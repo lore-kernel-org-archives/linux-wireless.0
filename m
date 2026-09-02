@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E9536B923
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45873377EC2
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788338778; cv=none; b=FiQ4pWGbsZ/roX109uYnOJz2Bt2CeQdU2fSDPtwLRGvtvvCx5sk91uL7993/MTXXdWyjuids6mapkfksKJPWNLdt0t8gfQyk45Ix2HEuNAPvxGW8ITHHMbGP/+S8QsOVV7MArbwIxfFbdGwwRjMzzxGKg6fuuwrqsJ+wHlU3/mo=
+	t=1788338778; cv=none; b=jSWitR6TUcxjXTWAm7mjVg1YHRa4IVp2LIiWrsX3DNQcNl/AF9jsLnAGMlH9/ueirQyzFFD0OSJgr/neiNcBc+xZzN8klJUupc52pfU+eFIh4Uud0nly1Qi4o+43rYveMBQDFe3qba8g+AGfZbk6SuOgfBXeb3w2X5QaVoDjzmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788338778; c=relaxed/simple;
-	bh=EDLRrjZcDnGn7w0R3aXmFL9VMSLP/FpPTW7RJvW76TA=;
+	bh=4HyCousZl5tdIN2BfB70LAsFn6FmHPVvnrVR53P7wzk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XnCjOwrjnwGxL0uUwqP/lweawXUeWSLlhq3556gVdfiUse70rr5Cd+6rIRotyNqL9IA/ojZE5xpp7ft93AthoSpK6B/KIzhBlpp/WVY0Xs2ELPR0m4Ixu+eNAkpPB+yuLATXYMeWN5Esi9gWy07HxgCE4IYcU/KRACNvQsMTg3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=M03hOAQ0; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=uPQs1FcnDfmsJoGhl2q3snEo8weYWkWLDu0sghG18vDYHYrxlrFsUI6fAR8GiFfQF8jvFvNwwzW5rC4/tlMd8y02TWY5pTZN6rbMksK4N5dB7+dXajzBI+ACCWQLWQBxBLu8HgcCfVSllB9hR76c0T2u39UHOIOgK5Rveh4zkJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=QTS7hm4H; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="M03hOAQ0"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="QTS7hm4H"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=I1zfleYHdw9gTgQa/Kl/dqNAZMmwj7hTQF4cOXpF+Xw=; b=M03hOAQ0ax//dHwDgA3sno9enr
-	pJgLkveZICXKy50/2rrYlvpTSJXZAw2rhG1KJiTCk6pORsaDIO5lsDPDx3GKtx/ntxQlC76deKcFB
-	MhuK5JupIpX1lZG4adHLhEZbxRoy1iMuwgZmFcgLRQkf0I95xqDoUGJAP6lMiVVIQqZQ=;
+	bh=FskLG2VHtlexQp2vOvED2Rm7AhaWvT0/PywaoTp5rfc=; b=QTS7hm4HDUtMD8KUrfim/AcMCg
+	Qru8Npgw8hLMGbgjLbiwlGpP97hmn3aOX3T+YqHWBQ/SAkSEYGntBRNQ13Kd6Xl4hdKkR92f2aodH
+	XG0qBxz6L5gA8142TqA4sLU4Y3UIMuv7AV18RhhF/FVmIc32eoCAPVKfBFhNjq7XQxis=;
 Received: from p200300cadf14d1000000000000000162.dip0.t-ipconnect.de ([2003:ca:df14:d100::162] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x1gbm-00Cwkn-12;
+	id 1x1gbm-00Cwkn-1d;
 	Wed, 02 Sep 2026 10:46:14 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [RFC PATCH 04/15] wifi: cfg80211: add SCS and MSCS request validation
-Date: Wed,  2 Sep 2026 10:45:59 +0200
-Message-ID: <2f4d60f5e8c2e7feabbe98e4b24db7f9dad3275a.1788338716.git-series.nbd@nbd.name>
+Subject: [RFC PATCH 05/15] wifi: cfg80211: add set_scs and set_mscs driver ops
+Date: Wed,  2 Sep 2026 10:46:00 +0200
+Message-ID: <7bcf9052cf02f1f5d12d8e14ea8d8eca253892f4.1788338716.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
 References: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
@@ -48,338 +48,228 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Check what the element parsers leave: the rules of 9.4.2.120 and 9.4.2.242
-relating the request type, the classifier and the traffic description to
-each other.
+Add the two ops that install a stream classification on a peer, the
+extended feature flags that advertise them, and a wiphy_register() check
+that a wiphy does not advertise what it cannot do.
 
-A failed check is a status code and not an error. The request came from a
-peer over the air and hostapd passes it on as it arrived, so an AP answers
-a legal request with a legal refusal.
-
-The one rule the standard leaves open is a TCLAS Processing 0 descriptor
-whose elements name one parameter with two values. No MSDU can satisfy
-it, so decline it rather than install a rule that never fires.
-
-An uplink or direct link descriptor carries no classifier, so add the QoS
-Characteristics element accessors that read the direction, and the size
-check that has to pass before anything else reads one.
+One SCS Request frame can carry several descriptors with different
+request types, so set_scs takes a set and each descriptor carries its own
+status back. A peer has at most one active MSCS, so set_mscs needs only a
+return value.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/linux/ieee80211-eht.h | 128 +++++++++++++++++++++++++++++++++++-
- include/linux/ieee80211.h     |   1 +-
- include/net/cfg80211.h        |  17 +++++-
- net/wireless/core.h           |   2 +-
- net/wireless/scs.c            | 110 ++++++++++++++++++++++++++++++-
- 5 files changed, 258 insertions(+)
+ include/net/cfg80211.h       | 28 +++++++++++++++++++++-
+ include/uapi/linux/nl80211.h | 10 ++++++++-
+ net/wireless/core.c          | 10 ++++++++-
+ net/wireless/rdev-ops.h      | 32 ++++++++++++++++++++++++-
+ net/wireless/trace.h         | 49 +++++++++++++++++++++++++++++++++++++-
+ 5 files changed, 129 insertions(+)
 
-diff --git a/include/linux/ieee80211-eht.h b/include/linux/ieee80211-eht.h
-index b62297a978e7..73c1b441c7f3 100644
---- a/include/linux/ieee80211-eht.h
-+++ b/include/linux/ieee80211-eht.h
-@@ -1369,4 +1369,132 @@ static inline u32 ieee80211_eml_trans_timeout_in_us(u16 eml_cap)
- 				 _data + ieee80211_mle_common_size(_data),\
- 				 _len - ieee80211_mle_common_size(_data))
- 
-+/**
-+ * struct ieee80211_qos_char_elem - QoS Characteristics element
-+ * @element_id: %WLAN_EID_EXTENSION
-+ * @length: length of everything behind it
-+ * @element_id_ext: %WLAN_EID_EXT_QOS_CHARACTERISTICS
-+ * @control: control info, see %IEEE80211_QOS_CHAR_CTRL_*
-+ * @min_service_interval: minimum service period interval, in microseconds
-+ * @max_service_interval: maximum service period interval, in microseconds
-+ * @min_data_rate: minimum data rate at the MAC SAP, in kilobits per second
-+ * @delay_bound: targeted transport time of an MSDU, in microseconds
-+ * @variable: the optional parameters that the presence bitmap names, in the
-+ *	order of the %IEEE80211_QOS_CHAR_PRES_* bits
-+ *
-+ * This is the whole element, header included, because the only consumer of it
-+ * is a device that takes it as it arrived.
-+ */
-+struct ieee80211_qos_char_elem {
-+	u8 element_id;
-+	u8 length;
-+	u8 element_id_ext;
-+	__le32 control;
-+	__le32 min_service_interval;
-+	__le32 max_service_interval;
-+	u8 min_data_rate[3];
-+	u8 delay_bound[3];
-+	u8 variable[];
-+} __packed;
-+
-+#define IEEE80211_QOS_CHAR_CTRL_DIRECTION		GENMASK(1, 0)
-+#define IEEE80211_QOS_CHAR_CTRL_PRESENCE		GENMASK(24, 9)
-+
-+#define IEEE80211_QOS_CHAR_DIR_UPLINK			0
-+#define IEEE80211_QOS_CHAR_DIR_DOWNLINK			1
-+#define IEEE80211_QOS_CHAR_DIR_DIRECT			2
-+
-+#define IEEE80211_QOS_CHAR_PRES_MAX_MSDU_SIZE		BIT(0)
-+#define IEEE80211_QOS_CHAR_PRES_SERVICE_START_TIME	BIT(1)
-+#define IEEE80211_QOS_CHAR_PRES_SERVICE_START_LINK_ID	BIT(2)
-+#define IEEE80211_QOS_CHAR_PRES_MEAN_DATA_RATE		BIT(3)
-+#define IEEE80211_QOS_CHAR_PRES_BURST_SIZE		BIT(4)
-+#define IEEE80211_QOS_CHAR_PRES_MSDU_LIFETIME		BIT(5)
-+#define IEEE80211_QOS_CHAR_PRES_MSDU_DELIVERY_INFO	BIT(6)
-+#define IEEE80211_QOS_CHAR_PRES_MEDIUM_TIME		BIT(7)
-+
-+/**
-+ * ieee80211_qos_char_presence - QoS Characteristics presence bitmap
-+ * @qc: the element
-+ * Return: the Presence Bitmap Of Additional Parameters subfield, a bitmap of
-+ *	%IEEE80211_QOS_CHAR_PRES_*
-+ */
-+static inline u16
-+ieee80211_qos_char_presence(const struct ieee80211_qos_char_elem *qc)
-+{
-+	return u32_get_bits(le32_to_cpu(qc->control),
-+			    IEEE80211_QOS_CHAR_CTRL_PRESENCE);
-+}
-+
-+/**
-+ * ieee80211_qos_char_direction - QoS Characteristics direction
-+ * @qc: the element
-+ * Return: %IEEE80211_QOS_CHAR_DIR_UPLINK, _DOWNLINK or _DIRECT
-+ */
-+static inline u8
-+ieee80211_qos_char_direction(const struct ieee80211_qos_char_elem *qc)
-+{
-+	return u32_get_bits(le32_to_cpu(qc->control),
-+			    IEEE80211_QOS_CHAR_CTRL_DIRECTION);
-+}
-+
-+/**
-+ * ieee80211_qos_char_size_ok - check a QoS Characteristics element
-+ * @data: candidate octets, from the Element ID
-+ * @len: length of @data
-+ *
-+ * Takes octets rather than an element, because deciding whether they are one
-+ * is what it is for. Every other accessor takes the element, so it can only be
-+ * read once this has passed.
-+ *
-+ * Return: %true if the octets are the element they claim to be and its length
-+ *	matches the parameters it says are present
-+ */
-+static inline bool ieee80211_qos_char_size_ok(const u8 *data, size_t len)
-+{
-+	const struct ieee80211_qos_char_elem *qc = (const void *)data;
-+	size_t needed = sizeof(*qc);
-+	u16 present;
-+
-+	if (len < needed)
-+		return false;
-+
-+	if (qc->element_id != WLAN_EID_EXTENSION ||
-+	    qc->element_id_ext != WLAN_EID_EXT_QOS_CHARACTERISTICS ||
-+	    qc->length != len - 2)
-+		return false;
-+
-+	present = ieee80211_qos_char_presence(qc);
-+
-+	if (present & ~GENMASK(7, 0))
-+		return false;
-+
-+	if (ieee80211_qos_char_direction(qc) > IEEE80211_QOS_CHAR_DIR_DIRECT)
-+		return false;
-+
-+	/* A LinkID names the link of the Service Start Time, so it needs one */
-+	if (present & IEEE80211_QOS_CHAR_PRES_SERVICE_START_LINK_ID &&
-+	    !(present & IEEE80211_QOS_CHAR_PRES_SERVICE_START_TIME))
-+		return false;
-+
-+	if (present & IEEE80211_QOS_CHAR_PRES_MAX_MSDU_SIZE)
-+		needed += 2;
-+	if (present & IEEE80211_QOS_CHAR_PRES_SERVICE_START_TIME)
-+		needed += 4;
-+	if (present & IEEE80211_QOS_CHAR_PRES_SERVICE_START_LINK_ID)
-+		needed += 1;
-+	if (present & IEEE80211_QOS_CHAR_PRES_MEAN_DATA_RATE)
-+		needed += 3;
-+	if (present & IEEE80211_QOS_CHAR_PRES_BURST_SIZE)
-+		needed += 4;
-+	if (present & IEEE80211_QOS_CHAR_PRES_MSDU_LIFETIME)
-+		needed += 2;
-+	if (present & IEEE80211_QOS_CHAR_PRES_MSDU_DELIVERY_INFO)
-+		needed += 1;
-+	if (present & IEEE80211_QOS_CHAR_PRES_MEDIUM_TIME)
-+		needed += 2;
-+
-+	return len == needed;
-+}
-+
- #endif /* LINUX_IEEE80211_EHT_H */
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 1837a4e7ea30..6a515df36fc9 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1826,6 +1826,7 @@ enum ieee80211_eid_ext {
- 	WLAN_EID_EXT_EHT_MULTI_LINK = 107,
- 	WLAN_EID_EXT_EHT_CAPABILITY = 108,
- 	WLAN_EID_EXT_TID_TO_LINK_MAPPING = 109,
-+	WLAN_EID_EXT_QOS_CHARACTERISTICS = 113,
- 	WLAN_EID_EXT_BANDWIDTH_INDICATION = 135,
- 	WLAN_EID_EXT_KNOWN_STA_IDENTIFCATION = 136,
- 	WLAN_EID_EXT_NON_AP_STA_REG_CON = 137,
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c3b17ee6a192..f140c3c2a5b8 100644
+index f140c3c2a5b8..73ccb6e3173c 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4237,6 +4237,23 @@ struct cfg80211_scs_desc {
+@@ -4237,6 +4237,18 @@ struct cfg80211_scs_desc {
  };
  
  /**
-+ * struct cfg80211_mscs_desc - the MSCS of one peer
++ * struct cfg80211_scs_result - what one SCS descriptor is answered with
 + *
-+ * @req_type: add, remove or change
-+ * @up_bitmap: user priorities that the AP learns from, one bit each
-+ * @up_limit: ceiling for the assigned user priority, 0 to 7
-+ * @stream_timeout: minimum lifetime of a learned value, in TUs
-+ * @fields: classifier parameters, a bitmap of &enum cfg80211_flow_field
++ * Parallel to the descriptor array, so a descriptor holds what was asked for
++ * and never what came of it.
++ *
++ * @status: IEEE status code
 + */
-+struct cfg80211_mscs_desc {
-+	enum nl80211_scs_req_type req_type;
-+	u8 up_bitmap;
-+	u8 up_limit;
-+	u32 stream_timeout;
-+	u32 fields;
++struct cfg80211_scs_result {
++	u16 status;
 +};
 +
 +/**
-  * struct cfg80211_scs_verdict - result of an SCS evaluation
+  * struct cfg80211_mscs_desc - the MSCS of one peer
   *
-  * @match: an SCS descriptor claimed the MSDU
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 6e8b9d651f4f..2d6d0d70abce 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -643,6 +643,8 @@ int cfg80211_parse_tclas(const u8 *elems, size_t len,
- 			 struct cfg80211_tclas *out, u8 n_tclas,
- 			 enum cfg80211_tclas_processing *processing);
- int cfg80211_parse_tclas_mask(const u8 *elems, size_t len, u32 *fields);
-+bool cfg80211_scs_desc_valid(const struct cfg80211_scs_desc *desc);
-+bool cfg80211_mscs_desc_valid(const struct cfg80211_mscs_desc *desc);
+  * @req_type: add, remove or change
+@@ -5359,6 +5371,16 @@ struct mgmt_frame_regs {
+  *
+  * @set_qos_map: Set QoS mapping information to the driver
+  *
++ * @set_scs: Add, change or remove SCS descriptors of one peer. The action
++ *	frame exchange has been handled by userspace, so this just has to make
++ *	the transmit path classify matching MSDUs. The op answers every
++ *	descriptor in the result entry of the same index, and a declined change
++ *	leaves the previously accepted classification of that SCSID in force.
++ *	A negative return fails the request as a whole and answers nothing.
++ * @set_mscs: Install, change or remove the MSCS of one peer. A peer has at
++ *	most one active MSCS, so the result is a single return value rather
++ *	than a per descriptor status.
++ *
+  * @set_ap_chanwidth: Set the AP (including P2P GO) mode channel width for the
+  *	given interface This is used e.g. for dynamic HT 20/40 MHz channel width
+  *	changes during the lifetime of the BSS.
+@@ -5763,6 +5785,12 @@ struct cfg80211_ops {
+ 			       struct net_device *dev,
+ 			       struct cfg80211_qos_map *qos_map);
  
- #if IS_ENABLED(CONFIG_CFG80211_KUNIT_TEST)
- #define EXPORT_SYMBOL_IF_CFG80211_KUNIT(sym) EXPORT_SYMBOL_IF_KUNIT(sym)
-diff --git a/net/wireless/scs.c b/net/wireless/scs.c
-index 299a8d83205e..a8daaa99b49e 100644
---- a/net/wireless/scs.c
-+++ b/net/wireless/scs.c
-@@ -805,3 +805,113 @@ void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
- 	}
++	int	(*set_scs)(struct wiphy *wiphy, struct net_device *dev,
++			   const u8 *peer, struct cfg80211_scs_desc * const *desc,
++			   struct cfg80211_scs_result *res, u8 n_desc);
++	int	(*set_mscs)(struct wiphy *wiphy, struct net_device *dev,
++			    const u8 *peer, struct cfg80211_mscs_desc *desc);
++
+ 	int	(*set_ap_chanwidth)(struct wiphy *wiphy, struct net_device *dev,
+ 				    unsigned int link_id,
+ 				    struct cfg80211_chan_def *chandef);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 86e1855c8475..f3e085c3c34c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -7127,6 +7127,14 @@ enum nl80211_feature_flags {
+  *
+  * @NL80211_EXT_FEATURE_PROBE_AP: Driver supports probing the associated AP
+  *	in STA mode using @NL80211_CMD_PROBE_PEER.
++ * @NL80211_EXT_FEATURE_SCS: Driver or device supports the stream
++ *	classification service, so it classifies transmitted MSDUs against the
++ *	descriptors given with %NL80211_CMD_SET_SCS. Userspace sets the SCS
++ *	field of the Extended Capabilities element only when this is reported.
++ * @NL80211_EXT_FEATURE_MSCS: Driver or device supports the mirrored stream
++ *	classification service, configured with %NL80211_CMD_SET_MSCS.
++ *	Userspace sets the Mirrored SCS field of the Extended Capabilities
++ *	element only when this is reported.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -7210,6 +7218,8 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_ROC_ADDR_FILTER,
+ 	NL80211_EXT_FEATURE_SET_KEY_LTF_SEED,
+ 	NL80211_EXT_FEATURE_PROBE_AP,
++	NL80211_EXT_FEATURE_SCS,
++	NL80211_EXT_FEATURE_MSCS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index d13310fef691..cc2cff43ef75 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -974,6 +974,16 @@ int wiphy_register(struct wiphy *wiphy)
+ 		    rdev->ops->update_connect_params))
+ 		return -EINVAL;
+ 
++	if (WARN_ON(wiphy_ext_feature_isset(&rdev->wiphy,
++					    NL80211_EXT_FEATURE_SCS) &&
++		    !rdev->ops->set_scs))
++		return -EINVAL;
++
++	if (WARN_ON(wiphy_ext_feature_isset(&rdev->wiphy,
++					    NL80211_EXT_FEATURE_MSCS) &&
++		    !rdev->ops->set_mscs))
++		return -EINVAL;
++
+ 	if (wiphy->addresses)
+ 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 46849fe8d0b3..1287c3542d93 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1185,6 +1185,38 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
+ 	return ret;
  }
- EXPORT_SYMBOL(cfg80211_scs_evaluate);
-+
-+/*
-+ * Two elements of one Processing 0 descriptor can demand two values for one
-+ * parameter, which no MSDU satisfies.
-+ */
-+static bool tclas_conflict(const struct cfg80211_tclas *a,
-+			   const struct cfg80211_tclas *b)
+ 
++static inline int rdev_set_scs(struct cfg80211_registered_device *rdev,
++			       struct net_device *dev, const u8 *peer,
++			       struct cfg80211_scs_desc * const *desc,
++			       struct cfg80211_scs_result *res, u8 n_desc)
 +{
-+	struct cfg80211_flow_key ka, kb;
-+	u32 common = a->fields & b->fields;
++	int ret = -EOPNOTSUPP;
 +
-+	if (!common)
-+		return false;
-+
-+	flow_key_select(&a->key, common, &ka);
-+	flow_key_select(&b->key, common, &kb);
-+
-+	return memcmp(&ka, &kb, sizeof(ka));
-+}
-+
-+/**
-+ * cfg80211_scs_desc_valid - check one SCS descriptor against the standard
-+ *
-+ * @desc: the descriptor, already parsed
-+ *
-+ * The checks that a classifier element can fail on its own live in
-+ * cfg80211_parse_tclas(). This is what is left: the rules that relate the
-+ * request type, the classifier and the traffic description to each other.
-+ *
-+ * Return: whether the descriptor may be installed. A refusal is a legal
-+ *	answer to a legal request, so the caller declines it with a status
-+ *	code rather than failing the message.
-+ */
-+bool cfg80211_scs_desc_valid(const struct cfg80211_scs_desc *desc)
-+{
-+	bool want_tclas = true;
-+	unsigned int i, j;
-+
-+	/*
-+	 * 11.25.2 answers a termination with TCLAS_PROCESSING_TERMINATED and
-+	 * makes no exception for a malformed one, and it offers no denial
-+	 * status for one either. A removal names an identifier, so anything
-+	 * else the station put in the descriptor changes nothing it means.
-+	 */
-+	if (desc->req_type == NL80211_SCS_REQ_REMOVE)
-+		return true;
-+
-+	/* An uplink or direct link descriptor is a traffic description */
-+	if (desc->qos_char &&
-+	    ieee80211_qos_char_direction(desc->qos_char) !=
-+	    IEEE80211_QOS_CHAR_DIR_DOWNLINK)
-+		want_tclas = false;
-+
-+	if (want_tclas != !!desc->n_tclas)
-+		return false;
-+
-+	/* Such a descriptor holds no classifier, so it relates nothing */
-+	if (!want_tclas)
-+		return desc->tclas_processing == CFG80211_TCLAS_PROCESSING_ABSENT;
-+
-+	switch (desc->tclas_processing) {
-+	case CFG80211_TCLAS_PROCESSING_ALL:
-+	case CFG80211_TCLAS_PROCESSING_ANY:
-+		/* A choice between elements needs more than one element */
-+		if (desc->n_tclas < 2)
-+			return false;
-+		break;
-+	case CFG80211_TCLAS_PROCESSING_DEFAULT:
-+		/* 9.4.2.120 pairs it with no classifier, and there is one */
-+		return false;
-+	case CFG80211_TCLAS_PROCESSING_ABSENT:
-+		break;
-+	default:
-+		return false;
++	if (rdev->ops->set_scs) {
++		trace_rdev_set_scs(&rdev->wiphy, dev, peer, n_desc);
++		ret = rdev->ops->set_scs(&rdev->wiphy, dev, peer, desc, res,
++					 n_desc);
++		trace_rdev_return_int(&rdev->wiphy, ret);
 +	}
 +
-+	if (desc->tclas_processing != CFG80211_TCLAS_PROCESSING_ALL)
-+		return true;
-+
-+	for (i = 0; i < desc->n_tclas; i++)
-+		for (j = i + 1; j < desc->n_tclas; j++)
-+			if (tclas_conflict(&desc->tclas[i], &desc->tclas[j]))
-+				return false;
-+
-+	return true;
++	return ret;
 +}
-+EXPORT_SYMBOL_IF_CFG80211_KUNIT(cfg80211_scs_desc_valid);
 +
-+/**
-+ * cfg80211_mscs_desc_valid - check an MSCS descriptor against the standard
-+ *
-+ * @desc: the descriptor, already parsed
-+ *
-+ * Return: whether the descriptor may be installed.
-+ */
-+bool cfg80211_mscs_desc_valid(const struct cfg80211_mscs_desc *desc)
++static inline int rdev_set_mscs(struct cfg80211_registered_device *rdev,
++				struct net_device *dev, const u8 *peer,
++				struct cfg80211_mscs_desc *desc)
 +{
-+	bool remove = desc->req_type == NL80211_SCS_REQ_REMOVE;
++	int ret = -EOPNOTSUPP;
 +
-+	if (remove == !!desc->fields)
-+		return false;
++	if (rdev->ops->set_mscs) {
++		trace_rdev_set_mscs(&rdev->wiphy, dev, peer, desc);
++		ret = rdev->ops->set_mscs(&rdev->wiphy, dev, peer, desc);
++		trace_rdev_return_int(&rdev->wiphy, ret);
++	}
 +
-+	/*
-+	 * The Stream Timeout is the least time the AP keeps a learned value.
-+	 * Zero asks for no guarantee at all, so nothing would ever expire the
-+	 * entries of that station and its own table would fill with values for
-+	 * flows that ended. 9.4.2.242 reserves the field for a Remove.
-+	 */
-+	return remove || desc->stream_timeout;
++	return ret;
 +}
++
+ static inline int
+ rdev_set_ap_chanwidth(struct cfg80211_registered_device *rdev,
+ 		      struct net_device *dev,
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 8c2a91b85c39..81c0899cb212 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2636,6 +2636,55 @@ TRACE_EVENT(rdev_set_ap_chanwidth,
+ 		  __entry->link_id)
+ );
+ 
++TRACE_EVENT(rdev_set_scs,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 const u8 *peer, u8 n_desc),
++	TP_ARGS(wiphy, netdev, peer, n_desc),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(peer)
++		__field(u8, n_desc)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(peer, peer);
++		__entry->n_desc = n_desc;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", %pM, %d descriptors",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->peer, __entry->n_desc)
++);
++
++TRACE_EVENT(rdev_set_mscs,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 const u8 *peer, const struct cfg80211_mscs_desc *desc),
++	TP_ARGS(wiphy, netdev, peer, desc),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(peer)
++		__field(u32, fields)
++		__field(u32, stream_timeout)
++		__field(u8, up_bitmap)
++		__field(u8, up_limit)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(peer, peer);
++		__entry->fields = desc ? desc->fields : 0;
++		__entry->stream_timeout = desc ? desc->stream_timeout : 0;
++		__entry->up_bitmap = desc ? desc->up_bitmap : 0;
++		__entry->up_limit = desc ? desc->up_limit : 0;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT
++		  ", %pM, fields %x, UP bitmap %x, UP limit %d, timeout %d",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->peer, __entry->fields,
++		  __entry->up_bitmap, __entry->up_limit,
++		  __entry->stream_timeout)
++);
++
+ TRACE_EVENT(rdev_add_tx_ts,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 u8 tsid, const u8 *peer, u8 user_prio, u16 admitted_time),
 -- 
 git-series 0.9.1
