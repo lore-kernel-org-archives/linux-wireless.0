@@ -1,83 +1,71 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B648441D208
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 09:27:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988F9469821
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 10:41:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788341238; cv=none; b=qbzSuH50HnlZiS7yqVC/851Te3W7V80Wu7bKvdeV+kAMU3c8LLj/VNF6Bko+uaL4GahZjPhTAQn+9tekpQ3A4Jg5RtQPDUEHRNlb9daDwpJ92U9K3wzqmxMR6V9mB3NFJrU5vVgkPoW7st/O+1cx28MwOiZ6EVAEuUVG4Wbh44A=
+	t=1788345713; cv=none; b=Tm0D0lcxkGKbtZAMDKvRdIdXkd++IBY81PgfvR+EYO4t1fQIurFJTStj3YHFaJABPowP+sfkdhEWKoTqzRabK/tfj2uNgR77jSQxd6HIjyyJ3n6WzJuehn8Pt9nlPJrl4MXlY1CTuRQ14Bxox4B59pFekhAIzcbEBQq3y+NNMnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788341238; c=relaxed/simple;
-	bh=Ufx/Na5ud9+HB4KmgqLZ2egUUb8IbKIAGqt4GKt4yFc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tdpfea1G9jUC6Gg9oCO0yoj1jLQBgbALVskBUs28+jdzV4dEpubamEndFsaiWhIxEMNRwUkpzBLuBTOyqTF+76/g3cc0J79uQyd+2yMOZ2sd1MzgiJoigfGNQhBrx3t8TPA+viY7HM8onMxUxewpKmlcPzi90usLddHpzTmjDa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PKXyDqkf; arc=none smtp.client-ip=209.85.210.178
+	s=arc-20240116; t=1788345713; c=relaxed/simple;
+	bh=X1kI7enujw/BKcxgK8l9mNf0YGyaiGCcyKAncN0yXF4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GkyNKSuoNdRvtuH8mDJHyX1qQ4W1vgMkbA30eOjKiR70n8EYADl091Mc/Jry9I9e1yM05zhlfM2yP+YQwwy9HK+whH33bFy03eAObxZg43al/dl/bUedMCsl7dGgpxbpcJ0LAdXxeYO7ndUwSanYaj1tTqbv9IRVtm7S0pSWK1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OdxwBPOj; arc=none smtp.client-ip=209.85.221.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PKXyDqkf"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-84f3ab8750cso670513b3a.0
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 02:27:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OdxwBPOj"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-48436216a98so579506f8f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 03:41:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788341234; x=1788946034; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=eRUAOAdoeg0ACoOZGqt1RM6QAFvC+MmIu2Q8vR/OfzI=;
-        b=PKXyDqkf6VbnIabTAHzLjJVq4JNAhEiCnK0lcWXV4L2nZp/oFBEZ2BR3zlIFmm+QaA
-         GAOUDw4YZSku9pbqjcXRRuHPO98U5+PjZG/wOBfFn5bdE3CIX7kl6Nb0ZTc7DRJ6ZPiY
-         re5BbwC4H2SpHCG3BWyByu1c2wTR87pJ7UDkY9VgZp5eg+BuyQs+tGb6+AnCsZa1vCuY
-         4cqjM6Yvg+rpS86Vtp776VIE0mJv7eGkRyOdNZfLNlgER1SBgjVxCXhfZd5OhlKMX+TR
-         s9aPzll71lJFrvjdSeFInKEl61r7mJ/zR7NTjCH59DN2jgRJHLIfMRlppWm9HaHNJWka
-         cCeA==
+        d=gmail.com; s=20251104; t=1788345709; x=1788950509; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5khuFZT81tX7pSug/4+JUOUpnKVo3evkTPVFZ3Cd+Zc=;
+        b=OdxwBPOjd6cSiI/4INa+0peozNc2JeH94Asca4+QeRK0M0F7ECOvN+xWnCLibBC1bb
+         nUxe5wuMdEwakzv0OPYlKlB7fSUw/1ylA7VUmtJs1Qj2ZQBOkWEcD17+LESHoE8lK4CV
+         kPkEgImfKl0ghnziRPLsjBDVUBrMiiWTM2XG0ygtL/jz/fY3fzquJ500DPda61AVpXCK
+         ikj6K9gtdY7RyPo142V5mGcnABbWTyhYKiPtYhfVGZqOOXpx2chFduzs5rCp+nLz9Wgw
+         Lw4uayGRE7lj7RvIpjJT1qehXPpX02pAkIFZK3t6hbFWvWvhPSQK1Pzw22PAHBrhN2JF
+         VBkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788341234; x=1788946034;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=eRUAOAdoeg0ACoOZGqt1RM6QAFvC+MmIu2Q8vR/OfzI=;
-        b=fY0nTzvrbWXhXyZnQ6SkTS6NWGlO3JdT9QoUoYxUE1WETvisekLrv3chtNPmiJhaZ+
-         cPNRW/QMjp7+uPW0xpVzpA7bIyucBZR+ND8+zeCKMtKhmEi0T78C0cHaRbBvFj4pkgtE
-         ZyQvha5xmEaQ3US2ZFZrLf6Je2yrHN5KcYJqD74jTp8WWfFBwquJwzA83EeRxifuUFK/
-         UtUPyfeCxqiIblgNna9blbtPl3TWghcRbjhOl7cjXgCOtXmGNvF/hLD7qascUdf3P4XQ
-         JNVHuvXIuIOVCaJfo7YhdlO5PucoR46wpsXkNoU6izn8cPngVZ7kd9OSgcxHDIeT7keX
-         17fQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxx/3/G17Qw2E+gIe3lx8IFzkxZWTYDTaejMHW0iwaK2tpJcoFw+d74qI6FQD449pj3w9lvtOh9ePoonfTGFA==@vger.kernel.org
-X-Gm-Message-State: AFuF++lJCpM+IXxY0IIK5YQcuXQvEOMOjBl/iRMJ4VuC+54zH9G8ICes
-	wYH4FjH6xJ+QQ0DXrJiHS73HKpoQouWDoWkfXhLsoAGOqHOlZOSW0gHB
-X-Gm-Gg: AYBFou2hYwyMibhI1BdTwy3mEVNFD9nHghcJh9GAcBJ96AOmrPQ7/Lv0UvjlZrpwC5F
-	6tdBu3RhfKQgveauiSMtzhdBWcIhS927KD/U7s8h+ADVnZ2P9sXbR6yBimN31wbp5FN+ST8/Bhi
-	/uV639KEZrY7w78UMZTr6O16+wgQ+SVdGdTn9Hpa1h6KFc2nq3T6zTt1on+F5an7L1QbfvZc8V3
-	9LNbk4opNppR+wJLLFFAlYbIl+qRungtRrWi1idqFxSFS6tA4TdqQ87Jh3Jx/zrjQ3ptcxZfE9W
-	VNlTTL53vXQwjCKtlAOTKf7YCaCiQiUALW07LgzEHG35WqMJICPAVYt1aL3jz/KrMkOEi8EuLAU
-	MOVV3/7agXQA9fgYGX3dV8vvlLfIMPv8SsZjtdIKG98VWTWcJ6QC9NgKtfYxbZ10xuNI3ybAz8b
-	/pVfp+0tEackM7YeHkad2F7kuc/kqy7HA2oAk1yeBverh6JpoXRc85tVKsFmlq3Mz2A+a0DcXWq
-	wAMcphlxfK/bO1C9+fV
-X-Received: by 2002:a05:6a00:2183:b0:857:7384:b5f6 with SMTP id d2e1a72fcca58-85ed464053cmr5298268b3a.18.1788341233701;
-        Wed, 02 Sep 2026 02:27:13 -0700 (PDT)
-Received: from 192.168.50.3 ([183.193.115.0])
-        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-85dc11fae83sm1055963b3a.59.2026.09.02.02.27.10
+        d=1e100.net; s=20251104; t=1788345709; x=1788950509;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=5khuFZT81tX7pSug/4+JUOUpnKVo3evkTPVFZ3Cd+Zc=;
+        b=XKFjHPcnMyZ/oJ+Wt042mrWCsHq/hc536V7Foz7zRIdb1K61glRfL71CEVznFi3OgS
+         X7oN/TwmSigxsl1sW5gHa60oJd6q+yCtYDNG7zhtlHLDi2FcJi6FUNF0lQLj0tuD67mp
+         zIyKA1cXJIuBD1MLOg+128qgEhXzeoLwmTyAxEeRPFOu/AYudeHu12EhYKFQDiWUI7+C
+         pm1yV0vqU6YlFksuacA3Di/msw4tml1hIOdDP08pUofbzGBNikbOt2xJpIcdL/wnrlpj
+         K6I22JdmKnVxzWISmaN/vw9tOoasVFQIYIshED6eZPhg44VrW9L9NyAUwz+yJx4dmFFC
+         BL6A==
+X-Forwarded-Encrypted: i=1; AKwUvBzJZHIawUfEiMDDsHG7oCyOedhf340BAfBkme7mc15USWvYF/4tVfYMCDpuRb408JD9SMRjmTE30HRzHQbdrw==@vger.kernel.org
+X-Gm-Message-State: AFuF++nnxU1S64pymmMn5Njqa9BC82LWGR6TJ4igg7cpim+W22vI6kHY
+	v6N+O8EbpHv80WhqW/X5DiOeb1uI6F5SDGLJtwQNUKXYcqlA5HpkPzik
+X-Gm-Gg: AYBFou2u8he1jiwyCSQ0vrDShQbK5I0KWd5FpQOt64Y+WBfYOkasYZDl0IZ0H0OxL6L
+	miMUVCvs4sh4+yFb5o8oLDEVY8Shke6c7MSxNPAUFoWZrokyhHDJ7hYACc7e2ZiveCqd48mNeqa
+	z3LX5mdTOMQ5ssSTobmv0wMwazCqnqtLhaTx3B14BcYBg8IXoWnOZEVg7BkZuJQcGRw3ZDYlXws
+	YsWvo/jV9N4BAPp7AR9gEX347xvW6AF8cw5OS55zA91m4gtqPQZzPzS3LoPDxex/jwTS5w8sOBC
+	XgXsZldnLvP9V/Lyv8anh4JgPXxHLNaJjmRtWQ+VRk/TiWUA0TsZvtmW4Mis+CtjqaDCG1z5gGv
+	2n1UFDH1jSTmyTxrhSgnglUtoq//I0jgQWfb+mrw0cJxguOYBMeyHaDAe0oZPqal7r7ZtlQA6wR
+	JpXYelK4e8hmkGHQBvOyhxoSCaQ+vy5UscVpbd5ZzpWcBzZ766ABGmw3RHLvIxXnt2OLc=
+X-Received: by 2002:a05:6000:2582:b0:482:fbb0:a262 with SMTP id ffacd0b85a97d-484914b94aemr6379556f8f.20.1788345708202;
+        Wed, 02 Sep 2026 03:41:48 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48448e72df2sm5998947f8f.1.2026.09.02.03.41.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 02:27:13 -0700 (PDT)
-Sender: Weiming Shi <thebestswings@gmail.com>
-From: Weiming Shi <bestswngs@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
+        Wed, 02 Sep 2026 03:41:47 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	co+36935f8953d6874a@bugs.sh,
-	Xiang Mei <xmei5@asu.edu>,
-	Weiming Shi <bestswngs@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 2/2] wifi: mac80211: fix link STA group key use-after-free
-Date: Wed,  2 Sep 2026 17:26:58 +0800
-Message-ID: <20260902092658.792735-2-bestswngs@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260902092658.792735-1-bestswngs@gmail.com>
-References: <20260902092658.792735-1-bestswngs@gmail.com>
+	Mehmet Fide <mehmet.fide@screeningeagle.com>
+Subject: [PATCH rtw-next 0/2] wifi: rtw88: usb: keep bmc traffic from exhausting the TX page pool
+Date: Wed,  2 Sep 2026 12:41:44 +0200
+Message-ID: <20260902104146.3853102-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -86,196 +74,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A group key installed for an MLO link STA is stored in link_sta->gtk[] and
-sdata->key_list. Link STA removal currently frees the link STA without
-removing these keys. A later key teardown then returns -ENOLINK before
-unlinking the key, while its caller still queues the key for destruction.
-This leaves a freed node on sdata->key_list and can also leave key->sta
-dangling.
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Remove a link STA's group keys while the link STA and driver link are still
-present. During full station teardown, collect GTKs from every link
-together with the pairwise keys, unlink all of them, wait for one
-post-unlink network grace period, and then destroy the batch.
+Hi Ping-Ke, Bitterblue,
 
-Also let removal of an already orphaned key reach the list unlink
-bookkeeping when the link or link STA is gone. Keep -ENOLINK unchanged for
-key installation.
+this follows up on the discussion under the v3 routing patch [1]: with
+that patch applied, a single dozing station is still enough to route all
+broadcast and multicast traffic through the high queue, and since the
+chip only drains that queue in the ATIM window after DTIM beacons while
+the frames occupy the shared TX page pool, ordinary chatter empties the
+pool and the AP stops accepting stations. Numbers and the ATIM window
+experiment are in the thread [2]; the short version: at the default 2 TU
+window the queue drains ~3 frames per DTIM, ~40 frames/s of mDNS takes
+the pool from 1803 to 16 pages in about 100 s, and enlarging the window
+to 4 TU or more makes the same storm harmless.
 
-BUG: KASAN: slab-use-after-free in ieee80211_remove_link_keys
-Read of size 8 at addr ffff888028c3c818 by task exploit/5192
-ieee80211_remove_link_keys (net/mac80211/key.c:1114)
-ieee80211_vif_update_links (net/mac80211/link.c:192 net/mac80211/link.c:351)
-ieee80211_vif_set_links (net/mac80211/link.c:408)
-cfg80211_remove_link (net/wireless/util.c:2894)
-nl80211_remove_link (net/wireless/nl80211.c:16312)
-genl_family_rcv_msg_doit (net/netlink/genetlink.c:1117)
-netlink_sendmsg (net/netlink/af_netlink.c:1889)
-Kernel panic - not syncing: KASAN: panic_on_warn set ...
+The series follows the order Ping-Ke suggested (bound first, then
+filter):
 
-Fixes: ccdde7c74ffd ("wifi: mac80211: properly implement MLO key handling")
-Reported-by: co+36935f8953d6874a@bugs.sh
-Closes: https://lore.kernel.org/linux-wireless/s6BRFbJoyNpjUBu6NC9TdJxvXM9vpQsN1FcY@bugs.sh/
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5
-Signed-off-by: Weiming Shi <bestswngs@gmail.com>
----
- net/mac80211/key.c      | 55 +++++++++++++++++++++++++++++++++++------
- net/mac80211/key.h      |  3 +++
- net/mac80211/sta_info.c |  6 +++++
- 3 files changed, 56 insertions(+), 8 deletions(-)
+Patch 1 caps how many frames the driver hands to the high queue with a
+small token bucket set below the measured drain rate; the excess goes
+out on the access category queue right away. This is the guarantee: the
+pool stays healthy under any storm, including ARP/DHCP bursts.
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index a69617d8d1c7..b907258829f0 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -475,7 +475,7 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		return -EINVAL;
- 
- 	if (link_id >= 0) {
--		if (!link) {
-+		if (!link && !sta) {
- 			link = sdata_dereference(sdata->link[link_id], sdata);
- 			if (!link)
- 				return -ENOLINK;
-@@ -484,7 +484,7 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		if (sta) {
- 			link_sta = rcu_dereference_protected(sta->link[link_id],
- 							     lockdep_is_held(&sta->local->hw.wiphy->mtx));
--			if (!link_sta)
-+			if (!link_sta && new)
- 				return -ENOLINK;
- 		}
- 	} else {
-@@ -535,7 +535,7 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			if (new &&
- 			    !(new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX))
- 				_ieee80211_set_tx_key(new, true);
--		} else {
-+		} else if (link_sta) {
- 			rcu_assign_pointer(link_sta->gtk[idx], new);
- 		}
- 		/* Only needed for transition from no key -> key.
-@@ -1183,23 +1183,57 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
--void ieee80211_free_sta_keys(struct ieee80211_local *local,
--			     struct sta_info *sta)
-+static void ieee80211_remove_link_sta_keys(struct ieee80211_local *local,
-+					   struct link_sta_info *link_sta,
-+					   struct list_head *keys)
- {
- 	struct ieee80211_key *key;
- 	int i;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	for (i = 0; i < ARRAY_SIZE(sta->deflink.gtk); i++) {
--		key = wiphy_dereference(local->hw.wiphy, sta->deflink.gtk[i]);
-+	for (i = 0; i < ARRAY_SIZE(link_sta->gtk); i++) {
-+		key = wiphy_dereference(local->hw.wiphy, link_sta->gtk[i]);
- 		if (!key)
- 			continue;
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
- 				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				      key, NULL);
-+		list_add_tail(&key->free_list, keys);
-+	}
-+}
-+
-+void ieee80211_free_link_sta_keys(struct ieee80211_local *local,
-+				  struct link_sta_info *link_sta)
-+{
-+	struct ieee80211_key *key, *tmp;
-+	LIST_HEAD(keys);
-+
-+	ieee80211_remove_link_sta_keys(local, link_sta, &keys);
-+	if (list_empty(&keys))
-+		return;
-+
-+	synchronize_net();
-+	list_for_each_entry_safe(key, tmp, &keys, free_list)
- 		__ieee80211_key_destroy(key, key->sdata->vif.type ==
- 					NL80211_IFTYPE_STATION);
-+}
-+
-+void ieee80211_free_sta_keys(struct ieee80211_local *local,
-+			     struct sta_info *sta)
-+{
-+	struct ieee80211_key *key, *tmp;
-+	LIST_HEAD(keys);
-+	int i;
-+
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	for (i = 0; i < ARRAY_SIZE(sta->link); i++) {
-+		struct link_sta_info *link_sta;
-+
-+		link_sta = wiphy_dereference(local->hw.wiphy, sta->link[i]);
-+		if (link_sta)
-+			ieee80211_remove_link_sta_keys(local, link_sta, &keys);
- 	}
- 
- 	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-@@ -1209,9 +1243,14 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
- 				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				      key, NULL);
-+		list_add_tail(&key->free_list, &keys);
-+	}
-+
-+	if (!list_empty(&keys))
-+		synchronize_net();
-+	list_for_each_entry_safe(key, tmp, &keys, free_list)
- 		__ieee80211_key_destroy(key, key->sdata->vif.type ==
- 					NL80211_IFTYPE_STATION);
--	}
- }
- 
- void ieee80211_delayed_tailroom_dec(struct wiphy *wiphy,
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index f5a97213a559..e4ee89de9438 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -24,6 +24,7 @@
- struct ieee80211_local;
- struct ieee80211_sub_if_data;
- struct ieee80211_link_data;
-+struct link_sta_info;
- struct sta_info;
- 
- /**
-@@ -167,6 +168,8 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 			 bool force_synchronize);
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 			     struct sta_info *sta);
-+void ieee80211_free_link_sta_keys(struct ieee80211_local *local,
-+				  struct link_sta_info *link_sta);
- void ieee80211_reenable_keys(struct ieee80211_sub_if_data *sdata);
- int ieee80211_key_switch_links(struct ieee80211_sub_if_data *sdata,
- 			       unsigned long del_links_mask,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 22eba0e6e54c..cebfb2c4c0cc 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -3444,10 +3444,16 @@ int ieee80211_sta_activate_link(struct sta_info *sta, unsigned int link_id)
- void ieee80211_sta_remove_link(struct sta_info *sta, unsigned int link_id)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct link_sta_info *link_sta;
- 	u16 old_links = sta->sta.valid_links;
- 
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
-+	link_sta = wiphy_dereference(sdata->local->hw.wiphy,
-+				     sta->link[link_id]);
-+	if (link_sta)
-+		ieee80211_free_link_sta_keys(sta->local, link_sta);
-+
- 	sta->sta.valid_links &= ~BIT(link_id);
- 
- 	if (!WARN_ON(!test_sta_flag(sta, WLAN_STA_INSERTED)))
+Patch 2 admits only ARP, EAPOL and DHCP to the after-DTIM path, matching
+the vendor driver's default high queue filter, so ordinary chatter never
+reaches the beacon-paced queue and the budget is left for the frames a
+sleeping station actually needs. At runtime the filter is evaluated
+before a token is taken, so chatter does not consume the budget.
+
+Not included: raising REG_ATIMWND. It would add drain capacity, but the
+queue stays unbounded and a wider window costs every PS station awake
+time after each DTIM; if the firmware is fine with a larger window on
+the USB chips I can add it as a separate patch. The mac80211-side
+buffering (IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING) needs a beacon-time
+event; the firmware seems to have one (C2H_BCN_EARLY_RPT, used by the
+vendor driver for TDLS), that is a follow-up once we know it works in AP
+mode.
+
+Tested on a Verdin AM62 AP with RTL8822BU (USB2, 20 MHz, WPA2, one
+Windows client in power save), free page count read at 0x240, on top of
+rtw-next with c710c7c2e038:
+  - baseline (rtw-next as is), one client in power save, ~80 bmc frames/s
+    generated on the AP: free pages 1803 -> 16 within 30 s and pinned for
+    the whole storm, 18 "error beacon valid" / rsvd page failures, and
+    after the storm three reconnect attempts failed (no association
+    until the client left and the pool recovered ~90 s later)
+  - patch 1 alone: 1803 pages throughout the same 180 s storm and a
+    120 s DHCP-port storm, no beacon errors, ping over the existing link
+    6/6, reconnects 3/3
+  - patches 1+2: 1803 pages throughout both storms as well, no
+    beacon errors, ping 6/6, reconnects 3/3; the filter keeps the
+    budget for ARP/EAPOL/DHCP, so the DHCP-port storm is the case where
+    the token bucket actually engages
+  - join/ping cycling without power save (10 cycles): unchanged
+  - with an iPhone (screen off) as the only associated station instead
+    of the Windows client: baseline 1803 -> 17 in 30 s and three join
+    attempts from a second device fail; with both patches 1803
+    throughout and the second device joins 3/3
+  - the same series on an RTL8821CU AP (i.MX8MP, PREEMPT_RT kernel,
+    411 free pages when idle): baseline drops to 16 pages within 30 s
+    and stays there, ping and three join attempts all fail; with the
+    series the count stays at 411 through the multicast storm, dips to
+    357 and recovers during the DHCP-port storm (the budget doing its
+    job), ping 6/6 and joins 3/3. No atomic-context or lockdep
+    complaints on the RT kernel.
+
+[1] https://lore.kernel.org/linux-wireless/20260814053426.2473247-1-mehmet.fide@gmail.com/
+[2] https://lore.kernel.org/linux-wireless/20260901091830.2506562-1-mehmet.fide@gmail.com/
+
+Mehmet Fide (2):
+  wifi: rtw88: usb: bound what the driver feeds the after-DTIM queue
+  wifi: rtw88: usb: only let the frames a dozing station needs use the
+    after-DTIM queue
+
+ drivers/net/wireless/realtek/rtw88/usb.c | 82 +++++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/usb.h |  5 ++
+ 2 files changed, 84 insertions(+), 3 deletions(-)
+
 -- 
-2.55.0
+2.54.0
 
