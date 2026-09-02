@@ -1,54 +1,54 @@
 Received: from smtp2.infineon.com (smtp2.infineon.com [217.10.52.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DCEC37188A
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:51:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4CEC4746BD
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:51:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788367919; cv=none; b=iQUo2VCeJZxAITD/q+bgNX045RZR8iY+Pu+vWZZsiz+wP+pJyeWKs3Q0dEo1hZ42YdNmkVZCb8/AOFf9Y0Hs8Bf+puFDlsyMvpE3+SLNTsbMSJN0rQsWsF3WJ7Vc/bOH6uzA87UEUfRXybkjgiDO5RwTgj3PBVZ6Al6fm+wXfvA=
+	t=1788367923; cv=none; b=mmTmSJi9Bnzb9pYHnlFOUAi5TnigSZZYNEdJ5/6nldPueIkhtc2oWwwymd4q115J5XG4Gtr+ZPyh2JsvJaWdcvZZ61Zk4BtGzNwDyJ3sI0ZEgEY348UixiSfIkbq8Jt4LFfbe0WYePX+jFEuGR8CPRoSR4NQs3DuYajPBdlIzXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788367919; c=relaxed/simple;
-	bh=Nzyea97Fg9dLIdCaAkZnahGVsrJ5CFQeAF4PGpI9WI8=;
+	s=arc-20240116; t=1788367923; c=relaxed/simple;
+	bh=8TD3KA1EI0Tc+H/rx4apRBCTQ98aRVQUUCu5YhlQdUA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NPl0nWNBSX2Ov1tZQUda6ZcYo+jldj/fX4+YD4qtznv64bnLbxZl4ywh7J1MEBpnJYZQQxCGJAN0YMhn9OZqdb3SNNAIEYLMFctkGmBXkUauaM2U3YAhjRbSuucZii4/zRozpV6lvsMPgsqdJK1PZuNipaihVyEEQ3bML16jxWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=Xnf9XFm5; arc=none smtp.client-ip=217.10.52.18
+	 MIME-Version:Content-Type; b=DcEcpunfkH9A2CK9ly7PVXB/oq1qye6Z4RHqruFKOpUW3V/huEZTjsncPOD03nbaPxYUMLHQ0z3tc3JdmqDKrSEBWJ/8+3jo6WGT3ot4VZ4bKpnZIOBidEhvEv4mWL1cSprPHog5WEzDKy7ZshQStKfZ0CCFOzbSc3D8zan91O4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=Gj19b7ir; arc=none smtp.client-ip=217.10.52.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="Xnf9XFm5"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="Gj19b7ir"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788367916; x=1819903916;
+  t=1788367920; x=1819903920;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Nzyea97Fg9dLIdCaAkZnahGVsrJ5CFQeAF4PGpI9WI8=;
-  b=Xnf9XFm5HCPpv1XFXCLuWKeOAdeDobqwRDBmRFPLja7zkb53KvNAznU7
-   eGj2Plg45RuocteJ8uQClsh+Y7KOH2edavG30FVOcNlva5jPKnsodnmFD
-   IqBtFBs082r5ZHZ/cWKjgV8k2TNnrTiLkHtIpgCpWLo0PkoDOEUPqaJDd
-   E=;
-X-CSE-ConnectionGUID: UbX5Hb0TRISvx8v0dqz2Uw==
-X-CSE-MsgGUID: Li8xMPNMSPevPvYYd1yk1A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="176356782"
+  bh=8TD3KA1EI0Tc+H/rx4apRBCTQ98aRVQUUCu5YhlQdUA=;
+  b=Gj19b7ir+AXKzvwP+EY/vhuKGaTM+1pe9CniUCSgbtHBiZ9Fa3JVP9R3
+   tEPrb7AQsszWzjADxUin/T6X92o+8w4N40UJE4y8N4EMSp/A5qq3hnv9H
+   o4eyO78GTXfAoVGpOWCUo60JW8L3m0XhV3V1yIHj0X9dIgW2QKhnnrZDD
+   o=;
+X-CSE-ConnectionGUID: PtsUhytWT2KILJuJVLngfw==
+X-CSE-MsgGUID: GMk23DWCTLmQDasXm0hbog==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="176356799"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="176356782"
+   d="scan'208";a="176356799"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
-  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:51:48 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE805.infineon.com
- (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE803.infineon.com) ([172.23.29.29])
+  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:51:59 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE803.infineon.com
+ (172.23.29.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:51:48 +0200
+ 2026 18:51:59 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:51:46 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:51:57 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 02/25] wifi: inffmac: add firmware.c/h
-Date: Wed, 2 Sep 2026 16:50:33 +0000
-Message-ID: <20260902165057.456447-3-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 03/25] wifi: inffmac: add dfu.c/h
+Date: Wed, 2 Sep 2026 16:50:34 +0000
+Message-ID: <20260902165057.456447-4-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,1100 +60,1241 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE810.infineon.com (172.23.29.36) To
+X-ClientProxiedBy: MUCSE821.infineon.com (172.23.29.47) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Driver implementation for handling various types of Device firmware files
-like binaries, NVRAM, CLM BLOB.
+Driver implementation for doing Device Firmware Updates (DFU) on the WLAN
+Device. Like for example Connecivity Processor (CP) chipsets have multiple
+offloaded functionalities, which can be upgraded using this DFU support.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- .../net/wireless/infineon/inffmac/firmware.c  | 968 ++++++++++++++++++
- .../net/wireless/infineon/inffmac/firmware.h  | 100 ++
- 2 files changed, 1068 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/firmware.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/firmware.h
+ drivers/net/wireless/infineon/inffmac/dfu.c | 1084 +++++++++++++++++++
+ drivers/net/wireless/infineon/inffmac/dfu.h |  124 +++
+ 2 files changed, 1208 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/dfu.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/dfu.h
 
-diff --git a/drivers/net/wireless/infineon/inffmac/firmware.c b/drivers/net/wireless/infineon/inffmac/firmware.c
+diff --git a/drivers/net/wireless/infineon/inffmac/dfu.c b/drivers/net/wireless/infineon/inffmac/dfu.c
 new file mode 100644
-index 000000000000..01c9efe2ae21
+index 000000000000..fecd00a6efca
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/firmware.c
-@@ -0,0 +1,968 @@
++++ b/drivers/net/wireless/infineon/inffmac/dfu.c
+@@ -0,0 +1,1084 @@
 +// SPDX-License-Identifier: ISC
 +/*
-+ * Copyright (c) 2013 Broadcom Corporation
-+ *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#include <linux/efi.h>
-+#include <linux/kernel.h>
++/*
++ * New IOT specific chips supports new FW download flow to NON-Volatile and Volatile memory.
++ * This is different from the regular Combo chip flow which downloads to RAM/SRAM.
++ * The update will be done to RRAM/FLASH/PSRAM portion of this category of chips.
++ * This would be done in
++ *  1. first time update to the product
++ *  2. dynamic update only to WRLS_Core
++ *  3. complete Product gets updated
++ */
++
++#include <linux/types.h>
++#include <linux/fs.h>
 +#include <linux/slab.h>
-+#include <linux/device.h>
-+#include <linux/firmware.h>
-+#include <linux/module.h>
++#include <linux/string.h>
++#include <linux/atomic.h>
++#include <linux/kernel.h>
++#include <linux/delay.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/card.h>
++#include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/host.h>
 +
 +#include "main.h"
-+#include "debug.h"
-+#include "firmware.h"
++#include "sdio.h"
 +#include "chip.h"
++#include "dev_cmd.h"
++#include "feature.h"
++#include "bus_proto.h"
++#include "dfu.h"
++#include "firmware.h"
 +
-+#define INFF_FW_MAX_NVRAM_SIZE			64000
-+#define INFF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
-+#define INFF_FW_NVRAM_PCIEDEV_LEN		20	/* pcie/1/4/ + \0 */
-+#define INFF_FW_DEFAULT_BOARDREV		"boardrev=0xff"
-+#define INFF_FW_MACADDR_FMT			"macaddr=%pM"
-+#define INFF_FW_MACADDR_LEN			(7 + ETH_ALEN * 3)
-+
-+enum nvram_parser_state {
-+	ST_IDLE,
-+	ST_KEY,
-+	ST_VALUE,
-+	ST_COMMENT,
-+	ST_END
++struct inff_dfu_hex_data {
++	int    addr_mode;  /* mode of destination addr */
++	u16    hi_addr;    /* high byte of destination addr */
++	u32    dest_addr;  /* destination addr */
++	u8     *ds;        /* allocate memory for hex file data */
 +};
 +
-+/**
-+ * struct nvram_parser - internal info for parser.
-+ *
-+ * @state: current parser state.
-+ * @data: input buffer being parsed.
-+ * @nvram: output buffer with parse result.
-+ * @nvram_len: length of parse result.
-+ * @line: current line.
-+ * @column: current column in line.
-+ * @pos: byte offset in input buffer.
-+ * @entry: start position of key,value entry.
-+ * @multi_dev_v1: detect pcie multi device v1 (compressed).
-+ * @multi_dev_v2: detect pcie multi device v2.
-+ * @boardrev_found: nvram contains boardrev information.
-+ * @strip_mac: strip the MAC address.
-+ */
-+struct nvram_parser {
-+	enum nvram_parser_state state;
-+	const u8 *data;
-+	u8 *nvram;
-+	u32 nvram_len;
-+	u32 line;
-+	u32 column;
-+	u32 pos;
-+	u32 entry;
-+	bool multi_dev_v1;
-+	bool multi_dev_v2;
-+	bool boardrev_found;
-+	bool strip_mac;
-+};
-+
-+/*
-+ * is_nvram_char() - check if char is a valid one for NVRAM entry
-+ *
-+ * It accepts all printable ASCII chars except for '#' which opens a comment.
-+ * Please note that ' ' (space) while accepted is not a valid key name char.
-+ */
-+static bool is_nvram_char(char c)
++static char *inff_dfu_reg_addr2str(u32 addr)
 +{
-+	/* comment marker excluded */
-+	if (c == '#')
-+		return false;
-+
-+	/* key and value may have any other readable character */
-+	return (c >= 0x20 && c < 0x7f);
-+}
-+
-+static bool is_whitespace(char c)
-+{
-+	return (c == ' ' || c == '\r' || c == '\n' || c == '\t');
-+}
-+
-+static enum nvram_parser_state inff_nvram_handle_idle(struct nvram_parser *nvp)
-+{
-+	char c;
-+
-+	c = nvp->data[nvp->pos];
-+	if (c == '\n')
-+		return ST_COMMENT;
-+	if (is_whitespace(c) || c == '\0')
-+		goto proceed;
-+	if (c == '#')
-+		return ST_COMMENT;
-+	if (is_nvram_char(c)) {
-+		nvp->entry = nvp->pos;
-+		return ST_KEY;
-+	}
-+	inff_dbg(INFO, "warning: ln=%d:col=%d: ignoring invalid character\n",
-+		 nvp->line, nvp->column);
-+proceed:
-+	nvp->column++;
-+	nvp->pos++;
-+	return ST_IDLE;
-+}
-+
-+static enum nvram_parser_state inff_nvram_handle_key(struct nvram_parser *nvp)
-+{
-+	enum nvram_parser_state st = nvp->state;
-+	char c;
-+
-+	c = nvp->data[nvp->pos];
-+	if (c == '=') {
-+		/* ignore RAW1 by treating as comment */
-+		if (strncmp(&nvp->data[nvp->entry], "RAW1", 4) == 0)
-+			st = ST_COMMENT;
-+		else
-+			st = ST_VALUE;
-+		if (strncmp(&nvp->data[nvp->entry], "devpath", 7) == 0)
-+			nvp->multi_dev_v1 = true;
-+		if (strncmp(&nvp->data[nvp->entry], "pcie/", 5) == 0)
-+			nvp->multi_dev_v2 = true;
-+		if (strncmp(&nvp->data[nvp->entry], "boardrev", 8) == 0)
-+			nvp->boardrev_found = true;
-+		/* strip macaddr if platform MAC overrides */
-+		if (nvp->strip_mac &&
-+		    strncmp(&nvp->data[nvp->entry], "macaddr", 7) == 0)
-+			st = ST_COMMENT;
-+	} else if (!is_nvram_char(c) || c == ' ') {
-+		inff_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
-+			 nvp->line, nvp->column);
-+		return ST_COMMENT;
-+	}
-+
-+	nvp->column++;
-+	nvp->pos++;
-+	return st;
-+}
-+
-+static enum nvram_parser_state
-+inff_nvram_handle_value(struct nvram_parser *nvp)
-+{
-+	char c;
-+	char *skv;
-+	char *ekv;
-+	u32 cplen;
-+
-+	c = nvp->data[nvp->pos];
-+	if (!is_nvram_char(c)) {
-+		/* key,value pair complete */
-+		ekv = (u8 *)&nvp->data[nvp->pos];
-+		skv = (u8 *)&nvp->data[nvp->entry];
-+		cplen = ekv - skv;
-+		if (nvp->nvram_len + cplen + 1 >= INFF_FW_MAX_NVRAM_SIZE)
-+			return ST_END;
-+		/* copy to output buffer */
-+		memcpy(&nvp->nvram[nvp->nvram_len], skv, cplen);
-+		nvp->nvram_len += cplen;
-+		nvp->nvram[nvp->nvram_len] = '\0';
-+		nvp->nvram_len++;
-+		return ST_IDLE;
-+	}
-+	nvp->pos++;
-+	nvp->column++;
-+	return ST_VALUE;
-+}
-+
-+static enum nvram_parser_state
-+inff_nvram_handle_comment(struct nvram_parser *nvp)
-+{
-+	char *eoc, *sol;
-+
-+	sol = (char *)&nvp->data[nvp->pos];
-+	eoc = strchr(sol, '\n');
-+	if (!eoc) {
-+		eoc = strchr(sol, '\0');
-+		if (!eoc)
-+			return ST_END;
-+	}
-+
-+	/* eat all moving to next line */
-+	nvp->line++;
-+	nvp->column = 1;
-+	nvp->pos += (eoc - sol) + 1;
-+	return ST_IDLE;
-+}
-+
-+static enum nvram_parser_state inff_nvram_handle_end(struct nvram_parser *nvp)
-+{
-+	/* final state */
-+	return ST_END;
-+}
-+
-+static enum nvram_parser_state
-+(*nv_parser_states[])(struct nvram_parser *nvp) = {
-+	inff_nvram_handle_idle,
-+	inff_nvram_handle_key,
-+	inff_nvram_handle_value,
-+	inff_nvram_handle_comment,
-+	inff_nvram_handle_end
-+};
-+
-+static int inff_init_nvram_parser(struct nvram_parser *nvp,
-+				  const u8 *data, size_t data_len)
-+{
-+	size_t size;
-+
-+	memset(nvp, 0, sizeof(*nvp));
-+	nvp->data = data;
-+	/* Limit size to MAX_NVRAM_SIZE, some files contain lot of comment */
-+	if (data_len > INFF_FW_MAX_NVRAM_SIZE)
-+		size = INFF_FW_MAX_NVRAM_SIZE;
-+	else
-+		size = data_len;
-+	/* Add space for properties we may add */
-+	size += strlen(INFF_FW_DEFAULT_BOARDREV) + 1;
-+	size += INFF_FW_MACADDR_LEN + 1;
-+	/* Alloc for extra 0 byte + roundup by 4 + length field */
-+	size += 1 + 3 + sizeof(u32);
-+	nvp->nvram = kzalloc(size, GFP_KERNEL);
-+	if (!nvp->nvram)
-+		return -ENOMEM;
-+
-+	nvp->line = 1;
-+	nvp->column = 1;
-+	return 0;
-+}
-+
-+/* inff_fw_strip_multi_v1 :Some nvram files contain settings for multiple
-+ * devices. Strip it down for one device, use domain_nr/bus_nr to determine
-+ * which data is to be returned. v1 is the version where nvram is stored
-+ * compressed and "devpath" maps to index for valid entries.
-+ */
-+static void inff_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
-+				   u16 bus_nr)
-+{
-+	/* Device path with a leading '=' key-value separator */
-+	char pci_path[20];
-+	size_t pci_len;
-+	char pcie_path[20];
-+	size_t pcie_len;
-+
-+	u32 i, j;
-+	bool found;
-+	u8 *nvram;
-+	u8 id;
-+
-+	nvram = kzalloc(nvp->nvram_len + 1 + 3 + sizeof(u32), GFP_KERNEL);
-+	if (!nvram)
-+		goto fail;
-+
-+	/* min length: devpath0=pcie/1/4/ + 0:x=y */
-+	if (nvp->nvram_len < INFF_FW_NVRAM_DEVPATH_LEN + 6)
-+		goto fail;
-+
-+	/* First search for the devpathX and see if it is the configuration
-+	 * for domain_nr/bus_nr. Search complete nvp
-+	 */
-+	snprintf(pci_path, sizeof(pci_path), "=pci/%d/%d", domain_nr,
-+		 bus_nr);
-+	pci_len = strlen(pci_path);
-+	snprintf(pcie_path, sizeof(pcie_path), "=pcie/%d/%d", domain_nr,
-+		 bus_nr);
-+	pcie_len = strlen(pcie_path);
-+	found = false;
-+	i = 0;
-+	while (i < nvp->nvram_len - INFF_FW_NVRAM_DEVPATH_LEN) {
-+		/* Format: devpathX=pcie/Y/Z/
-+		 * Y = domain_nr, Z = bus_nr, X = virtual ID
-+		 */
-+		if (strncmp(&nvp->nvram[i], "devpath", 7) == 0 &&
-+		    (!strncmp(&nvp->nvram[i + 8], pci_path, pci_len) ||
-+		     !strncmp(&nvp->nvram[i + 8], pcie_path, pcie_len))) {
-+			id = nvp->nvram[i + 7] - '0';
-+			found = true;
-+			break;
-+		}
-+		while (nvp->nvram[i] != 0)
-+			i++;
-+		i++;
-+	}
-+	if (!found)
-+		goto fail;
-+
-+	/* Now copy all valid entries, release old nvram and assign new one */
-+	i = 0;
-+	j = 0;
-+	while (i < nvp->nvram_len) {
-+		if ((nvp->nvram[i] - '0' == id) && (nvp->nvram[i + 1] == ':')) {
-+			i += 2;
-+			if (strncmp(&nvp->nvram[i], "boardrev", 8) == 0)
-+				nvp->boardrev_found = true;
-+			while (nvp->nvram[i] != 0) {
-+				nvram[j] = nvp->nvram[i];
-+				i++;
-+				j++;
-+			}
-+			nvram[j] = 0;
-+			j++;
-+		}
-+		while (nvp->nvram[i] != 0)
-+			i++;
-+		i++;
-+	}
-+	kfree(nvp->nvram);
-+	nvp->nvram = nvram;
-+	nvp->nvram_len = j;
-+	return;
-+
-+fail:
-+	kfree(nvram);
-+	nvp->nvram_len = 0;
-+}
-+
-+/* inff_fw_strip_multi_v2 :Some nvram files contain settings for multiple
-+ * devices. Strip it down for one device, use domain_nr/bus_nr to determine
-+ * which data is to be returned. v2 is the version where nvram is stored
-+ * uncompressed, all relevant valid entries are identified by
-+ * pcie/domain_nr/bus_nr:
-+ */
-+static void inff_fw_strip_multi_v2(struct nvram_parser *nvp, u16 domain_nr,
-+				   u16 bus_nr)
-+{
-+	char prefix[INFF_FW_NVRAM_PCIEDEV_LEN];
-+	size_t len;
-+	u32 i, j;
-+	u8 *nvram;
-+
-+	nvram = kzalloc(nvp->nvram_len + 1 + 3 + sizeof(u32), GFP_KERNEL);
-+	if (!nvram) {
-+		nvp->nvram_len = 0;
-+		return;
-+	}
-+
-+	/* Copy all valid entries, release old nvram and assign new one.
-+	 * Valid entries are of type pcie/X/Y/ where X = domain_nr and
-+	 * Y = bus_nr.
-+	 */
-+	snprintf(prefix, sizeof(prefix), "pcie/%d/%d/", domain_nr, bus_nr);
-+	len = strlen(prefix);
-+	i = 0;
-+	j = 0;
-+	while (i < nvp->nvram_len - len) {
-+		if (strncmp(&nvp->nvram[i], prefix, len) == 0) {
-+			i += len;
-+			if (strncmp(&nvp->nvram[i], "boardrev", 8) == 0)
-+				nvp->boardrev_found = true;
-+			while (nvp->nvram[i] != 0) {
-+				nvram[j] = nvp->nvram[i];
-+				i++;
-+				j++;
-+			}
-+			nvram[j] = 0;
-+			j++;
-+		}
-+		while (nvp->nvram[i] != 0)
-+			i++;
-+		i++;
-+	}
-+	kfree(nvp->nvram);
-+	nvp->nvram = nvram;
-+	nvp->nvram_len = j;
-+}
-+
-+static void inff_fw_add_defaults(struct nvram_parser *nvp)
-+{
-+	if (nvp->boardrev_found)
-+		return;
-+
-+	memcpy(&nvp->nvram[nvp->nvram_len], &INFF_FW_DEFAULT_BOARDREV,
-+	       strlen(INFF_FW_DEFAULT_BOARDREV));
-+	nvp->nvram_len += strlen(INFF_FW_DEFAULT_BOARDREV);
-+	nvp->nvram[nvp->nvram_len] = '\0';
-+	nvp->nvram_len++;
-+}
-+
-+static void inff_fw_add_macaddr(struct nvram_parser *nvp, u8 *mac)
-+{
-+	int len;
-+
-+	len = scnprintf(&nvp->nvram[nvp->nvram_len], INFF_FW_MACADDR_LEN + 1,
-+			INFF_FW_MACADDR_FMT, mac);
-+	WARN_ON(len != INFF_FW_MACADDR_LEN);
-+	nvp->nvram_len += len + 1;
-+}
-+
-+/* inff_nvram_strip :Takes a buffer of "<var>=<value>\n" lines read from a fil
-+ * and ending in a NUL. Removes carriage returns, empty lines, comment lines,
-+ * and converts newlines to NULs. Shortens buffer as needed and pads with NULs.
-+ * End of buffer is completed with token identifying length of buffer.
-+ */
-+static void *inff_fw_nvram_strip(const u8 *data, size_t data_len,
-+				 u32 *new_length, u16 domain_nr, u16 bus_nr,
-+				 struct device *dev)
-+{
-+	struct nvram_parser nvp;
-+	u32 pad;
-+	u32 token;
-+	__le32 token_le;
-+	u8 mac[ETH_ALEN];
-+
-+	if (inff_init_nvram_parser(&nvp, data, data_len) < 0)
-+		return NULL;
-+
-+	if (eth_platform_get_mac_address(dev, mac) == 0)
-+		nvp.strip_mac = true;
-+
-+	while (nvp.pos < data_len) {
-+		nvp.state = nv_parser_states[nvp.state](&nvp);
-+		if (nvp.state == ST_END)
-+			break;
-+	}
-+	if (nvp.multi_dev_v1) {
-+		nvp.boardrev_found = false;
-+		inff_fw_strip_multi_v1(&nvp, domain_nr, bus_nr);
-+	} else if (nvp.multi_dev_v2) {
-+		nvp.boardrev_found = false;
-+		inff_fw_strip_multi_v2(&nvp, domain_nr, bus_nr);
-+	}
-+
-+	if (nvp.nvram_len == 0) {
-+		kfree(nvp.nvram);
-+		return NULL;
-+	}
-+
-+	inff_fw_add_defaults(&nvp);
-+
-+	if (nvp.strip_mac)
-+		inff_fw_add_macaddr(&nvp, mac);
-+
-+	pad = nvp.nvram_len;
-+	*new_length = roundup(nvp.nvram_len + 1, 4);
-+	while (pad != *new_length) {
-+		nvp.nvram[pad] = 0;
-+		pad++;
-+	}
-+
-+	token = *new_length / 4;
-+	token = (~token << 16) | (token & 0x0000FFFF);
-+	token_le = cpu_to_le32(token);
-+
-+	memcpy(&nvp.nvram[*new_length], &token_le, sizeof(token_le));
-+	*new_length += sizeof(token_le);
-+
-+	return nvp.nvram;
-+}
-+
-+void inff_fw_nvram_free(void *nvram)
-+{
-+	kfree(nvram);
-+}
-+
-+struct inff_fw {
-+	struct device *dev;
-+	struct inff_fw_request *req;
-+	u32 curpos;
-+	unsigned int board_index;
-+	void (*done)(struct device *dev, int err, struct inff_fw_request *req);
-+};
-+
-+#ifdef CONFIG_EFI
-+/* In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
-+ * to specify "worldwide" compatible settings, but these 2 ccode-s do not work
-+ * properly. "ccode=ALL" causes channels 12 and 13 to not be available,
-+ * "ccode=XV" causes all 5GHz channels to not be available. So we replace both
-+ * with "ccode=X2" which allows channels 12+13 and 5Ghz channels in
-+ * no-Initiate-Radiation mode. This means that we will never send on these
-+ * channels without first having received valid wifi traffic on the channel.
-+ */
-+static void inff_fw_fix_efi_nvram_ccode(char *data, unsigned long data_len)
-+{
-+	char *ccode;
-+
-+	ccode = strnstr((char *)data, "ccode=ALL", data_len);
-+	if (!ccode)
-+		ccode = strnstr((char *)data, "ccode=XV\r", data_len);
-+	if (!ccode)
-+		return;
-+
-+	ccode[6] = 'X';
-+	ccode[7] = '2';
-+	ccode[8] = '\r';
-+}
-+
-+static u8 *inff_fw_nvram_from_efi(size_t *data_len_ret)
-+{
-+	efi_guid_t guid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61, 0xb5, 0x1f,
-+				   0x43, 0x26, 0x81, 0x23, 0xd1, 0x13);
-+	unsigned long data_len = 0;
-+	efi_status_t status;
-+	u8 *data = NULL;
-+
-+	if (!efi_rt_services_supported(EFI_RT_SUPPORTED_GET_VARIABLE))
-+		return NULL;
-+
-+	status = efi.get_variable(L"nvram", &guid, NULL, &data_len, NULL);
-+	if (status != EFI_BUFFER_TOO_SMALL)
-+		goto fail;
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data)
-+		goto fail;
-+
-+	status = efi.get_variable(L"nvram", &guid, NULL, &data_len, data);
-+	if (status != EFI_SUCCESS)
-+		goto fail;
-+
-+	inff_fw_fix_efi_nvram_ccode(data, data_len);
-+	inff_info("Using nvram EFI variable\n");
-+
-+	*data_len_ret = data_len;
-+	return data;
-+fail:
-+	kfree(data);
-+	return NULL;
-+}
-+#else
-+static inline u8 *inff_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-+#endif
-+
-+static void inff_fw_free_request(struct inff_fw_request *req)
-+{
-+	struct inff_fw_item *item;
-+	int i;
-+
-+	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
-+		if (item->type == INFF_FW_TYPE_BINARY || item->type == INFF_FW_TYPE_TRXS ||
-+		    item->type == INFF_FW_TYPE_TRXSE || item->type == INFF_FW_TYPE_HEX)
-+			release_firmware(item->binary);
-+		else if (item->type == INFF_FW_TYPE_NVRAM)
-+			inff_fw_nvram_free(item->nv_data.data);
-+	}
-+	kfree(req);
-+}
-+
-+static int inff_fw_request_nvram_done(const struct firmware *fw, void *ctx)
-+{
-+	struct inff_fw *fwctx = ctx;
-+	struct inff_fw_item *cur;
-+	bool kfree_nvram = false;
-+	u32 nvram_length = 0;
-+	void *nvram = NULL;
-+	u8 *data = NULL;
-+	size_t data_len;
-+
-+	inff_dbg(TRACE, "dev=%s\n", dev_name(fwctx->dev));
-+
-+	cur = &fwctx->req->items[fwctx->curpos];
-+
-+	if (fw && fw->data) {
-+		data = (u8 *)fw->data;
-+		data_len = fw->size;
-+	} else {
-+		data = inff_fw_nvram_from_efi(&data_len);
-+		if (data)
-+			kfree_nvram = true;
-+		else if (!(cur->flags & INFF_FW_REQF_OPTIONAL))
-+			goto fail;
-+	}
-+
-+	if (data)
-+		nvram = inff_fw_nvram_strip(data, data_len, &nvram_length,
-+					    fwctx->req->domain_nr,
-+					    fwctx->req->bus_nr,
-+					    fwctx->dev);
-+
-+	if (kfree_nvram)
-+		kfree(data);
-+
-+	release_firmware(fw);
-+	if (!nvram && !(cur->flags & INFF_FW_REQF_OPTIONAL))
-+		goto fail;
-+
-+	inff_dbg(TRACE, "nvram %p len %d\n", nvram, nvram_length);
-+	cur->nv_data.data = nvram;
-+	cur->nv_data.len = nvram_length;
-+	return 0;
-+
-+fail:
-+	return -ENOENT;
-+}
-+
-+static int inff_fw_complete_request(const struct firmware *fw,
-+				    struct inff_fw *fwctx)
-+{
-+	struct inff_fw_item *cur = &fwctx->req->items[fwctx->curpos];
-+	int ret = 0;
-+
-+	inff_dbg(TRACE, "firmware %s %sfound\n", cur->path, fw ? "" : "not ");
-+
-+	switch (cur->type) {
-+	case INFF_FW_TYPE_NVRAM:
-+		ret = inff_fw_request_nvram_done(fw, fwctx);
-+		break;
-+	case INFF_FW_TYPE_BINARY:
-+	case INFF_FW_TYPE_TRXSE:
-+	case INFF_FW_TYPE_TRXS:
-+	case INFF_FW_TYPE_CLM:
-+	case INFF_FW_TYPE_HEX:
-+		if (fw)
-+			cur->binary = fw;
-+		else
-+			ret = -ENOENT;
-+		break;
++	switch (addr) {
++	case SDIOD_D2H_MSG_0:
++		return "SDIOD_D2H_MSG_0";
++	case SDIOD_D2H_MSG_1:
++		return "SDIOD_D2H_MSG_1";
++	case SDIOD_D2H_MSG_4:
++		return "SDIOD_D2H_MSG_4";
++	case SDIOD_H2D_MSG_0:
++		return "SDIOD_H2D_MSG_0";
++	case SDIOD_H2D_MSG_4:
++		return "SDIOD_H2D_MSG_4";
 +	default:
-+		/* something fishy here so bail out early */
-+		inff_err("unknown fw type: %d\n", cur->type);
-+		release_firmware(fw);
-+		ret = -EINVAL;
++		return "Non DEVICE_TO_HOST address";
 +	}
-+
-+	return (cur->flags & INFF_FW_REQF_OPTIONAL) ? 0 : ret;
 +}
 +
-+static char *inff_alt_fw_path(const char *path, const char *board_type)
++static int inff_dfu_msg_readl(struct inff_sdio_dev *sdiodev, u32 addr, u32 *msg)
 +{
-+	char base[INFF_FW_NAME_LEN];
-+	const char *suffix;
-+	char *ret;
++	u8 readmsg;
++	int err = 0;
++	*msg = 0;
 +
-+	if (!board_type)
-+		return NULL;
++	/* Security handshake registers are 1 byte registers in SDIO clock domain */
++	readmsg = inff_sdiod_func_rb_ext(sdiodev->func3, addr, &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(addr), err);
++		return -EFAULT;
++	}
++	*msg |= readmsg;
 +
-+	suffix = strrchr(path, '.');
-+	if (!suffix || suffix == path)
-+		return NULL;
++	readmsg = inff_sdiod_func_rb_ext(sdiodev->func3, addr + 1, &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(addr + 1), err);
++		return -EFAULT;
++	}
++	*msg |= (readmsg << 8);
 +
-+	/* strip extension at the end */
-+	strscpy(base, path, INFF_FW_NAME_LEN);
-+	base[suffix - path] = 0;
++	readmsg = inff_sdiod_func_rb_ext(sdiodev->func3, addr + 2, &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(addr + 2), err);
++		return -EFAULT;
++	}
++	*msg |= (readmsg << 16);
 +
-+	ret = kasprintf(GFP_KERNEL, "%s.%s%s", base, board_type, suffix);
-+	if (!ret)
-+		inff_err("out of memory allocating firmware path for '%s'\n",
-+			 path);
++	readmsg = inff_sdiod_func_rb_ext(sdiodev->func3, addr + 3, &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(addr + 3), err);
++		return -EFAULT;
++	}
++	*msg |= (readmsg << 24);
 +
-+	inff_dbg(TRACE, "FW alt path: %s\n", ret);
++	return err;
++}
 +
++static int inff_dfu_msg_writeb(struct inff_sdio_dev *sdiodev, u8 msg)
++{
++	int err = 0;
++
++	inff_sdiod_func_wb(sdiodev, sdiodev->func3, SDIOD_H2D_MSG_0, msg, &err);
++	if (err) {
++		inff_err("err %d", err);
++		return -EFAULT;
++	}
++	return 0;
++}
++
++static int inff_dfu_msg_writel(struct inff_sdio_dev *sdiodev, u32 msg)
++{
++	int err = 0;
++
++	/* Security handshake registers are 1 byte registers in SDIO clock domain */
++	inff_sdiod_func_wb(sdiodev, sdiodev->func3, SDIOD_H2D_MSG_4, ((msg >> 0) & 0xFF), &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(SDIOD_H2D_MSG_4), err);
++		return -EFAULT;
++	}
++	inff_sdiod_func_wb(sdiodev, sdiodev->func3, (SDIOD_H2D_MSG_4 + 1),
++			   ((msg >> 8) & 0xFF), &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(SDIOD_H2D_MSG_4 + 1), err);
++		return -EFAULT;
++	}
++	inff_sdiod_func_wb(sdiodev, sdiodev->func3, (SDIOD_H2D_MSG_4 + 2),
++			   ((msg >> 16) & 0xFF), &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(SDIOD_H2D_MSG_4 + 2), err);
++		return -EFAULT;
++	}
++	inff_sdiod_func_wb(sdiodev, sdiodev->func3, (SDIOD_H2D_MSG_4 + 3),
++			   ((msg >> 24) & 0xFF), &err);
++	if (err) {
++		inff_err("%s err %d", inff_dfu_reg_addr2str(SDIOD_H2D_MSG_4 + 3), err);
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
++static int inff_dfu_wait_msg(struct inff_sdio_dev *sdiodev, u32 addr, u32 msg)
++{
++	u32 readmsg = 0;
++	u32 readycnt = 0;
++	int err = 0;
++
++	while (readmsg != msg) {
++		usleep_range(INFF_DFU_CP_ROM_BOOT_DELAY, INFF_DFU_CP_ROM_BOOT_DELAY + 10);
++
++		/* Read the REG to check if desired message is ready */
++		readmsg = inff_sdiod_func_rb(sdiodev, sdiodev->func3, addr, &err);
++		if (err) {
++			inff_err("msg read failed %d", err);
++			return -EFAULT;
++		}
++
++		readycnt++;
++		if (readycnt == INFF_DFU_CP_IORDY_CNT) {
++			inff_err("msg = 0x%x expected = 0x%x\n", readmsg, msg);
++			return -EFAULT;
++		}
++	}
++
++	inff_dbg(SDIO, "msg = 0x%x cnt = %d", msg, readycnt);
++	return 0;
++}
++
++static u16 inff_dfu_extract_fw_hex_field(const char *fw_data, u16 sp, u16 cn)
++{
++	char field[8];
++	u16 v;
++
++	strscpy(field, fw_data + sp, cn + 1);
++	field[cn] = '\0';
++
++	if (!kstrtou16(field, 16, &v))
++		return v;
++
++	return 0;
++}
++
++static int inff_dfu_get_next_line_len(const u8 *fw_data)
++{
++	u32 str_len = 0;
++	u8 *line_end = NULL;
++
++	line_end = strchr(fw_data, '\n');
++	if (*fw_data != ':' || !line_end)
++		return 0;
++
++	str_len = (u32)(line_end - fw_data);
++	inff_dbg(SDIOEXT, "next line len = %d", str_len);
++
++	return str_len;
++}
++
++static int inff_dfu_sdio_transfer_membytes(struct inff_sdio_dev *sdiodev, u32 address,
++					   u8 *data, u32 size)
++{
++	int err = 0;
++	u32 block1_offset = 0;
++	u32 block2_addr = 0;
++	u16 block1_size = 0;
++	u16 block2_size = 0;
++	u8 *block2_data = NULL;
++
++	do {
++		/* To avoid SDIO access crosses AXI 4k address boundaries crossing */
++		if (((address & SDIOD_ADDR_BOUND_MASK) + size) > SDIOD_ADDR_BOUND) {
++			inff_dbg(SDIO, "data cross 4K boundary\n");
++			/* The 1st 4k packet */
++			block1_offset = address & SDIOD_ADDR_BOUND_MASK;
++			block1_size = (SDIOD_ADDR_BOUND - block1_offset);
++
++			err = inff_sdiod_ramrw(sdiodev, true, address,
++					       data, block1_size);
++			if (err)
++				break;
++
++			/* The 2nd 4k packet */
++			block2_addr = address + block1_size;
++			block2_size = size - block1_size;
++			block2_data = data + block1_size;
++			err = inff_sdiod_ramrw(sdiodev, true, block2_addr,
++					       block2_data, block2_size);
++		} else {
++			err = inff_sdiod_ramrw(sdiodev, true, address, data, size);
++		}
++	} while (false);
++
++	return err;
++}
++
++static u32 inff_dfu_get_hfd_from_fw_data(const u8 **fw_data,
++					 struct inff_dfu_hex_data *hfd)
++{
++	int str_len;
++	u16 num_bytes, addr, data_pos, type, w, i;
++	u32 abs_base_addr32 = 0;
++	u32 nbytes = 0;
++
++	if (!hfd->ds) {
++		inff_err("String or data string NULL");
++		return nbytes;
++	}
++
++	while (nbytes == 0) {
++		str_len = inff_dfu_get_next_line_len(*fw_data);
++
++		if (str_len == 0) {
++			break;
++		} else if (str_len > INFF_DFU_CP_HEX_DATA_OFFSET) {
++			num_bytes = inff_dfu_extract_fw_hex_field(*fw_data,
++								  INFF_DFU_CP_HEX_NUMB_OFFSET,
++								  INFF_DFU_CP_HEX_NUMB_LEN);
++			addr = inff_dfu_extract_fw_hex_field(*fw_data,
++							     INFF_DFU_CP_HEX_ADDR_OFFSET,
++							     INFF_DFU_CP_HEX_ADDR_LEN);
++			type = inff_dfu_extract_fw_hex_field(*fw_data,
++							     INFF_DFU_CP_HEX_TYPE_OFFSET,
++							     INFF_DFU_CP_HEX_TYPE_LEN);
++			data_pos = INFF_DFU_CP_HEX_DATA_OFFSET;
++
++			for (i = 0; i < num_bytes; i++) {
++				w = inff_dfu_extract_fw_hex_field(*fw_data, data_pos,
++								  INFF_DFU_CP_HEX_NUMB_LEN);
++				hfd->ds[i] = (u8)(w & 0x00FF);
++				data_pos += INFF_DFU_CP_HEX_NUMB_LEN;
++			}
++			switch (type) {
++			case INFF_DFU_CP_HEX_LINE_TYPE_EXT_ADDR:
++				hfd->hi_addr = (hfd->ds[0] << 8) | hfd->ds[1];
++				hfd->addr_mode = INFF_DFU_CP_ADDR_MODE_EXTENDED;
++				inff_dbg(SDIO, "hfd->hi_addr0x%x ", hfd->hi_addr);
++				break;
++			case INFF_DFU_CP_HEX_LINE_TYPE_EXT_SEGMENT_ADDR:
++				hfd->hi_addr = (hfd->ds[0] << 8) | hfd->ds[1];
++				hfd->addr_mode = INFF_DFU_CP_ADDR_MODE_SEGMENT;
++				break;
++			case INFF_DFU_CP_HEX_LINE_TYPE_ABS_32BIT_ADDR:
++				abs_base_addr32 = (hfd->ds[0] << 24) | (hfd->ds[1] << 16) |
++					(hfd->ds[2] << 8) | hfd->ds[3];
++				hfd->addr_mode = INFF_DFU_CP_ADDR_MODE_LINEAR32;
++				break;
++			case INFF_DFU_CP_HEX_LINE_TYPE_DATA:
++				hfd->dest_addr = addr;
++				if (hfd->addr_mode == INFF_DFU_CP_ADDR_MODE_EXTENDED)
++					hfd->dest_addr += (hfd->hi_addr << 16);
++				else if (hfd->addr_mode == INFF_DFU_CP_ADDR_MODE_SEGMENT)
++					hfd->dest_addr += (hfd->hi_addr << 4);
++				else if (hfd->addr_mode == INFF_DFU_CP_ADDR_MODE_LINEAR32)
++					hfd->dest_addr += abs_base_addr32;
++				nbytes = num_bytes;
++				break;
++			}
++		}
++
++		/* End of file reached, exit loop */
++		if (type == INFF_DFU_CP_HEX_LINE_TYPE_END_OF_DATA) {
++			inff_dbg(SDIO, "End of data\n");
++			break;
++		}
++
++		/* move to next line */
++		*fw_data += str_len + 1;
++	}
++
++	inff_dbg(SDIO, "nbytes [%d]\n", nbytes);
++	return nbytes;
++}
++
++static int inff_dfu_cp_fw_img_download(struct inff_sdio_dev *sdiodev, const struct firmware *fw)
++{
++	struct inff_dfu_hex_data hfd = {INFF_DFU_CP_ADDR_MODE_EXTENDED, 0, 0, NULL};
++	const u8 *app_data = NULL;
++	u8 *mem_blk = NULL;
++	u8 *mem_ptr = NULL;
++	u32 rd;
++	int ret  = 0;
++	u8 sn = 1, nesn = 0;
++	u32 addrf = 0;
++	u32 readmsg = 0;
++	u16 bootfw_rsp_cnt = 0;
++
++	app_data = fw->data;
++	mem_blk = kmalloc(INFF_DFU_CP_BLK_SIZE + INFF_DFU_CP_SD_ALIGN, GFP_KERNEL);
++	if (!mem_blk) {
++		inff_err("Fail to allocate memory for FWDL block");
++		ret = -ENOMEM;
++		goto err;
++	}
++	mem_ptr = mem_blk;
++
++	if ((u32)(uintptr_t)mem_ptr % INFF_DFU_CP_SD_ALIGN)
++		mem_ptr += (INFF_DFU_CP_SD_ALIGN - ((u32)(uintptr_t)mem_blk %
++			    INFF_DFU_CP_SD_ALIGN));
++
++	hfd.ds = kmalloc(INFF_DFU_CP_MAX_STR_LEN, GFP_KERNEL);
++	if (!hfd.ds) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	/* Wait for boot fw ready message from Device */
++	ret = inff_dfu_wait_msg(sdiodev, SDIOD_D2H_MSG_1, INFF_DFU_CP_D2H_MSG_BOOTFW_READY);
++	if (ret)
++		goto err;
++
++	while ((rd = inff_dfu_get_hfd_from_fw_data(&app_data, &hfd)) > 0) {
++		u32 start_addr, start_data, end_addr, end_data, i, wbc, pad;
++
++		inff_dbg(SDIO, "SN = %d, NESN = %d, addr = 0x%x", sn, nesn, addrf);
++		inff_dbg(SDIOEXT, "\tread %d bytes at address %08x", rd, hfd.dest_addr);
++
++		start_addr = INFF_DFU_CP_MEM_OFFSET | (CYW5591X_FWDWNLD_RAM_WR_ADDR &
++				INFF_DFU_CP_START_ADDR_MASK);
++		wbc = 0;
++
++		/**
++		 * Make sure the start address is 4 byte aligned to avoid alignment issues
++		 * with SD host controllers
++		 */
++		if (!ISALIGNED(start_addr, INFF_DFU_CP_HEX_ALIGN_LEN)) {
++			pad        = start_addr % INFF_DFU_CP_HEX_ALIGN_LEN;
++			start_addr = ROUNDDN(start_addr, INFF_DFU_CP_HEX_ALIGN_LEN);
++			inff_dbg(SDIO, "Padding start address : %d  bytes\n", pad);
++			start_data = inff_sdiod_readl(sdiodev, start_addr, &ret);
++			if (ret) {
++				inff_err("start_addr:0x%x inff_sdiod_readl error:%d",
++					 start_addr, ret);
++				goto err;
++			}
++			for (i = 0; i < pad; i++, wbc++)
++				mem_ptr[wbc] = (u8)((u8 *)&start_data)[i];
++		}
++
++		/* length */
++		mem_ptr[0] = rd;
++		mem_ptr[1] = rd >> 8;
++		wbc += 2;
++
++		/* address */
++		mem_ptr[2] = hfd.dest_addr;
++		mem_ptr[3] = hfd.dest_addr >> 8;
++		mem_ptr[4] = hfd.dest_addr >> 16;
++		mem_ptr[5] = hfd.dest_addr >> 24;
++
++		wbc += 4;
++
++		inff_dbg(SDIO, "addr :0x%x\n", hfd.dest_addr);
++
++		memcpy(&mem_ptr[wbc], hfd.ds, rd);
++		wbc += rd;
++
++		inff_dbg(SDIO, "data copied %d bytes\n", rd);
++		/* Make sure the length is multiple of 4bytes to avoid alignment issues
++		 * with SD host controllers
++		 */
++		end_addr = start_addr + wbc;
++
++		if (!ISALIGNED(end_addr, 4)) {
++			end_data = inff_sdiod_readl(sdiodev, ROUNDDN(end_addr, 4), &ret);
++			if (ret) {
++				inff_err("end_addr:0x%x inff_sdiod_readl error:%d", end_addr,
++					 ret);
++				goto err;
++			}
++			for (i = (end_addr % 4); i < 4; i++, wbc++)
++				mem_ptr[wbc] = (u8)((u8 *)&end_data)[i];
++		}
++
++		inff_dbg(SDIO, "SDIO PKT size %d bytes\n", wbc);
++
++		if (((start_addr & 0xFFF) + wbc) <= 0x1000) {
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, start_addr,
++							      mem_ptr, wbc);
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++		} else {
++			u32 wb = 0x1000 - (start_addr & 0xFFF);
++
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, start_addr,
++							      mem_ptr, wb);
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++
++			usleep_range(INFF_DFU_CP_SDIORB_NEXT_DELAY, INFF_DFU_CP_SDIORB_NEXT_DELAY);
++
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, (start_addr + wb),
++							      (mem_ptr + wb), (wbc - wb));
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++		}
++
++		ret = inff_dfu_msg_writel(sdiodev, CYW5591X_FWDWNLD_RAM_WR_ADDR | nesn);
++		if (ret)
++			goto err;
++
++		ret = inff_dfu_msg_writeb(sdiodev, INFF_DFU_CP_H2D_MSG_BOOTFW_DATA_LOADED);
++		if (ret)
++			goto err;
++
++		/* Wait for CP boot fw to process current chunk of data */
++		sn = nesn;
++		nesn = (nesn) ? 0 : 1;
++		addrf = hfd.dest_addr;
++		bootfw_rsp_cnt = 0;
++		/*Check if seq no is changed, Mindriver might not have processed the prev pkt */
++		do {
++			usleep_range(INFF_BOOTFW_RSP_DELAY, INFF_BOOTFW_RSP_DELAY + 10);
++			ret = inff_dfu_msg_readl(sdiodev, SDIOD_D2H_MSG_4, &readmsg);
++			if (ret)
++				goto err;
++			inff_dbg(SDIO, "expected sn =%d, received sn = %d\n", nesn,
++				 (readmsg & INFF_DFU_CP_SEQ_MASK));
++			bootfw_rsp_cnt++;
++			if  (bootfw_rsp_cnt == INFF_BOOTFW_RSP_MAX_CNT) {
++				inff_err("Boot FW response timeout cnt = %d\n",
++					 INFF_BOOTFW_RSP_MAX_CNT);
++				ret = -EFAULT;
++				goto err;
++			}
++		} while ((readmsg & INFF_DFU_CP_SEQ_MASK) != nesn);
++
++		/* Wait for boot fw ready message from Device before next chunk */
++		ret = inff_dfu_wait_msg(sdiodev, SDIOD_D2H_MSG_1,
++					INFF_DFU_CP_D2H_MSG_BOOTFW_READY);
++		if (ret)
++			goto err;
++
++		/* clear H2D message to prevent boot fw start to process chunk of data */
++		ret = inff_dfu_msg_writeb(sdiodev, 0);
++		if (ret)
++			goto err;
++	}
++
++	ret = inff_dfu_msg_writel(sdiodev, CYW5591X_IMAGE_LAUNCH_ADDR);
++	if (ret)
++		goto err;
++
++	ret = inff_dfu_msg_writeb(sdiodev, INFF_DFU_CP_H2D_MSG_BOOTFW_DATA_LOADED);
++	if (ret)
++		goto err;
++
++	ret = inff_dfu_wait_msg(sdiodev, SDIOD_D2H_MSG_0, INFF_DFU_CP_D2H_MSG_FW_VALIDAT_START);
++	if (ret)
++		goto err;
++err:
++	release_firmware(fw);
++	kfree(mem_blk);
++	kfree(hfd.ds);
 +	return ret;
 +}
 +
-+static int inff_fw_request_firmware(const struct firmware **fw,
-+				    struct inff_fw *fwctx)
++static int inff_dfu_cp_bootfw_download(struct inff_sdio_dev *sdiodev, const struct firmware *fw)
 +{
-+	struct inff_fw_item *cur = &fwctx->req->items[fwctx->curpos];
-+	unsigned int i;
-+	int ret;
++	struct inff_dfu_hex_data hfd = {INFF_DFU_CP_ADDR_MODE_EXTENDED, 0, 0, NULL};
++	const u8 *bootfw_data = NULL;
++	u8 *mem_blk = NULL;
++	u8 *mem_ptr = NULL;
++	u32 rd;
++	int ret  = 0;
 +
-+	/* Files can be board-specific, first try board-specific paths */
-+	for (i = 0; i < ARRAY_SIZE(fwctx->req->board_types); i++) {
-+		char *alt_path;
-+
-+		if (!fwctx->req->board_types[i])
-+			goto fallback;
-+		alt_path = inff_alt_fw_path(cur->path,
-+					    fwctx->req->board_types[i]);
-+		if (!alt_path)
-+			goto fallback;
-+
-+		ret = request_firmware_direct(fw, alt_path, fwctx->dev);
-+		kfree(alt_path);
-+		if (ret)
-+			inff_info("no board-specific nvram available (ret=%d), device will use %s\n",
-+				  ret, cur->path);
-+		else
-+			return ret;
++	bootfw_data = fw->data;
++	mem_blk = kmalloc(INFF_DFU_CP_BLK_SIZE + INFF_DFU_CP_SD_ALIGN, GFP_KERNEL);
++	mem_ptr = mem_blk;
++	if (!mem_ptr) {
++		inff_err("Fail to allocate memory for FWDL block");
++		ret = -ENOMEM;
++		goto err;
 +	}
 +
-+fallback:
-+	return request_firmware(fw, cur->path, fwctx->dev);
++	if ((u32)(uintptr_t)mem_ptr % INFF_DFU_CP_SD_ALIGN)
++		mem_ptr += (INFF_DFU_CP_SD_ALIGN - ((u32)(uintptr_t)mem_blk %
++			    INFF_DFU_CP_SD_ALIGN));
++
++	hfd.ds = kmalloc(INFF_DFU_CP_MAX_STR_LEN, GFP_KERNEL);
++	if (!hfd.ds) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	while ((rd = inff_dfu_get_hfd_from_fw_data(&bootfw_data, &hfd)) > 0) {
++		u32 start_addr, start_data, end_addr, end_data, i, wbc, pad;
++
++		inff_dbg(SDIO, "\tread %d bytes at address %08x", rd, hfd.dest_addr);
++
++		start_addr = INFF_DFU_CP_MEM_OFFSET | (hfd.dest_addr & INFF_DFU_CP_START_ADDR_MASK);
++		wbc        = 0;
++
++		/**
++		 * Make sure the start address is 4 byte aligned to avoid alignment issues
++		 * with SD host controllers
++		 */
++		if (!ISALIGNED(start_addr, INFF_DFU_CP_HEX_ALIGN_LEN)) {
++			pad        = start_addr % INFF_DFU_CP_HEX_ALIGN_LEN;
++			start_addr = ROUNDDN(start_addr, INFF_DFU_CP_HEX_ALIGN_LEN);
++			start_data = inff_sdiod_readl(sdiodev, start_addr, &ret);
++			if (ret) {
++				inff_err("start_addr:0x%x inf_sdiod_readl error:%d",
++					 start_addr, ret);
++				goto err;
++			}
++			for (i = 0; i < pad; i++, wbc++)
++				mem_ptr[wbc] = (u8)((u8 *)&start_data)[i];
++		}
++		memcpy(&mem_ptr[wbc], hfd.ds, rd);
++		wbc += rd;
++		/**
++		 * Make sure the length is multiple of 4bytes to avoid alignment issues
++		 * with SD host controllers
++		 */
++		end_addr = start_addr + wbc;
++		if (!ISALIGNED(end_addr, 4)) {
++			end_data = inff_sdiod_readl(sdiodev, ROUNDDN(end_addr, 4), &ret);
++			if (ret) {
++				inff_err("end_addr:0x%x inf_sdiod_readl error:%d", end_addr,
++					 ret);
++				goto err;
++			}
++			for (i = (end_addr % 4); i < 4; i++, wbc++)
++				mem_ptr[wbc] = (u8)((u8 *)&end_data)[i];
++		}
++
++		if (((start_addr & 0xFFF) + wbc) <= 0x1000) {
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, start_addr,
++							      mem_ptr, wbc);
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++		} else {
++			u32 wb = 0x1000 - (start_addr & 0xFFF);
++
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, start_addr,
++							      mem_ptr, wb);
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++			usleep_range(INFF_DFU_CP_SDIORB_NEXT_DELAY,
++				     INFF_DFU_CP_SDIORB_NEXT_DELAY + 10);
++			ret = inff_dfu_sdio_transfer_membytes(sdiodev, (start_addr + wb),
++							      (mem_ptr + wb), (wbc - wb));
++			if (ret) {
++				inff_err("error %d on writing %d membytes at 0x%08x",
++					 ret, rd, start_addr);
++				goto err;
++			}
++		}
++	}
++
++err:
++	release_firmware(fw);
++	kfree(mem_blk);
++	kfree(hfd.ds);
++	return ret;
 +}
 +
-+static void inff_fw_request_done(const struct firmware *fw, void *ctx)
++static int inff_dfu_cp_img_dwnld_start(struct inff_sdio_dev *sdiodev,
++				       const struct firmware *boot_fw,
++				       const struct firmware *cp_fw)
 +{
-+	struct inff_fw *fwctx = ctx;
-+	struct inff_fw_item *cur = &fwctx->req->items[fwctx->curpos];
-+	char alt_path[INFF_FW_NAME_LEN];
-+	int ret;
++	int err = 0;
 +
-+	if (!fw && cur->type == INFF_FW_TYPE_TRXS) {
-+		strscpy(alt_path, cur->path, INFF_FW_NAME_LEN);
-+		/* strip 'se' from .trxse at the end */
-+		//alt_path[strlen(alt_path) - ] = 0;
-+		ret = request_firmware(&fw, alt_path, fwctx->dev);
-+		if (!ret)
-+			cur->path = alt_path;
++	err = inff_dfu_wait_msg(sdiodev, SDIOD_D2H_MSG_0, INFF_DFU_CP_D2H_MSG_BL_READY);
++	if (err)
++		return -EFAULT;
++
++	err = inff_dfu_msg_writel(sdiodev, CYW5591X_BOOTFW_RAM_LD_ADDR);
++	if (err)
++		return -EFAULT;
++
++	err = inff_dfu_msg_writeb(sdiodev, INFF_DFU_CP_H2D_MSG_BOOT_FWLOAD_START);
++	if (err)
++		return -EFAULT;
++
++	err = inff_dfu_cp_bootfw_download(sdiodev, boot_fw);
++	if (err) {
++		inff_err("CP boot fw download failed[ret %d]", err);
++		return -EFAULT;
 +	}
-+	if (!fw && cur->type == INFF_FW_TYPE_TRXSE) {
-+		strscpy(alt_path, cur->path, INFF_FW_NAME_LEN);
-+		/* strip 'se' from .trxse at the end */
-+		alt_path[strlen(alt_path) - 2] = 0;
-+		ret = request_firmware(&fw, alt_path, fwctx->dev);
-+		if (!ret)
-+			cur->path = alt_path;
++	inff_dbg(INFO, "CP boot fw download done!!!\n");
++
++	err = inff_dfu_msg_writeb(sdiodev, INFF_DFU_CP_H2D_MSG_BOOT_FWLOAD_DONE);
++	if (err)
++		return -EFAULT;
++
++	err = inff_dfu_cp_fw_img_download(sdiodev, cp_fw);
++	if (err)
++		inff_err("Connected Processor image download failed [ret %d]", err);
++	else
++		inff_dbg(INFO, "Connected Processor image download done!!!\n");
++
++	return err;
++}
++
++int inff_dfu_cp_img_dwnld_init(struct inff_sdio_dev *sdiodev, const struct firmware *boot_fw,
++			       const struct firmware *cp_fw)
++{
++	int	ret = 0;
++	u8 fw_ready = 0;
++
++	ret = sdio_enable_func(sdiodev->func3);
++	if (ret) {
++		inff_err("enable func3 err %d", ret);
++		/* Disable F3 again */
++		sdio_disable_func(sdiodev->func3);
++		goto fail;
 +	}
 +
-+	ret = inff_fw_complete_request(fw, fwctx);
++	fw_ready = inff_sdiod_func_rb_ext(sdiodev->func3, SDIOD_D2H_MSG_0, &ret);
++	if (ret) {
++		inff_err("SDIOD_F3_D2H_MSG_0 err %d", ret);
++		ret = -EFAULT;
++		goto fail;
++	}
 +
-+	while (ret == 0 && ++fwctx->curpos < fwctx->req->n_items) {
-+		inff_fw_request_firmware(&fw, fwctx);
-+		ret = inff_fw_complete_request(fw, ctx);
++	inff_dbg(SDIO, "FW Ready Flags 0x%x\n", fw_ready);
++	ret = inff_dfu_cp_img_dwnld_start(sdiodev, boot_fw, cp_fw);
++	if (ret)
++		goto fail;
++
++	return 0;
++fail:
++	return ret;
++}
++
++static int inff_dfu_cp_send_opcode_data(struct inff_if *ifp, u16 op_code, const u8 *data,
++					u16 data_len)
++{
++	static u8 pkt[INFF_DFU_CP_PKT_LEN_MAX] = { INFF_DFU_CP_OTA_CMD_ID };
++	*(u16 *)&pkt[INFF_DFU_CP_OPC_OFFSET] = op_code;
++	int ret = 0;
++
++	switch (op_code) {
++	case INFF_CONTROL_CP_DFU_PRE_DOWNLOAD:
++		ret = inff_cpcmd_data_set(ifp, INFF_CP_C_DFU,
++					  &pkt, INFF_DFU_CP_DAT_OFFSET);
++		break;
++	case INFF_CONTROL_CP_DFU_DOWNLOAD:
++		*(u16 *)&pkt[INFF_DFU_CP_LEN_OFFSET] = data_len;
++		memcpy(&pkt[INFF_DFU_CP_DAT_OFFSET], data, data_len);
++		ret = inff_cpcmd_data_set(ifp, INFF_CP_C_DFU,
++					  &pkt, (data_len + INFF_DFU_CP_DAT_OFFSET));
++		break;
++	case INFF_CONTROL_CP_DFU_DATA:
++		*(u16 *)&pkt[INFF_DFU_CP_LEN_OFFSET] = data_len;
++		if (!data)
++			return -1;
++		memcpy(&pkt[INFF_DFU_CP_DAT_OFFSET], data, data_len);
++		ret = inff_cpcmd_data_set(ifp, INFF_CP_C_DFU,
++					  &pkt, (data_len + INFF_DFU_CP_DAT_OFFSET));
++		break;
++	case INFF_CONTROL_CP_DFU_VERIFY:
++		ret = inff_cpcmd_data_set(ifp, INFF_CP_C_DFU,
++					  &pkt, INFF_DFU_CP_DAT_OFFSET);
++		break;
++	case INFF_CONTROL_CP_DFU_ABORT:
++		ret = inff_cpcmd_data_set(ifp, INFF_CP_C_DFU,
++					  &pkt, INFF_DFU_CP_DAT_OFFSET);
++		break;
++	default:
++		break;
 +	}
 +
 +	if (ret) {
-+		inff_fw_free_request(fwctx->req);
-+		fwctx->req = NULL;
++		inff_err("DFU data send failed, ret=%d\n", ret);
++		return -1;
 +	}
-+	fwctx->done(fwctx->dev, ret, fwctx->req);
-+	kfree(fwctx);
-+}
-+
-+static void inff_fw_request_done_alt_path(const struct firmware *fw, void *ctx)
-+{
-+	struct inff_fw *fwctx = ctx;
-+	struct inff_fw_item *first = &fwctx->req->items[0];
-+	const char *board_type, *alt_path;
-+	int ret = 0;
-+
-+	if (fw) {
-+		inff_fw_request_done(fw, ctx);
-+		return;
-+	}
-+
-+	/* Try next board firmware */
-+	if (fwctx->board_index < ARRAY_SIZE(fwctx->req->board_types)) {
-+		board_type = fwctx->req->board_types[fwctx->board_index++];
-+		if (!board_type)
-+			goto fallback;
-+		alt_path = inff_alt_fw_path(first->path, board_type);
-+		if (!alt_path)
-+			goto fallback;
-+
-+		if (!fw) {
-+			ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
-+						      fwctx->dev, GFP_KERNEL, fwctx,
-+						      inff_fw_request_done_alt_path);
-+		}
-+		kfree(alt_path);
-+
-+		if (ret < 0)
-+			inff_fw_request_done(fw, ctx);
-+		return;
-+	}
-+
-+fallback:
-+	/* Fall back to canonical path if board firmware not found */
-+	ret = request_firmware_nowait(THIS_MODULE, true, first->path,
-+				      fwctx->dev, GFP_KERNEL, fwctx,
-+				      inff_fw_request_done);
-+
-+	if (ret < 0)
-+		inff_fw_request_done(fw, ctx);
-+}
-+
-+static bool inff_fw_request_is_valid(struct inff_fw_request *req)
-+{
-+	struct inff_fw_item *item;
-+	int i;
-+
-+	if (!req->n_items)
-+		return false;
-+
-+	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
-+		if (!item->path)
-+			return false;
-+	}
-+	return true;
-+}
-+
-+int inff_fw_get_firmwares(struct device *dev, struct inff_fw_request *req,
-+			  void (*fw_cb)(struct device *dev, int err,
-+					struct inff_fw_request *req))
-+{
-+	struct inff_fw_item *first = &req->items[0];
-+	struct inff_fw *fwctx;
-+	char *alt_path = NULL;
-+	int ret;
-+
-+	inff_dbg(TRACE, "dev=%s\n", dev_name(dev));
-+	if (!fw_cb)
-+		return -EINVAL;
-+
-+	if (!inff_fw_request_is_valid(req))
-+		return -EINVAL;
-+
-+	fwctx = kzalloc_obj(*fwctx);
-+	if (!fwctx)
-+		return -ENOMEM;
-+
-+	fwctx->dev = dev;
-+	fwctx->req = req;
-+	fwctx->done = fw_cb;
-+
-+	/* First try alternative board-specific path if any */
-+	if (fwctx->req->board_types[0])
-+		alt_path = inff_alt_fw_path(first->path,
-+					    fwctx->req->board_types[0]);
-+	if (alt_path) {
-+		fwctx->board_index++;
-+		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
-+					      fwctx->dev, GFP_KERNEL, fwctx,
-+					      inff_fw_request_done_alt_path);
-+		kfree(alt_path);
-+	} else {
-+		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
-+					      fwctx->dev, GFP_KERNEL, fwctx,
-+					      inff_fw_request_done);
-+	}
-+	if (ret < 0)
-+		inff_fw_request_done(NULL, fwctx);
 +
 +	return 0;
 +}
 +
-+struct inff_fw_request *
-+inff_fw_alloc_request(char mp_path[], u32 chip, u32 chiprev,
-+		      const struct inff_firmware_mapping mapping_table[],
-+		      u32 table_size, struct inff_fw_name *fwnames,
-+		      u32 n_fwnames)
++static enum fw_upload_err inff_dfu_cp_prepare(struct fw_upload *fw_ul,
++					      const u8 *data, u32 data_size)
 +{
-+	struct inff_fw_request *fwreq;
-+	char chipname[12];
-+	size_t mp_path_len;
-+	u32 i, j;
-+	char end = '\0';
-+	bool boot_fw_req = 0;
++	struct inff_dfu *dfu;
++	struct inff_pub *drvr;
++	struct inff_if *ifp;
++	int ret = 0;
 +
-+	if (chiprev >= BITS_PER_TYPE(u32)) {
-+		inff_err("Invalid chip revision %u\n", chiprev);
-+		return NULL;
++	if (!fw_ul->dd_handle) {
++		inff_err("DFU not attached\n");
++		return FW_UPLOAD_ERR_CANCELED;
 +	}
 +
-+	for (i = 0; i < table_size; i++) {
-+		if (mapping_table[i].chipid == chip &&
-+		    mapping_table[i].revmask & BIT(chiprev))
-+			break;
++	dfu = fw_ul->dd_handle;
++	drvr = dfu->drvr;
++	ifp = inff_get_ifp(drvr, 0);
++
++	dfu->cancel_request = false;
++
++	ret = inff_dfu_cp_send_opcode_data(ifp, INFF_CONTROL_CP_DFU_PRE_DOWNLOAD, NULL, 0);
++
++	if (ret) {
++		inff_err("pre download failed, ret=%d\n", ret);
++		return FW_UPLOAD_ERR_BUSY;
 +	}
 +
-+	inff_chip_name(chip, chiprev, chipname, sizeof(chipname));
-+
-+	if (i == table_size) {
-+		inff_err("Unknown chip %s\n", chipname);
-+		return NULL;
++	ret = inff_dfu_cp_send_opcode_data(ifp, INFF_CONTROL_CP_DFU_DOWNLOAD,
++					   (const u8 *)&data_size, sizeof(data_size));
++	if (ret) {
++		inff_err("pre download set size failed, ret=%d\n", ret);
++		return FW_UPLOAD_ERR_INVALID_SIZE;
 +	}
 +
-+	fwreq = kzalloc_flex(*fwreq, items, n_fwnames);
-+	if (!fwreq)
-+		return NULL;
++	return FW_UPLOAD_ERR_NONE;
++}
 +
-+	inff_info("using %s for chip %s\n",
-+		  mapping_table[i].fw_base, chipname);
++static enum fw_upload_err inff_dfu_cp_write(struct fw_upload *fw_ul, const u8 *data,
++					    u32 offset, u32 size, u32 *written)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++	struct inff_pub *drvr = dfu->drvr;
++	struct inff_if *ifp = inff_get_ifp(drvr, 0);
++	int ret = 0;
++	u32 remains = size;
++	u32 offset_size = 0;
 +
-+	mp_path_len = strnlen(mp_path, INFF_FW_ALTPATH_LEN);
-+	if (mp_path_len)
-+		end = mp_path[mp_path_len - 1];
++	if (dfu->cancel_request)
++		return FW_UPLOAD_ERR_CANCELED;
 +
-+	fwreq->n_items = n_fwnames;
++	inff_info("DFU image download in progress...\n");
 +
-+	for (j = 0; j < n_fwnames; j++) {
-+		fwreq->items[j].path = fwnames[j].path;
-+		fwnames[j].path[0] = '\0';
-+		/* check if firmware path is provided by module parameter */
-+		if (mp_path[0] != '\0') {
-+			strscpy(fwnames[j].path, mp_path,
-+				INFF_FW_NAME_LEN);
++	while (remains > 0) {
++		u16 len = (remains > INFF_DFU_CP_PKT_CHUNK_LEN) ? INFF_DFU_CP_PKT_CHUNK_LEN :
++			  remains;
 +
-+			if (end != '/') {
-+				strlcat(fwnames[j].path, "/",
-+					INFF_FW_NAME_LEN);
++		ret = inff_dfu_cp_send_opcode_data(ifp, INFF_CONTROL_CP_DFU_DATA,
++						   data + offset_size, len);
++		if (ret) {
++			inff_err("DFU write data failed, ret=%d\n", ret);
++			return FW_UPLOAD_ERR_INVALID_SIZE;
++		}
++		remains -= len;
++		offset_size += len;
++		inff_info(".");
++	}
++
++	inff_dbg(INFO, "\nDFU image download done, verification will start\n");
++	*written = offset_size;
++
++	return FW_UPLOAD_ERR_NONE;
++}
++
++static enum fw_upload_err inff_dfu_cp_poll_complete(struct fw_upload *fw_ul)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++	struct inff_pub *drvr = dfu->drvr;
++	struct inff_if *ifp = inff_get_ifp(drvr, 0);
++	int ret = 0;
++
++	if (dfu->cancel_request)
++		return FW_UPLOAD_ERR_CANCELED;
++
++	ret = inff_dfu_cp_send_opcode_data(ifp, INFF_CONTROL_CP_DFU_VERIFY, NULL, 0);
++	if (ret) {
++		inff_err("DFU image verify failed, ret=%d\n", ret);
++		return FW_UPLOAD_ERR_FW_INVALID;
++	}
++
++	inff_info("\nDFU image download and validation done!!\n");
++
++	return FW_UPLOAD_ERR_NONE;
++}
++
++static void inff_dfu_cp_cancel(struct fw_upload *fw_ul)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++	struct inff_pub *drvr = dfu->drvr;
++	struct inff_if *ifp = inff_get_ifp(drvr, 0);
++	int ret = 0;
++
++	dfu->cancel_request = true;
++
++	ret = inff_dfu_cp_send_opcode_data(ifp, INFF_CONTROL_CP_DFU_ABORT, NULL, 0);
++	if (ret)
++		inff_err("DFU cancel failed, ret=%d\n", ret);
++}
++
++static const struct fw_upload_ops inff_dfu_cp_ops = {
++	.prepare = inff_dfu_cp_prepare,
++	.write = inff_dfu_cp_write,
++	.poll_complete = inff_dfu_cp_poll_complete,
++	.cancel = inff_dfu_cp_cancel,
++};
++
++struct inff_dfu_update_context *dfu_upd_ctx;
++
++void inff_dfu_ai_free_ctx(struct inff_dfu_update_context **ctx)
++{
++	if (!ctx || !(*ctx))
++		return;
++
++	if ((*ctx)->bin_logic) {
++		kfree((*ctx)->bin_logic->data);
++		kfree((*ctx)->bin_logic);
++		(*ctx)->bin_logic = NULL;
++	}
++
++	if ((*ctx)->bin_payload) {
++		kfree((*ctx)->bin_payload->data);
++		kfree((*ctx)->bin_payload);
++		(*ctx)->bin_payload = NULL;
++	}
++
++	kfree(*ctx);
++	*ctx = NULL;
++}
++
++static enum fw_upload_err inff_dfu_ai_prepare(struct fw_upload *fw_ul,
++					      const u8 *data, u32 data_size)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++
++	inff_dbg(INFO, "requested size %d\n", data_size);
++
++	if (data_size >= INFF_DFU_MAX_SIZE) {
++		inff_err("data_size exceeds max size %d!\n", data_size);
++		return FW_UPLOAD_ERR_INVALID_SIZE;
++	}
++
++	kfree(dfu->data);
++	dfu->data = NULL;
++	dfu->size = 0;
++	dfu->data = kzalloc(data_size, GFP_KERNEL);
++	if (!dfu->data) {
++		inff_err("alloc fail!\n");
++		return FW_UPLOAD_ERR_RW_ERROR;
++	}
++
++	dfu->size = data_size;
++
++	return FW_UPLOAD_ERR_NONE;
++}
++
++static enum fw_upload_err inff_dfu_ai_write(struct fw_upload *fw_ul, const u8 *data,
++					    u32 offset, u32 size, u32 *written)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++
++	if (offset > dfu->size || size > dfu->size - offset) {
++		inff_err("offset %d size %d exceeds limitation!\n", offset, size);
++		return FW_UPLOAD_ERR_INVALID_SIZE;
++	}
++
++	memcpy(dfu->data + offset, data, size);
++	*written = size;
++
++	return FW_UPLOAD_ERR_NONE;
++}
++
++static enum fw_upload_err inff_dfu_ai_poll_complete(struct fw_upload *fw_ul)
++{
++	struct inff_dfu *dfu = fw_ul->dd_handle;
++	u8 *cur = dfu->data;
++	u32 bin_type = 0;
++	u32 bin_size = 0;
++	u32 remaining = 0;
++	u8 *bin_data;
++	struct firmware *binary;
++	struct inff_dfu_update_context **ctx = &dfu_upd_ctx;
++	enum fw_upload_err ret = FW_UPLOAD_ERR_NONE;
++
++	if (!dfu->drvr->bus_reset.func) {
++		inff_err("no reset function!\n");
++		ret = FW_UPLOAD_ERR_RW_ERROR;
++		goto exit;
++	}
++
++	inff_dfu_ai_free_ctx(ctx);
++	*ctx = kzalloc(sizeof(**ctx), GFP_KERNEL);
++	if (!*ctx) {
++		inff_err("alloc context failed!\n");
++		ret = FW_UPLOAD_ERR_RW_ERROR;
++		goto exit;
++	}
++
++	/* parse the binary type/size and alloc space to save the data */
++	while ((cur - dfu->data) < dfu->size) {
++		remaining = dfu->size - (cur - dfu->data);
++
++		if (remaining < INFF_DFU_FIELD_LEN * 2) {
++			inff_err("truncated TLV header!\n");
++			inff_dfu_ai_free_ctx(ctx);
++			ret = FW_UPLOAD_ERR_FW_INVALID;
++			goto exit;
++		}
++
++		bin_type = *((u32 *)cur);
++		bin_size = *((u32 *)cur + 1);
++
++		if (bin_size > remaining - INFF_DFU_FIELD_LEN * 2) {
++			inff_err("TLV data size exceeds buffer boundary!\n");
++			inff_dfu_ai_free_ctx(ctx);
++			ret = FW_UPLOAD_ERR_FW_INVALID;
++			goto exit;
++		}
++
++		bin_data = kmemdup((u8 *)((u32 *)cur + 2), bin_size, GFP_KERNEL);
++		if (!bin_data) {
++			inff_dfu_ai_free_ctx(ctx);
++			ret = FW_UPLOAD_ERR_RW_ERROR;
++			goto exit;
++		}
++
++		binary = kzalloc(sizeof(*binary), GFP_KERNEL);
++		if (!binary) {
++			kfree(bin_data);
++			inff_dfu_ai_free_ctx(ctx);
++			ret = FW_UPLOAD_ERR_RW_ERROR;
++			goto exit;
++		}
++
++		binary->size = bin_size;
++		binary->data = bin_data;
++
++		switch (bin_type) {
++		case INFF_DFU_TYPE_RAMAPP_LOGIC:
++			if ((*ctx)->bin_logic) {
++				kfree((*ctx)->bin_logic->data);
++				kfree((*ctx)->bin_logic);
 +			}
++			(*ctx)->bin_logic = binary;
++			break;
++		case INFF_DFU_TYPE_RAMAPP_PAYLOAD:
++			if ((*ctx)->bin_payload) {
++				kfree((*ctx)->bin_payload->data);
++				kfree((*ctx)->bin_payload);
++			}
++			(*ctx)->bin_payload = binary;
++			break;
++		default:
++			kfree(binary->data);
++			kfree(binary);
++			inff_dfu_ai_free_ctx(ctx);
++			inff_dbg(INFO, "wrong file\n");
++			ret = FW_UPLOAD_ERR_FW_INVALID;
++			goto exit;
 +		}
 +
-+		if (boot_fw_req) {
-+			char bootfw_name[INFF_FW_NAME_LEN];
-+
-+			snprintf(bootfw_name, INFF_FW_NAME_LEN, "%s-bootfw",
-+				 mapping_table[i].fw_base);
-+			strlcat(fwnames[j].path, bootfw_name, INFF_FW_NAME_LEN);
-+		} else {
-+			strlcat(fwnames[j].path, mapping_table[i].fw_base,
-+				INFF_FW_NAME_LEN);
-+		}
-+		strlcat(fwnames[j].path, fwnames[j].extension,
-+			INFF_FW_NAME_LEN);
-+		fwreq->items[j].path = fwnames[j].path;
-+
-+		if (!strncmp(fwnames[j].extension, ".trxse", 6)) {
-+			fwreq->items[j].type = INFF_FW_TYPE_TRXSE;
-+		} else if (!strncmp(fwnames[j].extension, ".trxs", 5)) {
-+			fwreq->items[j].type = INFF_FW_TYPE_TRXS;
-+		} else if (!strncmp(fwnames[j].extension, ".txt", 4)) {
-+			fwreq->items[j].type = INFF_FW_TYPE_NVRAM;
-+			fwreq->items[j].flags = INFF_FW_REQF_OPTIONAL;
-+		} else if (!strncmp(fwnames[j].extension, ".clm_blob", 9)) {
-+			fwreq->items[j].type = INFF_FW_TYPE_CLM;
-+			fwreq->items[j].flags = INFF_FW_REQF_OPTIONAL;
-+		} else if (!strncmp(fwnames[j].extension, ".hex", 4)) {
-+			fwreq->items[j].type = INFF_FW_TYPE_HEX;
-+			if (chip == INF_CC_CYW5591X_CHIP_ID)
-+				boot_fw_req = 1;
-+		}
++		cur += (INFF_DFU_FIELD_LEN * 2);
++		cur += bin_size;
 +	}
 +
-+	return fwreq;
++	/* trigger the bus reset */
++	inff_dbg(INFO, "Process bus reset!\n");
++	schedule_work(&dfu->drvr->bus_reset);
++
++exit:
++	kfree(dfu->data);
++	dfu->data = NULL;
++	dfu->size = 0;
++	return ret;
 +}
 +
-+struct inff_fw_request *
-+inff_prepare_fw_request(char mp_path[], struct inff_chip *ci,
-+			const struct inff_firmware_mapping *name_map,
-+			int map_size, const char *board_type)
++static void inff_dfu_ai_cancel(struct fw_upload *fw_ul)
 +{
-+	struct inff_fw_request *fwreq;
-+	struct inff_chip_specific *chip_spec = &ci->chip_spec;
-+	struct inff_fw_dataset *fw_data = &chip_spec->fwdata[0];
-+	u32 num_fwnames = 0;
-+	struct inff_fw_name fwnames[INFF_FW_BIN_MAX_TYPE + INFF_FW_CP_BIN_MAX_TYPE];
++	/* A bus reset is triggered immediately after the firmware binary is
++	 * collected, causing the DFU interface to be removed. As a result,
++	 * there is no opportunity for the user to cancel the download once
++	 * it has started. This function is intentionally left empty.
++	 */
++}
 +
-+	if (ci->chip == INF_CC_CYW5591X_CHIP_ID) {
-+		if (fw_data[INFF_FW_CP].fwnames.extension) {
-+			fwnames[INFF_FW_CP].extension = fw_data[INFF_FW_CP].fwnames.extension;
-+			fwnames[INFF_FW_CP].path = fw_data[INFF_FW_CP].fwnames.path;
-+			num_fwnames++;
-+		} else {
-+			inff_err("chip 0x%x uninitialized with fw code file extension\n",
-+				 ci->chip);
-+			return NULL;
-+		}
++static const struct fw_upload_ops inff_dfu_ai_ops = {
++	.prepare = inff_dfu_ai_prepare,
++	.write = inff_dfu_ai_write,
++	.poll_complete = inff_dfu_ai_poll_complete,
++	.cancel = inff_dfu_ai_cancel,
++};
 +
-+		if (fw_data[INFF_FW_BOOT].fwnames.extension) {
-+			fwnames[INFF_FW_BOOT].extension = fw_data[INFF_FW_BOOT].fwnames.extension;
-+			fwnames[INFF_FW_BOOT].path = fw_data[INFF_FW_BOOT].fwnames.path;
-+			num_fwnames++;
-+		}
-+	} else {
-+		if (fw_data[INFF_FW_CODE].fwnames.extension) {
-+			fwnames[INFF_FW_CODE].extension = fw_data[INFF_FW_CODE].fwnames.extension;
-+			fwnames[INFF_FW_CODE].path = fw_data[INFF_FW_CODE].fwnames.path;
-+			num_fwnames++;
-+		} else {
-+			inff_err("chip 0x%x uninitialized with fw code file extension\n",
-+				 ci->chip);
-+			return NULL;
-+		}
-+		if (fw_data[INFF_FW_NVRAM].fwnames.extension) {
-+			fwnames[INFF_FW_NVRAM].extension = fw_data[INFF_FW_NVRAM].fwnames.extension;
-+			fwnames[INFF_FW_NVRAM].path = fw_data[INFF_FW_NVRAM].fwnames.path;
-+			num_fwnames++;
-+		}
-+		if (fw_data[INFF_FW_CLM].fwnames.extension) {
-+			fwnames[INFF_FW_CLM].extension = fw_data[INFF_FW_CLM].fwnames.extension;
-+			fwnames[INFF_FW_CLM].path = fw_data[INFF_FW_CLM].fwnames.path;
-+			num_fwnames++;
-+		}
++int inff_dfu_attach(struct inff_pub *drvr)
++{
++	struct device *dev = drvr->bus_if->dev;
++	struct inff_dfu *dfu = NULL;
++	const struct fw_upload_ops *dfu_ops = NULL;
++	long fw_ul_err;
++
++	switch (drvr->bus_if->chip_pub->socitype) {
++	case INFF_SOCI_AI:
++		if (drvr->bus_if->chip_pub->chip != INF_CC_ACW74XX_CHIP_ID)
++			return 0;
++		dfu_ops = &inff_dfu_ai_ops;
++		break;
++	case INFF_SOCI_CP:
++		dfu_ops = &inff_dfu_cp_ops;
++		break;
++	default:
++		inff_err("chip type %u is not supported\n",
++			 drvr->bus_if->chip_pub->socitype);
++		return -ENODEV;
 +	}
 +
-+	fwreq = inff_fw_alloc_request(mp_path, ci->chip, ci->chiprev, name_map,
-+				      map_size, fwnames, num_fwnames);
-+	if (!fwreq)
-+		return NULL;
++	/* allocate memory for DFU struct */
++	dfu = kzalloc(sizeof(*dfu), GFP_KERNEL);
++	if (!dfu)
++		return -ENOMEM;
 +
-+	fwreq->board_types[0] = board_type;
++	dfu->drvr = drvr;
++	dfu->cancel_request = false;
 +
-+	return fwreq;
++	/* register firmware upload feature */
++	dfu->fw_ul = firmware_upload_register(NULL, dev, dev_name(dev),
++					      dfu_ops, dfu);
++
++	if (IS_ERR(dfu->fw_ul)) {
++		fw_ul_err = PTR_ERR(dfu->fw_ul);
++		kfree(dfu);
++		inff_err("firmware_upload_register failed %ld\n", fw_ul_err);
++		return (int)fw_ul_err;
++	}
++	drvr->dfu = dfu;
++	return 0;
 +}
-diff --git a/drivers/net/wireless/infineon/inffmac/firmware.h b/drivers/net/wireless/infineon/inffmac/firmware.h
++
++void inff_dfu_detach(struct inff_pub *drvr)
++{
++	if (!drvr)
++		return;
++
++	if (!drvr->dfu)
++		return;
++
++	firmware_upload_unregister(drvr->dfu->fw_ul);
++	kfree(drvr->dfu);
++	drvr->dfu = NULL;
++}
+diff --git a/drivers/net/wireless/infineon/inffmac/dfu.h b/drivers/net/wireless/infineon/inffmac/dfu.h
 new file mode 100644
-index 000000000000..0d36e5d6eb2d
+index 000000000000..6dd4e7ed9b3a
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/firmware.h
-@@ -0,0 +1,100 @@
++++ b/drivers/net/wireless/infineon/inffmac/dfu.h
+@@ -0,0 +1,124 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
-+ * Copyright (c) 2013 Broadcom Corporation
-+ *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#ifndef INFF_FIRMWARE_H
-+#define INFF_FIRMWARE_H
++#include "dev_cmd.h"
++#include "chip_cyw5591x.h"
++#include "sdio.h"
 +
-+#define INFF_FW_REQF_OPTIONAL		0x0001
++#ifndef INFF_DFU_H
++#define INFF_DFU_H
 +
-+#define	INFF_FW_NAME_LEN		320
++#define SDIOD_ADDR_BOUND                     0x1000
++#define SDIOD_ADDR_BOUND_MASK                0xFFF
 +
-+#define INFF_FW_MAX_BOARD_TYPES	8
++/* Host to Device message */
++/* Below H2D Messages needs to align with the Minidirver used */
++#define  SDIOD_H2D_MSG_0                         0x10031
++#define  INFF_DFU_CP_H2D_MSG_BOOT_FWLOAD_START   BIT(0)
++#define  INFF_DFU_CP_H2D_MSG_BOOT_FWLOAD_DONE    BIT(1)
++#define  INFF_DFU_CP_H2D_MSG_BOOTFW_DATA_LOADED BIT(4)
 +
-+#define INFF_FW_DEFAULT_PATH		"infineon/"
++/* Device to Host message */
++#define SDIOD_D2H_MSG_0                        0x10039
++#define INFF_DFU_CP_D2H_MSG_BL_READY           BIT(1)
++#define INFF_DFU_CP_D2H_MSG_FW_VALIDAT_START   BIT(4)
++#define INFF_DFU_CP_D2H_MSG_FW_VALIDAT_DONE    BIT(6)
 +
-+/* forward declaration */
-+struct inff_chip;
++#define SDIOD_D2H_MSG_1                        0x1003A
++#define INFF_DFU_CP_D2H_MSG_BOOTFW_READY       BIT(0)
 +
-+/**
-+ * struct inff_firmware_mapping - Used to map chipid/revmask to firmware
-+ *	filename and nvram filename. Each bus type implementation should create
-+ *	a table of firmware mappings (using the macros defined below).
-+ *
-+ * @chipid: ID of chip.
-+ * @revmask: bitmask of revisions, e.g. 0x10 means rev 4 only, 0xf means rev 0-3
-+ * @fw: name of the firmware file.
-+ * @nvram: name of nvram file.
-+ */
-+struct inff_firmware_mapping {
-+	u32 chipid;
-+	u32 revmask;
-+	const char *fw_base;
++#define SDIOD_H2D_MSG_4                     0x10035
++
++#define SDIOD_D2H_MSG_4                     0x1003D
++
++#define INFF_DFU_CP_ROM_BOOT_DELAY          100  /* in usecs */
++
++/* wait for 5000 write/read cycles till F3 is enabled */
++#define INFF_DFU_CP_IORDY_CNT               5000
++
++#define INFF_BOOTFW_RSP_MAX_CNT             2000 /* wait for 2000*100 uS = 200 mS */
++#define INFF_BOOTFW_RSP_DELAY               100  /* 100 uS */
++
++#define INFF_DFU_CP_MEM_OFFSET                 0x19000000
++
++#define INFF_DFU_CP_OTA_CMD_ID                 (0x19)
++#define INFF_DFU_CP_OPC_OFFSET                 (1)
++#define INFF_DFU_CP_LEN_OFFSET                 (3)
++#define INFF_DFU_CP_DAT_OFFSET                 (5)
++
++#define INFF_DFU_CP_MAX_STR_LEN                (600)
++#define INFF_DFU_CP_BLK_SIZE                   (INFF_DFU_CP_MAX_STR_LEN / 2 + 8)
++#define INFF_DFU_CP_SD_ALIGN                   (32)
++
++#define INFF_DFU_CP_PKT_LEN_MAX                (600)
++#define INFF_DFU_CP_PKT_CHUNK_LEN              (256)
++
++#define INFF_CONTROL_CP_GROUP_DFU              (0xC0)
++#define INFF_CONTROL_CP_DFU_PRE_DOWNLOAD       ((INFF_CONTROL_CP_GROUP_DFU << 8) | 0x88)
++#define INFF_CONTROL_CP_DFU_DOWNLOAD           ((INFF_CONTROL_CP_GROUP_DFU << 8) | 0x89)
++#define INFF_CONTROL_CP_DFU_DATA               ((INFF_CONTROL_CP_GROUP_DFU << 8) | 0x8a)
++#define INFF_CONTROL_CP_DFU_VERIFY             ((INFF_CONTROL_CP_GROUP_DFU << 8) | 0x90)
++#define INFF_CONTROL_CP_DFU_ABORT              ((INFF_CONTROL_CP_GROUP_DFU << 8) | 0x92)
++
++#define INFF_DFU_CP_SDIORB_DELAY                10
++#define INFF_DFU_CP_SDIORB_NEXT_DELAY           1000
++
++#define INFF_DFU_CP_MEM_OFFSET                     0x19000000
++#define INFF_DFU_CP_START_ADDR_MASK                0x00FFFFFF
++
++#define INFF_DFU_CP_ADDR_MODE_UNKNOWN              0
++#define INFF_DFU_CP_ADDR_MODE_EXTENDED             1
++#define INFF_DFU_CP_ADDR_MODE_SEGMENT              2
++#define INFF_DFU_CP_ADDR_MODE_LINEAR32             3
++
++#define INFF_DFU_CP_HEX_LINE_TYPE_DATA             0
++#define INFF_DFU_CP_HEX_LINE_TYPE_END_OF_DATA      1
++#define INFF_DFU_CP_HEX_LINE_TYPE_EXT_SEGMENT_ADDR 2
++#define INFF_DFU_CP_HEX_LINE_TYPE_EXT_ADDR         4
++#define INFF_DFU_CP_HEX_LINE_TYPE_ABS_32BIT_ADDR   5
++
++#define INFF_DFU_CP_SEQ_MASK                       0x1
++
++#define INFF_DFU_CP_HEX_DATA_OFFSET       (9)
++#define INFF_DFU_CP_HEX_NUMB_OFFSET       (1)
++#define INFF_DFU_CP_HEX_ADDR_OFFSET       (3)
++#define INFF_DFU_CP_HEX_TYPE_OFFSET       (7)
++
++#define INFF_DFU_CP_HEX_NUMB_LEN          (2)
++#define INFF_DFU_CP_HEX_ADDR_LEN          (4)
++#define INFF_DFU_CP_HEX_TYPE_LEN          (2)
++#define INFF_DFU_CP_HEX_ALIGN_LEN         (4)
++
++#define INFF_DFU_MAX_SIZE (5 * 1024 * 1024)
++#define INFF_DFU_FIELD_LEN 4
++#define INFF_DFU_TYPE_RAMAPP_LOGIC 0x11
++#define INFF_DFU_TYPE_RAMAPP_PAYLOAD 0x22
++
++#define ROUNDDN(p, align)                   ((p) & ~((align) - 1))
++#define	ISALIGNED(a, x)                     (((uintptr_t)(a) & ((x) - 1)) == 0)
++
++struct inff_dfu {
++	struct inff_pub *drvr;
++	struct fw_upload *fw_ul;
++	u8 *data;
++	u32 size;
++	bool cancel_request;
 +};
 +
-+/* Firmware and Country Local Matrix files */
-+#define INFF_FW_ENTRY(chipid, mask, name) \
-+	{ chipid, mask, INFF_ ## name ## _FIRMWARE_BASENAME }
-+
-+void inff_fw_nvram_free(void *nvram);
-+
-+enum inff_fw_type {
-+	INFF_FW_TYPE_BINARY,
-+	INFF_FW_TYPE_NVRAM,
-+	INFF_FW_TYPE_TRXSE,
-+	INFF_FW_TYPE_TRXS,
-+	INFF_FW_TYPE_CLM,
-+	INFF_FW_TYPE_HEX,
++struct inff_dfu_update_context {
++	struct firmware *bin_logic;
++	struct firmware *bin_payload;
 +};
 +
-+struct inff_fw_item {
-+	const char *path;
-+	enum inff_fw_type type;
-+	u16 flags;
-+	union {
-+		const struct firmware *binary;
-+		struct {
-+			void *data;
-+			u32 len;
-+		} nv_data;
-+	};
-+};
++int inff_dfu_attach(struct inff_pub *drvr);
++void inff_dfu_detach(struct inff_pub *drvr);
++int inff_dfu_cp_img_dwnld_init(struct inff_sdio_dev *sdiodev, const struct firmware *boot_fw,
++			       const struct firmware *cp_fw);
++void inff_dfu_ai_free_ctx(struct inff_dfu_update_context **ctx);
 +
-+struct inff_fw_request {
-+	u16 domain_nr;
-+	u16 bus_nr;
-+	u32 n_items;
-+	const char *board_types[INFF_FW_MAX_BOARD_TYPES];
-+	struct inff_fw_item items[] __counted_by(n_items);
-+};
++extern struct inff_dfu_update_context *dfu_upd_ctx;
 +
-+struct inff_fw_name {
-+	const char *extension;
-+	char *path;
-+};
-+
-+struct inff_fw_request *
-+inff_fw_alloc_request(char mp_path[], u32 chip, u32 chiprev,
-+		      const struct inff_firmware_mapping mapping_table[],
-+		      u32 table_size, struct inff_fw_name *fwnames,
-+		      u32 n_fwnames);
-+
-+/*
-+ * Request firmware(s) asynchronously. When the asynchronous request
-+ * fails it will not use the callback, but call device_release_driver()
-+ * instead which will call the driver .remove() callback.
-+ */
-+int inff_fw_get_firmwares(struct device *dev, struct inff_fw_request *req,
-+			  void (*fw_cb)(struct device *dev, int err,
-+					struct inff_fw_request *req));
-+
-+struct inff_fw_request *
-+inff_prepare_fw_request(char mp_path[], struct inff_chip *ci,
-+			const struct inff_firmware_mapping *name_map,
-+			int map_size, const char *board_type);
-+
-+#endif /* INFF_FIRMWARE_H */
++#endif /* INFF_DFU_H */
 -- 
 2.43.0
 
