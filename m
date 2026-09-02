@@ -1,54 +1,54 @@
-Received: from smtp11.infineon.com (smtp11.infineon.com [217.10.52.105])
+Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DAA24A384F
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:53:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 183A13BBFCD
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:53:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368004; cv=none; b=hGDBQeMnKyln/zGaN2q4L0lsRgu9zGrErcy9Qbob8F3fWFX42hGSPHeAq9PBxvNZBx+P2PCTRtCuD89SZB486TpMKd3q+ee75sdibKYSqwAPrJjKl4Hcz/hOCGDcBxDgi55hljFA97Y9mBm/1II9Y4RSx4rxA0LVSAJCsGG0FKE=
+	t=1788368020; cv=none; b=P9AjfDEi5oGjMavwlFmqjvM3/HEJ210+MidyDB0taZEPeIYgJu/Y+y77/pEKkD3w/r4xQ8WW5Jw1ozVZEJ4dOH3tRe+LTxZwz4bw7zI/GpAFnNDIegF2skj/lOWGwwOjcgpkCOM+JiiF+nJH0VfXkhBocKyaLJaatIgGtrbxKdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368004; c=relaxed/simple;
-	bh=Z/uM7n7CFzCOKjlTe4eZYyacgO9r5zQ3s77IovWCiqA=;
+	s=arc-20240116; t=1788368020; c=relaxed/simple;
+	bh=n/Cw7PNQ+GhIBhC217pIr3UFu6oTZCClIYB4IcpEJAs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JUxDNxgMMjhefNgCYXblb9QIISdfuO5FFb6+VEiuygK6CqkWB/xNZi1xeVNp14lwrlgEUqE0aYd+jXTTxJEUMmiUCfvsksZpnFZg2yIYmCfk5etUmVIDub6xg7GVIRhAD6l7kLcG61oYOcKnMcjoxBPvO6fM71+oD0c5gQ73lMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=AbY1Kdgp; arc=none smtp.client-ip=217.10.52.105
+	 MIME-Version:Content-Type; b=HVSTH7AwXBHCvs2IunbvmU/1CRFqEDxmGBpAJpgwKKivMVLMQ7SzPD6ya2tpl2SzNMiPfNVzFVA6ikUEFeiI3ogDErzD5erqvDPVBUCerD7PRYhgf6jlhj89tGnwXClUxnQRB0Lv9bB+oc7jS6wQz+Xh7RqxvZwmGMtw0Ys7hdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=fhGSirVP; arc=none smtp.client-ip=217.10.52.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="AbY1Kdgp"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="fhGSirVP"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788368001; x=1819904001;
+  t=1788368018; x=1819904018;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Z/uM7n7CFzCOKjlTe4eZYyacgO9r5zQ3s77IovWCiqA=;
-  b=AbY1KdgpC30XaNOrA7uZpfxSkUcDqIEHtHdb3OktthO6mfL/Ji2P/XW3
-   tiFHVHGeh/10QNh6F7vb91+aQ3pvfYO+E4YG+Np4dy6RzO0CrwoOIY5G9
-   EXCBLs3WJEFvq3KhwBHlTKUqjilvHoUYTgaljl9gqA+GQvfBk5ILYMUfN
-   4=;
-X-CSE-ConnectionGUID: CIHIY+h6Q764HbASdmct6Q==
-X-CSE-MsgGUID: JdXWoCebSfSv3bIJnPbrQQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="159196516"
+  bh=n/Cw7PNQ+GhIBhC217pIr3UFu6oTZCClIYB4IcpEJAs=;
+  b=fhGSirVP5abId9qsEnTDpXl0rkgeAV5Jenf8rHvvs00FhYIBKUIc2SfE
+   NbS5Qh/mXdfa1QAoL02ICmTx3Gfww857NB13NNpkk0ocMFik0oZoYoYIw
+   RFh5+lhtoaDgw5zazvsM09Q4S4t3jRx2cfMpcAG0dL6mY/HCS4K/T6cwL
+   o=;
+X-CSE-ConnectionGUID: hdFeU44DROGUoCwuDzHj1A==
+X-CSE-MsgGUID: WkVyDSvmTCqScrWLUWXcSg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="107705841"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="159196516"
+   d="scan'208";a="107705841"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
-  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:53:19 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE819.infineon.com
- (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE814.infineon.com) ([172.23.29.40])
+  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:53:36 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE814.infineon.com
+ (172.23.29.40) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:53:19 +0200
+ 2026 18:53:35 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:53:17 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:53:33 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 10/25] wifi: inffmac: add dev_evt.c/h
-Date: Wed, 2 Sep 2026 16:50:41 +0000
-Message-ID: <20260902165057.456447-11-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 11/25] wifi: inffmac: add net.c/h
+Date: Wed, 2 Sep 2026 16:50:42 +0000
+Message-ID: <20260902165057.456447-12-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,1327 +60,575 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE812.infineon.com (172.23.29.38) To
+X-ClientProxiedBy: MUCSE804.infineon.com (172.23.29.30) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Driver implementation for registering and handling various types of
-asynchronous events generated by the CP or the WLAN firmware in the
-Device.
+Integrate the driver with kernel network stack for enabling
+datapath communication using a netdev for WLAN interfaces.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- .../net/wireless/infineon/inffmac/dev_evt.c   | 847 ++++++++++++++++++
- .../net/wireless/infineon/inffmac/dev_evt.h   | 447 +++++++++
- 2 files changed, 1294 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/dev_evt.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/dev_evt.h
+ drivers/net/wireless/infineon/inffmac/net.c | 500 ++++++++++++++++++++
+ drivers/net/wireless/infineon/inffmac/net.h |  43 ++
+ 2 files changed, 543 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/net.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/net.h
 
-diff --git a/drivers/net/wireless/infineon/inffmac/dev_evt.c b/drivers/net/wireless/infineon/inffmac/dev_evt.c
+diff --git a/drivers/net/wireless/infineon/inffmac/net.c b/drivers/net/wireless/infineon/inffmac/net.c
 new file mode 100644
-index 000000000000..6d63ad4afab1
+index 000000000000..036bf7ebad8b
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/dev_evt.c
-@@ -0,0 +1,847 @@
++++ b/drivers/net/wireless/infineon/inffmac/net.c
+@@ -0,0 +1,500 @@
 +// SPDX-License-Identifier: ISC
 +/*
-+ * Copyright (c) 2012 Broadcom Corporation
++ * Copyright (c) 2010 Broadcom Corporation
 + *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
++
 +#include <linux/netdevice.h>
++#include <net/rtnetlink.h>
++#include <net/sock.h>
 +
 +#include "main.h"
-+#include "chan.h"
-+#include "utils.h"
-+#include "cfg80211.h"
-+#include "debug.h"
-+#include "dev_evt.h"
-+#include "dev_cmd.h"
-+#include "interface.h"
-+#include "bus_proto.h"
 +#include "net.h"
++#include "cfg80211.h"
++#include "interface.h"
++#include "utils.h"
++#include "bus_proto.h"
++#include "dev_cmd.h"
 +
-+/**
-+ * struct inff_fwevt_queue_item - event item on event queue.
-+ *
-+ * @q: list element for queuing.
-+ * @code: event code.
-+ * @ifidx: interface index related to this event.
-+ * @ifaddr: ethernet address for interface.
-+ * @emsg: common parameters of the firmware event message.
-+ * @datalen: length of the data array
-+ * @data: event specific data part of the firmware event.
++/* Store the mac that user set from cfg80211 api.
++ * If dongle gets reset, the mac will be restored to dongle.
 + */
-+struct inff_fwevt_queue_item {
-+	struct list_head q;
-+	enum inff_fwevt_code code;
-+	u8 ifidx;
-+	u8 ifaddr[ETH_ALEN];
-+	struct inff_event_msg_be emsg;
-+	u32 datalen;
-+	u8 data[] __counted_by(datalen);
-+};
++u8 user_mac_addr[ETH_ALEN] = {0};
 +
-+/*
-+ * struct inff_fwevt_code_name - code, name mapping entry.
-+ */
-+struct inff_fwevt_code_name {
-+	enum inff_fwevt_code code;
-+	const char *name;
-+};
-+
-+#ifdef DEBUG
-+/* array for mapping code to event name */
-+static struct inff_fwevt_code_name
-+fwevt_names[] = {
-+	{INFF_E_SET_SSID, "SET_SSID"},
-+	{INFF_E_JOIN, "JOIN"},
-+	{INFF_E_START, "START"},
-+	{INFF_E_AUTH, "AUTH"},
-+	{INFF_E_AUTH_IND, "AUTH_IND"},
-+	{INFF_E_DEAUTH, "DEAUTH"},
-+	{INFF_E_DEAUTH_IND, "DEAUTH_IND"},
-+	{INFF_E_ASSOC, "ASSOC"},
-+	{INFF_E_ASSOC_IND, "ASSOC_IND"},
-+	{INFF_E_REASSOC, "REASSOC"},
-+	{INFF_E_REASSOC_IND, "REASSOC_IND"},
-+	{INFF_E_DISASSOC, "DISASSOC"},
-+	{INFF_E_DISASSOC_IND, "DISASSOC_IND"},
-+	{INFF_E_QUIET_START, "QUIET_START"},
-+	{INFF_E_QUIET_END, "QUIET_END"},
-+	{INFF_E_BEACON_RX, "BEACON_RX"},
-+	{INFF_E_LINK, "LINK"},
-+	{INFF_E_MIC_ERROR, "MIC_ERROR"},
-+	{INFF_E_NDIS_LINK, "NDIS_LINK"},
-+	{INFF_E_ROAM, "ROAM"},
-+	{INFF_E_TXFAIL, "TXFAIL"},
-+	{INFF_E_PMKID_CACHE, "PMKID_CACHE"},
-+	{INFF_E_RETROGRADE_TSF, "RETROGRADE_TSF"},
-+	{INFF_E_PRUNE, "PRUNE"},
-+	{INFF_E_AUTOAUTH, "AUTOAUTH"},
-+	{INFF_E_EAPOL_MSG, "EAPOL_MSG"},
-+	{INFF_E_SCAN_COMPLETE, "SCAN_COMPLETE"},
-+	{INFF_E_ADDTS_IND, "ADDTS_IND"},
-+	{INFF_E_DELTS_IND, "DELTS_IND"},
-+	{INFF_E_BCNSENT_IND, "BCNSENT_IND"},
-+	{INFF_E_BCNRX_MSG, "BCNRX_MSG"},
-+	{INFF_E_BCNLOST_MSG, "BCNLOST_MSG"},
-+	{INFF_E_ROAM_PREP, "ROAM_PREP"},
-+	{INFF_E_RESET_COMPLETE, "RESET_COMPLETE"},
-+	{INFF_E_JOIN_START, "JOIN_START"},
-+	{INFF_E_ROAM_START, "ROAM_START"},
-+	{INFF_E_ASSOC_START, "ASSOC_START"},
-+	{INFF_E_IBSS_ASSOC, "IBSS_ASSOC"},
-+	{INFF_E_RADIO, "RADIO"},
-+	{INFF_E_PSM_WATCHDOG, "PSM_WATCHDOG"},
-+	{INFF_E_PROBREQ_MSG, "PROBREQ_MSG"},
-+	{INFF_E_SCAN_CONFIRM_IND, "SCAN_CONFIRM_IND"},
-+	{INFF_E_PSK_SUP, "PSK_SUP"},
-+	{INFF_E_COUNTRY_CODE_CHANGED, "COUNTRY_CODE_CHANGED"},
-+	{INFF_E_EXCEEDED_MEDIUM_TIME, "EXCEEDED_MEDIUM_TIME"},
-+	{INFF_E_ICV_ERROR, "ICV_ERROR"},
-+	{INFF_E_UNICAST_DECODE_ERROR, "UNICAST_DECODE_ERROR"},
-+	{INFF_E_MULTICAST_DECODE_ERROR, "MULTICAST_DECODE_ERROR"},
-+	{INFF_E_TRACE, "TRACE"},
-+	{INFF_E_IF, "IF"},
-+	{INFF_E_RSSI, "RSSI"},
-+	{INFF_E_EXTLOG_MSG, "EXTLOG_MSG"},
-+	{INFF_E_ACTION_FRAME, "ACTION_FRAME"},
-+	{INFF_E_ACTION_FRAME_TX_COMPLETE, "ACTION_FRAME_TX_COMPLETE"},
-+	{INFF_E_PRE_ASSOC_IND, "PRE_ASSOC_IND"},
-+	{INFF_E_PRE_REASSOC_IND, "PRE_REASSOC_IND"},
-+	{INFF_E_CHANNEL_ADOPTED, "CHANNEL_ADOPTED"},
-+	{INFF_E_AP_STARTED, "AP_STARTED"},
-+	{INFF_E_DFS_AP_STOP, "DFS_AP_STOP"},
-+	{INFF_E_DFS_AP_RESUME, "DFS_AP_RESUME"},
-+	{INFF_E_ESCAN_RESULT, "ESCAN_RESULT"},
-+	{INFF_E_ACTION_FRAME_OFF_CHAN_COMPLETE, "ACTION_FRAME_OFF_CHAN_COMPLETE"},
-+	{INFF_E_PROBERESP_MSG, "PROBERESP_MSG"},
-+	{INFF_E_PROBEREQ_MSG, "PROBEREQ_MSG"},
-+	{INFF_E_DCS_REQUEST, "DCS_REQUEST"},
-+	{INFF_E_FIFO_CREDIT_MAP, "FIFO_CREDIT_MAP"},
-+	{INFF_E_ACTION_FRAME_RX_COMPLETE, "ACTION_FRAME_RX_COMPLETE"},
-+	{INFF_E_SA_COMPLETE_IND, "SA_COMPLETE_IND"},
-+	{INFF_E_ASSOC_REQ_IE, "ASSOC_REQ_IE"},
-+	{INFF_E_ASSOC_RESP_IE, "ASSOC_RESP_IE"},
-+	{INFF_E_BCMC_CREDIT_SUPPORT, "BCMC_CREDIT_SUPPORT"},
-+	{INFF_E_EXT_AUTH_REQ, "EXT_AUTH_REQ"},
-+	{INFF_E_EXT_AUTH_FRAME_RX, "EXT_AUTH_FRAME_RX"},
-+	{INFF_E_MGMT_FRAME_TXSTATUS, "MGMT_FRAME_TXSTATUS"},
-+	{INFF_E_MGMT_FRAME_OFF_CHAN_COMPLETE, "MGMT_FRAME_OFF_CHAN_COMPLETE"},
-+	{INFF_E_EXT_ASSOC_FRAME_RX, "EXT_ASSOC_FRAME_RX"},
-+};
-+
-+/**
-+ * inff_fwevt_name() - returns name for given event code.
-+ *
-+ * @code: code to lookup.
-+ */
-+const char *
-+inff_fwevt_name(enum inff_fwevt_code code)
++void inff_net_txflowblock(struct inff_if *ifp,
++			  enum inff_netif_stop_reason reason, bool state)
 +{
-+	int i;
++	unsigned long flags;
 +
-+	for (i = 0; i < ARRAY_SIZE(fwevt_names); i++) {
-+		if (fwevt_names[i].code == code)
-+			return fwevt_names[i].name;
++	if (!ifp || !ifp->ndev)
++		return;
++
++	inff_dbg(TRACE, "bsscfgidx=%d stop=0x%X reason=%d state=%d\n",
++		 ifp->bsscfgidx, ifp->netif_stop, reason, state);
++
++	spin_lock_irqsave(&ifp->netif_stop_lock, flags);
++	if (state) {
++		if (!ifp->netif_stop)
++			netif_stop_queue(ifp->ndev);
++		ifp->netif_stop |= reason;
++	} else {
++		ifp->netif_stop &= ~reason;
++		if (!ifp->netif_stop)
++			netif_wake_queue(ifp->ndev);
 +	}
-+	return "unknown";
-+}
-+#else
-+const char *
-+inff_fwevt_name(enum inff_fwevt_code code)
-+{
-+	return "nodebug";
-+}
-+#endif
-+
-+/**
-+ * inff_fwevt_queue_event() - create and queue event.
-+ *
-+ * @fwevt: firmware event handling info.
-+ * @event: event queue entry.
-+ */
-+static void
-+inff_fwevt_queue_event(struct inff_fwevt_info *fwevt,
-+		       struct inff_fwevt_queue_item *event)
-+{
-+	ulong flags;
-+
-+	spin_lock_irqsave(&fwevt->evt_q_lock, flags);
-+	list_add_tail(&event->q, &fwevt->event_q);
-+	spin_unlock_irqrestore(&fwevt->evt_q_lock, flags);
-+	schedule_work(&fwevt->event_work);
++	spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
 +}
 +
-+/**
-+ * inff_fwevt_dequeue_event() - get event from the queue.
-+ *
-+ * @fwevt: firmware event handling info.
-+ */
-+static struct inff_fwevt_queue_item *
-+inff_fwevt_dequeue_event(struct inff_fwevt_info *fwevt)
++void inff_net_setcarrier(struct inff_if *ifp, bool on)
 +{
-+	struct inff_fwevt_queue_item *event = NULL;
-+	ulong flags;
++	struct net_device *ndev;
 +
-+	spin_lock_irqsave(&fwevt->evt_q_lock, flags);
-+	if (!list_empty(&fwevt->event_q)) {
-+		event = list_first_entry(&fwevt->event_q,
-+					 struct inff_fwevt_queue_item, q);
-+		list_del(&event->q);
-+	}
-+	spin_unlock_irqrestore(&fwevt->evt_q_lock, flags);
++	ndev = ifp->ndev;
++	inff_net_txflowblock(ifp, INFF_NETIF_STOP_REASON_DISCONNECTED, !on);
++	if (on) {
++		if (!netif_carrier_ok(ndev))
++			netif_carrier_on(ndev);
 +
-+	return event;
-+}
-+
-+/**
-+ * inff_fwevt_event_worker() - firmware event worker.
-+ *
-+ * @work: worker object.
-+ */
-+static void
-+inff_fwevt_event_worker(struct work_struct *work)
-+{
-+	struct inff_pub *drvr;
-+	struct inff_if *ifp;
-+	struct inff_fwevt_info *fwevt;
-+	struct inff_fwevt_queue_item *event;
-+	struct inff_event_msg_be *emsg_be;
-+	struct inff_event_msg emsg;
-+
-+	fwevt = container_of(work, struct inff_fwevt_info, event_work);
-+	drvr = container_of(fwevt, struct inff_pub, fwevt);
-+
-+	while ((event = inff_fwevt_dequeue_event(fwevt))) {
-+		inff_dbg(DEVEVT, "event %s (%u) ifidx %u bsscfg %u addr %pM\n",
-+			 inff_fwevt_name(event->code), event->code,
-+			 event->emsg.ifidx, event->emsg.bsscfgidx,
-+			 event->emsg.addr);
-+		if (event->emsg.bsscfgidx >= INFF_MAX_IFS) {
-+			iphy_err(drvr, "invalid bsscfg index: %u\n", event->emsg.bsscfgidx);
-+			goto event_free;
-+		}
-+
-+		/* convert event message */
-+		emsg_be = &event->emsg;
-+		emsg.version = be16_to_cpu(emsg_be->version);
-+		emsg.flags = be16_to_cpu(emsg_be->flags);
-+		emsg.event_code = event->code;
-+		emsg.status = be32_to_cpu(emsg_be->status);
-+		emsg.reason = be32_to_cpu(emsg_be->reason);
-+		emsg.auth_type = be32_to_cpu(emsg_be->auth_type);
-+		emsg.datalen = be32_to_cpu(emsg_be->datalen);
-+		memcpy(emsg.addr, emsg_be->addr, ETH_ALEN);
-+		memcpy(emsg.ifname, emsg_be->ifname, sizeof(emsg.ifname));
-+		emsg.ifidx = emsg_be->ifidx;
-+		emsg.bsscfgidx = emsg_be->bsscfgidx;
-+
-+		inff_dbg(DEVEVT, "  version %u flags %u status %u reason %u\n",
-+			 emsg.version, emsg.flags, emsg.status, emsg.reason);
-+		inff_dbg_hex_dump(INFF_MSGLVL_ON(DEVEVT), event->data,
-+				  min_t(u32, emsg.datalen, 64),
-+				  "event payload, len=%d\n", emsg.datalen);
-+
-+		ifp = drvr->iflist[emsg.bsscfgidx];
-+		if (!ifp)
-+			ifp = inff_get_ifp(drvr, 0);
-+
-+		/* Call the registered event handler */
-+		if (fwevt->evt_handler[event->code]) {
-+			if (fwevt->evt_handler[event->code](ifp, &emsg, event->data))
-+				iphy_err(drvr, "event handler failed (%d)\n",
-+					 event->code);
-+		} else {
-+			iphy_err(drvr, "unhandled event %d ignored\n", event->code);
-+		}
-+event_free:
-+		kfree(event);
++	} else {
++		if (netif_carrier_ok(ndev))
++			netif_carrier_off(ndev);
 +	}
 +}
 +
-+/**
-+ * inff_fwevt_attach() - initialize firmware event handling.
-+ *
-+ * @drvr: driver information object.
-+ */
-+void
-+inff_fwevt_attach(struct inff_pub *drvr)
++bool inff_net_rx_preprocess(struct inff_if *ifp, struct sk_buff *skb)
 +{
-+	struct inff_fwevt_info *fwevt = &drvr->fwevt;
++	if (skb->pkt_type == PACKET_MULTICAST)
++		ifp->ndev->stats.multicast++;
 +
-+	INIT_WORK(&fwevt->event_work, inff_fwevt_event_worker);
-+	spin_lock_init(&fwevt->evt_q_lock);
-+	INIT_LIST_HEAD(&fwevt->event_q);
++	if (!(ifp->ndev->flags & IFF_UP)) {
++		inff_pkt_buf_free_skb(skb);
++		return false;
++	}
++
++	ifp->ndev->stats.rx_bytes += skb->len;
++	ifp->ndev->stats.rx_packets++;
++
++	return true;
 +}
 +
-+/**
-+ * inff_fwevt_detach() - cleanup firmware event handling.
-+ *
-+ * @drvr: driver information object.
-+ */
-+void
-+inff_fwevt_detach(struct inff_pub *drvr)
++void inff_net_rx(struct inff_if *ifp, struct sk_buff *skb, bool inirq)
 +{
-+	struct inff_fwevt_info *fwevt = &drvr->fwevt;
++	if (!inff_net_rx_preprocess(ifp, skb))
++		return;
 +
-+	/* cancel the worker if initialized */
-+	if (fwevt->event_work.func) {
-+		cancel_work_sync(&fwevt->event_work);
-+		WARN_ON(!list_empty(&fwevt->event_q));
-+		memset(fwevt->evt_handler, 0, sizeof(fwevt->evt_handler));
-+	}
++	inff_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
++	if (ifp->napi.poll && ifp->napi_gro)
++		napi_gro_receive(&ifp->napi, skb);
++	else
++		netif_rx(skb);
 +}
 +
-+/**
-+ * inff_fwevt_register() - register handler for given event code.
-+ *
-+ * @drvr: driver information object.
-+ * @code: event code.
-+ * @handler: handler for the given event code.
-+ */
-+int
-+inff_fwevt_register(struct inff_pub *drvr, enum inff_fwevt_code code,
-+		    inff_fwevt_handler_t handler)
++static int inff_netdev_open(struct net_device *ndev)
 +{
-+	if (drvr->fwevt.evt_handler[code]) {
-+		iphy_err(drvr, "event code %d already registered\n", code);
-+		return -ENOSPC;
++	struct inff_if *ifp = netdev_priv(ndev);
++	struct inff_pub *drvr = ifp->drvr;
++	struct inff_bus *bus_if = drvr->bus_if;
++	u32 toe_ol = 0;
++	int ret;
++
++	/* If bus is not ready, can't continue */
++	if (bus_if->state != INFF_BUS_UP) {
++		iphy_err(drvr, "failed bus is not ready\n");
++		return -EAGAIN;
 +	}
-+	drvr->fwevt.evt_handler[code] = handler;
-+	inff_dbg(TRACE, "event handler registered for %s\n",
-+		 inff_fwevt_name(code));
++
++	atomic_set(&ifp->pend_8021x_cnt, 0);
++
++	/* Get current TOE mode from dongle */
++	if (inff_socitype_is_ai(bus_if)) {
++		if (inff_fwcmd_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0 &&
++		    (toe_ol & TOE_TX_CSUM_OL) != 0)
++			ndev->features |= NETIF_F_IP_CSUM;
++		else
++			ndev->features &= ~NETIF_F_IP_CSUM;
++	}
++
++	wiphy_lock(drvr->wiphy);
++	ret = inff_cfg80211_up(ndev);
++	wiphy_unlock(drvr->wiphy);
++
++	if (ret) {
++		iphy_err(drvr, "failed to bring up cfg80211\n");
++		return -EIO;
++	}
++
++	/* Clear, carrier, set when connected or AP mode. */
++	netif_carrier_off(ndev);
++
 +	return 0;
 +}
 +
-+/**
-+ * inff_fwevt_unregister() - remove handler for given code.
-+ *
-+ * @drvr: driver information object.
-+ * @code: event code.
-+ */
-+void
-+inff_fwevt_unregister(struct inff_pub *drvr,
-+		      enum inff_fwevt_code code)
++static int inff_netdev_stop(struct net_device *ndev)
 +{
-+	inff_dbg(TRACE, "event handler cleared for %s\n",
-+		 inff_fwevt_name(code));
-+	drvr->fwevt.evt_handler[code] = NULL;
++	struct inff_if *ifp = netdev_priv(ndev);
++	struct inff_pub *drvr = ifp->drvr;
++
++	wiphy_lock(drvr->wiphy);
++
++	if (inff_socitype_is_ai(drvr->bus_if)) {
++		inff_cfg80211_down(ndev);
++	} else if (inff_socitype_is_cp(drvr->bus_if)) {
++		inff_cp_cfg80211_link_down(ifp);
++		clear_bit(INFF_VIF_STATUS_READY, &ifp->vif->sme_state);
++	}
++
++	wiphy_unlock(drvr->wiphy);
++
++	inff_net_setcarrier(ifp, false);
++
++	return 0;
 +}
 +
-+/**
-+ * inff_fwevt_activate_events() - enables firmware events registered.
-+ *
-+ * @ifp: primary interface object.
-+ */
-+int
-+inff_fwevt_activate_events(struct inff_if *ifp)
++static netdev_tx_t inff_netdev_start_xmit(struct sk_buff *skb,
++					  struct net_device *ndev)
 +{
++	int ret;
++	struct inff_if *ifp = netdev_priv(ndev);
 +	struct inff_pub *drvr = ifp->drvr;
-+	int i, err;
-+	struct eventmsgs_ext *eventmask_msg;
-+	u32 msglen;
++	struct ethhdr *eh;
++	int head_delta;
++	unsigned int tx_bytes = skb->len;
 +
-+	msglen = EVENTMSGS_EXT_STRUCT_SIZE + INFF_EVENTING_MASK_LEN;
-+	eventmask_msg = kzalloc(msglen, GFP_KERNEL);
-+	if (!eventmask_msg)
-+		return -ENOMEM;
++	/* Can the device send data? */
++	if (drvr->bus_if->state != INFF_BUS_UP) {
++		iphy_err(drvr, "xmit rejected state=%d\n", drvr->bus_if->state);
++		netif_stop_queue(ndev);
++		dev_kfree_skb(skb);
++		ret = -ENODEV;
++		goto done;
++	}
 +
-+	for (i = 0; i < INFF_E_LAST; i++) {
-+		if (ifp->drvr->fwevt.evt_handler[i]) {
-+			inff_dbg(DEVEVT, "enable event %s\n",
-+				 inff_fwevt_name(i));
-+			setbit(eventmask_msg->mask, i);
++	/* Make sure there's enough writeable headroom */
++	if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
++		head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
++
++		inff_dbg(INFO, "%s: %s headroom\n", inff_ifname(ifp),
++			 head_delta ? "insufficient" : "unmodifiable");
++		atomic_inc(&drvr->bus_if->stats.pktcowed);
++		ret = pskb_expand_head(skb, ALIGN(head_delta, NET_SKB_PAD), 0,
++				       GFP_ATOMIC);
++		if (ret < 0) {
++			iphy_err(drvr, "%s: failed to expand headroom\n",
++				 inff_ifname(ifp));
++			atomic_inc(&drvr->bus_if->stats.pktcow_failed);
++			dev_kfree_skb(skb);
++			goto done;
 +		}
 +	}
 +
-+	/* want to handle IF event as well */
-+	inff_dbg(DEVEVT, "enable event IF\n");
-+	setbit(eventmask_msg->mask, INFF_E_IF);
-+
-+	eventmask_msg->ver = EVENTMSGS_VER;
-+	eventmask_msg->command = EVENTMSGS_SET_MASK;
-+	eventmask_msg->len = INFF_EVENTING_MASK_LEN;
-+
-+	err = inff_fwcmd_iovar_data_set(ifp, "event_msgs_ext", eventmask_msg,
-+					msglen);
-+	if (!err)
-+		goto end;
-+
-+	err = inff_fwcmd_iovar_data_set(ifp, "event_msgs", eventmask_msg->mask,
-+					INFF_EVENTING_MASK_LEN);
-+	if (err)
-+		iphy_err(drvr, "Set event_msgs error (%d)\n", err);
-+
-+end:
-+	kfree(eventmask_msg);
-+	return err;
-+}
-+
-+/**
-+ * inff_fwevt_process_event() - process skb as firmware event.
-+ *
-+ * @drvr: driver information object.
-+ * @event_packet: event packet to process.
-+ * @packet_len: length of the packet
-+ * @gfp: memory allocation flags.
-+ *
-+ * If the packet buffer contains a firmware event message it will
-+ * dispatch the event to a registered handler (using worker).
-+ */
-+void
-+inff_fwevt_process_event(struct inff_pub *drvr,
-+			 struct inff_event *event_packet,
-+			 u32 packet_len, gfp_t gfp)
-+{
-+	enum inff_fwevt_code code;
-+	struct inff_fwevt_info *fwevt = &drvr->fwevt;
-+	struct inff_fwevt_queue_item *event;
-+	void *data;
-+	u32 datalen;
-+
-+	/* get event info */
-+	code = get_unaligned_be32(&event_packet->msg.event_type);
-+	datalen = get_unaligned_be32(&event_packet->msg.datalen);
-+	data = &event_packet[1];
-+
-+	if (code >= INFF_E_LAST)
-+		return;
-+
-+	if (code != INFF_E_IF && !fwevt->evt_handler[code])
-+		return;
-+
-+	if (datalen > INFF_DCMD_MAXLEN ||
-+	    datalen + sizeof(*event_packet) > packet_len)
-+		return;
-+
-+	event = kzalloc_flex(*event, data, datalen, gfp);
-+	if (!event)
-+		return;
-+
-+	event->datalen = datalen;
-+	event->code = code;
-+	event->ifidx = event_packet->msg.ifidx;
-+
-+	/* use memcpy to get aligned event message */
-+	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
-+	memcpy(event->data, data, datalen);
-+	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
-+
-+	inff_fwevt_queue_event(fwevt, event);
-+}
-+
-+void
-+inff_fwevt_process_skb(struct inff_pub *drvr, struct sk_buff *skb, u16 stype,
-+		       gfp_t gfp)
-+{
-+	struct inff_event *event_packet;
-+	u16 subtype, usr_stype;
-+
-+	/* only process events when protocol matches */
-+	if (skb->protocol != cpu_to_be16(ETH_P_LINK_CTL))
-+		return;
-+
-+	if ((skb->len + ETH_HLEN) < sizeof(*event_packet))
-+		return;
-+
-+	event_packet = (struct inff_event *)skb_mac_header(skb);
-+
-+	/* check subtype if needed */
-+	if (unlikely(stype)) {
-+		subtype = get_unaligned_be16(&event_packet->hdr.subtype);
-+		if (subtype != stype)
-+			return;
++	/* validate length for ether packet */
++	if (skb->len < sizeof(*eh)) {
++		ret = -EINVAL;
++		dev_kfree_skb(skb);
++		goto done;
 +	}
 +
-+	if (memcmp(INF_OUI, &event_packet->hdr.oui[0],
-+		   sizeof(event_packet->hdr.oui)))
-+		return;
++	eh = (struct ethhdr *)(skb->data);
 +
-+	/* final match on usr_subtype */
-+	usr_stype = get_unaligned_be16(&event_packet->hdr.usr_subtype);
-+	if (usr_stype != INFILCP_INF_SUBTYPE_EVENT)
-+		return;
++	if (eh->h_proto == htons(ETH_P_PAE))
++		atomic_inc(&ifp->pend_8021x_cnt);
 +
-+	inff_fwevt_process_event(drvr, event_packet, skb->len + ETH_HLEN, gfp);
++	/* determine the priority */
++	if (skb->priority == 0 || skb->priority > 7)
++		skb->priority = cfg80211_classify8021d(skb, NULL);
++
++	/* set pacing shift for packet aggregation */
++	sk_pacing_shift_update(skb->sk, 8);
++
++	ret = inff_proto_tx_queue_data(drvr, ifp->ifidx, skb);
++	if (ret < 0)
++		inff_txfinalize(ifp, skb, false);
++
++done:
++	if (ret) {
++		ndev->stats.tx_dropped++;
++	} else {
++		ndev->stats.tx_packets++;
++		ndev->stats.tx_bytes += tx_bytes;
++	}
++
++	/* Return ok: we always eat the packet */
++	return NETDEV_TX_OK;
 +}
 +
-+static s32
-+inff_notify_vif_event(struct inff_if *ifp, const struct inff_event_msg *e, void *data)
++static int inff_netdev_set_mac_address(struct net_device *ndev, void *addr)
 +{
-+	struct inff_pub *drvr = ifp->drvr;
-+	struct inff_cfg80211_info *cfg = drvr->config;
-+	struct inff_if_event *ifevent = (struct inff_if_event *)data;
-+	struct inff_cfg80211_vif_event *event = &cfg->vif_event;
-+	struct inff_cfg80211_vif *vif;
-+	enum nl80211_iftype iftype = NL80211_IFTYPE_UNSPECIFIED;
++	struct inff_if *ifp = netdev_priv(ndev);
++	struct sockaddr *sa = (struct sockaddr *)addr;
 +	int err = 0;
 +
-+	inff_dbg(DEVEVT, "%s (%d) action: %u ifidx: %u bsscfgidx: %u flags: %u role: %u\n",
-+		 inff_fwevt_name(e->event_code), e->event_code,
-+		 ifevent->action, ifevent->ifidx, ifevent->bsscfgidx,
-+		 ifevent->flags, ifevent->role);
-+
-+	if (ifevent->ifidx >= INFF_MAX_IFS) {
-+		iphy_err(drvr, "Invalid interface index: %u\n", ifevent->ifidx);
-+		return -EINVAL;
-+	}
-+
-+	spin_lock(&event->vif_event_lock);
-+	event->action = ifevent->action;
-+	vif = event->vif;
-+
-+	switch (ifevent->action) {
-+	case INFF_E_IF_ADD:
-+		inff_dbg(DEVEVT, "adding %s (%pM) interface\n", e->ifname,
-+			 e->addr);
-+
-+		switch (ifevent->role) {
-+		case INFF_E_IF_ROLE_STA:
-+			iftype = NL80211_IFTYPE_STATION;
-+			break;
-+		case INFF_E_IF_ROLE_AP:
-+			iftype = NL80211_IFTYPE_AP;
-+			break;
-+		default:
-+			iphy_err(drvr, "Invalid interface role: %d\n", ifevent->role);
-+			spin_unlock(&event->vif_event_lock);
-+			return -EINVAL;
++	if (inff_socitype_is_ai(ifp->drvr->bus_if)) {
++		err = inff_set_cur_etheraddr(ifp, sa->sa_data);
++		if (err >= 0) {
++			inff_dbg(TRACE, "MAC Address updated to %pM\n", sa->sa_data);
++			memcpy(ifp->mac_addr, sa->sa_data, ETH_ALEN);
++			memcpy(user_mac_addr, sa->sa_data, ETH_ALEN);
++			eth_hw_addr_set(ifp->ndev, ifp->mac_addr);
 +		}
-+
-+		if (ifevent->bsscfgidx >= INFF_MAX_IFS) {
-+			iphy_err(drvr, "invalid bsscfg index: %u\n",
-+				 ifevent->bsscfgidx);
-+			spin_unlock(&event->vif_event_lock);
-+			return -EINVAL;
-+		}
-+
-+		ifp = drvr->iflist[ifevent->bsscfgidx];
-+		if (ifp) {
-+			if (ifevent->bsscfgidx == 0) {
-+				inff_dbg(INFO,
-+					 "ignore IF ADD event for existing primary interface %s\n",
-+					 ifp->ndev->name);
-+				spin_unlock(&event->vif_event_lock);
-+				return 0;
-+			}
-+
-+			/*
-+			 * Remove the corresponding existing interface, to add it again,
-+			 * incase if its INFF_E_IF_DEL event was missed earlier.
-+			 */
-+			iphy_err(drvr,
-+				 "netdev:%s already exists, removing to add it again\n",
-+				 ifp->ndev->name);
-+			inff_net_del_if(drvr, ifp, false);
-+		}
-+
-+		ifp = inff_net_add_if(drvr, ifevent->bsscfgidx, ifevent->ifidx,
-+				      e->ifname, e->addr, iftype);
-+		if (IS_ERR_OR_NULL(ifp)) {
-+			iphy_err(drvr, "interface (role: %d) addition error (%ld)\n",
-+				 ifevent->role, PTR_ERR(ifp));
-+			spin_unlock(&event->vif_event_lock);
-+			return PTR_ERR(ifp);
-+		}
-+
-+		if (!vif) {
-+			spin_unlock(&event->vif_event_lock);
-+			/* Interface Add event may not be upon user request */
-+			vif = inff_alloc_vif(cfg, iftype);
-+			if (IS_ERR(vif)) {
-+				inff_net_del_if(drvr, ifp, false);
-+				return PTR_ERR(vif);
-+			}
-+		}
-+
-+		ifp->vif = vif;
-+		vif->ifp = ifp;
-+
-+		if (ifp->ndev) {
-+			vif->wdev.netdev = ifp->ndev;
-+			ifp->ndev->ieee80211_ptr = &vif->wdev;
-+			SET_NETDEV_DEV(ifp->ndev, wiphy_dev(cfg->wiphy));
-+		}
-+
-+		inff_proto_add_if(drvr, ifp);
-+
-+		spin_unlock(&event->vif_event_lock);
-+		if (inff_vif_event_armed(cfg)) {
-+			wake_up(&event->vif_wq);
-+			break;
-+		}
-+
-+		if (ifp->ndev) {
-+			/* Interface Add event may not be upon user request */
-+			err = inff_net_attach(ifp, false);
-+			if (err) {
-+				inff_err("netdevice register failed with err:%d\n",
-+					 err);
-+				inff_net_del_if(drvr, ifp, false);
-+			}
-+		}
-+
-+		break;
-+	case INFF_E_IF_DEL:
-+		inff_dbg(DEVEVT, "deleting %s (%pM) interface\n", e->ifname,
-+			 e->addr);
-+
-+		spin_unlock(&event->vif_event_lock);
-+		if (inff_vif_event_armed(cfg)) {
-+			wake_up(&event->vif_wq);
-+			break;
-+		}
-+
-+		/* Interface Delete event may not be upon user request */
-+		if (!ifp || ifp->bsscfgidx != ifevent->bsscfgidx)
-+			break;
-+
-+		inff_net_del_if(drvr, ifp, false);
-+
-+		break;
-+	case INFF_E_IF_CHANGE:
-+		inff_dbg(DEVEVT, "changing %s (%pM) interface\n", e->ifname,
-+			 e->addr);
-+
-+		inff_proto_reset_if(drvr, ifp);
-+
-+		spin_unlock(&event->vif_event_lock);
-+		if (inff_vif_event_armed(cfg))
-+			wake_up(&event->vif_wq);
-+
-+		break;
-+	default:
-+		err = -EINVAL;
-+		spin_unlock(&event->vif_event_lock);
-+		break;
 +	}
 +
 +	return err;
 +}
 +
-+void inff_fwevt_register_handlers(struct inff_cfg80211_info *cfg)
++static void inff_net_set_multicast_list(struct wiphy *wiphy,
++					struct wiphy_work *work)
 +{
-+	inff_fwevt_register(cfg->pub, INFF_E_IF,
-+			    inff_notify_vif_event);
-+}
++	struct inff_if *ifp = container_of(work, struct inff_if,
++					   multicast_work);
++	struct inff_pub *drvr = ifp->drvr;
++	struct net_device *ndev = ifp->ndev;
++	struct netdev_hw_addr *ha;
++	u32 cmd_value, cnt;
++	__le32 cnt_le;
++	char *buf, *bufp;
++	u32 buflen;
++	s32 err;
 +
-+/*
-+ * inff_cpevt_dequeue_event() - get event from the queue.
-+ *
-+ * @evi: event handling info.
-+ * @event_q: event queue.
-+ */
-+static struct inff_cpevt_queue_item *
-+inff_cpevt_dequeue_event(struct inff_cpevt_info *evi, struct list_head *event_q)
-+{
-+	struct inff_cpevt_queue_item *event = NULL;
-+	ulong flags;
++	if (inff_socitype_is_cp(ifp->drvr->bus_if))
++		return;
 +
-+	spin_lock_irqsave(&evi->lock, flags);
-+	if (!list_empty(event_q)) {
-+		event = list_first_entry(event_q,
-+					 struct inff_cpevt_queue_item, list);
-+		list_del(&event->list);
-+	}
-+	spin_unlock_irqrestore(&evi->lock, flags);
++	/* Determine initial value of allmulti flag */
++	cmd_value = (ndev->flags & IFF_ALLMULTI) ? true : false;
 +
-+	return event;
-+}
++	/* Send down the multicast list first. */
++	cnt = netdev_mc_count(ndev);
++	buflen = sizeof(cnt) + (cnt * ETH_ALEN);
++	buf = kmalloc(buflen, GFP_KERNEL);
++	if (!buf)
++		return;
++	bufp = buf;
 +
-+/*
-+ * inff_cpevt_queue_event() - queue event.
-+ * @evi: event handling info.
-+ * @event: event item.
-+ * @event_q: event queue.
-+ */
-+static void
-+inff_cpevt_queue_event(struct inff_cpevt_info *evi,
-+		       struct inff_cpevt_queue_item *event,
-+		       struct list_head *event_q)
-+{
-+	ulong flags;
++	cnt_le = cpu_to_le32(cnt);
++	memcpy(bufp, &cnt_le, sizeof(cnt_le));
++	bufp += sizeof(cnt_le);
 +
-+	spin_lock_irqsave(&evi->lock, flags);
-+	list_add_tail(&event->list, event_q);
-+	spin_unlock_irqrestore(&evi->lock, flags);
-+}
-+
-+static int
-+inff_cpevt_alloc_buf(struct inff_cpevt_info *evi)
-+{
-+	struct inff_cpevt_queue_item *event_item;
-+	u8 i;
-+
-+	INIT_LIST_HEAD(&evi->idle_q);
-+	INIT_LIST_HEAD(&evi->wait_q);
-+	INIT_LIST_HEAD(&evi->event_q);
-+	INIT_LIST_HEAD(&evi->monitor_q);
-+	spin_lock_init(&evi->lock);
-+
-+	for (i = 0; i < EVENT_MAX_RX_BUF; i++) {
-+		event_item = kzalloc_obj(*event_item);
-+		if (!event_item)
-+			return -ENODATA;
-+
-+		INIT_LIST_HEAD(&event_item->list);
-+		memset(&event_item->event, 0, sizeof(event_item->event));
-+
-+		spin_lock(&evi->lock);
-+		list_add_tail(&event_item->list, &evi->idle_q);
-+		spin_unlock(&evi->lock);
++	netdev_for_each_mc_addr(ha, ndev) {
++		if (!cnt)
++			break;
++		memcpy(bufp, ha->addr, ETH_ALEN);
++		bufp += ETH_ALEN;
++		cnt--;
 +	}
 +
++	err = inff_fwcmd_iovar_data_set(ifp, "mcast_list", buf, buflen);
++	if (err < 0) {
++		iphy_err(drvr, "Setting mcast_list failed, %d\n", err);
++		cmd_value = cnt ? true : cmd_value;
++	}
++
++	kfree(buf);
++
++	/*
++	 * Now send the allmulti setting.  This is based on the setting in the
++	 * net_device flags, but might be modified above to be turned on if we
++	 * were trying to set some addresses and dongle rejected it...
++	 */
++	err = inff_fwcmd_iovar_int_set(ifp, "allmulti", cmd_value);
++	if (err < 0)
++		iphy_err(drvr, "Setting allmulti failed, %d\n", err);
++
++	/*Finally, pick up the PROMISC flag */
++	cmd_value = (ndev->flags & IFF_PROMISC) ? true : false;
++	err = inff_fwcmd_int_set(ifp, INFF_C_SET_PROMISC, cmd_value);
++	if (err < 0) {
++		/* PROMISC unsupported by firmware of older chips */
++		if (err == -EBADE)
++			iphy_info_once(drvr, "INFF_C_SET_PROMISC unsupported\n");
++		else
++			iphy_err(drvr, "Setting INFF_C_SET_PROMISC failed, err=%d\n",
++				 err);
++	}
++}
++
++static void inff_netdev_set_multicast_list(struct net_device *ndev)
++{
++	struct inff_if *ifp = netdev_priv(ndev);
++
++	if (inff_socitype_is_ai(ifp->drvr->bus_if))
++		wiphy_work_queue(ifp->drvr->wiphy, &ifp->multicast_work);
++}
++
++static const struct net_device_ops inff_netdev_ops_pri = {
++	.ndo_open = inff_netdev_open,
++	.ndo_stop = inff_netdev_stop,
++	.ndo_start_xmit = inff_netdev_start_xmit,
++	.ndo_set_mac_address = inff_netdev_set_mac_address,
++	.ndo_set_rx_mode = inff_netdev_set_multicast_list,
++};
++
++int inff_net_attach(struct inff_if *ifp, bool locked)
++{
++	struct inff_pub *drvr = ifp->drvr;
++	struct net_device *ndev = ifp->ndev;
++	s32 err;
++
++	if (!ndev)
++		return -EINVAL;
++
++	/* set appropriate operations */
++	ndev->netdev_ops = &inff_netdev_ops_pri;
++
++	ndev->needed_headroom += drvr->hdrlen;
++
++	/* set the mac address & netns */
++	eth_hw_addr_set(ndev, ifp->mac_addr);
++	dev_net_set(ndev, wiphy_net(drvr->config->wiphy));
++
++	wiphy_work_init(&ifp->multicast_work, inff_net_set_multicast_list);
++
++	if (locked)
++		err = cfg80211_register_netdevice(ndev);
++	else
++		err = register_netdev(ndev);
++	if (err != 0) {
++		iphy_err(drvr, "couldn't register the net device\n");
++		goto fail;
++	}
++
++	netif_carrier_off(ndev);
++
++	ndev->priv_destructor = inff_cfg80211_free_netdev_priv;
++	inff_dbg(INFO, "%s: Infineon Dongle Host Driver\n", ndev->name);
 +	return 0;
++
++fail:
++	drvr->iflist[ifp->bsscfgidx] = NULL;
++	ndev->netdev_ops = NULL;
++	return -EBADE;
 +}
 +
-+static void
-+inff_cpevt_free_buf(struct list_head *q, const char name[])
++void inff_net_detach(struct net_device *ndev, bool locked)
 +{
-+	struct inff_cpevt_queue_item *event_item;
-+	struct inff_cpevt_queue_item *next = NULL;
-+	u32 count = 0;
-+
-+	list_for_each_entry_safe(event_item, next, q, list) {
-+		list_del(&event_item->list);
-+		kfree(event_item);
-+		count++;
++	if (ndev->reg_state == NETREG_REGISTERED) {
++		if (locked)
++			cfg80211_unregister_netdevice(ndev);
++		else
++			unregister_netdev(ndev);
++	} else {
++		inff_cfg80211_free_netdev_priv(ndev);
++		free_netdev(ndev);
 +	}
-+	inff_dbg(INFO, "%s Q: free pkt count %d\n", name, count);
 +}
 +
-+static int
-+inff_notify_cpevt_scan(struct inff_pub *drvr, struct inff_cpevt *event)
++struct inff_if *inff_net_add_if(struct inff_pub *drvr, s32 bsscfgidx, s32 ifidx,
++				const char *name, const u8 *mac_addr,
++				enum nl80211_iftype iftype)
 +{
-+	struct inff_cpevt_scan *scan_ev = NULL;
++	struct inff_if *ifp;
++	struct net_device *ndev;
++	int err;
 +
-+	if (event->version != INFF_CP_SCAN_EVENT_VER) {
-+		inff_err("version (%d) != %d\n", event->version, INFF_CP_SCAN_EVENT_VER);
-+		return -ENODATA;
-+	}
++	inff_dbg(TRACE, "bsscfgidx=%d, ifidx=%d\n", bsscfgidx, ifidx);
 +
-+	if (event->len != sizeof(*scan_ev)) {
-+		inff_err("len %d != scan_event %ld\n", event->len, sizeof(*scan_ev));
-+		return -ENODATA;
-+	}
++	switch (iftype) {
++	case NL80211_IFTYPE_STATION:
++		fallthrough;
++	case NL80211_IFTYPE_AP:
++		inff_dbg(INFO, "adding  netdev interface\n");
++		/* Allocate netdev, including space for private structure */
++		ndev = alloc_netdev(sizeof(*ifp), name,
++				    NET_NAME_UNKNOWN, ether_setup);
++		if (!ndev)
++			return ERR_PTR(-ENOMEM);
 +
-+	scan_ev = (struct inff_cpevt_scan *)event->data;
-+	return inff_cp_scan_event_handler(drvr, scan_ev);
-+}
-+
-+static int
-+inff_cpevt_handler(struct inff_pub *drvr, struct inff_cpevt *e)
-+{
-+	int ret = 0;
-+
-+	switch (e->type) {
-+	case INFF_CP_E_SCAN:
-+		ret = inff_notify_cpevt_scan(drvr, e);
++		ndev->needs_free_netdev = true;
++		ifp = netdev_priv(ndev);
++		ifp->ndev = ndev;
++		/* store mapping ifidx to bsscfgidx */
++		if (drvr->if2bss[ifidx] == INFF_BSSIDX_INVALID)
++			drvr->if2bss[ifidx] = bsscfgidx;
 +		break;
 +	default:
-+		inff_err("unsupported event: %d\n", e->type);
-+		/* driver bypass this event, keep forward to user */
++		return ERR_PTR(-EINVAL);
++	}
++
++	ifp->drvr = drvr;
++	drvr->iflist[bsscfgidx] = ifp;
++	ifp->ifidx = ifidx;
++	ifp->bsscfgidx = bsscfgidx;
++
++	if (inff_socitype_is_ai(drvr->bus_if)) {
++		init_waitqueue_head(&ifp->pend_8021x_wait);
++		spin_lock_init(&ifp->netif_stop_lock);
++	} else if (inff_socitype_is_cp(drvr->bus_if)) {
++		if (drvr->bus_if->state != INFF_BUS_UP)
++			inff_bus_change_state(drvr->bus_if, INFF_BUS_UP);
++
++		if (iftype == NL80211_IFTYPE_STATION) {
++			err = inff_cpcmd_data_get(ifp, INFF_CP_C_MAC, ifp->mac_addr, ETH_ALEN);
++			if (err) {
++				inff_err("Could not get MAC address (%d)\n", err);
++				return ERR_PTR(-EINVAL);
++			}
++		} else if (iftype == NL80211_IFTYPE_AP) {
++			err = inff_cpcmd_data_get(ifp, INFF_CP_C_SAP_MAC, ifp->mac_addr, ETH_ALEN);
++			if (err) {
++				inff_err("Could not get SoftAP MAC address (%d)\n", err);
++				return ERR_PTR(-EINVAL);
++			}
++		}
++	}
++
++	if (mac_addr)
++		memcpy(ifp->mac_addr, mac_addr, ETH_ALEN);
++
++	inff_dbg(TRACE, "%s (%pM) created by pid:%x\n",
++		 name, ifp->mac_addr, current->pid);
++
++	return ifp;
++}
++
++void inff_net_del_if(struct inff_pub *drvr, struct inff_if *ifp, bool locked)
++{
++	int ifidx;
++	s32 bsscfgidx;
++	enum nl80211_iftype iftype = NL80211_IFTYPE_UNSPECIFIED;
++
++	if (!drvr || !ifp) {
++		inff_err("NULL interface cannot be removed\n");
++		return;
++	}
++
++	ifidx = ifp->ifidx;
++	bsscfgidx = ifp->bsscfgidx;
++
++	if (ifp->vif)
++		iftype = ifp->vif->wdev.iftype;
++
++	inff_dbg(TRACE, "bsscfgidx=%d, ifidx=%d\n", bsscfgidx,
++		 ifp->ifidx);
++
++	inff_proto_del_if(drvr, ifp);
++
++	switch (iftype) {
++	case NL80211_IFTYPE_STATION:
++		fallthrough;
++	case NL80211_IFTYPE_AP:
++		inff_dbg(INFO, "deleting netdev interface\n");
++		if (bsscfgidx == 0) {
++			rtnl_lock();
++			inff_netdev_stop(ifp->ndev);
++			rtnl_unlock();
++		} else {
++			netif_stop_queue(ifp->ndev);
++		}
++
++		wiphy_work_cancel(drvr->wiphy, &ifp->multicast_work);
++		inff_net_detach(ifp->ndev, locked);
++		break;
++	default:
++		inff_dbg(TRACE, "Unknown wdev iface type");
 +		break;
 +	}
 +
-+	if (ret)
-+		inff_err("handle event code (%d) failed\n", e->type);
-+	return ret;
++	drvr->iflist[bsscfgidx] = NULL;
++	if (drvr->if2bss[ifidx] == bsscfgidx)
++		drvr->if2bss[ifidx] = INFF_BSSIDX_INVALID;
 +}
-+
-+/*
-+ * inff_cpevt_worker() - event worker.
-+ *
-+ * @work: worker object.
-+ */
-+static void
-+inff_cpevt_worker(struct work_struct *work)
-+{
-+	struct inff_pub *drvr;
-+	struct inff_cpevt_info *evi;
-+	struct inff_cpevt_queue_item *event_item = NULL;
-+
-+	evi = container_of(work, struct inff_cpevt_info, event_work);
-+	drvr = container_of(evi, struct inff_pub, evi);
-+
-+	while ((event_item = inff_cpevt_dequeue_event(evi, &evi->wait_q))) {
-+		inff_cpevt_handler(drvr, &event_item->event);
-+		inff_cpevt_queue_event(evi, event_item, &evi->idle_q);
-+	}
-+}
-+
-+/*
-+ * inff_cpevt_attach() - initialize event handling.
-+ * @drvr: driver information object.
-+ */
-+int
-+inff_cpevt_attach(struct inff_pub *drvr)
-+{
-+	struct inff_cpevt_info *evi = &drvr->evi;
-+
-+	if (inff_cpevt_alloc_buf(evi)) {
-+		inff_err("Failed to alloc event buffer\n");
-+		return -ENOMEM;
-+	}
-+
-+	INIT_WORK(&evi->event_work, inff_cpevt_worker);
-+
-+	return 0;
-+}
-+
-+/*
-+ * inff_cpevt_detach() - cleanup event handling.
-+ * @drvr: driver information object.
-+ */
-+void
-+inff_cpevt_detach(struct inff_pub *drvr)
-+{
-+	struct inff_cpevt_info *evi = &drvr->evi;
-+
-+	/* cancel the worker if initialized */
-+	if (evi->event_work.func)
-+		cancel_work_sync(&evi->event_work);
-+
-+	spin_lock(&evi->lock);
-+
-+	inff_cpevt_free_buf(&evi->idle_q, "idle");
-+	inff_cpevt_free_buf(&evi->wait_q, "wait");
-+	inff_cpevt_free_buf(&evi->event_q, "event");
-+	inff_cpevt_free_buf(&evi->monitor_q, "monitor");
-+
-+	spin_unlock(&evi->lock);
-+}
-+
-+/*
-+ * inff_cpevt_process_skb() - process skb as event.
-+ * @drvr: driver information object.
-+ * @pkt: event packet to process.
-+ * @inirq: in irq.
-+ * Dispatch the event packet to worker.
-+ */
-+void
-+inff_cpevt_process_skb(struct inff_pub *drvr, struct sk_buff *pkt)
-+{
-+	struct inff_cpevt_info *evi = &drvr->evi;
-+	struct inff_cpevt_queue_item *event_item;
-+
-+	if (pkt->len > sizeof(struct inff_cpevt)) {
-+		inff_err("event len (%d) > %ld\n", pkt->len, sizeof(struct inff_cpevt));
-+		return;
-+	}
-+
-+	event_item = inff_cpevt_dequeue_event(evi, &evi->idle_q);
-+	if (!event_item) {
-+		inff_err("no buffer in idle q\n");
-+		return;
-+	}
-+
-+	memset(&event_item->event, 0, sizeof(event_item->event));
-+	memcpy(&event_item->event, pkt->data, pkt->len);
-+
-+	inff_dbg_hex_dump(INFF_MSGLVL_ON(DEVEVT), pkt->data,
-+			  min_t(u32, pkt->len, 64),
-+			  "event payload, len=%d\n", pkt->len);
-+
-+	inff_cpevt_queue_event(evi, event_item, &evi->wait_q);
-+
-+	schedule_work(&evi->event_work);
-+}
-diff --git a/drivers/net/wireless/infineon/inffmac/dev_evt.h b/drivers/net/wireless/infineon/inffmac/dev_evt.h
+diff --git a/drivers/net/wireless/infineon/inffmac/net.h b/drivers/net/wireless/infineon/inffmac/net.h
 new file mode 100644
-index 000000000000..cc9d4384b1b8
+index 000000000000..ac16fbd63235
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/dev_evt.h
-@@ -0,0 +1,447 @@
++++ b/drivers/net/wireless/infineon/inffmac/net.h
+@@ -0,0 +1,43 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
-+ * Copyright (c) 2012 Broadcom Corporation
++ * Copyright (c) 2010 Broadcom Corporation
 + *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#ifndef INFF_DEV_EVT_H
-+#define INFF_DEV_EVT_H
++#ifndef INFF_NET_H
++#define INFF_NET_H
 +
++#include <linux/types.h>
 +#include <linux/unaligned.h>
-+#include <linux/skbuff.h>
-+#include <linux/if_ether.h>
-+#include <linux/if.h>
-+
-+#define INF_OUI		"\x00\x03\x19"
-+
-+/* formward declarations */
-+struct inff_pub;
-+struct inff_if;
-+struct inff_cfg80211_info;
-+
-+/* list of firmware events */
-+/* firmware event codes sent by the dongle */
-+enum inff_fwevt_code {
-+	INFF_E_SET_SSID = 0,
-+	INFF_E_JOIN = 1,
-+	INFF_E_START = 2,
-+	INFF_E_AUTH = 3,
-+	INFF_E_AUTH_IND = 4,
-+	INFF_E_DEAUTH = 5,
-+	INFF_E_DEAUTH_IND = 6,
-+	INFF_E_ASSOC = 7,
-+	INFF_E_ASSOC_IND = 8,
-+	INFF_E_REASSOC = 9,
-+	INFF_E_REASSOC_IND = 10,
-+	INFF_E_DISASSOC = 11,
-+	INFF_E_DISASSOC_IND = 12,
-+	INFF_E_QUIET_START = 13,
-+	INFF_E_QUIET_END = 14,
-+	INFF_E_BEACON_RX = 15,
-+	INFF_E_LINK = 16,
-+	INFF_E_MIC_ERROR = 17,
-+	INFF_E_NDIS_LINK = 18,
-+	INFF_E_ROAM = 19,
-+	INFF_E_TXFAIL = 20,
-+	INFF_E_PMKID_CACHE = 21,
-+	INFF_E_RETROGRADE_TSF = 22,
-+	INFF_E_PRUNE = 23,
-+	INFF_E_AUTOAUTH = 24,
-+	INFF_E_EAPOL_MSG = 25,
-+	INFF_E_SCAN_COMPLETE = 26,
-+	INFF_E_ADDTS_IND = 27,
-+	INFF_E_DELTS_IND = 28,
-+	INFF_E_BCNSENT_IND = 29,
-+	INFF_E_BCNRX_MSG = 30,
-+	INFF_E_BCNLOST_MSG = 31,
-+	INFF_E_ROAM_PREP = 32,
-+	INFF_E_RESET_COMPLETE = 35,
-+	INFF_E_JOIN_START = 36,
-+	INFF_E_ROAM_START = 37,
-+	INFF_E_ASSOC_START = 38,
-+	INFF_E_IBSS_ASSOC = 39,
-+	INFF_E_RADIO = 40,
-+	INFF_E_PSM_WATCHDOG = 41,
-+	INFF_E_PROBREQ_MSG = 44,
-+	INFF_E_SCAN_CONFIRM_IND = 45,
-+	INFF_E_PSK_SUP = 46,
-+	INFF_E_COUNTRY_CODE_CHANGED = 47,
-+	INFF_E_EXCEEDED_MEDIUM_TIME = 48,
-+	INFF_E_ICV_ERROR = 49,
-+	INFF_E_UNICAST_DECODE_ERROR = 50,
-+	INFF_E_MULTICAST_DECODE_ERROR = 51,
-+	INFF_E_TRACE = 52,
-+	INFF_E_IF = 54,
-+	INFF_E_RSSI = 56,
-+	INFF_E_EXTLOG_MSG = 58,
-+	INFF_E_ACTION_FRAME = 59,
-+	INFF_E_ACTION_FRAME_TX_COMPLETE = 60,
-+	INFF_E_PRE_ASSOC_IND = 61,
-+	INFF_E_PRE_REASSOC_IND = 62,
-+	INFF_E_CHANNEL_ADOPTED = 63,
-+	INFF_E_AP_STARTED = 64,
-+	INFF_E_DFS_AP_STOP = 65,
-+	INFF_E_DFS_AP_RESUME = 66,
-+	INFF_E_ESCAN_RESULT = 69,
-+	INFF_E_ACTION_FRAME_OFF_CHAN_COMPLETE = 70,
-+	INFF_E_PROBERESP_MSG = 71,
-+	INFF_E_PROBEREQ_MSG = 72,
-+	INFF_E_DCS_REQUEST = 73,
-+	INFF_E_FIFO_CREDIT_MAP = 74,
-+	INFF_E_ACTION_FRAME_RX_COMPLETE = 75,
-+	INFF_E_SA_COMPLETE_IND = 80,
-+	INFF_E_ASSOC_REQ_IE = 87,
-+	INFF_E_ASSOC_RESP_IE = 88,
-+	INFF_E_BCMC_CREDIT_SUPPORT = 127,
-+	INFF_E_EXT_AUTH_REQ = 187,
-+	INFF_E_EXT_AUTH_FRAME_RX = 188,
-+	INFF_E_MGMT_FRAME_TXSTATUS = 189,
-+	INFF_E_MGMT_FRAME_OFF_CHAN_COMPLETE = 190,
-+	INFF_E_EXT_ASSOC_FRAME_RX = 196,
-+	/* this determines event mask length which must match
-+	 * minimum length check in device firmware so it is
-+	 * hard-coded here.
-+	 */
-+	INFF_E_LAST = 203
-+};
-+
-+/* list of CP events */
-+/* CP event codes sent by the dongle */
-+enum inff_cpevt_code {
-+	INFF_CP_E_NW = 0,
-+	INFF_CP_E_SCAN = 1
-+};
-+
-+#define INFF_EVENTING_MASK_LEN		DIV_ROUND_UP(INFF_E_LAST, 8)
-+
-+/* flags field values in struct inff_event_msg */
-+#define INFF_EVENT_MSG_LINK		0x01
-+#define INFF_EVENT_MSG_FLUSHTXQ	0x02
-+#define INFF_EVENT_MSG_GROUP		0x04
-+
-+/* status field values in struct inff_event_msg */
-+#define INFF_E_STATUS_SUCCESS			0
-+#define INFF_E_STATUS_FAIL			1
-+#define INFF_E_STATUS_TIMEOUT			2
-+#define INFF_E_STATUS_NO_NETWORKS		3
-+#define INFF_E_STATUS_ABORT			4
-+#define INFF_E_STATUS_NO_ACK			5
-+#define INFF_E_STATUS_UNSOLICITED		6
-+#define INFF_E_STATUS_ATTEMPT			7
-+#define INFF_E_STATUS_PARTIAL			8
-+#define INFF_E_STATUS_NEWSCAN			9
-+#define INFF_E_STATUS_NEWASSOC			10
-+#define INFF_E_STATUS_11HQUIET			11
-+#define INFF_E_STATUS_SUPPRESS			12
-+#define INFF_E_STATUS_NOCHANS			13
-+#define INFF_E_STATUS_CS_ABORT			15
-+#define INFF_E_STATUS_ERROR			16
-+
-+/* status field values for PSK_SUP event */
-+#define INFF_E_STATUS_FWSUP_WAIT_M1		4
-+#define INFF_E_STATUS_FWSUP_PREP_M2		5
-+#define INFF_E_STATUS_FWSUP_COMPLETED		6
-+#define INFF_E_STATUS_FWSUP_TIMEOUT		7
-+#define INFF_E_STATUS_FWSUP_WAIT_M3		8
-+#define INFF_E_STATUS_FWSUP_PREP_M4		9
-+#define INFF_E_STATUS_FWSUP_WAIT_G1		10
-+#define INFF_E_STATUS_FWSUP_PREP_G2		11
-+
-+/* reason field values in struct inff_event_msg */
-+/* roam reason codes */
-+#define INFF_ROAM_E_REASON_INITIAL_ASSOC     0     /* initial assoc */
-+#define INFF_ROAM_E_REASON_LOW_RSSI          1     /* roamed due to low RSSI */
-+#define INFF_ROAM_E_REASON_DEAUTH            2     /* roamed due to DEAUTH indication */
-+#define INFF_ROAM_E_REASON_DISASSOC          3     /* roamed due to DISASSOC indication */
-+#define INFF_ROAM_E_REASON_BCNS_LOST         4     /* roamed due to lost beacons */
-+#define INFF_ROAM_E_REASON_FAST_ROAM_FAILED  5     /* roamed due to fast roam failure */
-+#define INFF_ROAM_E_REASON_DIRECTED_ROAM     6     /* roamed due to request by AP */
-+#define INFF_ROAM_E_REASON_TSPEC_REJECTED    7     /* roamed due to TSPEC rejection */
-+#define INFF_ROAM_E_REASON_BETTER_AP         8     /* roamed due to finding better AP */
-+#define INFF_ROAM_E_REASON_MINTXRATE         9     /* roamed because at mintxrate for too long */
-+#define INFF_ROAM_E_REASON_TXFAIL            10    /* We can hear AP, but AP can't hear us */
-+#define INFF_ROAM_E_REASON_BSSTRANS_REQ      11    /* roamed due to BSS Transition request by AP */
-+#define INFF_ROAM_E_REASON_LOW_RSSI_CU       12    /* roamed due to low RSSI and Channel Usage */
-+#define INFF_ROAM_E_REASON_RADAR_DETECTED    13    /* roamed due to radar detection by STA */
-+#define INFF_ROAM_E_REASON_CSA               14    /* roamed due to CSA from AP */
-+#define INFF_ROAM_E_REASON_ESTM_LOW          15    /* roamed due to ESTM low tput */
-+#define INFF_ROAM_E_REASON_LAST              16
-+
-+#define INFF_E_REASON_LINK_BSSCFG_DIS		4
-+#define INFF_E_REASON_FAST_ROAM_FAILED		5
-+#define INFF_E_REASON_DIRECTED_ROAM		6
-+#define INFF_E_REASON_TSPEC_REJECTED		7
-+#define INFF_E_REASON_BETTER_AP		8
-+
-+/* reason field values for PSK_SUP event */
-+#define INFF_E_REASON_FWSUP_OTHER		0
-+#define INFF_E_REASON_FWSUP_DECRYPT_KEY_DATA	1
-+#define INFF_E_REASON_FWSUP_BAD_UCAST_WEP128	2
-+#define INFF_E_REASON_FWSUP_BAD_UCAST_WEP40	3
-+#define INFF_E_REASON_FWSUP_UNSUP_KEY_LEN	4
-+#define INFF_E_REASON_FWSUP_PW_KEY_CIPHER	5
-+#define INFF_E_REASON_FWSUP_MSG3_TOO_MANY_IE	6
-+#define INFF_E_REASON_FWSUP_MSG3_IE_MISMATCH	7
-+#define INFF_E_REASON_FWSUP_NO_INSTALL_FLAG	8
-+#define INFF_E_REASON_FWSUP_MSG3_NO_GTK	9
-+#define INFF_E_REASON_FWSUP_GRP_KEY_CIPHER	10
-+#define INFF_E_REASON_FWSUP_GRP_MSG1_NO_GTK	11
-+#define INFF_E_REASON_FWSUP_GTK_DECRYPT_FAIL	12
-+#define INFF_E_REASON_FWSUP_SEND_FAIL		13
-+#define INFF_E_REASON_FWSUP_DEAUTH		14
-+#define INFF_E_REASON_FWSUP_WPA_PSK_TMO	15
-+#define INFF_E_REASON_FWSUP_WPA_PSK_M1_TMO	16
-+#define INFF_E_REASON_FWSUP_WPA_PSK_M3_TMO	17
-+
-+/* action field values for inff_ifevent */
-+#define INFF_E_IF_ADD				1
-+#define INFF_E_IF_DEL				2
-+#define INFF_E_IF_CHANGE			3
-+
-+/* flag field values for inff_ifevent */
-+#define INFF_E_IF_FLAG_NOIF			1
-+
-+/* role field values for inff_ifevent */
-+#define INFF_E_IF_ROLE_STA			0
-+#define INFF_E_IF_ROLE_AP			1
 +
 +/**
-+ * definitions for event packet validation.
-+ */
-+#define INFILCP_INF_SUBTYPE_EVENT		1
-+#define INFILCP_SUBTYPE_VENDOR_LONG		32769
-+
-+/**
-+ * struct inff_ethhdr - Infineon specific ether header.
++ * enum inff_netif_stop_reason - reason for stopping netif queue.
 + *
-+ * @subtype: subtype for this packet.
-+ * @length: length of appended data.
-+ * @version: version indication.
-+ * @oui: OUI of this packet.
-+ * @usr_subtype: subtype for this OUI.
++ * @INFF_NETIF_STOP_REASON_FWS_FC:
++ *	netif stopped due to firmware signalling flow control.
++ * @INFF_NETIF_STOP_REASON_FLOW:
++ *	netif stopped due to flowring full.
++ * @INFF_NETIF_STOP_REASON_DISCONNECTED:
++ *	netif stopped due to not being connected (STA mode).
 + */
-+struct inff_ethhdr {
-+	__be16 subtype;
-+	__be16 length;
-+	u8 version;
-+	u8 oui[3];
-+	__be16 usr_subtype;
-+} __packed;
-+
-+struct inff_event_msg_be {
-+	__be16 version;
-+	__be16 flags;
-+	__be32 event_type;
-+	__be32 status;
-+	__be32 reason;
-+	__be32 auth_type;
-+	__be32 datalen;
-+	u8 addr[ETH_ALEN];
-+	char ifname[IFNAMSIZ];
-+	u8 ifidx;
-+	u8 bsscfgidx;
-+} __packed;
-+
-+/**
-+ * struct inff_event - contents of Infineon event packet.
-+ *
-+ * @eth: standard ether header.
-+ * @hdr: Infineon specific ether header.
-+ * @msg: common part of the actual event message.
-+ */
-+struct inff_event {
-+	struct ethhdr eth;
-+	struct inff_ethhdr hdr;
-+	struct inff_event_msg_be msg;
-+} __packed;
-+
-+#define EVENT_MAX_DATA_LEN 1024
-+#define EVENT_MAX_RX_BUF 10
-+
-+struct inff_cpevt {
-+	u16 type;
-+	u16 len;
-+	u8 version;
-+	u8 data[EVENT_MAX_DATA_LEN];
++enum inff_netif_stop_reason {
++	INFF_NETIF_STOP_REASON_FWS_FC = BIT(0),
++	INFF_NETIF_STOP_REASON_FLOW = BIT(1),
++	INFF_NETIF_STOP_REASON_DISCONNECTED = BIT(2)
 +};
 +
-+/**
-+ * struct inff_event_msg - firmware event message.
-+ *
-+ * @version: version information.
-+ * @flags: event flags.
-+ * @event_code: firmware event code.
-+ * @status: status information.
-+ * @reason: reason code.
-+ * @auth_type: authentication type.
-+ * @datalen: length of event data buffer.
-+ * @addr: ether address.
-+ * @ifname: interface name.
-+ * @ifidx: interface index.
-+ * @bsscfgidx: bsscfg index.
-+ */
-+struct inff_event_msg {
-+	u16 version;
-+	u16 flags;
-+	u32 event_code;
-+	u32 status;
-+	u32 reason;
-+	s32 auth_type;
-+	u32 datalen;
-+	u8 addr[ETH_ALEN];
-+	char ifname[IFNAMSIZ];
-+	u8 ifidx;
-+	u8 bsscfgidx;
-+};
++void inff_net_txflowblock(struct inff_if *ifp,
++			  enum inff_netif_stop_reason reason, bool state);
++void inff_net_setcarrier(struct inff_if *ifp, bool on);
++bool inff_net_rx_preprocess(struct inff_if *ifp, struct sk_buff *skb);
++void inff_net_rx(struct inff_if *ifp, struct sk_buff *skb, bool inirq);
++int inff_net_attach(struct inff_if *ifp, bool locked);
++void inff_net_detach(struct net_device *ndev, bool locked);
++struct inff_if *inff_net_add_if(struct inff_pub *drvr, s32 bsscfgidx, s32 ifidx,
++				const char *name, const u8 *mac_addr,
++				enum nl80211_iftype iftype);
++void inff_net_del_if(struct inff_pub *drvr, struct inff_if *ifp, bool locked);
 +
-+struct inff_if_event {
-+	u8 ifidx;
-+	u8 action;
-+	u8 flags;
-+	u8 bsscfgidx;
-+	u8 role;
-+};
-+
-+enum event_msgs_ext_command {
-+	EVENTMSGS_NONE		=	0,
-+	EVENTMSGS_SET_BIT	=	1,
-+	EVENTMSGS_RESET_BIT	=	2,
-+	EVENTMSGS_SET_MASK	=	3
-+};
-+
-+#define EVENTMSGS_VER 1
-+#define EVENTMSGS_EXT_STRUCT_SIZE	offsetof(struct eventmsgs_ext, mask[0])
-+
-+/* len-	for SET it would be mask size from the application to the firmware */
-+/*		for GET it would be actual firmware mask size */
-+/* maxgetsize -	is only used for GET. indicate max mask size that the */
-+/*				application can read from the firmware */
-+struct eventmsgs_ext {
-+	u8	ver;
-+	u8	command;
-+	u8	len;
-+	u8	maxgetsize;
-+	u8	mask[];
-+};
-+
-+struct inff_fwevt_roam_reason_name {
-+	u32 reason;
-+	char *reason_name;
-+};
-+
-+typedef int (*inff_fwevt_handler_t)(struct inff_if *ifp,
-+				    const struct inff_event_msg *evtmsg,
-+				    void *data);
-+
-+/**
-+ * struct inff_fwevt_info - firmware event handling information.
-+ *
-+ * @event_work: event worker.
-+ * @evt_q_lock: lock for event queue protection.
-+ * @event_q: event queue.
-+ * @evt_handler: registered event handlers.
-+ */
-+struct inff_fwevt_info {
-+	struct work_struct event_work;
-+	spinlock_t evt_q_lock;	/* lock for event queue protection */
-+	struct list_head event_q;
-+
-+	int (*evt_handler[INFF_E_LAST])(struct inff_if *ifp,
-+					const struct inff_event_msg *evtmsg,
-+					void *data);
-+};
-+
-+/*
-+ * struct inff_cpevt_queue_item - event item on event queue.
-+ *
-+ * @list: list element for queuing.
-+ * @event: event specific data part of the event.
-+ */
-+struct inff_cpevt_queue_item {
-+	struct list_head list;
-+	struct inff_cpevt event;
-+};
-+
-+/*
-+ * struct inff_cpevt_info - event handling information.
-+ *
-+ * @event_work: event worker.
-+ * @event_q_lock: lock for event queue protection.
-+ * @event_q: event queue.
-+ */
-+struct inff_cpevt_info {
-+	struct work_struct event_work;
-+	/* lock for event queue protection */
-+	spinlock_t lock;
-+	struct list_head idle_q;
-+	struct list_head wait_q;
-+	struct list_head event_q;
-+	struct list_head monitor_q;
-+};
-+
-+#define INFF_CP_NW_EVENT_VER 2
-+
-+/*
-+ * struct inff_cpevt_nw - contents of CP network event.
-+ */
-+struct inff_cpevt_nw {
-+	u8 type;
-+	u8 if_idx;
-+	union {
-+		u8 mac[ETH_ALEN];
-+		u32 ipv4;		/* IPv4 address in network byte order */
-+		u32 reason;
-+		u32 pad[2];
-+	} u;
-+	u32 ipv6[4];
-+} __packed;
-+
-+/* Scan Event */
-+#define INFF_CP_SCAN_EVENT_VER		2
-+#define INFF_CP_SCAN_IE_LEN_MAX		896
-+
-+/*
-+ * struct inff_cpevt_scan - contents of CP scan event.
-+ */
-+struct inff_cpevt_scan {
-+	u8     ssid_length;	/* SSID length */
-+	char   ssid[IEEE80211_MAX_SSID_LEN + 1]; /* SSID of the access point */
-+	u32    security_type;	/* WiFi security type */
-+	u8     macaddr[ETH_ALEN];	/* MAC Address of the access point */
-+	s16    signal_strength;	/* signal strength */
-+	u8     channel;	/* channel number */
-+	u8     band;	/* WiFi band of access point */
-+	bool   scan_complete;	/* WiFi scan complete/incomplete */
-+	u16    beacon_period;	/* Interval between two consecutive beacon frames. Unit: Kusec */
-+	u16    capability;	/* Capability information */
-+	u32    ie_len;	/* Length of the IE. */
-+
-+	/* Pointer to the received Beacon/Probe Response IE (Information Element). */
-+	u8     ie[INFF_CP_SCAN_IE_LEN_MAX];
-+} __packed;
-+
-+const char *inff_fwevt_name(enum inff_fwevt_code code);
-+
-+void inff_fwevt_attach(struct inff_pub *drvr);
-+void inff_fwevt_detach(struct inff_pub *drvr);
-+int inff_fwevt_register(struct inff_pub *drvr, enum inff_fwevt_code code,
-+			int (*handler)(struct inff_if *ifp,
-+				       const struct inff_event_msg *evtmsg,
-+				       void *data));
-+void inff_fwevt_unregister(struct inff_pub *drvr,
-+			   enum inff_fwevt_code code);
-+int inff_fwevt_activate_events(struct inff_if *ifp);
-+void inff_fwevt_process_event(struct inff_pub *drvr,
-+			      struct inff_event *event_packet,
-+			      u32 packet_len, gfp_t gfp);
-+void inff_fwevt_process_skb(struct inff_pub *drvr, struct sk_buff *skb, u16 stype,
-+			    gfp_t gfp);
-+void inff_fwevt_register_handlers(struct inff_cfg80211_info *cfg);
-+
-+int inff_cpevt_attach(struct inff_pub *drvr);
-+void inff_cpevt_detach(struct inff_pub *drvr);
-+void inff_cpevt_process_skb(struct inff_pub *drvr, struct sk_buff *pkt);
-+
-+#endif /* INFF_DEV_EVT_H */
++#endif /* INFF_NET_H */
 -- 
 2.43.0
 
