@@ -1,71 +1,42 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782C6385D7F
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:22:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABCC32DEA74
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788337350; cv=none; b=PZujIu9UCLmzHxt7aIpXXjLyLiAE3Ii3JIKC2wSokvoSummIbuN4SJhaHIuVbQYbBoFMxr/N6GkkgLy3ih3QK7vLJqY6RdU5LweJ59pyKdz2+CR9ZnayIMVhCqvbZqcYRkN+hnU30i/5xcs4+yhSUfgFVR+B1o+6Jp4IkKbExNM=
+	t=1788338777; cv=none; b=qifrOE0JHHvpka2k21nKrnhwb5XAeBk2UM1htmf7QefLDNUmEgx+1R7mjlwmUbgQhnaJuC2Cqzsb62OT7SRDaWOR4qhf0H2svWFN4pdhPcmBDRyoRULFauZhr4zD+F/Vdr9/ZpRKCvS868NNGiCIOplZEfXHZ61WE/yDE3mC+7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788337350; c=relaxed/simple;
-	bh=oa6HjGViZFyoRJTy/Z2W2UNJiXRoDabPV0p1bGeDSUk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fcFF8Aa3WPOV9+7EDiVg8sZZ91JgRS2kQYXKPUMkpZn9RQq5IAZiyAAcvFQVhLY003l6pMcLUBv9tW7JAiclIVU8Dcmopb88P6BQQpCrxizPgExJkY4Rt5IHPYMjkKCV0K5ox1CaC7kYZAiHuLTEBE7BGWluWmDp8bdrCHODYes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r3wSR1M0; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788338777; c=relaxed/simple;
+	bh=2OLNidt7YzaeovLU3OAiHvFN0y8YsQQws0tiIoO3q40=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mo4a+PYpR2gmpF4TTS1aw38lbcf66R1VwPluu2+h6JmeSVHm3TzNtnZK2/Srt77J/cKOkj4fxW3wv7kxx0s2oDyddnOTDA6bMW0+nJpc+YR+WaIiGcKAVJDHy4wdJKhnk1r15RohxUhSMnKT63xWQudLm8Qu5M9PpHPU7CnkMRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=aUkrFctC; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r3wSR1M0"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-49b0d8bc2aaso6855305e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 01:22:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788337347; x=1788942147; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ST0JywuIijs9AyXrfzYTAQmxlPvMrq1DLcWk/E2Kd+c=;
-        b=r3wSR1M0Ek5YvFsPi2mgqJ4woTPjSWVqC/4MFzlWs559LC2b6i5PPGUEIRKTFv4dBP
-         AjkxaQ0Gk1SQ9Q0ncAR49H9g8PzSfpIEoCBRk2zvFCfFkjHt4jd7QNxTa7hV6vY2juyt
-         m2c6XzN5gSOKKoliPpPtuUL5goqlrHjT+SqYzNvk2+nbxTvaHKkXBHhsAKVTcKeiBnEe
-         iQSupFYo5JsKpEO9Vzh4ZwJ926yTk1js0997M1h58oHFbbEHgthggMA62WRDlQPLo/eX
-         yD4f+XVkkj9coZ0jX3NQZOcC/T5YRz0dt/iBSo9QMCGIVcei0Ad5HjYbkvrM5vf09Z0H
-         dypw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788337347; x=1788942147;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ST0JywuIijs9AyXrfzYTAQmxlPvMrq1DLcWk/E2Kd+c=;
-        b=kCJOtl9E9RgPMo4diNblQpaDZZFluxFjJ9eJlgldGoYt9+i7Lfi+M0fmLK19UGHVYi
-         AUfPsAGJ2I47RFNzTEnv+CRGPBMS01KiYTBCdUmqcAnSkV0I6ULE5t6c4ic+gvBqQIba
-         fCFos+ZlCOILQJUhXHZQrAdjqnvr2zwhb4OK5v9RCs2fDNO3XN/q8LMTYhnKl6AUATh+
-         JjEoCzM/AiG/4HWHhDBGlpKAr6W9ud9L4u4se5bik8oh4COcWNHdQMShRicYa/kUegw4
-         Rhxh5ANogxlKfSIuF7k4FZJF+4jx/RsjzCO8AkFK6s2uCjeS2O/zBPlsiFV/JjwpoXhC
-         oqkA==
-X-Forwarded-Encrypted: i=1; AHgh+Rqc8TZgQtOwtPBGVbIDFJ4LdWrDRm9CZk+NFlSMXmZ57Ah7EUc4rRhIS+3kIcbwZ0xJJznsH/91Y+et4MwY6A==@vger.kernel.org
-X-Gm-Message-State: AFuF++mxB9Fpr7Tu0VA3eMhvHDamBtKlPhjXhVuLnYPdtQmeAFaPwugP
-	y02yACPyxUOlm4IuzkCXff2oPgpIL3BI0kAyNfnKUDTt9vlLoX+q8BK+
-X-Gm-Gg: AR+sD11w+MkrCv5dghclkGxZtKVmGLcYjuUfFz0XY07eTK0u3LPNZLWFIDdKxibCqo/
-	nYG9SdXbATgTtRflEuTcBWhQZxdIgkgHiE988SOs9DAQ6dJ6UmLMsA8DDqQp9HcaUDt/HQ0nEKw
-	c6kjSo22hucaBfK4olu6RqLXqzgRQzN1i4oECWidk5XQRMMSUWxn+Q68OsKt4MbAQfuVWgvk3yE
-	Zx66Hcy7J/f8Z8ZZwkMDwhkBCoqEsoNQmNMsqiollalZssQ08/csaoCmeJP6iml173BIYODZDOR
-	2Wcj1TucwNA8S0Ohvw7GOqH5o16Uo9T7Cw9QgIOoAusxHQGG8eR8L6p/wpRyGL8eAuUaU496s8j
-	3EKwgWRttNmHSpR6DP9/4plDEmNFyA3T4d3NNys2A8NM02uvHjsaiBhIXmdNXi9Oi77dC2jUf1j
-	XdtiUmDTL1yp5VUZdT0d64hFZnKk5pyN9gh4WYhhD0jVc9PgeD28E=
-X-Received: by 2002:a05:600c:c170:b0:49b:d45:703e with SMTP id 5b1f17b1804b1-49ce57f072fmr62819355e9.8.1788337346382;
-        Wed, 02 Sep 2026 01:22:26 -0700 (PDT)
-Received: from vitor-nb ([2001:8a0:c4c6:f00:e66:da8a:ae8a:96d3])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48448ee9cf7sm4992947f8f.25.2026.09.02.01.22.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 01:22:25 -0700 (PDT)
-From: Vitor Soares <ivitro@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Vitor Soares <vitor.soares@toradex.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH ath-next] wifi: ath12k: provide MAC address list for single-radio wiphys
-Date: Wed,  2 Sep 2026 09:22:18 +0100
-Message-ID: <20260902082219.3010793-2-ivitro@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aUkrFctC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=3JBV2EYmaXWAZHm5OYLd6YiGj0qZynf9nsPxpKFKwVQ=; b=aUkrFctCEjxdbQRPsLqo2PSONP
+	dDOPxspwkTogbqZno8qo+q0jOvZlNylZsh4RRknPMD7razj9RBNYvynaNlzKPziuETA4zRdWvgPNo
+	fbIbE9RiVxG8kgbK1hDheZVWc6qFFwWOEytz/U6DRQSxWvjFFUsSwcz90KsWNfzTlkiY=;
+Received: from p200300cadf14d1000000000000000162.dip0.t-ipconnect.de ([2003:ca:df14:d100::162] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1x1gbl-00Cwkn-1v;
+	Wed, 02 Sep 2026 10:46:13 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC PATCH 00/15] wifi: SCS and MSCS
+Date: Wed,  2 Sep 2026 10:45:55 +0200
+Message-ID: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,120 +45,115 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Vitor Soares <vitor.soares@toradex.com>
+These two services let a station tell an AP how to classify the traffic
+the AP sends to it. SCS carries a classifier and the user priority to
+give what matches it. MSCS asks the AP to mirror onto the downlink
+whatever priority the station used on the uplink of the same flow.
+802.11be adds a QoS Characteristics element to an SCS descriptor, which
+describes the service a stream wants rather than how to recognise it.
 
-ath12k supports creating vdevs with addresses provided by mac80211.
-Userspace can already make concurrent interfaces work by explicitly
-assigning different locally administered addresses.
+The split follows the one the QoS map already uses. hostapd and
+wpa_supplicant encode and decode the Robust AV Streaming action frames
+that carry both services, hold the dialog tokens and decide policy. The
+kernel parses the classifier elements, classifies every MSDU it queues,
+and hands the traffic description to the driver. Each descriptor is
+answered on its own, and the per descriptor IEEE status codes are what
+userspace puts into the SCS Response frame, so the answer a station gets
+is the kernel's.
 
-However, ath12k does not advertise an address list, so when a second
-interface is created without an explicit address, mac80211 has nothing
-to pick from and falls back to the permanent address. If the first
-interface is already running with that address, bringing up the second
-one fails with -ENOTUNIQ.
+An earlier RFC proposed a different split, where hostapd translates each
+classifier into an nftables rule that tags the packet. Two things argue
+against it. It costs on the software path, where netfilter on the bridge
+adds work to every frame and evaluation scales with the rule count of
+the whole BSS. And it makes a wireless feature depend on a second
+subsystem being built in and enabled.
 
-As in ath11k, provide a list of usable addresses so
-ieee80211_assign_perm_addr() can hand each new interface an unused one.
-Keep the first entry as the radio's own MAC address. Generate the
-remaining entries as locally administered variants by changing only the
-upper nibble of the first octet, which naturally limits the pool to 16
-unique addresses.
+Patches 1 to 7 build the cfg80211 side, which has no user by design: the
+element parsers, the flow parser and the MSCS key, the evaluator, the
+request validation, the two driver ops, the nl80211 commands, and KUnit
+tests for the classifier.
 
-Handle only single-radio wiphys. Wiphys with more than one radio behave
-exactly as before.
+Patches 8 to 13 make it work in mac80211: per station rule storage, the
+transmit hook, MSCS learning on receive and its application on transmit,
+the sta_set_scs driver op, and two debugfs files.
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+Patch 14 turns both on in hwsim, so the whole of the above can be
+exercised without hardware. mac80211 classifies in software for every
+driver it serves, so the two feature flags are all it takes to reach the
+transmit hook, the learning and the evaluator. It answers sta_set_scs as
+well, because without an answer every descriptor carrying a traffic
+description is declined and that half of the path cannot be reached.
+Nothing simulated schedules a stream, so what it answers with comes from
+debugfs.
 
-Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
----
-Note that a device which is not MLO capable registers one wiphy per
-radio, so each radio of a multi-radio device also gets a pool, seeded
-from that radio's own MAC. I only have single-radio WCN7850 hardware,
-so that case is untested.
----
- drivers/net/wireless/ath/ath12k/mac.c | 48 +++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+That path is tested: on hwsim, with hostapd driving the two commands, a
+classifier tags the frames it names with the user priority it asks for,
+the granularity rule and the per descriptor status codes answer as
+11.25.2 says, and MSCS mirrors the priority of an uplink flow onto the
+downlink under its limit and its priority bitmap, each one checked
+against the TID of the frames on the air.
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 9a775602775d..bee6701f1029 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -14685,6 +14685,50 @@ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
- 	kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
- }
- 
-+static void ath12k_mac_cleanup_mac_address_list(struct ath12k_hw *ah)
-+{
-+	kfree(ah->hw->wiphy->addresses);
-+}
-+
-+static void ath12k_mac_setup_mac_address_list(struct ath12k_hw *ah,
-+					      const u8 *mac_addr)
-+{
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
-+	struct mac_address *addresses;
-+	u16 n_addresses;
-+	int i;
-+
-+	/* The pool is derived from one base address, so it can describe only a
-+	 * single-radio wiphy: with more radios each radio has its own base
-+	 * address, possibly from a different ath12k_base.
-+	 */
-+	if (ah->num_radio != 1)
-+		return;
-+
-+	/* Only the upper nibble of the first octet is varied, so at most 16
-+	 * addresses can be derived from one base.
-+	 */
-+	n_addresses = min_t(u16, TARGET_NUM_VDEVS(ar->ab), 16);
-+	if (n_addresses <= 1)
-+		return;
-+
-+	addresses = kzalloc_objs(*addresses, n_addresses);
-+	if (!addresses)
-+		return;
-+
-+	ether_addr_copy(addresses[0].addr, mac_addr);
-+	for (i = 1; i < n_addresses; i++) {
-+		ether_addr_copy(addresses[i].addr, mac_addr);
-+		/* set Local Administered Address bit */
-+		addresses[i].addr[0] |= 0x2;
-+
-+		addresses[i].addr[0] += i << 4;
-+	}
-+
-+	ah->hw->wiphy->addresses = addresses;
-+	ah->hw->wiphy->n_addresses = n_addresses;
-+}
-+
- static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- {
- 	struct ieee80211_hw *hw = ah->hw;
-@@ -14704,6 +14748,7 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 
- 	ath12k_mac_cleanup_iface_combinations(ah);
-+	ath12k_mac_cleanup_mac_address_list(ah);
- 
- 	SET_IEEE80211_DEV(hw, NULL);
- }
-@@ -14820,6 +14865,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	wiphy->available_antennas_tx = antennas_tx;
- 
- 	SET_IEEE80211_PERM_ADDR(hw, mac_addr);
-+	ath12k_mac_setup_mac_address_list(ah, mac_addr);
- 	SET_IEEE80211_DEV(hw, ab->dev);
- 
- 	ret = ath12k_mac_setup_iface_combinations(ah);
-@@ -15041,6 +15087,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 	}
- 
-+	ath12k_mac_cleanup_mac_address_list(ah);
-+
- 	SET_IEEE80211_DEV(hw, NULL);
- 
- 	return ret;
+Patch 15 is the first hardware. mt7996 hands an uplink QoS
+Characteristics element to its MURU scheduler, which serves the stream
+with trigger frames. It depends on the op added in patch 12, so it cannot
+travel through the mt76 tree on its own.
+
+Felix Fietkau (15):
+  wifi: cfg80211: add the TCLAS element parsers
+  wifi: cfg80211: add the flow parser and the MSCS key
+  wifi: cfg80211: add the SCS evaluator
+  wifi: cfg80211: add SCS and MSCS request validation
+  wifi: cfg80211: add set_scs and set_mscs driver ops
+  wifi: cfg80211: add SCS and MSCS configuration commands
+  wifi: cfg80211: add KUnit tests for the SCS classifier
+  wifi: mac80211: add SCS and MSCS rule storage
+  wifi: mac80211: classify transmitted MSDUs with SCS
+  wifi: mac80211: learn MSCS flows on receive
+  wifi: mac80211: apply MSCS on transmit
+  wifi: mac80211: add the sta_set_scs driver op
+  wifi: mac80211: add SCS and MSCS debugfs files
+  wifi: mac80211_hwsim: support SCS and MSCS
+  wifi: mt76: mt7996: apply the SCS traffic description
+
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c   |   1 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   |  79 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    |  40 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.h    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |   2 +-
+ drivers/net/wireless/virtual/mac80211_hwsim_i.h    |   3 +-
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c |  25 +-
+ include/linux/ieee80211-eht.h                      | 128 ++-
+ include/linux/ieee80211.h                          |   6 +-
+ include/net/cfg80211.h                             | 235 ++++-
+ include/net/mac80211.h                             |  22 +-
+ include/uapi/linux/nl80211.h                       | 128 ++-
+ net/mac80211/Makefile                              |   3 +-
+ net/mac80211/cfg.c                                 |   2 +-
+ net/mac80211/debugfs_sta.c                         | 238 ++++-
+ net/mac80211/driver-ops.h                          |  26 +-
+ net/mac80211/ieee80211_i.h                         |  17 +-
+ net/mac80211/iface.c                               |  12 +-
+ net/mac80211/rx.c                                  |   5 +-
+ net/mac80211/scs.c                                 | 639 ++++++++++-
+ net/mac80211/sta_info.c                            |   1 +-
+ net/mac80211/sta_info.h                            |  78 +-
+ net/mac80211/trace.h                               |  27 +-
+ net/mac80211/util.c                                |   2 +-
+ net/mac80211/wme.c                                 |  13 +-
+ net/wireless/Makefile                              |   2 +-
+ net/wireless/core.c                                |  10 +-
+ net/wireless/core.h                                |   8 +-
+ net/wireless/nl80211.c                             | 426 +++++++-
+ net/wireless/rdev-ops.h                            |  32 +-
+ net/wireless/scs.c                                 | 917 ++++++++++++++-
+ net/wireless/tests/Makefile                        |   2 +-
+ net/wireless/tests/scs.c                           | 547 ++++++++-
+ net/wireless/trace.h                               |  49 +-
+ 34 files changed, 3725 insertions(+), 4 deletions(-)
+ create mode 100644 net/mac80211/scs.c
+ create mode 100644 net/wireless/scs.c
+ create mode 100644 net/wireless/tests/scs.c
+
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
 -- 
-2.55.0
-
+git-series 0.9.1
