@@ -1,54 +1,54 @@
-Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DFF44746BD
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:55:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B97463B91
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:55:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368114; cv=none; b=HjMDzLV2BoR/crH4b0r2D78um+AmX0TlGZzQ8NdL9A/2Ten6BGdPYulGYhhDjepTXls19nd34nZ7CAZW+HPi1LGyPjlyGo1Yx57881GNnfyIkxH1GxMuSaFu3UScXeFVqI89/vAnpZ7WdjWcRZ+ltfgo96OCx88c9CAg5Hkiols=
+	t=1788368129; cv=none; b=Dh1IjyrS4Q8AFPMpMFEo+ytQXy4kqzIbOPU/ay7dBCVH6BJ/1Fv+lad1hVsN3F4HvQwu5undu8wYa2aorK3Pn9/PZ1hzCTTyZomnxIul6Q5xXkYOTT+WAXPO9XEZMJvr1qKk5Fx59uoHN/jics7YsTygVbSFEuoOYkDdGWEx48U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368114; c=relaxed/simple;
-	bh=0Se5gEK+8K5T+otXL9M2lkUirvOUELPlviNg3RWzKDw=;
+	s=arc-20240116; t=1788368129; c=relaxed/simple;
+	bh=jz9Ynbyb8bDhOPkt38LLSLQjh/V1CKKftYTS9hNQyXA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iVHGrQKiA25xSInVCWjtUaKkkkyrZNiBJ1uLcYes4+ZlwC60DwQJJ24bUiVqe3DlkPfW05p6bc4dB1I34hAB1z2phgXGH16PuUCrYHL2pGJLpVkxbzMYq/R/zVXqPUOoT1RWl77GOk4PEQWimMa9vsqVDbQJXP9kNrTLVoM/rao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=f3ajW5Vf; arc=none smtp.client-ip=217.10.52.204
+	 MIME-Version:Content-Type; b=e8wCl5M6RwXWcRAIUs2Fu69hK1NemyADkTOz7LBUCNmYK4AORnRW1YrQy4KXMMj6GcYUiGcVoS6Id6qUKYtF5YFvDmtvTYPZ8eYwl53i+B1MsqCvyLFgUaELGFsLM/IR6aVRfWEgKwTpfaebcv1eDhM0m7cNFQmsWaR80wY+ppM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=AQq856Ms; arc=none smtp.client-ip=217.10.52.160
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="f3ajW5Vf"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="AQq856Ms"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788368112; x=1819904112;
+  t=1788368126; x=1819904126;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=0Se5gEK+8K5T+otXL9M2lkUirvOUELPlviNg3RWzKDw=;
-  b=f3ajW5Vfwa62EKqE3h3fry43M3yJsZMfhg01bvdi75pMzQN6OftPVdV7
-   vB036J0K7oCDyJwSvXeZ6YPs8qx9KnzUtXqVa1X8lG6s9mFlREiIk4Xv4
-   lqbNgUQaRwcMVfIaAygtFJEo0fWUiPuUXY8NZBckF0w62DqiZCiaAzM8G
-   Y=;
-X-CSE-ConnectionGUID: BXiDoma9SMqgCgGRMkCPaA==
-X-CSE-MsgGUID: EXCg/69ASVuhA3L+74Rxhw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="107705976"
+  bh=jz9Ynbyb8bDhOPkt38LLSLQjh/V1CKKftYTS9hNQyXA=;
+  b=AQq856MsFB3rb3OdAZK3XbpRu3fxt4C7oIyprwhc1lGquMze6A3oy0zR
+   QWTDTMIeABJKlhyndZyevmHucsVVkhoIG+HC5U9UlKE8jlSHPz/qBTH2u
+   1e3oybwCIW88cIHRKlDweAPwnsTRiakvc9YjoIWl9wAyvYOXX5m4As/FB
+   Q=;
+X-CSE-ConnectionGUID: yKggF2YlQe22CFiO8ZX78w==
+X-CSE-MsgGUID: yay2Q5rVS6albi5aMttDDg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="145161357"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="107705976"
+   d="scan'208";a="145161357"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
-  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:55:12 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE805.infineon.com
- (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE803.infineon.com) ([172.23.29.29])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:55:24 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE803.infineon.com
+ (172.23.29.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:55:11 +0200
+ 2026 18:55:23 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:55:09 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:55:22 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 19/25] wifi: inffmac: add bcdc.c/h
-Date: Wed, 2 Sep 2026 16:50:50 +0000
-Message-ID: <20260902165057.456447-20-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 20/25] wifi: inffmac: add ie.c/h
+Date: Wed, 2 Sep 2026 16:50:51 +0000
+Message-ID: <20260902165057.456447-21-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,26 +60,26 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
+X-ClientProxiedBy: MUCSE803.infineon.com (172.23.29.29) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Driver implementation of the BCDC protocol used for the Control and Data
-communication with Infineon's WLAN Device over the SDIO BUS.
+Driver imeplementation to configure, handle and parse Information elements
+of the Wi-Fi frames.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- drivers/net/wireless/infineon/inffmac/bcdc.c | 516 +++++++++++++++++++
- drivers/net/wireless/infineon/inffmac/bcdc.h |  29 ++
- 2 files changed, 545 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/bcdc.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/bcdc.h
+ drivers/net/wireless/infineon/inffmac/ie.c | 656 +++++++++++++++++++++
+ drivers/net/wireless/infineon/inffmac/ie.h | 170 ++++++
+ 2 files changed, 826 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/ie.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/ie.h
 
-diff --git a/drivers/net/wireless/infineon/inffmac/bcdc.c b/drivers/net/wireless/infineon/inffmac/bcdc.c
+diff --git a/drivers/net/wireless/infineon/inffmac/ie.c b/drivers/net/wireless/infineon/inffmac/ie.c
 new file mode 100644
-index 000000000000..8c61c9bcc146
+index 000000000000..35251b354b50
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/bcdc.c
-@@ -0,0 +1,516 @@
++++ b/drivers/net/wireless/infineon/inffmac/ie.c
+@@ -0,0 +1,656 @@
 +// SPDX-License-Identifier: ISC
 +/*
 + * Copyright (c) 2010 Broadcom Corporation
@@ -88,549 +88,830 @@ index 000000000000..8c61c9bcc146
 + * All rights reserved.
 + */
 +
-+/*******************************************************************************
-+ * Communicates with the dongle by using dcmd codes.
-+ * For certain dcmd codes, the dongle interprets string data from the host.
-+ ******************************************************************************/
-+
-+#include <linux/types.h>
-+#include <linux/netdevice.h>
++#include <linux/kernel.h>
++#include <linux/etherdevice.h>
++#include <linux/module.h>
++#include <linux/vmalloc.h>
++#include <linux/string.h>
++#include <net/cfg80211.h>
++#include <net/netlink.h>
 +
 +#include "main.h"
-+#include "net.h"
 +#include "utils.h"
-+#include "fwsignal.h"
++#include "chan.h"
 +#include "debug.h"
-+#include "bus_proto.h"
-+#include "bcdc.h"
++#include "dev_cmd.h"
++#include "fwsignal.h"
++#include "cfg80211.h"
++#include "interface.h"
++#include "feature.h"
++#include "dev_cmd.h"
 +
-+/* BCDC flag definitions */
-+#define BCDC_DCMD_ERROR		0x01		/* 1=cmd failed */
-+#define BCDC_DCMD_SET		0x02		/* 0=get, 1=set cmd */
-+#define BCDC_DCMD_IF_MASK	0xF000		/* I/F index */
-+#define BCDC_DCMD_IF_SHIFT	12
-+#define BCDC_DCMD_ID_MASK	0xFFFF0000	/* id an cmd pairing */
-+#define BCDC_DCMD_ID_SHIFT	16		/* ID Mask shift bits */
-+#define BCDC_DCMD_ID(flags)	\
-+	(((flags) & BCDC_DCMD_ID_MASK) >> BCDC_DCMD_ID_SHIFT)
++void inff_clear_assoc_req_ie(struct inff_cfg80211_info *cfg)
++{
++	struct inff_cfg80211_connect_info *conn_info = &cfg->conn_info;
 +
-+/*
-+ * BCDC header - Infineon specific extension of CDC.
-+ * Used on data packets to convey priority.
++	kfree(conn_info->req_ie);
++	conn_info->req_ie = NULL;
++	conn_info->req_ie_len = 0;
++}
++
++void inff_clear_assoc_resp_ie(struct inff_cfg80211_info *cfg)
++{
++	struct inff_cfg80211_connect_info *conn_info = &cfg->conn_info;
++
++	kfree(conn_info->resp_ie);
++	conn_info->resp_ie = NULL;
++	conn_info->resp_ie_len = 0;
++}
++
++/* Traverse a string of 1-byte tag/1-byte length/variable-length value
++ * triples, returning a pointer to the substring whose first element
++ * matches tag
 + */
-+#define	BCDC_HEADER_LEN		4
-+#define BCDC_PROTO_VER		2	/* Protocol version */
-+#define BCDC_FLAG_VER_MASK	0xf0	/* Protocol version mask */
-+#define BCDC_FLAG_VER_SHIFT	4	/* Protocol version shift */
-+#define BCDC_FLAG_SUM_GOOD	0x04	/* Good RX checksums */
-+#define BCDC_FLAG_SUM_NEEDED	0x08	/* Dongle needs to do TX checksums */
-+#define BCDC_PRIORITY_MASK	0x7
-+#define BCDC_FLAG2_IF_MASK	0x0f	/* packet rx interface in APSTA */
-+#define BCDC_FLAG2_IF_SHIFT	0
++const struct inff_tlv *
++inff_parse_tlvs(const void *buf, int buflen, uint key)
++{
++	const struct inff_tlv *elt = buf;
++	int totlen = buflen;
 +
-+#define BCDC_GET_IF_IDX(hdr) \
-+	((int)((((hdr)->flags2) & BCDC_FLAG2_IF_MASK) >> BCDC_FLAG2_IF_SHIFT))
-+#define BCDC_SET_IF_IDX(hdr, idx) {\
-+	typeof(hdr) _hdr = (hdr); \
-+	((_hdr)->flags2 = (((_hdr)->flags2 & ~BCDC_FLAG2_IF_MASK) | \
-+	((idx) << BCDC_FLAG2_IF_SHIFT))); \
++	/* find tagged parameter */
++	while (totlen >= TLV_HDR_LEN) {
++		int len = elt->len;
++
++		/* validate remaining totlen */
++		if (elt->id == key && (totlen >= (len + TLV_HDR_LEN)))
++			return elt;
++
++		elt = (struct inff_tlv *)((u8 *)elt + (len + TLV_HDR_LEN));
++		totlen -= (len + TLV_HDR_LEN);
 +	}
 +
-+/**
-+ * struct inff_proto_bcdc_header - BCDC header format
-+ *
-+ * @flags: flags contain protocol and checksum info.
-+ * @priority: 802.1d priority.
-+ * @flags2: additional flags containing dongle interface index.
-+ * @data_offset: start of packet data. header is following by firmware signals.
-+ */
-+struct inff_proto_bcdc_header {
-+	u8 flags;
-+	u8 priority;
-+	u8 flags2;
-+	u8 data_offset;
-+};
-+
-+/*
-+ * maximum length of firmware signal data between
-+ * the BCDC header and packet data in the tx path.
-+ */
-+#define INFF_PROT_FW_SIGNAL_MAX_TXBYTES	12
-+
-+#define RETRIES 2 /* # of retries to retrieve matching dcmd response */
-+#define BUS_HEADER_LEN	(16 + 64)	/* Must be at least SDPCM_RESERVE
-+					 * (amount of header tha might be added)
-+					 * plus any space that might be needed
-+					 * for bus alignment padding.
-+					 */
-+#define ROUND_UP_MARGIN 2048
-+
-+struct inff_bcdc {
-+	u16 reqid;
-+	u8 bus_header[BUS_HEADER_LEN];
-+	struct inff_proto_bcdc_dcmd msg;
-+	unsigned char buf[INFF_DCMD_MAXLEN];
-+	struct inff_fws_info *fws;
-+};
-+
-+struct inff_fws_info *drvr_to_fws(struct inff_pub *drvr)
-+{
-+	struct inff_bcdc *bcdc = drvr->proto->pd;
-+
-+	return bcdc->fws;
++	return NULL;
 +}
 +
-+static int
-+inff_proto_bcdc_msg(struct inff_pub *drvr, int ifidx, uint cmd, void *buf,
-+		    uint len, bool set)
++struct inff_tlv *
++inff_find_iwie(const u8 *parse, u32 len)
 +{
-+	struct inff_bcdc *bcdc = (struct inff_bcdc *)drvr->proto->pd;
-+	struct inff_proto_bcdc_dcmd *msg = &bcdc->msg;
-+	u32 flags;
++	const struct inff_tlv *ie = NULL;
 +
-+	memset(msg, 0, sizeof(struct inff_proto_bcdc_dcmd));
++	/* unfortunately it's too much work to dispose the const cast - inff_parse_tlvs
++	 * is used everywhere and changing its prototype to take const qualifier needs
++	 * a massive change to all its callers...
++	 */
 +
-+	msg->cmd = cpu_to_le32(cmd);
-+	msg->len = cpu_to_le32(len);
-+	flags = (++bcdc->reqid << BCDC_DCMD_ID_SHIFT);
-+
-+	if (set)
-+		flags |= BCDC_DCMD_SET;
-+	flags = (flags & ~BCDC_DCMD_IF_MASK) |
-+		(ifidx << BCDC_DCMD_IF_SHIFT);
-+	msg->flags = cpu_to_le32(flags);
-+
-+	if (buf)
-+		memcpy(bcdc->buf, buf, len);
-+
-+	len += sizeof(*msg);
-+	if (len > INFF_TX_IOCTL_MAX_MSG_SIZE)
-+		len = INFF_TX_IOCTL_MAX_MSG_SIZE;
-+
-+	/* Send request */
-+	return inff_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg, len);
++	ie = inff_parse_tlvs(parse, len, WLAN_EID_INTERWORKING);
++	if (ie)
++		return (struct inff_tlv *)ie;
++	return NULL;
 +}
 +
-+static int inff_proto_bcdc_cmplt(struct inff_pub *drvr, u32 id, u32 len)
++s32
++inff_clear_iwie(struct inff_cfg80211_info *cfg, struct inff_if *ifp)
 +{
-+	int ret;
-+	struct inff_bcdc *bcdc = (struct inff_bcdc *)drvr->proto->pd;
++	struct ie_set_buffer ie_setbuf = {0};
 +
-+	len += sizeof(struct inff_proto_bcdc_dcmd);
-+	do {
-+		ret = inff_bus_rxctl(drvr->bus_if, (unsigned char *)&bcdc->msg,
-+				     len);
-+		if (ret < 0)
-+			break;
-+	} while (BCDC_DCMD_ID(le32_to_cpu(bcdc->msg.flags)) != id);
++	inff_dbg(TRACE, "clear interworking IE\n");
 +
-+	return ret;
++	memset(&ie_setbuf, 0, sizeof(struct ie_set_buffer));
++
++	ie_setbuf.ie_buffer.iecount = cpu_to_le32(1);
++	ie_setbuf.ie_buffer.ie_list[0].ie_data.id = WLAN_EID_INTERWORKING;
++	ie_setbuf.ie_buffer.ie_list[0].ie_data.len = 0;
++
++	return inff_fwcmd_iovar_data_set(ifp, "ie", &ie_setbuf, sizeof(ie_setbuf));
 +}
 +
-+static int
-+inff_proto_bcdc_query_fwcmd(struct inff_pub *drvr, int ifidx, uint cmd,
-+			    void *buf, uint len, int *fwerr)
++s32
++inff_add_iwie(struct inff_cfg80211_info *cfg, struct inff_if *ifp, s32 pktflag,
++	      u8 ie_id, u8 *data, u8 data_len)
 +{
-+	struct inff_bcdc *bcdc = (struct inff_bcdc *)drvr->proto->pd;
-+	struct inff_proto_bcdc_dcmd *msg = &bcdc->msg;
-+	void *info;
-+	int ret = 0, retries = 0;
-+	u32 id, flags;
++	int err = 0;
++	u32 buf_len;
++	struct ie_set_buffer *ie_setbuf;
 +
-+	inff_dbg(BCDC, "cmd %d len %d\n", cmd, len);
-+
-+	*fwerr = 0;
-+	ret = inff_proto_bcdc_msg(drvr, ifidx, cmd, buf, len, false);
-+	if (ret < 0) {
-+		iphy_err(drvr, "inff_proto_bcdc_msg failed w/status %d\n",
-+			 ret);
-+		goto done;
++	if (ie_id != WLAN_EID_INTERWORKING) {
++		inff_err("unsupported (id=%d)\n", ie_id);
++		return -EINVAL;
 +	}
 +
-+retry:
-+	/* wait for interrupt and get first fragment */
-+	ret = inff_proto_bcdc_cmplt(drvr, bcdc->reqid, len);
-+	if (ret < 0)
-+		goto done;
-+
-+	flags = le32_to_cpu(msg->flags);
-+	id = (flags & BCDC_DCMD_ID_MASK) >> BCDC_DCMD_ID_SHIFT;
-+
-+	if (id < bcdc->reqid && (++retries < RETRIES))
-+		goto retry;
-+	if (id != bcdc->reqid) {
-+		iphy_err(drvr, "%s: unexpected request id %d (expected %d)\n",
-+			 inff_ifname(inff_get_ifp(drvr, ifidx)), id,
-+			 bcdc->reqid);
-+		ret = -EINVAL;
-+		goto done;
++	/* access network options (1 octet)  is the mandatory field */
++	if (!data || data_len == 0 || data_len > INFF_IW_IES_MAX_BUF_LEN) {
++		inff_err("wrong interworking IE (len=%d)\n", data_len);
++		return -EINVAL;
 +	}
 +
-+	/* Check info buffer */
-+	info = (void *)&bcdc->buf[0];
-+
-+	/* Copy info buffer */
-+	if (buf) {
-+		if (ret < (int)len)
-+			len = ret;
-+		memcpy(buf, info, len);
++	/* Validate the pktflag parameter */
++	if (pktflag & ~(INFF_VNDR_IE_CUSTOM_FLAG)) {
++		inff_err("invalid packet flag 0x%x\n", pktflag);
++		return -EINVAL;
 +	}
 +
-+	ret = 0;
++	buf_len = sizeof(struct ie_set_buffer) + data_len - 1;
 +
-+	/* Check the ERROR flag */
-+	if (flags & BCDC_DCMD_ERROR)
-+		*fwerr = le32_to_cpu(msg->status);
-+done:
-+	return ret;
++	/* if already set with previous values, delete it first */
++	err = inff_clear_iwie(cfg, ifp);
++	if (err)
++		return err;
++
++	ie_setbuf = kmalloc(buf_len, GFP_KERNEL);
++	if (!ie_setbuf)
++		return -ENOMEM;
++
++	strscpy(ie_setbuf->cmd, "add", sizeof(ie_setbuf->cmd));
++
++	/* Buffer contains only 1 IE */
++	ie_setbuf->ie_buffer.iecount = cpu_to_le32(1);
++	/* use VNDR_IE_CUSTOM_FLAG flags for none vendor IE . currently fixed value */
++	ie_setbuf->ie_buffer.ie_list[0].pktflag = cpu_to_le32(pktflag);
++
++	/* Now, add the IE to the buffer */
++	ie_setbuf->ie_buffer.ie_list[0].ie_data.id = WLAN_EID_INTERWORKING;
++	ie_setbuf->ie_buffer.ie_list[0].ie_data.len = data_len;
++	/* Returning void here as max data_len can be 8 */
++	(void)memcpy((u8 *)&ie_setbuf->ie_buffer.ie_list[0].ie_data.data[0],
++			data, data_len);
++
++	err = inff_fwcmd_iovar_data_set(ifp, "ie", ie_setbuf, buf_len);
++	if (err)
++		inff_err("Failed to add interworking IE\n");
++
++	kfree(ie_setbuf);
++
++	return err;
 +}
 +
-+static int
-+inff_proto_bcdc_set_fwcmd(struct inff_pub *drvr, int ifidx, uint cmd,
-+			  void *buf, uint len, int *fwerr)
++s32
++inff_parse_vndr_ies(const u8 *vndr_ie_buf, u32 vndr_ie_len,
++		    struct parsed_vndr_ies *vndr_ies)
 +{
-+	struct inff_bcdc *bcdc = (struct inff_bcdc *)drvr->proto->pd;
-+	struct inff_proto_bcdc_dcmd *msg = &bcdc->msg;
-+	int ret;
-+	u32 flags, id;
++	struct inff_vs_tlv *vndrie;
++	struct inff_tlv *ie;
++	struct parsed_vndr_ie_info *parsed_info;
++	s32 remaining_len;
 +
-+	inff_dbg(BCDC, "cmd %d len %d\n", cmd, len);
++	remaining_len = (s32)vndr_ie_len;
++	memset(vndr_ies, 0, sizeof(*vndr_ies));
 +
-+	*fwerr = 0;
-+	ret = inff_proto_bcdc_msg(drvr, ifidx, cmd, buf, len, true);
-+	if (ret < 0)
-+		goto done;
-+
-+	ret = inff_proto_bcdc_cmplt(drvr, bcdc->reqid, len);
-+	if (ret < 0)
-+		goto done;
-+
-+	flags = le32_to_cpu(msg->flags);
-+	id = (flags & BCDC_DCMD_ID_MASK) >> BCDC_DCMD_ID_SHIFT;
-+
-+	if (id != bcdc->reqid) {
-+		iphy_err(drvr, "%s: unexpected request id %d (expected %d)\n",
-+			 inff_ifname(inff_get_ifp(drvr, ifidx)), id,
-+			 bcdc->reqid);
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
-+	ret = 0;
-+
-+	/* Check the ERROR flag */
-+	if (flags & BCDC_DCMD_ERROR)
-+		*fwerr = le32_to_cpu(msg->status);
-+
-+done:
-+	return ret;
-+}
-+
-+static void
-+inff_proto_bcdc_hdrpush(struct inff_pub *drvr, int ifidx, u8 offset,
-+			struct sk_buff *pktbuf)
-+{
-+	struct inff_proto_bcdc_header *h;
-+
-+	/* Push BDC header used to convey priority for buses that don't */
-+	skb_push(pktbuf, BCDC_HEADER_LEN);
-+
-+	h = (struct inff_proto_bcdc_header *)(pktbuf->data);
-+
-+	h->flags = (BCDC_PROTO_VER << BCDC_FLAG_VER_SHIFT);
-+	if (pktbuf->ip_summed == CHECKSUM_PARTIAL)
-+		h->flags |= BCDC_FLAG_SUM_NEEDED;
-+
-+	h->priority = (pktbuf->priority & BCDC_PRIORITY_MASK);
-+	h->flags2 = 0;
-+	h->data_offset = offset;
-+	BCDC_SET_IF_IDX(h, ifidx);
-+}
-+
-+static int
-+inff_proto_bcdc_hdrpull(struct inff_pub *drvr, bool do_fws,
-+			struct sk_buff *pktbuf, struct inff_if **ifp)
-+{
-+	struct inff_proto_bcdc_header *h;
-+	struct inff_if *tmp_if;
-+
-+	/* Pop BCDC header used to convey priority for buses that don't */
-+	if (pktbuf->len <= BCDC_HEADER_LEN) {
-+		inff_dbg(INFO, "rx data too short (%d <= %d)\n",
-+			 pktbuf->len, BCDC_HEADER_LEN);
-+		return -EBADE;
-+	}
-+
-+	h = (struct inff_proto_bcdc_header *)(pktbuf->data);
-+
-+	tmp_if = inff_get_ifp(drvr, BCDC_GET_IF_IDX(h));
-+	if (!tmp_if) {
-+		inff_dbg(INFO, "no matching ifp found for ifidx: %d\n",
-+			 BCDC_GET_IF_IDX(h));
-+		return -EBADE;
-+	}
-+	if (((h->flags & BCDC_FLAG_VER_MASK) >> BCDC_FLAG_VER_SHIFT) !=
-+	    BCDC_PROTO_VER) {
-+		iphy_err(drvr, "%s: non-BCDC packet received, flags 0x%x\n",
-+			 inff_ifname(tmp_if), h->flags);
-+		return -EBADE;
-+	}
-+
-+	if (h->flags & BCDC_FLAG_SUM_GOOD) {
-+		inff_dbg(BCDC, "%s: BDC rcv, good checksum, flags 0x%x\n",
-+			 inff_ifname(tmp_if), h->flags);
-+		pktbuf->ip_summed = CHECKSUM_UNNECESSARY;
-+	}
-+
-+	pktbuf->priority = h->priority & BCDC_PRIORITY_MASK;
-+
-+	skb_pull(pktbuf, BCDC_HEADER_LEN);
-+	if (do_fws)
-+		inff_fws_hdrpull(tmp_if, h->data_offset << 2, pktbuf);
-+	else
-+		skb_pull(pktbuf, h->data_offset << 2);
-+
-+	if (pktbuf->len == 0)
-+		return -ENODATA;
-+
-+	if (ifp)
-+		*ifp = tmp_if;
-+	return 0;
-+}
-+
-+static int inff_proto_bcdc_tx_queue_data(struct inff_pub *drvr, int ifidx,
-+					 struct sk_buff *skb)
-+{
-+	struct inff_if *ifp = inff_get_ifp(drvr, ifidx);
-+	struct inff_bcdc *bcdc = drvr->proto->pd;
-+
-+	if (!inff_fws_queue_skbs(bcdc->fws))
-+		return inff_proto_txdata(drvr, ifidx, 0, skb);
-+
-+	return inff_fws_process_skb(ifp, skb);
-+}
-+
-+static int
-+inff_proto_bcdc_txdata(struct inff_pub *drvr, int ifidx, u8 offset,
-+		       struct sk_buff *pktbuf)
-+{
-+	inff_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
-+	return inff_bus_txdata(drvr->bus_if, pktbuf);
-+}
-+
-+void inff_proto_bcdc_txflowblock(struct device *dev, bool state)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_pub *drvr = bus_if->drvr;
-+
-+	inff_fws_bus_blocked(drvr, state);
-+}
-+
-+void
-+inff_proto_bcdc_txcomplete(struct device *dev, struct sk_buff *txp,
-+			   bool success)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_bcdc *bcdc = bus_if->drvr->proto->pd;
-+	struct inff_if *ifp;
-+
-+	/* await txstatus signal for firmware if active */
-+	if (inff_fws_fc_active(bcdc->fws)) {
-+		inff_fws_bustxcomplete(bcdc->fws, txp, success);
-+	} else {
-+		if (inff_proto_bcdc_hdrpull(bus_if->drvr, false, txp, &ifp))
-+			inff_pkt_buf_free_skb(txp);
-+		else
-+			inff_txfinalize(ifp, txp, success);
-+	}
-+}
-+
-+static void
-+inff_proto_bcdc_configure_addr_mode(struct inff_pub *drvr, int ifidx,
-+				    enum proto_addr_mode addr_mode)
-+{
-+}
-+
-+static void
-+inff_proto_bcdc_delete_peer(struct inff_pub *drvr, int ifidx,
-+			    u8 peer[ETH_ALEN])
-+{
-+}
-+
-+static void inff_proto_bcdc_rxreorder(struct inff_if *ifp,
-+				      struct sk_buff *skb, bool inirq)
-+{
-+	inff_fws_rxreorder(ifp, skb, inirq);
-+}
-+
-+static void
-+inff_proto_bcdc_add_if(struct inff_if *ifp)
-+{
-+	inff_fws_add_interface(ifp);
-+}
-+
-+static void
-+inff_proto_bcdc_del_if(struct inff_if *ifp)
-+{
-+	inff_fws_del_interface(ifp);
-+}
-+
-+static void
-+inff_proto_bcdc_reset_if(struct inff_if *ifp)
-+{
-+	inff_fws_reset_interface(ifp);
-+}
-+
-+static void
-+inff_proto_bcdc_cleanup_if(struct inff_if *ifp)
-+{
-+	inff_fws_cleanup_interface(ifp);
-+}
-+
-+static int
-+inff_proto_bcdc_init_done(struct inff_pub *drvr)
-+{
-+	struct inff_bcdc *bcdc = drvr->proto->pd;
-+	struct inff_fws_info *fws;
-+
-+	fws = inff_fws_attach(drvr);
-+	if (IS_ERR(fws))
-+		return PTR_ERR(fws);
-+
-+	bcdc->fws = fws;
-+	return 0;
-+}
-+
-+static void inff_proto_bcdc_debugfs_create(struct inff_pub *drvr)
-+{
-+	inff_fws_debugfs_create(drvr);
-+}
-+
-+void inff_bcdc_process_event(struct device *dev, struct sk_buff *skb)
-+{
-+	struct inff_if *ifp;
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_pub *drvr = bus_if->drvr;
-+
-+	inff_dbg(DEVEVT, "%s: rxp=%p\n", dev_name(dev), skb);
-+
-+	if (inff_rx_hdrpull(drvr, skb, &ifp))
-+		return;
-+
-+	inff_fwevt_process_skb(ifp->drvr, skb, 0, GFP_KERNEL);
-+	inff_pkt_buf_free_skb(skb);
-+}
-+
-+void inff_bcdc_rx(struct device *dev, struct sk_buff *skb, bool handle_event,
-+		  bool inirq)
-+{
-+	struct inff_if *ifp;
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_pub *drvr = bus_if->drvr;
-+
-+	inff_dbg(DATA, "%s: rxp=%p\n", dev_name(dev), skb);
-+
-+	if (inff_rx_hdrpull(drvr, skb, &ifp))
-+		return;
-+
-+	if (inff_proto_is_reorder_skb(skb)) {
-+		inff_proto_rxreorder(ifp, skb, inirq);
-+	} else {
-+		/* Process special event packets */
-+		if (handle_event) {
-+			gfp_t gfp = inirq ? GFP_ATOMIC : GFP_KERNEL;
-+
-+			inff_fwevt_process_skb(ifp->drvr, skb,
-+					       INFILCP_SUBTYPE_VENDOR_LONG, gfp);
++	ie = (struct inff_tlv *)vndr_ie_buf;
++	while (ie) {
++		if (ie->id != WLAN_EID_VENDOR_SPECIFIC)
++			goto next;
++		vndrie = (struct inff_vs_tlv *)ie;
++		/* len should be bigger than OUI length + one */
++		if (vndrie->len < (VS_IE_FIXED_HDR_LEN - TLV_HDR_LEN + 1)) {
++			inff_err("invalid vndr ie. length is too small %d\n",
++				 vndrie->len);
++			goto next;
++		}
++		/* if wpa or wme ie, do not add ie */
++		if (!memcmp(vndrie->oui, (u8 *)WPA_OUI, TLV_OUI_LEN) &&
++		    (vndrie->oui_type == WPA_OUI_TYPE ||
++		    vndrie->oui_type == WME_OUI_TYPE)) {
++			inff_dbg(TRACE, "Found WPA/WME oui. Do not add it\n");
++			goto next;
 +		}
 +
-+		inff_net_rx(ifp, skb, inirq);
++		parsed_info = &vndr_ies->ie_info[vndr_ies->count];
++
++		/* save vndr ie information */
++		parsed_info->ie_ptr = (char *)vndrie;
++		parsed_info->ie_len = vndrie->len + TLV_HDR_LEN;
++		memcpy(&parsed_info->vndrie, vndrie, sizeof(*vndrie));
++
++		vndr_ies->count++;
++
++		inff_dbg(TRACE, "** OUI %3ph, type 0x%02x\n",
++			 parsed_info->vndrie.oui,
++			 parsed_info->vndrie.oui_type);
++
++		if (vndr_ies->count >= VNDR_IE_PARSE_LIMIT)
++			break;
++next:
++		remaining_len -= (ie->len + TLV_HDR_LEN);
++		if (remaining_len <= TLV_HDR_LEN)
++			ie = NULL;
++		else
++			ie = (struct inff_tlv *)(((u8 *)ie) + ie->len +
++				TLV_HDR_LEN);
 +	}
-+}
-+
-+int inff_proto_bcdc_attach(struct inff_pub *drvr)
-+{
-+	struct inff_bcdc *bcdc;
-+
-+	bcdc = kzalloc_obj(*bcdc, GFP_ATOMIC);
-+	if (!bcdc)
-+		goto fail;
-+
-+	/* ensure that the msg buf directly follows the cdc msg struct */
-+	if ((unsigned long)(&bcdc->msg + 1) != (unsigned long)bcdc->buf) {
-+		iphy_err(drvr, "struct inff_proto_bcdc is not correctly defined\n");
-+		goto fail;
-+	}
-+
-+	drvr->proto->query_fwcmd = inff_proto_bcdc_query_fwcmd;
-+	drvr->proto->set_fwcmd = inff_proto_bcdc_set_fwcmd;
-+	drvr->proto->hdrpull = inff_proto_bcdc_hdrpull;
-+	drvr->proto->tx_queue_data = inff_proto_bcdc_tx_queue_data;
-+	drvr->proto->txdata = inff_proto_bcdc_txdata;
-+	drvr->proto->configure_addr_mode = inff_proto_bcdc_configure_addr_mode;
-+	drvr->proto->delete_peer = inff_proto_bcdc_delete_peer;
-+	drvr->proto->rxreorder = inff_proto_bcdc_rxreorder;
-+	drvr->proto->add_if = inff_proto_bcdc_add_if;
-+	drvr->proto->del_if = inff_proto_bcdc_del_if;
-+	drvr->proto->reset_if = inff_proto_bcdc_reset_if;
-+	drvr->proto->cleanup_if = inff_proto_bcdc_cleanup_if;
-+	drvr->proto->init_done = inff_proto_bcdc_init_done;
-+	drvr->proto->debugfs_create = inff_proto_bcdc_debugfs_create;
-+	drvr->proto->pd = bcdc;
-+
-+	drvr->hdrlen += BCDC_HEADER_LEN + INFF_PROT_FW_SIGNAL_MAX_TXBYTES;
-+	drvr->bus_if->maxctl = INFF_DCMD_MAXLEN +
-+			sizeof(struct inff_proto_bcdc_dcmd) + ROUND_UP_MARGIN;
 +	return 0;
-+
-+fail:
-+	kfree(bcdc);
-+	return -ENOMEM;
 +}
 +
-+void inff_proto_bcdc_detach(struct inff_pub *drvr)
++u32
++inff_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd)
 +{
-+	struct inff_bcdc *bcdc = drvr->proto->pd;
++	strscpy(iebuf, add_del_cmd, VNDR_IE_CMD_LEN);
 +
-+	drvr->proto->pd = NULL;
-+	inff_fws_detach(bcdc->fws);
-+	kfree(bcdc);
++	put_unaligned_le32(1, &iebuf[VNDR_IE_COUNT_OFFSET]);
++
++	put_unaligned_le32(pktflag, &iebuf[VNDR_IE_PKTFLAG_OFFSET]);
++
++	memcpy(&iebuf[VNDR_IE_VSIE_OFFSET], ie_ptr, ie_len);
++
++	return ie_len + VNDR_IE_HDR_SIZE;
 +}
-diff --git a/drivers/net/wireless/infineon/inffmac/bcdc.h b/drivers/net/wireless/infineon/inffmac/bcdc.h
++
++s32
++inff_parse_extension_ies(const u8 *extension_ie_buf, u32 extension_ie_len,
++			 struct parsed_extension_ies *extension_ies)
++{
++	struct inff_ext_tlv *ext_ie;
++	struct inff_tlv *ie;
++	struct parsed_ext_ie_info *parsed_info;
++	s32 remaining_len;
++
++	remaining_len = (s32)extension_ie_len;
++	memset(extension_ies, 0, sizeof(*extension_ies));
++
++	ie = (struct inff_tlv *)extension_ie_buf;
++	while (ie) {
++		if (ie->id != WLAN_EID_EXTENSION)
++			goto next;
++		ext_ie = (struct inff_ext_tlv *)ie;
++
++		/* len should be bigger than ext_id + one data */
++		if (ext_ie->len < 2) {
++			inff_err("invalid ext_ie ie. length is too small %d\n",
++				 ext_ie->len);
++			goto next;
++		}
++
++		/* skip parsing the HE capab, HE_6G_capa & oper IE from upper layer
++		 * to avoid sending it to the FW, as these IEs will be
++		 * added by the FW based on the MAC & PHY capab if HE
++		 * is enabled.
++		 */
++		if (ext_ie->ext_id == WLAN_EID_EXT_HE_CAPABILITY ||
++		    ext_ie->ext_id == WLAN_EID_EXT_HE_OPERATION ||
++		    ext_ie->ext_id == WLAN_EID_EXT_HE_6GHZ_CAPA)
++			goto next;
++
++		parsed_info = &extension_ies->ie_info[extension_ies->count];
++
++		parsed_info->ie_ptr = (char *)ext_ie;
++		parsed_info->ie_len = ext_ie->len + TLV_HDR_LEN;
++		memcpy(&parsed_info->ie_data, ext_ie, sizeof(*ext_ie));
++
++		extension_ies->count++;
++
++		inff_dbg(TRACE, "** EXT_IE %d, len 0x%02x EXT_ID: %d\n",
++			 parsed_info->ie_data.id,
++			 parsed_info->ie_data.len,
++			 parsed_info->ie_data.ext_id);
++
++		/* temperory parsing at most 5 EXT_ID, will review it.*/
++		if (extension_ies->count >= VNDR_IE_PARSE_LIMIT)
++			break;
++next:
++		remaining_len -= (ie->len + TLV_HDR_LEN);
++		if (remaining_len <= TLV_HDR_LEN)
++			ie = NULL;
++		else
++			ie = (struct inff_tlv *)(((u8 *)ie) + ie->len +
++				TLV_HDR_LEN);
++	}
++	return 0;
++}
++
++s32 inff_get_assoc_ies(struct inff_cfg80211_info *cfg, struct inff_if *ifp)
++{
++	struct inff_pub *drvr = cfg->pub;
++	struct inff_cfg80211_assoc_ielen_le *assoc_info;
++	struct inff_cfg80211_connect_info *conn_info = &cfg->conn_info;
++	struct inff_cfg80211_edcf_acparam edcf_acparam_info[EDCF_AC_COUNT];
++	u32 req_len;
++	u32 resp_len;
++	u32 flags;
++	s32 err = 0;
++
++	inff_dbg(CONN, "req: %p, req len (%d) resp: %p resp len (%d)\n", conn_info->req_ie,
++		 conn_info->req_ie_len, conn_info->resp_ie, conn_info->resp_ie_len);
++
++	if (conn_info->req_ie_len && conn_info->resp_ie_len &&
++	    conn_info->req_ie && conn_info->resp_ie)
++		return 0;
++
++	inff_clear_assoc_ies(cfg);
++
++	memset(cfg->extra_buf, '\0', WL_EXTRA_BUF_MAX);
++	err = inff_fwcmd_iovar_data_get(ifp, "assoc_info",
++					cfg->extra_buf, WL_ASSOC_INFO_MAX);
++	if (err) {
++		iphy_err(drvr, "could not get assoc info (%d)\n", err);
++		return err;
++	}
++	assoc_info =
++		(struct inff_cfg80211_assoc_ielen_le *)cfg->extra_buf;
++	req_len = le32_to_cpu(assoc_info->req_len);
++	resp_len = le32_to_cpu(assoc_info->resp_len);
++	flags = le32_to_cpu(assoc_info->flags);
++	if (req_len > WL_EXTRA_BUF_MAX || resp_len > WL_EXTRA_BUF_MAX) {
++		iphy_err(drvr, "invalid lengths in assoc info: req %u resp %u\n",
++			 req_len, resp_len);
++		return -EINVAL;
++	}
++	if (req_len) {
++		memset(cfg->extra_buf, '\0', WL_EXTRA_BUF_MAX);
++		err = inff_fwcmd_iovar_data_get(ifp, "assoc_req_ies",
++						cfg->extra_buf,
++						WL_ASSOC_INFO_MAX);
++		if (err) {
++			iphy_err(drvr, "could not get assoc req (%d)\n", err);
++			return err;
++		}
++
++		if (flags & INFF_ASSOC_REQ_IS_REASSOC)
++			conn_info->req_ie_len = req_len - sizeof(struct dot11_reassoc_req);
++		else
++			conn_info->req_ie_len = req_len - sizeof(struct dot11_assoc_req);
++
++		conn_info->req_ie =
++		    kmemdup(cfg->extra_buf, conn_info->req_ie_len,
++			    GFP_KERNEL);
++		if (!conn_info->req_ie)
++			conn_info->req_ie_len = 0;
++	} else {
++		conn_info->req_ie_len = 0;
++		conn_info->req_ie = NULL;
++	}
++
++	/* resp_len is the total length of assoc resp
++	 * which includes 6 bytes of aid/status code/capabilities.
++	 * the assoc_resp_ie length should minus the 6 bytes which starts from rate_ie.
++	 */
++	if (resp_len) {
++		memset(cfg->extra_buf, '\0', WL_EXTRA_BUF_MAX);
++		err = inff_fwcmd_iovar_data_get(ifp, "assoc_resp_ies",
++						cfg->extra_buf,
++					      WL_ASSOC_INFO_MAX);
++		if (err) {
++			iphy_err(drvr, "could not get assoc resp (%d)\n", err);
++			return err;
++		}
++		conn_info->resp_ie_len = resp_len - sizeof(struct dot11_assoc_resp);
++		conn_info->resp_ie =
++		    kmemdup(cfg->extra_buf, conn_info->resp_ie_len,
++			    GFP_KERNEL);
++		if (!conn_info->resp_ie)
++			conn_info->resp_ie_len = 0;
++
++		err = inff_fwcmd_iovar_data_get(ifp, "wme_ac_sta",
++						edcf_acparam_info,
++						sizeof(edcf_acparam_info));
++		if (err) {
++			inff_err("could not get wme_ac_sta (%d)\n", err);
++			return err;
++		}
++
++		inff_wifi_prioritize_acparams(edcf_acparam_info,
++					      cfg->ac_priority);
++	} else {
++		conn_info->resp_ie_len = 0;
++		conn_info->resp_ie = NULL;
++	}
++	inff_dbg(CONN, "req len (%d) resp len (%d)\n",
++		 conn_info->req_ie_len, conn_info->resp_ie_len);
++
++	return err;
++}
++
++void inff_clear_assoc_ies(struct inff_cfg80211_info *cfg)
++{
++	struct inff_cfg80211_connect_info *conn_info = &cfg->conn_info;
++
++	kfree(conn_info->req_ie);
++	conn_info->req_ie = NULL;
++	conn_info->req_ie_len = 0;
++	kfree(conn_info->resp_ie);
++	conn_info->resp_ie = NULL;
++	conn_info->resp_ie_len = 0;
++}
++
++s32 inff_vif_set_mgmt_ie(struct inff_cfg80211_vif *vif, s32 pktflag,
++			 const u8 *vndr_ie_buf, u32 vndr_ie_len)
++{
++	struct inff_pub *drvr;
++	struct inff_if *ifp;
++	struct inff_vif_saved_ie *saved_ie;
++	s32 err = 0;
++	u8  *iovar_ie_buf;
++	u8  *curr_ie_buf;
++	u8  *mgmt_ie_buf = NULL;
++	int mgmt_ie_buf_len;
++	u32 *mgmt_ie_len;
++	u32 del_add_ie_buf_len = 0;
++	u32 total_ie_buf_len = 0;
++	u32 parsed_ie_buf_len = 0;
++	struct parsed_vndr_ies old_vndr_ies;
++	struct parsed_vndr_ies new_vndr_ies;
++	struct parsed_vndr_ie_info *vndrie_info;
++	s32 i;
++	u8 *ptr;
++	int remained_buf_len;
++	struct parsed_extension_ies new_ext_ies;
++	struct parsed_extension_ies old_ext_ies;
++	struct parsed_ext_ie_info *extie_info;
++
++	if (!vif)
++		return -ENODEV;
++	ifp = vif->ifp;
++	drvr = ifp->drvr;
++	saved_ie = &vif->saved_ie;
++
++	inff_dbg(TRACE, "bsscfgidx %d, pktflag : 0x%02X\n", ifp->bsscfgidx,
++		 pktflag);
++	iovar_ie_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
++	if (!iovar_ie_buf)
++		return -ENOMEM;
++	curr_ie_buf = iovar_ie_buf;
++	switch (pktflag) {
++	case INFF_VNDR_IE_PRBREQ_FLAG:
++		mgmt_ie_buf = saved_ie->probe_req_ie;
++		mgmt_ie_len = &saved_ie->probe_req_ie_len;
++		mgmt_ie_buf_len = sizeof(saved_ie->probe_req_ie);
++		break;
++	case INFF_VNDR_IE_PRBRSP_FLAG:
++		mgmt_ie_buf = saved_ie->probe_res_ie;
++		mgmt_ie_len = &saved_ie->probe_res_ie_len;
++		mgmt_ie_buf_len = sizeof(saved_ie->probe_res_ie);
++		break;
++	case INFF_VNDR_IE_BEACON_FLAG:
++		mgmt_ie_buf = saved_ie->beacon_ie;
++		mgmt_ie_len = &saved_ie->beacon_ie_len;
++		mgmt_ie_buf_len = sizeof(saved_ie->beacon_ie);
++		break;
++	case INFF_VNDR_IE_ASSOCREQ_FLAG:
++		mgmt_ie_buf = saved_ie->assoc_req_ie;
++		mgmt_ie_len = &saved_ie->assoc_req_ie_len;
++		mgmt_ie_buf_len = sizeof(saved_ie->assoc_req_ie);
++		break;
++	case INFF_VNDR_IE_ASSOCRSP_FLAG:
++		mgmt_ie_buf = saved_ie->assoc_res_ie;
++		mgmt_ie_len = &saved_ie->assoc_res_ie_len;
++		mgmt_ie_buf_len = sizeof(saved_ie->assoc_res_ie);
++		break;
++	default:
++		err = -EPERM;
++		iphy_err(drvr, "not suitable type\n");
++		goto exit;
++	}
++
++	if (vndr_ie_len > mgmt_ie_buf_len) {
++		err = -ENOMEM;
++		iphy_err(drvr, "extra IE size too big\n");
++		goto exit;
++	}
++
++	/* parse and save new vndr_ie in curr_ie_buff before comparing it */
++	if (vndr_ie_buf && vndr_ie_len && curr_ie_buf) {
++		ptr = curr_ie_buf;
++		inff_parse_vndr_ies(vndr_ie_buf, vndr_ie_len, &new_vndr_ies);
++		for (i = 0; i < new_vndr_ies.count; i++) {
++			vndrie_info = &new_vndr_ies.ie_info[i];
++			memcpy(ptr + parsed_ie_buf_len, vndrie_info->ie_ptr,
++			       vndrie_info->ie_len);
++			parsed_ie_buf_len += vndrie_info->ie_len;
++		}
++		inff_parse_extension_ies(vndr_ie_buf, vndr_ie_len, &new_ext_ies);
++		for (i = 0; i < new_ext_ies.count; i++) {
++			extie_info = &new_ext_ies.ie_info[i];
++			memcpy(ptr + parsed_ie_buf_len, extie_info->ie_ptr,
++			       extie_info->ie_len);
++			parsed_ie_buf_len += extie_info->ie_len;
++		}
++	}
++
++	if (mgmt_ie_buf && *mgmt_ie_len) {
++		if (parsed_ie_buf_len && parsed_ie_buf_len == *mgmt_ie_len &&
++		    (memcmp(mgmt_ie_buf, curr_ie_buf,
++			    parsed_ie_buf_len) == 0)) {
++			inff_dbg(TRACE, "Previous mgmt IE equals to current IE\n");
++			goto exit;
++		}
++
++		/* parse old vndr_ie */
++		inff_parse_vndr_ies(mgmt_ie_buf, *mgmt_ie_len, &old_vndr_ies);
++		/* parse old ext_ie */
++		inff_parse_extension_ies(mgmt_ie_buf, *mgmt_ie_len, &old_ext_ies);
++
++		/* make a command to delete old ie */
++		for (i = 0; i < old_vndr_ies.count; i++) {
++			vndrie_info = &old_vndr_ies.ie_info[i];
++
++			inff_dbg(TRACE, "DEL ID : %d, Len: %d , OUI:%3ph\n",
++				 vndrie_info->vndrie.id,
++				 vndrie_info->vndrie.len,
++				 vndrie_info->vndrie.oui);
++
++			del_add_ie_buf_len = inff_vndr_ie(curr_ie_buf, pktflag,
++							  vndrie_info->ie_ptr,
++							  vndrie_info->ie_len,
++							  "del");
++			curr_ie_buf += del_add_ie_buf_len;
++			total_ie_buf_len += del_add_ie_buf_len;
++		}
++		/* make a command to delete old extension ie */
++		for (i = 0; i < old_ext_ies.count; i++) {
++			extie_info = &old_ext_ies.ie_info[i];
++
++			inff_dbg(TRACE, "DEL EXT_IE : %d, Len: %d , ext_id:%d\n",
++				 extie_info->ie_data.id,
++				 extie_info->ie_data.len,
++				 extie_info->ie_data.ext_id);
++
++			del_add_ie_buf_len = inff_vndr_ie(curr_ie_buf,
++							  pktflag | INFF_VNDR_IE_CUSTOM_FLAG,
++							  extie_info->ie_ptr,
++							  extie_info->ie_len,
++							  "del");
++			curr_ie_buf += del_add_ie_buf_len;
++			total_ie_buf_len += del_add_ie_buf_len;
++		}
++	}
++
++	*mgmt_ie_len = 0;
++	/* Add if there is any extra IE */
++	if (mgmt_ie_buf && parsed_ie_buf_len) {
++		ptr = mgmt_ie_buf;
++
++		remained_buf_len = mgmt_ie_buf_len;
++
++		/* make a command to add new ie */
++		for (i = 0; i < new_vndr_ies.count; i++) {
++			vndrie_info = &new_vndr_ies.ie_info[i];
++
++			/* verify remained buf size before copy data */
++			if (remained_buf_len < (vndrie_info->vndrie.len +
++							VNDR_IE_VSIE_OFFSET)) {
++				iphy_err(drvr, "no space in mgmt_ie_buf: len left %d",
++					 remained_buf_len);
++				break;
++			}
++			remained_buf_len -= (vndrie_info->ie_len +
++					     VNDR_IE_VSIE_OFFSET);
++
++			inff_dbg(TRACE, "ADDED ID : %d, Len: %d, OUI:%3ph\n",
++				 vndrie_info->vndrie.id,
++				 vndrie_info->vndrie.len,
++				 vndrie_info->vndrie.oui);
++
++			del_add_ie_buf_len = inff_vndr_ie(curr_ie_buf, pktflag,
++							  vndrie_info->ie_ptr,
++							  vndrie_info->ie_len,
++							  "add");
++
++			/* save the parsed IE in wl struct */
++			memcpy(ptr + (*mgmt_ie_len), vndrie_info->ie_ptr,
++			       vndrie_info->ie_len);
++			*mgmt_ie_len += vndrie_info->ie_len;
++
++			curr_ie_buf += del_add_ie_buf_len;
++			total_ie_buf_len += del_add_ie_buf_len;
++		}
++		/* make a command to add new EXT ie */
++		for (i = 0; i < new_ext_ies.count; i++) {
++			extie_info = &new_ext_ies.ie_info[i];
++
++			/* verify remained buf size before copy data */
++			if (remained_buf_len < (extie_info->ie_data.len +
++							VNDR_IE_VSIE_OFFSET)) {
++				iphy_err(drvr, "no space in mgmt_ie_buf: len left %d",
++					 remained_buf_len);
++				break;
++			}
++			remained_buf_len -= (extie_info->ie_len +
++					     VNDR_IE_VSIE_OFFSET);
++
++			inff_dbg(TRACE, "ADDED EXT ID : %d, Len: %d, OUI:%d\n",
++				 extie_info->ie_data.id,
++				 extie_info->ie_data.len,
++				 extie_info->ie_data.ext_id);
++
++			del_add_ie_buf_len = inff_vndr_ie(curr_ie_buf,
++							  pktflag | INFF_VNDR_IE_CUSTOM_FLAG,
++							  extie_info->ie_ptr,
++							  extie_info->ie_len,
++							  "add");
++
++			/* save the parsed IE in wl struct */
++			memcpy(ptr + (*mgmt_ie_len), extie_info->ie_ptr,
++			       extie_info->ie_len);
++			*mgmt_ie_len += extie_info->ie_len;
++
++			curr_ie_buf += del_add_ie_buf_len;
++			total_ie_buf_len += del_add_ie_buf_len;
++		}
++	}
++	if (total_ie_buf_len) {
++		err  = inff_fwcmd_bsscfg_data_set(ifp, "vndr_ie", iovar_ie_buf,
++						  total_ie_buf_len);
++		if (err)
++			iphy_err(drvr, "vndr ie set error : %d\n", err);
++	}
++
++exit:
++	kfree(iovar_ie_buf);
++	return err;
++}
++
++s32 inff_vif_clear_mgmt_ies(struct inff_cfg80211_vif *vif)
++{
++	static const s32 pktflags[] = {
++		INFF_VNDR_IE_PRBRSP_FLAG,
++		INFF_VNDR_IE_BEACON_FLAG,
++		INFF_VNDR_IE_ASSOCRSP_FLAG
++	};
++	int i;
++
++	if (vif->wdev.iftype == NL80211_IFTYPE_AP)
++		inff_vif_set_mgmt_ie(vif, INFF_VNDR_IE_ASSOCRSP_FLAG, NULL, 0);
++	else
++		inff_vif_set_mgmt_ie(vif, INFF_VNDR_IE_PRBREQ_FLAG, NULL, 0);
++
++	for (i = 0; i < ARRAY_SIZE(pktflags); i++)
++		inff_vif_set_mgmt_ie(vif, pktflags[i], NULL, 0);
++
++	memset(&vif->saved_ie, 0, sizeof(vif->saved_ie));
++	return 0;
++}
++
+diff --git a/drivers/net/wireless/infineon/inffmac/ie.h b/drivers/net/wireless/infineon/inffmac/ie.h
 new file mode 100644
-index 000000000000..c0b451d74c32
+index 000000000000..df2e6a3d10a8
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/bcdc.h
-@@ -0,0 +1,29 @@
++++ b/drivers/net/wireless/infineon/inffmac/ie.h
+@@ -0,0 +1,170 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
-+ * Copyright (c) 2013 Broadcom Corporation
++ * Copyright (c) 2010 Broadcom Corporation
 + *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#ifndef INFF_BCDC_H
-+#define INFF_BCDC_H
++#ifndef INFF_IE_H
++#define INFF_IE_H
 +
-+struct inff_proto_bcdc_dcmd {
-+	__le32 cmd;     /* dongle command value */
-+	__le32 len;     /* lower 16: output buflen, upper 16:input buflen (excludes header) */
-+	__le32 flags;   /* flag defns given below */
-+	__le32 status;  /* status code returned from the device */
++#define	DOT11_MGMT_HDR_LEN		24	/* d11 management header len */
++#define	DOT11_BCN_PRB_FIXED_LEN		12	/* beacon/probe fixed length */
++
++#define WPA_OUI				"\x00\x50\xF2"	/* WPA OUI */
++#define WPA_OUI_TYPE			1
++#define RSN_OUI				"\x00\x0F\xAC"	/* RSN OUI */
++#define	WME_OUI_TYPE			2
++#define WPS_OUI_TYPE			4
++#define WFA_OUI_TYPE_MBO_OCE		0x16
++
++#define VS_IE_FIXED_HDR_LEN		6
++#define WPA_IE_VERSION_LEN		2
++#define WPA_IE_MIN_OUI_LEN		4
++#define WPA_IE_SUITE_COUNT_LEN		2
++
++#define VNDR_IE_CMD_LEN			4	/* length of the set command
++						 * string :"add", "del" (+ NUL)
++						 */
++#define VNDR_IE_COUNT_OFFSET		4
++#define VNDR_IE_PKTFLAG_OFFSET		8
++#define VNDR_IE_VSIE_OFFSET		12
++#define VNDR_IE_HDR_SIZE		12
++#define VNDR_IE_PARSE_LIMIT		5
++
++#define IE_MAX_LEN			512
++
++/* IE TLV processing */
++#define TLV_LEN_OFF			1	/* length offset */
++#define TLV_HDR_LEN			2	/* header length */
++#define TLV_BODY_OFF			2	/* body offset */
++#define TLV_OUI_LEN			3	/* oui id length */
++
++/* 802.11 Mgmt Packet flags */
++#define INFF_VNDR_IE_BEACON_FLAG	0x1
++#define INFF_VNDR_IE_PRBRSP_FLAG	0x2
++#define INFF_VNDR_IE_ASSOCRSP_FLAG	0x4
++#define INFF_VNDR_IE_AUTHRSP_FLAG	0x8
++#define INFF_VNDR_IE_PRBREQ_FLAG	0x10
++#define INFF_VNDR_IE_ASSOCREQ_FLAG	0x20
++/* vendor IE in IW advertisement protocol ID field */
++#define INFF_VNDR_IE_IWAPID_FLAG	0x40
++/* allow custom IE id */
++#define INFF_VNDR_IE_CUSTOM_FLAG	0x100
++
++/* flags */
++#define INFF_ASSOC_REQ_IS_REASSOC 0x01 /* assoc req was actually a reassoc */
++
++/* Max length of Interworking element */
++#define INFF_IW_IES_MAX_BUF_LEN	8
++
++struct dot11_assoc_req {
++	u16 capability;		/* capability information */
++	u16 listen;		/* listen interval */
 +};
 +
-+int inff_proto_bcdc_attach(struct inff_pub *drvr);
-+void inff_proto_bcdc_detach(struct inff_pub *drvr);
-+void inff_proto_bcdc_txflowblock(struct device *dev, bool state);
-+void inff_proto_bcdc_txcomplete(struct device *dev, struct sk_buff *txp,
-+				bool success);
-+struct inff_fws_info *drvr_to_fws(struct inff_pub *drvr);
-+void inff_bcdc_process_event(struct device *dev, struct sk_buff *skb);
-+void inff_bcdc_rx(struct device *dev, struct sk_buff *skb,
-+		  bool handle_event, bool inirq);
++struct dot11_reassoc_req {
++	u16 capability;		/* capability information */
++	u16 listen;		/* listen interval */
++	u8 ap[ETH_ALEN];	/* Current AP address */
++};
 +
-+#endif /* INFF_BCDC_H */
++struct dot11_assoc_resp {
++	u16 capability;		/* capability information */
++	u16 status;		/* status code */
++	u16 aid;		/* association ID */
++};
++
++/**
++ * struct inff_tlv - tag_ID/length/value_buffer tuple.
++ *
++ * @id: tag identifier.
++ * @len: number of bytes in value buffer.
++ * @data: value buffer.
++ */
++struct inff_tlv {
++	u8 id;
++	u8 len;
++	u8 data[];
++};
++
++/* Vendor specific ie. id = 221, oui and type defines exact ie */
++struct inff_vs_tlv {
++	u8 id;
++	u8 len;
++	u8 oui[3];
++	u8 oui_type;
++};
++
++struct parsed_vndr_ie_info {
++	u8 *ie_ptr;
++	u32 ie_len;	/* total length including id & length field */
++	struct inff_vs_tlv vndrie;
++};
++
++struct parsed_vndr_ies {
++	u32 count;
++	struct parsed_vndr_ie_info ie_info[VNDR_IE_PARSE_LIMIT];
++};
++
++struct inff_ext_tlv {
++	u8 id;
++	u8 len;
++	u8 ext_id;
++};
++
++struct parsed_ext_ie_info {
++	u8 *ie_ptr;
++	u32 ie_len;	/* total length including id & length field */
++	struct inff_ext_tlv ie_data;
++};
++
++struct parsed_extension_ies {
++	u32 count;
++	struct parsed_ext_ie_info ie_info[VNDR_IE_PARSE_LIMIT];
++};
++
++struct ie_info {
++	__le32 pktflag;			/* bitmask indicating which packet(s) contain this IE */
++	struct inff_tlv ie_data;	/* IE data */
++} __packed;
++
++struct ie_buf {
++	__le32 iecount;			/* number of entries in the ie_list[] array */
++	struct ie_info ie_list[1];	/* variable size list of ie_info_t structs */
++} __packed;
++
++struct ie_set_buffer {
++	char cmd[VNDR_IE_CMD_LEN];	/* ie IOVar set command : "add" + NUL */
++	struct ie_buf ie_buffer;	/* buffer containing IE list information */
++} __packed;
++
++const struct inff_tlv *inff_parse_tlvs(const void *buf, int buflen, uint key);
++
++struct inff_tlv *inff_find_iwie(const u8 *parse, u32 len);
++
++s32 inff_clear_iwie(struct inff_cfg80211_info *cfg, struct inff_if *ifp);
++
++s32 inff_add_iwie(struct inff_cfg80211_info *cfg, struct inff_if *ifp,
++		  s32 pktflag, u8 ie_id, u8 *data, u8 data_len);
++
++s32 inff_parse_vndr_ies(const u8 *vndr_ie_buf, u32 vndr_ie_len, struct parsed_vndr_ies *vndr_ies);
++
++u32 inff_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd);
++
++s32 inff_parse_extension_ies(const u8 *extension_ie_buf, u32 extension_ie_len,
++			     struct parsed_extension_ies *extension_ies);
++
++s32 inff_get_assoc_ies(struct inff_cfg80211_info *cfg, struct inff_if *ifp);
++
++void inff_clear_assoc_ies(struct inff_cfg80211_info *cfg);
++
++s32 inff_vif_set_mgmt_ie(struct inff_cfg80211_vif *vif, s32 pktflag,
++			 const u8 *vndr_ie_buf, u32 vndr_ie_len);
++s32 inff_vif_clear_mgmt_ies(struct inff_cfg80211_vif *vif);
++
++void inff_clear_assoc_req_ie(struct inff_cfg80211_info *cfg);
++void inff_clear_assoc_resp_ie(struct inff_cfg80211_info *cfg);
++
++#endif /* INFF_IE_H */
 -- 
 2.43.0
 
