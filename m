@@ -1,83 +1,89 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 848892472B6
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 02:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+Received: from hqu.edu.cn (hqu.edu.cn [210.34.240.11])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2EB6B4CCDEF;
+	Wed,  2 Sep 2026 02:46:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.34.240.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788317123; cv=none; b=W5Zg+JCXowPDYaCP/83GKYcisp2Su+81ytr7qm7Pt0o2l3RbKhs2sjknNyPamxYElZxwaNP3858ApqNDNx1WABhy5/FWsAacIQ3ztXolwXIetYg1TIg6LCrFE3H53L9U7MxrZ6bg1CjWs+Bs9wAn17ke3IV2AzU25jalexYSnoc=
+	t=1788317198; cv=none; b=Yo4HDZTL/N5KyBjQ2JGaQuaEN6VK2iJjk5EC9BNZ2JrK5eGxXKisU6LwT5x3FjhBrSijdl3dSkqo6vt4LswLYuwe+fqC3Ia1tX3DQinzXydmFPnQ2sTU22eYdzbtpGYGIXg2ti65MlGyPafaB1fX11JSTbliXlhtqIahj+FnIiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788317123; c=relaxed/simple;
-	bh=4SaScgUeTbTmjEjv8trbQkCUHkq2CKZoB4DLC2k83Dg=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=tD22KhCkwJXHq/oUpwYIvrt4PoGPlCdyZN+1zH/ZdZxmg1AYG1QjbsJ7OnfboPOkhv5486ZeAGOcLGVMvlkB5Y1S7aZyoR1+qHG2emFH76uTGiAHbBlFlH2ho1LToXxc2dHjLoToZG9VRCBqSyNSzPT2TqDzHQqDrAZ81zsc85U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dDM0pr5t; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dDM0pr5t"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6822jHLK12253237, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788317117; bh=X091aBbiMmZFT8SkSMRj7leSB+EOiIingAJEKKrwew4=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=dDM0pr5tjlH8H1QSRsquUDH+JKZHRJDqgqSGtPBzUCnZmbVamLK5llH8Fn/bgjx9D
-	 9JWYIcpuJAeXaXtvw5p10s0OAsuX7xyRtKVFtuUNU6WFpzNxTEi10xxB/DnYDj8nrr
-	 dDmFvOsMf9tpgRTIRIU/mZerfZyHyh8GBIf2bYG9/6/g4wZwp1hAexJ6kd3kMa8xlW
-	 So4dabUS4pTjGSyls3zMuUvxgaOj8Bp92cTh4r2Ydf5gL2Y9bdyuGG69BVrCwa2YbB
-	 tCihdRfslrfLjp+VgzouDHLuMCV/0fwI3obs8mJ53UFCZuPZxbFQ3AfCsCexoL+6K7
-	 fM4iCDKRFZD8Q==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6822jHLK12253237
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 2 Sep 2026 10:45:17 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 2 Sep 2026 10:45:14 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43 via Frontend
- Transport; Wed, 2 Sep 2026 10:45:09 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>, <pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, Chelsy Ratnawat
-	<chelsyratnawat2001@gmail.com>
-Subject: Re: [PATCH] wifi: rtlwifi: remove dead mimo_ps handling from rate update code
-In-Reply-To: <20260814165556.1102547-1-chelsy.ratnawat1@ibm.com>
-References: <20260814165556.1102547-1-chelsy.ratnawat1@ibm.com>
-Message-ID: <b2f67c8a-cfcc-4a96-bdbd-7a8fec82ff02@RTKEXHMBS04.realtek.com.tw>
-Date: Wed, 2 Sep 2026 10:45:09 +0800
+	s=arc-20240116; t=1788317198; c=relaxed/simple;
+	bh=vf3rGOCPnf8EqbL3gDKUJV6Z+XhAKY4Q5qICBD9eRc4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pDAFAdwSlTcmYdaEh2TH8Z4dE19cytvLVlHPMO1w0aA5Q900n/J3fZh1ZvVts4pkaWY1c77mO0eTwuTY/3NibHXy4jv25N6WLYW73+QWhXJp+s2Qj4/wS1xs/2sBDVZoXwJff+YaCSIo2t6HMpP8/rmFT7aW03fidYJMACgfIis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stu.hqu.edu.cn; spf=pass smtp.mailfrom=stu.hqu.edu.cn; arc=none smtp.client-ip=210.34.240.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stu.hqu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.hqu.edu.cn
+Received: from raspberry-nas (unknown [27.42.228.181])
+	by cmweb (Coremail) with SMTP id C_Ai0gCH6tkBjpdqiSAFAA--.10504S2;
+	Wed, 02 Sep 2026 10:46:25 +0800 (CST)
+From: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	linux-kernel@vger.kernel.org,
+	YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
+Subject: [PATCH v2] wifi: rtw88: use firmware MAC address as fallback
+Date: Wed,  2 Sep 2026 10:46:22 +0800
+Message-ID: <20260902024622.4149279-1-raspberrykan@stu.hqu.edu.cn>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260901124551.3921506-1-raspberrykan@stu.hqu.edu.cn>
+References: <20260901124551.3921506-1-raspberrykan@stu.hqu.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:C_Ai0gCH6tkBjpdqiSAFAA--.10504S2
+X-Coremail-Antispam: 1UD129KBjvJXoWruw1DZrW8ZFW8tF4fGFyfWFg_yoW8JF1Dpa
+	yDGa1a9FnxJrsrua1fWa1ruF1rGan3J34jyr9Yy3s09rn8XryfZFyUGF9FvF1jqFW0yF4U
+	tr15trZrGF9YvrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyv14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
+	6r4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+	rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+	vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
+	x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+	xKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAF
+	wI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbrMaUUUUUU==
+X-CM-SenderInfo: ysvskiyqsqlko6vw3hxktxhvlgxou0/1tbiAQAQBGqVmGMDTgAGsa
 
-Chelsy Ratnawat <chelsyratnawat2001@gmail.com> wrote:
+Some devices provide the Wi-Fi MAC address through firmware instead of
+storing a valid address in the chip efuse.
 
-> From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-> 
-> Several rtlwifi drivers declare mimo_ps as IEEE80211_SMPS_OFF
-> and never modify it. As a result, conditionals checking for
-> IEEE80211_SMPS_STATIC or IEEE80211_SMPS_DYNAMIC are false,
-> making those branches unreachable.
-> 
-> Remove the unused mimo_ps variables, drop the dead SMPS
-> branches, and simplify the remaining rate mask selection logic
-> without changing runtime behavior. Also move ratr_mask
-> declarations out of the removed conditional blocks where
-> appropriate.
-> 
-> Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Try to read the MAC address from firmware before falling back to a
+randomly generated address.
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
-
-0de28b917fd3 wifi: rtlwifi: remove dead mimo_ps handling from rate update code
-
+Signed-off-by: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
 ---
-https://github.com/pkshih/rtw.git
+Changes in v2:
+- Fix the undeclared mac_ret issue by checking
+  device_get_mac_address() directly.
+
+ drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index cd9254370fcc..0f23498b5c96 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2060,8 +2060,11 @@ static int rtw_chip_efuse_info_setup(struct rtw_dev *rtwdev)
+ 	efuse->ext_lna_5g = efuse->lna_type_5g & BIT(3) ? 1 : 0;
+ 
+ 	if (!is_valid_ether_addr(efuse->addr)) {
+-		eth_random_addr(efuse->addr);
+-		dev_warn(rtwdev->dev, "efuse MAC invalid, using random\n");
++		if (device_get_mac_address(rtwdev->dev, efuse->addr)) {
++			eth_random_addr(efuse->addr);
++			dev_warn(rtwdev->dev,
++				 "failed to get valid MAC address, using random\n");
++		}
+ 	}
+ 
+ out_disable:
+-- 
+2.53.0
 
