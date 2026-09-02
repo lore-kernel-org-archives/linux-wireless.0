@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E265326939
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3292F3B19AC
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788338781; cv=none; b=NYCwBOhTjuidTjFBthMsG8cU01NtXGsD4iCmk7QncV5XAfViZ2nDT9sIngF5SEJ604FhAEmEs9G54WdykaaUslOrrToEeXJfpZrs/eNjVPSWZ5mew3EapFb6YofnLPLAcTf2WFgYg40+SmyWtAULMSQA0tTk+9v5Cafk9hoo3zo=
+	t=1788338783; cv=none; b=NyHMoLNW1sOi0VAxIYJDs79muynJEq7fB8fvE3ufK8EmkCg4SpPlxUvZwcM6reJWyr16HdxjpMOsBSTaUhz3cTASrBYOiBLqV6G5XvY9JXHnoMNBH6zguo5v/89By4gTvb/bm5XnEghxmrC+q0e4sOMOniG5IQWSaGEtgBMLcAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788338781; c=relaxed/simple;
-	bh=7zq9cEhQ73J/rPG2rhdPHC0ER+w8XCuEb+U3LGXe34U=;
+	s=arc-20240116; t=1788338783; c=relaxed/simple;
+	bh=SvGXYABmCT2skFyk170Yp6EOO5JtvhzAxlBSlxhx2EM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CQd47dFLiZMvp3HhoHLylpN3ACf0s7tlUI13opvrYfK+BEn8ISjcYsFUv2pnVrqKm3uZi+DvLZxJqvalydHSbrBXHA5DyviR7ag8Wt28s+yqDzU7ybkrzWJsGJv+xEVczUM8OD15jIkh9qnnfxq/ifN6FJsfYyN+jXcSXcG4Pfo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=h4vn8NyO; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=UOP5YUgDIfQGk6PGejiAT9KBcmKNYbX2YUYzmXOgQmjEvRg6jS1v0yhLj3Q8awETqZNOTUWwHji1iO5RfPve/PLM3J5QxIl8U5cvxoq2KZuGKQfT7KT3JbDIj83aeZ5IiAMWee0Jn7uqFHfFSYmqir3cfDJAD8kS1z+fjvf/IS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=MO925R+c; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="h4vn8NyO"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="MO925R+c"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=GYHIVpaqsdt+OYgB/kdQAfU2TZ/FdEzVaZB0vGzEJ5c=; b=h4vn8NyOo4GURU3BWQxOaFCmLI
-	p+jk7AauupMH649DLOS4Qeh/hSp5Lm1viR3POtpIz76g7kftM7RhmWjFenougEwa3jg3fQDOl+q8J
-	kJ2q24YHtdNXH0DIDwWj6jiHPJxsBjmawVgyXYnkx+nlIXVGbM1mh0IpQg3UAi1xkqY8=;
+	bh=QdiHbw3Azh+6iQOOAqbCjAEXPlUzMsZyCsQrKqGsTug=; b=MO925R+cK2b7mdYwnLFRzMfnSe
+	vc8Jj+sfsh9G9uocES4uObX/FM2SpnpRqkfnx/qzt8GtJ+r6EeSfaPuctKE0eEaUZXWlHzi5+K5Jd
+	q9Wpg5jAmNtTqzpPijvAFlnMH8/masSy1MIaHGQQCi3FDAU+jnJo5CRP7FM1hvNtw9aI=;
 Received: from p200300cadf14d1000000000000000162.dip0.t-ipconnect.de ([2003:ca:df14:d100::162] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x1gbm-00Cwkn-2q;
-	Wed, 02 Sep 2026 10:46:14 +0200
+	id 1x1gbo-00Cwkn-11;
+	Wed, 02 Sep 2026 10:46:16 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [RFC PATCH 07/15] wifi: cfg80211: add KUnit tests for the SCS classifier
-Date: Wed,  2 Sep 2026 10:46:02 +0200
-Message-ID: <0cc7ffa606b3a4a866306e5c05800603518f7d64.1788338716.git-series.nbd@nbd.name>
+Subject: [RFC PATCH 15/15] wifi: mt76: mt7996: apply the SCS traffic description
+Date: Wed,  2 Sep 2026 10:46:10 +0200
+Message-ID: <ac82008f9ab30b82771038f5770529b63d5f2420.1788338716.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
 References: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
@@ -48,588 +48,209 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Cover the cases where a mistake gives a wrong priority rather than a
-crash, so that nothing else would report it:
+The firmware schedules uplink traffic against the QoS Characteristics
+element of an SCS stream, so pass the element down through sta_set_scs
+and let the MURU scheduler serve the stream with trigger frames.
 
-- A non-first IP fragment must report no ports.
-- A descriptor the frame cannot satisfy must not match, one it can must,
-  and the granularity rule must decide between two that both match,
-  whatever order they are in.
-- A descriptor that matched must leave nothing undecided.
-- A mirrored key must swap the pairs of 11.25.3 item b) and leave every
-  unselected field zero.
-- A refused classifier type must be refused.
-- The QoS Characteristics presence bitmap must place every optional field
-  at the right offset.
+A downlink or direct link descriptor is declined, because the firmware
+serves uplink alone.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/wireless/tests/Makefile |   2 +-
- net/wireless/tests/scs.c    | 547 +++++++++++++++++++++++++++++++++++++-
- 2 files changed, 548 insertions(+), 1 deletion(-)
- create mode 100644 net/wireless/tests/scs.c
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c   |  1 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   | 79 +++++++++++++++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    | 40 ++++++++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.h    |  4 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  2 +-
+ 5 files changed, 126 insertions(+)
 
-diff --git a/net/wireless/tests/Makefile b/net/wireless/tests/Makefile
-index c364e63b508e..a4b7f2e206fc 100644
---- a/net/wireless/tests/Makefile
-+++ b/net/wireless/tests/Makefile
-@@ -1,3 +1,3 @@
--cfg80211-tests-y += module.o fragmentation.o scan.o util.o chan.o
-+cfg80211-tests-y += module.o fragmentation.o scan.o util.o chan.o scs.o
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index fb635a092584..fb064fb4f938 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -526,6 +526,7 @@ mt7996_init_wiphy(struct ieee80211_hw *hw, struct mtk_wed_device *wed)
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
++	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SCS);
  
- obj-$(CONFIG_CFG80211_KUNIT_TEST) += cfg80211-tests.o
-diff --git a/net/wireless/tests/scs.c b/net/wireless/tests/scs.c
-new file mode 100644
-index 000000000000..f3f237a7d924
---- /dev/null
-+++ b/net/wireless/tests/scs.c
-@@ -0,0 +1,547 @@
-+// SPDX-License-Identifier: GPL-2.0-only
+ 	if (mt7996_eeprom_has_background_radar(dev) &&
+ 	    (!mdev->dev->of_node ||
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index e218856b0c45..61c89b1aa4cb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -2051,6 +2051,84 @@ static void mt7996_sta_set_4addr(struct ieee80211_hw *hw,
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
 +/*
-+ * KUnit tests for the SCS and MSCS classifier
-+ *
-+ * Each case is one that fails with a wrong priority rather than a crash.
-+ *
-+ * Copyright (C) 2026 Felix Fietkau <nbd@nbd.name>
++ * A stream belongs to the station and not to one of its links, so every link
++ * carries it. A link with no station entry is not one that can serve it, so a
++ * descriptor that reached none of them has not been programmed at all.
 + */
-+#include <kunit/skbuff.h>
-+#include <kunit/test.h>
-+#include <linux/ieee80211.h>
-+#include <linux/ip.h>
-+#include <net/cfg80211.h>
-+#include "../core.h"
++static int mt7996_sta_scs_program(struct mt7996_dev *dev,
++				  struct ieee80211_vif *vif,
++				  struct ieee80211_sta *sta,
++				  const struct cfg80211_scs_desc *desc,
++				  bool del)
++{
++	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
++	struct ieee80211_link_sta *link_sta;
++	unsigned int link_id;
++	bool any = false;
++	int ret = 0;
 +
-+static const u8 test_da[ETH_ALEN] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x02 };
++	for_each_sta_active_link(vif, sta, link_sta, link_id) {
++		struct mt7996_sta_link *msta_link;
 +
-+/* An Ethernet header, an IPv4 header and four octets of UDP ports */
-+static const u8 udp_frame[] = {
-+	0x02, 0x00, 0x00, 0x00, 0x00, 0x02,	/* destination address */
-+	0x02, 0x00, 0x00, 0x00, 0x00, 0x01,	/* source address */
-+	0x08, 0x00,
-+	0x45, 0x00, 0x00, 0x20, 0xab, 0xcd, 0x00, 0x00,
-+	0x40, 0x11, 0x00, 0x00,
-+	192, 168, 1, 1,
-+	192, 168, 1, 2,
-+	0x13, 0x88, 0x27, 0x10,
-+	0xde, 0xad, 0xbe, 0xef,
++		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
++		if (!msta_link || !msta_link->wcid.sta)
++			continue;
++
++		any = true;
++		if (mt7996_mcu_set_scs(dev, msta_link->wcid.idx, desc, del))
++			ret = -EIO;
++	}
++
++	return any ? ret : -EIO;
++}
++
++static int mt7996_sta_set_scs(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      struct cfg80211_scs_desc * const *desc,
++			      struct cfg80211_scs_result *res, u8 n_desc)
++{
++	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	u8 i;
++
++	mutex_lock(&dev->mt76.mutex);
++
++	for (i = 0; i < n_desc; i++) {
++		const struct cfg80211_scs_desc *d = desc[i];
++		bool del = d->req_type == NL80211_SCS_REQ_REMOVE || !d->qos_char;
++
++		/*
++		 * The firmware serves an uplink stream with trigger frames and
++		 * has nothing for the other two directions. 11.25.2 leaves a
++		 * declined change with its earlier classification, so the
++		 * stream that went with it stays too.
++		 */
++		if (!del && ieee80211_qos_char_direction(d->qos_char) !=
++			    IEEE80211_QOS_CHAR_DIR_UPLINK) {
++			res[i].status = WLAN_STATUS_REQUEST_DECLINED;
++			continue;
++		}
++
++		/*
++		 * A descriptor with no traffic description leaves mac80211 to
++		 * classify alone, so whatever the identifier was serving is
++		 * deleted rather than left running. Nothing about a deletion
++		 * can be reported, and nothing needs to be.
++		 */
++		if (!mt7996_sta_scs_program(dev, vif, sta, d, del) || del)
++			continue;
++
++		/* No link may serve a stream the station is told it lost */
++		mt7996_sta_scs_program(dev, vif, sta, d, true);
++		res[i].status = WLAN_STATUS_REQUEST_DECLINED;
++	}
++
++	mutex_unlock(&dev->mt76.mutex);
++
++	return 0;
++}
++
+ static void mt7996_sta_set_decap_offload(struct ieee80211_hw *hw,
+ 					 struct ieee80211_vif *vif,
+ 					 struct ieee80211_sta *sta,
+@@ -2588,6 +2666,7 @@ const struct ieee80211_ops mt7996_ops = {
+ 	.set_coverage_class = mt7996_set_coverage_class,
+ 	.sta_statistics = mt7996_sta_statistics,
+ 	.sta_set_4addr = mt7996_sta_set_4addr,
++	.sta_set_scs = mt7996_sta_set_scs,
+ 	.sta_set_decap_offload = mt7996_sta_set_decap_offload,
+ 	.add_twt_setup = mt7996_mac_add_twt_setup,
+ 	.twt_teardown_request = mt7996_twt_teardown_request,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index cd7587ce5b8a..2af84a6ab9e4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -2616,6 +2616,46 @@ int mt7996_mcu_add_rate_ctrl(struct mt7996_dev *dev, struct mt7996_sta *msta,
+ 	return ret;
+ }
+ 
++/* The firmware reads the TID and the rest of the stream out of the element */
++int mt7996_mcu_set_scs(struct mt7996_dev *dev, u16 wlan_idx,
++		       const struct cfg80211_scs_desc *desc, bool del)
++{
++#define MURU_QOS_FLAG_UPDATE	20
++#define MURU_QOS_FLAG_DELETE	21
++	struct {
++		u8 __rsv1[4];
++
++		__le16 tag;
++		__le16 len;
++		__le32 qos_flag;
++		__le16 wlan_idx;
++		u8 __rsv2[12];
++		u8 dir;
++		u8 __rsv3[4];
++		u8 scs_id;
++		u8 qos_ie[44];
++	} __packed req = {
++		.tag = cpu_to_le16(UNI_CMD_MURU_SET_QOS_CFG),
++		.len = cpu_to_le16(sizeof(req) - 4),
++		.wlan_idx = cpu_to_le16(wlan_idx),
++		.scs_id = desc->id,
++	};
++
++	if (del) {
++		req.qos_flag = cpu_to_le32(MURU_QOS_FLAG_DELETE);
++	} else {
++		if (desc->qos_char_len > sizeof(req.qos_ie))
++			return -EINVAL;
++
++		req.qos_flag = cpu_to_le32(MURU_QOS_FLAG_UPDATE);
++		req.dir = ieee80211_qos_char_direction(desc->qos_char);
++		memcpy(req.qos_ie, desc->qos_char, desc->qos_char_len);
++	}
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_WMWA_UNI_CMD(MURU), &req,
++				 sizeof(req), true);
++}
++
+ static int
+ mt7996_mcu_add_group(struct mt7996_dev *dev, struct mt7996_vif_link *link,
+ 		     struct mt76_wcid *wcid)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+index 74b70fb6da3d..efd474cf8da9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+@@ -991,6 +991,10 @@ enum {
+ };
+ 
+ enum {
++	UNI_CMD_MURU_SET_QOS_CFG = 0xfe,
 +};
 +
-+/* The same datagram, as a fragment with a nonzero offset */
-+static const u8 udp_fragment[] = {
-+	0x02, 0x00, 0x00, 0x00, 0x00, 0x02,	/* destination address */
-+	0x02, 0x00, 0x00, 0x00, 0x00, 0x01,	/* source address */
-+	0x08, 0x00,
-+	0x45, 0x00, 0x00, 0x20, 0xab, 0xcd, 0x00, 0x02,
-+	0x40, 0x11, 0x00, 0x00,
-+	192, 168, 1, 1,
-+	192, 168, 1, 2,
-+	0x13, 0x88, 0x27, 0x10,
-+	0xde, 0xad, 0xbe, 0xef,
-+};
-+
-+static struct sk_buff *test_skb(struct kunit *test, const u8 *data, size_t len)
-+{
-+	struct sk_buff *skb = kunit_zalloc_skb(test, 256, GFP_KERNEL);
-+
-+	KUNIT_ASSERT_NOT_NULL(test, skb);
-+	skb_put_data(skb, data, len);
-+
-+	return skb;
-+}
-+
-+#define FLOW_F(name)	BIT(CFG80211_FLOW_F_##name)
-+
-+/* Reading the layer 4 header of a later fragment would match payload octets */
-+static void flow_parse_fragment(struct kunit *test)
-+{
-+	struct cfg80211_flow_info info;
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_frame,
-+							     sizeof(udp_frame)),
-+						    &info));
-+	KUNIT_EXPECT_TRUE(test, info.present & FLOW_F(SRC_PORT));
-+	KUNIT_EXPECT_TRUE(test, info.present & FLOW_F(DST_PORT));
-+	KUNIT_EXPECT_EQ(test, be16_to_cpu(info.key.src_port), 5000);
-+	KUNIT_EXPECT_EQ(test, be16_to_cpu(info.key.dst_port), 10000);
-+	KUNIT_EXPECT_EQ(test, info.key.proto, IPPROTO_UDP);
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_fragment,
-+							     sizeof(udp_fragment)),
-+						    &info));
-+	KUNIT_EXPECT_FALSE(test, info.present & FLOW_F(SRC_PORT));
-+	KUNIT_EXPECT_FALSE(test, info.present & FLOW_F(DST_PORT));
-+	KUNIT_EXPECT_EQ(test, info.key.src_port, 0);
-+	KUNIT_EXPECT_EQ(test, info.key.dst_port, 0);
-+
-+	/* The addresses are still classifier parameters of a later fragment */
-+	KUNIT_EXPECT_TRUE(test, info.present & FLOW_F(IP_SRC));
-+	KUNIT_EXPECT_TRUE(test, info.present & FLOW_F(IP_DST));
-+}
-+
-+static struct cfg80211_scs_desc *
-+test_scs_desc(struct kunit *test, u8 id, u8 up, const u8 *elems, size_t len)
-+{
-+	struct cfg80211_scs_desc *desc;
-+	int n_tclas;
-+
-+	n_tclas = cfg80211_tclas_count(elems, len);
-+	KUNIT_ASSERT_GE(test, n_tclas, 0);
-+
-+	desc = kunit_kzalloc(test, struct_size(desc, tclas, n_tclas),
-+			     GFP_KERNEL);
-+	KUNIT_ASSERT_NOT_NULL(test, desc);
-+
-+	desc->id = id;
-+	desc->up = up;
-+	desc->n_tclas = n_tclas;
-+	KUNIT_ASSERT_EQ(test, 0,
-+			cfg80211_parse_tclas(elems, len, desc->tclas, n_tclas,
-+					     &desc->tclas_processing));
-+
-+	return desc;
-+}
-+
-+/* When two descriptors match, the more granular one wins */
-+static void scs_granularity(struct kunit *test)
-+{
-+	/* Classifier type 4 over IPv4, source and destination address */
-+	static const u8 two_params[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x06,		/* type, mask: src and dst address */
-+		4,			/* version */
-+		192, 168, 1, 1,
-+		192, 168, 1, 2,
-+		0, 0, 0, 0,		/* ports, not selected */
-+		0, 0, 0,		/* dscp, protocol, reserved */
-+	};
-+	/* The same, and the destination port as well */
-+	static const u8 three_params[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x16,		/* src, dst, dst port */
-+		4,
-+		192, 168, 1, 1,
-+		192, 168, 1, 2,
-+		0, 0, 0x27, 0x10,
-+		0, 0, 0,
-+	};
-+	/* A source port that the frame does not carry a matching value for */
-+	static const u8 wrong_port[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x08,		/* src port only */
-+		4,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0x00, 0x35, 0, 0,
-+		0, 0, 0,
-+	};
-+	struct cfg80211_scs_desc *list[3];
-+	struct cfg80211_scs_verdict verdict;
-+	struct cfg80211_flow_info info;
-+
-+	list[0] = test_scs_desc(test, 1, 3, two_params, sizeof(two_params));
-+	list[1] = test_scs_desc(test, 2, 6, three_params, sizeof(three_params));
-+	list[2] = test_scs_desc(test, 3, 7, wrong_port, sizeof(wrong_port));
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_frame,
-+							     sizeof(udp_frame)),
-+						    &info));
-+
-+	/*
-+	 * Neither mask sets the version bit, but a type 4 classifier compares
-+	 * the version anyway. It still does not count, so the counts are 2 and
-+	 * 3 and the descriptor order below is what the rule decides.
-+	 */
-+	KUNIT_EXPECT_EQ(test, list[0]->tclas[0].fields,
-+			FLOW_F(IP_VERSION) | FLOW_F(IP_SRC) | FLOW_F(IP_DST));
-+	KUNIT_EXPECT_EQ(test, list[1]->tclas[0].fields,
-+			FLOW_F(IP_VERSION) | FLOW_F(IP_SRC) | FLOW_F(IP_DST) |
-+			FLOW_F(DST_PORT));
-+
-+	/* Only the two address descriptors match, and the granular one wins */
-+	cfg80211_scs_evaluate(list, 3, &info, &verdict);
-+	KUNIT_EXPECT_TRUE(test, verdict.match);
-+	KUNIT_EXPECT_EQ(test, verdict.scsid, 2);
-+	KUNIT_EXPECT_EQ(test, verdict.up, 6);
-+
-+	/* The order of the list must not decide it */
-+	swap(list[0], list[1]);
-+	cfg80211_scs_evaluate(list, 3, &info, &verdict);
-+	KUNIT_EXPECT_TRUE(test, verdict.match);
-+	KUNIT_EXPECT_EQ(test, verdict.scsid, 2);
-+
-+	/* A frame without ports leaves only the address descriptor */
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_fragment,
-+							     sizeof(udp_fragment)),
-+						    &info));
-+	cfg80211_scs_evaluate(list, 3, &info, &verdict);
-+	KUNIT_EXPECT_TRUE(test, verdict.match);
-+	KUNIT_EXPECT_EQ(test, verdict.scsid, 1);
-+	KUNIT_EXPECT_EQ(test, verdict.up, 3);
-+	KUNIT_EXPECT_TRUE(test, verdict.undecided);
-+}
-+
-+/* A key learned from an uplink frame must describe the downlink direction */
-+static void flow_key_mirror(struct kunit *test)
-+{
-+	/* Classifier type 4 over IPv4, both addresses and both ports */
-+	static const u8 mask_elem[] = {
-+		WLAN_EID_EXTENSION, 19,
-+		WLAN_EID_EXT_TCLAS_MASK,
-+		4, 0x1e,
-+		4,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0, 0, 0,
-+	};
-+	struct cfg80211_flow_key as_is, mirrored;
-+	struct cfg80211_flow_info info;
-+	u32 fields;
-+
-+	KUNIT_ASSERT_EQ(test, 0,
-+			cfg80211_parse_tclas_mask(mask_elem, sizeof(mask_elem),
-+						  &fields));
-+	KUNIT_EXPECT_EQ(test, fields,
-+			FLOW_F(IP_VERSION) | FLOW_F(IP_SRC) | FLOW_F(IP_DST) |
-+			FLOW_F(SRC_PORT) | FLOW_F(DST_PORT));
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_frame,
-+							     sizeof(udp_frame)),
-+						    &info));
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_key_build(&info, fields,
-+							CFG80211_FLOW_AS_IS,
-+							&as_is));
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_key_build(&info, fields,
-+							CFG80211_FLOW_MIRRORED,
-+							&mirrored));
-+
-+	KUNIT_EXPECT_MEMEQ(test, &as_is.src, &mirrored.dst, sizeof(as_is.src));
-+	KUNIT_EXPECT_MEMEQ(test, &as_is.dst, &mirrored.src, sizeof(as_is.dst));
-+	KUNIT_EXPECT_EQ(test, as_is.src_port, mirrored.dst_port);
-+	KUNIT_EXPECT_EQ(test, as_is.dst_port, mirrored.src_port);
-+
-+	/* Nothing the layout does not select may reach the key */
-+	KUNIT_EXPECT_MEMEQ(test, as_is.sa, "\x00\x00\x00\x00\x00\x00",
-+			   ETH_ALEN);
-+	KUNIT_EXPECT_EQ(test, as_is.eth_type, 0);
-+	KUNIT_EXPECT_EQ(test, as_is.proto, 0);
-+
-+	/* The version is one the layout does select, so it is in both keys */
-+	KUNIT_EXPECT_EQ(test, as_is.ip_version, 4);
-+	KUNIT_EXPECT_EQ(test, mirrored.ip_version, 4);
-+}
-+
-+/* The Ethernet addresses mirror as a pair */
-+static void flow_key_mirror_eth(struct kunit *test)
-+{
-+	static const u8 mask_elem[] = {
-+		WLAN_EID_EXTENSION, 17,
-+		WLAN_EID_EXT_TCLAS_MASK,
-+		0, 0x01,		/* classifier type 0, source address */
-+		0, 0, 0, 0, 0, 0,
-+		0, 0, 0, 0, 0, 0,
-+		0, 0,
-+	};
-+	struct cfg80211_flow_key key;
-+	struct cfg80211_flow_info info;
-+	u32 fields;
-+
-+	KUNIT_ASSERT_EQ(test, 0,
-+			cfg80211_parse_tclas_mask(mask_elem, sizeof(mask_elem),
-+						  &fields));
-+	KUNIT_EXPECT_EQ(test, fields, FLOW_F(ETH_SA));
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_frame,
-+							     sizeof(udp_frame)),
-+						    &info));
-+
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_key_build(&info, fields,
-+							CFG80211_FLOW_MIRRORED,
-+							&key));
-+
-+	/* The mirror parameter of the source address is the destination */
-+	KUNIT_EXPECT_MEMEQ(test, key.sa, test_da, ETH_ALEN);
-+	KUNIT_EXPECT_MEMEQ(test, key.da, "\x00\x00\x00\x00\x00\x00", ETH_ALEN);
-+}
-+
-+/* Classifier types that classify an MPDU, and type 3 in a mask, are refused */
-+static void tclas_refused(struct kunit *test)
-+{
-+	static const u8 mac_header[] = {
-+		WLAN_EID_TCLAS, 5,
-+		255,
-+		6, 0x00, 0x00, 0x00,	/* type 6, three octet classifier mask */
-+	};
-+	static const u8 up_not_255[] = {
-+		WLAN_EID_TCLAS, 17,
-+		0,			/* a UP that takes part in the match */
-+		0, 0x01,
-+		0x02, 0x00, 0x00, 0x00, 0x00, 0x01,
-+		0x02, 0x00, 0x00, 0x00, 0x00, 0x02,
-+		0x08, 0x00,
-+	};
-+	static const u8 filter_in_mask[] = {
-+		WLAN_EID_EXTENSION, 9,
-+		WLAN_EID_EXT_TCLAS_MASK,
-+		3, 0,
-+		0, 0,
-+		0x00, 0x00,
-+		0xff, 0xff,
-+	};
-+	/* Classifier type 1, superseded by type 4 and deprecated for IPv6 */
-+	static const u8 legacy_ip[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		1, 0x06,
-+		4,
-+		192, 168, 1, 1,
-+		192, 168, 1, 2,
-+		0, 0, 0, 0,
-+		0, 0, 0,
-+	};
-+	/* Classifier type 2, deprecated in favour of type 5 */
-+	static const u8 legacy_vlan[] = {
-+		WLAN_EID_TCLAS, 5,
-+		255,
-+		2, 0x01,
-+		0x00, 0x64,
-+	};
-+	enum cfg80211_tclas_processing processing;
-+	struct cfg80211_tclas tclas;
-+	u32 fields;
-+
-+	KUNIT_EXPECT_EQ(test, -EOPNOTSUPP,
-+			cfg80211_parse_tclas(mac_header, sizeof(mac_header),
-+					     &tclas, 1, &processing));
-+	KUNIT_EXPECT_EQ(test, -EOPNOTSUPP,
-+			cfg80211_parse_tclas(up_not_255, sizeof(up_not_255),
-+					     &tclas, 1, &processing));
-+	KUNIT_EXPECT_EQ(test, -EOPNOTSUPP,
-+			cfg80211_parse_tclas(legacy_ip, sizeof(legacy_ip),
-+					     &tclas, 1, &processing));
-+	KUNIT_EXPECT_EQ(test, -EOPNOTSUPP,
-+			cfg80211_parse_tclas(legacy_vlan, sizeof(legacy_vlan),
-+					     &tclas, 1, &processing));
-+	KUNIT_EXPECT_EQ(test, -EOPNOTSUPP,
-+			cfg80211_parse_tclas_mask(filter_in_mask,
-+						  sizeof(filter_in_mask),
-+						  &fields));
-+}
-+
-+/* A descriptor that matched is decided, whichever element was skipped */
-+static void scs_undecided(struct kunit *test)
-+{
-+	/* A source address element and a source port element, match either */
-+	static const u8 addr_or_port[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x02,		/* source address */
-+		4,
-+		192, 168, 1, 1,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0, 0, 0,
-+
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x08,		/* source port */
-+		4,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0x13, 0x88, 0, 0,
-+		0, 0, 0,
-+
-+		WLAN_EID_TCLAS_PROCESSING, 1, 1,
-+	};
-+	/* The source port alone */
-+	static const u8 port_only[] = {
-+		WLAN_EID_TCLAS, 19,
-+		255,
-+		4, 0x08,
-+		4,
-+		0, 0, 0, 0,
-+		0, 0, 0, 0,
-+		0x13, 0x88, 0, 0,
-+		0, 0, 0,
-+	};
-+	struct cfg80211_scs_verdict verdict;
-+	struct cfg80211_flow_info info;
-+	struct cfg80211_scs_desc *list[1];
-+
-+	list[0] = test_scs_desc(test, 1, 4, addr_or_port, sizeof(addr_or_port));
-+	KUNIT_ASSERT_EQ(test, list[0]->n_tclas, 2);
-+	KUNIT_ASSERT_EQ(test, list[0]->tclas_processing, 1);
-+
-+	/* Both elements match a whole datagram */
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_frame,
-+							     sizeof(udp_frame)),
-+						    &info));
-+	cfg80211_scs_evaluate(list, 1, &info, &verdict);
-+	KUNIT_EXPECT_TRUE(test, verdict.match);
-+	KUNIT_EXPECT_FALSE(test, verdict.undecided);
-+
-+	/*
-+	 * A later fragment has no ports, so the port element is skipped. The
-+	 * address element still matches, so the descriptor is decided.
-+	 */
-+	KUNIT_ASSERT_TRUE(test, cfg80211_flow_parse(test_skb(test, udp_fragment,
-+							     sizeof(udp_fragment)),
-+						    &info));
-+	cfg80211_scs_evaluate(list, 1, &info, &verdict);
-+	KUNIT_EXPECT_TRUE(test, verdict.match);
-+	KUNIT_EXPECT_FALSE(test, verdict.undecided);
-+
-+	/* With nothing else to match on, the same fragment leaves it open */
-+	list[0] = test_scs_desc(test, 2, 4, port_only, sizeof(port_only));
-+	cfg80211_scs_evaluate(list, 1, &info, &verdict);
-+	KUNIT_EXPECT_FALSE(test, verdict.match);
-+	KUNIT_EXPECT_TRUE(test, verdict.undecided);
-+}
-+
-+/* The presence bitmap decides where every optional field starts */
-+static void qos_characteristics(struct kunit *test)
-+{
-+	/* Downlink, TID 5, UP 5, and a Service Start Time with no LinkID */
-+	static const u8 no_link_id[] = {
-+		0xff, 0x17, 0x71,	/* element header, 113 */
-+		0x55, 0x05, 0x00, 0x00,	/* control info, presence bit 1 */
-+		0xe8, 0x03, 0x00, 0x00,	/* minimum service interval */
-+		0xd0, 0x07, 0x00, 0x00,	/* maximum service interval */
-+		0x88, 0x13, 0x00,	/* minimum data rate */
-+		0x20, 0x4e, 0x00,	/* delay bound */
-+		0x78, 0x56, 0x34, 0x12,	/* service start time */
-+	};
-+	static const u8 with_link_id[] = {
-+		0xff, 0x18, 0x71,
-+		0x55, 0x0d, 0x00, 0x00,	/* presence bits 1 and 2 */
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+		0x78, 0x56, 0x34, 0x12,
-+		0x03,			/* service start time LinkID */
-+	};
-+	/* A LinkID with no Service Start Time refers to a field that is absent */
-+	static const u8 orphan_link_id[] = {
-+		0xff, 0x14, 0x71,
-+		0x55, 0x09, 0x00, 0x00,	/* presence bit 2 alone */
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+		0x03,
-+	};
-+	/* The header names the element, so a wrong extension is not this one */
-+	static const u8 bad_ext_id[] = {
-+		0xff, 0x17, 0x70,
-+		0x55, 0x05, 0x00, 0x00,
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+		0x78, 0x56, 0x34, 0x12,
-+	};
-+	/* The Length field must agree with the octets behind it */
-+	static const u8 bad_length[] = {
-+		0xff, 0x18, 0x71,
-+		0x55, 0x05, 0x00, 0x00,
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+		0x78, 0x56, 0x34, 0x12,
-+	};
-+	/* The length must match the parameters the bitmap says are present */
-+	static const u8 short_elem[] = {
-+		0xff, 0x13, 0x71,
-+		0x55, 0x05, 0x00, 0x00,
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+	};
-+
-+	KUNIT_EXPECT_TRUE(test, ieee80211_qos_char_size_ok(no_link_id,
-+							   sizeof(no_link_id)));
-+	KUNIT_EXPECT_EQ(test, ieee80211_qos_char_direction((const void *)no_link_id),
-+			IEEE80211_QOS_CHAR_DIR_DOWNLINK);
-+	KUNIT_EXPECT_EQ(test, ieee80211_qos_char_presence((const void *)no_link_id),
-+			IEEE80211_QOS_CHAR_PRES_SERVICE_START_TIME);
-+
-+	KUNIT_EXPECT_TRUE(test, ieee80211_qos_char_size_ok(with_link_id,
-+							   sizeof(with_link_id)));
-+	KUNIT_EXPECT_EQ(test, ieee80211_qos_char_presence((const void *)with_link_id),
-+			IEEE80211_QOS_CHAR_PRES_SERVICE_START_TIME |
-+			IEEE80211_QOS_CHAR_PRES_SERVICE_START_LINK_ID);
-+
-+	KUNIT_EXPECT_FALSE(test, ieee80211_qos_char_size_ok(orphan_link_id,
-+							    sizeof(orphan_link_id)));
-+	KUNIT_EXPECT_FALSE(test, ieee80211_qos_char_size_ok(short_elem,
-+							    sizeof(short_elem)));
-+	KUNIT_EXPECT_FALSE(test, ieee80211_qos_char_size_ok(bad_ext_id,
-+							    sizeof(bad_ext_id)));
-+	KUNIT_EXPECT_FALSE(test, ieee80211_qos_char_size_ok(bad_length,
-+							    sizeof(bad_length)));
-+}
-+
-+/*
-+ * An uplink or direct link descriptor carries no classifier and no user
-+ * priority, per IEEE Std 802.11be-2024, 35.17. Refusing one would leave the
-+ * traffic description that a driver schedules against unreachable.
-+ */
-+static void scs_traffic_description(struct kunit *test)
-+{
-+	/* Uplink, and a Service Start Time with no LinkID */
-+	static const u8 uplink[] = {
-+		0xff, 0x17, 0x71,
-+		0x54, 0x05, 0x00, 0x00,
-+		0xe8, 0x03, 0x00, 0x00,
-+		0xd0, 0x07, 0x00, 0x00,
-+		0x88, 0x13, 0x00,
-+		0x20, 0x4e, 0x00,
-+		0x78, 0x56, 0x34, 0x12,
-+	};
-+	struct cfg80211_scs_desc desc = {
-+		.req_type = NL80211_SCS_REQ_ADD,
-+		.tclas_processing = CFG80211_TCLAS_PROCESSING_ABSENT,
-+		.qos_char = (const void *)uplink,
-+		.qos_char_len = sizeof(uplink),
-+		.id = 1,
-+	};
-+
-+	KUNIT_ASSERT_TRUE(test, ieee80211_qos_char_size_ok(uplink,
-+							   sizeof(uplink)));
-+	KUNIT_ASSERT_EQ(test, ieee80211_qos_char_direction((const void *)uplink),
-+			IEEE80211_QOS_CHAR_DIR_UPLINK);
-+
-+	KUNIT_EXPECT_TRUE(test, cfg80211_scs_desc_valid(&desc));
-+
-+	/* 35.17 bans the TCLAS Processing element from such a descriptor */
-+	desc.tclas_processing = CFG80211_TCLAS_PROCESSING_DEFAULT;
-+	KUNIT_EXPECT_FALSE(test, cfg80211_scs_desc_valid(&desc));
-+}
-+
-+static struct kunit_case scs_cases[] = {
-+	KUNIT_CASE(flow_parse_fragment),
-+	KUNIT_CASE(scs_granularity),
-+	KUNIT_CASE(scs_undecided),
-+	KUNIT_CASE(flow_key_mirror),
-+	KUNIT_CASE(flow_key_mirror_eth),
-+	KUNIT_CASE(tclas_refused),
-+	KUNIT_CASE(qos_characteristics),
-+	KUNIT_CASE(scs_traffic_description),
-+	{}
-+};
-+
-+static struct kunit_suite scs = {
-+	.name = "cfg80211-scs",
-+	.test_cases = scs_cases,
-+};
-+
-+kunit_test_suite(scs);
++enum {
+ 	UNI_VOW_DRR_CTRL,
+ 	UNI_VOW_RX_AT_AIRTIME_EN = 0x0b,
+ 	UNI_VOW_RX_AT_AIRTIME_CLR_EN = 0x0e,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index 2a0cdb56f822..ebd55d8da654 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -754,6 +754,8 @@ int mt7996_mcu_set_fixed_rate_ctrl(struct mt7996_dev *dev,
+ 				   void *data, u16 version);
+ int mt7996_mcu_set_fixed_field(struct mt7996_dev *dev, struct mt7996_sta *msta,
+ 			       void *data, u8 link_id, u32 field);
++int mt7996_mcu_set_scs(struct mt7996_dev *dev, u16 wlan_idx,
++		       const struct cfg80211_scs_desc *desc, bool del);
+ int mt7996_mcu_set_eeprom(struct mt7996_dev *dev);
+ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_len,
+ 			  enum mt7996_eeprom_mode mode);
 -- 
 git-series 0.9.1
