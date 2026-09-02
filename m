@@ -1,54 +1,54 @@
-Received: from smtp2.infineon.com (smtp2.infineon.com [217.10.52.18])
+Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4034A4A64C4
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:54:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8D3A4A9D54
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:55:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368102; cv=none; b=paJDIGFx5PpRV11h61m6iiGdDco/d2+UB3+AWRjPCZ/VryJkdJhQpRGRjw8LCNs5rKw4S7vozdDpCuu/nKIYuY4/lT/74HEOHe8dt12q1X3jH8SC9oBerchmoPYQNbGNJ+iC9AIrp7vJb5iHNYcoNOAvgZiaYQVIL03o3uSUALw=
+	t=1788368108; cv=none; b=FLnfOQRcOiTmhiPZTEZXm1+YwTPzmwwKSrO5m6K8GTQg2moY34KJUN81FbEreP74Xlxu1TuG04Swrvqgaz8rN7Hv09QAYiyywqrDMa1gimy2ycHLZHAM02jXl24ukf1jSrxWTFVAqobr7QirIOk7e5Ce3NbaF9mu1QvpQi5i7Mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368102; c=relaxed/simple;
-	bh=b67c5sviATm6suP366sobAQx/GQnj5UavPAYQMGZjZ4=;
+	s=arc-20240116; t=1788368108; c=relaxed/simple;
+	bh=HSqYFwb5qTdi2e5yPxX4ouRQA5XDh1QbwAviumkCjtA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fj5B0wJUN7GmQUJ9Rz13uNDn4c0yhGqIfB+DCQpwSPmF346T7dmHEkfVvGxGux8JGm2zEVSbPC988inS/svio6yGYvFDV8k27G5QKlBHY8kOkicQFgUnsOKFnwuOgmS47ZGmygauPD6c2h0WT1sshsEDp354XW/Ap9CiQbb+IK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=JZ71Ta5H; arc=none smtp.client-ip=217.10.52.18
+	 MIME-Version:Content-Type; b=OKorAnqz5UASSot+ssi7/85Q8wLtpveiVk/a9lcQms53Ynz7LNrLIuJ3T9XYjDmjmJPgbLy/dc2FT+CHRBBKY9CKObbTjNYJc3S7UJdKWPtgICBCl/OTnycIVlJykBzz2GL0qhKBLIFO6jEDQNrDM963ON0ghw0tp4cj2W+FIws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=pSK1gnb4; arc=none smtp.client-ip=217.10.52.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="JZ71Ta5H"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="pSK1gnb4"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788368091; x=1819904091;
+  t=1788368103; x=1819904103;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=b67c5sviATm6suP366sobAQx/GQnj5UavPAYQMGZjZ4=;
-  b=JZ71Ta5H+X06LqmPK3nMSDVzDhsAYOrAt9CPz8xF+rGvoO0P9Wk0of66
-   TAgbrzAr6AJJ6SftDP2NzSLGe731sSvzFuWuegX65EW3da3ndoBH4dhCa
-   wDWUOFrBqVUUrrXLIsWbp6kXXc5mWoYTZDLUhsBWdiBRADlJRq1d1rRTr
-   w=;
-X-CSE-ConnectionGUID: kkw2DZ27SmiIFDBopSbZDQ==
-X-CSE-MsgGUID: OkB7Bj24R4aDzhXN1j/V4A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="176357049"
+  bh=HSqYFwb5qTdi2e5yPxX4ouRQA5XDh1QbwAviumkCjtA=;
+  b=pSK1gnb4DgyZWhO981E0rD3rjFyPpbTLewzOddq/5m9+YeHCjOCdh/oe
+   vz2G4IxZCFxHRiNKH6ih4wbALNQf4/QYKWxKj/gjeowr4WwBoj/+UunaL
+   mnpfbI9eNxw6So64gyz77Bb0BvbCMGgmKYQBiW4NNFFd9PyFTJ6WOmN5O
+   c=;
+X-CSE-ConnectionGUID: r+zCyI5tQPeKkPQfF/FjFw==
+X-CSE-MsgGUID: 1V1PQMP6Rn+mvsWfj5HjVA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="107705957"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="176357049"
+   d="scan'208";a="107705957"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE814.infineon.com) ([172.23.29.40])
-  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:54:49 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE814.infineon.com
- (172.23.29.40) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE812.infineon.com) ([172.23.29.38])
+  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:55:01 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE812.infineon.com
+ (172.23.29.38) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:54:48 +0200
+ 2026 18:55:00 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:54:45 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:54:58 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 17/25] wifi: inffmac: add sdio.c/h
-Date: Wed, 2 Sep 2026 16:50:48 +0000
-Message-ID: <20260902165057.456447-18-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 18/25] wifi: inffmac: add fwsignal.c/h
+Date: Wed, 2 Sep 2026 16:50:49 +0000
+Message-ID: <20260902165057.456447-19-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,27 +60,26 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE824.infineon.com (172.23.29.55) To
+X-ClientProxiedBy: MUCSE823.infineon.com (172.23.29.54) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Implements the specific bus logic for Infineon devices connected to the
-linux machine via an SDIO interface.
+Implementation of the firmware signalling used for flow control during
+Data transmission between Host Driver and Device firmware via the SDIO bus.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- drivers/net/wireless/infineon/inffmac/sdio.c | 7585 ++++++++++++++++++
- drivers/net/wireless/infineon/inffmac/sdio.h |  234 +
- include/linux/mmc/sdio_ids.h                 |    2 +
- 3 files changed, 7821 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/sdio.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/sdio.h
+ .../net/wireless/infineon/inffmac/fwsignal.c  | 3017 +++++++++++++++++
+ .../net/wireless/infineon/inffmac/fwsignal.h  |   53 +
+ 2 files changed, 3070 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/fwsignal.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/fwsignal.h
 
-diff --git a/drivers/net/wireless/infineon/inffmac/sdio.c b/drivers/net/wireless/infineon/inffmac/sdio.c
+diff --git a/drivers/net/wireless/infineon/inffmac/fwsignal.c b/drivers/net/wireless/infineon/inffmac/fwsignal.c
 new file mode 100644
-index 000000000000..afe4ac407bf0
+index 000000000000..637b50bd6499
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/sdio.c
-@@ -0,0 +1,7585 @@
++++ b/drivers/net/wireless/infineon/inffmac/fwsignal.c
+@@ -0,0 +1,3017 @@
 +// SPDX-License-Identifier: ISC
 +/*
 + * Copyright (c) 2010 Broadcom Corporation
@@ -88,7837 +87,3075 @@ index 000000000000..afe4ac407bf0
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
-+
 +#include <linux/types.h>
-+#include <linux/atomic.h>
-+#include <linux/kernel.h>
-+#include <linux/kthread.h>
-+#include <linux/printk.h>
++#include <linux/module.h>
++#include <linux/if_ether.h>
++#include <linux/spinlock.h>
++#include <linux/skbuff.h>
 +#include <linux/netdevice.h>
-+#include <linux/interrupt.h>
-+#include <linux/sched.h>
-+#include <linux/sched/signal.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/core.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/completion.h>
-+#include <linux/firmware.h>
-+#include <linux/module.h>
-+#include <linux/debugfs.h>
-+#include <linux/vmalloc.h>
-+#include <linux/net_tstamp.h>
-+#include <linux/unaligned.h>
-+#include <linux/scatterlist.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/suspend.h>
-+#include <linux/errno.h>
-+#include <linux/module.h>
-+#include <linux/acpi.h>
++#include <linux/etherdevice.h>
++#include <linux/err.h>
++#include <linux/jiffies.h>
 +#include <net/cfg80211.h>
 +
 +#include "main.h"
++#include "net.h"
 +#include "utils.h"
-+#include "bus_proto.h"
-+#include "sdio.h"
-+#include "firmware.h"
-+#include "bcdc.h"
-+#include "fwsignal.h"
-+#include "dev_cmd.h"
-+#include "trxhdr.h"
-+#include "feature.h"
-+#include "chip_cyw5591x.h"
-+#include "chip_acw74xx.h"
++#include "chan.h"
 +#include "debug.h"
++#include "dev_cmd.h"
++#include "dev_evt.h"
++#include "fwsignal.h"
 +#include "cfg80211.h"
++#include "bus_proto.h"
++#include "bcdc.h"
 +#include "chip.h"
-+#include "dfu.h"
-+
-+/* Definitions related to SDIOD DMA WAR in Diamond */
-+#define SD_DMA_REG_XMTCONTROL_OFFSET 0x200
-+#define SD_DMA_REG_GPIOOUTREG_OFFSET 0x338
-+#define SD_DMA_REG_XMTCTRL_SUSP_EN   0x803
-+#define SD_DMA_REG_XMTCTRL_SUSP_DIS  0x801
-+#define SD_DMA_RX_FIFO_DBG_CNT_MSK   0xFE
-+
-+#define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
-+#define CTL_DONE_TIMEOUT	msecs_to_jiffies(60000)
-+
-+#define INFF_BLHS_D2H_READY_TIMEOUT   5000 /* msec */
-+
-+/* Last 32-bit word of the RAM_APP staging area in the CPUSS SRAM
-+ * 0x34002000 + 0x14000 - 4 = 0x34015FFC
-+ */
-+#define INFF_CPUSS_CONSOLE_SHARED_ADDR		0x34015FFC
-+#define INFF_CPUSS_CONSOLE_ADDR_RANGE_LOW	0x34000000
-+#define INFF_CPUSS_CONSOLE_ADDR_RANGE_HIGH	0x3402C000
-+
-+/* watermark expressed in number of words */
-+#define DEFAULT_F2_WATERMARK    0x8
-+
-+#ifdef DEBUG
-+
-+#define INFF_TRAP_INFO_SIZE	80
-+
-+#define CBUF_LEN	(128)
-+
-+/* Device console log buffer state */
-+#define CONSOLE_BUFFER_MAX	2024
-+
-+struct rte_log_le {
-+	__le32 buf;		/* Can't be pointer on (64-bit) hosts */
-+	__le32 buf_size;
-+	__le32 idx;
-+	char *_buf_compat;	/* Redundant pointer for backward compat. */
-+};
-+
-+struct cpu_log_le {
-+	__le32 magic_word;
-+	__le32 buf;             /* Can't be pointer on (64-bit) hosts */
-+	__le32 buf_size;
-+	__le32 idx;
-+};
-+
-+struct rte_console {
-+	/* Virtual UART
-+	 * When there is no UART (e.g. Quickturn),
-+	 * the host should write a complete
-+	 * input line directly into cbuf and then write
-+	 * the length into vcons_in.
-+	 * This may also be used when there is a real UART
-+	 * (at risk of conflicting with
-+	 * the real UART).  vcons_out is currently unused.
-+	 */
-+	uint vcons_in;
-+	uint vcons_out;
-+
-+	/* Output (logging) buffer
-+	 * Console output is written to a ring buffer log_buf at index log_idx.
-+	 * The host may read the output when it sees log_idx advance.
-+	 * Output will be lost if the output wraps around faster than the host
-+	 * polls.
-+	 */
-+	struct rte_log_le log_le;
-+
-+	/* Console input line buffer
-+	 * Characters are read one at a time into cbuf
-+	 * until <CR> is received, then
-+	 * the buffer is processed as a command line.
-+	 * Also used for virtual UART.
-+	 */
-+	uint cbuf_idx;
-+	char cbuf[CBUF_LEN];
-+};
-+
-+#endif				/* DEBUG */
-+
-+#define TXQLEN		2048	/* bulk tx queue length */
-+#define TXHI		(TXQLEN - 256)	/* turn on flow control above TXHI */
-+#define TXLOW		(TXHI - 256)	/* turn off flow control below TXLOW */
-+#define PRIOMASK	7
-+
-+#define TXRETRIES	2	/* # of retries for tx frames */
-+
-+#define INFF_RXBOUND	50	/* Default for max rx frames in
-+				 * one scheduling
-+				 */
-+
-+#define INFF_TXBOUND	20	/* Default for max tx frames in
-+				 * one scheduling
-+				 */
-+
-+#define INFF_TXMINMAX	1	/* Max tx frames if rx still pending */
-+
-+#define MEMBLOCK	2048	/* Block size used for downloading
-+				 * of dongle image
-+				 */
-+
-+#define INFF_FIRSTREAD	BIT(6)
-+
-+#define MAX_INIT_RETRY_CNT	3
-+static unsigned char global_init_retry;
-+
-+/* SBSDIO_DEVICE_CTL */
-+
-+/* 1: device will assert busy signal when receiving CMD53 */
-+#define SBSDIO_DEVCTL_SETBUSY		0x01
-+/* 1: assertion of sdio interrupt is synchronous to the sdio clock */
-+#define SBSDIO_DEVCTL_SPI_INTR_SYNC	0x02
-+/* 1: mask all interrupts to host except the chipActive (rev 8) */
-+#define SBSDIO_DEVCTL_CA_INT_ONLY	0x04
-+/* 1: isolate internal sdio signals, put external pads in tri-state; requires
-+ * sdio bus power cycle to clear (rev 9)
-+ */
-+#define SBSDIO_DEVCTL_PADS_ISO		0x08
-+/* 1: enable F2 Watermark */
-+#define SBSDIO_DEVCTL_F2WM_ENAB		0x10
-+/* Force SD->SB reset mapping (rev 11) */
-+#define SBSDIO_DEVCTL_SB_RST_CTL	0x30
-+/*   Determined by CoreControl bit */
-+#define SBSDIO_DEVCTL_RST_CORECTL	0x00
-+/*   Force backplane reset */
-+#define SBSDIO_DEVCTL_RST_BPRESET	0x10
-+/*   Force no backplane reset */
-+#define SBSDIO_DEVCTL_RST_NOBPRESET	0x20
-+/* Reset SB Address to default value */
-+#define SBSDIO_DEVCTL_ADDR_RESET    0x40
-+
-+/* direct(mapped) cis space */
-+
-+/* SDIO function 1 register CHIPCLKCSR */
-+/* Force ALP request to backplane */
-+#define SBSDIO_FORCE_ALP		0x01
-+/* Force HT request to backplane */
-+#define SBSDIO_FORCE_HT			0x02
-+/* Force ILP request to backplane */
-+#define SBSDIO_FORCE_ILP		0x04
-+/* Make ALP ready (power up xtal) */
-+#define SBSDIO_ALP_AVAIL_REQ		0x08
-+/* Make HT ready (power up PLL) */
-+#define SBSDIO_HT_AVAIL_REQ		0x10
-+/* Squelch clock requests from HW */
-+#define SBSDIO_FORCE_HW_CLKREQ_OFF	0x20
-+/* Status: ALP is ready */
-+#define SBSDIO_ALP_AVAIL		0x40
-+/* Status: HT is ready */
-+#define SBSDIO_HT_AVAIL			0x80
-+#define SBSDIO_CSR_MASK			0x1F
-+#define SBSDIO_AVBITS		(SBSDIO_HT_AVAIL | SBSDIO_ALP_AVAIL)
-+#define SBSDIO_ALPAV(regval)	((regval) & SBSDIO_AVBITS)
-+#define SBSDIO_HTAV(regval)	(((regval) & SBSDIO_AVBITS) == SBSDIO_AVBITS)
-+#define SBSDIO_ALPONLY(regval)	({ \
-+	typeof(regval) _regval = (regval); \
-+	(SBSDIO_ALPAV(_regval) && !SBSDIO_HTAV(_regval)); \
-+	})
-+#define SBSDIO_CLKAV(regval, alponly) ({ \
-+	typeof(regval) _regval = (regval); \
-+	(SBSDIO_ALPAV(_regval) && (alponly ? 1 : SBSDIO_HTAV(_regval))); \
-+	})
-+#define ALP_WAIT_MIN 65
-+#define ALP_WAIT_MAX 85
-+
-+/* intstatus */
-+#define I_SMB_SW0       BIT(0)	/* To SB Mail S/W interrupt 0 */
-+#define I_SMB_SW1       BIT(1)	/* To SB Mail S/W interrupt 1 */
-+#define I_SMB_SW2       BIT(2)	/* To SB Mail S/W interrupt 2 */
-+#define I_SMB_SW3       BIT(3)	/* To SB Mail S/W interrupt 3 */
-+#define I_SMB_SW_MASK	0x0000000f	/* To SB Mail S/W interrupts mask */
-+#define I_SMB_SW_SHIFT	0	/* To SB Mail S/W interrupts shift */
-+#define I_HMB_SW0       BIT(4)	/* To Host Mail S/W interrupt 0 */
-+#define I_HMB_SW1       BIT(5)	/* To Host Mail S/W interrupt 1 */
-+#define I_HMB_SW2       BIT(6)	/* To Host Mail S/W interrupt 2 */
-+#define I_HMB_SW3       BIT(7)	/* To Host Mail S/W interrupt 3 */
-+#define I_HMB_SW_MASK	0x000000f0	/* To Host Mail S/W interrupts mask */
-+#define I_HMB_SW_SHIFT	4	/* To Host Mail S/W interrupts shift */
-+#define I_WR_OOSYNC     BIT(8)	/* Write Frame Out Of Sync */
-+#define I_RD_OOSYNC     BIT(9)	/* Read Frame Out Of Sync */
-+#define I_PC            BIT(10)	/* descriptor error */
-+#define I_PD            BIT(11)	/* data error */
-+#define I_DE            BIT(12)	/* Descriptor protocol Error */
-+#define I_RU            BIT(13)	/* Receive descriptor Underflow */
-+#define I_RO            BIT(14)	/* Receive fifo Overflow */
-+#define I_XU            BIT(15)	/* Transmit fifo Underflow */
-+#define I_RI            BIT(16)	/* Receive Interrupt */
-+#define I_BUSPWR        BIT(17)	/* SDIO Bus Power Change (rev 9) */
-+#define I_XMTDATA_AVAIL BIT(23)	/* bits in fifo */
-+#define I_XI            BIT(24)	/* Transmit Interrupt */
-+#define I_RF_TERM       BIT(25)	/* Read Frame Terminate */
-+#define I_WF_TERM       BIT(26)	/* Write Frame Terminate */
-+#define I_PCMCIA_XU     BIT(27)	/* PCMCIA Transmit FIFO Underflow */
-+#define I_SBINT         BIT(28)	/* sbintstatus Interrupt */
-+#define I_CHIPACTIVE    BIT(29)	/* chip from doze to active state */
-+#define I_SRESET        BIT(30)	/* CCCR RES interrupt */
-+#define I_IOE2          BIT(31)	/* CCCR IOE2 Bit Changed */
-+#define I_ERRORS        (I_PC | I_PD | I_DE | I_RU | I_RO | I_XU)
-+#define I_DMA           (I_RI | I_XI | I_ERRORS)
-+
-+/* SDA_FRAMECTRL */
-+#define SFC_RF_TERM   BIT(0)	/* Read Frame Terminate */
-+#define SFC_WF_TERM   BIT(1)	/* Write Frame Terminate */
-+#define SFC_CRC4WOOS  BIT(2)	/* CRC error for write out of sync */
-+#define SFC_ABORTALL  BIT(3)	/* Abort all in-progress frames */
-+
-+/*
-+ * Software allocation of To SB Mailbox resources
-+ */
-+
-+/* tosbmailbox bits corresponding to intstatus bits */
-+#define SMB_NAK      BIT(0)	/* Frame NAK */
-+#define SMB_INT_ACK  BIT(1)	/* Host Interrupt ACK */
-+#define SMB_USE_OOB  BIT(2)	/* Use OOB Wakeup */
-+#define SMB_DEV_INT  BIT(3)	/* Miscellaneous Interrupt */
-+
-+/* tosbmailboxdata */
-+#define SMB_DATA_VERSION_SHIFT		16 /* host protocol version */
-+#define SMB_DATA_WLAN_ON		BIT(0) /* Host sends WLAN_ON interrupt to device */
-+#define SMB_DATA_WLAN_OFF		BIT(1) /* Host sends WLAN_OFF interrupt to device */
-+#define SMB_DATA_DONGLE_CLEAN_UP	BIT(7) /* Host indicates cleanup to dongle */
-+
-+/*
-+ * Software allocation of To Host Mailbox resources
-+ */
-+
-+/* intstatus bits */
-+#define I_HMB_FC_STATE	I_HMB_SW0	/* Flow Control State */
-+#define I_HMB_FC_CHANGE	I_HMB_SW1	/* Flow Control State Changed */
-+#define I_HMB_FRAME_IND	I_HMB_SW2	/* Frame Indication */
-+#define I_HMB_HOST_INT	I_HMB_SW3	/* Miscellaneous Interrupt */
-+
-+/* tohostmailboxdata */
-+#define HMB_DATA_NAKHANDLED	0x0001	/* retransmit NAK'd frame */
-+#define HMB_DATA_DEVREADY	0x0002	/* talk to host after enable */
-+#define HMB_DATA_FC		0x0004	/* per prio flowcontrol update flag */
-+#define HMB_DATA_FWREADY	0x0008	/* fw ready for protocol activity */
-+#define HMB_DATA_FWHALT		0x0010	/* firmware halted */
-+#define HMB_DATA_CREDITMAP	0x0020	/* Device sent interrupt to collect credit map */
-+#define HMB_DATA_CPUSS_FWHALT  0x8000  /* cpuss firmware halted */
-+
-+#define HMB_DATA_FCDATA_MASK	0xff000000
-+#define HMB_DATA_FCDATA_SHIFT	24
-+
-+#define HMB_DATA_VERSION_MASK	0x00ff0000
-+#define HMB_DATA_VERSION_SHIFT	16
-+
-+/*
-+ * Software-defined protocol header
-+ */
-+
-+/* Current protocol version */
-+#define SDPCM_PROT_VERSION	4
-+
-+/*
-+ * Shared structure between dongle and the host.
-+ * The structure contains pointers to trap or assert information.
-+ */
-+#define SDPCM_SHARED_VERSION       0x0003
-+#define SDPCM_SHARED_VERSION_MASK  0x00FF
-+#define SDPCM_SHARED_ASSERT_BUILT  0x0100
-+#define SDPCM_SHARED_ASSERT        0x0200
-+#define SDPCM_SHARED_TRAP          0x0400
-+
-+/* Space for header read, limit for data packets */
-+#define MAX_HDR_READ	BIT(6)
-+#define MAX_RX_DATASZ	2048
-+
-+/* Bump up limit on waiting for HT to account for first startup;
-+ * if the image is doing a CRC calculation before programming the PMU
-+ * for HT availability, it could take a couple hundred ms more, so
-+ * max out at a 1 second (1000000us).
-+ */
-+#undef PMU_MAX_TRANSITION_DLY
-+#define PMU_MAX_TRANSITION_DLY 1000000
-+
-+/* Value for ChipClockCSR during initial setup */
-+#define INFF_INIT_CLKCTL1	(SBSDIO_FORCE_HW_CLKREQ_OFF |	\
-+					SBSDIO_ALP_AVAIL_REQ)
-+
-+#define INFF_IDLE_ACTIVE	0	/* Do not request any SD clock change
-+					 * when idle
-+					 */
-+#define INFF_IDLE_STOP		(-1)	/* Request SD clock be stopped */
-+#define INFF_IDLE_INTERVAL	1
-+
-+#define KSO_WAIT_US 50
-+#define KSO_MAX_SEQ_TIME_NS (1000000 * 10) /* Ideal time for kso sequence 10ms in ns*/
-+#define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY / KSO_WAIT_US)
-+
-+/* io_en */
-+#define SDIO_FUNC_ENABLE_1	0x02
-+#define SDIO_FUNC_ENABLE_2	0x04
-+
-+/* intr_status */
-+#define INTR_STATUS_FUNC1	0x2
-+#define INTR_STATUS_FUNC2	0x4
-+
-+#define INFF_SDIO_REG_DAR_H2D_MSG_0	0x10030
-+#define INFF_SDIO_REG_DAR_D2H_MSG_0	0x10038
-+#define INFF_SDIO_REG_DAR_D2H_MSG_1	0x1003c
-+#define INFF_SDIO_REG_DAR_D2H_MSG_2	0x10046
-+
-+#define INFF_SDIO_REG_D2H_MSG_0	0x1800204C
-+#define INFF_SDIO_REG_H2D_MSG_0	0x18002048
-+
-+#define INFF_SDIO_D2H_ACW74XX_READY	BIT(24)
-+
-+#define CM3_SOCRAM_WRITE_END_LOCATION	0x80000
-+
-+/* Sdio rev 27 only */
-+/* To read secure-mode bit */
-+#define SBSDIO_FUNC1_SECURE_MODE	0x10001
-+
-+/* function 0 vendor specific CCCR registers */
-+
-+#define SDIO_CCCR_INTR_PND			0x05
-+#define SDIO_CCCR_IO_ABORT			0x06
-+#define SDIO_CCCR_IO_ABORT_RES			BIT(3)
-+#define SDIO_CCCR_INFF_CARDCAP			0xf0
-+#define SDIO_CCCR_INFF_CARDCAP_CMD14_SUPPORT	BIT(1)
-+#define SDIO_CCCR_INFF_CARDCAP_CMD14_EXT	BIT(2)
-+#define SDIO_CCCR_INFF_CARDCAP_CMD_NODEC	BIT(3)
-+#define SDIO_CCCR_INFF_CARDCAP_CHIPID_PRESENT	BIT(6)
-+#define SDIO_CCCR_INFF_CARDCAP_SECURE_MODE	BIT(7)
-+
-+/* Interrupt enable bits for each function */
-+#define SDIO_CCCR_IEN_FUNC0			BIT(0)
-+#define SDIO_CCCR_IEN_FUNC1			BIT(1)
-+#define SDIO_CCCR_IEN_FUNC2			BIT(2)
-+#define SDIO_CCCR_IEN_FUNC3			BIT(3)
-+
-+#define SDIO_CCCR_INFF_CARDCTRL			0xf1
-+#define SDIO_CCCR_INFF_CARDCTRL_WLANRESET	BIT(1)
-+#define SDIO_CCCR_INFF_CARDCTRL_BTRESET		BIT(2)
-+
-+#define SDIO_CCCR_INFF_SEPINT			0xf2
-+#define SDIO_CCCR_INFF_SEPINT_MASK		BIT(0)
-+#define SDIO_CCCR_INFF_SEPINT_OE		BIT(1)
-+#define SDIO_CCCR_INFF_SEPINT_ACT_HI		BIT(2)
-+
-+/* function 1 miscellaneous registers */
-+
-+/* sprom command and status */
-+#define SBSDIO_SPROM_CS			0x10000
-+/* sprom info register */
-+#define SBSDIO_SPROM_INFO		0x10001
-+/* sprom indirect access data byte 0 */
-+#define SBSDIO_SPROM_DATA_LOW		0x10002
-+/* sprom indirect access data byte 1 */
-+#define SBSDIO_SPROM_DATA_HIGH		0x10003
-+/* sprom indirect access addr byte 0 */
-+#define SBSDIO_SPROM_ADDR_LOW		0x10004
-+/* gpio select */
-+#define SBSDIO_GPIO_SELECT		0x10005
-+/* gpio output */
-+#define SBSDIO_GPIO_OUT			0x10006
-+/* gpio enable */
-+#define SBSDIO_GPIO_EN			0x10007
-+/* rev < 7, watermark for sdio device TX path */
-+#define SBSDIO_WATERMARK		0x10008
-+/* control busy signal generation */
-+#define SBSDIO_DEVICE_CTL		0x10009
-+
-+/* SB Address Window Low (b15) */
-+#define SBSDIO_FUNC1_SBADDRLOW		0x1000A
-+/* SB Address Window Mid (b23:b16) */
-+#define SBSDIO_FUNC1_SBADDRMID		0x1000B
-+/* SB Address Window High (b31:b24)    */
-+#define SBSDIO_FUNC1_SBADDRHIGH		0x1000C
-+/* Frame Control (frame term/abort) */
-+#define SBSDIO_FUNC1_FRAMECTRL		0x1000D
-+/* ChipClockCSR (ALP/HT ctl/status) */
-+#define SBSDIO_FUNC1_CHIPCLKCSR		0x1000E
-+/* SdioPullUp (on cmd, d0-d2) */
-+#define SBSDIO_FUNC1_SDIOPULLUP		0x1000F
-+/* Write Frame Byte Count Low */
-+#define SBSDIO_FUNC1_WFRAMEBCLO		0x10019
-+/* Write Frame Byte Count High */
-+#define SBSDIO_FUNC1_WFRAMEBCHI		0x1001A
-+/* Read Frame Byte Count Low */
-+#define SBSDIO_FUNC1_RFRAMEBCLO		0x1001B
-+/* Read Frame Byte Count High */
-+#define SBSDIO_FUNC1_RFRAMEBCHI		0x1001C
-+/* MesBusyCtl (rev 11) */
-+#define SBSDIO_FUNC1_MESBUSYCTRL	0x1001D
-+/* Watermark for sdio device RX path */
-+#define SBSDIO_MESBUSY_RXFIFO_WM_MASK	0x7F
-+#define SBSDIO_MESBUSY_RXFIFO_WM_SHIFT	0
-+/* Enable busy capability for MES access */
-+#define SBSDIO_MESBUSYCTRL_ENAB		0x80
-+#define SBSDIO_MESBUSYCTRL_ENAB_SHIFT	7
-+
-+/* Sdio Core Rev 12 */
-+#define SBSDIO_FUNC1_WAKEUPCTRL		0x1001E
-+#define SBSDIO_FUNC1_WCTRL_ALPWAIT_MASK		0x1
-+#define SBSDIO_FUNC1_WCTRL_ALPWAIT_SHIFT	0
-+#define SBSDIO_FUNC1_WCTRL_HTWAIT_MASK		0x2
-+#define SBSDIO_FUNC1_WCTRL_HTWAIT_SHIFT		1
-+#define SBSDIO_FUNC1_SLEEPCSR		0x1001F
-+#define SBSDIO_FUNC1_SLEEPCSR_KSO_MASK		0x1
-+#define SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT		0
-+#define SBSDIO_FUNC1_SLEEPCSR_KSO_EN		1
-+#define SBSDIO_FUNC1_SLEEPCSR_DEVON_MASK	0x2
-+#define SBSDIO_FUNC1_SLEEPCSR_DEVON_SHIFT	1
-+#define SBSDIO_FUNC1_SLEEPCSR_BT_KSO_MASK	0x4
-+#define SBSDIO_FUNC1_SLEEPCSR_BT_KSO_SHIFT	2
-+#define SBSDIO_FUNC1_SLEEPCSR_BT_DEVON_MASK	0x8
-+
-+#define SBSDIO_FUNC1_MISC_REG_START	0x10000	/* f1 misc register start */
-+#define SBSDIO_FUNC1_MISC_REG_LIMIT	0x1001F	/* f1 misc register end */
-+
-+/* Sdio Core Rev 31 */
-+/* Hard Reset SDIO core, output soft reset signal which should cause backplane reset */
-+#define SDIO_IO_CARD_RESET                0x08
-+
-+/* function 1 OCP space */
-+
-+/* sb offset addr is <= 15 bits, 32k */
-+#define SBSDIO_SB_OFT_ADDR_MASK		0x07FFF
-+#define SBSDIO_SB_OFT_ADDR_LIMIT	0x08000
-+/* with b15, maps to 32-bit SB access */
-+#define SBSDIO_SB_ACCESS_2_4B_FLAG	0x08000
-+
-+/* Address bits from SBADDR regs */
-+#define SBSDIO_SBWINDOW_MASK		0xffff8000
-+
-+#define INFF_CP_TX_WAIT_TIME 10
-+
-+/* watchdog polling interval */
-+#define INFF_WD_POLL	msecs_to_jiffies(10)
-+
-+/* SDIO function number definition */
-+#define SDIO_FUNC_0		0
-+#define SDIO_FUNC_1		1
-+#define SDIO_FUNC_2		2
-+#define SDIO_FUNC_3		3
-+#define SDIO_FUNC_4		4
-+#define SDIO_FUNC_5		5
-+#define SDIO_FUNC_6		6
-+#define SDIO_FUNC_7		7
-+
-+#define ACW74XX_WIFISS_ADDR_2_CPUSS_ADDR_OFFSET 0x5e000000
-+
-+/* RAM_APP */
-+#define SMB_DATA_RAM_APP_START		0x10000000
-+#define SMB_DATA_RAM_APP_END		0x20000000
-+
-+#define CM33_CPUSS_SRAM_START		0x34002000
-+#define SRT_RAM_APP_TYPE		1
-+#define CPUSS_RAM_APP_TYPE		2
-+
-+#define RAM_APP_TYPE_MASK		0xF
-+#define RAM_APP_TYPE_SHIFT		24
-+#define RAM_APP_SIZE_MASK		0xFFFFFF
-+
-+/* RAM_APP toHostmailboxData over DEVICE2HOSTREG1 */
-+enum {
-+	HMB_DATA_WIFISS_SRAM_STAGING	=	1,
-+	HMB_DATA_CPUSS_SRAM_STAGING	=	2,
-+};
-+
-+#define INFF_SDIO_D2H_READY_TIMEOUT		5000 /* msec */
-+
-+/* sdio core registers */
-+struct sdpcmd_regs {
-+	u32 corecontrol;		/* 0x00, rev8 */
-+	u32 corestatus;			/* rev8 */
-+	u32 pad0[1];
-+	u32 biststatus;			/* rev8 */
-+
-+	/* PCMCIA access */
-+	u16 pcmciamesportaladdr;	/* 0x010, rev8 */
-+	u16 pad1[1];
-+	u16 pcmciamesportalmask;	/* rev8 */
-+	u16 pad2[1];
-+	u16 pcmciawrframebc;		/* rev8 */
-+	u16 pad3[1];
-+	u16 pcmciaunderflowtimer;	/* rev8 */
-+	u16 pad4[1];
-+
-+	/* interrupt */
-+	u32 intstatus;			/* 0x020, rev8 */
-+	u32 hostintmask;		/* rev8 */
-+	u32 intmask;			/* rev8 */
-+	u32 sbintstatus;		/* rev8 */
-+	u32 sbintmask;			/* rev8 */
-+	u32 funcintmask;		/* rev4 */
-+	u32 pad5[2];
-+	u32 tosbmailbox;		/* 0x040, rev8 */
-+	u32 tohostmailbox;		/* rev8 */
-+	u32 tosbmailboxdata;		/* rev8 */
-+	u32 tohostmailboxdata;		/* rev8 */
-+
-+	/* synchronized access to registers in SDIO clock domain */
-+	u32 sdioaccess;			/* 0x050, rev8 */
-+	u32 pad6[3];
-+
-+	/* PCMCIA frame control */
-+	u8 pcmciaframectrl;		/* 0x060, rev8 */
-+	u8 pad7[3];
-+	u8 pcmciawatermark;		/* rev8 */
-+	u8 pad8[155];
-+
-+	/* interrupt batching control */
-+	u32 intrcvlazy;			/* 0x100, rev8 */
-+	u32 pad9[3];
-+
-+	/* counters */
-+	u32 cmd52rd;			/* 0x110, rev8 */
-+	u32 cmd52wr;			/* rev8 */
-+	u32 cmd53rd;			/* rev8 */
-+	u32 cmd53wr;			/* rev8 */
-+	u32 abort;			/* rev8 */
-+	u32 datacrcerror;		/* rev8 */
-+	u32 rdoutofsync;		/* rev8 */
-+	u32 wroutofsync;		/* rev8 */
-+	u32 writebusy;			/* rev8 */
-+	u32 readwait;			/* rev8 */
-+	u32 readterm;			/* rev8 */
-+	u32 writeterm;			/* rev8 */
-+	u32 pad10[40];
-+	u32 clockctlstatus;		/* rev8 */
-+	u32 pad11[7];
-+
-+	u32 pad12[76];			/* DMA engines */
-+
-+	u32 chipid;			/* SDIO ChipID Register, 0x330, rev31 */
-+	u32 eromptr;			/* SDIO EromPtrOffset Register, 0x334, rev31 */
-+	u32 pad13[50];
-+
-+	/* SDIO/PCMCIA CIS region */
-+	char cis[512];			/* 0x400-0x5ff, rev6 */
-+
-+	/* PCMCIA function control registers */
-+	char pcmciafcr[256];		/* 0x600-6ff, rev6 */
-+	u16 pad14[55];
-+
-+	/* PCMCIA backplane access */
-+	u16 backplanecsr;		/* 0x76E, rev6 */
-+	u16 backplaneaddr0;		/* rev6 */
-+	u16 backplaneaddr1;		/* rev6 */
-+	u16 backplaneaddr2;		/* rev6 */
-+	u16 backplaneaddr3;		/* rev6 */
-+	u16 backplanedata0;		/* rev6 */
-+	u16 backplanedata1;		/* rev6 */
-+	u16 backplanedata2;		/* rev6 */
-+	u16 backplanedata3;		/* rev6 */
-+	u16 pad15[31];
-+
-+	/* sprom "size" & "blank" info */
-+	u16 spromstatus;		/* 0x7BE, rev2 */
-+	u32 pad16[464];
-+
-+	u16 pad17[0x80];
-+};
-+
-+#define SD_REG(field) \
-+		(offsetof(struct sdpcmd_regs, field))
-+
-+static void inff_sdio_setup(struct device *dev, int err,
-+			    struct inff_fw_request *fwreq);
-+static int inff_sdio_f2_ready(struct inff_sdio *bus);
-+static int inff_sdio_bus_reset(struct device *dev);
-+
-+#ifdef DEBUG
-+/* Device console log buffer state */
-+struct inff_console {
-+	uint count;		/* Poll interval msec counter */
-+	uint log_addr;		/* Log struct address (fixed) */
-+	struct rte_log_le log_le;	/* Log struct (host copy) */
-+	uint bufsize;		/* Size of log buffer */
-+	u8 *buf;		/* Log buffer (host copy) */
-+	uint last;		/* Last buffer read index */
-+};
-+
-+struct inff_trap_info {
-+	__le32		type;
-+	__le32		epc;
-+	__le32		cpsr;
-+	__le32		spsr;
-+	__le32		r0;	/* a1 */
-+	__le32		r1;	/* a2 */
-+	__le32		r2;	/* a3 */
-+	__le32		r3;	/* a4 */
-+	__le32		r4;	/* v1 */
-+	__le32		r5;	/* v2 */
-+	__le32		r6;	/* v3 */
-+	__le32		r7;	/* v4 */
-+	__le32		r8;	/* v5 */
-+	__le32		r9;	/* sb/v6 */
-+	__le32		r10;	/* sl/v7 */
-+	__le32		r11;	/* fp/v8 */
-+	__le32		r12;	/* ip */
-+	__le32		r13;	/* sp */
-+	__le32		r14;	/* lr */
-+	__le32		pc;	/* r15 */
-+};
-+#endif				/* DEBUG */
-+
-+struct sdpcm_shared {
-+	u32 flags;
-+	u32 trap_addr;
-+	u32 assert_exp_addr;
-+	u32 assert_file_addr;
-+	u32 assert_line;
-+	u32 console_addr;	/* Address of struct rte_console */
-+	u32 msgtrace_addr;
-+	u8 tag[32];
-+	u32 brpt_addr;
-+};
-+
-+struct sdpcm_shared_le {
-+	__le32 flags;
-+	__le32 trap_addr;
-+	__le32 assert_exp_addr;
-+	__le32 assert_file_addr;
-+	__le32 assert_line;
-+	__le32 console_addr;	/* Address of struct rte_console */
-+	__le32 msgtrace_addr;
-+	u8 tag[32];
-+	__le32 brpt_addr;
-+};
-+
-+/* dongle SDIO bus specific header info */
-+struct inff_sdio_hdrinfo {
-+	u8 seq_num;
-+	u8 channel_and_flags;
-+	u16 len;
-+	u16 len_left;
-+	u16 len_nxtfrm;
-+	u8 dat_offset;
-+	bool lastfrm;
-+	u16 tail_pad;
-+};
-+
-+struct task_ctl {
-+	struct	task_struct *p_task;
-+	struct	completion comp;
-+};
-+
-+/*
-+ * hold counter variables
-+ */
-+struct inff_sdio_count {
-+	uint intrcount;		/* Count of device interrupt callbacks */
-+	uint lastintrs;		/* Count as of last watchdog timer */
-+	uint pollcnt;		/* Count of active polls */
-+	uint regfails;		/* Count of R_REG failures */
-+	uint tx_sderrs;		/* Count of tx attempts with sd errors */
-+	uint fcqueued;		/* Tx packets that got queued */
-+	uint rxrtx;		/* Count of rtx requests (NAK to dongle) */
-+	uint rx_toolong;	/* Receive frames too long to receive */
-+	uint rxc_errors;	/* SDIO errors when reading control frames */
-+	uint rx_hdrfail;	/* SDIO errors on header reads */
-+	uint rx_badhdr;		/* Bad received headers (roosync?) */
-+	uint rx_badseq;		/* Mismatched rx sequence number */
-+	uint fc_rcvd;		/* Number of flow-control events received */
-+	uint fc_xoff;		/* Number which turned on flow-control */
-+	uint fc_xon;		/* Number which turned off flow-control */
-+	uint rxglomfail;	/* Failed deglom attempts */
-+	uint rxglomframes;	/* Number of glom frames (superframes) */
-+	uint rxglompkts;	/* Number of packets from glom frames */
-+	uint f2rxhdrs;		/* Number of header reads */
-+	uint f2rxdata;		/* Number of frame data reads */
-+	uint f2txdata;		/* Number of f2 frame writes */
-+	uint f1regdata;		/* Number of f1 register accesses */
-+	uint tickcnt;		/* Number of watchdog been schedule */
-+	ulong tx_ctlerrs;	/* Err of sending ctrl frames */
-+	ulong tx_ctlpkts;	/* Ctrl frames sent to dongle */
-+	ulong rx_ctlerrs;	/* Err of processing rx ctrl frames */
-+	ulong rx_ctlpkts;	/* Ctrl frames processed from dongle */
-+	ulong rx_readahead_cnt;	/* packets where header read-ahead was used */
-+};
-+
-+/* misc chip info needed by some of the routines */
-+/* Private data for SDIO bus interaction */
-+struct inff_sdio {
-+	struct inff_sdio_dev *sdiodev;	/* sdio device handler */
-+	struct inff_chip *ci;	/* Chip info struct */
-+	struct inff_core *sdio_core; /* sdio core info struct */
-+
-+	u32 hostintmask;	/* Copy of Host Interrupt Mask */
-+	atomic_t intstatus;	/* Intstatus bits (events) pending */
-+	atomic_t fcstate;	/* State of dongle flow-control */
-+
-+	uint blocksize;		/* Block size of SDIO transfers */
-+	uint roundup;		/* Max roundup limit */
-+
-+	struct pktq txq;	/* Queue length used for flow-control */
-+	u8 flowcontrol;	/* per prio flow control bitmask */
-+	u8 tx_seq;		/* Transmit sequence number (next) */
-+	u8 tx_max;		/* Maximum transmit sequence allowed */
-+
-+	u8 *hdrbuf;		/* buffer for handling rx frame */
-+	u8 *rxhdr;		/* Header of current rx frame (in hdrbuf) */
-+	u8 rx_seq;		/* Receive sequence number (expected) */
-+	struct inff_sdio_hdrinfo cur_read;
-+				/* info of current read frame */
-+	bool rxskip;		/* Skip receive (awaiting NAK ACK) */
-+	bool rxpending;		/* Data frame pending in dongle */
-+
-+	uint rxbound;		/* Rx frames to read before resched */
-+	uint txbound;		/* Tx frames to send before resched */
-+	uint txminmax;
-+
-+	struct sk_buff *glomd;	/* Packet containing glomming descriptor */
-+	struct sk_buff_head glom; /* Packet list for glommed superframe */
-+
-+	u8 *rxbuf;		/* Buffer for receiving control packets */
-+	uint rxblen;		/* Allocated length of rxbuf */
-+	u8 *rxctl;		/* Aligned pointer into rxbuf */
-+	u8 *rxctl_orig;		/* pointer for freeing rxctl */
-+	uint rxlen;		/* Length of valid data in buffer */
-+	spinlock_t rxctl_lock;	/* protection lock for ctrl frame resources */
-+
-+	u8 sdpcm_ver;	/* Bus protocol reported by dongle */
-+
-+	atomic_t ipend;		/* Device interrupt is pending */
-+	uint spurious;		/* Count of spurious interrupts */
-+
-+#ifdef DEBUG
-+	uint console_interval;
-+	uint cpuss_console_interval;
-+	struct inff_console console;	/* Console output polling support */
-+	struct inff_console cpuss_console;
-+	uint console_addr;	/* Console address from shared struct */
-+	uint cpuss_console_addr;
-+#endif				/* DEBUG */
-+
-+	uint clkstate;		/* State of sd and backplane clock(s) */
-+	s32 idletime;		/* Control for activity timeout */
-+	s32 idlecount;		/* Activity timeout counter */
-+	s32 idleclock;		/* How to set bus driver when idle */
-+	bool rxflow_mode;	/* Rx flow control mode */
-+	bool rxflow;		/* Is rx flow control on */
-+	bool alp_only;		/* Don't use HT clock (ALP only) */
-+
-+	u8 *ctrl_frame_buf;
-+	u16 ctrl_frame_len;
-+	bool ctrl_frame_stat;
-+	int ctrl_frame_err;
-+
-+	spinlock_t txq_lock;		/* protect bus->txq */
-+	wait_queue_head_t ctrl_wait;
-+	wait_queue_head_t dcmd_resp_wait;
-+
-+	struct timer_list timer;
-+	struct completion watchdog_wait;
-+	struct task_struct *watchdog_tsk;
-+	bool wd_active;
-+
-+	struct workqueue_struct *inff_wq;
-+	struct work_struct datawork;
-+	bool dpc_triggered;
-+	bool dpc_running;
-+
-+	bool txoff;		/* Transmit flow-controlled */
-+	struct inff_sdio_count sdcnt;
-+	bool sr_enabled; /* SaveRestore enabled */
-+	bool sleeping;
-+
-+	u8 tx_hdrlen;		/* sdio bus header length for tx packet */
-+	bool txglom;		/* host tx glomming enable flag */
-+	u16 head_align;		/* buffer pointer alignment */
-+	u16 sgentry_align;	/* scatter-gather buffer alignment */
-+	struct mutex sdsem;
-+	bool chipid_preset;
-+	bool ddr50_mode;	/* DDR50 Mode enabled*/
-+	bool acw74xx_ramapp;	/* indicate it's running rampap download */
-+	bool acw74xx_f2_txdma_suspended;	/* Tracks whether the TXDMA has been suspended */
-+	bool credit_map_capable;
-+};
-+
-+/* clkstate */
-+#define CLK_NONE	0
-+#define CLK_SDONLY	1
-+#define CLK_PENDING	2
-+#define CLK_AVAIL	3
-+
-+#ifdef DEBUG
-+static int qcount[NUMPRIO];
-+#endif				/* DEBUG */
-+
-+#define RETRYCHAN(chan) ((chan) == SDPCM_EVENT_CHANNEL)
-+
-+/* Limit on rounding up frames */
-+static const uint max_roundup = 512;
-+
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+#define ALIGNMENT  8
-+#else
-+#define ALIGNMENT  4
-+#endif
-+
-+enum inff_sdio_frmtype {
-+	INFF_SDIO_FT_NORMAL,
-+	INFF_SDIO_FT_SUPER,
-+	INFF_SDIO_FT_SUB,
-+};
-+
-+/* SDIO Pad drive strength to select value mappings */
-+struct sdiod_drive_str {
-+	u8 strength;	/* Pad Drive Strength in mA */
-+	u8 sel;		/* Chip-specific select value */
-+};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 11 (1.8V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
-+	{32, 0x6},
-+	{26, 0x7},
-+	{22, 0x4},
-+	{16, 0x5},
-+	{12, 0x2},
-+	{8, 0x3},
-+	{4, 0x0},
-+	{0, 0x1}
-+};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 13 (1.8v) */
-+static const struct sdiod_drive_str sdiod_drive_strength_tab5_1v8[] = {
-+	{6, 0x7},
-+	{5, 0x6},
-+	{4, 0x5},
-+	{3, 0x4},
-+	{2, 0x2},
-+	{1, 0x1},
-+	{0, 0x0}
-+};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 17 (1.8v) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab6_1v8[] = {
-+	{3, 0x3},
-+	{2, 0x2},
-+	{1, 0x1},
-+	{0, 0x0} };
-+
-+/* SDIO Drive Strength to sel value table for 43143 PMU Rev 17 (3.3V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
-+	{16, 0x7},
-+	{12, 0x5},
-+	{8,  0x3},
-+	{4,  0x1}
-+};
-+
-+/* per-board firmware binaries */
-+#define INFF_CYW55900_FIRMWARE_BASENAME		INFF_FW_DEFAULT_PATH "inffmac55900-sdio"
-+#define INFF_ACW74XX_FIRMWARE_BASENAME		INFF_FW_DEFAULT_PATH "inffmac7413-sdio"
-+
-+MODULE_FIRMWARE(INFF_CYW55900_FIRMWARE_BASENAME ".hex");
-+MODULE_FIRMWARE(INFF_ACW74XX_FIRMWARE_BASENAME ".trx");
-+
-+static const struct inff_firmware_mapping inff_sdio_fwnames[] = {
-+	INFF_FW_ENTRY(INF_CC_ACW74XX_CHIP_ID, 0xFFFFFFFF, ACW74XX),
-+};
-+
-+static const struct inff_firmware_mapping inff_cp_fwnames[] = {
-+	INFF_FW_ENTRY(INF_CC_CYW5591X_CHIP_ID, 0xFFFFFFFF, CYW55900),
-+};
-+
-+#define TXCTL_CREDITS	2
-+
-+u8 inff_sdiod_func0_rb(struct inff_sdio_dev *sdiodev, u32 addr, int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x\n", addr);
-+
-+	if (!sdiodev->bus->sleeping || sdiodev->ignore_bus_error)
-+		return inff_sdiod_func0_rb_ext(sdiodev, addr, ret);
-+
-+	inff_err(" Error Access Not allowed\n");
-+	if (ret)
-+		*ret = -EPERM;
-+	return 0xFF;
-+}
-+
-+void inff_sdiod_func0_wb(struct inff_sdio_dev *sdiodev, u32 addr, u32 data,
-+			 int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x val 0x%x\n", addr, data);
-+
-+	if (!sdiodev->bus->sleeping || sdiodev->ignore_bus_error) {
-+		inff_sdiod_func0_wb_ext(sdiodev, addr, data, ret);
-+	} else {
-+		inff_err(" Error Access Not allowed\n");
-+		if (ret)
-+			*ret = -EPERM;
-+	}
-+}
-+
-+u8 inff_sdiod_readb(struct inff_sdio_dev *sdiodev, u32 addr, int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x\n", addr);
-+
-+	if (!sdiodev->bus->sleeping || addr == SBSDIO_FUNC1_SLEEPCSR)
-+		return inff_sdiod_readb_ext(sdiodev, addr, ret);
-+
-+	inff_err(" Error Access Not allowed\n");
-+	if (ret)
-+		*ret = -EPERM;
-+	return 0xFF;
-+}
-+
-+void inff_sdiod_writeb(struct inff_sdio_dev *sdiodev, u32 addr, u32 data,
-+		       int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x val 0x%x\n", addr, data);
-+
-+	if (!sdiodev->bus->sleeping || addr == SBSDIO_FUNC1_SLEEPCSR) {
-+		inff_sdiod_writeb_ext(sdiodev, addr, data, ret);
-+	} else {
-+		inff_err(" Error Access Not allowed\n");
-+		if (ret)
-+			*ret = -EPERM;
-+	}
-+}
-+
-+u8 inff_sdiod_func_rb(struct inff_sdio_dev *sdiodev, struct sdio_func *func, u32 addr, int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x\n", addr);
-+
-+	if (!sdiodev->bus->sleeping)
-+		return inff_sdiod_func_rb_ext(func, addr, ret);
-+
-+	inff_err(" Error Access Not allowed\n");
-+	if (ret)
-+		*ret = -EPERM;
-+	return 0xFF;
-+}
-+
-+void inff_sdiod_func_wb(struct inff_sdio_dev *sdiodev, struct sdio_func *func, u32 addr,
-+			u32 data, int *ret)
-+{
-+	inff_dbg(SDIOEXT, "addr 0x%x val 0x%x\n", addr, data);
-+
-+	if (!sdiodev->bus->sleeping) {
-+		inff_sdiod_func_wb_ext(func, addr, data, ret);
-+	} else {
-+		inff_err(" Error Access Not allowed\n");
-+		if (ret)
-+			*ret = -EPERM;
-+	}
-+}
-+
-+static void pkt_align(struct sk_buff *p, int len, int align)
-+{
-+	uint datalign;
-+
-+	datalign = (unsigned long)(p->data);
-+	datalign = roundup(datalign, (align)) - datalign;
-+	if (datalign)
-+		skb_pull(p, datalign);
-+	__skb_trim(p, len);
-+}
-+
-+/* To check if there's window offered */
-+static bool data_ok(struct inff_sdio *bus)
-+{
-+	return (u8)(bus->tx_max - bus->tx_seq) > TXCTL_CREDITS &&
-+	       ((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0;
-+}
-+
-+/* To check if there's window offered */
-+static bool txctl_ok(struct inff_sdio *bus)
-+{
-+	return (bus->tx_max - bus->tx_seq) != 0 &&
-+	       ((bus->tx_max - bus->tx_seq) & 0x80) == 0;
-+}
-+
-+static int
-+inff_sdio_kso_control(struct inff_sdio *bus, bool on)
-+{
-+	u8 wr_val = 0, rd_val, cmp_val, bmask;
-+	int err = 0;
-+	int err_cnt = 0;
-+	int try_cnt = 0;
-+	unsigned long kso_loop_time = 0;
-+	struct timespec64 ts_start, ts_end, ts_delta;
-+	struct inff_sdio_dev *sdiod = bus->sdiodev;
-+
-+	inff_dbg(SDIO, "KSO on=%d\n", on);
-+
-+	sdio_retune_crc_disable(bus->sdiodev->func1);
-+
-+	/* Cannot re-tune if device is asleep; defer till we're awake */
-+	if (on)
-+		sdio_retune_hold_now(bus->sdiodev->func1);
-+
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_AI:
-+		wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
-+
-+		/* Start time of kso_sequence */
-+		ktime_get_ts64(&ts_start);
-+
-+		/* Change bus width to 1-bit mode before kso 0 */
-+		if (!on && bus->idleclock == INFF_IDLE_STOP)
-+			inff_sdio_set_sdbus_clk_width(bus, SDIO_SDMODE_1BIT);
-+
-+		/* 1st KSO write goes to AOS wake up core if device is asleep  */
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
-+
-+		/* The chip could go down immediately after
-+		 * KSO bit is cleared. So the further reads of KSO register could
-+		 * fail. Thereby just bailing out immediately after clearing KSO
-+		 * bit, to avoid polling of KSO bit.
-+		 */
-+		if (!on) {
-+			bus->sdiodev->sbwad_valid = 0;
-+			return err;
-+		}
-+
-+		/* device WAKEUP through KSO:
-+		 * write bit 0 & read back until
-+		 * both bits 0 (kso bit) & 1 (dev on status) are set
-+		 */
-+		cmp_val = SBSDIO_FUNC1_SLEEPCSR_KSO_MASK |
-+			SBSDIO_FUNC1_SLEEPCSR_DEVON_MASK;
-+		bmask = cmp_val;
-+		break;
-+	case INFF_SOCI_CP:
-+		wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_BT_KSO_SHIFT);
-+
-+		/* Start time of kso_sequence */
-+		ktime_get_ts64(&ts_start);
-+
-+		/* Change bus width to 1-bit mode before kso 0 */
-+		if (!on && bus->idleclock == INFF_IDLE_STOP)
-+			inff_sdio_set_sdbus_clk_width(bus, SDIO_SDMODE_1BIT);
-+		else
-+		/* Set Flag to ignore SDIO Bus access error during KSO */
-+			bus->sdiodev->ignore_bus_error = true;
-+
-+		/* 1st KSO write goes to AOS wake up core if device is asleep  */
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
-+
-+		/* The chip could go down immediately after
-+		 * KSO bit is cleared. So the further reads of KSO register could
-+		 * fail. Thereby just bailing out immediately after clearing KSO
-+		 * bit, to avoid polling of KSO bit.
-+		 */
-+		if (!on) {
-+			bus->sdiodev->sbwad_valid = 0;
-+			return err;
-+		}
-+
-+		/* device WAKEUP through KSO:
-+		 * write bit 2 & read back until
-+		 * both bits 2 (kso bit) & 3 (dev on status) are set
-+		 */
-+		cmp_val = SBSDIO_FUNC1_SLEEPCSR_BT_KSO_MASK |
-+			  SBSDIO_FUNC1_SLEEPCSR_BT_DEVON_MASK;
-+		bmask = cmp_val;
-+		break;
-+	}
-+
-+	do {
-+		/* reliable KSO bit set/clr:
-+		 * the sdiod sleep write access is synced to PMU 32khz clk
-+		 * just one write attempt may fail,
-+		 * read it back until it matches written value
-+		 */
-+		rd_val = inff_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
-+					  &err);
-+		if (!err) {
-+			if ((rd_val & bmask) == cmp_val)
-+				break;
-+		} else {
-+			err_cnt++;
-+		}
-+
-+		/* Do one KSO write-read-check without any delay in between the steps,
-+		 * if Device is already up KSO sequence will complete immediately
-+		 * without any delay for Host
-+		 */
-+		if (try_cnt == 0) {
-+			/* If Device is already up then it will not reach here,
-+			 * if the control reaches here it means device is in sleep
-+			 * so delay for some time to let Device wake up before
-+			 * starting subsequent KSO wr-rd-check sequence
-+			 * Delay should be less than the time device takes to wakeup
-+			 * in normal case, because giving more delay than what device needs
-+			 * will lead to host being unnecessarily blocked here while device is
-+			 * already up and ready, leading to more power consumptions of both
-+			 * host and device, as well as overall increased response delays
-+			 */
-+			usleep_range(2500, 3000);
-+		} else {
-+			/* Initial delay is done, now do continuous KSO wr-rd-check
-+			 * sequence with some small delay
-+			 */
-+			usleep_range(KSO_WAIT_US / 2, KSO_WAIT_US);
-+		}
-+
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val,
-+				  &err);
-+
-+	} while (try_cnt++ < MAX_KSO_ATTEMPTS);
-+
-+	ktime_get_ts64(&ts_end);
-+	ts_delta = timespec64_sub(ts_end, ts_start);
-+	kso_loop_time = timespec64_to_ns(&ts_delta);
-+
-+	if (try_cnt > MAX_KSO_ATTEMPTS)
-+		inff_dbg(SDIO, "KSO=%d sequence failed after max tries=%d and err_cnt=%d\n"
-+			  "kso_seq_time=%luns rd_val=0x%x err=%d\n",
-+			   on, try_cnt, err_cnt, kso_loop_time, rd_val, err);
-+
-+	if (bus->idleclock == INFF_IDLE_STOP) {
-+		/* Change the bus width to 4-bit mode on kso 1 */
-+		sdiod->ignore_bus_error = true;
-+		inff_sdio_set_sdbus_clk_width(bus, SDIO_SDMODE_4BIT);
-+		sdiod->ignore_bus_error = false;
-+	}
-+
-+	/* New KSO Sequence for H1 DDR50 Mode*/
-+	if (bus->ddr50_mode) {
-+		u32 ret, chipid;
-+
-+		/* Set Flag to ignore SDIO Bus access error during KSO */
-+		sdiod->ignore_bus_error = true;
-+		chipid = inff_sdiod_readl(sdiod,
-+					  bus->ci->ccsec->bus_corebase + SD_REG(chipid),
-+					  &ret);
-+		/* Clear Flag to ignore SDIO Bus access error during KSO */
-+		sdiod->ignore_bus_error = false;
-+		inff_dbg(SDIO, "chipid: 0x%x ret = 0x%x\n", chipid, ret);
-+	}
-+
-+	sdio_retune_release(bus->sdiodev->func1);
-+
-+	if (kso_loop_time > KSO_MAX_SEQ_TIME_NS)
-+		inff_err("ERR: KSO=%d sequence took %luns > expected %uns try_cnt=%d\n"
-+			  "err_cnt=%d rd_val=0x%x err=%d\n",
-+			   on, kso_loop_time, KSO_MAX_SEQ_TIME_NS, try_cnt, err_cnt, rd_val, err);
-+
-+	inff_dbg(SDIO, "INFO: KSO=%d try_cnt=%d err_cnt=%d kso_seq_time=%luns\n"
-+			"rd_val=0x%x err=%d\n", on, try_cnt, err_cnt, kso_loop_time, rd_val, err);
-+
-+	sdio_retune_crc_enable(bus->sdiodev->func1);
-+
-+	return err;
-+}
-+
-+#define HOSTINTMASK		(I_HMB_SW_MASK | I_CHIPACTIVE)
-+
-+/* Turn backplane clock on or off */
-+static int inff_sdio_htclk(struct inff_sdio *bus, bool on, bool pendok)
-+{
-+	int err;
-+	u8 clkctl, clkreq, devctl;
-+	unsigned long timeout;
-+
-+	clkctl = 0;
-+
-+	if (bus->sr_enabled) {
-+		bus->clkstate = (on ? CLK_AVAIL : CLK_SDONLY);
-+		return 0;
-+	}
-+
-+	if (on) {
-+		/* Request HT Avail */
-+		clkreq =
-+		    bus->alp_only ? SBSDIO_ALP_AVAIL_REQ : SBSDIO_HT_AVAIL_REQ;
-+
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+				  clkreq, &err);
-+		if (err) {
-+			inff_err("HT Avail request error: %d\n", err);
-+			return -EBADE;
-+		}
-+
-+		/* Check current status */
-+		clkctl = inff_sdiod_readb(bus->sdiodev,
-+					  SBSDIO_FUNC1_CHIPCLKCSR, &err);
-+		if (err) {
-+			inff_err("HT Avail read error: %d\n", err);
-+			return -EBADE;
-+		}
-+
-+		/* Go to pending and await interrupt if appropriate */
-+		if (!SBSDIO_CLKAV(clkctl, bus->alp_only) && pendok) {
-+			/* Allow only clock-available interrupt */
-+			devctl = inff_sdiod_readb(bus->sdiodev,
-+						  SBSDIO_DEVICE_CTL, &err);
-+			if (err) {
-+				inff_err("Devctl error setting CA: %d\n", err);
-+				return -EBADE;
-+			}
-+
-+			devctl |= SBSDIO_DEVCTL_CA_INT_ONLY;
-+			inff_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
-+					  devctl, &err);
-+			inff_dbg(SDIO, "CLKCTL: set PENDING\n");
-+			bus->clkstate = CLK_PENDING;
-+
-+			return 0;
-+		} else if (bus->clkstate == CLK_PENDING) {
-+			/* Cancel CA-only interrupt filter */
-+			devctl = inff_sdiod_readb(bus->sdiodev,
-+						  SBSDIO_DEVICE_CTL, &err);
-+			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
-+			inff_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
-+					  devctl, &err);
-+		}
-+
-+		/* Otherwise, wait here (polling) for HT Avail */
-+		timeout = jiffies +
-+			  msecs_to_jiffies(PMU_MAX_TRANSITION_DLY / 1000);
-+		while (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
-+			clkctl = inff_sdiod_readb(bus->sdiodev,
-+						  SBSDIO_FUNC1_CHIPCLKCSR,
-+						  &err);
-+			if (time_after(jiffies, timeout))
-+				break;
-+
-+			usleep_range(5000, 10000);
-+		}
-+		if (err) {
-+			inff_err("HT Avail request error: %d\n", err);
-+			return -EBADE;
-+		}
-+		if (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
-+			inff_err("HT Avail timeout (%d): clkctl 0x%02x\n",
-+				 PMU_MAX_TRANSITION_DLY, clkctl);
-+			return -EBADE;
-+		}
-+
-+		/* Mark clock available */
-+		bus->clkstate = CLK_AVAIL;
-+		inff_dbg(SDIO, "CLKCTL: turned ON\n");
-+
-+#if defined(DEBUG)
-+		if (!bus->alp_only) {
-+			if (SBSDIO_ALPONLY(clkctl))
-+				inff_err("HT Clock should be on\n");
-+		}
-+#endif				/* defined (DEBUG) */
-+
-+	} else {
-+		clkreq = 0;
-+
-+		if (bus->clkstate == CLK_PENDING) {
-+			/* Cancel CA-only interrupt filter */
-+			devctl = inff_sdiod_readb(bus->sdiodev,
-+						  SBSDIO_DEVICE_CTL, &err);
-+			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
-+			inff_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
-+					  devctl, &err);
-+		}
-+
-+		bus->clkstate = CLK_SDONLY;
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+				  clkreq, &err);
-+		inff_dbg(SDIO, "CLKCTL: turned OFF\n");
-+		if (err) {
-+			inff_err("Failed access turning clock off: %d\n",
-+				 err);
-+			return -EBADE;
-+		}
-+	}
-+	return 0;
-+}
++#include "sdio.h"
 +
 +/**
-+ *	inff_sdio_set_sdbus_clk_width - set SD clock enable/disable and sd_mode
-+ *	@func: SDIO function attached to host
-+ *	@flags: reusing existing mmc->pm_flags to pass idle clk disable/enable or
-+ *		change sdbus width through mmc.
++ * DOC: Firmware Signalling
++ *
++ * Firmware can send signals to host and vice versa, which are passed in the
++ * data packets using TLV based header. This signalling layer is on top of the
++ * BDC bus protocol layer.
 + */
-+int inff_sdio_set_sdbus_clk_width(struct inff_sdio *bus, unsigned int flags)
-+{
-+	struct mmc_host *host;
-+	u8 ctrl;
-+	int ret = 0;
++/*
++ * enum inff_fws_tlv_type - definition of tlv identifiers.
++ */
++enum inff_fws_tlv_type {
++	INFF_FWS_TYPE_MAC_OPEN = 1,
++	INFF_FWS_TYPE_MAC_CLOSE = 2,
++	INFF_FWS_TYPE_MAC_REQUEST_CREDIT = 3,
++	INFF_FWS_TYPE_TXSTATUS = 4,
++	INFF_FWS_TYPE_PKTTAG = 5,
++	INFF_FWS_TYPE_MACDESC_ADD = 6,
++	INFF_FWS_TYPE_MACDESC_DEL = 7,
++	INFF_FWS_TYPE_RSSI = 8,
++	INFF_FWS_TYPE_INTERFACE_OPEN = 9,
++	INFF_FWS_TYPE_INTERFACE_CLOSE = 10,
++	INFF_FWS_TYPE_FIFO_CREDITBACK = 11,
++	INFF_FWS_TYPE_PENDING_TRAFFIC_BMP = 12,
++	INFF_FWS_TYPE_MAC_REQUEST_PACKET = 13,
++	INFF_FWS_TYPE_HOST_REORDER_RXPKTS = 14,
++	INFF_FWS_TYPE_TRANS_ID = 18,
++	INFF_FWS_TYPE_COMP_TXSTATUS = 19,
++	INFF_FWS_TYPE_FILLER = 255,
++	INFF_FWS_TYPE_INVALID
++};
 +
-+	if (WARN_ON(!bus))
-+		return -EINVAL;
++#define INFF_FWS_TYPE_FIFO_CREDITBACK_V2_LEN   12
++#define INFF_FIFO_CREDITBACK_TX_OFFSET         6
 +
-+	host = bus->sdiodev->func1->card->host;
++/*
++ * enum inff_fws_tlv_len - definition of tlv lengths.
++ */
++enum inff_fws_tlv_len {
++	INFF_FWS_TYPE_MAC_OPEN_LEN = 1,
++	INFF_FWS_TYPE_MAC_CLOSE_LEN = 1,
++	INFF_FWS_TYPE_MAC_REQUEST_CREDIT_LEN = 2,
++	INFF_FWS_TYPE_TXSTATUS_LEN = 4,
++	INFF_FWS_TYPE_PKTTAG_LEN = 4,
++	INFF_FWS_TYPE_MACDESC_ADD_LEN = 8,
++	INFF_FWS_TYPE_MACDESC_DEL_LEN = 8,
++	INFF_FWS_TYPE_RSSI_LEN = 1,
++	INFF_FWS_TYPE_INTERFACE_OPEN_LEN = 1,
++	INFF_FWS_TYPE_INTERFACE_CLOSE_LEN = 1,
++	INFF_FWS_TYPE_FIFO_CREDITBACK_LEN = 6,
++	INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN = 2,
++	INFF_FWS_TYPE_MAC_REQUEST_PACKET_LEN = 3,
++	INFF_FWS_TYPE_HOST_REORDER_RXPKTS_LEN = 10,
++	INFF_FWS_TYPE_TRANS_ID_LEN = 6,
++	INFF_FWS_TYPE_COMP_TXSTATUS_LEN = 1,
++	INFF_FWS_TYPE_FILLER_LEN = 0
++};
 +
-+	if (flags == SDIO_IDLECLOCK_DIS || flags == SDIO_IDLECLOCK_EN) {
-+		/* Switch OFF/ON SD CLOCK in sdio Host Controller */
-+		host->pm_caps |= flags;
-+		/* Call SDHCI interface function from ops */
-+		host->ops->set_ios(host, &host->ios);
-+	} else if (flags == SDIO_SDMODE_1BIT || flags == SDIO_SDMODE_4BIT) {
-+		ctrl = inff_sdiod_func0_rb(bus->sdiodev, SDIO_CCCR_IF, &ret);
-+		/* Check for Error */
-+		if (ret)
-+			return ret;
++/* AMPDU rx reordering definitions */
++#define INFF_RXREORDER_FLOWID_OFFSET		0
++#define INFF_RXREORDER_MAXIDX_OFFSET		2
++#define INFF_RXREORDER_FLAGS_OFFSET		4
++#define INFF_RXREORDER_CURIDX_OFFSET		6
++#define INFF_RXREORDER_EXPIDX_OFFSET		8
 +
-+		/* Clear first two bits
-+		 * 00 - 1 bit wide
-+		 * 10 - 4 bit wide
-+		 */
-+		ctrl &= ~SDIO_BUS_WIDTH_MASK;
-+		/* set as 4-bit bus width */
-+		if (flags == SDIO_SDMODE_4BIT)
-+			ctrl |= SDIO_BUS_WIDTH_4BIT;
-+
-+		inff_sdiod_func0_wb(bus->sdiodev, SDIO_CCCR_IF, ctrl, &ret);
-+		/* Update HOST CTRL register with 1 bit or 4 bit mode */
-+		host->pm_caps |= flags;
-+		/* Call SDHCI interface function from ops */
-+		host->ops->set_ios(host, &host->ios);
-+	}
-+	return ret;
-+}
-+
-+/* Change idle/active SD state */
-+static int inff_sdio_sdclk(struct inff_sdio *bus, bool on)
-+{
-+	if (bus->idleclock == INFF_IDLE_STOP)
-+		inff_sdio_set_sdbus_clk_width(bus,
-+					      on ? SDIO_IDLECLOCK_DIS :
-+						   SDIO_IDLECLOCK_EN);
-+
-+	if (on)
-+		bus->clkstate = CLK_SDONLY;
-+	else
-+		bus->clkstate = CLK_NONE;
-+
-+	return 0;
-+}
-+
-+/* Transition SD and backplane clock readiness */
-+int inff_sdio_clkctl(struct inff_sdio *bus, uint target, bool pendok)
-+{
-+#ifdef DEBUG
-+	uint oldstate = bus->clkstate;
-+#endif				/* DEBUG */
-+
-+	/* Early exit if we're already there */
-+	if (bus->clkstate == target)
-+		return 0;
-+
-+	switch (target) {
-+	case CLK_AVAIL:
-+		/* Make sure SD clock is available */
-+		if (bus->clkstate == CLK_NONE)
-+			inff_sdio_sdclk(bus, true);
-+		/* Now request HT Avail on the backplane */
-+		inff_sdio_htclk(bus, true, pendok);
-+		break;
-+
-+	case CLK_SDONLY:
-+		/* Remove HT request, or bring up SD clock */
-+		if (bus->clkstate == CLK_NONE)
-+			inff_sdio_sdclk(bus, true);
-+		else if (bus->clkstate == CLK_AVAIL)
-+			inff_sdio_htclk(bus, false, false);
-+		else
-+			inff_err("request for %d -> %d\n",
-+				 bus->clkstate, target);
-+		break;
-+
-+	case CLK_NONE:
-+		/* Make sure to remove HT request */
-+		if (bus->clkstate == CLK_AVAIL)
-+			inff_sdio_htclk(bus, false, false);
-+		/* Now remove the SD clock */
-+		inff_sdio_sdclk(bus, false);
-+		break;
-+	}
-+#ifdef DEBUG
-+	inff_dbg(SDIO, "%d -> %d\n", oldstate, bus->clkstate);
-+#endif				/* DEBUG */
-+
-+	return 0;
-+}
-+
-+static int
-+inff_sdio_bus_sleep(struct inff_sdio *bus, bool sleep, bool pendok)
-+{
-+	int err = 0;
-+	u8 clkcsr;
-+
-+	inff_dbg(SDIO, "BUS state request %s, currently %s\n",
-+		 (sleep ? "SLEEP" : "WAKE"),
-+		 (bus->sleeping ? "SLEEP" : "WAKE"));
-+
-+	/* Done if we're already in the requested state */
-+	if (sleep == bus->sleeping)
-+		goto end;
-+
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_CP:
-+		/* Going to sleep */
-+		if (sleep) {
-+			err = inff_sdio_kso_control(bus, false);
-+			if (bus->idleclock == INFF_IDLE_STOP)
-+				inff_sdio_sdclk(bus, false);
-+		} else {
-+			if (bus->idleclock == INFF_IDLE_STOP && bus->clkstate == CLK_NONE)
-+				inff_sdio_sdclk(bus, true);
-+			err = inff_sdio_kso_control(bus, true);
-+		}
-+		if (err) {
-+			inff_err("error while changing bus sleep state %d\n", err);
-+			goto done;
-+		}
-+		break;
-+	case INFF_SOCI_AI:
-+		/* If SR is enabled control bus state with KSO */
-+		if (bus->sr_enabled) {
-+			/* Going to sleep */
-+			if (sleep) {
-+				clkcsr = inff_sdiod_readb(bus->sdiodev,
-+							  SBSDIO_FUNC1_CHIPCLKCSR,
-+							  &err);
-+				if ((clkcsr & SBSDIO_CSR_MASK) == 0) {
-+					inff_dbg(SDIO, "no clock, set ALP\n");
-+					inff_sdiod_writeb(bus->sdiodev,
-+							  SBSDIO_FUNC1_CHIPCLKCSR,
-+							  SBSDIO_ALP_AVAIL_REQ, &err);
-+				}
-+
-+				err = inff_sdio_kso_control(bus, false);
-+
-+				if (bus->idleclock == INFF_IDLE_STOP)
-+					inff_sdio_sdclk(bus, false);
-+			} else {
-+				if (bus->idleclock == INFF_IDLE_STOP && bus->clkstate == CLK_NONE)
-+					inff_sdio_clkctl(bus, CLK_SDONLY, false);
-+
-+				err = inff_sdio_kso_control(bus, true);
-+			}
-+			if (err) {
-+				inff_err("error while changing bus sleep state %d\n",
-+					 err);
-+				goto done;
-+			}
-+		}
-+		break;
-+	}
-+
-+end:
-+	/* control clocks */
-+	if (sleep) {
-+		if (!bus->sr_enabled)
-+			inff_sdio_clkctl(bus, CLK_NONE, pendok);
-+	} else {
-+		if (inff_socitype_is_ai(bus->sdiodev->bus_if))
-+			inff_sdio_clkctl(bus, CLK_AVAIL, pendok);
-+
-+		inff_sdio_wd_timer(bus, true);
-+	}
-+	bus->sleeping = sleep;
-+	inff_dbg(SDIO, "BUS state changed to %s\n",
-+		 (sleep ? "SLEEP" : "WAKE"));
-+done:
-+	inff_dbg(SDIO, "BUS state request err=%d\n", err);
-+	return err;
-+}
++#define INFF_RXREORDER_DEL_FLOW		0x01
++#define INFF_RXREORDER_FLUSH_ALL		0x02
++#define INFF_RXREORDER_CURIDX_VALID		0x04
++#define INFF_RXREORDER_EXPIDX_VALID		0x08
++#define INFF_RXREORDER_NEW_HOLE		0x10
 +
 +#ifdef DEBUG
-+static inline bool inff_sdio_valid_shared_address(u32 addr)
++/*
++ * inff_fws_tlv_names - array of tlv names.
++ */
++static struct {
++	enum inff_fws_tlv_type id;
++	const char *name;
++} inff_fws_tlv_names[] = {
++	{1, "MAC_OPEN"},
++	{2, "MAC_CLOSE"},
++	{3, "MAC_REQUEST_CREDIT"},
++	{4, "TXSTATUS"},
++	{5, "PKTTAG"},
++	{6, "MACDESC_ADD"},
++	{7, "MACDESC_DEL"},
++	{8, "RSSI"},
++	{9, "INTERFACE_OPEN"},
++	{10, "INTERFACE_CLOSE"},
++	{11, "FIFO_CREDITBACK"},
++	{12, "PENDING_TRAFFIC_BMP"},
++	{13, "MAC_REQUEST_PACKET"},
++	{14, "HOST_REORDER_RXPKTS"},
++	{18, "TRANS_ID"},
++	{19, "COMP_TXSTATUS"},
++	{255, "FILLER"}
++};
++
++static const char *inff_fws_get_tlv_name(enum inff_fws_tlv_type id)
 +{
-+	return !(addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff));
-+}
++	int i;
 +
-+static int inff_sdio_readshared(struct inff_sdio *bus,
-+				struct sdpcm_shared *sh)
-+{
-+	u32 addr = 0;
-+	int rv;
-+	u32 shaddr = 0;
-+	struct sdpcm_shared_le sh_le;
-+	__le32 addr_le;
-+	u32 offset = 0;
-+	u32 tmp_addr = 0;
++	for (i = 0; i < ARRAY_SIZE(inff_fws_tlv_names); i++)
++		if (inff_fws_tlv_names[i].id == id)
++			return inff_fws_tlv_names[i].name;
 +
-+	sdio_claim_host(bus->sdiodev->func1);
-+	inff_sdio_bus_sleep(bus, false, false);
-+
-+	/** Read last word in socram to determine
-+	 *  address of sdpcm_shared structure
-+	 */
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
-+		offset = ACW74XX_WIFISS_ADDR_2_CPUSS_ADDR_OFFSET;
-+
-+		bus->cpuss_console_addr = 0;
-+		rv = inff_sdiod_ramrw(bus->sdiodev, false, INFF_CPUSS_CONSOLE_SHARED_ADDR,
-+				      (u8 *)&addr_le, 4);
-+		if (rv < 0)
-+			return rv;
-+		tmp_addr = le32_to_cpu(addr_le);
-+		if (tmp_addr > INFF_CPUSS_CONSOLE_ADDR_RANGE_LOW &&
-+		    tmp_addr < INFF_CPUSS_CONSOLE_ADDR_RANGE_HIGH)
-+			bus->cpuss_console_addr = le32_to_cpu(addr_le);
-+
-+		inff_dbg(INFO, " CPUSS console address 0x%x\n", bus->cpuss_console_addr);
-+	} else {
-+		shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
-+		if (!bus->ci->rambase && inff_chip_sr_capable(bus->ci))
-+			shaddr -= bus->ci->srsize;
-+	}
-+
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, shaddr,
-+			      (u8 *)&addr_le, 4);
-+	if (rv < 0)
-+		goto fail;
-+
-+	/*
-+	 * Check if addr is valid.
-+	 * NVRAM length at the end of memory should have been overwritten.
-+	 */
-+	addr = le32_to_cpu(addr_le);
-+	if (!inff_sdio_valid_shared_address(addr)) {
-+		inff_err("invalid sdpcm_shared address 0x%08X\n", addr);
-+		rv = -EINVAL;
-+		goto fail;
-+	}
-+
-+		addr += offset;
-+
-+	inff_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
-+
-+	/* Read hndrte_shared structure */
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&sh_le,
-+			      sizeof(struct sdpcm_shared_le));
-+	if (rv < 0)
-+		goto fail;
-+
-+	sdio_release_host(bus->sdiodev->func1);
-+
-+	/* Endianness */
-+	sh->flags = le32_to_cpu(sh_le.flags);
-+	sh->trap_addr = le32_to_cpu(sh_le.trap_addr) + offset;
-+	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr) + offset;
-+	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr) + offset;
-+	sh->assert_line = le32_to_cpu(sh_le.assert_line) + offset;
-+	sh->console_addr = le32_to_cpu(sh_le.console_addr) + offset;
-+	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr) + offset;
-+
-+	inff_dbg(INFO, "rte_console address is  is 0x%08x\n", sh->console_addr);
-+
-+	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) > SDPCM_SHARED_VERSION) {
-+		inff_err("sdpcm_shared version %d unsupported, drivers expects version <= %d\n",
-+			 sh->flags & SDPCM_SHARED_VERSION_MASK,
-+			 SDPCM_SHARED_VERSION);
-+		return -EPROTO;
-+	}
-+	return 0;
-+
-+fail:
-+	inff_err("unable to obtain sdpcm_shared info: rv=%d (addr=0x%x)\n",
-+		 rv, addr);
-+	sdio_release_host(bus->sdiodev->func1);
-+	return rv;
-+}
-+
-+static void inff_sdio_get_console_addr(struct inff_sdio *bus)
-+{
-+	struct sdpcm_shared sh;
-+
-+	if (inff_sdio_readshared(bus, &sh) == 0) {
-+		/* reset the last read count when buffer address is updated */
-+		bus->console.last = 0;
-+		bus->console_addr = sh.console_addr;
-+	}
++	return "INVALID";
 +}
 +#else
-+static void inff_sdio_get_console_addr(struct inff_sdio *bus)
++static const char *inff_fws_get_tlv_name(enum inff_fws_tlv_type id)
 +{
++	return "NODEBUG";
 +}
 +#endif /* DEBUG */
 +
-+static u32 inff_sdio_hostmail(struct inff_sdio *bus, u32 *hmbd)
++/*
++ * The PKTTAG tlv has additional bytes when firmware-signalling
++ * mode has REUSESEQ flag set.
++ */
++#define INFF_FWS_TYPE_SEQ_LEN				2
++
++/*
++ * flags used to enable tlv signalling from firmware.
++ */
++#define INFF_FWS_FLAGS_RSSI_SIGNALS			0x0001
++#define INFF_FWS_FLAGS_XONXOFF_SIGNALS			0x0002
++#define INFF_FWS_FLAGS_CREDIT_STATUS_SIGNALS		0x0004
++#define INFF_FWS_FLAGS_HOST_PROPTXSTATUS_ACTIVE	0x0008
++#define INFF_FWS_FLAGS_PSQ_GENERATIONFSM_ENABLE	0x0010
++#define INFF_FWS_FLAGS_PSQ_ZERO_BUFFER_ENABLE		0x0020
++#define INFF_FWS_FLAGS_HOST_RXREORDER_ACTIVE		0x0040
++
++#define INFF_FWS_MAC_DESC_TABLE_SIZE			32
++#define INFF_FWS_MAC_DESC_ID_INVALID			0xff
++
++#define INFF_FWS_HOSTIF_FLOWSTATE_OFF			0
++#define INFF_FWS_HOSTIF_FLOWSTATE_ON			1
++#define INFF_FWS_FLOWCONTROL_HIWATER			((256 * 8) - 256)
++#define INFF_FWS_FLOWCONTROL_LOWATER			256
++
++#define INFF_FWS_PSQ_PREC_COUNT		((INFF_FWS_FIFO_COUNT + 1) * 2)
++#define INFF_FWS_PSQ_LEN				(256 * 8)
++#define INFF_FWS_AFQ_PREC_COUNT		(INFF_FWS_FIFO_COUNT + 1)
++#define INFF_FWS_AFQ_LEN				(4096 * 8)
++
++#define INFF_FWS_HTOD_FLAG_PKTFROMHOST			0x01
++#define INFF_FWS_HTOD_FLAG_PKT_REQUESTED		0x02
++
++#define INFF_FWS_RET_OK_NOSCHEDULE			0
++#define INFF_FWS_RET_OK_SCHEDULE			1
++
++#define INFF_FWS_MODE_HANGER			1 /* use hanger */
++#define INFF_FWS_MODE_AFQ			2 /* use afq */
++#define INFF_FWS_MODE_IS_OLD_DEF(x)		(((x) & 3U) != 0)
++
++#define INFF_FWS_MODE_AFQ_SHIFT			2
++#define INFF_FWS_MODE_GET_AFQ(x)		(((x) >> INFF_FWS_MODE_AFQ_SHIFT) & 1)
++
++#define INFF_FWS_MODE_REUSESEQ_SHIFT			3	/* seq reuse */
++#define INFF_FWS_MODE_SET_REUSESEQ(x, val)	{ \
++		typeof(x) _x = (x); \
++		((_x) = \
++		((_x) & ~(1 << INFF_FWS_MODE_REUSESEQ_SHIFT)) | \
++		(((val) & 1) << INFF_FWS_MODE_REUSESEQ_SHIFT)); \
++		}
++#define INFF_FWS_MODE_GET_REUSESEQ(x)	\
++		(((x) >> INFF_FWS_MODE_REUSESEQ_SHIFT) & 1)
++
++#define INFF_FWS_MODE_REORDERSUPP_SHIFT		4
++#define INFF_FWS_MODE_GET_REORDERSUPP(x)	(((x) >> INFF_FWS_MODE_REORDERSUPP_SHIFT) & 1)
++
++static inline u32 inff_fws_mode_set_afq(u32 mode, u8 val)
 +{
-+	struct inff_sdio_dev *sdiod = bus->sdiodev;
-+	struct inff_core *core = bus->sdio_core;
-+	struct inff_fws_info *fws;
-+	u32 intstatus = 0;
-+	u32 hmb_data;
-+	bool fw_halt = false;
-+	u8 fcbits;
++	return (mode & ~(1 << INFF_FWS_MODE_AFQ_SHIFT)) |
++	       ((val & 1) << INFF_FWS_MODE_AFQ_SHIFT);
++}
++
++static inline u32 inff_fws_mode_set_reordersupp(u32 mode, u8 val)
++{
++	return (mode & ~(1 << INFF_FWS_MODE_REORDERSUPP_SHIFT)) |
++	       ((val & 1) << INFF_FWS_MODE_REORDERSUPP_SHIFT);
++}
++
++/**
++ * enum inff_fws_skb_state - indicates processing state of skb.
++ *
++ * @INFF_FWS_SKBSTATE_NEW: sk_buff is newly arrived in the driver.
++ * @INFF_FWS_SKBSTATE_DELAYED: sk_buff had to wait on queue.
++ * @INFF_FWS_SKBSTATE_SUPPRESSED: sk_buff has been suppressed by firmware.
++ * @INFF_FWS_SKBSTATE_TIM: allocated for TIM update info.
++ */
++enum inff_fws_skb_state {
++	INFF_FWS_SKBSTATE_NEW,
++	INFF_FWS_SKBSTATE_DELAYED,
++	INFF_FWS_SKBSTATE_SUPPRESSED,
++	INFF_FWS_SKBSTATE_TIM
++};
++
++/**
++ * struct inff_skbuff_cb - control buffer associated with skbuff.
++ *
++ * @bus_flags: 2 bytes reserved for bus specific parameters
++ * @if_flags: holds interface index and packet related flags.
++ * @htod: host to device packet identifier (used in PKTTAG tlv).
++ * @htod_seq: this 16-bit is original seq number for every suppress packet.
++ * @state: transmit state of the packet.
++ * @mac: descriptor related to destination for this packet.
++ *
++ * This information is stored in control buffer struct sk_buff::cb, which
++ * provides 48 bytes of storage so this structure should not exceed that.
++ */
++struct inff_skbuff_cb {
++	u16 bus_flags;
++	u16 if_flags;
++	u32 htod;
++	u16 htod_seq;
++	enum inff_fws_skb_state state;
++	struct inff_fws_mac_descriptor *mac;
++};
++
++/*
++ * macro casting skbuff control buffer to struct inff_skbuff_cb.
++ */
++#define inff_skbcb(skb)	((struct inff_skbuff_cb *)((skb)->cb))
++
++/*
++ * sk_buff control if flags
++ *
++ *	b[11]  - packet sent upon firmware request.
++ *	b[10]  - packet only contains signalling data.
++ *	b[9]   - packet is a tx packet.
++ *	b[8]   - packet used requested credit
++ *	b[7]   - interface in AP mode.
++ *	b[3:0] - interface index.
++ */
++#define INFF_SKB_IF_FLAGS_REQUESTED_MASK	0x0800
++#define INFF_SKB_IF_FLAGS_REQUESTED_SHIFT	11
++#define INFF_SKB_IF_FLAGS_SIGNAL_ONLY_MASK	0x0400
++#define INFF_SKB_IF_FLAGS_SIGNAL_ONLY_SHIFT	10
++#define INFF_SKB_IF_FLAGS_TRANSMIT_MASK        0x0200
++#define INFF_SKB_IF_FLAGS_TRANSMIT_SHIFT	9
++#define INFF_SKB_IF_FLAGS_REQ_CREDIT_MASK	0x0100
++#define INFF_SKB_IF_FLAGS_REQ_CREDIT_SHIFT	8
++#define INFF_SKB_IF_FLAGS_IF_AP_MASK		0x0080
++#define INFF_SKB_IF_FLAGS_IF_AP_SHIFT		7
++#define INFF_SKB_IF_FLAGS_INDEX_MASK		0x000f
++#define INFF_SKB_IF_FLAGS_INDEX_SHIFT		0
++
++#define inff_skb_if_flags_set_field(skb, field, value) \
++	inff_maskset16(&(inff_skbcb(skb)->if_flags), \
++			INFF_SKB_IF_FLAGS_ ## field ## _MASK, \
++			INFF_SKB_IF_FLAGS_ ## field ## _SHIFT, (value))
++#define inff_skb_if_flags_get_field(skb, field) \
++	inff_maskget16(inff_skbcb(skb)->if_flags, \
++			INFF_SKB_IF_FLAGS_ ## field ## _MASK, \
++			INFF_SKB_IF_FLAGS_ ## field ## _SHIFT)
++
++/*
++ * sk_buff control packet identifier
++ *
++ * 32-bit packet identifier used in PKTTAG tlv from host to dongle.
++ *
++ * - Generated at the host driver
++ * - Seen as a generic sequence number by firmware except for the flags field.
++ *
++ * Generation	: b[31]	=> generation number for this packet [host->fw]
++ *			   OR, current generation number [fw->host]
++ * Flags	: b[30:27] => command, status flags
++ * FIFO-AC	: b[26:24] => AC-FIFO id
++ * h-slot	: b[23:8] => hanger-slot
++ * freerun	: b[7:0] => A free running counter
++ */
++#define INFF_SKB_HTOD_TAG_GENERATION_MASK		0x80000000
++#define INFF_SKB_HTOD_TAG_GENERATION_SHIFT		31
++#define INFF_SKB_HTOD_TAG_FLAGS_MASK			0x78000000
++#define INFF_SKB_HTOD_TAG_FLAGS_SHIFT			27
++#define INFF_SKB_HTOD_TAG_FIFO_MASK			0x07000000
++#define INFF_SKB_HTOD_TAG_FIFO_SHIFT			24
++#define INFF_SKB_HTOD_TAG_HSLOT_MASK			0x00ffff00
++#define INFF_SKB_HTOD_TAG_HSLOT_SHIFT			8
++#define INFF_SKB_HTOD_TAG_FREERUN_MASK			0x000000ff
++#define INFF_SKB_HTOD_TAG_FREERUN_SHIFT		0
++
++#define inff_skb_htod_tag_set_field(skb, field, value) \
++	inff_maskset32(&(inff_skbcb(skb)->htod), \
++			INFF_SKB_HTOD_TAG_ ## field ## _MASK, \
++			INFF_SKB_HTOD_TAG_ ## field ## _SHIFT, (value))
++#define inff_skb_htod_tag_get_field(skb, field) \
++	inff_maskget32(inff_skbcb(skb)->htod, \
++			INFF_SKB_HTOD_TAG_ ## field ## _MASK, \
++			INFF_SKB_HTOD_TAG_ ## field ## _SHIFT)
++
++#define INFF_SKB_HTOD_SEQ_FROMFW_MASK			0x2000
++#define INFF_SKB_HTOD_SEQ_FROMFW_SHIFT			13
++#define INFF_SKB_HTOD_SEQ_FROMDRV_MASK			0x1000
++#define INFF_SKB_HTOD_SEQ_FROMDRV_SHIFT		12
++#define INFF_SKB_HTOD_SEQ_NR_MASK			0x0fff
++#define INFF_SKB_HTOD_SEQ_NR_SHIFT			0
++
++#define inff_skb_htod_seq_set_field(skb, field, value) \
++	inff_maskset16(&(inff_skbcb(skb)->htod_seq), \
++			INFF_SKB_HTOD_SEQ_ ## field ## _MASK, \
++			INFF_SKB_HTOD_SEQ_ ## field ## _SHIFT, (value))
++#define inff_skb_htod_seq_get_field(skb, field) \
++	inff_maskget16(inff_skbcb(skb)->htod_seq, \
++			INFF_SKB_HTOD_SEQ_ ## field ## _MASK, \
++			INFF_SKB_HTOD_SEQ_ ## field ## _SHIFT)
++
++#define INFF_FWS_TXSTAT_GENERATION_MASK	0x80000000
++#define INFF_FWS_TXSTAT_GENERATION_SHIFT	31
++#define INFF_FWS_TXSTAT_FLAGS_MASK		0x78000000
++#define INFF_FWS_TXSTAT_FLAGS_SHIFT		27
++#define INFF_FWS_TXSTAT_FIFO_MASK		0x07000000
++#define INFF_FWS_TXSTAT_FIFO_SHIFT		24
++#define INFF_FWS_TXSTAT_HSLOT_MASK		0x00FFFF00
++#define INFF_FWS_TXSTAT_HSLOT_SHIFT		8
++#define INFF_FWS_TXSTAT_FREERUN_MASK		0x000000FF
++#define INFF_FWS_TXSTAT_FREERUN_SHIFT		0
++
++#define inff_txstatus_get_field(txs, field) \
++	inff_maskget32(txs, INFF_FWS_TXSTAT_ ## field ## _MASK, \
++			INFF_FWS_TXSTAT_ ## field ## _SHIFT)
++
++/* How long to defer borrowing in jiffies */
++#define INFF_FWS_BORROW_DEFER_PERIOD		(HZ / 10)
++
++/**
++ * enum inff_fws_txstatus - txstatus flag values.
++ *
++ * @INFF_FWS_TXSTATUS_DISCARD:
++ *	host is free to discard the packet.
++ * @INFF_FWS_TXSTATUS_CORE_SUPPRESS:
++ *	802.11 core suppressed the packet.
++ * @INFF_FWS_TXSTATUS_FW_PS_SUPPRESS:
++ *	firmware suppress the packet as device is already in PS mode.
++ * @INFF_FWS_TXSTATUS_FW_TOSSED:
++ *	firmware tossed the packet.
++ * @INFF_FWS_TXSTATUS_FW_DISCARD_NOACK:
++ *	firmware tossed the packet after retries.
++ * @INFF_FWS_TXSTATUS_FW_SUPPRESS_ACKED:
++ *	firmware wrongly reported suppressed previously, now fixing to acked.
++ * @INFF_FWS_TXSTATUS_FW_EXPIRED:
++ *	firmware expired the packet.
++ * @INFF_FWS_TXSTATUS_FW_DROPPED:
++ *	firmware dropped the packet.
++ * @INFF_FWS_TXSTATUS_FW_MKTFREE:
++ *	firmware marked the packet free.
++ */
++enum inff_fws_txstatus {
++	INFF_FWS_TXSTATUS_DISCARD = 0,
++	INFF_FWS_TXSTATUS_CORE_SUPPRESS = 1,
++	INFF_FWS_TXSTATUS_FW_PS_SUPPRESS = 2,
++	INFF_FWS_TXSTATUS_FW_TOSSED = 3,
++	INFF_FWS_TXSTATUS_FW_DISCARD_NOACK = 4,
++	INFF_FWS_TXSTATUS_FW_SUPPRESS_ACKED = 5,
++	INFF_FWS_TXSTATUS_FW_EXPIRED = 6,
++	INFF_FWS_TXSTATUS_FW_DROPPED = 7,
++	INFF_FWS_TXSTATUS_FW_MKTFREE = 8
++};
++
++enum inff_fws_fcmode {
++	INFF_FWS_FCMODE_NONE,
++	INFF_FWS_FCMODE_IMPLIED_CREDIT,
++	INFF_FWS_FCMODE_EXPLICIT_CREDIT
++};
++
++enum inff_fws_mac_desc_state {
++	INFF_FWS_STATE_OPEN = 1,
++	INFF_FWS_STATE_CLOSE
++};
++
++/**
++ * struct inff_fws_mac_descriptor - firmware signalling data per node/interface
++ *
++ * @name: name of the descriptor.
++ * @occupied: slot is in use.
++ * @mac_handle: handle for mac entry determined by firmware.
++ * @interface_id: interface index.
++ * @state: current state.
++ * @suppressed: mac entry is suppressed.
++ * @generation: generation bit.
++ * @ac_bitmap: ac queue bitmap.
++ * @requested_credit: credits requested by firmware.
++ * @requested_packet: packet requested by firmware.
++ * @ea: ethernet address.
++ * @seq: per-node free-running sequence.
++ * @psq: power-save queue.
++ * @transit_count: packet in transit to firmware.
++ * @suppr_transit_count: suppressed packet in transit to firmware.
++ * @send_tim_signal: if set tim signal will be sent.
++ * @traffic_pending_bmp: traffic pending bitmap.
++ * @traffic_lastreported_bmp: traffic last reported bitmap.
++ */
++struct inff_fws_mac_descriptor {
++	char name[16];
++	u8 occupied;
++	u8 mac_handle;
++	u8 interface_id;
++	u8 state;
++	bool suppressed;
++	u8 generation;
++	u8 ac_bitmap;
++	u8 requested_credit;
++	u8 requested_packet;
++	u8 ea[ETH_ALEN];
++	u8 seq[INFF_FWS_FIFO_COUNT];
++	struct pktq psq;
++	int transit_count;
++	int suppr_transit_count;
++	bool send_tim_signal;
++	u8 traffic_pending_bmp;
++	u8 traffic_lastreported_bmp;
++	struct pktq afq;
++};
++
++#define INFF_FWS_HANGER_MAXITEMS	3072
++#define INFF_BORROW_RATIO			3
++
++/**
++ * enum inff_fws_hanger_item_state - state of hanger item.
++ *
++ * @INFF_FWS_HANGER_ITEM_STATE_FREE: item is free for use.
++ * @INFF_FWS_HANGER_ITEM_STATE_INUSE: item is in use.
++ * @INFF_FWS_HANGER_ITEM_STATE_INUSE_SUPPRESSED: item was suppressed.
++ */
++enum inff_fws_hanger_item_state {
++	INFF_FWS_HANGER_ITEM_STATE_FREE = 1,
++	INFF_FWS_HANGER_ITEM_STATE_INUSE,
++	INFF_FWS_HANGER_ITEM_STATE_INUSE_SUPPRESSED
++};
++
++/**
++ * struct inff_fws_hanger_item - single entry for tx pending packet.
++ *
++ * @state: entry is either free or occupied.
++ * @pkt: packet itself.
++ */
++struct inff_fws_hanger_item {
++	enum inff_fws_hanger_item_state state;
++	struct sk_buff *pkt;
++};
++
++/**
++ * struct inff_fws_hanger - holds packets awaiting firmware txstatus.
++ *
++ * @pushed: packets pushed to await txstatus.
++ * @popped: packets popped upon handling txstatus.
++ * @failed_to_push: packets that could not be pushed.
++ * @failed_to_pop: packets that could not be popped.
++ * @failed_slotfind: packets for which failed to find an entry.
++ * @slot_pos: last returned item index for a free entry.
++ * @items: array of hanger items.
++ */
++struct inff_fws_hanger {
++	u32 pushed;
++	u32 popped;
++	u32 failed_to_push;
++	u32 failed_to_pop;
++	u32 failed_slotfind;
++	u32 slot_pos;
++	struct inff_fws_hanger_item items[INFF_FWS_HANGER_MAXITEMS];
++};
++
++struct inff_fws_macdesc_table {
++	struct inff_fws_mac_descriptor nodes[INFF_FWS_MAC_DESC_TABLE_SIZE];
++	struct inff_fws_mac_descriptor iface[INFF_MAX_IFS];
++	struct inff_fws_mac_descriptor other;
++};
++
++struct inff_ohd_creditmap {
++	u8 num_acs;
++	u8 fifo_credit[INFF_FWS_FIFO_COUNT];
++};
++
++struct inff_fws_stats {
++	u32 tlv_parse_failed;
++	u32 tlv_invalid_type;
++	u32 header_only_pkt;
++	u32 header_pulls;
++	u32 pkt2bus;
++	u32 send_pkts[5];
++	u32 requested_sent[5];
++	u32 generic_error;
++	u32 mac_update_failed;
++	u32 mac_ps_update_failed;
++	u32 if_update_failed;
++	u32 packet_request_failed;
++	u32 credit_request_failed;
++	u32 rollback_success;
++	u32 rollback_failed;
++	u32 delayq_full_error;
++	u32 supprq_full_error;
++	u32 txs_indicate;
++	u32 txs_discard;
++	u32 txs_supp_core;
++	u32 txs_supp_ps;
++	u32 txs_tossed;
++	u32 txs_expired;
++	u32 txs_dropped;
++	u32 txs_mktfree;
++	u32 txs_unknown;
++	u32 txs_host_tossed;
++	u32 bus_flow_block;
++	u32 fws_flow_block;
++	u32 cnt_recv_err;
++	u32 cnt_cleanup_if;
++};
++
++struct inff_fws_info {
++	struct inff_pub *drvr;
++	spinlock_t spinlock;	/* spinlock for fw signal resource protection */
++	ulong flags;
++	struct inff_fws_stats stats;
++	struct inff_fws_hanger hanger;
++	enum inff_fws_fcmode fcmode;
++	bool fw_signals;
++	bool bcmc_credit_check;
++	struct inff_fws_macdesc_table desc;
++	struct workqueue_struct *fws_wq;
++	struct work_struct fws_dequeue_work;
++	u32 fifo_enqpkt[INFF_FWS_FIFO_COUNT];
++	int fifo_credit[INFF_FWS_FIFO_COUNT];
++	int init_fifo_credit[INFF_FWS_FIFO_COUNT];
++	int credits_borrowed[INFF_FWS_FIFO_AC_VO + 1]
++		[INFF_FWS_FIFO_AC_VO + 1];
++	int deq_node_pos[INFF_FWS_FIFO_COUNT];
++	u32 fifo_credit_map;
++	u32 fifo_delay_map;
++	unsigned long borrow_defer_timestamp;
++	bool bus_flow_blocked;
++	bool creditmap_received;
++	bool credit_recover;
++	bool sdio_recv_error;
++	u8 mode;
++	bool avoid_queueing;
++	int fws_psq_len;
++	int fws_psq_hi_water;
++	int fws_psq_low_water;
++	struct work_struct creditmap_query_work;
++	int wlfc_mode;
++};
++
++static int inff_fws_deque_afq(struct inff_fws_info *fws, u16 hslot, u8 hcnt,
++			      u8 prec, struct sk_buff **pktout);
++static int inff_fws_enque_afq(struct inff_fws_info *fws,
++			      struct sk_buff *skb);
++
++/**
++ * inff_fws_get_tlv_len() - returns defined length for given tlv id.
++ *
++ * @fws: firmware-signalling information.
++ * @id: identifier of the TLV.
++ *
++ * Return: the specified length for the given TLV; Otherwise -EINVAL.
++ */
++static int inff_fws_get_tlv_len(struct inff_fws_info *fws,
++				enum inff_fws_tlv_type id)
++{
++	switch (id) {
++	case INFF_FWS_TYPE_MAC_OPEN:
++		return INFF_FWS_TYPE_MAC_OPEN_LEN;
++	case INFF_FWS_TYPE_MAC_CLOSE:
++		return INFF_FWS_TYPE_MAC_CLOSE_LEN;
++	case INFF_FWS_TYPE_MAC_REQUEST_CREDIT:
++		return INFF_FWS_TYPE_MAC_REQUEST_CREDIT_LEN;
++	case INFF_FWS_TYPE_TXSTATUS:
++		return INFF_FWS_TYPE_TXSTATUS_LEN;
++	case INFF_FWS_TYPE_PKTTAG:
++		return INFF_FWS_TYPE_PKTTAG_LEN;
++	case INFF_FWS_TYPE_MACDESC_ADD:
++		return INFF_FWS_TYPE_MACDESC_ADD_LEN;
++	case INFF_FWS_TYPE_MACDESC_DEL:
++		return INFF_FWS_TYPE_MACDESC_DEL_LEN;
++	case INFF_FWS_TYPE_RSSI:
++		return INFF_FWS_TYPE_RSSI_LEN;
++	case INFF_FWS_TYPE_INTERFACE_OPEN:
++		return INFF_FWS_TYPE_INTERFACE_OPEN_LEN;
++	case INFF_FWS_TYPE_INTERFACE_CLOSE:
++		return INFF_FWS_TYPE_INTERFACE_CLOSE_LEN;
++	case INFF_FWS_TYPE_FIFO_CREDITBACK:
++		return INFF_FWS_TYPE_FIFO_CREDITBACK_LEN;
++	case INFF_FWS_TYPE_PENDING_TRAFFIC_BMP:
++		return INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN;
++	case INFF_FWS_TYPE_MAC_REQUEST_PACKET:
++		return INFF_FWS_TYPE_MAC_REQUEST_PACKET_LEN;
++	case INFF_FWS_TYPE_HOST_REORDER_RXPKTS:
++		return INFF_FWS_TYPE_HOST_REORDER_RXPKTS_LEN;
++	case INFF_FWS_TYPE_TRANS_ID:
++		return INFF_FWS_TYPE_TRANS_ID_LEN;
++	case INFF_FWS_TYPE_COMP_TXSTATUS:
++		return INFF_FWS_TYPE_COMP_TXSTATUS_LEN;
++	case INFF_FWS_TYPE_FILLER:
++		return INFF_FWS_TYPE_FILLER_LEN;
++	default:
++		fws->stats.tlv_invalid_type++;
++		break;
++	}
++	return -EINVAL;
++}
++
++static void inff_fws_lock(struct inff_fws_info *fws)
++		__acquires(&fws->spinlock)
++{
++	spin_lock_irqsave(&fws->spinlock, fws->flags);
++}
++
++static void inff_fws_unlock(struct inff_fws_info *fws)
++		__releases(&fws->spinlock)
++{
++	spin_unlock_irqrestore(&fws->spinlock, fws->flags);
++}
++
++static bool inff_fws_ifidx_match(struct sk_buff *skb, void *arg)
++{
++	u32 ifidx = inff_skb_if_flags_get_field(skb, INDEX);
++	return ifidx == *(int *)arg;
++}
++
++static void inff_fws_hanger_init(struct inff_fws_hanger *hanger)
++{
++	int i;
++
++	memset(hanger, 0, sizeof(*hanger));
++	for (i = 0; i < ARRAY_SIZE(hanger->items); i++)
++		hanger->items[i].state = INFF_FWS_HANGER_ITEM_STATE_FREE;
++}
++
++static u32 inff_fws_hanger_get_free_slot(struct inff_fws_hanger *h)
++{
++	u32 i;
++
++	i = (h->slot_pos + 1) % INFF_FWS_HANGER_MAXITEMS;
++
++	while (i != h->slot_pos) {
++		if (h->items[i].state == INFF_FWS_HANGER_ITEM_STATE_FREE) {
++			h->slot_pos = i;
++			goto done;
++		}
++		i++;
++		if (i == INFF_FWS_HANGER_MAXITEMS)
++			i = 0;
++	}
++	inff_err("all slots occupied\n");
++	h->failed_slotfind++;
++	i = INFF_FWS_HANGER_MAXITEMS;
++done:
++	return i;
++}
++
++static int inff_fws_hanger_pushpkt(struct inff_fws_hanger *h,
++				   struct sk_buff *pkt, u32 slot_id)
++{
++	if (slot_id >= INFF_FWS_HANGER_MAXITEMS)
++		return -ENOENT;
++
++	if (h->items[slot_id].state != INFF_FWS_HANGER_ITEM_STATE_FREE) {
++		inff_err("slot is not free\n");
++		h->failed_to_push++;
++		return -EINVAL;
++	}
++
++	h->items[slot_id].state = INFF_FWS_HANGER_ITEM_STATE_INUSE;
++	h->items[slot_id].pkt = pkt;
++	h->pushed++;
++	return 0;
++}
++
++static inline int inff_fws_hanger_poppkt(struct inff_fws_hanger *h,
++					 u32 slot_id, struct sk_buff **pktout,
++					 bool remove_item)
++{
++	if (slot_id >= INFF_FWS_HANGER_MAXITEMS)
++		return -ENOENT;
++
++	if (h->items[slot_id].state == INFF_FWS_HANGER_ITEM_STATE_FREE) {
++		inff_err("entry not in use\n");
++		h->failed_to_pop++;
++		return -EINVAL;
++	}
++
++	*pktout = h->items[slot_id].pkt;
++	if (remove_item) {
++		h->items[slot_id].state = INFF_FWS_HANGER_ITEM_STATE_FREE;
++		h->items[slot_id].pkt = NULL;
++		h->popped++;
++	}
++	return 0;
++}
++
++static void
++inff_fws_flow_control_check(struct inff_fws_info *fws, struct pktq *pq,
++			    u8 if_id)
++{
++	struct inff_if *ifp = inff_get_ifp(fws->drvr, if_id);
++
++	if (WARN_ON(!ifp))
++		return;
++
++	if ((ifp->netif_stop & INFF_NETIF_STOP_REASON_FWS_FC) &&
++	    pq->len <= fws->fws_psq_low_water)
++		inff_net_txflowblock(ifp, INFF_NETIF_STOP_REASON_FWS_FC,
++				     false);
++	if (!(ifp->netif_stop & INFF_NETIF_STOP_REASON_FWS_FC) &&
++	    pq->len >= fws->fws_psq_hi_water) {
++		fws->stats.fws_flow_block++;
++		inff_net_txflowblock(ifp, INFF_NETIF_STOP_REASON_FWS_FC,
++				     true);
++	}
++}
++
++static void inff_fws_psq_flush(struct inff_fws_info *fws, struct pktq *q,
++			       int ifidx)
++{
++	struct inff_fws_hanger_item *hi;
++	bool (*matchfn)(struct sk_buff *, void *) = NULL;
++	struct sk_buff *skb;
++	int prec;
++	u32 hslot;
++	int skbidx;
++
++	if (ifidx != -1)
++		matchfn = inff_fws_ifidx_match;
++	for (prec = 0; prec < q->num_prec; prec++) {
++		skb = inff_pktq_pdeq_match(q, prec, matchfn, &ifidx);
++		while (skb) {
++			hslot = inff_skb_htod_tag_get_field(skb, HSLOT);
++			if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode)) {
++				hi = &fws->hanger.items[hslot];
++				WARN_ON(skb != hi->pkt);
++				hi->state = INFF_FWS_HANGER_ITEM_STATE_FREE;
++				inff_fws_hanger_poppkt(&fws->hanger, hslot,
++						       &skb, true);
++			}
++			skbidx = inff_skb_if_flags_get_field(skb, INDEX);
++			inff_fws_flow_control_check(fws, q, skbidx);
++			inff_pkt_buf_free_skb(skb);
++			skb = inff_pktq_pdeq_match(q, prec, matchfn, &ifidx);
++		}
++	}
++}
++
++static int inff_fws_hanger_mark_suppressed(struct inff_fws_hanger *h,
++					   u32 slot_id)
++{
++	if (slot_id >= INFF_FWS_HANGER_MAXITEMS)
++		return -ENOENT;
++
++	if (h->items[slot_id].state == INFF_FWS_HANGER_ITEM_STATE_FREE) {
++		inff_err("entry not in use\n");
++		return -EINVAL;
++	}
++
++	h->items[slot_id].state = INFF_FWS_HANGER_ITEM_STATE_INUSE_SUPPRESSED;
++	return 0;
++}
++
++static void inff_fws_hanger_cleanup(struct inff_fws_info *fws,
++				    bool (*fn)(struct sk_buff *, void *),
++				     int ifidx)
++{
++	struct inff_fws_hanger *h = &fws->hanger;
++	struct sk_buff *skb;
++	int i;
++	enum inff_fws_hanger_item_state s;
++
++	for (i = 0; i < ARRAY_SIZE(h->items); i++) {
++		s = h->items[i].state;
++		if (s == INFF_FWS_HANGER_ITEM_STATE_INUSE ||
++		    s == INFF_FWS_HANGER_ITEM_STATE_INUSE_SUPPRESSED) {
++			skb = h->items[i].pkt;
++			if (!fn || fn(skb, &ifidx)) {
++				/* suppress packets freed from psq */
++				if (s == INFF_FWS_HANGER_ITEM_STATE_INUSE)
++					inff_pkt_buf_free_skb(skb);
++				h->items[i].state =
++					INFF_FWS_HANGER_ITEM_STATE_FREE;
++			}
++		}
++	}
++}
++
++static void inff_fws_macdesc_set_name(struct inff_fws_info *fws,
++				      struct inff_fws_mac_descriptor *desc)
++{
++	if (desc == &fws->desc.other)
++		strscpy(desc->name, "MAC-OTHER", sizeof(desc->name));
++	else if (desc->mac_handle)
++		scnprintf(desc->name, sizeof(desc->name), "MAC-%d:%d",
++			  desc->mac_handle, desc->interface_id);
++	else
++		scnprintf(desc->name, sizeof(desc->name), "MACIF:%d",
++			  desc->interface_id);
++}
++
++static void inff_fws_macdesc_init(struct inff_fws_mac_descriptor *desc,
++				  u8 *addr, u8 ifidx)
++{
++	inff_dbg(TRACE,
++		 "desc %p ea=%pM, ifidx=%u\n", desc, addr, ifidx);
++	desc->occupied = 1;
++	desc->state = INFF_FWS_STATE_OPEN;
++	desc->requested_credit = 0;
++	desc->requested_packet = 0;
++	/* depending on use may need ifp->bsscfgidx instead */
++	desc->interface_id = ifidx;
++	desc->ac_bitmap = 0xff; /* update this when handling APSD */
++	if (addr)
++		memcpy(&desc->ea[0], addr, ETH_ALEN);
++}
++
++static void inff_fws_macdesc_reset(struct inff_fws_mac_descriptor *entry)
++{
++	int i;
++
++	inff_fws_macdesc_init(entry, entry->ea, entry->interface_id);
++	entry->mac_handle = 0;
++	entry->suppressed = 0;
++	entry->transit_count = 0;
++	entry->suppr_transit_count = 0;
++	entry->generation = 0;
++
++	for (i = 0; i < INFF_FWS_FIFO_COUNT; i++)
++		entry->seq[i] = 0;
++
++	entry->send_tim_signal = 0;
++	entry->traffic_pending_bmp = 0;
++	entry->traffic_lastreported_bmp = 0;
++}
++
++static
++void inff_fws_macdesc_deinit(struct inff_fws_mac_descriptor *desc)
++{
++	inff_dbg(TRACE,
++		 "ea=%pM, ifidx=%u\n", desc->ea, desc->interface_id);
++	desc->occupied = 0;
++	desc->state = INFF_FWS_STATE_CLOSE;
++	desc->requested_credit = 0;
++	desc->requested_packet = 0;
++}
++
++static struct inff_fws_mac_descriptor *
++inff_fws_macdesc_lookup(struct inff_fws_info *fws, u8 *ea)
++{
++	struct inff_fws_mac_descriptor *entry;
++	int i;
++
++	if (!ea)
++		return ERR_PTR(-EINVAL);
++
++	entry = &fws->desc.nodes[0];
++	for (i = 0; i < ARRAY_SIZE(fws->desc.nodes); i++) {
++		if (entry->occupied && !memcmp(entry->ea, ea, ETH_ALEN))
++			return entry;
++		entry++;
++	}
++
++	return ERR_PTR(-ENOENT);
++}
++
++static struct inff_fws_mac_descriptor*
++inff_fws_macdesc_find(struct inff_fws_info *fws, struct inff_if *ifp, u8 *da)
++{
++	struct inff_fws_mac_descriptor *entry;
++	bool multicast;
++
++	multicast = is_multicast_ether_addr(da);
++
++	/* Multicast destination, STA clients get the interface entry */
++	if (multicast && ifp->fws_desc) {
++		entry = ifp->fws_desc;
++		goto done;
++	}
++
++	entry = inff_fws_macdesc_lookup(fws, da);
++	if (IS_ERR(entry))
++		entry = ifp->fws_desc;
++
++done:
++	return entry;
++}
++
++static bool inff_fws_macdesc_closed(struct inff_fws_info *fws,
++				    struct inff_fws_mac_descriptor *entry,
++				     int fifo)
++{
++	struct inff_fws_mac_descriptor *if_entry;
++	bool closed;
++
++	/* for unique destination entries the related interface
++	 * may be closed.
++	 */
++	if (entry->mac_handle) {
++		if_entry = &fws->desc.iface[entry->interface_id];
++		if (if_entry->state == INFF_FWS_STATE_CLOSE)
++			return true;
++	}
++	/* an entry is closed when the state is closed and
++	 * the firmware did not request anything.
++	 */
++	closed = entry->state == INFF_FWS_STATE_CLOSE &&
++		 !entry->requested_credit && !entry->requested_packet;
++
++	/* Or firmware does not allow traffic for given fifo */
++	return closed || !(entry->ac_bitmap & BIT(fifo));
++}
++
++static void inff_fws_macdesc_cleanup(struct inff_fws_info *fws,
++				     struct inff_fws_mac_descriptor *entry,
++				      int ifidx)
++{
++	if (entry->occupied && (ifidx == -1 || ifidx == entry->interface_id)) {
++		inff_fws_psq_flush(fws, &entry->psq, ifidx);
++		if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++			inff_pktq_flush(&entry->afq, true, NULL, NULL);
++		entry->occupied = !!(entry->psq.len);
++	}
++}
++
++static void inff_fws_bus_txq_cleanup(struct inff_fws_info *fws,
++				     bool (*fn)(struct sk_buff *, void *),
++				     int ifidx)
++{
++	struct inff_fws_hanger_item *hi;
++	struct pktq *txq;
++	struct sk_buff *skb;
++	int prec;
++	u32 hslot;
++
++	txq = inff_bus_gettxq(fws->drvr->bus_if);
++	if (IS_ERR(txq)) {
++		inff_dbg(TRACE, "no txq to clean up\n");
++		return;
++	}
++
++	for (prec = 0; prec < txq->num_prec; prec++) {
++		skb = inff_pktq_pdeq_match(txq, prec, fn, &ifidx);
++		while (skb) {
++			if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode)) {
++				hslot = inff_skb_htod_tag_get_field(skb, HSLOT);
++				hi = &fws->hanger.items[hslot];
++				WARN_ON(skb != hi->pkt);
++				hi->state = INFF_FWS_HANGER_ITEM_STATE_FREE;
++			}
++			inff_pkt_buf_free_skb(skb);
++			skb = inff_pktq_pdeq_match(txq, prec, fn, &ifidx);
++		}
++	}
++}
++
++static void inff_fws_cleanup(struct inff_fws_info *fws, int ifidx)
++{
++	int i;
++	struct inff_fws_mac_descriptor *table;
++	bool (*matchfn)(struct sk_buff *, void *) = NULL;
++
++	if (!fws)
++		return;
++
++	if (ifidx != -1)
++		matchfn = inff_fws_ifidx_match;
++
++	/* cleanup individual nodes */
++	table = &fws->desc.nodes[0];
++	for (i = 0; i < ARRAY_SIZE(fws->desc.nodes); i++)
++		inff_fws_macdesc_cleanup(fws, &table[i], ifidx);
++
++	inff_fws_macdesc_cleanup(fws, &fws->desc.other, ifidx);
++	inff_fws_bus_txq_cleanup(fws, matchfn, ifidx);
++	if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_fws_hanger_cleanup(fws, matchfn, ifidx);
++}
++
++static u8 inff_fws_hdrpush(struct inff_fws_info *fws, struct sk_buff *skb)
++{
++	struct inff_fws_mac_descriptor *entry = inff_skbcb(skb)->mac;
++	u8 *wlh;
++	u16 data_offset = 0;
++	u8 fillers;
++	__le32 pkttag = cpu_to_le32(inff_skbcb(skb)->htod);
++	__le16 pktseq = cpu_to_le16(inff_skbcb(skb)->htod_seq);
++
++	inff_dbg(TRACE, "%s, idx=%d hslot=%d htod %X seq %X\n",
++		 entry->name, inff_skb_if_flags_get_field(skb, INDEX),
++		 (le32_to_cpu(pkttag) >> 8) & 0xffff,
++		 inff_skbcb(skb)->htod, inff_skbcb(skb)->htod_seq);
++	if (entry->send_tim_signal)
++		data_offset += 2 + INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN;
++	if (INFF_FWS_MODE_GET_REUSESEQ(fws->mode))
++		data_offset += INFF_FWS_TYPE_SEQ_LEN;
++	/* +2 is for Type[1] and Len[1] in TLV, plus TIM signal */
++	data_offset += 2 + INFF_FWS_TYPE_PKTTAG_LEN;
++	fillers = round_up(data_offset, 4) - data_offset;
++	data_offset += fillers;
++
++	skb_push(skb, data_offset);
++	wlh = skb->data;
++
++	wlh[0] = INFF_FWS_TYPE_PKTTAG;
++	wlh[1] = INFF_FWS_TYPE_PKTTAG_LEN;
++	memcpy(&wlh[2], &pkttag, sizeof(pkttag));
++	if (INFF_FWS_MODE_GET_REUSESEQ(fws->mode)) {
++		wlh[1] += INFF_FWS_TYPE_SEQ_LEN;
++		memcpy(&wlh[2 + INFF_FWS_TYPE_PKTTAG_LEN], &pktseq,
++		       sizeof(pktseq));
++	}
++	wlh += wlh[1] + 2;
++
++	if (entry->send_tim_signal) {
++		entry->send_tim_signal = false;
++		wlh[0] = INFF_FWS_TYPE_PENDING_TRAFFIC_BMP;
++		wlh[1] = INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN;
++		wlh[2] = entry->mac_handle;
++		wlh[3] = entry->traffic_pending_bmp;
++		inff_dbg(TRACE, "adding TIM info: handle %d bmp 0x%X\n",
++			 entry->mac_handle, entry->traffic_pending_bmp);
++		wlh += INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN + 2;
++		entry->traffic_lastreported_bmp = entry->traffic_pending_bmp;
++	}
++	if (fillers)
++		memset(wlh, INFF_FWS_TYPE_FILLER, fillers);
++
++	return (u8)(data_offset >> 2);
++}
++
++static bool inff_fws_tim_update(struct inff_fws_info *fws,
++				struct inff_fws_mac_descriptor *entry,
++				 int fifo, bool send_immediately)
++{
++	struct sk_buff *skb;
++	struct inff_skbuff_cb *skcb;
++	s32 err;
++	u32 len;
++	u8 data_offset;
++	int ifidx;
++
++	/* check delayedQ and suppressQ in one call using bitmap */
++	if (inff_pktq_mlen(&entry->psq, 3 << (fifo * 2)) == 0)
++		entry->traffic_pending_bmp &= ~NBITVAL(fifo);
++	else
++		entry->traffic_pending_bmp |= NBITVAL(fifo);
++
++	entry->send_tim_signal = false;
++	if (entry->traffic_lastreported_bmp != entry->traffic_pending_bmp)
++		entry->send_tim_signal = true;
++	if (send_immediately && entry->send_tim_signal &&
++	    entry->state == INFF_FWS_STATE_CLOSE) {
++		/* create a dummy packet and sent that. The traffic          */
++		/* bitmap info will automatically be attached to that packet */
++		len = INFF_FWS_TYPE_PKTTAG_LEN + 2 +
++		      INFF_FWS_TYPE_SEQ_LEN +
++		      INFF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN + 2 +
++		      4 + fws->drvr->hdrlen;
++		skb = inff_pkt_buf_get_skb(len);
++		if (!skb)
++			return false;
++		skb_pull(skb, len);
++		skcb = inff_skbcb(skb);
++		skcb->mac = entry;
++		skcb->state = INFF_FWS_SKBSTATE_TIM;
++		skcb->htod = 0;
++		skcb->htod_seq = 0;
++		data_offset = inff_fws_hdrpush(fws, skb);
++		ifidx = inff_skb_if_flags_get_field(skb, INDEX);
++		inff_fws_unlock(fws);
++		err = inff_proto_txdata(fws->drvr, ifidx, data_offset, skb);
++		inff_fws_lock(fws);
++		if (err)
++			inff_pkt_buf_free_skb(skb);
++		return true;
++	}
++	return false;
++}
++
++static int inff_fws_rssi_indicate(struct inff_fws_info *fws, s8 rssi)
++{
++	inff_dbg(CTL, "rssi %d\n", rssi);
++	return 0;
++}
++
++static
++int inff_fws_macdesc_indicate(struct inff_fws_info *fws, u8 type, u8 *data)
++{
++	struct inff_fws_mac_descriptor *entry, *existing;
++	u8 mac_handle;
++	u8 ifidx;
++	u8 *addr;
++
++	mac_handle = *data++;
++	ifidx = *data++;
++	addr = data;
++
++	entry = &fws->desc.nodes[mac_handle & 0x1F];
++	if (type == INFF_FWS_TYPE_MACDESC_DEL) {
++		if (entry->occupied) {
++			inff_dbg(TRACE, "deleting %s mac %pM\n",
++				 entry->name, addr);
++			inff_fws_lock(fws);
++			inff_fws_macdesc_cleanup(fws, entry, -1);
++			inff_fws_macdesc_deinit(entry);
++			inff_fws_unlock(fws);
++		} else {
++			fws->stats.mac_update_failed++;
++		}
++		return 0;
++	}
++
++	existing = inff_fws_macdesc_lookup(fws, addr);
++	if (IS_ERR(existing)) {
++		if (!entry->occupied) {
++			inff_fws_lock(fws);
++			entry->mac_handle = mac_handle;
++			inff_fws_macdesc_init(entry, addr, ifidx);
++			inff_fws_macdesc_set_name(fws, entry);
++			inff_pktq_init(&entry->psq,
++				       INFF_FWS_PSQ_PREC_COUNT,
++				       fws->fws_psq_len);
++			if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++				inff_pktq_init(&entry->afq,
++					       INFF_FWS_AFQ_PREC_COUNT,
++					       INFF_FWS_AFQ_LEN);
++			inff_fws_unlock(fws);
++			inff_dbg(TRACE, "add %s mac %pM\n", entry->name, addr);
++		} else {
++			fws->stats.mac_update_failed++;
++		}
++	} else {
++		if (entry != existing) {
++			inff_dbg(TRACE, "copy mac %s\n", existing->name);
++			inff_fws_lock(fws);
++			memcpy(entry, existing,
++			       offsetof(struct inff_fws_mac_descriptor, psq));
++			entry->mac_handle = mac_handle;
++			inff_fws_macdesc_deinit(existing);
++			inff_fws_macdesc_set_name(fws, entry);
++			inff_fws_unlock(fws);
++			inff_dbg(TRACE, "relocate %s mac %pM\n", entry->name,
++				 addr);
++		} else {
++			inff_dbg(TRACE, "use existing\n");
++			WARN_ON(entry->mac_handle != mac_handle);
++		}
++	}
++	return 0;
++}
++
++static int inff_fws_macdesc_state_indicate(struct inff_fws_info *fws,
++					   u8 type, u8 *data)
++{
++	struct inff_fws_mac_descriptor *entry;
++	u8 mac_handle;
 +	int ret;
 +
-+	/* Read mailbox data and ack that we did so */
-+	hmb_data = inff_sdiod_readl(sdiod,
-+				    core->base + SD_REG(tohostmailboxdata),
-+				    &ret);
-+	/* skip generating SMB_INT_ACK if there is no MB data */
-+	if (!ret && hmb_data)
-+		inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
-+				  SMB_INT_ACK, &ret);
-+
-+	bus->sdcnt.f1regdata += 2;
-+
-+	/* dongle indicates the firmware has halted/crashed */
-+	if (hmb_data & HMB_DATA_FWHALT) {
-+		inff_dbg(SDIO, "mailbox indicates firmware halted\n");
-+		fw_halt = true;
++	mac_handle = data[0];
++	entry = &fws->desc.nodes[mac_handle & 0x1F];
++	if (!entry->occupied) {
++		fws->stats.mac_ps_update_failed++;
++		return -ESRCH;
 +	}
-+	if (hmb_data & HMB_DATA_CPUSS_FWHALT) {
-+		inff_dbg(SDIO, "mailbox indicates cpuss firmware halted\n");
-+		fw_halt = true;
++	inff_fws_lock(fws);
++	/* a state update should wipe old credits */
++	entry->requested_credit = 0;
++	entry->requested_packet = 0;
++	if (type == INFF_FWS_TYPE_MAC_OPEN) {
++		entry->state = INFF_FWS_STATE_OPEN;
++		ret = INFF_FWS_RET_OK_SCHEDULE;
++	} else {
++		entry->state = INFF_FWS_STATE_CLOSE;
++		inff_fws_tim_update(fws, entry, INFF_FWS_FIFO_AC_BK, false);
++		inff_fws_tim_update(fws, entry, INFF_FWS_FIFO_AC_BE, false);
++		inff_fws_tim_update(fws, entry, INFF_FWS_FIFO_AC_VI, false);
++		inff_fws_tim_update(fws, entry, INFF_FWS_FIFO_AC_VO, true);
++		ret = INFF_FWS_RET_OK_NOSCHEDULE;
 +	}
-+	if (fw_halt)
-+		inff_fw_crashed(&sdiod->func1->dev);
++	inff_fws_unlock(fws);
++	return ret;
++}
 +
-+	/* Dongle recomposed rx frames, accept them again */
-+	if (hmb_data & HMB_DATA_NAKHANDLED) {
-+		inff_dbg(SDIO, "Dongle reports NAK handled, expect rtx of %d\n",
-+			 bus->rx_seq);
-+		if (!bus->rxskip)
-+			inff_err("unexpected NAKHANDLED!\n");
++static int inff_fws_interface_state_indicate(struct inff_fws_info *fws,
++					     u8 type, u8 *data)
++{
++	struct inff_fws_mac_descriptor *entry;
++	u8 ifidx;
++	int ret;
 +
-+		bus->rxskip = false;
-+		intstatus |= I_HMB_FRAME_IND;
++	ifidx = data[0];
++
++	if (ifidx >= INFF_MAX_IFS) {
++		ret = -ERANGE;
++		goto fail;
 +	}
++
++	entry = &fws->desc.iface[ifidx];
++	if (!entry->occupied) {
++		ret = -ESRCH;
++		goto fail;
++	}
++
++	inff_dbg(TRACE, "%s (%d): %s\n", inff_fws_get_tlv_name(type), type,
++		 entry->name);
++	inff_fws_lock(fws);
++	switch (type) {
++	case INFF_FWS_TYPE_INTERFACE_OPEN:
++		entry->state = INFF_FWS_STATE_OPEN;
++		ret = INFF_FWS_RET_OK_SCHEDULE;
++		break;
++	case INFF_FWS_TYPE_INTERFACE_CLOSE:
++		entry->state = INFF_FWS_STATE_CLOSE;
++		ret = INFF_FWS_RET_OK_NOSCHEDULE;
++		break;
++	default:
++		ret = -EINVAL;
++		inff_fws_unlock(fws);
++		goto fail;
++	}
++	inff_fws_unlock(fws);
++	return ret;
++
++fail:
++	fws->stats.if_update_failed++;
++	return ret;
++}
++
++static int inff_fws_request_indicate(struct inff_fws_info *fws, u8 type,
++				     u8 *data)
++{
++	struct inff_fws_mac_descriptor *entry;
++
++	entry = &fws->desc.nodes[data[1] & 0x1F];
++	if (!entry->occupied) {
++		if (type == INFF_FWS_TYPE_MAC_REQUEST_CREDIT)
++			fws->stats.credit_request_failed++;
++		else
++			fws->stats.packet_request_failed++;
++		return -ESRCH;
++	}
++
++	inff_dbg(TRACE, "%s (%d): %s cnt %d bmp %d\n",
++		 inff_fws_get_tlv_name(type), type, entry->name,
++		  data[0], data[2]);
++	inff_fws_lock(fws);
++	if (type == INFF_FWS_TYPE_MAC_REQUEST_CREDIT)
++		entry->requested_credit = data[0];
++	else
++		entry->requested_packet = data[0];
++
++	entry->ac_bitmap = data[2];
++	inff_fws_unlock(fws);
++	return INFF_FWS_RET_OK_SCHEDULE;
++}
++
++static void
++inff_fws_macdesc_use_req_credit(struct inff_fws_mac_descriptor *entry,
++				struct sk_buff *skb)
++{
++	if (entry->requested_credit > 0) {
++		entry->requested_credit--;
++		inff_skb_if_flags_set_field(skb, REQUESTED, 1);
++		inff_skb_if_flags_set_field(skb, REQ_CREDIT, 1);
++		if (entry->state != INFF_FWS_STATE_CLOSE)
++			inff_err("requested credit set while mac not closed!\n");
++	} else if (entry->requested_packet > 0) {
++		entry->requested_packet--;
++		inff_skb_if_flags_set_field(skb, REQUESTED, 1);
++		inff_skb_if_flags_set_field(skb, REQ_CREDIT, 0);
++		if (entry->state != INFF_FWS_STATE_CLOSE)
++			inff_err("requested packet set while mac not closed!\n");
++	} else {
++		inff_skb_if_flags_set_field(skb, REQUESTED, 0);
++		inff_skb_if_flags_set_field(skb, REQ_CREDIT, 0);
++	}
++}
++
++static void inff_fws_macdesc_return_req_credit(struct sk_buff *skb)
++{
++	struct inff_fws_mac_descriptor *entry = inff_skbcb(skb)->mac;
++
++	if ((inff_skb_if_flags_get_field(skb, REQ_CREDIT)) &&
++	    entry->state == INFF_FWS_STATE_CLOSE)
++		entry->requested_credit++;
++}
++
++static void inff_fws_return_credits(struct inff_fws_info *fws,
++				    u8 fifo, u8 credits)
++{
++	int lender_ac;
++	int *borrowed;
++	int *fifo_credit;
++
++	if (!credits)
++		return;
++
++	fws->fifo_credit_map |= 1 << fifo;
++
++	if (fifo >= INFF_FWS_FIFO_AC_BK &&
++	    fifo <= INFF_FWS_FIFO_AC_VO)
++		for (lender_ac = INFF_FWS_FIFO_AC_VO; lender_ac >= 0;
++		     lender_ac--) {
++			borrowed = &fws->credits_borrowed[fifo][lender_ac];
++			if (*borrowed) {
++				fws->fifo_credit_map |= (1 << lender_ac);
++				fifo_credit = &fws->fifo_credit[lender_ac];
++				if (*borrowed >= credits) {
++					*borrowed -= credits;
++					*fifo_credit += credits;
++					return;
++				}
++
++				credits -= *borrowed;
++				*fifo_credit += *borrowed;
++				*borrowed = 0;
++			}
++		}
++
++	if (credits)
++		fws->fifo_credit[fifo] += credits;
++
++	if (fws->fifo_credit[fifo] > fws->init_fifo_credit[fifo])
++		fws->fifo_credit[fifo] = fws->init_fifo_credit[fifo];
++}
++
++static void inff_fws_schedule_deq(struct inff_fws_info *fws)
++{
++	/* only schedule dequeue when there are credits for delayed traffic */
++	if ((fws->fifo_credit_map & fws->fifo_delay_map) ||
++	    (!inff_fws_fc_active(fws) && fws->fifo_delay_map))
++		queue_work(fws->fws_wq, &fws->fws_dequeue_work);
++}
++
++static int inff_fws_enq(struct inff_fws_info *fws,
++			enum inff_fws_skb_state state, int fifo,
++			 struct sk_buff *p)
++{
++	struct inff_pub *drvr = fws->drvr;
++	int prec = 2 * fifo;
++	u32 *qfull_stat = &fws->stats.delayq_full_error;
++	struct inff_fws_mac_descriptor *entry;
++	struct pktq *pq;
++	struct sk_buff_head *queue;
++	struct sk_buff *p_head;
++	struct sk_buff *p_tail;
++	u32 fr_new;
++	u32 fr_compare;
++
++	entry = inff_skbcb(p)->mac;
++	if (!entry) {
++		iphy_err(drvr, "no mac descriptor found for skb %p\n", p);
++		return -ENOENT;
++	}
++
++	inff_dbg(DATA, "fifo %d skb %p\n", fifo, p);
++	if (state == INFF_FWS_SKBSTATE_SUPPRESSED) {
++		prec += 1;
++		qfull_stat = &fws->stats.supprq_full_error;
++
++		/* Fix out of order delivery of frames. Dont assume frame    */
++		/* can be inserted at the end, but look for correct position */
++		pq = &entry->psq;
++		if (pktq_full(pq) || pktq_pfull(pq, prec)) {
++			*qfull_stat += 1;
++			return -ENFILE;
++		}
++		queue = &pq->q[prec].skblist;
++
++		p_head = skb_peek(queue);
++		p_tail = skb_peek_tail(queue);
++		fr_new = inff_skb_htod_tag_get_field(p, FREERUN);
++
++		while (p_head != p_tail) {
++			fr_compare = inff_skb_htod_tag_get_field(p_tail,
++								 FREERUN);
++			/* be sure to handle wrap of 256 */
++			if ((fr_new > fr_compare &&
++			     ((fr_new - fr_compare) < 128)) ||
++			    (fr_new < fr_compare &&
++			     ((fr_compare - fr_new) > 128)))
++				break;
++			p_tail = skb_queue_prev(queue, p_tail);
++		}
++		/* Position found. Determine what to do */
++		if (!p_tail) {
++			/* empty list */
++			__skb_queue_tail(queue, p);
++		} else {
++			fr_compare = inff_skb_htod_tag_get_field(p_tail,
++								 FREERUN);
++			if ((fr_new > fr_compare &&
++			     ((fr_new - fr_compare) < 128)) ||
++			    (fr_new < fr_compare &&
++			     ((fr_compare - fr_new) > 128))) {
++				/* After tail */
++				__skb_queue_after(queue, p_tail, p);
++			} else {
++				/* Before tail */
++				__skb_insert(p, p_tail->prev, p_tail, queue);
++			}
++		}
++
++		/* Complete the counters and statistics */
++		pq->len++;
++		if (pq->hi_prec < prec)
++			pq->hi_prec = (u8)prec;
++	} else if (!inff_pktq_penq(&entry->psq, prec, p)) {
++		*qfull_stat += 1;
++		return -ENFILE;
++	}
++
++	/* increment total enqueued packet count */
++	fws->fifo_delay_map |= 1 << fifo;
++	fws->fifo_enqpkt[fifo]++;
++
++	/* update the sk_buff state */
++	inff_skbcb(p)->state = state;
 +
 +	/*
-+	 * DEVREADY does not occur with gSPI.
++	 * A packet has been pushed so update traffic
++	 * availability bitmap, if applicable
 +	 */
-+	if (hmb_data & (HMB_DATA_DEVREADY | HMB_DATA_FWREADY)) {
-+		bus->sdpcm_ver =
-+		    (hmb_data & HMB_DATA_VERSION_MASK) >>
-+		    HMB_DATA_VERSION_SHIFT;
-+		if (bus->sdpcm_ver != SDPCM_PROT_VERSION)
-+			inff_err("ver mismatch, %d, expecting %d, hmb_data 0x%x\n",
-+				 bus->sdpcm_ver, SDPCM_PROT_VERSION, hmb_data);
++	inff_fws_tim_update(fws, entry, fifo, true);
++	inff_fws_flow_control_check(fws, &entry->psq,
++				    inff_skb_if_flags_get_field(p, INDEX));
++	return 0;
++}
++
++static struct sk_buff *inff_fws_deq(struct inff_fws_info *fws, int fifo)
++{
++	struct inff_fws_mac_descriptor *table;
++	struct inff_fws_mac_descriptor *entry;
++	struct sk_buff *p;
++	int num_nodes;
++	int node_pos;
++	int prec_out;
++	int pmsk;
++	int i;
++
++	table = (struct inff_fws_mac_descriptor *)&fws->desc;
++	num_nodes = sizeof(fws->desc) / sizeof(struct inff_fws_mac_descriptor);
++	node_pos = fws->deq_node_pos[fifo];
++
++	for (i = 0; i < num_nodes; i++) {
++		entry = &table[(node_pos + i) % num_nodes];
++		if (!entry->occupied ||
++		    inff_fws_macdesc_closed(fws, entry, fifo))
++			continue;
++
++		if (entry->suppressed)
++			pmsk = 2;
 +		else
-+			inff_dbg(SDIO, "Dongle ready, protocol version %d\n",
-+				 bus->sdpcm_ver);
++			pmsk = 3;
++		p = inff_pktq_mdeq(&entry->psq, pmsk << (fifo * 2), &prec_out);
++		if (!p) {
++			if (entry->suppressed) {
++				if (entry->suppr_transit_count)
++					continue;
++				entry->suppressed = false;
++				p = inff_pktq_mdeq(&entry->psq,
++						   1 << (fifo * 2), &prec_out);
++			}
++		}
++		if  (!p)
++			continue;
++
++		inff_fws_macdesc_use_req_credit(entry, p);
++
++		/* move dequeue position to ensure fair round-robin */
++		fws->deq_node_pos[fifo] = (node_pos + i + 1) % num_nodes;
++		inff_fws_flow_control_check(fws, &entry->psq,
++					    inff_skb_if_flags_get_field(p,
++									INDEX));
++		/*
++		 * A packet has been picked up, update traffic
++		 * availability bitmap, if applicable
++		 */
++		inff_fws_tim_update(fws, entry, fifo, false);
 +
 +		/*
-+		 * Retrieve console state address now that firmware should have
-+		 * updated it.
++		 * decrement total enqueued fifo packets and
++		 * clear delay bitmap if done.
 +		 */
-+		inff_sdio_get_console_addr(bus);
++		fws->fifo_enqpkt[fifo]--;
++		if (fws->fifo_enqpkt[fifo] == 0)
++			fws->fifo_delay_map &= ~(1 << fifo);
++		goto done;
++	}
++	p = NULL;
++done:
++	inff_dbg(DATA, "fifo %d skb %p\n", fifo, p);
++	return p;
++}
++
++static int inff_fws_txstatus_suppressed(struct inff_fws_info *fws, int fifo,
++					struct sk_buff *skb,
++					u32 genbit, u16 seq)
++{
++	struct inff_fws_mac_descriptor *entry = inff_skbcb(skb)->mac;
++	u32 hslot;
++	int ret;
++
++	hslot = inff_skb_htod_tag_get_field(skb, HSLOT);
++
++	/* this packet was suppressed */
++	if (!entry->suppressed) {
++		entry->suppressed = true;
++		entry->suppr_transit_count = entry->transit_count;
++		inff_dbg(DATA, "suppress %s: transit %d\n",
++			 entry->name, entry->transit_count);
 +	}
 +
-+	/*
-+	 * Flow Control has been moved into the RX headers and this out of band
-+	 * method isn't used any more.
-+	 * remaining backward compatible with older dongles.
++	entry->generation = genbit;
++
++	inff_skb_htod_tag_set_field(skb, GENERATION, genbit);
++	inff_skbcb(skb)->htod_seq = seq;
++	if (inff_skb_htod_seq_get_field(skb, FROMFW)) {
++		inff_skb_htod_seq_set_field(skb, FROMDRV, 1);
++		inff_skb_htod_seq_set_field(skb, FROMFW, 0);
++	} else {
++		inff_skb_htod_seq_set_field(skb, FROMDRV, 0);
++	}
++	ret = inff_fws_enq(fws, INFF_FWS_SKBSTATE_SUPPRESSED, fifo, skb);
++
++	if (ret != 0) {
++		/* suppress q is full drop this packet */
++		if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++			inff_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
++					       true);
++	} else {
++		/* Mark suppressed to avoid a double free during wlfc cleanup */
++		if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++			inff_fws_hanger_mark_suppressed(&fws->hanger, hslot);
++	}
++
++	return ret;
++}
++
++static int
++inff_fws_txs_process(struct inff_fws_info *fws, u8 flags, u32 hslot,
++		     u32 genbit, u16 seq, u8 compcnt, u8 hcnt, u8 fifo_id)
++{
++	struct inff_pub *drvr = fws->drvr;
++	u32 fifo;
++	u8 cnt = 0;
++	int ret = 0;
++	bool remove_from_hanger = true;
++	struct sk_buff *skb = NULL;
++	struct inff_skbuff_cb *skcb;
++	struct inff_fws_mac_descriptor *entry = NULL;
++	struct inff_if *ifp;
++
++	inff_dbg(DATA, "flags %d\n", flags);
++
++	if (flags == INFF_FWS_TXSTATUS_DISCARD) {
++		fws->stats.txs_discard += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_CORE_SUPPRESS) {
++		fws->stats.txs_supp_core += compcnt;
++		remove_from_hanger = false;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_PS_SUPPRESS) {
++		fws->stats.txs_supp_ps += compcnt;
++		remove_from_hanger = false;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_TOSSED) {
++		fws->stats.txs_tossed += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_DISCARD_NOACK) {
++		fws->stats.txs_discard += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_SUPPRESS_ACKED) {
++		fws->stats.txs_discard += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_EXPIRED) {
++		fws->stats.txs_expired += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_DROPPED) {
++		fws->stats.txs_dropped += compcnt;
++	} else if (flags == INFF_FWS_TXSTATUS_FW_MKTFREE) {
++		fws->stats.txs_mktfree += compcnt;
++	} else {
++		fws->stats.txs_unknown += compcnt;
++		iphy_err(drvr, "unexpected txstatus %u\n", flags);
++	}
++
++	while (cnt < compcnt) {
++		if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode)) {
++			ret = inff_fws_deque_afq(fws, hslot, hcnt,
++						 fifo_id, &skb);
++		} else {
++			ret = inff_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
++						     remove_from_hanger);
++		}
++		if (ret != 0 || !skb) {
++			iphy_err(drvr, "no packet in hanger slot: hslot=%d\n",
++				 hslot);
++			goto cont;
++		}
++
++		skcb = inff_skbcb(skb);
++		entry = skcb->mac;
++		if (WARN_ON(!entry)) {
++			inff_pkt_buf_free_skb(skb);
++			goto cont;
++		}
++		entry->transit_count--;
++		if (entry->suppressed && entry->suppr_transit_count)
++			entry->suppr_transit_count--;
++
++		inff_dbg(DATA, "%s flags %d htod %X seq %X\n", entry->name,
++			 flags, skcb->htod, seq);
++
++		/* pick up the implicit credit from this packet */
++		fifo = inff_skb_htod_tag_get_field(skb, FIFO);
++		if (fws->fcmode == INFF_FWS_FCMODE_IMPLIED_CREDIT ||
++		    inff_skb_if_flags_get_field(skb, REQ_CREDIT)) {
++			inff_fws_return_credits(fws, fifo, 1);
++			inff_fws_schedule_deq(fws);
++		}
++		inff_fws_macdesc_return_req_credit(skb);
++
++		ret = inff_proto_hdrpull(fws->drvr, false, skb, &ifp);
++		if (ret) {
++			inff_pkt_buf_free_skb(skb);
++			goto cont;
++		}
++		if (!remove_from_hanger)
++			ret = inff_fws_txstatus_suppressed(fws, fifo, skb,
++							   genbit, seq);
++		if (remove_from_hanger || ret)
++			inff_txfinalize(ifp, skb, true);
++
++cont:
++		hcnt = (hcnt + 1) & INFF_FWS_TXSTAT_FREERUN_MASK;
++		if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++			hslot = (hslot + 1) & (INFF_FWS_TXSTAT_HSLOT_MASK >>
++					       INFF_FWS_TXSTAT_HSLOT_SHIFT);
++		if (INFF_FWS_MODE_GET_REUSESEQ(fws->mode))
++			seq = (seq + 1) & INFF_SKB_HTOD_SEQ_NR_MASK;
++
++		cnt++;
++	}
++
++	return 0;
++}
++
++static void inff_fws_txs_process_host_tossed(struct inff_fws_info *fws,
++					     struct sk_buff *skb,
++					     bool header_pulled,
++					     bool in_transit)
++{
++	struct inff_pub *drvr = fws->drvr;
++	struct inff_fws_mac_descriptor *entry;
++	struct inff_if *ifp = NULL;
++	struct sk_buff *pktout;
++	u32 hslot;
++	u32 fifo;
++	int ret;
++
++	fws->stats.txs_host_tossed++;
++
++	if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode)) {
++		hslot = inff_skb_htod_tag_get_field(skb, HSLOT);
++		ret = inff_fws_hanger_poppkt(&fws->hanger, hslot, &pktout,
++					     true);
++		if (ret || !pktout)
++			iphy_err(drvr, "no packet in hanger slot: hslot=%d\n",
++				 hslot);
++		else
++			skb = pktout;
++	}
++
++	entry = inff_skbcb(skb)->mac;
++	if (WARN_ON(!entry || IS_ERR(entry))) {
++		inff_pkt_buf_free_skb(skb);
++		return;
++	}
++
++	if (in_transit) {
++		entry->transit_count--;
++		if (entry->suppressed && entry->suppr_transit_count)
++			entry->suppr_transit_count--;
++	}
++
++	fifo = inff_skb_htod_tag_get_field(skb, FIFO);
++	inff_fws_return_credits(fws, fifo, 1);
++	inff_fws_schedule_deq(fws);
++	inff_fws_macdesc_return_req_credit(skb);
++
++	if (header_pulled) {
++		ifp = inff_get_ifp(drvr,
++				   inff_skb_if_flags_get_field(skb, INDEX));
++	} else {
++		ret = inff_proto_hdrpull(drvr, false, skb, &ifp);
++		if (ret) {
++			inff_pkt_buf_free_skb(skb);
++			return;
++		}
++	}
++
++	inff_txfinalize(ifp, skb, false);
++}
++
++static void inff_fws_credit_auto_recover(struct inff_fws_info *fws, u8 *data)
++{
++	int fifo, i;
++	u8 *fw_tx = data + INFF_FIFO_CREDITBACK_TX_OFFSET;
++	u8 *fw_back = data;
++	int borrowed = 0;
++	int loan = 0;
++	int missing = 0;
++	int host_record_credit;
++	int in_fw_credit;
++
++	inff_dbg(SDIO, "tx %pM back %pM\n", fw_tx, fw_back);
++	inff_dbg(SDIO, "credit [BK]:%d [BE]:%d [VI]:%d [VO]:%d [BCMC]:%d\n",
++		 fws->fifo_credit[0], fws->fifo_credit[1], fws->fifo_credit[2],
++		 fws->fifo_credit[3], fws->fifo_credit[4]);
++
++	/* must check from highest priority FIFO */
++	for (fifo = INFF_FWS_FIFO_COUNT - 1; fifo >= INFF_FWS_FIFO_AC_BK; fifo--) {
++		/* if no credit lost, continue to check next FIFO */
++		if (fws->init_fifo_credit[fifo] == fws->fifo_credit[fifo])
++			continue;
++
++		inff_dbg(SDIO, "FIFO %d init: %d current: %d\n",
++			 fifo, fws->init_fifo_credit[fifo], fws->fifo_credit[fifo]);
++
++		if (fifo <= INFF_FWS_FIFO_AC_VO) {
++			/* how many credit are borrowed from other FIFO */
++			for (i = 0; i <= INFF_FWS_FIFO_AC_VO; i++)
++				borrowed += fws->credits_borrowed[fifo][i];
++
++			/* how many credit are lend to other FIFO */
++			for (i = 0; i <= INFF_FWS_FIFO_AC_VO; i++)
++				loan += fws->credits_borrowed[i][fifo];
++
++			inff_dbg(SDIO, "borrowed: %d loan: %d\n", borrowed, loan);
++		}
++
++		/* calculate missed credit */
++		host_record_credit = fws->init_fifo_credit[fifo] -
++			fws->fifo_credit[fifo] + borrowed - loan;
++		in_fw_credit = fw_tx[fifo] - fw_back[fifo];
++		missing = host_record_credit - in_fw_credit;
++		inff_dbg(SDIO, "host %d fw %d missing: %d\n",
++			 host_record_credit, in_fw_credit, missing);
++
++		if (missing > 0)
++			inff_fws_return_credits(fws, fifo, missing);
++	}
++
++	inff_dbg(SDIO, "Leave: credit [BK]:%d [BE]:%d [VI]:%d [VO]:%d [BCMC]:%d\n",
++		 fws->fifo_credit[0], fws->fifo_credit[1], fws->fifo_credit[2],
++		 fws->fifo_credit[3], fws->fifo_credit[4]);
++}
++
++static int inff_fws_fifocreditback_indicate(struct inff_fws_info *fws,
++					    s16 len, u8 *data)
++{
++	int i;
++
++	if (fws->fcmode != INFF_FWS_FCMODE_EXPLICIT_CREDIT) {
++		inff_dbg(INFO, "ignored\n");
++		return INFF_FWS_RET_OK_NOSCHEDULE;
++	}
++
++	inff_fws_lock(fws);
++	for (i = 0; i < INFF_FWS_FIFO_COUNT; i++)
++		inff_fws_return_credits(fws, i, data[i]);
++
++	inff_dbg(DATA, "map: credit %x delay %x\n", fws->fifo_credit_map,
++		 fws->fifo_delay_map);
++
++	/* when bus error happened, try to recover lost credit */
++	if (len == INFF_FWS_TYPE_FIFO_CREDITBACK_V2_LEN && fws->credit_recover) {
++		inff_err("Trigger credit recover\n");
++		inff_fws_credit_auto_recover(fws, data);
++		fws->credit_recover = false;
++	}
++	inff_fws_unlock(fws);
++	return INFF_FWS_RET_OK_SCHEDULE;
++}
++
++static int inff_fws_txstatus_indicate(struct inff_fws_info *fws, u8 type,
++				      u8 *data)
++{
++	__le32 status_le;
++	__le16 seq_le;
++	u32 status;
++	u32 hslot;
++	u32 genbit;
++	u8 flags, hcnt, fifo_id;
++	u16 seq;
++	u8 compcnt;
++	u8 compcnt_offset = INFF_FWS_TYPE_TXSTATUS_LEN;
++
++	memcpy(&status_le, data, sizeof(status_le));
++	status = le32_to_cpu(status_le);
++	flags = inff_txstatus_get_field(status, FLAGS);
++	hslot = inff_txstatus_get_field(status, HSLOT);
++	genbit = inff_txstatus_get_field(status, GENERATION);
++	hcnt = inff_txstatus_get_field(status, FREERUN);
++	fifo_id = inff_txstatus_get_field(status, FIFO);
++	if (INFF_FWS_MODE_GET_REUSESEQ(fws->mode)) {
++		memcpy(&seq_le, &data[INFF_FWS_TYPE_TXSTATUS_LEN],
++		       sizeof(seq_le));
++		seq = le16_to_cpu(seq_le);
++		compcnt_offset += INFF_FWS_TYPE_SEQ_LEN;
++	} else {
++		seq = 0;
++	}
++
++	if (type == INFF_FWS_TYPE_COMP_TXSTATUS)
++		compcnt = data[compcnt_offset];
++	else
++		compcnt = 1;
++	fws->stats.txs_indicate += compcnt;
++
++	inff_fws_lock(fws);
++	inff_fws_txs_process(fws, flags, hslot, genbit, seq, compcnt, hcnt,
++			     fifo_id);
++	inff_fws_unlock(fws);
++	return INFF_FWS_RET_OK_NOSCHEDULE;
++}
++
++static int inff_fws_dbg_seqnum_check(struct inff_fws_info *fws, u8 *data)
++{
++	__le32 timestamp;
++
++	memcpy(&timestamp, &data[2], sizeof(timestamp));
++	inff_dbg(CTL, "received: seq %d, timestamp %d\n", data[1],
++		 le32_to_cpu(timestamp));
++	return 0;
++}
++
++static int inff_fws_notify_credit_map(struct inff_if *ifp,
++				      const struct inff_event_msg *e,
++				      void *data)
++{
++	struct inff_pub *drvr = ifp->drvr;
++	struct inff_fws_info *fws = drvr_to_fws(drvr);
++	int i;
++	u8 *credits = data;
++
++	if (e->datalen < INFF_FWS_FIFO_COUNT) {
++		iphy_err(drvr, "event payload too small (%d)\n", e->datalen);
++		return -EINVAL;
++	}
++
++	fws->creditmap_received = true;
++
++	inff_dbg(TRACE, "Event FIFO_CREDIT_MAP (%d) credit map for %pM\n",
++		 e->event_code, credits);
++	inff_fws_lock(fws);
++	for (i = 0; i < ARRAY_SIZE(fws->fifo_credit); i++) {
++		fws->fifo_credit[i] += credits[i] - fws->init_fifo_credit[i];
++		fws->init_fifo_credit[i] = credits[i];
++		if (fws->fifo_credit[i] > 0)
++			fws->fifo_credit_map |= 1 << i;
++		else
++			fws->fifo_credit_map &= ~(1 << i);
++		WARN_ONCE(fws->fifo_credit[i] < 0,
++			  "fifo_credit[%d] is negative(%d)\n", i,
++			  fws->fifo_credit[i]);
++	}
++	inff_fws_schedule_deq(fws);
++	inff_fws_unlock(fws);
++	return 0;
++}
++
++static void inff_creditmap_query_worker(struct work_struct *work)
++{
++	struct inff_fws_info *fws = container_of(work, struct inff_fws_info, creditmap_query_work);
++	struct inff_if *ifp = inff_get_ifp(fws->drvr, 0);
++	struct inff_ohd_creditmap credit_buff;
++	int ret, i = 0;
++	u8 credits[INFF_FWS_FIFO_COUNT];
++	struct inff_event_msg msg;
++
++	if (fws->creditmap_received)
++		return;
++
++	memset(&credit_buff, 0, sizeof(credit_buff));
++	ret = inff_fwcmd_data_get(ifp, ACW74XX_OHD_IOCTL_GET_CREDIT_INFO,
++				  &credit_buff, sizeof(credit_buff));
++
++	if (ret < 0) {
++		inff_err("ACW74XX_OHD_IOCTL_GET_CREDIT_INFO failed\n");
++	} else {
++		for (i = 0; i < credit_buff.num_acs; i++) {
++			inff_dbg(TRACE, " FIFO %d Credits %d\n", i, credit_buff.fifo_credit[i]);
++			credits[i] = credit_buff.fifo_credit[i];
++		}
++		msg.datalen = INFF_FWS_FIFO_COUNT;
++		inff_fws_notify_credit_map(ifp, &msg, credits);
++	}
++}
++
++void inff_creditmap_query(struct inff_fws_info *fws)
++{
++	if (fws && fws->creditmap_query_work.func) {
++		if (!work_busy(&fws->creditmap_query_work))
++			schedule_work(&fws->creditmap_query_work);
++	}
++}
++
++static int inff_fws_notify_bcmc_credit_support(struct inff_if *ifp,
++					       const struct inff_event_msg *e,
++						void *data)
++{
++	struct inff_fws_info *fws = drvr_to_fws(ifp->drvr);
++
++	if (fws) {
++		inff_fws_lock(fws);
++		fws->bcmc_credit_check = true;
++		inff_fws_unlock(fws);
++	}
++	return 0;
++}
++
++static void inff_rxreorder_get_skb_list(struct inff_ampdu_rx_reorder *rfi,
++					u8 start, u8 end,
++					struct sk_buff_head *skb_list)
++{
++	/* initialize return list */
++	__skb_queue_head_init(skb_list);
++
++	if (rfi->pend_pkts == 0) {
++		inff_dbg(INFO, "no packets in reorder queue\n");
++		return;
++	}
++
++	do {
++		if (rfi->pktslots[start]) {
++			__skb_queue_tail(skb_list, rfi->pktslots[start]);
++			rfi->pktslots[start] = NULL;
++		}
++		start++;
++		if (start > rfi->max_idx)
++			start = 0;
++	} while (start != end);
++	rfi->pend_pkts -= skb_queue_len(skb_list);
++}
++
++void inff_fws_rxreorder(struct inff_if *ifp, struct sk_buff *pkt, bool inirq)
++{
++	struct inff_pub *drvr = ifp->drvr;
++	u8 *reorder_data;
++	u8 flow_id, max_idx, cur_idx, exp_idx, end_idx;
++	struct inff_ampdu_rx_reorder *rfi;
++	struct sk_buff_head reorder_list;
++	struct sk_buff *pnext;
++	u8 flags;
++
++	reorder_data = ((struct inff_skb_reorder_data *)pkt->cb)->reorder;
++	flow_id = reorder_data[INFF_RXREORDER_FLOWID_OFFSET];
++	flags = reorder_data[INFF_RXREORDER_FLAGS_OFFSET];
++
++	/* validate flags and flow id */
++	if (flags == 0xFF) {
++		iphy_err(drvr, "invalid flags...so ignore this packet\n");
++		inff_net_rx(ifp, pkt, inirq);
++		return;
++	}
++
++	rfi = ifp->drvr->reorder_flows[flow_id];
++	if (flags & INFF_RXREORDER_DEL_FLOW) {
++		inff_dbg(INFO, "flow-%d: delete\n",
++			 flow_id);
++
++		if (!rfi) {
++			inff_dbg(INFO, "received flags to cleanup, but no flow (%d) yet\n",
++				 flow_id);
++			inff_net_rx(ifp, pkt, inirq);
++			return;
++		}
++
++		inff_rxreorder_get_skb_list(rfi, rfi->exp_idx, rfi->exp_idx,
++					    &reorder_list);
++		/* add the last packet */
++		__skb_queue_tail(&reorder_list, pkt);
++		kfree(rfi);
++		ifp->drvr->reorder_flows[flow_id] = NULL;
++		goto netif_rx;
++	}
++	/* from here on we need a flow reorder instance */
++	if (!rfi) {
++		max_idx = reorder_data[INFF_RXREORDER_MAXIDX_OFFSET];
++
++		/* allocate space for flow reorder info */
++		inff_dbg(INFO, "flow-%d: start, maxidx %d\n",
++			 flow_id, max_idx);
++		rfi = kzalloc_flex(*rfi, pktslots, max_idx + 1,
++				   GFP_ATOMIC);
++		if (!rfi) {
++			inff_net_rx(ifp, pkt, inirq);
++			return;
++		}
++
++		ifp->drvr->reorder_flows[flow_id] = rfi;
++		rfi->max_idx = max_idx;
++	}
++	if (flags & INFF_RXREORDER_NEW_HOLE)  {
++		if (rfi->pend_pkts) {
++			inff_rxreorder_get_skb_list(rfi, rfi->exp_idx,
++						    rfi->exp_idx,
++						    &reorder_list);
++			WARN_ON(rfi->pend_pkts);
++		} else {
++			__skb_queue_head_init(&reorder_list);
++		}
++		rfi->cur_idx = reorder_data[INFF_RXREORDER_CURIDX_OFFSET];
++		rfi->exp_idx = reorder_data[INFF_RXREORDER_EXPIDX_OFFSET];
++		rfi->max_idx = reorder_data[INFF_RXREORDER_MAXIDX_OFFSET];
++		rfi->pktslots[rfi->cur_idx] = pkt;
++		rfi->pend_pkts++;
++		inff_dbg(DATA, "flow-%d: new hole %d (%d), pending %d\n",
++			 flow_id, rfi->cur_idx, rfi->exp_idx, rfi->pend_pkts);
++	} else if (flags & INFF_RXREORDER_CURIDX_VALID) {
++		cur_idx = reorder_data[INFF_RXREORDER_CURIDX_OFFSET];
++		exp_idx = reorder_data[INFF_RXREORDER_EXPIDX_OFFSET];
++
++		if (exp_idx == rfi->exp_idx && cur_idx != rfi->exp_idx) {
++			/* still in the current hole */
++			/* enqueue the current on the buffer chain */
++			if (rfi->pktslots[cur_idx]) {
++				inff_dbg(INFO, "HOLE: ERROR buffer pending..free it\n");
++				inff_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
++				rfi->pktslots[cur_idx] = NULL;
++				rfi->pend_pkts--;
++			}
++			rfi->pktslots[cur_idx] = pkt;
++			rfi->pend_pkts++;
++			rfi->cur_idx = cur_idx;
++			inff_dbg(DATA, "flow-%d: store pkt %d (%d), pending %d\n",
++				 flow_id, cur_idx, exp_idx, rfi->pend_pkts);
++
++			/* can return now as there is no reorder
++			 * list to process.
++			 */
++			return;
++		}
++		if (rfi->exp_idx == cur_idx) {
++			if (rfi->pktslots[cur_idx]) {
++				inff_dbg(INFO, "error buffer pending..free it\n");
++				inff_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
++				rfi->pktslots[cur_idx] = NULL;
++				rfi->pend_pkts--;
++			}
++			rfi->pktslots[cur_idx] = pkt;
++			rfi->pend_pkts++;
++
++			/* got the expected one. flush from current to expected
++			 * and update expected
++			 */
++			inff_dbg(DATA, "flow-%d: expected %d (%d), pending %d\n",
++				 flow_id, cur_idx, exp_idx, rfi->pend_pkts);
++
++			rfi->cur_idx = cur_idx;
++			rfi->exp_idx = exp_idx;
++
++			inff_rxreorder_get_skb_list(rfi, cur_idx, exp_idx,
++						    &reorder_list);
++			inff_dbg(DATA, "flow-%d: freeing buffers %d, pending %d\n",
++				 flow_id, skb_queue_len(&reorder_list),
++				 rfi->pend_pkts);
++		} else {
++			u8 end_idx;
++
++			inff_dbg(DATA, "flow-%d (0x%x): both moved, old %d/%d, new %d/%d\n",
++				 flow_id, flags, rfi->cur_idx, rfi->exp_idx,
++				 cur_idx, exp_idx);
++			if (flags & INFF_RXREORDER_FLUSH_ALL)
++				end_idx = rfi->exp_idx;
++			else
++				end_idx = exp_idx;
++
++			/* flush pkts first */
++			inff_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
++						    &reorder_list);
++
++			if (exp_idx == ((cur_idx + 1) % (rfi->max_idx + 1))) {
++				__skb_queue_tail(&reorder_list, pkt);
++			} else {
++				rfi->pktslots[cur_idx] = pkt;
++				rfi->pend_pkts++;
++			}
++			rfi->exp_idx = exp_idx;
++			rfi->cur_idx = cur_idx;
++		}
++	} else {
++		/* explicitly window move updating the expected index */
++		exp_idx = reorder_data[INFF_RXREORDER_EXPIDX_OFFSET];
++
++		inff_dbg(DATA, "flow-%d (0x%x): change expected: %d -> %d\n",
++			 flow_id, flags, rfi->exp_idx, exp_idx);
++		if (flags & INFF_RXREORDER_FLUSH_ALL)
++			end_idx =  rfi->exp_idx;
++		else
++			end_idx =  exp_idx;
++
++		inff_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
++					    &reorder_list);
++		__skb_queue_tail(&reorder_list, pkt);
++		/* set the new expected idx */
++		rfi->exp_idx = exp_idx;
++	}
++netif_rx:
++	skb_queue_walk_safe(&reorder_list, pkt, pnext) {
++		__skb_unlink(pkt, &reorder_list);
++		inff_net_rx(ifp, pkt, inirq);
++	}
++}
++
++void inff_fws_hdrpull(struct inff_if *ifp, s16 siglen, struct sk_buff *skb)
++{
++	struct inff_skb_reorder_data *rd;
++	struct inff_fws_info *fws = drvr_to_fws(ifp->drvr);
++	u8 *signal_data;
++	s16 data_len;
++	u8 type;
++	s16 len;
++	u8 *data;
++	s32 status;
++	s32 err;
++
++	inff_dbg(HDRS, "ifidx %d, skblen %u, sig %d\n",
++		 ifp->ifidx, skb->len, siglen);
++
++	WARN_ON(siglen > skb->len);
++
++	if (siglen > skb->len)
++		siglen = skb->len;
++
++	if (!siglen)
++		return;
++	/* if flow control disabled, skip to packet data and leave */
++	if (!fws || !fws->fw_signals) {
++		skb_pull(skb, siglen);
++		return;
++	}
++
++	fws->stats.header_pulls++;
++	data_len = siglen;
++	signal_data = skb->data;
++
++	status = INFF_FWS_RET_OK_NOSCHEDULE;
++	while (data_len > 0) {
++		/* extract tlv info */
++		type = signal_data[0];
++
++		/* FILLER type is actually not a TLV, but
++		 * a single byte that can be skipped.
++		 */
++		if (type == INFF_FWS_TYPE_FILLER) {
++			signal_data += 1;
++			data_len -= 1;
++			continue;
++		}
++		len = signal_data[1];
++		data = signal_data + 2;
++
++		inff_dbg(HDRS, "tlv type=%s (%d), len=%d (%d)\n",
++			 inff_fws_get_tlv_name(type), type, len,
++			  inff_fws_get_tlv_len(fws, type));
++
++		/* abort parsing when length invalid */
++		if (data_len < len + 2)
++			break;
++
++		if (len < inff_fws_get_tlv_len(fws, type))
++			break;
++
++		err = INFF_FWS_RET_OK_NOSCHEDULE;
++		switch (type) {
++		case INFF_FWS_TYPE_HOST_REORDER_RXPKTS:
++			rd = (struct inff_skb_reorder_data *)skb->cb;
++			rd->reorder = data;
++			break;
++		case INFF_FWS_TYPE_MACDESC_ADD:
++		case INFF_FWS_TYPE_MACDESC_DEL:
++			inff_fws_macdesc_indicate(fws, type, data);
++			break;
++		case INFF_FWS_TYPE_MAC_OPEN:
++		case INFF_FWS_TYPE_MAC_CLOSE:
++			err = inff_fws_macdesc_state_indicate(fws, type, data);
++			break;
++		case INFF_FWS_TYPE_INTERFACE_OPEN:
++		case INFF_FWS_TYPE_INTERFACE_CLOSE:
++			err = inff_fws_interface_state_indicate(fws, type,
++								data);
++			break;
++		case INFF_FWS_TYPE_MAC_REQUEST_CREDIT:
++		case INFF_FWS_TYPE_MAC_REQUEST_PACKET:
++			err = inff_fws_request_indicate(fws, type, data);
++			break;
++		case INFF_FWS_TYPE_TXSTATUS:
++		case INFF_FWS_TYPE_COMP_TXSTATUS:
++			inff_fws_txstatus_indicate(fws, type, data);
++			break;
++		case INFF_FWS_TYPE_FIFO_CREDITBACK:
++			err = inff_fws_fifocreditback_indicate(fws, len, data);
++			break;
++		case INFF_FWS_TYPE_RSSI:
++			inff_fws_rssi_indicate(fws, *data);
++			break;
++		case INFF_FWS_TYPE_TRANS_ID:
++			inff_fws_dbg_seqnum_check(fws, data);
++			break;
++		case INFF_FWS_TYPE_PKTTAG:
++		case INFF_FWS_TYPE_PENDING_TRAFFIC_BMP:
++		default:
++			fws->stats.tlv_invalid_type++;
++			break;
++		}
++		if (err == INFF_FWS_RET_OK_SCHEDULE)
++			status = INFF_FWS_RET_OK_SCHEDULE;
++		signal_data += len + 2;
++		data_len -= len + 2;
++	}
++
++	if (data_len != 0)
++		fws->stats.tlv_parse_failed++;
++
++	if (status == INFF_FWS_RET_OK_SCHEDULE)
++		inff_fws_schedule_deq(fws);
++
++	/* signalling processing result does
++	 * not affect the actual ethernet packet.
 +	 */
-+	if (hmb_data & HMB_DATA_FC) {
-+		fcbits = (hmb_data & HMB_DATA_FCDATA_MASK) >>
-+							HMB_DATA_FCDATA_SHIFT;
++	skb_pull(skb, siglen);
 +
-+		if (fcbits & ~bus->flowcontrol)
-+			bus->sdcnt.fc_xoff++;
++	/* this may be a signal-only packet
++	 */
++	if (skb->len == 0)
++		fws->stats.header_only_pkt++;
++}
 +
-+		if (bus->flowcontrol & ~fcbits)
-+			bus->sdcnt.fc_xon++;
++static u8 inff_fws_precommit_skb(struct inff_fws_info *fws, int fifo,
++				 struct sk_buff *p)
++{
++	struct inff_skbuff_cb *skcb = inff_skbcb(p);
++	struct inff_fws_mac_descriptor *entry = skcb->mac;
++	u8 flags;
 +
-+		bus->sdcnt.fc_rcvd++;
-+		bus->flowcontrol = fcbits;
++	if (skcb->state != INFF_FWS_SKBSTATE_SUPPRESSED)
++		inff_skb_htod_tag_set_field(p, GENERATION, entry->generation);
++	flags = INFF_FWS_HTOD_FLAG_PKTFROMHOST;
++	if (inff_skb_if_flags_get_field(p, REQUESTED)) {
++		/*
++		 * Indicate that this packet is being sent in response to an
++		 * explicit request from the firmware side.
++		 */
++		flags |= INFF_FWS_HTOD_FLAG_PKT_REQUESTED;
++	}
++	inff_skb_htod_tag_set_field(p, FLAGS, flags);
++	return inff_fws_hdrpush(fws, p);
++}
++
++static void inff_fws_rollback_toq(struct inff_fws_info *fws,
++				  struct sk_buff *skb, int fifo)
++{
++	struct inff_pub *drvr = fws->drvr;
++	struct inff_fws_mac_descriptor *entry;
++	struct sk_buff *pktout;
++	int qidx;
++	int rc = 0;
++
++	entry = inff_skbcb(skb)->mac;
++	if (entry->occupied) {
++		qidx = 2 * fifo;
++		if (inff_skbcb(skb)->state == INFF_FWS_SKBSTATE_SUPPRESSED)
++			qidx++;
++
++		pktout = inff_pktq_penq_head(&entry->psq, qidx, skb);
++		if (!pktout) {
++			iphy_err(drvr, "%s queue %d full\n", entry->name, qidx);
++			rc = -ENOSPC;
++		}
++	} else {
++		iphy_err(drvr, "%s entry removed\n", entry->name);
++		rc = -ENOENT;
 +	}
 +
-+	/* query FC credit map info for ACW74XX */
-+	if (hmb_data & HMB_DATA_CREDITMAP) {
-+		bus->credit_map_capable = true;
-+		if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+			fws = drvr_to_fws(sdiod->bus_if->drvr);
++	if (rc) {
++		fws->stats.rollback_failed++;
++		inff_fws_txs_process_host_tossed(fws, skb, true, false);
++	} else {
++		fws->stats.rollback_success++;
++		inff_fws_return_credits(fws, fifo, 1);
++		inff_fws_macdesc_return_req_credit(skb);
++	}
++}
++
++static int inff_fws_borrow_credit(struct inff_fws_info *fws,
++				  int highest_lender_ac, int borrower_ac,
++				  bool borrow_all)
++{
++	int lender_ac, borrow_limit = 0;
++
++	for (lender_ac = 0; lender_ac <= highest_lender_ac; lender_ac++) {
++		if (!borrow_all)
++			borrow_limit =
++			  fws->init_fifo_credit[lender_ac] / INFF_BORROW_RATIO;
++		else
++			borrow_limit = 0;
++
++		if (fws->fifo_credit[lender_ac] > borrow_limit) {
++			fws->credits_borrowed[borrower_ac][lender_ac]++;
++			fws->fifo_credit[lender_ac]--;
++			if (fws->fifo_credit[lender_ac] == 0)
++				fws->fifo_credit_map &= ~(1 << lender_ac);
++			fws->fifo_credit_map |= (1 << borrower_ac);
++			inff_dbg(DATA, "borrow credit from: %d\n", lender_ac);
++			return 0;
++		}
++	}
++	fws->fifo_credit_map &= ~(1 << borrower_ac);
++	return -ENAVAIL;
++}
++
++static int inff_fws_commit_skb(struct inff_fws_info *fws, int fifo,
++			       struct sk_buff *skb)
++{
++	struct inff_skbuff_cb *skcb = inff_skbcb(skb);
++	struct inff_fws_mac_descriptor *entry;
++	int rc;
++	u8 ifidx;
++	u8 data_offset;
++
++	entry = skcb->mac;
++	if (IS_ERR(entry))
++		return PTR_ERR(entry);
++
++	data_offset = inff_fws_precommit_skb(fws, fifo, skb);
++	entry->transit_count++;
++	if (entry->suppressed)
++		entry->suppr_transit_count++;
++	ifidx = inff_skb_if_flags_get_field(skb, INDEX);
++	inff_fws_unlock(fws);
++	rc = inff_proto_txdata(fws->drvr, ifidx, data_offset, skb);
++	inff_fws_lock(fws);
++	inff_dbg(DATA, "%s flags %X htod %X bus_tx %d\n", entry->name,
++		 skcb->if_flags, skcb->htod, rc);
++	if (rc < 0) {
++		entry->transit_count--;
++		if (entry->suppressed)
++			entry->suppr_transit_count--;
++		(void)inff_proto_hdrpull(fws->drvr, false, skb, NULL);
++		goto rollback;
++	}
++
++	fws->stats.pkt2bus++;
++	fws->stats.send_pkts[fifo]++;
++	if (inff_skb_if_flags_get_field(skb, REQUESTED))
++		fws->stats.requested_sent[fifo]++;
++
++	return rc;
++
++rollback:
++	inff_fws_rollback_toq(fws, skb, fifo);
++	return rc;
++}
++
++static int inff_fws_assign_htod(struct inff_fws_info *fws, struct sk_buff *p,
++				int fifo)
++{
++	struct inff_skbuff_cb *skcb = inff_skbcb(p);
++	int rc = 0, hslot;
++
++	skcb->htod = 0;
++	skcb->htod_seq = 0;
++	if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		hslot = (uint)(skcb->mac - &fws->desc.nodes[0]);
++	else
++		hslot = inff_fws_hanger_get_free_slot(&fws->hanger);
++	inff_skb_htod_tag_set_field(p, HSLOT, hslot);
++	inff_skb_htod_tag_set_field(p, FREERUN, skcb->mac->seq[fifo]);
++	inff_skb_htod_tag_set_field(p, FIFO, fifo);
++	if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		rc = inff_fws_hanger_pushpkt(&fws->hanger, p, hslot);
++	if (!rc)
++		skcb->mac->seq[fifo]++;
++	else
++		fws->stats.generic_error++;
++	return rc;
++}
++
++int inff_fws_process_skb(struct inff_if *ifp, struct sk_buff *skb)
++{
++	struct inff_pub *drvr = ifp->drvr;
++	struct inff_fws_info *fws = drvr_to_fws(drvr);
++	struct inff_skbuff_cb *skcb = inff_skbcb(skb);
++	struct ethhdr *eh = (struct ethhdr *)(skb->data);
++	int fifo = INFF_FWS_FIFO_BCMC;
++	bool multicast = is_multicast_ether_addr(eh->h_dest);
++	int rc = 0;
++
++	inff_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
++
++	/* set control buffer information */
++	skcb->if_flags = 0;
++	skcb->state = INFF_FWS_SKBSTATE_NEW;
++	inff_skb_if_flags_set_field(skb, INDEX, ifp->ifidx);
++
++	/* mapping from 802.1d priority to firmware fifo index */
++	if (!multicast)
++		fifo = inff_map_prio_to_aci(drvr->config, skb->priority);
++
++	inff_fws_lock(fws);
++	if (fifo != INFF_FWS_FIFO_AC_BE && fifo < INFF_FWS_FIFO_BCMC)
++		fws->borrow_defer_timestamp = jiffies +
++					      INFF_FWS_BORROW_DEFER_PERIOD;
++
++	skcb->mac = inff_fws_macdesc_find(fws, ifp, eh->h_dest);
++	inff_dbg(DATA, "%s mac %pM multi %d fifo %d\n", skcb->mac->name,
++		 eh->h_dest, multicast, fifo);
++	if (!inff_fws_assign_htod(fws, skb, fifo)) {
++		inff_fws_enq(fws, INFF_FWS_SKBSTATE_DELAYED, fifo, skb);
++		inff_fws_schedule_deq(fws);
++	} else {
++		iphy_err(drvr, "no hanger slot available\n");
++		rc = -ENOMEM;
++	}
++	inff_fws_unlock(fws);
++
++	return rc;
++}
++
++void inff_fws_reset_interface(struct inff_if *ifp)
++{
++	struct inff_fws_mac_descriptor *entry = ifp->fws_desc;
++
++	if (entry)
++		inff_fws_macdesc_init(entry, ifp->mac_addr, ifp->ifidx);
++}
++
++void inff_fws_add_interface(struct inff_if *ifp)
++{
++	struct inff_fws_info *fws = drvr_to_fws(ifp->drvr);
++	struct inff_fws_mac_descriptor *entry;
++
++	if (!ifp->ndev || !inff_fws_queue_skbs(fws))
++		return;
++
++	entry = &fws->desc.iface[ifp->ifidx];
++	ifp->fws_desc = entry;
++	inff_fws_macdesc_init(entry, ifp->mac_addr, ifp->ifidx);
++	inff_fws_macdesc_set_name(fws, entry);
++	inff_pktq_init(&entry->psq,
++		       INFF_FWS_PSQ_PREC_COUNT,
++		       fws->fws_psq_len);
++	if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_pktq_init(&entry->afq, INFF_FWS_AFQ_PREC_COUNT,
++			       INFF_FWS_AFQ_LEN);
++	inff_dbg(TRACE, "added %s\n", entry->name);
++}
++
++void inff_fws_del_interface(struct inff_if *ifp)
++{
++	struct inff_fws_mac_descriptor *entry = ifp->fws_desc;
++	struct inff_fws_info *fws = drvr_to_fws(ifp->drvr);
++
++	if (!entry)
++		return;
++
++	inff_fws_lock(fws);
++	ifp->fws_desc = NULL;
++	inff_dbg(TRACE, "deleting %s\n", entry->name);
++	inff_fws_macdesc_cleanup(fws, &fws->desc.iface[ifp->ifidx],
++				 ifp->ifidx);
++	inff_fws_macdesc_deinit(entry);
++	inff_fws_cleanup(fws, ifp->ifidx);
++	inff_fws_unlock(fws);
++}
++
++static void inff_fws_dequeue_worker(struct work_struct *worker)
++{
++	struct inff_fws_info *fws;
++	struct inff_pub *drvr;
++	struct sk_buff *skb;
++	int fifo;
++	u32 hslot;
++	u32 ifidx;
++	int ret;
++	u32 highest_lender = 0;
++
++	fws = container_of(worker, struct inff_fws_info, fws_dequeue_work);
++	drvr = fws->drvr;
++
++	inff_fws_lock(fws);
++	for (fifo = INFF_FWS_FIFO_BCMC; fifo >= 0 && !fws->bus_flow_blocked;
++	     fifo--) {
++		if (!inff_fws_fc_active(fws)) {
++			while ((skb = inff_fws_deq(fws, fifo)) != NULL) {
++				hslot = inff_skb_htod_tag_get_field(skb,
++								    HSLOT);
++				if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++					inff_fws_hanger_poppkt(&fws->hanger,
++							       hslot, &skb,
++							       true);
++				ifidx = inff_skb_if_flags_get_field(skb,
++								    INDEX);
++				/* Use proto layer to send data frame */
++				inff_fws_unlock(fws);
++				ret = inff_proto_txdata(drvr, ifidx, 0, skb);
++				inff_fws_lock(fws);
++				if (ret < 0)
++					inff_txfinalize(inff_get_ifp(drvr,
++								     ifidx),
++							 skb, false);
++				if (fws->bus_flow_blocked)
++					break;
++			}
++			continue;
++		}
++
++		while ((fws->fifo_credit[fifo]) ||
++		       ((!fws->bcmc_credit_check) &&
++				(fifo == INFF_FWS_FIFO_BCMC))) {
++			skb = inff_fws_deq(fws, fifo);
++			if (!skb)
++				break;
++			fws->fifo_credit[fifo]--;
++			if (inff_fws_commit_skb(fws, fifo, skb))
++				break;
++			if (fws->bus_flow_blocked)
++				break;
++		}
++
++		if (fifo >= INFF_FWS_FIFO_AC_BK &&
++		    fifo <= INFF_FWS_FIFO_AC_VO &&
++		    fws->fifo_credit[fifo] == 0 &&
++		    !fws->bus_flow_blocked) {
++			highest_lender = fifo - 1;
++
++			/* Borrow Credit for BK access category from Higer AC queues */
++			if (fifo == INFF_FWS_FIFO_AC_BK)
++				highest_lender = INFF_FWS_FIFO_AC_BE;
++
++			while (inff_fws_borrow_credit(fws, highest_lender,
++						      fifo, true) == 0) {
++				skb = inff_fws_deq(fws, fifo);
++				if (!skb) {
++					inff_fws_return_credits(fws, fifo, 1);
++					break;
++				}
++				if (inff_fws_commit_skb(fws, fifo, skb))
++					break;
++				if (fws->bus_flow_blocked)
++					break;
++			}
++		}
++	}
++	inff_fws_unlock(fws);
++}
++
++#ifdef DEBUG
++static int inff_debugfs_fws_stats_read(struct seq_file *seq, void *data)
++{
++	struct inff_bus *bus_if = dev_get_drvdata(seq->private);
++	struct inff_fws_info *fws = drvr_to_fws(bus_if->drvr);
++	struct inff_fws_stats *fwstats = &fws->stats;
++
++	seq_printf(seq,
++		   "header_pulls:    %8u\t"
++		   "header_only_pkt: %8u\n"
++		   "tlv_parse_failed:%8u\t"
++		   "tlv_invalid_type:%8u\n"
++		   "mac_update_fails:%8u\t"
++		   "ps_update_fails: %8u\t"
++		   "if_update_fails: %8u\n"
++		   "pkt2bus:         %8u\t"
++		   "generic_error:   %8u\n"
++		   "rollback_success:%8u\t"
++		   "rollback_failed: %8u\n"
++		   "delayq_full:     %8u\t"
++		   "supprq_full:     %8u\n"
++		   "txs_indicate:    %8u\t"
++		   "txs_discard:     %8u\n"
++		   "txs_suppr_core:  %8u\t"
++		   "txs_suppr_ps:    %8u\n"
++		   "txs_tossed:      %8u\t"
++		   "txs_expired:     %8u\n"
++		   "txs_dropped:     %8u\t"
++		   "txs_mktfree:     %8u\n"
++		   "txs_unknown:     %8u\t"
++		   "txs_host_tossed: %8u\n"
++		   "bus_flow_block:  %8u\t"
++		   "fws_flow_block:  %8u\n",
++		   fwstats->header_pulls,
++		   fwstats->header_only_pkt,
++		   fwstats->tlv_parse_failed,
++		   fwstats->tlv_invalid_type,
++		   fwstats->mac_update_failed,
++		   fwstats->mac_ps_update_failed,
++		   fwstats->if_update_failed,
++		   fwstats->pkt2bus,
++		   fwstats->generic_error,
++		   fwstats->rollback_success,
++		   fwstats->rollback_failed,
++		   fwstats->delayq_full_error,
++		   fwstats->supprq_full_error,
++		   fwstats->txs_indicate,
++		   fwstats->txs_discard,
++		   fwstats->txs_supp_core,
++		   fwstats->txs_supp_ps,
++		   fwstats->txs_tossed,
++		   fwstats->txs_expired,
++		   fwstats->txs_dropped,
++		   fwstats->txs_mktfree,
++		   fwstats->txs_unknown,
++		   fwstats->txs_host_tossed,
++		   fwstats->bus_flow_block,
++		   fwstats->fws_flow_block);
++
++	seq_printf(seq,
++		   "receive error:	%8u\t"
++		   "cleanup if:		%8u\n\n",
++		   fwstats->cnt_recv_err,
++		   fwstats->cnt_cleanup_if);
++
++	seq_printf(seq,
++		   "send_pkts:		  BK:%u BE:%u VO:%u VI:%u BCMC:%u\n"
++		   "requested_sent:	  BK:%u BE:%u VO:%u VI:%u BCMC:%u\n\n",
++		   fwstats->send_pkts[0], fwstats->send_pkts[1],
++		   fwstats->send_pkts[2], fwstats->send_pkts[3],
++		   fwstats->send_pkts[4],
++		   fwstats->requested_sent[0],
++		   fwstats->requested_sent[1],
++		   fwstats->requested_sent[2],
++		   fwstats->requested_sent[3],
++		   fwstats->requested_sent[4]);
++
++	return 0;
++}
++#else
++static int inff_debugfs_fws_stats_read(struct seq_file *seq, void *data)
++{
++	return 0;
++}
++#endif
++
++struct inff_fws_info *inff_fws_attach(struct inff_pub *drvr)
++{
++	struct inff_chip *ci = drvr->bus_if->chip_pub;
++	struct inff_fws_info *fws;
++	struct inff_if *ifp;
++	u32 tlv = INFF_FWS_FLAGS_RSSI_SIGNALS;
++	int rc;
++	u32 mode = 0, fw_caps;
++
++	fws = kzalloc_obj(*fws);
++	if (!fws) {
++		rc = -ENOMEM;
++		goto fail;
++	}
++
++	spin_lock_init(&fws->spinlock);
++
++	/* store drvr reference */
++	fws->drvr = drvr;
++	fws->fcmode = drvr->settings->fcmode;
++	fws->fws_psq_len = INFF_FWS_PSQ_LEN;
++	fws->fws_psq_hi_water = INFF_FWS_FLOWCONTROL_HIWATER;
++	fws->fws_psq_low_water = INFF_FWS_FLOWCONTROL_LOWATER;
++
++	if (!drvr->bus_if->always_use_fws_queue &&
++	    fws->fcmode == INFF_FWS_FCMODE_NONE) {
++		fws->avoid_queueing = true;
++		inff_dbg(INFO, "FWS queueing will be avoided\n");
++		return fws;
++	}
++
++	fws->fws_wq = create_singlethread_workqueue("inff_fws_wq");
++	if (!fws->fws_wq) {
++		iphy_err(drvr, "workqueue creation failed\n");
++		rc = -EBADF;
++		goto fail;
++	}
++	INIT_WORK(&fws->fws_dequeue_work, inff_fws_dequeue_worker);
++
++	/* enable firmware signalling if fcmode active */
++	if (fws->fcmode != INFF_FWS_FCMODE_NONE)
++		tlv |= INFF_FWS_FLAGS_XONXOFF_SIGNALS |
++		       INFF_FWS_FLAGS_CREDIT_STATUS_SIGNALS |
++		       INFF_FWS_FLAGS_HOST_PROPTXSTATUS_ACTIVE |
++		       INFF_FWS_FLAGS_HOST_RXREORDER_ACTIVE;
++
++	if (ci->chip == INF_CC_ACW74XX_CHIP_ID) {
++		INIT_WORK(&fws->creditmap_query_work, inff_creditmap_query_worker);
++	} else {
++		rc = inff_fwevt_register(drvr, INFF_E_FIFO_CREDIT_MAP,
++					 inff_fws_notify_credit_map);
++		if (rc < 0) {
++			iphy_err(drvr, "register credit map handler failed\n");
++			goto fail;
++		}
++		rc = inff_fwevt_register(drvr, INFF_E_BCMC_CREDIT_SUPPORT,
++					 inff_fws_notify_bcmc_credit_support);
++		if (rc < 0) {
++			iphy_err(drvr, "register bcmc credit handler failed\n");
++			inff_fwevt_unregister(drvr, INFF_E_FIFO_CREDIT_MAP);
++			goto fail;
++		}
++	}
++
++	/* Setting the iovar may fail if feature is unsupported
++	 * so leave the rc as is so driver initialization can
++	 * continue. Set mode back to none indicating not enabled.
++	 */
++	fws->fw_signals = true;
++	ifp = inff_get_ifp(drvr, 0);
++	if (inff_fwcmd_iovar_int_set(ifp, "tlv", tlv)) {
++		iphy_err(drvr, "failed to set bdcv2 tlv signaling\n");
++		fws->fcmode = INFF_FWS_FCMODE_NONE;
++		fws->fw_signals = false;
++	}
++
++	if (inff_fwcmd_iovar_int_set(ifp, "ampdu_hostreorder", 1))
++		inff_dbg(INFO, "enabling AMPDU host-reorder failed\n");
++
++	/* Enable seq number reuse, if supported */
++	rc = 0;
++	if (inff_fwcmd_iovar_int_get(ifp, "wlfc_mode", &fw_caps) == 0) {
++		inff_dbg(INFO, "wlfc_mode fw_caps=0x%x\n", fw_caps);
++
++		if (INFF_FWS_MODE_IS_OLD_DEF(fw_caps)) {
++			mode = INFF_FWS_MODE_AFQ;
++		} else {
++			u8 afq = INFF_FWS_MODE_GET_AFQ(fw_caps);
++			u8 reordersupp = INFF_FWS_MODE_GET_REORDERSUPP(fw_caps);
++
++			mode = inff_fws_mode_set_afq(mode, afq);
++			mode = inff_fws_mode_set_reordersupp(mode, reordersupp);
++		}
++
++		if (!drvr->settings->afq_enable) {
++			if (INFF_FWS_MODE_IS_OLD_DEF(fw_caps))
++				mode = INFF_FWS_MODE_HANGER;
++			else
++				mode = inff_fws_mode_set_afq(mode, 0);
++		}
++
++		rc = inff_fwcmd_iovar_int_set(ifp, "wlfc_mode", mode);
++		if (INFF_FWS_MODE_GET_REUSESEQ(fw_caps)) {
++			INFF_FWS_MODE_SET_REUSESEQ(fws->mode, 1);
++			if (rc >= 0)
++				INFF_FWS_MODE_SET_REUSESEQ(mode, 1);
++		}
++	}
++
++	fws->wlfc_mode = 0;
++	if (rc >= 0) {
++		if (INFF_FWS_MODE_IS_OLD_DEF(mode))
++			fws->wlfc_mode = inff_fws_mode_set_afq(fws->wlfc_mode,
++							       mode == INFF_FWS_MODE_AFQ);
++		else
++			fws->wlfc_mode = mode;
++	} else {
++		iphy_err(drvr, "set wlfc_mode failed, rc=%d\n", rc);
++		goto fail;
++	}
++
++	if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_fws_hanger_init(&fws->hanger);
++	inff_fws_macdesc_init(&fws->desc.other, NULL, 0);
++	inff_fws_macdesc_set_name(fws, &fws->desc.other);
++	inff_dbg(INFO, "added %s\n", fws->desc.other.name);
++	inff_pktq_init(&fws->desc.other.psq,
++		       INFF_FWS_PSQ_PREC_COUNT,
++		       fws->fws_psq_len);
++	if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_pktq_init(&fws->desc.other.afq, INFF_FWS_AFQ_PREC_COUNT,
++			       INFF_FWS_AFQ_LEN);
++
++	inff_dbg(INFO, "%s bdcv2 tlv signaling [%x]\n",
++		 fws->fw_signals ? "enabled" : "disabled", tlv);
++
++	if (ci->chip == INF_CC_ACW74XX_CHIP_ID) {
++		if (inff_sdio_credit_map_update(drvr->bus_if)) {
++			/* process the pending query */
 +			inff_creditmap_query(fws);
 +		}
 +	}
 +
-+	/* Shouldn't be any others */
-+	if (hmb_data & ~(HMB_DATA_DEVREADY |
-+			 HMB_DATA_NAKHANDLED |
-+			 HMB_DATA_FC |
-+			 HMB_DATA_FWREADY |
-+			 HMB_DATA_FWHALT |
-+			 HMB_DATA_CREDITMAP |
-+			 HMB_DATA_CPUSS_FWHALT |
-+			 HMB_DATA_FCDATA_MASK | HMB_DATA_VERSION_MASK))
-+		inff_err("Unknown mailbox data content: 0x%02x\n",
-+			 hmb_data);
-+	/* Populate hmb_data if argument is passed for DS1 check later */
-+	if (hmbd)
-+		*hmbd = hmb_data;
++	return fws;
 +
-+	return intstatus;
++fail:
++	inff_fws_detach(fws);
++	return ERR_PTR(rc);
 +}
 +
-+static void inff_sdio_rxfail(struct inff_sdio *bus, bool abort, bool rtx)
++void inff_fws_detach(struct inff_fws_info *fws)
 +{
-+	struct inff_sdio_dev *sdiod = bus->sdiodev;
-+	struct inff_core *core = bus->sdio_core;
-+	uint retries = 0;
-+	u16 lastrbc;
-+	u8 hi, lo;
-+	int err;
-+
-+	inff_err("%sterminate frame%s\n",
-+		 abort ? "abort command, " : "",
-+		 rtx ? ", send NAK" : "");
-+
-+	if (abort)
-+		inff_sdiod_abort(bus->sdiodev, bus->sdiodev->func2);
-+
-+	inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_RF_TERM,
-+			  &err);
-+	bus->sdcnt.f1regdata++;
-+
-+	/* Wait until the packet has been flushed (device/FIFO stable) */
-+	for (lastrbc = retries = 0xffff; retries > 0; retries--) {
-+		hi = inff_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_RFRAMEBCHI,
-+				      &err);
-+		lo = inff_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_RFRAMEBCLO,
-+				      &err);
-+		bus->sdcnt.f1regdata += 2;
-+
-+		if (hi == 0 && lo == 0)
-+			break;
-+
-+		if ((hi > (lastrbc >> 8)) && (lo > (lastrbc & 0x00ff))) {
-+			inff_err("count growing: last 0x%04x now 0x%04x\n",
-+				 lastrbc, (hi << 8) + lo);
-+		}
-+		lastrbc = (hi << 8) + lo;
-+	}
-+
-+	if (!retries)
-+		inff_err("count never zeroed: last 0x%04x\n", lastrbc);
-+	else
-+		inff_dbg(SDIO, "flush took %d iterations\n", 0xffff - retries);
-+
-+	if (rtx) {
-+		bus->sdcnt.rxrtx++;
-+		inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
-+				  SMB_NAK, &err);
-+
-+		bus->sdcnt.f1regdata++;
-+		if (err == 0)
-+			bus->rxskip = true;
-+	}
-+
-+	/* Clear partial in any case */
-+	bus->cur_read.len = 0;
-+}
-+
-+static void inff_sdio_txfail(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	u8 i, hi, lo;
-+
-+	/* On failure, abort the command and terminate the frame */
-+	inff_err("sdio error, abort command and terminate frame\n");
-+	bus->sdcnt.tx_sderrs++;
-+
-+	if (inff_socitype_is_cp(bus->sdiodev->bus_if))
++	if (!fws)
 +		return;
 +
-+	inff_sdiod_abort(sdiodev, sdiodev->func2);
-+	inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
-+	bus->sdcnt.f1regdata++;
-+
-+	for (i = 0; i < 3; i++) {
-+		hi = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_WFRAMEBCHI, NULL);
-+		lo = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_WFRAMEBCLO, NULL);
-+		bus->sdcnt.f1regdata += 2;
-+		if (hi == 0 && lo == 0)
-+			break;
-+	}
-+}
-+
-+static int inff_cp_sdio_wait_dev_ready(struct inff_sdio_dev *sdiodev, bool polling)
-+{
-+	struct inff_sdio *bus = sdiodev->bus;
-+	struct inff_core *core = bus->sdio_core;
-+	u32 addr = core->base + SD_REG(tohostmailboxdata);
-+	static u32 prev_data_seq = 1;
-+	u32 current_seq;
-+	int ret = -EBUSY, err;
-+
-+	/* WAR: wait for NCP lib(in device) to receive previous data */
-+	do {
-+		current_seq = inff_sdiod_readl(bus->sdiodev, addr, &err);
-+		if (err) {
-+			inff_err("failed to read host mailbox data: %d\n", err);
-+			break;
-+		}
-+		if (current_seq != prev_data_seq) {
-+			prev_data_seq = current_seq;
-+			ret = 0;
-+			break;
-+		}
-+
-+		if (polling)
-+			usleep_range(INFF_CP_TX_WAIT_TIME / 2, INFF_CP_TX_WAIT_TIME);
-+
-+	} while (polling);
-+
-+	return ret;
-+}
-+
-+/* return total length of buffer chain */
-+static uint inff_sdio_glom_len(struct inff_sdio *bus)
-+{
-+	struct sk_buff *p;
-+	uint total;
-+
-+	total = 0;
-+	skb_queue_walk(&bus->glom, p)
-+		total += p->len;
-+	return total;
-+}
-+
-+static void inff_sdio_free_glom(struct inff_sdio *bus)
-+{
-+	struct sk_buff *cur, *next;
-+
-+	skb_queue_walk_safe(&bus->glom, cur, next) {
-+		skb_unlink(cur, &bus->glom);
-+		inff_pkt_buf_free_skb(cur);
-+	}
-+}
-+
-+/*
-+ * inffmac sdio bus specific header
-+ * This is the lowest layer header wrapped on the packets transmitted between
-+ * host and WiFi dongle which contains information needed for SDIO core and
-+ * firmware
-+ *
-+ * It consists of 3 parts: hardware header, hardware extension header and
-+ * software header
-+ * hardware header (frame tag) - 4 bytes
-+ * Byte 0~1: Frame length
-+ * Byte 2~3: Checksum, bit-wise inverse of frame length
-+ * hardware extension header - 8 bytes
-+ * Tx glom mode only, N/A for Rx or normal Tx
-+ * Byte 0~1: Packet length excluding hw frame tag
-+ * Byte 2: Reserved
-+ * Byte 3: Frame flags, bit 0: last frame indication
-+ * Byte 4~5: Reserved
-+ * Byte 6~7: Tail padding length
-+ * software header - 8 bytes
-+ * Byte 0: Rx/Tx sequence number
-+ * Byte 1: 4 MSB Channel number, 4 LSB arbitrary flag
-+ * Byte 2: Length of next data frame, reserved for Tx
-+ * Byte 3: Data offset
-+ * Byte 4: Flow control bits, reserved for Tx
-+ * Byte 5: Maximum Sequence number allowed by firmware for Tx, N/A for Tx packet
-+ * Byte 6~7: Reserved
-+ */
-+#define SDPCM_HWHDR_LEN			4
-+#define SDPCM_HWEXT_LEN			8
-+#define SDPCM_SWHDR_LEN			8
-+#define SDPCM_HDRLEN			(SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN)
-+/* software header */
-+#define SDPCM_SEQ_MASK			0x000000ff
-+#define SDPCM_SEQ_WRAP			256
-+#define SDPCM_CHANNEL_MASK		0x00000f00
-+#define SDPCM_CHANNEL_SHIFT		8
-+#define SDPCM_FLAGS_MASK		0x0000f000
-+#define SDPCM_FLAGS_SHIFT		12
-+#define SDPCM_CONTROL_CHANNEL		0	/* Control */
-+#define SDPCM_EVENT_CHANNEL		1	/* Asyc Event Indication */
-+#define SDPCM_DATA_CHANNEL		2	/* Data Xmit/Recv */
-+#define SDPCM_GLOM_CHANNEL		3	/* Coalesced packets */
-+#define SDPCM_BT_CHANNEL		4	/* For BT packets */
-+#define SDPCM_OHD_CHANNEL		5	/* For packet to be consumed by OHD */
-+#define SDPCM_TEST_CHANNEL		15	/* Test/debug packets */
-+#define SDPCM_GLOMDESC(p)		(((u8 *)p)[1] & 0x80)
-+#define SDPCM_NEXTLEN_MASK		0x00ff0000
-+#define SDPCM_NEXTLEN_SHIFT		16
-+#define SDPCM_DOFFSET_MASK		0xff000000
-+#define SDPCM_DOFFSET_SHIFT		24
-+#define SDPCM_FCMASK_MASK		0x000000ff
-+#define SDPCM_WINDOW_MASK		0x0000ff00
-+#define SDPCM_WINDOW_SHIFT		8
-+
-+static inline u8 inff_sdio_getdatoffset(u8 *swheader)
-+{
-+	u32 hdrvalue;
-+
-+	hdrvalue = le32_to_cpu(*(__le32 *)swheader);
-+	return (u8)((hdrvalue & SDPCM_DOFFSET_MASK) >> SDPCM_DOFFSET_SHIFT);
-+}
-+
-+static inline bool inff_sdio_fromevntchan(u8 *swheader)
-+{
-+	u32 hdrvalue;
-+	u8 ret;
-+
-+	hdrvalue = le32_to_cpu(*(__le32 *)swheader);
-+	ret = (u8)((hdrvalue & SDPCM_CHANNEL_MASK) >> SDPCM_CHANNEL_SHIFT);
-+
-+	return (ret == SDPCM_EVENT_CHANNEL);
-+}
-+
-+static int inff_sdio_hdparse(struct inff_sdio *bus, u8 *header,
-+			     struct inff_sdio_hdrinfo *rd,
-+			      enum inff_sdio_frmtype type)
-+{
-+	u16 len, checksum;
-+	u8 rx_seq, fc, tx_seq_max;
-+	u32 swheader;
-+
-+	/* hw header */
-+	len = get_unaligned_le16(header);
-+	checksum = get_unaligned_le16(header + sizeof(u16));
-+	/* All zero means no more to read */
-+	if (!(len | checksum)) {
-+		bus->rxpending = false;
-+		return -ENODATA;
-+	}
-+	if ((u16)(~(len ^ checksum))) {
-+		inff_err("HW header checksum error\n");
-+		bus->sdcnt.rx_badhdr++;
-+		inff_sdio_rxfail(bus, false, false);
-+		return -EIO;
-+	}
-+	if (len < SDPCM_HDRLEN) {
-+		inff_err("HW header length error\n");
-+		return -EPROTO;
-+	}
-+	if (type == INFF_SDIO_FT_SUPER &&
-+	    (roundup(len, bus->blocksize) != rd->len)) {
-+		inff_err("HW superframe header length error\n");
-+		return -EPROTO;
-+	}
-+	if (type == INFF_SDIO_FT_SUB && len > rd->len) {
-+		inff_err("HW subframe header length error\n");
-+		return -EPROTO;
-+	}
-+	rd->len = len;
-+
-+	/* software header */
-+	header += SDPCM_HWHDR_LEN;
-+	swheader = le32_to_cpu(*(__le32 *)header);
-+	if (type == INFF_SDIO_FT_SUPER && SDPCM_GLOMDESC(header)) {
-+		inff_err("Glom descriptor found in superframe head\n");
-+		rd->len = 0;
-+		return -EINVAL;
-+	}
-+	rx_seq = (u8)(swheader & SDPCM_SEQ_MASK);
-+	rd->channel_and_flags = (swheader & SDPCM_CHANNEL_MASK) >> SDPCM_CHANNEL_SHIFT;
-+	if (len > MAX_RX_DATASZ && rd->channel_and_flags != SDPCM_CONTROL_CHANNEL &&
-+	    type != INFF_SDIO_FT_SUPER) {
-+		inff_err("HW header length too long\n");
-+		bus->sdcnt.rx_toolong++;
-+		inff_sdio_rxfail(bus, false, false);
-+		rd->len = 0;
-+		return -EPROTO;
-+	}
-+	if (type == INFF_SDIO_FT_SUPER && rd->channel_and_flags != SDPCM_GLOM_CHANNEL) {
-+		inff_err("Wrong channel for superframe\n");
-+		rd->len = 0;
-+		return -EINVAL;
-+	}
-+	if (type == INFF_SDIO_FT_SUB && rd->channel_and_flags != SDPCM_DATA_CHANNEL &&
-+	    rd->channel_and_flags != SDPCM_EVENT_CHANNEL) {
-+		inff_err("Wrong channel for subframe\n");
-+		rd->len = 0;
-+		return -EINVAL;
-+	}
-+	rd->dat_offset = inff_sdio_getdatoffset(header);
-+	if (rd->dat_offset < SDPCM_HDRLEN || rd->dat_offset > rd->len) {
-+		inff_err("seq %d: bad data offset\n", rx_seq);
-+		bus->sdcnt.rx_badhdr++;
-+		inff_sdio_rxfail(bus, false, false);
-+		rd->len = 0;
-+		return -ENXIO;
-+	}
-+	if (rd->seq_num != rx_seq) {
-+		inff_dbg(SDIO, "seq %d, expected %d\n", rx_seq, rd->seq_num);
-+		bus->sdcnt.rx_badseq++;
-+		rd->seq_num = rx_seq;
-+	}
-+	/* no need to check the reset for subframe */
-+	if (type == INFF_SDIO_FT_SUB)
-+		return 0;
-+	rd->len_nxtfrm = (swheader & SDPCM_NEXTLEN_MASK) >> SDPCM_NEXTLEN_SHIFT;
-+	if (rd->len_nxtfrm << 4 > MAX_RX_DATASZ) {
-+		/* only warm for NON glom packet */
-+		if (rd->channel_and_flags != SDPCM_GLOM_CHANNEL)
-+			inff_err("seq %d: next length error\n", rx_seq);
-+		rd->len_nxtfrm = 0;
-+	}
-+	swheader = le32_to_cpu(*(__le32 *)(header + 4));
-+	fc = swheader & SDPCM_FCMASK_MASK;
-+	if (bus->flowcontrol != fc) {
-+		if (~bus->flowcontrol & fc)
-+			bus->sdcnt.fc_xoff++;
-+		if (bus->flowcontrol & ~fc)
-+			bus->sdcnt.fc_xon++;
-+		bus->sdcnt.fc_rcvd++;
-+		bus->flowcontrol = fc;
-+	}
-+	tx_seq_max = (swheader & SDPCM_WINDOW_MASK) >> SDPCM_WINDOW_SHIFT;
-+	if ((u8)(tx_seq_max - bus->tx_seq) > 0x40) {
-+		inff_err("seq %d: max tx seq number error\n", rx_seq);
-+		tx_seq_max = bus->tx_seq + 2;
-+	}
-+	bus->tx_max = tx_seq_max;
-+
-+	return 0;
-+}
-+
-+static inline void inff_sdio_update_hwhdr(u8 *header, u16 frm_length)
-+{
-+	*(__le16 *)header = cpu_to_le16(frm_length);
-+	*(((__le16 *)header) + 1) = cpu_to_le16(~frm_length);
-+}
-+
-+static void inff_sdio_hdpack(struct inff_sdio *bus, u8 *header,
-+			     struct inff_sdio_hdrinfo *hd_info)
-+{
-+	u32 hdrval;
-+	u8 hdr_offset;
-+
-+	inff_sdio_update_hwhdr(header, hd_info->len);
-+	hdr_offset = SDPCM_HWHDR_LEN;
-+
-+	if (bus->txglom) {
-+		hdrval = (hd_info->len - hdr_offset) | (hd_info->lastfrm << 24);
-+		*((__le32 *)(header + hdr_offset)) = cpu_to_le32(hdrval);
-+		hdrval = (u16)hd_info->tail_pad << 16;
-+		*(((__le32 *)(header + hdr_offset)) + 1) = cpu_to_le32(hdrval);
-+		hdr_offset += SDPCM_HWEXT_LEN;
-+	}
-+
-+	hdrval = hd_info->seq_num;
-+	hdrval |= (hd_info->channel_and_flags << SDPCM_CHANNEL_SHIFT) &
-+		  SDPCM_CHANNEL_MASK;
-+	hdrval |= ((hd_info->channel_and_flags & 0xf0) << 8) &
-+		  SDPCM_FLAGS_MASK;
-+	hdrval |= (hd_info->dat_offset << SDPCM_DOFFSET_SHIFT) &
-+		  SDPCM_DOFFSET_MASK;
-+	*((__le32 *)(header + hdr_offset)) = cpu_to_le32(hdrval);
-+	*(((__le32 *)(header + hdr_offset)) + 1) = 0;
-+}
-+
-+static u8 inff_sdio_rxglom(struct inff_sdio *bus, u8 rxseq)
-+{
-+	u16 dlen, totlen;
-+	u8 *dptr, num = 0;
-+	u16 sublen;
-+	struct sk_buff *pfirst, *pnext;
-+	int errcode;
-+	u8 doff;
-+	struct inff_sdio_hdrinfo rd_new;
-+
-+	/* If packets, issue read(s) and send up packet chain */
-+	/* Return sequence numbers consumed? */
-+
-+	inff_dbg(SDIO, "start: glomd %p glom %p\n",
-+		 bus->glomd, skb_peek(&bus->glom));
-+
-+	/* If there's a descriptor, generate the packet chain */
-+	if (bus->glomd) {
-+		pfirst = NULL;
-+		pnext = NULL;
-+		/* it is a u32 len to u16 dlen, should have a sanity check here. */
-+		if (bus->glomd->len <= 0xFFFF) {
-+			dlen = (u16)(bus->glomd->len);
-+			if (!dlen || (dlen & 1)) {
-+				inff_err("bad glomd len(%d), ignore descriptor\n",
-+					 dlen);
-+				dlen = 0;
-+			}
-+		} else {
-+			inff_err("overflowed glomd len(%d), ignore descriptor\n",
-+				 bus->glomd->len);
-+			dlen = 0;
-+		}
-+		dptr = bus->glomd->data;
-+
-+		for (totlen = num = 0; dlen; num++) {
-+			/* Get (and move past) next length */
-+			sublen = get_unaligned_le16(dptr);
-+			dlen -= sizeof(u16);
-+			dptr += sizeof(u16);
-+			if (sublen < SDPCM_HDRLEN ||
-+			    (num == 0 && (sublen < (2 * SDPCM_HDRLEN)))) {
-+				inff_err("descriptor len %d bad: %d\n",
-+					 num, sublen);
-+				pnext = NULL;
-+				break;
-+			}
-+			if (sublen % bus->sgentry_align) {
-+				inff_err("sublen %d not multiple of %d\n",
-+					 sublen, bus->sgentry_align);
-+			}
-+			totlen += sublen;
-+
-+			/* For last frame, adjust read len so total
-+			 * is a block multiple
-+			 */
-+			if (!dlen) {
-+				sublen +=
-+				    (roundup(totlen, bus->blocksize) - totlen);
-+				totlen = roundup(totlen, bus->blocksize);
-+			}
-+
-+			/* Allocate/chain packet for next subframe */
-+			pnext = inff_pkt_buf_get_skb(sublen + bus->sgentry_align);
-+			if (!pnext) {
-+				inff_err("inff_pkt_buf_get_skb failed, num %d len %d\n",
-+					 num, sublen);
-+				break;
-+			}
-+			skb_queue_tail(&bus->glom, pnext);
-+
-+			/* Adhere to start alignment requirements */
-+			pkt_align(pnext, sublen, bus->sgentry_align);
-+		}
-+
-+		/* If all allocations succeeded, save packet chain
-+		 * in bus structure
-+		 */
-+		if (pnext) {
-+			inff_dbg(GLOM, "allocated %d-byte packet chain for %d subframes\n",
-+				 totlen, num);
-+			if (INFF_MSGLVL_ON(GLOM) && bus->cur_read.len &&
-+			    totlen != bus->cur_read.len) {
-+				inff_dbg(GLOM, "glomdesc mismatch: nextlen %d glomdesc %d rxseq %d\n",
-+					 bus->cur_read.len, totlen, rxseq);
-+			}
-+			pfirst = NULL;
-+			pnext = NULL;
-+		} else {
-+			inff_sdio_free_glom(bus);
-+			num = 0;
-+		}
-+
-+		/* Done with descriptor packet */
-+		inff_pkt_buf_free_skb(bus->glomd);
-+		bus->glomd = NULL;
-+		bus->cur_read.len = 0;
-+	}
-+
-+	/* Ok -- either we just generated a packet chain,
-+	 * or had one from before
++	/* Cancel creditmap_query_work which uses system_wq (not fws_wq).
++	 * Must cancel before kfree(fws) to prevent use-after-free.
 +	 */
-+	if (!skb_queue_empty(&bus->glom)) {
-+		u32 len_glom = 0;
++	/* Only cancel if work was initialized (ACW74XX chip only) */
++	if (fws->creditmap_query_work.func)
++		cancel_work_sync(&fws->creditmap_query_work);
 +
-+		if (INFF_MSGLVL_ON(GLOM)) {
-+			inff_dbg(GLOM, "try superframe read, packet chain:\n");
-+			skb_queue_walk(&bus->glom, pnext) {
-+				inff_dbg(GLOM, "    %p: %p len 0x%04x (%d)\n",
-+					 pnext, (u8 *)(pnext->data),
-+					 pnext->len, pnext->len);
-+			}
-+		}
++	if (fws->fws_wq)
++		destroy_workqueue(fws->fws_wq);
 +
-+		pfirst = skb_peek(&bus->glom);
-+		len_glom = inff_sdio_glom_len(bus);
-+		if (len_glom > 0xFFFF) {
-+			inff_err("glom_len is %d bytes, overflowed\n",
-+				 len_glom);
-+			goto frame_error_handle;
-+		} else {
-+			dlen = (u16)len_glom;
-+		}
++	/* cleanup */
++	inff_fws_lock(fws);
++	inff_fws_cleanup(fws, -1);
++	inff_fws_unlock(fws);
 +
-+		/* Do an SDIO read for the superframe.  Configurable iovar to
-+		 * read directly into the chained packet, or allocate a large
-+		 * packet and copy into the chain.
-+		 */
-+		sdio_claim_host(bus->sdiodev->func1);
-+		errcode = inff_sdiod_recv_chain(bus->sdiodev,
-+						&bus->glom, dlen);
-+		sdio_release_host(bus->sdiodev->func1);
-+		bus->sdcnt.f2rxdata++;
-+
-+		/* On failure, kill the superframe */
-+		if (errcode < 0) {
-+			inff_err("glom read of %d bytes failed: %d\n",
-+				 dlen, errcode);
-+			goto frame_error_handle;
-+		}
-+
-+		inff_dbg_hex_dump(INFF_MSGLVL_ON(GLOM),
-+				  pfirst->data, min_t(int, pfirst->len, 48),
-+				  "SUPERFRAME:\n");
-+
-+		rd_new.seq_num = rxseq;
-+		rd_new.len = dlen;
-+		sdio_claim_host(bus->sdiodev->func1);
-+		errcode = inff_sdio_hdparse(bus, pfirst->data, &rd_new,
-+					    INFF_SDIO_FT_SUPER);
-+		sdio_release_host(bus->sdiodev->func1);
-+		bus->cur_read.len = rd_new.len_nxtfrm << 4;
-+
-+		/* Remove superframe header, remember offset */
-+		skb_pull(pfirst, rd_new.dat_offset);
-+		num = 0;
-+
-+		/* Validate all the subframe headers */
-+		skb_queue_walk(&bus->glom, pnext) {
-+			/* leave when invalid subframe is found */
-+			if (errcode)
-+				break;
-+
-+			rd_new.len = pnext->len;
-+			rd_new.seq_num = rxseq++;
-+			sdio_claim_host(bus->sdiodev->func1);
-+			errcode = inff_sdio_hdparse(bus, pnext->data, &rd_new,
-+						    INFF_SDIO_FT_SUB);
-+			sdio_release_host(bus->sdiodev->func1);
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(GLOM),
-+					  pnext->data, 32, "subframe:\n");
-+
-+			num++;
-+		}
-+
-+		/* Terminate frame on error */
-+		if (errcode)
-+			goto frame_error_handle;
-+
-+		/* Basic SD framing looks ok - process each packet (header) */
-+
-+		skb_queue_walk_safe(&bus->glom, pfirst, pnext) {
-+			dptr = (u8 *)(pfirst->data);
-+			sublen = get_unaligned_le16(dptr);
-+			doff = inff_sdio_getdatoffset(&dptr[SDPCM_HWHDR_LEN]);
-+
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(DATA),
-+					  dptr, pfirst->len,
-+					  "Rx Subframe Data:\n");
-+
-+			__skb_trim(pfirst, sublen);
-+			skb_pull(pfirst, doff);
-+
-+			if (pfirst->len == 0) {
-+				skb_unlink(pfirst, &bus->glom);
-+				inff_pkt_buf_free_skb(pfirst);
-+				continue;
-+			}
-+
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(GLOM),
-+					  pfirst->data,
-+					  min_t(int, pfirst->len, 32),
-+					  "subframe %d to stack, %p (%p/%d) nxt/lnk %p/%p\n",
-+					  bus->glom.qlen, pfirst, pfirst->data,
-+					  pfirst->len, pfirst->next,
-+					  pfirst->prev);
-+			skb_unlink(pfirst, &bus->glom);
-+			if (inff_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN])) {
-+				inff_bcdc_process_event(bus->sdiodev->dev, pfirst);
-+			} else {
-+				inff_bcdc_rx(bus->sdiodev->dev, pfirst,
-+					     false, false);
-+			}
-+
-+			bus->sdcnt.rxglompkts++;
-+		}
-+
-+		bus->sdcnt.rxglomframes++;
-+	}
-+
-+	return num;
-+
-+frame_error_handle:
-+	sdio_claim_host(bus->sdiodev->func1);
-+	inff_sdio_rxfail(bus, true, false);
-+	bus->sdcnt.rxglomfail++;
-+	inff_sdio_free_glom(bus);
-+	sdio_release_host(bus->sdiodev->func1);
-+	bus->cur_read.len = 0;
-+
-+	return 0;
++	/* free top structure */
++	kfree(fws);
 +}
 +
-+static int inff_sdio_dcmd_resp_wait(struct inff_sdio *bus, uint *condition,
-+				    bool *pending)
++void inff_fws_debugfs_create(struct inff_pub *drvr)
 +{
-+	DECLARE_WAITQUEUE(wait, current);
-+	int timeout = DCMD_RESP_TIMEOUT;
-+
-+	/* Wait until control frame is available */
-+	add_wait_queue(&bus->dcmd_resp_wait, &wait);
-+	set_current_state(TASK_INTERRUPTIBLE);
-+
-+	while (!(*condition) && (!signal_pending(current) && timeout))
-+		timeout = schedule_timeout(timeout);
-+
-+	if (signal_pending(current))
-+		*pending = true;
-+
-+	set_current_state(TASK_RUNNING);
-+	remove_wait_queue(&bus->dcmd_resp_wait, &wait);
-+
-+	return timeout;
++	/* create debugfs file for statistics */
++	inff_debugfs_add_entry(drvr, "fws_stats",
++			       inff_debugfs_fws_stats_read);
 +}
 +
-+static int inff_sdio_dcmd_resp_wake(struct inff_sdio *bus)
++bool inff_fws_queue_skbs(struct inff_fws_info *fws)
 +{
-+	wake_up_interruptible(&bus->dcmd_resp_wait);
-+
-+	return 0;
++	return !fws->avoid_queueing;
 +}
 +
-+static void
-+inff_cp_sdio_rx_proc_data(struct inff_sdio_dev *sdiodev,
-+			  struct sk_buff *pkt, u8 ifidx)
++bool inff_fws_fc_active(struct inff_fws_info *fws)
 +{
-+	struct inff_pub *drvr = sdiodev->bus_if->drvr;
-+	struct inff_if *ifp;
++	if (!fws->creditmap_received)
++		return false;
 +
-+	ifp = drvr->iflist[ifidx];
++	return fws->fcmode != INFF_FWS_FCMODE_NONE;
++}
 +
-+	if (!ifp) {
-+		inff_err("ifp is NULL\n");
++void inff_fws_bustxcomplete(struct inff_fws_info *fws, struct sk_buff *skb,
++			    bool success)
++{
++	if (inff_skbcb(skb)->state == INFF_FWS_SKBSTATE_TIM) {
++		inff_pkt_buf_free_skb(skb);
 +		return;
 +	}
 +
-+	pkt->protocol = eth_type_trans(pkt, ifp->ndev);
-+
-+	netif_rx(pkt);
-+}
-+
-+static void
-+inff_cp_sdio_read_control(struct inff_sdio *bus, struct sk_buff *pkt)
-+{
-+	u8 *buf = NULL;
-+
-+	buf = vzalloc(pkt->len);
-+	if (!buf)
-+		goto done;
-+
-+	memcpy(buf, pkt->data, pkt->len);
-+
-+	inff_dbg_hex_dump(INFF_MSGLVL_ON(SDIO), pkt->data,
-+			  pkt->len, "Rx Control:\n");
-+
-+	spin_lock_bh(&bus->rxctl_lock);
-+	if (bus->rxctl) {
-+		inff_err("last control frame is being processed.\n");
-+		spin_unlock_bh(&bus->rxctl_lock);
-+		goto done;
-+	}
-+	bus->rxctl = buf;
-+	bus->rxlen = pkt->len;
-+	spin_unlock_bh(&bus->rxctl_lock);
-+	buf = NULL;
-+
-+done:
-+	/* Awake any waiters */
-+	inff_sdio_dcmd_resp_wake(bus);
-+	vfree(buf);
-+}
-+
-+static bool
-+inff_cp_sdio_rx_proc(struct inff_sdio *bus, struct sk_buff *pkt, u16 len)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	struct inff_pub *drvr = sdiodev->bus_if->drvr;
-+	struct inff_sdio_hdrinfo *sw_hdr = (struct inff_sdio_hdrinfo *)pkt->data;
-+	bool free_skb = true;
-+	u8 channel, ifidx;
-+
-+	if (sw_hdr->seq_num != bus->rx_seq) {
-+		inff_err("seq %d, expected %d\n", sw_hdr->seq_num, bus->rx_seq);
-+		bus->rx_seq = sw_hdr->seq_num + 1;
++	if (!success) {
++		inff_fws_lock(fws);
++		inff_fws_txs_process_host_tossed(fws, skb, false, true);
++		inff_fws_unlock(fws);
 +	} else {
-+		bus->rx_seq++;
-+	}
-+
-+	skb_pull(pkt, SDPCM_SWHDR_LEN);
-+
-+	inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(DATA),
-+			  pkt->data, sw_hdr->len, "Rx Data:\n");
-+
-+	inff_dbg(SDIO, "seq_num: %d, channel_and_flags: %d\n",
-+		 sw_hdr->seq_num, sw_hdr->channel_and_flags);
-+
-+	channel = (sw_hdr->channel_and_flags & 0x0f);
-+	ifidx = (sw_hdr->channel_and_flags & 0xf0) >> 4;
-+
-+	switch (channel) {
-+	case SDPCM_CONTROL_CHANNEL:
-+		inff_cp_sdio_read_control(bus, pkt);
-+		break;
-+	case SDPCM_EVENT_CHANNEL:
-+		inff_cpevt_process_skb(drvr, pkt);
-+		break;
-+	case SDPCM_DATA_CHANNEL:
-+		inff_cp_sdio_rx_proc_data(sdiodev, pkt, ifidx);
-+		free_skb = false;
-+		break;
-+	default:
-+		inff_err("unsupported SDPCM channel_and_flags: %d\n",
-+			 sw_hdr->channel_and_flags);
-+		break;
-+	}
-+
-+	return free_skb;
-+}
-+
-+static void
-+inff_sdio_read_control(struct inff_sdio *bus, u8 *hdr, uint len, uint doff)
-+{
-+	uint rdlen, pad;
-+	u8 *buf = NULL, *rbuf;
-+	int sdret;
-+
-+	if (bus->rxblen)
-+		buf = vzalloc(bus->rxblen);
-+	if (!buf)
-+		goto done;
-+
-+	rbuf = bus->rxbuf;
-+	pad = ((unsigned long)rbuf % bus->head_align);
-+	if (pad)
-+		rbuf += (bus->head_align - pad);
-+
-+	/* Copy the already-read portion over */
-+	memcpy(buf, hdr, INFF_FIRSTREAD);
-+	if (len <= INFF_FIRSTREAD)
-+		goto gotpkt;
-+
-+	/* Raise rdlen to next SDIO block to avoid tail command */
-+	rdlen = len - INFF_FIRSTREAD;
-+	if (bus->roundup && bus->blocksize && rdlen > bus->blocksize) {
-+		pad = bus->blocksize - (rdlen % bus->blocksize);
-+		if (pad <= bus->roundup && pad < bus->blocksize &&
-+		    ((len + pad) < bus->sdiodev->bus_if->maxctl))
-+			rdlen += pad;
-+	} else if (rdlen % bus->head_align) {
-+		rdlen += bus->head_align - (rdlen % bus->head_align);
-+	}
-+
-+	/* Drop if the read is too big or it exceeds our maximum */
-+	if ((rdlen + INFF_FIRSTREAD) > bus->sdiodev->bus_if->maxctl) {
-+		inff_err("%d-byte control read exceeds %d-byte buffer\n",
-+			 rdlen, bus->sdiodev->bus_if->maxctl);
-+		inff_sdio_rxfail(bus, false, false);
-+		goto done;
-+	}
-+
-+	if ((len - doff) > bus->sdiodev->bus_if->maxctl) {
-+		inff_err("%d-byte ctl frame (%d-byte ctl data) exceeds %d-byte limit\n",
-+			 len, len - doff, bus->sdiodev->bus_if->maxctl);
-+		bus->sdcnt.rx_toolong++;
-+		inff_sdio_rxfail(bus, false, false);
-+		goto done;
-+	}
-+
-+	/* Read remain of frame body */
-+	sdret = inff_sdiod_recv_buf(bus->sdiodev, SDIO_FUNC_2, rbuf, rdlen);
-+	bus->sdcnt.f2rxdata++;
-+
-+	/* Control frame failures need retransmission */
-+	if (sdret < 0) {
-+		inff_err("read %d control bytes failed: %d\n",
-+			 rdlen, sdret);
-+		bus->sdcnt.rxc_errors++;
-+		inff_sdio_rxfail(bus, true, true);
-+		goto done;
-+	} else {
-+		memcpy(buf + INFF_FIRSTREAD, rbuf, rdlen);
-+	}
-+
-+gotpkt:
-+
-+	inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(CTL),
-+			  buf, len, "RxCtrl:\n");
-+
-+	/* Point to valid data and indicate its length */
-+	spin_lock_bh(&bus->rxctl_lock);
-+	if (bus->rxctl) {
-+		inff_err("last control frame is being processed.\n");
-+		spin_unlock_bh(&bus->rxctl_lock);
-+		vfree(buf);
-+		goto done;
-+	}
-+	bus->rxctl = buf + doff;
-+	bus->rxctl_orig = buf;
-+	bus->rxlen = len - doff;
-+	spin_unlock_bh(&bus->rxctl_lock);
-+
-+done:
-+	/* Awake any waiters */
-+	inff_sdio_dcmd_resp_wake(bus);
-+}
-+
-+static int
-+inff_cp_sdio_hdparse(struct inff_sdio *bus, u8 *header,
-+		     struct inff_sdio_hdrinfo *rd)
-+{
-+	u16 len, checksum;
-+
-+	/* hw header */
-+	len = get_unaligned_le16(header);
-+	checksum = get_unaligned_le16(header + sizeof(u16));
-+
-+	/* All zero means no more to read */
-+	if (!(len | checksum)) {
-+		inff_dbg(SDIO, "no more data to recv");
-+		return -ENODATA;
-+	}
-+
-+	inff_dbg(SDIO, "len: 0x%x, checksum: 0x%x\n", len, checksum);
-+
-+	if ((u16)(~(len ^ checksum))) {
-+		inff_err("HW header checksum error\n");
-+		return -EIO;
-+	}
-+
-+	if (len < SDPCM_HDRLEN) {
-+		inff_err("HW header length error\n");
-+		return -EPROTO;
-+	}
-+
-+	len -= SDPCM_HWHDR_LEN;
-+
-+	rd->len = len;
-+
-+	return 0;
-+}
-+
-+static int
-+inff_cp_sdio_readframes(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	struct inff_sdio_hdrinfo rd;
-+	struct sk_buff *pkt;
-+	int err;
-+
-+	sdio_claim_host(sdiodev->func1);
-+
-+	do {
-+		/* read HW header */
-+		err = inff_sdiod_recv_buf(sdiodev, SDIO_FUNC_2,
-+					  bus->rxhdr, SDPCM_HWHDR_LEN);
-+		if (err) {
-+			inff_err("RXHEADER FAILED\n");
-+			err = -ENODATA;
-+			break;
-+		}
-+
-+		inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) || INFF_MSGLVL_ON(HDRS),
-+				  bus->rxhdr, SDPCM_HWHDR_LEN,
-+				  "RxHdr:\n");
-+
-+		if (inff_cp_sdio_hdparse(bus, bus->rxhdr, &rd))
-+			break;
-+
-+		/* read payload */
-+		pkt = inff_pkt_buf_get_skb(rd.len);
-+		if (!pkt) {
-+			inff_err("infu_pkt_buf_get_skb %d failed\n", rd.len);
-+			err = -ENODATA;
-+			break;
-+		}
-+
-+		err = inff_sdiod_recv_pkt(sdiodev, SDIO_FUNC_2, pkt);
-+		if (err) {
-+			inff_err("recv packet error %d\n", err);
-+			break;
-+		}
-+
-+		if (inff_cp_sdio_rx_proc(bus, pkt, rd.len))
-+			inff_pkt_buf_free_skb(pkt);
-+
-+	} while (true);
-+
-+	sdio_release_host(sdiodev->func1);
-+
-+	return err;
-+}
-+
-+/* Pad read to blocksize for efficiency */
-+static void inff_sdio_pad(struct inff_sdio *bus, u16 *pad, u16 *rdlen)
-+{
-+	if (bus->roundup && bus->blocksize && *rdlen > bus->blocksize) {
-+		*pad = bus->blocksize - (*rdlen % bus->blocksize);
-+		if (*pad <= bus->roundup && *pad < bus->blocksize &&
-+		    *rdlen + *pad + INFF_FIRSTREAD < MAX_RX_DATASZ)
-+			*rdlen += *pad;
-+	} else if (*rdlen % bus->head_align) {
-+		*rdlen += bus->head_align - (*rdlen % bus->head_align);
++		inff_fws_lock(fws);
++		if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++			inff_fws_enque_afq(fws, skb);
++		inff_fws_unlock(fws);
 +	}
 +}
 +
-+static inline void inff_sdio_acw74xx_resume_txdma(struct inff_sdio *bus)
++/** afq = At Firmware Queue, queue containing packets pending in the dongle */
++static int inff_fws_deque_afq(struct inff_fws_info *fws, u16 hslot, u8 hcnt,
++			      u8 prec, struct sk_buff **pktout)
 +{
-+	u32 val = SD_DMA_RX_FIFO_DBG_CNT_MSK;
-+	u32 loop = 0;
-+	u32 gpio_addr = (bus->sdio_core->base + SD_DMA_REG_GPIOOUTREG_OFFSET);
-+	u32 xmtctl_addr = (bus->sdio_core->base + SD_DMA_REG_XMTCONTROL_OFFSET);
++	struct inff_fws_mac_descriptor *entry;
++	struct pktq *pq;
++	struct sk_buff_head *q;
++	struct sk_buff *p = NULL, *b = NULL;
 +
-+	if (!bus->acw74xx_f2_txdma_suspended)
-+		return;
++	if (!fws)
++		return -ENAVAIL;
 +
-+	/* Read back the SDIO GpioOutput Register (Offset 0x338) */
-+	while (val & SD_DMA_RX_FIFO_DBG_CNT_MSK) {
-+		loop++;
-+		val = inff_sdiod_readl(bus->sdiodev, gpio_addr, NULL);
-+	};
-+	val = SD_DMA_REG_XMTCTRL_SUSP_DIS;
-+	inff_sdiod_writel(bus->sdiodev, xmtctl_addr, val, NULL);
-+	bus->acw74xx_f2_txdma_suspended = false;
-+}
++	if (pktout)
++		*pktout = NULL;
 +
-+static inline void inff_sdio_acw74xx_suspend_txdma(struct inff_sdio *bus)
-+{
-+	u32 xmtctl = SD_DMA_REG_XMTCTRL_SUSP_EN;
-+	u32 addr = (bus->sdio_core->base + SD_DMA_REG_XMTCONTROL_OFFSET);
++	WARN_ON(hslot >= INFF_FWS_MAC_DESC_TABLE_SIZE + INFF_MAX_IFS + 1);
 +
-+	if (bus->acw74xx_f2_txdma_suspended)
-+		return;
-+
-+	inff_sdiod_writel(bus->sdiodev, addr, xmtctl, NULL);
-+	bus->acw74xx_f2_txdma_suspended = true;
-+}
-+
-+static uint inff_sdio_readframes(struct inff_sdio *bus, uint maxframes)
-+{
-+	struct sk_buff *pkt;		/* Packet for event or data frames */
-+	u16 pad;		/* Number of pad bytes to read */
-+	uint rxleft = 0;	/* Remaining number of frames allowed */
-+	int ret;		/* Return code from calls */
-+	uint rxcount = 0;	/* Total frames read */
-+	struct inff_sdio_hdrinfo *rd = &bus->cur_read, rd_new;
-+	u8 head_read = 0;
-+
-+	if (bus->acw74xx_f2_txdma_suspended && bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		sdio_claim_host(bus->sdiodev->func1);
-+		inff_sdio_acw74xx_resume_txdma(bus);
-+		sdio_release_host(bus->sdiodev->func1);
-+	}
-+
-+	/* Not finished unless we encounter no more frames indication */
-+	bus->rxpending = true;
-+
-+	for (rd->seq_num = bus->rx_seq, rxleft = maxframes;
-+	     !bus->rxskip && rxleft && bus->sdiodev->state == INFF_SDIOD_DATA;
-+	     rd->seq_num++, rxleft--) {
-+		/* Handle glomming separately */
-+		if (bus->glomd || !skb_queue_empty(&bus->glom)) {
-+			u8 cnt;
-+
-+			inff_dbg(GLOM, "calling rxglom: glomd %p, glom %p\n",
-+				 bus->glomd, skb_peek(&bus->glom));
-+			cnt = inff_sdio_rxglom(bus, rd->seq_num);
-+			inff_dbg(GLOM, "rxglom returned %d\n", cnt);
-+			rd->seq_num += cnt - 1;
-+			rxleft = (rxleft > cnt) ? (rxleft - cnt) : 1;
-+			continue;
-+		}
-+
-+		sdio_claim_host(bus->sdiodev->func1);
-+
-+		rd->len_left = rd->len;
-+		/* read header first for unknown frame length */
-+		if (!rd->len) {
-+			ret = inff_sdiod_recv_buf(bus->sdiodev, SDIO_FUNC_2,
-+						  bus->rxhdr, INFF_FIRSTREAD);
-+			bus->sdcnt.f2rxhdrs++;
-+			if (ret < 0) {
-+				inff_err("RXHEADER FAILED: %d\n",
-+					 ret);
-+				bus->sdcnt.rx_hdrfail++;
-+				inff_sdio_rxfail(bus, true, true);
-+				sdio_release_host(bus->sdiodev->func1);
-+				continue;
-+			}
-+
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) || INFF_MSGLVL_ON(HDRS),
-+					  bus->rxhdr, SDPCM_HDRLEN,
-+					  "RxHdr:\n");
-+
-+			if (inff_sdio_hdparse(bus, bus->rxhdr, rd,
-+					      INFF_SDIO_FT_NORMAL)) {
-+				sdio_release_host(bus->sdiodev->func1);
-+				if (!bus->rxpending)
-+					break;
-+
-+				continue;
-+			}
-+
-+			if (rd->channel_and_flags == SDPCM_CONTROL_CHANNEL) {
-+				inff_sdio_read_control(bus, bus->rxhdr,
-+						       rd->len,
-+						       rd->dat_offset);
-+				/* prepare the descriptor for the next read */
-+				rd->len = rd->len_nxtfrm << 4;
-+				rd->len_nxtfrm = 0;
-+				/* treat all packet as event if we don't know */
-+				rd->channel_and_flags = SDPCM_EVENT_CHANNEL;
-+				sdio_release_host(bus->sdiodev->func1);
-+				continue;
-+			}
-+
-+			if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+				if (rd->channel_and_flags == SDPCM_OHD_CHANNEL) {
-+					inff_err(" SDPCM_OHD_CHANNEL event received");
-+					inff_sdio_read_control(bus, bus->rxhdr,
-+							       rd->len,
-+							       rd->dat_offset);
-+					/* prepare the descriptor for the next read */
-+					rd->len = rd->len_nxtfrm << 4;
-+					rd->len_nxtfrm = 0;
-+					/* treat all packet as event if we don't know */
-+					rd->channel_and_flags = SDPCM_EVENT_CHANNEL;
-+					sdio_release_host(bus->sdiodev->func1);
-+					continue;
-+				}
-+			}
-+
-+			rd->len_left = rd->len > INFF_FIRSTREAD ?
-+				       rd->len - INFF_FIRSTREAD : 0;
-+			head_read = INFF_FIRSTREAD;
-+		}
-+
-+		inff_sdio_pad(bus, &pad, &rd->len_left);
-+
-+		pkt = inff_pkt_buf_get_skb(rd->len_left + head_read +
-+					    bus->head_align);
-+		if (!pkt) {
-+			/* Give up on data, request rtx of events */
-+			inff_err("inff_pkt_buf_get_skb failed\n");
-+			inff_sdio_rxfail(bus, false,
-+					 RETRYCHAN(rd->channel_and_flags));
-+			sdio_release_host(bus->sdiodev->func1);
-+			continue;
-+		}
-+		skb_pull(pkt, head_read);
-+		pkt_align(pkt, rd->len_left, bus->head_align);
-+
-+		ret = inff_sdiod_recv_pkt(bus->sdiodev, SDIO_FUNC_2, pkt);
-+		bus->sdcnt.f2rxdata++;
-+		sdio_release_host(bus->sdiodev->func1);
-+
-+		if (ret < 0) {
-+			inff_err("read %d bytes from channel %d failed: %d\n",
-+				 rd->len, rd->channel_and_flags, ret);
-+			inff_pkt_buf_free_skb(pkt);
-+			sdio_claim_host(bus->sdiodev->func1);
-+			inff_sdio_rxfail(bus, true,
-+					 RETRYCHAN(rd->channel_and_flags));
-+			sdio_release_host(bus->sdiodev->func1);
-+			continue;
-+		}
-+
-+		if (head_read) {
-+			skb_push(pkt, head_read);
-+			memcpy(pkt->data, bus->rxhdr, head_read);
-+			head_read = 0;
-+		} else {
-+			memcpy(bus->rxhdr, pkt->data, SDPCM_HDRLEN);
-+			rd_new.seq_num = rd->seq_num;
-+			sdio_claim_host(bus->sdiodev->func1);
-+			if (inff_sdio_hdparse(bus, bus->rxhdr, &rd_new,
-+					      INFF_SDIO_FT_NORMAL)) {
-+				rd->len = 0;
-+				inff_sdio_rxfail(bus, true, true);
-+				sdio_release_host(bus->sdiodev->func1);
-+				inff_pkt_buf_free_skb(pkt);
-+				continue;
-+			}
-+			bus->sdcnt.rx_readahead_cnt++;
-+			if (rd->len != roundup(rd_new.len, 16)) {
-+				inff_err("frame length mismatch:read %d, should be %d\n",
-+					 rd->len,
-+					 roundup(rd_new.len, 16) >> 4);
-+				rd->len = 0;
-+				inff_sdio_rxfail(bus, true, true);
-+				sdio_release_host(bus->sdiodev->func1);
-+				inff_pkt_buf_free_skb(pkt);
-+				continue;
-+			}
-+			sdio_release_host(bus->sdiodev->func1);
-+			rd->len_nxtfrm = rd_new.len_nxtfrm;
-+			rd->channel_and_flags = rd_new.channel_and_flags;
-+			rd->dat_offset = rd_new.dat_offset;
-+
-+			inff_dbg_hex_dump(!(INFF_MSGLVL_ON(BYTES) &&
-+					    INFF_MSGLVL_ON(DATA)) &&
-+					  INFF_MSGLVL_ON(HDRS),
-+					  bus->rxhdr, SDPCM_HDRLEN,
-+					  "RxHdr:\n");
-+
-+			if (rd_new.channel_and_flags == SDPCM_CONTROL_CHANNEL) {
-+				inff_err("readahead on control packet %d?\n",
-+					 rd_new.seq_num);
-+				/* Force retry w/normal header read */
-+				rd->len = 0;
-+				sdio_claim_host(bus->sdiodev->func1);
-+				inff_sdio_rxfail(bus, false, true);
-+				sdio_release_host(bus->sdiodev->func1);
-+				inff_pkt_buf_free_skb(pkt);
-+				continue;
-+			}
-+		}
-+
-+		inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(DATA),
-+				  pkt->data, rd->len, "Rx Data:\n");
-+
-+		/* Save superframe descriptor and allocate packet frame */
-+		if (rd->channel_and_flags == SDPCM_GLOM_CHANNEL) {
-+			if (SDPCM_GLOMDESC(&bus->rxhdr[SDPCM_HWHDR_LEN])) {
-+				inff_dbg(GLOM, "glom descriptor, %d bytes:\n",
-+					 rd->len);
-+				inff_dbg_hex_dump(INFF_MSGLVL_ON(GLOM),
-+						  pkt->data, rd->len,
-+						  "Glom Data:\n");
-+				__skb_trim(pkt, rd->len);
-+				skb_pull(pkt, SDPCM_HDRLEN);
-+				bus->glomd = pkt;
-+			} else {
-+				inff_err("%s: glom superframe w/o descriptor!\n", __func__);
-+				sdio_claim_host(bus->sdiodev->func1);
-+				inff_sdio_rxfail(bus, false, false);
-+				sdio_release_host(bus->sdiodev->func1);
-+			}
-+			/* prepare the descriptor for the next read */
-+			rd->len = rd->len_nxtfrm << 4;
-+			rd->len_nxtfrm = 0;
-+			/* treat all packet as event if we don't know */
-+			rd->channel_and_flags = SDPCM_EVENT_CHANNEL;
-+			continue;
-+		}
-+
-+		/* Fill in packet len and prio, deliver upward */
-+		__skb_trim(pkt, rd->len);
-+		skb_pull(pkt, rd->dat_offset);
-+
-+		if (pkt->len == 0) {
-+			inff_pkt_buf_free_skb(pkt);
-+		} else if (rd->channel_and_flags == SDPCM_EVENT_CHANNEL) {
-+			inff_bcdc_process_event(bus->sdiodev->dev, pkt);
-+		} else {
-+			inff_bcdc_rx(bus->sdiodev->dev, pkt,
-+				     false, false);
-+		}
-+
-+		/* prepare the descriptor for the next read */
-+		rd->len = rd->len_nxtfrm << 4;
-+		rd->len_nxtfrm = 0;
-+		/* treat all packet as event if we don't know */
-+		rd->channel_and_flags = SDPCM_EVENT_CHANNEL;
-+	}
-+
-+	rxcount = maxframes - rxleft;
-+	/* Message if we hit the limit */
-+	if (!rxleft)
-+		inff_dbg(DATA, "hit rx limit of %d frames\n", maxframes);
++	if (hslot < INFF_FWS_MAC_DESC_TABLE_SIZE)
++		entry = &fws->desc.nodes[hslot];
++	else if (hslot < INFF_FWS_MAC_DESC_TABLE_SIZE + INFF_MAX_IFS)
++		entry = &fws->desc.iface[hslot - INFF_FWS_MAC_DESC_TABLE_SIZE];
 +	else
-+		inff_dbg(DATA, "processed %d frames\n", rxcount);
-+	/* Back off rxseq if awaiting rtx, update rx_seq */
-+	if (bus->rxskip)
-+		rd->seq_num--;
-+	bus->rx_seq = rd->seq_num;
-+
-+	return rxcount;
-+}
-+
-+static void
-+inff_sdio_wait_event_wakeup(struct inff_sdio *bus)
-+{
-+	wake_up(&bus->ctrl_wait);
-+}
-+
-+static int inff_sdio_txpkt_hdalign(struct inff_sdio *bus, struct sk_buff *pkt)
-+{
-+	struct inff_bus_stats *stats;
-+	u16 head_pad;
-+	u8 *dat_buf;
-+
-+	dat_buf = (u8 *)(pkt->data);
-+
-+	/* Check head padding */
-+	head_pad = ((unsigned long)dat_buf % bus->head_align);
-+	if (head_pad) {
-+		if (skb_headroom(pkt) < head_pad) {
-+			stats = &bus->sdiodev->bus_if->stats;
-+			atomic_inc(&stats->pktcowed);
-+			if (skb_cow_head(pkt, head_pad)) {
-+				atomic_inc(&stats->pktcow_failed);
-+				return -ENOMEM;
-+			}
-+			head_pad = 0;
-+		}
-+		skb_push(pkt, head_pad);
-+		dat_buf = (u8 *)(pkt->data);
-+	}
-+	memset(dat_buf, 0, head_pad + bus->tx_hdrlen);
-+	return head_pad;
-+}
-+
-+/*
-+ * struct inff_skbuff_cb reserves first two bytes in sk_buff::cb for
-+ * bus layer usage.
-+ */
-+/* flag marking a dummy skb added for DMA alignment requirement */
-+#define ALIGN_SKB_FLAG		0x8000
-+/* bit mask of data length chopped from the previous packet */
-+#define ALIGN_SKB_CHOP_LEN_MASK	0x7fff
-+
-+static int inff_sdio_txpkt_prep_sg(struct inff_sdio *bus,
-+				   struct sk_buff_head *pktq,
-+				   struct sk_buff *pkt, u16 total_len)
-+{
-+	struct inff_sdio_dev *sdiodev;
-+	struct sk_buff *pkt_pad;
-+	u16 tail_pad, tail_chop, chain_pad;
-+	unsigned int blksize;
-+	bool lastfrm;
-+	int ntail, ret;
-+
-+	sdiodev = bus->sdiodev;
-+	blksize = sdiodev->func2->cur_blksize;
-+	/* sg entry alignment should be a divisor of block size */
-+	WARN_ON(blksize % bus->sgentry_align);
-+
-+	/* Check tail padding */
-+	lastfrm = skb_queue_is_last(pktq, pkt);
-+	tail_pad = 0;
-+	tail_chop = pkt->len % bus->sgentry_align;
-+	if (tail_chop)
-+		tail_pad = bus->sgentry_align - tail_chop;
-+	chain_pad = (total_len + tail_pad) % blksize;
-+	if (lastfrm && chain_pad)
-+		tail_pad += blksize - chain_pad;
-+	if (skb_tailroom(pkt) < tail_pad && pkt->len > blksize) {
-+		pkt_pad = inff_pkt_buf_get_skb(tail_pad + tail_chop +
-+						bus->head_align);
-+		if (!pkt_pad)
-+			return -ENOMEM;
-+		ret = inff_sdio_txpkt_hdalign(bus, pkt_pad);
-+		if (unlikely(ret < 0)) {
-+			kfree_skb(pkt_pad);
-+			return ret;
-+		}
-+		memcpy(pkt_pad->data,
-+		       pkt->data + pkt->len - tail_chop,
-+		       tail_chop);
-+		*(u16 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
-+		skb_trim(pkt, pkt->len - tail_chop);
-+		skb_trim(pkt_pad, tail_pad + tail_chop);
-+		__skb_queue_after(pktq, pkt, pkt_pad);
-+	} else {
-+		ntail = pkt->data_len + tail_pad -
-+			(pkt->end - pkt->tail);
-+		if (skb_cloned(pkt) || ntail > 0)
-+			if (pskb_expand_head(pkt, 0, ntail, GFP_ATOMIC))
-+				return -ENOMEM;
-+		if (skb_linearize(pkt))
-+			return -ENOMEM;
-+		__skb_put(pkt, tail_pad);
-+	}
-+
-+	return tail_pad;
-+}
-+
-+/**
-+ * inff_sdio_txpkt_prep - packet preparation for transmit
-+ * @bus: inff_sdio structure pointer
-+ * @pktq: packet list pointer
-+ * @chan: virtual channel to transmit the packet
-+ *
-+ * Processes to be applied to the packet
-+ *	- Align data buffer pointer
-+ *	- Align data buffer length
-+ *	- Prepare header
-+ * Return: negative value if there is error
-+ */
-+static int
-+inff_sdio_txpkt_prep(struct inff_sdio *bus,
-+		     struct sk_buff_head *pktq, uint chan)
-+{
-+	u16 head_pad, total_len, tail_pad = 0, payload_len;
-+	struct sk_buff *pkt_next;
-+	u8 txseq;
-+	int ret;
-+	struct inff_sdio_hdrinfo hd_info = {0};
-+
-+	txseq = bus->tx_seq;
-+	total_len = 0;
-+	skb_queue_walk(pktq, pkt_next) {
-+		/* alignment packet inserted in previous
-+		 * loop cycle can be skipped as it is
-+		 * already properly aligned and does not
-+		 * need an sdpcm header.
-+		 */
-+		if (*(u16 *)pkt_next->cb & ALIGN_SKB_FLAG)
-+			continue;
-+
-+		/* align packet data pointer */
-+		ret = inff_sdio_txpkt_hdalign(bus, pkt_next);
-+		if (ret < 0)
-+			return ret;
-+		head_pad = (u16)ret;
-+		if (head_pad)
-+			memset(pkt_next->data + bus->tx_hdrlen, 0, head_pad);
-+
-+		total_len += pkt_next->len;
-+
-+		if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+			tail_pad = 0;
-+			if (pkt_next->len % bus->head_align)
-+				tail_pad = bus->head_align - (pkt_next->len % bus->head_align);
-+
-+			payload_len = pkt_next->len;
-+			pkt_next->len += tail_pad;
-+			hd_info.len = (payload_len + tail_pad);
-+		} else {
-+			hd_info.len = pkt_next->len;
-+		}
-+
-+		hd_info.lastfrm = skb_queue_is_last(pktq, pkt_next);
-+		if (bus->txglom && pktq->qlen > 1) {
-+			ret = inff_sdio_txpkt_prep_sg(bus, pktq,
-+						      pkt_next, total_len);
-+			if (ret < 0)
-+				return ret;
-+			hd_info.tail_pad = (u16)ret;
-+			total_len += (u16)ret;
-+		}
-+
-+		hd_info.channel_and_flags = ((chan & 0x0f));
-+		hd_info.dat_offset = head_pad + bus->tx_hdrlen;
-+		hd_info.seq_num = txseq++;
-+
-+		/* Now fill the header */
-+		inff_sdio_hdpack(bus, pkt_next->data, &hd_info);
-+
-+		if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+			/* update reserve bytes (B10 and B11) with actual payload length */
-+			*((__le16 *)(pkt_next->data + 10)) = cpu_to_le16(payload_len);
-+		}
-+
-+		if (INFF_MSGLVL_ON(BYTES) &&
-+		    ((INFF_MSGLVL_ON(CTL) && chan == SDPCM_CONTROL_CHANNEL) ||
-+		     (INFF_MSGLVL_ON(DATA) && chan != SDPCM_CONTROL_CHANNEL)))
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(SDIO), pkt_next->data,
-+					  hd_info.len, "Tx Frame:\n");
-+		else if (INFF_MSGLVL_ON(HDRS))
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(SDIO), pkt_next->data,
-+					  head_pad + bus->tx_hdrlen,
-+					  "Tx Header:\n");
-+	}
-+	/* Hardware length tag of the first packet should be total
-+	 * length of the chain (including padding)
-+	 */
-+	if (bus->txglom)
-+		inff_sdio_update_hwhdr(__skb_peek(pktq)->data, total_len);
-+	return 0;
-+}
-+
-+/**
-+ * inff_sdio_cp_txpkt_prep - packet preparation for transmit
-+ * @bus: inff_sdio structure pointer
-+ * @pktq: packet list pointer
-+ * @chan: virtual channel to transmit the packet
-+ *
-+ * Processes to be applied to the packet
-+ *	- Align data buffer pointer
-+ *	- Align data buffer length
-+ *	- Prepare header
-+ * Return: negative value if there is error
-+ */
-+static int
-+inff_sdio_cp_txpkt_prep(struct inff_sdio *bus, struct inff_if *ifp,
-+			struct sk_buff_head *pktq, uint chan)
-+{
-+	u16 head_pad, total_len;
-+	struct sk_buff *pkt_next;
-+	u8 txseq = 0;
-+	int ret;
-+	struct inff_sdio_hdrinfo hd_info = {0};
-+
-+	txseq = bus->tx_seq;
-+	total_len = 0;
-+	skb_queue_walk(pktq, pkt_next) {
-+		/* alignment packet inserted in previous
-+		 * loop cycle can be skipped as it is
-+		 * already properly aligned and does not
-+		 * need an sdpcm header.
-+		 */
-+		if (*(u16 *)pkt_next->cb & ALIGN_SKB_FLAG)
-+			continue;
-+
-+		/* align packet data pointer */
-+		ret = inff_sdio_txpkt_hdalign(bus, pkt_next);
-+		if (ret < 0)
-+			return ret;
-+		head_pad = (u16)ret;
-+		if (head_pad)
-+			memset(pkt_next->data + bus->tx_hdrlen, 0, head_pad);
-+
-+		total_len += pkt_next->len;
-+
-+		hd_info.len = pkt_next->len;
-+		if (bus->sdiodev->sg_support && (bus->txglom && pktq->qlen > 1)) {
-+			ret = inff_sdio_txpkt_prep_sg(bus, pktq,
-+						      pkt_next, total_len);
-+			if (ret < 0)
-+				return ret;
-+			hd_info.tail_pad = (u16)ret;
-+			total_len += (u16)ret;
-+		}
-+
-+		hd_info.lastfrm = skb_queue_is_last(pktq, pkt_next);
-+		hd_info.channel_and_flags = ((chan & 0x0f) | ((ifp->ifidx << 4) & 0xf0));
-+		hd_info.dat_offset = head_pad + bus->tx_hdrlen;
-+		hd_info.seq_num = txseq++;
-+
-+		/* Now fill the header */
-+		inff_sdio_hdpack(bus, pkt_next->data, &hd_info);
-+
-+		if (INFF_MSGLVL_ON(BYTES) &&
-+		    ((INFF_MSGLVL_ON(CTL) && chan == SDPCM_CONTROL_CHANNEL) ||
-+		     (INFF_MSGLVL_ON(DATA) && chan != SDPCM_CONTROL_CHANNEL)))
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(SDIO), pkt_next->data,
-+					  hd_info.len, "Tx Frame:\n");
-+		else if (INFF_MSGLVL_ON(HDRS))
-+			inff_dbg_hex_dump(INFF_MSGLVL_ON(SDIO), pkt_next->data,
-+					  head_pad + bus->tx_hdrlen,
-+					  "Tx Header:\n");
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * inff_sdio_txpkt_postp - packet post processing for transmit
-+ * @bus: inff_sdio structure pointer
-+ * @pktq: packet list pointer
-+ *
-+ * Processes to be applied to the packet
-+ *	- Remove head padding
-+ *	- Remove tail padding
-+ */
-+static void
-+inff_sdio_txpkt_postp(struct inff_sdio *bus, struct sk_buff_head *pktq)
-+{
-+	u8 *hdr;
-+	u32 dat_offset;
-+	u16 tail_pad;
-+	u16 dummy_flags, chop_len;
-+	struct sk_buff *pkt_next, *tmp, *pkt_prev;
-+
-+	skb_queue_walk_safe(pktq, pkt_next, tmp) {
-+		dummy_flags = *(u16 *)(pkt_next->cb);
-+		if (dummy_flags & ALIGN_SKB_FLAG) {
-+			chop_len = dummy_flags & ALIGN_SKB_CHOP_LEN_MASK;
-+			if (chop_len) {
-+				pkt_prev = pkt_next->prev;
-+				skb_put(pkt_prev, chop_len);
-+			}
-+			__skb_unlink(pkt_next, pktq);
-+			inff_pkt_buf_free_skb(pkt_next);
-+		} else {
-+			hdr = pkt_next->data + bus->tx_hdrlen - SDPCM_SWHDR_LEN;
-+			dat_offset = le32_to_cpu(*(__le32 *)hdr);
-+			dat_offset = (dat_offset & SDPCM_DOFFSET_MASK) >>
-+				     SDPCM_DOFFSET_SHIFT;
-+			skb_pull(pkt_next, dat_offset);
-+			if (bus->txglom) {
-+				tail_pad = le16_to_cpu(*(__le16 *)(hdr - 2));
-+				if (tail_pad)
-+					skb_trim(pkt_next, pkt_next->len - tail_pad);
-+			}
-+		}
-+	}
-+}
-+
-+/* Writes a HW/SW header into the packet and sends it. */
-+static int inff_cp_sdio_txpkt(struct inff_sdio *bus, struct inff_if *ifp,
-+			      struct sk_buff_head *pktq, uint chan)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	struct sk_buff *pkt_next, *tmp;
-+	bool success = false;
-+	int ret;
-+
-+	if (!ifp) {
-+		inff_err("Error: inff_sdio_txpkt, ifp NULL\n");
-+		return -1;
-+	}
-+
-+	ret = inff_sdio_cp_txpkt_prep(bus, ifp, pktq, chan);
-+	if (ret)
-+		goto done;
-+
-+	sdio_claim_host(sdiodev->func1);
-+	ret = inff_sdiod_send_pkt(sdiodev, pktq);
-+	if (ret < 0) {
-+		inff_sdio_txfail(bus);
-+	} else {
-+		bus->tx_seq = (bus->tx_seq + pktq->qlen) % SDPCM_SEQ_WRAP;
-+		success = true;
-+	}
-+	sdio_release_host(sdiodev->func1);
-+
-+done:
-+	inff_sdio_txpkt_postp(bus, pktq);
-+	skb_queue_walk_safe(pktq, pkt_next, tmp) {
-+		__skb_unlink(pkt_next, pktq);
-+		inff_txfinalize(ifp, pkt_next, success);
-+	}
-+
-+	return ret;
-+}
-+
-+/* Writes a HW/SW header into the packet and sends it. */
-+/* Assumes: (a) header space already there, (b) caller holds lock */
-+static int inff_sdio_txpkt(struct inff_sdio *bus,
-+			   struct sk_buff_head *pktq, uint chan)
-+{
-+	int ret;
-+	struct sk_buff *pkt_next, *tmp;
-+
-+	ret = inff_sdio_txpkt_prep(bus, pktq, chan);
-+	if (ret)
-+		goto done;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+
-+	if (!bus->acw74xx_f2_txdma_suspended && bus->ci->chip == INF_CC_ACW74XX_CHIP_ID)
-+		inff_sdio_acw74xx_suspend_txdma(bus);
-+	ret = inff_sdiod_send_pkt(bus->sdiodev, pktq);
-+	bus->sdcnt.f2txdata++;
-+
-+	if (ret < 0)
-+		inff_sdio_txfail(bus);
-+
-+	sdio_release_host(bus->sdiodev->func1);
-+
-+done:
-+	inff_sdio_txpkt_postp(bus, pktq);
-+	if (ret == 0)
-+		bus->tx_seq = (bus->tx_seq + pktq->qlen) % SDPCM_SEQ_WRAP;
-+	skb_queue_walk_safe(pktq, pkt_next, tmp) {
-+		__skb_unlink(pkt_next, pktq);
-+		inff_proto_bcdc_txcomplete(bus->sdiodev->dev, pkt_next,
-+					   ret == 0);
-+	}
-+	return ret;
-+}
-+
-+static u16 inff_cp_sdio_sendfromq(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	struct inff_if *ifp = NULL;
-+	struct sk_buff *pkt;
-+	struct sk_buff_head pktq;
-+	u16 pkt_num;
-+	u8 tx_prec_map;
-+	int ret = 0, prec_out;
-+
-+	tx_prec_map = ~bus->flowcontrol;
-+
-+	do {
-+		pkt_num = pktq_len(&bus->txq);
-+		if (pkt_num == 0)
-+			break;
-+
-+		inff_dbg(DATA, "pkt_num: %d\n", pkt_num);
-+
-+		/* check dev whether prepare to receive next data */
-+		sdio_claim_host(sdiodev->func1);
-+		ret = inff_cp_sdio_wait_dev_ready(sdiodev, false);
-+		sdio_release_host(sdiodev->func1);
-+		if (ret < 0)
-+			break;
-+
-+		/* dequeue and transmit skb */
-+		__skb_queue_head_init(&pktq);
-+		spin_lock_bh(&bus->txq_lock);
-+
-+		/* Find highest priority packet */
-+		pkt = inff_pktq_mdeq(&bus->txq, tx_prec_map, &prec_out);
-+		if (!pkt) {
-+			spin_unlock_bh(&bus->txq_lock);
-+			break;
-+		}
-+
-+		skb_orphan(pkt);
-+		__skb_queue_tail(&pktq, pkt);
-+
-+		spin_unlock_bh(&bus->txq_lock);
-+
-+		ifp = netdev_priv(pkt->dev);
-+
-+		ret = inff_cp_sdio_txpkt(bus, ifp, &pktq, SDPCM_DATA_CHANNEL);
-+	} while (true);
-+
-+	return pkt_num;
-+}
-+
-+static uint inff_sdio_sendfromq(struct inff_sdio *bus, uint maxframes)
-+{
-+	struct sk_buff *pkt;
-+	struct sk_buff_head pktq;
-+	int ret = 0, prec_out, i;
-+	uint cnt = 0;
-+	u8 tx_prec_map, pkt_num, que_cnt;
-+
-+	tx_prec_map = ~bus->flowcontrol;
-+
-+	/* Send frames until the limit or some other event */
-+	for (cnt = 0; (cnt < maxframes) && data_ok(bus);) {
-+		pkt_num = 1;
-+		que_cnt = bus->tx_max - bus->tx_seq;
-+		if (bus->txglom) {
-+			pkt_num = min_t(u8, que_cnt - TXCTL_CREDITS,
-+					bus->sdiodev->txglomsz);
-+		}
-+
-+		pkt_num = min_t(u32, pkt_num,
-+				inff_pktq_mlen(&bus->txq, ~bus->flowcontrol));
-+		__skb_queue_head_init(&pktq);
-+		spin_lock_bh(&bus->txq_lock);
-+		for (i = 0; i < pkt_num; i++) {
-+			pkt = inff_pktq_mdeq(&bus->txq, tx_prec_map,
-+					     &prec_out);
-+			if (!pkt)
-+				break;
-+			__skb_queue_tail(&pktq, pkt);
-+		}
-+		spin_unlock_bh(&bus->txq_lock);
-+		if (i == 0)
-+			break;
-+
-+		ret = inff_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
-+
-+		cnt += i;
-+	}
-+
-+	/* Deflow-control stack if needed */
-+	if (bus->sdiodev->state == INFF_SDIOD_DATA &&
-+	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
-+		bus->txoff = false;
-+		inff_proto_bcdc_txflowblock(bus->sdiodev->dev, false);
-+	}
-+
-+	return cnt;
-+}
-+
-+static int inff_sdio_tx_ctrlframe(struct inff_sdio *bus, u8 *frame, u16 len)
-+{
-+	u8 doff = 0;
-+	u16 pad = 0, payload_len = 0;
-+	uint retries = 0;
-+	struct inff_sdio_hdrinfo hd_info = {0};
-+	int ret;
-+	struct inff_proto_bcdc_dcmd *ioctl_ptr = (struct inff_proto_bcdc_dcmd *)frame;
-+
-+	/* Back the pointer to make room for bus header */
-+	frame -= bus->tx_hdrlen;
-+	len += bus->tx_hdrlen;
-+
-+	/* Add alignment padding (optional for ctl frames) */
-+	doff = ((unsigned long)frame % bus->head_align);
-+	if (doff) {
-+		frame -= doff;
-+		len += doff;
-+		memset(frame + bus->tx_hdrlen, 0, doff);
-+	}
-+
-+	/* Round send length to next SDIO block */
-+	if (bus->roundup && bus->blocksize && len > bus->blocksize) {
-+		pad = bus->blocksize - (len % bus->blocksize);
-+		if (pad > bus->roundup || pad >= bus->blocksize)
-+			pad = 0;
-+	} else if (len % bus->head_align) {
-+		pad = bus->head_align - (len % bus->head_align);
-+	}
-+	len += pad;
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		payload_len = len - pad;
-+		hd_info.len = len;
-+	} else {
-+		hd_info.len = len - pad;
-+	}
-+
-+	hd_info.channel_and_flags = SDPCM_CONTROL_CHANNEL;
-+
-+	hd_info.dat_offset = doff + bus->tx_hdrlen;
-+	hd_info.seq_num = bus->tx_seq;
-+	hd_info.lastfrm = true;
-+	hd_info.tail_pad = pad;
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		if (ioctl_ptr->cmd > NON_WLC_ACW74XX_OHD_IOCTL_BASE) {
-+			hd_info.channel_and_flags = SDPCM_OHD_CHANNEL;
-+			ioctl_ptr->cmd -= NON_WLC_ACW74XX_OHD_IOCTL_BASE;
-+		}
-+	}
-+
-+	inff_sdio_hdpack(bus, frame, &hd_info);
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		//update reserve bytes (B10 and B11) with actual payload length
-+		*((__le16 *)(frame + 10)) = cpu_to_le16(payload_len);
-+	}
-+
-+	if (bus->txglom)
-+		inff_sdio_update_hwhdr(frame, len);
-+
-+	inff_dbg_hex_dump(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(CTL),
-+			  frame, len, "Tx Frame:\n");
-+	inff_dbg_hex_dump(!(INFF_MSGLVL_ON(BYTES) && INFF_MSGLVL_ON(CTL)) &&
-+			  INFF_MSGLVL_ON(HDRS),
-+			  frame, min_t(u16, len, 16), "TxHdr:\n");
-+
-+	if (!bus->acw74xx_f2_txdma_suspended && bus->ci->chip == INF_CC_ACW74XX_CHIP_ID)
-+		inff_sdio_acw74xx_suspend_txdma(bus);
-+
-+	do {
-+		ret = inff_sdiod_send_buf(bus->sdiodev, SDIO_FUNC_2, frame, len);
-+
-+		if (ret < 0)
-+			inff_sdio_txfail(bus);
++		entry = &fws->desc.other;
++
++	pq = &entry->afq;
++	if (WARN_ON(prec >= pq->num_prec))
++		return -EINVAL;
++
++	q = &pq->q[prec].skblist;
++	skb_queue_walk(q, p) {
++		if (p && hcnt != inff_skb_htod_tag_get_field(p, FREERUN))
++			b = p;
 +		else
-+			bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQ_WRAP;
-+	} while (ret < 0 && retries++ < TXRETRIES);
-+
-+	return ret;
-+}
-+
-+static void inff_sdio_bus_stop(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+	struct inff_core *core = bus->sdio_core;
-+	u32 local_hostintmask;
-+	u8 saveclk, bpreq;
-+	int err;
-+
-+	if (bus->watchdog_tsk) {
-+		get_task_struct(bus->watchdog_tsk);
-+		send_sig(SIGTERM, bus->watchdog_tsk, 1);
-+		kthread_stop_put(bus->watchdog_tsk);
-+		bus->watchdog_tsk = NULL;
++			break;
 +	}
 +
-+	if (sdiodev->state != INFF_SDIOD_NOMEDIUM) {
-+		sdio_claim_host(sdiodev->func1);
-+
-+		/* Enable clock for device interrupts */
-+		inff_sdio_bus_sleep(bus, false, false);
-+
-+		/* Disable and clear interrupts at the chip level also */
-+		inff_sdiod_writel(sdiodev, core->base + SD_REG(hostintmask),
-+				  0, NULL);
-+
-+		local_hostintmask = bus->hostintmask;
-+		bus->hostintmask = 0;
-+
-+		if (inff_socitype_is_ai(bus_if))  {
-+			/* Force backplane clocks to assure F2 interrupt propagates */
-+			saveclk = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+						   &err);
-+			if (!err) {
-+				bpreq = saveclk;
-+				bpreq |= SBSDIO_FORCE_HT;
-+				inff_sdiod_writeb(sdiodev,
-+						  SBSDIO_FUNC1_CHIPCLKCSR,
-+						  bpreq, &err);
-+			}
-+			if (err)
-+				inff_err("Failed to force clock for F2: err %d\n",
-+					 err);
-+		}
-+
-+		/* Turn off the bus (F2), free any pending packets */
-+		inff_dbg(INTR, "disable SDIO interrupts\n");
-+		sdio_disable_func(sdiodev->func2);
-+
-+		/* Clear any pending interrupts now that F2 is disabled */
-+		inff_sdiod_writel(sdiodev, core->base + SD_REG(intstatus),
-+				  local_hostintmask, NULL);
-+
-+		sdio_release_host(sdiodev->func1);
-+	}
-+	/* Clear the data packet queues */
-+	inff_pktq_flush(&bus->txq, true, NULL, NULL);
-+
-+	/* Clear any held glomming stuff */
-+	inff_pkt_buf_free_skb(bus->glomd);
-+	inff_sdio_free_glom(bus);
-+
-+	/* Clear rx control and wake any waiters */
-+	spin_lock_bh(&bus->rxctl_lock);
-+	bus->rxlen = 0;
-+	spin_unlock_bh(&bus->rxctl_lock);
-+	inff_sdio_dcmd_resp_wake(bus);
-+
-+	/* Reset some F2 state stuff */
-+	bus->rxskip = false;
-+	bus->tx_seq = 0;
-+	bus->rx_seq = 0;
-+}
-+
-+static inline void inff_sdio_clrintr(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev;
-+	unsigned long flags;
-+
-+	sdiodev = bus->sdiodev;
-+	if (sdiodev->oob_irq_requested) {
-+		spin_lock_irqsave(&sdiodev->irq_en_lock, flags);
-+		if (!sdiodev->irq_en && !atomic_read(&bus->ipend)) {
-+			enable_irq(sdiodev->settings->bus.sdio.oob_irq_nr);
-+			sdiodev->irq_en = true;
-+		}
-+		spin_unlock_irqrestore(&sdiodev->irq_en_lock, flags);
-+	}
-+}
-+
-+static int inff_sdio_intr_rstatus(struct inff_sdio *bus)
-+{
-+	struct inff_core *core = bus->sdio_core;
-+	u32 addr;
-+	unsigned long val;
-+	int ret;
-+
-+	addr = core->base + SD_REG(intstatus);
-+
-+	val = inff_sdiod_readl(bus->sdiodev, addr, &ret);
-+	bus->sdcnt.f1regdata++;
-+	if (ret != 0)
-+		return ret;
-+
-+	val &= bus->hostintmask;
-+	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
-+
-+	/* Clear interrupts */
-+	if (val) {
-+		inff_sdiod_writel(bus->sdiodev, addr, val, &ret);
-+		bus->sdcnt.f1regdata++;
-+		atomic_or(val, &bus->intstatus);
++	if (p == (struct sk_buff *)q) {
++		if (b)
++			inff_dbg(SDIO, "can't find matching seq(%d)\n", hcnt);
++		else
++			inff_dbg(SDIO, "queue is empty\n");
++		return 0;
 +	}
 +
-+	return ret;
-+}
-+
-+static void inff_sdio_dpc(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiod = bus->sdiodev;
-+	u32 newstatus = 0;
-+	u32 intstat_addr = bus->sdio_core->base + SD_REG(intstatus);
-+	unsigned long intstatus;
-+	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
-+	uint framecnt;			/* Temporary counter of tx/rx frames */
-+	int err = 0;
-+	u16 txq_num = 0;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+
-+	if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+		/* If waiting for HTAVAIL, check status */
-+		if (!bus->sr_enabled && bus->clkstate == CLK_PENDING) {
-+			u8 clkctl, devctl = 0;
-+
-+#ifdef DEBUG
-+			/* Check for inconsistent device control */
-+			devctl = inff_sdiod_readb(bus->sdiodev, SBSDIO_DEVICE_CTL,
-+						  &err);
-+#endif			/* DEBUG */
-+
-+			/* Read CSR, if clock on switch to AVAIL, else ignore */
-+			clkctl = inff_sdiod_readb(bus->sdiodev,
-+						  SBSDIO_FUNC1_CHIPCLKCSR, &err);
-+
-+			inff_dbg(SDIO, "DPC: PENDING, devctl 0x%02x clkctl 0x%02x\n",
-+				 devctl, clkctl);
-+
-+			if (SBSDIO_HTAV(clkctl)) {
-+				devctl = inff_sdiod_readb(bus->sdiodev,
-+							  SBSDIO_DEVICE_CTL, &err);
-+				devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
-+				inff_sdiod_writeb(bus->sdiodev,
-+						  SBSDIO_DEVICE_CTL, devctl, &err);
-+				bus->clkstate = CLK_AVAIL;
-+			}
-+		}
-+	}
-+	/* Make sure backplane clock is on */
-+	inff_sdio_bus_sleep(bus, false, true);
-+
-+	/* Pending interrupt indicates new device status */
-+	if (atomic_read(&bus->ipend) > 0) {
-+		atomic_set(&bus->ipend, 0);
-+		err = inff_sdio_intr_rstatus(bus);
-+	}
-+
-+	/* Start with leftover status bits */
-+	intstatus = atomic_xchg(&bus->intstatus, 0);
-+
-+	/* Handle flow-control change: read new state in case our ack
-+	 * crossed another change interrupt.  If change still set, assume
-+	 * FC ON for safety, let next loop through do the debounce.
-+	 */
-+	if (intstatus & I_HMB_FC_CHANGE) {
-+		intstatus &= ~I_HMB_FC_CHANGE;
-+		inff_sdiod_writel(sdiod, intstat_addr, I_HMB_FC_CHANGE, &err);
-+
-+		newstatus = inff_sdiod_readl(sdiod, intstat_addr, &err);
-+
-+		bus->sdcnt.f1regdata += 2;
-+		atomic_set(&bus->fcstate,
-+			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-+		intstatus |= (newstatus & bus->hostintmask);
-+	}
-+
-+	/* Handle host mailbox indication */
-+	if (intstatus & I_HMB_HOST_INT) {
-+		u32 hmb_data = 0;
-+
-+		intstatus &= ~I_HMB_HOST_INT;
-+		intstatus |= inff_sdio_hostmail(bus, &hmb_data);
-+	}
-+
-+	sdio_release_host(bus->sdiodev->func1);
-+
-+	/* Generally don't ask for these, can get CRC errors... */
-+	if (intstatus & I_WR_OOSYNC) {
-+		inff_err("Dongle reports WR_OOSYNC\n");
-+		intstatus &= ~I_WR_OOSYNC;
-+	}
-+
-+	if (intstatus & I_RD_OOSYNC) {
-+		inff_err("Dongle reports RD_OOSYNC\n");
-+		intstatus &= ~I_RD_OOSYNC;
-+	}
-+
-+	if (intstatus & I_SBINT) {
-+		inff_err("Dongle reports SBINT\n");
-+		intstatus &= ~I_SBINT;
-+	}
-+
-+	/* Would be active due to wake-wlan in gSPI */
-+	if (intstatus & I_CHIPACTIVE) {
-+		inff_dbg(SDIO, "Dongle reports CHIPACTIVE\n");
-+		intstatus &= ~I_CHIPACTIVE;
-+	}
-+
-+	if (intstatus & I_HMB_FC_STATE) {
-+		inff_dbg(INFO, "Dongle reports HMB_FC_STATE\n");
-+		intstatus &= ~I_HMB_FC_STATE;
-+	}
-+
-+	/* Ignore frame indications if rxskip is set */
-+	if (bus->rxskip)
-+		intstatus &= ~I_HMB_FRAME_IND;
-+
-+	/* On frame indication, read available frames */
-+	if (intstatus & I_HMB_FRAME_IND) {
-+		if (inff_socitype_is_cp(bus->sdiodev->bus_if)) {
-+			inff_cp_sdio_readframes(bus);
-+		} else if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+			if (bus->clkstate == CLK_AVAIL && !sdiod->redownload_fw)
-+				inff_sdio_readframes(bus, bus->rxbound);
-+		}
-+		if (!bus->rxpending)
-+			intstatus &= ~I_HMB_FRAME_IND;
-+	}
-+
-+	/* Keep still-pending events for next scheduling */
-+	if (intstatus)
-+		atomic_or(intstatus, &bus->intstatus);
-+
-+	inff_sdio_clrintr(bus);
-+
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_CP:
-+		if (bus->ctrl_frame_stat) {
-+			sdio_claim_host(bus->sdiodev->func1);
-+			err = inff_cp_sdio_wait_dev_ready(bus->sdiodev, false);
-+
-+			err |= inff_sdio_tx_ctrlframe(bus, bus->ctrl_frame_buf,
-+						      bus->ctrl_frame_len);
-+			bus->ctrl_frame_err = err;
-+			wmb(); /*Ensure tx ctrlframe cache line entry is flushed*/
-+			bus->ctrl_frame_stat = false;
-+			if (err)
-+				inff_err("sdio ctrlframe tx failed err=%d\n", err);
-+			sdio_release_host(bus->sdiodev->func1);
-+			inff_sdio_wait_event_wakeup(bus);
-+		}
-+
-+		txq_num = inff_cp_sdio_sendfromq(bus);
-+		if (txq_num)
-+			inff_sdio_trigger_dpc(bus);
-+		break;
-+	case INFF_SOCI_AI:
-+		if (bus->clkstate == CLK_AVAIL && inff_sdio_f2_ready(bus)) {
-+			if (bus->ctrl_frame_stat && txctl_ok(bus)) {
-+				sdio_claim_host(bus->sdiodev->func1);
-+				if (bus->ctrl_frame_stat) {
-+					err = inff_sdio_tx_ctrlframe(bus, bus->ctrl_frame_buf,
-+								     bus->ctrl_frame_len);
-+					bus->ctrl_frame_err = err;
-+					wmb(); /*Ensure tx ctrlframe cache line entry is flushed*/
-+					bus->ctrl_frame_stat = false;
-+					if (err)
-+						inff_err("sdio ctrlframe tx failed err=%d\n", err);
-+				}
-+				sdio_release_host(bus->sdiodev->func1);
-+				inff_sdio_wait_event_wakeup(bus);
-+			}
-+			/* Send queued frames (limit 1 if rx may still be pending) */
-+			if (!atomic_read(&bus->fcstate) && data_ok(bus) &&
-+			    inff_pktq_mlen(&bus->txq, ~bus->flowcontrol) && txlimit) {
-+				framecnt = bus->rxpending ? min(txlimit, bus->txminmax) :
-+								txlimit;
-+				inff_sdio_sendfromq(bus, framecnt);
-+			}
-+		}
-+
-+		if (bus->sdiodev->state != INFF_SDIOD_DATA || err != 0) {
-+			inff_err("failed backplane access over SDIO, halting operation\n");
-+			atomic_set(&bus->intstatus, 0);
-+			if (bus->ctrl_frame_stat) {
-+				sdio_claim_host(bus->sdiodev->func1);
-+				if (bus->ctrl_frame_stat) {
-+					bus->ctrl_frame_err = -ENODEV;
-+					/* Ensure err is written to variable before wakeup */
-+					wmb();
-+					bus->ctrl_frame_stat = false;
-+					inff_sdio_wait_event_wakeup(bus);
-+				}
-+				sdio_release_host(bus->sdiodev->func1);
-+			}
-+		} else if (atomic_read(&bus->intstatus) ||
-+			   atomic_read(&bus->ipend) > 0 ||
-+			   (!atomic_read(&bus->fcstate) &&
-+			    inff_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
-+			    data_ok(bus))) {
-+			bus->dpc_triggered = true;
-+		}
-+		break;
-+	}
-+}
-+
-+static struct pktq *inff_sdio_bus_gettxq(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	return &bus->txq;
-+}
-+
-+static bool inff_sdio_prec_enq(struct pktq *q, struct sk_buff *pkt, int prec)
-+{
-+	struct sk_buff *p;
-+	int eprec = -1;		/* precedence to evict from */
-+
-+	/* Fast case, precedence queue is not full and we are also not
-+	 * exceeding total queue length
-+	 */
-+	if (!pktq_pfull(q, prec) && !pktq_full(q)) {
-+		inff_pktq_penq(q, prec, pkt);
-+		return true;
-+	}
-+
-+	/* Determine precedence from which to evict packet, if any */
-+	if (pktq_pfull(q, prec)) {
-+		eprec = prec;
-+	} else if (pktq_full(q)) {
-+		p = inff_pktq_peek_tail(q, &eprec);
-+		if (!p)
-+			inff_err("inff_pktq_peek_tail() failed\n");
-+		if (eprec > prec)
-+			return false;
-+	}
-+
-+	/* Evict if needed */
-+	if (eprec >= 0) {
-+		/* Detect queueing to unconfigured precedence */
-+		if (eprec == prec)
-+			return false;	/* refuse newer (incoming) packet */
-+		/* Evict packet according to discard policy */
-+		p = inff_pktq_pdeq_tail(q, eprec);
-+		if (!p)
-+			inff_err("inff_pktq_pdeq_tail() failed\n");
-+		inff_pkt_buf_free_skb(p);
-+	}
-+
-+	/* Enqueue */
-+	p = inff_pktq_penq(q, prec, pkt);
-+	if (!p)
-+		inff_err("inff_pktq_penq() failed\n");
-+
-+	return p ? true : false;
-+}
-+
-+static int inff_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
-+{
-+	int ret = -EBADE;
-+	uint prec;
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	if (sdiodev->state != INFF_SDIOD_DATA)
-+		return -EIO;
-+
-+	/* Add space for the header */
-+	skb_push(pkt, bus->tx_hdrlen);
-+	/* precondition: IS_ALIGNED((unsigned long)(pkt->data), 2) */
-+
-+	/* In WLAN, priority is always set by the AP using WMM parameters
-+	 * and this need not always follow the standard 802.1d priority.
-+	 * Based on AP WMM config, map from 802.1d priority to corresponding
-+	 * precedence level.
-+	 */
-+	prec = inff_map_prio_to_prec(bus_if->drvr->config,
-+				     (pkt->priority & PRIOMASK));
-+
-+	/* Check for existing queue, current flow-control,
-+	 * pending event, or pending clock
-+	 */
-+	bus->sdcnt.fcqueued++;
-+
-+	skb_tx_timestamp(pkt);
-+
-+	/* Priority based enq */
-+	spin_lock_bh(&bus->txq_lock);
-+	/* reset bus_flags in packet cb */
-+	*(u16 *)(pkt->cb) = 0;
-+	if (!inff_sdio_prec_enq(&bus->txq, pkt, prec)) {
-+		skb_pull(pkt, bus->tx_hdrlen);
-+		inff_err("out of bus->txq !!!\n");
-+		ret = -ENOSR;
++	if (!b) {
++		p = inff_pktq_pdeq(pq, prec);
 +	} else {
-+		ret = 0;
++		inff_dbg(SDIO, "out of order, seq(%d), head_seq(%d)\n", hcnt,
++			 inff_skb_htod_tag_get_field(skb_peek(q), FREERUN));
++		skb_unlink(p, q);
++		pq->len--;
 +	}
 +
-+	if (inff_socitype_is_ai(sdiodev->bus_if)) {
-+		if (pktq_len(&bus->txq) >= TXHI) {
-+			bus->txoff = true;
-+			inff_proto_bcdc_txflowblock(dev, true);
-+		}
-+	}
-+	spin_unlock_bh(&bus->txq_lock);
-+
-+#ifdef DEBUG
-+	if (pktq_plen(&bus->txq, prec) > qcount[prec])
-+		qcount[prec] = pktq_plen(&bus->txq, prec);
-+#endif
-+
-+	inff_sdio_trigger_dpc(bus);
-+	return ret;
-+}
-+
-+#ifdef DEBUG
-+#define CONSOLE_LINE_MAX	192
-+#define CPUSS_CONS_MAGIC_WORD   0xAABB1122
-+
-+static int inff_sdio_read_cpuss_console(struct inff_sdio *bus)
-+{
-+	u32 addr;
-+	int rv, idx;
-+	u32 n;
-+	u8 ch;
-+	struct cpu_log_le log_le;
-+	struct inff_console *c = &bus->cpuss_console;
-+	u8 line[CONSOLE_LINE_MAX];
-+	u32 magic_word = 0;
-+
-+	if (!bus->cpuss_console_addr)
-+		return 0;
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, bus->cpuss_console_addr, (u8 *)&log_le,
-+			      sizeof(log_le));
-+
-+	if (rv < 0)
-+		return rv;
-+
-+	/* Allocate console buffer (one time only) */
-+	if (!c->buf) {
-+		c->bufsize = le32_to_cpu(log_le.buf_size);
-+		c->buf = kmalloc(c->bufsize, GFP_ATOMIC);
-+		if (!c->buf)
-+			return -ENOMEM;
-+	}
-+
-+	magic_word = le32_to_cpu(log_le.magic_word);
-+	if (magic_word != CPUSS_CONS_MAGIC_WORD) {
-+		inff_err("cpuss log buffer not initialized!");
-+		return 0;
-+	}
-+
-+	idx = le32_to_cpu(log_le.idx);
-+
-+	/* Protect against corrupt value */
-+	if (idx > c->bufsize)
-+		return -EBADE;
-+
-+	/*
-+	 * Skip reading the console buffer if the index pointer
-+	 * has not moved
-+	 */
-+	if (idx == c->last)
-+		return 0;
-+
-+	/* Read the console buffer */
-+	addr = le32_to_cpu(log_le.buf);
-+
-+	if (addr == 0)
-+		return 0;
-+
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr, c->buf, c->bufsize);
-+	if (rv < 0)
-+		return rv;
-+
-+	while (c->last != idx) {
-+		for (n = 0; n < CONSOLE_LINE_MAX - 2; n++) {
-+			if (c->last == idx) {
-+				/* This would output a partial line.
-+				 * Instead, back up
-+				 * the buffer pointer and output this
-+				 * line next time around.
-+				 */
-+				if (c->last >= n)
-+					c->last -= n;
-+				else
-+					c->last = c->bufsize - n;
-+				goto break2;
-+			}
-+			ch = c->buf[c->last];
-+			c->last = (c->last + 1) % c->bufsize;
-+			if (ch == '\n')
-+				break;
-+			line[n] = ch;
-+		}
-+
-+		if (n > 0) {
-+			if (line[n - 1] == '\r')
-+				n--;
-+			line[n] = 0;
-+			pr_debug("CPUSS Console : %s\n", line);
-+		}
-+	}
-+break2:
++	if (pktout)
++		*pktout = p;
 +
 +	return 0;
 +}
 +
-+static int inff_sdio_readconsole(struct inff_sdio *bus)
++static int inff_fws_enque_afq(struct inff_fws_info *fws, struct sk_buff *skb)
 +{
-+	struct inff_console *c = &bus->console;
-+	u8 line[CONSOLE_LINE_MAX], ch;
-+	u32 n, idx, addr;
-+	int rv;
++	struct inff_fws_mac_descriptor *entry;
++	u32 hslot = inff_skb_htod_tag_get_field(skb, HSLOT);
++	u32 fifo = inff_skb_htod_tag_get_field(skb, FIFO);
 +
-+	/* Don't do anything until FWREADY updates console address */
-+	if (bus->console_addr == 0)
-+		return 0;
-+
-+	/* Read console log struct */
-+	addr = bus->console_addr + offsetof(struct rte_console, log_le);
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&c->log_le,
-+			      sizeof(c->log_le));
-+	if (rv < 0)
-+		return rv;
-+
-+	/* Allocate console buffer (one time only) */
-+	if (!c->buf) {
-+		c->bufsize = le32_to_cpu(c->log_le.buf_size);
-+		c->buf = kmalloc(c->bufsize, GFP_ATOMIC);
-+		if (!c->buf)
-+			return -ENOMEM;
-+	}
-+
-+	idx = le32_to_cpu(c->log_le.idx);
-+
-+	/* Protect against corrupt value */
-+	if (idx > c->bufsize)
-+		return -EBADE;
-+
-+	/* Skip reading the console buffer if the index pointer
-+	 * has not moved
-+	 */
-+	if (idx == c->last)
-+		return 0;
-+
-+	/* Read the console buffer */
-+	addr = le32_to_cpu(c->log_le.buf);
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID)
-+		addr += ACW74XX_WIFISS_ADDR_2_CPUSS_ADDR_OFFSET;
-+
-+	/* During FW Control Switch from Bootloader to Ram
-+	 * Console address read will return all 0's which is not a valid.
-+	 * when we try to access 0 ram address we are getting SDIO error.
-+	 */
-+	if (addr == 0)
-+		return 0;
-+
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr, c->buf, c->bufsize);
-+	if (rv < 0)
-+		return rv;
-+
-+	while (c->last != idx) {
-+		for (n = 0; n < CONSOLE_LINE_MAX - 2; n++) {
-+			if (c->last == idx) {
-+				/* This would output a partial line.
-+				 * Instead, back up
-+				 * the buffer pointer and output this
-+				 * line next time around.
-+				 */
-+				if (c->last >= n)
-+					c->last -= n;
-+				else
-+					c->last = c->bufsize - n;
-+				goto break2;
-+			}
-+			ch = c->buf[c->last];
-+			c->last = (c->last + 1) % c->bufsize;
-+			if (ch == '\n')
-+				break;
-+			line[n] = ch;
-+		}
-+
-+		if (n > 0) {
-+			if (line[n - 1] == '\r')
-+				n--;
-+			line[n] = 0;
-+			pr_debug("CONSOLE: %s\n", line);
-+		}
-+	}
-+break2:
-+
-+	return 0;
-+}
-+#endif				/* DEBUG */
-+
-+static int
-+inff_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+	int ret;
-+
-+	if (sdiodev->state != INFF_SDIOD_DATA)
-+		return -EIO;
-+
-+	/* Send from dpc */
-+	bus->ctrl_frame_buf = msg;
-+	bus->ctrl_frame_len = msglen;
-+	/* Ensure msg is written to variable before trigger dpc */
-+	wmb();
-+	bus->ctrl_frame_stat = true;
-+
-+	inff_sdio_trigger_dpc(bus);
-+	wait_event_timeout(bus->ctrl_wait, !bus->ctrl_frame_stat,
-+			   CTL_DONE_TIMEOUT);
-+
-+	ret = 0;
-+	if (bus->ctrl_frame_stat) {
-+		sdio_claim_host(bus->sdiodev->func1);
-+		if (bus->ctrl_frame_stat) {
-+			inff_dbg(SDIO, "ctrl_frame timeout\n");
-+			bus->ctrl_frame_stat = false;
-+			ret = -ETIMEDOUT;
-+		}
-+		sdio_release_host(bus->sdiodev->func1);
-+	}
-+	if (!ret) {
-+		inff_dbg(SDIO, "ctrl_frame complete, err=%d\n",
-+			 bus->ctrl_frame_err);
-+		/* Ensure read completed */
-+		rmb();
-+		ret = bus->ctrl_frame_err;
-+	}
-+
-+	if (ret)
-+		bus->sdcnt.tx_ctlerrs++;
++	if (hslot < INFF_FWS_MAC_DESC_TABLE_SIZE)
++		entry = &fws->desc.nodes[hslot];
++	else if (hslot < INFF_FWS_MAC_DESC_TABLE_SIZE + INFF_MAX_IFS)
++		entry = &fws->desc.iface[hslot - INFF_FWS_MAC_DESC_TABLE_SIZE];
 +	else
-+		bus->sdcnt.tx_ctlpkts++;
++		entry = &fws->desc.other;
 +
-+	return ret;
-+}
-+
-+#ifdef DEBUG
-+static int inff_sdio_dump_console(struct seq_file *seq, struct inff_sdio *bus,
-+				  struct sdpcm_shared *sh)
-+{
-+	u32 addr, console_ptr, console_size, console_index;
-+	char *conbuf = NULL;
-+	__le32 sh_val;
-+	int rv;
-+
-+	/* obtain console information from device memory */
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le);
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr,
-+			      (u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_ptr = le32_to_cpu(sh_val);
-+
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le.buf_size);
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr,
-+			      (u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_size = le32_to_cpu(sh_val);
-+
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le.idx);
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, addr,
-+			      (u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_index = le32_to_cpu(sh_val);
-+
-+	/* allocate buffer for console data */
-+	if (console_size <= CONSOLE_BUFFER_MAX)
-+		conbuf = vzalloc(console_size + 1);
-+
-+	if (!conbuf)
-+		return -ENOMEM;
-+
-+	/* obtain the console data from device */
-+	conbuf[console_size] = '\0';
-+	rv = inff_sdiod_ramrw(bus->sdiodev, false, console_ptr, (u8 *)conbuf,
-+			      console_size);
-+	if (rv < 0)
-+		goto done;
-+
-+	rv = seq_write(seq, conbuf + console_index,
-+		       console_size - console_index);
-+	if (rv < 0)
-+		goto done;
-+
-+	if (console_index > 0)
-+		rv = seq_write(seq, conbuf, console_index - 1);
-+
-+done:
-+	vfree(conbuf);
-+	return rv;
-+}
-+
-+static int inff_sdio_trap_info(struct seq_file *seq, struct inff_sdio *bus,
-+			       struct sdpcm_shared *sh)
-+{
-+	int error;
-+	struct inff_trap_info tr;
-+
-+	if ((sh->flags & SDPCM_SHARED_TRAP) == 0) {
-+		inff_dbg(INFO, "no trap in firmware\n");
-+		return 0;
-+	}
-+
-+	error = inff_sdiod_ramrw(bus->sdiodev, false, sh->trap_addr, (u8 *)&tr,
-+				 sizeof(struct inff_trap_info));
-+	if (error < 0)
-+		return error;
-+
-+	if (seq)
-+		seq_printf(seq,
-+			   "dongle trap info: type 0x%x @ epc 0x%08x\n"
-+			   "  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
-+			   "  lr   0x%08x pc   0x%08x offset 0x%x\n"
-+			   "  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
-+			   "  r4   0x%08x r5   0x%08x r6 0x%08x r7 0x%08x\n",
-+			   le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
-+			   le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
-+			   le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
-+			   le32_to_cpu(tr.pc), sh->trap_addr,
-+			   le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
-+			   le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
-+			   le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
-+			   le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
-+	else
-+		pr_debug("dongle trap info: type 0x%x @ epc 0x%08x\n"
-+			 "  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
-+			 "  lr   0x%08x pc   0x%08x offset 0x%x\n"
-+			 "  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
-+			 "  r4   0x%08x r5   0x%08x r6 0x%08x r7 0x%08x\n",
-+			 le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
-+			 le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
-+			 le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
-+			 le32_to_cpu(tr.pc), sh->trap_addr,
-+			 le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
-+			 le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
-+			 le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
-+			 le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
-+	return 0;
-+}
-+
-+static int inff_sdio_assert_info(struct seq_file *seq, struct inff_sdio *bus,
-+				 struct sdpcm_shared *sh)
-+{
-+	int error = 0;
-+	char file[80] = "?";
-+	char expr[80] = "<???>";
-+
-+	if ((sh->flags & SDPCM_SHARED_ASSERT_BUILT) == 0) {
-+		inff_dbg(INFO, "firmware not built with -assert\n");
-+		return 0;
-+	} else if ((sh->flags & SDPCM_SHARED_ASSERT) == 0) {
-+		inff_dbg(INFO, "no assert in dongle\n");
-+		return 0;
-+	}
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+	if (sh->assert_file_addr != 0) {
-+		error = inff_sdiod_ramrw(bus->sdiodev, false,
-+					 sh->assert_file_addr, (u8 *)file, 80);
-+		if (error < 0)
-+			return error;
-+	}
-+	if (sh->assert_exp_addr != 0) {
-+		error = inff_sdiod_ramrw(bus->sdiodev, false,
-+					 sh->assert_exp_addr, (u8 *)expr, 80);
-+		if (error < 0)
-+			return error;
-+	}
-+	sdio_release_host(bus->sdiodev->func1);
-+
-+	seq_printf(seq, "dongle assert: %s:%d: assert(%s)\n",
-+		   file, sh->assert_line, expr);
-+	return 0;
-+}
-+
-+static int inff_sdio_checkdied(struct inff_sdio *bus)
-+{
-+	int error;
-+	struct sdpcm_shared sh;
-+
-+	if (inff_socitype_is_cp(bus->sdiodev->bus_if)) {
-+		inff_dbg(INFO, "FW trap support not enabled for CP.\n");
-+		return 0;
-+	}
-+
-+	error = inff_sdio_readshared(bus, &sh);
-+
-+	if (error < 0)
-+		return error;
-+
-+	if ((sh.flags & SDPCM_SHARED_ASSERT_BUILT) == 0)
-+		inff_dbg(INFO, "firmware not built with -assert\n");
-+	else if (sh.flags & SDPCM_SHARED_ASSERT)
-+		inff_err("assertion in dongle\n");
-+
-+	if (sh.flags & SDPCM_SHARED_TRAP) {
-+		inff_err("firmware trap in dongle\n");
-+		inff_sdio_trap_info(NULL, bus, &sh);
-+	}
++	inff_pktq_penq(&entry->afq, fifo, skb);
 +
 +	return 0;
 +}
 +
-+static int inff_sdio_died_dump(struct seq_file *seq, struct inff_sdio *bus)
++void inff_fws_bus_blocked(struct inff_pub *drvr, bool flow_blocked)
 +{
-+	int error = 0;
-+	struct sdpcm_shared sh;
-+
-+	error = inff_sdio_readshared(bus, &sh);
-+	if (error < 0)
-+		goto done;
-+
-+	error = inff_sdio_assert_info(seq, bus, &sh);
-+	if (error < 0)
-+		goto done;
-+
-+	error = inff_sdio_trap_info(seq, bus, &sh);
-+	if (error < 0)
-+		goto done;
-+
-+	error = inff_sdio_dump_console(seq, bus, &sh);
-+
-+done:
-+	return error;
-+}
-+
-+static int inff_sdio_forensic_read(struct seq_file *seq, void *data)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(seq->private);
-+	struct inff_sdio *bus = bus_if->bus_priv.sdio->bus;
-+
-+	return inff_sdio_died_dump(seq, bus);
-+}
-+
-+static int inff_debugfs_sdio_count_read(struct seq_file *seq, void *data)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(seq->private);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio_count *sdcnt = &sdiodev->bus->sdcnt;
-+
-+	seq_printf(seq,
-+		   "intrcount:    %u\nlastintrs:    %u\n"
-+		   "pollcnt:      %u\nregfails:     %u\n"
-+		   "tx_sderrs:    %u\nfcqueued:     %u\n"
-+		   "rxrtx:        %u\nrx_toolong:   %u\n"
-+		   "rxc_errors:   %u\nrx_hdrfail:   %u\n"
-+		   "rx_badhdr:    %u\nrx_badseq:    %u\n"
-+		   "fc_rcvd:      %u\nfc_xoff:      %u\n"
-+		   "fc_xon:       %u\nrxglomfail:   %u\n"
-+		   "rxglomframes: %u\nrxglompkts:   %u\n"
-+		   "f2rxhdrs:     %u\nf2rxdata:     %u\n"
-+		   "f2txdata:     %u\nf1regdata:    %u\n"
-+		   "tickcnt:      %u\ntx_ctlerrs:   %lu\n"
-+		   "tx_ctlpkts:   %lu\nrx_ctlerrs:   %lu\n"
-+		   "rx_ctlpkts:   %lu\nrx_readahead: %lu\n",
-+		   sdcnt->intrcount, sdcnt->lastintrs,
-+		   sdcnt->pollcnt, sdcnt->regfails,
-+		   sdcnt->tx_sderrs, sdcnt->fcqueued,
-+		   sdcnt->rxrtx, sdcnt->rx_toolong,
-+		   sdcnt->rxc_errors, sdcnt->rx_hdrfail,
-+		   sdcnt->rx_badhdr, sdcnt->rx_badseq,
-+		   sdcnt->fc_rcvd, sdcnt->fc_xoff,
-+		   sdcnt->fc_xon, sdcnt->rxglomfail,
-+		   sdcnt->rxglomframes, sdcnt->rxglompkts,
-+		   sdcnt->f2rxhdrs, sdcnt->f2rxdata,
-+		   sdcnt->f2txdata, sdcnt->f1regdata,
-+		   sdcnt->tickcnt, sdcnt->tx_ctlerrs,
-+		   sdcnt->tx_ctlpkts, sdcnt->rx_ctlerrs,
-+		   sdcnt->rx_ctlpkts, sdcnt->rx_readahead_cnt);
-+
-+	return 0;
-+}
-+
-+static void inff_sdio_debugfs_create(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_pub *drvr = bus_if->drvr;
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+	struct dentry *dentry = inff_debugfs_get_devdir(drvr);
-+
-+	if (IS_ERR_OR_NULL(dentry))
-+		return;
-+
-+	bus->console_interval = INFF_CONSOLE_INTERVAL;
-+	bus->cpuss_console_interval = INFF_CPUSS_CONSOLE_INTERVAL;
-+
-+	inff_debugfs_add_entry(drvr, "forensics", inff_sdio_forensic_read);
-+	inff_debugfs_add_entry(drvr, "counters",
-+			       inff_debugfs_sdio_count_read);
-+	debugfs_create_u32("console_interval", 0644, dentry,
-+			   &bus->console_interval);
-+	debugfs_create_u32("cpuss_console_interval", 0644, dentry,
-+			   &bus->cpuss_console_interval);
-+}
-+#else
-+static int inff_sdio_checkdied(struct inff_sdio *bus)
-+{
-+	return 0;
-+}
-+
-+static void inff_sdio_debugfs_create(struct device *dev)
-+{
-+}
-+#endif /* DEBUG */
-+
-+static int
-+inff_sdio_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
-+{
-+	int timeleft;
-+	uint rxlen = 0;
-+	bool pending;
-+	u8 *buf;
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	if (sdiodev->state != INFF_SDIOD_DATA)
-+		return -EIO;
-+
-+	/* Wait until control frame is available */
-+	timeleft = inff_sdio_dcmd_resp_wait(bus, &bus->rxlen, &pending);
-+
-+	spin_lock_bh(&bus->rxctl_lock);
-+	rxlen = bus->rxlen;
-+	memcpy(msg, bus->rxctl, min(msglen, rxlen));
-+	bus->rxctl = NULL;
-+	buf = bus->rxctl_orig;
-+	bus->rxctl_orig = NULL;
-+	bus->rxlen = 0;
-+	spin_unlock_bh(&bus->rxctl_lock);
-+	vfree(buf);
-+
-+	if (rxlen) {
-+		inff_dbg(CTL, "resumed on rxctl frame, got %d expected %d\n",
-+			 rxlen, msglen);
-+	} else if (timeleft == 0) {
-+		inff_err("resumed on timeout\n");
-+		inff_sdio_checkdied(bus);
-+	} else if (!pending) {
-+		inff_dbg(CTL, "resumed for unknown reason?\n");
-+		inff_sdio_checkdied(bus);
-+	} else {
-+		inff_dbg(CTL, "cancelled\n");
-+		return -ERESTARTSYS;
-+	}
-+
-+	if (rxlen)
-+		bus->sdcnt.rx_ctlpkts++;
-+	else
-+		bus->sdcnt.rx_ctlerrs++;
-+
-+	return rxlen ? (int)rxlen : -ETIMEDOUT;
-+}
-+
-+#ifdef DEBUG
-+static bool
-+inff_sdio_verifymemory(struct inff_sdio_dev *sdiodev, u32 ram_addr,
-+		       u8 *ram_data, uint ram_sz)
-+{
-+	char *ram_cmp;
-+	int err;
-+	bool ret = true;
-+	int address;
-+	int offset;
-+	int len;
-+
-+	/* read back and verify */
-+	inff_dbg(INFO, "Compare RAM dl & ul at 0x%08x; size=%d\n", ram_addr,
-+		 ram_sz);
-+	ram_cmp = kmalloc(MEMBLOCK, GFP_KERNEL);
-+	/* do not proceed while no memory but  */
-+	if (!ram_cmp)
-+		return true;
-+
-+	address = ram_addr;
-+	offset = 0;
-+	while (offset < ram_sz) {
-+		len = ((offset + MEMBLOCK) < ram_sz) ? MEMBLOCK :
-+		      ram_sz - offset;
-+		err = inff_sdiod_ramrw(sdiodev, false, address, ram_cmp, len);
-+		if (err) {
-+			inff_err("error %d on reading %d membytes at 0x%08x\n",
-+				 err, len, address);
-+			ret = false;
-+			break;
-+		} else if (memcmp(ram_cmp, &ram_data[offset], len)) {
-+			inff_err("Downloaded RAM image is corrupted, block offset is %d, len is %d\n",
-+				 offset, len);
-+			ret = false;
-+			break;
-+		}
-+		offset += len;
-+		address += len;
-+	}
-+
-+	kfree(ram_cmp);
-+
-+	return ret;
-+}
-+#else	/* DEBUG */
-+static bool
-+inff_sdio_verifymemory(struct inff_sdio_dev *sdiodev, u32 ram_addr,
-+		       u8 *ram_data, uint ram_sz)
-+{
-+	return true;
-+}
-+#endif	/* DEBUG */
-+
-+static int inff_sdio_download_code_file(struct inff_sdio *bus,
-+					const struct firmware *fw)
-+{
-+	struct trx_header_le *trx = (struct trx_header_le *)fw->data;
-+	u32 fw_size;
-+	u32 address;
-+	int err;
-+
-+	address = bus->ci->rambase;
-+	fw_size = fw->size;
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		/* The SRAM FW size should be lesser 544k.
-+		 * Otherwise NVRAM cannot be downloaded
-+		 */
-+		if (fw_size > bus->ci->chip_spec.hw_chip_ramsize) {
-+			inff_err("fw size exceeds!\n");
-+			return -EINVAL;
-+		}
-+
-+		err = inff_sdiod_ramrw(bus->sdiodev, true, address,
-+				       (u8 *)fw->data, fw_size);
-+
-+		if (err)
-+			inff_err("error %d on writing %d membytes at 0x%08x\n",
-+				 err, (int)fw_size, address);
-+		else if (!inff_sdio_verifymemory(bus->sdiodev, address,
-+						 (u8 *)fw->data, fw_size))
-+			err = -EIO;
-+	} else {
-+		if (trx->magic == cpu_to_le32(TRX_MAGIC)) {
-+			if ((le32_to_cpu(trx->flag_version) >> 16) == TRX_VERSION5)
-+				address -= sizeof(struct trxv5_header_le);
-+			else
-+				address -= sizeof(struct trx_header_le);
-+			fw_size = le32_to_cpu(trx->len);
-+		}
-+
-+		err = inff_sdiod_ramrw(bus->sdiodev, true, address,
-+				       (u8 *)fw->data, fw_size);
-+
-+		if (err)
-+			inff_err("error %d on writing %d membytes at 0x%08x\n",
-+				 err, (int)fw_size, address);
-+		else if (!inff_sdio_verifymemory(bus->sdiodev, address,
-+						 (u8 *)fw->data, fw_size))
-+			err = -EIO;
-+	}
-+
-+	return err;
-+}
-+
-+static int inff_sdio_download_nvram(struct inff_sdio *bus,
-+				    void *vars, u32 varsz)
-+{
-+	int address = bus->ci->ramsize - varsz + bus->ci->rambase;
-+	int err;
-+
-+	err = inff_sdiod_ramrw(bus->sdiodev, true, address, vars, varsz);
-+	if (err)
-+		inff_err("error %d on writing %d nvram bytes at 0x%08x\n",
-+			 err, varsz, address);
-+	else if (!inff_sdio_verifymemory(bus->sdiodev, address, vars, varsz))
-+		err = -EIO;
-+
-+	return err;
-+}
-+
-+static int inff_sdio_acw74xx_ram_app_staging(struct inff_sdio_dev *sdiodev, u8 staging_val)
-+{
-+	u32 regdata;
-+
-+	SPINWAIT_MS(((u32)inff_sdiod_readb(sdiodev, INFF_SDIO_REG_DAR_D2H_MSG_1, NULL) &
-+		    staging_val) == 0,
-+		    INFF_SDIO_D2H_READY_TIMEOUT, 10);
-+
-+	regdata = (u32)inff_sdiod_readb(sdiodev, INFF_SDIO_REG_DAR_D2H_MSG_1, NULL);
-+	if (!(regdata & staging_val)) {
-+		inff_err("staging_val 0x%x fail, addr 0x%x regdata 0x%x timeout %dms\n",
-+			 staging_val,
-+			 INFF_SDIO_REG_DAR_D2H_MSG_1,
-+			 regdata,
-+			 INFF_SDIO_D2H_READY_TIMEOUT);
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
-+static int inff_sdio_acw74xx_ram_app_download(struct inff_sdio_dev *sdiod,
-+					      const struct firmware *logic,
-+					      const struct firmware *payload)
-+{
-+	struct inff_core *core = sdiod->bus->sdio_core;
-+	u8 ram_app_type = SRT_RAM_APP_TYPE;
-+	size_t ram_app_sz = 0;
-+	u32 smbdata;
-+	int err;
-+
-+	ram_app_sz = logic->size;
-+	if (payload) {
-+		ram_app_type = CPUSS_RAM_APP_TYPE;
-+		ram_app_sz = payload->size;
-+	}
-+
-+	smbdata = (SMB_DATA_RAM_APP_START | ((ram_app_type & RAM_APP_TYPE_MASK)
-+			<< RAM_APP_TYPE_SHIFT)) | (ram_app_sz & RAM_APP_SIZE_MASK);
-+	inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata), smbdata, NULL);
-+	inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox), SMB_DEV_INT, NULL);
-+
-+	if (ram_app_type == SRT_RAM_APP_TYPE) {
-+		err = inff_sdio_acw74xx_ram_app_staging(sdiod, HMB_DATA_CPUSS_SRAM_STAGING);
-+		if (err)
-+			return err;
-+	} else if (ram_app_type == CPUSS_RAM_APP_TYPE) {
-+		err = inff_sdio_acw74xx_ram_app_staging(sdiod, HMB_DATA_WIFISS_SRAM_STAGING);
-+		if (err)
-+			return err;
-+	}
-+
-+	/* Download RAM APP logic */
-+	inff_dbg(INFO, "Download RAMAPP logic\n");
-+	err = inff_sdiod_ramrw(sdiod, true, CM33_CPUSS_SRAM_START,
-+			       (u8 *)logic->data, logic->size);
-+	if (err) {
-+		inff_err("error %d on writing %zu membytes at 0x%08x\n",
-+			 err, logic->size, CM33_CPUSS_SRAM_START);
-+		return err;
-+	}
-+
-+	if (payload) {
-+		/* Download RAM APP payload */
-+		inff_dbg(INFO, "Download RAMAPP payload\n");
-+		err = inff_sdiod_ramrw(sdiod, true, sdiod->bus->ci->rambase,
-+				       (u8 *)payload->data, payload->size);
-+		if (err) {
-+			inff_err("error %d on writing %zu membytes at 0x%08x\n",
-+				 err, payload->size, sdiod->bus->ci->rambase);
-+			return err;
-+		}
-+	}
-+
-+	smbdata = (SMB_DATA_RAM_APP_END | ((ram_app_type & RAM_APP_TYPE_MASK)
-+		   << RAM_APP_TYPE_SHIFT)) | (ram_app_sz & RAM_APP_SIZE_MASK);
-+	inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata), smbdata, NULL);
-+	inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox), SMB_DEV_INT, NULL);
-+
-+	/* wait 5s for device to complete the process */
-+	inff_dbg(INFO, "wait 5s for dongle reset completion\n");
-+	msleep(5000);
-+	return 0;
-+}
-+
-+static int inff_sdio_download_firmware_acw74xx(struct inff_sdio *bus,
-+					       const struct firmware *fw,
-+					       void *nvram, u32 nvlen)
-+{
-+	struct inff_dfu_update_context **ctx = &dfu_upd_ctx;
-+	int infferr;
-+	u32 rstvec;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+	inff_sdio_clkctl(bus, CLK_AVAIL, false);
-+
-+	bus->acw74xx_ramapp = false;
-+	bus->acw74xx_f2_txdma_suspended = false;
-+	if (*ctx) {
-+		inff_dbg(INFO, "Process RAMAPP download!\n");
-+		if (inff_sdio_acw74xx_ram_app_download(bus->sdiodev,
-+						       (*ctx)->bin_logic,
-+						       (*ctx)->bin_payload))
-+			inff_dbg(INFO, "Process RAMAPP download FAIL!\n");
-+		inff_dfu_ai_free_ctx(ctx);
-+		release_firmware(fw);
-+		inff_fw_nvram_free(nvram);
-+
-+		bus->acw74xx_ramapp = true;
-+		inff_sdio_bus_reset(bus->sdiodev->dev);
-+		infferr = -EBUSY;
-+		goto err;
-+	}
-+
-+	rstvec = get_unaligned_le32(fw->data);
-+	inff_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
-+
-+	infferr = bus->ci->blhs->prep_fwdl(bus->ci);
-+	if (infferr) {
-+		inff_err("FW download preparation failed\n");
-+		release_firmware(fw);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	infferr = inff_sdio_download_code_file(bus, fw);
-+	release_firmware(fw);
-+	if (infferr) {
-+		inff_err("dongle image file download failed\n");
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	infferr = bus->ci->blhs->post_fwdl(bus->ci);
-+	if (infferr) {
-+		inff_err("FW download failed, err=%d\n", infferr);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	infferr = bus->ci->blhs->chk_validation(bus->ci);
-+	if (infferr) {
-+		inff_err("FW validation failed, err=%d\n", infferr);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	inff_err(" FW download and validation is successful\n");
-+
-+	infferr = bus->ci->blhs->pre_nvramdl(bus->ci);
-+	if (infferr) {
-+		inff_err("NVRAM download preparation failed\n");
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	infferr = inff_sdio_download_nvram(bus, nvram, nvlen);
-+	inff_fw_nvram_free(nvram);
-+	if (infferr) {
-+		inff_err("dongle nvram file download failed\n");
-+		goto err;
-+	}
-+
-+	infferr = bus->ci->blhs->post_nvramdl(bus->ci);
-+	if (infferr) {
-+		inff_err(" nvram file validation failed\n");
-+		goto err;
-+	}
-+
-+	inff_err(" FW and NVram download successful\n");
-+err:
-+	inff_sdio_clkctl(bus, CLK_SDONLY, false);
-+	sdio_release_host(bus->sdiodev->func1);
-+	return infferr;
-+}
-+
-+static int inff_sdio_download_firmware(struct inff_sdio *bus,
-+				       const struct firmware *fw,
-+				       void *nvram, u32 nvlen)
-+{
-+	int inferror;
-+	u32 rstvec;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+	inff_sdio_clkctl(bus, CLK_AVAIL, false);
-+
-+	rstvec = get_unaligned_le32(fw->data);
-+	inff_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
-+
-+	inferror = bus->ci->blhs->prep_fwdl(bus->ci);
-+	if (inferror) {
-+		inff_err("FW download preparation failed\n");
-+		release_firmware(fw);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	inferror = inff_sdio_download_code_file(bus, fw);
-+	release_firmware(fw);
-+	if (inferror) {
-+		inff_err("dongle image file download failed\n");
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	inferror = bus->ci->blhs->post_fwdl(bus->ci);
-+	if (inferror) {
-+		inff_err("FW download failed, err=%d\n", inferror);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	inferror = bus->ci->blhs->chk_validation(bus->ci);
-+	if (inferror) {
-+		inff_err("FW valication failed, err=%d\n", inferror);
-+		inff_fw_nvram_free(nvram);
-+		goto err;
-+	}
-+
-+	inferror = inff_sdio_download_nvram(bus, nvram, nvlen);
-+	inff_fw_nvram_free(nvram);
-+	if (inferror) {
-+		inff_err("dongle nvram file download failed\n");
-+		goto err;
-+	}
-+
-+	bus->ci->blhs->post_nvramdl(bus->ci);
-+
-+err:
-+	inff_sdio_clkctl(bus, CLK_SDONLY, false);
-+	sdio_release_host(bus->sdiodev->func1);
-+	return inferror;
-+}
-+
-+static void inff_sdio_sr_init(struct inff_sdio *bus)
-+{
-+	int err = 0;
-+	u8 val;
-+	u8 wakeupctrl;
-+	u8 cardcap;
-+	u8 chipclkcsr;
-+
-+	wakeupctrl = SBSDIO_FUNC1_WCTRL_HTWAIT_SHIFT;
-+	chipclkcsr = SBSDIO_FORCE_HT;
-+
-+	cardcap = (SDIO_CCCR_INFF_CARDCAP_CMD14_SUPPORT |
-+		   SDIO_CCCR_INFF_CARDCAP_CMD14_EXT);
-+
-+	val = inff_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, &err);
-+	if (err) {
-+		inff_err("error reading SBSDIO_FUNC1_WAKEUPCTRL\n");
-+		return;
-+	}
-+	val |= 1 << wakeupctrl;
-+	inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, val, &err);
-+	if (err) {
-+		inff_err("error writing SBSDIO_FUNC1_WAKEUPCTRL\n");
-+		return;
-+	}
-+
-+	/* Add CMD14 Support */
-+	inff_sdiod_func0_wb(bus->sdiodev, SDIO_CCCR_INFF_CARDCAP,
-+			    cardcap,
-+			    &err);
-+	if (err) {
-+		inff_err("error writing SDIO_CCCR_INFF_CARDCAP\n");
-+		return;
-+	}
-+
-+	inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+			  chipclkcsr, &err);
-+	if (err) {
-+		inff_err("error writing SBSDIO_FUNC1_CHIPCLKCSR\n");
-+		return;
-+	}
-+
-+	/* set flag */
-+	bus->sr_enabled = true;
-+	inff_dbg(INFO, "SR enabled\n");
-+}
-+
-+/* enable KSO bit */
-+static int inff_sdio_kso_init(struct inff_sdio *bus)
-+{
-+	struct inff_core *core = bus->sdio_core;
-+	u8 kso_mask, kso_shift;
-+	u8 val;
-+	int err = 0;
-+
-+	/* KSO bit added in SDIO core rev 12 */
-+	if (core->rev < 12)
-+		return 0;
-+
-+	val = inff_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
-+	if (err) {
-+		inff_err("error reading SBSDIO_FUNC1_SLEEPCSR\n");
-+		return err;
-+	}
-+
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_AI:
-+		kso_mask = SBSDIO_FUNC1_SLEEPCSR_KSO_MASK;
-+		kso_shift = SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT;
-+		break;
-+	case INFF_SOCI_CP:
-+		kso_mask = SBSDIO_FUNC1_SLEEPCSR_BT_KSO_MASK;
-+		kso_shift = SBSDIO_FUNC1_SLEEPCSR_BT_KSO_SHIFT;
-+		break;
-+	default:
-+		inff_err("chip type %u is not supported\n",
-+			 bus->ci->socitype);
-+		return -ENODEV;
-+	}
-+
-+	if (!(val & SBSDIO_FUNC1_SLEEPCSR_KSO_MASK)) {
-+		val |= (SBSDIO_FUNC1_SLEEPCSR_KSO_EN <<
-+			SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
-+				  val, &err);
-+		if (err) {
-+			inff_err("error writing SBSDIO_FUNC1_SLEEPCSR\n");
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int inff_sdio_bus_preinit(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+	struct inff_core *core = bus->sdio_core;
-+	struct inff_if *ifp = bus_if->drvr->iflist[0];
-+	u32 value;
-+	__le32 iovar;
-+	int err = 0;
-+
-+	/* maxctl provided by common layer */
-+	if (WARN_ON(!bus_if->maxctl))
-+		return -EINVAL;
-+
-+	/* Allocate control receive buffer */
-+	bus_if->maxctl += bus->roundup;
-+	value = roundup((bus_if->maxctl + SDPCM_HDRLEN), ALIGNMENT);
-+	value += bus->head_align;
-+	bus->rxbuf = kmalloc(value, GFP_ATOMIC);
-+	if (bus->rxbuf)
-+		bus->rxblen = value;
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		bus->tx_hdrlen = SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN;
-+		inff_bus_add_txhdrlen(bus->sdiodev->dev, bus->tx_hdrlen);
-+		goto done;
-+	}
-+
-+	/* the commands below use the terms tx and rx from
-+	 * a device perspective, ie. bus:txglom affects the
-+	 * bus transfers from device to host.
-+	 */
-+	if (core->rev < 12) {
-+		/* for sdio core rev < 12, disable txgloming */
-+		iovar = 0;
-+		err = inff_fwcmd_iovar_data_set(ifp, "bus:txglom", &iovar,
-+						sizeof(iovar));
-+	} else {
-+		/* otherwise, set txglomalign */
-+		value = sdiodev->settings->bus.sdio.sd_sgentry_align;
-+		/* SDIO ADMA requires at least 32 bit alignment */
-+		iovar = cpu_to_le32(max_t(u32, value, ALIGNMENT));
-+		err = inff_fwcmd_iovar_data_set(ifp, "bus:txglomalign", &iovar,
-+						sizeof(iovar));
-+	}
-+
-+	if (err < 0)
-+		goto done;
-+
-+	bus->tx_hdrlen = SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN;
-+	if (sdiodev->sg_support) {
-+		bus->txglom = false;
-+		iovar = cpu_to_le32(1);
-+		err = inff_fwcmd_iovar_data_set(ifp, "bus:rxglom",
-+						&iovar, sizeof(iovar));
-+		if (err < 0) {
-+			/* bus:rxglom is allowed to fail */
-+			err = 0;
-+		} else {
-+			bus->txglom = true;
-+			bus->tx_hdrlen += SDPCM_HWEXT_LEN;
-+		}
-+	}
-+	inff_bus_add_txhdrlen(bus->sdiodev->dev, bus->tx_hdrlen);
-+done:
-+	return err;
-+}
-+
-+static size_t inff_sdio_bus_get_ramsize(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	return bus->ci->ramsize - bus->ci->srsize;
-+}
-+
-+static size_t inff_sdio_bus_get_rambase(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	return bus->ci->rambase;
-+}
-+
-+static size_t inff_sdio_bus_get_cpuss_rambase(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	return bus->ci->cpuss_rambase;
-+}
-+
-+static size_t inff_sdio_bus_get_cpuss_ramsize(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+
-+	return bus->ci->cpuss_ramsize;
-+}
-+
-+void inff_sdio_trigger_dpc(struct inff_sdio *bus)
-+{
-+	bus->dpc_triggered = true;
-+	queue_work(bus->inff_wq, &bus->datawork);
-+}
-+
-+void inff_sdio_isr(struct inff_sdio *bus, bool in_isr)
-+{
-+	struct inff_sdio_dev *sdiod;
-+	struct inff_pub *drvr;
-+
-+	if (!bus) {
-+		inff_err("bus is null pointer, exiting\n");
-+		return;
-+	}
-+
-+	sdiod = bus->sdiodev;
-+	drvr = sdiod->bus_if->drvr;
-+
-+	/* Count the interrupt call */
-+	bus->sdcnt.intrcount++;
-+	if (in_isr) {
-+		atomic_set(&bus->ipend, 1);
-+	} else {
-+		/* Wake up the bus if in sleep */
-+		if (bus->sleeping)
-+			inff_sdio_bus_sleep(bus, false, false);
-+
-+		if (inff_sdio_intr_rstatus(bus))
-+			inff_err("failed backplane access\n");
-+	}
-+
-+	bus->dpc_triggered = true;
-+	queue_work(bus->inff_wq, &bus->datawork);
-+}
-+
-+static void inff_sdio_bus_watchdog(struct inff_sdio *bus)
-+{
-+	bool clk_check = false;
-+#ifdef DEBUG
-+	/* Poll for console output periodically */
-+	if (bus->sdiodev->state == INFF_SDIOD_DATA && INFF_MSGLVL_ON(FWCON) &&
-+	    bus->console_interval != 0) {
-+		bus->console.count += jiffies_to_msecs(INFF_WD_POLL);
-+		if (bus->console.count >= bus->console_interval) {
-+			bus->console.count -= bus->console_interval;
-+			sdio_claim_host(bus->sdiodev->func1);
-+			/* Make sure backplane clock is on */
-+			inff_sdio_bus_sleep(bus, false, false);
-+			if (inff_sdio_readconsole(bus) < 0)
-+				/* stop on error */
-+				bus->console_interval = 0;
-+			sdio_release_host(bus->sdiodev->func1);
-+		}
-+	}
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		if (bus->sdiodev->state == INFF_SDIOD_DATA && INFF_MSGLVL_ON(CPUSS_ON) &&
-+		    bus->cpuss_console_interval != 0) {
-+			bus->cpuss_console.count += jiffies_to_msecs(INFF_WD_POLL);
-+			if (bus->cpuss_console.count >= bus->cpuss_console_interval) {
-+				bus->cpuss_console.count -= bus->cpuss_console_interval;
-+				sdio_claim_host(bus->sdiodev->func1);
-+				inff_sdio_bus_sleep(bus, false, false);
-+				if (inff_sdio_read_cpuss_console(bus) < 0)
-+					bus->cpuss_console_interval = 0;
-+				sdio_release_host(bus->sdiodev->func1);
-+			}
-+		}
-+	}
-+#endif				/* DEBUG */
-+
-+	if (inff_socitype_is_ai(bus->sdiodev->bus_if))
-+		clk_check = (bus->clkstate == CLK_AVAIL);
-+	else if (inff_socitype_is_cp(bus->sdiodev->bus_if))
-+		clk_check = (bus->clkstate == CLK_SDONLY);
-+
-+	/* On idle timeout clear activity flag and/or turn off clock */
-+	if (!bus->dpc_triggered) {
-+		/* Ensure read completed */
-+		rmb();
-+		if (!bus->dpc_running && bus->idletime > 0 &&
-+		    (clk_check)) {
-+			bus->idlecount++;
-+			if (bus->idlecount >= bus->idletime) {
-+				inff_dbg(SDIO, "idle\n");
-+				sdio_claim_host(bus->sdiodev->func1);
-+#ifdef DEBUG
-+				if (!INFF_MSGLVL_ON(FWCON) ||
-+				    bus->console_interval == 0)
-+#endif
-+					inff_sdio_wd_timer(bus, false);
-+				bus->idlecount = 0;
-+
-+				if (!bus->dpc_triggered && !bus->dpc_running)
-+					inff_sdio_bus_sleep(bus, true, false);
-+				else
-+					inff_err("DPC active Skip sleep");
-+
-+				sdio_release_host(bus->sdiodev->func1);
-+			}
-+		} else {
-+			bus->idlecount = 0;
++	struct inff_fws_info *fws = drvr_to_fws(drvr);
++	struct inff_if *ifp;
++	int i;
++
++	if (fws->avoid_queueing) {
++		for (i = 0; i < INFF_MAX_IFS; i++) {
++			ifp = drvr->iflist[i];
++			if (!ifp || !ifp->ndev)
++				continue;
++			inff_net_txflowblock(ifp, INFF_NETIF_STOP_REASON_FLOW,
++					     flow_blocked);
 +		}
 +	} else {
-+		bus->idlecount = 0;
++		fws->bus_flow_blocked = flow_blocked;
++		if (!flow_blocked)
++			inff_fws_schedule_deq(fws);
++		else
++			fws->stats.bus_flow_block++;
 +	}
 +}
 +
-+static void inff_sdio_dataworker(struct work_struct *work)
++void inff_fws_cleanup_interface(struct inff_if *ifp)
 +{
-+	struct inff_sdio *bus = container_of(work, struct inff_sdio,
-+					     datawork);
-+
-+	bus->dpc_running = true;
-+
-+	/* make sure dpc_running is true */
-+	wmb();
-+	while (READ_ONCE(bus->dpc_triggered)) {
-+		bus->dpc_triggered = false;
-+		inff_sdio_dpc(bus);
-+		bus->idlecount = 0;
-+	}
-+	bus->dpc_running = false;
-+	if (inff_sdiod_freezing(bus->sdiodev)) {
-+		inff_sdiod_change_state(bus->sdiodev, INFF_SDIOD_DOWN);
-+		inff_sdiod_try_freeze(bus->sdiodev);
-+		inff_sdiod_change_state(bus->sdiodev, INFF_SDIOD_DATA);
-+	}
-+}
-+
-+static u32
-+inff_sdio_ccsec_get_buscorebase(struct inff_sdio_dev *sdiodev)
-+{
-+	u8 devctl = 0;
-+	u32 addr = 0;
-+	int err = 0;
-+
-+	devctl = inff_sdiod_readb(sdiodev, SBSDIO_DEVICE_CTL, NULL);
-+	inff_sdiod_writeb(sdiodev, SBSDIO_DEVICE_CTL, devctl | SBSDIO_DEVCTL_ADDR_RESET, &err);
-+	if (err)
-+		goto exit;
-+
-+	addr |= (inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_SBADDRLOW, NULL) << 8) |
-+			(inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_SBADDRMID, NULL) << 16) |
-+			(inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_SBADDRHIGH, NULL) << 24);
-+
-+	inff_dbg(INFO, "sdiod core address is 0x%x\n", addr);
-+exit:
-+	if (err) {
-+		inff_err("Get SDIO core base address failed, err=%d", err);
-+		addr = 0;
-+	}
-+	inff_sdiod_writeb(sdiodev, SBSDIO_DEVICE_CTL, devctl, &err);
-+
-+	return addr;
-+}
-+
-+static u32 inff_sdio_buscore_blhs_read(void *ctx, u32 reg_offset)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+
-+	return (u32)inff_sdiod_readb(sdiodev, reg_offset, NULL);
-+}
-+
-+static void inff_sdio_buscore_blhs_write(void *ctx, u32 reg_offset, u32 value)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+
-+	inff_sdiod_writeb(sdiodev, reg_offset, (u8)value, NULL);
-+}
-+
-+static u32 inff_sdio_buscore_blhs_readl(void *ctx, u32 addr)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+	u8 offset = 0;
-+	u32 buffer = 0, reg = 0;
-+
-+	for (offset = 0; offset < 4 ; offset++) {
-+		reg = inff_sdiod_readb(sdiodev, addr + offset, NULL);
-+		buffer |= (reg << (8 * offset));
-+	}
-+
-+	return buffer;
-+}
-+
-+static void inff_sdio_acw74xx_send_cpuss_cmd(void *ctx, u8 wlan_cmd)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+	struct inff_core *core = sdiodev->bus->sdio_core;
-+	u8 tosbmailbox_data = 0;
-+
-+	switch (wlan_cmd) {
-+	case INFF_CPUSS_CMD_WLAN_ON:
-+		tosbmailbox_data = SMB_DATA_WLAN_ON;
-+		break;
-+	case INFF_CPUSS_CMD_WLAN_OFF:
-+		tosbmailbox_data = SMB_DATA_WLAN_OFF;
-+		break;
-+	case INFF_CPUSS_CMD_DONGLE_CLEAN_UP:
-+		tosbmailbox_data = SMB_DATA_DONGLE_CLEAN_UP;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	inff_sdiod_writel(sdiodev, core->base + SD_REG(tosbmailboxdata),
-+			  tosbmailbox_data, NULL);
-+
-+	inff_sdiod_writel(sdiodev, core->base + SD_REG(tosbmailbox),
-+			  SMB_DEV_INT, NULL);
-+}
-+
-+static int inff_sdio_buscoreprep(void *ctx)
-+{
-+	struct inff_sdio_dev *sdiodev = ctx;
-+	int err = 0;
-+	u8 clkval, clkset;
-+
-+	/* Try forcing SDIO core to do ALPAvail request only */
-+	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_ALP_AVAIL_REQ;
-+	inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
-+	if (err) {
-+		inff_err("error writing for HT off\n");
-+		return err;
-+	}
-+
-+	/* If register supported, wait for ALPAvail and then force ALP */
-+	/* This may take up to 15 milliseconds */
-+	clkval = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, NULL);
-+
-+	if ((clkval & ~SBSDIO_AVBITS) != clkset) {
-+		inff_err("ChipClkCSR access: wrote 0x%02x read 0x%02x\n",
-+			 clkset, clkval);
-+		return -EACCES;
-+	}
-+
-+	SPINWAIT(((clkval = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+					     NULL)),
-+		 !SBSDIO_ALPAV(clkval)),
-+		 PMU_MAX_TRANSITION_DLY);
-+
-+	if (!SBSDIO_ALPAV(clkval)) {
-+		inff_err("timeout on ALPAV wait, clkval 0x%02x\n",
-+			 clkval);
-+		return -EBUSY;
-+	}
-+
-+	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_FORCE_ALP;
-+	inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
-+	usleep_range(ALP_WAIT_MIN, ALP_WAIT_MAX);
-+
-+	/* Also, disable the extra SDIO pull-ups */
-+	inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
-+
-+	return 0;
-+}
-+
-+static void inff_sdio_buscore_activate(void *ctx, struct inff_chip *chip,
-+				       u32 rstvec)
-+{
-+	struct inff_sdio_dev *sdiodev = ctx;
-+	struct inff_core *core = sdiodev->bus->sdio_core;
-+	u32 reg_addr;
-+	int err;
-+
-+	/* clear all interrupts */
-+	reg_addr = core->base + SD_REG(intstatus);
-+	inff_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
-+
-+	if (rstvec) {
-+		/* Write reset vector to address 0 */
-+		err = inff_sdiod_ramrw(sdiodev, true, 0, (void *)&rstvec,
-+				       sizeof(rstvec));
-+		if (err)
-+			inff_err("error %d on reading %d membytes\n",
-+				 err, (int)sizeof(rstvec));
-+	}
-+}
-+
-+static u32 inff_sdio_buscore_read32(void *ctx, u32 addr)
-+{
-+	struct inff_sdio_dev *sdiodev = ctx;
-+	u32 val;
-+
-+	val = inff_sdiod_readl(sdiodev, addr, NULL);
-+
-+	return val;
-+}
-+
-+static void inff_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
-+{
-+	struct inff_sdio_dev *sdiodev = ctx;
-+
-+	inff_sdiod_writel(sdiodev, addr, val, NULL);
-+}
-+
-+static int
-+inff_sdio_buscore_sec_attach(void *ctx, struct inff_blhs **blhs, struct inff_ccsec **ccsec,
-+			     u32 flag, uint timeout, uint interval)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+	struct inff_blhs *blhsh = NULL;
-+	struct inff_ccsec *ccsech = NULL;
-+	u32 reg_addr;
-+	u32 regdata;
-+	u8 cardcap;
-+
-+	if (sdiodev->func1->vendor != SDIO_VENDOR_ID_CYPRESS)
-+		return 0;
-+
-+	cardcap = inff_sdiod_func0_rb(sdiodev, SDIO_CCCR_INFF_CARDCAP, NULL);
-+
-+	switch (sdiodev->func2->device) {
-+	case SDIO_DEVICE_ID_CYPRESS_ACW7413:
-+		if (cardcap & SDIO_CCCR_INFF_CARDCAP_SECURE_MODE) {
-+			blhsh = kzalloc_obj(*blhsh);
-+			if (!blhsh)
-+				return -ENOMEM;
-+
-+			blhsh->d2h = INFF_SDIO_REG_DAR_D2H_MSG_0;
-+			blhsh->h2d = INFF_SDIO_REG_DAR_H2D_MSG_0;
-+			blhsh->read = inff_sdio_buscore_blhs_read;
-+			blhsh->write = inff_sdio_buscore_blhs_write;
-+			blhsh->readl = inff_sdio_buscore_blhs_readl;
-+			blhsh->write(ctx, blhsh->h2d, 0);
-+
-+			blhsh->d2h_2 = INFF_SDIO_REG_DAR_D2H_MSG_2;
-+			blhsh->send_cpuss_cmd = inff_sdio_acw74xx_send_cpuss_cmd;
-+
-+			SPINWAIT_MS((blhsh->readl(ctx, blhsh->d2h)
-+				     & INFF_SDIO_D2H_ACW74XX_READY) == 0, timeout, interval);
-+
-+			regdata = blhsh->readl(ctx, blhsh->d2h);
-+			if (!(regdata & INFF_SDIO_D2H_ACW74XX_READY)) {
-+				inff_err("Timeout waiting for bootloader ready\n");
-+				kfree(blhsh);
-+				return -EPERM;
-+			}
-+			*blhs = blhsh;
-+		}
-+		break;
-+	case SDIO_DEVICE_ID_CYPRESS_CYW55900:
-+	default:
-+		break;
-+	}
-+
-+	if (cardcap & SDIO_CCCR_INFF_CARDCAP_CHIPID_PRESENT) {
-+		ccsech = kzalloc_obj(*ccsech);
-+		if (!ccsech) {
-+			kfree(blhsh);
-+			return -ENOMEM;
-+		}
-+		ccsech->bus_corebase = inff_sdio_ccsec_get_buscorebase(sdiodev);
-+		reg_addr = ccsech->bus_corebase + SD_REG(eromptr);
-+		ccsech->erombase = inff_sdio_buscore_read32(ctx, reg_addr);
-+		reg_addr = ccsech->bus_corebase + SD_REG(chipid);
-+		ccsech->chipid = inff_sdio_buscore_read32(ctx, reg_addr);
-+		*ccsec = ccsech;
-+
-+		inff_dbg(TRACE, " chip id present 0x%x\n", ccsech->chipid);
-+
-+		/* Add backward compatibility for CPUSS that may advertise the
-+		 * older/temporary chip id (0x1104da0d)
-+		 */
-+		if (ccsech->chipid == 0x1104da0d) {
-+			ccsech->chipid = 0xf0891122;
-+			inff_dbg(TRACE, " chip id updated to 0x%x\n", ccsech->chipid);
-+		}
-+	}
-+
-+	if (cardcap & SDIO_CCCR_INFF_CARDCAP_CHIPID_PRESENT) {
-+		u32 reg_val;
-+		u32 err;
-+
-+		/* Get SDIO Bus Mode*/
-+		reg_val = inff_sdiod_func0_rb(sdiodev, SDIO_CCCR_SPEED, &err);
-+		if (err) {
-+			inff_err("error getting sdio bus speed\n");
-+		} else {
-+			if (reg_val & SDIO_SPEED_DDR50)
-+				sdiodev->bus->ddr50_mode = true;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+#define LOOP_TO_CHECK_FOR_BP_ENABLE    50000      /* Wait for 500msec */
-+#define INTR_F1_WAIT_MIN               10
-+#define INTR_F1_WAIT_MAX               20
-+
-+static int inff_get_intr_pending_data(void *ctx)
-+{
-+	struct inff_sdio_dev *sdiodev = (struct inff_sdio_dev *)ctx;
-+	int loop = 0, status = 0, err = 0;
-+	u32 reg_val = 0;
-+
-+	for (loop = 0; loop < LOOP_TO_CHECK_FOR_BP_ENABLE; loop++) {
-+		sdio_claim_host(sdiodev->func1);
-+		reg_val = inff_sdiod_func0_rb(sdiodev, SDIO_CCCR_INTx, &err);
-+		sdio_release_host(sdiodev->func1);
-+		status = reg_val & INTR_STATUS_FUNC1;
-+
-+		if (status) {
-+			inff_err("[%d]: Backplane enabled.\n", loop);
-+			break;
-+		}
-+		usleep_range(INTR_F1_WAIT_MIN, INTR_F1_WAIT_MAX);
-+	}
-+
-+	/* Bootloader hung after backplane disable */
-+	if (loop == LOOP_TO_CHECK_FOR_BP_ENABLE) {
-+		err = -EBUSY;
-+		inff_err("Device hung, return failure. time out %d ms\n",
-+			 (LOOP_TO_CHECK_FOR_BP_ENABLE * 10) / 1000);
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct inff_buscore_ops inff_sdio_buscore_ops = {
-+	.prepare = inff_sdio_buscoreprep,
-+	.activate = inff_sdio_buscore_activate,
-+	.read32 = inff_sdio_buscore_read32,
-+	.write32 = inff_sdio_buscore_write32,
-+	.sec_attach = inff_sdio_buscore_sec_attach,
-+	.get_intr_pend = inff_get_intr_pending_data,
-+};
-+
-+static int
-+inff_sdio_probe_attach(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev;
-+	u8 clkctl = 0;
-+	int err = 0;
-+	u32 enum_base;
-+	int ret = -EBADE;
-+
-+	sdiodev = bus->sdiodev;
-+	sdio_claim_host(sdiodev->func1);
-+
-+	enum_base = inff_chip_enum_base(sdiodev->func1->device);
-+
-+	/*
-+	 * Force PLL off until inff_chip_attach()
-+	 * programs PLL control regs
-+	 */
-+
-+	inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, INFF_INIT_CLKCTL1,
-+			  &err);
-+	if (!err)
-+		clkctl = inff_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+					  &err);
-+
-+	if (err || ((clkctl & ~SBSDIO_AVBITS) != INFF_INIT_CLKCTL1)) {
-+		inff_err("ChipClkCSR access: err %d wrote 0x%02x read 0x%02x\n",
-+			 err, INFF_INIT_CLKCTL1, clkctl);
-+		goto fail;
-+	}
-+
-+	bus->ci = inff_chip_attach(sdiodev, sdiodev->func1->device,
-+				   &inff_sdio_buscore_ops);
-+	if (IS_ERR(bus->ci)) {
-+		inff_err("inff_chip_attach failed!\n");
-+		bus->ci = NULL;
-+		goto fail;
-+	}
-+
-+	if (!bus->ci->ccsec)
-+		pr_debug("F1 signature read @0x18000000=0x%4x\n",
-+			 inff_sdiod_readl(sdiodev, enum_base, NULL));
-+
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID) {
-+		bus->sdio_core = inff_chip_get_core(bus->ci, INF_CORE_ACW74XX);
-+		sdiodev->cc_core = inff_chip_get_core(bus->ci, INF_CORE_ACW74XX);
-+	} else {
-+		/* Pick up the SDIO core info struct from chip.c */
-+		bus->sdio_core   = inff_chip_get_core(bus->ci, INF_CORE_SDIO_DEV);
-+		if (!bus->sdio_core)
-+			goto fail;
-+
-+		/* Pick up the CHIPCOMMON core info struct, for bulk IO in infsdh.c */
-+		sdiodev->cc_core = inff_chip_get_core(bus->ci, INF_CORE_CHIPCOMMON);
-+		if (!sdiodev->cc_core)
-+			goto fail;
-+	}
-+
-+	sdiodev->settings = inff_get_module_param(sdiodev->dev);
-+	if (IS_ERR_OR_NULL(sdiodev->settings)) {
-+		inff_err("Failed to get device parameters\n");
-+		ret = PTR_ERR_OR_ZERO(sdiodev->settings);
-+		goto fail;
-+	}
-+
-+	/* platform specific configuration:
-+	 *   alignments must be at least 4 bytes for ADMA
-+	 */
-+	bus->head_align = ALIGNMENT;
-+	bus->sgentry_align = ALIGNMENT;
-+	if (sdiodev->settings->bus.sdio.sd_head_align > ALIGNMENT)
-+		bus->head_align = sdiodev->settings->bus.sdio.sd_head_align;
-+	if (sdiodev->settings->bus.sdio.sd_sgentry_align > ALIGNMENT)
-+		bus->sgentry_align =
-+				sdiodev->settings->bus.sdio.sd_sgentry_align;
-+
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	inff_sdiod_sgtable_alloc(sdiodev);
-+
-+	if (inff_sdio_kso_init(bus)) {
-+		inff_err("error enabling KSO\n");
-+		goto fail;
-+	}
-+
-+	sdio_release_host(sdiodev->func1);
-+
-+	inff_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
-+
-+	/* allocate header buffer */
-+	bus->hdrbuf = kzalloc(MAX_HDR_READ + bus->head_align, GFP_KERNEL);
-+	if (!bus->hdrbuf)
-+		return -ENOMEM;
-+	/* Locate an appropriately-aligned portion of hdrbuf */
-+	bus->rxhdr = (u8 *)roundup((unsigned long)&bus->hdrbuf[0],
-+				    bus->head_align);
-+
-+	sdiodev->bus_if->chip_pub = bus->ci;
-+
-+	return 0;
-+
-+fail:
-+	sdio_release_host(sdiodev->func1);
-+	return ret;
-+}
-+
-+static int
-+inff_sdio_watchdog_thread(void *data)
-+{
-+	struct inff_sdio *bus = (struct inff_sdio *)data;
-+	int wait;
-+
-+	allow_signal(SIGTERM);
-+	/* Run until signal received */
-+	inff_sdiod_freezer_count(bus->sdiodev);
-+	while (1) {
-+		if (kthread_should_stop())
-+			break;
-+		inff_sdiod_freezer_uncount(bus->sdiodev);
-+		wait = wait_for_completion_interruptible(&bus->watchdog_wait);
-+		inff_sdiod_freezer_count(bus->sdiodev);
-+		inff_sdiod_try_freeze(bus->sdiodev);
-+		if (!wait) {
-+			inff_sdio_bus_watchdog(bus);
-+			/* Count the tick for reference */
-+			bus->sdcnt.tickcnt++;
-+			reinit_completion(&bus->watchdog_wait);
-+		} else {
-+			break;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static void
-+inff_sdio_watchdog(struct timer_list *t)
-+{
-+	struct inff_sdio *bus = timer_container_of(bus, t, timer);
-+
-+	if (bus->watchdog_tsk) {
-+		complete(&bus->watchdog_wait);
-+		/* Reschedule the watchdog */
-+		if (bus->wd_active)
-+			mod_timer(&bus->timer,
-+				  jiffies + INFF_WD_POLL);
-+	}
-+}
-+
-+static int inff_sdio_get_blob(struct device *dev, const struct firmware **fw,
-+			      enum inff_blob_type type)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiodev->bus;
-+	struct inff_chip_specific *chip_spec = &bus->ci->chip_spec;
-+
-+	switch (type) {
-+	case INFF_BLOB_CLM:
-+		*fw = chip_spec->clm_fw;
-+		chip_spec->clm_fw = NULL;
-+		break;
-+	default:
-+		return -ENOENT;
-+	}
-+
-+	if (!*fw)
-+		return -ENOENT;
-+
-+	return 0;
-+}
-+
-+static int inff_sdio_bus_reset(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+
-+	/* start by unregistering irqs */
-+	inff_sdiod_intr_unregister(sdiodev);
-+
-+	inff_sdiod_remove(sdiodev);
-+
-+	/* reset the adapter */
-+	sdio_claim_host(sdiodev->func1);
-+	mmc_hw_reset(sdiodev->func1->card);
-+	sdio_release_host(sdiodev->func1);
-+
-+	inff_bus_change_state(sdiodev->bus_if, INFF_BUS_DOWN);
-+	return 0;
-+}
-+
-+static void inff_sdio_bus_remove(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiod = bus_if->bus_priv.sdio;
-+
-+	device_release_driver(&sdiod->func2->dev);
-+	device_release_driver(&sdiod->func1->dev);
-+}
-+
-+static int inff_sdio_bus_set_fcmode(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+
-+	if (!inff_feat_is_enabled(bus_if->drvr->iflist[0], INFF_FEAT_PROPTXSTATUS)) {
-+		sdiodev->settings->fcmode = bus_if->drvr->settings->fcmode;
-+		inff_dbg(INFO, "Set fcmode = %d\n", sdiodev->settings->fcmode);
-+	}
-+
-+	return sdiodev->settings->fcmode;
-+}
-+
-+static const struct inff_bus_ops inff_sdio_bus_ops = {
-+	.stop = inff_sdio_bus_stop,
-+	.preinit = inff_sdio_bus_preinit,
-+	.txdata = inff_sdio_bus_txdata,
-+	.txctl = inff_sdio_bus_txctl,
-+	.rxctl = inff_sdio_bus_rxctl,
-+	.gettxq = inff_sdio_bus_gettxq,
-+	.get_rambase = inff_sdio_bus_get_rambase,
-+	.get_ramsize = inff_sdio_bus_get_ramsize,
-+	.get_cpuss_rambase = inff_sdio_bus_get_cpuss_rambase,
-+	.get_cpuss_ramsize = inff_sdio_bus_get_cpuss_ramsize,
-+	.get_blob = inff_sdio_get_blob,
-+	.debugfs_create = inff_sdio_debugfs_create,
-+	.reset = inff_sdio_bus_reset,
-+	.remove = inff_sdio_bus_remove,
-+	.set_fcmode = inff_sdio_bus_set_fcmode
-+};
-+
-+static void inff_sdio_reset_cp(struct inff_sdio *bus)
-+{
-+	struct inff_sdio_dev *sdiodev = bus->sdiodev;
-+	u32 reg_val = 0;
-+	int err = 0;
-+
-+	inff_sdio_kso_control(bus, false);
-+
-+	/* Configure registers to trigger BT reset on
-+	 * "SDIO Soft Reset", and set RES bit to trigger
-+	 *  SDIO as well as BT reset
-+	 */
-+
-+	/* Set card control so an SDIO card reset
-+	 * does a BT backplane reset
-+	 */
-+	reg_val = inff_sdiod_func0_rb(sdiodev,
-+				      SDIO_CCCR_INFF_CARDCTRL,
-+				      &err);
-+	if (err) {
-+		inff_err("Failed to read SDIO_CCCR_INFF_CARDCTRL: %d\n", err);
-+		return;
-+	}
-+
-+	reg_val |= SDIO_CCCR_INFF_CARDCTRL_BTRESET;
-+
-+	inff_dbg(INFO, "Write CARDCTRL = 0x%x\n", reg_val);
-+
-+	inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_INFF_CARDCTRL,
-+			    reg_val, &err);
-+	if (err) {
-+		inff_err("Failed to write SDIO_CCCR_INFF_CARDCTRL: %d\n", err);
-+		return;
-+	}
-+
-+	inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT,
-+			    sdiodev->func1->num | SDIO_IO_CARD_RESET,
-+			    &err);
-+	if (err) {
-+		inff_err("Failed to write SDIO_IO_CARD_RESET: %d\n", err);
-+		return;
-+	}
-+}
-+
-+static void inff_sdio_reset(struct inff_sdio *bus)
-+{
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_CP:
-+		switch (bus->ci->chip) {
-+		case INF_CC_CYW5591X_CHIP_ID:
-+			inff_sdio_reset_cp(bus);
-+			break;
-+		}
-+		break;
-+	case INFF_SOCI_AI:
-+		switch (bus->ci->chip) {
-+		case INF_CC_ACW74XX_CHIP_ID:
-+			if (!bus->acw74xx_ramapp) {
-+				sdio_claim_host(bus->sdiodev->func1);
-+				inff_sdio_bus_sleep(bus, false, false);
-+				inff_sdio_acw74xx_send_cpuss_cmd(bus->sdiodev,
-+								 INFF_CPUSS_CMD_DONGLE_CLEAN_UP);
-+				sdio_release_host(bus->sdiodev->func1);
-+				/* wait 1s for device to complete the RMMOD operation */
-+				msleep(1000);
-+			}
-+			break;
-+		}
-+	}
-+}
-+
-+#define INFF_SDIO_FW_CP		0
-+#define INFF_SDIO_FW_BOOT	1
-+
-+#define INFF_SDIO_FW_CODE	0
-+#define INFF_SDIO_FW_NVRAM	1
-+#define INFF_SDIO_FW_CLM	2
-+
-+static int inff_sdio_enable_func2(struct inff_bus *bus_if)
-+{
-+	struct inff_sdio_dev *sdiod = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiod->bus;
-+	struct inff_core *core = bus->sdio_core;
-+	u8 saveclk, bpreq;
-+	u8 devctl;
-+	int err = 0;
-+
-+	sdio_claim_host(sdiod->func1);
-+
-+	if (inff_socitype_is_ai(bus_if)) {
-+		/* Make sure backplane clock is on, needed to generate F2 interrupt */
-+		inff_sdio_clkctl(bus, CLK_AVAIL, false);
-+		if (bus->clkstate != CLK_AVAIL)
-+			goto release;
-+
-+		/* Force clocks on backplane to be sure F2 interrupt propagates */
-+		saveclk = inff_sdiod_readb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR, &err);
-+		if (!err) {
-+			bpreq = saveclk;
-+			bpreq |= SBSDIO_FORCE_HT;
-+			inff_sdiod_writeb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR,
-+					  bpreq, &err);
-+		}
-+		if (err) {
-+			inff_err("Failed to force clock for F2: err %d\n", err);
-+			goto release;
-+		}
-+
-+		/* Enable function 2 (frame transfers) */
-+		inff_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata),
-+				  SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
-+	}
-+
-+	err = sdio_enable_func(sdiod->func2);
-+
-+	inff_dbg(INFO, "enable F2: err=%d\n", err);
-+
-+	/* If F2 successfully enabled, set core and enable interrupts */
-+	if (!err) {
-+		/* Set up the interrupt mask and enable interrupts */
-+		bus->hostintmask = HOSTINTMASK;
-+		inff_sdiod_writel(sdiod, core->base + SD_REG(hostintmask),
-+				  bus->hostintmask, NULL);
-+
-+		switch (sdiod->func1->device) {
-+		case SDIO_DEVICE_ID_CYPRESS_ACW7413:
-+			inff_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
-+				 INFACW74XX_F2_WATERMARK);
-+			inff_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-+					  INFACW74XX_F2_WATERMARK, &err);
-+			devctl = inff_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
-+						  &err);
-+			devctl |= SBSDIO_DEVCTL_F2WM_ENAB;
-+			inff_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
-+					  &err);
-+			inff_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
-+					  INFACW74XX_F1_MESBUSYCTRL, &err);
-+			break;
-+		case SDIO_DEVICE_ID_CYPRESS_CYW55900:
-+			inff_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
-+				 INF55900_F2_WATERMARK);
-+			inff_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-+					  INF55900_F2_WATERMARK, &err);
-+			devctl = inff_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
-+						  &err);
-+			devctl |= SBSDIO_DEVCTL_F2WM_ENAB;
-+			inff_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
-+					  &err);
-+			inff_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
-+					  INF55900_F1_MESBUSYCTRL, &err);
-+			break;
-+		default:
-+			inff_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-+					  DEFAULT_F2_WATERMARK, &err);
-+			break;
-+		}
-+	} else {
-+		/* Disable F2 again */
-+		sdio_disable_func(sdiod->func2);
-+		goto checkdied;
-+	}
-+
-+	if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+		if (inff_chip_sr_capable(bus->ci)) {
-+			inff_sdio_sr_init(bus);
-+		} else {
-+			/* Restore previous clock setting */
-+			inff_sdiod_writeb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR,
-+					  saveclk, &err);
-+		}
-+	}
-+
-+	if (err == 0) {
-+		/* Assign bus interface call back */
-+		sdiod->bus_if->dev = sdiod->dev;
-+		sdiod->bus_if->ops = &inff_sdio_bus_ops;
-+		sdiod->bus_if->chip = bus->ci->chip;
-+		sdiod->bus_if->chiprev = bus->ci->chiprev;
-+
-+		/* Allow full data communication using DPC from now on. */
-+		inff_sdiod_change_state(bus->sdiodev, INFF_SDIOD_DATA);
-+
-+		err = inff_sdiod_intr_register(sdiod);
-+		if (err != 0)
-+			inff_err("intr register failed:%d\n", err);
-+		bus->sdiodev->redownload_fw = false;
-+	}
-+
-+	/* If we didn't come up, turn off backplane clock */
-+	if (err != 0) {
-+		if (inff_socitype_is_ai(bus->sdiodev->bus_if))
-+			inff_sdio_clkctl(bus, CLK_NONE, false);
-+		goto checkdied;
-+	}
-+
-+	/* Start the watchdog timer */
-+	bus->sdcnt.tickcnt = 0;
-+	inff_sdio_wd_timer(bus, true);
-+	sdio_release_host(sdiod->func1);
-+
-+	err = inff_alloc_wiphy(sdiod->dev, sdiod->settings);
-+	if (err) {
-+		inff_err("inff_alloc failed\n");
-+		goto claim;
-+	}
-+
-+	/* Attach to the common layer, reserve hdr space */
-+	err = inff_bus_attach(sdiod->dev);
-+	if (err != 0) {
-+		inff_err("inff_bus_attach failed\n");
-+		goto free;
-+	}
-+
-+	return 0;
-+free:
-+	if (global_init_retry < MAX_INIT_RETRY_CNT) {
-+		global_init_retry++;
-+		inff_err("global_init_retry:%d\n", global_init_retry);
-+
-+		/* start by unregistering irqs */
-+		inff_sdiod_intr_unregister(bus->sdiodev);
-+
-+		inff_sdiod_remove(bus->sdiodev);
-+
-+		/* reset the adapter */
-+		sdio_claim_host(bus->sdiodev->func1);
-+		mmc_hw_reset(bus->sdiodev->func1->card);
-+		sdio_release_host(bus->sdiodev->func1);
-+
-+		inff_bus_change_state(bus->sdiodev->bus_if, INFF_BUS_DOWN);
-+		return err;
-+	}
-+
-+	inff_free_wiphy(sdiod->dev);
-+claim:
-+	sdio_claim_host(sdiod->func1);
-+checkdied:
-+	inff_sdio_checkdied(bus);
-+release:
-+	sdio_release_host(sdiod->func1);
-+	return err;
-+}
-+
-+static int inff_sdio_cp_img_download(struct inff_bus *bus_if, const struct firmware *boot_fw,
-+				     const struct firmware *cp_fw)
-+{
-+	struct inff_sdio_dev *sdiod = bus_if->bus_priv.sdio;
-+	u8 val = 0;
-+	int err = 0;
-+	u8 f2_retry_nct = 0;
-+
-+	/* Enable SDIO function 3 */
-+	inff_dbg(SDIO, "Enable Func3\n");
-+
-+	sdio_claim_host(sdiod->func1);
-+	val = inff_sdiod_func0_rb(sdiod, SDIO_CCCR_IOEx, &err);
-+	if (err) {
-+		inff_err("Failed to read SDIO_CCCR_IOEx: err %d\n", err);
-+		goto release;
-+	}
-+
-+	val |= SDIO_CCCR_IEN_FUNC3;
-+	inff_sdiod_func0_wb(sdiod, SDIO_CCCR_IOEx, val, &err);
-+	if (err) {
-+		inff_err("Failed to write SDIO_CCCR_IOEx: err %d\n", err);
-+		goto release;
-+	}
-+	sdio_release_host(sdiod->func1);
-+	inff_dbg(SDIO, "Enabled F3 successfully\n");
-+	/* Enable SDIO function 3 Done */
-+
-+	do {
-+		inff_info("Checking if CP image is already running or not...\n");
-+		msleep(6000);
-+		err = inff_sdio_enable_func2(bus_if);
-+		f2_retry_nct++;
-+	} while ((err != 0) && (f2_retry_nct < 2));
-+
-+	if (err) {
-+		inff_info("No image running in CP, Image download required\n");
-+		sdio_claim_host(sdiod->func1);
-+		err = inff_dfu_cp_img_dwnld_init(sdiod, boot_fw, cp_fw);
-+		if (err) {
-+			inff_err("CP first image download failed: %d\n", err);
-+			goto release;
-+		}
-+		inff_info("CP first image download Done!\n");
-+		sdio_release_host(sdiod->func1);
-+		mmc_hw_reset(sdiod->func1->card);
-+		return 0;
-+	}
-+
-+	inff_info("CP image already booted and F2 already enabled!\n");
-+
-+	/* Initialize DFU */
-+	err = inff_dfu_attach(bus_if->drvr);
-+	if (err != 0)
-+		inff_err("CP DFU init failed, run time image update not possible\n");
-+
-+	return 0;
-+
-+release:
-+	sdio_release_host(sdiod->func1);
-+	return err;
-+}
-+
-+static void inff_sdio_setup(struct device *dev, int err,
-+			    struct inff_fw_request *fwreq)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiod = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiod->bus;
-+	struct inff_chip_specific *chip_spec = &bus->ci->chip_spec;
-+	const struct firmware *code;
-+	void *nvram;
-+	u32 nvram_len;
-+
-+	inff_dbg(SDIO, "dev=%s, err=%d\n", dev_name(dev), err);
-+
-+	if (err)
-+		goto fail;
-+
-+	code = fwreq->items[INFF_SDIO_FW_CODE].binary;
-+	nvram = fwreq->items[INFF_SDIO_FW_NVRAM].nv_data.data;
-+	nvram_len = fwreq->items[INFF_SDIO_FW_NVRAM].nv_data.len;
-+	chip_spec->clm_fw = fwreq->items[INFF_SDIO_FW_CLM].binary;
-+	kfree(fwreq);
-+
-+	/* try to download image and nvram to the dongle */
-+	bus->alp_only = true;
-+	if (bus->ci->chip == INF_CC_ACW74XX_CHIP_ID)
-+		err = inff_sdio_download_firmware_acw74xx(bus, code, nvram, nvram_len);
-+	else
-+		err = inff_sdio_download_firmware(bus, code, nvram, nvram_len);
-+
-+	if (err)
-+		goto fail;
-+	bus->alp_only = false;
-+
-+	err = inff_sdio_enable_func2(bus_if);
-+	if (err)
-+		goto fail;
-+
-+	/* Initialize DFU */
-+	err = inff_dfu_attach(bus_if->drvr);
-+	if (err != 0)
-+		goto fail;
-+
-+	/* ready */
-+	return;
-+
-+fail:
-+	inff_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
-+	device_release_driver(&sdiod->func2->dev);
-+	device_release_driver(dev);
-+}
-+
-+static void inff_cp_firmware_callback(struct device *dev, int err,
-+				      struct inff_fw_request *fwreq)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiod = bus_if->bus_priv.sdio;
-+	struct inff_sdio *bus = sdiod->bus;
-+	const struct firmware *boot_fw;
-+	const struct firmware *cp_fw;
-+
-+	inff_dbg(SDIO, "dev=%s, err=%d\n", dev_name(dev), err);
-+
-+	if (err)
-+		goto fail;
-+
-+	cp_fw = fwreq->items[INFF_SDIO_FW_CP].binary;
-+	boot_fw = fwreq->items[INFF_SDIO_FW_BOOT].binary;
-+
-+	kfree(fwreq);
-+
-+	/* try to download image to the dongle */
-+	if (bus->ci->chip == INF_CC_CYW5591X_CHIP_ID)
-+		err = inff_sdio_cp_img_download(bus_if, boot_fw, cp_fw);
-+
-+	if (err)
-+		goto fail;
-+
-+	/* ready */
-+	return;
-+fail:
-+	inff_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
-+	device_release_driver(&sdiod->func2->dev);
-+	device_release_driver(dev);
-+}
-+
-+int inff_sdio_probe(struct inff_sdio_dev *sdiodev)
-+{
-+	int ret;
-+	struct inff_sdio *bus;
-+	struct workqueue_struct *wq;
-+	struct inff_fw_request *fwreq;
-+
-+	/* Allocate private bus interface state */
-+	bus = kzalloc_obj(*bus, GFP_ATOMIC);
-+	if (!bus) {
-+		ret = -ENOMEM;
-+		goto fail;
-+	}
-+
-+	bus->sdiodev = sdiodev;
-+	sdiodev->bus = bus;
-+	skb_queue_head_init(&bus->glom);
-+	INIT_WORK(&bus->datawork, inff_sdio_dataworker);
-+	bus->txbound = INFF_TXBOUND;
-+	bus->rxbound = INFF_RXBOUND;
-+	bus->txminmax = INFF_TXMINMAX;
-+	bus->tx_seq = SDPCM_SEQ_WRAP - 1;
-+
-+	/* single-threaded workqueue */
-+	wq = alloc_ordered_workqueue("inff_wq/%s", WQ_MEM_RECLAIM | WQ_HIGHPRI,
-+				     dev_name(&sdiodev->func1->dev));
-+	if (!wq) {
-+		inff_err("insufficient memory to create txworkqueue\n");
-+		ret = -ENOMEM;
-+		goto fail;
-+	}
-+	inff_sdiod_freezer_count(sdiodev);
-+	bus->inff_wq = wq;
-+
-+	/* attempt to attach to the dongle */
-+	ret = inff_sdio_probe_attach(bus);
-+	if (ret < 0) {
-+		inff_err("inff_sdio_probe_attach failed\n");
-+		goto fail;
-+	}
-+
-+	spin_lock_init(&bus->rxctl_lock);
-+	spin_lock_init(&bus->txq_lock);
-+	init_waitqueue_head(&bus->ctrl_wait);
-+	init_waitqueue_head(&bus->dcmd_resp_wait);
-+	/* Initialize thread based operation and lock */
-+	mutex_init(&bus->sdsem);
-+
-+	/* Set up the watchdog timer */
-+	timer_setup(&bus->timer, inff_sdio_watchdog, 0);
-+	/* Initialize watchdog thread */
-+	init_completion(&bus->watchdog_wait);
-+	bus->watchdog_tsk = kthread_run(inff_sdio_watchdog_thread,
-+					bus, "inff_wdog/%s",
-+					dev_name(&sdiodev->func1->dev));
-+	if (IS_ERR(bus->watchdog_tsk)) {
-+		pr_warn("inff_watchdog thread failed to start\n");
-+		bus->watchdog_tsk = NULL;
-+	}
-+	/* Initialize DPC thread */
-+	bus->dpc_triggered = false;
-+	bus->dpc_running = false;
-+
-+	/* default sdio bus header length for tx packet */
-+	bus->tx_hdrlen = SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN;
-+
-+	/* Query the F2 block size, set roundup accordingly */
-+	bus->blocksize = bus->sdiodev->func2->cur_blksize;
-+	bus->roundup = min(max_roundup, bus->blocksize);
-+
-+	if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+		sdio_claim_host(bus->sdiodev->func1);
-+
-+		/* Disable F2 to clear any intermediate frame state on the dongle */
-+		sdio_disable_func(bus->sdiodev->func2);
-+
-+		bus->rxflow = false;
-+
-+		/* Done with backplane-dependent accesses, can drop clock... */
-+		inff_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
-+
-+		sdio_release_host(bus->sdiodev->func1);
-+		/* ...and initialize clock/power states */
-+		bus->clkstate = CLK_SDONLY;
-+	} else if (inff_socitype_is_cp(bus->sdiodev->bus_if)) {
-+		bus->clkstate = CLK_SDONLY;
-+		bus->tx_seq = 0;
-+	}
-+
-+	bus->idletime = INFF_DEFAULT_SDIO_IDLE_CONFIG;
-+
-+	switch (sdiodev->func1->device) {
-+	case SDIO_DEVICE_ID_CYPRESS_CYW55900:
-+		bus->idleclock = INFF_IDLE_STOP;
-+		break;
-+	default:
-+		bus->idleclock = INFF_IDLE_ACTIVE;
-+		break;
-+	}
-+
-+	/* SR state */
-+	bus->sr_enabled = false;
-+
-+	inff_dbg(INFO, "completed!!\n");
-+
-+	switch (bus->ci->socitype) {
-+	case INFF_SOCI_AI:
-+		fwreq = inff_prepare_fw_request(sdiodev->settings->firmware_path,
-+						bus->ci, inff_sdio_fwnames,
-+						ARRAY_SIZE(inff_sdio_fwnames),
-+						bus->sdiodev->settings->board_type);
-+		if (!fwreq) {
-+			ret = -ENOMEM;
-+			goto fail;
-+		}
-+
-+		ret = inff_fw_get_firmwares(sdiodev->dev, fwreq,
-+					    inff_sdio_setup);
-+		if (ret != 0) {
-+			inff_err("async firmware request failed: %d\n", ret);
-+			kfree(fwreq);
-+			goto fail;
-+		}
-+		break;
-+	case INFF_SOCI_CP:
-+		fwreq = inff_prepare_fw_request(sdiodev->settings->firmware_path,
-+						bus->ci, inff_cp_fwnames,
-+						ARRAY_SIZE(inff_cp_fwnames),
-+						bus->sdiodev->settings->board_type);
-+		if (!fwreq) {
-+			ret = -ENOMEM;
-+			goto fail;
-+		}
-+
-+		ret = inff_fw_get_firmwares(sdiodev->dev, fwreq,
-+					    inff_cp_firmware_callback);
-+		if (ret != 0) {
-+			inff_err("async firmware request failed: %d\n", ret);
-+			kfree(fwreq);
-+			goto fail;
-+		}
-+		break;
-+	default:
-+		inff_err("chip type %u is not supported\n",
-+			 bus->ci->socitype);
-+		goto fail;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	inff_sdio_remove(bus);
-+	sdiodev->bus = NULL;
-+	return ret;
-+}
-+
-+/* Detach and free everything */
-+void inff_sdio_remove(struct inff_sdio *bus)
-+{
-+	struct inff_chip_specific *chip_spec;
-+
-+	if (!bus) {
-+		inff_err("bus is null pointer, exiting\n");
-+		return;
-+	}
-+
-+	chip_spec = &bus->ci->chip_spec;
-+
-+	/* Stop watchdog task */
-+	if (bus->watchdog_tsk) {
-+		get_task_struct(bus->watchdog_tsk);
-+		send_sig(SIGTERM, bus->watchdog_tsk, 1);
-+		kthread_stop_put(bus->watchdog_tsk);
-+		bus->watchdog_tsk = NULL;
-+	}
-+
-+	/* De-register interrupt handler */
-+	inff_sdiod_intr_unregister(bus->sdiodev);
-+
-+	inff_bus_detach(bus->sdiodev->dev);
-+	inff_dfu_detach(bus->sdiodev->bus_if->drvr);
-+	inff_free_wiphy(bus->sdiodev->dev);
-+
-+	cancel_work_sync(&bus->datawork);
-+	if (bus->inff_wq)
-+		destroy_workqueue(bus->inff_wq);
-+
-+	if (bus->ci) {
-+		if (bus->sdiodev->state != INFF_SDIOD_NOMEDIUM) {
-+			sdio_claim_host(bus->sdiodev->func1);
-+			inff_sdio_wd_timer(bus, false);
-+
-+			if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+				inff_sdio_clkctl(bus, CLK_AVAIL, false);
-+
-+				/* Leave the device in state where it is
-+				 * 'passive'. This is done by resetting all
-+				 * necessary cores.
-+				 */
-+				msleep(20);
-+				inff_chip_set_passive(bus->ci);
-+			}
-+
-+			inff_sdio_reset(bus);
-+
-+			inff_sdio_clkctl(bus, CLK_NONE, false);
-+			sdio_release_host(bus->sdiodev->func1);
-+		}
-+		inff_chip_detach(bus->ci);
-+	}
-+	if (bus->sdiodev->settings)
-+		inff_release_module_param(bus->sdiodev->settings);
-+
-+	if (inff_socitype_is_ai(bus->sdiodev->bus_if)) {
-+		release_firmware(chip_spec->clm_fw);
-+		chip_spec->clm_fw = NULL;
-+#if IS_BUILTIN(CONFIG_MMC)
-+		sdio_claim_host(bus->sdiodev->func1);
-+		mmc_hw_reset(bus->sdiodev->func1->card);
-+		sdio_release_host(bus->sdiodev->func1);
-+#endif
-+	}
-+
-+	kfree(bus->rxbuf);
-+	kfree(bus->hdrbuf);
-+	kfree(bus);
-+
-+	inff_dbg(TRACE, "Disconnected\n");
-+}
-+
-+void inff_sdio_wd_timer(struct inff_sdio *bus, bool active)
-+{
-+	/* Totally stop the timer */
-+	if (!active && bus->wd_active) {
-+		timer_delete_sync(&bus->timer);
-+		bus->wd_active = false;
-+		return;
-+	}
-+
-+	/* don't start the wd until fw is loaded */
-+	if (bus->sdiodev->state != INFF_SDIOD_DATA)
++	struct inff_fws_info *fws = drvr_to_fws(ifp->drvr);
++	struct inff_fws_mac_descriptor *entry;
++	struct inff_fws_mac_descriptor *table;
++	bool (*matchfn)(struct sk_buff *, void *) = inff_fws_ifidx_match;
++	int ifidx = ifp->ifidx;
++	int i;
++
++	if (!fws->sdio_recv_error)
 +		return;
 +
-+	if (active) {
-+		if (!bus->wd_active) {
-+			/* Create timer again when watchdog period is
-+			 * dynamically changed or in the first instance
-+			 */
-+			bus->timer.expires = jiffies + INFF_WD_POLL;
-+			add_timer(&bus->timer);
-+			bus->wd_active = true;
-+		} else {
-+			/* Re arm the timer, at last watchdog period */
-+			mod_timer(&bus->timer, jiffies + INFF_WD_POLL);
-+		}
-+	}
++	inff_fws_lock(fws);
++
++	fws->stats.cnt_cleanup_if++;
++	fws->sdio_recv_error = false;
++
++	entry = &fws->desc.iface[ifidx];
++	inff_dbg(SDIO, "iface[%d] mac %pM if %d psq len %d\n",
++		 ifidx, entry->ea, entry->interface_id, entry->psq.len);
++
++	/* cleanup interface */
++	inff_fws_psq_flush(fws, &entry->psq, ifidx);
++	if (INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_pktq_flush(&entry->afq, true, NULL, NULL);
++	inff_fws_macdesc_reset(entry);
++
++	/* cleanup individual nodes */
++	table = &fws->desc.nodes[0];
++	for (i = 0; i < ARRAY_SIZE(fws->desc.nodes); i++)
++		inff_fws_macdesc_cleanup(fws, &table[i], ifidx);
++
++	/* cleanup txq and hanger */
++	inff_fws_bus_txq_cleanup(fws, matchfn, ifidx);
++	if (!INFF_FWS_MODE_GET_AFQ(fws->wlfc_mode))
++		inff_fws_hanger_cleanup(fws, matchfn, ifidx);
++
++	inff_fws_unlock(fws);
 +}
-+
-+int inff_sdio_sleep(struct inff_sdio *bus, bool sleep)
-+{
-+	int ret;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+	ret = inff_sdio_bus_sleep(bus, sleep, false);
-+	sdio_release_host(bus->sdiodev->func1);
-+
-+	return ret;
-+}
-+
-+/* Check F2 Ready bit before sending data to Firmware */
-+static int
-+inff_sdio_f2_ready(struct inff_sdio *bus)
-+{
-+	int ret = -1;
-+	int iordy_status = 0;
-+
-+	sdio_claim_host(bus->sdiodev->func1);
-+	/* Read the status of IOR2 */
-+	iordy_status = inff_sdiod_func0_rb(bus->sdiodev, SDIO_CCCR_IORx, NULL);
-+
-+	sdio_release_host(bus->sdiodev->func1);
-+	ret = iordy_status & SDIO_FUNC_ENABLE_2;
-+	return ret;
-+}
-+
-+bool inff_sdio_credit_map_update(struct inff_bus *bus_if)
-+{
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+
-+	return sdiodev->bus->credit_map_capable;
-+}
-+
-+#define SDIO_FUNC1_BLOCKSIZE		64
-+#define SDIO_FUNC2_BLOCKSIZE		512
-+#define SDIO_ACW74XX_FUNC2_BLOCKSIZE	256
-+
-+/* Maximum milliseconds to wait for F2 to come up */
-+#define SDIO_WAIT_F2RDY	3000
-+
-+static irqreturn_t inff_sdiod_oob_irqhandler(int irq, void *dev_id)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev_id);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+
-+	inff_dbg(INTR, "OOB intr triggered\n");
-+
-+	/* out-of-band interrupt is level-triggered which won't
-+	 * be cleared until dpc
-+	 */
-+	if (sdiodev->irq_en) {
-+		disable_irq_nosync(irq);
-+		sdiodev->irq_en = false;
-+	}
-+
-+	inff_sdio_isr(sdiodev->bus, true);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+/* interrupt handler for SDIO function 1 interrupt */
-+static void inff_sdiod_ib_irqhandler(struct sdio_func *func)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(&func->dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+
-+	inff_dbg(INTR, "F%d IB intr triggered\n", func->num);
-+
-+	inff_sdio_isr(sdiodev->bus, false);
-+}
-+
-+/* dummy handler for SDIO function 2 interrupt */
-+static void inff_sdiod_dummy_irqhandler(struct sdio_func *func)
-+{
-+}
-+
-+int inff_sdiod_intr_register(struct inff_sdio_dev *sdiodev)
-+{
-+	struct inff_sdio_platform_data *pdata;
-+	int ret = 0;
-+	u8 data;
-+
-+	pdata = &sdiodev->settings->bus.sdio;
-+	if (pdata->oob_irq_supported) {
-+		inff_dbg(SDIO, "SDIO register OOB IRQ %d\n",
-+			 pdata->oob_irq_nr);
-+		if (!sdiodev->oob_irq_requested) {
-+			spin_lock_init(&sdiodev->irq_en_lock);
-+			sdiodev->irq_en = true;
-+
-+			ret = request_irq(pdata->oob_irq_nr,
-+					  inff_sdiod_oob_irqhandler,
-+				  pdata->oob_irq_flags, "inff_oob_intr",
-+				  &sdiodev->func1->dev);
-+			if (ret != 0) {
-+				inff_err("request_irq failed %d\n", ret);
-+				return ret;
-+			}
-+			sdiodev->oob_irq_requested = true;
-+
-+			ret = enable_irq_wake(pdata->oob_irq_nr);
-+			if (ret != 0) {
-+				inff_err("enable_irq_wake failed %d\n", ret);
-+				return ret;
-+			}
-+			disable_irq_wake(pdata->oob_irq_nr);
-+		}
-+		sdio_claim_host(sdiodev->func1);
-+
-+		/* must configure SDIO_CCCR_IENx to enable irq */
-+		data = inff_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
-+		data |= SDIO_CCCR_IEN_FUNC1 | SDIO_CCCR_IEN_FUNC2 |
-+			SDIO_CCCR_IEN_FUNC0;
-+		inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
-+
-+		/* redirect, configure and enable io for interrupt signal */
-+		data = SDIO_CCCR_INFF_SEPINT_MASK | SDIO_CCCR_INFF_SEPINT_OE;
-+		if (pdata->oob_irq_flags & IRQF_TRIGGER_HIGH)
-+			data |= SDIO_CCCR_INFF_SEPINT_ACT_HI;
-+		inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_INFF_SEPINT,
-+				    data, &ret);
-+		sdio_release_host(sdiodev->func1);
-+	} else {
-+		sdio_claim_host(sdiodev->func1);
-+		sdio_claim_irq(sdiodev->func1, inff_sdiod_ib_irqhandler);
-+		sdio_claim_irq(sdiodev->func2, inff_sdiod_dummy_irqhandler);
-+		sdio_release_host(sdiodev->func1);
-+		sdiodev->sd_irq_requested = true;
-+	}
-+
-+	return 0;
-+}
-+
-+void inff_sdiod_intr_unregister(struct inff_sdio_dev *sdiodev)
-+{
-+	inff_dbg(SDIO, "SDIO unregister oob=%d sd=%d\n",
-+		 sdiodev->oob_irq_requested,
-+		 sdiodev->sd_irq_requested);
-+
-+	if (sdiodev->oob_irq_requested) {
-+		struct inff_sdio_platform_data *pdata;
-+
-+		pdata = &sdiodev->settings->bus.sdio;
-+		sdio_claim_host(sdiodev->func1);
-+		inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_INFF_SEPINT, 0, NULL);
-+		inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
-+		sdio_release_host(sdiodev->func1);
-+
-+		sdiodev->oob_irq_requested = false;
-+		free_irq(pdata->oob_irq_nr, &sdiodev->func1->dev);
-+		sdiodev->irq_en = false;
-+		sdiodev->oob_irq_requested = false;
-+	}
-+
-+	if (sdiodev->sd_irq_requested) {
-+		sdio_claim_host(sdiodev->func1);
-+		sdio_release_irq(sdiodev->func2);
-+		sdio_release_irq(sdiodev->func1);
-+		sdio_release_host(sdiodev->func1);
-+		sdiodev->sd_irq_requested = false;
-+	}
-+}
-+
-+void inff_sdiod_change_state(struct inff_sdio_dev *sdiodev,
-+			     enum inff_sdiod_state state)
-+{
-+	if (sdiodev->state == INFF_SDIOD_NOMEDIUM ||
-+	    state == sdiodev->state)
-+		return;
-+
-+	inff_dbg(TRACE, "%d -> %d\n", sdiodev->state, state);
-+	switch (sdiodev->state) {
-+	case INFF_SDIOD_DATA:
-+		/* any other state means bus interface is down */
-+		inff_bus_change_state(sdiodev->bus_if, INFF_BUS_DOWN);
-+		break;
-+	case INFF_SDIOD_DOWN:
-+		/* transition from DOWN to DATA means bus interface is up */
-+		if (state == INFF_SDIOD_DATA)
-+			inff_bus_change_state(sdiodev->bus_if, INFF_BUS_UP);
-+		break;
-+	default:
-+		break;
-+	}
-+	sdiodev->state = state;
-+}
-+
-+static int inff_sdiod_set_backplane_window(struct inff_sdio_dev *sdiodev,
-+					   u32 addr)
-+{
-+	u32 v, bar0 = addr & SBSDIO_SBWINDOW_MASK;
-+	int err = 0, i;
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: Write operation when bus is in sleep state\n");
-+		return -EPERM;
-+	}
-+
-+	if (sdiodev->sbwad_valid && bar0 == sdiodev->sbwad)
-+		return 0;
-+
-+	v = bar0 >> 8;
-+
-+	for (i = 0 ; i < 3 && !err ; i++, v >>= 8)
-+		inff_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
-+				  v & 0xff, &err);
-+
-+	if (!err) {
-+		sdiodev->sbwad_valid = 1;
-+		sdiodev->sbwad = bar0;
-+	}
-+
-+	return err;
-+}
-+
-+u32 inff_sdiod_readl(struct inff_sdio_dev *sdiodev, u32 addr, int *ret)
-+{
-+	u32 data = 0;
-+	int retval;
-+
-+	inff_dbg(SDIOEXT, "addr 0x%x\n", addr);
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: Read operation when bus is in sleep state\n");
-+		if (ret)
-+			*ret = -EPERM;
-+		return data;
-+	}
-+
-+	retval = inff_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	inff_dbg(SDIO, "reading from addr 0x%x bar0 0x%08x ", addr, sdiodev->sbwad);
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	data = sdio_readl(sdiodev->func1, addr, &retval);
-+
-+	if (retval)
-+		data = 0;
-+
-+	inff_dbg(SDIO, "data 0x%08x\n", data);
-+out:
-+	if (ret)
-+		*ret = retval;
-+
-+	return data;
-+}
-+
-+void inff_sdiod_writel(struct inff_sdio_dev *sdiodev, u32 addr,
-+		       u32 data, int *ret)
-+{
-+	int retval;
-+
-+	inff_dbg(SDIOEXT, "addr 0x%x val 0x%x\n", addr, data);
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: Write operation when bus is in sleep state\n");
-+		if (ret)
-+			*ret = -EPERM;
-+		return;
-+	}
-+
-+	retval = inff_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	inff_dbg(SDIO, "writing 0x%08x to addr 0x%x bar0 0x%08x\n", data, addr, sdiodev->sbwad);
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	sdio_writel(sdiodev->func1, data, addr, &retval);
-+
-+out:
-+	if (ret)
-+		*ret = retval;
-+}
-+
-+static int inff_sdiod_skbuff_read(struct inff_sdio_dev *sdiodev,
-+				  struct sdio_func *func, u32 addr,
-+				   struct sk_buff *skb)
-+{
-+	unsigned int req_sz;
-+	int err;
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: Read operation when bus is in sleep state\n");
-+		return -EPERM;
-+	}
-+
-+	/* Single skb use the standard mmc interface */
-+	req_sz = skb->len + 3;
-+	req_sz &= (uint)~3;
-+
-+	switch (func->num) {
-+	case SDIO_FUNC_1:
-+		err = sdio_memcpy_fromio(func, ((u8 *)(skb->data)), addr,
-+					 req_sz);
-+		break;
-+	case SDIO_FUNC_2:
-+	case SDIO_FUNC_3:
-+		err = sdio_readsb(func, ((u8 *)(skb->data)), addr, req_sz);
-+		break;
-+	default:
-+		/* bail out as things are really fishy here */
-+		WARN(1, "invalid sdio function number: %d\n", func->num);
-+		err = -ENOMEDIUM;
-+	}
-+
-+	if (err == -ENOMEDIUM)
-+		inff_sdiod_change_state(sdiodev, INFF_SDIOD_NOMEDIUM);
-+
-+	return err;
-+}
-+
-+static int inff_sdiod_skbuff_write(struct inff_sdio_dev *sdiodev,
-+				   struct sdio_func *func, u32 addr,
-+				   struct sk_buff *skb)
-+{
-+	unsigned int req_sz;
-+	int err;
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: Write operation when bus is in sleep state\n");
-+		return -EPERM;
-+	}
-+
-+	/* Single skb use the standard mmc interface */
-+	req_sz = skb->len + 3;
-+	req_sz &= (uint)~3;
-+
-+	if (func->num == SDIO_FUNC_1 || func->num == SDIO_FUNC_2)
-+		err = sdio_memcpy_toio(func, addr, ((u8 *)(skb->data)), req_sz);
-+	else if (func->num == SDIO_FUNC_3)
-+		err = sdio_writesb(func, addr, ((u8 *)(skb->data)), req_sz);
-+	else
-+		return -EINVAL;
-+
-+	if (err == -ENOMEDIUM)
-+		inff_sdiod_change_state(sdiodev, INFF_SDIOD_NOMEDIUM);
-+
-+	return err;
-+}
-+
-+static int mmc_submit_one(struct mmc_data *md, struct mmc_request *mr,
-+			  struct mmc_command *mc, int sg_cnt, int req_sz,
-+			  int func_blk_sz, u32 *addr,
-+			  struct inff_sdio_dev *sdiodev,
-+			  struct sdio_func *func, int write)
-+{
-+	int ret;
-+
-+	if (sdiodev->bus->sleeping) {
-+		if (!sdiodev->ignore_bus_error)
-+			inff_err("ERROR: %s operation when bus is in sleep state\n",
-+				 write ? "Write" : "Read");
-+		return -EPERM;
-+	}
-+
-+	md->sg_len = sg_cnt;
-+	md->blocks = req_sz / func_blk_sz;
-+	mc->arg |= (*addr & 0x1FFFF) << 9;	/* address */
-+	mc->arg |= md->blocks & 0x1FF;	/* block count */
-+	/* incrementing addr for function 1 */
-+	if (func->num == SDIO_FUNC_1)
-+		*addr += req_sz;
-+
-+	mmc_set_data_timeout(md, func->card);
-+	mmc_wait_for_req(func->card->host, mr);
-+
-+	ret = mc->error ? mc->error : md->error;
-+	if (ret == -ENOMEDIUM) {
-+		inff_sdiod_change_state(sdiodev, INFF_SDIOD_NOMEDIUM);
-+	} else if (ret != 0) {
-+		inff_err("CMD53 sg block %s failed %d\n",
-+			 write ? "write" : "read", ret);
-+		ret = -EIO;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * inff_sdiod_sglist_rw - SDIO interface function for block data access
-+ * @sdiodev: inffmac sdio device
-+ * @func: SDIO function
-+ * @write: direction flag
-+ * @addr: dongle memory address as source/destination
-+ * @pktlist: skb buffer head pointer
-+ *
-+ * This function takes the respbonsibility as the interface function to MMC
-+ * stack for block data access. It assumes that the skb passed down by the
-+ * caller has already been padded and aligned.
-+ */
-+static int inff_sdiod_sglist_rw(struct inff_sdio_dev *sdiodev,
-+				struct sdio_func *func,
-+				bool write, u32 addr,
-+				struct sk_buff_head *pktlist)
-+{
-+	unsigned int req_sz, func_blk_sz, sg_cnt, sg_data_sz, pkt_offset;
-+	unsigned int max_req_sz, src_offset, dst_offset;
-+	unsigned char *pkt_data, *orig_data, *dst_data;
-+	struct sk_buff_head local_list, *target_list;
-+	struct sk_buff *pkt_next = NULL, *src;
-+	unsigned short max_seg_cnt;
-+	struct mmc_request mmc_req;
-+	struct mmc_command mmc_cmd;
-+	struct mmc_data mmc_dat;
-+	struct scatterlist *sgl;
-+	int ret = 0;
-+
-+	if (!pktlist->qlen)
-+		return -EINVAL;
-+
-+	target_list = pktlist;
-+	/* for host with broken sg support, prepare a page aligned list */
-+	__skb_queue_head_init(&local_list);
-+	if (!write && sdiodev->settings->bus.sdio.broken_sg_support) {
-+		req_sz = 0;
-+		skb_queue_walk(pktlist, pkt_next)
-+			req_sz += pkt_next->len;
-+		req_sz = ALIGN(req_sz, func->cur_blksize);
-+		while (req_sz > PAGE_SIZE) {
-+			pkt_next = inff_pkt_buf_get_skb(PAGE_SIZE);
-+			if (!pkt_next) {
-+				ret = -ENOMEM;
-+				goto exit;
-+			}
-+			__skb_queue_tail(&local_list, pkt_next);
-+			req_sz -= PAGE_SIZE;
-+		}
-+		pkt_next = inff_pkt_buf_get_skb(req_sz);
-+		if (!pkt_next) {
-+			ret = -ENOMEM;
-+			goto exit;
-+		}
-+		__skb_queue_tail(&local_list, pkt_next);
-+		target_list = &local_list;
-+	}
-+
-+	func_blk_sz = func->cur_blksize;
-+	max_req_sz = sdiodev->max_request_size;
-+	max_seg_cnt = min_t(unsigned short, sdiodev->max_segment_count,
-+			    target_list->qlen);
-+
-+	memset(&mmc_req, 0, sizeof(struct mmc_request));
-+	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
-+	memset(&mmc_dat, 0, sizeof(struct mmc_data));
-+
-+	mmc_dat.sg = sdiodev->sgtable.sgl;
-+	mmc_dat.blksz = func_blk_sz;
-+	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
-+	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
-+	mmc_cmd.arg = write ? 1 << 31 : 0;	/* write flag  */
-+	mmc_cmd.arg |= (func->num & 0x7) << 28;	/* SDIO func num */
-+	mmc_cmd.arg |= 1 << 27;			/* block mode */
-+	/* for function 1 the addr will be incremented */
-+	mmc_cmd.arg |= (func->num == SDIO_FUNC_1) ? 1 << 26 : 0;
-+	mmc_cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
-+	mmc_req.cmd = &mmc_cmd;
-+	mmc_req.data = &mmc_dat;
-+
-+	req_sz = 0;
-+	sg_cnt = 0;
-+	sgl = sdiodev->sgtable.sgl;
-+	skb_queue_walk(target_list, pkt_next) {
-+		pkt_offset = 0;
-+		while (pkt_offset < pkt_next->len) {
-+			pkt_data = pkt_next->data + pkt_offset;
-+			sg_data_sz = pkt_next->len - pkt_offset;
-+			if (sg_data_sz > sdiodev->max_segment_size)
-+				sg_data_sz = sdiodev->max_segment_size;
-+			if (sg_data_sz > max_req_sz - req_sz)
-+				sg_data_sz = max_req_sz - req_sz;
-+
-+			if (!sgl) {
-+				/* out of (pre-allocated) scatterlist entries */
-+				ret = -ENOMEM;
-+				goto exit;
-+			}
-+			sg_set_buf(sgl, pkt_data, sg_data_sz);
-+			sg_cnt++;
-+
-+			sgl = sg_next(sgl);
-+			req_sz += sg_data_sz;
-+			pkt_offset += sg_data_sz;
-+			if (req_sz >= max_req_sz || sg_cnt >= max_seg_cnt) {
-+				ret = mmc_submit_one(&mmc_dat, &mmc_req, &mmc_cmd,
-+						     sg_cnt, req_sz, func_blk_sz,
-+						     &addr, sdiodev, func, write);
-+				if (ret)
-+					goto exit_queue_walk;
-+				req_sz = 0;
-+				sg_cnt = 0;
-+				sgl = sdiodev->sgtable.sgl;
-+			}
-+		}
-+	}
-+	if (sg_cnt)
-+		ret = mmc_submit_one(&mmc_dat, &mmc_req, &mmc_cmd,
-+				     sg_cnt, req_sz, func_blk_sz,
-+				     &addr, sdiodev, func, write);
-+exit_queue_walk:
-+	if (!write && sdiodev->settings->bus.sdio.broken_sg_support) {
-+		src = __skb_peek(&local_list);
-+		src_offset = 0;
-+		skb_queue_walk(pktlist, pkt_next) {
-+			dst_offset = 0;
-+
-+			/* This is safe because we must have enough SKB data
-+			 * in the local list to cover everything in pktlist.
-+			 */
-+			while (1) {
-+				req_sz = pkt_next->len - dst_offset;
-+				if (req_sz > src->len - src_offset)
-+					req_sz = src->len - src_offset;
-+
-+				orig_data = src->data + src_offset;
-+				dst_data = pkt_next->data + dst_offset;
-+				memcpy(dst_data, orig_data, req_sz);
-+
-+				src_offset += req_sz;
-+				if (src_offset == src->len) {
-+					src_offset = 0;
-+					src = skb_peek_next(src, &local_list);
-+				}
-+				dst_offset += req_sz;
-+				if (dst_offset == pkt_next->len)
-+					break;
-+			}
-+		}
-+	}
-+
-+exit:
-+	sg_init_table(sdiodev->sgtable.sgl, sdiodev->sgtable.orig_nents);
-+	while ((pkt_next = __skb_dequeue(&local_list)) != NULL)
-+		inff_pkt_buf_free_skb(pkt_next);
-+
-+	return ret;
-+}
-+
-+int inff_sdiod_recv_buf(struct inff_sdio_dev *sdiodev, u8 fn,
-+			u8 *buf, uint nbytes)
-+{
-+	struct sk_buff *mypkt = NULL;
-+	int err = 0;
-+
-+	mypkt = inff_pkt_buf_get_skb(nbytes);
-+	if (!mypkt) {
-+		inff_err("inff_pkt_buf_get_skb failed: len %d\n",
-+			 nbytes);
-+		return -EIO;
-+	}
-+
-+	err = inff_sdiod_recv_pkt(sdiodev, fn, mypkt);
-+	if (!err)
-+		memcpy(buf, mypkt->data, nbytes);
-+
-+	inff_pkt_buf_free_skb(mypkt);
-+	return err;
-+}
-+
-+int inff_sdiod_recv_pkt(struct inff_sdio_dev *sdiodev, u8 fn,
-+			struct sk_buff *pkt)
-+{
-+	struct sdio_func *func = NULL;
-+	u32 base_addr = 0;
-+	u32 recv_addr = 0;
-+	int err = 0;
-+
-+	if (fn == SDIO_FUNC_2) {
-+		/* F2 is only DMA. HW ignore the address field in the cmd53 /cmd52. */
-+		base_addr = sdiodev->cc_core->base;
-+		recv_addr = base_addr & SBSDIO_SB_OFT_ADDR_MASK;
-+		recv_addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+		func = sdiodev->func2;
-+	} else if (fn == SDIO_FUNC_3) {
-+		/* F3 has registers and DMA. A DMA access is identified using the
-+		 * address value 0x0. If the address field has any other value, it
-+		 * won't be considered as F3 packet transfer. If the address corresponds
-+		 * to a valid F3 register address, driver will get proper response,
-+		 * otherwise driver will get error response.
-+		 */
-+		base_addr = 0;
-+		recv_addr = 0;
-+		func = sdiodev->func3;
-+	} else {
-+		inff_err("invalid function number: %d\n", fn);
-+		return -EINVAL;
-+	}
-+
-+	err = inff_sdiod_set_backplane_window(sdiodev, base_addr);
-+	if (err)
-+		goto done;
-+
-+	err = inff_sdiod_skbuff_read(sdiodev, func, recv_addr, pkt);
-+
-+	inff_dbg(DATA, "F%d, base addr: 0x%x, recv addr: 0x%x, size: %d, err: %d\n",
-+		 fn, base_addr, recv_addr, pkt->len, err);
-+done:
-+	return err;
-+}
-+
-+int inff_sdiod_recv_chain(struct inff_sdio_dev *sdiodev,
-+			  struct sk_buff_head *pktq, uint totlen)
-+{
-+	struct sk_buff *glom_skb = NULL;
-+	struct sk_buff *skb;
-+	u32 addr = sdiodev->cc_core->base;
-+	int err = 0;
-+
-+	inff_dbg(SDIO, "addr = 0x%x, size = %d\n",
-+		 addr, pktq->qlen);
-+
-+	err = inff_sdiod_set_backplane_window(sdiodev, addr);
-+	if (err)
-+		goto done;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	if (pktq->qlen == 1) {
-+		err = inff_sdiod_skbuff_read(sdiodev, sdiodev->func2, addr,
-+					     __skb_peek(pktq));
-+	} else if (!sdiodev->sg_support) {
-+		glom_skb = inff_pkt_buf_get_skb(totlen);
-+		if (!glom_skb)
-+			return -ENOMEM;
-+		err = inff_sdiod_skbuff_read(sdiodev, sdiodev->func2, addr,
-+					     glom_skb);
-+		if (err)
-+			goto done;
-+
-+		skb_queue_walk(pktq, skb) {
-+			memcpy(skb->data, glom_skb->data, skb->len);
-+			skb_pull(glom_skb, skb->len);
-+		}
-+	} else {
-+		err = inff_sdiod_sglist_rw(sdiodev, sdiodev->func2, false,
-+					   addr, pktq);
-+	}
-+
-+done:
-+	inff_pkt_buf_free_skb(glom_skb);
-+	return err;
-+}
-+
-+int inff_sdiod_send_buf(struct inff_sdio_dev *sdiodev, u8 fn,
-+			u8 *buf, uint nbytes)
-+{
-+	struct sk_buff *mypkt = NULL;
-+	struct sdio_func *func = NULL;
-+	u32 base_addr = 0;
-+	u32 send_addr = 0;
-+	int err = 0;
-+
-+	if (fn == 2) {
-+		/* F2 is only DMA. HW ignore the address field in the cmd53 /cmd52. */
-+		base_addr = sdiodev->cc_core->base;
-+		send_addr = base_addr & SBSDIO_SB_OFT_ADDR_MASK;
-+		send_addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+		func = sdiodev->func2;
-+	} else if (fn == 3) {
-+		/* F3 has registers and DMA. A DMA access is identified using the
-+		 * address value 0x0. If the address field has any other value, it
-+		 * won't be considered as F3 packet transfer. If the address corresponds
-+		 * to a valid F3 register address, driver will get proper response,
-+		 * otherwise driver will get error response.
-+		 */
-+		base_addr = 0;
-+		send_addr = 0;
-+		func = sdiodev->func3;
-+	} else {
-+		inff_err("invalid function number: %d\n", fn);
-+		return -EINVAL;
-+	}
-+
-+	mypkt = inff_pkt_buf_get_skb(nbytes);
-+
-+	if (!mypkt) {
-+		inff_err("inff_pkt_buf_get_skb failed: len %d\n",
-+			 nbytes);
-+		return -EIO;
-+	}
-+
-+	memcpy(mypkt->data, buf, nbytes);
-+
-+	err = inff_sdiod_set_backplane_window(sdiodev, base_addr);
-+	if (err)
-+		goto out;
-+
-+	err = inff_sdiod_skbuff_write(sdiodev, func, send_addr, mypkt);
-+
-+	inff_dbg(DATA, "F%d, base addr: 0x%x, send addr: 0x%x, size: %d, err: %d\n",
-+		 fn, base_addr, send_addr, mypkt->len, err);
-+out:
-+	inff_pkt_buf_free_skb(mypkt);
-+
-+	return err;
-+}
-+
-+int inff_sdiod_send_pkt(struct inff_sdio_dev *sdiodev,
-+			struct sk_buff_head *pktq)
-+{
-+	struct sk_buff *skb;
-+	u32 addr = sdiodev->cc_core->base;
-+	int err;
-+
-+	inff_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
-+
-+	err = inff_sdiod_set_backplane_window(sdiodev, addr);
-+	if (err)
-+		return err;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	if (pktq->qlen == 1 || !sdiodev->sg_support) {
-+		skb_queue_walk(pktq, skb) {
-+			err = inff_sdiod_skbuff_write(sdiodev, sdiodev->func2,
-+						      addr, skb);
-+			if (err)
-+				break;
-+		}
-+	} else {
-+		err = inff_sdiod_sglist_rw(sdiodev, sdiodev->func2, true,
-+					   addr, pktq);
-+	}
-+
-+	return err;
-+}
-+
-+int
-+inff_sdiod_ramrw(struct inff_sdio_dev *sdiodev, bool write, u32 address,
-+		 u8 *data, uint size)
-+{
-+	int err = 0;
-+	struct sk_buff *pkt;
-+	u32 sdaddr;
-+	uint dsize;
-+
-+	dsize = min_t(uint, SBSDIO_SB_OFT_ADDR_LIMIT, size);
-+	pkt = __dev_alloc_skb(dsize, GFP_KERNEL);
-+	if (!pkt) {
-+		inff_err("dev_alloc_skb failed: len %d\n", dsize);
-+		return -EIO;
-+	}
-+	pkt->priority = 0;
-+
-+	/* Determine initial transfer parameters */
-+	sdaddr = address & SBSDIO_SB_OFT_ADDR_MASK;
-+	if ((sdaddr + size) & SBSDIO_SBWINDOW_MASK)
-+		dsize = (SBSDIO_SB_OFT_ADDR_LIMIT - sdaddr);
-+	else
-+		dsize = size;
-+
-+	sdio_claim_host(sdiodev->func1);
-+
-+	/* Do the transfer(s) */
-+	while (size) {
-+		/* Set the backplane window to include the start address */
-+		err = inff_sdiod_set_backplane_window(sdiodev, address);
-+		if (err)
-+			break;
-+
-+		inff_dbg(SDIO, "%s %d bytes at offset 0x%08x in window 0x%08x\n",
-+			 write ? "write" : "read", dsize,
-+			 sdaddr, address & SBSDIO_SBWINDOW_MASK);
-+
-+		sdaddr &= SBSDIO_SB_OFT_ADDR_MASK;
-+		sdaddr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+		skb_put(pkt, dsize);
-+
-+		if (write) {
-+			memcpy(pkt->data, data, dsize);
-+			err = inff_sdiod_skbuff_write(sdiodev, sdiodev->func1,
-+						      sdaddr, pkt);
-+		} else {
-+			err = inff_sdiod_skbuff_read(sdiodev, sdiodev->func1,
-+						     sdaddr, pkt);
-+		}
-+
-+		if (err) {
-+			inff_err("membytes transfer failed write=%d err=%d\n", write, err);
-+			break;
-+		}
-+		if (!write)
-+			memcpy(data, pkt->data, dsize);
-+		skb_trim(pkt, 0);
-+
-+		/* Adjust for next transfer (if any) */
-+		size -= dsize;
-+		if (size) {
-+			data += dsize;
-+			address += dsize;
-+			sdaddr = 0;
-+			dsize = min_t(uint, SBSDIO_SB_OFT_ADDR_LIMIT, size);
-+		}
-+	}
-+
-+	dev_kfree_skb(pkt);
-+
-+	sdio_release_host(sdiodev->func1);
-+
-+	return err;
-+}
-+
-+int inff_sdiod_abort(struct inff_sdio_dev *sdiodev, struct sdio_func *func)
-+{
-+	/* Issue abort cmd52 command through F0 */
-+	inff_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, func->num, NULL);
-+	return 0;
-+}
-+
-+#define INFF_SDIO_DEFAULT_GLOM_SIZE	32  /* max tx frames in glom chain */
-+
-+void inff_sdiod_sgtable_alloc(struct inff_sdio_dev *sdiodev)
-+{
-+	struct sdio_func *func;
-+	struct mmc_host *host;
-+	uint max_blocks;
-+	uint nents;
-+	int err;
-+
-+	func = sdiodev->func2;
-+	host = func->card->host;
-+	sdiodev->sg_support = host->max_segs > 1;
-+	max_blocks = min_t(uint, host->max_blk_count, 511u);
-+	sdiodev->max_request_size = min_t(uint, host->max_req_size,
-+					  max_blocks * func->cur_blksize);
-+	sdiodev->max_segment_count = min_t(uint, host->max_segs,
-+					   SG_MAX_SINGLE_ALLOC);
-+	sdiodev->max_segment_size = host->max_seg_size;
-+
-+	if (!sdiodev->sg_support)
-+		return;
-+
-+	nents =  INFF_SDIO_DEFAULT_GLOM_SIZE * 2;
-+
-+	WARN_ON(nents > sdiodev->max_segment_count);
-+
-+	inff_dbg(TRACE, "nents=%d\n", nents);
-+	err = sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
-+	if (err < 0) {
-+		inff_err("allocation failed: disable scatter-gather");
-+		sdiodev->sg_support = false;
-+	}
-+
-+	sdiodev->txglomsz = INFF_SDIO_DEFAULT_GLOM_SIZE;
-+}
-+
-+static int inff_sdiod_freezer_attach(struct inff_sdio_dev *sdiodev)
-+{
-+	if (!IS_ENABLED(CONFIG_PM_SLEEP))
-+		return 0;
-+
-+	sdiodev->freezer = kzalloc_obj(*sdiodev->freezer);
-+	if (!sdiodev->freezer)
-+		return -ENOMEM;
-+	atomic_set(&sdiodev->freezer->thread_count, 0);
-+	atomic_set(&sdiodev->freezer->freezing, 0);
-+	init_waitqueue_head(&sdiodev->freezer->thread_freeze);
-+	init_completion(&sdiodev->freezer->resumed);
-+	return 0;
-+}
-+
-+static void inff_sdiod_freezer_detach(struct inff_sdio_dev *sdiodev)
-+{
-+	if (sdiodev->freezer) {
-+		WARN_ON(atomic_read(&sdiodev->freezer->freezing));
-+		kfree(sdiodev->freezer);
-+		sdiodev->freezer = NULL;
-+	}
-+}
-+
-+static int inff_sdiod_freezer_on(struct inff_sdio_dev *sdiodev)
-+{
-+	atomic_t *expect = &sdiodev->freezer->thread_count;
-+	int res = 0;
-+
-+	sdiodev->freezer->frozen_count = 0;
-+	reinit_completion(&sdiodev->freezer->resumed);
-+	atomic_set(&sdiodev->freezer->freezing, 1);
-+	inff_sdio_trigger_dpc(sdiodev->bus);
-+	wait_event(sdiodev->freezer->thread_freeze,
-+		   atomic_read(expect) == sdiodev->freezer->frozen_count);
-+	sdio_claim_host(sdiodev->func1);
-+	res = inff_sdio_sleep(sdiodev->bus, true);
-+	sdio_release_host(sdiodev->func1);
-+	return res;
-+}
-+
-+static void inff_sdiod_freezer_off(struct inff_sdio_dev *sdiodev)
-+{
-+	sdio_claim_host(sdiodev->func1);
-+	inff_sdio_sleep(sdiodev->bus, false);
-+	sdio_release_host(sdiodev->func1);
-+	atomic_set(&sdiodev->freezer->freezing, 0);
-+	complete_all(&sdiodev->freezer->resumed);
-+}
-+
-+bool inff_sdiod_freezing(struct inff_sdio_dev *sdiodev)
-+{
-+	return IS_ENABLED(CONFIG_PM_SLEEP) &&
-+		atomic_read(&sdiodev->freezer->freezing);
-+}
-+
-+void inff_sdiod_try_freeze(struct inff_sdio_dev *sdiodev)
-+{
-+	if (!inff_sdiod_freezing(sdiodev))
-+		return;
-+	sdiodev->freezer->frozen_count++;
-+	wake_up(&sdiodev->freezer->thread_freeze);
-+	wait_for_completion(&sdiodev->freezer->resumed);
-+}
-+
-+void inff_sdiod_freezer_count(struct inff_sdio_dev *sdiodev)
-+{
-+	if (IS_ENABLED(CONFIG_PM_SLEEP))
-+		atomic_inc(&sdiodev->freezer->thread_count);
-+}
-+
-+void inff_sdiod_freezer_uncount(struct inff_sdio_dev *sdiodev)
-+{
-+	if (IS_ENABLED(CONFIG_PM_SLEEP))
-+		atomic_dec(&sdiodev->freezer->thread_count);
-+}
-+
-+int inff_sdiod_remove(struct inff_sdio_dev *sdiodev)
-+{
-+	sdiodev->state = INFF_SDIOD_DOWN;
-+	if (sdiodev->bus) {
-+		inff_sdio_remove(sdiodev->bus);
-+		sdiodev->bus = NULL;
-+	}
-+
-+	inff_sdiod_freezer_detach(sdiodev);
-+
-+	/* Disable functions 2 then 1. */
-+	sdio_claim_host(sdiodev->func1);
-+	sdio_disable_func(sdiodev->func2);
-+	sdio_disable_func(sdiodev->func1);
-+	sdio_release_host(sdiodev->func1);
-+
-+	sg_free_table(&sdiodev->sgtable);
-+	sdiodev->sbwad = 0;
-+	sdiodev->sbwad_valid = 0;
-+
-+	pm_runtime_allow(sdiodev->func1->card->host->parent);
-+	return 0;
-+}
-+
-+static void inff_sdiod_host_fixup(struct mmc_host *host)
-+{
-+	/* runtime-pm powers off the device */
-+	pm_runtime_forbid(host->parent);
-+	/* avoid removal detection upon resume */
-+	host->caps |= MMC_CAP_NONREMOVABLE;
-+}
-+
-+int inff_sdiod_probe(struct inff_sdio_dev *sdiodev)
-+{
-+	int ret = 0;
-+	unsigned int f2_blksz = SDIO_FUNC2_BLOCKSIZE;
-+
-+	sdio_claim_host(sdiodev->func1);
-+
-+	ret = sdio_set_block_size(sdiodev->func1, SDIO_FUNC1_BLOCKSIZE);
-+	if (ret) {
-+		inff_err("Failed to set F1 blocksize\n");
-+		sdio_release_host(sdiodev->func1);
-+		return ret;
-+	}
-+	switch (sdiodev->func2->device) {
-+	case SDIO_DEVICE_ID_CYPRESS_CYW55900:
-+		f2_blksz = SDIO_INF55900_FUNC2_BLOCKSIZE;
-+		break;
-+	case SDIO_DEVICE_ID_CYPRESS_ACW7413:
-+		f2_blksz = SDIO_ACW74XX_FUNC2_BLOCKSIZE;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	ret = sdio_set_block_size(sdiodev->func2, f2_blksz);
-+	if (ret) {
-+		inff_err("Failed to set F2 blocksize\n");
-+		sdio_release_host(sdiodev->func1);
-+		return ret;
-+	}
-+	inff_dbg(SDIO, "set F2 blocksize to %d\n", f2_blksz);
-+
-+	/* increase F2 timeout */
-+	sdiodev->func2->enable_timeout = SDIO_WAIT_F2RDY;
-+
-+	/* Enable Function 1 */
-+	ret = sdio_enable_func(sdiodev->func1);
-+	sdio_release_host(sdiodev->func1);
-+	if (ret) {
-+		inff_err("Failed to enable F1: err=%d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = inff_sdiod_freezer_attach(sdiodev);
-+	if (ret)
-+		goto out;
-+
-+	/* try to attach to the target device */
-+	ret = inff_sdio_probe(sdiodev);
-+	if (ret)
-+		goto out;
-+
-+	inff_sdiod_host_fixup(sdiodev->func2->card->host);
-+out:
-+	if (ret)
-+		inff_sdiod_remove(sdiodev);
-+
-+	return ret;
-+}
-+
-+#define INFF_SDIO_DEVICE(dev_id)	\
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_CYPRESS, dev_id)}
-+
-+/* devices we support, null terminated */
-+static const struct sdio_device_id inff_sdmmc_ids[] = {
-+	INFF_SDIO_DEVICE(SDIO_DEVICE_ID_CYPRESS_CYW55900),
-+	INFF_SDIO_DEVICE(SDIO_DEVICE_ID_CYPRESS_ACW7413),
-+	{ /* end: all zeroes */ }
-+};
-+MODULE_DEVICE_TABLE(sdio, inff_sdmmc_ids);
-+
-+static int inff_ops_sdio_probe(struct sdio_func *func,
-+			       const struct sdio_device_id *id)
-+{
-+	int err;
-+	struct inff_sdio_dev *sdiodev;
-+	struct inff_bus *bus_if;
-+
-+	if (!id) {
-+		dev_err(&func->dev, "Error no sdio_device_id passed for %x:%x\n",
-+			func->vendor, func->device);
-+		return -ENODEV;
-+	}
-+
-+	inff_dbg(SDIO, "Class=%x\n", func->class);
-+	inff_dbg(SDIO, "sdio vendor ID: 0x%04x\n", func->vendor);
-+	inff_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
-+	inff_dbg(SDIO, "Function#: %d\n", func->num);
-+	/* Consume func num 1 but dont do anything with it. */
-+	if (func->num == SDIO_FUNC_1 || func->num == SDIO_FUNC_3)
-+		return 0;
-+
-+	/* Set MMC_QUIRK_LENIENT_FN0 for this card */
-+	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+
-+	/* Set MMC_QUIRK_BLKSZ_FOR_BYTE_MODE for this card
-+	 * Use func->cur_blksize by default
-+	 */
-+	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
-+
-+	/* Ignore anything but func 2 */
-+	if (func->num != SDIO_FUNC_2)
-+		return -ENODEV;
-+
-+	bus_if = kzalloc_obj(*bus_if);
-+	if (!bus_if)
-+		return -ENOMEM;
-+	sdiodev = kzalloc_obj(*sdiodev);
-+	if (!sdiodev) {
-+		kfree(bus_if);
-+		return -ENOMEM;
-+	}
-+
-+	/* store refs to functions used. mmc_card does
-+	 * not hold the F0 function pointer.
-+	 */
-+	sdiodev->func1 = func->card->sdio_func[0];
-+	sdiodev->func2 = func;
-+	sdiodev->func3 = func->card->sdio_func[2];
-+
-+	sdiodev->bus_if = bus_if;
-+	bus_if->bus_priv.sdio = sdiodev;
-+
-+	switch (sdiodev->func2->device) {
-+	case SDIO_DEVICE_ID_CYPRESS_CYW55900:
-+		bus_if->proto_type = INFF_PROTO_ICDC;
-+		break;
-+	case SDIO_DEVICE_ID_CYPRESS_ACW7413:
-+		bus_if->proto_type = INFF_PROTO_BCDC;
-+		break;
-+	default:
-+		inff_err("Unsupported SDIO Device %d\n",
-+			 sdiodev->func2->device);
-+		goto fail;
-+	}
-+
-+	dev_set_drvdata(&func->dev, bus_if);
-+	dev_set_drvdata(&sdiodev->func1->dev, bus_if);
-+	sdiodev->dev = &sdiodev->func1->dev;
-+	dev_set_drvdata(&sdiodev->func2->dev, bus_if);
-+	if (sdiodev->func3) {
-+		inff_dbg(SDIO, "Set F3 dev\n");
-+		dev_set_drvdata(&sdiodev->func3->dev, bus_if);
-+	}
-+
-+	inff_sdiod_change_state(sdiodev, INFF_SDIOD_DOWN);
-+
-+	inff_dbg(SDIO, "F2 found, calling inff_sdiod_probe...\n");
-+	err = inff_sdiod_probe(sdiodev);
-+	if (err) {
-+		inff_err("F2 error, probe failed %d...\n", err);
-+		goto fail;
-+	}
-+
-+	inff_dbg(SDIO, "SDIO probing completed...\n");
-+	return 0;
-+
-+fail:
-+	dev_set_drvdata(&func->dev, NULL);
-+	dev_set_drvdata(&sdiodev->func1->dev, NULL);
-+	dev_set_drvdata(&sdiodev->func2->dev, NULL);
-+	kfree(sdiodev);
-+	kfree(bus_if);
-+	return err;
-+}
-+
-+static void inff_ops_sdio_remove(struct sdio_func *func)
-+{
-+	struct inff_bus *bus_if;
-+	struct inff_sdio_dev *sdiodev;
-+
-+	inff_dbg(SDIO, "sdio vendor ID: 0x%04x\n", func->vendor);
-+	inff_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
-+	inff_dbg(SDIO, "Function: %d\n", func->num);
-+
-+	bus_if = dev_get_drvdata(&func->dev);
-+	if (bus_if) {
-+		sdiodev = bus_if->bus_priv.sdio;
-+
-+		/* start by unregistering irqs */
-+		inff_sdiod_intr_unregister(sdiodev);
-+
-+		if (func->num != SDIO_FUNC_1)
-+			return;
-+
-+		/* only proceed with rest of cleanup if func 1 */
-+		inff_sdiod_remove(sdiodev);
-+
-+		dev_set_drvdata(&sdiodev->func1->dev, NULL);
-+		dev_set_drvdata(&sdiodev->func2->dev, NULL);
-+		if (sdiodev->func3) {
-+			inff_dbg(SDIO, "Remove F3 dev\n");
-+			dev_set_drvdata(&sdiodev->func3->dev, NULL);
-+		}
-+
-+		kfree(bus_if);
-+		kfree(sdiodev);
-+	}
-+}
-+
-+static int inff_ops_sdio_suspend(struct device *dev)
-+{
-+	struct sdio_func *func;
-+	struct inff_bus *bus_if;
-+	struct inff_sdio_dev *sdiodev;
-+	mmc_pm_flag_t sdio_flags;
-+	struct inff_cfg80211_info *config;
-+	int retry = INFF_PM_WAIT_MAXRETRY;
-+	bool cap_power_off;
-+	int ret = 0;
-+
-+	func = container_of(dev, struct sdio_func, dev);
-+
-+	cap_power_off = !!(func->card->host->caps & MMC_CAP_POWER_OFF_CARD);
-+
-+	bus_if = dev_get_drvdata(dev);
-+	config = bus_if->drvr->config;
-+
-+	inff_dbg(SDIO, "SDIO suspend: F%d\n", func->num);
-+
-+	while (retry &&
-+	       config->pm_state == INFF_CFG80211_PM_STATE_SUSPENDING) {
-+		usleep_range(10000, 20000);
-+		retry--;
-+	}
-+	if (!retry && config->pm_state == INFF_CFG80211_PM_STATE_SUSPENDING)
-+		inff_err("timed out wait for cfg80211 suspended\n");
-+
-+	if (func->num != SDIO_FUNC_1)
-+		return 0;
-+
-+	sdiodev = bus_if->bus_priv.sdio;
-+
-+	if (!cap_power_off) {
-+		inff_sdiod_freezer_on(sdiodev);
-+		inff_sdio_wd_timer(sdiodev->bus, 0);
-+
-+		sdio_flags = MMC_PM_KEEP_POWER;
-+		if (sdio_set_host_pm_flags(sdiodev->func1, sdio_flags))
-+			inff_err("Failed to set pm_flags %x\n", sdio_flags);
-+
-+	} else {
-+		/* power will be cut so remove device, probe again in resume */
-+		inff_sdiod_intr_unregister(sdiodev);
-+		ret = inff_sdiod_remove(sdiodev);
-+		if (ret)
-+			inff_err("Failed to remove device on suspend\n");
-+	}
-+
-+	return ret;
-+}
-+
-+static int inff_ops_sdio_resume(struct device *dev)
-+{
-+	struct inff_bus *bus_if = dev_get_drvdata(dev);
-+	struct inff_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
-+	bool cap_power_off = !!(func->card->host->caps & MMC_CAP_POWER_OFF_CARD);
-+	int ret = 0;
-+
-+	inff_dbg(SDIO, "SDIO resume: F%d\n", func->num);
-+
-+	if (func->num != SDIO_FUNC_2)
-+		return 0;
-+
-+	if (cap_power_off) {
-+		/* bus was powered off and device removed, probe again */
-+		ret = inff_sdiod_probe(sdiodev);
-+		if (ret)
-+			inff_err("Failed to probe device on resume\n");
-+	} else {
-+		inff_sdiod_freezer_off(sdiodev);
-+	}
-+
-+	return ret;
-+}
-+
-+static DEFINE_SIMPLE_DEV_PM_OPS(inff_sdio_pm_ops,
-+				inff_ops_sdio_suspend,
-+				inff_ops_sdio_resume);
-+
-+static struct sdio_driver inff_sdmmc_driver = {
-+	.probe = inff_ops_sdio_probe,
-+	.remove = inff_ops_sdio_remove,
-+	.name = KBUILD_MODNAME,
-+	.id_table = inff_sdmmc_ids,
-+	.drv = {
-+		.pm = pm_sleep_ptr(&inff_sdio_pm_ops),
-+	},
-+};
-+
-+int inff_sdio_register(void)
-+{
-+	return sdio_register_driver(&inff_sdmmc_driver);
-+}
-+
-+void inff_sdio_exit(void)
-+{
-+	sdio_unregister_driver(&inff_sdmmc_driver);
-+}
-diff --git a/drivers/net/wireless/infineon/inffmac/sdio.h b/drivers/net/wireless/infineon/inffmac/sdio.h
+diff --git a/drivers/net/wireless/infineon/inffmac/fwsignal.h b/drivers/net/wireless/infineon/inffmac/fwsignal.h
 new file mode 100644
-index 000000000000..86a0da406f50
+index 000000000000..24ef391f531f
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/sdio.h
-@@ -0,0 +1,234 @@
++++ b/drivers/net/wireless/infineon/inffmac/fwsignal.h
+@@ -0,0 +1,53 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
-+ * Copyright (c) 2010 Broadcom Corporation
++ * Copyright (c) 2012 Broadcom Corporation
 + *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#ifndef	INFF_SDIO_H
-+#define	INFF_SDIO_H
-+
-+#include <linux/skbuff.h>
-+#include <linux/firmware.h>
-+#include "firmware.h"
++#ifndef INFF_FWSIGNAL_H
++#define INFF_FWSIGNAL_H
 +
 +/**
-+ * enum inff_sdiod_state - the state of the bus.
++ * enum inff_fws_fifo - fifo indices used by dongle firmware.
 + *
-+ * @INFF_SDIOD_DOWN: Device can be accessed, no DPC.
-+ * @INFF_SDIOD_DATA: Ready for data transfers, DPC enabled.
-+ * @INFF_SDIOD_NOMEDIUM: No medium access to dongle possible.
++ * @INFF_FWS_FIFO_FIRST: first fifo, ie. background.
++ * @INFF_FWS_FIFO_AC_BK: fifo for background traffic.
++ * @INFF_FWS_FIFO_AC_BE: fifo for best-effort traffic.
++ * @INFF_FWS_FIFO_AC_VI: fifo for video traffic.
++ * @INFF_FWS_FIFO_AC_VO: fifo for voice traffic.
++ * @INFF_FWS_FIFO_BCMC: fifo for broadcast/multicast (AP only).
++ * @INFF_FWS_FIFO_ATIM: fifo for ATIM (AP only).
++ * @INFF_FWS_FIFO_COUNT: number of fifos.
 + */
-+enum inff_sdiod_state {
-+	INFF_SDIOD_DOWN,
-+	INFF_SDIOD_DATA,
-+	INFF_SDIOD_NOMEDIUM
++enum inff_fws_fifo {
++	INFF_FWS_FIFO_FIRST,
++	INFF_FWS_FIFO_AC_BK = INFF_FWS_FIFO_FIRST,
++	INFF_FWS_FIFO_AC_BE,
++	INFF_FWS_FIFO_AC_VI,
++	INFF_FWS_FIFO_AC_VO,
++	INFF_FWS_FIFO_BCMC,
++	INFF_FWS_FIFO_ATIM,
++	INFF_FWS_FIFO_COUNT
 +};
 +
-+struct inff_sdiod_freezer {
-+	atomic_t freezing;
-+	atomic_t thread_count;
-+	u32 frozen_count;
-+	wait_queue_head_t thread_freeze;
-+	struct completion resumed;
-+};
++struct inff_fws_info *inff_fws_attach(struct inff_pub *drvr);
++void inff_fws_detach(struct inff_fws_info *fws);
++void inff_fws_debugfs_create(struct inff_pub *drvr);
++bool inff_fws_queue_skbs(struct inff_fws_info *fws);
++bool inff_fws_fc_active(struct inff_fws_info *fws);
++void inff_fws_hdrpull(struct inff_if *ifp, s16 siglen, struct sk_buff *skb);
++int inff_fws_process_skb(struct inff_if *ifp, struct sk_buff *skb);
 +
-+struct inff_sdio_dev {
-+	struct sdio_func *func1;
-+	struct sdio_func *func2;
-+	struct sdio_func *func3;
-+	u32 sbwad;			/* Save backplane window address */
-+	bool sbwad_valid;			/* Save backplane window address */
-+	struct inff_core *cc_core;	/* chipcommon core info struct */
-+	struct inff_sdio *bus;
-+	struct device *dev;
-+	struct inff_bus *bus_if;
-+	struct inff_mp_device *settings;
-+	bool oob_irq_requested;
-+	bool sd_irq_requested;
-+	bool irq_en;			/* irq enable flags */
-+	spinlock_t irq_en_lock;
-+	bool sg_support;
-+	uint max_request_size;
-+	ushort max_segment_count;
-+	uint max_segment_size;
-+	uint txglomsz;
-+	struct sg_table sgtable;
-+	enum inff_sdiod_state state;
-+	struct inff_sdiod_freezer *freezer;
-+	bool redownload_fw;
-+	bool ignore_bus_error;	/* Ignore SDIO Bus access error*/
-+};
++void inff_fws_reset_interface(struct inff_if *ifp);
++void inff_fws_add_interface(struct inff_if *ifp);
++void inff_fws_del_interface(struct inff_if *ifp);
++void inff_fws_bustxcomplete(struct inff_fws_info *fws, struct sk_buff *skb,
++			    bool success);
++void inff_fws_bus_blocked(struct inff_pub *drvr, bool flow_blocked);
++void inff_fws_rxreorder(struct inff_if *ifp, struct sk_buff *skb, bool inirq);
++void inff_fws_cleanup_interface(struct inff_if *ifp);
++void inff_creditmap_query(struct inff_fws_info *fws);
 +
-+/* Register/deregister interrupt handler. */
-+int inff_sdiod_intr_register(struct inff_sdio_dev *sdiodev);
-+void inff_sdiod_intr_unregister(struct inff_sdio_dev *sdiodev);
-+
-+/* SDIO device register access interface */
-+/* Accessors for SDIO Function 0 */
-+#define inff_sdiod_func0_rb_ext(sdiodev, addr, r) \
-+	sdio_f0_readb((sdiodev)->func1, (addr), (r))
-+
-+#define inff_sdiod_func0_wb_ext(sdiodev, addr, v, ret) \
-+	sdio_f0_writeb((sdiodev)->func1, (v), (addr), (ret))
-+
-+/* Accessors for SDIO Function 1 */
-+#define inff_sdiod_readb_ext(sdiodev, addr, r) \
-+	sdio_readb((sdiodev)->func1, (addr), (r))
-+
-+#define inff_sdiod_writeb_ext(sdiodev, addr, v, ret) \
-+	sdio_writeb((sdiodev)->func1, (v), (addr), (ret))
-+
-+/* Accessors for SDIO specific function number */
-+#define inff_sdiod_func_rb_ext(func, addr, r) \
-+	sdio_readb((func), (addr), (r))
-+
-+#define inff_sdiod_func_wb_ext(func, addr, v, ret) \
-+	sdio_writeb((func), (v), (addr), (ret))
-+
-+u8 inff_sdiod_func0_rb(struct inff_sdio_dev *sdiodev, u32 addr, int *ret);
-+void inff_sdiod_func0_wb(struct inff_sdio_dev *sdiodev, u32 addr, u32 data,
-+			 int *ret);
-+u8 inff_sdiod_readb(struct inff_sdio_dev *sdiodev, u32 addr, int *ret);
-+void inff_sdiod_writeb(struct inff_sdio_dev *sdiodev, u32 addr, u32 data,
-+		       int *ret);
-+u8 inff_sdiod_func_rb(struct inff_sdio_dev *sdiodev, struct sdio_func *func, u32 addr, int *ret);
-+void inff_sdiod_func_wb(struct inff_sdio_dev *sdiodev, struct sdio_func *func, u32 addr,
-+			u32 data, int *ret);
-+
-+u32 inff_sdiod_readl(struct inff_sdio_dev *sdiodev, u32 addr, int *ret);
-+void inff_sdiod_writel(struct inff_sdio_dev *sdiodev, u32 addr, u32 data,
-+		       int *ret);
-+
-+/* Buffer transfer to/from device (client) core via cmd53.
-+ *   fn:       function number
-+ *   flags:    backplane width, address increment, sync/async
-+ *   buf:      pointer to memory data buffer
-+ *   nbytes:   number of bytes to transfer to/from buf
-+ *   pkt:      pointer to packet associated with buf (if any)
-+ *   complete: callback function for command completion (async only)
-+ *   handle:   handle for completion callback (first arg in callback)
-+ * Returns 0 or error code.
-+ * NOTE: Async operation is not currently supported.
-+ */
-+int inff_sdiod_send_pkt(struct inff_sdio_dev *sdiodev,
-+			struct sk_buff_head *pktq);
-+int inff_sdiod_send_buf(struct inff_sdio_dev *sdiodev, u8 fn,
-+			u8 *buf, uint nbytes);
-+
-+int inff_sdiod_recv_pkt(struct inff_sdio_dev *sdiodev, u8 fn,
-+			struct sk_buff *pkt);
-+int inff_sdiod_recv_buf(struct inff_sdio_dev *sdiodev, u8 fn,
-+			u8 *buf, uint nbytes);
-+int inff_sdiod_recv_chain(struct inff_sdio_dev *sdiodev,
-+			  struct sk_buff_head *pktq, uint totlen);
-+
-+/* Read/write to memory block (F1, no FIFO) via CMD53 (sync only).
-+ *   rw:       read or write (0/1)
-+ *   addr:     direct SDIO address
-+ *   buf:      pointer to memory data buffer
-+ *   nbytes:   number of bytes to transfer to/from buf
-+ * Returns 0 or error code.
-+ */
-+int inff_sdiod_ramrw(struct inff_sdio_dev *sdiodev, bool write, u32 address,
-+		     u8 *data, uint size);
-+
-+/* Issue an abort to the specified function */
-+int inff_sdiod_abort(struct inff_sdio_dev *sdiodev, struct sdio_func *func);
-+
-+void inff_sdiod_sgtable_alloc(struct inff_sdio_dev *sdiodev);
-+void inff_sdiod_change_state(struct inff_sdio_dev *sdiodev,
-+			     enum inff_sdiod_state state);
-+bool inff_sdiod_freezing(struct inff_sdio_dev *sdiodev);
-+void inff_sdiod_try_freeze(struct inff_sdio_dev *sdiodev);
-+void inff_sdiod_freezer_count(struct inff_sdio_dev *sdiodev);
-+void inff_sdiod_freezer_uncount(struct inff_sdio_dev *sdiodev);
-+
-+int inff_sdiod_probe(struct inff_sdio_dev *sdiodev);
-+int inff_sdiod_remove(struct inff_sdio_dev *sdiodev);
-+
-+int inff_sdio_probe(struct inff_sdio_dev *sdiodev);
-+void inff_sdio_remove(struct inff_sdio *bus);
-+void inff_sdio_isr(struct inff_sdio *bus, bool in_isr);
-+
-+void inff_sdio_wd_timer(struct inff_sdio *bus, bool active);
-+int inff_sdio_sleep(struct inff_sdio *bus, bool sleep);
-+int inff_sdio_set_sdbus_clk_width(struct inff_sdio *bus, unsigned int flags);
-+int inff_sdio_clkctl(struct inff_sdio *bus, uint target, bool pendok);
-+void inff_sdio_trigger_dpc(struct inff_sdio *bus);
-+bool inff_sdio_credit_map_update(struct inff_bus *bus_if);
-+
-+#define D11_BASE_ADDR			0x18001000
-+#define D11_AXI_BASE_ADDR		0xE8000000
-+#define D11_SHM_BASE_ADDR		(D11_AXI_BASE_ADDR + 0x4000)
-+
-+#define D11REG_ADDR(offset)	(D11_BASE_ADDR + (offset))
-+#define D11IHR_ADDR(offset)	(D11_AXI_BASE_ADDR + 0x400 + (2 * (offset)))
-+#define D11SHM_ADDR(offset)	(D11_SHM_BASE_ADDR + (offset))
-+
-+/* MacControl register */
-+#define D11_MACCONTROL_REG			D11REG_ADDR(0x120)
-+#define D11_MACCONTROL_REG_WAKE		0x4000000
-+
-+/* HUDI Sequence SHM bits */
-+#define	C_DS1_CTRL_SDIO_DS1_SLEEP		0x1
-+#define	C_DS1_CTRL_SDIO_MAC_ON			0x2
-+#define	C_DS1_CTRL_SDIO_RADIO_PHY_ON	0x4
-+#define	C_DS1_CTRL_SDIO_DS1_EXIT		0x8
-+#define	C_DS1_CTRL_PROC_DONE			0x100
-+#define	C_DS1_CTRL_REQ_VALID			0x200
-+
-+#define PHYTX_ERR_BLK_SIZE		18
-+#define D11SHM_FIRST2BYTE_MASK		0xFFFF0000
-+#define D11SHM_SECOND2BYTE_MASK		0x0000FFFF
-+#define D11SHM_2BYTE_SHIFT		16
-+
-+#define D11SHM_RD(sdh, offset, ret) \
-+	inff_sdiod_readl(sdh, D11SHM_ADDR(offset), ret)
-+
-+/* SHM Read is motified based on SHM 4 byte alignment as SHM size is 2 bytes and
-+ * 2 byte is currently not working on FMAC
-+ * If SHM address is not 4 byte aligned, then right shift by 16
-+ * otherwise, mask the first two MSB bytes
-+ * Suppose data in address 7260 is 0x440002 and it is 4 byte aligned
-+ * Correct SHM value is 0x2 for this SHM offset and next SHM value is 0x44
-+ */
-+#define D11SHM_RDW(sdh, offset, ret) ({ \
-+	typeof(sdh) _sdh = (sdh); \
-+	typeof(offset) _offset = (offset); \
-+	typeof(ret) _ret = (ret); \
-+	((_offset % 4) ? \
-+		(inff_sdiod_readl(_sdh, D11SHM_ADDR(_offset), _ret) \
-+		>> D11SHM_2BYTE_SHIFT) : \
-+		(inff_sdiod_readl(_sdh, D11SHM_ADDR(_offset), _ret) \
-+		& D11SHM_SECOND2BYTE_MASK)); \
-+	})
-+
-+/* SHM is of size 2 bytes, 4 bytes write will overwrite other SHM's
-+ * First read 4 bytes and then clear the required two bytes based on
-+ * 4 byte alignment, then update the required value and write the
-+ * 4 byte value now
-+ */
-+#define D11SHM_WR(sdh, offset, val, mask, ret) \
-+	do { \
-+		typeof(offset) _offet = (offset); \
-+		typeof(val) _val = (val); \
-+		typeof(mask) _mask = (mask); \
-+		if ((_offet) % 4) \
-+			_val = (_val & D11SHM_SECOND2BYTE_MASK) | \
-+				((_mask) << D11SHM_2BYTE_SHIFT); \
-+		else \
-+			_val = (_mask) | (_val & D11SHM_FIRST2BYTE_MASK); \
-+		inff_sdiod_writel(sdh, D11SHM_ADDR(_offet), _val, ret); \
-+	} while (0)
-+#define D11REG_WR(sdh, addr, val, ret) \
-+	inff_sdiod_writel(sdh, addr, val, ret)
-+
-+#define D11REG_RD(sdh, addr, ret) \
-+	inff_sdiod_readl(sdh, addr, ret)
-+
-+void inff_sdio_exit(void);
-+int inff_sdio_register(void);
-+
-+#endif /* INFF_SDIO_H */
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index afae93f6f245..655fad820dc4 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -81,6 +81,8 @@
- 
- #define SDIO_VENDOR_ID_CYPRESS			0x04b4
- #define SDIO_DEVICE_ID_BROADCOM_CYPRESS_43439	0xbd3d
-+#define SDIO_DEVICE_ID_CYPRESS_CYW55900		0xbd40
-+#define SDIO_DEVICE_ID_CYPRESS_ACW7413		0xbd42
- 
- #define SDIO_VENDOR_ID_MARVELL			0x02df
- #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
++#endif /* INFF_FWSIGNAL_H */
 -- 
 2.43.0
 
