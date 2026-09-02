@@ -1,86 +1,87 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D7B3F074A
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 10:43:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4E9C3A6F10
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 10:47:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788345809; cv=none; b=Vkl/BvuCYluh8Cmqoi+zrLL3VfMUjmsdBfv1iQRwrjmwodirjh5G6Lg4nJi+ZomIsFJWZXeILPPT5Wb6k51wQBmOB55Sxbo1ZWl3l6g2xTca9hQHkuWb8el6tS+12T3bMGRFTZbgSF3ucOnAoqQYv5k2i5mYTjI2QrriEV/1JF0=
+	t=1788346056; cv=none; b=ZRXAY5hyN5beacEkW6WnsR7LCncCuUZUjSnGbvkM5WhPYmbUUXXqM7fsTnXfSvDG8zBM7KDwRnJ3/dxgzu/pRSATelDn/FRJxP+eEC4KhnAoMSQ0rKN5JWU8QHHVamBeS39p+B0yfg659c4hfNJZ04YKWvfQmQHarTFF/GuiFzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788345809; c=relaxed/simple;
-	bh=oCuFvdGN7DuQjciD2mN+c41GNVnVdH2+YvNRw6JD/Fc=;
+	s=arc-20240116; t=1788346056; c=relaxed/simple;
+	bh=3TA0tUx2G5Sr0S2yRoQ9Ig2RQrxPjx3TqJ4uDoMwM7Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bv+0ppA4GRXlXzJoUxJxLM9vy2svsgiQMdzLRaaFDkkYDYCsxb+lhLoTXr0Fd5xCiLxZgQKQbCX/JxZ4aqcWYzGOypAQgow+AUEPfi66s7YCUe22R5jh44puwUTnLgZG5UNjExpfXSHEBDY/fEymWQE+b3AonFrKDMfmfZJ47Ss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=esnWfu9O; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Gs11hWcI; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=fHg/Qjd2rhIZv4eLradEr5ss/Fssftq34DE8JwXpj8kfLA6ejx3Kb2ElDiy9kRtCj5wCZKIU6BKaWzMoscXBxWdRQMA6zXJ4enoajmot5cSfN2ZvgFFeouodNJ3mQvRShG5lum+ui8We3vnjpwMG6NAF++z/L62Rtkduso7xwys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Xqoh47VP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NvA331XB; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="esnWfu9O";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Gs11hWcI"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6829N4hk1080308
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Sep 2026 10:43:23 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Xqoh47VP";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NvA331XB"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6829NIP61239490
+	for <linux-wireless@vger.kernel.org>; Wed, 2 Sep 2026 10:47:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	sF1N73AUgFMEsW3Z0Jj1FP1jxQJauSxNOYM2tnE84rU=; b=esnWfu9OYalq6NeO
-	HeBcNeN7XV0o0FKpcMImL+vAMi3WXNIijbL1kI0Bv7hWsD8rBfEMXJSFnOLTJIVL
-	G8YB9tI8FDFUOqp1pY8Zu1X7lxj561UApUjwZfTLmze4dc87iY//fwiTRzGIMUIc
-	CePSJAdZsOnk7BOxYVSpO7Bw/JYdW9Fy35j9bNhpzvztsTrI1yimCDicPhmKRSsw
-	SqvX8uYvaTIE+MUcOvxziSIUrpM7Fm7CrSFtE05mNuNDj0ALNaP/tgE0c7QVznrf
-	Y/BuFXkQcZH2VteLN6JGkSb3Pv3qtFE0GkEtijOiKq8isaGXSDZBD/oWZlmcBsmZ
-	4tIIRg==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4geb561r2s-1
+	1c4l4NjJNyna0JXM1EZySsOREA38Ii81XrbtM1fCLBA=; b=Xqoh47VPX8C0zEXP
+	9RODhSDri81H5k7OGC+9XV4Vhjj7FOQqaod+URJcKFFIz07OPJdk1h8Qio66IBhU
+	yL/FZt3VobIiqvW37pwcnrk1hRBI6shv5NSunVPhyqlX1JbT0fWFRTTraAeVxKM8
+	MNTwS9joFGNaMUWL7EvPnBzQwSBu31IPImIJHQ5WFMRLAx1rsmC18uO+3fxwGzM1
+	BA5qOLlJ2uBlvrL2ngbcKwHgtAMQ8c9gecPOmfLFY1wsQK70Wb4O3aZtJDsAI2A+
+	qrWbC/jRJ0+YQkVhZBIMuCbbA4CybO1mCLjv5osRY6RIFR5vMRPdMDdpsu/PUeEp
+	bwImpQ==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ge38w3erx-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 10:43:23 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-398d0010cfaso1811755a91.3
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 03:43:23 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 10:47:30 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2d9336581a2so15900905ad.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 03:47:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788345803; x=1788950603; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sF1N73AUgFMEsW3Z0Jj1FP1jxQJauSxNOYM2tnE84rU=;
-        b=Gs11hWcIYfMnkOuNW1ELV7HD4bTSufR/c7Ph/PYxxAVlpWM1qLaWKSl2jvlFJ0oR+Z
-         VDQ6j0UMAIifpY8ndBclEADZ9RGFbh41ph/SrbBXafaN6QrjtINRwx54u1Bzkj0HB/LA
-         qbW4AcGRhakI9JOR6PQbiwfZwBvNWgo+cHXZbQigGpV6C7DjaHqMbNbl9e4YBJaS/66T
-         gw4Yq04UudwV42Jeal5Uvmz0hINgwhebjkcc4Ot7LRNrfVEinwZ/SFdQD1YscuNffCxd
-         TEtIlpOaPDbYeJYcGyW+71/9kkIKwkpUwh+tMqeOqtNNRvJ9kMN5aA298XI9yiiSR0ki
-         qK9g==
+        d=oss.qualcomm.com; s=google; t=1788346049; x=1788950849; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1c4l4NjJNyna0JXM1EZySsOREA38Ii81XrbtM1fCLBA=;
+        b=NvA331XBguvODgE6Jj/wxuUhZOl0J23bJ6vmq6bXlSax2Ac2JSIX3S1a57hqE/0M9J
+         ZmOeaTMpDFZ9srpV/gaEs//dmHiPxjlgIvVwfgg59ACNYwAkDz/dZjfX+DtZwL3vnKpz
+         va789zbp+G3wdLpj4oixMj4rtTu7h8ygZYBTiRTQI8TtwCLkqy++U+Wd+bmHvQvkkuPH
+         YKydz8OEh/wZYOfzD3AKCD9HAaQfThKBSe4BTTAoai/lHRQ825gzhZWw1B2jYc4W7mad
+         EQMQw17W7+aWZ22yqcIvBB/iohz7vvqLIUKqAGnkZezkS4TLiw944ThpgQ+tIWmgHKn1
+         JVtA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788345803; x=1788950603;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1788346049; x=1788950849;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=sF1N73AUgFMEsW3Z0Jj1FP1jxQJauSxNOYM2tnE84rU=;
-        b=IWfPycyVDCXAzivFTcoZ61iSbW6GtmmFnbUuhpw5s9v4KCLAkz6I27EzniBQY3XUos
-         8/ZLgLN+TSMqsmLDcHFAaqkzOWl3ZqAXeV3+0PC6+V3ygi/WCV3m3oD98OHDiBAmGlvK
-         0ZPWjBVaNupv+0+XwR5N8FPHFrnWWtOs+EnEnnsKn3JR2SGjKCwLxnw7KfG3/NIo05gm
-         ShBUBpneYiQR3ewh1idIRKnNB03uMHmOple89sO8NU+Hm5BNUJcdu/7dPmzoOGj2HW61
-         bXY+KvCtgR3nmSO7b8bEyX3vD1gpQ4WRrhR1nWuYItrcZUSkSn5AScg2f/SygeOrCzjn
-         acvg==
-X-Gm-Message-State: AFuF++nAYIdegt5FXl/oLcMu8d8RFG+5bT9HVJzSZ8sKwKi3mLrtUynY
-	Yp0WMwQKyq8cqf33+TFhzljFAjLgXyySdFuUr3gKMKysTfH2FN3us1uEIhEYR1If2IVS70vmALz
-	u7VCHvgOND7Vc1sg4ay71OuSrELGk6rOPEslNeMEn8QPwwwHsMBsKrxOrYE/1JFSeCJv6nowiKg
-	ntuA==
-X-Gm-Gg: AYBFou3gRpBL60nLSKjP3NaNV8nb6GwCczPcHOa1w3M61sVNzqN93EYUlBsddAZSZl8
-	sx5xjKcRFoxP+d8uHHcKO0ZklpCOjHAb5S2dI5zRFrldhsftDtt7MANcYeRDttk5Bp/TaZc341S
-	Su6GXf8TcGKA5/mRr9U+PSmGBWOD5/iTM5HvT6QVEMyX5s5c0jOfKCr6/s/kkrse5VFqvBDqvfH
-	qMd2RngQK1JaSAKFjfEiAgybTmzcMjbbytDLzhAtntZbXiN2Wx0tOggAGBkfWnvSSFp3RrJXRpD
-	KNLDd4WQabvqunqQnTF1m2DppEXWnkfjxDWkjIJidMb+WoOEWn4K3nAuBV5nkCsPSNlwwJep1w/
-	P8R0R2FxoVGjevOBi2FmUO1GUwouz8eVhIrAmqh2XNTiqrhn9VNWmmR6zkHTB8uFvTY2xc9U=
-X-Received: by 2002:a17:90a:d604:b0:398:c9be:cca8 with SMTP id 98e67ed59e1d1-39aedf5e124mr6070975a91.2.1788345802672;
-        Wed, 02 Sep 2026 03:43:22 -0700 (PDT)
-X-Received: by 2002:a17:90a:d604:b0:398:c9be:cca8 with SMTP id 98e67ed59e1d1-39aedf5e124mr6070916a91.2.1788345802161;
-        Wed, 02 Sep 2026 03:43:22 -0700 (PDT)
-Received: from [10.133.33.22] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39ae62cfe43sm1139160a91.1.2026.09.02.03.43.20
+        bh=1c4l4NjJNyna0JXM1EZySsOREA38Ii81XrbtM1fCLBA=;
+        b=GOBJJEDW2QUqvxpix5nSJk9X9a7zMPgLlerdK+7aaHRtCa/JtA1Jqd9/pDPS61Ajbe
+         CWprIzKCnjgaxxzON338yzrzgpGGQXwRoMYmKznwusQxlpbpCWKXAzW8Cmf9D2XpVBQk
+         3AiabmcBffb7v3+GrSkl7ALvufgGupwaeX4qkjjZqR2PygClZKSDK7aMzaETL7+zv7wc
+         7CFmO4TdibG0IlgiUobHvFa4osBHtXqoQ/FvGnG5MQHcMzXOf8FQWC8dTRr5U0/dvlUE
+         6B7ecDKHPt4I0F8bomqXIfOpLTo+u+zYTXM5NsW8bwwG4nhCXk8JU7nhYpFyS1YOlOiI
+         tJGg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq0TWesAC5LjxknKXAIrbSGLnaqUtKPdyy6Xv87OyLG4V+hsBAVNrHXgkIYchnsF9h91MskMQY8wV39EOIiKw==@vger.kernel.org
+X-Gm-Message-State: AFuF++lb6rK65eQ1yZh30JcRKfyNIigVzTmAXdGQKcb1vYXbgn4zIArc
+	vQwZ7CCbqtjfvnRVBzC1q6aY9sRLPlfQEMfnlAtfGp8bhs4EQFQhtTylVFoYysxyjFT0y7V98WD
+	fgAS/Mg2g/1sOOSFmT+1FYbvssRYCXc+KVyYObSQwioCVEdlVjvULbcjxTGekvUAS9ofaCg==
+X-Gm-Gg: AR+sD137LQjuQ6dWX5fjPdjI/SxBKMlsu6iVkh9E4A38l0PqrZFnGt1DB15tRcw/CTK
+	tWVXUCFcr/orDfLHvR1E2sayFdeYufSPn7MNnjRhP4Q4Wydwc4mTsdlGMoUGZ2betFoFbKyxtU2
+	Dh3OiU2MAnxeVLrSplQaH4eUnSyGbaXwyHzAmB7BXVP0Kyj32TwS3Fu1WlMg8RZvm7LXKOubIwA
+	N84HrOIYNncqRoWCQjL6YDAqrgYMkdxSUyGR7LAdeHdaG6W1O6W1NnxEK34IqysLeTQgjoGiTaE
+	uedBVRLTvwgAuEtXvJW/sjqdVFMnOsJlo9dFanmBPTcveNZOEOtKb+vVOrzWHvvKnEm56hVco/v
+	QZzUZ2pBQR+Zn0OFttv4+HjmdbwqpWrZ5oII=
+X-Received: by 2002:a17:90b:4c44:b0:38d:b36e:9813 with SMTP id 98e67ed59e1d1-39aee0188bbmr6061425a91.11.1788346048938;
+        Wed, 02 Sep 2026 03:47:28 -0700 (PDT)
+X-Received: by 2002:a17:90b:4c44:b0:38d:b36e:9813 with SMTP id 98e67ed59e1d1-39aee0188bbmr6061321a91.11.1788346048369;
+        Wed, 02 Sep 2026 03:47:28 -0700 (PDT)
+Received: from [172.20.10.2] ([152.59.48.192])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39ae0f27047sm5119750a91.5.2026.09.02.03.47.23
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Sep 2026 03:43:21 -0700 (PDT)
-Message-ID: <99c5ff3e-c1e3-4565-9226-27bb1c5ef299@oss.qualcomm.com>
-Date: Wed, 2 Sep 2026 18:43:19 +0800
+        Wed, 02 Sep 2026 03:47:27 -0700 (PDT)
+Message-ID: <741d7c3e-6eea-4a84-bf4c-8d8eb8032c83@oss.qualcomm.com>
+Date: Wed, 2 Sep 2026 16:17:20 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -88,84 +89,198 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next 0/2] wifi: ath12k: remove duplicated STA state
- from link peers
-To: Aishwarya R <aishwarya.r@oss.qualcomm.com>, ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <20260901085616.2959268-1-aishwarya.r@oss.qualcomm.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: Re: IPQ5332 multipd: missing text PD level and qcom,rproc ownership
+To: Hideo Sumi <hideo.sumi@mugops.com>,
+        Manikanta Mylavarapu <quic_mmanikan@quicinc.com>
+Cc: Jeff Johnson <jjohnson@kernel.org>,
+        Bjorn Andersson
+ <andersson@kernel.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        linux-remoteproc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <20260902041339.7665-1-hideo.sumi@mugops.com>
 Content-Language: en-US
-In-Reply-To: <20260901085616.2959268-1-aishwarya.r@oss.qualcomm.com>
+From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+In-Reply-To: <20260902041339.7665-1-hideo.sumi@mugops.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA5NCBTYWx0ZWRfXwuUVkaW2ns6/
- pYrHXCDhQO22X7RZYUZjbiG0SZ3F+B7UNtSz9I1l4wGuIEt7rL0/0b6QZBlNtRMzA/+l7Sc+uBb
- bC0N3bSjW9/rpPsc0mfktBXHQ59+vooLLKNwR7/DFgmkqMFhTQOPWJgJOXPPS46E6CDPGZstJvV
- yG1KN/+5IbkI/EOYN/ISj3r7KM0rJSr+1sySJyERfEjEPTmUSDJXiZejHjcbMDwVrmmMIV2PtsF
- /vGJzOvAVONGkE/Z8lF3a4aQzw39CjposVT7fiYNYLMf5g90C/iZz4Yi16NhZ4h2NFuS9bpw4by
- dQl0qzwxiXmKvhsX5UmxGfMskMYywMLHqilts9xUHtx8gYsqXWon0iL+1hoCx5u4g9aKI5W0o6r
- lCVvDAuByFHSlqFIZqoDakD0Za1OqvYuwITDZr8rtTOJ6bqq3DdKFTkiPdZpbkaIb5uLZYzP2G/
- Wi4zIVaXdpizwuHiemw==
-X-Proofpoint-GUID: iJ48l5qaYP7cIQVqtQTRpmx41hGj6c7T
-X-Authority-Analysis: v=2.4 cv=D8N37PRj c=1 sm=1 tr=0 ts=6a97fdcb cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+X-Proofpoint-ORIG-GUID: _I1DM9_vPjCEMUVjjWebrbMluyfjtUn-
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA5NSBTYWx0ZWRfX6DbvetbvYSsX
+ JJDFumYrrwry0aQgPIFSgABCapWnm7K05xqWFAM1HzAFmEFSYlWdqD0z2IBJOwN/ya3olXFlSl0
+ +wnPCUsoO4Sjs9wZ/REOA4ffW8XEnbw=
+X-Authority-Analysis: v=2.4 cv=LOpWhpW9 c=1 sm=1 tr=0 ts=6a97fec2 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=O5pfq51LmT9kH+AdY1uYEg==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=EUspDBNiAAAA:8 a=ZJRRAzY_uXNWia_j-uIA:9 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-ORIG-GUID: iJ48l5qaYP7cIQVqtQTRpmx41hGj6c7T
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA5NCBTYWx0ZWRfX6Y697pQ5/Omy
- JB2quqxH+U52yqxwsbmFugfloPvJr8idQlXUpA5DTbFGYgdyVanZjSlwc6KrDMChsuLyIF1pRF/
- LF7xorfUJtnjNvcKyRGHCWZh/Ev1F0U=
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=4vZXxqc4KIhUxI1rvgMA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-GUID: _I1DM9_vPjCEMUVjjWebrbMluyfjtUn-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA5NSBTYWx0ZWRfX/NxkpHvpW80g
+ eo3vw2Z+uiO9OhlcUK1JDAsTJx5RejB8HxixOJ0mcGchtWK73qHw9VVt12NLuwfDDw//Tux/tm4
+ 1JaA6A/BNr6HShL6Qbpo/bBPRdbvjqiDRfcvWKd7jYY7Jj2QcPXvceyIjHaO5IxKBHXtle28B/L
+ /PziFQuTB736MXiY5K9+CUFf04qATDXZlHAxY363wW/cPeXd8Cq6/cMDGpXf0jKwr23AcGPWD1C
+ G+ZWEcQG6guC3BH6iEbK5khDIbgbpSEcT/C/jQcHiLJLxdDeKLZWmQNAJ0JJns2KR0Y/kzX5q77
+ adF5iGQNGLx0W0Rm11fNfaLO37pk1H/bfWHXOcPBP3Et6js8GJh1fFfJBXtShUInJYA2gD8fHZA
+ c08OVuqgbFWY1fV9JuLULmJ2o8AptlPxBBBGFtLxSG3dti1vwaZenXarTk7B9bYiL8+aVotWc5a
+ DsOM13NYi5xiacfC4ag==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-02_02,2026-09-01_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 lowpriorityscore=0 spamscore=0 phishscore=0 adultscore=0
- malwarescore=0 clxscore=1015 impostorscore=0 priorityscore=1501
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2609020094
+ malwarescore=0 lowpriorityscore=0 priorityscore=1501 suspectscore=0
+ adultscore=0 clxscore=1015 impostorscore=0 bulkscore=0 phishscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609020095
 
 
 
-On 9/1/2026 4:56 PM, Aishwarya R wrote:
-> ath12k_dp_link_peer currently carries state that is not inherently
-> link-specific. Both the station pointer and authorization state are
-> shared across the links belonging to the same logical peer or station,
-> yet are stored separately in each link peer.
+On 9/2/2026 9:43 AM, Hideo Sumi wrote:
+> Hi Manikanta, all,
 > 
-> This series moves ownership of these fields to structures matching their
-> actual scope:
+> I have been bringing up the WiFi subsystem on an IPQ5332 board using the
+> multipd remoteproc driver (qcom_q6v5_mpd) together with the ath12k AHB
+> backend, on 6.18.44. Two things came out of it that I could not settle
+> from the code alone. Both look structural rather than like mistakes on
+> my side, so I would rather report them than sit on them.
 > 
->   * Store the station pointer only in ath12k_dp_peer.
->   * Store authorization state only in ath12k_sta.
+> Caveat up front: I am running vendor (QSDK) Q6 firmware, as there is no
+> upstream firmware for this part. If either answer is "that is a
+> vendor-firmware-only concern", that is a perfectly good answer and I
+> will stop there.
 > 
-> Doing so eliminates duplicated state, reduces bookkeeping required when
-> the state changes, and makes the ownership model clearer.
 > 
-> Patch 1 removes the duplicate sta pointer from ath12k_dp_link_peer and
-> updates users to retrieve it through ath12k_dp_peer.
+> 1. The root PD does not boot without a text PD level, and the binding
+>    has no way to describe one
+>    ------------------------------------------------------------------
 > 
-> Patch 2 moves is_authorized from ath12k_dp_link_peer to ath12k_sta and
-> updates authorization handling accordingly.
+> With the DT shaped as the binding describes -- a root PD with user PDs
+> pd-1/pd-2 directly underneath -- the root PD never reaches a usable
+> state:
 > 
-> Aishwarya R (2):
->   wifi: ath12k: store station pointer only in dp_peer
->   wifi: ath12k: move is_authorized flag to ath12k_sta
+>   qcom-q6-mpd d100000.remoteproc: fatal error without message
 > 
->  drivers/net/wireless/ath/ath12k/core.h        |  2 +
->  drivers/net/wireless/ath/ath12k/dp_htt.c      |  2 +-
->  drivers/net/wireless/ath/ath12k/dp_peer.c     | 29 ------------
->  drivers/net/wireless/ath/ath12k/dp_peer.h     | 17 +++++--
->  drivers/net/wireless/ath/ath12k/dp_rx.c       |  2 +-
->  drivers/net/wireless/ath/ath12k/mac.c         | 47 ++++---------------
->  drivers/net/wireless/ath/ath12k/peer.c        |  2 -
->  .../net/wireless/ath/ath12k/wifi7/dp_mon.c    |  2 +-
->  drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c | 15 +++---
->  drivers/net/wireless/ath/ath12k/wmi.c         |  2 +-
->  10 files changed, 36 insertions(+), 84 deletions(-)
+> No further diagnostics, and the user PDs never come up.
 > 
-> base-commit: e07447e654476262558bee570f4cf456e2b32565
+> The vendor DT has a level between the root PD and the user PDs: a text
+> PD (compatible "qcom,ipq5332-mpd-upd-text") that owns a separate
+> firmware image, with the user PDs as its children rather than the
+> root's:
+> 
+>   q6v5_wcss             qcom,ipq5332-q6-mpd        q6_fw0.mdt
+>     text-pd             qcom,ipq5332-mpd-upd-text  q6_fw3.mdt
+>       pd1                                          q6_fw1.mdt
+>       pd2                                          q6_fw2.mdt
+> 
+> Once I added that level -- a text PD node with its own firmware-name,
+> the user PDs reparented under it, and a small driver change so that
+> q6_register_userpd() recurses and the PAS ID is derived from the node
+> -- the fatal error disappeared and the whole chain came up:
+> 
+>   remoteproc remoteproc2: powering up pd1
+>   remoteproc remoteproc1: powering up text-pd3
+>   remoteproc remoteproc0: powering up d100000.remoteproc
+>   remoteproc remoteproc0: remote processor d100000.remoteproc is now up
+>   remoteproc remoteproc1: remote processor text-pd3 is now up
+>   remoteproc remoteproc2: remote processor pd1 is now up
+> 
+> The ordering is the interesting part. "powering up" runs child to parent
+> as rproc_boot() recurses upward, and "is now up" comes back parent to
+> child as it unwinds -- which is exactly the parent-first dependency the
+> multipd model exists to express. The text PD simply was not one of the
+> levels it can express.
+> 
+> So: is the text PD level deliberately out of scope upstream -- because
+> upstream firmware for these parts is expected to be packaged without a
+> separate text image, say -- or is it a level that should exist and is
+> not there yet?
+> 
+> I ask because if it is the latter, the binding as posted cannot describe
+> this hardware at all, and that seems worth settling before it lands. I
+> have a working change against qcom_q6v5_mpd.c and would be glad to send
+> it as an RFC. I did not want to send it uninvited if the omission is
+> intentional.
+> 
+> 
+> 2. The vendor DT and the ath12k AHB backend disagree about what
+>    qcom,rproc points at
+>    ------------------------------------------------------------------
+> 
+> This one I can describe precisely, but I cannot tell which side is
+> meant to be authoritative.
+> 
+> In ath12k's AHB backend, qcom,rproc is the *root* PD. ahb.c resolves the
+> phandle and boots it via a function named ath12k_ahb_boot_root_pd(),
+> waits for rootpd_ready, and then does the entire user PD lifecycle
+> itself: qcom_mdt_load() of amss_<n>.mdt into memory-region[0],
+> qcom_scm_pas_auth_and_reset() with a PAS ID it computes locally, and a
+> spawn via qcom_smem_state_update_bits(). It also requests the "spawn",
+> "ready" and "stop-ack" interrupts by name to drive that sequence.
+> 
+> In the vendor DT, qcom,rproc is the *user* PD:
+> 
+>   wifi@c0000000 {
+>       compatible = "qcom,cnss-qca5332", "qcom,ipq5332-wifi";
+>       qcom,rproc = <&remoteproc_pd1>;              /* the user PD */
+>       qcom,userpd-subsys-name = "q6v5_wcss_userpd1";
+>   };
+> 
+> There, remoteproc owns the user PD -- image, PAS, spawn and the same
+> three interrupts -- and the WiFi driver only attaches to it.
+> 
+> These are mutually exclusive, and on this board they collide. With
+> qcom_q6v5_mpd instantiating user PD rprocs as its binding describes, the
+> PD boots fine and then ath12k cannot have the interrupt it needs:
+> 
+>   remoteproc remoteproc2: remote processor pd1 is now up
+>   genirq: Flags mismatch irq 31. 00002001 (UserPD1-spawn)
+>           vs. 00002001 (q6v5_wcss_userpd1_spawn-ack)
+>   ath12k_ahb c000000.wifi: error -EBUSY: Request spawn irq failed: -16
+> 
+> Same interrupt, same flags, two requesters, neither wrong in isolation.
+> 
+> So which is the intended division of labour?
+> 
+>   - Are the pd-1/pd-2 nodes in the multipd binding meant for non-WiFi
+>     PDs only, with WiFi user PDs left entirely to ath12k -- so a board
+>     with only WiFi user PDs should describe none of them, and point
+>     qcom,rproc at the root PD?
+>   - Or is remoteproc meant to own them, as the vendor DT has it, and
+>     ath12k's AHB backend should attach rather than load and spawn when
+>     qcom,rproc resolves to a user PD?
+> 
+> I have deliberately not sent a patch for this one. Either answer implies
+> a behaviour change in a driver used by boards I cannot test, and
+> guessing at the ownership model and then changing ath12k for everyone is
+> not mine to do.
+> 
+> Happy to test patches, provide full boot logs, or run experiments on
+> this board -- it is on a serial console with a recoverable second
+> firmware bank, so I can iterate destructively without much risk.
+> 
+> Thanks for the series, and for reading this far.
+> 
+> Regards,
+> Hideo Sumi
+> 
 
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+The intended model is that the root PD is completely managed by qcom_q6v5_mpd,
+while the Text PD and WiFi User PDs are managed by ath12k.
+
+ath12k will take complete ownership of the Text PD and User PDs. This includes
+loading the Text PD/shared firmware and User PD firmware, as well as handling
+the corresponding spawn/ready/stop-ack interrupts.
+
+The shared firmware support is covered in this patch: https://patchwork.kernel.org/project/linux-wireless/patch/20260811054316.518494-1-aaradhana.sahu@oss.qualcomm.com/
+
+So, qcom,rproc in the ath12k DT is expected to point to the root PD.
+The WiFi User PDs should not be independently managed by qcom_q6v5_mpd, otherwise
+both remoteproc and ath12k would try to manage the same User PD and interrupts, which
+leads to the IRQ conflict you observed.
+
+The Text PD is an additional level in the ath12k Multi-PD flow and is handled by ath12k
+as part of the WiFi User PD lifecycle.
+
+-- 
+Aaradhana Sahu
+
