@@ -1,78 +1,82 @@
-Received: from smtp.inf.ufrgs.br (smtp.inf.ufrgs.br [143.54.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from e226-11.smtp-out.us-east-2.amazonses.com (e226-11.smtp-out.us-east-2.amazonses.com [23.251.226.11])
+	(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D49604A2E02
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 20:25:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=143.54.11.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 592EA1FCFFC
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 00:59:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.226.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788294323; cv=none; b=otvNNiTLpSF0+81AngsCjlOdJMziaLi49dD/8KGtkiMm406kWl0LLQ60GCie5O2d/8jCBnSsx86Myxamqyjbro0pMPAA9jPwAgUuc7oalGcYD+VL2lb9Nq09jmdaGsI5l9mdI/KZh52FYiQ4/8XVAumiG5reNRA+UB86iXYQrJM=
+	t=1788310753; cv=none; b=ZaLTZmdjXdteltdcBL8Grib6o9ytrHPIWGTNAb5wPGznaT38VE80JvzN6pGqiNI0DEP5Z+zn5RU6lmqokwXLknIN+uAU0xLswO4mjmy0XWUmyQiO5qEAXZMxdZXx0XRx4iMf0m1ae/g9HxO9MYSMPd92rMkxPhBY4EjkiW30Hs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788294323; c=relaxed/simple;
-	bh=YpSEe/QeNNcL5SUb0P9guYoRbvyYY8c7s5p4Uk+t/mk=;
-	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
-	 References:Message-ID; b=W9uYzx4U//a+ujRTpaUmTOeVGW1JmeBNxeXrcpzL/6jmSEzQBd77nMU2wvwujxjhRlmNsR4r8ZbzUUMnYhUq9HdHT9gHFI28CFpiwkaepr0Z5OlFuhlC/EhBFeOxckHxQjmEHKUm9APp4hmy7huh0rx2WiR8rtZHSdGe4k1L9KA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inf.ufrgs.br; spf=pass smtp.mailfrom=inf.ufrgs.br; dkim=pass (2048-bit key) header.d=inf.ufrgs.br header.i=@inf.ufrgs.br header.b=KrN5vhf0; arc=none smtp.client-ip=143.54.11.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inf.ufrgs.br
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inf.ufrgs.br
+	s=arc-20240116; t=1788310753; c=relaxed/simple;
+	bh=0Vulr7xI1zDqRYUgsWzWA+XMP5YAZz0vAHKY4j7TLns=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LbnTyTDdLrTZZznE+0EaqNwIGTUSXJxQG6jMMQC+1evWsFWyYRzEPGEOpIXT14tNfPUvsvb9Zc6dUOCHPAIPE+VIz6aAIRNU22WpqA6hjM2ReXPzMwi6wBeKItgJFfeG4jx4/VPSeVsouCUnnGFH7yGRvjolUELvpXmzu6Ts7bc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=venenga.com; spf=none smtp.mailfrom=ses-relay.venenga.com; dkim=pass (1024-bit key) header.d=venenga.com header.i=@venenga.com header.b=Or35jPkr; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=KwOjPspU; arc=none smtp.client-ip=23.251.226.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=venenga.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ses-relay.venenga.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=inf.ufrgs.br header.i=@inf.ufrgs.br header.b="KrN5vhf0"
-Received: from webmail.inf.ufrgs.br (webmail.inf.ufrgs.br [143.54.11.45])
-	by smtp.inf.ufrgs.br (Postfix) with ESMTPSA id 369531210E9;
-	Tue,  1 Sep 2026 17:25:13 -0300 (-03)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=inf.ufrgs.br;
-	s=dkim2026; t=1788294313;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZKLqU9L/8UvKxH4648IEH/avxS1YpdOxrXvY+OvEEWg=;
-	b=KrN5vhf0GMNe4+LsMGcn2Wrxwoivh3gcGybfbkAnR8Ogm9KgIINlPcGgZ2NFK+KsBHdXj1
-	uAfcfvP2oeJK8ItR9EaK+aTI6mMT9c70Uqb4OB8zG7kX4bfXNNIqTYToBpZg8tio6PXaqR
-	BXk3gaPNL4AYlU6c+iDX0yYHsYQOTgnWk3jB7sE+9Syz86OT9sGgzfULsVI8AznfWc+K33
-	WYJo/w+9W0TnRt3pdESg6z+gx1IyDCuI+51YPrX6sNLxS1aohHk4NnXALH+FMUNo+XVNQ1
-	ke5USGCWPNpriR7XGF5B6LzHYub1/t1ovhpTwoHrrmucR6ZMAc5Hg832IEQioQ==
-Received: from 179-104-165-168.xd-dynamic.algarnetsuper.com.br
- ([179.104.165.168])
- by webmail.inf.ufrgs.br
- with HTTP (HTTP/1.1 POST); Tue, 01 Sep 2026 17:25:13 -0300
+	dkim=pass (1024-bit key) header.d=venenga.com header.i=@venenga.com header.b="Or35jPkr";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="KwOjPspU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=pcbcfjs7ujmqksael7fxa3wo7bayjouh; d=venenga.com; t=1788310750;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=0Vulr7xI1zDqRYUgsWzWA+XMP5YAZz0vAHKY4j7TLns=;
+	b=Or35jPkrSku8E6ov+t0mFbbdxfN/Avv+MoLCA+6pmc79YroEBWPwf/Qirrad22Zg
+	7RR3SRHCTWJfdxu43ovH2nqDnzqBnU7ZsBIx9viF+VGHqKrnQO6Q9nkjhl4VrLcl6nm
+	NF19iXN7xPgXZp5EyjYUAFC+aVoB3AeRKM0kFq3E=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=kra23psoka5qyyh6gdejiiuof3nluwuz; d=amazonses.com; t=1788310750;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Feedback-ID;
+	bh=0Vulr7xI1zDqRYUgsWzWA+XMP5YAZz0vAHKY4j7TLns=;
+	b=KwOjPspU/o/lX6UbjawIbgkuHijvfDumpifOSHzXhCLWRg7+Ts9M9WG2sHBfvQXz
+	Rq9f49WKKspxTeMSECiLsaert+K1UcWdv+ray3+BcBBCOLO/Ms0BAndsytIKaD3O93n
+	nONN06p6lKAbZKSauLybGq5EBMoq2gGruWdr2wyw=
+From: nick@venenga.com
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com, Nick Venenga <nick@venenga.com>
+Subject: [PATCH v2 rtw-next] wifi: rtw89: 8922au: add ASUS BE93
+Date: Wed, 2 Sep 2026 00:59:10 +0000
+Message-ID: <010f01a05fa084ba-80349068-cd1f-4e4e-99f5-8cf6f4c03216-000000@us-east-2.amazonses.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260829140823.2213829-1-nick@venenga.com>
+References: <20260829140823.2213829-1-nick@venenga.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
 Content-Transfer-Encoding: 8bit
-Date: Tue, 01 Sep 2026 17:25:13 -0300
-From: Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless] wifi: mac80211: fix channel changes for active
- monitors
-In-Reply-To: <20260901192258.6603-1-lucid_duck@justthetip.ca>
-References: <20260901025525.4017-1-matheus.aalmeida@inf.ufrgs.br>
- <20260901192258.6603-1-lucid_duck@justthetip.ca>
-Message-ID: <42caafdd41111750ee6303ee6ea672ad@inf.ufrgs.br>
-X-Sender: matheus.aalmeida@inf.ufrgs.br
-User-Agent: Roundcube Webmail/0.9.5
+Feedback-ID: ::1.us-east-2.Gp3Q+tRhOMwNNNSu6vJHeaJdVgiavF2vrJAUloPIlNg=:AmazonSES
+X-SES-Outgoing: 2026.09.02-23.251.226.11
 
-> Tested-by: Devin Wittmayer <...>
-> 
-> Two MediaTek USB adapters ...
+From: Nick Venenga <nick@venenga.com>
 
-Thanks for testing this, especially on real hardware and on both kernel
-versions.
+ASUS USB-BE93 Mini USB-C adapter
+Originally added and tested here https://github.com/morrownr/rtw89/pull/121
 
-I originally ran into this while writing my own 802.11 stack and had only
-tested the fix with mac80211_hwsim, so it's good to see the same issue
-reproduced and fixed on actual hardware as well.
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Nick Venenga <nick@venenga.com>
+---
+Changes in v2:
+- change subject to "wifi: rtw89: 8922au: add ASUS BE93" (Ping-Ke Shih)
 
-> Still open is that an active monitor gets no channel at all when it is
-> created ...
+ drivers/net/wireless/realtek/rtw89/rtw8922au.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The initial-channel case is interesting too. That sounds like a separate
-issue, so I’ll keep this patch focused on channel changes.
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922au.c b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
+index 56c79b1ec865..7fba7b1511e4 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8922au.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
+@@ -52,6 +52,8 @@ static const struct usb_device_id rtw_8922au_id_table[] = {
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0b05, 0x1bd2, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x0b05, 0x1d84, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0bda, 0x8912, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8922au_info },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0db0, 0xda0e, 0xff, 0xff, 0xff),
+-- 
+2.55.0
 
-Matheus
