@@ -1,139 +1,152 @@
-Received: from mail01.salmtek.com (mail01.salmtek.com [65.108.149.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC80B4BB5D5;
-	Thu,  3 Sep 2026 15:00:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.108.149.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95E64C8FE0
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Sep 2026 15:06:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788447635; cv=none; b=ZwXyzKAiLqOwzHnf79ylCw4iG6zTgugKgaGMi90pQMIIJU8J0zXh2lvcRs6UZD7Ydcb0XhbwmO7/Q2AE+vC5Iz17fFzD0hSYljtIjQ8OSTbVEANrUI/1/NeQ8QFFXMAunNp86vTG7+R+aOd15nLhnKFOUO3rew1nSTZMEYUwF7w=
+	t=1788447996; cv=none; b=RFKPTDVzbwkqbWdFfHump1dx1KT7pANbniXMYqKbuDemf07672Hb+CpvFwb7rGdiO18IUV7wQkXscU17jbaUESJuXrcaNlPG8okMcTlqjUMG+otiRjbxI3xvKLXxIpSQ9TSM20xFu7pPTAA+U/u6wumM5xkbdV7hb+pRRGcA2Yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788447635; c=relaxed/simple;
-	bh=Knp04GX35Uv1sDTbNkONfQcmM0uAfalH2x++UFeVV8s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fALriX5FfrOByVok4yfTFvR6Ie/h1oSDEXxuMUVWM027EgaqaEuMO/NRu4jbAIm2kLg6VqZxbKWg0mTUwEHNynfX9L/1LAdOsedIrcjlx0fBbPiYGP5FSB+jo7/DQpQVjYKvZsojZSl0I/SWn4GFGbSRFia+foc9UcuumcwGAKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=salmtek.com; spf=none smtp.mailfrom=salmtek.com; dkim=pass (2048-bit key) header.d=salmtek.com header.i=@salmtek.com header.b=dfD8eQ8R; arc=none smtp.client-ip=65.108.149.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=salmtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=salmtek.com
+	s=arc-20240116; t=1788447996; c=relaxed/simple;
+	bh=WH0QTFAGkBASqEUK10naybiWkASY5mU9qZY1XfCsA78=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ATOCPkAs5ncCi+kciCaBdezX81+hJuXtvRWEvJixzaaEjPz6DDQo/C55HdjMaKG+7//253Fa19TyidrhFU3Z3J+78RPB2kBoM6LgMKq6MQDcg+9ww9NUlQ2OO9yFJvF5fk1NVzQFu6Zm0xaB2MoVHFRDooFUc5wMeL0Rs+fVsk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NTINs6bA; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=salmtek.com header.i=@salmtek.com header.b="dfD8eQ8R"
-Received: from mail01.salmtek.com (localhost.localdomain [127.0.0.1])
-	by mail01.salmtek.com (Proxmox) with ESMTP id D6AE440925;
-	Thu, 03 Sep 2026 12:00:25 -0300 (-03)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=salmtek.com; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:from:from:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=selector01; bh=1J5YWfIaliRnkR
-	MI/8B08F7xEXXPvDk24J81082ruWw=; b=dfD8eQ8R+x6IFOQsNEcMAqLNcfmXOi
-	R3ytSap652IMxEmJeV1bWZP4vJl1t56v4qomSiW6l/+t2+S8R76McKYmUVn++4yR
-	iz8GRMGmxjDF/J3ambzLBMf10OtBVaAR174wt/M17OZG3Dbpn/StvFHjk/a2K0uR
-	1FnrKg9Tb/bnaezI+YhljPphQHRPBMk8mWLw998HDKz4xXI411n1AKcO8ZJu3Cv5
-	Pdo0shEpU4HPOcRd+5OlAOFIwwBKFCOzfbL0pISjZT0nw8wsq+QYDJa+EoCnBhlx
-	uMgnbj5EjGUUO1d+itkpVVfx+zVMGIKb7ywUTfxBSpEbjcA0pd/EHr/A==
-Message-ID: <376dbf6f-ecda-49ca-a7c0-af2a4077e945@salmtek.com>
-Date: Thu, 3 Sep 2026 12:00:06 -0300
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NTINs6bA"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-49557167508so25299495e9.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 08:06:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788447993; x=1789052793; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=THzjvy5iGboyhx98aFSf1bvAFTvgaD3XGcWeB3Rn6lc=;
+        b=NTINs6bA3GqiKjFdJsMJUj4OFjHB2BjLZMANp0fpKNE3ooFguHaq8AEbHwdAK1tl/E
+         ziNIuH7atdzqKBvRl8x0rNdbZ0vBTuWl1e7Mxem3MDTqYG+m5O4GrkWZVBHdAl3boJVc
+         jNRwt/nNd/LVeXZh8l+eoLnC6NvwGIILMbdTQzT3GnL2Shme0RpDdr73hVOpTKiqRLKo
+         UFs5wF8G8bTVvW5vvsxnSUv/0ZAOLVU1hVWV9VN6QFm1M7qUmF/O8NG5k2wfTKJejWsv
+         /A1sJMO0X/SL5b/SLS8J3kDCrcsOzhCIyS01KxsiFDozHv9gckBfIg88XirtGTxXTv9R
+         yLCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788447993; x=1789052793;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=THzjvy5iGboyhx98aFSf1bvAFTvgaD3XGcWeB3Rn6lc=;
+        b=abWifnx9vUShnNZ+7EUfl3OObGNrPsO6GOG4iB6YQqqAMOys8LRJRSxkk9ny9DsQq9
+         aafdX4uioXJ+BBtSmMSrrEpOmlWNxQKBES6IYIaIBq8TXb8E6ZE0Y6uE7zj6whwIj8ud
+         +jb2kseX+78dgFnPhR1Hgx9YgtuYTqkbJLw17RuV74h6A9vOmJFYPwdobVpN7ULeva7a
+         d5gNpYvUbPicoQ4UPJPzw4SO82NkjBWbxaMmLzYtGc8hJ187sZt4A94PpgsMRa3qGmN1
+         x37G2GsI5fd1x0FgRo3YVSzu0kCR3dZUGKDPkBeC6/Q1NUnzJ6l47EgfuHA/ueo7GSyv
+         Q+eg==
+X-Gm-Message-State: AFuF++n55yVY2qAU//N3nUdNzboA18unEbljZJG+Viq66cnOJYKLqcS2
+	2yBNn6tgzgHMtl6fTQPLE046olcLeM1Ew54J4xyIg+Z0RSX/P3Iqe2DvXJoXdklYiXc=
+X-Gm-Gg: AYBFou1OG/XJA92heaqpBM4qHLKfkEnTSplDkuPbvzJJSgjXxHAmP7jU+NeAK5uROWX
+	uXiBQvedvoMNUMxBxfCU2kmdUbR/bZU7AzgJG2XvmYmdl+jUlMri4FfeXn2chQxH/KB1j45BYbP
+	axpBik8YExVZm3eu0fPr91thbf3EzSo96atfaBDxaMpKZ3brWvKjZkjQjDWiOyhE3oJ36XR513R
+	YIGZ+hd7PLRWkaerSaeivDcNA7MyY0HqBUo3khd1NcATPqpUjppmBfM5kVGxLBh/IqrB85U1nnK
+	uVhh73iRIGgAUDTtqJGONmVXOMZKYQCN+AyQhP4yD4IysvxgY0W0XpJo+K9CKFmQiw5e6vgdLem
+	VIQY/1eV8YprhoUyvLos+Kz+Z3Sgx80dv7hMVa0m1B1HOlVv15w2oUTWrJ8au2+TNYm5kVQME6K
+	EVNmjiCKava9dWavPW4mUnDVf/5AfMklAvcRgrFYwzz2ELIJj2c0z5FLxYnw==
+X-Received: by 2002:a05:600c:4712:b0:496:bbce:fc with SMTP id 5b1f17b1804b1-49ce5843aa9mr215052115e9.12.1788447992569;
+        Thu, 03 Sep 2026 08:06:32 -0700 (PDT)
+Received: from metepc ([46.197.185.71])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5e589bsm71318925e9.13.2026.09.03.08.06.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 08:06:32 -0700 (PDT)
+From: =?UTF-8?q?=C3=96mer=20Mete=20Kaya?= <omermetekaya0@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	kvalo@kernel.org,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?=C3=96mer=20Mete=20Kaya?= <omermetekaya0@gmail.com>,
+	syzbot+adeb8550754921fece20@syzkaller.appspotmail.com,
+	syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com,
+	syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com,
+	syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com,
+	syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com
+Subject: [PATCH] wifi: cfg80211: avoid holding rtnl_mutex across all cfg80211_leave() calls
+Date: Thu,  3 Sep 2026 18:05:53 +0300
+Message-ID: <20260903150608.485390-1-omermetekaya0@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath12k: flush REO queue extension descriptors
- before freeing the qdesc
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260831151011.2336305-1-sebastian.salmhofer@salmtek.com>
- <265ee3ce-b953-4cef-a34e-c2f51a86ec26@oss.qualcomm.com>
-Content-Language: en-US
-From: Sebastian Salmhofer <sebastian.salmhofer@salmtek.com>
-Organization: SalmTek LLC
-In-Reply-To: <265ee3ce-b953-4cef-a34e-c2f51a86ec26@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 9/3/2026 5:07 AM, Baochen Qiang wrote:
- >> The faulting addresses always fall at offsets 0x100..0x580 of a
- >> retired qdesc and never at 0x000 or 0x080, i.e. exactly the ten
- >> extension descriptors and never the queue descriptor or the 1K bitmap
- >
- > the queue desc offset should be 0x000, and the offset of the first 
-extension descriptor
- > should at 0x080. However the IOMMU warning starts at 0x100, which 
-does not make sense ...
+reg_check_chans_work() holds rtnl_mutex for the entire duration of
+iterating over all registered devices and calling cfg80211_leave() on
+each invalid wdev. cfg80211_leave() can be slow (disconnect, stop AP,
+leave mesh), causing rtnl_mutex starvation when many wireless interfaces
+are present. This results in tasks waiting for rtnl_mutex for longer
+than hung_task_timeout_secs:
 
-You are right that under the driver's struct layout ext_desc[0] sits at
-0x080, so that sentence of the commit message was an interpretation on
-my part, not an observed fact. The observed facts, across about ten
-days of logs and more than a dozen retired qdescs, are:
+  INFO: task hung in inet_rtm_newaddr
+  INFO: task hung in inet6_rtm_newaddr
+  INFO: task hung in nsim_destroy
+  INFO: task hung in tun_chr_close
+  INFO: task hung in switchdev_deferred_process_work
 
-- every fault falls at an offset in 0x100..0x580 of a retired
-   1536-byte qdesc (bases are 2KB-aligned from kmalloc-2k, so the
-   offsets are unambiguous),
-- no fault was ever seen at 0x000 or 0x080,
-- within one qdesc the faulting lines are 0x80-strided runs, sometimes
-   the full 0x100..0x580 sweep, sometimes a subset, and lines of one
-   qdesc can be written back in separate bursts minutes apart.
+Fix by walking cfg80211_rdev_list under RCU and acquiring rtnl per-device,
+so other rtnl waiters get a chance to run between devices.
 
-Two explanations would fit that pattern: either the hardware expects
-the 1K bitmap descriptor directly after the base queue structure (so
-extension descriptors effectively start at 0x100 from the hardware's
-point of view), or FLUSH_QUEUE_1K_DESC covers the first 256 bytes of
-the queue as one object. I don't have documentation for the REO cache
-controller, so I can only report that on QCN9274 hw2.0 with
-WLAN.WBE.1.6-01243 the single 1K flush demonstrably leaves everything
-from 0x100 upward dirty. Could you check internally what the 1K flush
-actually covers on this target, and where the hardware expects the 1K
-bitmap? I will reword the commit message to stay purely with the
-observed offsets in v2.
+I could not add the Fixes: tag because this patch addresses five separate
+hung task reports whose cause bisections all failed, making it impossible
+to identify a single introducing commit.
 
- >> The writes are triggered by later REO activity, typically
- >> a new station association, so they can occur minutes or hours after the
- >> memory was freed, and the blocked transactions stall the data path for
- >> several seconds.
- >
- > then what happens? the new sta association succeeds?
+Reported-by: syzbot+adeb8550754921fece20@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=adeb8550754921fece20
+Reported-by: syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=101224300649c3eb8af4
+Reported-by: syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=8141dcbd23a8f857798a
+Reported-by: syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=b0ae8f1abf7d891e0426
+Reported-by: syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=d6bbe0f5705cb8a5aa2b
+Signed-off-by: Ömer Mete Kaya <omermetekaya0@gmail.com>
+---
+ net/wireless/reg.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-Yes, the association succeeds. The IOMMU blocks the writes, so nothing
-is corrupted; the user-visible symptom is that the data path stalls
-for several seconds around each fault burst, for all connected
-stations, which is how this was noticed (periodic freezes of
-latency-sensitive traffic). With the fix applied the stalls are gone
-along with the faults. Without an IOMMU the same writes would land in
-freed memory. I will make that explicit in v2.
-
- >> +    while (off > HAL_LINK_DESC_ALIGN) {
- >> +        off -= HAL_LINK_DESC_ALIGN;
- >> +        memset(&cmd, 0, sizeof(cmd));
- >
- > unnecessary cleanup since all required fields are refilled in each 
-iteration.
-
-Right, and the same for the one before the base flush - cmd is
-zero-initialized and both sites set every field the flush-cache
-command reads. Will drop both in v2.
-
- >> +    if (rx_tid->tid != HAL_DESC_REO_NON_QOS_TID)
- >> +        cmd.flag |= HAL_REO_CMD_FLG_FLUSH_QUEUE_1K_DESC;
- >
- > HAL_REO_CMD_FLG_FLUSH_QUEUE_1K_DESC is used to flush all in a single 
-cmd. since we switch
- > back to the per segment flush, do we still need it?
-
-I kept it deliberately. The per-segment loop covers every 128-byte
-line from 0x080 upward, and the flag makes the final base flush cover
-whatever the "1K descriptor" object is, so the sequence is correct
-under either interpretation above, at no extra cost. Dropping the flag
-would restore the exact pre-b706fb4e580b sequence; that may well be
-sufficient, but if the 1K-window queue is cached as an object larger
-than 128 bytes on this target, a plain flush of the base address might
-not cover its tail, and I cannot rule that out from here. If you can
-confirm that plain 128-byte flushes fully cover a 1K-window queue
-descriptor, I am happy to drop the flag in v2.
-
-I will send v2 with the memsets removed and the commit message
-clarified once the 1K flush semantics are settled.
-
-Thanks for the review,
-Sebastian
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a8336baf85dc..a2e0d1cf8317 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2466,12 +2466,21 @@ static void reg_check_chans_work(struct work_struct *work)
+ 	struct cfg80211_registered_device *rdev;
+ 
+ 	pr_debug("Verifying active interfaces after reg change\n");
+-	rtnl_lock();
+-
+-	for_each_rdev(rdev)
++	/*
++	 * Acquire rtnl per-device instead of holding it for the entire loop;
++	 * cfg80211_leave() can be slow and starve other rtnl waiters otherwise.
++	 * wiphy_unregister() holds rtnl across list_del_rcu() + synchronize_rcu(),
++	 * so rdev cannot be freed while we hold rtnl_lock() below.
++	 */
++	rcu_read_lock();
++	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
++		rcu_read_unlock();
++		rtnl_lock();
+ 		reg_leave_invalid_chans(&rdev->wiphy);
+-
+-	rtnl_unlock();
++		rtnl_unlock();
++		rcu_read_lock();
++	}
++	rcu_read_unlock();
+ }
+ 
+ void reg_check_channels(void)
+-- 
+2.55.0
 
