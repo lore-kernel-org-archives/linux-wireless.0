@@ -1,44 +1,45 @@
-Received: from forward206a.mail.yandex.net (forward206a.mail.yandex.net [178.154.239.87])
+Received: from forward502a.mail.yandex.net (forward502a.mail.yandex.net [178.154.239.82])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6277B37A856;
-	Thu,  3 Sep 2026 04:30:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E530535E958;
+	Thu,  3 Sep 2026 04:33:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.82
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788409846; cv=none; b=L3pXsjQCSLR0Lm34/cTCRVmzeg1bpb+5Or5BJOTbPUnh/P8iAhRb6SlkxeVVE1IerCEoqs8CoQ12fx9RrWRk/hGsoovDTR/oJ+Q1/rOmie4WY8eST6KvfkA0XZhxrcNxE87yGWTOdb+nmteMZzREOJgfyhVl7NOsPyWISc7muRA=
+	t=1788410026; cv=none; b=azcTNcKTRC/eJ3q+s8pOD8CnvU3RPy6T/L76FzCxfcs1cRUlED4ESccgAe7seKFCMxsoQazCCfOK/25NeufZG0C+QwDQrpcEI47qy93Kbn4DDRAzwTowwDFLCQ5Tr7J43cAIzJjU5awtSS4HqxQrqZax01B7PLJejMHvc6ccMY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788409846; c=relaxed/simple;
-	bh=ORdag3CCI5zqJKQuC0TkIJG0A2D0ZDZE84Pojx+wsI4=;
-	h=From:To:MIME-Version:Date:Message-Id:Content-Type; b=RtzoSrTh/LFKop+OpSYPubCa9dQviYv87syz/2Ei2dht8bQyuIeTyI0Mmrprb+yCrQdi+qV/XNsaLLkAeSqVdXfoCP1aGINPyYNLvZok4xGP7v/6ZCKWUyNDnlfLSOzGFe7okrEVKQJW4X2HT5jJh28svQ1YpNtDZwjDhlee6DY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=fail smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=C4E7k/x8; arc=none smtp.client-ip=178.154.239.87
+	s=arc-20240116; t=1788410026; c=relaxed/simple;
+	bh=iMOVNoc6QQyWQMLmkFf9okRPvwyKpS5CBmpd4s0XK8c=;
+	h=From:To:In-Reply-To:References:Subject:MIME-Version:Date:
+	 Message-Id:Content-Type; b=DoWa0RQ8EOsLkKqqbUdwLdZapg/5z4F8/mrB1pmZuhSkbjrinlnFEpQv+m8K4dd41EpKPGwQsSZMIYbvVZVQJ9B7LL854vkQI4jj3uiwzDm3B4PhczUZuR41qj8RvH0LFzwXHBVi6d/3nRzlzxoj7R9c1x4xqK7TwkKOJ4ZXVe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=fail smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=pNq4XxWd; arc=none smtp.client-ip=178.154.239.82
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="C4E7k/x8"
-Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d101])
-	by forward206a.mail.yandex.net (postfix) with ESMTPS id 0EA1F8502B;
-	Thu, 03 Sep 2026 07:23:00 +0300 (MSK)
-Received: from mail-nwsmtp-mxback-production-main-25.vla.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-25.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:d0c:0:640:b1cd:0])
-	by forward101a.mail.yandex.net (postfix) with ESMTPS id 4280780D7F;
-	Thu, 03 Sep 2026 07:22:52 +0300 (MSK)
-Received: from mail.yandex.ru (2a02:6b8:c0d:a1:0:640:bafe:0 [2a02:6b8:c0d:a1:0:640:bafe:0])
-	by mail-nwsmtp-mxback-production-main-25.vla.yp-c.yandex.net (mxback) with HTTPS id iMcCWxDvx4Y0-JKqugUkQ;
-	Thu, 03 Sep 2026 07:22:51 +0300
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="pNq4XxWd"
+Received: from mail-nwsmtp-mxback-production-main-217.vla.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-217.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:170f:0:640:53dd:0])
+	by forward502a.mail.yandex.net (postfix) with ESMTPS id 805AB83044;
+	Thu, 03 Sep 2026 07:25:52 +0300 (MSK)
+Received: from mail.yandex.ru (2a02:6b8:c0d:28d:0:640:a036:0 [2a02:6b8:c0d:28d:0:640:a036:0])
+	by mail-nwsmtp-mxback-production-main-217.vla.yp-c.yandex.net (mxback) with HTTPS id pPcaiCEvtuQ0-IvYgDXnA;
+	Thu, 03 Sep 2026 07:25:51 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1788409371; bh=0zthGu/O1Qmz5rOXIIwyBD8+qtWp+/uaNg6P1907Xt8=;
-	h=Message-Id:Date:To:From;
-	b=C4E7k/x8Wk3zqm2UwAEynK+y5CcDlYBGGh4FoDmmuNbDadGfpDL/je0/FFzWZqHQX
-	 Lgn/iYFcoCtUjZtp+sFfzXeEAthN4LNXBgx62EFujlhf1ZacyzJyKyVcrPYAJRrcAF
-	 DImKh/DDAU80kexWmEKYBFws1znkCz5WaTUo99nI=
-Authentication-Results: mail-nwsmtp-mxback-production-main-25.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-Received: by megd36izw2gubgrl.vla.yp-c.yandex.net (sendbernar) with HTTPS id 334c9e58a6dbfccd86f589bac3512048;
-	Thu, 03 Sep 2026 07:22:51 +0300
+	t=1788409551; bh=rkmexPEIRPA30Syl3rkL+qAosg2qqeH4C7WnUPZjOSg=;
+	h=Message-Id:Date:Subject:To:References:In-Reply-To:From;
+	b=pNq4XxWdgL68/vIf5r5XV2QSXF/mtdj2Rre/Kpg/jyrdCMPZpG8fpb0lBPEzLvAn0
+	 89glJG/1OLjbqdUomz0xYygogFw2LW0eE+IrZHvgudHm584SLDob9ratqcI2Ggy9yN
+	 N/HBoBn480KL8Yd4HV9taP9N2JmQJ1rQSowyaQK4=
+Authentication-Results: mail-nwsmtp-mxback-production-main-217.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Received: by mail-sendbernar-production-main-93.vla.yp-c.yandex.net (sendbernar) with HTTPS id a3add6233ce9e4d6311702883fad4840;
+	Thu, 03 Sep 2026 07:25:51 +0300
 From: =?utf-8?B?0JPQtdGA0LzQsNC9INCh0LXQvNGR0L3QvtCy?= <GermanAizek@yandex.ru>
 To: Jakub Kicinski <kuba@kernel.org>,
 	Kalle Valo <kvalo@kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <795111788409331@mail.yandex.ru>
+References: <795111788409331@mail.yandex.ru>
+Subject: [PATCH] wifi: mt7601u: add vnd_reset parameter to fix probe failure on Tenda U2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,13 +47,54 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Mailer: Yamail [ http://yandex.ru ] 5.0
-Date: Thu, 03 Sep 2026 07:22:51 +0300
-Message-Id: <795111788409331@mail.yandex.ru>
+Date: Thu, 03 Sep 2026 07:25:51 +0300
+Message-Id: <314831788409434@mail.yandex.ru>
 Content-Type: multipart/mixed;
-	boundary="----==--bound.101862.e14820d5-73c5-4cab-99d4-52f319dab817"
+	boundary="----==--bound.100608.8d3645a2-7ab9-4ba4-91f5-094555084f3a"
 
 
-------==--bound.101862.e14820d5-73c5-4cab-99d4-52f319dab817
+------==--bound.100608.8d3645a2-7ab9-4ba4-91f5-094555084f3a
+Content-Transfer-Encoding: base64
+Content-Type: text/html; charset=utf-8
+
+PGRpdj48ZGl2PndpZmk6IG10NzYwMXU6IGFkZCB2bmRfcmVzZXQgcGFyYW1ldGVyIHRvIGZpeCBw
+cm9iZSBmYWlsdXJlIG9uIFRlbmRhIFUyPC9kaXY+PGRpdj7CoDwvZGl2PjxkaXY+T24gY2VydGFp
+biBNVDc2MDFVIGFkYXB0ZXJzLCBzdWNoIGFzIFRlbmRhIFUyIGFuZDwvZGl2PjxkaXY+b3RoZXIg
+bmV3ZXIgaGFyZHdhcmUgcmV2aXNpb25zLCBkcml2ZXIgaW5pdGlhbGl6YXRpb24gY29uc2lzdGVu
+dGx5IGZhaWxzPC9kaXY+PGRpdj5kdXJpbmcgcHJvYmUgd2l0aCB2ZW5kb3IgcmVxdWVzdCB0aW1l
+b3V0cyAoLTExMCAvIC1FVElNRURPVVQpOjwvZGl2PjxkaXY+wqAgbXQ3NjAxdSAzLTE0OjEuMDog
+QVNJQyByZXZpc2lvbjogNzYwMTAwMDEgTUFDIHJldmlzaW9uOiA3NjAxMDUwMDwvZGl2PjxkaXY+
+wqAgbXQ3NjAxdSAzLTE0OjEuMDogRmlybXdhcmUgVmVyc2lvbjogMC4xLjAwIEJ1aWxkOiA3NjQw
+IEJ1aWxkIHRpbWU6IDIwMTMwMjA1MjE0Nl9fX188L2Rpdj48ZGl2PsKgIG10NzYwMXUgMy0xNDox
+LjA6IFZlbmRvciByZXF1ZXN0IHJlcTowNyBvZmY6MDlhOCBmYWlsZWQ6LTExMDwvZGl2PjxkaXY+
+wqAgbXQ3NjAxdSAzLTE0OjEuMDogVmVuZG9yIHJlcXVlc3QgcmVxOjAyIG9mZjowOWE4IGZhaWxl
+ZDotMTEwPC9kaXY+PGRpdj7CoCBtdDc2MDF1IDMtMTQ6MS4wOiBWZW5kb3IgcmVxdWVzdCByZXE6
+MDcgb2ZmOjA3MzQgZmFpbGVkOi0xMTA8L2Rpdj48ZGl2PsKgIG10NzYwMXUgMy0xNDoxLjA6IFZl
+bmRvciByZXF1ZXN0IHJlcTo0MiBvZmY6MDIzMCBmYWlsZWQ6LTExMDwvZGl2PjxkaXY+wqAgbXQ3
+NjAxdSAzLTE0OjEuMDogcHJvYmUgd2l0aCBkcml2ZXIgbXQ3NjAxdSBmYWlsZWQgd2l0aCBlcnJv
+ciAtMTEwPC9kaXY+PGRpdj7CoDwvZGl2PjxkaXY+VGhlIGZhaWx1cmUgb2NjdXJzIGJlY2F1c2Ug
+bXQ3NjAxdV9sb2FkX2Zpcm13YXJlKCkgdW5jb25kaXRpb25hbGx5IGNhbGxzPC9kaXY+PGRpdj5t
+dDc2MDF1X3ZlbmRvcl9yZXNldCgpIChNVF9WRU5EX0RFVl9NT0RFX1JFU0VUKSBiZWZvcmUgdXBs
+b2FkaW5nIGZpcm13YXJlPC9kaXY+PGRpdj5jaHVua3MuIE9uIHRoZXNlIGRldmljZXMsIGlzc3Vp
+bmcgdGhpcyB2ZW5kb3IgcmVzZXQgbGVhdmVzIHRoZSBpbnRlcm5hbDwvZGl2PjxkaXY+TUNVIC8g
+RkNFIERNQSBlbmdpbmUgaW4gYW4gdW5yZXNwb25zaXZlIHN0YXRlIGFmdGVyIHRoZSBmaXJzdCBm
+aXJtd2FyZTwvZGl2PjxkaXY+VVJCIGlzIHN1Ym1pdHRlZC4gQXMgYSByZXN1bHQsIHJlYWRpbmcg
+TVRfVFhfQ1BVX0ZST01fRkNFX0NQVV9ERVNDX0lEWDwvZGl2PjxkaXY+KDB4MDlhOCkgaW1tZWRp
+YXRlbHkgdGltZXMgb3V0LjwvZGl2PjxkaXY+SW50cm9kdWNlIGEgYm9vbGVhbiBtb2R1bGUgcGFy
+YW1ldGVyICd2bmRfcmVzZXQnIChkZWZhdWx0OiBmYWxzZSkgdG88L2Rpdj48ZGl2Pm1ha2UgdGhp
+cyB2ZW5kb3IgcmVzZXQgb3B0aW9uYWwuIFdoZW4gdGhlIHZlbmRvciByZXNldCBpcyBza2lwcGVk
+LDwvZGl2PjxkaXY+ZmlybXdhcmUgdXBsb2FkIHN1Y2NlZWRzIGFuZCB0aGUgd2lyZWxlc3MgaW50
+ZXJmYWNlIGluaXRpYWxpemVzIG5vcm1hbGx5LjwvZGl2PjxkaXY+wqA8L2Rpdj48ZGl2Pkxpbms6
+IGh0dHBzOi8vYnVncy5sYXVuY2hwYWQubmV0L3VidW50dS8rc291cmNlL2xpbnV4LytidWcvMTcx
+NjMwMTwvZGl2PjxkaXY+wqA8L2Rpdj48ZGl2Pk1vcmUgaXNzdWVzIHdpdGggVGVuZGEgVTIgYW5k
+IExpbnV4OjwvZGl2PjxkaXY+LSBodHRwczovL3d3dy5vcGVuYS50di92aWV3dG9waWMucGhwP3Q9
+NjM5MTk8L2Rpdj48ZGl2Pi0gaHR0cHM6Ly9hc2t1YnVudHUuY29tL3F1ZXN0aW9ucy8xNDE4ODUw
+L3RoZS1wcm9ibGVtLXdpdGgtd2ktZmktdTI8L2Rpdj48ZGl2Pi0gaHR0cHM6Ly9iYnMuYXJjaGxp
+bnV4Lm9yZy92aWV3dG9waWMucGhwP2lkPTIyNDg1OTwvZGl2PjxkaXY+LSBodHRwczovL3d3dy5y
+ZWRkaXQuY29tL3IvYXJjaGxpbnV4L2NvbW1lbnRzLzFkNmRmdjUvbXQ3NjAxdV91c2Jfd2lmaV9u
+b3Rfd29ya2luZy88L2Rpdj48ZGl2PsKgPC9kaXY+PGRpdj5TaWduZWQtb2ZmLWJ5OiBIZXJtYW4g
+U2VtZW5vZmYgJmx0O0dlcm1hbkFpemVrQHlhbmRleC5ydSZndDs8L2Rpdj48L2Rpdj4=
+------==--bound.100608.8d3645a2-7ab9-4ba4-91f5-094555084f3a
 Content-Disposition: attachment;
 	filename="0001-PATCH-wifi-mt7601u-add-vnd_reset-parameter-to-fix-pr.patch"
 Content-Transfer-Encoding: base64
@@ -119,4 +161,4 @@ TCwgMCk7CiAKLQltdDc2MDF1X3ZlbmRvcl9yZXNldChkZXYpOwotCW1zbGVlcCg1KTsKKwlpZiAo
 dm5kX3Jlc2V0KSB7CisJCW10NzYwMXVfdmVuZG9yX3Jlc2V0KGRldik7CisJCW1zbGVlcCg1KTsK
 Kwl9CiAKIAltdDc2MDF1X3dyKGRldiwgMHhhNDQsIDApOwogCW10NzYwMXVfd3IoZGV2LCAweDIz
 MCwgMHg4NDIxMCk7Ci0tIAoyLjU1LjAKCg==
-------==--bound.101862.e14820d5-73c5-4cab-99d4-52f319dab817--
+------==--bound.100608.8d3645a2-7ab9-4ba4-91f5-094555084f3a--
