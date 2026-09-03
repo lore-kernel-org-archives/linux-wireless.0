@@ -1,177 +1,208 @@
-Received: from mta1.migadu.com (out-26.mta1.migadu.com [95.215.58.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx07-0057a101.pphosted.com (mx07-0057a101.pphosted.com [205.220.184.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5D84A64FC
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Sep 2026 12:59:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.26
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788440367; cv=none; b=V1FeeIfXnudlofopceTKh8Pw8ktWXrxjqwL9Yx+KoAmIk90359ZVRbP9iJCaV+0JVb324AyHu01ABdQsnQQa174ztcXxy4vTTQgG/DZDxaRrTzPF9UGCGpl/qTq1SOMSNJ/5lZgfFIqpNngc74i0n44sMsKUH+dVbet4k25Lhvo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788440367; c=relaxed/simple;
-	bh=uLgdnxfLeG1up6nHp0UCJHgWN+XeuopVXhCQgVlHoYI=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To; b=UzpNyBBh8Bf26xodXRpj6jTLq/UEAqsQrRPHhKZ0Bpfc37DIIWfCN8IuZGLmO4JTuPu5VGiGKitsvhnChjeuPfDWESCZ6PDvCeDKPIOp/m/iSFcLlXxkERquBLc8Eqy6k34XlAHXN1rz2IsHL6ScakaqgRyjWOZ/GDucXw6RD9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com; spf=pass smtp.mailfrom=cknow-tech.com; dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b=RGns+CVv; arc=none smtp.client-ip=95.215.58.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cknow-tech.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B1B4B0CA1;
+	Thu,  3 Sep 2026 13:30:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.184.10
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788442217; cv=fail; b=IM81m4w8D/PDeYasgx/pCAmX5B170ThKFlJ8zVUmR03LCA1wvWilp5PzmXlzstjR49NQxqseu8XFGMDk3BxT0u7tvI+2/+l4y7yKOTsyfbjIVh4L0cKeA6KHNIwpdgj5JieKigA8XiiiytKrKIRqz8V4JzfU4xhuv9wt9u5LtkE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788442217; c=relaxed/simple;
+	bh=uyeoUW5HaC11zfZ5RoqJLtCLnj2FB9wel9n369HU574=;
+	h=Date:From:To:Cc:Subject:Message-ID:Content-Type:
+	 Content-Disposition:MIME-Version; b=LYaTMTeRcl3KV96ibYd41EM3crgGWCvp9IXuqiWquHtxZE8GCJ/TMCUHsur+e6AxaM695S6so+KdJan5EQ6XMbKbkn/66Asc31zsJBAQXJWZOn8ctg6L1d6VreKgbX42gFgOsj/h9K1Pyd+jCQJPM28o5Vj7Klmr+KBQ/PKZmNg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=westermo.com; spf=pass smtp.mailfrom=westermo.com; dkim=pass (2048-bit key) header.d=westermo.com header.i=@westermo.com header.b=Wj8GI082; dkim=pass (1024-bit key) header.d=beijerelectronicsab.onmicrosoft.com header.i=@beijerelectronicsab.onmicrosoft.com header.b=KvUpsKH8; arc=fail smtp.client-ip=205.220.184.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=westermo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=westermo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b="RGns+CVv"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=uLgdnxfLeG1up6nHp0UCJHgWN+XeuopVXhCQgVlHoYI=;
- c=simple/simple; d=cknow-tech.com;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788440360; v=1; x=1789045160;
- b=RGns+CVvq2T9BbZVIoZ+doP3kWnbYPwa/ZUmRl6rErZcwQUaooQ3Bn/I78hiC59M5t0l5u6y
- m5AP6SqrNG5lbNGWoqnyQV9mwU4SkT8O2XMmdBBHJAZnJE61/PKps/XGK3uttm6FkQHClnMjIMC
- RlvJeAOhv+h38jPjbiNKV5djv2gYEKIDxZVbqz0V0PXRpi+fgG5nf3rUr4yrMqRuvR04J4Fjc55
- 7+IhqAzBUIuEa3rRSGcCYw6PkkeA2U+ntuPdzmyM6mPbghPCSyzuvogt55mvqOvCh1zWfbeD+1b
- U+FomnJoig7N5TnNRRmDuz86CeVViRRKhFI/S1hBjxkuQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id dc46ac61033885ce;
-	Thu, 03 Sep 2026 12:59:20 +0000
-X-Mizu-Trace-ID: dc46ac61033885ce
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=westermo.com header.i=@westermo.com header.b="Wj8GI082";
+	dkim=pass (1024-bit key) header.d=beijerelectronicsab.onmicrosoft.com header.i=@beijerelectronicsab.onmicrosoft.com header.b="KvUpsKH8"
+Received: from pps.filterd (m0214197.ppops.net [127.0.0.1])
+	by mx07-0057a101.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 683D6P483636248;
+	Thu, 3 Sep 2026 15:29:42 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=westermo.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	270620241; bh=c6eDN1LFjJy0wJR/ov+UULOWB8oqTEKjpOQyEvHRjiw=; b=Wj
+	8GI082d+PZ4+hnj/fZS+GmonOW8CCzkTr4Qzih0MOpgGqhbkTfWiF2KKOBn/jvbM
+	pYp2JUL7RBMpaKAH6d1kB5TOYvhk5wzWUsY+fXGSt7HHSKU7tGoqPF/yLnm+dQu5
+	eaHjuE/dcgQAmPDDFL/lDTdyPB9toDzRx6uxyRP4YWzWqp5Rne3qwCchFJ56Ml/f
+	tmWIXLGBemzxWauF1qULSMNOrBbyrvY0lGvNd6Z1EUs7+gHJwFimma4I2Oin9iDK
+	OGt0XvSI+y1pbZlrgRF/4HRExZM0TD0AbPuUGf50YYjwN5iJH/QnrcAgJosRgG5r
+	g2uo4//K49hhbFCmsVeA==
+Received: from pa4pr04cu001.outbound.protection.outlook.com (mail-francecentralazon11023085.outbound.protection.outlook.com [40.107.162.85])
+	by mx07-0057a101.pphosted.com (PPS) with ESMTPS id 4ge5sv2b6j-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 03 Sep 2026 15:29:42 +0200 (MEST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=zJiRehKs2sv70XWFHtF/BTi+bdIc5Hx/2oAYtkyMGKedq1XADkS+wa7SrRTs/NxLw3NuCaezJk1uygzOaGQum94Bk8LHgMGPh8v7zJuTrc8wsNhvUUcBAe9zY4c4ouhC2P5mTKs565Cn/4DQQV2eSSwDSAabXJMqZHY0V/1oqys1bC2YFT3bMyadi/nC7qDA497/6AA50HCfbQzTGZpszHb4D7V9Y6r9sBxpIjEEaTqzPLnBGnSA5KNDeI5GvigcvMUigy8TEdNdv4JRZkevWRRsvs0i5NER9ZvO+tWW3wmYkE3f+30kR1IlbuctDYKSr072akz4n75H83/0POcXzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=c6eDN1LFjJy0wJR/ov+UULOWB8oqTEKjpOQyEvHRjiw=;
+ b=GTZ7VR3yXevqAMX+jCzpNiBu/GKP1yPQ5dw4MwueUmHUTRANO5vWjtuKRr9+zl+3T2WphKSepyD4UuE94gqGILCuyIL0t4jloUHNI5zRlmJhjDRiGR3TkN3fZ6SRSQEgom/ey0Pvch8bSH2/t1C5Qilv4WZmu3081RyZzd1n/6XxfsxvqVmXSj+z/VqtwOgVt1gTe9oAdT82Ol9pb0+due0wc5PY8Wem2dHqaZMaYJXo4xhJgtii8m09+R5k45EZs9VOsJXHvsANU27eu6L88eMYkyOwgw1p7cQdFXq50qWaOK3NdLKkVhkuWfjpl0HCKp8dR2pRAtfJqhge18SxWw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=westermo.com; dmarc=pass action=none header.from=westermo.com;
+ dkim=pass header.d=westermo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=beijerelectronicsab.onmicrosoft.com;
+ s=selector1-beijerelectronicsab-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=c6eDN1LFjJy0wJR/ov+UULOWB8oqTEKjpOQyEvHRjiw=;
+ b=KvUpsKH8CYaWM6fl/5kz616skIZHuyOMjimRagNDk2fbj304nBeDuOSOKgZjioAzmk1Y5PtDm4dF7g59cRyHGzm1A5IcWXLgZZbcN9zic9wCTRgvzpGK0zWTW/64PVf79rhtMKWDxDeTc01ti8w6t9ey7HVkD2yIBxjPZ8oaoCA=
+Received: from PA3P192MB2868.EURP192.PROD.OUTLOOK.COM (2603:10a6:102:4d7::12)
+ by AM8P192MB2824.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:32d::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Thu, 3 Sep
+ 2026 13:29:41 +0000
+Received: from PA3P192MB2868.EURP192.PROD.OUTLOOK.COM
+ ([fe80::bd96:8c85:982d:19ce]) by PA3P192MB2868.EURP192.PROD.OUTLOOK.COM
+ ([fe80::bd96:8c85:982d:19ce%4]) with mapi id 15.21.0360.008; Thu, 3 Sep 2026
+ 13:29:41 +0000
+Date: Thu, 3 Sep 2026 15:29:38 +0200
+From: Michael Pfeifroth <micpf@westermo.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH] wifi: ath12k: fix freq range overflow when reg rules not yet
+ parsed
+Message-ID: <apl2QtZu6EwGL0dD@mpf-ESPRIMO-P9012>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-ClientProxiedBy: BE1P281CA0080.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:b10:78::7) To PA3P192MB2868.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:102:4d7::12)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 03 Sep 2026 14:59:19 +0200
-Message-Id: <DL5P72WYQVOQ.23G9D01OY3BAA@cknow-tech.com>
-Subject: Stack trace when starting iwd with Intel BE200 M.2 Wi-Fi+BT card
-From: "Diederik de Haas" <diederik@cknow-tech.com>
-To: <linux-wireless@vger.kernel.org>
-X-Mailer: aerc 0.22.0-9-ge948bb7230f4
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA3P192MB2868:EE_|AM8P192MB2824:EE_
+X-MS-Office365-Filtering-Correlation-Id: 06fe99ef-c940-4471-ebec-08df09bf68ac
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|18002099003|56012099006|3023799007|11063799006|10067099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	1EoQloj+4wjYvKvq/jEoVM4QFDO8mNeLsEXIGJbgWMT2Fji55nEg/YPqsmsG2Nyg7eY6hpccWrBsqUmMAJihXwRMc1fyKsG5bnxj5DrCV4vf4F6tUHFGCm+gkxYVWE5HNPEU4Y74zH+KtKG9t0XZtm+j5CijkwqJeoTtJbEExfCtk7ECSSu4jSmBwb5PmE6Kqf75Lh9wWywWjZH6vZOUdz6XdLI7NoQAWeBHeEtVBbtuIVgqnWhR430Fg/t+Gp0tUXOLCGZEpXYZKKFC2q50Ssz4K0AYyj1Usqu7JA+L4MPysVXR6uLg4K0plbnkzA/0Q9o0taGHxH20Z7jsNWLIC6C3kefqERiM8KKkJBmHi6wM08DOC4WjIOeMmmXGPzDHf7Hq9TccgEc51fd0gr1vPvRbA+bsFkQVUMRyzGr8sbRsb57FAX+aOzR1cG56GacNWhdRFyBI4rSfLgQHu3OZJI/OsXu2icNgugftzQJZtOFUkn1ZTLEhJ7pyOcX5/ogdAz6XviDH85q/L+dVCxAmRWv5pExCXIxt6O2iY9a/wDtPRD3qXvVADHWVnwH5TMc6KT1FOM8+aPvkkbXbRW2tPqsFkMR3SiaFLSxrZZJHAAe9RBvCl+rYrj4RNAGxDaykzjOkL4n/L1OIeena94O8sRSQqVYMp6+8wYd5Wfz7Mlk=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA3P192MB2868.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(18002099003)(56012099006)(3023799007)(11063799006)(10067099003)(6133799003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?4OskhsE3JoNksK2bkUOv4eYdXhiFPlW1z/Hhm2SPPnpCpLD4zdE3x9UsaVB+?=
+ =?us-ascii?Q?PlYVpsmfIerii80ba9Mu0cvv8v5LU00sNde6ZI20dh29K3cjakb62uIYUP8V?=
+ =?us-ascii?Q?qLrurOesDkeSuCaQbEiXIQiG/k7MGj09m62EvA3LCeUV7vuEATVEHTNfnyKb?=
+ =?us-ascii?Q?hJdd1NJqXWIMAy1UZXg+qhrKg5pwaSSvxYSp4BY/wKOSPt+tM8o3o/GRdtb2?=
+ =?us-ascii?Q?b3+AihHxo8xDFFclMFRpDKEr+bR139PH2xzw1kapb10b11KffPP0HpheG11N?=
+ =?us-ascii?Q?DsfWo4fQYz0N4ZOjWozeuhvYRgesfrnE0aP2ZanOjCZCtD1bPcLlQRXLvk7S?=
+ =?us-ascii?Q?gaYg4XW4QGfh9MvpR8NLjzaff8OzMb55BmeeUkCZvn/GFeRWSkXHA+l92meU?=
+ =?us-ascii?Q?YWqGG8znzL5UO7rlVM9cQcQ9a83WA6qgenyg2XP5pfDQKR7MWdu2o1VzXIsY?=
+ =?us-ascii?Q?+SDZAk4m+iKUfzRmgHav3yolwO+PY90u+ndNPwySBvZhYWMIK+Sq1j8RDexO?=
+ =?us-ascii?Q?ohvv+TFTDPx+sBXP2LfYk9/GEnDm2K1lqcH4l1X6HavLc/+IHMTdDC95YfCq?=
+ =?us-ascii?Q?2jFl23Ij9GyjLJAe9tih5AZJUZKZ53VKf97zeyDz/4pCx/Rgzg1w4kCmFhiF?=
+ =?us-ascii?Q?dfX7Z1oirKxzgy5SBc2v1phyDZd8qr64biB1w16IbtNs/K2rGbv6rf+cbI36?=
+ =?us-ascii?Q?hPL9V0ZIvRJ9pVYPdAccO9FFPEmMYM4yAwCA7mQFEwUH/12QdM7U5LKpjb14?=
+ =?us-ascii?Q?Qh8xP+OOLvBwCqQEHDALO83cNLDFWoGVIoleKQgv/5H4hTheq7COqRWw3jyY?=
+ =?us-ascii?Q?py/Y3mCE+fV2UXazJ1hPJKo7NnCrMptTajMO/SMlrEAwCo78QAKY1sdd9o5w?=
+ =?us-ascii?Q?WMlg/R4DnZAc2KCGe4p1nKw4orliptJGOl5Jkk1KBES6QgayawNwZvB2sr4d?=
+ =?us-ascii?Q?91QW4gOGnlWIpMU3ljN9WpoopwX/BBcGJTTQLWi5T+R202jGFGAKEmCGOaIc?=
+ =?us-ascii?Q?BXHsC/uof4I/y9q2KGrqv5GEIHlAl3fGYhc1DwM8/+Q5v6bscPiPnrIG1RQ/?=
+ =?us-ascii?Q?dmQnoXBPnMENSVQeW3hcsgSTlCvKuEuKh8M45+qIqWTX4oZayww7ixKiE0Rg?=
+ =?us-ascii?Q?zo1+C46qurSnvV1UpD6Pgxe+lqGWNi10wPfLblvJEPIjQ1hyNNP9Ow+fysIT?=
+ =?us-ascii?Q?fFNxE5d/x6ribgY5pnJvSnm+bFhU5guDNpPSz5IyKrxdZJt0rgC8wa/ft+Oz?=
+ =?us-ascii?Q?/g+OvOFsLJl380vfZpbv649Pc4hMbC8BbabvJhs6b+eozmPNZCkqPBkDh/gS?=
+ =?us-ascii?Q?GGNmZV2FeFVNJqlVERwrgx0NcBV7JCzRibhJwFOo25unafkCI/gm+Zc7Jysp?=
+ =?us-ascii?Q?bgkm9HSebUzEk+A3H+Rel7Q+RZPo4ert3fLPcJqvroh2GpmeeY5q9s2tc201?=
+ =?us-ascii?Q?64l8kT7zDlJNqitkTrV7RKqt1PQGRWHiFY55ohpVcV2+Il1O9LWqOJAJtOCc?=
+ =?us-ascii?Q?XWinYRD+U89v0cNuPNPAzLLGtDhNbd7DX9mcYUm0SY9ciktS+iu5S1VWZEqi?=
+ =?us-ascii?Q?4fhTDM125gk4BEGph61L7RtCmi5j7AAf8XtXw2lB9I3z9FOQJvRFxLHj89n0?=
+ =?us-ascii?Q?jubuSQh6/+zK2P7thvVIUPUgQNGC0Zwuv//9yIgh6s9EFPU8T/SWT9HnnzNF?=
+ =?us-ascii?Q?WBzoxdyTIlQsKYLwdWDWxaYxeXWlvcimN5T0/8pXsR4GNzLIsbDjD3KDVNDW?=
+ =?us-ascii?Q?5dS6iOG/gg=3D=3D?=
+X-Exchange-RoutingPolicyChecked:
+	a4Bt8seYR3KyLKdV6qaxHu0DiZDeR/7OEj5hOqU3J5UEXgoGAmCkWWTV+pP5pi4JhG/w1l8qq4q3nCDBGzQ+08OofDOLv1mmhQ+9ANNXi/QtWJsnXZm0hF0kvvEf0gyQxkQpE+F6k7SoAtXuWp042q+rL1Z5cm9/ScT3Z/qm35MBi4QFZfIGjBkHTKjmFZ/bUKgBickezuNI/sph3zxgTbeYMSkQSD6k6mMasfb5gYo/IUSD/mvlbRdVp9YgzbfP7coC1TDv1SbJ5D18TrZhJVYbptXUm/qEfsQR31Frz53CpCv2+siAqbWKs+rQhmBGnIWUfmw9W2YbGgwCUA0E9A==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	PJfj/874vhDCoh88zyHhiWB2tiGKIlftktD8+pUSU3M8tMTPVtGk87IIjPN+IaHiVSasdeM/dowk9Yy9AjIbsf3mL+yac9M0SAjwsXINAJD69WZeRTh3gDpaNBXZDg56fx0F22i+3AJwSSI7N7NRm6nyO2ia11Y9U74px5AQTQV1AlWUr9yWVovfQwu6+ixWgwc/Mcy4BD1vzYElCBRqQWauDLAsmXD3gjwm6l3IFvdSkOGijxfeDtii+5h+CdEl24WCb3lXbCHSA39BMGmRxQPgiRJo/El8Zn6wrCHRW4lkW27HMQIaVwlSn7qDrKS5dbQgVnIU29zNc7F09mFX5NKf6XdLeMdUyRgU9AghaPdD4e91u0XhL4lzTRuTzu8gx1Coe82XSjqcMR2gQ1G7YxgCt0BEdgqs/OG0s15+xrzTZrtqBwPNbZ3vsbH23wgbGeeJHfwAmazCT7eicYx92mXonBVN/W+wlywCNIXbSvTLyyJzEa5rMWMQDU27nxlRA9AJRMeeA4QSCOmBdGk3BTbffrB9p8oifoYYqvj6oFeudECS/sfXow508jiYYrjAMG7b5TxiXyyOI03HrwggHJibGNBwozkKMWNmruVoy+5wvL4feq1mBIVW4CzwZRww
+X-OriginatorOrg: westermo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 06fe99ef-c940-4471-ebec-08df09bf68ac
+X-MS-Exchange-CrossTenant-AuthSource: PA3P192MB2868.EURP192.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Sep 2026 13:29:41.0140
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4b2e9b91-de77-4ca7-8130-c80faee67059
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NubMBk4h0eZk/fVYQaZzXpTnamkofiMRivakELU550eyQFY5Ez1BffCWS6EM6rxUDoOYJlJfGe5Fo/IIL8S9OQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB2824
+X-MS-Exchange-CrossPremises-AuthSource: PA3P192MB2868.EURP192.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossPremises-AuthAs: Internal
+X-MS-Exchange-CrossPremises-AuthMechanism: 14
+X-MS-Exchange-CrossPremises-Mapi-Admin-Submission:
+X-MS-Exchange-CrossPremises-MessageSource: StoreDriver
+X-MS-Exchange-CrossPremises-BCC:
+X-MS-Exchange-CrossPremises-OriginalClientIPAddress: 104.151.95.196
+X-MS-Exchange-CrossPremises-TransportTrafficType: Email
+X-MS-Exchange-CrossPremises-Antispam-ScanContext:
+	DIR:Originating;SFV:NSPM;SKIP:0;
+X-MS-Exchange-CrossPremises-SCL: 1
+X-MS-Exchange-CrossPremises-Processed-By-Journaling: Journal Agent
+X-OrganizationHeadersPreserved: AM8P192MB2824.EURP192.PROD.OUTLOOK.COM
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDExNyBTYWx0ZWRfXw2qXH9HcSO44
+ 8nZYp0aMHi9GuHy6R/rglpjco6cHcx+3uHYshKlOjO6Pa0YeDJUFwglewIFD2rR5U69GW18ScCS
+ RlugNYB0BOrA04YVk65+7IfKoIyZudVgu5AkqeitIsEhReupNxMH5P1qxWow9QWjmJHHpI1Mris
+ k0garcTrEcUN19Gzj29NZ/N6I4+SgDbZ9ydSx2k5jHx7afxeQPBo9Sch2GQswd7QgqNQiNCPVmJ
+ xpGOmaPUlTHhh5wy+we4owt9HTUgzJrt+z4/f30jheSBQ2VexqtJoRqnXO376O6p/MU6cRQT9Ro
+ zHD6jYfX2+IPBpArvjoggHJTBhlt1blamvEHD3CaGbsUm8Aq9FvYDZ0XljrumORZJjMTN17Tz+9
+ LZxPgRYAH9Dpyc2Erq3ytJi6pm9feyXm2DL6Wc/J9EMJ7BUtSlBSziW1YJfHGLSkAPB6D5cV7as
+ OTSMhOahvRFuRGvMkeA==
+X-Proofpoint-GUID: _nWKZQe-H1SXzyRr3POpRslqkcxorq4o
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDExNyBTYWx0ZWRfX5cmNTm93sB2L
+ rfgm6KtFG2IAOAoYEae/F2lW8E/rLIrh9uHp7SPazLR/ObS3e4iaWX/jX9zw8jYfHUAU86m0HTI
+ MrT4Xw8ffjZP+tZnZNpFB6JdvVdpDRM=
+X-Authority-Analysis: v=2.4 cv=Es3aPycA c=1 sm=1 tr=0 ts=6a997646 cx=c_pps
+ a=FXahOaI4078dIhBFKIJ6+A==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+ a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
+ a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=8gLI3H-aZtYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=tr3XZvuDWTETL0Uaxejn:22 a=8ys4xmT3Mru1TjC2zVq1:22
+ a=VwQbUJbxAAAA:8 a=N9GNhs4bAAAA:8 a=-Oh_-6K6ROkFF56HLt8A:9 a=CjuIK1q_8ugA:10
+ a=PZhj9NlD-CKO8hVp7yCs:22
+X-Proofpoint-ORIG-GUID: _nWKZQe-H1SXzyRr3POpRslqkcxorq4o
 
-Hi,
+ath12k_regd_update() resets ab->reg_freq_{2,5,6}ghz.start_freq to INT_MAX
+before the per-band regulatory rules are parsed, and firmware delivers the
+2 GHz rules before the 5/6 GHz ones. If it runs for a radio whose rules are
+not applied yet, freq_low stays at INT_MAX, and MHZ_TO_KHZ(freq_low)
+overflows u32 into an inverted, empty range. cfg80211 then rejects AP
+bring-up on that band with "Failed to set beacon parameters".
 
-I have a FriendlyElec NanoPC-T6 LTS (arm64, RK3588 SoC) and plugged in
-its E-key slot an Intel BE200 card. I'm using TF-A + U-Boot as firmware
-and bootloader, not something with ACPI support.
+Reject non-positive-width ranges; a later ath12k_regd_update() installs the
+correct range once the rules exist.
 
-That's probably why I'm getting these warnings in dmesg:
-```
-[   11.313596] ACPI: <n/a>: failed to evaluate _DSM 2c176672-0b22-294b-814f=
--75e4dd26b5fd rev:0 func:0 (0x1001)
-[   11.313641] ACPI: <n/a>: failed to evaluate _DSM 2c176672-0b22-294b-814f=
--75e4dd26b5fd rev:0 func:0 (0x1001)
-```
+Fixes: 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update")
+Cc: stable@vger.kernel.org
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+Signed-off-by: Michael Pfeifroth <micpf@westermo.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-My kernel does have ``CONFIG_ACPI=3Dy``, but it's not used on this device.
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 99bf5cf79..654c58d7c 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -14125,7 +14125,7 @@ EXPORT_SYMBOL(ath12k_mac_op_set_rekey_data);
+ void ath12k_mac_update_freq_range(struct ath12k *ar,
+ 				  u32 freq_low, u32 freq_high)
+ {
+-	if (!(freq_low && freq_high))
++	if (!freq_low || freq_low >= freq_high)
+ 		return;
+ 
+ 	if (ar->freq_range.start_freq || ar->freq_range.end_freq) {
 
-When I start iwd.service, I get the following stack trace:
+base-commit: 1b78070aaef63512688aebfbc82365ef9d6660f1
+-- 
+2.34.1
 
-```
-[12144.572968] ------------[ cut here ]------------
-[12144.572984] WARNING: net/wireless/nl80211.c:10730 at nl80211_get_reg_do+=
-0x244/0x270 [cfg80211], CPU#6: iwd/2361
-[12144.574304] Modules linked in: algif_aead des_generic libdes md4 snd_seq=
-_dummy snd_hrtimer snd_seq snd_seq_device algif_hash algif_skcipher af_alg =
-8021q garp mrp stp llc bnep iwlmld aes_ce_blk mac80211 ghash_ce gf128mul sn=
-d_soc_simple_card pwm_fan snd_soc_rt5616 leds_gpio btusb libarc4 snd_soc_si=
-mple_card_utils snd_soc_rockchip_i2s_tdm gpio_ir_recv snd_soc_hdmi_codec ha=
-ntro_vpu snd_soc_rl6231 ofpart btrtl snd_soc_core btintel spi_nor rockchip_=
-vdec snd_compress btbcm v4l2_jpeg synopsys_hdmirx rockchip_rga v4l2_vp9 snd=
-_pcm_dmaengine rk805_pwrkey v4l2_h264 rockchip_rng btmtk mtd snd_pcm rockch=
-ip_thermal v4l2_dv_timings v4l2_mem2mem iwlwifi videobuf2_dma_sg videobuf2_=
-dma_contig bluetooth snd_timer videobuf2_memops snd videobuf2_v4l2 ecdh_gen=
-eric soundcore videodev vsi_iommu cfg80211 panthor videobuf2_common mc rock=
-et drm_gpuvm gpu_sched drm_shmem_helper rfkill drm_exec cpufreq_dt evdev su=
-nrpc binfmt_misc pkcs8_key_parser nvme_fabrics efi_pstore configfs autofs4 =
-ext4 crc16 mbcache jbd2 r8169 realtek phy_package mdio_devres
-[12144.574461]  of_mdio fixed_phy fwnode_mdio libphy mdio_bus xhci_plat_hcd=
- rk808_regulator xhci_hcd nvme nvme_core nvme_keyring nvme_auth onboard_usb=
-_dev rockchipdrm dw_hdmi_qp dw_mipi_dsi fusb302 tcpm rtc_hym8563 dw_hdmi fa=
-n53555 aux_hpd_bridge analogix_dp drm_dp_aux_bus drm_display_helper gpio_ro=
-ckchip cec fixed phy_rockchip_usbdp sdhci_of_dwcmshc typec rc_core display_=
-connector dw_mmc_rockchip sdhci_pltfm rockchip_saradc drm_client_lib sdhci =
-dw_mmc_pltfm drm_dma_helper phy_rockchip_samsung_hdptx industrialio_trigger=
-ed_buffer kfifo_buf spi_rockchip_sfc phy_rockchip_naneng_combphy dw_wdt phy=
-_rockchip_snps_pcie3 nvmem_rockchip_otp spi_rockchip cqhci dw_mmc pl330 roc=
-kchip_dfi drm_kms_helper dwc3 ohci_platform i2c_rk3x drm adc_keys ohci_hcd =
-ehci_platform industrialio ehci_hcd udc_core pwm_rockchip usbcore ulpi phy_=
-rockchip_inno_usb2 usb_common
-[12144.588844] CPU: 6 UID: 0 PID: 2361 Comm: iwd Not tainted 7.3-rc1-arm64-=
-cknow #1 PREEMPTLAZY  Debian 7.3~rc1-1
-[12144.589720] Hardware name: FriendlyElec NanoPC-T6 LTS (DT)
-[12144.590200] pstate: 20400009 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
-[12144.590809] pc : nl80211_get_reg_do+0x244/0x270 [cfg80211]
-[12144.591317] lr : nl80211_get_reg_do+0xbc/0x270 [cfg80211]
-[12144.591815] sp : ffff80008657b750
-[12144.592107] x29: ffff80008657b770 x28: ffff00013282ddc0 x27: 00000000000=
-00000
-[12144.592736] x26: 0000000000000000 x25: ffffb244e7ef36c0 x24: ffffb244e1f=
-98d00
-[12144.593363] x23: ffff80008657b8e8 x22: ffff000101c28400 x21: ffff000101c=
-27000
-[12144.593991] x20: ffff0001335bd014 x19: ffff80008657b7b0 x18: 00000000000=
-00010
-[12144.594618] x17: 0000000000000000 x16: 0000000000000000 x15: fffffffffff=
-fffff
-[12144.595245] x14: 0000000000000001 x13: ffffb244e6646eb8 x12: 00000000000=
-00000
-[12144.595872] x11: 000000000000016f x10: ffff000104b6b9dc x9 : ffffb244e20=
-41b54
-[12144.596500] x8 : ffff0001335bd014 x7 : 0000000000000000 x6 : 00000000000=
-00014
-[12144.597127] x5 : 0000000000000014 x4 : 0000000000000000 x3 : ffff0001328=
-2ddc0
-[12144.597755] x2 : 0000000000000001 x1 : ffff000106fc83e0 x0 : 00000000000=
-00000
-[12144.598382] Call trace:
-[12144.598599]  nl80211_get_reg_do+0x244/0x270 [cfg80211] (P)
-[12144.599108]  genl_family_rcv_msg_doit+0xe8/0x160
-[12144.599520]  genl_rcv_msg+0x1fc/0x280
-[12144.599846]  netlink_rcv_skb+0x70/0x158
-[12144.600186]  genl_rcv+0x3c/0x60
-[12144.600467]  netlink_unicast+0x1e8/0x2f8
-[12144.600814]  netlink_sendmsg+0x1ac/0x420
-[12144.601162]  __sock_sendmsg+0x64/0xc8
-[12144.601488]  __sys_sendto+0x114/0x190
-[12144.601813]  __arm64_sys_sendto+0x2c/0x48
-[12144.602169]  invoke_syscall.constprop.0+0xac/0x110
-[12144.602596]  el0_svc_common.constprop.0+0xc0/0xf0
-[12144.603012]  do_el0_svc+0x24/0x40
-[12144.603308]  el0_svc+0x40/0x260
-[12144.603591]  el0t_64_sync_handler+0xa0/0xe8
-[12144.603962]  el0t_64_sync+0x198/0x1a0
-[12144.604286] ---[ end trace 0000000000000000 ]---
-[12145.058595] ACPI: <n/a>: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3=
--1f738e285ade rev:0 func:0 (0x1001)
-```
-
-Despite the stacktrace, the wireless connection does work:
-```
-root@nanopc-t6-lts:~# iwctl station wlan0 show
-                                Station: wlan0
----------------------------------------------------------------------------=
------
-  Settable  Property              Value
----------------------------------------------------------------------------=
------
-            Scanning              no
-            State                 connected
-	    ...
-            RxMode                802.11ax
-            RxMCS                 10
-            TxMode                802.11ax
-            TxMCS                 7
-            TxBitrate             1225100 Kbit/s
-            RxBitrate             2161300 Kbit/s
-            ExpectedThroughput    1020936 Kbit/s
-```
-
-Similar results and stacktrace with kernel 6.18, 7.1 and 7.2, so it's not
-a recent regression.
-
-I also have a NanoPC-T6 Plus, which is quite similar, with an MediaTek MT79=
-25
-M.2 Wi-Fi+BT card and there I do not get the ACPI msgs or the stack trace.
-
-Happy to provide extra info, run tests, etc.
-
-Cheers,
-  Diederik
