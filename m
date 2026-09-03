@@ -1,191 +1,234 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2E550C2B6
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Sep 2026 20:56:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A781DED42
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Sep 2026 21:24:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788468991; cv=none; b=apzCVqZDU1mOGQXE1k1Ckc0hugxsZCRd2Xkj8q5JGlsjb3RCgAOEWexvZAFHhNTfvEnYWJm+4HDmfmdhy4myjsV+PEeECZyTAzzoXBOcH6P54d0Y6yC7Uwud+vZ9G3GbhiZQDdULf58LQw9lmGv4S4SWdBNimr4qsVaYAGEXr08=
+	t=1788470694; cv=none; b=JFkSTa8/ONdp7Jqa7WO0uiSCbXDkQVaoFV1mZQ4d+Zq78DYqT5U8RyAxFZQqo/z15jvIYFKAqLOziZBFLKR72Z5Et6J8IPHGW1JOatROsb6jJRLxtOUoG7kk7kKx9iEmWaRjniNZ9SKu/l0TWdKBKw/5c5q6iJc8Rjr6///ls5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788468991; c=relaxed/simple;
-	bh=asM3u2jh2/97ma/RigKr/jhcfK2a1T/GQYGyli6hKw4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=PdMDpKYxfMEnmUoHoVwBrFEFpcAh2kWeFUR/plPVBp03W4mastlhN6MjJ9CYg179hujdkH7l0nWFg1LzuViMQxIjJqSSUVjFTh17hhFmSj9xcEAaIJ/VU1DxyByMTmgkALVpQCo+YzBgQ8T8t57BmP0MKP/Zc9A+rtL3LAEPcCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com; spf=none smtp.mailfrom=mojatatu.com; dkim=pass (1024-bit key) header.d=mojatatu.com header.i=@mojatatu.com header.b=oybCd1ev; arc=none smtp.client-ip=209.85.160.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mojatatu.com
+	s=arc-20240116; t=1788470694; c=relaxed/simple;
+	bh=/YjjEmAIxpzBMggT/DhThDDtrdGrlTOWRd3kOcfHYEU=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=ii+dvma6VbLOgtALwjWD6gvvNgYB42rzltR3pD3S03nT9c7jfi2AFvrHR6QU3wbXOxOaP7UWEyTCbrZFLWZfWw6Pek+Eenwpbj/MLrdta4gGI+iIsPBZnXBe8OokRi0VL+O/BRkofD2dPDR71RguXRUt7MTkE6Z4E4HtZv00QBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HQSUgAwA; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mojatatu.com header.i=@mojatatu.com header.b="oybCd1ev"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-52d8679c149so3991501cf.2
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 13:56:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HQSUgAwA"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-49b965570d7so3904425e9.0
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 14:24:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mojatatu.com; s=google; t=1788468981; x=1789073781; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=omcuQrXyWn92mT7/l5cfyeWdZD8VtU1sSuEMsPrFlZA=;
-        b=oybCd1evk4sAK+iGb2ojUB9x+GtRbYMjyKcG5CdCgfMiCGLieM3mKh9/digSW31lyO
-         y76otpy2sV37+9OE+fzYDzVB65TDOfzo/CJjdGXgZUDDk2Xuhay1nyN8nt6YD+yAk8qG
-         VWeIATpbzMWK5B2O8zbJtj/n7hjY1CJiskFL0=
+        d=gmail.com; s=20251104; t=1788470690; x=1789075490; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:content-language:cc:to
+         :subject:from:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=mY/0C5nYgJd0Ug9TJUl4shTrLESynuosTZHPVyYcACw=;
+        b=HQSUgAwAfQXpkwv93deIY5nETtgDCi1pjvoY66ECagWy/3McmLLCyPJq3tVAfj7PWM
+         NKo4ZhSqt3VO72ylHCvZpxV0x7VB749Yi1e+lhXCgg8a4H22QVYpfZOyAD4au8bVnXZA
+         g+FumgN+XqnRbGGGBfM9GRPahasACuF8GstP7EP1J0dr3rCUVr2TbRiyst4e+ioQEQqu
+         xq+GubbzmaAdV7GE8ov8q4/NPmCnBgjOI7GD2t64x7WPXZ6Lag/lf4dKyj5n/I0ROCAr
+         OfsdtMjgI4YG9bQMs01ojXt1CGHEhtbZyf6OOZ2pssihpl5jBCCne1b7m9k9keFgsSde
+         CEpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788468981; x=1789073781;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=omcuQrXyWn92mT7/l5cfyeWdZD8VtU1sSuEMsPrFlZA=;
-        b=V0M33QZgl+1SKSsoz8TdLZkeeaTG4+8Ys+yYT+JcyaJ/lkrgHthQdG8FYyBXXF6Fd2
-         vlJQj5rLRZ15XmfjmJFITYkIh4W9Mymvd77AjypruS07PZCwsnu5JLuMj2FOBIrtnVaG
-         Xllf9GLZXpRLHZe9rM47d966iM1yQezSD0Zg/dqH0wBZNL081yGQmlLxLq97O6IBy2OX
-         h9uisVLVcjqF359c+dWst2V8S41QY5T7YNwP/stV6LupSPOxf2WJejAp7i/1f9/p+WAJ
-         lzoESNakFu1/ghBgbcRVcgw/W0BtaEuMHc+OjYaaBLj5Kd8ZKwlgrO1V61Gp39H+JeKa
-         oFpA==
-X-Forwarded-Encrypted: i=1; AKwUvBzlBCREMDfwwarABtGuvE3alqeJcJNR9ypTER/zpUcxlcaKbTUnfwNwtLqrXNShFFqnh8D3C3I4lPOlX38kEg==@vger.kernel.org
-X-Gm-Message-State: AFuF++mdWVneuNJSr9m6ARXVsHkVv8lq/c6tOQnVFZxLt527tTIJ1B52
-	e44AUq3S4tN9zvU7sQA6SoRqqhNiHgOMPBV6+iHuT56wH48FPpQtjFLKQwsQLz0+TQ==
-X-Gm-Gg: AYBFou1XTQe7Rkaa/5gPfEnjj6sAdS3RoRnA6zqK3fJNO29hf8vJ0LFdjOC3IpDYSMY
-	gdmI49PylmZv2K0+TnPmguFzx+4D4UxzNYNr6h3TZvCihoWyKTJv4UjQgE9pydoOP+nNkheflJl
-	HAd4AVqjYPID4bz0t2czBh0pmDdhmhLuKNcwpjNx44PyRRQQMaPn/Koqtg6NWfbaInTuBFFV5n+
-	vSsnJbyZEQH8GyPALWeJMrEUhKCLdzWIYRYhZJvJgsy0XwQId+vHjJDHw2Im59qnc4kT/K3L+NA
-	wx3kE/EqQnTuwb1Yx9CUqRNgBw2DgWGhNfybz55qkbXxSrGUuP/82y8iH1TtUZ6aEVfkr/0dme1
-	wUaerN/8aKUzjqQYPGeNF4hUNNh+PHAHTHHbHnYAcCj3ZP/mu2uiprnuRrqlPE42okHnbGwGKke
-	U59lYpQ+gwZOHdfJmIWa0kHgXJKsubscieGNTjIP/P525d3DLqUSLBHhzi3ATzK3mmqSatk1f6H
-	c8eaHrHK22OtZY9dt1PuqKuPE5W/fO+cnYKqOx4Vf28KjvXhiYJtxwujMXhPpsk7VpF9G73EtwH
-	csYc6pjm7pxB
-X-Received: by 2002:ac8:7f0f:0:b0:52f:b9ad:9dc1 with SMTP id d75a77b69052e-530548ea102mr18677551cf.20.1788468981102;
-        Thu, 03 Sep 2026 13:56:21 -0700 (PDT)
-Received: from majuu.waya (pool-174-112-106-84.cpe.net.cable.rogers.com. [174.112.106.84])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5305422fc07sm5509881cf.31.2026.09.03.13.56.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2026 13:56:20 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-To: netdev@vger.kernel.org
-Cc: Jamal Hadi Salim <jhs@mojatatu.com>,
-	stable@vger.kernel.org,
-	Jiri Pirko <jiri@resnulli.us>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Victor Nogueira <victor@mojatatu.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Vega <vega@nebusec.ai>
-Subject: [PATCH net 1/2] net/sched: codel: bound the dropping loop per dequeue call
-Date: Thu,  3 Sep 2026 16:56:15 -0400
-Message-Id: <QDISC-1L5H.v1.20260903184552@mojatatu.com>
-X-Mailer: git-send-email 2.34.1
+        d=1e100.net; s=20251104; t=1788470690; x=1789075490;
+        h=content-transfer-encoding:content-type:content-language:cc:to
+         :subject:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mY/0C5nYgJd0Ug9TJUl4shTrLESynuosTZHPVyYcACw=;
+        b=e/YOXTR0PM7m+dimMwCZjpe2ugd+Kh7/dHXvfVBQ3C9xiwVksyOkTuygco3Xftnv0p
+         1asxzwEGbKgsIFctL/aKScV+n6RPbgkfSZqpV8YeBxjSgALeKSBa2Jbp6TjdfuMSpBia
+         KVhfd5PpyAPjQ+ifFCjQ9wreVbqwsqp4LySBsQ1gNW0AYoFiOHzPExB05MVWC31h5mug
+         YGRBhBnpMjBMxl6hMZEOiTl3ziwIIdKQAYmaGOiwbkN/ahw+nWlVPQpoWqGieJfhWai6
+         xoZ/jXtW3tjn+gyHQGv3xyTgg2/cO9UQ1IbFVyS1lMATBhxDUfAF3hBirAmlQ6UNXsDY
+         /aBg==
+X-Gm-Message-State: AFuF++kv9slH4zb3dvcROUBGE9NdiQGHk1ovrVyjiaBSroxRPYQs6/6d
+	f/wpVwe5bJyoNK5OxfOkcDhd4lInHAlyqwPdyd6HVKm7c1Qx/tA/M9Q7kWiggQ==
+X-Gm-Gg: AYBFou3i/oK3mqUc+tzu6Kgkv6gy3XzzLKGzbu8PDeZcT+OsjcpbWuMg0JNXWH1Nsyp
+	YeTyTb3zWJMg2ZyoIKoi8JR7gn9eicSTFNrOjjzrLWtxGm49qV24yBtDEtGKhzsa/wgZ8N2vbls
+	KghQ7UmeVgjF+uKfHOmaTDnmkzHMTGTVfi9jViEV3B2yDEi214eWEbMinC8LxjbhCtRmLXN7Gif
+	qIEb3ONRdjX6WJjivAkoo9GDSv9P8J2ZnK6lRv5OKWvwlgUyK1YGLmvlaa62nqDusRtKLYAMhjX
+	TICUyjq0TgmnG9KzpKbszXtc1XdDMceNyXiAnFUwcBbaOs3oNycEXJ0YYrzD1hTj4/XI0aE+Wjj
+	wPvKi1nIYrmtUvrfoSEcslceJJ8EaI5Od/qt6P3dSupPaz4uxFrEH9DHtgY2GusPALo13PUnW+u
+	5b9Xfqh2F74ud80+aFpvzpbyqj296D9UQTYInhNDFqxKtruPoqWex0euwKg/2Fd+kWlxs=
+X-Received: by 2002:a05:600c:c4a7:b0:49c:df2b:15fc with SMTP id 5b1f17b1804b1-49cf823d0dcmr16281725e9.8.1788470690249;
+        Thu, 03 Sep 2026 14:24:50 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5936a5esm66990415e9.3.2026.09.03.14.24.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Sep 2026 14:24:49 -0700 (PDT)
+Message-ID: <fd7bbc79-03f9-4932-ada8-f555392d4485@gmail.com>
+Date: Fri, 4 Sep 2026 00:24:47 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH rtw-next] wifi: rtw88: usb: Download the reserved page
+ synchronously
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, i.mafifi17@gmail.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The CoDel control law schedules the next drop one interval/sqrt(count)
-after the previous drop, using the configured interval
-(codel_params.interval). For very small intervals the scheduled step
-rounds down to zero, so the dropping loop in codel_dequeue() never
-advances and drains the entire backlog under the qdisc lock in one
-call - an unprivileged user can trigger a soft lockup this way.
+From: Mohammed Afifi <i.mafifi17@gmail.com>
 
-Fix in the shared codel code used by both codel and fq_codel:
+In AP mode the reserved page (which contains the beacon) is downloaded
+to the chip by rtw_fw_write_data_rsvd_page(). That function writes the
+data via rtw_hci_write_data_rsvd_page() and then immediately polls the
+hardware BCN_VALID bit to confirm the firmware accepted the beacon.
 
-1. Make the control-law step at least 1 tick so the dropping loop
-   always moves forward.
+On USB, rtw_usb_write_data_rsvd_page() ends up in rtw_usb_write_port(),
+which submits the URB with usb_submit_urb() and returns as soon as the
+transfer is queued. The completion callback only frees the skb. As a
+result the BCN_VALID poll can run while the beacon is still in flight
+on the bus, and the poll times out even though the download itself is
+fine.
 
-2. Cap the dropping loop at CODEL_MAX_DROPS_PER_DEQUEUE (256) drops
-   per codel_dequeue() call, resyncing drop_next to now when the cap
-   is hit: the catch-up owed to the loop grows with the idle gap and
-   the backlog, which no interval threshold can bound. This is a
-   deliberate behaviour change after long idle gaps.
+This shows up as:
 
-The cap applies to fq_codel (4b549a2ef4be) and the mac80211 TXQ path
-(fixed interval, cap only).
+  rtw_8822bu: error beacon valid
+  rtw_8822bu: failed to download drv rsvd page
 
-The target sojourn delay (codel_params.target) is not validated: it
-does not feed the control law, so a sub-tick value is aggressive
-rather than deadlock-prone.
+The failure is intermittent because the poll retries sometimes cover
+the transfer time. It occurs in bursts when something triggers repeated
+beacon updates, such as stations associating and disassociating.
 
-Conditions to recreate the bug (repro from vega@nebusec.ai):
-  - tc qdisc add dev lo root handle 1: tbf rate 1kbit burst 2kb limit 1000000
-  - tc qdisc add dev lo parent 1:1 handle 10: codel interval 2us target 1ms noecn limit 1000000 (same for fq_codel)
-  - unpatched kernel: tc accepts it; a UDP flood under the 1kbit tbf
-    soft-lockups (watchdog: BUG: soft lockup) while one
-    codel_dequeue() call drops the backlog under the qdisc lock
-  - patched kernel: same setup, at most 256 drops per dequeue call,
-    no soft lockup
+Fix this by adding a synchronous bulk-out helper that waits for the URB
+to complete, and using it for the reserved page download. Only the
+reserved page / beacon path is made synchronous; the normal data TX
+path is left untouched, so throughput is unaffected.
 
-Fixes: 76e3cc126bb2 ("codel: Controlled Delay AQM")
-Reported-by: Vega <vega@nebusec.ai>
-Tested-by: Victor Nogueira <victor@mojatatu.com>
-Signed-off-by: Jamal Hadi Salim <jhs@mojatatu.com>
+The reserved page download runs in process context under rtwdev->mutex,
+so sleeping there is safe.
+
+Closes: https://github.com/lwfinger/rtw88/issues/451
+Signed-off-by: Mohammed Afifi <i.mafifi17@gmail.com>
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 ---
- include/net/codel.h      |  5 +++++
- include/net/codel_impl.h | 16 +++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/usb.c | 92 +++++++++++++++++++++++-
+ 1 file changed, 91 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/codel.h b/include/net/codel.h
-index aa80f744826c..183d43c2bd43 100644
---- a/include/net/codel.h
-+++ b/include/net/codel.h
-@@ -140,6 +140,11 @@ struct codel_vars {
- /* needed shift to get a Q0.32 number from rec_inv_sqrt */
- #define REC_INV_SQRT_SHIFT (32 - REC_INV_SQRT_BITS)
- 
-+/* Cap on drops per codel_dequeue() call: the loop's work depends on the
-+ * idle gap and backlog, both outside our control; resync when exceeded.
-+ */
-+#define CODEL_MAX_DROPS_PER_DEQUEUE 256
-+
- /**
-  * struct codel_stats - contains codel shared variables and stats
-  * @maxpacket:	largest packet we've seen so far
-diff --git a/include/net/codel_impl.h b/include/net/codel_impl.h
-index 2c1f0ec309e9..9e779cd4d6de 100644
---- a/include/net/codel_impl.h
-+++ b/include/net/codel_impl.h
-@@ -93,12 +93,17 @@ static void codel_Newton_step(struct codel_vars *vars)
-  * CoDel control_law is t + interval/sqrt(count)
-  * We maintain in rec_inv_sqrt the reciprocal value of sqrt(count) to avoid
-  * both sqrt() and divide operation.
-+ *
-+ * Clamp the increment to at least 1 tick: a very small interval (or a
-+ * large count) can truncate it to zero, stalling the dropping loop.
-  */
- static codel_time_t codel_control_law(codel_time_t t,
- 				      codel_time_t interval,
- 				      u32 rec_inv_sqrt)
- {
--	return t + reciprocal_scale(interval, rec_inv_sqrt << REC_INV_SQRT_SHIFT);
-+	return t + max_t(u32, 1,
-+			 reciprocal_scale(interval,
-+					  rec_inv_sqrt << REC_INV_SQRT_SHIFT));
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index c90802919473..04e3095432c3 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -394,6 +394,71 @@ static int rtw_usb_write_port(struct rtw_dev *rtwdev, u8 qsel, struct sk_buff *s
+ 	return ret;
  }
  
- static bool codel_should_drop(const struct sk_buff *skb,
-@@ -156,6 +161,7 @@ static struct sk_buff *codel_dequeue(void *ctx,
- 	struct sk_buff *skb = dequeue_func(vars, ctx);
- 	codel_time_t now;
- 	bool drop;
-+	unsigned int drops = 0;
++struct rtw_usb_write_data_sync_cb {
++	struct completion done;
++	int status;
++};
++
++static void rtw_usb_write_port_sync_complete(struct urb *urb)
++{
++	struct rtw_usb_write_data_sync_cb *cb = urb->context;
++
++	cb->status = urb->status;
++	complete(&cb->done);
++}
++
++/* Synchronous bulk-out that returns only after the data has actually been
++ * transferred to the device. Required for the reserved-page / beacon
++ * download: the caller polls the hardware BCN_VALID bit immediately after
++ * this returns, so the bytes must be on the chip by then. The normal async
++ * TX path races that poll, which shows up as intermittent
++ * "error beacon valid" / "failed to download drv rsvd page" in AP mode,
++ * more often on 5 GHz where the larger beacon takes longer to transfer.
++ */
++static int rtw_usb_write_port_sync(struct rtw_dev *rtwdev, u8 qsel,
++				   struct sk_buff *skb)
++{
++	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
++	struct usb_device *usbd = rtwusb->udev;
++	struct rtw_usb_write_data_sync_cb cb;
++	int ep = qsel_to_ep(rtwusb, qsel);
++	unsigned int pipe;
++	struct urb *urb;
++	int ret;
++
++	if (ep < 0)
++		return ep;
++
++	urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!urb)
++		return -ENOMEM;
++
++	init_completion(&cb.done);
++	cb.status = -EINPROGRESS;
++
++	pipe = usb_sndbulkpipe(usbd, rtwusb->out_ep[ep]);
++	usb_fill_bulk_urb(urb, usbd, pipe, skb->data, skb->len,
++			  rtw_usb_write_port_sync_complete, &cb);
++	urb->transfer_flags |= URB_ZERO_PACKET;
++
++	ret = usb_submit_urb(urb, GFP_KERNEL);
++	if (ret)
++		goto out;
++
++	/* 5 s matches the vendor driver's bulk-out timeout */
++	if (!wait_for_completion_timeout(&cb.done, msecs_to_jiffies(5000))) {
++		usb_kill_urb(urb);
++		ret = -ETIMEDOUT;
++	} else {
++		ret = cb.status;
++	}
++
++out:
++	usb_free_urb(urb);
++
++	return ret;
++}
++
+ static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb, struct sk_buff_head *list)
+ {
+ 	struct rtw_dev *rtwdev = rtwusb->rtwdev;
+@@ -543,13 +608,38 @@ static int rtw_usb_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
+ {
+ 	const struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_tx_pkt_info pkt_info = {0};
++	struct rtw_tx_desc *pkt_desc;
++	struct sk_buff *skb;
++	int ret;
  
- 	if (!skb) {
- 		vars->first_above_time = 0;
-@@ -180,6 +186,14 @@ static struct sk_buff *codel_dequeue(void *ctx,
- 			 */
- 			while (vars->dropping &&
- 			       codel_time_after_eq(now, vars->drop_next)) {
-+				if (++drops > CODEL_MAX_DROPS_PER_DEQUEUE) {
-+					/* fell far behind the schedule */
-+					WRITE_ONCE(vars->drop_next,
-+						   codel_control_law(now,
-+								     params->interval,
-+								     vars->rec_inv_sqrt));
-+					break;
-+				}
- 				/* dont care of possible wrap
- 				 * since there is no more divide.
- 				 */
+ 	pkt_info.tx_pkt_size = size;
+ 	pkt_info.qsel = TX_DESC_QSEL_BEACON;
+ 	pkt_info.offset = chip->tx_pkt_desc_sz;
+ 	pkt_info.ls = true;
+ 
+-	return rtw_usb_write_data(rtwdev, &pkt_info, buf);
++	skb = dev_alloc_skb(chip->tx_pkt_desc_sz + size);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, chip->tx_pkt_desc_sz);
++	skb_put_data(skb, buf, size);
++	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
++	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
++	rtw_tx_fill_tx_desc(rtwdev, &pkt_info, pkt_desc);
++	rtw_tx_fill_txdesc_checksum(rtwdev, &pkt_info, pkt_desc);
++
++	/* Download the beacon/reserved page synchronously so that the caller's
++	 * subsequent BCN_VALID poll observes the completed transfer instead of
++	 * racing the async TX path.
++	 */
++	ret = rtw_usb_write_port_sync(rtwdev, pkt_info.qsel, skb);
++	if (ret)
++		rtw_err(rtwdev, "failed to download rsvd page over USB, ret=%d\n",
++			ret);
++
++	dev_kfree_skb_any(skb);
++
++	return ret;
+ }
+ 
+ static int rtw_usb_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
 -- 
-2.43.0
+2.55.0
 
