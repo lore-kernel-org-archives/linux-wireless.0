@@ -1,73 +1,77 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 172424E1415
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAEBE4E1413
 	for <linux-wireless@vger.kernel.org>; Thu,  3 Sep 2026 15:36:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788449796; cv=none; b=jhhrSoi6ZJfwYRwZA2F4HcMFbUbZ2WZgJXjfEsXpZqLAvBe9wU6b2V3imEe40DduwZFeBa9Hb/8T77/nSrOSN98nKDwDIv9e8kaYV/B6Alzlg0UDZw78oX6ax35EWfI+ibQL2+92F/sqMvXQiBGt34u/YUKqKEKM8bTtJESIUps=
+	t=1788449797; cv=none; b=GFY7npXSeiJBbyz31Cv3H4bQcAYJ1mU7kBoHYx2oNsHY6xLm4FZu50C1hI6yl1qZvgzfDWTGy7Vki1zOG5a31oPeJUiNBBI6mK+20S3ZpqrfIaYDcH6smYrTne9F2FIYRa9NRQpRSZ1gEopzIgeDPrkoQLW6pgyITuR80+JnU64=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788449796; c=relaxed/simple;
-	bh=Y4N5n3dWF43z5fnhzSjvS2JctFJVZQSgkRXuPz00tj8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hI5r0MeEy2eTTocNPcBMXRE5iqndh5ihrlhYXJEP6GxkJiBVh6Jsd1dUtUMlVmBSFurDPgU8rmgBqfwceZ2AKplcknjCLZ2aVI6VrQCbm9g3a2JH+b6BhWnxxIJxEyWNP4ExqcZnPe6LL751IO73Gwvl4PI3Ypt//EIJQdUYraA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XcKC2slh; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1788449797; c=relaxed/simple;
+	bh=Sx82Mbp5lO5DjoKy80dsNlSHsxmeRD7u8l6pGGCMoDw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YT+phmfxBbR9CDJ6LMODgzFqCJ8F5HEnPHudqfLSr9bZMU67tmSsju8a82PMB3kO1R9T4mHXq1q4d2nzCvGb4V6DYwUGcEK9g31MSg/u3PFoaZS7Ml7NmJwGEOzrU0zRZSeJrCRrJx4+Qd2xuP9I95k2h8XlCKAcpWTPuLXNAb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ADrn3gjh; arc=none smtp.client-ip=209.85.128.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XcKC2slh"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-499b2981a7bso26783745e9.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 08:36:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ADrn3gjh"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-49b0d78a801so20745e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 08:36:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788449793; x=1789054593; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=HxVPdMsVHdS0kk+CtMD8XqvKLESkGAfNVL5qV8f2BIs=;
-        b=XcKC2slhhxO/9v0o3/hAySnngt2tHiRC8VLBEiR5/b5ZFYERL796+2Gt/mIEvyJadv
-         zdNozbMPLfn0jtGrUxR1/C01FgoR+ULTKHuZEfXX1TK/sFsEh2IO7OI9HBE2rXzyXK9S
-         Xf5YIS9fWvwbeRb0G92SMZ2h19jkW56Bsfh7vr9qxzd2Z19amz9I3OjdLSCi3CbA2kl1
-         WOB3YY2eFFMIvFBX8tvuwljRjfpPOhNX/s/WpR+ssj5SMAynIEm1+XPKedaxiMIj1XGc
-         NF9jyOrL4ymTC5u0nzgwBMCv2qsFyaJTzysL9F6lH4QxN/E0ytnPUh4xY/3Fo6GIMCGD
-         hf6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788449793; x=1789054593;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
+        d=gmail.com; s=20251104; t=1788449794; x=1789054594; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:sender:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=HxVPdMsVHdS0kk+CtMD8XqvKLESkGAfNVL5qV8f2BIs=;
-        b=pjkERCqyYBZiY/OolMG8mE+rxscn4PX826HEscwC+bK2qvx0TFhiyOHwnM86d2rTqW
-         5TObEHis/kKO/YJUPZwrFlPVNREZwTuH9ItnLKcZTzSpy0OvVkJUdMMyS7dtmW0Qxi0V
-         txLzFA6CY2/zp3+17pzqjyDPZn5WW996RaezIJ7f4AxvDPhrrhruk25slEJXjZq7dH1O
-         iqpZKK5LtbVxQJIoto3avTIk4i11EEuSumrcbypWWOGxssmgQ6zF4kA9Oa4nv696elsT
-         tC0TLSNiQiZnd+NZOSX5ltZiCPOnlVU1R7OYKBaBUOtENrRpFsJh3Lv/k0EaoEHaSr7i
-         gDQw==
-X-Forwarded-Encrypted: i=1; AKwUvBxyK7tHnYABiF7DJIhKPTEloluL+6zfjcUu+t1/6meOl2RNFe0C/wiqYrmc+T0YNVzpmrnkYglyzBCrknz7fw==@vger.kernel.org
-X-Gm-Message-State: AFuF++mNbOI6nI/TxnhWv/sMEYmxdRGqGX7R57UmdfkoEYZOEm1kGf8E
-	xt63MlA3JhnYlICqnlYTIw4WPn3ZK0E6rxsXngUOyzbjWNDeSFbMdxnsbixH
-X-Gm-Gg: AYBFou2OESRGI0Y/d9eVfg8+0QqvNSHQQuwQStoiBf01yZbBRRBegFm6k+MCw9G/FRA
-	lS2+QGogu6OqN8TtIZUnlHdTR8jwKQk64OVuMBfUeymJkG71CCBo2dtEF/zE9w/L+/6V1Soyqr+
-	PlGIlVc3roX3yIg6Drs0oirS5WUXpOnlEmYM8e42JFADZIvaHEMSUjprlINRmrvjdZYUFooEPmE
-	+ZMLO1AZze1qx3m8Rnfdky5J2Xq3U6XHaGQjilJmBiU8SGnnItp+DsBAmeT6XKUo2QfKuB7w3Pb
-	bVIU2Z/XsyI8UVQ7NBf2GvrUJkIEEjYUHkqUiE2irHLMCHKw+XG5URHiaBwo7QD+l4kQckfDxUD
-	v8ysxZWBTyHIzzrq8++N7bvuM4KqGkUttlf5DaXAbsRivMGdWIaVssRQzhrZDYTeNX6FAFDmqtO
-	63dkj39kWlmXChXkgwydJ3DjG3D33xOGMoqNVgzAdJcaCXYcHaQxOiY6/WkrjJuTbcXaJTbi9f6
-	nbe7IQStAJn2wuUy/bb9cmrgMgmqssazxVq3zpqtYoK9NqTvFzkH+mYN6P9QILTSirE4k8qUEtV
-	eyImiVC1kQH4eHY=
-X-Received: by 2002:a05:600c:4684:b0:49c:f617:7cf with SMTP id 5b1f17b1804b1-49cf61707efmr7854075e9.0.1788449793027;
+        bh=mKYBlq5Au3+HGNkg1vfOBKHH7P2alX9eeNg+UdnZVyg=;
+        b=ADrn3gjhi5wv5vwR25msD2CWjArgICNkDeFwl7Syi0TpNKNigyIWRYRGm9WyzL/Vaa
+         Qq12xKNthoBC1kGUgYinYA8CtJaTlabUUbsNgkm4tZZwLB7pihJCascnebpUbbhsP6MQ
+         Nav/98pj6BfgHMJJgFnp85blaYLITZluPm1rXaQbmHH7XUb9y9+LjZcJ+5l1io0Sbg/Q
+         7WqDVphYkW9fpu3ws4GqpwQJqjyMjUcPy95AkJiQIgVx4jWPsjzrXtm1oSd22Yf3CMa6
+         AmWdEIxsZai+ofRBWX44mSns2esbQqnEVn0j1LHrkT4nID7CCg7MoeIA1ABu+ecU1u0f
+         n/ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788449794; x=1789054594;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:sender:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mKYBlq5Au3+HGNkg1vfOBKHH7P2alX9eeNg+UdnZVyg=;
+        b=PAloCmC789PZdiLKsaxozoehjRYDQvm84ooFUSQaHf59zzDfgQ4mXuOjpgccPuQnLB
+         RxhcvEXWN7tWt/aR/iTt1UYIBlC1mQDU4i/QybQ9ysEjKW1oRSp84jR/U3cN0LZoS8c5
+         P2U7lKCNxK0sYl6Hqit382JbL0rRcNBtn1XuVoPsGEhbo3xlAM7pCuScrwv0KdpziSA6
+         ZKU7aeBrUg4pr+xoaTO+jYJYq1W7nU72kp+RSCjlwpTSktMbt1SJimB2SOxtOrveO24d
+         H0gFkjOIAaVlsCh53pRVtHV3tu7AgQw7Cm3t6zq3ri4OFrZsWXBMi8WVMrhf/ZLvO6up
+         vB5Q==
+X-Forwarded-Encrypted: i=1; AKwUvBwfbYyH/iFcTHqUHYhEEs6Rdid64DYayyS7uD+iJGxtfgVP8ndF0mdMnWvHCjmwOFtF0FTHiV/NIOpYYXuv6w==@vger.kernel.org
+X-Gm-Message-State: AFuF++kVJdQtWjY+VDwBggLlljot93OOHKi2YckOKL4lv3aGKGNS9voA
+	v2lT4Zoz9cH+KDJlFAjcRkfv6n0Gr5y1kroW2JwksW04siiMgNR2l88jlXrd
+X-Gm-Gg: AYBFou0Askgk4rEEF3vDBCHlCZvXYckm+cUOsP69yzQjXteTXk4oFJA6XEPIvhyQxoe
+	Nz+0vP0SZqcPjKVRyHHgBRM/NT4RpM4qeVZOK2oeCWQZXAmYVecw3fV4AbkiN+IJcgWEsaI21Gj
+	1q3EA+kAjIgSl+kEnDbGgZWJvlWXvPQ8m9adRFkinR7CVwgzNfwVHeWqlumLLs0oIsr4OwCW3ED
+	kC6BFjbq5XE51IY0PIKdTg8+sJKZDnNUs4XELg6tzlPR0tByiCesAuOh1D1CQ+YAoYUiPzfHBH+
+	aymb2tDHgmGvGCOGQocsLO6QRSuZXBaLxP3xl1T5sm+4r6LedHiCLu5PFxvjpiNJ+rp3oyoaG9A
+	A9cmCmGWqQKbM6588EZWA7jNIQN+1J6MoP34yWuJZJjCdXJXHf2l/K9RHs+YlF0CIgK0pufOjFg
+	PdCbvFCIWxvsCHo7wiYESvIIEeN6fiABopt7S60x3dQTt63VZnHcWq9S3vs1wJRvjb5IrRFScSW
+	v44cXOYqHeMsC6fDh8e/vq8LmSsZNfZfWBADYLSDzHnmeE2bD3pbprmMhF+rMzDjlUXGNoujqhx
+	cswMz35lproYYTY=
+X-Received: by 2002:a05:600c:6992:b0:49a:a101:4157 with SMTP id 5b1f17b1804b1-49ce58034admr264450575e9.7.1788449793861;
         Thu, 03 Sep 2026 08:36:33 -0700 (PDT)
 Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce831af89sm75568425e9.1.2026.09.03.08.36.31
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce831af89sm75568425e9.1.2026.09.03.08.36.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2026 08:36:31 -0700 (PDT)
+        Thu, 03 Sep 2026 08:36:33 -0700 (PDT)
 Sender: N B <gen.benner@gmail.com>
 From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
 To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/5] wifi: ath9k: cut USB round trips on channel changes
-Date: Thu,  3 Sep 2026 18:36:12 +0300
-Message-ID: <20260903153617.990995-1-nerijus.bendziunas@gmail.com>
+Subject: [PATCH v2 1/5] wifi: ath9k: name the register multi-read limit
+Date: Thu,  3 Sep 2026 18:36:13 +0300
+Message-ID: <20260903153617.990995-2-nerijus.bendziunas@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260903153617.990995-1-nerijus.bendziunas@gmail.com>
+References: <20260903153617.990995-1-nerijus.bendziunas@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -77,93 +81,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Every register access on the ath9k_htc devices is a synchronous WMI round
-trip, so a channel change that is nearly free on PCI costs tens of
-milliseconds over USB. These patches take round trips out of that
-path without changing what the hardware is asked to do.
+ath9k_multi_regread() converts the addresses and the results through
+fixed eight-entry arrays without checking the count it was given, so
+every REG_READ_MULTI() caller has to stay at or below eight to be safe
+over USB. Nothing says so. The only caller that exists today,
+ar9271_hw_pa_cal(), happens to ask for exactly eight.
 
-Patch 1 writes down the eight-register limit on REG_READ_MULTI() that
-ath9k_multi_regread() has always had and never stated. Patch 2 makes a
-multi-read that times out over USB return all ones, the way a single
-read already does, instead of the stack contents it copies out today.
-Patch 3 replaces the ten-queue ath9k_hw_numtxpending() poll in
-ath9k_hw_channel_change() with two multi-reads, and needs patch 2 so
-that a timed-out read still counts as frames pending. Patch 4 wraps the
-read-modify-write runs in ar5008_hw_set_delta_slope() and
-ath9k_hw_start_nfcal() in the RMW buffer. Patch 5 drops the departing
-channel's noise-floor readout on a fast channel change over USB.
+Give the limit a name next to REG_READ_MULTI(), size the arrays with it,
+and warn rather than write past them.
 
-Patches 3 and 4 sit in code that PCI runs too, but there the multi-read
-is a loop of ordinary reads and the RMW buffer callbacks are not
-installed, so the register traffic is unchanged. Patch 5 is gated on
-ATH_USB.
+Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 7 +++++--
+ drivers/net/wireless/ath/ath9k/hw.h           | 7 +++++++
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-Measured on an AR9271 (0cf3:9271), counting WMI commands with a debug
-counter added locally around the driver's channel change:
-
-  full reset, unpatched            182 commands   ~92 ms
-  channel change with 1-5           44 commands   ~31 ms
-
-The queue poll alone was around twenty reads per change, and the two
-read-modify-write runs another ten commands.
-
-The second row also needs two changes that are not in this series:
-taking the fast channel-change path on same-band retunes, which mainline
-does only for off-channel scan hops, and a mac80211 fix so a monitor
-retune performs one driver channel change instead of two. Both are
-separate, and I am not asking for them here. What this series
-contributes on its own is the round-trip reduction that those then
-benefit from; mainline as it stands sees it on scan hops.
-
-One note on how this was checked, because it changed the series. Two
-further patches that also cut round trips, skipping the PCU
-re-initialisation and the WMI_SET_MODE on a fast change, measured about
-twice as fast again on a channel-switch latency benchmark. They also left
-the receiver dead: ath9k_host_rx_init() is what clears AR_DIAG_RX_DIS and
-AR_DIAG_RX_ABORT, and without it the radio retunes correctly and hears
-nothing. The latency benchmark could not see that, since it only timed
-the tuning. What caught it was two AR9271s coupled over coax, one
-injecting raw frames and the other capturing. Those two patches are
-therefore not here. With patches 1-5 in place, the fast path delivered
-90-97% of injected frames on the standard 2.4 GHz channels across
-repeated runs, against 95-97% for a full reset on the same build. The
-spread is the rig, not the patches: the same binary can read differently
-minutes apart, and the fast path shows that drift first because it does
-not recalibrate, which is the reason mainline limits it to scan hops.
-Those numbers are from cards on root ports. With the receiving card two
-USB hub tiers deep, fast-path reception was unreliable with and without
-these patches while full resets were unaffected, so that is a property
-of the fast path on this hardware rather than of the series.
-
-Changes in v2:
-- New patch 2. While tracing a different WMI timeout I found that
-  ath9k_multi_regread() copies an uninitialised buffer out when the
-  command fails. In v1 that turned the fail-safe queue check (every
-  single read returns -1 on timeout, which reads as pending) into a
-  coin toss, and it also affects the existing ANI, EEPROM and register
-  array callers, so it is fixed on its own with a Fixes tag.
-- Patch 3 gained a comment sentence saying why a failed read is safe.
-- Patches 1, 4 and 5 are unchanged.
-
-Nerijus Bendžiūnas (5):
-  wifi: ath9k: name the register multi-read limit
-  wifi: ath9k_htc: report a failed multi-read as all ones
-  wifi: ath9k: check all tx queues with one multi-read
-  wifi: ath9k: batch the read-modify-writes of a channel change
-  wifi: ath9k: skip the departing channel's noise floor on USB fast
-    changes
-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |  2 +
- drivers/net/wireless/ath/ath9k/calib.c        |  2 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 10 ++++-
- drivers/net/wireless/ath/ath9k/hw.c           | 21 ++++++----
- drivers/net/wireless/ath/ath9k/hw.h           |  7 ++++
- drivers/net/wireless/ath/ath9k/mac.c          | 38 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mac.h          |  1 +
- 7 files changed, 71 insertions(+), 10 deletions(-)
-
-
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 6de78ae85726..7fdec25c76ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -258,10 +258,13 @@ static void ath9k_multi_regread(void *hw_priv, u32 *addr,
+ 	struct ath_hw *ah = hw_priv;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = common->priv;
+-	__be32 tmpaddr[8];
+-	__be32 tmpval[8];
++	__be32 tmpaddr[ATH9K_MULTI_READ_MAX];
++	__be32 tmpval[ATH9K_MULTI_READ_MAX];
+ 	int i, ret;
+ 
++	if (WARN_ON_ONCE(count > ATH9K_MULTI_READ_MAX))
++		return;
++
+ 	for (i = 0; i < count; i++) {
+ 		tmpaddr[i] = cpu_to_be32(addr[i]);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b942b8303d8f..946c4d307b91 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -83,6 +83,13 @@
+ #define REG_READ(_ah, _reg) \
+ 	(_ah)->reg_ops.read((_ah), (_reg))
+ 
++/*
++ * Registers a single REG_READ_MULTI() may ask for. The USB transport carries
++ * the addresses and the results in one WMI command each, so its buffers put a
++ * hard cap on the count; callers must split larger reads themselves.
++ */
++#define ATH9K_MULTI_READ_MAX	8
++
+ #define REG_READ_MULTI(_ah, _addr, _val, _cnt)		\
+ 	(_ah)->reg_ops.multi_read((_ah), (_addr), (_val), (_cnt))
+ 
 -- 
 2.55.0
 
