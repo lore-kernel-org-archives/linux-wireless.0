@@ -1,74 +1,74 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A1B51FCC7
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 18:53:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6803C51FCD3
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 18:53:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788547998; cv=none; b=ZMCqLe/d0BBUnedH2kWj6yJ1ZmSAKhd5XoikBV0haFt4NmtTbA7TSeymzYwz9pyACTyegytstgnOIGzpU0tNqToLWaWy4lwh86yo4YwGym8e6ZXhbPVJm6XCm3kVrD+7JcXCV7J7jg5g+eQ2h/B494f+Ii7edadF79rHIt5eDE0=
+	t=1788547998; cv=none; b=Hhg/ylLxiRm0z3RAJJj6sP3wULHIT9vNfQLqwWn/udwGCqnOqqn88PxKZ1MZWhTaZDigh1/uRFNk/pejHic9cboYDMgGgEJTGW7Q1ajei7oxSyPLsj9TyWG94AoC1hhvy/AtkrtVR6xxa/0CacM+qLUE+jYbrkT9gDkceLFYtoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788547998; c=relaxed/simple;
-	bh=q0jBlW76LvL4fU60HQWKpNaPKvxyoQqAS/s/hZ+Rji0=;
+	bh=EZdaHNjU+TIXVe4GCjTzp2mJ0V1U6rUpYJ8v6fB/t8E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RMKYZUbUzeOk11RUyHx3JIGhqHaJf4s6Knf13fgBVIh0Cj6NRkqJdcINAr9Q1aVyo4mqupqopEtsHwgrqV433A91VZicuqwVgY/hew8w7HjwvqjSCtOH7qLyb8lCJd+hOfNCENpc/10NoPFdEuow7P2FWIdtKIm+vvhM4EJLshM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TbxFVEUG; arc=none smtp.client-ip=209.85.128.50
+	 MIME-Version:Content-Type; b=XHhzx17ow1jVrgPbeH86yomZQAEau/diDE6wUf4Y+IxukCdriGD5Fghy+KDk1/GbIvfil0C1SLaKsc5OV1RR4diNST+UEFJUTsm7CLcPYIdDEav0tmTHvqq7UuVuSevkE73rXzU2EvT5kDz8lzFa+DTbYd5tRsSw+KTNybR10G8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aOdXFWcu; arc=none smtp.client-ip=209.85.128.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TbxFVEUG"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-49cf4f81d86so10552315e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 11:53:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aOdXFWcu"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-498028b3d5eso12710865e9.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 11:53:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788547993; x=1789152793; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788547994; x=1789152794; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:sender:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=d85C0WGMaBUKYmEMA486RpdKAWHT2Sz0LL4lVc+yQdE=;
-        b=TbxFVEUGpEXmEx/mHYEwVc+DGkPBK/u9epodKRApuXuRSFS46JEmqSTMCbFB0lFHRa
-         7BNLkruNxYdkRMTmFY23ZH1q45In9g4mcIgKGgP4Nq2iM6kUjGX+XiuwplnaVqsJSiU6
-         rejbo4OqSmzCS4rTEmB9xK1bw8MLuKK3goIzJ+kr7RsqcPOLqJ38CPiSv/0YgNT3/MGQ
-         rjQ2WsTga2cxvmE7cDXwdnwiGsN/F5FUiUU/KADWLwjQRjQpmnflfW4Iut8skyrGfAU+
-         puIKGTW1XC7v/VKefWzFHWbXCwbqZYzi7bB4fUuoNp/mzklSRSFM2AX9r/ffEBGSQok+
-         Sdxw==
+        bh=K8YmC3OILkqrRt2yACBkxysDZXA8U3Xzaub87X9aEHc=;
+        b=aOdXFWcu1MQKzgnUQmcUQ/Ft1eQzast+KzSNf3hA8X0VGH/tVODP7J0t2bK1OGhYo1
+         a22pNeqhE3/NNDSTLwcnMYMp+Va9TNE9Yi4YUgTkmIrnEeT3FN4vCsTgvvCnnO8tgh1l
+         nFsV3VlY2+b0iQSo7BFn2Mc6z4bX2txV0z7I0nsr9+Lhppmbe84zseZ0JZePHOvvVdCm
+         XhEA34U2gIKfOKRcujSGwoinSCW6y8QjnKJbnM4W13AKEmSQWVz+Cau0DVCvTwcaNy1l
+         5S9NnRHhH4CXXMid1hZHq9QYkJTuu3V/OTQK7vNvCTcHzcMacaHDr9yVu6z0ZIVJqip1
+         8jJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788547993; x=1789152793;
+        d=1e100.net; s=20251104; t=1788547994; x=1789152794;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=d85C0WGMaBUKYmEMA486RpdKAWHT2Sz0LL4lVc+yQdE=;
-        b=EpZENiGGBTqW4CmlpU+hpRLnt5CYmvQQK7l8XoOI7aY7xMGb0H9veQpu37c2nli0Ho
-         4fM4KX7dlxUeNmztV4ZhyJKL9AIzTxyK4D+s5rQRmDP5hlGri7X2DdYlfhqoLTefV0v0
-         dF+gOIOEZGX2FwSGjH/Gg4CSWkB/EQkMpidW+EdHpaGjdLUH2o5hydk1QHf3Vcg1vMzd
-         HtEL1P9UDQHxpcu+HP10jjpaROT0wgOUHp0Ag1Sr1pZ6U2W+c/x52fEhmNqOd3VAvo2c
-         yXSQ2f/mE9hcv1+zyIIIvOGstxG1R0ADzYn0snsP2pphdq2WQO2rWr/x5HuBvFY+9AQv
-         U6gA==
-X-Forwarded-Encrypted: i=1; AKwUvBxTk0WKPfacwvA8+d9kL6U+2tsplft61WiNTLFNC++DuotAC3dAHAt2BUKBSP+amHRccVmc0gE85SAhEjzTgA==@vger.kernel.org
-X-Gm-Message-State: AFuF++kZYqPDCMD9VQckC9m9eTvAUKd8SAX4MnNSBCXJMyfi9mSoeA1i
-	HILxflRsK4WAt4mQ9vmj5AShyl8gymjeRRXk/fPaqE5bDO0NDELDeZU=
-X-Gm-Gg: AYBFou3NCDJ7W0sEFGUMpSe8beB3z/xr1hgtYrj6pILOho3KA077ISqmgcCZ3sKZkza
-	U/eoLrM0Fi1IZbaXeS+J1s7EY/wtFBxZy6S379uNMBI1Iw6nibf8nnP7jttMN3lpAeS69Pv/762
-	x4QIwnZ+LhkM5lJ3nVXFnPbLSRBkr496Y0AyvfP5plG5AjsIWImFmecG8v9qZ2MdVtULTur+7Ms
-	7n0d1ZK3JAZfhKXJ6NBWlWxEIU2ehWYJ0ICqeGBD4/yGEhrQLHqM4P7I+BLMHz55wCtDb5Q0gO2
-	hfzooM6MIhTmn2HC/GbDHhN1MyJs+8knSARqmuySJBvP4gLRtoG6ELuzfwRBKGqGnHDzUX4r9fn
-	XlTxNNHSKn0ZpeeN6URTYk1hCF7omlIUbtlQ6wEnz7HiyO+Z2XbP0KgaBozY6n5EWuA9Zcv7oKc
-	vo1T837Cq/16NnrA9QBdWd1WuDAqBQ1k7GXeOkUajwpr2IoM9Z2MxXz9QZqXVG5Bkv6/QCWaOHi
-	BxU5l4t4IxNY93uiJPh35VHmOjyGb7vWsKepQKhFQ0Lumaf1fpaKmE5L8qDNmQ+BZjKKS3mZ8vU
-	HBR0PuBEShtj3Viz
-X-Received: by 2002:a05:600c:3495:b0:499:726b:7375 with SMTP id 5b1f17b1804b1-49cf8279f41mr82218115e9.14.1788547993229;
-        Fri, 04 Sep 2026 11:53:13 -0700 (PDT)
+        bh=K8YmC3OILkqrRt2yACBkxysDZXA8U3Xzaub87X9aEHc=;
+        b=UKbrhuvQECRGlKfq/5JRRbI++/8pBTxzBGI+WnDuzRSe/9j3GmCeMvMb0v22HEXhvB
+         t2b4mfWraAKidpTqGL/SkZn+Vcf2pactxewjrP/gzjAWcsPCTlSyQbisgosMn0kg0j+4
+         X5AvnvQt3ISRGyqYHw9hF7SwetL8CqcRA/VDSd2PXtVQC/bMjvxh/KBtgTnAzvDRLv9B
+         MS5phhVD51L1kXzQn7fyOe5LIyqphkGHtfsM7bCBl5T5l8f5Boy6Whu6wx/qHuASmtK1
+         qvzSn5DNMMeiWHNS4LzdDiI17vOPTWGVsfHowt/A3mmDw4E9SGz7Zz/q6M5z0Z3fMkCK
+         CjZw==
+X-Forwarded-Encrypted: i=1; AKwUvBwULSFrTL6RtRO7d+lsXulPZUofRzjp9vfAgSZXwcbGlp7FXiA2LidjQeqYBUOXOv6iZBYoFf4McY6hhpzkYw==@vger.kernel.org
+X-Gm-Message-State: AFuF++lcwZBWbywqufkD5NUz2pPtcrX4/sbP8OqAFkkNR5S0uk8Npuv9
+	eF8OgpZC2Xd7YafiARZf16JhdjMljGarwYw+cNTOnUMbcbvlqQ4fBNBvLPKc
+X-Gm-Gg: AYBFou1Qx3hcoWmZ/p3TyDn+Wf5c/rQVn/a74n+jwrIIQW67HdQOpp21p7K5L+YxxTm
+	NBZ/avSYwnOr65m6FPjN2vo9Vpo9gwNk4tHCORF5a+zY8UF1apujTBGCZkWpdd9Y3gXnV2HMhLf
+	ZeDxaiL3wXmD071gjuAZVWDM21L3JE6V+y8Yg1BH2l4Zzi6lJ4riD2NkUOA4+XBawJWew3FDdia
+	XPCAUKFs1bA4yiDJIjQ0gL3RNKYNkLjn41eDLlxKhOldHQxV088Bf8nG6AeiJE6hEZvxFTAszVU
+	yugi1vdzM9rVzBSz4QF8938jkbjVXMLAaznbAgaGNxo1yBuGAsByjdpqD11rSzg0s2p8DL0JiD7
+	KTIGb9K9DHL6qjAEsdmn+UzRdFf+ee6RzMRt6rGsR9sfNuoI+QZREUQ33T59qgT+O14lOTBPxAc
+	zZ6L++/GsMnG8Ly7YKSW8v+XXGg2menwad/d6Qz5bfZMPqyN08AxyDsyER2TWb6wgtQ9qFk5jrf
+	z/sWwPI729dlrysixvpxCUGX5Qv7IkGH8ijQzkr7hmjzqKhc9qan9NO1u6ff4lSP+I/Z3V8JFBE
+	Ux68
+X-Received: by 2002:a05:600c:4e4c:b0:499:621a:2ec2 with SMTP id 5b1f17b1804b1-49cf8206e4dmr84668845e9.3.1788547994177;
+        Fri, 04 Sep 2026 11:53:14 -0700 (PDT)
 Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cfbe5b252sm58607715e9.3.2026.09.04.11.53.12
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cfbe5b252sm58607715e9.3.2026.09.04.11.53.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 11:53:12 -0700 (PDT)
+        Fri, 04 Sep 2026 11:53:13 -0700 (PDT)
 Sender: N B <gen.benner@gmail.com>
 From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
 To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH v3 3/5] wifi: ath9k: check all tx queues with one multi-read
-Date: Fri,  4 Sep 2026 21:52:51 +0300
-Message-ID: <20260904185253.809209-4-nerijus.bendziunas@gmail.com>
+Subject: [PATCH v3 4/5] wifi: ath9k: batch the read-modify-writes of a channel change
+Date: Fri,  4 Sep 2026 21:52:52 +0300
+Message-ID: <20260904185253.809209-5-nerijus.bendziunas@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904185253.809209-1-nerijus.bendziunas@gmail.com>
 References: <20260904185253.809209-1-nerijus.bendziunas@gmail.com>
@@ -81,125 +81,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Before a channel change, ath9k_hw_channel_change() calls
-ath9k_hw_numtxpending() for each of the 10 queues. Each call reads
-AR_QSTS and then AR_Q_TXE, so confirming that the radio has drained
-takes up to 20 register reads. On the USB devices each read is a
-synchronous WMI round trip, paid on every channel change before tuning
-starts.
+ar5008_hw_set_delta_slope() and ath9k_hw_start_nfcal() each issue a run
+of read-modify-writes with no register read in between. Both run on
+every channel change, and on the USB devices each REG_RMW is a separate
+WMI command.
 
-Add ath9k_hw_first_txpending(), which collects the 10 queue status
-registers and AR_Q_TXE with REG_READ_MULTI() and applies the same
-pending test. Use it in ath9k_hw_channel_change(). On PCI the
-multi-read is a loop of single reads, so the register traffic there is
-unchanged.
-
-A multi-read that fails over USB returns all ones, which counts as
-pending, so a lost read still fails the fast channel change and the
-caller falls back to a full reset.
+Wrap both runs in ENABLE_REG_RMW_BUFFER() and REG_RMW_BUFFER_FLUSH() so
+the USB transport sends each run as one command. PCI does not install
+the buffer callbacks, so the macros do nothing there and the writes are
+issued as before. The same holds for USB devices with firmware older
+than 1.4, which have no WMI_REG_RMW_CMDID. ar5008_hw_set_delta_slope()
+is the AR5008 and AR9002 callback; AR9003 has its own and is not
+touched.
 
 Assisted-by: Claude:claude-fable-5-1
 Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  | 13 +++++----
- drivers/net/wireless/ath/ath9k/mac.c | 40 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mac.h |  1 +
- 3 files changed, 47 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 2 ++
+ drivers/net/wireless/ath/ath9k/calib.c      | 2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e08ab73fcacb..d204cdf3fa8f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1547,7 +1547,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	bool band_switch = false, mode_diff = false;
- 	u8 ini_reloaded = 0;
--	u32 qnum;
-+	int qnum;
- 	int r;
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 7a45f5f62826..af05dcf95a61 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -868,6 +868,7 @@ static void ar5008_hw_set_delta_slope(struct ath_hw *ah,
+ 	ath9k_hw_get_delta_slope_vals(ah, coef_scaled, &ds_coef_man,
+ 				      &ds_coef_exp);
  
- 	if (pCap->hw_caps & ATH9K_HW_CAP_FCC_BAND_SWITCH) {
-@@ -1556,12 +1556,11 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 		mode_diff = !!(flags_diff & ~CHANNEL_HT);
- 	}
- 
--	for (qnum = 0; qnum < AR_NUM_QCU; qnum++) {
--		if (ath9k_hw_numtxpending(ah, qnum)) {
--			ath_dbg(common, QUEUE,
--				"Transmit frames pending on queue %d\n", qnum);
--			return false;
--		}
-+	qnum = ath9k_hw_first_txpending(ah);
-+	if (qnum >= 0) {
-+		ath_dbg(common, QUEUE,
-+			"Transmit frames pending on queue %d\n", qnum);
-+		return false;
- 	}
- 
- 	if (!ath9k_hw_rfbus_req(ah)) {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index b070403e083f..27926b67d628 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -77,6 +77,46 @@ u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q)
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_TIMING3,
+ 		      AR_PHY_TIMING3_DSC_MAN, ds_coef_man);
+ 	REG_RMW_FIELD(ah, AR_PHY_TIMING3,
+@@ -882,6 +883,7 @@ static void ar5008_hw_set_delta_slope(struct ath_hw *ah,
+ 		      AR_PHY_HALFGI_DSC_MAN, ds_coef_man);
+ 	REG_RMW_FIELD(ah, AR_PHY_HALFGI,
+ 		      AR_PHY_HALFGI_DSC_EXP, ds_coef_exp);
++	REG_RMW_BUFFER_FLUSH(ah);
  }
- EXPORT_SYMBOL(ath9k_hw_numtxpending);
  
-+/**
-+ * ath9k_hw_first_txpending - find a tx queue that still has frames pending
-+ * @ah: hardware
-+ *
-+ * Asking ath9k_hw_numtxpending() about each queue in turn costs up to two
-+ * register reads per queue, and on the USB devices every one of those is a
-+ * synchronous WMI round trip. Collect the queue status registers and AR_Q_TXE
-+ * with the multi-read op instead, in chunks of ATH9K_MULTI_READ_MAX. A
-+ * multi-read that fails over USB reads as all ones, which counts as pending,
-+ * so a WMI timeout still refuses the fast channel change.
-+ *
-+ * Return: the first queue with frames pending, or -1 if all are drained.
-+ */
-+int ath9k_hw_first_txpending(struct ath_hw *ah)
-+{
-+	u32 addr[AR_NUM_QCU + 1];
-+	u32 val[AR_NUM_QCU + 1];
-+	u32 q, txe, done = 0;
-+
-+	for (q = 0; q < AR_NUM_QCU; q++)
-+		addr[q] = AR_QSTS(q);
-+	addr[AR_NUM_QCU] = AR_Q_TXE;
-+
-+	while (done < ARRAY_SIZE(addr)) {
-+		u32 count = min_t(u32, ARRAY_SIZE(addr) - done,
-+				  ATH9K_MULTI_READ_MAX);
-+
-+		REG_READ_MULTI(ah, addr + done, val + done, count);
-+		done += count;
-+	}
-+
-+	txe = val[AR_NUM_QCU];
-+	for (q = 0; q < AR_NUM_QCU; q++) {
-+		if ((val[q] & AR_Q_STS_PEND_FR_CNT) || (txe & BIT(q)))
-+			return q;
-+	}
-+
-+	return -1;
-+}
-+
- /**
-  * ath9k_hw_updatetxtriglevel - adjusts the frame trigger level
-  *
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 16203e7ecf29..5b94ce087be2 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -721,6 +721,7 @@ u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q);
- void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp);
- void ath9k_hw_txstart(struct ath_hw *ah, u32 q);
- u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
-+int ath9k_hw_first_txpending(struct ath_hw *ah);
- bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
- bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q);
- void ath9k_hw_abort_tx_dma(struct ath_hw *ah);
+ static bool ar5008_hw_rfbus_req(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index b4ab85bd7895..73c63ab32d53 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -224,6 +224,7 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update)
+ 	if (ah->caldata)
+ 		set_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL(ah),
+ 		    AR_PHY_AGC_CONTROL_ENABLE_NF);
+ 
+@@ -235,6 +236,7 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update)
+ 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+ 
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL(ah), AR_PHY_AGC_CONTROL_NF);
++	REG_RMW_BUFFER_FLUSH(ah);
+ }
+ 
+ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
 -- 
 2.55.0
 
