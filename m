@@ -1,127 +1,119 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-vk1-f181.google.com (mail-vk1-f181.google.com [209.85.221.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC246314B73
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 00:35:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.174
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788482132; cv=pass; b=KgK6krAEakCIorwQKazoFblaavrPbkcYhGuxUwDEy/5gyR3xHPjogo1Kigu6iZFt4s4gXShSmV5wmeXHs6sNvUo1JwQkiU4AJ1zoSC4/8PnfDTRX4pf0kyX3VV2cgLYw9iXJ3fvqHbRewlUFxZmjGyzBtPwrgMFNGmsloTS6DdQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788482132; c=relaxed/simple;
-	bh=6mc+ysZ4PjKe5tpOOyTXrXxi9SHfqCj+f7PO2DH/4mk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jsBjEuzdvrLqvk5D2faPI3hPoNRuBOK+2BDm1ZbZjDXBwAcSSM/BpXu7k6syn6v5smwxoA5r34AFnmsz+H41hFw+n+dVXvLmWUD8gu835Y44yweQxlI2GSr1KJ5DAe1EKtLNp8RdUS/M8/i5MxHKHPv36fcFDCTxBt/d2nNpYOg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UlB8TNX8; arc=pass smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11E7DF59
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 01:07:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788484035; cv=none; b=BI7LdJGuPQzKTtHNb+xJTAP7E4rckULJfP95nqDvz1Qdxx5gZQ0KZIsr79XTFL+/hfSFSFtxhmHp1tTV/sLqyfnMAYEqES6leTKiXGu/W6HzZflpM6kw8MPQMbBSy70StMXCIsKSXmZcJI5js3mGkusgqUhOXrcURcSebrT9EBY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788484035; c=relaxed/simple;
+	bh=V+whmUX8XzuC2LAuqdzy68aZedQol/qYxrciaKqgL4Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EvPuYaZQsq2LDUQViWTqjcf5AcfmJVFSwK7UD0s6f3e7eVAUd+zX1Bj8u6i7ByD9QuvMzUxLzAf2gGtfb63yT7xl6+evKhDD19S02++rM8RoqDaM+r5y2kZ7GEDA3efjhboIwg7CxEvyFx+cl/ItlX1SPn6It2wEyJIh/uCTuuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WV8H7nyT; arc=none smtp.client-ip=209.85.221.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UlB8TNX8"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-5300bdf61d9so6315541cf.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 17:35:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788482130; cv=none;
-        d=google.com; s=arc-20260327;
-        b=G5jD0zNizxj3J1O9HPi06V0Fi0LyOb58Kx8XCUJLuQzq+thP+BrQ++w2XqDp1tBNJh
-         JbNuGftZ1LplJdHStf8TrZ5MmbUmj1qDlOJh47+Fk7540T40rH2Y1WEDa+jcZBM9kYQ8
-         XnGFupWE3WLTNBfeQeNi5CJdPkgGKo5zJHInWkUbD04wCCDBlYQzF23Gr+f2iQTZQPbX
-         ukhDPaTGUC2m+0msGNozfd90Z08RAYKHqOsoAiJfnLSgnOrxUixUHMKeM1PsyVz7sR3V
-         mdW7GMXaYgn3/bc+ysRjoKl9jhLYoAuBQKIGC5GU9zSLvHobR7H9YANn6VeSfFMO66TR
-         gBDA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=frzNhQSteSDys2/ZOWWgAmq0ecP55hQGym3yBI7s6zs=;
-        fh=lS6wKgH47kqxQk7F9sRiTmUcBViLmTOxjd93azs962s=;
-        b=Q6HCYrwMaovZGw8FeD7koNvirKSZ52eq+dbeQacpvHQheo1tx/ea83I5YkdzgQ2VOy
-         ZT7Uw7zxNa2cwbtOCnUkrwQ48tyb2Z0d34J/M0UnAfwJENxdfIlIB7qFL8afUIFNwwsb
-         WLw5NCf5oGHUCC2sxrwDF/0O1VL3yEhFrcz1xEFEdTxe9dMzPOwnbUyUmYhgLaE1cPeY
-         h3v32R/k0TN4PFcux3robNFab0ye+CgroFdQaeyyE5JFjQ4o6rZ48wvfstgaZ+HlrtoE
-         5pX7e0uzspQL2LKxHNPDdRRYwjMCZ/m9oinw1adFbXjSGLtWDpdxQ43N97CGwM5QAwRZ
-         zSiA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WV8H7nyT"
+Received: by mail-vk1-f181.google.com with SMTP id 71dfb90a1353d-5c79c9f7b54so259897e0c.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2026 18:07:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788482130; x=1789086930; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=frzNhQSteSDys2/ZOWWgAmq0ecP55hQGym3yBI7s6zs=;
-        b=UlB8TNX8useah/0RCFqkgFZIV1Qir7qAm7MYNuyLColl4lHsLkJsIq9/zfuHS6zJoh
-         sswmu+DyF4Bk+w+pxwK1yrGBXvUuj2ZgqamzxYJQWCuKqmp4eyasDG6cjPxB2a/JOfCQ
-         OnvDSfeVB+czFqmpCPDXpNJvT5DBC8Dbah5KEdI5ATTMSUAWnWYuPPhZLHK4VV916mbN
-         oefWwus63EHI9gIST2KdHqYo7nPyW5TI/AGNKe3n3pgXt9bHE9REVbiDKN4EpgeKnSi4
-         HYkn+HFsJWTLGWtkHZPoz2fErSC3eCQVJ0u7+by/odEOzTq+geM9yPf2pzd7o9qbqrPd
-         OcBg==
+        d=gmail.com; s=20251104; t=1788484032; x=1789088832; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ytj1LLsnzT4CFuo0gdf7aqlLxBYXmvU+PDPXyHag5ak=;
+        b=WV8H7nyT9lxnqZf6yfJCLb/28geuyivEa2rBlZOh7jwgLCyeVjzMunc0S7vqR5Ug4m
+         A+h0INQvnW6ObKxNDCkZ3ra+bKMLfZ+FqHrQGNTISmlKNjraq7Mzqc0bk/w0FxxKNbBL
+         AQiu/0iUxFK5C5kb9ZvduQBZy6tUxsgy6G5yaz8WexfQrd6Pw3HE+ekqTCGgZpp/Wv3U
+         Ow9dpuK4b0qwUYkahg6bemv7PYqIZvBug8gVlW+e2cC1scQmq/tTGvHahEUtnV2VsL3H
+         SAgLXyCRI0fXqIIv0OduTmKEeH19jii/Wwp7Ut3uFSyVV+doHdZ7XeYYd+Ise7k2b3ob
+         V/ZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788482130; x=1789086930;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=frzNhQSteSDys2/ZOWWgAmq0ecP55hQGym3yBI7s6zs=;
-        b=sF0yloa0zyibVKE/3rSOz7QGmaVTesNgnoSxP3eCJnMwIMGWQN9ek7SMjifqc4dCI4
-         Pwp219KKB9W1OcXtVyuCqe409Db53TGrdWLbynjL0QC1Iw/t43Fwnlk/RRqmgmLl3zqZ
-         xtDgVFXI/SEMeomHWf9OObENnCN4kTSRGxmJ9TpCH9XqoPaEo0tvzeO56jQ2ckdUgF16
-         ePzZGFxzMjOoZQXG6jMwY8auz2UpWAZypRfUXODXTiT7qtLnwGG79IFOL+hnHwI6+cXp
-         v0UdRwAhI98LM2VNpu3/aP4Kd9AZlUUfmBozuSXYiaW4fpcxfTKv1HcgZKzU5cpfPQxZ
-         Kg+g==
-X-Forwarded-Encrypted: i=1; AKwUvBzb8ffBeueOHYr3U4kf6K9cFS+QVVGXMMKjo8KuxeFb/u9lYEne8fsK35OQlMCVIy/vLgusGsqIg+Bd8QfNOg==@vger.kernel.org
-X-Gm-Message-State: AFuF++mPK2UbwmpR7nGXPxsy1msTJFmZBPzEvia2BTMoypjh6bsn0xIR
-	1A06EgRK/V9kzRhh9t/2c+ahW4+D6DmlRsvMAAzfNdFRMK5WnrBC1cEhfSI3JZUcXe1T2ySPJpP
-	7Glk5Bm0PodJcIKYZNe7+qHqb+D51ZpekfBpGfANT
-X-Gm-Gg: AYBFou1Jihn9gzyMGnuDQnRcb1qcdNBzZlSxlE3IBPgFB5RBznONeQOB5EgVEkr92Ud
-	IARSne8Ff4+jNo3PGWPB+KYLdCpWh3MsT/qb7qB7LuowwdiN7/2tTzsDxWDnvXFae7545l152yh
-	Pjfg1/eUwzNnrAQrAJ7Z8hX/UKEQRJ1Rqb+Na3eGOS1BCyt7i4cLvLcs0TYKq38Up4xkfy8wFev
-	ylPnCqBwrzolpnCwqA3aoDTtA4yDgdkNh7KzyM0QLfMW4jsdjTy8LiEWGSZCxp30BqmepIQczKs
-	U8cJUIWbD6vjDBn3t8PTk3ngYGOFXIjkPw1XrMbwBLlNuSAg+4hgVdfAKr/y1D1o+JoIOv4I9Ll
-	qZOhEMJ/ZA2dY9ea2tj5/jPMJFlswH6/JQ/55cKcQYHphYLRiKwrOFSWwXB4tOx+8N4Kx
-X-Received: by 2002:a05:622a:13d1:b0:519:89b6:78b4 with SMTP id
- d75a77b69052e-530549f8dacmr25714951cf.40.1788482128968; Thu, 03 Sep 2026
- 17:35:28 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788484032; x=1789088832;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ytj1LLsnzT4CFuo0gdf7aqlLxBYXmvU+PDPXyHag5ak=;
+        b=grzCTx7UvvDJiWKPeChZb/aMNjeZQBIi6gUXYAwFWpPkaP9yTeEeqiBWx7uXCSPzyA
+         HUuW8RfobRZz/4CY3t4BXZowJ3TN9FRGsypV6mZPlm/FFaBopuAwUgbiU2B8ZbbYHSJB
+         JJuT1p+mO/Mc/s7NdhUoxEudeF9eHsN+ZkIQHNm1/TYXWzB6mgt/HkWKZOQWoL/QeS1W
+         Rn+donls0rjwlB2Juy33aJirZ3Hj63/ncBy4TU30S+virEaWSaScFQfgd+1iLCUntDoi
+         3z87FtelUWmxPRcsHBTpK9nEbIDlp/9N+DIEh90F3VcfbEpsoVVkQ5zGox+iBUa16n/D
+         2ezQ==
+X-Gm-Message-State: AFuF++lkQ4SG99U0gbtW59ID7W7ylPgBVQlPD0Pmj6SI+Fzt6XhwKirr
+	G/wMZmGSgVbcvniqpGuV+P9KnIsyQuhiBs2oWsBj7e1LyGH2nmFyQTciBO4pmDai
+X-Gm-Gg: AYBFou1rYuB5Xe3JrFZmLPjDImcUbz+BcrFYtUT9pqoDEXkLmBnt6ACGApSg0PoygCr
+	cOr6Dak0jx2kHNQ0IxPB2nxhv15okiZ3DoczclyCyw1IYLS5PNBfAD6+orewfCaHu8qKoAapCcj
+	HLOP0K049RZZB009rM9STJ5ogHa/GXbyloqOF+L6INME37bV4inzU04CkaGSzj1ym5k8iibDAcW
+	D1epNgldUeBtQ3FovEyfvfOoBS82xL4wp44zAt/IPUvD6NQphTyWRu0Ob79N4Df4ukssrS+GB9y
+	68UUe6EjdatV2SsYl+Evr8VZT9p312RwJc9zi/y5e3n90GfElTTjJ6+2Mnk8kAS1ZAxN0Y1HB5r
+	Bcz3hKvdoD1rd3VpryuQkDZiTRcKpcmNxrmEfOLMB5WNtBFhYx0vbWU8FyoNUAViC0kgGQbpIG7
+	JXeCZ0St/I4z6Cw1Ink3HEMnAPsd8M85rkXZqIJoHUkKKF2elyko0YRboXDhgm6IOYGTNci5cbp
+	dX05AHvENKvoZ86L4VVqlmSiQ+C4aGWj4M=
+X-Received: by 2002:a05:6122:4698:b0:5bf:4522:fca7 with SMTP id 71dfb90a1353d-5c7ed3b2275mr884693e0c.4.1788484032511;
+        Thu, 03 Sep 2026 18:07:12 -0700 (PDT)
+Received: from localhost.localdomain ([190.177.170.24])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5c7ec1ef798sm1117875e0c.4.2026.09.03.18.07.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 18:07:11 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7603: initialize global station WCID
+Date: Thu,  3 Sep 2026 22:07:02 -0300
+Message-ID: <20260904010702.16306-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <QDISC-1L5H.v1.20260903184552@mojatatu.com>
-In-Reply-To: <QDISC-1L5H.v1.20260903184552@mojatatu.com>
-From: Eric Dumazet <edumazet@google.com>
-Date: Fri, 4 Sep 2026 02:35:17 +0200
-X-Gm-Features: AcwNN1WZ6JtfBewsjSnHeZkprjED3AmjHmsOyjvG7B-1OWmURvRIgA8rmFLdJJA
-Message-ID: <CANn89iKFVvFaNcZyGOxmyPbpc6ax49ZqwMWDeBAsH5dav-y-SA@mail.gmail.com>
-Subject: Re: [PATCH net 1/2] net/sched: codel: bound the dropping loop per
- dequeue call
-To: Jamal Hadi Salim <jhs@mojatatu.com>
-Cc: netdev@vger.kernel.org, stable@vger.kernel.org, 
-	Jiri Pirko <jiri@resnulli.us>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
-	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Victor Nogueira <victor@mojatatu.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	linux-wireless@vger.kernel.org, Vega <vega@nebusec.ai>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 3, 2026 at 10:56=E2=80=AFPM Jamal Hadi Salim <jhs@mojatatu.com>=
- wrote:
->
-> The CoDel control law schedules the next drop one interval/sqrt(count)
-> after the previous drop, using the configured interval
-> (codel_params.interval). For very small intervals the scheduled step
-> rounds down to zero, so the dropping loop in codel_dequeue() never
-> advances and drains the entire backlog under the qdisc lock in one
-> call - an unprivileged user can trigger a soft lockup this way.
->
+mt7603 uses a driver-private global station WCID for frames that have
+neither a station nor a vif, including frames injected through a monitor
+interface. Unlike the core global WCID initialized by
+mt76_register_device(), this WCID is published without ever being passed
+to mt76_wcid_init().
 
-...
+Since commit 0335c034e726 ("wifi: mt76: fix race condition related to
+checking tx queue fill status"), mt76_tx() queues every such frame on the
+WCID's tx_pending or tx_offchannel queue and links its tx_list. The first
+injected frame therefore reaches __skb_queue_tail() with an uninitialized
+sk_buff_head and dereferences a NULL prev pointer.
 
->  static bool codel_should_drop(const struct sk_buff *skb,
-> @@ -156,6 +161,7 @@ static struct sk_buff *codel_dequeue(void *ctx,
->         struct sk_buff *skb =3D dequeue_func(vars, ctx);
->         codel_time_t now;
->         bool drop;
-> +       unsigned int drops =3D 0;
+Initialize the WCID before publishing it.
 
-SGTM, note that this line breaks RCT.
+The fix was tested on an MT7603 PCIe device. Three wildcard probe requests
+were injected through a monitor interface. The hardware queue head and tail
+advanced from 0 to 3 and a second radio captured the third request over the
+air. No oops or reset occurred. After restoring AP mode, a 150 MB transfer
+also completed without a reset.
 
-Reviewed-by: Eric Dumazet <edumazet@google.com>
+Fixes: 0335c034e726 ("wifi: mt76: fix race condition related to checking tx queue fill status")
+Cc: stable@vger.kernel.org
+Signed-off-by: Cristian Papa <pcristian292@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7603/init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index 10f2ec70c792..218ec406d2a8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -230,6 +230,7 @@ mt7603_mac_init(struct mt7603_dev *dev)
+ 
+ 	eth_broadcast_addr(bc_addr);
+ 	mt7603_wtbl_init(dev, MT7603_WTBL_RESERVED, -1, bc_addr);
++	mt76_wcid_init(&dev->global_sta.wcid, 0);
+ 	dev->global_sta.wcid.idx = MT7603_WTBL_RESERVED;
+ 	rcu_assign_pointer(dev->mt76.wcid[MT7603_WTBL_RESERVED],
+ 			   &dev->global_sta.wcid);
+-- 
+2.51.0
