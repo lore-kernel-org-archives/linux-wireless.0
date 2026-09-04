@@ -1,42 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95404EE858
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:02:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7576D4EE86A
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788534150; cv=none; b=XcU5qIsmAVx/BUpnT9g9zWmSnAyt6hE/FGt3qoU2woVlt3cx4PW9zai6snvSvgcePCzPR5FH/JlJAWuJ4sFgg0HDJR4/v6i6HP1f7nUdEV9NtGU0KQ2nQ2RrHq8W+hAJnXpYXCncjInvEbsrz+OuMCmnwkjlXT4joUXUuQSd5a4=
+	t=1788534152; cv=none; b=VRiO3oIVUz0QCeTKW97kV2iQhC4L8wAMAU7zzbUqaCbbdGFNXT0ymeni0wyHe5py08uVgaPCSqGrAGfDoTUQ/PQ4s5/AqpDdlD46IbSw4uF/Y0AhOStMffeQiQP/gsySBbxKPzSFhyiHEbzUadG67pAuTAX5T/JJ7rhdbwUuy6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788534150; c=relaxed/simple;
-	bh=S7aksQo8Xz4++Y6kqmEGyuD/yi706P1ddGjVxdZKQDc=;
+	s=arc-20240116; t=1788534152; c=relaxed/simple;
+	bh=Up0U3WQJvGeB4pSC8wVCVxzjDzUqyrY4qfXpHOkddPI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ckN9fuc/vWiM1AwIqx+Uax/sF0fUWfWICtJ7fksqW4nWqB1RxwgpWdT+yjKqF1wSLg7cFjDlPdk0XAGH/1ctMMi0802Egb4866BFi28D+cO8ixfSqLDO+MGv+fAgKITnCSNy7h+pWLMmB+AHv0R/bRnvQJCiAo5Z+1NTa/baDwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=W9sAlN1u; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=IhxgJwZbDpj4Yqw0N/yX4nqMyLN3Iw/IHy0F5AdWPc/LVnctwBEgCmMyja79intkM5wwyq++aW0kfQn5bdihrLG1kZwjfYjRISpFQ6yGdfBSrSpUiT//EPntmdG7d72xbiHjSzKXjiDk7cSzIYsQMR8JtJcTBIf4CPtH9XPGaGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=noMBJzuA; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="W9sAlN1u"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="noMBJzuA"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=EOFNdXE5zb3zy+OAQOeuMcPBM1FHnCsuG4PDw5ob700=;
-	t=1788534148; x=1789743748; b=W9sAlN1uzkVe1TrUANedphHDKuqDjTdC32hC4TTGpy3LS7X
-	kK/OaHKriVQYzzfjaNJHVayseRQ4xPcKvrrDxOZBqWAuy5YwtmXQSAYu3sMdjyd4VdQYUUK/bLYzK
-	E5JPEHCSSTKUYgp0xB+o0PMT30ZokY4BA1iOibYcdpWSHlab2tqlV5dlzelZuU3m1Kk/D2QMt03BM
-	XKBpl89EYjJbezggy1d1uXDrcHJA8A0jam7IXYSkg3KlZcqujBVonIaH8OXfgTi9AH8geE7NW9Jkv
-	svW1Zkx+dYGzmBaW5YTwqqDLtDBGnC+RLsB4fKncMr2OpT4vQd6Hf9r50/tWQsKg==;
+	Resent-Cc:Resent-Message-ID; bh=594B2mk4pXGuBwOBHTEzwXPrBL9I97b+iXC+SspINt8=;
+	t=1788534150; x=1789743750; b=noMBJzuA7fTmClXAdD8zlSzFrNIki3hgqQeqJO3kyMhGmmZ
+	regSZj5y1vhiGD9VCkKxVHUgkUNmCbWA4NLnPfBDpaZqu6QZmBq9JcC1Yycag1QNuLuFLHdW/6odG
+	u3kpHt196D4sEEiKQw5xdh7BPgJOW546zeX8iNQyAB5McUVKwjzTqXBuQrZSC+RlzGAS8i7FZor2X
+	/ObakutypNmHAYoi6xmDpteFEh5lnn64NnCi1EYbjWRhRlx/4mhLUqduC/nYW7n35mmOsRlEnINeE
+	T5kuyosItalLDJ/HikDdG+zMf24O3XhjKzyhpyI9NvoWf0DZxpLQNibQHzx+FN6Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VQw-00000001Sh8-1PBX;
-	Fri, 04 Sep 2026 17:02:26 +0200
+	id 1x2VQw-00000001Sh8-40Dz;
+	Fri, 04 Sep 2026 17:02:27 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless 3/4] wifi: mac80211: unlist vifs when their netdev is unregistered
-Date: Fri,  4 Sep 2026 17:02:01 +0200
-Message-ID: <20260904170220.038ad73e6c04.I990abca78483e058746b6f42b4796717c3028164@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	syzbot+c5f8a81e794d4a4f2014@syzkaller.appspotmail.com
+Subject: [PATCH wireless 4/4] wifi: cfg80211: get the wiphy out of a dying network namespace
+Date: Fri,  4 Sep 2026 17:02:02 +0200
+Message-ID: <20260904170220.7f3edc6d9992.I5e57921011244d3d8ef14d89e738aa19a5d972a0@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904150220.427345-6-johannes@sipsolutions.net>
 References: <20260904150220.427345-6-johannes@sipsolutions.net>
@@ -50,73 +51,115 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-mac80211 only removes vifs from the local->interfaces list when
-an interface is removed via ieee80211_if_remove(), before it
-unregisters the netdev. However, it's possible for a netdev to
-be unregistered without going through that: When the netns that
-holds the wiphy is destroyed, the wiphy is supposed to move to
-the init_ns, but that can run into allocation failures.
+When a network namespace is destroyed, cfg80211_pernet_exit() moves any
+wiphy back to the initial namespace, and just warns if that fails. But
+moving an interface can fail (due to allocation failures), and then the
+wiphy is left behind with a garbage netns pointer:
 
-Then, mac80211 has an interface listed that doesn't exist, and
-will eventually hit
+  Kernel mode fault at addr 0x30
+  genlmsg_multicast_netns.constprop.0+0x46/0xcf [cfg80211]
+  nl80211_notify_wiphy+0xcd/0xe8 [cfg80211]
+  wiphy_unregister+0x169/0x3fc [cfg80211]
 
-  BUG: failure at net/wireless/core.h:141/wiphy_to_rdev()!
-  ...
-  _cfg80211_unregister_wdev+0x24/0x36a [cfg80211]
-  cfg80211_unregister_wdev+0x15/0x1d [cfg80211]
-  ieee80211_remove_interfaces+0x1ff/0x257 [mac80211]
-  ieee80211_unregister_hw+0x73/0x1d1 [mac80211]
-  mac80211_hwsim_del_radio+0x114/0x166 [mac80211_hwsim]
+Note that commit debac3a20dec ("net: Remove conflicting altnames for
+dying netns in __dev_change_net_namespace().") fixed another path
+that could reach it without allocation failures.
 
-Remove the interface from the list in ->ndo_uninit if it's still
-around to avoid this.
+Remove interfaces that cannot be moved instead of failing the switch,
+so that the wiphy always ends up in the initial namespace. In this
+case the netdev core will unregister the interfaces anyway.
 
 Assisted-by: LLM
+Reported-by: syzbot+c5f8a81e794d4a4f2014@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=c5f8a81e794d4a4f2014
 Fixes: 463d018323851 ("cfg80211: make aware of net namespaces")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/iface.c | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
+ net/wireless/core.c | 37 +++++++++++++++++++++++++------------
+ 1 file changed, 25 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ebe3b068c7ea..889c32fd8de1 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -926,9 +926,33 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 	}
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 9ee1c36f1262..25dd1a4d6b4e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -168,20 +168,24 @@ static int cfg80211_switch_wdev_netns(struct wireless_dev *wdev,
+ 	return err;
  }
  
-+/*
-+ * The netdev can be unregistered without mac80211 doing it, e.g. by the netdev
-+ * core when cfg80211 couldn't move it out of a network namespace that's being
-+ * destroyed. Drop it from the interface list either way.
-+ */
-+static void ieee80211_unlist_sdata(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *iter;
-+
-+	ASSERT_RTNL();
-+
-+	list_for_each_entry(iter, &local->interfaces, list) {
-+		if (iter != sdata)
+-int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+-			  struct net *net)
++static int __cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
++				   struct net *net, bool force)
+ {
+ 	struct net *old_net = wiphy_net(&rdev->wiphy);
+-	struct wireless_dev *wdev;
++	struct wireless_dev *wdev, *tmp;
+ 	int err = 0;
+ 
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK))
+-		return -EOPNOTSUPP;
+-
+-	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
++	list_for_each_entry_safe(wdev, tmp, &rdev->wiphy.wdev_list, list) {
+ 		err = cfg80211_switch_wdev_netns(wdev, net);
+-		if (err)
++		if (!err)
 +			continue;
-+		guard(mutex)(&local->iflist_mtx);
-+		list_del_rcu(&sdata->list);
-+		return;
-+	}
++		if (!force)
+ 			goto undo;
++		/* remove interfaces that fail to allow wiphy switching */
++		dev_close(wdev->netdev);
++		scoped_guard(wiphy, &rdev->wiphy)
++			cfg80211_unregister_wdev(wdev);
++		err = 0;
+ 	}
+ 
+ 	scoped_guard(wiphy, &rdev->wiphy) {
+@@ -199,7 +203,7 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 		/* this only fails on allocation failure */
+ 		err = device_rename(&rdev->wiphy.dev,
+ 				    dev_name(&rdev->wiphy.dev));
+-		if (err)
++		if (err && !force)
+ 			wiphy_net_set(&rdev->wiphy, old_net);
+ 
+ 		nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
+@@ -212,8 +216,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 		}
+ 	}
+ 
+-	if (!err)
+-		return 0;
++	if (!err || force)
++		return err;
+ 
+ 	/* set to the last one to undo all of them */
+ 	wdev = list_entry(&rdev->wiphy.wdev_list, typeof(*wdev), list);
+@@ -229,6 +233,15 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
++			  struct net *net)
++{
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK))
++		return -EOPNOTSUPP;
++
++	return __cfg80211_switch_netns(rdev, net, false);
 +}
 +
- static void ieee80211_uninit(struct net_device *dev)
+ static void cfg80211_rfkill_poll(struct rfkill *rfkill, void *data)
  {
--	ieee80211_teardown_sdata(IEEE80211_DEV_TO_SUB_IF(dev));
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	ieee80211_unlist_sdata(sdata);
-+	ieee80211_teardown_sdata(sdata);
+ 	struct cfg80211_registered_device *rdev = data;
+@@ -1882,7 +1895,7 @@ static void __net_exit cfg80211_pernet_exit(struct net *net)
+ 	rtnl_lock();
+ 	for_each_rdev(rdev) {
+ 		if (net_eq(wiphy_net(&rdev->wiphy), net))
+-			WARN_ON(cfg80211_switch_netns(rdev, &init_net));
++			WARN_ON(__cfg80211_switch_netns(rdev, &init_net, true));
+ 	}
+ 	rtnl_unlock();
  }
- 
- static int ieee80211_netdev_setup_tc(struct net_device *dev,
 -- 
 2.55.0
 
