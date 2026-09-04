@@ -1,97 +1,123 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E01C4EBAF8
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 17:26:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E4351C343
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 18:09:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788542772; cv=none; b=NQDS5aXduFv7jB/KmcUGGmP90r10Rsa+tYajOdgg8S993p9Mb3f6Y/HAYjWgZkkiqd0mbo99+Ne7j6PeLdbLO3BqfBelI/UPBUoA2TU5TWGQ+IZMmpLi1yr9fyRCw8lYcQLwRsetpo3AubwpziS6kk5wIQUzG8xqDq6txV/s4Zk=
+	t=1788545353; cv=none; b=IsdRK2tYkVGog/IHq1RPYrTw7N1DKE9KjLM5QZR9yvPa9XrtIVDFDBahnHViumNWacOm9fbORfE0RhPOrbBSPPqikJIXiMRWmEoCYh1Rf00JOX9elM1WJTXwID3iKfQHF3yYDqpZ0gWumuFYwhude45R3QvSMVn6QHHTx0DCC9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788542772; c=relaxed/simple;
-	bh=Y5Bn7jdxQw6ehqVkk5oJNtrS7WlEpI5MwesIyHBOiCA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OPk9oz06NFtqvNiX0eA4UXHWgbDoQ5vX+WRnhFBjtrRi+7XYNPCUzIfQZwATrKo2CKF/GwMDx0eqDqNZzlq8bZbalpfGDOrYH9ofwHkJpNvFuVJ5YfdHvjueYJrLEGqiRIWjQpoP5VAP4ouRBGMqWwJU0TcldzL0Z5mklpnYCs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EQfQNqp8; arc=none smtp.client-ip=209.85.218.41
+	s=arc-20240116; t=1788545353; c=relaxed/simple;
+	bh=cOJ8OxC4C2lMANiPHbYWMMXjIpP6bwsiDFodLkUz53A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oNqbTTvSfFxeDLknaDkv8cw+DfSjCkgGYjnlCoj7JnGfN6n0TsCh5A0GEKgNDaHnZ3+Lsvh0LIsNN7gPqj9gXYKlxq3+a6c3Dm3vNghxzuj0qCZAXMuttsSoR7HrvNq9YzwQcCzarrXnFzYOCdPT0vho3e6R0oCf7/aCB445wiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MeI59mND; arc=none smtp.client-ip=209.85.222.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EQfQNqp8"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c255c58156bso245906666b.3
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 10:26:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MeI59mND"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-9371bcf1f8fso103906685a.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 11:09:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788542769; x=1789147569; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Y5Bn7jdxQw6ehqVkk5oJNtrS7WlEpI5MwesIyHBOiCA=;
-        b=EQfQNqp8cl0n7zgabvELulJsYhijFBEPtAHa0OrbRDim3rEMf9Us8nDywBLZsP9/Hd
-         7pJLmiPiWTCvN/F4g+3UmRPUaEbHL+G2rOQw1O1NgfdOWPTT97kgRxAFW54DryIZ2c3m
-         uQR3uLfJVOLv8VGJejYLuMW/F2KHz2fxLYdFHwTuPrK5XNp+9F0xguUkkcjyZlLbp2bF
-         hI0u5iueuQEJ+I8pYnaMSl6qnqxEaYBapFI/q4nPcYHYEf7J1UHV5S0iLCkZ/RhVtIXQ
-         DTQLqllmzHN93jzvynXYsDMLqkrXwLDXQrANycZma0q0yr+h8Q2+PGIi12rUD49znJJo
-         TYzA==
+        d=gmail.com; s=20251104; t=1788545350; x=1789150150; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=MhB51A6w/OoQrojpsxyxq7p8lUxX8bUIIqyiGqLRUb0=;
+        b=MeI59mND87iOaMNWK84U92bOhkqYgMtsweWAIzOODOFD/e730DJQxx9g960NRdUAPx
+         m+dBShC9r0ewvFS+W/7a0H4CRUQNrdJO9PCWVtcx0dA9xGG3nKCbYZJAqxyknnURKOEk
+         MzwukEl10NFJr1cr6hlh9NdRFYvsOU21Jacc4gfcNIzQsUK2ofjtj3EU/34EnIIlt7oj
+         JO94jLYgmJlrp97ktjlE2TgYlGvdBZ3Op05GOnpoeNGKh+qasqcPKrJ2DvNTe4NDF74P
+         9t08BpE1TulxXqgmhzaJ/fVLMTxcgBkLs0KBOk/pbi/5rvaqOzeTGwa7Q6IapZduNuRx
+         UfuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788542769; x=1789147569;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Y5Bn7jdxQw6ehqVkk5oJNtrS7WlEpI5MwesIyHBOiCA=;
-        b=nZ4+sLYufEYz6EizjAtYazsK05PZrTMbHx/9amZtUKNsgSp5aYqGd48GpzjIeO+YZE
-         a9kv1HKpXL5L/8Fc5wvm/T5cGMNhu67b3cB6Go8wUEwdt1xZ2McMCRT8n+PSubGSVOkx
-         qIqq7jEP6EV9LB6Xxd98+6xwiZou5CanNUA2tuK8eAOqhT3Sq4F8lGsOunCIdUBBAuys
-         wydhJwqHfb0+OO31F7lgi8TmczqFSZ1Mj8hcm+J/OImg3cQ7znjBCKhw3yK683zAWctt
-         I90WLqlSjxT66FsZblhzfELGT5I6H7xofSYGtjFuf5JkFl1mCk7fHd6o9pfGKQGBNNq7
-         P2HA==
-X-Gm-Message-State: AFuF++mHSI+WPhvCikMSXKFcgbrNoAtjiQyps5DlMy5yacZHSq4XbEEQ
-	Lq3QhhvWEGMtazkuv6iCUT0Vcj34YUKTs2ToyxvLDftxqk5ir/hd5bmVljthAhPw/oY=
-X-Gm-Gg: AYBFou1WrDye67aGe3Xk1YQDh0w+13cYLfdXFtRrGVyxGEWDR1I+oeTcOjmAeLKJmYQ
-	6mUBIjlRRvBX1mUFOrc1hDSu0ucM3NFWj82e/6aiERV7B/pa6fZq7TPvbPGd6AM+JITBITz9Tgk
-	5N+ecHvWb+9j/DVTnNCt6slZhfhRFhoPIgPxceGTjK0/MbhFjg9BPgmCD6+e0X4G5do4mPEjheV
-	agpz2FOuhwGPXR97jizLXwvxIUkEdpLTvQqUfqFj5ZN+y1xzFo3dikr8U3aUYYf1z5vuKk/pTj/
-	tRRbyqpr6x28ZhQ6IVj+0km64FLHGVqtHrAAGlDWFRwOuQpQN3DipuWaCfGM8FV1/409LaFplf5
-	AvIcWkRyoRuQiyng12FFhSMZHZEw/PNcQMeaHPKzGDat78XMT3YNrfhS2A+2ZIVWhu6dndkkjZh
-	3RhvVqnLyS03Ly3kPFsAYTm6ruRBmz9Qn+ao70fmqxESzSsUqVdJ9dr7aHDNqo9hLLJVmu8CN3y
-	Y6YPUbKgxuaPGcFlkuZsIwrCW/wKCHLM94M0g==
-X-Received: by 2002:a17:906:730e:b0:c20:af9d:4533 with SMTP id a640c23a62f3a-c260c9f74d6mr339493866b.19.1788542769015;
-        Fri, 04 Sep 2026 10:26:09 -0700 (PDT)
-Received: from ca91a6afa0c8 ([31.7.57.58])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c260d4aa01dsm139132466b.15.2026.09.04.10.26.07
+        d=1e100.net; s=20251104; t=1788545350; x=1789150150;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=MhB51A6w/OoQrojpsxyxq7p8lUxX8bUIIqyiGqLRUb0=;
+        b=C44jb7aJjCLCTqu5XZuas1wmD/XoOpQzqdNljbVRgaZBcjixgMPbR9RYVFUr6UbN2K
+         TF6FkEmtGFb/COlUFy62GTS+Gjtq+8ba3XPO/pGBuLehbiaDtLI62VyPU9K2j1OMBBvj
+         rwUnJ2SHTOJ7damijl7koFYpNqMj0e+nngFM3OLEpdxeLZ523KoJwCZVBjPBFtlX/tNF
+         erADkGMk8cLJIcNeTxe8YntId+E4KxnqDp7JUr7+mgkLw6gumP9G1LPmMJsETxBMFRSg
+         a1T6rTGuoIDPv8og1b0ewuYyTxteoXhKE2xClS0mwl4lUzaTNomrdsjdFW2nf+0Eu9pW
+         KtfA==
+X-Forwarded-Encrypted: i=1; AKwUvBz1BnctmPS8//bQ98iFYb7fZTNMyaclg2M+NVBW9kThDcxsjlDfg6ttLSAzieJzJFX81kXO2b008SLTVbjmBA==@vger.kernel.org
+X-Gm-Message-State: AFuF++k1Imy2YgUUVCQojjC1ZqF0t0OqD/GMxqRifpdJt1RwPNFkLl/l
+	QzHvSy0Zfd2yih+jAdzJEaiRo6iYo1bbFzOSFXZZ7A4vYIQl5Oe4/703PzPk
+X-Gm-Gg: AYBFou30l+GgT37ErmiEd/Ngn7rvKrbAHaiFNa8VWVDhi5L7nBNS/bs4vfb6gwUzv1p
+	t+obJ5MQyMuWexYSRJjz/AF2tU3QHKzyhy75b3Aw301ze48sdaczsb6VQuhYVyyTI0y76kro/MN
+	MMvdXhIRNmsCB8McFXRqyZcAckac7fUZp5AMsuNK753vaZmu+7b56aIujq5TKOqXpLTut3nMTfs
+	JfHpc/QPje9GiFr22w/8lay8ujVssLZB60wLwf5EG6FGEm7aHOtuuWxa+F3hxUeyK4lVASHIMOG
+	aTuyzxgh1m4t75mPqXTUS/xUYsxsw+EbiIXz1JdVJS/N9lVijKNOcsVLPNl+E8PuMWo1QLMf5FI
+	LDbdl4j4O/TLRmjtsVhyaQE1Ag7Atrt0lWezYrIbiqSh5ixn/eMGSRfFoJWTBlk9uwgxB5V0Smf
+	nrMZ26xgpiexmVzV6ehMbKWFfXHfQ9raVH/p8Jr3xwUO1aDVKkgxxH7m9KjieA+QE8n80sMOiLw
+	XfVpn0/hZQ85zbnC10syxLM68/F4h5yNHjFDTfkR6povCLGNgP0cxdwB4hEF6IjnRezT9jVk+O0
+	M+W9I132l17GDgs=
+X-Received: by 2002:a05:620a:6e1a:b0:92e:d7c7:7de9 with SMTP id af79cd13be357-93980325353mr601007985a.8.1788545349740;
+        Fri, 04 Sep 2026 11:09:09 -0700 (PDT)
+Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9397fba21d6sm260739085a.37.2026.09.04.11.09.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 10:26:08 -0700 (PDT)
-From: Valera Kozlov <valera.kozlov19@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Subject: Re: [PATCH v2 2/2] wifi: mt76: mt7996: route disassoc frames to ALTXQ
-Date: Fri,  4 Sep 2026 20:25:44 +0300
-Message-ID: <20260904172545.25-1-valera.kozlov19@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260901194338.110-2-valera.kozlov19@gmail.com>
-References: <20260901194338.110-2-valera.kozlov19@gmail.com>
+        Fri, 04 Sep 2026 11:09:09 -0700 (PDT)
+Sender: N B <gen.benner@gmail.com>
+From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH v2] wifi: ath9k_htc: fix the byte count of a full RMW buffer flush
+Date: Fri,  4 Sep 2026 21:08:49 +0300
+Message-ID: <20260904180849.775404-1-nerijus.bendziunas@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi Felix,
+ath9k_reg_rmw_buffer() flushes the buffer when it is full, but sizes
+the WMI command with sizeof(struct register_write), which is 8 bytes.
+The buffer holds struct register_rmw entries, which are 12 bytes. For
+the 15 entries of a full buffer the firmware receives 120 bytes instead
+of 180 and applies only the first 10 read-modify-writes.
 
-While rebasing this against mt76-fixes as requested, I noticed
-ece175a8a7af ("wifi: mt76: use ALTX queue for packets to disassociated
-stations") already covers the same problem via MT_WCID_TX_INFO_SET,
-and with broader scope than my patch (any station that hasn't
-completed authorization, not just the disassoc-frame case I was
-checking for).
+ath9k_reg_rmw_flush() already uses the correct size. Use it in the
+full-buffer path as well.
 
-After rebasing, my patch's diff against tx.c and mac.c came out empty,
-and the one remaining line in mt7996/main.c was a redundant second
-clear of the same flag already cleared by your commit a few lines
-below.
+No current caller fills the buffer; ath9k_hw_4k_set_gain() comes
+closest with 14 entries. The first caller to queue a 15th entry loses
+its last five writes without any error, which is why this is worth
+having in stable trees before one appears.
 
-I'm withdrawing this patch (2/2) as superseded by ece175a8a7af.
-Patch 1/2 (spin_lock_irqsave for reg_lock) is unrelated and still
-stands.
+Fixes: 8badb50cfab6 ("ath9k_htc: add new WMI_REG_RMW_CMDID command")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-fable-5-1
+Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
+---
+Changes in v2:
+- Add Assisted-by, rewrite the commit message, rebase onto ath-next. No
+  code change.
 
-Thanks,
-Valera
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 6de78ae85726..0b49d2cc99f0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -405,7 +405,7 @@ static void ath9k_reg_rmw_buffer(void *hw_priv,
+ 	if (priv->wmi->multi_rmw_idx == MAX_RMW_CMD_NUMBER) {
+ 		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
+ 			  (u8 *) &priv->wmi->multi_rmw,
+-			  sizeof(struct register_write) * priv->wmi->multi_rmw_idx,
++			  sizeof(struct register_rmw) * priv->wmi->multi_rmw_idx,
+ 			  (u8 *) &rsp_status, sizeof(rsp_status),
+ 			  100);
+ 		if (unlikely(r)) {
+
+base-commit: 1d8e73163ef933624341075f576e2f36ef9133f7
+-- 
+2.55.0
+
