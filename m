@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE794E80A9
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C4ED4E8DEA
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788534081; cv=none; b=OLwThKF035mA+BVpJ6PHOcCtETPqXD08JKoFdrA66ZdopX/CkEgPixaXyE7FQDjtl2F45ga/J4dZmjWPMzk/M5f5XDnjMRg6mzVvpdleRFn0HGtXo0PbbVIbNsws+1+sJasvMye8wJpLmufKlG7WrgWN856y/OHSEDo52gPGn/I=
+	t=1788534081; cv=none; b=KDCAQ8BeZP1acnwcCT9WU5MGQ4GhfZlO6pe/6MsMDrO/3T0Fajbi1m154Rm3ihaWGx+Soh9+tno+fo9jPAIsnofkywguvAZKMWChjiiwg0HFo7NErxAHjMebz+i1pJpV2IWZzGWlqbaOFDtgqAQX/FiQKkRO+Ns8p8t301xVsNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788534081; c=relaxed/simple;
-	bh=XeNmHRlBxm5r8WZbLXiZP1IggqExH6gE7QHr+I8rtkw=;
+	bh=qe2ZL61dvbN6vV/uQfOajf6s2y8m+cvWpxiUBYLKFU4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IHse/dPOovFLGhAiQdhMDGU9Vl72zKXMwLsCgGXCvCcxGqM93krDxHFrfwZs3rITmgMojjQblD+A7SUhM3UfEHTn+1qmVTcFulMwsrf9tfc1ojgkOsBvn7DxZdu7RMV93HY8KQnIjd5U/CMCicwIGCC7MI9VRvCOzrlnL9sZ8dk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=m0BARFQO; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=NkKRiSHnTVbNzlLLoWf6U6aSs9Q66gB3Ebg2Ex9zT1+pJ8UGlHB+KD4uwV14PFFkMjEjStTEfzm+MjK5gwxFberAdnvbCw6y+Xxl6t22gXZy111GW4dDSWPocea2ZPLlqrpa9EVlky7Ubg0uv7GBHyeASEW3/xUIUoThWHX/tZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OYtLMWIe; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="m0BARFQO"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OYtLMWIe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=NgNyW7TLF9JyAAFaU/9Wx0ubArwetd440zQFqFgloC0=;
-	t=1788534078; x=1789743678; b=m0BARFQO6LteJL6mo0EWCDBp4RQqJ2rg+UXWs0uxfT96fH6
-	H3pbAhCf0QRjPAApixY7bUPQDJ+xPgJMjKTEqgB92tdNLLfpkPaOyq89ufCgHETZ/bgpoKDFwRra+
-	Jhxr4oj0Xa2QXlTaV2HxZo8z/5JgVSRoS+VE5twYDG8mB31SD2jrvV61V00Eeg18j0Esz55aRNXSB
-	97umMa76F7kCOXOQgO0jG5wOrbUWn+xYkZwzyv4kwZCzI0xrOJwgTaUXxSou7qxI1YqifAMDIva7x
-	3qKo1K3mCSgnod7H+VqHXGXD1z8qAzI0HLDViHk1DODdZSJgmvdQpXBOK+sXJ+6Q==;
+	Resent-Cc:Resent-Message-ID; bh=/pwPfUB8E+z3F/n+wJqz0CzrQK+zlJklxEDBQ99262A=;
+	t=1788534077; x=1789743677; b=OYtLMWIeINwwYDERDale9zSf8ipU32ZKjnTcJTWc8x2LnKE
+	dXPOn64tCfzXqLNXvddgEZU9xRwZ6m6srdD6nLc9CErCjGaUXVZ18Nlv0maGsMZ3gB3fPcmnzSVUS
+	WJRm3LxWoq9OE7xMgTXvtZk9BmrZK3QhMv6WSgapeZ/iov2f5uE6LreSGfMZ2DhaFrVdpWAkzlabD
+	qK6y66fDD/sscGkM3NQsf03Q0mk232svCWQ/z03V5vZwTjiIBVoH0s/93WmdnnfCgNuIPoEDCYoju
+	AkLa6Q0PmzfZQRKAqtEWafeo7D3HBs/tMQmUOmliAtrkDHN3nGNir01TzWbko60w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VPm-00000001SeL-4AoL;
-	Fri, 04 Sep 2026 17:01:15 +0200
+	id 1x2VPl-00000001SeL-0ucq;
+	Fri, 04 Sep 2026 17:01:13 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+b59873f5699e941717ca@syzkaller.appspotmail.com
-Subject: [PATCH wireless 05/10] wifi: mac80211: don't RCU-dereference the mesh CSA settings we just set
-Date: Fri,  4 Sep 2026 16:58:04 +0200
-Message-ID: <20260904170057.30c3a1780224.Ia633160bc01e1ad1b30a9f44446728a747f2b16a@changeid>
+	syzbot+e55106f8389651870be0@syzkaller.appspotmail.com
+Subject: [PATCH wireless 03/10] wifi: mac80211: require a peer station for TDLS setup confirm
+Date: Fri,  4 Sep 2026 16:58:02 +0200
+Message-ID: <20260904170057.2ff31ae3e799.Ie409325ed6f2e55d2ef3ff2439e0c054dc8233b8@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904150057.424369-12-johannes@sipsolutions.net>
 References: <20260904150057.424369-12-johannes@sipsolutions.net>
@@ -51,34 +51,63 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In the error path of ieee80211_mesh_csa_beacon() the settings that were
-just assigned are read back with rcu_dereference(), which lockdep then
-complains about.
+It's nonsense for the setup confirm to go to station that
+doesn't even exist, and it hits a warning when building
+the frame:
 
-There's no need to read the pointer at all, tmp_csa_settings still is
-the right value anyway.
+  WARN_ON_ONCE(!sta || !ap_sta)
+
+Only accept WLAN_TDLS_SETUP_CONFIRM when the station is
+already there as a TDLS station. Need to copy the call
+to ieee80211_tdls_prep_mgmt_packet() since the existing
+WLAN_TDLS_DISCOVERY_REQUEST already falls through to it.
 
 Assisted-by: LLM
-Fixes: b8456a14e9d2 ("{nl,cfg,mac}80211: implement mesh channel switch userspace API")
-Reported-by: syzbot+b59873f5699e941717ca@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=b59873f5699e941717ca
+Fixes: 6f7eaa47e1de ("mac80211: add TDLS QoS param IE on setup-confirm")
+Reported-by: syzbot+e55106f8389651870be0@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=e55106f8389651870be0
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/mac80211/tdls.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index bed7ac838250..a35e2d5870b6 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1559,7 +1559,6 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	ret = ieee80211_mesh_rebuild_beacon(sdata);
- 	if (ret) {
--		tmp_csa_settings = rcu_dereference(ifmsh->csa);
- 		RCU_INIT_POINTER(ifmsh->csa, NULL);
- 		kfree_rcu(tmp_csa_settings, rcu_head);
- 		return ret;
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 7f40b1d62938..f663d28d9209 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1281,6 +1281,24 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 						   peer_capability, initiator,
+ 						   extra_ies, extra_ies_len);
+ 		break;
++	case WLAN_TDLS_SETUP_CONFIRM: {
++		struct sta_info *sta;
++
++		sta = sta_info_get(sdata, peer);
++		if (!sta || !sta->sta.tdls) {
++			ret = -ENOLINK;
++			break;
++		}
++
++		ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer,
++						      link_id, action_code,
++						      dialog_token,
++						      status_code,
++						      peer_capability,
++						      initiator, extra_ies,
++						      extra_ies_len, 0, NULL);
++		break;
++	}
+ 	case WLAN_TDLS_DISCOVERY_REQUEST:
+ 		/*
+ 		 * Protect the discovery so we can hear the TDLS discovery
+@@ -1289,7 +1307,6 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		 */
+ 		drv_mgd_protect_tdls_discover(sdata->local, sdata, link_id);
+ 		fallthrough;
+-	case WLAN_TDLS_SETUP_CONFIRM:
+ 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
+ 		/* no special handling */
+ 		ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer,
 -- 
 2.55.0
 
