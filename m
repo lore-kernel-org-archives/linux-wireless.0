@@ -1,92 +1,83 @@
-Received: from mta1.migadu.com (out-146.mta1.migadu.com [95.215.58.146])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [178.154.239.84])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AD9344999F
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:24:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF314AA1E2;
+	Fri,  4 Sep 2026 14:28:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788531893; cv=none; b=CbAUIE2EUS5GNNLUJsozjYWZJghJw3hf6mHOf5c9gOVWrTJm2ET4U33yydk2D9wrWXgvjZPVZC6fgqylBWaj00CYviRq4PAe4ziaHPnqSRF57lq5wZ/uegpXTSy43I54GJ23BaaTSPNKLKMZHQxR2IEkmK0oC0YnZNYYWb9cRVQ=
+	t=1788532107; cv=none; b=JRrBhmxXVqiVZsr2Gc8FaTS4r6GH/h+v5EvUSqrGT/12NKG+Im6HqrmHO1jQKgeezjIoz9MKUfLeUI2uxBKb5dN+HCegp3nmo/W6SZgOYdKwAqip8XbiIe+/R0rF6Y9qC4crE30MjZ4NMDKuub/VyvYbs+cJI9xkZ+Mkena/SbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788531893; c=relaxed/simple;
-	bh=2TOjKpiQDuKkSYFBrgeLSO8YuRj2qMEpLtWfgIyc9Rk=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc; b=XJTE313u+vxnOAIX19kHuDtEJHwLY7FDsAhxaoU2S+E+ztdpKRjFalYkww8cl9ggQkGlPhaEH469QSxPqKSuYYTSgeuGHDGGlMnReKo84ajCUal2MKnU8g6nfvEaDE8ItiBgsZ7DZmw9p+U9OGHXphuhfLyUgO02hAj3KMb6IGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Am2/ukVc; arc=none smtp.client-ip=95.215.58.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788532107; c=relaxed/simple;
+	bh=e/HmegveW9ysx/4ZtuFa4RwBMP859OyT8t8cNAJMhIQ=;
+	h=From:To:Cc:Subject:MIME-Version:Date:Message-Id:Content-Type; b=Jf8koajZQIuajMw6ceK1WIkavij8bXWB2CSVW6mApyNfwG1FevIUVL/SsQml+IfXyW6M/nvEVjZ7bNKUt+2eE42uPYVIajR6yIqxf7Z2F5GkJDJRRGc0pBbMWkaBRflRn/QKZ3DZwnVHzJJvXpygBmwV/71c/unVLYeNB2Zr4JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me; spf=pass smtp.mailfrom=0upti.me; dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b=VaauQKUq; arc=none smtp.client-ip=178.154.239.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0upti.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Am2/ukVc"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=2TOjKpiQDuKkSYFBrgeLSO8YuRj2qMEpLtWfgIyc9Rk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788531889; v=1; x=1789136689;
- b=Am2/ukVcNhCx6xGzW7RDULo6wrnYl4JL2NhuUKtxifR4Lo0ZI7PoLJthmJo1h04gg1ZgReIo
- L8uiwceSvNX7P2aZ8gojRy9K0S+GQmyYtKpMsAoUqakQxrmNwbW80xKuGy7sCTs+mhTPyqwrnpH
- SxkDqjA+QUtkpGa9JSP6IZ8g=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 36cecdea86e02bbf;
-	Fri, 04 Sep 2026 14:24:49 +0000
-X-Mizu-Trace-ID: 36cecdea86e02bbf
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b="VaauQKUq"
+Received: from mail-nwsmtp-mxback-production-main-691.iva.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-691.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:1589:0:640:596:0])
+	by forward101a.mail.yandex.net (postfix) with ESMTPS id 94DCF80D17;
+	Fri, 04 Sep 2026 17:28:15 +0300 (MSK)
+Received: from mail.yandex.ru (2a02:6b8:c0c:752d:0:640:91d2:0 [2a02:6b8:c0c:752d:0:640:91d2:0])
+	by mail-nwsmtp-mxback-production-main-691.iva.yp-c.yandex.net (mxback) with HTTPS id vRKeX66vl0U0-DQkt58Xi;
+	Fri, 04 Sep 2026 17:28:15 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=0upti.me; s=mail;
+	t=1788532095; bh=r41Xe1mrwIPlvXiNA3j++3Eu8PLXhMgnYzML5OVQBWE=;
+	h=Message-Id:Date:Subject:To:From:Cc;
+	b=VaauQKUqGzQ1uzeeGxwIZrsB18rEkZZ5dw2BBYqpNRy1skJpkrub9fnN5xgRkoh7R
+	 +U1KSZyCpuD3yEajTYVd0aHkTV4OLvSw++4naxtL2jC7wTWnLd0VNxiHF8tFlSF4Jm
+	 Xo45Nn+JadGrsLHThQAAgIEmoo8KyuVFfTqeN1To=
+Authentication-Results: mail-nwsmtp-mxback-production-main-691.iva.yp-c.yandex.net; dkim=pass header.i=@0upti.me
+Received: by mail-sendbernar-production-main-68.iva.yp-c.yandex.net (sendbernar) with HTTPS id 59ee03733a089c59512294a09661e3f4;
+	Fri, 04 Sep 2026 17:28:14 +0300
+From: Ilya K <me@0upti.me>
+To: linux-mediatek@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [bug] Triple whammy of mt7996e bugs on 7.2+
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Fri, 04 Sep 2026 14:24:45 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Tianchu Chen" <tianchu.chen@linux.dev>
-Message-ID: <90bb2b07007942064c04aa3729cedd9eb1e930b1@linux.dev>
-TLS-Required: No
-Subject: [PATCH] wifi: rsi: fix heap OOB write on key removal
-To: linux-wireless@vger.kernel.org
-Cc: pengpeng@iscas.ac.cn
+X-Mailer: Yamail [ http://yandex.ru ] 5.0
+Date: Fri, 04 Sep 2026 17:28:14 +0300
+Message-Id: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-From: Tianchu Chen <flynnnchen@tencent.com>
+Hey folks,
 
-When a key is removed (data =3D=3D NULL), rsi_hal_load_key() runs:
+Not really sure where to report this, but I've encountered some "interesting" issues on my bpi-r4 running kernel 7.2 and up.
 
-	memset(&set_key[FRAME_DESC_SZ], 0, frame_len - FRAME_DESC_SZ);
+The first issue is that after a while the firmware on the mt7996e sometimes seemingly just locks up. 
+As it usually is with those things, there's not much debug info available, so all I get is
 
-set_key is a struct rsi_set_key *, so the subscript is scaled by
-sizeof(struct rsi_set_key) (160 bytes): &set_key[FRAME_DESC_SZ] is
-skb->data + 2560, and the memset writes 144 zero bytes starting
-2.4KB past the end of the 160-byte skb data buffer, corrupting
-unrelated heap objects. The intended byte offset would have been
-(u8 *)set_key + FRAME_DESC_SZ.
+[58764.004954] mt7996e 0000:01:00.0: Message 00130022 (seq 12) timeout
 
-The write fires on every DISABLE_KEY callback, so plain disconnects,
-roams and interface teardowns trigger it on real networks.
+This has happened before, but very rarely, and now it seems to happen consistently at least once a day or so, on
+the exact same setup that is stable for weeks on end with 7.1. I have not attempted a bisect yet because
+1) I kinda need my network to actually work reliably and 2) it happens so inconsistently that it's hard to
+pin down a good commit.
 
-The memset is redundant: the whole buffer is zeroed right after
-allocation, so the frame sent to the device is byte-identical
-without it. Drop the else branch; normal operation is unaffected.
+The other issue is that the kernel then fully explodes trying to recover from this, in two different ways 
+depending on whether WED is enabled or disabled: with WED on, it tries to double free a page somewhere on the 
+teardown path, and with WED off it just wedges seemingly all of nl80211 and any process that happened to be talking to it.
 
-Discovered by Atuin - Automated Vulnerability Discovery Engine.
+I'm attaching the logs for both cases, hopefully this helps figure out what's going on, and happy to do more testing if
+needed.
 
-Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Tianchu Chen <flynnnchen@tencent.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 --
- 1 file changed, 2 deletions(-)
+For posterity, my current kernel tree is basically vanilla + just enough changes to get bpi-r4 10G ports working on NixOS:
+- 7.1 branch: https://github.com/K900/linux/tree/bpi-r4-71
+- 7.2 branch: https://github.com/K900/linux/tree/bpi-r4-72
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wirele=
-ss/rsi/rsi_91x_mgmt.c
-index bb167f03367bf..d9dcbb2553176 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -852,8 +852,6 @@ int rsi_hal_load_key(struct rsi_common *common,
- 			memcpy(set_key->tx_mic_key, &data[16], 8);
- 			memcpy(set_key->rx_mic_key, &data[24], 8);
- 		}
--	} else {
--		memset(&set_key[FRAME_DESC_SZ], 0, frame_len - FRAME_DESC_SZ);
- 	}
-=20
-=20	skb_put(skb, frame_len);
---=20
-2.51.0
+(there are exactly zero *80211/mt76/mt7996e changes).
+
+Oh, I've also tried pulling the latest firmware from vendor OpenWRT feed and that did not help matters at all.
+
+Any help in figuring this out would be greatly appreciated!
+
+- Ilya
+
