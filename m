@@ -1,190 +1,215 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0909350EC1A
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 18:23:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDC5B519938
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 18:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788546208; cv=none; b=gBJh4TcnJHW0fkqLTZpcYqCSrx7C7Fc7MiGghf+Nlnuu0Ll2HJSC2viXLYI6d/meevBC8lxug25QedudBJDsty4z5fjBvFK0JFyxWi0VoSilgqiAG3XCQLxRxWDlIMVKvGRW6Tk+ZvgifJpFL9/Rq1WHEpvQjvk1h5AcBsr2Nt8=
+	t=1788546613; cv=none; b=klEaz5fchSavvZLtE30H1KAEYM8Dma4/6/mX7Uo4rtB8CQu2wpQ+v9gNp/o0hc4Ugp66yoFcKTK75iU+HwfXZyp3P83yRMoRM5O5soPC5BwJLKLy4VMPyN1EHV09UqlCPiuEYzYLLpV6dv/C8Fw7QTGHoGPz/VB8VG1kfz5FtXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788546208; c=relaxed/simple;
-	bh=qLBwZLzyH8uzwDT2HdJvcx1jK0C3H7dUyAkrKzIoFKo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=m9Fa2hlnSQf6oU2Q3LFaSHsGkPNicpkDrOKpactQO966gh8NTW+GtfQpWyeLMnJyR/6iD4QLjiv4fgEBFwex43HE8VZ7tvm4DrQexpyLvTSuya6wSUj0sywHG1ppsFtHjpygiqgf0qRLmnS18pDc3IVBTo6Ejc2bbrUz8GxNOck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pfOF03QG; arc=none smtp.client-ip=209.85.160.180
+	s=arc-20240116; t=1788546613; c=relaxed/simple;
+	bh=JOVPX9mJAgEY9P9QUcV5TYqqDHNJ6DeCWFPOQgxN+pI=;
+	h=Date:Message-ID:From:To:Cc:Subject:Content-Type; b=plLrPnxjfUTJA+wJoSdvT2+215ZAkfLue6qXlTWHzkIqrYzfyS0jWdcDSqIDS2qu6DHQijx//AerqpwpDCNlz607Z81DQGsANWchjmUmIdYzx8mkDpJs2/vbRHgpwaf2SBMd30Z4J2WVsInXtaDb8xDqmFT/oQG9y4eyURGhegE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eT0grXNi; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pfOF03QG"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-5301db51586so18181661cf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 11:23:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eT0grXNi"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3969e82ff8fso1444855a91.0
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 11:30:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788546206; x=1789151006; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=+rPF2baMygOE+6+zdwAm12933adxMnFxrc4psklCm6M=;
-        b=pfOF03QGoJsVM8IvpxTDUMNz/NJ2w6Oqzcfv5ksHMTGGWQGUV8ZOwORS3vDKQ2EZXe
-         L1hox1g7DGrKpSZG0gDi6PZ1/4v8nknwQWah0jO0Rfn/ROnbQ7w/9GpeYhMQJYNJR5mQ
-         AJgJLyzvNqU9OaVY+kh0DflGGVONGi8qen9sAKDRFu5pquAUX2mnlAdGot2r6f+ZhlxC
-         uCLKlRwsFg+dXrFPJahNDl/uv40kvWEz5Xd1mMX7uD1MOrqQHO8NRGdy1fiPV0yGmwGu
-         yUOvg83pCZBi6DCy3bKldW45G6YBMHB6FAGncD312pF2bnvGFilD8X4U1NjxmDqbVxyG
-         9Bew==
+        d=gmail.com; s=20251104; t=1788546611; x=1789151411; darn=vger.kernel.org;
+        h=content-type:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=+FVQDqwY4yOK1b7Ca/fCnzSAexkd6ZecfuH5u7/amtQ=;
+        b=eT0grXNin5B+/3XjRy670vKlljmvt6SV5cw4fzS+hR3290PB7zqqpbox5RyPuAXEKn
+         ixhyjDE5A33xHzgd/weK9y8Gr0gOMHI1n48ts1xZRdGOsx6JXOmENrAcb72eYczdDfAU
+         xjRKHjhHOI5ey4X7quJegkRN1cC7VMwFMLDLOurHBLTabwvC1G9IeDZhqZ1dhkd+DJLj
+         vn6S+mHvpAc4kKm7dWphgFj5jW2IYT1x5KadDzzQh3WtPbe3kywdlbVSsTobzKe4Nxy+
+         xYSo3Ip1CuS27lTwU5Pnjqjk1XV7wj8meIBZ7aX2r8sde1/AOK1U+a2/dzBaO6m4RXTq
+         5s6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788546206; x=1789151006;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=+rPF2baMygOE+6+zdwAm12933adxMnFxrc4psklCm6M=;
-        b=hcj6BToosnzj5xaj4KNR47wvI3d44kWSvILa/rA91fSQw8wbrcYrhusAd/Z1c+P70c
-         Os1+IdlGFwLIddN4wzPM9jdJHeOg/nOufyIq4NXHUuIeGyuSDDBfZNvAeQfqtHdtMFFl
-         okvZ3qP/0mP7iI6yx6siodmB9uDpGE+xZJsYjwK0NWVE4l4NWqHtP4JFR8NXepgt+IgC
-         7rnkjL++08OP2Fpe3V+gA0sNGqiKixtpQvZebbvsjuvbU+M8PUzARhCJejCJPWhJt5eX
-         2Z4PLk9w4sywbC1i618Ylw0CaJLT/Xev7MgeR1m/fNc5ykDxhFDp1Nwewyxnq8qNBRB5
-         e6WQ==
-X-Forwarded-Encrypted: i=1; AKwUvByBCxue98i/LBcITSbg0hl8F+Z7uaNBDazbU4HIwxOhCuTQJzD1YpeKLZJ+efuF/ZEH2dZAs2wXwYav5vKrnQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++loHxL4hvux+ZZ0lJPkbLiqtFu54tkDm/9ARr3GmWYHhUhbWTg2
-	NMCfDcQ4lBjlcvSwHbbmk/3ViJz/JU+KJzT/x/UllY+DwrV27rN2PStrFWHs
-X-Gm-Gg: AYBFou0aOPW1D8Zq5ZoG9gEK/Kv1uiml7uUhAVxTSznARVo7OqC1gdwhWswqRAQo7U5
-	xnjvFB4yIWBOlQSy6WHDnrcBnlpy4Is7n3P6TIuENDkT58ZrVSi9UdFLBNgAjt3tbnOXVK6Gmfa
-	I+1J2OuOg9NSvT+RUMK/IaYucF7/9jk1VK5e9n/DEHpURqAS1YDb73rDNGOJzDOCF2vNRYcPVMd
-	glkim0AjHg6IkKnUOOlPJwD9dv8cf+lxs0W5sH9Htau4VFnIWznUCSJTzHPUNOQ171HcByYQW7W
-	pZatC4p2lBH7fgt4FQuV6MwBGo/zVNK2xpy6t3jqvKeWP1Pnjgrn1V7X/Ftc7NX29m5eI0vWfbs
-	P588Ub7vc8qar09HLrgByMsiEOAQCUBiLnMr6jIGyjVn00ZyU//ueYINxA83/Qm5G9AowaMEEdt
-	4YvFWF6wgx0IM8P+kSPhxJYAYuGcVlP0gFBzYEDRjUcXYsah9UKohIgHTfJ3QL7T7GoqLSVg7Iv
-	NtKj4bxBHEtmvoVf6q+5IzkLjdA0LFIFE6UQcNXyncDGPLx8Ul/jSqBXWIytkoo2OHCD/pze3tL
-	KbrB
-X-Received: by 2002:ac8:59d5:0:b0:530:430b:cce5 with SMTP id d75a77b69052e-53054a3a641mr76796551cf.47.1788546205540;
-        Fri, 04 Sep 2026 11:23:25 -0700 (PDT)
-Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91040646d59sm26172066d6.8.2026.09.04.11.23.23
+        d=1e100.net; s=20251104; t=1788546611; x=1789151411;
+        h=content-type:subject:cc:to:from:message-id:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+FVQDqwY4yOK1b7Ca/fCnzSAexkd6ZecfuH5u7/amtQ=;
+        b=ksTq0RdlRjz124tq/5XuJg0GBuBVNr1HcAWZRX/714aEVM5j6bvv4jmUzT4FT00R6d
+         pQYkuHwF0ijogDrKCpxP/as+Tsni/QZp4w8N7YBRrdsk2N0WQMdYNHsnwr0jc+C2HFZ/
+         rXnOnMh7qG7PiUWvH9P8/KSnQ4PyrRJCbyY1l5VjrmA2jkDmUYzHu4brsYFlNwn3yX0a
+         8YYhFuCaUIqxSUccG5i6cem9+n5zQ07uXZQ7hB2ra1KFXv4vthwCG+BgnC7AV9J0Kzbz
+         2A0sx76PcaX73e7X/rP4C8Hh5YWaM7ujBhg+GYyA+NuHHEe2wc/PXrcD5SrEVNke3edq
+         AKFg==
+X-Gm-Message-State: AFuF++m3Te/iyl66+qBdCo6dyXNAiL5My9/y9dzH12gAqx08ksays99B
+	ukwx+u+d4ufRFJ2NRwZBxxMNaYcLpjtpNZA8SD9BgpMtg3+oohDt4vbymCS2gcsPgTk=
+X-Gm-Gg: AYBFou2uJARc0hBtc4/d5oRqKrk3xmMKxoVwRIxP9iN1ut12w5OEh9tpkpnN8twHo3R
+	XmoAfvUSlylVJl9dk7ZrB1k6sfZCaWDpCRtD6T2OAUWNzcQSWFTYcvXlwDt8sUGHPOAWZ99JnND
+	4+AmABr+o/HLXl690j9HdXrcbDbhWDn7vmFhX2xl1EQKYzNUTRm3gBHYMsfB4C29ijIzLLiNd/s
+	1x/6JCdTPOHJLFxZM5XVWCFOhj9JQp/odye5Uub5X/NyD/YrAyCU5d06JxhH/+/b0N2kuzMI6/1
+	3mhQeReC+1irGMO3wdMeFxKLEUoBonPe7qlmYFBtxDAtd0UE2THFEhDHj7S+OQ/UShWq1gLvzo8
+	txmc1D4awhKmZeDAPVW2WAwP+GHvJ1PxjDKS/76eP+8OAzv38oWLR7cUiuFTjNoxl9Kv1+F7p7C
+	7Pa6qFFYhn+KINz66i1cx5M+IOam8uycffZ+CdPGZF/YxrovQ6aNHusDaZa86h5/tJiRKS6CiyW
+	hVeKY5GmBKAdiI9l4z3C6nWAsvJQORHlD+/UBG8inCrRwyY1cwjFIglc6YOL2lGqob2omP1awU6
+	/pVtn1TcUrK8dRIyBXhoZA==
+X-Received: by 2002:a17:90b:582d:b0:399:e97:8d5a with SMTP id 98e67ed59e1d1-39b2627fe18mr11352035a91.25.1788546610758;
+        Fri, 04 Sep 2026 11:30:10 -0700 (PDT)
+Received: from localhost ([122.179.130.175])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-333959d5f69sm8000538eec.0.2026.09.04.11.30.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 11:23:24 -0700 (PDT)
-Sender: N B <gen.benner@gmail.com>
-From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] wifi: ath9k_htc: pass CRC-tagged spectral samples to the FFT parser
-Date: Fri,  4 Sep 2026 21:23:20 +0300
-Message-ID: <20260904182320.792881-1-nerijus.bendziunas@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        Fri, 04 Sep 2026 11:30:09 -0700 (PDT)
+Date: Sat, 05 Sep 2026 00:00:06 +0530
+Message-ID: <cab32383bff0af2e4b31a86422d20d71.ankitdange37@gmail.com>
+From: Ankit Dange <ankitdange37@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Subject: wireless-regdb: IN DFS ranges result in DFS_UNSET and prevent mt76 CAC
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-The AR9271 firmware checks AR_CRCErr before AR_PHYErr when it fills in
-the RX status, so a descriptor with both bits set reaches the host as a
-CRC error without the PHY error flag. ath9k had the same order and
-changed it in commit 3a325565c7fa ("ath9k: reorder error codes for
-spectral"), because spectral samples received under interference often
-carry a CRC error. The firmware was never updated, and the host passes
-only PHY errors to ath_cmn_process_fft(), so on a busy channel the scan
-keeps producing samples and the host drops all of them as CRC errors.
+Hi,
 
-Observed on a deployed receiver: 640 frames per second with rs_status
-0x01, each with SPECTRAL_SCAN_BITMASK set in the trailing radar_info,
-while the recv CRC ERR counter grew at the sample rate and PHY ERR did
-not move.
+I am seeing an immediate DFS/CAC failure on an OpenWrt 24.10.0 based
+system using MT7915E/mt76 with country code IN.
 
-When a scan is active, also pass a CRC error frame to the parser when
-its length is one an FFT report can have, one byte less to two bytes
-more than the report length for the channel width, with the PHY error
-code the parser expects. The parser still checks SPECTRAL_SCAN_BITMASK
-in the trailer and returns a frame without it to the normal path. A
-frame with the bit set is consumed whether or not its contents parse.
-It had failed its CRC and was about to be dropped anyway; the only
-visible change is that a monitor interface with FIF_FCSFAIL no longer
-sees those frames.
+Environment:
 
-The firmware can be fixed separately, but linux-firmware ships version
-1.4.0 from 2015, so the host has to handle what that firmware sends.
+  Device: YunCore AX820
+  SoC: MediaTek MT7621
+  Wi-Fi: MediaTek MT7915E
+  OpenWrt: 24.10.0 r28427-6df0e3d02a
+  Kernel: 6.6.73
+  mt76: 2025.01.14~8e4f72b6
+  wireless-regdb: 2024.10.07
 
-Fixes: 83fb287ecd8a ("ath9k_htc: process rx spectral packets")
-Assisted-by: Claude:claude-fable-5-1
-Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
----
-Changes in v2:
-- Describe what the parser actually checks: after the forced error code
-  its only remaining gate is SPECTRAL_SCAN_BITMASK; a frame passing it
-  is consumed.
-- Comment and length test now say the accepted window is one byte less
-  to two bytes more than the report length, which is what the parser
-  accepts; the test was already that, written as len + 1 >= fft_len.
-- Pass the parser a copy of the rx status instead of changing the
-  original in place.
-- Add Assisted-by, rewrite the commit message, rebase onto ath-next.
+The India entry in db.txt is:
 
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 41 +++++++++++++++++++
- 1 file changed, 41 insertions(+)
+  country IN:
+      (2402 - 2482 @ 40), (30)
+      (5150 - 5250 @ 80), (30)
+      (5250 - 5350 @ 80), (24), DFS
+      (5470 - 5725 @ 160), (24), DFS
+      (5725 - 5875 @ 80), (30)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index bed7ea2425a0..b0b95444fc95 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -969,6 +969,32 @@ static void rx_status_htc_to_ath(struct ath_rx_status *rx_stats,
- 	convert_htc_flag(rx_stats, rxstatus);
- }
- 
-+/*
-+ * The firmware reports a frame that failed its CRC as a CRC error even when
-+ * the PHY error bit is set as well, so under interference spectral samples
-+ * reach the host as CRC errors. A sample is recognisable by its size: one
-+ * byte less to two bytes more than the FFT report length for the channel
-+ * width, the range the parser accepts.
-+ */
-+static bool ath9k_htc_is_spectral_sample_len(struct ath9k_htc_priv *priv,
-+					     u16 len)
-+{
-+	enum nl80211_channel_type chan_type;
-+	u16 fft_len;
-+
-+	if (priv->spec_priv.spectral_mode == SPECTRAL_DISABLED)
-+		return false;
-+
-+	chan_type = cfg80211_get_chandef_type(&priv->hw->conf.chandef);
-+	if (chan_type == NL80211_CHAN_HT40MINUS ||
-+	    chan_type == NL80211_CHAN_HT40PLUS)
-+		fft_len = SPECTRAL_HT20_40_TOTAL_DATA_LEN;
-+	else
-+		fft_len = SPECTRAL_HT20_TOTAL_DATA_LEN;
-+
-+	return len >= fft_len - 1 && len <= fft_len + 2;
-+}
-+
- static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 			     struct ath9k_htc_rxbuf *rxbuf,
- 			     struct ieee80211_rx_status *rx_status)
-@@ -1052,6 +1078,21 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 		goto rx_next;
- 	}
- 
-+	/*
-+	 * Hand a CRC error of sample size to the FFT parser with the error
-+	 * code it expects. It returns 0 only for a frame without the spectral
-+	 * bit in its trailer; anything else is consumed.
-+	 */
-+	if (unlikely(rx_stats.rs_status & ATH9K_RXERR_CRC) &&
-+	    ath9k_htc_is_spectral_sample_len(priv, rs_datalen)) {
-+		struct ath_rx_status sample_rs = rx_stats;
-+
-+		sample_rs.rs_phyerr = ATH9K_PHYERR_RADAR;
-+		if (ath_cmn_process_fft(&priv->spec_priv, hdr, &sample_rs,
-+					rx_status->mactime))
-+			goto rx_next;
-+	}
-+
- 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, &rx_stats,
- 			&decrypt_error, priv->rxfilter))
- 		goto rx_next;
+The DFS frequency ranges are marked with DFS, but the country entry does
+not specify DFS-FCC, DFS-ETSI, or DFS-JP.
 
-base-commit: 1d8e73163ef933624341075f576e2f36ef9133f7
--- 
-2.55.0
+On the device:
 
+  iw reg get
+
+reports:
+
+  country IN: DFS-UNSET
+
+When I configure channel 100, hostapd reports:
+
+  phy1-ap0: interface state COUNTRY_UPDATE->DFS
+  phy1-ap0: DFS-CAC-START freq=5500 chan=100 sec_chan=0,
+             width=0, seg0=0, seg1=0, cac_time=60s
+  DFS start_dfs_cac() failed, -1
+  phy1-ap0: interface state DFS->DISABLED
+  phy1-ap0: AP-DISABLED
+
+The failure is immediate; CAC does not run for 60 seconds.
+
+I added temporary instrumentation in mt76. During a transition from
+working non-DFS channel 157 to DFS channel 100, I see:
+
+  DFSDBG: region=0 dfs_state=1 prev_state=0
+
+The relevant mt76 enum is:
+
+  enum mt76_dfs_state {
+      MT_DFS_STATE_UNKNOWN,
+      MT_DFS_STATE_DISABLED,
+      MT_DFS_STATE_CAC,
+      MT_DFS_STATE_ACTIVE,
+  };
+
+Therefore the runtime values correspond to:
+
+  prev_state = 0 = MT_DFS_STATE_UNKNOWN
+  dfs_state  = 1 = MT_DFS_STATE_DISABLED
+
+The relevant mt76 function is:
+
+  enum mt76_dfs_state mt76_phy_dfs_state(struct mt76_phy *phy)
+  {
+      struct ieee80211_hw *hw = phy->hw;
+      struct mt76_dev *dev = phy->dev;
+
+      if (dev->region == NL80211_DFS_UNSET ||
+          test_bit(MT76_SCANNING, &phy->state))
+          return MT_DFS_STATE_DISABLED;
+
+      if (!phy->radar_enabled) {
+          if ((hw->conf.flags & IEEE80211_CONF_MONITOR) &&
+              (phy->chandef.chan->flags & IEEE80211_CHAN_RADAR))
+              return MT_DFS_STATE_ACTIVE;
+
+          return MT_DFS_STATE_DISABLED;
+      }
+
+      if (!cfg80211_reg_can_beacon(hw->wiphy, &phy->chandef,
+                                   NL80211_IFTYPE_AP))
+          return MT_DFS_STATE_CAC;
+
+      return MT_DFS_STATE_ACTIVE;
+  }
+
+Since the regulatory state is NL80211_DFS_UNSET, mt76 returns
+MT_DFS_STATE_DISABLED before CAC handling.
+
+I also instrumented the later MT7915 radar initialization functions:
+
+  mt7915_dfs_init_radar_specs()
+  mt7915_dfs_start_radar_detector()
+
+These were not reached during the failing CAC attempt.
+
+The observed flow is therefore:
+
+  country IN
+    -> DFS-UNSET
+    -> mt76 returns MT_DFS_STATE_DISABLED
+    -> radar detector/CAC is not started
+    -> hostapd start_dfs_cac() fails
+
+I reproduced this with:
+
+  channel 100 / HT20
+  channel 100 / HE80
+  channel 52 / HT20
+
+Non-DFS channel 157 works normally.
+
+There is also an existing OpenWrt report with the same symptom:
+
+  https://github.com/openwrt/openwrt/issues/20699
+
+My questions are:
+
+1. Is it intentional that India has DFS-required ranges but no
+   DFS-FCC, DFS-ETSI, or DFS-JP region?
+
+2. If NL80211_DFS_UNSET is intentional, how are drivers such as mt76
+   expected to perform DFS CAC?
+
+3. Is mt76 expected to disable DFS when the regulatory region is
+   NL80211_DFS_UNSET?
+
+4. Should the India regulatory entry be updated, or is there another
+   intended mechanism for selecting the appropriate DFS radar profile?
+
+I have not forced DFS-FCC, DFS-ETSI, or DFS-JP locally because I do not
+want to select a radar profile without regulatory justification.
+
+I can provide complete "iw reg get" output, "iw phy" output, hostapd
+logs, and the temporary mt76 instrumentation patch if useful.
+
+Thanks,
+Ankit Dange
