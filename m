@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 852D2324B22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212CB37106D
 	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:56:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788533787; cv=none; b=vCx3qp4Qx8ikoOeP+CXVAcAIFoN5FDbVnh4PIfFdK5EzLFCVqRwOa/FhODHGAbS3QlT2cKkNBDtdxyiCq4v9QsI14RpCnUsa/TQ520xOlDs8CEF+uzRW4GBT8LbECqG/MCJPTsw9i8LAi0jTzfrjJtbny8xgc5u3mPDhw9LKgPI=
+	t=1788533788; cv=none; b=oQjFDQ7t6kquEeDOUkTa32g1UlvvPATeVrdvLMd03RPprLh4eX6rC3k4VRxE7rVVhT1Oovgj7GEEz+ctKYHNH/rB/syEqFJnLHU07qVlLzu9FJ3gjr8UmiLgIik9hbUK2Ve5Y4r0q5TYp7x2bi6IaPpcDT1Afmk3wCFlA+x8pNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788533787; c=relaxed/simple;
-	bh=xipREGjBhUYLPraKWe3eKqhpD+1W41qGbrR1eao1TCc=;
+	s=arc-20240116; t=1788533788; c=relaxed/simple;
+	bh=RF1ZEubO7HgC/GjoePHyipweyMjBHdQHidL+zgdU7aM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aWLVAOl61rGCwgxJnhp2p9/IhuK1tgNah8h/lCp6XVvzV6PRhbX3JlO7MvbHbaeKPT6Suqjda8nnmLk2n42IH0NB5khmFs2p/JyX5MK2pSYvOWqHkPKgym29v12j8VOgIlLjB5EV2k+OwNGL85Uiony4N3qNMUQqZ5rDsWMAPtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=uTXNNskm; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=qPvdqbdPjHrqo4/ZZBskEj2a/iRk/DWb/j+NrGjBc87e1S5eJQqKcwTldzNPhRIdJwGQ/Sv/knOI2tcnYl5jJTttunaK3q4UoU3cSZRA8SDaufGG7IDJeF0W3YjoGjqunSnpK28m21ViF/PxHd7ynZLdzNBJdrBsFRpEKT8wNzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=UCRYy3Jp; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="uTXNNskm"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="UCRYy3Jp"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=pJPx50ju/WzzvqaBgzhK+XGnime6W9MmemHfRqVnuS8=;
-	t=1788533785; x=1789743385; b=uTXNNskmXaan4STmBpcSNe97RhCqGBZIGCjWc3JCNU0zeQY
-	QrrvWQPwu1Y7zWeEdhS36KzRAKHixAZQRoEAdWmW4YufyL6YxospOvzksYwatFvlzGGESsMWqGVW2
-	AeG0am1sKP0mN6TtTm0zrAPQwZsE7JLognhQ5Z1Pely86lbJ+8vw9UIb1w4prfL58EuJF/dx5v0Ey
-	OmAwi7GWTyrLYZAvphuED9sIiVMwWtlrdfOaBPU05THXwUMLDSpeVa/pyncKJn5tlFX3qvZrkO7DD
-	t8M0Y+hlGyiWO+kuaeuUjxP1sVqm+IUkSgZxxab97VqKZLjdT23DQ+SRM27NngKg==;
+	Resent-Cc:Resent-Message-ID; bh=cHGnCKsOdA2BC0TX8ARJYibszxeMCCoZfKEu/LhHyVM=;
+	t=1788533786; x=1789743386; b=UCRYy3JpAPXCFVaeiwlhnvDVyRd5fQDiJJg/51uOi3svnU3
+	XELYoBtnZpmaxA8HhChl/KV2ueu1PNugJz8HPOyKrvuujM8t2HsGyXt208TzMo9X2to4O+nxIHaxW
+	Lplvz8i+VXrsdBPZ5yj4cd+b7LMFoef6B0zoruH5qkSO9QRrqMz3MWgsdK1UvUKRa3q6f392Jr2Sk
+	BwwV99QyFL1V15KFTplHxhGAKgthMr5gmZPnoMoihKxTs6Wvn/YImz81Z/cAc0DRWB0cqrn3aqj8d
+	LOLxq8RUYRuyURG1LOt1HmHdYY1v8pEkdqsei6/6vCu3CgKUTC3UDVelNZwZVRWw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VL4-00000001SUL-2Z1V;
-	Fri, 04 Sep 2026 16:56:22 +0200
+	id 1x2VL5-00000001SUL-13jE;
+	Fri, 04 Sep 2026 16:56:23 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+abff43d2d045e37c0bb2@syzkaller.appspotmail.com
-Subject: [PATCH wireless 1/8] wifi: cfg80211: don't get the radio mask for netdev-less wdevs
-Date: Fri,  4 Sep 2026 16:55:01 +0200
-Message-ID: <20260904165614.2056a8b7dc91.I7412c5062d8166ad6c81ee7252cec49dea19a60f@changeid>
+	syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
+Subject: [PATCH wireless 2/8] wifi: cfg80211: check IP header size in cfg80211_classify8021d()
+Date: Fri,  4 Sep 2026 16:55:02 +0200
+Message-ID: <20260904165614.5e61a4c80b92.I37d68d3f406cb3b90b32e6943418d66070b65197@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904145614.423902-10-johannes@sipsolutions.net>
 References: <20260904145614.423902-10-johannes@sipsolutions.net>
@@ -51,46 +51,67 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-cfg80211_calculate_bi_data() calls rdev_get_radio_mask() with
-wdev->netdev, which can be NULL and then crashes in mac80211.
+A frame that looks like IP can be transmitted, but be too short, so
+the DS field is read incorrectly:
 
-To avoid that, invert the order of checks since wdev->netdev
-is always valid for beaconing interfaces.
+  BUG: KMSAN: uninit-value in cfg80211_classify8021d+0x99d/0x12b0 net/wireless/util.c:1027
+   cfg80211_classify8021d+0x99d/0x12b0 net/wireless/util.c:1027
+   ieee80211_select_queue+0x37a/0x9e0 net/mac80211/wme.c:180
+   __ieee80211_subif_start_xmit+0x60f/0x1d90 net/mac80211/tx.c:4304
+   ieee80211_subif_start_xmit+0xa8/0x6d0 net/mac80211/tx.c:4538
+   ...
+   packet_sendmsg+0x9173/0xa2a0 net/packet/af_packet.c:3108
+
+Use skb_header_pointer() like the MPLS case.
 
 Assisted-by: LLM
-Fixes: abb4cfe3661a ("wifi: cfg80211: extend interface combination check for multi-radio")
-Reported-by: syzbot+abff43d2d045e37c0bb2@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=abff43d2d045e37c0bb2
+Fixes: e31a16d6f64e ("wireless: move some utility functions from mac80211 to cfg80211")
+Reported-by: syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=878ddc3962f792e9af59
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/util.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ net/wireless/util.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
 
 diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 3e584d0ca3e2..408ebb10924f 100644
+index 408ebb10924f..5429cf3cfd2f 100644
 --- a/net/wireless/util.c
 +++ b/net/wireless/util.c
-@@ -2477,16 +2477,15 @@ static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
- 		if (wdev->valid_links)
- 			continue;
+@@ -1039,12 +1039,30 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
+ 	}
  
-+		wdev_bi = cfg80211_wdev_bi(wdev);
-+		if (!wdev_bi)
-+			continue;
+ 	switch (skb->protocol) {
+-	case htons(ETH_P_IP):
+-		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
++	case htons(ETH_P_IP): {
++		const struct iphdr *iph;
++		struct iphdr _iph;
 +
- 		/* skip wdevs not active on the given wiphy radio */
- 		if (radio_idx >= 0 &&
- 		    !(rdev_get_radio_mask(rdev, wdev->netdev) & BIT(radio_idx)))
- 			continue;
- 
--		wdev_bi = cfg80211_wdev_bi(wdev);
--
--		if (!wdev_bi)
--			continue;
--
- 		if (!*beacon_int_gcd) {
- 			*beacon_int_gcd = wdev_bi;
- 			continue;
++		iph = skb_header_pointer(skb, sizeof(struct ethhdr),
++					 sizeof(*iph), &_iph);
++		if (!iph)
++			return 0;
++
++		dscp = ipv4_get_dsfield(iph) & 0xfc;
+ 		break;
+-	case htons(ETH_P_IPV6):
+-		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
++	}
++	case htons(ETH_P_IPV6): {
++		const struct ipv6hdr *ip6h;
++		struct ipv6hdr _ip6h;
++
++		ip6h = skb_header_pointer(skb, sizeof(struct ethhdr),
++					  sizeof(*ip6h), &_ip6h);
++		if (!ip6h)
++			return 0;
++
++		dscp = ipv6_get_dsfield(ip6h) & 0xfc;
+ 		break;
++	}
+ 	case htons(ETH_P_MPLS_UC):
+ 	case htons(ETH_P_MPLS_MC): {
+ 		struct mpls_label mpls_tmp, *mpls;
 -- 
 2.55.0
 
