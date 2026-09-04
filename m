@@ -1,146 +1,113 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-ej2-f1.google.com (mail-ej2-f1.google.com [74.125.228.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56FDA36C0C8
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 08:49:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 365823E7BA4
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 09:06:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.129
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788511785; cv=none; b=lX5QJCnMwu4jHAovzpParj3l1aFuMBe1621oDpCg8iAkzwoe+YTE1gKoRipYO3yD6vERaC5WEImhXjxwIuQ5lXKOKMxn71pTZ4FGFFhfFPnBFnef/WaweC9uFwuqRc7kqnhlKLb5HbQ5aPZdKX7UEgBNZpqwc/cXt9VyfUX4GYc=
+	t=1788512810; cv=none; b=mn7pU3OE+ubTj+JYG/YSu/JTC33tfkbkGe5uKBICa0rJ2ho2vUk9A+ZAWquqT/LNYe6YEIDcSClR3xju2TUravaokf89XDqA31cN+cmcWPOcLJbrg0ydL4oiIOkkMnZbCUV8jOIulNeFEJeHZ1KR3lZNoXax9hhFgRL5UEgnPCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788511785; c=relaxed/simple;
-	bh=Z8mPENNWcv1eq8P/28+Mi9OOdfEllu2+UZehW5EHxFU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ltNjbP0Pnlqfq72nJws2ApiQ4kypJXvZZJSAIIxTW7o8RpZZXI+Qfy+8PTf7rHLPB3yZaciCw7YmZgLgQO1E47BCjeQ9uXlRb3G903emgwHS6l/cGuy7OniQ8H47Qv/q5cA2BsnwdfFQnfd60dmAqTgfawQ2HWIh3iOkQWXWApI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=n1lOqSst; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788512810; c=relaxed/simple;
+	bh=fRUsBC0vRdmA7CghYVQ1yCKfykjRMfmZmTgqkwKPv2E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Nu8QfFpl6wQi+xsh+ZS+KLtuMMfKxzceMAPHdN1+F0Rom5/dad6UUgLFtmBnBhncJkWaejJ4HaPNwQoujrf98kXt24WQZDj4Jl2iexg2KcP3M3iyEQrT8dnk9ivMQtaYf3+zdNETLnM7IP0TBnrC9zImXUxTX0yMmFUbz7Ren98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=G4Hkwcpp; arc=none smtp.client-ip=74.125.228.129
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="n1lOqSst"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4980fe6b3beso13483075e9.0
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 01:49:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="G4Hkwcpp"
+Received: by mail-ej2-f1.google.com with SMTP id a640c23a62f3a-c15de09d5c4so36002166b.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 02:06:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788511782; x=1789116582; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Jfu2EemlakeU3G/i0hecUm1qkaXQeHbKJFBtMpImgJw=;
-        b=n1lOqSstD3Dli/+SNwFHxQkCrAzROyLT0LInxHbSTlaMF0/lRvLfiJpIxgX+7hbYxa
-         /FlJ3YmqBSEo+VxK84raVUghIeROORfFY5MZZT3NHfd1ZaJteHxBQPTHIanHnI8tviaQ
-         QNLki2uYxRCTN/eCwzZBxG+e+JXQW+0GHuKcRbcuGlAhrlpGkIIKPdMlOVQD/8XS8kXZ
-         sfD+675CKJwXrkdNElNqXfssQ2KCGkaxKfW45HBZPYV722n+h4hx63IV+d8aWGqjA+bO
-         zmMfBOxmN64pMUVW7UtGcsj5yjA0sxlkStC9l0jhcUQphIm6JjWNmkF+DrBD51a7DY5t
-         AwtA==
+        d=bairaktaris.de; s=google; t=1788512806; x=1789117606; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Uo4Rx38QNKC6a2s1UXfvJmSvSpnape+bVE/YMGjtDuk=;
+        b=G4HkwcppqokRa84nVKefI4xQIWKT3vDSMtP3IoTAU/za/bqDFRXdnoD18vRUaMYPUN
+         HG2sCz+uIHkmAC+3OyllDgOlwPzYqoyZMMxaD2KhcBLucMkMLz4JLhXGzhSmPFbDcCCU
+         4W3gB8iTrnkr8o8J+AawTXJKLRASLMnS6w3+e9jh/7ZNhfGWoGLAsBeh2OxggbZyKaxC
+         5Pa6OIkfc3R1IPb03kg7qrH9ZSovkO3MymMsD9bJ4f5016qDJc/t4T8FoVGQMm9be+80
+         qamYRFoktp7TXKtuVI6D7vKwst4S52ZHWw8gObpaLEbMfNk2CtM4mv/Q5D6fTlknOcPh
+         XSFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788511782; x=1789116582;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Jfu2EemlakeU3G/i0hecUm1qkaXQeHbKJFBtMpImgJw=;
-        b=VeCFiwyNOIPDneEc1ryAhT56Kr8lDETduXOCMrKk3O9i9PEyWKxzYSzuVCTy4GDCIy
-         MfQDGLg7cnU1tdfG2nSiS1YnvrhxUW4LWz7BibGbioZ2SGR+9Ljj1iZ8yiIV6qzfsumG
-         4HuP70VThI59LVHjeuXI4rUol5UoEgv2DCEVO6abz3FNPXkgD8TN2FzO8cJx0jpggVV+
-         M0gIBzyNM8PaNPAoJdk7bFOcZDk6KC7b7r7EzBONXCX+ZSva9sMlCBbB2KJ6q6tJ6dNl
-         OdFOBExhCMKg/6nfTJexpYL/PRjeoRSHBwpCSH8vZoz2Y1bFxZA+gIOFDyIPklggx3Nd
-         SMqw==
-X-Gm-Message-State: AFuF++lIHJXunjdXq1lNG7nAx3Cp7E1auuqCAMFXRbkI45Lnn0NHZLCB
-	m8xHRJrVR3m6U3a8LxS7MB79PDc5ROO3XSIIG+ZbuUO5eEimR+6aHpk=
-X-Gm-Gg: AYBFou1hNhgGwQoJ48MYJhUz+iDRV1+R96fuOZcyjJN2HHucE8vulyeG7/phYlwsnZQ
-	UxygWWiJFoA/3m+WVoVeJgePfRrzSIRe/gwpNgoUkJwSTlzHNDwypMwk/6R18BHpB/k6HFB6JlF
-	yj/okyXLL3xBJ1iv182+eiHAWYTXkS0cDAnZ6hXC6xVdKG2zojWhgHdbX4zL3zI+tXHMxM+rRRP
-	Zoki2U7cYg+plKIkVxyTPfWMNY806O9/IhborierRjfSNEgVGZmbqPfoyoCbWFfpVpMIzsGFLZT
-	9KPCYMG2/Y2XVdNcJB90K+kaaBsM0XoY28e+vO4MYYOHZEH/YpDDrM/4b0PP8AxKtr1+svxUngt
-	+DDX43jzVMOxicqO1qPdgzeGShsy7BDZWYmVbaSP5CVhvLTUHNc8nGNZKKIZUiG51qHfczi3PJx
-	O3Mat9XuKTN9L+v10bHfZStfWt/hRHYQ==
-X-Received: by 2002:a05:600c:8b8c:b0:49c:f13e:e52 with SMTP id 5b1f17b1804b1-49cf893b58bmr31193105e9.15.1788511782473;
-        Fri, 04 Sep 2026 01:49:42 -0700 (PDT)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5941cb4sm83963155e9.4.2026.09.04.01.49.41
+        d=1e100.net; s=20251104; t=1788512806; x=1789117606;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Uo4Rx38QNKC6a2s1UXfvJmSvSpnape+bVE/YMGjtDuk=;
+        b=St0b5yhimaRuP4o9lf93ZeYU588ih23ffYVR2kCVxKkYGXl3GfF+YpDckw2pk6MDVN
+         1P95OcxB48a+yDzJ+QMw1k5ZlNG45u2R+PREsFY9KHYhtUPLIrGp0Xj65PCf4jzYVgca
+         qZHyhgS15IkZzcWoUWasHf14p/874934D5EFYzlHSYA5JJNa/6wx+cGFOEPA+Psyu9O4
+         re9cfKDBNqYWZfp8tDQjsVP+FJhjFi5V9X2cQ5fsqCOCYopwtmxlXDKAnHDPm7HZF42/
+         V7gXXDUVYVmCtOMq8s75p+/ynIP17uJX1TJYyqut60o6mXc7B6V8CIG4AXJBuvk7C3lA
+         ls5Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxTXcqp2VGgkyL74WiCTo3XzB01i3DWE7W4Tn4qLgc42ClYpc7IPARSSihL9wqUHYodrGinxLMOrfId6my8nw==@vger.kernel.org
+X-Gm-Message-State: AFuF++n/7NVEJao5UHOGdUaB5H71hPikuBk9Ux10lNyAC5d7lKkkZ6EQ
+	/HvQoSGrzxitqf0SMQg2Ffp1a7vI7dSCiEDn1OJGHzCLTBsA/UKsVGLELELLC4Envf2SCg1F89c
+	ESMHN0KBFqiA=
+X-Gm-Gg: AYBFou142Wn0/yasKp3rbsuqUExrsfZhN/Sjz2yVGNfbYGgFw9m/Mn5Qaab3JZhn+mr
+	YJfBo7e3DLqQJ7xTRsW2hvk4899ulJs54IaEq/YNx9SkOxFQdWRxzvw5LEC4mYElDNac8GbzPEG
+	0TFxikjZRkT1lG7Ftw59M5e+wShmLiJSumUT0cvGg3QSK5gD0bWwXxjfkt7CBZe9nZ/5Le6s4qy
+	ewLabCmCFk5hZMKDi5BVATJZldUOJcQtYgd7xJUCuOsXoh/8z/4PPddF8AmCJ+5r70JNrI0Z6r/
+	VpiAdN5URyqWtrN5qTzLrW16JyuBUNMulHomZpFb6OzyicC6RhNRnnUU0iZia7UJTbdKcT16oNB
+	qp3x5m0YS3VeK6bgV7iBiWHARD9tN1rVFBNdjAeH21MKZs4hsG6jW5pji/KqSIdjhyLjN+MTQmp
+	ZpSsuMf7KV+XuDjARIuzMKj23Xycvm3O6DcqoXIn6j8DTVKstaBeSYSKh5mE9d5+Ye00UEbNm3m
+	oXRH//rdulCzq6IEQcTkyHC5pX2Cxig9OZIa5ALtjbYDqSGzTizOiasQVkXgMLiout2VIjCawEm
+	hocXoI1sFs5RAdrEASphcvTX2Vp6oDNRKPuyNU2Xu5mlWplKX1RDwb6RnpFia0mQkqqiSTgsPKK
+	Bh6PjRZ2qYcpeDmdjcEFC8PN3Lvt5WxlxjXlAF/+aLSNza28eWV0NJWjU7IQkWG0PkixeWzUWGp
+	CCWbyyiR6sFo5T
+X-Received: by 2002:a17:907:c00b:b0:c25:5fa5:dea4 with SMTP id a640c23a62f3a-c260c9717e0mr336806266b.4.1788512806207;
+        Fri, 04 Sep 2026 02:06:46 -0700 (PDT)
+Received: from Desktop (pd9513f67.dip0.t-ipconnect.de. [217.81.63.103])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c260d559364sm77404766b.35.2026.09.04.02.06.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 01:49:41 -0700 (PDT)
-From: Tristan Madani <tristmd@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tristan Madani <tristan@talencesecurity.com>,
-	stable@vger.kernel.org
-Subject: [PATCH wireless] wifi: rtlwifi: fix OOB reads in IE parsing functions
-Date: Fri,  4 Sep 2026 08:49:40 +0000
-Message-ID: <20260904084940.3885379-1-tristmd@gmail.com>
-X-Mailer: git-send-email 2.47.3
+        Fri, 04 Sep 2026 02:06:45 -0700 (PDT)
+From: Julius Bairaktaris <julius@bairaktaris.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wifi: mac80211: fix swapped fq_overlimit/fq_overmemory in aqm debugfs
+Date: Fri,  4 Sep 2026 11:06:26 +0200
+Message-ID: <20260904090626.92727-1-julius@bairaktaris.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Tristan Madani <tristan@talencesecurity.com>
+The two scnprintf arguments for fq_overlimit and fq_overmemory are in the
+wrong order, which results in the aqm debugfs file showing the overmemory
+count under the fq_overlimit label and vice versa.
 
-rtl_find_ie() and rtl_find_221_ie() iterate over information elements
-in beacon frames using a loop condition of `while (pos < end)`.  When
-only one byte remains (pos == end - 1), the loop body accesses pos[1]
-which reads one byte beyond the validated buffer boundary.
-
-In rtl_find_ie(), pos[1] is read in the bounds check expression
-`pos + 2 + pos[1] > end` before the result of that check can prevent
-the access.
-
-In rtl_find_221_ie(), the situation is worse: when the last byte
-happens to be 0xDD (221, vendor-specific IE), the code accesses
-pos[1] for the length, pos[2] for the data pointer, and passes both to
-rtl_chk_vendor_ouisub() which performs memcmp() on the out-of-bounds
-data.  The bounds check `pos + 2 + pos[1] > end` only appears after the
-vendor IE has already been fully processed.
-
-Fix both functions by tightening the loop condition to
-`while (pos + 2 <= end)`, which ensures that at least the IE id (pos[0])
-and length (pos[1]) bytes are within bounds before any access.
-Additionally, in rtl_find_221_ie(), move the full IE bounds check before
-the vendor-specific processing to prevent accessing IE data that extends
-past the buffer.
-
-Fixes: acd48572c396 ("rtlwifi: Change base routines for addition of rtl8192se and rtl8192de")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+Fixes: 2a4e675d887b ("mac80211: Export fq memory limit information in debugfs")
+Reviewed-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+v2: rewrite the commit message (Johannes)
+v1: https://lore.kernel.org/linux-wireless/20260823195739.49222-1-julius@bairaktaris.de/
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 9e98c01bb90e6..9671b9247b571 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2373,7 +2373,7 @@ u8 *rtl_find_ie(u8 *data, unsigned int len, u8 ie)
- 
- 	pos = (u8 *)mgmt->u.beacon.variable;
- 	end = data + len;
--	while (pos < end) {
-+	while (pos + 2 <= end) {
- 		if (pos + 2 + pos[1] > end)
- 			return NULL;
- 
-@@ -2597,17 +2597,17 @@ static bool rtl_find_221_ie(struct ieee80211_hw *hw, u8 *data,
- 
- 	pos = (u8 *)mgmt->u.beacon.variable;
- 	end = data + len;
--	while (pos < end) {
--		if (pos[0] == 221) {
-+	while (pos + 2 <= end) {
-+		if (pos + 2 + pos[1] > end)
-+			return false;
-+
-+		if (pos[0] == 221 && pos[1] >= 3) {
- 			vendor_ie.length = pos[1];
- 			vendor_ie.octet = &pos[2];
- 			if (rtl_chk_vendor_ouisub(hw, vendor_ie))
- 				return true;
- 		}
- 
--		if (pos + 2 + pos[1] > end)
--			return false;
--
- 		pos += 2 + pos[1];
- 	}
- 	return false;
+ net/mac80211/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index a4d5461f6480..014f3c872706 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -96,8 +96,8 @@ static ssize_t aqm_read(struct file *file,
+ 			"RW fq_quantum %u\n",
+ 			fq->flows_cnt,
+ 			fq->backlog,
+-			fq->overmemory,
+ 			fq->overlimit,
++			fq->overmemory,
+ 			fq->collisions,
+ 			fq->memory_usage,
+ 			fq->memory_limit,
 -- 
-2.47.3
+2.53.0
 
