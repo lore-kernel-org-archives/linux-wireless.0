@@ -1,136 +1,100 @@
-Received: from sphereful.davidgow.net (sphereful.davidgow.net [203.29.242.92])
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D4A2749C1;
-	Fri,  4 Sep 2026 07:30:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.29.242.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F0B73A48F7
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 07:35:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788507057; cv=none; b=R8qfMPvtqw1qeFcSThOEQzB+D5kR6kADqOoCYyDLW2yhKG+kPhhehHhNdDPoaYMQ8v+Ua18+rV/MjbqY2h5wLo2PR7gTj7EqR4b/jPahWB3IvGvBW1szBXndOEYf+LWVC5C3vVBa5tXTo3ujT09rPXxLM0TU8c++7+4lkYdgBy4=
+	t=1788507364; cv=none; b=U2o9uFgfHTdn8++mLkCqzDF6lzUcsTl6ZeDEBI3YJQTHsHmZIt8xqnZdiekT0Mp0ufO6qKPGfUq3MzYtU38DFLAIitV1KYCwV6+NyTScR1YKAJ/WWX/X4cYjrdMpAoyuKMvtEPQ9fRibRwHkdMmLZZCB7YtTQxKnSkoYKsOMYmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788507057; c=relaxed/simple;
-	bh=63RTdAchA4e5/HG54Wog5dnkc1w5rE+eIUmtjEyIBvI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U/1nie/7T/8hIIkIz10OEBCLmkbLq0zv0M6boCsI9x63sOdH0rWT3hY+lkKVxF/T1ibXU5qZ4pOZRcR+Q5/s+r9j9dh5LAgYk8THO2xjxhq9BT6F8e2K1wcm6tybc+Tct9UW7RU/50MkhEsTi+AWpnaD7MMlraMQAFMyi8m1JrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=davidgow.net; spf=pass smtp.mailfrom=davidgow.net; arc=none smtp.client-ip=203.29.242.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=davidgow.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=davidgow.net
-Received: by sphereful.davidgow.net (Postfix, from userid 119)
-	id 844CF20013A; Fri,  4 Sep 2026 15:30:43 +0800 (AWST)
-X-Spam-Level: 
-Received: from [IPV6:2001:8003:8802:7000::41b] (unknown [IPv6:2001:8003:8802:7000::41b])
-	by sphereful.davidgow.net (Postfix) with ESMTPSA id 6205E2000F9;
-	Fri,  4 Sep 2026 15:30:40 +0800 (AWST)
-Message-ID: <bcf1ee9b-97e5-43f9-81eb-67ac6a0a98dc@davidgow.net>
-Date: Fri, 4 Sep 2026 15:30:37 +0800
+	s=arc-20240116; t=1788507364; c=relaxed/simple;
+	bh=9BmdIQOXzcZzIhJ6OxYyzRvCgAum9ek2MaBmEeYMRYw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hYuBsZqXoqQHyM32Nbm5a7E+F/zKuIx+E/yDxeKEedgS+B1UvOW93I2RSV5hKVNLKiX/LSul0EfYof3U/kAAMyMu/dj3r5KmNzv3CbyiQo6ljQEVwk+0xVhDQxoWsBl3sxfpkEx9G3rPqr6UvwP58UCh0SgcTPvr675d1Jv4Dus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=F+vb7NOL; arc=none smtp.client-ip=212.77.101.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="F+vb7NOL"
+Received: (wp-smtpd smtp.wp.pl 9849 invoked from network); 4 Sep 2026 09:29:16 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1788506956; bh=pXZi44vTEGgPV6aGYuUGoiM66gCNBhbOFDok4gwgmH4=;
+          h=From:To:Cc:Subject;
+          b=F+vb7NOL/LpdKYnXADgzCQbxmuB4H0gs1w3VwQwzs99yvUDzf/FwybnTuysDDLha7
+           ikrNokBfUJ+bYiNrvxUDfLpGNubyurY/uikKjQaqR32ViI71VtnEuGdjSWgFTV0ahM
+           uVWvLpu71Noyg4W0Zc6o+I83jzbi/BDoyKqPJLbkYu4uaEfRm9AyNkRR9mGAfDQm5O
+           QvfpGAATip7yWBQ5uUa18cvq6j3V1HBP3EgZeChGiy6/kqNo/FOYSftQgCEC4HLvhl
+           RYGnE2kfM1J3iQJR5tQ+dvD/sJQcp9VtFi8MaOManx9Ifht3YwUEiSVGyQk4Vzd9gS
+           9v1r9tc+Hcg0A==
+Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <johannes@sipsolutions.net>; 4 Sep 2026 09:29:16 +0200
+Date: Fri, 4 Sep 2026 09:29:15 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wifi: mac80211: queue frames while off-channel
+Message-ID: <20260904072915.GA41290@wp.pl>
+References: <20260820131217.21824-1-stf_xl@wp.pl>
+ <2476da0c8b837dba5750f7a556d9bac2387a9c59.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI
- SAR init during probe
-To: Devin Wittmayer <lucid_duck@justthetip.ca>, Felix Fietkau <nbd@nbd.name>,
- Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: Klara Modin <klarasmodin@gmail.com>,
- Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>, JB Tsai <jb.tsai@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>, Ryder Lee <ryder.lee@mediatek.com>,
- Shayne Chen <shayne.chen@mediatek.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- regressions@lists.linux.dev
-References: <20260825181712.28548-1-lucid_duck@justthetip.ca>
-Content-Language: en-US
-From: David Gow <david@davidgow.net>
-In-Reply-To: <20260825181712.28548-1-lucid_duck@justthetip.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2476da0c8b837dba5750f7a556d9bac2387a9c59.camel@sipsolutions.net>
+X-WP-MailID: fb1a43119bde8ad007de71e1487c6112
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [0RPx]                               
 
-Le 26/08/2026 à 02:17, Devin Wittmayer a écrit :
-> Some laptops carry a MediaTek power table in their firmware, and the
-> driver reads it to set a transmit limit for each frequency range. It
-> only fills in the ranges themselves when it registers the device.
+On Fri, Sep 04, 2026 at 08:56:13AM +0200, Johannes Berg wrote:
+> On Thu, 2026-08-20 at 15:12 +0200, Stanislaw Gruszka wrote:
+> > 
+> > The change depends on the iTXQ resumption handling introduced by
+> > commit 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs for resumption")
+> > and the wake_tx_queue support introduced by
+> > commit a790cc3a4fad ("wifi: mac80211: add wake_tx_queue callback to drivers"),
+> > so use those in 'Fixes' tag.
 > 
-> The startup step that does this existed already, but it never programmed
-> anything. These two commits made it run a regulatory update instead,
-> which sets the limits on the way through, long before registration. So on
-> a machine that has the table the driver reads through an empty pointer
-> and the interface never appears:
+> That doesn't really make any sense, IMHO.
+Going to drop those 'Fixes:' tags and comment. but I don't know
+what the tag should be then.
+I saw in docs that 'Fixes:' is required for -stable submissions
+for net tree, but maybe I could just skip it for mac80211?
+
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -267,20 +267,14 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+> >  }
+> >  
+> >  static ieee80211_tx_result debug_noinline
+> > -ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+> > +ieee80211_tx_h_check_offchannel(struct ieee80211_tx_data *tx)
 > 
->    BUG: kernel NULL pointer dereference, address: 0000000000000004
->    RIP: 0010:mt792x_init_acpi_sar_power
->    Call Trace:
->     mt7921_set_tx_sar_pwr
->     mt7921_mcu_regd_update
->     mt7921_regd_update
->     mt7921_run_firmware
->     mt7921e_mcu_init
->     mt7921_init_work
+> I (vaguely?) had these ordered by execution order, might make sense to
+> move around and try to keep that.
+Ok, will move.
+
+> >  {
+> > -
+> >  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+> > -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+> > -	bool assoc = false;
+> > -
+> > -	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
+> > -		return TX_CONTINUE;
 > 
-> Skip it when the ranges are missing. They are applied again once the
-> device is up, which is where they came from before.
 > 
-> Reported-by: Klara Modin <klarasmodin@gmail.com>
-> Closes: https://lore.kernel.org/linux-wireless/aoyxqHYvSuaBeubf@soda.int.kasm.eu/
-> Fixes: 9b80bd9cab40 ("wifi: mt76: mt7921: add regulatory wiphy self manager support")
-> Fixes: e9f3f1cc133f ("wifi: mt76: mt7925: add regulatory wiphy self manager support")
-> Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
-> ---
-
-I can also confirm that this fixes the same NULL pointer dereference in 
-7.3-rc1 here, also on a Framework 13 (Ryzen 7040):
-
-BUG: kernel NULL pointer dereference, address: 0000000000000004
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 0 P4D 0
-Oops: Oops: 0000 [#1] SMP NOPTI
-CPU: 10 UID: 0 PID: 149 Comm: kworker/10:1 Tainted: G            E 
-7.3.0-rc1-sulix+ #15 PREEMPT(full)  b7f05cce278af6607ac2dcae2fd785935bbe0dc6
-Hardware name: Framework Laptop 13 (AMD Ryzen 7040Series)/FRANMDCP07, 
-BIOS 03.05 03/29/2024
-Workqueue: events mt7921_init_work [mt7921_common]
-RIP: 0010:mt792x_init_acpi_sar_power+0x40/0x1ed [mt792x_lib]
-(...)
-
-
-Tested-by: David Gow <david@davidgow.net>
-
-Thanks,
--- David
-
-
+> Not sure you should remove that, still you want injection to go out?
 > 
-> Reproduced on both chips before sending, an MT7922 and an MT7925, and the
-> fix clears both. Neither machine here ships a vendor power table, so I
-> supplied one through an ACPI override in the initrd. It also wants recent
-> firmware. The June builds do not turn on self-managed regulatory and
-> nothing happens; the builds now in linux-firmware do, and then it dies
-> exactly as reported with no interface at all. Patched, both come up and
-> scan normally, and the injected limits still show through in the power
-> table afterwards, so the skip does not lose them.
-> 
-> With that table still in place and the fix absent, backing out the mt7921
-> commit on its own also boots clean, so the table is not what causes this.
-> 
->   drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> index 946dd7956e4a..b468051fbe68 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> @@ -323,7 +323,8 @@ int mt792x_init_acpi_sar_power(struct mt792x_phy *phy, bool set_default)
->   	const struct cfg80211_sar_capa *capa = phy->mt76->hw->wiphy->sar_capa;
->   	int i;
->   
-> -	if (!phy->acpisar || !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
-> +	if (!capa || !phy->acpisar ||
-> +	    !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
->   		return 0;
->   
->   	/* When ACPI SAR enabled in HW, we should apply rules for .frp
+> Not sure injection should even be queued - maybe you do want to send
+> while scanning on a random channel? Or maybe not? Maybe someone depends
+> on that behaviour? Or maybe not? Kinda hard to say...
+I will keep it v2, change indeed could cause regression for someone.
 
+Regards
+Stanislaw
