@@ -1,103 +1,115 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80A6947F774
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 10:53:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9848F3A6F11
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 11:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788519206; cv=none; b=tsjmApScuCltxHI5mcbo6OkqRDSUWiXXCpdJ77LRX2cqeEN/NKFHjqaFEfkADUtmxEWB8uMnwdsgN9mN9x534G/mKeCaZCAqIeygtulOuYlRcvspzDVbDEK4rPCkOgyyFmTnWUYIjNaMWEK0Kh3z4yT1RaW7MVWzo5TkuDIOPww=
+	t=1788522415; cv=none; b=Qw9kz/LgqbACc9yhVwE2rOXPfLXh+xLQlCnue48bLuUB0carTE+rhRHaKrGcim+aQrXDU0GWRoYWtGI9wjyKGX7KKQzwopGsrsLWom/QlpEKeJzeDmxGsBQ7mt/ACIFbve+PjTSrpbhH7AFssPlqJO58v8MbG2sBkZkItKbnCUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788519206; c=relaxed/simple;
-	bh=Uo0nJNWyQeugzeZ71OV+2aOLYFmZFM+SLpYSMzCZIWU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L+jWVasY6ajoqde0TGmzLWhiETG7YUdVuI6JPAVo//zz5Gagnartu6OQuZHzivZnPrJnnyYdUSP1t/1Nydz6bLfQrTtXUICH0fVKZ5zQHn1wO/nBCRRyhCoXN69VoGzkrFqrBsJPVwvdvtUFjByQvhj89wvS6seiCjt2ltFYXi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bapG/pt6; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bapG/pt6"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cbedf433a99so927071a12.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 03:53:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788519199; x=1789123999; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ZpIP2MYSsGgQmoU6USafOMMVUmfThh8Xiz9qk2fLfyA=;
-        b=bapG/pt6JLaGyer+ME3IOo4ak5/hS3tmHIAYg99AFRmeN5r1gQGQb2c3Wo9G4ksCVU
-         1kwA0/G07x/wswDM2/sSwiWiUnSwNGG6z7YK14FQqZ95COFCytCHuVQMJRocsiWwsYdt
-         Da2diZ2UfCYg3q0JJX43+GFhMCMF2JT329uYxZrU12dkoC0pOcaTayeafujInulmFJdZ
-         XplPNc7RCiccSSZumVS+yu4w8sykXOcVU9KF1jsiOYtUWv1u3rFtSjNj6M+g30vQ5FaE
-         6CEQ/TEs9/JWfIg7Ybr6jfTx6GFwHBmOk6IwswyziNVe3hCwAI3Ji3ygg87GQO8czX+d
-         0a+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788519199; x=1789123999;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ZpIP2MYSsGgQmoU6USafOMMVUmfThh8Xiz9qk2fLfyA=;
-        b=gdxMgXvKihbkwpKeMT4885AbmxDY7oHqD/B/GziFk7IbXGze4wKnWnDysCp3jvnNXZ
-         EMV5Sx6/0+r5WQ2yUd8Q1CL8LtHggSWBUbFgwxdyEBK7OT1Q9/kmfxZsmQ7cHPaHwyJK
-         MI6HIZKBOzZw5QC9xcOEc3Uhgsfp+6eVwl9R886On7BrpgpkY8XGjID7A3Rs88QuUWTX
-         9LU4GmGPg1cGScR+/K3/l0BuHguyPKm6kHDBom3ZP0JIeUBciZC3w0/Q0KAMEjCkJXvO
-         Hc+4UhMAcrcV6wX2vNrlnPOkO6lozudDZ4myBk2231Iwn23JVa1dPpCYy3gU11hA6ngh
-         wUvQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzOB9+iLdVtnQHDC3SAB8hc1GwFpqHGyHa+xHgGl0R5DiTLy/9SH9jtFvIM45NxLMBXsKkyqx95zc6R16YxWQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++l/s1BJL7hs/28V2iPGKsKONy93L9vGTGfcWLtgLAHtakC1ojbC
-	6ph4+Y59Ql0swlTNdxmIDSuGiPpxFLqo7u2JQnsfaL2A/JbeefC0Dg4W/V0bR14DLZw=
-X-Gm-Gg: AYBFou0Ma5Lx8hgtbaQGmxTla12735eBDc3THuG+h/TBeaLrWhCNsJwKFRuJWoO5bZ6
-	d9Z/EBSlEmEHBeMkdjCleXuO8kpyo97rnXXQQml9DvXeBy1Ganvonr+Q9xhxA9W4+vLWtC7b6gF
-	9PXYttkBeet11CaQhebFen2lo6U5LLkTcR9rcr1W3G16UxYVveNBgP/stSOLYsu3F2x1/t05/9k
-	dV1i6uz+1ayouypCH2OjGJ1YI03Lz/e/Sh5xafCW/nU0+LNVs+kLxdw+cO5cvXVhiPh0thbhxar
-	YqcIY1Yn7XhuY5QBYtMF2zARU+UOTK9lA38wGkJL0eVE17HOnExZLa3d3sBW8p7tvC7OrVqoVMj
-	isafcJ0zvbSH3EL7IBv1wbe4XF9crDrTYU9OIgCWHInr78pCi4VrcmoxbTanc6LyxTipEOhq3Sl
-	BB/T06VHXOnn05IdoxH/YzAZudn4zVi5hlsHayf7mnYeBpZKii9Kb4+epIE0gVLKU+3xAP+hy2f
-	5RrqguNhjiAEXJAjhaZJnXEsQ==
-X-Received: by 2002:a05:6a21:3204:b0:3c3:bbe6:95c7 with SMTP id adf61e73a8af0-3da3a0a910amr8553364637.17.1788519199395;
-        Fri, 04 Sep 2026 03:53:19 -0700 (PDT)
-Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339af25062sm8624311eec.16.2026.09.04.03.53.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 03:53:18 -0700 (PDT)
-From: Hemanth Selam <hemanth.selam@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] wifi: ath9k: fix typo "upto" in comments
-Date: Fri,  4 Sep 2026 16:23:12 +0530
-Message-ID: <20260904105313.33238-1-hemanth.selam@gmail.com>
-X-Mailer: git-send-email 2.48.1
+	s=arc-20240116; t=1788522415; c=relaxed/simple;
+	bh=eyKocvX3UttCaC534y8Qs1Z86d6NrKhSHOJYy0COTX0=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=EWMu/cXpOH/GgdYFgXaAOqk3xf50aW307jYsIxjSDdy8wjYH3bRWCu0YKMRha7VGSjTAUv81Ny9dC+yaNY/ya//IDaqyL263na0zSMx6hfRbCKOaMxSDHntFkrxbNPU+1vbyiNU0DG37hEJbjTBf/00VZ027nzEyMMc8RTUS77M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Julius Bairaktaris <julius@bairaktaris.de>, Johannes Berg
+ <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wifi: mac80211: scale the airtime queue limit by the
+ station's weight
+In-Reply-To: <CAC1t37KSg4rHmWBWvF1OkGfjYjVuQ44oDu-F=s4-7RXpkZD7kg@mail.gmail.com>
+References: <20260824142435.1757391-1-julius@bairaktaris.de>
+ <b61760b0e284898db3dc3c7856da128ba637330e.camel@sipsolutions.net>
+ <CAC1t37JMHWHNfEfK4+2uMj59+rkQATftmohmxnYM63crYGWysw@mail.gmail.com>
+ <6d033c71732e8ad2df4abcde1d38d89e2536609f.camel@sipsolutions.net>
+ <CAC1t37LF9Y=s23DNXmg9WM6sV+ENg+hTNgRNiW5ZMEwqx9CZJg@mail.gmail.com>
+ <b1fee6e45c4e2d215437f112c8819d74547ac11a.camel@sipsolutions.net>
+ <CAC1t37KSg4rHmWBWvF1OkGfjYjVuQ44oDu-F=s4-7RXpkZD7kg@mail.gmail.com>
+Date: Fri, 04 Sep 2026 13:46:49 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87tso5tf12.fsf@toke.dk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Correct "upto" to "up to", reported by scripts/checkpatch.pl using the
-misspelling list in scripts/spelling.txt.  Only touches comments, no code
-changes.
+Julius Bairaktaris <julius@bairaktaris.de> writes:
 
-Assisted-by: Cursor:claude-opus-5
-Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>> Now I'm confused - I was thinking it'd be wrong _only_ for ath9k etc.,
+>> but you just corrected me and said that ieee80211_next_txq() is called
+>> anyway, so then wouldn't it also be wrong on ath11k? Or not wrong on
+>> all?
+>
+> Both run the DRR:
+>
+> ath11k drains the selected queue until AQL stops it
+>
+>     net/mac80211/util.c, wake_tx_push_queue():
+>         while (1) {
+>                 skb = ieee80211_tx_dequeue(&local->hw, queue);
+>
+> so every station has a full queue in the chip and the firmware picks
+> the next one. The DRR order doesn't get exposed to the fw.
+>
+> ath9k hands over one aggregate per selection
+>
+>     drivers/net/wireless/ath/ath9k/xmit.c, ath_tx_sched_aggr():
+>         if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
+>                 return -EBUSY;
+>
+> so there the DRR order is the air order and the weight already works.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0d6272ac0dac..af92bb25f74b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1826,8 +1826,8 @@ struct base_eep_header *ath9k_htc_get_eeprom_base(struct ath9k_htc_priv *priv)
- 	struct base_eep_header *pBase = NULL;
- 	/*
- 	 * This can be done since all the 3 EEPROM families have the
--	 * same base header upto a certain point, and we are interested in
--	 * the data only upto that point.
-+	 * same base header up to a certain point, and we are interested in
-+	 * the data only up to that point.
- 	 */
- 
- 	if (AR_SREV_9271(priv->ah))
--- 
-2.48.1
+ath9k doesn't use AQL at all (as you say, it schedules transmissions
+directly), so that's not really relevant to any discussion of AQL :)
 
+So I think the reason the weight is not working is that there's no
+pushback from the driver in the wake_tx_push_queue() callback. The DRR
+mechanism for achieving fairness (or, in the case of weights,
+unfairness) is basically:
+
+1. Driver pushes data to the hardware until the hardware buffer fills up.
+   Crucially, the assumption here is that there's a single shared buffer
+   that we fill.
+
+2. When some space in the hardware becomes available it pulls the next
+   data, and DRR can influence the order of packets going into the
+   (shared) hardware buffer, which is how it controls the division of
+   airtime between stations.
+
+Crucially, between 1. and 2. (i.e., from the buffer fills up until
+there's space again), the driver does not pull any packets from the TXQs
+until there's space again. In ath10k (for example) this is achieved by
+the ath10k_mac_tx_can_push() check in its wake_tx_queue function.
+
+However, the mac80211 implementation of wake_tx_queue() just calls
+drv_tx() without any pushback, so every time a packet arrives, the push
+function will re-run, iterating through the available TXQs and pushing
+data into the driver. Looking at the ath11k specifically, it seems
+that the driver will just keep pushing data into the hardware, only
+stopping when it runs out of TX descriptors across all TX rings. At
+which point I guess packets will just start getting dropped in drv_tx()?
+
+Which means that for ath11k, stations will pretty much always have their
+full AQL limit worth of packets enqueued in the firmware. And changing
+that limit to take into account the weights does not seem like a totally
+insane way of influencing the relative weight between stations in the
+absence of other knobs. The main drawback is that this means that
+giving a station a higher share of the airtime also translates into
+worse latency for that station (as it'll have more data queued outside
+the influence of fq_codel). It's not quite clear to me whether the
+increased access to the medium will offset this.
+
+An alternative to this approach would be to impose the global limit from
+the mac80211 side by refusing to dequeue any packets into the hardware
+while local->aql_total_pending_airtime is above a certain level. In
+theory, at least, that should achieve the same thing by letting DRR do
+its thing.
+
+-Toke
