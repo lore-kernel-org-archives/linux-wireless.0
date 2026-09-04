@@ -1,43 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B5233BBB9
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886D54E8DED
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788534077; cv=none; b=eu2iTN+l9NtVWTODOFE3SWDEXCD0AZgQ4F+po5BAdFWoGiH3D3Ei6r0sR6jNKYVhwSMj4qxBBsQGc5gO/1N7LzBaGterEsxFM6QvvyCZPUsIKOBdWUQ9gUfzElA8SS505f8Z7+nx+LUIHfFoe4LmlWiJ3Mlr8smdJlc+ZxIdc1I=
+	t=1788534079; cv=none; b=aF/VWzn61Q6yYO3aK0UPimTxU/dwQpg8cN3+e53fq+prgb+0aMWDoVqQIE5TpL2A+bqAWq3WwWYc0OXv5CFNrkPbU0cYtNksshIdSzJyFOPDSPN99Yt3pQXbz+sJHQ8OUgujS8jKxm5DRgOBjTfTd2zJLlf5XdAzbnjvDsoL9ss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788534077; c=relaxed/simple;
-	bh=Ae1P12HyG5tRBwMBW95UM+Lon0ODN5CVgKbKpf74KT8=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=TTDHaLghimjNOd7HcggVY0iecrrcNCJnGSjvYIkKB+ugEtPTOYu+nRYWeNHx78fXjKZqO7bS/MTfkMWkZYJ7SB/onxiYSBcXwM93sSa044h1J39VQ/uSjaT2rYhiuvaI3ivzpMDkC4b/eI4ahmVUVIYQzFe1/k4EmwOjUJpgfgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=S0UNorH7; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1788534079; c=relaxed/simple;
+	bh=4evQ6mgYVVil0DkpyJ/B3pcNoU4tDbiFrOWVFydUFGo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BCSgVYCakm1+m8SXohma8GqSz6sSBYGf1h8c/025HPSqLlVXTWRwTOeGObuN7uYCikBEAv9uiiD+YDOG6J6Njqkqr3XnK32YtC57fGlmtVG/9uWxN3V9jpiao41OJyC9tTKMh3OqNOT5QZzH1qfZvXwBMVhpcJYUS0+TnJW7VlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PVIJa/rf; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="S0UNorH7"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PVIJa/rf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=Ae1P12HyG5tRBwMBW95UM+Lon0ODN5CVgKbKpf74KT8=; t=1788534074; x=1789743674; 
-	b=S0UNorH7gdMZT+Em5/wQhHI0gFIOqsy/KC/Icr3wC8VXMWehAFM41g9ujIP9F60lupAowZUAw3Z
-	Evr7gtTM+ECreUs5YhSURFQ5zFAj6ckP9WBJfYu2rnduKlR72vTNW/da4R8G37zWHKSGjTf2QSmtA
-	QnuMyTprnG0jbtYXbyXeMIM3N4U71a2zzPIGsa4jNI/iXyQiLf9GofW4YsbhGLpGyD7aSdMsotUZH
-	SchdCuzpTrEwQErDng2pBkH4xhpxEyFO+rq1d3a6ATx2mRMxtGBf04+pl7y+BQh7va3npTVv8IwNm
-	jV3ka0ADiZzSLpEjCNX5Np2ZyE3n/aqszo6g==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=GApykz5RrSng+Bd/BW5TcQmMODeuNzscx3bbYHkVgwM=;
+	t=1788534076; x=1789743676; b=PVIJa/rfHi/D8e5R9cU73KklAOljYVG1If2KKXbzXF/ZeDH
+	cZLH82PkgpdYYKbBAvxzGBpjWSi2sdV2Tux8XpVFH7zbWaL+4RzPuokQOehpuX6g7bXwI0hNZcIzM
+	c+AV2EhrSoeYhjjSv1fAmqIRqxTUzsUIwmM7jxfLojG+L8nkIjOLkFmJZ3piOoxQ49lE/ar4yf0wk
+	fn/mPwe0RlJSuMxfNmfNvl7tTbgB97wfaHJtfXMl0Rk36uxZeq8P5ps1ODFir1yXFbB/OsgxeXI09
+	SQifugilaJS4FV8ijrNZ9lT6Hh2cZZSOCPNgbUqQahA3JnGLrcehjl0DC/0WoK/g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VPj-00000001SeL-0mkB
-	for linux-wireless@vger.kernel.org;
-	Fri, 04 Sep 2026 17:01:11 +0200
+	id 1x2VPk-00000001SeL-2Pm4;
+	Fri, 04 Sep 2026 17:01:12 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless 00/10] mac80211 syzbot fixes - part 2
-Date: Fri,  4 Sep 2026 16:57:59 +0200
-Message-ID: <20260904150057.424369-12-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	syzbot+de3ee5362db09487ea37@syzkaller.appspotmail.com
+Subject: [PATCH wireless 02/10] wifi: mac80211: reset the AP_VLAN tailroom counter on ifdown
+Date: Fri,  4 Sep 2026 16:58:01 +0200
+Message-ID: <20260904170057.1f4fc05e5663.Ic863c2fea0352a9282006378bc9c9dedbe27c037@changeid>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260904150057.424369-12-johannes@sipsolutions.net>
+References: <20260904150057.424369-12-johannes@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,10 +49,40 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The last patch isn't really syzbot per se, but fell out because
-I originally didn't have the leak fix (c3e7724b6bc2) and then
-ended up with a better fix, this then just remained the userspace
-side fix (to report the skb as failed).
+From: Johannes Berg <johannes.berg@intel.com>
 
-johannes
+On ifup, AP_VLAN interfaces get crypto_tx_tailroom_needed_cnt from
+the AP interface, but it's never decremented again unless the AP is
+also brought down. Thus, bringing the same AP_VLAN up again will
+increment the counter again and eventually hit the sanity check:
+
+  WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt !=
+               master->crypto_tx_tailroom_needed_cnt);
+
+Reset it on ifdown to avoid that.
+
+Assisted-by: LLM
+Fixes: f9dca80b98ca ("mac80211: fix AP_VLAN crypto tailroom calculation")
+Reported-by: syzbot+de3ee5362db09487ea37@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=de3ee5362db09487ea37
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 9c10d2f0b8b4..ebe3b068c7ea 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -616,6 +616,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		RCU_INIT_POINTER(sdata->vif.bss_conf.chanctx_conf, NULL);
+ 		/* see comment in the default case below */
+ 		ieee80211_free_keys(sdata, true);
++		/* increased by AP value on ifup, so reset on ifdown */
++		sdata->crypto_tx_tailroom_needed_cnt = 0;
+ 		/* no need to tell driver */
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+-- 
+2.55.0
 
