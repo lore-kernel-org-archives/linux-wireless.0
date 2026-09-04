@@ -1,141 +1,115 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+Received: from mta1.migadu.com (out-21.mta1.migadu.com [95.215.58.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 144EE3C660C
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 19:16:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788549392; cv=pass; b=F6ErR9HHg74qXhRlvN3bAPSRkCKgTKuuK71oX3cn8zBauwLJRhvw+MmZuZddD5OBJNfd0dhavP1OlzMCtCx90KIGde/m4jhIPpjpA42uh2jJzpKlmjOB3IjP6hXGkW5p01thQjLgB442C94bIgHwzv3H9x7F5NtZ/8H42Vv6r6Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788549392; c=relaxed/simple;
-	bh=dSLn5HQBim03v9tLWNUdygFPDDMFDP1Cu81FBMYgWlg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rnxBdEjlzzh0ETLfuMnKbaRsJpan402E/3p0k4ku/T+KULVs1yYyE/xNCgOfRCfx0WsxXvjRNVA+2dHXwv1LWv+W4KafThMvU/vcbi9dzi9y0e4oaloV7OyR0EVJcY34do/1vunQN4lB2mUL7XflzTbxNgx2NR+bsaawRZKyB24=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QgvCyWFg; arc=pass smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B653B1014
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 20:03:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.21
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788552239; cv=none; b=uGcMDsa1DWiXpkr21bx35l4NACWd9RoHrU7FSbuOLThEIPEwHC0U5AQAsLk8Ib5iA+zSyADg/0/uZOayWYM8GE6dnA9R/1dmz20cDzN9bcOPZ32an/4v82dNUkdE7sNHq4i8hfBJSZEC0oT/L0+vAF2UQvWDmYVDDD8JP3e5a88=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788552239; c=relaxed/simple;
+	bh=qi6RHnGDCGkfNITqcvCFwcoWSmNWkH+un3Fby8LVM/w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jH5tacORn93/tMu1HzDXAHoRMBQcK07DlTIEpyY9aYbk1hLxq8XQjWR0etHbjBfWbqEWzeQyyWlxZBjFAL3JbteOkcAM3TaEkCSJ4Eh8VY8fJJ01bkKEVg2jd95N6MLRXgBZD5rzhby1ULAaaM4ArCujEwRqLtP5U9FX0KK218k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=gLC00eOX; arc=none smtp.client-ip=95.215.58.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QgvCyWFg"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6a68279dd86so1862227a12.3
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2026 12:16:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788549388; cv=none;
-        d=google.com; s=arc-20260327;
-        b=UVV+TCh5O116eZnwgeES5YXs/2TCXVekJQQTgxdjEMKp2fki8A5vmsPTfOMjrc6CPb
-         zMGY+MYnEIgYopylvdvzz85REPsJsRaRr4j4UvavFqwaJN+r7uPg97L33Rtr2GJMmqts
-         EJ7rcgNxNX9f66+TqexTCOjfLV5S7aTz3czuRZV2DiK0AvFwAuV7wLUqa5MSIHD7Ge+N
-         FsD9M2f1iaR/O2e+xpGaXet681mH3tzxlpQ98JwbqpJSVAJXGqV3futKR4FFmvI2WSz9
-         JLKUfx4Xet2O1MjZmsnQXDAv7U0KQlZ2JClN4p7w9bLMHW8y9hdB1kxEb6SWx4N7YZl9
-         SB+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ZCnu/IOFqlzFGy1VhMJGeYJiUaF7CCozjN+EPzxcJ4o=;
-        fh=kyUGJxJonLoHZz4Tg9rgEqPngE+pXNKX+MGgT6RbEUk=;
-        b=qqi5qFoJHfWgu+3L0Pmsj+HVJONIfWkz+jKYiBCF4p8YNw/hytxF9C6qxdi5Z0Uv4a
-         YP1wCbTCco3HCkbpTcLZ9svg7F8UamOfMhcKK68yCRH17aP/xhPIOWggWG9Lrzn6x2J+
-         Uq8zs1yxm1dYOsf1SC5zHievY4w8krD7oNFBiKRAuZx2mn7tMQJxgbzZ+xkVoX0msOV0
-         P7bYDxBl3jm5888xlJepIaRpGOoklE/73sVQz9p6e8m2DP83+O8PDLwh16NFqpD745Ds
-         95hs1j8qnpIJFvZbuDLL106PrmmLhGXsy2hjw/4dsgGywfO+iK7ZUY6oRoYdjVL/W9QZ
-         zAtA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788549388; x=1789154188; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ZCnu/IOFqlzFGy1VhMJGeYJiUaF7CCozjN+EPzxcJ4o=;
-        b=QgvCyWFgyNmROL83YCJLzqwTBjvqoW08p6BDRXpR1/Wh+6eGxue6Y5JE103P3rkSRU
-         421GIpzimmQwBi5YOnGSlZTN5RS9/tORuuHXv6MtyticGdqLCG60C3lvy251jwYOZw3y
-         UqhaHIh7rOWlGy+JLPP21QWVRXn3ostiASYswG1LajMle4ZVz1qbD0K1cOLCkA2Nefj8
-         qVvItzSOEUhB027EIc+dMpEs4Pu87e/faPwBO1l60Q7UoJ66I3nwoWJB3Eg7pX/qyCFf
-         yMYOyYCuFftH6n+ATI+4PzUI0J4Z8F19GdLtU4rPDAf+MBk62zPS5SOIvHxGVw5NJDq1
-         QhPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788549388; x=1789154188;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ZCnu/IOFqlzFGy1VhMJGeYJiUaF7CCozjN+EPzxcJ4o=;
-        b=PuwJ8CWUClKdhgbvJ/vZg181erhXPdCSiJ+3P7FNLaFldqGlnnyuZPyToYGOsYeNs5
-         2Ece6Rhxj078BT21nvInrd1LxjVZtA8BVMCMbEladoMXk96+DBubRdfOU203JrCV09ci
-         HKn1XZV4THEJdF8PJj1cyg2c1wBCtwPR5lsYjwr8C7DvCr7f7g0cYiCxa9M36kJMUPZV
-         d+508Le8UmThKNOdmeyfudr1REG3Z6O1hE3AHnBvQQKoxtor5LQSA57+z9XaUSO37jlz
-         B4PFP82UNNVTqqb/8xeQ5pJobWQcia6rftAG6pm9ywoEaaQ//aVuFBJSbFFctcv0QVnr
-         6B0g==
-X-Gm-Message-State: AFuF++mlsfq/jn/69+S5gIWaQG7DsQZKXbZLj1rUwSu8FWqazFqqhub8
-	1L8/nCl37bbTS4fyEA7biN/PsfseWCbsIuQyEl9QpRmXio/JqHucZM24J5D8xzF0KtCK5nai/Ll
-	Z5Pl4NsS10Aj2vcz1/8N2Ds+qx+1TOlA=
-X-Gm-Gg: AYBFou244d4PN1JkrGVyHlbgqdF0HnodvsXYHnAdtpBmtIiaLXPiIu/FZCIvgByKUey
-	g/WqAZsSsuh9vv9PlzTIK+X1AKsxz9K5ZsSZH9BAQXOXSimpLA4KTOwz3veEk6rpbqDj+oUEF6L
-	0CR+IS45wltE/U3KGuW1GcvQEdnbS9QuUU9eclrrGPr+IxF1RvVup99K/0D5gEhgxts1ZsR+Wxf
-	0X9V8j7jNIQP9tmcmieNuyax94xMwHL+yoxO5ClUDxM55dRPeWkv0/QSIsfGdtNwzGfamsPS6ON
-	umoXPxAX/RTFOT+nY4Me638/0Sc7Owg68GYIuaniXq9dsYc6EGWih4ZCWdn/lC762aADcrtMslz
-	qboFSZwb20eMu/1grvfY9/KMjbMoMaXNgsEUlcbDyeWAAtpX7Kkxg+3aLmGMaO/eaC8KSytrk5x
-	R4/bNLvJ4BdwXXWy16/cfpZ08ifmw0hClfNsNjA8z0yGwSQgTgZt4mTmY=
-X-Received: by 2002:a05:6402:3719:b0:6a6:32f5:556f with SMTP id
- 4fb4d7f45d1cf-6a7e8e92ad8mr3257058a12.17.1788549387316; Fri, 04 Sep 2026
- 12:16:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="gLC00eOX"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=qi6RHnGDCGkfNITqcvCFwcoWSmNWkH+un3Fby8LVM/w=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788552234; v=1; x=1789157034;
+ b=gLC00eOXknMCaOe5+j7239KW24VeKllKW6uZEHK+bv49u5yRu+WRCL+G0U31O2CkpjPlReuN
+ aOV9v7LS+rPVMg4lGhNH2NCCu9QE09+3FJEuGvfEhPeknpfJ5clmosV87MaKEA6UDD0YAy0CXuA
+ ZKUa41UNk9RbzkWgHCy+U6ULEbH2tzpeeb5OFrsNRqMk2BahQr/j9uYQK4LrNX4JhABQN8GfF/6
+ 26B5HS6r1Sy07ONHABf5nosD66d0VaOVrBYyG0AKGQ1nhgfHVAHoK/M7l1KTxLg2Dd+EnCph7wC
+ 8AirpOOgCpQK/2fZG4YjxLgkxOofsfmf+wo+9/H7sNncQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7f571189813e464c;
+	Fri, 04 Sep 2026 20:03:44 +0000
+X-Mizu-Trace-ID: 7f571189813e464c
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@nbd.name>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH wireless v2] wifi: mac80211: refuse to make a monitor active when it has no queue
+Date: Fri,  4 Sep 2026 13:03:38 -0700
+Message-ID: <20260904200338.10829-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260815190724.16943-1-rosenp@gmail.com> <12f4b21bb334a49c88bf28428b92589adecfa53a.camel@sipsolutions.net>
-In-Reply-To: <12f4b21bb334a49c88bf28428b92589adecfa53a.camel@sipsolutions.net>
-From: Rosen Penev <rosenp@gmail.com>
-Date: Fri, 4 Sep 2026 12:16:15 -0700
-X-Gm-Features: AcwNN1Uebinon_dT-DPRW-qSB2zh1md1DuwOs37F8oXGrEfMC9-efp4_3gEtAIk
-Message-ID: <CAKxU2N9ZPRSotiPhayrQFyzbf=sPcU7X3o6ozRECOibhCj_kbA@mail.gmail.com>
-Subject: Re: [PATCHv2 wireless] mac80211: stop tpt LED trigger timer before
- freeing trigger
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, 
-	"John W. Linville" <linville@tuxdriver.com>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Sep 4, 2026 at 12:41=E2=80=AFAM Johannes Berg <johannes@sipsolution=
-s.net> wrote:
->
-> On Sat, 2026-08-15 at 12:07 -0700, Rosen Penev wrote:
-> > On a hot unplug, the device is torn down
-> > through ieee80211_unregister_hw() without ever going through
-> > ieee80211_do_stop(), so the timer is never stopped.
->
-> I don't buy this.
->
-> Also, missed wifi: prefix.
->
-> Please don't just feed me LLM garbage. Do you have a crash reported on
-> this?
-Not formally no. However I am able to reliably panic the kernel. After
-this patch I can't.
+A monitor interface only gets a TXQ if it's created active, and one can't
+be added later. Setting the flag on a down interface is still allowed, so
+the driver is handed a monitor with no queue. ath9k dereferences it:
 
-Some output:
+  BUG: kernel NULL pointer dereference, address: 0000000000000066
+  RIP: 0010:ath_tx_node_init+0x49/0x170 [ath9k]
+   ath9k_add_interface+0x10c/0x140 [ath9k]
+   drv_add_interface+0x54/0x250 [mac80211]
+   ieee80211_do_open+0x32f/0x800 [mac80211]
 
-[20004.982362] Call Trace:
-[20004.982365]  <IRQ>
-[20004.982369]  led_trigger_blink+0x55/0x90
-[20004.982375]  ? __pfx_tpt_trig_timer+0x10/0x10 [mac80211
-9e1764ff5588e2fa1476cc1f40fb40aa15fcf740]
-[20004.982444]  ? __pfx_tpt_trig_timer+0x10/0x10 [mac80211
-9e1764ff5588e2fa1476cc1f40fb40aa15fcf740]
-[20004.982500]  call_timer_fn+0x2a/0x130
-[20004.982505]  __run_timers+0x27c/0x340
-[20004.982511]  run_timer_softirq+0x86/0xf0
-[20004.982513]  ? irqtime_account_irq+0x30/0xc0
-[20004.982519]  handle_softirqs+0xe3/0x2b0
-[20004.982523]  ? srso_alias_return_thunk+0x5/0xfbef5
-[20004.982528]  __irq_exit_rcu+0xb0/0x100
-[20004.982530]  sysvec_apic_timer_interrupt+0x71/0x90
-[20004.982535]  </IRQ>
-[20004.982536]  <TASK>
+Reached with CAP_NET_ADMIN by "iw dev X set monitor active" followed by
+"ip link set X up". RTNL is held, so netlink operations block behind it.
 
-I can do so with a USB wifi adapter using the rt2x00 driver but not
-the mt76 driver. I kept pointing the LLM at rt2x00 but it always
-determined rt2x00 to be fine and the issue being here.
->
-> johannes
+Refuse the flag when there is no queue to give.
+
+Fixes: 79af1f866193 ("mac80211: avoid allocating TXQs that won't be used")
+Cc: stable@vger.kernel.org
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+---
+Only drivers that advertise active monitor can reach this, since cfg80211
+refuses the flag otherwise.
+
+  crashes   ath9k, mt7603
+  checks    mt7615, mt7915, mt7921, mt7925, mt7996
+
+On the ones that check, the promotion works. A monitor promoted while down
+captures the same as one created active:
+
+  promoted        89, 89, 89 beacons in ten seconds
+  created active  88, 89, 88
+  passive         176
+
+So this refuses something that currently functions on five drivers.
+Reserving a queue for every monitor instead would keep it, at the cost of
+undoing the commit named above.
+
+Tested on a 7921 USB part: the promotion is refused, and both creating a
+monitor active and toggling one that already has a queue still work.
+
+v2: changelog and comment rewritten by hand. Dropped mt76x02 from the list
+    above, it does not use the interface queue at all.
+
+v1: https://lore.kernel.org/linux-wireless/20260824003656.27049-1-lucid_duck@justthetip.ca/
+
+ net/mac80211/cfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 23f4f9ec86d0..8b47468dd5c0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -115,6 +115,10 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 			return -EBUSY;
+ 	}
+ 
++	/* TXQs are reserved in ieee80211_if_add() and cannot be added later */
++	if ((params->flags & MONITOR_FLAG_ACTIVE) && !sdata->vif.txq)
++		return -EOPNOTSUPP;
++
+ 	/* validate whether MU-MIMO can be configured */
+ 	if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
+ 	    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
+-- 
+2.55.0
+
