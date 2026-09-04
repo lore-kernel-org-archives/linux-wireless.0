@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212CB37106D
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:56:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A954CB8BB
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:56:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788533788; cv=none; b=oQjFDQ7t6kquEeDOUkTa32g1UlvvPATeVrdvLMd03RPprLh4eX6rC3k4VRxE7rVVhT1Oovgj7GEEz+ctKYHNH/rB/syEqFJnLHU07qVlLzu9FJ3gjr8UmiLgIik9hbUK2Ve5Y4r0q5TYp7x2bi6IaPpcDT1Afmk3wCFlA+x8pNY=
+	t=1788533788; cv=none; b=Jkxt5pta7JXgNlaMNRo3nHxAxiqJ0upfpybFXya0RCBgCEpYlf0JlMJmArJWwCYw69bfLQfRxAYMXBBf1hKyxA8rH3iBDS7MmhBM6egcJuteHZ0rSjEFIp9TeF5pfSdWzwNTPt3QASh9yesUt0ThYt6semvRWDoSdLAhVM5uu4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788533788; c=relaxed/simple;
-	bh=RF1ZEubO7HgC/GjoePHyipweyMjBHdQHidL+zgdU7aM=;
+	bh=IkSyEEc44oVhhZCFf7G7fU+WxohhFExddRwq+DQ+pMo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qPvdqbdPjHrqo4/ZZBskEj2a/iRk/DWb/j+NrGjBc87e1S5eJQqKcwTldzNPhRIdJwGQ/Sv/knOI2tcnYl5jJTttunaK3q4UoU3cSZRA8SDaufGG7IDJeF0W3YjoGjqunSnpK28m21ViF/PxHd7ynZLdzNBJdrBsFRpEKT8wNzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=UCRYy3Jp; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=TAiaIDn6cSGcsu5lEqUH5U9kyAZsDVTQ8jljok/MdNrBTewutRehm09aL5oYjiQIDjovrxDHunujCQiEKSP9eYcZSz75JeCOF5+fhz4uKSEDdqDjgdQS7qq/C+YIexVOucU0jAfckBtq5XZ95dM640wNuCtII5/hN4rh90O1KH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Zzt2gzQ7; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="UCRYy3Jp"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Zzt2gzQ7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=cHGnCKsOdA2BC0TX8ARJYibszxeMCCoZfKEu/LhHyVM=;
-	t=1788533786; x=1789743386; b=UCRYy3JpAPXCFVaeiwlhnvDVyRd5fQDiJJg/51uOi3svnU3
-	XELYoBtnZpmaxA8HhChl/KV2ueu1PNugJz8HPOyKrvuujM8t2HsGyXt208TzMo9X2to4O+nxIHaxW
-	Lplvz8i+VXrsdBPZ5yj4cd+b7LMFoef6B0zoruH5qkSO9QRrqMz3MWgsdK1UvUKRa3q6f392Jr2Sk
-	BwwV99QyFL1V15KFTplHxhGAKgthMr5gmZPnoMoihKxTs6Wvn/YImz81Z/cAc0DRWB0cqrn3aqj8d
-	LOLxq8RUYRuyURG1LOt1HmHdYY1v8pEkdqsei6/6vCu3CgKUTC3UDVelNZwZVRWw==;
+	Resent-Cc:Resent-Message-ID; bh=iNRFT6oy1CpDfvM10gouVsk9kYBx0WDx3LOTvBi5IAk=;
+	t=1788533787; x=1789743387; b=Zzt2gzQ7b9ZGNwZ0NebhHx6kLeeESC/+nQbW+Nvm6ufh2DD
+	w5IGw0Inmo5okhSXykMlCBDfBCYvdcqsZb4rqtde6wsKt3fc1aqyjzW/XCenJgJ0XmpFjwWUxDPDq
+	XcXpsOMscGdxLB66rk1lXGvSlxieZIT/dNt9aOMytoPipxqAQZkgneW/yBfGNyV3zuzE6KRxDnWe/
+	jeh4EF/N0LbCbfw31uxaJmvKt1D0nbWkE0YJMmQUA+O7w7r6rGLvbMS1Jdhs9MnxPLgfudzynKk2V
+	sVBEYQaPmUIa7OSggMepflkdhJnFCCpshc9G1+Z1F8+5A+7q5SK7MW7WRl5SxRpw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VL5-00000001SUL-13jE;
-	Fri, 04 Sep 2026 16:56:23 +0200
+	id 1x2VL6-00000001SUL-3xwz;
+	Fri, 04 Sep 2026 16:56:25 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
-Subject: [PATCH wireless 2/8] wifi: cfg80211: check IP header size in cfg80211_classify8021d()
-Date: Fri,  4 Sep 2026 16:55:02 +0200
-Message-ID: <20260904165614.5e61a4c80b92.I37d68d3f406cb3b90b32e6943418d66070b65197@changeid>
+	syzbot+1a797e1c81be78a2ace7@syzkaller.appspotmail.com
+Subject: [PATCH wireless 4/8] wifi: cfg80211: only group hidden BSSes with beacon entries
+Date: Fri,  4 Sep 2026 16:55:04 +0200
+Message-ID: <20260904165614.bcfa64715745.Iad740347c86de56d4ff4f96a95f3c3afc47c42de@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904145614.423902-10-johannes@sipsolutions.net>
 References: <20260904145614.423902-10-johannes@sipsolutions.net>
@@ -51,67 +51,56 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-A frame that looks like IP can be transmitted, but be too short, so
-the DS field is read incorrectly:
+When a probe response for an unknown BSS comes in, __cfg80211_bss_update()
+looks for an existing entry with the same BSSID and a hidden (zero-length
+or NUL-filled) SSID, and if it finds one it groups them, using the beacon
+IEs from the existing entry.
 
-  BUG: KMSAN: uninit-value in cfg80211_classify8021d+0x99d/0x12b0 net/wireless/util.c:1027
-   cfg80211_classify8021d+0x99d/0x12b0 net/wireless/util.c:1027
-   ieee80211_select_queue+0x37a/0x9e0 net/mac80211/wme.c:180
-   __ieee80211_subif_start_xmit+0x60f/0x1d90 net/mac80211/tx.c:4304
-   ieee80211_subif_start_xmit+0xa8/0x6d0 net/mac80211/tx.c:4538
-   ...
-   packet_sendmsg+0x9173/0xa2a0 net/packet/af_packet.c:3108
+But that could find another entry without a beacon, if it was also from a
+probe response (with SSID), so there's a group without beacon elements.
 
-Use skb_header_pointer() like the MPLS case.
+If a beacon with a hidden SSID for that BSSID arrives later,
+cfg80211_combine_bsses() goes looking for the probe response entries that
+belong to it - i.e. entries with the same BSSID and channel that have no
+beacon IEs - and finds those two. They are already grouped with each
+other, so it hits its
+
+  WARN_ON_ONCE(bss->pub.hidden_beacon_bss)
+  WARN_ON_ONCE(!list_empty(&bss->hidden_list))
+
+which are there because an entry without beacon elements is not supposed
+to be part of a group yet.
+
+Only combine entries when a beacon was already received, ones that are
+kept separate will be combined when a beacon arrives.
 
 Assisted-by: LLM
-Fixes: e31a16d6f64e ("wireless: move some utility functions from mac80211 to cfg80211")
-Reported-by: syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=878ddc3962f792e9af59
+Fixes: 4593c4cbe1c9 ("cfg80211: fix BSS list hidden SSID lookup")
+Reported-by: syzbot+1a797e1c81be78a2ace7@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=1a797e1c81be78a2ace7
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/util.c | 26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+ net/wireless/scan.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 408ebb10924f..5429cf3cfd2f 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1039,12 +1039,30 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
- 	}
- 
- 	switch (skb->protocol) {
--	case htons(ETH_P_IP):
--		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-+	case htons(ETH_P_IP): {
-+		const struct iphdr *iph;
-+		struct iphdr _iph;
-+
-+		iph = skb_header_pointer(skb, sizeof(struct ethhdr),
-+					 sizeof(*iph), &_iph);
-+		if (!iph)
-+			return 0;
-+
-+		dscp = ipv4_get_dsfield(iph) & 0xfc;
- 		break;
--	case htons(ETH_P_IPV6):
--		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
-+	}
-+	case htons(ETH_P_IPV6): {
-+		const struct ipv6hdr *ip6h;
-+		struct ipv6hdr _ip6h;
-+
-+		ip6h = skb_header_pointer(skb, sizeof(struct ethhdr),
-+					  sizeof(*ip6h), &_ip6h);
-+		if (!ip6h)
-+			return 0;
-+
-+		dscp = ipv6_get_dsfield(ip6h) & 0xfc;
- 		break;
-+	}
- 	case htons(ETH_P_MPLS_UC):
- 	case htons(ETH_P_MPLS_MC): {
- 		struct mpls_label mpls_tmp, *mpls;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 4fe114f6aee3..604b10ef0f94 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -2077,6 +2077,13 @@ __cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 			if (!hidden)
+ 				hidden = rb_find_bss(rdev, tmp,
+ 						     BSS_CMP_HIDE_NUL);
++			/*
++			 * Only group with an entry with beacon data, otherwise
++			 * beacon data can never be filled/updated.
++			 */
++			if (hidden &&
++			    !rcu_access_pointer(hidden->pub.beacon_ies))
++				hidden = NULL;
+ 			if (hidden) {
+ 				new->pub.hidden_beacon_bss = &hidden->pub;
+ 				list_add(&new->hidden_list,
 -- 
 2.55.0
 
