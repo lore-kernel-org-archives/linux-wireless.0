@@ -1,43 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D328A4CC272
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:56:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD89F4D8DAB
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 14:56:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788533789; cv=none; b=Fe+5SkfUU/AkwCFLouKEA/AjGgyYJbDCgQv7WR2+qXGmPx+fj4EYftcQgoFSDlFRA+fYp6BS+Z+nyiidlB6OuGXpezVpbhKs+7UIf8LynzTylmTqEqw095UMxQ5eLt40YXHLjMptCcaPayyIuDY2D34gv0PRfdUl+a+wufY27DE=
+	t=1788533792; cv=none; b=C0DBOWXgZ4Zv7jNtn3Ju+LuDLzOw8nD0LXFu6ATGJRLK2mOvKsX5c0OiFJo4ztfU+XfpLYZIs/GboV866cauixI+oQtdMDgq25LqmXq0WMVT7qLmUUypIQGJ/Y91Z4O1wPn2/PsEgnbXOTw0gJpog+eMvl15dlzsXqXmQqoyco8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788533789; c=relaxed/simple;
-	bh=hOSCXfy/ceoKwaaCVRhdH+bnfLRkWhgIlSMhgTlIpt4=;
+	s=arc-20240116; t=1788533792; c=relaxed/simple;
+	bh=bZaxFTXqoD9k8G9dChnNYXHZupNjAQdahtqJPZMmELs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NHEi59sn+yQ34XpTmPCyZes9G6P+vsQutKnGJJtAdS6FjBLm+eBFR6iK1KtXdp4sZKaTkCcXewWp5hdizXw6DaWSDHVxzfN/WDJLOii4gSqONoXT1qSkel3zHy3LYrV2B/5gDjrxIPrNNDdMujYS9Thh4tP+3W0NIUjkLzzwvC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=x3U/aS7X; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=cl9wjc6j1pChavlYrlNMSpNBU3YHlOD4sjom1TL9Kv0WfHP5EGT9cDC15GejNv7PfDCN/rYUlSL7yDAs2vL+6tqjtcs0anJjX5ARBdNUps7L5HQ5oHH37EnENmh8pw11vFxfxkhEJOgH1w1XmbAWNf9IIrYzyirPyaTI+mdVIJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=wuDbV4W7; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="x3U/aS7X"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="wuDbV4W7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=BHq3gp6rCyLhM6OOZNiW1NrcrlYG6c6U0vHv1K3zQlM=;
-	t=1788533787; x=1789743387; b=x3U/aS7XRDV5ISP8ksq0uz+C2PP/JXokUbm/NOPGkNOIEqK
-	gKC1xqQnvR5kewvcFPEfjn1MWQp8Hdk84N+nxBcO+FJNCPUNBtyuiwvK/AbqCIXtlSn1U0TwdGFME
-	MWLqWc04Ze4ThY4u5oZUnQV1P2J39KB0Go010hmqXiZOwZp4+cYTv5bSRrQQhbTkgLldQccyyJmRO
-	Y40dUMUxIWJNppf3AN8MHu6D9StTam1eHe1ybR0K5bxU1QZRonKBCO+IGPOuF9xCBAWMF2Gri7kpV
-	F09JlWgAXWwuMHaUvPq6ZeH9Tyj43l/6QxSdrPa9AXjcAQz5Gi/GLyYGXdKUlCxw==;
+	Resent-Cc:Resent-Message-ID; bh=dVvTlyOFfYE/meQFpApUSQl83lg54QDltuf5noAQVKQ=;
+	t=1788533790; x=1789743390; b=wuDbV4W7uZX39hYE3KGX7QZROa/6M/G8854kHgAGWParzNb
+	glYJhxLe4V6cbVq2Sb5sjmN9Iyvni7cyGnqec85ptfvLpxYac73LHciQwt9GVT8LAiI5wrI/uMWVc
+	jVFZfpONd5JUS67hIW00K83crNyCp/tNYDsRvXdVh0XTHnPsZSJ1uuU3P2b5Gmle7Cy6P3yj/o9/K
+	5vVqs3pL14wHx19I5lLlO4WWQIAs8bYzgPFECPAhTCgYOaM7fLvS4DPVVK6YsFHGURiG8CSYq1V1D
+	x+WZlrtOToS54AbuNhnGJgeOryoKg2+WnDKqG43lo56LxtHUbOgODprqTIwqOefA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VL7-00000001SUL-2E8E;
-	Fri, 04 Sep 2026 16:56:25 +0200
+	id 1x2VLA-00000001SUL-12Tq;
+	Fri, 04 Sep 2026 16:56:28 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+dc6f4dce0d707900cdea@syzkaller.appspotmail.com
-Subject: [PATCH wireless 5/8] wifi: cfg80211: don't filter by BSS type when removing stale entries
-Date: Fri,  4 Sep 2026 16:55:05 +0200
-Message-ID: <20260904165614.1f05dae1c546.Ib52d57b57caa912efee020f9d4a033a5160617ce@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless 7/8] wifi: cfg80211: fix NAN regulatory enforcement
+Date: Fri,  4 Sep 2026 16:55:07 +0200
+Message-ID: <20260904165614.6abc075b5401.Ib90696e3fa49b1698c27d64db5360d51f6f187a9@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904145614.423902-10-johannes@sipsolutions.net>
 References: <20260904145614.423902-10-johannes@sipsolutions.net>
@@ -51,45 +50,35 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When an assoc AP switches to a channel that already has a BSS entry,
-cfg80211_update_assoc_bss_entry() removes that entry before rehashing
-the real one, since the two would otherwise collide in the BSS rbtree.
+reg_wdev_chan_valid() returns early for any wdev that has no netdev,
+which is fine for P2P originally (and later PD still), but NAN has
+no netdev and yet enforcement code was added and is needed, but is
+dead code right now.
 
-The lookup for that entry also required it to match the connection's BSS
-type, so an entry advertising e.g. the IBSS capability bit was left in
-place, and the following cfg80211_rehash_bss() then ran into it:
-
-  WARN_ON(!cmp)
-
-Changing the type shouldn't really happen, but can be triggered by a
-rogue AP/device, so drop the check and remove any entries matching
-the comparison.
+Use wdev_running() instead so that netdev-less wdevs aren't skipped.
+P2P/PD don't do anything in the later switch, but NAN code can now
+be reached.
 
 Assisted-by: LLM
-Fixes: 0afd425b1b64 ("cfg80211: fix duplicated scan entries after channel switch")
-Reported-by: syzbot+dc6f4dce0d707900cdea@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=dc6f4dce0d707900cdea
+Fixes: 0e8ec738a71e ("wifi: cfg80211: add support for NAN data interface")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/scan.c | 5 -----
- 1 file changed, 5 deletions(-)
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 604b10ef0f94..caa9c6495f20 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -3502,11 +3502,6 @@ void cfg80211_update_assoc_bss_entry(struct wireless_dev *wdev,
- 	cbss->pub.channel = chan;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a8336baf85dc..9910b080b402 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2345,7 +2345,7 @@ static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	iftype = wdev->iftype;
  
- 	list_for_each_entry(bss, &rdev->bss_list, list) {
--		if (!cfg80211_bss_type_match(bss->pub.capability,
--					     bss->pub.channel->band,
--					     wdev->conn_bss_type))
--			continue;
--
- 		if (bss == cbss)
- 			continue;
+ 	/* make sure the interface is active */
+-	if (!wdev->netdev || !netif_running(wdev->netdev))
++	if (!wdev_running(wdev))
+ 		return true;
  
+ 	/* NAN doesn't have links, handle it separately */
 -- 
 2.55.0
 
