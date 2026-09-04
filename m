@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C4ED4E8DEA
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 419984EA39C
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Sep 2026 15:01:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788534081; cv=none; b=KDCAQ8BeZP1acnwcCT9WU5MGQ4GhfZlO6pe/6MsMDrO/3T0Fajbi1m154Rm3ihaWGx+Soh9+tno+fo9jPAIsnofkywguvAZKMWChjiiwg0HFo7NErxAHjMebz+i1pJpV2IWZzGWlqbaOFDtgqAQX/FiQKkRO+Ns8p8t301xVsNg=
+	t=1788534082; cv=none; b=SdO1LZt9iAL5xnoQMEz5UvU1EedwBIbL1cAOR6IX7NDl3Md+j8hl0+k5MhFPuwBGVV1xe/1E4OElKwxkbXEuC0NqwVTwgEe1eDmkZw76glRKSW0CwL7AOZcL+VOtfFa5klJuEmZad55nkuxoyeeVx6uCLKdq6nNsxwv4h8VWnPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788534081; c=relaxed/simple;
-	bh=qe2ZL61dvbN6vV/uQfOajf6s2y8m+cvWpxiUBYLKFU4=;
+	s=arc-20240116; t=1788534082; c=relaxed/simple;
+	bh=hRrMGXrywIs1cT2r2C6JxHc4G76M3xYfqxq1+hXIir0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NkKRiSHnTVbNzlLLoWf6U6aSs9Q66gB3Ebg2Ex9zT1+pJ8UGlHB+KD4uwV14PFFkMjEjStTEfzm+MjK5gwxFberAdnvbCw6y+Xxl6t22gXZy111GW4dDSWPocea2ZPLlqrpa9EVlky7Ubg0uv7GBHyeASEW3/xUIUoThWHX/tZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OYtLMWIe; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=q6NXFKCdoTWQYF4dtUPt7VLm8t2KBzQqwQxUtpnAqK9ij9xR5vzpLrkGkAuBem7Na9UZUJtCZVSiPkhyzFWsJyhIw2+cvSMlTugZ+l0RonBeUGEpTHhgYo/gsgB9d03VABIOOdhyMhkHOGUg/oKgpram8uESfDHSLOWm0XQcKRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=nuLHWqau; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OYtLMWIe"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="nuLHWqau"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=/pwPfUB8E+z3F/n+wJqz0CzrQK+zlJklxEDBQ99262A=;
-	t=1788534077; x=1789743677; b=OYtLMWIeINwwYDERDale9zSf8ipU32ZKjnTcJTWc8x2LnKE
-	dXPOn64tCfzXqLNXvddgEZU9xRwZ6m6srdD6nLc9CErCjGaUXVZ18Nlv0maGsMZ3gB3fPcmnzSVUS
-	WJRm3LxWoq9OE7xMgTXvtZk9BmrZK3QhMv6WSgapeZ/iov2f5uE6LreSGfMZ2DhaFrVdpWAkzlabD
-	qK6y66fDD/sscGkM3NQsf03Q0mk232svCWQ/z03V5vZwTjiIBVoH0s/93WmdnnfCgNuIPoEDCYoju
-	AkLa6Q0PmzfZQRKAqtEWafeo7D3HBs/tMQmUOmliAtrkDHN3nGNir01TzWbko60w==;
+	Resent-Cc:Resent-Message-ID; bh=qsfaB7Bg/6kb78Sx499Kb47kVPxambREY9mPArfMpWI=;
+	t=1788534080; x=1789743680; b=nuLHWqauRNbkg7x0oazrVIumYAj4hBpFJuNj9bstgSAoNLP
+	2dzb13eQ6DYgh+mtu2/Y6hgxc1ACEdIOklXAab2yMEDQ8huF9xk/I7P/eJrw7vUEUjIqXVO0SVvp0
+	qwFcBULjWzysVWoM/2Z6d9rQVl5fUc6Um9e6i8HTIKhZ/ndiBqRp0bbsm+i7dCT9Ol2tovUlUVlJ/
+	/ErH7WNE+5V07oO/q+PnDfBjwRQ5/W4MU8M8txesN5/9FaXh9lyVlIoqOhqRIJnzdi/l06PlktraG
+	Tq/sJlIcym3+mtKavAKJ2GKRdiiSPCc5vWJIYuRhrMfomVjeIMaOQQI+RT4wvTOQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2VPl-00000001SeL-0ucq;
-	Fri, 04 Sep 2026 17:01:13 +0200
+	id 1x2VPo-00000001SeL-1jZK;
+	Fri, 04 Sep 2026 17:01:16 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+e55106f8389651870be0@syzkaller.appspotmail.com
-Subject: [PATCH wireless 03/10] wifi: mac80211: require a peer station for TDLS setup confirm
-Date: Fri,  4 Sep 2026 16:58:02 +0200
-Message-ID: <20260904170057.2ff31ae3e799.Ie409325ed6f2e55d2ef3ff2439e0c054dc8233b8@changeid>
+	syzbot+f961b9f94edbc266f1f8@syzkaller.appspotmail.com
+Subject: [PATCH wireless 07/10] wifi: mac80211: add HE 6 GHz capability in the scan elems len
+Date: Fri,  4 Sep 2026 16:58:06 +0200
+Message-ID: <20260904170057.c08c4965ccd2.I5ccc4ffcbccce7e33f038bffa27bb5d215e982ee@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904150057.424369-12-johannes@sipsolutions.net>
 References: <20260904150057.424369-12-johannes@sipsolutions.net>
@@ -51,63 +51,36 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-It's nonsense for the setup confirm to go to station that
-doesn't even exist, and it hits a warning when building
-the frame:
+The HE 6 GHz Band Capability element is in the probe request for
+every band if 6 GHz is supported, so add the size to scan_ies_len.
 
-  WARN_ON_ONCE(!sta || !ap_sta)
-
-Only accept WLAN_TDLS_SETUP_CONFIRM when the station is
-already there as a TDLS station. Need to copy the call
-to ieee80211_tdls_prep_mgmt_packet() since the existing
-WLAN_TDLS_DISCOVERY_REQUEST already falls through to it.
+Otherwise, building probe request elements can fail, triggering the
+WARN_ON in __ieee80211_start_scan().
 
 Assisted-by: LLM
-Fixes: 6f7eaa47e1de ("mac80211: add TDLS QoS param IE on setup-confirm")
-Reported-by: syzbot+e55106f8389651870be0@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=e55106f8389651870be0
+Fixes: 2ad2274c58ee ("mac80211: Add HE 6GHz capabilities element to probe request")
+Reported-by: syzbot+f961b9f94edbc266f1f8@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=f961b9f94edbc266f1f8
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tdls.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ net/mac80211/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 7f40b1d62938..f663d28d9209 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -1281,6 +1281,24 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 						   peer_capability, initiator,
- 						   extra_ies, extra_ies_len);
- 		break;
-+	case WLAN_TDLS_SETUP_CONFIRM: {
-+		struct sta_info *sta;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index a59837b9f480..6408e8464338 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1453,6 +1453,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 			sizeof(struct ieee80211_he_mcs_nss_supp) +
+ 			IEEE80211_HE_PPE_THRES_MAX_LEN;
+ 
++		if (local->hw.wiphy->bands[NL80211_BAND_6GHZ])
++			local->scan_ies_len +=
++				3 + sizeof(struct ieee80211_he_6ghz_capa);
 +
-+		sta = sta_info_get(sdata, peer);
-+		if (!sta || !sta->sta.tdls) {
-+			ret = -ENOLINK;
-+			break;
-+		}
-+
-+		ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer,
-+						      link_id, action_code,
-+						      dialog_token,
-+						      status_code,
-+						      peer_capability,
-+						      initiator, extra_ies,
-+						      extra_ies_len, 0, NULL);
-+		break;
-+	}
- 	case WLAN_TDLS_DISCOVERY_REQUEST:
- 		/*
- 		 * Protect the discovery so we can hear the TDLS discovery
-@@ -1289,7 +1307,6 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 		 */
- 		drv_mgd_protect_tdls_discover(sdata->local, sdata, link_id);
- 		fallthrough;
--	case WLAN_TDLS_SETUP_CONFIRM:
- 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
- 		/* no special handling */
- 		ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer,
+ 		if (supp_eht)
+ 			local->scan_ies_len +=
+ 				3 + sizeof(struct ieee80211_eht_cap_elem) +
 -- 
 2.55.0
 
