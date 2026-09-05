@@ -1,84 +1,75 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-99.mta1.migadu.com [95.215.58.99])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99A839902B;
-	Sat,  5 Sep 2026 06:15:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8CBD222597
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 06:37:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788588921; cv=none; b=oYqKy6E8xaspXaViR+euqdi5VTrrNXr26Bm013Ny9T1lST6t86cGpHvxoyxmQraszF4FKbL9zHTeNplQy/PrFO0woRISvynplc9GByvrGG+IODUh4tZyVeKgSD6nq3v7G7XKGRBv956ABd98m21JiehhZFDeV6kAA9uxqFogRIA=
+	t=1788590266; cv=none; b=R76iWPhxXMIZMj3GcGtB+MR+oSa6eWt4tETbpBjsWkCIKlrXJfu3b9MERO2Bv0VbN8IwXTOy2oqPmi62DlTPZj8GrQrD1hhFHQ8zpyuxrIasb7q6zTz7tJGo2BBkohDpzQTTQ7nz34/sIS7x9nMR97S+IraTl7u3RMNMrHujeWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788588921; c=relaxed/simple;
-	bh=0PE2nVJEfLd+eGJIsDNB7qnEJvVfkDaVwCZbyEIv80M=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Gxsy35mVm7CnUOqmrNI7BRalQ4O4HfeBM7rX3s9VUhfIkPQ5goM0KhWXwAn3+jplvEXMt1VCbg2TDYHFKFtXC3KSRh3PBhe8NVAF6iB0SpW4mM8riwnQCTzYxV18358D8M19qxKhTiAubThsyCLZ7ULbtFr5eFqFgjgLDttOU2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=s3P4geiT; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788590266; c=relaxed/simple;
+	bh=cmF1m54I1KPcW/jkQRB1cp8VQdUqqng6NmllgisHAbI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=FpcFNsWNUJlE2/fvWHdYNa4SDi2Tvv0dcFgSZzctCm4ewMROPyEGVOXh1btpcm63Ek/N1Qy8m/lgAjuhC6dtTr2oE8BitlkmROKAPNV63FZ2UCxkI0TjJZdHFcWz/PcgbkR4OoBqEpo6/8HYrjVl4LcDR+hFx0JprEbnUBEK3Qc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=Y9AFtuxv; arc=none smtp.client-ip=95.215.58.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="s3P4geiT"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=0PE2nVJEfLd+eGJIsDNB7qnEJvVfkDaVwCZbyEIv80M=;
-	t=1788588917; x=1789798517; b=s3P4geiT9fzS+dU2HE0zTI1+IqDYMU6keOqOWmSj7Fj5U2a
-	bC6+dZXNJsgsTo+0GOIFpDQp1JhY25r8WsFyI3RbPmUGedJiWYgvpyt7XKuc+TmvxKTsZPxXh6Zyb
-	/7+VV15Fm3UQ1HGUmf49nIZxzN4A+XKeBoCUYlAnj61rSV4YYzgRXA3bcNmH+USmA/ZX6FDquynJM
-	ILR5QkTybA+Q2p7djbJ4UZl+PRXIMu4TfHsf+GBlK7sT/LkJID27e+3dWK4DejGTzTANukEIcRmLA
-	L5KLehQ98fnPiN4nfjwFleM+IdovDjLW/PITScv8sJ3uHwek4ekLZgVlTWRJottg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x2jgB-00000002B0b-0Qjr;
-	Sat, 05 Sep 2026 08:15:07 +0200
-Message-ID: <9d91e1719383f8ba6dfc45650a92b1f2c2bc2f6b.camel@sipsolutions.net>
-Subject: Re: [PATCHv2 wireless] mac80211: stop tpt LED trigger timer before
- freeing trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rosen Penev <rosenp@gmail.com>
-Cc: linux-wireless@vger.kernel.org, "John W. Linville"
- <linville@tuxdriver.com>,  open list <linux-kernel@vger.kernel.org>
-Date: Sat, 05 Sep 2026 08:15:06 +0200
-In-Reply-To: <CAKxU2N9ZPRSotiPhayrQFyzbf=sPcU7X3o6ozRECOibhCj_kbA@mail.gmail.com> (sfid-20260904_211629_075221_49F57F20)
-References: <20260815190724.16943-1-rosenp@gmail.com>
-	 <12f4b21bb334a49c88bf28428b92589adecfa53a.camel@sipsolutions.net>
-	 <CAKxU2N9ZPRSotiPhayrQFyzbf=sPcU7X3o6ozRECOibhCj_kbA@mail.gmail.com>
-	 (sfid-20260904_211629_075221_49F57F20)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="Y9AFtuxv"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=cmF1m54I1KPcW/jkQRB1cp8VQdUqqng6NmllgisHAbI=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788590261; v=1; x=1789195061;
+ b=Y9AFtuxv5gzYUbv+JZSp8nu6PRWhSgY9ItpG83p78tk91PLZu/nFZzosghI38EdYJHoaCJvH
+ 1O2/4Xwju5rESfQ5cn2h0y/mGKYBx1+2Ef7sK1BePRFe7AEWEv7B/9+UoxXcdP7hIqopPHsYtAf
+ uT1o2vHK+C9NLlbJMaHBjxKRGu803zM6rr1cnGDohghe0xsac6bdCHADr0rEcAEBgEksK+R8YDh
+ /iSQbQqa6laC+Op/ee6t+jUH4dpuodsYut69wM+8IjWxBdFBgnRHQqFSCZT35dPT/J1bOFQrzw3
+ SQJ/NNCXnUpjWn0tnGgGEnPsZHNJN1n03esUUFEzbZNRw==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 9c3f7cb43324628e;
+	Sat, 05 Sep 2026 06:37:31 +0000
+X-Mizu-Trace-ID: 9c3f7cb43324628e
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Pablo Diaz <pablo.diazv@pucp.edu.pe>
+Cc: linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>
+Subject: Re: [BUG] mt7921e/MT7902: firmware programs near-zero Tx power for all 20/40 MHz rates -> assoc fails except at close range
+Date: Fri,  4 Sep 2026 23:37:28 -0700
+Message-ID: <20260905063728.31929-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <CA+Hv-VqrxKWETcegx09-=v7udVO0Rk1CY9nPjw8sDK3mzgw-JQ@mail.gmail.com>
+References: <CA+Hv-VqrxKWETcegx09-=v7udVO0Rk1CY9nPjw8sDK3mzgw-JQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2026-09-04 at 12:16 -0700, Rosen Penev wrote:
-> On Fri, Sep 4, 2026 at 12:41=E2=80=AFAM Johannes Berg <johannes@sipsoluti=
-ons.net> wrote:
-> >=20
-> > On Sat, 2026-08-15 at 12:07 -0700, Rosen Penev wrote:
-> > > On a hot unplug, the device is torn down
-> > > through ieee80211_unregister_hw() without ever going through
-> > > ieee80211_do_stop(), so the timer is never stopped.
-> >=20
-> > I don't buy this.
-> >=20
-> > Also, missed wifi: prefix.
-> >=20
-> > Please don't just feed me LLM garbage. Do you have a crash reported on
-> > this?
-> Not formally no. However I am able to reliably panic the kernel. After
-> this patch I can't.
+On Fri, 4 Sep 2026 13:58:14 -0500, Pablo Diaz wrote:
+> I will build your patch with a print_hex_dump added to mt792x_acpi_read()
 
-Then you can probably enable debug objects etc. to figure out why?
+Much obliged on the assistance, please build v2. The first one rejected those
+tables and this version reads them:
 
-I don't think this patch really fixes the cause, just the symptom.
+  https://lore.kernel.org/linux-wireless/20260905013551.24635-1-lucid_duck@justthetip.ca/
 
-Maybe it's related to this:
-https://lore.kernel.org/linux-wireless/20260904165722.044aa432f873.I601a67a=
-2cd558b8ef8416a07554ae7efe896e9d8@changeid/
+PE also puts you on the FCC row of the geo table. This adapter will not
+select that row.
 
-johannes
+The kprobe result points away from a shifted parse. A byte-shifted read lands
+on assorted values, not the same one everywhere. If every range comes back -1,
+the bytes behind them are all 0xFF. That is the template you describe, before
+anything fills it.
+
+Filled, v2 parses those tables. Unfilled, v2 rejects them and no limit
+reaches the firmware. Your hex dump settles which in one boot.
+
+Devin
