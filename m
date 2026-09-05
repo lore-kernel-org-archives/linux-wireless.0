@@ -1,165 +1,171 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590A5322C73
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 08:58:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13EA93218BA
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 10:05:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788598740; cv=none; b=WCiZGTgNS8CISMx7Qy8/hMigBEzxRTH0UYXKvXaZ9/wFbR0yTGmERRegsZW5R3/qw+Aul2e+8sFWSrrcNlZdZJGDxRDzDQZKMsOkYGEgRUDaWBuxL2gJPb0AdQ8ta4X3xhV3CKGo0FpdsDVcbGLMG5FySGmzQIikFlJaQ+jM0NU=
+	t=1788602758; cv=none; b=MZB4E12hvlnDsxYWRgojDPkvIx9ie1dMfW5mLTfLbDgSaTkemWiSTsgD2a4TRYQR4bvBveUekfML+M4rNStGaJ1ge7MevaCngRzD16cXEmXrTED3HmgGIM0uP3sfHqlyHI6gzeBLnYwNO50DoxkUrATItpTNryr26ZvGjEGFmjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788598740; c=relaxed/simple;
-	bh=wwO1tiUatXUNiREkAKHOy4KgtEdLsUuk32neGIK+pVw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XM7n5YdGUuP5qJZPEL8TsQ+ZNQLux1hHEWYu/OqaXU0cnwXyft0VzDBqPdsq8Zr6iK7bpP3Zmdjtj5bj3xc0MQd1MrWl+3vtpK6DJojSvpkGKXbdysMB2LfwSwulcwjV8rfcF6uH0bCTJBG82Obd7BtlwTGA0nkD5z01OVAkZ1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QEP7kryX; arc=none smtp.client-ip=209.85.221.54
+	s=arc-20240116; t=1788602758; c=relaxed/simple;
+	bh=cpP8ANudbdWPOFQJFqMv+O1f4auumUXQKGMA0l7fPo4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JJPOiyMKWq0Bd4y/nK9doiNwnXoBOk+//cSFvVUTJF2bTfNiVxOCbnmevGyB5RUCQ/TXnbKxEaNQbQH6Help0GvoGM/MMxfdcved/ynrIBKzKbcJKzEcyFwNoWqzYOWfjgUK2Jd3ED5SDkR/Nr5iV4uinqQ1Tr5ELc+0jVq+p80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RnX5gc2w; arc=none smtp.client-ip=209.85.208.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QEP7kryX"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-47ddf7b09e5so1971917f8f.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 01:58:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RnX5gc2w"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-39c7ef2b1e2so16900851fa.1
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 03:05:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788598734; x=1789203534; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:sender:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=gvGhL3HZ4A6FyUQcqo6y9PFuXiif2pxtShOv+n9uw9o=;
-        b=QEP7kryXnMSQRxg9RVwS1KJY3vLyUE0xdDqTyG6OoQi6zGM9a3fJm4kStxxu/V+nw+
-         pL/0o5aaJZZWbGNovZyrBHlhAA/sm3ieYr8VDoTloEDfFhJGafoDHbqNz7NFD+yUQzH+
-         MmxIoPBQ5f7vZyccQbXeMAb3shM5KWB9d7ep0HjJg9itf2KAuJp5OP6kfD9uhmQID6hW
-         r46x5P6uV/tw9VFPng8Z0isW7w/gFmg+pWLo0dwGuIYVztPPGCDGo+Ow9VXSWfBcIvpP
-         pb8y/K8zqdxI2MFfY6b3uQ1Lz97UYQ2U1Ao6jUmdKY8nbjyPKGyDs7CC0t3Qpj9YEVWn
-         IaRg==
+        d=gmail.com; s=20251104; t=1788602755; x=1789207555; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KEmycsxdKEgtKycB7F+mNFHTBFbitCM1fHqOBorxUCg=;
+        b=RnX5gc2wuiX2d/Z5Sr0FttOIP9ikHXL0wOBoIpa3JHvSHzL2K2Q3q57u5VoJCQSlB1
+         YF6ntulkXgJbjYg0VYeTAaxSCag1JkSVNAgsiFW9d+Pch+uq+nbnnfuzQ2PoR4oSUDLv
+         F5vp73UUl07Fm6Tkg953YrsUTXDHcNQwS5gxu2P09tEDDi4zZcIy4dBK70/YM0CQ6LFJ
+         WkYZfcIBFrZdb3maqr8ta7pxCse7fwkoFui4rCXcnLhRhYR2YLNeCANvYTq8pWrM+b4/
+         HISYHqDjfPdOVq98rBCN6utqyXqH/hAbvoR7AYxlZ3XQxMye9Penn4j8V9DbV3mWcIC5
+         XilA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788598734; x=1789203534;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:sender:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gvGhL3HZ4A6FyUQcqo6y9PFuXiif2pxtShOv+n9uw9o=;
-        b=oCIOPvpqqN1vu38FwFS/BgzmtTf4BYuIGbjao/PXaigJs96jkaFNuvJ06J19Ssi6gS
-         LdMUIjWeD4S4UcfpD31mRtsKMm1sK0ntB2rzJk0Er6ifytI4BO0UdZ/y17aSLcZ5IQ2S
-         c0/rB0p/M0V6YS6Qlb7ed5wLQby/aeZvtI/iTFHkLn3EEqIUJokUcgyCv5wcbr2NMSnW
-         x7yLdBrAcnAK/FOSde9DbjcSPV0OWj6LI6rTTR8ajUBwqI+n05o6hCo6thflVTfRvfgf
-         VoXduy1+JNJvBrYu1p6fee16Z/7KBGvgmXz4crVYrfPVFoWrJsyp8opjtSZSRCrka5vJ
-         delg==
-X-Forwarded-Encrypted: i=1; AKwUvBx4ECX2xpvQ5L1Wm/L+kNcmPe1FOyag281cUHsGK3YZvhX0R20ZYVUqVTK0wCohZcLYuMQaeHayVw7FfjdFrw==@vger.kernel.org
-X-Gm-Message-State: AFuF++mL1tnkIlQeJxW6wkiKfEGmrVvZgEn5o3YPCsNpzk1hudC4k9sA
-	U0YPEC+RyQTrq/XoDdMGIMsqT5pF9K55I0hzZty9D1kS5t0RXo5ErK8vpWdj
-X-Gm-Gg: AYBFou16BR46Pfen5kElLYjfptJ86EonV6MFVlzqRH8JkS/mXQO2KzTfPIcX7Sf4UqU
-	nxoJNirC0EpsTmrf7aGApGiaFPSMgWaquFAoLlU5mPvXLSOUev3qIvmoALmfCM2fjGW1KULiARX
-	BKHO5K48iHaYT86wjTQZ6o2yGqrZa2QI/ZL9NGUf8C0YfXR/BIbaY+Xc1at273F5OLsJfpDrgBk
-	jKyjFKQKp02cMstUsh64TA8Mw9Wa8m9aCvjbGcmCFSq9eZmSgTCw+ArYX/2mDB6ZCf9jn3+Wi5x
-	MzwQQ2uS0pzK7Vnd8WorGUg41l9frYj/bMCqCGT6aE9eTPCCeuKsNqONwD7Ms3epAWGpdgyj8g6
-	kgUfYs+/NO3jEkQDPNdbSJt2/imJCa/J6YrRrhZS/r/O+94wVHSgPzr6Yw256ahHl7UCjuqXX4/
-	J5bh76ZKmtms6j1YuM+7XMM8UQG58CdsQaSY/MrpdTkHhub1GI/UzOHjMAza0S5xx0ROYKzpyoP
-	hPXsAR86qvs+QIXrnU/7w/zHgqVZkpqVxkdCG7qKRmdcXr4tVehAqkHu3tXdsTYU18S00JZljz6
-	2BAmaQ==
-X-Received: by 2002:a05:600c:35c3:b0:49c:fc6c:be10 with SMTP id 5b1f17b1804b1-49cfc6cc055mr83086845e9.22.1788598734103;
-        Sat, 05 Sep 2026 01:58:54 -0700 (PDT)
-Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5952560sm228306435e9.3.2026.09.05.01.58.52
+        d=1e100.net; s=20251104; t=1788602755; x=1789207555;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KEmycsxdKEgtKycB7F+mNFHTBFbitCM1fHqOBorxUCg=;
+        b=r47Ug+wfMZoN6LtnrxQfO6RXqZvTJRLWJRzds/DN4Xsc+lG7ClgsN0UpvMQlVTcvph
+         /hSGJZ3HTFP0OQ2KqPGhHr053MYV9NP1VCd2DlwgZB/vrIXwVzcfKzjLATbsidDpo3Pr
+         8mE9+BGJueJUOJnYZreC41kU9f4rBMhiTRPJPhli2bRh8bJPwBr3EwkkySOegnphLvho
+         nv6JjnfJklIXhJ2CcmjeF3fEynKv+Xgz6JJgIp65uYJeq25s8MqB6n7096LNVCnZV+GM
+         QuUpAsGnUp9e0GH/oMF1H1HkRrI2e7tUW8WfDdfoAWii2RxFKFxMs00F50dusnl8+/8G
+         kCQg==
+X-Gm-Message-State: AFuF++nfWcl4QZAef1dHDmw9xGVS4YrY53sBHTv8ZhbWyOOchmlT5Ipq
+	VJ9Q3dBYcBHQ4bQK9xLuRUWl7o5INHD3UJzlqCtO16rfWIqXHdgWwjZs
+X-Gm-Gg: AYBFou2GAGr5VErNxCegVO51moQomfGrgytxZuZYZx6EUh3qXSV18A4oEygSDu2FBix
+	dczbbYCG4Dtnq+hOnGSAfyUt1iKeG5HjPjsVf9l4UfrT+pWLT+sxExa9pm2yAsxjxSmJ4cnu1Rn
+	WkamHae8AM1J/pK8//TSsEqFzkjByEIW6/g7wbI3DxtmidHdeTqbLwMXnJPjjLryw2PM9UwBkfU
+	YDF1hsMWRWL33wYuuG5TnCOUju47VLC3fHcFaKSwYc1WMqDATlLGQjXDp1f504/8ly6Q6F9t/VS
+	dyznE7drTolDWMDNPVuJ8ngk+he1L/O14Sss8pfTZj+3OHkgrfJOypNXRSbdz3QioLJ3azTubav
+	bvewVzg+LJpmWOla+QvYbNYihNU7M1vmtLdFkqb9TM9W+pU22JZ0DAvBq324eFsJdNAwmZEbq0w
+	xdGioM8dSu2l9zjIM/XwiAUuiUw4lNYRyY+VCIpwyKHuRlZnXHToMBe4gU1kBb+piBsizYM+UXX
+	BEQQTsF9V5QiXz0XgQXuuzRgfNBnY8r/5ik6dMlE+xXhwNmngg2DKWU6pOSCQ==
+X-Received: by 2002:a05:651c:a206:20b0:3a3:74b7:fc0f with SMTP id 38308e7fff4ca-3a374b827ffmr7443231fa.27.1788602754702;
+        Sat, 05 Sep 2026 03:05:54 -0700 (PDT)
+Received: from archlinux ([94.180.80.42])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a3705868a0sm13107741fa.19.2026.09.05.03.05.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 01:58:53 -0700 (PDT)
-Sender: N B <gen.benner@gmail.com>
-From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@kernel.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/2] wifi: ath9k_htc: fix the byte count of a full RMW buffer flush
-Date: Sat,  5 Sep 2026 11:58:06 +0300
-Message-ID: <20260905085807.384488-2-nerijus.bendziunas@gmail.com>
+        Sat, 05 Sep 2026 03:05:54 -0700 (PDT)
+From: Arsenii Pashchenko <ulijg308@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arsenii Pashchenko <ulijg308@gmail.com>
+Subject: [PATCH rtw-next v8 0/3] wifi: rtw88: rtw8822c: refactor DAC IQ calibration to s32
+Date: Sat,  5 Sep 2026 17:05:45 +0700
+Message-ID: <cover.1788601784.git.ulijg308@gmail.com>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260905085807.384488-1-nerijus.bendziunas@gmail.com>
-References: <20260905085807.384488-1-nerijus.bendziunas@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The AR9271 PA calibration has been running with its last five
-register writes dropped since the RMW buffer was added.
-ar9271_hw_pa_cal() queues exactly 15 read-modify-writes, which fills
-the buffer, and ath9k_reg_rmw_buffer() sizes that flush with
-sizeof(struct register_write), 8 bytes, instead of
-sizeof(struct register_rmw), 12 bytes. The firmware gets 120 of the
-180 bytes and applies only the first 10.
+This series refactors the Digital-to-Analog Converter (DAC) IQ
+calibration routines in the rtw8822c driver, eliminating legacy
+unsigned workarounds in favor of native signed math.
 
-Fixing the size alone kills the device. The command becomes
-8 (HTC) + 4 (WMI) + 180 = 192 bytes, three full 64-byte USB packets,
-and the firmware ends a command only on a short packet
-(usb_reg_out_patch() in open-ath9k-htc-firmware). The 192-byte
-command is never delivered: the device stops answering WMI and stays
-dead through a warm reboot until power is removed. An AR9271 hangs
-this way on the first interface open, with the linux-firmware 1.4.0
-blob and with an open-firmware build alike.
+The original code heavily relies on unsigned 32-bit math mapped over
+a 10-bit circular hardware register scale centered around 0x200. This
+introduces complex nested boundary checks, custom bubble sort rules,
+and custom min/max tracking helpers.
 
-So cap the buffer at 14 entries as well. A command of n entries is
-12 * (n + 1) bytes, a multiple of 64 only at n = 15 within the
-buffer's reach. The next largest RMW batch, ath9k_hw_4k_set_gain(),
-queues at most 14 entries, 180 bytes, and a register write batch is
-8n + 12 bytes, never a multiple of 64. The PA calibration then goes
-out as 14 + 1 entries and all 15 writes reach the chip.
-AR9271_AN_RF2G6_OFFS then reads 30 on 40 of 40 opens, where the
-truncated command gave 32 on 78 of 80; a firmware with fixed
-reassembly, given the full 15-entry command, gave 30 on 19 of 20. The
-on-air effect is not measured yet. With the cap, 120 interface opens
-ran clean: 60 with this patch, 20 of them on the linux-firmware 1.4.0
-blob and 20 on a second AR9271, and 60 with a bench build of the same
-wire lengths.
+By migrating the temporary stack arrays and signatures to signed s32
+and utilizing the kernel's FIELD_GET_SIGNED() API, the coordination
+system is linearized. This allows the removal of internal custom
+helpers, collapses unsigned wrap-around logic into standard linear
+operations, and enables the drop-in integration of the kernel's
+native heapsort library.
 
-Fixes: 8badb50cfab6 ("ath9k_htc: add new WMI_REG_RMW_CMDID command")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
+The series is broken down as follows:
+Patch 1: Introduces GENMASK constants for register fields and replaces
+         manual bit shifts with standard FIELD_GET() macros.
+Patch 2: Converts stack buffers and function signatures to signed s32,
+         switches sampling to FIELD_GET_SIGNED(), and straightens out
+         the validation windows and hardware offset mapping.
+Patch 3: Replaces custom bubble sort logic and unused helpers with a direct
+         call to the kernel's native sort() library using a safe,
+         overflow-proof relational comparator.
+
+AI Disclosure:
+An AI assistant was used for source code analysis and conceptual
+consultation regarding the signed math transformation. All code
+modifications, final implementations, and refactoring steps were
+written, reviewed, and verified manually by the author.
+
+Testing:
+- Note: The author does not possess the actual rtw8822c hardware. Actual
+  throughput and runtime performance verification is left to the vendor
+  or community testers.
+- Every patch in the series was verified with scripts/checkpatch.pl
+  and yielded 0 errors and 0 warnings.
+- Each patch was sequentially built (bisected and compiled) to ensure
+  there are no compiler warnings, pointer type mismatches, or broken
+  builds at any intermediate step.
 ---
+Changes in v8:
+  - Patches 1/3 and 3/3: Collected Acked-by from Ping-Ke Shih.
+  - Patch 2/3: Fixed comment block style (made the first line empty).
+  
+Changes in v7:
+ - Fixed variables declaration order in rtw8822c_dac_iq_offset() to comply
+   with the "no declarations in the middle" kernel style rule (moved 'avg'
+   and 'i' to the top of the function).
+ - Fixed a typo in patch 2 commit message: changed FIELD_GET() to
+   FIELD_GET_SIGNED() to match the actual code implementation.
+ - Simplified the signed average hardware mapping in rtw8822c_dac_iq_offset()
+   by replacing the complex ternary operator arithmetic with a clean, standard 
+   bitwise AND mask via GENMASK(9, 0) and added an explanatory comment block.
+
+Changes in v6:
+ - Noted lack of physical hardware for throughput testing in the cover letter.
+ - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
+ - Optimized the min/max search loop in rtw8822c_dac_cal_iq_search() by
+   starting from index 1 since index 0 is used for initialization.
+ - Reverted an accidental change that broke the compilation.
+
+Changes in v5:
+ - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
+ 
+Changes in v4:
+ - Flattened the series from 4 to 3 patches to avoid intermediate broken
+   states where sign-extended variables interacted with unsigned check
+   logic, ensuring 100% clean bisectability.
+ - Leveraged FIELD_GET_SIGNED() for modern, native handling of 10-bit
+   signed hardware entries as suggested during review.
+ - Shifted definition of register field masks from the .c file into the
+   shared rtw8822c.h header file according to subsystem design patterns.
+ - Stripped out custom rtw8822c_dac_iq_sort() wrapper, invoking the
+   kernel sort() library directly inside the main calibration search loop.
+
 Changes in v3:
-- v2 said no caller fills the buffer; ar9271_hw_pa_cal() does, on
-  every AR9271 reset.
-- Cap MAX_RMW_CMD_NUMBER at 14 in the same patch: the corrected size
-  alone yields a 192-byte command the firmware never delivers.
-- Assisted-by in the form Documentation/process/coding-assistants.rst
-  now asks for.
+ - Corrected the subject prefix target tree from wireless-next to rtw-next 
+   as requested by the maintainer.
+   
 Changes in v2:
-- Add Assisted-by, rewrite the commit message, rebase onto ath-next.
+ - Fixed missing target tree name in the subject prefix (switched to wireless-next).
 
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
- drivers/net/wireless/ath/ath9k/wmi.h          | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+Arsenii Pashchenko (3):
+  wifi: rtw88: rtw8822c: Use bitfield macros for DAC IQ sampling
+  wifi: rtw88: rtw8822c: Convert DAC IQ calibration path to signed math
+  wifi: rtw88: rtw8822c: Replace custom DAC IQ sorting with kernel sort
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 6de78ae85726..0b49d2cc99f0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -405,7 +405,7 @@ static void ath9k_reg_rmw_buffer(void *hw_priv,
- 	if (priv->wmi->multi_rmw_idx == MAX_RMW_CMD_NUMBER) {
- 		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
- 			  (u8 *) &priv->wmi->multi_rmw,
--			  sizeof(struct register_write) * priv->wmi->multi_rmw_idx,
-+			  sizeof(struct register_rmw) * priv->wmi->multi_rmw_idx,
- 			  (u8 *) &rsp_status, sizeof(rsp_status),
- 			  100);
- 		if (unlikely(r)) {
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 5c3b710b8f31..256f46098a6b 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -126,7 +126,8 @@ enum wmi_event_id {
- };
- 
- #define MAX_CMD_NUMBER 62
--#define MAX_RMW_CMD_NUMBER 15
-+/* 15 entries make 192 bytes, three full USB packets: never delivered. */
-+#define MAX_RMW_CMD_NUMBER 14
- 
- struct register_write {
- 	__be32 reg;
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 161 ++++++------------
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 +
+ 2 files changed, 55 insertions(+), 109 deletions(-)
+
 -- 
 2.55.0
 
