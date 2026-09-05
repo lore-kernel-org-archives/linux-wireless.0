@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2854D345EC6
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 20:10:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C390035E1D1
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 20:10:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788639003; cv=none; b=ArMzau2ZRFel51ZGI7AhfT/OgpHp/c+QMA79hIrwc8HlrsNyVnziRmyhPferyG9DYwFAKOwA96q/cLGSfY9JO0FcynMGaGYjWHxNusgzT7iYYMmgejmxpQB4DIGq/jjlPkkpIYrAw4EfuM9oqrV/r02o5fqw/PO+WlRIfLJ0Wg4=
+	t=1788639005; cv=none; b=krN/9i3htgVYKjF/+MN3Nr4hMmQkUvoOO9s/bo+qyybslyjsYVM+A7xvfAsF1xv1WeRCSpj3vjiRYeLFdXZ5t5oiYSeuHj+KFT0YmG2r+JY8NY7mCYuLfrOD+Dh34xVNMNNuuQ6BJyPxASb7OerKXEyZis9rV1iJc9OfzqJ+m3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788639003; c=relaxed/simple;
-	bh=r69cd/xOH5IoJ+VWKkqwfoBNAP/s3A0j6bL6CYCoKOQ=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=WgaY/6C4eAlZ4Es8cGwrMoGvhSJ9nKntVcG2HMPpQL+9Ddn/esk6g3ALE1ZrmUQnwcvTT14aAEXT/5KjBXl+sja+XlR5cOK7r04B6YGSnLFzxvOozQiJrrEXNVEUEW6zCT4EiON5+AkblbdI/rs0p5n7esAPGTuon/z4ocHeUr0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jpZK9qbt; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1788639005; c=relaxed/simple;
+	bh=nwT9yDqpDXcGUSuOID+rILOrmqUoS/3GbI8wSaYl5yA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=iTEUOo3JQFDrwYJcJTQNbfMJo3jOSiRaSA9hSoLM6rLkNHvMBmLXV+0jZNzcbAEPk1LTeQCahAfTa0mTTxK1DvAY40DeOgVb4Qf+0s2YQPXmyi5H6DM8jHdgC5sgJXfs96uJ8B129hQax3PvW3XEjdXYJlXKbPwofH4WxLW0g9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mzXQZ0mW; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jpZK9qbt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mzXQZ0mW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788639002; x=1820175002;
+  t=1788639003; x=1820175003;
   h=date:from:to:cc:subject:message-id;
-  bh=r69cd/xOH5IoJ+VWKkqwfoBNAP/s3A0j6bL6CYCoKOQ=;
-  b=jpZK9qbtCAahRqL0bNDSW2/L/mVrb9t56bwTDvP7+7zYQWEqvs6/WzpU
-   yeFC6eO1OfHfibbmVnAqRUvDdH6/UVcNXJwJa2WpHlsbH9XSZSaABairQ
-   Ft9SCrf1LLmye4KDEsrBXrfS8IiRVStREExnIf5CywYhEZLYV0mw92I+D
-   ZQgGpyBEYkHIN0sf+/shO8H/NILFLjbkEmJuuz01VVhepGRTbglsqaLOC
-   bKfQSEQd8OWzLDJYeM/zj8lfwaSMsQ1NAjGp90w+/37utDbUaQb39Xup2
-   MVFD9Y2rYDR5F1BYkl34AqZi+etPpCvfpXcPE09Yo3SkurUl3SardyVQf
-   Q==;
-X-CSE-ConnectionGUID: Ty7G/V26QBiuA99AJtc3Ug==
-X-CSE-MsgGUID: eRxwvSrtRCitSBleEHgjhA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11897"; a="100263659"
+  bh=nwT9yDqpDXcGUSuOID+rILOrmqUoS/3GbI8wSaYl5yA=;
+  b=mzXQZ0mWWNpUK+PAQvrQfHl3tYn9nvf4Ky4f7gsOoy9/+2tdV3bSI8mV
+   9fKPxgyy1NL7pt+K1AoQZqDg7kyemgL0Mn4FUFPZ+8/F4QfLWOJ0S2wyK
+   M6vvZx42R20lkIcqCEwPR2mMXiYEB3UMoQkb4psQ3FydipAXhO6cddnty
+   fw2iM31e5kSKM9OrJ9dpb6HcCqp98HLWIEoeKTn+4zKtDj/5udqN/nJqw
+   LD19slFV3xlzozU0mcChGmEkKRo9dx/AJPMHY2dT3vgau1zxWDnVVCJei
+   0C76KVETgq6K2cc3ZtHtgoh03jvoZVcWxZKolprpv8Dltpu4j7Yqi6rXK
+   w==;
+X-CSE-ConnectionGUID: x6+qfrckTDitkS+h/98CRg==
+X-CSE-MsgGUID: hkU+8CLgTSC8vbOClRpURw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11897"; a="100263660"
 X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="100263659"
+   d="scan'208";a="100263660"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
   by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2026 13:10:01 -0700
-X-CSE-ConnectionGUID: G1ld8m6IQaa5GJaTjHGq5Q==
-X-CSE-MsgGUID: 8AoJfCUzQO21IdA2G3xzWA==
+X-CSE-ConnectionGUID: 8kf+ncu9QNOKQ2hwQltGqQ==
+X-CSE-MsgGUID: eWq/wcPQQVq47TK3QjApzA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="272290859"
+   d="scan'208";a="272290862"
 Received: from lkp-server01.sh.intel.com (HELO 73f3364bc37e) ([10.239.97.150])
   by fmviesa004.fm.intel.com with ESMTP; 05 Sep 2026 13:10:00 -0700
 Received: from kbuild by 73f3364bc37e with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1x2wi6-0000000014D-1gs1;
+	id 1x2wi6-0000000014B-1bRt;
 	Sat, 05 Sep 2026 20:09:58 +0000
-Date: Sun, 06 Sep 2026 04:09:26 +0800
+Date: Sun, 06 Sep 2026 04:09:34 +0800
 From: kernel test robot <lkp@intel.com>
 To: Johannes Berg <johannes.berg@intel.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [wireless:for-next] BUILD SUCCESS
- da2ca406f45a6e21760243152ed8d2e8e72915c2
-Message-ID: <202609060424.bN6zFvWs-lkp@intel.com>
+Subject: [wireless-next:for-next] BUILD SUCCESS
+ 1b60ed34f712e9f606d80951f1586f4274ebadf1
+Message-ID: <202609060432.aDPv6VVT-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -59,8 +59,8 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
-branch HEAD: da2ca406f45a6e21760243152ed8d2e8e72915c2  wifi: mac80211: avoid WARN in set_bitrate_mask when sdata not in driver
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git for-next
+branch HEAD: 1b60ed34f712e9f606d80951f1586f4274ebadf1  wifi: mac80211: serialize debugfs netdev rename with recreate
 
 elapsed time: 1965m
 
