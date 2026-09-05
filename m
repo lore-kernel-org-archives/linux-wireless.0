@@ -1,104 +1,84 @@
-Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A3761FCE;
-	Sat,  5 Sep 2026 05:49:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.21.23.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99A839902B;
+	Sat,  5 Sep 2026 06:15:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788587349; cv=none; b=WJs5StxZ5GsxcviMqilF14DtJgyyGaU3rbd7qoftK2UqMD37CDFWlGQ5hvosp0dWpkFWrvfAPyzvWQQxuFYGuIfG8E+4xdRT/oawwbSe3VsSXgCEWcS7RepeplcGBBJpaHI+OJKl3o1Z19hfo3GbcSbZJDKf0HTe6uapR0gWrdQ=
+	t=1788588921; cv=none; b=oYqKy6E8xaspXaViR+euqdi5VTrrNXr26Bm013Ny9T1lST6t86cGpHvxoyxmQraszF4FKbL9zHTeNplQy/PrFO0woRISvynplc9GByvrGG+IODUh4tZyVeKgSD6nq3v7G7XKGRBv956ABd98m21JiehhZFDeV6kAA9uxqFogRIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788587349; c=relaxed/simple;
-	bh=dLgyqMjJrt6QoHcIhrs2GwJlrjB833hjrC0NvbX6Bb8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=p1EuHa7xPdsR3xuGSpUMIj3cdCypXxtcXZeixwTkAQhxpaTzCPLF0IjZmaNYtM/uZZwdpIRg1UvaGhXK4wrhcnd9l7MkXYdN/9ncc1bdZPZDVdAXLqd0YQgAjj9aLJOkkBit2CRazqTKrNqoRQ68Ht0wq+RPUiGhBkl1FUZvLVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org; spf=pass smtp.mailfrom=disroot.org; dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b=RX8dqXbP; arc=none smtp.client-ip=178.21.23.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
+	s=arc-20240116; t=1788588921; c=relaxed/simple;
+	bh=0PE2nVJEfLd+eGJIsDNB7qnEJvVfkDaVwCZbyEIv80M=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Gxsy35mVm7CnUOqmrNI7BRalQ4O4HfeBM7rX3s9VUhfIkPQ5goM0KhWXwAn3+jplvEXMt1VCbg2TDYHFKFtXC3KSRh3PBhe8NVAF6iB0SpW4mM8riwnQCTzYxV18358D8M19qxKhTiAubThsyCLZ7ULbtFr5eFqFgjgLDttOU2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=s3P4geiT; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b="RX8dqXbP"
-Received: from mail01.layka.lan (localhost [127.0.0.1])
-	by disroot.org (Postfix) with ESMTP id 2F891883C9;
-	Sat, 05 Sep 2026 07:49:04 +0200 (CEST)
-X-Virus-Scanned: SPAM Filter at disroot.org
-Received: from layka.disroot.org ([127.0.0.1])
- by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
- id HN4AlLPN_2I6; Sat,  5 Sep 2026 07:49:03 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
-	t=1788587343; bh=dLgyqMjJrt6QoHcIhrs2GwJlrjB833hjrC0NvbX6Bb8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RX8dqXbPZXUzXy91NZ7MRhX0CkfXZ18pgqtfmXqOY8DWqMe8wmLa8B0eSdi53aZJU
-	 MZmWm0CLbT4m8QTVBs4lRs6MaLjkYWDGdj8TYLF0NolXfal7Y3x7+1SCvRDVSsj9ZF
-	 gxGwQ9ohJNsZV7PKXKXbp0tSblmwNKa1uYF6kSbHt4x2xWM0Wq2PyZiMSyee8oWoGO
-	 BsiistNCCfOFLs2868tyLvUpjJEDpE1OcisdSCEqMv4g4/BSRUNRfwMuNNmOyfnOxm
-	 7cgKj6W8y33VSr1ITIC5kc0o3hVC4j9sg539Hbgo7YDLNcRwkq2RokqGY/0wWLybVQ
-	 jDE1UlUVBo4Sg==
-From: Marco Scardovi <scardracs@disroot.org>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Deren Wu <deren.wu@mediatek.com>,
- Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
- Klara Modin <klarasmodin@gmail.com>, David Gow <david@davidgow.net>,
- linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
- linux-kernel@vger.kernel.org
-Subject:
- Re: [PATCH] wifi: mt76: mt792x: fix NULL pointer dereference in
- mt792x_init_acpi_sar_power
-Date: Sat, 05 Sep 2026 07:48:50 +0200
-Message-ID: <oWkA8ZPAS2aI62u9I6EKqQ@disroot.org>
-In-Reply-To: <20260904234838.19342-1-lucid_duck@justthetip.ca>
-References:
- <20260904161826.5638-1-scardracs@disroot.org>
- <20260904234838.19342-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="s3P4geiT"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=0PE2nVJEfLd+eGJIsDNB7qnEJvVfkDaVwCZbyEIv80M=;
+	t=1788588917; x=1789798517; b=s3P4geiT9fzS+dU2HE0zTI1+IqDYMU6keOqOWmSj7Fj5U2a
+	bC6+dZXNJsgsTo+0GOIFpDQp1JhY25r8WsFyI3RbPmUGedJiWYgvpyt7XKuc+TmvxKTsZPxXh6Zyb
+	/7+VV15Fm3UQ1HGUmf49nIZxzN4A+XKeBoCUYlAnj61rSV4YYzgRXA3bcNmH+USmA/ZX6FDquynJM
+	ILR5QkTybA+Q2p7djbJ4UZl+PRXIMu4TfHsf+GBlK7sT/LkJID27e+3dWK4DejGTzTANukEIcRmLA
+	L5KLehQ98fnPiN4nfjwFleM+IdovDjLW/PITScv8sJ3uHwek4ekLZgVlTWRJottg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x2jgB-00000002B0b-0Qjr;
+	Sat, 05 Sep 2026 08:15:07 +0200
+Message-ID: <9d91e1719383f8ba6dfc45650a92b1f2c2bc2f6b.camel@sipsolutions.net>
+Subject: Re: [PATCHv2 wireless] mac80211: stop tpt LED trigger timer before
+ freeing trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org, "John W. Linville"
+ <linville@tuxdriver.com>,  open list <linux-kernel@vger.kernel.org>
+Date: Sat, 05 Sep 2026 08:15:06 +0200
+In-Reply-To: <CAKxU2N9ZPRSotiPhayrQFyzbf=sPcU7X3o6ozRECOibhCj_kbA@mail.gmail.com> (sfid-20260904_211629_075221_49F57F20)
+References: <20260815190724.16943-1-rosenp@gmail.com>
+	 <12f4b21bb334a49c88bf28428b92589adecfa53a.camel@sipsolutions.net>
+	 <CAKxU2N9ZPRSotiPhayrQFyzbf=sPcU7X3o6ozRECOibhCj_kbA@mail.gmail.com>
+	 (sfid-20260904_211629_075221_49F57F20)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+X-malware-bazaar: not-scanned
 
-In data sabato 5 settembre 2026 01:48:38 Ora legale dell=E2=80=99Europa cen=
-trale,=20
-Devin Wittmayer ha scritto:
-> On Fri, 4 Sep 2026 18:18:26 +0200, Marco Scardovi wrote:
-> > Fixes: f965333e491e ("mt76: mt7921: introduce ACPI SAR support")
->=20
-> There is a patch for this from 25 August:
->=20
-> =20
-> https://lore.kernel.org/linux-wireless/20260825181712.28548-1-lucid_duck@=
-ju
-> stthetip.ca/
->=20
-> Klara Modin reported it, David Gow confirmed the fix on a Framework 13.
->=20
-Hi Devin,
+On Fri, 2026-09-04 at 12:16 -0700, Rosen Penev wrote:
+> On Fri, Sep 4, 2026 at 12:41=E2=80=AFAM Johannes Berg <johannes@sipsoluti=
+ons.net> wrote:
+> >=20
+> > On Sat, 2026-08-15 at 12:07 -0700, Rosen Penev wrote:
+> > > On a hot unplug, the device is torn down
+> > > through ieee80211_unregister_hw() without ever going through
+> > > ieee80211_do_stop(), so the timer is never stopped.
+> >=20
+> > I don't buy this.
+> >=20
+> > Also, missed wifi: prefix.
+> >=20
+> > Please don't just feed me LLM garbage. Do you have a crash reported on
+> > this?
+> Not formally no. However I am able to reliably panic the kernel. After
+> this patch I can't.
 
-sorry, I didn't notice that a thread was already opened so I supposed no
-one reported it at all.
-> One note on the Fixes tag. The crash needs a regulatory update to run
-> before registration, and that only started with these:
->=20
->   9b80bd9cab40  2026-06-09  mt7921 regulatory wiphy self manager
->   e9f3f1cc133f  2026-06-09  mt7925 regulatory wiphy self manager
->=20
-> Before those it just set flags, so the 2022 commit would reach stable
-> kernels that never had the bug.
->=20
-You are right on that, I'll pay more attention next time
-> Your trace enters through the regulatory notifier, mine through
-> firmware init. I could not find mt7921_regd_notifier_work in mt76
-> here, so if you have a second trigger I would like to see it.
->=20
-The whole patch is as you see it but: I didn't add anything more.
-Tbh I was working on a whole different sub but the OS refused to start
-because of this one so I came up with the absolute minimum patch to
-make it working
-> Thanks for taking this one on.
->=20
-> Devin
-At this point you can count this patch as void. Thank you for your time,
-Marco
+Then you can probably enable debug objects etc. to figure out why?
 
+I don't think this patch really fixes the cause, just the symptom.
 
+Maybe it's related to this:
+https://lore.kernel.org/linux-wireless/20260904165722.044aa432f873.I601a67a=
+2cd558b8ef8416a07554ae7efe896e9d8@changeid/
+
+johannes
