@@ -1,237 +1,110 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from enxio.de (enxio.de [91.210.227.97])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E310029BDBF
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 08:45:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642B93CD8B5
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 08:58:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.210.227.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788597930; cv=none; b=ZS6U58nEHNV70+Luf9181AtRrab5lHY3bJixwWCfuqBO11rInhJh5+Kqb+hd/tgHJ8Guaj5xiH6UoCx3FD5Ar5d0Y0FX69qJCyyAvgYSzqdPd2HhYxwEGSrWy9MmhjKjr0bo66pdxOUd8fou1/XzPwQfMeVWPuN0ZLOUuCJhAmU=
+	t=1788598708; cv=none; b=h2wtG4u4WK4Fbc+W0/mM1c2io5jRE0SdMWvtJ3BVbQSfrAPXr5wz6AHIMK9sE4xFeHg6L3x7Ch6oMCmbazxzYL+h/754OD44Tet9tWDLc9ZujVx/oMQDlnxpEBpB0S+purdm+mOvfN44YcF5vnKSSaRAOrRV5b4lFpOXmqn82Rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788597930; c=relaxed/simple;
-	bh=qTUqJpmOZfneAkXR51R9HKjY3ut2KmdkckUklfD7V00=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=BpEvGww8nyhaksh+6Ics0YmYoURhTx0vpfGDJj9Gf5H23Bx336zswTC4J5AZaz8X9eNirJOpACeWzEs+8NcQRIqU6DfQCEAYXg/Xp1NE50cN4MqjU+FDBgEvfgwhxg7jEW9okCpVhQXH4VAnu7MfJzGr1h7Nq3HPYWhUgm3FN4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=geEqIIia; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="geEqIIia"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-4843f205a5bso1094636f8f.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 01:45:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788597926; x=1789202726; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=yi85Njyt+YQbTk0qkutRoUa/021alepU64DQKFvSd8E=;
-        b=geEqIIiaCoXdyHMHkgnPnQ4qMRayFubT9BzLex8eLi5YXF2p56MuSSYF73VxGSOuVE
-         CCUGEQu72Bg5RdxaiRs7F8ntLCLYixvwAfK90Jxn1N01volZOZzRKJZkJ5lmItYISCA+
-         hMs+BxXkpwO7/xyBd8Z7KLKK2P2UqglzUvqlUC1BDIfbo1T8ib44Q7vBOZKfU+roJ4mE
-         3Pqge5s6KTDm/boKwRwCsQittL53Wy4eY/yBAs50RvFndUOiPSEtj0liJDp/aZy1i32k
-         x6fRajyrEdXtmbl75BlgDmg6JCANzx09l9sNB81t9BIXFee4BehuNdGyiPuxOtqkPjKO
-         4y5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788597926; x=1789202726;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yi85Njyt+YQbTk0qkutRoUa/021alepU64DQKFvSd8E=;
-        b=nhJdRfJfVQOiovLkvMJ8DksEmNlbAUg4rUBNEOIIMwmnLg4lLqQJUon1bSdvsyjTs5
-         JXiE4Gk81gIyeP4XNUAoBfZHW3nrOZhnwMv0q2CMWj7Zkwb2MOW4jQRG5gKkxN3jx52q
-         JKefO8CgydlpvWXs2KwSjRds4gV+SGM+I/VeZC+idUfjydrnOzAGoyzY1DK4CcfGtKXR
-         1B3M+MvTGA/5YFmyd3ampkhQ87MS6nmb1pAcozEYCSb1kRGWt0ed5tYCVrL9UMmodph0
-         178L9/2rcSgKX8OgVKWAyDhW9NtUF1/DsEhCnKDOCXEuvk2b9LNaSmPNog205taGLOgg
-         d5eg==
-X-Gm-Message-State: AFuF++nW/66PsBc79lhzvoN/jv8fjVV24vpCRvyMBQaZ+aniiAWm9tei
-	PnL/fBznhN5oco/92M0einQtylTLXqbJ7lbach1fS5DL/EOr7LE5+hrt7AZrqQ==
-X-Gm-Gg: AYBFou3565F8IzMswZ5c4f1qRWzHH42NanEeX+VPbWXkuudMLv3ei8jI7/eHKW9OG9a
-	zgU1JlO0S4kOVFH3/hEROuIO6BhcddvUgDXbYFj6x0Vlllf//6wugfegXnhn1PueOS6GcIuMC0I
-	p6XBfzA7zzfJ8gFpmx+1/tg2EVUITlYNOMQLklxrvgOluVyhGCfL8U7r8qoyyOIj3Hz7Y3YYAHv
-	22sJMMVeNiGtDwM3syFtq9Gl6bj4jzQ4kw5PiP14xWXc95iwSuSSeqPMEecPqK5FzcA5Ptiho/e
-	nTowOp31P9KVVjFVzzu7LntmpdeuO2H161/LYItBGD2k2Vdu7hwjNdp2tS7WG6o3JPuBfsrpHrq
-	Tvx2mURfdlhLGOKIiHwmtRDJN+7vTAMJIFOEris999ky1X3lxVO/cBqddTUnlpVXYgmYSwmDu9u
-	Ze8IglMmNErkrANXfdMEMshFA9V4OPYRII4jtg4RUVVAyf+Przpzti+saG7+YPHHQwrs3j9huqs
-	Y8+lA==
-X-Received: by 2002:a05:6000:2f86:b0:485:8a46:b3c7 with SMTP id ffacd0b85a97d-4858a46b5b7mr8932763f8f.47.1788597925987;
-        Sat, 05 Sep 2026 01:45:25 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485883c81c3sm11542834f8f.26.2026.09.05.01.45.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 05 Sep 2026 01:45:25 -0700 (PDT)
-Message-ID: <8efe15ee-bdea-428b-a636-3e801c22009f@gmail.com>
-Date: Sat, 5 Sep 2026 11:45:23 +0300
+	s=arc-20240116; t=1788598708; c=relaxed/simple;
+	bh=7ac71Qf5smvMd74myWY2LV6//fBf8iMplALhVwHNtXk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dsd2z+73qunhH5TqO9wv/1ArNbDNS0JYMf+jasUvKxE0kllRl+D7MOVZO1Fxp6whNXvM/fMjVV0o71a9mNF8mPx89IucWofGO61C8zcNEhHqhsWePsCD0/Owby1rFkMEZVN9DYQ/KnUIz88Fcoagq/onmkB9lh7vIfNFhNchSiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de; spf=pass smtp.mailfrom=enxio.de; arc=none smtp.client-ip=91.210.227.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=enxio.de
+Received: from [95.157.48.181] (helo=roja.toh.cx)
+	by enxio.de with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <thomas.hilber@enxio.de>)
+	id 1x2mE3-00000009MnK-1uz5;
+	Sat, 05 Sep 2026 10:58:15 +0200
+Received: from localhost ([127.0.0.1])
+	by roja.toh.cx with esmtp (Exim 4.94.2)
+	(envelope-from <thomas.hilber@enxio.de>)
+	id 1x2mE2-00FPKC-S9; Sat, 05 Sep 2026 10:58:14 +0200
+From: Thomas Hilber <thomas.hilber@enxio.de>
+To: Devin Wittmayer <lucid_duck@justthetip.ca>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com,
+	linux-mediatek@lists.infradead.org
+Subject: Re: AP drops STA data frames for ~130-170ms after 4-way handshake
+ completes (ath9k_htc, mt76; not brcmfmac)
+Date: Sat, 05 Sep 2026 10:49:46 +0200
+Message-ID: <20260905084946.3643161@enxio.de>
+In-Reply-To: <178842137902.19372.6968639520035628037@justthetip.ca>
+References: <20260827074442.826644@enxio.de>
+	<20260829232532.29622-1-lucid_duck@justthetip.ca>
+	<20260830104236.521389@enxio.de>
+	<20260830190028.20209-1-lucid_duck@justthetip.ca>
+	<20260831054740.1543875@enxio.de>
+	<178842137902.19372.6968639520035628037@justthetip.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, i.mafifi17@gmail.com
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: [PATCH rtw-next v2] wifi: rtw88: usb: Download the reserved page
- synchronously
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Mohammed Afifi <i.mafifi17@gmail.com>
+On Thu, 2026-09-03 at 00:42 -0700, Devin Wittmayer wrote:
+> So the measurement worth making is your key install.
 
-In AP mode the reserved page (which contains the beacon) is downloaded
-to the chip by rtw_fw_write_data_rsvd_page(). That function writes the
-data via rtw_hci_write_data_rsvd_page() and then immediately polls the
-hardware BCN_VALID bit to confirm the firmware accepted the beacon.
+Measured. It is not the key path.
 
-On USB, rtw_usb_write_data_rsvd_page() ends up in rtw_usb_write_port(),
-which submits the URB with usb_submit_urb() and returns as soon as the
-transfer is queued. The completion callback only frees the skb. As a
-result the BCN_VALID poll can run while the beacon is still in flight
-on the bus, and the poll times out even though the download itself is
-fine.
+Both tracepoints, paired by pid, taken during the same 150s window in which
+the stall was being measured on the station side, so these are the same
+associations and not a separate run:
 
-This shows up as:
+                          station side              ath9k_htc set_key
+                                                 (drv_set_key -> return)
+  nohwcrypt=0   5.01 attempts, 134.4 ms      median 0.418 ms, max 0.663 ms
+                n=183 cycles, 98% >1 attempt      n=394, none over 50 ms
 
-  rtw_8822bu: error beacon valid
-  rtw_8822bu: failed to download drv rsvd page
+  nohwcrypt=1   1.01 attempts,   3.8 ms      median 0.001 ms
+                                                  (driver barely involved)
 
-The failure is intermittent because the poll retries sometimes cover
-the transfer time. It occurs in bursts when something triggers repeated
-beacon updates, such as stations associating and disassociating.
+394 key installs, not one above 0.7 ms, while every association in the same
+window was losing 134 ms. That is about 320x short of accounting for it, so
+by your test the two-mechanisms reading holds.
 
-Fix this by adding a synchronous bulk-out helper that waits for the URB
-to complete, and using it for the reserved page download. Only the
-reserved page / beacon path is made synchronous; the normal data TX
-path is left untouched, so throughput is unaffected.
+One caveat I cannot close from here. ath9k_htc is a USB part and set_key
+ends in a WMI write, so "drv_set_key returned" is only the driver call
+returning. If that write were queued rather than acknowledged, the number
+above would be measuring the queueing and not the install. Against that:
+0.418 ms is about what a USB control round trip costs, and it is far too
+slow to be a memory write, which is what it would look like if nothing went
+out to the chip. So I think the key really is in the part when set_key
+returns - but I have not read the WMI path to confirm it is synchronous,
+and if someone who knows ath9k_htc says otherwise, this measurement is
+worth nothing.
 
-The reserved page download runs in process context under rtwdev->mutex,
-so sleeping there is safe.
+You are right about my 22.2 ms and I should not have offered it. Timing
+first-frame delivery at the netdev can only ever time the frames that
+survived, so it cannot distinguish deaf from slow. It was not evidence,
+and I have dropped it.
 
-Closes: https://github.com/lwfinger/rtw88/issues/451
-Signed-off-by: Mohammed Afifi <i.mafifi17@gmail.com>
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
----
-v2:
- - Fix compilation error in rtw_usb_write_data_rsvd_page().
----
- drivers/net/wireless/realtek/rtw88/usb.c | 91 +++++++++++++++++++++++-
- 1 file changed, 90 insertions(+), 1 deletion(-)
+Your induced window is a much better instrument than anything either of us
+had before, and it is worth saying what it does and does not settle. It
+shows that a slow key install produces this signature. It does not show
+that a slow key install is what produces it on hardware where the install
+is fast - and on ath9k_htc it now looks like it isn't. Both can be true.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index c90802919473..d31297954f22 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -394,6 +394,71 @@ static int rtw_usb_write_port(struct rtw_dev *rtwdev, u8 qsel, struct sk_buff *s
- 	return ret;
- }
- 
-+struct rtw_usb_write_data_sync_cb {
-+	struct completion done;
-+	int status;
-+};
-+
-+static void rtw_usb_write_port_sync_complete(struct urb *urb)
-+{
-+	struct rtw_usb_write_data_sync_cb *cb = urb->context;
-+
-+	cb->status = urb->status;
-+	complete(&cb->done);
-+}
-+
-+/* Synchronous bulk-out that returns only after the data has actually been
-+ * transferred to the device. Required for the reserved-page / beacon
-+ * download: the caller polls the hardware BCN_VALID bit immediately after
-+ * this returns, so the bytes must be on the chip by then. The normal async
-+ * TX path races that poll, which shows up as intermittent
-+ * "error beacon valid" / "failed to download drv rsvd page" in AP mode,
-+ * more often on 5 GHz where the larger beacon takes longer to transfer.
-+ */
-+static int rtw_usb_write_port_sync(struct rtw_dev *rtwdev, u8 qsel,
-+				   struct sk_buff *skb)
-+{
-+	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
-+	struct usb_device *usbd = rtwusb->udev;
-+	struct rtw_usb_write_data_sync_cb cb;
-+	int ep = qsel_to_ep(rtwusb, qsel);
-+	unsigned int pipe;
-+	struct urb *urb;
-+	int ret;
-+
-+	if (ep < 0)
-+		return ep;
-+
-+	urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!urb)
-+		return -ENOMEM;
-+
-+	init_completion(&cb.done);
-+	cb.status = -EINPROGRESS;
-+
-+	pipe = usb_sndbulkpipe(usbd, rtwusb->out_ep[ep]);
-+	usb_fill_bulk_urb(urb, usbd, pipe, skb->data, skb->len,
-+			  rtw_usb_write_port_sync_complete, &cb);
-+	urb->transfer_flags |= URB_ZERO_PACKET;
-+
-+	ret = usb_submit_urb(urb, GFP_KERNEL);
-+	if (ret)
-+		goto out;
-+
-+	/* 5 s matches the vendor driver's bulk-out timeout */
-+	if (!wait_for_completion_timeout(&cb.done, msecs_to_jiffies(5000))) {
-+		usb_kill_urb(urb);
-+		ret = -ETIMEDOUT;
-+	} else {
-+		ret = cb.status;
-+	}
-+
-+out:
-+	usb_free_urb(urb);
-+
-+	return ret;
-+}
-+
- static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb, struct sk_buff_head *list)
- {
- 	struct rtw_dev *rtwdev = rtwusb->rtwdev;
-@@ -543,13 +608,37 @@ static int rtw_usb_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_tx_pkt_info pkt_info = {0};
-+	struct sk_buff *skb;
-+	int ret;
- 
- 	pkt_info.tx_pkt_size = size;
- 	pkt_info.qsel = TX_DESC_QSEL_BEACON;
- 	pkt_info.offset = chip->tx_pkt_desc_sz;
- 	pkt_info.ls = true;
- 
--	return rtw_usb_write_data(rtwdev, &pkt_info, buf);
-+	skb = dev_alloc_skb(chip->tx_pkt_desc_sz + size);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, chip->tx_pkt_desc_sz);
-+	skb_put_data(skb, buf, size);
-+	skb_push(skb, chip->tx_pkt_desc_sz);
-+	memset(skb->data, 0, chip->tx_pkt_desc_sz);
-+	rtw_tx_fill_tx_desc(rtwdev, &pkt_info, skb);
-+	rtw_tx_fill_txdesc_checksum(rtwdev, &pkt_info, skb->data);
-+
-+	/* Download the beacon/reserved page synchronously so that the caller's
-+	 * subsequent BCN_VALID poll observes the completed transfer instead of
-+	 * racing the async TX path.
-+	 */
-+	ret = rtw_usb_write_port_sync(rtwdev, pkt_info.qsel, skb);
-+	if (ret)
-+		rtw_err(rtwdev, "failed to download rsvd page over USB, ret=%d\n",
-+			ret);
-+
-+	dev_kfree_skb_any(skb);
-+
-+	return ret;
- }
- 
- static int rtw_usb_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
--- 
-2.55.0
+Thanks also for the retraction on the reorder window; that saved me from
+building on it. For what it is worth, my TID 7 sessions still show your
+exact mismatch, declared SSN never arriving in about 97% of them - but at
+the same rate in the arm with no stall, so it is a real pattern here that
+simply does not track the symptom either.
 
+Where that leaves ath9k_htc: association completes, the 4-way handshake
+completes, hostapd authorizes the port, the key reaches the chip in under a
+millisecond, the block-ack window opens on a sequence the station does send
+- and the station's first several frames still do not come back. I am out
+of hypotheses that I can test from outside the driver. If anyone on the
+ath9k side wants a specific tracepoint or a debug patch exercised, I have a
+bench that reproduces this on demand, roughly 250 associations per two
+minutes, and I will run whatever you like.
+
+Thomas
