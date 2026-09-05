@@ -1,70 +1,74 @@
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13EA93218BA
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 10:05:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D14E63B2FC6
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 10:05:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788602758; cv=none; b=MZB4E12hvlnDsxYWRgojDPkvIx9ie1dMfW5mLTfLbDgSaTkemWiSTsgD2a4TRYQR4bvBveUekfML+M4rNStGaJ1ge7MevaCngRzD16cXEmXrTED3HmgGIM0uP3sfHqlyHI6gzeBLnYwNO50DoxkUrATItpTNryr26ZvGjEGFmjo=
+	t=1788602759; cv=none; b=K15RdRwZkbpuOdMyaYJ77vANesuTMCidVF3bgK6P3tAHlrFnTwG1GPBV15dA97FWpCkVySKK6GWH3BPS+pCIABqEer/lofcH3pCIytJdeyrwy5FG67fnIJ80i5GVoBY6v3HCgCVWUdKwg29VoaO7aK2fmIxxm0soOR3Zo7gk2Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788602758; c=relaxed/simple;
-	bh=cpP8ANudbdWPOFQJFqMv+O1f4auumUXQKGMA0l7fPo4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JJPOiyMKWq0Bd4y/nK9doiNwnXoBOk+//cSFvVUTJF2bTfNiVxOCbnmevGyB5RUCQ/TXnbKxEaNQbQH6Help0GvoGM/MMxfdcved/ynrIBKzKbcJKzEcyFwNoWqzYOWfjgUK2Jd3ED5SDkR/Nr5iV4uinqQ1Tr5ELc+0jVq+p80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RnX5gc2w; arc=none smtp.client-ip=209.85.208.182
+	s=arc-20240116; t=1788602759; c=relaxed/simple;
+	bh=IpBe6QMdFYojPCd3r7iZwbZIV3JLrSuhGwUg6VBmvF8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Gx39Vea1KkvKnX5xEsPfus+ct3PND1fZ5xFUkVAptaQEQwAvEAu0715XbG74B8oQdTi5yEwMDZlkQrNoAdo+SxkTdsDeNEy1nd9cnI5418E0NQ8Wkwgo2bYktJNt1+dQpcF4zcYOmTF4LV/XW50hU8JuYyX0A4jGl2Ut4H/bwsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=stdXOfHD; arc=none smtp.client-ip=209.85.208.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RnX5gc2w"
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-39c7ef2b1e2so16900851fa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 03:05:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="stdXOfHD"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a35920ff96so24433171fa.0
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 03:05:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788602755; x=1789207555; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KEmycsxdKEgtKycB7F+mNFHTBFbitCM1fHqOBorxUCg=;
-        b=RnX5gc2wuiX2d/Z5Sr0FttOIP9ikHXL0wOBoIpa3JHvSHzL2K2Q3q57u5VoJCQSlB1
-         YF6ntulkXgJbjYg0VYeTAaxSCag1JkSVNAgsiFW9d+Pch+uq+nbnnfuzQ2PoR4oSUDLv
-         F5vp73UUl07Fm6Tkg953YrsUTXDHcNQwS5gxu2P09tEDDi4zZcIy4dBK70/YM0CQ6LFJ
-         WkYZfcIBFrZdb3maqr8ta7pxCse7fwkoFui4rCXcnLhRhYR2YLNeCANvYTq8pWrM+b4/
-         HISYHqDjfPdOVq98rBCN6utqyXqH/hAbvoR7AYxlZ3XQxMye9Penn4j8V9DbV3mWcIC5
-         XilA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788602755; x=1789207555;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1788602756; x=1789207556; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KEmycsxdKEgtKycB7F+mNFHTBFbitCM1fHqOBorxUCg=;
-        b=r47Ug+wfMZoN6LtnrxQfO6RXqZvTJRLWJRzds/DN4Xsc+lG7ClgsN0UpvMQlVTcvph
-         /hSGJZ3HTFP0OQ2KqPGhHr053MYV9NP1VCd2DlwgZB/vrIXwVzcfKzjLATbsidDpo3Pr
-         8mE9+BGJueJUOJnYZreC41kU9f4rBMhiTRPJPhli2bRh8bJPwBr3EwkkySOegnphLvho
-         nv6JjnfJklIXhJ2CcmjeF3fEynKv+Xgz6JJgIp65uYJeq25s8MqB6n7096LNVCnZV+GM
-         QuUpAsGnUp9e0GH/oMF1H1HkRrI2e7tUW8WfDdfoAWii2RxFKFxMs00F50dusnl8+/8G
-         kCQg==
-X-Gm-Message-State: AFuF++nfWcl4QZAef1dHDmw9xGVS4YrY53sBHTv8ZhbWyOOchmlT5Ipq
-	VJ9Q3dBYcBHQ4bQK9xLuRUWl7o5INHD3UJzlqCtO16rfWIqXHdgWwjZs
-X-Gm-Gg: AYBFou2GAGr5VErNxCegVO51moQomfGrgytxZuZYZx6EUh3qXSV18A4oEygSDu2FBix
-	dczbbYCG4Dtnq+hOnGSAfyUt1iKeG5HjPjsVf9l4UfrT+pWLT+sxExa9pm2yAsxjxSmJ4cnu1Rn
-	WkamHae8AM1J/pK8//TSsEqFzkjByEIW6/g7wbI3DxtmidHdeTqbLwMXnJPjjLryw2PM9UwBkfU
-	YDF1hsMWRWL33wYuuG5TnCOUju47VLC3fHcFaKSwYc1WMqDATlLGQjXDp1f504/8ly6Q6F9t/VS
-	dyznE7drTolDWMDNPVuJ8ngk+he1L/O14Sss8pfTZj+3OHkgrfJOypNXRSbdz3QioLJ3azTubav
-	bvewVzg+LJpmWOla+QvYbNYihNU7M1vmtLdFkqb9TM9W+pU22JZ0DAvBq324eFsJdNAwmZEbq0w
-	xdGioM8dSu2l9zjIM/XwiAUuiUw4lNYRyY+VCIpwyKHuRlZnXHToMBe4gU1kBb+piBsizYM+UXX
-	BEQQTsF9V5QiXz0XgQXuuzRgfNBnY8r/5ik6dMlE+xXhwNmngg2DKWU6pOSCQ==
-X-Received: by 2002:a05:651c:a206:20b0:3a3:74b7:fc0f with SMTP id 38308e7fff4ca-3a374b827ffmr7443231fa.27.1788602754702;
-        Sat, 05 Sep 2026 03:05:54 -0700 (PDT)
+        bh=ZihC6gdFyAtWT1MYgYEnu+8RGKM23e/TuDS3snfY308=;
+        b=stdXOfHDBp34JXGT9Fwm2mVPufrMaiJaXhwyZoqIRDKiOrvQ0D+upCJ2zs7t/wS23T
+         0g+J4R7r0oY3y4SOlcvfyJ83N9sP3BnLt+ldcg3SAvLHQT5eHLXhauPtAVFqq8td6iGa
+         2KO1uztNAwXjYa4xknG8+85lST7krWreoJVrcmK+o0AgjXaBj5mBPeM8OkdQNymqcPjA
+         LU0PULXq6/wvlTgVkdVkt2s1yHMaVmVdEOSTtIx/X6wnLPQN7JB01M6/dnVJgNtuWP6k
+         oKuwyWitKoSh3bpfb4M8uPVbQ3YWMSpd6w7C0Cgy5t2IGddzfQv10UVmYYW4y62az9NR
+         Tr2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788602756; x=1789207556;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ZihC6gdFyAtWT1MYgYEnu+8RGKM23e/TuDS3snfY308=;
+        b=C4xcyDhvUGESh1/REHRO/Ce5aezXVJ5OCfbbSTwKS3awe9T38HTzmluj8B8iRlwnNm
+         Y5gh02QnmUzXwMyYFpvKMLAo4nTd/niWc6gjtSmTsHRZBQpgV4+8qs3SD7ZjSIs3GPhn
+         0BYxMcNTwovr1gifPQx1AHagmtGlX1A4ZjZLnZDLcuiyvKnWiLTDe32fidadwrjcw0Ej
+         iUwLJI9eMNQ1UJlMcftYk9t1b4M1BuLWXsnKrvvX+RfKBhAQyg2E8PCk5ixrqtfgvFp6
+         j5YgS0Oe2olhLxIwxRWLaGo8asJvGhnFz9yYvO8RWbcnYZhQbJUtChK//ywZl4i/WthW
+         nFTw==
+X-Gm-Message-State: AFuF++l4DsrOVb3SGAEdfL/uOyepGZmMV9Mc5bytsEFEuhYf65OYet1D
+	BZM/1jvoU6tnCXK2OU8nK7XKuavw+XTLRQAmmIlED/axcy1gspe2SmYc
+X-Gm-Gg: AYBFou3V/p/BtEOP+eVF22ilz3U6Rk48J30COnpJY4FsS3po4a+QcL88FnLz1vA9wVl
+	UrArBME5FznE8vLR1+6SrGRh+Xv0vkmsP/nyYFeZZOoGM6fN/VL6RVxnQ7JrRCD//F9Zgn3Iab9
+	8LskVKMrXTHlu/2rZFmODpUBxukXrx03+fDsrRT/uTpiJOmJCSuzpvIfMqksxSVKhrFweV6tv7L
+	mOJBtRO2VSGNYbVuJhEyC1+lNEe/frsxgTcpfvovgaPS9JgS/E8cw4XvUfm/nC12/eUz3zZuw8K
+	VSm//qH5x/Mk1hS321cZZy1B631TuILGIoCcOVcOAc7lgBmpZu6ClBEhxfOMB2PDQhuY4DTOBXo
+	vnh8c7yGgIeX80yTdR0LZ3FNwT+EmlW0u/TR0rhCUmr4jznn8Sklg/w7BmjnO4AdcYRnzACwcRH
+	2PSjlHyJWDxqNLPJhgIYRqzFyitIs0SSr1aDqd27+wyFM9iqxXLMRu2I2wTdY7tzk15n/O4kMMw
+	6xlD0xIh6/zJkacmJGBvjz7+Q8GW8GqERjIaCTOhtFSSk3wxLvJI6BAwuhLxA==
+X-Received: by 2002:a05:651c:31cf:b0:3a3:61ec:7db7 with SMTP id 38308e7fff4ca-3a372e08c5fmr10761191fa.13.1788602755470;
+        Sat, 05 Sep 2026 03:05:55 -0700 (PDT)
 Received: from archlinux ([94.180.80.42])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a3705868a0sm13107741fa.19.2026.09.05.03.05.53
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a3705868a0sm13107741fa.19.2026.09.05.03.05.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 03:05:54 -0700 (PDT)
+        Sat, 05 Sep 2026 03:05:55 -0700 (PDT)
 From: Arsenii Pashchenko <ulijg308@gmail.com>
 To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Arsenii Pashchenko <ulijg308@gmail.com>
-Subject: [PATCH rtw-next v8 0/3] wifi: rtw88: rtw8822c: refactor DAC IQ calibration to s32
-Date: Sat,  5 Sep 2026 17:05:45 +0700
-Message-ID: <cover.1788601784.git.ulijg308@gmail.com>
+Subject: [PATCH rtw-next v8 1/3] wifi: rtw88: rtw8822c: Use bitfield macros for DAC IQ sampling
+Date: Sat,  5 Sep 2026 17:05:46 +0700
+Message-ID: <064626e2b0a0e415ddd53afbf908c000524e0e58.1788601784.git.ulijg308@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <cover.1788601784.git.ulijg308@gmail.com>
+References: <cover.1788601784.git.ulijg308@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -73,99 +77,69 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series refactors the Digital-to-Analog Converter (DAC) IQ
-calibration routines in the rtw8822c driver, eliminating legacy
-unsigned workarounds in favor of native signed math.
+Define proper GENMASK constants for the In-phase (I) and Quadrature
+(Q) components of the DAC IQ data register in the header file.
+Replace manual bit shifting, masking, and rtw_read32_mask() with
+standard rtw_read32() and the FIELD_GET() macro to improve code
+readability.
 
-The original code heavily relies on unsigned 32-bit math mapped over
-a 10-bit circular hardware register scale centered around 0x200. This
-introduces complex nested boundary checks, custom bubble sort rules,
-and custom min/max tracking helpers.
-
-By migrating the temporary stack arrays and signatures to signed s32
-and utilizing the kernel's FIELD_GET_SIGNED() API, the coordination
-system is linearized. This allows the removal of internal custom
-helpers, collapses unsigned wrap-around logic into standard linear
-operations, and enables the drop-in integration of the kernel's
-native heapsort library.
-
-The series is broken down as follows:
-Patch 1: Introduces GENMASK constants for register fields and replaces
-         manual bit shifts with standard FIELD_GET() macros.
-Patch 2: Converts stack buffers and function signatures to signed s32,
-         switches sampling to FIELD_GET_SIGNED(), and straightens out
-         the validation windows and hardware offset mapping.
-Patch 3: Replaces custom bubble sort logic and unused helpers with a direct
-         call to the kernel's native sort() library using a safe,
-         overflow-proof relational comparator.
-
-AI Disclosure:
-An AI assistant was used for source code analysis and conceptual
-consultation regarding the signed math transformation. All code
-modifications, final implementations, and refactoring steps were
-written, reviewed, and verified manually by the author.
-
-Testing:
-- Note: The author does not possess the actual rtw8822c hardware. Actual
-  throughput and runtime performance verification is left to the vendor
-  or community testers.
-- Every patch in the series was verified with scripts/checkpatch.pl
-  and yielded 0 errors and 0 warnings.
-- Each patch was sequentially built (bisected and compiled) to ensure
-  there are no compiler warnings, pointer type mismatches, or broken
-  builds at any intermediate step.
+Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-Changes in v8:
-  - Patches 1/3 and 3/3: Collected Acked-by from Ping-Ke Shih.
-  - Patch 2/3: Fixed comment block style (made the first line empty).
-  
-Changes in v7:
- - Fixed variables declaration order in rtw8822c_dac_iq_offset() to comply
-   with the "no declarations in the middle" kernel style rule (moved 'avg'
-   and 'i' to the top of the function).
- - Fixed a typo in patch 2 commit message: changed FIELD_GET() to
-   FIELD_GET_SIGNED() to match the actual code implementation.
- - Simplified the signed average hardware mapping in rtw8822c_dac_iq_offset()
-   by replacing the complex ternary operator arithmetic with a clean, standard 
-   bitwise AND mask via GENMASK(9, 0) and added an explanatory comment block.
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 18 +++++++++---------
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |  3 +++
+ 2 files changed, 12 insertions(+), 9 deletions(-)
 
-Changes in v6:
- - Noted lack of physical hardware for throughput testing in the cover letter.
- - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
- - Optimized the min/max search loop in rtw8822c_dac_cal_iq_search() by
-   starting from index 1 since index 0 is used for initialization.
- - Reverted an accidental change that broke the compilation.
-
-Changes in v5:
- - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 244c80264..137544649 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -291,9 +291,9 @@ static void rtw8822c_dac_cal_iq_sample(struct rtw_dev *rtwdev, u32 *iv, u32 *qv)
  
-Changes in v4:
- - Flattened the series from 4 to 3 patches to avoid intermediate broken
-   states where sign-extended variables interacted with unsigned check
-   logic, ensuring 100% clean bisectability.
- - Leveraged FIELD_GET_SIGNED() for modern, native handling of 10-bit
-   signed hardware entries as suggested during review.
- - Shifted definition of register field masks from the .c file into the
-   shared rtw8822c.h header file according to subsystem design patterns.
- - Stripped out custom rtw8822c_dac_iq_sort() wrapper, invoking the
-   kernel sort() library directly inside the main calibration search loop.
-
-Changes in v3:
- - Corrected the subject prefix target tree from wireless-next to rtw-next 
-   as requested by the maintainer.
-   
-Changes in v2:
- - Fixed missing target tree name in the subject prefix (switched to wireless-next).
-
-Arsenii Pashchenko (3):
-  wifi: rtw88: rtw8822c: Use bitfield macros for DAC IQ sampling
-  wifi: rtw88: rtw8822c: Convert DAC IQ calibration path to signed math
-  wifi: rtw88: rtw8822c: Replace custom DAC IQ sorting with kernel sort
-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 161 ++++++------------
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 +
- 2 files changed, 55 insertions(+), 109 deletions(-)
-
+ 	while (i < DACK_SN_8822C && cnt < 10000) {
+ 		cnt++;
+-		temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
+-		iv[i] = (temp & 0x3ff000) >> 12;
+-		qv[i] = temp & 0x3ff;
++		temp = rtw_read32(rtwdev, 0x2dbc);
++		iv[i] = FIELD_GET(RTW8822C_DAC_IV_MASK, temp);
++		qv[i] = FIELD_GET(RTW8822C_DAC_QV_MASK, temp);
+ 
+ 		if (rtw8822c_dac_iq_check(rtwdev, iv[i]) &&
+ 		    rtw8822c_dac_iq_check(rtwdev, qv[i]))
+@@ -344,12 +344,12 @@ static void rtw8822c_dac_cal_iq_search(struct rtw_dev *rtwdev,
+ 		rtw8822c_dac_iq_sort(rtwdev, iv, qv);
+ 
+ 		if (i_delta > 5 || q_delta > 5) {
+-			temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
+-			iv[0] = (temp & 0x3ff000) >> 12;
+-			qv[0] = temp & 0x3ff;
+-			temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
+-			iv[DACK_SN_8822C - 1] = (temp & 0x3ff000) >> 12;
+-			qv[DACK_SN_8822C - 1] = temp & 0x3ff;
++			temp = rtw_read32(rtwdev, 0x2dbc);
++			iv[0] = FIELD_GET(RTW8822C_DAC_IV_MASK, temp);
++			qv[0] = FIELD_GET(RTW8822C_DAC_QV_MASK, temp);
++			temp = rtw_read32(rtwdev, 0x2dbc);
++			iv[DACK_SN_8822C - 1] = FIELD_GET(RTW8822C_DAC_IV_MASK, temp);
++			qv[DACK_SN_8822C - 1] = FIELD_GET(RTW8822C_DAC_QV_MASK, temp);
+ 		} else {
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index fc62b67a1..7bea99614 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -141,6 +141,9 @@ const struct rtw_table name ## _tbl = {			\
+ #define DACK_RF_8822C		1
+ #define DACK_SN_8822C		100
+ 
++#define RTW8822C_DAC_IV_MASK GENMASK(21, 12)
++#define RTW8822C_DAC_QV_MASK GENMASK(9, 0)
++
+ /* phy status page0 */
+ #define GET_PHY_STAT_P0_PWDB_A(phy_stat)                                       \
+ 	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
 -- 
 2.55.0
 
