@@ -1,45 +1,75 @@
-Received: from enxio.de (enxio.de [91.210.227.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642B93CD8B5
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 08:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.210.227.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74ADA3AA504
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 08:58:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788598708; cv=none; b=h2wtG4u4WK4Fbc+W0/mM1c2io5jRE0SdMWvtJ3BVbQSfrAPXr5wz6AHIMK9sE4xFeHg6L3x7Ch6oMCmbazxzYL+h/754OD44Tet9tWDLc9ZujVx/oMQDlnxpEBpB0S+purdm+mOvfN44YcF5vnKSSaRAOrRV5b4lFpOXmqn82Rg=
+	t=1788598738; cv=none; b=R+25pzHKzyfW0o2eDoC7C25ih+ExeY2FJWE/8XW036R7vN/tkOCNvQbbK4Bpn/uFXHzEmR5sGuk2n/FeCN+6+6fw8ue/VMJdyUTsM1EZKYUHmkGPBjUkLL2W1jA9bA69uiugtQP+wTO1j5MZQ5GK/ft1IRhscc7C6mf5Azyt6SY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788598708; c=relaxed/simple;
-	bh=7ac71Qf5smvMd74myWY2LV6//fBf8iMplALhVwHNtXk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dsd2z+73qunhH5TqO9wv/1ArNbDNS0JYMf+jasUvKxE0kllRl+D7MOVZO1Fxp6whNXvM/fMjVV0o71a9mNF8mPx89IucWofGO61C8zcNEhHqhsWePsCD0/Owby1rFkMEZVN9DYQ/KnUIz88Fcoagq/onmkB9lh7vIfNFhNchSiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de; spf=pass smtp.mailfrom=enxio.de; arc=none smtp.client-ip=91.210.227.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=enxio.de
-Received: from [95.157.48.181] (helo=roja.toh.cx)
-	by enxio.de with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <thomas.hilber@enxio.de>)
-	id 1x2mE3-00000009MnK-1uz5;
-	Sat, 05 Sep 2026 10:58:15 +0200
-Received: from localhost ([127.0.0.1])
-	by roja.toh.cx with esmtp (Exim 4.94.2)
-	(envelope-from <thomas.hilber@enxio.de>)
-	id 1x2mE2-00FPKC-S9; Sat, 05 Sep 2026 10:58:14 +0200
-From: Thomas Hilber <thomas.hilber@enxio.de>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com,
-	linux-mediatek@lists.infradead.org
-Subject: Re: AP drops STA data frames for ~130-170ms after 4-way handshake
- completes (ath9k_htc, mt76; not brcmfmac)
-Date: Sat, 05 Sep 2026 10:49:46 +0200
-Message-ID: <20260905084946.3643161@enxio.de>
-In-Reply-To: <178842137902.19372.6968639520035628037@justthetip.ca>
-References: <20260827074442.826644@enxio.de>
-	<20260829232532.29622-1-lucid_duck@justthetip.ca>
-	<20260830104236.521389@enxio.de>
-	<20260830190028.20209-1-lucid_duck@justthetip.ca>
-	<20260831054740.1543875@enxio.de>
-	<178842137902.19372.6968639520035628037@justthetip.ca>
+	s=arc-20240116; t=1788598738; c=relaxed/simple;
+	bh=GM53c5bDaqujucxbxaxGpiG4wy3NyirQxLZiAGL0gAg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SQ+9kOOYSeBNxJevcrR2TA4n0Gw3D84O1MXakJvmddbKE57KsQ3ZfLhha9a8lfN88KmLsZMQ5Lotcp+p8AyUE3eOnTsf8vQm4OMADEHa7ZYfPLgvgbVRGZb92SP+WJq0wJ6F8K9suJq+xWaAfluAJwR7xtU/qxx5/zXUwsaRERU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RswzZy0o; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RswzZy0o"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-49b965570d7so21288025e9.0
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 01:58:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788598733; x=1789203533; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=rRYnCyD6UDzDv4ELVSWA0Rp0mK6cDy5rp6eJ73k+jLw=;
+        b=RswzZy0oYXVY06Qh7ikRBMPnAGnCIChvYEwaxHClBfuR8jic3igYCq3WcyKLEN4KLD
+         5GZW+BeinyCKc1u7F/TpuhNaMDHByqM5il0YCc6tLS2v7r2o1V6C2l9ZXRGXW0BejqgY
+         MBG6kpcNHEt/0NcHBQHXiesBuywGHw27RvLCA0PRo2WoQu8DD+GNeLeklP5e13XhDFBQ
+         hUyj/voGbJYjtGhsnwi4oS14EpdAtfKjT94y1uIvgrEZ2D79xLL/IbEnaePc8Rj48s7Y
+         i72gLRys8XP9NNkAGbMX0EzzMIEma9APICYap4D2Ras0/sv2gNHU6MGOC3zwgsXdq/7t
+         c3xQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788598733; x=1789203533;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=rRYnCyD6UDzDv4ELVSWA0Rp0mK6cDy5rp6eJ73k+jLw=;
+        b=eMVQNYmErHGKLpvY3+IC+ZW0okVmDPY7m2RFZLOYaP/HMxevxp0RWAEQqnUFPvF0BU
+         5q+rN6iD60WB30OSm9eG/Ru8Fe2Oaif/P1OtteI98GhQTWzJaa6nczbsEkWPIyWDqUnI
+         mEHmOt1ZpVMomEt8qKRX2pLiaMjCMdK2ZIypK8syhOWZT4ANLxfq9G9oi3ahOf97vXKc
+         kkMGFsmlqdkHAxPawyUluNFiHPdC+PqLLn5yBUJAEjNtHnzF43tj04BzASOxiq410Inj
+         a08ipyjac/0usQy25Ny7wU4N9VjSA3y345EJUxj7I55TeGfu+5ZeQ/aE7ayycfhEmGOG
+         thWQ==
+X-Forwarded-Encrypted: i=1; AKwUvBx7Bkpoeo3vVtqvbWJmQxi+SHrOmTVLJ0vrsVz7CumgZQSQfjhVAZDNO8dduvwThBEIJre8ckIHowKjfH3PJQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++kRg8m+Os/TxFVaY7EXIcqgfAA8U416BB38wontKuI20dCC8elb
+	Bzp/7OAGXciu1I9Rn4Rv5dN2IkqomyG+VYcHho5sYvdkYCQqhSc/U/XtLkyj
+X-Gm-Gg: AYBFou3YdFRe6UDX7W9cybLtdgqpiORqr8qj0KZ6039d8NveGgtRGsqJYc/25fQzTe4
+	D+StPIznLhQfV6KL6ugwHYlUt198N8ULs+3iekDHIRckCFcxtt7byp3W2M6VNZDq4oPpcVuy+VF
+	mtPE/utFysn4AK8h+WkvA53xa/wxQUrbMvyE8kE3AGFHf5EfXQrPoWOhN2vN146oRtf0i9M6m25
+	Lc6jwQq3KLgz6HM1/GpBNa0ml6bDmdb1pv2OSaZJ8dP8eI4g6exOLcT/VVoVXzm4zfu5ZGnd9VD
+	6au4cukBRu5zMPq2qQNv1ydpXimXUY2Ql5QiNtqpxdVBh57wumpDYcHCvS/lsYj50havdl8aPoK
+	QzAcOL+Dyp0YfIyeEiAUejltWXzxhCzyIdDkiKCI1Y89dFmhpPvhO3j3WMXf4Icl7neEJf0Ora7
+	8jXraW1d5ChMFDlFPAYn9yhQNYklQLWfVISOhdGkDBDyUlw1m3wMapAPICFbh0utZn9ycS1SMtC
+	8po0Ko/WptScmHvE+kUtwbHzC3v/s2lc8tIVazUf035FkEs+NMKTt2kfVTgmYO6022RyggV4eau
+	a1x+Lg==
+X-Received: by 2002:a05:600c:c4a7:b0:49c:df2b:15fc with SMTP id 5b1f17b1804b1-49cf823d0dcmr127115825e9.8.1788598732765;
+        Sat, 05 Sep 2026 01:58:52 -0700 (PDT)
+Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5952560sm228306435e9.3.2026.09.05.01.58.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 05 Sep 2026 01:58:52 -0700 (PDT)
+Sender: N B <gen.benner@gmail.com>
+From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@kernel.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/2] wifi: ath9k_htc: keep WMI commands off the 64-byte packet boundary
+Date: Sat,  5 Sep 2026 11:58:05 +0300
+Message-ID: <20260905085807.384488-1-nerijus.bendziunas@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,62 +79,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On Thu, 2026-09-03 at 00:42 -0700, Devin Wittmayer wrote:
-> So the measurement worth making is your key install.
+v2 [1] must not be applied. Its message said no caller fills the RMW
+buffer; ar9271_hw_pa_cal() does, on every AR9271 reset. With the size
+corrected the flush is a 192-byte command, three full 64-byte USB
+packets. The firmware ends a command only on a short packet, so this
+one is never delivered: the device stops answering WMI and stays dead
+until power is removed. This happens on the first interface open,
+with the linux-firmware 1.4.0 blob and with an open-firmware build.
 
-Measured. It is not the key path.
+Patch 1 fixes the size and caps MAX_RMW_CMD_NUMBER at 14, so the
+buffer can never produce a 192-byte command. With the cap, 120
+interface opens ran clean: 60 with this patch, 20 of them on the
+linux-firmware blob and 20 on a second AR9271, and 60 with a bench
+build of the same wire lengths. A 16-entry, 204-byte command is
+delivered while the 15-entry, 192-byte one is not. Patch 2 refuses
+any command whose length is a multiple of the endpoint's packet size.
 
-Both tracepoints, paired by pid, taken during the same 150s window in which
-the stall was being measured on the station side, so these are the same
-associations and not a separate run:
+With all 15 writes applied the PA calibration reads offset 30 on 40
+of 40 opens, where the truncated command gave 32 on 78 of 80. A
+firmware with fixed reassembly, given the full 15-entry command, gave
+30 on 19 of 20. The on-air effect is not measured yet.
 
-                          station side              ath9k_htc set_key
-                                                 (drv_set_key -> return)
-  nohwcrypt=0   5.01 attempts, 134.4 ms      median 0.418 ms, max 0.663 ms
-                n=183 cycles, 98% >1 attempt      n=394, none over 50 ms
+The firmware rule is usb_reg_out_patch() in open-ath9k-htc-firmware,
+target_firmware/magpie_fw_dev/target/hif/usb_api_main_patch.c. A fix
+for it exists and goes to the firmware project separately; it does
+not reach devices already in the field, so the driver has to stay
+clear anyway.
 
-  nohwcrypt=1   1.01 attempts,   3.8 ms      median 0.001 ms
-                                                  (driver barely involved)
+[1] https://lore.kernel.org/linux-wireless/20260904180849.775404-1-nerijus.bendziunas@gmail.com/
 
-394 key installs, not one above 0.7 ms, while every association in the same
-window was losing 134 ms. That is about 320x short of accounting for it, so
-by your test the two-mechanisms reading holds.
+Based on ath-next, commit 1d8e73163ef9.
 
-One caveat I cannot close from here. ath9k_htc is a USB part and set_key
-ends in a WMI write, so "drv_set_key returned" is only the driver call
-returning. If that write were queued rather than acknowledged, the number
-above would be measuring the queueing and not the install. Against that:
-0.418 ms is about what a USB control round trip costs, and it is far too
-slow to be a memory write, which is what it would look like if nothing went
-out to the chip. So I think the key really is in the part when set_key
-returns - but I have not read the WMI path to confirm it is synchronous,
-and if someone who knows ath9k_htc says otherwise, this measurement is
-worth nothing.
+Nerijus Bendžiūnas (2):
+  wifi: ath9k_htc: fix the byte count of a full RMW buffer flush
+  wifi: ath9k_htc: refuse a command that fills whole USB packets
 
-You are right about my 22.2 ms and I should not have offered it. Timing
-first-frame delivery at the netdev can only ever time the frames that
-survived, so it cannot distinguish deaf from slow. It was not evidence,
-and I have dropped it.
+ drivers/net/wireless/ath/ath9k/hif_usb.c      | 7 +++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
+ drivers/net/wireless/ath/ath9k/wmi.h          | 3 ++-
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
-Your induced window is a much better instrument than anything either of us
-had before, and it is worth saying what it does and does not settle. It
-shows that a slow key install produces this signature. It does not show
-that a slow key install is what produces it on hardware where the install
-is fast - and on ath9k_htc it now looks like it isn't. Both can be true.
+-- 
+2.55.0
 
-Thanks also for the retraction on the reorder window; that saved me from
-building on it. For what it is worth, my TID 7 sessions still show your
-exact mismatch, declared SSN never arriving in about 97% of them - but at
-the same rate in the arm with no stall, so it is a real pattern here that
-simply does not track the symptom either.
-
-Where that leaves ath9k_htc: association completes, the 4-way handshake
-completes, hostapd authorizes the port, the key reaches the chip in under a
-millisecond, the block-ack window opens on a sequence the station does send
-- and the station's first several frames still do not come back. I am out
-of hypotheses that I can test from outside the driver. If anyone on the
-ath9k side wants a specific tracepoint or a debug patch exercised, I have a
-bench that reproduces this on demand, roughly 250 associations per two
-minutes, and I will run whatever you like.
-
-Thomas
