@@ -1,142 +1,105 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+Received: from sg-2-5.ptr.blmpb.com (sg-2-5.ptr.blmpb.com [71.18.227.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB1339281B
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 11:06:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B4A3B9DAD
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 11:43:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=71.18.227.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788692781; cv=none; b=fwbpQXZMX/A4FM/Zb7/ERscLurKYGsNEfVSWx9PEuXtUXdm0i758V6vFGQ7Uv80xgx47P/Ja+iaNYjNFrfn1Lbsx1XcpHWUJJpHqib1nRytke/FDw0yEg4NWY9z5QBRs6vY3bZkid5K9PbEjrxj/1fsqnynk/XeNlo6nNIxfHgg=
+	t=1788695014; cv=none; b=hQ6lNRhKmwSBpABWhdEiUdrXRTLp9vxUSS5UZD+9RaZGAgTphOprp93Zv8n2O4Y/mXTOl+hPBEUvSyZDGhmf4siswguO+n5l8pCr17ker0mO+/kSlZsKJs6Dl/g5lerH314ptdzHDFJifuzPZnjXRgc6DuiTlAiU+GRfWgUzexk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788692781; c=relaxed/simple;
-	bh=N/HRc843haF7GhRaeCjYuBNpl6Jx8wyMgtTtNTc+Uhw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V6bdoN3iwwS6DtYQPTL/6hpEO8Rnb07OTXZyCWc10nZCdiw0iID2IX74JM4GKcDKbTqBHXVqFZXYOLyNzVy4pAb6FzKknoqN9ZBdayi1xRrFO9LSuUEh924lwQ8E6esgz/tD1NvRPQ7fUyCZBOF7wWtAm2xWYhxYzdti17GCKzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZzXJjOiV; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788695014; c=relaxed/simple;
+	bh=4K1s1AQ/FgjCmH7yjjU/gqsqx+7f1Mdt5UNkaHrqoP0=;
+	h=To:From:Message-Id:Mime-Version:Content-Type:Cc:Date:
+	 Content-Disposition:References:Subject:In-Reply-To; b=Sa1090X9Xcvtqt3/4wzyGVq5+Ct1XwAKF+yaGEk3iLyEoLhxgBdB4SfOP2ZpVkinLxqZF7nYXvO3na0bbeXCR/ToVZrhE9zcbkyRwEjo/FsM78OCsDCo70dlEuLiGHVSc8JQtFLCsWK+T4aWVkVo7mvSLKgu5fWrJzDo665xe08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc; spf=pass smtp.mailfrom=cherr.cc; dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b=Si4/uHmN; arc=none smtp.client-ip=71.18.227.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cherr.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZzXJjOiV"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-4859245e493so715705f8f.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 04:06:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788692778; x=1789297578; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=IEig/JE3WWqe5qqWFwj9jUgs0T7aqJalyU5R1FMFTAM=;
-        b=ZzXJjOiVnD1/RDmYNJdXHg0IKoPSr9IAVbEb2SWyjkoFBQP5w1OL6ghfAv78/0LzNs
-         T29OZRfBEgSDxVna8FPQ3oursF1y3iR8w5mMulSnfIkkiDLDUAFD7AC6F37zDCJlIAGu
-         tijj++X9XnmGezcEGojSB4dJwVDLqHa+wL/Yla1v6Mq0VV4DqULPVn/K9Ws8OIRIprhQ
-         QglaTuow2UZJussgEknZqrN2abIXghwKFt7Hls8TjQM/NmnZsYwTamkE6fo83HbnILCe
-         10lWsNC7GBMgNrLzKa/cdDgpqvftBrutITQ5OUcfvS8bSJqw38c1mORXB5ZwwasEOlLr
-         XTEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788692778; x=1789297578;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=IEig/JE3WWqe5qqWFwj9jUgs0T7aqJalyU5R1FMFTAM=;
-        b=XiCrcNoYTEyKhcmb+uxV7clEmmvVe73BYOUE6M92rQi4I86AHEI5UWOHAh5IskrwH2
-         7CUx0XpKD3pL8JuXQJfWojO5lJI2U9PMHer2VVedXQyvCKiqYtc/cJrJu4X28zINzp/F
-         z2wqI9wz/CPxuzBlNorLDiWNJiDD8/OKhxazJovDIRyRR3YOgsD8wIXoXIuszLiLZOqZ
-         Dco8sPJo2F21fqgDbvDp6YYXRrfIm7fiOHYztElteXzmXMVNZHN+NINbIzP1OKze6ca9
-         +MOVuQtp6SBYu5w0NWW+2HvQkBizk3i0bDVXRYACVYwYLh4vB8+vrnmpCuF/HiZgzeNH
-         UDMw==
-X-Forwarded-Encrypted: i=1; AKwUvBxoXplpWVJWhd6xi27nYAGMSXGkwEFEyUAwlLxEJqwOgOKcgsPQAxGdTTRSGzKcIJGSYsNOdNMEwaqtaZrpnw==@vger.kernel.org
-X-Gm-Message-State: AFuF++mL1P8V+zslaxm+4ckXGu61HNWfyU0KRfUjMNgwJwkCfE6Agcai
-	6U6ogD+KGFV1Y69i4crV30vWOA5El0sGZmcmDuG3izij3PWtf0vX7dd1
-X-Gm-Gg: AYBFou07zy2+pLoMXaXzmbwIX53eGkB8QguJZ3cohG52b3mDIlan9S6gji0DGf4i2rS
-	tHmjcKWT1xT0jmCF/xeUdpI96TlzismW6Xnllri0mmS7Vl1dm69rm+32UZaWPlxEO8DrqN6NcDC
-	aS1qUa0xGc2V4WUKe7UhjxZO2blI0vEwZBMNzYW8WumaFI9VWGmNO12Ih3ojofS2txgjIcIWMgL
-	xc7CiXnEpkbzkXsRrN/JnFVjLVAqOa7qlrLypkgQMrbTp/SJnDU+PWOb1bq3+UoNDiKHdD/LhBJ
-	C2ZJ0UwybhD24aFRGbmsDAYLkDMJNe4yesDfzOW4xsgUAe47Nt/8XZido9PTwLifoQN2D0r7Der
-	Eb8RCq04dhb5NdbOmPI2GpZn4q9BfBnManfJLPanAfsQUXd/26xlPk6pJXN3F0Lo0GOp7dI4/rg
-	GWMoEgPgBjVE2aVc24tPqDmNPy78c4IXa7rDfTCFFed7X2F1xM2PYazkQPaO82br/UeUTAfW9+t
-	DDoEAXZOkWBFhZAI9v6J4dAeuJ6vwmio9f7tZDj0IVJAAOAf3vRzMwtNkYfb5BwXwM=
-X-Received: by 2002:a05:6000:2282:b0:485:8a47:5b82 with SMTP id ffacd0b85a97d-4858a475d65mr16888274f8f.31.1788692778352;
-        Sun, 06 Sep 2026 04:06:18 -0700 (PDT)
-Received: from shift.daheim (p200300d5ff3cee0050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff3c:ee00:50f4:96ff:fe46:beef])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485885bf3f0sm22605582f8f.33.2026.09.06.04.06.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2026 04:06:16 -0700 (PDT)
-Received: from localhost ([127.0.0.1])
-	by shift with esmtp (Exim 4.100)
-	(envelope-from <chunkeey@gmail.com>)
-	id 1x3AhT-000000007rj-0XAD;
-	Sun, 06 Sep 2026 13:06:15 +0200
-Message-ID: <bdca394f-0371-45ad-bfee-b044444ad724@gmail.com>
-Date: Sun, 6 Sep 2026 13:06:15 +0200
+	dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b="Si4/uHmN"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=feishu2604220257; d=cherr.cc; t=1788694999; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=kF4XOpxl2FOCXm+aoX2z5PQbLq1Swi8wrCG8/hWWD30=;
+ b=Si4/uHmN6Mh4m9OlewWy/Rzsm0ZOlXSVeXWhsEdZVRzUb8k0xy61i6MbCVMpbRIIPn/Bne
+ rxAZBicc6H9p/Yp+/wvI8VSnAuMRUpCofcUp3nnqWsmrvIS0u1+2u6+qbMrK4QNWpxd8/Y
+ RLP28H0eDLH5xe3kge17+qSoRyftXn+k4JtHTPNQPxfn0xS5CNDNjbVSFqt9kdKm5i29+4
+ 6LhBFyqZxvqYJngNwnwH2Ht9YEPyPnftNOffPvO0kbw6ur5asLfyXzOwV6C3GUczX7NY7V
+ 7ha93/Mpu4PbUHMPhYcZDc5p2Rrq61dTjet/DSaGrWURMxeoN/BCxerF3sPIJg==
+To: "Christian Lamparter" <chunkeey@gmail.com>
+From: "Shengzhuo Wei" <me@cherr.cc>
+Message-Id: <ap1R0jU3UMVGI3ml@pve>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: p54: fix incorrect frame length check in
- p54_find_ie()
-To: Wang Yan <wangyan01@kylinos.cn>
-Cc: johannes.berg@intel.com, zilin@seu.edu.cn, linville@tuxdriver.com,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260903081200.267514-1-wangyan01@kylinos.cn>
-Content-Language: de-DE
-From: Christian Lamparter <chunkeey@gmail.com>
-In-Reply-To: <20260903081200.267514-1-wangyan01@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Cc: "Shengzhuo Wei" <me@cherr.cc>, "David S. Miller" <davem@davemloft.net>, 
+	"John W. Linville" <linville@tuxdriver.com>, 
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<stable@vger.kernel.org>
+Date: Sun, 6 Sep 2026 19:43:14 +0800
+Content-Disposition: inline
+X-Original-From: Shengzhuo Wei <me@cherr.cc>
+Received: from pve ([111.40.58.231]) by smtp.feishu.cn with ESMTPS; Sun, 06 Sep 2026 19:43:16 +0800
+References: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc> <20260831-p54-pda-validation-v2-1-dae566b388c8@cherr.cc> <f3eb0dfe-3b9c-483b-b802-2207fe8b747b@gmail.com>
+Subject: Re: [PATCH v2 1/2] wifi: p54: validate curve data length in the calibration curve converters
+In-Reply-To: <f3eb0dfe-3b9c-483b-b802-2207fe8b747b@gmail.com>
+X-Lms-Return-Path: <lba+26a9d51d5+de2f2f+vger.kernel.org+me@cherr.cc>
 
-On 9/3/26 10:12 AM, Wang Yan wrote:
-> In p54_find_ie(), mgmt is a pointer to struct ieee80211_mgmt, so
-> sizeof(mgmt) evaluates to the size of the pointer rather than the size
-> of the management frame header.
+On 2026-09-06 11:31, Christian Lamparter wrote:
+> > diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
+> > index 95580921d933..0dc848d77c5e 100644
+> > --- a/drivers/net/wireless/intersil/p54/eeprom.c
+> > +++ b/drivers/net/wireless/intersil/p54/eeprom.c
+> > @@ -414,17 +414,22 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
+> >   }
+> >   static int p54_convert_rev0(struct ieee80211_hw *dev,
+> > -			    struct pda_pa_curve_data *curve_data)
+> > +			    struct pda_pa_curve_data *curve_data, size_t len)
+> >   {
+> >   	struct p54_common *priv = dev->priv;
+> >   	struct p54_pa_curve_data_sample *dst;
+> >   	struct pda_pa_curve_data_sample_rev0 *src;
+> > +	size_t needed = curve_data->channels *
+> > +		(sizeof(*src) * curve_data->points_per_channel + 2);
+> >   	size_t cd_len = sizeof(*curve_data) +
+> >   		(curve_data->points_per_channel*sizeof(*dst) + 2) *
+> >   		 curve_data->channels;
+> >   	unsigned int i, j;
+> >   	void *source, *target;
+> > +	if (len < sizeof(*curve_data) + needed)
+> > +		return -EINVAL;
+> > +
 > 
-> Use sizeof(*mgmt) instead so that the skb length is compared against
-> the actual size of the management frame header.
+> Hmm, Puh. Interessting. Several things. But yeah, this should work.
 > 
-> Fixes: 0ac0d6cedf61 ("p54: Move mac80211 glue code")
+> Acked-by: Christian Lamparter <chunkeey@gmail.com>
 
-It's older than that. I traced it back to:
-Fixes: e5ea92a7528d ("p54: AP & Ad-hoc testing")
+Hi Christian,
 
-> Signed-off-by: Wang Yan <wangyan01@kylinos.cn>
-> ---
->   drivers/net/wireless/intersil/p54/main.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-> index 57a62108cbc3..d3e1776174f9 100644
-> --- a/drivers/net/wireless/intersil/p54/main.c
-> +++ b/drivers/net/wireless/intersil/p54/main.c
-> @@ -76,7 +76,7 @@ u8 *p54_find_ie(struct sk_buff *skb, u8 ie)
->   	struct ieee80211_mgmt *mgmt = (void *)skb->data;
->   	u8 *pos, *end;
->   
-> -	if (skb->len <= sizeof(mgmt))
-> +	if (skb->len <= sizeof(*mgmt))
->   		return NULL;
+Thanks for the review and the Ack.
 
-In theory this check is actually superfluous. Reason being the rest of the code of this function:
+> Still I have some questions: Did you write/touch any of this yourself?
+> Or is this patch straight from the model?
 
-|        pos = (u8 *)mgmt->u.beacon.variable;
-|        end = skb->data + skb->len;
-|        while (pos < end) {
-|                if (pos + 2 + pos[1] > end)
-|                        return NULL;
-|
-|                if (pos[0] == ie)
-|                        return pos;
-|
-|                pos += 2 + pos[1];
-|        }
-|        return NULL;
+AI found the bug. I wrote the fix myself and used AI to review it
+afterwards.
+ 
+> It's because I can grok (heh) why "needed" ended up as a separate variable next to cd_len.
+> But why was the sizeof(*curve_data) not included there too? It's only used once in the
+> if check so and this sounds like the "needed" needed some extra? Maybe because it was
+> already checked?
 
-The check in the while loop and the checks within the while loop make sure that
-no "pos" is returned unless the IE is still within skb->len.
+I kept sizeof(*curve_data) separate because I was thinking of needed
+as the input data size without the header. But since it is only used
+in that check, adding the header there too would be simpler.
 
-But true, it should have been *mgmt and not mgmt.
-So:
-Acked-by: Christian Lamparter <chunkeey@gmail.com>
+Would you like me to send a v3 that makes just this change in both
+converters?
 
-That said, if you want to respin and remove this check, I would also ack it.
+Thanks,
+Shengzhuo
