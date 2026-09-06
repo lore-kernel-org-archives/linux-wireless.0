@@ -1,80 +1,113 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-1.mta1.migadu.com [95.215.58.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2FC347533;
-	Sun,  6 Sep 2026 14:44:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442112C15B0
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 14:58:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788705853; cv=none; b=fiUqlXa1vpykpjhjvnPZN4z9Agqgj8FPZsCONukEKkk8Wxmc0zZkidP9FpugFH+kmnHN7DGdnVJYUb3W3XewKftYf/1wHIYdRQQdXUR2fcthdMjYXq7jeGg4e6+QzEcPTn8Zf0zB1emN68bTqbp0DKBuVeunqH4/X+GJf6VtyXc=
+	t=1788706708; cv=none; b=RTtpu6sRgs+FzhTJfL6zqTjSaZxwUJ/FpxZf+8RM/jw4PQDeQ2pCYBW/hqp17YtUX+FP1J/EHxp81bfuaunYpYqRBvBPHOw9anLcyYSvR6dDctlY20/zDeqNw9AXPf2YMkkSjCTpWnqGAy716ZaOHSlknPU1wER5TuulhCX14lY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788705853; c=relaxed/simple;
-	bh=/+TbxWPvt8Y2/J5G2/EFNHjGi1axHxBhIBKzr+e2naw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nMT1IReDV8QsTK1VniofheIZxZ9xJPEcc1myM7FI+xp01/dv8/1a0/7TDu+7kPWmQT5kklm6anduoWJ/t37pa4EWEPQFB44b8WAGYue9fBsoMBQT19YDySL+yxGq1SBVlMtbgu2k7jTwyuAL6FNgQN7YREIbPR0Q763TzL+FtmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=sSA3xEp4; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788706708; c=relaxed/simple;
+	bh=X1X1XJOiaGMcgLUV9Phz5J441oQ5Q9jynA6K9H0r+Es=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=Lvauf5BWfxRvhEf/SOx0AuHyn/dW3op4/zasToECTkJe86nzoq1TqPKACOu4oWg1Yz7a6wLYD8YGfNYgz7OpiuM3gOjeUaFeOU/jh30fJRxSleyT6Pntc4+qnvCHsW8xalJhkc+iY79RnQQksDCzdbLCnjavE90GuSxO614gRjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Au2Caw1K; arc=none smtp.client-ip=95.215.58.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="sSA3xEp4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=/+TbxWPvt8Y2/J5G2/EFNHjGi1axHxBhIBKzr+e2naw=;
-	t=1788705850; x=1789915450; b=sSA3xEp4uUvosvADI+hqRE/rtUMv+9H9esARckd9Q49gE79
-	eWmj70DL9CJ3JXaHEhXQkSCU9jcCEms1ieyfYSWFWJpDf+modohdv2Yu3dk/7r38m0ER4QJKG49x/
-	DWpUvE0J8xInr4WOfoYEiYUFvHyafL+VY5m3l6jT28fEYBWr/dm1+mKwRhIqQEavR05kNNrCXujVn
-	Rh9mgmO23M+0kA96GTsRcTtQze4gVfw2zoVYb5mua7sxF+EJtZpJTzlGj4mY13eXOWPxuMDoNu5xn
-	rklLE8uqy2dHXqMX0/O2C1A/Ckee9oRQ/+8Zs7WQZnJasTCk28/ztVWkXtI5UAag==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3E6D-00000003Lf0-3WUD;
-	Sun, 06 Sep 2026 16:44:02 +0200
-Message-ID: <75869083607cf39b5a32616395b14663ecdf3615.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: p54: fix incorrect frame length check in
- p54_find_ie()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@gmail.com>, Wang Yan <wangyan01@kylinos.cn>
-Cc: zilin@seu.edu.cn, linville@tuxdriver.com,
- linux-wireless@vger.kernel.org, 	linux-kernel@vger.kernel.org
-Date: Sun, 06 Sep 2026 16:44:00 +0200
-In-Reply-To: <5a29065b-87ae-4c63-873d-fa22b0899199@gmail.com> (sfid-20260906_162442_218051_2470202B)
-References: <20260903081200.267514-1-wangyan01@kylinos.cn>
-	 <bdca394f-0371-45ad-bfee-b044444ad724@gmail.com>
-	 <087d18429b448d5b63f922fd6779925f827134c7.camel@sipsolutions.net>
-	 <5a29065b-87ae-4c63-873d-fa22b0899199@gmail.com>
-	 (sfid-20260906_162442_218051_2470202B)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Au2Caw1K"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=X1X1XJOiaGMcgLUV9Phz5J441oQ5Q9jynA6K9H0r+Es=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788706704; v=1; x=1789311504;
+ b=Au2Caw1K896veQEYRPH+LK7+2NA+HuStpmhlyOUn+Q6SjMU9Nsxja3EzAeQNwNzgJBAeB7M3
+ xurRqQMJmK76pjdzzX3VM8A8hGu2DT8eV1ApPCC0/muaxSjWKGCcoHx/erX4A0akGuCa91D6IPI
+ /B0qaY5SmUW99BF+Us3b5BeM=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7c99fd45abf91139;
+	Sun, 06 Sep 2026 14:58:14 +0000
+X-Mizu-Trace-ID: 7c99fd45abf91139
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sun, 06 Sep 2026 16:58:08 +0200
+Message-Id: <DL8BLOM85V8C.2LYATK4FQ9CNG@linux.dev>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, "Bitterblue Smith"
+ <rtl8821cerfe2@gmail.com>, "Peter Robinson" <pbrobinson@gmail.com>, "Hans
+ de Goede" <johannes.goede@oss.qualcomm.com>
+Subject: Re: [PATCH v8 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+From: "Luka Gejak" <luka.gejak@linux.dev>
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "Luka Gejak"
+ <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+ <linux-wireless@vger.kernel.org>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260825163314.1590-1-luka.gejak@linux.dev>
+ <4866D935-FCC8-4F24-9C05-8678DCB22533@linux.dev>
+ <f1454e9c2add47b2b01a0adb8233455f@realtek.com>
+ <B2A0C047-C517-4AB4-BD6E-3EC6E9DA23EB@linux.dev>
+ <f3e7701d6eb045faa31c1b914eae6228@realtek.com>
+In-Reply-To: <f3e7701d6eb045faa31c1b914eae6228@realtek.com>
 
-On Sun, 2026-09-06 at 16:24 +0200, Christian Lamparter wrote:
-> >=20
-> > FWIW, I dropped it because it really shouldn't have been there this way
-> > since 'mgmt' can be far bigger than needed since it contains the union
-> > for all kinds of action frames etc.
-> >=20
-> > I'm not even sure it's needed regardless of the next check since the
-> > beacon is built by mac80211.
-> >=20
-> > Just blindly patching one mistake for another doesn't help anyone.
->=20
-> Ok, alright? I just looked in both:
-> https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.gi=
-t/
-> https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git/
->=20
-> Was there a patch already? Or did I missread the first sentence that hint=
-ed this was "dropped"?
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+> Without proper quota message, I need coming back to previous mail and fin=
+ding
+> out the stuff you want to discuss...
 
-Oh, I didn't phrase that well - I dropped the patch from my queue.
+Sorry, my last reply dropped your text. Quoting properly from here.
 
-johannes
+> I don't know how bad the poor signal environment was. But 2000ms looks ve=
+ry
+> strange to me, it is too large. Have you captured air sniffer to see what
+> happened?
+>
+> I think we can check three points
+> 1) If the probe uses low rate (e.g. 6M)
+> 2) signal strength
+> 3) signal quality
+
+Agreed that 2000 ms is not a sane number, and I am not proposing it as
+one. I raised it only because it separates a late report from a missing
+one, and it did.
+
+No air capture: that is the tester's board and environment, not mine, so
+I cannot sniff it. I will ask him for the three points above.
+
+The one measurement I do have that speaks to all three is a comparison
+within the same link and the same window. Nullfunc reports come back in
+400 to 1000 ms, worst case 1460 ms (appeared only once), while management
+frames on that same link come back in 0 to 20 ms. A 6M probe rate or a weak
+signal would slow both, so whatever is happening is specific to the nullfun=
+c
+path rather than to the air, and it looks like firmware retry time.
+
+So I am not asking for anything here and there is no patch attached to
+it. If his three answers say otherwise I will come back with them.
+
+> The ieee80211_purge_tx_queue() I mentioned is to reference to the point:
+>
+>>>   rtw_tx_report_purge_timer() -> skb_queue_purge()
+>> I think it should use ieee80211_purge_tx_queue() instead of skb_queue_pu=
+rge().
+
+Understood, and that is what I have. I answered a question you had not
+asked last time.
+
+  wifi: rtw88: tx: hand timed out TX report frames back to mac80211
+
+No chip condition. It is the same pattern rtw_txq_push_skb() already
+uses in rtw-next, which hands the skb back with ieee80211_free_txskb()
+when the HCI write fails, applied to the report timeout instead.
+
+I will send it together with the SDIO padding fix once the preparation
+series is applied, to keep them out of the way while that is in review.
+
+Best regards,
+Luka Gejak
