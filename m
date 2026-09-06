@@ -1,88 +1,93 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A73883BB699;
-	Sun,  6 Sep 2026 11:57:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC6DA3B994A
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 11:59:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788695875; cv=none; b=OHLW5DcKjStJRI7b3hGnc8IvOgNyTj2EVqJDunVup+ptxHzSFVvxUiWqt86S2ZtQkpzCcWJ0F0MRdcwoNkRpe0Cf3Je4RKtmxQCMPzKnYafzn9wyXrumXOYvZJhP/g1sKK8wMnSw+QZ9JSQQqbsUU2T0Gi3zLe7lBQ99UqSBkIU=
+	t=1788695955; cv=none; b=BP6QFdt2MnV2IjVqaJglfyFMVTndX2qSPwgf9m406nNcwO35XvcJI5YbvBfP+Nq4sdNUxIwIrA7/xrEPMmbVfhCMuKjdLeV/6QNuNXAJyj2qKT42WXtn7TVKGGMsP3fGh+PRMbQgerTYgVJM/ZTG5jtzQ8nh1lA/id652KdkMEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788695875; c=relaxed/simple;
-	bh=WFG2unOWr2rUL/ff46rpkVyeHhPFd2WZP7rmyHJw14k=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ZijuydQ75Y0RD8AKApJ4bMK6qO2LD6QgXwOKiMdDXlr/iJa5LhTvFLNZ8KZUpfDnhTfFQkp7rqWiySn3lr8JI7rl7erM4yRsH5B5qDrZsd6v/h5x416QuLFUGOKl3iZKw09/cwCQFFT9n6LHG9eHbREg2oJQhW062R7CVO5eWKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=bhjUt2Ln; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788695955; c=relaxed/simple;
+	bh=jz5LgxvtzxcctV6IH5maABcFEi4JbrhAW5XDbGYdhpg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=K9tDtqCwhiHv7GRdMxc0MGZYupmzCKX6A3nxhTNxnvLx5MrOS6H+qgEfD7CFR/xAI4jlK8H9mAUGK4tvyeA0clwwxCiSj9uBpyZHGo/cthyBS09ux8Y3i0yKBlmZcU363z8Ah+a5FZmuvvbczS93ap/4SfpSyogGoRJi1U2cdVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PmUrL1xb; arc=none smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="bhjUt2Ln"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=oNAKJHgibLFMG/kQIXTl01jK4ijxuqWnXbc1C7lQ+RE=;
-	t=1788695873; x=1789905473; b=bhjUt2LnzNKDD5judgtajJlxc6bJYHMuAowyx2CzoooYHIH
-	iQHL06Cr2/48+DfhvLd4gMqtm0E7o5RWrFQvFRNoYGPdeVpgtQwHlFcOcmwWSn7Hdb5Ju3qC5ozlO
-	qJjGM6NnN+MjQsj+2dd29/ErNY5WQEyGp9cHo+z4PdWMA8d7ptHD+5MmQjBVNW39E1eyitoRPR0CL
-	stqexcXvKL/o0TfUoePBo1Vnjf20MuBzaTtWSY+jduspdw42oJJjF9mtClrdBZXpVjI7X2kJZzp7z
-	vvbNoAlNuGx4Lilw6NVsNa/RPJARLZkZhiiwc49d+NUcypifJDDW8b9YOwSrQu9w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3BVO-00000003G16-2bKU;
-	Sun, 06 Sep 2026 13:57:50 +0200
-Message-ID: <8e094e1bd016b04d3ab3bb02be2723aebaf9c9e4.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: cfg80211: avoid holding rtnl_mutex across all
- cfg80211_leave() calls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?=D6mer?= Mete Kaya <omermetekaya0@gmail.com>, 
-	linux-wireless@vger.kernel.org
-Cc: kvalo@kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	horms@kernel.org, syzbot+adeb8550754921fece20@syzkaller.appspotmail.com, 
-	syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com, 
-	syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com, 
-	syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com, 
-	syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com
-Date: Sun, 06 Sep 2026 13:57:49 +0200
-In-Reply-To: <20260906002657.620076-2-omermetekaya0@gmail.com> (sfid-20260906_022719_558651_B6EAD15C)
-References: <20260903151542.486376-2-omermetekaya0@gmail.com>
-	 <20260906002657.620076-1-omermetekaya0@gmail.com>
-	 <20260906002657.620076-2-omermetekaya0@gmail.com>
-	 (sfid-20260906_022719_558651_B6EAD15C)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PmUrL1xb"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5b14d1f9315so2327371e87.2
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 04:59:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788695951; x=1789300751; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=g4mHo3F8s/8e+ESznlznShaPsnkOnnMwdoOs5mVuQUg=;
+        b=PmUrL1xb3vwV7dkfJ6Oh6+xt3Rv21b8Sygz3wBkc1ms+a0HLTAPml7AAZF0AcJV1fK
+         llbOe6EYPk2L4ekOgyyk9vft8w0kUeMNbrnbpcjsnRLpqS5tOKDmGWbv0U1KoIVba1XM
+         qnsbdF33lPFCwmUUI+lOMkjegqtU77/k+bi2s2QFxkFZ3MaOcZ088+c2dvTABTRpCOgu
+         Em/fQVVEblMIo8Qep92HImrwprvuS0JcSHWULUtxi8zS8QYkAr/KR7fIyBbM6M7qN+uQ
+         3auBgWK99uSBk5tUpIJTtlBMXBi4bCFtbJO8p1E4g8uPgEN/2FoVsaX6eNeVf/BP8IwE
+         X8+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788695951; x=1789300751;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=g4mHo3F8s/8e+ESznlznShaPsnkOnnMwdoOs5mVuQUg=;
+        b=UYoLf2PqRYlK477t7Sko7l5jSoF6XDZCN57L6rpDuI4AyaHbCvBXGYgsxDMCxCZFXI
+         6KSSZXPz0tiuX/o6c7q/B5XpVXhqhrq1na/ewvJwe1McRlPi8mg+LVMUg/P7nAa71UsH
+         C+VH9Q1J/t8TudhK7TIavAdAXHo6zvJgeoHiIVI0DzmpqlxQe1Bk7LSUrgPajZy7TcIm
+         9nNQKgbyxS2O9XRrp6BMR1xDGFutgD48L4udyJA5+f0TZqdRjimGSLcuGwH8ZTA6Ah+X
+         CE4Y0ROZaLGFmZK6jVOBX11wSIiVK93+e6RKhAxEVLlCQSFTSx0ISbAs2BptsaI+LQd0
+         8LeQ==
+X-Gm-Message-State: AFuF++n9QxClUUm9coMaS1FzYqM7XGfkn1ZC9xYCXDvFrwsskQlWEK+f
+	OC68hBM1xWcvnKycpaKuIebohvOnLiz1F37PkCj+FNppGCRcKMbOkzakfiCv0Da/J/A=
+X-Gm-Gg: AYBFou2nT5psqeXElLK8l2NQkDK90oMxVCiGBr7i/Nw+p5TqG365Jsp809r5GUrmiID
+	aedRVy8Bn1bEJ+JNq0Bupr1XjsP715RDuAX38qFNoESuz6fVdbhtuyeoYU+zb5oQT0fULiBStq1
+	aH1ZW/m8MyB1iTTo0v7kyah/2+PMeGr9tbkgxnssnE7vBupDgykqoBLwlDHzvgufi9EpduRIHoF
+	ni+LKF6oT2J72c6/mtBY4hY1869TGmfkQu+1ZVaEbYOoFTdoVhQmtNeToj8LDt+ZP3RTqd5+vGU
+	V1Bkx9kWGzFF1uVEfx5uk5683sRIar+m50lEORIx99iIbo97U7Qpb7igflM+z1j03uXBkNO9nC8
+	aWTQ6B7pJi2p+VLcl+1oYF7e0OtaH/DUnv6QMOoguhrB2aHLVXK3TedKnCQJcAmIdLmao6R+6XJ
+	sguaBsLrMrn25Rlaur/C63aHR1u4F1W8R0xVlSix0hIGa7kSj64jFGMCcA9kzEKbaMaz8utdhvY
+	3Qrlw7Dcu5IDa1r
+X-Received: by 2002:a05:6512:1325:b0:5ae:bcc4:c071 with SMTP id 2adb3069b0e04-5b616e7c32bmr5987572e87.0.1788695951173;
+        Sun, 06 Sep 2026 04:59:11 -0700 (PDT)
+Received: from localhost.localdomain ([80.66.93.120])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b6166ecf3dsm1634077e87.15.2026.09.06.04.59.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Sep 2026 04:59:10 -0700 (PDT)
+From: Maxim Skokov <skokovmaksimevg@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtw89: RTL8851B BTC entry requires unpublished firmware 0.29.133.0
+Date: Sun,  6 Sep 2026 14:58:53 +0300
+Message-ID: <20260906115855.15755-1-skokovmaksimevg@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <5976dee678a04857b862bc8745420fef@realtek.com>
+References: <20260905131503.6160-1-skokovmaksimevg@gmail.com> <5976dee678a04857b862bc8745420fef@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Sun, 2026-09-06 at 03:25 +0300, =C3=96mer Mete Kaya wrote:
->=20
-> +	/*
-> +	 * Snapshot rdev pointers under RCU with a device reference so they
-> +	 * cannot be freed between per-device rtnl acquisitions. Using a
-> +	 * per-device rtnl_lock() instead of holding it across all devices
-> +	 * avoids starving other rtnl waiters when cfg80211_leave() is slow.
-> +	 */
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list)
-> +		n++;
-> +	rcu_read_unlock();
-> =20
-> -	rtnl_unlock();
-> +	if (!n)
-> +		return;
-> +
-> +	snap =3D kmalloc_array(n, sizeof(*snap), GFP_KERNEL);
-> +	if (!snap)
-> +		return;
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+> >   - Is firmware 0.29.133 or newer expected to reach linux-firmware at
+> >     some point, with the driver support having landed ahead of it?
+>
+> This one.
+>
+> When BTC expert does upgrade, he does review and implement the changes
+> across chips in one go, because the firmware is share to many chips.
+> Or, he will review the changes again and again.
 
-I really don't know _what_ you're doing here, or more realistically what
-exactly you're asking your LLM to do here, but it's pointless. Please
-just stop, you're not helping in any way.
+Understood, thanks for explaining.  Good to know the table is meant to
+run ahead of the published firmware rather than the other way round, and
+that the entries land per-chip in one batch.
 
-johannes
+Thanks,
+Maxim
