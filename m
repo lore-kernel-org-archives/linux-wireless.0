@@ -1,100 +1,104 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEFA618C02E
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 17:05:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8B513777E
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 17:10:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.54
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788714315; cv=pass; b=poEFp51jbDQrBcNXoioHL9gS6RpFeDCO5CWVT0VnQ902PLV+MSdQEThzrBiitd6DQ2kWERN+bnckFA3antMpzJDnGr0Q0UesKlp/fIZp3OuY9OpwZnKPugVcJGkvbn7Mx/gXtrvJIv8yemWSK2XuTFFV13W1JReg4Dv1YgtV5Y4=
+	t=1788714629; cv=pass; b=FqSkTlkExUj/IxApnFdNRbmGA5NyttTU5O3uxECdSH0gEDid5fKrEw+U80lhDJG1faIXgfJGHkIgrDTLFIbc0Sxs0GwK3ptSRlh5ewL7hKwnEhF/elgqvHmoAU97VQ9Ac9oMk1R48aWcAUuMwb4UdFbY3gBGzSSCO0PvBiXF3+0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788714315; c=relaxed/simple;
-	bh=8fXne5T8mflJIcqQiHG7pXn1c3SyLN6hIiaTu1VteFE=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=p3b+eVD2UEne+LL+NaV3GuWnCrUV8HJ+7lDpApQMdl0o8BrxJ1GjvoaLrCOTj79t/EhK7j/gW0hE35SeCu9Oou8gpTcTa24+YusanZdDxQcCp0OQRXvEcVKyejhP6V4delYCRKekmtK02iAoyE+1qkVrsK2vKki6q1OmtEq6i4A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rYhYHbLu; arc=pass smtp.client-ip=209.85.218.42
+	s=arc-20240116; t=1788714629; c=relaxed/simple;
+	bh=HZEcyytTRfm6SobuhYkTk1dOEKPrzvjkXoMvjjO12rM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=TJvI5P29UyaPIgWW8I+Iw7ANEe1U6CmWXh7rdfTlCSfhJ3szTA/9NHZqbS7oLjDzVB7ciRsgXVWXK7W21wIsy3DUZbFrvMhKbfoiVLelY9sAyrftl95yTF7eIjxgpNGGGMb01mM2TK93j7pei+oebEe4ciGsjV9X6rj5IXtLou0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lcy/k/1k; arc=pass smtp.client-ip=209.85.208.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rYhYHbLu"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-c25b661d37dso367277766b.0
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 10:05:13 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788714312; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lcy/k/1k"
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6a0c8283146so4156099a12.0
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 10:10:27 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788714626; cv=none;
         d=google.com; s=arc-20260327;
-        b=qd4bzJktF5B2w2YujETmn++Okq+l51A5kTMSVWosHC0puSqfVyCoPKvAR8/aGiassV
-         9WKm1TvR1+J0PsKgLrQZRaOBDx6Lw1/ndzu8Oe8WVSqxTHH79g+M8BO9PrxKFkopw2nK
-         zKrn9j2BVyAoBtRiThBKHqpV7yJ122ydDTBgIqeHKPKLDkyh4XGI+BNaMSzDCwWoOpap
-         vPnJUI89VRMQg0BFfNjXAFaNFMgLOTbyZLwtKNeV6paGhZ1dBkdrcieFBM0N3wQdD7Ka
-         IQXmLc7SviHLOiYsfzJRe5rfC46PwJCXjK299v+ontBeAWK7pg4zuwcv/FtRLD6xuRuE
-         h2/A==
+        b=po+bd2/QzQaOXI/syX2BBPlNeGwIJCF7CaJpcyuCS45rA/TjJ6z5jSXIcgdFnJAOmC
+         yuyQglYn156myIPjSdBAl1GdKcIp2s3NxGllkcWnZNt1SZDhW6UvRE7n12BLJMLpp1+q
+         2FWHb2dI4oaRnJV/7y24HSFJCSm2g/fH+u0PIY404pvnGWTdMMH0OxxjRL/y6ZH/vsME
+         1s7xJLsXI+Q7LuTtBoT+ZnuY1GAM0p4E/lKEaha0SDYrZYa5J23caDYggSYVOLcIXX8h
+         LgY2tm8aQKxIXk3dT1sIBQFfC6uGLJctuTW1Atv3eLh4/K8tGE2fl2zkQc0i6Kmf1ECM
+         rmLQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=lpZZMLMHvlqMqswwbt0dtw/wSlCGyEJ00c3Xa/znKv4=;
-        fh=YwBtleC/YAjEWE4DPg2k2jqh/FMvJB0nl0KRnZchQG0=;
-        b=nptnkN+ovVPv77fcz0ytiiaNIEWPSm3fBBEXhOUx/XdpFRvmm+XrTLhpitqZ3GtH6p
-         GQ9zWqUB3zNlavH/OV6QU7C8SKaVUYJvdAucIuyNGPLQtEjmfR7Bxf4ELN/3VxQtgwPu
-         BoQsE68WszX5h8u7mbUTjThhpPxJ4i/OrpcScYBlAILazbF/OwKqGZxfjF7RfrmhexOr
-         vPERqN2QIXQdNtTJi8xeUpGdogYlg6xR3T0L8l5CkPxJoTfn8D9iJYPisdTRHz7Wferq
-         reYIDzPRP4EPYqERYw+M2FndY9pxJENhxNtODxaWVfAJN0jlGn0uu0rFbrypiuvDz0Le
-         ZV6A==;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :dkim-signature;
+        bh=fivbRIV9F3sA2+obiII4BuUq9auchksRabMC3bMsek4=;
+        fh=69IOGyLbtOiUPuJ47XhFPJSR23ZkGu5xP2z8BrhaNto=;
+        b=jfg3ARy1saLKtGtn3EFEfewrVBUoDWpsfBzNwE3jakTOUHinySGhd3d15RQzMmVwy8
+         ZOxogtls0V0xJm/xkC7nLcIEcwV34k4nzsCfxivYeQOD1vNvbqDIYdvS1Co6rqhXTtrs
+         LMm3Ic6QOUH3KB9uMBOHsDDGFXvKLq7c7A/mWr4/kLzNfo2Qjqw5XhIuedLUJlYd1n7i
+         Q71azk5qOqAtVPLkscR1DU+2OBGB31iwLq17kPr6fXw7vC1HWNhR66G4DF/9n3o5sS/3
+         HBaAbBDwMSkOfP3hJ1Kv42gIaNHFk517ZBqeqWZSEBAgPdk8abhIoO9N/CFvGK7H6QE/
+         WVLA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788714312; x=1789319112; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=lpZZMLMHvlqMqswwbt0dtw/wSlCGyEJ00c3Xa/znKv4=;
-        b=rYhYHbLuRZ0L2E2mZ16lEFQIHNw6sEDskMkUzt01eurVJKZkrn8a3TUxS1r0i+vsvq
-         5BZkmmq7auea4NaMzi+E05PDPz75FdrOjl6hCFE2kJ3gVZhFK0fRsQkhbSCCyHthFria
-         /LebkYwOZJaPalmxWFpHHaGku59D+Z27zscbRMnHwmGX6NLPS6JzKoX3SmTuBhgVnXal
-         lOAPnL4szixjsMwsdQqfvf5y/sVerGrSeugvdCDV2vRTPh1lDkTyEv3yZ4TOKbMjZFSu
-         1HsVwgJ/n3nzR4bdFRHu1s4P1tu3y+oRifViFb6g1o8cr4hqnxUOFcQXGjZlni9b+fxx
-         Z1nQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788714312; x=1789319112;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1788714626; x=1789319426; darn=vger.kernel.org;
+        h=content-type:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=lpZZMLMHvlqMqswwbt0dtw/wSlCGyEJ00c3Xa/znKv4=;
-        b=Fo6rPAlEoUTU7gm3M6XwFFiosmo6+UU2zMys14Pfn5+sYl+eivrDotdgog/c0S5oCv
-         OSIKjIEHr+1pgJg39WjkQmJ0ech3z4aV6MF4dPgBHAVmUygg1j1M6mxCcsAtnWi5Gm5w
-         r+aYP40Tyai7EhHHi5a71SHJ+VmhedK3+bWHZVSElnIl6N6yhQYY0xG5wMwCrm6XSC/X
-         B3dqju8t1IqTuqrWWowAPeEpXnIFZhbvDLYV72e6NoseFwzxrDEqUFi7mVwseseRYUCu
-         LovJwpR2+NKu96jH92XwZlgCESkog0QWZgAWzYYIOWwnK4lr8g5cQdK+dnQ23rWQ3Xew
-         dxRQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzRhC792w0ws4G24AhXP31Q6KduXaNZMQ4JGkTFv3t4x2WMBbhkFSH2YKYki4y+d2YZFKQ9Q4hhkzjnGceJCg==@vger.kernel.org
-X-Gm-Message-State: AFuF++mHibZ2tYusGb4TZvBJnAGCndZBkKP2W6Vc2p837IuYaUl5eEDO
-	9sXX5ELyprThXqknx46EAyHdcrPvZvCayutzPSNs2Ck90/UHZ8ryj6LMZUisrXvZy357fPTwcYE
-	+qLP2IyscqmERVvN1+Qd9/MYlnbcoZPw=
-X-Gm-Gg: AYBFou0kbcN/jwu2r3wyBafNAJWfwFCyLb70lgZvP+vRQp4SV9u0CVNC35N0BITAnf2
-	F2KNEazCnADeL2a0LgVA/0u6jh6hGqCLJGF7yqIDm2UFY2sRhOSkGRWlgvOH+g2aEZ9eLtGX9iG
-	INrfFXL3l0RlZs1dUyUKTCAAiwqww9lQsLtTYCfNA2Ltcu8IIMpx41t3+5ugOqOYgMjH4X0Cwts
-	MO8LQVEbJFM4AKuLCEeIY5cC0QM803plNxZXhVXnfQi0DaKX4WsrxujpFBoApB4LdhBUkDixo2P
-	boSksnEucp9By8SYQwwOKEPxkzJngn/hsTj0rbMu
-X-Received: by 2002:a17:907:d649:b0:c26:19e3:e982 with SMTP id
- a640c23a62f3a-c2619e3eee5mr525101766b.34.1788714311398; Sun, 06 Sep 2026
- 10:05:11 -0700 (PDT)
+        bh=fivbRIV9F3sA2+obiII4BuUq9auchksRabMC3bMsek4=;
+        b=lcy/k/1kJX9BJf9AGGq5piUPpDceGrmPmFBxKUrCUf+zcAy8yVENIZRnPvJEG/n4tb
+         rOoQoBYm5qqcXxuy3c1YC7F0K9lqyZS63XGWyMH8xlwOLCoqJ9ashBPT7TYPl/FNrP7W
+         R89oKSjR6eP6oVyhqaTQCD3x5qo0hC963/LUmw7FOJF0SgXuMN/2XPY7glJkRzj2wmzI
+         ts/hBYzoFFeZHlHylAMBL4iBSBfysAhu2e+8LBiD7qZzNRdejTdRiFfoS9BoRLmsv+Be
+         KT/zaw93vWk8S587V+4N7JMt57BInqaFGh29PgLM/LFGbRyYQsiBuQFRo2LFLRvHU1mz
+         DMJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788714626; x=1789319426;
+        h=content-type:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fivbRIV9F3sA2+obiII4BuUq9auchksRabMC3bMsek4=;
+        b=kU6fX2Weyy3Nl9Y8mgNbo46DIyJ3VOLanp4H6tHDPQaawQ761KVU1iVKBobmT+/5bF
+         +a9uywBLDh7kAz8cBfprkFXf0bTTdVrSz23dSozRNmDOBS85gjcBIMEXHAl62RL6NzXY
+         N23a5L0TlIoa+wS4azuQhTRecIURqizUHl90bYTtBT3NfVOvjAggH+uMTHuNAkS71y+Y
+         GxQMWj2GL2ccSVRPpKPNP49VRgOi3IDsa959YUAFPUchpVAg/TPdrDHuDpE6asthydmX
+         UbQSepqFkxqw8Dr6z9JKpq5D+TjAtNj7zCEqQg+w/vJxB9THrLO/Z+jxL+DTXqZVG6jB
+         1oTQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwxMD9KE1f96gGNhAMTMltfAziXwRvoKT8jjlfMzMKtTJ5mukjRUtTFPVuH5g8j4jzxS0Nr8bnLK50Fz/Vx5A==@vger.kernel.org
+X-Gm-Message-State: AFuF++mHvfayhIUxa5IlnqQ4FeryrKuj7YflryWhJzl+R9GLR0RgUno3
+	xYndWdUvlk72DOG4O0S+Bh28jp43ECX2MqPukcCwus8j4Xf9EHZYfyin4T+GUIB07yMrdNsgcyq
+	bLFbdN8tbyGHoyl3P6ScWHoXOSYabpSo=
+X-Gm-Gg: AYBFou0IPXc6WZAgg7EmaIxj3YHj3P+5vVPVVyDUqeSPZqp6u/W4UH3lb+VWLocId14
+	MVdu+LkAsvyNsksbPmPkY6OItOZ7e9T5rklp63uXVDiOas8qZN7yhMSIg8U2mubtbjP4mX69q0W
+	UwruhzlBTmQTkyO1oJpWcCkMoU60KSrNuxfQDDd+U2DWmVgTwBmXPbR+1BxCAEgCF0MNu9ok6nO
+	me1w5DmZKR4e/b24P9hv/aLGRlCLjvITSKbpssAGfGHwbYFFXgp7s/GN7mjZTq8HsQP7gjszyQr
+	Gkc5Q3IkR+gaDxLDFGapVN2fhUM3eJSPjSIzj71Bmpkqp4nnempjyr0iZsvaIPD4DoWbJtHzATO
+	l0MTXr5wBpm0Poc00SXx+
+X-Received: by 2002:a05:6402:538d:b0:6a0:ffb0:273b with SMTP id
+ 4fb4d7f45d1cf-6a7e8cb1346mr5411057a12.0.1788714625502; Sun, 06 Sep 2026
+ 10:10:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Ermak S <germanaizek0@gmail.com>
-Date: Sun, 6 Sep 2026 20:05:02 +0300
-X-Gm-Features: AcwNN1Ugy_dAKZY8eqVOuAgTRDDsM1ZKej_LqO6mg-LVUQmSKhoCBkDei60G_Nc
-Message-ID: <CAMnMt5YMA70FJwH+ddo24Ejd8HbpFSgUv73Ybu-fu+F-gcoesQ@mail.gmail.com>
+References: <CAMnMt5YMA70FJwH+ddo24Ejd8HbpFSgUv73Ybu-fu+F-gcoesQ@mail.gmail.com>
+In-Reply-To: <CAMnMt5YMA70FJwH+ddo24Ejd8HbpFSgUv73Ybu-fu+F-gcoesQ@mail.gmail.com>
+From: Herman Semenoff <germanaizek0@gmail.com>
+Date: Sun, 6 Sep 2026 20:10:17 +0300
+X-Gm-Features: AcwNN1VXTtuGEQ84iexSHIE7ObX1CHhpZMgUMkYX_Vj2dvKw3vvUbQHw3wdR13Y
+Message-ID: <CAMnMt5Y_fL0cHQ1CjU9+vn0rZVO5eitL6h0dTQ5Wg48c68-yYg@mail.gmail.com>
 Subject: [PATCH] wifi: mt7601u: add vnd_reset parameter to fix probe failure
  on Tenda U2
 To: kuba@kernel.org, kvalo@kernel.org, linux-wireless@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="00000000000022f14f065ad38151"
+Content-Type: multipart/mixed; boundary="000000000000dbcb90065ad39355"
 
---00000000000022f14f065ad38151
-Content-Type: multipart/alternative; boundary="00000000000022f14d065ad3814f"
+--000000000000dbcb90065ad39355
+Content-Type: multipart/alternative; boundary="000000000000dbcb8e065ad39353"
 
---00000000000022f14d065ad3814f
+--000000000000dbcb8e065ad39353
 Content-Type: text/plain; charset="UTF-8"
-
-wifi: mt7601u: add vnd_reset parameter to fix probe failure on Tenda U2
 
 On certain MT7601U adapters, such as Tenda U2 and
 other newer hardware revisions, driver initialization consistently fails
@@ -133,141 +137,62 @@ Signed-off-by: Herman Semenoff <GermanAizek@yandex.ru>
 Signed-off-by: Herman Semenoff <germanaizek0@gmail.com
 <GermanAizek@yandex.ru>>
 
-diff patch changes for sashiko.dev viewer
-```
----
- drivers/net/wireless/mediatek/mt7601u/mcu.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-index bad6ca821..abf4767f1 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-@@ -10,6 +10,7 @@
- #include <linux/delay.h>
- #include <linux/usb.h>
- #include <linux/skbuff.h>
-+#include <linux/moduleparam.h>
-
- #include "mt7601u.h"
- #include "dma.h"
-@@ -21,6 +22,14 @@
- #define MCU_FW_URB_SIZE (MCU_FW_URB_MAX_PAYLOAD + 12)
- #define MCU_RESP_URB_SIZE 1024
-
-+static bool vnd_reset;
-+module_param(vnd_reset, bool, 0644);
-+MODULE_PARM_DESC(vnd_reset, "Perform vendor reset during firmware upload
-(default: false)");
-+
-+static bool disable_usb_sg;
-+module_param(disable_usb_sg, bool, 0644);
-+MODULE_PARM_DESC(disable_usb_sg, "Unused compatibility parameter");
-+
- static inline int firmware_running(struct mt7601u_dev *dev)
- {
-  return mt7601u_rr(dev, MT_MCU_COM_REG0) == 1;
-@@ -459,8 +468,10 @@ static int mt7601u_load_firmware(struct mt7601u_dev
-*dev)
-  mt7601u_wr(dev, 0x94c, 0);
-  mt7601u_wr(dev, MT_FCE_PSE_CTRL, 0);
-
-- mt7601u_vendor_reset(dev);
-- msleep(5);
-+ if (vnd_reset) {
-+ mt7601u_vendor_reset(dev);
-+ msleep(5);
-+ }
-
-  mt7601u_wr(dev, 0xa44, 0);
-  mt7601u_wr(dev, 0x230, 0x84210);
---
-```
-
---00000000000022f14d065ad3814f
+--000000000000dbcb8e065ad39353
 Content-Type: text/html; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr"><div>wifi: mt7601u: add vnd_reset parameter to fix probe f=
-ailure on Tenda U2</div><div>=C2=A0</div><div>On certain MT7601U adapters, =
-such as Tenda U2 and</div><div>other newer hardware revisions, driver initi=
-alization consistently fails</div><div>during probe with vendor request tim=
-eouts (-110 / -ETIMEDOUT):</div><div>=C2=A0 mt7601u 3-14:1.0: ASIC revision=
-: <span class=3D"gmail-wmi-callto">76010001</span> MAC revision: <span clas=
-s=3D"gmail-wmi-callto">76010500</span></div><div>=C2=A0 mt7601u 3-14:1.0: F=
-irmware Version: 0.1.00 Build: 7640 Build time: <span class=3D"gmail-wmi-ca=
-llto">201302052146</span>____</div><div>=C2=A0 mt7601u 3-14:1.0: Vendor req=
-uest req:07 off:09a8 failed:-110</div><div>=C2=A0 mt7601u 3-14:1.0: Vendor =
-request req:02 off:09a8 failed:-110</div><div>=C2=A0 mt7601u 3-14:1.0: Vend=
-or request req:07 off:0734 failed:-110</div><div>=C2=A0 mt7601u 3-14:1.0: V=
-endor request req:42 off:0230 failed:-110</div><div>=C2=A0 mt7601u 3-14:1.0=
-: probe with driver mt7601u failed with error -110</div><div>=C2=A0</div><d=
-iv>The failure occurs because mt7601u_load_firmware() unconditionally calls=
-</div><div>mt7601u_vendor_reset() (MT_VEND_DEV_MODE_RESET) before uploading=
- firmware</div><div>chunks. On these devices, issuing this vendor reset lea=
-ves the internal</div><div>MCU / FCE DMA engine in an unresponsive state af=
-ter the first firmware</div><div>URB is submitted. As a result, reading MT_=
-TX_CPU_FROM_FCE_CPU_DESC_IDX</div><div>(0x09a8) immediately times out.</div=
-><div>Introduce a boolean module parameter &#39;vnd_reset&#39; (default: fa=
-lse) to</div><div>make this vendor reset optional. When the vendor reset is=
- skipped,</div><div>firmware upload succeeds and the wireless interface ini=
-tializes normally.</div><div>=C2=A0</div><div>Link: <a href=3D"https://bugs=
-.launchpad.net/ubuntu/+source/linux/+bug/1716301" rel=3D"noopener noreferre=
-r" target=3D"_blank">https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1=
-716301</a></div><div>=C2=A0</div><div>More issues with Tenda U2 and Linux:<=
-/div><div>- <a href=3D"https://www.opena.tv/viewtopic.php?t=3D63919" rel=3D=
-"noopener noreferrer" target=3D"_blank">https://www.opena.tv/viewtopic.php?=
-t=3D63919</a></div><div>- <a href=3D"https://askubuntu.com/questions/141885=
-0/the-problem-with-wi-fi-u2" rel=3D"noopener noreferrer" target=3D"_blank">=
-https://askubuntu.com/questions/1418850/the-problem-with-wi-fi-u2</a></div>=
-<div>- <a href=3D"https://bbs.archlinux.org/viewtopic.php?id=3D224859" rel=
-=3D"noopener noreferrer" target=3D"_blank">https://bbs.archlinux.org/viewto=
-pic.php?id=3D224859</a></div><div>- <a href=3D"https://www.reddit.com/r/arc=
-hlinux/comments/1d6dfv5/mt7601u_usb_wifi_not_working/" rel=3D"noopener nore=
-ferrer" target=3D"_blank">https://www.reddit.com/r/archlinux/comments/1d6df=
-v5/mt7601u_usb_wifi_not_working/</a></div><div><br>Signed-off-by: Herman Se=
-menoff &lt;<a href=3D"mailto:GermanAizek@yandex.ru" rel=3D"noopener norefer=
-rer" target=3D"_blank">GermanAizek@aizekgroup.ru</a>&gt;</div><div>Signed-o=
-ff-by: Herman Semenoff &lt;<a href=3D"mailto:GermanAizek@yandex.ru" rel=3D"=
-noopener noreferrer" target=3D"_blank">GermanAizek@yandex.ru</a>&gt;<br>Sig=
-ned-off-by: Herman Semenoff &lt;<a href=3D"mailto:GermanAizek@yandex.ru" re=
-l=3D"noopener noreferrer" target=3D"_blank">germanaizek0@gmail.com</a>&gt;<=
-br><br></div><div>diff patch changes for <a href=3D"http://sashiko.dev">sas=
-hiko.dev</a> viewer</div><div>```</div>---<br>=C2=A0drivers/net/wireless/me=
-diatek/mt7601u/mcu.c | 15 +++++++++++++--<br>=C2=A01 file changed, 13 inser=
-tions(+), 2 deletions(-)<br><br>diff --git a/drivers/net/wireless/mediatek/=
-mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c<br>index bad6ca=
-821..abf4767f1 100644<br>--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c<=
-br>+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c<br>@@ -10,6 +10,7 @@<b=
-r>=C2=A0#include &lt;linux/delay.h&gt;<br>=C2=A0#include &lt;linux/usb.h&gt=
-;<br>=C2=A0#include &lt;linux/skbuff.h&gt;<br>+#include &lt;linux/modulepar=
-am.h&gt;<br>=C2=A0<br>=C2=A0#include &quot;mt7601u.h&quot;<br>=C2=A0#includ=
-e &quot;dma.h&quot;<br>@@ -21,6 +22,14 @@<br>=C2=A0#define MCU_FW_URB_SIZE	=
-		(MCU_FW_URB_MAX_PAYLOAD + 12)<br>=C2=A0#define MCU_RESP_URB_SIZE		1024<br=
->=C2=A0<br>+static bool vnd_reset;<br>+module_param(vnd_reset, bool, 0644);=
-<br>+MODULE_PARM_DESC(vnd_reset, &quot;Perform vendor reset during firmware=
- upload (default: false)&quot;);<br>+<br>+static bool disable_usb_sg;<br>+m=
-odule_param(disable_usb_sg, bool, 0644);<br>+MODULE_PARM_DESC(disable_usb_s=
-g, &quot;Unused compatibility parameter&quot;);<br>+<br>=C2=A0static inline=
- int firmware_running(struct mt7601u_dev *dev)<br>=C2=A0{<br>=C2=A0	return =
-mt7601u_rr(dev, MT_MCU_COM_REG0) =3D=3D 1;<br>@@ -459,8 +468,10 @@ static i=
-nt mt7601u_load_firmware(struct mt7601u_dev *dev)<br>=C2=A0	mt7601u_wr(dev,=
- 0x94c, 0);<br>=C2=A0	mt7601u_wr(dev, MT_FCE_PSE_CTRL, 0);<br>=C2=A0<br>-	m=
-t7601u_vendor_reset(dev);<br>-	msleep(5);<br>+	if (vnd_reset) {<br>+		mt760=
-1u_vendor_reset(dev);<br>+		msleep(5);<br>+	}<br>=C2=A0<br>=C2=A0	mt7601u_w=
-r(dev, 0xa44, 0);<br>=C2=A0	mt7601u_wr(dev, 0x230, 0x84210);<br>--<br>```</=
-div>
+<div dir=3D"ltr"><div>On certain MT7601U adapters, such as Tenda U2 and</di=
+v><div>other newer hardware revisions, driver initialization consistently f=
+ails</div><div>during probe with vendor request timeouts (-110 / -ETIMEDOUT=
+):</div><div>=C2=A0 mt7601u 3-14:1.0: ASIC revision: <span>76010001</span> =
+MAC revision: <span>76010500</span></div><div>=C2=A0 mt7601u 3-14:1.0: Firm=
+ware Version: 0.1.00 Build: 7640 Build time: <span>201302052146</span>____<=
+/div><div>=C2=A0 mt7601u 3-14:1.0: Vendor request req:07 off:09a8 failed:-1=
+10</div><div>=C2=A0 mt7601u 3-14:1.0: Vendor request req:02 off:09a8 failed=
+:-110</div><div>=C2=A0 mt7601u 3-14:1.0: Vendor request req:07 off:0734 fai=
+led:-110</div><div>=C2=A0 mt7601u 3-14:1.0: Vendor request req:42 off:0230 =
+failed:-110</div><div>=C2=A0 mt7601u 3-14:1.0: probe with driver mt7601u fa=
+iled with error -110</div><div>=C2=A0</div><div>The failure occurs because =
+mt7601u_load_firmware() unconditionally calls</div><div>mt7601u_vendor_rese=
+t() (MT_VEND_DEV_MODE_RESET) before uploading firmware</div><div>chunks. On=
+ these devices, issuing this vendor reset leaves the internal</div><div>MCU=
+ / FCE DMA engine in an unresponsive state after the first firmware</div><d=
+iv>URB is submitted. As a result, reading MT_TX_CPU_FROM_FCE_CPU_DESC_IDX</=
+div><div>(0x09a8) immediately times out.</div><div>Introduce a boolean modu=
+le parameter &#39;vnd_reset&#39; (default: false) to</div><div>make this ve=
+ndor reset optional. When the vendor reset is skipped,</div><div>firmware u=
+pload succeeds and the wireless interface initializes normally.</div><div>=
+=C2=A0</div><div>Link: <a href=3D"https://bugs.launchpad.net/ubuntu/+source=
+/linux/+bug/1716301" rel=3D"noopener noreferrer" target=3D"_blank">https://=
+bugs.launchpad.net/ubuntu/+source/linux/+bug/1716301</a></div><div>=C2=A0</=
+div><div>More issues with Tenda U2 and Linux:</div><div>- <a href=3D"https:=
+//www.opena.tv/viewtopic.php?t=3D63919" rel=3D"noopener noreferrer" target=
+=3D"_blank">https://www.opena.tv/viewtopic.php?t=3D63919</a></div><div>- <a=
+ href=3D"https://askubuntu.com/questions/1418850/the-problem-with-wi-fi-u2"=
+ rel=3D"noopener noreferrer" target=3D"_blank">https://askubuntu.com/questi=
+ons/1418850/the-problem-with-wi-fi-u2</a></div><div>- <a href=3D"https://bb=
+s.archlinux.org/viewtopic.php?id=3D224859" rel=3D"noopener noreferrer" targ=
+et=3D"_blank">https://bbs.archlinux.org/viewtopic.php?id=3D224859</a></div>=
+<div>- <a href=3D"https://www.reddit.com/r/archlinux/comments/1d6dfv5/mt760=
+1u_usb_wifi_not_working/" rel=3D"noopener noreferrer" target=3D"_blank">htt=
+ps://www.reddit.com/r/archlinux/comments/1d6dfv5/mt7601u_usb_wifi_not_worki=
+ng/</a></div><div><br>Signed-off-by: Herman Semenoff &lt;<a href=3D"mailto:=
+GermanAizek@yandex.ru" rel=3D"noopener noreferrer" target=3D"_blank">German=
+Aizek@aizekgroup.ru</a>&gt;</div><div>Signed-off-by: Herman Semenoff &lt;<a=
+ href=3D"mailto:GermanAizek@yandex.ru" rel=3D"noopener noreferrer" target=
+=3D"_blank">GermanAizek@yandex.ru</a>&gt;<br>Signed-off-by: Herman Semenoff=
+ &lt;<a href=3D"mailto:GermanAizek@yandex.ru" rel=3D"noopener noreferrer" t=
+arget=3D"_blank">germanaizek0@gmail.com</a>&gt;</div><br></div>
 
---00000000000022f14d065ad3814f--
---00000000000022f14f065ad38151
-Content-Type: text/x-patch; charset="US-ASCII"; 
-	name="0001-PATCH-wifi-mt7601u-add-vnd_reset-parameter-to-fix-pr.diff"
+--000000000000dbcb8e065ad39353--
+--000000000000dbcb90065ad39355
+Content-Type: application/x-patch; 
+	name="0001-PATCH-wifi-mt7601u-add-vnd_reset-parameter-to-fix-pr.patch"
 Content-Disposition: attachment; 
-	filename="0001-PATCH-wifi-mt7601u-add-vnd_reset-parameter-to-fix-pr.diff"
+	filename="0001-PATCH-wifi-mt7601u-add-vnd_reset-parameter-to-fix-pr.patch"
 Content-Transfer-Encoding: base64
-Content-ID: <f_mtq29ec40>
-X-Attachment-Id: f_mtq29ec40
+Content-ID: <f_mtq2gtq80>
+X-Attachment-Id: f_mtq2gtq80
 
 RnJvbSBjMDNkNzNkMzdkZjQ0MGQwMDQ2ZDY4NDA2ZmRlMmFhMWY2MmZlMGQxIE1vbiBTZXAgMTcg
 MDA6MDA6MDAgMjAwMQpGcm9tOiBIZXJtYW4gU2VtZW5vZmYgPEdlcm1hbkFpemVrQGFpemVrZ3Jv
@@ -329,4 +254,4 @@ X1BTRV9DVFJMLCAwKTsKIAotCW10NzYwMXVfdmVuZG9yX3Jlc2V0KGRldik7Ci0JbXNsZWVwKDUp
 OworCWlmICh2bmRfcmVzZXQpIHsKKwkJbXQ3NjAxdV92ZW5kb3JfcmVzZXQoZGV2KTsKKwkJbXNs
 ZWVwKDUpOworCX0KIAogCW10NzYwMXVfd3IoZGV2LCAweGE0NCwgMCk7CiAJbXQ3NjAxdV93cihk
 ZXYsIDB4MjMwLCAweDg0MjEwKTsKLS0gCjIuNTUuMAoK
---00000000000022f14f065ad38151--
+--000000000000dbcb90065ad39355--
