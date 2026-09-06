@@ -1,35 +1,35 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16560296BD2
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 12:35:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA431279903
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 13:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788698135; cv=none; b=Wx0TiDfi/KPT+DBsBoo3GladHGU/AdVz+THjq/M8fr1puMyqvXMbW2g65ygNSPPGQ9/2Bf3gR8fPexYhbmWFUsNGxlWDhTmDCRYWxGCh0MI7lnr/JOn2HzDvL6Y6cCTY4Q5648FZaad0PqCUWlc4GsO7fIAcjuRJsH/A3mS8eIE=
+	t=1788701705; cv=none; b=IqNrtjTlr5w4Llya9KgmSfS524GeB+pM0B2W+vBAyzSnxWHyy0eumDrkwsOlSIeP8ooa9mEQ15oM62/XH5tdt7KQtNi81z0wUtaz47yaiNe42hRJlPRoibecVmcmF6IieAMvm7UEEy0wfOTNak7jZ8tJMTiSqyg83G2eAPT8ym4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788698135; c=relaxed/simple;
+	s=arc-20240116; t=1788701705; c=relaxed/simple;
 	bh=RP7+QZuqwKo7iKb8y6Gdo1jz0U3Pom6m4HZQwMmwvCc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OLkiOGojH6FdDcFZZcBtpVFmeAy5xCmGn5hZNw2LFw9bkId39TsOxVPRTlAXctZyhSMtrxfTkNcsyNmVjIHWXGrw5uB64CvY0GHKTsnNAHe/tvnt6/IVY0TQP8C4JF2PNdb4sR8aOlmimwOZTeAKxFCjJJElAYyb2H4XFJ2n3zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=LELTsMUJ; arc=none smtp.client-ip=220.197.31.5
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bj4jskKtng5oylsJ1wdTIBKcNRaHOBzIpJnnfI77nT0zAdnJbnNs6nLsPMFkxNTaQYVtTQLx2NiVz6KQoybbG2rClEWJVWUfpo87YM7UhHZhpXd0D2cHU5I2Xdion6bOwwoubHd27CD7LMSEH5XlzL+fZ2wkbC8Ti4U7oNwCw/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GKi7lf1h; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="LELTsMUJ"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GKi7lf1h"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=6l
-	cWjDdIW9Rr2FLGobuIY2NsKXwnZl4vqb5P2sn8Vrw=; b=LELTsMUJ/+u7MpWFql
-	BV//i68TdHEDwLukV924/0XD9cEO7dpM9e6fyEFGy26zR5wERlf8Ya/H2SU9mUcm
-	dW0RynAO+X6ueYHRdIsVNcwihUMgubGCI3uXOy+VghtfmC//+CDOfiw5BKjhmRhC
-	wHb+cyKVui+/zR1x5E/Wuc8bM=
+	cWjDdIW9Rr2FLGobuIY2NsKXwnZl4vqb5P2sn8Vrw=; b=GKi7lf1hloW4Ij0BMt
+	aRuLYYBath17sgb5shScp8Eq6b/wf9li8ykmufyDv66bUQiqtLgSdTnHfeGdKr9s
+	Aql33nhp58QH9kybOP0+Tq4fOFCmioIyM/YWMjQ9xyFl0V2uTm22FJ2EMPDP8uKA
+	v48ddb81f4dwDN2028oepohGE=
 Received: from LAPTOP-BJS5C4G0 (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgCHJx_vXZ1qZo_cQA--.9531S2;
-	Sun, 06 Sep 2026 20:35:13 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgCXpcv3a51q3rYGRQ--.38511S2;
+	Sun, 06 Sep 2026 21:34:49 +0800 (CST)
 From: Heyang Tan <thy15333007817@163.com>
 To: linux-wireless@vger.kernel.org
 Cc: chunkeey@googlemail.com
 Subject: [PATCH] p54: validate firmware descriptor RX range
-Date: Sun,  6 Sep 2026 20:34:48 +0800
-Message-ID: <20260906123448.1852-1-thy15333007817@163.com>
+Date: Sun,  6 Sep 2026 21:34:44 +0800
+Message-ID: <20260906133444.946-1-thy15333007817@163.com>
 X-Mailer: git-send-email 2.51.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -38,12 +38,12 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgCHJx_vXZ1qZo_cQA--.9531S2
+X-CM-TRANSID:PigvCgCXpcv3a51q3rYGRQ--.38511S2
 X-Coremail-Antispam: 1Uf129KBjvJXoW7Ww4kXr47Ary3Zw1UZF45trb_yoW8CFWrpF
 	WUCayfKrW7KF47X393JFsxAFy5J3WkJF17WFyxZ3Z0qF13Ar1vqF1YvFWUZw15CrZayrWa
 	9r1Utw17Grs0yaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uc6pQUUUUU=
-X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC4QKZQ2qdXgJKYgAA36
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uho7_UUUUU=
+X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC4RobxGqda-oeTgAA3S
 
 The BR_CODE_DESCR parser reads fields through rx_keycache_size without
 checking that the record contains those fields. The record length is
