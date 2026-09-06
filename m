@@ -1,105 +1,86 @@
-Received: from sg-2-5.ptr.blmpb.com (sg-2-5.ptr.blmpb.com [71.18.227.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B4A3B9DAD
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 11:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=71.18.227.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A8E3B6C14;
+	Sun,  6 Sep 2026 11:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788695014; cv=none; b=hQ6lNRhKmwSBpABWhdEiUdrXRTLp9vxUSS5UZD+9RaZGAgTphOprp93Zv8n2O4Y/mXTOl+hPBEUvSyZDGhmf4siswguO+n5l8pCr17ker0mO+/kSlZsKJs6Dl/g5lerH314ptdzHDFJifuzPZnjXRgc6DuiTlAiU+GRfWgUzexk=
+	t=1788695384; cv=none; b=TxTTC1MXjEf6rVW+HdrnC9nTVX/eEh24lwX/KkNeaorSmBFghIFjl3iPg8kvrF4lF9h8eWc4S7KIiP+8qlSDFbDDFa0xrq4xuIuM19tb5BpgIfTo7DtNCwQbIn7jtHWJtQVMukMGI2V+ZOEvmGCo0NQMGWMj+y4IBEKK4YGWsEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788695014; c=relaxed/simple;
-	bh=4K1s1AQ/FgjCmH7yjjU/gqsqx+7f1Mdt5UNkaHrqoP0=;
-	h=To:From:Message-Id:Mime-Version:Content-Type:Cc:Date:
-	 Content-Disposition:References:Subject:In-Reply-To; b=Sa1090X9Xcvtqt3/4wzyGVq5+Ct1XwAKF+yaGEk3iLyEoLhxgBdB4SfOP2ZpVkinLxqZF7nYXvO3na0bbeXCR/ToVZrhE9zcbkyRwEjo/FsM78OCsDCo70dlEuLiGHVSc8JQtFLCsWK+T4aWVkVo7mvSLKgu5fWrJzDo665xe08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc; spf=pass smtp.mailfrom=cherr.cc; dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b=Si4/uHmN; arc=none smtp.client-ip=71.18.227.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cherr.cc
+	s=arc-20240116; t=1788695384; c=relaxed/simple;
+	bh=pmOpvwKv/Su6P41qSkFiN79XyyZDPQstpg1hqKz4EaI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Nc/tOh++V+fxFiRyPyYQZW7wsqomh6ecNh8eYmITc0bQkRJRb28t4Gh8uGubq548b+PSuSLwlMZbnif81vUaT99KYVDcia412dO1JBQ/gp5/ZbMWOvlkn7HcVaMfvGP5KC+CHmVvpsi/7KqKr3ws9YJgw0i9MHePAjE9XvweN0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=T6MACGCe; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b="Si4/uHmN"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="T6MACGCe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=feishu2604220257; d=cherr.cc; t=1788694999; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=kF4XOpxl2FOCXm+aoX2z5PQbLq1Swi8wrCG8/hWWD30=;
- b=Si4/uHmN6Mh4m9OlewWy/Rzsm0ZOlXSVeXWhsEdZVRzUb8k0xy61i6MbCVMpbRIIPn/Bne
- rxAZBicc6H9p/Yp+/wvI8VSnAuMRUpCofcUp3nnqWsmrvIS0u1+2u6+qbMrK4QNWpxd8/Y
- RLP28H0eDLH5xe3kge17+qSoRyftXn+k4JtHTPNQPxfn0xS5CNDNjbVSFqt9kdKm5i29+4
- 6LhBFyqZxvqYJngNwnwH2Ht9YEPyPnftNOffPvO0kbw6ur5asLfyXzOwV6C3GUczX7NY7V
- 7ha93/Mpu4PbUHMPhYcZDc5p2Rrq61dTjet/DSaGrWURMxeoN/BCxerF3sPIJg==
-To: "Christian Lamparter" <chunkeey@gmail.com>
-From: "Shengzhuo Wei" <me@cherr.cc>
-Message-Id: <ap1R0jU3UMVGI3ml@pve>
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=XNdzB6j6US5wUuat8S8FJTGFFmsSf5Nta1dIyeRTbKU=;
+	t=1788695380; x=1789904980; b=T6MACGCe5mPfqny4jmy8m1R/GSffKtSXaBvivBRNlcHu/jD
+	JVsPd+lOGrCvdVvlkaH+UUyCtwVm+n85h4iVHp/zIhjrIswhlWKWfcY3CQuFUiTaY0Vk2wzf9MVSh
+	GLFT+X94mzX7MtH9te4S89VeWoh8onml0lH+d4LIh5qZ8RFojeATSUeVR3K0FZY9RRIwH7MuZ9Kel
+	J5ao9wMRHK0zw4k5wT7lJuL6YOKry/CnZXJhxUsnp9YWtdRKPDyQLerQhTRCQupDJwWvQBvHJysEl
+	zlmEGK9XhV/XHq6zLJuOJhKLtRE/f+veHM9QlSAatNq8FrPYO9CFxezVWxiA3V4Q==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x3BNI-00000003Fmb-0qd9;
+	Sun, 06 Sep 2026 13:49:28 +0200
+Message-ID: <087d18429b448d5b63f922fd6779925f827134c7.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: p54: fix incorrect frame length check in
+ p54_find_ie()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@gmail.com>, Wang Yan <wangyan01@kylinos.cn>
+Cc: zilin@seu.edu.cn, linville@tuxdriver.com,
+ linux-wireless@vger.kernel.org, 	linux-kernel@vger.kernel.org
+Date: Sun, 06 Sep 2026 13:49:27 +0200
+In-Reply-To: <bdca394f-0371-45ad-bfee-b044444ad724@gmail.com>
+References: <20260903081200.267514-1-wangyan01@kylinos.cn>
+	 <bdca394f-0371-45ad-bfee-b044444ad724@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Cc: "Shengzhuo Wei" <me@cherr.cc>, "David S. Miller" <davem@davemloft.net>, 
-	"John W. Linville" <linville@tuxdriver.com>, 
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<stable@vger.kernel.org>
-Date: Sun, 6 Sep 2026 19:43:14 +0800
-Content-Disposition: inline
-X-Original-From: Shengzhuo Wei <me@cherr.cc>
-Received: from pve ([111.40.58.231]) by smtp.feishu.cn with ESMTPS; Sun, 06 Sep 2026 19:43:16 +0800
-References: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc> <20260831-p54-pda-validation-v2-1-dae566b388c8@cherr.cc> <f3eb0dfe-3b9c-483b-b802-2207fe8b747b@gmail.com>
-Subject: Re: [PATCH v2 1/2] wifi: p54: validate curve data length in the calibration curve converters
-In-Reply-To: <f3eb0dfe-3b9c-483b-b802-2207fe8b747b@gmail.com>
-X-Lms-Return-Path: <lba+26a9d51d5+de2f2f+vger.kernel.org+me@cherr.cc>
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
-On 2026-09-06 11:31, Christian Lamparter wrote:
-> > diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
-> > index 95580921d933..0dc848d77c5e 100644
-> > --- a/drivers/net/wireless/intersil/p54/eeprom.c
-> > +++ b/drivers/net/wireless/intersil/p54/eeprom.c
-> > @@ -414,17 +414,22 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
-> >   }
-> >   static int p54_convert_rev0(struct ieee80211_hw *dev,
-> > -			    struct pda_pa_curve_data *curve_data)
-> > +			    struct pda_pa_curve_data *curve_data, size_t len)
-> >   {
-> >   	struct p54_common *priv = dev->priv;
-> >   	struct p54_pa_curve_data_sample *dst;
-> >   	struct pda_pa_curve_data_sample_rev0 *src;
-> > +	size_t needed = curve_data->channels *
-> > +		(sizeof(*src) * curve_data->points_per_channel + 2);
-> >   	size_t cd_len = sizeof(*curve_data) +
-> >   		(curve_data->points_per_channel*sizeof(*dst) + 2) *
-> >   		 curve_data->channels;
-> >   	unsigned int i, j;
-> >   	void *source, *target;
-> > +	if (len < sizeof(*curve_data) + needed)
-> > +		return -EINVAL;
-> > +
-> 
-> Hmm, Puh. Interessting. Several things. But yeah, this should work.
-> 
-> Acked-by: Christian Lamparter <chunkeey@gmail.com>
+On Sun, 2026-09-06 at 13:06 +0200, Christian Lamparter wrote:
+>=20
+> >        pos =3D (u8 *)mgmt->u.beacon.variable;
+> >        end =3D skb->data + skb->len;
+> >        while (pos < end) {
+> >                if (pos + 2 + pos[1] > end)
+> >                        return NULL;
+> >=20
+> >                if (pos[0] =3D=3D ie)
+> >                        return pos;
+> >=20
+> >                pos +=3D 2 + pos[1];
+> >        }
+> >        return NULL;
+>=20
+> The check in the while loop and the checks within the while loop make sur=
+e that
+> no "pos" is returned unless the IE is still within skb->len.
+>=20
+> But true, it should have been *mgmt and not mgmt.
 
-Hi Christian,
+FWIW, I dropped it because it really shouldn't have been there this way
+since 'mgmt' can be far bigger than needed since it contains the union
+for all kinds of action frames etc.
 
-Thanks for the review and the Ack.
+I'm not even sure it's needed regardless of the next check since the
+beacon is built by mac80211.
 
-> Still I have some questions: Did you write/touch any of this yourself?
-> Or is this patch straight from the model?
+Just blindly patching one mistake for another doesn't help anyone.
 
-AI found the bug. I wrote the fix myself and used AI to review it
-afterwards.
- 
-> It's because I can grok (heh) why "needed" ended up as a separate variable next to cd_len.
-> But why was the sizeof(*curve_data) not included there too? It's only used once in the
-> if check so and this sounds like the "needed" needed some extra? Maybe because it was
-> already checked?
-
-I kept sizeof(*curve_data) separate because I was thinking of needed
-as the input data size without the header. But since it is only used
-in that check, adding the header there too would be simpler.
-
-Would you like me to send a v3 that makes just this change in both
-converters?
-
-Thanks,
-Shengzhuo
+johannes
