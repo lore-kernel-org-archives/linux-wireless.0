@@ -1,186 +1,98 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15250305699
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 00:27:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B83817C211;
+	Sun,  6 Sep 2026 01:38:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788654440; cv=none; b=tbLajw04sueBYAdx/3U0jPlRnoWnIum3YrAXSvJtrdqdQJnbsL+JiB9d/SKykS4a4eEBNegjQl91woB5feIiDTpTouFrGbaoeRew0gMefdbXmckmn3le8boCfdhQrRr3BdHvLzG+vVIr59VXTW7jQAfHeuMn83erDlxYiMqkwmI=
+	t=1788658720; cv=none; b=OhZLHBgPlWNR77vl2bRdrf/f/1zEjHRy7RORQyYNQc+BPLVT6fib3c1rOuuUumSrb1HgLk7W4McOOiGF2gDPqaHz16DU+6shdIdIZU39CaJqTYTa6yEnqpxUtMbTxefKKFfidEr4ShOlOojzxMyEIV44uiVJZoSRBzNkgQdFe44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788654440; c=relaxed/simple;
-	bh=2TdAKrKV0FCbD/Fri2RG+Wg+0ou7YdCoPON6tgECizM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E7HbCKgbbo5zNEDhlddIOiPEAtKRB63N/sQZLPhv/uQ141RtPMqJkFBHyigZXr4MSO6zjE7+jqnkkX1ZUi+xDLKouRhCfdBCQr6H/nk0mUp5vXNalyhJVflIHvLxVev2pr8bGTC+8W3XQCT9XgyNKp2kfRvAwuubGAGvZpOEzT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IxVLPAil; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788658720; c=relaxed/simple;
+	bh=pkVHo6XfekYcbVFSVTGQ5S8EN/iE3gGIxcoeJVVprpE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Qqb6FwrensnNPiMHijwyscsP814R2a1aly96Jcrl9rHtzBpmMdGzcwBi6Nu+xBfuRoMvGSvwN0pQS36QkZWDw285Xot1N1SpsqHiMxQBNwBhVNkqOIu1DjJJxVCYxTfupgoOPXbWf3QtClDwJjvNogZ3R3P+12w9VmKmuzN0Dfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=wX45L/Nk; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IxVLPAil"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-498028b3d5eso21369855e9.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 17:27:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788654437; x=1789259237; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=WmwzJcel3VfLt6Lpe6LNfEoo3vOWPkIx9eCfAv/ke9k=;
-        b=IxVLPAilMhnwq0GbJM/Nz+0ufwylUYO2HUm31iwFddT18h9LHg3cwfCWu/O5pT+eLu
-         itegbDGqaSoiwbPocPQ1x4985iRgfJWK/8HYCtDp+mawe05djxxl9pDeteRyzQ6Z/R9f
-         idHcNnJsxS+hcmDkV38IdeY1EQjb1YX2qVneiyezWFqyqch8Bel7ex78FwCma3hlvFjA
-         F6VDlC0YgsNyHWzsK43OW8rDJxQ1I1wo+ofVLeBy8yy0ZeQsf9OwQ5gRvRwrc4ti+YPH
-         QnAO2g0WEoZIN1nMjSTPIVIoh7sFtuhvba0fKFTrT2M4rAAKj/EDZrupTV6TQ2+DqYCh
-         FuqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788654437; x=1789259237;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WmwzJcel3VfLt6Lpe6LNfEoo3vOWPkIx9eCfAv/ke9k=;
-        b=qfIZ6giPu8Mnm78bmXSi0XIqQQR0+7xZ5TVs5braAqS3emfZ37ZHZbv71uMHsu8zYc
-         g0VYe1lZqY3w+xE/Oon5dz6F0g+B4vphpuzLMN02KnZuaHD4/CKj2Ah9iE7cygL5P8SN
-         88N0wCD2XrZfdXX9tZgorRtntg4F1sN0xqr32vUzzj+triGin2GGDyy2VJEmke50FnPA
-         3ZyIvV8LBmNnPy1wuU5te+Wsnwc49NjOqNcI+t1v1/dqx27pj3Nx2Scwfzz85kZvgcic
-         c9M05dzIZ7Bfei1Y7MPLvUyouqxhLRacUpur7tTtv7iNavZ6VzZwdIeFFkb50rK4vlTq
-         pjmw==
-X-Gm-Message-State: AFuF++mqPd0nfKXVyUQHLyIRxYWzy3YeDjZN7vgs0sfT4Z1rQhO/m/Ux
-	jORUTIL76yZbiMFIASsZ+PSwwuMdGyr9tMyM5KVr8hR4TbeXax0aEnHplJi8t8seWsY=
-X-Gm-Gg: AYBFou2NO5eUQ3r6i9+hstuhEF3j2NOgXk4hhMAB+5eTJve8mT3MqNlg/NRE6uLRC8C
-	6MdWYQsw/weKnJ430jDvaYlLcqgI372PgrOMX4ZLnjiRevXKNXycokCCS+5iKmE3F0B28brxw/H
-	NLDbV2esh3Ie7shfm7TcTmhkkfAbv1NwpWXU7ygOVOxFxq1In6CTBrWuB0feWpsWLvxXKYVA9fK
-	Hd1J5QIfaW4GvxPIQ8WqZAC6pe8GgTQIumxE1O0ZiZ8+ahkyRyGqfVkKiFRoU2j7wkah4SfL7VN
-	lqYxO0KjHEFiq6O3sgEAt9y7YxJRp9isr4fTcSGda51+5/tw0Thi+0S1VN+DphIvf+0PmehPzTH
-	uM+PLkPq6F8cxwNUPm1mJyrRXQ2HmvrMspfIrRbMTAfd4DO1+Ug7BZxIZCGfI0JTh2sYAdUCMOO
-	dn5Sss8S+sJnO+xY4fVl5aDzsONTfspsV+3B7T0e7mdIen06yWO7s4WJpMFbc=
-X-Received: by 2002:a05:600c:474c:b0:49c:fa21:1c8b with SMTP id 5b1f17b1804b1-49cfa211d53mr122489015e9.32.1788654436801;
-        Sat, 05 Sep 2026 17:27:16 -0700 (PDT)
-Received: from metepc ([46.197.185.71])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5533ffbsm236791575e9.3.2026.09.05.17.27.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 17:27:16 -0700 (PDT)
-From: =?UTF-8?q?=C3=96mer=20Mete=20Kaya?= <omermetekaya0@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	kvalo@kernel.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	horms@kernel.org,
-	=?UTF-8?q?=C3=96mer=20Mete=20Kaya?= <omermetekaya0@gmail.com>,
-	syzbot+adeb8550754921fece20@syzkaller.appspotmail.com,
-	syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com,
-	syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com,
-	syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com,
-	syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com
-Subject: [PATCH] wifi: cfg80211: avoid holding rtnl_mutex across all cfg80211_leave() calls
-Date: Sun,  6 Sep 2026 03:25:46 +0300
-Message-ID: <20260906002657.620076-2-omermetekaya0@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260906002657.620076-1-omermetekaya0@gmail.com>
-References: <20260903151542.486376-2-omermetekaya0@gmail.com>
- <20260906002657.620076-1-omermetekaya0@gmail.com>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="wX45L/Nk"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6861bkn871544854, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1788658666; bh=pkVHo6XfekYcbVFSVTGQ5S8EN/iE3gGIxcoeJVVprpE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=wX45L/NkZqE++ONL0HvCa9YrVqxWApKVI2GJViBkJghmiXOzVZYJYjpzemxXwOoC5
+	 fXIjxVLJem9waHQ8Qa57ESkjoORWZChXRPMHG8tRHydSGF/vvkTwlUO71SghrvDRof
+	 anFZrnRPdXiPFPKrlPkHhkst72HaMcYuvqyWeLPNcUdAcnHUmd8OcuVdpYaBVBgNTl
+	 cfltK+GOTv14dkOOhY++maM1lYggxePzPMj1rD3RuWPePk5yrl4M7EJ3Kk4B7G6wUa
+	 te58RRaZQ4XhznKd7W7Tr9ADSq3lBEY6tzR1XsUoHKm4ARqkyuxjOWJeKDIAWEIY02
+	 isdGiNCA8iUBg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6861bkn871544854
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Sun, 6 Sep 2026 09:37:46 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Sun, 6 Sep 2026 09:37:46 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Sun, 6 Sep 2026 09:37:46 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
+ Goede" <johannes.goede@oss.qualcomm.com>
+Subject: RE: [PATCH v8 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+Thread-Topic: [PATCH v8 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+Thread-Index: AQHdNK98EWXiqeD5uE6QFc7swG8a87awGBYAgAdVyYCAAdP9gIAHklPg
+Date: Sun, 6 Sep 2026 01:37:46 +0000
+Message-ID: <f3e7701d6eb045faa31c1b914eae6228@realtek.com>
+References: <20260825163314.1590-1-luka.gejak@linux.dev>
+ <4866D935-FCC8-4F24-9C05-8678DCB22533@linux.dev>
+ <f1454e9c2add47b2b01a0adb8233455f@realtek.com>
+ <B2A0C047-C517-4AB4-BD6E-3EC6E9DA23EB@linux.dev>
+In-Reply-To: <B2A0C047-C517-4AB4-BD6E-3EC6E9DA23EB@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-reg_check_chans_work() holds rtnl_mutex for the entire duration of
-iterating over all registered devices and calling cfg80211_leave() on
-each invalid wdev. cfg80211_leave() can be slow (disconnect, stop AP,
-leave mesh), causing rtnl_mutex starvation when many wireless interfaces
-are present. This results in tasks waiting for rtnl_mutex for longer
-than hung_task_timeout_secs:
-
-  INFO: task hung in inet_rtm_newaddr
-  INFO: task hung in inet6_rtm_newaddr
-  INFO: task hung in nsim_destroy
-  INFO: task hung in tun_chr_close
-  INFO: task hung in switchdev_deferred_process_work
-
-Fix by taking a snapshot of cfg80211_rdev_list under RCU, holding a
-device reference (get_device/put_device) to prevent freeing, then
-acquiring rtnl per-device so other rtnl waiters get a chance to run
-between devices. After acquiring rtnl, wiphy.registered is checked to
-skip any device that was unregistered in the meantime.
-
-Fixes: f7e60032c661 ("wifi: cfg80211: fix locking in regulatory disconnect")
-Reported-by: syzbot+adeb8550754921fece20@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=adeb8550754921fece20
-Reported-by: syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=101224300649c3eb8af4
-Reported-by: syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=8141dcbd23a8f857798a
-Reported-by: syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=b0ae8f1abf7d891e0426
-Reported-by: syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=d6bbe0f5705cb8a5aa2b
-Signed-off-by: Ömer Mete Kaya <omermetekaya0@gmail.com>
----
- net/wireless/reg.c | 44 +++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 39 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index a8336baf85dc..7a3f1e470e14 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2463,15 +2463,49 @@ static void reg_leave_invalid_chans(struct wiphy *wiphy)
- 
- static void reg_check_chans_work(struct work_struct *work)
- {
--	struct cfg80211_registered_device *rdev;
-+	struct cfg80211_registered_device *rdev, **snap;
-+	int i, n = 0;
- 
- 	pr_debug("Verifying active interfaces after reg change\n");
--	rtnl_lock();
- 
--	for_each_rdev(rdev)
--		reg_leave_invalid_chans(&rdev->wiphy);
-+	/*
-+	 * Snapshot rdev pointers under RCU with a device reference so they
-+	 * cannot be freed between per-device rtnl acquisitions. Using a
-+	 * per-device rtnl_lock() instead of holding it across all devices
-+	 * avoids starving other rtnl waiters when cfg80211_leave() is slow.
-+	 */
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list)
-+		n++;
-+	rcu_read_unlock();
- 
--	rtnl_unlock();
-+	if (!n)
-+		return;
-+
-+	snap = kmalloc_array(n, sizeof(*snap), GFP_KERNEL);
-+	if (!snap)
-+		return;
-+
-+	i = 0;
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
-+		if (i >= n)
-+			break;
-+		get_device(&rdev->wiphy.dev);
-+		snap[i++] = rdev;
-+	}
-+	rcu_read_unlock();
-+	n = i;
-+
-+	for (i = 0; i < n; i++) {
-+		rtnl_lock();
-+		if (snap[i]->wiphy.registered)
-+			reg_leave_invalid_chans(&snap[i]->wiphy);
-+		rtnl_unlock();
-+		put_device(&snap[i]->wiphy.dev);
-+	}
-+
-+	kfree(snap);
- }
- 
- void reg_check_channels(void)
--- 
-2.55.0
-
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBIaSBQaW5nLUtlLA0K
+PiBPbiBBdWd1c3QgMzEsIDIwMjYgNDoyMzo0OCBBTSBHTVQrMDI6MDAsIFBpbmctS2UgU2hpaCA8
+cGtzaGloQHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gDQo+IFRoZSBwcm9iZV93YWl0X21zIHRlc3Qg
+eW91IHN1Z2dlc3RlZCBoYXMgcnVuLCBuaW5lIGhvdXJzIGluIHRoZSB0ZXN0ZXIncw0KPiBwb29y
+IHNpZ25hbCBlbnZpcm9ubWVudC4gQXQgMjAwMCBtcyBoZSBzYXcgb25lICJGYWlsZWQgdG8gc2Vu
+ZCBudWxsZnVuYw0KPiAuLi4gZGlzY29ubmVjdGluZyIuIEF0IDUwMCBtcyBpdCB3YXMgb25lIGV2
+ZXJ5IHR3ZW50eSB0byBmb3J0eSBzZWNvbmRzLg0KPiBTYW1lIGVudmlyb25tZW50LCBzYW1lIGRy
+aXZlci4NCg0KV2l0aG91dCBwcm9wZXIgcXVvdGEgbWVzc2FnZSwgSSBuZWVkIGNvbWluZyBiYWNr
+IHRvIHByZXZpb3VzIG1haWwgYW5kIGZpbmRpbmcNCm91dCB0aGUgc3R1ZmYgeW91IHdhbnQgdG8g
+ZGlzY3Vzcy4uLg0KDQpJIGRvbid0IGtub3cgaG93IGJhZCB0aGUgcG9vciBzaWduYWwgZW52aXJv
+bm1lbnQgd2FzLiBCdXQgMjAwMG1zIGxvb2tzIHZlcnkNCnN0cmFuZ2UgdG8gbWUsIGl0IGlzIHRv
+byBsYXJnZS4gSGF2ZSB5b3UgY2FwdHVyZWQgYWlyIHNuaWZmZXIgdG8gc2VlIHdoYXQNCmhhcHBl
+bmVkPyANCg0KSSB0aGluayB3ZSBjYW4gY2hlY2sgdGhyZWUgcG9pbnRzDQoxKSBJZiB0aGUgcHJv
+YmUgdXNlcyBsb3cgcmF0ZSAoZS5nLiA2TSkNCjIpIHNpZ25hbCBzdHJlbmd0aCAgDQozKSBzaWdu
+YWwgcXVhbGl0eSANCiAgIFdpdGhvdXQgaGFyZHdhcmUgZXF1aXBtZW50LCB0aGlzIGlzIGhhcmQg
+dG8gdXMuIEkgdGhpbmsgd2UgY2FuIGNvbXBhcmUNCiAgIHRoZSBsaW5rIHJhdGUgd2l0aCBvdGhl
+ciBXaUZpIGNhcmQgYXQgdGhlIHNhbWUgZGlzdGFuY2UgZmFyIGZyb20gQVAuDQoNCg0KPiANCj4g
+PiBCdXQgSSBmZWVsIHRoaXMgY2FzZSwgdXNpbmcgaWVlZTgwMjExX3B1cmdlX3R4X3F1ZXVlKCkg
+aXMgZXF1aXZhbGVudD8NCj4gDQo+IE5vdCBlcXVpdmFsZW50LiBpZWVlODAyMTFfcHVyZ2VfdHhf
+cXVldWUoKSBjYWxscyBpZWVlODAyMTFfZnJlZV90eHNrYigpLA0KPiB3aGljaCBjYWxscyBpZWVl
+ODAyMTFfcmVwb3J0X3VzZWRfc2tiKCkgd2l0aCBkcm9wcGVkID0gdHJ1ZTogdGhhdA0KPiBzZXR0
+bGVzIHRoZSBhaXJ0aW1lIGFjY291bnRpbmcgYW5kIGZyZWVzIHRoZSBza2IgcHJvcGVybHksIGJ1
+dCBuZXZlcg0KPiByZWFjaGVzIGllZWU4MDIxMV9zdGFfdHhfbm90aWZ5KCkuIE9ubHkgaWVlZTgw
+MjExX3R4X3N0YXR1c18qKCkgZG9lcy4gSXQNCj4gZml4ZXMgdGhlIG93bmVyc2hpcCBidWcgYW5k
+IHRlbGxzIHRoZSBjb25uZWN0aW9uIHBvbGwgbm90aGluZywgd2hpY2gNCj4gZ2l2ZW4gdGhlIGFi
+b3ZlIGRvZXMgbm90IG1hdHRlci4NCg0KVGhlIGllZWU4MDIxMV9wdXJnZV90eF9xdWV1ZSgpIEkg
+bWVudGlvbmVkIGlzIHRvIHJlZmVyZW5jZSB0byB0aGUgcG9pbnQ6DQoNCj4gPiAgIHJ0d190eF9y
+ZXBvcnRfcHVyZ2VfdGltZXIoKSAtPiBza2JfcXVldWVfcHVyZ2UoKQ0KPiBJIHRoaW5rIGl0IHNo
+b3VsZCB1c2UgaWVlZTgwMjExX3B1cmdlX3R4X3F1ZXVlKCkgaW5zdGVhZCBvZiBza2JfcXVldWVf
+cHVyZ2UoKS4NCg0KDQo=
