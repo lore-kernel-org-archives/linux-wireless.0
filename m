@@ -1,76 +1,74 @@
 Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE025339399
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Sep 2026 23:43:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E49B23AB88
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 00:21:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788651815; cv=none; b=EbYi6p79Pnh1UsVNAWuevdSqc7pg+J9stQg95vG3UuRGu5tAVovQPj7cJLQwbMG1Lel8KfiyEY3drNPcP11ls7uBfm94Iq/nGpuFqwv4x9OSodVRgdPbiaUsa3QECN3n2naZYAtr7xVgThVDqfCo+DzuvWBfJKQY9O5J813pEu0=
+	t=1788654118; cv=none; b=GZu7g1ZKuAmnNM6eK7wqyPJPvHWvv8ueI4sYmlHP+0bntsjqozP0wnCzG8Hl+rbL40PQI3AMhQ2Y54lBtO/VI7w+cr9NdzRJPtq/n9cZp3SagqMfVaW3oUjU8GTcVlpZryFhWJq6V2efhsLTxqsUMdRyJlEQW0GYJ2WPM2c4J54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788651815; c=relaxed/simple;
-	bh=zchHN9arP9ge/dPrqhBbh2MYBfzGH0SN9zBWIUnJFGU=;
+	s=arc-20240116; t=1788654118; c=relaxed/simple;
+	bh=bANCkv74bjVkNmw2i1bBp4PEjTFYNJHoUrMGPwTQrbs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HmtcvgQQHOkpSYE6ShKKBjt3KhjH9E9Faxo3tSNkppS461/eBqwmqTnBttFZvwj76ESDUywEwpLdiUwjf7mHb4tg8IfwPfmZC2EGevcrOLbKHUSXcfepfBG530Ib0KbSNEIkuIKQ7vAANBz39p6iZ1idr0Nx/ORwfBhKBEqmd5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NzN/efT/; arc=none smtp.client-ip=209.85.167.44
+	 MIME-Version; b=YRlu+8VZSsQqrlbvh5DF6E+XUBlBcfEE1t4D6LPrptjTHN6MqkMgJiR8vj7QjJUBIsGJbm8Arf7DA6DlMmL291jNxNDiiMWGiR+NKzt7QRKML8mn817bRgMbI1PQBHXz57ohf6TrX2g0tGFyhe/NlFdl67gYctuK9t/4CIQ69yA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rj+3jhmB; arc=none smtp.client-ip=209.85.167.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NzN/efT/"
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5b5f21afe8cso4237815e87.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 16:43:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rj+3jhmB"
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5b60bcf9051so2060795e87.1
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 17:21:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788651812; x=1789256612; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788654115; x=1789258915; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=UbNBfLErXJ0W7XLwHtZHjCp30XgpQStS2wuh13GP0sU=;
-        b=NzN/efT/7+3T4Wjfvbb9e1Z9J7p+ef5rEBXsR1udqIOJgtuYl044xo9RAHzk4V/EBr
-         CyiDkpvdg6QTNaI4EXcKXjnTG1E3gnOzAkKPEo/ai6YcHLT3HzwLWZMOQvJkeBGPe0A8
-         Z11zSSFlfxGUWM/aYGKQKYGLXFvWfwcFhXSZxGWb8yVZA6/TBhR6kEuocwuCCdBJJExd
-         EX5V5FuO3kM8JcJMDlDmDQ7G1UrGgKzJXX85lgAev69Pri9wpEC4Nt6c0K9aCvuRaTOm
-         dUzIsQ2saQlNMfLWgzexLT+HTffvWZv8QXSvi+Pfzwr/3hRU632ODLFr3IXvhIhTNiw1
-         eoyQ==
+        bh=mbngxJwnoEkVcJ+SwI6uR0MJaawYw2SIyOrsYxc60no=;
+        b=rj+3jhmBB9xlmH8ZQKUyNwBFumHOmxXmOQIUr8GW4uIRQxE/qvoWRJp7JBpJJnpk24
+         dDUwSz3FSFp8k5snQEXt5k4xaIJAl2qkv1jPLFHo9qjgTICsf6fKks2ZxAADRdaRllTb
+         HzHaF54GyLAftp8qQ3gjo03JWQS+kK2aEWI6QFmciypOsl0Baw8aEIeuaj65er4lzY43
+         gC1GYpAhyR3r+XXufFEabTDw/uNbBXcIx7a5iqPSfTHAWaleTgGgdRdOMjz1v6CPYW73
+         z3iteVVHcBxSMKGtgR2//FvV+NTF5EFVTilFxI+3QvXK8dgIFmOLa2VhFP8OfwcgfRFf
+         Tr3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788651812; x=1789256612;
+        d=1e100.net; s=20251104; t=1788654115; x=1789258915;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UbNBfLErXJ0W7XLwHtZHjCp30XgpQStS2wuh13GP0sU=;
-        b=k6c9Id/Rtb39gLQeRGkXOWRBjwZPNwS/amVp1zc2c8mGe8x93S0mf9Nh/P68onWW0X
-         c+pYGxtRks5xuFdFOlSnQnLYpHVfXmRFltVlqFf6hTOyTB6LdyiXw3w0BqYA/3jSCRYl
-         VGRs+aAI5mxKxkzeA4rp6IdZqfnDAIJroO6Sb+RraS2GZWh168Nvr25f046VEwn8fvJW
-         rdfpvaF42uUuazn5OvakrRfrloBVAP38mKO1m/zmsfKEzR62Za1HO/qUsHYdUwtmPBBs
-         Rcz5+aerq2tAMqobkWmJ8GjBOI3VoC6tyKkhUJ1g4/+C2L9g8UM6GmAcgr23kQxq/vYT
-         LiTg==
-X-Forwarded-Encrypted: i=1; AKwUvBwE/vQXUWS/QZFqX30Hr6R/HnFmjw1vCjXdNdXSAHddpE/17b20kyj/FqHbmm+NRmjCKfift9nbj2WFvjB9Og==@vger.kernel.org
-X-Gm-Message-State: AFuF++lTHpl+b0FJ/eGKnys65LY32R803uuu9D1IXRk+tTcUboNXNV1z
-	fDlS4SePIvH4aRjmPejBXV6ZjZ0zahEFTrCTmZXzRJqv0ljGtWIbVG0i
-X-Gm-Gg: AYBFou3PQ0YxbBnPXoCGXCJdSlmg7u7Jb/W/wys1C2rMGe6gePDMTpnlc4/HlbqH+i7
-	irfc7bP0J0UYIO6BTsS0zGJz71cDruaFtrjKwhhSyB0fzk110gkX1VuJVFk/PixIgNH1p8xnFhK
-	7N/InnOSkpTFh4x/3SptaLsQM5KukLd9cXATi211SbqnmAQK+lZCrHZq/vTBokIvlkeQ7fIBOYE
-	0greIk0OcKhbgGUNu7MhDII1bjC1G6BEac+4x5mKrYvqfHnuPjvRnJHLWJTkAc4wHpj1VcZ8QlU
-	5M3HqZ9uXxwiGKKs5H84yQQg1JZM00yjYwwKnmLT7ZCPO16jxRVsllvsMA0PgFaZuOE7Tw3oYxR
-	0chXRtOfTxO3e42fGYiinP5dkCTugrCajoDSGhRZ+fW89VLcXq2BBBvl6FNdmQdZhNaTMMLoBBn
-	sC/uNIVj9s8bccvaRB9UyghW6AN9RpbzL9BTOinClFcOflw6IkduFdZFrQO3xsyCUm9g73upki4
-	wFwljCE
-X-Received: by 2002:a05:6512:2206:b0:5ad:68aa:8a78 with SMTP id 2adb3069b0e04-5b60e6a5360mr3012076e87.5.1788651811350;
-        Sat, 05 Sep 2026 16:43:31 -0700 (PDT)
-Received: from localhost.localdomain ([80.66.92.203])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b616705bedsm1329357e87.67.2026.09.05.16.43.28
+        bh=mbngxJwnoEkVcJ+SwI6uR0MJaawYw2SIyOrsYxc60no=;
+        b=WSY+wIqM01k+dQj+gHe9O1k+RjKbterl4EbEQLuytMQmczKlRYInPfpVolxT3ueHUd
+         Jb/ZmEku12pC0pGTYVlmOnBIjqJoT+I3/cLdFqNp00A2VnYeYHkb3oUrRHBxocfFHwNi
+         ONUstxxIZS8yVTM/WZmXNVm5bI8iG8sPpgXzy5JqnORJRJoR2wMgphStDqdR0qYptol0
+         kL5T2vKAPMJuhadSLuxUIOs76No9JDQ1X+xaZb224JuTewCdiME5k5QtaMMVH4gJdGyz
+         J4JaSTdh246QVM1QqY0GpEQ3ifQJDbqDhLihw0yAq2SwW+hyTZSfzZ/QaIDb9k6RCZkN
+         MKsw==
+X-Gm-Message-State: AFuF++mh356JzGX6usIHHAbGPkU9n87DpdQazfjx2aNVo7GSuB9lzJPc
+	TQdqIeAuC25Wa82FNY2t4JH0ElE88tB3HeZr8NAKWkcJSmMgeD6ibULH
+X-Gm-Gg: AYBFou2b4NfNd269zAQEKOIrdjsPognWJcKS07cd9ORHtShsMR6bndIXsnfApU6uCT/
+	WlU5SFo7Vzc9YFtkD+rCn7l8dPG52jhuP4rfJE4p6K5+0pdoXwR4xjn+FTzZBcdS44V7l9Wn9Wg
+	vuh02epmk0fUhreeemsZcwqy9hAsb6In3P8lQkHsR3bC33vWa91EBcCxCCaakdMowYZsUvpGkcx
+	3iWD5hNWscryJ9GM8/EWjPCq3yCx8XLScyXAi55+aRekDi3i8deQkrqfzV1aC5UNSXtXfYb3cOb
+	ST+eGBjEFHqOAvOvPOXtDYrPbzC2rJCgE2/MEC6GAhJ2HKIHg55o6lR0MblSvyMf48TRh7XSGe1
+	QUquSUk4aq4BPWbs1A54GWd7NKczoj78gTqdkT51TIhpUQukN8PjlcZTG39NYuTNA6hVzT/lDGQ
+	YjyxI3Vuc/vn4j+LQ060BIr01khR+zd/btNJKc/kvCvFh39qVBHwvy91zOaeiPorACetGy4BucS
+	XgFcA==
+X-Received: by 2002:a05:6512:224c:b0:5b6:425:4bef with SMTP id 2adb3069b0e04-5b61706a350mr3872124e87.32.1788654114805;
+        Sat, 05 Sep 2026 17:21:54 -0700 (PDT)
+Received: from localhost.localdomain ([80.66.93.17])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b6166ecf3dsm1352411e87.15.2026.09.05.17.21.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 16:43:30 -0700 (PDT)
+        Sat, 05 Sep 2026 17:21:53 -0700 (PDT)
 From: Maxim Skokov <skokovmaksimevg@gmail.com>
-To: tristan@talencesecurity.com,
-	tristmd@gmail.com
-Cc: pkshih@realtek.com,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] wifi: rtw89: fix OOB read in __rtw89_wow_parse_akm()
-Date: Sun,  6 Sep 2026 02:43:03 +0300
-Message-ID: <20260905234309.6922-1-skokovmaksimevg@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Maxim Skokov <skokovmaksimevg@gmail.com>
+Subject: Re: [PATCH rtw-next v2 00/14] wifi: rtw89: update RTL8922D capabilities and settings, and enable P2P device
+Date: Sun,  6 Sep 2026 03:20:50 +0300
+Message-ID: <20260906002135.5118-1-skokovmaksimevg@gmail.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260830143154.1751910-2-tristmd@gmail.com>
-References: <20260830143154.1751910-1-tristmd@gmail.com> <20260830143154.1751910-2-tristmd@gmail.com>
+In-Reply-To: <20260902052958.50371-1-pkshih@realtek.com>
+References: <20260902052958.50371-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -79,59 +77,76 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Sun, Aug 30, 2026 at 02:31:53PM +0000, Tristan Madani wrote:
-> skb->len is the total frame length, not the length of the IE portion.
-> The IEs in an association request start at offset 28 (24-byte header +
-> 4-byte fixed fields), so the correct IE length is skb->len minus that
-> offset.  Passing the full frame length causes cfg80211_find_ie() to walk
-> up to 28 bytes past the end of the skb data buffer, triggering a
-> slab-out-of-bounds read.
+On Wed, Sep 02, 2026 at 01:29:44PM +0800, Ping-Ke Shih wrote:
+> This series updates RTL8922D capabilities and settings, and enables
+> P2P device.
 
-The length passed to cfg80211_find_ie() is indeed wrong and the fix looks
-correct to me.  I did try to reproduce the reported slab-out-of-bounds
-though, and I don't think it is reachable.  If I'm wrong about this,
-I'd be glad to be corrected.
+Tested the chip-independent parts of this series on RTL8851BE
+(rtw89_8851be), a 1x1 Wi-Fi 6 part, since patches 3 and 11-14 touch
+common code and thus change behaviour for every rtw89 device.  The
+8922d-specific patches (1-2, 4-10) were not exercised, I don't have
+that hardware.
 
-cfg80211_find_ie() walks the elements via for_each_element(), which is
-bounded by _data + _datalen and never dereferences past it.  With
-ies = skb->data + 28 and len = skb->len, the highest byte the walk can
-touch is skb->data + 28 + skb->len - 1, i.e. exactly 28 bytes past
-skb_tail_pointer(), as you describe.
+Applied on top of rtw-next commit 81510c3d6f21 ("wifi: rtw88: debugfs:
+don't vzalloc(0) when rsvd_page is read unconfigured").  All 14 patches
+applied cleanly and the build is free of new warnings.
 
-What follows skb_tail_pointer(), however, is the skb tailroom and then
-struct skb_shared_info, and both live inside the same allocation.
-sizeof(struct skb_shared_info) is 320 bytes on x86_64, so even with zero
-tailroom the 28-byte overread stays within the object and KASAN has
-nothing to report.
+Patch 3 and 14, interface combinations as reported by 'iw phy':
 
-Measured on RTL8851BE (rtw89_8851be) with a kprobe on
-__rtw89_wow_parse_akm(), on a real association request:
+  before:
+    #{ managed } <= 1, #{ AP, P2P-client, P2P-GO } <= 1,
+    total <= 2, #channels <= 1
 
-    skb->len   tailroom   overread   slack to end of allocation
-    160        1552       28         1872
+  after:
+    #{ managed } <= 2, #{ AP, P2P-client, P2P-GO } <= 1,
+    #{ P2P-device } <= 1, total <= 3, #channels <= 1
 
-So the defect is a read of uninitialised memory inside the skb rather
-than an out-of-bounds access -- KMSAN territory, not KASAN.  The
-practical consequence is that on a network with no RSN IE (an open BSS,
-where mac80211 emits no RSN element at all), the walk continues into the
-tailroom and may match a bogus element with id 48, after which
-rtw_wow->akm is set from garbage.
+Patch 3, two station interfaces in SCC.  Second station vif added with
+'iw interface add', given its own MAC and associated to the same BSSID
+as the first one, so both links are on the same channel by construction
+(5180 MHz).  Both associate, and both carry traffic at the same time:
 
-That is still worth fixing, but it may be worth rewording the commit
-message, since the "slab-out-of-bounds" wording is what justifies the
-Cc: stable here.  The same reasoning applies to patch 1/2.
+  30 s of concurrent ping to the gateway, one flow per interface
 
-One more thing in the same function, which this patch does not address:
+    wlp2s0  90 packets transmitted, 90 received, 0% packet loss
+    wlan1   90 packets transmitted, 90 received, 0% packet loss
 
-	rsn_ie = (struct rtw89_rsn_ie *)rsn;
-	rtw_wow->akm = rsn_ie->akm_cipher_suite.type;
+  station dump after the run
 
-struct rtw89_rsn_ie is 20 bytes and akm_cipher_suite.type sits at offset
-19, but cfg80211_find_ie() only validates the element header.  A minimal
-RSN element with datalen = 2 (version only) makes that read land 15
-bytes past the end of the element, and with the length fix applied it can
-still reach past the end of the frame when the element sits at the tail.
-Checking rsn[1] before the cast would close that too.
+    wlp2s0  rx 1225221  tx 27526  tx failed 1  beacon loss 15
+    wlan1   rx  128239  tx 16140  tx failed 2  beacon loss  0
+
+The first interface is unaffected when the second one is torn down.
+
+Patch 14, P2P device.  wpa_supplicant creates it on its own during boot
+now that the driver advertises the iftype, and NetworkManager lists it
+as a wifi-p2p device.  The driver runs with three vifs at once
+(two managed plus the P2P device) without complaints.
+
+No WARNs, no backtraces and no rtw89 error messages in dmesg during any
+of this.  Association, DHCP and switching between 2.4 GHz and 5 GHz all
+keep working.
+
+Patches 11-13 were only exercised indirectly, through the absence of
+regressions in association and channel switching.  Patch 12 is a no-op
+here, RTL8851BE has no 6 GHz band.
+
+Tested-by: Maxim Skokov <skokovmaksimevg@gmail.com> # RTL8851BE, patches 3 and 11-14
+
+One observation that may be worth a note in the cover letter.  Since
+patch 14 declares #{ P2P-device } <= 1, a second wpa_supplicant instance
+on the same phy cannot start: it tries to create its own P2P device,
+hits the limit, and then gives up on the whole interface rather than
+falling back:
+
+  nl80211: Could not set interface 'p2p-dev-wlan1' UP
+  P2P: Failed to enable P2P Device interface
+  p2p-dev-wlan1: Failed to initialize driver interface
+
+So the two-station setup that patch 3 enables needs p2p_disabled=1 in
+the second supplicant config.  The driver behaves correctly here, it
+just means the new capability is not reachable with a default
+wpa_supplicant, which someone trying this out is likely to hit.
 
 Thanks,
 Maxim
