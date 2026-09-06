@@ -1,84 +1,187 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53BD715350B
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 04:25:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4BD383310
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 06:53:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788668759; cv=none; b=HFjoJrN2ZoDOT0Vku9Wbc31/LGxgVJ7512bjdMmtyrNlb0HPVW7t6cySbQKJsxyEx1mp/Q5+LhRJQkCk0TeIvQQR1oF1VhKz0jU1DQDI62qDNg+0n17xtfME2jkUTqsWbie75f296Yzf0R3sxEaQ00sy5leIkQkSD+qNlR2QE/k=
+	t=1788677626; cv=none; b=TMf7cTvTrr787LD8wDaeugxWz33I1LK90G+MLZhGqrFIv+mSzHZBxNNaSG4lF/9ed+Bxr6RBIySF41C3rm6Y9zwVgrIoG+ItYRi6qzqj9LeDMDH3XH4abP960DqZkYNKy1zSpDjayAp/FWAFUmVz6OlGWB0FR09HxpoKOIA9PZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788668759; c=relaxed/simple;
-	bh=iTKJUtPX3Y5mFhLJLKBd7KqW0s9cQVmNMbGdCaTdpIg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=at7lUqTTuakXJmwIJ2GNPdWPoBm3+pf6GtX8t3deMQj1JX8Td0K2VbdvAoDMv2WOJ7siwJVYQ3YX8rXfiZpHG+4snE4IB7SyZDcjcKK9c1fDufqNH/JnV9zBDDaqDgNFbHjxADFfVSqlrLUIpkbMAC2dLp2uUZ8G0V5+y73l15E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=XM0M0yhK; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="XM0M0yhK"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6864PstM61658371, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788668754; bh=4aHsBY30scnNS3lE/Fn4dZoOwqrugg88AyJw5N8NuRs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=XM0M0yhK/9Xpdbr4j0zDywNS8nfjQ4Xo+MWeCptJNne5rsP/Br6NnMTFIpoQ8MZWp
-	 L5xCAGzRXm/862XboGbtNzTBRwAnEON0J9TnJni8yj6ADHtm/0vQ2qw0EEPbjkQSpJ
-	 y4JAehoOxK+emieATPQUwSz79sxghx6/klxrYKmrbUi+9+bzmR0JhbbWSQY95hAnFZ
-	 ybElWhzrENf1b3dqzXPneyjgxLpLvHMbDfK7zVaAPy4R0iRrxdsRMG6tDm26h1XGc4
-	 nxhmVOybUVgFrTuLi+vw3AZtWR3zQdEiVUp2+tI+uS1Ljc0t9pwKhurVpKAzt4aFqa
-	 5drO4HCq393Jw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6864PstM61658371
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 6 Sep 2026 12:25:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Sun, 6 Sep 2026 12:25:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Sun, 6 Sep 2026 12:25:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Sun, 6 Sep 2026 12:25:54 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Maxim Skokov <skokovmaksimevg@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: rtw89: RTL8851B BTC entry requires unpublished firmware
- 0.29.133.0
-Thread-Topic: rtw89: RTL8851B BTC entry requires unpublished firmware
- 0.29.133.0
-Thread-Index: AQHdPTiveb8acy2IWEyuU/lutHatFrbA8tcQ
-Date: Sun, 6 Sep 2026 04:25:54 +0000
-Message-ID: <5976dee678a04857b862bc8745420fef@realtek.com>
-References: <20260905131503.6160-1-skokovmaksimevg@gmail.com>
-In-Reply-To: <20260905131503.6160-1-skokovmaksimevg@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1788677626; c=relaxed/simple;
+	bh=slNRKK1qqmgMRQK7dcFyyagEVRkU0/v67Mmng7ReoI4=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=qY1r/yQehWvV6U0jwfTOvoutPtiY6HM/0Xfqv9JXiGVDZVr2mLnTbg2ryczeVT3Y0Kw02QnGA9nc2gzjAshhne1aEPotn041dlKQN1rOfPDatSA1CwP9ZRQ/BV+FvOGwvmKr1mLKXKwet3y7JGTIAZ9lP21sUMySZE/C+GaNm9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-6b1b8b593a4so2644848eaf.2
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 23:53:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788677624; x=1789282424;
+        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=PVZTOHUmWPPHgQn8fYuWFVTYCawkrbtKAtu0dFMRMFQ=;
+        b=murVJ7oYStpklWCzQAYsklhqb1/6PYf2jvbVeefUnDWAzsFrcZZTLloKQRnCUu9foq
+         ac651+4MDwAsoRNmxrhxry9ZD+ErNUq4NUW3N5vnh/LSMDQaMzecG02upxnPdSgE9CT0
+         RzRifNEAHPo7BCUhPzTHh5Y2U70WUhdr734WVNFXoqA5uX9P/34bIe2VFMgmvfhF6FLH
+         8oK3t7G6qEy4lFMWjOAYrghZnX9tB3tLsJK3LXE7BFEtJDTDADipe+3DhwsNr4MYw9eG
+         Rw4gUD/NjGomqv42PQBHu1j9H8oeMqFIv1JoWWvqSNuu2u0JbHvixTAQKWRyQDJHmKl4
+         Kdjg==
+X-Forwarded-Encrypted: i=1; AKwUvBwEEGK/xHxBEGKZ+d6ZdVs07vSwOOE4qr9s/3vgrrX32Spe5q2acm+b7Zf+qOfmsYQxD1hNzqhkbHPFjqFycA==@vger.kernel.org
+X-Gm-Message-State: AFuF++lC8bkeyNSIe+YCvvJNTz5kKjZ8zNr0s/XD7sr04TTE+IIMOK8y
+	M+CP0as/vw9dzzGo1QlqRUD3lrlYWG+DDdL+vA0hpe8+Lkx5UOK6oEb6jmIDjv3pRKoEsWUj4wl
+	700evHH/foMnkf8cm6Ul1iqV19qBQ+u8oUj2BP8kuCoB2W/NJsSstCV34mks=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Received: by 2002:a05:6820:a07:b0:6b9:3295:7712 with SMTP id
+ 006d021491bc7-6b932957a0cmr2849741eaf.53.1788677624012; Sat, 05 Sep 2026
+ 23:53:44 -0700 (PDT)
+Date: Sat, 05 Sep 2026 23:53:43 -0700
+In-Reply-To: <20260904170140.5f69a10d606b.I4a7921d00643f69e439c7a3b221d104f66a3dcdc@changeid>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a9d0df7.0a3344eb.391530.001e.GAE@google.com>
+Subject: [syzbot ci] Re: wifi: mac80211_hwsim: don't hand frames to mac80211
+ while stopping
+From: syzbot ci <syzbot+cid341333ae0c934f1@syzkaller.appspotmail.com>
+To: johannes.berg@intel.com, johannes@sipsolutions.net, 
+	linux-wireless@vger.kernel.org, syzbot@syzkaller.appspotmail.com
+Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Maxim Skokov <skokovmaksimevg@gmail.com> wrote:
-> To be clear, I am not reporting a malfunction.  I have not observed any
-> concrete problem that I can attribute to this, and the legacy profile may
-> well be perfectly adequate.  I simply cannot tell how the situation is
-> meant to be read:
->=20
->   - Is firmware 0.29.133 or newer expected to reach linux-firmware at
->     some point, with the driver support having landed ahead of it?
+syzbot ci has tested the following series
 
-This one.
+[v1] wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
+https://lore.kernel.org/all/20260904170140.5f69a10d606b.I4a7921d00643f69e439c7a3b221d104f66a3dcdc@changeid
+* [PATCH wireless] wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
 
-When BTC expert does upgrade, he does review and implement the changes
-across chips in one go, because the firmware is share to many chips.=20
-Or, he will review the changes again and again.=20
+and found the following issue:
+BUG: unable to handle kernel paging request in hwsim_cloned_frame_received_nl
 
-Ping-Ke
+Full report is available here:
+https://ci.syzbot.org/series/219738fc-ed0e-47c8-8100-a5940fbc20b7
 
+***
+
+BUG: unable to handle kernel paging request in hwsim_cloned_frame_received_nl
+
+tree:      wireless-next
+URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/wireless/wireless-next.git
+base:      1b60ed34f712e9f606d80951f1586f4274ebadf1
+arch:      amd64
+compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+config:    https://ci.syzbot.org/builds/f0e5a89a-2d3b-4813-b1a1-01cf1b6e2ce4/config
+syz repro: https://ci.syzbot.org/findings/457734e4-6b31-48a4-9aa6-ac6a4c6d65ee/syz_repro
+
+BUG: unable to handle page fault for address: 00000000000048d0
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 10ab48067 P4D 10ab48067 PUD 0 
+Oops: Oops: 0000 [#1] SMP KASAN NOPTI
+CPU: 1 UID: 0 PID: 5793 Comm: syz.2.19 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+RIP: 0010:lock_release+0x85/0x3c0 kernel/locking/lockdep.c:5923
+Code: 84 26 02 00 00 65 8b 05 71 68 f1 11 85 c0 0f 85 17 02 00 00 65 4c 8b 3d b1 23 f1 11 41 83 bf a4 0b 00 00 00 0f 85 01 02 00 00 <49> 81 3e e0 24 56 94 0f 84 f4 01 00 00 9c 5b fa 48 c7 c7 60 f2 48
+RSP: 0018:ffffc900036ef418 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000004870 RCX: 8000000000000001
+RDX: 0000000000000000 RSI: ffffffff8c6d9460 RDI: ffffffff8c6d9420
+RBP: ffffc900036ef570 R08: ffffc900036ef60f R09: 0000000000000000
+R10: ffffc900036ef5e0 R11: fffff520006ddec2 R12: ffff888171777aa4
+R13: ffffffff873ae393 R14: 00000000000048d0 R15: ffff88810ccca580
+FS:  00007fe9e40d46c0(0000) GS:ffff8882a8cd9000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000000048d0 CR3: 0000000113f11000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ __mutex_unlock_slowpath+0x88/0x900 kernel/locking/mutex.c:989
+ hwsim_cloned_frame_received_nl+0x363/0xcf0 drivers/net/wireless/virtual/mac80211_hwsim_main.c:6607
+ genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
+ genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
+ genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
+ netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2556
+ genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
+ netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
+ netlink_unicast+0x7bd/0x940 net/netlink/af_netlink.c:1345
+ netlink_sendmsg+0x813/0xb40 net/netlink/af_netlink.c:1900
+ sock_sendmsg_nosec+0x13a/0x180 net/socket.c:800
+ __sock_sendmsg net/socket.c:815 [inline]
+ __sys_sendto+0x408/0x5a0 net/socket.c:2281
+ __do_sys_sendto net/socket.c:2288 [inline]
+ __se_sys_sendto net/socket.c:2284 [inline]
+ __x64_sys_sendto+0xde/0x100 net/socket.c:2284
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fe9e315e98e
+Code: 08 0f 85 a5 a8 ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 80 00 00 00 00 48 83 ec 08
+RSP: 002b:00007fe9e40d2ea8 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
+RAX: ffffffffffffffda RBX: 00007fe9e40d46c0 RCX: 00007fe9e315e98e
+RDX: 0000000000000034 RSI: 00007fe9e40d2fe0 RDI: 0000000000000003
+RBP: 0000000000000000 R08: 00007fe9e40d2f24 R09: 000000000000000c
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000003
+R13: 0000000000000000 R14: 00007fe9e40d2fe0 R15: 0000000000000000
+ </TASK>
+Modules linked in:
+CR2: 00000000000048d0
+---[ end trace 0000000000000000 ]---
+RIP: 0010:lock_release+0x85/0x3c0 kernel/locking/lockdep.c:5923
+Code: 84 26 02 00 00 65 8b 05 71 68 f1 11 85 c0 0f 85 17 02 00 00 65 4c 8b 3d b1 23 f1 11 41 83 bf a4 0b 00 00 00 0f 85 01 02 00 00 <49> 81 3e e0 24 56 94 0f 84 f4 01 00 00 9c 5b fa 48 c7 c7 60 f2 48
+RSP: 0018:ffffc900036ef418 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000004870 RCX: 8000000000000001
+RDX: 0000000000000000 RSI: ffffffff8c6d9460 RDI: ffffffff8c6d9420
+RBP: ffffc900036ef570 R08: ffffc900036ef60f R09: 0000000000000000
+R10: ffffc900036ef5e0 R11: fffff520006ddec2 R12: ffff888171777aa4
+R13: ffffffff873ae393 R14: 00000000000048d0 R15: ffff88810ccca580
+FS:  00007fe9e40d46c0(0000) GS:ffff8882a8cd9000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000000048d0 CR3: 0000000113f11000 CR4: 0000000000352ef0
+----------------
+Code disassembly (best guess):
+   0:	84 26                	test   %ah,(%rsi)
+   2:	02 00                	add    (%rax),%al
+   4:	00 65 8b             	add    %ah,-0x75(%rbp)
+   7:	05 71 68 f1 11       	add    $0x11f16871,%eax
+   c:	85 c0                	test   %eax,%eax
+   e:	0f 85 17 02 00 00    	jne    0x22b
+  14:	65 4c 8b 3d b1 23 f1 	mov    %gs:0x11f123b1(%rip),%r15        # 0x11f123cd
+  1b:	11
+  1c:	41 83 bf a4 0b 00 00 	cmpl   $0x0,0xba4(%r15)
+  23:	00
+  24:	0f 85 01 02 00 00    	jne    0x22b
+* 2a:	49 81 3e e0 24 56 94 	cmpq   $0xffffffff945624e0,(%r14) <-- trapping instruction
+  31:	0f 84 f4 01 00 00    	je     0x22b
+  37:	9c                   	pushf
+  38:	5b                   	pop    %rbx
+  39:	fa                   	cli
+  3a:	48                   	rex.W
+  3b:	c7                   	.byte 0xc7
+  3c:	c7                   	(bad)
+  3d:	60                   	(bad)
+  3e:	f2                   	repnz
+  3f:	48                   	rex.W
+
+
+***
+
+If these findings have caused you to resend the series or submit a
+separate fix, please add the following tag to your commit message:
+  Tested-by: syzbot@syzkaller.appspotmail.com
+
+---
+This report is generated by a bot. It may contain errors.
+syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+
+To test a fix for this bug, please reply with `#syz test`
+(on a separate line) and attach the patch to the email.
+
+Notes:
+- The patch will be applied on top of the tested series (as an
+  incremental fix).
+- To test a new version of the whole series, please send it directly
+  to syzbot@lists.linux.dev.
+- Arguments like custom git repos and branches are not supported.
