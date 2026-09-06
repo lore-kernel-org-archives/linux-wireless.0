@@ -1,78 +1,78 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDF55364EB2
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 18:05:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03FAF3B14D4
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 18:14:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.50
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788717918; cv=pass; b=ug1giHvIKtb4o7P1NAoBBbzFqp75I0iCOkF9yUgRvm7Kq4hvI2AwSknRCvtNkfPzGet6b0ja0uyaHqCCNSIMz8TKI3ku4yo6qczw4IEwtDXtHKY6aG9SIj6AjZ/cQRZnAy3T1cRikDlbcG0iOfKnrTjmXfCHiheaS2HBnZgvgw4=
+	t=1788718494; cv=pass; b=nTEiqgrJRi3pn2uvnlUpFd3AkDHJznTLnkMzoB8DDC9CLVH2WWEGJ31li48AElHSk3dXPH76Qya3dgiicUXpIpUkurSM2CNw0PVPT96rtOkaygu5+MW+G4SQa73SFx3Os2CpR2mnjwcRTLvuUl0mjy88Q+Fq2jbc8cRcwUMAk5A=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788717918; c=relaxed/simple;
-	bh=oZrbA+gqhj+N47M5MEXg42k2Lnl2gVVvx1vsYaMwzfE=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=aCyMOMcyhk3Jdm13/f/+EXMjcq5cn1LiK/G6qES/XUEwXB8w06Zg9XgW+khFudFCTVfcS/VSxgfZsx8ApR00RXvpYuJYV0q0PJjqi9VzO/27GdVwbECVgKnr5ojfOFdKeDTboKYGwJHOeOo4MVl36KFdfSNcAh9s/If5kbk/ZMk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PO3zhmpL; arc=pass smtp.client-ip=209.85.208.52
+	s=arc-20240116; t=1788718494; c=relaxed/simple;
+	bh=2uIeKFJ6kSyQmOt/lS7FHOi4SRMwZSiVnijYyxEhUYA=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=S1WrbjPlB1cOrfuvqcDW5/Quhbi/jwJ1bNdiR0x8SgUUUm63YgyCB+UCYJhYHCvYzEX6H66oF03DOMU5IHLWjLX97xQ77GuKa79AsneEFpJzC+jnPStQWqGSN5znYVplStF4B8OofrOEQNo6wb5IAA0WgQo61mIn3jOKkPr0z7E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HjxlB6QY; arc=pass smtp.client-ip=209.85.208.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PO3zhmpL"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-6a0794669a6so4206943a12.2
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 11:05:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788717913; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HjxlB6QY"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6a5ebf75d62so4038975a12.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 11:14:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788718491; cv=none;
         d=google.com; s=arc-20260327;
-        b=YHHIi/ErDiRNPJ/wuiAF4R76BkNd8FE8LYNYKZYElxWB43nXrlvmvwIcGrJcJuU1fd
-         8YSA+hcI9UPWsz7rijMzV9eMzGh30BWYOz1T12LTWUBc38o6bmBHmSy5QK3z8EjSVgZS
-         Iq7ChY9q+qY1CVcJpOTKVJwUN8uecT5zRVKXNJ70pGEJ/3QArtnDZu+mf84opnJlGXV6
-         5sYLXnLIL+BxwW/SW4ldaUtzft4Z/rkFCDLxCUu40mudhWy6yTT2ZkAQARsSzcdAaN1Z
-         pDy7HYbBcPMyZ6T4y9XwJ/5PLBSYg0ixQDJdoojd1s0U+SqQRgbvPsrlniLxU+ygzFol
-         no+w==
+        b=ApSmbWl2t1Rto9daprPUXc8kMJx6H6ClWn06yfapuM8w5j0V4oceLePvHE+VnCf7u7
+         a6x8tSu5S2r/eCsdv7z4yKw1mtwrdYVvT8J6sXAAHKQhwGnwMl3gT+7KQ0Ks/D/EbJ0e
+         u8u4MartnPedA9r8oCe4gLNy9Yo3BMCIxK4C4WoGF0YuaxSsGvThvVLUvqbkJWvib3Zx
+         le0iiML1YCT92BqTpAQN5xTdKxaJ63cutDG9/RECrkuGq/fevUJwWSSW+o8xesiAQACU
+         ZzDaBRGU0OStKx2ngib2Gvy8sfe4Q5zaq/sffdAHHdk1W97rCC8BHfVEHDBH1kykpITe
+         Wh0Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=pa0aNgWUrAXoDkrBmj85T0XzOgW1Y6aPgEyekCwvi4c=;
-        fh=zmCRzwyC5X/imv2F2BPe8HbucM95be1OG6abwhHXRcU=;
-        b=dbyIXrjEFTTXzJIkRF9zCD7IlRZp8c/4YnS/Wlr/y0m9TFVA70po3Jqv8iIXNfZCa/
-         jFQMHrVqb2msL6XVe4ZXZjDeK814KlKi9NcQcDGCEvzE4Y994SnA74R1QQwIv41w1B/d
-         1B1GJawLZPXNmmRfFMuIrfKNcH0K/hJIPKJuNo/m5mBJjQ+taACZr5EgBaK6DU1Ju2sa
-         +7ZNKL6w6hmBylPzhXxNewMCUqAeuSVyw722iED+7CwQq2kmclfTA6pALCGrXTDhVEji
-         UdP1kplYqCdz2sBQXd75qZiVKbeOmKtza7CZiihGvdBrcl4jAly4u8Ihu6lMyPgB0Cwe
-         0LkQ==;
+        bh=BZBDbjweCgWN70lZ84c1vU1QYkRvTglzhT8uoQ1WdK8=;
+        fh=1DTF61ZHMCVb9QAn/D7ApugNTuN8UQi3nwhcK4Lo2Ss=;
+        b=eWlcUj/XzujUOOAw3PbFq1oAw1rPSN59+F/LPIrrj9c5PKwOzh7FmL6pTeDVbjEbD9
+         Zytw6/80XBgeQO8Cn3WaawewX1CRcsw+54AOA3YzBoG73qranw4UeI+9WN2bA8GfLucl
+         5F3zfbpxUJ1XDMgXQSyVflB9IDV/kQAmtU7zRKuveUpvAgOi92lAu2PPBIVohzgPzZIw
+         ZSaKV5SURWFS1pwP6uYhFF5i4vcBn2g0ko/6CoTG5fnUuljuUtPEtFOjRUj3H0hjla7S
+         oO6KtnHyG1bgZ1IVodDuv1nD7PfB4uSwCQVV2ls9OQNOmZPhDeO56P6KE8ugZf9J/mJ5
+         3NWg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788717913; x=1789322713; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788718491; x=1789323291; darn=vger.kernel.org;
         h=content-type:to:subject:message-id:date:from:mime-version:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=pa0aNgWUrAXoDkrBmj85T0XzOgW1Y6aPgEyekCwvi4c=;
-        b=PO3zhmpLzjFBBJwPpDiDhAi7SI2nOwzfbqZ6elOJM2DlQOqyZulbg/Azlq1/O9SrRC
-         8By5jUyilrngzFXTc+nIr6k9ihm+snBsFlbEO9uTEow/PPCSbqFDW/nKq+E9MdSpUpBO
-         kCvjAaxs89tWPf4BkbAE19o7sCzGuuBx5TgcyqJpYC/obOhRtTNfxxSjtY9iCKVQJBMW
-         DGSzzYb9bPHNTyxuIII1rG8HssjvfamU8KX0Fs+3u9qPcwk4BxMZfYPBuKS8qIiLqKKW
-         074rFyRkyWHmcAFfcBat/oW+lm4zcBjj8ECWvxlbteVc5c9CH1yg4FTFikxZ1Sp4JxB/
-         GCsg==
+        bh=BZBDbjweCgWN70lZ84c1vU1QYkRvTglzhT8uoQ1WdK8=;
+        b=HjxlB6QYal8/2wt1oQ9mvMN1Yqgvcscti6W3uLUro/e/AKBDQMFYPI7HPukQjVoSNE
+         Gj3fEL8dKp8Oiq9qcnYqcCN2HmXePqzhQi7wDxwfJ1ev6+C6ZIeKUBrQ+g4TOZmWrpTF
+         3M8VeYTrMgofoZ8AKeXV0Y18FgyhBjLcd5kEGGtZBFJlf73W00B25lKIsUGDhERv59hL
+         WcMRcqmo1zJjOHq4OaaU113dYcHPbGbOQ5Iss00FjWug7XvbYYjPhLtBxQFZYZ9sjLHP
+         KVEG1DlXaOu+wrwZjGC2YzheaUTdSK1mNodLfJcy8ZnxpagV1ZZZJanfoWVFLOpqu6hE
+         2O8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788717913; x=1789322713;
+        d=1e100.net; s=20251104; t=1788718491; x=1789323291;
         h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=pa0aNgWUrAXoDkrBmj85T0XzOgW1Y6aPgEyekCwvi4c=;
-        b=f3KVU5iHa/eEl2wOZ27tc5LASX0tzGbagA+FvNJpX55sYRXW9SiO/92p0NzHhqOhCE
-         2/vb5ngJcBAf2LNi2kinydv8HmDE0KDLofAkrDpL69yLmqqaCOk7oWFBX0Yk0eZIqqhq
-         rBrSbC61SYzzHYOVl1MrBoF5k1hioL1h+jiiFdvAtzx7KrselAdYMCokqUTcgk4BpfNH
-         uIQFRMuM9jxG3ZPYRCIfdzEshVsWGngbQeZ6HsbS2WFUMIuQ2PZheTmfF7Nh2gwB3RA1
-         RSPNZZTyZZlHxA75b0+zyYJb+t2MCMp2e7WCN+jNkdQj1n8laGQktjhHY0B8TwpqrV/F
-         YOqg==
-X-Forwarded-Encrypted: i=1; AKwUvBwK6oRf+JUZA7hRvW7dUcwxRqY/IqfKT7nKsASETolczvnKks1nazMwILgBUZIzMgQzz1kFDEeoQin2fR7MKQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++lzHKGwIKsl17d5haEJqjEaO1HSx2KbhvR0enMHK21pkI7sKJ8y
-	RnVVbvldNBMKiJ+izzb0eYRmDSFAFAXPjqeRpTLDE3Jty0I1oaSU8F9fXymCLiEIS8vyNTTZr3H
-	9+2DC5ZKZmyTkjKYn/Wkt+WaWJxENpXVSAytG2A0=
-X-Gm-Gg: AYBFou0/jJqZBsvftCKhFl4YvTl8Ri7WZLCEtT8w0UEjG3QDp1SyWTucV7LE5dfg/5N
-	F6TAW4c6O775lK3KIOcNW9KRpmrArq8MeFK9uDFwJNtBZfhUXTrTuHw8IhPqPdJ+U52gJI8vO6u
-	zd77YXsMD3RSrYiAZ5XB+EC7UR79Dpw6Y+MShwrdoJ34wsiPbTz7R1W0bK10YIV6mQYbB1Glt/O
-	N7BmHD07awl1QSYxv+5xVxET3ESCvD3nOQY0nyJila+Pu6Q9PCV1mp/xK5r4UpWL1q2Da99AYYY
-	EegD6r/vv9CuqpIAlSo69NVmLFsc7W4nC4NQAfz89Wdlf288xGj+GWIAYc1p37dV7bxNjVfwBWN
-	YgJcHh2wI+tuntyj8akCr
-X-Received: by 2002:a05:6402:3552:b0:6a7:ee55:dcd6 with SMTP id
- 4fb4d7f45d1cf-6a7ee55dd7emr5195426a12.37.1788717912975; Sun, 06 Sep 2026
- 11:05:12 -0700 (PDT)
+        bh=BZBDbjweCgWN70lZ84c1vU1QYkRvTglzhT8uoQ1WdK8=;
+        b=b2vnbFty6sRH2PSOdCXfgJ7FAhzLdd+2yBiqN7pZ66txbKIGIdaqJHfYEzCWIQ1rQ4
+         Do5f0NR0wLE6dgZ0Ixl2npdKJM/Zo825hX5vaYU8Y6jD/NryuqqCUp/f9OBBYsFya8+h
+         +dW6Oxi2pUVSuX9tq5aJD8euWtkdeX+Iao6a4M4PZdQV9e4fbtmJa6MhGmIJECfKfxm2
+         5ULNBp3hQBXK+CuLOOEewERufbzpNNcO6cMOKH3Ntb9TqMCF1CPYnkDughR90fVO7pYE
+         dJcAaWPx1oRtKmcoOqTTUdTO6srbVch5IA1XvZE7/rcSqb0Ehv2SvuiqBYIJiOy4gq26
+         5Qfg==
+X-Forwarded-Encrypted: i=1; AKwUvBwF/UGu49Cjw4XSbDPV5mrpQY9GT6ULHIEnoJz+gagD7OZMuVX1Sy2DO1MMOJfQFSbnyIkeIHoQ7kXeo1dbqQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++m7X7E9Ik4okdKKxWoWC0W6Etu8QR6v4SA5o9GQDM6i3VKWYUwW
+	iVZx9suEo0tDEZnhZbExekNafNgFF8M8z0s3NdqCH3jFqmvG/ysTtWz9T218sIlUWIvzgUCeoFy
+	32gBFyN6s4kxF/qj5WJXH1JztW6qWSLc=
+X-Gm-Gg: AYBFou2ILt0hH7sWxalqlFNBbn5TSpVMBvryyAE+AUUKpm7qohXvnAgLuFb71B1AZ28
+	LZEOKZhrMusjJQhfLcj+wPK94FI2Dg2dvsdP9SKZQMPPCVbZtAYn4mdHga1839lYTtMrpvojh7M
+	J3By9vcFK5VCrm8sEwjep8ZlQJ3NOZ4fv63C8mSe2xX63dD8SOVBU7enblBovWJ82EYluXRkSy2
+	CD5GP52BhrKlkRguV/XADtvB9q8UUyM/mcg4ycSQ3w9lbp0SPT5/G6yoy1pGRBHYr1eviulaWd8
+	7T7XmMZO6E4DXQrziP30gklOGFpmlloT1REsO/h8/zLGi1UlF9L8HvkObHUbQhWmK1J5qLFuuMh
+	pWAFQ08tzD02DgHC2gG8kFNoRmBNjd6Q=
+X-Received: by 2002:a05:6402:350e:b0:6a8:151b:4f8b with SMTP id
+ 4fb4d7f45d1cf-6a8151b5117mr1163910a12.9.1788718491060; Sun, 06 Sep 2026
+ 11:14:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,27 +80,32 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 From: Herman Semenoff <germanaizek0@gmail.com>
-Date: Sun, 6 Sep 2026 21:05:05 +0300
-X-Gm-Features: AcwNN1UFEVFNvQf-_X8sOKVlhKXXkSgs5UqaHugB48_TROvAqilevHmYdWT9u90
-Message-ID: <CAMnMt5aEXztCdrr-rFMOv9rEKgxVir4Oe90mPpO9duQoxLJxCg@mail.gmail.com>
+Date: Sun, 6 Sep 2026 21:14:44 +0300
+X-Gm-Features: AcwNN1XQea4JVeKlgosC4Fnb06TVn9_6OLpz_KP5Kh1YLDKOaHMdq7n0R17mMXA
+Message-ID: <CAMnMt5bi7417A8gRAZMKA8GJzwR+YCUEUQZ0Qeh4t7Vp=uq=mg@mail.gmail.com>
 Subject: [PATCH] wifi: mt7601u: add vnd_reset parameter to fix probe failure
  on Tenda U2
 To: kuba@kernel.org, kvalo@kernel.org, linux-wireless@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
+From c03d73d37df440d0046d68406fde2aa1f62fe0d1 Mon Sep 17 00:00:00 2001
+From: Herman Semenoff <GermanAizek@aizekgroup.ru>
+Date: Thu, 3 Sep 2026 07:14:32 +0300
+Subject: [PATCH] wifi: mt7601u: add vnd_reset parameter to fix probe
+failure on Tenda U2
+
 On certain MT7601U adapters, such as Tenda U2 and other newer hardware
 revisions, driver initialization consistently fails during probe with
 vendor request timeouts (-110 / -ETIMEDOUT):
 
-  mt7601u 3-14:1.0: ASIC revision: 76010001 MAC revision: 76010500
-  mt7601u 3-14:1.0: Firmware Version: 0.1.00 Build: 7640 Build time:
-201302052146____
-  mt7601u 3-14:1.0: Vendor request req:07 off:09a8 failed:-110
-  mt7601u 3-14:1.0: Vendor request req:02 off:09a8 failed:-110
-  mt7601u 3-14:1.0: Vendor request req:07 off:0734 failed:-110
-  mt7601u 3-14:1.0: Vendor request req:42 off:0230 failed:-110
-  mt7601u 3-14:1.0: probe with driver mt7601u failed with error -110
+    mt7601u 3-14:1.0: ASIC revision: 76010001 MAC revision: 76010500
+    mt7601u 3-14:1.0: Firmware Version: 0.1.00 Build: 7640
+    mt7601u 3-14:1.0: Vendor request req:07 off:09a8 failed:-110
+    mt7601u 3-14:1.0: Vendor request req:02 off:09a8 failed:-110
+    mt7601u 3-14:1.0: Vendor request req:07 off:0734 failed:-110
+    mt7601u 3-14:1.0: Vendor request req:42 off:0230 failed:-110
+    mt7601u 3-14:1.0: probe with driver mt7601u failed with error -110
 
 The failure occurs because mt7601u_load_firmware() unconditionally calls
 mt7601u_vendor_reset() (MT_VEND_DEV_MODE_RESET) before uploading firmware
@@ -160,7 +165,7 @@ upload (default: false)");
 - msleep(5);
 + if (vnd_reset) {
 + mt7601u_vendor_reset(dev);
-+ msleep(5);
++ usleep_range(5000, 10000);
 + }
 
   mt7601u_wr(dev, 0xa44, 0);
