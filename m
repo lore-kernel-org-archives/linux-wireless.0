@@ -1,187 +1,103 @@
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4BD383310
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 06:53:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30DBA3C4B8D
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 08:20:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788677626; cv=none; b=TMf7cTvTrr787LD8wDaeugxWz33I1LK90G+MLZhGqrFIv+mSzHZBxNNaSG4lF/9ed+Bxr6RBIySF41C3rm6Y9zwVgrIoG+ItYRi6qzqj9LeDMDH3XH4abP960DqZkYNKy1zSpDjayAp/FWAFUmVz6OlGWB0FR09HxpoKOIA9PZo=
+	t=1788682822; cv=none; b=cZ0VlrUd3u59J3Sl/9pkDYx9LcoTnF5WhA6Y240LqzAkpoAFjUktUJFGpkcDqcLBtJgBdbuyTvpGiFsXCjPSwUNZ6riO96di0G2GvFar1fP0uFiiF8ZvpEauhIQbGJXKm6XoG51/R0jxHT2fa0U5w2Z+54p/A+GMNsYLGiONj3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788677626; c=relaxed/simple;
-	bh=slNRKK1qqmgMRQK7dcFyyagEVRkU0/v67Mmng7ReoI4=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=qY1r/yQehWvV6U0jwfTOvoutPtiY6HM/0Xfqv9JXiGVDZVr2mLnTbg2ryczeVT3Y0Kw02QnGA9nc2gzjAshhne1aEPotn041dlKQN1rOfPDatSA1CwP9ZRQ/BV+FvOGwvmKr1mLKXKwet3y7JGTIAZ9lP21sUMySZE/C+GaNm9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-6b1b8b593a4so2644848eaf.2
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2026 23:53:44 -0700 (PDT)
+	s=arc-20240116; t=1788682822; c=relaxed/simple;
+	bh=k/46rd7cvC0Orx2Im4cugtLKMvwQQqOCYqTZRcALraA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SUXHfTNW/okobG+Ob3aqq+9PFGwaJR5NuapavVGThwKWv6yJuTf2hwRiwRYHIwo/F4ms1LHEOHUlSKnxfomhsAxJYi4PmhAxIybdBpOCFKFo2D+Hn+ix/V5BF/8MIHxqK7glk0OyLPn3Oc4RRCVNoOO3zyl9bgCGQqrq51VYPsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FwW2vMy3; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FwW2vMy3"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-49ccfbe062eso21303455e9.3
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 01:20:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788682819; x=1789287619; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=k/46rd7cvC0Orx2Im4cugtLKMvwQQqOCYqTZRcALraA=;
+        b=FwW2vMy3Y6OX6qxEXhuqufr0qz146QlrtA4T7qv1rwstpCr9rjRnQdR+U3WHGbuqMb
+         f/01Ngr/ulnY9KH7DjpKw6doJoBoXBXM1v8GWC2b749Yb+9P5VQDXORsDI3sZZ3y4d3H
+         MZBAzaHTCOJ+wkldxvMFpcWcX/uOW3qEj5HzahpUUxXQ1M1F79lKOs+4ajpaIxM3bvWG
+         xK9tTs1X3RilTyDbPp5co7dpbU9ASkd8bWMoAz5ZRC1E+IgVevodNHR7PONfjBKLZbhA
+         Wgh2IdQT/jtLp7efn25CjQw5jGq+HM+CG8m6h8mp33SX49XJp7fs9Nf+EHjQtlGghIx2
+         JASg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788677624; x=1789282424;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=PVZTOHUmWPPHgQn8fYuWFVTYCawkrbtKAtu0dFMRMFQ=;
-        b=murVJ7oYStpklWCzQAYsklhqb1/6PYf2jvbVeefUnDWAzsFrcZZTLloKQRnCUu9foq
-         ac651+4MDwAsoRNmxrhxry9ZD+ErNUq4NUW3N5vnh/LSMDQaMzecG02upxnPdSgE9CT0
-         RzRifNEAHPo7BCUhPzTHh5Y2U70WUhdr734WVNFXoqA5uX9P/34bIe2VFMgmvfhF6FLH
-         8oK3t7G6qEy4lFMWjOAYrghZnX9tB3tLsJK3LXE7BFEtJDTDADipe+3DhwsNr4MYw9eG
-         Rw4gUD/NjGomqv42PQBHu1j9H8oeMqFIv1JoWWvqSNuu2u0JbHvixTAQKWRyQDJHmKl4
-         Kdjg==
-X-Forwarded-Encrypted: i=1; AKwUvBwEEGK/xHxBEGKZ+d6ZdVs07vSwOOE4qr9s/3vgrrX32Spe5q2acm+b7Zf+qOfmsYQxD1hNzqhkbHPFjqFycA==@vger.kernel.org
-X-Gm-Message-State: AFuF++lC8bkeyNSIe+YCvvJNTz5kKjZ8zNr0s/XD7sr04TTE+IIMOK8y
-	M+CP0as/vw9dzzGo1QlqRUD3lrlYWG+DDdL+vA0hpe8+Lkx5UOK6oEb6jmIDjv3pRKoEsWUj4wl
-	700evHH/foMnkf8cm6Ul1iqV19qBQ+u8oUj2BP8kuCoB2W/NJsSstCV34mks=
+        d=1e100.net; s=20251104; t=1788682819; x=1789287619;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=k/46rd7cvC0Orx2Im4cugtLKMvwQQqOCYqTZRcALraA=;
+        b=UUfZfqkK0gMrF+cz29/FPv1ucykQHclCyFEfmKckuMYyaL3Vz8TNR76jsAw5jrYPmu
+         OfmGjLsWOJXDmuFUhPbPeoGdsnNbejVRqn+45FOXE33SWJKn0jvTlVnfdeLAWOl0JAXV
+         4I3U9Urp+7csy/v4BkEu7VorDtRB/dOr5SYnZX6Qfv4LdzgKbsSUyWiqRnqr8ZQT+c10
+         MVnE/+OT+lqbZSbyCuHo0myGu67p1TH2i559n849Erwxzit0xCNRwRO0fsyGumsB3h87
+         5DbbZP4H0Ww9i7wZOS6WNUlg3UO6yTNWGhIrFuhCNlTH6cvFcM+Zra9plRbtFsYqqCHk
+         m1Rg==
+X-Forwarded-Encrypted: i=1; AKwUvBxMsgpi/UudEuSoq06MacVDx7kXD2P6Oj+4Md9oyAh+hmR3cB+vKdo1k7uTqogfCqzTNm9Q45QpJodsbhqzPw==@vger.kernel.org
+X-Gm-Message-State: AFuF++kkw338TE2mATP/IHIx9wdbXHmKT6x0BagUYcPscN6UYRR2n01T
+	RbJmFg6X0smzJf89lffBfW4dRmbLnmv6YXbCkriAIyzRnINg0hkgQYq04hfc3w==
+X-Gm-Gg: AYBFou1b0av73b+JWksFLvA5yasXZil01Gi6d9/2ApxAED502BPFgwgw/lSudrggeXS
+	XNRAoUN+j371nFbhBS2cY98D2lroEzKhxCb1wOownf8Q3KdIuAYWS2VpDuNoyZt/MKmt8s+wHW/
+	T+PAyXOyZqxIBXUFZjUyQaokA90bJyEq8usZ+7qxMYzXg6QtQIt1dmpEZzH4eznN2126291ZCKJ
+	vaEd0R61ocm0gbyVZNt6f/NnDa8iY4cfvUcd58HqVyytu3rk3HsIuy7QQkEg04ka4ZOTcFW2QN/
+	IMvwNM0FBN0CU4kpH3Oc81DZ/IdQM4NuhUw6re4XI0lguULto61yZmsoqfxT/FNRICf1z13jY2k
+	ZjLVzLcmMcG6WoSx8NmivovsqcqSX8+Hwv+7sIWZCx5xeEGfSJZZWmuNZ+3N5g7ZH5SZV67jTMn
+	SzAtQuM40bXAv6mfWvppDD0Usy09zusCjW+Xn0z/oT276/x+BxUh1/boK3LqPKX1sVpw==
+X-Received: by 2002:a05:600c:348a:b0:49c:fa20:cc03 with SMTP id 5b1f17b1804b1-49cfa20ccedmr117480115e9.26.1788682819131;
+        Sun, 06 Sep 2026 01:20:19 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d03543064sm123450485e9.13.2026.09.06.01.20.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Sep 2026 01:20:18 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mehmet Fide <mehmet.fide@screeningeagle.com>
+Subject: Re: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the high queue only for DTIM delivery
+Date: Sun,  6 Sep 2026 10:20:17 +0200
+Message-ID: <20260906082017.909554-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <070f9724ca4a42a0b64bbf63724d8cdc@realtek.com>
+References: <070f9724ca4a42a0b64bbf63724d8cdc@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:a07:b0:6b9:3295:7712 with SMTP id
- 006d021491bc7-6b932957a0cmr2849741eaf.53.1788677624012; Sat, 05 Sep 2026
- 23:53:44 -0700 (PDT)
-Date: Sat, 05 Sep 2026 23:53:43 -0700
-In-Reply-To: <20260904170140.5f69a10d606b.I4a7921d00643f69e439c7a3b221d104f66a3dcdc@changeid>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a9d0df7.0a3344eb.391530.001e.GAE@google.com>
-Subject: [syzbot ci] Re: wifi: mac80211_hwsim: don't hand frames to mac80211
- while stopping
-From: syzbot ci <syzbot+cid341333ae0c934f1@syzkaller.appspotmail.com>
-To: johannes.berg@intel.com, johannes@sipsolutions.net, 
-	linux-wireless@vger.kernel.org, syzbot@syzkaller.appspotmail.com
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-syzbot ci has tested the following series
+Hi Ping-Ke,
 
-[v1] wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
-https://lore.kernel.org/all/20260904170140.5f69a10d606b.I4a7921d00643f69e439c7a3b221d104f66a3dcdc@changeid
-* [PATCH wireless] wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
+> FYI. I checked vendor driver. Normally REG_ATIMWND sets 0xa or 0xc in AP mode
+> for chips.
 
-and found the following issue:
-BUG: unable to handle kernel paging request in hwsim_cloned_frame_received_nl
+Thanks, that matches what I measured: 0x04 already drained the storm, so
+0xa leaves comfortable headroom. If you agree I will add a small third patch
+to the series that programs REG_ATIMWND to 0xa when the interface goes into
+AP mode, as a complement to the bound and the filter (each covers a
+different failure mode: the window adds drain capacity, the bound protects
+the pool if the window is not enough, the filter keeps the ordinary chatter
+off the beacon-paced path altogether).
 
-Full report is available here:
-https://ci.syzbot.org/series/219738fc-ed0e-47c8-8100-a5940fbc20b7
+> As you saw it is for TDLS channel switching (timeslot sharing), I
+> don't think it can work in AP mode...
+> I will ask USB experts internally to see if there is an interrupt
+> to notify driver about TBTT (or beacon early).
 
-***
+Understood, and thank you for asking. If such a notification exists I would
+be glad to prototype IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING on top of it
+as the long-term solution; the bound and filter series does not depend on it.
 
-BUG: unable to handle kernel paging request in hwsim_cloned_frame_received_nl
-
-tree:      wireless-next
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/wireless/wireless-next.git
-base:      1b60ed34f712e9f606d80951f1586f4274ebadf1
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/f0e5a89a-2d3b-4813-b1a1-01cf1b6e2ce4/config
-syz repro: https://ci.syzbot.org/findings/457734e4-6b31-48a4-9aa6-ac6a4c6d65ee/syz_repro
-
-BUG: unable to handle page fault for address: 00000000000048d0
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 10ab48067 P4D 10ab48067 PUD 0 
-Oops: Oops: 0000 [#1] SMP KASAN NOPTI
-CPU: 1 UID: 0 PID: 5793 Comm: syz.2.19 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:lock_release+0x85/0x3c0 kernel/locking/lockdep.c:5923
-Code: 84 26 02 00 00 65 8b 05 71 68 f1 11 85 c0 0f 85 17 02 00 00 65 4c 8b 3d b1 23 f1 11 41 83 bf a4 0b 00 00 00 0f 85 01 02 00 00 <49> 81 3e e0 24 56 94 0f 84 f4 01 00 00 9c 5b fa 48 c7 c7 60 f2 48
-RSP: 0018:ffffc900036ef418 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 0000000000004870 RCX: 8000000000000001
-RDX: 0000000000000000 RSI: ffffffff8c6d9460 RDI: ffffffff8c6d9420
-RBP: ffffc900036ef570 R08: ffffc900036ef60f R09: 0000000000000000
-R10: ffffc900036ef5e0 R11: fffff520006ddec2 R12: ffff888171777aa4
-R13: ffffffff873ae393 R14: 00000000000048d0 R15: ffff88810ccca580
-FS:  00007fe9e40d46c0(0000) GS:ffff8882a8cd9000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000000048d0 CR3: 0000000113f11000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- __mutex_unlock_slowpath+0x88/0x900 kernel/locking/mutex.c:989
- hwsim_cloned_frame_received_nl+0x363/0xcf0 drivers/net/wireless/virtual/mac80211_hwsim_main.c:6607
- genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
- genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
- genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
- netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2556
- genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
- netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
- netlink_unicast+0x7bd/0x940 net/netlink/af_netlink.c:1345
- netlink_sendmsg+0x813/0xb40 net/netlink/af_netlink.c:1900
- sock_sendmsg_nosec+0x13a/0x180 net/socket.c:800
- __sock_sendmsg net/socket.c:815 [inline]
- __sys_sendto+0x408/0x5a0 net/socket.c:2281
- __do_sys_sendto net/socket.c:2288 [inline]
- __se_sys_sendto net/socket.c:2284 [inline]
- __x64_sys_sendto+0xde/0x100 net/socket.c:2284
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fe9e315e98e
-Code: 08 0f 85 a5 a8 ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 80 00 00 00 00 48 83 ec 08
-RSP: 002b:00007fe9e40d2ea8 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-RAX: ffffffffffffffda RBX: 00007fe9e40d46c0 RCX: 00007fe9e315e98e
-RDX: 0000000000000034 RSI: 00007fe9e40d2fe0 RDI: 0000000000000003
-RBP: 0000000000000000 R08: 00007fe9e40d2f24 R09: 000000000000000c
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000003
-R13: 0000000000000000 R14: 00007fe9e40d2fe0 R15: 0000000000000000
- </TASK>
-Modules linked in:
-CR2: 00000000000048d0
----[ end trace 0000000000000000 ]---
-RIP: 0010:lock_release+0x85/0x3c0 kernel/locking/lockdep.c:5923
-Code: 84 26 02 00 00 65 8b 05 71 68 f1 11 85 c0 0f 85 17 02 00 00 65 4c 8b 3d b1 23 f1 11 41 83 bf a4 0b 00 00 00 0f 85 01 02 00 00 <49> 81 3e e0 24 56 94 0f 84 f4 01 00 00 9c 5b fa 48 c7 c7 60 f2 48
-RSP: 0018:ffffc900036ef418 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 0000000000004870 RCX: 8000000000000001
-RDX: 0000000000000000 RSI: ffffffff8c6d9460 RDI: ffffffff8c6d9420
-RBP: ffffc900036ef570 R08: ffffc900036ef60f R09: 0000000000000000
-R10: ffffc900036ef5e0 R11: fffff520006ddec2 R12: ffff888171777aa4
-R13: ffffffff873ae393 R14: 00000000000048d0 R15: ffff88810ccca580
-FS:  00007fe9e40d46c0(0000) GS:ffff8882a8cd9000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000000048d0 CR3: 0000000113f11000 CR4: 0000000000352ef0
-----------------
-Code disassembly (best guess):
-   0:	84 26                	test   %ah,(%rsi)
-   2:	02 00                	add    (%rax),%al
-   4:	00 65 8b             	add    %ah,-0x75(%rbp)
-   7:	05 71 68 f1 11       	add    $0x11f16871,%eax
-   c:	85 c0                	test   %eax,%eax
-   e:	0f 85 17 02 00 00    	jne    0x22b
-  14:	65 4c 8b 3d b1 23 f1 	mov    %gs:0x11f123b1(%rip),%r15        # 0x11f123cd
-  1b:	11
-  1c:	41 83 bf a4 0b 00 00 	cmpl   $0x0,0xba4(%r15)
-  23:	00
-  24:	0f 85 01 02 00 00    	jne    0x22b
-* 2a:	49 81 3e e0 24 56 94 	cmpq   $0xffffffff945624e0,(%r14) <-- trapping instruction
-  31:	0f 84 f4 01 00 00    	je     0x22b
-  37:	9c                   	pushf
-  38:	5b                   	pop    %rbx
-  39:	fa                   	cli
-  3a:	48                   	rex.W
-  3b:	c7                   	.byte 0xc7
-  3c:	c7                   	(bad)
-  3d:	60                   	(bad)
-  3e:	f2                   	repnz
-  3f:	48                   	rex.W
-
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
-
----
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
-
-To test a fix for this bug, please reply with `#syz test`
-(on a separate line) and attach the patch to the email.
-
-Notes:
-- The patch will be applied on top of the tested series (as an
-  incremental fix).
-- To test a new version of the whole series, please send it directly
-  to syzbot@lists.linux.dev.
-- Arguments like custom git repos and branches are not supported.
+Mehmet
