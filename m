@@ -1,62 +1,64 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazolkn19013080.outbound.protection.outlook.com [52.103.35.80])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazolkn19010021.outbound.protection.outlook.com [52.103.33.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 097043BD25E;
-	Sun,  6 Sep 2026 23:37:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.35.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CD7327AC57;
+	Sun,  6 Sep 2026 23:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.33.21
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788737845; cv=fail; b=Hh/Cr6W0XQYYU2lXlp6VUWVyyGe2FO1A1AyJ3/evjO1NoYAWHf2/srKLpI0k+kkDVkRUn/fRlIh3VrHdMrXj3ZEvn2J1pQMto4Hj7Hj0Yib/gnj7sc8Ika8Xec3URuzdVEtTKzDbMP0aXyqDvvt1T1kMryYBq4Ap/WMv7E5Kiak=
+	t=1788738152; cv=fail; b=rquBzfaO2HEVrkBOVwLq0GW1PrNz+Vv9Vcdvw+RmdyVwLScnhdsbhWr/iW0YM9BVXlob+/cG6nYjR2cp75bVLt1Y+Hp4dPyuLsZTZAqhOpyv/KrVn29s38i/F65VDlxnniJxyw63hdgocLfumPMTlvx2nZncwVqIBS0/IQEm1oM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788737845; c=relaxed/simple;
-	bh=W2ree0b5JgGpGU8zAS0X0CU8ZtzyxZepRc8mOVVFvlQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=nW5sgPfsI7K6HR3KBm+TwPPB9V3MfdHrUHGzJwY7Plw1F/4EEWWDLOTPdYbLQtjzGa1ygOLlyF8mDjsknXLrgunmAch1MQ+WMbDecY/XiOoI3KVr5G2duWNthphbiBnegmraYaV/ExFs8grUQbBBMGWzdofmMQMR7Iv6TrYpj6A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=POtvSSah; arc=fail smtp.client-ip=52.103.35.80
+	s=arc-20240116; t=1788738152; c=relaxed/simple;
+	bh=0X9v757BtP6zWA44C/l5fxSuB+vTe5e+4mGov1TamSI=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=kbFn2tw5+LtuVeGBtBDFeu48sRBb+L9U2hF/cBjwXQIzY7ecPmxKHmPVy2BbwehRHiDfIzvFGst7yNvqWZtmAi7SKY9dpGVRhh2TB2ra4tD9OnhFd5St+eok3WEv1Y4qDafYj2fdPtZAyIF7mAuxB9eSuKuuu48I9qCoTg8bd0Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=Qr4caX+v; arc=fail smtp.client-ip=52.103.33.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="POtvSSah"
+	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="Qr4caX+v"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=FUMp1GZGyZNHKoIlIOsl3JCPQW4Hb6Qo7g3+x6ZH3e3QUC0GgsSB+XZ7e4y+lfn8JT+btRgN0w4ofUzX/jqqWkWCcnu0pBsV11vB4omyumYILJNxyXYqRMTC+SnNEqQIbZcyy4SJ1aa5wh2QfVTHayIkbd+YOLUVVKCPf7cVxSe4XsI2APYew/NbU7nRzw/ht0jmkkQO/RJtwq+UFZdZTGAJO8157GO2A7+D/VKxqmFJ+MdURAOJBxKgicbOTulyGa2C8Qcrmj9FiAj8Bre0pFU0xO+Y0+EcujuMy9eqYuIsJOTAWmdN2r2haDDtW3bnMaM6FuvUW/Y24P/ah7Cc3g==
+ b=J3+EvfO9243Qosq+0p2fvvbiT9NaQpkue5zxvhG/qnwuOk//w7mM8FSmU2uKxJwCZ/276KWYbhq7JOYbFQdJaIkT54AoZpljlpfQiV4jUYUvvrnKD7nxPHizGw0/CbTM/A2+Y9ZT1uQf2LQWuTl7GimVxHwIoMbYlnLbVGhMBd7KgRdoPsP0U2elaC8NOllgNpl9ee/EJRnzjQ7dcswDMwAKpuDwXHvHsPgY1kGkVPMijnyP74JMhvjfXVWFXTQyayBPCcg+okurEEti2HYFFof8kMTNRKr2QUI8Cop9rTguP+LpDR32EcZm5FNHIku/Jid5k8qVAD7pikg18iGapA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zRPobl82tB0PJGemzdQLZN/7SPZtnLsk0Hn6RMmNGIQ=;
- b=YQuIvz3YOdKNGngK56Da0R1heNuSwZYTBUIwnVfHixFJlKKbbZmd4JDlwyX9NhX53yrUGcpXOgcx+8QiedOnZrvWG//6rnixDZq2cjxqGkhp5dbOexJLVV58CKX0WVH/geibq1qcCI50whtCYLNU1ZOy9v3kZgnF15jKZGzaE7L7ohnfTAUuVJ580iM6LozXicLsMhkff9bgDwxiZgOrS9OhznvvD7qHr9j8rigk6tQNQJji0dDHwQrqeofdfL0aDPC5LMyXUC/PLq9SWknvx+v0ZjQEVINhcJX8cDp0tF10TzyK1/gc2+e/NPJIhLG5tGpes+NxepluE25G3n1ahQ==
+ bh=6621Tt8Wofg6hjcmAhxUXL9WY6V4fKEh16GVa0K/klc=;
+ b=GnObYswprXLQbdabbLxT6JPUp7b/BfF2LlbC/yUTo4gOPnAYFidWHmYeHHiYoP4uj9hQ/kGIRb8v/KqVMko8e/VRsImq8sHoRsp6IEnfrwPlnd8ulYbSkBAvrhdSQiVik1zXM2VM4ZpWe+9nZu/P1Fv0JGaLOqfMI+e7Kz/HzsmRv5hWzeYlm/uYe5hgl/O2wqyWWC6IPjYM5yffA4SJFIdYp645XzmAg+qtGrgdeEXfz+eS+VZkF1fs43RcOQw5N0iFa7vzEawOXY+bBkJjufTmWQc1Rlck+9QaS8n96bcl1SpsJ7QrkiMvTkOoh4MZyI8g9CRNvwOY0cGDyPgSdg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.CO.UK;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zRPobl82tB0PJGemzdQLZN/7SPZtnLsk0Hn6RMmNGIQ=;
- b=POtvSSahJ+bRN789ooldpkATo4V+Acm31B78ALliJE3zylvbpnCbd9XEDU44MTJFiAqKaey75Aersb8rIDOud56mEAhoHgxZEVZosLzRz4qIDRHaE10sj3JLPC3BEXRB4dlFxPgd6TlyJQcxHVyjrOtTSiGQqIjGA/J99kbPzbSiFwT6H+Q/yHMEV2n3mE9OvBst9wGAwJbELRJFYlLoqEF4Y/0u7vSUtrdat/M0DQD/Bk+R3eGqE9u7RBLaY5qpwqNFEvOqNE2nvuNpHvbLCN2ywjWN6WuO3V6LE1qMneEU6arZZGwVfqBBANEQGKuI8C1VPbrXpM89mkDsZrMI9A==
+ bh=6621Tt8Wofg6hjcmAhxUXL9WY6V4fKEh16GVa0K/klc=;
+ b=Qr4caX+vhJKNR652dmlGEYoZdvZmyRC/2K6mV7ucB0gBVqhi+lQ8ec/418qEPGk9/HUFcsjv3+SU911jmSWdaIBeExO//xjQfqafN3pGgQb7mUA5VD/ODzIlZfHtQgBJC0kisANjKAt3f8Ht0TpoBOPuIr9rlEAaVcEQrLcMXU7nQdgGnC6WkJnibSJj9DuMYhDevqKrUg1d0su/NRqkzGsIMPPfXZQhDvhi8Vv0YJjehLN4wb++qQJj4XSsNrOQp4PVrT2bLF/g4IlQN9QiDYqJ/gQPdI/do1fyn0g0qtQzZYyWKPcGmBbGcR4u1l9mLk4k8SBRuoeAfZYB7wUmQw==
 Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:344::22)
  by PAXP251MB0113.EURP251.PROD.OUTLOOK.COM (2603:10a6:102:200::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.15; Sun, 6 Sep
- 2026 23:37:21 +0000
+ 2026 23:42:29 +0000
 Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
  ([fe80::2952:d4d0:4ba:8352]) by AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
  ([fe80::2952:d4d0:4ba:8352%6]) with mapi id 15.21.0382.014; Sun, 6 Sep 2026
- 23:37:21 +0000
+ 23:42:28 +0000
 From: Aamir Ahmed <elb12345@hotmail.co.uk>
-To: Kalle Valo <kvalo@kernel.org>,
-	Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org,
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
+	Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Kalle Valo <kvalo@kernel.org>
+Cc: Arien Judge <arien.judge@morsemicro.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH] wifi: wilc1000: validate packet bounds in RX buffer parsing
-Date: Mon,  7 Sep 2026 00:37:16 +0100
+Subject: [PATCH] wifi: mm81x: validate packet length in mm81x_yaps_read_pkt()
+Date: Mon,  7 Sep 2026 00:42:24 +0100
 Message-ID:
- <AS8P251MB0001BF71A8397CE77A82E7E2C8B32@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
+ <AS8P251MB0001B650C31E9F37C3B7907BC8B32@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
 X-Mailer: git-send-email 2.53.0.windows.1
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: LO4P123CA0555.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:33b::8) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+X-ClientProxiedBy: LO4P265CA0091.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2bc::8) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
  (2603:10a6:20b:344::22)
 X-Microsoft-Original-Message-ID:
- <20260906233716.87729-1-elb12345@hotmail.co.uk>
+ <20260906234224.87901-1-elb12345@hotmail.co.uk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -66,61 +68,62 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: AS8P251MB0001:EE_|PAXP251MB0113:EE_
-X-MS-Office365-Filtering-Correlation-Id: ae0c49a7-2f32-45cc-cf7f-08df0c6fcbd0
+X-MS-Office365-Filtering-Correlation-Id: 7b61a61d-7b48-4a39-057d-08df0c7082e7
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|24021099003|55001999006|5062599005|5072599009|4140399003|15080799012|25010399006|51005399006|23021999003|25031999004|37011999003|19110799012|8060799015|440099028|3412199025|26104999009|40105399003|2607281247196008;
+	BCL:0;ARA:14566002|24021099003|55001999006|16051099003|5062599005|5072599009|4140399003|15080799012|25010399006|23021999003|25031999004|37011999003|19110799012|8060799015|41001999006|440099028|3412199025|26104999009|52005399003|40105399003|2607281247196008;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?tFtZGEfPzZ8WbNz3HVPql/qvl21SGWlol4rjvvtnbUTumFDES77vX7SoISA1?=
- =?us-ascii?Q?YwVozi4EWmYGNLODhDNvvCT3QEVTCnvWvGeUqxkPRxQjzueFTQ6hp9P5wq65?=
- =?us-ascii?Q?DtkwpwYz1gEaEgzqP4M8n8CcGbj4qggwbNFtFVEYqdqhIqSHcEGhot4Wu9F5?=
- =?us-ascii?Q?kpPb9wHsMJstwTwuia2fhzFhD51bkJKEORxIKiLS4n9A0FIUfNTFeTW2ILbx?=
- =?us-ascii?Q?8GhGCQVbO9yW5RH/SQRv5Ftk2LutNVLYPB4M9XT1zr0Hm5st87Kpg95VZCrN?=
- =?us-ascii?Q?elo11r7wBAgELQGADwIXTp5O45sG2YeMnmHMUgNZ40TRl4DqokA/NRFMzyHH?=
- =?us-ascii?Q?wPEEvhGU0uO4I/SdqfYMCmMAbfc/db69W5Q52CZyTzj+zWeLXRW5px1LaYg2?=
- =?us-ascii?Q?O4EFqS3CkpYkiv0Nu3VWERnK6oEFaN+3YHiL8GX3XM+kJ+ENRDxaQrvarhsX?=
- =?us-ascii?Q?xbgb7e/lLGRYkI5JVHw9v7nWrbFgFZxa/lL8jUnceam1bGuEQGbukbNVfnfi?=
- =?us-ascii?Q?pOnktxMezWQLV5qEo6v5N0Sj9vjUI8DCczHEDvm9iXOQk5EgEKZEJO4oomqK?=
- =?us-ascii?Q?Evud3ghKc2cQwURSbaQCBo6/T1mXxH/VrTvQKX6bB+UscIZ8l9GHcfQcdEsB?=
- =?us-ascii?Q?Vck74iK0zVwqbLqAlB9ziyxGx7hqGX448Nj/9WCuSvVZaT9mrpwBZopcgTjS?=
- =?us-ascii?Q?uWKC9ieZbn5wRv+FCOMtOAT0pIXYuw4wlrzVZvzSymjl29V3l7NMT47zJvrB?=
- =?us-ascii?Q?zgXKhyBhNCZw36cvDwc5SaEPy5zMrDd5OF9CiAuCN8KWdxk68kTRymjMsQgb?=
- =?us-ascii?Q?/dvN1dTNUSYrE+ofFU4PZs/vqXbWBx4AjsVmV5IXH5bxSK+nSEnzj6Co7dtV?=
- =?us-ascii?Q?NfWJAMUNyFbJkI8p2zQKF2/CyITCj6DL7F3FmLQbcV2Aq0DHOh+YhA9bztxY?=
- =?us-ascii?Q?lVTwI9jJVq6W1VMytysY+O1zaGCUCO8EiNpzAVjsJKU8u/9X75bomb1giRZU?=
- =?us-ascii?Q?4YdyQc2SbTfYB6ux4S1LNUYDEN0KKX/7uH7K1zPjwmFGQV7qctdB8dDzvHI6?=
- =?us-ascii?Q?uInfWfGE?=
+	=?us-ascii?Q?Hii0i5/BCKClTe5/cWnOSmnyAJTn3J1gN/1YNb/OZhEsZue8w/TtWDuzL6n0?=
+ =?us-ascii?Q?cL+cxDLXIxXgr4sqH8wPLxsAC78q8hujUIFUk6UdPABCrEkaroNtFPRmOnAp?=
+ =?us-ascii?Q?CdeDsP7ASlL0TblCGBhqA/yLsqJVGqLwE/UJzCoALmz01IIut9Hnd6GMxLZb?=
+ =?us-ascii?Q?AZtTAsGE+MgAyHcxXvWw3SLkBO7gl0sbSyCJMyVxTNlq18Jd2edaWNGf16/H?=
+ =?us-ascii?Q?pbJWfjPMxedGcKUBJDcAUKqj/cuNHnAuar0HQahykOF5d1wAEUrpi/JwlPGx?=
+ =?us-ascii?Q?01PgRtplf+CkpX2uuO8eoJ0RvbOyLo21wSCPmLngqGxdc82Jvhe6+cn/MCXt?=
+ =?us-ascii?Q?j4bOnQFsR+iZ3MeYqrpLkLyG8nd0fv5Ypsv2VKORTJFrsPvI24EnGbskWoPc?=
+ =?us-ascii?Q?/OYyo7Lf0kU7QLlndxip5J3iRsIl2Iy5REdOSYhCI4vJyCbM+KhVKNU3kWw+?=
+ =?us-ascii?Q?i3BwBfTxA2xQysum5SXA2WN6qlniW2Z9zp0UnJ386xSTCrVrTqKmaT8/gbmk?=
+ =?us-ascii?Q?LfiuHkGEhJH/cdMOpd4lqkc33hl4GVHzxoomAE0rPWDkDrxnelJUrIrVdCGB?=
+ =?us-ascii?Q?p0w6/7O4SwBO0uDHIBCEuzRd1ygvhfasvd0pDui0Np/MqUIeH094MeFKNs+y?=
+ =?us-ascii?Q?U7j2m7hWHNVPSgI1T+SmWjS/cl9SaRG3GyDs2ZJIZRMPO8zMpJim156t+ZIg?=
+ =?us-ascii?Q?Fj8xzypYpg01C6Yr6cqkPB8lOC9YpOpdUofBgrqMY0ZH+BZzffEffhfYiEm+?=
+ =?us-ascii?Q?L7BywJ55r/VnnmhrkSF0Qf7gzcYNkqNK8Q6RbMgJ1hADYsCYF+Anp/XcZHU5?=
+ =?us-ascii?Q?KehGdmCbn8wkxN/3TdGHmCIoIkKoiVLcx9+XgJi3x/kz7CgbE9L9UwJpySy8?=
+ =?us-ascii?Q?Y+lPl5Qx0G9HcPSgb1dwxuLObwNTPxI1HsklAl7/chuTvqQMrJof73zXXIMY?=
+ =?us-ascii?Q?rfWell7LwOsOknDoj+gSU0pJO5UWAVVTKORJvmXnfyjC0USPKeg+mcHzn0kN?=
+ =?us-ascii?Q?ngbeVm4cBWPX9I5vlNnJRPVjxaN7P5CvwcHFEbGY9ZIDLuF56oXxNCR5q7sY?=
+ =?us-ascii?Q?ztYQhn73D/g+V5Vvm3gTL+7I4FxGosM0sad53iOM6Pics+UMEnb3SCqVq4Q1?=
+ =?us-ascii?Q?rqhLvlWKxnGc?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MhHHXKjBSiabUkvuFUka5wA8G+cks31v3rJMoBnDeg2bPjQQizlrCF1cnfKi?=
- =?us-ascii?Q?iPNlWPKERPDxyGPT00h/GNYYJs2yCXUx1r2ZtiNJGKqg9UetFadKVCJ2IsTe?=
- =?us-ascii?Q?+UhZGPuOWBLqWSYqIuV1Ff1aRbUiSnRiniMP+X/uNxNoTWZMn3Mc8TmBEk0i?=
- =?us-ascii?Q?ezc12zDEx/YUfR5V8GaF19y6zoQOb6bmmOXAMlmyGBjbRhLmKrOHTwzHLdvC?=
- =?us-ascii?Q?JAmJJEeM/+ZT9hwHlDQiC36axMsJj0plsMcF5Ibt/TTRDYYmoVZpu4GkGnN3?=
- =?us-ascii?Q?bHzSSHgO8YaQ5tp2sxnOqxyIUCQZdwb6JOudNekX0WN5WdQiyyzlxu70QU3m?=
- =?us-ascii?Q?bXhyCcPVpYOY1vWyycZVnKDFHjE8s5T1trsBF2XtI6m3wdg2Q12cFCGxzrAL?=
- =?us-ascii?Q?CYxmCtDJLCzm45xgKnvkRKd9frXIAnYEdvc3MckFKdqIen1qJKQYOowdUC+h?=
- =?us-ascii?Q?h3I2NpB2C22qIEe3F+CxH5StMPNZL7jtP30g5JSPRaoLutlpbi2UOXj7aRoE?=
- =?us-ascii?Q?28FOqIY53VGgjdfGsdy7v+yXddHYIl+04BCV5nqrrP0sZsEaM8a1UXF+qosm?=
- =?us-ascii?Q?g1k87M8tChcQtEjL7hYbTHzICz3kU7J3NEFUAXigTQBQAebpxMr1Ohmr1oSD?=
- =?us-ascii?Q?OdXLa2DRxvp8cEtdCFgd6jM4tM1wINEwM0WNuBqgPU84fteXCwv5dquW8us8?=
- =?us-ascii?Q?QOxwVDN2LSEvdidR2PbBaFuhtRvnPYw5jJkaoVpEqdLtkPc3qGg4nei/rqJK?=
- =?us-ascii?Q?i1yX5PKANxGB5ugmsQ8xFh/e+e1+ETEt8b1bJG86sQlnQsWxg59Njs1yYLsN?=
- =?us-ascii?Q?6eRxa8WlN+U5H2Os+meHA6RVzCEWCufRd15HtppI2MjPgKjd9IrRg8vYUMfu?=
- =?us-ascii?Q?2sLB4r9SjUnLzcmlvpE3bJ2S+4T6yL3zNvvKzAivQDQaBdi/YC0hi68pk1FE?=
- =?us-ascii?Q?AqOzSpF9i0wDfy6ij6758eAtlJmuFcYdZ2BXsqtBFCBhMJ6f0nfcdShOf6qi?=
- =?us-ascii?Q?Xj4GVw3RL9kv014wZmnSAU9q4+wQ3CGxwnDqbkPkMAz/MwZgY0zk8A6ZLbT/?=
- =?us-ascii?Q?ja4jTNmR5YjrpnMq1dzuI37Zmq3lWyRs39pTftuh/6GdDLSydoG/VLV18cJp?=
- =?us-ascii?Q?r5bNw9pHw2t7mOmVvW+41vkGrgU70BBJqJnPsrUIupXAs7Od3FOSt9FMMo18?=
- =?us-ascii?Q?xRpCyIE1Zn4zPEYxGdJJDKvHgKomdjlkPNavELqvV+J6aZYfzvghcntIehcN?=
- =?us-ascii?Q?0nNfh6J38A4sqIW4xY5ki1CXW0Nvz3fKv5zOnBhK0ZuH0lnaAE/0m4CMjAZu?=
- =?us-ascii?Q?xEYRriojrSpqFcqVNlQWokq3ry/WJo07LhjHXxuw0EdfZukMz/l0ugCVRmdT?=
- =?us-ascii?Q?BUNlbDUY6dfypAbQhhjoIsQ2KxS+jWbPT3/R0d0bSrlSrpwdzHwPQru/fa1u?=
- =?us-ascii?Q?HrmC1XNtYpSdr7HnS62btYqiiMLFNEVi?=
+	=?us-ascii?Q?Kda6xH05GM7jHGUHPFk3Uuff4R17YXP8RNwH/zfHtCk1Qc74zXTH20DSW7bt?=
+ =?us-ascii?Q?G7KxBIgvjO0FkGgSjS9tUWBwln/Xi5rEYGIalo2X5s7cVoseclynBc2P/2EK?=
+ =?us-ascii?Q?YFN3twHurqSt2shQoREzbqIev4B4dqa/k5OG7Z1CZEHkDzyvGuuF3tLGqsnb?=
+ =?us-ascii?Q?FT2YEkw+xFSD+J/lQwv7fkjngE2fsOIb97+QiN/U8kHOLaS1A+FDKQRgl9aN?=
+ =?us-ascii?Q?49UTvo2CQ8AsRIif+0iqjrwS2F+ZmZJY7o1U4vgTFsvLwAPBTfvlAxEFwWcm?=
+ =?us-ascii?Q?k4xxpAw9d1FJJKFWY71Q7dnARTyKkIAkaRHP91xHEhXNdLdjR8fn8n+1Rs3E?=
+ =?us-ascii?Q?gHDLIgj01aPmAo/r/H0zcsRzV8F4O1lZkydZKbj6e847IwZOq3CuzltdLXAc?=
+ =?us-ascii?Q?nAPy0TO5gsvLLAfKP0UD/TLpgjiJnj28TjN7foC0tkd9+HzBd2uf+WVkqsEz?=
+ =?us-ascii?Q?WAOzeXDT9z2CQwIXJXtewmggTl3UIA0l6OlkWsPMjLf8i9ST2MMiAAPqEVCq?=
+ =?us-ascii?Q?hH4FVizoaBJeWIm47gW08ahiDDMZS9lLCQ+mXerair2GvosL/PIc9Z5g+oNk?=
+ =?us-ascii?Q?CrtEYIY/6UYFCQzmmWO8aCvrr+Oo8aV0vmCVsR3eF1Hlmc3wrVFmsXPHkvRv?=
+ =?us-ascii?Q?vjAyHGrdnSeq/N5LJAuWWlnImpCG+rd+hdvxnNvd+d02fLDELx+2npn14mm/?=
+ =?us-ascii?Q?kYk1iOoFHf+7Bb+7a4YS0WuNgKRS5fFa58T1ppa8UMjDWRlpp/sxeCYM7SWf?=
+ =?us-ascii?Q?VjvXOFUaKy3Lw3Zhogrudi8cZi4dmf7N7sdg2UvSBnX1Xp7GvZfjFkacqy2W?=
+ =?us-ascii?Q?iIdatJ1sVzRgfQw9+tYNADBeEmRrfiON1Mf/DWV2xZwPPPzvp81pkNaJb0yi?=
+ =?us-ascii?Q?FVXKa22RN647mzBVLb8pzj5ScDFnVlr5v6bqvTQnjXfFjxrePNjCAs3kUy/o?=
+ =?us-ascii?Q?dEj5+M8/UM91ikgHh80GLb1pnkH0O/8fIZ5SdlfcjEvzlVBdDM/GQbqqu5rM?=
+ =?us-ascii?Q?mve3uo9k0MXpVbed2+YIU4hAP/Q58iN8/rOZ0hArk5BTbCnBfxipDwohNBRU?=
+ =?us-ascii?Q?7IMC5YrVNITNq7y1mFvAixeUORd1+5IV4+259qpiCQERXdnaZI+e9+OcBM+2?=
+ =?us-ascii?Q?koYalxtF/rd8mnKJlEbB+jgGv0AbGJcf2Zq399tTr8Za2KVCyrS4QBG5jQrZ?=
+ =?us-ascii?Q?Ka4LUrChw2iFT+9k3fkV9j/U6c8SQCzkSQZfNlq360vjNhognYPNmOVxTnSU?=
+ =?us-ascii?Q?WIP8Z1r2X5UtZNAaCnDLdxagOjee375Fq1T0R2X+5efbh8MHkjrEHr0rHP+E?=
+ =?us-ascii?Q?7E/2mSoSYGsVZTYRnIRxBOzoypzHiOiPlbmPIsVlDdi6WMllGStEE6sXsa9M?=
+ =?us-ascii?Q?PA4wB4/Dp0jkCkNwW95hvgfqLkDPuu7APKTN07zunzs4rCbZ+uGD1mLj/PWc?=
+ =?us-ascii?Q?E6GHJMniH+32z8QBz6Aq2Dge7Fv2R64S?=
 X-OriginatorOrg: sct-15-20-9412-3-msonline-outlook-fe3f5.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: ae0c49a7-2f32-45cc-cf7f-08df0c6fcbd0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7b61a61d-7b48-4a39-057d-08df0c7082e7
 X-MS-Exchange-CrossTenant-AuthSource: AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2026 23:37:21.3205
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2026 23:42:28.4308
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -128,85 +131,63 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXP251MB0113
 
-wilc_wlan_handle_rx_buff() parses a firmware DMA receive buffer
-containing multiple packets.  The header, packet length, packet
-offset, and total-length fields are all read from firmware-provided
-data without validating them against the remaining buffer size.
+mm81x_yaps_read_pkt() casts skb->data to struct mm81x_skb_hdr and
+accesses header fields without first verifying that the skb contains
+enough data for the header structure.  A malformed device response with
+a valid YAPS delimiter but undersized payload would cause out-of-bounds
+reads from heap memory.
 
-A malformed or corrupted receive buffer can cause out-of-bounds reads
-in three ways:
+Additionally, the function computes the expected packet length from
+header-embedded fields (hdr->offset and hdr->len) but never checks
+this against the actual skb length.  Since skb_trim() only shrinks, a
+claimed length exceeding the real data is silently accepted, and the
+subsequent __skb_pull() in the dispatch path underflows skb->len.
 
-1. The 4-byte packet header is read with get_unaligned_le32() when
-   fewer than 4 bytes remain in the buffer.
+Add two validation checks:
+1. Verify skb->len >= sizeof(struct mm81x_skb_hdr) before accessing
+   any header fields.
+2. Verify the header-claimed total length does not exceed the actual
+   skb length before enqueuing.
 
-2. For management frames, HOST_HDR_OFFSET + pkt_len bytes are accessed
-   past the current offset without checking they fit within tp_len.
-
-3. For data and config frames, pkt_offset + pkt_len bytes are accessed
-   without similar bounds checks.
-
-The do-while loop condition (offset < size) is insufficient because it
-does not guarantee that a full header or packet body fits in the
-remaining bytes.
-
-Fix by:
- - Converting the do-while to a while loop that ensures at least
-   sizeof(u32) bytes remain before reading the header.
- - Checking tp_len against the remaining buffer size.
- - Validating pkt_len against tp_len for management frames
-   (accounting for HOST_HDR_OFFSET).
- - Validating pkt_offset and pkt_len against tp_len for data
-   and config frames.
-
-Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
-Cc: stable@vger.kernel.org
+Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
 Signed-off-by: Aamir Ahmed <elb12345@hotmail.co.uk>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/morsemicro/mm81x/yaps.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 4b116fe6f9ea..3ebcd688f2dd 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -1111,7 +1111,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 	int is_cfg_packet;
- 	u8 *buff_ptr;
+diff --git a/drivers/net/wireless/morsemicro/mm81x/yaps.c b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+index e98a2a58726f..da2c88901d64 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/yaps.c
++++ b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+@@ -147,6 +147,13 @@ static int mm81x_yaps_read_pkt(struct mm81x_yaps *yaps, struct sk_buff *skb)
  
--	do {
-+	while (offset + sizeof(u32) <= size) {
- 		buff_ptr = buffer + offset;
- 		header = get_unaligned_le32(buff_ptr);
+ 	__skb_queue_head_init(&skbq);
  
-@@ -1123,11 +1123,19 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 		if (pkt_len == 0 || tp_len == 0)
- 			break;
- 
-+		if (tp_len > size - offset)
-+			break;
-+
- 		if (pkt_offset & IS_MANAGMEMENT) {
-+			if (tp_len < HOST_HDR_OFFSET || pkt_len > tp_len - HOST_HDR_OFFSET)
-+				break;
- 			buff_ptr += HOST_HDR_OFFSET;
- 			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len,
- 					 pkt_offset & IS_MGMT_AUTH_PKT);
- 		} else {
-+			if (pkt_offset > tp_len ||
-+			    pkt_len > tp_len - pkt_offset)
-+				break;
- 			if (!is_cfg_packet) {
- 				wilc_frmw_to_host(wilc, buff_ptr, pkt_len,
- 						  pkt_offset);
-@@ -1148,7 +1156,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 			}
- 		}
- 		offset += tp_len;
--	} while (offset < size);
++	if (skb->len < sizeof(*hdr)) {
++		dev_err(mors->dev, "packet too short for header (%u < %zu)",
++			skb->len, sizeof(*hdr));
++		ret = -EINVAL;
++		goto exit_return_page;
 +	}
- }
++
+ 	hdr = (struct mm81x_skb_hdr *)skb->data;
+ 	if (hdr->sync != MM81X_SKB_HEADER_SYNC) {
+ 		dev_err(mors->dev, "sync value error [0xAA:%d], hdr.len %d",
+@@ -186,6 +193,14 @@ static int mm81x_yaps_read_pkt(struct mm81x_yaps *yaps, struct sk_buff *skb)
+ 	}
  
- static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 	skb_len = sizeof(*hdr) + hdr->offset + le16_to_cpu(hdr->len);
++	if (skb_len > skb->len) {
++		dev_err(mors->dev,
++			"header claims %d bytes but packet is only %u",
++			skb_len, skb->len);
++		ret = -EINVAL;
++		goto exit_return_page;
++	}
++
+ 	skb_bytes_remaining = mm81x_skbq_space(mq);
+ 
+ 	if (skb_len > skb_bytes_remaining) {
 -- 
 2.43.0
 
