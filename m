@@ -1,61 +1,59 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF6D17C203
-	for <linux-wireless@vger.kernel.org>; Sun,  6 Sep 2026 02:42:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92AD310784;
+	Sun,  6 Sep 2026 03:07:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788662556; cv=none; b=tdy9AB6FxnguOyrSuzNdZDHwsK1N+LNej1FZeXZbEMf/aoyihbWywCZ1qGgq9w8Y0TCyKl3hQtMHuHEQiitVCJsVrmbT0NSt3flEcDYtiwgvEDcNB6p96jAeCzYYBxokmvQUYXpL+5WcxLw4eriY0TFAir9Xopnzdh7TFkVJBWE=
+	t=1788664049; cv=none; b=Ap2r6hSYR181rkY5022FnJ8thQ4vQ/zjncq/97W6qbrrh4Ny83+BgeAJ/OQEfNyqKt6n0ihNyiEVFU697b/HVMBKUa+BOceCLHGIAWAqDkPWMU+qsU/k8WLPmYETlTxHKMHhFWvqVdyS1coAcQuN6EoLXFsqUK9vMjJrLwTvSok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788662556; c=relaxed/simple;
-	bh=6kIDuePJVRjtAcgl1iwx6ulfKrRsgD6jZuu3eZNqtBk=;
+	s=arc-20240116; t=1788664049; c=relaxed/simple;
+	bh=s0kqTMAn+RuT8RtrzujibazkTEJeZK6Yu5sX3Ozfops=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=tuCaizwOM1v+RetqSV6bVJO640UMcVCRgiw8E8Q4prO7umkaVjY0CKc53ALczwLgeFQtVWhxJIGmsS/gh5cdOmpiz0uvakj0N1MFgaa3l5PxQpBQRiajOWM99AuyHV4i7cCr6IPuHWRujOKFJ4Whuf4Hwqg9yAfA429w7xh2cjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=H92tzadh; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=I/OeDXm2e8ZdCE7NFU+qrV4n0kQrwgacg75U+EoRHI6RmPdcEUvwFXdgRB3AeSwRMZzO+qod1EptbAVMdU5P/gPt0SFzGiXNTz6XXUdYQxjf+rKKjvZ3Nx8+CIfWgCGqA8Pyqy4zK6MbfRWU8f1Qn33WxR+u/0Eq/vJ8F3AyWm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Pn1HjCUq; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="H92tzadh"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6862gUomD1591723, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Pn1HjCUq"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68637JnnC1599463, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788662550; bh=xSQkd5i9LDz98I1xpXkr08c2ncyTsqRcraO4bo0fzsE=;
+	t=1788664039; bh=AwALmqCFQoGfbpaeExzkavyaY388OD4xrWSxkXSl1Cs=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=H92tzadhzYOPsTHHGEpZDzOTwkYo+K7kO+aFALmtypiPPaPM5goy3DiT9bTauy9du
-	 EkIAuSVZ8CkCjsFEYQsU2RfJM+KBmUtcLoAZpP039BiA5tbQm2gH3O1Ir4z8k3AD0g
-	 utHHMevRaQj/1jHrCufwLhAImkxTVmLruAZtY8NyA/8+pCQW8RXlmjY9rD+0tcxfvB
-	 e0Sxp9S3RTS1hGFDhfP1MVZ6Fwvr5LgjqK0/UgDgj9q9QfK3vU90Lyl9AqWVHtTw0a
-	 EGzO9KT6KhdFXL4A/EGAyOfX0M2Q+QCwY43lc8qnGhmxrfW8qFoK756lYRMKuXUJw2
-	 3r/8ja4mt4O7g==
+	b=Pn1HjCUqf36xNB4QqtDQr4NQ3E/zLy9bTNr+Kd3540g5cpG4cP5p4SMpFofjbeWx6
+	 hqW5rAVAEA5sPmcuSsDO2CqwslhWpjwMlh5m4a+JqQ4NM/6yVFUn/kCyKWWzgvzPr7
+	 7HQcBkN4xqOizoKnzIbjLrMFFp5HeRvKifwHh2Q1hKbAF8iBaAhBbplnNTdQ7pYYAr
+	 pS4fevhWqJJQTvXotIS2V27pTsPSgsVgeVtnpZPUUourQg6Eo64m4GvdQRRN4Z61xr
+	 HscXW5uXhxSIrUeZSxWEi8RKvJxiV3/1Lw865cpZh0rlxnaisJBTzJbX+AdTo8cj+P
+	 mfGnrqdzuAxIg==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6862gUomD1591723
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68637JnnC1599463
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 6 Sep 2026 10:42:30 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+	Sun, 6 Sep 2026 11:07:19 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Sun, 6 Sep 2026 10:42:30 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Sun, 6 Sep 2026 10:42:30 +0800
+ 15.2.2562.43; Sun, 6 Sep 2026 11:07:19 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Sun, 6 Sep 2026 10:42:30 +0800
+ 15.02.2562.043; Sun, 6 Sep 2026 11:07:19 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: andres parra <andres.parrab@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC PATCH 0/4] wifi: rtw89: add NL80211_IFTYPE_P2P_DEVICE
- support
-Thread-Topic: [RFC PATCH 0/4] wifi: rtw89: add NL80211_IFTYPE_P2P_DEVICE
- support
-Thread-Index: AQHdMl2v7tQ2zv4uLUO5Yj5iw+rPVLav6JQwgAgPEICACPKoQA==
-Date: Sun, 6 Sep 2026 02:42:30 +0000
-Message-ID: <6f1348e20ecd4df383904c5225cd0954@realtek.com>
-References: <20260822174229.65643-1-andres.parrab@gmail.com>
- <fe4778c07f644ed38a03c467ef1293d7@realtek.com>
- <20260831175044.208200-1-andres.parrab@gmail.com>
-In-Reply-To: <20260831175044.208200-1-andres.parrab@gmail.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+CC: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mehmet Fide
+	<mehmet.fide@screeningeagle.com>
+Subject: RE: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the
+ high queue only for DTIM delivery
+Thread-Topic: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the
+ high queue only for DTIM delivery
+Thread-Index: AQHdK66WOfaBclcfS0e15NhvFyIcILazZGiAgAXJeAD//9pbAIAH9LaQ
+Date: Sun, 6 Sep 2026 03:07:19 +0000
+Message-ID: <070f9724ca4a42a0b64bbf63724d8cdc@realtek.com>
+References: <9209280c3f044363afd884687ae3cb6b@realtek.com>
+ <20260901091830.2506562-1-mehmet.fide@gmail.com>
+In-Reply-To: <20260901091830.2506562-1-mehmet.fide@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -67,62 +65,83 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-andres parra <andres.parrab@gmail.com> wrote:
-> On the two things I asked about:
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
+> > The HIQ packets only send out right after beacon within ATIM
+> > window controlled by REG_ATIMWND (0x055A). Can you try to
+> > enlarge the size to see if it will be different?
 >=20
-> 1. Cross-band cost: confirmed reproducible with your patches too, and
->    it matches your explanation exactly -- forced the STA link onto
->    5GHz while the P2P-Client link stayed on 2.4GHz (same channel it
->    started on), and casting became noticeably choppier, then smooth
->    again once STA moved back to 2.4GHz. Consistent with TDMA timeslot
->    sharing rather than a bug in either patch set.
+> It makes a dramatic difference. Same storm, only REG_ATIMWND changed:
+>=20
+>   0x02 (default)  pool 1803 -> 16 in ~105 s, pinned  (reproduced twice)
+>   0x04            pool never leaves 1803 over 180 s
+>   0x08            same, never drops
+>   0x10            same, never drops  (reproduced twice)
 
-It depends on the bandwidth the casting needs.=20
-
-The TDMA timeslot is assigned according to TBTT of AP and GO, but the
-DUT (RTL8922AE) plays STA and GC, which he has no way to arrange a
-good TBTT to yield 50/50 timeslot for 2/5GHz bands.
-
-Which means if DUT is STA and GO, it will try it best to share the
-timeslot for two roles.
+FYI. I checked vendor driver. Normally REG_ATIMWND sets 0xa or 0xc in AP mo=
+de
+for chips.
 
 >=20
-> 2. Same-band channel-switch disconnect: reproduced it with your
->    patches too, while writing this email. My AP did a real, ordinary
->    channel switch on the STA link (CTRL-EVENT-STARTED-CHANNEL-SWITCH
->    -> CTRL-EVENT-CHANNEL-SWITCH, 2462 MHz -> 2412 MHz, i.e. channel 11
->    to channel 1, both 2.4 GHz),
-
-Do you know why your AP want to switch from channel 11 to channel 1?
-Or you manually control it to do so?
-
->    while the P2P-Client link was still
->    active on channel 11. Result, same signature as with my own patch:
+> > Is it possible to declare IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and
+> > call ieee80211_get_buffered_bc() to get the BC packets to send?
 >=20
->      p2p-wlanX-Y: CTRL-EVENT-BEACON-LOSS
->      p2p-wlanX-Y: CTRL-EVENT-DISCONNECTED bssid=3D<GO> reason=3D4 locally=
-_generated=3D1
->      P2P-GROUP-REMOVED p2p-wlanX-Y client reason=3DIDLE
+> I looked at how the existing users time the release. ath9k_htc can do
+> it on USB only because its firmware sends an SWBA event at beacon time
+> (WMI_SWBA_EVENTID) and the driver pulls the buffered frames from that
+> handler; rt2500usb has no such event and explicitly refuses to set the
+> flag for that reason (see the comment in rt2500usb_probe_hw_mode).
+>=20
+> Interestingly, the firmware seems to already have the needed event: the
+> vendor driver enables a beacon-early C2H report through a bit in the
+> SET_PWR_MODE H2C (SET_H2CCMD_PWRMODE_PARM_BCN_EARLY_C2H_RPT, C2H id
+> 0x1E), though it only uses it for TDLS channel switching, i.e. in a
+> station power-save context. Do you know whether that report also works
+> in AP mode on the USB chips, and fires early enough to pace
+> ieee80211_get_buffered_bc()? If it does, this becomes the clean
+> long-term solution and I would be happy to prototype it.
 
-In our side, the setup below can work with RTL8922AE firmware v0.35.115.2
-(not release yet; and it will be public soon)
+As you saw it is for TDLS channel switching (timeslot sharing), I
+don't think it can work in AP mode...
 
-PC#1  (AP)
-   wls1 -> softap (ch 11)
-   hostapd_cli wls1 ... [A]
-PC#2  (GO)
-   wpa_cli p2p-dev-wls1 p2p_group_add -> [p2p-wls1-0] p2p-GO (ch 11)
-   wpa_cli p2p-wls1-0 ... [B]
-PC#3  (STA + GC)
-   wpa_cli wls1 -> connect to PC#1 sotap
-   wpa_cli p2p-dev-wls1 ... [C]
-   Then,
-   make p2p connection via [B] and [C] -> PC#3 becomes SCC (ch 11 + ch 11)
-=20
-   Finally,
-   set chan_switch via [A] -> PC#1 becomes ch 1 -> PC#3 becomes MCC (ch 1 +=
- ch 11)
-   (chan_switch <cs_count> <freq>)
+I will ask USB experts internally to see if there is an interrupt
+to notify driver about TBTT (or beacon early).=20
 
-Ping-Ke
+>=20
+> For what it is worth, the vendor driver does not use any beacon event
+> for bmc delivery on USB either: it parks at most one filtered burst in
+> the high queue, lets the hardware pace it out after the DTIM beacon,
+> and refills only when the queue reads back empty - in other words, its
+> real protection is a hard bound on high queue occupancy, which is what
+> patch 1/2 below brings to rtw88.
+>=20
+> > Maybe, check bound first, and then filter ?
+>=20
+> Agreed. Here is how I would combine the four knobs:
+>=20
+>   - bound (patch 1/2): hard cap on how many bmc frames may sit on the
+>     high queue (token bucket refilled at what the default window
+>     drains, overflow goes out on the AC queues awake-style). This is
+>     the guarantee: the pool stays healthy under any storm, including
+>     the ARP/DHCP bursts the filter admits.
+>   - filter (patch 2/2): admit only ARP, EAPOL and DHCP to the high
+>     queue, matching the vendor driver's default. Ordinary chatter never
+>     reaches the beacon-paced path, so the bound rarely engages.
+>   - ATIM window: given the measurements, a moderate raise (0x04
+>     already drains this storm, 0x10 gives headroom) would add drain
+>     capacity as a complement. I left it out of the series for now
+>     because the queue stays unbounded either way and a wider window
+>     costs every PS station awake time after each DTIM - I assume that
+>     is why the vendor driver keeps it small and filters instead. If
+>     the firmware is fine with a larger window on these chips I can add
+>     it as a third patch; is 0x055A safe to raise across the USB chips?
+
+I think yes. The in AP mode, the value is 0xa or 0xc no matter which
+HCI type is.
+
+>   - mac80211 BC buffering: the long-term correct PS delivery, gated on
+>     a beacon-time event as above; follow-up work, not part of this
+>     series.
+
+I will check internally to see if USB has an interrupt for TBTT.=20
+
 
