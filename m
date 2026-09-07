@@ -1,63 +1,201 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB09B503BE1
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 17:35:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308E12BDC1C
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 17:41:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788802514; cv=none; b=YFPoPGwqtk+JIl88kBF3HLlTNp0jpf2gpQ++AxdzXFWkN2ZNVd82lVwCz7OR1wa6m7Ca/Pq3BInTKdg6JWfN803G+IhPA/FrKd7YZYjbhutzMQsaYnWza43Y6zOsIC/Ccg5mmKWC2fsIp1l1n5shJUkkkSl8C3o5cFvf2z6GrG0=
+	t=1788802893; cv=none; b=cpaDnXGdgvis3iQkNwALgtjYs+/x5lF2W9pTapH/N2Kx3xExG+xj4ePywIjR2mE5gHbPtQhkNd0/PqBBgMUeeC4rsXIuSzZUGcKXf+g97hA6OZXUUIXgiMKRdM8pEq9LGTb3GVI5ONqYcMJgJ09XksXN6TO8K36w9cL2RBGG6oM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788802514; c=relaxed/simple;
-	bh=uFwMwQUmfSyN8MkklpTLqIS0+8gt174wQ2LH581bNa0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pz2qfiepO2qZa6VmOLkOCS2FTG8xjkFN5bNgl4eK8lm4LPwspWPyE3nawA3fMqs7XXRsgNMIUb4QVA7yhtTbhn+0TCNM00eSfJlY0Mq948i8bDgYqo+hT4Mi3zjIEq0z4yye6jTIqj02EAhvYbp98LerzWL72Nyqeu0V7b2TNKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=J+E6fgE1; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788802893; c=relaxed/simple;
+	bh=of48Zn3QG9OYX8GAvL5SV6+iszJ6IbVmTNPc/HsZkX8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=hy1r2J83otngqH5fae/c0bpUw8jhxp045WjPvXMYfUv+gePBkxaItEzZ3roOt1luMAjzsbQBOSOoZcHZnktytUqVMCrUOX98bBdS3zoDSELZGhjJ2j225enJbbQhEDBEUEesHtZBEN2cbEAQ9J6+CcguOODnCnn3umtZ8bi1YWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g002GSmI; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="J+E6fgE1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=uFwMwQUmfSyN8MkklpTLqIS0+8gt174wQ2LH581bNa0=;
-	t=1788802512; x=1790012112; b=J+E6fgE1pM/ZDOZGX6f0XCPP325R5L9y5Trpwc3qL2DWOr5
-	LowXuAEnCNmMPWw+s4KR/DkMM48mT45T+ZLK/m/JcqrJkbbgcJL6BZQN7cjDTZRwj158Ykf7IeyjE
-	5Vb4x7rPhzjTDit63m7hM39H2OcFyJCvxd3Zlt8GCZtFiETDANLTrxChHB+85a2oKqvFde2/Zr05Y
-	5+nlxT+m0wOBJJmNwAnicgaszT3VdAyZmpbbno/6hpQBq+esObpoGyfLxT68Mm/icR1w4YYItTynR
-	fKaz5Oldtdwn2EJ5sNejzmfXTkOmOq25kCGg5zMsapYyNzZQzS2G3mSdkfWzeDjA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3dFN-00000004lxm-1Ikx;
-	Mon, 07 Sep 2026 19:35:09 +0200
-Message-ID: <497398008538f1be822d348bb80c726ebb0184be.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless 1/2] wifi: cfg80211: add
- NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: linux-wireless@vger.kernel.org, Andrei Otcheretianski
-	 <andrei.otcheretianski@intel.com>
-Date: Mon, 07 Sep 2026 19:35:08 +0200
-In-Reply-To: <20260907203545.2185380c2557.Ice8839058e114f6f9783079807df446388187dda@changeid>
-References: 
-	<20260907203545.2185380c2557.Ice8839058e114f6f9783079807df446388187dda@changeid>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g002GSmI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788802892; x=1820338892;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=of48Zn3QG9OYX8GAvL5SV6+iszJ6IbVmTNPc/HsZkX8=;
+  b=g002GSmIXBmPEa+NACdETgi5fD+KyKm4mrVuTrtSx1i+ALD8JFxqVgfT
+   9NA5/1bJeaTRYYsL2v7tB/pe5vsD7j5xdMV87e/V1mZ9EE70m5J5r1qH6
+   yilWXXZiFQIBiVGYCaCX87sPXvVU4OSDo4Ym8c3qR8PPyJOjIbBd/bxSJ
+   EzOqkDKQQbFyQTWjebqDfqCVweRP/ClzV/wuwj0GQyrWhU3HOnqFIJxNH
+   sy0wwmprO51+sv94FdBhE94Oze5nIbjdm25M04v/GHTwiElVmwWdzUjji
+   y3FUy+CKjotxxwqowWXzClaVmR8SsvXwLCX/Fj72bntfS9N9TSFdp2WSi
+   A==;
+X-CSE-ConnectionGUID: hbhdJpatSD+eXY8cU4ByBA==
+X-CSE-MsgGUID: uPCtXOpIQPaH3LPwZvHJAQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="92908470"
+X-IronPort-AV: E=Sophos;i="6.25,267,1779174000"; 
+   d="scan'208";a="92908470"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:32 -0700
+X-CSE-ConnectionGUID: O/UfmoS1Q6KgrMHb9ofiKg==
+X-CSE-MsgGUID: UD7LCo5lQK2edfL1QmXgUA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,267,1779174000"; 
+   d="scan'208";a="264573260"
+Received: from weis0040.iil.intel.com ([10.12.217.108])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:30 -0700
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 wireless-next 2/2] wifi: mac80211: implement NAN non-evacuable channels
+Date: Mon,  7 Sep 2026 20:43:30 +0300
+Message-Id: <20260907204319.4a1413ac7687.I38b685378c3557679ed6387922a94a7da821555c@changeid>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260907204319.2185380c2557.Ice8839058e114f6f9783079807df446388187dda@changeid>
+References: <20260907204319.2185380c2557.Ice8839058e114f6f9783079807df446388187dda@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2026-09-07 at 20:35 +0300, Miri Korenblit wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->=20
-> Add a new NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS command that lets user
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-I'm not taking a whole new API to wireless, that's not what it's for.
+Implement the nan_set_non_evac_channels operation in mac80211. It marks
+the provided channels as non-evacuable in the current local schedule and
+clears the flag on all other channels. All provided channels must exist
+in the current schedule, otherwise -ENOENT is returned.
 
-johannes
+ieee80211_nan_find_evac_chan() skips channels marked as non-evacuable
+when selecting a channel to evacuate for concurrent operations.
+
+Fixes: 42c9de58d990 ("wifi: mac80211: add NAN channel evacuation support")
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ include/net/mac80211.h     |  2 ++
+ net/mac80211/cfg.c         | 13 +++++++++++++
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/nan.c         | 33 +++++++++++++++++++++++++++++++++
+ 4 files changed, 50 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7bb4618065b6..33ff018c33ec 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -923,12 +923,14 @@ struct ieee80211_bss_conf {
+  * @channel_entry: the Channel Entry blob as defined in Wi-Fi Aware
+  *	(TM) 4.0 specification Table 100 (Channel Entry format for the NAN
+  *	Availability attribute).
++ * @no_evacuate: if set, this channel must not be evacuated
+  */
+ struct ieee80211_nan_channel {
+ 	struct ieee80211_chan_req chanreq;
+ 	u8 needed_rx_chains;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	u8 channel_entry[6];
++	bool no_evacuate;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 23f4f9ec86d0..cdcf1f057707 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -5973,6 +5973,18 @@ ieee80211_set_peer_nan_sched(struct wiphy *wiphy,
+ 	return ieee80211_nan_set_peer_sched(sdata, sched);
+ }
+ 
++static int
++ieee80211_set_nan_non_evac_channels(struct wiphy *wiphy,
++				    struct wireless_dev *wdev,
++				    struct cfg80211_nan_non_evac_channels *channels)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++	lockdep_assert_wiphy(wiphy);
++
++	return ieee80211_nan_set_non_evac_channels(sdata, channels);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -6091,4 +6103,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_epcs = ieee80211_set_epcs,
+ 	.nan_set_local_sched = ieee80211_set_local_nan_sched,
+ 	.nan_set_peer_sched = ieee80211_set_peer_nan_sched,
++	.nan_set_non_evac_channels = ieee80211_set_nan_non_evac_channels,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 53b0b08d3459..929fc8930a35 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2087,6 +2087,8 @@ int ieee80211_nan_set_local_sched(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_nan_local_sched *sched);
+ int ieee80211_nan_set_peer_sched(struct ieee80211_sub_if_data *sdata,
+ 				 struct cfg80211_nan_peer_sched *sched);
++int ieee80211_nan_set_non_evac_channels(struct ieee80211_sub_if_data *sdata,
++					struct cfg80211_nan_non_evac_channels *channels);
+ void ieee80211_nan_free_peer_sched(struct ieee80211_nan_peer_sched *sched);
+ void ieee80211_nan_update_ndi_carrier(struct ieee80211_sub_if_data *ndi_sdata);
+ struct ieee80211_nan_channel *
+diff --git a/net/mac80211/nan.c b/net/mac80211/nan.c
+index 19e08661be43..38bd105121ac 100644
+--- a/net/mac80211/nan.c
++++ b/net/mac80211/nan.c
+@@ -248,6 +248,35 @@ ieee80211_nan_find_free_channel(struct ieee80211_nan_sched_cfg *sched_cfg)
+ 	return NULL;
+ }
+ 
++int
++ieee80211_nan_set_non_evac_channels(struct ieee80211_sub_if_data *sdata,
++				    struct cfg80211_nan_non_evac_channels *channels)
++{
++	struct ieee80211_nan_sched_cfg *sched_cfg = &sdata->vif.cfg.nan_sched;
++
++	/*
++	 * cfg80211 already validated that all provided channels belong to the
++	 * current schedule, so just clear all non-evacuable flags and set the
++	 * ones in the list.
++	 */
++	for (int j = 0; j < ARRAY_SIZE(sched_cfg->channels); j++)
++		sched_cfg->channels[j].no_evacuate = false;
++
++	for (int i = 0; i < channels->n_channels; i++) {
++		for (int j = 0; j < ARRAY_SIZE(sched_cfg->channels); j++) {
++			if (!sched_cfg->channels[j].chanreq.oper.chan)
++				continue;
++			if (cfg80211_chandef_identical(&sched_cfg->channels[j].chanreq.oper,
++						       &channels->chandefs[i])) {
++				sched_cfg->channels[j].no_evacuate = true;
++				break;
++			}
++		}
++	}
++
++	return 0;
++}
++
+ int ieee80211_nan_set_local_sched(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_nan_local_sched *sched)
+ {
+@@ -786,6 +815,10 @@ ieee80211_nan_find_evac_chan(struct ieee80211_local *local,
+ 
+ 		usable_channels++;
+ 
++		/* No-evacuate channel is usable but cannot be evacuated */
++		if (chan->no_evacuate)
++			continue;
++
+ 		chan_ctx = container_of(chan->chanctx_conf,
+ 					struct ieee80211_chanctx, conf);
+ 
+-- 
+2.34.1
+
