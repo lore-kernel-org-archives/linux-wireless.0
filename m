@@ -1,55 +1,54 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0039C1DB92C
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 17:41:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C97D42BDC1C
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 17:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788802893; cv=none; b=HF/Nvgva/DhqJFfCJMBZhLNNkLc0cKFhpG7YpApBTgoKzkfqyy7SgwFa0bV6D2Nef1yf1k1+biyuacWQxgrJdBhlPJ1mJUOoPZJ3bnpQRFlMwWfE5OHfyqM7NPLZXvl0yFjmjgb0LBFHAafAw5MvP6lZFTY0DIkXSW6Eb7upSxs=
+	t=1788802919; cv=none; b=uOUhQXYo+Sfhmam2j5icifudFr3fmYunj+ozN6TXJ1GAWRf8g+X2AG/7/wi9WgXvTdjjKqTMbNSV/j3QwvCmX5NOPi95h58sUFcD6o/nra0oSSFShntqtZ1LdCLO9OGiODWEQEIoiXJigUtc+SWBXZ33KwlmXjEDbtg3Xsu/n+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788802893; c=relaxed/simple;
-	bh=A+zDF/qJok5Q0B1CCoPFZROu/mZRWSPwwAcWb1aonrI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=um6bijDEmAugcYSEcoBcKkUOIZgzaaVqHBp22HChLhAxhPSstz4NDBaZfAN1c3ZN/BAxq2uBNMlvMeEZ6JSGgsKu6m/FhC0Vs3hw+fR/Nnnccb+Z0GNMyfwGxQN7rUt6mJ88wqQlGJcq5dTGFEmtzJxo9WuUoSsBUgeZMYkS1OI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ghAFR1gR; arc=none smtp.client-ip=198.175.65.15
+	s=arc-20240116; t=1788802919; c=relaxed/simple;
+	bh=d/c9dZg389lsp7GU5Lr7sEgc9Q3STScSfoKrrCIxtjc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=MP7/2bnrWJQlDUWTfF24NN9Kpncuun8C+nnLibNZA/xv3ldbcTe3GGDoBOEFgFvA4TBg6hAdkCWaLXeAg3a464QsSMmC21eO914Swkg/Ui5ATsZYIzFOLU8nLuJDtcU8QGnYqqdKyi5a+srOGtMQ1ZTTHNhsarEuL5/P3pw//b8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A3HCLy8M; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ghAFR1gR"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A3HCLy8M"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788802891; x=1820338891;
+  t=1788802918; x=1820338918;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=A+zDF/qJok5Q0B1CCoPFZROu/mZRWSPwwAcWb1aonrI=;
-  b=ghAFR1gRwQbwKxlWWrTGs8McuH0tm6RVTgEZ05q/jjoiDXNoBMNcPe9U
-   VYYV4Fn9PU9jw2ksqyKnxBWO+h0Ccr4GvcHdgoN91Rz22/BoGQzJ5lJv3
-   dvlueZffX/aM4qJUql1rVBDtx7nkL0FJLiicPjeVgba5h0HzmdV+6m4gU
-   /fV/sdej5K9QpgnkgfxM2wlBHa7UELuF+SwT1vbkTekktRTgyvKEoVUB1
-   /bztncBFRJPsaN4ynyYI3DUWcI7WGusEOVKwFQiybETtYTev95P/O6Ace
-   L+Bl1DWjiILGFFKxrXsPQ1+7X8JuBxsdrSkg3cW+jSJzZ6mF86iw0M/O3
-   w==;
-X-CSE-ConnectionGUID: efjTH2z0R6ayZByXMNMlYg==
-X-CSE-MsgGUID: wq2qScF6Q2qpHL6xSMH6Vg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="92908466"
+  bh=d/c9dZg389lsp7GU5Lr7sEgc9Q3STScSfoKrrCIxtjc=;
+  b=A3HCLy8Mr+O0qH7hXq9AyE7WVi9jFcjXO1JGdiu6ALwoghKf/djfqoYU
+   x/d+aQ3yx9fttp3huDQ/0dbIGdii8ftm7Hf8GgkkUyHxY7MIlWiDrZSdM
+   VygD//NB+gc2TQr5wl8AgHuBPojzlSjYC79JsS7gq/q3DlXpf2IsZHHkR
+   ZX5LwxniEzU6Qe36HTbr/JElA8L6ev/3qD8h6P0wN8UzO26JngNsSzlWV
+   JSSDLyBTm2VpDCxO49BWGvQkTAk7LIpC3KHHMVzgrjlAZ5dI9q4DucnGu
+   kMkZkzDMHhGV3FTtTMDzqwnP5Pl9O0PhvGxnSbfZgwayds+oQVx2BqzcJ
+   A==;
+X-CSE-ConnectionGUID: ywSU2cl6QBupX99JnxbWOA==
+X-CSE-MsgGUID: 4Ri2+xKmS3WEOmtEbvrh+w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="111981878"
 X-IronPort-AV: E=Sophos;i="6.25,267,1779174000"; 
-   d="scan'208";a="92908466"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:30 -0700
-X-CSE-ConnectionGUID: 4LGcbb+lQz6BX/QHOkJ4Ug==
-X-CSE-MsgGUID: tCRdMM0NSEqZWLRYFFR5rQ==
+   d="scan'208";a="111981878"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:57 -0700
+X-CSE-ConnectionGUID: QDuiY1VEQXqUBsGhVxUFPg==
+X-CSE-MsgGUID: rUtletlHRDu2TtOzJJ5czw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,267,1779174000"; 
-   d="scan'208";a="264573256"
+   d="scan'208";a="269452864"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:28 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 10:41:56 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 wireless-next 1/2] wifi: cfg80211: add NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS
-Date: Mon,  7 Sep 2026 20:43:29 +0300
-Message-Id: <20260907204319.2185380c2557.Ice8839058e114f6f9783079807df446388187dda@changeid>
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [PATCH wireless-next] wifi: cfg80211: fix NAN local schedule update ordering and allocation
+Date: Mon,  7 Sep 2026 20:43:57 +0300
+Message-Id: <20260907204351.a9a08f59fb8d.I0b45103342d4a911142a2325b9259258758a0670@changeid>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -62,351 +61,103 @@ Content-Transfer-Encoding: 8bit
 
 From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Add a new NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS command that lets user
-space mark a set of NAN channels as non-evacuable. The command carries
-the channels as nested NL80211_ATTR_NAN_CHANNEL attributes (chandef
-only) and replaces the entire set of non-evacuable channels; channels
-not included in the list become evacuable again.
+In cfg80211_nan_set_local_schedule(), after calling the driver,
+the old channel definitions were freed and only then the new ones were
+allocated and stored.
+This had two problems:
 
-All provided channels must already exist in the current local schedule,
-otherwise -ENOENT is returned. The command is rejected with -EBUSY
-while a schedule update is pending.
+ - On allocation failure the previous channel definitions had already been
+   freed while the driver had already applied the new schedule, leaving
+   the wdev with no channel definitions.
+ - If the driver completes a deferred schedule update synchronously,
+   the completion notification to user space fired before the new
+   channel definitions were stored, exposing an inconsistent state.
 
-This prevents the kernel from evacuating channels that carry NDC or
-immutable schedules, so evacuating these channels would break existing
-NDP connections.
+Allocate and fill the new channel definitions before calling the driver,
+swap them in, and roll back on failure. Also set the pending flag before
+the driver call so that a synchronous deferred completion can clear it.
 
-Fixes: 154b0296c0ec ("wifi: nl80211: Add a notification to notify NAN channel evacuation")
 Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- include/net/cfg80211.h       | 24 +++++++++++++
- include/uapi/linux/nl80211.h | 31 ++++++++++++++++
- net/wireless/core.c          | 35 ++++++++++++++++++
- net/wireless/core.h          |  4 +++
- net/wireless/nl80211.c       | 69 ++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 17 +++++++++
- net/wireless/trace.h         | 25 +++++++++++++
- 7 files changed, 205 insertions(+)
+ net/wireless/core.c | 53 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 19 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6461a7bd0169..59d76a0daf2c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4256,6 +4256,21 @@ struct cfg80211_nan_local_sched {
- 	struct cfg80211_nan_channel nan_channels[] __counted_by(n_channels);
- };
- 
-+/**
-+ * struct cfg80211_nan_non_evac_channels - NAN non-evacuable channels
-+ *
-+ * This struct defines the set of NAN local schedule channels that must not
-+ * be evacuated for concurrent operations.
-+ *
-+ * @n_channels: number of channel definitions in %chandefs.
-+ * @chandefs: array of channel definitions that must not be evacuated. Each
-+ *	must match a channel of the current local schedule.
-+ */
-+struct cfg80211_nan_non_evac_channels {
-+	u8 n_channels;
-+	struct cfg80211_chan_def chandefs[] __counted_by(n_channels);
-+};
-+
- /**
-  * struct cfg80211_nan_peer_map - NAN peer schedule map
-  *
-@@ -5204,6 +5219,12 @@ struct mgmt_frame_regs {
-  *	schedule, the full new schedule is provided - partial updates are not
-  *	supported, and the new schedule completely replaces the previous one.
-  *
-+ * @nan_set_non_evac_channels: set the list of local schedule channels that
-+ *	must not be evacuated for concurrent operations. The provided list
-+ *	replaces the previous set; channels of the current schedule that are
-+ *	not included become evacuable again. All provided channels are
-+ *	guaranteed by cfg80211 to belong to the current local schedule.
-+ *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-  *
-  * @get_txq_stats: Get TXQ stats for interface or phy. If wdev is %NULL, this
-@@ -5590,6 +5611,9 @@ struct cfg80211_ops {
- 	int	(*nan_set_peer_sched)(struct wiphy *wiphy,
- 				      struct wireless_dev *wdev,
- 				      struct cfg80211_nan_peer_sched *sched);
-+	int	(*nan_set_non_evac_channels)(struct wiphy *wiphy,
-+					     struct wireless_dev *wdev,
-+					     struct cfg80211_nan_non_evac_channels *channels);
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d8fefefc11a9..fb300b0c4a28 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1383,6 +1383,13 @@
-  *	from the device to perform an announced schedule update. See
-  *	%NL80211_ATTR_NAN_SCHED_DEFERRED for more details.
-  *	If not set, the schedule should be applied immediately.
-+ *	Setting a new schedule is always allowed and is never treated as an
-+ *	evacuation, even if it removes channels that were previously marked as
-+ *	non-evacuable with %NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS. The
-+ *	non-evacuable marking is a per-channel property of the schedule:
-+ *	channels that remain in the new schedule keep their marking, channels
-+ *	that are removed simply lose it, and newly added channels are
-+ *	evacuable by default.
-  * @NL80211_CMD_NAN_SCHED_UPDATE_DONE: Event sent to user space to notify that
-  *	a deferred local NAN schedule update (requested with
-  *	%NL80211_CMD_NAN_SET_LOCAL_SCHED and %NL80211_ATTR_NAN_SCHED_DEFERRED)
-@@ -1427,6 +1434,28 @@
-  * @NL80211_CMD_STOP_PD: Stop the PD operation, identified by
-  *	its %NL80211_ATTR_WDEV interface.
-  *
-+ * @NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS: Set the list of NAN local schedule
-+ *	channels that must not be evacuated. NAN must be operational
-+ *	(%NL80211_CMD_START_NAN was executed) and a local schedule must have
-+ *	been set (%NL80211_CMD_NAN_SET_LOCAL_SCHED). The command carries zero
-+ *	or more nested %NL80211_ATTR_NAN_CHANNEL attributes, each identifying a
-+ *	channel (by its channel definition) of the current local schedule that
-+ *	must not be evacuated for concurrent operations. The provided list
-+ *	replaces the previous set of non-evacuable channels; channels of the
-+ *	current schedule that are not included become evacuable again. All
-+ *	provided channels must exist in the current local schedule, otherwise
-+ *	the command fails. This is used to protect channels carrying NDC or
-+ *	immutable schedules, whose evacuation would break existing NDP
-+ *	connections.
-+ *	The non-evacuable marking is a per-channel property of the current
-+ *	local schedule and only affects evacuation for concurrent operations;
-+ *	it does not prevent the schedule itself from being changed. Removing a
-+ *	channel from the schedule with %NL80211_CMD_NAN_SET_LOCAL_SCHED is a
-+ *	user-initiated change, not an evacuation, and is allowed even for a
-+ *	non-evacuable channel. Across a schedule update, channels that remain
-+ *	keep their non-evacuable marking, removed channels lose it, and newly
-+ *	added channels are evacuable by default; issue this command again to
-+ *	change the non-evacuable set.
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1705,6 +1734,8 @@ enum nl80211_commands {
- 	NL80211_CMD_START_PD,
- 	NL80211_CMD_STOP_PD,
- 
-+	NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
 diff --git a/net/wireless/core.c b/net/wireless/core.c
-index d13310fef691..2f46243773f9 100644
+index 2f46243773f9..3e1d2c00b502 100644
 --- a/net/wireless/core.c
 +++ b/net/wireless/core.c
-@@ -325,6 +325,41 @@ int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
+@@ -288,6 +288,8 @@ int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
+ 				    struct wireless_dev *wdev,
+ 				    struct cfg80211_nan_local_sched *sched)
+ {
++	struct cfg80211_chan_def *chandefs = NULL, *old_chandefs;
++	u8 old_n_channels;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&rdev->wiphy.mtx);
+@@ -298,29 +300,42 @@ int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
+ 	if (wdev->u.nan.sched_update_pending)
+ 		return -EBUSY;
+ 
+-	ret = rdev_nan_set_local_sched(rdev, wdev, sched);
+-	if (ret)
+-		return ret;
+-
+-	wdev->u.nan.sched_update_pending = sched->deferred;
+-
+-	kfree(wdev->u.nan.chandefs);
+-	wdev->u.nan.chandefs = NULL;
+-	wdev->u.nan.n_channels = 0;
++	/*
++	 * Pre-allocate chandefs, so we don't ruin the current
++	 * schedule on allocation failure.
++	 */
++	if (sched->n_channels) {
++		chandefs = kcalloc(sched->n_channels, sizeof(*chandefs),
++				   GFP_KERNEL);
++		if (!chandefs)
++			return -ENOMEM;
+ 
+-	if (!sched->n_channels)
+-		return 0;
++		for (int i = 0; i < sched->n_channels; i++)
++			chandefs[i] = sched->nan_channels[i].chandef;
++	}
+ 
+-	wdev->u.nan.chandefs = kcalloc(sched->n_channels,
+-				       sizeof(*wdev->u.nan.chandefs),
+-				       GFP_KERNEL);
+-	if (!wdev->u.nan.chandefs)
+-		return -ENOMEM;
++	/*
++	 * Swap in the new chandefs before calling the driver and set the
++	 * deferred flag, so if the driver completes the update synchronously
++	 * the new schedule will be already in place.
++	 */
++	old_chandefs = wdev->u.nan.chandefs;
++	old_n_channels = wdev->u.nan.n_channels;
++	wdev->u.nan.chandefs = chandefs;
++	wdev->u.nan.n_channels = sched->n_channels;
++	wdev->u.nan.sched_update_pending = sched->deferred;
+ 
+-	for (int i = 0; i < sched->n_channels; i++)
+-		wdev->u.nan.chandefs[i] = sched->nan_channels[i].chandef;
++	ret = rdev_nan_set_local_sched(rdev, wdev, sched);
++	if (ret) {
++		/* Restore the previous schedule on failure */
++		wdev->u.nan.sched_update_pending = false;
++		wdev->u.nan.chandefs = old_chandefs;
++		wdev->u.nan.n_channels = old_n_channels;
++		kfree(chandefs);
++		return ret;
++	}
+ 
+-	wdev->u.nan.n_channels = sched->n_channels;
++	kfree(old_chandefs);
+ 
  	return 0;
  }
- 
-+int cfg80211_nan_set_non_evac_channels(struct cfg80211_registered_device *rdev,
-+				       struct wireless_dev *wdev,
-+				       struct cfg80211_nan_non_evac_channels *channels)
-+{
-+	lockdep_assert_held(&rdev->wiphy.mtx);
-+
-+	if (wdev->iftype != NL80211_IFTYPE_NAN || !wdev_running(wdev))
-+		return -EINVAL;
-+
-+	/*
-+	 * Don't allow updating the non-evacuable channels while a deferred
-+	 * schedule update is pending, as the set of channels may still change.
-+	 */
-+	if (wdev->u.nan.sched_update_pending)
-+		return -EBUSY;
-+
-+	/* All provided channels must belong to the current local schedule. */
-+	for (int i = 0; i < channels->n_channels; i++) {
-+		bool found = false;
-+
-+		for (int j = 0; j < wdev->u.nan.n_channels; j++) {
-+			if (cfg80211_chandef_identical(&wdev->u.nan.chandefs[j],
-+						       &channels->chandefs[i])) {
-+				found = true;
-+				break;
-+			}
-+		}
-+
-+		if (!found)
-+			return -ENOENT;
-+	}
-+
-+	return rdev_nan_set_non_evac_channels(rdev, wdev, channels);
-+}
-+
- void cfg80211_stop_pd(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev)
- {
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index b4610f6685dc..4ee48b937080 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -565,6 +565,10 @@ int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
- 				    struct wireless_dev *wdev,
- 				    struct cfg80211_nan_local_sched *sched);
- 
-+int cfg80211_nan_set_non_evac_channels(struct cfg80211_registered_device *rdev,
-+				       struct wireless_dev *wdev,
-+				       struct cfg80211_nan_non_evac_channels *channels);
-+
- struct cfg80211_internal_bss *
- cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 		    struct cfg80211_internal_bss *tmp,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e585da1d79c9..f44036ad43fb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -17763,6 +17763,69 @@ static int nl80211_nan_set_local_sched(struct sk_buff *skb,
- 	return cfg80211_nan_set_local_schedule(rdev, wdev, sched);
- }
- 
-+static int
-+nl80211_parse_non_evac_channel(struct cfg80211_registered_device *rdev,
-+			       struct nlattr *channel, struct genl_info *info,
-+			       struct cfg80211_chan_def *chandef)
-+{
-+	struct nlattr **channel_parsed __free(kfree) =
-+		kcalloc(NL80211_ATTR_MAX + 1, sizeof(*channel_parsed),
-+			GFP_KERNEL);
-+	int ret;
-+
-+	if (!channel_parsed)
-+		return -ENOMEM;
-+
-+	ret = nla_parse_nested(channel_parsed, NL80211_ATTR_MAX, channel, NULL,
-+			       info->extack);
-+	if (ret)
-+		return ret;
-+
-+	return nl80211_parse_chandef(rdev, info->extack, channel_parsed,
-+				     chandef, false);
-+}
-+
-+static int nl80211_nan_set_non_evac_channels(struct sk_buff *skb,
-+					     struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	int rem, i = 0, n_channels = 0;
-+	struct nlattr *channel;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_NAN)
-+		return -EOPNOTSUPP;
-+
-+	if (!wdev_running(wdev))
-+		return -ENOTCONN;
-+
-+	/* Count how many channel attributes we got */
-+	nlmsg_for_each_attr_type(channel, NL80211_ATTR_NAN_CHANNEL,
-+				 info->nlhdr, GENL_HDRLEN, rem)
-+		n_channels++;
-+
-+	struct cfg80211_nan_non_evac_channels *channels __free(kfree) =
-+		kzalloc(struct_size(channels, chandefs, n_channels),
-+			GFP_KERNEL);
-+	if (!channels)
-+		return -ENOMEM;
-+
-+	channels->n_channels = n_channels;
-+
-+	nlmsg_for_each_attr_type(channel, NL80211_ATTR_NAN_CHANNEL,
-+				 info->nlhdr, GENL_HDRLEN, rem) {
-+		int ret;
-+
-+		ret = nl80211_parse_non_evac_channel(rdev, channel, info,
-+						     &channels->chandefs[i]);
-+		if (ret)
-+			return ret;
-+		i++;
-+	}
-+
-+	return cfg80211_nan_set_non_evac_channels(rdev, wdev, channels);
-+}
-+
- static int nl80211_get_protocol_features(struct sk_buff *skb,
- 					 struct genl_info *info)
- {
-@@ -20619,6 +20682,12 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP),
- 	},
-+	{
-+		.cmd = NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS,
-+		.doit = nl80211_nan_set_non_evac_channels,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP),
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 46849fe8d0b3..269258c94a42 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1093,6 +1093,23 @@ rdev_nan_set_peer_sched(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int
-+rdev_nan_set_non_evac_channels(struct cfg80211_registered_device *rdev,
-+			       struct wireless_dev *wdev,
-+			       struct cfg80211_nan_non_evac_channels *channels)
-+{
-+	int ret;
-+
-+	trace_rdev_nan_set_non_evac_channels(&rdev->wiphy, wdev, channels);
-+	if (rdev->ops->nan_set_non_evac_channels)
-+		ret = rdev->ops->nan_set_non_evac_channels(&rdev->wiphy, wdev,
-+							   channels);
-+	else
-+		ret = -EOPNOTSUPP;
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- static inline int rdev_start_pd(struct cfg80211_registered_device *rdev,
- 				struct wireless_dev *wdev)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 8c2a91b85c39..435dc58cafbe 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2483,6 +2483,31 @@ TRACE_EVENT(rdev_nan_set_peer_sched,
- 	)
- );
- 
-+TRACE_EVENT(rdev_nan_set_non_evac_channels,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
-+		 struct cfg80211_nan_non_evac_channels *channels),
-+	TP_ARGS(wiphy, wdev, channels),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		WDEV_ENTRY
-+		__field(u8, n_channels)
-+		__dynamic_array(u32, freqs, channels->n_channels)
-+	),
-+	TP_fast_assign(
-+		u32 *freqs = __get_dynamic_array(freqs);
-+
-+		WIPHY_ASSIGN;
-+		WDEV_ASSIGN;
-+		__entry->n_channels = channels->n_channels;
-+		for (int i = 0; i < channels->n_channels; i++)
-+			freqs[i] = channels->chandefs[i].chan->center_freq;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", n_channels: %u, freqs: %s",
-+		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->n_channels,
-+		  __print_array(__get_dynamic_array(freqs),
-+				__entry->n_channels, sizeof(u32)))
-+);
-+
- TRACE_EVENT(rdev_set_mac_acl,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 struct cfg80211_acl_data *params),
 -- 
 2.34.1
 
