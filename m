@@ -1,89 +1,89 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3560252B1DA
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 20:34:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF1C52BE4A
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 20:34:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788813248; cv=none; b=btEeu9jueKG2bdR2ovtkLGS3mEA5F7mVbbroJEIXIQSFAUNIvc48cEz5jB2a/g1/1+uNM78pgy63tBYu/pZfWMXkst37HYrRi3DN5XKeJfsxHNkkaAIxqXFnTgiSQ/DXDFpAXjdO5/tNVOZyB+cbV17m1QRaT/ipAqcdaabeM5M=
+	t=1788813252; cv=none; b=IczIPJKFpre/C2YxQlTjat4UzmY73Xv5heM+UBIugOE28FP/5OjURfBaAhgFcgwtW3uhvnvv9aKVvmOOf+EHKeNC50SvN2Z6PxifrRZk6m/96G9xJ2PR2Ejad06kI+HoW5WYSvv66mIrD3I/HoTyUXaacEXWLVKdA65E8Ux1srg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788813248; c=relaxed/simple;
-	bh=/xXrRGDv6Jszk0sj0UbOjDjGSuSuowHtjBK+vXW0/Zg=;
+	s=arc-20240116; t=1788813252; c=relaxed/simple;
+	bh=9GUJmm0JnYOjtca2tQcxf9Y4BE+SaF+P3iTowK/ZOVM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=GOrjtYoBZ2JDdcXDMDZRFvIw7BSndlwEvmCXD6EJZzkFF/EkKUc2SRqXfBdhnkzxs+mRFouYqwd65p8kVXvRo33xgmIVCAckrKe0fCOZDGeVmeKqm9q29p5dJfGJ/4Oa7mSt4hdGyEmn8EavxazDfPN3PVnJUBP2v6FfUkl9AVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hJ993Gm2; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=igJTnoSZ; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=js+zOMDFcCnt+1OBzdzCj2PU9u3I4HaxfDo4gUxmGUThrt8EzPxMcFN5+ok0QMf2rvP/u5l7glFhFjhJtWLPLQpIuPtTA/ykhzXCzhGfFSGZLWURGfY485gOH6d5GnZLtQ8AbXFxxTAKmQk8k1JKWB0D0PoGCd34HfxFgS7Cj4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ddoh97ek; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=blKIGHxX; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hJ993Gm2";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="igJTnoSZ"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ddoh97ek";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="blKIGHxX"
 Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687H89qG838288
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Sep 2026 20:34:05 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687H85EW838236
+	for <linux-wireless@vger.kernel.org>; Mon, 7 Sep 2026 20:34:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2FTgMhgLWmf0Jq8fB7caGXnFJscVEgzrr/HiqFpuFaU=; b=hJ993Gm2X6ceZs4H
-	00hEijX8UwEgxYue+TyOtJfLGAbC0JtJEBE/k3N6bKD9PeNyXmIW71TZ+VGzm7T2
-	o7Cgp7mPfuyIhd6t/7fBw2ZxZIAXr1sGUAQfLCOKcpnC9RJk2iwEQ7myUbPSv1rH
-	slKI8X0sv8lt8UYlnjaT8QfYmBvXrx+1NdIm6yRF2NQNhD/rkSP+WmLv9OW5/xYL
-	iV/yUJ+Zg3WsZcMGutuaUIKlaLfOnMzb0vYzvi66U6Ue6Fn6sPLS2sA0JtANEb11
-	iRwFz4RysWEMa1+6ropAllHIgLtwqR0XYVNxB09YtU/OTD0QCpu24EI8Yzez3Zof
-	No5cng==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ghssg2j39-1
+	wVk15Adnij0xzN+GSJBRJZvYMNQ2RQbb8lQpb3qcGW8=; b=Ddoh97ekoxO8K/6B
+	vxZfoZ/3CldzvgdjITcJEd7yV1dzBOkbiv0FXPVLFWE3Juf/EmjMEDqq/V2zUBzm
+	lewTzP5LNtbrrPSlak1OFSP6d14TWRtNPovoT9+G5OyP+eC9gThwb83sf4foG3GP
+	0G5YWZ5wBfTf84wFCnWKqapAiCUTjvuVd5dOaFbKCwSQIkNuRYIWZ6Iahba3cfJG
+	4d8SNUROtNKvGN4I4KhrEfI/hsMALB87P48NXBd8xyD5beB2OCO2MejS9qI7qNEU
+	JZc8OOrylZBNlWeKWWZ2E4zmgRtuZwzAXu7Ly/czj6ZyT/Fm1bq7CntSzfMzFWH3
+	ICnzyA==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ghssg2j3g-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 20:34:04 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cfca8558d2so48074295ad.2
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 13:34:04 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 20:34:08 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-398e1f7d1a5so334081a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 13:34:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788813244; x=1789418044; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1788813248; x=1789418048; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=2FTgMhgLWmf0Jq8fB7caGXnFJscVEgzrr/HiqFpuFaU=;
-        b=igJTnoSZCIVE56FlA/lnNK+Vil3eU5Y3WPFWUMyy7+e7ei8QxA5N9IBbQX3gMK+Tjl
-         yJB1slTZI+aEpvTA1GiZ1ahBZd/QGEl6gUG8lDdKEa6sImEaafqXESGrpCSkKWpt5LXJ
-         whJLNYSKxV3G5ygrzXkKItYB8X91CaIxLc8sfGyPvMS3o+DMrM6BxkBiIv0AvYVT/s2c
-         j+xftki57lSzBJZplcPMOEhVnbjIyIITBnRoCmyElnqUI/0ufesbXa0sOlyouRwvJZ8w
-         ++COWH1ccXhs7D94sriIscUrKn0UZ/K/0LptVflf1rKiurY4UZ2n10jE3hq/EiqhmOpO
-         saFA==
+        bh=wVk15Adnij0xzN+GSJBRJZvYMNQ2RQbb8lQpb3qcGW8=;
+        b=blKIGHxX+cFuqBZWHX+DUAwjqgaNBQ3OCOgRJ/EJLGaLXo0yY5EO7epCxtCh9xyjb6
+         UIW9HaJCdaLOr51bojcYUdz5r9V+h21uJi+lQM5BkqX1AkTYj/QT0maAAF2+AYGqkFXj
+         nCALd+nvnQj/rrImSsGATJWxEyzsAQFAlvZpylFnO6+j0DIrbWFeaU9HiTGoWaWhhifm
+         eFjhtBDS+5a7S8J8T+zT0ZPYPjGpbO0vnNKz1QozDUdKEOkde8dpxg44YMceSurBMxf+
+         skWvqmtF5Gm2fXR82JiKBF6z8Krde9RhRgq7XrqUYGfg7BCk0tu0lDBfjPFfe77H23wW
+         Z40g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788813244; x=1789418044;
+        d=1e100.net; s=20251104; t=1788813248; x=1789418048;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=2FTgMhgLWmf0Jq8fB7caGXnFJscVEgzrr/HiqFpuFaU=;
-        b=QKPcTbXhV4i5dX/QzYehXxiJbt15AzafWjqLm27XpdTcfIxDIJT8jBtiNzSsXx6vBk
-         30kRqekIUZ3aCtWNhN+qA9gp31Kt6DwM/PHJeJ1Lcm+NFmmDkqzJ5OGPUBb9ANtWWgak
-         bfngNJxVdUM0v7+nacVKkVh45trzvGeBmJXFs+AjxKC/W1t9Jgb7hl4wITrgDPx8Wroe
-         6/fP4DM8rpmfMDKeld4AQtkSm8NmcEJevw4XLxwBlV9wBourfBKg/Yn/JkKQKXYvfLCK
-         dWOJMEmrsFixSvyHxRhDf2DoFHsf2yiJsu8SRMMWULZht5DfrJhD9TU6cek8V+qaagDL
-         PLdQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwlUhytJD4e3FoxSLIW+ddvT3IlAXqIJ+caxiIBRjvmdwJGswACUruDcnALUjH/gukUMmz3qL5yIMIa76ni8w==@vger.kernel.org
-X-Gm-Message-State: AFuF++kNbr/A3tTaGLDVuU9LsWmyO5XKCKklj3naaVTnuiiRDZatYjMd
-	/s7vhvT4NhYcCDiQ1NIR/cnphwHxmMcixrokgHuhAw25JIibCT1wTdm7e9SMxZWIcFvVNWQtWiD
-	HEwrRx3qZ3nDzPdhODUUsFpXKw0fr+A0VGo2okaEZArYkz6WVIqzhnfTnjWLfFtjkAbVZ
-X-Gm-Gg: AYBFou1eGf7vFUFKE1YDEAwLaOt2a9zwuztsZsEYtYH2HavOln+/vP6FhmQTjYEfTt8
-	hS2mmoJcvcIvdOlUgaoZziGGP848dxtwYdVEwWi43HwbRYXql2bdtRkwXCsTZHm3B+9JnG6sMSE
-	UGwzAts7sUr8lrVpGNLdhjxO/xUei2I5OMXuMKFdpxqxjtU4SR/+9A6r/K6tRrHZpzPuci1btfk
-	6pOpN7Qb4Eo4u+r708jNHd2EPg+9HiCDhckR9xk9Hem/rEm/bQUU29c8HSqazBymeqiA2mEatoJ
-	/VWhZN9oUHu7Y7YPae2QBFx6Gr75Ytf1fEV0LBnMeT9tYQ/mBklQ3qQzyR8bjjfrp48aVhlAs5Z
-	VcfFfLRkQ6BNLM6/q7TZWnEDpfagtrDLF//G4va4BIci0iZycVBH0CmOqRownUchYu/xrJfx05+
-	Pral28lFOiUDB9DM630TdJVQ==
-X-Received: by 2002:a05:6a20:a11a:b0:3d1:2dc5:7d37 with SMTP id adf61e73a8af0-3da39b5c97dmr38558550637.3.1788813243893;
-        Mon, 07 Sep 2026 13:34:03 -0700 (PDT)
-X-Received: by 2002:a05:6a20:a11a:b0:3d1:2dc5:7d37 with SMTP id adf61e73a8af0-3da39b5c97dmr38558480637.3.1788813243407;
-        Mon, 07 Sep 2026 13:34:03 -0700 (PDT)
+        bh=wVk15Adnij0xzN+GSJBRJZvYMNQ2RQbb8lQpb3qcGW8=;
+        b=iOSowuJAiAr3HsvI1thrn0h9EoODtbqZ8oBhzJo06UdI3H5iptvVu2q/yUYBVyilq+
+         mW4oX0kOB9QHm4QWJwsgcssry/GAJY4SJHCIRFo/xY0DWbA+z4re2xCGTcg31cqxdhxZ
+         /AXuTUOkYGIXSguwRfimmEd010eIZ58Gy61LOYnshM0HLZwQSaABCtfOmp7QCYFJMbvt
+         eGzmNrQ6i+c0PSbJNShmw4CEdnYIZi/bLazTMEQJopHQJKgwoX4s5g5vk9XPCIr/LLmq
+         sHnb2c2tn6L6NB2nilyHy0hsv5PWH96kTsrKj7gvh3fvWVSfYafyxIOA2fXjwZNtnxsh
+         coAA==
+X-Forwarded-Encrypted: i=1; AKwUvBwsGwooM3RqK0pRp3mlib5nVwr3H5RZqCZ4Vx+tM4e+TfazQpc0h1j0cOuNgUZ/WS+GkcSzXK6gtqVUua5VXQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++k7fIXzZqbF/J8a5S/1tXOSPApq9Dq6WMruFPUq4cuUHVkW5DPS
+	wFoPdwXRTWgxVrOM7WaTypey4nBi7Fzp0maZ1+R9p1GRUCXpgMIGqMVGCK0fZcaoldZCQTp/PdC
+	B6qUYuZKMx83HsMNbDYMID6++yZxPZoqf0Yh7xh7ifcvk6+0nRm0SoOMGfr9W2ULGQZbZ
+X-Gm-Gg: AYBFou2n399M/e1MtDvXD5Q5fgPBB34q9BLrV4Z9+TZBKL4DaZt5BqfCI8km88WQxOQ
+	OeMgJXJ/20bXr8Upij42g2l50FXKpndprcR//4Xxam/hrPQQIKAzmsghBJYjJdGYRKIJfhEqXLl
+	U0dTc++3GJIVCK8h6Z5UdkSrPhZJpLQbdpjt904+gmE0rOIOD/TB8kFGX6UmeudU/0xciG2W3gL
+	gz1f1Buiecd5UyqIrjy7N/5CtZCaViDFUFU1RnBXtUbcXfjORAaOd0m8ZEB95ONdmcWGm4Ufnl6
+	vaOXWAc55WndBg9BcqDVBxX1lWZCA7+HBFiDp8WaLO5AsBwE1awGCa5N8z8ZzCvMrkbGmhhFyFn
+	vQwMIcCsff3zX+CUJH6Uxo2Pr7IxKK2uHGxB+bVSRCe3fTHzalXL5NWE2NByESxGSM6Ftl64mMF
+	Qpz0YvCK5hWQRMn36G585ZwQ==
+X-Received: by 2002:a05:6a21:e8b:b0:3d1:c99f:efbf with SMTP id adf61e73a8af0-3da3a11ed0cmr41235095637.14.1788813247718;
+        Mon, 07 Sep 2026 13:34:07 -0700 (PDT)
+X-Received: by 2002:a05:6a21:e8b:b0:3d1:c99f:efbf with SMTP id adf61e73a8af0-3da3a11ed0cmr41235048637.14.1788813247274;
+        Mon, 07 Sep 2026 13:34:07 -0700 (PDT)
 Received: from hu-pooventh-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339af25062sm47841297eec.16.2026.09.07.13.33.59
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339af25062sm47841297eec.16.2026.09.07.13.34.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2026 13:34:02 -0700 (PDT)
+        Mon, 07 Sep 2026 13:34:06 -0700 (PDT)
 From: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
-Date: Tue, 08 Sep 2026 01:59:22 +0530
-Subject: [PATCH wireless-next 13/18] wifi: cfg80211/mac80211: Handle UHR
- Link Reconfiguration frame
+Date: Tue, 08 Sep 2026 01:59:23 +0530
+Subject: [PATCH wireless-next 14/18] wifi: nl80211: Pack SMD dynamic
+ context along with frame
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,7 +92,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260908-smd-v1-13-65ad4ab30fbd@oss.qualcomm.com>
+Message-Id: <20260908-smd-v1-14-65ad4ab30fbd@oss.qualcomm.com>
 References: <20260908-smd-v1-0-65ad4ab30fbd@oss.qualcomm.com>
 In-Reply-To: <20260908-smd-v1-0-65ad4ab30fbd@oss.qualcomm.com>
 To: "David S. Miller" <davem@davemloft.net>,
@@ -103,25 +103,25 @@ Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org,
         Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfXwmspeLWEyyj2
- h4i3Mt6dE4j8sK3kkpCag4Gr5lhPPQqZFzJMuQ+nCX30HT7Y3z8OG3GKCsYlLtX3B7mtzuNh6Su
- +9Pru/WLzSI5o8f4quDbH+Z4I7qlYLhda2YVw2v5HYjNF7+qYcT5Gx+LmDBUY9h66on+U/mBnh+
- Q3ANxalx9nmdHPpHF34ZaP+oc2he65cgqhOrahnYiWrI3Itn6lWbZ1BzNezY2rbC/fOBzrVyDjq
- 9qxWOlrygw1aP0siYeiwTPJimFIraxHOE/Xi/OQVHBfmSLbjHstlSB3HY6IoTiNhBIvjhk3szn9
- v9BaOwRS0wh5iUGe3wLe5QdF7QiFrf9LNbDhqv/UYOzZr5MiuWCLwpoA+cx+D0YvBQfX2XEFCLC
- uvA+R1n404FDOAj6JzshVUZGCiI2M4Z0NXWCyqEON3g3z/zrEUoRBnmMp125rE98Bw7vl+Nk4Ln
- waE3NkGNZDyq2paLV2w==
-X-Authority-Analysis: v=2.4 cv=MrJiLWae c=1 sm=1 tr=0 ts=6a9f1fbc cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfXyWeeiN6KzxT7
+ XTg1EXDu0I2I15K9hHRtwK83/tDBUQ7f5yfO+5iIZrMDmQ/QoecT0ehyIslF27/hYSRN1WJCWaH
+ 3cY+33fuueF+SiEblVveZfGE5+7KjdhSN3WqEz3E01avt9Rhi+frbb7bJ3KjtL2kAj766K8QMnx
+ 9frQ0C2RcaqpL9iJLv0kOrCS+SPvcqSHy6RWzLdltpwtFehn6bLB0PABpsw0IaXB/ecnJnqH4Zv
+ J76FpXCVyV9WhAUXKzBU6nLnbqHHimxqsk4d1xaem9nOgnJGUMWqbWS8T9PKx9CNg3Cjwt+jfFp
+ Z33cWqPstz3ZqYbIjYmUB0/QwOjdI8pv2obGRgF0tX41grm7YgBt8EyEU05Vt3u0Vqu4+8S6KF/
+ UhpkzRYXJTL0yaGn2I6pjtSqHPnfHGxJK1vPUAtwtcV0qekrH6ZYpUJ/+/ZpnxTQJwlOg3jx2Ps
+ xDzaDt8P8qBiOUQ8GmA==
+X-Authority-Analysis: v=2.4 cv=MrJiLWae c=1 sm=1 tr=0 ts=6a9f1fc0 cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=EUspDBNiAAAA:8 a=LQFPhaWwRXareCLbuGQA:9 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-ORIG-GUID: j4Ixg_EILrB4u_rWex1VyvokiFcZilrQ
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfX48gnp94yo1Pb
- DdePjaFPqZSOYbg9fnCzjIJ0z7u3vhqGet2Tw/5syNo3G4eOZfaA7mzQP7jNI3/dJlNm12Xl21H
- +Kitez4kTG7fohl01LVcNon+pv77dQ4=
-X-Proofpoint-GUID: j4Ixg_EILrB4u_rWex1VyvokiFcZilrQ
+ a=EUspDBNiAAAA:8 a=bhEJrp4yiY6RaB6cu_EA:9 a=QEXdDO2ut3YA:10
+ a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-ORIG-GUID: yzbGw6LdXjUlcQ1IrO22ylxaIOU-ch6a
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfXwVCZd2yCKTFw
+ 1haoBLd2jcSRexbibjJB3CcGy/eBvMYXlASfDYhv8FkifxIdZbRtUGWAcx0xTpZhiQlc7s1DWB7
+ XC0RgYgGxq6HJ+uwgKCVxZ24KNn7Fss=
+X-Proofpoint-GUID: yzbGw6LdXjUlcQ1IrO22ylxaIOU-ch6a
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-07_05,2026-09-07_01,2025-10-01_01
@@ -132,181 +132,317 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
  definitions=main-2609070226
 
-The UHR Link Reconfiguration Request frame triggers SMD BSS Transition
-on the current AP MLD. At the point where mac80211 forwards this
-frame to userspace via nl80211_send_mgmt(), the driver has already
-collected the STA's dynamic context (SN, PN, BlockAck state) and
-attached it to the SKB via the SKB_EXT_WIRELESS extension. But this
-information is not known by nl80211 to pack the context with the frame
-sent to userspace.
+While packing the received management frame in nl80211_send_mgmt() to
+send to userspace, nest the SMD dynamic context along with the frame
+message. This shall be used by userspace to transport the context to the
+target AP MLD for programming the dynamic state of the STA session for
+seamless roaming as part of SMD BSS Transition.
 
-Add handling for the UHR ST Preparation and Execution request frames
-in ieee80211_rx_h_userspace_mgmt() to pull the ieee80211_smd_ctx
-pointer from the SKB extension and store it in cfg80211_rx_info, so
-that nl80211_send_mgmt() can include it in the NL80211_CMD_FRAME event.
-
+Suggested-by: Jouni Malinen <jouni.malinen@oss.qualcomm.com>
+Co-developed-by: Aditya Sathish <asathish@qti.qualcomm.com>
+Signed-off-by: Aditya Sathish <asathish@qti.qualcomm.com>
 Signed-off-by: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 ---
- include/linux/ieee80211-uhr.h | 59 +++++++++++++++++++++++++++++++++++++++++++
- include/net/cfg80211.h        | 13 ++++++++++
- net/mac80211/rx.c             | 22 ++++++++++++++++
- 3 files changed, 94 insertions(+)
+ net/wireless/nl80211.c | 269 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 268 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/ieee80211-uhr.h b/include/linux/ieee80211-uhr.h
-index f904b1e65f10..cda8251a1a9a 100644
---- a/include/linux/ieee80211-uhr.h
-+++ b/include/linux/ieee80211-uhr.h
-@@ -743,6 +743,65 @@ ieee80211_uhr_mode_change_tuple_size(const struct ieee80211_uhr_mode_change_tupl
- 			     IEEE80211_UHR_MODE_CHANGE_CONTROL_MODE_LENGTH);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d59f0eb40493..5065dc75b0bc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -19568,6 +19568,265 @@ nl80211_epcs_cfg(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev_set_epcs(rdev, dev, val);
  }
  
-+/**
-+ * ieee80211_is_uhr_link_reconf_req - check if frame is UHR Link Reconf Request
-+ * @skb: the SKB to check
-+ * Return: whether or not the frame is a UHR Link Reconf Request frame
-+ */
-+static inline bool ieee80211_is_uhr_link_reconf_req(struct sk_buff *skb)
++static size_t _nl80211_smd_ctx_nl_ba_param_size(void)
 +{
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	u8 category, action;
++	size_t n = 0;
 +
-+	if (!ieee80211_is_action(mgmt->frame_control))
-+		return false;
++	n += nla_total_size(0); /* ba_params nest header */
++	n += n_dl_tids * (nla_total_size(0) + /* tid nest header */
++			nla_total_size(sizeof(u16)) + /* buff_size */
++			nla_total_size(sizeof(u8)) + /* policy */
++			nla_total_size(0) + /* amsdu_support */
++			nla_total_size(sizeof(u16)) + /* timeout */
++			nla_total_size(0) + /* ext_no_frag */
++			nla_total_size(sizeof(u8)) + /* ext_frag_lvl */
++			nla_total_size(sizeof(u16))); /* ext_buff_size */
 +
-+	if (skb->len < IEEE80211_MIN_ACTION_SIZE(uhr_link_reconf_req))
-+		return false;
-+
-+	category = mgmt->u.action.category;
-+	action = mgmt->u.action.action_code;
-+
-+	return category == WLAN_CATEGORY_PROTECTED_UHR &&
-+	       action == IEEE80211_PROTECTED_UHR_ACTION_LINK_RECONFIG_REQUEST;
++	return n;
 +}
 +
-+/**
-+ * ieee80211_is_st_prep_req - check if frame is ST Preparation Request
-+ * @skb: the SKB to check
-+ * Return: whether or not the frame is an ST Prep request frame
-+ */
-+static inline bool ieee80211_is_st_prep_req(struct sk_buff *skb)
++static size_t
++nl80211_smd_ctx_nl_size(struct cfg80211_smd_transition_info *st_info)
 +{
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	u8 type;
++	const struct ieee80211_smd_ctx *ctx = st_info->ctx;
++	int n_dl_tids = 0, n_ul_tids = 0;
++	u8 pn_len = ctx->pn_len;
++	size_t n = 0;
 +
-+	if (!ieee80211_is_uhr_link_reconf_req(skb))
-+		return false;
++	/* count valid TIDs */
++	n_dl_tids = bitmap_weight(ctx->dl.valid_tid_bmap,
++				  IEEE80211_SMD_CTX_NUM_TIDS);
++	n_ul_tids = bitmap_weight(ctx->ul.valid_tid_bmap,
++				  IEEE80211_SMD_CTX_NUM_TIDS);
 +
-+	type = mgmt->u.action.uhr_link_reconf_req.type;
++	n += nla_total_size(sizeof(u8)); /* ST type */
 +
-+	return type == IEEE80211_UHR_LINK_RECONFIG_REQUEST_ST_PREP;
++	/* outer NL80211_ATTR_SMD_CTX nest */
++	n += nla_total_size(0); /* nest header */
++
++	/* DL nest */
++	n += nla_total_size(0); /* DL nest header */
++
++	n += nla_total_size(sizeof(u8)); /* valid_tid_bitmap */
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_DL_SN, ctx->valid_ctx_bmap)) {
++		n += nla_total_size(0); /* DL SN nest header */
++		n += n_dl_tids * nla_total_size(sizeof(u16)); /* DL SN */
++	}
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_PN, ctx->valid_ctx_bmap))
++		n += nla_total_size(pn_len); /* DL PN */
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_BA_PARAMS, ctx->valid_ctx_bmap))
++		n += _nl80211_smd_ctx_nl_ba_param_size(); /* DL BA params */
++
++	/* UL nest */
++	n += nla_total_size(0); /* UL nest header */
++
++	n += nla_total_size(sizeof(u8)); /* valid_tid_bitmap */
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_UL_SN, ctx->valid_ctx_bmap)) {
++		n += nla_total_size(0); /* UL SN nest header */
++		n += n_ul_tids * nla_total_size(sizeof(u16)); /* UL SN */
++	}
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_PN, ctx->valid_ctx_bmap)) {
++		n += nla_total_size(0); /* UL PN nest header */
++		n += n_ul_tids * nla_total_size(pn_len); /* UL PN */
++	}
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_BA_PARAMS, ctx->valid_ctx_bmap))
++		n += _nl80211_smd_ctx_nl_ba_param_size(); /* UL BA params */
++
++	if (ctx->drv_ctx_size)
++		n += nla_total_size(ctx->drv_ctx_size); /* Driver data */
++
++	return n;
 +}
 +
-+/**
-+ * ieee80211_is_st_exec_req - check if frame is ST Execution Request
-+ * @skb: the SKB to check
-+ * Return: whether or not the frame is an ST Exec request frame
-+ */
-+static inline bool ieee80211_is_st_exec_req(struct sk_buff *skb)
++static int
++nl80211_put_smd_ctx_ba_params(struct sk_buff *msg,
++			      const unsigned long *tid_bmap,
++			      const struct ieee80211_smd_ctx_ba *ba_tids,
++			      bool dl)
 +{
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	u8 type;
++	u32 ba_params_attr = NL80211_SMD_CTX_DL_ATTR_BA_PARAMS;
++	struct nlattr *dl_ul_ba = NULL, *tid_ba = NULL;
++	u8 tid;
 +
-+	if (!ieee80211_is_uhr_link_reconf_req(skb))
-+		return false;
++	if (!dl)
++		ba_params_attr = NL80211_SMD_CTX_UL_ATTR_BA_PARAMS;
 +
-+	type = mgmt->u.action.uhr_link_reconf_req.type;
++	dl_ul_ba = nla_nest_start(msg, ba_params_attr);
++	if (!dl_ul_ba)
++		return -ENOBUFS;
 +
-+	return type == IEEE80211_UHR_LINK_RECONFIG_REQUEST_ST_EXEC;
++	for_each_set_bit(tid, tid_bmap, IEEE80211_SMD_CTX_NUM_TIDS) {
++		const struct ieee80211_smd_ctx_ba *ba = &ba_tids[tid];
++
++		tid_ba = nla_nest_start(msg, tid + 1);
++		if (!tid_ba)
++			goto nla_fail;
++
++		if (nla_put_u16(msg, NL80211_SMD_CTX_BA_ATTR_BUFF_SIZE,
++				ba->buffer_size) ||
++		    nla_put_u8(msg, NL80211_SMD_CTX_BA_ATTR_POLICY,
++			       ba->ba_policy) ||
++		    (ba->amsdu_supported &&
++		     nla_put_flag(msg,
++				  NL80211_SMD_CTX_BA_ATTR_AMSDU_SUPPORT)) ||
++		    nla_put_u16(msg, NL80211_SMD_CTX_BA_ATTR_TIMEOUT,
++				ba->timeout) ||
++		    (ba->ext_no_frag &&
++		     nla_put_flag(msg, NL80211_SMD_CTX_BA_ATTR_EXT_NO_FRAG)) ||
++		    nla_put_u8(msg, NL80211_SMD_CTX_BA_ATTR_EXT_FRAG_LEVEL,
++			       ba->extfrag_level) ||
++		    nla_put_u16(msg, NL80211_SMD_CTX_BA_ATTR_EXT_BUFF_SIZE,
++				ba->ext_buffer_size)) {
++			nla_nest_cancel(msg, tid_ba);
++			goto nla_fail;
++		}
++
++		nla_nest_end(msg, tid_ba);
++	}
++
++	nla_nest_end(msg, dl_ul_ba);
++	return 0;
++
++nla_fail:
++	nla_nest_cancel(msg, dl_ul_ba);
++	return -ENOBUFS;
 +}
 +
- #define for_each_uhr_mode_change_tuple(data, len, tuple)		\
- 	for (tuple = (const void *)(data);				\
- 	     (len) - ((const u8 *)tuple - (data)) >= sizeof(*tuple) &&	\
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 75d0123fbb5d..7b0f328fec79 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4887,6 +4887,17 @@ struct mgmt_frame_regs {
- 	u32 global_mcast_stypes, interface_mcast_stypes;
- };
- 
-+/**
-+ * struct cfg80211_smd_transition_info - SMD BSS Transition info
-+ *
-+ * @ctx: Dynamic context to be transferred as part of ST
-+ * @type: Type of ST indication
-+ */
-+struct cfg80211_smd_transition_info {
-+	struct ieee80211_smd_ctx *ctx;
-+	enum nl80211_smd_ctx_type type;
-+};
-+
- /**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-@@ -9543,6 +9554,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * @flags: flags, as defined in &enum nl80211_rxmgmt_flags
-  * @rx_tstamp: Hardware timestamp of frame RX in nanoseconds
-  * @ack_tstamp: Hardware timestamp of ack TX in nanoseconds
-+ * @st_info: SMD BSS Transition data in skb extension
-  */
- struct cfg80211_rx_info {
- 	int freq;
-@@ -9554,6 +9566,7 @@ struct cfg80211_rx_info {
- 	u32 flags;
- 	u64 rx_tstamp;
- 	u64 ack_tstamp;
-+	struct cfg80211_smd_transition_info st_info;
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 40ed03a775ba..156a4c0d55ac 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3993,6 +3993,24 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 	return RX_QUEUED;
- }
- 
-+static void
-+ieee80211_rx_h_userspace_mgmt_st_frame(struct cfg80211_rx_info *info,
-+				       struct sk_buff *skb)
++static int nl80211_put_smd_ctx(struct sk_buff *msg,
++			       struct cfg80211_smd_transition_info *st_info)
 +{
-+	struct ieee80211_mgmt *mgmt = (void *)info->buf;
-+	struct wireless_skb_ext *ext;
-+	u8 type;
++	struct nlattr *dl_sn = NULL, *ul_sn = NULL, *ul_pn = NULL;
++	struct nlattr *smd_ctx = NULL, *dl = NULL, *ul = NULL;
++	const struct ieee80211_smd_ctx *ctx;
++	u8 dl_tid_bmap = 0, ul_tid_bmap = 0;
++	u8 tid;
 +
-+	type = mgmt->u.action.uhr_link_reconf_req.type;
++	/* ST Type */
++	if (nla_put_u8(msg, NL80211_ATTR_SMD_CTX_TYPE, st_info->type))
++		return -ENOBUFS;
 +
-+	ext = skb_ext_find(skb, SKB_EXT_WIRELESS);
-+	if (!ext || ext->type != WIRELESS_SKB_EXT_UHR_SMD)
-+		return;
++	smd_ctx = nla_nest_start(msg, NL80211_ATTR_SMD_CTX);
++	if (!smd_ctx)
++		return -ENOBUFS;
 +
-+	info->st_info.type = type;
-+	info->st_info.ctx = ext->uhr_smd_ctx->smd_ctx;
++	ctx = st_info->ctx;
++
++	/* Build DL context */
++	dl_tid_bmap = bitmap_read(ctx->dl.valid_tid_bmap, 0,
++				  IEEE80211_SMD_CTX_NUM_TIDS);
++
++	dl = nla_nest_start(msg, NL80211_SMD_CTX_ATTR_DL);
++	if (!dl)
++		goto nla_fail;
++
++	if (nla_put_u8(msg, NL80211_SMD_CTX_DL_ATTR_VALID_TID_BITMAP,
++		       dl_tid_bmap))
++		goto nla_fail_dl;
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_DL_SN, ctx->valid_ctx_bmap)) {
++		dl_sn = nla_nest_start(msg, NL80211_SMD_CTX_DL_ATTR_SN);
++		if (!dl_sn)
++			goto nla_fail_dl;
++
++		for_each_set_bit(tid, ctx->dl.valid_tid_bmap,
++				 IEEE80211_SMD_CTX_NUM_TIDS) {
++			if (nla_put_u16(msg, tid + 1, ctx->dl.sn[tid])) {
++				nla_nest_cancel(msg, dl_sn);
++				goto nla_fail_dl;
++			}
++		}
++		nla_nest_end(msg, dl_sn);
++	}
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_PN, ctx->valid_ctx_bmap) &&
++	    nla_put(msg, NL80211_SMD_CTX_DL_ATTR_PN, ctx->pn_len, ctx->dl.pn))
++		goto nla_fail_dl;
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_BA_PARAMS, ctx->valid_ctx_bmap) &&
++	    nl80211_put_smd_ctx_ba_params(msg, ctx->dl.valid_tid_bmap,
++					  ctx->dl.ba, true))
++		goto nla_fail_dl;
++
++	nla_nest_end(msg, dl);
++
++	/* Build UL context */
++	ul_tid_bmap = bitmap_read(ctx->ul.valid_tid_bmap, 0,
++				  IEEE80211_SMD_CTX_NUM_TIDS);
++
++	ul = nla_nest_start(msg, NL80211_SMD_CTX_ATTR_UL);
++	if (!ul)
++		goto nla_fail;
++
++	if (nla_put_u8(msg, NL80211_SMD_CTX_UL_ATTR_VALID_TID_BITMAP,
++		       ul_tid_bmap))
++		goto nla_fail_ul;
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_UL_SN, ctx->valid_ctx_bmap)) {
++		ul_sn = nla_nest_start(msg, NL80211_SMD_CTX_UL_ATTR_SN);
++		if (!ul_sn)
++			goto nla_fail_ul;
++
++		for_each_set_bit(tid, ctx->ul.valid_tid_bmap,
++				 IEEE80211_SMD_CTX_NUM_TIDS) {
++			if (nla_put_u16(msg, tid + 1, ctx->ul.sn[tid])) {
++				nla_nest_cancel(msg, ul_sn);
++				goto nla_fail_ul;
++			}
++		}
++		nla_nest_end(msg, ul_sn);
++	}
++
++	if (ctx->pn_len &&
++	    test_bit(IEEE80211_SMD_CTX_VALID_PN, ctx->valid_ctx_bmap)) {
++		ul_pn = nla_nest_start(msg, NL80211_SMD_CTX_UL_ATTR_PN);
++		if (!ul_pn)
++			goto nla_fail_ul;
++
++		for_each_set_bit(tid, ctx->ul.valid_tid_bmap,
++				 IEEE80211_SMD_CTX_NUM_TIDS) {
++			if (nla_put(msg, tid + 1, ctx->pn_len,
++				    ctx->ul.pn[tid])) {
++				nla_nest_cancel(msg, ul_pn);
++				goto nla_fail_ul;
++			}
++		}
++		nla_nest_end(msg, ul_pn);
++	}
++
++	if (test_bit(IEEE80211_SMD_CTX_VALID_BA_PARAMS, ctx->valid_ctx_bmap) &&
++	    nl80211_put_smd_ctx_ba_params(msg, ctx->ul.valid_tid_bmap,
++					  ctx->ul.ba, false))
++		goto nla_fail_ul;
++
++	nla_nest_end(msg, ul);
++
++	/* Driver data blob */
++	if (ctx->drv_ctx_size &&
++	    nla_put(msg, NL80211_SMD_CTX_ATTR_DRV_DATA, ctx->drv_ctx_size,
++		    ctx->drv_ctx))
++		goto nla_fail;
++
++	nla_nest_end(msg, smd_ctx);
++
++	return 0;
++
++nla_fail_ul:
++	nla_nest_cancel(msg, ul);
++
++nla_fail_dl:
++	nla_nest_cancel(msg, dl);
++
++nla_fail:
++	nla_nest_cancel(msg, smd_ctx);
++	return -EINVAL;
 +}
 +
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -22193,10 +22452,14 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct cfg80211_rx_info *info, gfp_t gfp)
  {
-@@ -4003,6 +4021,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
- 		.len = rx->skb->len,
- 		.link_id = rx->link_id,
- 		.have_link_id = rx->link_id >= 0,
-+		.st_info.ctx = NULL,
- 	};
+ 	struct net_device *netdev = wdev->netdev;
++	int st_roaming_data_len = 0;
+ 	struct sk_buff *msg;
+ 	void *hdr;
  
- 	/* skip known-bad action frames and return them in the next handler */
-@@ -4024,6 +4043,9 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
- 	    ieee80211_is_ftm(rx->skb)) {
- 		info.rx_tstamp = ktime_to_ns(skb_hwtstamps(rx->skb)->hwtstamp);
- 		info.ack_tstamp = ktime_to_ns(status->ack_tx_hwtstamp);
-+	} else if (ieee80211_is_st_prep_req(rx->skb) ||
-+		   ieee80211_is_st_exec_req(rx->skb)) {
-+		ieee80211_rx_h_userspace_mgmt_st_frame(&info, rx->skb);
- 	}
+-	msg = nlmsg_new(100 + info->len, gfp);
++	if (info->st_info.ctx)
++		st_roaming_data_len = nl80211_smd_ctx_nl_size(&info->st_info);
++
++	msg = nlmsg_new(100 + info->len + st_roaming_data_len, gfp);
+ 	if (!msg)
+ 		return -ENOMEM;
  
- 	if (cfg80211_rx_mgmt_ext(&rx->sdata->wdev, &info)) {
+@@ -22230,6 +22493,10 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 						   NL80211_ATTR_PAD)))
+ 		goto nla_put_failure;
+ 
++	if (st_roaming_data_len &&
++	    nl80211_put_smd_ctx(msg, &info->st_info))
++		goto nla_put_failure;
++
+ 	genlmsg_end(msg, hdr);
+ 
+ 	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
 
 -- 
 2.34.1
