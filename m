@@ -1,55 +1,56 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC15215161
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 00:45:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391B5136351;
+	Mon,  7 Sep 2026 00:53:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788741918; cv=none; b=PvbtMu8jh5QtSFkfWvlfCRCrB3mRs+CiNhlq2m57wXMwtfH+ykMMC0G0E0oJfZK86dCtRfq//gdARrpRxRq2nyi/V2rbq0SPqb40FBmfd8b6Y0U91UI5e50k9C2FIt75k0Eio9j6/aJw0r7SRFxBcW32+8qsTxkLL2XgVVs2mW4=
+	t=1788742418; cv=none; b=a0F0+kKB5UuMNWAu3JoxhFGKWfexB0zcZ0TEyD0jT660Al64vz/7gcKZ7JtgNLYDmBIutKeocysTbI/9ZkkHgK+S9gzXmW+i6e2KXxf0S8Ahux4dtlAC2oOaGhbzGvUhkUMXhN6sr/UcrtEGC/EPKyLrg7KbmU2dagvRe7P76co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788741918; c=relaxed/simple;
-	bh=Jt6bGXIKoM2005wAUQaGBbcfik7OMkpeifPppmE4EhA=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=RYk01m6rAHa6OG69gOfzq5EcIO2L2xAt54Hh2t/ResfsZHBkQdy5WexGIrtzrSy0VUA1gnGycyova4dcUN7CtbwDW/RwYuWCUwOwEz+6wWwt1CON0pphKUAGTJvAFeoj5fTfSFTCe7chDzPH9WUrZg4OHX3LOIYFofHuludjcHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=GZZzyQrx; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1788742418; c=relaxed/simple;
+	bh=8oerNDadBeL5/DMlpJ6zVKmqUvuHWphCdDja55UIutY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=mJ1A+EyUjNkX/bz2KyId8wxZl396SmyIekFOBcgrL1dqRvK6sAl3Awcsg0eBtazSKQz9N20qgWphMnxXNCrh/WBLz9Uwcx5P18UagtsZzceoLoxaOmdnM5TvFDhIU+xqaAwY7i11oPZ4ZEn8iUmnarswQ6OlC5yZREhFUUS1ECc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=VjqAjtZA; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="GZZzyQrx"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6870j7Ir92349942, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="VjqAjtZA"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6870rW3x92353040, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788741907; bh=NypIxESWDHg3fyadqdSPsaVJ5aQ68rwaqU1ZOkhBusw=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	t=1788742412; bh=VXNvg6DFW62+TDnBK7kaCLKyc1Lj68wdQzE/9+J7o6E=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=GZZzyQrxvXlwYlKzgEFibW7mRr6V89Gk/Qe/q96i71kAaoYKH80rRZdpHRKKUG4/A
-	 CQDorxEBWgNA47VAmB3SaGn+tBwN/cbcoHIrq8RtfGef3Mj32JKVtXkAVPp6gPMoHl
-	 vFYIVOmpVZtKz6LK3FMPNsH6KrnNlGB+LG+hBKJHDR3wWegaaTJiVL+qfwCxMonQcX
-	 BWmiJryGsGhr5XKAw8FkYSBjRPRQ9WsuYTYyVjRyc29KOz54fO2jaqL1UbZo8o2009
-	 dm74J2XtfHX+Whqxp4ZPLNWDLbDl/iFznhLxZrFbWLYaEKgkEBQqtzl9/3o2KUiMpP
-	 9/BwfFP9eDtwQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6870j7Ir92349942
+	b=VjqAjtZACeIJVZ4VeRQVK0NIRG7agc735voKhdvTfFvwRlTnAKRAu4gdln8Gu/E0I
+	 WmrPX6qjxmg9L5b+l32c3EPOFj/578x7+8PigR8x4JVzLqXDR+T1xrY1Ibe8edHA0A
+	 K50eSrZvw0nePny01eXM1TEDQr6vQLLQTbA5TjNb1FmxwDo0GEayPf8W2gCxKMJtBi
+	 10WWdRoUYPzE9K1bAceVTj6HOUCmyab5chfCexQLKXIs68bQT7fhkokIQY3UJjsmWy
+	 nLGrseQ+gr3Ry/z9gRQyD+NEaqX6Ivm826Uq09iU6yyQdYnfAwkYTHUHPg/3TquJfH
+	 UX9Ur+jO1jp8Q==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6870rW3x92353040
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 7 Sep 2026 08:45:07 +0800
+	Mon, 7 Sep 2026 08:53:32 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Mon, 7 Sep 2026 08:45:07 +0800
+ 15.2.2562.43; Mon, 7 Sep 2026 08:53:33 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Mon, 7 Sep 2026 08:45:07 +0800
+ 15.02.2562.043; Mon, 7 Sep 2026 08:53:33 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luis Albisu <lfa@me.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: [BUG] wifi: rtw88: WARN_ON storm from rtw_get_channel_group() -
- 5GHz channel 163 missing from switch
-Thread-Topic: [BUG] wifi: rtw88: WARN_ON storm from rtw_get_channel_group() -
- 5GHz channel 163 missing from switch
-Thread-Index: AQHdPkpgYdwTowjPKE+cQeByEDxNMrbCRoXQ
-Date: Mon, 7 Sep 2026 00:45:07 +0000
-Message-ID: <0d8a797bf64141e7ad438bfed0a85599@realtek.com>
-References: <1EC07BE6-C572-4E85-8C6B-5587597D8186@me.com>
-In-Reply-To: <1EC07BE6-C572-4E85-8C6B-5587597D8186@me.com>
+To: Maxim Skokov <skokovmaksimevg@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw89: fix typos in comments, debug messages and
+ struct field
+Thread-Topic: [PATCH] wifi: rtw89: fix typos in comments, debug messages and
+ struct field
+Thread-Index: AQHdPLxoeqCUhqVOYE+KCJqv7rQpLLbCTFvg
+Date: Mon, 7 Sep 2026 00:53:33 +0000
+Message-ID: <8094bfc474e34b2f826b9487e49bd601@realtek.com>
+References: <20260904222548.19732-1-skokovmaksimevg@gmail.com>
+In-Reply-To: <20260904222548.19732-1-skokovmaksimevg@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -61,66 +62,31 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Luis Albisu <lfa@me.com> wrote:
-> Hi,
+Maxim Skokov <skokovmaksimevg@gmail.com> wrote:
+> Correct several misspellings found by codespell:
 >=20
-> This report was generated by Claude Code after it addressed an issue it f=
-ound on one of my machines.
+>   moniter   -> monitor     (struct rtw89_btc_wl_role_info_bpos field)
+>   serach    -> search      (comment)
+>   Unsupport -> Unsupported (error message)
+>   nofity    -> notify      (comment)
+>   updat     -> update      (debug message)
+>   lagacy    -> legacy      (comment)
 >=20
-> It suggested I submit this since it might be of interest.
+> The renamed struct field has no users, so no further changes are
+> needed. No functional changes.
 >=20
-> Thank you for developing and making this code available and I hope this i=
-s helpful!
->=20
-> Sincerely,
->=20
-> LFA
->=20
-> On 6.18.29 an RTL8821AU in monitor mode produces a WARN_ON backtrace on
-> every channel hop that lands on 5GHz channel 165 with HT40, at roughly
-> 152 warnings per visit. Over a day this wrote 2.8 GB of journal on the
-> host and cut log retention from ~15 days to ~1.5. Not fatal, but it
-> taints the kernel and buries every other log line.
+> Signed-off-by: Maxim Skokov <skokovmaksimevg@gmail.com>
 
-I think the restriction always presents, right? Or only happens after 6.18.=
-29?
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
->=20
-> Hardware / software
-> -------------------
-> Adapter:  Alfa AWUS036ACS, USB 0bda:0811
->           "Realtek 8812AU/8821AU 802.11ac WLAN Adapter"
-> Driver:   rtw88_8821au / rtw88_8821a / rtw88_88xxa / rtw88_usb / rtw88_co=
-re
-> Kernel:   6.18.29+rpt-rpi-2712 #1 PREEMPT Debian 1:6.18.29-1+rpt1, aarch6=
-4
-> Machine:  Raspberry Pi 5 Model B Rev 1.0
-> Regdom:   country US (DFS-FCC); relevant range (5730 - 5850 @ 80)
-> Consumer: Kismet, monitor VIF, channel_hop_speed=3D1/sec
->=20
-> Reproduction
-> ------------
-> Put the adapter in monitor mode and set the channel to 165 with HT40
-> (Kismet's linuxwifi source does this automatically as part of its hop
-> list). Every such hop emits the backtrace below. Channels 1-11, 36-64,
-> 100-144, 149-161 are all clean; only hops involving 165 warn.
->=20
-> I isolated it by sampling `iw dev wlan1mon info` every 150 ms for 60 s
-> and joining the samples to warning timestamps. All 152 warnings in that
-> window fell in the two sample windows adjacent to the single visit to
-> channel 165. A visit to channel 161 at HT40 in a cycle that did not
-> include 165 produced zero warnings, as did every 20 MHz and 80 MHz
-> visit to every other channel.
->=20
-> Removing 165 from the hop list stops it completely: 480 warnings per
-> 10 minutes before, 0 across three separate 10-minute windows after.
->=20
 
-It looks similar to the one we met before. Please apply [1] to see
-if it can avoid the warning, but it also denies the use of certain channels=
-.
+> ---
+>=20
+> Notes:
+>     Found with codespell. Patch prepared with AI assistance; all changes =
+reviewed by me.
 
-[1] https://patchwork.kernel.org/project/linux-wireless/patch/2026041305360=
-1.13037-1-pkshih@realtek.com/
+Add a tag like  Assisted-by: LLM codespell ?
 
+Just reply this mail, no need to resend v2.=20
 
