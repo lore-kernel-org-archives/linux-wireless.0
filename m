@@ -1,73 +1,73 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C2D3B47CA
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053EC3769E8
 	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 19:09:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788808148; cv=none; b=OvTWaYsZB680MBYiHOt4OlUmzftyNJKmINsYO2jGeCx+j6Ri0tdbpjdMJGEOSf+4KBt5aIn+B3Tp2IkVFEF6hyCG11HJzjkhP1Ul/dG/4lvzOcv2S4OhJRFglMdAaMiMquNVpYcnLvHfvE80BaQThbVC/iMQ7lkjLxidgwsVOdU=
+	t=1788808149; cv=none; b=pw7uAC47hL4h0mPvVzpTplxSgnXfHHN5XQVsJj6Yl8rYZ/v8IC90tZGv7NUjSn/cuaEFToRcjfZpnMEyvzLAPBNv9w+ka29ibWs+5iICjf4X4WbBPXida7ysXV8AOxJ6UkYw2O2vYjOEWEV7LLKQx2NaRciAp22gzcs0lGqfaMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788808148; c=relaxed/simple;
-	bh=ztWP+24QaHA6Xw67hhL9tmJxZPi3tbSdQjf6uZ9EM6I=;
+	s=arc-20240116; t=1788808149; c=relaxed/simple;
+	bh=wwfOcqXAp5nTl+6NtE1fOP+Og6Nf8pBGaeI3tD3iD6E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Uehfu4ezPkNW+crgMTfz427RyeeM29mWbDTwcwkU5K4+KGfhy88RP64bEqi3JnEeV3C5onBbcsOYQ0k8tmXb4sjw96cRiOkgJWv2RZbKh/CmDnC1/V/oChpfB72wYcR4LXDQnIUiTne7fRYRRFHNjrjEaON7+Vo894sTEUiX3Os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Btwu77J7; arc=none smtp.client-ip=209.85.221.51
+	 MIME-Version; b=S+JT1R7sqs4AQxUzd9SkegWWDeFCNmcA+QIqfmvyJ5QoQ2YGAfPpyBL1bLL1mAb8SckMlxjWpV+GCrnzIgz9RxipCmoKqYu7/dtpYs1HBUnB7tDsCvbJzqc3bV2Dv2satn3pHjnEmNqHmMB4s5iyLHYXqqn2m7mVuAmOSyWi1OM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JG7lhmFY; arc=none smtp.client-ip=209.85.221.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Btwu77J7"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-482f9309813so3441345f8f.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JG7lhmFY"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-484392e3d33so2704129f8f.2
         for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 12:09:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788808144; x=1789412944; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788808145; x=1789412945; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=aWWUTNxueDekJa6qk76yBRcI4kBuGeARV4/mQXdjmJg=;
-        b=Btwu77J7bhZktSG10DgtFxKA/3g75DMy+S6vuOEDfknsLovw/BrwZqZflwD+957zso
-         P4VOk+II/qPV23AcU6LQlmruvX7Ts/nVDeKyZ+JCx2unASCybivqXit1qJhiHHM1UCe5
-         eF1aAEW6S3DS1VSF/0Sj+tP/LCkRKTd/jykDO0D2b+JaTPLWHY08ZYCXIxefI/pldSH8
-         VxaVCzDFenZMPcF2hOO9GmIWLXTbNQmzuCR4Udm1NgAHHheoQyYz135e1Y+t2wX+WQPc
-         4otDeLngINXV/dU9EnQKLTE4gA+2N5E1kf4CcHRpeK6bKckFuiDP8QgMS680MO8O8dSC
-         1FqQ==
+        bh=vyjryOFgl3/IWpjbrekzZYkUOz/Xg+LWqq/iX1jm4B4=;
+        b=JG7lhmFYjy3mu0k1ZvMSH6+Jj67PGlvP2KHV+Mn/h7QJyGX1T5nkq/gnf+0qD1qOdO
+         +ZMS7rqsndXKOJQplpDas05iMTgRDW5pJfpEikeFzP2R/oLHqCADNbSlO/EWFXxtx2Gd
+         Ac0mJ/QGIDc0tfOw7cmzDXyweBzLH0Uobbnc72u6oLTzHyNSHme/1CYwtJrLp4A0ZFI2
+         7GoDOk+3P9wz7BV/DUUcD8q8Wp85CTQXOlezjXBn4jr2QU27S65MQqPlbGWz/006lhYJ
+         rQSvIfW0DdqDkeBqu7JYodjGmJn1qm7J+rHxjoVCB4KkWezc0fVmUvJlXRdGSZM8gkKg
+         DceQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788808144; x=1789412944;
+        d=1e100.net; s=20251104; t=1788808145; x=1789412945;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aWWUTNxueDekJa6qk76yBRcI4kBuGeARV4/mQXdjmJg=;
-        b=iaSQSFFF7odA4vWZG7ZGZfWBZG3tsJYaoQKg/8agpUPoRm2OT2B6bIUl0LoCnqnvV1
-         SPFNu+4AbVm+Y6GpurSmGnXrnw2jnKfPKxtZM63EYgMm9VtVcn3sBooJQ8kdBufXEZcA
-         2khYGUeIc1jpQP+SGrpj02U+8mniaY0ktxmGkdcTPWlrmkGSQGXLoJPE2g0qu9gv7vUe
-         lqHM1D6HoyNgmwWlmnuPJFTiwNtDY3XNVdWbFSPCkSdHFOb0TKjezT40rTgs7vltbwVt
-         MjHFSeqo5D+v3PmxI5t2OAw0uPAfygtPt7uotalYI+EUPvleF+/8X2SDPm4t67kt7Vww
-         bSZg==
-X-Forwarded-Encrypted: i=1; AKwUvBwV/BMZMJAYwrGyBt0Sd7a9PNd6bDjZZjQ8wm7NH5TzVu1e+S00AnhRv9VcSFtQb0dl05vmAkTS1OrzhHsO+A==@vger.kernel.org
-X-Gm-Message-State: AFuF++nxcyJm4b43O1UanhJE+QtYHjsEJssFZ73Dx710GIuCgZ7/vGLB
-	LjaTyQc5lnAeektYQaRs1FyS7uM9zh4XeAgmryy3jr8rH4bRknSmt+RZ
-X-Gm-Gg: AYBFou1TxVZGdFmnZWqxXzKLCBNruXvSUOu+FDIjA4sqR5coxb/QeWiHJE+3NGsG67/
-	rBd281oqhZVHXrZvjsrinHnND5tFxUw4Rd2K+2krojkGZO/QdBpyNX4qrfWy+SArrkJBGvRTWtr
-	mfKwsUfvI+P7fdlTFejtka+MxfqTv57nQp8b2ZwlIGQHXf4bbcbrixH92Y4VPyNnrJ7fy7XpHOt
-	uclEezt8p9KHoaFAtmbT6ajG6g0ZgGGyM+sOBkh/Abk5gCplvu+xB3K18v23qOhP/43uTr9gUN9
-	l5xTLC9uiuQPHzI8O44PvyPG58HILKdRyNSkK4pxn/zQ/9+CjO+HNkX2GsXmYAU+4jQhO4XijSB
-	+iEwdpXUnTvumMK49/1L2DJzXKYcVET+9bhlOBv+w+7efL6gbIULN8L/LSsTWHsZYW3/u84LcPQ
-	+CtJN7WFIrSymMdCP7NRzHyEN4rA32fRYYY0zelrUY/ebexJdUWmBX/W4vhQ+Vm86KuJ9qeeuxo
-	pL7
-X-Received: by 2002:a05:6000:2001:b0:47f:96e3:530e with SMTP id ffacd0b85a97d-48587285526mr24874171f8f.8.1788808144235;
-        Mon, 07 Sep 2026 12:09:04 -0700 (PDT)
+        bh=vyjryOFgl3/IWpjbrekzZYkUOz/Xg+LWqq/iX1jm4B4=;
+        b=Lnh/Sr0Xdpq3zVktUrlvCClujjZ6QlnYDEmJa2pjew/WyQD1OB7NCQg6FsRCO8o3Vg
+         EHeTwda8+BU/BeSNN/yLMN7XeGH86WrNoN7goGDNzOqg9ihb7uWopjiv2KtbiKfftdhr
+         Dn6fzO9l2njKPd2oJMkm+5dTl6EEXySCzVD1TjfDC+rYAi2sXLz31xCFUaPJQXWh/SWX
+         u1YPmEGPIC4BzYu/Obxc5AUI0MX7Qo1uJTCIXGcyRE27U4J2dfYUIQ/vatbr+3/pSncw
+         iKTMm8xCDsMAerjVMve1iz16AxK/lvKqwI295taf8w5qn12NiTaZ7+gVBJBy0c18ZItN
+         Ezdw==
+X-Forwarded-Encrypted: i=1; AKwUvBzDBJLb5dEPCqrS46v+kqtSsm0eJswecSZZX28j3CWY+pgyUdLN9Ev7iPCn1ZLu1xNxYhAyS04BJV9vvLpTOw==@vger.kernel.org
+X-Gm-Message-State: AFuF++lrj/1OPusCC4VWd75aSdJfnUloV6Tj7rUM+Ao+/KN1B3FGJsUJ
+	4nof6oT5uHD2cIe/EqjkFb1APZrRDNUuq+IGLsRSUscudG+HX6jjb8kU
+X-Gm-Gg: AYBFou1mCo6TQ9VNhzIoFrL0pKOKULG9tpTyPrZjl9y3KySsshZK0RXej4tBmMxE75O
+	ibaqCMAiVe0kAkPwacXnrWzsN/Fi1VER5CU7d15D6f/7uKMpnAk9ch0cPIqT9ZvgbS/6t75XlSw
+	mXewmK/V/n2wzyL9DgzONY7BcDCDCNVXMVBCuBVkpIGMTzQo2NGkX1iYyvAkKz3Eytqbn2hdCEj
+	Xo94T+s5GeHf6K8oB2znwRqEPy+N2uQ3pJCwX9fkeuLEw31sPy/o9DOzz4nTxPungF9bZb58UaS
+	WfaGybl1p8vCmv45nIVC9hW0+MtH40wfPuX1opKdmXIewePpxp419m2ZE18EAIJwYuyX0SiR+Ob
+	oPG2XKEoJI+70GwczNrgC4hs5QQ7CwB5kc6ybDkrW7Dv6AdZcFptP+qtZKafTpktI1wjE3HH4Lr
+	RLydsAqq20uLVMF45aHwMOw7snGoMCo9NMny3uNDfo0F3abr98MzKP5/Ulw4WG0mpHvZY5sEymG
+	3E5
+X-Received: by 2002:a05:6000:1882:b0:485:8313:9f43 with SMTP id ffacd0b85a97d-485872b86b9mr27640631f8f.25.1788808145100;
+        Mon, 07 Sep 2026 12:09:05 -0700 (PDT)
 Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485885bf3f0sm33365544f8f.33.2026.09.07.12.09.03
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485885bf3f0sm33365544f8f.33.2026.09.07.12.09.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2026 12:09:03 -0700 (PDT)
+        Mon, 07 Sep 2026 12:09:04 -0700 (PDT)
 From: Mehmet Fide <mehmet.fide@gmail.com>
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	mehmet.fide@screeningeagle.com
-Subject: [PATCH rtw-next v2 1/3] wifi: rtw88: usb: bound what the driver feeds the after-DTIM queue
-Date: Mon,  7 Sep 2026 21:08:59 +0200
-Message-ID: <20260907190901.1056945-2-mehmet.fide@gmail.com>
+Subject: [PATCH rtw-next v2 2/3] wifi: rtw88: usb: only let the frames a dozing station needs use the after-DTIM queue
+Date: Mon,  7 Sep 2026 21:09:00 +0200
+Message-ID: <20260907190901.1056945-3-mehmet.fide@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260907190901.1056945-1-mehmet.fide@gmail.com>
 References: <20260907190901.1056945-1-mehmet.fide@gmail.com>
@@ -81,127 +81,93 @@ Content-Transfer-Encoding: 8bit
 
 From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Frames routed to the high queue are transmitted right after DTIM beacons
-only, inside the ATIM window, while they wait in the shared TX page pool.
-The driver puts no limit on how many it hands over, so as long as one
-station dozes, any sustained broadcast or multicast traffic outruns the
-drain and empties the pool: measured on an RTL8822BU AP with a single
-client in power save and ~40 frames/s of mDNS chatter, the free page
-count at 0x240 goes from 1803 to 16 in about 100 seconds and stays there
-for as long as the traffic lasts. From that point every other transmit
-queues behind the backlog, authentication responses arrive too late for
-anyone to join, and the reserved page download fails ("error beacon
-valid"). The AP keeps beaconing and only a reboot recovers.
+With the budget in place the high queue can no longer take the chip
+down, but ordinary chatter still competes with the frames a sleeping
+station actually needs. mac80211 marks every broadcast and multicast
+frame with IEEE80211_TX_CTL_SEND_AFTER_DTIM while a station dozes,
+mDNS and SSDP included, so under normal traffic the budget is spent on
+frames nobody waits for.
 
-Feed the high queue through a small budget that refills below the
-measured drain rate (about 3 frames per DTIM, ~15/s at dtim_period 2 on
-the default 2 TU ATIM window); whatever exceeds the budget leaves on its
-access category queue right away. The high queue backlog is now bounded
-by the burst size under any load, so the page pool cannot run dry, at
-the price that a dozing station may miss part of a broadcast storm.
+Do what the vendor driver does with its default "allow special" high
+queue filter: admit only ARP, EAPOL and DHCP to the after-DTIM path,
+the frames a station coming out of power save has to see; everything
+else goes out on its access category queue at line rate. The frames
+are classified the way rtw89_core_tx_btc_spec_pkt_notify() does it,
+from skb->protocol and the network and transport header offsets that
+mac80211 keeps from the netdev path; EAPOL is the control port flag.
+Frames the AP relays between its own stations arrive as ETH_P_802_3
+and are not inspected, they leave on the access category queue.
+
+With the filter in place the page pool stays at 1803 through the same
+180 second storm, a DHCP flood still takes the after-DTIM path (and is
+then held by the budget), and join/ping cycling without power save is
+unchanged (10/10).
 
 Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
 ---
 v2:
-- macro RTW_USB_HIQ_REFILL_INTERVAL for HZ / 10, RTW_USB_HIQ_BUDGET_MAX (Ping-Ke)
-- 'budget' instead of 'token': hiq_budget, rtw_usb_hiq_take_budget() (Ping-Ke)
-- refill bookkeeping rewritten as elapsed / interval and
-  hiq_refill = jiffies - elapsed % interval, with a comment (Ping-Ke)
-- blank lines after spin_lock_irqsave() and before spin_unlock_irqrestore() (Ping-Ke)
+- classify from skb->protocol, ip_hdr() and udp_hdr() like
+  rtw89_core_tx_btc_spec_pkt_notify(), EAPOL from the control port flag;
+  the SNAP/IV parser and linux/unaligned.h are gone (Ping-Ke)
+- <linux/*> includes in alphabetical order (Ping-Ke)
+- relayed (ETH_P_802_3) frames documented as not inspected
 
- drivers/net/wireless/realtek/rtw88/usb.c | 41 ++++++++++++++++++++++--
- drivers/net/wireless/realtek/rtw88/usb.h |  5 +++
- 2 files changed, 43 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/usb.c | 26 ++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index c90802919473..5482e44f4a88 100644
+index 5482e44f4a88..473b63d16658 100644
 --- a/drivers/net/wireless/realtek/rtw88/usb.c
 +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -562,7 +562,37 @@ static int rtw_usb_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
+@@ -2,9 +2,11 @@
+ /* Copyright(c) 2018-2019  Realtek Corporation
+  */
+ 
++#include <linux/ip.h>
+ #include <linux/module.h>
+-#include <linux/usb.h>
+ #include <linux/mutex.h>
++#include <linux/udp.h>
++#include <linux/usb.h>
+ #include "main.h"
+ #include "debug.h"
+ #include "mac.h"
+@@ -562,6 +564,26 @@ static int rtw_usb_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
  	return rtw_usb_write_data(rtwdev, &pkt_info, buf);
  }
  
--static u8 rtw_usb_tx_queue_mapping_to_qsel(struct sk_buff *skb)
-+#define RTW_USB_HIQ_REFILL_INTERVAL	(HZ / 10)	/* jiffies per unit of budget */
-+#define RTW_USB_HIQ_BUDGET_MAX		16
-+
-+static bool rtw_usb_hiq_take_budget(struct rtw_usb *rtwusb)
++static bool rtw_usb_bmc_needs_dtim(struct sk_buff *skb)
 +{
-+	unsigned long flags, elapsed, add;
-+	bool ok;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct udphdr *udphdr;
 +
-+	spin_lock_irqsave(&rtwusb->hiq_lock, flags);
++	if (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)
++		return true;
 +
-+	elapsed = jiffies - rtwusb->hiq_refill;
-+	add = elapsed / RTW_USB_HIQ_REFILL_INTERVAL;
-+	if (add) {
-+		rtwusb->hiq_budget = min_t(unsigned long, rtwusb->hiq_budget + add,
-+					   RTW_USB_HIQ_BUDGET_MAX);
-+		/* The part of the current interval that has not completed yet
-+		 * keeps counting toward the next unit
-+		 */
-+		rtwusb->hiq_refill = jiffies - elapsed % RTW_USB_HIQ_REFILL_INTERVAL;
-+	}
-+	ok = rtwusb->hiq_budget > 0;
-+	if (ok)
-+		rtwusb->hiq_budget--;
++	if (skb->protocol == htons(ETH_P_ARP))
++		return true;
 +
-+	spin_unlock_irqrestore(&rtwusb->hiq_lock, flags);
++	if (skb->protocol != htons(ETH_P_IP) ||
++	    ip_hdr(skb)->protocol != IPPROTO_UDP)
++		return false;
 +
-+	return ok;
++	udphdr = udp_hdr(skb);
++
++	return udphdr->dest == htons(67) || udphdr->dest == htons(68);
 +}
 +
-+static u8 rtw_usb_tx_queue_mapping_to_qsel(struct rtw_usb *rtwusb,
-+					   struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -573,7 +603,8 @@ static u8 rtw_usb_tx_queue_mapping_to_qsel(struct sk_buff *skb)
- 		qsel = TX_DESC_QSEL_MGMT;
+ #define RTW_USB_HIQ_REFILL_INTERVAL	(HZ / 10)	/* jiffies per unit of budget */
+ #define RTW_USB_HIQ_BUDGET_MAX		16
+ 
+@@ -604,7 +626,7 @@ static u8 rtw_usb_tx_queue_mapping_to_qsel(struct rtw_usb *rtwusb,
  	else if (is_broadcast_ether_addr(hdr->addr1) ||
  		 is_multicast_ether_addr(hdr->addr1))
--		qsel = (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ?
-+		qsel = (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) &&
-+		       rtw_usb_hiq_take_budget(rtwusb) ?
+ 		qsel = (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) &&
+-		       rtw_usb_hiq_take_budget(rtwusb) ?
++		       rtw_usb_bmc_needs_dtim(skb) && rtw_usb_hiq_take_budget(rtwusb) ?
  		       TX_DESC_QSEL_HIGH : skb->priority;
  	else if (skb_get_queue_mapping(skb) <= IEEE80211_AC_BK)
  		qsel = skb->priority;
-@@ -593,7 +624,7 @@ static int rtw_usb_tx_write(struct rtw_dev *rtwdev,
- 	u8 *pkt_desc;
- 	int ep;
- 
--	pkt_info->qsel = rtw_usb_tx_queue_mapping_to_qsel(skb);
-+	pkt_info->qsel = rtw_usb_tx_queue_mapping_to_qsel(rtwusb, skb);
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
- 	ep = qsel_to_ep(rtwusb, pkt_info->qsel);
-@@ -1034,6 +1065,10 @@ static int rtw_usb_init_tx(struct rtw_dev *rtwdev)
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
- 	int i;
- 
-+	spin_lock_init(&rtwusb->hiq_lock);
-+	rtwusb->hiq_budget = RTW_USB_HIQ_BUDGET_MAX;
-+	rtwusb->hiq_refill = jiffies;
-+
- 	rtwusb->txwq = create_singlethread_workqueue("rtw88_usb: tx wq");
- 	if (!rtwusb->txwq) {
- 		rtw_err(rtwdev, "failed to create TX work queue\n");
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 9b695b688b24..94ff21dd0846 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -75,6 +75,11 @@ struct rtw_usb {
- 	u8 out_ep[RTW_USB_EP_MAX];
- 	int qsel_to_ep[TX_DESC_QSEL_MAX];
- 
-+	/* protects hiq_budget and hiq_refill */
-+	spinlock_t hiq_lock;
-+	u32 hiq_budget;
-+	unsigned long hiq_refill;
-+
- 	struct workqueue_struct *txwq, *rxwq;
- 
- 	struct sk_buff_head tx_queue[RTW_USB_EP_MAX];
 -- 
 2.55.0
 
