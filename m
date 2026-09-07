@@ -1,89 +1,89 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F163743CE42
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 20:33:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84D134E3762
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 20:33:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788813231; cv=none; b=HsPJg8ZXb7XBu4+nOBSDEU4inA52ZuqEvyI3cVJjTnu8rwSQPO8s9OzI/1yOQfbI6uMBOE/1nddTCfCYT8X/+v9B1x0216DkIkT/vt2yL+aylndmdScJte6Z0S+SQAuNXvJwFfg5/yenldPdXUHn19oX3lH9wmoKO9/sIDal8SI=
+	t=1788813235; cv=none; b=n+3NY0V8arvixIJXTPO2mfRWI/81s5U+eustZ7O50MRnrEocAwY2AsP8v8xQGyUljEn+XOlzRc1rQcJY323TQ/zRlBeAzdJGm3cuG5Ad/mVDfZ5vwtVGU/Za86LK++jCkb67I03UxPnCfoBkzL/mt/zq91kD7lFmleVWOrZAYrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788813231; c=relaxed/simple;
-	bh=86w9hu+WJ1z3hy9Or+mlRGtKjgaxVht0KJsSe0k3fEg=;
+	s=arc-20240116; t=1788813235; c=relaxed/simple;
+	bh=3BIpCqgDAnBGrfpL4IV/b7aNMrM2UPJt17dMZbUsoWw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=G/wQewBxYP+o5F90753XJgJeuvbXPfr2dXwvutI2snt/xaJbzM4/rNRiktO9YJA0Xo+KTepdebNxubJBOhjgbhkb5dn9FDr1PPDJMHWYHKdzjlrPfcww5GJX/88D2IJ8rYyCDI7GxuFN9XWZOXCgJoXtHnz+9O/nNCzWrYwEuwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RAVSusNU; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ihQU8Mzt; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=jJKuxDlnLC82L07dfkQXyIVzzoSUV1407ER3goB2/Y+aqZf6ZNXvcjwP4V8t8hUzsgkroo1e3b0gUW4GbPYinYPz08rSi8rBctIw+SnOtc7AGDShsowm7nxvXip9HTHwSmtig5MkgQ1SGZc0AmDDqmSfacPWKdpmPyP0XcEbGZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LlrtBn7c; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KM7AuC88; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RAVSusNU";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ihQU8Mzt"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687H9eWZ4065039
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Sep 2026 20:33:49 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LlrtBn7c";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KM7AuC88"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687H7gb24015285
+	for <linux-wireless@vger.kernel.org>; Mon, 7 Sep 2026 20:33:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	gofo4g5PMnVYPHJH99bL1SwGrtDr+P/qsI5BTGGqohw=; b=RAVSusNUGqWXGM24
-	HXFfHQS0H6iLEF2X3JaSi5NtkAfaOD/wCk32AQbYBtjiqEShavXWh/YEjt9oJ/4M
-	55a8JsB1m5mJsCB9l3G3GjctySL9GZ+JckPHVOFEG7XnqpVxD4EMR2zNu5m3lMeE
-	CQ83XH89MZuXpY7G/ZjKrrDLC9BM3k+0PWyz21WSVUJgx4NZxCkcN39rqE1y97hK
-	dIxKv7xGU2HVnrWi2b0+knt7OTlqX5j2gCFS9B1hIbCr9oGWufb6B+SzoRZfrq3l
-	PrQLe6ySXkdHhZ1RNaDaaRcYapqMX4tpOcS3vgla0AvhcbciX3rJFWSXWhoe1rDU
-	E3u1bw==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gj077gtkh-1
+	pCsImhyIeDGFUN5AVZ441p15WIFo4hf5osqfn8vGVMw=; b=LlrtBn7crFH9fRya
+	+Tz8nCXmaT3mT3zrlwdfQea6bUmqNeO6gAhMt8StV0VlDY8FFQAPrZcIypg3XXFN
+	uAXxln9FXmFPvMd9cHrIYPRtUa+ibLoagUN29PJt84BSWt6Nx1hXarkULNucziDv
+	+zyruQb6FfRxxYh6UtM6g9s+BReQnt1OhUnx3CehvjCNr5U360068VUanAzY/U+J
+	pDtBVvWc37dt4Ytd/o5Evz6Q1NQZ55jMTdkXswacSvS8WRi9F9kbKUeNyL7PjKgL
+	RfIJf/V6Sh2ujv6xVjnvcPDLeD22RfDRKF6TyWo0ctSX9QAzvo8Ae4YwI+NuVwN8
+	xPBkYA==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ghsw22fum-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 20:33:48 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3968dfff779so5337630a91.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 13:33:48 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 20:33:52 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cbe77d6864dso5786910a12.2
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2026 13:33:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788813228; x=1789418028; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1788813232; x=1789418032; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=gofo4g5PMnVYPHJH99bL1SwGrtDr+P/qsI5BTGGqohw=;
-        b=ihQU8MztNpQ5CWHSj9SaMdxQCZIBVBdOBkwnTVqaw+DK4Cyge3kAFsjPQjFObhNJnH
-         sCdKWPXELq6EJtjHFcM6M+CSuDO3Soy2LLsOPy7UD1ZbvvFm5lzAaU4L8FJhiB1qDPK5
-         CrQveQX3Ml0NzR1KIWSQTqISloRHRiKgntxXrr9AYvkCNm0J1mvvYY+WtLbJG2vbWY4L
-         ZuJi+YI06HlpC6qbJYfOu9+rk4UuVhJte7PDL31IPkaM0mCfVm88F52CmFPsw422Decr
-         Pb5iX800ql/5rfQj0tnTPuCNdTDkcqWdnHgnDZFGHWP85fyCNzUVw5Iy46WqF8QoxWgw
-         qwlg==
+        bh=pCsImhyIeDGFUN5AVZ441p15WIFo4hf5osqfn8vGVMw=;
+        b=KM7AuC88U0JzmfFkcOrqZR4xZUJx9qzxEGOdd5to6wJ49PlGuoi3xoLdvwz1VXaL1A
+         aCES257UgbEa5QR8jaxnd8bYh6IIyCM8nTQ2EnuY7aN6YNqOZ8qd1kmkYFbe5acWQYyW
+         HdT2oKmTw81hh0d5o5Ng2TUKgfErQCi8GB1pHdN5zAvR60PaGyZVvXIpAsu9bHNM6daA
+         Hzj6YftX5BPmaemBaJeS7pHxFs9bqSUrpVJArgRXKxJ9NSVoIK9GEMdDCYuwiEsNBuHg
+         HtJ21R+mWWtOL4+gR967P94GvPZQhRlow3qg1ViWDbMuabQ1X+v8PjfBCRVAfX09ODQz
+         pZUQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788813228; x=1789418028;
+        d=1e100.net; s=20251104; t=1788813232; x=1789418032;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=gofo4g5PMnVYPHJH99bL1SwGrtDr+P/qsI5BTGGqohw=;
-        b=Icyk6rgCOI6mlGdcF0dkF+ZWswr51iExo/NjmRz1Gu7xFAQOHyoSjxsUdg4qe2IIM1
-         2XkcnHjM1pr/WnhPbhBme78jjv60VyTxTxRBJqFTkhbuIqB0ml+bgLbUnwN6KGI3Si1E
-         nhG3j56iomMcgwlz+fTobobzz/U4KUaHDPLjRPATs0iQy7EpJfribwmXjgF2H+NKgPUd
-         phV0B10O7w1XP4HdGhlFXeaXBa4gm1BhGuLt9Ct/9ak24rP7t1hgY2RhL0UWg2ISAqLs
-         zK/eI/Bk5j3ChUYHH0UtXs9smrYEQC6kW1cUOXum2i4kw43jelDRShU1NgzuH0/jiSe2
-         UqnQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxulzGEufLKQyOAv3ua4q0VcuvpPHu9Wq2KwpC4sXbVaK4Vhr7IJc1Lorys/8SFwAnCXMFFfrJazIIROStPKw==@vger.kernel.org
-X-Gm-Message-State: AFuF++kGRmo428iSCg3r2zs9+Je4pI3I5rkq+MCziXJ1jlcLb/ZWct6p
-	4RZER4ji4VvirxQNQrYsCFvj/xRyblucChhPc7EAHPA0phCtsLbDGE5RGWJgDikXQoUhtWH6AQs
-	ysUqrFHxdS+aVGSGsHvqPDfEVlqYVi0K9h3ZRcHzRBWHVO+xTiDoxo95I/g73OgdpeEc9
-X-Gm-Gg: AYBFou0+P4eit8vc1ByaDG0Z/HaswJ1Dfzuuc1mxuQvfrrKM0V/bpP/97iHrkspbx73
-	yIn9Qjr37mdKiwvjqJ3HAvoZKm/+evAa3GtgkFabsCViz40KpXWMzr3cv2COLbd7KN9alPZ2CXx
-	wcAK0U+7j6QzPYawTxoIGeCrd/HNjf/Yd8GudDNH4yG11SoPHXEZZi7o7hBH6jE1qZ/xRQ637wj
-	9GKdrMCbX+83iU6EPK9opzx1BYcOqENpp43iAof8/gLlJJLrhdJzO+NIz41mWFq09+kkcexQZTS
-	4H5k+sp8Pl+zmEwmrvHHINwY7Rx/FEM5/QX0C8t4zZoUaishsklcwNxCYWIZGBAIkwVewffHTvL
-	2Dk4SFhjgxvF0HjzlL+rbpyFrxyTh2/aelRlZG2wm68A8iCLzFiMKg7IIpF1nYL63Tw5vM0JMZN
-	izL/O1KfPsA34iTtERxAW1tg==
-X-Received: by 2002:a17:90a:f945:b0:395:8124:ac53 with SMTP id 98e67ed59e1d1-39b8bd31191mr2581264a91.6.1788813227985;
-        Mon, 07 Sep 2026 13:33:47 -0700 (PDT)
-X-Received: by 2002:a17:90a:f945:b0:395:8124:ac53 with SMTP id 98e67ed59e1d1-39b8bd31191mr2581239a91.6.1788813227557;
-        Mon, 07 Sep 2026 13:33:47 -0700 (PDT)
+        bh=pCsImhyIeDGFUN5AVZ441p15WIFo4hf5osqfn8vGVMw=;
+        b=dbGFUeS1CSPPSUUeXqpFgEOa2jzU0nQ/i+VrGmxhJzSo//75yyYftGDaPV0HMF4JPH
+         0YJwUKngcEmCKf9Qe3TgbPcYb7sfTGPd37iRMoGnxzdrQl+wVkjVexFVbS4XyFXgvT4y
+         OoXzfCtEFm+ewkfICbomcsq8rNRQMM7i4xz5RNKVBQFIT6zqlclm2sRmraD0bTDb1jSC
+         I3GpFt/SCOILGY9dis7sLpk22fDnfkLkgc7+o0P6ubs9XxIDdKwX3jkL8grGrukBLnEz
+         3TK/dLFVORCfbls4tmV8zUXeokjB6dyXB6anHNxU8e/pOITV7iTwAgCcdVUzTJHmTBXo
+         5IPg==
+X-Forwarded-Encrypted: i=1; AKwUvBwe6YsTW8bAY26sWJuaOtSs0uKinvUPT+Mh7dvocl/mWHv0Po0OA5Et9SwRKnqrSd6FTHhj505fiAdzjmkaUA==@vger.kernel.org
+X-Gm-Message-State: AFuF++kE+tzcEmXxWzgJwtHScRV/s1Pu5XRCDspe7gVLbao8DZstDRN8
+	etGjEYyJw7qMF/n5GgBHBE8Jr+pPAr9oNqY4NJiHTWB0ocx9ZJEOOkbsh6NoFWt94huzJNKPywM
+	pycNlq6XstY/VNwdtOozLSBxnStmuMdLJtEOZMY0Js8sfIVyp5NfEZtF8KC2GhL79P8W9
+X-Gm-Gg: AYBFou0KhW93QXk6TrFagvySD5Ssz1isTSvUide++opNe+loTjEk7iYaloeoZVJ1kTh
+	bmMfjgZ96CKZ8vF9LfeBRCJJIZ7aczAnQtCn4PbJrqgVZAJh3a8D6W4HkHzj+9pT/Kt7rry3Sbd
+	eIYyJy9T51fCftjgt5x9DO7EJ//0hQfS0MLS5d2hNWU3kJ1w+DjgpV1M0beuZNSslLm4+AOB9EQ
+	xypacqDnDVbHFcgc6niyWLBogL0KHKruDt1O11LRdWepHGkj8pT00gWRO7kQ4/i3b77osjOAxsT
+	kRBQDzVUlkd/gq/Fl391AVst7v7PxK84e92LIl0mMDotoNZyK8OtNZzXik6dpzq71xdjUSNx7fP
+	uyhw7nLMmDY9L9frvaezr5lNJQigTMmc+Pw56ZETk+Zpqpq4bPl+1BLthJLQN5mYoQL+pHeCB2a
+	ohoNhTOCPRi12mak7qnztfJQ==
+X-Received: by 2002:a05:6a20:43a3:b0:3d3:afeb:880 with SMTP id adf61e73a8af0-3da3a223f79mr38439444637.28.1788813231902;
+        Mon, 07 Sep 2026 13:33:51 -0700 (PDT)
+X-Received: by 2002:a05:6a20:43a3:b0:3d3:afeb:880 with SMTP id adf61e73a8af0-3da3a223f79mr38439400637.28.1788813231454;
+        Mon, 07 Sep 2026 13:33:51 -0700 (PDT)
 Received: from hu-pooventh-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339af25062sm47841297eec.16.2026.09.07.13.33.43
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339af25062sm47841297eec.16.2026.09.07.13.33.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2026 13:33:46 -0700 (PDT)
+        Mon, 07 Sep 2026 13:33:51 -0700 (PDT)
 From: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
-Date: Tue, 08 Sep 2026 01:59:18 +0530
-Subject: [PATCH wireless-next 09/18] wifi: mac80211: Send BlockAck policy
- in AMPDU action
+Date: Tue, 08 Sep 2026 01:59:19 +0530
+Subject: [PATCH wireless-next 10/18] wifi: mac80211: Define SMD BSS
+ Transition context for transport
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,7 +92,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260908-smd-v1-9-65ad4ab30fbd@oss.qualcomm.com>
+Message-Id: <20260908-smd-v1-10-65ad4ab30fbd@oss.qualcomm.com>
 References: <20260908-smd-v1-0-65ad4ab30fbd@oss.qualcomm.com>
 In-Reply-To: <20260908-smd-v1-0-65ad4ab30fbd@oss.qualcomm.com>
 To: "David S. Miller" <davem@davemloft.net>,
@@ -103,127 +103,219 @@ Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org,
         Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfX5O9uyDYcyU7h
- F7KHy1I4vSwEJvKtM/lt/zGoZN3UTIROYzlf7zrye+6PD2KTuYm/dSJx7w9UcH3EgQKaCoaMCbM
- gEh/O2gGGbToED1IFyIVSap+15lE3F3KRpdKW0RTRLp9qDUXZpQ10JwqurhfllJLdd3+n01gyWZ
- 4RAbRHq38KNMtdc93GueTdDjBuPzy7ZITXqVUNDHKx+Pe8h7z0yUU339us7rTd/12g1LHkm3yfv
- Q4ZbaNGlzm7YRAtTqm1YFnQwo+3b4wQcD85RmtJLwNJg4aWFKPh5/W6Vmk1tA4t0k4lUwN96wjq
- uyi6HDCCOBcL6fMWdd0n6+5JC7RVUYhyZ4v7vThFMCkmfEY7l6HQ+2wauw+1KM5c9IC77SNksWI
- 2STO/HfVGPEp35zwwR8GxMkwm00WYo5lvFN26fH/N45/SqZNgY1PWwRzibcCPPeAHN+Xuk0CizQ
- 0GHnbwZ9xrFBpudJ6Vg==
-X-Authority-Analysis: v=2.4 cv=Xbe5Co55 c=1 sm=1 tr=0 ts=6a9f1fac cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-ORIG-GUID: qrrgAQ0yV33W_fU2Di3Kly5sJGeuveRy
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfXwkfssacbKZqy
+ HBeKNS46Y9rs7RWebHwn+vOFDPZJb+RFsfHE0hu4uRrfEYi/LxOF2vuU9wT4/kmPv/72qIpgf+u
+ Ve98xgpHqoY1dOgRlc3xjFd+8nsBHf8=
+X-Authority-Analysis: v=2.4 cv=eKwjSnp1 c=1 sm=1 tr=0 ts=6a9f1fb0 cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=EUspDBNiAAAA:8 a=poGJry9enlaRV4ryzAsA:9 a=QEXdDO2ut3YA:10
- a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-ORIG-GUID: sFVhqSzFUCm-n-Zrsb9gq0W4XFzIEuXL
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfX6m8yNF9XMwiy
- eXRpyD/Sly/QcAvIvPnCiDOKl7jFrk+N57FjPvWlkXMmpt1tanwn8tuDKWBY5ukduBab+lPVGVX
- gCn9kJAo5q3XDNi7U8P1wQxkHlfdCHw=
-X-Proofpoint-GUID: sFVhqSzFUCm-n-Zrsb9gq0W4XFzIEuXL
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=EUspDBNiAAAA:8 a=J9-iD1ZZfo0dXw_rko0A:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDIyNiBTYWx0ZWRfX5byP1yPvJl/n
+ bIVl5sihCrf95G5dkveQhLaCzWOY75ji9o/xpkwAiA0YIMVz8s1BJlFSLBEa6WeEfGnkI9x6LFB
+ SU6Zr3yVrLPjujnd+lLatdG4hOfEJyxouJyxIv7n4JVGrHdHP6v8e847TdZM78yC6snObYRTbZ4
+ nxxY4Q1OCW7mIctHbuAXVAfvE1uy8n4uVfaLGjhYkOEpaRCZXLXFHVN7oegQNKglA2kPpTa6fDI
+ eqEEjKx6A7YdA2T4tIUTGAo9cuGtZ4OnjGbkKYGvS9r/lPo3e5VAVpRuNfFP1wUtAc92MNKleGI
+ aIKZSgkBjtgYOlGwxJxZo/mpcoZtkwQdbQorNcmQrk48iZ4Xp86SCPrWdhYySHHSozXtMybCo4n
+ amcwbj+md/BBgas7OWflEWk++El2CULXsxp39/ucY3J+a3ChMnH1RB0C6cs7f5nbinJMVZQj0+u
+ /E0JjjgE2K8Bm83MsIw==
+X-Proofpoint-GUID: qrrgAQ0yV33W_fU2Di3Kly5sJGeuveRy
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-07_05,2026-09-07_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 impostorscore=0 lowpriorityscore=0 clxscore=1015 adultscore=0
- suspectscore=0 priorityscore=1501 spamscore=0 bulkscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609070226
+ bulkscore=0 lowpriorityscore=0 malwarescore=0 priorityscore=1501
+ suspectscore=0 clxscore=1015 adultscore=0 spamscore=0 phishscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609070226
 
-While sending AMPDU action hints to wireless drivers, mac80211 does not
-currently send the BlockAck policy extracted from ADDBA frames. Send the
-BlockAck policy as well so that drivers have complete information about
-the negotiation. Policy is valid only for IEEE80211_AMPDU_RX_START.
+IEEE P802.11bn/D2.0, Aug 2026, subclause 37.16.9, defines the context
+data to be transported during SMD BSS Transition (ST) laid out in
+subclause 37.16. The station's context data is attached to the ST
+Preparation or Execution management frame using SKB extensions so that
+userspace receives the context along with the relevant frame.
+
+Define the context data - per-TID sequence numbers in downlink (DL) and
+uplink (UL) directions, packet number in DL, per-TID packet numbers in
+UL, and per-TID BlockAck session parameters in DL and UL, plus a
+variable-length driver context - to be used by the driver to attach the
+context to the frame SKB. Additionally, define a helper that attaches
+the SMD context to the SKB extension so that the initialization
+operations (container allocation, reference tracking, and context
+linking) are properly handled.
 
 Signed-off-by: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
 ---
- include/net/mac80211.h | 15 +++++++++++++++
- net/mac80211/agg-rx.c  |  1 +
- net/mac80211/trace.h   |  8 +++++---
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ include/linux/ieee80211-uhr.h | 86 +++++++++++++++++++++++++++++++++++++++++++
+ include/net/mac80211.h        | 50 +++++++++++++++++++++++++
+ 2 files changed, 136 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9b5fa6d6281b..32b9b7cd1685 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3964,6 +3964,19 @@ enum ieee80211_ampdu_mlme_action {
- #define IEEE80211_AMPDU_TX_START_IMMEDIATE 1
- #define IEEE80211_AMPDU_TX_START_DELAY_ADDBA 2
+diff --git a/include/linux/ieee80211-uhr.h b/include/linux/ieee80211-uhr.h
+index c3f87d4c8bec..f904b1e65f10 100644
+--- a/include/linux/ieee80211-uhr.h
++++ b/include/linux/ieee80211-uhr.h
+@@ -649,6 +649,92 @@ struct ieee80211_uhr_mode_change_tuple {
+ 	u8 variable[];
+ } __packed;
  
-+/**
-+ * enum ieee80211_ba_policy - BlockAck Policy
-+ *
-+ * @IEEE80211_BLOCKACK_DELAYED: Block ACK sent to the BAR sender in next TXOP
-+ * @IEEE80211_BLOCKACK_IMMEDIATE: Block ACK sent to the BAR sender immediately
-+ *
-+ * This field is valid only for %IEEE80211_AMPDU_RX_START.
++/*
++ * Context information carried in SMD BSS Transition (refer IEEE P802.11bn/D2.0,
++ * Aug 2026, subclause 37.16.9.
 + */
-+enum ieee80211_ba_policy {
-+	IEEE80211_BLOCKACK_DELAYED,
-+	IEEE80211_BLOCKACK_IMMEDIATE,
++#define IEEE80211_SMD_CTX_NUM_VALID_CTX    8
++
++#define IEEE80211_SMD_CTX_VALID_DL_SN      0
++#define IEEE80211_SMD_CTX_VALID_UL_SN      1
++#define IEEE80211_SMD_CTX_VALID_PN         2
++#define IEEE80211_SMD_CTX_VALID_BA_PARAMS  3
++/* Positions 4 to 7 are reserved */
++
++/*
++ * Data TIDs transported in the context, IEEE P802.11bn/D2.0, Aug 2026,
++ * subclause 9.4.2.364.
++ */
++#define IEEE80211_SMD_CTX_NUM_TIDS 8
++
++#define IEEE80211_SMD_CTX_MAX_PN_LEN 16
++
++/**
++ * struct ieee80211_smd_ctx_ba - BlockAck parameters for DL and UL
++ *
++ * @amsdu_supported: Peer's capability to support A-MSDU within A-MPDU.
++ * @ba_policy: BlockAck policy (0 = delayed BlockAck, 1 = immediate BlockAck)
++ * @buffer_size: Reorder buffer size from ADDBA Request (10-bit, max 1023)
++ * @timeout: BlockAck session timeout
++ * @ext_no_frag: ADDBA Extension fragmentation support
++ * @extfrag_level: ADDBA Extension HE fragmentation level
++ * @ext_buffer_size: ADDBA Extension buffer size; combined with @buffer_size as
++ *	(@ext_buffer_size << 10 | @buffer_size) to get the full reorder
++ *	buffer size
++ */
++struct ieee80211_smd_ctx_ba {
++	bool amsdu_supported;
++	u8 ba_policy;
++	u16 buffer_size;
++	u16 timeout;
++	bool ext_no_frag;
++	u8 extfrag_level;
++	u16 ext_buffer_size;
 +};
 +
- /**
-  * struct ieee80211_ampdu_params - AMPDU action parameters
-  *
-@@ -3976,6 +3989,7 @@ enum ieee80211_ampdu_mlme_action {
-  * @buf_size: reorder buffer size  (number of subframes). Valid only when the
-  *	action is set to %IEEE80211_AMPDU_RX_START or
-  *	%IEEE80211_AMPDU_TX_OPERATIONAL
-+ * @policy: BlockAck policy of type &enum ieee80211_ba_policy
-  * @amsdu: indicates the peer's ability to receive A-MSDU within A-MPDU.
-  *	valid when the action is set to %IEEE80211_AMPDU_TX_OPERATIONAL
-  * @timeout: BA session timeout. Valid only when the action is set to
-@@ -3987,6 +4001,7 @@ struct ieee80211_ampdu_params {
- 	u16 tid;
- 	u16 ssn;
- 	u16 buf_size;
-+	enum ieee80211_ba_policy policy;
- 	bool amsdu;
- 	u16 timeout;
- };
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 9629e00069a1..2d67fd883146 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -289,6 +289,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		.amsdu = false,
- 		.timeout = timeout,
- 		.ssn = start_seq_num,
-+		.policy = ba_policy,
- 	};
- 	int i, ret = -EOPNOTSUPP;
- 	u16 status = WLAN_STATUS_REQUEST_DECLINED;
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 294a8a44a125..63838a6d5d07 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -116,6 +116,7 @@
- 				__field(u16, ssn)					\
- 				__field(u16, buf_size)					\
- 				__field(bool, amsdu)					\
-+				__field(u8, policy)					\
- 				__field(u16, timeout)					\
- 				__field(u16, action)
- #define AMPDU_ACTION_ASSIGN	STA_NAMED_ASSIGN(params->sta);				\
-@@ -123,12 +124,13 @@
- 				__entry->ssn = params->ssn;				\
- 				__entry->buf_size = params->buf_size;			\
- 				__entry->amsdu = params->amsdu;				\
-+				__entry->policy = params->policy;			\
- 				__entry->timeout = params->timeout;			\
- 				__entry->action = params->action;
--#define AMPDU_ACTION_PR_FMT	STA_PR_FMT " tid %d, ssn %d, buf_size %u, amsdu %d, timeout %d action %d"
-+#define AMPDU_ACTION_PR_FMT	STA_PR_FMT " tid %d, ssn %d, buf_size %u, amsdu %d, policy=%u, timeout %d action %d"
- #define AMPDU_ACTION_PR_ARG	STA_PR_ARG, __entry->tid, __entry->ssn,			\
--				__entry->buf_size, __entry->amsdu, __entry->timeout,	\
--				__entry->action
-+				__entry->buf_size, __entry->amsdu, __entry->policy,	\
-+				__entry->timeout, __entry->action
- 
- /*
-  * Tracing for driver callbacks.
++/**
++ * struct ieee80211_smd_ctx - IEEE 802.11bn SMD Roaming Context (refer
++ *	IEEE P802.11bn/D2.0, Aug 2026, subclause 37.16.9)
++ *
++ * @valid_ctx_bmap: Bitmap indicating which context fields are valid;
++ *	bit positions defined by IEEE80211_SMD_CTX_VALID_* constants
++ * @pn_len: Length of PN in bytes; varies by cipher type
++ *	(e.g. CCMP (6), GCMP-256 (16))
++ * @dl: Down-link context data
++ * @dl.valid_tid_bmap: valid DL TIDs for which context is present
++ * @dl.sn: DL SN per-TID to be assigned next
++ * @dl.pn: DL PN to be assigned next
++ * @dl.ba: DL BlockAck parameters per-TID for the BlockAck session
++ * @ul: Up-link context data
++ * @ul.valid_tid_bmap: valid UL TIDs for which context is present
++ * @ul.sn: UL SN per-TID to be checked next
++ * @ul.pn: UL PN per-TID to be checked next
++ * @ul.ba: UL BlockAck parameters per-TID for the BlockAck session
++ * @drv_ctx_size: Number of valid bytes in @drv_ctx.
++ * @drv_ctx: Variable-sized array of driver-specific context, counted by
++ *	@drv_ctx_size. Opaque to the wireless core; interpreted by the drivers.
++ */
++struct ieee80211_smd_ctx {
++	DECLARE_BITMAP(valid_ctx_bmap, IEEE80211_SMD_CTX_NUM_VALID_CTX);
++	u8 pn_len;
++
++	struct {
++		DECLARE_BITMAP(valid_tid_bmap, IEEE80211_SMD_CTX_NUM_TIDS);
++		u16 sn[IEEE80211_SMD_CTX_NUM_TIDS];
++		u8 pn[IEEE80211_SMD_CTX_MAX_PN_LEN];
++		struct ieee80211_smd_ctx_ba ba[IEEE80211_SMD_CTX_NUM_TIDS];
++	} dl;
++	struct {
++		DECLARE_BITMAP(valid_tid_bmap, IEEE80211_SMD_CTX_NUM_TIDS);
++		u16 sn[IEEE80211_SMD_CTX_NUM_TIDS];
++		u8 pn[IEEE80211_SMD_CTX_NUM_TIDS][IEEE80211_SMD_CTX_MAX_PN_LEN];
++		struct ieee80211_smd_ctx_ba ba[IEEE80211_SMD_CTX_NUM_TIDS];
++	} ul;
++
++	size_t drv_ctx_size;
++	u8 drv_ctx[] ____cacheline_aligned __counted_by(drv_ctx_size);
++};
++
+ static inline int
+ ieee80211_uhr_mode_change_tuple_size(const struct ieee80211_uhr_mode_change_tuple *tuple)
+ {
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 32b9b7cd1685..b4b1d3db9b19 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/if_ether.h>
+ #include <linux/skbuff.h>
++#include <linux/skbuff_wireless.h>
+ #include <linux/ieee80211.h>
+ #include <linux/lockdep.h>
+ #include <net/cfg80211.h>
+@@ -8246,4 +8247,53 @@ bool ieee80211_vif_nan_started(struct ieee80211_vif *vif);
+  * Return: 0 if success and non-zero on error
+  */
+ int ieee80211_encrypt_tx_skb(struct sk_buff *skb);
++
++/**
++ * ieee80211_skb_ext_add_uhr - attach or replace a UHR SMD context on
++ *	SKB_EXT_WIRELESS
++ * @skb: the SKB to attach the extension to
++ * @ctx: the SMD context; must be a kmalloc-ed buffer by the caller
++ *
++ * Allocates a &struct wireless_skb_ext_smd_ctx container, sets @ctx to it with
++ * @refcnt initialized to 1, and attaches it to @skb on SKB_EXT_WIRELESS.
++ * If SKB_EXT_WIRELESS is already active, the existing @container is released
++ * before the new one is attached.
++ *
++ * Ownership of @ctx transfers to @container on success - the core will
++ * kfree() both when the last reference is released.
++ * Upon error, @ctx ownership is not transferred from the caller; old @container
++ * may get freed.
++ *
++ * Drivers must use this helper to attach SKB_EXT_WIRELESS extension to
++ * properly handle clone and COW copies.
++ *
++ * Returns 0 on success; -ENOMEM on allocation failure.
++ */
++static inline int ieee80211_skb_ext_add_uhr(struct sk_buff *skb,
++					    struct ieee80211_smd_ctx *ctx)
++{
++	struct wireless_skb_ext_smd_ctx *container;
++	struct wireless_skb_ext *ext;
++
++	container = kzalloc_obj(*container, GFP_ATOMIC);
++	if (!container)
++		return -ENOMEM;
++
++	refcount_set(&container->refcnt, 1);
++	container->smd_ctx = ctx;
++
++	skb_ext_del(skb, SKB_EXT_WIRELESS);
++
++	ext = skb_ext_add(skb, SKB_EXT_WIRELESS);
++	if (!ext) {
++		kfree(container);
++		return -ENOMEM;
++	}
++
++	ext->uhr_smd_ctx = container;
++	ext->type = WIRELESS_SKB_EXT_UHR_SMD;
++
++	return 0;
++}
++
+ #endif /* MAC80211_H */
 
 -- 
 2.34.1
