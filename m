@@ -1,88 +1,77 @@
-Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F01B449B2B
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 09:43:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1764037BE93;
+	Mon,  7 Sep 2026 09:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788774240; cv=none; b=nyllOWEOFl2cMRoIb2ELX+jti2tMiDIvM3p8J+lldP/kInbV2NRJrQSw6kGtC+dLpnJfIVCRLBtcwlHMYZfWS4TsfIzywuKhtkUwSC8O4Ub12ge4NNpBB7TkSnR+Cq3HBRPjeagv6k40OtIkub+Em1DE2tMM0kU4rlZZqVJtF8g=
+	t=1788774441; cv=none; b=AgMQN4fSiXfmdWS2fm2cfSL7pbFAaTzmXfdt4gsGgtEcZYuB/D7YWRDYOSgQN5cXZex7tCDuCTR+TH3XIfqxVzt14/ZLltzDLmfrpMlGQ/pgPep+ksa4raQenUUqpiIvOx2cBa3AxZUDFKZKDAFohYp8yV9xzIXosKwEll7cR7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788774240; c=relaxed/simple;
-	bh=W/tjzhit7188afMNdjQeUVFsuHLn/LyB0aJkjmumVkM=;
-	h=Subject:Content-Type:Date:Message-Id:To:Cc:From:Mime-Version; b=ra1rRSLwztusEZlEwMlQZllWcMuzPUKudQQ64ULZJ2HS1rBDDkaz5SyFS+o0Zk0EHLiL/AIE+3jK/v3RHoCZwYO4+ceqmTrAow7z1jRSetAPFaXcnBmQOewIoFOUHdiG5ekUFdWQUwOJlXDLduqP9xvWgRWNOoSjcSi/AssEBW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bedmex.com; spf=none smtp.mailfrom=bedmex.com; dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b=ChJT05aU; arc=none smtp.client-ip=209.127.231.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bedmex.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bedmex.com
+	s=arc-20240116; t=1788774441; c=relaxed/simple;
+	bh=43b7EzOAzU+8AHXIAeUmr9FriOvzo5/nVUwwv8bvaTs=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=NkMH1elk9IsedtHChFreX88iHY0HIVPKX9BFKbexVp+Y5OlnONy+kTQ6yRAOvJdmdJFZLRJG+acDw2PScfJq39EyP0uqya/UwbvA4qWoKHRStBq/tO74HoQxSn4L/uaijjg3kNrwR19MSMa7uRVen4zlmp8YmDuNFpNlS/FmBuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=SuDq/sX2; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b="ChJT05aU"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="SuDq/sX2"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=bedmex-com.20200927.dkim.feishu.cn; t=1788774227;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=W/tjzhit7188afMNdjQeUVFsuHLn/LyB0aJkjmumVkM=;
- b=ChJT05aU6mfuOzVD8lvISughvrslUFt7akn9UdLx/rd5JfrgXT0aGCEIqrhPOp8sEscOEE
- xEq3gy1sn8ey8fPUSQh72QL/SPiKBoirH9URgYk5GAdceQzDV/fiZtwVMDXc/6UahYqOmL
- zpX+f0rJ944ZCwhhHbJa0rxAnA8scEq64of12w+6wa6bkU1IJohMMISuwt8Kh3kA6kwoDT
- 5d5bWTqJ4euZbZUMMxsC608SocFW/P+4xJ5XjfaCrezKpW8Pt2ngsGGoBK+XU7jri8XbUu
- qt6SL3nW+TCS+aPDXe2I6P/wsS0F4XOISwXsp0LoKQzQVbrNfZM/eY4/dVZgyg==
-Subject: Re: [RFC PATCH wireless-next v3 0/4] wifi: aic: add AIC8800D80 SDIO FullMAC driver
-X-Lms-Return-Path: <lba+16a9e8751+554bf4+vger.kernel.org+yanli.yang@bedmex.com>
-Content-Type: text/plain; charset=UTF-8
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=Hnr58vE73LK7YGXuPdZbJ4n+GfIeo3BTqA/oxTPuMs4=;
+	t=1788774440; x=1789984040; b=SuDq/sX28I8gz/809ms59Vb6c35+deDjoj8zbMNufXtbQfu
+	uDgJfo7UP3GLtu/22DY/pXskSJ8zNqeekCDHqBTJkdYcqS/Ntpj/CRkyrLBcF5TuSn73rBfiu93fG
+	HIS/LmHRCZI+3cM09N2gl+F2iMlS44GL06jKYCbrhnSRRNLgwf1eI/qOnU28d38tDP163ScBY5wkD
+	8ygfXJzPTp9jf839U7ZvMMjle6CgJZfLeqwt7j+d0pL80Pr7pbUHdT5henyQp4cVBxrhsq9DZrgBQ
+	zXVItT2Obcj8iLNkQvzZSamkPgDeLOuwsdxSwIIpTMjL+Jq9dEoknBWNC4BYbO4g==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x3Vwb-00000004S9x-0yPF;
+	Mon, 07 Sep 2026 11:47:17 +0200
+Message-ID: <87f5112aeea92eb84350eaa19ef8ccdf4c630c96.camel@sipsolutions.net>
+Subject: Re: [PATCH 3/3] wifi: cfg80211: check if AP has been started before
+ adding new station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Slawomir Stepien <sst@poczta.fm>
+Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev, 
+	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Date: Mon, 07 Sep 2026 11:47:16 +0200
+In-Reply-To: <ap6H7U3j0CgPj2IR@nr200>
+References: <20260813090434.2071318-1-sst@poczta.fm>
+	 <20260813090434.2071318-3-sst@poczta.fm>
+	 <113768c35523738bdc7ab8441ecda64a063900bf.camel@sipsolutions.net>
+	 <ap6H7U3j0CgPj2IR@nr200>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 17:43:45 +0800
-Message-Id: <0c6903be00b92ecb18f2e74fdd9f8cb39e4db47b.c89ac920.6beb.4d20.9ae1.6b2096263672@feishu.cn>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>, 
-	"Zhirun Liu" <zhirunliu@aicsemi.com>, "Dijia Xu" <dijiaxu@aicsemi.com>, 
-	"Chunqiu Liu" <chunqiuliu@aicsemi.com>, 
-	=?utf-8?q?=E5=8D=AB=E7=AB=8B=E7=8F=A9?= <liheng.wei@bedmex.com>
-From: =?utf-8?q?=E6=9D=A8=E5=BD=A6=E7=AB=8B?= <yanli.yang@bedmex.com>
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
-Hi Johannes,
+On Mon, 2026-09-07 at 11:46 +0200, Slawomir Stepien wrote:
+> On wrz 04, 2026 11:25, Johannes Berg wrote:
+> > On Thu, 2026-08-13 at 11:04 +0200, Slawomir Stepien wrote:
+> > >=20
+> > >  	case NL80211_IFTYPE_P2P_GO:
+> > > +		/* Add a new station only after the AP and link has been started *=
+/
+> > > +		link_id =3D wdev->valid_links ? params.link_sta_params.link_id : 0=
+;
+> >=20
+> > max() maybe?
+>=20
+> But wouldn't that blur the intent here? It's not about a bigger value. It=
+'s about MLO or not MLO
+> device handling.
 
-Thank you for the candid feedback. I hear you, and I clearly
-misunderstood the situation.
+Yeah, true, was thinking more of the pattern than the semantics.
 
-You are right that I treated your v2 comments as a fix-list and
-rushed a v4 without stepping back to actually learn the upstream
-process. The "we now have AIC8800_GENL" answer was exactly the
-wrong response - I was defending an out-of-tree design choice
-(a vendor private genl family) instead of questioning whether it
-should exist at all under the upstream framework. I now understand
-that upstream is not interested in what we shipped to existing
-customers; it is interested in code that fits the kernel's existing
-interfaces and conventions.
-
-So I will stop sending revisions for now.
-
-Instead, I want to use this time to actually learn. Could you point
-me to what would constitute "demonstrated willingness"? Concretely,
-I plan to:
-
-=C2=A0 * Study how existing wireless drivers under drivers/net/wireless/
-=C2=A0=C2=A0=C2=A0 interface with nl80211/cfg80211 instead of private netli=
-nk
-=C2=A0=C2=A0=C2=A0 families, and re-evaluate whether AIC8800_GENL (and simi=
-lar
-=C2=A0=C2=A0=C2=A0 private ABIs) should exist at all.
-=C2=A0 * Read Documentation/process/* and the wireless subsystem's
-=C2=A0=C2=A0=C2=A0 contribution guidelines end to end, not skim them.
-=C2=A0 * Look at recent driver submissions that were accepted and the
-=C2=A0=C2=A0=C2=A0 review threads that shaped them.
-=C2=A0 * Run checkpatch, kernel-doc, and the other tooling the
-=C2=A0=C2=A0=C2=A0 documentation expects, as a baseline, not as an aftertho=
-ught.
-
-I would rather take the time to do this properly than waste your
-review cycles on another premature revision. If there is anything
-specific you would want to see me demonstrate understanding of
-before I come back with a new version, I will prioritize that.
-
-Thanks,
-Yanli
+johannes
