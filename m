@@ -1,73 +1,70 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214EF2DC765
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 04:43:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3ED2DC79F
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 04:48:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788756211; cv=none; b=cGzjzdusEil4mvrA1A7CVwg4jXueU+nC4S5Newv2oS1I0UwZs1oRQcjDyHuHLd3361qMjPD9F6gcNpjCYAbLJ6VGHk4o8UBEQqxCt+Aajye9c6E4bxy0W+qfaeJXppsEhuOm8FSOdObk0Zenasalmubi4F+xvmoF55xR8Xdha7Y=
+	t=1788756538; cv=none; b=Aix55ce+zKlVQ07UjO3rSiUX9wJPnhPxmreTXnk5kiSuk/YCQaCOqgpliSkNZ25rd9KC46PE51vC/qVITh7ggJBOBMI4hiKLzaPQrAHdi1GWpiD82fm3iSZBYcbSIak84d8mSxm+uPPMgZPjMeC5E5nqxr6SQLa1+Hy+WXqPQf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788756211; c=relaxed/simple;
-	bh=BVw8IY5EYtMD4L+jHzae+iwF/GRDppMCagadCeLC0BA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JaCtqdrVzz1pkECXkhcfY3Sg4VY4HpNFqcV0TLpbKlqXIw3Yo6k8+0rl3CqGjAIImjqOXleAFKA1zpOc9dFR+eLoPuJOI8VCw7mZ1J96nUoS17R1Ih25T3z63LacvFLGN7A2UV4uLejqMnf/WYtvTkrDH2AsgeTbqqa16PKc1r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lCv/cmfc; arc=none smtp.client-ip=209.85.208.170
+	s=arc-20240116; t=1788756538; c=relaxed/simple;
+	bh=GaHTEdmNzzzlNBmR+bArB7XlDc1phrEHMtjnhtvDAgI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FXYvPP1sSFBJgw7OhcBIsyCkfzERpAZmo5hasLYx1pK10+DjT2UBWF+wQr4pjwJLxGf/ViW7l88a4oRUNv6lAM2wadxkxFMwEXbMUm/Kkye7TONuLDQePzYT/u2b98n1J3ZqwwkfaE8EEHMLwbAeWTvAruImAQyYGKggXVFTQ2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r5ppAvA/; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lCv/cmfc"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a20367cf82so26021251fa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 21:43:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r5ppAvA/"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d6d28aa26cso17882255ad.2
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 21:48:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788756208; x=1789361008; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BVw8IY5EYtMD4L+jHzae+iwF/GRDppMCagadCeLC0BA=;
-        b=lCv/cmfcI0lPNIL6Eee05C5xpctiUMVjry33f0ubuwnZftLXWk+H6LGLqeX6A4TmTe
-         gRmTAfIMtb83uOVuXJbJ+ltCNFXAioKeUU7a2FVKSIS1V9j94Xl++L7J2oFmzrqtfXOo
-         Vt2JfMup8jWVPacc5rBa3c7pUilZHOPzdw6A5wkgGISIbX/Y9qywJL6O2gJg/DWj1b9L
-         CYWSOxAPLSTRUwmfzfBzTV7FE/Jbnh9HjG6dM7cIFWLI5P9wJLeWL4jCofkvhMHKkFnQ
-         +6H6T5zxBVhzdguuc6pzLt/wo6nhLQMKr2Lb7GMl/gHgTWLveBigLyM9AObLNV2ClPg4
-         fMYw==
+        d=gmail.com; s=20251104; t=1788756536; x=1789361336; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ofzc/Gj2NFvW1nQHd8NV9Yu7XtABoRJWurs6AjAsQWs=;
+        b=r5ppAvA/BT4uEZd0O8Pe6xXU0NoJ83NR/H8NP0qYFsB4S4lLWXlOBMC5l4YlUi6nlq
+         xZ6IAIMMMzw9/ZEBRnLwmMUGhhqmntG1PMYfAllj4HmzLFw0HmQlNDBgwxmOkwzUxY0e
+         v0k1zBBe2ZJrbY4rN+nBkhqMyhDNJkEDdVakdR1PXJYptkBCvGHCL1uDEwWje++EmHq3
+         NMwHu6MDdXKHO+C2Z+1xpm+j1xfwew6btGJbij5X4JCC2707E/w06QEUbfHRS/LEnkxG
+         GK9PICvkgpkMd1fW5MnxZXyK5/A5TPUtuaiyhxtGjex5Ravo6H4XCZ9ZOoO3dBfHCDcS
+         c0Cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788756208; x=1789361008;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=BVw8IY5EYtMD4L+jHzae+iwF/GRDppMCagadCeLC0BA=;
-        b=dE1LoC5wC5aFKaBgFejBf9mdF8a3+gDAABzY4XDXZp0jxL8ZJJXUM+EOQRLw3NXNHs
-         Q4wefxpPeiV9CEluYpirQ9sJLeFKHOjaRoO6TNTq2WuCSCkW42xgjJC7KmsFztWeZsbT
-         rMeifyajc0Ofa9Zp3pK+ImylnZX7uZBk8qOCSghbKY68qkTYxCgMhU8K/ZQhOW4aMnhq
-         KHFMOtVB+1FbKRpbA006JtELExPahrN/csWS2FVQHJd1pU6b5ggza87Ss5d2lHTN3NRB
-         r5gMcLoK8Tnf4D3qwLz9NltXsKKKLnwuhQqbvkO0ChJosmFPDn0tMlu44pJNKGHlpzEy
-         DSAA==
-X-Gm-Message-State: AFuF++nEwf2oG1jeMkKBp78OwgGvBdML94m/3QF/WJKYMKGtrQBsDkPH
-	AC58DdvpNd3mKticyXX6fHsE/Av0fPc3lK8ZPTJ9tuliLhnwA+y8i7pB7vFOq2Cg5jzDbg==
-X-Gm-Gg: AYBFou3lCjLxG/Mz1hf/e+NsxOUEpAk2OQ1qN1rtItfLJjEF0D7lsY3wtneZBzU1S7x
-	zZZab2x8tt/sbKFFn1rIQAF4l2r3VnepAPgfii4bYQungCJZD2cKLbxsUW4/KpHu0pjN0vKwRv8
-	cFRUFGvD2+d8K7W/A3TKE8y5VGQrf0phTtr0NLWd6QRHM71VcEMFSU+eEFBHC77cxniDMWSUX2d
-	++wcW0PxA/8IjZrUOFCqy7+voSJFtpkiy+z/5y2qeKDuvxyGLAYQbNhLc2g6sjRQegHjvEgVYlY
-	1x87KnHtoTZUpZVkEx/sZ055FJBcZ1Pe90iLLAyjzr/M4nt3TtCsLy5cyTu4XXv4DUfEOXGN/sz
-	4sbQkjvxgC2+6LLQvFDNTouNtR1YsL6fZn/ZdoJPl1qChcwqvg4y+VUfaquEG4RQOIXFCyTywjc
-	ZuWAzXwDjCkO3PW38R50oT1Rsf9aqhzxj7gWUFgMYIEamKWTVFvsSRh7bZfR1CqCA6kxigSGxfe
-	8mKKg==
-X-Received: by 2002:a05:6512:3d0b:b0:5b0:1b0a:2370 with SMTP id 2adb3069b0e04-5b616edeb86mr2969246e87.2.1788756207681;
-        Sun, 06 Sep 2026 21:43:27 -0700 (PDT)
-Received: from localhost.localdomain ([80.66.92.203])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b74cdb1067sm1429611e87.72.2026.09.06.21.43.25
+        d=1e100.net; s=20251104; t=1788756536; x=1789361336;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ofzc/Gj2NFvW1nQHd8NV9Yu7XtABoRJWurs6AjAsQWs=;
+        b=tF7YpTw62sV1+iK9KXWXgQZ5XW7kbOe3BsN9YfOUTFRH39eg2wukUn60lkq+OlHsSX
+         UrpjgJn41Sp7ET/7t8L0tqrpccteE9hR2VaR2FSvxKX3ddMKZlFDK4fkoMeqluTxYX0p
+         HZyoq3HlqniwMQ+dDMtXXHjb1H8R6KFdptE44FOjCpMQ8GiJ4cZbK3ram4g+SUvFlZhx
+         tjH61iOFSjfcodZroRuH17mg4IMXh8gJZInCV4qQ/tROgAd3ByTPypykhoyCTfke+oYI
+         92k29t3vvrYPHWQGrcqqLBqt9arnFKd5AlNiBqGjrh2wS+VBCxGaIpmi27mpB5SwIxO3
+         JpUQ==
+X-Gm-Message-State: AFuF++nb08o1pzjJEKqeVgKb+95Mnjxfq5KuHkT8wdYvK3+OYxLK3qB/
+	ruGTYLeV5hOin5UA2w8pqEJV6n4BzgJcgTQZsvc/8IbXmfWd1AKTbTl1
+X-Gm-Gg: AYBFou2WGBCQ6R2iyGl6Gp/m5VZpWt2CunafIDZ6xYUkRp17D+s8rYc77RueKNIcjlV
+	c5NKOCntK35IYAYWbz+tNPhKP1KV5IsAkUzcgWXgqQKSCYnelTZplCOZiwNnDqQZt3U+GwQZ1mz
+	cqeV4zeaQuTLt2PP1X1O9fL3U3d6FqU8fak3xQ8ru2aseGfkjzy5MGBcB6wUbLXaMfJ+SJDuSaS
+	caEV55cLT550xWZTovWgMNogB2+40IAK5rSrzJjB81A8/DzY/gj4u04T2qEYPGXCiIcNR8F/mhU
+	RAVm6LOqbtz/zVUOc0nV1BmXA/kgKP4Qu8OxXnAKS0EJZxXoIcdPFgirY70ds95RH995Bdx5Gvz
+	4DY+eXwdGxvu9xnYzJY4vWOfOBE8Flur80cAV9ZTMdQxJN9e3r7Ya15hbdZK+TRH7ferbIs1FWz
+	3nKZPq673kuEaGYNEFF26N2VZ8VdNIomPhEs3ZwVnYmNWjCebJH9hSxBC0j+SLvQLb6r5LBARQo
+	2bUt7qTYanYAg==
+X-Received: by 2002:a17:90b:578c:b0:398:e6b6:acc2 with SMTP id 98e67ed59e1d1-39b261e7649mr33250077a91.12.1788756536244;
+        Sun, 06 Sep 2026 21:48:56 -0700 (PDT)
+Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339aa33e96sm23834001eec.12.2026.09.06.21.48.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2026 21:43:27 -0700 (PDT)
-From: Maxim Skokov <skokovmaksimevg@gmail.com>
-To: pkshih@realtek.com
+        Sun, 06 Sep 2026 21:48:55 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: rtw89: fix typos in comments, debug messages and struct field
-Date: Mon,  7 Sep 2026 07:43:11 +0300
-Message-ID: <20260907044315.4364-1-skokovmaksimevg@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <8906397e40454e45b82c12ea272b3a9f@realtek.com>
-References: <20260904222548.19732-1-skokovmaksimevg@gmail.com> <8094bfc474e34b2f826b9487e49bd601@realtek.com> <20260907040138.4321-1-skokovmaksimevg@gmail.com> <8906397e40454e45b82c12ea272b3a9f@realtek.com>
+Subject: [PATCH v2 0/2] wifi: realtek: fix typos in comments
+Date: Mon,  7 Sep 2026 10:18:49 +0530
+Message-ID: <20260907044851.9884-1-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,10 +73,55 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
-> I think "LLM" should point out the model explicitly, such as
-> Claude:claude-opus-5, Codex:gpt-5.6-terra, ...
+This is v2 of the spelling fixes for this tree.
 
-Agreed, that is what commits in the tree already do. Please use:
+Changes since v1:
+Split into per-driver patches and the single-line comments touched now
+carry one space inside the delimiters, as Ping-Ke Shih asked.
 
-Assisted-by: Claude:claude-opus-5 codespell
+Only comments change; no code is touched.
+
+ drivers/net/wireless/realtek/rtl8xxxu/regs.h       |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/base.c        |  2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.h   |  2 +-
+ .../wireless/realtek/rtlwifi/rtl8188ee/pwrseq.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/reg.h   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192d/reg.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192du/phy.c   |  4 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   |  2 +-
+ .../wireless/realtek/rtlwifi/rtl8192ee/pwrseq.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |  4 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   | 10 +++++-----
+ .../net/wireless/realtek/rtlwifi/rtl8192se/reg.h   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/trx.c   |  4 ++--
+ .../wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c   |  2 +-
+ .../wireless/realtek/rtlwifi/rtl8723ae/pwrseq.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/dm.c    |  2 +-
+ .../wireless/realtek/rtlwifi/rtl8723be/pwrseq.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/reg.h   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |  4 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    | 12 ++++++------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  2 +-
+ .../wireless/realtek/rtlwifi/rtl8821ae/pwrseq.h    |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/reg.h   | 14 +++++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/usb.c         |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  6 +++---
+ 42 files changed, 64 insertions(+), 64 deletions(-)
+
