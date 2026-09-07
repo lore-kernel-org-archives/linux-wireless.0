@@ -1,196 +1,113 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazolkn19013076.outbound.protection.outlook.com [52.103.35.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 449F732E141;
-	Mon,  7 Sep 2026 03:46:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.35.76
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788752782; cv=fail; b=X0Z5eD+S2JWS2/GJPsGWvpdre7AkOYSvICmSZyqmYDxDyLob0+HKbLrWcDC3HBUXQ5Jyton/32k3A8YoozAyG54xSYw4pvfDQDN4mOhGSz0Ts68YSUYWYNhZ7ziFygShmJnXuKdsQshDc3pUT6LWT6Myr1uVEVbLBX2mXG12qmI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788752782; c=relaxed/simple;
-	bh=ObXD/8Br2kdzNunTf+JOsFxTm05s/IK5uOGVFCX7ocQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Ehgl1RK9ky0fS1uYmT0huCLKFDvspZr+JvanGXJcxoCgfg+V6GTPt6YrOxtlywi5Jqonjar3UcLEfbF/h5nxKTBJN4ZKUVT7iaY4ARcCJKHXJW7sMHazIxCMfI8Npzsc8lQGnl1ejU/zY8umkbp+Xj6S9lYsZJIb1yqGdEvA8WM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=cb/gEIri; arc=fail smtp.client-ip=52.103.35.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.co.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63AC22E7375
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 03:54:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788753288; cv=none; b=XgnXJvRz59pU6H9vN/aNts7mPRi3ky3RCL+GCj47o4nEyI6o0K4Z87CK27E7H/ujjxLDcEfIQdLG3DBcLerPXLl0rCAYaxB7ZQvTJ+to1b0vFnq6DYJMoAEq1QTWddHl/vXTWJdwg96WFE6UzdqWem3uuh6qc1+EEPJOvwq4Ang=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788753288; c=relaxed/simple;
+	bh=GZVBBmeFqxwYT71GX4TctZ49vIOOBe+lTxvXYNFUw+E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=COOYl7dbUIv3Wo+qHUnYkHzzXjHISM0QME6ePUM6BtWSTErGk97sr5YV3YTxQJQTO/cY+SkxbA6CbB8b8xDzQuAwdhWXSw8vGiQBMLQkeo/I5I6lzFGrO0wByQ2nIQjdzki2nqXLbcOPVq5qs/d3MXubrMx1QJFgZpqX45h6KrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=pwunB2gF; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="cb/gEIri"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ku3WCSzMHUivm1NS7l0U57BXOk0N+FzDCSRYqJT6ALM36LCEMZ5poRh/UrhVqSYXmq7NUmktcDyuQLFjSDkLc04ydc4xUZ49WBE6l1udH1nlM2osRol/np4TcOR3v9F5Vqsfvb/ihOOoGqARk5TBSMb+tdb8yQQltHHMxgKk5BNmNrF567gpQJyRV0fQz/qJWjQek8jYka9WKkYOs+1qBBPmpsAgLsrNVa6X8quNpw6tgIIJHSDtWxpMISa7LzufW3q+g1KG6suPpK1OsyIS+a/vQ4m+cRV5OxEKuvdvJxOuE5ALRI0fA8ent2bdV7ej4h9AD8CurNyFR0Xo30gECw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=34a2/qTrYYIlorcZIcMR/N4crlVwDt3d1CGSV92Ec3c=;
- b=IyTIV4W7ZcQGmzF9C8kdvxXBVBHRtBCzzUeUt2PMpU6bhRyfy0ML7yPtVPrfK+gd8JuTG0qnP0J6hAxYwAiDBgdniuFAyOfKrJ+mfKGY2lTcDm3zG5KVC9dYPD+USOs+gmIcV1/uR3Jmo+fK/55kiFm9Syt419VgZ37+TL1OVGOcujmZvG2aCjwAitoi/tkW5TS5piWqbCicoS/KVheKtk112RFQfrmRE6CigoYt4ijpqAR9YNZ172rr4GWZbbY1iA0GQGI/fO0hdvmd4FFU0bT6AiKilFbLbmpX8Z+jJpgWHoUBLksOXZ8SvaZI7qnftpzDJ3lN0+7BLSYDAqsR2w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.CO.UK;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=34a2/qTrYYIlorcZIcMR/N4crlVwDt3d1CGSV92Ec3c=;
- b=cb/gEIri4FlBB/uKtndqNMGyWypJe0Xcb7bbFHs+btzCi1eNRMwOXqLFbZAzOdn9gtT+i86Yn1DqtW8IzWSVIapKLIOgFm99ISEZy153ys806rWAl2XqRTOK0dTUdx0YcBQ04j1np3FdjMuCVKCbH5up0ZsVgfsc+gqBSOqtnp+GcW1fwX2USOZpv4wd8jzb4a6Ea19jxu4Ua6rRF7zLNhRMBtmZo54AQC6sgI6q2PiHJplEsp/CEznaImGzsVUmn9IbSth3QUdLxKjSxpGkXIDJP5bKq4StVZS5UKWFSSlXzLC1A6y5/LqW1D/jY4r1KxX7OvBAjIq0hRDZd1atVQ==
-Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:344::22)
- by AS4P251MB0846.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:515::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.15; Mon, 7 Sep
- 2026 03:46:18 +0000
-Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- ([fe80::2952:d4d0:4ba:8352]) by AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- ([fe80::2952:d4d0:4ba:8352%6]) with mapi id 15.21.0382.014; Mon, 7 Sep 2026
- 03:46:18 +0000
-From: Aamir Ahmed <elb12345@hotmail.co.uk>
-To: loic.poulain@oss.qualcomm.com,
-	wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Cc: kvalo@kernel.org,
-	jeff.johnson@oss.qualcomm.com,
-	Aamir Ahmed <elb12345@hotmail.co.uk>,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: wcn36xx: fix heap overread in PTT message response processing
-Date: Mon,  7 Sep 2026 03:46:13 +0000
-Message-ID:
- <AS8P251MB0001F9300CEC70A883F313DAC8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
-X-Mailer: git-send-email 2.43.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: LO4P123CA0686.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:37b::18) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- (2603:10a6:20b:344::22)
-X-Microsoft-Original-Message-ID:
- <20260907034613.523101-1-elb12345@hotmail.co.uk>
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="pwunB2gF"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2d942c7cc2fso23933925ad.3
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2026 20:54:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1788753286; x=1789358086; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=YwFTU9DGxIbLpOSpn6SjG8b5qEPfh2a5dv+JDDxbYe8=;
+        b=pwunB2gFq250CPWW3O0MfXXLM7waEtRYdaL0kED1VEJ9Kyyrnk9GK/TL/6Rtc5LiOr
+         KRNX3POWN8qSpLolqGmHPgNWal0Y+algXZeDMBIYGQP8CB6FZUSr7iWmqwAO4yfTVlgt
+         oo9sB266vmlZAdJCghqDs46AgOM//vxeu/lRMbm9xIiuKcBx2IGxWarAGImU2hUnsS9+
+         6r1XKkm1bWolhAmhvqLiNWvf9FXv7unbzdLcmxRB6xRgwSqam9YKSmNhNl8FBAjPpasd
+         TMkq3xiN+KnhIPkUUg6PqDICn7cGMpuuOuORBhiROhouNBQMrxmw7lQNJ9tNOgzi8Lvq
+         +BhA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788753286; x=1789358086;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YwFTU9DGxIbLpOSpn6SjG8b5qEPfh2a5dv+JDDxbYe8=;
+        b=CUKj/nes2CN2Ss2F4JmUYwiS+cG4uYq4rh+mpfCcnjwnUU2k7z2nQN/u+vyz2u9qEi
+         NZsnQtlkMk89fxXlkc2FyNl1o+XU89thfaUQF2D01Kk63K1kPYmD8uVwcprc1EIMPsxP
+         wOtUlmonU07JPAqnlec5JwZCVo72BoXykuvqJ4rW9l/3zCxarAkw/Bf6Yb03CBeEcWrl
+         jpr4v+TrmN67gN+HuorMGSZ4G2mLnIj2Q8o9+VTtAx72iLnO82EdMqwPargTi8LkSQ/i
+         g+ZemUBN9STqinV9t0ZHqiItx3PSQFHcmoK04J1MlRTkTVykGN3P74SM2tuB1uN0mose
+         sUCw==
+X-Forwarded-Encrypted: i=1; AKwUvBwn45zhC7pw+bFkOb0Mu+iY0BaJqm9tTM0bjKhOLndwQOSAalooakDvHjFm4z3qnUjizzRUqATrkfoP85AjQQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++lVYf89BAS5xKR6VHtmMexbzonCA/+N3z7j8hL4bKRO3DrzjjoK
+	yBbYaaHRfELKoovKHZIZ9r4zMeYhaHEmguIwKV6U+DvBzjSHfIUGodKxKpad/y1vS0E=
+X-Gm-Gg: AYBFou1LQTj0Gf2C96BdFoZNsPLtYW0sO+6m/5kw+Bym7icmkXRvBNNUBaew5RApBvj
+	18NYedpafdo5EwfSNSnniN9RKUfCL93miIBtEFeUCnuCOD5KM8NTx/KwuAIJiNBFD5auM4QHj3o
+	wX51VCTiqkGfPR41oka940isAGWhkFiq7n5C+gpf9Yf+MEPdCC8hdVZ0P8rPhfo2p62k9eMzEU6
+	+aqlatdWYwaWrZyV+a1lD140m4MKB6S+53H0n9CrJL47iSipWQUu4BQyq5x9/vaKaBWyToOkN6Y
+	tHIh6t5c9r7MsczJ/i0MIlaERke6YrYvqu7roT9iKoveAYvmv7c38vFDjIwAL3uMjGi3wXlLCbw
+	yJ5ypIEBEnOh+AmoL8mpy1paU1H6GUJl7qL2JNnKcfZRSaHyw+mXjKQ+83qYSwDQcWDlHZSWtPa
+	iP90q1MwFhek8fE0EZYn0VTmU5W5nd2Seqf4SYVFxRFmz6gnvIuVqLLqN8C/tPTB3SE7jho2wF6
+	P4a00SDlH5aNNKO/ZEKU/jDNuLIWG2nkp5nK3sgZWMM6cCvCNYY6Jz9mcIR
+X-Received: by 2002:a17:902:758a:b0:2d6:e4ff:9cad with SMTP id d9443c01a7336-2db1250d832mr228413905ad.3.1788753285588;
+        Sun, 06 Sep 2026 20:54:45 -0700 (PDT)
+Received: from localhost (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db149ccb2bsm37885875ad.71.2026.09.06.20.54.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Sep 2026 20:54:45 -0700 (PDT)
+Date: Mon, 7 Sep 2026 13:54:39 +1000
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: Aamir Ahmed <elb12345@hotmail.co.uk>
+Cc: dan.callaghan@morsemicro.com, linux-wireless@vger.kernel.org, 
+	arien.judge@morsemicro.com, johannes@sipsolutions.net
+Subject: Re: [PATCH] wifi: mm81x: validate n_channels in disabled channels
+ response
+Message-ID: <hkev7i2nbiohxsgir5k6dycbfibli4wdppmvaadhepdwkcmg3u@k3mimegwq6ox>
+References: <AS8P251MB0001BD39926B78E73D53A439C8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS8P251MB0001:EE_|AS4P251MB0846:EE_
-X-MS-Office365-Filtering-Correlation-Id: b6698dcc-b0a8-4b57-a2ae-08df0c9292ab
-X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|41001999006|55001999006|24021099003|5062599005|5072599009|4140399003|25010399006|19110799012|51005399006|15080799012|12121999013|8060799015|2604032031799003|23021999003|25031999004|37011999003|26104999009|3412199025|440099028|40105399003|2607281247196008|1710799026;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?NCo8sYSfzqka6fdM9tKhuwbI+DHlSHscY3Fx1TAGA6t9ijFLT6S381j/Jev2?=
- =?us-ascii?Q?VycZK7bMh/fbcaYpwxM8WeS4tHrRHNmK/brZ+jb2SIFq2gJ9s0B0IFpNW5Mn?=
- =?us-ascii?Q?pgqRpba7fKCtVpxo6zFn1bdNGc43tFi4OnPe34jZ7FnIYZRZ9ZiABUHEBJUB?=
- =?us-ascii?Q?Z2yJZZrLcDyPgEs7A3N6ms5nTRE+O0v4vlfTgB+2wfu8MZ6pO1nhMUY+ktzV?=
- =?us-ascii?Q?MUDGQ5OGUJ3hXLlsbExl6h8m99+pSc+1CJ8WaF0TdxgoYUv+PnAE0C2hO17x?=
- =?us-ascii?Q?zJ9mj+c7kTLAbUKF4lxYQbDPL8+6ebR7bTpwCRrWyC/7qAJ+wQWe3I44Gl1Q?=
- =?us-ascii?Q?RxZ0h0TfHJCQ3TVjZqhicpkIMKpJHfynDod2/5Z2vXutc9U48ozPo+AD1wkL?=
- =?us-ascii?Q?HHrHtFWt2XjRujXIy5fx9AzjiGWlvofoiIIVwpGy2HlSVEjArZeTfDMfMBDF?=
- =?us-ascii?Q?9Z1H1lMe2GUSsrrvGvjiQFZvXLl9EPh9hzl/921lg9S6bp4Ut/Vs8ShaGwm+?=
- =?us-ascii?Q?Uun4i280TspmhCTUZJZIXkx9IlLaZCVF/bBvWZ6hqWJ0S+XW9h3iOZu2yzdD?=
- =?us-ascii?Q?pH4LmwV9pXVExwOrPJAUej2j5C59+ugvLdlq20QAw+I8FwwMOIM6EmiW/2fe?=
- =?us-ascii?Q?e5NJCqe1EoXyGhnoxf/K7yXTgRVlVLbOYN+SRq2ypLH36tETjxOxP2phGpoY?=
- =?us-ascii?Q?7ngpKqEiPK/2inRkQAREu++Quy5jNOf1dUJOyjgn1QVy4MjcYJ+FbS/aaVwM?=
- =?us-ascii?Q?SM9ttnK2taKvpEMMwjiFJKhaNdcVlkRy3hYsCT+zfIB52toV3lnO7kiHvt/I?=
- =?us-ascii?Q?bbUoN0TdAApbiQogTUV6w0wqIoQ+UfUvWSUci6XgaeTMsomD+mkbBGNKAV4A?=
- =?us-ascii?Q?MUSRZsQzTZ2uleTV/6p8sBfKyMoyfCp1JNLomv/mmx9giAt1FkLEn0ZpJoAI?=
- =?us-ascii?Q?YLxkEuJ8gUJlSf/7nxnEgc7slF7PPF5Cu94zyRhrHxvetMN559irN+6WUDce?=
- =?us-ascii?Q?CmEpaCO1fQzXIRetNj+Zcup32S/ABoKzARMR1gCbVbEcb7yuuE3PUYZETw2l?=
- =?us-ascii?Q?a23cVW1M3cECX2w7vECw6eUxRpAU+mflJrx7z16qDHDfChjm3NYChgR4cGdp?=
- =?us-ascii?Q?/vDpIuwC5gSi/ep4wFRzl/V/rVV4OEqs81u8IGQsDjmVoAt7Ydq8GkzNtJvt?=
- =?us-ascii?Q?PR/dWgP1ArZEvyPZAonN7HJI+G/P1j9GNeTCaw=3D=3D?=
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?HezosgKv0LDbz/9IHP18Zb4BF30MD3vn+Mo8kIaNLh0rRMjXzb982ItuSpKq?=
- =?us-ascii?Q?QkhJzTM2vvMaMlELsAM2mWhwkvaGaQkjhVHmw7rVXWnDYtbbbjzdy2E4ri/e?=
- =?us-ascii?Q?+5blBe+ysmzfhttI1bjvVxjsumUOGfWsozG8XnleEpZVko8/6SDYLybkwI3K?=
- =?us-ascii?Q?YmDqWMCUUJ0jkcR5t5P+6KpRGz+UnPVaUnjcNAHI3iz+C4BAya/bj6R13Srg?=
- =?us-ascii?Q?vSRNj5XMV0VIAR4zvvGlNypLceTsQ9T7hpELh7uXyn7KYwU4tBeXdszNJxMv?=
- =?us-ascii?Q?sd6VgJsYGIzsIUgLRSl8lhVQsPxiJQ5nG6BPq/RtTMamH9MXQxEzAb5QYFBb?=
- =?us-ascii?Q?pvQGIs2c1hf4OEUzajqz3R86kXAK1ag9HzxfPJGnGYPbYqnwoZtOxR0d6ZQJ?=
- =?us-ascii?Q?JIMCVbnT8Z1CUdFL4EXmZS8YugaJh3U6l5kDyKtwSx5OV5kKQbuT5GRfwG4i?=
- =?us-ascii?Q?8qXxNvQWgn9dCzduJJuQl95G8dtOu17KnAc6/sIkDge6PL6+gsUzSQri16cr?=
- =?us-ascii?Q?2yQQ3wk1MNiMZCAX6BUIzqxPgBIJOerN66pUgA+bxPyXFZCyD+BHTucqd5X9?=
- =?us-ascii?Q?w9Ao/KybHKr5d+8zij9JFdZqtc0leGGJ/uMxEVUBZoiEBZGx/6jScssO8whI?=
- =?us-ascii?Q?akM8vDj9Q3LmSD+pjJJhYdvpUh7fvwSrbowvzA5EfsnsBpHdE2wn/uJd8fZr?=
- =?us-ascii?Q?01S3CTSiC8PqrllvqWNoC+I7+EnbfZAjSFnxZE06eS60hRNCSZholPTkpJgU?=
- =?us-ascii?Q?tZMIfbhBvQ5GiF/HhfD8ldXQPACnIzckN4IU8mVXk6eLFsjhj2Hb/UtdWT59?=
- =?us-ascii?Q?FLScJAKpvbOZbVhK9csguZpI5L4Gx0WUcltRUhphusW0tvxDBGWwpYG74NFV?=
- =?us-ascii?Q?EtaIRyR8GasMgnK0aBX39ONohvHqjSB5yuKrbd1oextvDxofRVk1vKGe14F/?=
- =?us-ascii?Q?5LcsQC9jrb40vUtuECfsMsNyQ0enFkrBz62uVK9+zwaFZeVSMXUvbfj5xTff?=
- =?us-ascii?Q?BfChoimGZLDWgaU3sygCyQZ0BGiPzkoK9jBqN+DIvl1SBgANLyv8lhZlPVnt?=
- =?us-ascii?Q?1gQPL6Nr2yxyUK0Z4aSwWygPbK4suqAhPLHl/3OC42KbcgIHnihCAIaNq0UE?=
- =?us-ascii?Q?8e4ReSlNV4PgZ6IfBaMhSvRAT53WK3UYXhGxNUA1yJruFq1z+5PeMEiRROwQ?=
- =?us-ascii?Q?zymkMvINJVZfj1m+SDqT0rWuOp6mTRV9HjT1Pmoc2yJ6sFFhh/VF02pPzWWe?=
- =?us-ascii?Q?TqCTeHwLb+N6M/15244AApW8NDHmG3F3X96ZYiKGQXPhk0Rgz2JyUgYIhSG9?=
- =?us-ascii?Q?HXIBkJlXTuqF2XZVkBbFnDUAuACnpMmxOoerNfgyjlBIIqdmKfZiJU+CoLTY?=
- =?us-ascii?Q?90oJd1jNdTw9OwOogoqwPI48e5aS2fgDImWP9M3SYwA8Ni1BI2tC+fCkL62p?=
- =?us-ascii?Q?gQcMxTYLv1RK978cyPRzbFgs7q9YGNZZ?=
-X-OriginatorOrg: sct-15-20-9412-3-msonline-outlook-fe3f5.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: b6698dcc-b0a8-4b57-a2ae-08df0c9292ab
-X-MS-Exchange-CrossTenant-AuthSource: AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2026 03:46:18.0372
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS4P251MB0846
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <AS8P251MB0001BD39926B78E73D53A439C8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
 
-wcn36xx_smd_process_ptt_msg_rsp() uses rsp->header.len (firmware-reported
-total message length including the header) as the kmemdup size when
-copying the PTT message payload.  Since the copy starts at rsp->ptt_msg,
-which is at offset sizeof(*rsp) (12 bytes) within the response buffer,
-this reads 12 bytes beyond the actual message data.
+On Mon, Sep 07, 2026 at 03:25:52AM +0000, Aamir Ahmed wrote:
+> mm81x_mac_check_fw_disabled_chans() iterates over n_channels
+> entries from the firmware response without verifying the count
+> fits within the allocated response buffer. A firmware response
+> with n_channels larger than the channel array size causes
+> out-of-bounds reads from the response buffer.
+> 
+> Validate n_channels against the array size before iterating.
+> 
+> Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
+> Signed-off-by: Aamir Ahmed <elb12345@hotmail.co.uk>
 
-The debug dump has a similar issue: it uses rsp->header.len minus only
-sizeof(ptt_msg_resp_status) (4 bytes), reading 8 bytes past the data.
+I think you need to disclose your use of AI [1]. I think the preffered
+approach is to insert Assisted-by: LLM and not worry about the model.
 
-Both cases read stale data from the hal_buf (a 4096-byte heap buffer),
-and kmemdup returns it to the testmode caller which passes it to
-userspace via netlink, constituting an information leak.
+> +	if (le32_to_cpu(resp->n_channels) > ARRAY_SIZE(mors_s1ghz_channels)) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+> +
 
-Fix by computing the PTT payload length from the verified buffer length
-rather than trusting the firmware-reported header.len field, and add an
-explicit check that the buffer is large enough for the response header.
+I think this needs to go above the first for loop right after the call
+to mm81x_cmd_get_disabled_channels. If we were to get into a situation
+where this somehow happens, we would strip all NO_PRIMARY flags and
+leave some edgeband primaries that should be marked NO_PRIMARY as not.
 
-Fixes: 87f825e6e246 ("wcn36xx: Add support for Factory Test Mode (FTM)")
-Cc: stable@vger.kernel.org
-Signed-off-by: Aamir Ahmed <elb12345@hotmail.co.uk>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Also since you are looking here, might want to change the uint that
+mm81x_cmd_get_disabled_channels takes to a u32 or something.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index c0b477345832..d8597bc112f0 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1066,21 +1066,26 @@ static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
- 					   void **p_ptt_rsp_msg)
- {
- 	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
-+	size_t ptt_msg_len;
- 	int ret;
- 
- 	ret = wcn36xx_smd_rsp_status_check(buf, len);
- 	if (ret)
- 		return ret;
- 
-+	if (len < sizeof(*rsp))
-+		return -EIO;
-+
- 	rsp = buf;
-+	ptt_msg_len = len - sizeof(*rsp);
- 
--	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
--		    rsp->header.len);
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %zu\n",
-+		    ptt_msg_len);
- 	wcn36xx_dbg_dump(WCN36XX_DBG_HAL_DUMP, "HAL_PTT_MSG_RSP:", rsp->ptt_msg,
--			 rsp->header.len - sizeof(rsp->ptt_msg_resp_status));
-+			 ptt_msg_len);
- 
--	if (rsp->header.len > 0) {
--		*p_ptt_rsp_msg = kmemdup(rsp->ptt_msg, rsp->header.len,
-+	if (ptt_msg_len > 0) {
-+		*p_ptt_rsp_msg = kmemdup(rsp->ptt_msg, ptt_msg_len,
- 					 GFP_ATOMIC);
- 		if (!*p_ptt_rsp_msg)
- 			return -ENOMEM;
--- 
-2.43.0
+lachlan 
 
+[1] https://docs.kernel.org/process/coding-assistants.html
