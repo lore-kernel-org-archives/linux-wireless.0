@@ -1,307 +1,169 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazolkn19013074.outbound.protection.outlook.com [52.103.46.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7153F376BD9;
-	Mon,  7 Sep 2026 02:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788749827; cv=none; b=pIQspBG0jFJOGo6+LtwXb3RIdSPFulMGe6YccRImYJk3FIGPd6XZ/T6tLDuSTzAS24XSkNpk1eXzqP1DPRXb5w/AxxcCoGP3UN+Bs14FfmjS72z3g77eKEZ+mmsenwmlweaHg8qSQnyEKqctn1G/L9YsrhF6nRhjGODtz5b6yTw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788749827; c=relaxed/simple;
-	bh=s0/gyL4DT92vLetKQ2d+0g4Wr2TTxYncKq3clGoPgqw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=aCsMs6nf/Wxo5ymjN3qE5Tj1BJIHvXEWO7sb88xYa3TUnnYltUgmEdf5CxlRvynEn3Ha8hxn45RJrjkPv4qFz2cDVZrukBDGo3ccblwNG2v2uXoUfNXjj7yzCvXMl3yGd8nh9KmRXx2p19ZEfCJVTLD9OJ0F5iE9D9+pWWxYDG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=tmyzvUB0; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28BF92D0C89
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2026 02:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.46.74
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788749947; cv=fail; b=LjgY7l+5RyjkpxVn3KyW3KPZSzoPR+p9Sz94u/7t/mvmj5GsA8j1X+SvpukDjA1esCKpK+uyT7etM455PEnTjGFgY2oz8pBHMrDsPIVAuRqEkiUd3gINUQpolQMI+IamJtl3gOncFLlLqadFd5jyuC+ZGoVRjDxKO2LLYmyOK5I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788749947; c=relaxed/simple;
+	bh=ISNLjBdxv9yuNyLNZ08balE5B7bTqCMquIfJURsWCM4=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=PZC2ORXLJl0Y4M7tntWspCSpODgZaN7sEIcAt2dxrhNDC335aO7wnN+hjwfFR/e6MoDbNTdfS47sPjOhyWKg7WRg18JiDc8pn9t7EgSTqOy/RyH9GS9zzY2VgCDBoEdEc9Z47fkWpdWjsp2/XNfqGJ/+/E/A1pMsHvghOae6psI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=OmvUMe4d; arc=fail smtp.client-ip=52.103.46.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="tmyzvUB0"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6872v08O12422432, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788749820; bh=rJy0msPsIWRoEvtAeLNY5tO+DEJtBsF57CCXNrbhlyo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=tmyzvUB0nACVhp+82ZMQoyGdCYuNfuGwN00KVpZdfB6Jvn1tb0FzeW1usgFVlPfeT
-	 ncB1x3gJwud6WN7gE+jrDc1EJ7scvrBSwSQBVNl64JUmdX/XFWrTjM8TtOZOB5WB+2
-	 jQZy579vw8oFlC2B831Vc+2S6mX3zPCAoTcxq98LRPskUIppPa1CvjVjesltKqtXnU
-	 RjB4AunwA1KsqaSRVVPu1IwOUbdv+AiZQk1el1lR9jJuEoLO/AOIFtXiCRDQrDgrOh
-	 dKkh/C0qIm602U8AQOLZAsCnNQaVJFmsHOyw7FmbMvvzCkFRF+Ifz2YEej/gbxWUZR
-	 iEN/dggF5fbpA==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6872v08O12422432
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 7 Sep 2026 10:57:00 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Mon, 7 Sep 2026 10:57:00 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Mon, 7 Sep 2026 10:57:00 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Hemanth Selam <hemanth.selam@gmail.com>, Jes Sorensen
-	<Jes.Sorensen@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] wifi: realtek: fix typos in comments
-Thread-Topic: [PATCH] wifi: realtek: fix typos in comments
-Thread-Index: AQHdPGS3XpPs/3IfWkqczYbSJKV/obbCbaAw
-Date: Mon, 7 Sep 2026 02:57:00 +0000
-Message-ID: <14025cfd9b964ea9b3b2c3775b192692@realtek.com>
-References: <20260904115826.12928-1-hemanth.selam@gmail.com>
-In-Reply-To: <20260904115826.12928-1-hemanth.selam@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="OmvUMe4d"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bi0QYZb/26DhFAx5jolo1w3ip3QXkqof6ebl/f40zM0MLTH7FvYV1wYu+dI9KAtcB5RSKpls8fUyZJ4am26NKb82mqivurxJl7jVzoFDXjEn5khXq+6lVyYVp12PA3T9RJQjSUXw1CXmXIRqOTX8tvibgvY0uc/hQUk9Ggj51Ym/cI3M3Q0o03VG1CLKzRxYuQNzy6Qs18hHcPWIS62JQRuX3BWp4D2UGRkYR4kdJAiOPkp7feji9hIzIOywsbLdz21yTMBVSJ6iiomXOywrG3nMcdTPscdyYsxcWBjIOB9JE9nr0T8EqFpg8Y0RRGrg9xcRyKT6fSiDtE7d768/GQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lVrvUSD/A5HOxmbLhiooEatMcMcE69/jebHtDecLo6o=;
+ b=dd5CWjCNeY2ljZDoleeWtmRJcyeoD1lKp3djnSZhj/4UYWQMLKrl5qqIWBX23RgyXlbxz+ztKdafCVHiZtUjOK0j3Kz5VznxPtKJt+ITB6j1JO6nIRl2z6S0awizpRP4evBvBq+zZIjieDrStjvM8MNmlR/+mG8uMT/PFevT8fR5zSrbXKrDB1CqP2rzfImVE/8va29RGoyaetu3MpmK0MZpaBkO/Vz5wYyApkB9nL107ktiCJ6Vr77xUnkUPjWkbbsTZKEefTvNhE8ZtajQUBYtwdzw2x0+xjoopFusADYh25qfhRFcX8b7b/mPYnI/eqpPVsnnr04yI2RLG/X+YQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.CO.UK;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lVrvUSD/A5HOxmbLhiooEatMcMcE69/jebHtDecLo6o=;
+ b=OmvUMe4dr5MLo35i4+2RJchdRqICcO7weclRbazogG7lI4TDdRhywNqm5uyI2MrQQTyjLD07ClmduWyNx6iVDB71r0InOzXAzh885BISNIpWqPds0RRrc5XmKUvf82GxaPfBnuOwMDUAXjeP7zYSFMgyqzPnjKgMhAn4UI4+MQIGP0uVwmZHu23sW0v9rt3cEz1QEwqLAGojxJEzWNgBSq1I7HQ3Rwglg6lrkbD27TybT4cJh1+JUatRWoM5bwZWPmTYvZfbHmb60AzrPq/WvwCGBP+y23CQvlEf5n60wXKZl5jk/wa5bElgN36TOFXGpYFJry191tTcKDXJiK9PCg==
+Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:344::22)
+ by PA1PPF7BA71296B.EURP251.PROD.OUTLOOK.COM (2603:10a6:108:1::21c) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.15; Mon, 7 Sep
+ 2026 02:59:03 +0000
+Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ ([fe80::2952:d4d0:4ba:8352]) by AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ ([fe80::2952:d4d0:4ba:8352%6]) with mapi id 15.21.0382.014; Mon, 7 Sep 2026
+ 02:59:03 +0000
+From: Aamir Ahmed <elb12345@hotmail.co.uk>
+To: jerome.pouiller@silabs.com,
+	linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org,
+	Aamir Ahmed <elb12345@hotmail.co.uk>
+Subject: [PATCH] wifi: wfx: validate num_tx_confs against HIF message length
+Date: Mon,  7 Sep 2026 02:59:00 +0000
+Message-ID:
+ <AS8P251MB000103B16A46379DFADEDB21C8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
+X-Mailer: git-send-email 2.43.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: LO4P123CA0029.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:151::16) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ (2603:10a6:20b:344::22)
+X-Microsoft-Original-Message-ID:
+ <20260907025900.508314-1-elb12345@hotmail.co.uk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AS8P251MB0001:EE_|PA1PPF7BA71296B:EE_
+X-MS-Office365-Filtering-Correlation-Id: db793dba-0a9d-45a2-8b7c-08df0c8bf929
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|23021999003|25010399006|4140399003|15080799012|2604032031799003|19110799012|37011999003|8060799015|41001999006|25031999004|55001999006|24021099003|5072599009|5062599005|52005399003|40105399003|2607281247196008|3412199025|440099028|26104999009|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?4a4DGnTArOLARtdegz8/BfUvKxFL87t7E1SN9jJ4rthJsXUMKeAfj8JO9xT2?=
+ =?us-ascii?Q?qFiuMBTjaHeQnsFZHqFS4AFXv2Ne3XCDDgbaFHR8o15rpnPqor7V8KJ8zCq2?=
+ =?us-ascii?Q?NXHbD/hkkB9HFWa+G+85Y4Cfs1udBdP/b8HZ1pnxC21EyG3ArwoypiGuYHXx?=
+ =?us-ascii?Q?NuX4sng43Q+7OCapsiL6VR6E3V5cEy5ojfFuzHGaBrhvJkWKfqWhH4M2f6Mn?=
+ =?us-ascii?Q?+as5Tc8PfObtf9BadXANF5AH/A47kINyUDiLJfCASFkWFbXLP8cgEDR6Sqjy?=
+ =?us-ascii?Q?rZqcN3CO6D/dZiXPYmh8lTnWCzE3++O97aQ2cuWy47a/II6ohAVtJmmsWSoR?=
+ =?us-ascii?Q?NzcJfTI3MTLgt6JIMJbCWKvISXtoKCyROn411YfOQByYsj21NVBIy3tNFIvJ?=
+ =?us-ascii?Q?Um0qZhWVlEfaRW/t03MtC7JnebLNrGT3J3aIboKYDvj/ZswcWbfV8Ohq5w+/?=
+ =?us-ascii?Q?hX2CIfZ8yTpRDWsKJ6i7vyAJiTBrY4HFcbDlExWzZCLPY66ySZIUycMwwRKy?=
+ =?us-ascii?Q?BETbWIbTUT6NrqAxhFLeIS3jd2qsMO6YPmrowE+nVafwJn3u7LI0YvbUYpyG?=
+ =?us-ascii?Q?H9ZefC+DSvKE8Pybhq2S97Vz+0J6GERFR11p/AGYn4eCcod2cQ1g3GIBoyJY?=
+ =?us-ascii?Q?8dqS8G6Izhpgx+k1zD1m+du6JsaDqC3tA1jl8WFHLhYrLTzFnkPdl8QBSFK7?=
+ =?us-ascii?Q?AWxX4JcK4B8sZzcuEfBOZ1L6C6Z+cPZAkeUkZuMCOnhLhPWbrpyCXrnzFYe2?=
+ =?us-ascii?Q?UqIkrStJLTfWKj47gGi7VBwUJ+9tWSz1UlLgHCv7WNXFY6qCwyrFaA/tg1MI?=
+ =?us-ascii?Q?nvyfRTklQKefWkLF6cLNt0T1fjxIbYyqPE6u4qRa+lsjYl3DDKRshA8RuWrA?=
+ =?us-ascii?Q?EnSsrg3WIgboYCWW1YtABI/iIlrgVKjE9G0OO/VeS+huSyErBzrHK7V6DK0Y?=
+ =?us-ascii?Q?PMMWra6C7jiqFZjTDIuSLPEA8y7XaAXHey9mm5o0pfn+azdhGyuulw6DEFwT?=
+ =?us-ascii?Q?iW/B3WwjiJNXYBFhnXBCPGtVs4GaU3PoqTz/TujDt/kx31WToiCEfk13rZQX?=
+ =?us-ascii?Q?/wUPJnqiwsz157FHVbLu1YUj+NMxX+USkjvbrzdvNcYfuSS068TlJs9GCi36?=
+ =?us-ascii?Q?eP50hnzhCGPoygqepVnTaNyAxy+B2ZVbC0/6hhxhWTCTpiCIJ+LH5p8=3D?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?LXL/yMig8RnyXrHb9PNry5eWTXhEeIPNkHaU8CJ9FiXcwhpx7i//DG7jDckI?=
+ =?us-ascii?Q?p7KTuPTPT/9kavST1bn4wcmgfxUdYUme4jEDC3elljSS26RzntlTFvKDWckm?=
+ =?us-ascii?Q?4hRHjlJvTwcIzsBw0tfeT9WukV0Sn11wKJ9YWRCgV92ZGiAtahMui9ycWE1q?=
+ =?us-ascii?Q?4f9tqilsh9fZvfIxH4+0D5hAWvxP5XbJ+GAtMDanvUAfs2IUky+QZJLoDD8x?=
+ =?us-ascii?Q?ivW7/k/4jNuAs7ebrxHPsg2UhzKkhQ/WeWo0SREjsqyoWpCljvCHjvBL3Q/o?=
+ =?us-ascii?Q?MpQUJer2I66A9EV+E7pfi946SvOMvwrltLk2pDHov0llsk0Gr9M5pETmY1xg?=
+ =?us-ascii?Q?TgkGnUrJFL6H8fphCrTBdKYtEDzDPRXs4gRessg8D+Y4H2h8yvWX5Jt9414j?=
+ =?us-ascii?Q?cEyR0+HXkF6oYglAepNyFSLs2xJcloeBpuXgIbStP4gBP5/rGQvGhotXf4IW?=
+ =?us-ascii?Q?Tj8GTjElf9nxfj29MSd7hXJHrYsVQ1iAtiv0tQt+ZRFb8EO18RAVyGIjvB3y?=
+ =?us-ascii?Q?P9D5lFnedeIJBfFZuto7RlFwu4VAgEwy1KOSOH26d84vYi90uuYoGMS9A53/?=
+ =?us-ascii?Q?3FYOlyjk6B4Y0OFZ02AMXG1A1euBBEtoq5TIlnCyNwZlcvg3TCpvHoP4owTC?=
+ =?us-ascii?Q?Eu0m4W9B+gGyyocMQBskId1meMbqh1KZPm22tc6PuYQD94PjYJPwee5wWRC+?=
+ =?us-ascii?Q?ayB2cMXCmN3BJc0F1rKxmInvttRdBNr5JbTe6rOA/i9CSyylWG+n9P6F1825?=
+ =?us-ascii?Q?rm5jtnZAGd4OoVfBA66jnJZnZMzaRoJoOrTv0MleKsvJ8SjKP+Km4j887/hg?=
+ =?us-ascii?Q?/YKUDwODlfLv2IScicrZySuDERGsNbT7IU23USQ7Gtv8IH08OOhLKKQiHXGr?=
+ =?us-ascii?Q?Cq5JZNaLiF7JXpY3+DFH9dIYKwtUAuIkGRhaT6a959efXfcRK2b7NstzWTGR?=
+ =?us-ascii?Q?U0+O5pdMjDphGxsqp3P2A+is8Ot9iTr+9F+5YzAAl4AG2k5zaMoCf/19sA/w?=
+ =?us-ascii?Q?KxGvyh81FRIxs50AZsjQNLQ5jk4hfaljh6PfB+SmBGGgAzB12/LB0cU1a5/8?=
+ =?us-ascii?Q?24aafIAtMBukIuLLu+eVwPAGJaTecKI6+efi+xv31urI4oYyj6+x66r0kPJp?=
+ =?us-ascii?Q?M6oDAJP5r2zoWUcSxYavcChT4LVKf2SPvmDLGbEfxtfzktrRQuw64j4cI6JL?=
+ =?us-ascii?Q?eNk9Y4w8Tbu2KPtzET+PG40PYr2K2lXPyn5sCyynV2JF1Z/UsfONvAeQJHrc?=
+ =?us-ascii?Q?CGIc+IcPs88LaZAC+RHn8nqphOCbbgSbkJLvndoLUDIICsevnC0vhDPZu5Sz?=
+ =?us-ascii?Q?JwbuIFBy7tRCeY1uqCHb3Q0m96xnxDtIz230F2y/poFRtExLCjfl4BwLKr2X?=
+ =?us-ascii?Q?UYnglnoLsWKBq6oIXWGp9CDWnXm/OM54MpDDHEsiwbEizeOOINLytG1mq+RC?=
+ =?us-ascii?Q?fGUzQRPdDA/Mz0zX2Ph4hma4yIhiHBRt?=
+X-OriginatorOrg: sct-15-20-9412-3-msonline-outlook-fe3f5.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: db793dba-0a9d-45a2-8b7c-08df0c8bf929
+X-MS-Exchange-CrossTenant-AuthSource: AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2026 02:59:03.3033
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA1PPF7BA71296B
 
-Hemanth Selam <hemanth.selam@gmail.com> wrote:
-> Fix typos in comments, reported by scripts/checkpatch.pl using the
-> misspelling list in scripts/spelling.txt.  Only touches comments, no code
-> changes.
->=20
-> Assisted-by: Cursor:claude-opus-5
-> Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/regs.h       |  2 +-
+wfx_hif_multi_tx_confirm() trusts the device-supplied
+num_tx_confs field without checking whether the HIF message
+is large enough to contain that many entries. A malformed
+or corrupted message with a large num_tx_confs value causes
+out-of-bounds reads from the tx_conf_payload flexible array.
 
-Please send this as an individual patch, and the subject looks like
+Validate that the HIF body is large enough for the fixed
+header and the claimed number of confirmation entries before
+iterating.
 
-    wifi: rtl8xxxu: ....=20
+Fixes: 9bca45f3d692 ("staging: wfx: allow to send 802.11 frames")
+Signed-off-by: Aamir Ahmed <elb12345@hotmail.co.uk>
+---
+ drivers/net/wireless/silabs/wfx/hif_rx.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-and subject of rtlwifi is
-    wifi: rtlwifi: ....
-
-The nit below is to add exact one space at initial and tail for single line
-comment. For comment block, I prefer not to stir them.=20
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2a=
-nt.c
-> b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> index 7a71f063015a..df1ee39d6f49 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> @@ -1894,7 +1894,7 @@ static void btc8723b2ant_tdma_duration_adjust(struc=
-t btc_coexist *btcoexist,
->                 result =3D 0;
->                 wait_count =3D 0;
->         } else {
-> -               /*accquire the BT TRx retry count from BT_Info byte2*/
-> +               /*acquire the BT TRx retry count from BT_Info byte2*/
-
-Add spaces after /* and before */
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-> b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-> index f749d19ec5f5..069d89c7800d 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-> @@ -879,7 +879,7 @@ static void dm_txpower_track_cb_therm(struct ieee8021=
-1_hw *hw)
->                 {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 25, 25}
->         };
->=20
-> -       /*Initilization (7 steps in total) */
-> +       /*Initialization (7 steps in total) */
-
-Add a space after /*
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-> b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-> index 88b7a715f4c5..c5ca8f1551f9 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-> @@ -762,7 +762,7 @@ void rtl92ee_set_fw_rsvdpagepkt(struct ieee80211_hw *=
-hw, bool b_dl_finished)
->         }
->  }
->=20
-> -/*Shoud check FW support p2p or not.*/
-> +/*Should check FW support p2p or not.*/
-
-Add spaces after /* and before */
-
->  static void rtl92ee_set_p2p_ctw_period_cmd(struct ieee80211_hw *hw, u8 c=
-twindow)
->  {
->         u8 u1_ctwindow_period[1] =3D {ctwindow};
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/reg.h
-> b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/reg.h
-> index 45f968e0e57c..416bb6670da7 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/reg.h
-> @@ -303,7 +303,7 @@
->=20
->  #define        RPWM                                    PCI_RPWM
->=20
-> -/* Regsiter Bit and Content definition  */
-> +/* Register Bit and Content definition  */
-
-Keep single one space before */
-
->=20
->  #define        ISO_MD2PP                               BIT(0)
->  #define        ISO_PA2PCIE                             BIT(3)
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> index c65d14fb914f..5df141c5960e 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> @@ -742,7 +742,7 @@ static void rtl8723be_dm_txpower_tracking_callback_th=
-ermalmeter(
->                 5, 6, 6, 6, 6, 7, 7, 7, 8, 8,  9,
->                 9, 10, 10, 11, 12, 13, 14, 15};
->=20
-> -       /*Initilization ( 7 steps in total )*/
-> +       /*Initialization ( 7 steps in total )*/
-
-Add spaces after /* and before */
-
->         rtlpriv->dm.txpower_trackinginit =3D true;
->         rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
->                 "%s\n", __func__);
-
-[...]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> index 7d833b72c7ed..caa7be69ac4d 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> @@ -631,7 +631,7 @@
->  #define        HWSET_MAX_SIZE                          512
->  #define   EFUSE_MAX_SECTION                    64
->  #define   EFUSE_REAL_CONTENT_LEN               256
-> -/* PG data exclude header, dummy 7 bytes frome CP test and reserved 1byt=
-e.*/
-> +/* PG data exclude header, dummy 7 bytes from CP test and reserved 1byte=
-.*/
-
-Add a space before */
-
->  #define                EFUSE_OOB_PROTECT_BYTES         18
->=20
->  #define        EEPROM_DEFAULT_TSSI                     0x0
-> @@ -1523,7 +1523,7 @@
->  #define        ROFDM0_TXCOEFF5                 0xcb4
->  #define        ROFDM0_TXCOEFF6                 0xcb8
->=20
-> -/*Path_A RFE cotrol */
-> +/*Path_A RFE control */
-
-Add a space after /*
-
->  #define        RA_RFE_CTRL_8812                0xcb8
->  /*Path_B RFE control*/
->  #define        RB_RFE_CTRL_8812                0xeb8
-> @@ -2336,7 +2336,7 @@
->=20
->  #define        REG_UN_used_register            0x01bf
->=20
-> -/* Path_A RFE cotrol pinmux*/
-> +/* Path_A RFE control pinmux*/
-
-Add a space before */
-
->  #define                RA_RFE_PINMUX           0xcb0
->  /* Path_B RFE control pinmux*/
->  #define                RB_RFE_PINMUX           0xeb0
-> @@ -2345,17 +2345,17 @@
->  #define                RB_RFE_INV              0xeb4
->=20
->  /* RXIQC */
-> -/*RxIQ imblance matrix coeff. A & B*/
-> +/*RxIQ imbalance matrix coeff. A & B*/
-
-Add spaces after /* and before */
-
->  #define RA_RXIQC_AB                    0xc10
-> -/*RxIQ imblance matrix coeff. C & D*/
-> +/*RxIQ imbalance matrix coeff. C & D*/
-
-Add spaces after /* and before */
-
->  #define        RA_RXIQC_CD                     0xc14
->  /* Pah_A TX scaling factor*/
->  #define        RA_TXSCALE                      0xc1c
->  /* Path_B TX scaling factor*/
->  #define        RB_TXSCALE                      0xe1c
-> -/*RxIQ imblance matrix coeff. A & B*/
-> +/*RxIQ imbalance matrix coeff. A & B*/
-
-Add spaces after /* and before */
-
->  #define        RB_RXIQC_AB                     0xe10
-> -/*RxIQ imblance matrix coeff. C & D*/
-> +/*RxIQ imbalance matrix coeff. C & D*/
-
-Add spaces after /* and before */
-
-
->  #define        RB_RXIQC_CD                     0xe14
->  /*bit mask for IQC matrix element A & C*/
->  #define        RXIQC_AC                        0x02ff
-
-[..]
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> index f1830ddcdd8c..9e2149bbac5a 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> @@ -744,7 +744,7 @@ enum rtl_var_map {
->         RTL_IMR_BDOK,           /*Beacon Queue DMA OK Interrup */
->         RTL_IMR_HIGHDOK,        /*High Queue DMA OK Interrupt */
->         RTL_IMR_COMDOK,         /*Command Queue DMA OK Interrupt*/
-> -       RTL_IMR_TBDOK,          /*Transmit Beacon OK interrup */
-> +       RTL_IMR_TBDOK,          /*Transmit Beacon OK interrupt */
-
-Add a space after /*=20
-
->         RTL_IMR_MGNTDOK,        /*Management Queue DMA OK Interrupt */
->         RTL_IMR_TBDER,          /*For 92C,Transmit Beacon Error Interrupt=
- */
->         RTL_IMR_BKDOK,          /*AC_BK DMA OK Interrupt */
-> @@ -2693,7 +2693,7 @@ struct rtl_priv {
->         int max_fw_size;
->=20
->         /* hal_cfg : for diff cards
-> -        * intf_ops : for diff interrface usb/pcie
-> +        * intf_ops : for diff interface usb/pcie
->          */
->         const struct rtl_hal_cfg *cfg;
->         const struct rtl_intf_ops *intf_ops;
-> @@ -2841,7 +2841,7 @@ enum bt_radio_shared {
->  #define        RT_RF_PS_LEVEL_ALWAYS_ASPM      BIT(6)
->  /* no matter RFOFF or SLEEP we set PS_ASPM_LEVL*/
->  #define        RT_PS_LEVEL_ASPM                BIT(7)
-> -/*When LPS is on, disable 2R if no packet is received or transmittd.*/
-> +/*When LPS is on, disable 2R if no packet is received or transmitted.*/
-
-Add spaces after /* and before */
-
->  #define        RT_RF_LPS_DISALBE_2R            BIT(30)
->  #define        RT_RF_LPS_LEVEL_ASPM            BIT(31) /*LPS with ASPM *=
-/
->  #define        RT_IN_PS_LEVEL(ppsc, _ps_flg)           \
-> --
-> 2.48.1
+diff --git a/drivers/net/wireless/silabs/wfx/hif_rx.c b/drivers/net/wireless/silabs/wfx/hif_rx.c
+index 64ca8acb8e4f..683fb67916c8 100644
+--- a/drivers/net/wireless/silabs/wfx/hif_rx.c
++++ b/drivers/net/wireless/silabs/wfx/hif_rx.c
+@@ -62,9 +62,15 @@ static int wfx_hif_multi_tx_confirm(struct wfx_dev *wdev,
+ 				    const struct wfx_hif_msg *hif, const void *buf)
+ {
+ 	const struct wfx_hif_cnf_multi_transmit *body = buf;
++	int hif_body_len = le16_to_cpu(hif->len) - sizeof(*hif);
+ 	int i;
+ 
+-	WARN(body->num_tx_confs <= 0, "corrupted message");
++	if (hif_body_len < (int)sizeof(*body) ||
++	    body->num_tx_confs > (hif_body_len - sizeof(*body)) /
++				 sizeof(body->tx_conf_payload[0])) {
++		dev_err(wdev->dev, "corrupted multi tx confirm\n");
++		return -EINVAL;
++	}
+ 	for (i = 0; i < body->num_tx_confs; i++)
+ 		wfx_tx_confirm_cb(wdev, &body->tx_conf_payload[i]);
+ 	return 0;
+-- 
+2.43.0
 
