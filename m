@@ -1,196 +1,143 @@
-Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-40.mta0.migadu.com [91.218.175.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8455C53ED15
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:47:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B7D5427E3
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:56:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788871624; cv=none; b=XePKqHZRXUaBf8LAr4XsMKiag+QUhD471vs+o/7LP4Sv2w+DS5emC38pY+1AyWOFQYYLmcwm5l8EtefyE+hrD45ghGRWdykXTNu15XF63ohtC/5CTESQykRFPZg3yeuUuZP7RtBelxZoXPgTMzW+7ef7kLKApkXCKM+P7Zy87Mg=
+	t=1788872192; cv=none; b=bqN3pxV6bDzobGG/plF5TUh3ufpiQ2CNwncwTNjDwGP6Vd5zS8rMaxofnpdgZwqjh0eYU+LvoSpw34V2+o5juJneUgTydcYlJFfm/+/E3RCF8lLty828nqBYP3aD1eAJVTHxUSRYDtaUJyohUoBP1sgIEXUlH4RBXUhoq9N8uIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788871624; c=relaxed/simple;
-	bh=nSIsuNFgivXXUQFkkh2UAm69QxMNGxyM6y0WeZlnB1s=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=SYhenBDpMXkIB6OSg+dM8R5ipH5pwAt4zJ9kR0wRQ1OtdZfQxSTRWI+iHiZpNadsBJj4WfHQ/bUIHfzl5mayJKY618ZdNZE4IqS04itvYh3pmVq2gt+49sKu4a9Vuo9ItpApsn9kIbZahGqIIR9Xh32TyRpiGZN00iXWHKlfhoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=KbXeLyQB; arc=none smtp.client-ip=212.77.101.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1788872192; c=relaxed/simple;
+	bh=dvxoYrFwANfOfAGdF2meKaNS1goS1wQOzWzhG5OqaTc=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
+	 References:In-Reply-To; b=sIYtCz4UKMkcaaw2aogHFVgId/FZT507rVVif4eZfl/tdC1ucuOyQClIrgTVQ9oV3hz2vnlqSYV9jy3aCL/dcilcT1KoHNwUhEq3A4+t+xRHWzFKnsykNImqgL3sfqTW4cHYsf7wDVuTRYEIq407HgDCs0cxG2bd/97ro+JOqto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RJSHWLnv; arc=none smtp.client-ip=91.218.175.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="KbXeLyQB"
-Received: (wp-smtpd smtp.wp.pl 667 invoked from network); 8 Sep 2026 14:46:52 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1788871612; bh=QuutxINxLELqJqoI08YM99QjWjCEZXXayskBtNn5lDM=;
-          h=From:To:Cc:Subject;
-          b=KbXeLyQBKiq/uRJrrI7/4OQRrB9TFm/VsmyNarTl/XTUVr1EYGpGCeK2w2KjZd7LL
-           0rAOcsr/IZvXVnx4InqppLRqi2ybpE/iSd/0cu7ge2HFzZopdJ29Fba4AOKCE2r1LO
-           Di5SczAzRHN7Tv9wIaaIsimcmzLB8imGj18s3SrHpt0yOHBTV/vggo6xdUTCKZ11cw
-           jXq7AC8n09TXtJkZHASseRWSDfehSAlLk5O8Qw564skqOYO7Tf9vfQLPFF9KcStv09
-           03S7v6h99JcfQ1in9H5kE7pWpUNTdfEunILVcxzfuz0YjgHnjxFyenr7Pod51CyGPD
-           1FSKuJ98Wte1A==
-Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <johannes@sipsolutions.net>; 8 Sep 2026 14:46:52 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH RESEND v2] wifi: mac80211: queue frames while off-channel
-Date: Tue,  8 Sep 2026 14:46:51 +0200
-Message-Id: <20260908124651.2995-1-stf_xl@wp.pl>
-X-Mailer: git-send-email 2.25.4
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RJSHWLnv"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=dvxoYrFwANfOfAGdF2meKaNS1goS1wQOzWzhG5OqaTc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788872185; v=1; x=1789476985;
+ b=RJSHWLnv9cT87OKsH+d8QbrgTGsOWUaB6QPhJ1Fsdr0l7zyov3kv4iaYZoApmx+b6Wl/8Cqo
+ qRGyEJCjPcffNu93DJyg85JgB3NLcbjMylzyXGcqG2hDoF/NBeRfBlwANz8I1gZtGEotgUCU2SZ
+ dbomHxBDyfaargbI7s/LIGxQ=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d6758adfd6373cdd;
+	Tue, 08 Sep 2026 12:56:25 +0000
+X-Mizu-Trace-ID: d6758adfd6373cdd
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-WP-MailID: c459ff43650ff9bbb31ac43ff463a6e9
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [wUOk]                               
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 08 Sep 2026 14:56:24 +0200
+Message-Id: <DL9Y9KGJKWIT.26GHPWWWG0WFV@linux.dev>
+Subject: Re: [PATCH v9 4/6] wifi: rtw88: sdio: track free TX pages and OQT
+ credits for RTL8723BS
+From: "Luka Gejak" <luka.gejak@linux.dev>
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "luka.gejak@linux.dev"
+ <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+ <linux-wireless@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, "Bitterblue Smith"
+ <rtl8821cerfe2@gmail.com>, "Peter Robinson" <pbrobinson@gmail.com>, "Hans
+ de Goede" <johannes.goede@oss.qualcomm.com>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260831061144.18631-1-luka.gejak@linux.dev>
+ <20260831061144.18631-5-luka.gejak@linux.dev>
+ <d4a8b1203ee0402483269a31ad4d6dd2@realtek.com>
+In-Reply-To: <d4a8b1203ee0402483269a31ad4d6dd2@realtek.com>
 
-Drivers without FAST_XMIT and hardware scan support currently drop TX
-frames during software scanning while being off-channel. This happens
-in ieee80211_tx_h_check_assoc() before frames reach internal TX queue.
+On Sun Sep 6, 2026 at 4:22 AM CEST, Ping-Ke Shih wrote:
+[...]
+> If the __skb_padd() is necessary for original (generic) part, please
+> add another patch to fix it. (see below comment)
+[...]
+> Why doesn't rtw_sdio_write_port_generic() need __skb_pad() as well?
+> Is there an existing problem by original?
 
-Move the off-channel check to invoke_tx_handlers_late(), after
-ieee80211_queue_skb(). Frames can then remain queued and be transmitted
-when the interface returns on-channel. This how TX works currently when
-code goes via ieee80211_xmit_fast() path.
+There is. rtw_sdio_write_port() rounds the transfer up with
+sdio_align_size() and passes that length to sdio_memcpy_toio() while the
+skb still holds only skb->len bytes, so between one and 511 bytes from
+past the end of the frame get transmitted. Whether that stays inside the
+skb's allocation depends on how much tailroom it happens to have.
 
-Below is rt2x00 driver ping output example while scanning, before and
-after the fix. After the fix, packets are no longer lost. Some have
-increased latency, what is expected behavior.
+It gets its own patch, no chip condition:
 
-BEFORE:
-64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.61 ms
-64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=3.33 ms # Missed 30
-64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.03 ms
-64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=3.10 ms # Missed 33
-64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=3.04 ms # Missed 35
-64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.05 ms # Missed 37
-64 bytes from 192.168.0.1: icmp_seq=40 ttl=64 time=4.14 ms # Missed 39
-64 bytes from 192.168.0.1: icmp_seq=41 ttl=64 time=4.50 ms
+  wifi: rtw88: sdio: zero the padding added to a TX transfer
 
-AFTER:
-64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.40 ms
-64 bytes from 192.168.0.1: icmp_seq=30 ttl=64 time=6.10 ms
-64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=4.69 ms
-64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.49 ms
-64 bytes from 192.168.0.1: icmp_seq=33 ttl=64 time=148 ms
-64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=6.83 ms
-64 bytes from 192.168.0.1: icmp_seq=35 ttl=64 time=8.66 ms
-64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=13.0 ms
-64 bytes from 192.168.0.1: icmp_seq=37 ttl=64 time=4.78 ms
-64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.85 ms
+Which also answers the question the other way round: the RTL8723BS does
+not need the padding for its own sake. I tested that rather than assume
+it, with a local patch that transfers unpadded exactly as the generic
+path does. Uplink is 20.9 to 21.1 Mbit/s unpadded against 19.5 to 19.8
+padded, in an interleaved A/B in one session, and scans, reconnection
+and a UDP flood are clean either way. So the padding is a correctness
+fix that belongs in the shared path, and patch 4 no longer carries it.
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-v1 -> v2: 
- - drop wrong Fixes tags 
- - move handler function to keep order in the code  
- - do not remove info->flags & IEEE80211_TX_CTL_INJECTED check
- 
- net/mac80211/tx.c | 52 +++++++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 24 deletions(-)
+There is an ordering point in that, which I would rather raise with you.
+The separate fix patches rtw_sdio_write_port(), which after this series
+is rtw_sdio_write_port_generic(), so it applies cleanly on top but only
+covers the generic path. The RTL8723BS would then be the one part still
+transmitting the padding unzeroed, which is not where I want to leave it.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 91b14112e24f..08a39272f26a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -269,7 +269,6 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- {
--
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 	bool assoc = false;
-@@ -277,20 +276,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
- 		return TX_CONTINUE;
- 
--	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
--	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
--	    !ieee80211_is_probe_req(hdr->frame_control) &&
--	    !ieee80211_is_any_nullfunc(hdr->frame_control))
--		/*
--		 * When software scanning only nullfunc frames (to notify
--		 * the sleep state to the AP) and probe requests (for the
--		 * active scan) are allowed, all other frames should not be
--		 * sent and we should not get here, but if we do
--		 * nonetheless, drop them to avoid sending them
--		 * off-channel. See __ieee80211_start_scan() for more.
--		 */
--		return TX_DROP;
--
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_OCB)
- 		return TX_CONTINUE;
- 
-@@ -805,6 +790,33 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	return TX_CONTINUE;
- }
- 
-+static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_check_offchannel(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+
-+	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
-+		return TX_CONTINUE;
-+
-+	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
-+	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
-+	    !ieee80211_is_probe_req(hdr->frame_control) &&
-+	    !ieee80211_is_any_nullfunc(hdr->frame_control)) {
-+		/*
-+		 * When software scanning only nullfunc frames (to notify
-+		 * the sleep state to the AP) and probe requests (for the
-+		 * active scan) are allowed, all other frames should not be
-+		 * sent and we should not get here, but if we do
-+		 * nonetheless, drop them to avoid sending them
-+		 * off-channel. See __ieee80211_start_scan() for more.
-+		 */
-+		return TX_DROP;
-+	}
-+
-+	return TX_CONTINUE;
-+}
-+
- static __le16 ieee80211_tx_next_seq(struct sta_info *sta, int tid)
- {
- 	u16 *seq = &sta->tid_seq[tid];
-@@ -1864,6 +1876,7 @@ static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx)
- 		goto txh_done;
- 	}
- 
-+	CALL_TXH(ieee80211_tx_h_check_offchannel);
- 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
- 	CALL_TXH(ieee80211_tx_h_sequence);
- 	CALL_TXH(ieee80211_tx_h_fragment);
-@@ -4686,10 +4699,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	queue = ieee80211_select_queue(sdata, sta, skb);
- 	skb_set_queue_mapping(skb, queue);
- 
--	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
--	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
--		goto out_free;
--
- 	skb = skb_share_check(skb, GFP_ATOMIC);
- 	if (unlikely(!skb))
- 		return;
-@@ -4756,11 +4765,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tpt_led_trig_tx(local, len);
- 
- 	ieee80211_tx_8023(sdata, skb, sta, false);
--
--	return;
--
--out_free:
--	kfree_skb(skb);
- }
- 
- static bool ieee80211_check_mcast_offload(struct ieee80211_sub_if_data *sdata,
--- 
-2.50.1
+The shared place is rtw_sdio_write_to_port(), which both paths call, but
+that only exists once this series is in. So I plan to send it once this
+series is applied, against that function, where a single patch covers
+every SDIO part including this one and nothing here needs respinning.
 
+There is one more thing. With the padding gone from patch 4, nothing on
+that path returns -ENOMEM any more, so retrying it in patch 6 was dead
+code and I removed it. If the padding fix is applied then -ENOMEM becomes
+reachable again, for every chip, and that retry has to come back with it:
+without it a stopped access category has nothing left to kick it.
+
+> As we have sdio_set_block_size(sdio_func, RTW_SDIO_BLOCK_SIZE),
+> can here use sdio_align_size() to get the writ_size?
+
+Yes, and v10 does. I checked it is really the same rather than only
+looking the same: on this card sdio_align_size() matches the open coded
+rounding at the block boundaries, and over a full session it agreed on
+every frame, 80000 of them with no difference.
+
+It is equivalent because the card reports multi block support and a 512
+byte block size, which puts the byte mode limit at 512. Without those
+two properties sdio_align_size() falls into chunked byte transfers that
+are not block multiples, so the equivalence is a property of this card
+and host rather than something unconditional. It is still the right call:
+it is the core helper and it is what the generic path already uses.
+
+> I think write_size must be large or equal to skb->len, right?
+> Therefore, declare size_t pad_size at top of function, and then
+[...]
+> I think this is easier to read.
+
+You are right that it can never be negative. The whole block is gone in
+v10 with the padding, so the question does not arise any more, but it
+would have been the better shape.
+
+> In this patchset, you add many comments. Please review them across whole
+> patchset to see if they actually need. Like this one, do you think the co=
+de
+> can't explain itself?
+
+I went through the series and removed redundant comments: v10 adds 62 comme=
+nt
+lines where v9 added 103.
+
+What I kept is the things the code cannot show: which page pool a queue
+draws from and how that was measured on hardware, why the counters are
+atomic_t, why only the defined interrupt status bits are acknowledged,
+and the two places where an skb has already been handed on and must not
+be touched. Two more are there because they were asked for in earlier
+review: the comment in patch 2 and the mod_delayed_work() one in patch 6.
+Say the word if any of those should go too.
+
+Best regards,
+Luka Gejak
