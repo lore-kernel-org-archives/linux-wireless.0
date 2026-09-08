@@ -1,171 +1,80 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09BC4AC143
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 08:56:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 763754AF9D3;
+	Tue,  8 Sep 2026 08:56:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788857782; cv=none; b=JRfguVA7K8axKFXCi60YN8h+yEBMJAbbtn5F8d5/Xn01bJFPa5KeiZpDHHTzdOHgodeOOY1csoGPFyMtHIzknwOHezKltHsEknrHIW1LAkVaLxWlwtQPtw7wnfzrdTwXh/7FbfEo5aSPqzZ/lwO4AQTRelRn8SWnv+qE7IjugdE=
+	t=1788857802; cv=none; b=Dy1OuPB5hm6pfkNMCuliZHSu5o6uP+enaMMNwsUADoR8SzBJIMMJ/ViksunBUKRKQDLn1kJM4QYNKlS2Qv3YR8VrXQzblYGWmjR7Tnva02KFQoS7Pp8qkdQul5620m0SQEkVDEIJAVunHgXYBin356uhuHbuS7WzztkzCwA9KiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788857782; c=relaxed/simple;
-	bh=Vzu8r+u/HFSEQ2tAui4c1RywA0u4mC5DQD+sRV2X2vA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=OE2rwD9BZZrpRUyaI+059AGlnGQC+f7psnyvaBo47JBNM9oSZwo1rMsAIokleQ1Ty2+G/SMzA19YXpCa47SL6hZ3WnUXBHAC+Slz5z7vNylsPdvPsQee78puiB+X3I0cuO8SU5ruS2+02DJTLj7Zr5VQNQY6px+Avi5r86oDG4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=nxl7d9fd; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1788857802; c=relaxed/simple;
+	bh=XuR89paReM5i+jnslJrHfRiRnslXz9G5DzQVW+tZL+k=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=bjvl4/XyqrsI9kWRlcdQUPIlm/1HPhmbnOONYFQRog8RRwtPeAfMgI6fG28a6/pJzAflg/rwVZnoWuXE0Lugyi8m1CaGcs8zf+xRayoK8+WtCfy8xFfP8QHmtkwj6PLHezz6tOoENUZ2rAzNnU460AgV07V7J/yq3SbK8JWMoTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HKIenxmD; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="nxl7d9fd"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6888trJR33681848, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788857754; bh=4OefeSuGtcm9wvrRsWH6qS6np5XmCrw3Q3GIaPhNY+U=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version;
-	b=nxl7d9fd9smXcZaTGxhSrA9GlZr4NAneqr/C2SbwJH5azG8ned0Jt1b1fcrRNn8Sc
-	 zlfcUkne7UvIUhxNUOSOw+bYIKKTsW7SfsnpgLg7k8IVIrBfkHkz5ivtXYsjAkZWH4
-	 Se4356on1V56R1GmsuFxxffEuEgrRiU0SqnZy5jG5B8n5IGm4/u4nPPLyi1HGP/She
-	 xNk5NhfQMbwk3jRQ2ryM1MVoT6QTzFcMaNyNIVYXvP3PlVlorasG8AclVSx4bocQNR
-	 ovyQgfHReAulZUeU9babI6zZWP2ZO8iBfZOmknpTXMXMw64wUVD2+Yx3X/SY0ijhnh
-	 ljIL4iZKoFAgQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6888trJR33681848
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 8 Sep 2026 16:55:53 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 8 Sep 2026 16:55:52 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 8 Sep 2026 16:55:52 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Tue, 8 Sep 2026 16:55:52 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: secure_email <securelevelone@gmail.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-CC: "kvalo@kernel.org" <kvalo@kernel.org>
-Subject: RE: [BUG] rtw89: kernel panic in rtw89_core_acquire_sta_ba_entry
- (list_del corruption)
-Thread-Topic: [BUG] rtw89: kernel panic in rtw89_core_acquire_sta_ba_entry
- (list_del corruption)
-Thread-Index: AQHdPzy+XXA+M7j+KES4OgpoSQSJbLbEUWVQ
-Date: Tue, 8 Sep 2026 08:55:52 +0000
-Message-ID: <6b2ba863e0ec4251bcf6216f289e8bcf@realtek.com>
-References: <CACj-1MxFTc1CUgVbbUC3VQxi-DBBNvDkPmsN1OLxn1e0t+PgnQ@mail.gmail.com>
- <CAH-fA9oS2N-D05BSd0DDp_hGtBEH==cLuxr1XCUiL_UC3CN+bg@mail.gmail.com>
-In-Reply-To: <CAH-fA9oS2N-D05BSd0DDp_hGtBEH==cLuxr1XCUiL_UC3CN+bg@mail.gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: yes
-Content-Type: multipart/mixed;
-	boundary="_002_6b2ba863e0ec4251bcf6216f289e8bcfrealtekcom_"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HKIenxmD"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=XuR89paReM5i+jnslJrHfRiRnslXz9G5DzQVW+tZL+k=;
+	t=1788857797; x=1790067397; b=HKIenxmDNRr2sw91wb7fF8JyRmCjmWgr3vkX2029i64UJX5
+	XrPu6OPfVTYc0ZA05qbMcoFh0rF6dbMT89ZMQ5i7IQpdqdx4qbVbdObM1Az9pVMekrochOqnpxHE3
+	Jvw3W/x+GZDkfWlMnWs5avk76XlkSgExRjk3Dm6dBhtg4C58x0maErAW3bkGEW8EG4nNNwmIP6C1H
+	RJFhmOyDILpAbiqY4tT6B/9Atlw2ybSN5PpMye6xOoV3MXB7LF1dphyTsb4ye1IwnjvaBkP6uvLn9
+	3AzOn4Y1vskgtM14wcTggvSne9TDtBQ7ZyOlXJoMrGxqQJASOYTedhtQtXP7IwSw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x3rcz-00000005ttu-0Bos;
+	Tue, 08 Sep 2026 10:56:29 +0200
+Message-ID: <0fc3903fc2b6e0b2a01a8b473cd5ce1fa3b57f00.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless 1/1] wifi: mac80211: fix mesh fast xmit path
+ deletion UAF
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zihan Xi <zihanx@nebusec.ai>, linux-wireless@vger.kernel.org
+Cc: Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org, Vega
+ <vega@nebusec.ai>,  Luxing Yin <root@tr0jan.top>
+Date: Tue, 08 Sep 2026 10:56:28 +0200
+In-Reply-To: <94174303640c5e1022b31836770bad75f741afbf.1788845030.git.zihanx@nebusec.ai> (sfid-20260908_082840_904659_5067153E)
+References: <cover.1788845030.git.zihanx@nebusec.ai>
+	 <94174303640c5e1022b31836770bad75f741afbf.1788845030.git.zihanx@nebusec.ai>
+	 (sfid-20260908_082840_904659_5067153E)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
---_002_6b2ba863e0ec4251bcf6216f289e8bcfrealtekcom_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On Tue, 2026-09-08 at 06:28 +0000, Zihan Xi wrote:
+> mesh_fast_tx_cache() stores raw mesh_path pointers in a persistent
+> fast-xmit cache entry. Path deletion flushes currently visible cache
+> entries and then schedules the path for RCU freeing, but a sender that
+> already holds the path in an RCU read-side section can insert a new
+> entry after that flush. Once the lookup RCU section ends, the path is
+> freed while the new cache entry still points at it. A later
+> mesh_fast_tx_get() then dereferences the freed flags, expiry, or
+> next_hop fields.
+>=20
+> Mark the path MESH_PATH_DELETED before flushing the cache, and reject
+> cache insertion if the mesh path or optional MPP path was deleted while
+> the entry was being built. The cache walk lock orders this check with
+> deletion flush, so entries inserted before the flush are removed and
+> later entries are not cached.
+>=20
+> The crash path is ieee80211_mesh_xmit_fast() -> mesh_fast_tx_get().
+> The same cache is also consumed by ieee80211_rx_mesh_fast_forward(),
+> so the deletion tombstone covers both consumers.
 
-KHBsZWFzZSB1c2UgcGxhaW4gdGV4dCBhbmQgbm90IHRvcCBwb3N0aW5nKQ0KDQpzZWN1cmVfZW1h
-aWwgPHNlY3VyZWxldmVsb25lQGdtYWlsLmNvbT4gIHdyb3RlOg0KPiBIYXJkd2FyZTogUmVhbHRl
-ayBSVEw4OTIyQUUgKHJ0dzg5Xzg5MjJhZSkNCj4gS2VybmVsIHZlcnNpb246IDcuMS42LTIwMS5m
-YzQ0Lng4Nl82NA0KPiBEaXN0cmlidXRpb246IEZlZG9yYSBDb3NtaWMgQXRvbWljIDQ0DQo+IA0K
-PiBEZXNjcmlwdGlvbjoNCj4gQSBrZXJuZWwgcGFuaWMgb2NjdXJzIGR1cmluZyBCbG9jayBBY2sg
-KEJBKSBzZXNzaW9uIGFjcXVpc2l0aW9uLw0KPiB0ZWFyZG93biBpbiB0aGUgcnR3ODkgZHJpdmVy
-Lg0KPiBUaGUga2VybmVsIHJlcG9ydHMgYSAibGlzdF9kZWwgY29ycnVwdGlvbiIgaW5zaWRlIA0K
-PiBydHc4OV9jb3JlX2FjcXVpcmVfc3RhX2JhX2VudHJ5LCB3aGljaCBwb2ludHMgdG8gYSBwb3Rl
-bnRpYWwgcmFjZSANCj4gY29uZGl0aW9uIG9yIG1pc3NpbmcgbG9jayBkdXJpbmcgQkEgZW50cnkg
-bWFuYWdlbWVudCB1bmRlciBXaS1GaSBsb2FkLg0KDQpCb3RoIHJ0dzg5X2NvcmVfYWNxdWlyZV9z
-dGFfYmFfZW50cnkoKSBhbmQgcnR3ODlfY29yZV9yZWxlYXNlX3N0YV9iYV9lbnRyeSgpDQpob2xk
-IHdpcGh5X2xvY2soKSwgc28gSSB0aGluayB0aGVyZSBzaG91bGQgYmUgbm8gcmFjZSBjb25kaXRp
-b24uDQoNCj4gDQo+IFN0ZXBzIHRvIHJlcHJvZHVjZToNCj4gMS4gVXNlIGNvbXB1dGVyIHJlZ3Vs
-YXJseSAoc3BlY2lmaWNhbGx5IG9uIHdpZmkgYXMgdGhhdCBpcyBob3cgYnVnIGlzIA0KPiB0cmln
-Z2VyZWQpIG5vIG1hdHRlciBpZiBkb3dubG9hZGluZyBzb21lIGZpbGVzLCBzdXJmaW5nIHRoZSB3
-ZWIsIA0KPiBnYW1pbmcgb3Igc3RlcHBpbmcgYXdheSBmcm9tIFBDLg0KPiAyLiBXaXRoaW4gYSBm
-ZXcgbWludXRlcyBhbmQgdXAgdG8gYXJvdW5kIDQwIG1pbnV0ZXMgYnVnIGlzIHRyaWdnZXJlZC4N
-Cg0KRnJvbSB0aGlzIHBvaW50LCBpdCBkaWQgY29ubmVjdGlvbiBhbmQgZGlzY29ubmVjdGlvbiBm
-cmVxdWVudGx5LiBBcmUgdGhleQ0KaW50ZW50aW9uYWwgb3Igc29tZXRoaW5nIHdyb25nPw0KDQpN
-YXkgMTkgMjM6NDc6NTIga2VybmVsOiB3bHA4czA6IGF1dGhlbnRpY2F0ZSB3aXRoIHh4Onh4Onh4
-Onh4Onh4Onh4DQoNClRoZSBjb25uZWN0aW9uIGJlY29tZXMgZGlzY29ubmVjdGVkIGFib3V0IDF+
-NSBtaW51dGVzLiBEaWQgeW91IGNvbnRyb2wNCldpRmkgdmlhIEdVST8NCg0KTWF5IDE5IDIzOjUz
-OjA2IGtlcm5lbDogd2xwOHMwOiBhc3NvY2lhdGVkDQpNYXkgMTkgMjM6NTQ6MDYga2VybmVsOiB3
-bHA4czA6IGRlYXV0aGVudGljYXRpbmcgZnJvbSB4eDp4eDp4eDp4eDp4eDp4eA0KDQpUcnkgdG8g
-ZGlzYWJsZSBwb3dlciBzYXZlIHRvIHNlZSBpZiBpdCBjYW4gYmVjb21lIGJldHRlcjoNCg0KICAg
-c3VkbyBpdyB3bGFuMCBzZXQgcG93ZXJfc2F2ZSBvZmYNCg0KPiANCj4gU3lzdGVtIGJlaGF2aW9y
-Og0KPiBXaWZpIHRvZ2dsZSBpbiBzZXR0aW5ncyBzdG9wcyBmdW5jdGlvbmluZyAoc3R1Y2sgb24g
-ImVuYWJsZWQiKSwgDQo+IGZvbGxvd2VkIGJ5IGRlZ3JhZGF0aW9uIGluIGNlcnRhaW4gYXBwbGlj
-YXRpb25zLCBsb3NzIG9mIGludGVybmV0IA0KPiBjb25uZWN0aXZpdHkgYm90aCBpbiB0ZXJtaW5h
-bCBhbmQgYnJvd3NlciwgZXRjLiwgYW5kIGlmIEkgZGVjaWRlIHRvIA0KPiByZWJvb3QgdGhlIHN5
-c3RlbSBpdCB3aWxsIGhhbmcgaW5kZWZpbml0ZWx5IHVubGVzcyBJIGRvIGEgaGFyZCANCj4gc2h1
-dGRvd24uDQo+IA0KPiBDYWxsIFRyYWNlIC8gUGFuaWMgTG9ncyBjYW4gYmUgZm91bmQgaW4gdGhl
-IGF0dGFjaG1lbnRzIGJlbG93Lg0KPiANCj4gQWRkaXRpb25hbCBpbmZvOg0KPiBJIGluaXRpYWxs
-eSByZXBvcnRlZCB0aGlzIG9uIFJlZCBIYXQgQnVnemlsbGEgKEJ1ZyAyNDk3OTczKSwgYnV0IGFt
-IA0KPiBzZW5kaW5nIHRoaXMgdXBzdHJlYW0gYXMgcmVxdWVzdGVkIHRvIGhlbHAgZ2V0IHRoZSBw
-YW5pYyBiYWNrdHJhY2UgaW4gDQo+IGZyb250IG9mIHJ0dzg5IG1haW50YWluZXJzLg0KPiANCj4N
-Cg0KUGxlYXNlIGFwcGx5IGF0dGFjaGVkIGRlYnVnIHBhdGNoLCBhbmQgY29sbGVjdCBhbmQgc2hh
-cmUgbG9nIHRvIG1lLiANCg0KUGluZy1LZQ0KDQo=
+What? You need to start writing your own commit messages.
 
---_002_6b2ba863e0ec4251bcf6216f289e8bcfrealtekcom_
-Content-Type: application/octet-stream;
-	name="20260908_00_print_ba_cam.patch"
-Content-Description: 20260908_00_print_ba_cam.patch
-Content-Disposition: attachment; filename="20260908_00_print_ba_cam.patch";
-	size=2671; creation-date="Tue, 08 Sep 2026 08:48:13 GMT";
-	modification-date="Tue, 08 Sep 2026 07:58:19 GMT"
-Content-Transfer-Encoding: base64
-
-Y29tbWl0IDQ3NzNmZjBhNzdiYmM0ODM2NGU3NzQ4MDljZTVhYmIyNzA2OGNlN2UKQXV0aG9yOiBQ
-aW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4KRGF0ZTogICBUdWUgU2VwIDggMTU6NTc6
-NDkgMjAyNiArMDgwMAoKICAgIHByaW50IGJhIGNhbQogICAgCiAgICBTaWduZWQtb2ZmLWJ5OiBQ
-aW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4KCmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5L2NvcmUuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnR3ODkvY29yZS5jCmluZGV4IDU3MmQ5YzY1YTJkZC4uN2UwNGRhMWZkZjkwIDEwMDY0
-NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5L2NvcmUuYworKysgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5L2NvcmUuYwpAQCAtNTYyNCw3ICs1NjI0
-LDE0IEBAIGludCBydHc4OV9jb3JlX2FjcXVpcmVfc3RhX2JhX2VudHJ5KHN0cnVjdCBydHc4OV9k
-ZXYgKnJ0d2RldiwKIAogCWxvY2tkZXBfYXNzZXJ0X3dpcGh5KHJ0d2Rldi0+aHctPndpcGh5KTsK
-IAorCXByaW50aygiJXM6JWRcbiIsIF9fZnVuY19fLCBfX0xJTkVfXyk7CisKIAlpZHggPSBydHc4
-OV9jb3JlX2FjcXVpcmVfYml0X21hcChjYW1faW5mby0+YmFfY2FtX21hcCwgY2hpcC0+YmFjYW1f
-bnVtKTsKKworCXByaW50aygiXHQlczolZCBhY3F1aXJlIGVudHJ5PSVkIGFsbD0lKnBoIHJ0d3N0
-YV9saW5rPSVwIHRpZD0lZFxuIiwgX19mdW5jX18sIF9fTElORV9fLAorCQlpZHgsIChpbnQpc2l6
-ZW9mKGNhbV9pbmZvLT5iYV9jYW1fbWFwKSwgY2FtX2luZm8tPmJhX2NhbV9tYXAsCisJCXJ0d3N0
-YV9saW5rLCB0aWQpOworCiAJaWYgKGlkeCA9PSBjaGlwLT5iYWNhbV9udW0pIHsKIAkJLyogYWxs
-b2NhdGUgYSBzdGF0aWMgQkEgQ0FNIHRvIHRpZD0wLzUsIHNvIHJlcGxhY2UgdGhlIGV4aXN0aW5n
-CiAJCSAqIG9uZSBpZiBCQSBDQU0gaXMgZnVsbC4gSGFyZHdhcmUgd2lsbCBwcm9jZXNzIHRoZSBv
-cmlnaW5hbCB0aWQKQEAgLTU2NDAsNyArNTY0NywxMiBAQCBpbnQgcnR3ODlfY29yZV9hY3F1aXJl
-X3N0YV9iYV9lbnRyeShzdHJ1Y3QgcnR3ODlfZGV2ICpydHdkZXYsCiAKIAkJCWlkeCA9IGk7CiAJ
-CQllbnRyeSA9IHRtcDsKLQkJCWxpc3RfZGVsKCZlbnRyeS0+bGlzdCk7CisKKwlwcmludGsoIlx0
-JXM6JWQgcmVwbGFjZSBlbnRyeT0lZCBhbGw9JSpwaCBydHdzdGFfbGluaz0lcCB0aWQ9JWRcbiIs
-IF9fZnVuY19fLCBfX0xJTkVfXywKKwkJaWR4LCAoaW50KXNpemVvZihjYW1faW5mby0+YmFfY2Ft
-X21hcCksIGNhbV9pbmZvLT5iYV9jYW1fbWFwLAorCQlydHdzdGFfbGluaywgdGlkKTsKKworCQkJ
-bGlzdF9kZWxfaW5pdCgmZW50cnktPmxpc3QpOwogCQkJYnJlYWs7CiAJCX0KIApAQCAtNTY1MCw2
-ICs1NjYyLDEwIEBAIGludCBydHc4OV9jb3JlX2FjcXVpcmVfc3RhX2JhX2VudHJ5KHN0cnVjdCBy
-dHc4OV9kZXYgKnJ0d2RldiwKIAkJZW50cnkgPSAmY2FtX2luZm8tPmJhX2NhbV9lbnRyeVtpZHhd
-OwogCX0KIAorCXByaW50aygiXHQlczolZCBhZGQgICAgIGVudHJ5PSVkIGFsbD0lKnBoIHJ0d3N0
-YV9saW5rPSVwIHRpZD0lZFxuIiwgX19mdW5jX18sIF9fTElORV9fLAorCQlpZHgsIChpbnQpc2l6
-ZW9mKGNhbV9pbmZvLT5iYV9jYW1fbWFwKSwgY2FtX2luZm8tPmJhX2NhbV9tYXAsCisJCXJ0d3N0
-YV9saW5rLCB0aWQpOworCiAJZW50cnktPnRpZCA9IHRpZDsKIAlsaXN0X2FkZF90YWlsKCZlbnRy
-eS0+bGlzdCwgJnJ0d3N0YV9saW5rLT5iYV9jYW1fbGlzdCk7CiAKQEAgLTU2NjgsMTQgKzU2ODQs
-MjUgQEAgaW50IHJ0dzg5X2NvcmVfcmVsZWFzZV9zdGFfYmFfZW50cnkoc3RydWN0IHJ0dzg5X2Rl
-diAqcnR3ZGV2LAogCiAJbG9ja2RlcF9hc3NlcnRfd2lwaHkocnR3ZGV2LT5ody0+d2lwaHkpOwog
-CisJcHJpbnRrKCIlczolZFxuIiwgX19mdW5jX18sIF9fTElORV9fKTsKKwogCWxpc3RfZm9yX2Vh
-Y2hfZW50cnlfc2FmZShlbnRyeSwgdG1wLCAmcnR3c3RhX2xpbmstPmJhX2NhbV9saXN0LCBsaXN0
-KSB7CiAJCWlmIChlbnRyeS0+dGlkICE9IHRpZCkKIAkJCWNvbnRpbnVlOwogCisJcHJpbnRrKCJc
-dCVzOiVkIHJlbGVhc2UgZW50cnk9JWQgYWxsPSUqcGggcnR3c3RhX2xpbms9JXAgdGlkPSVkIChi
-ZWZvcmUpXG4iLCBfX2Z1bmNfXywgX19MSU5FX18sCisJCWlkeCwgKGludClzaXplb2YoY2FtX2lu
-Zm8tPmJhX2NhbV9tYXApLCBjYW1faW5mby0+YmFfY2FtX21hcCwKKwkJcnR3c3RhX2xpbmssIHRp
-ZCk7CisKIAkJaWR4ID0gZW50cnkgLSBjYW1faW5mby0+YmFfY2FtX2VudHJ5OwotCQlsaXN0X2Rl
-bCgmZW50cnktPmxpc3QpOworCQlsaXN0X2RlbF9pbml0KCZlbnRyeS0+bGlzdCk7CiAKIAkJcnR3
-ODlfY29yZV9yZWxlYXNlX2JpdF9tYXAoY2FtX2luZm8tPmJhX2NhbV9tYXAsIGlkeCk7CisKKwlw
-cmludGsoIlx0JXM6JWQgcmVsZWFzZSBlbnRyeT0lZCBhbGw9JSpwaCBydHdzdGFfbGluaz0lcCB0
-aWQ9JWQgKGFmdGVyKVxuIiwgX19mdW5jX18sIF9fTElORV9fLAorCQlpZHgsIChpbnQpc2l6ZW9m
-KGNhbV9pbmZvLT5iYV9jYW1fbWFwKSwgY2FtX2luZm8tPmJhX2NhbV9tYXAsCisJCXJ0d3N0YV9s
-aW5rLCB0aWQpOworCiAJCSpjYW1faWR4ID0gaWR4OwogCQlyZXR1cm4gMDsKIAl9Cg==
-
---_002_6b2ba863e0ec4251bcf6216f289e8bcfrealtekcom_--
+johannes
