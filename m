@@ -1,174 +1,223 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC1958B6BA
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 16:50:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E7E458F083
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 17:05:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788886211; cv=none; b=VNrzUV7DF1DBW4zBM7hB7vW35mQJbXYWu9bVayNyJfdGOvO64nJnenWlCwfbhfYsXppP/M0OnkT0KxTB+4D4+ANOtnFJH5kdlU24SYa6+vqGAXDvph8FeGnDHTNGL0dzZjLETQyybbHQ/VIJh1CfFIZYMqn3fT4XIw501L68tsM=
+	t=1788887138; cv=none; b=AYw0J4uxpVjclJYIHNgsD7e05HYhAS76y/NSq5MI6nwqZVzY9lWrvUPQSgD7G8BEsFlWdIBe8a8vpANUaNYeCq6QiyZXv8kIhZRzVIhr70819o9sWvh5adq03bX8RpYSwqFrl03scFI4FjY7MFbJtKSrbOP8Tcv85BAR1wjisBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788886211; c=relaxed/simple;
-	bh=NDkMboDNQp1h3ckZyvzND7zGXOoGNEIsTFGiRphdgY0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=W6cUYfjlpMWP2Jvw0Sy++3rMG70BnQrL5AoIuz/uHiWPxLA9GHvYCA5pUVotzti2h3fZ/jP/Z7cbcb3tDbCuH0bUVHocJXRzti2cQ3F6SOPJESpsIq2y2cPs0eRLOwnWJ9U7f+PNV1dret+WJBK/yzZcZhGpOiihRK48xsd7nXI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=f6yjC98h; arc=none smtp.client-ip=67.231.154.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1788887138; c=relaxed/simple;
+	bh=XgSPVedMOyKZx0hD9D5eSQiDvn54bm23acHsJcZwnPs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S6KWBPNU+w4B7QiWZZKajnirM9SV09xY9JKGvTqCZWMtRIhifUm0Gry0InxFKVSkkKS2URJ3udwjMCSkphN8e3YaTjDN3zkVPyrlqrYi8wQ+hdXQsH3L2l4gH3CUv+o665WVChxM0/39fTDo1PAaXJ2y3eYsAP6cYy5zoSTjmfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PK7he5rd; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=TLMXrSTm; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="f6yjC98h"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C2D38980086;
-	Tue,  8 Sep 2026 16:50:01 +0000 (UTC)
-Received: from [192.168.100.159] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id 1FE8013C2B1;
-	Tue,  8 Sep 2026 09:50:01 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 1FE8013C2B1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1788886201;
-	bh=NDkMboDNQp1h3ckZyvzND7zGXOoGNEIsTFGiRphdgY0=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=f6yjC98hYQABZ0/O6rC8BcDZyvYZjrdLiZS98v4AxMtVQYtBiz0c/IPT9yOkTJE70
-	 nyu1mlqvyzy/ytgnWlZg2YMJRymIj27WfC36piOtnbY9fD851zU4y8UyGJETkBW2Wx
-	 mKQPg2MZ6tuUE2KcAAld9UAFRLoU9mvceUgCtUgA=
-Message-ID: <dce34788-a6fb-b2e0-4657-aab3843111b6@candelatech.com>
-Date: Tue, 8 Sep 2026 09:50:00 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PK7he5rd";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="TLMXrSTm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788887135;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=uIROfkEXMmiaOqUCdHyBQ6VVSwBDCHIdpWTf5XleH3U=;
+	b=PK7he5rdi2aUMfwEtwhfswSsy7rHniBgpPiluusGQS1082C+XDRIIpM9zRVD8jhtRgpD/l
+	0dfDQdnGZlWE7gDHD6xC7/WWNzae1za6AsWCpHk8CrMnvTEjNbXwBP+12lylxH77k2PbzA
+	BIuUZ+YXKCTlAaR8Ud6an3b4SG58qlM=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-524-lzKHG3XAOTKA_EJSrhKDEw-1; Tue, 08 Sep 2026 13:05:34 -0400
+X-MC-Unique: lzKHG3XAOTKA_EJSrhKDEw-1
+X-Mimecast-MFC-AGG-ID: lzKHG3XAOTKA_EJSrhKDEw_1788887133
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-499b99a8a10so41790225e9.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 10:05:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788887133; x=1789491933; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uIROfkEXMmiaOqUCdHyBQ6VVSwBDCHIdpWTf5XleH3U=;
+        b=TLMXrSTmtG50UQntXPNwO8ILcUgtrKkCVDUP7PJhFEkaUhlxGW/16/QL3VTSJwCXPc
+         E9yaq/QD4AvCnTEoRE56gbtwT/pwURMtQhdHPh3Iv0Nn4RpkuPEs/o1wDgeD4mwv1Rus
+         Hm6i2syw6a4YNNUNwp1dYwWAjoA6OlduX0lfB3ATAqELvBpvMghtVQgmUZ1TV9v1jrYR
+         w1H6p/VgZF0pvPlwaipjcNDxJqts8RSjj/HPB/+Nm7BCGyWY1yJT3uO0QsB47Q3LNWus
+         ZITy4Gv4UiSq4qoYSKfhYaXWNPknQLFz/6VwhE9DOFsNNPUppqoYa/Zc/pWxdyYOQnIa
+         P+yQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788887133; x=1789491933;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=uIROfkEXMmiaOqUCdHyBQ6VVSwBDCHIdpWTf5XleH3U=;
+        b=tU6PeJtytsdKdv+G6Em9dwIYsc6p3G970Z85hOEITBf7SCd2xVq15gibgYO+MQSlks
+         LaMtQOFsZSYGAAbsBot7gB9hIDPd2mBWteoFxctVgAqyFcBVwarf3Njb8vPoBHwQgj77
+         Ov2/fLnIoz9c/Pj4WXN4rO8aZot33agidpbCYqzHbOrfIroMKTgPratJV+mq3T4nnzAH
+         T98XrRLN0Vs41+LdRYjqcsZ9iqnIMZgbllzZGWQzUG1hj3PxgDaptsu1Jv87frPHHhGH
+         BxBBCjBK2sTilDsrQ+3MvppG6T0bD1ecmQy+QDw75f3ABJBrR7AejTd2uF33+/QeEMXu
+         ZQPA==
+X-Forwarded-Encrypted: i=1; AKwUvByfWxFDR9gfzjcBDwD+fvsGfUCmGFmdb+Y1eoTtaMM+TfItBA2rgn0Y894hxLHTkvBu/OuarEDltY76m1hilQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++mfZQAZbdHTE4yYsmLHehowziTChXl23Jfz6mr2aBS800vDLiWG
+	vVpHO1D1MYY5lnPwtsQ59TIN5rOEZTDMxmkpLxH2bit/7hwCU1R1SW0Bc3IfNQodMfEAlTa6WiF
+	e5tZe0EFTNojUyYwbG4XlUZW9yYz2O+ivBIc+VCgHyl9Q0RXmWu/U9vkDkWG2d8ME69pZ
+X-Gm-Gg: AYBFou2j8uNWXoCLpvKstvL623gaTocmV8TwM4YVuyKmaDRsDC0DwFW2ZL++d2wT0Gr
+	u92IPjdEW7fFsGePO6pIdP9DEWNh/o67o9NxpIzLJdgoSFHh+AePrrkqTXlRFy/aggKfRjOG2hV
+	g1SGN/i4wSEmoiR3snWr4hs2458afWxNZHIJyaj2d3CEiFAka1Z+KMA3bVSWJwmS0ZaBe2/s5TL
+	fARsIlnL0NcfUGMHhWz/4zk9VC0fKxrRWNDib1x9JQ/gJK1jKtW0oIp//67KJRjgakhTR1pz0WA
+	1lsKmczuzVS7fczrcqEVKcFLHhPZm4/2Rfa9uKitqMlg0o04AwKGEzEgAw2/mKoxYcZoMkrBw00
+	Vrhtt/4/qSAmKRWaABGuMFJET
+X-Received: by 2002:a05:600c:b8d:b0:49c:e37e:4389 with SMTP id 5b1f17b1804b1-49d1754e950mr91094875e9.4.1788887132786;
+        Tue, 08 Sep 2026 10:05:32 -0700 (PDT)
+X-Received: by 2002:a05:600c:b8d:b0:49c:e37e:4389 with SMTP id 5b1f17b1804b1-49d1754e950mr91094415e9.4.1788887132337;
+        Tue, 08 Sep 2026 10:05:32 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cf75cd8d0sm381078745e9.2.2026.09.08.10.05.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Sep 2026 10:05:31 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+	id A91959B9279; Tue, 08 Sep 2026 19:05:30 +0200 (CEST)
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Kalle Valo <kvalo@kernel.org>,
+	Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: ath9k: Clean up device initialisation guards
+Date: Tue,  8 Sep 2026 19:05:18 +0200
+Message-ID: <20260908170520.112946-1-toke@redhat.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH] wifi: cfg80211: avoid holding rtnl_mutex across all
- cfg80211_leave() calls
-To: =?UTF-8?Q?=c3=96mer_Mete_Kaya?= <omermetekaya0@gmail.com>,
- linux-wireless@vger.kernel.org
-References: <20260903151542.486376-2-omermetekaya0@gmail.com>
- <20260906002657.620076-1-omermetekaya0@gmail.com>
- <20260906002657.620076-2-omermetekaya0@gmail.com>
- <81a437a9-4ffd-4d6d-84c9-c093af5c46a5@candelatech.com>
- <b65da403-8144-4524-a076-5d25c86c0c14@gmail.com>
-Content-Language: en-US
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <b65da403-8144-4524-a076-5d25c86c0c14@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MDID: 1788886202-5RK9GEJdMWl7
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;at1;1788886202;5RK9GEJdMWl7;<greearb@candelatech.com>;de889796e53c34c4d532d20f77e1c862
-X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On 9/8/26 01:58, Ömer Mete Kaya wrote:
-> 
-> 
-> On 9/7/26 19:38, Ben Greear wrote:
->> On 9/5/26 5:25 PM, Ömer Mete Kaya wrote:
->>> reg_check_chans_work() holds rtnl_mutex for the entire duration of
->>> iterating over all registered devices and calling cfg80211_leave() on
->>> each invalid wdev. cfg80211_leave() can be slow (disconnect, stop AP,
->>> leave mesh), causing rtnl_mutex starvation when many wireless interfaces
->>> are present. This results in tasks waiting for rtnl_mutex for longer
->>> than hung_task_timeout_secs:
->>>
->>>     INFO: task hung in inet_rtm_newaddr
->>>     INFO: task hung in inet6_rtm_newaddr
->>>     INFO: task hung in nsim_destroy
->>>     INFO: task hung in tun_chr_close
->>>     INFO: task hung in switchdev_deferred_process_work
->>
->> Hello Omer,
->>
->> Considering that maybe something has mis-diagnosed the problem, could
->> you share details of the stack traces of
->> the hung processes and lockdep output to see if the hang is actually
->> elsewhere?  What kernel version are you
->> testing?
->>
->> Thanks,
->> Ben
->>
-> 
-> 
-> Hi Ben,
-> 
-> Here is the evidence with stack traces and lockdep output. My kernel
-> version is 7.2.0-02677-g544d85de4dc2 (net/main HEAD) and both unpatched
-> and patched kernels were tested on the same setup(52 mac80211_hwsim
-> radios (mac80211_hwsim.radios=51)).
-> 
-> Unpatched kernel:
-> 
-> The lockdep output shows reg_check_chans_work as the rtnl_mutex holder
-> and ip as the waiter:
-> 
-> locks held by kworker/0:2/11408: 3, on CPU#0:
-> #1: (reg_check_chans).work
-> #2: ffffffff91118180 (rtnl_mutex){+.+.}-{4:4},
-> at: reg_check_chans_work+0xad/0x1330
-> 
-> locks held by ip/14180: 1, on CPU#0:
-> #0: ffffffff91118180 (rtnl_mutex){+.+.}-{4:4},
-> at: rtnl_getlink+0xbfb/0x13b0
-> 
-> Hung task call trace:
-> 
-> INFO: task ip:14180 blocked for more than 5 seconds.
-> Call Trace:
-> __schedule+0x1cba/0x6a40
-> schedule+0xe2/0x2e0
-> schedule_preempt_disabled+0x13/0x30
-> __mutex_lock+0x871/0x1cc0
-> rtnl_getlink+0xbfb/0x13b0
-> rtnetlink_rcv_msg+0x9a1/0xee0
-> netlink_rcv_skb+0x186/0x450
-> netlink_sendmsg+0x8e5/0xde0
-> 
-> Kernel panic, not syncing: hung_task: blocked tasks
-> 
-> I injected msleep(200) per wdev in reg_leave_invalid_chans() to model a
-> slow cfg80211_leave() operation, to measure the hold duration. With 52
-> interfaces this produced approximately 10.5 seconds of
-> continuous rtnl_mutex hold:
-> 
-> cfg80211: reg_check_chans_work: rtnl held for 10499 ms
-> 
-> The structural problem is clear regardless of the exact duration:
-> rtnl_mutex is held across all per-interface cleanup for every
-> registered device in a single acquisition.
-> 
-> Patched kernel:
-> 
-> rtnl_mutex is acquired per-device, each hold is brief:
-> 
-> cfg80211: reg_check_chans_work: device 0 rtnl held 0 ms
-> cfg80211: reg_check_chans_work: device 1 rtnl held 0 ms
-> ...
-> cfg80211: reg_check_chans_work: device 51 rtnl held 0 ms
-> 
-> No hung tasks were observed.
+The ath9k driver has a couple of guards against the RX path running
+until device initialisation has completed. However, they are problematic
+for several reasons:
 
-At least my kernel tends to only warn about hung tasks that are blocked
-for minutes.  Did you adjust your kernel to make this timeout smaller?
+- They use smp_wmb() paired with a data_race() annotation, instead of
+  the idiomatic smb_store_release()/smb_load_acquire() pair.
 
-Do you actually have 52 real devices that cause this problem?  If so, what
-hardware is this?  Or you can only reproduce this with modified kernel that
-injects a 200ms sleep?
+- The guard in ath9k_wmi_event_tasklet() is weirdly late in the
+  function.
 
-As a note, we've tested with 50+ real wifi radios in a system, and while we've seen deadlocks
-due to something weird with CMA memory allocation in Intel be200 radios, our fix was
-different (and never accepted upstream).
+- There are two of them when there's really no reason the rx init gets
+  to run before the whole initialisation is complete.
 
-Thanks,
-Ben
+Consolidate the guards on the single ath9k_htc_priv->initialized
+variable and use smb_store_release()/smb_load_acquire() to access it.
+Move the store into ath9k_init_device() to make sure it's set in all
+paths in the driver.
 
+Fixes: 24355fcb0d4c ("wifi: ath9k: delay all of ath9k_wmi_event_tasklet() until init is complete")
+Fixes: b0ec7e55fce6 ("ath9k_htc: fix NULL pointer dereference at ath9k_htc_rxep()")
+Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |  1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  7 +++----
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  8 ++------
+ drivers/net/wireless/ath/ath9k/wmi.c          | 12 ++++++------
+ 4 files changed, 11 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 6c33e898b300..4d2b75d0212e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -281,7 +281,6 @@ struct ath9k_htc_rxbuf {
+ struct ath9k_htc_rx {
+ 	struct list_head rxbuf;
+ 	spinlock_t rxbuflock;
+-	bool initialized;
+ };
+ 
+ #define ATH9K_HTC_TX_CLEANUP_INTERVAL 50 /* ms */
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 6de78ae85726..911eaa4f776a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -910,6 +910,9 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 	ath9k_init_leds(priv);
+ 	ath9k_start_rfkill_poll(priv);
+ 
++	/* signal completion to ath9k_htc_rxep() and ath9k_wmi_event_tasklet() */
++	smp_store_release(&priv->initialized, true);
++
+ 	return 0;
+ 
+ err_world:
+@@ -966,10 +969,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 
+ 	htc_handle->drv_priv = priv;
+ 
+-	/* Allow ath9k_wmi_event_tasklet() to operate. */
+-	smp_wmb();
+-	priv->initialized = true;
+-
+ 	return 0;
+ 
+ err_init:
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index bed7ea2425a0..95f48c7dca15 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1141,8 +1141,8 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+ 	struct ath9k_htc_rxbuf *rxbuf = NULL, *tmp_buf = NULL;
+ 	unsigned long flags;
+ 
+-	/* Check if ath9k_rx_init() completed. */
+-	if (!data_race(priv->rx.initialized))
++	/* Check if ath9k_init_device() completed. */
++	if (!smp_load_acquire(&priv->initialized))
+ 		goto err;
+ 
+ 	spin_lock_irqsave(&priv->rx.rxbuflock, flags);
+@@ -1200,10 +1200,6 @@ int ath9k_rx_init(struct ath9k_htc_priv *priv)
+ 		list_add_tail(&rxbuf->list, &priv->rx.rxbuf);
+ 	}
+ 
+-	/* Allow ath9k_htc_rxep() to operate. */
+-	smp_wmb();
+-	priv->rx.initialized = true;
+-
+ 	return 0;
+ 
+ err:
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 284e8c13b043..44e91815a159 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -146,6 +146,12 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+ 	unsigned long flags;
+ 	u16 cmd_id;
+ 
++	/* Check if ath9k_init_device() completed. */
++	if (!smp_load_acquire(&priv->initialized)) {
++		tasklet_schedule(t);
++		return;
++	}
++
+ 	do {
+ 		spin_lock_irqsave(&wmi->wmi_lock, flags);
+ 		skb = __skb_dequeue(&wmi->wmi_event_queue);
+@@ -155,12 +161,6 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+ 		}
+ 		spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+ 
+-		/* Check if ath9k_htc_probe_device() completed. */
+-		if (!data_race(priv->initialized)) {
+-			kfree_skb(skb);
+-			continue;
+-		}
+-
+ 		hdr = (struct wmi_cmd_hdr *) skb->data;
+ 		cmd_id = be16_to_cpu(hdr->command_id);
+ 		wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+2.55.0
 
