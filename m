@@ -1,83 +1,141 @@
-Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D23C524AE6
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 09:44:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788860666; cv=none; b=PrqY+ly6iGIDsSzyei8dps93FO+By6plRcrN80Rz192hm9M6qQpQ7n3EKqcl96/Jl04/w2pD4yqV46GYP9iHir+wsd/10T/1uwlP14TnXsifHbZotFwQlgwNQ/KlpbuJz8dGxGEmhuEEnkbtGvAZbR9urXhqY3PLMMyhrLQZhEU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788860666; c=relaxed/simple;
-	bh=3nSzLZLYMzxlGIZlESoUGe+P1IGAPlZ6M0eSLcsLM3E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nr2xz5AQNL37J2zFfgjVNsbCfJo4TjIceuu6mGvwdR5LCugP0WWQjzW78qWeqPLR02q5W7muakYgNMhnabFdOJ356oKp89CcJNDB7FY0p4nrq7TYn24uAbzCwo2hbqmZwZW8I2qKhGF1FTZfl6odxBQNron40+PSpFISNDEZUms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=q7zaBDqC; arc=none smtp.client-ip=217.74.67.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E214A49A7;
+	Tue,  8 Sep 2026 09:44:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788860689; cv=pass; b=HXSVR9bfnRHpzy0K7gyRhz1z0ppM5kKEJMYm4sSALFrxdQCdzLM8lDz7M9G2tif0/t4A1FTmlTeyKhHalmX9rTD0pOu6TZOoG9sCsn/q/cbf2+MHRMsz3I/j0WkHcy+4BkXuD57PvNOVHBcgC/entFcFcBTD66qBBtA1XnRxrk8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788860689; c=relaxed/simple;
+	bh=okk/6UKvvJuFy0HfkixIG69h3/2z4AmE9S0HHh3WLco=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=eUAVKJPbu6+D/6CoJeMpQthE5ThmR21SEqVi8Kgwp9aH8+3Rq9OnEWxaUksAuo9bfdW6RoNj6AGqKQurw2eDow88y0dMpd4Ibw+havHNDkPMRYR0Lh3ejZlz90nr/q+pTkGz069J2dlWQ3kSz8rgEoX5C0/LoUI/f7hdErEztfI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=AkkoA4g+; arc=pass smtp.client-ip=185.185.170.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="q7zaBDqC"
-Received: from nr200 (unknown [80.68.231.31])
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="AkkoA4g+"
+Received: from fauth-c2-smtp.messagingengine.com (fauth-c2-smtp.messagingengine.com [204.75.18.201])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Tue,  8 Sep 2026 11:44:18 +0200 (CEST)
-Date: Tue, 8 Sep 2026 11:44:16 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: Re: [PATCH 3/3] wifi: cfg80211: check if AP has been started before
- adding new station
-Message-ID: <ap_Y8OD0eBAnB8QS@nr200>
-References: <20260813090434.2071318-1-sst@poczta.fm>
- <20260813090434.2071318-3-sst@poczta.fm>
- <113768c35523738bdc7ab8441ecda64a063900bf.camel@sipsolutions.net>
+	(Authenticated sender: jmtilli)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hfJtw5MtWz49Q5T;
+	Tue, 08 Sep 2026 12:44:40 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
+	t=1788860681;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=okk/6UKvvJuFy0HfkixIG69h3/2z4AmE9S0HHh3WLco=;
+	b=AkkoA4g+cdgtOntOBeCtgp7e5YEL5kCQnDqxmKvSZPwzZX4MLzi7IVLpez33Wjv8mA00Jb
+	gLnRewcuvFht5TvhvCuHXijTWDGGOjUQLfUcoDxakJvUys+jnzGraBLCbiJKFXQNmBfeqV
+	XaUYPpui2v4eiMYt0Ha7fdOoBM+BNFVjp8fJGs85jPh0LTxldvPufaAHfSGEc/z6CqNlo7
+	gYfdSCBnBKgJdFbF28Dn9xqjdhuSqVPPcRnVez36oqeYH5pi+HqXnhY2PVmcIacEktPf77
+	M9wEV6K6d/uYs541XGNjKBzl6ISUNlEkiqDAntfVdq+0V/DbJ6tc623pFGKxcQ==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1788860681;
+	b=cd7AyBRDueQ3jJ07ANj8QVqU/kQcA2cgPwWB+a1kMFB17+jff+jVogBR19z9cBvB3JLG5d
+	IghYGue4kaEhJ0gHF5Le074jyFkZKUZbAzNdR/ZDW/2L5z4TGS7DJpjBNC2JCmJ8tghWJq
+	/NzwsYKa1EJOCy0Fk++A04t3RxTk1FxpwVeErcjxnuVQRyAtRnKy7rctvOAmiqpn1tkA4h
+	2+jtrhdXBmV8R+rYaAaKJbHuVSvEV5q++dKxKK8hq7iJgz9Y+MAqrcJcsGP5Ie+wFBrLny
+	sdTRrtYdfuEKcwKg7CQhk/7v3bV0I6Rr46soi8kpDDj6NH31G57yBghjZZrVJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
+	s=lahtoruutu; t=1788860681;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=okk/6UKvvJuFy0HfkixIG69h3/2z4AmE9S0HHh3WLco=;
+	b=nNypRlsdhiGVdeSHQ37mzYZAzZIc0jJKwjTR1/SRSPlUYWgarZeLvY1Ur0/lcfZ8q654ii
+	keouWkEih2fcBl2ASgw/pU0lITT780nD1NinxsNAJ21yYS8+OngDOjKHQZcJRXzeOjNCLD
+	fuYrEH18QUBbamuINv8V4nusbz7F5MOTZb3mQ5HJLmtzIMaNMOLujHC+QoOojwTChIV7kx
+	jveuPjbs79ZmnM/QLOjsiI2kptslQplomSHzPGHnUuK12cStr2/BL/xzlju9GTwpE5gIPf
+	MMJu/HD/tYBtWnV1E5N+G/jfKlpvD8nooc5lBYuJDBPS2U7BXWZLxaSC37ABfw==
+ARC-Authentication-Results: i=1;
+	ORIGINATING;
+	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfauth.ams.internal (Postfix) with ESMTP id 0D73E198003A;
+	Tue,  8 Sep 2026 05:44:40 -0400 (EDT)
+Received: from ams-imap-13 ([10.64.2.33])
+  by ams-compute-02.internal (MEProxy); Tue, 08 Sep 2026 05:44:40 -0400
+X-ME-Sender: <xms:Bdmfag0oJIPtIHdp15FNK_ZlFdN56u-GxgQtG_P6tcyg-IKQuxu50w>
+    <xme:Bdmfal6P618KOufT0AatJ7zRE4WPse3oGZosgxLcXeX3xEYbamL5ACxj0a94aXzP6
+    4rZ0G6g-gEzVQKHhwMpfThmMB0F4Q7zlK9rvH05npXZlKoMVGSFgeoE>
+X-ME-Proxy-Cause: dmFkZTEQ6RAYbZbS6n2XZ91CCDVH1PswnGr8U2+3tuLiFTy4d1Bb10G7XCafM0ID5ejv1h
+    UZXyfcVmyzTcL718ElzEntJLirWMZWQhFqPCw2ydLCRkreUBMw2X3HnoN+1F7JnndHR8zi
+    Sp4ODtSghtSxRKi4Cg861W0s4zHP/rrBOdathqyDMBoI/8T7s8i7Sbxh3vHOGHKpO+cw7K
+    kcvpmbSz0nr0H1WhIwf4idE53v9ZsBaHoldGedv2Gdl6cVY0ywUqLCFL7w588aYhy64fOv
+    SArJG669zMjCkJOlbyfwleJPE+mp9+24JBGl4a/sLnqcR7NpKb6o2Jut9dnpzXgjBXBjN+
+    ZbaBEggnrGmIsPujM9VgF9Oug0fw8KuqtdbLn7kzmkc3wPC30aIXgzv6OFPNklHY+Fypmc
+    HqanJxDTY6vLsYHuUxlM0qgUcp8bR4T/88Lfcnfr0gPXfre+lJPGQ8bXt2GBrNuOOzKlZY
+    hEgQQss4L2oBP+d9CNGZJXrTGm8/jCRjQ9nL6XpH1UqHyvNuhYZfC6kNuph0jCo944fk0r
+    E7kl6dQ/ntbsfOL1i4biQAriVlCJgrKbCpMweYBxAaDPHEP+/r919UIhhC/IYmWg5unr14
+    V1LF0wEfCTTYNlVAPB+LBTdH9H8+SQRHgOasCrb6mtNlINf1A5NIcjiy3zNQ
+X-ME-Proxy: <xmx:CNmfakY1PnJ90UlsCm8XHJwYiV_5SHH34CS-GYqSCvPOjzxhjoKRzQ>
+    <xmx:CNmfaoIuCvbPae8Iatr8AFQel9kzLtqBvQCF-9mZfNDKjANJ47Kwxw>
+    <xmx:CNmfatq4lc6ZVy1cPfkC6DZ0N7p7rvggsllI4zSFJtQmgebEKIVsQw>
+    <xmx:CNmfahAo5lASRNKEZmoX9AoEIxTZhw7W3mioKr96w7lbO0rA63w9fA>
+    <xmx:CNmfajcudKS2cF_hGTgEqVcCI_OV8tv7zL1oiUTz9Nh6UtNVV37URmL0>
+Feedback-ID: i02414972:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 71AD9F80083; Tue,  8 Sep 2026 05:44:37 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <113768c35523738bdc7ab8441ecda64a063900bf.camel@sipsolutions.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1788860660; bh=qRS7sqO90bq5MVdJypTliiG6818q57NEQsDft4ry+hI=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=q7zaBDqCkkw/yyr04OVA2Hq5CU58aK1lTU13Ra10D3cNCQUwRzv/chDGAMRcNaTpP
-	 eP52WU8Lpc9JUaxRurYVFm/b5Rgzjz+nO9djoqFI5k/a45+sjNcKxWyZORoZMtzvuk
-	 SOTugGULAeLg/0UJyMB18y58ulP/Ja2rZBhv4Lag=
+X-ThreadId: Av35K2MZ7qUg
+Date: Tue, 08 Sep 2026 12:44:17 +0300
+From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
+To: ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+ "Kalle Valo" <kvalo@kernel.org>, "Jeff Johnson" <jjohnson@kernel.org>,
+ "Manivannan Sadhasivam" <manivannan.sadhasivam@linaro.org>
+Cc: "Bjorn Andersson" <andersson@kernel.org>,
+ "Konrad Dybcio" <konradybcio@kernel.org>,
+ "David S . Miller" <davem@davemloft.net>,
+ "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
+ "Paolo Abeni" <pabeni@redhat.com>, "Simon Horman" <horms@kernel.org>,
+ "Mihai Moldovan" <ionic@ionic.de>, linux-wireless@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Message-Id: <2cf63e00-95aa-41ba-ae8e-8abbfbc486e7@app.fastmail.com>
+In-Reply-To: <20260908093145.2492666-1-juha-matti.tilli@iki.fi>
+References: <20260908093145.2492666-1-juha-matti.tilli@iki.fi>
+Subject: Re: [PATCH v3 00/12] ath1{1,2}k: support multiple PCI devices in one system
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On wrz 04, 2026 11:25, Johannes Berg wrote:
-> On Thu, 2026-08-13 at 11:04 +0200, Slawomir Stepien wrote:
-> > 
-> >  	case NL80211_IFTYPE_P2P_GO:
-> > +		/* Add a new station only after the AP and link has been started */
-> > +		link_id = wdev->valid_links ? params.link_sta_params.link_id : 0;
-> 
-> max() maybe?
-> 
-> > +		if (!wdev->links[link_id].ap.beacon_interval)
-> > +			return -ENETDOWN;
-> 
-> I think the same issue might exist also for mesh, maybe address that as
-> well?
-> 
-> And I think you could have a fourth patch to clean up the mac80211 code
-> to no longer handle the "STA creation on AP_VLAN" case?
+On Tue, Sep 8, 2026, at 12:31, Juha-Matti Tilli wrote:
+> As you may well know, multiple identical ath11k and ath12k devices are
+> not supported in a single Linux host because they use conflicting QRTR
+> node IDs. Fortunately, Denis Kenzior created a patchset to support
+> multiple QRTR endpoints with identical node IDs, and Mihai Moldovan
+> refined it, after which I took over the patchset and refined it more.
 
-But is there such case?
-The only part I think is related is the handling code when params.vlan is set. However, this code is
-still OK. I do not see any other code that would be a good candidate for removal/change.
+Hello,
 
-Am I missing something here?
+I am incredibly sorry by messing up the threading. git-send-email said:
 
-Also, during this check, I've came to a conclusion that I will reword a bit the commit message for
-PATCH 1/3, since userspace can still add STA to AP_VLAN in one go, using
-attrs[NL80211_ATTR_STA_VLAN] and that's fine, since the wdev would be the base AP interface, so all
-check will happen.
+4.7.1 Error: too many recipients from 83.150.90.33
 
--- 
-Slawomir Stepien
+...and failed at the patch id 8/12.
+
+So I thought retrying from where it failed would be safe. But that
+broke the threading.
+
+The next time, I'll increase the waiting time between subsequent mails.
+
+Links to mails missed from the thread:
+
+https://lore.kernel.org/all/20260908093437.2493698-1-juha-matti.tilli@iki.fi/
+https://lore.kernel.org/all/20260908093437.2493698-2-juha-matti.tilli@iki.fi/
+https://lore.kernel.org/all/20260908093437.2493698-3-juha-matti.tilli@iki.fi/
+https://lore.kernel.org/all/20260908093437.2493698-4-juha-matti.tilli@iki.fi/
+https://lore.kernel.org/all/20260908093437.2493698-5-juha-matti.tilli@iki.fi/
+
+BR, Juha-Matti
