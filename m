@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-80.mta0.migadu.com [91.218.175.80])
+Received: from mta1.migadu.com (out-98.mta1.migadu.com [95.215.58.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A96AC560ABF
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 13:29:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E14C563FB9
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 13:29:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788874200; cv=none; b=FDEPy5vTXNb/niOWvWtA06KLj34dyZ8alQqEPKuFq7n/UFzWItBk9tLSxC2kGEOBt1hd+ASiUWxXyuGyefUOabWViAiVcME8PgjWBRBXSti8HonPZ4+H8zdOwxKLPvpXKoPjTFpBTnGc0f1L6HFUJA91EA4avYeasqOrq0TdjIs=
+	t=1788874201; cv=none; b=axMvCX80d6tCU+4d+mGpm1L1gyue+0OJ+tWBfiHqvWUu7VNwboX1SMQno95nabXJKB3xCPQ2nGrZXy0wGc3ePdV8isLj5vj0b3aWcCTLHfLUwvy9BAU0dRAGiLs/UJMahWWcENUPrATt3WkLoetRkHxOVcqfCcNsYasM6B3u83c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788874200; c=relaxed/simple;
-	bh=MVin06amZxKHcazosou87jhcjKKSJQCHsOU8q2F4eLo=;
+	s=arc-20240116; t=1788874201; c=relaxed/simple;
+	bh=pj7G8hGWOYrz8BYJYMu4gorGGocx/OpcaEvOKht0G58=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=f+mA3fawH78PdLp6WP/g1pd9TIKvNSObxd2jEVwoG+WNd90PHXX472suFLtpLrbfgJ+JIThEgpaMM8Ze1mGJ5dFPo/vNWxiuunxEaGqj4JSps9Ai4pjsZMWGSg6bBPYqRs2CpZsf39CdU+WjIJSb83EV6PiYhHdDWel+dUcWN8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=szrNbKEt; arc=none smtp.client-ip=91.218.175.80
+	 MIME-Version; b=IKTZEPWouodwBZMpEUE6MDxDj/PDUT71oXqiuTl6hHBo2AT/YXRjIyZs3aL2NGQrWiCIRh5AUyfq2dSAHsdZt/AEoW8E1savn5gcYUBH10ZtCPahavqVZWTelvxl7Xhs1L2Hu49tO0Gns2Kic+Kgf0khCv4jl61sMVals7qvOFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=i/bw5e5O; arc=none smtp.client-ip=95.215.58.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="szrNbKEt"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="i/bw5e5O"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=MVin06amZxKHcazosou87jhcjKKSJQCHsOU8q2F4eLo=;
+DKIM-Signature: a=rsa-sha256; bh=pj7G8hGWOYrz8BYJYMu4gorGGocx/OpcaEvOKht0G58=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788874184; v=1; x=1789478984;
- b=szrNbKEtJp+uVA7Li37tNuh7Sul4gEQkYT8rOsD+EdEDphD9c1SIW7KZRpL5LdI6ePKNG6l/
- GprOxCAgjisRSS7yWUejwAzcGSnbNsjQwq16RbM5Grkx2TUceOsGZFD/fIZnKu8+V6qyCcozY2f
- JNHX2c+auKYDkATW82VrdGoo=
+ t=1788874186; v=1; x=1789478986;
+ b=i/bw5e5Oby7sDlsQeI9YvgqOBN62rJXKBLXa7NLGbV3n4ZOVGsyPs7/8OakA+Jz7oXJl9mlp
+ sLvaFL0qfhIyzMzeYnV6z42nMDXBQGdiNY8H7bAxFhrv4ensKeKGIMaQckehPkRZjqhzfbWb3ks
+ GXylCxsbYYU8zd72yROF38zQ=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 7f4c4f6709f620b7;
-	Tue, 08 Sep 2026 13:29:44 +0000
-X-Mizu-Trace-ID: 7f4c4f6709f620b7
+Received: by smtp.migadu.com with ESMTPS id 12519f327f5f0f4e;
+	Tue, 08 Sep 2026 13:29:46 +0000
+X-Mizu-Trace-ID: 12519f327f5f0f4e
 X-Migadu-Flow: FLOW_OUT
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,9 +37,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v10 1/6] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-Date: Tue,  8 Sep 2026 15:29:21 +0200
-Message-ID: <20260908132926.68976-2-luka.gejak@linux.dev>
+Subject: [PATCH v10 3/6] wifi: rtw88: tx: extend the TX report purge timeout to RTL8723BS
+Date: Tue,  8 Sep 2026 15:29:23 +0200
+Message-ID: <20260908132926.68976-4-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908132926.68976-1-luka.gejak@linux.dev>
 References: <20260908132926.68976-1-luka.gejak@linux.dev>
@@ -53,15 +53,20 @@ Content-Transfer-Encoding: 8bit
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS, runs
-a Realtek vendor firmware that differs from the firmware used by the
-other rtw88 8723 family devices. Supporting it needs a number of small
-adjustments spread across the shared core, all of which have to be
-restricted to this one chip and bus combination.
+Commit c80788f7c5ae ("wifi: rtw88: increase TX report timeout to fix
+race condition") raised the purge timeout to 2500 ms for the RTL8723DU,
+because the firmware can stay off channel during background scans for
+longer than the 500 ms default, which delays the TX reports and lets the
+purge timer drop the tracking skbs. The host stack then reads the missing
+status as loss and collapses TCP throughput.
 
-Add the chip type and a helper that tests for it, so the changes that
-follow can be gated without repeating the chip and bus comparison.
+The RTL8723BS runs the same vendor firmware over a slower SDIO host and
+hits the same race. Testers on ARM SDIO boards see "failed to get tx
+report from firmware" under load, with the same throughput collapse.
+Extend the 2500 ms timeout to the RTL8723BS.
 
+Reported-by: Peter Robinson <pbrobinson@gmail.com>
+Closes: https://lore.kernel.org/all/CALeDE9PgQmpMfDt1DgfLD4tBFGH0MZ7GncV6RUEOHhHbKF+TdQ@mail.gmail.com/
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
@@ -72,36 +77,29 @@ Notes:
     Changes in v8: none.
     Changes in v7: none.
     Changes in v6: none.
-    Changes in v5: none.
+    Changes in v5: none. Restored in v4 after being dropped in v2, because
+    testers on slower ARM SDIO hosts hit the warning that commit
+    c80788f7c5ae already fixes for the RTL8723DU.
 
- drivers/net/wireless/realtek/rtw88/main.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtw88/tx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 6883fbd9f768..d59f6e323adf 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -194,6 +194,7 @@ enum rtw_chip_type {
- 	RTW_CHIP_TYPE_8723D,
- 	RTW_CHIP_TYPE_8821C,
- 	RTW_CHIP_TYPE_8703B,
-+	RTW_CHIP_TYPE_8723B,
- 	RTW_CHIP_TYPE_8821A,
- 	RTW_CHIP_TYPE_8812A,
- 	RTW_CHIP_TYPE_8814A,
-@@ -2195,6 +2196,12 @@ static inline bool rtw_chip_has_tx_stbc(struct rtw_dev *rtwdev)
- 	return rtwdev->chip->tx_stbc;
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 8786bbb421c2..4e110a457e71 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -208,8 +208,9 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
+ 	__skb_queue_tail(&tx_report->queue, skb);
+ 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
  
-+static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->chip->id == RTW_CHIP_TYPE_8723B &&
-+	       rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
-+}
-+
- static inline u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
- {
- 	unsigned long mac_id;
+-	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
+-	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
++	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
++	     rtwdev->hci.type == RTW_HCI_TYPE_USB) ||
++	    rtw_is_8723bs(rtwdev))
+ 		timeout = msecs_to_jiffies(2500);
+ 
+ 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
 -- 
 2.55.0
 
