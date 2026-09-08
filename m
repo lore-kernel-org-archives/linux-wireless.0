@@ -1,86 +1,73 @@
-Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055D74B2031;
-	Tue,  8 Sep 2026 09:35:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788860139; cv=pass; b=q4kfQDxlaq8n6/gs687HLpT9Lryy+cI6vC9cOsNX3vVxaEeAyu/EMTogL0qlIgAFtLpTCIkokXFPEs9kCVmJREEYZQl9pJ+s14Yft3IPte1idesSRUrClwjXbbpcLqnYSkZXnbG1lkrvhEerlmRwHxl2hlSwpo3ir6B/lrJX6W0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788860139; c=relaxed/simple;
-	bh=CjIuEh27k1Xal8RS7CusYRx4cMVCNqvokJf2yY4eXCU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FFMLmXC2Zz70M7DVCK173Msfktur6ySHWzN+I0ydG27Ul7jya0p7B7e5ZPX1COjxUPB/wyzsHyRmsC1tunW6ngLniZFNIMYRTDAvAFWRCt2us37ZY8lqhABqJN6gvRNqdmsYbJd3oqtByBIjLm7iQT2NL65qes6ONOZahXEMuig=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=NiAdMkxI; arc=pass smtp.client-ip=185.185.170.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CECF64D2ED8
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 09:38:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788860320; cv=none; b=QONz3AoEzUJTcsRpKjZawpHx8ED5CFcD2fM4nOsLdqzp37OWNSLPYbTGBXSl+4r+jXM9hk4ETHQEtlBPAJ3NgzUPCUaWE53FGj22SGyoxMyqWwoQB+vs6ap3Ijrf6pW2zNxBTndBf0+fzFeYIB4TF7Md895OzjF47M7jSl7Canw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788860320; c=relaxed/simple;
+	bh=dw3ifo+Vs4AfVLuiQB5RFEfyx7qGf7x+AkemF937nMo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=anV721k/X+cjCms6DYsK6ntcikS9YAclqFhkEqawEm58cOP5No64v6/cUVyKO60BcGm1daWP1jfFTv8ONdGk3pzKSWrlirSXcDxQiN3ggQf6/xYl/4a4VkobnuXub5CSlgyywfj3PEtDahHBydTtGRkIKvvJahQX/MfKBt//YbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iFyPfgmE; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="NiAdMkxI"
-Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hfJhM12z2z49QLG;
-	Tue, 08 Sep 2026 12:35:31 +0300 (EEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1788860131;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vRs19l52ovGuAIjGa7YqoKMg2NfGlSjJwTPL4k7vc2c=;
-	b=NiAdMkxIyyh3NDJprkUTuf2Q1eqFxi344Ao8crIgZwnovGK9ixUTOjC3pJBBXVQBPI/Rks
-	ndnVwVTgF2OvmJvYtY4mJgONTqNKN77WaJcksfnx4LSL9bB4eQjP+cC5njyJtJLxAxb8xe
-	tUPus41JipdUKflsmdtawujIJEpnTB3+AwjboMoTkNYAY/oTPIRqjIvfF0O28Ydl95SKa/
-	atBjq2+8qVqi654xiTtfcMfZkq5usAoBLEwkpap436S5zVx6RSbKBT/tlvIWK6APE2oXva
-	QKY/39E0KnHVh2ZfeZjxx0L26QKdXZ8TXHEx/H3v1gSL6GJKQTRouxSX1f8gUw==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1788860131;
-	b=pQAkl8rQAsHWpen5iLs2INnduCGReTAGSKqifshOOzkT6kHUyU5HcyPD0/k1M7PNMW9KNK
-	KD2Utq93Zatn2j5kOIS91BzkWybAmkFS/B0ninJiHNHLJ3Rz9tNBJNvEpUSi3OppP8gS7B
-	ZREihqJWVgzxIbGli8GGdm9xXYipoMgeLRuJ0aKP3qQtRTZPgkWGwkNDqMPntB4jYkym2y
-	V2SVoj5GwLgYIr74PqHY+m46vjLSvlgJvCjsVwdJPaqvOIhz3lwXRDMw61ktbvFAxZAkVW
-	tWFCyD4nZ+UUAgQBzSnCiiyb6YlZ0rfNYZGMz5YgtK4EnC2zWXKib1acFx7YQQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1788860131;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vRs19l52ovGuAIjGa7YqoKMg2NfGlSjJwTPL4k7vc2c=;
-	b=Z+SYMumaDUZrM+bK91MfhU15ixQ4a/2cZVTvZSQR0Xg5cxRl7TM6jCc7od+d8CeGwsss7w
-	U2caCdxD7iPUYUw/sdBxRy24cdOyeR7/1EJEoizbkDxa6nEpuVcgNzm+jFUOu+sEEM28Lg
-	r2SNHNXd1AZPTu89SOdXuRm0+E+voiyg/UcGBILz52bJU3K6W1BBUSh2yLl6YraXaLcdja
-	iRMr+TMcZHZoSnOqN4siTOwse+vn0zyI/3o1UMxibAQHsvj5n0dPI4v7hPjEyuTBh0vYAw
-	r4YlQHEYmPAYhT7bcaxgk2GJ3dbHDfUYLewkv3pEQcyN7kb79ao9Aumk/KgCYQ==
-ARC-Authentication-Results: i=1;
-	ORIGINATING;
-	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
-From: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
-To: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	Kalle Valo <kvalo@kernel.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Mihai Moldovan <ionic@ionic.de>,
-	Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
-	linux-wireless@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 12/12] wifi: ath12k: bind to QRTR endpoint ID in ath12k_qmi_init_service
-Date: Tue,  8 Sep 2026 12:34:37 +0300
-Message-Id: <20260908093437.2493698-5-juha-matti.tilli@iki.fi>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iFyPfgmE"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2d71ae3455aso69632015ad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 02:38:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788860318; x=1789465118; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4EfWoUvk4MqKppy1+qmN7/DqUC6o3V+gob+0zbDN5fk=;
+        b=iFyPfgmEn8Bfhle34DDgvcXJjKfivpDvytMbwSbl6qgnpeWvJidhAY1/hS8D+ujv99
+         MNqLX2dUZ/en62yOwHGWuu1swCLeSfmPiw48QUyx6cOvPyBwTNOwnG2ZcDZTkUYwitho
+         jUWljuYXxHAmdCiDv16JlNE2c7L87D4MQKSMewRlOzS2HRWlWoZQavdgFBDiOo9faD+W
+         9VjckdW131x2o/yctqtfV7/tu+R6TGFzTYGgF9qaa1P8EebYaeiV41i/stVQlHmL4+LL
+         RkyfIcIlV5PlmUPkfA6xjmb0owOAU+N31NZsRdMxduRTyRgYYnyfx40CsYi/urc69AzJ
+         xAmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788860318; x=1789465118;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4EfWoUvk4MqKppy1+qmN7/DqUC6o3V+gob+0zbDN5fk=;
+        b=k4jPJuBb9eveAnN7m5TETJ2C2O0BAY9oh1GZcRoHjyTkUlrrPO4T8KQjPDt+efNLWD
+         /ypMybX5npEM52RVeyLmgde72KsndQ2FgRwMO0Clr39UxhzGMPQaNIzjZIerrtiyPQXG
+         DBJ0x3eu4WjGGw1OSg+F8cupx2jzQiP4ulrp8x6x4VH5yJrXKUy/rZLGUgVdtC+r+fSH
+         GvVbPiJlvGaFI6Va/eCF/DrkvLtXW/tDLwue8GnLKRF8EtKfUS0d1LlWrNuQ7DmiJIc/
+         SxsKWw5FAWl3pVQpFZXVV198uDSVOInqUBzjoZUCDM3MYKOdoJGSouoAV+1pfiQiHqhG
+         8lpQ==
+X-Gm-Message-State: AFuF++lXsjQ/h5rBzSFBn/GKqMCLAD1ovcedGMUw/x8cf3h+oDXPbLNX
+	V7CmK149T4OZ+aq3xnPLL6z8poAZxfDuKU5zfnkVuIA1xmm3Zc+OQOQ7gvkijJgkCGA=
+X-Gm-Gg: AYBFou3cj7Kw+Xj2hkhBIrN5ahlgwZtqp0L0yKBGUPTw56Xx7YQ4ks1BhrW0/XwXv5L
+	nUoaVDHnTY8zulDr4lcfJaSlVkIQpDS+QkI2njh185OIS70Oc7rNo+ZOqhMvl/JxaRG6PNTIGmT
+	dhLvNDe5I1b2O2W2jrHVLieboydVXVrdaHPN6msAcc+e0anVvQBjRCHoKiW5mRyJTKaJRXdV+fu
+	k3M/OY+4WICLEY5WVcHM3XNK2OLq+Kxbc7fD6eMDfuAKohd7GGH6BBeHY+afkdlErWU6Q/a0whS
+	Mo2t9q56i2Bmxnku+szO1wTU8XFLjZQRY2UI5WVH4dBd3ZjKx6OHtI480mUjGi0GG5hyTZ027J/
+	WVjDkGF+nx0FtheHjUj7pNsZ7D601nCfvS0evmGdrEpRSRVET7rMN/8HEfiE5pfCtcpGQCPzjZl
+	Z+KF0EQ6MBUuE4KMu+yRJ4g3syvijpRYTewPCUKUtYx/BwEC47R0ST+7O5kMUO5+E/AqLMwOenW
+	xZvCDtNYUOoUMStM7U6/VsZUhASA3SY7pJgZcRe4GHCA0xcGzKpQQAhrwjx9MfMLe5xDg3TwCpE
+	5g==
+X-Received: by 2002:a17:903:2b0d:b0:2d9:1dee:43db with SMTP id d9443c01a7336-2db1284b6dfmr404892985ad.15.1788860318084;
+        Tue, 08 Sep 2026 02:38:38 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440.tw-tpe02.nxp.com (114-25-99-144.dynamic-ip.hinet.net. [114.25.99.144])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1497d9f9sm54848085ad.32.2026.09.08.02.38.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Sep 2026 02:38:37 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	francesco@dolcini.it,
+	linux-mmc@vger.kernel.org,
+	Ulf Hansson <ulfh@kernel.org>,
+	Jeff Chen <jeff.chen_1@nxp.com>
+Subject: [PATCH wireless-next 0/4] wifi: nxpwifi: add support for SDIO IW610
+Date: Tue,  8 Sep 2026 17:37:54 +0800
+Message-Id: <20260908093758.596444-1-chunfan.chen@gmail.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260908093437.2493698-1-juha-matti.tilli@iki.fi>
-References: <20260908093437.2493698-1-juha-matti.tilli@iki.fi>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -89,57 +76,56 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Mihai Moldovan <ionic@ionic.de>
+From: Jeff Chen <jeff.chen_1@nxp.com>
 
-If possible, fetch the QRTR endpoint ID in ath12k_qmi_init_service, just
-before calling qmi_handle_init, and make it available in the qmi_handle.
+This series adds support for the NXP SDIO IW610 to the nxpwifi driver.
 
-qmi_helpers will then automatically bind to this endpoint for us.
+IW610 uses different SDIO device IDs and a different firmware image
+from the existing IW61x devices. It shares the same SDIO register
+layout, so most of the existing SDIO support can be reused.
 
-This finally allows using multiple ath12k-based cards with the same QRTR
-node/port combination to work simultanenous (and, for that matter, at
-all), including combinations of ath11k-based and ath12k-based cards.
+The first two patches update the MMC subsystem. They add the SDIO IDs
+needed by IW610 and apply the required
+MMC_QUIRK_BLKSZ_FOR_BYTE_MODE quirk. The last two patches add SDIO
+IW610 support to nxpwifi and limit channel width requests based on
+firmware capabilities.
 
-Signed-off-by: Mihai Moldovan <ionic@ionic.de>
-Old-version-tested-by: Mihai Moldovan <ionic@ionic.de>
-Old-version-tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
----
- drivers/net/wireless/ath/ath12k/qmi.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Ulf, could you please Ack patches 1 and 2? 
 
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index 50082505c882d..3611d0eff22b3 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -9,11 +9,13 @@
- #include "qmi.h"
- #include "core.h"
- #include "debug.h"
-+#include "hif.h"
- #include <linux/of.h>
- #include <linux/firmware.h>
- #include <linux/of_address.h>
- #include <linux/ioport.h>
- #include <linux/of_reserved_mem.h>
-+#include <net/sock.h>
- 
- #define SLEEP_CLOCK_SELECT_INTERNAL_BIT	0x02
- #define HOST_CSTATE_BIT			0x04
-@@ -4075,6 +4077,13 @@ int ath12k_qmi_init_service(struct ath12k_base *ab)
- 	ab->qmi.ab = ab;
- 
- 	ab->qmi.target_mem_mode = ab->target_mem_mode;
-+
-+	ret = ath12k_hif_set_qrtr_endpoint_id(ab);
-+	if (ret) {
-+		ath12k_warn(ab, "failed to set QRTR endpoint ID: %d\n", ret);
-+		ath12k_warn(ab, "only one device per system will be supported\n");
-+	}
-+
- 	ret = qmi_handle_init(&ab->qmi.handle, ATH12K_QMI_RESP_LEN_MAX,
- 			      &ath12k_qmi_ops, ath12k_qmi_msg_handlers);
- 	if (ret < 0) {
+  [1/4] mmc: sdio: add NXP IW610 device ID
+        Add SDIO device ID 0x0215 for IW610.
+
+  [2/4] mmc: core: add IW610 base ID and block-size quirk
+        Add base card ID 0x0214 and apply
+        MMC_QUIRK_BLKSZ_FOR_BYTE_MODE.
+
+  [3/4] wifi: nxpwifi: add support for SDIO IW610
+        Add the IW610 device descriptor and firmware name.
+
+  [4/4] wifi: nxpwifi: restrict channel width on 20 MHz-only hardware
+        Do not request 40 MHz or 80 MHz operation when the firmware
+        does not support it.
+
+Tested on:
+  - NXP i.MX93 EVK running the NXP BSP kernel
+  - Lenovo ThinkPad T430 running current wireless-next
+
+Jeff Chen (4):
+  mmc: sdio: add NXP IW610 device ID
+  mmc: core: add NXP IW610 base ID and block size quirk
+  wifi: nxpwifi: Add support for SDIO-based IW610
+  wifi: nxpwifi: Limit channel width based on firmware capability
+
+ drivers/mmc/core/quirks.h               |  3 +++
+ drivers/net/wireless/nxp/nxpwifi/11n.c  |  4 +++-
+ drivers/net/wireless/nxp/nxpwifi/fw.h   |  2 ++
+ drivers/net/wireless/nxp/nxpwifi/sdio.c | 16 ++++++++++++++++
+ drivers/net/wireless/nxp/nxpwifi/sdio.h |  1 +
+ include/linux/mmc/sdio_ids.h            |  2 ++
+ 6 files changed, 27 insertions(+), 1 deletion(-)
+
+
+base-commit: 1b60ed34f712e9f606d80951f1586f4274ebadf1
 -- 
 2.34.1
 
