@@ -1,58 +1,58 @@
 Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B00352122E;
-	Tue,  8 Sep 2026 09:32:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EE4523782;
+	Tue,  8 Sep 2026 09:32:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788859969; cv=pass; b=AkO5PqlQayqn1+IjFxbyEGfTSzJs0B2lwtah/QbmLmj3rla04t/Uv2TI/onzq4cCgyLfnKXWdj4HaU9+NfKvtX8fnUN4XzhrHDKBhJrJiub8Ro1R+wjPSuV3lUX2TUVCAoJx9cs4wuCb5eaDJ8gVRIRJMklh13cdZ2jpGHGXbj8=
+	t=1788859977; cv=pass; b=YBARs/4XcriXkco82FKUt2p4j+xgvjNtttJKV0uFpB2snOD/b4gszXhl8x8atAU4G8UysooUHImDsVpdyXH6ALqU6l+mjR9SvN/GrMqn+xa7IOfXBbpXZBuqWS9riGcyBdKIGHLRrGTYvsB9zqMlZEnXUfrMB1VLrEozeMUhR0w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788859969; c=relaxed/simple;
-	bh=abrrbXf+C9yT3jDSTjifMWlBVf4KJoVMvnOKyh+KQj4=;
+	s=arc-20240116; t=1788859977; c=relaxed/simple;
+	bh=fFVpnQJZzO4PFI4NbxLVE75hxJzqPxs7InUICkJ+M+s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=W5io9Zog2ucGD3nMvroGJYp123qcZN/NLKsxQDLwifiwRqgAY1U4VkjtpQPxmzGd5RkP3lCMlJVGYWu6Ni8aOw8xS3rC1TJegbjdS6k0v8iMrK76sHN1eXJ6MoHTM4PmEAdNz8uUGeTpVe4CN6bWsWICywvPIW3EsN5vht8/MCA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=GDFvosVQ; arc=pass smtp.client-ip=185.185.170.37
+	 MIME-Version; b=mPRzMf6SrePZMo8AhaZUHgfG1uf3Ub9/GWjfE98JxLP57rrw5lmM6WIYhb/aY+WobvBQhJSu10COrnp/xz9/2TaGpjdnnGUCx2NDJhEBxPNFYOUBCoShwbaUwjzyHYqN3SYbPusSwGcR9IMfGFiFNn3Y7yVFKbEYM/VzsMTRDt0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=ljZX/e+g; arc=pass smtp.client-ip=185.185.170.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="GDFvosVQ"
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="ljZX/e+g"
 Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hfJd61d3kz49QFh;
-	Tue, 08 Sep 2026 12:32:42 +0300 (EEST)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hfJdF16ZKz49Q5T;
+	Tue, 08 Sep 2026 12:32:49 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1788859962;
+	t=1788859969;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=bPA7RZq69BQzFDIgq2/jKxXiYvSrAjNW2sfY7vkWUj8=;
-	b=GDFvosVQwFpz2usimAFdYNa/rQFAovzLdeUu9VV/g1d7bGTu0waN7IL5GAnWddgfUoURD2
-	vrbsu1mlHExaZN8yiHgnqWJd3DvTatgGsURpSMz25dSER6SNo7hKyBwHan83sJEBN5Ru2h
-	otQRVok3uF5Gw4jPdX0tLS1F2o2YJ6vx298EsjZUZWhWgOFJc+SNbqP5+yaeuYsZVH4TIb
-	TtIxMyyYmjJulqB38IL8qg3IDk2GwOVZh5YpqmYp7EjlQpmx8HECyvy6VNQpQ9sD36L+Fi
-	kUTThOiLuAY6QR9OcsIZ8GhkWt+2grVJedoOXierqzw4q9y9KYVwpPOds3v8GA==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1788859962;
-	b=NLgnrOeoDJpVgYSEYU8v8YmQx8sQXOoaWImMRa2axAzDmwIdpxs4bPB7DFo9t6ibMBub4Q
-	H+49bVvlW6CTIUWaFkIy2bK7DYJEdyKHBg0WwM9xRrFSA1yD2KYY649rqwkmRipaP611Wh
-	Bl0PytgTOz2IqpvhXpOrzwgmHfS3VXJdSpTWFi9Te3/wMLLzNSPaAvr1AAHRjMTp8rzGS9
-	fS6vvIqjXMZYtqxFZhKZhiwxS2pc64tqWAgmvwvAOub9ieSKz9+2MuUZTzG1FMyQRIcg+U
-	Pq9HuxLWD2tafHvQ8dS072KrBY2qOSnHjIeBfNxUWp1nPwloKeTVFQrIdOi02Q==
+	bh=UskWr+boRdHCKqvgiQhgiQCmhJi2c28VCTFGVe919rE=;
+	b=ljZX/e+gAy5wqtt2JXd92XUF51cPmrc8n43j2UYSe9JvsQ/0aYejmN6sTgFOb3qWi/oGnD
+	4ojH4CjNah9Nf1Oj+bWbjVwBkLwwlrAkUqwha+MU3d5WxhFQASJNvI1lV6HphRagBJP38z
+	2Acs7W4lUjARLJe1Ox3D3rhnr69PESYoXbr1EPGKGmhKFbpKavxjp9enhan2BVwLiRBkGs
+	Na60Eqd7FZgAdXKVbUDeTuTY+sEcIV2MXfXdRGkTVMUMH/qZI3GAHMyXMxpwwzLoHfXfw6
+	4cEMnmXpY696nvkEafCKU4WHQ8mQpHBQMWiRdoHpH7iKlrbMfeRjl3u8dAzGBQ==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1788859969;
+	b=YAxe8mc116ZAbijctVtRdisbycCjvTyKC4zoDBMgKa74VtggXJnyoOIx1Ytv5+UDZsu9Kf
+	K187SQUTFw/PVBvEfnQiV/QAi4dlhAeDkBOAcmdKbW41nLLgLjY07RyBa2fWg9Lf5aTKI9
+	XxsRph5FlLgNTbiP+vc473I+K+UDHP8Oj8Wcf3aou/W1og34hEjIQmI0IVz5lzsBd5bdmx
+	guWaCrqMzHofLLHomvke8V7aeZjzWiqtHRL6sf9svJdC9eWubke3FlALIqWliW4IyHlmB0
+	rXQ4fqka10aZulpck3Feu4+O0dMIJFJiiHIC+OFiJ6Qgp1wb9BRCbc14F/7PXg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1788859962;
+	s=lahtoruutu; t=1788859969;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=bPA7RZq69BQzFDIgq2/jKxXiYvSrAjNW2sfY7vkWUj8=;
-	b=HoFS9EwbSdJUQMmFbT/OfPafoLTbPvoEWzqKRVA2SssR3h/P5gM5Zc7b+TARFC4SBZAPKz
-	Sre+m/xRtLQutYf28q0uVIXWaNGje4TZBrurWUdWXyyhAEadcB0GK+XsF4Y5OQKL9ofS61
-	vkBwok2pNHVGMus5TT2Jiy1D2jtFgMcqucE/CBHpnWd4hOn/Z9nWXviuyzdPK6IwI6yi8K
-	93dd2dIZKDNTr1HijayJUbvIc0cXUNw5g4Lg6DrTe861drYesoPTIthVlF+pN50SP69+Cd
-	g+s9qYmYTycDJbfHqfHJ8B9NTN7WoS/bQHoo0rVRJMTOR45nfKCkAVHs1cVbVw==
+	bh=UskWr+boRdHCKqvgiQhgiQCmhJi2c28VCTFGVe919rE=;
+	b=mCuMYCZVoyAxCIj24CVKELQe4WxjQ5Bjwu6akEhGPzNsa23TzvTHJOSb2B4U2wuuNovkWF
+	bQ5G6Ir3rzvwB6ZKX9kaWq4RtdmsueeNDeqGrnF/ljKwvI8f+dhg0EZONBdSk5gCBm9MP1
+	JDZ8hHImIPAPsBfpfJClSKYJ/QYBKLauMmNvCXDMQ2vXn03nC7Ui7AzKoR511sJbLr4AcY
+	WGYJ12jDlYAhumQSaP+jqG/34bn838yxpJbu2X4I5TdBNVo3gxytM1jNJr+t0RSmwzZYTh
+	4KtFO4GNQUYDyUuMiHmSCiJjDrhngoBVZ2417Pwi5hBOUVAvu/JHNy9LKSVaaQ==
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
@@ -75,9 +75,9 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-arm-msm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 04/12] soc: qcom: qmi_helpers: add QRTR endpoint ID to qmi_handle
-Date: Tue,  8 Sep 2026 12:31:37 +0300
-Message-Id: <20260908093145.2492666-5-juha-matti.tilli@iki.fi>
+Subject: [PATCH v3 05/12] soc: qcom: qmi_helpers: optionally bind to QRTR endpoint ID in qmi_sock_create
+Date: Tue,  8 Sep 2026 12:31:38 +0300
+Message-Id: <20260908093145.2492666-6-juha-matti.tilli@iki.fi>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260908093145.2492666-1-juha-matti.tilli@iki.fi>
 References: <20260908093145.2492666-1-juha-matti.tilli@iki.fi>
@@ -91,36 +91,65 @@ Content-Transfer-Encoding: 8bit
 
 From: Mihai Moldovan <ionic@ionic.de>
 
-Adding this allows us to easily supply an endpoint ID to bind on later
-on when creating the socket.
+For clients that already know the QRTR endpoint ID before actually
+creating the QMI socket and set it in struct qmi_handle, optionally try
+to bind to this QRTR endpoint ID when creating the socket.
+
+This can fail, and qmi_sock_create will issue diagnostic messages, but
+otherwise ignore the error.
 
 Signed-off-by: Mihai Moldovan <ionic@ionic.de>
 Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 ---
- include/linux/soc/qcom/qmi.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/soc/qcom/qmi_interface.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/include/linux/soc/qcom/qmi.h b/include/linux/soc/qcom/qmi.h
-index b9dcb437a0be5..c675d095df778 100644
---- a/include/linux/soc/qcom/qmi.h
-+++ b/include/linux/soc/qcom/qmi.h
-@@ -224,6 +224,7 @@ struct qmi_msg_handler {
-  * @txns:	outstanding transactions
-  * @txn_lock:	lock for modifications of @txns
-  * @handlers:	list of handlers for incoming messages
-+ * @endpoint_id: QRTR endpoint ID to bind on
-  */
- struct qmi_handle {
+diff --git a/drivers/soc/qcom/qmi_interface.c b/drivers/soc/qcom/qmi_interface.c
+index 16e2e24b60968..1550138a938d2 100644
+--- a/drivers/soc/qcom/qmi_interface.c
++++ b/drivers/soc/qcom/qmi_interface.c
+@@ -586,6 +586,7 @@ static struct socket *qmi_sock_create(struct qmi_handle *qmi,
+ 				      struct sockaddr_qrtr *sq)
+ {
  	struct socket *sock;
-@@ -247,6 +248,8 @@ struct qmi_handle {
- 	struct mutex txn_lock;
++	const struct proto_ops *ops = NULL;
+ 	int ret;
  
- 	const struct qmi_msg_handler *handlers;
+ 	ret = sock_create_kern(&init_net, AF_QIPCRTR, SOCK_DGRAM,
+@@ -593,6 +594,33 @@ static struct socket *qmi_sock_create(struct qmi_handle *qmi,
+ 	if (ret < 0)
+ 		return ERR_PTR(ret);
+ 
++	ops = READ_ONCE(sock->ops);
 +
-+	u32 endpoint_id;
- };
- 
- int qmi_add_lookup(struct qmi_handle *qmi, unsigned int service,
++	if (!ops) {
++		pr_warn("sock->ops not available for QMI socket\n");
++		pr_warn("will not be able to bind to endpoint ID.\n");
++		/* N.B.: this error value will not be passed out. */
++		ret = -ENXIO;
++	}
++
++	if (!ret && !ops->setsockopt) {
++		pr_warn("ops->setsockopt not available for QMI socket\n");
++		pr_warn("will not be able to bind to endpoint ID.\n");
++		/* N.B.: this error value will not be passed out. */
++		ret = -ENXIO;
++	}
++
++	/* Only bind to a specific endpoint if a valid one was provided. */
++	if (!ret && qmi->endpoint_id) {
++		ret = ops->setsockopt(sock, SOL_QRTR, QRTR_BIND_ENDPOINT,
++				      KERNEL_SOCKPTR(&qmi->endpoint_id),
++				      sizeof(qmi->endpoint_id));
++
++		if (ret < 0)
++			pr_warn("binding to QRTR endpoint ID failed: %d\n",
++				ret);
++	}
++
+ 	ret = kernel_getsockname(sock, (struct sockaddr *)sq);
+ 	if (ret < 0) {
+ 		sock_release(sock);
 -- 
 2.34.1
 
