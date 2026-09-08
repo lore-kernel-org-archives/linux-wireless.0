@@ -1,81 +1,96 @@
-Received: from mta1.migadu.com (out-8.mta1.migadu.com [95.215.58.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD99B582B97
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 16:36:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 284EE579806;
+	Tue,  8 Sep 2026 16:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788885394; cv=none; b=LEBvqMcMP9lM2fWsTfibckH3ohvfw4ciBbEKEzJYXUSoFw9hzsdCW+koZGc7sgxl4Ot4ck0OFEIQu/uasWn6Da6IhVnOIkGczQwol4iVbOdSNOT9P1l2wLTqs9UEDmHwNjpCqIdhTM7EVmQsXOccuZnQ7PgeQDB794BRBh2cYGI=
+	t=1788885828; cv=none; b=pLhJCZ2iKn80zeNu+2GDgwaG7bgv3sJHwhNCE9Or8SZWvo1KQ3r+4mBYELmHrsYDiAib5SPDB5Z8aCdzjZrxzWvoZN0vui4IDsstU46Zo3sM6MJzFGkUB2ngGcKcDJEHHFrfyWW865J6EtXfXcxT461ppb10CQAJUivFpFwRNyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788885394; c=relaxed/simple;
-	bh=dP/cjZy8ldnqq1PjpLbkEAGsTOME3zjuGeluM6xHCm4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gIOyNRDGpbgeZ0QxjwJeUoefTW60LxJ67QRhEWEMI2S/Mev6c5YjlBvuYcf+xBVlinNQSFFzet4cCSKCXHhI/UvkbHk5PXsez41CXe3gmpNQKpBkjPnoilruPuftXK8iFIcF9XWtftJmohQcKZICOD/KNAhwuKsRkhXvuJlwY98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=HFXzYZvh; arc=none smtp.client-ip=95.215.58.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="HFXzYZvh"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=dP/cjZy8ldnqq1PjpLbkEAGsTOME3zjuGeluM6xHCm4=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788885388; v=1; x=1789490188;
- b=HFXzYZvh6WXQ6mYwxrfrLLdBLSz/9PtXDx3j6sJ6ryZq+YZ6QYIcVXsdxzk4t2R3IRWqKbXA
- PQI+ZrhKDiYudQ7nYBlzyofQg8vwWT6VFGhxdM5eYpbnR+cdBiBBINXMarpelkNKPu1tBX3NnRW
- LKvTEbzCbFspV5QdzLVGBPjaPswIhtHWF1ayi6FLhnu9qQN63M4W9yzpujzLViBXZ9+ar3M1E4B
- s22vcE4U38hkANICS83rbuS4cBNfP8BV9D5bI1aDGTIt39vvl7ZIQ5K73PYlVAzmzO1Nd/al6+Q
- VT68p+X9dDXSq5fgt1CSjdINzlIQzqWkm55hNCJ/BbEcw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ba30160a00438295;
-	Tue, 08 Sep 2026 16:36:18 +0000
-X-Mizu-Trace-ID: ba30160a00438295
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Eason Lai <eason.lai@mediatek.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	kun.wu@mediatek.com,
-	deren.wu@mediatek.com,
-	Sean Wang <sean.wang@mediatek.com>,
-	quan.zhou@mediatek.com,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	leon.yen@mediatek.com,
-	litien.chang@mediatek.com,
-	jb.tsai@mediatek.com,
-	Sergei Melnichenko <sergei.melnichenko@gmail.com>,
-	Hans Buchheim <hbuchheim@gmail.com>
-Subject: Re: [PATCH v4 2/2] wifi: mt76: fix memory leak in USB TX path
-Date: Tue,  8 Sep 2026 09:36:14 -0700
-Message-ID: <20260908163614.7138-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260827083526.1621600-3-eason.lai@mediatek.com>
-References: <20260827083526.1621600-3-eason.lai@mediatek.com>
+	s=arc-20240116; t=1788885828; c=relaxed/simple;
+	bh=BeVg/o6n5kVBf89V3PqRwqUEH/SxBe3/mZtoyE+Y2Bk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=peMqIrYPKlMbOUUg6GOO9z3CVR53i2WKE2v2asxnAKPf8K5ug9g+pAw4lFi/GlEmbwt8n46xEPwRAwdb6x7nvptS2egmh7Xn9qKY+yICmmoCW7fbeW+s8NmalzKYCP+ksEsiSIAOM7UUNvoaGc728bzIahMKhczlLROlbFPmcFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, Thomas Fourier
+ <fourier.thomas@gmail.com>
+Cc: stable@vger.kernel.org, Tetsuo Handa
+ <penguin-kernel@i-love.sakura.ne.jp>, "open list:QUALCOMM ATHEROS ATH9K
+ WIRELESS DRIVER" <linux-wireless@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH net] ath9k_htc: fix possibly missing barrier in
+ ath9k_htc_rxep()
+In-Reply-To: <a5534789-351d-402c-b7a0-bdd98b68fcd3@oss.qualcomm.com>
+References: <20260803104424.25880-1-fourier.thomas@gmail.com>
+ <a5534789-351d-402c-b7a0-bdd98b68fcd3@oss.qualcomm.com>
+Date: Tue, 08 Sep 2026 18:43:42 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87mrtrg0ch.fsf@toke.dk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On Thu, 27 Aug 2026 01:35:26 -0700, Eason Lai wrote:
-> Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
-> Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
-> Closes: https://github.com/morrownr/mt76/issues/83
-> Signed-off-by: Eason Lai <eason.lai@mediatek.com>
+Jeff Johnson <jeff.johnson@oss.qualcomm.com> writes:
 
-Eason,
+> On 8/3/2026 3:44 AM, Thomas Fourier wrote:
+>> ath9k_rx_init() initialises the rx buffer and its lock then calls a
+>> memory barrier and then sets the priv->rx.initialized flag. However,
+>> ath9k_htc_rxep() reads that flag and imidiatly takes the lock. This may
+>
+> s/imidiatly/immediately/
+>
+>> cause the lock to be taken while not fully initialized.
+>> 
+>> Add a barrier to prevent speculative read of the lock before checking
+>> the initized flag.
+>
+> s/initized/initialized/ (or initialised)
+>
+>> 
+>> Fixes: b0ec7e55fce6 ("ath9k_htc: fix NULL pointer dereference at ath9k_htc_rxep()")
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+>> index bed7ea2425a0..97d61f3f0aad 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+>> @@ -1145,6 +1145,12 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+>>  	if (!data_race(priv->rx.initialized))
+>>  		goto err;
+>>  
+>> +	/*
+>> +	 * Make sure all the ath9k_rx_init() memory writes are visible before
+>> +	 * proceeding.
+>> +	 */
+>> +	smp_rmb();
+>> +
+>>  	spin_lock_irqsave(&priv->rx.rxbuflock, flags);
+>>  	list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+>>  		if (!tmp_buf->in_process) {
+>
+> I decided to run this though my review agent, which has the following
+> analysis:
 
-Thank you for carrying this through four revisions.
+[...]
 
-The issue in the Closes line was reported by Sergei Melnichenko, with the
-stack capture that narrowed it to the USB TX path. He asked to be credited:
+> So my question: Are there any flaws with that analysis?
 
-Reported-by: Sergei Melnichenko <sergei.melnichenko@gmail.com>
+Well, my conclusion was basically that adding the smp_rmb() is not
+actively wrong, even if it's not exactly idiomatic.
 
-Hans Buchheim's Tested-by from 1 September is on this thread as well.
+But sure, we can go with smp_store_release/load_acquire instead; might
+as well fix up that other tasklet issue while I'm at it...
 
-Devin
+-Toke
