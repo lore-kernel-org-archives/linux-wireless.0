@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A3353A8AF
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:28:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC45F53446E
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:28:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788870534; cv=none; b=kFoiPFcqN9NM9Lgx/h1KjJXI2FIGXkIg2qUPRrrDIaofRIsM6v3tU7m+Fvd1AOWWW8O6IBCX86MSZCtzT5/QoXCu9yEQD+xgo6heCrdtvTJAvg1rhmimWmNDyALYagUhreAXb/Xylar3JmkN5WnivicYX2glsBxfSzqvPKH+Pks=
+	t=1788870535; cv=none; b=VICa6uPv0PcA1Zs2yLPzMK/QlhLndgYLkuj1A63mzqNpcf34PfSloRDl7yx1R5xT2pwEo/N1Kisrhhk6AWStLH81sDgOt0rqtI+A3LpVvD+HQcJlk3ON1udNqHW1AFfCvdYj7UoRmD5tr5BBpjhL0vus4UT/O6gl/nW41ZnJ0wI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788870534; c=relaxed/simple;
-	bh=yf6mR1TEWdaNgmkpz2EmiQRVrd7ZiTf1+uOPCJZujss=;
+	s=arc-20240116; t=1788870535; c=relaxed/simple;
+	bh=ibHmlgyDM4dgejuaEKako1mst1B2WB7Y7Y77e/xr5qc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gpsJzrZh12Z9y+o655zpX8OOsLmK6VCMLQkTJgN6mLpiiGy/GirfySOWDa3Y0ZqTamdOLgnWB2oGoiZyJfOzWJNkbnpqWHbe2mjGt3uF1xnp0ulIMpuYju2cuyDjMpiuuEUt7e7I4gXDrBQixWU9N12p9va3smoYgm1Vfod9aDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KCZh04vj; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=hIoqcTZRbAjHHtJx/cBUQTdRS0Wint/9xbqV8pj/dRr6J+/zjabVW8RsQM/y6AIjxi6zl9xFiDCat5Mqr/s0/Qd3417lZlx8MVB4F0iuDtJhtWq1y36EJNF9oDDSeLLcZ7raqj2SHQDmyUzGWmUir00rR5MBdbE9TEXXvqjaVLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=FOFjDg6M; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KCZh04vj"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="FOFjDg6M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SOZmcXmm8paFjeiiT8T73/BmfikpJUPYQTX1AgP17g0=;
-	t=1788870532; x=1790080132; b=KCZh04vj8qlHEtFA8vg1TshvhZGjNUGlU9qayKjyGfF1vWd
-	3uFjQ9haag2DcaLX/cIJI8xBNbYE1bY9kbwxP5CkYnOmZ5oHyhAcqwdOpRto82b8capEDsF4yn2HY
-	ST45YUrYdjtYb26rod6QZ0x32GAPCkDRw/fcAOkhGTTAhAs0SGWEib8Kh9y1Z/eajcgms/xuUdRLV
-	uJkep8qNXKsykLOCeMikz+L+8BOaL3IHWczw351jPGonU9qViVaYB86sehlTCrFr8Ay1UeExS1ALU
-	YRhnOV//5PVFgsz7TqUckJ5ZK8jY9pR3JTSCX8DGF5yzLu5b37MNLAYMKpAK1l0A==;
+	Resent-Cc:Resent-Message-ID; bh=OfwHXqdOnqNxYq4sElHrn+qgoIgzpX0VyELoE5yH+UA=;
+	t=1788870533; x=1790080133; b=FOFjDg6MLkHnAz9fKvFg6X9TO9UdsQRhkgsfiqp1vgyCnyG
+	sLoJIDwFQfvoisX5wPPE8magt783rywHa3NTrKTZDEo9ZHrKld3Gf/TfBj/xIKT6ppQejxN9JSmX5
+	gKorSfYUGCntzst7kc4JVQ6968CwziIwK3IAdNoBz26PnoaizfRMK39eTWlG0bfsSyt14o7ie8KUH
+	NBFQAWAswbTu6JttLL+W2wsft4UiK8J5nYyYxFN/Ukw2+3zHNm8DgkCca9TVY433kXvCE8w55eP0e
+	LytC2XJMx9FaSfpfaSflw6TmVwVvebQ+2ysyUyabHQ+hunSrX3aRCGYPHUeWAySA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3uwU-0000000670J-1tUw;
-	Tue, 08 Sep 2026 14:28:50 +0200
+	id 1x3uwV-0000000670J-0ARN;
+	Tue, 08 Sep 2026 14:28:51 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com
-Subject: [PATCH RESEND wireless 08/10] wifi: mac80211: mesh: reset the CSA state when leaving
-Date: Tue,  8 Sep 2026 14:28:19 +0200
-Message-ID: <20260908122838.201719-20-johannes@sipsolutions.net>
+	syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com
+Subject: [PATCH RESEND wireless 09/10] wifi: mac80211: mesh: release the channel if start fails
+Date: Tue,  8 Sep 2026 14:28:20 +0200
+Message-ID: <20260908122838.201719-21-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908122838.201719-12-johannes@sipsolutions.net>
 References: <20260908122838.201719-12-johannes@sipsolutions.net>
@@ -51,82 +51,53 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-ifmsh->csa is allocated in ieee80211_mesh_csa_beacon() and only freed
-in ieee80211_mesh_finish_csa(), i.e. when the channel switch completes.
-Leaving the mesh while a switch is still pending therefore leaks it.
+ieee80211_join_mesh() acquires a channel context and then calls
+ieee80211_start_mesh(), which can fail. In that case, the chanctx
+isn't released then interface removal will attempt to unassign it
+after it's removed from the driver, hitting:
 
-Additionally, ifmsh->csa_role and ifmsh->chsw_ttl have their state leak
-in this case, so things can get mixed up in addition to the memory
-leak.
+  wlan0: Failed check-sdata-in-driver check, flags: 0x0
+  WARNING: net/mac80211/driver-ops.c:366 at drv_unassign_vif_chanctx
+   ieee80211_assign_link_chanctx
+   __ieee80211_link_release_channel
+   ieee80211_link_release_channel
+   ieee80211_teardown_sdata
+   unregister_netdevice_many_notify
+   _cfg80211_unregister_wdev
+   ieee80211_remove_interfaces
+   ieee80211_unregister_hw
+   mac80211_hwsim_del_radio
+   hwsim_exit_net
 
-Refactor the reset and call it in ieee80211_stop_mesh() to fix it all.
+Correctly release the channel on start failures.
 
 Assisted-by: LLM
-Reported-by: syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=f5752cd6b94fe38be666
-Fixes: b8456a14e9d2 ("{nl,cfg,mac}80211: implement mesh channel switch userspace API")
-Link: https://patch.msgid.link/20260904170057.86f8e0a996cc.Ib013eda6356cb548f29e04dfc7bf2c7a746b75a0@changeid
+Reported-by: syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=63a84ea9c0f57d6133fa
+Fixes: 2b5e19677592 ("mac80211: cache mesh beacon")
+Link: https://patch.msgid.link/20260904170057.8c86b0a8a44f.If6d6e31f93aca94e992ae17edc691407b146537c@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c | 29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+ net/mac80211/cfg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a35e2d5870b6..8f8814125375 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1196,6 +1196,21 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	return 0;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 2d5a0abe35db..d3558f0c7550 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3323,7 +3323,11 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err)
+ 		return err;
+ 
+-	return ieee80211_start_mesh(sdata);
++	err = ieee80211_start_mesh(sdata);
++	if (err)
++		ieee80211_link_release_channel(&sdata->deflink);
++
++	return err;
  }
  
-+static void ieee80211_mesh_reset_csa(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct mesh_csa_settings *csa;
-+
-+	/* Reset the TTL value and Initiator flag */
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
-+	ifmsh->chsw_ttl = 0;
-+
-+	/* Remove the CSA and MCSP elements from the beacon */
-+	csa = sdata_dereference(ifmsh->csa, sdata);
-+	RCU_INIT_POINTER(ifmsh->csa, NULL);
-+	kfree_rcu(csa, rcu_head);
-+}
-+
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -1206,6 +1221,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 
- 	/* abort any running channel switch */
- 	sdata->vif.bss_conf.csa_active = false;
-+	ieee80211_mesh_reset_csa(sdata);
- 	ieee80211_vif_unblock_queues_csa(sdata);
- 
- 	/* flush STAs and mpaths on this iface */
-@@ -1514,19 +1530,10 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata, u64 *changed)
- {
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	struct mesh_csa_settings *tmp_csa_settings;
--	int ret = 0;
-+	int ret;
- 
--	/* Reset the TTL value and Initiator flag */
--	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
--	ifmsh->chsw_ttl = 0;
-+	ieee80211_mesh_reset_csa(sdata);
- 
--	/* Remove the CSA and MCSP elements from the beacon */
--	tmp_csa_settings = sdata_dereference(ifmsh->csa, sdata);
--	RCU_INIT_POINTER(ifmsh->csa, NULL);
--	if (tmp_csa_settings)
--		kfree_rcu(tmp_csa_settings, rcu_head);
- 	ret = ieee80211_mesh_rebuild_beacon(sdata);
- 	if (ret)
- 		return -EINVAL;
+ static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
 -- 
 2.55.0
 
