@@ -1,64 +1,64 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFC254EE878
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 09:39:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195544FC8F4
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 09:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788860346; cv=none; b=GbHiavM8IzPVdiPhQ9tWOMuHT40WyN85K7uAkKAcuMRfe6XZ+TYQbSHUTmX5eb/f9FD0NcNZ322mrT4cIDD/Xg6sGB20Okdf1IoOm7rraOt9Xu1P+KadtZt6RfLtw7brjU7oG4lAQxnNaM+4+mJo3SoihDLrwfD7kwo8se1egXI=
+	t=1788860352; cv=none; b=JQsfaFEvc8EiNZcD/FR7bMxnGZoIF4ojor3VExP5FtmWPJnTVJLZAntGMzVDH98SAhOLz+6U2dbY6gkhcjcasLuoKF2ak36T3mZkWIAGZ44sz61C7XLycbxOHT1QmznmH6eRobVeeyfhdEvQZKfXTZ+auZhutvH0mkVamDdkows=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788860346; c=relaxed/simple;
-	bh=znCoxd6YU0vaytcLOKCB6Mo6LM/P8R4MM75M2jk8Ivs=;
+	s=arc-20240116; t=1788860352; c=relaxed/simple;
+	bh=qrqXw+BwjIJFKdstGQAN4+oyo/cF1qAWVyQbjsOTyHI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kaANL7EwCY16uOjDzFKWC8q01n689xYGaM9FWCHlAAUkpj99wafpXNJOhbvahloWy5dRedBvxQy7lL0vnIA3x30bC12H5XqQp197RMNyeGxwtS/aq7kUimDuiYems1uq05fwJupM5g9wHjejez7Xej+0wV0Ehwb9MgyX5KDbs7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BIn2LAOX; arc=none smtp.client-ip=209.85.214.180
+	 MIME-Version; b=tPta3xNEDxHoW1hYiErptIWAqArgI70CkxhDXkWfMqcyqmclwvvj4S3fpLtwoEsK1ycuzmf5zr7cOhvFU5t/CkEkxTG1beLtCCd72l8cLCR5oRp9ESdCt42J28XIauqOmoIJf/7GP5XbKEIVUFbeKZde5MPNcCQzAJzDWC0hHVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A0fl67bf; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BIn2LAOX"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2db3305f94fso31562195ad.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 02:39:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A0fl67bf"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2d8f265cbe6so33930935ad.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 02:39:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788860344; x=1789465144; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788860350; x=1789465150; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=veiyGrZ979vQEs7rWnsg+eWwwTfAHUYngaFq2JYfcfY=;
-        b=BIn2LAOXolZATB7eddG2gr2Wd1a5J60cdJtuSGFOWF6fItW7VoILhHMQQi8/rKbw4F
-         5pLVHp6L+p1eTX1QLlPKR9Q776mkqThDUOWqHd2IBkfMcTMl8hz6pjZl+3+StPOiJijD
-         /7HdkfxnEqKkmjlk9zXSR/3Z3aTkDjEXhQOVUqpQ/QhajGwjepV3q+QFWmCmaq/JWKmg
-         uHm6VVZSVjSGGYWS3xSWePNOHMRx7DPZJq/C6Bpj7PKhZZmy848jyn3eX/0ldVx/RPaa
-         TOH5VipxPSLUDmEJw09OY6bvzpCJjYc/SJ/1z5jWIGLnj96RUMc8OEUecYqkxejTVWnA
-         WklQ==
+        bh=FircOyEpe4b2jldkLo347QbktMO+xUZbOtLdp+AOv2c=;
+        b=A0fl67bfCdb8WZ24ftVcEl4uZ7ST41cjOZwfZ+0DB+qGiRLox+6+udWjE74NHxRliM
+         eHs2+J50YuVR/bQIEQ2TsDBsdnWPL6jBGFAvbTZbuJyPnKtAQSLDOSCc4G9czgp6WFPH
+         L9QMn/pqzghJKOtcIKSo+DPeUTeJcMTvm6Yx5AaUc2XuPgMxYiitZ1dOrStfieHw4ZtM
+         wZ7B4hlPsxn3VS8gj5nPc2TIs6T9CPK8Z9GjhLDzqiOf5AQTeQkqsJ0lKIPS08C86BbL
+         VxuwHJX9gvPahQihOWLNbhljSWTWBD8ZD8fpnGGIaVAK11xBvfwvWOKmAvDX35ghJ5GO
+         2SuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788860344; x=1789465144;
+        d=1e100.net; s=20251104; t=1788860350; x=1789465150;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=veiyGrZ979vQEs7rWnsg+eWwwTfAHUYngaFq2JYfcfY=;
-        b=QbR1l2gaa/bHANOrkN6Bt+mpXzRAZe3T7CYcFWrBTEo29/5amVgjbyvRAbSXowTVZd
-         zB8p84r4NXWTOZxzZkfiDn4xuzdyXtNdxuIlaof6T7qc0EnsbNbtLisp0StGq7FLoGiz
-         zldd7wNWjFi9+OXusV1EXcpeDGR6TvQldxEDoKyTS4iuRJax3e4xArPxBv/Whc0He+JM
-         eJnNHgem9VQ1p3bg80L999IZxsGL74w3b95jUrUufu1dKRdCDHyn/9Ia/74npVQ3/EPI
-         YFBsJgSttler8fdymlqQL3uu6aghKG+VyEiixF+gh1YFqCponIBD7ulluOJRoYOAoPAa
-         AnfQ==
-X-Gm-Message-State: AFuF++m/petOH0aj3wfeJf/pE3kRRc8/hTnc+qRcqd+dzk1sjZD38tzv
-	bCuInfiWGGwWplimQYLo9o8BA2Xgewqj5xSMEL87mSGMLTZyXaF9nzAOTD534pbhDFw=
-X-Gm-Gg: AYBFou2M8TV1ZMfkc0UWiIptq5fsHB+AI/X7sHKjJ+0c6Ly9Sms9MkefBR/tb80RLMu
-	dqtW+r/8HGbZ8Xwjb1SXVSbnD0NIUBrjltYTTrl94Ny08N0e62UupD5utbECEwLyg3cnhWR9I+A
-	t7HBLjn9GluHNzvvLc5lGFdg0jG8namBA1XPDS2P4qGdQ3TAyDjlKrMhzpnkdxXlTMEQWzHFUz3
-	Iy7EbXlWKiYJzQ9zfvYi5eT/zV4+g18yJcPoDyKTEW38IZV1I2n0MUA2Unt8j0/uKSZe6rl6mfN
-	lPQqg84kKqwcR6qDNIR50pSWDy1x90FQFy29zOODRHzUmF/mIUWaUP6JHrrecUE+8KaZcQQlyjD
-	E4m3QW/0BlGKE1HAkyPk22wdD9V2hbJE+EiMexsP2rToORI264Bz2bHje/sA/MmLH/zO6BZ25yA
-	+eZ9/ii0wHHrvYG05NWJ9q8KUF+xWIVKWiozdjj8uOWBN0YjNXxwp69Zl6fB3Fpv72+NrHUY3iM
-	r8wEQOM3UMqwDxe8Lri45hF573ODm4wlIBSyeEK60WUv5NWggW0DVqk0v7G9+bnsEoQuVK0c83U
-	xQ==
-X-Received: by 2002:a17:903:3910:b0:2d9:383a:30f1 with SMTP id d9443c01a7336-2db6c699f35mr115521875ad.4.1788860343901;
-        Tue, 08 Sep 2026 02:39:03 -0700 (PDT)
+        bh=FircOyEpe4b2jldkLo347QbktMO+xUZbOtLdp+AOv2c=;
+        b=DmIQVgxjDtVvxlELh8XMH7lSn7r6a8Lbnbyz/kNNFB32H8jWLNGRe38pXA7rBzm4kE
+         ngfgV+4hT0y+utles7rWPfJOBdXsXiJ49/dgAGUqdcuELmpRRLMbrpwZcj0E1fp/FJa+
+         nspFz9FZr4ZjLUtJXFtK/qvQBkHNc9CJ8YpBVjJn4zaS3TENq4ZFwkS2ALGtNEBkcgdY
+         Bug3Y5ZYkRWejkKCQatllMj6aKvtibmtNOuF9cbZ01wQlSnEqfz2mh5qO/RpqBZLt/6P
+         hlZYxEEMXdeLr+VOCiiN2CBtn/pdI3tKZMoVR2R67xWK2PSFStYY1FuMGSdrcTpJD0Nq
+         rO+g==
+X-Gm-Message-State: AFuF++nCQ8AqjC3hKVoOx6BpdfveBeTwxr97HbbdHuY5tH+ibmwW8dwp
+	nCRhMCjRbmZpF4j2+bzM16j6l+TuKOLvK8yY9W4S2auF0Qym4tkJHs+uEHTFoszMwu0=
+X-Gm-Gg: AYBFou1lBadcx2HD71sh0s36s5C1kaeZU8fwQn8XuFbE6+KGqXYi/fNGOAiG7VYAFRJ
+	isfp691pGfQi8Os7oFJLN8edV5I5cw2jKOk7Rg9IN2NbuKfz14T3sWQJRAY2fhLziF/Gnj9i4yq
+	QVNpQEJcKlgS5X3uzQy0tH4+A1wHwPfVDTFg+o0d8VHTRqAZwZxSBKHdlNIkvrXrmc2WFYOoNS9
+	HoPpLtS/nOba2e8IVxN06RTBMPASraJcjo9xc16yK+lGayqfMW1SWGcjDLmRfB3PKsNvSgQPQCY
+	7jgsbRgnAnDSq9wmzW3YH8LGV/iQReZYXBe64UaIIxZH69wjOEUHPikNWa6hl7ACIa5yRvW1AKA
+	1QK9FBmByO/bIIHTUvBLbXQVO8KZCYp2Q/+voDi0M8xIuO/7X3XK9sEm63l2aaMvOQBN4felUlz
+	Apqlu+7SEyy295lDYE1VVXYIcZMj+ghBAhg2nmTxqt1YuQVHPOYv8KcsX0V9rqUGsRdoPq0gUXK
+	IkHAL51ESfFFujxQ1TwDStZqlkpffCVGlwuzibu0rSMywbEMOJrBC9UwuJg/7ihIsM0M6S2i6ze
+	Ng==
+X-Received: by 2002:a17:902:f642:b0:2d9:3be4:7e31 with SMTP id d9443c01a7336-2db12508aa9mr427344645ad.5.1788860350295;
+        Tue, 08 Sep 2026 02:39:10 -0700 (PDT)
 Received: from nxpwireless-Inspiron-14-Plus-7440.tw-tpe02.nxp.com (114-25-99-144.dynamic-ip.hinet.net. [114.25.99.144])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1497d9f9sm54848085ad.32.2026.09.08.02.39.01
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1497d9f9sm54848085ad.32.2026.09.08.02.39.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 02:39:03 -0700 (PDT)
+        Tue, 08 Sep 2026 02:39:09 -0700 (PDT)
 From: Jeff Chen <chunfan.chen@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
@@ -66,9 +66,9 @@ Cc: johannes@sipsolutions.net,
 	linux-mmc@vger.kernel.org,
 	Ulf Hansson <ulfh@kernel.org>,
 	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: [PATCH wireless-next 2/4] mmc: core: add NXP IW610 base ID and block size quirk
-Date: Tue,  8 Sep 2026 17:37:56 +0800
-Message-Id: <20260908093758.596444-3-chunfan.chen@gmail.com>
+Subject: [PATCH wireless-next 3/4] wifi: nxpwifi: Add support for SDIO-based IW610
+Date: Tue,  8 Sep 2026 17:37:57 +0800
+Message-Id: <20260908093758.596444-4-chunfan.chen@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260908093758.596444-1-chunfan.chen@gmail.com>
 References: <20260908093758.596444-1-chunfan.chen@gmail.com>
@@ -82,50 +82,67 @@ Content-Transfer-Encoding: 8bit
 
 From: Jeff Chen <jeff.chen_1@nxp.com>
 
-The NXP IW610 SDIO chipset identifies itself with a base card ID
-(0x0214) during the initial MMC bus scan, whereas the WLAN function
-reports a different ID (0x0215).
+Add the IW610 SDIO device ID to the supported device table. This
+enables driver probing, interface initialization, and firmware
+download for the NXP IW610 wireless chipset.
 
-Like the IW61x, the IW610 requires MMC_QUIRK_BLKSZ_FOR_BYTE_MODE for
-correct byte-mode block size handling. Since SDIO fixups are applied
-before function devices are enumerated, the quirk must be associated
-with the base card ID rather than the WLAN function ID.
-
-Add the SDIO_DEVICE_ID_NXP_IW610_BASE definition and apply the required
-fixup in the SDIO quirk table.
-
+Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
 ---
- drivers/mmc/core/quirks.h    | 3 +++
- include/linux/mmc/sdio_ids.h | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/net/wireless/nxp/nxpwifi/sdio.c | 16 ++++++++++++++++
+ drivers/net/wireless/nxp/nxpwifi/sdio.h |  1 +
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/mmc/core/quirks.h b/drivers/mmc/core/quirks.h
-index ae3ece89d0aa..98cb680e3ace 100644
---- a/drivers/mmc/core/quirks.h
-+++ b/drivers/mmc/core/quirks.h
-@@ -211,6 +211,9 @@ static const struct mmc_fixup __maybe_unused sdio_fixup_methods[] = {
- 	SDIO_FIXUP(SDIO_VENDOR_ID_NXP, SDIO_DEVICE_ID_NXP_IW61X_BASE,
- 		   add_quirk, MMC_QUIRK_BLKSZ_FOR_BYTE_MODE),
- 
-+	SDIO_FIXUP(SDIO_VENDOR_ID_NXP, SDIO_DEVICE_ID_NXP_IW610_BASE,
-+		   add_quirk, MMC_QUIRK_BLKSZ_FOR_BYTE_MODE),
-+
- 	END_FIXUP
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sdio.c b/drivers/net/wireless/nxp/nxpwifi/sdio.c
+index 8ef0f6eb49e2..f4de494bf2f2 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sdio.c
++++ b/drivers/net/wireless/nxp/nxpwifi/sdio.c
+@@ -96,6 +96,19 @@ static const struct nxpwifi_sdio_device nxpwifi_sdio_iw61x = {
+ 	.can_ext_scan = true,
  };
  
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 5eff5e348eb0..dfffda3d8002 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -123,6 +123,7 @@
- #define SDIO_VENDOR_ID_NXP			0x0471
- #define SDIO_DEVICE_ID_NXP_IW61X_BASE		0x0204
- #define SDIO_DEVICE_ID_NXP_IW61X		0x0205
-+#define SDIO_DEVICE_ID_NXP_IW610_BASE		0x0214
- #define SDIO_DEVICE_ID_NXP_IW610		0x0215
++static const struct nxpwifi_sdio_device nxpwifi_sdio_iw610 = {
++	.firmware = IW610_SDIO_FW_NAME,
++	.reg = &nxpwifi_reg_iw61x,
++	.max_ports = 32,
++	.mp_agg_pkt_limit = 16,
++	.tx_buf_size = NXPWIFI_TX_DATA_BUF_SIZE_4K,
++	.mp_tx_agg_buf_size = NXPWIFI_MP_AGGR_BSIZE_MAX,
++	.mp_rx_agg_buf_size = NXPWIFI_MP_AGGR_BSIZE_MAX,
++	.can_dump_fw = true,
++	.fw_dump_enh = true,
++	.can_ext_scan = true,
++};
++
+ static struct memory_type_mapping generic_mem_type_map[] = {
+ 	{"DUMP", NULL, 0, 0xDD},
+ };
+@@ -458,6 +471,8 @@ static void nxpwifi_sdio_coredump(struct device *dev)
+ static const struct sdio_device_id nxpwifi_ids[] = {
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_NXP, SDIO_DEVICE_ID_NXP_IW61X),
+ 		.driver_data = (unsigned long)&nxpwifi_sdio_iw61x},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_NXP, SDIO_DEVICE_ID_NXP_IW610),
++		.driver_data = (unsigned long)&nxpwifi_sdio_iw610},
+ 	{},
+ };
  
- #define SDIO_VENDOR_ID_REALTEK			0x024c
+@@ -2326,3 +2341,4 @@ MODULE_DESCRIPTION("NXP WiFi SDIO Driver version " SDIO_VERSION);
+ MODULE_VERSION(SDIO_VERSION);
+ MODULE_LICENSE("GPL");
+ MODULE_FIRMWARE(IW61X_SDIO_FW_NAME);
++MODULE_FIRMWARE(IW610_SDIO_FW_NAME);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sdio.h b/drivers/net/wireless/nxp/nxpwifi/sdio.h
+index de5c884a5b14..e9881448fe2f 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sdio.h
++++ b/drivers/net/wireless/nxp/nxpwifi/sdio.h
+@@ -11,6 +11,7 @@
+ #include "main.h"
+ 
+ #define IW61X_SDIO_FW_NAME     "nxp/sd_w61x_v1.bin.se"
++#define IW610_SDIO_FW_NAME     "nxp/sd_iw610.bin.se"
+ 
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
 -- 
 2.34.1
 
