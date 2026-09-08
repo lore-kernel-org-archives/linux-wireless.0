@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-98.mta1.migadu.com [95.215.58.98])
+Received: from mta1.migadu.com (out-101.mta1.migadu.com [95.215.58.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E14C563FB9
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 13:29:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B75B379991
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 13:29:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788874201; cv=none; b=axMvCX80d6tCU+4d+mGpm1L1gyue+0OJ+tWBfiHqvWUu7VNwboX1SMQno95nabXJKB3xCPQ2nGrZXy0wGc3ePdV8isLj5vj0b3aWcCTLHfLUwvy9BAU0dRAGiLs/UJMahWWcENUPrATt3WkLoetRkHxOVcqfCcNsYasM6B3u83c=
+	t=1788874203; cv=none; b=Wud4ty9405Hn4590ypjVNuXebTJTYyFGa/7oLCkw0ATJeJTAyaIVPlv+zK8yrJEIyXR/aLjvvzIieTBT7dH+lsAS2dNnvUZthBPmUP3vuJoOYrd7W/H2TU4ZVzJ2zYt/voVmn/xDDVaxOzoSM7VEFfnTW25ySJvlaxLCP6EhXLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788874201; c=relaxed/simple;
-	bh=pj7G8hGWOYrz8BYJYMu4gorGGocx/OpcaEvOKht0G58=;
+	s=arc-20240116; t=1788874203; c=relaxed/simple;
+	bh=a9rVBWMM50OjJvKtJxvsx0Ug/bK2LLpn67flxuVltso=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IKTZEPWouodwBZMpEUE6MDxDj/PDUT71oXqiuTl6hHBo2AT/YXRjIyZs3aL2NGQrWiCIRh5AUyfq2dSAHsdZt/AEoW8E1savn5gcYUBH10ZtCPahavqVZWTelvxl7Xhs1L2Hu49tO0Gns2Kic+Kgf0khCv4jl61sMVals7qvOFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=i/bw5e5O; arc=none smtp.client-ip=95.215.58.98
+	 MIME-Version; b=WibSHTEnTmbaTiPKlqc3bKR/g4XiH0fnLFQr47N/TJmCXCXn8+pzNN5U21oAYJgVAG/lNKe15o0pP+RPH3/78YdQzoDYkhQog2gWQiNHFivj+U4KRoXvWUwlMwVOpFP8PDLtpYAR6mQ5ltL9iYb8MP1fUZQ2wwi5shP1f1evw7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QHB2cu8v; arc=none smtp.client-ip=95.215.58.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="i/bw5e5O"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QHB2cu8v"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=pj7G8hGWOYrz8BYJYMu4gorGGocx/OpcaEvOKht0G58=;
+DKIM-Signature: a=rsa-sha256; bh=a9rVBWMM50OjJvKtJxvsx0Ug/bK2LLpn67flxuVltso=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
  t=1788874186; v=1; x=1789478986;
- b=i/bw5e5Oby7sDlsQeI9YvgqOBN62rJXKBLXa7NLGbV3n4ZOVGsyPs7/8OakA+Jz7oXJl9mlp
- sLvaFL0qfhIyzMzeYnV6z42nMDXBQGdiNY8H7bAxFhrv4ensKeKGIMaQckehPkRZjqhzfbWb3ks
- GXylCxsbYYU8zd72yROF38zQ=
+ b=QHB2cu8vM7jrf19y0SNwajXP+J3iU8CQH3EOiRm0GE7IWBjoXZ6uA4ekPWhItonXdarGmqwv
+ Jf/6CYUZs8zYPblTsEA6QL2kXjet2Wz68zzjzgT5uEIrXPIuDl+fkZdjATSShsjwp2BhglXIqnB
+ BzbnXvK/I7BKRYi9jujKurpc=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 12519f327f5f0f4e;
+Received: by smtp.migadu.com with ESMTPS id 4d967d513e0fbdfa;
 	Tue, 08 Sep 2026 13:29:46 +0000
-X-Mizu-Trace-ID: 12519f327f5f0f4e
+X-Mizu-Trace-ID: 4d967d513e0fbdfa
 X-Migadu-Flow: FLOW_OUT
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,9 +37,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v10 3/6] wifi: rtw88: tx: extend the TX report purge timeout to RTL8723BS
-Date: Tue,  8 Sep 2026 15:29:23 +0200
-Message-ID: <20260908132926.68976-4-luka.gejak@linux.dev>
+Subject: [PATCH v10 4/6] wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
+Date: Tue,  8 Sep 2026 15:29:24 +0200
+Message-ID: <20260908132926.68976-5-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908132926.68976-1-luka.gejak@linux.dev>
 References: <20260908132926.68976-1-luka.gejak@linux.dev>
@@ -53,53 +53,578 @@ Content-Transfer-Encoding: 8bit
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-Commit c80788f7c5ae ("wifi: rtw88: increase TX report timeout to fix
-race condition") raised the purge timeout to 2500 ms for the RTL8723DU,
-because the firmware can stay off channel during background scans for
-longer than the 500 ms default, which delays the TX reports and lets the
-purge timer drop the tracking skbs. The host stack then reads the missing
-status as loss and collapses TCP throughput.
+The RTL8723BS reports free TX page counts that the generic 8051 path
+reads back from the chip on every transfer, which is both slow over SDIO
+and unreliable on this part: the register frequently reads back zero
+while pages are in fact available. It also gates transmission on a free
+count in the SDIO output queue, REG_SDIO_OQT_FREE_PG, which rtw88 does
+not track at all. The vendor driver calls this the OQT free space and
+never expands the acronym; the register holds the number of further
+transfers the SDIO output queue can accept, and the chip discards
+writes that arrive when it has run out.
 
-The RTL8723BS runs the same vendor firmware over a slower SDIO host and
-hits the same race. Testers on ARM SDIO boards see "failed to get tx
-report from firmware" under load, with the same throughput collapse.
-Extend the 2500 ms timeout to the RTL8723BS.
+Mirror the vendor driver and keep the per-queue and public page counts
+in software, seeded at start and resynchronised from the chip only when
+the cached counts say there is not enough room. Wait for a free output
+queue entry before writing, and account for the pages consumed after a
+successful transfer.
 
-Reported-by: Peter Robinson <pbrobinson@gmail.com>
-Closes: https://lore.kernel.org/all/CALeDE9PgQmpMfDt1DgfLD4tBFGH0MZ7GncV6RUEOHhHbKF+TdQ@mail.gmail.com/
+The check, the output queue wait and the accounting are serialised by
+a mutex. The TX worker and the H2C path reach this function
+concurrently, and two writers that both pass the checks can otherwise
+claim the same pages and output queue entry, after which the chip
+silently discards whichever transfer arrives second. The vendor driver
+avoids the same race by funnelling all transmission through one thread.
+
+Measured on RTL8723BS hardware against an iperf3 server one hop behind
+the AP, with the wlan0 byte counters as ground truth. On the generic
+path the association completes but no data passes at all: TCP and UDP
+both measure 0 bit/s in either direction. With this patch TCP is
+25.3 Mbit/s up and 37.3 Mbit/s down, and UDP is 25.0 Mbit/s up at 0%
+loss.
+
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
 
 Notes:
-    Changes in v10: none.
-    Changes in v9: none.
-    Changes in v8: none.
-    Changes in v7: none.
+    Changes in v10:
+      - the transfer size comes from sdio_align_size() now. On this card,
+        which reports multi block support and a 512 byte block size, it is
+        identical to the open coded rounding: checked at the block
+        boundaries and then against every frame of a session, 80000 frames
+        with no difference.
+      - the block padding is gone from this patch. Measured on hardware it
+        is not something the chip needs. Transferring unpadded, exactly as
+        the generic path does, gives 20.9 to 21.1 Mbit/s uplink against
+        19.5 to 19.8 padded, with scans, reconnection and a UDP flood clean
+        either way. What the padding really fixes is that the aligned
+        length is read from past the end of the frame, which every SDIO
+        part does today, so it is a separate fix and not part of this
+        patch.
+      - dropped the comment above rtw_sdio_write_port_8723bs() and trimmed
+        the ones on the page counters.
+    Changes in v9:
+      - rtw_sdio_write_port() is now only a dispatcher, with the two paths in
+        rtw_sdio_write_port_8723bs() and rtw_sdio_write_port_generic(), as
+        you asked. The chip specific one takes the mutex with guard()
+        directly, so the extra rtw_sdio_8723bs_write_port() layer, which only
+        existed to give the guard a scope while the generic path shared the
+        outer function, is gone.
+      - the unaligned SKB warning is in rtw_sdio_write_to_port() now, once,
+        next to the transfer whose pointer it checks and after any padding.
+        __func__ therefore reads rtw_sdio_write_to_port on every SDIO part.
+    Changes in v8:
+      - RTW_TX_QUEUE_VO is accounted against the normal page pool rather than
+        the high one. rtw_sdio_get_tx_addr() writes it to the normal transmit
+        FIFO, and that is the pool the chip charges: over a saturating VO
+        flood the high pool never lost a single page while the public pool
+        drained. The vendor maps VO to the high queue, but it also writes VO
+        to the high FIFO, which rtw88 does not.
+      - the output queue entry claimed before the transfer is handed back
+        when the transfer fails, rather than staying claimed until the cache
+        next resyncs from the chip.
+      - mutex_destroy() for tx_credit_lock on teardown and on the init error
+        path, matching rtw_core_deinit().
+      - the comment on the cached page counters no longer explains the
+        atomic_t by the several contexts that write them. Since v7 the
+        transmit paths all update them under tx_credit_lock; what is left
+        outside the lock is rtw_sdio_start() seeding them, and that is the
+        reason they stay atomic_t.
+      - the free page check, the output queue wait, the transfer and the
+        accounting moved into rtw_sdio_8723bs_write_port(), which takes the
+        lock with guard(mutex) as you suggested. The generic path is a short
+        branch in rtw_sdio_write_port() that never touches the lock, and the
+        transfer itself is shared as rtw_sdio_write_to_port().
+      - lockdep_assert_held() added to rtw_sdio_8723bs_write_port(),
+        rtw_sdio_8723bs_wait_tx_oqt() and rtw_sdio_8723bs_consume_txpg(),
+        and checked on a kernel built with CONFIG_PROVE_LOCKING over
+        bidirectional traffic and three module reloads: nothing fired.
+      - the padding uses a pad_size local and the comment is down to the one
+        point that matters, that __skb_pad() must not free the skb.
+      - the comment above the lock is gone; the one at the declaration of
+        tx_credit_lock covers it.
+    Changes in v7:
+      - the free page check, the output queue wait and the accounting after
+        the transfer are serialised by a mutex. The TX worker and the H2C
+        path run concurrently, and two writers that both passed the checks
+        could claim the same pages and output queue entry; the OQT refill
+        could also read the register while the other writer was between its
+        claim and its transfer. The chip silently discards the overcommitted
+        transfer, which for H2C means a lost firmware command.
+      - the CMD53 address is computed from skb->len again, as upstream does.
+        Passing the aligned size changed the encoded transfer length for
+        every other SDIO chip whenever sdio_align_size() padded; for the
+        RTL8723BS the two encodings are the same value.
+      - the padding is applied with __skb_pad() and only on the RTL8723BS
+        path. The open coded version wrote into a cloned skb's shared buffer
+        when the tailroom happened to be large enough, and it also ran on
+        the generic path, giving other chips a new allocation and failure
+        mode. __skb_pad() does not move skb->len, so the trim on the way out
+        is gone too. It must not free the skb on failure, since one caller
+        requeues it and the other frees it.
+    
     Changes in v6: none.
-    Changes in v5: none. Restored in v4 after being dropped in v2, because
-    testers on slower ARM SDIO hosts hit the warning that commit
-    c80788f7c5ae already fixes for the RTL8723DU.
+    Changes in v5:
+      - the commit message now says what OQT is, as far as the vendor driver
+        reveals it.
+      - rtw_sdio_8723bs_sync_free_txpg() returns whether the chip reported
+        anything and is the only caller of _store_free_txpg(), and
+        _init_free_txpg() returns an error rather than nothing. That found a
+        real bug: the public pool size was acq_pg_num minus the reserved
+        queues with no check, so a chip coming up with no transmit page
+        allocation would underflow a u16 and leave about 65000 free pages.
+        It is now rtw_sdio_8723bs_pubq_num(), shared with the queue page
+        allocation repair path, and it fails cleanly.
+      - the output queue wait is bounded by a jiffies deadline rather than a
+        loop count, so RTW_SDIO_OQT_TIMEOUT_MS is really milliseconds.
+      - rtw_sdio_8723bs_check_rqpn() returns an error instead of silently
+        doing nothing when the pool cannot cover the reserved queues, and
+        rtw_sdio_start() propagates it. Both early returns are explained.
 
- drivers/net/wireless/realtek/rtw88/tx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/sdio.c | 327 ++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/sdio.h |  12 +
+ 2 files changed, 323 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 8786bbb421c2..4e110a457e71 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -208,8 +208,9 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
- 	__skb_queue_tail(&tx_report->queue, skb);
- 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index 5b40d74b16ee..64c6f0c881a2 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -20,6 +20,7 @@
+ #include "tx.h"
  
--	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
--	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
-+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
-+	     rtwdev->hci.type == RTW_HCI_TYPE_USB) ||
-+	    rtw_is_8723bs(rtwdev))
- 		timeout = msecs_to_jiffies(2500);
+ #define RTW_SDIO_INDIRECT_RW_RETRIES			50
++#define RTW_SDIO_OQT_TIMEOUT_MS				1000
  
- 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
+ static bool rtw_sdio_is_bus_addr(u32 addr)
+ {
+@@ -548,12 +549,149 @@ static int rtw_sdio_read_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
+ 	return ret;
+ }
+ 
++/*
++ * The counters are atomic_t because rtw_sdio_start() seeds them outside
++ * tx_credit_lock, which the transmit paths hold while using them.
++ */
++static void rtw_sdio_8723bs_store_free_txpg(struct rtw_dev *rtwdev,
++					    u32 free_txpg)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	atomic_set(&rtwsdio->free_pg_high,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_HIGH));
++	atomic_set(&rtwsdio->free_pg_normal,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_NORMAL));
++	atomic_set(&rtwsdio->free_pg_low,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_LOW));
++	atomic_set(&rtwsdio->free_pg_pub,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_PUB));
++}
++
++static bool rtw_sdio_8723bs_sync_free_txpg(struct rtw_dev *rtwdev)
++{
++	u32 free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++
++	if (!free_txpg)
++		return false;
++
++	rtw_sdio_8723bs_store_free_txpg(rtwdev, free_txpg);
++
++	return true;
++}
++
++static int rtw_sdio_8723bs_pubq_num(struct rtw_dev *rtwdev, u16 *pubq_num)
++{
++	const struct rtw_page_table *pg_tbl = &rtwdev->chip->page_table[0];
++	u16 acq_pg_num = rtwdev->fifo.acq_pg_num;
++	u16 reserved_num;
++
++	reserved_num = pg_tbl->hq_num + pg_tbl->lq_num + pg_tbl->nq_num +
++		       pg_tbl->exq_num + pg_tbl->gapq_num;
++	if (acq_pg_num <= reserved_num) {
++		rtw_err(rtwdev,
++			"no transmit pages left for the public queue: %u of %u reserved\n",
++			reserved_num, acq_pg_num);
++		return -EINVAL;
++	}
++
++	*pubq_num = acq_pg_num - reserved_num;
++
++	return 0;
++}
++
++static int rtw_sdio_8723bs_init_free_txpg(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	const struct rtw_page_table *pg_tbl;
++	u16 pubq_num;
++	int ret;
++
++	/* Seed from the page table when the chip has nothing to report yet. */
++	if (!rtw_sdio_8723bs_sync_free_txpg(rtwdev)) {
++		ret = rtw_sdio_8723bs_pubq_num(rtwdev, &pubq_num);
++		if (ret)
++			return ret;
++
++		pg_tbl = &rtwdev->chip->page_table[0];
++		atomic_set(&rtwsdio->free_pg_high, pg_tbl->hq_num);
++		atomic_set(&rtwsdio->free_pg_normal, pg_tbl->nq_num);
++		atomic_set(&rtwsdio->free_pg_low, pg_tbl->lq_num);
++		atomic_set(&rtwsdio->free_pg_pub, pubq_num);
++	}
++
++	atomic_set(&rtwsdio->tx_oqt_free,
++		   rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG));
++
++	return 0;
++}
++
++/*
++ * Clamped at zero: a lost update against rtw_sdio_8723bs_consume_txpg() can
++ * briefly drive a counter negative, and wrapping would hide the shortage
++ * instead of triggering a resync from the chip.
++ */
++static unsigned int rtw_sdio_8723bs_pages_free(struct rtw_dev *rtwdev,
++					       atomic_t *dedicated)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	int free;
++
++	free = atomic_read(dedicated) + atomic_read(&rtwsdio->free_pg_pub);
++
++	return free > 0 ? free : 0;
++}
++
++/*
++ * The pool a queue draws from follows the transmit FIFO that
++ * rtw_sdio_get_tx_addr() writes into, since that is the one the chip charges.
++ * RTW_TX_QUEUE_MGMT is the exception: it goes to the extra FIFO, which
++ * REG_SDIO_FREE_TXPG has no counter for and this chip allocates no pages to,
++ * so it is accounted against the high pool and served from the public one.
++ */
++static atomic_t *rtw_sdio_8723bs_free_txpg(struct rtw_dev *rtwdev, u8 queue)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	switch (queue) {
++	case RTW_TX_QUEUE_VI:
++	case RTW_TX_QUEUE_VO:
++		return &rtwsdio->free_pg_normal;
++	case RTW_TX_QUEUE_BE:
++	case RTW_TX_QUEUE_BK:
++		return &rtwsdio->free_pg_low;
++	case RTW_TX_QUEUE_BCN:
++	case RTW_TX_QUEUE_H2C:
++	case RTW_TX_QUEUE_HI0:
++	case RTW_TX_QUEUE_MGMT:
++		return &rtwsdio->free_pg_high;
++	default:
++		return NULL;
++	}
++}
++
+ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 				    size_t count)
+ {
+ 	unsigned int pages_free, pages_needed;
+ 
+-	if (rtw_chip_wcpu_8051(rtwdev)) {
++	if (rtw_is_8723bs(rtwdev)) {
++		atomic_t *dedicated;
++
++		dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++		if (!dedicated) {
++			rtw_warn(rtwdev, "Unknown mapping for queue %u\n", queue);
++			return -EINVAL;
++		}
++
++		pages_free = rtw_sdio_8723bs_pages_free(rtwdev, dedicated);
++		pages_needed = DIV_ROUND_UP(count, rtwdev->chip->page_size);
++		if (pages_needed <= pages_free)
++			return 0;
++
++		rtw_sdio_8723bs_sync_free_txpg(rtwdev);
++		pages_free = rtw_sdio_8723bs_pages_free(rtwdev, dedicated);
++	} else if (rtw_chip_wcpu_8051(rtwdev)) {
+ 		u32 free_txpg;
+ 
+ 		free_txpg = rtw_sdio_read32(rtwdev, REG_SDIO_FREE_TXPG);
+@@ -632,24 +770,60 @@ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 	return 0;
+ }
+ 
+-static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+-			       enum rtw_tx_queue_type queue)
++static int rtw_sdio_8723bs_wait_tx_oqt(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+-	bool bus_claim;
+-	size_t txsize;
+-	u32 txaddr;
+-	int ret;
++	unsigned long deadline;
++	u8 free;
+ 
+-	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
+-	if (!txaddr)
+-		return -EINVAL;
++	lockdep_assert_held(&rtwsdio->tx_credit_lock);
+ 
+-	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
++	if (atomic_add_unless(&rtwsdio->tx_oqt_free, -1, 0))
++		return 0;
+ 
+-	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
+-	if (ret)
+-		return ret;
++	deadline = jiffies + msecs_to_jiffies(RTW_SDIO_OQT_TIMEOUT_MS);
++	do {
++		free = rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG);
++		if (free) {
++			atomic_set(&rtwsdio->tx_oqt_free, free - 1);
++			return 0;
++		}
++		usleep_range(1000, 2000);
++	} while (time_before(jiffies, deadline));
++
++	return -EBUSY;
++}
++
++static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
++					 unsigned int pages)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	atomic_t *dedicated;
++	unsigned int taken;
++	int free;
++
++	lockdep_assert_held(&rtwsdio->tx_credit_lock);
++
++	dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++	if (!dedicated)
++		return;
++
++	free = atomic_read(dedicated);
++	taken = min_t(unsigned int, pages, free > 0 ? free : 0);
++	atomic_sub(taken, dedicated);
++
++	pages -= taken;
++	if (pages && atomic_sub_return(pages, &rtwsdio->free_pg_pub) < 0)
++		atomic_set(&rtwsdio->free_pg_pub, 0);
++}
++
++static int rtw_sdio_write_to_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
++				  enum rtw_tx_queue_type queue, u32 txaddr,
++				  size_t write_size)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool bus_claim;
++	int ret;
+ 
+ 	if (!IS_ALIGNED((unsigned long)skb->data, RTW_SDIO_DATA_PTR_ALIGN))
+ 		rtw_warn(rtwdev, "Got unaligned SKB in %s() for queue %u\n",
+@@ -660,7 +834,8 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 	if (bus_claim)
+ 		sdio_claim_host(rtwsdio->sdio_func);
+ 
+-	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data, txsize);
++	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data,
++			       write_size);
+ 
+ 	if (bus_claim)
+ 		sdio_release_host(rtwsdio->sdio_func);
+@@ -668,11 +843,83 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 	if (ret)
+ 		rtw_warn(rtwdev,
+ 			 "Failed to write %zu byte(s) to SDIO port 0x%08x",
+-			 txsize, txaddr);
++			 write_size, txaddr);
+ 
+ 	return ret;
+ }
+ 
++static int rtw_sdio_write_port_8723bs(struct rtw_dev *rtwdev,
++				      struct sk_buff *skb,
++				      enum rtw_tx_queue_type queue)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	unsigned int pages;
++	size_t write_size;
++	size_t txsize;
++	u32 txaddr;
++	int ret;
++
++	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
++	if (!txaddr)
++		return -EINVAL;
++
++	txsize = round_up(skb->len, 4);
++	write_size = sdio_align_size(rtwsdio->sdio_func, skb->len);
++
++	guard(mutex)(&rtwsdio->tx_credit_lock);
++
++	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
++	if (ret)
++		return ret;
++
++	ret = rtw_sdio_8723bs_wait_tx_oqt(rtwdev);
++	if (ret)
++		return ret;
++
++	ret = rtw_sdio_write_to_port(rtwdev, skb, queue, txaddr, write_size);
++	if (ret) {
++		/* nothing was queued, so hand the output queue entry back */
++		atomic_inc(&rtwsdio->tx_oqt_free);
++		return ret;
++	}
++
++	pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
++	rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
++
++	return 0;
++}
++
++static int rtw_sdio_write_port_generic(struct rtw_dev *rtwdev,
++				       struct sk_buff *skb,
++				       enum rtw_tx_queue_type queue)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	size_t txsize;
++	u32 txaddr;
++	int ret;
++
++	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
++	if (!txaddr)
++		return -EINVAL;
++
++	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
++
++	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
++	if (ret)
++		return ret;
++
++	return rtw_sdio_write_to_port(rtwdev, skb, queue, txaddr, txsize);
++}
++
++static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
++			       enum rtw_tx_queue_type queue)
++{
++	if (rtw_is_8723bs(rtwdev))
++		return rtw_sdio_write_port_8723bs(rtwdev, skb, queue);
++
++	return rtw_sdio_write_port_generic(rtwdev, skb, queue);
++}
++
+ static void rtw_sdio_init(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+@@ -749,8 +996,51 @@ static int rtw_sdio_setup(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
++/*
++ * Reprogram the queue page allocation if the chip came up with none. This is
++ * a repair path, not part of the normal start sequence: a non-zero free page
++ * count means the allocation latched during power on and must be left alone,
++ * and without a transmit page pool there is nothing to divide up either.
++ */
++static int rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
++{
++	const struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	const struct rtw_page_table *pg_tbl;
++	u32 free_txpg;
++	u16 pubq_num;
++	int ret;
++
++	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++	if (free_txpg || !fifo->acq_pg_num)
++		return 0;
++
++	ret = rtw_sdio_8723bs_pubq_num(rtwdev, &pubq_num);
++	if (ret)
++		return ret;
++
++	pg_tbl = &chip->page_table[0];
++	rtw_write32(rtwdev, REG_RQPN_NPQ,
++		    BIT_RQPN_NE(pg_tbl->nq_num, pg_tbl->exq_num));
++	rtw_write32(rtwdev, REG_RQPN,
++		    BIT_RQPN_HLP(pg_tbl->hq_num, pg_tbl->lq_num, pubq_num));
++
++	return 0;
++}
++
+ static int rtw_sdio_start(struct rtw_dev *rtwdev)
+ {
++	if (rtw_is_8723bs(rtwdev)) {
++		int ret = rtw_sdio_8723bs_check_rqpn(rtwdev);
++
++		if (ret)
++			return ret;
++
++		ret = rtw_sdio_8723bs_init_free_txpg(rtwdev);
++		if (ret)
++			return ret;
++	}
++
+ 	rtw_sdio_enable_rx_aggregation(rtwdev);
+ 	rtw_sdio_enable_interrupt(rtwdev);
+ 
+@@ -1294,6 +1584,8 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
+ 		return -ENOMEM;
+ 	}
+ 
++	mutex_init(&rtwsdio->tx_credit_lock);
++
+ 	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
+ 		skb_queue_head_init(&rtwsdio->tx_queue[i]);
+ 	rtwsdio->tx_handler_data = kmalloc_obj(*rtwsdio->tx_handler_data);
+@@ -1306,6 +1598,7 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
+ 	return 0;
+ 
+ err_destroy_wq:
++	mutex_destroy(&rtwsdio->tx_credit_lock);
+ 	destroy_workqueue(rtwsdio->txwq);
+ 	return -ENOMEM;
+ }
+@@ -1320,6 +1613,8 @@ static void rtw_sdio_deinit_tx(struct rtw_dev *rtwdev)
+ 
+ 	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
+ 		ieee80211_purge_tx_queue(rtwdev->hw, &rtwsdio->tx_queue[i]);
++
++	mutex_destroy(&rtwsdio->tx_credit_lock);
+ }
+ 
+ int rtw_sdio_probe(struct sdio_func *sdio_func,
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+index 457e8b02380e..f43f1c6309b7 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.h
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+@@ -86,6 +86,10 @@
+ #define REG_SDIO_OQT_FREE_PG			(SDIO_LOCAL_OFFSET + 0x001E)
+ /* Free Tx Buffer Page */
+ #define REG_SDIO_FREE_TXPG			(SDIO_LOCAL_OFFSET + 0x0020)
++#define BIT_FREE_TXPG_HIGH			GENMASK(7, 0)
++#define BIT_FREE_TXPG_NORMAL			GENMASK(15, 8)
++#define BIT_FREE_TXPG_LOW			GENMASK(23, 16)
++#define BIT_FREE_TXPG_PUB			GENMASK(31, 24)
+ /* HCI Current Power Mode 1 */
+ #define REG_SDIO_HCPWM1				(SDIO_LOCAL_OFFSET + 0x0024)
+ /* HCI Current Power Mode 2 */
+@@ -159,6 +163,14 @@ struct rtw_sdio {
+ 	struct workqueue_struct *txwq;
+ 	struct rtw_sdio_work_data *tx_handler_data;
+ 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
++
++	atomic_t free_pg_high;
++	atomic_t free_pg_normal;
++	atomic_t free_pg_low;
++	atomic_t free_pg_pub;
++	atomic_t tx_oqt_free;
++	/* one writer at a time between the credit check and the accounting */
++	struct mutex tx_credit_lock;
+ };
+ 
+ extern const struct dev_pm_ops rtw_sdio_pm_ops;
 -- 
 2.55.0
 
