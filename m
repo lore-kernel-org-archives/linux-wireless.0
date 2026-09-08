@@ -1,66 +1,66 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D75F23EDACD
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC9454A7CC
 	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 13:53:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788875622; cv=none; b=mYcVegvjWz+1J9dQrszfIyhi76Dt8b6AKVqaiLLaOoppFFOOMCdQkICfBhT9EqNXfjgppFK2NdSuLeyKkl8MijhAmEphbU7TnFThtr5k3PUu4X4cII6qKWTxExE6yxN6BK+jsscKXdCcE1rRIfEtUJiPegBIsUiGNkoeOu0pv1Y=
+	t=1788875623; cv=none; b=LC2QggfqVRN6P8FNuR7YW8BrRmHcNaZxiyTXgNDYGx7pinXZDKXSdG+vgiB/tFV6bRIQP/3IICP+dBHxVzz/4UZ0tf7hynMMDzD1kQNdsmq76K5i1FaRulBX5eDfWZzCf3iIiJLovA6+YtziVvYfa+ZFIFTOFkW4ewYSDcnVx5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788875622; c=relaxed/simple;
-	bh=oxu2BrFXMHQ7tCtzImP6ujIrHiCOhiw6t/tTEFwjPQM=;
+	s=arc-20240116; t=1788875623; c=relaxed/simple;
+	bh=7wIfSA7jIgn+YuODqH1Zm4TLzhQihyQIWfos5qWU4Lc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=C2vY01gwWrayxGlxR7cZuyFlYtc6PTWO5CS6B6Bk8lMCan8oSs4pV7bzEM2l2gtMEWL+52qW6DG2c70jqjyp5idE2sLEOdBeNe1tQEmuW5s2bJE/9rZrZiUcD57Ihanqe5y72CScm6Z6Ndk2qBGPBzs9p0aSUXl9vdLiD67iXhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=XVtz0xtG; arc=none smtp.client-ip=209.85.218.47
+	 MIME-Version; b=KcXYwS7No28jJeqzt3oehm/evV8SeVSRl5ZTRzDYXlqwcxuWSw7bU0KMO/yAY/Z1zd5ASzrJEPEU5w1NMJyUD0GstTT8g3TmPwvYB63k6dPHyhZi3DEF7Q15pIRKd7CJDihQW5Yfs2GNd5ry1wkUv4NTEg+4bnzulmaSuWPStgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=atY7zy2H; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="XVtz0xtG"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c20e70a0962so592900766b.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 06:53:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="atY7zy2H"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c263415982eso355790766b.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 06:53:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1788875605; x=1789480405; darn=vger.kernel.org;
+        d=bairaktaris.de; s=google; t=1788875606; x=1789480406; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=RPdLShOxqlTto6fsSHI/vFszQMvhlliVKlymqNv97DI=;
-        b=XVtz0xtGbzG3gzP1Ua/pJtpYhh+aNGUWKZtUaZddiqORYs5saqU0icjQwxrjLBd+ck
-         ylX2R3xkm5UNAOglJgEOw9jLn74eVCFDhmD4est61jcUiqDHXMMbWlX0uqcxIvOp92sv
-         dGCd4/tnvAkLDzDjUhcpT6vTHzrXvyf+hpGbPGOaLm+Y6kjCNlU23XRl9POUW1Qkt7Lc
-         MhcYE25JjDT9/Y+ZL0DXhdBF4LskbrWPE4/tlXIpeGVVo2uxmEkb8/t8IpejSlFIaKzt
-         QPZ7OukF4F1olviWf0N38eiBki2ffh3fpC4L1g+mxcJManFVcKTaGDByTA+TfnCbDcWE
-         bxmQ==
+        bh=onv4qoIcCtETFC209nIFagBVXouZZuhs1jFn7+5wWYM=;
+        b=atY7zy2HI/b1aqOv0owoHGMS9WiEf9LpNAezUogtvunTG2lQ7Ww/KnS8ELzTU9dZan
+         2Zx7LYbfFVNf4EKMkwVukEdAtSW8mlNM5+k2ybOyyGU+clO7vTejW52Z6V+3TkF8lXGx
+         ErwisnjHG7ydflVWd2Wl+2WyXWReXRMq36klStLLQKVJIdpUxGLi72k4pgZzmjKpi/Gl
+         uG2wRhO1z0u5xDSXJwx2fF2ZcAT74fHh63xetzNk+AfC0SpLEXfhi2DohdOP/y6XaCcE
+         27iybP8HZtqKgpoPE/ItvlBg/tkZ7cNcOAAumfyu5Hvrh7FeXk7n5lRhyYy7WUZj/bDs
+         +Q2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788875605; x=1789480405;
+        d=1e100.net; s=20251104; t=1788875606; x=1789480406;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=RPdLShOxqlTto6fsSHI/vFszQMvhlliVKlymqNv97DI=;
-        b=sAirrTQDAHV3O31nIQJJ2HpCt4S/iTyjtY3ws+Q9oMeNZnpB4ymMZ7CsqmbWIaatjE
-         bL8Be5Q9I5Yrr/gW7qrQ6KJ6Drm6nb4q77vARy9p7gmBVyXOj53ZroLGcOa3y6lWXmYV
-         sBiinDpyU6SHfbtMZiqi/1XuzlXWCUJwiQykU/WzBQDhqmRIQT5DNJvtIcJ5r7IROxYW
-         ZtYJCNYFaaJbWrlYbIsdL8YU8XOr9aU9otBi3UK+9c9yyigKUDjzXVn6Jr9tI9ebCzGa
-         WdxluqBnCFzMK9BPdq33gg1aAjNfFCKW3pIC4bmM0ilI45HN9UqvItjqfPII1MqV0OUt
-         JQzw==
-X-Gm-Message-State: AFuF++mdR6jkKIDMxFoUSUkVp8bww6dyI4j7l5Sr5EuCbgDR58awEvqH
-	8uCnCvR/5UBgRgPc+rYWw9jyeILefKN2tJNRa/Q9s/IOyQq2sKdsNYO2GFVrQSJuwA==
-X-Gm-Gg: AYBFou3Okc53FuUiUs6UI7rkOMKHKFv6sfea2oG+Lv2e10Yof/+Jmi4oqCpZBj7Jbi5
-	srFuvC8eIGmJeef6q5I2223NGMgWGH7d+R0mtj43GGw/qKpU4Hzp1/AqKquWzRnfWzRRd3ilk3W
-	F38FJJ4tavMxD0sfE4HxwT4tCT0Eowq0yqdOv+Kb6RN7ChHoq7UjQIRhIXsQtXpkHar9RmAZCrj
-	BgC07nYJqGwOAzQybuUQgTi7o85zNzdvIQplKYSzjWxkfbODA8yHssw1ziZmN7MfK9dF6sLCvUI
-	s5BOm1E/IW/d2Zc+HtSo1kX8O6RCIG3VsNNTYOISied6aHN82OpoLMil2NPuLvxfmIUdzY03iC2
-	2dTew1rDftgDabDpLJKzhFrDXw3kUeJfLlGvzNAGcQ2K4Rg4vaMdCiy3z4mfarXDkQ6D09EOFBf
-	iHoez2N2HWLH8LH/OZQFUdv+qBnOU/za5LiW31lTONPQk2ce3lFPaMphE8UYYGA6ridhNb8rXbw
-	mp7ZkLbz34hv/IY4CdGyNtpB2StN63igvAyBPfKgFqiAloEfeY0dlwL6u58IpQi+dSmXQheEem3
-	47Z7zN5sOGjH17D1W2qPOs53PTuHq3xd8zCuNX01Iu+PT6lm2wJdQZPd0L4IW6PgX80+M/JzdCJ
-	9FDmCVtDxBJYvrjplRczh7E5ALwx/dxBwOs5jd8K21snYJxlPQBOMTUQFj6vPvYbsYZOkp1XQS/
-	lB+ALG7btkqTW3
-X-Received: by 2002:a17:906:7308:b0:c20:9447:bd5e with SMTP id a640c23a62f3a-c260c8e77fcmr2400016266b.9.1788875604992;
-        Tue, 08 Sep 2026 06:53:24 -0700 (PDT)
+        bh=onv4qoIcCtETFC209nIFagBVXouZZuhs1jFn7+5wWYM=;
+        b=ooJtiakZdn1UkeaYR/8Z9hEo4d1hYLB5mbgTPZwmOQuaRo1NlZpyZ8NTj5YQbjzuY9
+         pwkZcKjeMVl+ET3xgSCjpte+YuzQ0iasG1/iTTuDkAWPQEMwj0zA3TwFcR1JfbHdOuic
+         yv4VOTcLvcjtx2kv0OKF/R8THGCyG2dmz9oEnhN8hgFNnvTgBxvlxxwoe7xcTqxE6oV0
+         kf+jIVETpZ1FZ2nfqcOpsRQnYbR4f6PWgwo2CitKB/b7dp3P70WP1Hji7sT1/h3Lrx/V
+         Y3a1xP20VE0KJZcjI4Rx0CkJ21fb1JGBYw83UkQdJUK8pg5wQTmGsOO6SWwRzt1nC+In
+         QQRg==
+X-Gm-Message-State: AFuF++mhWRtlIi4BJa+Zkkf58zTZlnkFmD48OT8ZPm0dj1ZpjOUCAPEd
+	+shlCAin5VcL0A4klcYbpKnNw8wD0ZAKNK8pC0TDnyXMvYK1Tmq3QplwZ8UocBkLww==
+X-Gm-Gg: AYBFou2b0YpcaH6E8WDjuCLnX1ypPwe6wD7AC86Ms+xqoP5c6FMEyLmSLdihDpTfHD9
+	JFtHSg88XGpo6KMmo3BtqIMTl4eVukDc99PWbXaqZOkZPmDhE84gy8mts0SxVMf0u8iBAQKqyPk
+	33NC8nJmqALKQNZsc6Quc7DqchwGQxg60CCpk9NgJSdZIXEqgzn6HH6vJQjXrS5Xq8CIi8RF68Q
+	JDEY1SuMYIE79G7VgWnweDkWeHhv2FFARnrsW8QB+4mE5iL7NHuhVbwpD0brn6owtIwwZ5s9Wad
+	X6QBfMH35m/yPLk5rPtLOKCBY/BN21GCLclMzKtIigeEaSBXasgkORPJcZ81E134Sef902eWtIc
+	axgW/188tPPSrcQziB/CwU4x8Zsun7YvPMlZL0/DHGIpl5HepyihCt93IDwlIGP7oXv2ViEp1SZ
+	bnEMalmM44jpdPvvxztXtmyW6irkKAVZiwuxwqYIFLWfaMT665Lrbs8Sr+xWHkBLlbNJNzAyMP1
+	pAsAvym8fwVbesrC/u4OzWTuMC5wu2MOOURhSsZq/3CNXZdbGxbQE2B4Gt2O4nXUBzSFsbiYP5O
+	hL9W5O/UZalRXg4lkd2DyQEhI3tJ0GV55cJ+5TFcNbJIHrutos+dqhXszYsd6jGuY8sz7KcVMEa
+	XTUfylTnmSsF48Vchn2jNeDsvwoJywz4QCQsGj+sAcwIts/myBcuYKx9RNbp0vz0IRTCXpvp7Ts
+	1jO3YjapWxupyJ
+X-Received: by 2002:a17:907:6ea2:b0:c25:8bcb:ea0b with SMTP id a640c23a62f3a-c260c6a0e93mr1982912066b.4.1788875605742;
+        Tue, 08 Sep 2026 06:53:25 -0700 (PDT)
 Received: from Desktop (pd951346e.dip0.t-ipconnect.de. [217.81.52.110])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c260d5cdf7asm647602666b.58.2026.09.08.06.53.24
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c260d5cdf7asm647602666b.58.2026.09.08.06.53.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 06:53:24 -0700 (PDT)
+        Tue, 08 Sep 2026 06:53:25 -0700 (PDT)
 From: Julius Bairaktaris <julius@bairaktaris.de>
 To: jjohnson@kernel.org
 Cc: linux-wireless@vger.kernel.org,
@@ -70,9 +70,9 @@ Cc: linux-wireless@vger.kernel.org,
 	sven@narfation.org,
 	quic_vthiagar@quicinc.com,
 	john@phrozen.org
-Subject: [PATCH ath-next v4 6/9] wifi: ath11k: run the TXQ scheduler on tx completion
-Date: Tue,  8 Sep 2026 15:53:15 +0200
-Message-ID: <20260908135319.754140-7-julius@bairaktaris.de>
+Subject: [PATCH ath-next v4 7/9] wifi: ath11k: charge received airtime to the station deficit
+Date: Tue,  8 Sep 2026 15:53:16 +0200
+Message-ID: <20260908135319.754140-8-julius@bairaktaris.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260908135319.754140-1-julius@bairaktaris.de>
 References: <20260908135319.754140-1-julius@bairaktaris.de>
@@ -84,117 +84,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A station whose airtime queue limit is reached stops being served by
-ieee80211_tx_dequeue(), and the airtime it is waiting on is only returned
-when the hardware completes the frames already charged to it. ath11k starts
-a scheduling round only where mac80211 calls the wake_tx_queue callback, so
-once the limit binds, the backlog moves again only when one of those events
-comes round: most often the next frame from the network stack. Under a
-saturated download the arrivals keep the round running; a flow that has
-just filled the intermediate queue, or one whose sender is waiting on the
-acknowledgements behind that queue, stalls for as long as it takes the next
-arrival to appear.
+mac80211's airtime scheduler is configured to account both directions:
+local->airtime_flags is AIRTIME_USE_TX | AIRTIME_USE_RX, and
+ieee80211_sta_register_airtime() adds the received airtime to the same
+deficit the transmit side subtracts from. ath11k passes zero for it, so
+an access point serving a station that mostly uploads charges that
+station nothing for the medium it occupies, and the deficit that decides
+whose queue is served next describes half the traffic.
 
-Start a round for each access category a reaped completion belonged to,
-on that radio, at the point where the airtime has been returned. The
-airtime queue limit then bounds a queue that is refilled as it drains,
-rather than one that is refilled when the network stack happens to push.
-The access category is the queue mapping mac80211 stamped on the frame.
+Register the duration the hardware reports for each received PPDU. It
+arrives in the RXPCU PPDU end TLV on the monitor status ring, which is
+subscribed for every radio, and ath11k already accumulates it as the
+station's rx_duration. Charging it once per PPDU matches what the
+transmit side registers, whereas an estimate rebuilt per MSDU counts the
+preamble and the interframe space once for every subframe of an
+aggregate.
 
-Measured on an IPQ8074 AP with a TCP download forwarded from a wired
-host to one 1x1 VHT80 station, BE aql_txq_limit 500/1000 us, 20 s runs,
-three interleaved runs per arm, download rate and the RTT the sender's
-TCP sees on that flow, mean and maximum:
-
-                    Mbit/s               RTT mean ms   RTT max ms
-  with this patch   100.8, 101.5, 100.6  27, 26, 26    32, 31, 32
-  without            93.0,  99.1,  76.2  26, 27, 94    66, 36, 347
-
-Without it the download moves only when the network stack pushes, and
-a run in three stalls until the sender retransmits. At the default
-limit, which binds on this flow as well, this patch reads 101 Mbit/s at
-48 to 55 ms and the arm without it 80.7 to 101.1 Mbit/s at 54 to 79 ms.
+The PPDU end user stats TLV that names the TID is not in the default
+monitor status filter, so the airtime is charged to best effort, the
+access category the deficit arbitrates the bulk of the traffic in. The
+call is made after ab->base_lock is dropped, under the rcu read lock the
+loop holds, as the tx completion path does; base_lock is contended by
+every tx completion. A PPDU from a peer with no station entry is not
+charged to anyone.
 
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
 
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
 ---
- drivers/net/wireless/ath/ath11k/dp_tx.c | 14 +++++++++++++-
- drivers/net/wireless/ath/ath11k/mac.c   |  7 +++++++
- drivers/net/wireless/ath/ath11k/mac.h   |  1 +
- 3 files changed, 21 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 52c4a9924a31..70d326fe6a1f 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -694,9 +694,10 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 	struct sk_buff *msdu;
- 	struct hal_tx_status ts = {};
- 	struct dp_tx_ring *tx_ring = &dp->tx_ring[ring_id];
-+	unsigned long push = 0;
- 	u32 *desc;
- 	u32 msdu_id;
--	u8 mac_id;
-+	u8 mac_id, i;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 68472e1e748a..a7b9bb295728 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -5270,6 +5270,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 	struct sk_buff_head skb_list;
+ 	struct ath11k_peer *peer;
+ 	struct ath11k_sta *arsta;
++	struct ieee80211_sta *sta;
+ 	int num_buffs_reaped = 0;
+ 	u32 rx_buf_sz;
+ 	u16 log_type;
+@@ -5324,6 +5325,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 			continue;
+ 		}
  
- 	spin_lock_bh(&status_ring->lock);
++		sta = NULL;
+ 		rcu_read_lock();
+ 		spin_lock_bh(&ab->base_lock);
+ 		peer = ath11k_peer_find_by_id(ab, ppdu_info->peer_id);
+@@ -5337,12 +5339,25 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
  
-@@ -756,12 +757,23 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 		spin_unlock(&tx_ring->tx_idr_lock);
+ 		arsta = ath11k_sta_to_arsta(peer->sta);
+ 		ath11k_dp_rx_update_peer_stats(arsta, ppdu_info);
++		sta = peer->sta;
  
- 		ar = ab->pdevs[mac_id].ar;
-+		__set_bit(mac_id * IEEE80211_NUM_ACS + skb_get_queue_mapping(msdu),
-+			  &push);
+ 		if (ath11k_debugfs_is_pktlog_peer_valid(ar, peer->addr))
+ 			trace_ath11k_htt_rxdesc(ar, skb->data, log_type, rx_buf_sz);
  
- 		if (atomic_dec_and_test(&ar->dp.num_tx_pending))
- 			wake_up(&ar->dp.tx_empty_waitq);
- 
- 		ath11k_dp_tx_complete_msdu(ar, msdu, &ts);
- 	}
+ next_skb:
+ 		spin_unlock_bh(&ab->base_lock);
 +
-+	/* A completion returns the airtime the frame was charged, which is
-+	 * what an airtime-limited station in that access category is waiting
-+	 * on. The arrivals that would otherwise start a round are themselves
-+	 * queued behind that limit.
-+	 */
-+	for_each_set_bit(i, &push, ab->num_radios * IEEE80211_NUM_ACS)
-+		ath11k_mac_tx_push_pending(ab->pdevs[i / IEEE80211_NUM_ACS].ar,
-+					   i % IEEE80211_NUM_ACS);
- }
++		/* The airtime a station spends transmitting is taken from
++		 * the others, so its deficit is charged for it too, with the
++		 * duration the hardware measured for the whole PPDU, as on
++		 * the transmit side. The TLV that names the TID is not in
++		 * the default monitor status filter, so the charge goes to
++		 * BE. Outside base_lock, which tx completion contends for;
++		 * sta is held by the rcu read lock.
++		 */
++		if (sta && ppdu_info->rx_duration)
++			ieee80211_sta_register_airtime(sta, 0, 0,
++						       ppdu_info->rx_duration);
+ 		rcu_read_unlock();
  
- int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 342b38308468..ffb6b865c2df 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6583,6 +6583,13 @@ static void ath11k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
- 	ath11k_mac_schedule_txq(hw->priv, txq->ac);
- }
- 
-+void ath11k_mac_tx_push_pending(struct ath11k *ar, u8 ac)
-+{
-+	rcu_read_lock();
-+	ath11k_mac_schedule_txq(ar, ac);
-+	rcu_read_unlock();
-+}
-+
- void ath11k_mac_drain_tx(struct ath11k *ar)
- {
- 	/* make sure rcu-protected mac80211 tx path itself is drained */
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
-index 59f83c7175fd..d577c5ca249c 100644
---- a/drivers/net/wireless/ath/ath11k/mac.h
-+++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -161,6 +161,7 @@ struct ath11k *ath11k_mac_get_ar_by_vdev_id(struct ath11k_base *ab, u32 vdev_id)
- struct ath11k *ath11k_mac_get_ar_by_pdev_id(struct ath11k_base *ab, u32 pdev_id);
- 
- void ath11k_mac_drain_tx(struct ath11k *ar);
-+void ath11k_mac_tx_push_pending(struct ath11k *ar, u8 ac);
- void ath11k_mac_peer_cleanup_all(struct ath11k *ar);
- int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
- u8 ath11k_mac_bw_to_mac80211_bw(u8 bw);
+ 		dev_kfree_skb_any(skb);
 -- 
 2.53.0
 
