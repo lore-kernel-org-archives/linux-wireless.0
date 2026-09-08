@@ -1,96 +1,104 @@
-Received: from smtpo63.interia.pl (smtpo63.interia.pl [217.74.67.63])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3131A52B1CD
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 11:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.63
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3204119FA;
+	Tue,  8 Sep 2026 12:10:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788868756; cv=none; b=gj8GSl9tNX/TwIIFsQMwbrGdT0UbhaXDBjrDX2rBtYmeFxUUyuCxx+zhSC4FKeJn36vUhIhIulm++LsWk7/44L0OdNh7+j2yvsFsYs9HvabVu12xJCbLoQFrfhashnOsOZ93Eex0itKK1QtgwlGpglzyMyYqVL4il4Q5UOpCsVo=
+	t=1788869413; cv=none; b=hWpK5v613u7xuZ/UtwMdqnhfXNZlR4SE9881Waq7GE3nLWNIkgmHJ2aqVhAHeKKULGaNChrng3+J7WRtLTh/lVEwqvHO4hGApgyu7BuwvdWJJkxTvhZUeAVLjze2d2Zk6xKbBHWR3KcfRnzRImwak5FoRMxW809IkzFyzLniy6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788868756; c=relaxed/simple;
-	bh=MfsxBJ6NlEeM+8rbXq+NIID3c9HT4pB92XAyZW+nVrs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bDkBE4et75h8T7yuY75P3KUzHHpYhW0CwEbaCSCOSoH2y3v6clUVe3vQ/N1nXZZWy55kVHfgqTUgYinkrT5WbtKySeHalyjO8OBZaELb3z8MUpMnV1dGa+s8dT5WnYzC7D6808rp+tgddGABn0k8EuGlecquRvbJJHv1ubldElk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=t7KnY8Cx; arc=none smtp.client-ip=217.74.67.63
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1788869413; c=relaxed/simple;
+	bh=oKozBCCg1kGyxYMiaJulg4ZulR9HpOfXoYfb6mLsMuU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PCyueD20C2V6FpteHJbZtZJUAoPcO9dXoDpCh3zonNAp5PO92ziFSn/874TvsVI9hAkDDsOt0u134ZpDr/5kiBvaF+nFPe9oUk/3cl8dSccfmvuA+JntXXz+4T7bGrhxDW2lZIBi5yFwjukqUg1tNmi5N41IQX0TxSJTUNMR2bs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NA+vUnaG; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="t7KnY8Cx"
-Received: from nr200 (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Tue,  8 Sep 2026 13:59:03 +0200 (CEST)
-Date: Tue, 8 Sep 2026 13:59:01 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: Re: [PATCH 3/3] wifi: cfg80211: check if AP has been started before
- adding new station
-Message-ID: <ap_4hS6M8g4u6z--@nr200>
-References: <20260813090434.2071318-1-sst@poczta.fm>
- <20260813090434.2071318-3-sst@poczta.fm>
- <113768c35523738bdc7ab8441ecda64a063900bf.camel@sipsolutions.net>
- <ap_Y8OD0eBAnB8QS@nr200>
- <8934029f86b1c0e75f777185b2768f8e9755cae5.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NA+vUnaG"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=iIrCCrZub8v+AoROsXt50ja4lv1+ARsgTH5VGRh2sek=;
+	t=1788869406; x=1790079006; b=NA+vUnaGBnxoFSmunRRewCyAH9zx1FWDumxeF1wohoKzUD4
+	lwgdf9vE3aXI73wCMC2JBOiYy4YuPGpoc0lNJ3pHgFJwU0vQ1ogsVP6uZe1D7e/mfipuSRRGLA9CX
+	Agk2vWOYKvtC23rxfLD+DqDPFSPVtSQcA41oz4QpFRzvdJZbMSeIsNjS+F8HY7aov1uJm5Y/QEbSn
+	V01fi/7g5ZYswa+eb5Ok22a9RXV8uw8/coIFiyVT5LKBfzU/N3Tys4vDdS9MNPXAh41tX5F/Wn57H
+	NKU/8pLDbCd/osfdKznrYtQNNUSC6BH258U9iB6pLl/vKSsp0h0c8eESnMoeyDaQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x3ueF-000000065vi-2uiX;
+	Tue, 08 Sep 2026 14:09:59 +0200
+Message-ID: <81a49fcf5f1c6acf1d017d405d2aaf6d3ea417c5.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: libipw: reject TKIP frames without a full MIC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daehyeon Ko <4ncienth@gmail.com>, Stanislav Yakovlev
+	 <stas.yakovlev@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 08 Sep 2026 14:09:58 +0200
+In-Reply-To: <20260908082729.209627-1-4ncienth@gmail.com> (sfid-20260908_102749_361409_E04BC684)
+References: <20260908082729.209627-1-4ncienth@gmail.com>
+	 (sfid-20260908_102749_361409_E04BC684)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8934029f86b1c0e75f777185b2768f8e9755cae5.camel@sipsolutions.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1788868745; bh=LD3kiUlCRno+rl8RodUamrYcjrOz0JXo82CrRqMJUik=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=t7KnY8Cxk9Z4tNellCBXBlu2LLB0TV58LK8rLgSBtloJptm0mDHDwTDHZulK3IYUU
-	 m9WJd5/o4FdSndrEBspzMOFtXx+vYNZT1Dux9L2Nr89uAuUSziuM/eo1THZalajUeA
-	 BwqOUrzJ5Xj8kaJ+VhJA+jJh1RhAfGupGmdXJJpE=
+X-malware-bazaar: not-scanned
 
-On wrz 08, 2026 11:46, Johannes Berg wrote:
-> On Tue, 2026-09-08 at 11:44 +0200, Slawomir Stepien wrote:
-> > On wrz 04, 2026 11:25, Johannes Berg wrote:
-> > > On Thu, 2026-08-13 at 11:04 +0200, Slawomir Stepien wrote:
-> > > > 
-> > > >  	case NL80211_IFTYPE_P2P_GO:
-> > > > +		/* Add a new station only after the AP and link has been started */
-> > > > +		link_id = wdev->valid_links ? params.link_sta_params.link_id : 0;
-> > > 
-> > > max() maybe?
-> > > 
-> > > > +		if (!wdev->links[link_id].ap.beacon_interval)
-> > > > +			return -ENETDOWN;
-> > > 
-> > > I think the same issue might exist also for mesh, maybe address that as
-> > > well?
-> > > 
-> > > And I think you could have a fourth patch to clean up the mac80211 code
-> > > to no longer handle the "STA creation on AP_VLAN" case?
-> > 
-> > But is there such case?
-> > The only part I think is related is the handling code when params.vlan is set. However, this code is
-> > still OK. I do not see any other code that would be a good candidate for removal/change.
-> > 
-> > Am I missing something here?
-> 
-> Don't think you're missing anything, there's just the block handling
-> param->vlan in add_station, it's dead code now. But why not kill it?
+On Tue, 2026-09-08 at 17:27 +0900, Daehyeon Ko wrote:
+> libipw_tkip_decrypt() accepts a frame containing the TKIP header and a
+> valid encrypted ICV even when the plaintext MSDU is shorter than the
+> eight-byte Michael MIC.  After it removes the header and ICV,
+> libipw_michael_mic_verify() subtracts the missing MIC from skb->len.
+>=20
+> skb->len is unsigned, so a zero-byte plaintext makes
+>=20
+>         skb->len - 8 - hdr_len
+>=20
+> wrap to 4294967288.  michael_mic() then attempts 1073741822 four-byte
+> reads starting at the end of the 802.11 header.  Generic KASAN reports a
+> slab-out-of-bounds read once the loop leaves the skb allocation.
+>=20
+> The ipw2100 and ipw2200 receive paths call this from a tasklet while
+> holding spin_lock_irqsave(), so the OOB access can panic the kernel or
+> stall a CPU with local interrupts disabled.
+>=20
+> The trigger requires an affected IPW device using host TKIP
+> verification, an active TKIP key, and a sender able to construct a
+> non-replayed frame with a valid encrypted ICV.  This conservatively means
+> a malicious AP or a peer holding the same TKIP key.
+>=20
+> Require the full MIC before entering the verifier.  A valid-MIC control
+> continues to pass.  A zero-payload frame with a valid encrypted ICV is
+> dropped without a KASAN report in three fresh boots through libipw_rx().
+>=20
+> The KASAN reproduction uses a white-box module and the registered TKIP
+> crypto operations.  I do not have the hardware, so this has not been
+> tested over the air.
+>=20
+> The initial candidate was supplied for validation.  AI-assisted tooling
+> traced the source and receive paths, prepared the reproducer and fix, and
+> ran the build and runtime checks.
 
-For the reason explained below (in my previous message).
-There can still be a command from userspace with AP base interface (as wdev) with
-attrs[NL80211_ATTR_STA_VLAN] set and this block will be executed in such case. Right?
+Bla bla bla. Please rewrite the commit message.
 
-> > Also, during this check, I've came to a conclusion that I will reword a bit the commit message for
-> > PATCH 1/3, since userspace can still add STA to AP_VLAN in one go, using
-> > attrs[NL80211_ATTR_STA_VLAN] and that's fine, since the wdev would be the base AP interface, so all
-> > check will happen.
-> 
-> Sure :)
+> +++ b/drivers/net/wireless/intel/ipw2x00/libipw_crypto_tkip.c
+> @@ -476,7 +476,7 @@ static int libipw_michael_mic_verify(struct sk_buff *=
+skb, int keyidx,
+>  	struct libipw_tkip_data *tkey =3D priv;
+>  	u8 mic[8];
+> =20
+> -	if (!tkey->key_set)
+> +	if (!tkey->key_set || skb->len < hdr_len + 8)
+>  		return -1;
 
--- 
-Slawomir Stepien
+Why hardcode 8?
+
+johannes
