@@ -1,45 +1,41 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3F9538D89
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:28:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8455C53ED15
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2026 12:47:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788870535; cv=none; b=Y4JK55CkimTaBCIGOh8I0t0yE0irvguPeVTvWrl2oEDOx81nelU3yYoSvQY8idEO6I/yjqvHChw/NUFaT9rTew+ZnEly77drBsQ2yvaWsWXVCiI0b6xHGD1mNoVVTUqC2qDkYC5tkQHpMO/g6gzNi4Pucm9lGCpNE+EToqyj5UE=
+	t=1788871624; cv=none; b=XePKqHZRXUaBf8LAr4XsMKiag+QUhD471vs+o/7LP4Sv2w+DS5emC38pY+1AyWOFQYYLmcwm5l8EtefyE+hrD45ghGRWdykXTNu15XF63ohtC/5CTESQykRFPZg3yeuUuZP7RtBelxZoXPgTMzW+7ef7kLKApkXCKM+P7Zy87Mg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788870535; c=relaxed/simple;
-	bh=wk9+LgGW3NNQ/0AXAm762s7AMHsX/UzGJYrFdkt4WdE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CaZ3GfJB1uBBHXLFtu+IAXCpO4dPqDpjWLwyafV15WBETkiOjGy2hLwVHlmcI4gj+UA9tFev88334ceXsSuTkhAfjnWEKmDNhPKmUhE5hXe64Ih05I8qijT5szrAr0zVSCbVhi7x0BcWJ0v4zV8dOohafoKB0Jxi+0aONNi1zig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=rMw11Owl; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788871624; c=relaxed/simple;
+	bh=nSIsuNFgivXXUQFkkh2UAm69QxMNGxyM6y0WeZlnB1s=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=SYhenBDpMXkIB6OSg+dM8R5ipH5pwAt4zJ9kR0wRQ1OtdZfQxSTRWI+iHiZpNadsBJj4WfHQ/bUIHfzl5mayJKY618ZdNZE4IqS04itvYh3pmVq2gt+49sKu4a9Vuo9ItpApsn9kIbZahGqIIR9Xh32TyRpiGZN00iXWHKlfhoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=KbXeLyQB; arc=none smtp.client-ip=212.77.101.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rMw11Owl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=oMfNS0yjGpE9TuLcJcLKaXkW8dvHjOmpoBAEykSjkdI=;
-	t=1788870534; x=1790080134; b=rMw11OwlPDKfAch4B7Ggvm3xry8vcTtRGt6ctiCzPrUVFG+
-	fRs2SC4JEj61quBOOTlWsmx0HlwIafFaFK27XG4ujHYkcP7ggdyCLjTHmy3xO1tu3NmbB9ES1lS9U
-	RcbOEp1ivuLFlgIqgveDKFKtAQ50SdmlOLZ91Q1BksLsoGksXbonV9q3kCID+e1+mV7RX3ykP13GJ
-	SIbvvPZ12ceuAeDX8lgGajUQIosvsBfY2zQElXWxm1l7X8ZWO8o2ArreoIOqR2j3XSyrflseidNSJ
-	Gm3LkNjG7FYBeqVs1NEohLWiEJTYtL5zGKFMkWIHQ3FxCe9TuijAtZ9fetV7JdRg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3uwV-0000000670J-35hx;
-	Tue, 08 Sep 2026 14:28:51 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH RESEND wireless 10/10] wifi: mac80211: set up the TX info early to fix failure paths
-Date: Tue,  8 Sep 2026 14:28:21 +0200
-Message-ID: <20260908122838.201719-22-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260908122838.201719-12-johannes@sipsolutions.net>
-References: <20260908122838.201719-12-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="KbXeLyQB"
+Received: (wp-smtpd smtp.wp.pl 667 invoked from network); 8 Sep 2026 14:46:52 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1788871612; bh=QuutxINxLELqJqoI08YM99QjWjCEZXXayskBtNn5lDM=;
+          h=From:To:Cc:Subject;
+          b=KbXeLyQBKiq/uRJrrI7/4OQRrB9TFm/VsmyNarTl/XTUVr1EYGpGCeK2w2KjZd7LL
+           0rAOcsr/IZvXVnx4InqppLRqi2ybpE/iSd/0cu7ge2HFzZopdJ29Fba4AOKCE2r1LO
+           Di5SczAzRHN7Tv9wIaaIsimcmzLB8imGj18s3SrHpt0yOHBTV/vggo6xdUTCKZ11cw
+           jXq7AC8n09TXtJkZHASseRWSDfehSAlLk5O8Qw564skqOYO7Tf9vfQLPFF9KcStv09
+           03S7v6h99JcfQ1in9H5kE7pWpUNTdfEunILVcxzfuz0YjgHnjxFyenr7Pod51CyGPD
+           1FSKuJ98Wte1A==
+Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <johannes@sipsolutions.net>; 8 Sep 2026 14:46:52 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH RESEND v2] wifi: mac80211: queue frames while off-channel
+Date: Tue,  8 Sep 2026 14:46:51 +0200
+Message-Id: <20260908124651.2995-1-stf_xl@wp.pl>
+X-Mailer: git-send-email 2.25.4
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,107 +43,154 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-WP-MailID: c459ff43650ff9bbb31ac43ff463a6e9
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [wUOk]                               
 
-From: Johannes Berg <johannes.berg@intel.com>
+Drivers without FAST_XMIT and hardware scan support currently drop TX
+frames during software scanning while being off-channel. This happens
+in ieee80211_tx_h_check_assoc() before frames reach internal TX queue.
 
-The previous commit 2c51457d930f ("wifi: mac80211: free ack status
-frame on TX header build failure") cleaned up the leak, but still
-left the code a bit messy and the failed SKB didn't get reported
-to userspace.
+Move the off-channel check to invoke_tx_handlers_late(), after
+ieee80211_queue_skb(). Frames can then remain queued and be transmitted
+when the interface returns on-channel. This how TX works currently when
+code goes via ieee80211_xmit_fast() path.
 
-Fix this up by initialising skb->cb[] earlier, which allows using
-ieee80211_free_txskb() and therefore reports it for the failure
-in ieee80211_build_hdr(), and unifies the ieee80211_skb_resize()
-failure path with it.
+Below is rt2x00 driver ping output example while scanning, before and
+after the fix. After the fix, packets are no longer lost. Some have
+increased latency, what is expected behavior.
 
-Assisted-by: LLM
-Fixes: c3e7724b6bc2 ("mac80211: use ieee80211_free_txskb to fix possible skb leaks")
-Link: https://patch.msgid.link/20260904170057.bc197594e025.I2c7d9e50cc9abeb45b8dc1ba9411a3619cc92b10@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+BEFORE:
+64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.61 ms
+64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=3.33 ms # Missed 30
+64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.03 ms
+64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=3.10 ms # Missed 33
+64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=3.04 ms # Missed 35
+64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.05 ms # Missed 37
+64 bytes from 192.168.0.1: icmp_seq=40 ttl=64 time=4.14 ms # Missed 39
+64 bytes from 192.168.0.1: icmp_seq=41 ttl=64 time=4.50 ms
+
+AFTER:
+64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.40 ms
+64 bytes from 192.168.0.1: icmp_seq=30 ttl=64 time=6.10 ms
+64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=4.69 ms
+64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.49 ms
+64 bytes from 192.168.0.1: icmp_seq=33 ttl=64 time=148 ms
+64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=6.83 ms
+64 bytes from 192.168.0.1: icmp_seq=35 ttl=64 time=8.66 ms
+64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=13.0 ms
+64 bytes from 192.168.0.1: icmp_seq=37 ttl=64 time=4.78 ms
+64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.85 ms
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- net/mac80211/tx.c | 38 ++++++++++++++++++++------------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+v1 -> v2: 
+ - drop wrong Fixes tags 
+ - move handler function to keep order in the code  
+ - do not remove info->flags & IEEE80211_TX_CTL_INJECTED check
+ 
+ net/mac80211/tx.c | 52 +++++++++++++++++++++++++----------------------
+ 1 file changed, 28 insertions(+), 24 deletions(-)
 
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c343ed56506a..814399989b5e 100644
+index 91b14112e24f..08a39272f26a 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -2981,10 +2981,23 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	skb = skb_share_check(skb, GFP_ATOMIC);
- 	if (unlikely(!skb)) {
--		ret = -ENOMEM;
--		goto free;
-+		/* skb_share_check() already freed the skb */
-+		if (info_id)
-+			ieee80211_remove_ack_skb(local, info_id);
-+		return ERR_PTR(-ENOMEM);
- 	}
- 
-+	/* set this up so failure paths can clean up ack skb */
-+	info = IEEE80211_SKB_CB(skb);
-+	memset(info, 0, sizeof(*info));
-+
-+	info->flags = info_flags;
-+	if (info_id) {
-+		info->status_data = info_id;
-+		info->status_data_idr = 1;
-+	}
-+	info->band = band;
-+
- 	hdr.frame_control = fc;
- 	hdr.duration_id = 0;
- 	hdr.seq_ctrl = 0;
-@@ -3023,10 +3036,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		head_need += local->tx_headroom;
- 		head_need = max_t(int, 0, head_need);
- 		if (ieee80211_skb_resize(sdata, skb, head_need, ENCRYPT_DATA)) {
--			ieee80211_free_txskb(&local->hw, skb);
--			skb = NULL;
- 			ret = -ENOMEM;
--			goto free;
-+			goto free_txskb;
- 		}
- 	}
- 
-@@ -3053,16 +3064,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 	skb_reset_mac_header(skb);
- 
--	info = IEEE80211_SKB_CB(skb);
--	memset(info, 0, sizeof(*info));
+@@ -269,7 +269,6 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ {
 -
--	info->flags = info_flags;
--	if (info_id) {
--		info->status_data = info_id;
--		info->status_data_idr = 1;
--	}
--	info->band = band;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	bool assoc = false;
+@@ -277,20 +276,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
+ 		return TX_CONTINUE;
+ 
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
+-	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
+-	    !ieee80211_is_probe_req(hdr->frame_control) &&
+-	    !ieee80211_is_any_nullfunc(hdr->frame_control))
+-		/*
+-		 * When software scanning only nullfunc frames (to notify
+-		 * the sleep state to the AP) and probe requests (for the
+-		 * active scan) are allowed, all other frames should not be
+-		 * sent and we should not get here, but if we do
+-		 * nonetheless, drop them to avoid sending them
+-		 * off-channel. See __ieee80211_start_scan() for more.
+-		 */
+-		return TX_DROP;
 -
- 	if (likely(!cookie)) {
- 		ctrl_flags |= u32_encode_bits(link_id,
- 					      IEEE80211_TX_CTRL_MLO_LINK);
-@@ -3086,16 +3087,17 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 					     pre_conf_link_id, link_id);
- #endif
- 			ret = -EINVAL;
--			goto free;
-+			goto free_txskb;
- 		}
- 	}
+ 	if (tx->sdata->vif.type == NL80211_IFTYPE_OCB)
+ 		return TX_CONTINUE;
  
- 	info->control.flags = ctrl_flags;
- 
- 	return skb;
-+ free_txskb:
-+	ieee80211_free_txskb(&local->hw, skb);
-+	return ERR_PTR(ret);
-  free:
--	if (info_id)
--		ieee80211_remove_ack_skb(local, info_id);
- 	kfree_skb(skb);
- 	return ERR_PTR(ret);
+@@ -805,6 +790,33 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	return TX_CONTINUE;
  }
+ 
++static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_check_offchannel(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++
++	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
++		return TX_CONTINUE;
++
++	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
++	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
++	    !ieee80211_is_probe_req(hdr->frame_control) &&
++	    !ieee80211_is_any_nullfunc(hdr->frame_control)) {
++		/*
++		 * When software scanning only nullfunc frames (to notify
++		 * the sleep state to the AP) and probe requests (for the
++		 * active scan) are allowed, all other frames should not be
++		 * sent and we should not get here, but if we do
++		 * nonetheless, drop them to avoid sending them
++		 * off-channel. See __ieee80211_start_scan() for more.
++		 */
++		return TX_DROP;
++	}
++
++	return TX_CONTINUE;
++}
++
+ static __le16 ieee80211_tx_next_seq(struct sta_info *sta, int tid)
+ {
+ 	u16 *seq = &sta->tid_seq[tid];
+@@ -1864,6 +1876,7 @@ static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx)
+ 		goto txh_done;
+ 	}
+ 
++	CALL_TXH(ieee80211_tx_h_check_offchannel);
+ 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+ 	CALL_TXH(ieee80211_tx_h_sequence);
+ 	CALL_TXH(ieee80211_tx_h_fragment);
+@@ -4686,10 +4699,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	queue = ieee80211_select_queue(sdata, sta, skb);
+ 	skb_set_queue_mapping(skb, queue);
+ 
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
+-	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
+-		goto out_free;
+-
+ 	skb = skb_share_check(skb, GFP_ATOMIC);
+ 	if (unlikely(!skb))
+ 		return;
+@@ -4756,11 +4765,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tpt_led_trig_tx(local, len);
+ 
+ 	ieee80211_tx_8023(sdata, skb, sta, false);
+-
+-	return;
+-
+-out_free:
+-	kfree_skb(skb);
+ }
+ 
+ static bool ieee80211_check_mcast_offload(struct ieee80211_sub_if_data *sdata,
 -- 
-2.55.0
+2.50.1
 
