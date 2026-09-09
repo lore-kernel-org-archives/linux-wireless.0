@@ -1,79 +1,129 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B687A3546E9;
-	Wed,  9 Sep 2026 05:53:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A1E2D3727
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 05:58:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788933198; cv=none; b=WpT3vkBkBhqGQHmGio5t3FNTylrnbRPVeLkU/O8x71ZHXmv6dPw8L7I7LUpxKvSlp51mjlbpMLXJdrBvweU/G/Gp+P7qrzhKmq4tnEwR/odu2ZDxNn97pmD620IU1SclvRUJAIL0CgbdzFeGK/DMklpEKY/bVGU5TQsXhnhwZXo=
+	t=1788933484; cv=none; b=S6Lp/qr0kpDuI+keITovp7sKBis+1jN13tc9jbByUqTsrsgimazklBbDZMCO9iLbPVb6U0kWBB5r+sPNjEHhOJ3VnCavtlj1i0aEo/nl0uHzL68/wNXNJXhkz6fdL93Yvh9qleiCA0SBLbTva7EWbvwO+EfBvzDoquWh53gXMH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788933198; c=relaxed/simple;
-	bh=/Mhe+TGwpITJ5l85bZCjeSMXVvHI6Gxgg3Z+in9G8gQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=n2lTeV+DaJWnLiZRgVnyUchQaE4xo9yW6NGq0xIj6+ubX9S6FacG2zSQPddk/axwZusj1Y/7hYzZQJ5z+mwlS0pyP1oOxmpqSl3HqnjQPi17xMGK8I0xFaiCQ+ArOjtuOVFeoBXqD8iEGw6d0XL5fJ5uCT2jy4xivy/zUNRgxCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=pTQTZV0r; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788933484; c=relaxed/simple;
+	bh=/EpkuVH0ZDWvsEZuppDcUom8DCCLZP0xfsa8tUUrMOA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oJOKmBz0ODOzM3n82LSnh1cCoCEZLVMyqJNN4jk7gByyHJdUrQGDiRookx5YPABe2bqT2fEDsYKrhQ9hCpkQgYmfmx8/mMVjO95GRhQaDpVwN1zaHDJlv9UK3aMsu6xKMpC6fEs5XGk5c1wMwlIEoSsw/5hyA7tluph6JAB6R44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=rKXgeSB3; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="pTQTZV0r"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=/Mhe+TGwpITJ5l85bZCjeSMXVvHI6Gxgg3Z+in9G8gQ=;
-	t=1788933196; x=1790142796; b=pTQTZV0rbo7EvBjTgPY0sVuLjB/mcsc1yvaPlgebPIYLl5V
-	88Q0CXFT4ySMSo+aZ0ta6FfvrP6M08vv7i8n+wJ5WAZIzgHiiy6wM0Z+tt35Wwgu/uIM3TNhHy7mz
-	K7oAu8IhKGJtUCMhLe3NlPiv20DesTpaNc/GfR1ps1G5K6H/KLh32lI2jLtecEYitikk+wZtvyUJf
-	8lhP01nK1sqj4PZSo2CG8a2/cD7Z+hmjD2wFH7qytiwE8sGQrFPtyXBLhOtPStfC5kV99ccVA95XI
-	tJeP4V9pNxofWcBZTlmdo5V6JREyH+aSMUN8tHrQWuw8z4hC4e1ujxzwUFwg9tNQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x4BF8-00000007djD-0drd;
-	Wed, 09 Sep 2026 07:53:10 +0200
-Message-ID: <e9b36721c9e2b0b24c89c2e1b5b03b17c438f30c.camel@sipsolutions.net>
-Subject: Re: [PATCH RESEND wireless-next 00/18] wifi: Add Seamless Mobility
- Domain (SMD) AP support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, Jakub Kicinski
-	 <kuba@kernel.org>
-Cc: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>, "David S . Miller"
-	 <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Paolo Abeni
-	 <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
-	linux-wireless@vger.kernel.org
-Date: Wed, 09 Sep 2026 07:53:09 +0200
-In-Reply-To: <e7089219-ed02-4288-a678-660a52289e61@oss.qualcomm.com>
-References: <20260908-smd-v1-0-9fd2d876a1fb@oss.qualcomm.com>
-	 <20260908125017.0fb226c5@kernel.org>
-	 <404004c4c97bf776077685b7ec33a14fa777cd70.camel@sipsolutions.net>
-	 <80266eb9666d6106110d998cb6330868da55bf59.camel@sipsolutions.net>
-	 <20260908132004.29176fec@kernel.org>
-	 <0e950f7f0c3f5a2c1f6476e255716b09876624f4.camel@sipsolutions.net>
-	 <e7089219-ed02-4288-a678-660a52289e61@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="rKXgeSB3"
+X-UUID: 6518d8e2ac1311f18dc8c9802ae25ab1-20260909
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=UVPcEqdvMw0odJtdzU41jB5q01uD8558jbITbPIqW1c=;
+	b=rKXgeSB3BTk+rn1vMYl4yOYOIpvD3VpGu2SeBo1zSCn1Wd2nDBw3IArauOTfcb8xr+QE5A7vhmO2RcDgdUdIvkARxIDgCRhdC/8nhhn8k9AoYJlYJhreiJy37vy1ZZ1GkFARIErRb0ONwt+iKDMdio/ZFYpulqHBSd8D9d3nJj0=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:3f377e0f-d97e-4f9d-a1c3-deea4abcdf14,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:447b99e2-72a5-4ba1-af40-18bbd6ea8ffd,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 6518d8e2ac1311f18dc8c9802ae25ab1-20260909
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 87215197; Wed, 09 Sep 2026 13:57:52 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Wed, 9 Sep 2026 13:57:51 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Wed, 9 Sep 2026 13:57:51 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7928: only do CLC hw type sanity check on MT7925
+Date: Wed, 9 Sep 2026 13:57:50 +0800
+Message-ID: <20260909055750.929102-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Tue, 2026-09-08 at 17:20 -0700, Jeff Johnson wrote:
->=20
-> Apologies for the AI-like commit messages. Those are at my prompting sinc=
-e I
-> want these patches to be understandable by folks who may not know or
-> understand the underlying details of SMD roaming so I requested they cont=
-ain
-> enough detail that referencing the spec should not be necessary.
->=20
-> AFAIK none of this code is AI generated.
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-Did you read it? The comments (in patch 1 we were talking about) are
-also all clearly generated.
+mt7925_load_clc() is shared by MT7925, MT7927 and MT7928 (0x7935 is
+folded into 0x7928 in pci.c). The hw type sanity check it does on every
+CLC region is MT7925-specific twice over: the encap bits live at
+efuse offset MT_EE_HW_TYPE (0xa71) in the MT7925 layout, and only
+MT7925 CLC blobs carry that hw type in their t0/t2 header. On
+MT7927/MT7928 the driver therefore reads a byte that means nothing on
+those parts and compares it against a header field that was never
+populated, so a mismatch silently skips every CLC region and leaves
+phy->clc[] empty - no country/regd table gets installed at all.
 
-johannes
+Gate both the efuse read and the two header checks on is_mt7925(), so
+MT7927/MT7928 accept the CLC regions from their own firmware as-is.
+No functional change for MT7925: PCIe still reads 0xa71 and filters by
+encap type, USB still runs with hw_encap = 0 as before.
+
+Fixes: 356b39285559 ("wifi: mt76: connac3: refactor CLC header type validation logic")
+
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c    | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index bd63789ab8f7..bf2cb6172cc8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -855,7 +855,7 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 	if (!mt7925_regd_clc_supported(dev))
+ 		return 0;
+ 
+-	if (mt76_is_mmio(&dev->mt76)) {
++	if (is_mt7925(&dev->mt76) && mt76_is_mmio(&dev->mt76)) {
+ 		ret = mt7925_mcu_read_eeprom(dev, MT_EE_HW_TYPE, &hw_encap);
+ 		if (ret)
+ 			return ret;
+@@ -906,14 +906,16 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 		if (phy->clc[clc->idx])
+ 			continue;
+ 
+-		/* header content sanity */
+-		if ((clc->idx == MT792x_CLC_BE_CTRL || clc->idx == MT792x_CLC_REGD) &&
+-		    u8_get_bits(clc->t2.type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
+-			continue;
++		/* header content sanity, only MT7925 encodes hw type in CLC */
++		if (is_mt7925(&dev->mt76)) {
++			if ((clc->idx == MT792x_CLC_BE_CTRL || clc->idx == MT792x_CLC_REGD) &&
++			    u8_get_bits(clc->t2.type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
++				continue;
+ 
+-		if (clc->idx != MT792x_CLC_BE_CTRL && clc->idx != MT792x_CLC_REGD &&
+-		    u8_get_bits(clc->t0.type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
+-			continue;
++			if (clc->idx != MT792x_CLC_BE_CTRL && clc->idx != MT792x_CLC_REGD &&
++			    u8_get_bits(clc->t0.type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
++				continue;
++		}
+ 
+ 		phy->clc[clc->idx] = devm_kmemdup(mdev->dev, clc,
+ 						  le32_to_cpu(clc->len),
+-- 
+2.18.0
+
