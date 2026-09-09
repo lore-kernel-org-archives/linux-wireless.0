@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1BB56853B;
-	Wed,  9 Sep 2026 15:26:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED1633438F;
+	Wed,  9 Sep 2026 15:45:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788967565; cv=none; b=uTx9WCtcMjDCbEEDjCSGndnG8C2Q1eWL3D8SO+P4DL6liJ+Ep2nesRc+kGZwYyvTyY3KPRPK7uJ+qeqFRlYvyfY9qIbHJjIiZQmBiAllelA9FiYO9cyM6BUA4sOE/Vk4CwDhBQWgwla2nW4WHqViaQXjizy9mohPrqsrFpuWFwA=
+	t=1788968745; cv=none; b=XCpPkH/ASFU8nliHimOgqCm1uxIy9/IHMFllt9ZPyQEvlw9Ks4ymopzH7j/mw+qWq6ejeMNmsprXD+W+xxNs97vDmqb5AwScgbTJdrilcPHN25yxa4QoutA2P3yx33jGCderwpsEk0oUpzSzIt8w4x928TgllWqpou8mpJ3rUCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788967565; c=relaxed/simple;
-	bh=Cf2hreyau1WZx40HIJYSVkVGQzRG0li2rax//M/ZeU4=;
+	s=arc-20240116; t=1788968745; c=relaxed/simple;
+	bh=I2rle+zu/ri+CODGl/XdnfKTXVC90SKls9odin13bqs=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tBJpHiz1pGYoLv7CgHmR0aAEksWAIrjwwp3BhlunDgSQ3/6WR/xEFK40l34ojyXxILN1yxhzd0gMgo9pFj/F/IXpXFeKfGiGRoIMazgWEBYxd+3o0BgAQJ4Gl2TeMm2SFO/Y6PbDJzV5XIAZwV70eYkYySID0EIKGqR5Ug27BtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MFrRqU5N; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=LCPUicd6ZpNeYFFzz/nM6+VYykEYvMduJIytuCqb6xVQhjU2WxJJ0cU4LL/YM5qyR5Pu2KmRaeUWGq33kt0/M+CmoDsjvxiRU0oMP44go4Mlkktw6nJaH8Aw0NgGdySKtsBsvck9XNjdpzKQZyPTCMHmQUbTQbny3M9B/r7ahzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J21aYGhd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MFrRqU5N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 040F61F00A3A;
-	Wed,  9 Sep 2026 15:26:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J21aYGhd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20C9D1F00A3A;
+	Wed,  9 Sep 2026 15:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788967563;
-	bh=VmQN5R3CMf9j81dcdOm9MAKp3S2PpYHRXM8Hl8m6TOs=;
+	s=k20260515; t=1788968743;
+	bh=sakVHRs3/NQUtJQMSRKwg9fScIxwuZv64HPK97858Jk=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=MFrRqU5NzXxhXulydHviLVF6dDyfaTnZkx4JVwjYIM0iKTXRE3XWW7D6KjTMYndtJ
-	 YTJWgw2vba5sJJY+iHWMQTmo6DykvxjfPZQ75Fq4VoNSoospeE+eJWNTKMP5n+iNXe
-	 6jPTbBb45uaRQvfZgV4694yq1JKVkwi1ntvhd0zncE1DdwLbix5x5TNYImmTTSd2Uf
-	 60zyY6bvTUW6YLSGCZCQsRtyB1SmcgzM2QL3h1nqgDkFuUMyTGKtJhriVGziKDsN3q
-	 jOAe42bQt4u0o6/bS1fXHBgizu0I+2ILe4N/OLLQdc31FlHJB/MsEX+/cE6OcG5qo8
-	 nVkdrX5ivac5g==
-Subject: Re: [PATCH] wifi: cfg80211: avoid holding rtnl_mutex across all
- cfg80211_leave() calls
+	b=J21aYGhdTBRlQ5DAhIgqkQQyWchCjk/EpO6vfuvdcusk6aBHCdPdjiJbaI1prqaO4
+	 fo7KG6Flt+LHGoSEcsZAONN3aCFxKsbO9c+vk4pY5RQmcHlSJz6nK8tNWk8bA+7uxN
+	 C1WVPP1gSrU5FOK5BLlPoWIVNwUw+9AZc9/kDzVG5uxQTqwBrwEZ0FikWailvsqAxO
+	 q4DWpv2mRqIxLOTkczY60R2EmNxwjeCfLMGHg7itRCdDd/pH7XpCq5L6iCv0HTf9Ys
+	 8GEBUKlKuiMhg8gHN+N2N+5qn7ynwno6YHq7Cy9RzWEAmGWA1s7tDBsD7o6gRbsU5c
+	 iZ3iWKhjYxRTw==
+Subject: Re: [PATCH] wifi: mm81x: bound response memcpy by actual skb length
 From: netdev-bot+sashiko@kernel.org
-To: omermetekaya0@gmail.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
- kvalo@kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- horms@kernel.org, syzbot+adeb8550754921fece20@syzkaller.appspotmail.com,
- syzbot+101224300649c3eb8af4@syzkaller.appspotmail.com,
- syzbot+8141dcbd23a8f857798a@syzkaller.appspotmail.com,
- syzbot+b0ae8f1abf7d891e0426@syzkaller.appspotmail.com,
- syzbot+d6bbe0f5705cb8a5aa2b@syzkaller.appspotmail.com, kuba@kernel.org
-Date: Wed, 09 Sep 2026 15:26:02 +0000
-Message-ID: <178896756249.219967.143377989987631735@kernel.org>
-In-Reply-To: <20260906002657.620076-2-omermetekaya0@gmail.com>
-References: <20260906002657.620076-2-omermetekaya0@gmail.com>
+To: elb12345@hotmail.co.uk
+Cc: lachlan.hodges@morsemicro.com, dan.callaghan@morsemicro.com,
+ kvalo@kernel.org, arien.judge@morsemicro.com, johannes@sipsolutions.net,
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ stable@vger.kernel.org, kuba@kernel.org
+Date: Wed, 09 Sep 2026 15:45:42 +0000
+Message-ID: <178896874260.219967.8962297974075267128@kernel.org>
+In-Reply-To: =?utf-8?q?=3CAS8P251MB0001B37B237975CAE6092B80C8B32=40AS8P251MB?=
+ =?utf-8?q?0001=2EEURP251=2EPROD=2EOUTLOOK=2ECOM=3E?=
+References: =?utf-8?q?=3CAS8P251MB0001B37B237975CAE6092B80C8B32=40AS8P251MB0?=
+ =?utf-8?q?001=2EEURP251=2EPROD=2EOUTLOOK=2ECOM=3E?=
 X-sashiko-severity: High
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -54,186 +52,225 @@ MIME-Version: 1.0
 Thank you for your contribution! Sashiko AI review found 3 potential
 issue(s) to consider:
 
-Critical: 0 · High: 2 · Medium: 1 · Low: 0
+Critical: 0 · High: 3 (1) · Medium: 0 · Low: 0
 
-- [High] The patch only splits the rtnl critical section at wiphy
-  granularity: rtnl_lock() is taken once per snapshot entry and held…
-- [High] If a new wiphy device is registered between the two RCU read
-  sections, the array population loop will break early and silently skip…
-- [Medium] reg_check_chans_work() (net/wireless/reg.c:2464) newly depends
-  on a kmalloc_array() allocation and silently abandons the entire…
+- [High] Incomplete fix: mm81x_cmd_resp_process() still dereferences the
+  device-supplied response header (and, in the else branch, the 4-byte…
+- [High] The patch adopts silent truncation as the malformed-response
+  policy: at command.c:207-213 `ret = 0` is set first, then the copy…
+- [High] The newly added `length = min_t(int, length, skb->len);`
+  (command.c:212) narrows the unsigned `skb->len` to `int`.
+
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the memcpy the
+  patch hardens writes through `dest_resp`, read from…
 
 --
 
-wifi: cfg80211: avoid holding rtnl_mutex across all cfg80211_leave() calls
+wifi: mm81x: bound response memcpy by actual skb length
 
-This changes reg_check_chans_work() to snapshot cfg80211_rdev_list under RCU
-with a device reference on each entry, then take rtnl_lock() once per device
-instead of once for the whole walk.  A wiphy.registered check is added after
-each rtnl acquisition to skip devices that went away in the meantime.
+This adds a third min_t() clamp in mm81x_cmd_resp_process() so that the
+response memcpy is also limited by skb->len, in addition to the caller's
+expected length and the firmware-reported hdr.len.  The stated goal is to
+stop a malformed device response from making the copy read past the valid
+skb data.
 
-Closes: https://syzkaller.appspot.com/bug?extid=adeb8550754921fece20
-Closes: https://syzkaller.appspot.com/bug?extid=101224300649c3eb8af4
-Closes: https://syzkaller.appspot.com/bug?extid=8141dcbd23a8f857798a
-Closes: https://syzkaller.appspot.com/bug?extid=b0ae8f1abf7d891e0426
-Closes: https://syzkaller.appspot.com/bug?extid=d6bbe0f5705cb8a5aa2b
-
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index a8336baf85dc6..7a3f1e470e143 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -2463,15 +2463,49 @@ static void reg_leave_invalid_chans(struct wiphy *wiphy)
->  
->  static void reg_check_chans_work(struct work_struct *work)
->  {
-> -	struct cfg80211_registered_device *rdev;
-> +	struct cfg80211_registered_device *rdev, **snap;
-> +	int i, n = 0;
->  
->  	pr_debug("Verifying active interfaces after reg change\n");
-> -	rtnl_lock();
->  
-> -	for_each_rdev(rdev)
-> -		reg_leave_invalid_chans(&rdev->wiphy);
-> +	/*
-> +	 * Snapshot rdev pointers under RCU with a device reference so they
-> +	 * cannot be freed between per-device rtnl acquisitions. Using a
-> +	 * per-device rtnl_lock() instead of holding it across all devices
-> +	 * avoids starving other rtnl waiters when cfg80211_leave() is slow.
-> +	 */
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list)
-> +		n++;
-> +	rcu_read_unlock();
->  
-> -	rtnl_unlock();
-> +	if (!n)
-> +		return;
-> +
-> +	snap = kmalloc_array(n, sizeof(*snap), GFP_KERNEL);
-> +	if (!snap)
-> +		return;
-
-[Severity: Medium]
-Does this silently drop the whole regulatory enforcement pass when the
-allocation fails?
-
-Before this change reg_check_chans_work() could not fail: it was just
-rtnl_lock() + for_each_rdev() + reg_leave_invalid_chans().  Now a transient
-kmalloc_array() failure returns without touching any wiphy, so
-reg_leave_invalid_chans() never runs for any device in this round.
-
-The only place that queues the work is reg_check_channels():
-
-net/wireless/reg.c:reg_check_channels() {
-	mod_delayed_work(system_power_efficient_wq,
-			 &reg_check_chans,
-			 msecs_to_jiffies(REG_ENFORCE_GRACE_MS));
-}
-
-and its callers are all regulatory-change events (set_reg request, country
-IE, driver hint, indoor flag).  Nothing re-arms the work on this failure
-path, so interfaces that the newly applied regdomain forbids (AP beaconing,
-associated STA, joined mesh) would keep running until some unrelated later
-regdomain change happens to queue the work again.
-
-Would rescheduling the work on allocation failure, or avoiding the
-snapshot array entirely (for example restarting from the list head using
-the rdev list generation counter), be preferable here?
-
-> +
-> +	i = 0;
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
-> +		if (i >= n)
-> +			break;
-> +		get_device(&rdev->wiphy.dev);
-> +		snap[i++] = rdev;
-> +	}
-> +	rcu_read_unlock();
-> +	n = i;
-> +
-> +	for (i = 0; i < n; i++) {
-> +		rtnl_lock();
-> +		if (snap[i]->wiphy.registered)
-> +			reg_leave_invalid_chans(&snap[i]->wiphy);
-> +		rtnl_unlock();
-> +		put_device(&snap[i]->wiphy.dev);
-> +	}
+> diff --git a/drivers/net/wireless/morsemicro/mm81x/command.c b/drivers/net/wireless/morsemicro/mm81x/command.c
+> index afb7ee9bb236f..591e5ba107533 100644
+> --- a/drivers/net/wireless/morsemicro/mm81x/command.c
+> +++ b/drivers/net/wireless/morsemicro/mm81x/command.c
+> @@ -209,6 +209,7 @@ int mm81x_cmd_resp_process(struct mm81x *mors, struct sk_buff *skb)
+>  		length = min_t(int, length,
+>  			       le16_to_cpu(src_resp->hdr.len) +
+>  				       sizeof(struct host_cmd_header));
+> +		length = min_t(int, length, skb->len);
 
 [Severity: High]
-The count pass and the fill pass are two separate RCU read
-sections with nothing held in between, so n can be stale by the
-time snap[] is populated - and the truncation is silent.
+Should this clamp use an unsigned type instead of int?
 
-wiphy_register() publishes a new radio with
-list_add_rcu(&rdev->list, &cfg80211_rdev_list), i.e. at the head
-of the list.  If a device is registered (USB adapter plugged in, a
-new radio created) between the two rcu_read_lock() sections, the
-second list_for_each_entry_rcu() starts at that brand new rdev,
-fills snap[] with the first n entries and then hits the i >= n
-break.  The entries that fall off are the ones at the *tail*, i.e.
-the oldest radios - exactly the ones most likely to have
-associated STAs, beaconing APs or joined meshes that the new
-regdomain forbids.  reg_leave_invalid_chans() is never called for
-them in this round, and since reg_check_channels() is only armed
-from regulatory-change events, nothing retries; those interfaces
-keep operating on channels the new regdomain disallows.
+skb->len is unsigned int, and min_t() just assigns into the requested
+type with no signedness check:
 
-Note this is a functional regression against the previous
-for_each_rdev() walk under rtnl, which by construction saw a
-consistent list.
+include/linux/minmax.h:
+    #define __cmp_once_unique(op, type, x, y, ux, uy) \
+        ({ type ux = (x); type uy = (y); __cmp(op, ux, uy); })
+    ...
+    #define min_t(type, x, y) __cmp_once(min, type, x, y)
 
-cfg80211_rdev_list is written under rtnl, so would it be simpler
-to build the snapshot in a single pass under rtnl_lock() (counting
-and get_device() together, or via cfg80211_rdev_list_generation),
-then drop rtnl and re-acquire it per device for the
-reg_leave_invalid_chans() calls?  If you want to keep the RCU
-two-pass form, what is the plan for the list growing between the
-passes - re-count and retry, or over-allocate and re-check?
+So for any skb->len above INT_MAX, "int uy = skb->len" is negative, always
+wins the min, and overrides the two correct bounds above it.  memcpy()
+then converts that negative length to a near-SIZE_MAX size_t.
+
+Can skb->len get that large here?  mm81x_skbq_dispatch_work() in skbq.c
+pulls the outer header using device-supplied values without first checking
+them against the skb length:
+
+    __skb_pull(pfirst, sizeof(*hdr) + hdr->offset);
+
+and __skb_pull() in include/linux/skbuff.h only does:
+
+    skb->len -= len;
+    if (unlikely(skb->len < skb->data_len)) {
+        ...
+        BUG();
+    }
+
+With data_len == 0 for these linear RX skbs, the subtraction wraps
+silently.  The precondition looks device controlled: mm81x_yaps_hw_read_pkts()
+sizes the skb purely from the chip delimiter (dev_alloc_skb(pkt_size)
+followed by skb_put(pkts[i].skb, pkt_size)), and the only later adjustment
+in mm81x_yaps_read_pkt() is
+
+    skb_len = sizeof(*hdr) + hdr->offset + le16_to_cpu(hdr->len);
+    ...
+    skb_trim(skb, skb_len);
+
+which can only shrink.  A small pkt_size combined with a large u8
+hdr->offset therefore leaves skb->len wrapped.
+
+Before this patch the copy length was bounded only by resp_cb->length and
+hdr.len + sizeof(struct host_cmd_header), both small positive values, so
+the same malformed input gave a bounded stale read.  Does the new line turn
+that into an unbounded memcpy?  Note that fortify cannot catch it either,
+since dest_resp is a struct host_cmd_resp * with a flexible array member,
+so __struct_size() is unknown.
+
+Would min_t(u32, ...) or skb_headlen() be the right comparison type here?
 
 [Severity: High]
-Does this actually bound the rtnl hold time?  The split here is at wiphy
-granularity only: rtnl is taken once and held across the complete
-reg_leave_invalid_chans() pass for that wiphy.
+Does this cover the other reads of the same buffer?
 
-net/wireless/reg.c:reg_leave_invalid_chans() {
-	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-		bool valid;
+mm81x_cmd_resp_process() dereferences the device-supplied header long
+before reaching the clamped memcpy, with no check that skb->len covers
+sizeof(struct host_cmd_resp) (12-byte host_cmd_header plus the __le32
+status):
 
-		scoped_guard(wiphy, wiphy)
-			valid = reg_wdev_chan_valid(wiphy, wdev);
-		if (!valid)
-			cfg80211_leave(rdev, wdev, -1);
-	}
-}
+    u16 resp_message_id = le16_to_cpu(src_resp->hdr.message_id);
+    u16 resp_host_id = le16_to_cpu(src_resp->hdr.host_id);
+    ...
+    if (!HOST_CMD_IS_RESP(src_resp)) {
+        ret = mm81x_mac_event_recv(mors, skb);
 
-That inner loop is unchanged and can call cfg80211_leave() an unbounded
-number of times, and each call goes into driver ops:
+and the branch immediately below the memcpy, taken whenever the caller
+passed no response buffer, reads bytes 12..15 with no skb->len bound at
+all:
 
-reg_leave_invalid_chans() -> cfg80211_leave() -> cfg80211_leave_locked() ->
-cfg80211_disconnect() / cfg80211_stop_ap() / cfg80211_leave_mesh() /
-cfg80211_stop_nan()
+    } else {
+        ret = le32_to_cpu(src_resp->status);
+    }
 
-with cfg80211_leave() itself requiring rtnl:
+skb->len on entry is fully device derived: mm81x_yaps_read_pkt() trims to
+sizeof(*hdr) + hdr->offset + le16_to_cpu(hdr->len) and
+mm81x_skbq_dispatch_work() pulls sizeof(*hdr) + hdr->offset, so a chip
+reporting hdr.len == 0 on the command channel hands this function an skb
+with skb->len == 0.  The sibling consumer reached from the
+HOST_CMD_IS_RESP() branch, mm81x_mac_event_recv() in mac.c, reads
+message_id, host_id and vif_id from skb->data with the same lack of a
+length check.
 
-net/wireless/core.c:cfg80211_leave() {
-	ASSERT_RTNL();
-	...
-	guard(wiphy)(&rdev->wiphy);
+Would a single early rejection, along the lines of
 
-	cfg80211_leave_locked(rdev, wdev, link_id);
-}
+    if (skb->len < sizeof(struct host_cmd_resp))
+        goto exit_free;
 
-So when the interfaces are concentrated on one wiphy (many wdevs on a single
-radio, or one slow leave op), the longest contiguous rtnl section is the same
-as before, and rtnl waiters such as inet_rtm_newaddr, tun_chr_close and
-nsim_destroy can still exceed hung_task_timeout_secs.  Is that consistent
-with the commit message claim that the reported hangs are closed?
+be the better shape?  That would also make the clamp added here redundant.
 
-Wouldn't a fix need to drop and re-acquire rtnl between wdevs, with
-per-wdev re-validation after re-acquiring (re-lookup by wiphy_idx plus a
-wdev registered re-check), rather than only between devices?
+[Severity: High]
+Is silent truncation the intended policy for a malformed response?
+
+ret = 0 is assigned before both clamps, so a copy shorter than
+sizeof(struct host_cmd_resp) is reported to the caller as a successful
+command, and mm81x_cmd_resp_process() records nothing about the response
+having been incomplete.
+
+Every caller passes an uninitialised on-stack response struct, for example
+in mm81x_cmd_get_max_txpower():
+
+    struct host_cmd_resp_get_max_txpower resp;
+
+    ret = mm81x_cmd_tx(mors, (struct host_cmd_resp *)&resp,
+                       (struct host_cmd_req *)&req, sizeof(resp), 0);
+    if (!ret)
+        *out_power_mbm = QDBM_TO_MBM(le32_to_cpu(resp.power_qdbm));
+
+mm81x_cmd_get_capabilities() and mm81x_cmd_add_if() do the same, and none
+of them use = {} or memset().
+
+mm81x_cmd_tx() then takes the status out of that same buffer:
+
+    ret = (length && resp) ? le32_to_cpu(resp->status) :
+                             resp_cb->ret;
+    if (ret > 0 || ret < -MAX_ERRNO)
+        ret = -EIO;
+
+So if the device reports hdr.len < 4, or skb->len < 16, the status word at
+offset 12 is never written and the command return status comes from
+uninitialised kernel stack, filtered only when it happens to fall outside
+the errno range.  If the truncation instead lands between 16 bytes and
+sizeof(resp), status is copied as 0 and the payload fields stay
+uninitialised while still being consumed: resp.hdr.vif_id in
+mm81x_cmd_add_if(), resp.power_qdbm in mm81x_cmd_get_max_txpower(), and
+the whole capability block copied into mors->fw_caps in
+mm81x_cmd_get_capabilities().
+
+Would rejecting the short response (ret = -EINVAL; goto exit;) or zeroing
+the untouched tail be preferable to extending the clamp chain?
+
+>  		memcpy(dest_resp, src_resp, length);
+>  	} else {
+>  		ret = le32_to_cpu(src_resp->status);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but the memcpy being hardened
+here writes through dest_resp, which is read out of a pending command
+skb whose lifetime does not look protected.
+
+mm81x_skbq_tx_pending() in skbq.c peeks mq->pending and drops mq->lock
+before returning the raw pointer:
+
+    spin_lock_bh(&mq->lock);
+    pfirst = skb_peek(&mq->pending);
+    spin_unlock_bh(&mq->lock);
+    return pfirst;
+
+mm81x_cmd_resp_process() then uses that pointer while holding only
+mors->cmd_lock: mm81x_skbq_pull_hdr_post_tx(cmd_skb), the read of
+resp_cb->length and resp_cb->dest_resp from IEEE80211_SKB_CB(cmd_skb),
+the memcpy, and the resp_cb->ret store.
+
+Meanwhile mm81x_yaps_flush_cmds() in yaps.c purges the command TX queue
+first:
+
+    if (yaps->flags & MM81X_HIF_FLAGS_COMMAND) {
+        mm81x_skbq_finish(&yaps->cmd_q);
+        mm81x_skbq_finish(&yaps->cmd_resp_q);
+    }
+
+and mm81x_skbq_finish() only cancels the dispatch work for to-host queues:
+
+    if (mq->flags & MM81X_HIF_FLAGS_DIR_TO_HOST)
+        cancel_work_sync(&mq->dispatch_work);
+    mm81x_skbq_purge(mq, &mq->skbq);
+    mm81x_skbq_purge(mq, &mq->pending);
+
+For the TX-side cmd_q there is no work to cancel, so the pending command
+skb is freed under cmd_q->lock only, and this happens before the
+cmd_resp_q finish cancels the response dispatch work.  The callers
+(mm81x_mac_flush(), mm81x_mac_restart(), mm81x_mac_unregister()) hold
+neither mors->cmd_lock nor mors->cmd_wait and do not flush mors->net_wq.
+
+Can the net_wq dispatch worker therefore be inside
+mm81x_cmd_resp_process() when the skb it peeked is freed, giving a
+skb_pull on freed memory, a resp_cb read from freed memory, and a memcpy
+through a stale dest_resp?  The same lockset gap would also let
+mm81x_cmd_tx() read resp_cb->ret and call mm81x_skbq_skb_finish(cmd_q,
+skb, NULL) on an already freed skb.
+
+Would holding cmd_lock (or cmd_q->lock) across the peek-and-use region,
+or making the flush path take cmd_lock and cancel the response dispatch
+work before purging cmd_q, be the right fix?
+
+>  	}
 
 -- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260906002657.620076-2-omermetekaya0%40gmail.com
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/AS8P251MB0001B37B237975CAE6092B80C8B32%40AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
