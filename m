@@ -1,55 +1,51 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5B72877DE
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 07:02:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF2533C4565
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 07:02:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788937334; cv=none; b=cKakvrILpa9gufmGhad+vFdslH6c8o6AwPEM4P54/TNlOqaT9eNvhcwwFg5YL5RQUkE30GMR7gFxHcVGqiTaiVYR3HaWyNrK3ZvldOwKc9s3QMnXo9Mpan3PFCtSiyKEqGDOb8X397L+Nl4XGhk1lnv3bpXfnBbGbI5V98CL+Js=
+	t=1788937334; cv=none; b=HF5arl6i0mGrnYee66jHkZ8H1GCeHlq/KFLA12bsXdCT47nc0iqMrGjSeyxTmAi0ljj0KU9zmbfl7JsgBafQZJlpE3F+4PB7AK6JcSPCDO9YOQ4gkYZVFvXsq7pXW+5jkSWSPMthIRHwA0m895SnHF5+VaUYQKN4Ob2vHfwkIME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788937334; c=relaxed/simple;
-	bh=jcVlkOnTdeMwQSzKxDBbqxQk2uESwRKwZ3ToR4nCJy8=;
+	bh=6l7DFrpJ/hnBMxBD/ZA17+T41iwcdls7v/Hc0n5c6XA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GSu0FCOkfYZtZ4qbhXSoIjUJYOVkV0xBuUrryDxppPTrE6QfFeJswzXxe4b66H5iNObrsayzmc+XzsBFjcN00hntEjHXF5EYwXc6jsRt4rpnsCn7MXCA+NscsmGqx6xc1e1kvFyld9EkbF354dZx0X0bEyCBOZOQSGbGCmoTL9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=lxcL5250; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=HbY1FP7nQYLZAg1VuUSxafKhJVzNFz+/bt1LcDipiJiRpT63gkz6KgnrVBxySYG4jF01f2fltNFhIMXFccpFICWVskQtujBcLGqRVRds1/kgmknp6orDFJhpx4J0jJ0i+urQDX04eyOuNoKxiyv9mOP3H8I/UW2C11CIm2Rf41k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=SDmAdali; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="lxcL5250"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 689727Lr8357262, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="SDmAdali"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6897255R0357181, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788937328; bh=yP6tOcyXIaYPRkWp3r9SeiITEsw0htPkWUD0eTN75Zs=;
+	t=1788937326; bh=n/bUlT0r6mMgGV/wiBS5zcTjsIuF5xWFzg6DqJbQRpU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=lxcL5250vKT0f93Sl54hul7gyoGxLaFV8EEWxXvrE1PDr0AUyL3Xuu1B5G4RiH94o
-	 WM9zWG8bhfkPiZrUojUsx/W221Hmqaum+MFn3BKjaYgQWMqmosSRsXcw2ZLkux79WE
-	 FVLfmscZqfiBcuChte3c7PVts50wpdChZhDPaPPee+UYhnlKgFglePeDCh/i0eVo6O
-	 1lWn2SVPgfvUFzzCx/NCRpYuu+GAAf7luJ2E+b+RND2tTx+y6vsHD63g4VXorFIuej
-	 94Oh7EkXHLybtvNQ3NtBc5Ub2zV4QR2WUtm0EMFjoGkAFzFnIs+UNfJkRZ8e13Htac
-	 +2LNPNK9fwtLQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 689727Lr8357262
+	b=SDmAdali0vbT+3WZQ/uzxxRu6UfoYckjVo3Gm2QI5et0m7k/gx57loadlzZA5A392
+	 kEea+DLJnNMneIjC/GyoJI0R1GNkByXjRGl3iguJErXKV1Vdofuzre89+zEtMW+duM
+	 Qk7Jbkuz+CgIzqit0lOUhTvWpLqj47Tjqjo3tdKS0ye4loa2qQ7wFTBLoCjwDKKO7m
+	 xYURBSjtMg5Cl7oR96OFwDtSBTx5HbFiQinO3GYzjK8weBYUK8XCxMX7HLKL5VaJac
+	 FLKUdRUy/MafOLG7LN1RRLUxRz9/SOr+kJIkXqpoCiiTZyJ/o+gZghZfPbp34ZCf8H
+	 4HEgUtWVYODGA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6897255R0357181
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 9 Sep 2026 15:02:07 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 9 Sep 2026 15:02:07 +0800
+	for <linux-wireless@vger.kernel.org>; Wed, 9 Sep 2026 15:02:05 +0800
 Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 9 Sep 2026 15:02:04 +0800
+ 15.2.2562.43; Wed, 9 Sep 2026 15:01:58 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43 via Frontend
- Transport; Wed, 9 Sep 2026 15:02:04 +0800
+ Transport; Wed, 9 Sep 2026 15:01:57 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <dian_syuan0116@realtek.com>, <echuang@realtek.com>,
 	<phhuang@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 15/15] wifi: rtw89: phy: correct PHY-1 EDCCA report register access
-Date: Wed, 9 Sep 2026 15:00:04 +0800
-Message-ID: <20260909070004.35353-16-pkshih@realtek.com>
+Subject: [PATCH rtw-next 14/15] wifi: rtw89: 8852b: update default value for ANA SWR
+Date: Wed, 9 Sep 2026 15:00:03 +0800
+Message-ID: <20260909070004.35353-15-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260909070004.35353-1-pkshih@realtek.com>
 References: <20260909070004.35353-1-pkshih@realtek.com>
@@ -62,70 +58,45 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Eric Huang <echuang@realtek.com>
+The RTL8852BE randomly card drops on certain platforms. Adjust ANA_SWR
+behavior by compensation parameters to stabilize the switching regulator
+output to prevent unwanted drop.
 
-RTL8922D fills the PHY-1 rpt_b entry with the address of rpt_a.
-
-The report select of RTL8922A and RTL8922D has a per-PHY instance, but it
-was written without the PHY index, so PHY-1 read its report registers
-through the select of PHY-0. Write it with rtw89_phy_write32_idx() instead.
-
-Signed-off-by: Eric Huang <echuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy.c      | 12 ++++++------
- drivers/net/wireless/realtek/rtw89/rtw8922d.c |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtw89/reg.h      | 2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c | 5 +----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c33b888bc0e3..074865665b16 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -8712,8 +8712,8 @@ static void rtw89_phy_edcca_log(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *b
- 	rtw89_phy_write32_mask(rtwdev, edcca_p_regs->rpt_sel,
- 			       edcca_p_regs->rpt_sel_mask, 0);
- 	if (rtwdev->chip->chip_id == RTL8922A || rtwdev->chip->chip_id == RTL8922D) {
--		rtw89_phy_write32_mask(rtwdev, edcca_regs->rpt_sel_be,
--				       edcca_regs->rpt_sel_be_mask, 0);
-+		rtw89_phy_write32_idx(rtwdev, edcca_regs->rpt_sel_be,
-+				      edcca_regs->rpt_sel_be_mask, 0, bb->phy_idx);
- 		per20_bitmap = rtw89_phy_read32_mask(rtwdev, edcca_p_regs->rpt_a,
- 						     MASKBYTE0);
- 	}
-@@ -8738,16 +8738,16 @@ static void rtw89_phy_edcca_log(struct rtw89_dev *rtwdev, struct rtw89_bb_ctx *b
- 	pwdb_s40 = u32_get_bits(tmp, MASKBYTE2);
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index e85af8713777..11b30be8f880 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -265,7 +265,7 @@
+ #define R_AX_SPSANA_ON_CTRL1 0x0224
  
- 	if (rtwdev->chip->chip_id == RTL8922A || rtwdev->chip->chip_id == RTL8922D) {
--		rtw89_phy_write32_mask(rtwdev, edcca_regs->rpt_sel_be,
--				       edcca_regs->rpt_sel_be_mask, 4);
-+		rtw89_phy_write32_idx(rtwdev, edcca_regs->rpt_sel_be,
-+				      edcca_regs->rpt_sel_be_mask, 4, bb->phy_idx);
- 		tmp = rtw89_phy_read32(rtwdev, edcca_p_regs->rpt_b);
- 		pwdb[0] = u32_get_bits(tmp, MASKBYTE3);
- 		pwdb[1] = u32_get_bits(tmp, MASKBYTE2);
- 		pwdb[2] = u32_get_bits(tmp, MASKBYTE1);
- 		pwdb[3] = u32_get_bits(tmp, MASKBYTE0);
+ #define R_AX_SPS_ANA_ON_CTRL2 0x0228
+-#define RTL8852B_RFE_05_SPS_ANA 0x4A82
++#define RTL8852B_DEFAULT_SPS_ANA 0x4F42
  
--		rtw89_phy_write32_mask(rtwdev, edcca_regs->rpt_sel_be,
--				       edcca_regs->rpt_sel_be_mask, 5);
-+		rtw89_phy_write32_idx(rtwdev, edcca_regs->rpt_sel_be,
-+				      edcca_regs->rpt_sel_be_mask, 5, bb->phy_idx);
- 		tmp = rtw89_phy_read32(rtwdev, edcca_p_regs->rpt_b);
- 		pwdb[4] = u32_get_bits(tmp, MASKBYTE3);
- 		pwdb[5] = u32_get_bits(tmp, MASKBYTE2);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922d.c b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-index 2325e646c487..41e2aa1c8f78 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-@@ -271,7 +271,7 @@ static const struct rtw89_edcca_regs rtw8922d_edcca_regs = {
- 		.rpt_sel_mask		= B_EDCCA_RPT_SEL_BE4_MSK,
- 	}, {
- 		.rpt_a			= R_EDCCA_RPT_A_BE4_C1,
--		.rpt_b			= R_EDCCA_RPT_A_BE4_C1,
-+		.rpt_b			= R_EDCCA_RPT_B_BE4_C1,
- 		.rpt_sel		= R_EDCCA_RPT_SEL_BE4_C1,
- 		.rpt_sel_mask		= B_EDCCA_RPT_SEL_BE4_MSK,
- 	}},
+ #define R_AX_WLAN_XTAL_SI_CTRL 0x0270
+ #define B_AX_WL_XTAL_SI_CMD_POLL BIT(31)
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+index 356623341f65..c3c53a6b8119 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+@@ -355,10 +355,7 @@ static const u8 rtw89_btc_8852b_bt_rssi_thres[BTC_BT_RSSI_THMAX] = {50, 40, 30,
+ 
+ static void rtw8852b_pwr_sps_ana(struct rtw89_dev *rtwdev)
+ {
+-	struct rtw89_efuse *efuse = &rtwdev->efuse;
+-
+-	if (efuse->rfe_type == 0x5)
+-		rtw89_write16(rtwdev, R_AX_SPS_ANA_ON_CTRL2, RTL8852B_RFE_05_SPS_ANA);
++	rtw89_write16(rtwdev, R_AX_SPS_ANA_ON_CTRL2, RTL8852B_DEFAULT_SPS_ANA);
+ }
+ 
+ static void rtw8852b_pwr_sps_dig_off(struct rtw89_dev *rtwdev)
 -- 
 2.25.1
 
