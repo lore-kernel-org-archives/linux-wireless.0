@@ -1,72 +1,72 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E88638C406
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 07:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF1F3AA9EF
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 07:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788939100; cv=none; b=kWZJ1VyVzhqDhBImgMy8H7WfScgqs61M/dxv9h8b2geHnm+HSFkiL4cu+Zt9q+qRySQWLDrkpASQu2SLdpKTbA/RoiOAyWfKnxl4fZMhpahdS3ay/q6kOshgstuMqBzWzVq92xaU2/OL5X6ReFTl9W8VWst/Bzudfr0c+tnXeag=
+	t=1788939103; cv=none; b=j0PtQofgVEUyQaVMqQJ85ocl6eiMYNVxMHWvcexk4azWiOcMMyEy5GhOvF+EdHGLfpD3mibVX8KFIbPloh/oPJo7SSfk3XzYS8giHOLZ6rrZu+UF5EYkmdB9NANBN8Y+iQ0BlH5WUhkDzJCvR8AzVJZgE4+65rKtNMQQ0MfEO14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788939100; c=relaxed/simple;
-	bh=OIVFqAucL1U1NCzgA5z6DXWrjzXSwibeLQzbK4m5u9A=;
+	s=arc-20240116; t=1788939103; c=relaxed/simple;
+	bh=Vk0dgqm3pJ0clBYZ0cTT7Lcs6abLw7gUXU8l0AjBxzg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IRRfd7IvUnitMEQUEGTDO5u45KAT2YznGrSvr32Jh9fXhFjhCYLclp1SSo4dAVGZryMirxiT4EX4Etx7JL962TofcglIGRU+vNa5HZ9xrN7pcDmBmeoFKa0KgV2tJkWv0pU+ymlVDGgsLYBKlNwUlwZfh8iDXvbuy/p9o7EW3Vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=tkPwtbA+; arc=none smtp.client-ip=209.85.216.47
+	 MIME-Version; b=HAZylmywxfw+Tst7xCNoO8ZKGFdhbLi919EeUAxBgBjKn8169reesXa+KA97K3yYcgz3xtDmXi5FGlOgw0b+UTwP4snzd4ovyKwOEk4yxgYO+X3k4MVvys9sZiL+sOg3fejBjrWoFrp4FuO5XsV8eWcSNZOHOS+X4dnNhoKewp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=papDljJF; arc=none smtp.client-ip=209.85.215.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="tkPwtbA+"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-38511175ad3so4686065a91.2
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2026 00:31:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="papDljJF"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cc1cb472b76so4248332a12.0
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2026 00:31:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1788939094; x=1789543894; darn=vger.kernel.org;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1788939101; x=1789543901; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HZAi5w87ASNSFnBjTvWYxTit40zoM8oybJIbzbTRf0g=;
-        b=tkPwtbA+ZbLGhV4DB7mK3dh/tap1+Pttsks92JkLdHTNG4zwCpf9bzyMbr3IPrqOo7
-         UOilKR6yCqkJM7Bf4Q9effMJNDJq+fxsR4YZOMy/dltSygY83kx9ao8e1QSFzZIDE90N
-         VB3XCXJfxeX7gkV9F4rKTwMeg3t7H8ppdNFQ/QfcpgteDOb4Iq7AOy6trVe+vQJan/It
-         dqB6NvRcr5TQ//45ToUaIKGCN2sl5ecJ9aH0PB7UShp5cC2LAsymCVpocxRXR15vl0EJ
-         eSKeGQDyE4ZDQT3IflRrfnEmfnHynGb9mldYRjISsMMh8n20NtXkDA62t4POKLobwpNe
-         p7tQ==
+        bh=r51GNvtVwRR51Qq/5au5KCaM9QHirsPfOx9FsHjs7+8=;
+        b=papDljJFVtoPHED5tjeDkob7Uvqrxj6419PNVx+vcZ8mXzf9z4GyVPOzzvxeSlfErc
+         EurV6Sj2RuhxihzLHHppZjYfDa37oD9+c0cw6ZxklyTTxN6S79qYHVOefJ9oJ+8AuK3j
+         3CotghqXHMi73YHYOhwYogc8XyHW8JJLsCp7LIZeHpls3zmFBwZ64T1tEf+06UKXCAdG
+         cZ9pgZq3bqJg2ajmgK0AeQKF+fxXSepSw9lH880GoZUYvg9qVU2inJIJdPYQbEId7jRQ
+         xQjd0uXkSFPhBjKV6Z2999UgFRbWxLjNWmGmN+eWlPr7+LAmyPsUwNnwINPsXAQ2uygH
+         xkPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788939094; x=1789543894;
+        d=1e100.net; s=20251104; t=1788939101; x=1789543901;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HZAi5w87ASNSFnBjTvWYxTit40zoM8oybJIbzbTRf0g=;
-        b=YWlucaq+HE13AzfWgVyX/H9XeJ3dHIzI7s+xOj1WRhFWCNI63hnzmyYR1H06R83UyM
-         E/YkFOuqktSAfKhp2nBXQytGlNq44qngcbVla8ZCrvd3y+vOS0lnZ2S2E6TtsspKHFD3
-         XjApxmWieCbOqtD6h0ZkaFzf9TDB8oAsnF4FM8W/RH7AKFlREsZ0d0OB4QoQ+O4xlyoE
-         cqMttVppoX8boypB1ZT2tPXc7yJsZEYVeHrXKi/kE8RjWMIVWJ+Gvvkqsc8cbov9Yrob
-         mYyB06hgSoT5QyWHbE+RAd8zRfWpGr4auVJI4u2YOv9YzXvI5XyeeJ2oIgpKRCYpTqFZ
-         ExVQ==
-X-Gm-Message-State: AFuF++nfgjUcOIKOAcFkTsXptJdsNIQZ+X+0LCEb3iXsNwQjm24qZw6P
-	bxruvVS9tz6KKyZPDIXDs3GPuY7AEI3N3F/8aBmNAJR/hYYtFqOubgKB9LOtgWV5PdI=
-X-Gm-Gg: AYBFou1nvpaUyvgV4XrLkVm7Yb6mA9e7BkwDXhW/4jB3tzHtfxYWgEY+O+J0RXv3txH
-	ZJwNxPLML3upityMBwfxJMSxtQ8+LJ0aa4kXHcli3Sobkcui7yR+ufSZEnCji9Faot9pd5WMgjO
-	QN1RQzZRQRsKbtwCuK9Xqolo4MWRJ/lLvZZY88t6raADitHPdAcoBVfBQsAGn2Aj0tqrykc9jLu
-	d+ejVV48w1WMDUUDyR52GQAmGney0MVVIaxJU2JANWEFpAvSuwnhM9EgIAQvWp8c5SMSauSPV8W
-	TOdBWBU3TVzYSOUYVNWfVAw2y55UstPTIFuhDbJRS9bSpG36hEqRk2uLNy8tgjdKRLMdjFwujy1
-	R7rsGAYqVxTNVPNmcpMpDvV51cSMh3IRaFDw3r+3vdNg3af0rdqRAaAX3zIPNt4EP5EHzqFVek1
-	T4AIBfjBCaG3PWAzuO2GDlngZGZRTv8MrBNyx/0RFVQKGQ/w4Nb/yPF3Y+PpvXtJ06d4FMrgIIL
-	zoQxaePxYmKeDubusMhuwpoF0Isy/63BKXRS1TdSrBwPjTRB0FW8rQB/6+yeP1Gbp7UFMmRPIJ6
-	ZOUBXo/GU2sPrg==
-X-Received: by 2002:a17:90a:e7ce:b0:398:bacb:1137 with SMTP id 98e67ed59e1d1-39b2624a1bbmr48344085a91.19.1788939093576;
-        Wed, 09 Sep 2026 00:31:33 -0700 (PDT)
+        bh=r51GNvtVwRR51Qq/5au5KCaM9QHirsPfOx9FsHjs7+8=;
+        b=K+Ks2P3tKn3kT8UjW1GTRSz9kZTLZNYqvbac+o98R9SBJ8/1yuWzt5GLwt8YHEe88Y
+         WcDVN0ZaFDlEvF/ITMAVYFsVB/ED2NSTOes+XrI6nKR1j5QzXfueFFHr2Bmwt7iwem9u
+         CeGyT8RuSAkUcsA7IUZWOgTQSCAH5eI4CWatdY+3hbrkMA/VERSAw4hSK09Bq4CWFoQE
+         CBI1YsJ1Qwtx4lqIvkx1yIZldGZswsjp6JVX19iEFlpHVjaPM+176Z8l71DhrSbrL3jP
+         cTQFJyrA/Q7JgEvonrxi26qJ+gIqg+e7foxCR7ZR/mw0fxfcCEbswcDXEOhTFDk90ahH
+         6cYA==
+X-Gm-Message-State: AFuF++mW8xhToeRsVwYtMpH9SNstmCmmCxsT1z5iTcqLgy6Ze4imo+va
+	ajiqshpbJsTFrqTULn1c+AN5sdKmeZ7H5zHRx3nv+6DYr6R6Zh1cCycmPaFla2WhGF4=
+X-Gm-Gg: AYBFou0XYzB10vdQuOIFikNYS4ARAC6r0OFvz7ZktwFkfdkDdnaY71vS4QrGw8rkBLP
+	6Qt2HQkVABTsIF9sp4eEVNEz6vSvmx2RuiuZnGdU/7wV6GF86RFJ6k8QyOGY/TTYBvoGkr67f/T
+	UAGOp2sPylnHvEjVkoyQk7uOmV0UEoRMNk+YXlsZAWroaDvZjATEXlTaAdAM8aqnVyBjPDA5FVw
+	HP0Pp0PYz9WFJ4Ormms1SlS9LiSqhz4NKbgEhizYiBdrt61ptaNdAfK7I8qElsKKexN2popi9zK
+	Gyft6irdsaTLtKISv4Tja7YIq9ITgkjyKSgyZZwYUB8F1sCP30HSGxSNb7lCcDk7mEC1VTUNqt1
+	AbTOr48qucGaUGaEi6KZV/uT6RP9cM84Ze2ZMJN0SkpxB/tOQhAOgY4r8I1AdeFakCyKx3d8Z8i
+	iiDB2zxRNg0rAv+kIh1wpdo+A2R7aEOS7PYcBZIeXQMAsmSJzIOYGhGp2ICT78dLe3ZU9g/y1c+
+	37YZ3kgtxB1FnW5QAC8mkIulRQOCbncjWACTBepw3T9RVZDX6JkBZ4zx6gauqsE1xX6Gu3s6rgr
+	8BI=
+X-Received: by 2002:a17:90b:1c8b:b0:398:9bd5:490c with SMTP id 98e67ed59e1d1-39b26214502mr46925124a91.19.1788939101258;
+        Wed, 09 Sep 2026 00:31:41 -0700 (PDT)
 Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b2615039asm30891776a91.15.2026.09.09.00.31.30
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b2615039asm30891776a91.15.2026.09.09.00.31.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2026 00:31:32 -0700 (PDT)
+        Wed, 09 Sep 2026 00:31:37 -0700 (PDT)
 From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	arien.judge@morsemicro.com,
 	Lachlan Hodges <lachlan.hodges@morsemicro.com>
-Subject: [PATCH wireless-next 1/2] wifi: radiotap: add S1G TLVs and channel frequency
-Date: Wed,  9 Sep 2026 17:30:13 +1000
-Message-ID: <20260909073014.53344-2-lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless-next 2/2] wifi: mac80211: report 900MHz channel for S1G band radiotap header
+Date: Wed,  9 Sep 2026 17:30:14 +1000
+Message-ID: <20260909073014.53344-3-lachlan.hodges@morsemicro.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260909073014.53344-1-lachlan.hodges@morsemicro.com>
 References: <20260909073014.53344-1-lachlan.hodges@morsemicro.com>
@@ -78,105 +78,27 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the necessary definitions to create radiotap S1G TLVs
-and channel flags for S1G sniffers.
+Currently S1G frames are reported as 2GHz spectrum, use the 900MHz
+channel flag instead.
 
 Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- include/net/ieee80211_radiotap.h | 66 ++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+ net/mac80211/rx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 8bbaf77da7cf..27ee67b38ea8 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -93,6 +93,7 @@ enum ieee80211_radiotap_presence {
- 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
- 	IEEE80211_RADIOTAP_VENDOR_NAMESPACE = 30,
- 	IEEE80211_RADIOTAP_EXT = 31,
-+	IEEE80211_RADIOTAP_S1G = 32,
- 	IEEE80211_RADIOTAP_EHT_USIG = 33,
- 	IEEE80211_RADIOTAP_EHT = 34,
- 	IEEE80211_RADIOTAP_UHR_ELR = 37,
-@@ -112,6 +113,9 @@ enum ieee80211_radiotap_flags {
- 
- /* for IEEE80211_RADIOTAP_CHANNEL */
- enum ieee80211_radiotap_channel_flags {
-+	IEEE80211_CHAN_700MHZ = 0x0001,
-+	IEEE80211_CHAN_800MHZ = 0x0002,
-+	IEEE80211_CHAN_900MHZ = 0x0004,
- 	IEEE80211_CHAN_CCK = 0x0020,
- 	IEEE80211_CHAN_OFDM = 0x0040,
- 	IEEE80211_CHAN_2GHZ = 0x0080,
-@@ -792,6 +796,68 @@ enum ieee80211_radiotap_uhr_user_info {
- 	IEEE80211_RADIOTAP_UHR_USER_INFO_2X_LDPC		= 0x02000000,
- };
- 
-+/*
-+ * ieee80211_radiotap_s1g - content of S1G TLV (type 32)
-+ * see www.radiotap.org/fields/S1G.html for details
-+ */
-+struct ieee80211_radiotap_s1g {
-+	__le16 known;
-+	__le16 data1;
-+	__le16 data2;
-+} __packed;
-+
-+enum ieee80211_radiotap_s1g_known {
-+	IEEE80211_RADIOTAP_S1G_KNOWN_PPDU_FORMAT	= 0x0001,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_RESPONSE_IND	= 0x0002,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_GI			= 0x0004,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_NSS		= 0x0008,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_BW			= 0x0010,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_MCS		= 0x0020,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_COLOR		= 0x0040,
-+	IEEE80211_RADIOTAP_S1G_KNOWN_UPLINK_IND		= 0x0080,
-+};
-+
-+enum ieee80211_radiotap_s1g_data1 {
-+	IEEE80211_RADIOTAP_S1G_DATA1_PPDU_FORMAT	= 0x0003,
-+	IEEE80211_RADIOTAP_S1G_DATA1_RESPONSE_IND	= 0x000c,
-+	IEEE80211_RADIOTAP_S1G_DATA1_GI			= 0x0020,
-+	IEEE80211_RADIOTAP_S1G_DATA1_NSS		= 0x00c0,
-+	IEEE80211_RADIOTAP_S1G_DATA1_BW			= 0x0f00,
-+	IEEE80211_RADIOTAP_S1G_DATA1_MCS		= 0xf000,
-+};
-+
-+enum ieee80211_radiotap_s1g_data2 {
-+	IEEE80211_RADIOTAP_S1G_DATA2_COLOR		= 0x0007,
-+	IEEE80211_RADIOTAP_S1G_DATA2_UPLINK_IND		= 0x0008,
-+	IEEE80211_RADIOTAP_S1G_DATA2_RSSI		= 0xff00,
-+};
-+
-+enum ieee80211_radiotap_s1g_ppdu_format {
-+	IEEE80211_RADIOTAP_S1G_PPDU_FORMAT_1M		= 0,
-+	IEEE80211_RADIOTAP_S1G_PPDU_FORMAT_SHORT	= 1,
-+	IEEE80211_RADIOTAP_S1G_PPDU_FORMAT_LONG		= 2,
-+};
-+
-+enum ieee80211_radiotap_s1g_response_ind {
-+	IEEE80211_RADIOTAP_S1G_RESPONSE_IND_NONE	= 0,
-+	IEEE80211_RADIOTAP_S1G_RESPONSE_IND_NDP		= 1,
-+	IEEE80211_RADIOTAP_S1G_RESPONSE_IND_NORMAL	= 2,
-+	IEEE80211_RADIOTAP_S1G_RESPONSE_IND_LONG	= 3,
-+};
-+
-+enum ieee80211_radiotap_s1g_gi {
-+	IEEE80211_RADIOTAP_S1G_GI_LONG			= 0,
-+	IEEE80211_RADIOTAP_S1G_GI_SHORT			= 1,
-+};
-+
-+enum ieee80211_radiotap_s1g_bw {
-+	IEEE80211_RADIOTAP_S1G_BW_1MHZ			= 0,
-+	IEEE80211_RADIOTAP_S1G_BW_2MHZ			= 1,
-+	IEEE80211_RADIOTAP_S1G_BW_4MHZ			= 2,
-+	IEEE80211_RADIOTAP_S1G_BW_8MHZ			= 3,
-+	IEEE80211_RADIOTAP_S1G_BW_16MHZ			= 4,
-+};
-+
- /**
-  * ieee80211_get_radiotap_len - get radiotap header length
-  * @data: pointer to the header
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5e26be8e27d8..edb53e5b4462 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -452,6 +452,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	if (status->band == NL80211_BAND_5GHZ ||
+ 	    status->band == NL80211_BAND_6GHZ)
+ 		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
++	else if (status->band == NL80211_BAND_S1GHZ)
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_900MHZ;
+ 	else if (status->encoding != RX_ENC_LEGACY)
+ 		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
+ 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
 -- 
 2.43.0
 
