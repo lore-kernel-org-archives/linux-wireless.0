@@ -1,148 +1,79 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CBE830BB8D;
-	Wed,  9 Sep 2026 05:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B687A3546E9;
+	Wed,  9 Sep 2026 05:53:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788932226; cv=none; b=Jw3/FD+Z12VaLSYWTzABVovCBGB3CKJGqWlNW9/Fxx0fk9Z5mjRg7hojPlvCwVDiD68BuCZBZaWVBJy7tXNtkcmJDfQbpYWn4121vB7SLhUcBhUnlmZtUIx9HC2Mwqp2gmeIwoVaa7PI4t/4Z89dc6G5NMRJV+h3LYnCR2gUis0=
+	t=1788933198; cv=none; b=WpT3vkBkBhqGQHmGio5t3FNTylrnbRPVeLkU/O8x71ZHXmv6dPw8L7I7LUpxKvSlp51mjlbpMLXJdrBvweU/G/Gp+P7qrzhKmq4tnEwR/odu2ZDxNn97pmD620IU1SclvRUJAIL0CgbdzFeGK/DMklpEKY/bVGU5TQsXhnhwZXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788932226; c=relaxed/simple;
-	bh=IshiAGA28kVJe42YrlFwDD8RK0AbDrQXiQinug776TM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=YLnGNudZVHV6pAwc4vrjRE4XnFKU2BtnhYl7rLOhO1pTqZ4F2UQNksPzEv3c8aZ5qGSg0Pgx4O/hgpUh7otXJphPiK1uf8cD/fyENfeqWhWvC7g7zMKc/rTMdzHAosHNSHudOC+kHBt/ONlDBU9W0sJtjw10UduuzHisy3g6egI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ejUlElb5; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1788933198; c=relaxed/simple;
+	bh=/Mhe+TGwpITJ5l85bZCjeSMXVvHI6Gxgg3Z+in9G8gQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=n2lTeV+DaJWnLiZRgVnyUchQaE4xo9yW6NGq0xIj6+ubX9S6FacG2zSQPddk/axwZusj1Y/7hYzZQJ5z+mwlS0pyP1oOxmpqSl3HqnjQPi17xMGK8I0xFaiCQ+ArOjtuOVFeoBXqD8iEGw6d0XL5fJ5uCT2jy4xivy/zUNRgxCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=pTQTZV0r; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ejUlElb5"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6895ah2rB326064, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788932204; bh=IshiAGA28kVJe42YrlFwDD8RK0AbDrQXiQinug776TM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ejUlElb5esNCBrwn9snepaRT5Q5Io/4hVuAXY4zOdBjPd4DuI6lV5DcO0ABk+s9B8
-	 x1nT+WvPR5y7YRbISem8wfyCJloJqXfKpxFjxZ1wx1QklwWGC4lXlhGsAuIXJGsD/w
-	 Be+92ytn0yPfLGfa4Z7+nrAb7IHIacmK40RBhumiAsF6Itb7jhhLF05D126JHDqglJ
-	 3QdXy+vGdMBK0awy20GRB1sF7rjZvEckuaUUOy2UxsBEr7jaa5GctR7A/iTy+ZZzSk
-	 SZ+jacKFiqZ01CFOXJNNWm6vHQTqICkeYQc9VgR0/llNQr1E924IFQdvtsT9Scl9r7
-	 3l8rn3WhE3F6g==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6895ah2rB326064
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 9 Sep 2026 13:36:44 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 9 Sep 2026 13:36:43 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 9 Sep 2026 13:36:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Wed, 9 Sep 2026 13:36:42 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
- Goede" <johannes.goede@oss.qualcomm.com>
-Subject: RE: [PATCH v9 4/6] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Topic: [PATCH v9 4/6] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Index: AQHdOQ+tujcloACDt0ancBmQ7iNVjbbA0nqAgANYMgCAAYCvkA==
-Date: Wed, 9 Sep 2026 05:36:42 +0000
-Message-ID: <6a59823f69d140b1a6c44d475f5b93bd@realtek.com>
-References: <20260831061144.18631-1-luka.gejak@linux.dev>
- <20260831061144.18631-5-luka.gejak@linux.dev>
- <d4a8b1203ee0402483269a31ad4d6dd2@realtek.com>
- <DL9Y9KGJKWIT.26GHPWWWG0WFV@linux.dev>
-In-Reply-To: <DL9Y9KGJKWIT.26GHPWWWG0WFV@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="pTQTZV0r"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=/Mhe+TGwpITJ5l85bZCjeSMXVvHI6Gxgg3Z+in9G8gQ=;
+	t=1788933196; x=1790142796; b=pTQTZV0rbo7EvBjTgPY0sVuLjB/mcsc1yvaPlgebPIYLl5V
+	88Q0CXFT4ySMSo+aZ0ta6FfvrP6M08vv7i8n+wJ5WAZIzgHiiy6wM0Z+tt35Wwgu/uIM3TNhHy7mz
+	K7oAu8IhKGJtUCMhLe3NlPiv20DesTpaNc/GfR1ps1G5K6H/KLh32lI2jLtecEYitikk+wZtvyUJf
+	8lhP01nK1sqj4PZSo2CG8a2/cD7Z+hmjD2wFH7qytiwE8sGQrFPtyXBLhOtPStfC5kV99ccVA95XI
+	tJeP4V9pNxofWcBZTlmdo5V6JREyH+aSMUN8tHrQWuw8z4hC4e1ujxzwUFwg9tNQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x4BF8-00000007djD-0drd;
+	Wed, 09 Sep 2026 07:53:10 +0200
+Message-ID: <e9b36721c9e2b0b24c89c2e1b5b03b17c438f30c.camel@sipsolutions.net>
+Subject: Re: [PATCH RESEND wireless-next 00/18] wifi: Add Seamless Mobility
+ Domain (SMD) AP support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, Jakub Kicinski
+	 <kuba@kernel.org>
+Cc: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>, "David S . Miller"
+	 <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Paolo Abeni
+	 <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-wireless@vger.kernel.org
+Date: Wed, 09 Sep 2026 07:53:09 +0200
+In-Reply-To: <e7089219-ed02-4288-a678-660a52289e61@oss.qualcomm.com>
+References: <20260908-smd-v1-0-9fd2d876a1fb@oss.qualcomm.com>
+	 <20260908125017.0fb226c5@kernel.org>
+	 <404004c4c97bf776077685b7ec33a14fa777cd70.camel@sipsolutions.net>
+	 <80266eb9666d6106110d998cb6330868da55bf59.camel@sipsolutions.net>
+	 <20260908132004.29176fec@kernel.org>
+	 <0e950f7f0c3f5a2c1f6476e255716b09876624f4.camel@sipsolutions.net>
+	 <e7089219-ed02-4288-a678-660a52289e61@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
-DQpMdWthIEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+IE9uIFN1biBTZXAg
-NiwgMjAyNiBhdCA0OjIyIEFNIENFU1QsIFBpbmctS2UgU2hpaCB3cm90ZToNCj4gWy4uLl0NCj4g
-PiBJZiB0aGUgX19za2JfcGFkZCgpIGlzIG5lY2Vzc2FyeSBmb3Igb3JpZ2luYWwgKGdlbmVyaWMp
-IHBhcnQsIHBsZWFzZQ0KPiA+IGFkZCBhbm90aGVyIHBhdGNoIHRvIGZpeCBpdC4gKHNlZSBiZWxv
-dyBjb21tZW50KQ0KPiBbLi4uXQ0KPiA+IFdoeSBkb2Vzbid0IHJ0d19zZGlvX3dyaXRlX3BvcnRf
-Z2VuZXJpYygpIG5lZWQgX19za2JfcGFkKCkgYXMgd2VsbD8NCj4gPiBJcyB0aGVyZSBhbiBleGlz
-dGluZyBwcm9ibGVtIGJ5IG9yaWdpbmFsPw0KPiANCj4gVGhlcmUgaXMuIHJ0d19zZGlvX3dyaXRl
-X3BvcnQoKSByb3VuZHMgdGhlIHRyYW5zZmVyIHVwIHdpdGgNCj4gc2Rpb19hbGlnbl9zaXplKCkg
-YW5kIHBhc3NlcyB0aGF0IGxlbmd0aCB0byBzZGlvX21lbWNweV90b2lvKCkgd2hpbGUgdGhlDQo+
-IHNrYiBzdGlsbCBob2xkcyBvbmx5IHNrYi0+bGVuIGJ5dGVzLCBzbyBiZXR3ZWVuIG9uZSBhbmQg
-NTExIGJ5dGVzIGZyb20NCj4gcGFzdCB0aGUgZW5kIG9mIHRoZSBmcmFtZSBnZXQgdHJhbnNtaXR0
-ZWQuIFdoZXRoZXIgdGhhdCBzdGF5cyBpbnNpZGUgdGhlDQo+IHNrYidzIGFsbG9jYXRpb24gZGVw
-ZW5kcyBvbiBob3cgbXVjaCB0YWlscm9vbSBpdCBoYXBwZW5zIHRvIGhhdmUuDQo+IA0KPiBJdCBn
-ZXRzIGl0cyBvd24gcGF0Y2gsIG5vIGNoaXAgY29uZGl0aW9uOg0KPiANCj4gICB3aWZpOiBydHc4
-ODogc2RpbzogemVybyB0aGUgcGFkZGluZyBhZGRlZCB0byBhIFRYIHRyYW5zZmVyDQoNCldpbGwv
-c2hvdWxkIHlvdSBhZGQgdGhpcyBpbiB2MTAgb3IgdjExIGJlZm9yZSB5b3VyIHBhdGNoIDQvNj8N
-Cg0KQXMgeW91ciB2MTAgZGlkbid0IGdldCByYW4gYnkgTklQQSBiZWNhdXNlIG9mIFsxXSwgeW91
-IGNhbiBzZW5kIHYxMCB3aXRoDQpSRVNFTkQgb3IganVzdCBzZW5kIHYxMSAoaW5jbHVkaW5nIHRo
-ZSBhZGRpdGlvbmFsIG9uZSkuDQoNCihUbyBhbnN3ZXIgdGhlIG9yZGVyaW5nIHBvaW50IHF1ZXN0
-aW9uIGJlbG93LikgSSBwcmVmZXIgdG8gaGF2ZSB0aGUgcGF0Y2gNCmluIGFkdmFuY2UsIGZvciB0
-d28gcmVhc29ucy4gT25lIGlzIHRvIGJhY2twb3J0IGVhc2llciwgYW5kIGFub3RoZXIgaXMgdG8N
-CmNsZWFyIHRvIGtub3cgaXQgaXMgZXhpc3RpbmcgcHJvYmxlbS4NCg0KWzFdIGh0dHBzOi8vbG9y
-ZS5rZXJuZWwub3JnL2xpbnV4LXdpcmVsZXNzL2ZlMGQ4YTNjMjk1MWMwNTFiMzIxOTAyNTgyZWFm
-OTVmMjMwYTc1NGQuY2FtZWxAc2lwc29sdXRpb25zLm5ldC9ULyN1DQoNCj4gDQo+ID4gQXMgd2Ug
-aGF2ZSBzZGlvX3NldF9ibG9ja19zaXplKHNkaW9fZnVuYywgUlRXX1NESU9fQkxPQ0tfU0laRSks
-DQo+ID4gY2FuIGhlcmUgdXNlIHNkaW9fYWxpZ25fc2l6ZSgpIHRvIGdldCB0aGUgd3JpdF9zaXpl
-Pw0KPiANCj4gWWVzLCBhbmQgdjEwIGRvZXMuIEkgY2hlY2tlZCBpdCBpcyByZWFsbHkgdGhlIHNh
-bWUgcmF0aGVyIHRoYW4gb25seQ0KPiBsb29raW5nIHRoZSBzYW1lOiBvbiB0aGlzIGNhcmQgc2Rp
-b19hbGlnbl9zaXplKCkgbWF0Y2hlcyB0aGUgb3BlbiBjb2RlZA0KPiByb3VuZGluZyBhdCB0aGUg
-YmxvY2sgYm91bmRhcmllcywgYW5kIG92ZXIgYSBmdWxsIHNlc3Npb24gaXQgYWdyZWVkIG9uDQo+
-IGV2ZXJ5IGZyYW1lLCA4MDAwMCBvZiB0aGVtIHdpdGggbm8gZGlmZmVyZW5jZS4NCj4gDQo+IEl0
-IGlzIGVxdWl2YWxlbnQgYmVjYXVzZSB0aGUgY2FyZCByZXBvcnRzIG11bHRpIGJsb2NrIHN1cHBv
-cnQgYW5kIGEgNTEyDQo+IGJ5dGUgYmxvY2sgc2l6ZSwgd2hpY2ggcHV0cyB0aGUgYnl0ZSBtb2Rl
-IGxpbWl0IGF0IDUxMi4gV2l0aG91dCB0aG9zZQ0KPiB0d28gcHJvcGVydGllcyBzZGlvX2FsaWdu
-X3NpemUoKSBmYWxscyBpbnRvIGNodW5rZWQgYnl0ZSB0cmFuc2ZlcnMgdGhhdA0KPiBhcmUgbm90
-IGJsb2NrIG11bHRpcGxlcywgc28gdGhlIGVxdWl2YWxlbmNlIGlzIGEgcHJvcGVydHkgb2YgdGhp
-cyBjYXJkDQo+IGFuZCBob3N0IHJhdGhlciB0aGFuIHNvbWV0aGluZyB1bmNvbmRpdGlvbmFsLiBJ
-dCBpcyBzdGlsbCB0aGUgcmlnaHQgY2FsbDoNCj4gaXQgaXMgdGhlIGNvcmUgaGVscGVyIGFuZCBp
-dCBpcyB3aGF0IHRoZSBnZW5lcmljIHBhdGggYWxyZWFkeSB1c2VzLg0KDQpJbiB2MTAsIHRoZSBi
-ZWdpbm5pbmcgb2YgcnR3X3NkaW9fd3JpdGVfcG9ydF84NzIzYnMoKSBhbmQNCnJ0d19zZGlvX3dy
-aXRlX3BvcnRfZ2VuZXJpYyBiZWNvbWUgdGhlIHNpbWlsYXIuIEFuZA0KSSB0aGluayAnIHR4c2l6
-ZSA9IHJvdW5kX3VwKHNrYi0+bGVuLCA0KTsnIGlzIG5vdCBuZWNlc3NhcnkgdG8NCnJ0d19zZGlv
-X3dyaXRlX3BvcnRfODcyM2JzKCkgYmVjYXVzZSBpdCBpcyA1MTItYnl0ZSBhbGlnbmVkLg0KDQpU
-aGVyZWZvcmUsIHlvdSBjYW4gZG8gdGhlIHNhbWUgdGhpbmcgaW4gcnR3X3NkaW9fd3JpdGVfcG9y
-dCgpIGFuZCB0aGVuDQpjYWxsIA0KICAgIHJ0d19zZGlvX3dyaXRlX3BvcnRfODcyM2JzKCkNCm9y
-DQogICAgcnR3X3NkaW9fd3JpdGVfcG9ydF9nZW5lcmljKCkNCmJ5IGNvbmRpdGlvbi4gDQoNCj4g
-DQo+ID4gSSB0aGluayB3cml0ZV9zaXplIG11c3QgYmUgbGFyZ2Ugb3IgZXF1YWwgdG8gc2tiLT5s
-ZW4sIHJpZ2h0Pw0KPiA+IFRoZXJlZm9yZSwgZGVjbGFyZSBzaXplX3QgcGFkX3NpemUgYXQgdG9w
-IG9mIGZ1bmN0aW9uLCBhbmQgdGhlbg0KPiBbLi4uXQ0KPiA+IEkgdGhpbmsgdGhpcyBpcyBlYXNp
-ZXIgdG8gcmVhZC4NCj4gDQo+IFlvdSBhcmUgcmlnaHQgdGhhdCBpdCBjYW4gbmV2ZXIgYmUgbmVn
-YXRpdmUuIFRoZSB3aG9sZSBibG9jayBpcyBnb25lIGluDQo+IHYxMCB3aXRoIHRoZSBwYWRkaW5n
-LCBzbyB0aGUgcXVlc3Rpb24gZG9lcyBub3QgYXJpc2UgYW55IG1vcmUsIGJ1dCBpdA0KPiB3b3Vs
-ZCBoYXZlIGJlZW4gdGhlIGJldHRlciBzaGFwZS4NCg0KV2lsbCB0aGlzIGJlIG5lZWRlZCBieSB0
-aGUgYWRkaXRpb25hbCBwYXRjaA0KDQogICAid2lmaTogcnR3ODg6IHNkaW86IHplcm8gdGhlIHBh
-ZGRpbmcgYWRkZWQgdG8gYSBUWCB0cmFuc2ZlciI/DQoNCj4gDQo+ID4gSW4gdGhpcyBwYXRjaHNl
-dCwgeW91IGFkZCBtYW55IGNvbW1lbnRzLiBQbGVhc2UgcmV2aWV3IHRoZW0gYWNyb3NzIHdob2xl
-DQo+ID4gcGF0Y2hzZXQgdG8gc2VlIGlmIHRoZXkgYWN0dWFsbHkgbmVlZC4gTGlrZSB0aGlzIG9u
-ZSwgZG8geW91IHRoaW5rIHRoZSBjb2RlDQo+ID4gY2FuJ3QgZXhwbGFpbiBpdHNlbGY/DQo+IA0K
-PiBJIHdlbnQgdGhyb3VnaCB0aGUgc2VyaWVzIGFuZCByZW1vdmVkIHJlZHVuZGFudCBjb21tZW50
-czogdjEwIGFkZHMgNjIgY29tbWVudA0KPiBsaW5lcyB3aGVyZSB2OSBhZGRlZCAxMDMuDQo+IA0K
-PiBXaGF0IEkga2VwdCBpcyB0aGUgdGhpbmdzIHRoZSBjb2RlIGNhbm5vdCBzaG93OiB3aGljaCBw
-YWdlIHBvb2wgYSBxdWV1ZQ0KPiBkcmF3cyBmcm9tIGFuZCBob3cgdGhhdCB3YXMgbWVhc3VyZWQg
-b24gaGFyZHdhcmUsIHdoeSB0aGUgY291bnRlcnMgYXJlDQo+IGF0b21pY190LCB3aHkgb25seSB0
-aGUgZGVmaW5lZCBpbnRlcnJ1cHQgc3RhdHVzIGJpdHMgYXJlIGFja25vd2xlZGdlZCwNCj4gYW5k
-IHRoZSB0d28gcGxhY2VzIHdoZXJlIGFuIHNrYiBoYXMgYWxyZWFkeSBiZWVuIGhhbmRlZCBvbiBh
-bmQgbXVzdCBub3QNCj4gYmUgdG91Y2hlZC4gVHdvIG1vcmUgYXJlIHRoZXJlIGJlY2F1c2UgdGhl
-eSB3ZXJlIGFza2VkIGZvciBpbiBlYXJsaWVyDQo+IHJldmlldzogdGhlIGNvbW1lbnQgaW4gcGF0
-Y2ggMiBhbmQgdGhlIG1vZF9kZWxheWVkX3dvcmsoKSBvbmUgaW4gcGF0Y2ggNi4NCj4gU2F5IHRo
-ZSB3b3JkIGlmIGFueSBvZiB0aG9zZSBzaG91bGQgZ28gdG9vLg0KDQpJIHdpbGwgY2hlY2sgdGhp
-cyBieSB2MTEsIGJlY2F1c2UgSSdkIGxpa2UgeW91IGNhbiBoYXZlIHYxMSB3aXRoDQoNCiAgMS4g
-IndpZmk6IHJ0dzg4OiBzZGlvOiB6ZXJvIHRoZSBwYWRkaW5nIGFkZGVkIHRvIGEgVFggdHJhbnNm
-ZXIiDQogIDIuIG1vdmUgdGhlIHNhbWUgYmVnaW5uaW5nIG9mIHJ0d19zZGlvX3dyaXRlX3BvcnRf
-ODcyM2JzKCkNCiAgICAgYW5kIHJ0d19zZGlvX3dyaXRlX3BvcnRfZ2VuZXJpYygpIHRvIHJ0d19z
-ZGlvX3dyaXRlX3BvcnQoKQ0KDQpJcyBpdCBva2F5IHRvIHlvdT8NCg0KUGluZy1LZQ0KDQo=
+On Tue, 2026-09-08 at 17:20 -0700, Jeff Johnson wrote:
+>=20
+> Apologies for the AI-like commit messages. Those are at my prompting sinc=
+e I
+> want these patches to be understandable by folks who may not know or
+> understand the underlying details of SMD roaming so I requested they cont=
+ain
+> enough detail that referencing the spec should not be necessary.
+>=20
+> AFAIK none of this code is AI generated.
+
+Did you read it? The comments (in patch 1 we were talking about) are
+also all clearly generated.
+
+johannes
