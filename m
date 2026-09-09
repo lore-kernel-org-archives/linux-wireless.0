@@ -1,80 +1,71 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A40B3A4F58
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 06:01:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FCD73A641F
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 06:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788933664; cv=none; b=qg75mK3GWO3lp0y68GvfDnBKxoh4U/Z+69lOc6xnONKCpKXccX889/RJg9cEoQG1keCAXJjxxWETh8BzasGDWzi9Fd/dz0JZ31aO7ZVM6BsDVuLun2Ryr9W2Cjx9yQ8DW19MdFOmW4WNeUicrDQgibKOCOc6CcIZtSyDYqcXWkM=
+	t=1788934297; cv=none; b=LZNAxaPKXl4OewdfFGhvRNQgFQnFfODUek7DqfLZ2WYWLvwdbAUXPIPEaFm/8ps1KeVHDDJYuezpQJEcfFIayaQYB4449hjy4iCpv+0sWlBGzexUAcYchssk/xlrk/egtDXXlk7wFdV0FFhHI8NOYl3T/X7GgYGsIKcK9gLu0GA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788933664; c=relaxed/simple;
-	bh=S/fzE7LggtKyXFVV+3o0QCAj32nkdP1715ppK3vGFKw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Zw9IKr1CYuaEZ6zRBwiOdySGdEUL06ZcXZGDXeesnGJOR6XUlcDgj6iPgyR83vyca8fT/H7+D2XzoRnmspcSV90274P1Rg73FWWXq7lT7DCK9REX3dU0DrLShrgUl0qHzZzN9Ew66Cz1OQGk2Y9Xi6PkXmzZsEFQqWOvNT0kcNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai; spf=pass smtp.mailfrom=nebusec.ai; dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b=IYORCHwA; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nebusec.ai
+	s=arc-20240116; t=1788934297; c=relaxed/simple;
+	bh=jaLBXs7Os+iy8cVs8rEN5uKDkf7LSav2f/F/TMcJUqw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CcvwwMBaZwXnQS8A8MIDhx6eODZ2adxBPLV4/TTTGiB+b7kIONcPZUalFiB5aXV21SuJzF6Bu+fmzT2jRXaJRPB8JqG7d9/LWDmH45en1dq/yRmhd/NEteVsi7DVTx/rRGtw2isx9+glQ6+nsZyH5J6YgSJ7IeTGEHk7KAU+YrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bl1MzMZ9; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b="IYORCHwA"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-3964e480f76so6341290a91.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 23:01:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bl1MzMZ9"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2d715f4a587so76124305ad.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2026 23:11:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nebusec.ai; s=google; t=1788933662; x=1789538462; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=gvow6oU4iq+0a+bBr6UukoAAqBxhHL+gKoXpK7iHJCA=;
-        b=IYORCHwAfNY6VX+KYA/obNIlz/YoxYfiSw+BGBZqcxHhYDgs0yCT+uObG/8pGBvtEg
-         e9DJE4PVljtrJ8Q1TqZc9T6rvEuQ7uctvtMjkgNM6Rjixdb/qmsQ/+dzrmgMMfOi7G4g
-         nZXoZK0H4BRRpw0yB9SFLYgYmul/rMMBDy2V135anF5lzcbGQ6YLBqDRxguV6kVWhYSr
-         TRgeb/hZou+7U1Bp03fJAapz4SbsWbX1RPXqFpVXRG20BAmCaLMPDiRoov0GCzIRBbU1
-         ewAUs/8soSpyEmXBPdIZWd/BN6itUKi99PwbYDw7qf7MigiSa9s+IceGQC3E94Q3c+a9
-         i6lw==
+        d=gmail.com; s=20251104; t=1788934293; x=1789539093; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NEjcqxEvEi/00cM1XbcbS+ADXbDTmQAkuPBw9uAC6p8=;
+        b=bl1MzMZ97VuznXgOdgLlQjUzSRoT35aLoslbNS6A6dhZ0piMh9MfAi9IG/SGrk0btx
+         XU9bc0SiNKwwgHjJ9m2eVOGczq/pDLtNrA/Efcgcbh3vd7yjuldj1X/M8v8p58BFMKev
+         T6pHx1g+B/gsNLj0b53pUW7R+OwW3K1AFbOuj9Hbin813SL7LjTNSFDgk8V0QIfWnQ1t
+         bRBZAHZMYuzUo/3EG+VjLFMpbIkTVQZ+BCLDQk/hSyDmJjEOEaxg1U/wffyO9BkXwW4q
+         m9T6ys5RBgPbGC1RwnJixByYmaMUtdF3BRkVlapbgAHyh4YbAxzc9S77WdUt1gPPhj1R
+         zVqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788933662; x=1789538462;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=gvow6oU4iq+0a+bBr6UukoAAqBxhHL+gKoXpK7iHJCA=;
-        b=fp01ZZzh36rcacoMdxYQM0VhkfrSumBQXDtdOTpykPIKhzqAf0MMu+rgWNqSiHtpB2
-         mfwSSMA54ZyjHH7gQd3dpWGSFziYpaLUi0gC81G4B+IRZv2ATVV1GOlX1QKM/gMo6TDs
-         RhS8UHpYSv/0yCBWtReTFKwnHyIF/0mYkdjXfd+djz/fmWM9ptkg5ImEeW9+Q8MAMzwb
-         7bPoO/ZQVM5iRBfaazGw64tR0kKn3z5g074S53oSSA3sQidvBGIk6zudRs/tgzRLCsyW
-         twHm/uWsnwhmVftsAQA4S9dplIocsL4sSjppSNRQOMPklGJYEGKPb2DOpt/XMQPTIm5O
-         6RmA==
-X-Gm-Message-State: AFuF++mB6XBOwjA2BB33+V5yzSA8GHcmbE2oTT82cyoOKyi7yIYnyZOQ
-	Qgav/U2aFxW9Lu6PXJM7uZCbv8xlRRKrcjPKP6mjPYOSa10oAw0l+hJONzqsQ9QGK95sMWChvkn
-	aE7MDFg==
-X-Gm-Gg: AYBFou2bqWeX8oYY6sIgUdW3aTmD2dV+DAVYDP87jMwWmPSMxrVcTsKwjbxcNMG7v3c
-	UgRuw4/2BzdN1yEP0p7BAik92AKarzOaOe1xZuCedoytyjpr0rZrt93naL2AAGYP4NF98WKom8E
-	qipxVlTHGdX0Aazkg7w+VjEN6gY+pnYfGyzuOJ8+8I1PSyVP0W6RJrKurIg38Z5b5nre/c6L2lh
-	66OEnw3CSUTaXOEfkF1aKfmTb9oqyTuxR3/n5hf1uplMhL30+VS/V6U0pxzI5aloRAVLtNQJxQ6
-	eHQ7z4NLTzH3+/3IAls4MOHV9GyYhxQwaDHrPwJMDVmzRF+J+3/optIP5Cd9pIANx9TZBgcCCMf
-	NDAWpbKr/Tc55wFbek32C1RM7LmwL9qLgXbW5NpVDhFndYGVPL7Lx2zc1vBLvubRL7XAdsqiqyd
-	+7k9N/jYABZJTiTIjEbqIgbUEmhwJ9T6nGoVymETZpWpqO3IaqeKHEOAEKzej7aNqGhgY77wGge
-	BwNxDrekNqoCNflm/jDYYSMaqgfuQ==
-X-Received: by 2002:a17:90a:dfcd:b0:396:4cbf:45a2 with SMTP id 98e67ed59e1d1-39b84cce5a8mr18859182a91.14.1788933662174;
-        Tue, 08 Sep 2026 23:01:02 -0700 (PDT)
-Received: from b6ad5085b32f.. ([122.51.212.64])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39cfa44aee7sm662709a91.3.2026.09.08.23.00.56
+        d=1e100.net; s=20251104; t=1788934293; x=1789539093;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=NEjcqxEvEi/00cM1XbcbS+ADXbDTmQAkuPBw9uAC6p8=;
+        b=Zt26uwy3do2C5d3VxsBf3MXYgk6ChX4MIIrDXWmzdNbzusrBrwkgUekQR09KgqQ17C
+         JbPwh80n2wU6ZtO0oYedPzPFHrxP59sFNjBcJd/WTStu46M90gConoLcMeKfIGjbsP3l
+         PFvO4JJ0rz/KN72qXT171PUE5WwZEjBHqtWbOyBRcbAStXgNeinn8ONCt/mD4cljdAA3
+         Jqv3UZX3f2Jrb/K9uTvbgDtTnEqqnt9t8QFigaKKJj+drAGmdKFWVp0BFyrb6PsmSXPZ
+         BAaNAqVOYhN/pJkLuxJ+B19x7+GJ6QXEyPW/zCOMRwohUBkWwkkS3t1sIKXAVFgnDnfo
+         Ei6Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzKFOiwLW/5tniBnXkyMGV6DLjrZkwh1Uofztj7IHaGF4y8sei7j0MdnWXZDp7GOxVS/KEH0VuGG/Gee4GWtw==@vger.kernel.org
+X-Gm-Message-State: AFuF++nIkdUoItuuA8wF3sOC8DmOHP4rKxIiuBIFahVZTaEQs7IYIcCI
+	KYwFanco+AF3ZwP51d8uohu4m4R5rJLtm8EwR5YgfA640GW41scpIFxN
+X-Gm-Gg: AYBFou0+kaZufDGlQTZXAehkkzOtBliQFM1v8Fg2J8j0ZhqcMieVqKzUSNX9IgRheLa
+	YrUJW24lROQYO0WmcZduECL5yMxo5dTHkyYTVFd7JAJNme8Z7vEz8ieIaDLbCojOMZdqOHtpieY
+	e55knLOtU2oeK0DXajk6r/BSMhrelVTaosrJV7lEoMEr9qQhOSJi3TKrtwWaq0bsigWxt1Bh5qj
+	xJCgbwfKzn0Q50aNmGOf7EGEtuQMtvOx7+HaXa2MuZhncKnn9hOuKJB4jE3MQb/MJ0Z6Uv0EX4F
+	yQJqaR05YXKP7uH+akP4FOvAeQcMhi8Y3vGND3kvugjcTRh0XiV8iogITnlARQ0TYBMtQwHMOpz
+	m2eFxYKrkZmTAotBpGTXs9namechoTA8Rap0RBtEbfpKGkmqfaMZDG6Yw2LrAyQgTdjTcc328p9
+	vEOjBjYBICfL/yPWCmyftSUUCI2Ti+b6K+CUEQNXUk/gwmnwStR9PI+16utUFcEytgtYuJbSS23
+	tDZiCxfFPw=
+X-Received: by 2002:a17:902:d48e:b0:2d9:2fc9:570f with SMTP id d9443c01a7336-2db12854ba4mr485362505ad.16.1788934292887;
+        Tue, 08 Sep 2026 23:11:32 -0700 (PDT)
+Received: from ancienth-X870E-Nova-WiFi ([125.186.72.2])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1497da0fsm67131495ad.37.2026.09.08.23.11.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 23:01:01 -0700 (PDT)
-From: Zihan Xi <zihanx@nebusec.ai>
-To: linux-wireless@vger.kernel.org
+        Tue, 08 Sep 2026 23:11:32 -0700 (PDT)
+From: Daehyeon Ko <4ncienth@gmail.com>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@nbd.name>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	linux-kernel@vger.kernel.org,
-	Zihan Xi <zihanx@nebusec.ai>,
-	stable@vger.kernel.org,
-	Vega <vega@nebusec.ai>,
-	Luxing Yin <root@tr0jan.top>
-Subject: [PATCH wireless v2 1/1] wifi: mac80211: fix mesh fast xmit path deletion UAF
-Date: Wed,  9 Sep 2026 06:00:46 +0000
-Message-ID: <f0c01d0a6d7bdc3497dd62b69a884c00f0d8b78b.1788930567.git.zihanx@nebusec.ai>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1788930567.git.zihanx@nebusec.ai>
-References: <cover.1788930567.git.zihanx@nebusec.ai>
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] wifi: libipw: reject TKIP frames without a full MIC
+Date: Wed,  9 Sep 2026 15:11:24 +0900
+Message-ID: <20260909061124.3802517-1-4ncienth@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -83,57 +74,68 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mesh_fast_tx_cache() stores raw mesh_path pointers. Path deletion
-flushes the cache and then frees the path with kfree_rcu(), but a
-lookup that already holds the path can insert a new cache entry
-after the flush. The cache then points at freed memory.
+libipw_michael_mic_verify() assumes that an skb contains an eight-byte
+Michael MIC. A short TKIP frame makes the unsigned payload length wrap,
+causing michael_mic() to read past the skb.
 
-Set MESH_PATH_DELETED before flushing, and skip inserting a cache
-entry if the path or MPP path is already deleted. Check this under
-the cache walk lock so it is ordered with the flush.
+Check that the MIC is present before verifying it, and use the existing
+MICHAEL_MIC_LEN constant for all MIC lengths in the verifier.
 
-Fixes: d5edb9ae8d56 ("wifi: mac80211: mesh fast xmit support")
+Fixes: b453872c35cf ("[NET] ieee80211 subsystem")
 Cc: stable@vger.kernel.org
-Reported-by: Vega <vega@nebusec.ai>
 Assisted-by: LLM
-Co-developed-by: Luxing Yin <root@tr0jan.top>
-Signed-off-by: Luxing Yin <root@tr0jan.top>
-Signed-off-by: Zihan Xi <zihanx@nebusec.ai>
+Signed-off-by: Daehyeon Ko <4ncienth@gmail.com>
 ---
-changes in v2:
-  - Rewrite the commit message.
-  - v1 Link: https://lore.kernel.org/all/94174303640c5e1022b31836770bad75f741afbf.1788845030.git.zihanx@nebusec.ai/
+A tested source reproducer and full serial logs are available privately
+to the maintainers on request. They are not included because this finding
+was validated with AI assistance, as required by
+Documentation/process/security-bugs.rst.
 
- net/mac80211/mesh_pathtbl.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Changes in v2:
+- Rewrite the commit message.
+- Use the existing MICHAEL_MIC_LEN constant throughout the verifier.
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 03171cf008557..dfcc4f3a7088e 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -577,6 +577,12 @@ void mesh_fast_tx_cache(struct ieee80211_sub_if_data *sdata,
- 		goto unlock_sta;
- 
- 	spin_lock(&cache->walk_lock);
-+	if ((READ_ONCE(mpath->flags) & MESH_PATH_DELETED) ||
-+	    (mppath && (READ_ONCE(mppath->flags) & MESH_PATH_DELETED))) {
-+		kfree(entry);
-+		goto unlock_cache;
-+	}
-+
- 	prev = rhashtable_lookup_get_insert_fast(&cache->rht,
- 						 &entry->rhash,
- 						 fast_tx_rht_params);
-@@ -812,6 +818,9 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mesh_path *mpath)
+Link: https://lore.kernel.org/r/20260908082729.209627-1-4ncienth@gmail.com
+
+ .../net/wireless/intel/ipw2x00/libipw_crypto_tkip.c  | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_crypto_tkip.c b/drivers/net/wireless/intel/ipw2x00/libipw_crypto_tkip.c
+index 24bb28ab7a49..2b0cf0ec496a 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_crypto_tkip.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_crypto_tkip.c
+@@ -474,14 +474,16 @@ static int libipw_michael_mic_verify(struct sk_buff *skb, int keyidx,
+ 					int hdr_len, void *priv)
  {
- 	hlist_del_rcu(&mpath->walk_list);
- 	rhashtable_remove_fast(&tbl->rhead, &mpath->rhash, mesh_rht_params);
-+	spin_lock_bh(&mpath->state_lock);
-+	mpath->flags |= MESH_PATH_DELETED;
-+	spin_unlock_bh(&mpath->state_lock);
- 	if (tbl == &mpath->sdata->u.mesh.mpp_paths)
- 		mesh_fast_tx_flush_addr(mpath->sdata, mpath->dst);
- 	else
+ 	struct libipw_tkip_data *tkey = priv;
+-	u8 mic[8];
++	u8 mic[MICHAEL_MIC_LEN];
+ 
+-	if (!tkey->key_set)
++	if (!tkey->key_set || skb->len < hdr_len + MICHAEL_MIC_LEN)
+ 		return -1;
+ 
+ 	michael_mic(&tkey->key[24], (struct ieee80211_hdr *)skb->data,
+-		    skb->data + hdr_len, skb->len - 8 - hdr_len, mic);
+-	if (memcmp(mic, skb->data + skb->len - 8, 8) != 0) {
++		    skb->data + hdr_len,
++		    skb->len - MICHAEL_MIC_LEN - hdr_len, mic);
++	if (memcmp(mic, skb->data + skb->len - MICHAEL_MIC_LEN,
++		   MICHAEL_MIC_LEN) != 0) {
+ 		struct ieee80211_hdr *hdr;
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		printk(KERN_DEBUG "%s: Michael MIC verification failed for "
+@@ -499,7 +501,7 @@ static int libipw_michael_mic_verify(struct sk_buff *skb, int keyidx,
+ 	tkey->rx_iv32 = tkey->rx_iv32_new;
+ 	tkey->rx_iv16 = tkey->rx_iv16_new;
+ 
+-	skb_trim(skb, skb->len - 8);
++	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
+ 
+ 	return 0;
+ }
+
+base-commit: a4d4c205cdb8657077f72bf0676b51df8ea8e01e
 -- 
-2.43.0
+2.55.0
 
