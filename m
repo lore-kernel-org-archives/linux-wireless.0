@@ -1,133 +1,85 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C69396D14
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 18:59:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE67D3E832B;
+	Wed,  9 Sep 2026 20:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788980381; cv=none; b=O5e++jMIj8F0H3XJhfXUxz3/3HvB7YZ+Wg4KHlE7nQ4RY8FoC243/3r5tK8SERnk3tO8Uwi5avFZwP2Tzm4dN2f1arSpadVUYIGbmAcpJ0C0PKaD1di/eALYv+u/tj6vWCAgga0Vx2alrYYbl6TKd4zchYUE+uQbU8neSfL0ctw=
+	t=1788984798; cv=none; b=Z+RhZXUsbOAFGfr9ydzoPJRdtzK5SGPx0shmyMf1zdjmVwOe4e8J0kuvCLZsIVLTAVnX9lyl99hA3IKOupyU+8TTEvKnaZbnVDhcd+m+W6fSup3PWJ9CN7yBaUg+7L+TlIMUhVasPfs2xz/t4pwTH4CGrQh9pXG+itDaPD+bjTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788980381; c=relaxed/simple;
-	bh=A3bchGY+kz0lZgkCyyDioMWnheewJPx79xZCrOEZtsY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=p4ocFMvWqdbWwSF1dN2RuV9hnrvkI8F5d6dH5Nyg8FqYdhDNrsBN5PxYmq0u1RY8eJC0tsW+2w1YSSVB7V7ho+QDeO9Cgd4RQ8FNB4JavdzMIxOWN8SSqqgR3BXq6pH+kRbGsfKT5O5rMeTmshwHRMTwJ0TJsMZMkA5WYdln9tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eWpDceV6; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788984798; c=relaxed/simple;
+	bh=bnC9i/qyrIrvmIuMX4qik5bvAcDw9t6bIP1TOqxUKNs=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=djI+JZo3oAZTEiZWD1hWH695/NwEjlGbESRJ95sOW8wCfzU2ZzNutJ7r2Cg2WExD9tSBshi/DfFuDSUh8uVG4BgLSJAiv1XUGeRvpJwQ8XBryp3JpuQHfhpnb2yPrD7TwQzoKfHsOVjZ06Gu1Mj/IVLjrK0V+APBHEideaCveWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DR/n6eKN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eWpDceV6"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b94fce6e8so5228935e9.2
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2026 11:59:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788980378; x=1789585178; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=EW3QQwRMlnzoZrrbBdGZDRMb7oY2hJNihqkm8pyQ76g=;
-        b=eWpDceV6uCT7HpUl+xI5a4uSGu5oTiaYbPLR8dRV/RPKbKnlzehrZ4GR9Ul288avwX
-         1wiWRbXP9eQI6PZNClThF/nLak5AFnJ2Vjf2pw8nwT09/J+B2xj7FaiLcU9Pns3TKER5
-         Dsa8/DFaaKjq1Uzv++n3Hi1bxA4wfVsx5Rsy2ukniR8i0r/fo/SWBNsVtI+1C3tJF3d7
-         U9WmGp02X/jXd4vjqf1Op5EA5jKp00SwdxQTBiu/Lq9b9FKrTuLsQ+affGHY2FcwYVBC
-         u0GeuWB/KLALqZwY8wzxszsCCQRtIInZXUMfZX0k7i02N+bwgXOndOVQgu2kGU2YZC6x
-         US0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788980378; x=1789585178;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EW3QQwRMlnzoZrrbBdGZDRMb7oY2hJNihqkm8pyQ76g=;
-        b=rh+erHm0U9U6oe+du7tqSI+wJHSvNlch8+I7iFhH0+FlXVFu0Yi4JKDgGlLYYqlbEp
-         aDGm2euAZtlKp2padqmkd82ttLNtBbPhIbFIMjE2kMwh/78dhTLuPn3lqqqlDfGTfQrW
-         RLWwM7GPPho5Y8d/DPcw4oa6jCtDOC7IZq4dDUYD0ckZjE50nDRthAj1sMH+zAK8vuxr
-         TBj2DgaelqbWTIXslKHGUpab9d0C0QakziA3Gi8gqWv1jGUTIyp2dS74WSe6SEXZZ8FY
-         uyozM2mVYQnxbrU9JD6oIR4NXGW02oXVMS98sttJWOQeMI6pCuDbofQDBq7HG7jJOmdF
-         DEIg==
-X-Gm-Message-State: AFuF++lTRJmnjI4kkyQ/7kCw/SOGmXg8K9Xx8osP3u1HtTs7PSFC7Flz
-	P+Kd1S1EUszQuyhWtkI5ERyh8mO0lyuYDCQH5STMPnjTpTKAgRM0uGop0jcbV4GD
-X-Gm-Gg: AYBFou06/xBrDIbJbDYwiBJP50qFmh9Rs2ZYSO4CLEMdGmRZIbqcneSd+euSzPGl5/l
-	EGPQ3gCXm9ltu+YmTMChnUB1SYnrPgOX9X3fNRZvWcf8kUzVzh7gmm72DH+geGLpxXdMbOpzR3J
-	ywVAR85GUNeWXp1B/D7QqFduZBKt8uCXHNNs1EO7u1lp48RQSP9CllcCve6otQ6gfcGALxP37jO
-	RvDhYxsKyoHribia7k4i+HPha+KLg7qtUtwVDwklAj/kpeAI6UkrRcPPB8FALO2FcTxip1tHuq3
-	nEIjS8leJYjns9kux3PVyT+Wfc0eso+sSS/zXUvdl020lL6lLbzGCrC/geESgFWdxnFs1CGtJuZ
-	7yKDtQ47swQ96xCJYbKyoRm2rU6pNIgILUw/32nBjeYSIass7kcHyuekIpCCWDTCqmvOYPX1BxX
-	hzIHmVwVXAy5ndP9umpMn4yxVYSYJenE8LlVZeRSKt5M8u2ruWHf6+rFApc+VYzKdtWaNt2qSsV
-	msoM0JxwL0kw9zHRncLXQ59nrw+Kg==
-X-Received: by 2002:a05:600c:4f44:b0:49d:e0c:e55e with SMTP id 5b1f17b1804b1-49d25914e45mr27116285e9.23.1788980377829;
-        Wed, 09 Sep 2026 11:59:37 -0700 (PDT)
-Received: from gkaran.home ([2a02:587:4e00:af00:4405:590b:435f:6c05])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d26c38e3asm11305025e9.9.2026.09.09.11.59.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2026 11:59:37 -0700 (PDT)
-From: Georgios Karantzas <gck.kara@gmail.com>
-To: toke@toke.dk
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Georgios Karantzas <gck.kara@gmail.com>
-Subject: [PATCH v2] wifi: ath9k_htc: bound TX aggregation to MAX_TX_BUF_SIZE
-Date: Wed,  9 Sep 2026 21:59:21 +0300
-Message-ID: <20260909185921.1757-1-gck.kara@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260831173931.1672-1-gck.kara@gmail.com>
-References: <20260831173931.1672-1-gck.kara@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DR/n6eKN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB2E31F000FF;
+	Wed,  9 Sep 2026 20:13:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788984789;
+	bh=3ESmjIDaAZL3gvYROvt+bUtd2dtK8PDyuE2Z4g7MRIY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=DR/n6eKNdaynq1gsYXZ/BwaPHXNus9E3/0vj6BrXjMblDdcaFAsb7h1+ttvROLj/Y
+	 VilZ8LrOrckcLoYRbIN9ipl7TELaiWdUpXt7ibYsNdxhcwuXBx1ELanUKtZ5JA+/1E
+	 TR6IUorEcPrV/Fsrqd3d4br5LbvBd4sPgV72V1aMWdcr7q8QDJujAjyqXuCNUaPSwz
+	 EzI88LTScrLZ9J6XTytdz9a/C/Z3XYXK1DJ04o7Gx6cSXZqfZ+JY8hbCFsvKVtIJL7
+	 pgFY16M4J0CDcrfvo3NYHiX6BUL/hu7jHYIAA3CX5hybZnbLfH9PTS6FN5rcjn/SKN
+	 Ztil6yC4LQ0QA==
+Date: Wed, 9 Sep 2026 13:13:08 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>, "David S . Miller" 
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Paolo Abeni 
+ <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RESEND wireless-next 00/18] wifi: Add Seamless Mobility
+ Domain (SMD) AP support
+Message-ID: <20260909131308.6bda08e0@kernel.org>
+In-Reply-To: <0e950f7f0c3f5a2c1f6476e255716b09876624f4.camel@sipsolutions.net>
+References: <20260908-smd-v1-0-9fd2d876a1fb@oss.qualcomm.com>
+	<20260908125017.0fb226c5@kernel.org>
+	<404004c4c97bf776077685b7ec33a14fa777cd70.camel@sipsolutions.net>
+	<80266eb9666d6106110d998cb6330868da55bf59.camel@sipsolutions.net>
+	<20260908132004.29176fec@kernel.org>
+	<0e950f7f0c3f5a2c1f6476e255716b09876624f4.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Bound the TX batch by cumulative byte length, not just record count.
+On Tue, 08 Sep 2026 22:27:52 +0200 Johannes Berg wrote:
+> On Tue, 2026-09-08 at 13:20 -0700, Jakub Kicinski wrote:
+> > Ah, missed the skb extension. Obvious AI slop. Fun times.  
+> 
+> "Look Mom, I can push a button, I'm an engineer now!"
+> 
+> Do we have rules? I'm currently refusing to read anything that has an AI
+> written commit message ... at the very least.
+> 
+> While I was on vacation the AI sloperators were arguing with each other
+> on the wireless list:
+> https://lore.kernel.org/linux-wireless/20260827074442.826644@enxio.de/
+> 
+> Can I ban those email addresses somehow?
 
-Fixes: fb9987d0f748c983 ("ath9k_htc: Support for AR9271 chipset.")
-Signed-off-by: Georgios Karantzas <gck.kara@gmail.com>
----
-v2:
-- 72-col wrap + Fixes: tag.
-- Accounting kept: deferred len += offset never fires on early break.
-- (!i) guard dropped per review.
-
- drivers/net/wireless/ath/ath9k/hif_usb.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 0a3d2190b..533e74565 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -328,11 +328,14 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
- 	tx_skb_cnt = min_t(u16, hif_dev->tx.tx_skb_cnt, MAX_TX_AGGR_NUM);
- 
- 	for (i = 0; i < tx_skb_cnt; i++) {
--		nskb = __skb_dequeue(&hif_dev->tx.tx_skb_queue);
-+		nskb = skb_peek(&hif_dev->tx.tx_skb_queue);
-+		if (!nskb)
-+			break;
- 
--		/* Should never be NULL */
--		BUG_ON(!nskb);
-+		if (tx_buf->offset + nskb->len + 4 > MAX_TX_BUF_SIZE)
-+			break;
- 
-+		nskb = __skb_dequeue(&hif_dev->tx.tx_skb_queue);
- 		hif_dev->tx.tx_skb_cnt--;
- 
- 		buf = tx_buf->buf;
-@@ -342,13 +345,8 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
- 		*hdr++ = cpu_to_le16(ATH_USB_TX_STREAM_MODE_TAG);
- 		buf += 4;
- 		memcpy(buf, nskb->data, nskb->len);
--		tx_buf->len = nskb->len + 4;
--
--		if (i < (tx_skb_cnt - 1))
--			tx_buf->offset += (((tx_buf->len - 1) / 4) + 1) * 4;
--
--		if (i == (tx_skb_cnt - 1))
--			tx_buf->len += tx_buf->offset;
-+		tx_buf->len = tx_buf->offset + nskb->len + 4;
-+		tx_buf->offset += (((nskb->len + 3) / 4) + 1) * 4;
- 
- 		__skb_queue_tail(&tx_buf->skb_queue, nskb);
- 		TX_STAT_INC(hif_dev, skb_queued);
--- 
-2.47.3
-
+We have a bot in nipa (mailbot.py) which follows the mailing list.
+It can already update patchwork state.
+I was thinking of adding support for bans there, something like 
+ pv-bot: ban-1mo
+and for a month the bot would respond "you have been banned, bla bla"
+and auto-discard patches from patchwork.
+That said I haven't gotten to the point of wanting to ban anyone yet.
+Most of the "contributors" excrete 10+ patches in a day, then get bored
+and disappear. Corporate slop may be more persistent tho, Qualcomm
+employees must have gotten LLM access because we also saw slop from them
+on netdev. TBH I see similar problems within Meta, tho. Random people
+who can barely master Java now try to contribute upstream.
+No idea what to do about all this.
+One obvious thing, I guess, is that we should no longer feel obligated
+to provide any meaningful feedback just because someone posted code.
