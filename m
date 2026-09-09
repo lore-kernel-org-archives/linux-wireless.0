@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-253.mta0.migadu.com [91.218.175.253])
+Received: from mta1.migadu.com (out-84.mta1.migadu.com [95.215.58.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00AB8448D19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1715F44064C
 	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2026 07:46:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.253
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788939987; cv=none; b=X7W5D0LJRWkx/xQ5j6Ytdi5M1DUzbnCQsYymleCLdh3xlq/I60PEjLrWUFejRuHptQ+T0zgyXMEmImUiHQAsJK/3o6i628qYLVTavOKrFwzNP9SN1kvd+Tn+HCscg+8fniUvvekq0DvDOnvku5Fe1k6RiMtyC9KtRyFFuPcOi0A=
+	t=1788939989; cv=none; b=lNGeT3GaJYqsHcUh0ybHJbjKkFAu8w+bBqRPs7DhaoCmokRE7Ur/58KabvKs8k2szZN1Zu+kMkZZC/IRh1wgg8lQCUS0TVcQ00qVcypmrDhPX1zQPBuzYL4GpAlV0jMyqowK1QeS5yyW/AEcpPZQWcB0mh4yayDhJEL2AIdUAhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788939987; c=relaxed/simple;
-	bh=bzxSM15rzJHsp6riBpQ3uZbf0JigR6jvr11t70GGikw=;
+	s=arc-20240116; t=1788939989; c=relaxed/simple;
+	bh=FHAVAgnPTkkVTucfD73+axRxGRKhYp+PvfqXkQoGNzY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YZ7DJIxPyJJqrlY1g/Z4QfuAvIagLtnuxtNnh+MLGKGUccefiY8CvzDY0P4PNbao2RbsaTxCjdmXR3sMvB3fSWyLoha4YyKyggOk82yaMkDvBeM205MxF3Hw5Q/YQlthejsB3U7Kc6xIbiFFmsf/At87zggGXgU+FbuD70StlGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YqvuFNWP; arc=none smtp.client-ip=91.218.175.253
+	 MIME-Version; b=djjQHtR4ezrOr67ENru3Q888HITkn6GNmYJApvWoy7aPYak5A0yIrcZ2hw8n3G/ZWqdKNpz3VKOgbkzHt3A4ey8/TM2deN1lHqkldKWOpKE7wS4TWYfMgufVVzngjjSrUVlQPE2OoV0bZfTSy4lQFG1dGC7nLJt/WI+Oya2URMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AWe5UMiK; arc=none smtp.client-ip=95.215.58.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YqvuFNWP"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AWe5UMiK"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=bzxSM15rzJHsp6riBpQ3uZbf0JigR6jvr11t70GGikw=;
+DKIM-Signature: a=rsa-sha256; bh=FHAVAgnPTkkVTucfD73+axRxGRKhYp+PvfqXkQoGNzY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788939982; v=1; x=1789544782;
- b=YqvuFNWPB35XxwNnv9svJPxW5il/ZSY5j445VXwB5rNmW0lUl3xHZBu5GhW9Uhl+sJaZX5pa
- 8JKVbuDs34c6v3GBi24FVA5cCJXUinnEwFUiL9mlIgsSJ90iK7sAJ/IcBhMIO/Qkp0N4PGbG2O9
- JzhSyfRE7WCazcWhVL0HVf5c=
+ t=1788939983; v=1; x=1789544783;
+ b=AWe5UMiK4qBgpXXl8qisMH/2TIBTsgjLsp6WhNOEVt7ZUhhW0a5xWIH0Jx4G6JApqG+h1y1O
+ 4Bqa0o+lLw+y4qB5VSWT4lwFgI7hg5bAy5l43Z0Jbong7F0Y/ZsB0cbiUnahbK5CLgxURJ8Ta5Z
+ WoxJY95aqLUZUGGUwRHLhqO0=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f19ea53a44304837;
-	Wed, 09 Sep 2026 07:46:22 +0000
-X-Mizu-Trace-ID: f19ea53a44304837
+Received: by smtp.migadu.com with ESMTPS id bb76d9970d045c24;
+	Wed, 09 Sep 2026 07:46:23 +0000
+X-Mizu-Trace-ID: bb76d9970d045c24
 X-Migadu-Flow: FLOW_OUT
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,9 +37,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v11 3/7] wifi: rtw88: tx: extend the TX report purge timeout to RTL8723BS
-Date: Wed,  9 Sep 2026 09:45:52 +0200
-Message-ID: <20260909074556.55709-4-luka.gejak@linux.dev>
+Subject: [PATCH v11 4/7] wifi: rtw88: sdio: zero the padding added to a TX transfer
+Date: Wed,  9 Sep 2026 09:45:53 +0200
+Message-ID: <20260909074556.55709-5-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260909074556.55709-1-luka.gejak@linux.dev>
 References: <20260909074556.55709-1-luka.gejak@linux.dev>
@@ -53,54 +53,77 @@ Content-Transfer-Encoding: 8bit
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-Commit c80788f7c5ae ("wifi: rtw88: increase TX report timeout to fix
-race condition") raised the purge timeout to 2500 ms for the RTL8723DU,
-because the firmware can stay off channel during background scans for
-longer than the 500 ms default, which delays the TX reports and lets the
-purge timer drop the tracking skbs. The host stack then reads the missing
-status as loss and collapses TCP throughput.
+rtw_sdio_write_port() rounds the transfer up with sdio_align_size() and
+then hands that length to sdio_memcpy_toio() while the skb still only
+holds skb->len bytes. The difference, between one and 511 bytes, is read
+from beyond the end of the frame and transmitted. Whether it stays
+inside the skb's allocation depends on how much tailroom the skb happens
+to have, so this is at best sending uninitialised memory over the air.
 
-The RTL8723BS runs the same vendor firmware over a slower SDIO host and
-hits the same race. Testers on ARM SDIO boards see "failed to get tx
-report from firmware" under load, with the same throughput collapse.
-Extend the 2500 ms timeout to the RTL8723BS.
+Pad the skb up to the transfer size first. __skb_pad() zeroes the added
+bytes, reallocates a cloned skb rather than writing into a buffer a
+clone still shares, and leaves skb->len alone, so nothing else in the
+transmit path has to change.
 
-Reported-by: Peter Robinson <pbrobinson@gmail.com>
-Closes: https://lore.kernel.org/all/CALeDE9PgQmpMfDt1DgfLD4tBFGH0MZ7GncV6RUEOHhHbKF+TdQ@mail.gmail.com/
+It must not free the skb on failure: rtw_sdio_write_data() frees the skb
+itself and rtw_sdio_process_tx_queue() requeues it, so both callers
+still own it and would double free.
+
+Found while reworking this path for the RTL8723BS. Measured on RTL8723BS
+hardware, padding the transfer costs nothing observable: uplink is
+19.5 to 19.8 Mbit/s padded against 20.9 to 21.1 Mbit/s unpadded in an
+interleaved A/B, with scans, reconnection and a UDP flood clean in both.
+The other SDIO parts sharing this path are untested; I have only the
+RTL8723BS.
+
+Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation for SDIO based chipsets")
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
 
 Notes:
-    Changes in v11: none.
-    Changes in v10: none.
-    Changes in v9: none.
-    Changes in v8: none.
-    Changes in v7: none.
-    Changes in v6: none.
-    Changes in v5: none. Restored in v4 after being dropped in v2, because
-    testers on slower ARM SDIO hosts hit the warning that commit
-    c80788f7c5ae already fixes for the RTL8723DU.
+    New in v11.
+    
+      Ping-Ke asked for this to come before the RTL8723BS accounting patch
+      rather than after the series, so that it backports on its own and so
+      that it is clear it is an existing problem rather than something the
+      RTL8723BS work introduced.
+    
+      The pad_size local is the shape he asked for on v9: declared at the
+      top, computed unconditionally, and tested with if (pad_size > 0).
 
- drivers/net/wireless/realtek/rtw88/tx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/sdio.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 8786bbb421c2..4e110a457e71 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -208,8 +208,9 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
- 	__skb_queue_tail(&tx_report->queue, skb);
- 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index 5b40d74b16ee..8466abad972a 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -636,6 +636,7 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 			       enum rtw_tx_queue_type queue)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	size_t pad_size;
+ 	bool bus_claim;
+ 	size_t txsize;
+ 	u32 txaddr;
+@@ -646,6 +647,17 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 		return -EINVAL;
  
--	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
--	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
-+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
-+	     rtwdev->hci.type == RTW_HCI_TYPE_USB) ||
-+	    rtw_is_8723bs(rtwdev))
- 		timeout = msecs_to_jiffies(2500);
+ 	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
++	pad_size = txsize - skb->len;
++
++	if (pad_size > 0) {
++		/*
++		 * __skb_pad() must not free the skb on failure: both callers
++		 * still own it, one requeues it and the other frees it.
++		 */
++		ret = __skb_pad(skb, pad_size, false);
++		if (ret)
++			return ret;
++	}
  
- 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
+ 	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
+ 	if (ret)
 -- 
 2.55.0
 
