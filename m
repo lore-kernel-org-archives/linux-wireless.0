@@ -1,41 +1,35 @@
-Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
+Received: from smtpo63.interia.pl (smtpo63.interia.pl [217.74.67.63])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6DC41A929
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 08:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CA5418344
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 08:05:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.63
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789027483; cv=none; b=JjxqrLQx+gnH4t0dDxEHDKMCtJ8vMF+wI3BZmw5qKaWBZOYE1vaP6ftBXvLjbzXIr4xA+mFNdURPdBpHzZNpSQgvmsD00OinUPXYPIuM3cQrX9Gs81R5GVPb0qz9Trq3U/fItNItiLHksXG+dP59PNvO9R2E1tO5wHRVL1hpzWI=
+	t=1789027508; cv=none; b=arLwriPDY8sKQuw8RdLzGXOlkkjyx4MJE2AgP7q4WCIXJLgMdUgI8TpPgm+Xuye/qgAOZKMryhpGx+wfXAJWiuO4pe5dpgvtqMyKIQ+6pbOtuH7kwV/TW5iO2CVMreJoNuqDfkxBqsKmoH2BpuZ4/vF804aq6Qdc+e+nAQK+5Rw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789027483; c=relaxed/simple;
-	bh=Aknesmf63WWHxnl+hUnB2nUJ2tvXQcu76VS7Rq08R1U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fpwZ0xQjen6DRAC2N7hG0D90/cxef1Z/6t8Q69M1gyfLkWQq9EK4LRbHdKcrb2zljc8R9i7H0vIBzak/ichwS52EPmJRuwK+mg9kNXqVqvIlPalTzkQa6BvsG4JInGA+d0V4+r/GMoV1jwcQqHN2uZx2WNvMRK5T7nrK0AhQr7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=gbnjwNtR; arc=none smtp.client-ip=217.74.67.75
+	s=arc-20240116; t=1789027508; c=relaxed/simple;
+	bh=/cD67VZV8ad2RDRKzKyMw3tSFbMp21H3/a6sNuZHWTU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XwCL6fL1DTG/56HZxVc5neTqRcpstzc+ydinujuCvhe6c2sfT8gDX8etsSv24qe2xWpKO6wmvstxe1dLC1m9+xVptueClm+tbJtRsSVxTSV+G1jNuMMIaBQrntsTyJvFYbOHlpKXmDkXEumsOSC/lMefd13KGgsIwjGnfrk35Lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=obSjUq51; arc=none smtp.client-ip=217.74.67.63
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="gbnjwNtR"
+	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="obSjUq51"
 Received: from localhost (unknown [80.68.231.31])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
 	(No client certificate requested)
 	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Thu, 10 Sep 2026 10:04:27 +0200 (CEST)
+	Thu, 10 Sep 2026 10:04:57 +0200 (CEST)
 From: Slawomir Stepien <sst@poczta.fm>
-To: syzkaller-bugs@googlegroups.com,
-	johannes@sipsolutions.net,
+To: johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
-	syzbot@lists.linux.dev,
-	sst@poczta.fm,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: [PATCH v2 3/3] wifi: cfg80211: check if AP has been started or joined a mesh before adding new station
-Date: Thu, 10 Sep 2026 10:04:18 +0200
-Message-ID: <20260910080418.725741-3-sst@poczta.fm>
+	sst@poczta.fm
+Subject: [PATCH] wifi: mac80211: verify if AP_VLAN belongs to the correct AP
+Date: Thu, 10 Sep 2026 10:04:54 +0200
+Message-ID: <20260910080454.725913-1-sst@poczta.fm>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260910080418.725741-1-sst@poczta.fm>
-References: <20260910080418.725741-1-sst@poczta.fm>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,80 +38,77 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1789027468; bh=wXmof0fVgwPh18EP2lIyPcZjTugPqgnEEJB7r9J78VM=;
+	t=1789027498; bh=XCXrRKtVN91beg33bhT3sQJeVgP/yegQK7JfqOq6CC0=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=gbnjwNtRRlVLcD8DjmFDseoORM1k/R/QESvcWBPanP0dQlLeNd2EhCQ+7PfLeheuf
-	 dcBWjM/6J1HIyAwAFQ3Fe3VcGRC/6u22bXEvm3McInc5yIyW9nZywUxNdr1hdyEQFk
-	 WGH6X9sbRmFsC/SlVUbAungZ8psJiQl3KY8+ITnc=
+	b=obSjUq51kmlx1RFAozlfttRTkk8czBAzO6iP5Dhz2VCC/OlV4uqhGB9wqDECQ9iNf
+	 6et+T8inXiwhxc3cZBp39U8y1pwuG01gUQKCD/qrhmcDCDVVzh2f/twN4w4H52dW0g
+	 1Urb3Xiwcuw29Am2ukxRalt6qq2KeB9SiSc2ndQw=
 
-Adding a new station to AP makes only sense when the AP has been started
-(nl80211_start_ap()) or joined a mesh (__cfg80211_join_mesh()).
+The get_vlan() only checks if NL80211_ATTR_STA_VLAN target is an
+AP/AP_VLAN/P2P_GO interface on the same wiphy. It has no notion of which
+specific AP a given AP_VLAN belongs to. Without a check in mac80211
+itself, NL80211_CMD_NEW_STATION and NL80211_CMD_SET_STATION could
+add/move a station onto an AP_VLAN interface that actually belongs to a
+different AP on the same wiphy.
 
-Check if AP is up and beaconing on the link or joined the mesh, when
-adding new station. Return error if this isn't the case.
+Reject the userspace request unless the VLAN interface's bss pointer
+matches the bss of the interface the station is being added to/belongs
+to.
 
-Note that libertas devices need special handling since they do not
-implement join_mesh() and the decision must be made on channel
-definition.
-
-Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
 Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Link: https://lore.kernel.org/all/22e7ddfc50d7a6a16c437b876dab5fe223799610.camel@sipsolutions.net/
 ---
-v2:
-* Add mesh handling (inc. libertas devices special case)
+ net/mac80211/cfg.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-v1:
-* https://lore.kernel.org/all/20260813090434.2071318-3-sst@poczta.fm/
----
- net/wireless/nl80211.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8f7238415047..fca19e1d0c9a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9328,7 +9328,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 23f4f9ec86d0..920681eb2e87 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2637,19 +2637,25 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
  {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
--	int err;
-+	int err, link_id;
- 	struct wireless_dev *wdev = info->user_ptr[1];
- 	struct net_device *dev = wdev->netdev;
- 	struct station_parameters params;
-@@ -9567,6 +9567,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
-+		/* Add a new station only after the AP and link has been started */
-+		link_id = wdev->valid_links ? params.link_sta_params.link_id : 0;
-+		if (!wdev->links[link_id].ap.beacon_interval)
-+			return -ENETDOWN;
-+
- 		/* ignore WME attributes if iface/sta is not capable */
- 		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
- 		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
-@@ -9611,6 +9616,19 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(params.vlan);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
-+		/*
-+		 * Add a new station only after the mesh has been started.
-+		 * libertas doesn't implement join_mesh(); it configures the
-+		 * mesh via sysfs and joins it when the channel is set, so
-+		 * use that as the started indication instead.
-+		 */
-+		if (rdev->ops->libertas_set_mesh_channel) {
-+			if (!wdev->u.mesh.chandef.chan)
-+				return -ENETDOWN;
-+		} else if (!wdev->u.mesh.beacon_interval) {
-+			return -ENETDOWN;
-+		}
-+
- 		/* ignore uAPSD data */
- 		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 	int err;
  
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	if (params->vlan) {
+-		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
++		struct ieee80211_sub_if_data *vlansdata =
++			IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+-		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    sdata->vif.type != NL80211_IFTYPE_AP)
++		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    vlansdata->vif.type != NL80211_IFTYPE_AP)
++			return -EINVAL;
++
++		/* the VLAN must belong to the AP we're adding the station to */
++		if (vlansdata->bss != sdata->bss)
+ 			return -EINVAL;
+-	} else
+-		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++		sdata = vlansdata;
++	}
+ 
+ 	if (ether_addr_equal(mac, sdata->vif.addr))
+ 		return -EINVAL;
+@@ -2845,6 +2851,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
++		/* the VLAN must belong to the AP the station is on */
++		if (vlansdata->bss != sdata->bss)
++			return -EINVAL;
++
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+ 			err = ieee80211_set_sta_4addr(local, vlansdata, sta);
+ 			if (err)
 -- 
 2.55.0
 
