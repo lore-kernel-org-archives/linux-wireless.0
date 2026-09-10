@@ -1,101 +1,103 @@
-Received: from mta0.migadu.com (out-29.mta0.migadu.com [91.218.175.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B31DB388E4D
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 18:25:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A46457268E;
+	Thu, 10 Sep 2026 18:25:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789064716; cv=none; b=Pvj/mWvxHUU1fbKL0dxXh9KyMDIznnetXZ8DFTS9zCViqE0tP08rorDeBsw1a7VU3H8SRkgxELRaYfmk6HcjawHpWoVJMbM00dCxeYTKMThclwbJ3b5GB2+cElI0Rprrl9Pt8JDfbZ6voGPJLHM1n7bm8PPRo09n21CbthSKj5U=
+	t=1789064735; cv=none; b=ryDejg8kexa/gtLXYS3xhVytKfciVycbqcPMgPE5Q08DWiFiUbHo3Vca52jrJk8Qgr4aNiKN2YqVuB7HIveXGnA+89baIK+L9RrBSa2OWeMp5mQEed+5LUDTNVkUdZDc2kVQPKsdpRgkTMeBLLD4cxiUUQ/kjRaUeVrtFAKa1p0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789064716; c=relaxed/simple;
-	bh=Unzddf307mAvMOURKnhmf+KWoikvjT9ZPBPAxTwAQAE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V6GVHVI67dZ+INmb6PQUjhQSxnGsbd3dgrxlyrzr3Hcr2ml8hpq4EyXroLMYgU/ZyxmV9nUDU3FTlzgs3VgOOPlSvF7h4hsszn49K4TTHwdOG1G1uz9W/S5/bvoa3GXh4e4KozwyL+szzmv3wJV66a3oLbzkI3guYkSRX5mNxXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=JmpqVa2P; arc=none smtp.client-ip=91.218.175.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="JmpqVa2P"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Unzddf307mAvMOURKnhmf+KWoikvjT9ZPBPAxTwAQAE=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789064709; v=1; x=1789669509;
- b=JmpqVa2PZ4+Qp/nd4bxw0YWMj2QpHvMinnwo6iVSWfGk3oUkATLTEhNdyD492m4peGEVD7V3
- 9fh7GMmpK53ghysOEcifvmT4Gq4kLej7hvX5GWerFuIIwwK/lzZpq6gzEQtDLOwFrgozKtrJWKd
- 6XDbpJPr8fDThELdkkSaRtxEt3PQbsnbeJ+84ndhv5v7zMMX+W3y7lT5tKCafJ/xx5pGff/ZWfh
- S9DlObe5gu/PCgVIYgWCMC+0lO0vy7lrDSvlP66vO9WhLcrtz8cWS8F6Se1NC4UhfqxRBuUDKAc
- ZJMyesP85PIQlk+17cRyOjSzb5fdYcJ6ypfzVnHP6BSPw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 424bc7d2cbc17b05;
-	Thu, 10 Sep 2026 18:24:59 +0000
-X-Mizu-Trace-ID: 424bc7d2cbc17b05
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH wireless] wifi: mt76: mt7925: cancel mlo_pm_work on the USB stop path
-Date: Thu, 10 Sep 2026 11:24:57 -0700
-Message-ID: <20260910182457.35209-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
+	s=arc-20240116; t=1789064735; c=relaxed/simple;
+	bh=deY2krLPRGBmZOE9h6F0RqiZK050slPf2jLksF0/6QA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=ho3igKxB4qF94ZOl+wBUjGYMDrAOKn3IPLpy3NI1qiWnxThfBOWfqiUgAWLIXYjgbKGdgfw2WTbu7vobrWm0Or4ozPiO5YO3ZO2mx2/huuy5Q6QGPOyKk+LQa6/NqY0K4yO6M6qVeMAXjRmRqB4u2yvKb5ng1gU9COv8tw5I1bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Georgios Karantzas <gck.kara@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Georgios
+ Karantzas <gck.kara@gmail.com>
+Subject: Re: [PATCH v2] wifi: ath9k_htc: bound TX aggregation to
+ MAX_TX_BUF_SIZE
+In-Reply-To: <20260909185921.1757-1-gck.kara@gmail.com>
+References: <20260831173931.1672-1-gck.kara@gmail.com>
+ <20260909185921.1757-1-gck.kara@gmail.com>
+Date: Thu, 10 Sep 2026 20:25:19 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <874ifxdkvk.fsf@toke.dk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-81faf578320d added the cancel to mt7925_ops, but it never reaches USB.
-mt7925u_probe() takes its own copy of the ops and points .stop back at the
-shared mt792x handler, which cancels mac_work, ps_work, wake_work and
-reset_work and knows nothing about mlo_pm_work. So the work still outlives
-teardown there. The last line of that commit message says it covers both
-buses. That's mine and it's a boo-boo.
+Georgios Karantzas <gck.kara@gmail.com> writes:
 
-Give the USB path its own stop that cancels the work first.
+> Bound the TX batch by cumulative byte length, not just record count.
+>
+> Fixes: fb9987d0f748c983 ("ath9k_htc: Support for AR9271 chipset.")
+> Signed-off-by: Georgios Karantzas <gck.kara@gmail.com>
+> ---
+> v2:
+> - 72-col wrap + Fixes: tag.
 
-Two-link MLO on a Netgear A9000, work armed with a power-save change, then
-the interface brought down:
+You seem to have dropped the commit message instead of just wrapping it.
+Wrap does not mean "truncate", it just means "make sure each line stays
+below 72 characters". The explanation in the commit message of v1 was
+fine, the lines were just too long :)
 
-                   stock    patched
-    stop ran        3/3      3/3
-    work still ran  3/3      0/3
+> - Accounting kept: deferred len += offset never fires on early break.
 
-Skipping the stop leaves both builds running the work, so the zero is the
-cancel and not a setup that failed.
+Ah, right. Please explain this in the commit message. Also, see below:
 
-Fixes: 276a56883257 ("wifi: mt76: mt7925: update the power-saving flow")
-Cc: stable@vger.kernel.org
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-index 1757023..db6fd01 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-@@ -147,6 +147,15 @@ out:
- 	return err;
- }
- 
-+static void mt7925u_stop(struct ieee80211_hw *hw, bool suspend)
-+{
-+	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-+
-+	cancel_delayed_work_sync(&dev->mlo_pm_work);
-+
-+	mt792xu_stop(hw, suspend);
-+}
-+
- static int mt7925u_probe(struct usb_interface *usb_intf,
- 			 const struct usb_device_id *id)
- {
-@@ -193,7 +202,7 @@ static int mt7925u_probe(struct usb_interface *usb_intf,
- 	if (!ops)
- 		return -ENOMEM;
- 
--	ops->stop = mt792xu_stop;
-+	ops->stop = mt7925u_stop;
- 
- 	mdev = mt76_alloc_device(&usb_intf->dev, sizeof(*dev), ops, &drv_ops);
- 	if (!mdev)
+> - (!i) guard dropped per review.
+>
+>  drivers/net/wireless/ath/ath9k/hif_usb.c | 18 ++++++++----------
+>  1 file changed, 8 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> index 0a3d2190b..533e74565 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -328,11 +328,14 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+>  	tx_skb_cnt = min_t(u16, hif_dev->tx.tx_skb_cnt, MAX_TX_AGGR_NUM);
+>  
+>  	for (i = 0; i < tx_skb_cnt; i++) {
+> -		nskb = __skb_dequeue(&hif_dev->tx.tx_skb_queue);
+> +		nskb = skb_peek(&hif_dev->tx.tx_skb_queue);
+> +		if (!nskb)
+> +			break;
+>  
+> -		/* Should never be NULL */
+> -		BUG_ON(!nskb);
+> +		if (tx_buf->offset + nskb->len + 4 > MAX_TX_BUF_SIZE)
+> +			break;
+>  
+> +		nskb = __skb_dequeue(&hif_dev->tx.tx_skb_queue);
+>  		hif_dev->tx.tx_skb_cnt--;
+>  
+>  		buf = tx_buf->buf;
+> @@ -342,13 +345,8 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+>  		*hdr++ = cpu_to_le16(ATH_USB_TX_STREAM_MODE_TAG);
+>  		buf += 4;
+>  		memcpy(buf, nskb->data, nskb->len);
+> -		tx_buf->len = nskb->len + 4;
+> -
+> -		if (i < (tx_skb_cnt - 1))
+> -			tx_buf->offset += (((tx_buf->len - 1) / 4) + 1) * 4;
+> -
+> -		if (i == (tx_skb_cnt - 1))
+> -			tx_buf->len += tx_buf->offset;
+> +		tx_buf->len = tx_buf->offset + nskb->len + 4;
+> +		tx_buf->offset += (((nskb->len + 3) / 4) + 1) * 4;
+
+While we're fixing this, let's make it readable as well - this could be
+(with an #include <linux/math.h>):
+
+		tx_buf->offset += round_up(nskb->len + 4, 4);
+
+-Toke
