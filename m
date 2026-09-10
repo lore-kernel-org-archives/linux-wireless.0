@@ -1,97 +1,122 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C8E33CF670;
-	Thu, 10 Sep 2026 09:27:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3DA936C9C0
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 09:29:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789032455; cv=none; b=rWPeQV6QLszKI+5DKx7IcrtXE6YF5Ptwixwj1iuXATmMQ7uS4wRzZNVGvvHGxDRdFhNUcBYF1LCMkN9FL5l3movXyA/h06WDuwAIjqTby4Gl75rdIrc30ofEK6Y4ClTXsTVLEdnRlRy+v7qtvR/eJBQK4mgv9BbNEuGEPJejkqc=
+	t=1789032548; cv=none; b=pQQimSZTA2sj9XBgv98nKqwOFCl8v0AO7/48zpAo0pa1K4HiiJgatB6yoKWsaoRh73FlaX074UyEaBFzvPEWu7ZyimjOZqhgY9mDr1tdKoEcG3I+qW6iUqG/vOyJjj/xoOkSbdqJAZo5CZj4lz9sdbxVa0UmeuBUdSPAa+Yh0TM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789032455; c=relaxed/simple;
-	bh=H7Nsp2q3uoIWn+L7K88CstEyoFEqqFhxu8vAG00TqW0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=slh8f/17akO6KLrFaB19J25T5w0A891jeLl3mzGuYVyJ758SR3bPnO2tmlnaCJ6UgUkos/AaC2e9H9v98Yjmrdrq5vTwuJYiaUth3omjb9jekXOSE8hyx3wbOxu4ocsWamJ5+Z9TEi0o9qUlbGNbtfe2wtRWjmIeHbP2TD3Q7/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=V8NsMYom; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789032548; c=relaxed/simple;
+	bh=4Nj1IKf6whIuo+lWa6GLVTcE+XJNlwDYbWTeihB8Bvo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kb+kARNRdjHDQQACmoEQgACE4pHOcptIN24BY98FypDhEk7pLIkSGCTM+CnqC0atkmSd6+n7vepNdiGfHm8XCwsM3dJ73CaUGGiVXVjAK6F8uIk6GCnf1IRm3mkGP/ZNwlH5APLolfpOZAHGSjHTeDOwoOEwViY/Sr2F7WVEXMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=S4m9vfeg; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="V8NsMYom"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68A9RMPs81365863, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789032442; bh=H7Nsp2q3uoIWn+L7K88CstEyoFEqqFhxu8vAG00TqW0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=V8NsMYoml4Rn4QCAp0K8J/9MkRNXhxakB0PXQz3+Dk9aD8kyTdvcdXTbJ+4CYg5Ws
-	 zdA3C5s5JHaP7jS/7hRYRhciU4tbrKwe8w7Pc2sDyLkXD3ZAEHgHy3mjBDmKQAXY1R
-	 BIZKXfbpjFwKmm9WAxdtnQI35TqU47Hjt0JrnlJV+AcawLL3BXnFclFcBFlLUR2+vB
-	 7uJBx543PasRHR3LSJBI+yiTXACkpnkMfcIn51FAmlWvwqfgnjvRALf0Dpj2fxghYj
-	 fuJMBikNZ7V7+lZcSKTUfVlL56GVBU12Z69ORJiBiilYKdOqvI1biIEFnNhk1Glrf8
-	 fTMpjacep5Vig==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68A9RMPs81365863
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 10 Sep 2026 17:27:22 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="S4m9vfeg"
+X-UUID: 0c9d9f3aacfa11f18dc8c9802ae25ab1-20260910
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=R1y+GM/mCucEyMK20un1qpMmaGRve3ZYZM7wCNj6itM=;
+	b=S4m9vfegu4EB3JvdiAcwqxgYOMliqybDRAKUEpOS1BrKwCt2n2NuJXGHTrN2j81W1GNNlC93fgs073xHgBYcn+uqXyvTBRlOpw3WeG1yWKH314KQnpuqS8MAivdNeZRjjvPw0UU5ZN9oYtWpreWNdVNoZy63WnAFFmVMPXCGihI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:d1895737-b739-4623-9159-2d1f20f2d4b8,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:cc44a8e2-72a5-4ba1-af40-18bbd6ea8ffd,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 0c9d9f3aacfa11f18dc8c9802ae25ab1-20260910
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1208440892; Thu, 10 Sep 2026 17:28:57 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 10 Sep 2026 17:27:22 +0800
-Received: from RTKEXHMBS05.realtek.com.tw ([::1]) by
- RTKEXHMBS05.realtek.com.tw ([fe80::a236:c445:ce4a:140a%4]) with mapi id
- 15.02.2562.043; Thu, 10 Sep 2026 17:27:22 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Mehmet Fide <mehmet.fide@gmail.com>
-CC: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"mehmet.fide@screeningeagle.com" <mehmet.fide@screeningeagle.com>
-Subject: RE: [PATCH rtw-next v3 2/3] wifi: rtw88: usb: only let the frames a
- dozing station needs use the after-DTIM queue
-Thread-Topic: [PATCH rtw-next v3 2/3] wifi: rtw88: usb: only let the frames a
- dozing station needs use the after-DTIM queue
-Thread-Index: AQHdQPzRmXZkdDBZmUWBfZh1sR4Hh7bHixBg
-Date: Thu, 10 Sep 2026 09:27:22 +0000
-Message-ID: <fe7df8dd883d40caad3133616e0b54a1@realtek.com>
-References: <20260910081716.769081-1-mehmet.fide@gmail.com>
- <20260910081716.769081-3-mehmet.fide@gmail.com>
-In-Reply-To: <20260910081716.769081-3-mehmet.fide@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ 15.2.2562.29; Thu, 10 Sep 2026 17:28:56 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 10 Sep 2026 17:28:56 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7922: only check CLC hw encap type on MT7922
+Date: Thu, 10 Sep 2026 17:28:55 +0800
+Message-ID: <20260910092855.1689679-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Mehmet Fide <mehmet.fide@gmail.com> wrote:
-> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
->=20
-> With the budget in place the high queue can no longer take the chip
-> down, but ordinary chatter still competes with the frames a sleeping
-> station actually needs. mac80211 marks every broadcast and multicast
-> frame with IEEE80211_TX_CTL_SEND_AFTER_DTIM while a station dozes,
-> mDNS and SSDP included, so under normal traffic the budget is spent on
-> frames nobody waits for.
->=20
-> Do what the vendor driver does with its default "allow special" high
-> queue filter: admit only ARP, EAPOL and DHCP to the after-DTIM path,
-> the frames a station coming out of power save has to see; everything
-> else goes out on its access category queue at line rate. The frames
-> are classified the way rtw89_core_tx_btc_spec_pkt_notify() does it,
-> from skb->protocol and the network and transport header offsets that
-> mac80211 keeps from the netdev path; EAPOL is the control port flag.
-> Frames the AP relays between its own stations arrive as ETH_P_802_3
-> and are not inspected, they leave on the access category queue.
->=20
-> With the filter in place the page pool stays at 1803 through the same
-> 180 second storm, a DHCP flood still takes the after-DTIM path (and is
-> then held by the budget), and join/ping cycling without power save is
-> unchanged (10/10).
->=20
-> Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+The hw type encap field in the CLC header is only populated on MT7922.
+On other chips the EEPROM MT_EE_HW_TYPE read is skipped, leaving
+hw_encap as 0, so the POWER and REGD entries are compared against a
+bogus value and dropped, leaving those CLC tables empty.
 
+Read MT_EE_HW_TYPE and run the header sanity check only on MT7922, and
+accept the CLC entries as-is on the other chips.
+
+Fixes: 31bc74e462b1 ("wifi: mt76: mt7921: add CLC regulatory domain support")
+
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c    | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index c6af7f00ca59..0092a90eb7fb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -423,7 +423,7 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 	if (!mt7921_regd_clc_supported(dev))
+ 		return 0;
+ 
+-	if (mt76_is_mmio(&dev->mt76)) {
++	if (is_mt7922(&dev->mt76) && mt76_is_mmio(&dev->mt76)) {
+ 		ret = mt7921_mcu_read_eeprom(dev, MT_EE_HW_TYPE, &hw_encap);
+ 		if (ret)
+ 			return ret;
+@@ -471,14 +471,16 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 		if (phy->clc[clc->idx])
+ 			continue;
+ 
+-		/* header content sanity */
+-		if (clc->idx == MT7921_CLC_POWER &&
+-		    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
+-			continue;
++		/* header content sanity, only MT7922 encodes hw type in CLC */
++		if (is_mt7922(&dev->mt76)) {
++			if (clc->idx == MT7921_CLC_POWER &&
++			    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
++				continue;
+ 
+-		if (clc->idx == MT7921_CLC_REGD &&
+-		    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
+-			continue;
++			if (clc->idx == MT7921_CLC_REGD &&
++			    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
++				continue;
++		}
+ 
+ 		phy->clc[clc->idx] = devm_kmemdup(mdev->dev, clc,
+ 						  le32_to_cpu(clc->len),
+-- 
+2.18.0
 
