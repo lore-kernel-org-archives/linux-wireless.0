@@ -1,44 +1,44 @@
-Received: from mta0.migadu.com (out-46.mta0.migadu.com [91.218.175.46])
+Received: from mta0.migadu.com (out-47.mta0.migadu.com [91.218.175.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80777383C93
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 03:11:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B76385D68
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 03:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789009877; cv=none; b=mtH347iGOUjzVLuJtto/YzxRO4flcik65fiD7TwfXhMByrhVxIiUdwvNY2NehrHc/EWjbJQfa2iyn61ZlJAc9dkOrpDvdPvC2f48VXenbQnC0mmtpmObYqzm4rs83+4CkRSjZ5DM3e6wk5+rMHjX45NbCZw8i3wTp0U0eos84Hk=
+	t=1789009879; cv=none; b=kv2vGTfL0wtjt+fJGSDN3yO4wHXPD0IG3kMW4rd5sa7PrvUBVF1iycnepP+iLep8mt7+PtcWmp4dWecANb8ddCuaVCcGpWATdWOs06uMCXnBYhXRf6FaoX+w68vhUI2g+Qe2L2GXyr4Wlhh6yF7RG4iXJYOodr9heyv8WBFZiUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789009877; c=relaxed/simple;
-	bh=7KzUFv49w6HE+2wsp3PnziaKu2DGbCjmay2SdfIHDLI=;
+	s=arc-20240116; t=1789009879; c=relaxed/simple;
+	bh=eT6Rs+Bqe2GzErT0DYERaLhJHKGVCA/meei3BWCpq7M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ql/S4uWe1QrlpyS4su1VfXwHhgeMmWg0dDw49FmkM9FId4DP6UAtKKGQUe8GmHGS5ZGiC1TVHSXVg0vDC4I4TXSlk27hN7smTcMq809GqFbCJ8XxHo62lfoGCAFOOedSbi6hY82li6kXeittS0icybBmnlCoJVqkt94Q5OpReVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=bLEEzxmW; arc=none smtp.client-ip=91.218.175.46
+	 MIME-Version; b=fg74mgc9p8YrYKdnYQHyn5cKQhf+eiTgQFixPRXE8Q96d8ts4fiP3SMs/HYEvqADMyt+Ch/lGkLAqNTLXiEcSc1nO3Jj+jW3uF9ISz2pASB6aSi07IW/2Y463/V2qS0Hc9oFSPQAtY415nei3pMWjIynLWq31t2TJ25DxDlJMTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=T2+0YKee; arc=none smtp.client-ip=91.218.175.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="bLEEzxmW"
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="T2+0YKee"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=7KzUFv49w6HE+2wsp3PnziaKu2DGbCjmay2SdfIHDLI=;
+DKIM-Signature: a=rsa-sha256; bh=eT6Rs+Bqe2GzErT0DYERaLhJHKGVCA/meei3BWCpq7M=;
  c=simple/simple; d=justthetip.ca;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789009871; v=1; x=1789614671;
- b=bLEEzxmWINUk/EsTxr48Onxrvfy9wt6Uq+CScH6ZXx5Y29mYc+oS0s8u0c2Lrge2C2uta3rE
- MvwqmmYnRJonoDkEkEluDxGbn5arArPlOi2rPKeYMxk+Zj/fW5CIGX4PPISR23oJwBlkK1xxJ0t
- vms09vmeXJ6WX9o8ydz4OZIPvN+vkLqBs1pOVgNR6gjXus8fCvBpQPv+ENc9XSjUeTNdpBZ9n2H
- L6zBoNuR+wlxttjL/5ZWJhSgE6CNYP4YDIlUA6/wloA62HYu28b8JmDAU2Hyx6HcUjLtwN07rM3
- rakPlIZyuIplPODwWBa271UL0uWREX3SPlC4/MfIWj/CQ==
+ t=1789009872; v=1; x=1789614672;
+ b=T2+0YKee/0G/0/oKfvw9Li3cgqLsRnUt+j4BwZa3nroakf5CRejD8CYgaJBg8dJKxBCnhI/d
+ 1aNivRu8zMdWhnfn1tmjBiJbNrwF0qBbLSJNX3uP7U8dOB7LFnAPEb1QSlGE8Wr4iK5/VNGnptf
+ lOSW4XwaL1m6LuwAei7Z13hqZgB1fuegw4rpEezlLjDlX12GDn1BiOlDJT2p7qv4Bo5VLzNME5f
+ qm/i5LB/eM9NLQ9y6w5ALrx+3eTJ5ToL+6JvIOwouBbw6Xmouk7o/4sYzQ4TX9qS6SseNel5Go1
+ rs9Bmom1iF9tmSeI2PoOHRJ3+r0/qHAlE7v7fV/y65png==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6d022997a9e88ff3;
-	Thu, 10 Sep 2026 03:11:11 +0000
-X-Mizu-Trace-ID: 6d022997a9e88ff3
+Received: by smtp.migadu.com with ESMTPS id 6bba01725542afbb;
+	Thu, 10 Sep 2026 03:11:12 +0000
+X-Mizu-Trace-ID: 6bba01725542afbb
 X-Migadu-Flow: FLOW_OUT
 From: Devin Wittmayer <lucid_duck@justthetip.ca>
 To: stable@vger.kernel.org
 Cc: Felix Fietkau <nbd@nbd.name>,
 	Wentao Guan <guanwentao@uniontech.com>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 6.18.y 1/2] wifi: mt76: mt7925: cancel mlo_pm_work on stop
-Date: Wed,  9 Sep 2026 20:11:01 -0700
-Message-ID: <20260910031106.25906-2-lucid_duck@justthetip.ca>
+Subject: [PATCH 6.18.y 2/2] wifi: mt76: mt7925: cancel pending mlo_pm_work
+Date: Wed,  9 Sep 2026 20:11:02 -0700
+Message-ID: <20260910031106.25906-3-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260910031106.25906-1-lucid_duck@justthetip.ca>
 References: <20260910031106.25906-1-lucid_duck@justthetip.ca>
@@ -50,58 +50,88 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
+From: Wentao Guan <guanwentao@uniontech.com>
 
-commit 81faf578320df2dfc682a96baa6e85851dd68b6f upstream.
+commit 2889e84282dda147f10b10d94cf0efd90a349c53 upstream.
 
-mt7925 queues mlo_pm_work with a 5 second delay during multi-link
-power-save setup and never cancels it on the stop path. If the device is
-torn down inside that window, the work outlives the teardown and its timer
-fires afterwards, trying to queue onto the workqueue that is already gone:
+If the device is reset, suspended or unregistered within that window,
+the pending work can still run and access vif/bss data that may already
+be freed, or send MCU commands while the firmware is not available.
 
-  workqueue: cannot queue mt7925_mlo_pm_work [mt7925_common] on wq phy0
-  WARNING: kernel/workqueue.c:2283 at __queue_work+0x59/0xa0, CPU#1: swapper/1/0
-   call_timer_fn+0x2a/0x140
-   __run_timers+0x203/0x330
-   run_timer_softirq+0x86/0xf0
+Add cancel_delayed_work_sync(&dev->mlo_pm_work) in all relevant teardown
+and suspend paths:
 
-mt7921 already has its own stop callback, so add one for mt7925 that
-cancels the work before calling mt792x_stop().
+ - mt7925_mac_reset_work()        (chip reset recovery)
+ - mt7925e_unregister_device()    (PCIe unbind)
+ - mt7925_pci_suspend()           (PCIe bus suspend)
+ - mt7925_suspend()               (mac80211 suspend)
+ - mt7925u_suspend()              (USB bus / runtime suspend)
 
-Fixes: 276a56883257 ("wifi: mt76: mt7925: update the power-saving flow")
+This ensures the work is stopped before the device state becomes
+invalid.
+
+Assisted-by: kimi-cli:kimi-k2.7 code
+Assisted-by: atomcode:glm-5.2 #Reported-by
+
+Fixes: 276a568832577 ("wifi: mt76: mt7925: update the power-saving flow")
 Cc: stable@vger.kernel.org
-Tested-by: Traockl <281473483+Traockl@users.noreply.github.com>
+Signed-off-by: Wentao Guan <guanwentao@uniontech.com>
 Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
 ---
-Backport note: the upstream message ends "mt7925_ops backs both the PCIe
-and USB drivers, so this covers both." That is wrong and I said so on the
-list on 28 July. mt7925u_probe() replaces the stop callback with its own,
-so this reaches PCIe only. I dropped the sentence instead of carrying it
-into three more trees. The USB gap is a separate fix, not yet sent.
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+index 18f99d6..f9980b5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+@@ -1312,6 +1312,7 @@ void mt7925_mac_reset_work(struct work_struct *work)
+ 
+ 	cancel_delayed_work_sync(&dev->mphy.mac_work);
+ 	cancel_delayed_work_sync(&pm->ps_work);
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
+ 	cancel_work_sync(&pm->wake_work);
+ 
+ 	for (i = 0; i < 10; i++) {
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index 910713e..d22e25b 100644
+index d22e25b..8ef0d98 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -2180,10 +2180,19 @@ static void mt7925_rfkill_poll(struct ieee80211_hw *hw)
- 	wiphy_rfkill_set_hw_state(hw->wiphy, ret == 0);
- }
+@@ -1502,6 +1502,7 @@ static int mt7925_suspend(struct ieee80211_hw *hw,
+ 	cancel_delayed_work_sync(&phy->mt76->mac_work);
  
-+static void mt7925_stop(struct ieee80211_hw *hw, bool suspend)
-+{
-+	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-+
+ 	cancel_delayed_work_sync(&dev->pm.ps_work);
 +	cancel_delayed_work_sync(&dev->mlo_pm_work);
-+
-+	mt792x_stop(hw, suspend);
-+}
-+
- const struct ieee80211_ops mt7925_ops = {
- 	.tx = mt792x_tx,
- 	.start = mt7925_start,
--	.stop = mt792x_stop,
-+	.stop = mt7925_stop,
- 	.add_interface = mt7925_add_interface,
- 	.remove_interface = mt792x_remove_interface,
- 	.config = mt7925_config,
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
+ 
+ 	mt792x_mutex_acquire(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index d6732f5..7972111 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -41,6 +41,7 @@ static void mt7925e_unregister_device(struct mt792x_dev *dev)
+ 	mt76_for_each_q_rx(&dev->mt76, i)
+ 		napi_disable(&dev->mt76.napi[i]);
+ 	cancel_delayed_work_sync(&pm->ps_work);
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
+ 	cancel_work_sync(&pm->wake_work);
+ 	cancel_work_sync(&dev->reset_work);
+ 
+@@ -454,6 +455,7 @@ static int mt7925_pci_suspend(struct device *device)
+ 	dev->hif_resumed = false;
+ 	flush_work(&dev->reset_work);
+ 	cancel_delayed_work_sync(&pm->ps_work);
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
+ 	cancel_work_sync(&pm->wake_work);
+ 
+ 	mt7925_roc_abort_sync(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+index bf040f3..16ab139 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+@@ -251,6 +251,7 @@ static int mt7925u_suspend(struct usb_interface *intf, pm_message_t state)
+ 	pm->suspended = true;
+ 	dev->hif_resumed = false;
+ 	flush_work(&dev->reset_work);
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
+ 
+ 	mt76_connac_mcu_set_hif_suspend(&dev->mt76, true, false);
+ 	ret = wait_event_timeout(dev->wait,
 
