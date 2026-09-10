@@ -1,143 +1,240 @@
-Received: from mta0.migadu.com (out-190.mta0.migadu.com [91.218.175.190])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF80C384CEC
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 15:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8BFF4BB266;
+	Thu, 10 Sep 2026 16:23:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789055522; cv=none; b=pCHJyR+KrtG7mtP1BUCchoWYhgkkOJq/1lBux0ukKD6TYpx/yJey3JyTu9VnVjioLhYISBzxdpgwVNjpLW/IK2Ey72XU5nQnVrf6GlxCRfvVOA/CVJ9/ks76S7CK3laZ3gEBOV30tgaKSuJaSFQvx2fidCsJ2OWIsEMrdLKjvJw=
+	t=1789057395; cv=none; b=haMolN8rbO1mMZgO4r2FIgpdkICMoE6AmIdsK9mQ2HBDOPeoJiDNvgTPvyYJL//d009N5HuF7kSO7jah8ukernb5z0S3Kv0ZQARFag4M162UATZmZ6bUzXbWgwyPAbzOW59Ekw/iIkDOFBdh5hiPTdB/eUEjcgK7CeTLevGV5Zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789055522; c=relaxed/simple;
-	bh=4l8RcTxQx86XUUy4e/BXSOpcQXZho9nSHatN5fQ+aIk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=e9EKyanmGuBShpLM1IqfvsnXI9qsOyCOySAfyf/7PgGr41r432TWXYR9OXo9PBIn9bczPgSCXIwuftLszmKfOfGkW4SJvGEokAWTwFpv+JIs2rgoOa/NHnLXvJ6QrlTdJvwRb/jreO1JF9UNmglmV8SqR9KkFA8FytFPkW9Bdnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=saoAyadz; arc=none smtp.client-ip=91.218.175.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789057395; c=relaxed/simple;
+	bh=WFJwA7rFedD+sut2fLamdfjds/NqKNm8sVMMEXUIAfk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aompMycqtlfYeULoGZlV/vGh3Wsoduxon0i042Q/tmNIvFSWd+TF3O8VOYFju05JAxVMLnoYt5tN/KwQeV9OvvaEyXCH2r7WyGSPmCY8z8Z3N0U0x4PiJYHOZAO6hmcsfDz8ntKiWNNllnr/Ym9FmcSXk3RzqjnQY8kYe4db+pk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Di6J4ooq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=2EKGAeF5; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=v9LNypzg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=iqVfo1Lk; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="saoAyadz"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4l8RcTxQx86XUUy4e/BXSOpcQXZho9nSHatN5fQ+aIk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789055517; v=1; x=1789660317;
- b=saoAyadzmlEj2D6zs1QULVjhNb38MZBYVykNgqUPInikkzF/OtoFa6EaN3SBg4uI9RWkumF1
- Ttb6xOlMtokvK8xW0Tw2VsgEOQ7rBILpQtYuKYdb3HIWz0ycHBSSxcxtznUxzs52Tyo1cZlleNg
- EkxFz4wNTvzZvfzeAtEQeeNo=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 372dbca48d95678d;
-	Thu, 10 Sep 2026 15:51:57 +0000
-X-Mizu-Trace-ID: 372dbca48d95678d
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Di6J4ooq";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="2EKGAeF5";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="v9LNypzg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="iqVfo1Lk"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id AECA721DBF;
+	Thu, 10 Sep 2026 16:23:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1789057387; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kr4VsGry+oKuFNSODwNOT1epFYC6cWJFJntIrCTTAgc=;
+	b=Di6J4ooqj0YNM6hFl2R0QAoPrCYY+xDjaKsB/WTlQC30AvF58wJ5hQ4YlqziTkzbp4Og/P
+	8AcvpOg7/YbzCaNQKLMjJzQSURihPuWeFViFE2uYafcYTpIJsnzxU0jfqNtUgZDKRihBvk
+	pYIPz0zwPXel13Wvwc81TgwYDG7qh4I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1789057387;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kr4VsGry+oKuFNSODwNOT1epFYC6cWJFJntIrCTTAgc=;
+	b=2EKGAeF5UM0IQsTGyBtJtEWymjFLkfNM5dLWFz+lLgh2k1z7sVyu3GnjZh/Iff2EshTqjl
+	zkhxcxPvZmXVVUCw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=v9LNypzg;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=iqVfo1Lk
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1789057383; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kr4VsGry+oKuFNSODwNOT1epFYC6cWJFJntIrCTTAgc=;
+	b=v9LNypzgtLQ7CRKOmN6anD0VC81kX2iC2c1SQxxlO7XxDyaAXrKGQnx0CFuoDpq/1g1LaR
+	hObqfjDhrjmgyzypfatp8LsaPwXkXxB2ihx1FCBkjtbMfwpf1V/hcaC8BtjYX60RUsjQj/
+	bDSH8rzm6F/OyuAqSiUg6LmxSUgiqRY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1789057383;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kr4VsGry+oKuFNSODwNOT1epFYC6cWJFJntIrCTTAgc=;
+	b=iqVfo1LkEJDI3/oHuqx6Tkqp4cn5U3OeTC5em8w4cwZF+bn7rC/JxfARvjPvNOJVeIQ8TR
+	9p+8O0KpqpnPZYAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1530E137FD;
+	Thu, 10 Sep 2026 16:22:57 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ehFfAmHZompxSgAAD6G6ig
+	(envelope-from <fmancera@suse.de>); Thu, 10 Sep 2026 16:22:57 +0000
+Message-ID: <bee1e0e0-6114-462b-975c-62ca2e448e8e@suse.de>
+Date: Thu, 10 Sep 2026 18:22:21 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 10 Sep 2026 17:51:54 +0200
-Message-Id: <DLBR915C5L0S.1TEYXZ8LADNTH@linux.dev>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH v11 4/7] wifi: rtw88: sdio: zero the padding added to a
- TX transfer
-From: "Luka Gejak" <luka.gejak@linux.dev>
-To: "Luka Gejak" <luka.gejak@linux.dev>, "Ping-Ke Shih" <pkshih@realtek.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260909074556.55709-1-luka.gejak@linux.dev>
- <20260909074556.55709-5-luka.gejak@linux.dev>
- <d6507fd0447c4c09a9c80bb57dfef35c@realtek.com>
- <DLBQ2H40DC71.2Z3B32X9JQ17I@linux.dev>
-In-Reply-To: <DLBQ2H40DC71.2Z3B32X9JQ17I@linux.dev>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/13 net-next] net: ipv4: introduce CONFIG_IPV4 to
+ decouple the IPv4 stack
+To: netdev@vger.kernel.org
+Cc: horms@kernel.org, kuba@kernel.org, pabeni@redhat.com,
+ edumazet@google.com, davem@davemloft.net, Jason Gunthorpe <jgg@ziepe.ca>,
+ Leon Romanovsky <leon@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ Tony Nguyen <anthony.l.nguyen@intel.com>,
+ Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+ Elad Nachman <enachman@marvell.com>, Saeed Mahameed <saeedm@nvidia.com>,
+ Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
+ Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+ Edward Cree <ecree.xilinx@gmail.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+ Alexandre Torgue <alexandre.torgue@foss.st.com>,
+ Arend van Spriel <arend.vanspriel@broadcom.com>,
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+ Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Saurav Kashyap <skashyap@marvell.com>,
+ Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, Nilesh Javali <njavali@marvell.com>,
+ Manish Rangankar <mrangankar@marvell.com>, Varun Prakash
+ <varun@chelsio.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+ David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
+ Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>,
+ Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+ Marek Lindner <marek.lindner@mailbox.org>,
+ Simon Wunderlich <sw@simonwunderlich.de>,
+ Antonio Quartulli <antonio@mandelbit.com>,
+ Sven Eckelmann <sven@narfation.org>,
+ Nikolay Aleksandrov <razor@blackwall.org>,
+ Pablo Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>,
+ Phil Sutter <phil@nwl.cc>, Johannes Berg <johannes@sipsolutions.net>,
+ Matthieu Baerts <matttbe@kernel.org>, Mat Martineau <martineau@kernel.org>,
+ Geliang Tang <geliang@kernel.org>, Julian Anastasov <ja@ssi.bg>,
+ Aaron Conole <aconole@redhat.com>, Eelco Chaudron <echaudro@redhat.com>,
+ Ilya Maximets <i.maximets@ovn.org>, Allison Henderson <achender@kernel.org>,
+ Jamal Hadi Salim <jhs@mojatatu.com>, Jiri Pirko <jiri@resnulli.us>,
+ Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+ Xin Long <lucien.xin@gmail.com>, "D. Wythe" <alibuda@linux.alibaba.com>,
+ Dust Li <dust.li@linux.alibaba.com>, Sidraya Jayagond
+ <sidraya@linux.ibm.com>, Mahanta Jambigi <mjambigi@linux.ibm.com>,
+ Tony Lu <tonylu@linux.alibaba.com>, Wen Gu <guwen@linux.alibaba.com>,
+ Jon Maloy <jmaloy@redhat.com>, Tung Quang Nguyen
+ <tung.quang.nguyen@est.tech>, Steffen Klassert
+ <steffen.klassert@secunet.com>, Herbert Xu <herbert@gondor.apana.org.au>,
+ Casey Schaufler <casey@schaufler-ca.com>, Paul Moore <paul@paul-moore.com>,
+ James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
+ Vikas Gupta <vikas.gupta@broadcom.com>,
+ Bhargava Marreddy <bhargava.marreddy@broadcom.com>,
+ Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>,
+ Nicolai Buchwitz <nb@tipi-net.de>, =?UTF-8?Q?Markus_Bl=C3=B6chl?=
+ <markus@blochl.de>, Arnd Bergmann <arnd@arndb.de>,
+ Heiner Kallweit <hkallweit1@gmail.com>,
+ Florian Fainelli <florian.fainelli@broadcom.com>,
+ Krzysztof Kozlowski <krzk@kernel.org>,
+ Qingfang Deng <qingfang.deng@linux.dev>, Julian Braha
+ <julianbraha@gmail.com>, Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Eric Biggers <ebiggers@kernel.org>, Ard Biesheuvel <ardb@kernel.org>,
+ Neal Cardwell <ncardwell@google.com>, Kuniyuki Iwashima <kuniyu@google.com>,
+ Willem de Bruijn <willemb@google.com>, Alyssa Ross <hi@alyssa.is>,
+ Joel Granados <joel.granados@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
+ linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org, oss-drivers@corigine.com,
+ linux-net-drivers@amd.com, linux-stm32@st-md-mailman.stormreply.com,
+ linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org,
+ brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
+ b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux.dev,
+ netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+ mptcp@lists.linux.dev, lvs-devel@vger.kernel.org, dev@openvswitch.org,
+ rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
+ linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
+ linux-security-module@vger.kernel.org
+References: <20260910144914.8025-1-fmancera@suse.de>
+ <20260910144914.8025-2-fmancera@suse.de>
+Content-Language: en-US
+From: Fernando Fernandez Mancera <fmancera@suse.de>
+In-Reply-To: <20260910144914.8025-2-fmancera@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: AECA721DBF
+X-Spamd-Result: default: False [-1.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	FORGED_RECIPIENTS(2.00)[m:horms@kernel.org,m:kuba@kernel.org,m:edumazet@google.com,m:davem@davemloft.net,m:leon@kernel.org,m:andrew+netdev@lunn.ch,m:anthony.l.nguyen@intel.com,m:przemyslaw.kitszel@intel.com,m:enachman@marvell.com,m:saeedm@nvidia.com,m:tariqt@nvidia.com,m:mbloch@nvidia.com,m:idosch@nvidia.com,m:petrm@nvidia.com,m:ecree.xilinx@gmail.com,m:maxime.chevallier@bootlin.com,m:mcoquelin.stm32@gmail.com,m:alexandre.torgue@foss.st.com,m:arend.vanspriel@broadcom.com,m:miriam.rachel.korenblit@intel.com,m:kbusch@kernel.org,m:axboe@kernel.dk,m:hch@lst.de,m:sagi@grimberg.me,m:kch@nvidia.com,m:skashyap@marvell.com,m:jhasan@marvell.com,m:GR-QLogic-Storage-Upstream@marvell.com,m:James.Bottomley@HansenPartnership.com,m:mkp@kernel.org,m:njavali@marvell.com,m:mrangankar@marvell.com,m:varun@chelsio.com,m:brauner@kernel.org,m:marc.dionne@auristor.com,m:trondmy@kernel.org,m:anna@kernel.org,m:cel@kernel.org,m:jlayton@kernel.org,m:neil@brown.name,m:Dai.Ngo@oracle.com,m:marek.lindner@mailbox.o
+ rg,m:antonio@mandelbit.com,m:sven@narfation.org,m:razor@blackwall.org,m:pablo@netfilter.org,m:phil@nwl.cc,m:matttbe@kernel.org,m:martineau@kernel.org,m:geliang@kernel.org,m:i.maximets@ovn.org,m:achender@kernel.org,m:jhs@mojatatu.com,m:marcelo.leitner@gmail.com,m:lucien.xin@gmail.com,m:alibuda@linux.alibaba.com,m:dust.li@linux.alibaba.com,m:sidraya@linux.ibm.com,m:mjambigi@linux.ibm.com,m:tonylu@linux.alibaba.com,m:guwen@linux.alibaba.com,m:tung.quang.nguyen@est.tech,m:herbert@gondor.apana.org.au,m:paul@paul-moore.com,m:jmorris@namei.org,m:serge@hallyn.com,m:vikas.gupta@broadcom.com,m:bhargava.marreddy@broadcom.com,m:rajashekar.hudumula@broadcom.com,m:markus@blochl.de,m:arnd@arndb.de,m:hkallweit1@gmail.com,m:florian.fainelli@broadcom.com,m:krzk@kernel.org,m:qingfang.deng@linux.dev,m:julianbraha@gmail.com,m:enelsonmoore@gmail.com,m:gregkh@linuxfoundation.org,m:ebiggers@kernel.org,m:ardb@kernel.org,s:oleg@redhat.com,s:linux-stm32@st-md-mailman.stormreply.com,s:linux-fsdevel@vger.kernel
+ .org,s:linux-kernel@vger.kernel.org,s:linux-nfs@vger.kernel.org,s:linux-rdma@vger.kernel.org,s:linux-s390@vger.kernel.org,s:linux-scsi@vger.kernel.org,s:linux-sctp@vger.kernel.org,s:linux-security-module@vger.kernel.org,s:linux-wireless@vger.kernel.org,s:lvs-devel@vger.kernel.org,s:netfilter-devel@vger.kernel.org,s:target-devel@vger.kernel.org];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_CC(0.00)[kernel.org,redhat.com,google.com,davemloft.net,ziepe.ca,lunn.ch,intel.com,marvell.com,nvidia.com,gmail.com,bootlin.com,foss.st.com,broadcom.com,kernel.dk,lst.de,grimberg.me,HansenPartnership.com,chelsio.com,zeniv.linux.org.uk,suse.cz,auristor.com,brown.name,oracle.com,talpey.com,mailbox.org,simonwunderlich.de,mandelbit.com,narfation.org,blackwall.org,netfilter.org,strlen.de,nwl.cc,sipsolutions.net,ssi.bg,ovn.org,mojatatu.com,resnulli.us,linux.alibaba.com,linux.ibm.com,est.tech,secunet.com,gondor.apana.org.au,schaufler-ca.com,paul-moore.com,namei.org,hallyn.com,tipi-net.de,blochl.de,arndb.de,linux.dev,linuxfoundation.org,alyssa.is,vger.kernel.org,lists.osuosl.org,corigine.com,amd.com,st-md-mailman.stormreply.com,lists.infradead.org,lists.linux.dev,lists.open-mesh.org,openvswitch.org,oss.oracle.com,lists.sourceforge.net];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_ALL(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLdey6otz8cz7qhffota9ydd97)];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCPT_COUNT_GT_50(0.00)[133];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[netdev];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:email,suse.de:mid]
+X-Spam-Flag: NO
+X-Spam-Score: -1.01
 
-On Thu Sep 10, 2026 at 4:56 PM CEST, Luka Gejak wrote:
-> On Thu Sep 10, 2026 at 4:24 AM CEST, Ping-Ke Shih wrote:
->> luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
->>> From: Luka Gejak <luka.gejak@linux.dev>
->>>=20
->>> rtw_sdio_write_port() rounds the transfer up with sdio_align_size() and
->>> then hands that length to sdio_memcpy_toio() while the skb still only
->>> holds skb->len bytes. The difference, between one and 511 bytes, is rea=
-d
->>> from beyond the end of the frame and transmitted. Whether it stays
->>> inside the skb's allocation depends on how much tailroom the skb happen=
-s
->>> to have, so this is at best sending uninitialised memory over the air.
->>>=20
->>> Pad the skb up to the transfer size first. __skb_pad() zeroes the added
->>> bytes, reallocates a cloned skb rather than writing into a buffer a
->>> clone still shares, and leaves skb->len alone, so nothing else in the
->>> transmit path has to change.
->>
->> With __skb_pad(), it might increase CPU usage.
->> Could you roughly measure that?
->>
->
-> Measured with the ftrace function profiler over a 30 second saturating
-> uplink transfer, 18.6 Mbit/s, four cores:
->
->   function              hits      time(us)   share of one core
->   rtw_sdio_write_port  48358      26839023        89.2%
->   sdio_memcpy_toio     47855      11783994        39.2%
->   __skb_pad            48344        616489         2.1%
->   pskb_expand_head     47869        466036         1.6%
->
-> __skb_pad() is about 2% of one core with the link saturated. The whole
-> transfer takes 14.8% of the four cores against 0.77% idle, so the
-> padding is roughly 3.5% of the CPU the transfer already uses and 2.3%
-> of the driver's write path. On throughput it is about 6%, which is the
-> A/B in the commit message.
->
-> pskb_expand_head() runs on 99% of the calls, so nearly every frame takes
-> the reallocating path rather than the memset. That is three quarters of
-> the cost; without it the padding would be around 0.5% of one core. I
-> have not worked out yet whether the skb is cloned or short of tailroom.
-> If it is tailroom it is probably avoidable, and I can chase it as a
-> follow up.
->
-> I do not think this is a blocker. A few percent seems a fair price for
-> not putting uninitialised memory on the air.
->
-> One thing to decide, though. The commit message says the padding "costs
-> nothing observable", which is too strong given the numbers in that same
-> paragraph. Do you think it needs rewording? If so, would you be willing
-> to amend it yourself when applying? That seems better than a resend of
-> seven patches for one line.
->
+On 9/10/26 4:48 PM, Fernando Fernandez Mancera wrote:
+> Historically, the IPv4 protocol has been linked to the core INET
+> subsystem. Because shared infrastructure like the TCP/UDP engine,
+> routing or INET hashtables live inside net/ipv4/, it has been impossible
+> to compile a kernel with only IPv6 support.
+> 
+> This patch introduces the CONFIG_IPV4 Kconfig symbol, which is set to
+> 'def_bool y' for now. This does not allow to completely disable the
+> IPv4 stack yet but it lays the necessary build-system work for that
+> goal.
+> 
+> In addition, multiple subsystems Kconfig symbols across networking
+> features like tunnels, drivers and filesystems have been adjusted to
+> depend on IPv4. Keep on mind that follow-up work is required to convert
+> the Kconfig symbol to bool and remove the dependency on IPv4 where it
+> makes sense.
+> 
+> Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
+FWIW, I just checked and the following symbols that are currently marked 
+as "depends on IPV4" can already be compiled without IPV4:
 
-Following up on the padding cost, since I said I would find out where it
-goes.
+IPV6_MIP6, IPV6_ILA and IPV6_MROUTE
 
-It is tailroom, not cloning. Over 70000 padded frames, none were cloned:
-frames average 1575 bytes and need about 471 bytes of padding, but arrive
-with about 106 bytes of tailroom, so __skb_pad() reallocates on 98% of
-them. mac80211 reserves IEEE80211_ENCRYPT_TAILROOM, 18 bytes, and offers
-no way for a driver to ask for more on TX; extra_tx_headroom is headroom
-and extra_beacon_tailroom is beacons only.
+They will be adjusted on the next revision of the series. A re-check for 
+all the symbols will be performed.
 
-So I tried the other way round, a preallocated per-device buffer: copy
-the frame plus the zeros into it and transfer from there, which avoids
-the allocation. Interleaved A/B, 20 second uplink runs:
-
-  mode         throughput   CPU (4 cores)   __skb_pad
-  __skb_pad    18.6, 18.3      14.3, 15.0    444, 449 ms
-  bounce       19.0, 19.8      13.8, 14.3        0 ms
-
-That recovers most of it, roughly 2% of one core and 3 to 5% of
-throughput.
-
-I am not proposing it for this series. It is a workaround for the
-missing tailroom knob, it costs a copy, and it is only clean where a
-lock already serialises the transfer, which is true for this chip but
-not for the generic path. If you would rather have it as a separate
-patch later, or think the tailroom knob is worth raising with Johannes,
-I am happy either way.
-
-Best regards,
-Luka Gejak
-
-[...]
+Thanks,
+Fernando.
