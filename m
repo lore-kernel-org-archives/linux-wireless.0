@@ -1,192 +1,131 @@
-Received: from dvalin.narfation.org (dvalin.narfation.org [213.160.73.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo2-f32.google.com (mail-oo2-f32.google.com [74.125.231.160])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BE63AB287;
-	Thu, 10 Sep 2026 16:56:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.160.73.56
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789059398; cv=none; b=HJKzcnIDFkhoe2QBCp4RxSTXdLSZklQ9lA/9o3r4EJbU4/6sH5UwhYUuVXrQEoO7fSrNWea+cHCIxc/Qfqf4pPUi/8oDOJm80RXR1yFLHOzpz4m8v/isCThWEb1l8zYTYfsxrA6srBeImTyMR3QOedjgMUC9SYR2HoN4BBpWtKU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789059398; c=relaxed/simple;
-	bh=ScSG9WBXfS4Wo/8HDgWfWshTRFigOP1Fj1R22XjxUT0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UWG/PNPJ3BOcvwcfagXSU5JivU87sfjf2cx6FcYoTCFWl0wNuwEZSLwW9sLabzu0qLR28NYvsJY6cGHLkvWU1j69BJreRSEeS0xdeIr2+UJX2LF43AjAHYCjZ9j+XGhTmUCUJ5k9HqQ7O96L32Mp19IDj55B/oD4tCFgd68PayU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org; spf=pass smtp.mailfrom=narfation.org; dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b=nwEXBdcA; arc=none smtp.client-ip=213.160.73.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=narfation.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B4A58E2A1
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 17:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.231.160
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789061914; cv=pass; b=SbqZ+FMpfsL9uoSJb3X8keP6iulQ+1lC6OAg7zN5pEFlcVk/KYa0dYsiOrny4IfpYA9x67yTyolnAuKpf1NSUkn/cEOk2jZSIkGvhZTugG6GQYAw+ldPtPeVpnuTsjaAqYviACgXvi+tZQyVBY/4HQR1iw6Oorta8Xjo4GV25fI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789061914; c=relaxed/simple;
+	bh=XGzv8jeCrqkzgPMYFYsG8kVONBLGr6gJeBygDyTbHMA=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=n1O8f9QEwoyLygXiIRg48AKiTHMOngPtsgZs0Nt1fAHulRQ+ZqF9J5IrQ/gvV44pkvDM3ss0bbvUv7K2F638HFB3xkYV4vqh5v4HYwHmPFKY4hRalavZXCh5sIb0lh1/sZkhhc5U+JhltTAg++0fbh15QdPGTfDWXjCB418i7o0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=80211networks.com; spf=pass smtp.mailfrom=80211networks.com; dkim=pass (2048-bit key) header.d=80211networks.com header.i=@80211networks.com header.b=BqCOvMQc; arc=pass smtp.client-ip=74.125.231.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=80211networks.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=80211networks.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="nwEXBdcA"
-Received: by dvalin.narfation.org (Postfix) id 2356320394;
-	Thu, 10 Sep 2026 16:56:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-	s=20121; t=1789059391;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jpfKdfRhIDieddP8CnPCmiOpHujz9qF8RTfexgVbXU8=;
-	b=nwEXBdcAy3Bpov4VOY4e9xQIUo1PQ2X9HlwxbfnLeQfMjABTkXF73qIcnksvyZ+lcbcS0g
-	2rPkDRnl7UQZFmPrLPM9uczBVt0vyDhtL/31BVXskbZBb26AOMkMrYm6WaedfzaSpjh5hq
-	RYBqqwgy91rok1+/oD3mlpj7KKJQqzg=
-From: Sven Eckelmann <sven@narfation.org>
-To: netdev@vger.kernel.org, Fernando Fernandez Mancera <fmancera@suse.de>
-Cc: horms@kernel.org, kuba@kernel.org, pabeni@redhat.com, edumazet@google.com,
- davem@davemloft.net, Fernando Fernandez Mancera <fmancera@suse.de>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
- Andrew Lunn <andrew+netdev@lunn.ch>,
- Tony Nguyen <anthony.l.nguyen@intel.com>,
- Przemek Kitszel <przemyslaw.kitszel@intel.com>,
- Elad Nachman <enachman@marvell.com>, Saeed Mahameed <saeedm@nvidia.com>,
- Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
- Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
- Edward Cree <ecree.xilinx@gmail.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Maxime Coquelin <mcoquelin.stm32@gmail.com>,
- Alexandre Torgue <alexandre.torgue@foss.st.com>,
- Arend van Spriel <arend.vanspriel@broadcom.com>,
- Miri Korenblit <miriam.rachel.korenblit@intel.com>,
- Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- Chaitanya Kulkarni <kch@nvidia.com>, Saurav Kashyap <skashyap@marvell.com>,
- Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, Nilesh Javali <njavali@marvell.com>,
- Manish Rangankar <mrangankar@marvell.com>, Varun Prakash <varun@chelsio.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
- Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>,
- Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
- Marek Lindner <marek.lindner@mailbox.org>,
- Simon Wunderlich <sw@simonwunderlich.de>,
- Antonio Quartulli <antonio@mandelbit.com>,
- Nikolay Aleksandrov <razor@blackwall.org>,
- Pablo Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>,
- Phil Sutter <phil@nwl.cc>, Johannes Berg <johannes@sipsolutions.net>,
- Matthieu Baerts <matttbe@kernel.org>, Mat Martineau <martineau@kernel.org>,
- Geliang Tang <geliang@kernel.org>, Julian Anastasov <ja@ssi.bg>,
- Aaron Conole <aconole@redhat.com>, Eelco Chaudron <echaudro@redhat.com>,
- Ilya Maximets <i.maximets@ovn.org>, Allison Henderson <achender@kernel.org>,
- Jamal Hadi Salim <jhs@mojatatu.com>, Jiri Pirko <jiri@resnulli.us>,
- Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
- Xin Long <lucien.xin@gmail.com>, "D. Wythe" <alibuda@linux.alibaba.com>,
- Dust Li <dust.li@linux.alibaba.com>,
- Sidraya Jayagond <sidraya@linux.ibm.com>,
- Mahanta Jambigi <mjambigi@linux.ibm.com>, Tony Lu <tonylu@linux.alibaba.com>,
- Wen Gu <guwen@linux.alibaba.com>, Jon Maloy <jmaloy@redhat.com>,
- Tung Quang Nguyen <tung.quang.nguyen@est.tech>,
- Steffen Klassert <steffen.klassert@secunet.com>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- Casey Schaufler <casey@schaufler-ca.com>, Paul Moore <paul@paul-moore.com>,
- James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
- Vikas Gupta <vikas.gupta@broadcom.com>,
- Bhargava Marreddy <bhargava.marreddy@broadcom.com>,
- Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>,
- Nicolai Buchwitz <nb@tipi-net.de>,
- Markus =?UTF-8?B?QmzDtmNobA==?= <markus@blochl.de>,
- Arnd Bergmann <arnd@arndb.de>, Heiner Kallweit <hkallweit1@gmail.com>,
- Florian Fainelli <florian.fainelli@broadcom.com>,
- Krzysztof Kozlowski <krzk@kernel.org>,
- Qingfang Deng <qingfang.deng@linux.dev>,
- Julian Braha <julianbraha@gmail.com>,
- Ethan Nelson-Moore <enelsonmoore@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Eric Biggers <ebiggers@kernel.org>, Ard Biesheuvel <ardb@kernel.org>,
- Neal Cardwell <ncardwell@google.com>, Kuniyuki Iwashima <kuniyu@google.com>,
- Willem de Bruijn <willemb@google.com>, Alyssa Ross <hi@alyssa.is>,
- Joel Granados <joel.granados@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
- linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
- intel-wired-lan@lists.osuosl.org, oss-drivers@corigine.com,
- linux-net-drivers@amd.com, linux-stm32@st-md-mailman.stormreply.com,
- linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org,
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
- b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux.dev,
- netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
- mptcp@lists.linux.dev, lvs-devel@vger.kernel.org, dev@openvswitch.org,
- rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
- linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
- linux-security-module@vger.kernel.org
-Subject:
- Re: [PATCH 01/13 net-next] net: ipv4: introduce CONFIG_IPV4 to decouple the
- IPv4 stack
-Date: Thu, 10 Sep 2026 18:56:26 +0200
-Message-ID: <2927239.BEx9A2HvPv@ripper>
-In-Reply-To: <20260910144914.8025-2-fmancera@suse.de>
-References:
- <20260910144914.8025-1-fmancera@suse.de>
- <20260910144914.8025-2-fmancera@suse.de>
+	dkim=pass (2048-bit key) header.d=80211networks.com header.i=@80211networks.com header.b="BqCOvMQc"
+Received: by mail-oo2-f32.google.com with SMTP id 006d021491bc7-6bcdf97aa5eso10140eaf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 10:38:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789061893; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Eums5uwTyZRtjRGFFYQL5s941mMisFgUosGoNUdauc/ng2utiKKvIRkdDtNm8AKPsv
+         EQfNYcmHZIxPMxzKbw9nl2bK5RRv0bXnzuiB8u4bSN1HNVpnjd2dbmdIsHAeKnk3F7i1
+         B7+cvMaC3DyVZbjyuvODOCQVIMz+z1MOyuAOT22SzX1vlQpZ9phkzPJ4tqaoKyjftUt9
+         pNK0roKX/UPRPb76mNBCkmRLACoqkonux5VjTPuTuxZmrd80wjPs6SjzLEwZA04YL8Xw
+         Fd7F3/SXBI8WLOawJxG85sejaC9jVMwGk2cm99VP4GERM3EY+zeV4Dh9+YJnW9sTM8ez
+         IfQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=kqdEW/NNqFtqi6NoYYLQ2JpoLKEb30OYDLJZTZQ7EiY=;
+        fh=LFOtbSvqJezF9V2sSJOWB/BFcQ2vFY+c8NPJSCbOLfo=;
+        b=sdpxiiAEyKEPDfp9r4k5dUPLUx90poaWjSeCmLOlU7RxIBo0UMrR1Iu9SVlgdMPzGu
+         0RfZleC/qzwiCh0YbWs+yUpSD9qdrOJWMpDvMBV/YfLe40RZLm+IdTHL/AnNd72F/3fz
+         e62cimFB+vtFkoTxXjZO5Au2RZc/fBZLWsI87vMaVHRG+cUqLSha4Lq0/x05keaP94tN
+         r+VDZ10krWPrqwSnbxE6rMG/rzFn2oe76aIfJzwToNSvAMSjIy0pe3pRJ/9M4v5f4awu
+         YsejWiJPblSaaaEQoTSPDzBPUysoLzHPwCZ+QF1OOfqRGj1q/b8mUYxS5/pLHcFSYrZC
+         slOA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=80211networks.com; s=google; t=1789061893; x=1789666693; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=kqdEW/NNqFtqi6NoYYLQ2JpoLKEb30OYDLJZTZQ7EiY=;
+        b=BqCOvMQckbXfBv/Iwmb9aj948Aq3MRx8lckGtDgRl9dpQNF0fTLFcB8FZrxfHcGjWL
+         aQjZqNLxGWyiJyGMHEntGVHUDglO5PDWVw6hxVVhiawEH5GpukL6acuA0WojiP4RJr84
+         xVDhAFAlD/LndgClRLEhBcmAFdiWfxtFp3QHyFS0OlI9988EL+AbjMDkqihcYTzSOWqj
+         g88427wo/3yKm0plKqW3+swGddHQBrmp1wZOBcc4bCw1nCh6aPgDUKQInctx0esIG4DV
+         0tkTjKLYr3jnNQTbX6SriG1SCld4hlID7FQBPGdiv5C6YeNFxK4RpAkL1xnXduwzWLE9
+         p28g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789061893; x=1789666693;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=kqdEW/NNqFtqi6NoYYLQ2JpoLKEb30OYDLJZTZQ7EiY=;
+        b=Cn0RFKTu+YXtJ62jgQnfmQ6zLOysV4IwG1W2xl/mQzKMv22ONdIzfl8wa2CPxOFR/4
+         /BPpz2fMo8Sr7x/idEEKWALJangVJj90HysGI1++jfxyzc29iRaGpsEytT5H9oCNCGlm
+         LnZuQANLn58OfGLfu31O+IOCNAKguKg+HnebJrwmNfaRfI1eDIt8aQnHBFht4bC5vLrd
+         qN68c1Pyhxg2UKoTBV5XMS7Sm9euHj6agZ8EFUE8Ix1hZ5WA+qEF6Rgksj3kSmLKq5ZU
+         Y6O7SXaj2q2Ys1qP5szPi0F5CfU9lAmQKEusZmzr5tBcvC2AtRcZcmmkKK+F2lJGEnBn
+         Z3Bw==
+X-Gm-Message-State: AFuF++kFclFeWjdjU2qHsPxl2drBF5ZCki4G6Kjq2sylfA3FGGPrjh40
+	2cXAnk/knNl1O0Wc1Onqq6Ab7TUeGY3nSlRJRihD/sSZ31DLfZ4vGDnuZFohXpQqc8pIg7PFTIB
+	nGya6q98DnXnLZuHHBwDHSWvCQuzFQfJIASuXoycmPXB/Rzer7r5oLq6cUQ==
+X-Gm-Gg: AYBFou2mMsQh5OFsOK2kSuJUeOJJLk8MksCK/WBqpuRBIx+WzZBV1eYXi15GROpONSo
+	QIuxfcm+fwm5QWq028fpzcxUZiWUslZwosnHWl9PUw/dh3wS2gil8GfznqIsARxQMTtM7tYX6JR
+	bBYTDJDoEupDdicSxPV7Lh9qTWcYsFZg6beoja4edqzItbr9+/FLHAhGVJ2PenCoTL9lkh1MQB2
+	VMhiwzuZnCh9Q0mIGpju6783+D8FNK6dfKP3VZy3KK8xEtiL9tWw7wUuMapBJQmlrOsGCQMvGSX
+	UrxO7toPwoRqiOQUjeXPf5XnsFEtpaoF49j2kgmcvXOyoB9k+JzTwosg
+X-Received: by 2002:a05:6808:d4e:b0:4bd:c8be:1e07 with SMTP id
+ 5614622812f47-4c31953a9c1mr106630b6e.1.1789061892771; Thu, 10 Sep 2026
+ 10:38:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart15836323.tv2OnDr8pf";
- micalg="pgp-sha512"; protocol="application/pgp-signature"
+From: Firas Shaari <cto@80211networks.com>
+Date: Thu, 10 Sep 2026 13:38:01 -0400
+X-Gm-Features: AcwNN1UIDEPi8j6yQIOoGHvPthCGEXcasaSqfG8o52oZcQQJdGbhVLvxzOPC3AU
+Message-ID: <CADO+z2hr0r5MsOGCYJPecbVq4GeV5rymErCHOrE5hTYufn-sUQ@mail.gmail.com>
+Subject: What does the txpower value passed via nl80211 actually mean?
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 
---nextPart15836323.tv2OnDr8pf
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"; protected-headers="v1"
-From: Sven Eckelmann <sven@narfation.org>
-Date: Thu, 10 Sep 2026 18:56:26 +0200
-Message-ID: <2927239.BEx9A2HvPv@ripper>
-In-Reply-To: <20260910144914.8025-2-fmancera@suse.de>
-MIME-Version: 1.0
+Hi all,
 
-On Thursday, 10 September 2026 16:48:26 CEST Fernando Fernandez Mancera wrote:
-> diff --git a/net/batman-adv/Kconfig b/net/batman-adv/Kconfig
-> index 58c408b7a7d9..60ad4b09be6e 100644
-> --- a/net/batman-adv/Kconfig
-> +++ b/net/batman-adv/Kconfig
-> @@ -9,6 +9,7 @@
->  
->  config BATMAN_ADV
->         tristate "B.A.T.M.A.N. Advanced Meshing Protocol"
-> +       depends on IPV4
->         select CRC32
->         help
->           B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is
+My background is more on the RF/testing side than kernel development,
+so this may already be well understood by people on this list.
 
-This doesn't make a lot of sense to me IPV4 is not a requirement for 
-batman-adv. Only very specific features will require symbols from IPv4:
+When I run:
 
-* CONFIG_BATMAN_ADV_BLA
+  iw dev wlan0 set txpower fixed 2000
 
-  - arp_create
+on a 4-chain AP, what exactly is the 20 dBm intended to represent?
 
-* CONFIG_BATMAN_ADV_DAT
+ a) Conducted power per TX chain, meaning 20 dBm per chain, with
+    approximately +6 dB when combining four chains, plus antenna
+    gain; or
+ b) A total/EIRP value that the driver is expected to account for
+    across the chains?
 
-  - arp_create
+The nl80211.h documentation only says "Transmit power level in signed
+mBm units", and I couldn't find anything that clearly defines which
+interpretation is intended.
 
-* CONFIG_BATMAN_ADV_MCAST
+From what I could follow in ath11k, it appears to be (a), but I'd like
+to understand whether that's the intended meaning across drivers or
+simply how ath11k implements it.
 
-  - ip_mc_check_igmp
+The reason I'm asking is that on OpenWiFi APs, this value goes directly
+from the controller down to `iw set txpower`, and at least one
+controller has been labeling the value as "EIRP" in its UI. People
+design their networks in Ekahau using EIRP, enter that same number into
+the controller, and can end up with cells that have a much larger
+footprint than planned.
 
+I have a LitePoint tester and plan to measure the conducted power per
+chain across a few chipsets, including ath11k, ath12k, and mt76, using
+APs from Edgecore, Actiontec/CIG, and a few other white-box
+manufacturers.
 
-Basically things which currently depend on INET in net/batman-adv/Kconfig
+If (a) is indeed the intended interpretation, I'd be happy to send a
+small documentation patch so the next person doesn't have to guess.
 
-Or am I missing something here?
-
-Regards,
-	Sven
---nextPart15836323.tv2OnDr8pf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQS81G/PswftH/OW8cVND3cr0xT1ywUCaqLhOgAKCRBND3cr0xT1
-y0QVAQCluQcX0gr2MIQxC1VBX8WP3ecVDFqIOBKX04RTLEdoGQD+LCZ3LWDtGBbG
-zKG3h3F96XOApdHINtJ4L0x6nSSviww=
-=kxMI
------END PGP SIGNATURE-----
-
---nextPart15836323.tv2OnDr8pf--
-
-
-
+Thanks,
+Firas Shaari
+802.11 Networks Corp.
