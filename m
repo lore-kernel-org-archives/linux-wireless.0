@@ -1,122 +1,107 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-46.mta0.migadu.com [91.218.175.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5439535C69C;
-	Thu, 10 Sep 2026 02:40:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80777383C93
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 03:11:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789008054; cv=none; b=VsuOWYimh4RceU4yZFNxAyTrpEbCOyf6dfpciIeQD/0RERMxCKXklMaNs4oVXsPLPItgRPnF60nwdJVD/RFkSs4kl+PGHvTsO3/tisebob0c6t8g1Vikr2ApmK/zdDTOJWj+A3kr54J//rpsE00cULmxSPtnmv5AYDayn2EnGAw=
+	t=1789009877; cv=none; b=mtH347iGOUjzVLuJtto/YzxRO4flcik65fiD7TwfXhMByrhVxIiUdwvNY2NehrHc/EWjbJQfa2iyn61ZlJAc9dkOrpDvdPvC2f48VXenbQnC0mmtpmObYqzm4rs83+4CkRSjZ5DM3e6wk5+rMHjX45NbCZw8i3wTp0U0eos84Hk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789008054; c=relaxed/simple;
-	bh=qFO0jTQBXXaL45Ge3elu9TFhAI69oOsEtteNa/WXtI0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=eM4rS2B3bbOASN/+gC+d1ksPCA5wM3swVUzReN15eTjZnK3aj+lbn8R/+uG7x5aZ/1qwTe2Tv2KkT/KPtjgYBSlOQ4NpyzR81ay3qPGkq5t1/hkQGhHKuvPf/fAYNN9OyQ08EIOqW/TOndAJD8AGQOBOb/AoEMD5g6p8OK7RGOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=kU1lrjN1; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789009877; c=relaxed/simple;
+	bh=7KzUFv49w6HE+2wsp3PnziaKu2DGbCjmay2SdfIHDLI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ql/S4uWe1QrlpyS4su1VfXwHhgeMmWg0dDw49FmkM9FId4DP6UAtKKGQUe8GmHGS5ZGiC1TVHSXVg0vDC4I4TXSlk27hN7smTcMq809GqFbCJ8XxHo62lfoGCAFOOedSbi6hY82li6kXeittS0icybBmnlCoJVqkt94Q5OpReVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=bLEEzxmW; arc=none smtp.client-ip=91.218.175.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="kU1lrjN1"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68A2edk771120726, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789008040; bh=qFO0jTQBXXaL45Ge3elu9TFhAI69oOsEtteNa/WXtI0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=kU1lrjN1n360TdCM2PL9ElRKy9vYf0KHFmo8gapxnki7dXs+C+VyW5nHRNrzOvcEr
-	 OOYdgR4Sv2EgKHcyft6wpS5UrMhNG2bAkcG0FoR/t3XKNALKfOjeORoaRrRuMozBvY
-	 HLOGWjAgTkfsYXLEF/GaYGoj6fRpxnKz+YRwxcUfJNsNgHORZ4W5wcwYybrOFCRJqK
-	 YeTtgApB57LEYoK/AieJkYxT1mrTj226cSLWpvsjYUYhEZI2e/s3CXDiQBx6vD6azp
-	 eTxvEsMnkmkLVIFHq7aennmuXrr5E6XmHxRmiZbUuTt7C4odpVgEDaLjwWuaKOWzFr
-	 jAL3EkqEd33vw==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68A2edk771120726
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 10 Sep 2026 10:40:39 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Thu, 10 Sep 2026 10:40:39 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Thu, 10 Sep 2026 10:40:39 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Thu, 10 Sep 2026 10:40:39 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v11 5/7] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Topic: [PATCH v11 5/7] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Index: AQHdQC9YAxgQ7t6BwEqCwzl3Ie3kvbbHGw6g
-Date: Thu, 10 Sep 2026 02:40:39 +0000
-Message-ID: <351ffe7fa4d94b34ae6ce9984bb8b5b9@realtek.com>
-References: <20260909074556.55709-1-luka.gejak@linux.dev>
- <20260909074556.55709-6-luka.gejak@linux.dev>
-In-Reply-To: <20260909074556.55709-6-luka.gejak@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="bLEEzxmW"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=7KzUFv49w6HE+2wsp3PnziaKu2DGbCjmay2SdfIHDLI=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789009871; v=1; x=1789614671;
+ b=bLEEzxmWINUk/EsTxr48Onxrvfy9wt6Uq+CScH6ZXx5Y29mYc+oS0s8u0c2Lrge2C2uta3rE
+ MvwqmmYnRJonoDkEkEluDxGbn5arArPlOi2rPKeYMxk+Zj/fW5CIGX4PPISR23oJwBlkK1xxJ0t
+ vms09vmeXJ6WX9o8ydz4OZIPvN+vkLqBs1pOVgNR6gjXus8fCvBpQPv+ENc9XSjUeTNdpBZ9n2H
+ L6zBoNuR+wlxttjL/5ZWJhSgE6CNYP4YDIlUA6/wloA62HYu28b8JmDAU2Hyx6HcUjLtwN07rM3
+ rakPlIZyuIplPODwWBa271UL0uWREX3SPlC4/MfIWj/CQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 6d022997a9e88ff3;
+	Thu, 10 Sep 2026 03:11:11 +0000
+X-Mizu-Trace-ID: 6d022997a9e88ff3
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: stable@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Wentao Guan <guanwentao@uniontech.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 6.18.y 1/2] wifi: mt76: mt7925: cancel mlo_pm_work on stop
+Date: Wed,  9 Sep 2026 20:11:01 -0700
+Message-ID: <20260910031106.25906-2-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260910031106.25906-1-lucid_duck@justthetip.ca>
+References: <20260910031106.25906-1-lucid_duck@justthetip.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
-> From: Luka Gejak <luka.gejak@linux.dev>
->=20
-> The RTL8723BS reports free TX page counts that the generic 8051 path
-> reads back from the chip on every transfer, which is both slow over SDIO
-> and unreliable on this part: the register frequently reads back zero
-> while pages are in fact available. It also gates transmission on a free
-> count in the SDIO output queue, REG_SDIO_OQT_FREE_PG, which rtw88 does
-> not track at all. The vendor driver calls this the OQT free space and
-> never expands the acronym; the register holds the number of further
-> transfers the SDIO output queue can accept, and the chip discards
-> writes that arrive when it has run out.
->=20
-> Mirror the vendor driver and keep the per-queue and public page counts
-> in software, seeded at start and resynchronised from the chip only when
-> the cached counts say there is not enough room. Wait for a free output
-> queue entry before writing, and account for the pages consumed after a
-> successful transfer.
->=20
-> rtw_sdio_write_port() becomes a dispatcher. It works out the transfer
-> address and the aligned transfer size, which both paths need, and hands
-> them to rtw_sdio_write_port_8723bs() or rtw_sdio_write_port_generic().
-> The transfer itself moves into rtw_sdio_write_to_port(), which both
-> call, so the generic path is step for step what it was. The padding
-> added by the previous patch stays in rtw_sdio_write_port(), so it still
-> runs once for both paths and stays outside the credit mutex.
->=20
-> The RTL8723BS path keeps a separate length for the accounting. The chip
-> charges pages by the frame length rather than by the padded transfer, as
-> the vendor driver does, and the two differ just above a block boundary:
-> a 1025 byte frame is nine pages by length and twelve by the padded size.
->=20
-> The check, the output queue wait and the accounting are serialised by
-> a mutex. The TX worker and the H2C path reach this function
-> concurrently, and two writers that both pass the checks can otherwise
-> claim the same pages and output queue entry, after which the chip
-> silently discards whichever transfer arrives second. The vendor driver
-> avoids the same race by funnelling all transmission through one thread.
->=20
-> Measured on RTL8723BS hardware against an iperf3 server one hop behind
-> the AP, with the wlan0 byte counters as ground truth. On the generic
-> path the association completes but no data passes at all: TCP and UDP
-> both measure 0 bit/s in either direction. With this patch TCP is
-> 25.3 Mbit/s up and 37.3 Mbit/s down, and UDP is 25.0 Mbit/s up at 0%
-> loss.
->=20
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+commit 81faf578320df2dfc682a96baa6e85851dd68b6f upstream.
 
+mt7925 queues mlo_pm_work with a 5 second delay during multi-link
+power-save setup and never cancels it on the stop path. If the device is
+torn down inside that window, the work outlives the teardown and its timer
+fires afterwards, trying to queue onto the workqueue that is already gone:
+
+  workqueue: cannot queue mt7925_mlo_pm_work [mt7925_common] on wq phy0
+  WARNING: kernel/workqueue.c:2283 at __queue_work+0x59/0xa0, CPU#1: swapper/1/0
+   call_timer_fn+0x2a/0x140
+   __run_timers+0x203/0x330
+   run_timer_softirq+0x86/0xf0
+
+mt7921 already has its own stop callback, so add one for mt7925 that
+cancels the work before calling mt792x_stop().
+
+Fixes: 276a56883257 ("wifi: mt76: mt7925: update the power-saving flow")
+Cc: stable@vger.kernel.org
+Tested-by: Traockl <281473483+Traockl@users.noreply.github.com>
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+---
+Backport note: the upstream message ends "mt7925_ops backs both the PCIe
+and USB drivers, so this covers both." That is wrong and I said so on the
+list on 28 July. mt7925u_probe() replaces the stop callback with its own,
+so this reaches PCIe only. I dropped the sentence instead of carrying it
+into three more trees. The USB gap is a separate fix, not yet sent.
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 910713e..d22e25b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -2180,10 +2180,19 @@ static void mt7925_rfkill_poll(struct ieee80211_hw *hw)
+ 	wiphy_rfkill_set_hw_state(hw->wiphy, ret == 0);
+ }
+ 
++static void mt7925_stop(struct ieee80211_hw *hw, bool suspend)
++{
++	struct mt792x_dev *dev = mt792x_hw_dev(hw);
++
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
++
++	mt792x_stop(hw, suspend);
++}
++
+ const struct ieee80211_ops mt7925_ops = {
+ 	.tx = mt792x_tx,
+ 	.start = mt7925_start,
+-	.stop = mt792x_stop,
++	.stop = mt7925_stop,
+ 	.add_interface = mt7925_add_interface,
+ 	.remove_interface = mt792x_remove_interface,
+ 	.config = mt7925_config,
 
