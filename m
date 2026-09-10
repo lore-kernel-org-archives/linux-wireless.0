@@ -1,270 +1,207 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F633BBFCB;
-	Thu, 10 Sep 2026 06:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789022305; cv=none; b=NW0VprgXDzbOaHZDdeknoS+JFLDrUbozZW/eToqL94Qb4dLhU8fZBmTJzsnMyDxP7l5GUvEvCaYr/0KHHPqg1QTMwB9Iapc+48FadSvgJIE19W3xL3MSfdrO67nO9sHUx4Db9m08qZHKJPU7Rh6w40VLHriVIZbvKFsBHFpVNBQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789022305; c=relaxed/simple;
-	bh=Xa++H7v6qEgzzdyfPyOcE5bKef4SLwZKaPl0D8ZKFaY=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mgnzCDEBh/oT562edIxIVOFjGTxU1fuXt2xJNiqJfSAznTBRHOtEDEhXlBrmw/DOIEtHp0470gG17AkAgNiU3o8jqwgPq27mbG1/sHRnbS/aDR1E0RoK2G8p7CA1zA5239jBZfSLWffqMwiL2PvhSm+lein4uENcKj47f5z3WdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHrQgRYL; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0AF339705
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 06:56:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.180.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789023392; cv=pass; b=nRoz1IyROj2wUiDkDZ9YBHhpvxcvJDU3a5UGde+QKQC3zQ6a30iL16/sDQ6QIHj1scrPTHOzJS8rOD3dmM5JxWksOswt+v0mD5awWfCG7ia1EiFP44DTvGBpqJlEiCV3r6in9vdN6XJ20LIE32gl3+MKZPSV1saXAjCMWVO4aA4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789023392; c=relaxed/simple;
+	bh=QCIBypbvSEDwPB79oGI8b7TPpbZZpQV2xU4HGmoWamY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fiILTSzhRinWRj4chzD//T1o9cdibDYPYcLKjImYxGmkal/GVtB7gZ2z2aVZhGpzO3eelI8sWC7ZloozMjTgo8Ovr1Y1waaxjJ60XeBbp/MSGn9OOeiVmsxiiZ2A5JmO1/R5t6AgapuIxezz6/+0PStGY4wE76JY3P+crQS1Cug=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JVIO0I+Z; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=N3/UmuA/; arc=pass smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHrQgRYL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDC481F000FF;
-	Thu, 10 Sep 2026 06:38:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789022303;
-	bh=PgBCmpi9wIbpt8bE7nm61uWUm4ngcd2ZYPDryY49W1w=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=FHrQgRYL7RGlmlauPePOIBZIx6Sp9yD3oqZHcOafkPPWEjE1LQ2JjGSco5lIWVBUn
-	 yB3aj4Mu6wZVOrVCXJ2ow3iMYKEaWay1CnJXd13GaQGLfgT+XsKx/58HfLktwizuPp
-	 ZrJGJpqhPr42k0yEjjFLY2xo7wp2GnGb1jzjQkOvUt5RVzy76zC0wNXvN7L0pb2hCt
-	 u08DO9XMGlbUtTyJpaR8agJUY6xdXh6EeWy0AHUfxnJlN5NmWP2irGmniB11g8RlHj
-	 Qe67yhfjR4KbzUzmFXLknjsnMhgTd3csraeTBWcmpK5aXAmoPEt0MP3w4Qbso+0jVF
-	 kJizgsLlf6sdg==
-Subject:
- Re: [PATCH] wifi: wilc1000: validate packet bounds in RX buffer parsing
-From: netdev-bot+sashiko@kernel.org
-To: elb12345@hotmail.co.uk
-Cc: kvalo@kernel.org, ajay.kathat@microchip.com,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, kuba@kernel.org
-Date: Thu, 10 Sep 2026 06:38:22 +0000
-Message-ID: <178902230252.219967.10764605657139372266@kernel.org>
-In-Reply-To: =?utf-8?q?=3CAS8P251MB0001BF71A8397CE77A82E7E2C8B32=40AS8P251MB?=
- =?utf-8?q?0001=2EEURP251=2EPROD=2EOUTLOOK=2ECOM=3E?=
-References: =?utf-8?q?=3CAS8P251MB0001BF71A8397CE77A82E7E2C8B32=40AS8P251MB0?=
- =?utf-8?q?001=2EEURP251=2EPROD=2EOUTLOOK=2ECOM=3E?=
-X-sashiko-severity: Critical
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JVIO0I+Z";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="N3/UmuA/"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68A5H1sY4142926
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 06:56:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	4aKPvfZM58gWA2EaVlumqwxLg4OnLhGg//o4cfo9NEw=; b=JVIO0I+ZwDlKHM9j
+	D/TeQvqZBmIEW9WUiTGLQ5qeeqjgQPsQkJumGssyryITlk9QBUx10hJVFql8vNL3
+	9l4GCWGxhCUbFNApr89KsneusjCZJVGag/jknTuEBdaA9CmXAIaTKAEeAAKHulrg
+	pIbON/BCRy4/HsG9DdgxhSyCbFYWZ6oy9cZg5m20efgKhngdoWIwrEK+G5tiJzG+
+	iFH37RSVkFj20VeObSwGIaNmg8KtiRBRWsGgar7g6hfuP/xgWRCttJlFWtbIewnF
+	rhWHGck2OZHYcGU0afhUagZ9M0Dl0lXYakAl2bmBlnwhuyej2dKKZlTbwAiADboy
+	ofslXA==
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com [209.85.128.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gkcyd2fq1-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2026 06:56:27 +0000 (GMT)
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-872022ea3c0so135390867b3.3
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2026 23:56:27 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789023387; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Jd2gEE/pXRjJuY/AtyNuCa9waFpXhTZhcv3LVQOpah3BPNyB+8eSngDQhIQh0CdCtd
+         f9h1/f7pImlxKIxB+IR9PCc2Tf8AkNojJbeJ+vkk37SL4IkFZBZXqfpNW1ZsWYOXlQLH
+         8MDRfIlTCTUfpfBSpI1JwyrcrXbFTaHEHc29ATdsVmurLsIUknVT6twzgYCiOX4dChOU
+         oll5aG5bL9jRToMHlMg8RAPT/VB5pu08lllUcVfgUn93GZUKLpKwQDVaTeG/5j0UwE9F
+         aamxtl75WARGigze+8AsDhsOVTR7j36NHskGHXuzlMxuT8h8HYqZP8Z9yBTAG+3Oj3uI
+         x7Cw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=4aKPvfZM58gWA2EaVlumqwxLg4OnLhGg//o4cfo9NEw=;
+        fh=3SX/qiVliutkrG8sLV1T+yXIsjVYTqohq93KrU0bhAQ=;
+        b=qUOZSl6l8qyQLZFmQlLzMjWSTQvFNNxj6vNwiR0NtFIk0auKdvIfA5ovefZ+FKeoaf
+         EPN72+G/rcmxzkj+O8LPF/R5pZ7q0o0q8A4zNp8n+2gJKpwPx4RG12sdXlARnPp2JuvZ
+         h11ZmccAsr9Qlus8cRhiLteMB970FxdBQyQLiXM+ztT2vKTHKGn1/amY9EOfC1LGuFJS
+         jxOLEtnHtDU62KDnwhxeDnYR7f2gVOaEvuEiq8niQMLq2DKW61+QkgmqEkBxcBpcclx6
+         FVQEoDRRsSDDiXNt2/2SxqPeZZ2p7G3+JrS8J3mXG7I1p9YCHRciSIEcv4OdHtwAE3xQ
+         dNCA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789023387; x=1789628187; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=4aKPvfZM58gWA2EaVlumqwxLg4OnLhGg//o4cfo9NEw=;
+        b=N3/UmuA/GDFjpiN06pqhcdILFaomp/l3yTDM/Jlh9XKbabS/uar9MWww7KMxqEziZ7
+         q4PH05gvA5o0AuCX8T5zmkesOSDQp0LTd3kALLtcrMem1xGHyrnV822QQ8z17MhPsQGI
+         i+jE9yeed/7P0cqiP/gQ7ZzP/XdmGgC0iyonQh9MYz638nbvMocUg3FY1R3s7Dq5HF5r
+         IgfPWEE7ZP+7w0F8EzIO65rq37ThlgBztFShI6mz9blXBeuBRijhCZMvMYdO7eGMFEyD
+         VFhuSpNxXlUld1kapafcH+iUIjTIGWRDCAPAtBT3vw2h4eH6JOlYHZ9//JtJYJ8Zdwuk
+         4uQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789023387; x=1789628187;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4aKPvfZM58gWA2EaVlumqwxLg4OnLhGg//o4cfo9NEw=;
+        b=UBaDF+vOuGuFV2fgOdqyn5ncuNVOXnLjwdVuAHHni8eSuklHl9sZ0PHxx2Jc95uwu8
+         RNn19K6YTgRH2AnEEneIkyXFJTXF4E9l4Gd+dcL1f8lOj13O3Pf/65WEuKb9EMMgwpna
+         7atyl0EG6y1dKYKFNI0ycv8OEQDdtdU/36q2prqRRgWdZQK6nkKWxpxPgponb06J/YBF
+         qz66KeVjoe25MjkrsgV+QIIFyIt5L40uZbryvidlAfSwd18PX+YcnvNObu78+pVDuYc4
+         jzsjOMWpXqY5RrZI2tMIOPAD5g1RrWyBOKKeYXffrK62D3AyeyPdfsKoDClJM0OG64al
+         /AHg==
+X-Forwarded-Encrypted: i=1; AKwUvByGqDLJjrQ6XDcHbw6PguGqikjR9xuMw0RvaCC9Q9RsOSVAr4CN0IdwiLJbuiVWn+QMdIYZzeNKoI9Mwz6cEw==@vger.kernel.org
+X-Gm-Message-State: AFuF++m4V6k6fOZFAqgg9FfAK+M7m8GDsX4JesBUNiQG2rSaKb/dp5Iw
+	M6NFxSNf4LsxqISa2ymFxoKk/BfhOkK6MHUpkfqhrvIdQJ1DHbvKnfCzBTFnTr8V80JaiNZK3Du
+	hARoXmuMvh8Wb9qXDhtAd6O9rEKbLOWoM5gVGpEdo2hnnFWMKH8LM05wMIlx6OmKvknfYNDTZvA
+	+LD+0zzUVWdhp9Dz/3nsmkQdgPKGyBbfXOzD71zVKpLdcs
+X-Gm-Gg: AYBFou1J2RUNi8fFEMZTIxqkCtL4V48TDwRA4IgIgyhnKAOd0Ewau1LBXnohB40Ej9R
+	NkRECrHW6lOv1jkj2OjQ9iYLhrrjfcjwQOSWvYjA60mS20KuFcGpDTg5+I0QZ5SwqL1UZ/5HuhA
+	SsgXoa0c62BRmfF3bul6Fge9DkBdtVkA8DWFkqiH3s7BD2AoGgZolffE8IZw==
+X-Received: by 2002:a05:690e:1381:b0:66f:d093:c206 with SMTP id 956f58d0204a3-66fd093c2bdmr9267275d50.17.1789023387544;
+        Wed, 09 Sep 2026 23:56:27 -0700 (PDT)
+X-Received: by 2002:a05:690e:1381:b0:66f:d093:c206 with SMTP id
+ 956f58d0204a3-66fd093c2bdmr9267270d50.17.1789023387057; Wed, 09 Sep 2026
+ 23:56:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <888efe8e63b6a18fae4acd5a90a1e0e69dcdf2ca.1786012495.git.geert+renesas@glider.be>
+In-Reply-To: <888efe8e63b6a18fae4acd5a90a1e0e69dcdf2ca.1786012495.git.geert+renesas@glider.be>
+From: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Date: Thu, 10 Sep 2026 12:26:16 +0530
+X-Gm-Features: AcwNN1XL2UjMnNz9rSDQ09SUEB1jM8vYqGgIh718AFVmKu_cGWQR2wlTCqQPHEc
+Message-ID: <CAGptzHPbPKE7sQXfePGLH7_qVL8m7ihQYrB+L7kXR0EE3FMzsw@mail.gmail.com>
+Subject: Re: [PATCH] firmware: QCOM interfaces should depend on ARCH_QCOM
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Arnd Bergmann <arnd@arndb.de>, Krzysztof Kozlowski <krzk@kernel.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Linus Walleij <linusw@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-GUID: npCBJqcel6Bmd7Jeih85icCMzNja7f2d
+X-Authority-Analysis: v=2.4 cv=ef+o7LEH c=1 sm=1 tr=0 ts=6aa2549c cx=c_pps
+ a=g1v0Z557R90hA0UpD/5Yag==:117 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=rJkE3RaqiGZ5pbrm-msn:22 a=EUspDBNiAAAA:8 a=rMNxEFciD2boAfdi9R4A:9
+ a=QEXdDO2ut3YA:10 a=MFSWADHSvvjO3QEy5MdX:22
+X-Proofpoint-ORIG-GUID: npCBJqcel6Bmd7Jeih85icCMzNja7f2d
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTEwMDA3MSBTYWx0ZWRfXxlCfiq0JJq5b
+ RgRWiyKc65VKQ2J82zQu6f7CU6y0gvf63/uS6jNTSXbOnsKM3r4ckJMHQlWhI7MQxnDjFqs8eKy
+ OK+6olkMY6TswevQuH3wGIdv8d8yeDg=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTEwMDA3MSBTYWx0ZWRfX9F1mSI0NbeYm
+ GU8NiyxmRaPci9EOiBz7jqMy6m72suMpbnJk7UJCEluctDBTMgzsU24SjfdSv7DqCaqnGcGGI0R
+ /GqbeNxRxEqXHCN2muVvyGVEM4coX7cjOmU+Vt5bPVKgIGXotSTVB08zCnxQuP2AzHpfLFaYyLH
+ bNGv9GdwFVUzTJSMhA3d8/biT80V7H9qdvC3wYP5ejLo20a4YtRzEg2PzJGZ3G/ses2GDuEhdHU
+ VEugjN+jOjua5asx3/cXMiU6RtCFpCTKdWkHu4L0KPPmgc/8xmjDgHVb2n0rICBBIJmjDxUG537
+ 61H7eh66MLPHfwFYsx5LIPB055iYI27VmB+/YftVi1KyK//hnhv9G6VVGWvWEd2fWhoWsO6fxbs
+ xRMdoK6jLJusNi2WRYTEYo20BEh3TLFCV2uKxf1qycmc2SE6xWJwmJ+8+BoFOVOtujI5OVOeji4
+ A9Qjy2rO1MwtLu2NRTQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-10_02,2026-09-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 suspectscore=0 adultscore=0 priorityscore=1501
+ lowpriorityscore=0 clxscore=1015 phishscore=0 impostorscore=0 bulkscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609100071
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issue(s) to consider:
+On Thu, Aug 6, 2026 at 4:05=E2=80=AFPM Geert Uytterhoeven
+<geert+renesas@glider.be> wrote:
+>
+> The various Qualcomm firmware interfaces are only present on Qualcomm
+> systems.  Hence add dependencies on ARCH_QCOM, to prevent asking the
+> user about them when configuring a kernel without Qualcomm SoC support.
+> Make QCOM_PAS invisible instead, as it is already selected by its users
+> when needed.
+>
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+> I wondered whether QCOM_SCM should be made invisible, too, as it seems
+> to be selected by its users? But apparently commit 5c1a2975d23c51c0
+> ("firmware: qcom_scm: Migrate to generic PAS service") in net-next/main
+> and soc/for-next made it visible on purpose?
+> ---
+>  drivers/firmware/qcom/Kconfig | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
 
-Critical: 1 · High: 1 (1) · Medium: 1 · Low: 0
+Reviewed-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
 
-- [Critical] The `size` that the patched parser now treats as its
-  authoritative bound is a raw device-supplied length that is never…
-- [High] The new checks bound only the upper end of a record
-  (pkt_len/pkt_offset against tp_len, tp_len against size - offset) and…
-- [Medium] The new validation still accepts transport records that cannot
-  contain their own 4-byte header, and payload offsets that point inside…
+-Sumit
 
-Pre-existing issues:
-- [High] Short public-action management frames underflow the vendor-IE
-  length in wilc_wfi_p2p_rx() (cfg80211.c).
-
---
-
-wifi: wilc1000: validate packet bounds in RX buffer parsing
-
-The patch converts the record loop in wilc_wlan_handle_rx_buff() from a
-do-while into a while loop that requires four header bytes to remain, and
-adds checks of tp_len against the remaining buffer plus pkt_len/pkt_offset
-against tp_len.  A few questions about how complete the new bounds are.
-
-> diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-> index 4b116fe6f9ea9..3ebcd688f2dd5 100644
-> --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-> +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-> @@ -1111,7 +1111,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
->  	int is_cfg_packet;
->  	u8 *buff_ptr;
->  
-> -	do {
-> +	while (offset + sizeof(u32) <= size) {
->  		buff_ptr = buffer + offset;
->  		header = get_unaligned_le32(buff_ptr);
->  
-> @@ -1123,11 +1123,19 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
->  		if (pkt_len == 0 || tp_len == 0)
->  			break;
->  
-> +		if (tp_len > size - offset)
-> +			break;
-
-[Severity: Critical]
-Is "size" itself known to describe memory inside the RX allocation?  The
-only producer is wilc_wlan_handle_isr_ext():
-
-drivers/net/wireless/microchip/wilc1000/wlan.c:wilc_wlan_handle_isr_ext() {
-	size = FIELD_GET(WILC_INTERRUPT_DATA_SIZE, int_status) << 2;
-	...
-	if (size <= 0)
-		return;
-
-	if (WILC_RX_BUFF_SIZE - offset < size)
-		offset = 0;
-
-	buffer = &wilc->rx_buffer[offset];
-	...
-	ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
-	...
-	offset += size;
-	wilc->rx_buffer_offset = offset;
-	...
-	rqe->buffer = buffer;
-	rqe->buffer_size = size;
-}
-
-WILC_INTERRUPT_DATA_SIZE is GENMASK(14, 0) and the field is word scaled, so
-the chip can advertise 32767 << 2 = 131068 bytes, while wilc->rx_buffer is a
-single WILC_RX_BUFF_SIZE (96 * 1024 = 98304) byte allocation.  Since size is
-u32 the "size <= 0" test never fires, and for size > 98304 the code only
-rewinds offset to 0 and still issues hif_block_rx_ext() for the full size;
-wilc_sdio_read() and wilc_spi_read() only reject size <= 4, so nothing clamps
-the transfer.  Can this write past the end of wilc->rx_buffer?
-
-There also seems to be a second-order effect: rx_buffer_offset is then set to
-offset + size (up to 131068), and on the next interrupt
-"WILC_RX_BUFF_SIZE - offset" is evaluated in unsigned arithmetic, so
-98304 - 131068 wraps to a huge value that is never < size and the rewind
-never triggers again.  Would that leave buffer pointing entirely outside the
-allocation for every subsequent block read?
-
-Because rqe->buffer_size carries that same unvalidated length, every new
-check added here ("tp_len > size - offset" and friends) can pass while the
-parser walks memory outside the allocation.  Would clamping size to
-WILC_RX_BUFF_SIZE in wilc_wlan_handle_isr_ext() be needed for the new bounds
-in this function to mean anything?
-
->  		if (pkt_offset & IS_MANAGMEMENT) {
-> +			if (tp_len < HOST_HDR_OFFSET || pkt_len > tp_len - HOST_HDR_OFFSET)
-> +				break;
->  			buff_ptr += HOST_HDR_OFFSET;
->  			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len,
->  					 pkt_offset & IS_MGMT_AUTH_PKT);
->  		} else {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since the management check
-here only caps pkt_len from above, short management frames still reach
-wilc_wfi_p2p_rx() in cfg80211.c, where the vendor IE length underflows:
-
-drivers/net/wireless/microchip/wilc1000/cfg80211.c:wilc_wfi_p2p_rx() {
-	...
-	if (!ieee80211_is_action(mgmt->frame_control) ||
-	    !ieee80211_is_public_action((struct ieee80211_hdr *)buff, size))
-	...
-	d = (struct wilc_p2p_pub_act_frame *)(&mgmt->u.action);
-	if (d->oui_subtype != GO_NEG_REQ && d->oui_subtype != GO_NEG_RSP &&
-	...
-	vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
-					    buff + ie_offset, size - ie_offset);
-}
-
-ie_offset is offsetof(struct ieee80211_mgmt, u) + sizeof(*d) = 24 + 8 = 32,
-but ieee80211_is_public_action() only guarantees
-IEEE80211_MIN_ACTION_SIZE(category), i.e. 25 bytes.  For a 31 byte frame
-d->oui_subtype (frame offset 30) is still in bounds, and "size - ie_offset"
-with u32 size wraps to roughly 4 GiB.  Does that let cfg80211_find_vendor_ie()
-scan far past the RX buffer?
-
-A "size >= ie_offset" guard in wilc_wfi_p2p_rx(), and/or a minimum pkt_len
-check for management records here, would close it.
-
-> +			if (pkt_offset > tp_len ||
-> +			    pkt_len > tp_len - pkt_offset)
-> +				break;
-
-[Severity: High]
-The new checks bound the upper end of a record but never require a minimum
-length, since only zero pkt_len/tp_len is rejected.  Do the consumers still
-read past what has been validated?
-
-For the data path, tp_len = pkt_len = 1 with pkt_offset = 0 passes both
-checks, and then:
-
-drivers/net/wireless/microchip/wilc1000/netdev.c:wilc_frmw_to_host() {
-	...
-	wilc_netdev = get_if_handler(wilc, buff);
-	if (!wilc_netdev)
-		goto out;
-
-	buff += pkt_offset;
-}
-
-get_if_handler() is called with the record start, before pkt_offset is added,
-and does:
-
-drivers/net/wireless/microchip/wilc1000/netdev.c:get_if_handler() {
-	struct ieee80211_hdr *h = (struct ieee80211_hdr *)mac_header;
-	...
-			if (ether_addr_equal_unaligned(h->addr2, vif->bssid)) {
-}
-
-That touches bytes 4..15 of the record.  With the loop guard only requiring
-offset + 4 <= size, a record at offset == size - 4 would read up to 12 bytes
-beyond the region described by size.
-
-For the config path, pkt_len == 1 is accepted, but:
-
-drivers/net/wireless/microchip/wilc1000/wlan_cfg.c:wilc_wlan_cfg_indicate_rx() {
-	msg_type = frame[0];
-	msg_id = frame[1];	/* seq no */
-	frame += 4;
-	size -= 4;
-}
-
-size goes negative, and the info handlers then do:
-
-drivers/net/wireless/microchip/wilc1000/hif.c:wilc_gnrl_async_info_received() {
-	id = get_unaligned_le32(&buffer[length - 4]);
-}
-
-with a u32 length, so length < 4 indexes at 0xFFFFFFFD.  The same pattern
-appears in wilc_network_info_received(), which additionally does
-kmemdup(&buffer[9], get_unaligned_le16(&buffer[6]) - 1) and can copy up to
-65534 bytes out of a record validated as 1..8 bytes.
-
-On the management side, pkt_len == 1 with tp_len == 5 passes, yet
-wilc_wfi_mgmt_rx() reads two bytes:
-
-drivers/net/wireless/microchip/wilc1000/netdev.c:wilc_wfi_mgmt_rx() {
-		struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)buff;
-		u16 type = le16_to_cpup((__le16 *)buff);
-}
-
-Would per-branch minimum lengths be needed here, at least
-sizeof(struct ieee80211_hdr) before the data classifier, 4 plus the subtype
-requirements for config frames, and the parsed header size for management
-frames?
-
-[Severity: Medium]
-Can a record smaller than its own header still be accepted?  tp_len is only
-rejected when zero or larger than the remaining bytes, so tp_len in 1..3
-passes even though four header bytes were already consumed, and this branch
-accepts pkt_offset in 0..3.
-
-With tp_len = 1, pkt_offset = 0, pkt_len = 1, one byte of the framing header
-itself is handed to wilc_frmw_to_host() as packet data, and
-
-		offset += tp_len;
-
-advances by 1, so the next iteration parses a header overlapping the record
-just consumed.  Even with a large tp_len, pkt_offset = 0 makes the four byte
-receive header the first bytes of the Ethernet or configuration frame, which
-wilc_wlan_cfg_indicate_rx() then reads as msg_type/msg_id.
-
-Should the checks require tp_len >= sizeof(u32), and pkt_offset >=
-HOST_HDR_OFFSET for non-management records?
-
->  			if (!is_cfg_packet) {
->  				wilc_frmw_to_host(wilc, buff_ptr, pkt_len,
->  						  pkt_offset);
-
-[ ... ]
-
--- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/AS8P251MB0001BF71A8397CE77A82E7E2C8B32%40AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+> diff --git a/drivers/firmware/qcom/Kconfig b/drivers/firmware/qcom/Kconfi=
+g
+> index c7f8413ab996cf12..691db0ded8e8cf63 100644
+> --- a/drivers/firmware/qcom/Kconfig
+> +++ b/drivers/firmware/qcom/Kconfig
+> @@ -7,7 +7,7 @@
+>  menu "Qualcomm firmware drivers"
+>
+>  config QCOM_PAS
+> -       tristate "Qualcomm generic PAS interface driver"
+> +       tristate "Qualcomm generic PAS interface driver" if COMPILE_TEST
+>         help
+>           Enable the generic Peripheral Authentication Service (PAS) prov=
+ided
+>           by the firmware. It acts as the common layer with different TZ
+> @@ -16,6 +16,7 @@ config QCOM_PAS
+>
+>  config QCOM_PAS_TEE
+>         tristate "Qualcomm PAS TEE interface driver"
+> +       depends on ARCH_QCOM || COMPILE_TEST
+>         select QCOM_PAS
+>         depends on TEE
+>         depends on !CPU_BIG_ENDIAN
+> @@ -26,6 +27,7 @@ config QCOM_PAS_TEE
+>
+>  config QCOM_SCM
+>         tristate "Qualcomm PAS SCM interface driver"
+> +       depends on ARCH_QCOM || COMPILE_TEST
+>         select QCOM_PAS
+>         select QCOM_TZMEM
+>         default y if ARCH_QCOM
+> --
+> 2.43.0
+>
