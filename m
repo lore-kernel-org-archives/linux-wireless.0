@@ -1,59 +1,54 @@
-Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5B3448CEC
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 06:58:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB7CA43CE7F
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:04:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789109933; cv=none; b=b2n95h8oTAH9FFsLKgoY/Tji+O1XrpblyTFD/x809m8VXJ32my7WXb7WUNSzr2/ON0ZzGrHjTxPSTzVvpBojjr/mWMeLI3CmJe4Nt2fMC35RqnnTAzvcKDyCPEHW7eui1nTo/ANQnGf3jiPqruHA9ee34KcQZEBPPJBfUmrsL9E=
+	t=1789110285; cv=none; b=lBPLL9ToYk4iM8jJq7h3HL54bu+Kjpp+R190CWtAt+LPxwrwnuIv0fS647E/iy6DNh/uZ8sCsgwo/hUGrywIB3WNOqV9RtKKYGVcxU5IVIhy7XUIXdO/DaOj6sfEDLA661O1q774AobrcuHlRb7dOE+yC0uiS0my17T92rJjShQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789109933; c=relaxed/simple;
-	bh=qvJ0u9Qz3iu2bXVEQW354V2q/YwVxkZqBCl6oCaKlSg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q5AGWSHnudiGBlKZI0BjNtyf+r3wowhduVOcRrZQhj31TLu+2q5tLG2DC2/IwjRwfuN3k/l6Bx+cEXrOKYbMcUL3kFU0t4rs//CSLbF+m7Y4UYQfxIaymYQ6rOrm4hMuSxHdNhsi5MYkSs5+JZ++gnD1NmypfxYBKbBCNdGxUR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=lJG+TFoI; arc=none smtp.client-ip=217.10.52.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
+	s=arc-20240116; t=1789110285; c=relaxed/simple;
+	bh=+08dk40FChkVztUH6t+7QV1GEbrVLDBX0fqanu93lzU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NhBFHYioNThPa3ZHBIW9WvL402qEHaHJBBCji9+63i3cPSy/Vlx9lZ+sdfm6wB46jjCxTW1mzR3kPE+2b08olIK45c1vcqr9m52aB5e0XpL9cBbq+po97Z11QktS4jlWhJeVBYwYP+ldLPf8VykCS1pEbuFuPo57sLiOUCNZkT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Pw+J5+Is; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="lJG+TFoI"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1789109928; x=1820645928;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=qvJ0u9Qz3iu2bXVEQW354V2q/YwVxkZqBCl6oCaKlSg=;
-  b=lJG+TFoITZBic8rWv8OoGt39MQb3asG+eo+nSiqfQNLgejDBn2XZp07n
-   jBXReSy8VQgydeCXxCdcHha6ccINNh+5T6QZZAnwuUbe1AqeSJfZb59lr
-   Fcvi8Yx+a7W7HkILsHAOMHtPo4rCIw7JdOn4rMYeR1ooq+AvhF2Q0WZD+
-   g=;
-X-CSE-ConnectionGUID: Ppzy/LIIRhaL2Na9jqj69g==
-X-CSE-MsgGUID: 7fNyPGTUSH+bPHVKo0RpEw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="109046933"
-X-IronPort-AV: E=Sophos;i="6.27,96,1787004000"; 
-   d="scan'208";a="109046933"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE822.infineon.com) ([172.23.29.53])
-  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 08:57:32 +0200
-Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE822.infineon.com
- (172.23.29.53) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Fri, 11 Sep
- 2026 08:57:31 +0200
-Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
- MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Pw+J5+Is"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68B74WlmC2190795, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789110274; bh=vJWB1W/51nUEr/QB+YGDNhF1BM5i5akehrR5nIDGQrA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=Pw+J5+IszeohbVJS4jF5SFyOBFWn+dcAuwsCf4ct32frr1CA22DnNLcC5IlCMNLj1
+	 dm1fpbETegW9KOk/jLc8SjIcfCQxouQ1Rg6KlsoFJ4Wh9dyR68Q60S77Kw4yRPfZBm
+	 CDzOsDtP3jdp0O+y+3ngtEgik3HerGmtmbYrmc7NTptsmfGZFUe1uCd8l5kMICoBdw
+	 9HL7+ajYQYl+GRVaNJcqdszTT0GhSgtJGK6pfINkc8oQuPJjHLouWLTZUCc8yobLvy
+	 glhrxOCGALasjem6+c1jdJ3yc3VSp0JCBLx2n4+00dEZeZiAHJ/IYG8pDqahXNxk6x
+	 MqQbYePbAk0KA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68B74WlmC2190795
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 11 Sep 2026 15:04:33 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Fri, 11 Sep 2026 08:57:29 +0200
-From: Jason Huang <Jason.Huang2@infineon.com>
+ 15.2.2562.49; Fri, 11 Sep 2026 15:04:33 +0800
+Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 11 Sep 2026 15:04:32 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
+ (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Fri, 11 Sep 2026 15:04:32 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>, Arend van Spriel
-	<arend.vanspriel@broadcom.com>, <brcm80211@lists.linux.dev>,
-	<wlan-kernel-dev-list@infineon.com>
-Subject: [PATCH v6 2/5] wifi: brcmfmac: detect firmware FBT and OKC support
-Date: Fri, 11 Sep 2026 14:56:53 +0800
-Message-ID: <20260911065656.1269623-3-Jason.Huang2@infineon.com>
+CC: <error27@gmail.com>, <ku920601@realtek.com>
+Subject: [PATCH rtw-next] wifi: rtw89: coex: cancel RF band return condition at _set_bt_tx_power()
+Date: Fri, 11 Sep 2026 15:04:07 +0800
+Message-ID: <20260911070407.35803-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260911065656.1269623-1-Jason.Huang2@infineon.com>
-References: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
- <20260911065656.1269623-1-Jason.Huang2@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -62,52 +57,35 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE824.infineon.com (172.23.29.55) To
- MUCSE809.infineon.com (172.23.29.35)
 
-From: Carella Chen <carella.chen@infineon.com>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Some firmware advertises Fast BSS Transition and Opportunistic Key
-Caching support through the firmware capability string. Track those
-capabilities so later roaming offload handling can be enabled only
-when firmware reports support.
+Because RF band value 0 means 2 GHz and, if the condition set !rf_band
+return, the 2 GHz BT TX power will never been set. Correct the logic.
 
-Assisted-by: GitHub-Copilot-CLI:gpt-5.5
-Signed-off-by: Carella Chen <carella.chen@infineon.com>
-Signed-off-by: Jason Huang <jason.huang2@infineon.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Closes: https://lore.kernel.org/linux-wireless/aoXrgwyFu851qVNV@stanley.mountain/
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 488364ef8ff2..cc19e5e7ebf5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -45,6 +45,8 @@ static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
- 	{ BRCMF_FEAT_SAE, "sae " },
- 	{ BRCMF_FEAT_FWAUTH, "idauth" },
- 	{ BRCMF_FEAT_SAE_EXT, "sae_ext" },
-+	{ BRCMF_FEAT_FBT, "fbt " },
-+	{ BRCMF_FEAT_OKC, "okc" },
- };
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index e49d75cc55a1..b16af1291b93 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -3859,7 +3859,7 @@ static void _set_bt_tx_power(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
+ 	u8 buf[2] = {};
+ 	u8 len = sizeof(*buf);
  
- #ifdef DEBUG
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index 31f8695ca417..8165a286b630 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -59,7 +59,9 @@
- 	BRCMF_FEAT_DEF(SCAN_V2) \
- 	BRCMF_FEAT_DEF(PMKID_V2) \
- 	BRCMF_FEAT_DEF(PMKID_V3) \
--	BRCMF_FEAT_DEF(SAE_EXT)
-+	BRCMF_FEAT_DEF(SAE_EXT) \
-+	BRCMF_FEAT_DEF(FBT) \
-+	BRCMF_FEAT_DEF(OKC)
+-	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0 || !rf_band)
++	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0)
+ 		return;
  
- /*
-  * Quirks:
+ 	if (bt->rf_para.tx_pwr_freerun == level)
+
+base-commit: f71dd599a98182d6bc34dce39977f928068ecd64
 -- 
 2.25.1
 
