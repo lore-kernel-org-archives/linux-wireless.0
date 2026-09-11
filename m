@@ -1,117 +1,128 @@
-Received: from mta0.migadu.com (out-34.mta0.migadu.com [91.218.175.34])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C34442FAA
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:18:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF80939B497
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:24:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789111101; cv=none; b=Gd/3aI4cxARY1KlTCRbOgwYm6e+QrlrZfTy74uFbh3t4gIDtkLdT5gjhtD4uUc5cRTIpMQ0sqaDYSR/1iUnauVqgrwkglwv1twrn0Jzczzwzevxqe6vi2HRD+PPIhyQ5cKbyUkMFptZmKoawxAmOjwBGG//ldPLRBnpgh2dDWzc=
+	t=1789111468; cv=none; b=MHOBVM8/S00vHVnzSIvYiLBdEXOGpgkwc22nV9GhaZq4xNOpq/y6DJGiBOvT7/m5qGa7i4b4S1fESnSxFnq68uEhnD1VOPtEaCH3igPJx+yxpEiVlDsmGJfAqE/uR2yPC8i7mx2uWXkH0QK1hwuHHXpuf5XPkr7HAEdWCTfb1ko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789111101; c=relaxed/simple;
-	bh=HB9C5ndooPOI51e03OLe09bTWsmJUn1p5fraMMQWLa0=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=ba1+Tqvh3lbqzjk6YO9VKw1AAtMpNycX8P8YcfoSty+XW+P2VY1IXUgcwiNbDNj5scW1bIrATHaCdedT1fkaKru8P+ZDMVI7w9AHqzysc7mDfeUVBSOFmhxWcgzHDYFb0tjMUJeA+m1V/6CFSc0OFM4lvXlZxmHNLxsIOjQad7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iP6Oly/0; arc=none smtp.client-ip=91.218.175.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789111468; c=relaxed/simple;
+	bh=sXwF1on9n81MGRbpeOCmX2s0+AQudSNFliaULKBSRt8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ue48Vi99gyiHa9+lD6IiUGzKOAgp3aMqtF/1qxzGiGgqtZeHSnVRkDIC6L/61CNifvMVgHGqupLEmZc+2bn/Kf3CyGdnYSBQX8s8LnH/rl6mfy2EZ0VsokI6AEWEndIufWDQjuB+9c5XSBDo298/U1nTHsdmLpoDjgMTYOodpIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c3mChfep; arc=none smtp.client-ip=74.125.227.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iP6Oly/0"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HB9C5ndooPOI51e03OLe09bTWsmJUn1p5fraMMQWLa0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789111090; v=1; x=1789715890;
- b=iP6Oly/0cB3ZBTPLkNpILZgfiT+G1GvMkyonEqsxFEaaK2uHcfwBD5L5LeOrIxY28BEXij1q
- 0ULlz/y7E9QJrtgvIx7wlnMXFKkx7efmPPTVzC8DzCWy006CUMQ3eWiMrbqPVmLilXvKnAXIIeo
- s0RPtqorbAabK+wJP8ZACL2o=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id fa6f9a8f65eccf38;
-	Fri, 11 Sep 2026 07:18:09 +0000
-X-Mizu-Trace-ID: fa6f9a8f65eccf38
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c3mChfep"
+Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-396ccafb751so515684a91.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 00:24:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789111460; x=1789716260; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=TGZGv5Mzyd9kaR4ZVZfO50u8GGM3KaCihDXEWev0Cbo=;
+        b=c3mChfepux621/CehuPL6hF80l7RotnOGtEHkqfa54RAMn+MuWzmLE2ayxgARHQUtC
+         9PsDZBJcD29B4QIvd6ZDDCr9qhkQLRdgKfC7UndOtjpr/vfj+Li6mdz65LROK51hZKIJ
+         zIfDNEszp9WBotU9XBrPTS0VlXXptQKoEWlhOijM7ENYh3/Uivbib6E9N7PM93C0SpNQ
+         Cm4fTeAS796FOEqPfBOBcY57SjF9kyOHO2mOYLbz7JOJ9D4bTikgegcQxF4aDyYQLAFA
+         /VIgfFnSvZh1tC5Q7s4dZ17/EY88vFi5wpzX7/Yrct8CjsDa9s/pgSsruH14OQ2Hez6Y
+         y99A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789111460; x=1789716260;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=TGZGv5Mzyd9kaR4ZVZfO50u8GGM3KaCihDXEWev0Cbo=;
+        b=Zm4wT/+CtFevfDCV9xO27SVKAwnsdL7zlS5StNAfm/HOFtOcBZNdnFfDaGCMF80PoY
+         Gfm3dtlZQac8+vPuy/4p0iNOvJeQJ6CUVXDxm4FmExwkLGfnIQyBcp+X3dWbXuhxonOO
+         LnR/rNgLXUm1wn5Te7dWoXfe5T76nBTvidzrFdtTYcVF+ACQVptGc1fzOKq/+S3LgsLT
+         GiBATFNQeWK1Q4TgCvvynayryMi/WKWd0jD4ttDG6I4WiSOYf3/hJAHdz+P8GDBdQnIk
+         LsSauqnNAELw5EedebOSeYTBIajTpTqFc8TIr5Qp6/XlYfEK061CdCjZAuOkOrtgDaNy
+         ae+A==
+X-Gm-Message-State: AFuF++kOGQ97hS6No48aypjVzV1XlkUZG1LQUikObeCFR8ltTfJZ2F+3
+	QU6HVLAN4BM9dJEfCOIGEBXO4OdUYqx4PQ1m7wI+JqUKecbQjRnrOqoZXSRnkggZ
+X-Gm-Gg: AYBFou16j8HRh2Aspt1DSscO3RWOsQUtFsjrN3wVoNyJ+sNobJSTLBwq63gEzJDzps6
+	RbUmn6DCypDKznMD4y0BrN8xAmUZ6S7S8QL64m6dj+dtkzzLLT/xhC+tAEQqAnGe1WfTOx6u2FI
+	Yt3QYPH91O4wrF37lrsRgdnwxJ2VBvHyGj8qsbH8owhvsP+hMaAZnfB86P3gJlLh/HmYP2hv3wS
+	XZPesvRKwRs+bAd53o232a4vbIctZ+eACLhv2kS82sDNsf8okQ90MeEmrspVdsBGuP/sNi9Be//
+	skJrzPNCVVFuZ54ruYLdulnoDG4blFsY0F917dGwgYyppDic+PP/BaMIHLi/95PZiWX+SwX3y4z
+	CNEBG5NaXU8WAE+P6nrrZJXXXMlsKQe2a6C33DF4ARZTfDbOyJEM0dKIHTI/T+FDgKOHG8Fe+5E
+	2D2PpXZDTvYxnx9VTw2FVon9kARcdqJHOBI/DdSLwW25Ijt7T8E27uce+faxs2O9ylrefMUb52h
+	CeJP5isnGA2EU5wd/4WmmNsmPIztEMm/0j/dk9fO9GTTV5iu98wL4JtvhoYJqRzeS6MbPRkadUi
+	WiU=
+X-Received: by 2002:a17:90b:580e:b0:396:40e6:f631 with SMTP id 98e67ed59e1d1-39d9bbe47a7mr5454805a91.3.1789111460451;
+        Fri, 11 Sep 2026 00:24:20 -0700 (PDT)
+Received: from codespaces-1adab9.ktkhmpmw22vebpok31ngjx2qsb.ix.internal.cloudapp.net ([23.97.62.121])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39da1ad5d79sm1984815a91.12.2026.09.11.00.24.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Sep 2026 00:24:19 -0700 (PDT)
+From: Rivaldi Hormat <rivaldihormat@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@kernel.org,
+	ath10k@lists.infradead.org,
+	Rivaldi Hormat <rivaldihormat@gmail.com>
+Subject: [PATCH 1/2] wifi: ath10k: Add missing validation in debugfs mem_value and reg_value
+Date: Fri, 11 Sep 2026 07:23:16 +0000
+Message-ID: <20260911072318.5232-1-rivaldihormat@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Fri, 11 Sep 2026 07:18:09 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Tianchu Chen" <tianchu.chen@linux.dev>
-Message-ID: <c584533a7433cdcdd94c554621bb7d466854bd83@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH] wifi: mwifiex: bound SDIO fw dump count by memory table
- size
-To: briannorris@chromium.org, francesco@dolcini.it
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <7d886d74276c05eeb1b1698e31b72a5aed98612a@linux.dev>
-References: <7d886d74276c05eeb1b1698e31b72a5aed98612a@linux.dev>
+Content-Transfer-Encoding: 8bit
 
-September 4, 2026 at 8:57 PM, "Tianchu Chen" <tianchu.chen@linux.dev mail=
-to:tianchu.chen@linux.dev?to=3D%22Tianchu%20Chen%22%20%3Ctianchu.chen%40l=
-inux.dev%3E > wrote:
+mem_value and reg_value don't validate the address and size provided
+by the user. This can lead to out-of-bounds access to hardware memory
+and registers.
 
+Fix this by adding the missing validation.
 
->=20
->=20From: Tianchu Chen <flynnnchen@tencent.com>
->=20
->=20mwifiex_sdio_fw_dump() reads the number of memory regions (dump_num) =
-from=20
->=20a device register and uses it to index the static 15-entry
-> mem_type_mapping_tbl[] without any bounds check. A bogus device can
-> report a dump_num larger than the table, making each loop iteration
-> store a vmalloc pointer and a device-controlled size past the end
-> of the table into adjacent .data (up to ~5.7KB when dump_num is 255).
->=20
->=20The dump path runs after command timeouts or firmware crashes, so a
-> bogus device can first force an error to trigger the dump and
-> then report a bogus dump_num.
->=20
->=20Aborting the dump only loses the firmware snapshot; the card reset=20
->=20that follows is unaffected, so error recovery still completes.
->=20
->=20Discovered by Atuin - Automated Vulnerability Discovery Engine.
->=20
->=20Fixes: 54881c6b37c8d ("mwifiex: add firmware dump feature for SDIO")
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM
-> Signed-off-by: Tianchu Chen <flynnnchen@tencent.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 5 +++++
->  1 file changed, 5 insertions(+)
->=20
->=20diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/ne=
-t/wireless/marvell/mwifiex/sdio.c
-> index f039d6f19183a..e40ca40418b30 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -2795,6 +2795,11 @@ static void mwifiex_sdio_fw_dump(struct mwifiex_=
-adapter *adapter)
->  mwifiex_dbg(adapter, ERROR, "SDIO read memory length err\n");
->  goto done;
->  }
-> + if (dump_num > ARRAY_SIZE(mem_type_mapping_tbl)) {
-> + mwifiex_dbg(adapter, ERROR,
-> + "Invalid fw dump num: %d\n", dump_num);
-> + goto done;
-> + }
->=20=20
->=20 /* Read the length of every memory which will dump */
->  for (idx =3D 0; idx < dump_num; idx++) {
-> --=20
->=202.51.0
->
+Signed-off-by: Rivaldi Hormat <rivaldihormat@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Hi,
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index fb61e53ff..50e017021 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -729,6 +729,13 @@ static ssize_t ath10k_reg_value_write(struct file *file,
+ 
+ 	reg_addr = ar->debug.reg_addr;
+ 
++	/* FIX: Validate register address */
++	if (reg_addr > ar->hw_params.reg_size) {
++		ath10k_warn(ar, "Invalid register address 0x%08x\n", reg_addr);
++		ret = -EINVAL;
++		goto exit;
++	}
++
+ 	ret = kstrtou32_from_user(user_buf, count, 0, &reg_val);
+ 	if (ret)
+ 		goto exit;
+@@ -819,6 +826,19 @@ static ssize_t ath10k_mem_value_write(struct file *file,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
++	/* FIX: Validate address against memory size */
++	if (*ppos > ar->hw_params.mem_size) {
++		ath10k_warn(ar, "Invalid address 0x%08x for mem_value\n", (u32)*ppos);
++		return -EINVAL;
++	}
++
++	/* FIX: Validate size against remaining memory */
++	if (count > ar->hw_params.mem_size - *ppos) {
++		ath10k_warn(ar, "Invalid size %zu for mem_value at 0x%08x\n",
++			    count, (u32)*ppos);
++		return -EINVAL;
++	}
++
+ 	buf = vmalloc(count);
+ 	if (!buf) {
+ 		ret = -ENOMEM;
+-- 
+2.53.0
 
-I noticed that this patch is marked as "Changes Requested" in
-Wireless Patchwork, but I haven't received any review comments.
-
-Could you please point me to the requested changes or the relevant
-review message? I am happy to send a v2 once I know what should be improv=
-ed.
-
-Best regards,
-
-Tianchu
