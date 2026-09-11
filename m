@@ -1,62 +1,87 @@
-Received: from sonic309-27.consmr.mail.ne1.yahoo.com (sonic309-27.consmr.mail.ne1.yahoo.com [66.163.184.153])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D4A73A8384
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 18:59:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.163.184.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9993F86EE
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 19:04:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789153201; cv=none; b=F/5Tbk6CkYxb4exAlem+uLemVgikDzb59zE686+HNAnXyrvWW06ZGRWly6EF266Su5fUrTTvmd25CKscedt0sJDaZX0hbieLfPyqfIy904cZK5M+005WRmJ6GhG5JD/P10DxooBGLHp8C7pwk4wrnWcyiX9C1p1t6VkS4vFDgAE=
+	t=1789153490; cv=none; b=n4Mvl76vkANL2XtGXcNhGHrs6shQdWrj7bqagdmL85mI7O7pHvqWwc6rDbx7x8AGot8mJHUXPG3KuZwdYGCJmKNYk/IvoQSL88dqdeG7Luh9R2kKy7MsUvFA4D7KxsHGeTZrThIzEaf4202gkomXDKwyHGHIZ6nhQusrtVwFGxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789153201; c=relaxed/simple;
-	bh=j2KmhlXONrKBmB8LioVo80v7kvdpDGCasJKpOD3AEpI=;
+	s=arc-20240116; t=1789153490; c=relaxed/simple;
+	bh=yQiRl9MeV9tKsX6X7NZzmTmBBE64w4gdOL9s7E4Z9Z0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sghgG3AGuMEvHZgQlariarV0dmBbIxzG50DBjmwZBQCKyBnr3xiW4YfJ76z6p82Wq9lNB/6G6hDCIDWpDQxUrphDrshW97hvUzN9AwH7JlavLMUaRAl5XyvCcbh5Z8iYiiyMx83CPx+63JIbMHyvpejPz9XWkUK99vVCSp03+Os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=schaufler-ca.com; spf=none smtp.mailfrom=schaufler-ca.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=mtnVsO1V; arc=none smtp.client-ip=66.163.184.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=schaufler-ca.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=schaufler-ca.com
+	 In-Reply-To:Content-Type; b=sBFQjvAIVKVNyRv2okOYhAK8n4xasGGQKZS5TINw4bGrYpqjhodx0Z6JTcmhJauEUQzFkQQCjsLkqzD6SpVv4/OkzHqCuN4fsowJ8M/TlymhRA2HTOoYS0vrlIn0OaH1/kw2lKJoJn+yjzh6gHWHiXtvJwYQk5yj6iS4UybnovE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=E8jVy2+c; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bzyL0hFX; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="mtnVsO1V"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1789153195; bh=zPVAGvXA6BnDWmfJT3hQO0CB11Qqf66yZudh5n1EjA4=; h=Date:Subject:To:Cc:References:From:In-Reply-To:From:Subject:Reply-To; b=mtnVsO1VgKbez7SKzhsZplk6k0C9XTTXVlxzDnocNXEcQseScGzBI7NWgOkXr4UILYLp6xbh3FIHjwLdF+94WxMDb6ujNlEcAFFKECqG920WYAFTuiITuNW7RthvaIhN2AGu1tuq2GVpBfCumq35u7066l2/TlrAMDkZmZlUvAigViqjupi7aBGwM9ZfIWBkvefsp7nBcyrkSTSqOsa7ztb5+NPXMFhRnRdMy9gfukC2ZSMaXT2zEFTPBCWkqYo2lirWEQBy5QRK0sCqVkOeCrTj8u7fNeZOIN/CP0VXPWlqAHIOyz7yk4QRsYpt/9dz6e+97O94sev9f7/GzTpfMA==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1789153195; bh=8D6wX+F6GVfY3825euMFl9WpyXMjynR9Yldv18g8cqJ=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=bu4h9TPqgz2/xWApTNwcDeX3xsfNIFng8n/Rtz3yUlQCrPCz+m2kDMyd3M9a6Pms/kzWOPV43nupzqMml3jzOYsaiLLPly+AkpJFunibZo005zZSyijIaAunEVowe0JkVkRQWqOp3EyjFNwnYUBwktLOD74qKN3sUJjX3iT+AbTuQVUXuxCWnSHC8A/cGDFK6WSahfUHLR5Es1J3SpdWDOemGlmdMRQbZ7mhtYCUeOSYpeLQzl3jnYI9DzlW5RN8oiwsfwkf4cKnC3dFl7o/M6y2kWAU4NLhB44efnNs/WkreEBGwafOavMDhpRceTX4GcgwwjSW0pqGP8TqOam0tQ==
-X-YMail-OSG: 8IyxdVsVM1mOeDHP02iAS1e9vux4wp6Hm34349yjZZrE7KsVj4bJUTR76BW4BsK
- t19TLIIWTyEsL_xO6KYI6B3mIpTeWkCM7DlTvfoOQfuCsksf_DXfrnK4xY9kwKnB_FwtGMbXBVdX
- AwHEtPMyDd0o.V_n5VGZNusTss9eVCLkYUnExyioYPyx.Ad4XLy1Yhw66DZ6.cR7ayiSRijYW.xl
- 305XtUrCNu_HX0zlFhl1UhhhGTmHJWDT71o9fTQtscG7_EeuKRlbSitXpH3h2TWZBa1RvmugXEHt
- NXIrMOJrZi6l.PxmX8gxMKPF7q1N60fwVrVibI3BInE.6oUKBezs64Ge8lnfaH6urMLx_mS7NELj
- fXVYAq93FCVN6TNK0NO4G.DDrLjcDRa6hhwWgZ6gQzEbJo2rpUwMXusCpi7RZb5Xl3sf4c2Idq5Z
- 0YImN5yN2Urf87vmiFS8KvS6LQ8PAxxZyfXHUJ3TEbGILnbZXPD5AE_DFX2IpeDORzsdcSFaaNsu
- PJkDjGDNOOvznQ5FlWaMAh4HXH3i3.mQ0coMj6GUf4QwkG4eANVdkaMTdWJZeTV84xjq7hqr6XKn
- o1scllR7Z5GUkeTy8KNCbUrtqv5E7kUADSyywm2a.wUqCoxo5Q3A_YP0K0NZvpEKIs__FnlhdUI.
- q6m1Q09A2eYBeXmEIYZVeEkeB6sdw07Xxs8UUJuHZE0QHuKHXMrXD_xXTsGItQCvTPP8CDbX0kKe
- ImJUDil.4vy3ev72uHxHJEEWTnnuXYA_JydfBvosMnQg1N3bxdnWSWbU2Hkt3TqOn6I.FzGn6QG_
- wsFBAfZcXdPDj4v8n_Tn.11J7xLNj.C3Aoi_G63Dg8IjAO6.e7VyY4IIR7JohfOWwH7InWSPpd09
- L29Cgia4I5UJL8gTvOEtfAvKgJVnNCz.yi5pOsZY4j1II_vQDkb6oXyLuPEDAyPzDAFFnOiaNrKy
- x__Q1X.5B_1hlU32VDdlR0ZzLRLA1TJ22OXVHP7afTQZ2CEoO7JYf46la6agBDr8b5v6ACnNyYi0
- GhQZCLFp11jCoUSoTlX.swZ.VjvjiKiFxK1Ye.Y6beRQedZ1ShvRS3cGHZHLn0swNHUkffkG9fb3
- wOfjV.FBc9wUaDKFQWfxyDbjXO0IH0ejj1F4V87qTPUt2sRlRHwco_cjX6g8TQk3W1CWHZtJA8Pg
- tO3nnFPJrvQPKZpn49aFsX1c5K2ek4fcHTXgnHk4H1.HrFvV3xEMDEis4jnnSAlsgA8Rm6LvLdIz
- lUg33b0GLbxZzg0mpAIxtqrcQSofu5UyShBm.JhuDp9auiAWoHUZSz0qhhAGEt_GOhTOREfqCBZC
- G6fI4Yi.C177vKFVtiV63RCPKV3rxhhPlhyBZpV1ZUxEcqMjslksyvWTd6aT7vgXecZzbEB6Bbui
- PugKq5FvUYO.LajsfrgW6MxwegEMCwQHnJMQsa2Iiv_WjPIMQuqDSEH9zrUbp_k8Xt_MeBiTqXQs
- nXvD7ppdbgFMJjhFv1sbwFcotEUmdosnZNJTFj_.B9RbrhQTms0KTlTxt_kE8.NgiydL256Tokh1
- HbALEC9RtboqkogXmLNqhc9AtDZczzRhCNRn7Z2X3503NCMm88agdrjLobSs1H5d7xBdfXfFzDWy
- Nz0tAs4FjfupGpoHER0xGTafNDNwQhDzAsAi3Ns1zjs3AtY5PvuGfAWSa8fMSFBU03tXksZYFxo1
- ciJ0G1CvL1rd97I47QzrDWZ_28XKoUL8AUG1lo9hZdautcKmTjHBsHXCLAZuNOQ3VbTsaUcfqmee
- .irw7XZlKDpogx7TQrdIKjc686.9W3GLbec8PuplPYGKvHJJhuSP9jlcnM383VDSt8cLbmPuXq9q
- UfjAsSbY4zvrKu6HdDJcxvB8cx34WFQXftbm93mMXhuwnptgfKF5CDKWcQBHwqRHYsXSxAFpKM8S
- qTa3rFjIKqr1IO0XflZkb9XFSArGJix7oo_Xxz5tbTfxDmTZDSh6g_DFbDgKseITvTHLKJIf.Srg
- zVnCjD4ejDk1_J0rl97idNrtwcyBVrtsm8.34xwlrjrR25Rurg9citobqWcZ.BDfjnhc_fKhZQyb
- r8KhLp1zYO8PYT1BKGbEHUeMHroTq.j3oed5iHJ6xgxNJfL4MoCriV4lpnAthSrrU4GyoV4x2VqX
- oF_R8TC4LfHd6y98CdJloF.SZ2BtSQy89uStonDjpuGCXoEaZ98PKpIPceNx_hW37SyYRbmrBaKQ
- gu6._.5jHmTHesUwGqpIpKbbNaYhF7Q3yiS79YqO5LS7oubsSfX7dqeASC8h1m47H6U5NdATLY3r
- Y73pK8ITPNSGyICENKhMFqA--
-X-Sonic-MF: <casey@schaufler-ca.com>
-X-Sonic-ID: 155296a8-f4ef-4124-9fbd-d64e0f082663
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic309.consmr.mail.ne1.yahoo.com with HTTP; Fri, 11 Sep 2026 18:59:55 +0000
-Received: by hermes--production-gq1-678d9dd684-n95jq (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 54d69622036feeec9e5203b92a9973ac;
-          Fri, 11 Sep 2026 18:59:50 +0000 (UTC)
-Message-ID: <6f01eff3-20c9-488b-84f4-8c6456f2e54d@schaufler-ca.com>
-Date: Fri, 11 Sep 2026 11:59:47 -0700
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="E8jVy2+c";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bzyL0hFX"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68BHWV38972048
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 19:04:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	bXs2xynHDSjRZ/impVK9y9vG4YJMz2HwW3zOJHMfq+0=; b=E8jVy2+cXmNlHJ5I
+	DpylD34o/nqKksIYZEYwk+amlBAXuOREpoaufcou/sxzeQZ5MlGDfYs4C6WszNzx
+	6NDlbC2im5su898AOt4+bh3v2tkAPS5BH/wIESHT7sBFgmoJOQBvwYF7RuzucFMC
+	UVwIYd+d1aM4hSVXbIrRyAMrMbtQ2LiEQJ3ik+JJ36ZDHOzfjoIrCDtVljg7bfcK
+	OlelqzF8vAkjR2yh3WLCFU9TTd+ozwbAW3kf8gu4gZjnAlnMNzZThWFBpjivzvYn
+	RvAfpDTksjUxF1dV9vSTt+B5ASlWg/3Lr/w0767lUwHgAWQEatUF5dwtb7s5Ptc5
+	JJTZmA==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gmm22rwa9-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 19:04:28 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2db87f759c5so21081435ad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 12:04:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789153467; x=1789758267; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bXs2xynHDSjRZ/impVK9y9vG4YJMz2HwW3zOJHMfq+0=;
+        b=bzyL0hFXDWY9OdDoUkgZeUrl0fC6ddsarDJ4+MuAyk18gnUMTgKz2wFQy3yTQj6h73
+         FSAGnW+NGMvsoAFQohsbeVtxWBk3j2CjmYfI9a64J7iN5DQRzd+aXM5uxDF1MLCyfjvd
+         +OHyj+4++cW6WQcGAo44KwmSg7wDmIYO/bQhqAnm0PjLKniFttN7YWWNx4ux8p/HVFkW
+         mdgdcbrHKvSR5ubhGZizWpXmiBR44vz04nvuG1JZu6efymamgBN7DIafxQROsnzZwzFP
+         JHlS4LG8Ebt4/wvFO2GilOGoKxw+aXTOsYv4SeTNJpWfoxNAoYV5ZRtnm+hdDxsvTBZM
+         YXSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789153467; x=1789758267;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=bXs2xynHDSjRZ/impVK9y9vG4YJMz2HwW3zOJHMfq+0=;
+        b=I2cG3yA+CLXqceGdPpqf8eBeyXWs6v8s+A/OoZW4l/PMA5nGKAkFWoBTDK9n6fRr/i
+         h1c0COiH+4E92LydLtwUGfawcH8GC74tQrHItfnJV1+ZHe1FT5nMI3Jd5innpr6DgcUu
+         NBrXhHTBKdiSwpIG9KtazDDlBrf4H/RuWkbVusaUHz/fhB2OX5QszjKsUjjSAPmb+JdS
+         Pa50ODWkM21qzJoBdLn+SD1ew4zUt6aHq8lFFEGnSlFQ6+Z/wGQmORfKK+XiOa4QmDfG
+         ujsmN0JSp2wAZ9mKqySOxF+Pc8daeZkdpPX/o2B/P/ujHx3S6kr+beb1Gg9mwTS67Ji7
+         bUig==
+X-Forwarded-Encrypted: i=1; AKwUvBzA2gqvxd52aC7iYOXjUqe/qoZ4e8iNgt/e+AeWmLU4KwcQOnNCKuqnJxcpylZgGZZtb9PdJ6EXs6IcaC6l0g==@vger.kernel.org
+X-Gm-Message-State: AFuF++kPfLmYdk4Liz6eoq9W0/7xYMMr93i57i+oNiTcGfj+0D+HqeGY
+	cTQDDRsxVke1xOINLhSn1w/3P3EmIzojLIVpR4ezPJoE6ybV+U0W/NYgboMx3LL3trGyjNbPvFa
+	Jm0kWnsEC3vzTRAJx0T4/jr2ybvS9wxyIhT7l93ojr9NQ5nrx1K7+5bMryC0DXGohoSrDmw==
+X-Gm-Gg: AYBFou28YccGE/Acqogpn0+Bo5gBvTyWNGDEgNcNfoYpST654UAAyZJ4fYlV259E3Zd
+	Tu5oj42MdTnYcjR4QG85Z+WWRWPas+Qg2WVAeDt3BRj7efsZZKyc9TAyn7Nv8P8bV2I/uBEVctU
+	C6XGmEA4vfcqqpQaHljd14cHgtnycxNQ9GM45H6gq1kV854/z3R1gyiaixLVnEyD+DrevnjxmnG
+	poTvzACsVcqYpCekvxptYXhWacoFpVIOG6hkPR7TcVOG/mh9Zt6ZAqSOh6P/ZrjArnkk6SrSD6M
+	5XghxaFj5dX73uXejcqvmJUYCiD5ReTATRiFQjcWpxMxXDl88HhHy3tBVH7WQCabi35ebsIu49m
+	aEhOnEZCVANhsTylC4SnQYbHh39voNPVMq3jZpIuEZgA2OZ7zv2acDlHjYU6o
+X-Received: by 2002:a17:902:f693:b0:2ca:e19c:986 with SMTP id d9443c01a7336-2dd2a1c52damr90034705ad.1.1789153467071;
+        Fri, 11 Sep 2026 12:04:27 -0700 (PDT)
+X-Received: by 2002:a17:902:f693:b0:2ca:e19c:986 with SMTP id d9443c01a7336-2dd2a1c52damr90034185ad.1.1789153466548;
+        Fri, 11 Sep 2026 12:04:26 -0700 (PDT)
+Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33ba4e4fb3esm8541303eec.7.2026.09.11.12.04.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Sep 2026 12:04:26 -0700 (PDT)
+Message-ID: <eaf9335f-ec03-4a3d-8eec-dd788f47a992@oss.qualcomm.com>
+Date: Fri, 11 Sep 2026 12:04:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,172 +89,123 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/13 net-next] net: ipv4: introduce CONFIG_IPV4 to
- decouple the IPv4 stack
-To: Fernando Fernandez Mancera <fmancera@suse.de>, netdev@vger.kernel.org
-Cc: horms@kernel.org, kuba@kernel.org, pabeni@redhat.com,
- edumazet@google.com, davem@davemloft.net, Jason Gunthorpe <jgg@ziepe.ca>,
- Leon Romanovsky <leon@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>,
- Tony Nguyen <anthony.l.nguyen@intel.com>,
- Przemek Kitszel <przemyslaw.kitszel@intel.com>,
- Elad Nachman <enachman@marvell.com>, Saeed Mahameed <saeedm@nvidia.com>,
- Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
- Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
- Edward Cree <ecree.xilinx@gmail.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Maxime Coquelin <mcoquelin.stm32@gmail.com>,
- Alexandre Torgue <alexandre.torgue@foss.st.com>,
- Arend van Spriel <arend.vanspriel@broadcom.com>,
- Miri Korenblit <miriam.rachel.korenblit@intel.com>,
- Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- Chaitanya Kulkarni <kch@nvidia.com>, Saurav Kashyap <skashyap@marvell.com>,
- Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, Nilesh Javali <njavali@marvell.com>,
- Manish Rangankar <mrangankar@marvell.com>, Varun Prakash
- <varun@chelsio.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
- Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>,
- Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
- Marek Lindner <marek.lindner@mailbox.org>,
- Simon Wunderlich <sw@simonwunderlich.de>,
- Antonio Quartulli <antonio@mandelbit.com>,
- Sven Eckelmann <sven@narfation.org>,
- Nikolay Aleksandrov <razor@blackwall.org>,
- Pablo Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>,
- Phil Sutter <phil@nwl.cc>, Johannes Berg <johannes@sipsolutions.net>,
- Matthieu Baerts <matttbe@kernel.org>, Mat Martineau <martineau@kernel.org>,
- Geliang Tang <geliang@kernel.org>, Julian Anastasov <ja@ssi.bg>,
- Aaron Conole <aconole@redhat.com>, Eelco Chaudron <echaudro@redhat.com>,
- Ilya Maximets <i.maximets@ovn.org>, Allison Henderson <achender@kernel.org>,
- Jamal Hadi Salim <jhs@mojatatu.com>, Jiri Pirko <jiri@resnulli.us>,
- Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
- Xin Long <lucien.xin@gmail.com>, "D. Wythe" <alibuda@linux.alibaba.com>,
- Dust Li <dust.li@linux.alibaba.com>, Sidraya Jayagond
- <sidraya@linux.ibm.com>, Mahanta Jambigi <mjambigi@linux.ibm.com>,
- Tony Lu <tonylu@linux.alibaba.com>, Wen Gu <guwen@linux.alibaba.com>,
- Jon Maloy <jmaloy@redhat.com>, Tung Quang Nguyen
- <tung.quang.nguyen@est.tech>, Steffen Klassert
- <steffen.klassert@secunet.com>, Herbert Xu <herbert@gondor.apana.org.au>,
- Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
- "Serge E. Hallyn" <serge@hallyn.com>, Vikas Gupta
- <vikas.gupta@broadcom.com>,
- Bhargava Marreddy <bhargava.marreddy@broadcom.com>,
- Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>,
- Nicolai Buchwitz <nb@tipi-net.de>, =?UTF-8?Q?Markus_Bl=C3=B6chl?=
- <markus@blochl.de>, Arnd Bergmann <arnd@arndb.de>,
- Heiner Kallweit <hkallweit1@gmail.com>,
- Florian Fainelli <florian.fainelli@broadcom.com>,
- Krzysztof Kozlowski <krzk@kernel.org>,
- Qingfang Deng <qingfang.deng@linux.dev>, Julian Braha
- <julianbraha@gmail.com>, Ethan Nelson-Moore <enelsonmoore@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Eric Biggers <ebiggers@kernel.org>, Ard Biesheuvel <ardb@kernel.org>,
- Neal Cardwell <ncardwell@google.com>, Kuniyuki Iwashima <kuniyu@google.com>,
- Willem de Bruijn <willemb@google.com>, Alyssa Ross <hi@alyssa.is>,
- Joel Granados <joel.granados@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
- linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
- intel-wired-lan@lists.osuosl.org, oss-drivers@corigine.com,
- linux-net-drivers@amd.com, linux-stm32@st-md-mailman.stormreply.com,
- linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org,
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
- b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux.dev,
- netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
- mptcp@lists.linux.dev, lvs-devel@vger.kernel.org, dev@openvswitch.org,
- rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
- linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
- linux-security-module@vger.kernel.org,
- Casey Schaufler <casey@schaufler-ca.com>
-References: <20260910144914.8025-1-fmancera@suse.de>
- <20260910144914.8025-2-fmancera@suse.de>
- <ee89e26c-3dad-450b-8861-badf19afa141@schaufler-ca.com>
- <dfd9590c-e029-4432-9a13-c789f708cfee@suse.de>
+Subject: Re: [PATCH ath-devel] wifi: ath: split 5150-5350 regulatory rule
+To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
+Cc: Jeff Johnson <jjohnson@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20260904022557.2679261-1-rosenp@gmail.com>
 Content-Language: en-US
-From: Casey Schaufler <casey@schaufler-ca.com>
-In-Reply-To: <dfd9590c-e029-4432-9a13-c789f708cfee@suse.de>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <20260904022557.2679261-1-rosenp@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Mailer: WebService/1.1.26525 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTExMDI2OCBTYWx0ZWRfX4pN3Doa4ZeBM
+ gViCYxp+IkI8aHk1Qs2YV24J0sfHXCTXsHUwspBZdW57wqC/N1QVttUlAQqCaF0OgjwTcoP0afl
+ rcx+OFyPskt0PDfaV9I1d6ppwvidz/Puf3UTRtuMPBqKwUDl0w6wsDjjDiYPzsq9/g9Zd4l03YF
+ +oLvE1r6bsWm2EEGH8ps8jstd4Vo9/0tDXxiSaXN2W5Y2dKmzks4sYMfqhltZ3TanFitOa4Y/i8
+ nAVFT18Vk0bjMdwca09HhmXAn8QwrY1LUhyx7GTcaLjtW+QVD+0kWa4JYUPPWdDIeMEN51erFzO
+ 95KWfkxNEq0x1NbW49Flc5KORdcLGILmzU6QZm91SyqtJ+pew/AiWRyW09q68X2Z3pdBO/9qDNy
+ MmRciRcosCesjuN7xrXF5vO0ORJKI5DlZUERPz9W5KrWAQjS2GY9ZZew+75rfVyQkgLZaw2LsHF
+ QFFgvheKdM9eXSHEZBA==
+X-Authority-Analysis: v=2.4 cv=LPDz05W9 c=1 sm=1 tr=0 ts=6aa450bc cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=pGLkceISAAAA:8 a=ot0yeRjmKC6ZJrFq8XUA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-ORIG-GUID: tG9ZSQ2cROD3YjlohSSAJ8Ido4dg3xL-
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTExMDI2OCBTYWx0ZWRfX06ta5iq767eK
+ sQNcFPFjiL1un8ryEpWGlZoBNKJ0teldOOE0wf7JSdjKUnQ+Jj6cjqKwXByj1uK0R14zTL49tcA
+ XKhvJvm9mvgClgeC8iJBeBafvaM+9pI=
+X-Proofpoint-GUID: tG9ZSQ2cROD3YjlohSSAJ8Ido4dg3xL-
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-11_06,2026-09-11_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
+ malwarescore=0 spamscore=0 suspectscore=0 priorityscore=1501 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609110268
 
-On 9/11/2026 11:31 AM, Fernando Fernandez Mancera wrote:
-> On 9/11/26 7:46 PM, Casey Schaufler wrote:
->> On 9/10/2026 7:48 AM, Fernando Fernandez Mancera wrote:
->>> Historically, the IPv4 protocol has been linked to the core INET
->>> subsystem. Because shared infrastructure like the TCP/UDP engine,
->>> routing or INET hashtables live inside net/ipv4/, it has been
->>> impossible
->>> to compile a kernel with only IPv6 support.
->>>
->>> This patch introduces the CONFIG_IPV4 Kconfig symbol, which is set to
->>> 'def_bool y' for now. This does not allow to completely disable the
->>> IPv4 stack yet but it lays the necessary build-system work for that
->>> goal.
->>>
->>> In addition, multiple subsystems Kconfig symbols across networking
->>> features like tunnels, drivers and filesystems have been adjusted to
->>> depend on IPv4. Keep on mind that follow-up work is required to convert
->>> the Kconfig symbol to bool and remove the dependency on IPv4 where it
->>> makes sense.
->>>
->>> Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
->>> ---
->>>   
->>
->> ...
->>
->>
->>>   security/smack/Kconfig                        |  1 +
->>>   54 files changed, 126 insertions(+), 66 deletions(-)
->>>
->> ...
->>
->>> diff --git a/security/smack/Kconfig b/security/smack/Kconfig
->>> index 5a8dfad469c3..b4e6d0168bd1 100644
->>> --- a/security/smack/Kconfig
->>> +++ b/security/smack/Kconfig
->>> @@ -3,6 +3,7 @@ config SECURITY_SMACK
->>>       bool "Simplified Mandatory Access Control Kernel Support"
->>>       depends on NET
->>>       depends on INET
->>> +    depends on IPV4
->>>       depends on SECURITY
->>>       select NETLABEL
->>>       select SECURITY_NETWORK
->>
->> Why would this make sense? You're introducing the capability to use
->> IP6 by itself, which is admirable, but you're disallowing that
->> configuration
->> with the Smack LSM. It appears that you've done a mechanical lookup
->> in the
->> Kconfig files and applied the minimal change to make the kernel compile,
->> which probably works for most cases. It does not work for Smack. Unless
->> there's a strong argument that Smack with IPv6 and without IPv4 is
->> and always
->> will be a pointless configuration you have my NAK.
->>
->>
->
-> Right, that was kind of the point. The idea was to be able to compile
-> core networking without IPv4. There are still plenty of modules that
-> depends on IPv4. It does not mean that they will remain like that
-> forever as I mentioned my idea was a follow-up on the series to avoid
-> having a too long series.
->
-> Anyway, I can make Smack to do not depend on IPv4 on this series if
-> that could grant an ACK.
+On 9/3/2026 7:25 PM, Rosen Penev wrote:
+> Allow initiation in the 5150-5240 MHz portion of the world
+> regulatory rule while retaining NO_IR for 5260-5350 MHz, where
+> radar detection is required.
+> 
+> The previous single rule marked both ranges NO_IR and unnecessarily
+> restricted channels 36-48. Update the rule counts for the expanded
+> rule list.
 
-Yes, that would be acceptable. I apologize in advance for the Smack IPv6
-implementation. Replacing it with a proper CALIPSO stack has been on the
-todo list since CALIPSO was introduced.
+My understanding is that this is not correct. In world mode the entire 5 GHz
+band is restricted since some countries do not allow any transmission in that
+band. You must establish that you are in a supported regulatory domain via
+802.11d or other mechanisms before transmission.
 
->
-> Thanks,
-> Fernando.
->
+So I'm dropping this patch from patchwork
+> 
+> Assisted-by: Codex:gpt-5.6-luna
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  drivers/net/wireless/ath/regd.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+> index f15e7bd690b5..b129af0eed88 100644
+> --- a/drivers/net/wireless/ath/regd.c
+> +++ b/drivers/net/wireless/ath/regd.c
+> @@ -43,7 +43,8 @@ static int __ath_regd_init(struct ath_regulatory *reg);
+>  					 NL80211_RRF_NO_OFDM)
+>  
+>  /* We allow IBSS on these on a case by case basis by regulatory domain */
+> -#define ATH_5GHZ_5150_5350	REG_RULE(5150-10, 5350+10, 80, 0, 30,\
+> +#define ATH_5GHZ_5150_5350	REG_RULE(5150-10, 5240+10, 80, 0, 30, 0),\
+> +				REG_RULE(5260-10, 5350+10, 80, 0, 30,\
+>  					 NL80211_RRF_NO_IR)
+>  #define ATH_5GHZ_5470_5850	REG_RULE(5470-10, 5850+10, 80, 0, 30,\
+>  					 NL80211_RRF_NO_IR)
+> @@ -64,7 +65,7 @@ static int __ath_regd_init(struct ath_regulatory *reg);
+>  /* Can be used for:
+>   * 0x60, 0x61, 0x62 */
+>  static const struct ieee80211_regdomain ath_world_regdom_60_61_62 = {
+> -	.n_reg_rules = 5,
+> +	.n_reg_rules = 6,
+>  	.alpha2 =  "99",
+>  	.reg_rules = {
+>  		ATH_2GHZ_ALL,
+> @@ -74,7 +75,7 @@ static const struct ieee80211_regdomain ath_world_regdom_60_61_62 = {
+>  
+>  /* Can be used by 0x63 and 0x65 */
+>  static const struct ieee80211_regdomain ath_world_regdom_63_65 = {
+> -	.n_reg_rules = 4,
+> +	.n_reg_rules = 5,
+>  	.alpha2 =  "99",
+>  	.reg_rules = {
+>  		ATH_2GHZ_CH01_11,
+> @@ -85,7 +86,7 @@ static const struct ieee80211_regdomain ath_world_regdom_63_65 = {
+>  
+>  /* Can be used by 0x64 only */
+>  static const struct ieee80211_regdomain ath_world_regdom_64 = {
+> -	.n_reg_rules = 3,
+> +	.n_reg_rules = 4,
+>  	.alpha2 =  "99",
+>  	.reg_rules = {
+>  		ATH_2GHZ_CH01_11,
+> @@ -95,7 +96,7 @@ static const struct ieee80211_regdomain ath_world_regdom_64 = {
+>  
+>  /* Can be used by 0x66 and 0x69 */
+>  static const struct ieee80211_regdomain ath_world_regdom_66_69 = {
+> -	.n_reg_rules = 3,
+> +	.n_reg_rules = 4,
+>  	.alpha2 =  "99",
+>  	.reg_rules = {
+>  		ATH_2GHZ_CH01_11,
+> @@ -105,7 +106,7 @@ static const struct ieee80211_regdomain ath_world_regdom_66_69 = {
+>  
+>  /* Can be used by 0x67, 0x68, 0x6A and 0x6C */
+>  static const struct ieee80211_regdomain ath_world_regdom_67_68_6A_6C = {
+> -	.n_reg_rules = 4,
+> +	.n_reg_rules = 5,
+>  	.alpha2 =  "99",
+>  	.reg_rules = {
+>  		ATH_2GHZ_CH01_11,
+
