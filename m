@@ -1,72 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-34.mta0.migadu.com [91.218.175.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 385F3408026;
-	Fri, 11 Sep 2026 07:16:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C34442FAA
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789111016; cv=none; b=XJKfELRWMtJFqTGqiRopjS2IC7dekC2puZk/v7PYAK6Z9aBrYibSeKaxuhLZ26kZb9/pAys+Ye8CQEfhuVlaS0rupVo1SgKXpS3jnC1drVhR0w2D2rhXOP+n+ZjWrNy17CLNF59m00zRV+50J6UfyUgyEsaO8fhi1NcBa1lyu/8=
+	t=1789111101; cv=none; b=Gd/3aI4cxARY1KlTCRbOgwYm6e+QrlrZfTy74uFbh3t4gIDtkLdT5gjhtD4uUc5cRTIpMQ0sqaDYSR/1iUnauVqgrwkglwv1twrn0Jzczzwzevxqe6vi2HRD+PPIhyQ5cKbyUkMFptZmKoawxAmOjwBGG//ldPLRBnpgh2dDWzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789111016; c=relaxed/simple;
-	bh=9fMYtrX1EvVkrIp+f45k4OUe+00uEnhfE/7SQPpX67I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SdSRgX9MSO9L68PUM51CmQ2J7axZnPVoIXpCixJGChSCiYlLLyXftepgbLKZXDtgtRn6E08iwuwVeJrhwjobgA9Yj25VGSDPEopuRsKxIJrZohTftbVv4LNkkfA1KZQh8ssZvau5S3cxlEMUXL7vwvV9YhA8HMWri+tGcX8f0CQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mA11ete3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789111101; c=relaxed/simple;
+	bh=HB9C5ndooPOI51e03OLe09bTWsmJUn1p5fraMMQWLa0=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=ba1+Tqvh3lbqzjk6YO9VKw1AAtMpNycX8P8YcfoSty+XW+P2VY1IXUgcwiNbDNj5scW1bIrATHaCdedT1fkaKru8P+ZDMVI7w9AHqzysc7mDfeUVBSOFmhxWcgzHDYFb0tjMUJeA+m1V/6CFSc0OFM4lvXlZxmHNLxsIOjQad7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iP6Oly/0; arc=none smtp.client-ip=91.218.175.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mA11ete3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCC211F00899;
-	Fri, 11 Sep 2026 07:16:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789111003;
-	bh=qi8tO0zS4dwdokctM0TPh12wejUkRjDhNme5BOC8Oqs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mA11ete3jDX9cu/85xEzWyiS93JalyG3KB/CPNONW3MXJz3FoVir1JVwk4bQEzAtr
-	 Po8ThEwhisG8GzJyk4QXPmfVq9cwy5OxJmVwquuk68tFHc+V0HxeFY79QV0JSzJNLI
-	 M1UJN4EdRTC3kR0b7XJv4rWmCZ54hKhXwJkyoExGqyXILS05xsGNz1cWhXslbYbIC8
-	 dhLI+pN1jdsyFAhlBseYAVRryFxDq+IYvNa5a1dXoNa+HSMb4CZ2dzneMreOdIVuyb
-	 p/I0RSra1v41L/HRFPbqVG5CCwHyT1HrO2aI/IIbFez+hdxKqHZ1ovQfwD7FztX9t6
-	 6nXtDT488kxTg==
-Date: Fri, 11 Sep 2026 09:16:38 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Eduard Bostina <egbostina@gmail.com>
-Cc: Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
-	Johannes Berg <johannes@sipsolutions.net>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2] dt-bindings: net: wireless: Convert WL1251 to DT
- schema
-Message-ID: <20260911-cordial-camouflaged-marmot-4ca71c@quoll>
-References: <20260905201108.415713-1-egbostina@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iP6Oly/0"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=HB9C5ndooPOI51e03OLe09bTWsmJUn1p5fraMMQWLa0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789111090; v=1; x=1789715890;
+ b=iP6Oly/0cB3ZBTPLkNpILZgfiT+G1GvMkyonEqsxFEaaK2uHcfwBD5L5LeOrIxY28BEXij1q
+ 0ULlz/y7E9QJrtgvIx7wlnMXFKkx7efmPPTVzC8DzCWy006CUMQ3eWiMrbqPVmLilXvKnAXIIeo
+ s0RPtqorbAabK+wJP8ZACL2o=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id fa6f9a8f65eccf38;
+	Fri, 11 Sep 2026 07:18:09 +0000
+X-Mizu-Trace-ID: fa6f9a8f65eccf38
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260905201108.415713-1-egbostina@gmail.com>
+Date: Fri, 11 Sep 2026 07:18:09 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Tianchu Chen" <tianchu.chen@linux.dev>
+Message-ID: <c584533a7433cdcdd94c554621bb7d466854bd83@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH] wifi: mwifiex: bound SDIO fw dump count by memory table
+ size
+To: briannorris@chromium.org, francesco@dolcini.it
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <7d886d74276c05eeb1b1698e31b72a5aed98612a@linux.dev>
+References: <7d886d74276c05eeb1b1698e31b72a5aed98612a@linux.dev>
 
-On Sat, Sep 05, 2026 at 08:11:08PM +0000, Eduard Bostina wrote:
-> +allOf:
-> +  - $ref: /schemas/spi/spi-peripheral-props.yaml#
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +    #include <dt-bindings/gpio/gpio.h>
-> +    spi {
-> +        #address-cells = <1>;
-> +        #size-cells = <0>;
-> +        wl1251@0 {
+September 4, 2026 at 8:57 PM, "Tianchu Chen" <tianchu.chen@linux.dev mail=
+to:tianchu.chen@linux.dev?to=3D%22Tianchu%20Chen%22%20%3Ctianchu.chen%40l=
+inux.dev%3E > wrote:
 
-Nodename: wifi
 
-With this fixed:
+>=20
+>=20From: Tianchu Chen <flynnnchen@tencent.com>
+>=20
+>=20mwifiex_sdio_fw_dump() reads the number of memory regions (dump_num) =
+from=20
+>=20a device register and uses it to index the static 15-entry
+> mem_type_mapping_tbl[] without any bounds check. A bogus device can
+> report a dump_num larger than the table, making each loop iteration
+> store a vmalloc pointer and a device-controlled size past the end
+> of the table into adjacent .data (up to ~5.7KB when dump_num is 255).
+>=20
+>=20The dump path runs after command timeouts or firmware crashes, so a
+> bogus device can first force an error to trigger the dump and
+> then report a bogus dump_num.
+>=20
+>=20Aborting the dump only loses the firmware snapshot; the card reset=20
+>=20that follows is unaffected, so error recovery still completes.
+>=20
+>=20Discovered by Atuin - Automated Vulnerability Discovery Engine.
+>=20
+>=20Fixes: 54881c6b37c8d ("mwifiex: add firmware dump feature for SDIO")
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Tianchu Chen <flynnnchen@tencent.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>=20
+>=20diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/ne=
+t/wireless/marvell/mwifiex/sdio.c
+> index f039d6f19183a..e40ca40418b30 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -2795,6 +2795,11 @@ static void mwifiex_sdio_fw_dump(struct mwifiex_=
+adapter *adapter)
+>  mwifiex_dbg(adapter, ERROR, "SDIO read memory length err\n");
+>  goto done;
+>  }
+> + if (dump_num > ARRAY_SIZE(mem_type_mapping_tbl)) {
+> + mwifiex_dbg(adapter, ERROR,
+> + "Invalid fw dump num: %d\n", dump_num);
+> + goto done;
+> + }
+>=20=20
+>=20 /* Read the length of every memory which will dump */
+>  for (idx =3D 0; idx < dump_num; idx++) {
+> --=20
+>=202.51.0
+>
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Hi,
+
+I noticed that this patch is marked as "Changes Requested" in
+Wireless Patchwork, but I haven't received any review comments.
+
+Could you please point me to the requested changes or the relevant
+review message? I am happy to send a v2 once I know what should be improv=
+ed.
 
 Best regards,
-Krzysztof
 
+Tianchu
