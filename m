@@ -1,97 +1,204 @@
-Received: from mta0.migadu.com (out-47.mta0.migadu.com [91.218.175.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AC32C21D8
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 02:44:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17144235BE2;
+	Fri, 11 Sep 2026 03:06:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789094677; cv=none; b=qnZd0jfggk/JzWsN5HOLALeCXcAdUL/rSGQzCuTzUZD8C+ZqivNfuAESwzeRRgpKuK4OGzMdhWnFMhgI3huLs8XHoCgnWTZPffh91f85MjSaYQZy4rdh9ro/kcH3RoYrFSJtnla+PIw/zWPjcoPw6XwUmvSzzdoRzXl0bHRM4Qk=
+	t=1789096019; cv=none; b=UI0M/c3BgytlseaOUB+X8Y/VBS/l59NjQ3DtOX6MsvK1NoN3z8Z7mkK4SbCDCbbYVy5619JyLHS8RJk2nnu8nMqv0oa9zGyShKZFrXLhf0uACEifh4uB1Zk7ab8MK+Jb8A0EaqedgG2O7+vjFdTgmxaCHAppe4zgl0HInhJ8iGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789094677; c=relaxed/simple;
-	bh=6s7db2mV+TlkzTBdjKbi5IdNEnFyPr3Kh2+StaULis0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V1mj8EGJBMeCslW4y7bZPwlx7QvrXDyzi7f3AWNW9qjXIAIUeADX22dT3j30oDzylIEM8pCapQOJ5NSIwkJ/CKionfz5sYwKP4HZz8Rp28aGJpfR3ltL/53QTgx86vFJWfdbgzN9sJXkGM164GYvWjHhViZPJJv+wiQKzItFofg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=jmR4bZcd; arc=none smtp.client-ip=91.218.175.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1789096019; c=relaxed/simple;
+	bh=e3N52camSpbrbd9Lazc3PO5rOzbLbivpGj6w5lEHN4o=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=qxcRFFa35xGsXGdJisKIKhKfzzwkTzQT51CLpgNkjWZArjn5Kp251zHx5vQXPS87D7IxcyZDEYzJKGHFs1hN6XyJoQEeHh2vaWOAb6W0GiuvStWKAzShONkNRIXVR5rpt6l+6rkreQ+dDEz92CE6MW2CTxmZ4Di3Avj2IxMxFcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eQrwlCke; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="jmR4bZcd"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=6s7db2mV+TlkzTBdjKbi5IdNEnFyPr3Kh2+StaULis0=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789094672; v=1; x=1789699472;
- b=jmR4bZcdh9NrgUWk1uo/zORoV7q+POewcXMH1/mSHpeNKNEOtYyd40jpb7z2Uk9zGPp4QjyL
- srb3ro/D1zU9g5f4VfDnD6lJv2WIdWLeQ3szcSxKC1vvC6QyiZHZ3VUQDOJYPixtlxljULnhms0
- CDhmdJiSLxgvsgE9JH9MAFhbm/i8ZF2xEXSJNrUlp/u7IybV0EC67jtLebpnfdHKVrfg5RHD0J4
- NN/rb/RmqXxJ0gA7/TjqPOCqcEphj7UgnZv27oj8fHsWJ12sYV73lKtW/58Pe+/HmfhuQGj26SO
- ZqMQOlNUfaqI83NRSygNajMblCiveyPU0caGq46hVhm1A==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ea8fa00fd0bba988;
-	Fri, 11 Sep 2026 02:44:32 +0000
-X-Mizu-Trace-ID: ea8fa00fd0bba988
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless] wifi: mt76: mt7925: don't put the band auto marker in TGID
-Date: Thu, 10 Sep 2026 19:44:28 -0700
-Message-ID: <20260911024428.65244-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eQrwlCke"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789096017; x=1820632017;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=e3N52camSpbrbd9Lazc3PO5rOzbLbivpGj6w5lEHN4o=;
+  b=eQrwlCkeE9pvO1JxvAJ+m6Y58htFzSOpwNwXMRR1A0BHHMY+57mJuOn5
+   ziYmnCUHRSBKmNcOvFXLiq44OubOrF2gfhB6pxmPvN6JYGR1XDcytRONC
+   L2+ut/tiyyb3Rf3JFgqvgAI1lp7IP/wuMQnPziyzw5opfOtv1evL4VJ8P
+   ckUQOCLY4GInHmBhpjIl7DCicJ4Esot2NIWiozbvDQFSl2eooWjtj1/ai
+   CtRdN9/PhXnw2GxX0E9jR+g+P0xqoT3A7I5L9tr6Ql0S4LFSuvdoIhYI4
+   If9iDOEgyTiTPb07wjiRgEjEZA5am/34bid6W/7J6QYMPunMfaNurcGJO
+   w==;
+X-CSE-ConnectionGUID: WYdW6fAQSI6bKHsoFnqsQw==
+X-CSE-MsgGUID: jriaIVZFRnKP+58WC5hJXA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="89429442"
+X-IronPort-AV: E=Sophos;i="6.27,96,1787036400"; 
+   d="scan'208";a="89429442"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Sep 2026 20:06:56 -0700
+X-CSE-ConnectionGUID: TRo74acOSVef9oko2DY/ZQ==
+X-CSE-MsgGUID: fjFM+kLASb6uc+o2tBLw5w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,96,1787036400"; 
+   d="scan'208";a="273742228"
+Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Sep 2026 20:06:55 -0700
+Date: Fri, 11 Sep 2026 11:06:51 +0800
+From: kernel test robot <yi1.lai@intel.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: oe-lkp@lists.linux.dev, lkp@intel.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, yi1.lai@intel.com
+Subject: [linux-next:master] [wifi]  d25ba7909b:
+ hwsim.uhr_mld_sae_single_link.fail
+Message-ID: <202609110354.fc495fe8-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-band_idx starts out as 0xff, which tells the firmware to pick the band on
-its own. A remain-on-channel grant normally writes a real index over it
-before anything else looks. Two cases never see that: an MLD station
-throws the grant away, and an AP has no association to trigger one.
 
-The TX descriptor reads the same field into a two-bit slot, so the marker
-comes out as 3. Every data frame from those two goes out tagged band 3.
-Beacons are fine, they reach the firmware separately and never build a
-descriptor.
 
-Same numbers on an MT7925 and on a Netgear A9000:
+Hello,
 
-                        stock         patched
-  station, one link     0x00000001    0x00000001
-  station, two links    0x00003001    0x00000001
-  AP                    0x00003013    0x00000013
-  real band index, STA  0x00001001    0x00001001
-  real band index, AP   0x00001013    0x00001013
+kernel test robot noticed "hwsim.uhr_mld_sae_single_link.fail" on:
 
-Only the marker cases move.
+commit: d25ba7909b2781c827f8b2928f201307c3ad6e44 ("wifi: update UHR to Draf=
+t_P802.11bn D1.5")
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
 
-Fixes: 0cb349d742d1 ("wifi: mt76: mt7925: update mt7925_mac_link_bss_add for MLO")
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+[test failed on linux-next/master c68a982815dcce5464e3bf2a31ac94f5146c04ca]
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 101f571b0..3b82c9de2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -798,7 +798,8 @@ mt7925_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 	val = FIELD_PREP(MT_TXD1_WLAN_IDX, wcid->idx) |
- 	      FIELD_PREP(MT_TXD1_OWN_MAC, omac_idx);
- 
--	if (band_idx)
-+	/* 0xff means BAND_AUTO to the firmware, and TGID cannot encode it */
-+	if (band_idx && band_idx != 0xff)
- 		val |= FIELD_PREP(MT_TXD1_TGID, band_idx);
- 
- 	txwi[1] = cpu_to_le32(val);
+in testcase: hwsim
+version: hwsim-x86_64-b9562516f-1_20260824
+with following parameters:
+
+	test: group-21
+
+config: x86_64-rhel-9.4-func
+compiler: gcc-14
+test machine: 16 threads Intel(R) Core(TM) i7-13620H (Raptor Lake) with 32G=
+ memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new versio=
+n of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <yi1.lai@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202609110354.fc495fe8-lkp@intel.com
+
+2026-09-10 10:26:26 ./run-tests.py uhr_mld_sae_single_link
+DEV: wlan0: 02:00:00:00:00:00
+DEV: wlan1: 02:00:00:00:01:00
+DEV: wlan2: 02:00:00:00:02:00
+APDEV: wlan3
+APDEV: wlan4
+START uhr_mld_sae_single_link 1/1
+Test: UHR MLD AP with MLD client SAE H2E connection using single link
+Adding link on: ifname=3Dwlan7
+Connect STA wlan8 to AP
+hostapd STATUS: {'state': 'ENABLED', 'phy': 'phy16', 'freq': '2412', 'num_s=
+ta_non_erp': '0', 'num_sta_no_short_slot_time': '0', 'num_sta_no_short_prea=
+mble': '0', 'olbc': '0', 'num_sta_ht_no_gf': '0', 'num_sta_no_ht': '0', 'nu=
+m_sta_ht_20_mhz': '0', 'num_sta_ht40_intolerant': '0', 'olbc_ht': '0', 'ht_=
+op_mode': '0x0', 'hw_mode': 'g', 'cac_time_seconds': '0', 'cac_time_left_se=
+conds': 'N/A', 'channel': '1', 'edmg_enable': '0', 'edmg_channel': '0', 'se=
+condary_channel': '0', 'ieee80211n': '1', 'ieee80211ac': '0', 'ieee80211ax'=
+: '1', 'ieee80211be': '1', 'ieee80211bn': '1', 'beacon_int': '100', 'dtim_p=
+eriod': '2', 'eht_oper_chwidth': '0', 'eht_oper_centr_freq_seg0_idx': '0', =
+'num_links': '1', 'link_id': '0', 'link_addr': '02:00:00:db:32:cc', 'ap_mld=
+_type': 'STR', 'he_oper_chwidth': '0', 'he_oper_centr_freq_seg0_idx': '0', =
+'he_oper_centr_freq_seg1_idx': '0', 'ht_caps_info': '000c', 'ht_mcs_bitmask=
+': 'ffff0000000000000000', 'supported_rates': '02 04 0b 16 0c 12 18 24 30 4=
+8 60 6c', 'max_txpower': '20', 'bss[0]': 'wlan7', 'bssid[0]': '02:00:00:db:=
+32:cc', 'ssid[0]': 'mld_ap_sae_single_link', 'num_sta[0]': '1', 'mld_addr[0=
+]': '02:00:00:00:10:00', 'mld_id[0]': '0', 'mld_link_id[0]': '0'}
+hostapd STA: {'addr': '02:00:00:00:11:00', 'flags': '[AUTH][ASSOC][AUTHORIZ=
+ED][SHORT_PREAMBLE][WMM][MFP][HT][HE][EHT]', 'aid': '1', 'capability': '0x4=
+30', 'listen_interval': '5', 'supported_rates': '02 04 0b 16 0c 12 18 24 30=
+ 48 60 6c', 'timeout_next': 'NULLFUNC POLL', 'auth_alg': '3', 'dot11RSNASta=
+tsSTAAddress': '02:00:00:00:11:00', 'dot11RSNAStatsVersion': '1', 'dot11RSN=
+AStatsSelectedPairwiseCipher': '00-0f-ac-4', 'dot11RSNAStatsTKIPLocalMICFai=
+lures': '0', 'dot11RSNAStatsTKIPRemoteMICFailures': '0', 'wpa': '2', 'AKMSu=
+iteSelector': '00-0f-ac-8', 'hostapdWPAPTKState': '11', 'hostapdWPAPTKGroup=
+State': '0', 'hostapdMFPR': '1', 'rx_packets': '6', 'tx_packets': '5', 'rx_=
+bytes': '627', 'tx_bytes': '916', 'inactive_msec': '7', 'signal': '-50', 'r=
+x_rate_info': '10', 'tx_rate_info': '0', 'ht_mcs_bitmask': 'ffff00000000000=
+00000', 'connected_time': '0', 'sae_group': '19', 'sae_rejected_groups': ''=
+, 'supp_op_classes': '5151525354737475767778797a7b7c7d7e7f8081008280', 'he_=
+capab': '0178c81a400002bfce0000000000000000fafffaff', 'eht_capab': '07007c0=
+000feffff0f01008888880000', 'ht_caps_info': '0x13fe', 'ext_capab': '04004a0=
+2014000400001', 'peer_addr[0]': '16:ef:b1:22:6a:65', 'max_simul_links': '0'}
+valid_links=3D0x1
+
+active_links=3D0x1
+
+hostapd STATUS: {'state': 'ENABLED', 'phy': 'phy16', 'freq': '2412', 'num_s=
+ta_non_erp': '0', 'num_sta_no_short_slot_time': '0', 'num_sta_no_short_prea=
+mble': '0', 'olbc': '0', 'num_sta_ht_no_gf': '0', 'num_sta_no_ht': '0', 'nu=
+m_sta_ht_20_mhz': '0', 'num_sta_ht40_intolerant': '0', 'olbc_ht': '0', 'ht_=
+op_mode': '0x0', 'hw_mode': 'g', 'cac_time_seconds': '0', 'cac_time_left_se=
+conds': 'N/A', 'channel': '1', 'edmg_enable': '0', 'edmg_channel': '0', 'se=
+condary_channel': '0', 'ieee80211n': '1', 'ieee80211ac': '0', 'ieee80211ax'=
+: '1', 'ieee80211be': '1', 'ieee80211bn': '1', 'beacon_int': '100', 'dtim_p=
+eriod': '2', 'eht_oper_chwidth': '0', 'eht_oper_centr_freq_seg0_idx': '0', =
+'num_links': '1', 'link_id': '0', 'link_addr': '02:00:00:db:32:cc', 'ap_mld=
+_type': 'STR', 'he_oper_chwidth': '0', 'he_oper_centr_freq_seg0_idx': '0', =
+'he_oper_centr_freq_seg1_idx': '0', 'ht_caps_info': '000c', 'ht_mcs_bitmask=
+': 'ffff0000000000000000', 'supported_rates': '02 04 0b 16 0c 12 18 24 30 4=
+8 60 6c', 'max_txpower': '20', 'bss[0]': 'wlan7', 'bssid[0]': '02:00:00:db:=
+32:cc', 'ssid[0]': 'mld_ap_sae_single_link', 'num_sta[0]': '1', 'mld_addr[0=
+]': '02:00:00:00:10:00', 'mld_id[0]': '0', 'mld_link_id[0]': '0'}
+hostapd STA: {'addr': '02:00:00:00:11:00', 'flags': '[AUTH][ASSOC][AUTHORIZ=
+ED][SHORT_PREAMBLE][WMM][MFP][HT][HE][EHT]', 'aid': '1', 'capability': '0x4=
+30', 'listen_interval': '5', 'supported_rates': '02 04 0b 16 0c 12 18 24 30=
+ 48 60 6c', 'timeout_next': 'NULLFUNC POLL', 'auth_alg': '3', 'dot11RSNASta=
+tsSTAAddress': '02:00:00:00:11:00', 'dot11RSNAStatsVersion': '1', 'dot11RSN=
+AStatsSelectedPairwiseCipher': '00-0f-ac-4', 'dot11RSNAStatsTKIPLocalMICFai=
+lures': '0', 'dot11RSNAStatsTKIPRemoteMICFailures': '0', 'wpa': '2', 'AKMSu=
+iteSelector': '00-0f-ac-8', 'hostapdWPAPTKState': '11', 'hostapdWPAPTKGroup=
+State': '0', 'hostapdMFPR': '1', 'rx_packets': '7', 'tx_packets': '5', 'rx_=
+bytes': '753', 'tx_bytes': '916', 'inactive_msec': '112', 'signal': '-50', =
+'rx_rate_info': '10', 'tx_rate_info': '0', 'ht_mcs_bitmask': 'ffff000000000=
+0000000', 'connected_time': '0', 'sae_group': '19', 'sae_rejected_groups': =
+'', 'supp_op_classes': '5151525354737475767778797a7b7c7d7e7f8081008280', 'h=
+e_capab': '0178c81a400002bfce0000000000000000fafffaff', 'eht_capab': '07007=
+c0000feffff0f01008888880000', 'ht_caps_info': '0x13fe', 'ext_capab': '04004=
+a02014000400001', 'peer_addr[0]': '16:ef:b1:22:6a:65', 'max_simul_links': '=
+0'}
+Exception during test execution: Missing STA flag: UHR
+Traceback (most recent call last):
+  File "/lkp/benchmarks/hwsim/tests/hwsim/./run-tests.py", line 635, in main
+    t(dev, apdev)
+    ~^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/test_uhr.py", line 180, in test_u=
+hr_mld_sae_single_link
+    run_uhr_mld_sae_single_link(dev, apdev)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/test_uhr.py", line 174, in run_uh=
+r_mld_sae_single_link
+    uhr_verify_status(wpas, hapd0, is_ht=3DTrue)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/test_uhr.py", line 60, in uhr_ver=
+ify_status
+    raise Exception("Missing STA flag: UHR")
+Exception: Missing STA flag: UHR
+FAIL uhr_mld_sae_single_link 0.42002 2026-09-10 10:26:27.104099
+passed 0 test case(s)
+skipped 0 test case(s)
+failed tests: uhr_mld_sae_single_link
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20260911/202609110354.fc495fe8-lkp@=
+intel.com
+
+--=20
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
