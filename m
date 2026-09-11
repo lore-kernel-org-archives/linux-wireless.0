@@ -1,50 +1,59 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp2.infineon.com (smtp2.infineon.com [217.10.52.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D47944A72C
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 06:54:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7307B455182
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 06:57:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789109684; cv=none; b=YcmWHew/eahRlfruHt/U0dGtNJCuIBtGH73PQEKvA9RfbvtODwJ6ujd4BOmI9MJ2mW4j4Kzp/2+NalX8+dOgB2L9TmGbS0v6AtHFdtNzs+Ktaf7Ytk0MKtw47hQpGXmgqfAAd8umiXbSQdxpfA0BlgqPQFwkcPQ6p0DHYgPfbPc=
+	t=1789109876; cv=none; b=Nv77nC5Ld1XGea4fo0XyJFOc/aMvBKTC3VM9ixBMC7p6GisHq/YrGR1KznzESFCgBbAFDyJYLk6auVlSln32KE/5APXNVQcYFrIEkbS3u/Ahu+QCbPkdyUFHk67mQvWRfUTKpmshLMHABaBydx6gyYBqUm26Rxspu4+BwqEPTLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789109684; c=relaxed/simple;
-	bh=783xz523/9RE3H/6s5vBSzgJ6/TKreE2mQb896FOjU0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DE8tCcqS0A7QShv1drlThHheabzbtRQmsYn087e3d37BS1++zznSVX5nJtQhzSAxNt2M73kdiOkXHceR/aiUqAyoClXCS0VGsWY3pzR/J0EmL0jkHoxkM9kAPDuZ4t9MtLeU56JHj6oEee/k3ZB/SrnfVseQX2PausSeLnJ4Mf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=pz4PqoBG; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789109876; c=relaxed/simple;
+	bh=xoEYjvplPoovKgqtzw1eqFaZsN5X6CrfJCi8cAzyRck=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UcwwGFzwFqC7uIfd+NaRsKnaqlFUv3vw+//CA6z/dUOvThXk3lqD4CVqLFvsLKdoXflZc+n39fSmPiVSJCuW+kuciOcjhys9CPHIkYXX0FfomfBlGyrgvp81VUwRAf9QFZRcufdeM7P+AAJsrLs0vETJo2wm+XOhada9GATXJiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=fMl+SYG3; arc=none smtp.client-ip=217.10.52.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="pz4PqoBG"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68B6sNbQ52185742, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789109664; bh=J7hfaaa77oA/xThK8BU7JQ/Q7fYTZQJmHW/cUH2NWWg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=pz4PqoBGA2gtdtohY65oCwdaLE7hiakaDaK/cASyk+bGgeiONnrKFoHb9o9cvRozl
-	 R9xBlLHqdBdFLAUql9YcmscUoXV+P1hg8NzOA1aicvyvnaHWmblTr2/ZYGKxisOz5M
-	 dRPumKK/1+8tI/8PLFn4IsCoLjKBKIqSRaOiDQgD4XqVmHTQFOPrXUQfaT+g0nbmv3
-	 daZFTw3+mkCk/ZYuJjEmzRT5O8RyRaBoRCqULPdDRJAynD2NsW9sHlFQKaqL2Dn16b
-	 rniHVQbVv7iDExz+TWJ6GXwuqthOzgG1w/OPEhlDfa0wKKKdQ8kC3d1rpvbcVeiZtQ
-	 8skmsBXGtzUWw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68B6sNbQ52185742
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 14:54:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="fMl+SYG3"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1789109867; x=1820645867;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xoEYjvplPoovKgqtzw1eqFaZsN5X6CrfJCi8cAzyRck=;
+  b=fMl+SYG3SpP46KxJZUcSDWMlkDLk4GezTX+DEI3eXjHMXG7pI2SCHknD
+   ERI1ZThFUQMonUqdrgBLWtrU4oK1VOnsQw+kXhZ/tMLHPxAvZZcy1SW4n
+   xPMEdOi+uI0W7YqAMkLH6StbGoJiDA7NgvBy4VtJqd9hJqlJSiJ9cTYM7
+   Y=;
+X-CSE-ConnectionGUID: 84Kyy7d/Qle1K2hV26l7zw==
+X-CSE-MsgGUID: uyFWM7QER4Kz9EmFu7O89g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="178082356"
+X-IronPort-AV: E=Sophos;i="6.27,96,1787004000"; 
+   d="scan'208";a="178082356"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
+  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 08:57:41 +0200
+Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE819.infineon.com
+ (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Fri, 11 Sep
+ 2026 08:57:41 +0200
+Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
+ MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 11 Sep 2026 14:54:23 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Fri, 11 Sep 2026 14:54:23 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
+ 15.2.2562.46; Fri, 11 Sep 2026 08:57:39 +0200
+From: Jason Huang <Jason.Huang2@infineon.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <timlee@realtek.com>
-Subject: [PATCH rtw-next] wifi: rtw89: pci: disable D3cold on ASUS ExpertBook B3/P3 series
-Date: Fri, 11 Sep 2026 14:53:58 +0800
-Message-ID: <20260911065358.34375-1-pkshih@realtek.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, Arend van Spriel
+	<arend.vanspriel@broadcom.com>, <brcm80211@lists.linux.dev>,
+	<wlan-kernel-dev-list@infineon.com>
+Subject: [PATCH v6 3/5] wifi: brcmfmac: add PMK programming for firmware roaming offload
+Date: Fri, 11 Sep 2026 14:56:54 +0800
+Message-ID: <20260911065656.1269623-4-Jason.Huang2@infineon.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260911065656.1269623-1-Jason.Huang2@infineon.com>
+References: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
+ <20260911065656.1269623-1-Jason.Huang2@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,89 +62,212 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-ClientProxiedBy: MUCSE801.infineon.com (172.23.29.27) To
+ MUCSE809.infineon.com (172.23.29.35)
 
-From: Chin-Yen Lee <timlee@realtek.com>
+From: Darren Li <hsin-hung.li@cypress.com>
 
-ASUS ExpertBook models (B3406CMA, B3606CMA, P3406CMA, and P3606CMA) may
-encounter PCIe link loss or recovery issues after entering the L2 low-power
-state associated with D3cold.
+FT and OKC roaming offload need PMK material in firmware even when
+the initial 802.1X exchange is handled by userspace. Add a roaming
+firmware-supplicant profile state for those connections and allow PMK
+configuration while firmware FT or OKC state is active.
 
-Prevent these affected platforms from entering D3cold to avoid the
-problematic PCIe L2 state transition.
+Program the OKC PMK through the okc_info_pmk iovar before setting the
+regular PMK when firmware reports OKC state. Only select the roaming
+firmware-supplicant state when firmware advertises FBT or OKC support;
+devices without those capabilities keep the profile in the userspace
+supplicant state and do not issue roaming-offload specific iovars on
+every connect.
 
-Add a DMI quirk match table so that other non-affected platforms can
-continue utilizing D3cold power saving.
+For FT-PSK with firmware supplicant support, keep the profile in the
+PSK firmware-supplicant state.
 
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Assisted-by: GitHub-Copilot-CLI:gpt-5.5
+Signed-off-by: Darren Li <hsin-hung.li@cypress.com>
+Signed-off-by: Chung-Hsien Hsu <Chung-Hsien.Hsu@infineon.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+Co-developed-by: Carella Chen <carella.chen@infineon.com>
+Signed-off-by: Carella Chen <carella.chen@infineon.com>
+Co-developed-by: Shelley Yang <shelley.yang@infineon.com>
+Signed-off-by: Shelley Yang <shelley.yang@infineon.com>
+Signed-off-by: Jason Huang <jason.huang2@infineon.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci.c | 44 ++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 56 +++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h    |  5 +-
+ 2 files changed, 54 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 8c3f4eb52cc5..941fb5ca15b6 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -4766,6 +4766,49 @@ static const struct rtw89_hci_ops rtw89_pci_ops = {
- 	.rst_bdram	= rtw89_pci_reset_bdram,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 872c48806d09..f2916cc9e5fc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2112,9 +2112,11 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 	s32 val;
+ 	s32 err;
++	s32 okc_enable;
+ 	const struct brcmf_tlv *rsn_ie;
+ 	const u8 *ie;
+ 	u32 ie_len;
++	bool fwsup_roam;
+ 	u32 offset;
+ 	u16 rsn_cap;
+ 	u32 mfp;
+@@ -2122,6 +2124,9 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 
+ 	profile->use_fwsup = BRCMF_PROFILE_FWSUP_NONE;
+ 	profile->is_ft = false;
++	profile->is_okc = false;
++	fwsup_roam = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_FBT) ||
++		     brcmf_feat_is_enabled(ifp, BRCMF_FEAT_OKC);
+ 
+ 	if (!sme->crypto.n_akm_suites)
+ 		return 0;
+@@ -2138,6 +2143,8 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 			val = WPA_AUTH_UNSPECIFIED;
+ 			if (sme->want_1x)
+ 				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
++			else if (fwsup_roam)
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_ROAM;
+ 			break;
+ 		case WLAN_AKM_SUITE_PSK:
+ 			val = WPA_AUTH_PSK;
+@@ -2153,11 +2160,15 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 			val = WPA2_AUTH_UNSPECIFIED;
+ 			if (sme->want_1x)
+ 				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
++			else if (fwsup_roam)
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_ROAM;
+ 			break;
+ 		case WLAN_AKM_SUITE_8021X_SHA256:
+ 			val = WPA2_AUTH_1X_SHA256;
+ 			if (sme->want_1x)
+ 				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
++			else if (fwsup_roam)
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_ROAM;
+ 			break;
+ 		case WLAN_AKM_SUITE_PSK_SHA256:
+ 			val = WPA2_AUTH_PSK_SHA256;
+@@ -2170,10 +2181,16 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 			profile->is_ft = true;
+ 			if (sme->want_1x)
+ 				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
++			else if (fwsup_roam)
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_ROAM;
+ 			break;
+ 		case WLAN_AKM_SUITE_FT_PSK:
+ 			val = WPA2_AUTH_PSK | WPA2_AUTH_FT;
+ 			profile->is_ft = true;
++			if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_FWSUP))
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
++			else if (fwsup_roam)
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_ROAM;
+ 			break;
+ 		case WLAN_AKM_SUITE_WFA_DPP:
+ 			val = WFA_AUTH_DPP;
+@@ -2204,8 +2221,22 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ 
+ 	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_1X)
+ 		brcmf_dbg(INFO, "using 1X offload\n");
++
++	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_1X ||
++	    profile->use_fwsup == BRCMF_PROFILE_FWSUP_ROAM) {
++		err = brcmf_fil_bsscfg_int_get(ifp, "okc_enable",
++					       &okc_enable);
++		if (err) {
++			bphy_err(drvr, "get okc_enable failed (%d)\n", err);
++		} else {
++			brcmf_dbg(INFO, "okc_enable (%d)\n", okc_enable);
++			profile->is_okc = okc_enable;
++		}
++	}
+ 	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_SAE)
+ 		brcmf_dbg(INFO, "using SAE offload\n");
++	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_ROAM)
++		brcmf_dbg(INFO, "using roaming offload\n");
+ 
+ 	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP))
+ 		goto skip_mfp_config;
+@@ -2494,13 +2525,14 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 		if (sme->crypto.psk && !is_sae_akm &&
+ 		    profile->use_fwsup != BRCMF_PROFILE_FWSUP_SAE) {
+-			if (WARN_ON(profile->use_fwsup !=
+-				    BRCMF_PROFILE_FWSUP_NONE)) {
++			if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_NONE) {
++				brcmf_dbg(INFO, "using PSK offload\n");
++				profile->use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
++			} else if (WARN_ON(profile->use_fwsup !=
++					   BRCMF_PROFILE_FWSUP_PSK)) {
+ 				err = -EINVAL;
+ 				goto done;
+ 			}
+-			brcmf_dbg(INFO, "using PSK offload\n");
+-			profile->use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
+ 		}
+ 		if (profile->use_fwsup != BRCMF_PROFILE_FWSUP_NONE) {
+ 			/* enable firmware supplicant for this interface */
+@@ -5953,17 +5985,29 @@ static int brcmf_cfg80211_set_pmk(struct wiphy *wiphy, struct net_device *dev,
+ 				  const struct cfg80211_pmk_conf *conf)
+ {
+ 	struct brcmf_if *ifp;
++	struct brcmf_pub *drvr;
++	int ret;
+ 
+ 	brcmf_dbg(TRACE, "enter\n");
+ 
+-	/* expect using firmware supplicant for 1X */
+ 	ifp = netdev_priv(dev);
+-	if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X))
++	drvr = ifp->drvr;
++	if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X &&
++		    !ifp->vif->profile.is_ft &&
++		    !ifp->vif->profile.is_okc))
+ 		return -EINVAL;
+ 
+ 	if (conf->pmk_len > BRCMF_WSEC_MAX_PSK_LEN)
+ 		return -ERANGE;
+ 
++	if (ifp->vif->profile.is_okc) {
++		ret = brcmf_fil_iovar_data_set(ifp, "okc_info_pmk",
++					       conf->pmk, conf->pmk_len);
++		if (ret < 0)
++			bphy_err(drvr, "okc_info_pmk iovar failed: ret=%d\n",
++				 ret);
++	}
++
+ 	return brcmf_set_pmk(ifp, conf->pmk, conf->pmk_len);
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 63e534523f51..1aa99390a951 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -127,7 +127,8 @@ enum brcmf_profile_fwsup {
+ 	BRCMF_PROFILE_FWSUP_NONE,
+ 	BRCMF_PROFILE_FWSUP_PSK,
+ 	BRCMF_PROFILE_FWSUP_1X,
+-	BRCMF_PROFILE_FWSUP_SAE
++	BRCMF_PROFILE_FWSUP_SAE,
++	BRCMF_PROFILE_FWSUP_ROAM
  };
  
-+static void rtw89_pci_d3cold_quirks(struct rtw89_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id d3cold_quirks[] = {
-+		{
-+			.ident = "ASUS EXPERTBOOK B3406CMA",
-+			.matches = {
-+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
-+				DMI_MATCH(DMI_BOARD_NAME, "B3406CMA"),
-+			},
-+		},
-+		{
-+			.ident = "ASUS EXPERTBOOK B3606CMA",
-+			.matches = {
-+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
-+				DMI_MATCH(DMI_BOARD_NAME, "B3606CMA"),
-+			},
-+		},
-+		{
-+			.ident = "ASUS EXPERTBOOK P3406CMA",
-+			.matches = {
-+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
-+				DMI_MATCH(DMI_BOARD_NAME, "P3406CMA"),
-+			},
-+		},
-+		{
-+			.ident = "ASUS EXPERTBOOK P3606CMA",
-+			.matches = {
-+				DMI_MATCH(DMI_BOARD_VENDOR, "ASUS"),
-+				DMI_MATCH(DMI_BOARD_NAME, "P3606CMA"),
-+			},
-+		},
-+		{},
-+	};
-+	const struct dmi_system_id *match;
-+
-+	match = dmi_first_match(d3cold_quirks);
-+	if (!match)
-+		return;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_STATE, "Disable D3Cold on %s\n", match->ident);
-+	pci_d3cold_disable(pdev);
-+}
-+
- int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct rtw89_dev *rtwdev;
-@@ -4791,6 +4834,7 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	rtwdev->hci.rpwm_addr = pci_info->rpwm_addr;
- 	rtwdev->hci.cpwm_addr = pci_info->cpwm_addr;
+ /**
+@@ -164,6 +165,7 @@ enum brcmf_mgmt_tx_status {
+  * @bssid: bssid of joined/joining ibss.
+  * @sec: security information.
+  * @key: key information
++ * @is_okc: OKC is used for current connection.
+  */
+ struct brcmf_cfg80211_profile {
+ 	u8 bssid[ETH_ALEN];
+@@ -172,6 +174,7 @@ struct brcmf_cfg80211_profile {
+ 	enum brcmf_profile_fwsup use_fwsup;
+ 	u16 use_fwauth;
+ 	bool is_ft;
++	bool is_okc;
+ };
  
-+	rtw89_pci_d3cold_quirks(rtwdev, pdev);
- 	rtw89_check_quirks(rtwdev, info->quirks);
- 	rtw89_check_pci_ssid_quirks(rtwdev, pdev, pci_info->ssid_quirks);
- 
-
-base-commit: f71dd599a98182d6bc34dce39977f928068ecd64
+ /**
 -- 
 2.25.1
 
