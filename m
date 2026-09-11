@@ -1,152 +1,133 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+Received: from mta0.migadu.com (out-164.mta0.migadu.com [91.218.175.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507483EB0E8
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:24:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE57411FA7
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789111473; cv=none; b=YzllsjQMBLtMEjg+k6SyD07qPCLPgyzuqRvC0k4B0LSHKPjQy+laDHcXj5j7JafTlLiTOiqhTqXGhxMfoVJtNqNhxfyKz2p276BeaRNdFbDXKCF9OeMHEonB9PQHvDAjjVVPA/2vWmZbJj09Gp6Es0wgHT7WwopH5+qX/+sKiZs=
+	t=1789112475; cv=none; b=fTQAzxaLv/5xYVdifce/mfiCVNdIvrCC+ims+0P0nMG39AryjlQGSI89FfG/3kue+MgDDKiBfS0xG+eSuitBW6ub4YyHMC5ubBEXuRK5rjCDX3OPOcRl2EugAHKAtyE/LeWajTJHCXhwCf2IcYvHFiIu0QBoNprhPlp4MPE+VMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789111473; c=relaxed/simple;
-	bh=aoSZMPbbv+KZgH3lgZ82ja2wMgFCS7081TvMaC64rL4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fbBEnGwlwjOtkTFitbGj//3166eoIGBmkH8pcFNX+ZohqVVg25pbMBzBdmwz8a79Kk8sXezSYHaQJA+cIr1QuECNL77g06dq3ewGwFVKLURPXXIWIWYQMVxC9X1OuVvlWpr9Hxe1XGjq4d+K74DC9KZGOHMMAjcXfJWXTf1TByg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SMo5TO8r; arc=none smtp.client-ip=209.85.215.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789112475; c=relaxed/simple;
+	bh=hjsUTDS0aUfhWrQcW8ActP7iZuTl1bW/eidquzAMAC8=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=QnBbHzNw/4yz8LDxTLpNhLgpayfs8vdX8wTjl84fPe/lP73MxzdCiqntR1FkHs5IuP9jE+4203MNXvad8gzVtUEAT9jGqUdqJkaHoJ8ib2U3epaFo0O12ksx0cysy9dS7xyJbVhjEyBmpSUQirKIz6eqMWuKV3scyWwpPVdl264=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TopX4yvy; arc=none smtp.client-ip=91.218.175.164
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SMo5TO8r"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc4d03f95dfso84583a12.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 00:24:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789111466; x=1789716266; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MNkNpvPXXOsHCrRH3dp5EJvTni7q+cIYOriXNedPssg=;
-        b=SMo5TO8r76xIC1WOfrUBiSrWZbwPiKvU0EF7T69o7DHf0Yvwyv+vz1fS/vgp2dNwHM
-         pjvXcZlhzTviAJ4R3PSuprjhnuVPmtG9zL93uFrv2ortP3xNJeodgqkb7C+S7zMrGwS7
-         cFWMGQB5yAnxcVN2oRjzY6VBdv00bwYpo+byyZFCsc8Ov9VOV5cwL72BN1781TL4h1Bl
-         hoqZJtko5B4lXZLSudk7PBqBKOOUxa2A0sKJ422se0bJ9rA7RZPiT1XOFpoheWFeuCrQ
-         whBHP8T0d7O14jiTM0Du++DoRPBmMeQlVgrrB6LilvTUKddgtnU450zMbaXWjy725kiS
-         i4TQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789111466; x=1789716266;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MNkNpvPXXOsHCrRH3dp5EJvTni7q+cIYOriXNedPssg=;
-        b=sJA/B1KxM2LP7sTnwo8VSpZatgDjP6rI2bXlOYISZHn4StRfZ9Uny9F4/U+u6Esk2f
-         nSck1c6fFxAC0jdfR4wrqa2JqOL8OJFObNdYlg9ozibRq1WBW7sUIawWlbj54O9UXqdg
-         4E81z4W8uMDE1ODKOeYTOcmi9qzaTZmT3S+WLDiZ1rdxvwA9ZjZ+lHWjyrOy5OOxZ+72
-         R9o0v/i1hGrsz/lHcpErhnkGSdtm7dKKPSdq4rbWJYdRkiWvvSlVZwb1/2UAEe/z5CTJ
-         LdwTxyDyN1I/km8+sLPDwWuNSf//4GSUZHmLxV70PTsbvVrjRkyy9ZIiTkDndePm8wDM
-         7rKg==
-X-Gm-Message-State: AFuF++meCv2tK5zD5f91ntqmbbQrAGaVY2BOhS5YrhAoNC0RGO5/Y2nN
-	1vfdOlsw+LePGvlB/NcTArxVcjhG+l1JS+Oppc8RaPiSSL8oiHsaDabVUWNshk9A
-X-Gm-Gg: AYBFou2w2j9zXljhDDBS9mEtberx9CeciJBQCNS5yuF6FQKsi3B2PCQx7t2cEOo/RPT
-	c8W+X+ZCOYMc5gY5dNeuMZRDnx0jWfxk7RzFq/74G9EhDpnpbuGbh5ItRS/2jM785C2yuw+I6qr
-	LQSoOAXOQZER6QiSMM3gNdNB8HfEQ1MKxSXsnJ3q+3a33V4Xhek3uPxexuOPKyZmn/8Hijghbxw
-	J9LnaWhKQgc1gyTj8WqVyOfVICbn4PrxRMS/ikTyHawlyS7XEfE4zX+UIBPQ3Fb+FBS+tv/XiGe
-	gPGGYOvtUQj13J1b1ylfXygIcLqsZvrap02Cfvd8FYlDiPvclFOmMK2FsKiZ4MOP8frclgLmHHS
-	RZUnhXvOzP7apH1VInFbcVwmU8PlaHvDfOu2XImdZgm+D7JGQC+fSkBb2vAQKnTJsI2KNZzKye/
-	TRhXJpbuMcG8W8ZQWbZ0hJPo1MEFXYKCvqHWuns8/pTuT1GRCGph62MFUG82kkfmHyfK2YXHPRO
-	EItTIUAacTBY4Cu1vZS9pcIfMdjnQJqZSB5YNkDor7hWzB1BCTO35IIkZZ+odCf8ykgvtCXZhzx
-	+A==
-X-Received: by 2002:a17:90b:35d2:b0:396:41d1:cbc7 with SMTP id 98e67ed59e1d1-39d9bc0dca0mr4927613a91.3.1789111466067;
-        Fri, 11 Sep 2026 00:24:26 -0700 (PDT)
-Received: from codespaces-1adab9.ktkhmpmw22vebpok31ngjx2qsb.ix.internal.cloudapp.net ([23.97.62.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39da1ad5d79sm1984815a91.12.2026.09.11.00.24.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 00:24:25 -0700 (PDT)
-From: Rivaldi Hormat <rivaldihormat@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@kernel.org,
-	ath10k@lists.infradead.org,
-	Rivaldi Hormat <rivaldihormat@gmail.com>
-Subject: [PATCH 2/2] wifi: ath10k: Add missing validation in ath10k_htt_rx_proc_rx_frag_ind_hl
-Date: Fri, 11 Sep 2026 07:23:17 +0000
-Message-ID: <20260911072318.5232-2-rivaldihormat@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260911072318.5232-1-rivaldihormat@gmail.com>
-References: <20260911072318.5232-1-rivaldihormat@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TopX4yvy"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=hjsUTDS0aUfhWrQcW8ActP7iZuTl1bW/eidquzAMAC8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789112470; v=1; x=1789717270;
+ b=TopX4yvyCEzW4bZ8Qqigd/9cJBpUsNWFPZweIhgrwXovHWoWCBjlWGeG7Yw0/pEQ7oWUYY4a
+ +c6F8StRMNIQC8w58MtsSlNDCpp8OTvhf8uqkLiURXclqH89JHJ5b1vhRtyYX8w9fF79RnkJotN
+ Z3gHcbBgYurg/6Pn1kJdyWmE=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 357b0a632a779fc6;
+	Fri, 11 Sep 2026 07:41:00 +0000
+X-Mizu-Trace-ID: 357b0a632a779fc6
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 11 Sep 2026 09:40:55 +0200
+Message-Id: <DLCBFNKN09SW.2SIEDXTB4PGJD@linux.dev>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, "Peter Robinson"
+ <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH v11 4/7] wifi: rtw88: sdio: zero the padding added to a
+ TX transfer
+From: "Luka Gejak" <luka.gejak@linux.dev>
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "Luka Gejak" <luka.gejak@linux.dev>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260909074556.55709-1-luka.gejak@linux.dev>
+ <20260909074556.55709-5-luka.gejak@linux.dev>
+ <d6507fd0447c4c09a9c80bb57dfef35c@realtek.com>
+ <DLBQ2H40DC71.2Z3B32X9JQ17I@linux.dev>
+ <DLBR915C5L0S.1TEYXZ8LADNTH@linux.dev>
+ <2294d792e937441fbf4ef8169c03df18@realtek.com>
+ <a17a665d7d4c47fbb33e038d122ed200@realtek.com>
+In-Reply-To: <a17a665d7d4c47fbb33e038d122ed200@realtek.com>
 
-ath10k_htt_rx_proc_rx_frag_ind_hl() doesn't handle undersized packets.
-This can lead to an integer underflow and an out-of-bounds read.
+On Fri Sep 11, 2026 at 2:53 AM CEST, Ping-Ke Shih wrote:
+> Ping-Ke Shih <pkshih@realtek.com> wrote:
+>> Luka Gejak <luka.gejak@linux.dev> wrote:
+>> > mac80211 reserves IEEE80211_ENCRYPT_TAILROOM, 18 bytes, and offers
+>> > no way for a driver to ask for more on TX; extra_tx_headroom is headro=
+om
+>> > and extra_beacon_tailroom is beacons only.
+>>=20
+>> You can modify mac80211 to reserve larger ndev->needed_tailroom to
+>> see if it can really resolve the symptom. If so, you can propose
+>> to add fields for tailroom like headroom:
+>>=20
+>>   struct ieee80211_hw:: extra_tx_tailroom
+>>   struct ieee80211_local:: tx_headroom
+>>=20
+>
+> Note that the ndev->needed_tailroom isn't guaranteed by comments, so doin=
+g
+> some experiments by normal use case would be helpful to know if it's wort=
+h.
+>
+>  *	@needed_tailroom: Extra tailroom the hardware may need, but not in all
+>  *			  cases can this be guaranteed. Some cases also use
+>  *			  LL_MAX_HEADER instead to allocate the skb
+>
+> Ping-Ke
 
-Fix this by adding the missing validation.
+I ran it: one line in net/mac80211/iface.c, IEEE80211_ENCRYPT_TAILROOM
++ 512, nothing else. It does not help. Over 60000 frames the average
+tailroom went from 106 to 139 bytes against an average pad of 469, and
+96% still reallocate.
 
-Signed-off-by: Rivaldi Hormat <rivaldihormat@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 30 ++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+Your caveat is why, and it is stronger than the comment suggests:
+mac80211 never reads ndev->needed_tailroom as the field appears once in
+net/mac80211, which is the assignment itself. The only code that acts on
+it is skb_ensure_writable_head_tail(), whose one caller is net/dsa/user.c.
+And the protocols that do honour it read it when they allocate, which TCP
+never does, which is why only the few non-TCP frames moved the average.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ab2d373b4..4fabb9264 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2775,6 +2775,13 @@ static bool ath10k_htt_rx_proc_rx_frag_ind_hl(struct ath10k_htt *htt,
- 	struct htt_resp *resp;
- 	size_t tot_hdr_len;
- 
-+
-+	/* FIX: Validate skb length before skb_pull */
-+	if (skb->len < HTT_RX_FRAG_IND_INFO0_HEADER_LEN) {
-+		ath10k_warn(ar, "Invalid skb len %d for RX_FRAG_IND\n", skb->len);
-+		return false;
-+	}
-+
- 	resp = (struct htt_resp *)(skb->data + HTT_RX_FRAG_IND_INFO0_HEADER_LEN);
- 	skb_pull(skb, HTT_RX_FRAG_IND_INFO0_HEADER_LEN);
- 	skb_trim(skb, skb->len - FCS_LEN);
-@@ -2792,6 +2799,13 @@ static bool ath10k_htt_rx_proc_rx_frag_ind_hl(struct ath10k_htt *htt,
- 	num_mpdu_ranges = MS(__le32_to_cpu(rx_hl->hdr.info1),
- 			     HTT_RX_INDICATION_INFO1_NUM_MPDU_RANGES);
- 
-+	/* FIX: Validate num_mpdu_ranges */
-+	if (num_mpdu_ranges > 1) {
-+		ath10k_warn(ar, "Invalid num_mpdu_ranges %d\n", num_mpdu_ranges);
-+		goto err;
-+	}
-+
-+
- 	tot_hdr_len = sizeof(struct htt_resp_hdr) +
- 		      sizeof(rx_hl->hdr) +
- 		      sizeof(rx_hl->ppdu) +
-@@ -2799,10 +2813,26 @@ static bool ath10k_htt_rx_proc_rx_frag_ind_hl(struct ath10k_htt *htt,
- 		      sizeof(rx_hl->fw_desc) +
- 		      sizeof(struct htt_rx_indication_mpdu_range) * num_mpdu_ranges;
- 
-+	/* FIX: Validate tot_hdr_len against skb length */
-+	if (tot_hdr_len > skb->len) {
-+		ath10k_warn(ar, "Invalid tot_hdr_len %zu > skb->len %u\n",
-+			    tot_hdr_len, skb->len);
-+		goto err;
-+	}
-+
-+
- 	tid =  MS(rx_hl->hdr.info0, HTT_RX_INDICATION_INFO0_EXT_TID);
- 	rx_desc = (struct htt_hl_rx_desc *)(skb->data + tot_hdr_len);
- 	rx_desc_info = __le32_to_cpu(rx_desc->info);
- 
-+
-+	/* FIX: Validate fw_desc.len against remaining skb length */
-+	if (rx_hl->fw_desc.len > skb->len - tot_hdr_len) {
-+		ath10k_warn(ar, "Invalid fw_desc.len %u > remaining skb len\n",
-+			    rx_hl->fw_desc.len);
-+		goto err;
-+	}
-+
- 	hdr = (struct ieee80211_hdr *)((u8 *)rx_desc + rx_hl->fw_desc.len);
- 
- 	if (is_multicast_ether_addr(hdr->addr1)) {
--- 
-2.53.0
+So that tested the wrong knob rather than the idea.
 
+Your fields do work. I built them and measured it. ieee80211_skb_resize()
+is the only place on the TX path that grows tailroom, and it derives
+tail_need from IEEE80211_ENCRYPT_TAILROOM alone, gated on the frame
+needing software crypto tailroom, which is false for data frames under
+hardware CCMP. The headroom side is already what you describe:
+hw.extra_tx_headroom folds into local->tx_headroom and both callers add
+it into head_need. Adding hw.extra_tx_tailroom, folding it into a new
+local->tx_tailroom and adding that to tail_need outside the crypto gate
+delivers the tailroom. One further piece is needed: ieee80211_build_hdr()
+skips the resize entirely when it wants no headroom and the skb is not
+cloned, so that condition has to widen as well.
+
+With the driver asking for one SDIO block, frames arriving short of
+tailroom go from 29056 in 30000 to 1 in 30000, and uplink is about 6%
+faster in an interleaved A/B.
+
+One caveat though: this does not remove the reallocation, it moves it.
+pskb_expand_head() is called just as often, from ieee80211_skb_resize()
+now instead of from __skb_pad() in the driver. The driver side becomes
+much cheaper, 445 ms of __skb_pad per 20 s run against 82 ms, and total
+time in pskb_expand_head falls by about a third, but whole system CPU
+does not drop. The gain looks like moving the work off the SDIO critical
+path rather than doing less of it.
+
+I can write that up for Johannes as a separate mac80211 patch, with the
+rtw88 side as a follow up. It is independent of this series, but considerin=
+g
+your question was about CPU usage and this change doesn't overall reduce it=
+,
+it is probably not worth it.
+
+Best regards,
+Luka Gejak
