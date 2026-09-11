@@ -1,85 +1,66 @@
-Received: from mta0.migadu.com (out-19.mta0.migadu.com [91.218.175.19])
+Received: from mta0.migadu.com (out-187.mta0.migadu.com [91.218.175.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A4FC468C1F
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 08:42:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F19429037
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 10:16:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789116147; cv=none; b=AEfMtUeh8TK098LmzumJfhbv/MESLlkjG0Y1QZPkjL/Q2J+dCqZaAMjnYKJSVfe/mu2pAgzjyM28hu0zcCfRfGnAVhCUpEhN/YF4sJ1mKvemk62xsojRUpLeLSpMnRmD5o0oLx22qowHVffpP6X1p2Gj3pLyQU/YQz6JVO8+/cI=
+	t=1789121816; cv=none; b=o1WnPzXSexPwWxlp5LToJRj67lVtkZtX4haCSwJ9k/0fMWSfEvHOvWtozLQGoX89ZHzvKy3nco5pa1mc8nazZVs5vfY9EOIHVLl3t42EXt4q1+itwKnIizTH46hIZfFyqVWPThapXlvU3b5++lhpt+Qdl+f2bQMI/O1t0VMFFi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789116147; c=relaxed/simple;
-	bh=9Rl/2Dwn3EBk+1V6E1oPPEJyovJn7q/s0zuVVE8xjh0=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=t6ALKmvIGoUO5SKlPSHFxGvyh9u396UyeS/tXGhhjCFNW/RXOiUQQ61b/e2s7rM4Xmrb2MchBaahN9guuPMXJFLZdKxicHvcT/VCXwa4Ox3dFa0m1gf3UX1eX/5l9Jogu27LmkeKXN80lnNoBXepv0aDP3wxOQ9Ij2NzjgRybxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X96zHCbu; arc=none smtp.client-ip=91.218.175.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789121816; c=relaxed/simple;
+	bh=CP942oWEBd47mNJNqWykU6R4vRXGichTQsBF3/85k4c=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:
+	 References:In-Reply-To; b=QUmksm560r/BsMqvUY5aTn23aUnKqpSORDUihGLZkcq+h6UVGZ1j2g4YaB9H3IapLgncz5YPVPKhOWZ2LTV3E15YwbqpPe2dYC4GSLYyPn5Z3UuiEbqZ6/gx6QAljcPQm4t/fwn3sH81NUrGobopu0I5s0qNusL1i4Yl4Ppytw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com; spf=pass smtp.mailfrom=cknow-tech.com; dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b=AzAKSe3P; arc=none smtp.client-ip=91.218.175.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cknow-tech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X96zHCbu"
+	dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b="AzAKSe3P"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=9Rl/2Dwn3EBk+1V6E1oPPEJyovJn7q/s0zuVVE8xjh0=;
- c=simple/simple; d=linux.dev;
+DKIM-Signature: a=rsa-sha256; bh=CP942oWEBd47mNJNqWykU6R4vRXGichTQsBF3/85k4c=;
+ c=simple/simple; d=cknow-tech.com;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789116143; v=1; x=1789720943;
- b=X96zHCbuB/DkrSwQley0oOzN2twP7wNqcj0/c3XrQFXtwyoovOH1U7n68fc/3unfqmBWoUqQ
- trK4pFwnh0cqP2o6H5F7nfRDeeubnRH9q+GTWpU74kYttbbVxm1KoO8q20NxzHMuqUyO/8KGUPB
- wqsS7Uwdu8Ytu/JyL4D8GzxE=
+ t=1789121808; v=1; x=1789726608;
+ b=AzAKSe3Pa06YPL0+xFwsQik2GsuO2wq5CYXCQh7HMx5ceRkefqs3dTELqDWaBhdA5ygjm+yS
+ KxF8T5NQ3teab46opHapFT0hBes/g8qNaD67ZiQq4+JZ6wnF/gs+t925Zvmwj8Tx7AlcCGDSE4s
+ AxhNH3Z9+0PPVd9IMX5QH4nT7/1DmE+6DH0g1nixmOJtaETEIUFA/XU2da/8uVY66XQj3pGSD2B
+ s2E7333Dl/r67twLZYXn8Z1s6LD5NeXmwZ6kOLCavMgj6+QQljzpTSy+QC64JBr0KfzoSQuyPYh
+ JaOFrbZ9tkrVUAu5h91pmTqpU86D8BCvAE7upfX0W4xjQ==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4511d20fe87ed201;
-	Fri, 11 Sep 2026 08:42:13 +0000
-X-Mizu-Trace-ID: 4511d20fe87ed201
+Received: by smtp.migadu.com with ESMTPS id 02437128f31cb33b;
+	Fri, 11 Sep 2026 10:16:48 +0000
+X-Mizu-Trace-ID: 02437128f31cb33b
 X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Date: Fri, 11 Sep 2026 08:42:13 +0000
-Content-Type: text/plain; charset="utf-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <108d4da2ab381d6e22d4f84f1c1254aa59b20d88@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v11 4/7] wifi: rtw88: sdio: zero the padding added to a
- TX transfer
-To: "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael 
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- luka.gejak@linux.dev
-In-Reply-To: <a0a617f1b7e34b979a801e7c10ad98f3@realtek.com>
-References: <20260909074556.55709-1-luka.gejak@linux.dev>
- <20260909074556.55709-5-luka.gejak@linux.dev>
- <d6507fd0447c4c09a9c80bb57dfef35c@realtek.com>
- <DLBQ2H40DC71.2Z3B32X9JQ17I@linux.dev>
- <DLBR915C5L0S.1TEYXZ8LADNTH@linux.dev>
- <2294d792e937441fbf4ef8169c03df18@realtek.com>
- <a17a665d7d4c47fbb33e038d122ed200@realtek.com>
- <DLCBFNKN09SW.2SIEDXTB4PGJD@linux.dev>
- <a0a617f1b7e34b979a801e7c10ad98f3@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 11 Sep 2026 12:16:47 +0200
+Message-Id: <DLCEQZK5DBQN.2TCHLRZWE5EMT@cknow-tech.com>
+Subject: Re: Stack trace when starting iwd with Intel BE200 M.2 Wi-Fi+BT
+ card
+From: "Diederik de Haas" <diederik@cknow-tech.com>
+To: "Diederik de Haas" <diederik@cknow-tech.com>,
+ <linux-wireless@vger.kernel.org>
+X-Mailer: aerc 0.22.0-9-ge948bb7230f4
+References: <DL5P72WYQVOQ.23G9D01OY3BAA@cknow-tech.com>
+ <DLBMROQPJN2T.3BIEEFHQ7R6QB@cknow-tech.com>
+In-Reply-To: <DLBMROQPJN2T.3BIEEFHQ7R6QB@cknow-tech.com>
 
-September 11, 2026 at 9:45 AM, "Ping-Ke Shih" <pkshih@realtek.com mailto:=
-pkshih@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E=
- > wrote:
+On Thu Sep 10, 2026 at 2:21 PM CEST, Diederik de Haas wrote:
+> Not very impressive Wi-Fi speed, but alas.
+> I actually bought the BE200NGW and (later) AX210 card for Bluetooth.
+> Both perform poorly/terrible on that front, while the Intel 8265/8275 car=
+d
+> in my *amd64* laptop works great, including Bluetooth.
 
+That turned out to be a HW/PEBKAC problem: my pigtails were broken.
+Replacing them resolved my BT problems and Wi-Fi performs (even) better
+now. The stack trace on the BE200NGW is still present though.
 
->=20
->=20Luka Gejak <luka.gejak@linux.dev> wrote:
->=20
->=20>=20
->=20> I can write that up for Johannes as a separate mac80211 patch, with=
- the
-> >  rtw88 side as a follow up. It is independent of this series, but con=
-sidering
-> >  your question was about CPU usage and this change doesn't overall re=
-duce it,
-> >  it is probably not worth it.
-> >=20
->=20Thanks for the experiments. I think it is not worth...
->
-
-I agree, just let me know when the series is merged so I can send driver =
-series.
-Best regards,
-Luka Gejak
+Cheers,
+  Diederik
