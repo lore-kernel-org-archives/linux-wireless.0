@@ -1,91 +1,72 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB7CA43CE7F
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 07:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 385F3408026;
+	Fri, 11 Sep 2026 07:16:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789110285; cv=none; b=lBPLL9ToYk4iM8jJq7h3HL54bu+Kjpp+R190CWtAt+LPxwrwnuIv0fS647E/iy6DNh/uZ8sCsgwo/hUGrywIB3WNOqV9RtKKYGVcxU5IVIhy7XUIXdO/DaOj6sfEDLA661O1q774AobrcuHlRb7dOE+yC0uiS0my17T92rJjShQ=
+	t=1789111016; cv=none; b=XJKfELRWMtJFqTGqiRopjS2IC7dekC2puZk/v7PYAK6Z9aBrYibSeKaxuhLZ26kZb9/pAys+Ye8CQEfhuVlaS0rupVo1SgKXpS3jnC1drVhR0w2D2rhXOP+n+ZjWrNy17CLNF59m00zRV+50J6UfyUgyEsaO8fhi1NcBa1lyu/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789110285; c=relaxed/simple;
-	bh=+08dk40FChkVztUH6t+7QV1GEbrVLDBX0fqanu93lzU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NhBFHYioNThPa3ZHBIW9WvL402qEHaHJBBCji9+63i3cPSy/Vlx9lZ+sdfm6wB46jjCxTW1mzR3kPE+2b08olIK45c1vcqr9m52aB5e0XpL9cBbq+po97Z11QktS4jlWhJeVBYwYP+ldLPf8VykCS1pEbuFuPo57sLiOUCNZkT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Pw+J5+Is; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789111016; c=relaxed/simple;
+	bh=9fMYtrX1EvVkrIp+f45k4OUe+00uEnhfE/7SQPpX67I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SdSRgX9MSO9L68PUM51CmQ2J7axZnPVoIXpCixJGChSCiYlLLyXftepgbLKZXDtgtRn6E08iwuwVeJrhwjobgA9Yj25VGSDPEopuRsKxIJrZohTftbVv4LNkkfA1KZQh8ssZvau5S3cxlEMUXL7vwvV9YhA8HMWri+tGcX8f0CQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mA11ete3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Pw+J5+Is"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68B74WlmC2190795, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789110274; bh=vJWB1W/51nUEr/QB+YGDNhF1BM5i5akehrR5nIDGQrA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=Pw+J5+IszeohbVJS4jF5SFyOBFWn+dcAuwsCf4ct32frr1CA22DnNLcC5IlCMNLj1
-	 dm1fpbETegW9KOk/jLc8SjIcfCQxouQ1Rg6KlsoFJ4Wh9dyR68Q60S77Kw4yRPfZBm
-	 CDzOsDtP3jdp0O+y+3ngtEgik3HerGmtmbYrmc7NTptsmfGZFUe1uCd8l5kMICoBdw
-	 9HL7+ajYQYl+GRVaNJcqdszTT0GhSgtJGK6pfINkc8oQuPJjHLouWLTZUCc8yobLvy
-	 glhrxOCGALasjem6+c1jdJ3yc3VSp0JCBLx2n4+00dEZeZiAHJ/IYG8pDqahXNxk6x
-	 MqQbYePbAk0KA==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68B74WlmC2190795
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 11 Sep 2026 15:04:33 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 11 Sep 2026 15:04:33 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 11 Sep 2026 15:04:32 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Fri, 11 Sep 2026 15:04:32 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <error27@gmail.com>, <ku920601@realtek.com>
-Subject: [PATCH rtw-next] wifi: rtw89: coex: cancel RF band return condition at _set_bt_tx_power()
-Date: Fri, 11 Sep 2026 15:04:07 +0800
-Message-ID: <20260911070407.35803-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mA11ete3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCC211F00899;
+	Fri, 11 Sep 2026 07:16:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789111003;
+	bh=qi8tO0zS4dwdokctM0TPh12wejUkRjDhNme5BOC8Oqs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=mA11ete3jDX9cu/85xEzWyiS93JalyG3KB/CPNONW3MXJz3FoVir1JVwk4bQEzAtr
+	 Po8ThEwhisG8GzJyk4QXPmfVq9cwy5OxJmVwquuk68tFHc+V0HxeFY79QV0JSzJNLI
+	 M1UJN4EdRTC3kR0b7XJv4rWmCZ54hKhXwJkyoExGqyXILS05xsGNz1cWhXslbYbIC8
+	 dhLI+pN1jdsyFAhlBseYAVRryFxDq+IYvNa5a1dXoNa+HSMb4CZ2dzneMreOdIVuyb
+	 p/I0RSra1v41L/HRFPbqVG5CCwHyT1HrO2aI/IIbFez+hdxKqHZ1ovQfwD7FztX9t6
+	 6nXtDT488kxTg==
+Date: Fri, 11 Sep 2026 09:16:38 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Eduard Bostina <egbostina@gmail.com>
+Cc: Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
+	Johannes Berg <johannes@sipsolutions.net>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2] dt-bindings: net: wireless: Convert WL1251 to DT
+ schema
+Message-ID: <20260911-cordial-camouflaged-marmot-4ca71c@quoll>
+References: <20260905201108.415713-1-egbostina@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260905201108.415713-1-egbostina@gmail.com>
 
-From: Ching-Te Ku <ku920601@realtek.com>
+On Sat, Sep 05, 2026 at 08:11:08PM +0000, Eduard Bostina wrote:
+> +allOf:
+> +  - $ref: /schemas/spi/spi-peripheral-props.yaml#
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/irq.h>
+> +    #include <dt-bindings/gpio/gpio.h>
+> +    spi {
+> +        #address-cells = <1>;
+> +        #size-cells = <0>;
+> +        wl1251@0 {
 
-Because RF band value 0 means 2 GHz and, if the condition set !rf_band
-return, the 2 GHz BT TX power will never been set. Correct the logic.
+Nodename: wifi
 
-Reported-by: Dan Carpenter <error27@gmail.com>
-Closes: https://lore.kernel.org/linux-wireless/aoXrgwyFu851qVNV@stanley.mountain/
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+With this fixed:
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index e49d75cc55a1..b16af1291b93 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -3859,7 +3859,7 @@ static void _set_bt_tx_power(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
- 	u8 buf[2] = {};
- 	u8 len = sizeof(*buf);
- 
--	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0 || !rf_band)
-+	if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0)
- 		return;
- 
- 	if (bt->rf_para.tx_pwr_freerun == level)
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-base-commit: f71dd599a98182d6bc34dce39977f928068ecd64
--- 
-2.25.1
+Best regards,
+Krzysztof
 
