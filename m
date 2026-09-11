@@ -1,187 +1,131 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazolkn19013086.outbound.protection.outlook.com [52.103.35.86])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32FF03CDBB5
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 22:15:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.35.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789164939; cv=fail; b=RCw5tBYp376b0tBkizcblKjBUNVsGGc1GQCAzEgBKylH/b4NRvUlFif35aTcDErmqp2IDPh/eGtgJckWD+E/kjntzlm92VrsOQBGIT42XNqNImJVC8z3DQ+F2q7KI7YtzWCPm6REIILa2QTK56WxtvVdOYQsbYWsxhPF/dU1+qg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789164939; c=relaxed/simple;
-	bh=bLna4kz6mC4IQWkFzaeKtrL2vwwNdTUyYDzMIpTZhfw=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Au39phhtD4p/Kd9H0KGoetkVOF5mtrAYENt23hqeZALwdYPjtQHRPitK1QsfkG0Zm9N9JCxOmge1DG0OizRXwuw9znUcyGy5S5839kpIfvaWPoDbdhLwojRGsS+zrCOf2UwMRjagi6lv4Lzm36rrigXPwZKmHcC4zs3ciBBiI5Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=e+Pu+YJe; arc=fail smtp.client-ip=52.103.35.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.co.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD44E3D9DC0
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 22:55:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789167307; cv=none; b=ayNFX6HofAwj30ky6UhA65JqR8Kh8KNIu2emwqcoUAnlNW9dJQ9VGtKgsSdidts9mEaTb1Fnzp5XvFBVR83FNk3mSsSuqCekPUaUFgXwos9bvgKD3bZMBJ31PbDCdZUsQYbOHzYP/Fg3Zuh/j99HzqqF7ZfjG3qkN4eg3owSzJk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789167307; c=relaxed/simple;
+	bh=ygmd3j6naMUaRn4wqyNNGRB13xqTwwz24n2v15rlARI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=M8a67eJzq6woORN3etQVRAy7q7X9/9C0sGGODAWjLRr5FgjnuLsxSJemgEhoLW+2gl/FU9XbwojD4ovwVl8XCR587rE/zpqdtzIeDpdwM6lXhuUgoS4F0PZu9rAYY2FuES77zGqlqCk/5plzN6yK0hRH5QyThlIa5fD9MIDZj3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MBRsWiCm; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="e+Pu+YJe"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=AXU3l6GnIwdS71YOrzpeUujXsTAKoEiJfo88kEXw/H3C5FDqzzjEp9FbSCpO/AvXaRL6d945zu1KPefyhMW0BADZZaEu/Vq/tr3yJip3APMNnU699si9kCBsClVwdjMENtdevj3JZFTIQZhBIYvOxEyTvR+bDB0tZ4wmvB9E+YKMNifcDs0Evk9hdz/1MRsDXncFs21ex0N27dXsDoQP8VW4bhIPz5UrpBP3lqYTDgcySzMtTvVzgiYJeAffQaI3zK0whzi5DSktgXP1J4AQZ7sQWt6fLNQ1/bwjAmOi8vzInJFC/JACxQUyA8WFp7qrg9gL3y7zEL7poMiheMywIA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YNZkwB41rkojLWzbZiwN24SwcSYVkvKkv/iypAlnf9A=;
- b=ZU66A4kaKydTJCQdMVlmF0UaqIEiKhMwH14E/GCq84pfTe8+fIQcYblAqrkmQOKgIrGArkwIxOjO9eVsnCiggXDP11bYnHhUmJRQ3tLMXRWKTNKEqjR8AGEY/9oTTNLbUJMmAoJcFrbuWZY7sELxOdFcPuz/Hxzxym7WPcUF/N6PnVYBewt58QmGezfgBiE2uFUr9hUt1272FCwNFXcLhvh/OZhUWFuifRAhPtElAVxNdetdWdj0wULYEmWIxbRiMU2muqtWGSdb+fXlaxC7DuGoZY00j8yRHdy4GBk9FTcVhsMftTqgKIrIVPuQIhXTTTz7Z/sKS8XBtb+8Toh2nA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.CO.UK;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YNZkwB41rkojLWzbZiwN24SwcSYVkvKkv/iypAlnf9A=;
- b=e+Pu+YJeQYIiOFYKQ4x2DjE8Hse6hMH+Ce0kly5B+cHEqGjxNxfPXfuKgFuPknKqSbsXi19fblII8BYNZ6DajpaItFx1GJMDdNhIOOwoWBmycXqHU+MVnxgphIIez8y2IQ44gtKUOjb2C3Oe8tI3vq2wBDNQE7Dg+0Qz0s0XIKT3+yIKOK45mXym2zoAd3rtcWziuXfFr26Px12buJXfjc1D8gON6BfM3csBLbfZM43ADXe45TFEEhVE/GrCTNQAxFQciZLkisVga8QLACZ8IYOGGnIBPRr1oGRphj6hjRi+c13SusaV/vuCdoWWmEPNi/WCiqLljY03dupP6xjraQ==
-Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:344::22)
- by GV1P251MB0794.EURP251.PROD.OUTLOOK.COM (2603:10a6:150:51::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.7; Fri, 11 Sep
- 2026 22:15:33 +0000
-Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- ([fe80::2952:d4d0:4ba:8352]) by AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- ([fe80::2952:d4d0:4ba:8352%3]) with mapi id 15.21.0406.007; Fri, 11 Sep 2026
- 22:15:33 +0000
-From: Aamir Ahmed <elb12345@hotmail.co.uk>
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
-	Dan Callaghan <dan.callaghan@morsemicro.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Arien Judge <arien.judge@morsemicro.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next v3] wifi: mm81x: validate n_channels in disabled channels response
-Date: Fri, 11 Sep 2026 23:15:31 +0100
-Message-ID:
- <AS8P251MB00015A3FFF9F9A9628CB0BB0C8BE2@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
-X-Mailer: git-send-email 2.55.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: LO4P302CA0006.GBRP302.PROD.OUTLOOK.COM
- (2603:10a6:600:2c2::12) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
- (2603:10a6:20b:344::22)
-X-Microsoft-Original-Message-ID:
- <20260911221531.96414-1-elb12345@hotmail.co.uk>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MBRsWiCm"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-4858303de5dso1468593f8f.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 15:55:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789167304; x=1789772104; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/9BcpZ28ZB9TTbclwwCoyiL9EEzb27cEjQfU6Vw/HG0=;
+        b=MBRsWiCmi0fEj7OSTp4/UNjzV4KHQaG2fULn4mueB+4HBo1napOnWGNttx0e1FzMUU
+         pf0C/A+lS42pNVAk0OOSUCkF3JOshtCDNaRAfcfJdHxlYbLTWs8tUuDKOGNW+/pbh1i+
+         AgSP3L1bPWMdOq2t9iLdHPnmo699qmu5s5FJTUjsqS2tW3WGcnLhpBntssyaAJDCrBwx
+         +n25l8b/ZU4CKg0j6MOzTgxW0+MtzKJiyz1PBsXmocfvKrPE2BrEgS0g/4d8iWDIlLii
+         VvaLiCwOa/mTw5vhfmAy5RNfffJ9RR6BZ+xk2OTGBYKjrtAdS/Kqv+WpCXIdeqEbZn/4
+         4DNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789167304; x=1789772104;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=/9BcpZ28ZB9TTbclwwCoyiL9EEzb27cEjQfU6Vw/HG0=;
+        b=nJ4x+ZLW/o2BG8NNkTdQVvz2w/fgbLwuHOmyKnBh0yhjgP4yjzRcfoAlA1149Peof5
+         CIdsAlao3mMnhWLyMcz3+n6Yui5nAFJksEDNyLPDlvYxLBf/UC/nPXinq4UUWjDh9flA
+         +wk1V3mS+EkhpnrA/u9gTloA7qP9JjgwPDb4exCu8mvXuCPMCTxMjJdb5dpreAOqwwg1
+         8WZXCiP6o8dFLCkowYYQWTEBhrIIUM7iTO1VgJHf0n4ghvhwDUfIftNJbrW6eTDtq83A
+         2X5JqdRLSTEzEAe0MBekHbr3+eY94RGVtS5IMvC9e9SAkmL3GSZ9XBjDtirkVp5Lr0kH
+         A8Iw==
+X-Forwarded-Encrypted: i=1; AKwUvBwblqr7XR17k4R8BcjFs77laC3Kzkg19MEcPRxTi3fTfv5TiWT1ysdMbWAfQWY85Wr9SrUb8R/3Q28yy1kYFg==@vger.kernel.org
+X-Gm-Message-State: AFuF++mvmbZ/MEv3z9/qUPRMutAX8kWFsSkZk8vmfs+oVjbvWEcn14ID
+	hHCz+kOVElGQZr2YSgCgxf9XfxFwEAjan0nWyU+RtJTrMSJi8XFtZCwn
+X-Gm-Gg: AYBFou2HUHl/9nYzVaqYtvy6FoGgG0WUSccvZ+eiGZk8wbV7QbfF32SaIWmm71tqJ+p
+	4RBhN5mzwXOTbfK4YOFB516PriSmPsUJoCEfF5fd1Y9jLOHDUJpe7bPW9lAJw11iVekcb05NOxr
+	byIbuZiY8WJnHp45Ealf736oNkMGu1dqo73U8KWMCH4reQf1dc34WDAug/hZPQYIJ+Zn0Fb76bl
+	j4Qk6HnC9USHgXKYETm/pmRP493WWdQs8rsqnCXpW6Qk9lfiziXWDJZs036+70feK5Qhp3IVbaq
+	kbGcNR9IZiJXgz8GUowfV1EdoaIKoTBNsJgfoZpbMCx/35MQm8cQZlbSxLzf2ufPZvbyvx++t3P
+	2KF3flyC8XCG/Efa5mT/tDqJ0PX40G/PhfcwmVnOyS0rK6p3FOV7NGiKyg7jqocoMo9JqfMPokd
+	k4phrF2phGawB4F87Pm81dpR22n77CIMY5TBZqrjaeCpnrooASohO1rerkQkmFuyYg9FZQCJt2q
+	0lr4/P9JkV9qPnrZX40a9qNjTnaoVDGNFh28FufAMce3waUBqd0W5LP2VTCUP60/bIlqig0Ue0Y
+	OAf19qfOLqkmflY8UjuMutygJcq3Our7CiEq
+X-Received: by 2002:a05:6000:288e:b0:485:8c16:a33f with SMTP id ffacd0b85a97d-486eb350ca0mr7180318f8f.52.1789167303720;
+        Fri, 11 Sep 2026 15:55:03 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-095-114-033-154.95.114.pool.telefonica.de. [95.114.33.154])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-486eb35c071sm9075331f8f.33.2026.09.11.15.55.01
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 11 Sep 2026 15:55:03 -0700 (PDT)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Mehltretter <kmehltretter@gmail.com>,
+	John Crispin <john@phrozen.org>,
+	=?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: Fix beacon, TXQ and RX OMI kernel-doc references
+Date: Sat, 12 Sep 2026 00:53:42 +0200
+Message-Id: <20260911225342.11342-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS8P251MB0001:EE_|GV1P251MB0794:EE_
-X-MS-Office365-Filtering-Correlation-Id: 05d54ac3-4d74-4030-4156-08df1052323d
-X-MS-Exchange-SLBlob-MailProps:
-	vuaKsetfIZn9IFDOZRHBr3PkJ6iE+FIkFeGnMzt8OJ47Br0YQeRT3MphzTM3yxn2UjLpWAdhw/7iKkQ53eNObRHinNlZc19kLMc+JIweMcf2EcASp/IqThbWU9mrbXSvLVx3/mB6GonOR25BJr9yflYgZo1/x0CRtaq+ytT3Mc8/JECXuCI7AbcdowjRfjcDgjTb1VtIID1dQAKtx3yLmYlKkoERNmH9lT9IqMX1mnbjLwElO2guHL2+aIXvzvjwdH1LsPnBzlnUf3lbRsKP4a0LE/vHFsApwivo8738/umYL+2TFsoiOhdpP0LRybVKAiUpt92gh7L9KTY97INW1QP4BaYU8vyOn0FskdPyb7T39ACRw8SC+t83mCOLaB5kNxwLB2AEobEoTpy+Arg0M0tWyNvSWHUBj26xdz40iSjhjMECPpBatDdj65HvzaKWIbPF9Lx17kwWCZmCyDqLPcYc7aJd6keA1RcIBICSv/y551fW2GWuhe3YDbo0YE/FymLRosra1CvzrHAxHq5azJWGgQ8aPevnyv5+3HYZ/ojFacyT9ijUUq/7DBabCz+B7HXZnriV1TBkzAEAPGxtwjj6PjQJnzZor7Bk8uNbKqjRvANkyBvNQ73xLTez+83qZxCjlm0GFZ2G/Pkg/TgHvLtgQDkUTRreWx87NLIEHKc1iictSs6OzmBfNp5IIJY3wfEZj1hT9JDzWRzvIVh4F/MKcJD7D1M+dRutH8/xeSJtoT18v0mYbylgv4xT6h4pLqyP33rmknW6oHAYY+kILs2GlFmE6NjJT84Ec30YisouWLOSLPCaaHsYcFuDzrID
-X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|51005399006|23021999003|25010399006|37011999003|25031999004|15080799012|12121999013|19110799012|8060799015|5072599009|24021099003|55001999006|5062599005|40105399003|1602099012|10035399007|2607281247196008|4302099013|3412199025|440099028|26104999009;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?a8TzQgaNTV/tzfDh8xivGi7KwSpCxI5+E3S4Br7z7LP3FgKEPGpyBwg32Yz3?=
- =?us-ascii?Q?eI1jI95A2jiJ/9I1ywnXJFLL2/JZvgSlPXNSoktOjdzhKwVljDu4ab4dExyv?=
- =?us-ascii?Q?RbSA5+Mpj5NxJoOSbF33/fZAaQjH8SMFpArsxs7MXaXmZqCzp9vEdcFyuQDb?=
- =?us-ascii?Q?7jwVrgU+CuP/99Hx8zvv7sKXq/V3SeUsH2h3yuo8IAqFJt/6Ah4OBYvY8gMj?=
- =?us-ascii?Q?iTZwMgSLFzUwRtgHFDp/Xxr7bLCTdTyXL8DN8Jl9eOJDEvJYqF82nxE7gB5S?=
- =?us-ascii?Q?bFdvs2vRLrZ/V1aeJltv5DI20RWGbCOJVRitrmypFM76QE244vJ3i9mhYhqF?=
- =?us-ascii?Q?Q3ddidZd8Pa+pGRWHeWyKmpdP0VxcyI6G5D6G3xGrzHadfqwldWTe8wEH3RR?=
- =?us-ascii?Q?7SiFURJKKb2uEwTr8qu9OiUZx/XBDX2Hsr8X+0UhimB8e16VH/avD3WabfWB?=
- =?us-ascii?Q?dlLF+oGfuFtGAqaHiEgZ/j0cm/leoGuKmkeMR7RIk1ZFw1vri6MWjvvTSRwl?=
- =?us-ascii?Q?MCryGuaFWAf6Y1ECXnK/13AKtE5/bOc5ZwykyGfzVeDmC6Ra/I5hZGAoPBNb?=
- =?us-ascii?Q?50h6jn9AeBfD69Lhlp3+JOJEgcxkjXCxD4sUUYgF2TeXN1Rfn2fJ3UYngJtL?=
- =?us-ascii?Q?ZJ1nG9R9giNo+CzokPaWBaVUfz5pYMOPspWUHWAnUKKn5txfBQX+SwdsNxBm?=
- =?us-ascii?Q?U/T43/a6BntqF7YWBzc840+wy8amsjEAselvRZtKSq4UoH5JOkkkPf5Zak5t?=
- =?us-ascii?Q?2OlQJiIPOQzSAn7zHXnQJVoXYeRUFG5kNdq886JxgPJA2A/Td/aTTdPPAGO3?=
- =?us-ascii?Q?Mj9qoj1Jl8N9JthWzL8NICM3jjcJToWZzpSem4gOiz7dQTCOfT1n1EQX1BcX?=
- =?us-ascii?Q?lh85OMZS88/KsToTQyNraSRJH3NdUp4uxCsvfZ07Phu4yUrdqsnbRcrf2h4I?=
- =?us-ascii?Q?GvidGEWEpFccSkwO8pYVjTRWE+1pHbdTg8HZZoBP/becTD0Ojtuofml2PjX2?=
- =?us-ascii?Q?qHRAC0cJlTX/vFUc85PW42YqqZutzD8IORmmvUoOhXFFI9wUDzTT1OxhRwBk?=
- =?us-ascii?Q?TK2UP8m0E93h8iJLyq5S6LwVwMgHzdhMxesVJ7REU2A7lXje7vtvAyWPbPFj?=
- =?us-ascii?Q?eyHBZIjNF3Owsp/mhKj9hHg76Vg9VPKwrG7BP8hNgwEcvvJkExq9QG0XkFCI?=
- =?us-ascii?Q?izrs23ePlnZqPvbb?=
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?rf6OfK28fE2mI/9hv8WoX1L7Jq0RrUXf5XgDLi7/YFD1clJik8z7F0D9mKU9?=
- =?us-ascii?Q?MC9PmJCdyjTZvCRtVvuReiMCbwGxTXHcY9KWmvpH5sHef0TGAW1adxW0ktmy?=
- =?us-ascii?Q?4Q6CaEeW5robaTaFy6zttCYrB5eD9pNjmn8V7zeP006XzhqaXD0fhUOTMr3k?=
- =?us-ascii?Q?lrqUOVsJBI4sdtx18qSoQBUoPECOk86DNgUtvrYGNYARf8QSDXz9EwEw61bO?=
- =?us-ascii?Q?+mrFCAyuwPy2PZqAPg2g2OuCG+ehbh2InE0ZFvzUrfMeUAbr6tOCMePtjBYx?=
- =?us-ascii?Q?krGw2wELUrVN43UisE9otrP6RJ/Fvl9cu7j//UL9P5bEJfU8+QBuWhE2BnBF?=
- =?us-ascii?Q?OvQbUQv8PrBWWS68U8148plVxAOZsEI64BZrTU7uWt13gAo1Orr5L66drhyX?=
- =?us-ascii?Q?jmZHTImVw4Wg9YmURpMnBqnmbZ03qnWBPHi8M1HrKSAjymgAhtJoMw9c2gmt?=
- =?us-ascii?Q?P093TmVkf4/NqVw7FIQS1hxY42io1FwlSDbvPUYecgDyaYa67v0ng3ByYzpn?=
- =?us-ascii?Q?xN9a28gmGG9oF6DPZuT4sEfz8boAPW/m3AcaHuURzQlvTVIQHekcrDsy//zT?=
- =?us-ascii?Q?UBin8PSelMhTkeqtWSz9OsNVpogBNvZ55nT9aI5zLcvvK8RRhbi+5aEwzF1S?=
- =?us-ascii?Q?nRPWjRSZb1elZZBvmkBsKDkeUx4CAONOc0MdVusYzHFwATPwFKGl54dghrU2?=
- =?us-ascii?Q?RvUTXBcdIQdNsGYhe6lcVBDqhdDPxp7moxRwExRDtNYyw2XL+Lz42yvmJBPg?=
- =?us-ascii?Q?23kmAETugOAEZiPNuzfFsYUV7eYMlEbzw7S99r9Otp4SOkFtBHhKEVcqhI/8?=
- =?us-ascii?Q?4idF/FcuYTfdkwF0AFTtuNv0MHobrjNVskQPVs8K6SG6+duooqU0YTxavXEy?=
- =?us-ascii?Q?iPcjMVxGknPcL0Bdh+XzF9BX0gH9By/kf+IgRUd4huEZ2tS12ox1Xjda9hpM?=
- =?us-ascii?Q?ZELItZfjTEbmEGV8u7MPSwxh6d2iP4Q4RoYeuNlSP/wJmKNR6zASqabodbTW?=
- =?us-ascii?Q?KaRBOzHcGIKfpreTqs7rPicpxYduboB34xliZUS83aVXrekZjL0ehkk1d0BR?=
- =?us-ascii?Q?xZW+WHgZeJwYEm3M6McgZKaUMEQ9ip4+SErOnWKHlFPccHmdn7iUnVmsJlvh?=
- =?us-ascii?Q?5EGNpptnWA6kkTA5s41v+j1shCdlpNgdg3eeHsFhBZ6LpO5Wi03Jz4BSnpQY?=
- =?us-ascii?Q?rN3kG/dgpmD0/ueTe9atvVqD5ai0rC3I5GOLkej5Wazjm2E2+o0ALgzVTAkc?=
- =?us-ascii?Q?ApVxtBuizY1dQjgOelQSgmkdKdjHoyQSwNIXyeE3ymfwm0FQSttkCUJxHDiG?=
- =?us-ascii?Q?SyGZQGMOeWesUiDs976ba+R32rIvRYpKY0Jw0OyMOroiTv2dZwUq/wYkB8mV?=
- =?us-ascii?Q?lvAJPn+O9gQwpCns409ROzb0gGoXcLW/Px9huLOzVYzYJxT1lozCTOXMlFyW?=
- =?us-ascii?Q?D9Wa4zemwzdbjL0sBI5CKh2TP6DJyiVD?=
-X-OriginatorOrg: sct-15-20-9412-3-msonline-outlook-fe3f5.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: 05d54ac3-4d74-4030-4156-08df1052323d
-X-MS-Exchange-CrossTenant-AuthSource: AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2026 22:15:32.9277
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1P251MB0794
+Content-Transfer-Encoding: 8bit
 
-mm81x_mac_check_fw_disabled_chans() iterates over n_channels entries of
-the firmware response without validating the response length against
-the array size. A firmware response with n_channels larger than
-ARRAY_SIZE(mors_s1ghz_channels) reads past the end of the response
-buffer.
+Several mac80211 kernel-doc comments misspell the functions they
+describe. Refer to ieee80211_beacon_cntdwn_is_complete() for countdown
+completion, ieee80211_next_txq() in the transmit queue scheduling
+documentation, and ieee80211_prepare_rx_omi_bw() in the receive
+bandwidth finalization documentation.
 
-Validate it right after the command returns, before the first loop.
+These corrections make the references match the existing APIs.
 
+Fixes: 8552a434b6a0 ("mac80211: rename csa counters to countdown counters")
+Fixes: da7f40c05c16 ("wifi: mac80211: add some support for RX OMI power saving")
+Fixes: b4809e9484da ("mac80211: Add airtime accounting and scheduling to TXQs")
 Assisted-by: LLM
-Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
-Signed-off-by: Aamir Ahmed <elb12345@hotmail.co.uk>
+Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
 ---
-v3:
-  - single patch against wireless-next; v2 was stacked on v1 and did
-    not apply (Lachlan)
-  - wireless-next named in the subject so NIPA runs (Lachlan)
-  - drop the flag-clearing paragraph; describe the check as validating
-    the response length against the array size (Lachlan)
-  - Assisted-by: LLM, placed before Fixes: (Lachlan)
-v2: https://lore.kernel.org/linux-wireless/AS8P251MB00017F5BF791EA475A60A6CCC8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM/
-  - move the check above the first loop, right after
-    mm81x_cmd_get_disabled_channels() (Lachlan)
-v1: https://lore.kernel.org/linux-wireless/AS8P251MB0001BD39926B78E73D53A439C8B22@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM/
+ include/net/mac80211.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The uint -> u32 change to mm81x_cmd_get_disabled_channels() will follow
-as a separate patch once this lands.
-
-Compile-tested only (W=1 on the base-commit below); I have no mm81x
-hardware.
-
- drivers/net/wireless/morsemicro/mm81x/mac.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
-index 08ca116a6..c3035a993 100644
---- a/drivers/net/wireless/morsemicro/mm81x/mac.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
-@@ -279,6 +279,11 @@ static void mm81x_mac_check_fw_disabled_chans(struct ieee80211_hw *hw)
- 	if (ret)
- 		goto out;
- 
-+	if (le32_to_cpu(resp->n_channels) > ARRAY_SIZE(mors_s1ghz_channels)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	for (i = 0; i < ARRAY_SIZE(mors_s1ghz_channels); i++) {
- 		struct ieee80211_channel *ch = &mors_s1ghz_channels[i];
- 
-
-base-commit: 13e51269b6656768dc595ed6025e4974f2026543
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9d1fac6e808298e068bd819897cc7cabee3fc2b8..e8d35f431a1bcb0779fac9aebd6a6f7f4ba9ac2d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4594,7 +4594,7 @@ struct ieee80211_prep_tx_info {
+  *	decremented, and when they reach 1 the driver must call
+  *	ieee80211_csa_finish(). Drivers which use ieee80211_beacon_get()
+  *	get the csa counter decremented by mac80211, but must check if it is
+- *	1 using ieee80211_beacon_counter_is_complete() after the beacon has been
++ *	1 using ieee80211_beacon_cntdwn_is_complete() after the beacon has been
+  *	transmitted and then call ieee80211_csa_finish().
+  *	If the CSA count starts as zero or 1, this function will not be called,
+  *	since there won't be any time to beacon before the switch anyway.
+@@ -7874,7 +7874,7 @@ ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq,
+  * This function is used to check whether given txq is allowed to transmit by
+  * the airtime scheduler, and can be used by drivers to access the airtime
+  * fairness accounting without using the scheduling order enforced by
+- * next_txq().
++ * ieee80211_next_txq().
+  *
+  * Returns %true if the airtime scheduler thinks the TXQ should be allowed to
+  * transmit, and %false if it should be throttled. This function can also have
+@@ -8195,7 +8195,7 @@ bool ieee80211_prepare_rx_omi_bw(struct ieee80211_link_sta *link_sta,
+  * ieee80211_finalize_rx_omi_bw - finalize BW RX OMI update
+  * @link_sta: the link STA the OMI was sent to
+  *
+- * See ieee80211_client_prepare_rx_omi_bw(). Context is the same here
++ * See ieee80211_prepare_rx_omi_bw(). Context is the same here
+  * as well.
+  */
+ void ieee80211_finalize_rx_omi_bw(struct ieee80211_link_sta *link_sta);
 -- 
-2.43.0
+2.39.5 (Apple Git-154)
 
