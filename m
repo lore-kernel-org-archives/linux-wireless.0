@@ -1,131 +1,145 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-pz2-f43.google.com (mail-pz2-f43.google.com [74.125.228.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD44E3D9DC0
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 22:55:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789167307; cv=none; b=ayNFX6HofAwj30ky6UhA65JqR8Kh8KNIu2emwqcoUAnlNW9dJQ9VGtKgsSdidts9mEaTb1Fnzp5XvFBVR83FNk3mSsSuqCekPUaUFgXwos9bvgKD3bZMBJ31PbDCdZUsQYbOHzYP/Fg3Zuh/j99HzqqF7ZfjG3qkN4eg3owSzJk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789167307; c=relaxed/simple;
-	bh=ygmd3j6naMUaRn4wqyNNGRB13xqTwwz24n2v15rlARI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=M8a67eJzq6woORN3etQVRAy7q7X9/9C0sGGODAWjLRr5FgjnuLsxSJemgEhoLW+2gl/FU9XbwojD4ovwVl8XCR587rE/zpqdtzIeDpdwM6lXhuUgoS4F0PZu9rAYY2FuES77zGqlqCk/5plzN6yK0hRH5QyThlIa5fD9MIDZj3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MBRsWiCm; arc=none smtp.client-ip=209.85.221.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485E43EC82E
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 23:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789168363; cv=pass; b=aXtGo+dEE4HOmUi9L/ggzARhbEq9VBiSYD5hHTpZbWk0w8LQoCyRjILKFFBLvOFbqFtotfmD8Mr0U98BFJ0HHskR81vChKOGXKFeW+Ld8cgMyyujKJjmsFj7zpeOD+QlP6jxMkYKtfpEJJE+lADp/f+kuOHtlAdzwZO+p9MhgTQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789168363; c=relaxed/simple;
+	bh=U5b2EGQ0h1hGiuvcKNAxlYftbTygKbTmyhHzJL26viU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JlviW36PxNvEvR9mjuh1GYUI3zNHFz6QOxyoIxrA6qq6p13MkVRYJ632820wZbsMGIlPuXBhijmmoaqQTKEH8u/pQugMYEmaqgJsM9hs4FShEhCswnA/5O+JmhcLrQTTV+SvsN7eRlgap7BHG5HL8Kf05t5xm29exskOQn3epAE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com; spf=none smtp.mailfrom=mojatatu.com; dkim=pass (1024-bit key) header.d=mojatatu.com header.i=@mojatatu.com header.b=bDJBQdJM; arc=pass smtp.client-ip=74.125.228.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mojatatu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MBRsWiCm"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-4858303de5dso1468593f8f.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 15:55:05 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=mojatatu.com header.i=@mojatatu.com header.b="bDJBQdJM"
+Received: by mail-pz2-f43.google.com with SMTP id d2e1a72fcca58-85469d249c4so499564b3a.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2026 16:12:40 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789168359; cv=none;
+        d=google.com; s=arc-20260327;
+        b=BLKOO7EUIvN32t4wlnjU/2szbSNvjNovD+2k2YrNr8tFh0CYOBZr4/ixQVUdc8ATJW
+         fNem7gkrsHhaDOchtfAuMUuwtbpdbhvJC90EyydurFpsRT6qCjehGePVEUOMZt3BBowN
+         JgeUHxlrvIQOWAF8Ag3MNAzt2xNH5TqY6hahIX9CuM0H3HSAfX/GJOCk71rt+C91g16B
+         ZLSA5wE3fmKrriAzWt2l2WHnaEjeTIOLpVvBwpn/xHm0/pvNIFov7ZM2a/bThCl9eqol
+         bYDCEUQpyjcpDozZImKrZpv6RWO5lyOUK9cFtRYMvaCjSb8oY4AK+mutci7x3yhJ24Hn
+         pQxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=NVHoZLNQTSNiN6B8aYa+VAei/rQkC1SW8nQqoOBjgYM=;
+        fh=mgYTLh34J75fnrkTDpY5FCwUQPGFqfRhaFLbltCjF1Q=;
+        b=j0euW3H8q/65ja8O4qIu7Rc+8nrjvwTLXp2PeYtzK45KkhCqvuOygmdIC+cW0FZ/2S
+         OdH050HzoJqYObLqYmdbMgrEgGb+HpztN37ytlg/Inmwg5EPKgUSTHjmuzLDKgPfluQ6
+         9WO9tDnemIr2NvJcefrKsqQFn38skjijc/szvY1gs2A+nCuCH90s/1Ra144Ix7tvtmVr
+         1PjJfvVZmSO7i/XMvNAP1uGprUXWAMWgqTVz1ADfGAVLjSJ0tjrwBjklRCnhWOsz4mFu
+         kEYMbCX31U0AvyUJh0wIrO+ObKil82ZLZP68eSh9E4xD3aKcwG0+XHHUiznicCZRpG8k
+         Xagw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789167304; x=1789772104; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/9BcpZ28ZB9TTbclwwCoyiL9EEzb27cEjQfU6Vw/HG0=;
-        b=MBRsWiCmi0fEj7OSTp4/UNjzV4KHQaG2fULn4mueB+4HBo1napOnWGNttx0e1FzMUU
-         pf0C/A+lS42pNVAk0OOSUCkF3JOshtCDNaRAfcfJdHxlYbLTWs8tUuDKOGNW+/pbh1i+
-         AgSP3L1bPWMdOq2t9iLdHPnmo699qmu5s5FJTUjsqS2tW3WGcnLhpBntssyaAJDCrBwx
-         +n25l8b/ZU4CKg0j6MOzTgxW0+MtzKJiyz1PBsXmocfvKrPE2BrEgS0g/4d8iWDIlLii
-         VvaLiCwOa/mTw5vhfmAy5RNfffJ9RR6BZ+xk2OTGBYKjrtAdS/Kqv+WpCXIdeqEbZn/4
-         4DNA==
+        d=mojatatu.com; s=google; t=1789168359; x=1789773159; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=NVHoZLNQTSNiN6B8aYa+VAei/rQkC1SW8nQqoOBjgYM=;
+        b=bDJBQdJMUqEJ50EiXOho9fklpxlxedv//KcHhF5I09IZPnWY0ZK77hZhgg63T4gPDR
+         rNFqKhEtwDhvXpMUcyZizQbJpwdfhmhhFrfv3bZnaKdYCknLELNhRVakV/Yl8Mz4qFIE
+         YsKakeem92K9QzyrTgL0a6/3jxSKN/yyO6RVE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789167304; x=1789772104;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/9BcpZ28ZB9TTbclwwCoyiL9EEzb27cEjQfU6Vw/HG0=;
-        b=nJ4x+ZLW/o2BG8NNkTdQVvz2w/fgbLwuHOmyKnBh0yhjgP4yjzRcfoAlA1149Peof5
-         CIdsAlao3mMnhWLyMcz3+n6Yui5nAFJksEDNyLPDlvYxLBf/UC/nPXinq4UUWjDh9flA
-         +wk1V3mS+EkhpnrA/u9gTloA7qP9JjgwPDb4exCu8mvXuCPMCTxMjJdb5dpreAOqwwg1
-         8WZXCiP6o8dFLCkowYYQWTEBhrIIUM7iTO1VgJHf0n4ghvhwDUfIftNJbrW6eTDtq83A
-         2X5JqdRLSTEzEAe0MBekHbr3+eY94RGVtS5IMvC9e9SAkmL3GSZ9XBjDtirkVp5Lr0kH
-         A8Iw==
-X-Forwarded-Encrypted: i=1; AKwUvBwblqr7XR17k4R8BcjFs77laC3Kzkg19MEcPRxTi3fTfv5TiWT1ysdMbWAfQWY85Wr9SrUb8R/3Q28yy1kYFg==@vger.kernel.org
-X-Gm-Message-State: AFuF++mvmbZ/MEv3z9/qUPRMutAX8kWFsSkZk8vmfs+oVjbvWEcn14ID
-	hHCz+kOVElGQZr2YSgCgxf9XfxFwEAjan0nWyU+RtJTrMSJi8XFtZCwn
-X-Gm-Gg: AYBFou2HUHl/9nYzVaqYtvy6FoGgG0WUSccvZ+eiGZk8wbV7QbfF32SaIWmm71tqJ+p
-	4RBhN5mzwXOTbfK4YOFB516PriSmPsUJoCEfF5fd1Y9jLOHDUJpe7bPW9lAJw11iVekcb05NOxr
-	byIbuZiY8WJnHp45Ealf736oNkMGu1dqo73U8KWMCH4reQf1dc34WDAug/hZPQYIJ+Zn0Fb76bl
-	j4Qk6HnC9USHgXKYETm/pmRP493WWdQs8rsqnCXpW6Qk9lfiziXWDJZs036+70feK5Qhp3IVbaq
-	kbGcNR9IZiJXgz8GUowfV1EdoaIKoTBNsJgfoZpbMCx/35MQm8cQZlbSxLzf2ufPZvbyvx++t3P
-	2KF3flyC8XCG/Efa5mT/tDqJ0PX40G/PhfcwmVnOyS0rK6p3FOV7NGiKyg7jqocoMo9JqfMPokd
-	k4phrF2phGawB4F87Pm81dpR22n77CIMY5TBZqrjaeCpnrooASohO1rerkQkmFuyYg9FZQCJt2q
-	0lr4/P9JkV9qPnrZX40a9qNjTnaoVDGNFh28FufAMce3waUBqd0W5LP2VTCUP60/bIlqig0Ue0Y
-	OAf19qfOLqkmflY8UjuMutygJcq3Our7CiEq
-X-Received: by 2002:a05:6000:288e:b0:485:8c16:a33f with SMTP id ffacd0b85a97d-486eb350ca0mr7180318f8f.52.1789167303720;
-        Fri, 11 Sep 2026 15:55:03 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-095-114-033-154.95.114.pool.telefonica.de. [95.114.33.154])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-486eb35c071sm9075331f8f.33.2026.09.11.15.55.01
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 11 Sep 2026 15:55:03 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	John Crispin <john@phrozen.org>,
-	=?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: Fix beacon, TXQ and RX OMI kernel-doc references
-Date: Sat, 12 Sep 2026 00:53:42 +0200
-Message-Id: <20260911225342.11342-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+        d=1e100.net; s=20251104; t=1789168359; x=1789773159;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=NVHoZLNQTSNiN6B8aYa+VAei/rQkC1SW8nQqoOBjgYM=;
+        b=KpI+SdVVCxQhVHXxVNBJ3/ekIfPgoeSJS3bn7NMEqLwIegXD5jq7Ap5gZfFAGW+q27
+         MYGivVxpg4k07nUadnUxxwrjsOqR8Wodk3IfjZ1mfHE+T92+FYWc2hRDWidNxmlcB0hv
+         2eeVfGLem7IPQHEZxrOLYzG8ITln4hQivwLLM+mq/mYwqrBwh6AbG9LDxN22EKrsuOOp
+         frESpDtfg0s7nqZq4DsIxekDcHIYBf6mpoOAuxCNJ1c+P8vfp/nF1T/tBpskDilSZYak
+         K+26PX5AkesheDFWNItzgJxnyj5vjcBqwZwlChhwmNDLb/PZ8ftCUqlqXkweVqkhebzM
+         +TQQ==
+X-Forwarded-Encrypted: i=1; AKwUvByklksh9BLlaRrE/rQgZOppKK5P8DDcH92CDpbZ7Eh2XmgGy319d/91K16x+oVxbannxopj8l5SqKPsYoYKpg==@vger.kernel.org
+X-Gm-Message-State: AFuF++m8NiRfZTghEK+zV3kV4uDIYoQn7mkI3xJqVl60bxzstKdYMH5p
+	WRJeFVBFB+aY+Hp3fZ1VFTkCH1gRFkJ5lTY1iCnoJ3/5OvOvXX8bTVBSRNpBbeWSp+nTbuAHKCl
+	GNgO75aDhzla2ag9lsVpEPPGYAv8M0JgLSMo7E3u5
+X-Gm-Gg: AYBFou2eDCub3MHMpBJ59hL/HWO7YS25NK3AL1UN4nmeoArhhT7FZvEoHVRxQe1jj+u
+	geNvFesx+o+0LqOO0g1hDHfZT5Tv06ztRNRZbIlNNXoHagkloorCzva+yppHgC5L3e3e7UPkidD
+	31rs64LlmcMl9VMz0qTMMp9GP7/aYVq00p9OrOUOe5gh+TKFNRg5wD5e5AI+MPMcpgVmDs4LwK+
+	C4TIsIyNdue342RDAZOQgMYTGJgbFK3QWUlivqiyPv9Ynzt3y/0qWMpgKBh2y95dCt4kfJiB8jK
+	q67cM5XVb2J3GEkiigSPlEpr9V1fCwK/wd5wx80Z29VXXpnIG7ONDkqvOnoOJ9RdDeCXJagP1dA
+	ZuvJGf/YV3iqnJazTRtU+Ez68F+o6lJvwqw==
+X-Received: by 2002:a05:6a00:7541:b0:86c:b39b:66e4 with SMTP id
+ d2e1a72fcca58-86cb39b6a6bmr818636b3a.18.1789168359596; Fri, 11 Sep 2026
+ 16:12:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <QDISC-1L5H.v1.20260903184552@mojatatu.com> <CANn89iKFVvFaNcZyGOxmyPbpc6ax49ZqwMWDeBAsH5dav-y-SA@mail.gmail.com>
+ <CAM0EoMn5M__WHkniZLw8GNtHpTresTC2dQuL6brmAzUXH1YUKw@mail.gmail.com>
+In-Reply-To: <CAM0EoMn5M__WHkniZLw8GNtHpTresTC2dQuL6brmAzUXH1YUKw@mail.gmail.com>
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Date: Fri, 11 Sep 2026 19:12:28 -0400
+X-Gm-Features: AcwNN1VxwBhgJyQS3MJEPkDfRRZ_FKlaOla_PtSbjvxx1Fh58EDgtZfXE8iGhas
+Message-ID: <CAM0EoMkzo3s7QTLm=w4RkyAbKat3iVZ89dPtPeQoFRvqigs_4Q@mail.gmail.com>
+Subject: Re: [PATCH net 1/2] net/sched: codel: bound the dropping loop per
+ dequeue call
+To: Eric Dumazet <edumazet@google.com>
+Cc: netdev@vger.kernel.org, stable@vger.kernel.org, 
+	Jiri Pirko <jiri@resnulli.us>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Victor Nogueira <victor@mojatatu.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	linux-wireless@vger.kernel.org, Vega <vega@nebusec.ai>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Several mac80211 kernel-doc comments misspell the functions they
-describe. Refer to ieee80211_beacon_cntdwn_is_complete() for countdown
-completion, ieee80211_next_txq() in the transmit queue scheduling
-documentation, and ieee80211_prepare_rx_omi_bw() in the receive
-bandwidth finalization documentation.
+On Fri, Sep 4, 2026 at 4:31=E2=80=AFAM Jamal Hadi Salim <jhs@mojatatu.com> =
+wrote:
+>
+> On Thu, Sep 3, 2026 at 8:35=E2=80=AFPM Eric Dumazet <edumazet@google.com>=
+ wrote:
+> >
+> > On Thu, Sep 3, 2026 at 10:56=E2=80=AFPM Jamal Hadi Salim <jhs@mojatatu.=
+com> wrote:
+> > >
+> > > The CoDel control law schedules the next drop one interval/sqrt(count=
+)
+> > > after the previous drop, using the configured interval
+> > > (codel_params.interval). For very small intervals the scheduled step
+> > > rounds down to zero, so the dropping loop in codel_dequeue() never
+> > > advances and drains the entire backlog under the qdisc lock in one
+> > > call - an unprivileged user can trigger a soft lockup this way.
+> > >
+> >
+> > ...
+> >
+> > >  static bool codel_should_drop(const struct sk_buff *skb,
+> > > @@ -156,6 +161,7 @@ static struct sk_buff *codel_dequeue(void *ctx,
+> > >         struct sk_buff *skb =3D dequeue_func(vars, ctx);
+> > >         codel_time_t now;
+> > >         bool drop;
+> > > +       unsigned int drops =3D 0;
+> >
+> > SGTM, note that this line breaks RCT.
+> >
+>
+> Grrr.. it was in my brain to fix it, but my fingers didnt get the command=
+ ;->
+> If needed, I will send a v2.
 
-These corrections make the references match the existing APIs.
+Should i resend this? sashiko-nipa never reviewed and other one found no is=
+sues.
 
-Fixes: 8552a434b6a0 ("mac80211: rename csa counters to countdown counters")
-Fixes: da7f40c05c16 ("wifi: mac80211: add some support for RX OMI power saving")
-Fixes: b4809e9484da ("mac80211: Add airtime accounting and scheduling to TXQs")
-Assisted-by: LLM
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
----
- include/net/mac80211.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9d1fac6e808298e068bd819897cc7cabee3fc2b8..e8d35f431a1bcb0779fac9aebd6a6f7f4ba9ac2d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4594,7 +4594,7 @@ struct ieee80211_prep_tx_info {
-  *	decremented, and when they reach 1 the driver must call
-  *	ieee80211_csa_finish(). Drivers which use ieee80211_beacon_get()
-  *	get the csa counter decremented by mac80211, but must check if it is
-- *	1 using ieee80211_beacon_counter_is_complete() after the beacon has been
-+ *	1 using ieee80211_beacon_cntdwn_is_complete() after the beacon has been
-  *	transmitted and then call ieee80211_csa_finish().
-  *	If the CSA count starts as zero or 1, this function will not be called,
-  *	since there won't be any time to beacon before the switch anyway.
-@@ -7874,7 +7874,7 @@ ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq,
-  * This function is used to check whether given txq is allowed to transmit by
-  * the airtime scheduler, and can be used by drivers to access the airtime
-  * fairness accounting without using the scheduling order enforced by
-- * next_txq().
-+ * ieee80211_next_txq().
-  *
-  * Returns %true if the airtime scheduler thinks the TXQ should be allowed to
-  * transmit, and %false if it should be throttled. This function can also have
-@@ -8195,7 +8195,7 @@ bool ieee80211_prepare_rx_omi_bw(struct ieee80211_link_sta *link_sta,
-  * ieee80211_finalize_rx_omi_bw - finalize BW RX OMI update
-  * @link_sta: the link STA the OMI was sent to
-  *
-- * See ieee80211_client_prepare_rx_omi_bw(). Context is the same here
-+ * See ieee80211_prepare_rx_omi_bw(). Context is the same here
-  * as well.
-  */
- void ieee80211_finalize_rx_omi_bw(struct ieee80211_link_sta *link_sta);
--- 
-2.39.5 (Apple Git-154)
-
+cheers,
+jamal
+> > Reviewed-by: Eric Dumazet <edumazet@google.com>
+>
+> Thanks for the review - struggled a bit with this one and wasnt 100%
+> sure it was the right approach.
+> cheers,
+> jamal
