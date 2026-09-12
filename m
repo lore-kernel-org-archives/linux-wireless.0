@@ -1,886 +1,235 @@
-Received: from mail-lf2-f12.google.com (mail-lf2-f12.google.com [74.125.229.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28579386441
-	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 20:30:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.204
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789245021; cv=pass; b=LC95yfV9HTGZ0WALhGhdNqPg24O9AY7oVEpcNW3r41rSZoF8zfplKIR7B9Y9xfIUzRMtRGKx/AwZA/1R/KTYJYlN12UBJnj+gv1asUb5OYqpHe8jERCtKoM4uDh2Qcuc1fu9B+UBNlADwTGLX5eNqcaiwKFdfS+xZa5hyJ9AGQA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789245021; c=relaxed/simple;
-	bh=TEbJMMzIIogJg9LII0HnjQZYE7NIbdU378YChfhTp+A=;
-	h=MIME-Version:From:In-Reply-To:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d1bYNwoYGiBP2b2bFt9PDh+G4bHJohjqgylXsVS88mugnB9k7TuXyEKqbNtc49W87KkRRCSBqWK+6+shXwOeo+hpbPDJNd+rWAyS2cq4+U4HvppcL35e8VidzvmKZXNfXz2yYKskpdHcW+Tuw1DhvJKlU0JvAzvmjzhjP7JKwm4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=ehjczFV9; arc=pass smtp.client-ip=74.125.229.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2924549505D;
+	Sat, 12 Sep 2026 20:36:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789245386; cv=none; b=kSsTU7sVsCAESTwpkB7w2dzBWPZrGCcXQPwYTFMNXlb9eHnWjbBmYaMfdeSZGWVnYEwyTMUtNgDkuGXhRWTu6vbINYRDyuPPvygg6nInZrBaGLjFrdN/zCGeEctvL/oifWHgHESDNXQkCDhVY3wVOWpTQleKNRxpbnhKW40aNEM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789245386; c=relaxed/simple;
+	bh=1vJNEFCmpsEkh10gNad3iTXuzCz6W9V9XFIpJbERUKc=;
+	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=gTB0JPZto9YArqQfSJMkzKdWM1BNbDzCh/sw0RyPRSe3OVpjZxz2pUUXNmDqyvtGhtl8kdk0IpfD8pXeriqLm74kudDGUWhz1J/oMzrz01VbTYKopF1uKTebTqj/4ueU4W8zuZIdw+5VFuMOxXdhbZPVOHYSNEhcyYtnwDQYcBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UnzYYeUb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="ehjczFV9"
-Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b5e4f15b79so1066499e87.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 13:30:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789245015; cv=none;
-        d=google.com; s=arc-20260327;
-        b=h4NccW5EyqeXTlV0NVQDt1BnNaXJJFIhNHlWOu6j67/TD+jSx9tj02cnKNUHBQDZFT
-         oPUD6COykYrU/k9Tq2pNzOHUeib8Wx3BKJGu861a4HhGMwRd6vWqKR5ohWc7HqqPcQL0
-         10bG0yQPsgtYoZlZJ30cux+lTyMls6/VymDn4PhnQhGAOoGm3UQkJ2YuO53E2iGfO5D+
-         ynjBN0+PsEt5h0XwYZ5etSC13ct5MnqdjdVe4PmBq7uU4Dvf7oXoJcwg/WuYAVSlHv66
-         Hm7AEGef+qQnj8ZTj7QEk48ZmyW8zh2yKANqnXlpz2zS+lQc7HkPtK2yO/EHtcAwTtk+
-         aUGw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:references:in-reply-to:from
-         :mime-version:dkim-signature;
-        bh=wwwR6p6sEQJ3aQk1slQ0OuS5zPcXHPa1FuWl+bSWenA=;
-        fh=TFULXDBgHlLqMQdfUyAurUJgwNjfZoZpfLyj5gKGrno=;
-        b=j3Hwcxoj0/sHBWqiDtj76cLN2pRBTG+Iz0A2yRXEyp275QAdwl5KdjqmZnOrK2O/6K
-         38DsrVHVhJ9YDef2Gsg91ytrWdQpAGVMPQUt7oAtOI4HGxEgjG6wJD5D0MSeiBnOZmzt
-         Mwv95Z4C2oONDcws/m6DICCIIm4Wqklzj15/AlyBilF9RpgxhPqjghOxqZqEoa5WFnrY
-         28jFYjgeHYl4n3RpEZblfZF9oFtu0xIrDMgqSxjvqkqJ6RIVh+VNLh9KUDpOcHzBJttu
-         yEdNpahQ9PWXPoWbsyGy3Jn7rFdA3hLTI8qvBbWFgSnofcRI3U4I+bRSYUE4x+Yp/LQh
-         pGNQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=khu.ac.kr; s=google; t=1789245015; x=1789849815; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
-         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=wwwR6p6sEQJ3aQk1slQ0OuS5zPcXHPa1FuWl+bSWenA=;
-        b=ehjczFV9986wzZ/v+eyo5OOvrtGc7MYzbeTObprznoNXN6JuO3l1YgcjypzCpoa7Um
-         KsELhGTmog6mV51FfCbTPcU0fA9ud/cTN3QWcZZQ07ZsOLoSr2vWIRRtkLh3V/FxaclH
-         k5OsPvvayuqy7TssB8l4mH/8s/nIUV20ySp4o=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789245015; x=1789849815;
-        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
-         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=wwwR6p6sEQJ3aQk1slQ0OuS5zPcXHPa1FuWl+bSWenA=;
-        b=idoRTsaCXTewMeHUTU+ggv798Hu2ebtDHnvCtXybOV84SwXF+oOZGzj0PklPhom0Uu
-         CIuykHBarNEYfP7doRF5s+MUuiHO6nV7odgSpQc5BuT3dvlYBi4JkixgrSG3i8B13O2o
-         gG438QHlqJGAeRyt7pH4/423ogvTa5f9a61QM0NAd1QD0vuBoQf0kCZnVX2FmFDGEags
-         +udiraP6tXKGXZImClZd59sklR1xZGAS6cQKTN9bBDSNIIlmEG3qJNUWHkte4KfQj4Xc
-         yO4oINcoFsjHsCi0q5821z1iggq8YRfpy1v3KcUa922Mq0xnKFhOwD0Uq7nsrLPQRYIa
-         /84Q==
-X-Gm-Message-State: AFuF++nOzTKQ3tAwHCzUZqif3NKswMGgistdRowYUl2qobTfRvL8QCiH
-	mV6hoHk+ZrBAjqmZ1YwPcYuz8uLMePRr8s7rXdq3/PJ03czbQwdIZBZ8zvOT/LaAF2g/CCPlGIt
-	N6o8SQT8mKMVfc563I4eWlXGcqTLDJLT1elUrDqsGnFL2C/yBPCnM
-X-Gm-Gg: AYBFou3/3rg4QBEzfrmA6veYgkRd0fSVAHqjXrX77J+m/ETVRZhTrCmbM1z20dMXbfh
-	Kv/Fivc1u4v3SCEAhiFePY6BPorFVjxfzCybVHwk28iJm7ehLClW0aA4zMylKwTmmPk35PO2kq2
-	lK8dXpdzUKgrH3pDTQ3+HfTFRNz+b7bT38gn9kzWDJumvSNuOrSyaFaKiZ0dP/JfW4aieroHVbl
-	RYUf4gdzyjnsUfcFYXwTBByzs88ciJqUemN6vc46Ouq+Sl3g4LLtVLl4EJ5RPBEJx/3T5mpD5rA
-	m9/I8hycf6tHLU4QWesRI6H2rvg3wi7AGLu1YKUe0oNYd4fHKeM=
-X-Received: by 2002:a05:6512:318e:b0:5b4:97db:b740 with SMTP id
- 2adb3069b0e04-5b8a03149d1mr4423685e87.20.1789245014804; Sat, 12 Sep 2026
- 13:30:14 -0700 (PDT)
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 16:30:13 -0400
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 16:28:26 -0400
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 16:20:20 -0400
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UnzYYeUb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 462061F0089B;
+	Sat, 12 Sep 2026 20:36:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789245383;
+	bh=re1FxNKOTk60DfizzkKQ/TC8pr1T40dfBa4Ili/w84A=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=UnzYYeUbgihD3TMsAW7kknmPUrcQGcrqv7SX+Z7gyYGkFaAL57sOg1E+1c3Ihz9EZ
+	 Uf/AuIq3bDiAQKP7wI5urYLIRsa9a9CZLt3SUD7/UDf5uU232HBFwBw9ODG+nfXJ6f
+	 m0ry6Fl5vXwfwB2x2D8D6NLOnuuo9MXfrcH9O5QWcsgVDvSEdWA7WItFGla5jKfMci
+	 npzSnfv7jYUPEGSyZBjPpZMeC0ZEqNwnvRf9QWcGHnY+ZVvlE5rBw+t4YvBsxYg4sw
+	 usOFc8/KSbI1JNIJ5Qdgh0UbSGBtcAUY9PL9oCm3DH16Odsu/5Sn+X4bJUIDL/YWpI
+	 0G/lEGbaAiQ9Q==
+Subject: Re: [PATCH net repost 2/2] selftests/tc-testing: add codel/fq_codel
+ interval boundary cases
+From: netdev-bot+sashiko@kernel.org
+To: jhs@mojatatu.com
+Cc: netdev@vger.kernel.org, jiri@resnulli.us, davem@davemloft.net,
+ edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, horms@kernel.org,
+ victor@mojatatu.com, johannes@sipsolutions.net,
+ linux-wireless@vger.kernel.org, shuah@kernel.org, vega@nebusec.ai
+Date: Sat, 12 Sep 2026 20:36:21 +0000
+Message-ID: <178924538183.3125.10111240291445801017@kernel.org>
+In-Reply-To: <QDISC-1L5H.v1.20260912080102@mojatatu.com.2>
+References: <QDISC-1L5H.v1.20260912080102@mojatatu.com.2>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Received: from 77377267392	named unknown	by gmailapi.google.com	with HTTPREST;
- Sat, 12 Sep 2026 16:09:53 -0400
-From: kimwooseok <5mghybrid@khu.ac.kr>
-In-Reply-To: <CAH1Bc_wBUmmNyzF3c2H1aFBRBbAPSw0hR=1MnPOAcCXypVL_Dg@mail.gmail.com>
-References: <CAH1Bc_wBUmmNyzF3c2H1aFBRBbAPSw0hR=1MnPOAcCXypVL_Dg@mail.gmail.com>
-Date: Sat, 12 Sep 2026 16:30:13 -0400
-X-Gm-Features: AcwNN1X5amjBl7U2ctbrm9dqJOnYph90GlGZtflpKC3Lk7Jyp_TU-EfL2V0pPQA
-Message-ID: <CAH1Bc_xN+LjETSojhc0MtA=us=_r3EHGpkuWqQx5TvWVPh5N4A@mail.gmail.com>
-Subject: [PATCH wireless 4/4] wifi: rtl8xxxu: test RX ownership and recovery
- across failures
-To: Jes Sorensen <Jes.Sorensen@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-Add 11 KUnit cases for the RX allocation, submission, completion and
-retry paths. Cover each retryable completion followed by ENOMEM/EAGAIN,
-batch sizes 1, 8, 9 and 32, skb allocation failure, startup failure
-positions, cancellation and shutdown.
+Thank you for your contribution! Sashiko AI review found 2 potential
+issue(s) to consider:
 
-Run the actual RX helpers and worker with task-scoped stubs for
-allocation and USB submission. Observer references check that the driver
-releases its URB and skb references. A delayed-work case checks that
-one retry request schedules the submission worker.
+Critical: 0 · High: 0 · Medium: 2 · Low: 0
 
-Assisted-by: GPT-6 Astra
-Signed-off-by: kimwooseok <5mghybrid@khu.ac.kr>
----
- .../wireless/realtek/rtl8xxxu/.kunitconfig    |  16 +
- drivers/net/wireless/realtek/rtl8xxxu/Kconfig |  11 +
- .../net/wireless/realtek/rtl8xxxu/Makefile    |   3 +
- drivers/net/wireless/realtek/rtl8xxxu/core.c  |  66 ++-
- .../net/wireless/realtek/rtl8xxxu/rx-test.c   | 461 ++++++++++++++++++
- .../net/wireless/realtek/rtl8xxxu/rx-test.h   |  27 +
- 6 files changed, 569 insertions(+), 15 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
+- [Medium] None of the eight added tdc cases exercise the code the
+  previous patch ("net/sched: codel: bound the dropping loop per dequeue…
+- [Medium] The subject ("add codel/fq_codel interval boundary cases"),
+  the body ("the 1024us boundary is accepted") and the case names…
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
-b/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
-new file mode 100644
-index 0000000000000..decf383c3d51e
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
-@@ -0,0 +1,16 @@
-+CONFIG_MODULES=y
-+CONFIG_KUNIT=y
-+CONFIG_KUNIT_ALL_TESTS=n
-+CONFIG_NET=y
-+CONFIG_NETDEVICES=y
-+CONFIG_WIRELESS=y
-+CONFIG_CFG80211=y
-+CONFIG_MAC80211=y
-+CONFIG_WLAN=y
-+CONFIG_WLAN_VENDOR_REALTEK=y
-+CONFIG_USB_SUPPORT=y
-+CONFIG_USB=y
-+CONFIG_NEW_LEDS=y
-+CONFIG_LEDS_CLASS=y
-+CONFIG_RTL8XXXU=y
-+CONFIG_RTL8XXXU_KUNIT_TEST=y
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-index 14d0343368ac0..e2c16d62293a4 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-@@ -35,3 +35,14 @@ config RTL8XXXU_UNTESTED
- 	  author or reported to be working by third parties.
+--
 
- 	  Please report your results!
-+
-+config RTL8XXXU_KUNIT_TEST
-+	tristate "KUnit tests for rtl8xxxu RX recovery" if !KUNIT_ALL_TESTS
-+	depends on KUNIT && RTL8XXXU
-+	default KUNIT_ALL_TESTS
-+	help
-+	  Exercise RX buffer ownership, startup and recovery with the real
-+	  driver functions and controlled allocation and USB submission results.
-+	  These tests do not require a USB adapter.
-+
-+	  If unsure, say N.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-b/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-index 580a2fa675ee2..a592a81197857 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-@@ -4,3 +4,6 @@ obj-$(CONFIG_RTL8XXXU)	+= rtl8xxxu.o
- rtl8xxxu-y	:= core.o 8192e.o 8723b.o \
- 		   8723a.o 8192c.o 8188f.o \
- 		   8188e.o 8710b.o 8192f.o
-+
-+obj-$(CONFIG_RTL8XXXU_KUNIT_TEST) += rtl8xxxu-rx-test.o
-+rtl8xxxu-rx-test-y := rx-test.o
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c
-b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-index 883c9a56f52a4..323411e7f5e3b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-@@ -17,6 +17,8 @@
- #include <linux/iopoll.h>
- #include "regs.h"
- #include "rtl8xxxu.h"
-+#include "rx-test.h"
-+#include <kunit/static_stub.h>
+selftests/tc-testing: add codel/fq_codel interval boundary cases
 
- #define DRIVER_NAME "rtl8xxxu"
+This adds eight tdc cases (codel 6e44/a8c3/a695/9793 and fq_codel
+1b4d/3540/49c5/3e0f) that create a codel or fq_codel qdisc with small
+interval and target values and match the rendered qdisc dump line.  The
+stated purpose is to lock the small-interval uAPI after the preceding
+dropping-loop bound patch.
 
-@@ -60,8 +62,7 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation
-pages (range 1-127, 0 to di
- #define RTL8XXXU_TX_URB_HIGH_WATER	32
+No Link: tags are present in the commit header.
 
- static void rtl8xxxu_stop(struct ieee80211_hw *hw, bool suspend);
--static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
--				  struct rtl8xxxu_rx_urb *rx_urb);
-+
+> diff --git a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
+> index 6d515d0e5ed69..a894e6f0e2677 100644
+> --- a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
+> +++ b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
+> @@ -213,5 +213,77 @@
+>          "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1p target 5ms interval 100ms",
+>          "matchCount": "1",
+>          "teardown": ["$TC qdisc del dev $DEV1 handle 1: root"]
+> +    },
+> +    {
+> +        "id": "6e44",
+> +        "name": "Create CODEL with 1us interval, accepted (sub-tick, uAPI locked)",
+> +        "category": [
+> +            "qdisc",
+> +            "codel"
+> +        ],
+> +        "plugins": {
+> +            "requires": "nsPlugin"
+> +        },
+> +        "setup": [],
+> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root codel interval 1us",
+> +        "expExitCode": "0",
+> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
+> +        "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1000p target 5ms interval 0us",
+> +        "matchCount": "1",
+> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
+> +    },
 
- static struct ieee80211_rate rtl8xxxu_rates[] = {
- 	{ .bitrate = 10, .hw_value = DESC_RATE_1M, .flags = 0 },
-@@ -5817,7 +5818,36 @@ void jaguar2_rx_parse_phystats(struct
-rtl8xxxu_priv *priv,
- 	}
- }
+[Severity: Medium]
+Do any of the eight added cases actually exercise the code the previous
+patch changed?  Each one has an empty setup, a bare tc qdisc add as
+cmdUnderTest, and a plain tc qdisc show (no -s, no traffic, no dequeue) as
+verifyCmd.
 
--static void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT struct rtl8xxxu_rx_urb *rtl8xxxu_alloc_rx_urb(void)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_alloc_rx_urb);
-+	return kmalloc_obj(struct rtl8xxxu_rx_urb);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_urb);
-+
-+VISIBLE_IF_KUNIT struct sk_buff *rtl8xxxu_alloc_rx_skb(unsigned int size)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_alloc_rx_skb, size);
-+	return __netdev_alloc_skb(NULL, size, GFP_KERNEL);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_skb);
-+
-+VISIBLE_IF_KUNIT int rtl8xxxu_rx_usb_submit(struct urb *urb, gfp_t flags)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_rx_usb_submit, urb, flags);
-+	return usb_submit_urb(urb, flags);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_usb_submit);
-+
-+VISIBLE_IF_KUNIT void rtl8xxxu_schedule_rx_retry(struct rtl8xxxu_priv *priv)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_schedule_rx_retry, priv);
-+	queue_delayed_work(system_wq, &priv->rx_urb_retry_wq,
-+			   msecs_to_jiffies(RTL8XXXU_RX_URB_RETRY_DELAY_MS));
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_schedule_rx_retry);
-+
-+VISIBLE_IF_KUNIT void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
- 	unsigned long flags;
-@@ -5838,15 +5868,16 @@ static void rtl8xxxu_free_rx_resources(struct
-rtl8xxxu_priv *priv)
+Neither codel_change() in net/sched/sch_codel.c nor fq_codel_change() gained
+any validation in the previous patch, which touches only include/net/codel.h
+and include/net/codel_impl.h.  So the acceptance of interval 1us/3us/1024us
+and target 1us, and the dumped values interval 0us/2us/1.02ms and target 0us,
+look identical on an unpatched kernel.
 
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_free_rx_resources);
+Would these cases stay green if the max_t(u32, 1, ...) clamp in
+codel_control_law() or the CODEL_MAX_DROPS_PER_DEQUEUE bound in
+codel_dequeue() were reverted?  Similarly, would 9793 and 3e0f ("target not
+in control law") keep passing if target were wrongly folded into
+codel_control_law()?
 
--static int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	int i;
+The changelog says:
 
- 	/* No RX work is active until the complete pool has been allocated. */
- 	for (i = 0; i < RTL8XXXU_RX_URBS; i++) {
--		rx_urb = kmalloc_obj(struct rtl8xxxu_rx_urb);
-+		rx_urb = rtl8xxxu_alloc_rx_urb();
- 		if (!rx_urb)
- 			return -ENOMEM;
+  "These cases do not test the dropping-loop bound itself: tdc cannot
+   observe per-dequeue drop counts."
 
-@@ -5859,6 +5890,7 @@ static int rtl8xxxu_alloc_rx_urbs(struct
-rtl8xxxu_priv *priv)
+Is that framing accurate for the harness as a whole?  codel.json case deb1,
+in this same file, already drives traffic via scapyPlugin:
 
- 	return 0;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_urbs);
+        "plugins": {
+            "requires": ["nsPlugin", "scapyPlugin"]
+        },
+        "scapy": [
+            {
+                "iface": "$DEV0",
+                "count": 10,
+                ...
 
- static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_priv *priv,
- 				  struct rtl8xxxu_rx_urb *rx_urb)
-@@ -5887,7 +5919,7 @@ static void rtl8xxxu_queue_rx_urb(struct
-rtl8xxxu_priv *priv,
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
+and infra/qdiscs.json case c797 configures exactly the degenerate
+configuration and asserts exact counters:
 
--static void rtl8xxxu_rx_urb_retry_work(struct work_struct *work)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_retry_work(struct work_struct *work)
- {
- 	struct rtl8xxxu_priv *priv = container_of(to_delayed_work(work),
- 						struct rtl8xxxu_priv,
-@@ -5907,6 +5939,7 @@ static void rtl8xxxu_rx_urb_retry_work(struct
-work_struct *work)
+        "$TC qdisc add dev $DUMMY parent 1:2 handle 10: fq_codel target 1 interval 1 flows 1",
+        ...
+        "verifyCmd": "$TC -s -j qdisc show dev $DUMMY",
+        "matchJSON": [ ... "packets": 3, "drops": 1 ... ]
 
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_urb_retry_work);
+Per-dequeue granularity is indeed not observable, but aggregate drop counts
+under traffic appear to be.  Could the changelog say that a dynamic case was
+not written, rather than that tdc cannot express one?
 
- static void rtl8xxxu_queue_rx_urb_retry(struct rtl8xxxu_priv *priv,
- 					struct rtl8xxxu_rx_urb *rx_urb)
-@@ -5919,8 +5952,7 @@ static void rtl8xxxu_queue_rx_urb_retry(struct
-rtl8xxxu_priv *priv,
- 		list_add_tail(&rx_urb->list, &priv->rx_urb_retry_list);
- 		priv->rx_urb_retry_count++;
- 		/* Keep normal completions from bypassing the error backoff. */
--		queue_delayed_work(system_wq, &priv->rx_urb_retry_wq,
--				   msecs_to_jiffies(RTL8XXXU_RX_URB_RETRY_DELAY_MS));
-+		rtl8xxxu_schedule_rx_retry(priv);
- 	} else {
- 		usb_free_urb(&rx_urb->urb);
- 	}
-@@ -5928,7 +5960,7 @@ static void rtl8xxxu_queue_rx_urb_retry(struct
-rtl8xxxu_priv *priv,
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
+[ ... ]
 
--static void rtl8xxxu_rx_urb_work(struct work_struct *work)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_work(struct work_struct *work)
- {
- 	struct rtl8xxxu_priv *priv;
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
-@@ -5968,8 +6000,9 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
- 		}
- 	}
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_urb_work);
+> +    {
+> +        "id": "a695",
+> +        "name": "Create CODEL with 1024us interval boundary accepted",
+> +        "category": [
+> +            "qdisc",
+> +            "codel"
+> +        ],
+> +        "plugins": {
+> +            "requires": "nsPlugin"
+> +        },
+> +        "setup": [],
+> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root codel interval 1024us",
+> +        "expExitCode": "0",
+> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
+> +        "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1000p target 5ms interval 1.02ms",
+> +        "matchCount": "1",
+> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
+> +    },
 
--static int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
- 	unsigned long flags;
-@@ -6006,6 +6039,7 @@ free_remaining:
- 	}
- 	return ret;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_start_rx);
+[Severity: Medium]
+Which boundary is 1024us?  The subject says "interval boundary cases", the
+body says "the 1024us boundary is accepted", and this case (plus fq_codel
+49c5) is named "1024us interval boundary accepted", but I cannot find a
+1024us threshold in codel.
 
- /*
-  * The RTL8723BU/RTL8192EU vendor driver use coexistence table type
-@@ -6646,7 +6680,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv
-*priv, struct sk_buff *skb)
- 	return RX_TYPE_DATA_PKT;
- }
+include/net/codel.h has:
 
--static void rtl8xxxu_rx_complete(struct urb *urb)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_complete(struct urb *urb)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb =
- 		container_of(urb, struct rtl8xxxu_rx_urb, urb);
-@@ -6686,9 +6720,10 @@ cleanup:
- 	usb_free_urb(urb);
- 	dev_kfree_skb(skb);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_complete);
+  /* CoDel uses a 1024 nsec clock, encoded in u32
+   * This gives a range of 2199 seconds, because of signed compares
+   */
+  #define CODEL_SHIFT 10
 
--static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
--				  struct rtl8xxxu_rx_urb *rx_urb)
-+VISIBLE_IF_KUNIT int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
-+					    struct rtl8xxxu_rx_urb *rx_urb)
- {
- 	struct rtl8xxxu_fileops *fops = priv->fops;
- 	struct sk_buff *skb;
-@@ -6704,7 +6739,7 @@ static int rtl8xxxu_submit_rx_urb(struct
-rtl8xxxu_priv *priv,
- 		skb_size = IEEE80211_MAX_FRAME_LEN + rx_desc_sz;
- 	}
+The 1024 there is nanoseconds per tick, not microseconds.  Is this a ns/us
+mix-up?  1024us just converts to 1000 ticks and renders as 1.02ms; there is
+no clamp or validation at that value in codel.h, codel_impl.h, sch_codel.c or
+sch_fq_codel.c.
 
--	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
-+	skb = rtl8xxxu_alloc_rx_skb(skb_size);
- 	if (!skb)
- 		return -ENOMEM;
+The granularity boundary in the uAPI conversion looks like it sits at 2us:
 
-@@ -6712,7 +6747,7 @@ static int rtl8xxxu_submit_rx_urb(struct
-rtl8xxxu_priv *priv,
- 	usb_fill_bulk_urb(&rx_urb->urb, priv->udev, priv->pipe_in, skb->data,
- 			  skb_size, rtl8xxxu_rx_complete, skb);
- 	usb_anchor_urb(&rx_urb->urb, &priv->rx_anchor);
--	ret = usb_submit_urb(&rx_urb->urb, GFP_ATOMIC);
-+	ret = rtl8xxxu_rx_usb_submit(&rx_urb->urb, GFP_ATOMIC);
- 	if (ret) {
- 		usb_unanchor_urb(&rx_urb->urb);
- 		dev_kfree_skb(skb);
-@@ -6720,6 +6755,7 @@ static int rtl8xxxu_submit_rx_urb(struct
-rtl8xxxu_priv *priv,
- 	}
- 	return ret;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_submit_rx_urb);
+  net/sched/sch_codel.c:codel_change() {
+      u32 interval = nla_get_u32(tb[TCA_CODEL_INTERVAL]);
 
- static void rtl8xxxu_int_complete(struct urb *urb)
- {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
-b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
-new file mode 100644
-index 0000000000000..aedddcb049cdf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
-@@ -0,0 +1,461 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+#include <kunit/static_stub.h>
-+#include <kunit/test.h>
-+#include <linux/usb.h>
-+
-+#include "rtl8xxxu.h"
-+#include "rx-test.h"
-+
-+#define RX_TEST_URBS 32
-+#define RX_TEST_SKBS 512
-+
-+struct rx_test {
-+	struct rtl8xxxu_priv priv;
-+	struct ieee80211_hw hw;
-+	struct rtl8xxxu_fileops fops;
-+	struct usb_device udev;
-+	struct rtl8xxxu_rx_urb *urbs[RX_TEST_URBS];
-+	struct sk_buff *skbs[RX_TEST_SKBS];
-+	unsigned int allocated;
-+	unsigned int buffers;
-+	unsigned int alloc_calls;
-+	unsigned int alloc_fail_at;
-+	unsigned int submit_calls;
-+	unsigned int submit_fail_at;
-+	int submit_error;
-+	bool fail_skb;
-+	bool retry_pending;
-+	unsigned int retry_arms;
-+	atomic_t normal_runs;
-+};
-+
-+static struct rx_test *rx_current(void)
-+{
-+	return kunit_get_current_test()->priv;
-+}
-+
-+static struct rtl8xxxu_rx_urb *rx_alloc_object(void)
-+{
-+	struct rx_test *ctx = rx_current();
-+	struct rtl8xxxu_rx_urb *rx;
-+
-+	ctx->alloc_calls++;
-+	if (ctx->alloc_calls == ctx->alloc_fail_at)
-+		return NULL;
-+	rx = kmalloc_obj(struct rtl8xxxu_rx_urb);
-+	if (rx)
-+		ctx->urbs[ctx->allocated++] = rx;
-+	return rx;
-+}
-+
-+static struct sk_buff *rx_alloc_buffer(unsigned int size)
-+{
-+	struct rx_test *ctx = rx_current();
-+	struct sk_buff *skb;
-+
-+	if (ctx->fail_skb)
-+		return NULL;
-+	skb = alloc_skb(size, GFP_KERNEL);
-+	if (skb) {
-+		/* Retain an observer reference to detect a lost driver reference. */
-+		skb_get(skb);
-+		ctx->skbs[ctx->buffers++] = skb;
-+	}
-+	return skb;
-+}
-+
-+static int rx_submit(struct urb *urb, gfp_t flags)
-+{
-+	struct rx_test *ctx = rx_current();
-+
-+	ctx->submit_calls++;
-+	if (!ctx->submit_fail_at ||
-+	    ctx->submit_calls == ctx->submit_fail_at)
-+		return ctx->submit_error;
-+	return 0;
-+}
-+
-+static void rx_schedule_retry(struct rtl8xxxu_priv *priv)
-+{
-+	struct rx_test *ctx = rx_current();
-+
-+	/* Model the single pending delayed-work ticket, not a submission. */
-+	if (!ctx->retry_pending) {
-+		ctx->retry_pending = true;
-+		ctx->retry_arms++;
-+	}
-+}
-+
-+static void rx_observe_work(struct work_struct *work)
-+{
-+	struct rtl8xxxu_priv *priv;
-+	struct rx_test *ctx;
-+
-+	priv = container_of(work, struct rtl8xxxu_priv, rx_urb_wq);
-+	ctx = container_of(priv, struct rx_test, priv);
-+	atomic_inc(&ctx->normal_runs);
-+}
-+
-+static struct rx_test *rx_init(struct kunit *test, bool fake_timer)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
-+	if (!ctx)
-+		return NULL;
-+	test->priv = ctx;
-+	ctx->hw.priv = &ctx->priv;
-+	ctx->priv.hw = &ctx->hw;
-+	ctx->priv.udev = &ctx->udev;
-+	ctx->priv.fops = &ctx->fops;
-+	ctx->fops.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16);
-+	spin_lock_init(&ctx->priv.rx_urb_lock);
-+	INIT_LIST_HEAD(&ctx->priv.rx_urb_pending_list);
-+	INIT_LIST_HEAD(&ctx->priv.rx_urb_retry_list);
-+	init_usb_anchor(&ctx->priv.rx_anchor);
-+	INIT_WORK(&ctx->priv.rx_urb_wq, rx_observe_work);
-+	INIT_DELAYED_WORK(&ctx->priv.rx_urb_retry_wq,
-+			  rtl8xxxu_rx_urb_retry_work);
-+	atomic_set(&ctx->normal_runs, 0);
-+
-+	kunit_activate_static_stub(test, rtl8xxxu_alloc_rx_urb, rx_alloc_object);
-+	kunit_activate_static_stub(test, rtl8xxxu_alloc_rx_skb, rx_alloc_buffer);
-+	kunit_activate_static_stub(test, rtl8xxxu_rx_usb_submit, rx_submit);
-+	if (fake_timer)
-+		kunit_activate_static_stub(test, rtl8xxxu_schedule_rx_retry,
-+					   rx_schedule_retry);
-+	return ctx;
-+}
-+
-+static void rx_get_observers(struct rx_test *ctx)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ctx->allocated; i++)
-+		usb_get_urb(&ctx->urbs[i]->urb);
-+}
-+
-+static int rx_pool(struct rx_test *ctx, unsigned int count)
-+{
-+	struct rtl8xxxu_rx_urb *rx;
-+	unsigned int i;
-+	int ret;
-+
-+	ret = rtl8xxxu_alloc_rx_urbs(&ctx->priv);
-+	rx_get_observers(ctx);
-+	if (ret)
-+		return ret;
-+
-+	/* A reduced pool also tests recovery without the normal watermark. */
-+	for (i = count; i < ctx->allocated; i++) {
-+		rx = ctx->urbs[i];
-+		list_del_init(&rx->list);
-+		ctx->priv.rx_urb_pending_count--;
-+		usb_free_urb(&rx->urb);
-+	}
-+	return 0;
-+}
-+
-+static void rx_giveback(struct rx_test *ctx, unsigned int i, int status)
-+{
-+	struct urb *urb = &ctx->urbs[i]->urb;
-+
-+	/* The fake USB boundary does not emulate HCD giveback. */
-+	usb_unanchor_urb(urb);
-+	urb->status = status;
-+	urb->actual_length = 0;
-+	rtl8xxxu_rx_complete(urb);
-+}
-+
-+static void rx_finish(struct kunit *test, struct rx_test *ctx)
-+{
-+	struct urb *urb;
-+	unsigned int i;
-+
-+	ctx->priv.shutdown = true;
-+	cancel_delayed_work_sync(&ctx->priv.rx_urb_retry_wq);
-+	cancel_work_sync(&ctx->priv.rx_urb_wq);
-+	for (i = 0; i < ctx->allocated; i++) {
-+		urb = &ctx->urbs[i]->urb;
-+		if (urb->anchor)
-+			rx_giveback(ctx, i, -ENOENT);
-+	}
-+	rtl8xxxu_free_rx_resources(&ctx->priv);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	KUNIT_EXPECT_TRUE(test, usb_anchor_empty(&ctx->priv.rx_anchor));
-+	for (i = 0; i < ctx->allocated; i++) {
-+		urb = &ctx->urbs[i]->urb;
-+		KUNIT_EXPECT_EQ(test, refcount_read(&urb->kref.refcount), 1);
-+		usb_free_urb(urb);
-+	}
-+	for (i = 0; i < ctx->buffers; i++) {
-+		KUNIT_EXPECT_EQ(test, refcount_read(&ctx->skbs[i]->users), 1);
-+		kfree_skb(ctx->skbs[i]);
-+	}
-+}
-+
-+static void rx_retry_step(struct kunit *test, struct rx_test *ctx)
-+{
-+	KUNIT_ASSERT_TRUE(test, ctx->retry_pending);
-+	ctx->retry_pending = false;
-+	rtl8xxxu_rx_urb_retry_work(&ctx->priv.rx_urb_retry_wq.work);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	/* Execute the actual worker in the test task so boundary stubs apply. */
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+}
-+
-+static void rx_completion_submit_chain(struct kunit *test)
-+{
-+	static const int errors[] = {
-+		-EPROTO, -EILSEQ, -ETIME, -EOVERFLOW, -ECOMM, -ENOSR,
-+	};
-+	static const int submissions[] = { -ENOMEM, -EAGAIN };
-+	struct rx_test *ctx;
-+	unsigned int e, f, i;
-+	int runs;
-+
-+	for (e = 0; e < ARRAY_SIZE(errors); e++) {
-+		for (f = 0; f < ARRAY_SIZE(submissions); f++) {
-+			ctx = rx_init(test, true);
-+			KUNIT_ASSERT_NOT_NULL(test, ctx);
-+			KUNIT_ASSERT_EQ(test, rx_pool(ctx, RX_TEST_URBS), 0);
-+			KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+			for (i = 0; i < RX_TEST_URBS; i++)
-+				rx_giveback(ctx, i, errors[e]);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+			ctx->submit_error = submissions[f];
-+			rx_retry_step(test, ctx);
-+			runs = atomic_read(&ctx->normal_runs);
-+			flush_work(&ctx->priv.rx_urb_wq);
-+			KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), runs);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+			KUNIT_EXPECT_TRUE(test, ctx->retry_pending);
-+			for (i = 0; i < ctx->buffers; i++)
-+				KUNIT_EXPECT_EQ(test,
-+						refcount_read(&ctx->skbs[i]->users), 1);
-+			ctx->submit_error = 0;
-+			rx_retry_step(test, ctx);
-+			KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+			KUNIT_EXPECT_FALSE(test, usb_anchor_empty(&ctx->priv.rx_anchor));
-+			rx_finish(test, ctx);
-+		}
-+	}
-+}
-+
-+static void rx_worker_batch_sizes(struct kunit *test)
-+{
-+	static const unsigned int sizes[] = { 1, 8, 9, 32 };
-+	struct rx_test *ctx;
-+	unsigned int n, pass;
-+	int runs;
-+
-+	for (n = 0; n < ARRAY_SIZE(sizes); n++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, sizes[n]), 0);
-+		ctx->submit_error = -EAGAIN;
-+		rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+		for (pass = 0; pass < 3; pass++) {
-+			runs = atomic_read(&ctx->normal_runs);
-+			flush_work(&ctx->priv.rx_urb_wq);
-+			KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), runs);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, sizes[n]);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+			rx_retry_step(test, ctx);
-+		}
-+		ctx->submit_error = 0;
-+		rx_retry_step(test, ctx);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_skb_allocation_failure(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->fail_skb = true;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, ctx->submit_calls, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->buffers, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 8);
-+	ctx->fail_skb = false;
-+	rx_retry_step(test, ctx);
-+	KUNIT_EXPECT_EQ(test, ctx->submit_calls, 8);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_start_allocation_failure(struct kunit *test)
-+{
-+	static const unsigned int positions[] = { 1, 8, 32 };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(positions); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		ctx->alloc_fail_at = positions[i];
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_alloc_rx_urbs(&ctx->priv), -ENOMEM);
-+		rx_get_observers(ctx);
-+		KUNIT_EXPECT_EQ(test, ctx->allocated, positions[i] - 1);
-+		KUNIT_EXPECT_EQ(test, ctx->submit_calls, 0);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_start_temporary_failure(struct kunit *test)
-+{
-+	static const int errors[] = { -ENOMEM, -EAGAIN };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(errors); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 32), 0);
-+		ctx->submit_error = errors[i];
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+		KUNIT_EXPECT_TRUE(test, ctx->retry_pending);
-+		ctx->submit_error = 0;
-+		rx_retry_step(test, ctx);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_start_fatal_failure(struct kunit *test)
-+{
-+	static const unsigned int positions[] = { 1, 8, 32 };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(positions); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 32), 0);
-+		ctx->submit_fail_at = positions[i];
-+		ctx->submit_error = -ENODEV;
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), -ENODEV);
-+		KUNIT_EXPECT_EQ(test, ctx->submit_calls, positions[i]);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_terminal_completion(struct kunit *test)
-+{
-+	static const int errors[] = {
-+		-ENOENT, -ECONNRESET, -ENODEV, -ESHUTDOWN, -EPIPE,
-+	};
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(errors); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+		KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+		rx_giveback(ctx, 0, errors[i]);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_shutdown_completion(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+	KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+	ctx->priv.shutdown = true;
-+	rx_giveback(ctx, 0, -EPROTO);
-+	KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_shutdown_pending_retry(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->submit_error = -ENOMEM;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	ctx->priv.shutdown = true;
-+	rtl8xxxu_rx_urb_retry_work(&ctx->priv.rx_urb_retry_wq.work);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 8);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_shutdown_submission_failure(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->priv.shutdown = true;
-+	ctx->submit_error = -ENOMEM;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_real_delayed_bridge(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, false);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+	KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+	rx_giveback(ctx, 0, -EPROTO);
-+	flush_delayed_work(&ctx->priv.rx_urb_retry_wq);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 1);
-+	KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), 1);
-+	rx_finish(test, ctx);
-+}
-+
-+static struct kunit_case rx_cases[] = {
-+	KUNIT_CASE(rx_completion_submit_chain),
-+	KUNIT_CASE(rx_worker_batch_sizes),
-+	KUNIT_CASE(rx_skb_allocation_failure),
-+	KUNIT_CASE(rx_start_allocation_failure),
-+	KUNIT_CASE(rx_start_temporary_failure),
-+	KUNIT_CASE(rx_start_fatal_failure),
-+	KUNIT_CASE(rx_terminal_completion),
-+	KUNIT_CASE(rx_shutdown_completion),
-+	KUNIT_CASE(rx_shutdown_pending_retry),
-+	KUNIT_CASE(rx_shutdown_submission_failure),
-+	KUNIT_CASE(rx_real_delayed_bridge),
-+	{}
-+};
-+
-+static struct kunit_suite rx_suite = {
-+	.name = "rtl8xxxu-rx",
-+	.test_cases = rx_cases,
-+};
-+
-+kunit_test_suite(rx_suite);
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-+MODULE_DESCRIPTION("rtl8xxxu RX recovery KUnit tests");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-new file mode 100644
-index 0000000000000..295befdfe8144
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-@@ -0,0 +1,27 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef RTL8XXXU_RX_TEST_H
-+#define RTL8XXXU_RX_TEST_H
-+
-+#include <kunit/visibility.h>
-+#include <linux/gfp_types.h>
-+
-+struct rtl8xxxu_priv;
-+struct rtl8xxxu_rx_urb;
-+struct sk_buff;
-+struct urb;
-+struct work_struct;
-+
-+VISIBLE_IF_KUNIT struct rtl8xxxu_rx_urb *rtl8xxxu_alloc_rx_urb(void);
-+VISIBLE_IF_KUNIT struct sk_buff *rtl8xxxu_alloc_rx_skb(unsigned int size);
-+VISIBLE_IF_KUNIT int rtl8xxxu_rx_usb_submit(struct urb *urb, gfp_t flags);
-+VISIBLE_IF_KUNIT void rtl8xxxu_schedule_rx_retry(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
-+					    struct rtl8xxxu_rx_urb *rx_urb);
-+VISIBLE_IF_KUNIT void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_complete(struct urb *urb);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_work(struct work_struct *work);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_retry_work(struct work_struct *work);
-+
-+#endif
+      WRITE_ONCE(q->params.interval,
+                 ((u64)interval * NSEC_PER_USEC) >> CODEL_SHIFT);
+  }
+
+giving 1us -> 0 ticks, 2us -> 1 tick, 3us -> 2 ticks.  The added cases cover
+1us and 3us and skip 2us, which is the value used in the previous patch's own
+reproducer ("codel interval 2us target 1ms").  Could a case at 2us be added
+and the 1024us wording in the subject, body and case names be corrected?
+
+> diff --git a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
+> index 4ce62b857fd7a..de6a1b8d954ae 100644
+> --- a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
+> +++ b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
+> @@ -316,5 +316,77 @@
+
+[ ... ]
+
+> +    {
+> +        "id": "49c5",
+> +        "name": "Create FQ_CODEL with 1024us interval boundary accepted",
+> +        "category": [
+> +            "qdisc",
+> +            "fq_codel"
+> +        ],
+> +        "plugins": {
+> +            "requires": "nsPlugin"
+> +        },
+> +        "setup": [],
+> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root fq_codel interval 1024us",
+> +        "expExitCode": "0",
+> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
+> +        "matchPattern": "qdisc fq_codel 1: root refcnt [0-9]+ limit 10240p flows 1024 quantum [0-9]+ target 5ms interval 1.02ms memory_limit 32Mb ecn drop_batch 64",
+> +        "matchCount": "1",
+> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
+> +    },
+
+The same two questions apply to the fq_codel cases 1b4d/3540/49c5/3e0f: they
+are config-only adds plus a show, and 49c5 carries the same 1024us boundary
+naming.
+
+[ ... ]
+
 -- 
-2.48.1
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/QDISC-1L5H.v1.20260912080102%40mojatatu.com
