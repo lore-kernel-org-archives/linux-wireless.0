@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2924549505D;
-	Sat, 12 Sep 2026 20:36:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CDC1493D53;
+	Sat, 12 Sep 2026 20:36:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789245386; cv=none; b=kSsTU7sVsCAESTwpkB7w2dzBWPZrGCcXQPwYTFMNXlb9eHnWjbBmYaMfdeSZGWVnYEwyTMUtNgDkuGXhRWTu6vbINYRDyuPPvygg6nInZrBaGLjFrdN/zCGeEctvL/oifWHgHESDNXQkCDhVY3wVOWpTQleKNRxpbnhKW40aNEM=
+	t=1789245385; cv=none; b=Bfp1fR1oqumnmTsrgj1s309wzAEGEN/U8RtnsHiSTFH6kt8654Gjwq5QduzK4qCKQzIHn+tcwTh4wCZ+pFT9a5VjXxT2QYtgFsiuqf6NHXaRRS3A1w4md67rW7RZM74ZLbcxqAx1D/GCnnP5TjKEtETnI/udk7b16amTkR1th6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789245386; c=relaxed/simple;
-	bh=1vJNEFCmpsEkh10gNad3iTXuzCz6W9V9XFIpJbERUKc=;
+	s=arc-20240116; t=1789245385; c=relaxed/simple;
+	bh=7fFeOFI8O1dlWk9HtX2ESLYB8IUByGJZuBhi0dUslEY=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gTB0JPZto9YArqQfSJMkzKdWM1BNbDzCh/sw0RyPRSe3OVpjZxz2pUUXNmDqyvtGhtl8kdk0IpfD8pXeriqLm74kudDGUWhz1J/oMzrz01VbTYKopF1uKTebTqj/4ueU4W8zuZIdw+5VFuMOxXdhbZPVOHYSNEhcyYtnwDQYcBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UnzYYeUb; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=b0v39B7LOOidfLB0dgXLwHDml+N3p3KNuBuBX9ld0GBXoGscL6sIAI7zA+Kdm8qyI/OwK8Gctwag/Ovo5bzX5xN/36AUZhXsWiQGnR1+DajxGppTbfQg4nteCaLsu0FbIbJ/LLl1vL0dGTI1c2CR/kAjys+waNgmliXdCDgU5uI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZ9DH4BD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UnzYYeUb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 462061F0089B;
-	Sat, 12 Sep 2026 20:36:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZ9DH4BD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDCF91F00893;
+	Sat, 12 Sep 2026 20:36:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789245383;
-	bh=re1FxNKOTk60DfizzkKQ/TC8pr1T40dfBa4Ili/w84A=;
+	s=k20260515; t=1789245381;
+	bh=p9M/IAzBQZKgl4w2ddg7iyD5jSghv/BGxykmdqWcfY0=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=UnzYYeUbgihD3TMsAW7kknmPUrcQGcrqv7SX+Z7gyYGkFaAL57sOg1E+1c3Ihz9EZ
-	 Uf/AuIq3bDiAQKP7wI5urYLIRsa9a9CZLt3SUD7/UDf5uU232HBFwBw9ODG+nfXJ6f
-	 m0ry6Fl5vXwfwB2x2D8D6NLOnuuo9MXfrcH9O5QWcsgVDvSEdWA7WItFGla5jKfMci
-	 npzSnfv7jYUPEGSyZBjPpZMeC0ZEqNwnvRf9QWcGHnY+ZVvlE5rBw+t4YvBsxYg4sw
-	 usOFc8/KSbI1JNIJ5Qdgh0UbSGBtcAUY9PL9oCm3DH16Odsu/5Sn+X4bJUIDL/YWpI
-	 0G/lEGbaAiQ9Q==
-Subject: Re: [PATCH net repost 2/2] selftests/tc-testing: add codel/fq_codel
- interval boundary cases
+	b=RZ9DH4BDpWdz0d/2FRygE7X3n2jO+tARtlDAk93urxho8QE4yUD+ctAPlcsPYZ3rs
+	 8yaUlgJMdni4oKa5rhho9cEjNXClQ4Yfk6CEq8455gEUWbrZhd0Fev/7awFcQ2dnAL
+	 o2ZpDeiSZPDdgCZlbH7GSiMnX/I2+8EaYiYTY642AKG+fj44qvXYV+y/OsrH4/43zk
+	 bJjDcZKG741dofnrhnjMArH8P3UkkaODoTBzGXc3gDLmw150gvYQau4pL+yPylR4nL
+	 mNBq+AcXH1BIXe6ubPyBVY1Yu4riPdEL1i6I78acZ6hJHfTsPL387m8AVlM90WR5ym
+	 YgAKytV97dTGA==
+Subject: Re: [PATCH net repost 1/2] net/sched: codel: bound the dropping loop
+ per dequeue call
 From: netdev-bot+sashiko@kernel.org
 To: jhs@mojatatu.com
 Cc: netdev@vger.kernel.org, jiri@resnulli.us, davem@davemloft.net,
  edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, horms@kernel.org,
  victor@mojatatu.com, johannes@sipsolutions.net,
  linux-wireless@vger.kernel.org, shuah@kernel.org, vega@nebusec.ai
-Date: Sat, 12 Sep 2026 20:36:21 +0000
-Message-ID: <178924538183.3125.10111240291445801017@kernel.org>
-In-Reply-To: <QDISC-1L5H.v1.20260912080102@mojatatu.com.2>
-References: <QDISC-1L5H.v1.20260912080102@mojatatu.com.2>
-X-sashiko-severity: Medium
+Date: Sat, 12 Sep 2026 20:36:20 +0000
+Message-ID: <178924538043.3125.18096491736359251092@kernel.org>
+In-Reply-To: <QDISC-1L5H.v1.20260912080102@mojatatu.com>
+References: <QDISC-1L5H.v1.20260912080102@mojatatu.com>
+X-sashiko-severity: High
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,188 +48,131 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential
+Thank you for your contribution! Sashiko AI review found 1 potential
 issue(s) to consider:
 
-Critical: 0 · High: 0 · Medium: 2 · Low: 0
+Critical: 0 · High: 1 · Medium: 0 · Low: 0
 
-- [Medium] None of the eight added tdc cases exercise the code the
-  previous patch ("net/sched: codel: bound the dropping loop per dequeue…
-- [Medium] The subject ("add codel/fq_codel interval boundary cases"),
-  the body ("the 1024us boundary is accepted") and the case names…
+- [High] The new drop cap in codel_dequeue()
+  (include/net/codel_impl.h:189) is enforced with a function-local…
 
 --
 
-selftests/tc-testing: add codel/fq_codel interval boundary cases
+net/sched: codel: bound the dropping loop per dequeue call
 
-This adds eight tdc cases (codel 6e44/a8c3/a695/9793 and fq_codel
-1b4d/3540/49c5/3e0f) that create a codel or fq_codel qdisc with small
-interval and target values and match the rendered qdisc dump line.  The
-stated purpose is to lock the small-interval uAPI after the preceding
-dropping-loop bound patch.
+The patch clamps the CoDel control law increment to at least one tick so
+the dropping loop always advances, and caps the loop at
+CODEL_MAX_DROPS_PER_DEQUEUE (256) drops per codel_dequeue() call,
+resyncing drop_next to now when the cap trips.
 
-No Link: tags are present in the commit header.
-
-> diff --git a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
-> index 6d515d0e5ed69..a894e6f0e2677 100644
-> --- a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
-> +++ b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/codel.json
-> @@ -213,5 +213,77 @@
->          "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1p target 5ms interval 100ms",
->          "matchCount": "1",
->          "teardown": ["$TC qdisc del dev $DEV1 handle 1: root"]
-> +    },
-> +    {
-> +        "id": "6e44",
-> +        "name": "Create CODEL with 1us interval, accepted (sub-tick, uAPI locked)",
-> +        "category": [
-> +            "qdisc",
-> +            "codel"
-> +        ],
-> +        "plugins": {
-> +            "requires": "nsPlugin"
-> +        },
-> +        "setup": [],
-> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root codel interval 1us",
-> +        "expExitCode": "0",
-> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
-> +        "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1000p target 5ms interval 0us",
-> +        "matchCount": "1",
-> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
-> +    },
-
-[Severity: Medium]
-Do any of the eight added cases actually exercise the code the previous
-patch changed?  Each one has an empty setup, a bare tc qdisc add as
-cmdUnderTest, and a plain tc qdisc show (no -s, no traffic, no dequeue) as
-verifyCmd.
-
-Neither codel_change() in net/sched/sch_codel.c nor fq_codel_change() gained
-any validation in the previous patch, which touches only include/net/codel.h
-and include/net/codel_impl.h.  So the acceptance of interval 1us/3us/1024us
-and target 1us, and the dumped values interval 0us/2us/1.02ms and target 0us,
-look identical on an unpatched kernel.
-
-Would these cases stay green if the max_t(u32, 1, ...) clamp in
-codel_control_law() or the CODEL_MAX_DROPS_PER_DEQUEUE bound in
-codel_dequeue() were reverted?  Similarly, would 9793 and 3e0f ("target not
-in control law") keep passing if target were wrongly folded into
-codel_control_law()?
-
-The changelog says:
-
-  "These cases do not test the dropping-loop bound itself: tdc cannot
-   observe per-dequeue drop counts."
-
-Is that framing accurate for the harness as a whole?  codel.json case deb1,
-in this same file, already drives traffic via scapyPlugin:
-
-        "plugins": {
-            "requires": ["nsPlugin", "scapyPlugin"]
-        },
-        "scapy": [
-            {
-                "iface": "$DEV0",
-                "count": 10,
-                ...
-
-and infra/qdiscs.json case c797 configures exactly the degenerate
-configuration and asserts exact counters:
-
-        "$TC qdisc add dev $DUMMY parent 1:2 handle 10: fq_codel target 1 interval 1 flows 1",
-        ...
-        "verifyCmd": "$TC -s -j qdisc show dev $DUMMY",
-        "matchJSON": [ ... "packets": 3, "drops": 1 ... ]
-
-Per-dequeue granularity is indeed not observable, but aggregate drop counts
-under traffic appear to be.  Could the changelog say that a dynamic case was
-not written, rather than that tdc cannot express one?
+> diff --git a/include/net/codel.h b/include/net/codel.h
+> index aa80f744826cd..183d43c2bd434 100644
+> --- a/include/net/codel.h
+> +++ b/include/net/codel.h
+> @@ -140,6 +140,11 @@ struct codel_vars {
+>  /* needed shift to get a Q0.32 number from rec_inv_sqrt */
+>  #define REC_INV_SQRT_SHIFT (32 - REC_INV_SQRT_BITS)
+>  
+> +/* Cap on drops per codel_dequeue() call: the loop's work depends on the
+> + * idle gap and backlog, both outside our control; resync when exceeded.
+> + */
+> +#define CODEL_MAX_DROPS_PER_DEQUEUE 256
+> +
+>  /**
+>   * struct codel_stats - contains codel shared variables and stats
+>   * @maxpacket:	largest packet we've seen so far
 
 [ ... ]
 
-> +    {
-> +        "id": "a695",
-> +        "name": "Create CODEL with 1024us interval boundary accepted",
-> +        "category": [
-> +            "qdisc",
-> +            "codel"
-> +        ],
-> +        "plugins": {
-> +            "requires": "nsPlugin"
-> +        },
-> +        "setup": [],
-> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root codel interval 1024us",
-> +        "expExitCode": "0",
-> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
-> +        "matchPattern": "qdisc codel 1: root refcnt [0-9]+ limit 1000p target 5ms interval 1.02ms",
-> +        "matchCount": "1",
-> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
-> +    },
-
-[Severity: Medium]
-Which boundary is 1024us?  The subject says "interval boundary cases", the
-body says "the 1024us boundary is accepted", and this case (plus fq_codel
-49c5) is named "1024us interval boundary accepted", but I cannot find a
-1024us threshold in codel.
-
-include/net/codel.h has:
-
-  /* CoDel uses a 1024 nsec clock, encoded in u32
-   * This gives a range of 2199 seconds, because of signed compares
-   */
-  #define CODEL_SHIFT 10
-
-The 1024 there is nanoseconds per tick, not microseconds.  Is this a ns/us
-mix-up?  1024us just converts to 1000 ticks and renders as 1.02ms; there is
-no clamp or validation at that value in codel.h, codel_impl.h, sch_codel.c or
-sch_fq_codel.c.
-
-The granularity boundary in the uAPI conversion looks like it sits at 2us:
-
-  net/sched/sch_codel.c:codel_change() {
-      u32 interval = nla_get_u32(tb[TCA_CODEL_INTERVAL]);
-
-      WRITE_ONCE(q->params.interval,
-                 ((u64)interval * NSEC_PER_USEC) >> CODEL_SHIFT);
-  }
-
-giving 1us -> 0 ticks, 2us -> 1 tick, 3us -> 2 ticks.  The added cases cover
-1us and 3us and skip 2us, which is the value used in the previous patch's own
-reproducer ("codel interval 2us target 1ms").  Could a case at 2us be added
-and the 1024us wording in the subject, body and case names be corrected?
-
-> diff --git a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
-> index 4ce62b857fd7a..de6a1b8d954ae 100644
-> --- a/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
-> +++ b/tools/testing/selftests/tc-testing/tc-tests/qdiscs/fq_codel.json
-> @@ -316,5 +316,77 @@
+> diff --git a/include/net/codel_impl.h b/include/net/codel_impl.h
+> index 2c1f0ec309e9f..8f26132d45b7f 100644
+> --- a/include/net/codel_impl.h
+> +++ b/include/net/codel_impl.h
 
 [ ... ]
 
-> +    {
-> +        "id": "49c5",
-> +        "name": "Create FQ_CODEL with 1024us interval boundary accepted",
-> +        "category": [
-> +            "qdisc",
-> +            "fq_codel"
-> +        ],
-> +        "plugins": {
-> +            "requires": "nsPlugin"
-> +        },
-> +        "setup": [],
-> +        "cmdUnderTest": "$TC qdisc add dev $DUMMY handle 1: root fq_codel interval 1024us",
-> +        "expExitCode": "0",
-> +        "verifyCmd": "$TC qdisc show dev $DUMMY",
-> +        "matchPattern": "qdisc fq_codel 1: root refcnt [0-9]+ limit 10240p flows 1024 quantum [0-9]+ target 5ms interval 1.02ms memory_limit 32Mb ecn drop_batch 64",
-> +        "matchCount": "1",
-> +        "teardown": ["$TC qdisc del dev $DUMMY handle 1: root"]
-> +    },
+> @@ -154,6 +159,7 @@ static struct sk_buff *codel_dequeue(void *ctx,
+>  				     codel_skb_dequeue_t dequeue_func)
+>  {
+>  	struct sk_buff *skb = dequeue_func(vars, ctx);
+> +	unsigned int drops = 0;
+>  	codel_time_t now;
+>  	bool drop;
+>  
+> @@ -180,6 +186,14 @@ static struct sk_buff *codel_dequeue(void *ctx,
+>  			 */
+>  			while (vars->dropping &&
+>  			       codel_time_after_eq(now, vars->drop_next)) {
+> +				if (++drops > CODEL_MAX_DROPS_PER_DEQUEUE) {
+> +					/* fell far behind the schedule */
+> +					WRITE_ONCE(vars->drop_next,
+> +						   codel_control_law(now,
+> +								     params->interval,
+> +								     vars->rec_inv_sqrt));
+> +					break;
+> +				}
 
-The same two questions apply to the fq_codel cases 1b4d/3540/49c5/3e0f: they
-are config-only adds plus a show, and 49c5 carries the same 1024us boundary
-naming.
+[Severity: High]
 
-[ ... ]
+Since drops is a local of codel_dequeue(), does the cap actually bound the
+work done in one fq_codel ->dequeue() call, or only the work done for one
+flow?
+
+When the dropping loop empties a flow (any flow holding no more than 256
+packets), dequeue_func() returns NULL, codel_should_drop(NULL, ...) clears
+vars->dropping and codel_dequeue() returns NULL.  __fq_codel_dequeue() in
+net/sched/sch_fq_codel.c treats that NULL as "flow is empty" and restarts:
+
+net/sched/sch_fq_codel.c:__fq_codel_dequeue() {
+	...
+	skb = codel_dequeue(sch, &sch->qstats.backlog, &q->cparams,
+			    &flow->cvars, &q->cstats, qdisc_pkt_len,
+			    codel_get_enqueue_time, drop_func, dequeue_func);
+
+	if (!skb) {
+		/* force a pass through old_flows to prevent starvation */
+		if ((head == &q->new_flows) && !list_empty(&q->old_flows))
+			list_move_tail(&flow->flowchain, &q->old_flows);
+		else
+			list_del_init(&flow->flowchain);
+		goto begin;
+	}
+	...
+}
+
+The goto begin re-enters codel_dequeue() for the next flow with drops back
+at 0, still inside the same fq_codel_dequeue() call and the same qdisc lock
+hold.  With flows configurable up to 65536, doesn't that make the aggregate
+per ->dequeue() drop count O(active_flows * 256) rather than 256?
+
+fq_codel_peek() calls the same __fq_codel_dequeue() loop, so does the same
+amplification apply on the peek path?
+
+The same reproducer from the changelog, with the flood spread over many UDP
+source ports so each flow holds at most 256 packets, looks like it would
+still walk the whole backlog in one dequeue under the lock:
+
+  tc qdisc add dev lo root handle 1: tbf rate 1kbit burst 2kb limit 1000000
+  tc qdisc add dev lo parent 1:1 handle 10: fq_codel interval 2us \
+      target 1ms noecn limit 1000000 flows 65536
+
+Given that, is this changelog text accurate for fq_codel?
+
+    "The cap applies to fq_codel (4b549a2ef4be) and the mac80211 TXQ path
+    (fixed interval, cap only)."
+
+    "patched kernel: same setup, at most 256 drops per dequeue call,
+     no soft lockup"
+
+Would a budget shared across the fq outer loop work better here, either
+passed in by the caller or signalled back so that __fq_codel_dequeue()
+stops retrying when the budget is exhausted?  Otherwise, could the
+changelog state the residual multi-flow exposure?
+
+The mac80211 TXQ path has the same shape in fq_tin_dequeue()
+(include/net/fq_impl.h), which also does goto begin while fq->lock is held,
+so the per-call counter resets there too; its fixed 100ms interval keeps
+the per-flow loops short, but is the structural reset worth a note as well?
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/QDISC-1L5H.v1.20260912080102%40mojatatu.com
