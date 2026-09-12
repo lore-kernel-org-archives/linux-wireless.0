@@ -1,152 +1,155 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from meesny.iki.fi (meesny.iki.fi [195.140.195.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D3937B3F2
-	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 07:29:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789198148; cv=none; b=GsYftdhq1epkQD++jU2cnhzsJv3Ze/V66akpTffzn2QjViVJIWTc52KpfjNuMuhqA+r2umo2ql4twD4tOOsDJt9rY36cwrhm8bum32i9JJDqo092UDxxa1Hg6lxjO9PeICeFlpXPS5tN7hCI2c7+I4KnSbMit7eEcgrmdUGcUfo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789198148; c=relaxed/simple;
-	bh=dhpBYpFhJDs9xOYSwPliRDQuXyKGEUdRkSMpWqBtp9k=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=iXNW4FfyUh6K3AeP+yGx3tRHbwa4Xwiyp4CYFqEq6Xu4RejcZhxkSs/TVZYM70pTSKhBP27zFz+RGrLQsfrOUAZUMXWOlOk1Pweor2Fqh66UAYbDG5ekB/0J4G7YRhZ1ySjPWLMIDKXFiR5kxay3n3PktAtG9RImZ+6fMqz9eQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aiCZVzuy; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3117B38DC43;
+	Sat, 12 Sep 2026 07:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=195.140.195.201
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789199963; cv=pass; b=ICNbzCSL40bQnL06XWrtN4h3ijBZeQYm120Z4BTVJcnQKyMT7qawTDB7YvYXFmvnDq4/WLrLNaVZ+3duxIvsRI45zdJTJ8OHCqRGAHDqCxaIJlFm+vIWOjF9BXpPnUeDRwKv9lkrKYeF37Cl1nb99Byi3yCCz0kW9ye9V/9HcK0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789199963; c=relaxed/simple;
+	bh=NmXmFYFRtLU22HLrYBSd1oFf2pfvgHBMxjXsjw+Yi3Q=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=EZkuNzch6xYFbQmUj7UEVpMVjs2ZLRCX4rziFgjAPds/oYkDO6xa9VqDppkmfVhdkqt8UJt0xzBdPls7O5fRKvRw8WsTrnd5ZvrJ1WRzd4QfkDaHjt9x8xk89r+EsVK/a+KOoD6XtuXJzpfcRNAJeVcJw2+2nQOBbnC5jBbDHeQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (1024-bit key) header.d=iki.fi header.i=@iki.fi header.b=c1nizgtp; arc=pass smtp.client-ip=195.140.195.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aiCZVzuy"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccfd61ecaso5080215e9.3
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 00:29:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789198145; x=1789802945; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qthRk4n3iEIfUHnnP0shWi37odfpZtGT+hDRI85+BXo=;
-        b=aiCZVzuyIoqS11fm2pXvg0NLUqkxTzGZjfwmoqSXKl7ZeswFZ2jur6AOTyd39JoV2A
-         +lpWmlBHvUICqIGoDScOqD9CfudlPWp2Y70DplXrC5pwTY5FSy91TPWTjjqYOiAoLvZM
-         e5Zl5Jzoj9bOGBQYyd0cmcvO9yuL3iCcSFuhuSQCJIzrPceTKmQ/3PApf6zYXcxAt4N6
-         h1PD1YI09pLp+kmBTB3C1fwcQLII24AQ2K2kUwC75segu0b98lbXN7Z+zc2gSjHXRdyM
-         8QiuxZjOYw2W0616A7E2fsqqGnw2lFD77RTZEAg0mgsynYU/WgKsWUvWEPdQTpGZWaVk
-         IstQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789198145; x=1789802945;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qthRk4n3iEIfUHnnP0shWi37odfpZtGT+hDRI85+BXo=;
-        b=TDIuggjHp7im0/LhAdOaLE2IyPK1NP7bVm2f2V6qeKSaFSJ9iNpDd0nvZCv9nZZ6ZG
-         fWvoifnnhGm07MU0tdsOfNq8HI4w1P38avOdgCrOB5EwEiZv5UjnRP9lTTmOtvUCwaUV
-         AXrAVGM2p4QQB/CmsqeBy5wShIXlieeoit3BTe7GwdejCYgAez+Sp0zK6e2+/bgLXgPJ
-         SwBL/L9n4NdBSsv3TQC99XxTAGO5QKV09N1BTZxHfvvod+EDQRjQZQQZly8nR/FRVGSN
-         jLrTC4D0igtRFnc8dRXFfZOU0NP5TSjh3gcIZCYyFwE3+kYs1L3MnDJngseHh/Nyd0Z/
-         abMg==
-X-Forwarded-Encrypted: i=1; AKwUvBxEsE9H/4GoDJ48yo7XontCDa0w3thRNlIEW6wjNlARxsXkB71blsNcXXhKe00ANLs7LLyQvjbjymTaDvRYMw==@vger.kernel.org
-X-Gm-Message-State: AFuF++nUXAdHwFQdsvUJKaQirNeVT8exnR7otLtBiZidkh58GIDBtcC7
-	cxcPiU+WFLVNwEZR31+j5aWKU+5FIbxgGBzxXljtUnc4ZAKJDPsmb6Dk
-X-Gm-Gg: AYBFou2Xaa84uSUxVE90Rgpv9UoPy1mKJ5aW0bnFdKNs75P9Dvhei6rpIli5GV5zkmW
-	uxgVMDSLuyLbA3ELBGhx62Mhe1uLr4oBZxfMjLmBtUe0cLnlwNDwakVjNF9DyEvFX9mr3P1xuQg
-	TkG+6zexkEKcutnnx5UWvN41cfv4ZghmKioobs+wF2LFS98U/pcYMulLepicbo8jdrqnfA4lSHF
-	D6O2sejAPGpfcbzunqwhMGDH7rxy4aOV1aSfZUqo4uNpLC+y/a5H9siIgDX1z0O/qJePf0M/+Y3
-	zOto+8K9+R/t2rct/Cy6hNVeOsIbmuQVRw5PPaDis4/uwI1iCohPN4ZW0fbPs8bBYNxk8IBdVv4
-	yPNLymxupFqHfUhTnSVQDjuApy+TL3aJqXykBW3mE8UKRvRbkUSY7YyqvLX8FOdzz8WVpXWzWDu
-	zDgL2j2pr4+8vwDk74mJRbOW25EhcmCz9n3We+5VCHSMw+r4sYwjvha+JidRTlXLxbL4k=
-X-Received: by 2002:a05:600c:c490:b0:49c:f4e1:4c2d with SMTP id 5b1f17b1804b1-49e619c0423mr90508945e9.16.1789198145050;
-        Sat, 12 Sep 2026 00:29:05 -0700 (PDT)
-Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e6499d57bsm171299395e9.3.2026.09.12.00.29.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 12 Sep 2026 00:29:04 -0700 (PDT)
-Date: Sat, 12 Sep 2026 10:29:00 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Jeff Chen <jeff.chen_1@nxp.com>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	linux-wireless@vger.kernel.org
-Subject: [bug report] wifi: nxp: add nxpwifi driver for IW61x
-Message-ID: <aqT_PG-XPtelJ5cR@stanley.mountain>
+	dkim=pass (1024-bit key) header.d=iki.fi header.i=@iki.fi header.b="c1nizgtp"
+Received: from fauth-c1-smtp.messagingengine.com (fauth-c1-smtp.messagingengine.com [204.75.18.200])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: jmtilli)
+	by meesny.iki.fi (Postfix) with ESMTPSA id 4hhkMH4PThzySb;
+	Sat, 12 Sep 2026 10:59:07 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=meesny;
+	t=1789199948;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kWtoX2q/jGZ//1+vTBGDG8T4O15rbIPB/EVBKLVQA20=;
+	b=c1nizgtp/UZNwiHIDtiTCKEEfIaCe0KdOhFPIJTCb47HHJUK5LsxbiUhPhvDePNeNsnn8+
+	J7nd5Ar9y49SERDsS6Hkxa6YUP5HOPQ4Jnp0DYKlJWCOs8umYf2YjnUAT/nFF5A8lUGsEg
+	Ao61NcvI0IRG9KkoCLAhGdVYMdBUl9Y=
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=meesny; cv=none; t=1789199948;
+	b=VJ4U+jtAJFzR306aVpQL7xZpYGbpV8t2XgbbbxHtD23dRNrH0Vvrt1J+2xMdDxIIPQiism
+	MaZrkIiN15ygXZ/9kRybeR+lDqalOpf3+SNjZXbFZPd7kPP6/SEzBT0CpQHzoeE7nbgqAm
+	QxkH0PhCg/NyLJFJv12qM84cnINRR94=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
+	s=meesny; t=1789199948;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kWtoX2q/jGZ//1+vTBGDG8T4O15rbIPB/EVBKLVQA20=;
+	b=Y3jj+/jl1D9ZL3reijnjzxtM1ndhiL681A2rux/8xF+hhqz2GQevjUZkCfDQML5TPR+/LE
+	yYHfVYFG2dWLLnhGMIcvlnozPqIrfswLFBhTMJRBwSJ9IepE8Cr4Pj1dBFavCpPd4Wg2At
+	Mc0qck58ThGJGsc2sjk9vXm33lnm6Bc=
+ARC-Authentication-Results: i=1;
+	ORIGINATING;
+	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfauth.ams.internal (Postfix) with ESMTP id 88644198004A;
+	Sat, 12 Sep 2026 03:59:06 -0400 (EDT)
+Received: from ams-imap-13 ([10.64.2.33])
+  by ams-compute-02.internal (MEProxy); Sat, 12 Sep 2026 03:59:06 -0400
+X-ME-Sender: <xms:Rwalamwxsu26ZEAS5voScVlywrSY1nhVUTKXq3cCPVO3bORaiKI0WQ>
+    <xme:RwalatHmZGDCrKjVl44ZugsMgSP-83xtoEiRnWXbEa594O-wzVVXEOaS37DOktAxZ
+    4sdKJ1HSC1VSuv0EC7SHScw5yENnTPd1ZiKGEFNV7szZcRnIbl0xl0>
+X-ME-Proxy-Cause: dmFkZTFEXGNHCKhuAHtyaQNCz9mF0LZj+0EMZrDTZmy3QBtpWwkxw8Zh/OO90gMbHDDFgT
+    rbvZjVfyzbe7pkuXoVe4F/B+gfkty3EASgQrgf67g1gdMjrMwpOFHdiISUkhGVC3bvpJ9v
+    A91YgggnXoVf0wSMRnkH/4DlMkIjf+ckzw7bbjyYzmMwVAMq2ftHOT3fnqksac5SBbsmIa
+    MaWjmODyRy0ISaJM+6j9CoXe9+qacm+h1bg9tNmq/kjTbQPDkj/cxQkqm5oWG/imqJqNJs
+    Ev2UEr8Eg77CV9+/3aghkj2fBy7lSvVvXi3yrGhTiR19pRxc5DHSStlNeaVEV1VLGnx+TT
+    ZYeGFc/3MyJHxUijdmDRETWFGoaVjYJAdy1uZQ/BfFqdZAqgxHenipTtFZ+IsAkjZV82et
+    gYjy9Mrr0CxGBXCBY1gjGvAMwjbuPDk7V5PvJKRykqP8MnmE6N5FOiABM14uiaEeRu+Le3
+    uHBEaMbVg7qJTalVLlsh9Imxuv55Qyvo3/xt1DGbpovUZCUaT2W2s8VIJI2wXY1hnINTO7
+    ZGpqOFUev7REkutW6tUhurd8LQBWLSTGVe0PRDkwpzJCTQPdGQxKqrkfewZC4O+6lWMbRA
+    Wu1nZnQ4La7Mwtb9p3zmrEEuuwQHxIEdOcO30Im3b01LDr8JJ1MMMtqcoukQ
+X-ME-Proxy: <xmx:SgalanJwwwbuJsLQgae23CqvUJjCBfbiUimryUZ_BVZMVHowVP0KSA>
+    <xmx:SgalagAkJ3r3T_wIeqZo1ZRDMk6UNekCYm1Igx-rQlq1g3bzFzQh_A>
+    <xmx:SgalaoScTpCd1L-V1EcbcZqBRrWadwyH-hQgdE5LxFjo5cFTHYGotA>
+    <xmx:SgalahqLyq8KMc4R3N09DShooKOVboWooC2HMbjuNW16yJBdUFescg>
+    <xmx:SgalahV9QqOmNXwtcBK-HLYKgjWLCsxT90vaUs6jp6PopLystOxxEea7>
+Feedback-ID: i02414972:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 5DC57F80087; Sat, 12 Sep 2026 03:59:03 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-ThreadId: Av35K2MZ7qUg
+Date: Sat, 12 Sep 2026 10:58:42 +0300
+From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
+To: "Jeff Johnson" <jeff.johnson@oss.qualcomm.com>,
+ ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+ "Kalle Valo" <kvalo@kernel.org>, "Jeff Johnson" <jjohnson@kernel.org>,
+ "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: "Bjorn Andersson" <andersson@kernel.org>,
+ "Konrad Dybcio" <konradybcio@kernel.org>,
+ "David S . Miller" <davem@davemloft.net>,
+ "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
+ "Paolo Abeni" <pabeni@redhat.com>, "Simon Horman" <horms@kernel.org>,
+ "Mihai Moldovan" <ionic@ionic.de>, linux-wireless@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Message-Id: <65bea1ee-edf5-4884-98e7-f9d6237f8999@app.fastmail.com>
+In-Reply-To: <d91ce2be-6489-4399-b035-23f6aec0371f@oss.qualcomm.com>
+References: <20260908093145.2492666-1-juha-matti.tilli@iki.fi>
+ <d91ce2be-6489-4399-b035-23f6aec0371f@oss.qualcomm.com>
+Subject: Re: [PATCH v3 00/12] ath1{1,2}k: support multiple PCI devices in one system
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Hello Jeff Chen,
+On Fri, Sep 11, 2026, at 22:15, Jeff Johnson wrote:
+> On 9/8/2026 2:31 AM, Juha-Matti Tilli wrote:
+> > Hello,
+> > 
+> > As you may well know, multiple identical ath11k and ath12k devices are
+> > not supported in a single Linux host because they use conflicting QRTR
+> > node IDs. Fortunately, Denis Kenzior created a patchset to support
+> > multiple QRTR endpoints with identical node IDs, and Mihai Moldovan
+> > refined it, after which I took over the patchset and refined it more.
+> > 
+> > [snip]
+> 
+> How are you populating the list of recipients for your e-mail?
+> 
+> You are including folks no longer involved in kernel development, but more
+> importantly, you are using an obsolete e-mail address for the MHI maintainer
+> (Mani). I've replaced his address in my reply.
+> 
+> Please make sure to use scripts/get_maintainer.pl to get an accurate list of
+> recipients.
 
-Commit 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x") from
-Jun 5, 2026 (linux-next), leads to the following Smatch static
-checker warning:
+Hello,
 
-	drivers/net/wireless/nxp/nxpwifi/uap_cmd.c:1054 nxpwifi_set_11ax_status()
-	error: __memcpy() 'ax_cfg.data[4]' too small (50 vs 255)
+I will post a new patchset without messed-up threading later. The e-mail
+list was populated from Mihai's patchset from 2024, and I indeed noticed 
+that Mani's e-mail address was old, which would have been fixed in the
+next version anyway. I will also do an estimate of how recently the
+recipients have been doing kernel development, based on the Linux kernel
+commit history, and what kind of development they have done (in what
+subsystems), and remove addresses that haven't been part of relevant
+kernel subsystem development recently (except maybe Denis and Mihai
+could be listed as the patches were originally theirs). Of course,
+get_maintainer.pl result will be included.
 
-drivers/net/wireless/nxp/nxpwifi/uap_cmd.c
-    1019 int nxpwifi_set_11ax_status(struct nxpwifi_private *priv,
-    1020                             struct nxpwifi_uap_bss_param *bss_cfg,
-    1021                             struct cfg80211_ap_settings *params)
-    1022 {
-    1023         struct nxpwifi_11ax_he_cfg ax_cfg;
-    1024         u8 band = bss_cfg->band_cfg & BAND_CFG_CHAN_BAND_MASK;
-    1025         const struct element *he_cap;
-    1026         int ret;
-    1027 
-    1028         if (band == BAND_2GHZ)
-    1029                 ax_cfg.band = BIT(0);
-    1030         else if (band == BAND_5GHZ)
-    1031                 ax_cfg.band = BIT(1);
-    1032         else
-    1033                 return -EINVAL;
-    1034 
-    1035         ret = nxpwifi_send_cmd(priv, HOST_CMD_11AX_CFG,
-    1036                                HOST_ACT_GEN_GET, 0, &ax_cfg, true);
-    1037         if (ret)
-    1038                 return ret;
-    1039 
-    1040         he_cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_CAPABILITY,
-    1041                                         params->beacon.tail,
-    1042                                         params->beacon.tail_len);
-    1043 
-    1044         if (he_cap) {
-    1045                 ax_cfg.he_cap_cfg.id = he_cap->id;
-    1046                 ax_cfg.he_cap_cfg.len = he_cap->datalen;
-    1047                 if (params->twt_responder == 0) {
-    1048                         struct nxpwifi_11ax_he_cap_cfg *he_cap_cfg =
-    1049                         (struct nxpwifi_11ax_he_cap_cfg *)he_cap;
-    1050 
-    1051                         he_cap_cfg->cap_elem.mac_cap_info[0] &=
-    1052                                 ~HE_MAC_CAP_TWT_RESP_SUPPORT;
-    1053                 }
---> 1054                 memcpy(ax_cfg.data + 4,
-    1055                        he_cap->data,
-    1056                        he_cap->datalen);
-                                ^^^^^^^^^^^^^^^
-Smatch thinks we need some bounds checking on this.  The comments
-on cfg80211_find_ext_elem() suggest this is true.  I've been
-starting to use ChatGPT to review Smatch warnings and it says the
+I will also join the modified recipient lists of Denis's patchset and
+Mihai's patchset, as they are related to each other, and Mihai's patches
+require Denis's patches.
 
-	he_cap_cfg->cap_elem.mac_cap_info &= ~HE_MAC_CAP_TWT_RESP_SUPPORT;
+I hope that with these modifications, the patchsets could be taken into
+consideration and review.
 
-assignment on line 1051 is a concern as well since that was
-supposed to be const...  But I think const here is more of a guideline
-than a hard requirement?
+At least my git send-email settings and changed SMTP server settings
+should prevent the previous mistake in the next series, and if not, now
+I know --in-reply-to and --no-thread. Also shorter CC list will make SMTP
+server limits less likely.
 
-    1057         } else {
-    1058                 /* disable */
-    1059                 if (ax_cfg.he_cap_cfg.len &&
-    1060                     ax_cfg.he_cap_cfg.ext_id == WLAN_EID_EXT_HE_CAPABILITY) {
-    1061                         memset(ax_cfg.he_cap_cfg.he_txrx_mcs_support, 0xff,
-    1062                                sizeof(ax_cfg.he_cap_cfg.he_txrx_mcs_support));
-    1063                 }
-    1064         }
-    1065 
-    1066         return nxpwifi_send_cmd(priv, HOST_CMD_11AX_CFG,
-    1067                                 HOST_ACT_GEN_SET, 0, &ax_cfg, true);
-    1068 }
-
-This email is a free service from the Smatch-CI project [smatch.sf.net].
-
-regards,
-dan carpenter
+BR, Juha-Matti
