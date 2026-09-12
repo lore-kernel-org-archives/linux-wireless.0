@@ -1,107 +1,152 @@
 Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEE1235358
-	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 07:28:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D3937B3F2
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 07:29:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789198126; cv=none; b=Y4HOSUfr0Nc9JKVZj2gBhRqEdbk9egzKroaTIPYLZhTjzl4lTRhSlaRL7X1Ow/24gON5TARfKbilwLmhIaXZMTEUnf2sT2SZRgw6ZZzVebVIeHboUPFH4sNnpqpeywcO0Jj5rb7bcfeO4jqcDl8DL5w+bVsOoFbLt1Pz7yGxi3E=
+	t=1789198148; cv=none; b=GsYftdhq1epkQD++jU2cnhzsJv3Ze/V66akpTffzn2QjViVJIWTc52KpfjNuMuhqA+r2umo2ql4twD4tOOsDJt9rY36cwrhm8bum32i9JJDqo092UDxxa1Hg6lxjO9PeICeFlpXPS5tN7hCI2c7+I4KnSbMit7eEcgrmdUGcUfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789198126; c=relaxed/simple;
-	bh=Z9wPS/MfHLphmStRsx47ywqAztRP2hflM8FIhbi5DoI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Xbeo/DNiEoJdOk4ybGo7XtYO7ZzJey3hX25jlKSeTukboRS4QoTbCIwfdQ+WXNM9/YxJP8KvE0cukuHOGOFOkHNHNLHfqdSwbkXyhjrXk+MfxIaaOkX9e32OenpUULeMDCLYPTlatglvmhS3w4CPs6WpcURa1rSjuyDjMuOvtFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r2BTW0Tx; arc=none smtp.client-ip=74.125.225.140
+	s=arc-20240116; t=1789198148; c=relaxed/simple;
+	bh=dhpBYpFhJDs9xOYSwPliRDQuXyKGEUdRkSMpWqBtp9k=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=iXNW4FfyUh6K3AeP+yGx3tRHbwa4Xwiyp4CYFqEq6Xu4RejcZhxkSs/TVZYM70pTSKhBP27zFz+RGrLQsfrOUAZUMXWOlOk1Pweor2Fqh66UAYbDG5ekB/0J4G7YRhZ1ySjPWLMIDKXFiR5kxay3n3PktAtG9RImZ+6fMqz9eQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aiCZVzuy; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r2BTW0Tx"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b94fce6e8so4316055e9.2
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 00:28:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aiCZVzuy"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccfd61ecaso5080215e9.3
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 00:29:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789198123; x=1789802923; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SXp8lyNVVb74WFu8BWD5kffDqlcHsOtjcWC5AhUADvI=;
-        b=r2BTW0TxSKWIvgAWEZmbixpRep9wNqqPhdCZ8cJzKuLWeVu+bd+raYyWWITg2iPYP4
-         /nqDRzl56ebQRqYVSCb/vz8184oquvYbjmqXNUqgEcIRpmEpL8WKHAjOl96XdvwtS4Rm
-         xsI3fynKEgSGVzLqJYmaiv+qIGU/GYX2ElnafXSuMhjtIODImUr+m6+WR5ctsxnf4z3M
-         ueWbNtcgfNx4NO9bsRICfRii3wRee4Y+7sXyychrgTiQHWB+NGbFLy/Ywe+9Zb1+9oY0
-         X8C0wWcmaQrI37Vdofj0VOY5e+NaFv9hYXqSWd2XDgHmu7+imSQc0p9DfHVFfEplM7mB
-         TJAw==
+        d=gmail.com; s=20251104; t=1789198145; x=1789802945; darn=vger.kernel.org;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qthRk4n3iEIfUHnnP0shWi37odfpZtGT+hDRI85+BXo=;
+        b=aiCZVzuyIoqS11fm2pXvg0NLUqkxTzGZjfwmoqSXKl7ZeswFZ2jur6AOTyd39JoV2A
+         +lpWmlBHvUICqIGoDScOqD9CfudlPWp2Y70DplXrC5pwTY5FSy91TPWTjjqYOiAoLvZM
+         e5Zl5Jzoj9bOGBQYyd0cmcvO9yuL3iCcSFuhuSQCJIzrPceTKmQ/3PApf6zYXcxAt4N6
+         h1PD1YI09pLp+kmBTB3C1fwcQLII24AQ2K2kUwC75segu0b98lbXN7Z+zc2gSjHXRdyM
+         8QiuxZjOYw2W0616A7E2fsqqGnw2lFD77RTZEAg0mgsynYU/WgKsWUvWEPdQTpGZWaVk
+         IstQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789198123; x=1789802923;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1789198145; x=1789802945;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=SXp8lyNVVb74WFu8BWD5kffDqlcHsOtjcWC5AhUADvI=;
-        b=pp5xkGE66V3tyaC4/4MQxuKxlI00NPZA5mS3ATlTxmUpa6bcxHGshLiaEpMJfSkNmb
-         C4vbgIHgjushYyzqXEgLTuoFEef6V0u9PtQ1eLgCQJ8Wfn5jAVWd/HosbjEnwazoqBxf
-         YqwPmOg29QubJEUYAQtNe7a8xFjhNu4vOTZ3MfOFWmWZJwvWxmw6fnSzKE4GJCgBKiJx
-         aD4ciqFwMEx98o1k3C+pn/6r1zmPJLvLKmWMEzKHL9+wuz5Bog1vGfTwdVUJo/0XGhh4
-         U4J+L3UMXE02OEQtY1gjXcL8NGoRp18FZgyYgK1Nl9c577jr4yUN70TJBJ1TWo9JLi8B
-         bblA==
-X-Forwarded-Encrypted: i=1; AKwUvBxRNdhflUk8Xf99wuuz/ww1KKmFYa5WVikAF02LH2yLzkRRGnGVqPxX+4cZHdVz5M3quJByC2m2ZzwhO5666A==@vger.kernel.org
-X-Gm-Message-State: AFuF++k6Vx1wknUrkuvRubaE9g0ISJcAewCQiG/FaMX5wBfmof2/VcyT
-	pL6DCsnfgUWkyaXcGh3Wre4CsKwJm8ODi2S2VMjWRvcKJqMrh+ZFn1zQ
-X-Gm-Gg: AYBFou1Egcyq1J6QfaB07MF2MBVOmyy2mF2yzUsbE6vmk6wMO5oXvujXCLSEimkpGxj
-	iqF3QkXofGzIUo7zclI0ZNy9LsvutuXGJS+RMyXlvyKnMiOARLWwaQbD1YoBqFcJ9qbaMoAP3+H
-	yn8isbDx3yzJ2WTl+UO3jDvkA1AwF1XtjENCIy0wDLM5RtylLpmNDzSk4PPnIFCh9JKXvyCnGsv
-	F4GjxqatBegZi60R1Vu2E063zBENSfAqR5y1oRvVOZIK6ukg3tEdikZTDVKGT3YNS0/Q/cxmQzY
-	Y2chBVc1H8WOJ3SEmRpKOF+/NU8vIGXeeyh9/uzxCvacpjKxBi/pLEVM/No16FP8cwxS38hJG2H
-	r7j5q7U1EClSdAQ+9Y/R6MYbMu4teR7G51g70SQ9+Kped0PyW/QsJyJxHP7jBNOECr4lUJE3A30
-	6RLTVMUhJmRCuAPI44imtRXR3R2HvHWfjycZxOvTPMCY2beD1Q1/LAfTHcXsfyOjlmCf2H3096E
-	VNSDUVxOGrl8OHZh86I3G1j9YGuRw7+2BqRsqj7PPQfLldYu2zBGxK/ElisHVTvDFBWvDrZ/Ksa
-	kVzN3epaxnB+B1dWOmmaTAto7nw0gBElVr2uwXnh7cOaftGZ0TwV7RJ7tD76rvwdofor34rEy44
-	/R2L0WCw=
-X-Received: by 2002:a05:600c:4e0e:b0:49d:7f5:4cdd with SMTP id 5b1f17b1804b1-49e619d4d30mr91931345e9.27.1789198122902;
-        Sat, 12 Sep 2026 00:28:42 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a02-3100-b260-f201-9983-e8c4-aff5-7a36.310.pool.telefonica.de. [2a02:3100:b260:f201:9983:e8c4:aff5:7a36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d26be3e0asm235846435e9.1.2026.09.12.00.28.42
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 12 Sep 2026 00:28:42 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: Fix the return value in mesh_path_add() kernel-doc
-Date: Sat, 12 Sep 2026 09:28:40 +0200
-Message-Id: <20260912072840.50710-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+        bh=qthRk4n3iEIfUHnnP0shWi37odfpZtGT+hDRI85+BXo=;
+        b=TDIuggjHp7im0/LhAdOaLE2IyPK1NP7bVm2f2V6qeKSaFSJ9iNpDd0nvZCv9nZZ6ZG
+         fWvoifnnhGm07MU0tdsOfNq8HI4w1P38avOdgCrOB5EwEiZv5UjnRP9lTTmOtvUCwaUV
+         AXrAVGM2p4QQB/CmsqeBy5wShIXlieeoit3BTe7GwdejCYgAez+Sp0zK6e2+/bgLXgPJ
+         SwBL/L9n4NdBSsv3TQC99XxTAGO5QKV09N1BTZxHfvvod+EDQRjQZQQZly8nR/FRVGSN
+         jLrTC4D0igtRFnc8dRXFfZOU0NP5TSjh3gcIZCYyFwE3+kYs1L3MnDJngseHh/Nyd0Z/
+         abMg==
+X-Forwarded-Encrypted: i=1; AKwUvBxEsE9H/4GoDJ48yo7XontCDa0w3thRNlIEW6wjNlARxsXkB71blsNcXXhKe00ANLs7LLyQvjbjymTaDvRYMw==@vger.kernel.org
+X-Gm-Message-State: AFuF++nUXAdHwFQdsvUJKaQirNeVT8exnR7otLtBiZidkh58GIDBtcC7
+	cxcPiU+WFLVNwEZR31+j5aWKU+5FIbxgGBzxXljtUnc4ZAKJDPsmb6Dk
+X-Gm-Gg: AYBFou2Xaa84uSUxVE90Rgpv9UoPy1mKJ5aW0bnFdKNs75P9Dvhei6rpIli5GV5zkmW
+	uxgVMDSLuyLbA3ELBGhx62Mhe1uLr4oBZxfMjLmBtUe0cLnlwNDwakVjNF9DyEvFX9mr3P1xuQg
+	TkG+6zexkEKcutnnx5UWvN41cfv4ZghmKioobs+wF2LFS98U/pcYMulLepicbo8jdrqnfA4lSHF
+	D6O2sejAPGpfcbzunqwhMGDH7rxy4aOV1aSfZUqo4uNpLC+y/a5H9siIgDX1z0O/qJePf0M/+Y3
+	zOto+8K9+R/t2rct/Cy6hNVeOsIbmuQVRw5PPaDis4/uwI1iCohPN4ZW0fbPs8bBYNxk8IBdVv4
+	yPNLymxupFqHfUhTnSVQDjuApy+TL3aJqXykBW3mE8UKRvRbkUSY7YyqvLX8FOdzz8WVpXWzWDu
+	zDgL2j2pr4+8vwDk74mJRbOW25EhcmCz9n3We+5VCHSMw+r4sYwjvha+JidRTlXLxbL4k=
+X-Received: by 2002:a05:600c:c490:b0:49c:f4e1:4c2d with SMTP id 5b1f17b1804b1-49e619c0423mr90508945e9.16.1789198145050;
+        Sat, 12 Sep 2026 00:29:05 -0700 (PDT)
+Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e6499d57bsm171299395e9.3.2026.09.12.00.29.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Sep 2026 00:29:04 -0700 (PDT)
+Date: Sat, 12 Sep 2026 10:29:00 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Jeff Chen <jeff.chen_1@nxp.com>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	linux-wireless@vger.kernel.org
+Subject: [bug report] wifi: nxp: add nxpwifi driver for IW61x
+Message-ID: <aqT_PG-XPtelJ5cR@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-mesh_path_add() has returned the new (or the already existing) struct
-mesh_path, or an ERR_PTR(), since commit ae76eef027f7 ("mac80211: return
-new mpath from mesh_path_add()"), but its kernel-doc still says
-"Returns: 0 on success". Describe the pointer.
+Hello Jeff Chen,
 
-Fixes: ae76eef027f7 ("mac80211: return new mpath from mesh_path_add()")
-Assisted-by: LLM
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
----
- net/mac80211/mesh_pathtbl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Commit 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x") from
+Jun 5, 2026 (linux-next), leads to the following Smatch static
+checker warning:
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 03171cf008557f1eac3845bb2d5d291af04f6249..a9c5a3250edbb350cb5b638ca6595a0553f96bbe 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -673,7 +673,7 @@ void mesh_fast_tx_flush_addr(struct ieee80211_sub_if_data *sdata,
-  * @sdata: local subif
-  * @dst: destination address of the path (ETH_ALEN length)
-  *
-- * Returns: 0 on success
-+ * Returns: the new or the existing path on success, an ERR_PTR() on failure
-  *
-  * State: the initial state of the new path is set to 0
-  */
--- 
-2.39.5 (Apple Git-154)
+	drivers/net/wireless/nxp/nxpwifi/uap_cmd.c:1054 nxpwifi_set_11ax_status()
+	error: __memcpy() 'ax_cfg.data[4]' too small (50 vs 255)
 
+drivers/net/wireless/nxp/nxpwifi/uap_cmd.c
+    1019 int nxpwifi_set_11ax_status(struct nxpwifi_private *priv,
+    1020                             struct nxpwifi_uap_bss_param *bss_cfg,
+    1021                             struct cfg80211_ap_settings *params)
+    1022 {
+    1023         struct nxpwifi_11ax_he_cfg ax_cfg;
+    1024         u8 band = bss_cfg->band_cfg & BAND_CFG_CHAN_BAND_MASK;
+    1025         const struct element *he_cap;
+    1026         int ret;
+    1027 
+    1028         if (band == BAND_2GHZ)
+    1029                 ax_cfg.band = BIT(0);
+    1030         else if (band == BAND_5GHZ)
+    1031                 ax_cfg.band = BIT(1);
+    1032         else
+    1033                 return -EINVAL;
+    1034 
+    1035         ret = nxpwifi_send_cmd(priv, HOST_CMD_11AX_CFG,
+    1036                                HOST_ACT_GEN_GET, 0, &ax_cfg, true);
+    1037         if (ret)
+    1038                 return ret;
+    1039 
+    1040         he_cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_CAPABILITY,
+    1041                                         params->beacon.tail,
+    1042                                         params->beacon.tail_len);
+    1043 
+    1044         if (he_cap) {
+    1045                 ax_cfg.he_cap_cfg.id = he_cap->id;
+    1046                 ax_cfg.he_cap_cfg.len = he_cap->datalen;
+    1047                 if (params->twt_responder == 0) {
+    1048                         struct nxpwifi_11ax_he_cap_cfg *he_cap_cfg =
+    1049                         (struct nxpwifi_11ax_he_cap_cfg *)he_cap;
+    1050 
+    1051                         he_cap_cfg->cap_elem.mac_cap_info[0] &=
+    1052                                 ~HE_MAC_CAP_TWT_RESP_SUPPORT;
+    1053                 }
+--> 1054                 memcpy(ax_cfg.data + 4,
+    1055                        he_cap->data,
+    1056                        he_cap->datalen);
+                                ^^^^^^^^^^^^^^^
+Smatch thinks we need some bounds checking on this.  The comments
+on cfg80211_find_ext_elem() suggest this is true.  I've been
+starting to use ChatGPT to review Smatch warnings and it says the
+
+	he_cap_cfg->cap_elem.mac_cap_info &= ~HE_MAC_CAP_TWT_RESP_SUPPORT;
+
+assignment on line 1051 is a concern as well since that was
+supposed to be const...  But I think const here is more of a guideline
+than a hard requirement?
+
+    1057         } else {
+    1058                 /* disable */
+    1059                 if (ax_cfg.he_cap_cfg.len &&
+    1060                     ax_cfg.he_cap_cfg.ext_id == WLAN_EID_EXT_HE_CAPABILITY) {
+    1061                         memset(ax_cfg.he_cap_cfg.he_txrx_mcs_support, 0xff,
+    1062                                sizeof(ax_cfg.he_cap_cfg.he_txrx_mcs_support));
+    1063                 }
+    1064         }
+    1065 
+    1066         return nxpwifi_send_cmd(priv, HOST_CMD_11AX_CFG,
+    1067                                 HOST_ACT_GEN_SET, 0, &ax_cfg, true);
+    1068 }
+
+This email is a free service from the Smatch-CI project [smatch.sf.net].
+
+regards,
+dan carpenter
