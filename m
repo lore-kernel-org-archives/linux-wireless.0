@@ -1,79 +1,84 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E705E2F260C
-	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 22:09:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBFD5372ECE
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 22:09:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.171
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789250954; cv=pass; b=q/aiEiLv3Z874uGFKGH6hv5/L3eUBOMGvPTkd1PE9ImIIVur0Wx53mXc7u9Q3NB5LDamcV8Cs7ppfYU5JHRCGzVELOTHv4idsy/bRNwzatBBAc9Z3QMbC8ClV4pVCr0OL56nMgjQ4fggojQvagqDfVZxMqYcntunhASVRhwAVCA=
+	t=1789250978; cv=pass; b=JmFXEFmR2Evl0zF2bCMcXVVqBF+A2hHi6ylN0/St8zK1j1f4at+6CKY9cLiVEEw67s5OnOdhZqGFaehSMinQEOwWjgd1vsQ8GW9XdhVb6LYISoP0ewV8Rx0702oCUkdmtHe3MrDfqRrdcYvfiTqaQ7VwuHWYdsCdQ0l0WtB01JE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789250954; c=relaxed/simple;
-	bh=H2ICmjZpLo/tW61jV/HYoGADra3Y8ym4ib/gFKKdiW8=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=nJPk0d8CBX/09+YNr3PisQqn/WczxO8XJc1X+t/9ktDTOMe49GHr2QFucdvG3UGHBi55qFMKN0NGdco0iIBcVvZX5zS+t+S3FS2RM6DXiwVEJvb+nAjpBIcplgF+nXOo0c1ThW2nliF1xVUwNcOGBc/jfyqqItfYuQm45GwW7T8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=I7f0XMvZ; arc=pass smtp.client-ip=209.85.167.45
+	s=arc-20240116; t=1789250978; c=relaxed/simple;
+	bh=euNMuiJihVbGssVFL3EzLBt/V0FkgWJXXjT61R3oxVY=;
+	h=MIME-Version:From:In-Reply-To:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rqVJsI0VN5wo+UxPDgKfjKeJRGbuyuzJkbuoPo4BwzptldHlq86ZT22HcdGMb7eqA9PcmMdy4FhRoQBl61ow53rVBeEW0pbH40sc9xufVcxtlMtbvNIsJaYap4evyShndz/kXoyrNy7CoHJbbYleW56FUtOy4rRMnJaHr86vdTA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=F8kIfYeb; arc=pass smtp.client-ip=209.85.208.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="I7f0XMvZ"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5b754cc3b6aso2339881e87.2
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 15:09:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789250950; cv=none;
+	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="F8kIfYeb"
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-3a20f06cce6so17760081fa.1
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 15:09:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789250973; cv=none;
         d=google.com; s=arc-20260327;
-        b=JdDEjayyGvU0qXGoOgzXrEOXI01vNsKwCbPuifGIP1xYIq/UJ9HI9zBZQ4mVyHtjQ4
-         s+QG25O/ZATfzia7/a7V5cydm8boD9BlC83GuZGEIhkgnkTxKf/b2MLLLSqqLBNZFugD
-         2CT3X+HGXPBSLflBQhHBhWYbnrIc55+2HL14hZ/1FWIyH8BK1v82A+IOXBSsPd/r3eqJ
-         X5KvQQUqXQ44V/RKFt5AdxNr2q1XzkMT6aiwRdOrUzRqhfChMt5euYfocnpE6EmymeiZ
-         aq7LxbLDXqi+c4EW4D72DmT5Sx35UB4BQaT2qHXcm/tj2H1J+jkYryEzbxcoi3viQzum
-         g9JA==
+        b=ZTIR9OBm8x87FxKLuG2LO3GCY8bgoHm5Ik0jV4UkALiPM41nLNCuNPhFBlOTuz9wXi
+         MdfGVmH3bWYJMlJk7BrKj6jMniKLRDOfzs8IO0wa15VChXRZILGVFsbxILrzEQ2Bi/mE
+         VpkN3+tDtek9Tha0mIRNZE7Uu0RQciMmmn5Ech0Qq2bviVeLkHPnzwNCrhb3Nv8n1dRr
+         g6KUyyqP+L/zVpXPRp1bg6hrhKw80kI7UG5NiQmpgRYXjq/kOaA154e9TQXIjLQv8MRx
+         R42T7krPK5g8/lmCg/5YZw/i0qIfVUUhOcf5UTsXXXIjliP4PS5LVLraOnIXTSaiMte5
+         WSVw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=SaUBas2xojJNtpVmmDXVZGkNTaIpg5Lm10270g6b8fU=;
+        h=cc:to:subject:message-id:date:references:in-reply-to:from
+         :mime-version:dkim-signature;
+        bh=RZbmvP+qAHLIy4TizlwHYTL6WfRhtQ5q2w+eUJNpL84=;
         fh=J7ONFSsaxv15xzVBquNjfdgRvJschiboD5K2mdBH+5M=;
-        b=S5jCNCFsemdxjoXv4gj8pQf5fDZcf/b78eIPIwh1S4VG5LqE/SL/M99tXeTi0XM03k
-         lBz/kSU80ryVu5e19urb9B99jgcU8QH+rwgeaUjUZDheXN9XEL+097XCSFMo2ALvfO6r
-         QZ2StJ7W6wxpP95Z8kAt2sJCNWZlRtgjd2RahG1gP7jfd/ZBfP7NIh2KDm/vXPEH2gIX
-         oLzuMFaQJJz6DQhB+4Kr4uj/Qmu53tegVItQ10Gxy5m2ezUMRsKNkmoD4EwHqWbW3xeP
-         dc4tNA5BtScs+HVvdelQ4UXA8iK6HYOGZI7MEJUc5ImkOPNe5Zk6rfAemrR/pmm56Wvt
-         ZtZw==;
+        b=Rf9C+4Q9sPH71iioyDwrQjz1ItZCITdmxprA4Alqfib2DWWFZT02IPzE1adZCgpnUw
+         fCVYTmX2Fk4TDAmP4UuwofZpRlvWw5XHKzh8LNeGz6Wm75A/fxBE1z+buJYhUroQt1HE
+         mfDSyU4XxROeNLqJkjcNaBjtmb1hybeKdjpAjhyRJG90aox1FD4TsoVs6imXZA2hTGWM
+         D1v9LdjQaUSmnuKF1OyeYh4hPAIW5JkrKMhM5Oq44loj/PuUoO/21Z4yDR440LQo3D+2
+         1u7l69p7WjkWTGztf+xyDGooGgacRs0xEAm+A7OtFSmp+5svcuB2SYyu43aEfJvMtTKD
+         XqPQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=khu.ac.kr; s=google; t=1789250950; x=1789855750; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SaUBas2xojJNtpVmmDXVZGkNTaIpg5Lm10270g6b8fU=;
-        b=I7f0XMvZGa+qEjxCn3GebBbQkARe4SQIXmdtl4eoT5TDnpy537s2xfAc0UiVryAVvD
-         IENjdkxuXxYqJ6vW+uN6y4JhtJUTTFIPR1eQV3B/ajEKLGlsaRmGX66TqYJDod9pur46
-         l/ZeTIUBPgcgocIlaZupi4yAObj+6x1m8R3j4=
+        d=khu.ac.kr; s=google; t=1789250973; x=1789855773; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RZbmvP+qAHLIy4TizlwHYTL6WfRhtQ5q2w+eUJNpL84=;
+        b=F8kIfYeblelWcpQOoSYXpviOUDXV0jtAEvEcJb0OoB5END3bFaCVyHQGllSAxjMRtR
+         P7AU6/oVJzs/0BflQXhl1Rp3Jf4YyJXY8vXYCwvRxblva+cSSI/pMPcut22OkPMLxcIY
+         D13yROjxN1vhoEZtdiw24aKQvwhgf296p3NI0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789250950; x=1789855750;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=SaUBas2xojJNtpVmmDXVZGkNTaIpg5Lm10270g6b8fU=;
-        b=XHOEa+nRDKhv2PSdCz8dsznbLZWpXGplAaOnAGxJUs1MPctgNESauYzBC2bsfxMwVN
-         QwESst+1qEAK/gK/euTif2Krsx0+JnvjLBS/NHSF1V1CxjjbXOL/fVpb1BzTNxCXYSn3
-         0FoeQNa2ftvf8Qsvm4XHtBxj90DcBn2Um3d7NK+sD/gs8Rjmla161hXfJ0J7XWEV+EUV
-         CYJsoCU4p+pYcSDoyCwHm+erpLl1H+oCgb5E/Qr5ju39s8mM1cuWWmLCtveRIgH5SokX
-         GqCkDvJtGmIQ3bq5tNEfcKC9BFp1rapQIHnoZgRxb1cqmmyca478m5r1Cg7Iim68Xuj7
-         ivAw==
-X-Gm-Message-State: AFuF++mRV0ML3W8qiianM5HkFtE9FINfCSdvcYktquZ9UJC8aif6eAGl
-	X+/TG3S1l+wwtTNEZ6K0K1bKyWImhtNI3TLxvindE2h2AC1zcFnsJ8JgYPFkr2mY4tScuhLXSIg
-	4zEngJKZe8F/UtivufHvTKDD30mMJEHJFgkJR4E3PFxGThalOcS7uO8g=
-X-Gm-Gg: AYBFou3XF89Vh+P5QSh1BrdUPS1iD90c83IotESUJqIor31C859M6XNYs0K8tgUYuT8
-	caV1OkTgzghFegYXYUlJ2q5a9IFMHM/8RRcOvM/wk3A8Fcih2EJrEV7X9vLVLMICQ+AptU8OSM9
-	6ZcLOEoNM1WFwDIS+LkcNr/TVL+jY1570RVdaH3xgkaiasTDsZ1uobeCAXzOS3+kvjP/mL1uoyC
-	kqysh9rfqQ56yM9KrIxSiVRVgW4rLCpQWD+e9ADekRmqFmGGUM7/ZVSOUtUX3uZthgw0k9q5wub
-	V2uDlLTXjZqDP6J8Vq3TDOF81eJTCqH9g/k5TdDxRZrxkCAa9JA=
-X-Received: by 2002:a05:6512:b87:b0:5b5:e8af:a5f2 with SMTP id
- 2adb3069b0e04-5b8a02cccf0mr2106901e87.20.1789250949819; Sat, 12 Sep 2026
- 15:09:09 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1789250973; x=1789855773;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=RZbmvP+qAHLIy4TizlwHYTL6WfRhtQ5q2w+eUJNpL84=;
+        b=IZuSI2x0bk7CNrLDUV+qIG/WEaAFhWAsPkSkHvWpkxsQPZiM3FL5ZDnfSEyhCXQXcV
+         o/Dzl51qWI1cReuKpEwkuNg/uKo8KTC/dWQXwNN7aBtumxb8Tuy9KI6lHjmITM/H9LBQ
+         EODrfrvAMa6epaBvYTOGtoNhHtrlSE2JwKada5hackQEz6c5zXYNPYz684PMKBWOS5HC
+         szjrT3I/ewbjPrApbb+b9SAlBz4rVYwd94jLKHSNxuLIYA39Sr+9mZZv73l04mqXZB++
+         rJt8U/Vbn/zUNAwYaL6nx5Wx368wnDDQ+zoLKX8tG4iAHRg6M4JpwSe6nJ6SSqP+85eQ
+         5xWw==
+X-Gm-Message-State: AFuF++moKYEV0UklomcEv7GSJcLRxFngZ9x8jhtV66UoZn7I1Htyi1OQ
+	eaj+crjopSDfpjaawK2uvMIbFrPvvBzX7C6dnaOiSGxBD1HRwnkGAFQolNoH0ZChctwEgLHm56C
+	jF/KNcM1MCXqrkyYkyisJFmPZjnahVumW5AAYtwiwu8afLGlEe88t
+X-Gm-Gg: AYBFou0JdY+YOzPYW/RmzhH3zgPpOKe3O3oSdperXvwMKXyx/uinqHXDmoK/3K2AsGV
+	63MOTARnh12jpkmJMR0muwcUhHQwRiDqwbzR4LuXDRClG9aW5WBOhgK0CJEI6FVkI7WOPYwxMsO
+	1F9EbaLNVJ9K2Apu4BOSbp1UHU0VeXoeNy2ALn1VJh7qX993/kdrNdIlNj79PbNAmqrjqlr6fXP
+	rVyjJkY76E4PXEvJIkIQ9QTMoB1b+CS4PVWwXW9beCq0JU/knsT0GWQ7Yf98ZGP999ElKiWExc/
+	QMsCNEG29eHH1cIUqlrIzQGski9aBcCPWifzv36GkV8LlnOAnkzu
+X-Received: by 2002:a05:651c:1507:b0:3a4:82b7:bfcf with SMTP id
+ 38308e7fff4ca-3a5be03fbe1mr44171fa.0.1789250973557; Sat, 12 Sep 2026 15:09:33
+ -0700 (PDT)
 Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 15:09:09 -0700
+ Sat, 12 Sep 2026 18:09:32 -0400
 Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 17:08:17 -0500
+ Sat, 12 Sep 2026 15:09:28 -0700
 Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Sat, 12 Sep 2026 17:39:07 -0400
+ Sat, 12 Sep 2026 15:08:21 -0700
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Sat, 12 Sep 2026 14:39:35 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -81,87 +86,82 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 From: kimwooseok <5mghybrid@khu.ac.kr>
-Date: Sat, 12 Sep 2026 15:09:09 -0700
-X-Gm-Features: AcwNN1WJjBQEbc375fUfyTjRKYGITxb5OsGfVxMtKIzLK8nMKDyxANUQAsZFX4I
-Message-ID: <CAH1Bc_yJ1e_nHk9tP2qP_4D8MHEve1R2EF5cYCEXRwc+1xVAxw@mail.gmail.com>
-Subject: [PATCH RESEND wireless 0/4] wifi: rtl8xxxu: keep RX requests
- available across transient errors
+In-Reply-To: <CAH1Bc_yJ1e_nHk9tP2qP_4D8MHEve1R2EF5cYCEXRwc+1xVAxw@mail.gmail.com>
+References: <CAH1Bc_yJ1e_nHk9tP2qP_4D8MHEve1R2EF5cYCEXRwc+1xVAxw@mail.gmail.com>
+Date: Sat, 12 Sep 2026 18:09:32 -0400
+X-Gm-Features: AcwNN1VkoWc6yOIu-iP_4EECwaDJOmBbluOYtYWHQpuN-MgHe2ykg9w1FFygbkM
+Message-ID: <CAH1Bc_zqe_a93WcmksWBfmBkW2JGdhuRHcLECpLtznXA_dTWEA@mail.gmail.com>
+Subject: [PATCH RESEND wireless 1/4] wifi: rtl8xxxu: free RX skb when URB
+ submission fails
 To: linux-wireless@vger.kernel.org
 Cc: Jes.Sorensen@gmail.com, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed; boundary="000000000000b18dc1065b5074df"
+
+--000000000000b18dc1065b5074df
 Content-Type: text/plain; charset="UTF-8"
 
-This resends the same patches after line wrapping damaged the previous
-posting and prevented it from being applied. There are no code changes.
+A failed RX URB submission can leak the skb allocated for that attempt.
+rtl8xxxu_submit_rx_urb() allocates the buffer and stores it in urb.context,
+but if usb_submit_urb() fails, it only unanchors the URB. The RX worker
+queues ENOMEM/EAGAIN failures for retry with that buffer still attached.
 
-Previous posting:
-https://lore.kernel.org/linux-wireless/CAH1Bc_wBUmmNyzF3c2H1aFBRBbAPSw0hR=1MnPOAcCXypVL_Dg@mail.gmail.com/
+On the next attempt, rtl8xxxu_submit_rx_urb() allocates another skb and
+overwrites urb.context, losing the reference to the previous buffer.
+Stopping before the retry also leaks the buffer because pending-request
+cleanup frees only the URB.
 
-rtl8xxxu maintains a pool of 32 RX URBs. Successful completions return
-their URBs to a pending list and schedule the RX worker when more than
-eight URBs are waiting. The worker allocates fresh receive buffers and
-resubmits the queued URBs in a batch.
+Fix the leak at the submission failure by making rtl8xxxu_submit_rx_urb()
+responsible for both allocating the skb and releasing it when submission
+fails. Free the newly allocated skb and clear urb.context before returning
+the error, so neither retry nor stop receives a pending URB that still
+owns a buffer. Remove the caller-side skb cleanup from start and the RX
+worker; those callers now handle only whether to retry or release the URB.
 
-Completion errors free the affected URBs, reducing the pool. Once eight
-or fewer survive, their completions can leave all remaining requests on
-the pending list without reaching the worker scheduling threshold. If no
-request is in flight and no worker is pending or running, nothing triggers
-further submissions, so RX remains stalled after the errors stop.
+Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
+Assisted-by: GPT-6 Astra
+Signed-off-by: kimwooseok <5mghybrid@khu.ac.kr>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/core.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-Temporary submission failures can leave requests in the same state, while
-retaining an skb that the next submission attempt overwrites.
+--000000000000b18dc1065b5074df
+Content-Type: text/x-patch; charset="US-ASCII"; 
+	name="0001-wifi-rtl8xxxu-free-RX-skb-when-URB-submission-fails.patch"
+Content-Disposition: attachment; 
+	filename="0001-wifi-rtl8xxxu-free-RX-skb-when-URB-submission-fails.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: a064dd4dfd1042e1_0.1
 
-This series fixes buffer ownership on failed submission, unwinds
-incomplete startup, and preserves requests through one delayed retry path.
-The retry worker schedules submission even for a single request. A
-separate error list provides a 100 ms batch delay from the first error
-while preserving normal successful RX batching. Shutdown drains retry
-work, submission work and active requests in that order.
-
-Completion retries cover EPROTO, EILSEQ, ETIME, EOVERFLOW, ECOMM and ENOSR;
-ENOMEM/EAGAIN from startup or worker submission uses the same retry path.
-Cancellation and removal keep their release behavior. EPIPE endpoint-halt
-recovery is outside this series.
-
-With 24 injected EPROTO completions, the original driver stopped at eight
-pending requests and zero in flight for about 30 seconds. Under the same
-error budget, the patched driver retained all 32 requests and resumed RX
-without restarting the interface.
-
-Validation:
-- ARM64 QEMU KUnit: 11/11 cases passed, covering the actual RX helpers,
-  worker, buffer ownership, startup failures and shutdown.
-- RTL8192EU on Raspberry Pi, kernel 6.18.46-thesis-test-rt+: 13/13 cases
-  passed using a compatibility backport. The lab fixture substitutes
-  completion statuses and injects submission and allocation failures.
-  Each of the six completion statuses recovered after 32 completion
-  errors followed by 96 submission failures. Error-window, pending-retry
-  stop, startup failure and clean RX/down-up cases also passed.
-- W=1 ARM64 allmodconfig and allyesconfig builds passed with incremental
-  caches; the changed driver and KUnit objects rebuilt in both.
-  Sparse added no diagnostics relative to baseline.
-- Each intermediate production commit compiled, and sequential patch
-  application reproduced the corresponding source trees.
-
-kimwooseok (4):
-  wifi: rtl8xxxu: free RX skb when URB submission fails
-  wifi: rtl8xxxu: unwind incomplete receive startup
-  wifi: rtl8xxxu: preserve RX requests across recoverable transfer
-    errors
-  wifi: rtl8xxxu: test RX ownership and recovery across failures
-
- .../wireless/realtek/rtl8xxxu/.kunitconfig    |  16 +
- drivers/net/wireless/realtek/rtl8xxxu/Kconfig |  11 +
- .../net/wireless/realtek/rtl8xxxu/Makefile    |   3 +
- drivers/net/wireless/realtek/rtl8xxxu/core.c  | 236 +++++++--
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |   3 +
- .../net/wireless/realtek/rtl8xxxu/rx-test.c   | 461 ++++++++++++++++++
- .../net/wireless/realtek/rtl8xxxu/rx-test.h   |  27 +
- 7 files changed, 707 insertions(+), 50 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
- create mode 100644 drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-
-
-base-commit: f71dd599a98182d6bc34dce39977f928068ecd64
--- 
-2.48.1
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsOHh4eHUvY29yZS5j
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMKaW5kZXggYmRk
+YmQwOTkwZGU3Mi4uNzk1YTVlYzJmOGNkNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
+bHRlay9ydGw4eHh4dS9jb3JlLmMKQEAgLTU4NjQsNyArNTg2NCw2IEBAIHN0YXRpYyB2b2lkIHJ0
+bDh4eHh1X3J4X3VyYl93b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKIAlzdHJ1Y3QgcnRs
+OHh4eHVfcHJpdiAqcHJpdjsKIAlzdHJ1Y3QgcnRsOHh4eHVfcnhfdXJiICpyeF91cmIsICp0bXA7
+CiAJc3RydWN0IGxpc3RfaGVhZCBsb2NhbDsKLQlzdHJ1Y3Qgc2tfYnVmZiAqc2tiOwogCXVuc2ln
+bmVkIGxvbmcgZmxhZ3M7CiAJaW50IHJldDsKIApAQCAtNTg5Niw4ICs1ODk1LDYgQEAgc3RhdGlj
+IHZvaWQgcnRsOHh4eHVfcnhfdXJiX3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQogCQlk
+ZWZhdWx0OgogCQkJZGV2X3dhcm4oJnByaXYtPnVkZXYtPmRldiwKIAkJCQkgImZhaWxlZCB0byBy
+ZXF1ZXVlIHVyYiB3aXRoIGVycm9yICVpXG4iLCByZXQpOwotCQkJc2tiID0gKHN0cnVjdCBza19i
+dWZmICopcnhfdXJiLT51cmIuY29udGV4dDsKLQkJCWRldl9rZnJlZV9za2Ioc2tiKTsKIAkJCXVz
+Yl9mcmVlX3VyYigmcnhfdXJiLT51cmIpOwogCQl9CiAJfQpAQCAtNjU5Niw4ICs2NTkzLDExIEBA
+IHN0YXRpYyBpbnQgcnRsOHh4eHVfc3VibWl0X3J4X3VyYihzdHJ1Y3QgcnRsOHh4eHVfcHJpdiAq
+cHJpdiwKIAkJCSAgc2tiX3NpemUsIHJ0bDh4eHh1X3J4X2NvbXBsZXRlLCBza2IpOwogCXVzYl9h
+bmNob3JfdXJiKCZyeF91cmItPnVyYiwgJnByaXYtPnJ4X2FuY2hvcik7CiAJcmV0ID0gdXNiX3N1
+Ym1pdF91cmIoJnJ4X3VyYi0+dXJiLCBHRlBfQVRPTUlDKTsKLQlpZiAocmV0KQorCWlmIChyZXQp
+IHsKIAkJdXNiX3VuYW5jaG9yX3VyYigmcnhfdXJiLT51cmIpOworCQlkZXZfa2ZyZWVfc2tiKHNr
+Yik7CisJCXJ4X3VyYi0+dXJiLmNvbnRleHQgPSBOVUxMOworCX0KIAlyZXR1cm4gcmV0OwogfQog
+CkBAIC03NDEwLDcgKzc0MTAsNiBAQCBzdGF0aWMgaW50IHJ0bDh4eHh1X3N0YXJ0KHN0cnVjdCBp
+ZWVlODAyMTFfaHcgKmh3KQogCXN0cnVjdCBydGw4eHh4dV9wcml2ICpwcml2ID0gaHctPnByaXY7
+CiAJc3RydWN0IHJ0bDh4eHh1X3J4X3VyYiAqcnhfdXJiOwogCXN0cnVjdCBydGw4eHh4dV90eF91
+cmIgKnR4X3VyYjsKLQlzdHJ1Y3Qgc2tfYnVmZiAqc2tiOwogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7
+CiAJaW50IHJldCwgaTsKIApAQCAtNzQ2MSwxMyArNzQ2MCw4IEBAIHN0YXRpYyBpbnQgcnRsOHh4
+eHVfc3RhcnQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcpCiAJCXJ4X3VyYi0+aHcgPSBodzsKIAog
+CQlyZXQgPSBydGw4eHh4dV9zdWJtaXRfcnhfdXJiKHByaXYsIHJ4X3VyYik7Ci0JCWlmIChyZXQp
+IHsKLQkJCWlmIChyZXQgIT0gLUVOT01FTSkgewotCQkJCXNrYiA9IChzdHJ1Y3Qgc2tfYnVmZiAq
+KXJ4X3VyYi0+dXJiLmNvbnRleHQ7Ci0JCQkJZGV2X2tmcmVlX3NrYihza2IpOwotCQkJfQorCQlp
+ZiAocmV0KQogCQkJcnRsOHh4eHVfcXVldWVfcnhfdXJiKHByaXYsIHJ4X3VyYik7Ci0JCX0KIAl9
+CiAKIAlzY2hlZHVsZV9kZWxheWVkX3dvcmsoJnByaXYtPnJhX3dhdGNoZG9nLCAyICogSFopOwot
+LSAKMi40OC4xCgo=
+--000000000000b18dc1065b5074df--
