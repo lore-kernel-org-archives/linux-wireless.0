@@ -1,174 +1,118 @@
-Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi2-f0.google.com (mail-oi2-f0.google.com [74.125.231.192])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67AB416842;
-	Sat, 12 Sep 2026 09:41:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC415381EBB
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 09:57:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.192
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789206070; cv=none; b=hXjcbyGHSz1u2IroadJunMtYAaMCpKAm3XHr4A8C3nR2Ba9gs/iNQ6DZsRw7ocBrCBt9OdLplyXvRQ4I8EQehebbcQSQH8PaO4Th6RL4TwkBvR/+iSm+2SWpe05BvOZDfilG3FIsPg2fMRiRzMzDr5YV1E+N2SW3QVYm9hbrWBk=
+	t=1789207051; cv=none; b=Toq34Vo7wRJ97Y7rLs3aj6zLe8WcV7+rkItIBp+tQKkic9Fku6+t79/SiQyHB5WBRw1bbnofuwNVk9xs9sL0290ZEbymwXsOjUOs4oaenagsG3CArzvYb0l7koFE+emqaE6iDlQY8uy3OX6QxNGzlrKbznggjlsxKGtXUdVdP8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789206070; c=relaxed/simple;
-	bh=ddGcxI1iJxi2m2MhRVKWXwBPpir+KlK0dMvBt9NihKA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=WZJTGc7vQjikNQM4xQ8/UU/rcG2YidN9L9Wvx7ysR/ZuOOUQA+B29+2sD4Zp4gEZYwllQCrEcwcKjWswdxSvOs2g8JLz468mvOHjInC94nb8RQvQ6HY1BBNg0BRLLp3qqN7KJkyEQtXbXDT8WJyxcJHJ3DtMO1PyvBoXpR71xDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net; spf=pass smtp.mailfrom=jannau.net; dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b=bf7Y37Bf; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=wbI5F+KE; arc=none smtp.client-ip=103.168.172.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b="bf7Y37Bf";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="wbI5F+KE"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.phl.internal (Postfix) with ESMTP id 33163EC0092;
-	Sat, 12 Sep 2026 05:41:05 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Sat, 12 Sep 2026 05:41:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:message-id:mime-version:reply-to
-	:subject:subject:to:to; s=fm3; t=1789206065; x=1789292465; bh=hg
-	elB1aNZIxrLEiIkWEq3TlDBqZxOBKRli3gG0SLtmI=; b=bf7Y37BfiRHP4lQkTk
-	j9gtd0h8bVr6CJyisVl2Q5PqvijKSybxvV7vr5OjM0XzLhnmeOEAqJgOtLZeDtwB
-	S2YLmwG9ueGf6MdJOMXu7PBSce7f2B0VONzbOFLp2UsyPg6K8Z3UsSx9iMRFqO7x
-	VLMDO3iOa8F2EALkDc84RexHUfhHTSGLtoD7vXEm29HOfSlvETqMOSt7knW73Oz6
-	9kh1cNct0fhFSRe3llUd5ObIwwiIoo3Hh75QkSCjCM0weEI3Ygn9+DzxcFw6qFQe
-	1+arzcAFq1uuxOVDwZipsSqtFu/Mc/j3EAGVgZNwY/EOI3QK7cGruIJy4Txj2wGC
-	MwYA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:message-id:mime-version:reply-to:subject
-	:subject:to:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm1; t=1789206065; x=1789292465; bh=hgelB1aNZIxrLEiIkWEq3TlDBqZx
-	OBKRli3gG0SLtmI=; b=wbI5F+KEnfOi2BCL8e+RcTVonaVA4FSrgcHr/dQ8eOnY
-	w1Atf7aA6rRQXUwstvsWBN8iyV2QLeZZAJhBn58ibw4nYDx3wYzyRW6L2uHW7w55
-	0WEn+iRuUrynPZHlZvvsRoTm0QLqPhjCCY2WNMF7988fSCq6MdQIwPlA4DX3hbRP
-	Of8gqZSY7kzeyt0tQc/8UHUj2Na/NTzQC6/tboj2WHWtiqDbifYbO7JFbinKJZZY
-	M355HucrUDXGKnhIGejlS6igo4r7yVQIF6yXc47ifcCnVegsvCr4SBVqDOT3/wlT
-	aYNFseZlQcqSmgh+Wo6muCKk80dCVisMkdWR6tPqow==
-X-ME-Sender: <xms:MB6laosLFTmM9uvmL2mozEd9LJ7w7ypu51LxSldHyhCaRQC0xec2Gw>
-    <xme:MB6laqoT-ZTWaZadFYFRSbPmCLpouKVEuzwqn8i5r9lW2nGCVU8MIuQP9__6j2hQP
-    RPvwVuVkxK2bj8nG2gz5yMPhMyqZ2FzLT2LtEBmH0YEgLYS27pyYRw>
-X-ME-Received: <xmr:MB6lanKj2uFwtv9aPk1QTQPrRKMeTmwyBIipffzBrzvgp-TmFonbX7fiGP3hNnRSP__N0kbzqniUZ9OQiptbuCF1edojXxChR9yzXA>
-X-ME-Proxy-Cause: dmFkZTGMMXxsWH1QA8Yl0LAzl/pT4bdCejj2Kw6+qtO58AApVjKHspXnqQhgwf2GP2kCJ6
-    AWZpTBnfySAXQUTWeBOifuFmR0WrLuTnzTavcovK63y77UMk7exYrU44UVWz/tzgneH6h7
-    XlM32+xqTqxJRK4OGRK0KG1HoN9KKCuv18DjEJZlvEnGPO2fsjS8XjI49W0KUtb8/FlqY5
-    yMVGyVfoltZFC3FuavBhr5e/KfKmlVcnsnYZ2y0d5blQirggJqcso87oKaM3sCdVChw5wT
-    OlVTpUIFQzgrqZ0e90NMewDqIsxeAr+T/gB6c33/uzTHNjksqOl/d2OEvoUsm0aHNkiGk/
-    umj68XXlUq3TiXFeGN87pSEnDNSSzPyxTSwRN19nmdT5nzBfAd5nfxNiLDnjVE07CTUJRf
-    VQnDBv1NmrC6srdTuhke3muqchoqPGbTvSk/Abm8qcSU/AIrnV6o6vjDlw2+XQl5LLSbbK
-    uDPy3x6CkXZH8uqcn5kW7BkAdSJc+KuYhSCaaykHZQqbpTv2SkTwhwFIx8tLiA9Obj9buZ
-    bAIYoh9IG/VAjPGTDHtGrO18T73t2EUQVJzacmimMIt0sEe4Dk7NC4uSkAu4fd9sppLa8C
-    ZIKr9UHSPSTc2Rj5sTMTn/cn9JsADF01i8TEzY2XKxPNCkYHLY6MaIS4BHpA
-X-ME-Proxy: <xmx:MB6laqtCJsBKIRnuV--rCgVifyycg_Xs4WxVcootbmwM1hjMC_f7dA>
-    <xmx:MB6lakCYT9Jzj3cic1No8RD3G7x0sG-BFaEdTBrw8ZgLVXAb8w2Iqg>
-    <xmx:MB6lai7TjSps0ZCi8fV4QxvbuYWDDgHIqYiAsF_KtX4NBnA5dSAFIA>
-    <xmx:MB6lasDPQV_fx5r0HhP8-vYHp5yu_e1y1Abv6EczySY4KqnZlrS8TA>
-    <xmx:MR6larFXeElB3ac3b9EM0uq9OnyT59sjcLqpASKkf8tfEvvMIvZQH4T7>
-Feedback-ID: i47b949f6:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 12 Sep 2026 05:41:04 -0400 (EDT)
-From: Janne Grunau <j@jannau.net>
-Date: Sat, 12 Sep 2026 11:40:51 +0200
-Subject: [PATCH] wifi: brcmfmac: cfg80211: Report port_authorized for 4-way
- HS offload
+	s=arc-20240116; t=1789207051; c=relaxed/simple;
+	bh=NcL2t4U0J67ladaMFpTFwW8J5ilpYMEUMS0EnRZHJH8=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=iIx8g2U2WtHHBETRomenAhxfqR19uz0DNbFsaWi1MQikXOYuS9SMmTfiMun13YPgYAbXOMf87aBsDVYYRsEZ13RIOvKwZL0PW0g2rhJ7cT15s6ldZydDpMYl3qXWoBfhvNj5Qb89BArqt/K18pMYftTUXvZo7Pld6Q28htJUD/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.192
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi2-f0.google.com with SMTP id 5614622812f47-4a49b13b745so504539b6e.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2026 02:57:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789207048; x=1789811848;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=fr7k9fPnPXJBD2pXtyqUMHoj0Mm8KCdYxV9N6i9J7sQ=;
+        b=ZNEyEoD+UWZOq3HyUkg+nO3oEYYhvFAex91oukYK0z49BS5Ii7lCaaCbdgI5WVc0Sz
+         356nUQ9GOcHWvdbZI0qTLw26wOXq/Udb4EwQTyHqzE/mWgPTrGlupLPKyDiKaP0ozREx
+         Ltpk6HZhSVWntDAOo6pcZZir8NPyZ3XKuXBbcWET/AG8uOIeAdatWoqHRFr6ag9DLUDU
+         N+mrhOmGNCcdtAZBSdjoeirjIPn3hQZCFgrpvZRvMD4jCDV5dQ9MdFJ5pFsTgQhkSXbZ
+         Z70/97CZnB2Ezf3G5vdLwKmJ7Gt1R2cvLZrYxd3wGOnAOTPB7bPMQgaOfFbHaxpiUSMN
+         avVg==
+X-Forwarded-Encrypted: i=1; AKwUvBy+8ZmOJb1NvKcr8nUyNm10w5l7xVQVkDhKGclN8fTe21jEg2Uo7i6U4Oxsnq+PAF7YF4o+Q9dQ+eUSAWuEAw==@vger.kernel.org
+X-Gm-Message-State: AFuF++llND4zRUIhgDEb6OLKd/pyIs2LgYfqOxYe8j9hBuRRdq9aCwiU
+	z28Vm9Rq+RkSN8oMTqrPo0wZY5P5yMSj9z/xwqK19v9a0+B5lqYSRWc7tm92YBfnMh4RYyMAMI7
+	XGDHrvNBtOZ1gsyzFYnqMnUXaZuKD2QMcIp1j7abpfqtdwkl8YeZ2POlStYM=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260912-brcmfmac-4way-handshake-offload-authenticated-event-v1-1-e41a6a8281a2@jannau.net>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2NQQrCMBBFr1Jm7UCaWqleRVyMyYwZtIkksSqld
- ze4ew8e/69QOCsXOHUrZF60aIpN+l0HLlC8MapvDtbYgzn2Fq/ZzTKTw/2bvtgSXwLdGZPII5F
- HetXAsaqjyh55aYzTOMg4EVszMLTlZ2bRz//1fNm2H3DI07SFAAAA
-X-Change-ID: 20260912-brcmfmac-4way-handshake-offload-authenticated-event-853f58ae203e
-To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
- Hante Meuleman <meuleman@broadcom.com>, 
- "Gautam Shukla (Gautam Kumar)" <gautams@broadcom.com>, 
- Kalle Valo <kvalo@kernel.org>, 
- Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Cc: Jason Huang <jason.huang2@infineon.com>, linux-wireless@vger.kernel.org, 
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
- asahi@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
- Janne Grunau <j@jannau.net>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3353; i=j@jannau.net;
- s=yk2025; h=from:subject:message-id;
- bh=ddGcxI1iJxi2m2MhRVKWXwBPpir+KlK0dMvBt9NihKA=;
- b=owGbwMvMwCW2UNrmdq9+ahrjabUkhqylcno2wmmeAd0NXEvfPY6XSDE82LJYsOv6FWb3tCOtJ
- Xf+TK/oKGVhEONikBVTZEnSftnBsLpGMab2QRjMHFYmkCEMXJwCMJGzRQz/LJ9k/JTZslopdkJM
- +bXcA/vWWZ6ds3PW2pOKxYfinolV3mL4p24Xs1ji4CGz4LAjp4svvPZVXXvs+bMitxm1moK/z8+
- NZwUA
-X-Developer-Key: i=j@jannau.net; a=openpgp;
- fpr=8B336A6BE4E5695E89B8532B81E806F586338419
+X-Received: by 2002:a05:6820:5615:b0:6b1:61b8:7ed5 with SMTP id
+ 006d021491bc7-6c0b9e5071bmr7319025eaf.1.1789207048508; Sat, 12 Sep 2026
+ 02:57:28 -0700 (PDT)
+Date: Sat, 12 Sep 2026 02:57:28 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aa52208.f81106d8.2ab401.002a.GAE@google.com>
+Subject: [syzbot] [wireless?] INFO: task hung in ieee80211_register_hw (8)
+From: syzbot <syzbot+c92af8613ad38696ff09@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Since commit 416386060 ("Mark authorization completed on driver
-indication during 4-way HS offload") [0] wpa_supplicant expects
-NL80211_CMD_PORT_AUTHORIZED to complete the authentication when the
-driver supports 4-way handshake offload.
-This was apparently never tested with the upstream brcmfmac driver as it
-does not report this. This broke authentication on Apple silicon devices
-(BRCM4378, BRMC4387, BRMC4388) and other devices when wpa_supplicant
-2.11 was released [1]. This was initially dealt with by reverting the
-commit in Fedora [2] and other Linux distributions.
-Instead of carrying the revert over to wpa_supplicant 2.12 add the
-expected NL80211_CMD_PORT_AUTHORIZED when the connection is established.
-This will conflict with the "brcmfmac: add FT/OKC roaming offload
-support" [3] series but is written in a way to easily resolve the
-conflicts.
+Hello,
 
-The "Fixes:" tag is not fully accurate as this has only become an issue
-after userspace changes years later. Since the change is expected to be
-required in all active stable branches for wpa_supplicant 2.11 / 2.12
-compatibility it is helpful even though BRCMF_PROFILE_FWSUP_SAE did not
-exists then.
+syzbot found the following issue on:
 
-Link: https://github.com/zephyrproject-rtos/hostap/commit/41638606054a09867fe3f9a2b5523aa4678cbfa5 [0]
-Link: https://lists.infradead.org/pipermail/hostap/2024-August/042893.html [1]
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=2302577 [2]
-Link: https://lore.kernel.org/linux-wireless/20260911065656.1269623-5-Jason.Huang2@infineon.com/ [3]
-Cc: stable@vger.kernel.org
-Fixes: b8a64f0e96c2 ("brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK")
-Signed-off-by: Janne Grunau <j@jannau.net>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+HEAD commit:    6f157f39d181 Merge branch 'remove-comma-after-sentinel-ent..
+git tree:       net-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=104ae601580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=ba53f227359c9d59
+dashboard link: https://syzkaller.appspot.com/bug?extid=c92af8613ad38696ff09
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=101bf105580000
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 872c48806d09..9fd0ec6255b0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6504,6 +6504,7 @@ brcmf_bss_connect_done(struct brcmf_cfg80211_info *cfg,
- 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
- 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg);
- 	struct cfg80211_connect_resp_params conn_params;
-+	bool authorized;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -6528,7 +6529,15 @@ brcmf_bss_connect_done(struct brcmf_cfg80211_info *cfg,
- 		conn_params.req_ie_len = conn_info->req_ie_len;
- 		conn_params.resp_ie = conn_info->resp_ie;
- 		conn_params.resp_ie_len = conn_info->resp_ie_len;
-+		authorized = completed &&
-+			     ((profile->use_fwsup == BRCMF_PROFILE_FWSUP_SAE) ||
-+			      (profile->use_fwsup == BRCMF_PROFILE_FWSUP_PSK));
- 		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
-+		if (authorized) {
-+			cfg80211_port_authorized(ndev, profile->bssid, NULL, 0,
-+						 GFP_KERNEL);
-+			brcmf_dbg(CONN, "Report port authorized\n");
-+		}
- 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
- 			  completed ? "succeeded" : "failed");
- 	}
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/f30b26c34a47/disk-6f157f39.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/46a0f6146076/vmlinux-6f157f39.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/5b4fc3fe5ab8/bzImage-6f157f39.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+c92af8613ad38696ff09@syzkaller.appspotmail.com
+
+INFO: task syz-executor:5765 blocked for more than 158 seconds.
+      Not tainted syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor    state:D stack:22416 pid:5765  tgid:5765  ppid:5759   task_flags:0x400140 flags:0x00080000
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5520 [inline]
+ __schedule+0x17db/0x58f0 kernel/sched/core.c:7270
+ __schedule_loop kernel/sched/core.c:7347 [inline]
+ schedule+0x164/0x2b0 kernel/sched/core.c:7362
+ schedule_preempt_disabled+0x13/0x30 kernel/sched/core.c:7419
+ __mutex_lock_common kernel/locking/mutex.c:726 [inline]
+ __mutex_lock+0x7c1/0x1550 kernel/locking/mutex.c:821
+ ieee80211_register_hw+0x3881/0x4a50 net/mac80211/main.c:1560
+ mac80211_hwsim_new_radio+0x3258/0x56b0 drivers/net/wireless/virtual/mac80211_hwsim_main.c:6138
+ hwsim_new_radio_nl+0xd8b/0xf90 drivers/net/wireless/virtual/mac80211_hwsim_main.c:6957
+ genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
+ genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
+ genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
+
 
 ---
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
-change-id: 20260912-brcmfmac-4way-handshake-offload-authenticated-event-853f58ae203e
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-Best regards,
--- 
-Janne Grunau <j@jannau.net>
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
