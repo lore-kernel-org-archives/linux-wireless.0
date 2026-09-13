@@ -1,834 +1,358 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94EE7384CE9;
-	Sun, 13 Sep 2026 07:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 653D2399342;
+	Sun, 13 Sep 2026 08:35:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789284812; cv=none; b=KIzJYgowD5CDWVXPOlLMUSqPeCzZL1+9FIhv982CVM7xdhhALQNBq+9UYmOcfU1uZteMCYzkUQEiLuRLZUVQIVIYg/fAC6IJ6OoLreED/e7UCViosA0d9KoQKNSdJj8M2mHLBXNcfozbn9FFFDhsMauOHivcLXsTjnmBgR6+QYM=
+	t=1789288543; cv=none; b=Y428uj/poxdXBDHqHgMuuMrXQ5yrPlvqpfu5DSWk0snNP/0q6zqGenTsVSxv914kocMfoYhQdRgD0hr79MN2avH+EVi+wYUKc7EeeC+qomX1wlKWD47hoqVX57DGRnhKzRWkzWx2X5U4EOV8veBq/LK3W6o4mIBKhrvglLW5UDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789284812; c=relaxed/simple;
-	bh=8P66mAH/RdTXfC4MznyebqGFTfG4A0Xk/6F9dwSDUC0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=aO1bZOCeS2KjnE4ke9pzlSElLcCjAEpLVF4FqSz+vXY3jY5k/XTc5Cw1BuWJljZ0Mgy9uPG9hBq+hodtSSTC+Z8wT1WFA/uzD0UGXguFMV7yxvpCHN/kcF8psaSiHBhPFomxfidu1YrCsDiJ6fTG3UXgSRCSq/nDjY/7PnxBVOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C9NOebcl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789288543; c=relaxed/simple;
+	bh=SXaQoDkoAX1LD/TuLgAl7Pco0PKvCaIn0RvsB2+GLiY=;
+	h=Date:Message-ID:From:To:Cc:Subject:MIME-Version:Content-Type; b=Docl1x59rruQayTEtxakAEDiN6bv1pPE29IMjCm8ZVzDt1K6kYRV6iosQ3b6oTUyekzhqOUJKZ/swnW1on+5A0qJWzcnaRmkSEGYB9+2WHiXtfVN6JuN4Gr/j4GYzb53Vg89uTIsK1dSlUc7eZoYRKwVMR0srm9XxtJgSKjKYNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VkxX4IKi; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hN4nobvc; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=rotyr64i; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CIgm273t; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C9NOebcl"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 565AFC2BCFC;
-	Sun, 13 Sep 2026 07:33:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789284812;
-	bh=8P66mAH/RdTXfC4MznyebqGFTfG4A0Xk/6F9dwSDUC0=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=C9NOebclOYZAAyKdmmOwQ4MX/B1p45V3vYMRa7zxmNuR3vD7LXkmWujeG2acPuwuy
-	 t8tYdyooyowgtdXcI9qN0gqkOqs48ypKD5ekLZrj939xMpT01kc20e99lZV2aRL9Dy
-	 D24hPE12DZhWCzG4XgY3zblLrnseInfrjn6GHhF414evW4J2WMY1bYJ/ZfLsdt3H3l
-	 LTx2VRbOLvXgnwnAhE8e6pzZ+KLuAYxi6eXdxDQeb//Zl6AhlKaNpXuc8/TzK5axsi
-	 N3dmu1Put/GEHCFKsNMWJ3Dpj8+W3ir7leArbgkpRZbOtqktOmsnSNgiXDBJmqy1t4
-	 I6cmnZ+qHAQdA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43455C88E63;
-	Sun, 13 Sep 2026 07:33:32 +0000 (UTC)
-From: kimwooseok via B4 Relay <devnull+5mghybrid.khu.ac.kr@kernel.org>
-Date: Sun, 13 Sep 2026 16:33:22 +0900
-Subject: [PATCH rtw-next v2 4/4] wifi: rtl8xxxu: test RX ownership and
- recovery across failures
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VkxX4IKi";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hN4nobvc";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="rotyr64i";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CIgm273t"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 3BDE321D80;
+	Sun, 13 Sep 2026 08:35:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1789288532; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type;
+	bh=UJfrU1s6y9kniljNgkDsZApuFldQn/hOSpGIzKMxMQ8=;
+	b=VkxX4IKiMY/kkuTlJGOzUDHeJo4AybQgqM4WZM6H08CQJDhax6d1D4OdpzQWJwpul6puau
+	B4xDHbq7xWzlEUqcBGNLeqzf3CeWEQM/d16Nnyio0iNBdHSOkUi79LUZI+AgQ4W7zwgoBg
+	dHnQxX4LDkaGxriFB7im6jhwXVpR3SY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1789288532;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type;
+	bh=UJfrU1s6y9kniljNgkDsZApuFldQn/hOSpGIzKMxMQ8=;
+	b=hN4nobvcqFfMupJ7uBg/6BS0/P5WHyVoBuiFQdCsGsi69H85CTt4wJjHTZTy4D9vJFlHrX
+	czOfKEDqQG5kqLDA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=rotyr64i;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=CIgm273t
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1789288528; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type;
+	bh=UJfrU1s6y9kniljNgkDsZApuFldQn/hOSpGIzKMxMQ8=;
+	b=rotyr64i1a3eX117TXczc9TXtoPAn3zY0hnT78ImsFlR3dJh6TtvzccgEdl7WnFk81GBz3
+	Z7qIpg8c32rXBAug8300KogMptyPN+qNmI8ZDYyCriFOBervYka0J6Fykq+Y/Q1zmjOezv
+	8MlasbatJJSv67ukn3u5Q/NUw6X8+EE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1789288528;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type;
+	bh=UJfrU1s6y9kniljNgkDsZApuFldQn/hOSpGIzKMxMQ8=;
+	b=CIgm273tDWWLTUsE2pcxfg1vsPAWeCl7swV4pMo5GCovKU/AGiESJIfNG8wYbFrurmtabK
+	62/WoYfGvdX9O7CA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D67DC1368C;
+	Sun, 13 Sep 2026 08:35:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id dLf7Mk9gpmryDgAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Sun, 13 Sep 2026 08:35:27 +0000
+Date: Sun, 13 Sep 2026 10:35:27 +0200
+Message-ID: <87a4plsg4w.wl-tiwai@suse.de>
+From: Takashi Iwai <tiwai@suse.de>
+To: Chris Lew <christopher.lew@oss.qualcomm.com>
+Cc: Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>,
+    Pranav Mahesh Phansalkar <pranav.phansalkar@oss.qualcomm.com>,
+    netdev@vger.kernel.org,
+    linux-wireless@vger.kernel.org,
+    linux-kernel@vger.kernel.org,
+    regressions@lists.linux.dev
+Subject: [REGRESSION] ath12k suspend/resume breakage on 7.3-rc2
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: multipart/mixed;
+ boundary="Multipart_Sun_Sep_13_10:35:27_2026-1"
+X-Spam-Score: -3.51
+X-Rspamd-Queue-Id: 3BDE321D80
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[multipart/mixed,text/plain];
+	MX_GOOD(-0.01)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+,1:+,2:+];
+	TO_DN_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+
+--Multipart_Sun_Sep_13_10:35:27_2026-1
+Content-Type: text/plain; charset=US-ASCII
+
+Hi,
+
+on 7.3-rc2, the suspend/resume of ath12k WiFi on Lenovo Thinkpad T14s
+Gen6 AMD model is broken.  Upon suspend, the network isn't recovered,
+and the desktop got eventually frozen.
+
+The git bisect pointed to the commit
+544d85de4dc22c01badfd8cefa59829ce35c4858
+    net: qrtr: Send HELLO message on endpoint register
+
+and reverting this fixed the problem.
+
+Below is the (stripped) dmesg output after the resume showing the
+problem.
+
+As far as I understand, the problem seems to be the change of the code
+flow: ath12k uses mhi_power_down_keep_dev() during suspend, so the
+qcom_mhi_qrtr_remove() and *_probe() won't be called.  This makes the
+driver endlessly waiting for the HELLO handshake upon resume with the
+commit above.
+
+
+thanks,
+
+Takashi
+
+#regzbot introduced: 544d85de4dc22c01badfd8cefa59829ce35c4858
+
+
+--Multipart_Sun_Sep_13_10:35:27_2026-1
+Content-Type: text/plain; name="ath12-crash.txt"; charset=US-ASCII
+Content-Disposition: inline; filename="ath12-crash.txt"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260913-codex-rtw-rx-v2-v2-4-f09c964e0b96@khu.ac.kr>
-References: <20260913-codex-rtw-rx-v2-v2-0-f09c964e0b96@khu.ac.kr>
-In-Reply-To: <20260913-codex-rtw-rx-v2-v2-0-f09c964e0b96@khu.ac.kr>
-To: linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>, 
- Jes Sorensen <Jes.Sorensen@gmail.com>, linux-kernel@vger.kernel.org, 
- kimwooseok <5mghybrid@khu.ac.kr>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789284810; l=25836;
- i=5mghybrid@khu.ac.kr; s=kernel-20260913; h=from:subject:message-id;
- bh=Erw0UBHjIqZun9gdOYJ4NKEMuM8dxfGVdztYUIogd9w=;
- b=lumH2COzbqkjDC5YDPgFc9uf6dTEgDdMkIMw+LQKTDSXMvyl124PHbilXU2WXZoTMvKJL5SFX
- A7qgosoV6KNDpZHEsDWq42Xm9IJYEzdvGeA6FmrnSgyyvcaeknpodGI
-X-Developer-Key: i=5mghybrid@khu.ac.kr; a=ed25519;
- pk=1az/6lC8Tmd6BcvyarPc8FWoSxsV/WRr5NLs1v+kjlE=
-X-Endpoint-Received: by B4 Relay for 5mghybrid@khu.ac.kr/kernel-20260913
- with auth_id=1028
-X-Original-From: kimwooseok <5mghybrid@khu.ac.kr>
-Reply-To: 5mghybrid@khu.ac.kr
 
-From: kimwooseok <5mghybrid@khu.ac.kr>
+ath12k_wifi7_pci 0000:c2:00.0: BAR 0 [mem 0xb0600000-0xb07fffff 64bit]: assigned
+ath12k_wifi7_pci 0000:c2:00.0: enabling device (0000 -> 0002)
+ath12k_wifi7_pci 0000:c2:00.0: Wi-Fi 7 Hardware name: wcn7850 hw2.0
+ath12k_wifi7_pci 0000:c2:00.0: MSI vectors: 16
+(snip)
+ath12k_wifi7_pci 0000:c2:00.0: qmi dma allocation failed (7274496 B type 1), will try later with small size
+ath12k_wifi7_pci 0000:c2:00.0: chip_id 0x2 chip_family 0x4 board_id 0xff soc_id 0x40170200
+ath12k_wifi7_pci 0000:c2:00.0: fw_version 0x1103006c fw_build_timestamp 2026-03-06 09:10 fw_build_id QC_IMAGE_VERSION_STRING=WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+ath12k_wifi7_pci 0000:c2:00.0: invalid ACPI DSM TAS config size: 1
+ath12k_wifi7_pci 0000:c2:00.0: failed to get ACPI TAS config table: -22
+(snip)
+ath12k_wifi7_pci 0000:c2:00.0 wlp194s0: renamed from wlan0
+....
 
-Add 11 KUnit cases for the RX allocation, submission, completion and
-retry paths. Cover each retryable completion followed by ENOMEM/EAGAIN,
-batch sizes 1, 8, 9 and 32, skb allocation failure, startup failure
-positions, cancellation and shutdown.
+PM: suspend entry (s2idle)
+Filesystems sync: 0.029 seconds
+Freezing user space processes
+Freezing user space processes completed (elapsed 0.002 seconds)
+OOM killer disabled.
+Freezing remaining freezable tasks
+Freezing remaining freezable tasks completed (elapsed 0.000 seconds)
+printk: Suspending console(s) (use no_console_suspend to debug)
+....
 
-Run the actual RX helpers and worker with task-scoped stubs for
-allocation and USB submission. Observer references check that the driver
-releases its URB and skb references. A delayed-work case checks that
-one retry request schedules the submission worker.
+ath12k_wifi7_pci 0000:c2:00.0: timeout while waiting for restart complete
+ath12k_wifi7_pci 0000:c2:00.0: failed to resume core: -110
+ath12k_wifi7_pci 0000:c2:00.0: PM: dpm_run_callback(): pci_pm_resume returns -110
+ath12k_wifi7_pci 0000:c2:00.0: PM: failed to resume async: error -110
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable dynamic bw: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+------------[ cut here ]------------
+Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.
+WARNING: net/mac80211/util.c:1957 at ieee80211_reconfig+0x9e/0x1f40 [mac80211], CPU#2: kworker/u65:27/116237
+Modules linked in: uas(E) usb_storage(E) sd_mod(E) scsi_dh_emc(E) scsi_dh_rdac(E) scsi_dh_alua(E) sg(E) scsi_mod(E) scsi_common(E) cuse(E) tun(E) snd_seq_dummy(E) snd_hrtimer(E) snd_seq(E) rfcomm(E) hid_plantronics(E) nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) af_packet(E) nft_ct(E) nft_chain_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) ip_set(E) algif_hash(E) algif_skcipher(E) af_alg(E) bnep(E) dm_mod(E) binfmt_misc(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) qrtr_mhi(E) r8153_ecm(E) cdc_ether(E) usbnet(E) snd_acp_legacy_mach(E) snd_acp_mach(E) snd_soc_nau8821(E) snd_acp3x_rn(E) snd_acp70(E) snd_acp_i2s(E) snd_acp_pdm(E) snd_soc_dmic(E) snd_acp_pcm(E) btusb(E) snd_sof_amd_acp70(E) snd_usb_audio(E) snd_sof_amd_acp63(E) btrtl(E) snd_sof_amd_vangogh(E) btintel(E) snd_usbmidi_lib(E) snd_sof_amd_rembrandt(E) snd_ump(E) btbcm(E) r8152(E) snd_sof_amd_renoir(E) btmtk(E) snd_rawmi
+ di(E) qrtr(E) mii(E)
+ snd_sof_amd_acp(E) snd_seq_device(E) ath12k_wifi7(E) snd_sof_pci(E) bluetooth(E) snd_sof_xtensa_dsp(E) ath12k(E) snd_ctl_led(E) snd_sof(E) intel_rapl_msr(E) intel_rapl_common(E) snd_sof_utils(E) snd_hda_codec_alc269(E) mhi(E) snd_pci_ps(E) snd_hda_scodec_component(E) uvcvideo(E) snd_soc_acpi_amd_match(E) qmi_helpers(E) snd_hda_codec_atihdmi(E) snd_hda_codec_realtek_lib(E) snd_soc_sdca(E) kvm_amd(E) videobuf2_vmalloc(E) snd_hda_codec_generic(E) snd_hda_codec_hdmi(E) snd_soc_core(E) mac80211(E) videobuf2_memops(E) uvc(E) snd_hda_intel(E) videobuf2_v4l2(E) snd_compress(E) kvm(E) snd_hda_codec(E) snd_acp_pci(E) videodev(E) thinkpad_acpi(E) snd_amd_acpi_mach(E) snd_intel_dspcfg(E) spd5118(E) gpio_keys(E) think_lmi(E) irqbypass(E) snd_acp_legacy_common(E) libarc4(E) videobuf2_common(E) snd_hda_core(E) pcspkr(E) mc(E) firmware_attributes_class(E) wmi_bmof(E) battery(E) snd_pci_acp6x(E) sparse_keymap(E) ac(E) snd_hwdep(E) cfg80211(E) snd_pcm(E) snd_pci_acp5x(E) snd_timer(E) snd_rn_pci_acp3x
+ (E) fan(E)
+ snd_acp_config(E) amd_pmc(E) snd(E) soc_button_array(E) snd_soc_acpi(E) i2c_piix4(E) rfkill(E) joydev(E) k10temp(E) thermal(E) i2c_smbus(E) snd_pci_acp3x(E) soundcore(E) fuse(E) efi_pstore(E) dmi_sysfs(E) ip_tables(E) x_tables(E) ext4(E) mbcache(E) jbd2(E) usbhid(E) amdxdna(E) amdgpu(E) drm_buddy(E) amdxcp(E) i2c_algo_bit(E) drm_ttm_helper(E) ttm(E) drm_exec(E) drm_panel_backlight_quirks(E) drm_suballoc_helper(E) hid_multitouch(E) hid_generic(E) nvme(E) drm_display_helper(E) ucsi_acpi(E) xhci_pci(E) typec_ucsi(E) cec(E) roles(E) nvme_core(E) amd_pmf(E) video(E) xhci_hcd(E) rc_core(E) nvme_keyring(E) amdtee(E) typec(E) aesni_intel(E) gf128mul(E) amd_sfh(E) ccp(E) sp5100_tco(E) usbcore(E) gpu_sched(E) nvme_auth(E) crc16(E) thunderbolt(E) wmi(E) button(E) i2c_hid_acpi(E) tee(E) i2c_hid(E) serio_raw(E) br_netfilter(E) bridge(E) stp(E) llc(E) nf_tables(E) msr(E) i2c_dev(E) efivarfs(E)
+Unloaded tainted modules: snd_seq_midi_event(E):1 snd_seq_oss(E):1 [last unloaded: snd_seq_midi_event(E)]
+CPU: 2 UID: 0 PID: 116237 Comm: kworker/u65:27 Tainted: G            E       7.3.0-rc2-test2+ #729 PREEMPT(full)  245c2cda426ab8fbe50e1a5e242c600fed149e78
+Tainted: [E]=UNSIGNED_MODULE
+Hardware name: LENOVO 21M2S03K00/21M2S03K00, BIOS R2NET44W (1.18 ) 01/28/2026
+Workqueue: async async_run_entry_fn
+RIP: 0010:ieee80211_reconfig+0x9e/0x1f40 [mac80211]
+Code: d5 05 00 00 00 4c 89 df 4c 89 1c 24 e8 fb 35 fb ff 4c 8b 1c 24 85 c0 89 c3 0f 84 82 03 00 00 4c 89 1c 24 48 8d 3d 32 8b 1e 00 <67> 48 0f b9 3a 4c 8b 1c 24 eb 3e 84 c0 0f 85 f4 01 00 00 41 c6 83
+RSP: 0018:ffffd0ae25a73c58 EFLAGS: 00010286
+RAX: 00000000fffffff5 RBX: 00000000fffffff5 RCX: 0000000000000086
+RDX: 00000000fffffff5 RSI: 0000000000000086 RDI: ffffffffc26ba360
+RBP: ffff8b3604f403e0 R08: 0000000000000000 R09: 3fffffffffff7fff
+R10: ffffffff89ade780 R11: ffff8b3604f409c0 R12: ffffffff88b73088
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8b44148c0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000561dcde865d0 CR3: 0000000f2583a000 CR4: 0000000000f50ef0
+PKRU: 55555554
+Call Trace:
+ <TASK>
+ ? queue_work_node+0xf9/0x110
+ ? __async_schedule_node_domain+0xdd/0x140
+ ? __pfx_dpm_async_with_cleanup+0x10/0x10
+ ? __pfx_async_resume+0x10/0x10
+ ? __mutex_lock.constprop.0+0xe1/0x910
+ ? async_schedule_dev_nocall+0x8c/0xb0
+ wiphy_resume+0x89/0x1a0 [cfg80211 2570b52396ed1f7136cfda569804f3ee76261a22]
+ ? __pfx_wiphy_resume+0x10/0x10 [cfg80211 2570b52396ed1f7136cfda569804f3ee76261a22]
+ dpm_run_callback+0x4e/0x160
+ device_resume+0x1a0/0x2c0
+ ? __pfx_dpm_watchdog_handler+0x10/0x10
+ ? select_fallback_rq+0x181/0x1e0
+ async_resume+0x21/0x30
+ async_run_entry_fn+0x36/0x160
+ process_one_work+0x1d2/0x3d0
+ worker_thread+0x1b7/0x330
+ ? __pfx_worker_thread+0x10/0x10
+ kthread+0xe5/0x120
+ ? __pfx_kthread+0x10/0x10
+ ret_from_fork+0x2aa/0x340
+ ? __pfx_kthread+0x10/0x10
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+---[ end trace 0000000000000000 ]---
+------------[ cut here ]------------
+!local->started
+WARNING: net/mac80211/driver-ops.c:41 at drv_stop+0xff/0x110 [mac80211], CPU#10: kworker/u65:27/116237
+Modules linked in: uas(E) usb_storage(E) sd_mod(E) scsi_dh_emc(E) scsi_dh_rdac(E) scsi_dh_alua(E) sg(E) scsi_mod(E) scsi_common(E) cuse(E) tun(E) snd_seq_dummy(E) snd_hrtimer(E) snd_seq(E) rfcomm(E) hid_plantronics(E) nft_fib_inet(E) nft_fib_ipv4(E) nft_fib_ipv6(E) nft_fib(E) nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) af_packet(E) nft_ct(E) nft_chain_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) ip_set(E) algif_hash(E) algif_skcipher(E) af_alg(E) bnep(E) dm_mod(E) binfmt_misc(E) nls_iso8859_1(E) nls_cp437(E) vfat(E) fat(E) qrtr_mhi(E) r8153_ecm(E) cdc_ether(E) usbnet(E) snd_acp_legacy_mach(E) snd_acp_mach(E) snd_soc_nau8821(E) snd_acp3x_rn(E) snd_acp70(E) snd_acp_i2s(E) snd_acp_pdm(E) snd_soc_dmic(E) snd_acp_pcm(E) btusb(E) snd_sof_amd_acp70(E) snd_usb_audio(E) snd_sof_amd_acp63(E) btrtl(E) snd_sof_amd_vangogh(E) btintel(E) snd_usbmidi_lib(E) snd_sof_amd_rembrandt(E) snd_ump(E) btbcm(E) r8152(E) snd_sof_amd_renoir(E) btmtk(E) snd_rawmi
+ di(E) qrtr(E) mii(E)
+ snd_sof_amd_acp(E) snd_seq_device(E) ath12k_wifi7(E) snd_sof_pci(E) bluetooth(E) snd_sof_xtensa_dsp(E) ath12k(E) snd_ctl_led(E) snd_sof(E) intel_rapl_msr(E) intel_rapl_common(E) snd_sof_utils(E) snd_hda_codec_alc269(E) mhi(E) snd_pci_ps(E) snd_hda_scodec_component(E) uvcvideo(E) snd_soc_acpi_amd_match(E) qmi_helpers(E) snd_hda_codec_atihdmi(E) snd_hda_codec_realtek_lib(E) snd_soc_sdca(E) kvm_amd(E) videobuf2_vmalloc(E) snd_hda_codec_generic(E) snd_hda_codec_hdmi(E) snd_soc_core(E) mac80211(E) videobuf2_memops(E) uvc(E) snd_hda_intel(E) videobuf2_v4l2(E) snd_compress(E) kvm(E) snd_hda_codec(E) snd_acp_pci(E) videodev(E) thinkpad_acpi(E) snd_amd_acpi_mach(E) snd_intel_dspcfg(E) spd5118(E) gpio_keys(E) think_lmi(E) irqbypass(E) snd_acp_legacy_common(E) libarc4(E) videobuf2_common(E) snd_hda_core(E) pcspkr(E) mc(E) firmware_attributes_class(E) wmi_bmof(E) battery(E) snd_pci_acp6x(E) sparse_keymap(E) ac(E) snd_hwdep(E) cfg80211(E) snd_pcm(E) snd_pci_acp5x(E) snd_timer(E) snd_rn_pci_acp3x
+ (E) fan(E)
+ snd_acp_config(E) amd_pmc(E) snd(E) soc_button_array(E) snd_soc_acpi(E) i2c_piix4(E) rfkill(E) joydev(E) k10temp(E) thermal(E) i2c_smbus(E) snd_pci_acp3x(E) soundcore(E) fuse(E) efi_pstore(E) dmi_sysfs(E) ip_tables(E) x_tables(E) ext4(E) mbcache(E) jbd2(E) usbhid(E) amdxdna(E) amdgpu(E) drm_buddy(E) amdxcp(E) i2c_algo_bit(E) drm_ttm_helper(E) ttm(E) drm_exec(E) drm_panel_backlight_quirks(E) drm_suballoc_helper(E) hid_multitouch(E) hid_generic(E) nvme(E) drm_display_helper(E) ucsi_acpi(E) xhci_pci(E) typec_ucsi(E) cec(E) roles(E) nvme_core(E) amd_pmf(E) video(E) xhci_hcd(E) rc_core(E) nvme_keyring(E) amdtee(E) typec(E) aesni_intel(E) gf128mul(E) amd_sfh(E) ccp(E) sp5100_tco(E) usbcore(E) gpu_sched(E) nvme_auth(E) crc16(E) thunderbolt(E) wmi(E) button(E) i2c_hid_acpi(E) tee(E) i2c_hid(E) serio_raw(E) br_netfilter(E) bridge(E) stp(E) llc(E) nf_tables(E) msr(E) i2c_dev(E) efivarfs(E)
+Unloaded tainted modules: snd_seq_midi_event(E):1 snd_seq_oss(E):1 [last unloaded: snd_seq_midi_event(E)]
+CPU: 10 UID: 0 PID: 116237 Comm: kworker/u65:27 Tainted: G        W   E       7.3.0-rc2-test2+ #729 PREEMPT(full)  245c2cda426ab8fbe50e1a5e242c600fed149e78
+Tainted: [W]=WARN, [E]=UNSIGNED_MODULE
+Hardware name: LENOVO 21M2S03K00/21M2S03K00, BIOS R2NET44W (1.18 ) 01/28/2026
+Workqueue: async async_run_entry_fn
+RIP: 0010:drv_stop+0xff/0x110 [mac80211]
+Code: 48 8b 05 ac 56 25 00 48 85 c0 74 14 48 8b 78 08 48 89 de 89 54 24 04 e8 af a7 05 00 8b 54 24 04 65 48 ff 45 08 e9 30 ff ff ff <0f> 0b 48 83 c4 08 5b 5d c3 cc cc cc cc 0f 1f 40 00 90 90 90 90 90
+RSP: 0018:ffffd0ae25a73b90 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8b3604f409c0 RCX: 0000000000000282
+RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff8b3604f409c0
+RBP: 0000000000000000 R08: 0000000000000000 R09: ffff8b35023ce958
+R10: ffff8b3604f41328 R11: 0000000000000286 R12: ffff8b3604f409c0
+R13: 0000000000000000 R14: 0000000000000001 R15: ffffd0ae25a73bd0
+FS:  0000000000000000(0000) GS:ffff8b4414cc0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055d1e3644258 CR3: 0000000f2583a000 CR4: 0000000000f50ef0
+PKRU: 55555554
+Call Trace:
+ <TASK>
+ ? ieee80211_stop_device+0x72/0x80 [mac80211 e18f41d534f84d432ebf007925056aa3424b1586]
+ ieee80211_do_stop+0x655/0xa60 [mac80211 e18f41d534f84d432ebf007925056aa3424b1586]
+ ? __pfx_wait_rcu_exp_gp+0x10/0x10
+ ieee80211_stop+0x62/0xe0 [mac80211 e18f41d534f84d432ebf007925056aa3424b1586]
+ __dev_close_many+0xa8/0x1e0
+ netif_close_many+0xbc/0x1f0
+ netif_close+0x68/0xa0
+ dev_close+0x2a/0x80
+ cfg80211_shutdown_all_interfaces+0x4f/0x110 [cfg80211 2570b52396ed1f7136cfda569804f3ee76261a22]
+ wiphy_resume+0xc2/0x1a0 [cfg80211 2570b52396ed1f7136cfda569804f3ee76261a22]
+ ? __pfx_wiphy_resume+0x10/0x10 [cfg80211 2570b52396ed1f7136cfda569804f3ee76261a22]
+ dpm_run_callback+0x4e/0x160
+ device_resume+0x1a0/0x2c0
+ ? __pfx_dpm_watchdog_handler+0x10/0x10
+ ? select_fallback_rq+0x181/0x1e0
+ async_resume+0x21/0x30
+ async_run_entry_fn+0x36/0x160
+ process_one_work+0x1d2/0x3d0
+ worker_thread+0x1b7/0x330
+ ? __pfx_worker_thread+0x10/0x10
+ kthread+0xe5/0x120
+ ? __pfx_kthread+0x10/0x10
+ ret_from_fork+0x2aa/0x340
+ ? __pfx_kthread+0x10/0x10
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+---[ end trace 0000000000000000 ]---
+ieee80211 phy0: PM: dpm_run_callback(): wiphy_resume [cfg80211] returns -11
+ieee80211 phy0: PM: failed to resume async: error -11
+OOM killer enabled.
+Restarting tasks: Starting
+Restarting tasks: Done
+efivarfs: resyncing variable state
+efivarfs: finished resyncing variable state
+random: crng reseeded on system resumption
+PM: suspend exit
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
+fbcon: Taking over console
+Console: switching to colour frame buffer device 240x75
+ath12k_wifi7_pci 0000:c2:00.0: wmi command 16387 timeout
+ath12k_wifi7_pci 0000:c2:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+ath12k_wifi7_pci 0000:c2:00.0: failed to enable PMF QOS: -11
+ath12k_wifi7_pci 0000:c2:00.0: fail to start mac operations in pdev idx 0 ret -11
 
-Assisted-by: GPT-6 Astra
-Signed-off-by: kimwooseok <5mghybrid@khu.ac.kr>
----
- drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig |  16 +
- drivers/net/wireless/realtek/rtl8xxxu/Kconfig      |  11 +
- drivers/net/wireless/realtek/rtl8xxxu/Makefile     |   3 +
- drivers/net/wireless/realtek/rtl8xxxu/core.c       |  66 ++-
- drivers/net/wireless/realtek/rtl8xxxu/rx-test.c    | 461 +++++++++++++++++++++
- drivers/net/wireless/realtek/rtl8xxxu/rx-test.h    |  27 ++
- 6 files changed, 569 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig b/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
-new file mode 100644
-index 0000000000000..decf383c3d51e
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/.kunitconfig
-@@ -0,0 +1,16 @@
-+CONFIG_MODULES=y
-+CONFIG_KUNIT=y
-+CONFIG_KUNIT_ALL_TESTS=n
-+CONFIG_NET=y
-+CONFIG_NETDEVICES=y
-+CONFIG_WIRELESS=y
-+CONFIG_CFG80211=y
-+CONFIG_MAC80211=y
-+CONFIG_WLAN=y
-+CONFIG_WLAN_VENDOR_REALTEK=y
-+CONFIG_USB_SUPPORT=y
-+CONFIG_USB=y
-+CONFIG_NEW_LEDS=y
-+CONFIG_LEDS_CLASS=y
-+CONFIG_RTL8XXXU=y
-+CONFIG_RTL8XXXU_KUNIT_TEST=y
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-index 14d0343368ac0..e2c16d62293a4 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-@@ -35,3 +35,14 @@ config RTL8XXXU_UNTESTED
- 	  author or reported to be working by third parties.
- 
- 	  Please report your results!
-+
-+config RTL8XXXU_KUNIT_TEST
-+	tristate "KUnit tests for rtl8xxxu RX recovery" if !KUNIT_ALL_TESTS
-+	depends on KUNIT && RTL8XXXU
-+	default KUNIT_ALL_TESTS
-+	help
-+	  Exercise RX buffer ownership, startup and recovery with the real
-+	  driver functions and controlled allocation and USB submission results.
-+	  These tests do not require a USB adapter.
-+
-+	  If unsure, say N.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Makefile b/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-index 580a2fa675ee2..a592a81197857 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/Makefile
-@@ -4,3 +4,6 @@ obj-$(CONFIG_RTL8XXXU)	+= rtl8xxxu.o
- rtl8xxxu-y	:= core.o 8192e.o 8723b.o \
- 		   8723a.o 8192c.o 8188f.o \
- 		   8188e.o 8710b.o 8192f.o
-+
-+obj-$(CONFIG_RTL8XXXU_KUNIT_TEST) += rtl8xxxu-rx-test.o
-+rtl8xxxu-rx-test-y := rx-test.o
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-index 883c9a56f52a4..323411e7f5e3b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-@@ -17,6 +17,8 @@
- #include <linux/iopoll.h>
- #include "regs.h"
- #include "rtl8xxxu.h"
-+#include "rx-test.h"
-+#include <kunit/static_stub.h>
- 
- #define DRIVER_NAME "rtl8xxxu"
- 
-@@ -60,8 +62,7 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
- #define RTL8XXXU_TX_URB_HIGH_WATER	32
- 
- static void rtl8xxxu_stop(struct ieee80211_hw *hw, bool suspend);
--static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
--				  struct rtl8xxxu_rx_urb *rx_urb);
-+
- 
- static struct ieee80211_rate rtl8xxxu_rates[] = {
- 	{ .bitrate = 10, .hw_value = DESC_RATE_1M, .flags = 0 },
-@@ -5817,7 +5818,36 @@ void jaguar2_rx_parse_phystats(struct rtl8xxxu_priv *priv,
- 	}
- }
- 
--static void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT struct rtl8xxxu_rx_urb *rtl8xxxu_alloc_rx_urb(void)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_alloc_rx_urb);
-+	return kmalloc_obj(struct rtl8xxxu_rx_urb);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_urb);
-+
-+VISIBLE_IF_KUNIT struct sk_buff *rtl8xxxu_alloc_rx_skb(unsigned int size)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_alloc_rx_skb, size);
-+	return __netdev_alloc_skb(NULL, size, GFP_KERNEL);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_skb);
-+
-+VISIBLE_IF_KUNIT int rtl8xxxu_rx_usb_submit(struct urb *urb, gfp_t flags)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_rx_usb_submit, urb, flags);
-+	return usb_submit_urb(urb, flags);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_usb_submit);
-+
-+VISIBLE_IF_KUNIT void rtl8xxxu_schedule_rx_retry(struct rtl8xxxu_priv *priv)
-+{
-+	KUNIT_STATIC_STUB_REDIRECT(rtl8xxxu_schedule_rx_retry, priv);
-+	queue_delayed_work(system_wq, &priv->rx_urb_retry_wq,
-+			   msecs_to_jiffies(RTL8XXXU_RX_URB_RETRY_DELAY_MS));
-+}
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_schedule_rx_retry);
-+
-+VISIBLE_IF_KUNIT void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
- 	unsigned long flags;
-@@ -5838,15 +5868,16 @@ static void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
- 
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_free_rx_resources);
- 
--static int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	int i;
- 
- 	/* No RX work is active until the complete pool has been allocated. */
- 	for (i = 0; i < RTL8XXXU_RX_URBS; i++) {
--		rx_urb = kmalloc_obj(struct rtl8xxxu_rx_urb);
-+		rx_urb = rtl8xxxu_alloc_rx_urb();
- 		if (!rx_urb)
- 			return -ENOMEM;
- 
-@@ -5859,6 +5890,7 @@ static int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_alloc_rx_urbs);
- 
- static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_priv *priv,
- 				  struct rtl8xxxu_rx_urb *rx_urb)
-@@ -5887,7 +5919,7 @@ static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_priv *priv,
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
- 
--static void rtl8xxxu_rx_urb_retry_work(struct work_struct *work)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_retry_work(struct work_struct *work)
- {
- 	struct rtl8xxxu_priv *priv = container_of(to_delayed_work(work),
- 						struct rtl8xxxu_priv,
-@@ -5907,6 +5939,7 @@ static void rtl8xxxu_rx_urb_retry_work(struct work_struct *work)
- 
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_urb_retry_work);
- 
- static void rtl8xxxu_queue_rx_urb_retry(struct rtl8xxxu_priv *priv,
- 					struct rtl8xxxu_rx_urb *rx_urb)
-@@ -5919,8 +5952,7 @@ static void rtl8xxxu_queue_rx_urb_retry(struct rtl8xxxu_priv *priv,
- 		list_add_tail(&rx_urb->list, &priv->rx_urb_retry_list);
- 		priv->rx_urb_retry_count++;
- 		/* Keep normal completions from bypassing the error backoff. */
--		queue_delayed_work(system_wq, &priv->rx_urb_retry_wq,
--				   msecs_to_jiffies(RTL8XXXU_RX_URB_RETRY_DELAY_MS));
-+		rtl8xxxu_schedule_rx_retry(priv);
- 	} else {
- 		usb_free_urb(&rx_urb->urb);
- 	}
-@@ -5928,7 +5960,7 @@ static void rtl8xxxu_queue_rx_urb_retry(struct rtl8xxxu_priv *priv,
- 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
- }
- 
--static void rtl8xxxu_rx_urb_work(struct work_struct *work)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_work(struct work_struct *work)
- {
- 	struct rtl8xxxu_priv *priv;
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
-@@ -5968,8 +6000,9 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
- 		}
- 	}
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_urb_work);
- 
--static int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv)
-+VISIBLE_IF_KUNIT int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
- 	unsigned long flags;
-@@ -6006,6 +6039,7 @@ static int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv)
- 	}
- 	return ret;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_start_rx);
- 
- /*
-  * The RTL8723BU/RTL8192EU vendor driver use coexistence table type
-@@ -6646,7 +6680,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- 	return RX_TYPE_DATA_PKT;
- }
- 
--static void rtl8xxxu_rx_complete(struct urb *urb)
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_complete(struct urb *urb)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb =
- 		container_of(urb, struct rtl8xxxu_rx_urb, urb);
-@@ -6686,9 +6720,10 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
- 	usb_free_urb(urb);
- 	dev_kfree_skb(skb);
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_rx_complete);
- 
--static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
--				  struct rtl8xxxu_rx_urb *rx_urb)
-+VISIBLE_IF_KUNIT int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
-+					    struct rtl8xxxu_rx_urb *rx_urb)
- {
- 	struct rtl8xxxu_fileops *fops = priv->fops;
- 	struct sk_buff *skb;
-@@ -6704,7 +6739,7 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- 		skb_size = IEEE80211_MAX_FRAME_LEN + rx_desc_sz;
- 	}
- 
--	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
-+	skb = rtl8xxxu_alloc_rx_skb(skb_size);
- 	if (!skb)
- 		return -ENOMEM;
- 
-@@ -6712,7 +6747,7 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- 	usb_fill_bulk_urb(&rx_urb->urb, priv->udev, priv->pipe_in, skb->data,
- 			  skb_size, rtl8xxxu_rx_complete, skb);
- 	usb_anchor_urb(&rx_urb->urb, &priv->rx_anchor);
--	ret = usb_submit_urb(&rx_urb->urb, GFP_ATOMIC);
-+	ret = rtl8xxxu_rx_usb_submit(&rx_urb->urb, GFP_ATOMIC);
- 	if (ret) {
- 		usb_unanchor_urb(&rx_urb->urb);
- 		dev_kfree_skb(skb);
-@@ -6720,6 +6755,7 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- 	}
- 	return ret;
- }
-+EXPORT_SYMBOL_IF_KUNIT(rtl8xxxu_submit_rx_urb);
- 
- static void rtl8xxxu_int_complete(struct urb *urb)
- {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
-new file mode 100644
-index 0000000000000..aedddcb049cdf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.c
-@@ -0,0 +1,461 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+#include <kunit/static_stub.h>
-+#include <kunit/test.h>
-+#include <linux/usb.h>
-+
-+#include "rtl8xxxu.h"
-+#include "rx-test.h"
-+
-+#define RX_TEST_URBS 32
-+#define RX_TEST_SKBS 512
-+
-+struct rx_test {
-+	struct rtl8xxxu_priv priv;
-+	struct ieee80211_hw hw;
-+	struct rtl8xxxu_fileops fops;
-+	struct usb_device udev;
-+	struct rtl8xxxu_rx_urb *urbs[RX_TEST_URBS];
-+	struct sk_buff *skbs[RX_TEST_SKBS];
-+	unsigned int allocated;
-+	unsigned int buffers;
-+	unsigned int alloc_calls;
-+	unsigned int alloc_fail_at;
-+	unsigned int submit_calls;
-+	unsigned int submit_fail_at;
-+	int submit_error;
-+	bool fail_skb;
-+	bool retry_pending;
-+	unsigned int retry_arms;
-+	atomic_t normal_runs;
-+};
-+
-+static struct rx_test *rx_current(void)
-+{
-+	return kunit_get_current_test()->priv;
-+}
-+
-+static struct rtl8xxxu_rx_urb *rx_alloc_object(void)
-+{
-+	struct rx_test *ctx = rx_current();
-+	struct rtl8xxxu_rx_urb *rx;
-+
-+	ctx->alloc_calls++;
-+	if (ctx->alloc_calls == ctx->alloc_fail_at)
-+		return NULL;
-+	rx = kmalloc_obj(struct rtl8xxxu_rx_urb);
-+	if (rx)
-+		ctx->urbs[ctx->allocated++] = rx;
-+	return rx;
-+}
-+
-+static struct sk_buff *rx_alloc_buffer(unsigned int size)
-+{
-+	struct rx_test *ctx = rx_current();
-+	struct sk_buff *skb;
-+
-+	if (ctx->fail_skb)
-+		return NULL;
-+	skb = alloc_skb(size, GFP_KERNEL);
-+	if (skb) {
-+		/* Retain an observer reference to detect a lost driver reference. */
-+		skb_get(skb);
-+		ctx->skbs[ctx->buffers++] = skb;
-+	}
-+	return skb;
-+}
-+
-+static int rx_submit(struct urb *urb, gfp_t flags)
-+{
-+	struct rx_test *ctx = rx_current();
-+
-+	ctx->submit_calls++;
-+	if (!ctx->submit_fail_at ||
-+	    ctx->submit_calls == ctx->submit_fail_at)
-+		return ctx->submit_error;
-+	return 0;
-+}
-+
-+static void rx_schedule_retry(struct rtl8xxxu_priv *priv)
-+{
-+	struct rx_test *ctx = rx_current();
-+
-+	/* Model the single pending delayed-work ticket, not a submission. */
-+	if (!ctx->retry_pending) {
-+		ctx->retry_pending = true;
-+		ctx->retry_arms++;
-+	}
-+}
-+
-+static void rx_observe_work(struct work_struct *work)
-+{
-+	struct rtl8xxxu_priv *priv;
-+	struct rx_test *ctx;
-+
-+	priv = container_of(work, struct rtl8xxxu_priv, rx_urb_wq);
-+	ctx = container_of(priv, struct rx_test, priv);
-+	atomic_inc(&ctx->normal_runs);
-+}
-+
-+static struct rx_test *rx_init(struct kunit *test, bool fake_timer)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
-+	if (!ctx)
-+		return NULL;
-+	test->priv = ctx;
-+	ctx->hw.priv = &ctx->priv;
-+	ctx->priv.hw = &ctx->hw;
-+	ctx->priv.udev = &ctx->udev;
-+	ctx->priv.fops = &ctx->fops;
-+	ctx->fops.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16);
-+	spin_lock_init(&ctx->priv.rx_urb_lock);
-+	INIT_LIST_HEAD(&ctx->priv.rx_urb_pending_list);
-+	INIT_LIST_HEAD(&ctx->priv.rx_urb_retry_list);
-+	init_usb_anchor(&ctx->priv.rx_anchor);
-+	INIT_WORK(&ctx->priv.rx_urb_wq, rx_observe_work);
-+	INIT_DELAYED_WORK(&ctx->priv.rx_urb_retry_wq,
-+			  rtl8xxxu_rx_urb_retry_work);
-+	atomic_set(&ctx->normal_runs, 0);
-+
-+	kunit_activate_static_stub(test, rtl8xxxu_alloc_rx_urb, rx_alloc_object);
-+	kunit_activate_static_stub(test, rtl8xxxu_alloc_rx_skb, rx_alloc_buffer);
-+	kunit_activate_static_stub(test, rtl8xxxu_rx_usb_submit, rx_submit);
-+	if (fake_timer)
-+		kunit_activate_static_stub(test, rtl8xxxu_schedule_rx_retry,
-+					   rx_schedule_retry);
-+	return ctx;
-+}
-+
-+static void rx_get_observers(struct rx_test *ctx)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ctx->allocated; i++)
-+		usb_get_urb(&ctx->urbs[i]->urb);
-+}
-+
-+static int rx_pool(struct rx_test *ctx, unsigned int count)
-+{
-+	struct rtl8xxxu_rx_urb *rx;
-+	unsigned int i;
-+	int ret;
-+
-+	ret = rtl8xxxu_alloc_rx_urbs(&ctx->priv);
-+	rx_get_observers(ctx);
-+	if (ret)
-+		return ret;
-+
-+	/* A reduced pool also tests recovery without the normal watermark. */
-+	for (i = count; i < ctx->allocated; i++) {
-+		rx = ctx->urbs[i];
-+		list_del_init(&rx->list);
-+		ctx->priv.rx_urb_pending_count--;
-+		usb_free_urb(&rx->urb);
-+	}
-+	return 0;
-+}
-+
-+static void rx_giveback(struct rx_test *ctx, unsigned int i, int status)
-+{
-+	struct urb *urb = &ctx->urbs[i]->urb;
-+
-+	/* The fake USB boundary does not emulate HCD giveback. */
-+	usb_unanchor_urb(urb);
-+	urb->status = status;
-+	urb->actual_length = 0;
-+	rtl8xxxu_rx_complete(urb);
-+}
-+
-+static void rx_finish(struct kunit *test, struct rx_test *ctx)
-+{
-+	struct urb *urb;
-+	unsigned int i;
-+
-+	ctx->priv.shutdown = true;
-+	cancel_delayed_work_sync(&ctx->priv.rx_urb_retry_wq);
-+	cancel_work_sync(&ctx->priv.rx_urb_wq);
-+	for (i = 0; i < ctx->allocated; i++) {
-+		urb = &ctx->urbs[i]->urb;
-+		if (urb->anchor)
-+			rx_giveback(ctx, i, -ENOENT);
-+	}
-+	rtl8xxxu_free_rx_resources(&ctx->priv);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	KUNIT_EXPECT_TRUE(test, usb_anchor_empty(&ctx->priv.rx_anchor));
-+	for (i = 0; i < ctx->allocated; i++) {
-+		urb = &ctx->urbs[i]->urb;
-+		KUNIT_EXPECT_EQ(test, refcount_read(&urb->kref.refcount), 1);
-+		usb_free_urb(urb);
-+	}
-+	for (i = 0; i < ctx->buffers; i++) {
-+		KUNIT_EXPECT_EQ(test, refcount_read(&ctx->skbs[i]->users), 1);
-+		kfree_skb(ctx->skbs[i]);
-+	}
-+}
-+
-+static void rx_retry_step(struct kunit *test, struct rx_test *ctx)
-+{
-+	KUNIT_ASSERT_TRUE(test, ctx->retry_pending);
-+	ctx->retry_pending = false;
-+	rtl8xxxu_rx_urb_retry_work(&ctx->priv.rx_urb_retry_wq.work);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	/* Execute the actual worker in the test task so boundary stubs apply. */
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+}
-+
-+static void rx_completion_submit_chain(struct kunit *test)
-+{
-+	static const int errors[] = {
-+		-EPROTO, -EILSEQ, -ETIME, -EOVERFLOW, -ECOMM, -ENOSR,
-+	};
-+	static const int submissions[] = { -ENOMEM, -EAGAIN };
-+	struct rx_test *ctx;
-+	unsigned int e, f, i;
-+	int runs;
-+
-+	for (e = 0; e < ARRAY_SIZE(errors); e++) {
-+		for (f = 0; f < ARRAY_SIZE(submissions); f++) {
-+			ctx = rx_init(test, true);
-+			KUNIT_ASSERT_NOT_NULL(test, ctx);
-+			KUNIT_ASSERT_EQ(test, rx_pool(ctx, RX_TEST_URBS), 0);
-+			KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+			for (i = 0; i < RX_TEST_URBS; i++)
-+				rx_giveback(ctx, i, errors[e]);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+			ctx->submit_error = submissions[f];
-+			rx_retry_step(test, ctx);
-+			runs = atomic_read(&ctx->normal_runs);
-+			flush_work(&ctx->priv.rx_urb_wq);
-+			KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), runs);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+			KUNIT_EXPECT_TRUE(test, ctx->retry_pending);
-+			for (i = 0; i < ctx->buffers; i++)
-+				KUNIT_EXPECT_EQ(test,
-+						refcount_read(&ctx->skbs[i]->users), 1);
-+			ctx->submit_error = 0;
-+			rx_retry_step(test, ctx);
-+			KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+			KUNIT_EXPECT_FALSE(test, usb_anchor_empty(&ctx->priv.rx_anchor));
-+			rx_finish(test, ctx);
-+		}
-+	}
-+}
-+
-+static void rx_worker_batch_sizes(struct kunit *test)
-+{
-+	static const unsigned int sizes[] = { 1, 8, 9, 32 };
-+	struct rx_test *ctx;
-+	unsigned int n, pass;
-+	int runs;
-+
-+	for (n = 0; n < ARRAY_SIZE(sizes); n++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, sizes[n]), 0);
-+		ctx->submit_error = -EAGAIN;
-+		rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+		for (pass = 0; pass < 3; pass++) {
-+			runs = atomic_read(&ctx->normal_runs);
-+			flush_work(&ctx->priv.rx_urb_wq);
-+			KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), runs);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, sizes[n]);
-+			KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+			rx_retry_step(test, ctx);
-+		}
-+		ctx->submit_error = 0;
-+		rx_retry_step(test, ctx);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_skb_allocation_failure(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->fail_skb = true;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, ctx->submit_calls, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->buffers, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 8);
-+	ctx->fail_skb = false;
-+	rx_retry_step(test, ctx);
-+	KUNIT_EXPECT_EQ(test, ctx->submit_calls, 8);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_start_allocation_failure(struct kunit *test)
-+{
-+	static const unsigned int positions[] = { 1, 8, 32 };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(positions); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		ctx->alloc_fail_at = positions[i];
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_alloc_rx_urbs(&ctx->priv), -ENOMEM);
-+		rx_get_observers(ctx);
-+		KUNIT_EXPECT_EQ(test, ctx->allocated, positions[i] - 1);
-+		KUNIT_EXPECT_EQ(test, ctx->submit_calls, 0);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_start_temporary_failure(struct kunit *test)
-+{
-+	static const int errors[] = { -ENOMEM, -EAGAIN };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(errors); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 32), 0);
-+		ctx->submit_error = errors[i];
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 32);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+		KUNIT_EXPECT_TRUE(test, ctx->retry_pending);
-+		ctx->submit_error = 0;
-+		rx_retry_step(test, ctx);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_start_fatal_failure(struct kunit *test)
-+{
-+	static const unsigned int positions[] = { 1, 8, 32 };
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(positions); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 32), 0);
-+		ctx->submit_fail_at = positions[i];
-+		ctx->submit_error = -ENODEV;
-+		KUNIT_EXPECT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), -ENODEV);
-+		KUNIT_EXPECT_EQ(test, ctx->submit_calls, positions[i]);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 0);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_terminal_completion(struct kunit *test)
-+{
-+	static const int errors[] = {
-+		-ENOENT, -ECONNRESET, -ENODEV, -ESHUTDOWN, -EPIPE,
-+	};
-+	struct rx_test *ctx;
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(errors); i++) {
-+		ctx = rx_init(test, true);
-+		KUNIT_ASSERT_NOT_NULL(test, ctx);
-+		KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+		KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+		rx_giveback(ctx, 0, errors[i]);
-+		KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+		KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+		rx_finish(test, ctx);
-+	}
-+}
-+
-+static void rx_shutdown_completion(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+	KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+	ctx->priv.shutdown = true;
-+	rx_giveback(ctx, 0, -EPROTO);
-+	KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_shutdown_pending_retry(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->submit_error = -ENOMEM;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	ctx->priv.shutdown = true;
-+	rtl8xxxu_rx_urb_retry_work(&ctx->priv.rx_urb_retry_wq.work);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 8);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_shutdown_submission_failure(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, true);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 8), 0);
-+	ctx->priv.shutdown = true;
-+	ctx->submit_error = -ENOMEM;
-+	rtl8xxxu_rx_urb_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_FALSE(test, ctx->retry_pending);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	rx_finish(test, ctx);
-+}
-+
-+static void rx_real_delayed_bridge(struct kunit *test)
-+{
-+	struct rx_test *ctx;
-+
-+	ctx = rx_init(test, false);
-+	KUNIT_ASSERT_NOT_NULL(test, ctx);
-+	KUNIT_ASSERT_EQ(test, rx_pool(ctx, 1), 0);
-+	KUNIT_ASSERT_EQ(test, rtl8xxxu_start_rx(&ctx->priv), 0);
-+	rx_giveback(ctx, 0, -EPROTO);
-+	flush_delayed_work(&ctx->priv.rx_urb_retry_wq);
-+	flush_work(&ctx->priv.rx_urb_wq);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_retry_count, 0);
-+	KUNIT_EXPECT_EQ(test, ctx->priv.rx_urb_pending_count, 1);
-+	KUNIT_EXPECT_EQ(test, atomic_read(&ctx->normal_runs), 1);
-+	rx_finish(test, ctx);
-+}
-+
-+static struct kunit_case rx_cases[] = {
-+	KUNIT_CASE(rx_completion_submit_chain),
-+	KUNIT_CASE(rx_worker_batch_sizes),
-+	KUNIT_CASE(rx_skb_allocation_failure),
-+	KUNIT_CASE(rx_start_allocation_failure),
-+	KUNIT_CASE(rx_start_temporary_failure),
-+	KUNIT_CASE(rx_start_fatal_failure),
-+	KUNIT_CASE(rx_terminal_completion),
-+	KUNIT_CASE(rx_shutdown_completion),
-+	KUNIT_CASE(rx_shutdown_pending_retry),
-+	KUNIT_CASE(rx_shutdown_submission_failure),
-+	KUNIT_CASE(rx_real_delayed_bridge),
-+	{}
-+};
-+
-+static struct kunit_suite rx_suite = {
-+	.name = "rtl8xxxu-rx",
-+	.test_cases = rx_cases,
-+};
-+
-+kunit_test_suite(rx_suite);
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-+MODULE_DESCRIPTION("rtl8xxxu RX recovery KUnit tests");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-new file mode 100644
-index 0000000000000..295befdfe8144
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rx-test.h
-@@ -0,0 +1,27 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef RTL8XXXU_RX_TEST_H
-+#define RTL8XXXU_RX_TEST_H
-+
-+#include <kunit/visibility.h>
-+#include <linux/gfp_types.h>
-+
-+struct rtl8xxxu_priv;
-+struct rtl8xxxu_rx_urb;
-+struct sk_buff;
-+struct urb;
-+struct work_struct;
-+
-+VISIBLE_IF_KUNIT struct rtl8xxxu_rx_urb *rtl8xxxu_alloc_rx_urb(void);
-+VISIBLE_IF_KUNIT struct sk_buff *rtl8xxxu_alloc_rx_skb(unsigned int size);
-+VISIBLE_IF_KUNIT int rtl8xxxu_rx_usb_submit(struct urb *urb, gfp_t flags);
-+VISIBLE_IF_KUNIT void rtl8xxxu_schedule_rx_retry(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_start_rx(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
-+					    struct rtl8xxxu_rx_urb *rx_urb);
-+VISIBLE_IF_KUNIT void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_complete(struct urb *urb);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_work(struct work_struct *work);
-+VISIBLE_IF_KUNIT void rtl8xxxu_rx_urb_retry_work(struct work_struct *work);
-+
-+#endif
-
--- 
-2.48.1
-
-
+--Multipart_Sun_Sep_13_10:35:27_2026-1--
