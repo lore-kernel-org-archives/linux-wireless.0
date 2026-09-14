@@ -1,122 +1,99 @@
-Received: from smtpo49.interia.pl (smtpo49.interia.pl [217.74.67.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 136013F482F
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 08:14:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115A53F4831
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 08:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789373650; cv=none; b=MnXxPgKspVeidC0Nc7+dIhVE4UJNhHzAEZ2VXmEWcIJwug/AwIBkP3Hz+XroNJCYQWOnYG8NtXhrwQfL0aSVEeRvfaCKyF23b1Xsk72QTA+mq1qTQZsX199PClajZxI3RobcfYWGsPJsjM1RcTIyQmL0BpwtCf18oZzvyDQoSno=
+	t=1789373959; cv=none; b=h9aZLP36flmoiyqB79w3FKw8JGkIByeRv/FQHv0tGTX6zw9EOvU4oUZnCGAW/SuNYj6MCJF26Da0ux9YGi+bJV53rTa+4oGyqFSV/YqaD/NVDCviaTt7jIiLUmx0f5eZR9T94BoBQmG/ERi9xYUs4Oi/8qknBwBfht/QKIxBNpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789373650; c=relaxed/simple;
-	bh=1b4BpUoYwd7gTmoYqzAvY3yuIAVnE9sqr1w6QhiAyDs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p5WzpIw6onYlVqRMtdPOVxdY1kne2ZIB0rYAkwrTUXKFb/7XzGrMIEh51ebLOqZfPYQQmsy3S/uqViPK3Jt3E+rVy5RTXx5o9d6dF2uCf32bqcgpcNmSFiX8P/LLZqtKj49daZrh7Nc82U6ZhvbE+IKgF1VhdzI2jrzAidnB1Ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=Ag0r64ga; arc=none smtp.client-ip=217.74.67.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1789373959; c=relaxed/simple;
+	bh=hCAZBJhhRP2u77lOKxQO5T4yhqsaUjMYlivSY9/HGgE=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bSsB36sn9ZhDzMkvSgjyFrzpq80dAvkq0yynXxzrHUn5in+klKJmFBhZzyuWEqGz56CMhKWwDvPiwNoGPsMMNInSg0KreCQX9E4O5qzzt+bh2NFnAkts/FmLy4OZOVZJyadM0FCER14danuk1l6ria5J5G86EK8QZ5Z2KCL8ryc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FMIrVYTq; arc=none smtp.client-ip=74.125.227.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="Ag0r64ga"
-Received: from localhost (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Mon, 14 Sep 2026 10:14:05 +0200 (CEST)
-From: Slawomir Stepien <sst@poczta.fm>
-To: johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	sst@poczta.fm
-Subject: [PATCH v2] wifi: cfg80211: verify if AP_VLAN belongs to the correct AP
-Date: Mon, 14 Sep 2026 10:13:50 +0200
-Message-ID: <20260914081350.83484-1-sst@poczta.fm>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FMIrVYTq"
+Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-39b2ad83dc6so1870239a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 01:19:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789373957; x=1789978757; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=hLvHDynvrNxOy0DrTZpZJULh7McezOs0yqokhrkRfvE=;
+        b=FMIrVYTqYyz3hw4XyA/9JYPeEWYX5i9RFH3WCQhE+QJNpjm4gUDCq9aqtbtq46mTEl
+         cl11K4l4DLmyVbZlHcSgYbHvkn8wqRk4UtdL1Eo5sJQdKPS+dd2876YHFfw2MKXhmeBB
+         3ksM/i8JLmViS2B8jD7ZLJk8fAXXTP7BkRFww3koIqbPnkfa7HxiK8mumgpbpQqUEKAD
+         yxODbQpfIi5MPFgA73vpIkFd8tgZdTqFoTuoghJ14NbTFCE5QpsYkNUWT8PlxY1mm2Sk
+         Y3Y99onfzipP/yfQ//sUcZjMD7uZmqUrSVBQwwOmcPOJxtQqrLK3vLEM4JcSVxxsrQ/Y
+         85uw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789373957; x=1789978757;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hLvHDynvrNxOy0DrTZpZJULh7McezOs0yqokhrkRfvE=;
+        b=fQBCSx7P1egDoVF+YnLhRP4vbkLpLgQRSObbwa2SOWKNiOr6BlSinstn1o4+4g+rRu
+         EKQXRrGGpeygrUtv0x/wE2b0DNgfIjC3Uv3YRI9vhZlYdvtHDoxKMeUnkk9j17Jwdt58
+         Va3PEcHk0oxjROmxrcj0UJxWfZi4Oc/HhI2svIRR4dCA6dVvr6Gs4wEw49EopdX1KHRH
+         h82NH47RbH/UMApx898r1SzcmETfhlaELLWDS9ixG9V1g9VYhs59/0WLw6Kz66QXR2tL
+         +JNsWVuqbtV7NPvnSXXzZcFuzd6ECjlfcaa6LnFDJNWjmMYBLygV5OlmUZccutcrKc9F
+         l3ew==
+X-Forwarded-Encrypted: i=1; AKwUvBz5DHhbC7NXQltib5Xhl1kUoSG3tLMJ6Bwep6AbjwmItDg7znJD/juwX5jAqDUeNj17uuSSzyVZYVXrIwTo2Q==@vger.kernel.org
+X-Gm-Message-State: AFuF++kAGLRjZhmgrYi4UmEEI9NFZJMP8RGj4qx/LKTwjy2l/0Gn20FH
+	f0Yry1ZvhiUGq4Ak7/3oQC+Pysoa4LqWqKPGGFjM59v2oPmCuAMSQYzx
+X-Gm-Gg: AYBFou3EHIZKmMBxnDC8XWdfPN8ZlXVVLinIZMaJ95/kYYuD7jFUgmh+nWCxxcX/AdP
+	F7pwau+uCm0BBQ/1LXKs5XrZI69/6Bfmiu3b8tX7OxLRT7PfWJIu2CFG1oLfaa+4Xh3shx8XOsL
+	Mhbg6MwSZUpjL63sPqbZoYAMcklrEx8yEvyyqYzq1I/w0Tn0tzvC44ttILQHu6T9hNV1Gv255cA
+	1ARzpcXUm9mIvXp4lTDCAR61thX/gNNxUmdtJ3yLyGgnt8Kvv/sU6NR6ay4Jp6LkG0pksPyue0p
+	LuRmisypkihV0Vflk9YWV4hBEuQGnKGS73nYVcVzdo9L3PQkab6YNeNmxOxGC4GBxtU4e6GO1SK
+	2b1NCmf1cFA+oHGkY2+4Jo437lNUHjiY4u5bYoxtHMqGDS85dKckWrwTPiA2p5o7KaNOYTpnip2
+	tBAnyUIlRM1ow/lsP+dQ8dq1PsBjotl+NpIP62r5yEw4oo1HEQVx7WKX2ccAIghkRt8lg/0wn5V
+	uZiuaryFFex6/R7NfuA+VRWjaUmboxdlzNM/nXPmJ1O0KD7uqqTJSRHP6CbHF8twtPU6dh7YW+9
+X-Received: by 2002:a17:90a:1c8f:b0:39d:ec24:5ffe with SMTP id 98e67ed59e1d1-39dec2460a2mr2310184a91.9.1789373957212;
+        Mon, 14 Sep 2026 01:19:17 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-235-216.dynamic-ip.hinet.net. [61.228.235.216])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d95092c06sm19955341a91.4.2026.09.14.01.19.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2026 01:19:16 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
+Date: Mon, 14 Sep 2026 16:19:10 +0800
+To: Aamir Ahmed <elb12345@hotmail.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>, chunfan.chen@gmail.com,
+	Francesco Dolcini <francesco@dolcini.it>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless-next v2] wifi: nxpwifi: validate variable IE
+ lengths in beacon parser
+Message-ID: <aqet/hLbBlBpj3Xa@nxpwireless-Inspiron-14-Plus-7440>
+References: <AS8P251MB00010E2945A1BE91EB5415F7C8BD2@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1789373645; bh=jGa4RrGWo1KK+z/GtX6SiWwMhk+OP8oPCPxGTrf5OkU=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=Ag0r64gaBzZW4f0HKdOp1GWm3VubKFVaxQKuFrPJyqR7EiG1Q46CQ697sQNKomcn2
-	 0WiLAlCRSiyz/1wVG/rk4K1047lKmkfmQhSGzNUuVmpiwFmS2PlsmanwfM6M1pcjW9
-	 lUk01Q0VdsPVMXPtp86J78mRHMWnxtRqDY1A2KAU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <AS8P251MB00010E2945A1BE91EB5415F7C8BD2@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
 
-The get_vlan() only checks if NL80211_ATTR_STA_VLAN target is an
-AP/AP_VLAN/P2P_GO interface on the same wiphy. It has no notion of which
-specific AP a given AP_VLAN belongs to.
+On Sat, Sep 12, 2026 at 05:20:31 PM +0100, Aamir Ahmed wrote:
+>  		case WLAN_EID_OPMODE_NOTIF:
+> +			if (total_ie_len < sizeof(*bss_entry->oper_mode))
+> +				return -EINVAL;
+>  			bss_entry->oper_mode = (void *)current_ptr;
+>  			bss_entry->oper_mode_offset =
+>  				(u16)(current_ptr - bss_entry->beacon_buf);
 
-Fix that by comparing the ethernet addresses of the two net devices.
-Given VLAN A' must have the same address as AP A. Otherwise, return
-error code.
+Any reason to use total_ie_len here instead of element_len?
+Since we only access oper_mode->oper_mode later, would
+	element_len < sizeof(bss_entry->oper_mode->oper_mode)
+also work here?
 
-Signed-off-by: Slawomir Stepien <sst@poczta.fm>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Link: https://lore.kernel.org/all/22e7ddfc50d7a6a16c437b876dab5fe223799610.camel@sipsolutions.net/
----
-v2:
-* Move the logic to cfg80211 and use ether MAC address compare as suggested (from the beginning!) by
-  Johannes
-* Update the subject and commit message
+The current check looks fine to me.
 
-v1:
-* https://lore.kernel.org/all/20260910080454.725913-1-sst@poczta.fm/
----
- net/wireless/nl80211.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 899b6374c550..0f3388312ccd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8966,10 +8966,12 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- EXPORT_SYMBOL(cfg80211_check_station_change);
- 
- /*
-- * Get vlan interface making sure it is running and on the right wiphy.
-+ * Get vlan interface making sure it is running, on the right wiphy
-+ * and actually belongs to the given AP/P2P_GO interface.
-  */
- static struct net_device *get_vlan(struct genl_info *info,
--				   struct cfg80211_registered_device *rdev)
-+				   struct cfg80211_registered_device *rdev,
-+				   struct net_device *dev)
- {
- 	struct nlattr *vlanattr = info->attrs[NL80211_ATTR_STA_VLAN];
- 	struct net_device *v;
-@@ -8999,6 +9001,12 @@ static struct net_device *get_vlan(struct genl_info *info,
- 		goto error;
- 	}
- 
-+	/* Check if the VLAN interface belongs to the AP interface */
-+	if (!dev || !ether_addr_equal(v->dev_addr, dev->dev_addr)) {
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
- 	return v;
-  error:
- 	dev_put(v);
-@@ -9296,7 +9304,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
--	params.vlan = get_vlan(info, rdev);
-+	params.vlan = get_vlan(info, rdev, dev);
- 	if (IS_ERR(params.vlan))
- 		return PTR_ERR(params.vlan);
- 
-@@ -9597,7 +9605,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		}
- 
- 		/* must be last in here for error handling */
--		params.vlan = get_vlan(info, rdev);
-+		params.vlan = get_vlan(info, rdev, dev);
- 		if (IS_ERR(params.vlan))
- 			return PTR_ERR(params.vlan);
- 		break;
--- 
-2.55.0
-
+Reviewed-by: Jeff Chen <jeff.chen_1@nxp.com>
