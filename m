@@ -1,85 +1,51 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A616130D402
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 02:42:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D7833D6F0;
+	Mon, 14 Sep 2026 04:36:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.244.194.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789353730; cv=none; b=ryUHwrZg2eEVve7r9UbGHZOManBMYMtv3meKfgEItclhQTH1B7/lzShZEXB2KZpjBVzbvgEabwzz7TLaoLZcAQGWKYhHMXD/JeVhZnKEgpnLNsPNCQRDs231XtMEPGaXXg/VI3BrBY8HFCilL5T2nueBSd84f0WtWN7bicOb7cw=
+	t=1789360563; cv=none; b=Lw9b4BwpT8vXqh2D8SncjR+XlE3oTj7vGipGcjiW63SkNdPwAevlqLJvn1sWA513Pmdg+UuRI8Q8ujIMmuCJ3JZ6m77pD//ZfcE8qI+mYsZAR8yNYvRbHfibVtShyVaJaFGQmI/256W9YoqBAyXUTCE44OqgsGDkCY1G7/K/CrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789353730; c=relaxed/simple;
-	bh=YDxkVBZMGmsXvV1aqKlZr7+5Q6ydFogJOLPOSGKqAtM=;
+	s=arc-20240116; t=1789360563; c=relaxed/simple;
+	bh=l/3VpX+XI0mzcW52NigVjmYMhh6INWYXFx0JGEuAyv8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WUqm2KWGYTejv9iLsjx9FQ0vo/LxATpzpwou5UT2X2HuHZva4QzIEzHj4HjRhY0eEvaS/0/dVKMt4t8aSM95TzEjWeCdu80Mr2XZv5Qbjqkzd0TTHSlMBH8l0B0VquNQm6djf+Nr63NZHTkLAn18qoO3BFO9W9Qg48gBslI0CVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DTDisqrp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WV5Exead; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=DsxXDY+4LhdIkfc5ZH22RR8v3a6wuHquS6diWuIqj1JUD5GRekKcQCnkKjXFYo0Ajk6ygnHK8j2P87M/TDTQT2fS/VeP2T7a1Wz0srAc72GULz9JsyJUhRbfrVvhLsrdhaoW0blOXsgHm/mH3sBwRLjesq3UDUAzc/tcNnjktKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=WRhGlbO9; arc=none smtp.client-ip=185.244.194.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DTDisqrp";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WV5Exead"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68E2efPQ2241406
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 02:42:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	TwTEFykKDk3QzgeZ5LSS5wi+KEW9wopRBXAry/K6+G0=; b=DTDisqrppAE0EcKj
-	hLfarKOD4tnZ+LDR4R/EP2pGFEiR8CS3Mo3BcsBzGYksKWmTRgU0QhAgtUifxyvI
-	Hv0qK0lSVrt5Cl2JwpbncZUCg7GONQE57SLxcHu3Uog+ESouDf515WrrTIcldqUy
-	LOxUsHOn4Og2Yn4y7xLTzj5WaCYMlTcUql3BefQ3T2YkWSVWaInhLO39HhpzBo/5
-	ptcIfhZzI2sdkK5jie1+JutRo7EFG8pHMQTt8IzfK54bXisFMmJxzZnpozn5w0Mz
-	g63GYJUu4VaczRe6g0+tRh0XPzqkJX1SvASCIC9XiRo8fyo54i89FN/sXYdMViXK
-	fgGm7Q==
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gmywh4k0n-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 02:42:08 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-ca8aee88725so4191484a12.3
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2026 19:42:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789353728; x=1789958528; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TwTEFykKDk3QzgeZ5LSS5wi+KEW9wopRBXAry/K6+G0=;
-        b=WV5Exead120T1neviIlY5ooHVwSYv8K2JPgt20n7ERuh6KHOR1eAC4E2ThS2AB6Z7O
-         os37Qk5QbjnZZsM8L6zFL36Zddhc7kiJbwMWy1j+m2J6gVP4pD8q2mEkg4Xo88rhFxUb
-         yMg2+UJ0Cx7g+CPKzHtfjKdlNKenFTcqr2ivpgKAQ89eJX+wA8sjgjxkrlqxpy+ImvBh
-         7kjkNvloFZmevk/htqQlYSKL1X0s8BsHVAR/K7LRx4jxoB8ay/4Vc1bVqOmoVnl2CpY+
-         fOkCLVyYsq8Onnd51t8CLLMMneDmMYxBKOmYyvMuowOP1SptqET6QIRc9uZtqmoeG4id
-         wfaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789353728; x=1789958528;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TwTEFykKDk3QzgeZ5LSS5wi+KEW9wopRBXAry/K6+G0=;
-        b=sdTNriWOoRwLdIXz5nf97XX4FiQijfAkY3HXwOON3niuCXgeTsayHxN7bnF6x0E5IY
-         HkH/g0Vt+duFwqU4Txhl2ewL2+KFmiiHuXsVZtIS6fE+zNbkPGGjgvdfOLWvnMXuqH2Z
-         VynLEhR+xGXlpfcIok08aomNayX3HJr7Vc18Y1R6QNzEF6goVoilIgPEh5xDtDnGK0xO
-         ZjO2wTcnD40hg/v2gZuGZO8s+ozq9zz6jaR7dpY/jqZSpxNOM4MiBSWzTJbECjLkTgfa
-         w4Byd2+mxFSRUejS6sgb8crEPXICQ9wA6AFadxTyHKi9AsV22FOSwZ4ySi7k8iFh2qWu
-         cqOQ==
-X-Gm-Message-State: AFuF++mcunD7gW7ZlY5yHBvdeaM/qke7Bg61NHZBfCZ93gDAPgvOIm/h
-	UxeQm3GMdwl6pAhy2WhxLEwvPPLlJ1Nkn9abYwd37Tf3E6qZlJ4GApBJP/Ix+0YfT1Vngeg74jK
-	n5/MtlOKMpvTmuanED7TD6rvXYZU4s7nvct0pmfDDydVlGW64mJ77BOt08sJ6GSs6cdhtyQ==
-X-Gm-Gg: AYBFou26MqEiQMjm4Irf0tA8RlcZypjxV0BZJ02rY9uTvejCQU2S133goITiOtqAOiT
-	ciPB6UIGlVXqyijwD0tvtkhr+jcOGNI8wFrLvQjjmHc2p4H74hbxZ5plbbnGz6l7jMpNU++Xk8q
-	vGtA55NaCAOgVlon6x8HjqEnDEpXMiW7EWY9dm9Y98NOI3qv+EGtxz0JbuP8AsKYkdGOgNiyH0j
-	ZYeAPcoYDUJRGNEpYdCwLg7+xdrYjUJjfsXEIqcoOi3mPrZDIx/WK940RHhcRQ6miLPkCqPc43s
-	KpK7lri54aT/ElfqtKubfFil98yd0fewR9+HSndGLtDIrz/OxRqq3t9Db8UXNvIwmKct3Bcx9KX
-	6tc2xCWqaOJeKXv96xXtS6o1/MUlYJJxC8ONZR5F72Ml87wDVop9N30Ng5br9aB8+Wi/3Ss21
-X-Received: by 2002:a17:90b:50cc:b0:38e:9eb2:9d43 with SMTP id 98e67ed59e1d1-39dec1c2074mr1721694a91.16.1789353728181;
-        Sun, 13 Sep 2026 19:42:08 -0700 (PDT)
-X-Received: by 2002:a17:90b:50cc:b0:38e:9eb2:9d43 with SMTP id 98e67ed59e1d1-39dec1c2074mr1721640a91.16.1789353727584;
-        Sun, 13 Sep 2026 19:42:07 -0700 (PDT)
-Received: from [10.133.33.62] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d95713602sm18056503a91.11.2026.09.13.19.42.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 13 Sep 2026 19:42:07 -0700 (PDT)
-Message-ID: <395c7f5b-2f74-43f6-851e-ee5e779b4693@oss.qualcomm.com>
-Date: Mon, 14 Sep 2026 10:42:04 +0800
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="WRhGlbO9"
+Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
+	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hjslz4GJDz9KSt;
+	Mon, 14 Sep 2026 06:35:59 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1789360559;
+	bh=l/3VpX+XI0mzcW52NigVjmYMhh6INWYXFx0JGEuAyv8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=WRhGlbO9qY9QfRs4S606PpeWRg0XE7+ZPlCpSm1AU2rrDD5Lfo5WXz+VzPr3RpSY8
+	 G65jTa5AkmCnWvKBcxnLMDOnuIZ1sNmb2EIyJS5BehmfpL11Ug4cOFP6FtxsT2fq0X
+	 QpU4+vu48tLXRSb6hTeHRDG+xGOAPXgnpUoHY6XpjyhQ33qc6kJMf/uwf58dT0i3mz
+	 VyoAu1Nu9YvNLucsFZhFN9JTbaTp6K7yv38nFzpNdqWwRqEG4mDQcqIOX7MynLTsFH
+	 2WvSpKOTuM9mi2YhW5yr8WOuTHI71/tEarn9mvNKHyu6ZCKBDkIEW+bKADBTaNqXz9
+	 24qwmHiqI4wIw==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hjslz3Y6bz7wsn;
+	Mon, 14 Sep 2026 06:35:59 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hjslx4hd8z8svW;
+	Mon, 14 Sep 2026 06:35:57 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 805E05F9D2;
+	Mon, 14 Sep 2026 06:35:56 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <2fd03569-f1c4-4c02-97ed-c74f4cd7f809@leemhuis.info>
+Date: Mon, 14 Sep 2026 06:35:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -87,70 +53,101 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current v3] wifi: ath11k: reset ar->num_stations on
- hardware start
-To: Nicolas Escande <nico.escande@gmail.com>, ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <20260812-num-station-v3-1-871d20e043f6@gmail.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260812-num-station-v3-1-871d20e043f6@gmail.com>
+Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI
+ SAR init during probe
+To: Devin Wittmayer <lucid_duck@justthetip.ca>, Felix Fietkau <nbd@nbd.name>,
+ Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Klara Modin <klarasmodin@gmail.com>,
+ Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>, JB Tsai <jb.tsai@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>, Ryder Lee <ryder.lee@mediatek.com>,
+ Shayne Chen <shayne.chen@mediatek.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ regressions@lists.linux.dev
+References: <20260825181712.28548-1-lucid_duck@justthetip.ca>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <20260825181712.28548-1-lucid_duck@justthetip.ca>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: Eh81HYqW2k2pm7aL1SRbWj2VHrWIghWv
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE0MDAzNSBTYWx0ZWRfX/mhBcPk65aH5
- CY/vbXR4Yl5I6sgv70mHGowDoIFnAUVYsW7Tlh/3Bx4WjpLDWokuaoa01POsrru6531+SKwYiyH
- enxkf8oSYancW29UtuBxFUIAcLcj3rHknxkbvZWK3mENPE7MC4OO+mCQyfd13BZpYAFH9w0BXJi
- 0tcQy6a2KAcMhETLwNRJpTXvL9W6f8F9XcWOn/MK9wpZNzAx7/pqMRfuVMnHJrldWki6mU6JATj
- n4UXSk1DT+cOhtb47qM/rQsp87yU0leph+L47piAKAGqSqM9zz4+PWXqnv3ceTwR6PtGQFFC0cj
- 35nRv2oh47F76B5GVSADRgZt4rp2IFYVn2Y+Ifc7e04sVLSNXAExOc5RiASS6b+BIFwizVA8/QL
- 7kZfK+zR9k4IQXZVczwLJw5wKjHB2SlrLLspNW1vD5LqASzDDeN8Z5W82PpwED+5ZJOf7kHyfZE
- 30SSVn8NLZWRVMecTpg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE0MDAzNSBTYWx0ZWRfXyyr0PDlYXnZZ
- 79zSJzZFPKRmGLvsIH/ArBc79fdjhHeSKmLu6rLjryp3IcblyzDyDcQX9qEE3yTsDtFRoWurbbk
- lKFhYvWavlRWJ0U++yNBv6Mn3lECqJs=
-X-Proofpoint-ORIG-GUID: Eh81HYqW2k2pm7aL1SRbWj2VHrWIghWv
-X-Authority-Analysis: v=2.4 cv=PsUG/AM3 c=1 sm=1 tr=0 ts=6aa75f00 cx=c_pps
- a=rz3CxIlbcmazkYymdCej/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=XDoMHiau_i5UK2d4cvIA:9 a=QEXdDO2ut3YA:10
- a=bFCP_H2QrGi7Okbo017w:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-14_01,2026-09-13_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 suspectscore=0 bulkscore=0 spamscore=0
- malwarescore=0 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609140035
+X-PPP-Message-ID: <178936055709.725840.16914483602007956628@mxe9fb.netcup.net>
+X-NC-CID: DBseGpMhWIEgVtQ5BXljnzJ0Jmciv99+44qwUxKmBeXs+d6quD4=
 
+On 8/25/26 20:17, Devin Wittmayer wrote:
+> Some laptops carry a MediaTek power table in their firmware, and the
+> driver reads it to set a transmit limit for each frequency range. It
+> only fills in the ranges themselves when it registers the device.
+> 
+> The startup step that does this existed already, but it never programmed
+> anything. These two commits made it run a regulatory update instead,
+> which sets the limits on the way through, long before registration. So on
+> a machine that has the table the driver reads through an empty pointer
+> and the interface never appears:
 
+For the record: Linus pulled this directly from the list into mainline
+yesterday after I pointed to this patch in a small regression report. I
+did that, as I had seen multiple people reporting a regression who
+confirmed that this patch fixed things for them.
 
-On 8/12/2026 10:58 PM, Nicolas Escande wrote:
-> When (multiple) hw restart occurs, we end up in a situation where we
-> cannot accept new stations / mesh peers. This seems to be the
-> 'num_stations' in 'struct ath11k' that did not get reset properly in
-> this case. In ath11k_mac_op_start(), it was indeed the only accounting var
-> that did not get reset so let's clear it too.
+Bypassing subsystems like this has obvious downsides and risks; hence,
+if that got something on the wrong track, please speak up -- or ideally
+send patches to set things straight again in mainline.
+
+https://git.kernel.org/torvalds/c/7825de3f75d184612d77655669a04ea0da252c17
+/ 7825de3f75d184 ("wifi: mt76: mt792x: fix NULL dereference in ACPI SAR
+init during probe") [v7.3-rc3]
+
+Ciao, Thorsten
+
+>   BUG: kernel NULL pointer dereference, address: 0000000000000004
+>   RIP: 0010:mt792x_init_acpi_sar_power
+>   Call Trace:
+>    mt7921_set_tx_sar_pwr
+>    mt7921_mcu_regd_update
+>    mt7921_regd_update
+>    mt7921_run_firmware
+>    mt7921e_mcu_init
+>    mt7921_init_work
 > 
-> This avoids problems like those:
+> Skip it when the ranges are missing. They are applied again once the
+> device is up, which is where they came from before.
 > 
-> 	[1248828.088023] WARNING: CPU: 0 PID: 12281 at net/mac80211/util.c:1682 ieee80211_reconfig_stations+0x98/0xc0
-> 	[1248828.088115] Call trace:
-> 	[1248828.088116]  ieee80211_reconfig_stations+0x98/0xc0 (P)
-> 	[1248828.088119]  ieee80211_reconfig+0x774/0x1438
-> 	[1248828.088123]  ieee80211_restart_work+0x10c/0x178
-> 	[1248828.088127]  process_one_work+0x178/0x3c0
-> 	[1248828.088130]  worker_thread+0x280/0x440
-> 	[1248828.088133]  kthread+0xe0/0xf8
-> 	[1248828.088137]  ret_from_fork+0x10/0x20
-> 	[1248828.088141] ---[ end trace 0000000000000000 ]---
-> 	[1248836.686604] ath11k_pci 0000:04:00.0: refusing to associate station: too many connected already (128)
-> 	[1248836.686609] ath11k_pci 0000:04:00.0: Failed to add station: xx:xx:xx:xx:xx:xx for VDEV: 1
+> Reported-by: Klara Modin <klarasmodin@gmail.com>
+> Closes: https://lore.kernel.org/linux-wireless/aoyxqHYvSuaBeubf@soda.int.kasm.eu/
+> Fixes: 9b80bd9cab40 ("wifi: mt76: mt7921: add regulatory wiphy self manager support")
+> Fixes: e9f3f1cc133f ("wifi: mt76: mt7925: add regulatory wiphy self manager support")
+> Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+> ---
 > 
-> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-01977-QCAHKSWPL_SILICONZ-1
+> Reproduced on both chips before sending, an MT7922 and an MT7925, and the
+> fix clears both. Neither machine here ships a vendor power table, so I
+> supplied one through an ACPI override in the initrd. It also wants recent
+> firmware. The June builds do not turn on self-managed regulatory and
+> nothing happens; the builds now in linux-firmware do, and then it dies
+> exactly as reported with no interface at all. Patched, both come up and
+> scan normally, and the injected limits still show through in the power
+> table afterwards, so the skip does not lose them.
 > 
-> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+> With that table still in place and the fix absent, backing out the mt7921
+> commit on its own also boots clean, so the table is not what causes this.
+> 
+>  drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> index 946dd7956e4a..b468051fbe68 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> @@ -323,7 +323,8 @@ int mt792x_init_acpi_sar_power(struct mt792x_phy *phy, bool set_default)
+>  	const struct cfg80211_sar_capa *capa = phy->mt76->hw->wiphy->sar_capa;
+>  	int i;
+>  
+> -	if (!phy->acpisar || !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
+> +	if (!capa || !phy->acpisar ||
+> +	    !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
+>  		return 0;
+>  
+>  	/* When ACPI SAR enabled in HW, we should apply rules for .frp
+
