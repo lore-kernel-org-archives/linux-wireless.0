@@ -1,46 +1,59 @@
-Received: from mta0.migadu.com (out-105.mta0.migadu.com [91.218.175.105])
+Received: from mta0.migadu.com (out-26.mta0.migadu.com [91.218.175.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49776411FA1
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 21:27:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C753B27CE
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 23:16:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.26
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789421266; cv=none; b=Gc26kxjRSGrTV4S43Fmw/p2N21C1ZQE3BGOyMPCyYQdZ+4bqAgLmlPaPRvuVqAZe2hrhLKsc2KL3HhGuGiE4ysBnO1DtEAvKzH66ah+BZtlsYuSU3oqj0e5wTiZMJ5fpC/+CJB5v3tMzW/4m+psWekEYVlJo0TXliqEsr0sdgog=
+	t=1789427803; cv=none; b=KayuAYaiCSF/pOLT/qCz5q/gUAu+4wF802ZLAmfvKUld9JOy7uxEDStchZIAqQM/5wNIQhqLSRv1fUMdChK3TwKVrsPnBHcm6UVJ11sr2eJp6KhOglPcISwUder1lGkMqnm1fixwDVC8KH3j61Whgq7xLD1Y84J/QiWfxcfjYaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789421266; c=relaxed/simple;
-	bh=Kq9f06NVVGDL9EUefa+l6ziWNZYmyLU8s0uuUdKy+wI=;
+	s=arc-20240116; t=1789427803; c=relaxed/simple;
+	bh=6zWxkkeiTyWE5LKeVfdhoG160eDFFWVwrPpDwosVNsg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tbIzF5guNtILkLYOsxMRYeYFnTbigWOtf8P38jM/Qvv33pR6VKw1Hkvi+Ptr7wtguyoezDZdAFeSch3lA06bFG2R4MEHCGia/22jdgV4XjIi+GRi4Gh7F+KosogD4MUqB8IEp00ryCoC/Svb5rm301mQE78GBflvSkogwfHeSoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=ckrwptyJ; arc=none smtp.client-ip=91.218.175.105
+	 MIME-Version:Content-Type; b=D7E2b9gvXXOlV1N3QSoqTf4OZLmV93MKowA/IYInQTMTFQGLuRcpdWnEHhTBfAhsTQegN2PB9d72w/kAWvtLZxfqlfYefxSnh8lJJkiOqavMetHBOVfWlYaBMyF7RzA946anHFwrPYIk/ugaaFWfl96yjfmKwyMZX33ptkEFHq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=CTN8WiOg; arc=none smtp.client-ip=91.218.175.26
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="ckrwptyJ"
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="CTN8WiOg"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Kq9f06NVVGDL9EUefa+l6ziWNZYmyLU8s0uuUdKy+wI=;
+DKIM-Signature: a=rsa-sha256; bh=6zWxkkeiTyWE5LKeVfdhoG160eDFFWVwrPpDwosVNsg=;
  c=simple/simple; d=justthetip.ca;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789421258; v=1; x=1790026058;
- b=ckrwptyJ2IrabQG0QfyXoeT/eB/DEcmQFUEF3S/X+hutG1JjnSkTpFoN3vw2qPwUDO50/l5v
- j/hNYd5dZKDb24xTdw/E4Qr5xD4wsm+qgVmnzsddQDzeF7hUuzUonl+lQ6XmnZH/eHX7D7WcOlE
- 7ECnSKgCAWzjTvtiHg+5irWiv1dt2D2HUGAzhngJe3wGuEQntMk93p/vPIX9swe/krpxlLCdScT
- dLyoCry0PUkTWA/t+XwxdS3aKogP+sCMiDjOflBFwDo9nuguCk2fHAt7iteKUjpZlayeZ2MmIYu
- AB94sV9UfpYf+9FsHNK2VEY/aKRGpDn8tTdeQWOrgbF1Q==
+ t=1789427792; v=1; x=1790032592;
+ b=CTN8WiOgCgcBOqgnN4CcU3dUEdhIrCHG69eyBylJY3dopCJ14vtbC3gvs15LK5dIFLBssFSv
+ oaMh34+xqmSi+Se3HTEwEnAUmgwolt+UV0e3UQ2s7cp0agA9qpEl0cXPi50M+mDeiRathmIfC3p
+ R4gh8HPeL6jGDLv5VfIEkzZtkHDBwHsjrzqTmT7EE3WTaaLGW7hfkSjGIOu+/ldKi40pvC2eh1+
+ hZSa33IElwwuE8mS1px74fwfBFLbFr9AaPKcm8vgkHS4UDK61lok2XjvpID2qJRhyulnZ/slKnP
+ XGOm9GZLh7RrCqqVu2s12MzMIRMCKTUvO4VNNz2cJZxTA==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1fda61994051b6a7;
-	Mon, 14 Sep 2026 21:27:28 +0000
-X-Mizu-Trace-ID: 1fda61994051b6a7
+Received: by smtp.migadu.com with ESMTPS id 93e28aba6f8c875a;
+	Mon, 14 Sep 2026 23:16:21 +0000
+X-Mizu-Trace-ID: 93e28aba6f8c875a
 X-Migadu-Flow: FLOW_OUT
 From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: moosager <moosager90@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@nbd.name>
-Subject: Re: mt7921e: failure to reset causes network drop
-Date: Mon, 14 Sep 2026 14:27:26 -0700
-Message-ID: <20260914212726.15728-1-lucid_duck@justthetip.ca>
+To: Thorsten Leemhuis <regressions@leemhuis.info>,
+	Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Klara Modin <klarasmodin@gmail.com>,
+	Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>,
+	JB Tsai <jb.tsai@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev
+Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI SAR init during probe
+Date: Mon, 14 Sep 2026 16:16:18 -0700
+Message-ID: <20260914231618.17749-1-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <aqVwl7fe5zHVYXT9@fedora.fritz.box>
-References: <anG46qbvCqCHGF-f@fedora.fritz.box> <20260910055018.29328-1-lucid_duck@justthetip.ca> <aqVwl7fe5zHVYXT9@fedora.fritz.box>
+In-Reply-To: <2fd03569-f1c4-4c02-97ed-c74f4cd7f809@leemhuis.info>
+References: <20260825181712.28548-1-lucid_duck@justthetip.ca> <2fd03569-f1c4-4c02-97ed-c74f4cd7f809@leemhuis.info>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,51 +63,37 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-moosager,
+Thorsten,
 
-Thanks for confirming the ruling-out list, and the Bluetooth detail is
-worth having on the thread.
+Thanks for pointing Linus at it, that's pretty cool.
 
-On which tree. Patchwork says accepted, which means a maintainer took it
-and says nothing about mainline. That is why you could not find it.
+There's nothing to set straight as far as I could find so no additional
+patches to send. I went through it pretty thoroughly against mainline
+this afternoon.
 
-	openwrt/mt76   8e856ad93d3a   mt7921, applied 27 August
-	               4f2aa9910e0c   mt7925, applied 27 August
-	mainline       neither, checked today
+No stable backport needed. Both commits it fixes first appear in
+v7.3-rc1, so the regression never reached a release.
 
-Mainline still ignores the return in both of those resets, and I would
-not put a date on when that changes.
+Felix's tree carries no competing fix and has not touched that file
+since October from what I could find.
 
-Your Tested-by went on the mt7921 one.
+The two patches still queued for that file, Junjie's 0xff one and my
+table-layout one, both apply cleanly on top, so nothing got stranded.
+
+Thanks again,
 
 Devin
 
-On Sat, 12 Sep 2026, moosager wrote:
-
-> Hi Devin,
+On 14/09/2026 06:35, Thorsten Leemhuis wrote:
+> For the record: Linus pulled this directly from the list into mainline
+> yesterday after I pointed to this patch in a small regression report. I
+> did that, as I had seen multiple people reporting a regression who
+> confirmed that this patch fixed things for them.
 >
-> > On debugging further, I had the same ownership handshake fail on a mini PC
-> > here. What that ruled out, so you can skip them: in-tree against out-of-tree
-> > builds, a PCI bus reset, remove and rescan, and a cold boot. The Bluetooth
-> > half of the same chip kept working throughout, so the silicon was alive and
-> > only the WiFi side was stuck.
+> Bypassing subsystems like this has obvious downsides and risks; hence,
+> if that got something on the wrong track, please speak up -- or ideally
+> send patches to set things straight again in mainline.
 >
-> I can confirm these are the things I've had to rule out with my testing as well.
-> I can also attest to the fact that the Bluetooth half of the chip works
-> regardless of the Wi-Fi's state (I should've mentioned that earlier): I've used
-> my laptop for a while with mt7921e unloaded, all the while Bluetooth was working
-> the whole time.
->
-> > There is a patch for it that the maintainer has taken
->
-> Good, though I don't see which tree it has been merged in, I'm sure I'll see it
-> soon in a future release.
->
-> > It sits downstream of your bad read though, so it will not stop the
-> > register going wrong in the first place.
->
-> True, I will stress that the root cause has not been found yet and this chip is
-> still unusable for me (and others).
->
-> Sorry for the late reply, I'll test the output of lspci as well when I get the
-> chance to debug this further.
+> https://git.kernel.org/torvalds/c/7825de3f75d184612d77655669a04ea0da252c17
+> / 7825de3f75d184 ("wifi: mt76: mt792x: fix NULL dereference in ACPI SAR
+> init during probe") [v7.3-rc3]
