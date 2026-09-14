@@ -1,83 +1,106 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D7EB480357
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 12:58:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0939946D558
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 13:05:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789390731; cv=none; b=tUIoXNUMFIZGJKCfEg93ELtOaaDj/oVuKm9Aii6DDoH4FfQXv5pTVwvm+bUjWoswSgjATU9suy3DAH0DlST1pbbroclexfdWp2qquCiyZitva/ZqsjSVM/LfpErBWp02LoO50mENoDRusZmJTEikFdpGZhT5aFITDhFZ1lD9fvg=
+	t=1789391140; cv=none; b=ENDRt3eqkMDI1gOpkvAzWzM52HIdSgpmgizJ7PNhEnETWhZAu9KbDdU7gWc5gLZ4SwvtXZMrAtSpSKS/hGQtaKV4/89VjJZjniUrTAkG7aGu1Ghh4elTUFUEhFm2RbGo1fW77O9c+IcSGl8W01tVN4/LpSJUEAMpUenhliPMrsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789390731; c=relaxed/simple;
-	bh=445p2A0D2g3Vppp+qHEzCE7f3/L7kFo57xUqlBZ5wVk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=s6Uj9Ud83RBFmAf9JUzHTNINWn9SYRzWDz+Zh23dzqwTM1x45ZMWxWQ7SPZM0IlS0P3seDhniyQ2Q6xu5ioN4KV7Gu2mycJcYc0uNGp/sC7n2VaguhhjOXHADmrpiUyJ8KxKpaGmaYE8M1GGQ4b3+GIEc7boXJpVbCQSIQ8gXlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NNwzYSxC; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1789391140; c=relaxed/simple;
+	bh=q5o+CKn0Co/R2u4gXcpA7aZ6Z7WqyCo44To0XEIGF3E=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=iJLwYeoNc5pTfMEGnnEFSFfSq7qOl25T7JroBGhh9HP6CEjgEyhdKp1ysxk1pH3NPBRqI8c/IuxMhvbM/QCy4VX2st+SRVlPo0sDXIUzUgg0J55bkFCNRdIfRYS5wqFNL40iZSqbWeRC3W6R8TTslfB24LFpcbcTiPcCFQlLeoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O/66uSa6; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NNwzYSxC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Q6PpcdRGuERSPwSa7AMpx3pOzfqSziGYLUMOgaRiNG8=;
-	t=1789390729; x=1790600329; b=NNwzYSxC7I3C+zr33UDkz89nJXlpAWaLAvcS8gZBIrL7vlq
-	bPP5c53w+QQLs1Y7LVWO7uCaYMWbUrEwE1qGKOcEpCmaaE52jujILu7sw/RY5HIxNAf0SDFCv4cVZ
-	ItXMkxLKpf+iFaxAqDXemzs2JJD0hnJ6a4yyUyEbJ2P98k/LEo9Z+Lu1UCd7sdeJPiQuSRPjD9i1R
-	XtQuXaT2oQXsH4MZxD8f6njLXpVwX6U0KfBik0tP7/7JvwA1FfBFkRdBIjN6QIOLdl+fVeHeHVjP2
-	ttE2EqVZabOBbfjY5/vmlxckQNnhFZh7Ts49hpHsut3IAub4Y2vvOpu7Lqd0FJ5A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x66Gj-0000000FSuq-2Js0;
-	Mon, 14 Sep 2026 14:58:45 +0200
-Message-ID: <f8abbc475027650afc3293c4317433ccde2e9173.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless 1/1] wifi: mac80211: fix fragment length
- overflow
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhiling Zou <zhilinz@nebusec.ai>, linux-wireless@vger.kernel.org
-Cc: vega@nebusec.ai
-Date: Mon, 14 Sep 2026 14:58:44 +0200
-In-Reply-To: <ff9b52fe8e4afb8af643ab5e6c638f8fe6596714.1787980055.git.zhilinz@nebusec.ai> (sfid-20260829_073623_742822_6E8076F2)
-References: <cover.1787980055.git.zhilinz@nebusec.ai>
-	 <ff9b52fe8e4afb8af643ab5e6c638f8fe6596714.1787980055.git.zhilinz@nebusec.ai>
-	 (sfid-20260829_073623_742822_6E8076F2)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O/66uSa6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1789391136;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IIrbGOfIQRouXedn+IFe+NVdpQt1cwK8/ve6LQAjMBQ=;
+	b=O/66uSa6uvvM3oivI1M6pxBpCAbuTQPT/R9Xr/GPRjyCtQ+96ogwaVCdPwRru0GK8d6C83
+	LMDYBt15pueHdSGvX+ozSOXBkp5pJAZ4g8RGOVBm+nIUdUPVQ3xKb9BQnLLY5wM3QtHP09
+	Tu+1OmPJeEk04behp3sB6q/PCmC6efw=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-349-v8tbygsCPh-78Yel-q_hfQ-1; Mon,
+ 14 Sep 2026 09:05:32 -0400
+X-MC-Unique: v8tbygsCPh-78Yel-q_hfQ-1
+X-Mimecast-MFC-AGG-ID: v8tbygsCPh-78Yel-q_hfQ_1789391129
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E27241955F21;
+	Mon, 14 Sep 2026 13:05:28 +0000 (UTC)
+Received: from aesteve-thinkpadp1gen8.rmtes.csb (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B1325180056E;
+	Mon, 14 Sep 2026 13:05:26 +0000 (UTC)
+From: Albert Esteve <aesteve@redhat.com>
+Date: Mon, 14 Sep 2026 15:05:19 +0200
+Subject: [PATCH] ath10k: clear QMI if failed during init
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260914-fix-ath10k-dangling-v1-1-15c5089682b1@redhat.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MQQqAMAwEvyI5G2iLtuhXxIPaaINSpRURxL8bP
+ A47Ow9kSkwZ2uKBRBdn3qOALguYwhAXQvbCYJSxqtEVznzjcAatVvSybxwX1LV11lfGTeMI8jw
+ SifZXu/59P0FKLW1lAAAA
+X-Change-ID: 20260914-fix-ath10k-dangling-15676d427cbb
+To: Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Govind Singh <govinds@codeaurora.org>, 
+ Brian Norris <briannorris@chromium.org>, 
+ Niklas Cassel <niklas.cassel@linaro.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Albert Esteve <aesteve@redhat.com>
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789391126; l=928;
+ i=aesteve@redhat.com; s=20260827; h=from:subject:message-id;
+ bh=q5o+CKn0Co/R2u4gXcpA7aZ6Z7WqyCo44To0XEIGF3E=;
+ b=FllOoEx11IsQvIExPmEjc7zvCB6JpPPqftbJxleq4hs7bjcJpONSe3ItkwpiRa8GzlfV6YUZP
+ pudK/qMvdQqD9SIS5BBH9KG+C+0GFb2O/eUwRnriEebFaJVq7f7pazd
+X-Developer-Key: i=aesteve@redhat.com; a=ed25519;
+ pk=zI2RBeZgocwYm3AkJW4CtjoJnKoDZrfBl1xe5Ed6h+U=
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Sat, 2026-08-29 at 13:36 +0800, Zhiling Zou wrote:
-> The fragment reassembly cache tracks the amount of data in continuation
-> fragments in a u16. An oversized fragmented frame can therefore wrap the
-> value before it is passed to pskb_expand_head(), leaving the destination
-> skb too small for the queued fragments and triggering skb_over_panic().
->=20
-> Use an unsigned int, matching skb->len, so the accumulator is not
-> truncated at 16 bits.
->=20
-> Fixes: 3a11ce08c45b ("mac80211: add fragment cache to sta_info")
-> Cc: stable@vger.kernel.org
+A failed ath10k_qmi_init() left a dangling
+pointer (ar_snoc->qmi) in the cleanup path.
+Clear the pointer on the way out for hygiene
+and consistency with deinit().
 
-I'm not sure this is reachable in real hardware - there are PHY limits
-on frame sizes too... it might be though with VHT or so?
+Fixes: ba94c753ccb4 ("ath10k: add QMI message handshake for wcn3990 client")
+Signed-off-by: Albert Esteve <aesteve@redhat.com>
+---
+ drivers/net/wireless/ath/ath10k/qmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> +++ b/net/mac80211/sta_info.h
-> @@ -458,7 +458,7 @@ struct ieee80211_fragment_entry {
->  	struct sk_buff_head skb_list;
->  	unsigned long first_frag_time;
->  	u16 seq;
-> -	u16 extra_len;
-> +	unsigned int extra_len;
->  	u16 last_frag;
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index 0d74548a5f34..08a64f737fb4 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -1128,6 +1128,7 @@ int ath10k_qmi_init(struct ath10k *ar, u32 msa_size)
+ 
+ err:
+ 	kfree(qmi);
++	ar_snoc->qmi = NULL;
+ 	return ret;
+ }
+ 
 
-You could reorder the fields to not add holes, especially if you're
-fixing a patch that as trying to make this smaller ...
+---
+base-commit: bc35965f6940a9bf834d54187b6088b8eb09206d
+change-id: 20260914-fix-ath10k-dangling-15676d427cbb
 
-johannes
+Best regards,
+-- 
+Albert Esteve <aesteve@redhat.com>
+
