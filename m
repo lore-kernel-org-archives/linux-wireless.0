@@ -1,92 +1,95 @@
-Received: from mail-pl1-f227.google.com (mail-pl1-f227.google.com [209.85.214.227])
+Received: from mail-pf1-f227.google.com (mail-pf1-f227.google.com [209.85.210.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B7B388E44
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 18:43:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9301A3A4F51
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 18:43:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789411389; cv=none; b=rY1kSgf0h/S4M2SiITFAg8dhH3gPXmQyfJ1Z8XweX/2osB8qR3601jgzq8u7j4A047U+VpS1VryfiOIxTCBOcrtA2HKL5lo8klQj4QZ1qH8+e25K2lj1L0TfwEPytBYDlQasimO5/wvASJ2AkJkQvLgXnVKmOfHmpHbYERaxsUI=
+	t=1789411405; cv=none; b=uftUzJT3pCeJZCdHOyHzW9iGfgGCafv6Hnfvp0YqrCFJeF8x1pswoTxDkUQ5KnmUx9l3M4vr+vLYLjlRTvutDpcN/1NIi56IRO4jG1DtogeyeOZo0tySpmYJZoWOgD+aUywy3xvf1cAyvALsyIFupgNbxMX10ACnUgxX7V4gxlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789411389; c=relaxed/simple;
-	bh=VLY1Umk1yU84Icqq1PhsKQcaMi/Ow7hXTIZ5IR8tK0s=;
+	s=arc-20240116; t=1789411405; c=relaxed/simple;
+	bh=mtWjlL6opbGn5Z01q2KziQo4eyqJ4qENxxukKPKDwso=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UrqeQxZZniZbjUvkdUxvRX2WG1GNpgTy1kDzJKVER8ZPCcPRDrseWTLhquhd3msD09HphV+UHpJiWcOc7z0rCY/zvuIbQsVi+mM69zDqpxCt177yulju4L6U/4u+/KDkH/xenmU+lDuANawqhyTg6NqgvD0wJ2qAX22eVwJFDUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=OvDfRVAN; arc=none smtp.client-ip=209.85.214.227
+	 MIME-Version; b=o+fim+WOZnNAMvBFBv2nHxBJ0QXtMY2HtF7N7/WQw73eSs21q5j4SWVjSaS7K7zjGb/nzBE1YpYlbPrEv1/XRmT86J4GeWQu09ENm8O5Y8iGh9S/A575m10GW1gI5fOCu4hXSiZR+tqhw6HWtc1xTcBPLjnT+n0MdclldmlZ0+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=TootGZae; arc=none smtp.client-ip=209.85.210.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OvDfRVAN"
-Received: by mail-pl1-f227.google.com with SMTP id d9443c01a7336-2dd020a2e44so33815615ad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 11:43:07 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TootGZae"
+Received: by mail-pf1-f227.google.com with SMTP id d2e1a72fcca58-86a1aeec07aso417262b3a.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 11:43:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789411387; x=1790016187;
+        d=1e100.net; s=20251104; t=1789411399; x=1790016199;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QZHVxUjP7ai7HQXDh9w3LrC0rVTP6eIyhyn5Gf7ApeE=;
-        b=RVIRokYbMdNuw37kKVhO9qOmefof8G72N296D5/SEW3a0au9qjNci9X4Vv+h/0PAdJ
-         NwN07/b4aO0b5ThygBHtm1NJyI0ha5mUqMjKs6GtwhphyTgPScqRhgBp3wFGQYkElCme
-         hzsAG8XSWqq/jKHNKPxgHLv54lIx6ZKDsDRyff660bV+BtuUwqzi+foDjFSEKclFpCq+
-         RWxGZ7m351JaBydAPd6ECpg12nhcwJp1Sl/rsm606bVybcMSOMlEPwc5pSF6wTr0cmfW
-         lAPK4QFvjNO/fAQ0DJomk3QJ2tloWxAc6OIzG3UtOmXV2dBYp9br8dMEcYXzjT3zsAph
-         GEEA==
-X-Forwarded-Encrypted: i=1; AKwUvBzI29N18TXPsbu7yWtA0LVl5Sok7nyl9lnqq9Z9ZSsuEbq+l5NsIx+dsPmkvIxmB7+PCm/WhFLFtLLULTILrA==@vger.kernel.org
-X-Gm-Message-State: AFuF++niHgywgx8DnmP7caI/qgr6XMiGIWnqvMKGKQoNsTQlmn7grcGH
-	M6NVy7wR8mJH4jt1PmzMcdhtRwlf6yg/mL+CA2MZQEbbd3jv/9baLvxf+JKtu5Rp0zBVzzgJ3Q5
-	7ZxMWf0PzznvTW+C9SmA7dn/CJLjg4TS9LZDv9b2ztVH596RIBcNoBkSSHKk1tgmP3Ce7gwUpPQ
-	7KOBZ1XFnVpLmAjg6YnGLSfTJOJuTCRd2pZjUwInE3Xvb9sDbTcp99kVE/tc36s6riap2eeDKWb
-	msy+MPCxetrtdXT/SUyMWDFwQe8pek=
-X-Gm-Gg: AYBFou1dUELJ66lNot8GMQbVdlLPyo/UK2Yzmhz71C4Nm35oJSiiFv9gQPOs06b6lJv
-	uTEHbEXkke4BBtbkVAGWfc24uImUqQ3hThpsaGIHdmSFaRJFLvHYLmYsxRA8tZ3vk2poPdpyf/O
-	88/3XHptwvmoGaVJsbsBOsrczn3KAp6+8t3pWC3jQxsh5HUBDvQiZN9BCwZcv2UYNCFS1z5OEy0
-	SQTJ1Z6ZdddzNAmvbVgc/+ZbPVMWbKv7XtkgZoeYgFF1S89feTlaxvO/ETM/mkvhnPB4nZzpLyE
-	G3DrJj7DCLeRa6ztVCQNI+qYwtdUBeggb2VUFlzqOFo3YWuP0v4UDm3Tcf7tYgBN9Ikwij6ykwc
-	03h3XOnTD8fqNiPfjeVS+BmO1UMD48mXsH+J+V8OfCOj/Q8SLi0y8YasiOC6gh2oTfJtrnDKriM
-	+wjUhaBs6EsDgXA2QLv3ku4vBppGirx/vy7oU9DVg=
-X-Received: by 2002:a17:903:2b0e:b0:2db:5052:fd6f with SMTP id d9443c01a7336-2dd6c70b250mr77654245ad.17.1789411386596;
-        Mon, 14 Sep 2026 11:43:06 -0700 (PDT)
+        bh=TRYv25iRu9fFTWg27vlxcds24V+T7PCoVZa9yNuXC2A=;
+        b=m/DjO8g9mSBBlK32/C3LoBTWNczUCeWNVz78aSBFIMPEgYc/ASapN5h7CJ2FfLOTiu
+         idYjghQuHY3VSmQ8YDnCn1HzPdtK3bm3g/7L4L9MPq4JvECQzFGdvD6h/RAskS7gsHEB
+         IXrihI194yzgs1iEev/WofJF1/Od8MdbXfXvqeBbsd3d9jOleKygKKpIGCgl70K0ZIyV
+         Yb4+9Ecv5ypSa/SO+w5EQ+WcXrlm1d2k+CYd+uf8UlsmwpUsJZYfjIwmd2bPTTh2pJJM
+         iGi3IkC+BjfGRLHps/ecoF5XYfB3OgOqdiOYcHpVPrp0DvoIup6ImJhn4vydqWvm8ujl
+         gjYA==
+X-Forwarded-Encrypted: i=1; AKwUvBzU/R5s8jj9G5i9ESL0IB0u65lD0XN14uv7T/4WyUlFo0ii9FuVWyx58eAZC8vyskhe7uMshR7pTGKygGCHZQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++lFrXJGIuokYgf981w9/X3VTXWySYKR5zQXLMbNA0wL67QvvnFs
+	Rsiy1RG0F0ndtrn0CoyKS2C3bjrOquI7Gwaryd54tla8qX+hDrYIHtRYMjq/ZnJoOVj13IUhIab
+	4KhjVREAA4owVUEuBi1T0sTdZAuQyaGq9EuMsn4uqE/mKq9XtykKJgCMffB/H3QmlarkqHSa9n+
+	lfn8Pi1jcfgmeFBzYNtvZ8NJAsmDJJlO3o1zfckSGy5M9M1HE0wd3zhRoTMawXW23UV30XBDosx
+	0UebiG6tvlO6MB/E1JWiThhRvCzINk=
+X-Gm-Gg: AYBFou0B5aZdezSj+uKFNdShAqWT9J8hGDXsLiylUXTMixH1ZxkMNG90aJYPQ5tUZmS
+	hXTNFPgmjJkHoSAg2AVUD54PMTjgZaGKXojTamK/Ljiw4oELEkDN0jfNWuDkf+RyxFrKJ2SJnbA
+	pJcJQCJo2kRIbX0Go3qdaWoce8zf4qMQiYF40OvnYw9lnlpK8wfSZW79rlBIGQHfbjigKQl/50e
+	v79eB2YyFAYzvH7qvWTgU2vpvLu0XjkpiEE7N33Qx3C1t7WKQ2RJG70K+Smbginu1b3dtr9D/Zq
+	Dxg1p2gj/oeh8ZiKrGaEKBHTK3b8tqmWhR31wHcjUgz+z71lbwXYHghxCjqKw79BtsFryWbj43F
+	54xxLDIYFWBm7i6CCWKt3BdNTw4Lg7xdUAyuD/JoSDbpMhkdpEgETNmBGynH1RWZx1TqoCImKTC
+	xMjluudMwJ3gO1KrSYYoIcg+PgGXCQW+8yYhO9xLw=
+X-Received: by 2002:a05:6a00:1828:b0:84e:2382:f4f0 with SMTP id d2e1a72fcca58-86f83152fcdmr8024626b3a.4.1789411398839;
+        Mon, 14 Sep 2026 11:43:18 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-77.dlp.protect.broadcom.com. [144.49.247.77])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2dd2cfcb276sm4590925ad.10.2026.09.14.11.43.06
+        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-86b284c6490sm3058115b3a.8.2026.09.14.11.43.18
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Sep 2026 11:43:06 -0700 (PDT)
+        Mon, 14 Sep 2026 11:43:18 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38f283baf1fso4179696a91.3
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 11:43:05 -0700 (PDT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc1b8088202so3121841a12.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 11:43:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789411385; x=1790016185; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1789411397; x=1790016197; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QZHVxUjP7ai7HQXDh9w3LrC0rVTP6eIyhyn5Gf7ApeE=;
-        b=OvDfRVANx8XpXTrhcuZR/30PxAB2tal/PkoTjJw4lgIuHiQGpx9y/Hy21dhpSYylqZ
-         vZMoWL1qpH4eMxRmW519dQV4Z6BFmZ780m6bnJS+PgUW2cQR3hiwJXk0/Ryk96VoLto9
-         WO2fwIlzTNdTUBzaOEDtaWmJZHpyJD6DyOPOw=
-X-Forwarded-Encrypted: i=1; AKwUvBzH09CxjvX3ji5oYKk3biIecou15Z7tqQuQ3erqb8yYDPXlRblTfvaZV2UHyJ6RrGNhXQdCynloSqXTmLSMeA==@vger.kernel.org
-X-Received: by 2002:a17:90b:5850:b0:39d:fcbe:fdcf with SMTP id 98e67ed59e1d1-39dfcbf80a3mr1839044a91.1.1789411384890;
-        Mon, 14 Sep 2026 11:43:04 -0700 (PDT)
-X-Received: by 2002:a17:90b:5850:b0:39d:fcbe:fdcf with SMTP id 98e67ed59e1d1-39dfcbf80a3mr1838993a91.1.1789411384448;
-        Mon, 14 Sep 2026 11:43:04 -0700 (PDT)
+        bh=TRYv25iRu9fFTWg27vlxcds24V+T7PCoVZa9yNuXC2A=;
+        b=TootGZae418iEWKwoGbK1fPI2ZYlJkNzuAhVdImGQwg1LnzMnWlXCwsrYJqpl9l4Uz
+         wIXLzwJXdfeNqX22NnS/omHPJvj8SDiK9X8S4gNVWqzCaH4cx9ZwX0F32FW7tWmXeg19
+         9UzCS6M8MXXj8QoI0GfMDFdJjJeHZx4nGkueo=
+X-Forwarded-Encrypted: i=1; AKwUvBwonO2Jpz/EYwg4AmV72Ii+KFZboX+5o+XDMRZerZ0LjB+Aj6UDC1lr8nFuFN94xUgghgS2OOyKxPSt2YnQkw==@vger.kernel.org
+X-Received: by 2002:a05:6a20:a11d:b0:3d3:adbf:7783 with SMTP id adf61e73a8af0-3db40672d49mr8756115637.24.1789411396987;
+        Mon, 14 Sep 2026 11:43:16 -0700 (PDT)
+X-Received: by 2002:a05:6a20:a11d:b0:3d3:adbf:7783 with SMTP id adf61e73a8af0-3db40672d49mr8756051637.24.1789411396577;
+        Mon, 14 Sep 2026 11:43:16 -0700 (PDT)
 Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33ba4e52a60sm27509723eec.6.2026.09.14.11.43.02
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14365b347e6sm24621139c88.4.2026.09.14.11.43.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 11:43:03 -0700 (PDT)
+        Mon, 14 Sep 2026 11:43:16 -0700 (PDT)
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Markuss Broks <markuss.broks@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+To: Jiangshan Yi <yijiangshan@kylinos.cn>
+Cc: arend.vanspriel@broadcom.com,
 	linux-wireless@vger.kernel.org,
+	kees@kernel.org,
+	linville@tuxdriver.com,
 	brcm80211@lists.linux.dev,
 	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-next v3] wifi: brcmfmac: Add support for BCM4361 PCIe chipset
-Date: Mon, 14 Sep 2026 20:42:59 +0200
-Message-ID: <20260914184259.1466535-1-arend.vanspriel@broadcom.com>
+	linux-kernel@vger.kernel.org,
+	13667453960@163.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: brcmsmac: fix UAF in brcms_free_timer()
+Date: Mon, 14 Sep 2026 20:43:11 +0200
+Message-ID: <20260914184311.1477250-1-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260820-broadcom-staging-v3-1-7d5741e37efb@gmail.com>
-References: <20260820-broadcom-staging-v3-1-7d5741e37efb@gmail.com>
+In-Reply-To: <20260815121043.938414-1-yijiangshan@kylinos.cn>
+References: <20260815121043.938414-1-yijiangshan@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -96,23 +99,27 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Thu, 20 Aug 2026 20:59:01 +0300, Markuss Broks wrote:
-> Those are the required changes for the BCM4361 PCIe chipset support.
-> BCM4361 is a dual band 2.4GHz and 5GHz WiFi + Bluetooth combo chipset,
-> installed on several mobile devices, such as Samsung Galaxy S9.
+On Sat, 15 Aug 2026 20:10:43 +0800, Jiangshan Yi wrote:
+> brcms_free_timer() calls brcms_del_timer() which uses the non-synchronous
+> cancel_delayed_work() to cancel the timer's underlying delayed work.  If
+> the work callback (_brcms_timer) is already running, cancel_delayed_work()
+> returns false without waiting, and brcms_free_timer() proceeds to kfree(t)
+> while the callback still accesses t through container_of().
 >
-> Tested on Samsung Galaxy S9 (SM-G960F), where it's connected by PCIe link.
+> Add an explicit cancel_delayed_work_sync() after brcms_del_timer() to
+> guarantee that any in-flight callback has completed before the timer
+> structure is freed.
+>
+> Fixes: 5b435de0d786 ("net: wireless: add brcm80211 drivers")
+> Cc: stable@vger.kernel.org
 
-[...]
 
-> +#define BRCM_PCIE_4361_DEVICE_ID	0x441f
-> +#define BRCM_PCIE_4361_2G_DEVICE_ID	0x4420
-> +#define BRCM_PCIE_4361_5G_DEVICE_ID	0x4421
-
-The 2G and 5G device IDs are defined here but not added to
-brcmf_pcie_devid_table[] in pcie.c. I might have been clearer
-on that, but it seemed obvious to me. Please add them as well.
-Refer to 43602 device which has similar device IDs.
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
 Regards,
 Arend
+
+> Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
+> ---
+>  .../net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c    | 4 ++++
+>  1 file changed, 4 insertions(+)
