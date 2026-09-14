@@ -1,167 +1,103 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A386316199;
-	Mon, 14 Sep 2026 02:19:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E156A13C9C4
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 02:26:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789352381; cv=none; b=KEs/aERhd5Vzq9mVC9dVKXtRfRYjQqNZqDSVWi9v5RBcXauAna2pL2wK//RDSPeiq0zn/77Zg9W3D+GchXYXWmSokeIUMPDAh13ItzXqraQnq0fhNZDBOB/MT7MCCJj3iehdGzXZryrwg9reTXjaL6je24ojbK5ga1hB/gI9p4Y=
+	t=1789352767; cv=none; b=USwj3cfWjyzZGOnOCHap1uVfO/MImhdvJ9hPR+L2Eg5O9NUxQDD/xMcNX8xoMVTMoiWHuu+KwalgsSIO9Lflj5Pbw4BolULLotxehmvuSnE6wEq8QSNJfhMFrO+vNptX+xRw48paZG8PZ6BSc4679hYe5i1ELLiaK5lXiRPC+aQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789352381; c=relaxed/simple;
-	bh=anEtDGRQWaTzffV5J9EUHyQbMJKu2KszfFnkssnb3qs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DBLuPJn7KMQDro8wajI6CsRKtW5oapVUjxu7JRc3mTWTM+wSVMAdVnHKDTfhipyLuQTbwRJFVMGCfaZaW2FqZdFyERdllC1UEjCqBvX7BW0C5tgaXeRkxAVVjOZv30s72T0Rhie9tEGJmTan0SFr3CSUM7Jbf2XqNaPNxB12yLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=sQUS/Kng; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1789352767; c=relaxed/simple;
+	bh=020bxIcSthkJsnM8YVR4dA+lUbFE4ozDEoobnkmHsT4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LM8LiJQnHKV57vBgBZg3YB5ok0/FbKkzrv8VkWg2KPSzy+p1mz0HQngZrJfOTeaOg2dksJHoTWTfCNK1STUkpnR4e4Pwb1RrRuNZG81M3OLE2WUhQ+ubsOGoiSPJALAxrXw/ubc99MTzZVLLuUn/7enhKNtJ0h0rVq8BSHfoPGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KQ+ClQRE; arc=none smtp.client-ip=74.125.225.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="sQUS/Kng"
-X-UUID: b4b73268afe211f18dc8c9802ae25ab1-20260914
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=sA478DaC1kQ5BkUJJthxmPoh+OuKqAkvinPcE7BvToY=;
-	b=sQUS/KngRsTTtuy4d7G2sCx8XVojt4OXffVCrAzuitxsWZ6Kj26kmmlrMKtLv6sqx8aT5gTZcm3NYKdB4CoS4VAs+AcanYKilR7kSulgJqMdkPJc62NiZEy51iygn5+8Qqgl0jUtJytD/8RT5u0pXB8JpYiu0cxxgFjqVpCCFEU=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:03fb39f3-3b78-4392-b057-95b65498318e,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:bffc5f10-b0ca-45fb-a2c7-7f923da2cfe3,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
-	0|99,EDM:-3,IP:nil,URL:1,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,
-	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: b4b73268afe211f18dc8c9802ae25ab1-20260914
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
-	(envelope-from <eason.lai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 138749685; Mon, 14 Sep 2026 10:19:25 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 14 Sep 2026 10:19:24 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 14 Sep 2026 10:19:24 +0800
-From: Eason Lai <eason.lai@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<kun.wu@mediatek.com>, <deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
-	<quan.zhou@mediatek.com>, <ryder.lee@mediatek.com>, <leon.yen@mediatek.com>,
-	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>,
-	<lucid_duck@justthetip.ca>, <eason.lai@mediatek.com>,
-	<stable@vger.kernel.org>, Hans Buchheim <hbuchheim@gmail.com>, Sergei
- Melnichenko <sergei.melnichenko@gmail.com>
-Subject: [PATCH v5 2/2] wifi: mt76: fix memory leak in USB TX path
-Date: Mon, 14 Sep 2026 10:19:20 +0800
-Message-ID: <20260914021920.32246-3-eason.lai@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20260914021920.32246-1-eason.lai@mediatek.com>
-References: <20260827083526.1621600-1-eason.lai@mediatek.com>
- <20260914021920.32246-1-eason.lai@mediatek.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KQ+ClQRE"
+Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e71cdb22bso7015025e9.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2026 19:26:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789352764; x=1789957564; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:sender:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=020bxIcSthkJsnM8YVR4dA+lUbFE4ozDEoobnkmHsT4=;
+        b=KQ+ClQRE7mdMsFp7cCGOS8lJHcoQgpbcUcQSnEbB+wl2bkuQH+YXA86kuK7SE4/WmQ
+         pVSPmGG2v2T6IS2AUJAbxXYw9suR9DtaMDQGHL4mdmB90TITrSZDnku1BNb53SkwjSZA
+         DQis0e25rnIDhCUda8wQRnDCN6MWV6WTL4BOZwSTpsfLnJge1McGBn94YND/bWf7/cY7
+         UMBcZ3FZ/lYu97xQzCl1W5Y0t4gx76x6QgzU19neSeprXLdChkqtdz2TpUkdzd1TmWsJ
+         8yG2HV3Ck5iIPCMdyTNS7vJMf2UXP+0N4YoiUNO6Elz+/SljlyLUbrnKqUcpl5jOPIa4
+         8XOg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789352764; x=1789957564;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:sender:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=020bxIcSthkJsnM8YVR4dA+lUbFE4ozDEoobnkmHsT4=;
+        b=hyylFtvmJ2bGjEqxDJ5luQrYc3Cre/lZmUKwBambbWNiS4dxVRYQsThzk25f6elHFF
+         g3YaYfkUeCn4nBjSmVVWqN+MAYXrPZ3BhFjnrtS9R5PVqIcA78GthyleVI+1eL/Fm5EB
+         iDkBJUlUSXI3Iy23Egjfq4BxCvDiVZ/5EdNzhoDcVSeEeQSeaWkE1HyTqm4M0d4A0RB7
+         bTjGTqd/JthzrI3aGXWR6/RfqBiml6dctlfPYlQuwDcj/Zc+lY6hLlGvx7kyJ1ysyxbP
+         /I9K7RQZ/3ukCnxf6/IaPAa5DwmEPEUEdfgaJxTws/KxvurxBPS/uiubmjKdRpV+kx3x
+         F2+A==
+X-Forwarded-Encrypted: i=1; AKwUvBz5KpdB1tn+/4mlr/9m+VlYUYf/yQhLkAuKRedqMaFvqSyLrZzE11Ctpu2oxhH+szkQKBqzXICVAGAYYx96NQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++moq32IG2oaaMNvB4ecu1Lh3AQc1/Dp2JiX1/NBi+Tk46HXAWlo
+	zWr9M2qbu4bpTaQMGzFW5RZ5Ta56FoPTq1rFwwNuGjcAZ99hogQ/rhY=
+X-Gm-Gg: AYBFou0Bdr82OQ9LwunrQEUNFBW8Xxbp73jThbiqpXJrK4OIEm/51j2q494z9pGcC0Q
+	jPyPh+vjo7s9APIUQQD8qaUxs+6fnY8uAjRfurcJHfEApxnw/KdESP2bMz84gW2pffceRk/1ea0
+	4oRgMtPQfKxaYwIQeeJsDjI73AhiQbxJ87niUTqMrUFewNUgpveeYIKPmT56G+ce65UgNfykupQ
+	YIBl4zccIOzo4thcMEeTfXVvPHNr0tt2zaqHymJ6OqDog24Qu6inudJuN+14E4wDWIBElC78pRa
+	uU2uMJ1WaFme+QfX6AR694lXgRXied4+IMuwqDWypt7mU23AdlJXDyoeveZKZ8MGKLtpMxiP2kT
+	YzUcZvUp/FdynLbCiXgiLzG7ZUi61SUmuZC1jn/GEdZtvjiOQ2ygqeukjcENa6Om8WLcoIO5PkU
+	gsbRi6hMHmNiKtX2Pj8ncLRVf0uv5177o9CgJk4bhL33Apf/XuvXJzuHeCWU6lfPfpa2gOfY7fJ
+	Cg2l/NnIVNr4Z6ZNCZ0UwNw4z2QZVDb38luv4JVekCKCNJmmYehP5v5FFyMJqKnQVYsH9pXPYKU
+	TuosCbUpxKdxef8=
+X-Received: by 2002:a05:600c:1c0f:b0:49c:dcec:bd27 with SMTP id 5b1f17b1804b1-49e7a648ab0mr6027235e9.8.1789352763861;
+        Sun, 13 Sep 2026 19:26:03 -0700 (PDT)
+Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e60adaee4sm417415975e9.14.2026.09.13.19.26.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 13 Sep 2026 19:26:02 -0700 (PDT)
+Sender: N B <gen.benner@gmail.com>
+From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] wifi: ath9k: stop a failed register read from opening the RX filter
+Date: Mon, 14 Sep 2026 05:25:57 +0300
+Message-ID: <20260914022557.1141231-1-nerijus.bendziunas@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <5f892b6a-7c02-483f-84c3-43c1161ef251@oss.qualcomm.com>
+References: <20260911014653.1566388-1-nerijus.bendziunas@gmail.com> <20260911014653.1566388-2-nerijus.bendziunas@gmail.com> <5f892b6a-7c02-483f-84c3-43c1161ef251@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 
-When errors occur in mt76u_tx_queue_skb(), the skb is not properly
-freed, leading to memory leaks. This happens when:
-- The queue is full
-- tx_prepare_skb() drops zero-length frames (such as WMM NULL frames)
-  to prevent hardware TX hangs
-- Buffer setup fails
+On Fri, 11 Sep 2026 10:06:21 -0700, Jeff Johnson wrote:
+> On 9/10/2026 6:46 PM, Nerijus Bendžiūnas wrote:
+>> +/*
+>> + * Set bits in the RX filter without reading it back: on USB a failed read
+>> + * returns all ones, and writing that back would open every filter bit.
+>> + */
+>> +void ath9k_hw_enable_rxfilter(struct ath_hw *ah, u32 bits)
+>
+> there is a standard for kernel function documentation
+>
+> https://www.kernel.org/doc/html/latest/doc-guide/kernel-doc.html#function-documentation
 
-Fix by properly releasing the skb with ieee80211_tx_status_ext() when
-the queue is full or tx_prepare_skb() fails, and using
-mt76_tx_complete_skb() when mt76u_tx_setup_buffers() fails (since
-tx_prepare_skb() has already succeeded and may have allocated resources
-that need cleanup)
+Thanks, I will change this to kernel-doc.
 
-Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
-Cc: stable@vger.kernel.org
-Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
-Closes: https://github.com/morrownr/mt76/issues/83
-Signed-off-by: Eason Lai <eason.lai@mediatek.com>
-Tested-by: Hans Buchheim <hbuchheim@gmail.com>
-Reported-by: Sergei Melnichenko <sergei.melnichenko@gmail.com>
----
-v2:
-  - add error handling for queue full and tx_prepare_skb()
-  - correct error handling for mt76u_tx_setup_buffers()
-v3: add Tested-by: Devin Wittmayer and cc stable
-v4: add Closes line
-v5: add Tested-by: Hans Buchheim and Reported-by: Sergei Melnichenko
----
- drivers/net/wireless/mediatek/mt76/usb.c | 31 ++++++++++++++++++++----
- 1 file changed, 26 insertions(+), 5 deletions(-)
+Per Toke's request on the cover letter, this patch and the other ath9k
+fixes will come back as one series once, with the dependencies and the
+testing explained, rather than as a v4 on this thread.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index a9af3aa6b80a..dfc12f6944a7 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -893,6 +893,9 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
- 		   enum mt76_txq_id qid, struct sk_buff *skb,
- 		   struct mt76_wcid *wcid, struct ieee80211_sta *sta)
- {
-+	struct ieee80211_tx_status status = {
-+		.sta = sta,
-+	};
- 	struct mt76_tx_info tx_info = {
- 		.skb = skb,
- 	};
-@@ -900,17 +903,27 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
- 	u16 idx = q->head;
- 	int err;
- 
--	if (q->queued == q->ndesc)
--		return -ENOSPC;
-+	if (q->queued == q->ndesc) {
-+		err = -ENOSPC;
-+		goto err_free_skb;
-+	}
- 
- 	skb->prev = skb->next = NULL;
- 	err = dev->drv->tx_prepare_skb(dev, NULL, qid, wcid, sta, &tx_info);
- 	if (err < 0)
--		return err;
-+		goto err_free_skb;
- 
- 	err = mt76u_tx_setup_buffers(dev, tx_info.skb, q->entry[idx].urb);
--	if (err < 0)
--		return err;
-+	if (err < 0) {
-+		/*
-+		 * mt76_tx_status_skb_get() walks the idr and dereferences
-+		 * a freed skb. This SKB is not counted in non-AQL counter
-+		 * due to error return, so using 0xffff as wcid to keep
-+		 * balanced.
-+		 */
-+		mt76_tx_complete_skb(dev, 0xffff, tx_info.skb);
-+		goto err_ret;
-+	}
- 
- 	mt76u_fill_bulk_urb(dev, USB_DIR_OUT, q->ep, q->entry[idx].urb,
- 			    mt76u_complete_tx, &q->entry[idx]);
-@@ -921,6 +934,14 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
- 	q->queued++;
- 
- 	return idx;
-+
-+err_free_skb:
-+	status.skb = tx_info.skb;
-+	spin_lock_bh(&dev->rx_lock);
-+	ieee80211_tx_status_ext(dev->hw, &status);
-+	spin_unlock_bh(&dev->rx_lock);
-+err_ret:
-+	return err;
- }
- 
- static void mt76u_tx_kick(struct mt76_dev *dev, struct mt76_queue *q)
--- 
-2.45.2
-
+Nerijus
