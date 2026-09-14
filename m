@@ -1,126 +1,82 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D0AA2AD35
-	for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2026 22:16:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789337795; cv=pass; b=jUBcxyvIrNSoHv4u7SqTonmlEB4px/2VSzQYpBKXPvORgfhQvEUEJqx3O/TgeqONANn4VIxuaTyATBSTrc032PClA52egX8EehwCpWDyMWDPDC1lBoih9qInT6arv81Hxm5KInN90avRDcf1mxgoT8s/aZ+UVKLdyZcoNcAuP8U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789337795; c=relaxed/simple;
-	bh=cFcUkK2nuEqNN4s8o5NV69iPxdq3RuDxEJaGlB2rHfY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=I29ISkibI/1Ppy52D0sAUNXE01UCdaLi9aj4rE6K0KyEBHD0uxqgDQhymvQ+/ruBHBYkwJbQNd9tCsHd3eEdpqFo1up3T+7jyLdvkspNwyWwOC+5EewR4PxwrY0LlvC9ELKasRnwbAi7lqD0n4VDdEQk+yNIpQClLSsAmfMrM/M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=Y7o1/Acs; arc=pass smtp.client-ip=74.125.228.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8092E7394;
+	Mon, 14 Sep 2026 01:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789350432; cv=none; b=VnQa/ZKCfk6HU0eCPmDrHI0K7dpdJAzF9oyq34oPtzKjzyZttp7CdVH4ZcrETJiPXCg5UPxA33HKiLSuJuRDKXEj/zsQ7SpfuJ7OzTkdHxrAArsv8C8t1dst8DtMnzzSjnWYCwbeDtRGk+9Cw1dJN2HarJngYo2Yd8Ln+z9Sy9A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789350432; c=relaxed/simple;
+	bh=xAHp48baWR5R1QOKt1jjC4cltuY1LKBmTsnd+LBiivM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HDKfBhBroHR5M9lNGDqiOyb4F6nz/Cgn090Shreu3DlZeFyEg5N3rdhX4TlAfZVVj7lkY9vWoyVdlxMQex8zkh5RLXWNlPw0gUciydyBDJL4vPAQPKtrs28YwBxJ1NSetLXiuKRSJuDmF5teGWvOFv2Nbpjcp0JZWQIAHMHjJsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NQQBzzh+; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="Y7o1/Acs"
-Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc1cebad4afso1420656a12.0
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2026 15:16:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789337794; cv=none;
-        d=google.com; s=arc-20260327;
-        b=kVgkMAsRNi1Kemv3Aivy3tHJIDTBycs1LPcRsqkyS7pbDkzykSRO79HDYF6SyBUb9J
-         SoDaA18ZqHqpVPxpfoEZO46IoVsAdn8BEZYGC/EyCt62uB2GP8YCKSfFjoruz4+kYjzn
-         iOh2dsYif8syRZqhoDBgqvoch7UZ/D5y2e89+U/yFZ71nqxjgxFMn9jvz1fl3Lq6WAPm
-         lKP/11Zb0jk3yNmR7hAsM6wlZEtn/q4thPV42qzyWCrZF3vxfyjgxtuEOa0ZqPk6sQKG
-         iZCVn6vPnpeqwLqRGcV8t8A2ozrlJwCz0Ni+58rmOXrgFjjMKfEO0ABD34jgggOkvj0N
-         ktcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=cFcUkK2nuEqNN4s8o5NV69iPxdq3RuDxEJaGlB2rHfY=;
-        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
-        b=Mx8Z2t0NrmKzkbqlFmsCrg8hX+LRKIjUWaZ0bGywhtoU80vlnb8MQ66gK49cUHXdiu
-         OL1h4T1547+yOKE3WXROgXuVYnX1fz8iwK9ToRIgQkahVJ+S+SdF2fyZjVD1gqNFsaSr
-         3IJlFygExjtoU0NnrjIpDijn31K8MtYFSRWOkKXdmeI3LDRhOZQgDScFaEN7/WxKRGZD
-         CWkcwNzouEnfE5euRvJCZpX3BjnkcDhsNpW7YdUVBXChhCHOVqb5eiekcTNRACWwy8G4
-         hdWxFFyc3v8cOsG0TJDBd9RSVDqliL40JXyBE1xGnCjDpchEp9jX4Wz3JxfOjgCqenJj
-         t6mA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20251104; t=1789337794; x=1789942594; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cFcUkK2nuEqNN4s8o5NV69iPxdq3RuDxEJaGlB2rHfY=;
-        b=Y7o1/AcsUzeo5iOxFnF0+bsDtI7sMSIqXSoFabd79JUQhxYVHENCzVYCXsSqNVSAta
-         GlZCdmRfccYmHbDAtKlNjD749otBvVZD6ZGtFawKfr1kRk9zKK6TSiphBWx90uXupVzA
-         lLQJ1scs2HxvSZd9dtjbHN/RSZn0M3hVptUh3A5vIpVIjLdlJaX2p2/JtHE1F9Gr3rj2
-         SOy4QSxrI7M3ZQu1WO5QkFaDpL65JczYVcqhzjjMn+tMf5vkiSfupMpcPKzyfxXxJg49
-         Z5YJI29qe2cNFfRRyAiFKYzhR9PuBV17takJWG61J+ZBJvUAGF4p3jxRyMCb2vdvsPbo
-         Pn1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789337794; x=1789942594;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=cFcUkK2nuEqNN4s8o5NV69iPxdq3RuDxEJaGlB2rHfY=;
-        b=frsomdTLJCAQCjpUMVqJ7xnv+ECbwLVTNIEoqgLyFxlzBbyhfrv+8GlpxKU7s9b85x
-         H/5Bx77z0js3xNaDx3yO1L+V+zLe+tuH/b5HhqFd4qm+BNyWDt273s8Tsudiu4LTnUKX
-         lFsHGo8HipOvwoSOFVIBdWH0o4rdJ+P1tbY1XF1dj1OxJLvDF6dAOzacZx5Dxz9Gtj1P
-         eksOsmxz6a420oBtIEawHhX4sHBUrL433Y7gMNsGVSj/1Vyi48fmqrCX8Phdgojzoe+k
-         7TOuE0uAqjudLnaOqFcbjVdq+b1awW1e0iOlaRb0e+t4GqnSpVCoTHOQinRKv2VgIBFu
-         Qd9w==
-X-Gm-Message-State: AFuF++mSNRwEZQeA7EqlgyfuIm9etqmYTfHQVdlmaXKdij98HuZu/TSQ
-	ieoo3zS3BlhCoO9ZxGqjXJO5OvW+L/V9o3l7ioAJzk4EdVWolKLdvggIOfruukn43H5lDwgzcPb
-	iIKdg1Cqyjtjlcc0YmIj5pH4vmOOwIqY=
-X-Gm-Gg: AYBFou0N+J0secATqDB6NW+9chks0B6zK+5vrbjut3ld/j5LlsI5DFJk4vWrPeuFAHl
-	oq4HcSiCaUCjGARZkMp1x9Ioya0yYunkk+rur/GQrwnxBiGP4QLZ4MKsATCDSd30be8BqreZwSq
-	wIB6D8kzjon6AGKQqrn0SADeF4yo60AO3MKkl8voGPvq5eC/xfMVjwIf3pjefEgleuQIx8WQq8X
-	b5foxXvKJrOktcHgbPv4Z9qdmKxUeMorMECnlq/9aSVZgIrM5HbknHLk9doW2C/bFnSr5C+L4UN
-	BjK0vj6YUNyh/w5dBpKZcSfEuquJtG1NMTAfVOSiFVgh6OigA8UI606whusAEDyO0Z1qALrDvZy
-	DspcKUiwVj+m4YuGzIoJSheaPUmeAo/xkLhKbXhMUeEQM
-X-Received: by 2002:a17:90b:4b90:b0:38f:2168:b9cb with SMTP id
- 98e67ed59e1d1-39d9bd99cd2mr24385536a91.9.1789337793636; Sun, 13 Sep 2026
- 15:16:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NQQBzzh+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789350431; x=1820886431;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xAHp48baWR5R1QOKt1jjC4cltuY1LKBmTsnd+LBiivM=;
+  b=NQQBzzh+b5FrNostISB2CeGIq9vzXNF1SGINifecPhPI26C/kzcuSIQz
+   EqrVkdlfJLq7ivYFpsggscPmCwIEFkDLVzMl8jei8zeqAJ4vbrtrKLNdK
+   7snNl0SvH/YELQFAUtewKFRck6Qv0kUvuRCcQPoJDAaNEez8IJ/5HuFhu
+   DP0L4g7ZZxIL1ToOPUBM6wdKznYDKK3a//FGzGcYVCVHkuRXIW7pTa4jW
+   Ky0EerYCWPzRUrDpRJ6V43xaKJQ1uwkHnvBwWkXmSutT66Dc+CLwJ3afz
+   lVSISb4V4oMLIDpe0KOdBYFWoY5uHBYTeRj7bCsUmB6YjoIssIb0OfNj8
+   A==;
+X-CSE-ConnectionGUID: PgXjv7GHQIWL5BNgJno92g==
+X-CSE-MsgGUID: TYOInoFmTDOvvoeJKR5dpQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11904"; a="100034275"
+X-IronPort-AV: E=Sophos;i="6.27,102,1787036400"; 
+   d="scan'208";a="100034275"
+Received: from fmviesa013.fm.intel.com ([10.60.135.153])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2026 18:47:11 -0700
+X-CSE-ConnectionGUID: SAuVXkO7S0iffVrMqkiS6Q==
+X-CSE-MsgGUID: 7HdWhPrXTDef5ckQBTqegg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,102,1787036400"; 
+   d="scan'208";a="913231"
+Received: from junjie-desk-dev.bj.intel.com ([10.238.152.71])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2026 18:47:06 -0700
+From: Junjie Cao <junjie.cao@intel.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>,
+	Devin Wittmayer <lucid_duck@justthetip.ca>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless] wifi: mt76: mt792x: treat 0xff ACPI SAR entries as no limit
+Date: Mon, 14 Sep 2026 09:46:57 +0800
+Message-ID: <20260914014657.633599-1-junjie.cao@intel.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <acb947435fc78d5c06039c7bd5609c735468b0ee.1789002236.git.junjie.cao@intel.com>
+References: <acb947435fc78d5c06039c7bd5609c735468b0ee.1789002236.git.junjie.cao@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
- <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
- <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
- <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
- <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com> <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
- <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
- <CAOQMLZUn30NJwU4pR0hL=nz38Mbp=73wgqd+CoQE2qSO3cf4_w@mail.gmail.com>
- <013f7d3cf223417c94df41a2a45fa540@realtek.com> <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
- <CAOQMLZVMALBLeCZUB3Jdvk75znt0D7HxrXyPMhGPvcKLx3j-Yg@mail.gmail.com>
- <0912165f66394229b4f2b4114ae28a50@realtek.com> <CAOQMLZUbZhNhOQyxGXW7YSOU-z6w-4jWqfqVkaeMhdx2kLDrmg@mail.gmail.com>
- <c52840cf65464f659635eec6fcd6de12@realtek.com> <CAOQMLZU9fzaFNh+vbFR=ZpvkyG=T9UDwaeBVXpRj3fvYZt2D-g@mail.gmail.com>
- <ed3fe21f453744a3ac45484839c1c9f1@realtek.com>
-In-Reply-To: <ed3fe21f453744a3ac45484839c1c9f1@realtek.com>
-From: Adrodoc <adrodoc55@googlemail.com>
-Date: Mon, 14 Sep 2026 00:16:22 +0200
-X-Gm-Features: AcwNN1WuFX4qYUpu6ECuYFxTc_MHlUZ-ZWlD3xlV_Pwzu4q22snTsAb02i193Qo
-Message-ID: <CAOQMLZXAy+RoN9MEXFszNfwgZUP1PfNAyQsurNQCnzbEtPc01g@mail.gmail.com>
-Subject: Re: Error in rtw89 using Kernel 7.1.4
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Sorry for taking so long to reply.
-I have at some point stopped looking into this as I just can't
-reliably reproduce this.
-It feels like hunting a ghost.
-I am not even sure if my issue is present anymore or ever was a real
-issue with the driver to begin with.
-Maybe it was just coincidence that I had disconnects at the same time
-as these error logs.
-I can confirm that even if the SER L1 error occurs that does not
-necessarily cause a disconnect.
-I feel like at least some of my disconnects are due to high traffic
-during zoom desktop shares and during wlan0: RSN: Group rekeying,
-similar to https://github.com/morrownr/rtw89/issues/109, but I don't
-have reliable data to back this up.
-I am very sorry as I feel like I wasted your time for nothing. My apologies!
-But I am very grateful for the input you gave me!
-I'll close the associated github issue
-https://github.com/morrownr/rtw89/issues/116
+On Thu, 10 Sep 2026 09:23:00 +0800, Junjie Cao wrote:
+> No MT7922 here; the Zenbook reporter has offered to test.
 
-Best regards
-Adrodoc
+Tested on the Zenbook 14 UM3406HA, 7.2.4 plus this patch: channel
+42 tmac 3 -> 27 on OFDM/HT/VHT/HE, iw 0.00 -> 14.00 dBm, matching
+MD11 = 0x1b in its MTDS.
+https://bugzilla.redhat.com/show_bug.cgi?id=2515420#c20
+
+Tested-by: Fabien LAGARDE <fabienlagarde16@gmail.com>
