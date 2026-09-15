@@ -1,166 +1,184 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C394535C686;
-	Tue, 15 Sep 2026 14:20:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761803DA7F8;
+	Tue, 15 Sep 2026 15:05:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789482027; cv=none; b=U4GaWoEvn2os9ysiLk665dNruCaa2S3DVyuclir0H5ZGuvB/7oasvAdNqzVNA2EtjShTunbleiyK56oBLoE8I4BKYTQQ4oYslu5B6PXQlvraLR5/DetN9N8sQ1molQpkm3hp//3YcP9SFuTw2La3N5TdxlIOPt2Zc0Q0KbvsvGg=
+	t=1789484715; cv=none; b=n9cgZtmnJDObiTU3Dzaz31+a0VE8p5ZkvWNSAbO1BqKOoJRmIWji1QNFhKzdEI2MX0bJ9F/YXI3uyOZdhlfOELsxpQ5knNY/dhvubvT5UW5SBu9uY6EXcsd12KPYAIcKqFSX5y1I4It5zBqPrpVF2mzx2metov7nPf0Tsp3C8wk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789482027; c=relaxed/simple;
-	bh=PdjuIbUKue1uQ3zmvIysQrJ+zfckfYP7m5mfNpqQ4Bw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=YkLMXJ2/tvdzOSIkXjCBvPRW3Np88E70jTzlszsP/DP4SwKJkWefsDOaN2QMFfRtH95hHkAhKSzjKXEUvYk3PIOclku/SGXgmwr1mtvEuRA+vfuS2W9FsNSXvHHCSaWpyk2JRoO9L1wKClX2XZ/ub+/wLjViGCbtP5uNQcIsnrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VrG7dgY4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789484715; c=relaxed/simple;
+	bh=DAmlGFJZYAmgnOIvR39oev84RuA6yc2k24v0yU66UX8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Iv6os0/vSp83JQmPUZT3K8t+sCZv2X60CfX89bJcHxd7tH+hEYtWoG0HV/va1SvJDRZ2I+AyXHKMpAP7G/BJeqN4JAOpZN+SfcdLpV3ADIj9hW6BriMLtKaaFKvMPLPutnyRNXNBS0v0kDuSOoCng4cAiHqi+5c4xOXLqYRZLs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gf5L5wnm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrG7dgY4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F9B11F00898;
-	Tue, 15 Sep 2026 14:20:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gf5L5wnm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 609DE1F00893;
+	Tue, 15 Sep 2026 15:05:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789482026;
-	bh=MEsKI0LWezyhAWDQneqjdlMYSgB+3NODkCoVF3H5uR8=;
-	h=Date:From:To:Cc:Subject;
-	b=VrG7dgY4EunCHTT2EDJCct8kZjT5Iw72myINzHmivsb4o9OLT3yEY1Csgm/QTYVOy
-	 RxY1aG6Vy86EoQRasC837V03GAfJ28JwGRhtC0qEBcc9VAKQuZOwb+DQZIFXMdCvjR
-	 uJacPPq8FM44Xxxcc5x6pSi+yMIbRheV0BDvMjc/VyMHbij0L5nB/EB63L89BXF97m
-	 K+5MYyo9miXJZX+KYEI+QO7s/6ybWmOIdF9MHwrA+9mxn6OkaaLFNQS2kqDeil/6jj
-	 lUvP721w8vpjIFXjWbDfUsTXphkcUGquGOf14+yR0qlp1OEGLMmQJHKPNSmrjIcCbq
-	 qChJ4hJyd/+hQ==
-Date: Tue, 15 Sep 2026 15:20:22 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: manual merge of the wireless-next tree with the wireless
- tree
-Message-ID: <aqlUJnjxj1lroNev@sirena.org.uk>
-Mail-Followup-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wireless <linux-wireless@vger.kernel.org>,
+	s=k20260515; t=1789484714;
+	bh=92Jyv3r5iRKPp9A+0MWzJBMIdxeAT/qbE/UD5yjhWE0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gf5L5wnmtccLwoqcVRv226Jxh21B1B//39SXNk9kc4N8OS1FTlhq9PWO0oO0C2lV5
+	 /puLCofTcTcdOq9gexMECkzKA3ObUOxFvtdLZex77Bqia2hDmeu6n908Nd0hiX8iF9
+	 qTYQDbAMbNgjSO8+cNHSBskD1SEuiooBkMWuneDZS5c3lKtRyIRRattmm2nfwDtRhi
+	 /vDHelzWwxEEbNDJ6m9bDtWIf3Gi0xBkpoRi48jhIlvmxyg1p97zwYUvcCDIpP4GL2
+	 89RyOdTBK97/VTtSVGn5HnnYF5QSg1YyyyGBUWH6C6xYN7eMiLrpeTG7VTkcG879bb
+	 BqI5RrgGxycEw==
+Date: Tue, 15 Sep 2026 10:05:11 -0500
+From: Rob Herring <robh@kernel.org>
+To: Bill Wendling <morbo@google.com>
+Cc: linux-kernel@vger.kernel.org, codemender-patching+linux@google.com,
+	Russell King <linux@armlinux.org.uk>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Helge Deller <deller@gmx.de>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Ian Abbott <abbotti@mev.co.uk>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Matthias Schwarzott <zzam@gentoo.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Sylwester Nawrocki <s.nawrocki@samsung.com>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Kees Cook <kees@kernel.org>, Jiri Pirko <jiri@resnulli.us>,
+	Simon Horman <horms@kernel.org>, Chuck Lever <cel@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Mike Rapoport (Microsoft)" <rppt@kernel.org>,
+	Kanglong Wang <wangkanglong@loongson.cn>,
+	Tiezhu Yang <yangtiezhu@loongson.cn>,
+	Qiang Ma <maqianga@uniontech.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Ard Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>,
+	Thorsten Blum <blum@kernel.org>,
+	Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lyude Paul <lyude@redhat.com>,
+	Ashutosh Desai <ashutoshdesai993@gmail.com>,
+	Imre Deak <imre.deak@intel.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Johan Hovold <johan@kernel.org>,
 	Johannes Berg <johannes.berg@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Alexander Stein <alexander.stein@ew.tq-group.com>,
+	Cryolitia PukNgae <cryolitia@uniontech.com>,
+	Jiaming Zhang <r772577952@gmail.com>,
+	Will Porter <mrwillporter@gmail.com>,
+	Cen Zhang <zzzccc427@gmail.com>,
+	=?iso-8859-1?Q?C=E1ssio?= Gabriel <cassiogabrielcontato@gmail.com>,
+	Rong Zhang <i@rong.moe>, Arun Raghavan <arunr@valvesoftware.com>,
+	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
+	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+	linux-edac@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org, linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+	devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-nfs@vger.kernel.org, devel@lists.orangefs.org,
+	linux-hardening@vger.kernel.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH 10/28] of/fdt: Replace strlcat() with snprintf() in
+ early_init_dt_scan_chosen()
+Message-ID: <20260915150511.GB1926857-robh@kernel.org>
+References: <20260915081910.4142719-1-morbo@google.com>
+ <20260915081910.4142719-11-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="IBC+52lWwiJAH663"
-Content-Disposition: inline
-
-
---IBC+52lWwiJAH663
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260915081910.4142719-11-morbo@google.com>
 
-Hi all,
+On Tue, Sep 15, 2026 at 08:18:27AM +0000, Bill Wendling wrote:
+> When CONFIG_CMDLINE_EXTEND is enabled, early_init_dt_scan_chosen() uses
+> two strlcat() calls to append a space and CONFIG_CMDLINE to the command
+> line buffer.
+> 
+> In preparation for removing the deprecated strlcat() API[1], replace the
+> strlcat() calls with a single snprintf() call using the existing string
+> length.
+> 
+> Additionally, check for a NULL initial_boot_params pointer and jump to
+> "handle_cmdline" so that CONFIG_CMDLINE handling still occurs without
+> dereferencing a NULL FDT pointer in fdt_path_offset().
+> 
+> Link: https://github.com/KSPP/linux/issues/370 [1]
+> Cc: codemender-patching+linux@google.com
+> Assisted-by: Assistant:Claude-3.5-Sonnet [editor_update_file, shell_command_run]
+> Signed-off-by: Bill Wendling <morbo@google.com>
+> ---
 
-Today's linux-next merge of the wireless-next tree got a conflict in:
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index a64afc3ded3d..311021a83f03 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -1095,6 +1095,9 @@ int __init early_init_dt_scan_chosen(char *cmdline)
+>  	const void *rng_seed;
+>  	const void *fdt = initial_boot_params;
+>  
+> +	if (!fdt)
+> +		goto handle_cmdline;
+> +
+>  	node = fdt_path_offset(fdt, "/chosen");
+>  	if (node < 0)
+>  		node = fdt_path_offset(fdt, "/chosen@0");
+> @@ -1133,8 +1136,12 @@ int __init early_init_dt_scan_chosen(char *cmdline)
+>  	 */
+>  #ifdef CONFIG_CMDLINE
+>  #if defined(CONFIG_CMDLINE_EXTEND)
+> -	strlcat(cmdline, " ", COMMAND_LINE_SIZE);
+> -	strlcat(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+> +	{
 
-  drivers/net/wireless/virtual/mac80211_hwsim_main.c
+No need for brackets.
 
-between commit:
-
-  87840d4a3a21b ("wifi: mac80211_hwsim: don't hand frames to mac80211 while=
- stopping")
-
-=66rom the wireless tree and commit:
-
-  41416127e37e4 ("wifi: mac80211_hwsim: overwrite report SKB")
-
-=66rom the wireless-next tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
-diff --cc drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index b9446577ff499,9f895ad718e9b..0000000000000
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@@ -6540,13 -6543,51 +6548,58 @@@ static int hwsim_cloned_frame_received_
-  			goto out;
-  	}
- =20
- +	/*
- +	 * Serialise against mac80211_hwsim_stop() - mac80211 doesn't allow
- +	 * frames reported while the HW is down, hence the ->started check
- +	 * must be under mutex.
- +	 */
- +	mutex_lock(&data2->mutex);
- +
-+ 	/* look for the skb matching the cookie passed back from user */
-+ 	if (info->attrs[HWSIM_ATTR_COOKIE] &&
-+ 	    info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]) {
-+ 		u64 cookie =3D nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
-+ 		struct sk_buff *orig_skb, *found =3D NULL;
-+ 		struct mac80211_hwsim_data *txdata;
-+ 		struct ieee80211_tx_info *txi;
-+ 		const u8 *transmitter;
-+ 		unsigned long flags;
-+=20
-+ 		transmitter =3D nla_data(info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-+ 		txdata =3D get_hwsim_data_ref_from_addr(transmitter);
-+ 		if (!txdata || txdata->netgroup !=3D data2->netgroup)
- -			goto out;
-++			goto out_unlock;
-+=20
-+ 		spin_lock_irqsave(&txdata->pending.lock, flags);
-+ 		skb_queue_walk(&txdata->pending, orig_skb) {
-+ 			uintptr_t skb_cookie;
-+=20
-+ 			txi =3D IEEE80211_SKB_CB(orig_skb);
-+ 			skb_cookie =3D (uintptr_t)txi->rate_driver_data[0];
-+=20
-+ 			if (skb_cookie =3D=3D cookie) {
-+ 				found =3D orig_skb;
-+ 				break;
-+ 			}
-+ 		}
-+=20
-+ 		/* that's weird */
-+ 		if (!found) {
-+ 			spin_unlock_irqrestore(&txdata->pending.lock, flags);
- -			goto out;
-++			goto out_unlock;
-+ 		}
-+=20
-+ 		if (frame_data_len > found->len &&
-+ 		    pskb_expand_head(found, 0, frame_data_len - found->len,
-+ 				     GFP_ATOMIC)) {
-+ 			spin_unlock_irqrestore(&txdata->pending.lock, flags);
- -			goto out;
-++			goto out_unlock;
-+ 		}
-+ 		skb_trim(found, 0);
-+ 		skb_put_data(found, frame_data, frame_data_len);
-+ 		spin_unlock_irqrestore(&txdata->pending.lock, flags);
-+ 	}
-+=20
-  	/* check if radio is configured properly */
- =20
-  	if ((data2->idle && !data2->tmp_chan) || !data2->started)
-
---IBC+52lWwiJAH663
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmqpVCUACgkQJNaLcl1U
-h9B38Af/eKnFBgtukYy3uaCoiS2tMZBywYhcddFGeS3lTwc0NgZEIHQSlOlbQ61R
-XZ84CAPu69WaEV5T8mFybJiqDlKSpYMzX3IGAlu24eUL7MZz2D1b5D8tqzC3w52Z
-rAI5Droy4LblWw7Lfa/8wrswyrjqhW9ASonWBNdUD2a9ptzKN1vZyav4tY/ZopeF
-3j6+laxXnpY5lVWngVSFg3Q8DqqJdr2FE5cm9iZhnIYL0QsIqKaE3l+DOGtx3nIn
-2gxk4tjf5rF1xNKsJ9vdamC89jGuE6T6969kfoGMAz+ePj6LBTIKBXXvDbOwc84o
-e4MS487B8onAPdGQ2cYImV5tlJtlAw==
-=u395
------END PGP SIGNATURE-----
-
---IBC+52lWwiJAH663--
+> +		size_t len = strlen(cmdline);
+> +
+> +		if (len < COMMAND_LINE_SIZE)
+> +			snprintf(cmdline + len, COMMAND_LINE_SIZE - len, " %s", CONFIG_CMDLINE);
+> +	}
+>  #elif defined(CONFIG_CMDLINE_FORCE)
+>  	strscpy(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+>  #else
+> -- 
+> 2.55.0.1032.g73a4cd73de-goog
+> 
