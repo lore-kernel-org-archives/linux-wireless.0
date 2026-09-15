@@ -1,133 +1,277 @@
-Received: from mail-oo2-f39.google.com (mail-oo2-f39.google.com [74.125.231.167])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A815D47ECC2
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 22:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.167
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A4A2FD7B1;
+	Tue, 15 Sep 2026 22:36:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789511789; cv=none; b=rZGdsgx+3l/hvpCbNjk0ktVRAKF3o5ymAKeNYhtDbRLaXClO6wLNA4/jQ6CpjxWthvUeYpyx1u8Xuxq3EBQub22Z7dZ7xgLpekzoOJQpsso+ivKcZtaNjB5zKkoSL/K0jcD8OEoGOQsQR4ntThHIrV1616hGXa779T7xL4BHOZg=
+	t=1789511797; cv=none; b=mz2HV2vg2aQLokLkM/BiAbVFjNYa2sr/qai2bbmKoa1ICyfVmabTCYBWiWjP4RbvrHB7D7BfEHoXyARGWKCxM03deAAn1xsd42WIkxsOcO74SUqzqNj5MyLGwGB6CWS/MdaaqMj/AUL0Pg6KBo+5aewS5LvEDt14wbHI2aaTowI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789511789; c=relaxed/simple;
-	bh=NKKatqC2Re9eTa1xhiTQLVOdbcOfrB6iOyjGbHs3BmQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fIqpWY1T8lfW1D2nH2vkYJgR02DxDgsCPxWAg/fRHb533a3jBQ+KwAH1McIFoOCULKHGNDdu/8phgwicNeUNWvU0X9HRaZ1OhZxgBkuhmhQ42nS9LClR2WKd1YyLy++5uxmOoPvBfN4a4MWq6YFHwGL/kA/VzDVdeHMbGi6l/vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gompa.dev; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.231.167
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gompa.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oo2-f39.google.com with SMTP id 46e09a7af769-7f4f0d37dc4so150445a34.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 15:36:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789511785; x=1790116585;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yQxcNZFJRBnNKYE5HTxR/5YC6FQVB68aqhBIuL0+JAU=;
-        b=Axh+hNdzYiJEJ3PkVcftCmWZ+/5iaqGdZk+g2q2s+WlgSQjNulNrtzlFtFXCwq2EEn
-         l2UjTlwC69WUlftgnip5+7V9pOP0vi38V04GENHCN9OqlFyEQkdSREuKr/h74ABAdHJJ
-         bUUpsLwjAIL2B8pUGGtytvz6jhbTgybGfUlsJm4Z7u286PA5zMqlkGNKXFaEJSJ++edl
-         8lLUq2zK+k2WMNsj37zRFyq1SPGaWP66rJMOxcKGOnZxwmt9nIX9a7107t0XHi/ek2o/
-         5w5C1n0pbkjS22xyywtZtnHSnvZgrqoZElIz2NUplQ0JWtIZXtJjByP5+cPa4w91PgNV
-         GKGQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxSPo0EO1BeDEpmDP0s+lhV0K9x2+7Qu3bxjog3ABNAVFPTxLM4b1CRMOVSa2UUaS0EhqkWROeVAZYBENCnPg==@vger.kernel.org
-X-Gm-Message-State: AFuF++m48EANIcFGjLXnyJqmpwZ6oJoouqo10dkwDCc/4Fb87I6fwJAg
-	9J1hM9z9FJqG1eujMM6hUbkB9j7G2ZM1AcKPBBr8fCVDMAQ1Ajap2hjrWwGkUA==
-X-Gm-Gg: AYBFou0weVEUD4998M+TvVzOlXnOvlFzBPGmuQZSSygRZ/ErNJXzSCPDfpL9ApwiD9z
-	UYcpSsD1AV+0UXPoz2MxY7f/ajscmYb22MdC0MwFBAdiiCQtmU+oWjVaP6WUz6sCqeE+BtmBG+C
-	3RE9efYQ5WXEMAS+teo6SIS2QpjF4FQuu8FnntmAlp8IPzGVzGmo3ISzDoEJza80Ip6Y3/2Pjm6
-	SO8hqoJfuyN8PLA8ugP3REp9iiPzs30kn8nDT7KbPTt/Wwk8O0TrrsNOhWwA9XH5Pjzm12g7ayh
-	GLh2Q66pSBeUC7i6XZ8Z0t8PAkMv8bi5JKmQKhWePNZ644kdInfABwJ0BfricvuLbj5z2kKFN06
-	FUshBhtOS5YI4iSgm/rnTXPO0Pxe/Q5c2nZ6aCt9zxoxipP5c2+G/jcHBxE+D4xsP7cc5MLRgLt
-	3E1EP2b2sHvUhkwIQxR6btZAaMgFwMk/bm8Nb8Rge6jFhTHw7Jy7YzB0mfe950jpEbKHgERJOfn
-	keV8ottmLlKK0a1Wj9Ypg4KyroqdtnqL87d2SV2ITvfF7hWsT2rsDbSgFpT0m9anKuKP0wJUZyO
-	YG3ab4SSpNrhZbkIrYsRsD+lDbacuuaFgjE3Lj1j7h/hZW8=
-X-Received: by 2002:a05:6808:514b:b0:4b9:e5fa:8907 with SMTP id 5614622812f47-4ca4b738b12mr543496b6e.26.1789511785485;
-        Tue, 15 Sep 2026 15:36:25 -0700 (PDT)
-Received: from mail-oo2-f39.google.com (mail-oo2-f39.google.com. [74.125.231.167])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4ca20e6362fsm762751b6e.1.2026.09.15.15.36.24
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Sep 2026 15:36:25 -0700 (PDT)
-Received: by mail-oo2-f39.google.com with SMTP id 46e09a7af769-7fcb425fb68so160563a34.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 15:36:24 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxnUYlohoYKItNM2aEMANHS/McVGf1uByziNw/IEJj6fxeaqIVBXhYacZhbMOGYAWwhHJAkRXH4R9sP0Fa4ng==@vger.kernel.org
-X-Received: by 2002:a05:6830:2b0a:b0:7e9:e709:44f6 with SMTP id
- 46e09a7af769-80b2c5a740fmr490576a34.12.1789511784339; Tue, 15 Sep 2026
- 15:36:24 -0700 (PDT)
+	s=arc-20240116; t=1789511797; c=relaxed/simple;
+	bh=7EMxWfIlmrKyo2RNoD8ajkhvnDxN+xpuClNjuc42JfI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Fqg/pnxcTiwG3CZKKF3uojJ7f7RGA91erbaOYWF/jtilzgVDAgRY1OGO5bOFFI98eaSQWFl7ILHa3GWxJsmTxDD1gIHPtZlQtv/J6/iCHMh8YnJ4hRExUVuFugDRhmFwOaBTdqUvA22h1TgviepAxNxFz500kkdxaGdI6wwK9EM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mRuXfIMc; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mRuXfIMc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C60271F000FF;
+	Tue, 15 Sep 2026 22:36:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789511796;
+	bh=tJB/ynB1O6KFhhQUE3+H7FzZgaFEBZ+R06nzHlwMLRU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=mRuXfIMcpol2kF15SSXYqqHbP3nEguGhNBHCQlSGidP8Vu0MwfV6uRZFAtKjEZEYP
+	 TF5zzhSytWTBkeMNPzDdtvmrhhSs2BYLICHsNF1FJC+tm1YYqNmIfxQA4aQPFnsKEM
+	 pLxiKfsOyB3ZRiZiAWr2z1y6qlfBlz2Ui1wr9W6ydGjgtN0uxOCjPtayYu07TM68TQ
+	 lAp07odWWNmPSLkSc5G+CznsforeETweVDvvMMkaXeF1siiVdqcqWLpCXTPh0Opx6A
+	 xJzA8QB5gsEMB1CqYzthziEcNzXPvCdNtoy2Xq/knpihK26z/F9UwMdEjC4PCBQ6h1
+	 cnR0dcefKSY/g==
+Date: Tue, 15 Sep 2026 17:36:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, mani@kernel.org,
+	jjohnson@kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
+Message-ID: <20260915223634.GA878346@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260915-brcmfmac-4way-handshake-offload-authenticated-event-v2-1-fbb9cc7ac177@jannau.net>
-In-Reply-To: <20260915-brcmfmac-4way-handshake-offload-authenticated-event-v2-1-fbb9cc7ac177@jannau.net>
-From: Neal Gompa <neal@gompa.dev>
-Date: Tue, 15 Sep 2026 18:35:48 -0400
-X-Gmail-Original-Message-ID: <CAEg-Je_YwUiMGp824d_xSFu_tveO8fhg8iFkbF4yt+p3ZavgGA@mail.gmail.com>
-X-Gm-Features: AcwNN1W2qt9nnEEFJwdUZ2bbqC9KmYt-CX0tJb1UVyZt85fT9jD1BRVwzLovmLE
-Message-ID: <CAEg-Je_YwUiMGp824d_xSFu_tveO8fhg8iFkbF4yt+p3ZavgGA@mail.gmail.com>
-Subject: Re: [PATCH v2] wifi: brcmfmac: cfg80211: Report port_authorized for
- 4-way HS offload
-To: Janne Grunau <j@jannau.net>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>, Hante Meuleman <meuleman@broadcom.com>, 
-	Kalle Valo <kvalo@kernel.org>, Pieter-Paul Giesberts <pieterpg@broadcom.com>, 
-	Jason Huang <jason.huang2@infineon.com>, linux-wireless@vger.kernel.org, 
-	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
-	asahi@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	Arend van Spriel <arend@broadcom.com>, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260721081301.205374-1-jtornosm@redhat.com>
 
-On Tue, Sep 15, 2026 at 3:17=E2=80=AFPM Janne Grunau <j@jannau.net> wrote:
->
-> Since commit 416386060 ("Mark authorization completed on driver
-> indication during 4-way HS offload") [0] wpa_supplicant expects
-> NL80211_CMD_PORT_AUTHORIZED to complete the authentication when the
-> driver supports 4-way handshake offload.
-> This was apparently never tested with the upstream brcmfmac driver as it
-> does not report this. This broke authentication on Apple silicon devices
-> (BRCM4378, BRMC4387, BRMC4388) and other devices when wpa_supplicant
-> 2.11 was released [1]. This was initially dealt with by reverting the
-> commit in Fedora [2] and other Linux distributions.
-> Instead of carrying the revert over to wpa_supplicant 2.12 add the
-> expected NL80211_CMD_PORT_AUTHORIZED when the connection is established.
->
-> The "Fixes:" tag is not fully accurate as this has only became an issue
-> after userspace changes years after the change. Since the change is
-> expected to be required in all active stable branches for wpa_supplicant
-> 2.11 / 2.12 compatibility it is helpful even though
-> BRCMF_PROFILE_FWSUP_SAE did not exists then.
->
-> Link: https://github.com/zephyrproject-rtos/hostap/commit/41638606054a098=
-67fe3f9a2b5523aa4678cbfa5 [0]
-> Link: https://lists.infradead.org/pipermail/hostap/2024-August/042893.htm=
-l [1]
-> Link: https://bugzilla.redhat.com/show_bug.cgi?id=3D2302577 [2]
-> Link: https://lore.kernel.org/linux-wireless/20260911065656.1269623-5-Jas=
-on.Huang2@infineon.com/ [3]
-> Cc: stable@vger.kernel.org
-> Fixes: b8a64f0e96c2 ("brcmfmac: support 4-way handshake offloading for WP=
-A/WPA2-PSK")
-> Signed-off-by: Janne Grunau <j@jannau.net>
+On Tue, Jul 21, 2026 at 10:13:01AM +0200, Jose Ignacio Tornos Martinez wrote:
+> Some Qualcomm PCIe devices (WCN6855/WCN7850 WLAN cards, SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
+> 
+> The problem manifests in VFIO passthrough scenarios:
+> 
+> - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WLAN devices:
+>   Normal VM operation works fine, including clean shutdown/reboot.
+>   However, when the VM terminates uncleanly (crash, force-off), VFIO
+>   attempts to reset the device before it can be assigned to another VM.
+>   Without a working reset method, the device remains in an undefined state,
+>   preventing reuse.
+
+Just to clarify the commit log, I asked earlier about why this says
+"when the VM terminates *uncleanly*", since VFIO resets the device on
+every reassignment regardless of whether the VM termination was clean
+or unclean.
+
+But I didn't understand the answer (here's the question/answer from
+https://lore.kernel.org/all/20260612142638.1243895-1-jtornosm@redhat.com/t/#m853c96910f7c842dca597f5c0a0f2fcc90d98be1):
+
+>>> I don't know enough about VFIO, but I sort of expected that VFIO
+>>> would reset devices between reassignment regardless of how a VM
+>>> terminates.  I guess that's not true?
+
+> VFIO does attempt reset on every reassignment. Without a working
+> reset method, the attempt fails and the device remains in undefined
+> state. With this quirk, D3hot successfully resets the device
+> allowing reassignment.
+
+I guess you are saying that some kind of reset *does* work fine in
+normal, clean VM termination?  If reset works fine for normal VM
+termination but not for VM crash, do we have any idea why they are
+different?
+
+> - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
+>   on first VM assignment without proper reset capability.
+> 
+> Add device-specific reset methods using BAR-space hardware reset registers
+> that exist in these devices:
+> 
+> - WCN6855/WCN7850 WLAN devices use SoC global reset via BAR0 (sequence from
+>   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
+>   ath11k_mhi_set_mhictrl_reset()):
+>   - Write/clear reset bit at offset 0x3008
+>   - Wait for PCIe link recovery (up to 5 seconds)
+>   - Clear MHI controller SYSERR status at offset 0x38
+> 
+> - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
+>   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
+>   - Write reset request to offset 0xb0
+>   - Wait 2 seconds for reset completion
+
+Since these basically copy code from other drivers, is there an
+opportunity to remove it from those drivers and use this instead?
+I see that the maintainers for drivers/net/wireless/ath/ath11k/pci.c
+and drivers/bus/mhi/host/main.c are already cc'd, so this is something
+that could be done later (if it's possible); doesn't need to be done
+before merging this patch.
+
+This looks like two patches squashed together.  If there's any other
+reason to touch this patch, I would split them apart.
+
+> These are true hardware reset mechanisms (not power management or firmware
+> error recovery), providing proper device reset for VFIO scenarios.
+> 
+> Testing was performed on desktop platforms with M.2 WLAN and modem cards
+> using M.2-to-PCIe adapters, including extensive force-reset cycling to
+> verify stability.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 > ---
-> Changes in v2:
-> - rebased on wireless-next with "brcmfmac: add FT/OKC roaming offload
->   support" applied
-> - updated commit message
-> - Link to v1: https://lore.kernel.org/r/20260912-brcmfmac-4way-handshake-=
-offload-authenticated-event-v1-1-e41a6a8281a2@jannau.net
-> ---
->  .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 20 ++++++++++++++=
-++----
->  1 file changed, 16 insertions(+), 4 deletions(-)
->
-
-Looks good to me.
-
-Reviewed-by: Neal Gompa <neal@gompa.dev>
-
-
---=20
-=E7=9C=9F=E5=AE=9F=E3=81=AF=E3=81=84=E3=81=A4=E3=82=82=E4=B8=80=E3=81=A4=EF=
-=BC=81/ Always, there's only one truth!
+> v13: Address Alex Williamson feedback:
+>   - Validate initial ioread32() with PCI_POSSIBLE_ERROR() before
+>     read-modify-write to avoid writing error response back to device
+>     on platforms with APEI/GHES error escalation
+>   - Replace time_before()/msleep() polling loop with read_poll_timeout()
+>     for robustness against scheduling delays and code simplification
+> v12: https://lore.kernel.org/all/20260630065815.199693-1-jtornosm@redhat.com/
+> 
+>  drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 116 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 431c021d7414..bd1e0742052e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/isa-dma.h> /* isa_dma_bridge_buggy */
+>  #include <linux/init.h>
+>  #include <linux/iommu.h>
+> +#include <linux/iopoll.h>
+>  #include <linux/delay.h>
+>  #include <linux/acpi.h>
+>  #include <linux/dmi.h>
+> @@ -4240,6 +4241,118 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
+>  }
+>  
+> +#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET	0x3008
+> +#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
+> +#define QUALCOMM_WLAN_MHICTRL			0x38
+> +#define QUALCOMM_WLAN_MHICTRL_RESET_MASK	0x2
+> +
+> +/*
+> + * Qualcomm WLAN device-specific reset using SoC global reset via BAR0
+> + * registers.
+> + */
+> +static int reset_qualcomm_wlan(struct pci_dev *pdev, bool probe)
+> +{
+> +	void __iomem *bar;
+> +	u32 val;
+> +	u16 cmd;
+> +	int ret;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+> +	bar = pci_iomap(pdev, 0, 0);
+> +	if (!bar) {
+> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +		return -ENODEV;
+> +	}
+> +
+> +	val = ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	if (PCI_POSSIBLE_ERROR(val)) {
+> +		ret = -ENODEV;
+> +		goto out_restore;
+> +	}
+> +	val |= QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	val &= ~QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	ret = read_poll_timeout(ioread32, val,
+> +				!PCI_POSSIBLE_ERROR(val),
+> +				20 * USEC_PER_MSEC,
+> +				5 * USEC_PER_SEC, false,
+> +				bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	if (ret) {
+> +		pci_err(pdev, "PCIe link failed to recover after reset\n");
+> +		goto out_restore;
+> +	}
+> +
+> +	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
+> +	 * and thus need to set MHICTRL_RESET to clear SYSERR.
+> +	 */
+> +	iowrite32(QUALCOMM_WLAN_MHICTRL_RESET_MASK, bar + QUALCOMM_WLAN_MHICTRL);
+> +	ioread32(bar + QUALCOMM_WLAN_MHICTRL);
+> +
+> +	msleep(10);
+> +
+> +out_restore:
+> +	pci_iounmap(pdev, bar);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +
+> +	return ret;
+> +}
+> +
+> +#define MHI_SOC_RESET_REQ_OFFSET		0xb0
+> +#define MHI_SOC_RESET_REQ			BIT(0)
+> +
+> +/*
+> + * Qualcomm modem device-specific reset using MHI SoC reset via BAR0
+> + * register.
+> + */
+> +static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
+> +{
+> +	void __iomem *bar;
+> +	u16 cmd;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+> +	bar = pci_iomap(pdev, 0, 0);
+> +	if (!bar) {
+> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +		return -ENODEV;
+> +	}
+> +
+> +	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
+> +	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
+> +
+> +	/* Be sure device reset has been executed */
+> +	msleep(2000);
+> +
+> +	pci_iounmap(pdev, bar);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -4255,6 +4368,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_chelsio_generic_dev },
+>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>  		reset_hinic_vf_dev },
+> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_modem }, /* SDX62/SDX65 modems */
+> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_wlan },  /* WCN6855 WLAN */
+> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_wlan },  /* WCN7850 WLAN */
+>  	{ 0 }
+>  };
+>  
+> -- 
+> 2.54.0
+> 
