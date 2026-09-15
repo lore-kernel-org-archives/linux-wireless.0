@@ -1,112 +1,173 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB7040681D
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 17:47:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884214A6CDF;
+	Tue, 15 Sep 2026 18:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789494443; cv=none; b=R2oFmpasJAiaYiiSUkxDlR5Cdjti6X3hy+wOL5cStP/rHFPKcRnXSjgct6cC/sruyAv/fn89HjMxcI4cy5jTAftPk5zFWvtYA6+2CXkNllhATflMcUThdiZE5OppQVPhYSzTtseenlpggfaLURtr2uw8TYdNtRqIlzis+XbmhBE=
+	t=1789495532; cv=none; b=scEk3jaJqbfeet0JDqfFF0hblNplzvmS+1lPz5NwnsVrm4u1kVOCfExiYi/g6Hcz/08l4v56diz5hEAm6GLeiPHgwD5vF0ECUh6ZHM6V+9zH5qgIzxHNOxKGwTLx8eYsV+cO0V34F90js4GWpfA4rKUMxDgVeEre50pX0LwffPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789494443; c=relaxed/simple;
-	bh=I4KI1aweFFig+SZlrBdaO4mP05yecfWNr+LbmApZG/c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qi2/FjfgHtz/J6EVB/mBBdDz+XW7dUs9RYIh4snPS3qgzoqnjQirnFdJXiLWthWcKwwtSHgXcTrvi6M6bpILyLrOGxPxKcspTt8TvbPBhFUsSyZngTdvMnmXy+YcGnkOB3gDJ7U8ohmybuMXCj6DWO3h6+Uv/S3guL/mWgw1/iA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VuyRU6W9; arc=none smtp.client-ip=74.125.228.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789495532; c=relaxed/simple;
+	bh=V6K4OlMCnUsCbDMREVaUa2vUImH9KQWys0wgaxngXJA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gfuPf03J7lxn0tqT5OuVYHZ4DS/aVd4KrSy2EDRM8b982EshWCpuzHWUr+D9KdPANs83cOFX09kIsaIw7aDm2lEcsp6xot0jmqiCR0NzNGmwbnunVarZnX3eiEP4fnf2GnWnQ/YsopuMzFiqjYgckczMy+23ng8N45508TCOPxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jTo4X3Om; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VuyRU6W9"
-Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc4aa0f1766so62873a12.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 10:47:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789494441; x=1790099241; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=XpMG1qjPop6FoZkaj0fsmzVch6Tcbe08TjxPfHV5ihU=;
-        b=VuyRU6W9oOA+cxiJDl42MTH1xUnI6/pGuJTc/7yCd+32RPftTniZ37WbA82nFLYnGd
-         LcClt4N1I1OyPZeW5VvswOi31an/84YXfxG639UOpErSo6huHLPVEJW8kg5RJH9/Y49H
-         fhNtLTMWD4CfYiZGofN9HIB2bIyAohKpMdREyNj+wvApzucCVnvsbYEmGtcBzmpa2atu
-         5/Ztfx87nW07cO4hL8pj5TIUQsXqmRLpQCMBdLPRNym2GJCoPMX5jB1TL9biVLJau+EB
-         NobpRUYFwfv7DkaUprxS75ktWb+r/yqQlyxUPrYeKET3rIkfHsBkdwhhQVWuyFgVt/hL
-         E7zA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789494441; x=1790099241;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=XpMG1qjPop6FoZkaj0fsmzVch6Tcbe08TjxPfHV5ihU=;
-        b=AaOgLcbfwHBJBmxE479sMCok/nmjauaWuB6eDAw3f2c+l0g9CgsgPYl/j/hZ4FKPr5
-         oxAEq2HgvFoNPAsgN68iJrUA0WJQfL2UPyIJpttLysiP/x63zMlZoZ317/LBlbh929lS
-         Es/sSbjrlelWIwsi1Lvu23VhIywwB2i2xa3VuGcq6OeWCk+SbfUTtXbBWTz1/baq7+dX
-         sQ9bhOJWf6XQX3nSKKtqRF4R7YmhnSBcdufBCbXAUZCa1TFRRtKNUpgE+oXRMnKnHz04
-         0PFLqr7jmJbJGtiyLrQQ+gy/IJu1vS8uOGc2D4OcdWPdGZ6V9WZWpLjzTc8HV7kiXx73
-         Xuvg==
-X-Gm-Message-State: AFuF++lRvJk5X4SEhoVuIjhjzcBzV/G18k0IAedlpKmeIwq4gzfoNamS
-	22Y4qFXMe9q7ooejQvHZG7ZAv82kswigwYxcoD4CvDQZcYlvuF2B2/en27dPX+PNi4bS6rG/
-X-Gm-Gg: AYBFou2lBJrrl8brX/nCHvc8cepA8h7oplFHYXZOmgSdkv1xRpMiwNH7uv43HEZsyJR
-	93cOWAQaryiO+DAa6yCxpY9Qn+AXrv55+JBqBQc6PmJi2fRnljMp4Ia0IU7lBxisFSsKHwk5TSp
-	h7jraHy2dd1LdZLeQYbYd6IDaocn16vHi966Z2knARxb3XCNkmPXh6pGbXnLZnfM4qNrazGBEYL
-	AXTiWmw+SuD4L9xcYwnZ58BG4hTIaAErFyy2/C8Xn2kWC5IRCX9SmQVMvrzjjzYB0+BORCn2blZ
-	4YXszgtl1DYRTpQds999P2rSBJI6ah5j2tZyt3YHrjvQNg/iDlq7dO9x0/wEiHqvdh8wl4blDC/
-	+D92ErYh7f5oxvoOENzuSe9Bp5k4/2ipExOa4IpUlqCxfQp05BboSjjfDS0TgrVW/RsQzCtcvmj
-	XAk9ir8o1hsfrOa7NBHlrKsVcMO1+MiejSuqASca21goZ/QCICMt0w8ZbQpakBPW4Q3AHqV8JnK
-	F2HZTF2TotijDS2IwQVXV31qwXUyYOOPQ==
-X-Received: by 2002:a05:6a20:6a11:b0:3d0:ba81:79b1 with SMTP id adf61e73a8af0-3db400361e3mr16492369637.0.1789494440774;
-        Tue, 15 Sep 2026 10:47:20 -0700 (PDT)
-Received: from macpro17.tail61d16e.ts.net ([2804:14c:7bd0:701b:a9d3:4f15:11fc:30f5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5aca3fbsm545337eec.20.2026.09.15.10.47.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 10:47:20 -0700 (PDT)
-From: =?UTF-8?q?Vin=C3=ADcius=20Ramon=20Fontanela?= <vfontanela@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	=?UTF-8?q?Vin=C3=ADcius=20Ramon=20Fontanela?= <vfontanela@gmail.com>
-Subject: [PATCH v2] wifi: brcmfmac: allow ISO3166 fallback for BCM4350
-Date: Tue, 15 Sep 2026 14:43:00 -0300
-Message-ID: <20260915174300.28363-1-vfontanela@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260914200357.1743468-1-arend.vanspriel@broadcom.com>
-References: <20260914200357.1743468-1-arend.vanspriel@broadcom.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jTo4X3Om"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9A331F000FF;
+	Tue, 15 Sep 2026 18:05:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789495529;
+	bh=mPeI+6lTU/Y8EitQI5ZfnrfapFmX8wWN22xo6A7UJaE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jTo4X3Om6pjYJxMpPsXGw742bcwi+fNKt1WirPMCjMB3CN4+QeGCMAad0HowUYo27
+	 zkPX73/bpXrtYTMe0XsfHOKvy0auvvNyZSnejxr33FwP5Y4EAzd8YeVUzA5p/dgDEw
+	 5cFlE/iE3GLNGT0ByRP+/biS9WQfT2P4HJ97Jm9P9K/qgKyfL5uH3H46GOijU3awQE
+	 U05QkDGXb1dMAlMiuCtrF46H69n28W2iJaBayGHH26y3LSBp2/268of5pUNUCjMz6C
+	 lP5HOIiL9QmsIGugbJJQ+XSzW3eNNY7uy3+IQE3mKC77JsHqvgv78X1PoCadcnYcJG
+	 U7RPeBeWp4lDg==
+Date: Tue, 15 Sep 2026 11:05:29 -0700
+From: Kees Cook <kees@kernel.org>
+To: Bill Wendling <morbo@google.com>
+Cc: linux-kernel@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Helge Deller <deller@gmx.de>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Ian Abbott <abbotti@mev.co.uk>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Matthias Schwarzott <zzam@gentoo.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Sylwester Nawrocki <s.nawrocki@samsung.com>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Jiri Pirko <jiri@resnulli.us>, Simon Horman <horms@kernel.org>,
+	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Mike Rapoport (Microsoft)" <rppt@kernel.org>,
+	Kanglong Wang <wangkanglong@loongson.cn>,
+	Tiezhu Yang <yangtiezhu@loongson.cn>,
+	Qiang Ma <maqianga@uniontech.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Ard Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>,
+	Thorsten Blum <blum@kernel.org>,
+	Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lyude Paul <lyude@redhat.com>,
+	Ashutosh Desai <ashutoshdesai993@gmail.com>,
+	Imre Deak <imre.deak@intel.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Johan Hovold <johan@kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Alexander Stein <alexander.stein@ew.tq-group.com>,
+	Cryolitia PukNgae <cryolitia@uniontech.com>,
+	Jiaming Zhang <r772577952@gmail.com>,
+	Will Porter <mrwillporter@gmail.com>,
+	Cen Zhang <zzzccc427@gmail.com>,
+	=?iso-8859-1?Q?C=E1ssio?= Gabriel <cassiogabrielcontato@gmail.com>,
+	Rong Zhang <i@rong.moe>, Arun Raghavan <arunr@valvesoftware.com>,
+	nikitash.mariiaw@gmail.com, linux-arm-kernel@lists.infradead.org,
+	loongarch@lists.linux.dev, linux-mips@vger.kernel.org,
+	linux-parisc@vger.kernel.org, linux-edac@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+	linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com, devicetree@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
+	devel@lists.orangefs.org, linux-hardening@vger.kernel.org,
+	linux-sound@vger.kernel.org
+Subject: Re: [PATCH 00/28] Replace remaining strlcat() call sites with
+ snprintf()/seq_buf()
+Message-ID: <202609151055.AFC6267@keescook>
+References: <20260915081910.4142719-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
 
-BCM4350 devices using brcmfmac on x86/PCIe may have no platform-provided
-country code map. In that case brcmf_translate_country_code() falls back to
-ISO3166 codes only for chips accepted by
-brmcf_use_iso3166_ccode_fallback().
+On Tue, Sep 15, 2026 at 08:18:17AM +0000, Bill Wendling wrote:
+> strlcat() is deprecated: like strcat(), it requires re-scanning the
+> destination string from the beginning on every call, which is O(n^2)
+> when used to build up a string incrementally, and its truncation
+> behavior is easy to get wrong. See:
+> 
+>   https://github.com/KSPP/linux/issues/370
+> 
+> This series removes the remaining strlcat() call sites in the tree
+> (plus the one inside fortify-string.h's strcat() implementation
+> itself), replacing each with snprintf(), scnprintf(), or the seq_buf()
+> API, whichever best fits the surrounding code.
 
-BCM4350 is currently missing from that list, despite the adjacent BCM4345
-and BCM4356 being present. Add BCM4350 so these devices can use the ISO3166
-country code with revision 0.
+Thanks for tackling this!
 
-Signed-off-by: Vinícius Ramon Fontanela <vfontanela@gmail.com>
----
-v2: resend using git send-email to avoid line wrapping/corruption in v1.
+A few global notes:
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
- 1 file changed, 1 insertion(+)
+- This series almost certainly needs to be sent as separate single
+  patches to each subsystem maintainer (rather than a giant CC list).
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 9d8ce7bb0..2b819dbe6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -8076,6 +8076,7 @@ static bool brmcf_use_iso3166_ccode_fallback(struct brcmf_pub *drvr)
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43430_CHIP_ID:
- 	case BRCM_CC_4345_CHIP_ID:
-+	case BRCM_CC_4350_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
- 	case BRCM_CC_43602_CHIP_ID:
- 		return true;
+- As others noted already, we don't want to do anything as just an
+  open-coded strlen/sprintf; this doesn't gain us anything. If we can't
+  use seq_buf or some other solution, we need to figure out what we _can_
+  do for a given use.
+
+- There are some collisions with other in-flight patches, e.g.  Mariia's[1]
+
+- The "Assisted-by:" trailer doesn't need the level of detail you've
+  got, which changed recently[2]. Now the desired trailer would just be:
+    Assisted-by: LLM
+
+- Please avoid including the Cc list in the email body (above or below
+  the "---" line), as it ends up being redundant.
+
+I'll go look through the individual patches...
+
+-Kees
+
+[1] https://lore.kernel.org/all/27956255dde39f58d73a7b51cb53cbe3d7804f54.1786411026.git.mariianikitash@google.com/
+[2] https://git.kernel.org/linus/816d9992d9ed ("coding-assistants: simplify attribution")
+
 -- 
-2.55.0
+Kees Cook
