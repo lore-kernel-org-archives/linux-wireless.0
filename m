@@ -1,273 +1,532 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+Received: from mail-oi2-f13.google.com (mail-oi2-f13.google.com [74.125.231.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20F54A8A08
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 15:28:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14E4B3B4EB3
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 15:59:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789486110; cv=none; b=d2tRg2eW3Eg8pEWXTTyg3HmUdqy0ErnNmFTRVYHpiOCNsYx46b9dRAKJNEgL4pURGTBf1dzk/T0pRn7ln4fFZz7EKJYriUy+GbvMEFfG9PPRgAhS9mnOcGC4hVh3xjm2gBc33IlnvJtMsgG3wvqi9xTn34ZIWB3PFysHOIo9IIw=
+	t=1789487995; cv=none; b=pcCWqaNXVvJtxmug+pSc+V9Rwlxfz1QXC8ZmH/EaWVYNL8DHEl+YFOeRe3qcwWy1lE2Mater6UBlyp+6tu/uHLE+qUgFbsgkHx+JvRwQjghI3qI4Ix6JYVKvLUUYw4guTS4D3xdh12p7UBEnjdv2e3mqKaD1i3sLDQ5sn+C9L/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789486110; c=relaxed/simple;
-	bh=15+SZqGZ+rKb58cj8l9a3UfjccfUiCU49btU1/YB8gc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kAsm3REi9/DS0KTpG+PUgYaOcAmd9RkabtPGq8akFMMCgY9ShK0J/ODY/SDPhtna9evJV1rC9H/vD+ZNG/oMXAlR7ebxe07Rm4DPINQpXn7QXlH1aiYTQ2O5do3M035Vk7KiPeX9l8hEMWBj3S+GMGvsMWf7mPnJG3nnBk9ULZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jfEibjiI; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789487995; c=relaxed/simple;
+	bh=tu3isjCkJ9whd6wOUuxDJ+8nmbLRSLBlYLxu4cvur1I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=MxaIMuObwAUuhbF1zU+qagmJQtRX0truwq+dyOqiUd4A+jEqT+eB4vszlRgTGyeZdQGoTVxroRO9gWUIq2rx1BOxXEPkVHL62O/rXmRQQp3YGfp3PZU9kwYbufPdrlBhJYpYXgbxT2bwq/nAxKx2Gpq3IL4TmXJPiI0a9N1XJiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=JxXfR391; arc=none smtp.client-ip=74.125.231.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jfEibjiI"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e620fa473so19670285e9.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:28:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="JxXfR391"
+Received: by mail-oi2-f13.google.com with SMTP id 5614622812f47-4c17f382ff5so1300188b6e.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:59:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789486106; x=1790090906; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=33gYF2jzy1G9rIQBj+NprKHNDmK+lqFhKcN1EOQ8yF8=;
-        b=jfEibjiIwhZaYtGUuadVegONxUPC3HS7ouSb7i+RW4hkJn3ugSOYCnbX3shhzSbNGh
-         Vm65BmU109xm8lgJZ6JmhJO1e3qu0K0KgbI6jXTiXoFoSmb4hw+pQBN4A3eQSc8HuqDJ
-         6SL4kMY3suUG1ZiWLsAmEBFIoWT3gwDIabsq5GYfx7wNzJpFBwqLPkn8PnGuerzxyKI1
-         WuYvLHi6kvcXL6R4jF1oO6b0/4sN3ABxbfav1UooLx+EmDSo+YpzdILM2jXsT90xjat3
-         BymEefJvN/eL08EswWh1GZD4LVDp2p2XMiT9XtmgkhYWfzZb8N/fO/Ig+wJ2H2bwZ04p
-         deWA==
+        d=ieee.org; s=google; t=1789487989; x=1790092789; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=u17cMuYGc5vtBTFcb6UewtH/WxUd/WeV4HHc12mdl6E=;
+        b=JxXfR391zYMFKrDJDhFG0LZHM2foJZUzxKIJhGS4A8uC5HhMG4HqnsOaWuiDb1iB1r
+         NkW1Xh6vaFaqf3V3vvF6XfjXZ+mprMAvq1CPUv7Pul1Xw1PfRr9iDqAfeg3o1V8wdVAs
+         olOkoNaj+tZQ8BerD6q7SsPc03yfsRiu3F5Mw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789486106; x=1790090906;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1789487989; x=1790092789;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=33gYF2jzy1G9rIQBj+NprKHNDmK+lqFhKcN1EOQ8yF8=;
-        b=ZK4Q0Akx+kHFW4AVk7Wvbvq2j3QiEwYIyUmom4DZiUuF33S/G2/sTfTyaoePsmW4iD
-         bCm6ge8mzjzOcQOq60UYWc8L0amshLQKBmYLJQsegXMjy+hqSStU1QtpvY0QEkjbHGDQ
-         ErGzUjIk2jiloYlApkm0qtTy52RWfwxVajRrYgH/1ODB+wsxktBJcY4Zi7XldgKqR2R2
-         1GwhjY+9UUJthFj9ExDWwfSAoGArUHVdUJa2yzFBxRJlR6uIyHwbYtnQl1lqLOZj6u3J
-         rV6SBBhcyBX5/IExXQgVYIZofoudfzN6BwQoL5OFGBJU3H2QAm0SIEkSDprjxjBP0TfE
-         bsbw==
-X-Forwarded-Encrypted: i=1; AKwUvBz3LFshSzeshjY84n+K+XNbdP4tSTKTs2uhSZgLmPbCYVS+DOpLLeHOB/vFoty5HyaTD/TIiefgDOY9b8vlDA==@vger.kernel.org
-X-Gm-Message-State: AFuF++lxdCyGo1tOQCPKojCsnxWunXS+0+w0URupB81siwsfhg4FBLcD
-	t4xjCnHMWuL5tLjZTVfASmfzmKmxm8fiQF0K7FN1MWOzNCDIBhxWm+aJ
-X-Gm-Gg: AYBFou0Fydcv18F0lsJyy6p29eJUf34OC6tJ+BlPCPBRNgf+qg4VfR06DlBvr1gihjg
-	gVwyA602i0Wn5XGpUeYCrYJ+o5BJpoL3fUJ7uAQ65zJlY3iojvok0gyCyiF//sGKGWOEr0VUHRp
-	PBr96N8FqiUaMXspYBxl9xZJ5vvj+1PKpP0TmRAdjQoA3sY7BL6rVItr7V2VlW6K7wsThhnLKcy
-	NHMSd2ko9vHDNtlxMsUszjwCBg5E07zJY+StrrgACYjMaPum6OtS2rfWZUyWZqaH7/pf3Wm8cIh
-	NcCYiSGzh2bmp2TggQSH7V3gpFQbEV/4pzV2FJC8GeczPuQwqKBCr/gkwDSUZr8+AO2twDtKFnU
-	kB1yIz/bkTbWhM/mYMMp1+PfMR8ufq/hzT3qaBWhRXAMQr/EOk1CNyfPM2qszhkkrn2Zxfmc6GX
-	y9c4MFXbTNAoO8p9OXSrcEkiSnPF9XLfyTZYExQjdLIXX/9CVeKJfCmykpfPUkZa4=
-X-Received: by 2002:a05:600c:a47:b0:49d:16f1:94a5 with SMTP id 5b1f17b1804b1-49e7a677980mr92009675e9.25.1789486106257;
-        Tue, 15 Sep 2026 08:28:26 -0700 (PDT)
-Received: from vitor-nb ([2001:8a0:c4c6:f00:a903:f291:2714:83e1])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-486eb2ecf23sm36312931f8f.5.2026.09.15.08.28.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 08:28:25 -0700 (PDT)
-From: Vitor Soares <ivitro@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Vitor Soares <vitor.soares@toradex.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	baochen.qiang@oss.qualcomm.com,
-	kang.yang@oss.qualcomm.com
-Subject: [PATCH ath-next v2] wifi: ath12k: provide MAC address list for single-radio wiphys
-Date: Tue, 15 Sep 2026 16:28:15 +0100
-Message-ID: <20260915152815.254016-2-ivitro@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        bh=u17cMuYGc5vtBTFcb6UewtH/WxUd/WeV4HHc12mdl6E=;
+        b=P4gBU+ykvf/o96c7Z4ACxA5EpZ6pIhbeW8ff9+8ONeKdyq++3sSb7YQklFUhNNutUK
+         mnBdhpWrsy0BgFHmPHCRJlwzzzG+W2qBehFt+bSTA6UUDNgNLSoYJ9RfCgI3szb+9fOX
+         25jBvpv5dFR3dQMs1Hif4VE+PIV0D39YvX4sVgyWUFCXSnCeBBXezO5cRPx2BMCnZPif
+         7t2G8hH7Zu3wH7kIPleGx1NyCGcKfniWxOxuvZrLMA2U7uM7KzQRWwGtoofx9D4rYYLR
+         MaHeZWdlVTXzr6UYNPk3wFUYeJeiQPspstmjv8xUXPg36E9Ssm+/GS413nx+F//7w0uO
+         Kfyg==
+X-Forwarded-Encrypted: i=1; AKwUvBzBSQhWmEY0WqEdsNMjFtDAbd+tyb4DgSBJqWWVJGq6RJU6QgMqUoCszMbLiQJUKK1HxUaZYqW/RcbYnEMtpw==@vger.kernel.org
+X-Gm-Message-State: AFuF++mEOZOwX5SQfKpaNw2pKt8KtM303GTI1xDmyZ+LqNkH1NM/h7QY
+	EoMK3QVpdm0z2Ep6w+4MGsuluZjVB7LzHUHX8Uopnjvzt3nOTUsLzs/5B6lJpzC5vg==
+X-Gm-Gg: AYBFou03qa5dTrnO3SbcAnyRDYA+X4UKJhta4nH8zhk23+c6H/xi7Y8T2rKZ1QG+WiX
+	V/JapOfAGpPZmTKi28BPKCNt0I7Q5TMWKTWzZaMfMx8y/dBbYQVPZ4iLQhzRrevFzajFRM0Nre7
+	6O8+UMDXpl/hNwIo0Q4h6Pzo+e2HP1i0gJfP7uno5SPfdAk+GNaw+bUZ0G4pdK9YeZZCxk/ZCAf
+	WvmdsgTGQUS2MgWSg5Iw85eYqolwr5u78Y3rFRNL4RQCkNB6svBvIW2gGk66w1iDWTEgRzuChza
+	lizoO4xc46F72PREXGLi8qiXlQRW6DD5u8DUl8W7/YqJUttP52drqqqNTsvYe1W/c0+u6qtnULA
+	9PwV7p11lqYTowf3+45hgAy2e3nTuoDKAvE1lt+bt7Hj7k33Vx2jZq6Lj0Le7Z+76hxf7MG7Vuo
+	fclHBPG3/ikG3rv4mmHagGiLW5Rk8Tb5STfnLlKhPt7WBunQ/xUybRPdIE9nxsU+azRw==
+X-Received: by 2002:a05:6808:1512:b0:4b9:a88b:888f with SMTP id 5614622812f47-4c7b5d89f12mr5055793b6e.37.1789487989169;
+        Tue, 15 Sep 2026 08:59:49 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.googlemail.com with ESMTPSA id 586e51a60fabf-4842a33f8b2sm18328fac.14.2026.09.15.08.59.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Sep 2026 08:59:47 -0700 (PDT)
+Message-ID: <28bbceed-ec75-4916-b579-f33f63bff5d4@ieee.org>
+Date: Tue, 15 Sep 2026 10:59:44 -0500
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 net-next] dt-bindings: net: Use consistent indentation
+ in the example
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+ Justin Chen <justin.chen@broadcom.com>,
+ Florian Fainelli <florian.fainelli@broadcom.com>,
+ Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Linus Walleij <linusw@kernel.org>, =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?=
+ <clement.leger@bootlin.com>, Vladimir Oltean <olteanv@gmail.com>,
+ Heiner Kallweit <hkallweit1@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>, Felix Fietkau <nbd@nbd.name>,
+ Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
+ Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>,
+ Johannes Berg <johannes@sipsolutions.net>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Jeff Johnson <jjohnson@kernel.org>,
+ Richard Cochran <richardcochran@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>,
+ "G. Jaya Kumaran" <vineetha.g.jaya.kumaran@intel.com>,
+ Claudiu Manoil <claudiu.manoil@nxp.com>,
+ Alexandre Belloni <alexandre.belloni@bootlin.com>,
+ Alex Elder <elder@kernel.org>, Siddharth Vadapalli <s-vadapalli@ti.com>,
+ Roger Quadros <rogerq@kernel.org>, bcm-kernel-feedback-list@broadcom.com,
+ netdev@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-renesas-soc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ ath10k@lists.infradead.org
+References: <20260914155645.112508-2-krzysztof.kozlowski@oss.qualcomm.com>
+Content-Language: en-US
+From: Alex Elder <elder@ieee.org>
+In-Reply-To: <20260914155645.112508-2-krzysztof.kozlowski@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Vitor Soares <vitor.soares@toradex.com>
+On 9/14/26 10:56 AM, Krzysztof Kozlowski wrote:
+> Correct indentation in the examples to consistent 2- or 4-spaces
+> indentation to fix dt-check-style warnings ("example 0
+> [indent-consistent] indent mismatch ...").  Preferred is 4-spaces, but
+> re-indenting entire example just for that is too much churn.
+> 
+> In cortina,gemini-ethernet.yaml also drop the wrongly indented mdio bus,
+> because it is not necessary for the example.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-ath12k supports creating vdevs with addresses provided by mac80211.
-Userspace can already make concurrent interfaces work by explicitly
-assigning different locally administered addresses.
+Overall looks good to me (but the IPA binding in particular is good).
 
-However, ath12k does not advertise an address list, so when a second
-interface is created without an explicit address, mac80211 has nothing
-to pick from and falls back to the permanent address. If the first
-interface is already running with that address, bringing up the second
-one fails with -ENOTUNIQ.
-
-As in ath11k, provide a list of usable addresses so
-ieee80211_assign_perm_addr() can hand each new interface an unused one.
-Keep the first entry as the radio's own MAC address. Generate the
-remaining entries as locally administered variants by changing only the
-upper nibble of the first octet, which naturally limits the pool to 16
-unique addresses.
-
-The wiphy->addresses semantics are hardware-specific in ath12k: some
-platforms use it as an interface MAC address pool, while others use it
-for firmware-provided per-radio addresses. Gate host-generated addresses
-behind host_alloc_iface_mac and enable it for WCN7850.
-
-Handle only single-radio WCN7850 wiphys. Wiphys with more than one radio
-and other hardware families behave exactly as before.
-
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-
-Assisted-by: LLM
-Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
----
-v2:
-- Gate generated interface MAC address list behind hw_params
-  host_alloc_iface_mac, as suggested by Kang Yang.
-- Enable it only for WCN7850, the only part available for testing here.
-- Add Assisted-by: tag.
-- Link for v1: https://lore.kernel.org/all/20260902082219.3010793-2-ivitro@gmail.com/
----
- drivers/net/wireless/ath/ath12k/hw.h       |  1 +
- drivers/net/wireless/ath/ath12k/mac.c      | 52 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wifi7/hw.c |  6 +++
- 3 files changed, 59 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
-index 011bb22e21c7..03cb35071e0b 100644
---- a/drivers/net/wireless/ath/ath12k/hw.h
-+++ b/drivers/net/wireless/ath/ath12k/hw.h
-@@ -238,6 +238,7 @@ struct ath12k_hw_params {
- 	} client;
- 
- 	bool host_alloc_ml_id;
-+	bool host_alloc_iface_mac;
- };
- 
- struct ath12k_hw_ops {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index d4116ba0da08..45be5b08aa40 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -14743,6 +14743,54 @@ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
- 	kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
- }
- 
-+static void ath12k_mac_cleanup_mac_address_list(struct ath12k_hw *ah)
-+{
-+	kfree(ah->hw->wiphy->addresses);
-+}
-+
-+static void ath12k_mac_setup_mac_address_list(struct ath12k_hw *ah,
-+					      const u8 *mac_addr)
-+{
-+	struct mac_address *addresses;
-+	struct ath12k *ar;
-+	u16 n_addresses;
-+	int i;
-+
-+	/* The pool is derived from one base address, so it can describe only a
-+	 * single-radio wiphy: with more radios each radio has its own base
-+	 * address, possibly from a different ath12k_base.
-+	 */
-+	if (ah->num_radio != 1)
-+		return;
-+
-+	ar = ath12k_ah_to_ar(ah, 0);
-+	if (!ar->ab->hw_params->host_alloc_iface_mac)
-+		return;
-+
-+	/* Only the upper nibble of the first octet is varied, so at most 16
-+	 * addresses can be derived from one base.
-+	 */
-+	n_addresses = min_t(u16, TARGET_NUM_VDEVS(ar->ab), 16);
-+	if (n_addresses <= 1)
-+		return;
-+
-+	addresses = kzalloc_objs(*addresses, n_addresses);
-+	if (!addresses)
-+		return;
-+
-+	ether_addr_copy(addresses[0].addr, mac_addr);
-+	for (i = 1; i < n_addresses; i++) {
-+		ether_addr_copy(addresses[i].addr, mac_addr);
-+		/* set Local Administered Address bit */
-+		addresses[i].addr[0] |= 0x2;
-+
-+		addresses[i].addr[0] += i << 4;
-+	}
-+
-+	ah->hw->wiphy->addresses = addresses;
-+	ah->hw->wiphy->n_addresses = n_addresses;
-+}
-+
- static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- {
- 	struct ieee80211_hw *hw = ah->hw;
-@@ -14762,6 +14810,7 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 
- 	ath12k_mac_cleanup_iface_combinations(ah);
-+	ath12k_mac_cleanup_mac_address_list(ah);
- 
- 	SET_IEEE80211_DEV(hw, NULL);
- }
-@@ -14878,6 +14927,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	wiphy->available_antennas_tx = antennas_tx;
- 
- 	SET_IEEE80211_PERM_ADDR(hw, mac_addr);
-+	ath12k_mac_setup_mac_address_list(ah, mac_addr);
- 	SET_IEEE80211_DEV(hw, ab->dev);
- 
- 	ret = ath12k_mac_setup_iface_combinations(ah);
-@@ -15120,6 +15170,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 	}
- 
-+	ath12k_mac_cleanup_mac_address_list(ah);
-+
- 	SET_IEEE80211_DEV(hw, NULL);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index a20c21807344..8658828ea47d 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -445,6 +445,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.host_alloc_iface_mac = false,
- 	},
- 	{
- 		.name = "wcn7850 hw2.0",
-@@ -539,6 +540,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = false,
-+		.host_alloc_iface_mac = true,
- 	},
- 	{
- 		.name = "qcn9274 hw2.0",
-@@ -629,6 +631,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.host_alloc_iface_mac = false,
- 	},
- 	{
- 		.name = "ipq5332 hw1.0",
-@@ -713,6 +716,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.host_alloc_iface_mac = false,
- 	},
- 	{
- 		.name = "qcc2072 hw1.0",
-@@ -808,6 +812,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = false,
-+		.host_alloc_iface_mac = false,
- 	},
- 	{
- 		.name = "ipq5424 hw1.0",
-@@ -895,6 +900,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.host_alloc_iface_mac = false,
- 	},
- };
- 
--- 
-2.55.0
+Acked-by: Alex Elder <elder@riscstar.com>
+> 
+> ---
+> 
+> Changes in v2:
+> 1. Mention mdio bus removal.
+> ---
+>   .../bindings/net/brcm,asp-v2.0.yaml           |  2 +-
+>   .../bindings/net/cortina,gemini-ethernet.yaml | 52 ++++++--------
+>   .../bindings/net/dsa/renesas,rzn1-a5psw.yaml  |  4 +-
+>   .../bindings/net/intel,dwmac-plat.yaml        |  6 +-
+>   .../devicetree/bindings/net/mdio-gpio.yaml    | 16 ++---
+>   .../bindings/net/mscc,vsc7514-switch.yaml     |  8 +--
+>   .../devicetree/bindings/net/qcom,ipa.yaml     | 10 +--
+>   .../bindings/net/realtek,rtl82xx.yaml         |  6 +-
+>   .../bindings/net/socionext,uniphier-ave4.yaml | 32 ++++-----
+>   .../bindings/net/ti,cpsw-switch.yaml          | 70 +++++++++----------
+>   .../bindings/net/wireless/mediatek,mt76.yaml  | 32 ++++-----
+>   .../bindings/net/wireless/qcom,ath10k.yaml    |  2 +-
+>   12 files changed, 114 insertions(+), 126 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/brcm,asp-v2.0.yaml b/Documentation/devicetree/bindings/net/brcm,asp-v2.0.yaml
+> index a3db6d594c8c..7fcc564e820c 100644
+> --- a/Documentation/devicetree/bindings/net/brcm,asp-v2.0.yaml
+> +++ b/Documentation/devicetree/bindings/net/brcm,asp-v2.0.yaml
+> @@ -123,7 +123,7 @@ examples:
+>               phy0: ethernet-phy@1 {
+>                   reg = <1>;
+>               };
+> -       };
+> +        };
+>   
+>           mdio@ce14 {
+>               compatible = "brcm,asp-v2.1-mdio";
+> diff --git a/Documentation/devicetree/bindings/net/cortina,gemini-ethernet.yaml b/Documentation/devicetree/bindings/net/cortina,gemini-ethernet.yaml
+> index f0b5bea2458d..da9bc170cd54 100644
+> --- a/Documentation/devicetree/bindings/net/cortina,gemini-ethernet.yaml
+> +++ b/Documentation/devicetree/bindings/net/cortina,gemini-ethernet.yaml
+> @@ -87,18 +87,6 @@ examples:
+>       #include <dt-bindings/interrupt-controller/irq.h>
+>       #include <dt-bindings/clock/cortina,gemini-clock.h>
+>       #include <dt-bindings/reset/cortina,gemini-reset.h>
+> -    mdio0: mdio {
+> -      #address-cells = <1>;
+> -      #size-cells = <0>;
+> -      phy0: ethernet-phy@1 {
+> -        reg = <1>;
+> -        device_type = "ethernet-phy";
+> -      };
+> -      phy1: ethernet-phy@3 {
+> -        reg = <3>;
+> -        device_type = "ethernet-phy";
+> -      };
+> -    };
+>   
+>       ethernet@60000000 {
+>           compatible = "cortina,gemini-ethernet";
+> @@ -110,28 +98,28 @@ examples:
+>           ranges;
+>   
+>           gmac0: ethernet-port@0 {
+> -                compatible = "cortina,gemini-ethernet-port";
+> -                reg = <0x60008000 0x2000>, /* Port 0 DMA/TOE */
+> -                      <0x6000a000 0x2000>; /* Port 0 GMAC */
+> -                interrupt-parent = <&intcon>;
+> -                interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
+> -                resets = <&syscon GEMINI_RESET_GMAC0>;
+> -                clocks = <&syscon GEMINI_CLK_GATE_GMAC0>;
+> -                clock-names = "PCLK";
+> -                phy-mode = "rgmii";
+> -                phy-handle = <&phy0>;
+> +            compatible = "cortina,gemini-ethernet-port";
+> +            reg = <0x60008000 0x2000>, /* Port 0 DMA/TOE */
+> +                  <0x6000a000 0x2000>; /* Port 0 GMAC */
+> +            interrupt-parent = <&intcon>;
+> +            interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
+> +            resets = <&syscon GEMINI_RESET_GMAC0>;
+> +            clocks = <&syscon GEMINI_CLK_GATE_GMAC0>;
+> +            clock-names = "PCLK";
+> +            phy-mode = "rgmii";
+> +            phy-handle = <&phy0>;
+>           };
+>   
+>           gmac1: ethernet-port@1 {
+> -                compatible = "cortina,gemini-ethernet-port";
+> -                reg = <0x6000c000 0x2000>, /* Port 1 DMA/TOE */
+> -                      <0x6000e000 0x2000>; /* Port 1 GMAC */
+> -                interrupt-parent = <&intcon>;
+> -                interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
+> -                resets = <&syscon GEMINI_RESET_GMAC1>;
+> -                clocks = <&syscon GEMINI_CLK_GATE_GMAC1>;
+> -                clock-names = "PCLK";
+> -                phy-mode = "rgmii";
+> -                phy-handle = <&phy1>;
+> +            compatible = "cortina,gemini-ethernet-port";
+> +            reg = <0x6000c000 0x2000>, /* Port 1 DMA/TOE */
+> +                  <0x6000e000 0x2000>; /* Port 1 GMAC */
+> +            interrupt-parent = <&intcon>;
+> +            interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
+> +            resets = <&syscon GEMINI_RESET_GMAC1>;
+> +            clocks = <&syscon GEMINI_CLK_GATE_GMAC1>;
+> +            clock-names = "PCLK";
+> +            phy-mode = "rgmii";
+> +            phy-handle = <&phy1>;
+>           };
+>       };
+> diff --git a/Documentation/devicetree/bindings/net/dsa/renesas,rzn1-a5psw.yaml b/Documentation/devicetree/bindings/net/dsa/renesas,rzn1-a5psw.yaml
+> index ea285ef3e64f..fab6aa6237e9 100644
+> --- a/Documentation/devicetree/bindings/net/dsa/renesas,rzn1-a5psw.yaml
+> +++ b/Documentation/devicetree/bindings/net/dsa/renesas,rzn1-a5psw.yaml
+> @@ -127,8 +127,8 @@ examples:
+>                   phy-mode = "internal";
+>   
+>                   fixed-link {
+> -                  speed = <1000>;
+> -                  full-duplex;
+> +                    speed = <1000>;
+> +                    full-duplex;
+>                   };
+>               };
+>           };
+> diff --git a/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml b/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
+> index 62c1da36a2b5..d1522216d32b 100644
+> --- a/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
+> +++ b/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
+> @@ -91,9 +91,9 @@ examples:
+>           snps,tx-queues-to-use = <2>;
+>           snps,tx-sched-wrr;
+>           queue0 {
+> -           snps,weight = <0x10>;
+> -           snps,dcb-algorithm;
+> -           snps,priority = <0x0>;
+> +            snps,weight = <0x10>;
+> +            snps,dcb-algorithm;
+> +            snps,priority = <0x0>;
+>           };
+>   
+>           queue1 {
+> diff --git a/Documentation/devicetree/bindings/net/mdio-gpio.yaml b/Documentation/devicetree/bindings/net/mdio-gpio.yaml
+> index eb4171a1940e..36e51aaae9c0 100644
+> --- a/Documentation/devicetree/bindings/net/mdio-gpio.yaml
+> +++ b/Documentation/devicetree/bindings/net/mdio-gpio.yaml
+> @@ -45,13 +45,13 @@ examples:
+>       };
+>   
+>       mdio0: mdio {
+> -      compatible = "virtual,mdio-gpio";
+> -      #address-cells = <1>;
+> -      #size-cells = <0>;
+> -      gpios = <&qe_pio_a 11>,
+> -              <&qe_pio_c 6>;
+> -      ethphy0: ethernet-phy@0 {
+> -        reg = <0>;
+> -      };
+> +        compatible = "virtual,mdio-gpio";
+> +        #address-cells = <1>;
+> +        #size-cells = <0>;
+> +        gpios = <&qe_pio_a 11>,
+> +                <&qe_pio_c 6>;
+> +        ethphy0: ethernet-phy@0 {
+> +            reg = <0>;
+> +        };
+>       };
+>   ...
+> diff --git a/Documentation/devicetree/bindings/net/mscc,vsc7514-switch.yaml b/Documentation/devicetree/bindings/net/mscc,vsc7514-switch.yaml
+> index 86a9c3fc76c8..d825130b54b4 100644
+> --- a/Documentation/devicetree/bindings/net/mscc,vsc7514-switch.yaml
+> +++ b/Documentation/devicetree/bindings/net/mscc,vsc7514-switch.yaml
+> @@ -197,10 +197,10 @@ examples:
+>               <0x71040000 0x10000>,
+>               <0x71050000 0x10000>,
+>               <0x71060000 0x10000>;
+> -            reg-names = "sys", "rew", "qs", "ptp", "port0", "port1",
+> -            "port2", "port3", "port4", "port5", "port6",
+> -            "port7", "port8", "port9", "port10", "qsys",
+> -            "ana", "s0", "s1", "s2";
+> +      reg-names = "sys", "rew", "qs", "ptp", "port0", "port1",
+> +                  "port2", "port3", "port4", "port5", "port6",
+> +                  "port7", "port8", "port9", "port10", "qsys",
+> +                  "ana", "s0", "s1", "s2";
+>   
+>         ethernet-ports {
+>           #address-cells = <1>;
+> diff --git a/Documentation/devicetree/bindings/net/qcom,ipa.yaml b/Documentation/devicetree/bindings/net/qcom,ipa.yaml
+> index 68ec76fe4473..38e3830512fe 100644
+> --- a/Documentation/devicetree/bindings/net/qcom,ipa.yaml
+> +++ b/Documentation/devicetree/bindings/net/qcom,ipa.yaml
+> @@ -246,14 +246,14 @@ examples:
+>           qcom,remote-pid = <5>;
+>   
+>           ipa_smp2p_out: ipa-ap-to-modem {
+> -                qcom,entry-name = "ipa";
+> -                #qcom,smem-state-cells = <1>;
+> +            qcom,entry-name = "ipa";
+> +            #qcom,smem-state-cells = <1>;
+>           };
+>   
+>           ipa_smp2p_in: ipa-modem-to-ap {
+> -                qcom,entry-name = "ipa";
+> -                interrupt-controller;
+> -                #interrupt-cells = <2>;
+> +            qcom,entry-name = "ipa";
+> +            interrupt-controller;
+> +            #interrupt-cells = <2>;
+>           };
+>       };
+>   
+> diff --git a/Documentation/devicetree/bindings/net/realtek,rtl82xx.yaml b/Documentation/devicetree/bindings/net/realtek,rtl82xx.yaml
+> index 45033c31a2d5..07b39ef1fc62 100644
+> --- a/Documentation/devicetree/bindings/net/realtek,rtl82xx.yaml
+> +++ b/Documentation/devicetree/bindings/net/realtek,rtl82xx.yaml
+> @@ -91,8 +91,8 @@ examples:
+>           #size-cells = <0>;
+>   
+>           ethphy1: ethernet-phy@1 {
+> -                reg = <1>;
+> -                realtek,clkout-disable;
+> -                realtek,aldps-enable;
+> +            reg = <1>;
+> +            realtek,clkout-disable;
+> +            realtek,aldps-enable;
+>           };
+>       };
+> diff --git a/Documentation/devicetree/bindings/net/socionext,uniphier-ave4.yaml b/Documentation/devicetree/bindings/net/socionext,uniphier-ave4.yaml
+> index 4eb63b303cff..8c8622160abb 100644
+> --- a/Documentation/devicetree/bindings/net/socionext,uniphier-ave4.yaml
+> +++ b/Documentation/devicetree/bindings/net/socionext,uniphier-ave4.yaml
+> @@ -121,22 +121,22 @@ examples:
+>     - |
+>       ether: ethernet@65000000 {
+>           compatible = "socionext,uniphier-ld20-ave4";
+> -                reg = <0x65000000 0x8500>;
+> -                interrupts = <0 66 4>;
+> -                phy-mode = "rgmii";
+> -                phy-handle = <&ethphy>;
+> -                clock-names = "ether";
+> -                clocks = <&sys_clk 6>;
+> -                reset-names = "ether";
+> -                resets = <&sys_rst 6>;
+> -                socionext,syscon-phy-mode = <&soc_glue 0>;
+> +        reg = <0x65000000 0x8500>;
+> +        interrupts = <0 66 4>;
+> +        phy-mode = "rgmii";
+> +        phy-handle = <&ethphy>;
+> +        clock-names = "ether";
+> +        clocks = <&sys_clk 6>;
+> +        reset-names = "ether";
+> +        resets = <&sys_rst 6>;
+> +        socionext,syscon-phy-mode = <&soc_glue 0>;
+>   
+> -                mdio {
+> -                        #address-cells = <1>;
+> -                        #size-cells = <0>;
+> +        mdio {
+> +            #address-cells = <1>;
+> +            #size-cells = <0>;
+>   
+> -                        ethphy: ethernet-phy@1 {
+> -                                reg = <1>;
+> -                        };
+> -                };
+> +            ethphy: ethernet-phy@1 {
+> +                reg = <1>;
+> +            };
+>           };
+> +    };
+> diff --git a/Documentation/devicetree/bindings/net/ti,cpsw-switch.yaml b/Documentation/devicetree/bindings/net/ti,cpsw-switch.yaml
+> index 8b5da602a2e8..4d24dadfaa5d 100644
+> --- a/Documentation/devicetree/bindings/net/ti,cpsw-switch.yaml
+> +++ b/Documentation/devicetree/bindings/net/ti,cpsw-switch.yaml
+> @@ -192,50 +192,50 @@ examples:
+>           interrupt-names = "rx_thresh", "rx", "tx", "misc";
+>   
+>           ethernet-ports {
+> -                #address-cells = <1>;
+> -                #size-cells = <0>;
+> +            #address-cells = <1>;
+> +            #size-cells = <0>;
+>   
+> -                cpsw_port1: port@1 {
+> -                        reg = <1>;
+> -                        label = "port1";
+> -                        mac-address = [ 00 00 00 00 00 00 ];
+> -                        phys = <&phy_gmii_sel 1>;
+> -                        phy-handle = <&ethphy0_sw>;
+> -                        phy-mode = "rgmii";
+> -                        ti,dual-emac-pvid = <1>;
+> -                };
+> +            cpsw_port1: port@1 {
+> +                reg = <1>;
+> +                label = "port1";
+> +                mac-address = [ 00 00 00 00 00 00 ];
+> +                phys = <&phy_gmii_sel 1>;
+> +                phy-handle = <&ethphy0_sw>;
+> +                phy-mode = "rgmii";
+> +                ti,dual-emac-pvid = <1>;
+> +            };
+>   
+> -                cpsw_port2: port@2 {
+> -                        reg = <2>;
+> -                        label = "wan";
+> -                        mac-address = [ 00 00 00 00 00 00 ];
+> -                        phys = <&phy_gmii_sel 2>;
+> -                        phy-handle = <&ethphy1_sw>;
+> -                        phy-mode = "rgmii";
+> -                        ti,dual-emac-pvid = <2>;
+> -                };
+> +            cpsw_port2: port@2 {
+> +                reg = <2>;
+> +                label = "wan";
+> +                mac-address = [ 00 00 00 00 00 00 ];
+> +                phys = <&phy_gmii_sel 2>;
+> +                phy-handle = <&ethphy1_sw>;
+> +                phy-mode = "rgmii";
+> +                ti,dual-emac-pvid = <2>;
+> +            };
+>           };
+>   
+>           davinci_mdio_sw: mdio@1000 {
+> -                compatible = "ti,cpsw-mdio","ti,davinci_mdio";
+> -                reg = <0x1000 0x100>;
+> -                clocks = <&gmac_clkctrl DRA7_GMAC_GMAC_CLKCTRL 0>;
+> -                clock-names = "fck";
+> -                #address-cells = <1>;
+> -                #size-cells = <0>;
+> -                bus_freq = <1000000>;
+> +            compatible = "ti,cpsw-mdio","ti,davinci_mdio";
+> +            reg = <0x1000 0x100>;
+> +            clocks = <&gmac_clkctrl DRA7_GMAC_GMAC_CLKCTRL 0>;
+> +            clock-names = "fck";
+> +            #address-cells = <1>;
+> +            #size-cells = <0>;
+> +            bus_freq = <1000000>;
+>   
+> -                ethphy0_sw: ethernet-phy@0 {
+> -                        reg = <0>;
+> -                };
+> +            ethphy0_sw: ethernet-phy@0 {
+> +                reg = <0>;
+> +            };
+>   
+> -                ethphy1_sw: ethernet-phy@1 {
+> -                        reg = <1>;
+> -                };
+> +            ethphy1_sw: ethernet-phy@1 {
+> +                reg = <1>;
+> +            };
+>           };
+>   
+>           cpts {
+> -                clocks = <&gmac_clkctrl DRA7_GMAC_GMAC_CLKCTRL 25>;
+> -                clock-names = "cpts";
+> +            clocks = <&gmac_clkctrl DRA7_GMAC_GMAC_CLKCTRL 25>;
+> +            clock-names = "cpts";
+>           };
+>       };
+> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
+> index ae6b97cdc44b..bf4116b057d2 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
+> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
+> @@ -325,22 +325,22 @@ examples:
+>             r0 {
+>               regdomain = "FCC";
+>               txpower-5g {
+> -               b0 {
+> -                   channels = <36 48>;
+> -                   rates-ofdm = /bits/ 8 <23 23 23 23 23 23 23 23>;
+> -                   rates-mcs = /bits/ 8 <1 23 23 23 23 23 23 23 23 23 23>,
+> -                               /bits/ 8 <3 22 22 22 22 22 22 22 22 22 22>;
+> -                   rates-ru = /bits/ 8 <3 22 22 22 22 22 22 22 22 22 22 22 22>,
+> -                              /bits/ 8 <4 20 20 20 20 20 20 20 20 20 20 20 20>;
+> -               };
+> -               b1 {
+> -                   channels = <100 181>;
+> -                   rates-ofdm = /bits/ 8 <14 14 14 14 14 14 14 14>;
+> -                   rates-mcs = /bits/ 8  <4 14 14 14 14 14 14 14 14 14 14>;
+> -                   txs-delta = <12 9 6>;
+> -                   rates-ru = /bits/ 8  <7 14 14 14 14 14 14 14 14 14 14 14 14>;
+> -               };
+> -             };
+> +              b0 {
+> +                channels = <36 48>;
+> +                rates-ofdm = /bits/ 8 <23 23 23 23 23 23 23 23>;
+> +                rates-mcs = /bits/ 8 <1 23 23 23 23 23 23 23 23 23 23>,
+> +                            /bits/ 8 <3 22 22 22 22 22 22 22 22 22 22>;
+> +                rates-ru = /bits/ 8 <3 22 22 22 22 22 22 22 22 22 22 22 22>,
+> +                           /bits/ 8 <4 20 20 20 20 20 20 20 20 20 20 20 20>;
+> +              };
+> +              b1 {
+> +                channels = <100 181>;
+> +                rates-ofdm = /bits/ 8 <14 14 14 14 14 14 14 14>;
+> +                rates-mcs = /bits/ 8  <4 14 14 14 14 14 14 14 14 14 14>;
+> +                txs-delta = <12 9 6>;
+> +                rates-ru = /bits/ 8  <7 14 14 14 14 14 14 14 14 14 14 14 14>;
+> +              };
+> +            };
+>             };
+>           };
+>         };
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> index e667d78b3ab3..a52cb8a0d409 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> @@ -408,4 +408,4 @@ examples:
+>                             "msi15",
+>                             "legacy";
+>           ieee80211-freq-limit = <5470000 5875000>;
+> -      };
+> +    };
 
