@@ -1,58 +1,58 @@
 Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41F3B43DEC2;
-	Tue, 15 Sep 2026 05:47:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF2043BDC8;
+	Tue, 15 Sep 2026 05:47:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789451251; cv=pass; b=eWI0hXPYzYuAUhdn5RQo7aFVkVtVpivV/xwb0wCF7ma+0cDO9VvjyEdNHTl35aTxctzK2xrTq/k+FMZoSfGRF9aDkpk/Aqf+Zw2ZTV6SH4k/DGk9SurWfCuW3tywvSvlh3aI5hYs1cVfMuF/HnTu+kYVP3VG5xuWhyqELAQD7TQ=
+	t=1789451267; cv=pass; b=GhXtTa+2cxekohCAuzxyEeEBvXU8YpyVpjAO94ISy7mTCfsmIGBNGZp+WluByrpMBaM4yYIx64R2XcczIR99eJ2teOx7exZ+13VKhFpT9Z+T/ydaO5Jj68EJ6OdP7EGd3W5FFIbdx065lq4VxGka02s5AllFLcomNxjb5p7nAXI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789451251; c=relaxed/simple;
-	bh=rxPegwfWsbhaXnaOfXAiSIbv8UqPN8bqJ9GM2VU5AGA=;
+	s=arc-20240116; t=1789451267; c=relaxed/simple;
+	bh=lmfXVdhj4XKXkltUcw+u085d9Gv1YopwSSRwYiRt+mI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=e6uUDvaVGFhpkNyiXop8yInYP2dO5Bp2nJRODXt5G1/jm93DJ9ux1YbE2zrdVGu9XDd/tY6uLQqb96//1Y07r7WeZlUFPyIaERsEWPcAeJ9yQ7n0owsN6enRcH2+Bms1bwsCurxFYU+DYCYnhQeGwszc/NFiB5UAkIKFH5OT+Yg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=BWRfjJU2; arc=pass smtp.client-ip=185.185.170.37
+	 MIME-Version; b=uw2nLmdvansgXTnYKcWzW2jpIGkD6yYGvLG1GMKEQd6ESYe+BXgcONLgAJXvCpgZo4lHv3/u9ocr1Nw9VDpIjC0QuhNgrcSVPoJ5EofcxN7yxLCtgt+qP3wrHPD2C0LHq3Rx2yoHzlfalGHsm//UyR8jWmNeAglQEiooIZjPf3Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=RRpAzP0r; arc=pass smtp.client-ip=185.185.170.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="BWRfjJU2"
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="RRpAzP0r"
 Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkWHv3QkMz49Q6x;
-	Tue, 15 Sep 2026 08:47:23 +0300 (EEST)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkWJD46Dxz49Q6x;
+	Tue, 15 Sep 2026 08:47:40 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789451243;
+	t=1789451260;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=v8dnLpIuawa/T5WKzmKQT35hCSn6pD7KsZ9UF2NkcKc=;
-	b=BWRfjJU2Y1pi/YVWwpzyOTK4sAjECFATkJ51d8lxvHUftCGPXPk94J+hB2A5QY0v9ONrFo
-	/GMVsrnydVc9q8Ci4Xu+TWTPxoHllx1DPnS8U4VyaKr0esBo6BQAmmJcQRuYUMTdYnV0Ov
-	5M2gwnO27CB8P0UagBvD2LJQopfVc2uVVjm+RTSwkzHL2oJs/XqtTXtgDwszkRg/qLu5sb
-	z8YHZEKOYmLADKyej1j9n1ZBiryUenCugC/UYHIC3sK7rH1M8zbgQFwPm6e82Fb4tDPG90
-	cqBz9cSaR32DxtiqSIhH7agp90PpM7ORZVIlJtM4gTSPTubdEtJ1fCDFap9iHA==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789451243;
-	b=SsHBof+dIMMLHxAnF5KvFGo2Exe9Z4BYZUwq6kJks0+G+kjGpqy2xQHg1s8yO9cncDfHW2
-	oyi4gSYtt1nWAGT3Sq/Vdn/7JLS18EvZX3EIgPqCzmf5pdHQptp4naivJ4YQhnxp31U+nr
-	yVNNXSZyq8PryhhzhVZSSkaPQzVr32IRXWAK/3oX3oukHf/armce2jake+OHHjeAg6rTRG
-	RAAhOJAgW4vZfilI365RKMoKA7yu+1MSVie6t+pBiJ2CXeNDR7mToErgjw6pl4h4MTgPxg
-	bcSiQygjB6tGKJLNh8kNIq4B4Ev8pQDuIbknrK2/iyWmbWxAFtC5zxMbKJyK9w==
+	bh=ZL4TqLJCUHMypohzoaU3V9T/82qT11Mw0FniRBnY4gk=;
+	b=RRpAzP0rct1htzJzzS0BWkkX4BAeYSFLpHT9GeN58Iij5peky4BObPmkaIMrdy68+/ml8j
+	Fm4GHfJhjXn3W6X2HTAtQanFSOAZ3l5Aa6fqa4gO36dNo7AkwWJ9nOcmsgW89Y+nlAOIDT
+	8mUQf8Mrf5VPGaeCcWhNz9ArltdSBSpr6WRh9F17FMbdov2O+yjAefc9XJPlKEsg/KP8Rm
+	L/hKAXvSl5xc3guYI33deKPMKY6gw7olVfHC992GX4+h7iWHkQktz9hg16OnMNFNnOZdJW
+	79MN4wNo6wzlaHq6e6NmIp1iJlqD5oDaiO7G+sAGOC5Z7ydRO5UaUWKR0QWQhg==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789451260;
+	b=t89+cva3wNzd0ZHDUSo2MFdt1cs3SzleXZ+hyhjgGP6W11OaO5zlz5RzlkeBjzh8h0/Dvq
+	QN0zGUoUfISenyXCH9OOYZhC5JaptTRB9AlIARZKcWBumGA4RX8md1jFznTKMbjScR4q6h
+	FnCn2k4lLQ63fUkqkhFL7vGKtRX0Ggvgse9ZMowZGAXYAlBFTTeOQCMlUEwb5uLl5U+Hbq
+	ia/Ce62fcavKxMO/TD1JGMwXwXYusxDCg7dlvvsoCqnBaaHU5ECNSlJZ5dXHHcpJvI0obO
+	8cxuqntEQnt9UwMe2JBhYI5UG/76jGhKZeSJzQv2quMf4BTycnXkPQ+H1ckjSA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789451243;
+	s=lahtoruutu; t=1789451260;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=v8dnLpIuawa/T5WKzmKQT35hCSn6pD7KsZ9UF2NkcKc=;
-	b=fNJkeDHqKc4dOdtUsnvq7Gp4t2WKpLJq+NYagZIi7oX2SuUNv1nyPZKQ9yapDSk6tru5+o
-	Mst19EtwC8XIJaGXooKfxUxQyvN6gyCxX90GJQFc0kFzo2IeUX9yqYntMKEPNChF658cFa
-	09qrwo7iWDFOD66ENwFtm0gdomX1p3zo2Wpahfl8+pzKpcJIWEnUNa9ZCwApGvzM7QP/vI
-	ryEKW/IQ7vp3siWMob7Tkqu50OPd/grIvOp31MsenkKOn3ZuJHlXELJF1eJDWmh5sKU/we
-	Tu3RhKEgNGcx8jvi/Ax72PNOJ/LFN3k2OVZS9RmLA0cRov+5n4ouEd+kegR6DQ==
+	bh=ZL4TqLJCUHMypohzoaU3V9T/82qT11Mw0FniRBnY4gk=;
+	b=UZzsRLN/oAXl3bHpS2GGg+HFNscL5SpoyYxwW30FasIzdT+QQK5+CZ4jnDYX4kU3Ix2pO3
+	rpQFWZ8ji8rmPuwP0pJRAmDugYdyYfhaZpTSKqh9uoB2tlkid52+BFffQxvsNBX+aLRrrV
+	q/Ze2FAInpVuEEK2fMa/FYS0HnLaB3akjJNK4ypVDj84CiOqXPY57gJhSp7qwIaSr4vNmw
+	Ae8w7Rpl7HCHwj92qeaGXhnOtt955YAYithupAuT4fgmKpq27jxFARJvZmFMz86xYo+kjz
+	lTiKJ+0I+UYoLiL5U4HjSF4MUCdlfM6sLNVJCzFk8WTH0dCqDltVM25i3rtczg==
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
@@ -81,9 +81,9 @@ Cc: Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
 	netdev@vger.kernel.org
-Subject: [PATCH v7 12/15] net: qrtr: mhi: Report endpoint id in sysfs
-Date: Tue, 15 Sep 2026 08:42:04 +0300
-Message-Id: <20260915054207.2513877-13-juha-matti.tilli@iki.fi>
+Subject: [PATCH v7 13/15] net: qrtr: limit endpoint range to 16 bits on 32-bit machines
+Date: Tue, 15 Sep 2026 08:42:05 +0300
+Message-Id: <20260915054207.2513877-14-juha-matti.tilli@iki.fi>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
 References: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
@@ -95,60 +95,42 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Denis Kenzior <denkenz@gmail.com>
+On 64-bit machines, use the full range for endpoint ids, but on 32-bit
+machines, use only 16 bits. This gives plenty of endpoints, 65534 to
+be specific, apart from the invalid zero value and the local endpoint.
 
-Add a read-only 'endpoint' sysfs entry that contains the qrtr endpoint
-identifier assigned to this mhi device.  Can be used to direct / receive
-qrtr traffic only from a particular MHI device.
+This should fix any issues where a long-running system with lots of
+allocations might allocate an endpoint id bigger than 65535 on a 32-bit
+system. The node id, the secondary part, is already combined with port
+id into a value that is potentially 32 bits in existing old code.
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
-Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
-Reviewed-by: Andy Gross <agross@kernel.org>
-Signed-off-by: Mihai Moldovan <ionic@ionic.de>
+NOTE: this commit is a candidate for squashing with the two next
+commits, if we want to have the "radix tree of trees" approach. This
+note should probably be removed before committing. If we don't want
+"radix tree of trees", this commit needs careful decision of whether we
+may want to drop it.
+
 Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 ---
- net/qrtr/mhi.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ net/qrtr/af_qrtr.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/qrtr/mhi.c b/net/qrtr/mhi.c
-index 3990da1a65dc4..630ce0da060e5 100644
---- a/net/qrtr/mhi.c
-+++ b/net/qrtr/mhi.c
-@@ -106,6 +106,16 @@ static int qcom_mhi_qrtr_queue_dl_buffers(struct mhi_device *mhi_dev)
- 	return 0;
- }
+diff --git a/net/qrtr/af_qrtr.c b/net/qrtr/af_qrtr.c
+index b27c5a659795d..3c84da3059a80 100644
+--- a/net/qrtr/af_qrtr.c
++++ b/net/qrtr/af_qrtr.c
+@@ -22,7 +22,11 @@
+ #define QRTR_MAX_EPH_SOCKET 0x7fff
+ #define QRTR_EPH_PORT_RANGE \
+ 		XA_LIMIT(QRTR_MIN_EPH_SOCKET, QRTR_MAX_EPH_SOCKET)
++#if BITS_PER_LONG >= 64
+ #define QRTR_ENDPOINT_RANGE XA_LIMIT(qrtr_local_nid + 1, INT_MAX)
++#else
++#define QRTR_ENDPOINT_RANGE XA_LIMIT(qrtr_local_nid + 1, USHRT_MAX)
++#endif
  
-+static ssize_t endpoint_show(struct device *dev,
-+			     struct device_attribute *attr, char *buf)
-+{
-+	struct qrtr_mhi_dev *qdev = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%u\n", qdev->ep.id);
-+}
-+
-+static DEVICE_ATTR_RO(endpoint);
-+
- static int qcom_mhi_qrtr_probe(struct mhi_device *mhi_dev,
- 			       const struct mhi_device_id *id)
- {
-@@ -135,6 +145,9 @@ static int qcom_mhi_qrtr_probe(struct mhi_device *mhi_dev,
- 	if (rc)
- 		goto err_unregister;
+ #define QRTR_PORT_CTRL_LEGACY 0xffff
  
-+	if (device_create_file(&mhi_dev->dev, &dev_attr_endpoint) < 0)
-+		dev_err(qdev->dev, "Failed to create endpoint attribute\n");
-+
- 	dev_dbg(qdev->dev, "Qualcomm MHI QRTR driver probed\n");
- 
- 	return 0;
-@@ -151,6 +164,7 @@ static void qcom_mhi_qrtr_remove(struct mhi_device *mhi_dev)
- {
- 	struct qrtr_mhi_dev *qdev = dev_get_drvdata(&mhi_dev->dev);
- 
-+	device_remove_file(&mhi_dev->dev, &dev_attr_endpoint);
- 	qrtr_endpoint_unregister(&qdev->ep);
- 	mhi_unprepare_from_transfer(mhi_dev);
- 	dev_set_drvdata(&mhi_dev->dev, NULL);
 -- 
 2.34.1
 
