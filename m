@@ -1,87 +1,146 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84A625B09E;
-	Tue, 15 Sep 2026 00:40:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF42E2E737D;
+	Tue, 15 Sep 2026 00:50:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789432823; cv=none; b=q9Tw/qp4++UyQeMwrvsTCMSfLPq/skXdpEilexB47wqxpPww9pev5t1d7LSLhQ67T8/RxIk/FEa/EXnoHcHYaQK2DCSs1/iy8kYrJ9fVmQHjVdO/O7TzM5q1FJMk8vh19W+7Sa6gG/ypPllq4MM3CCkezwxITMOs5YeA9XGuZPs=
+	t=1789433451; cv=none; b=FuBk0/xg7ysYp0CSTzQfqmTJFH8xv7InFrQpNUjWa0e2BB1ojqBj2uquJRHDDYEU6/gO72vIXhV1ZdR2UyScxCwfE8vn0NfQ+1AZnK5uUlikz/EBCQCoGH2HMHuNlgiyPMlpYEOjKtVmFcYAmT8xJZd9P4SR2kYVk37c9fbzfXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789432823; c=relaxed/simple;
-	bh=ha7+AGq4swCCGi8az5HgRtPQvJkkNcZt9tTYI2z9AOc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=SMAw0LSsT2XAJkbEORE5hpl+W9i1IfIUoDCnjS9A0LoAWfjvj+5wE/c/1KKfej72YAI57HNrm9+FLbz0c3HzIAd0KTHHvOq3tMo/ZlKR+AvGqFfq/yTCvyxTiX0ND5wk2WRloq6SWAhy7fD4/3bpcXF6AT/EHmLDYlkQNp0ZPg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HRsGnHvK; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789433451; c=relaxed/simple;
+	bh=RyxyZU6tvGVK3Cpsto128QhecmW8cGT4ht7LtYUq96k=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Awlttub1zna3V7ktt9Ast2Wy66hF6j8X62wZ6ozchpUKvNM83V3T19kRjlLAnD8AJM3mBg5MFMNRp6bsLsASVuFQRCnqTXs+YGEv9ykMzPhu81rMg89pdwGEmW9Vek35KoqjUUlDAcf7PDRB63M8472w+FNQd7LvelUCPXO2wOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=OubUc28K; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HRsGnHvK"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68F0eBYr91150311, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789432811; bh=YDKgvmbQpYuceRlkPyqN48eYGAdVzrAI86Rqre6/b2g=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=HRsGnHvKQeijs1Y+BU6VTPr4pT0ZQADRoE+nTRQl0Evp5YYnoPUklRm52WbZcW9KY
-	 QGD9GWfjr7GUKmmY12R2D/byeMrtgDC/TpP7aQP3cqj6GTUrmkzzvqgB0XrEoW78fH
-	 DZM5gHFQ4uzeWP7Y6NQdzz4z+I36fYYXUHIWe/GuoUNTuWlz3+77m+K+nbluOdhfgi
-	 4FbC9wx2zT70TGL9vToj459x192emXk/1UUjRFFUt6YCEeImTR9533f9Raw6OebHgm
-	 seOd9OWU6/itZRBxHETw8YCExZ2YA+Qh57Q7AIRbqTmdXt9gNedhflKQ/r03f1OvjI
-	 4TB4rHzvj7Meg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68F0eBYr91150311
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 15 Sep 2026 08:40:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 15 Sep 2026 08:40:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 15 Sep 2026 08:40:11 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Maxim Skokov <skokovmaksimevg@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: rtw89: WOW_CPUIO_RX_CTRL is never answered on RTL8851B
-Thread-Topic: rtw89: WOW_CPUIO_RX_CTRL is never answered on RTL8851B
-Thread-Index: AQHdQu5+p1mtl9gOz0eDp/HSGCWOaLbNt3lA
-Date: Tue, 15 Sep 2026 00:40:11 +0000
-Message-ID: <95af665973144da2b527b9d6d445a6ca@realtek.com>
-References: <20260912193939.5565-1-skokovmaksimevg@gmail.com>
-In-Reply-To: <20260912193939.5565-1-skokovmaksimevg@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="OubUc28K"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1789433447;
+	bh=RyxyZU6tvGVK3Cpsto128QhecmW8cGT4ht7LtYUq96k=;
+	h=From:Date:Subject:To:Cc:From;
+	b=OubUc28KqQgzJdCmtM+mgjdyWdAfjd09wXdR5s/dEr2kE466GPU6evpleWbaXF9zS
+	 VrKHFk9oOKn7tBSsYYkQ85TD2Ie95HAZuvcJ0r+xrd6DS+iVwfdmbJQpVECmnzTEtp
+	 FREi8Wa8H2PxPxG4hYVMm8H7gFcSvKjhsuy1D0xv+qvJbrT/xuaRg/sUZY5VKJu/Yz
+	 eAJXB3GVf0m4cRGVu5QdOb9QbzPIWYJWm5YruRBlZigiHqqsD/UzcyzyUUVPKGcYMN
+	 Qsod3qDrcDzJlxcocdeNJF3aS4lARFjPl42o2cHvEaOpmXtEnYMd6+Mar1k9jkOwzO
+	 Dla32fMuFSiGw==
+Received: from jupiter.universe (unknown [100.64.1.62])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: sre)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id D11D517E020C;
+	Tue, 15 Sep 2026 02:50:47 +0200 (CEST)
+Received: by jupiter.universe (Postfix, from userid 1000)
+	id 8733A48002B; Tue, 15 Sep 2026 02:50:47 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+Date: Tue, 15 Sep 2026 02:50:39 +0200
+Subject: [PATCH wireless-next v2] wifi: brcmfmac: Improve D3 substate
+ entering timeout handling
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260915-brcmfmac-bcm43752-suspend-fix-v2-1-1bd84914998b@collabora.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/42OzQ6CMBCEX8Xs2TXQyp8n38NwKO0iNdCSLiCG8
+ O4CvoDHmck3MwswBUsMt9MCgSbL1rtNiPMJdKPck9CaTYOIRBoVUY5V0F3dKY2V7q4ySwTyyD0
+ 5g7WdsU4TWZBRMUUGto4+0GYf/Q9420AtMaOjeYDyF/NYvUgP+8YONJYHHz7Hnyk+sD+npxhjl
+ CLJk1QWJkvlXfu2VZUP6qJ9B+W6rl/2g1IJ7wAAAA==
+X-Change-ID: 20260908-brcmfmac-bcm43752-suspend-fix-f6539eda1e0d
+To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
+ Heiko Stuebner <heiko@sntech.de>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
+ brcm80211-dev-list.pdl@broadcom.com, linux-rockchip@lists.infradead.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ kernel@collabora.com, Sebastian Reichel <sebastian.reichel@collabora.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2977;
+ i=sebastian.reichel@collabora.com; h=from:subject:message-id;
+ bh=RyxyZU6tvGVK3Cpsto128QhecmW8cGT4ht7LtYUq96k=;
+ b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGqolme4nuHWmpgOjksw+iy1a4fJGq0ufmzc0
+ PdYynyZ531Lk4kCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJqqJZnAAoJENju1/PI
+ O/qaO9QP+gJfY+1klvAccg/4UQb9UdDoh7tto9tPNQafA1WQkAP19eYYRIqItzjK/CfE59NB6NZ
+ c7rLGMMrbBx3+/I6jC51uCJM/GTaaDAwH9Njk6mPYpLxtANleGpT82PJeTwjCB/y1dnNdD+DDFY
+ hMTyCkrSwYzAsY+sZ/WFvsYGY76UxBePB2GQUDOR/Cr80LQNFe3SIh0FWSONwVX+xtKlEr5i9y4
+ 5ZBpJ5SSO6C+yNYQzcft6gJhMngKwAuAujK9FH7NynacgGRMBi67goZ0uVHJhCeQhCw22mFm4bf
+ 43mJLVzhA0R/vcpQByazUWJen24LWPjJJshyea3O/noUTz0Lhh+heYHSopB+V0ZzTOQQ4sO/LTT
+ E2zDdRCNtgdmhSp1saVvKtr3DvaGd31ccieX+nCJrCZQAbYRmbaSRm8lOiHRerL84ZwUJGP/pBS
+ psiTZfb7fxhTkYxxhyguYdfxv0wYPuxev5ylFudR0TP6QFIb6muw1PRW7FlJ7yjjxF6Zop/W39y
+ 6X3HVKMl1KdLqpJwJ++PnV4iWYOLPlBFFt7fQq6xLteXZYEXTH4vWmt4aj6e8eXdSixmCg7/+hS
+ 0gLFrUsqHVcoCOfFgM+97eSrwy+0cCo2cqu6pEHo/624pM7A6eYuuvjELa+BAaUiqLxTl1rE8jo
+ NjkBBSOMrxGVj+36jEZswzA==
+X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
+ fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-Maxim Skokov <skokovmaksimevg@gmail.com> wrote:
->=20
-> but rtw89_fw_feat_list only carries
->=20
->         __CFG_FW_FEAT(RTL8852A, lt, 0, 13, 37, 0, NO_WOW_CPU_IO_RX),
->         __CFG_FW_FEAT(RTL8852B, lt, 0, 29, 30, 0, NO_WOW_CPU_IO_RX),
->=20
-> and nothing for RTL8851B.
+Some firmwares (e.g. BCM43752) do not service the D3_INFORM mailbox
+handshake when idle, so the D3 ACK never arrives. If WoWL is not armed
+the device is going to be powered off during system suspend and
+re-probed on resume anyway (brcmf_pcie_pm_leave_D3() handles that), so
+the missing ACK is harmless and must not abort the whole system suspend.
+When WoWL is active the device has to stay powered with its state
+preserved, so keep treating the timeout as fatal.
 
-I'll send a patch to add this:
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+This was tested with Rockchip RK3588 EVB1, which has a BCM43752 based
+WLAN card (AP6275P). This card is also used by a few other Rockchip
+boards (at least Khadas Edge2, RK3576 EVB1). Unfortunately
+linux-firmware does not contain any firmware files for this chip,
+so I used the files available from Armbian [0]:
 
-__CFG_FW_FEAT(RTL8851B, lt, 0, 29, 57, 0, NO_WOW_CPU_IO_RX),
+3779bd4f629961cf060a83cc5047a3b9b2d23c9d  brcmfmac43752-pcie.bin
+a471651d580b51da2a681e53c0cc3258eaa70e10  brcmfmac43752-pcie.clm_blob
+87294b22f4bf7b7f718cf24076f102df07e3c414  brcmfmac43752-pcie.txt
 
->=20
-> One unrelated note from the same trace: "Unknown wakeup reason 0" is not
-> a failed AoAC read. AOAC_RPT_1 and AOAC_RPT_2 both succeed, and
-> rtw89_wow_show_wakeup_reason() reads the reason straight from
-> wow_reason_reg, which holds 0 because the card was not the wake source
-> here, the RTC alarm was. The switch has no case for that and falls
-> through to the warning.
+[0] https://github.com/armbian/firmware/tree/master/brcm
 
-I'll check this internally if it is possible to avoid the "reason 0"=20
-message.=20
+At least with that firmware the suspend command times out blocking
+system suspend. Testing on the Rockchip platform requires PCIe
+suspend support for it, which has been send separately.
 
+The patch is based on v7.3-rc1 and can go via -next as system suspend
+with mainline kernel needs quite some work on Rockchip anyways.
+
+Changes in v2:
+- Link to v1: https://patch.msgid.link/20260908-brcmfmac-bcm43752-suspend-fix-v1-1-32585639d763@collabora.com
+- Set prefix to wireless-next instead of net-next
+- Do not print error if the timeout is ignored
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 55f4d7b970f2..17bae04c14b0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -2652,9 +2652,13 @@ static int brcmf_pcie_pm_enter_D3(struct device *dev)
+ 	wait_event_timeout(devinfo->mbdata_resp_wait, devinfo->mbdata_completed,
+ 			   BRCMF_PCIE_MBDATA_TIMEOUT);
+ 	if (!devinfo->mbdata_completed) {
+-		brcmf_err(bus, "Timeout on response for entering D3 substate\n");
+-		brcmf_bus_change_state(bus, BRCMF_BUS_UP);
+-		return -EIO;
++		if (devinfo->wowl_enabled) {
++			brcmf_err(bus, "Timeout on response for entering D3 substate\n");
++			brcmf_bus_change_state(bus, BRCMF_BUS_UP);
++			return -EIO;
++		}
++
++		brcmf_dbg(PCIE, "No D3 ACK, continuing to power the device off\n");
+ 	}
+ 
+ 	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
+
+---
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+change-id: 20260908-brcmfmac-bcm43752-suspend-fix-f6539eda1e0d
+
+Best regards,
+--  
+Sebastian Reichel <sebastian.reichel@collabora.com>
 
