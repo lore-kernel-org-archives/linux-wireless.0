@@ -1,58 +1,58 @@
 Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6968E38F651;
-	Tue, 15 Sep 2026 07:42:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7261738F651;
+	Tue, 15 Sep 2026 07:42:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789458140; cv=pass; b=mONdqzHHO34XeiSOAa1LwM+5uSQLXbN5XpbMV6mjxlrcw8zkqeNA37QFx/tBkV4j3xQl3Cl4u/c/kOJnjt+/Fi2JXdnP96fHJeoIuPDdyRoA/V0R/SdshK7KfltxYU22eispcBPDNCP+DaBidfGX5Pvrcoi2wYtNw0ULDI9+230=
+	t=1789458156; cv=pass; b=Uyh2DbNUVxLPNy4HFwbaWj9U3cwwGBNrwfFBOg4VCPumZOXOAkipbgPXMTkQPbhFJT/Rx7wakttlqrIzJX9aVkPTmWpnXvVa3dQiXrsIFev8dpk+SXqa2iVTJm/92yt7rWnspz88bCflmMRYj3o1ymsEAg4UTN+jmH4hBRg20vA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789458140; c=relaxed/simple;
-	bh=2DqcLFZjMCwvz4P2NATYwLxdAxbP1BJo+S/HUmZkm3s=;
+	s=arc-20240116; t=1789458156; c=relaxed/simple;
+	bh=4oPVfTuLdoKRiL1KhOv4pI7rErvpJxgcey+RwhBBvFU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eY+/xxRhdhXjADMGVEMLlgiX3dAl9glAi12iCh2Mb3GcZrjQ/grPyhIoD0UBSSlmxoXa57767UDfaus61Rv3+laxr10tMv+wqYIAQ5A9yWI7akTHwyljgVtJw2PbiKfgUjCyT8z7mrAE4Sm86Eh2BctJwkRXGdcQvXfx8y5GA9U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=hQ3sLSty; arc=pass smtp.client-ip=185.185.170.37
+	 MIME-Version; b=e7o0NtP1KvlQNwGRuduSSkIMwL1uGYeqRUZAbB9LZvwjZlu5nU96/ftW1CMtXe3lTJCC/L6HnWH07TQgVxmslFRZITLwwApIgRtHeWTCWB906+BXXHfS55qEEVP9bKE6W/dpojnYHbUS+FNtAk4DaPDYU4mY0QH1ONPXMrDOtjc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=DbL/TjAg; arc=pass smtp.client-ip=185.185.170.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="hQ3sLSty"
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="DbL/TjAg"
 Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkYrM3MVdz49Q6x;
-	Tue, 15 Sep 2026 10:42:11 +0300 (EEST)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkYrh3T1rz49Q6x;
+	Tue, 15 Sep 2026 10:42:28 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789458131;
+	t=1789458148;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=OnSIfRHoHMbuoGc49ZmGo5twqqhr6EXzw54yp5CgxrQ=;
-	b=hQ3sLStyGskXfdK19cDQavOa4VJlyQtDSRKDOk9CAhITDiscVOMVnp+laekRBZXZ8ytn+v
-	xJpfZJOUatK98uLYAKb23IJ2eGRzqRA35O80miwCMtTbSodbWrClqeGZqDXGpL3Rg2i3wb
-	QhyJrKZRlJ34EEA74y78pN9eX3LbIcqQ3iEM/XJXXm/DtpMcvaHHPWJ8I1H5p7LsfA6pKT
-	a8wA70SAU8OaB+W1tPNw27oo6UKRQOTuFU8sOoJj0QQCLMDNjuqVtc/yoYkPBZfoRF06kV
-	apCpLNVrog0aNHoE3agZrAQz2UePqokQcqqmeG9c/me1pLrbHa922tIXUIa8CA==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789458131;
-	b=C/pGxqJYK2JYz+STw8K0inNrDk38CVhpuk9d/0y3V1hV7io0DlgdS0JgNhueIvcl3thrz4
-	t2tFD7zt7YxTu1R4d2Qv8X0Pr02qLMDFE8xNJhsDgpCjQORni82zoJBVTX21kR4nN152ks
-	pmjR9tapfLN4bcZFfmDzaXiLtV1B9kMcjESh5zpQBkGM8+Hrf9yrmIy/5+dCTAMMflS32+
-	ja/UfEE/GQBsAQ1ts/pL6eSGNTLBsORg+rrcP64nrdRpHyLUdgk3J/bx1JZDS355n0vwuP
-	KUsTBGc8Mrm4+XiU9lyPwPiJkzY0u8HcpHsHTpMp8Ur8VKb53aH192MXZweZxw==
+	bh=n6wZoihAX0RzIzEuG6gPIj7VNZNxAWj7RdKbKT8wUj4=;
+	b=DbL/TjAggprTV6dX3LE381p36qm0gloLTtNjgx/mDDgp/idnKGo6vUih8O7rr+fHROzbxp
+	73uz/MHmgJP8vb3qcZRZ0JLkTYhhWTg69YW8r4YDKWHfjzyHELCL52HpP7kCFDr3Hdqwpi
+	9acmt0nqGXzBTWtrM7JLbImSxIHhXTg8oXSn9nrSggeEV9clEkgcXiD2KraCgeGATSV85k
+	Tig02z/K5aPKnj7XVwktWqsJOogaFSkouRJpeZl4acdLmyZhNXHOfAxOon4csejjRIyifL
+	MbzfQK5ipwBWovIek9XGQSmCzBVCA9pHrgXpdtHuRFvMnPnN42WXUV5xNyJ2LA==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789458148;
+	b=wca5xElpb59PpnQ26j3OJ0zFUIxNaOeOHE7Ii9tqP0JFrcue2oQvZJLbkCftwoJWcIezd2
+	hXeGzDgqvqECYgYRysJkASf98K5k3TRhFzO0nu64CVvMO+apHoGP2rab/zyJVYCwyl/8kE
+	ApX1QWOXFAyCLX4ucmrbm7+wK963Z41p/dc5sXX2AVUeFjySaFmq6XHT1C/bAd6cGBNM5Y
+	ivgQxW46v7TwoBjWXGxc3P6ZZeFvUnHaKEaSQbxQKgW3D/vCT5c+bu2sI/lXbDMyg0lvjh
+	uWBESnYtaBDZR+r9cIsFN3aVwhzX3cs55LzpFlxtnUziIY3uxj4WXSUL56aXAQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789458131;
+	s=lahtoruutu; t=1789458148;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=OnSIfRHoHMbuoGc49ZmGo5twqqhr6EXzw54yp5CgxrQ=;
-	b=NvnlXjzXw4+cc211btM8rAfzKKrsjm3nL7IC1oUmMxJSAdrfyF9RUY9OoGausJOiTFo3rp
-	tD60t8dtaRgxrDnuVADBgkB82GuHRkq8GJcmKa/FbOqPCGL9CEZPTTQiBRst0/luuZlFHT
-	RdpxwzVFwKaOLLUWXscVeGYGFU/RqnVS5aclKtAoz5fszwYUYNyl77K8J8DHIiKaTaOmFw
-	x20ig+IIOUo0ZqjQD5iurrAISKkTILGFyRRRzkmfsBY/79iwK0Q8FUwmC7Y6HQCraY/lfp
-	fXN6M6rdzLRhw9uOaB0mhYPbb/e/CGKkHfDkoHKgzML1r0dHzw5aSi9LdDaXHw==
+	bh=n6wZoihAX0RzIzEuG6gPIj7VNZNxAWj7RdKbKT8wUj4=;
+	b=glLpRHNux0v35r6NxrqX0XuDzTfv/vqeqWrSRTW5a5HyFOnNUm6KSp3x5sVx8FldnCelVS
+	7uZZ5YhKqXKI1Hkgv923Vc7UZd7WFJvP0T0IVqfnS8DzBxTu75+BjjG0y+AdFrJnQHL/MO
+	Ul3UDBKGB4p3NR274q6A06qGqBmBOIUFq56TQLg54HosmMBYZ0xIScHCk9DAjqLvTZRtZw
+	OtBFddJc96rXV25FMRe24A73mcxqVzy7HrjmX+fxbXs7HQ3ag6Yu4mjQkzRZBRDVvbMEqB
+	SjUYwxCEANToYTxJG8YAZn0j63OQqtw99fnyf0lEum+71d6I4rEY5FSYx2sxGA==
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
@@ -79,9 +79,9 @@ Cc: Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
 	Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	Mihai Moldovan <ionic@ionic.de>,
 	Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v4 01/12] net: qrtr: support getting new endpoint ids externally
-Date: Tue, 15 Sep 2026 10:41:24 +0300
-Message-Id: <20260915074135.2567411-2-juha-matti.tilli@iki.fi>
+Subject: [PATCH v4 02/12] bus: mhi: allow mhi to know about its qrtr endpoint id and free it
+Date: Tue, 15 Sep 2026 10:41:25 +0300
+Message-Id: <20260915074135.2567411-3-juha-matti.tilli@iki.fi>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260915074135.2567411-1-juha-matti.tilli@iki.fi>
 References: <20260915074135.2567411-1-juha-matti.tilli@iki.fi>
@@ -93,159 +93,94 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This is originally based on a patch by Mihai Moldovan, that allowed
-registering endpoint-specific data and getting endpoint ids by the
-endpoint-specific data. Unfortunately, the old API did not support
-freeing the ids, creating a memory leak if someone repeatedly unloads
-and reloads kernel modules. Also, the old API had O(N) complexity where
-N was the amount of leaked memory. Because the patch has been
-extensively changed, I reset authorship.
+It is slightly less than ideal to have MHI know about its QRTR endpoint
+id, since MHI can be compiled in without QRTR. However, since many users
+of MHI use QRTR, I was bold enough to edit the MHI controller data
+structure. The only alternative to this editing is to have a hash table
+or worse, an O(N) lookup list inside QRTR to turn MHI controller data
+pointer to QRTR endpoint id.  However, even in that case the QRTR
+endpoint id needs to be freed when the MHI controller is freed, so it is
+impossible to do this in a non-leaky way without editing MHI controller.
 
-So, the new patch version only supports getting ids externally, with the
-idea being that MHI controller would know about its endpoint id.
+It's a good question whether the QRTR endpoint it should be stored to
+mhi_controller or mhi_device. In most cases, it shouldn't matter, as two
+PCIe ath11k/ath12k cards have two mhi_controllers. So, I followed the
+original idea by Mihai Moldovan that mhi_controller has 1:1 relationship
+to QRTR endpoint.
 
-I made sure getting new data ids is permissible while holding a
-spinlock, since multiple threads may race to get the same id.
+MHI controller needs a function pointer to actually free the QRTR
+endpoint id, since MHI can be compiled in without QRTR, so the freeing
+has to happen externally.
 
-Originally-by: Mihai Moldovan <ionic@ionic.de>
-Signed-off-by: Mihai Moldovan <ionic@ionic.de>
 Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 ---
- MAINTAINERS        |  1 +
- include/net/qrtr.h | 10 ++++++++++
- net/qrtr/af_qrtr.c | 42 ++++++++++++++++++++++++++++++++++++------
- net/qrtr/qrtr.h    |  2 ++
- 4 files changed, 49 insertions(+), 6 deletions(-)
- create mode 100644 include/net/qrtr.h
+ drivers/bus/mhi/host/init.c | 8 ++++++++
+ include/linux/mhi.h         | 5 +++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0b42e898f4d8e..491f09cb7939c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -22506,6 +22506,7 @@ QUALCOMM IPC ROUTER (QRTR) DRIVER
- M:	Manivannan Sadhasivam <mani@kernel.org>
- L:	linux-arm-msm@vger.kernel.org
- S:	Maintained
-+F:	include/net/qrtr.h
- F:	include/trace/events/qrtr.h
- F:	include/uapi/linux/qrtr.h
- F:	net/qrtr/
-diff --git a/include/net/qrtr.h b/include/net/qrtr.h
-new file mode 100644
-index 0000000000000..762d60b03012e
---- /dev/null
-+++ b/include/net/qrtr.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+#ifndef __NET_QRTR_H
-+#define __NET_QRTR_H
+diff --git a/drivers/bus/mhi/host/init.c b/drivers/bus/mhi/host/init.c
+index fd3050889412d..d96b099432640 100644
+--- a/drivers/bus/mhi/host/init.c
++++ b/drivers/bus/mhi/host/init.c
+@@ -947,6 +947,9 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
+ 	rwlock_init(&mhi_cntrl->pm_lock);
+ 	spin_lock_init(&mhi_cntrl->transition_lock);
+ 	spin_lock_init(&mhi_cntrl->wlock);
++	spin_lock_init(&mhi_cntrl->qrtr_endpoint_lock);
++	mhi_cntrl->qrtr_endpoint_id = 0;
++	mhi_cntrl->free_qrtr_endpoint_id = NULL;
+ 	INIT_WORK(&mhi_cntrl->st_worker, mhi_pm_st_worker);
+ 	init_waitqueue_head(&mhi_cntrl->state_event);
+ 
+@@ -1087,6 +1090,11 @@ void mhi_unregister_controller(struct mhi_controller *mhi_cntrl)
+ 	put_device(&mhi_dev->dev);
+ 
+ 	ida_free(&mhi_controller_ida, mhi_cntrl->index);
 +
-+#include <linux/types.h>
-+
-+int qrtr_endpoint_get_data_id(u32 *endpoint_id);
-+void qrtr_endpoint_free_data_id(u32 endpoint_id);
-+
-+#endif	/* __NET_QRTR_H */
-diff --git a/net/qrtr/af_qrtr.c b/net/qrtr/af_qrtr.c
-index 7c50d32b11015..86a92e95e270f 100644
---- a/net/qrtr/af_qrtr.c
-+++ b/net/qrtr/af_qrtr.c
-@@ -11,6 +11,7 @@
- #include <linux/wait.h>
- 
- #include <net/sock.h>
-+#include <net/qrtr.h>
- 
- #include "qrtr.h"
- 
-@@ -753,8 +754,8 @@ static struct sk_buff *qrtr_alloc_ctrl_packet(struct qrtr_ctrl_pkt **pkt,
- int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid)
- {
- 	struct qrtr_node *node;
--	u32 endpoint_id;
--	int rc;
-+	u32 endpoint_id = 0;
-+	int rc = 0;
- 
- 	if (!ep || !ep->xmit)
- 		return -EINVAL;
-@@ -763,9 +764,18 @@ int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid)
- 	if (!node)
- 		return -ENOMEM;
- 
--	rc = xa_alloc_cyclic(&qrtr_endpoints, &endpoint_id, NULL,
--			     QRTR_ENDPOINT_RANGE, &next_endpoint_id,
--			     GFP_KERNEL);
-+	if (ep->endpoint_data_id)
-+		endpoint_id = ep->endpoint_data_id;
-+
-+	/*
-+	 * If we're registering an endpoint into smd or tun based qrtr,
-+	 * we don't have endpoint_data_id. Thus, allocate a new one.
-+	 */
-+	if (!endpoint_id) {
-+		rc = xa_alloc_cyclic(&qrtr_endpoints, &endpoint_id, NULL,
-+				     QRTR_ENDPOINT_RANGE, &next_endpoint_id,
-+				     GFP_KERNEL);
-+	}
- 
- 	if (rc < 0)
- 		goto free_node;
-@@ -857,13 +867,33 @@ void qrtr_endpoint_unregister(struct qrtr_endpoint *ep)
- 
- 	qrtr_node_release(node);
- 
--	xa_erase(&qrtr_endpoints, endpoint_id);
-+	if (ep->endpoint_data_id != endpoint_id)
-+		xa_erase(&qrtr_endpoints, endpoint_id); // did allocate
- 
- 	ep->id = 0;
- 	ep->node = NULL;
++	spin_lock(&mhi_cntrl->qrtr_endpoint_lock);
++	if (mhi_cntrl->free_qrtr_endpoint_id)
++		mhi_cntrl->free_qrtr_endpoint_id(mhi_cntrl);
++	spin_unlock(&mhi_cntrl->qrtr_endpoint_lock);
  }
- EXPORT_SYMBOL_GPL(qrtr_endpoint_unregister);
+ EXPORT_SYMBOL_GPL(mhi_unregister_controller);
  
-+int qrtr_endpoint_get_data_id(u32 *endpoint_id)
-+{
-+	int rc;
-+
-+	*endpoint_id = 0;
-+	// GFP_ATOMIC to allow while holding spinlock
-+	rc = xa_alloc_cyclic(&qrtr_endpoints, endpoint_id, NULL,
-+			     QRTR_ENDPOINT_RANGE, &next_endpoint_id,
-+			     GFP_ATOMIC);
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(qrtr_endpoint_get_data_id);
-+
-+void qrtr_endpoint_free_data_id(u32 endpoint_id)
-+{
-+	xa_erase(&qrtr_endpoints, endpoint_id);
-+}
-+EXPORT_SYMBOL_GPL(qrtr_endpoint_free_data_id);
-+
- /* Lookup socket by port.
-  *
-  * Callers must release with qrtr_port_put()
-diff --git a/net/qrtr/qrtr.h b/net/qrtr/qrtr.h
-index affc24f426c64..45e38be0b2cb6 100644
---- a/net/qrtr/qrtr.h
-+++ b/net/qrtr/qrtr.h
-@@ -21,6 +21,7 @@ struct qrtr_node_lookup_helper {
- /**
-  * struct qrtr_endpoint - endpoint handle
-  * @xmit: Callback for outgoing packets
-+ * @endpoint_data_id: an already allocated id to be used instead of new alloc
-  *
-  * The socket buffer passed to the xmit function becomes owned by the endpoint
-  * driver.  As such, when the driver is done with the buffer, it should
-@@ -32,6 +33,7 @@ struct qrtr_endpoint {
- 	struct qrtr_node *node;
- 	struct qrtr_node_lookup_helper helper;
- 	u32 id;
-+	u32 endpoint_data_id;
- };
+diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+index 8616bacd8675d..d6d5c93e41cb0 100644
+--- a/include/linux/mhi.h
++++ b/include/linux/mhi.h
+@@ -361,6 +361,7 @@ struct mhi_controller_config {
+  * @st_worker: State transition worker
+  * @hiprio_wq: High priority workqueue for MHI work such as state transitions
+  * @state_event: State change event
++ * @qrtr_endpoint_id: The QRTR endpoint id associated with this MHI controller
+  * @status_cb: CB function to notify power states of the device (required)
+  * @wake_get: CB function to assert device wake (optional)
+  * @wake_put: CB function to de-assert device wake (optional)
+@@ -373,6 +374,7 @@ struct mhi_controller_config {
+  * @write_reg: Write a MHI register via the physical link (required)
+  * @reset: Controller specific reset function (optional)
+  * @edl_trigger: CB function to trigger EDL mode (optional)
++ * @free_qrtr_endpoint_id: Function to free the QRTR endpoint id
+  * @buffer_len: Bounce buffer length
+  * @index: Index of the MHI controller instance
+  * @bounce_buf: Use of bounce buffer
+@@ -440,6 +442,8 @@ struct mhi_controller {
+ 	struct work_struct st_worker;
+ 	struct workqueue_struct *hiprio_wq;
+ 	wait_queue_head_t state_event;
++	u32 qrtr_endpoint_id;
++	spinlock_t qrtr_endpoint_lock;
  
- int qrtr_endpoint_register(struct qrtr_endpoint *ep, unsigned int nid);
+ 	void (*status_cb)(struct mhi_controller *mhi_cntrl,
+ 			  enum mhi_callback cb);
+@@ -458,6 +462,7 @@ struct mhi_controller {
+ 			  u32 val);
+ 	void (*reset)(struct mhi_controller *mhi_cntrl);
+ 	int (*edl_trigger)(struct mhi_controller *mhi_cntrl);
++	void (*free_qrtr_endpoint_id)(void *mhi_cntrl_void);
+ 
+ 	size_t buffer_len;
+ 	int index;
 -- 
 2.34.1
 
