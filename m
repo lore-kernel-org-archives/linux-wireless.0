@@ -1,57 +1,57 @@
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com [209.85.219.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5101E489FB1
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:26:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4F5248EC71
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:26:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789460806; cv=none; b=DouGwCXp3E5f0Vg9xe12plP9G+3JorW377HN7EKr73NwuSAVG2KCtXJ1L6yEEc3MuWe0fY53oHRe5+itx/7EwwfE4bUPqRRE/D8Slp327ygJi43gKw427bsQ8WRG+zhrTuuwXo3rqlUkMa70xL2kXW4tCdT5drXGUB+BFbLrNi0=
+	t=1789460807; cv=none; b=ty779LfHN3uODDoy9nicvxzUAzGH2LDflvN0R9WZCa7GsUtScpCjDkfJcJOxehTBmF1hyKtRySrkapxwWyPOLBzPcWoIgyue1s1wcsvnOFJEh6pdbIVhRqe5cvLhdw2IK/5DvM8wt7ID2D8/sXLKRNj0o1jIAqPrxl7tIVc7MR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789460806; c=relaxed/simple;
-	bh=LqJMFQGliTTZ9KNIvLTBQqllQDtaRAf0jEikiPuUKto=;
+	s=arc-20240116; t=1789460807; c=relaxed/simple;
+	bh=F9i32u7X67i3rjTFL62V2TeKyR+ixZjqL6I2EccGRRA=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=WFjCrTFhol7LymTt05vVd3cmQyhY3+hlWP3iDkYBNQuhht7C4IjvWvSU36LOk6EgPzpQ8Va29Gzgh2Y/tdSXLJ7aYv0a5csCnrDwmuKd0thQXikoTytERzApQtFRj5BkRcGuhsCCvd5XciMwB0BAdUh6QKxyOHROqNtpJNp9t2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MfbD7TSa; arc=none smtp.client-ip=209.85.219.70
+	 To:Cc:Content-Type; b=Tcl68uMX/5oKr6Neb/uGeiszrT0WUSAVT+1t3QwGg8q4edHrgiaz6/KpuOmIya3o0Z4vautrTddU9ozaW0Na6EMQuI7q0WHmgoGjSUGquvO368ARYeVmRI1LzupV8R70POLJrgUzvNhuJu2mD99mfMC8rwisvcPWdCyWKxYZXR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZZqNt8Fv; arc=none smtp.client-ip=209.85.219.69
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MfbD7TSa"
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-90ce21f2cc9so131780936d6.2
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 01:26:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZZqNt8Fv"
+Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-91064f6e75bso131705396d6.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 01:26:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789460799; x=1790065599; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1789460803; x=1790065603; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=eELVo8fI0ZjlHs2eEJ49S4+N/SPMib/OwBxEH2gJjRU=;
-        b=MfbD7TSaeQdJweb0onsPIKrwW9ELzASAT9JKriXlkE1gUiFUgKPraoPpMi9V3orAUK
-         ujQGGNkioDSYUrRMcqLljqqhmzH5lh5ferDM+/H8EtDhKJ6MmB4gn3b8XPg9Ap0pgJf+
-         faLtRsvkJKFo721hvuYu1G5sv6PtZPZQZRHd8t/L4wLZX0d7/yLvOsrNIPTcstRFqTxC
-         X6YpkqiNzinn46bswlIl9fsuugcDxb4+pXHx0E/ztvJpSuk2cXza6Fb7DT1tONIZJ7fE
-         hVQ6V2t82rQ4vZQOOhrNyt03m9twuiBl9GfhjYtDP8XG8+HtwSSF3lm51k7jCd3Y2h+F
-         UTFQ==
+        bh=CSHzy5Fr+v+g78gtgBhpLtU/5VBe17dtS9vTkuvViHg=;
+        b=ZZqNt8FvWSIgOyv9Y2p2P/F8KqVdqAP6lF1/+/od1y3G2fHkNxYeFwqlOn3v/pfMnz
+         u3AHtfTRsa7RPs1FIhGXXavGxG+T2+YQM9ykxDnvApg2lqhsrgZmbkKKGdfj10k5wG34
+         cs1auGWGt3uy7OrAnSRdVs8witMSBHvwFqDW3LGTEtE1aVJwHQidNfXUWiTTcb+XiHOP
+         qSAqHLSm1xJnSiQgz4xl/C6k90kTVTwVlsNJ85muy439YTI0jxx04N/VjfI3ZIjl5Des
+         aCY0zC7kMEwX2OiQUIE7LfqWJkS9Jn8Ik6si3SUnIJoCfcCkn1x1v7vjcg+KPECQhH8l
+         EhWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789460799; x=1790065599;
+        d=1e100.net; s=20260707; t=1789460803; x=1790065603;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=eELVo8fI0ZjlHs2eEJ49S4+N/SPMib/OwBxEH2gJjRU=;
-        b=heQxppZF1EpvDJCMIvE1tbjtQlQHE1n7shUmnrbM6hRKZWyVb2BpqtZVGvAGPjLCjl
-         zCuOt2qILZZMqgByfFNTxPe1QatZ6AczxBJoXBS3T1xFs1defrObzTgFmiOWyZc9Aiq5
-         DUVj16/uIoGo8Zt2x0NT6Ll0ebk9+bwgh3UXXlHiz/PZ9L5kUjmcI76CsBXNS8Z3vtwg
-         iUSimYGarykrgRC3vGV5XmQB6iNKG1qjfJkvRXhdtWT/q5BoZjTi/otcUzoxs2BXmtQy
-         fMopYkAZa4z9/IP2lJ0ut9rvpuO5Oe6c3Uj1cme3UpPdYPrd2iACBoEnKaaig6CUz8Fk
-         K2jg==
-X-Forwarded-Encrypted: i=1; AKwUvBzVeYysgXt3sl6bGr8e11a0u/LHFey9jdPaIxAON0HauIvM+a1iK5ruERbYZ3wVsL2vODQ4y2zegR9wAdC7oQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++mRDha/e560F2zTaeMBHJdjcei4WOYCVXRogVOEYhJpkQNpi+it
-	xICZ7agMT38VkDJ2GPukqbi3YDoUbkPAkAYBV9yALWRTDniqYNayVEwZqef8yoQxrj8HzkQIARW
-	i
-X-Received: from plvv1.prod.google.com ([2002:a17:902:d081:b0:2ca:ceab:34a3])
- (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:f612:b0:2d8:d4dd:24c0
- with SMTP id d9443c01a7336-2dd6c7e1a9fmr128970685ad.21.1789460409250; Tue, 15
- Sep 2026 01:20:09 -0700 (PDT)
-Date: Tue, 15 Sep 2026 08:18:34 +0000
+        bh=CSHzy5Fr+v+g78gtgBhpLtU/5VBe17dtS9vTkuvViHg=;
+        b=o9auXJO3mLeJJzviweoB55djx5dzB+S3j2ngPCLMjvx/bRsjglULnVA3VcpJZhqtU8
+         FElG18qzSB3n7bPmgny89Ak78FDxJVl+XQu+b4fGlXelYfjuQjwrbBCAQPbLc+3eJ911
+         JDS8IZHAki+vIZhB9sSrtGqyPbJgxKXFR+gbFUHwfC69R/fNOSi+LC/CxB8LEj4FsKdJ
+         J9IGmeKXE36sTIcj02RH33nhWw1P8LUhpM/9lHfvmClQO+tkbs1ZtuZEtGRYqaYRTgva
+         RNGil3TUxKhRv+Deb0GhahEaXY25e9saj8QlVXh6V7cKzNNa4KdWs/sq/23+chT3AtPN
+         2BlA==
+X-Forwarded-Encrypted: i=1; AKwUvBw9XG8Rs5CGzWdA+2ZchZeO737+JAOzmn0fvHCVDRen77UAj9CAviSf/hYQ8cBwltEKl/JcwyTt3wNn8tgEiw==@vger.kernel.org
+X-Gm-Message-State: AFuF++kUjaLqOTBEHlp5ij5oBxxn6f+/ZGxdfi3k8hCh3wvv9nSHd3Lg
+	WNT/VSuamLQw3U9dzg/s37eEGjUSo52rcLleFj4VpZFuPEBIQaTnNtJAcMx1zDNjYCFlLVZL5+M
+	u
+X-Received: from plky9.prod.google.com ([2002:a17:902:7009:b0:2dd:3c92:b0a2])
+ (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:8c5:b0:2c6:90ec:f601
+ with SMTP id d9443c01a7336-2dd6c5f3422mr125997365ad.8.1789460416594; Tue, 15
+ Sep 2026 01:20:16 -0700 (PDT)
+Date: Tue, 15 Sep 2026 08:18:42 +0000
 In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -61,8 +61,8 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260915081910.4142719-1-morbo@google.com>
 X-Mailer: git-send-email 2.55.0.1032.g73a4cd73de-goog
-Message-ID: <20260915081910.4142719-18-morbo@google.com>
-Subject: [PATCH 17/28] MIPS: cmdline: Refactor bootcmdline_append() to use snprintf()
+Message-ID: <20260915081910.4142719-26-morbo@google.com>
+Subject: [PATCH 25/28] EDAC/thunderx: Replace strlcat() with seq_buf
 From: Bill Wendling <morbo@google.com>
 To: linux-kernel@vger.kernel.org
 Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com, 
@@ -123,22 +123,23 @@ Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-bootcmdline_append() passes "max" (the maximum length of the source
-string "s") as the destination buffer size argument to strlcat(). Because
-strlcat() expects the total size of the destination buffer
-(COMMAND_LINE_SIZE), it fails to append anything whenever "max" is smaller
-than the current length of boot_command_line, and could overflow
-boot_command_line if "max" exceeds COMMAND_LINE_SIZE.
+The threaded ISR handlers (thunderx_ocx_com_threaded_isr(),
+thunderx_ocx_lnk_threaded_isr(), and thunderx_l2c_threaded_isr()) build
+multi-line error reports by formatting register details into a scratch
+buffer and appending them to "msg" with strlcat().
 
-In preparation for removing the deprecated strlcat() API[1], replace the
-strlcat() calls with snprintf() using the "%.*s" precision specifier. This
-bounds the read from "s" to at most "max" bytes while properly respecting
-the remaining space in boot_command_line.
+In preparation for removing the deprecated strlcat() API[1], refactor the
+ISR handlers to construct error messages using struct seq_buf.
+
+Additionally, fix two bugs in decode_register(): initialize "str[0] =3D '\0=
+'"
+so callers do not append stale buffer contents when no error bits match,
+and stop iterating if snprintf() truncates the buffer to avoid
+underflowing the remaining "size" counter.
 
 Link: https://github.com/KSPP/linux/issues/370 [1]
 Cc: codemender-patching+linux@google.com
-Assisted-by: SecurityEngineer:Gemini2.5Pro [editor_update_file, shell_comma=
-nd_run, make_kernel_build_single_file, test_runner_run_kunit_test]
+Assisted-by: AI:Claude-3-5-Sonnet [editor_update_file, shell_command_run]
 Signed-off-by: Bill Wendling <morbo@google.com>
 ---
 Cc: Russell King <linux@armlinux.org.uk>
@@ -252,45 +253,161 @@ Cc: devel@lists.orangefs.org
 Cc: linux-hardening@vger.kernel.org
 Cc: linux-sound@vger.kernel.org
 ---
- arch/mips/kernel/setup.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/edac/thunderx_edac.c | 64 ++++++++++++++++++++++--------------
+ 1 file changed, 39 insertions(+), 25 deletions(-)
 
-diff --git a/arch/mips/kernel/setup.c b/arch/mips/kernel/setup.c
-index 1ae6d0c0e1d6..0d9c2137d675 100644
---- a/arch/mips/kernel/setup.c
-+++ b/arch/mips/kernel/setup.c
-@@ -518,13 +518,28 @@ static void __init check_kernel_sections_mem(void)
+diff --git a/drivers/edac/thunderx_edac.c b/drivers/edac/thunderx_edac.c
+index e7c335ca0c36..4e3781815b6d 100644
+--- a/drivers/edac/thunderx_edac.c
++++ b/drivers/edac/thunderx_edac.c
+@@ -20,6 +20,7 @@
+ #include <linux/atomic.h>
+ #include <linux/bitfield.h>
+ #include <linux/circ_buf.h>
++#include <linux/seq_buf.h>
 =20
- static void __init bootcmdline_append(const char *s, size_t max)
+ #include <asm/page.h>
+=20
+@@ -47,12 +48,17 @@ static void decode_register(char *str, size_t size,
  {
-+	size_t len;
-+	int prec;
+ 	int ret =3D 0;
+=20
++	if (size > 0)
++		str[0] =3D '\0';
 +
- 	if (!s[0] || !max)
- 		return;
+ 	while (descr->type && descr->mask && descr->descr) {
+ 		if (reg & descr->mask) {
+ 			ret =3D snprintf(str, size, "\n\t%s, %s",
+ 				       descr->type =3D=3D ERR_CORRECTED ?
+ 					 "Corrected" : "Uncorrected",
+ 				       descr->descr);
++			if (ret < 0 || ret >=3D size)
++				break;
+ 			str +=3D ret;
+ 			size -=3D ret;
+ 		}
+@@ -1115,35 +1121,37 @@ static irqreturn_t thunderx_ocx_com_threaded_isr(in=
+t irq, void *irq_id)
 =20
--	if (boot_command_line[0])
--		strlcat(boot_command_line, " ", COMMAND_LINE_SIZE);
-+	len =3D strlen(boot_command_line);
-+	if (len >=3D COMMAND_LINE_SIZE - 1)
-+		return;
-=20
--	strlcat(boot_command_line, s, max);
-+	if (len) {
-+		if (COMMAND_LINE_SIZE - len < 3)
-+			return;
+ 	while (CIRC_CNT(ocx->com_ring_head, ocx->com_ring_tail,
+ 			ARRAY_SIZE(ocx->com_err_ctx))) {
++		struct seq_buf s;
 +
-+		prec =3D min_t(size_t, max, COMMAND_LINE_SIZE - len - 2);
-+		snprintf(boot_command_line + len, COMMAND_LINE_SIZE - len, " %.*s",
-+			 prec, s);
-+	} else {
-+		prec =3D min_t(size_t, max, COMMAND_LINE_SIZE - 1);
-+		snprintf(boot_command_line, COMMAND_LINE_SIZE, "%.*s",
-+			 prec, s);
-+	}
- }
+ 		tail =3D ring_pos(ocx->com_ring_tail,
+ 				ARRAY_SIZE(ocx->com_err_ctx));
+ 		ctx =3D &ocx->com_err_ctx[tail];
 =20
- #ifdef CONFIG_OF_EARLY_FLATTREE
+-		snprintf(msg, OCX_MESSAGE_SIZE, "%s: OCX_COM_INT: %016llx",
+-			ocx->edac_dev->ctl_name, ctx->reg_com_int);
++		seq_buf_init(&s, msg, OCX_MESSAGE_SIZE);
++
++		seq_buf_printf(&s, "%s: OCX_COM_INT: %016llx",
++			       ocx->edac_dev->ctl_name, ctx->reg_com_int);
+=20
+ 		decode_register(other, OCX_OTHER_SIZE,
+ 				ocx_com_errors, ctx->reg_com_int);
+=20
+-		strlcat(msg, other, OCX_MESSAGE_SIZE);
++		seq_buf_puts(&s, other);
+=20
+ 		for (lane =3D 0; lane < OCX_RX_LANES; lane++)
+ 			if (ctx->reg_com_int & BIT(lane)) {
+-				snprintf(other, OCX_OTHER_SIZE,
+-					 "\n\tOCX_LNE_INT[%02d]: %016llx OCX_LNE_STAT11[%02d]: %016llx",
+-					 lane, ctx->reg_lane_int[lane],
+-					 lane, ctx->reg_lane_stat11[lane]);
+-
+-				strlcat(msg, other, OCX_MESSAGE_SIZE);
++				seq_buf_printf(&s,
++					       "\n\tOCX_LNE_INT[%02d]: %016llx OCX_LNE_STAT11[%02d]: %016llx"=
+,
++					       lane, ctx->reg_lane_int[lane],
++					       lane, ctx->reg_lane_stat11[lane]);
+=20
+ 				decode_register(other, OCX_OTHER_SIZE,
+ 						ocx_lane_errors,
+ 						ctx->reg_lane_int[lane]);
+-				strlcat(msg, other, OCX_MESSAGE_SIZE);
++				seq_buf_puts(&s, other);
+ 			}
+=20
+ 		if (ctx->reg_com_int & OCX_COM_INT_CE)
+-			edac_device_handle_ce(ocx->edac_dev, 0, 0, msg);
++			edac_device_handle_ce(ocx->edac_dev, 0, 0, seq_buf_str(&s));
+=20
+ 		ocx->com_ring_tail++;
+ 	}
+@@ -1196,25 +1204,28 @@ static irqreturn_t thunderx_ocx_lnk_threaded_isr(in=
+t irq, void *irq_id)
+=20
+ 	while (CIRC_CNT(ocx->link_ring_head, ocx->link_ring_tail,
+ 			ARRAY_SIZE(ocx->link_err_ctx))) {
++		struct seq_buf s;
++
+ 		tail =3D ring_pos(ocx->link_ring_head,
+ 				ARRAY_SIZE(ocx->link_err_ctx));
+=20
+ 		ctx =3D &ocx->link_err_ctx[tail];
+=20
+-		snprintf(msg, OCX_MESSAGE_SIZE,
+-			 "%s: OCX_COM_LINK_INT[%d]: %016llx",
+-			 ocx->edac_dev->ctl_name,
+-			 ctx->link, ctx->reg_com_link_int);
++		seq_buf_init(&s, msg, OCX_MESSAGE_SIZE);
++
++		seq_buf_printf(&s, "%s: OCX_COM_LINK_INT[%d]: %016llx",
++			       ocx->edac_dev->ctl_name,
++			       ctx->link, ctx->reg_com_link_int);
+=20
+ 		decode_register(other, OCX_OTHER_SIZE,
+ 				ocx_com_link_errors, ctx->reg_com_link_int);
+=20
+-		strlcat(msg, other, OCX_MESSAGE_SIZE);
++		seq_buf_puts(&s, other);
+=20
+ 		if (ctx->reg_com_link_int & OCX_COM_LINK_INT_UE)
+-			edac_device_handle_ue(ocx->edac_dev, 0, 0, msg);
++			edac_device_handle_ue(ocx->edac_dev, 0, 0, seq_buf_str(&s));
+ 		else if (ctx->reg_com_link_int & OCX_COM_LINK_INT_CE)
+-			edac_device_handle_ce(ocx->edac_dev, 0, 0, msg);
++			edac_device_handle_ce(ocx->edac_dev, 0, 0, seq_buf_str(&s));
+=20
+ 		ocx->link_ring_tail++;
+ 	}
+@@ -1880,22 +1891,25 @@ static irqreturn_t thunderx_l2c_threaded_isr(int ir=
+q, void *irq_id)
+=20
+ 	while (CIRC_CNT(l2c->ring_head, l2c->ring_tail,
+ 			ARRAY_SIZE(l2c->err_ctx))) {
++		struct seq_buf s;
++
+ 		tail =3D ring_pos(l2c->ring_tail, ARRAY_SIZE(l2c->err_ctx));
+ 		ctx =3D &l2c->err_ctx[tail];
+=20
+-		snprintf(msg, L2C_MESSAGE_SIZE,
+-			 "%s: %s: %016llx, %s: %016llx",
+-			 l2c->edac_dev->ctl_name, reg_int_name, ctx->reg_int,
+-			 ctx->reg_ext_name, ctx->reg_ext);
++		seq_buf_init(&s, msg, L2C_MESSAGE_SIZE);
++
++		seq_buf_printf(&s, "%s: %s: %016llx, %s: %016llx",
++			       l2c->edac_dev->ctl_name, reg_int_name, ctx->reg_int,
++			       ctx->reg_ext_name, ctx->reg_ext);
+=20
+ 		decode_register(other, L2C_OTHER_SIZE, l2_errors, ctx->reg_int);
+=20
+-		strlcat(msg, other, L2C_MESSAGE_SIZE);
++		seq_buf_puts(&s, other);
+=20
+ 		if (ctx->reg_int & mask_ue)
+-			edac_device_handle_ue(l2c->edac_dev, 0, 0, msg);
++			edac_device_handle_ue(l2c->edac_dev, 0, 0, seq_buf_str(&s));
+ 		else if (ctx->reg_int & mask_ce)
+-			edac_device_handle_ce(l2c->edac_dev, 0, 0, msg);
++			edac_device_handle_ce(l2c->edac_dev, 0, 0, seq_buf_str(&s));
+=20
+ 		l2c->ring_tail++;
+ 	}
 --=20
 2.55.0.1032.g73a4cd73de-goog
 
