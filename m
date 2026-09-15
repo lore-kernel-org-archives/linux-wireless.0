@@ -1,36 +1,36 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B633BFE40
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 13:22:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93633B058F
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 13:22:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789478530; cv=none; b=aS9Gk4jEKJRP2OPd+1mmp4yrrIXwjirE9gkthsUOAcIt+eNgjo5R+yTzpQEM+wiyBepHlH2eA8QdJ9eoAxcdQBpBg9gwRHyIzBvXu0sJx8EwVJnA/xiU6F8mouXYnNGDyckmRjrOpgP/jekFwddqKC2G7QTDNQUyHDAfKMRk6Ic=
+	t=1789478531; cv=none; b=GSYDIqowBddA/XWXw09QewXLNHLfKf1yVKTfWtoN2JmKbF6I0hxDgj8g+ILEAfnrV1g2nX/TcThuNSxa3XLYxUftkIQlJ1mJ45y6UkVRj2OZZE9VzCx7wtq91+a4/y0U/ExqfoGhUr0MSpjb9vur88XzwGuLPoiGurv4P/14J6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789478530; c=relaxed/simple;
-	bh=lcE/RDya6EcfS6ZuuxYwGvsAu5u/rlZ6t3NIUH38ceo=;
+	s=arc-20240116; t=1789478531; c=relaxed/simple;
+	bh=A6xtVrULx3wGTy1Zn9HJmG+9ZIkZIvx4bpu4habiRPI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E9UCxKBTpHnzqM49dQ4iwINriaAHOVGHlmLowMEoAhccRlse7JrvC9THIm8oa6xgqvrK/laC2KR9eiuB/YBCHYV12rPr0y/LJiL3xyQf/hxw+bV+SY47v6kjA60z5UrLs8SfUFmQ9wOeTw9eTuCWPvgc75JhW5BjCRc6Vr+SYyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=aCgX+UVw; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=PZ0g7ekA4l7H2UTtG/J3xiasiYk8CIrBJeRwWBlCG1puG80rU5SfEjuv7JTnyv0I+oWLP+f4moGCizl/hvfybxTYn1PXXSZ5X+q58dyk/9R5dD6DXHbN3Dh+A3788SqXVcynCz9ZRxNd5Cm1UbgJ2pNDEAWWnXYcupmMIiZ/cMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=miZRvWBZ; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="aCgX+UVw"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="miZRvWBZ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=96Gt05m6I7x5tIjLBQue5PC//ka+PdxH44ahG5H6QBg=;
-	t=1789478529; x=1790688129; b=aCgX+UVwNAhr4i3RYrTeCM+J38MYoFgIjUJK3oRQQp29ZKh
-	ZuZ/zx0+CfeMA6uQS9tTsHukb79ZEZnB6XUzafoz2KQBUXPBPfNnGj0s/4XhTXCRPHUGPkLYbUsUS
-	QOcMSgEV3nrW7yuIWmcxpvwG7uk77SY977tkdG221h+xoplzL7Ddw/eZiV93L+HZ9SWW0+WvH7TyX
-	rqU5FJe0If3JmDWSuSIidNwdNZCE3549UC+a5K89+C8RJv7Fz5j/aepYC0jnU4lvs/YVetCOKOhRw
-	CaMLb1rrfNPXJfvyhCBtU2Fbf05rfsFPWioBWDHzhJikvVR9ZIMlz6+Ol2TnSatw==;
+	Resent-Cc:Resent-Message-ID; bh=lr5yKwQyReCmI5WY68mGpXRsIWqGVg0b/ORUTt/uYZA=;
+	t=1789478527; x=1790688127; b=miZRvWBZopudIvufoUYPxI++t9KCdUbm01d8PCxyhDXGXhc
+	t9OFZyN4JXLl7G4q9mj6EK4vr6gfvrZ3cvzrpHxPXxU6v2kmgF0LDi1EO880titbjedDs0OHjxB2r
+	txcGQYDApo+sUrKquAP0WWnTgUHcAr8G0wWbovaMurYuyxNHZ7so0HrhZxOcVB05ACwzKp9f1FQEC
+	lvf2s+lHL00JL6qToHkjO0oPxbFZpbfxyfQTycs6SsowBnUKH59ufpylAGOQh5xkFdra4Yqo/zPfv
+	1joLCZJeBuy+9JUpswF+iggXbdvQsrH3JG+PIR/C99U1Nv2ndtDb7etDodEma0Zg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1x6T6k-0000000H08V-2A3k;
-	Tue, 15 Sep 2026 15:21:58 +0200
+	id 1x6T6m-0000000H08V-2pd1;
+	Tue, 15 Sep 2026 15:22:00 +0200
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Jeff Johnson <jjohnson@kernel.org>,
@@ -43,9 +43,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
 	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next v4 5/8] wifi: cfg80211: add attribute for TX/RX denoting there is no station
-Date: Tue, 15 Sep 2026 15:19:31 +0200
-Message-ID: <20260915151925.f12af80b1972.I4cfd3db83ba3dc0267575f919ba613ea5d10abd5@changeid>
+Subject: [PATCH wireless-next v4 7/8] wifi: mac80211: pass station to ieee80211_tx_skb_tid
+Date: Tue, 15 Sep 2026 15:19:33 +0200
+Message-ID: <20260915151925.759b6144ddf9.Ib7be90db0d3712d14e7a292023ff3d922baef860@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260915131925.1780764-10-benjamin@sipsolutions.net>
 References: <20260915131925.1780764-10-benjamin@sipsolutions.net>
@@ -59,125 +59,180 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-For MLD stations, userspace may need to explicitly transmit a frame to
-a specific link address. In that case, it needs to ensure that no
-address translation happens.
+The station may be relevant for queuing and will also generally be
+resolved in some cases. However, we want to be able to prevent looking
+up the station based on the address.
 
-In the reverse case of an RX, userspace may need to know the link
-address for a frame. By passing the information whether a STA is known
-for the frame, userspace knows whether link translation happened and
-can do the reverse lookup when needed.
+Add a station parameter, which can be set to the correct station, to an
+error value to prevent station lookup or to NULL to get the old
+behaviour where the address is used to find the appropriate station.
 
-This is important for flows where a STA is still registered but the
-connection has been lost and it is returning again.
+Also disable the station lookup for ieee80211_tx_skb_tid_band already as
+it does not make any sense to find a station when doing an off-channel
+transmit.
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
-
 ---
+ net/mac80211/agg-tx.c      |  4 ++--
+ net/mac80211/ht.c          |  2 +-
+ net/mac80211/ieee80211_i.h | 11 +++++++----
+ net/mac80211/offchannel.c  |  2 +-
+ net/mac80211/rx.c          |  2 +-
+ net/mac80211/tdls.c        |  2 +-
+ net/mac80211/tx.c          | 10 ++++++----
+ 7 files changed, 19 insertions(+), 14 deletions(-)
 
-v4:
-- Change name to NL80211_ATTR_FRAME_NO_STA and use reference for
-  NL80211_CMD_FRAME in documentation
----
- include/net/cfg80211.h       | 4 ++++
- include/uapi/linux/nl80211.h | 7 +++++++
- net/wireless/nl80211.c       | 8 +++++++-
- 3 files changed, 18 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6461a7bd0169..9aa7d2d4a184 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4009,6 +4009,7 @@ struct cfg80211_update_ft_ies_params {
-  * @link_id: for MLO, the link ID to transmit on, -1 if not given; note
-  *	that the link ID isn't validated (much), it's in range but the
-  *	link might not exist (or be used by the receiver STA)
-+ * @no_sta: set if the frame should not be transmitted using an existing STA
-  */
- struct cfg80211_mgmt_tx_params {
- 	struct ieee80211_channel *chan;
-@@ -4021,6 +4022,7 @@ struct cfg80211_mgmt_tx_params {
- 	int n_csa_offsets;
- 	const u16 *csa_offsets;
- 	int link_id;
-+	bool no_sta;
- };
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 0832213430f4..ce9fb19d8c18 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -98,7 +98,7 @@ static void ieee80211_send_addba_request(struct sta_info *sta, u16 tid,
+ 	if (sta->sta.deflink.he_cap.has_he)
+ 		ieee80211_add_addbaext(skb, 0, agg_size);
+ 
+-	ieee80211_tx_skb_tid(sdata, skb, tid, -1);
++	ieee80211_tx_skb_tid(sdata, skb, NULL, tid, -1);
+ }
+ 
+ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+@@ -127,7 +127,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 					IEEE80211_TX_CTL_REQ_TX_STATUS;
+-	ieee80211_tx_skb_tid(sdata, skb, tid, -1);
++	ieee80211_tx_skb_tid(sdata, skb, NULL, tid, -1);
+ }
+ EXPORT_SYMBOL(ieee80211_send_bar);
+ 
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index e1e1b7f82f3f..c5c2113fa4f7 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -545,7 +545,7 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+ 	info->status_data = IEEE80211_STATUS_TYPE_SMPS |
+ 			    u16_encode_bits(status_link_id << 2 | smps,
+ 					    IEEE80211_STATUS_SUBDATA_MASK);
+-	ieee80211_tx_skb_tid(sdata, skb, 7, link_id);
++	ieee80211_tx_skb_tid(sdata, skb, NULL, 7, link_id);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 65311340db40..9514f01778be 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2471,7 +2471,8 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 		    struct sta_info *sta, struct sk_buff *skb);
+ 
+ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+-				 struct sk_buff *skb, int tid, int link_id,
++				 struct sk_buff *skb, struct sta_info *sta,
++				 int tid, int link_id,
+ 				 enum nl80211_band band);
+ 
+ static inline bool ieee80211_require_encrypted_assoc(__le16 fc,
+@@ -2486,18 +2487,20 @@ ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 			  enum nl80211_band band)
+ {
+ 	rcu_read_lock();
+-	__ieee80211_tx_skb_tid_band(sdata, skb, tid, -1, band);
++	__ieee80211_tx_skb_tid_band(sdata, skb, ERR_PTR(-ENOENT),
++				    tid, -1, band);
+ 	rcu_read_unlock();
+ }
+ 
+ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
+-			  struct sk_buff *skb, int tid, int link_id);
++			  struct sk_buff *skb, struct sta_info *sta,
++			  int tid, int link_id);
+ 
+ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+ 				    struct sk_buff *skb)
+ {
+ 	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
+-	ieee80211_tx_skb_tid(sdata, skb, 7, -1);
++	ieee80211_tx_skb_tid(sdata, skb, NULL, 7, -1);
+ }
  
  /**
-@@ -9501,6 +9503,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * @flags: flags, as defined in &enum nl80211_rxmgmt_flags
-  * @rx_tstamp: Hardware timestamp of frame RX in nanoseconds
-  * @ack_tstamp: Hardware timestamp of ack TX in nanoseconds
-+ * @no_sta: set if no station is known for the frame (relevant for MLD)
-  */
- struct cfg80211_rx_info {
- 	int freq;
-@@ -9512,6 +9515,7 @@ struct cfg80211_rx_info {
- 	u32 flags;
- 	u64 rx_tstamp;
- 	u64 ack_tstamp;
-+	bool no_sta;
- };
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 7acef80d5f1f..5cec8747b193 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -1022,7 +1022,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	}
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 32553cacf988..510102febc26 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3185,6 +3185,11 @@ enum nl80211_commands {
-  *	The aggregated message always precedes the per-link messages for the
-  *	same station within a dump sequence.
-  *
-+ * @NL80211_ATTR_FRAME_NO_STA: Valid for @NL80211_CMD_FRAME to denote that
-+ *	the kernel had no station for a received frame or should not use a
-+ *	known station to transmit a frame. This is relevant to know whether
-+ *	MLD address translation happened or to disable it when sending a frame.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3785,6 +3790,8 @@ enum nl80211_attrs {
+ 	if (!need_offchan) {
+-		ieee80211_tx_skb_tid(sdata, skb, 7, link_id);
++		ieee80211_tx_skb_tid(sdata, skb, NULL, 7, link_id);
+ 		ret = 0;
+ 		goto out_unlock;
+ 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6c823678d099..d6755a4c7d3c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4106,7 +4106,7 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
+ 					local->hw.offchannel_tx_hw_queue;
+ 		}
  
- 	NL80211_ATTR_STA_DUMP_LINK_STATS,
+-		__ieee80211_tx_skb_tid_band(rx->sdata, nskb, 7, -1,
++		__ieee80211_tx_skb_tid_band(rx->sdata, nskb, rx->sta, 7, -1,
+ 					    status->band);
+ 	}
  
-+	NL80211_ATTR_FRAME_NO_STA,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 4f4cae9fd274..7ec33885a3e1 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1066,7 +1066,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	}
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b081eeaf7016..e77a4c81d031 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1097,6 +1097,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_NPCA_PUNCT_BITMAP] =
- 		NLA_POLICY_FULL_RANGE(NLA_U32, &nl80211_punct_bitmap_range),
- 	[NL80211_ATTR_STA_DUMP_LINK_STATS] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_FRAME_NO_STA] = { .type = NLA_FLAG },
- };
+ 	if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
+-		ieee80211_tx_skb_tid(sdata, skb, 7, link_id);
++		ieee80211_tx_skb_tid(sdata, skb, sta, 7, link_id);
+ 		return 0;
+ 	}
  
- /* policy for the key attributes */
-@@ -14873,6 +14874,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	    !(wdev->valid_links & BIT(params.link_id)))
- 		return -EINVAL;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 06c50183f064..73affc540f0c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -6448,7 +6448,8 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *pubsta, u8 tid)
+ EXPORT_SYMBOL(ieee80211_unreserve_tid);
  
-+	params.no_sta =
-+		nla_get_flag(info->attrs[NL80211_ATTR_FRAME_NO_STA]);
-+
- 	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
- 	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
+ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+-				 struct sk_buff *skb, int tid, int link_id,
++				 struct sk_buff *skb, struct sta_info *sta,
++				 int tid, int link_id,
+ 				 enum nl80211_band band)
+ {
+ 	const struct ieee80211_hdr *hdr = (void *)skb->data;
+@@ -6500,12 +6501,13 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	local_bh_disable();
+ 	IEEE80211_SKB_CB(skb)->band = band;
+-	ieee80211_xmit(sdata, NULL, skb);
++	ieee80211_xmit(sdata, sta, skb);
+ 	local_bh_enable();
+ }
  
-@@ -22042,7 +22046,9 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 	    (info->ack_tstamp && nla_put_u64_64bit(msg,
- 						   NL80211_ATTR_TX_HW_TIMESTAMP,
- 						   info->ack_tstamp,
--						   NL80211_ATTR_PAD)))
-+						   NL80211_ATTR_PAD)) ||
-+	    (info->no_sta &&
-+	     nla_put_flag(msg, NL80211_ATTR_FRAME_NO_STA)))
- 		goto nla_put_failure;
+ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
+-			  struct sk_buff *skb, int tid, int link_id)
++			  struct sk_buff *skb, struct sta_info *sta,
++			  int tid, int link_id)
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	enum nl80211_band band;
+@@ -6531,7 +6533,7 @@ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
+ 		band = 0;
+ 	}
  
- 	genlmsg_end(msg, hdr);
+-	__ieee80211_tx_skb_tid_band(sdata, skb, tid, link_id, band);
++	__ieee80211_tx_skb_tid_band(sdata, skb, sta, tid, link_id, band);
+ 	rcu_read_unlock();
+ }
+ 
 -- 
 2.55.0
 
