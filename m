@@ -1,58 +1,58 @@
 Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF2043BDC8;
-	Tue, 15 Sep 2026 05:47:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A3D43E9F9;
+	Tue, 15 Sep 2026 05:48:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789451267; cv=pass; b=GhXtTa+2cxekohCAuzxyEeEBvXU8YpyVpjAO94ISy7mTCfsmIGBNGZp+WluByrpMBaM4yYIx64R2XcczIR99eJ2teOx7exZ+13VKhFpT9Z+T/ydaO5Jj68EJ6OdP7EGd3W5FFIbdx065lq4VxGka02s5AllFLcomNxjb5p7nAXI=
+	t=1789451305; cv=pass; b=I/oQfP7wlG2TZ9ZRhMehFBYWzfO3rKq+lValZHQpEvxYBRBSPAS3N6VwvIuqeoVia9xQy7z8LFc3OKDVyXLNOrcXCuBnfBHcOFYG0eA3qIUxtKe73Dv7t0LYiNSUr1oqSrDzR5PJ0aDhxP3W6hML4c7CMayZNltlEfjlOW0IGg4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789451267; c=relaxed/simple;
-	bh=lmfXVdhj4XKXkltUcw+u085d9Gv1YopwSSRwYiRt+mI=;
+	s=arc-20240116; t=1789451305; c=relaxed/simple;
+	bh=9/6M3/7gt0JLWQuczN0WgWo8dNZ1el0eF+EvhihOWSc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uw2nLmdvansgXTnYKcWzW2jpIGkD6yYGvLG1GMKEQd6ESYe+BXgcONLgAJXvCpgZo4lHv3/u9ocr1Nw9VDpIjC0QuhNgrcSVPoJ5EofcxN7yxLCtgt+qP3wrHPD2C0LHq3Rx2yoHzlfalGHsm//UyR8jWmNeAglQEiooIZjPf3Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=RRpAzP0r; arc=pass smtp.client-ip=185.185.170.37
+	 MIME-Version; b=Ibbd5iraWN4I36oyaAvSnieVwhcAbCiEmCR0iVoKHCxQS/xRTROaE4A3hT+l8aFDEFh5izeHH0qYZTUVltcOamRXm3NSfoYJOnt7m7NBkQ3zBA/u6vSnwo8T3f+mcjyQ37x7brfBxwxJNr68aYYt/WE2Fs/ydktg4d5tkF7F8/E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=KytI+jpD; arc=pass smtp.client-ip=185.185.170.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="RRpAzP0r"
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="KytI+jpD"
 Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkWJD46Dxz49Q6x;
-	Tue, 15 Sep 2026 08:47:40 +0300 (EEST)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkWJx68B7z49Q32;
+	Tue, 15 Sep 2026 08:48:17 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789451260;
+	t=1789451298;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZL4TqLJCUHMypohzoaU3V9T/82qT11Mw0FniRBnY4gk=;
-	b=RRpAzP0rct1htzJzzS0BWkkX4BAeYSFLpHT9GeN58Iij5peky4BObPmkaIMrdy68+/ml8j
-	Fm4GHfJhjXn3W6X2HTAtQanFSOAZ3l5Aa6fqa4gO36dNo7AkwWJ9nOcmsgW89Y+nlAOIDT
-	8mUQf8Mrf5VPGaeCcWhNz9ArltdSBSpr6WRh9F17FMbdov2O+yjAefc9XJPlKEsg/KP8Rm
-	L/hKAXvSl5xc3guYI33deKPMKY6gw7olVfHC992GX4+h7iWHkQktz9hg16OnMNFNnOZdJW
-	79MN4wNo6wzlaHq6e6NmIp1iJlqD5oDaiO7G+sAGOC5Z7ydRO5UaUWKR0QWQhg==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789451260;
-	b=t89+cva3wNzd0ZHDUSo2MFdt1cs3SzleXZ+hyhjgGP6W11OaO5zlz5RzlkeBjzh8h0/Dvq
-	QN0zGUoUfISenyXCH9OOYZhC5JaptTRB9AlIARZKcWBumGA4RX8md1jFznTKMbjScR4q6h
-	FnCn2k4lLQ63fUkqkhFL7vGKtRX0Ggvgse9ZMowZGAXYAlBFTTeOQCMlUEwb5uLl5U+Hbq
-	ia/Ce62fcavKxMO/TD1JGMwXwXYusxDCg7dlvvsoCqnBaaHU5ECNSlJZ5dXHHcpJvI0obO
-	8cxuqntEQnt9UwMe2JBhYI5UG/76jGhKZeSJzQv2quMf4BTycnXkPQ+H1ckjSA==
+	bh=9DZArNhvvAzVfrl1dfODQGqES9F9P7LrpHsacGtJDNA=;
+	b=KytI+jpDm+VXWaQlWntDClP3mbKkyfu1BZqP5+8YViWP6GcQ+jEBiJYGWheGr7YSVU02uV
+	2B+le+nK7RE1yv46v+ZVgAf6YZ3LVGt9qU1EG1In5hbh+6FPavx06oFfX5Y1TNFtsezMHy
+	gLcFplWlo/zi8RL44aoBXePHjnflHp9Kw4PYifw78NpLwHC7JWV6583nU6JSMo4GSJsLzo
+	Wq3EydeOW8l167pJDLweH8KG+EHfqZzH0o8WlDltqqjWtzpbbU/RdiUOTt4b1IgoEiazOG
+	o2OZ0xAL3TQTvsKCF18t35NccQlma4OQYoAFpVI4GWozRX1DNVe0gEC9QCeX4Q==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789451298;
+	b=llhd1Iwj/4wL6tuosk4gk5cMohP+ItEoAbTQ94C43a6NFJ46FeeXMVrMmkUIlfvT9cBWjr
+	MUTlerohnrQj47ElH2yeoth8q7PZw9+EeLPJuQlH9o7Omxj/JKT2JtO7a2ZdL9JlI3EDkx
+	zrFmsiUo3I6fMn8sfJOzL3LjfM0xLnEE7zjbSfySwqpEDx3iM8X1C7iv17nMO3IVdOBtnJ
+	CsUtUz95/zVqdQVdZOrPO2nnUQRvRCWsJ/JQTiPle+jYtR2y1vrs6diAsG8JG/GO60REux
+	YyKDeTFvssSm8kV8cne1eiuqmMNecnPRqi7Ed+WGQWKpAvcYen2caU+nhC3WDw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789451260;
+	s=lahtoruutu; t=1789451298;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZL4TqLJCUHMypohzoaU3V9T/82qT11Mw0FniRBnY4gk=;
-	b=UZzsRLN/oAXl3bHpS2GGg+HFNscL5SpoyYxwW30FasIzdT+QQK5+CZ4jnDYX4kU3Ix2pO3
-	rpQFWZ8ji8rmPuwP0pJRAmDugYdyYfhaZpTSKqh9uoB2tlkid52+BFffQxvsNBX+aLRrrV
-	q/Ze2FAInpVuEEK2fMa/FYS0HnLaB3akjJNK4ypVDj84CiOqXPY57gJhSp7qwIaSr4vNmw
-	Ae8w7Rpl7HCHwj92qeaGXhnOtt955YAYithupAuT4fgmKpq27jxFARJvZmFMz86xYo+kjz
-	lTiKJ+0I+UYoLiL5U4HjSF4MUCdlfM6sLNVJCzFk8WTH0dCqDltVM25i3rtczg==
+	bh=9DZArNhvvAzVfrl1dfODQGqES9F9P7LrpHsacGtJDNA=;
+	b=a8WmTcRpsY9kpaR00zL9DxydUHYqNRde+lPVpjgQzZd7sFxDEpqhlrUvo8fpdM+xsL0KFb
+	hh1I4daH4KXIfH8u4kb9TGXyHuPhyIdCKETV5csylmWECVuibwL/iC1MDP2i4+BpNxk0sR
+	UwM+s60LGcV6d69Jmuk/gU3vpWUEHGCHpyztZCmfdilRfq0PGapizIcpQORagprJ2ndhlR
+	lLTB1cAVZ72ALHt714L7zV2UVlbO6eRkdBUEpvRTQrGKWoEJt7Oz+yPuYRhxY+BoKXVMtm
+	D9GznDgel530LlZmUKtfw157NTk3oykcRqHaWWe4AwGjA5h8OrVuhne0vpGgjA==
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
@@ -81,9 +81,9 @@ Cc: Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
 	netdev@vger.kernel.org
-Subject: [PATCH v7 13/15] net: qrtr: limit endpoint range to 16 bits on 32-bit machines
-Date: Tue, 15 Sep 2026 08:42:05 +0300
-Message-Id: <20260915054207.2513877-14-juha-matti.tilli@iki.fi>
+Subject: [PATCH v7 14/15] net: qrtr: use nid modulo 65536 in 32-bit lookups
+Date: Tue, 15 Sep 2026 08:42:06 +0300
+Message-Id: <20260915054207.2513877-15-juha-matti.tilli@iki.fi>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
 References: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
@@ -95,42 +95,54 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On 64-bit machines, use the full range for endpoint ids, but on 32-bit
-machines, use only 16 bits. This gives plenty of endpoints, 65534 to
-be specific, apart from the invalid zero value and the local endpoint.
+The node id is chosen by the device firmware, and is generally a small
+single number. However, there's nothing to prevent the device from
+choosing a large node id. Use node id modulo 65536 in 32-bit systems to
+allow it to work in cases where the node id is large.
 
-This should fix any issues where a long-running system with lots of
-allocations might allocate an endpoint id bigger than 65535 on a 32-bit
-system. The node id, the secondary part, is already combined with port
-id into a value that is potentially 32 bits in existing old code.
-
-NOTE: this commit is a candidate for squashing with the two next
-commits, if we want to have the "radix tree of trees" approach. This
+NOTE: this commit is a candidate for squashing with the previous and
+next commit, if we want to have the "radix tree of trees" approach. This
 note should probably be removed before committing. If we don't want
 "radix tree of trees", this commit needs careful decision of whether we
 may want to drop it.
 
 Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 ---
- net/qrtr/af_qrtr.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/qrtr/af_qrtr.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/net/qrtr/af_qrtr.c b/net/qrtr/af_qrtr.c
-index b27c5a659795d..3c84da3059a80 100644
+index 3c84da3059a80..87eb7363c4a9f 100644
 --- a/net/qrtr/af_qrtr.c
 +++ b/net/qrtr/af_qrtr.c
-@@ -22,7 +22,11 @@
- #define QRTR_MAX_EPH_SOCKET 0x7fff
- #define QRTR_EPH_PORT_RANGE \
- 		XA_LIMIT(QRTR_MIN_EPH_SOCKET, QRTR_MAX_EPH_SOCKET)
-+#if BITS_PER_LONG >= 64
- #define QRTR_ENDPOINT_RANGE XA_LIMIT(qrtr_local_nid + 1, INT_MAX)
-+#else
-+#define QRTR_ENDPOINT_RANGE XA_LIMIT(qrtr_local_nid + 1, USHRT_MAX)
-+#endif
+@@ -497,8 +497,11 @@ static struct qrtr_node *qrtr_node_lookup(unsigned int endpoint_id,
+ 	unsigned long flags;
+ 	unsigned long key = 0;
  
- #define QRTR_PORT_CTRL_LEGACY 0xffff
+-	if (endpoint_id > QRTR_INDEX_HALF_UNSIGNED_MAX ||
+-	    nid > QRTR_INDEX_HALF_UNSIGNED_MAX)
++	/* nid is chosen by device firmware and is generally a single
++	 * and small number. If firmware chooses otherwise, use it
++	 * modulo 65536 in 32-bit systems.
++	 */
++	if (endpoint_id > QRTR_INDEX_HALF_UNSIGNED_MAX)
+ 		return node;
  
+ 	key = ((unsigned long)(endpoint_id) << QRTR_INDEX_HALF_BITS) |
+@@ -529,8 +532,11 @@ static int qrtr_node_assign(struct qrtr_node *node, unsigned int nid)
+ 	if (nid == QRTR_EP_NID_AUTO)
+ 		return 0;
+ 
+-	if (node->ep->id > QRTR_INDEX_HALF_UNSIGNED_MAX ||
+-	    nid > QRTR_INDEX_HALF_UNSIGNED_MAX)
++	/* nid is chosen by device firmware and is generally a single
++	 * and small number. If firmware chooses otherwise, use it
++	 * modulo 65536 in 32-bit systems.
++	 */
++	if (node->ep->id > QRTR_INDEX_HALF_UNSIGNED_MAX)
+ 		return -EINVAL;
+ 
+ 	spin_lock_irqsave(&qrtr_nodes_lock, flags);
 -- 
 2.34.1
 
