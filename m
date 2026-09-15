@@ -1,208 +1,101 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-lr2-f12.google.com (mail-lr2-f12.google.com [74.125.230.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96E5C48664C;
-	Tue, 15 Sep 2026 11:25:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA581184524
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 12:26:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789471504; cv=none; b=STGE8GD4DedD5zzjQFk2bkH1v7G1eMWb5BKqc4CHXREWMFvK+KsElNKFmWFJ5WMAZsQhfyyCWuQz+ksFFsgnMrtNpB/sVoJhIi3zNKWdRMTKZQ3yXrZ1bQzcClqVrzKd9o8ESHAwU6JfwyNoJduWQWoVSjkxCtMHtCuykEeFTcA=
+	t=1789475214; cv=none; b=edQ7AvUY0qwY1pCEkdGoLllhelTA8ldNkEaN2JM2ebagW7QtA5HQag6lgKCn0qJggroXg4x/tyH3sp8Kx0TsXkmJ/bqjiiO9jlJWkmH+UXtauIDxwiW3dWaloxtEpyPPnBOO+4KL1cCzQOEmVHU9wXILJdWbryXHxYQYKH3Jr8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789471504; c=relaxed/simple;
-	bh=0ve7/DDdcigv05770gqszO21YREHojJv3JBfh9LpjKU=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tISN/hfHhCg3v3MWi4PlDWGqnB+oJ9mSEsnYKbwFImBSVsmnv973OqC1Hfz3gLTGUX5eZdBJgud+4QWHNz2h72nFvuNQpbVBd9Qbp3B/ZxGQmLs4n2USXnoqW9VhBEV2wdn6tYnZYoz2vkxj0aWFGit8iO+LvnR+CQdReDRSIAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FSRxqY26; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=aSsl2yJ1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HmFYlpnJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FquzOGo+; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1789475214; c=relaxed/simple;
+	bh=xpmNOMEFZ79Zl34tT053pt+ZMJVypP0OCV382hkhG+s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iDXZMg8l3O3lUPup1oMmOXJ2wJYouahSDZuhc86CIQ6UX+q1skc8CnM39OIhbvwTcQF+/+yPp2UEta+bYviSGsdHCmeNr+KlqBVKAHp8/tP7tAIBHjqKMR8MJUOQgUfD0M6aOxIaJOe67jA8RghXMRBghGlxLB8Uy28U/e9pHGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FTc3sQ7w; arc=none smtp.client-ip=74.125.230.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FSRxqY26";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="aSsl2yJ1";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HmFYlpnJ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FquzOGo+"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 20F5421B02;
-	Tue, 15 Sep 2026 11:24:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1789471494; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=psqF+EOKBnDir7oSpdYk0cv/7bWaGxT8GNrr5rPj7yg=;
-	b=FSRxqY266D0vmKnF9nLIRDyWWQM9yhSRf7SWuTSbWdHKmTZfPMBWgLsJq7H8V56FVkky//
-	8MrE9PciUwBdoFcR4M6TLhf0Be1H7UyuT3X6eiMNzlMbbIthbvGQDSnAd0oqm56+IjjTWt
-	ZfmEPFx5zXWF3FpvnKWoZi5XGYuzP5E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1789471494;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=psqF+EOKBnDir7oSpdYk0cv/7bWaGxT8GNrr5rPj7yg=;
-	b=aSsl2yJ1+boxtQdbyNVNOLHSB2zJu6wAGQi+9pbebbTp2ClXENyw6idF+ycsnZ57BL4LP5
-	ZfcRP6lnX00QOOBw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=HmFYlpnJ;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=FquzOGo+
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1789471490; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=psqF+EOKBnDir7oSpdYk0cv/7bWaGxT8GNrr5rPj7yg=;
-	b=HmFYlpnJHQnucD0Hu7XWebQts4zdFxqB6Md4UgWWqagCStl48Xajm8kE50YWip9K8RYGR6
-	TjQMT6l+/cnv1Hphpj6UBRi2hgiye5AdRmKJllzK4WS/Qo3IlkmtIW20gkJR+AFYnIbRJu
-	qg1C7c30pv8I0/77mryKUVsgaauSbcU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1789471490;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=psqF+EOKBnDir7oSpdYk0cv/7bWaGxT8GNrr5rPj7yg=;
-	b=FquzOGo+tVlEMPCfctD8o5e/sCS7xihfao4/ZdIf2qlfM3ZVtlvjjsESrStMfdFOYRkvvC
-	9nOkOMjZr8TKGZBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E1B7713693;
-	Tue, 15 Sep 2026 11:24:46 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 2riGLf4qqWqtagAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Tue, 15 Sep 2026 11:24:46 +0000
-Date: Tue, 15 Sep 2026 13:24:46 +0200
-Message-ID: <877bkmn4e9.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Bill Wendling <morbo@google.com>
-Cc: linux-kernel@vger.kernel.org,	Russell King <linux@armlinux.org.uk>,
-	Huacai Chen <chenhuacai@kernel.org>,	WANG Xuerui <kernel@xen0n.name>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,	"James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,	Helge Deller <deller@gmx.de>,
-	Thomas Gleixner <tglx@kernel.org>,	Ingo Molnar <mingo@redhat.com>,	Borislav
- Petkov <bp@alien8.de>,	Dave Hansen <dave.hansen@linux.intel.com>,
-	x86@kernel.org,	"H. Peter Anvin" <hpa@zytor.com>,	Ian Abbott
- <abbotti@mev.co.uk>,	H Hartley Sweeten <hsweeten@visionengravers.com>,	Tony
- Luck <tony.luck@intel.com>,	Maarten Lankhorst
- <maarten.lankhorst@linux.intel.com>,	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,	Matthew Brost <matthew.brost@intel.com>,
-	=?ISO-8859-1?Q?=22Thomas_Hellstr=F6m=22?=
- <thomas.hellstrom@linux.intel.com>,	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,	Matthias Schwarzott
- <zzam@gentoo.org>,	Mauro Carvalho Chehab <mchehab@kernel.org>,	Tony Nguyen
- <anthony.l.nguyen@intel.com>,	Przemek Kitszel
- <przemyslaw.kitszel@intel.com>,	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,	Eric Dumazet
- <edumazet@google.com>,	Jakub Kicinski <kuba@kernel.org>,	Paolo Abeni
- <pabeni@redhat.com>,	Arend van Spriel <arend.vanspriel@broadcom.com>,	Rob
- Herring <robh@kernel.org>,	Saravana Kannan <saravanak@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,	Sylwester Nawrocki
- <s.nawrocki@samsung.com>,	Peter Griffin <peter.griffin@linaro.org>,	Alim
- Akhtar <alim.akhtar@samsung.com>,	Linus Walleij <linusw@kernel.org>,	Anil
- Gurumurthy <anil.gurumurthy@qlogic.com>,	Sudarsana Kalluru
- <sudarsana.kalluru@qlogic.com>,	"Martin K. Petersen" <mkp@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,	Anna Schumaker <anna@kernel.org>,
-	Mike Marshall <hubcap@omnibond.com>,	Martin Brandenburg
- <martin@omnibond.com>,	Kees Cook <kees@kernel.org>,	Jiri Pirko
- <jiri@resnulli.us>,	Simon Horman <horms@kernel.org>,	Chuck Lever
- <cel@kernel.org>,	Jeff Layton <jlayton@kernel.org>,	NeilBrown
- <neil@brown.name>,	Olga Kornievskaia <okorniev@redhat.com>,	Dai Ngo
- <Dai.Ngo@oracle.com>,	Tom Talpey <tom@talpey.com>,	Jaroslav Kysela
- <perex@perex.cz>,	Takashi Iwai <tiwai@suse.com>,	Andrew Morton
- <akpm@linux-foundation.org>,	"Mike Rapoport (Microsoft)" <rppt@kernel.org>,
-	Kanglong Wang <wangkanglong@loongson.cn>,	Tiezhu Yang
- <yangtiezhu@loongson.cn>,	Qiang Ma <maqianga@uniontech.com>,	Randy Dunlap
- <rdunlap@infradead.org>,	Pengpeng Hou <pengpeng@iscas.ac.cn>,	Ard
- Biesheuvel <ardb@kernel.org>,	Breno Leitao <leitao@debian.org>,	Thorsten
- Blum <blum@kernel.org>,	Harshit Mogalapalli
- <harshit.m.mogalapalli@oracle.com>,	Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,	Lyude Paul <lyude@redhat.com>,	Ashutosh Desai
- <ashutoshdesai993@gmail.com>,	Imre Deak <imre.deak@intel.com>,	Dmitry
- Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,	Johan Hovold
- <johan@kernel.org>,	Johannes Berg <johannes.berg@intel.com>,	Miri Korenblit
- <miriam.rachel.korenblit@intel.com>,	Alexander Stein
- <alexander.stein@ew.tq-group.com>,	Cryolitia PukNgae
- <cryolitia@uniontech.com>,	Jiaming Zhang <r772577952@gmail.com>,	Will
- Porter <mrwillporter@gmail.com>,	Cen Zhang <zzzccc427@gmail.com>,
-	=?ISO-8859-1?Q?=22C=E1ssio_Gabriel=22?= <cassiogabrielcontato@gmail.com>,
-	Rong Zhang <i@rong.moe>,	Arun Raghavan <arunr@valvesoftware.com>,
-	linux-arm-kernel@lists.infradead.org,	loongarch@lists.linux.dev,
-	linux-mips@vger.kernel.org,	linux-parisc@vger.kernel.org,
-	linux-edac@vger.kernel.org,	dri-devel@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org,	linux-input@vger.kernel.org,
-	linux-media@vger.kernel.org,	intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org,	linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev,	brcm80211-dev-list.pdl@broadcom.com,
-	devicetree@vger.kernel.org,	linux-samsung-soc@vger.kernel.org,
-	linux-gpio@vger.kernel.org,	linux-scsi@vger.kernel.org,
-	linux-nfs@vger.kernel.org,	devel@lists.orangefs.org,
-	linux-hardening@vger.kernel.org,	linux-sound@vger.kernel.org
-Subject: Re: [PATCH 00/28] Replace remaining strlcat() call sites with snprintf()/seq_buf()
-In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
-References: <20260915081910.4142719-1-morbo@google.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FTc3sQ7w"
+Received: by mail-lr2-f12.google.com with SMTP id 38308e7fff4ca-3a2ff16dd47so24940811fa.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 05:26:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789475211; x=1790080011; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6k2WCPX2Lro+tylch1akShaYbgtzv4QoGFTVB6XS47g=;
+        b=FTc3sQ7wO0uJ9NIQo5nNP6Rl1r/hwqg6LlNn1wre4Vt1kfJ0UPkteahV9h/y2BUJss
+         K+Qm+mmHwtzAWAMdierL50qlC1S2gDLrl7LWSrIoR4Q+oNPlk8CO4m0y4oGxJUyAmzvj
+         5LX/I50SeyeAcqOErl638QI9HCCoRGSS10/hcFZy4gXRBBLL8bPzzRCwnpbmIw161cSb
+         BpF3JgKA6/iuLOnrzxWPT4pPQuKl2rq8UuOebQdHAyd5PVo98obnU7ywYFW3epuCOd09
+         gClMuM/rsEdAutstghDMGyKzm65uye/5yvefWgrjPiBZEuXR6Q2fCH5gHopjrYMo59Ut
+         F7qQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789475211; x=1790080011;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6k2WCPX2Lro+tylch1akShaYbgtzv4QoGFTVB6XS47g=;
+        b=CRB35KMoTBLNmGFPTYEnoUPD2M/Vt1E2AoouN/EkyTx0HZfO+EZw3bL0vydtU1iSNJ
+         m6XCJUATktdqMau46lMYhVNvYBp08IAuAobSHv95EVkNM1hAEkaqAU7MClnrOEIC1CXG
+         YOgqVa90N8HRMLRW9zgb0qBg91oiXNyXpNiv2ViHsGu4RHFMf3xNMBeIJCMEr+ohymqJ
+         hXmjQpvnOVLvOMK1lsYHs780y3XuCS6bahz7SBgaQHjd+feLYcRdQKBPN+x2pHfH/AGh
+         hhYpHuIU+9fLiX45m5hOchyB6d6KrUwpG/jCDsF6232NwOO/dcUknmjXgRKKSRT4Zx5U
+         anbA==
+X-Gm-Message-State: AFuF++mliHEi78yG2C93hceQpekmTx7kbSRccAdi838utb/ftgWC/AFV
+	Kd0EeVeSQMZ6ntEHwXZDwE9Xmht7zXcHrkqyQfYP+I9fgC9Kf7gq0x6to84967DgFW7K6Q==
+X-Gm-Gg: AYBFou2XKWKCddXV+p9wVAhmS34EnmlLx/sKA/4sEy7F6KSs3fDefWFlDXIIr+oTlSw
+	/3+0v9MKliMN6opYJWMks0bghoh8+ImN95T15sLDZI/eSTw3GJozto+MQgV/1BsVFXEdDP6YSul
+	+MVgE2VaZhCzhEDjMDW2ylqzENZCjyI3CdbLk/APZtAO7W3rGnJGRrNa5UHrDw6MJxm/ZRL8lfU
+	zTJPy3Qz/66rDY3l9zD39U9eTm0y1RD6plkr4eq3IwWjDiKLWUE9M3H1Ho+SL3WQSssbcob8xwK
+	KZK3/O7Kjc3TOxCPqxz64GStnjF6Q1gV8pZIsf482VYnJmvpnKLRqQxVMe3+Vyy7R2Fy8TfvJAw
+	IAsdoh0Xbysy/SOuOEyTGWrvtQvaK6OU0BlD3phXxauu08oEKDHQ74461rCbAP6fmpXxh82pZsv
+	oHbKfQxZkPEjW3GDVVvkjFFrZaYEheVIWODs/WwjD3CdMNQ2Bo+EMZJtelZ1JTu/SXTbWCFMjoU
+	c/3gou+fBmvjwPM
+X-Received: by 2002:a2e:be9c:0:b0:3a5:a139:526e with SMTP id 38308e7fff4ca-3a5c897d9c2mr11521781fa.20.1789475210365;
+        Tue, 15 Sep 2026 05:26:50 -0700 (PDT)
+Received: from localhost.localdomain ([80.66.93.67])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b8a04600a2sm3235840e87.36.2026.09.15.05.26.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Sep 2026 05:26:49 -0700 (PDT)
+From: Maxim Skokov <skokovmaksimevg@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Maxim Skokov <skokovmaksimevg@gmail.com>
+Subject: rtw89: BT connect state differs between scoreboard and bt_info on RTL8851B
+Date: Tue, 15 Sep 2026 15:26:22 +0300
+Message-ID: <20260915122625.6341-1-skokovmaksimevg@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Spam-Level: 
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 20F5421B02
-X-Spamd-Result: default: False [-2.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_CONTAINS_FROM(1.00)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,armlinux.org.uk,kernel.org,xen0n.name,alpha.franken.de,HansenPartnership.com,gmx.de,redhat.com,alien8.de,linux.intel.com,zytor.com,mev.co.uk,visionengravers.com,intel.com,suse.de,gmail.com,ffwll.ch,gentoo.org,lunn.ch,davemloft.net,google.com,broadcom.com,samsung.com,linaro.org,qlogic.com,omnibond.com,resnulli.us,brown.name,oracle.com,talpey.com,perex.cz,suse.com,linux-foundation.org,loongson.cn,uniontech.com,infradead.org,iscas.ac.cn,debian.org,linuxfoundation.org,oss.qualcomm.com,ew.tq-group.com,rong.moe,valvesoftware.com,lists.infradead.org,lists.linux.dev,lists.freedesktop.org,lists.osuosl.org,lists.orangefs.org];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCPT_COUNT_GT_50(0.00)[110];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[netdev];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -2.01
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 15 Sep 2026 10:18:17 +0200,
-Bill Wendling wrote:
-> 
-> strlcat() is deprecated: like strcat(), it requires re-scanning the
-> destination string from the beginning on every call, which is O(n^2)
-> when used to build up a string incrementally, and its truncation
-> behavior is easy to get wrong.
+On RTL8851B with an A2DP sink connected and playing, btc_info shows
+bt->link_info.status.map.connect flipping between Y and N, while the
+scoreboard value stays the same:
 
-... but what many of your patches do is to replace strlcat() with
-open-codes, which is more error-prone and easier to get wrong than
-a single strlcat() call.
+  reason                connect   action     BT0->WL
+  NTFY_RADIO_STATE      N         WL_OFF     0x40000013
+  UPDATE_BT_INFO        Y         FREERUN    0x40000013
+  UPDATE_BT_INFO        Y         FREERUN    0x40000013
+  NTFY_RADIO_STATE      N         WL_OFF     0x40000013
 
-> See:
-> 
->   https://github.com/KSPP/linux/issues/370
+BTC_BSCB_BT_CONNECT, BIT(16), is never set in BT0->WL, while the bt_info
+mailbox reports the device as connected:
 
-It's clear that strlcat() isn't perfect and sometimes inefficient.
-But blindly deprecating without providing a good alternative doesn't
-sound like a right approach to me.
+  [bt_info] : raw_data[49 00 d0 00 04 00]
+              raw_info[2] = 0x49: connect=1, acl_busy=1, a2dp=1
+              raw_info[6] = 0x04: a2dp_active=1
 
+The field is written from both paths, _update_bt_info() and the
+scoreboard read in _update_bt_scbd(), so it ends up holding whichever
+event arrived last.
 
-thanks,
+Is the scoreboard connect bit expected to be set by BT firmware here, or
+is the mailbox the authoritative source and the scoreboard write
+intentional?
 
-Takashi
+WL_FW 0.29.41.3, BT_FW 0xf8ad230(patch), Coex 9.24.1, kernel 7.3.0-rc1.
