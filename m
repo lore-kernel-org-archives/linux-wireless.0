@@ -1,36 +1,36 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469143C8717
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74A913C98B7
 	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 13:22:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789478531; cv=none; b=jLOwjtKWttfmZLkZYlWq0q1uJ9Q1GfaR8WWdpq+g/5Xb1tGcUbF96HIEsoJ0u2HAcLfV567O7LRIdM0aGwZpgaGtl2PsXOwJp8A7nmpQJ3nGRzPKL0/cGIRX58/rIqqB5lGtEuPEPRrjK+8/YltYquSTUnMJ4SFidzrLrXkA/W0=
+	t=1789478531; cv=none; b=o2UcGs/vmrM7zMw9cE3zSBSjSvnKiEVnathvtlfCTRy7ceYY7+Ps/xxzH01gv54mYirOfXHde6gu6c8HEktinzccMw1Yse+LD9Kkw0u4s/UEVA50qsZ9QzzC93OwB9qYmJZeTGh68Tpj4G2sk4xBQ332LlKnk4V8kTf38y4EOgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789478531; c=relaxed/simple;
-	bh=a2l1s0LgPJ/QJbmjd0wowYW64fwNZmkzbnxwQl+vUV8=;
+	bh=EsnSng3OiSwGpK4uY+bm5+ygmz84+EL9xXGU807f0m0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rukXHi8srNYruLsu6tqzGotxrkgUeKWWUAAV9r4diDOee9rAFob+wScr49uuMpL4c+UbqgkiqKYmR36IiAE2mVpp3hdK17d8F94fJx7Z5N7XXjcLERx+A0wH4AOmp2eCCd2KVpXyzLI7/rDTo6uL47eejzBTrdrchwjHiRRPzDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=JCQQqQT4; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=PAOis3xMXMyX/M/kJPs3haRKu/llpBabbFOlOtdcrisEHYPeOzPUYLYzi0VO2fbrMPDb49ySXWqIDgq5nIDCTm3RzfPKUdJcgJk4hNwdoZgijypMSqeHh+JNl3OjMi+8TaXAWkovPU+iuN4DrSsOhR0iqfC1k1O1M0sI4PntqHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=wEkdZYse; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="JCQQqQT4"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="wEkdZYse"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=fuDuV9JdMaqBB1i4BS6ejH/c03yoLcQ+BAFv2pIzN8I=;
-	t=1789478529; x=1790688129; b=JCQQqQT4MWo37piTC+m9BKj1whWyFuVF6fOpd/MBwEiwrOm
-	YidotVaatLdTAxpINR9qcgcE27IT3t7Mzqmhpq6ulA2N4qSReY6dp+zCskUo430Qtcs7kM6CRvOLp
-	7pPg3yjtf0/qhQIL5jfZU4PDLDDn3qgKiq9mD8eizgmqNktKkcKnccmir0K0Z1SV/b/vUMfQLwIim
-	OKR24WhAD/VpqKUVHneGAG1+fQ+5Ls4LL+6e7H7kS1IyV6sXUuTbKmioR3wAfmrYyg6JnpesZrhTv
-	go9Pd3oUzcmQTYvdsa0rdw27/NinpzQCJAgIXpouPAGVCGcFNzvdqrmTM3hEwvPQ==;
+	Resent-Cc:Resent-Message-ID; bh=4li65BcNpSkuPJvoyH9P8yXhY9efVvAT0OcmyGsRKBI=;
+	t=1789478529; x=1790688129; b=wEkdZYsewfavO99JIx9/4u0Bu/U+C3Y28gIqJLwz7rpYDDq
+	N+PsCgObC4Em7mfFV87POfBNRtVFzeUJgVX22BKmCsCJ38MwBWYKt/dSZg4Q2aMJe1rUhm1BH0Fnr
+	VEJSDe8CR1v/TROhe2yPj7TotmI9EILjlI9SmtbYKenFFsWJVv2GFGSJz/LDA/bXhlsj3SbQmZFCF
+	NH5u9B2N/7U7rb2CtESobWleettOatKo6Ab7elgQUyju6TLbiCrqoBsAvA2uxLi3UfdtnRuVIzds0
+	alaTRNZY+TfXDHfFCycioViOdF3GWLNShjD+SsPb9M/JItCDAO7Lh2iQq/lyeSQA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1x6T6j-0000000H08V-1jgO;
-	Tue, 15 Sep 2026 15:21:57 +0200
+	id 1x6T6f-0000000H08V-3TeY;
+	Tue, 15 Sep 2026 15:21:54 +0200
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Jeff Johnson <jjohnson@kernel.org>,
@@ -43,9 +43,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
 	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next v4 4/8] wifi: mac80211: rework RX packet handling
-Date: Tue, 15 Sep 2026 15:19:30 +0200
-Message-ID: <20260915151925.de2fc9a47273.Ie12ec077142c6a7fdbb58cdfc5660497cc75150e@changeid>
+Subject: [PATCH wireless-next v4 1/8] wifi: iwlwifi: use link_sta internally to the driver
+Date: Tue, 15 Sep 2026 15:19:27 +0200
+Message-ID: <20260915151925.0b1269375e9e.I41df561f8129fac1327a07729cf4734b8752bcd6@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260915131925.1780764-10-benjamin@sipsolutions.net>
 References: <20260915131925.1780764-10-benjamin@sipsolutions.net>
@@ -59,415 +59,329 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-The code has grown over time and it was not correctly handling all
-cases. Examples of issues are that for management frames we would match
-the received address against the MLD address even though we should not
-resolve the station in that case. Another issue was that for data frames
-we would not correctly fall back to use link addresses when the driver
-does not provide the pubsta already.
-
-The new code still uses the same approach as before. For data frames,
-assume that a valid station exists and interfaces do not need to be
-iterated. On the other hand, for non-data frames (or if a data frame
-without a station is received) all interfaces must be iterated.
-
-Note that this rework makes mac80211 slightly more strict. For example,
-previously mac80211 would have incorrectly accepted a data frame that
-was transmitted on the wrong link.
+Using the link_sta is a natural way to pass both the STA and the link ID
+information at the same time. Use that internally to the driver in
+preparation to mac80211 changing its API and adopting the same method.
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
-
 ---
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c  | 17 +++----
+ drivers/net/wireless/intel/iwlwifi/mld/agg.h  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   | 45 ++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/mld/rx.h   |  2 +-
+ .../wireless/intel/iwlwifi/mld/tests/agg.c    |  7 +--
+ 5 files changed, 39 insertions(+), 36 deletions(-)
 
-v1:
- * Handle NAN_DATA interface type
- * Fix missing variable initialization in loop
----
- net/mac80211/rx.c | 291 +++++++++++++++++++++++++++-------------------
- 1 file changed, 171 insertions(+), 120 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 753d639d1955..1273c9067aed 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -4318,9 +4318,33 @@ static bool
- ieee80211_rx_is_valid_sta_link_id(struct ieee80211_sta *sta, u8 link_id)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+index 96102d2af2cf..c45c47337509 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+@@ -7,7 +7,8 @@
+ #include "hcmd.h"
+ 
+ static void
+-iwl_mld_reorder_release_frames(struct iwl_mld *mld, struct ieee80211_sta *sta,
++iwl_mld_reorder_release_frames(struct iwl_mld *mld,
++			       struct ieee80211_link_sta *link_sta,
+ 			       struct napi_struct *napi,
+ 			       struct iwl_mld_baid_data *baid_data,
+ 			       struct iwl_mld_reorder_buffer *reorder_buf,
+@@ -32,7 +33,7 @@ iwl_mld_reorder_release_frames(struct iwl_mld *mld, struct ieee80211_sta *sta,
+ 		while ((skb = __skb_dequeue(skb_list))) {
+ 			iwl_mld_pass_packet_to_mac80211(mld, napi, skb,
+ 							reorder_buf->queue,
+-							sta);
++							link_sta);
+ 			reorder_buf->num_stored--;
+ 		}
+ 	}
+@@ -74,7 +75,7 @@ static void iwl_mld_release_frames_from_notif(struct iwl_mld *mld,
+ 
+ 	reorder_buf = &ba_data->reorder_buf[queue];
+ 
+-	iwl_mld_reorder_release_frames(mld, link_sta->sta, napi, ba_data,
++	iwl_mld_reorder_release_frames(mld, link_sta, napi, ba_data,
+ 				       reorder_buf, nssn);
+ out_unlock:
+ 	rcu_read_unlock();
+@@ -180,7 +181,7 @@ void iwl_mld_del_ba(struct iwl_mld *mld, int queue,
+ 	reorder_buf = &ba_data->reorder_buf[queue];
+ 
+ 	/* release all frames that are in the reorder buffer to the stack */
+-	iwl_mld_reorder_release_frames(mld, link_sta->sta, NULL,
++	iwl_mld_reorder_release_frames(mld, link_sta, NULL,
+ 				       ba_data, reorder_buf,
+ 				       ieee80211_sn_add(reorder_buf->head_sn,
+ 							ba_data->buf_size));
+@@ -193,7 +194,7 @@ void iwl_mld_del_ba(struct iwl_mld *mld, int queue,
+  */
+ enum iwl_mld_reorder_result
+ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+-		int queue, struct ieee80211_sta *sta,
++		int queue, struct ieee80211_link_sta *link_sta,
+ 		struct sk_buff *skb, struct iwl_rx_mpdu_desc *desc)
  {
- 	if (sta->mlo)
--		return !!(sta->valid_links & BIT(link_id));
--	else
--		return sta->deflink.link_id == link_id;
-+		return sta->valid_links & BIT(link_id);
-+
-+	return sta->deflink.link_id == link_id;
-+}
-+
-+static bool ieee80211_rx_data_set_link_sta(struct ieee80211_rx_data *rx,
-+					   struct link_sta_info *link_sta)
-+{
-+	struct sta_info *sta;
-+
-+	if (WARN_ON_ONCE(!link_sta) ||
-+	    !ieee80211_rx_is_valid_sta_link_id(&link_sta->sta->sta,
-+					       link_sta->link_id))
-+		return false;
-+
-+	sta = link_sta->sta;
-+
-+	rx->sta = sta;
-+	rx->local = sta->sdata->local;
-+	rx->link = rcu_dereference(sta->sdata->link[link_sta->link_id]);
-+	if (!rx->link)
-+		return false;
-+
-+	rx->link_id = rx->link->link_id;
-+	rx->link_sta = link_sta;
-+
-+	return true;
- }
+ 	struct ieee80211_hdr *hdr = (void *)skb_mac_header(skb);
+@@ -228,12 +229,12 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 		return IWL_MLD_PASS_SKB;
  
- static bool ieee80211_rx_data_set_link(struct ieee80211_rx_data *rx,
-@@ -5296,60 +5320,19 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
- 	dev_kfree_skb(skb);
- }
+ 	/* no sta yet */
+-	if (IWL_FW_CHECK(mld, !sta,
++	if (IWL_FW_CHECK(mld, !link_sta,
+ 			 "Got valid BAID without a valid station assigned - %d\n",
+ 			 baid))
+ 		return IWL_MLD_PASS_SKB;
  
--static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
--				       struct sk_buff *skb, bool consume)
-+static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data *link)
- {
--	struct link_sta_info *link_sta;
--	struct ieee80211_hdr *hdr = (void *)skb->data;
--	struct sta_info *sta;
--	int link_id = -1;
--
--	if (ieee80211_is_s1g_beacon(hdr->frame_control)) {
--		if (!ieee80211_rx_data_set_sta(rx, NULL, -1))
--			return false;
--
--		return ieee80211_prepare_and_rx_handle(rx, skb, consume);
--	}
--
--	/*
--	 * FIXME: Here we can assume that link addresses have not
--	 * been translated.
--	 *
--	 * Look up link station first, in case there's a
--	 * chance that they might have a link address that
--	 * is identical to the MLD address, that way we'll
--	 * have the link information if needed.
--	 */
--	link_sta = link_sta_info_get_bss(rx->sdata, hdr->addr2);
--	if (link_sta) {
--		sta = link_sta->sta;
--		link_id = link_sta->link_id;
--	} else {
--		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
--
--		sta = sta_info_get_bss(rx->sdata, hdr->addr2);
--		if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
--		    status->freq) {
--			struct ieee80211_link_data *link;
--			struct ieee80211_chanctx_conf *conf;
--
--			for_each_link_data_rcu(rx->sdata, link) {
--				conf = rcu_dereference(link->conf->chanctx_conf);
--				if (!conf || !conf->def.chan)
--					continue;
-+	struct ieee80211_chanctx_conf *conf;
+-	mld_sta = iwl_mld_sta_from_mac80211(sta);
++	mld_sta = iwl_mld_sta_from_mac80211(link_sta->sta);
  
--				if (status->freq == conf->def.chan->center_freq) {
--					link_id = link->link_id;
--					break;
--				}
--			}
--		}
--	}
-+	if (!freq || link->sdata->vif.type == NL80211_IFTYPE_NAN ||
-+	    link->sdata->vif.type == NL80211_IFTYPE_NAN_DATA)
-+		return true;
- 
--	if (!ieee80211_rx_data_set_sta(rx, sta, link_id))
-+	conf = rcu_dereference(link->conf->chanctx_conf);
-+	if (!conf || !conf->def.chan)
- 		return false;
- 
--	return ieee80211_prepare_and_rx_handle(rx, skb, consume);
-+	return freq == conf->def.chan->center_freq;
- }
- 
+ 	/* not a data packet */
+ 	if (!ieee80211_is_data_qos(hdr->frame_control) ||
+@@ -324,7 +325,7 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 	 * will be released when the frame release notification arrives.
+ 	 */
+ 	if (!amsdu || last_subframe)
+-		iwl_mld_reorder_release_frames(mld, sta, napi, baid_data,
++		iwl_mld_reorder_release_frames(mld, link_sta, napi, baid_data,
+ 					       buffer, nssn);
+ 	else if (buffer->num_stored == 1)
+ 		buffer->head_sn = nssn;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.h b/drivers/net/wireless/intel/iwlwifi/mld/agg.h
+index 651c80d1c7cd..c6cd5fa219be 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/agg.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
  /*
-@@ -5363,11 +5346,14 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr;
-+	struct link_sta_info *link_sta;
-+	struct sta_info *sta;
- 	__le16 fc;
- 	struct ieee80211_rx_data rx;
--	struct ieee80211_sub_if_data *prev;
- 	struct rhlist_head *tmp;
-+	bool rx_data_pending;
- 	int err = 0;
+- * Copyright (C) 2024 Intel Corporation
++ * Copyright (C) 2024, 2026 Intel Corporation
+  */
+ #ifndef __iwl_agg_h__
+ #define __iwl_agg_h__
+@@ -106,7 +106,7 @@ int iwl_mld_ampdu_rx_stop(struct iwl_mld *mld, struct ieee80211_sta *sta,
  
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -5414,92 +5400,102 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		     ieee80211_is_s1g_beacon(hdr->frame_control)))
- 		ieee80211_scan_rx(local, skb);
+ enum iwl_mld_reorder_result
+ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+-		int queue, struct ieee80211_sta *sta,
++		int queue, struct ieee80211_link_sta *link_sta,
+ 		struct sk_buff *skb, struct iwl_rx_mpdu_desc *desc);
  
-+	/*
-+	 * RX of a data frame should only happen to existing stations.
-+	 * It is therefore more efficient to use the one provided by the driver
-+	 * or search based on the station's address.
-+	 *
-+	 * Note we will fall through and handle a spurious data frame in the
-+	 * same way as a management frame.
-+	 */
- 	if (ieee80211_is_data(fc)) {
--		struct sta_info *sta, *prev_sta;
--
- 		if (link_pubsta) {
--			sta = container_of(link_pubsta->sta,
--					   struct sta_info, sta);
--			if (!ieee80211_rx_data_set_sta(&rx, sta,
--						       link_pubsta->link_id))
--				goto out;
-+			sta = container_of(link_pubsta->sta, struct sta_info,
-+					   sta);
-+			link_sta = rcu_dereference(sta->link[link_pubsta->link_id]);
- 
--			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
-+			rx.sdata = sta->sdata;
-+			if (ieee80211_rx_data_set_link_sta(&rx, link_sta) &&
-+			    ieee80211_prepare_and_rx_handle(&rx, skb, true))
- 				return;
-+
- 			goto out;
- 		}
- 
--		prev_sta = NULL;
-+		rx_data_pending = false;
- 
-+		/* Search for stations on non-MLD interfaces */
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
--			int link_id;
-+			struct ieee80211_link_data *link;
- 
--			if (!prev_sta) {
--				prev_sta = sta;
-+			if (ieee80211_vif_is_mld(&sta->sdata->vif))
- 				continue;
--			}
- 
--			rx.sdata = prev_sta->sdata;
--
--			/*
--			 * FIXME: This is not correct as the addr2 cannot be a
--			 * link address if the loop itself is iterated.
--			 */
--			if (prev_sta->sta.mlo) {
--				struct link_sta_info *link_sta;
--
--				link_sta = link_sta_info_get_bss(rx.sdata,
--								 hdr->addr2);
--				if (!link_sta)
--					continue;
-+			link = &sta->sdata->deflink;
-+			if (!ieee80211_rx_valid_freq(status->freq, link))
-+				continue;
- 
--				link_id = link_sta->link_id;
--			} else {
--				link_id = sta->deflink.link_id;
-+			if (rx_data_pending) {
-+				ieee80211_prepare_and_rx_handle(&rx, skb,
-+								false);
-+				rx_data_pending = false;
- 			}
- 
--			if (!ieee80211_rx_data_set_sta(&rx, prev_sta, link_id))
--				goto out;
--
--			ieee80211_prepare_and_rx_handle(&rx, skb, false);
-+			rx.sdata = sta->sdata;
-+			if (!ieee80211_rx_data_set_link_sta(&rx, &sta->deflink))
-+				continue;
- 
--			prev_sta = sta;
-+			rx_data_pending = true;
- 		}
- 
--		if (prev_sta) {
--			int link_id;
--
--			rx.sdata = prev_sta->sdata;
-+		/* And search stations on MLD interfaces */
-+		for_each_link_sta_info(local, hdr->addr2, link_sta, tmp) {
-+			struct ieee80211_link_data *link;
- 
--			/*
--			 * FIXME: This is not correct as the addr2 cannot be a
--			 * link address if the loop itself is iterated.
--			 */
--			if (prev_sta->sta.mlo) {
--				struct link_sta_info *link_sta;
-+			sta = link_sta->sta;
-+			sdata =	sta->sdata;
-+			link = rcu_dereference(sdata->link[link_sta->link_id]);
- 
--				link_sta = link_sta_info_get_bss(rx.sdata,
--								 hdr->addr2);
--				if (!link_sta)
--					goto out;
-+			if (!ieee80211_rx_valid_freq(status->freq, link))
-+				continue;
- 
--				link_id = link_sta->link_id;
--			} else {
--				link_id = sta->deflink.link_id;
-+			if (rx_data_pending) {
-+				ieee80211_prepare_and_rx_handle(&rx, skb,
-+								false);
-+				rx_data_pending = false;
- 			}
- 
--			if (!ieee80211_rx_data_set_sta(&rx, prev_sta, link_id))
--				goto out;
-+			rx.sdata = sta->sdata;
-+			if (!ieee80211_rx_data_set_link_sta(&rx, link_sta))
-+				continue;
- 
-+			rx_data_pending = true;
-+		}
-+
-+		if (rx_data_pending) {
- 			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
- 				return;
-+
- 			goto out;
- 		}
-+
-+		/* fall through, e.g. for spurious frame notification */
- 	}
- 
--	prev = NULL;
-+	/*
-+	 * This is a management frame (or a data frame without a station) and
-+	 * it will be delivered independent of whether a station exists,
-+	 * so iterate the interfaces.
-+	 */
-+	rx_data_pending = false;
-+
-+	/* We expect the driver to provide frequency information */
-+	if (WARN_ON_ONCE(!local->emulate_chanctx && !status->freq))
-+		goto out;
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		struct ieee80211_link_data *link = NULL;
-+
- 		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 
-@@ -5507,30 +5503,85 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			continue;
- 
-+		link_sta = NULL;
-+		link = NULL;
-+
-+		/* Try to resolve the station */
-+		if (!ieee80211_vif_is_mld(&sdata->vif)) {
-+			sta = sta_info_get_bss(sdata, hdr->addr2);
-+
-+			if (sta) {
-+				link_sta = &sta->deflink;
-+				link = &sdata->deflink;
-+			}
-+		} else {
-+			link_sta = link_sta_info_get_bss(sdata, hdr->addr2);
-+
-+			if (link_sta)
-+				link = rcu_dereference(sdata->link[link_sta->link_id]);
-+		}
-+
- 		/*
--		 * frame is destined for this interface, but if it's
--		 * not also for the previous one we handle that after
--		 * the loop to avoid copying the SKB once too much
-+		 * If we found a STA and it has a valid link information, then
-+		 * RX using the station.
- 		 */
-+		if (link_sta && link &&
-+		    ieee80211_rx_valid_freq(status->freq, link)) {
-+			if (rx_data_pending) {
-+				ieee80211_prepare_and_rx_handle(&rx, skb, false);
-+				rx_data_pending = false;
-+			}
-+
-+			/* No valid_links check as we need to RX beacons */
-+
-+			rx.sdata = sdata;
-+			if (ieee80211_rx_data_set_link_sta(&rx, link_sta))
-+				rx_data_pending = true;
- 
--		if (!prev) {
--			prev = sdata;
- 			continue;
- 		}
- 
--		rx.sdata = prev;
--		ieee80211_rx_for_interface(&rx, skb, false);
-+		/* No station, try to resolve the link and RX */
-+		if (ieee80211_vif_is_mld(&sdata->vif)) {
-+			struct ieee80211_chanctx_conf *conf;
-+			bool found = false;
- 
--		prev = sdata;
--	}
-+			for_each_link_data_rcu(sdata, link) {
-+				conf = rcu_dereference(link->conf->chanctx_conf);
-+				if (!conf || !conf->def.chan)
-+					continue;
- 
--	if (prev) {
--		rx.sdata = prev;
-+				if (status->freq == conf->def.chan->center_freq) {
-+					found = true;
-+					break;
-+				}
-+			}
- 
--		if (ieee80211_rx_for_interface(&rx, skb, true))
--			return;
-+			if (!found)
-+				link = &sdata->deflink;
-+		} else {
-+			link = &sdata->deflink;
-+		}
-+
-+		if (rx_data_pending) {
-+			ieee80211_prepare_and_rx_handle(&rx, skb, false);
-+			rx_data_pending = false;
-+		}
-+
-+		rx.sdata = sdata;
-+		rx.local = sdata->local;
-+		rx.link = link;
-+		rx.link_id = link->link_id;
-+		rx.sta = NULL;
-+		rx.link_sta = NULL;
-+
-+		rx_data_pending = true;
- 	}
- 
-+	if (rx_data_pending &&
-+	    ieee80211_prepare_and_rx_handle(&rx, skb, true))
-+		return;
-+
-  out:
- 	dev_kfree_skb(skb);
+ void iwl_mld_handle_frame_release_notif(struct iwl_mld *mld,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index 269439d789f4..5696a247922b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -47,7 +47,8 @@ iwl_mld_fill_phy_data_from_mpdu(struct iwl_mld *mld,
  }
+ 
+ static inline int iwl_mld_check_pn(struct iwl_mld *mld, struct sk_buff *skb,
+-				   int queue, struct ieee80211_sta *sta)
++				   int queue,
++				   struct ieee80211_link_sta *link_sta)
+ {
+ 	struct ieee80211_hdr *hdr = (void *)skb_mac_header(skb);
+ 	struct ieee80211_rx_status *stats = IEEE80211_SKB_RXCB(skb);
+@@ -71,13 +72,13 @@ static inline int iwl_mld_check_pn(struct iwl_mld *mld, struct sk_buff *skb,
+ 		return 0;
+ 
+ 	/* if we are here - this for sure is either CCMP or GCMP */
+-	if (!sta) {
++	if (!link_sta) {
+ 		IWL_DEBUG_DROP(mld,
+ 			       "expected hw-decrypted unicast frame for station\n");
+ 		return -1;
+ 	}
+ 
+-	mld_sta = iwl_mld_sta_from_mac80211(sta);
++	mld_sta = iwl_mld_sta_from_mac80211(link_sta->sta);
+ 
+ 	extiv = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
+ 	keyidx = extiv[3] >> 6;
+@@ -119,17 +120,17 @@ static inline int iwl_mld_check_pn(struct iwl_mld *mld, struct sk_buff *skb,
+ void iwl_mld_pass_packet_to_mac80211(struct iwl_mld *mld,
+ 				     struct napi_struct *napi,
+ 				     struct sk_buff *skb, int queue,
+-				     struct ieee80211_sta *sta)
++				     struct ieee80211_link_sta *link_sta)
+ {
+ 	KUNIT_STATIC_STUB_REDIRECT(iwl_mld_pass_packet_to_mac80211,
+-				   mld, napi, skb, queue, sta);
++				   mld, napi, skb, queue, link_sta);
+ 
+-	if (unlikely(iwl_mld_check_pn(mld, skb, queue, sta))) {
++	if (unlikely(iwl_mld_check_pn(mld, skb, queue, link_sta))) {
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+ 
+-	ieee80211_rx_napi(mld->hw, sta, skb, napi);
++	ieee80211_rx_napi(mld->hw, link_sta->sta, skb, napi);
+ }
+ EXPORT_SYMBOL_IF_IWLWIFI_KUNIT(iwl_mld_pass_packet_to_mac80211);
+ 
+@@ -1728,7 +1729,7 @@ static void iwl_mld_update_last_rx_timestamp(struct iwl_mld *mld, u8 baid)
+  * Sets *drop to true if the packet should be dropped.
+  * Returns the station if found, or NULL otherwise.
+  */
+-static struct ieee80211_sta *
++static struct ieee80211_link_sta *
+ iwl_mld_rx_with_sta(struct iwl_mld *mld, struct ieee80211_hdr *hdr,
+ 		    struct sk_buff *skb,
+ 		    const struct iwl_rx_mpdu_desc *mpdu_desc,
+@@ -1803,10 +1804,10 @@ iwl_mld_rx_with_sta(struct iwl_mld *mld, struct ieee80211_hdr *hdr,
+ 							    queue);
+ 	}
+ 
+-	return sta;
++	return link_sta;
+ }
+ 
+-static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
++static int iwl_mld_rx_mgmt_prot(struct ieee80211_link_sta *link_sta,
+ 				struct ieee80211_hdr *hdr,
+ 				struct ieee80211_rx_status *rx_status,
+ 				u32 mpdu_status,
+@@ -1820,7 +1821,6 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 	struct ieee80211_key_conf *key;
+ 	const u8 *frame = (void *)hdr;
+ 	const u8 *mmie;
+-	u8 link_id;
+ 
+ 	if ((mpdu_status & IWL_RX_MPDU_STATUS_SEC_MASK) ==
+ 	     IWL_RX_MPDU_STATUS_SEC_NONE)
+@@ -1836,10 +1836,10 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 	if (!ieee80211_is_beacon(hdr->frame_control))
+ 		return 0;
+ 
+-	if (!sta)
++	if (!link_sta)
+ 		return -1;
+ 
+-	mld_sta = iwl_mld_sta_from_mac80211(sta);
++	mld_sta = iwl_mld_sta_from_mac80211(link_sta->sta);
+ 	mld_vif = iwl_mld_vif_from_mac80211(mld_sta->vif);
+ 
+ 	/* key mismatch - will also report !MIC_OK but we shouldn't count it */
+@@ -1853,8 +1853,7 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 		return 0;
+ 	}
+ 
+-	link_id = rx_status->link_valid ? rx_status->link_id : 0;
+-	link = rcu_dereference(mld_vif->link[link_id]);
++	link = rcu_dereference(mld_vif->link[link_sta->link_id]);
+ 	if (WARN_ON_ONCE(!link))
+ 		return -1;
+ 
+@@ -1905,7 +1904,7 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ }
+ 
+ static int iwl_mld_rx_crypto(struct iwl_mld *mld,
+-			     struct ieee80211_sta *sta,
++			     struct ieee80211_link_sta *link_sta,
+ 			     struct ieee80211_hdr *hdr,
+ 			     struct ieee80211_rx_status *rx_status,
+ 			     struct iwl_rx_mpdu_desc *desc, int queue,
+@@ -1915,7 +1914,7 @@ static int iwl_mld_rx_crypto(struct iwl_mld *mld,
+ 
+ 	if (unlikely(ieee80211_is_mgmt(hdr->frame_control) &&
+ 		     !ieee80211_has_protected(hdr->frame_control)))
+-		return iwl_mld_rx_mgmt_prot(sta, hdr, rx_status, status,
++		return iwl_mld_rx_mgmt_prot(link_sta, hdr, rx_status, status,
+ 					    le16_to_cpu(desc->mpdu_len));
+ 
+ 	if (!ieee80211_has_protected(hdr->frame_control) ||
+@@ -2023,7 +2022,7 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_mld_rx_phy_data phy_data = {};
+ 	struct iwl_rx_mpdu_desc *mpdu_desc = (void *)pkt->data;
+-	struct ieee80211_sta *sta;
++	struct ieee80211_link_sta *link_sta;
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb;
+ 	size_t mpdu_desc_size = sizeof(*mpdu_desc);
+@@ -2086,7 +2085,8 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
+ 
+ 	rcu_read_lock();
+ 
+-	sta = iwl_mld_rx_with_sta(mld, hdr, skb, mpdu_desc, pkt, queue, &drop);
++	link_sta = iwl_mld_rx_with_sta(mld, hdr, skb, mpdu_desc, pkt, queue,
++				       &drop);
+ 	if (drop)
+ 		goto drop;
+ 
+@@ -2127,7 +2127,7 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
+ 
+ 	iwl_mld_rx_fill_status(mld, link_id, hdr, skb, &phy_data);
+ 
+-	if (iwl_mld_rx_crypto(mld, sta, hdr, rx_status, mpdu_desc, queue,
++	if (iwl_mld_rx_crypto(mld, link_sta, hdr, rx_status, mpdu_desc, queue,
+ 			      le32_to_cpu(pkt->len_n_flags), &crypto_len))
+ 		goto drop;
+ 
+@@ -2140,7 +2140,8 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
+ 	if (iwl_mld_time_sync_frame(mld, skb, hdr->addr2))
+ 		goto out;
+ 
+-	reorder_res = iwl_mld_reorder(mld, napi, queue, sta, skb, mpdu_desc);
++	reorder_res = iwl_mld_reorder(mld, napi, queue, link_sta, skb,
++				      mpdu_desc);
+ 	switch (reorder_res) {
+ 	case IWL_MLD_PASS_SKB:
+ 		break;
+@@ -2153,7 +2154,7 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
+ 		goto drop;
+ 	}
+ 
+-	iwl_mld_pass_packet_to_mac80211(mld, napi, skb, queue, sta);
++	iwl_mld_pass_packet_to_mac80211(mld, napi, skb, queue, link_sta);
+ 
+ 	goto out;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.h b/drivers/net/wireless/intel/iwlwifi/mld/rx.h
+index 573b89c3c9c6..b08c5ade3db8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.h
+@@ -69,7 +69,7 @@ void iwl_mld_handle_rsc_notif(struct iwl_mld *mld,
+ void iwl_mld_pass_packet_to_mac80211(struct iwl_mld *mld,
+ 				     struct napi_struct *napi,
+ 				     struct sk_buff *skb, int queue,
+-				     struct ieee80211_sta *sta);
++				     struct ieee80211_link_sta *link_sta);
+ 
+ void iwl_mld_handle_phy_air_sniffer_notif(struct iwl_mld *mld,
+ 					  struct napi_struct *napi,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tests/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/tests/agg.c
+index 29b0248cec3d..e9efe2996f07 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/tests/agg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/tests/agg.c
+@@ -2,7 +2,7 @@
+ /*
+  * KUnit tests for channel helper functions
+  *
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
+ #include <kunit/test.h>
+ #include <kunit/static_stub.h>
+@@ -441,7 +441,7 @@ static void
+ fake_iwl_mld_pass_packet_to_mac80211(struct iwl_mld *mld,
+ 				     struct napi_struct *napi,
+ 				     struct sk_buff *skb, int queue,
+-				     struct ieee80211_sta *sta)
++				     struct ieee80211_link_sta *link_sta)
+ {
+ 	__skb_queue_tail(&g_released_skbs, skb);
+ 	g_num_released_skbs++;
+@@ -630,7 +630,8 @@ static void test_reorder_buffer(struct kunit *test)
+ 	mpdu_desc = setup_mpdu_desc();
+ 
+ 	rcu_read_lock();
+-	reorder_res = iwl_mld_reorder(mld, NULL, QUEUE, sta, skb, mpdu_desc);
++	reorder_res = iwl_mld_reorder(mld, NULL, QUEUE, &sta->deflink, skb,
++				      mpdu_desc);
+ 	rcu_read_unlock();
+ 
+ 	KUNIT_ASSERT_EQ(test, reorder_res, param->expected.reorder_res);
 -- 
 2.55.0
 
