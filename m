@@ -1,99 +1,87 @@
-Received: from mta0.migadu.com (out-26.mta0.migadu.com [91.218.175.26])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C753B27CE
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2026 23:16:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.26
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84A625B09E;
+	Tue, 15 Sep 2026 00:40:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789427803; cv=none; b=KayuAYaiCSF/pOLT/qCz5q/gUAu+4wF802ZLAmfvKUld9JOy7uxEDStchZIAqQM/5wNIQhqLSRv1fUMdChK3TwKVrsPnBHcm6UVJ11sr2eJp6KhOglPcISwUder1lGkMqnm1fixwDVC8KH3j61Whgq7xLD1Y84J/QiWfxcfjYaE=
+	t=1789432823; cv=none; b=q9Tw/qp4++UyQeMwrvsTCMSfLPq/skXdpEilexB47wqxpPww9pev5t1d7LSLhQ67T8/RxIk/FEa/EXnoHcHYaQK2DCSs1/iy8kYrJ9fVmQHjVdO/O7TzM5q1FJMk8vh19W+7Sa6gG/ypPllq4MM3CCkezwxITMOs5YeA9XGuZPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789427803; c=relaxed/simple;
-	bh=6zWxkkeiTyWE5LKeVfdhoG160eDFFWVwrPpDwosVNsg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D7E2b9gvXXOlV1N3QSoqTf4OZLmV93MKowA/IYInQTMTFQGLuRcpdWnEHhTBfAhsTQegN2PB9d72w/kAWvtLZxfqlfYefxSnh8lJJkiOqavMetHBOVfWlYaBMyF7RzA946anHFwrPYIk/ugaaFWfl96yjfmKwyMZX33ptkEFHq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=CTN8WiOg; arc=none smtp.client-ip=91.218.175.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1789432823; c=relaxed/simple;
+	bh=ha7+AGq4swCCGi8az5HgRtPQvJkkNcZt9tTYI2z9AOc=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=SMAw0LSsT2XAJkbEORE5hpl+W9i1IfIUoDCnjS9A0LoAWfjvj+5wE/c/1KKfej72YAI57HNrm9+FLbz0c3HzIAd0KTHHvOq3tMo/ZlKR+AvGqFfq/yTCvyxTiX0ND5wk2WRloq6SWAhy7fD4/3bpcXF6AT/EHmLDYlkQNp0ZPg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HRsGnHvK; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="CTN8WiOg"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=6zWxkkeiTyWE5LKeVfdhoG160eDFFWVwrPpDwosVNsg=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789427792; v=1; x=1790032592;
- b=CTN8WiOgCgcBOqgnN4CcU3dUEdhIrCHG69eyBylJY3dopCJ14vtbC3gvs15LK5dIFLBssFSv
- oaMh34+xqmSi+Se3HTEwEnAUmgwolt+UV0e3UQ2s7cp0agA9qpEl0cXPi50M+mDeiRathmIfC3p
- R4gh8HPeL6jGDLv5VfIEkzZtkHDBwHsjrzqTmT7EE3WTaaLGW7hfkSjGIOu+/ldKi40pvC2eh1+
- hZSa33IElwwuE8mS1px74fwfBFLbFr9AaPKcm8vgkHS4UDK61lok2XjvpID2qJRhyulnZ/slKnP
- XGOm9GZLh7RrCqqVu2s12MzMIRMCKTUvO4VNNz2cJZxTA==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 93e28aba6f8c875a;
-	Mon, 14 Sep 2026 23:16:21 +0000
-X-Mizu-Trace-ID: 93e28aba6f8c875a
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Thorsten Leemhuis <regressions@leemhuis.info>,
-	Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: Klara Modin <klarasmodin@gmail.com>,
-	Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>,
-	JB Tsai <jb.tsai@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	regressions@lists.linux.dev
-Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI SAR init during probe
-Date: Mon, 14 Sep 2026 16:16:18 -0700
-Message-ID: <20260914231618.17749-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <2fd03569-f1c4-4c02-97ed-c74f4cd7f809@leemhuis.info>
-References: <20260825181712.28548-1-lucid_duck@justthetip.ca> <2fd03569-f1c4-4c02-97ed-c74f4cd7f809@leemhuis.info>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HRsGnHvK"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68F0eBYr91150311, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789432811; bh=YDKgvmbQpYuceRlkPyqN48eYGAdVzrAI86Rqre6/b2g=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=HRsGnHvKQeijs1Y+BU6VTPr4pT0ZQADRoE+nTRQl0Evp5YYnoPUklRm52WbZcW9KY
+	 QGD9GWfjr7GUKmmY12R2D/byeMrtgDC/TpP7aQP3cqj6GTUrmkzzvqgB0XrEoW78fH
+	 DZM5gHFQ4uzeWP7Y6NQdzz4z+I36fYYXUHIWe/GuoUNTuWlz3+77m+K+nbluOdhfgi
+	 4FbC9wx2zT70TGL9vToj459x192emXk/1UUjRFFUt6YCEeImTR9533f9Raw6OebHgm
+	 seOd9OWU6/itZRBxHETw8YCExZ2YA+Qh57Q7AIRbqTmdXt9gNedhflKQ/r03f1OvjI
+	 4TB4rHzvj7Meg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68F0eBYr91150311
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 15 Sep 2026 08:40:11 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 15 Sep 2026 08:40:11 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Tue, 15 Sep 2026 08:40:11 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Maxim Skokov <skokovmaksimevg@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: rtw89: WOW_CPUIO_RX_CTRL is never answered on RTL8851B
+Thread-Topic: rtw89: WOW_CPUIO_RX_CTRL is never answered on RTL8851B
+Thread-Index: AQHdQu5+p1mtl9gOz0eDp/HSGCWOaLbNt3lA
+Date: Tue, 15 Sep 2026 00:40:11 +0000
+Message-ID: <95af665973144da2b527b9d6d445a6ca@realtek.com>
+References: <20260912193939.5565-1-skokovmaksimevg@gmail.com>
+In-Reply-To: <20260912193939.5565-1-skokovmaksimevg@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
 
-Thorsten,
+Maxim Skokov <skokovmaksimevg@gmail.com> wrote:
+>=20
+> but rtw89_fw_feat_list only carries
+>=20
+>         __CFG_FW_FEAT(RTL8852A, lt, 0, 13, 37, 0, NO_WOW_CPU_IO_RX),
+>         __CFG_FW_FEAT(RTL8852B, lt, 0, 29, 30, 0, NO_WOW_CPU_IO_RX),
+>=20
+> and nothing for RTL8851B.
 
-Thanks for pointing Linus at it, that's pretty cool.
+I'll send a patch to add this:
 
-There's nothing to set straight as far as I could find so no additional
-patches to send. I went through it pretty thoroughly against mainline
-this afternoon.
+__CFG_FW_FEAT(RTL8851B, lt, 0, 29, 57, 0, NO_WOW_CPU_IO_RX),
 
-No stable backport needed. Both commits it fixes first appear in
-v7.3-rc1, so the regression never reached a release.
+>=20
+> One unrelated note from the same trace: "Unknown wakeup reason 0" is not
+> a failed AoAC read. AOAC_RPT_1 and AOAC_RPT_2 both succeed, and
+> rtw89_wow_show_wakeup_reason() reads the reason straight from
+> wow_reason_reg, which holds 0 because the card was not the wake source
+> here, the RTC alarm was. The switch has no case for that and falls
+> through to the warning.
 
-Felix's tree carries no competing fix and has not touched that file
-since October from what I could find.
+I'll check this internally if it is possible to avoid the "reason 0"=20
+message.=20
 
-The two patches still queued for that file, Junjie's 0xff one and my
-table-layout one, both apply cleanly on top, so nothing got stranded.
 
-Thanks again,
-
-Devin
-
-On 14/09/2026 06:35, Thorsten Leemhuis wrote:
-> For the record: Linus pulled this directly from the list into mainline
-> yesterday after I pointed to this patch in a small regression report. I
-> did that, as I had seen multiple people reporting a regression who
-> confirmed that this patch fixed things for them.
->
-> Bypassing subsystems like this has obvious downsides and risks; hence,
-> if that got something on the wrong track, please speak up -- or ideally
-> send patches to set things straight again in mainline.
->
-> https://git.kernel.org/torvalds/c/7825de3f75d184612d77655669a04ea0da252c17
-> / 7825de3f75d184 ("wifi: mt76: mt792x: fix NULL dereference in ACPI SAR
-> init during probe") [v7.3-rc3]
