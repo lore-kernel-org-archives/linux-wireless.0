@@ -1,57 +1,57 @@
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D85B4A1DEF
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:27:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26264657E5
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 08:27:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789460858; cv=none; b=c9qCQYC6K5fAy7IScBkuZqFFx009ZbBJIJvgSRJfrUfj8k4wzcHkp4x3pSJWb1n8v/EeKA5ezrmweMIWQitlTfYk3E8iPolH3jY0WKAfxh7eqz42YsOalSzZz2R6PpnE1nFP2T4fyoDuQ0Dlp+IMykxN+FunLPO9JNg4mfDo4x4=
+	t=1789460866; cv=none; b=DRyOYYISYMzd4PQxazOqaTXG0vPULeYCEUIP9e6Ri+B2tKpWe+Zqd8LuLd1PK/xPKzCH3HWH8ituWcD/yThU7gyGEScMQQszDhfig3wX1hLxXb4VH1e6LPd7Hcn4d+PSv1Upe3/rhEFLSTyonMq8oO/Ml31E/1w2k9PmPfnJbXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789460858; c=relaxed/simple;
-	bh=s/FLNJ19YZGvt5oZ8eTe1yZo+b1FTWb/0ix0hrTXlNc=;
+	s=arc-20240116; t=1789460866; c=relaxed/simple;
+	bh=RwAdEk8GoMG+Ylv02Q78v2tXMpN+9oITjoSVCa+/lcI=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=eByX3FFBsqN2vmjWW1FdsHDzxWnkDMQi0RPSvS64dq7ocedd44xSotZiTza9NNo+wOA7UnktjlBmU4jXWfCqpNC5vL/U+RDfGH6wdyygsqVAysiMzhZURrN0EoxW193OjIdjr8CZ4AQMcbbpKrLRHg6ddwt+ZqYu32dJQ7vJXT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BXJTKT5a; arc=none smtp.client-ip=209.85.210.70
+	 To:Cc:Content-Type; b=oYYYZxAsBGOCCcjAWxxuRDJTfs1y7ZVFarQLv7J8IgPRN13x2Hs4IXiCp9Y/BeMRaAjvFdFql0qcpzbfXHq2dZAJ6QUWWfon7o1vAD93W5CaipSF+wtT7vmhprxFz1MyAPMhr2GIa57iHZFPZr7jvC785mFrS7P50mFXpDPekf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=e7NvMrfs; arc=none smtp.client-ip=209.85.219.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BXJTKT5a"
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-80665223e05so827451a34.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 01:27:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="e7NvMrfs"
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-9105cf082f7so85053736d6.2
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2026 01:27:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789460855; x=1790065655; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1789460863; x=1790065663; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=TmKdBXO38kbe6W228p+vBZ76A7D+nQJddOBfd0uRZ54=;
-        b=BXJTKT5a1z+m6KsLG4qyTF4IJzYSAkzZ9a2lkmStXESNd5ERRUIDBKQ1MLw4ixJF45
-         /xAtq4mRfBdm4N/13f94EhhWTSs0KVXgUcI2Ex/A002Lr+6TtEunQxBrWcbgxgG2O/dA
-         pQf0fbiKnc3Zm4Hi+w9n3p++wGA7oKeJ14b82SarNRuoxSV3fTzuS4YJS88vR7qTc7nR
-         ObAu5Vy9MUpfjLtlaDhwoF5tWluhSznhw6nc5sjVl/zum5rQw5tHX6WbOk4XlIMi9lxB
-         c2OWYSzA5lVhzYzuJqDhDOXsxjAF+uwt8FTjG1hWJyM2GgWTmZwpv3uvk2YtA+JtDZjb
-         o/Pg==
+        bh=3R1bHblX/YSNAoDVuSots2jijK47BJf7ndWg1gXSC20=;
+        b=e7NvMrfsFIojKSOPDiHqjKg4j3boL3vpKmzMYvDWdIB/UvDDnXxr4B6g8dqoyL0ohF
+         hjtcj1sSjHjbsShGPV3AEu+3XVxFrgXoa9p+7/mC9tTbfKyJQCnEULDSBbRdWKrijuCg
+         VUzEujoCeoAPj1Z5xH7hsJzIxK/obV1/kzfrxTZ2QyHAcmR3o90KACe4/r7lAOXq4nMP
+         RH83j/kbu5lPgMum/U/rijM6f4xI2hRZMcBh9IL1IBbNsEcUlxfpu7ToF2j6hSFiu970
+         UAO2DVi5yTtM4UcBzbrTxrJTRur+0ARlKczAxEbn0gpQ6ViZSADp0sHK8UFma3E6DB/M
+         8vEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789460855; x=1790065655;
+        d=1e100.net; s=20260707; t=1789460863; x=1790065663;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TmKdBXO38kbe6W228p+vBZ76A7D+nQJddOBfd0uRZ54=;
-        b=QowCgLvfVr3ESbXkxAYidld1yZ9DFtcR/7HJbMVPuri9NG2Qmqa1fycomBbib16NaA
-         1BUA84rC7CwnA/t2096AO8ANm8Ki1F1nQCRe4RSn/uvVcYwrPNO+qECNekAbsSxWniV6
-         PaNrj8hZ/ERLH5Ong5FAWi/B1t5n+4WE7PtQfUeaJC/ZefweT5XTdDzu7i048iCEDdEF
-         S6JMSqD23lr/F7kUAp+esz8OMn44ue57lxz41FoTbIpcTy9rh5GPYs8iv+dL/8Xzfvzg
-         hFpo9b8uisxjQ4ix6fuBI1a24kp+hMy+SrAC1IZK3DJTDLCeDglL6Po9QSC7Gtvj22lV
-         pPoA==
-X-Forwarded-Encrypted: i=1; AKwUvBykiuKpPeCNRqJE/YP30PYxFosf3t+YwiCXiAMVIA1nLf8v2eVo1pigMaCFxHg4o/ViTV3nE3Kl2KN4PNz/uA==@vger.kernel.org
-X-Gm-Message-State: AFuF++nvk8OEoUVOFNZqBKBX8719YBv7h/jCf9vo2aG0sw22XN9NmzoY
-	eq2IKT9YzZUsjinYS+9NS/41RXBCoxcAY5ST1kOlZ5Cpp3+2kYlu61iKtIjaBJQMckG1qisSopG
-	1
-X-Received: from plw16.prod.google.com ([2002:a17:903:45d0:b0:2dd:203e:7d7f])
- (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:e544:b0:2d8:d4cf:fe49
- with SMTP id d9443c01a7336-2dd7654538dmr37587935ad.15.1789460410166; Tue, 15
- Sep 2026 01:20:10 -0700 (PDT)
-Date: Tue, 15 Sep 2026 08:18:35 +0000
+        bh=3R1bHblX/YSNAoDVuSots2jijK47BJf7ndWg1gXSC20=;
+        b=1jQLtWkL2a3F+x162ZfcVWKIK39eOIudhrB78gIs9datQ39T9ulH8bq8pK+W4ser7i
+         NBUR4jrMtNmjO5jC8bHZzaFTfyp1K0pVm90r0ZVs8N/gn2j6JE4C5YVkW05c7xQdpIY6
+         UMZ33KRyfj2ANhl43Fuli6xjLJKiky6GKTj5EUWjYtTiqwluin8YyAsR+wco9xnaeX8s
+         /QS0ejnSwlRWRxuPLuWTH8MBqBzZ2k3dK6d98pkd7d4noMiI1M3TkL0v8wgNkK4jITzN
+         lgYpC0RMmRmUujb6iZFjZWFSJaRa3WodRV9mL/xbLFRjHhuuOE9hNL7D/xnuD052bOPo
+         8C6A==
+X-Forwarded-Encrypted: i=1; AKwUvBy4BSD5vDpAEuHwYInU/8ytMzV8Evq+Bx9ivepP7yose/Fq3M+c5ejUZFzFPqP/H6suKhs95Z4RaVNiX2c/jQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++luGmnanLWFiHgoaovwzYGXg7ympFtFkYe9c/UBiTrghmPdX0Tf
+	+xoo8Y54G1GKij2cEbc+NyBs/IIiOMoKez6R9McSp1T9mU+MFzl34iqV6ofLD8j3JGbRoN/FnPU
+	S
+X-Received: from pghu21.prod.google.com ([2002:a63:ef15:0:b0:cc4:da05:ef4c])
+ (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:3315:b0:3d3:aec2:4dcd
+ with SMTP id adf61e73a8af0-3db40623e61mr13262094637.25.1789460418341; Tue, 15
+ Sep 2026 01:20:18 -0700 (PDT)
+Date: Tue, 15 Sep 2026 08:18:44 +0000
 In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -61,9 +61,8 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260915081910.4142719-1-morbo@google.com>
 X-Mailer: git-send-email 2.55.0.1032.g73a4cd73de-goog
-Message-ID: <20260915081910.4142719-19-morbo@google.com>
-Subject: [PATCH 18/28] LoongArch: Refactor bootcmdline_init() to use seq_buf
- instead of strlcat()
+Message-ID: <20260915081910.4142719-28-morbo@google.com>
+Subject: [PATCH 27/28] drm/xe/pf: Convert strlcat() to seq_buf in control_read()
 From: Bill Wendling <morbo@google.com>
 To: linux-kernel@vger.kernel.org
 Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com, 
@@ -124,17 +123,17 @@ Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-bootcmdline_init() uses multiple strlcat() calls to append
-init_command_line or CONFIG_CMDLINE to boot_command_line.
+control_read() builds a list of supported SR-IOV VF control commands in a
+stack buffer by calling strlcat() twice per command in a loop.
 
-In preparation for removing the deprecated strlcat() API[1], initialize a
-struct seq_buf with the existing contents of boot_command_line and use
-seq_buf_puts() to append the command line fragments.
+In preparation for removing the deprecated strlcat() API[1], use struct
+seq_buf and seq_buf_printf() to format each command line and pass
+seq_buf_used() directly to simple_read_from_buffer().
 
 Link: https://github.com/KSPP/linux/issues/370 [1]
 Cc: codemender-patching+linux@google.com
-Assisted-by: CoPilot:1.0 [shell_command_run, editor_update_file, make_kerne=
-l_build_single_file]
+Assisted-by: CoT-Agent:Gemini-2.0-Flash [editor_update_file, shell_command_=
+run]
 Signed-off-by: Bill Wendling <morbo@google.com>
 ---
 Cc: Russell King <linux@armlinux.org.uk>
@@ -248,77 +247,44 @@ Cc: devel@lists.orangefs.org
 Cc: linux-hardening@vger.kernel.org
 Cc: linux-sound@vger.kernel.org
 ---
- arch/loongarch/kernel/setup.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/arch/loongarch/kernel/setup.c b/arch/loongarch/kernel/setup.c
-index 6fa4a22a58fd..826396f141b9 100644
---- a/arch/loongarch/kernel/setup.c
-+++ b/arch/loongarch/kernel/setup.c
-@@ -33,6 +33,7 @@
- #include <linux/of_address.h>
- #include <linux/suspend.h>
- #include <linux/swiotlb.h>
+diff --git a/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c b/drivers/gpu/drm/=
+xe/xe_gt_sriov_pf_debugfs.c
+index 0f242db775e1..5db7fc067c4d 100644
+--- a/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c
++++ b/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c
+@@ -4,6 +4,7 @@
+  */
+=20
+ #include <linux/debugfs.h>
 +#include <linux/seq_buf.h>
 =20
- #include <asm/addrspace.h>
- #include <asm/alternative.h>
-@@ -305,6 +306,8 @@ static void __init fdt_setup(void)
-=20
- static void __init bootcmdline_init(char **cmdline_p)
+ #include <drm/drm_print.h>
+ #include <drm/drm_debugfs.h>
+@@ -663,15 +664,15 @@ static ssize_t control_write(struct file *file, const=
+ char __user *buf, size_t c
+ static ssize_t control_read(struct file *file, char __user *buf, size_t co=
+unt, loff_t *ppos)
  {
+ 	char help[128];
 +	struct seq_buf s;
-+
- 	/*
- 	 * If CONFIG_CMDLINE_FORCE is enabled then initializing the command line
- 	 * is trivial - we simply use the built-in command line unconditionally &
-@@ -315,6 +318,11 @@ static void __init bootcmdline_init(char **cmdline_p)
- 		goto out;
+ 	size_t n;
+=20
+-	help[0] =3D '\0';
++	seq_buf_init(&s, help, sizeof(help));
+ 	for (n =3D 0; n < ARRAY_SIZE(control_cmds); n++) {
+-		strlcat(help, control_cmds[n].cmd, sizeof(help));
+-		strlcat(help, "\n", sizeof(help));
++		seq_buf_printf(&s, "%s\n", control_cmds[n].cmd);
  	}
 =20
-+	/* Initialize seq_buf pointing to boot_command_line */
-+	s.buffer =3D boot_command_line;
-+	s.size =3D COMMAND_LINE_SIZE;
-+	s.len =3D strlen(boot_command_line);
-+
- #ifdef CONFIG_OF_FLATTREE
- 	/*
- 	 * If CONFIG_CMDLINE_BOOTLOADER is enabled and we are in FDT-based system=
-,
-@@ -323,11 +331,11 @@ static void __init bootcmdline_init(char **cmdline_p)
- 	 * to boot_command_line.
- 	 */
- 	if (initial_boot_params) {
--		if (boot_command_line[0])
--			strlcat(boot_command_line, " ", COMMAND_LINE_SIZE);
-+		if (s.len)
-+			seq_buf_puts(&s, " ");
+-	return simple_read_from_buffer(buf, count, ppos, help, strlen(help));
++	return simple_read_from_buffer(buf, count, ppos, help, seq_buf_used(&s));
+ }
 =20
--		if (!strstr(boot_command_line, init_command_line))
--			strlcat(boot_command_line, init_command_line, COMMAND_LINE_SIZE);
-+		if (!strstr(s.buffer, init_command_line))
-+			seq_buf_puts(&s, init_command_line);
-=20
- 		goto out;
- 	}
-@@ -338,14 +346,14 @@ static void __init bootcmdline_init(char **cmdline_p)
- 	 * CONFIG_CMDLINE_EXTEND is enabled.
- 	 */
- 	if (IS_ENABLED(CONFIG_CMDLINE_EXTEND) && CONFIG_CMDLINE[0]) {
--		strlcat(boot_command_line, " ", COMMAND_LINE_SIZE);
--		strlcat(boot_command_line, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
-+		seq_buf_puts(&s, " ");
-+		seq_buf_puts(&s, CONFIG_CMDLINE);
- 	}
-=20
- 	/*
- 	 * Use built-in command line if the bootloader command line is empty.
- 	 */
--	if (IS_ENABLED(CONFIG_CMDLINE_BOOTLOADER) && !boot_command_line[0])
-+	if (IS_ENABLED(CONFIG_CMDLINE_BOOTLOADER) && !s.len)
- 		strscpy(boot_command_line, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
-=20
- out:
+ static const struct file_operations control_ops =3D {
 --=20
 2.55.0.1032.g73a4cd73de-goog
 
