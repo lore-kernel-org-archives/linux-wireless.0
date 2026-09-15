@@ -1,58 +1,58 @@
 Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A80B32D7F8;
-	Tue, 15 Sep 2026 07:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85BD394470;
+	Tue, 15 Sep 2026 07:46:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789458340; cv=pass; b=EH8T4f0empi5PpB8xDc/vXwbcQbBC/n5Iq7/WR01hoUux0JFzCuvPyvnDH1RN322sCJt3iRh5DK9MZ0QVfMuQUPbIha39SO+ZQOrpG1vIItNUjC0lOBb3sDKxUTucSjCS2XViEFG2boFSKVy6G99PWeUv4nrTbvV1Byq94hQZNY=
+	t=1789458365; cv=pass; b=EEK6uZuKd00QBKTtX9L2UnIYIQiYKt/w+vFOIdq48CyvIpopVyJBsCpK0OgKdAYb0uaP9xj5rp7qrRZufTlUtapdt3qd/MLVWsNejyU2f5zKCxvjcojsjXjbHyKd8DvCsPIY+1Rf01fhg7KOaSf39oe+f2PVE9yRdZ1SG4n+LwU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789458340; c=relaxed/simple;
-	bh=on9XxVhWLOh5qBhiXVNTYYMYu4a7lEGjwAwi7dwFPvA=;
+	s=arc-20240116; t=1789458365; c=relaxed/simple;
+	bh=xs+RvB1iCnuBwduzzzqF2lCfl4nixTxCqex0JP+Z/Lw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CWwznPuXZMni1a0ckWv/SVc2YdTuvfaP7Jkxm71y6+CVtAR9q9JJgUpa4CAvlxoqpe9NEs1aiMu3Va9iwu4Ul2j5skcP1Amskc7z1lu/nMQ9Bcjz4TxvGZudI/1OIMWgUf3ZMgITsWxwi7oHPzwNWahgyGgUmMbiStOtV6RzkiU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=GFI9TFNc; arc=pass smtp.client-ip=185.185.170.37
+	 MIME-Version; b=JCDGO0uDCYU1mTggN8S1wFcgCwCOEMRUnZqo1zGzTt7/qD42VszEUs4F6rWbIaHdeK15jZiGvxKiu1a+ArnkyYuHvr/CdlUxgQzF0Ng27qwdD6mbIlhAQj73/6b367yPaiN3ZUjCWv9cPO9FKWP8Fjnbqiss/PRu+pZpXCEsDMs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=tkgoV7sH; arc=pass smtp.client-ip=185.185.170.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="GFI9TFNc"
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="tkgoV7sH"
 Received: from mandelbrot.. (xdsl-83-150-90-33.nebulazone.fi [83.150.90.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkYwD17PFz49Q6x;
-	Tue, 15 Sep 2026 10:45:32 +0300 (EEST)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hkYwj6jV6z49Q8v;
+	Tue, 15 Sep 2026 10:45:57 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789458332;
+	t=1789458358;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YLt+l40Q3PpFquTJGHV0pr4yqekDZGuuw51X1SrFTE8=;
-	b=GFI9TFNcwhRqA62Hr5qFGhZk+U388b3j0kbMGyCuLGxBhTr/19T/9e+nPa8iNhBawQp2Sc
-	MnpEev0653GuSc82GOh5Weg9S4hkbWTxWjNs43k4p7hgFV7+ZC7QiISEFMQey/ShYczJ/G
-	maKE7x960QmIF/IPuC5HsbosnokbEvO05AjG3lHSSZ8KWz/XvbuOHKwZb98ltl65R6WdSN
-	CVKfmkjxXODe2l6oQ/Q9NjrqZBPcW5R69jn4iztYHuJTGyZvP/ELwjaqLpWzBaChK/pVkC
-	juSvSjuv3YE1RPVDTHW3d7yoMXiDshBUUK7woKTUZTaJq42pmNAmdUdcj2tBhg==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789458332;
-	b=vGV1q9uOCXnIAbiq6g+n8Fh4+pyPnn4ZVSgSZyj5krs4bh/LxhPnoGuq1nEM8YtU1hydhb
-	qzxPR2BJFtWVCxcATV2gWHt34RMIrJYPyosamsMUUfcVuXg7+p51oFFnB0fsMm88IH1xfl
-	jTdyl8GrbG5uQy+yq2obKhMMR+NGm2um1A/SImm8dpAVUP+ldxTQpjitxdmTtJGrGD2ce6
-	gbhSTzXd5cWgvztLl+Y1FT4H0dKz14TFInNaiRpZQ/KXzRbFHFmcbOM8WF5xDcilhCrEY6
-	7hxN5LDLtExhI3SvqoZJ36qyULPaApZ6LSDhU+DpzM7V9l51M5mYIgz+BTDv+Q==
+	bh=DkkTpGuw3kjQPg0827cXMo9wlb6PxVdztbjyv9fxYRE=;
+	b=tkgoV7sH2MyxlYGpctGt4LQrpHRunNaSmutUxAwS8R4rneEuLo6wapJOB+7ahBVHd4eMyu
+	0zaXbe/KTFVON0cH6Hjkeg9X8oRd/MfuslJBwDcDiU1N/qKuwZebcqUXPgpFA2pTkGlkXU
+	UdSP9B2lUS4t9pwBuK6k88zB64YJBeWGTi6NMhURYFm2vdEYUtpPGWEfkt1hM9E2b972g7
+	hh8KMFUbgftOSLwRDoMpUQy7ymjSipV8B1ahr9NokKXZbp217mPnDCqKZfJsPOgvnZZ5aX
+	ivY3/1Y1pBkHUWKovWgROIu15gZHGu3GcfR8nY29NbjebsX9gr65rN33LrvI0w==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789458358;
+	b=BhVhSAt39LAEYLm8MPu4TDgVBTBSJzLcHDOozD6K8OW0yr/Y0wq3G3cfR3JEhYvtz1/2DH
+	q78Nbtlv88W8gG8AZfehIioxvhAD2cDZsw6WXlOO6IzVVNle9Gb90WGIaJWmjyFLDFs8/m
+	plw5Ohggsdmz22uZU6YzCloBVY2eULfnbWT8G3DDA98xdeL9g80yay21eQFTWsP12EA6U+
+	xzh7/pBz7+/c8LrKwQBvwi3RJSIWxBafK1x0beAZkF9y4+egYpO5msoTQJfFa23bQEdsnI
+	Jbb5LZQIUrl4FCZ2hZikfv9HqCmZAxYg8rC3rip7hDRPTTRL1feP6aum2iJNSg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789458332;
+	s=lahtoruutu; t=1789458358;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YLt+l40Q3PpFquTJGHV0pr4yqekDZGuuw51X1SrFTE8=;
-	b=HYZo5SK+l0RWK0daZpPhBvo5TCKGKM4SkrIV0W+0vIzM7GSQa7kTwt2jfIWVmLgwUvhTXL
-	r2bu/np+f2G2T1YE+HNIF6dnajxYmmGnq6C3xwC/70SWHCVX7ynzXJWQ9u5bd79NCXaqud
-	mbVnlSAxR/PrSYuEloCgyaCl0xtTHXRp6uxLf2R457uZTs0IiOPLfcXMLJl8pLp9xT4SC/
-	V9sMx2ptlaqATniV27GwpY+UgefB3P6Sm0FDdsOQMrlYTIvVT03zM2A5MG/AQW3Tp6IhHO
-	U81xEUTLiP896fOJy9p8VcjHad2iI9CN1UVJFizweYGPkQIOxpgQvyvNTb+Gcw==
+	bh=DkkTpGuw3kjQPg0827cXMo9wlb6PxVdztbjyv9fxYRE=;
+	b=j+qBtzUZIfx3Eh4TxJcT9X1c1tNEBJ+QR7hhqkRIwArNZgyykrKkIn8qHu7oNCQ3kKfcYR
+	74ngVDvXRq7a0RIlfCSlvKEM2pKjhi5Vo49kqvMv+KE2KsoSysjaeLESgwpX3N4dLmz5KK
+	hIqwLkA2o0b+fbokzsN0eqwlnqFMK6pyV+y29KQ4oZ1GBDyBjPqrE5rOAfF3a+1z7sQy9N
+	gTLM9IsSG2IPLsa2fnjFJYD5JgLOJgVJEo/CrOERTwXVR1tjUVcmykCNDuixFfjqRa45iR
+	8MRoJ82L1q6S9Mh2kz5IhHbuqQKNSbz/iub6ShieOQzB9pi2xR4O++fQejFUYQ==
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
@@ -79,9 +79,9 @@ Cc: Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
 	Juha-Matti Tilli <juha-matti.tilli@iki.fi>,
 	Mihai Moldovan <ionic@ionic.de>,
 	Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v4 10/12] wifi: ath12k: add QRTR endpoint ID hif feature
-Date: Tue, 15 Sep 2026 10:41:33 +0300
-Message-Id: <20260915074135.2567411-11-juha-matti.tilli@iki.fi>
+Subject: [PATCH v4 11/12] wifi: ath12k: implement QRTR endpoint ID fetching for PCI
+Date: Tue, 15 Sep 2026 10:41:34 +0300
+Message-Id: <20260915074135.2567411-12-juha-matti.tilli@iki.fi>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260915074135.2567411-1-juha-matti.tilli@iki.fi>
 References: <20260915074135.2567411-1-juha-matti.tilli@iki.fi>
@@ -93,43 +93,102 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Mihai Moldovan <ionic@ionic.de>
+QRTR endpoint ID fetching for PCIe devices will use MHI.
 
-This will allow fetching the QRTR endpoint ID via hardware-specific
-means.
-
+Originally-by: Mihai Moldovan <ionic@ionic.de>
 Signed-off-by: Mihai Moldovan <ionic@ionic.de>
 Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 ---
- drivers/net/wireless/ath/ath12k/hif.h | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/ath/ath12k/mhi.c | 46 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/mhi.h |  3 ++
+ drivers/net/wireless/ath/ath12k/pci.c |  1 +
+ 3 files changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath12k/hif.h b/drivers/net/wireless/ath/ath12k/hif.h
-index 4de8667690e91..4591660519efb 100644
---- a/drivers/net/wireless/ath/ath12k/hif.h
-+++ b/drivers/net/wireless/ath/ath12k/hif.h
-@@ -32,6 +32,7 @@ struct ath12k_hif_ops {
- 	void (*get_ce_msi_idx)(struct ath12k_base *ab, u32 ce_id, u32 *msi_idx);
- 	int (*panic_handler)(struct ath12k_base *ab);
- 	void (*coredump_download)(struct ath12k_base *ab);
-+	int (*set_qrtr_endpoint_id)(struct ath12k_base *ab);
- };
+diff --git a/drivers/net/wireless/ath/ath12k/mhi.c b/drivers/net/wireless/ath/ath12k/mhi.c
+index ee87f00bc5de9..3d0884e65939d 100644
+--- a/drivers/net/wireless/ath/ath12k/mhi.c
++++ b/drivers/net/wireless/ath/ath12k/mhi.c
+@@ -8,6 +8,8 @@
+ #include <linux/pci.h>
+ #include <linux/firmware.h>
  
- static inline int ath12k_hif_map_service_to_pipe(struct ath12k_base *ab, u16 service_id,
-@@ -162,4 +163,13 @@ static inline void ath12k_hif_coredump_download(struct ath12k_base *ab)
- 	if (ab->hif.ops->coredump_download)
- 		ab->hif.ops->coredump_download(ab);
++#include <net/qrtr.h>
++
+ #include "core.h"
+ #include "debug.h"
+ #include "mhi.h"
+@@ -527,3 +529,47 @@ void ath12k_mhi_coredump(struct mhi_controller *mhi_ctrl, bool in_panic)
+ {
+ 	mhi_download_rddm_image(mhi_ctrl, in_panic);
  }
 +
-+static inline int ath12k_hif_set_qrtr_endpoint_id(struct ath12k_base *ab)
++static void ath12k_mhi_qrtr_free_mhi_id(void *mhi_cntrl_void)
 +{
-+	if (!ab->hif.ops->set_qrtr_endpoint_id)
-+		return -EOPNOTSUPP;
-+	else
-+		return ab->hif.ops->set_qrtr_endpoint_id(ab);
++	struct mhi_controller *mhi_cntrl = mhi_cntrl_void;
++	u32 id = mhi_cntrl->qrtr_endpoint_id;
++
++	if (id != 0)
++		qrtr_endpoint_free_data_id(id);
++	mhi_cntrl->qrtr_endpoint_id = 0;
++	mhi_cntrl->free_qrtr_endpoint_id = NULL;
 +}
 +
- #endif /* ATH12K_HIF_H */
++int ath12k_mhi_set_qrtr_endpoint_id(struct ath12k_base *ab)
++{
++	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
++	struct ath12k_qmi *qmi = &ab->qmi;
++	int ret;
++
++	spin_lock(&ab_pci->mhi_ctrl->qrtr_endpoint_lock);
++
++	if (ab_pci->mhi_ctrl->qrtr_endpoint_id) {
++		qmi->handle.endpoint_id = ab_pci->mhi_ctrl->qrtr_endpoint_id;
++	} else {
++		ret = qrtr_endpoint_get_data_id(&qmi->handle.endpoint_id);
++		if (!ret) {
++			ab_pci->mhi_ctrl->qrtr_endpoint_id =
++				qmi->handle.endpoint_id;
++			ab_pci->mhi_ctrl->free_qrtr_endpoint_id =
++				ath12k_mhi_qrtr_free_mhi_id;
++		}
++	}
++
++	spin_unlock(&ab_pci->mhi_ctrl->qrtr_endpoint_lock);
++
++	ath12k_dbg(ab, ATH12K_DBG_PCI,
++		   "queried mhi_ctrl QRTR endpoint ID: %u\n",
++		   qmi->handle.endpoint_id);
++	if (ret) {
++		ath12k_warn(ab, "failed to query QRTR endpoint ID: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/ath12k/mhi.h b/drivers/net/wireless/ath/ath12k/mhi.h
+index 3674326763858..3e692ce0b5108 100644
+--- a/drivers/net/wireless/ath/ath12k/mhi.h
++++ b/drivers/net/wireless/ath/ath12k/mhi.h
+@@ -41,4 +41,7 @@ void ath12k_mhi_clear_vector(struct ath12k_base *ab);
+ void ath12k_mhi_suspend(struct ath12k_pci *ar_pci);
+ void ath12k_mhi_resume(struct ath12k_pci *ar_pci);
+ void ath12k_mhi_coredump(struct mhi_controller *mhi_ctrl, bool in_panic);
++
++int ath12k_mhi_set_qrtr_endpoint_id(struct ath12k_base *ab);
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 6441927b53822..7b73672e5e8e4 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -1508,6 +1508,7 @@ static const struct ath12k_hif_ops ath12k_pci_hif_ops = {
+ 	.ce_irq_enable = ath12k_pci_hif_ce_irq_enable,
+ 	.ce_irq_disable = ath12k_pci_hif_ce_irq_disable,
+ 	.get_ce_msi_idx = ath12k_pci_get_ce_msi_idx,
++	.set_qrtr_endpoint_id = ath12k_mhi_set_qrtr_endpoint_id,
+ 	.panic_handler = ath12k_pci_panic_handler,
+ #ifdef CONFIG_ATH12K_COREDUMP
+ 	.coredump_download = ath12k_pci_coredump_download,
 -- 
 2.34.1
 
