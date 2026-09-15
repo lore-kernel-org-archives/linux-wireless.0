@@ -1,170 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-b7-smtp.messagingengine.com (fout-b7-smtp.messagingengine.com [202.12.124.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64FB4B5157;
-	Tue, 15 Sep 2026 19:00:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3364C67F0;
+	Tue, 15 Sep 2026 19:05:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789498821; cv=none; b=FDnaBcsFlabd+XjBfgNOIYpWDjq4fsMeJcCcRdIhS3FE9sFf3sgcUQKBMyISt/3VNFJPj7U8TcFTBm6JNFwksv4l2lHKtlVjZKI16YaJpZU1fp/S19Kw/HR2ZGY1GhHMjoWIkVCCr+koSVaE0jHp6A00snK8EFN8pwY2KDRYlis=
+	t=1789499134; cv=none; b=WVmyMiyB7c4MbHbpsGCrjzPVRrh79xSuTKxbDdCXIYpMbXJA+mAJ14xNnuf8E+IBc4LphHi/hUjVQdc9G/PrP8XOMtac95L+DQA5MfsYqkNqmwx1qeA6pWshcnmr0gIufqQSYTIue5ruegnTXT0hh7ONHCWcDlIug2cWuTETUvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789498821; c=relaxed/simple;
-	bh=/pxPtBDRL/rubNz3T85ru1lxCUdEgL1csnJGWfVKvsw=;
+	s=arc-20240116; t=1789499134; c=relaxed/simple;
+	bh=fYzTFMrWjdctrrJ27MFBf9XX8xJCRIxVFzRkxLXBs48=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GqmGZ+D+b0m16WrZ+LAU4nCNq7ZeqY8/MkYDWu7U8ZexwCzwKZMJHnBobpJLv1Y7OedjvbrLV4gt3JE5DLSw1kPRr7qVLfc/fQ1o+XSlxmD98yWl+6iUXp7iCHF8kKIPpRvIieZi+ah2VKfvPPY2DtWTTyfIVZV3L5Jv22r+pR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0iSBaet; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=QtI+mM6c1v5LrWXdsSUOjM+ojMbxpofynCJrYKd2gMDTOq6qcAq87VRt96J+Xqy5eSArDWUnpRm9sNvPheF0gprPbrsHWlCd5lF0akpW4aE5cUz8+GDIih0xt/XhJGakkMFByroB8AL2PSs7h73zlfUwjGYimuTUr4u60OaL3wI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net; spf=pass smtp.mailfrom=jannau.net; dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b=Q+ahwNiP; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Ve/JUjLV; arc=none smtp.client-ip=202.12.124.150
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0iSBaet"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48ECC1F00893;
-	Tue, 15 Sep 2026 19:00:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789498819;
-	bh=bH9D6fx46WAVM8PGx4wEKkSYBjKGmw5AvziupNUvWGk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=j0iSBaetC/3YCi18xNuSeB+n+7VnOF+QOgAvJx7ktLSNyWzdoyXHzZ/YPBs5rtm+n
-	 WA6gaCeYDOM7G68qSWfRsHvbbAN1voKYHzwbAYckQsRPEBWlfdZePBmdFPmQ1OMU/N
-	 sUCxn5+r/cR7FN5oCIcXoHFsLztawdQ7lZ2pVlHqL5qvTKh/9Qqc0Ta8A275Irt74k
-	 zf/eAGrgknulaZr5ylmpMNiuL5cL1xjelXuos4e0Xj/d9MPGQhh5E4WSCnRmy8X7rs
-	 HaD3mC4eIWM8qko0PgiUDZhDxobQu7+Yi4Weeos/5iSyNoUm6TMJqr9E5mfS6sKjxo
-	 y4BshIH81fNpw==
-Date: Tue, 15 Sep 2026 12:00:19 -0700
-From: Kees Cook <kees@kernel.org>
-To: Bill Wendling <morbo@google.com>
-Cc: linux-kernel@vger.kernel.org, codemender-patching+linux@google.com,
-	Russell King <linux@armlinux.org.uk>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Helge Deller <deller@gmx.de>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Ian Abbott <abbotti@mev.co.uk>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Matthias Schwarzott <zzam@gentoo.org>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Sylwester Nawrocki <s.nawrocki@samsung.com>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Jiri Pirko <jiri@resnulli.us>, Simon Horman <horms@kernel.org>,
-	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Mike Rapoport (Microsoft)" <rppt@kernel.org>,
-	Kanglong Wang <wangkanglong@loongson.cn>,
-	Tiezhu Yang <yangtiezhu@loongson.cn>,
-	Qiang Ma <maqianga@uniontech.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Ard Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>,
-	Thorsten Blum <blum@kernel.org>,
-	Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lyude Paul <lyude@redhat.com>,
-	Ashutosh Desai <ashutoshdesai993@gmail.com>,
-	Imre Deak <imre.deak@intel.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Johan Hovold <johan@kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Alexander Stein <alexander.stein@ew.tq-group.com>,
-	Cryolitia PukNgae <cryolitia@uniontech.com>,
-	Jiaming Zhang <r772577952@gmail.com>,
-	Will Porter <mrwillporter@gmail.com>,
-	Cen Zhang <zzzccc427@gmail.com>,
-	=?iso-8859-1?Q?C=E1ssio?= Gabriel <cassiogabrielcontato@gmail.com>,
-	Rong Zhang <i@rong.moe>, Arun Raghavan <arunr@valvesoftware.com>,
-	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
-	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-	linux-edac@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-input@vger.kernel.org,
-	linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
-	devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nfs@vger.kernel.org, devel@lists.orangefs.org,
-	linux-hardening@vger.kernel.org, linux-sound@vger.kernel.org
-Subject: Re: [PATCH 03/28] ARM: atags: Replace strlcat() with snprintf() for
- cmdline extend
-Message-ID: <202609151155.CC22827@keescook>
-References: <20260915081910.4142719-1-morbo@google.com>
- <20260915081910.4142719-4-morbo@google.com>
+	dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b="Q+ahwNiP";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Ve/JUjLV"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfout.stl.internal (Postfix) with ESMTP id ACA8E1D00225;
+	Tue, 15 Sep 2026 15:05:30 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-05.internal (MEProxy); Tue, 15 Sep 2026 15:05:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm3; t=1789499130; x=1789585530; bh=X6nMFbOQ3D
+	HbDdO6G3T8ctqV7op+vn9hbFndcI/EdSU=; b=Q+ahwNiPmmTANd1rlqkNl2vcjm
+	/HucwzOM6bRqCRa4kQmszpdRd4921Db7ZdkI/x9vM1dVeZhUp/c47w48sdPuVtux
+	rmBJeIpTrQmMGYP92H17xyK+NTm8qO6dNu84bhDmcZxTsbby4FxISc15ZiA62bpk
+	b+WCwU1Vwval8GJqaeh5/APBfS13cuENeuWx4Zm8llR6WnAiDbypONRrKqzMA7sD
+	da8lEUl+7szonIe+Oxw/nPn82Uec4XQrPXhTuw1hnpQVVyfjI1egwMmVK5NbcJTW
+	T/ZOKofGOqyPfUmloHKKXTTVCUbwc96Y2FyeGJ0HYrONwag2zyzyexXE9eZw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+	1789499130; x=1789585530; bh=X6nMFbOQ3DHbDdO6G3T8ctqV7op+vn9hbFn
+	dcI/EdSU=; b=Ve/JUjLV32STQI+5isIZiKCBAID9hsD1QZVO+MVyPl2UttSDE9d
+	Lg4LZN1qxLXLU8nLk16ycKZZUeAskcJdUfBVvB102PD7vA9PZKkwHLexd5/GB3yt
+	h4ua2p0UYjf4CNyJwbeMBowNJuCGQhJgj65yyZaRmVXXHLAb4odWz2h7xV5tObeh
+	+KxLf+hlM2gNXnjmQu5AR8eZ9/HZ4LcpANGaR6nNGzppV4Zzc65ZQX8KY/YZ+fRS
+	8uQjFw0lDAsDRC48jzW0bRFs+NM8KBsZIak77s4UF5q54GTfAJ5Zad6G5DXZEJaS
+	A17NcKkj1/RO1svwYLmWQt0N3WYvT34y4CQ==
+X-ME-Sender: <xms:-papahtTpArAllUFUG51inEl_yhPtljfoz7EWOpKLo-Ws7wRkPGtXw>
+    <xme:-papavrrBWIXD8GvVX3GP3TOBMygOAxHwIqSAXHBglNrUPGIJ3PBbILeog2YyxYdz
+    4bckqf8BC540ATT4N1QM7u7u3Zwx2kqkzRspyh7otrXMuJcPAJjtgQ>
+X-ME-Received: <xmr:-papaoKdaoRBsGRD18yo_KzS9GwSQP1Nc4HxKHp_-es0vt42YrWz13i269u9pVlib8R7AWBQa3VszWS77b55W4nhuKG95K-Ji-Y>
+X-ME-Proxy-Cause: dmFkZTEGgQbWaHIRRSDCL3gI1/7EEOGapo2YIjCR/0kOQE6wrTf9EILXR9pQXcv8fTF1w7
+    apfnInKjO6WmimIaasWVjIFziJM4E4rZjx1vKC+zSUFUNFU7V/xSeAllcWfVRLJt2wGVgL
+    WwQ4bM9mAvi6DcXEP6tp7fyfgME5WH5Aj5ZqnbjF/uzPesRulMx8A6nj4ajgGU46BhjtXx
+    rIp1cTZ1nWfj5YjTfvZurOllIqk6VtBaKSu/IFCfH6rXFeEgCScB1nJeLv5arBFjgXZD1g
+    6exQpmhzes5SN8e+kms8+EB9PMrMcwVbZLuV8sudiG3zZzWyIPE+lwDvFAtlHnigk7uoZE
+    98+OBS+IYA0CZPhWkv64CvCe/Fx/mmmH4hASBC+aMKXzLr60qTGdN7nTnWnOzrbQ5oOGDK
+    OEak/l8uuJ9LZnhiWMypwcQhsNetlCsvjmOPpDGETsjsNi01mccgPU2ddGejNm4AiXxgf+
+    gCdaH79VRZfqVES8mM98hUoSmp+qHYrBTqe7MdvWj+HmChVVdVHCQoIHQXuCTzOxdx3ZaY
+    t0uF2wvoOj7jDf+9/r98QLsIjJZnO1HOVobJrVU0txmgBjxapP5j9vQCncLGHTPg5TC0Zz
+    TH/6AYmhoIdUEnO2DvhUYLkQ3saiDiyoBFSsK4AiXq62WRtvff8/SCjwjZrA
+X-ME-Proxy: <xmx:-papansb3rhHQo5jw-Rjiy6_gPT3kLm7WfCwT5MyV-GqLqrgrRpwaQ>
+    <xmx:-papatDIISXcdf4DF2Avkm9MEb8IOgBioSgzjk59pFubQ3BgLRjeSw>
+    <xmx:-papan7gbepKbCdq4wy7mdf7wgBZZdYtqBvAlwUbLCDzLT23Ke-GwQ>
+    <xmx:-papatBaXQP3kZvSujq6bSlrrqpIl7jy1qZVuwwwzEQun5sGS3nIIg>
+    <xmx:-papaleOfwieA4a4fce8odzP0kcbCWpUv5xegy7aFmAFy0Ij8sKcX49E>
+Feedback-ID: i47b949f6:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 15 Sep 2026 15:05:29 -0400 (EDT)
+Date: Tue, 15 Sep 2026 21:05:27 +0200
+From: Janne Grunau <j@jannau.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"Gautam Shukla (Gautam Kumar)" <gautams@broadcom.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Jason Huang <jason.huang2@infineon.com>,
+	linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com, asahi@lists.linux.dev,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: brcmfmac: cfg80211: Report port_authorized for
+ 4-way HS offload
+Message-ID: <20260915190527.GA212312@robin.jannau.net>
+References: <20260912-brcmfmac-4way-handshake-offload-authenticated-event-v1-1-e41a6a8281a2@jannau.net>
+ <3422e0b3b7d4889d2a728c41b0b02f6c80fa71bf.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260915081910.4142719-4-morbo@google.com>
+In-Reply-To: <3422e0b3b7d4889d2a728c41b0b02f6c80fa71bf.camel@sipsolutions.net>
 
-On Tue, Sep 15, 2026 at 08:18:20AM +0000, Bill Wendling wrote:
-> --- a/arch/arm/kernel/atags_parse.c
-> +++ b/arch/arm/kernel/atags_parse.c
-> @@ -121,9 +121,10 @@ __tagtable(ATAG_REVISION, parse_tag_revision);
->  static int __init parse_tag_cmdline(const struct tag *tag)
->  {
->  #if defined(CONFIG_CMDLINE_EXTEND)
-> -	strlcat(default_command_line, " ", COMMAND_LINE_SIZE);
-> -	strlcat(default_command_line, tag->u.cmdline.cmdline,
-> -		COMMAND_LINE_SIZE);
-> +	size_t len = strlen(default_command_line);
-> +
-> +	snprintf(default_command_line + len, COMMAND_LINE_SIZE - len,
-> +		 " %s", tag->u.cmdline.cmdline);
->  #elif defined(CONFIG_CMDLINE_FORCE)
->  	pr_warn("Ignoring tag cmdline (using the default kernel command line)\n");
->  #else
+On Tue, Sep 15, 2026 at 03:22:50PM +0200, Johannes Berg wrote:
+> On Sat, 2026-09-12 at 11:40 +0200, Janne Grunau wrote:
+> > 
+> > This will conflict with the "brcmfmac: add FT/OKC roaming offload
+> > support" [3] series but is written in a way to easily resolve the
+> > conflicts.
+> 
+> I ... no, I'm not going to take that conflict, and I applied the FT/OKC
+> series to wireless-next. Please create this patch on top of wireless-
+> next, if needed at all, and then you can backport something later to
+> stable if needed.
 
-It's pretty clear we have a pattern of "simple append" that is needed,
-and while strlcat() does that, it's horrible. I feel like we need an
-appending scnprintf(), and it needs to return like strscpy() does (i.e.
--E2BIG on truncation).
+That is very unfortunate. I hoped this change could merged as a fix for
+7.3.
 
-My goal would be:
+The change is required. wpa_supplicant 2.12 (and unpatched 2.11) will
+run into its authentication timeout and disconnect WPA2/3 PSK networks
+on brcmfmac devices with firmware offload support.
 
-- don't open-code string length math
-- never leave the destination unterminated
-- allow for format strings
-- yes/no return indication for "did this truncate?"
+I'll rebase onto wireless-next and send a v2 but I think it's serious
+issue in the process that it will take until after v7.4-rc1 (7+ weeks
+from now) before this fix will land in stable kernel releases.
 
-Initializing a whole seq_buf struct for these small cases is too much
-overhead...
-
-For both cases (small without seq_buf, large with seq_buf), it is also
-frequently needed to know the resulting strlen. seq_buf doesn't do this
-right today, and a strscpy-style return value also doesn't tell us. :(
-
--- 
-Kees Cook
+Janne
