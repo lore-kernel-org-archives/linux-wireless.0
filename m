@@ -1,112 +1,110 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-lr2-f12.google.com (mail-lr2-f12.google.com [74.125.230.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F404483AF
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 08:18:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DC5265623
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 08:21:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789546707; cv=none; b=OgVZ5Mc3sqNvFhxIH4lPGw3oXhtM19mTnWq4QW0khRSBNq0B0wk6sI8akp3aQHs2Vg127ub3SPEn3x2ljVA9w3VOluMcn0dxeb5NeF7PxafgvrSWPTF0v3cny641PRqvHE5UFPoHTXa1TFHhusfxLXoCII0slpx7+BOKTfMMdBs=
+	t=1789546931; cv=none; b=LXZzlG6mAMylWpmJZvAM2QGrYS8pnrsUpCmSLwfAxijwn1NBPMJODbfRFwBICSYigZ+CEHCC5gy54EEiA0KajG0mHv699XEA05yaC05KHKPOY7IYpjUYXaSD3BU4woT5iNkjeVufDyNetkgfnC5OSHE4hTM+S29SZWedB9QTuAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789546707; c=relaxed/simple;
-	bh=vq836d4vF9XEXuxlefBUXGa6qhCq1ugKXG14vQbYAoU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=fimi7UJQyg2ck4AeKxHflaEj2GfpeqRslQaF34XI7fe2o33L3+XyyWSB+vs3fyVvJni3svUcFiQELnR6GHiQ6Gee6L+KCP2f/qR792cSrDCjINMM883FtlQlFU4yCRBeNFoiojsUHyiF9dbecGoKs6flrVYmB2nXbQ2DYAI2rRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TjJzr8oH; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789546931; c=relaxed/simple;
+	bh=SCOCbvNrWnbN1Yu1T17TfLV2d7QBtjYHAj2t6DmsxzA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=aJvnseTgIzSgJBgOxKowDQ0hvtLjvemJIpXRwQLzo6mgGcTnrQQlVH5yoyDPNJh8iqbmF8dRjksABsFF/RVsG9SiE30AHS0anKyBzIrCSgoTXGEWVKt0tivJQSFAaFXDxzeKnXOjgP+hrOZHyd74fsSPrMHavHK+cEFmqQX5o6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YKbOJaa9; arc=none smtp.client-ip=74.125.230.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TjJzr8oH"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G8IB0F02224246, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789546692; bh=vq836d4vF9XEXuxlefBUXGa6qhCq1ugKXG14vQbYAoU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=TjJzr8oHxDaWuIkkOUkvifvhFBzebfBJ/piSYu7swkrLJLBN/u4fSDrEaIJZ5sdOi
-	 XlXf9Fsd9iAzhtM3vyNAst3PUG+WQkiAQZ0CDW4fPRkpnBD5SCZvZYHxGKDQaTrvIJ
-	 +eF47QrhnlPxi3sHtM9+Pcej0adjv0elXGMQ2D43X4WvOyDSGxA+aqWBnJzQcsOjPu
-	 EHug7hBn6EK9dcsj/LH+jn3SOacsFpJB3fAYTQBwtZz7CU3GWL4tW6MVYV4C4SpsIi
-	 +CyUdtM0BNK8zmLWPc3mhjH4nsyTphUyW5+vy+JKeFYNgEd82lsXFdz4srtzgx+/U8
-	 uRwiH8to7CWUg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G8IB0F02224246
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 16 Sep 2026 16:18:12 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 16:18:10 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 16 Sep 2026 16:18:10 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "i.mafifi17@gmail.com" <i.mafifi17@gmail.com>
-Subject: RE: [PATCH rtw-next v3] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Topic: [PATCH rtw-next v3] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Index: AQHdRIZF9nRMVUbxQUC9Ami7rwCNVrbQ3Qpw
-Date: Wed, 16 Sep 2026 08:18:10 +0000
-Message-ID: <40bf5c51a1c24677bbd5e1ede8cbc5ce@realtek.com>
-References: <5e0ce93e-0615-405e-956c-0f8dd8a543d9@gmail.com>
-In-Reply-To: <5e0ce93e-0615-405e-956c-0f8dd8a543d9@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YKbOJaa9"
+Received: by mail-lr2-f12.google.com with SMTP id 38308e7fff4ca-3a5919af2eeso4932901fa.3
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 01:21:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789546914; x=1790151714; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=S1bPcOfCr9q3oqfiBwdzS97TJhehFi6OIxwiT+uhuBc=;
+        b=YKbOJaa93VL89VoXuP6BRYL0W8c3A6gq4dF6tn43QpE7J4ZiHPXlJESuPx4o2zStzU
+         u//CwRcWKW73lFbiWNAREFcEfB/L36mQtcDyXNivSgqzzpgl65jv2vrSzpAt+LPgtUVV
+         oXjq66Dveo4MW8MrCOboJZqbq1Su8kzQE01S8MOySr0Jc9yVHd1xzvYa8ROfSM72G5oR
+         fUIvxX5Fwtw1vMCHzTyhyDMaPPG1/4C1ncjwO0PC1ENsqATR7XpSKx+CKYpthHXI6Ns3
+         ScVpcWd5zwJlM/OJAbAzWHHR39XZ+HUAQpXjEcmIeKyalhX8KCqb1yWsPlvEq4AN/6gx
+         +5Aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789546914; x=1790151714;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=S1bPcOfCr9q3oqfiBwdzS97TJhehFi6OIxwiT+uhuBc=;
+        b=wLvrzl4ZBH8VASBKXECNE3/P2/Q+kJgE2CGK68YD17RyoZ9fEi9KhkNXrYhKcPir/p
+         rsK6PSUi5xVYETM88e2GutAhYeGhfwGIzqy8uMIT0CeRZViUX1oCG2/bJ0S31sHD/IUU
+         rd87NEwUSJp3O8IQOEzcpKAhUb89Ehpsi6DkdSkltEjuun26YWczuANalqArCKFNfy8+
+         JOM2zdnUVseykwMi9/ij3Ta8fqPKLxm8LS34Lx9gijlkq2r4OrghYUzWY8qOsI1zsdAW
+         uxqOKjKBr4bwrUIUIYXPOamAykN9yIZo9gvJqf0DSL9w8wBAEtN6UqvcwTEPL4+hh2Hz
+         x18w==
+X-Forwarded-Encrypted: i=1; AKwUvByVYpxIhBcZHXLYU6g6O0XhmphQKDXgTxdGHGBbfw7g/+cNNeIvuImtyqwiXCM8IqTqQw55vXELiXbIq4112w==@vger.kernel.org
+X-Gm-Message-State: AFuF++k6cCJq93TEtBEo8c/L/0T3lnyBXHKOSVPTmn6AD1bvLfBw/ZgD
+	Rko+t4egiaDc5Enk2FWnitwzrbrqUUA27RSdMgeEKjT8IPl0rIzJ3NJx
+X-Gm-Gg: AYBFou2RTfbu4raartXp2s9XVZmfhKbNprEWA1Fycq4QaK++/j6OhZ+YVInmsfl0MP4
+	tobNkNXxvqiRPSrjbpaQwT30Dph81Yvoz8ekS93nU1OUI1HomBXuBzdQRtMRne/6p8LQveSKjqD
+	VT/Jvafo3lupU9uMiXDFYIu0uqmWlyfnh+8NjkRXTDwGEouKpNe1GBWjv7XyOudycqMbs0Hd9fA
+	2xNI5QqTfICrTXuemZ2/Tkl2w99FCyFjV6h8TdlmDW167B8BuXPqbDfFVAjqM8eEQxA5e+TpF2f
+	ulQdtepPojaRYTDk0IMV/q+ZAaQa8CDZahxJ8thRNm1yHUO0E5b22afFHo4xxPcdihW3oIQejg+
+	+mhV6sMGa0jVw1TMEE7ZoIkSm4ZPtrnPKhn25yeKPfHW/yhVH8ZvQ54b+IOqQSIUhJkwBmLhhzX
+	aHZK8hgkMEGU7a7Ektt/I66WYr9fMZfJuWsBNe9KCJMZHKfIvPWg2YuSwfpH9A4JN4eDZMkillt
+	j14Yfsmt+aO900F
+X-Received: by 2002:a05:651c:1508:b0:3a3:1eba:a892 with SMTP id 38308e7fff4ca-3a5dc99f535mr3127741fa.11.1789546914096;
+        Wed, 16 Sep 2026 01:21:54 -0700 (PDT)
+Received: from localhost.localdomain ([80.66.93.83])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a5dafa9510sm4100771fa.24.2026.09.16.01.21.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 01:21:53 -0700 (PDT)
+From: Maxim Skokov <skokovmaksimevg@gmail.com>
+To: pkshih@realtek.com
+Cc: gary.chang@realtek.com,
+	linux-wireless@vger.kernel.org,
+	Maxim Skokov <skokovmaksimevg@gmail.com>
+Subject: Re: [PATCH rtw-next] wifi: rtw89: 8851b: avoid using CPUIO feature with old firmware
+Date: Wed, 16 Sep 2026 11:21:35 +0300
+Message-ID: <20260916082135.8854-1-skokovmaksimevg@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260916074000.65960-1-pkshih@realtek.com>
+References: <20260916074000.65960-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiBAQCAt
-NDk5LDE2ICs1MDYsMjEgQEAgc3RhdGljIHZvaWQgcnR3X3VzYl90eF9xdWV1ZV9wdXJnZShzdHJ1
-Y3QgcnR3X3VzYiAqcnR3dXNiKQ0KPiANCj4gIHN0YXRpYyB2b2lkIHJ0d191c2Jfd3JpdGVfcG9y
-dF9jb21wbGV0ZShzdHJ1Y3QgdXJiICp1cmIpDQo+ICB7DQo+IC0gICAgICAgc3RydWN0IHNrX2J1
-ZmYgKnNrYiA9IHVyYi0+Y29udGV4dDsNCj4gKyAgICAgICBzdHJ1Y3QgcnR3X3VzYl93cml0ZV9k
-YXRhX2NiICpjYiA9IHVyYi0+Y29udGV4dDsNCj4gDQoNCkkgdGhpbmsgaGVyZSBpcyBhIHJhY2lu
-ZyB3aXRoIHRpbWVvdXQgY2FzZSBvZiB3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVvdXQoKS4NCg0K
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgQ1BVMCAgICAgICAgICAgICAgICAgICAgICBDUFUx
-DQogICAgICAgICAgIChydHdfdXNiX3dyaXRlX3BvcnRfY29tcGxldGUpICAgICAgICAgKHJ0d191
-c2Jfd3JpdGVfZGF0YSkNCg0KICAgICAgICAgICBjYiA9IHVyYi0+Y29udGV4dA0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgd2FpdF9mb3JfY29tcGxldGlv
-bl90aW1lb3V0KCkgdGltZW91dA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAga2ZyZWUoY2IpOw0KICAgICAgICAgICBjYi0+c3RhdHVzID0gdXJiLT5zdGF0
-dXM7DQogICAgICAgICAgKGNiIGlzIGZyZWUtYWZ0ZXItdXNlKQ0KDQpydHc4OSBoYW5kbGVzIHRo
-aXMga2luZCBvZiBwcm9ibGVtIGJ5IFJDVS4gWW91IGNhbiByZWZlcmVuY2UNCnJ0dzg5X3dhaXRf
-Zm9yX2NvbmRfZXZhbCgpIHRvIGtub3cgaG93IGl0IGRvZXMuDQoNCj4gLSAgICAgICBkZXZfa2Zy
-ZWVfc2tiX2FueShza2IpOw0KPiArICAgICAgIGNiLT5zdGF0dXMgPSB1cmItPnN0YXR1czsNCj4g
-KyAgICAgICBjb21wbGV0ZSgmY2ItPmRvbmUpOw0KPiArICAgICAgIGRldl9rZnJlZV9za2JfYW55
-KGNiLT5za2IpOw0KPiArICAgICAgIGlmICghY2ItPnN5bmMpDQo+ICsgICAgICAgICAgICAgICBr
-ZnJlZShjYik7DQo+ICB9DQo+IA0KPiAgc3RhdGljIGludCBydHdfdXNiX3dyaXRlX2RhdGEoc3Ry
-dWN0IHJ0d19kZXYgKnJ0d2RldiwNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3Ry
-dWN0IHJ0d190eF9wa3RfaW5mbyAqcGt0X2luZm8sDQo+IC0gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHU4ICpidWYpDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4ICpidWYs
-IGJvb2wgc3luYykNCj4gIHsNCj4gICAgICAgICBjb25zdCBzdHJ1Y3QgcnR3X2NoaXBfaW5mbyAq
-Y2hpcCA9IHJ0d2Rldi0+Y2hpcDsNCj4gKyAgICAgICBzdHJ1Y3QgcnR3X3VzYl93cml0ZV9kYXRh
-X2NiICpjYjsNCj4gICAgICAgICBzdHJ1Y3Qgc2tfYnVmZiAqc2tiOw0KPiAgICAgICAgIHVuc2ln
-bmVkIGludCBzaXplOw0KPiAgICAgICAgIHU4IHFzZWw7DQo+IEBAIC01MjgsMTEgKzU0MCwyOSBA
-QCBzdGF0aWMgaW50IHJ0d191c2Jfd3JpdGVfZGF0YShzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LA0K
-PiAgICAgICAgIHJ0d190eF9maWxsX3R4X2Rlc2MocnR3ZGV2LCBwa3RfaW5mbywgc2tiKTsNCj4g
-ICAgICAgICBydHdfdHhfZmlsbF90eGRlc2NfY2hlY2tzdW0ocnR3ZGV2LCBwa3RfaW5mbywgc2ti
-LT5kYXRhKTsNCj4gDQo+ICsgICAgICAgY2IgPSBrbWFsbG9jX29iaigqY2IsIEdGUF9LRVJORUwp
-Ow0KPiArICAgICAgIGlmICghY2IpIHsNCj4gKyAgICAgICAgICAgICAgIGRldl9rZnJlZV9za2Jf
-YW55KHNrYik7DQo+ICsgICAgICAgICAgICAgICByZXR1cm4gLUVOT01FTTsNCj4gKyAgICAgICB9
-DQo+ICsNCj4gKyAgICAgICBpbml0X2NvbXBsZXRpb24oJmNiLT5kb25lKTsNCj4gKyAgICAgICBj
-Yi0+c3RhdHVzID0gLUVJTlBST0dSRVNTOw0KPiArICAgICAgIGNiLT5za2IgPSBza2I7DQo+ICsg
-ICAgICAgY2ItPnN5bmMgPSBzeW5jOw0KPiArDQo+ICAgICAgICAgcmV0ID0gcnR3X3VzYl93cml0
-ZV9wb3J0KHJ0d2RldiwgcXNlbCwgc2tiLA0KPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICBydHdfdXNiX3dyaXRlX3BvcnRfY29tcGxldGUsIHNrYik7DQo+ICsgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHJ0d191c2Jfd3JpdGVfcG9ydF9jb21wbGV0ZSwgY2IpOw0KPiAg
-ICAgICAgIGlmICh1bmxpa2VseShyZXQpKSB7DQo+ICAgICAgICAgICAgICAgICBydHdfZXJyKHJ0
-d2RldiwgImZhaWxlZCB0byBkbyBVU0Igd3JpdGUsIHJldD0lZFxuIiwgcmV0KTsNCj4gICAgICAg
-ICAgICAgICAgIGRldl9rZnJlZV9za2JfYW55KHNrYik7DQo+ICsgICAgICAgICAgICAgICBrZnJl
-ZShjYik7DQo+ICsgICAgICAgfSBlbHNlIGlmIChzeW5jKSB7DQo+ICsgICAgICAgICAgICAgICBp
-ZiAoIXdhaXRfZm9yX2NvbXBsZXRpb25fdGltZW91dCgmY2ItPmRvbmUsIHNlY3NfdG9famlmZmll
-cyg1KSkpDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHJldCA9IC1FVElNRURPVVQ7DQo+ICsg
-ICAgICAgICAgICAgICBlbHNlDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHJldCA9IGNiLT5z
-dGF0dXM7DQo+ICsgICAgICAgICAgICAgICBrZnJlZShjYik7DQo+ICAgICAgICAgfQ0KPiANCj4g
-ICAgICAgICByZXR1cm4gcmV0Ow0KDQoNCg==
+RTL8851BE, WL_FW 0.29.41.5, so the new entry applies. Applied on 7.3.0-rc1
+and rebuilt the rtw89 modules only, one suspend/resume cycle per run with
+WoWLAN armed for magic-packet and disconnect.
+
+Without the patch:
+
+  [ 1582.387887] PM: suspend entry (deep)
+  [ 1586.067431] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1589.406222] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1592.742446] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1594.422876] rtw89_8851be 0000:02:00.0: Unknown wakeup reason 0
+  [ 1597.737909] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1601.043919] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1604.353105] rtw89_8851be 0000:02:00.0: c2h reg timeout
+  [ 1604.538816] Restarting tasks: Starting
+
+With it:
+
+  [ 1635.641438] PM: suspend entry (deep)
+  [ 1637.703234] rtw89_8851be 0000:02:00.0: Unknown wakeup reason 0
+  [ 1638.871251] Restarting tasks: Starting
+
+Six timeouts gone, and the cycle spends 3.2 s instead of 22.2 s between
+suspend entry and task restart.
+
+"Unknown wakeup reason 0" is still there in both runs. That is a separate
+matter and not what this patch is about, so I mention it only so the tag
+is not read as covering it.
+
+Tested-by: Maxim Skokov <skokovmaksimevg@gmail.com>
