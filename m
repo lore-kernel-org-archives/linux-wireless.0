@@ -1,38 +1,84 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DEF43B38B1
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 13:57:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB4B51C335
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 14:35:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789567065; cv=none; b=V5smKV8soex2355dceprHyBEYkPj1a7urPxUBiCWUEaIkq1xDJ7OmHlJLeSHI1FK9c0x70o/p1qrSfaMuo04vTwrcoK94sd4XxxxLCFsahxomKOBtCryr6gJRXzH6iG40lPsSWJdkRLW9/TC//xIiMzzR+cNF3T151xHiOYDKvs=
+	t=1789569319; cv=none; b=S5514Jene0snArS6jQpAYY8+0LWane9mcYr10VQBLgRT86XtzymZETNNRrcX5AezKapxG0EgpKbBo1Q7VPHKq+hzD96Cx4SBcBH88zYTSEZ5T+5hZBShK9tFbA5jHfxfzbxqCHEoQvaZYzvXZi7pSlT6dVjVc105wcGSod68J1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789567065; c=relaxed/simple;
-	bh=Qi49dcxv6G47dt+F1rTDH1wxK4eSM04gDsZO25dLybc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=pasQOen/LxnTK+tRk1i8eZxb40xhWRH5EYP3I/JUujfjgc4T91bHRLn9i7I7grfG0KTR4UQbctdSs07r0Ox12tICxU59wT6eA1G3lRLybN5E/dIgGS5U+Kp9ahfg0cLtlNeqqFxlKOOpp+PdBT/ARTptjgckMk4SxrSdXTUtQHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=P37ia/Xl; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1789569319; c=relaxed/simple;
+	bh=Zi3mSLBQNZZo2v9oHiWFfl1yGQSv0KL/oPJSKS1MaNE=;
+	h=Message-ID:Date:MIME-Version:To:Cc:Subject:From:Content-Type; b=VjDwOYcP15mUjifAFaZuy0Vsbq7TuTkvOKhhXbpQeq25k2YAQ+4yPmQ1iTqRJXtKcrqp/qkMuL929z4CY7fnCpIxAxROTQsrdC6wCt+KKy8bzeV5zeqRgsZGWtJlg+DmsPc1rsImUFUQz7cTsYBOFwTQeaJfsC1C2g500+aKQOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=L0nQhZkF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Cf+tUNK3; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="P37ia/Xl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=peXEpVKJqUJ9DsVizih8stiMIWBzu8tOnlPygA906nc=; b=P37ia/Xlxf7yvGr4EQpHGot7e/
-	7owxXctCmfoVYtS/vKPDy0yBYTP1a/HlcrK4VvyRS6GxFFmMIpsgie+zP9qIHqf5ZNC6i3ZOw536N
-	+IMht9sdG/Xn1tUovc6eu4sqKskH/oBqxq1ZVhdgVYKW0ajROYzNzpi8j68ig+CI+a+E=;
-Received: from [2a01:599:102:54a5:349e:9e41:91dc:77b5] (helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1x6q8n-004yEq-1Q;
-	Wed, 16 Sep 2026 15:57:37 +0200
-Message-ID: <6dd72dec-0b37-43f9-b205-dc68bf5ce69b@nbd.name>
-Date: Wed, 16 Sep 2026 15:57:36 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="L0nQhZkF";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Cf+tUNK3"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GEYbHI3902482
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 14:35:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=tK73FQp1Mf4ROUthjYwNJv
+	g6RzgXr9daOQTchTpQz0Y=; b=L0nQhZkF76DbWVUbzThVh8vB7xUgbcm0FtGT/a
+	rxlY1dSRPIUll5FY2PqxadXEkiCERctY65OxkZZUdACWNKpv/4GGVilCFPGiz+C/
+	RwfqYUrYQ7wIeYMm7UnM3l72YIVjb/aeUOA2ZM91wqDfkMvykSkgqpyozJNhC7gz
+	EnSHDx0P8Hhw+Ejv8nYrwTKqhkwgzTxC0nHGJY9FBwj61OOb6QHlKVD8JeGd6DSK
+	nX/SRhPO9HpWZ/jpz7aqgb14tKWaREcF6kNUq0gaQg7hqxdkJYVXIhkz0UibmTm+
+	vaKqVcizSf5bgONd1Zu6gYWYy5lhKC7DJli31FefwN9dUQSA==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gqpu2spdc-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 14:35:13 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2d63bad3d09so88167905ad.3
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:35:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789569312; x=1790174112; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=tK73FQp1Mf4ROUthjYwNJvg6RzgXr9daOQTchTpQz0Y=;
+        b=Cf+tUNK3H5qqV2PeTJvUmU13XpUMqpt5pYsZ/B9ooKx8ez8vclG+wueMM2709Zhgya
+         hDxrcEnyTZ3/9AX16CZDnmVTLa9Wx+dJdmDXirFXWfrFrRHOtjoPRGGHb87Odu7/I4DO
+         joy8NOCXeQVDZXvTRWya2PKxWO9qTuPYhsh8FA9ZchnIw7vxMyCYh37RxqF8aSpNeQRs
+         26TZh9M4xIDLYj2e0tp4u+wMNNkq5e7sNe9oC1gcdavgiamPBrzQgQyxpyNhem+TFI4x
+         UH5/6GMX37F/M12xIKvGwnlkb2wRNsCsAJU9HgzVrFbWy/vTGMuDU8lsxtRWIY3ftKk3
+         JLPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789569312; x=1790174112;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=tK73FQp1Mf4ROUthjYwNJvg6RzgXr9daOQTchTpQz0Y=;
+        b=1Ywwsmr1ooV/SBw6XwZpXepjTtmz7lqputgXDjWg8GD+flhJ2dqJqPpO3BeLu+aLhD
+         LWQdSAwBEe7+ETz+UBR233eDrU72luovRIL+DdYCABkOPg8Ujdb+E6Zh3/a1qkX81gtx
+         z5zC2ShOtjfRgzC9RUu9fouZLxOPluon0PHVSUlpwjlGEEuz9Tsulurxq8AUTP1Orol7
+         Fphs3LJG95I3O2hlrwvhMw1sbCZWTIgU3Zy6mYs/HCt7asaaddAh46KbvYTqsHGRGwZm
+         7uTpZ50IUzE3lsCOgROEiXK/AVUeTkUCRKlnwwels6PW/xvb5MZXgvjeWZgD/Rndj6rj
+         P8sw==
+X-Gm-Message-State: AFuF++ktaiRSe1lLXNkPPVS8CHXwP3sgGAXHoblR2rcTjbqa/1aD/o7F
+	Oz9IfxFzOx+Jkv7uktbVla0ipK05QP6nXswRWTXcsMf2UA5H5DjrM6SjIKTBNmEYKc8/HZJuaGV
+	Nl+rhQkKMOSnxQUK1thUdFW53SgyTlo+zGCAZJ/w3hkNGQoVyfpggtf55ZqOl12tH9tLtbit6Iu
+	Z7UA==
+X-Gm-Gg: AYBFou2EQawKcdHB6ehlQzGyqWMSJGPKNlvR+UmJkYsYm5nGsbSVZMpu0hj+B+tos4t
+	zIT+dSuuTUGNe4+pviOX6hkOKNygBE5FYw6CUl65iNGDKy4U99gO2LitAywSY/R9Rb2jheMsF8k
+	JpB09oQVneY51+x9Ph8akLk0MkHTDR3uZ+ewYB4cVQl+QdT8bMV3xbzgwAwQGFdNVuUplnRpD5J
+	qlEmQE72o2+1PIhVva2B8zJI5QL99rS5usdLs5+8mBFRIrwDQrtgzZgz9fKRc2mQKHsHkoBlpWO
+	NO7C/Nsbr/pHXkJ9WUHkylVezu37LRMem8+dDaFm1kF77g7bodZqKTTJy7n9DgmoKJwYcafgQaJ
+	7WrD7oqOCgdbxaJSf1t+aA/GN6SsGC/pMMig2
+X-Received: by 2002:a17:903:1990:b0:2dd:3ddf:b876 with SMTP id d9443c01a7336-2dd8cc8bc70mr59216705ad.0.1789569312194;
+        Wed, 16 Sep 2026 07:35:12 -0700 (PDT)
+X-Received: by 2002:a17:903:1990:b0:2dd:3ddf:b876 with SMTP id d9443c01a7336-2dd8cc8bc70mr59216005ad.0.1789569311628;
+        Wed, 16 Sep 2026 07:35:11 -0700 (PDT)
+Received: from [10.81.91.45] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd89eb7496sm13023775ad.38.2026.09.16.07.35.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Sep 2026 07:35:11 -0700 (PDT)
+Message-ID: <ee7037be-6cc1-4bca-b732-42130483f469@oss.qualcomm.com>
+Date: Wed, 16 Sep 2026 07:35:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,53 +86,153 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] wifi: mt76: mt7996: use spin_lock_irqsave for
- reg_lock
-To: Valera Kozlov <valera.kozlov19@gmail.com>, linux-wireless@vger.kernel.org
-References: <20260901194338.110-1-valera.kozlov19@gmail.com>
-From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, jjohnson@kernel.org
+Subject: pull-request: ath-next-20260916
 Content-Language: en-US
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260901194338.110-1-valera.kozlov19@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: AK4PmKWWVhKexEkx9QK4L_HWYT4RA02i
+X-Authority-Analysis: v=2.4 cv=NelzRGD4 c=1 sm=1 tr=0 ts=6aaaa921 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=7zb2UhBhSU3A8DwyPNsA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-GUID: AK4PmKWWVhKexEkx9QK4L_HWYT4RA02i
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDE5NyBTYWx0ZWRfX2vCEw+GqO0j4
+ ZDBUihFedXvSv6rm/h/2r3z9rs+SmtQIKstsN/ceym9x6Nw9JlUeEi4E5yTYvofif5ITd+VikbW
+ HBY89jTIELKZU5Smb2DibBOdSzc6LTcmyBoXBF/fmJtu0M/bOD1Yj5YCwvt33sIvAaKYLcyiCkj
+ otUtan/KtaF3fnWZGTUFWb6TzqfICMGe2XSuzeqyhbFqRQilQybl8rM1lEsdWnm//pgz8Cw/Xvf
+ TQ0m8Oxk3SiqhF6lEcoELawtcOHognIru2H66BTSzu6wqJ7FOg5HB6Y+TFaUO6lYhzNme2VCedm
+ AFvoEuKHU5wqCyVYoY0hitJsDVITOFkDdPgTPOLK2yUQtl5Or7KnBtB04oialCMglmzAxQqBgvB
+ cDqDcPgNwOSwOdG/Ch406MViLOKobQx2A5XTkIlFKfj/AI2W+vQ7MyJ9J7T5ixbhjKKwKWRZcC6
+ VAMzGS9JpLjUxb98YeQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDE5NyBTYWx0ZWRfX5szgbpEs6sf+
+ nj0vLMm61Z8GuQZgy0l9sIXRtBCZruvxXwsNpqL/0xKtdBD+9g6WRItVFSeotMzBBuAg56PjlQa
+ KBAQ7rXlFUQF7UrgkKE8OKaCb+lwiGs=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-16_02,2026-09-16_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 adultscore=0 impostorscore=0 spamscore=0 clxscore=1015
+ bulkscore=0 malwarescore=0 suspectscore=0 lowpriorityscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609160197
 
-On 01.09.26 21:43, Valera Kozlov wrote:
-> mt7996_rr()/wr()/rmw() and mt7996_memcpy_fromio() take dev->reg_lock
-> via spin_lock_bh() when accessing remapped registers. This is not
-> safe against hard-IRQ context, which can lead to race conditions and
-> kernel panics on some platforms.
+The following changes since commit 1b78070aaef63512688aebfbc82365ef9d6660f1:
 
-What hard-IRQ context is accessing registers? I think it would be better 
-to fix that instead of imposing the irqsave cost on all register access.
+  Merge tag 'net-7.3-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-08-27 13:53:43 -0700)
 
-> MediaTek's own vendor tree independently found and fixed this same
-> issue, reporting it as causing AP panics via Asynchronous SError
-> Interrupt during normal WiFi operation:
-> https://github.com/mediatek/mtk-openwrt-feeds/commit/3edfc0cbf7dc666a0b051b54f51634d6ff2a3be6
+are available in the Git repository at:
 
-I only get 404 on that link.
+  git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git tags/ath-next-20260916
 
-- Felix
+for you to fetch changes up to c3bace8584ca707e34ba837f65c2e9d566af4c2c:
+
+  wifi: ath12k: add support to load shared firmware on multiPD (2026-09-10 14:29:09 -0700)
+
+----------------------------------------------------------------
+ath.git patches for v7.4 (PR #1)
+
+Add mailmap entries for some Qualcomm Wi-Fi developers now using
+@oss.qualcomm.com credentials.
+
+For ath12, add support for the qcom,calibration-variant Device Tree
+property and add more infrastructure for the IPQ5332 platform.
+
+Other than that, just an assortment of cleanups and minor bug fixes across
+the "ath" family of drivers that aren't urgent enough to go through the
+"current" process.
+
+----------------------------------------------------------------
+Aaradhana Sahu (4):
+      mailmap: add entries for Aaradhana Sahu
+      wifi: ath12k: Free allocated CE IRQs on request_irq() failure
+      wifi: ath12k: Free allocated external IRQs on request_irq() failure
+      wifi: ath12k: add support to load shared firmware on multiPD
+
+Abdun Nihaal (1):
+      wifi: ath11k: Fix possible memory leak in ath11k_dp_srng_setup()
+
+Andrew LaMarche (2):
+      wifi: ath12k: support calibration-variant from device tree
+      dt-bindings: wireless: ath12k: drop qcom,ath12k-calibration-variant
+
+Baochen Qiang (8):
+      wifi: ath12k: signal regd update completion when reg event is dropped
+      wifi: ath12k: use per-radio ab in ath12k_mac_hw_register()
+      wifi: ath12k: protect new_alpha2 access with base_lock
+      wifi: ath12k: skip setting country code during registration when unchanged
+      mailmap: add entries for Baochen Qiang
+      wifi: ath12k: use kernel types instead of userspace stdint types
+      wifi: ath12k: fix stale skb pointers after aligned TX payload shift
+      wifi: ath12k: fix truncated TX buffer DMA address in MSDU ext descriptor
+
+Jeff Johnson (2):
+      wifi: ath12k: remove skb->data check in ath12k_wmi_process_tpc_stats()
+      wifi: ath9k: use rcu_dereference_bh() for sta->rates in ath_merge_ratetbl()
+
+Julius Bairaktaris (2):
+      wifi: ath11k: implement CE interrupt enable/disable for AHB
+      wifi: ath11k: disable interrupts during firmware crash recovery
+
+Kamil Bienkiewicz (1):
+      wifi: ath12k: advertise AP_VLAN interface mode for IPQ5332
+
+Kang Yang (1):
+      wifi: ath12k: preserve PPDU state across monitor status buffers
+
+Linkai Gong (1):
+      wifi: ath12k: clear dangling channel pointers on error paths
+
+Manish Dharanenthiran (1):
+      mailmap: add entries for Manish Dharanenthiran
+
+Miaoqing Pan (3):
+      wifi: ath11k: fix sporadic WLAN initialization failures
+      wifi: ath11k: fix NULL dereference in ahb remove when QMI init incomplete
+      wifi: ath11k: unregister PM notifier on QMI init failure path
+
+Mikhail Lobanov (1):
+      wifi: ath11k: modify null check logic in ath11k_ce_rx_post_pipe()
+
+Nicolas Escande (1):
+      wifi: ath11k: fix locking problem in ath11k_dp_rx_tid_del_func()
+
+Rameshkumar Sundaram (2):
+      mailmap: add entries for Rameshkumar Sundaram
+      wifi: ath12k: fix DMA unwind for ext MSDU descriptor retry
+
+Sriram R (1):
+      mailmap: add entries for Sriram R
+
+Vasanthakumar Thiagarajan (1):
+      mailmap: update email address for Vasanthakumar Thiagarajan
+
+ .mailmap                                           |  13 +-
+ .../bindings/net/wireless/qcom,ath12k-wsi.yaml     |   7 -
+ drivers/net/wireless/ath/ath11k/Kconfig            |   3 +
+ drivers/net/wireless/ath/ath11k/ahb.c              |  16 +-
+ drivers/net/wireless/ath/ath11k/ce.c               |   2 +-
+ drivers/net/wireless/ath/ath11k/core.c             |  10 ++
+ drivers/net/wireless/ath/ath11k/dp.c               |   2 +
+ drivers/net/wireless/ath/ath11k/dp_rx.c            |  19 ++-
+ drivers/net/wireless/ath/ath12k/ahb.c              | 166 ++++++++++++++++++---
+ drivers/net/wireless/ath/ath12k/ahb.h              |   9 ++
+ drivers/net/wireless/ath/ath12k/ce.c               |   2 +-
+ drivers/net/wireless/ath/ath12k/core.c             |  23 +++
+ drivers/net/wireless/ath/ath12k/dp.c               |   2 +-
+ drivers/net/wireless/ath/ath12k/mac.c              |  45 +++++-
+ drivers/net/wireless/ath/ath12k/pci.c              |  55 ++++---
+ drivers/net/wireless/ath/ath12k/qmi.c              |   4 +
+ drivers/net/wireless/ath/ath12k/wifi7/ahb.c        |   3 +
+ drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c     |  23 +--
+ drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c      |  17 ++-
+ drivers/net/wireless/ath/ath12k/wifi7/hal_tx.c     |   2 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c         |   3 +-
+ drivers/net/wireless/ath/ath12k/wmi.c              |  16 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   2 +-
+ 23 files changed, 346 insertions(+), 98 deletions(-)
