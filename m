@@ -1,75 +1,171 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 000C83876C9
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 16:25:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1CD94D9542
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 17:34:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789575943; cv=none; b=jPbpBiyNH+ExpLppJ4tmsqpk3+pVpdO/1CQFwWguIrNfAVJcRnUOjbiPinZZ55Iaiph0qTHUovXkgoCLcQjxYSmc84DBjnvmCjG87KY+xf7PXEQpvwoT8S7gpesdu3RVDofOeK3TCqZqkZ3DcDd1/Jwpfvqu9+WuBp6cP/DaQwY=
+	t=1789580083; cv=none; b=Iou+F4SbGfm8tzkmfqHPGgh9jWShqbCNefFDWEZdmmaLkZ2qk6jNddDYL6p3cf8w+VgQ34B/MOQ2wsHc7xm1v5YIsgtBXit3IUhl1uzD5VGoxIzuC1RLIl/+sRHDxN1ertAM5RT2XY4SDCE+hAK1Cwwi2EDap2iRA/R8ICyPEvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789575943; c=relaxed/simple;
-	bh=fn0Gpjkf8crw2Bh7cFIXVZyGh0QHt2q0NzUxpkXMKFE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uqNbm80mP31GcqCnYFpsOefgUofx4pUw/4JveF2sKamXtqBnrGVJeF9gAPkJ6r9uieus1svyTCnaVwgsJlKqSjXDTYyCZBql/kRiq8Tq7u7cUpp5dtUskfGAOTwG2xuO1Sj3keup6/eBPx5kjVOVwLPEmklpj/VzTwa3bRjonCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVneGbr0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789580083; c=relaxed/simple;
+	bh=stiosI3snHNHPAa7ZoIaPSQZFzvJjokfhZ5zzBdnZzg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TrTmGNGQLQAr5CtwCY5+pK7HAD0J9TL2osy3Z3zxI46Fg0hNS+L6S1WkLb9mE34NW2Bui+vv7lPUkMd9HJORZDnpYk9ndOVpo8L6anZCU35A6Xz4qiVMHMRGohwvcTR/3QM+HAAW2steKeUmxsxC6ReoR7VdCVd5bqbgqDnnOf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SqaCr9BM; arc=none smtp.client-ip=74.125.225.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVneGbr0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBEC11F0089B
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 16:25:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789575941;
-	bh=fn0Gpjkf8crw2Bh7cFIXVZyGh0QHt2q0NzUxpkXMKFE=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=WVneGbr0wtKe5kuzvnaAbtOGujlVUEQGd1te6qm7vZW3TYeHaQtVAm6uE59XgRrpR
-	 6BhLgl5C9LCqzTDZrKEdjZuZ20AjTpTdeTluK5JqmqDnBe5vwhUaDlsBQdjrpR62yO
-	 1ruR0PZhQXyWQrFMJSZXw7WbYJy70hpJYaR4a2u5r8unePKdZZwR8Z/07U63ZOVJv9
-	 ZpXXp/zv4pnUOvP6R8bV8XMOI117ltVRuDEWgmfbJ/1I810tZ4GgpA/r6+Y2I/8ipr
-	 HHu9Glr4P9aIB52H0+Ja2t//3M6Aa09ciXm1rijDWUzL7dSWxWZMzMW5PuaLtwY9Wm
-	 3T0RheWIvelwg==
-Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b88dc3bc02so1222161e87.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 09:25:41 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxuAyfNXDivk7Q5LaZHkLDsOy1JFUh4KFOUKSx8giO40kQPvnF/9649EVqyftEEoV+TBcRzZRn6nMMB7hZQsw==@vger.kernel.org
-X-Gm-Message-State: AFuF++kxXPvhYqFJS4tgE1ylMczKYwYkEyPB7r7LCzWbkzMOR00K5gs1
-	9Gg9zAtzQjb03wFoMQKyOPae8VCyERjsbxNwhiHfdFqlH5BLrAScuyBFm6HqlqGz2cUCP7mvc/H
-	c+dxGDKrEEmWkDJnmlRUK0dEBDTbDy1g=
-X-Received: by 2002:a05:6512:3e1b:b0:5b6:1a7c:fd7f with SMTP id
- 2adb3069b0e04-5b8b6652b42mr949614e87.37.1789575940579; Wed, 16 Sep 2026
- 09:25:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SqaCr9BM"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6351832so648756f8f.3
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 10:34:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789580074; x=1790184874; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=Jab3z2lSjSUyFpWaybvz4ThV7LQrYnGZZ7snDuu1hVg=;
+        b=SqaCr9BMWMBsPR/KAfzXLDqD9uM9mKp0EPgGFsmEz8YavL2du4yIUyG3yULtLKuIN9
+         GvUzu3ScpHVMma72foX5hcMP7ZYlxac66ccXe24ddh7elcJQ4JIKgW9F4CaBxvFGRRTU
+         eJ6d2/Xlup/nChGlK9u1oAwYro/hkVTtTLGLZKNLZEwUqa6ISBrvfhUMvMgxHvocGtPp
+         8GSJtxifdbSZ7nKSkUHngB4CH9mFJ/hamu3nlCpMmcA+D4BQa1VG9nDNiAPZ2a3Cid93
+         tm0iplWep293BHBLtm3frx6XAbc5nsG4BRiJX5rNh2+//JPmRQt5Bj5UjP/YhLbyVmgE
+         dWXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789580074; x=1790184874;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=Jab3z2lSjSUyFpWaybvz4ThV7LQrYnGZZ7snDuu1hVg=;
+        b=QM2wcphAfhguiyIzpAEcAOG+BXX3pbenoxF7auT8BE2O/nryoRNfKY/FSjSaHhbybZ
+         scgT5EyvV5lVCgBs01sRLALZws/ct2B4XGHxb35rgBapc+369YWHkD7K3EMgBE2bIG0l
+         o3je1KTH+6DUuifDphOUJX7ZexjW5yVy/FKm1xA7jy/roKQfKBiR8fIm1LxALBslKWNw
+         LP4eudJL0KwXPBJ+1Wnap/wmyF9wuIMAdkBtIcJ2bRA4dzQ7sZzduXwn7xofVMCmqxRt
+         aoK80J4JdDPpzp9bZihuVXjSU/AM2IsnXphqxRrx874V6QSoVbwjvC4GgP60yMUDUfr8
+         B/cg==
+X-Gm-Message-State: AFuF++m6t1Lldddb9cyUch5Aqoo4+9P6NFNgoIjbh96bQGV9Egu4/KqE
+	T7s56GFXAoqlI74zmHJjNsXEj7Cv+gM2pvCrLv63R3q1mDqsR2n7G+j+AGAN
+X-Gm-Gg: AYBFou1ATENfTXwwT34Y8/5fXkOIyvlyXqyamx+XUR54jwKrlJJUONH1Hnd1U3fwKBd
+	dg5zFA2efrMAPnE7jgL2IevvJBkQbMRX2XBtDPQQO9EQNHiEtLnGFeCMwYbYIZc6E/jOe5BnE96
+	7ZNyFdS2HOv8SQDL9J+iifri2D4LMJhBrpSQgfbIjVQkg05841V7+qT1owXrwUus2L3kdg4Ei1c
+	pS2U8BCmH62M/filhjGYXguonMCDqc3aWRi4LKSVXZ8OUiqJRmUTFw9bKngVsKlIqBhgAyO3m5F
+	FXjZRZD5htRAadHpWHYZvB4OIkOrwyG7odTHvNXP+dOahG0QSMuOGY3E7TFFrlNz1I9UYfGiqr0
+	5fxSqOB6Ti8vDT3JXQ/qZfj+nvca0rFQmAOjJ5e8owG/9njCJKlt+DsCboT/YE4aXv3FyDSH/cu
+	5e4KW0y/g41y9Ts1aq9DSHVDZB4sTw6E2v3KNbOpaun/QK9+nRmfCf1UHFMM1hD8KSt7r3GvOco
+	ryOI8W/LB+Pr/biItUSlsDB98jAcQZvHPypTCsEkB7Je46A/QZv50B3559R++hVO7O653zJKsS8
+	/HqC3/tOO2zCAJA=
+X-Received: by 2002:a05:6000:18a6:b0:486:faa5:2165 with SMTP id ffacd0b85a97d-4870d271014mr4626272f8f.54.1789580074036;
+        Wed, 16 Sep 2026 10:34:34 -0700 (PDT)
+Received: from nn ([2001:1ab8:1003:0:f23c:f0c3:c09d:d6d6])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4870bf27ce2sm8987544f8f.20.2026.09.16.10.34.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 10:34:33 -0700 (PDT)
+Sender: N B <gen.benner@gmail.com>
+From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Simon Wunderlich <sw@simonwunderlich.de>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Kalle Valo <kvalo@kernel.org>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	stable@vger.kernel.org
+Subject: [PATCH ath-next v4 0/8] wifi: ath9k: fix register access and spectral scan filter handling on ath9k_htc
+Date: Wed, 16 Sep 2026 20:34:21 +0300
+Message-ID: <20260916173429.403889-1-nerijus.bendziunas@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260907090956.2825703-1-arnd@kernel.org>
-In-Reply-To: <20260907090956.2825703-1-arnd@kernel.org>
-From: Linus Walleij <linusw@kernel.org>
-Date: Wed, 16 Sep 2026 18:25:27 +0200
-X-Gmail-Original-Message-ID: <CAD++jLn_Dfzj9ME8Vc5fv8cwATENBRw=Dx9aSwt65JfqoeywKw@mail.gmail.com>
-X-Gm-Features: AcwNN1VuMUBHDE_HWXIYdZ8fFYEMsF2Ou_4jA1zeXX1dDAPFhRFN9qr5QZmK1N8
-Message-ID: <CAD++jLn_Dfzj9ME8Vc5fv8cwATENBRw=Dx9aSwt65JfqoeywKw@mail.gmail.com>
-Subject: Re: [PATCH 0/2 v7] gpiolib: finish the legacy cleanup
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Kent Gibson <warthog618@gmail.com>, 
-	Johannes Berg <johannes@sipsolutions.net>, linux-kernel@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-sh@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Sep 7, 2026 at 11:10=E2=80=AFAM Arnd Bergmann <arnd@kernel.org> wro=
-te:
+Eight fixes for the AR9271 USB driver, resent as one series in
+dependency order as requested.
 
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> These two patches are left from my cleanup series, finishing off the
-> work to turn off CONFIG_GPIOLIB_LEGACY by default, and removing the
-> include/linux/gpio.h header.
+Patch 1 gives the multi-register read a return value and checks it.
 
-The series:
-Reviewed-by: Linus Walleij <linusw@kernel.org>
+Patches 2 and 3 belong together: 2 fixes the byte count of a full
+read-modify-write flush, which has truncated the AR9271 PA calibration
+since the buffer was added, and caps the buffer at 14 entries because
+the corrected 15-entry command fills whole USB packets and is never
+delivered; 3 refuses any such command.
 
-Yours,
-Linus Walleij
+Patches 4, 5 and 8 are one bug family: a timed-out register read
+returns all ones, and the spectral scan wrote it back into the RX
+filter (4); disabling the scan never cleared the PHY error bits (5);
+the ath9k_htc filter recalculation read the same registers back (8).
+5 needs 4's helper, 8 needs both. 8 has a Fixes tag but no stable tag:
+the failure has not been seen on that path.
+
+Patch 6 fixes an out-of-bounds write in the shared spectral code on
+ath9k_htc. Patch 7 passes CRC-tagged spectral samples to the FFT
+parser, which the firmware reports as CRC errors. Both stand alone.
+
+Testing, all on AR9271; ath9k (PCI) is build-tested only:
+
+  1: build; a timed-out multi-read was not provoked.
+  2, 3: 100 interface opens on two devices, also on the stock
+     firmware, no hang; the size fix without the cap hangs the device
+     on the first open.
+  4: with a read fault injected the filter stays closed.
+  5: PHY error frames after a scan is disabled fall from about 2000/s
+     to tens/s.
+  6: a 7 hour scan soak with no memory corruption where the unpatched
+     driver faulted within a minute.
+  7: about 24 % more spectral samples per second at baseline.
+  8: filter recalculation issues no reads; the timeout it guards
+     against was not provoked.
+  All eight, on the series as sent: 965 interface up/down cycles with
+     spectral bursts, then 5 hours of continuous scanning under a
+     900 frame/s injected load; 657,426 WMI commands and 5,808
+     multi-register reads, none failed; taint unchanged.
+
+Not in this series: the acked -EBUSY guard for spectral scan control
+while the hardware is disabled, and the ath9k_htc debugfs counters and
+round-trip work, which follow once these fixes are in.
+
+Changes since the separate threads: patch 1 returns the error instead
+of filling the buffer with all ones, patch 3 returns -EMSGSIZE,
+kernel-doc for the RX filter helpers and no other code comments, one
+base, the git-blame authors on Cc, shorter commit messages, and the
+Assisted-by trailer in the documented form.
+
+Nerijus Bendžiūnas (8):
+  wifi: ath9k: return an error from a failed multi-register read
+  wifi: ath9k_htc: fix the byte count of a full RMW buffer flush
+  wifi: ath9k_htc: refuse a command that fills whole USB packets
+  wifi: ath9k: stop a failed register read from opening the RX filter
+  wifi: ath9k: clear the PHY error filter when a spectral scan is
+    disabled
+  wifi: ath9k: count spectral samples in the driver's own RX stats
+  wifi: ath9k_htc: pass CRC-tagged spectral samples to the FFT parser
+  wifi: ath9k_htc: derive the PHY error filter bits from software state
+
+ drivers/net/wireless/ath/ath.h                |  2 +-
+ drivers/net/wireless/ath/ath9k/ani.c          |  4 +-
+ .../net/wireless/ath/ath9k/common-spectral.c  | 41 +++++++++++------
+ .../net/wireless/ath/ath9k/common-spectral.h  | 10 +++-
+ drivers/net/wireless/ath/ath9k/debug.c        |  3 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c       | 10 ++--
+ drivers/net/wireless/ath/ath9k/eeprom.h       |  2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  4 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c  |  7 ++-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c   |  5 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |  7 +++
+ .../net/wireless/ath/ath9k/htc_drv_debug.c    |  3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  9 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 41 ++++++++++++++---
+ drivers/net/wireless/ath/ath9k/hw.c           | 46 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h           |  2 +
+ drivers/net/wireless/ath/ath9k/init.c         |  6 ++-
+ drivers/net/wireless/ath/ath9k/wmi.h          |  2 +-
+ 18 files changed, 156 insertions(+), 48 deletions(-)
+
+
+base-commit: c3bace8584ca707e34ba837f65c2e9d566af4c2c
+-- 
+2.55.0
+
