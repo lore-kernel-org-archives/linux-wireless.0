@@ -1,93 +1,109 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f42.google.com (mail-pz2-f42.google.com [74.125.228.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0C7C4EC641
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 11:25:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD1C4D09E0
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 11:37:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789557955; cv=none; b=bSAeKqJj5reZyI48x/KEAX74Oi+wcjFp9hAdxedhDWYOG5iRAyF5oTJZbLydCszZcAJ408NmxdeGL3u/IFhuSgFNamEmwckSVl3gI5ghKtDhTY5IwpE1S2GmRdrVCKz16HdCzgl21rvndWGRF7oRCb0R7TEdXbj4KQ7Pxla39w4=
+	t=1789558641; cv=none; b=MCzLFxqRBWlcmyGO+XCeKNcSsLO0d+eiA2bOQH8iIYx5YQmG64WuciYYwadbkn/gpChwTC1LQJAxSEFtGWfRRuFvQC1B2g1bemFlw4F6PmgbGv7QfYiJ6NAAw4pZ2SbYeKdQVLbTPg3J2Vt9rWN+5bXPGE5d0Rvg5ZVW5FFlGg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789557955; c=relaxed/simple;
-	bh=R+3NIbEmxJLr+oMhc13WIXNbtNuk0Sei3SCThPTbyxA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b3oswsglsx+B+f23XaXezmD8syHllGJV2DIc3ba7aqnL/5WSUcctmhiFNPotwINYCYSbiU2JToHN5zU2lrweCpMl/cGV78UXvizGvM+r7coipAp3gmOWLdyTbWxP2NezdEA7NMvCKheOmfPG+p1/RNAoFC+ikrqse8o/12Nb0ZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=VEsfktkl; arc=none smtp.client-ip=212.77.101.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1789558641; c=relaxed/simple;
+	bh=FbQ6xgNpLh1+aWQRKalxyJfNU46gtcOpd5w6xbKJJGM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mHHOG9gLsZceiz2DOgOlKWMku1x1HPpUk/HtWn0NKyp5aDT/yTUUTK5Buhji+otS3m6MkKP9IHYfLEGvnY36iW249iZSzp6PPyMa+gAdw/6yMCOLRlCIAhRWWo587m6W0um1FgBEkygr1hMbefSZYfMfgHqZe6hWb47Hmf6DdlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lSG092Oy; arc=none smtp.client-ip=74.125.228.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="VEsfktkl"
-Received: (wp-smtpd smtp.wp.pl 41478 invoked from network); 16 Sep 2026 13:19:04 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1789557544; bh=J1ce+vBR72jQkw//XqeqfopumQBMFWBnvlUt11/clpA=;
-          h=From:To:Cc:Subject;
-          b=VEsfktklkcfel3O92dKw3IGUlHun6u9rxpNVVSFXLEDz1oSnxU+EqaVu4lb75uMnr
-           WSbo0c7knJ8aE8hPcJbe0snHRsSfZ1WkEUmRg6q9YUSVSER51mtOq8v1I0B/soVDV/
-           JzMT32q33Cb8MU86SxuIW+2PJqJX44q+9j4+hk1IPQCAb0lyeu1jTLDe8rH2rKAPQY
-           +6a2x6hhQl5tV+fgQAoERadIYvDpJXzQ5x3H8/nEZWb9wuUPYxSTJzKAfzcSjraJNV
-           eYgwDABHq/hQEdCxYXTqr7QrC3cvB5F0mckXFmySDUDER4vFcKnnG2cUpeGa820sMR
-           5dv0+1T9ydlJw==
-Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <lgs201920130244@gmail.com>; 16 Sep 2026 13:19:04 +0200
-Date: Wed, 16 Sep 2026 13:19:04 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Guangshuo Li <lgs201920130244@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: iwlegacy: 3945: free EEPROM data on remove
-Message-ID: <20260916111904.GA15164@wp.pl>
-References: <20260916073736.2952028-1-lgs201920130244@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lSG092Oy"
+Received: by mail-pz2-f42.google.com with SMTP id 41be03b00d2f7-cc1cebad4aeso665092a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 04:37:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789558631; x=1790163431; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=cEQLS6J2QTb1fD6UW23RPMak1P8fPzYBsSNcEOaqPwk=;
+        b=lSG092OyiFbZf4EA6ioDQIAAT0sp/bEmDdi/1qYSTeas+HPZIclMaD8048vctvErEm
+         Xew2lf/IWW5crpfpwbB/GVf6DhlpobCt9o+L2HbY7i5zCrHyobrL8SFybQxVpfzW4dfn
+         gK1R7khd8getF/gIi9X5/MBpgk39k2elN7z50odWcNyOqRaSkteDxtM3/Mv5GMn9zaSr
+         0OPewhAoxpzyS1k1aahkrHZ25/wITxfhssVGikYpm7nABOlP33Zx6AQYp9zSYvZ1swUg
+         7LH4I8m3DbLfp5gErWp5FhcyHX/X/WbWrLXyyl3xF1RlWakKJAHDY0A2kHs7eujpHrqw
+         WmiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789558631; x=1790163431;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cEQLS6J2QTb1fD6UW23RPMak1P8fPzYBsSNcEOaqPwk=;
+        b=P1eYsJW7zVyI6Gf2DbQZzmKegTlWhffo9Y+u/CJ3QvTj6uxC6X8Xii96zt/wTHcXbd
+         x+AoDdW5VKOcxfpO0CfoKvAYqsLXJOGJ3YPYiboMfMjS12Zgs4nlRmC5EAAIRt1k4J9q
+         9cKTVIr27C3RHkNjW+T+/7DysPUG8KCOvXK7dlxzWonHusGguX6GUCz9bezwMaYkB/p0
+         BQpwiYGVysr99eR0A3gzUaSian6Q6MLzV5pA4Z2mlvkAskbZGFtuB8ouMVV8YyC5NUvo
+         JXiwY48PlKVHnMks8ll3zhH/jW12Z9zuuDQbFDTuymnK/E66w/fdHq2szAMI0x0s/kx3
+         KX2A==
+X-Forwarded-Encrypted: i=1; AKwUvByhn+mqxsvDvlduo8st2Mm2u5Ety/3QMHsSaHciiYf6rVBf45aLnBCt77T9Ou3Z0sX+xcSg/BQu4iRWA9+k1Q==@vger.kernel.org
+X-Gm-Message-State: AFuF++kqJouH6BknIMU/RDIqK6Wb7cklfBqcTZxOp2K4Y44DPnHxmRpu
+	BORu5m2vEtI8zSzWss8Ww6EpprdHl0N/WK6FPyCrW/0w2oP9YyXReqMd
+X-Gm-Gg: AYBFou3RmvUqxUUlSbkrK1fx3WURKN/uftcf+eMumBh58a96HkN8Kr5hvkbrD/dpi9n
+	JXuIVWlJ3HluKTvAfpx2eUR3BB5k9FlZKu58V2CHvckfW0t4d2kZwA3tFmoU47Fha8E05g6Dbf7
+	Mdsr5Li+BLe8pInf0U0v4YjXrHUbKZp5bSd3I09xLQHXiUTnd2u5dliylKWDoeH8QAMkGsh87Sq
+	SfnYzb+LJwkzZ+b0JuQvl0/dtU5kbTVZuuGS/Q2EXP+7cMWNJ7tJ17k7mrUMSzXKx7V8Rvc782P
+	W1zxGSUSdRahxHxkpr1MnoZ1fcVDF686enFy3riqoVLXAgXbMJ2iji2L27js1fQKoI3rBluIDZB
+	AfUAmNAdmmHiQVk7UdNt3+zpPvL5O/oUL/ybUviX/D1jgy3xtkJ1WcXqDoKLCJp1Wk/xEK2+RNA
+	FFugL6RkuddJ+XRdPg8NOmqePF2tj+tShjFEQH4AIEoI3IsLKAwq4XWn8o6DobjOzNx2iK41vwp
+	4/Hpj+QuQ9U1rspRnWVzeNyjBDbKzM+frpT6lj+aZvF
+X-Received: by 2002:a17:902:da85:b0:2dd:89b1:7fd3 with SMTP id d9443c01a7336-2dd8dc06d6amr44900095ad.4.1789558630843;
+        Wed, 16 Sep 2026 04:37:10 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([139.177.225.247])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd89f02fc2sm9927045ad.59.2026.09.16.04.37.07
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 16 Sep 2026 04:37:10 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] wifi: mac80211: balance mesh path quota accounting
+Date: Wed, 16 Sep 2026 19:36:47 +0800
+Message-ID: <20260916113649.28315-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260916073736.2952028-1-lgs201920130244@gmail.com>
-X-WP-MailID: eef6d4e4e276139c5143eea1506d8038
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [IRMx]                               
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 16, 2026 at 03:37:36PM +0800, Guangshuo Li wrote:
-> il3945_pci_probe() calls il_eeprom_init(), which allocates memory for
-> the EEPROM data. The probe failure paths release this allocation with
-> il_eeprom_free(), but the remove path does not free it after a
-> successful probe.
-> 
-> As a result, the EEPROM data is leaked when the PCI device is removed.
-> 
-> Free the EEPROM data in il3945_pci_remove() before releasing the
-> mac80211 hardware structure.
-> 
-> This issue was found by manual code inspection.
-> 
-> Fixes: 073d3f5f1b3b ("iwlwifi: changing EEPROM layout handling")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+The interface mesh path counter does not track the number of installed
+paths. Failed mesh additions can exhaust the quota while the table stays
+below the limit, and proxy-path churn can drive the counter negative and
+let later mesh additions exceed MESH_MAX_MPATHS.
 
-> ---
->  drivers/net/wireless/intel/iwlegacy/3945-mac.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-> index cbaf250626c5..f7ca182d1494 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-> @@ -3807,6 +3807,7 @@ il3945_pci_remove(struct pci_dev *pdev)
->  
->  	il_free_channel_map(il);
->  	il_free_geos(il);
-> +	il_eeprom_free(il);
->  	kfree(il->scan_cmd);
->  	dev_kfree_skb(il->beacon_skb);
->  	ieee80211_free_hw(il->hw);
-> -- 
-> 2.43.0
-> 
+mesh_path_add() reserves quota before allocation, but its allocation,
+insertion, and duplicate returns never roll it back. mpp_path_add() does
+not reserve quota at all, even though the common free path decrements the
+same counter for entries from both tables.
+
+Make every successfully installed mesh or proxy path hold exactly one
+shared reservation, and release it whenever an addition fails. The two
+defects have different origins, so they are fixed in separate patches.
+
+Validation used GCC W=1, Sparse C=2, and a controlled production-helper
+accounting matrix. Allocation and insertion errors used test-only fault
+injection; the concurrent duplicate path did not. A separate two-point
+hwsim 802.11s run reached mesh_path_add() from HWMP PREQ/PREP processing
+and mpp_path_add() from received mesh data with address extension. It
+observed the proxy-accounting difference with identical table walks. No
+physical-radio or layer-3 success is claimed.
+
+Zhao Li (2):
+  wifi: mac80211: release mesh path quota on failed additions
+  wifi: mac80211: account proxy paths against the mesh path limit
+
+ net/mac80211/mesh_pathtbl.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+
+base-commit: 50d3d79dc0743b616afb00d01a626c76758721f7
+-- 
+2.55.0
