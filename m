@@ -1,133 +1,90 @@
-Received: from mail-qv2-f39.google.com (mail-qv2-f39.google.com [74.125.230.167])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C043C5522
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:54:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.167
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789545278; cv=pass; b=P+MGRuo0d5N2qpsEOYJN1vJ/7FuGbpvCOLaO5RSU2ldVCeCVCDUQBOTjYETHI/zYPSx/Wp8Y5jTD4aaexCt8OZJKbODOU/LcsI3UpU1xgLB2qL+YMlAR4mMC7XcPSA8Z4PYGK4ZfGrVr2nFYwlsUxcPDOLv9S2vYXQp5EagETOY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789545278; c=relaxed/simple;
-	bh=HSQtSh/WBX64Az3Kdhpb9LI5nsWLBxof4MszIZvqUt8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ICgosAIgku2k/jbya21oqK9Rx/hZcDgtyhTEGcZaJxrdhz0pVnIsAyGPCUwQC6d6BBSt+itWWCBkVGj6AadMBiwmkx4VKbyKnChXxefZeNO2qbi/i9JUYb9TnXWMfPFj0fPRGz+7IRBfvtrQLxSw8FCcXm1Rcy4Vl623paAd7gE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eKzCRijK; arc=pass smtp.client-ip=74.125.230.167
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7FF3EB0E6;
+	Wed, 16 Sep 2026 08:01:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789545708; cv=none; b=S22MWj9qNU6Ud0DQWeqs72a7+pubcP2S8vAoMgJ+/5pICsKvKCY2n45TLsxA1ZdaxGpc4QPyNrv41j0JSrhT7KiXaR+Vg2lRQsGA6S6dHt50JeNMwx9MqqpTrScZDPMXCOOmkkY8RwYHnBmnoVdMllfZd47+iD+PCujUiHBXZjI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789545708; c=relaxed/simple;
+	bh=6rI8hUsnpNorKsclnhB4MfAndqPFSeeM4F5XwN/G1zQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=epjfU8WI3JAIp+TIyEJw58OsAiwrn456FOFr+55snBY9TDkmt+85j6eq96m6WegxKxx1O+KF8+EMegW56hu3vvM09oiyyB0umDruopOPRNdqhebLZmTxyo2ZJWtSuFX6BBncuDEDG56w9FQ+R303xrLvoYoLbSKIU7YNrI/HvGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=iQpnd388; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eKzCRijK"
-Received: by mail-qv2-f39.google.com with SMTP id 6a1803df08f44-90cdfe60d5fso6340926d6.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 00:54:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789545258; cv=none;
-        d=google.com; s=arc-20260327;
-        b=lDO26URh7A7uNAIGjf6y78GeFygf87Ba1Hc408Qh5JiQAi82J48HfZ79VWhud4wn7c
-         2Y8X8d9L79LmLnRENXDqyMBbjg1+8wqsYm4VM7WXD1ou9MivYIJFzdAFrJ9SeNf1M3ql
-         Wi+xF+ujlkokaQP/I06xEcKLbe5Rd1z78WcaEiluSQQScfWanI7un1+Nxq2tx306mQU7
-         O6/qqQOwpsoZfcp88k1j/4rvhHkQLQbYDo3c1XUtBCnLF1zuEzS0fGl6ijrokgn4xJk+
-         s1l5opm+WxmaPNHc/OIpxgWv70orCWn7fyLPyPVvq7UvYhqdupeI1gLOLY4TfP20+Rxr
-         VdwA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=HSQtSh/WBX64Az3Kdhpb9LI5nsWLBxof4MszIZvqUt8=;
-        fh=/0dHmH0KYqgsVG2UjuFLr52hI86agp8To9pRuvKenaM=;
-        b=EbS2S4/HqgkRHEZRqP8aPMuSFeIGI+DNi9kTNOpFClT63ziQj6IBwkYDmwNzGH8ILw
-         gAjQBaiQZ07ZKYoda3cXXy6Ll//uQfq8/Pv38B6d0NMcdrlYPSNfxYZ6jKNeWm6X30xv
-         jJ0Ss1zplx4Y3HogE2pot1IwMCf9e9KTsvCMs3d7Z2O/NQhqMqo0/cGOO2HR5UJSBHhz
-         f/6W1M1kxv/2dA8fauRKxm76EJ04kw8jamtCl3nDGu6JNN7YW2F3XnRL+0uVA7twTsA6
-         TPwAPXHNxsdHO7167+gdCDESTiHSoUyu7CdD4oCXiBJzAxve+mzkebbwyjRjokCVfPHL
-         k++g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789545258; x=1790150058; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=HSQtSh/WBX64Az3Kdhpb9LI5nsWLBxof4MszIZvqUt8=;
-        b=eKzCRijKfmCHHZiKgh/sX/8aL3JWce9ZwEhI1ahFWN74uSpobeK3CHkb//mMQsWBMx
-         zONX8u0DzKP3QMyJYXTV+ILQQW3WJFSLa6YbCShbeyowLKjQQ8vdbObij+zS9frIqiCr
-         Z+XW/PXrhhV1MDXTiJQcrHcWgG6K3VkGXWvOq5pr2DcRus3nC4gUE2mMD1JRxNe4Mxm4
-         DpeYaiyMyOclQaD9+BXd6QYkEIa95hjzUQwLaqXsIQZP06pGqBlreuUBpl1vkfVZ9wbh
-         buf2q7MQLT9AwL+vk/X5SSQsXbQrQw1NZQaANtwn959MBQgfhoApAV+kV0q5Bgx3ELZP
-         eliQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789545258; x=1790150058;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=HSQtSh/WBX64Az3Kdhpb9LI5nsWLBxof4MszIZvqUt8=;
-        b=prJgIswbOyemvxixTZJJLLG/tJdSLIMo18YcStabJW23G2RQ/ATElXNwBx8SVLLGVo
-         eEIZ4lJ4iGk+zrYFvA2AVa/XHRblobWVPS3bs+uGCzLU100C4liKhURLmtscXS4FCSQm
-         FpTL48vOvnbhieANh0VmOS0mmzKJYaGRis1qEbjiLx/FsLgUD5oGpXEfvXLS+Z/7KR0Q
-         ilRJkG+oJV6DdQ7l3LVarb+8z4vfu/YWHcogNxrlHnrhgNTEwq5p1Hcy15wC8jCJT3jB
-         Xjer/63byFsoe1zPzekrq9saoe1MwuNnC7ui+fMID2rhO5cJR68/MxGrMIL5EO38Pjpw
-         RUrA==
-X-Forwarded-Encrypted: i=1; AKwUvBytAwhbxwo6EaLBTVq71w+df6GXGE+Q0PZLKjLM0zFks6rKG9mU7vTRn+EfAjk4gimOM99b8DvS+zNBVRMbLg==@vger.kernel.org
-X-Gm-Message-State: AFuF++lcR6QZdhqhgFj3bqcVg1DGuxPwXRJrGs+DzfV+jbZtAdHemjsA
-	IajBI6HMUexTIE8/KJRfvgvYmnIB5QxHQPzCDyAsUghg89T7k1aCQR552cTqHXy6VZnfKoDuhEJ
-	ZLQVtO0+OaNwSKBJVUQA0zs5qo5BiHVI=
-X-Gm-Gg: AYBFou3rhMb109IOtFn015NVfG7jsA4FFuV7SX02n6GQnbVt70aKP4Pv3ME2+knyFOF
-	K+k7cI8W0CLVy2fBDQNxdfaymj2RIO2ki/N2vnJ6iFt4nnjlRNSFSaRe5TWBXZLKiovwQZbQ6CR
-	crE3opc9B0p2NaKNtlKs6obouFmKjQS8BoRB1NYGttmrTdL7Z7+p3LFx7Nc7BpHt8XhXWMn6qDz
-	2IGYC7Zni+YDQnJ6X5A3CagHBO7Fu6Xq+1D32i/Hjsk2nLMkOfq0CnlC+fWvCu5seKIXznB3naj
-	BludbYkMlP1YWZ0QQbkY/q8qvAH5mVWfPGZSF9BeREaf7X8AkuwjbsFHLkIuuQZW+fqD3cU4pEP
-	yLJkquo3lHbSnBVudtEDy2bh0tO4nCq5oHVhqyBMvCjzcT1ggyGs8C+WEoLQyzgoDkgpKJyYoDt
-	2x4bfelaY1hRERMr8xDJYzZWnECueibnPV5YVWy54/9s2ZoGLhmw==
-X-Received: by 2002:a05:6214:590e:b0:910:3f0c:b9e5 with SMTP id
- 6a1803df08f44-9123d7078aamr38407266d6.6.1789545258042; Wed, 16 Sep 2026
- 00:54:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="iQpnd388"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G815nP42182700, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789545666; bh=6rI8hUsnpNorKsclnhB4MfAndqPFSeeM4F5XwN/G1zQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=iQpnd388x6HqN5lM8l6LR7EDo+zFb/0neHCkPZQ9Rv5fS/LMgx3+D5nrf+S6Yomjk
+	 c6GV43aBqZ109kvPFTiB3AouirztcJl5n9bD9tyTMMZOUbHOP3dMUrf+5LUqMc3x6B
+	 ++rHHGwnplurPM/pJkO2j0TaqWpX7c3EekoSxFhSWvSn4ZJl9N+gmZN4Gdspw0/l7Z
+	 4ErfRQMKqO+mHi9eYquidT1C1gOHxWOXKNlbKc4fvYlcyqs8sXG49kSDwtFe6+JcMg
+	 wJ5AAtm5X/nkxlMfGzHtv3Kz3XelqqKpxlbMx8u+KgwrwLULSI6uD7XIUhYoXrX7aR
+	 OARf4WxNDsQDg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G815nP42182700
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 16 Sep 2026 16:01:06 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 16 Sep 2026 16:01:04 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Wed, 16 Sep 2026 16:01:04 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Peter Robinson <pbrobinson@gmail.com>
+CC: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH v11 1/7] wifi: rtw88: add the RTL8723B chip type and SDIO
+ helper
+Thread-Topic: [PATCH v11 1/7] wifi: rtw88: add the RTL8723B chip type and SDIO
+ helper
+Thread-Index: AQHdQC9Pa9h99Hy9KkK3Vh9b1IpI3rbQGdwAgABAwICAAIfM0A==
+Date: Wed, 16 Sep 2026 08:01:04 +0000
+Message-ID: <595af2640e4f4d34af9d3db6791bd468@realtek.com>
+References: <20260909074556.55709-1-luka.gejak@linux.dev>
+ <20260909074556.55709-2-luka.gejak@linux.dev>
+ <15af360d-5098-440d-a0a9-3d20ec43dc7f@RTKEXHMBS04.realtek.com.tw>
+ <CALeDE9MeWQGagFPy3TMA5WNRtw6-tRT5VS_uK8Kq5ZtKNd0xeQ@mail.gmail.com>
+In-Reply-To: <CALeDE9MeWQGagFPy3TMA5WNRtw6-tRT5VS_uK8Kq5ZtKNd0xeQ@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260909074556.55709-1-luka.gejak@linux.dev> <20260909074556.55709-2-luka.gejak@linux.dev>
- <15af360d-5098-440d-a0a9-3d20ec43dc7f@RTKEXHMBS04.realtek.com.tw>
-In-Reply-To: <15af360d-5098-440d-a0a9-3d20ec43dc7f@RTKEXHMBS04.realtek.com.tw>
-From: Peter Robinson <pbrobinson@gmail.com>
-Date: Wed, 16 Sep 2026 08:54:05 +0100
-X-Gm-Features: AcwNN1UgIQjFhrklRnP6j976pqqgi-Ol2d4fYUf19XemVpuj7kl9cWCwgLI2DiU
-Message-ID: <CALeDE9MeWQGagFPy3TMA5WNRtw6-tRT5VS_uK8Kq5ZtKNd0xeQ@mail.gmail.com>
-Subject: Re: [PATCH v11 1/7] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: luka.gejak@linux.dev, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Michael Straube <straube.linux@gmail.com>, 
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 16 Sept 2026 at 05:02, Ping-Ke Shih <pkshih@realtek.com> wrote:
->
-> luka.gejak@linux.dev wrote:
->
-> > From: Luka Gejak <luka.gejak@linux.dev>
-> >
-> > The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS, runs
-> > a Realtek vendor firmware that differs from the firmware used by the
-> > other rtw88 8723 family devices. Supporting it needs a number of small
-> > adjustments spread across the shared core, all of which have to be
-> > restricted to this one chip and bus combination.
-> >
-> > Add the chip type and a helper that tests for it, so the changes that
-> > follow can be gated without repeating the chip and bus comparison.
-> >
-> > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-
-Apologies for the late reply but if it's useful:
-Tested-by: Peter Robinson <pbrobinson@gmail.com> # Pine64+ and Pine64-LTS
-
-> 7 patch(es) applied to rtw-next branch of rtw.git, thanks.
->
-> 673662a0411e wifi: rtw88: add the RTL8723B chip type and SDIO helper
-> 5f92fb993456 wifi: rtw88: rx: mark zero length packets on RTL8723BS
-> 4d688f22ebbf wifi: rtw88: tx: extend the TX report purge timeout to RTL8723BS
-> b81ead28aeb1 wifi: rtw88: sdio: zero the padding added to a TX transfer
-> 5a95bd460175 wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
-> 8c17eb82a0fb wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
-> 28eaf7971a20 wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
->
-> ---
-> https://github.com/pkshih/rtw.git
->
+UGV0ZXIgUm9iaW5zb24gPHBicm9iaW5zb25AZ21haWwuY29tPiB3cm90ZToNCj4gT24gV2VkLCAx
+NiBTZXB0IDIwMjYgYXQgMDU6MDIsIFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPiB3
+cm90ZToNCj4gPg0KPiA+IGx1a2EuZ2VqYWtAbGludXguZGV2IHdyb3RlOg0KPiA+DQo+ID4gPiBG
+cm9tOiBMdWthIEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4NCj4gPiA+DQo+ID4gPiBUaGUg
+UlRMODcyM0IgaXMgYSA4MDIuMTFuIGNvbWJvIGNoaXAgd2hvc2UgU0RJTyB2YXJpYW50LCBSVEw4
+NzIzQlMsIHJ1bnMNCj4gPiA+IGEgUmVhbHRlayB2ZW5kb3IgZmlybXdhcmUgdGhhdCBkaWZmZXJz
+IGZyb20gdGhlIGZpcm13YXJlIHVzZWQgYnkgdGhlDQo+ID4gPiBvdGhlciBydHc4OCA4NzIzIGZh
+bWlseSBkZXZpY2VzLiBTdXBwb3J0aW5nIGl0IG5lZWRzIGEgbnVtYmVyIG9mIHNtYWxsDQo+ID4g
+PiBhZGp1c3RtZW50cyBzcHJlYWQgYWNyb3NzIHRoZSBzaGFyZWQgY29yZSwgYWxsIG9mIHdoaWNo
+IGhhdmUgdG8gYmUNCj4gPiA+IHJlc3RyaWN0ZWQgdG8gdGhpcyBvbmUgY2hpcCBhbmQgYnVzIGNv
+bWJpbmF0aW9uLg0KPiA+ID4NCj4gPiA+IEFkZCB0aGUgY2hpcCB0eXBlIGFuZCBhIGhlbHBlciB0
+aGF0IHRlc3RzIGZvciBpdCwgc28gdGhlIGNoYW5nZXMgdGhhdA0KPiA+ID4gZm9sbG93IGNhbiBi
+ZSBnYXRlZCB3aXRob3V0IHJlcGVhdGluZyB0aGUgY2hpcCBhbmQgYnVzIGNvbXBhcmlzb24uDQo+
+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogTHVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5k
+ZXY+DQo+ID4gPiBBY2tlZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+
+IA0KPiBBcG9sb2dpZXMgZm9yIHRoZSBsYXRlIHJlcGx5IGJ1dCBpZiBpdCdzIHVzZWZ1bDoNCj4g
+VGVzdGVkLWJ5OiBQZXRlciBSb2JpbnNvbiA8cGJyb2JpbnNvbkBnbWFpbC5jb20+ICMgUGluZTY0
+KyBhbmQgUGluZTY0LUxUUw0KDQpUaG91Z2ggSSBkb24ndCB3YW50IHRvIHRvdWNoIGdpdCByZXBv
+c2l0b3J5LCBpdCBpcyB3b3J0aCB0byBoYXZlIHRoaXMNCmZvciB0aGUgcmVjb3JkLiA6KQ0KDQoN
+Cg==
