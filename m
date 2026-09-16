@@ -1,67 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81296369D4A;
-	Wed, 16 Sep 2026 06:44:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9405C3B6C1C;
+	Wed, 16 Sep 2026 06:45:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789541099; cv=none; b=m5oTQBO4/RdshYUarPw67tuzg5Q4p0aXoW4VE/gOfwlGwXdNlyy04w7NkdHiMNL5HG/RML3ci4CP/S87kW8jP2P5o4YbQ7XPOdxOp/DWaayQgiff8m2DvZ8euwEKnI0LrLMWrPY2bZquC0J9/WM3CdPM74Eio/t1zatXkadHdP0=
+	t=1789541159; cv=none; b=IDQGEr1VJk2RfrCY9ikhr24jZ0ybXB8QLoSaMGNGXhFX3QwB/amsAFjdXWaMX8bWHM+J9+pB1wT5b7qIZoOhj/OOagDwlLdS9sJKmyhVtaSq9vP8r3GSCkdSZKmAt5Z+oCfs8b9HT/3yzlb9VUG762aoVwSdmcWY6tCVn9pqSZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789541099; c=relaxed/simple;
-	bh=xyKHrPrM3E1TLZPiLZR2KI0zu6dOOgOPDDDiFvCWNj4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=L8lNL/jXhlSDHW1po0Vkjy+a3oD+uH33SWLKAH/2pJv2EnPqJMfa30hzDRrkqRg5CbM2T3e5nktUrKFrYSuapkTXZsuA9+f6fHJXdBUvY6j2ZphgkKuYTmKF48dxl5Po0dhlFNiHKHgqmg2MMnCDl7IIvkLs0WCYVtu2G/VnvYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DD1fI4Js; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789541159; c=relaxed/simple;
+	bh=BzW1oySvud/ZXuyh8JK/hcMCRQXT2M+0osiULR2aS6w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AIDme61v4IOq5LQpZcvt0Tq+JY8xCnEMwsg3JeTQFl8xelJaWtSggf3bkK6L89yax72obUyHB2kwwJMi9lYoSwtLNAVC56xVUa7IUOctkV/58VOTOiue/z49qUxTIQMS8IAtZQ5r426vi1GAN/4GvTaxIkODnNCzpqBtNZzqhIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ACAVyIFh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DD1fI4Js"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DAF61F00898;
-	Wed, 16 Sep 2026 06:44:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ACAVyIFh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15BE01F000FF;
+	Wed, 16 Sep 2026 06:45:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789541098;
-	bh=ofm3x8EXEeMhTeJNsoZLbkp3mXtc6PQaLuhTfDxjCsk=;
-	h=Date:From:To:Cc:Subject;
-	b=DD1fI4Js+dNwuAh8T0HhLAyBPagTfatNxxqIU2Z75SBSk0SRxgSjSsMQ2X4Uc1HLD
-	 JoJwUI6zQmBn8e7iWPvQOZgKGe1KBoCmBgzOwAX3WPYIA2vDrpyBcLJlK+ul+kr/G3
-	 cCzFtuBZo2lNIYsjVLVIVDCiFmVo/ef4gXRStQa7rsSKy1xfXi2+WgXQke1G84nROo
-	 rjuplSjUx8sCrigEo2uprkzhoHyl2QIF9K7fYsAWCQAoTlKnm/9Lk5HubXNSPz85PZ
-	 LjicLJ3pn1sUgAVTuRWDLa622z/wMmamhrPMoEgsVneF5xomoYxwHRK10QvOlpk4FF
-	 bG5r0abn95Iug==
-Date: Tue, 15 Sep 2026 23:44:54 -0700
-From: Nathan Chancellor <nathan@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com
-Subject: -Wconstant-conversion in
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-Message-ID: <20260916064454.GA3635613@ax162>
+	s=k20260515; t=1789541157;
+	bh=taOEqL4siH3lxxx1UH5RkTc6W3vPtQoc/t7GJVuIGJw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ACAVyIFhrftw/R6xa50icqAmL7UozbxRjlWRNvte13eswSGg7vgO0zg4mULqhyL2c
+	 iHCohyHxSHLyx5BlFuNe9obKCSnmsSGkSBUe89qjqvD9DFYidFmCKBv/eSv+ymQY8H
+	 mYdjt2/FWhqv8ofu4DF7EvbDkBSENNeoJfdkFMcoKM3W3nX46eQ8+lRPR41FAfmS6i
+	 88iNrayH1la8aNgoWASgJBIV3E9T42k2tE/SWZJRkb9HS+8JNdgLVfYu+tOWj1pPg4
+	 RCeXpfdsNs2YvvFUIbtO1AR0DJopyl0HLhV24eckCwHuX6KfLcY0QQ8k0q9HX8tucX
+	 /2rLyzN9JYGNw==
+Date: Wed, 16 Sep 2026 08:45:46 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
+Cc: linux-arm-msm@vger.kernel.org, Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
+	Jeff Johnson <jjohnson@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Eric Dumazet <edumazet@google.com>, 
+	Kuniyuki Iwashima <kuniyu@google.com>, Paolo Abeni <pabeni@redhat.com>, 
+	Willem de Bruijn <willemb@google.com>, "David S. Miller" <davem@davemloft.net>, 
+	Jakub Kicinski <kuba@kernel.org>, Simon Horman <horms@kernel.org>, Mihai Moldovan <ionic@ionic.de>, 
+	Denis Kenzior <denkenz@gmail.com>, Marcel Holtmann <marcel@holtmann.org>, 
+	Andy Gross <agross@kernel.org>, linux-kernel@vger.kernel.org, mhi@lists.linux.dev, 
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
+	netdev@vger.kernel.org
+Subject: Re: [PATCH v7 01/15] net: qrtr: ns: validate msglen before ctrl_pkt
+ use
+Message-ID: <uo3sk7ygezaysxs3xgizspx6usbtin63rrpoc42l2jp4yxrii4@2jcof2iillbd>
+References: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
+ <20260915054207.2513877-2-juha-matti.tilli@iki.fi>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260915054207.2513877-2-juha-matti.tilli@iki.fi>
 
-Hi Arend,
+On Tue, Sep 15, 2026 at 08:41:53AM +0300, Juha-Matti Tilli wrote:
+> From: Denis Kenzior <denkenz@gmail.com>
+> 
+> The qrtr_ctrl_pkt structure is currently accessed without checking
+> if the received payload is large enough to hold the structure's fields.
+> Add a check to ensure the payload length is sufficient.
+> 
+> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+> Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
+> Reviewed-by: Andy Gross <agross@kernel.org>
+> Signed-off-by: Mihai Moldovan <ionic@ionic.de>
+> Fixes: 0c2204a4ad71 ("net: qrtr: Migrate nameservice to kernel from userspace")
+> Signed-off-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
 
-After [1] landed in clang main, I am seeing the following warning
-(turned error with CONFIG_WERROR=y / W=e):
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:224:18: error: implicit conversion from 'int' to 's8' (aka 'signed char') changes value from 128 to -128 [-Werror,-Wconstant-conversion]
-    224 |         {0, 0, 0, 0, 0, 128},
-        |         ~               ^~~
-
-As far as I can tell, this has been present since the original commit
-that added brcm80211 to the tree
-
-  a9533e7ea3c4 ("Staging: Add initial release of brcm80211 - Broadcom 802.11n wireless LAN driver.")
-
-based on my reading of drivers/staging/brcm80211/phy/wlc_phy_n.c. Should
-this final value be changed to -128 or should there be some other fix?
-
-[1]: https://github.com/llvm/llvm-project/commit/a5ef934a8d295dc03be3960f2b3744ec2e53238e
+- Mani
 
 -- 
-Cheers,
-Nathan
+மணிவண்ணன் சதாசிவம்
