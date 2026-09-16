@@ -1,54 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9392144A41A
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:23:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6038C44E038
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:23:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789543466; cv=none; b=ofK4sx4YeQaOUtI2K17lLpVRYFz3VmBwXpq5LIE4kBU/fhtyfckAdq4jWPqjX4H6f+s0WfBtkxISct0gQ2R0Fiabhk2XOv2gz359UO3gGYmSzh/oQLoaMbeJNmzvb1lNpkawiCXbh5eHQwc80AbaTwysmD8sPz+PIbOK2iSwKq0=
+	t=1789543471; cv=none; b=HTPGfW6Q6VztYVmknJy66mr9RpD3DJE7XPzBBttenxGeDlGUh/ImEft+iwCLsjQcZtpYshwGHiZWESL+HXEQp9wpmHIDTRQ7FAb2DJiAZpGDDF668GzJhZJ6quaUBYZMU4JDTUEDpzF+MRsoh6lXOHgsvwFkeq2oPPp9aMX2KS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789543466; c=relaxed/simple;
-	bh=H82DS6gj6htwLKgCrTJ8mbD3x2NKs1SGk8FN/o+Rlf4=;
+	s=arc-20240116; t=1789543471; c=relaxed/simple;
+	bh=UNWg5VnxJVEABRsecDDSekhPRJQoM8Hz7f4YtHDxYRc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U/N4u0DrmMRifieFsX7mEfJtc/IsOkk5O3YMQWKVvg7z7KfLZlf8olK+rAqgswjbZk1iBusN6xPGRIIuevigNqcjBafEFK1rmut6seyvyqDNwhsPDfTlYVh6aeNwbisIPU5mQbIZpn5dEz2U43FsXD31eAEtPpIb31JD3C7RpIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=l9CUM/x8; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=M9CZ5WQ7OyE30EYqwJziIQVqp/9jOu5N9p4YO+tnYTkhPo+THML2fp8kMojUvPfttXlVXcd67quqw6vS3P9eWiT5A6199xfLXGthorENj1Rl5rHNEwH7YbFEjfOC4qBixaDRvtbXvhhmw0DnBcwM7r+vap3zXt51162P5WKIjpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ClFesLRA; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="l9CUM/x8"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G7NmdK62168469, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ClFesLRA"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G7NseY62168494, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789543428; bh=6lOZJJ+Lq7VVWt2AOaVtjTRbYh2qSPkrlxH/WcEpbc8=;
+	t=1789543434; bh=e98IWI1wFh+Om8LXa3yydTMiaXdVSHNDjOwa53q5Ux4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=l9CUM/x8XVKTsFM3GdhUsaZ0sakrTEsw948zzvHoHZuz+qydzFJw4Gogy/Dd+zt6S
-	 HtTGr7ULK2ci+g23RiQ+Dgue/lLaq35A0JJ4W8AMgu1En/UuexD+GHtKkBK8vbjAGp
-	 4T4gOjxQ1QjoO13VbQ61QgoRpYK4LxzHPE6TUTYwWN4HRox9Js0EkpYhbst4pdbgN9
-	 D0PsBUW7qSaOigY0iZqoGX9k6fPT6sjRZT9WL7dDmWAd7RVba0mqGwkjINjb8+eWAN
-	 9K8A+W/kU+pozrjwxRAL92sYprvI+1c5vo683UlydWUzg7AioEoXQWGgIQUGXpCv/6
-	 H+xwbdK5FM0lQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G7NmdK62168469
+	b=ClFesLRAxuR7PPP3drD9LyiQFEA6q22VIvrKSctQvrr2mUkciYeHujoDYS0tlvs+x
+	 n/WQU+SHk5dKYZwSAHVgK2b7qjU6TYUgSCiguqby3dIzHIMo2UNo2v7Lkse8p7wtul
+	 40/ApkIwG/oNnlxm0pHuEv1fjtwizjGyEYJE4gQcplajJvVYX9ymL43mm+XVphwwyl
+	 ebaDYSFfGyvnruFp/y6Ho9DJUD/94AnXvBKEMJwrDH2kMUAl2tGWbW3ABiaPXLWNrZ
+	 QBQz9sLB6pQsBod9CkYfvr9mrApV1beZon421fDHZkYorkIKxsHzLyclsK5oZAt7Ap
+	 L68YFP+yZ51CQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G7NseY62168494
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 15:23:48 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 15:23:48 +0800
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 15:23:54 +0800
 Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 15:23:47 +0800
+ 15.2.2562.49; Wed, 16 Sep 2026 15:23:53 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 16 Sep 2026 15:23:47 +0800
+ Transport; Wed, 16 Sep 2026 15:23:53 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>
-Subject: [PATCH rtw-next 07/15] wifi: rtw89: coex: route BT sub-reports by bt_id for dual-BT support
-Date: Wed, 16 Sep 2026 15:22:30 +0800
-Message-ID: <20260916072238.62574-8-pkshih@realtek.com>
+Subject: [PATCH rtw-next 08/15] wifi: rtw89: coex: split bt_profile into per-device fields in trx H2C
+Date: Wed, 16 Sep 2026 15:22:31 +0800
+Message-ID: <20260916072238.62574-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260916072238.62574-1-pkshih@realtek.com>
 References: <20260916072238.62574-1-pkshih@realtek.com>
@@ -63,56 +59,135 @@ Content-Type: text/plain
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-RTL8922D supports dual BT (BT0 + BT1). The C2H report structs for
-fcxbtscan_v8 and fcxbtdevinfo carry a bt_id field that indicates which
-BT device sent the report; without routing the data always landed in
-bt0, silently dropping BT1 information.
+Rename bt_profile/rsvd2 to bt0_profile/bt1_profile in the DM trx_info
+struct and all three trx H2C structs (v7/v9/v107) to match the firmware
+interface for dual-BT devices.
 
-fcxbtscan_v8: the existing code used a local 'tbt' for the scan array
-copy but then wrote scan_info_update to the outer 'bt' (always bt0).
-Reassign 'bt' from bt_id so the update flag reaches the correct device.
+Previously _update_bt_info() wrote all BT devices' profile maps into a
+single bt_profile field, so the last device to report overwrote the
+first. The firmware received bt1_profile as zero at all times because
+rsvd2 was never updated.
 
-fcxbtdevinfo_v8: no bt_id routing existed at all. In v8 the rsvd byte
-carries bt_id; add a version check and redirect 'a2dp' to the selected
-device's a2dp descriptor.
-
-btver_v8 and btafh_v8 already route correctly and are untouched.
+Fix _update_bt_info() to assign bt0_profile when bid==BTC_BT_1ST and
+bt1_profile otherwise, so the firmware H2C correctly reflects each BT
+device's active profiles independently.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c |  7 ++++++-
+ drivers/net/wireless/realtek/rtw89/core.h |  4 ++--
+ drivers/net/wireless/realtek/rtw89/fw.c   | 12 ++++++------
+ drivers/net/wireless/realtek/rtw89/fw.h   | 12 ++++++------
+ 4 files changed, 20 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 785060acf508..2513af4d727c 100644
+index 2513af4d727c..b7b06b28009e 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1591,11 +1591,10 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
- 		} else if (ver->fcxbtscan == 8) {
- 			struct rtw89_btc_fbtc_btscan_v8 *pscan_v8 =
- 				(struct rtw89_btc_fbtc_btscan_v8 *)pfinfo;
--			struct rtw89_btc_bt_info *tbt =
--				pscan_v8->bt_id ? &btc->cx.bt1 : &btc->cx.bt0;
+@@ -9129,7 +9129,12 @@ static void _update_bt_info(struct rtw89_dev *rtwdev, u8 bid, u8 *buf, u32 len)
+ 	a2dp->exist = btinfo.lb2.a2dp;
+ 	pan->exist = btinfo.lb2.pan;
+ 	_update_bt_link_cnt(rtwdev, bt, is_bt_56g);
+-	btc->dm.trx_info.bt_profile = u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
++	if (bid == BTC_BT_1ST)
++		btc->dm.trx_info.bt0_profile =
++			u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
++	else
++		btc->dm.trx_info.bt1_profile =
++			u32_get_bits(btinfo.val, BT_PROFILE_PROTOCOL_MASK);
  
-+			bt = pscan_v8->bt_id ? &btc->cx.bt1 : &btc->cx.bt0;
- 			for (i = 0; i < CXSCAN_MAX; i++) {
--				tbt->scan_info_v2[i] = pscan_v8->para[i];
-+				bt->scan_info_v2[i] = pscan_v8->para[i];
- 				if ((pscan_v8->type & BIT(i)) &&
- 				    pscan_v8->para[i].win == 0 &&
- 				    pscan_v8->para[i].intvl == 0)
-@@ -1653,6 +1652,10 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
- 		break;
- 	case BTC_RPT_TYPE_BT_DEVICE:
- 		pdev = (struct rtw89_btc_fbtc_btdevinfo *)pfinfo;
-+		if (ver->fcxbtdevinfo == 8) {
-+			bt = pdev->rsvd ? &btc->cx.bt1 : &btc->cx.bt0;
-+			a2dp = &bt->link_info.a2dp_desc;
-+		}
- 		a2dp->device_name = le32_to_cpu(pdev->dev_name);
- 		a2dp->vendor_id = le16_to_cpu(pdev->vendor_id);
- 		a2dp->flush_time = le32_to_cpu(pdev->flush_time);
+ 	/* parse raw info low-Byte3 */
+ 	btinfo.val = raw_info[BTC_BTINFO_L3];
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index d1678a8b5872..7fee587a8162 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3840,8 +3840,8 @@ struct rtw89_btc_trx_info {
+ 
+ 	u8 cn; /* condition_num */
+ 	s8 nhm;
+-	u8 bt_profile;
+-	u8 rsvd2;
++	u8 bt0_profile;
++	u8 bt1_profile;
+ 
+ 	u16 tx_rate;
+ 	u16 rx_rate;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 63dd918b0989..33eb09e56f95 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -7223,8 +7223,8 @@ int rtw89_fw_h2c_cxdrv_trx_v7(struct rtw89_dev *rtwdev, u8 type)
+ 	h2c->v7_u8.zb_rx_gain = trx->zb_rx_gain[BTC_BT_1ST];
+ 	h2c->v7_u8.cn = trx->cn;
+ 	h2c->v7_u8.nhm = trx->nhm;
+-	h2c->v7_u8.bt_profile = trx->bt_profile;
+-	h2c->v7_u8.rsvd2 = trx->rsvd2;
++	h2c->v7_u8.bt0_profile = trx->bt0_profile;
++	h2c->v7_u8.bt1_profile = trx->bt1_profile;
+ 	h2c->v7_le.tx_rate = cpu_to_le16(trx->tx_rate);
+ 	h2c->v7_le.rx_rate = cpu_to_le16(trx->rx_rate);
+ 	h2c->v7_le.tx_tp = cpu_to_le32(trx->tx_tp);
+@@ -7290,8 +7290,8 @@ int rtw89_fw_h2c_cxdrv_trx_v9(struct rtw89_dev *rtwdev, u8 type)
+ 	}
+ 	h2c->v9_u8.cn = trx->cn;
+ 	h2c->v9_u8.nhm = trx->nhm;
+-	h2c->v9_u8.bt_profile = trx->bt_profile;
+-	h2c->v9_u8.rsvd2 = trx->rsvd2;
++	h2c->v9_u8.bt0_profile = trx->bt0_profile;
++	h2c->v9_u8.bt1_profile = trx->bt1_profile;
+ 	h2c->v9_le.tx_rate = cpu_to_le16(trx->tx_rate);
+ 	h2c->v9_le.rx_rate = cpu_to_le16(trx->rx_rate);
+ 	h2c->v9_le.tx_tp = cpu_to_le32(trx->tx_tp);
+@@ -7348,8 +7348,8 @@ int rtw89_fw_h2c_cxdrv_trx_v107(struct rtw89_dev *rtwdev, u8 type)
+ 	h2c->v107_u8.bt_rx_gain = trx->bt_rx_gain[BTC_BT_1ST];
+ 	h2c->v107_u8.cn = trx->cn;
+ 	h2c->v107_u8.nhm = trx->nhm;
+-	h2c->v107_u8.bt_profile = trx->bt_profile;
+-	h2c->v107_u8.rsvd2 = trx->rsvd2;
++	h2c->v107_u8.bt0_profile = trx->bt0_profile;
++	h2c->v107_u8.bt1_profile = trx->bt1_profile;
+ 	h2c->v7_le.tx_rate = cpu_to_le16(trx->tx_rate);
+ 	h2c->v7_le.rx_rate = cpu_to_le16(trx->rx_rate);
+ 	h2c->v7_le.tx_tp = cpu_to_le32(trx->tx_tp);
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index a15a5967cabc..294399bf57b1 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -2553,8 +2553,8 @@ struct rtw89_btc_trx_info_u8 {
+ 
+ 	u8 cn; /* condition_num */
+ 	s8 nhm;
+-	u8 bt_profile;
+-	u8 rsvd2;
++	u8 bt0_profile;
++	u8 bt1_profile;
+ } __packed;
+ 
+ struct rtw89_btc_trx_info_v7_u8 {
+@@ -2572,8 +2572,8 @@ struct rtw89_btc_trx_info_v7_u8 {
+ 
+ 	u8 cn;
+ 	s8 nhm;
+-	u8 bt_profile;
+-	u8 rsvd2;
++	u8 bt0_profile;
++	u8 bt1_profile;
+ } __packed;
+ 
+ struct rtw89_btc_trx_info_v107_u8 {
+@@ -2589,8 +2589,8 @@ struct rtw89_btc_trx_info_v107_u8 {
+ 
+ 	u8 cn;
+ 	s8 nhm;
+-	u8 bt_profile;
+-	u8 rsvd2;
++	u8 bt0_profile;
++	u8 bt1_profile;
+ } __packed;
+ 
+ struct rtw89_btc_trx_info_le {
 -- 
 2.25.1
 
