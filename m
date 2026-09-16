@@ -1,169 +1,154 @@
-Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7354A387A;
-	Wed, 16 Sep 2026 09:17:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789550248; cv=pass; b=lHHuB2u46bp0YcEBoAJuynWTDDHQQgWCc8gtER6AXpRQeD+OGxg4NtTejHZPQiTbso2XLAbu5LdJq0cqTkVzJBNDga/fqcjya3f6a5okxHWnrLityy1q/jO6ILZCsxYY1N59RvL24aNcI+KX+9jclJ2lePkIQDusLcTBfQFNxIE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789550248; c=relaxed/simple;
-	bh=9apGcAGF+qN+WdJNOYa47ONmDgzcaDL77nJ6s3G6f94=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=KaXSUeuH2XXuRMeKOEF5hrmLW+mxdcmyipF2MttjZaEKl3ofZpfc+ubrjRmEUL1LIhtdNhozloH3xUNuG2QownNbBRNSqusDHRLyRrrskvIlLZ2v2dRfyFKRhFQElBeC54tsmmLlG7FsSoEBgYlN3ZPr5wqe4RnJPSlu+WovV/k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=LOgzLAs4; arc=pass smtp.client-ip=185.185.170.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D1748AE0F
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 09:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789551004; cv=none; b=t2tCQdyZRqn6sejq4ml2RuEZDgtu2jw9CgF1Lqs1FFAG87Xs9LIkV/JkEeLppD4qF7Uv1kM/Lx+IhhasiBAiAeojiE2GJIx4hvOBPHP/mkrq+kBm2k6DjRxF2cA5/w0hgLP2Ee7LHzRPZo5oHSLdOKz1oRtFDy2sVjVOEVW9D0Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789551004; c=relaxed/simple;
+	bh=g/iC+DIqI1xrZJ0xCTu4BStW2wCcnb3D4yhvlUsffN0=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AbN6mBVfOxsxBMlyLZpK2w+jQe0S7ibRsDCdBOIJ8/8YPVJGtS0KJrffTLtkYi9qYEhwOD/oRuJ44Jc1oLPmAeqTlk+hNilnJx5JQEn4NDkn/Dz5pUBbZt5c3E+zowR8vqViVJbnQGoTts0Au76RknlYWr7WKx0G15HsoHdCX4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TqKxl7Lr; arc=none smtp.client-ip=74.125.225.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="LOgzLAs4"
-Received: from fauth-c2-smtp.messagingengine.com (fauth-c2-smtp.messagingengine.com [204.75.18.201])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hlCvL4YHpz49Q5T;
-	Wed, 16 Sep 2026 12:17:02 +0300 (EEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789550224;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9ZXpwDz6DoWWBmQ6vDNVRxdpcZSSALaEWv74i0upVdU=;
-	b=LOgzLAs4BikP/sgnQAfLugwVmoLTCaaR6pBGXA1afPjrpCv8xZ/XnHqdolLosB9Z928jgz
-	gUC1WbzWA3saYj/NlMXzY9Fx2IsiRZ+G1d/NRMZsLjMl6mixZRfJxp4/HOFQvH0OX9fr5M
-	fIExVqAoITO+kWu0iRMKXxdqsywyX0yt4e4HeIfupMcULbcornYNcOAeF53fr4xae0tZOi
-	cogbMyXpR/kYZ+yd1EWN0o65wR6CWx3xqmJnwO1aTVTv7yozoIYp+Omz6mQxHSKPmqL/CW
-	Hf2JQUn0Revkw1uCxFo+keDNbJ8/sbDMdgSv+FcoEwNk+Q/+ZjNME7Pae+ENEA==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789550224;
-	b=NGsvDT5a/D5ir8PsCu1YTvoejFwVxfILAw8mbusf8jcy0Befo7S6EgbCGn2XYE5e3NUEdq
-	kvgfjp4IsId7XRwGXOfaW0XGlS+RVtTO/xfLLlaTvN3yWoizUDYa7FKexRFFDuVwQYlBSb
-	kE3qEYw9DUxj8JcdEqiJghgJ3YpQGsjpo4dIuUnc4k+/i0jGkxyBLl5BpOdbkdO3CvXAQl
-	loqkxHgAtHbnqwGU4ZOjlO8+VTx2lrjcgCe8DKlx/OLWzFsLBzMse2BncHy9xV7iitf99+
-	56uvEQlqXRy6s8kAOcLVijWW2z5Mai/pMMYpJ9Z/ma/fuP5spzz+kVgHJ/qmYA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789550224;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9ZXpwDz6DoWWBmQ6vDNVRxdpcZSSALaEWv74i0upVdU=;
-	b=QaZDi5PRFHJw2YLEriC+I9FJuecvdYIKGxF2MwFomYnNj/WiyC04XmYLvrQR9TT1YrMnBW
-	XvM5KBxSJftPOuuDw48YeC0bvLzaRjRThXIUIg1RC2ihUI6eqVVp0zLe0C4rQyKqvXn2EQ
-	tG/jrxZT5asy1ZPaZ3OQxbdDWuUS0jotYa/kv7LLO5xfkhTJ4vMp7J1iz6zEJR6GmWtdSz
-	pmQOvF+SQ1AWYwyXTY0kb0H6JT7v2FXyDNsXL5s/ybHq9rHdH6BAnvKTcqJfwJD5ICGkp6
-	O/uNL1xpjDFaQzOUPayvoSjgNagiqCR1WE+Pyr5oLwyA5jWTwfW8koJ7rKsL5Q==
-ARC-Authentication-Results: i=1;
-	ORIGINATING;
-	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
-Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailfauth.ams.internal (Postfix) with ESMTP id 8E28B198003A;
-	Wed, 16 Sep 2026 05:17:01 -0400 (EDT)
-Received: from ams-imap-13 ([10.64.2.33])
-  by ams-compute-02.internal (MEProxy); Wed, 16 Sep 2026 05:17:01 -0400
-X-ME-Sender: <xms:iV6qag3fwJZVElS11KOnACeO3JGDmX_uwUJvl8TgfoB81E3A3vBJTg>
-    <xme:iV6qal56Dzqp_NRsS9Es8Vuey_S8mDBuDqKiHnugv7udTKHByS_h2x7KhaWC9KEU3
-    ZFj6u_mUwXrGGZgRvLUvPqFAckzru_7RfuhLscUhqlA1JtFSH91NSE>
-X-ME-Proxy-Cause: dmFkZTGNFtvyF6MZNYMeLjLWJ41+we1JJ2Ix4Ro8hXfbflboz9ZBw6ovM/eey9Gijq0/Iq
-    aPwhDw8Qs0gEeTKSlITUHQSLt0dbFE5HrptM2obUWfKKcjNRHWOJjELo9P5f3QEsYpsE6d
-    hrW5Y+e/1UX012oUQk2r8ajWj1yE2k4hnhEzGiUXQ2NZpcbroifSXrsO8hYkY4GZvOPXW5
-    babRbJSvfgsF0DJ+bk/amnon7PS+3s261lu//dm2pq9kX+yE0j/XwQTCgkJ5QWBcdzXRyp
-    IvmjBKmjAjCc36wGn77wxm/mB3uS0XnN641PdGPuNW6NRJnwXoV5AaGiTKSGXWUb2sv2kW
-    srTKTE258K+d/Dwk2y/m0SKBTkVT7iUPkU1kdUtkFDK9au+RML61NpjAQSvMuS2QklOCAT
-    UAE0Hclbs+lQFAMq3R/mv2I+geAjMoF/L4gApGDO6Ok4deMGQcUNbcrZ2rTidFmHrHZzx/
-    gQMgSOeBNDvD9iy9e0dl1J5ZBX04VAXhXHLTuesqaH0VHp1GqpyU+6RzZ9I6Vnu/y6GVaA
-    BUHGfOrmUhAdNu0TKM/MpcKO7bndP+Kp/1Gmkn31I3yzIkbIc5y04Ohkm3zMV2cLZp4SOD
-    mE6ShLsWg4EeG8xoB2+/E/2wMsc/KbkcfJAiIpiyOo86TfLmsaLXCTMeEgZg
-X-ME-Proxy: <xmx:jV6qag_xAfBF4b7JfLUzVt_CTM_U8mWr7A_Fmw2jJJINzbR-C7OltQ>
-    <xmx:jV6qakIvhColpei7gd9PzH58eLkXDhYxtHsZOf4mSPorf1AdaldRnA>
-    <xmx:jV6qakuRhvl58_-z8GXRpFgARl3MkEUjJMCJkpvj-5fzdjVRb-5nDw>
-    <xmx:jV6qatltm3i7OvXc1xh20Y-yn0KjYy3bt86NYaMQOUa0ni1awM2SLg>
-    <xmx:jV6qarkHNZlZSzvbVHQJBCQkSeFEKTwE3m9W_toSFDjvBi2RYo-4MH1r>
-Feedback-ID: i02414972:Fastmail
-Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id C76DFF80089; Wed, 16 Sep 2026 05:16:57 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TqKxl7Lr"
+Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49ccf3ca626so3311655e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 02:29:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789550994; x=1790155794; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=drCB0bFzLSt3iJv3AQNAxjZ5jc1SFYIJv68Mmbr8obI=;
+        b=TqKxl7LrugOFrQrgr8bdk88+4lv6xwiasJTOfStkN5VPSjnmIzv6T/HIKUKB391l8m
+         aP0WS6ji1Q/XPsOSzWynGbp6G3Sqk/TrqGdPwxlP+NPP7z04EpDLifyTLmNpyKjPitul
+         EB9Rkfwh8ymrL4n1jIueyXuEuicoczUb6JmVVr6Ywn6sjH6iyLNAuPuGHRMBurrKQw1r
+         4ZrPpvellJRfv8uBz/Hvs87/BfLCOS4sganTG4pAUCnUPLSPyjBBFaxLvBqNXUXAURG3
+         7JEvragE67izv0WU4XGTUcfR1iYvN1W8CdmHmjmDSfZR8IAkAZA9Dx4kydTrt7X1fSg9
+         yxqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789550994; x=1790155794;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=drCB0bFzLSt3iJv3AQNAxjZ5jc1SFYIJv68Mmbr8obI=;
+        b=MS33OJQaKGi5PCiupcM6WxMqwQ4akcZWU6MJ0WtG2FPXoCDNL8sZsghxqas7Pg1gyQ
+         OPACpvv0euapK0boZa/8/FszBSSaFqsNtjIjoi6dgZMkUb/d1oA3u0YFjflFvXgqAVBu
+         ASPTafcckViFrCgCq9F9SIpi7g/ir7e+iS1XxsimB20H3UQsLraMYSY3Rdn6+8bHRyTx
+         ngKvcr08hazQb0WQpuBWwRney/WCajBab888/yJOZq1344sEym7CAmhJU/Z8x5iEgOTm
+         bBxEybCSTWHJ9QeSIpvikWXPgKsRX5sjD76ldltnuiqRX/gKvE8bREfAkPpg3MI6HJ+X
+         B2Rw==
+X-Forwarded-Encrypted: i=1; AKwUvBxICisuQbwxZ5fpFqGMWFvwHxMLVaRVpA2ROdtcklRcwOOkL9DBCSPNESzWC7pJicmBYWfRC0LGNZPWXvUMeQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++mOrjjXsZT0BFP5HllU6v4hVAzMyUj7i2kHBtmRtf6fypjM+c0y
+	xXiAmCFtnE+1XX9Kc2uBzi4n7a7EOHnsN7vi36AHKaqcbT261BdLhVgL
+X-Gm-Gg: AYBFou2vgA/0q/OFku8S1TE29NJWNS0tJAUy/lq4NYkx1TIJEUCgHjjLDEBOMw8b2c9
+	QryI7ZwRT6t5alcDFbjT0hUHkKEO+vNlpjE77/YvGA0w2skLTyCAnFWJvhJN+BveNRYfPAjJnCQ
+	YDap+/0zQjV91WWTKNJ3PGinvrCjA7KwUPl3XQUh/zlpLzhyi/wPr/oz/eOvcFBT/xpmiaHOleY
+	cqcWhBRAVWbn4QuIXfNFwQOhNbweD+e/gcpLBqQ30gcUdcyo/o7iIB9W5l0hmAegPyGC8kERq1s
+	gf/H5bIMG5+LZ4H1keBteto8vAYTl5izBwcjmgLw1T0bwovMM2F9GMcNrNUvUGY9KcRyD0oMDLI
+	Y2nD1yZU5ao/T0QF5B+ssJeFbzMmRKyH31EUGApnPNXDMzy0EDQvvE+5q3TPRvgRFjLpG9iGiFJ
+	0uwGCSsf1/S5PRcGnU/0v5pK61VHyqYQ0B7k61zUkK2K/dJn0kjewy3lloJmaog3JhCqz4P3lXU
+	xpvOPfGPiRhrApyyJ5Gc7ykNMPDyFF9UIqt
+X-Received: by 2002:a05:600c:4709:b0:493:f5bf:4dc6 with SMTP id 5b1f17b1804b1-49eac46374bmr21150555e9.7.1789550993497;
+        Wed, 16 Sep 2026 02:29:53 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e83db9102sm64812065e9.12.2026.09.16.02.29.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 02:29:53 -0700 (PDT)
+Date: Wed, 16 Sep 2026 10:29:51 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Kees Cook <kees@kernel.org>
+Cc: Bill Wendling <morbo@google.com>, linux-kernel@vger.kernel.org,
+ codemender-patching+linux@google.com, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Andrew
+ Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, Peter Griffin <peter.griffin@linaro.org>, Linus
+ Walleij <linusw@kernel.org>, "Martin K. Petersen" <mkp@kernel.org>, Trond
+ Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Jiri
+ Pirko <jiri@resnulli.us>, Simon Horman <horms@kernel.org>, Chuck Lever
+ <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown
+ <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
+ <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Jaroslav Kysela
+ <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Andrew Morton
+ <akpm@linux-foundation.org>, "Mike Rapoport (Microsoft)" <rppt@kernel.org>,
+ Kanglong Wang <wangkanglong@loongson.cn>, Tiezhu Yang
+ <yangtiezhu@loongson.cn>, Qiang Ma <maqianga@uniontech.com>, Randy Dunlap
+ <rdunlap@infradead.org>, Pengpeng Hou <pengpeng@iscas.ac.cn>, Ard
+ Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>, Thorsten
+ Blum <blum@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Johan Hovold
+ <johan@kernel.org>, Cen Zhang <zzzccc427@gmail.com>, =?UTF-8?B?Q8Ohc3Np?=
+ =?UTF-8?B?bw==?= Gabriel <cassiogabrielcontato@gmail.com>, Rong Zhang
+ <i@rong.moe>, linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+ netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-gpio@vger.kernel.org,
+ devel@lists.orangefs.org, linux-hardening@vger.kernel.org,
+ linux-sound@vger.kernel.org
+Subject: Re: [PATCH 01/28] ALSA: ac97: Refactor snd_ac97_get_name() to use
+ snprintf()
+Message-ID: <20260916102532.4b881a25@pumpkin>
+In-Reply-To: <202609151134.361FEA04@keescook>
+References: <20260915081910.4142719-1-morbo@google.com>
+	<20260915081910.4142719-2-morbo@google.com>
+	<202609151134.361FEA04@keescook>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AaJBIn-uFwMB
-Date: Wed, 16 Sep 2026 12:16:37 +0300
-From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, "Jeff Hugo" <jeff.hugo@oss.qualcomm.com>,
- "Jeff Johnson" <jjohnson@kernel.org>,
- "Bjorn Andersson" <andersson@kernel.org>,
- "Konrad Dybcio" <konradybcio@kernel.org>,
- "Eric Dumazet" <edumazet@google.com>,
- "Kuniyuki Iwashima" <kuniyu@google.com>, "Paolo Abeni" <pabeni@redhat.com>,
- "Willem de Bruijn" <willemb@google.com>,
- "David S . Miller" <davem@davemloft.net>, "Jakub Kicinski" <kuba@kernel.org>,
- "Simon Horman" <horms@kernel.org>, "Mihai Moldovan" <ionic@ionic.de>,
- "Denis Kenzior" <denkenz@gmail.com>, "Marcel Holtmann" <marcel@holtmann.org>,
- "Andy Gross" <agross@kernel.org>, linux-kernel@vger.kernel.org,
- mhi@lists.linux.dev, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, ath12k@lists.infradead.org,
- netdev@vger.kernel.org
-Message-Id: <9ffaeae1-3768-408b-8434-9f1704412fbe@app.fastmail.com>
-In-Reply-To: 
- <bjfwy4usrfbrabmcp4xsr65nqwdpuryvmrb6tzp6k2ckmdx27h@kvf7idvsugsm>
-References: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
- <20260915054207.2513877-4-juha-matti.tilli@iki.fi>
- <bjfwy4usrfbrabmcp4xsr65nqwdpuryvmrb6tzp6k2ckmdx27h@kvf7idvsugsm>
-Subject: Re: [PATCH v7 03/15] net: qrtr: fit node ID + port number combination into
- unsigned long
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 16, 2026, at 10:01, Manivannan Sadhasivam wrote:
-> On Tue, Sep 15, 2026 at 08:41:55AM +0300, Juha-Matti Tilli wrote:
-> > From: Mihai Moldovan <ionic@ionic.de>
-> > 
-> > The flow control implementation uses a radix tree to store node ID and
-> > port number combinations and the key length is hardcoded to unsigned
-> > long.
-> > 
-> > The original implementation shifted the node ID up by 32 bits and added
-> > the port number to the lower 32 bits of the unsigned long value to
-> > create a key.
-> > 
-> > Unfortunately, since both node IDs and port numbers are defined as u32,
-> > this will overflow on platforms where sizeof(unsigned long) < 8 (which
-> > are most 32 bit platforms) and essentially just drop the node ID part.
-> > 
-> > To fix this, build the key in a generic way, using half of the unsigned
-> > long space for the node ID and the other half for the port number.
-> > 
-> > This will be transparent to platforms where sizeof(unsigned long) >= 8
-> > and fix overflow issues otherwise.
-> > 
-> > The caveat, of course, is that, for platforms where
-> > sizeof(unsigned long) < 8, the supported amount of node IDs and port
-> > numbers will be severely limited - to half of sizeof(unsigned long),
-> > which typically will be 16 bits. Needless to say, we have to check if
-> > both values fit into this limit.
-> > 
-> > This limitation is probably not going to be an issue in real-world
-> > scenarios, but if it turns out to be one after all, we could switch from
-> > a radix tree implementation to an XArray implementation.
-> > 
-> 
-> Documentation/core-api/xarray.rst says:
-> 
-> "If your index can be larger than ``ULONG_MAX`` then the XArray is not the data
-> type for you."
-> 
-> So the fix is to not make XArray work, but switch over to some other storage
-> mechanism instead of XArray, like hashtable.
+On Tue, 15 Sep 2026 11:39:34 -0700
+Kees Cook <kees@kernel.org> wrote:
 
-I think I will drop this along with patch 04/15 from the next series,
-as it fixes one bug but introduces another, and those bugs should
-probably be irrelevant for this patch series.
+(I've just juked a lot of the 'reply to' list - too long to gmail.)
 
-Indeed, that commit message by Mihai wasn't entirely correct: XArray
-will not work here.
+> On Tue, Sep 15, 2026 at 08:18:18AM +0000, Bill Wendling wrote:
+> > --- a/sound/pci/ac97/ac97_codec.c
+> > +++ b/sound/pci/ac97/ac97_codec.c
+> > @@ -1850,10 +1850,12 @@ void snd_ac97_get_name(struct snd_ac97 *ac97, unsigned int id, char *name,
+> >  
+> >  	pid = look_for_codec_id(snd_ac97_codec_ids, id);
+> >  	if (pid) {
+> > -		strlcat(name, " ", maxlen);
+> > -		strlcat(name, pid->name, maxlen);
+> > +		int l = strlen(name);
+> > +
+> >  		if (pid->mask != 0xffffffff)
+> > -			sprintf(name + strlen(name), " rev %u", id & ~pid->mask);
+> > +			snprintf(name + l, maxlen - l, " %s rev %u", pid->name, id & ~pid->mask);
+> > +		else
+> > +			snprintf(name + l, maxlen - l, " %s", pid->name);
+> >  		if (ac97 && pid->patch) {
+> >  			if ((modem && (pid->flags & AC97_MODEM_PATCH)) ||
+> >  			    (! modem && ! (pid->flags & AC97_MODEM_PATCH)))
+> > @@ -1861,6 +1863,7 @@ void snd_ac97_get_name(struct snd_ac97 *ac97, unsigned int id, char *name,
+> >  		}
+> >  	} else {
+> >  		int l = strlen(name);
+> > +
+> >  		snprintf(name + l, maxlen - l, " id %x", id & 0xff);
+> >  	}
+> >  }  
+> 
+> I'd rather not open-code the length math here. Can't we use seq_buf()
+> instead?
+> 
 
-BR, Juha-Matti
+Or just use the length returned by the strscpy() call that wrote the initial
+part of name[].
+The return the name length so the callers don't have to use strcat()
+themselves.
+Replacing strlcat() with strlen() and a copy is just pointless.
+
+David
