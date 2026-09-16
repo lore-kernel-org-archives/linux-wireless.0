@@ -1,54 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A33744C4E8
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF86440655
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 07:24:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789543446; cv=none; b=QXxR0NNdsGPMZGiHhgWL9Ci1mU1cIxM5A7FIob56o+1wbDah7Yv6WEnraBdDRbiv44lTqEhxvnmJPsIv8VCYbwUbN4wvf+qdbmhgv0qLLud0+mLAan2UsaKhKHryBLENMBzvDSCU4pyjVSQ2Db5tDvj2o8wSMgMhcAg1ipkBG/4=
+	t=1789543448; cv=none; b=IBlvHnBM6uinGXaYw63hLLURSZ8l5hRH+sQVIae/dPweKuokVMwqBXPa2W3nVQ75xWEsWoj3pNZSm/XA7Vvgvo7L8yjoyAeMN8X/a1203Bic55w5Xyi4jJZekCtQIwta3h0teoVDOF+KXCgFGn72qV8VAEYwk10nuApOoLU7QCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789543446; c=relaxed/simple;
-	bh=02KujcfhuFjJ2JRWhjujsEVROur08Hm3ptK5iEj3BDE=;
+	s=arc-20240116; t=1789543448; c=relaxed/simple;
+	bh=pdNgV+SXt2Fz4J+OSgJu/HI7lgCqEBQKe7HBLM9ylIw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bs4kG98sjBMtPflCMd8s1MDlbzft885AJk8vYvLHDdvZy7o1I3M1uXwrh5m62CRUUXxOwEb5pa2Ducy+eeDzoB5cS8TbTdzHjy7K8HyPqHMUN3fAZ4P6ETgFKTcCd2orN8YUb6r//H8XwwSqo9hqAo6A7ZoSfeKBfIlEgLBbhk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=leBeNK5h; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=n/F3vRhnae1BGg/4bE9f7FSpVHsaNJz40Q8Y1A9EVx/UFjwctk/htccsHwp7VZcnr+cytFREeEs3H2sM772C3K9s6rVJ53Oj0vrHkjNhBKBovwkwCYnlPeLUEhL6yu6MiWxvwuftqTPZdOKKinS+PFr7eVoLGx+wXz/X1yXDJzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=S25XuE9E; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="leBeNK5h"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G7NhZ322168454, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="S25XuE9E"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G7NxUJ22168510, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789543423; bh=Sv9TGBlPXfIB5pGrsWJAtPKjiITlrI1C9FJL9X3Uwxw=;
+	t=1789543439; bh=0H4GY4jI16uaFFxuNnpmFxi8cOHXGVcylgXPb0ZfqKk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=leBeNK5hHOpjxAArG7SdD9GlomOj3MLoVzbh20NdVirMolQMITouzcbTGx5PeW4T+
-	 QZyF2XMm+/XXSr0Z05nnN1oPs6VAaJnKG1K+dWdF8HledQ/sSex0WXoPVif6avGg5L
-	 gErNlPCHp5nmFtZDZho+6ltxA21vaYZUk2Z6mt4NcqmO5PrXMtsKqkgUlThK7AMCRP
-	 1XJH7q9UCUFwyyTVqLllXDUWUfKf894R5j6u/7Z4h0KfWqbk3VFd48c7Wc1XXY/tEb
-	 0Fppr9ZL9hvpNTAIZj+2QOrZBm69cPqkrrUYBuVfzwFnMLbcgd5gqZmdf7MdYGViOo
-	 vX4z/C2LoGjsg==
+	b=S25XuE9EVebMfNtpT6sm1pvIX+r0DIeHIj4f5HT0g47gM4j9SOUetJttEoz2v6nCR
+	 MsUmI/La4iKBqBLqHl6RgNqhwNJATD0gmuBb7aqeGyeOPwIkYxEJtxg2yIcbQVmq3O
+	 U0sA7rb7goP6oN/QVW3LFa3z6ELOvkJ5pn7SyiS4lInQ2W5s8SKFRD548bL4dN1h2k
+	 sth4Q2aMFBA338i1I0D2zFvgzxb5lcouHyyPC9J3MYb315Bw2dSLXaKDDoEdEecHqy
+	 fKq/6/AaS9wdayRK4vpCI9FDQRV1d0/Br8BGcq1BpBD3tbpxdLFujNf1JyuQ6S5/pi
+	 5J+s6ytczSWkQ==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G7NhZ322168454
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G7NxUJ22168510
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 15:23:43 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 15:23:59 +0800
+Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 15:23:42 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 15:23:40 +0800
+ 15.2.2562.49; Wed, 16 Sep 2026 15:23:59 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 16 Sep 2026 15:23:40 +0800
+ Transport; Wed, 16 Sep 2026 15:23:59 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>
-Subject: [PATCH rtw-next 06/15] wifi: rtw89: coex: add fcxcysta v8 report support
-Date: Wed, 16 Sep 2026 15:22:29 +0800
-Message-ID: <20260916072238.62574-7-pkshih@realtek.com>
+Subject: [PATCH rtw-next 09/15] wifi: rtw89: coex: add fcxtxpwr version dispatch for CXDRVINFO_TXPWR
+Date: Wed, 16 Sep 2026 15:22:32 +0800
+Message-ID: <20260916072238.62574-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260916072238.62574-1-pkshih@realtek.com>
 References: <20260916072238.62574-1-pkshih@realtek.com>
@@ -63,307 +59,309 @@ Content-Type: text/plain
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The firmware introduces coexistence cycle statistics report version 8
-(fcxcysta v8). The v8 struct layout diverges from v7: it adds a per-slot
-WL RX error ratio array, a new CXBCN_BT_PROTECT_OK beacon counter, and
-extended slot step time tracking. Because of these layout differences, the
-v7 and v8 parsing paths in _chk_btc_report are now separate branches
-rather than sharing one handler.
+Some firmware sends the TXPWR H2C with a version that differs from
+the one implied by fcxtrx. Add a dedicated fcxtxpwr field to
+rtw89_btc_ver so the TXPWR H2C version can be chosen independently.
+It defaults to 0, keeping every existing chip on the fcxtrx-based
+selection, and is set to 1 for the firmware that expects the
+versioned H2C: RTL8922A 0.35.111.0 and RTL8922D 0.35.94.0 and later.
 
-The v8 error-checking path adds hang detection for E2G, W1, and B1 slot
-counts in addition to the BT_SLOT_FLOOD and CYCLE_HANG checks carried over
-from v7. A dedicated _show_fbtc_cysta_v8 display function is added to
-expose the new fields through the debugfs coex dump.
+The ver=1 TXPWR H2C shares the rtw89_h2c_cxtxpwr_v9 layout and only
+differs in the header version, so let rtw89_fw_h2c_cxtxpwr_v9() take
+the version as an argument instead of adding a near-identical
+function. Update the CXDRVINFO_TXPWR dispatch to send ver=1 when
+fcxtxpwr is set before falling through to the fcxtrx-based selection.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 199 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/core.h |  26 +++
- 2 files changed, 225 insertions(+)
+ drivers/net/wireless/realtek/rtw89/coex.c | 52 ++++++++++++-----------
+ drivers/net/wireless/realtek/rtw89/core.h |  1 +
+ drivers/net/wireless/realtek/rtw89/fw.c   |  6 +--
+ drivers/net/wireless/realtek/rtw89/fw.h   |  2 +-
+ 4 files changed, 32 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 3a5219fcc7b9..785060acf508 100644
+index b7b06b28009e..1fb4a7176179 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1841,6 +1841,11 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			pcysta->v7 = pfwinfo->rpt_fbtc_cysta.finfo.v7;
- 			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo.v7);
- 			fwsubver->fcxcysta = pfwinfo->rpt_fbtc_cysta.finfo.v7.fver;
-+		} else if (ver->fcxcysta == 8) {
-+			pfinfo = &pfwinfo->rpt_fbtc_cysta.finfo.v8;
-+			pcysta->v8 = pfwinfo->rpt_fbtc_cysta.finfo.v8;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo.v8);
-+			fwsubver->fcxcysta = pfwinfo->rpt_fbtc_cysta.finfo.v8.fver;
- 		} else {
- 			goto err;
- 		}
-@@ -2628,6 +2633,49 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 				     le16_to_cpu(pcysta->v7.cycles));
- 			_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_HANG,
- 				     le16_to_cpu(pcysta->v7.cycles));
-+		} else if (ver->fcxcysta == 8) {
-+			if (dm->fddt_train == BTC_FDDT_ENABLE)
-+				break;
-+
-+			pcysta = &pfwinfo->rpt_fbtc_cysta.finfo;
-+
-+			if (dm->tdma_now.type != CXTDMA_OFF) {
-+				val16 = le16_to_cpu(pcysta->v8.cycle_time.tavg[CXT_WL]);
-+				_chk_btc_err(rtwdev, BTC_DCNT_WL_SLOT_DRIFT, val16);
-+
-+				val1 = le32_to_cpu(pcysta->v8.leak_slot.cnt_rximr) *
-+				       BTC_LEAK_AP_TH;
-+				val2 = le16_to_cpu(pcysta->v8.slot_cnt[CXST_LK]);
-+
-+				val16 = le16_to_cpu(pcysta->v8.cycles);
-+				if (dm->tdma_now.rxflctrl &&
-+				    val16 >= BTC_CYSTA_CHK_PERIOD && val1 > val2)
-+					dm->leak_ap = 1;
-+			} else if (dm->tdma_now.ext_ctrl == CXECTL_EXT) {
-+				val16 = le16_to_cpu(pcysta->v8.cycle_time.tavg[CXT_BT]);
-+				_chk_btc_err(rtwdev, BTC_DCNT_BT_SLOT_DRIFT, val16);
-+
-+				val1 = le16_to_cpu(pcysta->v8.a2dp_ept.cnt_timeout) *
-+				       BTC_SLOT_REQ_TH;
-+				val2 = le16_to_cpu(pcysta->v8.a2dp_ept.cnt);
-+
-+				val16 = le16_to_cpu(pcysta->v8.cycles);
-+				if (val16 >= BTC_CYSTA_CHK_PERIOD && val1 > val2)
-+					dm->slot_req_more = 1;
-+				else if (bt->link_info.status.map.connect == 0)
-+					dm->slot_req_more = 0;
-+			}
-+
-+			_chk_btc_err(rtwdev, BTC_DCNT_E2G_HANG,
-+				     le16_to_cpu(pcysta->v8.slot_cnt[CXST_E2G]));
-+			_chk_btc_err(rtwdev, BTC_DCNT_W1_HANG,
-+				     le16_to_cpu(pcysta->v8.slot_cnt[CXST_W1]));
-+			_chk_btc_err(rtwdev, BTC_DCNT_B1_HANG,
-+				     le16_to_cpu(pcysta->v8.slot_cnt[CXST_B1]));
-+			_chk_btc_err(rtwdev, BTC_DCNT_BT_SLOT_FLOOD,
-+				     le16_to_cpu(pcysta->v8.cycles));
-+			_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_HANG,
-+				     le16_to_cpu(pcysta->v8.cycles));
- 		} else {
- 			goto err;
- 		}
-@@ -10710,6 +10758,10 @@ static int _show_error(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
- 		pcysta->v7 = pfwinfo->rpt_fbtc_cysta.finfo.v7;
- 		except_cnt = pcysta->v7.except_cnt;
- 		exception_map = le32_to_cpu(pcysta->v7.except_map);
-+	} else if (ver->fcxcysta == 8) {
-+		pcysta->v8 = pfwinfo->rpt_fbtc_cysta.finfo.v8;
-+		except_cnt = pcysta->v8.except_cnt;
-+		exception_map = le32_to_cpu(pcysta->v8.except_map);
- 	} else {
- 		return 0;
- 	}
-@@ -11652,6 +11704,151 @@ static int _show_fbtc_cysta_v7(struct rtw89_dev *rtwdev, char *buf, size_t bufsz
- 	return p - buf;
- }
+@@ -140,7 +140,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 10,   .frptmap = 5,    .fcxctrl = 9,  .fcxinit = 11,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 4, .drvinfo_ver = 3, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 6,   .fcxmlo = 2,   .bt_desired = 8,
+-	 .fcxtrx = 9,
++	 .fcxtrx = 9,     .fcxtxpwr = 1,
+ 	},
+ 	{RTL8922D, RTW89_FW_VER_CODE(0, 35, 94, 0),
+ 	 .fcxbtcrpt = 11, .fcxtdma = 8,    .fcxslots = 7, .fcxcysta = 8,
+@@ -149,7 +149,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 10,    .frptmap = 5,    .fcxctrl = 9,  .fcxinit = 10,
+ 	 .fwevntrptl = 1,  .fwc2hfunc = 4, .drvinfo_ver = 3, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 6,   .fcxmlo = 2,   .bt_desired = 8,
+-	 .fcxtrx = 9,
++	 .fcxtrx = 9,     .fcxtxpwr = 1,
+ 	},
+ 	{RTL8852BT, RTW89_FW_VER_CODE(0, 29, 133, 0),
+ 	 .fcxbtcrpt = 9, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -158,7 +158,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 5,    .fcxctrl = 7,  .fcxinit = 107,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 103, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 107,
++	 .fcxtrx = 107,  .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852BT, RTW89_FW_VER_CODE(0, 29, 122, 0),
+ 	 .fcxbtcrpt = 8, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -167,7 +167,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 3,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 1, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852BT, RTW89_FW_VER_CODE(0, 29, 90, 0),
+ 	 .fcxbtcrpt = 7, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -176,7 +176,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 3,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 1, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8922A, RTW89_FW_VER_CODE(0, 35, 111, 0),
+ 	 .fcxbtcrpt = 11, .fcxtdma = 8,    .fcxslots = 7, .fcxcysta = 8,
+@@ -185,7 +185,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 10,   .frptmap = 5,    .fcxctrl = 9,  .fcxinit = 11,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 4, .drvinfo_ver = 3, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 6,   .fcxmlo = 2,   .bt_desired = 8,
+-	 .fcxtrx = 9,
++	 .fcxtrx = 9,     .fcxtxpwr = 1,
+ 	},
+ 	{RTL8922A, RTW89_FW_VER_CODE(0, 35, 71, 0),
+ 	 .fcxbtcrpt = 8, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -194,7 +194,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 8,   .frptmap = 4,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 3, .drvinfo_ver = 3, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 1,  .fcxmlo = 1,   .bt_desired = 9,
+-	 .fcxtrx = 7,
++	 .fcxtrx = 7,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8922A, RTW89_FW_VER_CODE(0, 35, 63, 0),
+ 	 .fcxbtcrpt = 8, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -203,7 +203,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 8,   .frptmap = 4,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 3, .drvinfo_ver = 2, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 1,  .fcxmlo = 1,   .bt_desired = 9,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8922A, RTW89_FW_VER_CODE(0, 35, 8, 0),
+ 	 .fcxbtcrpt = 8, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -212,7 +212,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 8,   .frptmap = 3,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 1, .drvinfo_ver = 1, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8851B, RTW89_FW_VER_CODE(0, 29, 133, 0),
+ 	 .fcxbtcrpt = 9, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -221,7 +221,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 5,    .fcxctrl = 7,  .fcxinit = 107,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 103, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 107,
++	 .fcxtrx = 107,  .fcxtxpwr = 0,
+ 	},
+ 	{RTL8851B, RTW89_FW_VER_CODE(0, 29, 29, 0),
+ 	 .fcxbtcrpt = 105, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 5,
+@@ -230,7 +230,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 2,   .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852C, RTW89_FW_VER_CODE(0, 27, 97, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 4,    .fcxslots = 2, .fcxcysta = 105,
+@@ -239,7 +239,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 101, .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 107,
++	 .fcxtrx = 107,  .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852C, RTW89_FW_VER_CODE(0, 27, 57, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 3,
+@@ -248,7 +248,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852C, RTW89_FW_VER_CODE(0, 27, 42, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 3,
+@@ -257,7 +257,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 2,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852C, RTW89_FW_VER_CODE(0, 27, 0, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 3,
+@@ -266,7 +266,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 2,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852B, RTW89_FW_VER_CODE(0, 29, 133, 0),
+ 	 .fcxbtcrpt = 9, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -275,7 +275,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 105,  .fcxctrl = 7,  .fcxinit = 107,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 103, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 107,
++	 .fcxtrx = 107,  .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852B, RTW89_FW_VER_CODE(0, 29, 122, 0),
+ 	 .fcxbtcrpt = 8, .fcxtdma = 7,    .fcxslots = 7, .fcxcysta = 7,
+@@ -284,7 +284,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 7,   .frptmap = 3,    .fcxctrl = 7,  .fcxinit = 7,
+ 	 .fwevntrptl = 1, .fwc2hfunc = 2, .drvinfo_ver = 1, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 8,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852B, RTW89_FW_VER_CODE(0, 29, 29, 0),
+ 	 .fcxbtcrpt = 105, .fcxtdma = 3,  .fcxslots = 1, .fcxcysta = 5,
+@@ -293,7 +293,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 2,   .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852B, RTW89_FW_VER_CODE(0, 29, 14, 0),
+ 	 .fcxbtcrpt = 5, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 4,
+@@ -302,7 +302,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1800,
+ 	 .max_role_num = 6, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852B, RTW89_FW_VER_CODE(0, 27, 0, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 3,
+@@ -311,7 +311,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 1,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852A, RTW89_FW_VER_CODE(0, 13, 37, 0),
+ 	 .fcxbtcrpt = 4, .fcxtdma = 3,    .fcxslots = 1, .fcxcysta = 3,
+@@ -320,7 +320,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 1,   .frptmap = 3,    .fcxctrl = 1,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 0, .drvinfo_ver = 0, .info_buf = 1280,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
+ 	{RTL8852A, RTW89_FW_VER_CODE(0, 13, 0, 0),
+ 	 .fcxbtcrpt = 1, .fcxtdma = 1,    .fcxslots = 1, .fcxcysta = 2,
+@@ -329,7 +329,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 0,   .frptmap = 0,    .fcxctrl = 0,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 0, .drvinfo_ver = 0, .info_buf = 1024,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
  
-+static int _show_fbtc_cysta_v8(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
-+{
-+	struct rtw89_btc_bt_info *bt = &rtwdev->btc.cx.bt0;
-+	struct rtw89_btc_bt_a2dp_desc *a2dp = &bt->link_info.a2dp_desc;
-+	struct rtw89_btc_btf_fwinfo *pfwinfo = &rtwdev->btc.fwinfo;
-+	struct rtw89_btc_fbtc_cysta_v8 *pcysta = NULL;
-+	struct rtw89_btc_dm *dm = &rtwdev->btc.dm;
-+	struct rtw89_btc_rpt_cmn_info *pcinfo;
-+	char *p = buf, *end = buf + bufsz;
-+	u16 cycle, c_begin, c_end, s_id;
-+	u8 i, cnt = 0, divide_cnt;
-+	u8 slot_pair;
-+
-+	pcinfo = &pfwinfo->rpt_fbtc_cysta.cinfo;
-+	if (!pcinfo->valid)
-+		return 0;
-+
-+	pcysta = &pfwinfo->rpt_fbtc_cysta.finfo.v8;
-+	p += scnprintf(p, end - p, "\n %-15s : cycle:%d", "[slot_stat]",
-+		       le16_to_cpu(pcysta->cycles));
-+
-+	for (i = 0; i < CXST_MAX; i++) {
-+		if (!le16_to_cpu(pcysta->slot_cnt[i]))
-+			continue;
-+		p += scnprintf(p, end - p, ", %s:%d",
-+			       id_to_slot(i),
-+			       le16_to_cpu(pcysta->slot_cnt[i]));
-+	}
-+
-+	if (dm->tdma_now.rxflctrl)
-+		p += scnprintf(p, end - p, ", leak_rx:%d",
-+			       le32_to_cpu(pcysta->leak_slot.cnt_rximr));
-+
-+	if (pcysta->collision_cnt)
-+		p += scnprintf(p, end - p, ", collision:%d",
-+			       pcysta->collision_cnt);
-+
-+	if (pcysta->skip_cnt)
-+		p += scnprintf(p, end - p, ", skip:%d",
-+			       le16_to_cpu(pcysta->skip_cnt));
-+
-+	p += scnprintf(p, end - p,
-+		       "\n %-15s : avg_t[wl:%d/bt:%d/lk:%d.%03d]",
-+		       "[cycle_stat]",
-+		       le16_to_cpu(pcysta->cycle_time.tavg[CXT_WL]),
-+		       le16_to_cpu(pcysta->cycle_time.tavg[CXT_BT]),
-+		       le16_to_cpu(pcysta->leak_slot.tavg) / 1000,
-+		       le16_to_cpu(pcysta->leak_slot.tavg) % 1000);
-+	p += scnprintf(p, end - p,
-+		       ", max_t[wl:%d/bt:%d(>%dms:%d)/lk:%d.%03d]",
-+		       le16_to_cpu(pcysta->cycle_time.tmax[CXT_WL]),
-+		       le16_to_cpu(pcysta->cycle_time.tmax[CXT_BT]),
-+		       dm->bt_slot_flood, dm->cnt_dm[BTC_DCNT_BT_SLOT_FLOOD],
-+		       le16_to_cpu(pcysta->leak_slot.tamx) / 1000,
-+		       le16_to_cpu(pcysta->leak_slot.tamx) % 1000);
-+	p += scnprintf(p, end - p, ", bcn[all:%d/ok:%d/in_bt:%d/in_bt_ok:%d]",
-+		       le16_to_cpu(pcysta->bcn_cnt[CXBCN_ALL]),
-+		       le16_to_cpu(pcysta->bcn_cnt[CXBCN_ALL_OK]),
-+		       le16_to_cpu(pcysta->bcn_cnt[CXBCN_BT_SLOT]),
-+		       le16_to_cpu(pcysta->bcn_cnt[CXBCN_BT_OK]));
-+
-+	if (a2dp->exist) {
-+		p += scnprintf(p, end - p,
-+			       "\n %-15s : a2dp_ept:%d, a2dp_late:%d(streak 2S:%d/max:%d)",
-+			       "[a2dp_stat]",
-+			       le16_to_cpu(pcysta->a2dp_ept.cnt),
-+			       le16_to_cpu(pcysta->a2dp_ept.cnt_timeout),
-+			       a2dp->no_empty_streak_2s,
-+			       a2dp->no_empty_streak_max);
-+
-+		p += scnprintf(p, end - p, ", avg_t:%d, max_t:%d",
-+			       le16_to_cpu(pcysta->a2dp_ept.tavg),
-+			       le16_to_cpu(pcysta->a2dp_ept.tmax));
-+	}
-+
-+	if (le16_to_cpu(pcysta->cycles) <= 1)
-+		goto out;
-+
-+	slot_pair = BTC_CYCLE_SLOT_MAX / 2;
-+
-+	if (le16_to_cpu(pcysta->cycles) <= slot_pair)
-+		c_begin = 1;
-+	else
-+		c_begin = le16_to_cpu(pcysta->cycles) - slot_pair + 1;
-+
-+	c_end = le16_to_cpu(pcysta->cycles);
-+
-+	if (a2dp->exist)
-+		divide_cnt = 2;
-+	else
-+		divide_cnt = 6;
-+
-+	if (c_begin > c_end)
-+		goto out;
-+
-+	for (cycle = c_begin; cycle <= c_end; cycle++) {
-+		cnt++;
-+		s_id = ((cycle - 1) % slot_pair) * 2;
-+
-+		if (cnt % divide_cnt == 1) {
-+			if (a2dp->exist)
-+				p += scnprintf(p, end - p, "\n %-15s : ",
-+					       "[slotT_wermtan]");
-+			else
-+				p += scnprintf(p, end - p, "\n %-15s : ",
-+					       "[slotT_rxerr]");
-+		}
-+
-+		p += scnprintf(p, end - p, "->b%d",
-+			       le16_to_cpu(pcysta->slot_step_time[s_id]));
-+
-+		if (a2dp->exist)
-+			p += scnprintf(p, end - p, "(%d/%d/%d/%dM/%d/%d/%d)",
-+				       pcysta->wl_rx_err_ratio[s_id],
-+				       pcysta->a2dp_trx[s_id].empty_cnt,
-+				       pcysta->a2dp_trx[s_id].retry_cnt,
-+				       (pcysta->a2dp_trx[s_id].tx_rate ? 3 : 2),
-+				       pcysta->a2dp_trx[s_id].tx_cnt,
-+				       pcysta->a2dp_trx[s_id].ack_cnt,
-+				       pcysta->a2dp_trx[s_id].nack_cnt);
-+		else
-+			p += scnprintf(p, end - p, "(%d)",
-+				       pcysta->wl_rx_err_ratio[s_id]);
-+
-+		p += scnprintf(p, end - p, "->w%d",
-+			       le16_to_cpu(pcysta->slot_step_time[s_id + 1]));
-+
-+		if (a2dp->exist)
-+			p += scnprintf(p, end - p, "(%d/%d/%d/%dM/%d/%d/%d)",
-+				       pcysta->wl_rx_err_ratio[s_id + 1],
-+				       pcysta->a2dp_trx[s_id + 1].empty_cnt,
-+				       pcysta->a2dp_trx[s_id + 1].retry_cnt,
-+				       (pcysta->a2dp_trx[s_id + 1].tx_rate ? 3 : 2),
-+				       pcysta->a2dp_trx[s_id + 1].tx_cnt,
-+				       pcysta->a2dp_trx[s_id + 1].ack_cnt,
-+				       pcysta->a2dp_trx[s_id + 1].nack_cnt);
-+		else
-+			p += scnprintf(p, end - p, "(%d)",
-+				       pcysta->wl_rx_err_ratio[s_id + 1]);
-+	}
-+
-+out:
-+	return p - buf;
-+}
-+
- static int _show_fbtc_nullsta(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
- {
- 	struct rtw89_btc *btc = &rtwdev->btc;
-@@ -11901,6 +12098,8 @@ static int _show_fw_dm_msg(struct rtw89_dev *rtwdev, char *buf, size_t bufsz)
- 		p += _show_fbtc_cysta_v105(rtwdev, p, end - p);
- 	else if (ver->fcxcysta == 7)
- 		p += _show_fbtc_cysta_v7(rtwdev, p, end - p);
-+	else if (ver->fcxcysta == 8)
-+		p += _show_fbtc_cysta_v8(rtwdev, p, end - p);
- 
- 	p += _show_fbtc_nullsta(rtwdev, p, end - p);
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 2e6d1be3a751..d1678a8b5872 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3665,6 +3665,31 @@ struct rtw89_btc_fbtc_cysta_v7 { /* statistics for cycles */
- 	__le32 except_map;
- } __packed;
- 
-+struct rtw89_btc_fbtc_cysta_v8 { /* statistics for cycles */
-+	u8 fver;
-+	u8 rsvd;
-+	u8 collision_cnt; /* counter for event/timer at the same time */
-+	u8 except_cnt;
-+
-+	u8 wl_rx_err_ratio[BTC_CYCLE_SLOT_MAX];
-+
-+	struct rtw89_btc_fbtc_a2dp_trx_stat_v4 a2dp_trx[BTC_CYCLE_SLOT_MAX];
-+
-+	__le16 skip_cnt;
-+	__le16 cycles; /* total cycle number */
-+	__le16 rsvd1;
-+
-+	__le16 slot_step_time[BTC_CYCLE_SLOT_MAX]; /* record the wl/bt slot time */
-+	__le16 slot_cnt[CXST_MAX]; /* slot count */
-+	__le16 bcn_cnt[5]; /* CXBCN_BT_PROTECT_OK added in v8 */
-+
-+	struct rtw89_btc_fbtc_cycle_time_info_v5 cycle_time;
-+	struct rtw89_btc_fbtc_cycle_a2dp_empty_info a2dp_ept;
-+	struct rtw89_btc_fbtc_cycle_leak_info_v7 leak_slot;
-+
-+	__le32 except_map;
-+} __packed;
-+
- union rtw89_btc_fbtc_cysta_info {
- 	struct rtw89_btc_fbtc_cysta_v2 v2;
- 	struct rtw89_btc_fbtc_cysta_v3 v3;
-@@ -3672,6 +3697,7 @@ union rtw89_btc_fbtc_cysta_info {
- 	struct rtw89_btc_fbtc_cysta_v5 v5;
- 	struct rtw89_btc_fbtc_cysta_v105 v105;
- 	struct rtw89_btc_fbtc_cysta_v7 v7;
-+	struct rtw89_btc_fbtc_cysta_v8 v8;
+ 	/* keep it to be the last as default entry */
+@@ -340,7 +340,7 @@ static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
+ 	 .fwlrole = 0,   .frptmap = 0,    .fcxctrl = 0,  .fcxinit = 0,
+ 	 .fwevntrptl = 0, .fwc2hfunc = 1, .drvinfo_ver = 0, .info_buf = 1024,
+ 	 .max_role_num = 5, .fcxosi = 0,  .fcxmlo = 0,   .bt_desired = 7,
+-	 .fcxtrx = 0,
++	 .fcxtrx = 0,    .fcxtxpwr = 0,
+ 	},
  };
  
- struct rtw89_btc_fbtc_cynullsta_v1 { /* cycle null statistics */
+@@ -3589,10 +3589,12 @@ static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 index)
+ 		if (ver->drvinfo_ver == 3 || ver->drvinfo_ver == 103)
+ 			index = 4;
+ 
+-		if (ver->fcxtrx == 7 || ver->fcxtrx == 107)
++		if (ver->fcxtxpwr == 1)
++			rtw89_fw_h2c_cxtxpwr_v9(rtwdev, index, 1);
++		else if (ver->fcxtrx == 7 || ver->fcxtrx == 107)
+ 			rtw89_fw_h2c_cxtxpwr_v7(rtwdev, index);
+ 		else if (ver->fcxtrx == 9)
+-			rtw89_fw_h2c_cxtxpwr_v9(rtwdev, index);
++			rtw89_fw_h2c_cxtxpwr_v9(rtwdev, index, 9);
+ 		break;
+ 	case CXDRVINFO_FDDT:
+ 		if (ver->drvinfo_ver == 3 || ver->drvinfo_ver == 103)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 7fee587a8162..57fa1ce080dd 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -4390,6 +4390,7 @@ struct rtw89_btc_ver {
+ 	u8 fcxmlo;
+ 	u8 bt_desired;
+ 	u8 fcxtrx;
++	u8 fcxtxpwr;
+ };
+ 
+ struct rtw89_btc_btf_fwinfo {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 33eb09e56f95..5b33bdb5a3e8 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -7458,7 +7458,7 @@ int rtw89_fw_h2c_cxtxpwr_v7(struct rtw89_dev *rtwdev, u8 type)
+ 	return ret;
+ }
+ 
+-int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type)
++int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type, u8 ver)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+ 	struct rtw89_btc_dm *dm = &btc->dm;
+@@ -7470,14 +7470,14 @@ int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type)
+ 
+ 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
+ 	if (!skb) {
+-		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_ctrl\n");
++		rtw89_err(rtwdev, "failed to alloc skb for h2c cxtxpwr\n");
+ 		return -ENOMEM;
+ 	}
+ 	skb_put(skb, len);
+ 	h2c = (struct rtw89_h2c_cxtxpwr_v9 *)skb->data;
+ 
+ 	h2c->hdr.type = type;
+-	h2c->hdr.ver = 9;
++	h2c->hdr.ver = ver;
+ 	h2c->hdr.len = sizeof(*h2c) - H2C_LEN_CXDRVHDR_V7;
+ 	if (dm->wl_tx_pwr_phy_map == BIT(RTW89_PHY_1))
+ 		h2c->pwr = rp.wl_tx_power[RTW89_PHY_1] & 0xff;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 294399bf57b1..5df3bb97249a 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -5538,7 +5538,7 @@ int rtw89_fw_h2c_cxdrv_trx_v9(struct rtw89_dev *rtwdev, u8 type);
+ int rtw89_fw_h2c_cxdrv_trx_v107(struct rtw89_dev *rtwdev, u8 type);
+ int rtw89_fw_h2c_cxdrv_rfk(struct rtw89_dev *rtwdev, u8 type);
+ int rtw89_fw_h2c_cxtxpwr_v7(struct rtw89_dev *rtwdev, u8 type);
+-int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type);
++int rtw89_fw_h2c_cxtxpwr_v9(struct rtw89_dev *rtwdev, u8 type, u8 ver);
+ int rtw89_fw_h2c_del_pkt_offload(struct rtw89_dev *rtwdev, u8 id);
+ int rtw89_fw_h2c_add_pkt_offload(struct rtw89_dev *rtwdev, u8 *id,
+ 				 struct sk_buff *skb_ofld);
 -- 
 2.25.1
 
