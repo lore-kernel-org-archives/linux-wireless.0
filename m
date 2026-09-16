@@ -1,121 +1,169 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D66148C40B
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 09:00:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789549290; cv=none; b=JfYoDX3DvZGDF9CVsUFYUr82myd3Xhw9RKtAdSZOphJMoqV7lveweuQ5rnDKqYeYc3dzANbaSJd2WJhvkmvCJ2vqZ2Z1geLTQ16eEw587u07dEJGvaDrZEW2sCml6zAOUzFJVh02BSUiMNtnL5VmP31VHI5SLTUwJo1Qc35iQQw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789549290; c=relaxed/simple;
-	bh=E4pA8mrhVzi8aijfss9MrTzwC4ghHE1lUJvjCb5iOYs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=P7XB0egVj40T29chjUpLZug45rjmjia7YjIk/b9D3fKA3alt3UessSR0xPwn5GrEFKWKKrIAGEqmm54nx34EMQyL1aOjaGk6swvFFODUxvDK4wlr2Y6NJeoDxsivX3rLeCxmNCTJBgw4mNcGIooYzh9cHGT17g3uJlBhZxJMrVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=KXQ6S7Zb; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7354A387A;
+	Wed, 16 Sep 2026 09:17:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789550248; cv=pass; b=lHHuB2u46bp0YcEBoAJuynWTDDHQQgWCc8gtER6AXpRQeD+OGxg4NtTejHZPQiTbso2XLAbu5LdJq0cqTkVzJBNDga/fqcjya3f6a5okxHWnrLityy1q/jO6ILZCsxYY1N59RvL24aNcI+KX+9jclJ2lePkIQDusLcTBfQFNxIE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789550248; c=relaxed/simple;
+	bh=9apGcAGF+qN+WdJNOYa47ONmDgzcaDL77nJ6s3G6f94=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=KaXSUeuH2XXuRMeKOEF5hrmLW+mxdcmyipF2MttjZaEKl3ofZpfc+ubrjRmEUL1LIhtdNhozloH3xUNuG2QownNbBRNSqusDHRLyRrrskvIlLZ2v2dRfyFKRhFQElBeC54tsmmLlG7FsSoEBgYlN3ZPr5wqe4RnJPSlu+WovV/k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=LOgzLAs4; arc=pass smtp.client-ip=185.185.170.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="KXQ6S7Zb"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68G90ocmE2241907, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789549251; bh=E4pA8mrhVzi8aijfss9MrTzwC4ghHE1lUJvjCb5iOYs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=KXQ6S7ZbQNruFjmKo4XxkP9otfQF/t1OMVAAs2s0PdUDCLb9+ndiHxIMCGkTVh+26
-	 BEZNBeR4GIwdiEswBCfnbK8P5eIKmrxU2GU9EjcumfoGbIb09puw1bYSVu53Q/8wgx
-	 DSp9YhV6Q7iLbjh7NhkaO2wWCCBWf3n24/NleKUkClxPJvdBhg4NmWHPivDDqZmrLP
-	 ouELO8wFzuRZIZ+u2mB93uZR5+SFIE7D1YYVDa0Vm7hJVYGvkhbfrp9qdxeXxH75Oq
-	 mIpvkNAXZwxgD/LT2PImt46n1qsQWPnurkpx9KWZoOtNbIFGYXVeohu2P+ITnxzS+v
-	 rDUzcj+dUl2+A==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68G90ocmE2241907
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 16 Sep 2026 17:00:51 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 17:00:50 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 16 Sep 2026 17:00:50 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 16 Sep 2026 17:00:50 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "i.mafifi17@gmail.com" <i.mafifi17@gmail.com>
-Subject: RE: [PATCH rtw-next v3] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Topic: [PATCH rtw-next v3] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Index: AQHdRIZF9nRMVUbxQUC9Ami7rwCNVrbQ3QpwgAANbpA=
-Date: Wed, 16 Sep 2026 09:00:49 +0000
-Message-ID: <874dbf3b9c11407cb6106efb29eddce3@realtek.com>
-References: <5e0ce93e-0615-405e-956c-0f8dd8a543d9@gmail.com>
- <40bf5c51a1c24677bbd5e1ede8cbc5ce@realtek.com>
-In-Reply-To: <40bf5c51a1c24677bbd5e1ede8cbc5ce@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="LOgzLAs4"
+Received: from fauth-c2-smtp.messagingengine.com (fauth-c2-smtp.messagingengine.com [204.75.18.201])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: jmtilli)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hlCvL4YHpz49Q5T;
+	Wed, 16 Sep 2026 12:17:02 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
+	t=1789550224;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ZXpwDz6DoWWBmQ6vDNVRxdpcZSSALaEWv74i0upVdU=;
+	b=LOgzLAs4BikP/sgnQAfLugwVmoLTCaaR6pBGXA1afPjrpCv8xZ/XnHqdolLosB9Z928jgz
+	gUC1WbzWA3saYj/NlMXzY9Fx2IsiRZ+G1d/NRMZsLjMl6mixZRfJxp4/HOFQvH0OX9fr5M
+	fIExVqAoITO+kWu0iRMKXxdqsywyX0yt4e4HeIfupMcULbcornYNcOAeF53fr4xae0tZOi
+	cogbMyXpR/kYZ+yd1EWN0o65wR6CWx3xqmJnwO1aTVTv7yozoIYp+Omz6mQxHSKPmqL/CW
+	Hf2JQUn0Revkw1uCxFo+keDNbJ8/sbDMdgSv+FcoEwNk+Q/+ZjNME7Pae+ENEA==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789550224;
+	b=NGsvDT5a/D5ir8PsCu1YTvoejFwVxfILAw8mbusf8jcy0Befo7S6EgbCGn2XYE5e3NUEdq
+	kvgfjp4IsId7XRwGXOfaW0XGlS+RVtTO/xfLLlaTvN3yWoizUDYa7FKexRFFDuVwQYlBSb
+	kE3qEYw9DUxj8JcdEqiJghgJ3YpQGsjpo4dIuUnc4k+/i0jGkxyBLl5BpOdbkdO3CvXAQl
+	loqkxHgAtHbnqwGU4ZOjlO8+VTx2lrjcgCe8DKlx/OLWzFsLBzMse2BncHy9xV7iitf99+
+	56uvEQlqXRy6s8kAOcLVijWW2z5Mai/pMMYpJ9Z/ma/fuP5spzz+kVgHJ/qmYA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
+	s=lahtoruutu; t=1789550224;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ZXpwDz6DoWWBmQ6vDNVRxdpcZSSALaEWv74i0upVdU=;
+	b=QaZDi5PRFHJw2YLEriC+I9FJuecvdYIKGxF2MwFomYnNj/WiyC04XmYLvrQR9TT1YrMnBW
+	XvM5KBxSJftPOuuDw48YeC0bvLzaRjRThXIUIg1RC2ihUI6eqVVp0zLe0C4rQyKqvXn2EQ
+	tG/jrxZT5asy1ZPaZ3OQxbdDWuUS0jotYa/kv7LLO5xfkhTJ4vMp7J1iz6zEJR6GmWtdSz
+	pmQOvF+SQ1AWYwyXTY0kb0H6JT7v2FXyDNsXL5s/ybHq9rHdH6BAnvKTcqJfwJD5ICGkp6
+	O/uNL1xpjDFaQzOUPayvoSjgNagiqCR1WE+Pyr5oLwyA5jWTwfW8koJ7rKsL5Q==
+ARC-Authentication-Results: i=1;
+	ORIGINATING;
+	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfauth.ams.internal (Postfix) with ESMTP id 8E28B198003A;
+	Wed, 16 Sep 2026 05:17:01 -0400 (EDT)
+Received: from ams-imap-13 ([10.64.2.33])
+  by ams-compute-02.internal (MEProxy); Wed, 16 Sep 2026 05:17:01 -0400
+X-ME-Sender: <xms:iV6qag3fwJZVElS11KOnACeO3JGDmX_uwUJvl8TgfoB81E3A3vBJTg>
+    <xme:iV6qal56Dzqp_NRsS9Es8Vuey_S8mDBuDqKiHnugv7udTKHByS_h2x7KhaWC9KEU3
+    ZFj6u_mUwXrGGZgRvLUvPqFAckzru_7RfuhLscUhqlA1JtFSH91NSE>
+X-ME-Proxy-Cause: dmFkZTGNFtvyF6MZNYMeLjLWJ41+we1JJ2Ix4Ro8hXfbflboz9ZBw6ovM/eey9Gijq0/Iq
+    aPwhDw8Qs0gEeTKSlITUHQSLt0dbFE5HrptM2obUWfKKcjNRHWOJjELo9P5f3QEsYpsE6d
+    hrW5Y+e/1UX012oUQk2r8ajWj1yE2k4hnhEzGiUXQ2NZpcbroifSXrsO8hYkY4GZvOPXW5
+    babRbJSvfgsF0DJ+bk/amnon7PS+3s261lu//dm2pq9kX+yE0j/XwQTCgkJ5QWBcdzXRyp
+    IvmjBKmjAjCc36wGn77wxm/mB3uS0XnN641PdGPuNW6NRJnwXoV5AaGiTKSGXWUb2sv2kW
+    srTKTE258K+d/Dwk2y/m0SKBTkVT7iUPkU1kdUtkFDK9au+RML61NpjAQSvMuS2QklOCAT
+    UAE0Hclbs+lQFAMq3R/mv2I+geAjMoF/L4gApGDO6Ok4deMGQcUNbcrZ2rTidFmHrHZzx/
+    gQMgSOeBNDvD9iy9e0dl1J5ZBX04VAXhXHLTuesqaH0VHp1GqpyU+6RzZ9I6Vnu/y6GVaA
+    BUHGfOrmUhAdNu0TKM/MpcKO7bndP+Kp/1Gmkn31I3yzIkbIc5y04Ohkm3zMV2cLZp4SOD
+    mE6ShLsWg4EeG8xoB2+/E/2wMsc/KbkcfJAiIpiyOo86TfLmsaLXCTMeEgZg
+X-ME-Proxy: <xmx:jV6qag_xAfBF4b7JfLUzVt_CTM_U8mWr7A_Fmw2jJJINzbR-C7OltQ>
+    <xmx:jV6qakIvhColpei7gd9PzH58eLkXDhYxtHsZOf4mSPorf1AdaldRnA>
+    <xmx:jV6qakuRhvl58_-z8GXRpFgARl3MkEUjJMCJkpvj-5fzdjVRb-5nDw>
+    <xmx:jV6qatltm3i7OvXc1xh20Y-yn0KjYy3bt86NYaMQOUa0ni1awM2SLg>
+    <xmx:jV6qarkHNZlZSzvbVHQJBCQkSeFEKTwE3m9W_toSFDjvBi2RYo-4MH1r>
+Feedback-ID: i02414972:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id C76DFF80089; Wed, 16 Sep 2026 05:16:57 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-ThreadId: AaJBIn-uFwMB
+Date: Wed, 16 Sep 2026 12:16:37 +0300
+From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
+To: "Manivannan Sadhasivam" <mani@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, "Jeff Hugo" <jeff.hugo@oss.qualcomm.com>,
+ "Jeff Johnson" <jjohnson@kernel.org>,
+ "Bjorn Andersson" <andersson@kernel.org>,
+ "Konrad Dybcio" <konradybcio@kernel.org>,
+ "Eric Dumazet" <edumazet@google.com>,
+ "Kuniyuki Iwashima" <kuniyu@google.com>, "Paolo Abeni" <pabeni@redhat.com>,
+ "Willem de Bruijn" <willemb@google.com>,
+ "David S . Miller" <davem@davemloft.net>, "Jakub Kicinski" <kuba@kernel.org>,
+ "Simon Horman" <horms@kernel.org>, "Mihai Moldovan" <ionic@ionic.de>,
+ "Denis Kenzior" <denkenz@gmail.com>, "Marcel Holtmann" <marcel@holtmann.org>,
+ "Andy Gross" <agross@kernel.org>, linux-kernel@vger.kernel.org,
+ mhi@lists.linux.dev, linux-wireless@vger.kernel.org,
+ ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+ netdev@vger.kernel.org
+Message-Id: <9ffaeae1-3768-408b-8434-9f1704412fbe@app.fastmail.com>
+In-Reply-To: 
+ <bjfwy4usrfbrabmcp4xsr65nqwdpuryvmrb6tzp6k2ckmdx27h@kvf7idvsugsm>
+References: <20260915054207.2513877-1-juha-matti.tilli@iki.fi>
+ <20260915054207.2513877-4-juha-matti.tilli@iki.fi>
+ <bjfwy4usrfbrabmcp4xsr65nqwdpuryvmrb6tzp6k2ckmdx27h@kvf7idvsugsm>
+Subject: Re: [PATCH v7 03/15] net: qrtr: fit node ID + port number combination into
+ unsigned long
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-UGluZy1LZSBTaGloIHdyb3RlOg0KPiBCaXR0ZXJibHVlIFNtaXRoIDxydGw4ODIxY2VyZmUyQGdt
-YWlsLmNvbT4gd3JvdGU6DQo+ID4gQEAgLTQ5OSwxNiArNTA2LDIxIEBAIHN0YXRpYyB2b2lkIHJ0
-d191c2JfdHhfcXVldWVfcHVyZ2Uoc3RydWN0IHJ0d191c2IgKnJ0d3VzYikNCj4gPg0KPiA+ICBz
-dGF0aWMgdm9pZCBydHdfdXNiX3dyaXRlX3BvcnRfY29tcGxldGUoc3RydWN0IHVyYiAqdXJiKQ0K
-PiA+ICB7DQo+ID4gLSAgICAgICBzdHJ1Y3Qgc2tfYnVmZiAqc2tiID0gdXJiLT5jb250ZXh0Ow0K
-PiA+ICsgICAgICAgc3RydWN0IHJ0d191c2Jfd3JpdGVfZGF0YV9jYiAqY2IgPSB1cmItPmNvbnRl
-eHQ7DQo+ID4NCj4gDQo+IEkgdGhpbmsgaGVyZSBpcyBhIHJhY2luZyB3aXRoIHRpbWVvdXQgY2Fz
-ZSBvZiB3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVvdXQoKS4NCj4gDQo+ICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIENQVTAgICAgICAgICAgICAgICAgICAgICAgQ1BVMQ0KPiAgICAgICAgICAg
-IChydHdfdXNiX3dyaXRlX3BvcnRfY29tcGxldGUpICAgICAgICAgKHJ0d191c2Jfd3JpdGVfZGF0
-YSkNCj4gDQo+ICAgICAgICAgICAgY2IgPSB1cmItPmNvbnRleHQNCj4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgd2FpdF9mb3JfY29tcGxldGlvbl90aW1l
-b3V0KCkgdGltZW91dA0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICBrZnJlZShjYik7DQo+ICAgICAgICAgICAgY2ItPnN0YXR1cyA9IHVyYi0+c3RhdHVz
-Ow0KPiAgICAgICAgICAgKGNiIGlzIGZyZWUtYWZ0ZXItdXNlKQ0KDQpmaXggdHlwbw0KICAgICAg
-ICAgICAgKGNiIGlzIHVzZS1hZnRlci1mcmVlKQ0KDQoNCj4gDQo+IHJ0dzg5IGhhbmRsZXMgdGhp
-cyBraW5kIG9mIHByb2JsZW0gYnkgUkNVLiBZb3UgY2FuIHJlZmVyZW5jZQ0KPiBydHc4OV93YWl0
-X2Zvcl9jb25kX2V2YWwoKSB0byBrbm93IGhvdyBpdCBkb2VzLg0KPiANCj4gPiAtICAgICAgIGRl
-dl9rZnJlZV9za2JfYW55KHNrYik7DQo+ID4gKyAgICAgICBjYi0+c3RhdHVzID0gdXJiLT5zdGF0
-dXM7DQo+ID4gKyAgICAgICBjb21wbGV0ZSgmY2ItPmRvbmUpOw0KPiA+ICsgICAgICAgZGV2X2tm
-cmVlX3NrYl9hbnkoY2ItPnNrYik7DQo+ID4gKyAgICAgICBpZiAoIWNiLT5zeW5jKQ0KPiA+ICsg
-ICAgICAgICAgICAgICBrZnJlZShjYik7DQo+ID4gIH0NCj4gPg0KPiA+ICBzdGF0aWMgaW50IHJ0
-d191c2Jfd3JpdGVfZGF0YShzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2LA0KPiA+ICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHN0cnVjdCBydHdfdHhfcGt0X2luZm8gKnBrdF9pbmZvLA0KPiA+
-IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4ICpidWYpDQo+ID4gKyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgdTggKmJ1ZiwgYm9vbCBzeW5jKQ0KPiA+ICB7DQo+ID4gICAgICAg
-ICBjb25zdCBzdHJ1Y3QgcnR3X2NoaXBfaW5mbyAqY2hpcCA9IHJ0d2Rldi0+Y2hpcDsNCj4gPiAr
-ICAgICAgIHN0cnVjdCBydHdfdXNiX3dyaXRlX2RhdGFfY2IgKmNiOw0KPiA+ICAgICAgICAgc3Ry
-dWN0IHNrX2J1ZmYgKnNrYjsNCj4gPiAgICAgICAgIHVuc2lnbmVkIGludCBzaXplOw0KPiA+ICAg
-ICAgICAgdTggcXNlbDsNCj4gPiBAQCAtNTI4LDExICs1NDAsMjkgQEAgc3RhdGljIGludCBydHdf
-dXNiX3dyaXRlX2RhdGEoc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwNCj4gPiAgICAgICAgIHJ0d190
-eF9maWxsX3R4X2Rlc2MocnR3ZGV2LCBwa3RfaW5mbywgc2tiKTsNCj4gPiAgICAgICAgIHJ0d190
-eF9maWxsX3R4ZGVzY19jaGVja3N1bShydHdkZXYsIHBrdF9pbmZvLCBza2ItPmRhdGEpOw0KPiA+
-DQo+ID4gKyAgICAgICBjYiA9IGttYWxsb2Nfb2JqKCpjYiwgR0ZQX0tFUk5FTCk7DQo+ID4gKyAg
-ICAgICBpZiAoIWNiKSB7DQo+ID4gKyAgICAgICAgICAgICAgIGRldl9rZnJlZV9za2JfYW55KHNr
-Yik7DQo+ID4gKyAgICAgICAgICAgICAgIHJldHVybiAtRU5PTUVNOw0KPiA+ICsgICAgICAgfQ0K
-PiA+ICsNCj4gPiArICAgICAgIGluaXRfY29tcGxldGlvbigmY2ItPmRvbmUpOw0KPiA+ICsgICAg
-ICAgY2ItPnN0YXR1cyA9IC1FSU5QUk9HUkVTUzsNCj4gPiArICAgICAgIGNiLT5za2IgPSBza2I7
-DQo+ID4gKyAgICAgICBjYi0+c3luYyA9IHN5bmM7DQo+ID4gKw0KPiA+ICAgICAgICAgcmV0ID0g
-cnR3X3VzYl93cml0ZV9wb3J0KHJ0d2RldiwgcXNlbCwgc2tiLA0KPiA+IC0gICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHJ0d191c2Jfd3JpdGVfcG9ydF9jb21wbGV0ZSwgc2tiKTsNCj4g
-PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBydHdfdXNiX3dyaXRlX3BvcnRfY29t
-cGxldGUsIGNiKTsNCj4gPiAgICAgICAgIGlmICh1bmxpa2VseShyZXQpKSB7DQo+ID4gICAgICAg
-ICAgICAgICAgIHJ0d19lcnIocnR3ZGV2LCAiZmFpbGVkIHRvIGRvIFVTQiB3cml0ZSwgcmV0PSVk
-XG4iLCByZXQpOw0KPiA+ICAgICAgICAgICAgICAgICBkZXZfa2ZyZWVfc2tiX2FueShza2IpOw0K
-PiA+ICsgICAgICAgICAgICAgICBrZnJlZShjYik7DQo+ID4gKyAgICAgICB9IGVsc2UgaWYgKHN5
-bmMpIHsNCj4gPiArICAgICAgICAgICAgICAgaWYgKCF3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVv
-dXQoJmNiLT5kb25lLCBzZWNzX3RvX2ppZmZpZXMoNSkpKQ0KPiA+ICsgICAgICAgICAgICAgICAg
-ICAgICAgIHJldCA9IC1FVElNRURPVVQ7DQo+ID4gKyAgICAgICAgICAgICAgIGVsc2UNCj4gPiAr
-ICAgICAgICAgICAgICAgICAgICAgICByZXQgPSBjYi0+c3RhdHVzOw0KPiA+ICsgICAgICAgICAg
-ICAgICBrZnJlZShjYik7DQo+ID4gICAgICAgICB9DQo+ID4NCj4gPiAgICAgICAgIHJldHVybiBy
-ZXQ7DQo+IA0KDQo=
+On Wed, Sep 16, 2026, at 10:01, Manivannan Sadhasivam wrote:
+> On Tue, Sep 15, 2026 at 08:41:55AM +0300, Juha-Matti Tilli wrote:
+> > From: Mihai Moldovan <ionic@ionic.de>
+> > 
+> > The flow control implementation uses a radix tree to store node ID and
+> > port number combinations and the key length is hardcoded to unsigned
+> > long.
+> > 
+> > The original implementation shifted the node ID up by 32 bits and added
+> > the port number to the lower 32 bits of the unsigned long value to
+> > create a key.
+> > 
+> > Unfortunately, since both node IDs and port numbers are defined as u32,
+> > this will overflow on platforms where sizeof(unsigned long) < 8 (which
+> > are most 32 bit platforms) and essentially just drop the node ID part.
+> > 
+> > To fix this, build the key in a generic way, using half of the unsigned
+> > long space for the node ID and the other half for the port number.
+> > 
+> > This will be transparent to platforms where sizeof(unsigned long) >= 8
+> > and fix overflow issues otherwise.
+> > 
+> > The caveat, of course, is that, for platforms where
+> > sizeof(unsigned long) < 8, the supported amount of node IDs and port
+> > numbers will be severely limited - to half of sizeof(unsigned long),
+> > which typically will be 16 bits. Needless to say, we have to check if
+> > both values fit into this limit.
+> > 
+> > This limitation is probably not going to be an issue in real-world
+> > scenarios, but if it turns out to be one after all, we could switch from
+> > a radix tree implementation to an XArray implementation.
+> > 
+> 
+> Documentation/core-api/xarray.rst says:
+> 
+> "If your index can be larger than ``ULONG_MAX`` then the XArray is not the data
+> type for you."
+> 
+> So the fix is to not make XArray work, but switch over to some other storage
+> mechanism instead of XArray, like hashtable.
+
+I think I will drop this along with patch 04/15 from the next series,
+as it fixes one bug but introduces another, and those bugs should
+probably be irrelevant for this patch series.
+
+Indeed, that commit message by Mihai wasn't entirely correct: XArray
+will not work here.
+
+BR, Juha-Matti
