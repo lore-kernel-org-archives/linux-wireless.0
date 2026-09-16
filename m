@@ -1,86 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazolkn19013079.outbound.protection.outlook.com [52.103.51.79])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24504B827F
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 18:17:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789582698; cv=none; b=NIXiLbZNH2ODUGOe4h/nIRIXCpQik8mLw0gDC9KOaj9wBbkuK28cnePd/vzPI+M869ZS9YMGhiJPFsJ1nl8NaQ3PEwYfZb7D/bBAp4wazxBRQ9kLLgGB+YJFzBcdgZ4tnju+9y0Jk39gM55Z81/nGs+ccOWThr9KLCoG488Errs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789582698; c=relaxed/simple;
-	bh=qmNHsftrPigc6z9lAhD5TrQ9HA5z1cFLq5Fdk1Pby1Q=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=E42+oSXHpOlNrh/ISTJr/a6X4UExoQLiON9mo40SBiT+PpxSi6QFS9Li8DEwKtaHhllBbTuqv1BWPNeYUnw48WnHzTFNaqYwGfrnfXVGLSiTiU9gJekL8OY3G8aZvFyjhRSpC/PMHnYvcTXCMg0oD/qDWy9euefU5aV026119HE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=luD3KYPt; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 079194D6C25;
+	Wed, 16 Sep 2026 18:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.51.79
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789583886; cv=fail; b=uAmGeqaPln7qflBEjSQA9ZXCm3D97/VY5o+H2m/GNji+0Ayj2WUEzsx1EomKmOzXJSaYsLuQ2gYNsJnrTevzJbRqR/d1mMqMwmF6jAslDf0aZeTLEqctt4M7rDPGcN2BtbnhGyYZU3GaGuonrpGkNlPz/0qLYODSJ4Fd/OgSWFU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789583886; c=relaxed/simple;
+	bh=XVmYLThRV8EZ/wLiZNlgSa/PzzcKDH6hbH1okwkv8Rs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=g7v+aZ6gpwRDcbJop6HK2TGKyyZmBSZ4I5CKhWAuvGDGjY1stcLKD4SWFYAAZX8Ad6h2IWOyOPPAOzpD3LmY/D0I+3tn7ylKSx9QZUNwAPFDXcHUMnfZ2HO0xaEP1tJ8rGOOw21djn67LajsG84iN1nSj5oGHned0ND5ecQmhlw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk; spf=pass smtp.mailfrom=hotmail.co.uk; dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b=bwQuhdGL; arc=fail smtp.client-ip=52.103.51.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="luD3KYPt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAF301F0089C
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 18:17:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789582674;
-	bh=NcQe03qyUu7W4K18zVzWNwv6MgOA45mAnb9g7/iXl8I=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=luD3KYPtQ6rVMU3canU+kY6TJZHae8NyVUBeWdM/TSLcgcyFEK9fHqsZ1Lf/ggrPJ
-	 +AQ62gV/2VLSfGIbVcm3QyD+DhZTf1ZWcGCI+LJQ5f8blfGn637DLQd0cvnGT8nR5V
-	 g1Drbzd11p8TrUI3uM7g39+m4LS3EYGDxxxRnlAdstpY2wJHyzZCTpO+IfOal5J/F1
-	 IhOMNQ/BmPqwUx/8F18mbeqf7+0srQYWLOOcOIyIjE97ZzzOG5bAR3gkXLMMQ1c7xF
-	 pl4hKbBH7Vkr6CLJK70t3r2GEdvHpXocftmnMqRKAftqA2OQmV6mJUzUgehhuO6z5y
-	 6qlQanImIhZkQ==
-Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b76ff64d78so1145496e87.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 11:17:54 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBwAxcRFQPNDhKsaKUDVRgxCRmMbKOnGs6H6jtaPrjoXDcsg8c2jFJ7GFamt1weU6X1Zrpcq5+dw+AwEyZN6OQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++nKWQEWl4pSfMO50a9l+JKsiyt6iWPwr/MZt92tGIPORPK4nZ+p
-	1PfjwkQnrcseayITojtLL13y3LbwBl/FvScc/YLk5FDsf9utsifLfQVSXcTdX9Zv9uXl4VjOIXA
-	GfzQnkkjHU65KMXn42he+83PyeMJvWxhOXXeEANI+9A==
-X-Received: by 2002:a05:6512:3345:b0:5b7:f0b9:ea7c with SMTP id
- 2adb3069b0e04-5b8b6605f11mr972331e87.8.1789582673568; Wed, 16 Sep 2026
- 11:17:53 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 16 Sep 2026 14:17:51 -0400
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 16 Sep 2026 14:17:51 -0400
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260907090956.2825703-1-arnd@kernel.org>
+	dkim=pass (2048-bit key) header.d=HOTMAIL.CO.UK header.i=@HOTMAIL.CO.UK header.b="bwQuhdGL"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=DOLlm/EdhZYeCsg3T5v6rYe514YtfR1x+KX/eWCxfisUlVE1BTzfJG+4qZJMFxCoTkRJq6/nD5iQuiYeB9k4ulyzwgee5TQ201GmFi2RXV7DJUflynn3/nVRV/fuQcloyHg7ay8ng6Gzpa/8OiWu8DaIRhcJLzuvdClYJzHH1n87dmXp5V8kAdKiDEyBVWcx5dc60xX979xMveJWwGN24ETcya2qPCkV7Et2u7eNqLBHvArSVj5Jd9ZopO1kla4i+jquwO7F6nJG1E3xB4l5q+/TOes64g19yq6//QzkMJa7ztiMIVNlNvGV2jywX48A0nazYCEK+QY3zcE92KcQAg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XVmYLThRV8EZ/wLiZNlgSa/PzzcKDH6hbH1okwkv8Rs=;
+ b=oZ9w5+kjXUvF+m0WwQoQMr0OjRW48ekHTdFZ23XoijRaBUspY8ZJVsbflf3UApstHJG1TLFoQolnfzigkcvsvd1cY/Kl2Oku56ReMyWwArtnO/6eTZyvRta2deaVsloOsd+C5Nhlrm73yjid/FUWfnCZPEx9K58Je5E/NkTq4Ih/4IFux+gWbI+VWwr5ppUFw1dQI7M+l5Puigy5ttVEqLRdHt5rfwtQ+Q8/vIEIKU/WFdX+ecFBohZRv77IWyQxBHJpaCJ2YUya2VAgBK7uzDRT1XCVRPjNX8JqCm/siKpxHRaLKlK55nxf7XJ0+bG0mSqaEoMmHqQQBxZigldb1g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.CO.UK;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XVmYLThRV8EZ/wLiZNlgSa/PzzcKDH6hbH1okwkv8Rs=;
+ b=bwQuhdGLy8lDqr9t0SWKlmo64udhXN837etAnno5a8jHFR80zbxeN089+da7LheSdpxyrIcJulPXcDAEKmrUiWb8fYgShbvWHelrV+PePrXZC2wLIxShnfPVkJb9OTopHChkm9RNAdSoRQTjZF0Klhy6Kt4P7GmaUa3gEfdUrUdH47Gp3rOFpblMDgPzGtSlBrUzLJgBtZQDcU1sKpDrdn6M1DXl9GAoqHBnXd1IREUjqVwLilwUI+Ffv1z6EXc3yMpsi9mUJIYOYSNJpivK2VrEPeCGp+LZ3bpz5RrgoxDBzm/HzsxmTizquvWMmmTVt8XZro4xqOLBdeyIKwB0cA==
+Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM (2603:10a6:20b:344::22)
+ by GV1P251MB0795.EURP251.PROD.OUTLOOK.COM (2603:10a6:150:52::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Wed, 16 Sep
+ 2026 18:37:23 +0000
+Received: from AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ ([fe80::2952:d4d0:4ba:8352]) by AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ ([fe80::2952:d4d0:4ba:8352%3]) with mapi id 15.21.0428.008; Wed, 16 Sep 2026
+ 18:37:23 +0000
+From: Aamir Ahmed <elb12345@hotmail.co.uk>
+To: =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= <jerome.pouiller@silabs.com>
+Cc: Aamir Ahmed <elb12345@hotmail.co.uk>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless v2] wifi: wfx: validate MIB read length before copying to caller
+Date: Wed, 16 Sep 2026 19:37:20 +0100
+Message-ID:
+ <AS8P251MB00014D0DDFBEADF55F743E0AC8B92@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM>
+X-Mailer: git-send-email 2.53.0.windows.1
+In-Reply-To: <3635048.QJadu78ljV@nb0018864>
+References: <AS8P251MB000155034FC391A2A54B9803C8BD2@AS8P251MB0001.EURP251.PROD.OUTLOOK.COM> <3635048.QJadu78ljV@nb0018864>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: LO4P123CA0401.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:189::10) To AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+ (2603:10a6:20b:344::22)
+X-Microsoft-Original-Message-ID:
+ <20260916183720.2867-1-elb12345@hotmail.co.uk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260907090956.2825703-1-arnd@kernel.org>
-Date: Wed, 16 Sep 2026 14:17:51 -0400
-X-Gmail-Original-Message-ID: <CAMRc=McRc9Aw-5WBipW5QhqqHp4+UKch15ui3E8a0srk2CUN7g@mail.gmail.com>
-X-Gm-Features: AcwNN1WT39KCCBGzK8bB5OYELfDMzkO3xawenRbklBZjDzeHGIgp80Nbi0LahYQ
-Message-ID: <CAMRc=McRc9Aw-5WBipW5QhqqHp4+UKch15ui3E8a0srk2CUN7g@mail.gmail.com>
-Subject: Re: [PATCH 0/2 v7] gpiolib: finish the legacy cleanup
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Kent Gibson <warthog618@gmail.com>, 
-	Johannes Berg <johannes@sipsolutions.net>, linux-kernel@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-sh@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AS8P251MB0001:EE_|GV1P251MB0795:EE_
+X-MS-Office365-Filtering-Correlation-Id: fd5aba19-ad7d-4c2c-46ff-08df14218c77
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|37011999003|8060799015|25010399006|51005399006|19110799012|15080799012|25031999004|6090799003|5072599009|23021999003|24021099003|55001999006|40105399003|2607281247196008|3412199025|440099028|26104999009|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?Yi9ndlBwWnRLREtKaHJobGtObG5GaDZMaWNoamt0SnBSaGhCVmU3WXpqOE5R?=
+ =?utf-8?B?UmMvNEhob1BHUVdYbVBTNm1WMnZNYml2MFBoRGVQLzgwSlpQR2tHRFpuK3gy?=
+ =?utf-8?B?UEFXazVzZkduYXk4aUdoUURmbnJRR3NvaElqRHdSemx1UUhGTEZYaDlLVVYz?=
+ =?utf-8?B?SHV0R0FzVmsrTjBmQjdobWVNa0IyNUcwU0hqYXc3bjZiV2JQNzVPNVRHOXhD?=
+ =?utf-8?B?N05tOUpHN3MvNGxrS1lxY0hTQzUrT3Nib21YcmtncmFJNjV3YUFyMkZISDJW?=
+ =?utf-8?B?NHFaME1wSThjRW9jRHJxbURvdWNZKzNDdVFwSnZPVUdkNUloQWZTRTVKaXhl?=
+ =?utf-8?B?QThoalhUOHp2SkUycDVreURGVHFEVXpIVGpGVGJSVkpobVJjT1ByUTZYeHVj?=
+ =?utf-8?B?Qzd4a2VYZ3JZV2ZMcllUa3R5MWFwakloS2JxL2lUZXRNbFY5a21HRDVsNW1s?=
+ =?utf-8?B?ZENLSEFXbXE4MEhJaEd3SUV0NExta3RBYzNXZUJ2bnkrS2FDNk1aUXo0YTVa?=
+ =?utf-8?B?dXQyR2dkSVdnSmd4V1dXamNWeW5NcDNlMDF6and4UWI5cm8wTmZJbU9vWmk5?=
+ =?utf-8?B?L3BXMytCMnNDK1VBSm5YYmtIUVBETHREVkJBY2RHYU5ncHJuczdmYlYzZ2hi?=
+ =?utf-8?B?MkxHME9ockdGRHAwZG56dU5aRzZvNWdRNGJpaU9XSWV5M0VvMGlKak1BeHRh?=
+ =?utf-8?B?a3MwYVkyNmIyS3hMNjlkV20vOTB5UGpvdTg5K3lBRmhXV0RHQ0ZhMS8yZDVW?=
+ =?utf-8?B?TDVYSTlYTVFOZlF4WVhDV1lLUE5zeW9MdTBObUVmbFAvaVd3K29HdWdWYXhi?=
+ =?utf-8?B?MFp5ZTJpNm5JU0RzdU5QK1hVckNVZmJ0TmNnTjROTlBQU1U3RStmTExFVnpY?=
+ =?utf-8?B?R1NveG1mUTFPVHN1bUo1ZUZPUHJIM0RvY0pLZlcwMzBhSW5OcHdTckh5OGN0?=
+ =?utf-8?B?QVQvYTQ3c1VFZUVTR2I3Mkd4Yk1rdXFwNkZRM1RheVVGWm5BTkVGOHYxYWZt?=
+ =?utf-8?B?cjBLVnBrNGtkOW1LNUl4SDVGczZUS0d1WUQ5KzZ1Uk1FWm13Vm1Ea292dGcz?=
+ =?utf-8?B?UW9YdUVoS1duSVlGS3g5Tzd0QkU4NjV6b0JlYUViaEZsaXhpTXZ1UlhBMzFr?=
+ =?utf-8?B?ZElWdGJxVjR6MnJDVDVlclFzRkxDZktkUTNFSUFBR2R4YktuRkEySWN4SjY5?=
+ =?utf-8?B?UWFOWC9CYXhaSEduNmd4YisyNDlaQ0NGbTJWT01pZGF2MDF4a2xCZGkxS2gx?=
+ =?utf-8?B?UnJGTm9HVVRJdWk3b0NnRjQ0Yzl3UmRYT3p1dm00VkhUMlpOUFlYbGxmQmd1?=
+ =?utf-8?B?bW83Z1lnUWFuY0dmenExTkZ1azdwZExhTlV3eStvYm55S2U4TFNIdnFGNlpF?=
+ =?utf-8?B?TFJRZlJ3RjdKZXdtMlpsbVA4cmxyUzRYVGxkalRtbVNueXVTZUFmY3ZMVWx6?=
+ =?utf-8?B?R3RoOUZETkZZUEpvQmJRdkRiR0dXSHZ0MHNsSEFBPT0=?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?TGZHMXQ2YzY2RkpVNVVRQ1RPZ3c5eWlwMEs3L1JVZG1CMSthRC92d2lDOHFT?=
+ =?utf-8?B?TVdmMEtiN2l0ZXk1c2dIN2FIT1pZWkVLV0JBMmpMT2djWGZESWszYWQ2d0Vz?=
+ =?utf-8?B?ZS9jNisrSUZUcys4Yis5c3Jndi9FM2hBdmNtVVZlMFZ1T3VUOU1lZWdJRXdw?=
+ =?utf-8?B?OHlpVDc0RmU3d0FIbEZzZis0bWdXbisrbWFtSWRnQ0lVZ3pHL0ZKdW40c2hH?=
+ =?utf-8?B?d1hNRk42MlB0M3pMeVRBVlMzaHJTOWM1U3Ewc1VNT2h1TnNqRHMrc1JVeGRF?=
+ =?utf-8?B?U2FCdVVvanVvVE1yWi82NDZZS3d1QkpweEQxUkhUWDArbWpnVlA4eVRJZnNq?=
+ =?utf-8?B?WXVDOTNXcVdEb0RMcXJnUm5welRDVTZqUTRad2tRTG4yOC94bi9kK09tdGRt?=
+ =?utf-8?B?Wm0xT0RJTkM5L20ybElxaDNTYzB4My9WNmxwUlNxWnd6VHNvQllhNUpKbU51?=
+ =?utf-8?B?TU83WHh3MElwN244ZHJOR0xRMUJuSXFCR1NvOXRQUmh3b056UTROWTBxTnRR?=
+ =?utf-8?B?WGZrL1hXQ0hlcUtBQmp3WlUvRkxTcW9iNVk5ZU14M0xMWEkyNTRnL1hqOU9Q?=
+ =?utf-8?B?M3FGaHNCRkNGVjR0ak5HcDkvSGc1cVphT0Vrd0lQS0FjbzdWMVRSSW9OR2ZO?=
+ =?utf-8?B?Ynd5d2d0dHdQWVM2S2pSb2MyejBDZUtSenlXVDFQSnFuRnpyWlh4bE8zbDFB?=
+ =?utf-8?B?bThBa1N0VUxTYXp3ODRnNUtJVnlzMUlGb1U2cHZQcllhWi9VczNsUjFZbGdM?=
+ =?utf-8?B?bTRUcVk4M3ovS3ZaSFFrcFRqOFFoTldQZUFPOHA1UFR6NEk5ZjFBbUpjMXE0?=
+ =?utf-8?B?Z0orVEZoZkxxQ3BJcElGUGsrTDBKNEQ1NHlyVnBlWE13ZGZseFV0a0NiZUM3?=
+ =?utf-8?B?dng0TTNVbjNaREpxek9SaWxIOS9GL0Q0VE43enAxV1RQWFdXWmZIZU4yY1NB?=
+ =?utf-8?B?bUtGQ3IyQnlPck5sTHkyUkIvdTZrcGRkam9xeU1JVnZzYUNlWEg2bHBKYTlH?=
+ =?utf-8?B?UG9DMWlTcVNUT2tiT2hOaG1mWWtoNisyZlNjc2JvdzRZNHVGek9PYVQyN2tL?=
+ =?utf-8?B?RnR3ejJkTkhtcTNaVTFEaUNkM2ZWVFNZZ0dkR2RaTXVIZ3lOSDh6aXdrZlF1?=
+ =?utf-8?B?a1o4dDBUUTFpSmcxTG85dWNKbW5YWmxaNXJtM1NUcTN5azI1UURONVYzNy9t?=
+ =?utf-8?B?OXp3aWtmUjRxVzFaWmtwallUSmVYL2lqVnBrVTRsSWlHZTNEUC9UazFya3Zq?=
+ =?utf-8?B?aUxrUkZGUHV6ZzlSZ3lucUw1Um9EZFFBTEo5U21GNFNEeCtZNVdKSW5qd2hM?=
+ =?utf-8?B?SURPWVU4WVlLLzBCOE1JU2NaOWcwNGRZaGVaYXdVUytGbnd3MWdTbjB0NzRm?=
+ =?utf-8?B?MklMRFVkRnhLeDRtMm9qWVluSXBpaXFBc1M0Y3B1ZEQxRGlhUjVOS2RFaVhz?=
+ =?utf-8?B?NG1iUXZZNWFzODZMc2FITWJvZWdoVEc0VGNxVzByN1hHdkUvT0VvNXludzcr?=
+ =?utf-8?B?eFdqL0trNDlPUGtkanBFZ2JNdmFTSzJwdnhwT1FTZ1JJZ0padFVJdWlEVUNp?=
+ =?utf-8?B?akxyZjUxQjgxdlZXeGg4b2N1RFA2cWRyOGZtUW5neWtMS0FSd1dEZVlkclhx?=
+ =?utf-8?B?czczekhwSk9uN0VpS2VDNmtUUDlwYmlKZmxkUjd1Rkg1L2Fpc3F5VmMyYnhR?=
+ =?utf-8?B?bEZoR1o3Nk5wUkxPRFpGaGR6WmxmdUk3aXVwVnQvcHI1YjQvU3BPbUExaVcy?=
+ =?utf-8?B?NW5ubVI4Um1qS3NPWmMxSmdZc1FhNUdHSUdFbWltVjZqL3k1RmhFL01RT0Ex?=
+ =?utf-8?B?V0NRcWlUSngvTjlodmp0SGRKVm5ueFhBUHB4T2JZcGFFOWlQRDc2WVdreEFV?=
+ =?utf-8?B?TkZpdnNyL0ZvdFRSdTdIcVRsT0ZFdWNmbyswSEdGRGpVREo2RkM5NEdubTky?=
+ =?utf-8?Q?zOeqlcV2TYi/bX2C89aiopYWERMCkm1d?=
+X-OriginatorOrg: sct-15-20-9412-3-msonline-outlook-fe3f5.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: fd5aba19-ad7d-4c2c-46ff-08df14218c77
+X-MS-Exchange-CrossTenant-AuthSource: AS8P251MB0001.EURP251.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Sep 2026 18:37:23.7342
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1P251MB0795
 
-On Mon, 7 Sep 2026 11:09:54 +0200, Arnd Bergmann <arnd@kernel.org> said:
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> These two patches are left from my cleanup series, finishing off the
-> work to turn off CONFIG_GPIOLIB_LEGACY by default, and removing the
-> include/linux/gpio.h header.
->
-> I had originally planned to send these during the merge window after all
-> the prerequisites made it in, but didn't finish that before my vacation,
-> so I'm sending it now.  I suppose this makes them 7.4 material now,
-> but at least the first one could stil be fast-tracked to 7.3 if there
-> is a good reason.
->
-> The second patch has to remove a few more leftover <linux/gpio.h>
-> inclusions that made it into 7.3-rc1 either from new code or from
-> conflicts with other changes.
->
+On Wed, Sep 16, 2026 at 10:37:28AM -0700, Jérôme Pouiller wrote:
+> Usually, you have to specify the name of the tool and the model used.
 
-With acks from SH and MIPS maintainers, I can take it for v7.4 through the
-GPIO tree.
+Sure, will add this extra info for v3. Thanks.
 
-Bart
+> Was this line generated by git-send-email?
+
+It comes from git format-patch --base=, not send-email. The base is
+df2908090cda ("Linux 7.3-rc2").
+
+Kind Regards
+Aamir A.
