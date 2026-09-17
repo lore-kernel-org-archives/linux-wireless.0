@@ -1,33 +1,38 @@
 Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8298D4B53E4;
-	Thu, 17 Sep 2026 12:08:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18D144E06CB;
+	Thu, 17 Sep 2026 12:19:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789646911; cv=none; b=uw29Z2NfeKLaISNZElvvrt5KOqP51E20UxN6Y/MfdoOHzQFL7PmquUtoGZ7apWRzhNXI8hh+l/T79+r9sUlpF/MS3V52GwG56mUKvNUP5bqz3n7q6C8qYKqz/oxY3MiSd9Qs6ZEu6dpS7BtMjuqWo8YmnD0eh7g0GxiC+Mgax34=
+	t=1789647607; cv=none; b=Is0hCsiT+JZho8aH7VwmqxU9F8BfVnwqPRJLG0BwG+adJY+Ql6FbyE5ibnkmR88qCD1Lpm/z5qzYnY3XJ44jtJmvR3I4UXL4Mupw6/S8B2jL8mbWAOh0rAGBkITzfBY7VZe2jm2SAVNoeomlwfVJkK800Tft/F8mLlfdYCVKVqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789646911; c=relaxed/simple;
-	bh=73+Q1OkGANOcwLIX6DZlsDyL6LquW8x11o9IXwKoigw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JY2tfZlKS7wyT2TJlyncTVbcYsgUqtLa/q5CdbDtkRQSOHbbHH6m929YRFiKAflQE5GOkIRKKU9GX0OlbktFpEfGL3r+eYaVflsrXND18gIM7+4SeIF5waEonfDHSlMkbbNWd+erARU7OiBFP8UsHRXJuur5HERlmFPGmpkPEtI=
+	s=arc-20240116; t=1789647607; c=relaxed/simple;
+	bh=/Ht/uW410A02q5PTUmIvyoNBxZk0HXuv+pzlZ8dp03k=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=H/qHkVoqgyKiZabdfemPz7IPmY0rhhNktuBX24F70vphK5YTX6QVYxcxTf1b3mpWcCfhh2xLGXf5VYlMcEG4oouDEkA1iyl6rzGkl7Z5E+gBbK2Z0eTyXyp/iOu00a9V+BRiun/SoEDx6i8iPnD1EMvkpNmBt6bQ/UY+/Gr3L/0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-05 (Coremail) with SMTP id zQCowAAHKkMq2KtqlDCACA--.42913S2;
-	Thu, 17 Sep 2026 20:08:10 +0800 (CST)
+	by APP-05 (Coremail) with SMTP id zQCowAAHKkPg2qtq5l+ACA--.43080S2;
+	Thu, 17 Sep 2026 20:19:44 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: andersson@kernel.org
-Cc: kvalo@qca.qualcomm.com,
+To: angelogioacchino.delregno@collabora.com
+Cc: linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
-	loic.poulain@oss.qualcomm.com,
-	wcn36xx@lists.infradead.org,
+	lorenzo@kernel.org,
+	matthias.bgg@gmail.com,
+	nbd@nbd.name,
+	ryder.lee@mediatek.com,
+	sean.wang@mediatek.com,
+	shayne.chen@mediatek.com,
 	Wentao Liang <vulab@iscas.ac.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH] wifi: wcn36xx: Fix tx-rings-empty state leak in platform_get_resources()
-Date: Thu, 17 Sep 2026 12:08:10 +0000
-Message-Id: <20260917120810.2150534-1-vulab@iscas.ac.cn>
+Subject: [PATCH] wifi: mt76: Fix of_node reference leak in mt76_get_rate_power_limits()
+Date: Thu, 17 Sep 2026 12:19:44 +0000
+Message-Id: <20260917121944.2150737-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -36,50 +41,96 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAAHKkMq2KtqlDCACA--.42913S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrKrW3Zw45Gw13Kr47WFyDJrb_yoWkJrc_GF
-	48WFZ7Jrs3Gr4UKF4kCr43Z3yFyr97W3WkG3ZrKa43A3y7A39rXry5Zw13Jwnrur4YyFnI
-	krnrJF1Yv342vjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbS8YjsxI4VWkCwAYFVCjjxCrM7CY07I20VC2zVCF04k26cxKx2IY
-	s7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4
-	kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_
-	Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
-	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1q6rW5McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkEbV
-	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2zVCS5cI20VAGYxC7MxkF
-	7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v1sIEY20_Gr43Wr
-	1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr1j6F4UJwCI42IY6I8E87Iv6x
-	kF7I0E14v26rxl6s0DYxBIdaVFxhVjvjDU0xZFpf9x07je0PfUUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwcNA2qrrRmDwQAAs5
+X-CM-TRANSID:zQCowAAHKkPg2qtq5l+ACA--.43080S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar47KryrZw1rZr1UGw4fGrg_yoW8KF45pF
+	W293yYkr1UJay7G3WIqF4fAa45tan2k3yUuF97G34rCws5uwn0qF12qa1YvF13AFy8ua4Y
+	yr1Ut3ZrGFWS9r7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPqb7Iv0xC_tr1lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6F4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxV
+	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7
+	v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0E0s8F02x267IIx4CEVc8vx2IErcIFxwAC
+	I402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrw
+	CF04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
+	5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtV
+	W8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY
+	1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I0E14v26rxl6s0DYxBIdaVFxhVjvjDU0xZFpf9x
+	07jbl19UUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRQNA2qrq02VlQAAs0
 
-wcn36xx_platform_get_resources() gets the "tx-rings-empty" smem state,
-which holds a reference, but only the wcn36xx_remove() path releases it.
-The reference is leaked on all the error paths taken when the mmio node
-cannot be parsed or the CCU or DXE memory cannot be mapped. Release it in
-the common cleanup label.
+mt76_find_power_limits_node() and mt76_find_channel_node() return nodes
+with the reference held, but mt76_get_rate_power_limits() overwrites the
+"txpower-<band>" node reference and never releases the channel node
+reference, leaking both.
 
-Fixes: f303a9311065 ("wcn36xx: Transition driver to SMD client")
+Drop the intermediate and the channel node reference on every exit path,
+and take a reference on the fallback node returned by
+mt76_find_power_limits_node() so the caller's of_node_put() is balanced.
+
+Fixes: 22b980badc0f ("mt76: add functions for parsing rate power limits from DT")
 Cc: stable@vger.kernel.org
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/eeprom.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index f34d64464f64..a55861e65481 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1555,6 +1555,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
- put_mmio_node:
- 	of_node_put(mmio_node);
- 	qcom_smem_state_put(wcn->tx_enable_state);
-+	qcom_smem_state_put(wcn->tx_rings_empty_state);
- 	return ret;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index afdb73661866..86f3fbb7e940 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -231,7 +231,8 @@ mt76_find_power_limits_node(struct mt76_dev *dev)
+ 		struct property *regd = of_find_property(cur, "regdomain", NULL);
  
+ 		if (!country && !regd) {
+-			fallback = cur;
++			of_node_put(fallback);
++			fallback = of_node_get(cur);
+ 			continue;
+ 		}
+ 
+@@ -429,7 +430,7 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 			      s8 target_power)
+ {
+ 	struct mt76_dev *dev = phy->dev;
+-	struct device_node *np;
++	struct device_node *np, *band_np;
+ 	const s8 *val;
+ 	char name[16];
+ 	char band;
+@@ -459,15 +460,18 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 		band = '6';
+ 		break;
+ 	default:
++		of_node_put(np);
+ 		return target_power;
+ 	}
+ 
+ 	snprintf(name, sizeof(name), "txpower-%cg", band);
+-	np = of_get_child_by_name(np, name);
+-	if (!np)
++	band_np = of_get_child_by_name(np, name);
++	of_node_put(np);
++	if (!band_np)
+ 		return target_power;
+ 
+-	np = mt76_find_channel_node(np, chan);
++	np = mt76_find_channel_node(band_np, chan);
++	of_node_put(band_np);
+ 	if (!np)
+ 		return target_power;
+ 
+@@ -514,6 +518,8 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 				     ARRAY_SIZE(dest->path.ru_bf), val, len, target_power,
+ 				     txs_delta, &max_power, n_chains, MT76_SKU_BACKOFF);
+ 
++	of_node_put(np);
++
+ 	return max_power;
+ }
+ EXPORT_SYMBOL_GPL(mt76_get_rate_power_limits);
 -- 
 2.34.1
 
