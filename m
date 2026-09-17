@@ -1,76 +1,76 @@
 Received: from mail-lf2-f13.google.com (mail-lf2-f13.google.com [74.125.229.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3516547142C
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 07:28:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4AAA47C105
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 07:29:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.205
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789630094; cv=pass; b=uchEjYOk5T5lIOYWscqr0FcRoOShV5flgVR59qJQF8LbyynfkQg9pjSniB3g5xycLBKtHB++yWMIJUE0kznP37nIQvypSWq1bMpguqtZdZ9FLrOQUACZ+4tqcIamHNwr2l6OobrrCi8jGigwJyQFTEkMAOp0ehNcgGLNB4LD1nM=
+	t=1789630185; cv=pass; b=JQoAEizoy6lpQAbX2jTdwioHyFJV7akhbz3Vxx1Xoz/Dj/SX4PQtQYH0ykBhJKO5iudic+gT4J2iqRBZ4U+7HHh8euwcrSHUmFjFzP6M7zzpfS7kI2ivbdDTEaIoj1QmEaWJFzvqLXfBFI8/PeKE1341A3XbOyKZkeMjO2UBjsU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789630094; c=relaxed/simple;
-	bh=05elrYjvDIKm9CUVYbNesPAN1KsoJq8Oh1BztpkYF+4=;
+	s=arc-20240116; t=1789630185; c=relaxed/simple;
+	bh=X3UbFhQzAa0Mw9xO9LHhTOOuDgL3VifHPJjvSa1lfcg=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RF/suY/hq/+1wOtLR+eVXTFP8qINC5RMRBonoWYEKf2H+ZFoDD8+j1n+Rq4QSQ8I7IcGppWsXLumpSiJa369uRjtYheSugakx/ACXqWlKykP2jzQRogBufyqOW5wfGu/LE/i65t7NaYBCft4gXdTwgSQd7ahY78dkmko9Mzhdvk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=hU45zv8+; arc=pass smtp.client-ip=74.125.229.205
+	 To:Cc:Content-Type; b=mt5hUP1ebesp8C8KSzr95LCv4sSAcs2WKTc+Yo5csdMGMKRC7xeSIm7kzobNpuLF3v2dG5m1uE2I8MSPhu6yNTXobHuSyMfW96yMJH18U+sk6g2eoTUUnx0hn+Y4WDEFwMwl8DpDiURP20VWLcZkdnf4n27I+io5qD2bl+y50XE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=cxNQd89N; arc=pass smtp.client-ip=74.125.229.205
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="hU45zv8+"
-Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5b74dbc7359so362529e87.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 00:28:07 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789630086; cv=none;
+	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="cxNQd89N"
+Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5b5e4f15cfdso424375e87.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 00:29:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789630177; cv=none;
         d=google.com; s=arc-20260327;
-        b=jYjOmT/Z/Z0bFAleM3YgV5gpZ42r+UNFMHRa1vWGyf0Mf+QrDXHJbvhwpmf1NeZcBl
-         4EfiOEHR+r3i2ZQRCr3KxtUOmbIjAO1x0QfOLHsO1rDa4zh8TGjm8ZZImjUrCPRmIoXR
-         elMvF9v2+7LxcfbEoxq/yLqNkz3dMqURzKeI2fatNJ7AiW7ePnwsdMPy6QLWDidYLEVG
-         BNSZnNh/2H4B128Dl3/F1cGOegbFqVLewSro/thQvYYDIBqvGYqTsiOV61cU6stmXK8a
-         hixsq/Xx6o1Cx63msRjJ1wiBwSYNSl65HeBTUsv5hd+sj9QN0w9JxwEDb2CX//AdkBdu
-         7GRA==
+        b=ZDADlY1loRS8KIyJie8c83qsARn9lD+dEMIwToqER6X2z2yn3adVMGwR/F6oA1IoIy
+         pY+eHxncqGUpbjTqssMJHCi3N63KC7cBqOMTNjaYSasxC6jTJrxDQwCYPKfFgneT7T+i
+         D429xQ3XM/Lq3wXcG0Z99DAMTHNWeOopCtwo1R34IHzEMprerQbY0TBx5GLXzWLg0Cjr
+         a8eqknaCsCT17WW+ItRWVaCtJG8bwXnZn5Hs/PhLVGb2mPqhvQIuDnrvVvj8GxjYVCqS
+         mzSQbTVUrG3tYESYZl2KK5IRsQlgkbw13iUjHAWNsu7S/P9fkhI+m9F2jH7t0SZmkD8o
+         BKGA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=05elrYjvDIKm9CUVYbNesPAN1KsoJq8Oh1BztpkYF+4=;
+        bh=X3UbFhQzAa0Mw9xO9LHhTOOuDgL3VifHPJjvSa1lfcg=;
         fh=MhtQkZecYlWmxg3DBRqEiMKK1vmKtO5bFPrMDotOrCs=;
-        b=rD3RIQNB//W8ZGJYUnyw7s/4zXDgR+56n558e0SaLpFyLzrwy6ciT+w8U1SVPoHuze
-         GNV7IZiTVfNglfieLhASAMbjM6AgdffhmJxsjYw+yppY0x3lk+SmvyTsH5lbm92o/9hA
-         suX3rBwxCXqNAOmeKi6s410UnEPPnvLnQXoIW9ssYkvsNkDsd8aqMrYUOvztBAu4TcXK
-         5mwJu4oJUFNQd9uFYAuTCbmkWoeQO77npow03MesLqXnS7gPq7sKjhITkUvlH5IBSjqK
-         paM57U5jQAgAa8ZiUPZyKm1HCYt+cnNsev2fFSkOduXJ9WxmXs+kCNbw7/BrsFikb14Y
-         UsNQ==;
+        b=QsQxPCA05MvqD0zf0WaRqfuPBBgyH8yV6wjTdGn0dfA5rMJRFdJPamT1ulubK0Hd41
+         QuFGLGjoJe9m9BR9JTBy8ccCP/ylzbyr7w2EilJVQ2vwZFR6DndHJxM85P22i7tH2uJn
+         2ZysrDyJ73/dZhk/5oMdzKXxNqPK9rwnARAxs5dTh/ZCA1Db1/N6FNDfZpXJpq7JDjHb
+         UuZev4Gzt7ZX1aCG99F3W8cVS3xKnf6KbtKSIh1q75REdPlsx6V30Hyfwvkr6HT/F4XN
+         PL4TZr3SUvpbdJ2pnQ+hGUKpnF5RmnJhWDPgIFm+jSdXR9gsUBH2EIUFMzZwyZQjdoyj
+         u/Xg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=khu.ac.kr; s=google; t=1789630086; x=1790234886; darn=vger.kernel.org;
+        d=khu.ac.kr; s=google; t=1789630177; x=1790234977; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=05elrYjvDIKm9CUVYbNesPAN1KsoJq8Oh1BztpkYF+4=;
-        b=hU45zv8+HX9YIvOrWXix++fNDtlyT7D9kKeMFKGiRd4vYZjbbWplbQGjITGs6SjlnV
-         s/nMD8ODpqMG+TrrN1Ob/D/2sMibF83ZrYJUf03JB+d2DR3NI7bs4guQxatdzxq5M8fe
-         3rl6DJx7dNVNqHsw8dqm4EUwN/GY6kVYg/vHc=
+        bh=X3UbFhQzAa0Mw9xO9LHhTOOuDgL3VifHPJjvSa1lfcg=;
+        b=cxNQd89NvK+k3yIjLO1S9ZnG5qaOMDvvaBihJjHm1piYUN+TJ9J4hZoJDCu/jN4BH1
+         MGzz4e3nC3Jl3GpJCsYFygqtbDkK5RuivAzm5HhiEqqColzXOTVe2Y/XBxCsb4EDeVLg
+         5CMREmOaTTN/FXt9Rnk5dwC8pq0H+B0Sf31Ts=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789630086; x=1790234886;
+        d=1e100.net; s=20260707; t=1789630177; x=1790234977;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=05elrYjvDIKm9CUVYbNesPAN1KsoJq8Oh1BztpkYF+4=;
-        b=cNbLyE7qdh5Ev3YZe0JbsbUYf9ndM9ZEUeU5g2UFN8zasIQGDQJD1yWQxulDlHPTiB
-         JXJQhXAvGGayo5F5v5wW74II4Ume9ghzEX93a+zeO3lPvOtP4aS0okQtAUZMClous0mU
-         Ex+9yTNpOgTDx3NH9F8clH22JDz3YFwESe24TucQZerbIh8myuaNwUQ3E5RJq/xiFgaJ
-         9XXZtGFUmQUEjryFyATVfCIvKaBMUH3B6Atd0DfTH0f1YamuQh26pojBeBzImla2CRvI
-         sSaHvht9mTmi2c68HIclUrr9zZUVgJspbxAnt/alVqLJdQMd5SMrihsrQdIy4Lgyx7U3
-         k0bQ==
-X-Gm-Message-State: AFuF++l+FjWbDmzwPVlQ6TLJunw0i06d9eEyoj9qblOOAjp1HoUyKqVJ
-	F913NXSEqx78R0O0TKFSCak1PpEI6VZ23oeDc9f8/oOH0TzaGNpFVSDvaPQn6wqezd2aNZeJdP4
-	hFxpzgVI5O4+kj26rx7vxKVDJ0t+hAds2ZpJPXDEyUg==
-X-Gm-Gg: AYBFou3N4LPVHx+fF/Nmb1Zqfby0ESm2wgQw8wxMkYo3XVhav4kslYIIj9dvVuLSaQa
-	iYaA6Rh9udAL9xhdSrSaBREvqBbObM0Du2oDceoA091mLkB38yGQLlst5mV4whr2wpurCUO04a0
-	fti8cuyESXwnzLCIpkTnR2HvE6Z0wycgYKwO9yN0X6a+9qL+xTbhcvmo6EXGQuHrvq+i4cuRggc
-	D97V/kmVlDtn6jeKdYu0lY+mF8t1WDivJ5OqTXr5XO5JP+sjuiw8fckypciE921NTzsxlDchrfq
-	lV0PKr2ev2Vm/nM2pjjEP5z+9/VIY0lv1uk/xXJYRzwk7PNDX+0CxNA=
-X-Received: by 2002:a05:6512:1189:b0:5b5:fae5:b221 with SMTP id
- 2adb3069b0e04-5b8b6605e9cmr1614229e87.14.1789630085986; Thu, 17 Sep 2026
- 00:28:05 -0700 (PDT)
+        bh=X3UbFhQzAa0Mw9xO9LHhTOOuDgL3VifHPJjvSa1lfcg=;
+        b=YgIE7F28qaYjKbcJ6GSM8Jb/u6n5ZgpL2AaRS+yC40DX6asU71y/ycn0gSDKHxgZSk
+         GGLDBHLfBFUVpKIm9dU1HX9yci/dbNNnf6tgOEJYuKgYKr1RUMrjey7+VVwC8D+pOpBS
+         97J1FZQXEi2oFsnQmP8PR4O9qC89FO9dzmNnyYnqpJAOZWrZ/ChV5eJ2keXlu5keAMJE
+         YfjIvWl1Y9JXWoMdrPsKPIQ+JmYlVtnZe9ha+YePyBwLy4Ut3E+m5KpYnNnaDWD5pngq
+         qPUwc22omAYCewBUfkY4p7QFoNbuyNDfM5PdU//ZBNM1ruTpvAN/U3SMTTpzc58xST9v
+         nIBA==
+X-Gm-Message-State: AFuF++l0RQDUp49rSEYAx4yLUF5TADOWvvg2K0v6ZUFhQ1OAJ76kc0jB
+	eHFqEyIl0xR/VaaqjjmuaALbLUD6o7RmvuLg6UcY6oGH+uDbcYOBzhgNd3dzm3fSL5ts2Uy3ThZ
+	euj2saR/dbYIPzbcbWCiE10qto9y2WhsZbLqL6qco1g==
+X-Gm-Gg: AYBFou0Dq5GsL3vFyMcfG1zvH/irAzndrlPyehDMKTLopJ+jmtq09XKW6g1x2AauJbL
+	NQivvyIzuMfebg555mpFWfpbkJDdOUxN9qMAmL8WxpYnt1NhgWR+mPFrfZsCKW+4Lz5loZFBYbu
+	CTWh3Jx6ql/9TE1i8yWNU+vRA5rMVltYaDJ+EgVqBj2LF8qHxAuoDA1V9H6zDxq23Vq1wqr0Zhp
+	JjeRR0k41J8YJEha8EOKWC9bdKmQRlX2rEbOfScLaZE9k5yfDUToKhDxCxNo0QeaqDwcJiMIcoN
+	Sqo1brXr1zSA3tFcXhbc3rI7D2JWNdY49PHq3v9YqawshwuN413cx38=
+X-Received: by 2002:a05:6512:3da1:b0:5b6:4ae:d87 with SMTP id
+ 2adb3069b0e04-5b8b66214c5mr1564777e87.27.1789630177213; Thu, 17 Sep 2026
+ 00:29:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -78,14 +78,15 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260913-codex-rtw-rx-v2-v2-0-f09c964e0b96@khu.ac.kr>
- <20260913-codex-rtw-rx-v2-v2-2-f09c964e0b96@khu.ac.kr> <b235d4ac6b8048c4916f484082654c48@realtek.com>
-In-Reply-To: <b235d4ac6b8048c4916f484082654c48@realtek.com>
+ <20260913-codex-rtw-rx-v2-v2-3-f09c964e0b96@khu.ac.kr> <2b956e6e0c5945e596d5825ace0c6203@realtek.com>
+In-Reply-To: <2b956e6e0c5945e596d5825ace0c6203@realtek.com>
 From: =?UTF-8?B?4oCN6rmA7Jqw7ISdW+2VmeyDnV0o7KCE7J6Q7KCV67O064yA7ZWZIOyghOyekOqzte2VmeqzvA==?=
 	=?UTF-8?B?KQ==?= <5mghybrid@khu.ac.kr>
-Date: Thu, 17 Sep 2026 16:27:51 +0900
-X-Gm-Features: AcwNN1Wv6zk9_UT-AZSH9kMTavg-5odm45cqC5oVbIByww0dhWV62MKE_I7qvb0
-Message-ID: <CAH1Bc_xVJXP-p5sDVSbD_9=vO=pZJ3bj3nCFbrMmMkM_H_GedQ@mail.gmail.com>
-Subject: Re: [PATCH rtw-next v2 2/4] wifi: rtl8xxxu: unwind incomplete receive startup
+Date: Thu, 17 Sep 2026 16:29:24 +0900
+X-Gm-Features: AcwNN1Udp1Uc2lpIVknPTI_jVxQzzmyOYan5TRYTMh9qrixvJkqLEg9-rrQ_nxc
+Message-ID: <CAH1Bc_ybPZtieaMkuUdbpv-STvJTqTxbFZgVbifNdbADt21C9Q@mail.gmail.com>
+Subject: Re: [PATCH rtw-next v2 3/4] wifi: rtl8xxxu: preserve RX requests
+ across recoverable transfer errors
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@gmail.com>, 
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -95,19 +96,22 @@ Hi Ping-Ke,
 
 Thanks for the review.
 
-I'll share the RX submission path between startup and the RX worker,
-while preserving the different handling of fatal errors during startup.
+Yes, the additional delay is part of the reason for the separate retry
+path. For v3, I'll merge the common queueing code into one helper with a
+retry flag, so the locking, shutdown check and list insertion are shared.
 
-I'll also remove the shutdown initialization added in probe. For v3,
-I'll test the actual start() -> error_out -> stop() paths with targeted
-fault injection, including failures at the different startup stages, to
-make sure partially initialized resources are handled safely.
+I'd like to keep the retry list and delayed work separate from normal
+pending requests, though. Putting failed requests directly on the normal
+pending list can let normal completions bypass the error backoff, while
+delaying the shared submission work can also delay replenishment of
+normal RX requests. Keeping the two lists preserves the existing normal
+RX scheduling while removing the duplicated queueing code.
 
-Regarding the Fixes tag, this patch addresses functional startup error
-handling rather than only refactoring: an allocation failure can leave
-already active RX requests behind, and a later allocation failure can
-also return success with ret still zero. I'll make these failure cases
-clearer in the commit message and include the validation results in v3.
+For the Fixes tag, the issue is that a finite burst of completion errors
+can shrink the RX URB pool until the remaining requests no longer reach
+the resubmission threshold. RX can then remain stopped even after the
+errors have ended. I'll make that failure mode more explicit in the
+commit message and validate the revised path with fault injection for v3.
 
 Thanks,
 Wooseok
