@@ -1,236 +1,157 @@
-Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3D94AB1A2;
-	Thu, 17 Sep 2026 10:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916AD343893
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 10:44:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789639515; cv=none; b=DCJonwLjKAgpELA6w6O9/Sq6tFeVYTYN4wpP3EJDPIk1BfySVPrvvMbryXivVDVlYk/Tvil6VGfhDitij9eTAaZFJN/jcXLtgI6g9NPmiHovjZuIFSxyKGZ1Uv5KHiDRuvafa1XycDP5z9ohYocvQXmhHkmZKtUiMZBYUMxZsEM=
+	t=1789641873; cv=none; b=XwMZJmjzM3t7uU3IX/tyazia6J3vVtbLbZI/CBiGY3fQz9zn22vIa34JxFSPFTijLcmcnE5Zzbkv99Pm9AeEohcxPJEJC8+9JDnfrrC2XgvzVp5Q26BcjWW1iAZWqAwUk0n1dVPTwl9Io8+HLc5sIWFYTf6hYxAhX5QcrejDzpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789639515; c=relaxed/simple;
-	bh=oJZpSGeZR7c0gtIpdrbJQjFPlzZ2zTpyCdhVreTnrow=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PWoNRvFdpVfqlooW/JUrpYx4SyQkxPCI8WhjDKzn4CwXgYHh8g0hyvr+wJketZmtjK4cBxIb64hxUCjSzgfFYMNrJDMYVMSR9brhLBkTPPFRRAqafwgSw3/2z18m/oAvIvvR0Nw+u32tFR6/vzN096642X2qNGk+u2Jehk11ANg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=w4WpXlaZ; arc=none smtp.client-ip=119.15.109.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
+	s=arc-20240116; t=1789641873; c=relaxed/simple;
+	bh=nLcJCiskvc5lQjgAwBGs0X2pvtgrhay2JDyabo7c4mE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZruwO45U9onUSFjY4YvmsZh+QQlzBRa7XEeJFzgW3RAnjUwA/sT1G66zspc/vDzmbG0ZnR3R5GerFdOH5e6LaWH0bDTImgWZ9V5+3HMvSgiGqxGMzzohwFr8Cj2Om5CTBSm2AEOG7KY6P5gUPXfwB3lDCTrxXHbRbRfbLjMC3p4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YhboDrhA; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Zok2NpXo; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="w4WpXlaZ"
-Received: from hawking.lan (ntp.lan [10.0.1.1])
-	by www.nmnhosting.com (Postfix) with ESMTPSA id 20AA840198;
-	Thu, 17 Sep 2026 20:04:34 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
-	t=1789639474;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=c3jDlmkxxOD3XtdyCo2tdWsuRppzBPyEgPOWoYIFm4o=;
-	b=w4WpXlaZxpCm4PXAWLUxpn8DhT4UZPVwp6YJzX37W6VsRL7jo3bS0bC3ERhkBHvSIVWw1u
-	Ny7ryHYojtfJun1AWUfRKLl6ClYJUAWvOMPx1YYf0HroG7Fmv4uOpqN78EMmoBPS1eNi8V
-	qWkQhwHMuUacQsEQqgemtPiZHePezZrZgIj/mfu0sSh1D9Ui/ZlRSc4QTVPQHsZAW1/G8L
-	OCaXr8uba8xRKYuYBxGzUgi/vwGlhKLfr9TxMrrbm4+RJGcC4C/DNOajcFbFqgLCF2xSpE
-	SqxAvuztXV972KHrpuixiBOoNiGfQSGeBJdsqxpK5YGdBfG+KEz4hspxR/QP1Q==
-X-GPT-Reason: legitimate; This is a technical discussion regarding
-	a Linux kernel patch (rtw88 driver) which perfectly aligns with
-	the recipient's identity as a technical/professional mailbox
-	(alastair@d-silva.org); the content is a detailed, high-context
-	engineering correspondence involving hardware telemetry, register
-	analysis, and code logic; the sender domain (d-silva.org) matches
-	the recipient domain, indicating a personal/professional relationship;
-	there are no phishing indicators, no malicious links, and no marketing
-	language.
-Message-ID: <919109e886399f09db41ef5800e7335440ed4971.camel@d-silva.org>
-Subject: Re: [PATCH] wifi: rtw88: sdio: Fix unhandled RX request interrupt
- storm
-From: Alastair D'Silva <alastair@d-silva.org>
-To: Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>, Martin
- Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
- "linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
-	 <stable@vger.kernel.org>
-Date: Thu, 17 Sep 2026 20:04:33 +1000
-In-Reply-To: <58a857e3b0614e2b9a520024b9932685@realtek.com>
-References: <20260916040635.205094-1-alastair@d-silva.org>
-	 <ea3434d849b34a4286b0a193351a610e@realtek.com>
-	 <58a857e3b0614e2b9a520024b9932685@realtek.com>
-Autocrypt: addr=alastair@d-silva.org; prefer-encrypt=mutual;
- keydata=mQINBGactvoBEADBFM2HqfQUUM4j40ZQPyYzmnM8S6zrycO0ipDDPMs7nZMzyzGzOdqfS
- VB/tuYvZOOKVWzJuWJ5aT/YyHx54r3L+D5hTkEG0sXPVJky3yTS9sbHEMSLBHb8TVVuhPVPuieV4g
- Nkqg5POMTidk8xAw50WpV++tUlewXVSciehnuCQPXhXMP7FcCh4uO8LdN7E8m7ir1LafKTFfoWPah
- KVT8NGG9r+ucrFcN5F+VnHxTDaI68yRPkNdtUWmp22wIX1KwDCtKFrndYO4p5Hv2hlDKomsuIIHHn
- muQGRwuh0xpf0nVJNF8ETZHMzxQLfo3e/HvxBFOTkwY9w7CuuQFZchbhS0I3PfmGT0+jiNcdfqjDC
- fPPB5uhy+DkR6wO72vuwFYUrpU2mdliDSdKEtWBHulnXMJjpBOXetfIwhI8G2dTVg59lN5i9DvJZc
- 7y1Sp+qfZQ4P9qpYZyQEKR4GNDOdnm6F2LW2cZkcyAU/Ii765zdDMTQMIzZNSxT/FcDd0K1voTNRl
- QHbQw+kmIMhzSv2JefcC9oNbE0XYzcBDNP5T3O/4itOQ90GCKQEPAbIPeBjlQif7kkyvo/H6yv4s9
- duuK7zbJD9AID/+KGLkpU3p68VDB/C2ZSb9rQz3p1CJNSfsX/CPk7sPqA7RKZ4a2B0hSJ2pJCncNZ
- KXtMlkkm/FmewARAQABtCdBbGFzdGFpciBEJ1NpbHZhIDxhbGFzdGFpckBkLXNpbHZhLm9yZz6JAl
- EEEwEKADsWIQTQGemDFwqYyU/dBWv75AdnjVo60gUCZpy2+gIbAwULCQgHAgIiAgYVCgkICwIEFgI
- DAQIeBwIXgAAKCRD75AdnjVo60qHZEACJnLfpS71Hk8bX0CLCNJ5wgqdZD3pBHEdbv9Ux9kRlZp4a
- ZFwlg9ltwBjl2dZP3PLtD9xQdsdYKVippKd5a7ZZC2y81oDaHjeC9LnPYn8+ce3mGE/+gRyoNfToY
- N06DeUNJKSlZ9t11UIqZCgfp12u16/Yrigy8C4ihEeHXlLhNX6JkeJR5gsHXJnC7vSuMZY+Qz2R72
- ZidWg+cd2WDMGop5sbTvc+55q94A7vTMlWzaix5HdbEUA3sd2U0dMBju5QodRGGhDQMcCu64TydRD
- MtMzzOk9ThJ036ze3HASWGOppyQmaw58k+XNzbHlr9Sc1LsFUNF7zpWXac2rzlywbyRAdFIT/TC76
- hy9zOkwIo2nwA/tdIwLx1j0UZPpAMQmcDUvJqZh6sE+fv6HN0yMPr+sSYJmriMt8Z6leCEHQXOHVI
- SI5z5FvV3coMmHYRq6aXpfs/8SLiYgkV3B0HE/E18Y3j1OkeLYoqIH1VfzQZeCSL/S77NYvk60/MV
- 1HFSyqLdUR3uWZI4uZzoEcMoB0GX33uCTp2Ntc00+wSntwekCUQLCMLUb7dZrbpVuobHoWWtkiD2I
- uE5kAiaVwwwzM0BUwiM6VzVoKbeECz93rdsNtwoDqM0NtzoISC46H/BKVQ9mRNXDO4ThEBpJ4H2Tn
- mPNRYYcR0u2mNy1EJII04w==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-9 
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YhboDrhA";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Zok2NpXo"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68H9Zfxs577160
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 10:44:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	iCYEospgVDPAAQl+7gboh+7Q+HFKYksIuEIvjVZidQY=; b=YhboDrhAqLfk8mIO
+	MtS2Ph9BkObPRR6lODo4+zBwlQrENDp4KVJBDE3lu3C1+iaPYh2f5FI7/w5R/Z4g
+	W2U8INKwzf5nTrm+ZQ2Rs9ataC8nSuyz8HS/wAmK6sTKteOfrXxyWJvhNnEQXALF
+	J5m86FRmjz12Lr7zieB2Hmc/9pylWtzvE89VswlpZ3pL93O3jmyRUVaNWgOd10SC
+	BbJr9vpUOXy7art02T3Vvw8/FUdQxzuzT9ioCFEaGctQQA8RBEbHcNoLUzrm72E8
+	c1uj99xuHpDGwq8lGMFeFDdXvrWF0FKV6nLqNTsibceLMu1C2+mPaD1KdoOISUT6
+	0O7OTw==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gr8uw1gqx-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 10:44:31 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc132709c76so953015a12.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 03:44:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789641871; x=1790246671; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iCYEospgVDPAAQl+7gboh+7Q+HFKYksIuEIvjVZidQY=;
+        b=Zok2NpXoNqvIBUjAXsvpj5HwdfwRRUWPhKrPkhpeyv27rm0Ne9yjOeODK0br5zvQTL
+         EP/7C0FYJAgai0fjEU3LQ5bYihMVAS0NaNwDOXj5VUU2S8KscZj8XBNjqwgNusPHc2Xx
+         fn067Edc26wbuSqWMqHeAEo00MKsAlMX/bhtoHZljI2DhriR88uddgKwQV3lOnZIPCbZ
+         b1s41Tzt27jDQk4XGOUUsbf9i3Y4u5CFmosHpuk+GA5mM51PC612bBT7tXtwhwjlFUno
+         PxdKqlX84+MOaH2SIJstUUR1w0BTrWbVcctIRDixQopH/lCD3itJgyxZrd+OVtPIVheS
+         YDQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789641871; x=1790246671;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=iCYEospgVDPAAQl+7gboh+7Q+HFKYksIuEIvjVZidQY=;
+        b=gHF2aM2MGqhJtT1Icrqw8OqDnAoW4jtfiwFfzfRaa7lIPqUu4Ti9zHzJkbZkc4p6C2
+         0f77pjhvctlgHykvllg7c057x7tldJ5wW+HzSMO7ladNo2rGk3zhTwjDiWj4uKpKt/k7
+         tYjuhsO5GxAA4EGOkJI5l5Di2RsAOrnl4L60sif8IkmfCMUTIW7CuK0XszAxjD4EeAKE
+         cW28Y+o7dlwb4Wjb162ohmvc2aSgphFSMX/gUDt776kRsYFyH69EpElRRJHYKW0V7KJO
+         KRnFv6kYwqXSIB/pmvPzqWLN0aUDkK7OPmZw4K0if4UDHzRt8LRuZmhuAFmUZ9kvnsjF
+         l9iQ==
+X-Gm-Message-State: AFuF++n2dGEp7Yn4Gij71DeI+TyOMTRM33sW6qRUWiy0AoUNKE4iR/vL
+	vRrFPUHo2frUQmliQibUyDZgaeIaDIXLjh7ramaAwiimQFFiFyTMjn9b7v/EhCH2LA6Zp9zjhf1
+	CMtgz7WhqP8x0emlkKIzvg0uGdG6FtvxF2kEP2/ZJdS0/WDyzQqGyRE2KBLM5tCZuWoDY+w==
+X-Gm-Gg: AYBFou2MA0eGREXjXXVNAVkkdr55TcRVPkGHdTkEJoDB3nbFwE4ZKSPPIHcN6pod2oW
+	MiFFhwGcD6ouFJ8ctV4bfqDnfTdZTUSeiVhAyK8n/yjl1rREygHDL3woSFYm+7pPZSpDTIfnZTH
+	7stMpViuSYFJMM0LhB7IMFMErDIopgGS3pAyxky67RandgJ+p84+n+k6saSldgs2eWUxheuixQr
+	nh/titRIAD1GWQ78aUkYSXdoys0HlDVSHJfObu1hc9dTx44GZzOx031PH+mB+cFYGXMF0Za2syC
+	0yjIuMSuHVhRy6dNlYrwEghZCYeX1gMBxJWA7SmvejqPYgngjk4o0vxTvMP6nnewyeNSrJmOibv
+	UIDb9RDDVPIHH5g1BtOpazMwXjh6ciklhpSgwZ0Rm+N0Ig/k=
+X-Received: by 2002:a05:6a20:d10f:b0:3d3:aec2:4dc9 with SMTP id adf61e73a8af0-3dd5f72b353mr17153723637.21.1789641871094;
+        Thu, 17 Sep 2026 03:44:31 -0700 (PDT)
+X-Received: by 2002:a05:6a20:d10f:b0:3d3:aec2:4dc9 with SMTP id adf61e73a8af0-3dd5f72b353mr17153666637.21.1789641870660;
+        Thu, 17 Sep 2026 03:44:30 -0700 (PDT)
+Received: from [10.152.209.53] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-144c9f0da19sm186695c88.7.2026.09.17.03.44.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Sep 2026 03:44:30 -0700 (PDT)
+Message-ID: <1da678cc-d2f3-46d2-9cb1-1c3ed2a8f0a3@oss.qualcomm.com>
+Date: Thu, 17 Sep 2026 16:14:26 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-
-On Thu, 2026-09-17 at 09:09 +0000, Ping-Ke Shih wrote:
-> Ping-Ke Shih wrote:
-> >=20
-> > Hi Martin,
-> >=20
-> > Alastair D'Silva <alastair@d-silva.org> wrote:
-> > > In rtw_sdio_handle_interrupt(), the HISR status register is
-> > > cleared using
-> > > Write-1-to-Clear (W1C) semantics. However, the driver masks out
-> > > the
-> > > REG_SDIO_HISR_RX_REQUEST bit in the local 'hisr' variable before
-> > > writing
-> > > it back, causing a 0 to be written to that bit.
-> >=20
-> > I feel this patch makes sense.
-> >=20
-> > Did you remember why you clear the bit locally? Can you share
-> > vendor
-> > driver you referenced?
-> >=20
->=20
-> I asked internal expert who said this bit will be cleared
-> automatically
-> if all packets in RX buffer are received. If we clear this bit here,
-> the interrupt will not raise again if no newly incoming packet even
-> there are remaining packets in RX buffer.=20
->=20
-> Checking rtw_sdio_rx_isr(), we can see it reads hisr for each
-> iteration,
-> which this is also the evidence that the bit will be cleared
-> automatically.
->=20
-> Therefore, we need to dig further why the RX buffer can't be empty
-> and get stuck.=20
->=20
-> Ping-Ke
->=20
-
-Hi Ping-Ke and Martin,
-
-Thank you for following up and consulting with the internal hardware
-team. We have extensive test telemetry and logs from our bring-up of
-the Mellow Fly-C5 board in Armbian that provide full context on this
-issue.
-
-1. Test Platform & Failure Telemetry:
--------------------------------------
-- Hardware: Mellow Fly-C5 (Allwinner H618 SoC, sun50i-h618).
-
-- Wi-Fi Chip: Onboard Realtek RTL8821CS connected over SDIO (mmc1 /
-sunxi-mmc).
-
-- Kernels: Tested on mainline Linux 6.18 and 7.x branches using
-rtw88_8821cs.
-
-- Reproduction: On stock mainline kernels, immediately upon interface
-bring-up and association (wlan0: associated), the CPU core servicing
-the SDIO IRQ became 100% pegged in an interrupt storm, triggering RCU
-stalls:
-    rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-            0-...0: (1 GPs behind) idle=3D... softirq=3D...
-    rcu: rcu_preempt kthread starved for 5126 jiffies!
-
-- Verification: With this patch applied (leaving=20
-REG_SDIO_HISR_RX_REQUEST set so W1C acknowledges it), the board
-completed 100/100 consecutive reboots under active network traffic
-(continuous ping, SSH, Moonraker HTTP) with zero RCU stalls and zero
-packet loss.
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 0/6] wifi: ath12k: fix monitor RX buffer
+ lifecycle issues
+To: Kang Yang <kang.yang@oss.qualcomm.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20260916060325.854-1-kang.yang@oss.qualcomm.com>
+Content-Language: en-US
+From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+In-Reply-To: <20260916060325.854-1-kang.yang@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: 7-iDwJNCZSR_TiSLMzdWze9blSYymX_Y
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE3MDE0OSBTYWx0ZWRfX4v6skQiXdg5w
+ 9/vnV7miLQ5HxAVWiFBhTogOkhAisQAn9hYsyNr+US7knRjCTnAPh0rDZ7dZ1yBhH4AJBVdj3He
+ ehHG3TjcbjNFKPRRzTRzAeSp2kjRiEiuXYyQXe2Yc2qbcS2WvWV7wcJogVlCSiT3dDx8Ie0hsmj
+ Fum8eOT6n/cFBU6KlMOLwWF79Fv8D9f70vG97kHzzeExOx7NYxh/7fCrLmS3Bvi30b25k8i4wNh
+ xLUvygco6B84QmqcqDdRBgipPYiz7y1TyFrr1478YOiroR1tCG+754nyC/MeRLlUJjY8zfMUa1n
+ 2rHQpFKpEZNweIY3z7ZwSZ4whGUUyHYjy/E6vT7jmTb9Rb/JrBNY0ZLaDETVt+TuI/E211D9iHX
+ 9Rkg3F3SExbei1Pd1hq+G52xoShBB508VgugnH9t/sNaMHgpSFaactGZ9tI2GHE/N7wrcLLGJz+
+ MrXV/RJYAsDWjDSaV3w==
+X-Proofpoint-GUID: 7-iDwJNCZSR_TiSLMzdWze9blSYymX_Y
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE3MDE0OSBTYWx0ZWRfX/ywAYixXtiUU
+ 71/sFl5mXUWW9CkLijdbHRm09fl2zVH4Zzy35Q1+rBr8huzjr/kHgnXi4KP6NLR8/7NITjMewTX
+ JdHrc5c9h7uLXbLsZ9cXxAltYlf2e4A=
+X-Authority-Analysis: v=2.4 cv=dMUzC+Zb c=1 sm=1 tr=0 ts=6aabc48f cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=EUspDBNiAAAA:8 a=jeZ2dEGWif2cJ8v1hNMA:9 a=QEXdDO2ut3YA:10
+ a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_02,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 malwarescore=0 bulkscore=0 impostorscore=0 suspectscore=0
+ spamscore=0 phishscore=0 adultscore=0 clxscore=1015 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609170149
 
 
-2. Why the bit was cleared locally (Vendor driver reference):
--------------------------------------------------------------
 
-In Realtek's vendor drivers (such as rtl8822bs and rtl8723ds):
-- In hal/rtl8822b/sdio/rtl8822bs_io.c:
-    if (phal->sdio_hisr & BIT_RX_REQUEST_8822B) {
-        /* No need to write 1 clear for RX_REQUEST */
-        phal->sdio_hisr ^=3D BIT_RX_REQUEST_8822B;
-- In include/hal_com_reg.h:
-    MASK_SDIO_HISR_CLEAR explicitly excludes SDIO_HISR_RX_REQUEST.
+On 9/16/2026 11:33 AM, Kang Yang wrote:
+> This series fixes several monitor RX buffer management bugs in the
+> monitor destination path.
+> 
+> The fixes address leaked skb buffers, stale monitor descriptor state,
+> object lifetime issues, and incorrect DMA unmap handling observed in
+> various error and corner cases.
+> 
+> Kang Yang (6):
+>    wifi: ath12k: fix skb leak on paddr mismatch in wifi7 mon RX pop
+>    wifi: ath12k: free pending MSDUs on duplicate mon link descriptor
+>    wifi: ath12k: fix stale tail_msdu pointer returned from mpdu_pop
+>    wifi: ath12k: place dp_mon_mpdu on stack in mon dst reap loop
+>    wifi: ath12k: fix skb leak on monitor PPDU ID wraparound
+>    wifi: ath12k: avoid double DMA unmap of held monitor RX buffers
+> 
+>   drivers/net/wireless/ath/ath12k/dp.c          |  9 +++----
+>   drivers/net/wireless/ath/ath12k/dp_mon.c      | 15 ++++++------
+>   drivers/net/wireless/ath/ath12k/dp_mon.h      |  2 +-
+>   .../net/wireless/ath/ath12k/wifi7/dp_mon.c    | 24 +++++++++----------
+>   4 files changed, 24 insertions(+), 26 deletions(-)
+> 
+> 
 
-Martin appears to have ported this comment and software-clearing
-convention directly into rtw88_sdio_handle_interrupt().
-
-
-3. Difference between 8051 and 3081 chips in rtw_sdio_rx_isr():
----------------------------------------------------------------
-
-Regarding the observation that rtw_sdio_rx_isr() re-reads HISR in each
-iteration:
-
-Notice that in rtw_sdio_rx_isr() (sdio.c:1057-1073):
-    if (rtw_chip_wcpu_8051(rtwdev)) {
-        hisr =3D rtw_read32(rtwdev, REG_SDIO_HISR);
-    } else {
-        /* RTW_WCPU_3081 chips have improved hardware or
-         * firmware and can use rx_len unconditionally.
-         */
-        hisr =3D REG_SDIO_HISR_RX_REQUEST;
-    }
-
-RTL8821CS (and RTL8822C/B) has wlan_cpu =3D=3D RTW_WCPU_3081. For 3081
-chips, rtw_sdio_rx_isr() never actually reads REG_SDIO_HISR! It sets
-hisr to REG_SDIO_HISR_RX_REQUEST unconditionally and loops purely based
-on REG_SDIO_RX0_REQ_LEN.
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
 
 
-4. The RX buffer IS empty when the storm occurs:
-------------------------------------------------
-
-The buffer is not getting stuck with unread data. In our testing:
-
-- rtw_sdio_rx_isr() drains all available packets until
-REG_SDIO_RX0_REQ_LEN reads as 0, and then breaks out of the loop.
-
-- rtw_sdio_handle_interrupt() then writes back to REG_SDIO_HISR with
-  REG_SDIO_HISR_RX_REQUEST masked out (writing 0).
-
-- Because the bit was not cleared in hardware via W1C (and was not
-automatically de-asserted by hardware when rx_len reached 0), the SDIO
-host controller sees the IRQ line still asserted and immediately re-
-invokes the handler.
-
-- On re-entry, REG_SDIO_HISR_RX_REQUEST is still 1, but
-REG_SDIO_RX0_REQ_LEN is 0. rtw_sdio_rx_isr() immediately breaks out,
-hisr writes 0 again, and the CPU is trapped in a 100% spin loop.
-
-
-5. Effect on future interrupts:
--------------------------------
-
-Regarding the internal expert's concern that clearing the bit prevents
-future interrupts: in our testing, writing 1 to clear
-REG_SDIO_HISR_RX_REQUEST after the FIFO is drained did NOT prevent
-subsequent RX interrupts. When new packets arrived over the air, the
-hardware asserted REG_SDIO_HISR_RX_REQUEST again normally.
-
-If there is concern about edge cases (such as hitting the 64KB
-total_rx_bytes limit before the FIFO is completely empty), would it be
-acceptable to only clear REG_SDIO_HISR_RX_REQUEST if
-REG_SDIO_RX0_REQ_LEN reads 0, or re-read REG_SDIO_HISR at the end of
-rtw_sdio_rx_isr()?
-
-Cheers,
-
---=C2=A0
-Alastair D'Silva
