@@ -1,89 +1,233 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25F44FD78F;
-	Thu, 17 Sep 2026 17:06:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A744E73C1
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 17:39:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789664805; cv=none; b=RvM2yKxo7NcHb/A/YRx1M258SNzf+vMpyIHrSK5M0Fj5ijJorUaCZWTBPhw3wzM+/2jCwKUxnQ6iY6sdwwGsQwl9gMchf9jtt2AzEAL85p1qsZ3bshgiZEsbfMR8tyNpsJVDshOSZoWRybZ+vWDh30twFCC6XQF2j3WxyiU1lNY=
+	t=1789666747; cv=none; b=V3oXQ31PRqmc60rvq9GWvMrmf+9TnM1w/J5n3iew9BejZqAMiozGSC9KxBsBpl2KKfu+BtHBYjz0hqZPb9laOm/p8/ZYFe02iMs6iBoafBfBZNGxQlsE2JSMaCnbSFBCmQ3VuRmTJVJsjxN+/QvDPk3s2Fzdw2211aW8ZacT0Lk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789664805; c=relaxed/simple;
-	bh=uwuIT3omK02sZdec7a0FXVuDK2O3xZEMksDRkfSnzaA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=CU0K10WOJwO/19vT6HhrjY2KGjfW28Mjw9NdSPy8FrOQVq9c9Y48rv1ZspyO3EO/m2PyFGBZY018AC2sR2+VB3aao4W9NMrOUCPGU5UeQepxPqHMNEM5+nnmZjOYPFJo1oMGzwgM7MAaRif21IqsbF7iKE5gdxURvtf56QFldZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gHGHTvtJ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789666747; c=relaxed/simple;
+	bh=KapTej4C0o3i0JdDWH+OS3TmSnMl8SsuYylwDN7IbX4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ddd2S57yK//UYQ0C3wUCzxV5A6qSyMRPzZ1tY8wK5L1m2yr9I53HiQ5AyBlyBc+00toFldw222x1ZquaWW68/o8rMKKreKCoTLZGn9bKa4k+NGQEqdXHnogWG5PVmq3tEC0LMTrmqXUyd2eHHaP0pp4+FOlzBnPR/17NHSSU63M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=C+to8sQw; arc=none smtp.client-ip=217.10.52.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gHGHTvtJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E0DF1F00893;
-	Thu, 17 Sep 2026 17:06:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789664803;
-	bh=thptWvz4OVCspoERVZ766KnGJOYRQWL/l9e0wco26zk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=gHGHTvtJa8ZqJi+mpWrczyhU8V7irl79da3wZEEQ6mBacP/g+M0kfS2fcL7yoNgmW
-	 wNbOs/ErLHpxxyG/ePxupieQ8pcFwj+9LCqG1SSeymQERPmWKLpt6j76+Vb5QeJf27
-	 EHi+hhIFnIHHgxTb0d25dU9hYPQzKhumhLBNtBMH0xxhpX5izYp+6IT/+CB7mLy0KC
-	 z9G1HMag6QDCmRNw6fsMzhju2O/5PR08BA2F9tBmVDWn5TjqITo4/5A204EBIPZ5/n
-	 9UU90blkT6hDsIw34wj5yJ0NPKIIjsjDoYTPyqzxhKmdom91s6/7B7jw48MpPqGeNh
-	 SmQGtSb+a/rDA==
-Date: Thu, 17 Sep 2026 12:06:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: alex@shazbot.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, bhelgaas@google.com,
-	jjohnson@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mani@kernel.org, mhi@lists.linux.dev
-Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260917170642.GA1026691@bhelgaas>
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="C+to8sQw"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1789666744; x=1821202744;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=KapTej4C0o3i0JdDWH+OS3TmSnMl8SsuYylwDN7IbX4=;
+  b=C+to8sQwLw28/5FWmjBSFHptTyc1YSql3DN6+Ql7caS5O7F3kgdWIPuv
+   I1AWqZSLt9oTlYbJufCYpYfcSHcOMfyUhxPda6+mxhTb2pK1pDNeXUy34
+   ynu1Plxq8iSWSUsth9s+p0/fKHeq7tlvhaSDIH3LwgkqC2F8th/Bameud
+   E=;
+X-CSE-ConnectionGUID: bvsiXLsXQ72J5zlx5QdBiQ==
+X-CSE-MsgGUID: I8OtGan+RaiF0zoUZ+yl4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="147568511"
+X-IronPort-AV: E=Sophos;i="6.27,103,1787004000"; 
+   d="scan'208";a="147568511"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE812.infineon.com) ([172.23.29.38])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2026 19:38:54 +0200
+Received: from MUCSE829.infineon.com (172.23.29.22) by MUCSE812.infineon.com
+ (172.23.29.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Thu, 17 Sep
+ 2026 19:38:54 +0200
+Received: from ISCN5CG6022HSR.infineon.com (10.161.6.196) by
+ MUCSE829.infineon.com (172.23.29.22) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Thu, 17 Sep 2026 19:38:52 +0200
+From: GirishBukkasagara.Rudrappa <girishbukkasagara.rudrappa@infineon.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <arend.vanspriel@broadcom.com>, <johannes.berg@intel.com>,
+	<brcm80211@lists.linux.dev>, <wlan-kernel-dev-list@infineon.com>,
+	<bogdan.nicolae@gmail.com>, Girish Rudrappa
+	<girishbukkasagara.rudrappa@infineon.com>
+Subject: [PATCH v2] wifi: brcmfmac: Set extsae_pwe parameter to Infineon firmware in SAP mode
+Date: Thu, 17 Sep 2026 17:37:04 +0000
+Message-ID: <20260917173704.6356-1-girishbukkasagara.rudrappa@infineon.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260831061213.240270-1-girishbukkasagara.rudrappa@infineon.com>
+References: <20260831061213.240270-1-girishbukkasagara.rudrappa@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260917065918.13357-1-jtornosm@redhat.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MUCSE817.infineon.com (172.23.29.43) To
+ MUCSE829.infineon.com (172.23.29.22)
 
-On Thu, Sep 17, 2026 at 08:59:18AM +0200, Jose Ignacio Tornos Martinez wrote:
-> Hi Bjorn,
-> 
-> Thanks for the review.
-> 
-> > I guess you are saying that some kind of reset *does* work
-> > fine in normal, clean VM termination?  If reset works fine
-> > for normal VM termination but not for VM crash, do we have
-> > any idea why they are different?
->
-> It depends on the device:
-> 
-> - For the modems (SDX62/SDX65), without a proper reset
->   capability, these devices never successfully initialize
->   even on first VM assignment.
-> 
-> - For the WLAN devices (WCN6855/WCN7850), the reset fails
->   in both cases, but on clean VM shutdown the guest driver's
->   .shutdown/.remove callbacks properly deinitialize the device
->   (stop DMA, disable interrupts, etc.), so it ends up in a
->   known-good state even without a successful reset. On unclean
->   termination (crash, force-off), the guest driver callbacks
->   never run, the device stays in an undefined state, and
->   without a working reset it cannot be reused.
+From: Girish Rudrappa <girishbukkasagara.rudrappa@infineon.com>
 
-Ah, so this depends on the previous VM tenant to clean up after itself
-instead of the host kernel enforcing the isolation?
+Parse and configure the extsae_pwe according to the information from the
+supported rate/extended support rate and RSNX IE
 
-That seems important to mention and potentially unacceptable to
-tenants if an issue in the tenant's kernel may cause their data to be
-leaked to the next user of the device.
+Parse the beacon IEs on start_ap() and set the extsae_pwe iovar.
+Set sae_pwe to 2 when the RSNX IE advertises H2E, 1 when an H2E-only
+membership selector is present, 0 otherwise.
 
-> I will try to clarify this better in the commit messages for v14.
-> 
-> > Since these basically copy code from other drivers, is there
-> > an opportunity to remove it from those drivers and use this
-> > instead?
->
-> Yes, that could be a follow-up after this lands.
+The changes are tested with FW Version 7.45.286
 
-Sounds good.
+Signed-off-by: Girish Rudrappa <girishbukkasagara.rudrappa@infineon.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 77 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/cyw/core.c    |  6 ++
+ .../broadcom/brcm80211/brcmfmac/fwvid.h       | 11 +++
+ 3 files changed, 94 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9d8ce7bb046e..a9e5ab5ea292 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5131,6 +5131,79 @@ brcmf_config_ap_mgmt_ie(struct brcmf_cfg80211_vif *vif,
+ 	return err;
+ }
+ 
++static s32
++brcmf_parse_configure_sae_pwe(struct brcmf_if *ifp,
++			      struct cfg80211_ap_settings *settings)
++{
++	const struct brcmf_tlv *rsnx_ie;
++	const struct brcmf_tlv *ext_rate_ie;
++	const struct brcmf_tlv *supp_rate_ie;
++	u8 ie_len, i;
++	u32 wpa_auth = 0;
++	u32 sae_pwe = 0; /* 0 = Hunting-and-Pecking only, 1 = H2E only, 2 = both */
++	s32 err = 0;
++
++	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_SAE_EXT))
++		return 0;
++
++	err = brcmf_fil_bsscfg_int_get(ifp, "wpa_auth", &wpa_auth);
++	if (err || (wpa_auth & WPA3_AUTH_SAE_PSK) == 0) {
++		brcmf_dbg(INFO, "wpa_auth is not SAE:0x%x\n", wpa_auth);
++		return 0;
++	}
++
++	rsnx_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
++				   settings->beacon.tail_len, WLAN_EID_RSNX);
++
++	if (rsnx_ie && rsnx_ie->len &&
++	    (rsnx_ie->data[0] & WLAN_RSNX_CAPA_SAE_H2E))
++		sae_pwe = 2;
++
++	/* Found rsnx_ie with SAE_H2E, check the bss selector to know if it is
++	 * a H2E only.
++	 */
++
++	if (sae_pwe == 2) {
++		supp_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.head,
++						settings->beacon.head_len,
++						WLAN_EID_SUPP_RATES);
++		ext_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
++					       settings->beacon.tail_len,
++					       WLAN_EID_EXT_SUPP_RATES);
++		if (ext_rate_ie) {
++			ie_len = ext_rate_ie->len;
++			for (i = 0; i < ie_len; i++) {
++				if ((ext_rate_ie->data[i] & 0x7f) ==
++				    BSS_MEMBERSHIP_SELECTOR_SAE_H2E) {
++					sae_pwe = 1;
++					break;
++				}
++			}
++		}
++
++		/* If we cannot found H2E only selector in ext_supp_rate IE,
++		 * traversal supp_rate IE to make sure it really doesn't exist
++		 */
++		if (sae_pwe == 2 && supp_rate_ie) {
++			ie_len = supp_rate_ie->len;
++			for (i = 0; i < ie_len; i++) {
++				if ((supp_rate_ie->data[i] & 0x7f) ==
++				    BSS_MEMBERSHIP_SELECTOR_SAE_H2E) {
++					sae_pwe = 1;
++					break;
++				}
++			}
++		}
++	}
++
++	err = brcmf_fwvid_configure_sae_pwe(ifp, sae_pwe);
++	if (err == -EOPNOTSUPP)
++		return 0;
++
++	brcmf_dbg(TRACE, "extsae_pwe=%u\n", sae_pwe);
++	return err;
++}
++
+ static s32
+ brcmf_parse_configure_security(struct brcmf_if *ifp,
+ 			       struct cfg80211_ap_settings *settings,
+@@ -5164,6 +5237,10 @@ brcmf_parse_configure_security(struct brcmf_if *ifp,
+ 			err = brcmf_configure_wpaie(ifp, tmp_ie, true);
+ 			if (err < 0)
+ 				return err;
++
++			err = brcmf_parse_configure_sae_pwe(ifp, settings);
++			if (err < 0)
++				return err;
+ 		}
+ 	} else {
+ 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+index 545eb9aae966..0443207dfe00 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+@@ -367,10 +367,16 @@ static void brcmf_cyw_register_event_handlers(struct brcmf_pub *drvr)
+ 			    brcmf_notify_mgmt_tx_status);
+ }
+ 
++static int brcmf_cyw_configure_sae_pwe(struct brcmf_if *ifp, u32 sae_pwe)
++{
++	return brcmf_fil_iovar_int_set(ifp, "extsae_pwe", sae_pwe);
++}
++
+ const struct brcmf_fwvid_ops brcmf_cyw_ops = {
+ 	.set_sae_password = brcmf_cyw_set_sae_pwd,
+ 	.alloc_fweh_info = brcmf_cyw_alloc_fweh_info,
+ 	.activate_events = brcmf_cyw_activate_events,
+ 	.get_cfg80211_ops = brcmf_cyw_get_cfg80211_ops,
+ 	.register_event_handlers = brcmf_cyw_register_event_handlers,
++	.configure_sae_pwe = brcmf_cyw_configure_sae_pwe,
+ };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
+index f3e011d090f2..56d341a75a53 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
+@@ -18,6 +18,7 @@ struct brcmf_fwvid_ops {
+ 	int (*activate_events)(struct brcmf_if *ifp);
+ 	void (*get_cfg80211_ops)(struct brcmf_pub *drvr);
+ 	void (*register_event_handlers)(struct brcmf_pub *drvr);
++	int (*configure_sae_pwe)(struct brcmf_if *ifp, u32 sae_pwe);
+ };
+ 
+ /* exported functions */
+@@ -40,6 +41,16 @@ static inline void brcmf_fwvid_feat_attach(struct brcmf_if *ifp)
+ 	vops->feat_attach(ifp);
+ }
+ 
++static inline int brcmf_fwvid_configure_sae_pwe(struct brcmf_if *ifp, u32 sae_pwe)
++{
++	const struct brcmf_fwvid_ops *vops = ifp->drvr->vops;
++
++	if (!vops || !vops->configure_sae_pwe)
++		return -EOPNOTSUPP;
++
++	return vops->configure_sae_pwe(ifp, sae_pwe);
++}
++
+ static inline int brcmf_fwvid_set_sae_password(struct brcmf_if *ifp,
+ 					       struct cfg80211_crypto_settings *crypto)
+ {
+-- 
+2.53.0
+
