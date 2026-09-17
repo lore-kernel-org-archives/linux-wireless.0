@@ -1,86 +1,103 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9297643D503;
-	Thu, 17 Sep 2026 08:56:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 548554AB3BF;
+	Thu, 17 Sep 2026 09:10:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789635411; cv=none; b=KDkN5+Iv4w/mGLqadI3633xmxI/ebXXN0dRHzLOcCChekO6cXadoUBwIqpcR0ZjlBt3JHo1JFZlwvbWYwSt+MJiOzKiyE9DCyTGUxL6CkSdl6Gn4p4q38k12Oua67kq/3RzMQqan4fCTtxThm8tCTmcJTBWTAGSPBkWl2sxbKKQ=
+	t=1789636213; cv=none; b=B/o8tfGNoJhSWNJkf/66i946jv/ztEt/ziW3e5E+rBS9iBdkfviiB/p4hBjiUTP1hBu1ugHf3wP0My8s8WE5Lf8BUAvi+EKVQ6Dy+DJoW03m8H4PHVDWpQ+VCVoHTmE/1k8FOzteBfNjrKmUhf/DW7BtZlHI3K2QiczfgSbPFE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789635411; c=relaxed/simple;
-	bh=s5u2AyGTEY7qVivI6JscsmSZSmPFDoG29XJMQntgNm0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=d/Am0pst1wUAV3dXNHsl3OcD7VIShaTWdiQPOvd8EFa6b20e2tJvLHpSC4UxVF3k9sGJx5kRs4jkVQdqkB4K/RZ7tBcyUkofLd86c67KgVRD8vEXaIUZ77DR6EWRRaBUPft9iUQsa1iM7Jhk9vleProxauHOGj8f1+yF+XP+k5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: mail.toke.dk; dkim=none
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, Pengpeng Hou
- <pengpeng@iscas.ac.cn>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] wifi: ath9k: reject short WMI command responses
-In-Reply-To: <8c2dbacf-63ec-428c-b283-50198579cb89@oss.qualcomm.com>
-References: <20260814075837.20005-1-pengpeng@iscas.ac.cn>
- <8c2dbacf-63ec-428c-b283-50198579cb89@oss.qualcomm.com>
-Date: Thu, 17 Sep 2026 10:56:33 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87cxucuugu.fsf@toke.dk>
+	s=arc-20240116; t=1789636213; c=relaxed/simple;
+	bh=VR5R/ckONE5WIHaDtjgVkmaC0BRZAQRLZd5mpaDxOTo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=jzXNz6xJ6SZzweaanOlvE345R0DIlvUH4ZpqAD4aYaMjLKSupMXKF6SsCaJOp03ff4Em9q8UT6inRbVwKYk5gjhn3y0cufAoAYU3Vr23Mq7deeEw1w9SmVK9y61bmw3ZIpby5qk7zy/1Lv/8kBYs8oaS9TFJjX5tv8pb1r5Ffxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=bQk50RsD; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="bQk50RsD"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68H99gE123147515, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789636183; bh=VR5R/ckONE5WIHaDtjgVkmaC0BRZAQRLZd5mpaDxOTo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=bQk50RsDXK/Le8txZ13Un8Uj/+6vd/vmD9TBcY1gLMw6ImeK/1eoSyJCPZyYoMQxZ
+	 OH+1ozRfLi+FNybZRzqb839lGlAnivLjrJt/UoszBopmZ+g2vB5k/MZOvzgsekbc7G
+	 YrgAyro8IyaPn6m0EuD6TgSM+pwaZDyA/6Pes0BydJ0EbqPe269ZJ3N7GlcW15DFSv
+	 b2mYDoFCzKj/3LldShtT63J1U+13xK0Emyf4A2j2uYio+GTbHlLF0xLc30zO28bw23
+	 OjwWIITSYbNTLyrn2LhJds//vz1ZiaKecw7jjMao+e3EEcWo4St1Y55rlvBtp91q5A
+	 WrZC54Gnv6OJQ==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68H99gE123147515
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 17 Sep 2026 17:09:43 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 17 Sep 2026 17:09:43 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 17 Sep 2026 17:09:42 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Thu, 17 Sep 2026 17:09:42 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Alastair D'Silva <alastair@d-silva.org>, Kalle Valo <kvalo@kernel.org>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw88: sdio: Fix unhandled RX request interrupt
+ storm
+Thread-Topic: [PATCH] wifi: rtw88: sdio: Fix unhandled RX request interrupt
+ storm
+Thread-Index: AQHdRZjHlTD58hEpHEaBWkK5Af0sf7bSYOjAgAAXxcA=
+Date: Thu, 17 Sep 2026 09:09:42 +0000
+Message-ID: <58a857e3b0614e2b9a520024b9932685@realtek.com>
+References: <20260916040635.205094-1-alastair@d-silva.org>
+ <ea3434d849b34a4286b0a193351a610e@realtek.com>
+In-Reply-To: <ea3434d849b34a4286b0a193351a610e@realtek.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 
-Jeff Johnson <jeff.johnson@oss.qualcomm.com> writes:
+Ping-Ke Shih wrote:
+>=20
+> Hi Martin,
+>=20
+> Alastair D'Silva <alastair@d-silva.org> wrote:
+> > In rtw_sdio_handle_interrupt(), the HISR status register is cleared usi=
+ng
+> > Write-1-to-Clear (W1C) semantics. However, the driver masks out the
+> > REG_SDIO_HISR_RX_REQUEST bit in the local 'hisr' variable before writin=
+g
+> > it back, causing a 0 to be written to that bit.
+>=20
+> I feel this patch makes sense.
+>=20
+> Did you remember why you clear the bit locally? Can you share vendor
+> driver you referenced?
+>=20
 
-> On 8/14/2026 12:58 AM, Pengpeng Hou wrote:
->> ath9k_wmi_rsp_callback() removes the validated WMI header and copies
->> the number of bytes expected by the waiting command into its response
->> buffer. A device response shorter than that expectation can therefore
->> be read beyond the skb payload.
->> 
->> Record -EMSGSIZE for a short response, complete the waiter, and return
->> the stored status from the command path. This also prevents callers from
->> consuming stale response bytes as a successful reply.
->> 
->> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
->> Assisted-by: Codex:gpt-5
->> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
->> ---
->> Changes since v1: https://lore.kernel.org/all/20260704011405.55089-1-pengpeng@iscas.ac.cn/
->> - return a stored response error to the waiting command
->> - retain acceptance of replies longer than the requested prefix
->> - recheck callback synchronization under the existing WMI lock
->> 
->> The WMI callback and waiter synchronization were reviewed statically; no
->> ath9k firmware fault injection was performed.
->> 
->>  drivers/net/wireless/ath/ath9k/wmi.c | 17 +++++++++++++++--
->>  drivers/net/wireless/ath/ath9k/wmi.h |  1 +
->>  2 files changed, 16 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
->> index 284e8c13b043..06d9975f9717 100644
->> --- a/drivers/net/wireless/ath/ath9k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
->> @@ -206,8 +206,16 @@ static void ath9k_wmi_rsp_callback(struct wmi *wmi, struct sk_buff *skb)
->>  {
->>  	skb_pull(skb, sizeof(struct wmi_cmd_hdr));
->>  
->> -	if (wmi->cmd_rsp_buf != NULL && wmi->cmd_rsp_len != 0)
->> +	if (wmi->cmd_rsp_buf && wmi->cmd_rsp_len) {
->> +		if (skb->len < wmi->cmd_rsp_len) {
->> +			wmi->cmd_rsp_status = -EMSGSIZE;
->
-> my review agent notes that if this path is taken that there is no debug
-> message alerting this. see my suggestion on dealing with this below...
+I asked internal expert who said this bit will be cleared automatically
+if all packets in RX buffer are received. If we clear this bit here,
+the interrupt will not raise again if no newly incoming packet even
+there are remaining packets in RX buffer.=20
 
-I think you're being pedantic here. I'm pretty sure there's no real
-hardware that does this; merging this is meant to protect against a
-USB device pretending to be an ath9k_htc and trying to exploit the
-kernel. So I think it's fine to merge as-is.
+Checking rtw_sdio_rx_isr(), we can see it reads hisr for each iteration,
+which this is also the evidence that the bit will be cleared automatically.
 
--Toke
+Therefore, we need to dig further why the RX buffer can't be empty
+and get stuck.=20
+
+Ping-Ke
+
+
