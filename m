@@ -1,45 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 298C73E40EA
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 06:48:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F934457DF
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 06:48:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789627724; cv=none; b=MQVS2XEZEVMaZC4lNyOUZFKf7Lp5sGbSCI76OnTEWXSdbcsAGwDWnypARYclJun2ueFUe9lo/IsNvUP9KI4t2uaFqrOgdAhhKObDdh+f+r9nk4Te0nF4qjTEsVfW6auQLT9wTA75P1CJ25iExEKTEaxIr6wfb6fnMZ18GfMph0w=
+	t=1789627727; cv=none; b=daxQeNgWm+tUvCWuHji8FN12kNbcxelGjjQXUqwGzIw43zglTb5lebReu4gXeJX7p/erL8p6Klu4oo9DR7Vm6yy9Ozi24QwmHZR/ZpHd1jCGZF/cfeIm1PISYgPU14oFyLtvWbdXM5HNAKWT8drArF+XdZUf2uo5m+FPx3/DJZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789627724; c=relaxed/simple;
-	bh=3jIIF/WOU9H2yQV04mRQjY74nmF7dGtB9JYdYQvm+1U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cO9ZlBCHQ7M5UnCroGHtiDvYfG3hezA78grBMhpN3LXn7dwHHVUfuK1714O6++gpfclkUMudwEgEV5euS3GfhmL7aW77oBwSfh8G6qyybpImV/sgBEZ11hrYmNS14YmtsOdOmhWI6e65frlb5L5Sm/xjd5Ag7+vehL3dxkGWrJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=i8vKrf0F; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1789627727; c=relaxed/simple;
+	bh=Vaksf6mVkDt6qpn4MgBSFQTD9uTAPkA0fjL78cwCe78=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=hvDbWWR/oeXRAy1SN4gAKTR6ut+7AJyadRKIddvFD6ZWUOcKhS+ljCuag9pdm1qVwRyZOOh0Ryb+WaTtM8NuB9UlRePLd5PVJkbrqOrYGnrehBUqrKJ9ToQh/Bev60kdBA0X01HeJE5HBkQdmvG2fjZ1AfuuF6GnlddLZzGYrKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OVTV6C1I; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i8vKrf0F"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OVTV6C1I"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789627722;
+	s=mimecast20190719; t=1789627724;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=38XCC3pzzBeGcbj7BSYYe61HHKXklyzXx0gZrWcUPq4=;
-	b=i8vKrf0FA+Oww7jZf2aSaZ/o+81HUPip+u0guErohTdPqjGglP/A8CrdK1zIzGYglVnt/x
-	AqggsmWLoBGiew3kagSmWhhUmAu0pklXhIs32M1IL3P43VuJUhsuGhoYwtdjHeNXXLyNLN
-	VDieqVk7vibeB7psWIJRNWyJxFf6wSk=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=x33XW/wjXt6WHIS6oNPy0fJBTUtYpgjF1Fs3XuRG47o=;
+	b=OVTV6C1IXegNp8UulnN29yFoM5tEi+VbUDdNeKw+JRi/Czrytb/bcTCSkGvm2vkQUhRXDW
+	jdN/8412ukLwHCPd/MjtSPTKM15IFLdf9VPCC4URn5AhJ383EZ8+eT31O2/HxX0GW6yJtU
+	P3mnMQuYhGnSTSyqkd3iCZvZmQwHCEk=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-623-L0mNYR8MM02UZed6OsDEtA-1; Thu,
- 17 Sep 2026 02:48:38 -0400
-X-MC-Unique: L0mNYR8MM02UZed6OsDEtA-1
-X-Mimecast-MFC-AGG-ID: L0mNYR8MM02UZed6OsDEtA_1789627717
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-692-zgYYo98xPMa2CbqBBl4t5w-1; Thu,
+ 17 Sep 2026 02:48:41 -0400
+X-MC-Unique: zgYYo98xPMa2CbqBBl4t5w-1
+X-Mimecast-MFC-AGG-ID: zgYYo98xPMa2CbqBBl4t5w_1789627719
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F405E18CD2FA;
-	Thu, 17 Sep 2026 06:48:30 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E9583195F140;
+	Thu, 17 Sep 2026 06:48:36 +0000 (UTC)
 Received: from fedora.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B8AA23003EED;
-	Thu, 17 Sep 2026 06:48:28 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D02F33003EED;
+	Thu, 17 Sep 2026 06:48:34 +0000 (UTC)
 From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 To: jjohnson@kernel.org
 Cc: ath11k@lists.infradead.org,
@@ -47,9 +49,11 @@ Cc: ath11k@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v7 0/4] ath11k/ath12k: implement TX flow control
-Date: Thu, 17 Sep 2026 08:48:21 +0200
-Message-ID: <20260917064825.12747-1-jtornosm@redhat.com>
+Subject: [PATCH v7 1/4] wifi: ath11k: use queue mapping for WCN6750 ring selection
+Date: Thu, 17 Sep 2026 08:48:22 +0200
+Message-ID: <20260917064825.12747-2-jtornosm@redhat.com>
+In-Reply-To: <20260917064825.12747-1-jtornosm@redhat.com>
+References: <20260917064825.12747-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,34 +63,63 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-This series implements custom wake_tx_queue operations for ath11k and
-ath12k drivers to prevent hardware ring overflow issues under heavy
-traffic.
+WCN6750 selects the TCL ring using skb_get_hash() to distribute
+flows across its 3 TX rings, as introduced in commit 7636c9a6e7d7
+("wifi: ath11k: Add multi TX ring support for WCN6750"). The goal
+was to prevent out-of-order packet delivery that could occur with
+smp_processor_id()-based selection, where packets of the same flow
+could end up on different rings depending on CPU scheduling.
 
-Without proper flow control, both drivers experience -ENOMEM errors
-("failed to transmit frame -12") when the hardware TCL ring fills up.
-Additionally, ath12k can hang under sustained high throughput. These
-issues are more commonly observed in VMs with PCIe passthrough but
-also occur on bare metal systems.
+Switch to skb_get_queue_mapping() instead, which returns the AC
+(access category) assigned by mac80211 in ieee80211_select_queue().
+This provides the same ordering guarantee: packets of the same TID
+always map to the same AC and therefore always land on the same
+ring, preventing reordering.
 
-The implementation follows the pattern used in the iwlwifi driver,
-adapted for ath11k/ath12k hardware ring architecture, checking
-hardware ring space before dequeuing packets from mac80211.
+Using queue mapping for ring selection also provides QoS-aware
+distribution, where each traffic class gets a deterministic ring
+assignment, rather than the random distribution that flow hashing
+produces. With 3 rings and 4 ACs (VO=0, VI=1, BE=2, BK=3), the
+mapping becomes: VO and BK share ring 0, VI uses ring 1, and BE
+uses ring 2.
 
-Testing shows stable operation with eliminated -ENOMEM errors, no hangs,
-and improved throughput under heavy traffic conditions.
+This matches the approach already used by ath12k for WCN7850, which
+has the same ring count and uses skb_get_queue_mapping() for its
+ring selector.
 
-Jose Ignacio Tornos Martinez (4):
-  wifi: ath11k: use queue mapping for WCN6750 ring selection
-  wifi: ath11k/ath12k: remove skb parameter from get_ring_selector
-  wifi: ath11k: implement custom wake_tx_queue with flow control
-  wifi: ath12k: implement custom wake_tx_queue with flow control
+This change also removes the dependency on skb_get_hash(), which
+is relevant for a subsequent patch that removes the skb parameter
+from the get_ring_selector hw_ops callback entirely, enabling
+TX flow control in wake_tx_queue without requiring a complex peek
+to inspect frames before dequeue.
 
-v7: No modification in patches 1 and 2
-    Address comments from Jeff Johnson:
-      Patch 3: Add the defensive pattern _bh in both spinlocks (ath11k)
-      Patch 4: Add the defensive pattern _bh in both spinlocks (ath12k)
-v6: https://lore.kernel.org/all/20260811172435.616200-1-jtornosm@redhat.com/
---
-2.49.0
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+v7: no modification
+v6: https://lore.kernel.org/all/20260811172435.616200-2-jtornosm@redhat.com/
+
+ drivers/net/wireless/ath/ath11k/hw.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 93f9a03c48dc..d679e39dce03 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -891,13 +891,7 @@ static u32 ath11k_hw_ipq8074_get_tcl_ring_selector(struct sk_buff *skb)
+ 
+ static u32 ath11k_hw_wcn6750_get_tcl_ring_selector(struct sk_buff *skb)
+ {
+-	/* Select the TCL ring based on the flow hash of the SKB instead
+-	 * of CPU ID. Since applications pumping the traffic can be scheduled
+-	 * on multiple CPUs, there is a chance that packets of the same flow
+-	 * could end on different TCL rings, this could sometimes results in
+-	 * an out of order arrival of the packets at the receiver.
+-	 */
+-	return skb_get_hash(skb);
++	return skb_get_queue_mapping(skb);
+ }
+ 
+ const struct ath11k_hw_ops ipq8074_ops = {
+-- 
+2.54.0
 
