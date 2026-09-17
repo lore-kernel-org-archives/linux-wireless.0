@@ -1,164 +1,151 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2D0034750F
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 03:08:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 786D138A736;
+	Thu, 17 Sep 2026 03:20:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789614491; cv=none; b=jlXeQN5TKJEWZ+BfOaGao/ogGEWw5jx0zGqo4z4oI27Zc+adCk9vk6PtT274vgCAqt4wn8KlzNm2qeMyAekVPtFpxOOtv9bRFBTh6HHXNLA+etL8kxG0gmhIYjRA5XMezlBGfchFnUIdNHNBgNPasI3GxI+uqNjLTdL451dpqy8=
+	t=1789615228; cv=none; b=HmBvOZKD9c/TI9e3a1hNxMPf/XTFNbmq4vFDGQjhGY2PSUWJhkRuyjuX9Gh/VZIglJ/O2kNDi9oR5kEziI0Oo2/IwnjmaWtjEhHfL6QqEPDTAf7oCqnLOFXgf4oda8NbpXe+x6kJwjj1kqKsxkexZ7q0p/oJqZKZv89jSzoRF6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789614491; c=relaxed/simple;
-	bh=BFWJBTnLF1aE8X+tLyBABld1kYZc7ehMNU4s+4XJNu0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lHHk3mZRFBBCHWrnuv8yZiNZkV/VtPHXxGUk0NGg1eU/adyvBx5oYL3d39D9/BcXa/fh0K1//V+6PuRbfXQxCBumCsZngHh2tqTlobANBB44Zd9Xs/61mq3dL1LjsTVytB5IVIcaM8heVREw+4FafL3g1g8O9rVaZnBKfzIWUkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XGUyAhsi; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=AhYRd0NT; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1789615228; c=relaxed/simple;
+	bh=+t8nFhLySQeEk2FVKHAU4MnDhEhCCA6vFVkhjsNNVNU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=h5G5QW30Qp0/SowkUDZV6hI+fsREzOZzE2wnSZ2gDsoVqCt3qNuHNIw8HwgN2Kl19NVsup3QztUvDwqXtcXRyFEaZ26D5Gb/onACPEyhfLqLl72QGapstf3qenZRLcOcybHjg7q3kxU2WVJi/a9XvcBTwJcvuXe3cME39vjVinI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=pFWrDg9I; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XGUyAhsi";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="AhYRd0NT"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68H2sh7C3302568
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 03:07:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/2v5Ij2HkXLd7w5QHHLHFy8fu/Zau4E+h+giE13eitE=; b=XGUyAhsiSSf4ibJL
-	HJ8s5IV447hEWu3UaG/napa2e7oeGY2/hn73H06enD1j6ojitvTEhejF2dW++lIj
-	GxIiwVm07MLDhvwm45r1LAu0Fu5DP5BRIS4kwMSYEagMHrLLxZH7kELO6PqO70Ug
-	gBCz4hCSi8f1YWLAXDKBYWrzF0pTLev9GCaocAu9TH14CT/+PlDIH92MXeaLm7N1
-	ePVHzWCMN6vilRGoYrcPUT1RS5x52BfshIRNxNMVcMAMq9I4CKpd1WnqNjNRTPVx
-	1tpjoQQwPUw63P932dObFXjSxKqybcBVBMrwIkOUnqW2G3kUysRL28EVG5H8NqC1
-	2W5jVQ==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gr7uc81bs-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 03:07:54 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc1ca15334cso465514a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2026 20:07:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789614474; x=1790219274; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/2v5Ij2HkXLd7w5QHHLHFy8fu/Zau4E+h+giE13eitE=;
-        b=AhYRd0NTIH7oyVPBFXTkSA7EGe9O9QL9kopnn1H9vFbsFCxRTpulraWKNvsqF2dj71
-         t5e0/gh9mTNzldCkOOY1pzbD5cWjzkge+WxLCmpPui/TfLp/FJhcApMrq8K2GTgtvu9H
-         zxFUbgQTpSz83EOteY56qS3nV7Yoe9oavDc02KOWSd3Ccagu1bbP1GOpCWLVcJx2Fwpm
-         1jtIlUIKM2Ub4zzZ6xraRpqEVoEEXu9gy7DTUIUwn+mPkioNK/a9JYVEj1/hMCPZH6O/
-         O1kt+Lxi3VTlnNwIUsOJQ/5HNBAr7aM3oUTwVBb3K9/t6kr8lb3HloVq/rC8DpEzB/G8
-         C0CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789614474; x=1790219274;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/2v5Ij2HkXLd7w5QHHLHFy8fu/Zau4E+h+giE13eitE=;
-        b=H9mLyX1YjOLeYInHUsBKSbKrQm0EU7Bvpp8pAdokswvKinIJPpHBWiiqZo8QvAxQL7
-         cqFqsfU5sm50ZsRyt2VCR//pf9QIo+U5nCQXa8ZFrrI2SDZ0GMdjnJCZawwEFT+lfSHm
-         6Y5C6UspuKE0cL/XXZdWwVXR+7Z/lJ5R9JJ0lM7lHYRGpDUWbPx7pTBr1ZlqMVP8bTdK
-         /rxkJLY/rTX4lP92YI0R5zDU8GgjWdluBPeqFdS7xVLCBuV5jlaS4ACCPI/4ZrYxDuhW
-         lb93mMwmOSwVSNYtsYkV4f7yW8VbQGkVgdyf8lp+ItbB/auo1EnIs0wlrcMGEXScxUfu
-         pq5A==
-X-Forwarded-Encrypted: i=1; AKwUvBzdNz0EFUQkzrFESdiDCLYyjYjikEM7OhzVtG5qpp5+CtxU8bSpR2rKwAp7kG5963aaVPGKH/JyTfxG9Uq6Fg==@vger.kernel.org
-X-Gm-Message-State: AFuF++n4kjQkCdYbRuUIb1U0qJ7A5K6MNCQC+XHNyn9bBOJ3VaVSM3G7
-	bSU4yN3quqs8vajhC/Bpai2ZbkyNsfg1y5fvlzaFEbD57/0pvL53E8cqHCLeNQsJZzuf9k21g1b
-	28U3ym6cNzzutPGyVphgWi1m/q0urGiGh1pmmNXcJzXVsWxAikz1/AsKRDtAXZGHtet6fOA==
-X-Gm-Gg: AYBFou3UyvFzW87ExgJtA4SHmUab+muIDHbtNWdOHAKw4V00C3iQBOKSaxSmXUb/fyn
-	KhVFMFun/Vqe+8HBtHX8FHgT6XrjY06Eo19bQZyyqD4Vv+Qae6rqGcnO4+GeP+l6gFWOTfkISGF
-	GWtBHiwEi9oMmKsOLMujXeVI+V0+Ydk8SUroYdNsII6bVMrcUM8uL7LByENNYsBsbmAqeBMeJXa
-	VsjCpNIerKVl5yYcOHh+hOgPx78DFyPp2KQ8qxQ6Df0JEthmYuubNtGycuckIDdspSAGsSZkLoz
-	LR15pAyxjgYqatovJsGQvQEiysCadQ3GPfTdM0MNTO24nGVM3ajhdQlMUE6REtRzQzrogqzXJyP
-	sVc0hpaHlcRpNMgi8/DBGaJoh2tqldDOOoYPuk8aZM0vgeG6zjRDHrX4+E0gZdF1MlgLMmwXh
-X-Received: by 2002:a05:6a20:4311:b0:3cc:f008:8123 with SMTP id adf61e73a8af0-3dd5f448831mr11834377637.8.1789614474154;
-        Wed, 16 Sep 2026 20:07:54 -0700 (PDT)
-X-Received: by 2002:a05:6a20:4311:b0:3cc:f008:8123 with SMTP id adf61e73a8af0-3dd5f448831mr11834312637.8.1789614473570;
-        Wed, 16 Sep 2026 20:07:53 -0700 (PDT)
-Received: from [10.133.33.84] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc50abae95csm2452404a12.25.2026.09.16.20.07.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2026 20:07:53 -0700 (PDT)
-Message-ID: <670a6d6d-2d95-41b2-b64a-997a39d4f320@oss.qualcomm.com>
-Date: Thu, 17 Sep 2026 11:07:51 +0800
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="pFWrDg9I"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68H3KIAg82972585, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789615219; bh=+t8nFhLySQeEk2FVKHAU4MnDhEhCCA6vFVkhjsNNVNU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=pFWrDg9IUsJqlZZRm2MLxiSV3IJ1Ig/qQRdEXnxLw/loaewC8IJBLszi3AoQ5fohF
+	 hrViUebuH1g/fconz1QkcdD/BjdZCUAy4SWADhSrh50WbGTpCEup+gghDOVj6NgTwk
+	 Mu9/7nQ4Gmof2zYsXWjfS57k238HSvbe23XnW0LL8r436BAN2nNa8T9EagElup8hj0
+	 l6M+UxZO2w69yMMdTVjoxvIY4oxsdFc92IZlK2/Dt/qSa3SSgxXExJicurUU2Ww1MP
+	 wKi1FqsW0YDm0cXqiBJiXfX4EpcKWd3z1QEtRA9FDoZRa9VZf58lTh3YURSUIoonfX
+	 XKZcjqv/vB33g==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68H3KIAg82972585
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 17 Sep 2026 11:20:18 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 17 Sep 2026 11:20:19 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Thu, 17 Sep 2026 11:20:19 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "5mghybrid@khu.ac.kr" <5mghybrid@khu.ac.kr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Jes Sorensen <Jes.Sorensen@gmail.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2 2/4] wifi: rtl8xxxu: unwind incomplete receive
+ startup
+Thread-Topic: [PATCH rtw-next v2 2/4] wifi: rtl8xxxu: unwind incomplete
+ receive startup
+Thread-Index: AQHdQ1I1PFatV4b/iEafUgAm4qfdsLbSAwsA
+Date: Thu, 17 Sep 2026 03:20:19 +0000
+Message-ID: <b235d4ac6b8048c4916f484082654c48@realtek.com>
+References: <20260913-codex-rtw-rx-v2-v2-0-f09c964e0b96@khu.ac.kr>
+ <20260913-codex-rtw-rx-v2-v2-2-f09c964e0b96@khu.ac.kr>
+In-Reply-To: <20260913-codex-rtw-rx-v2-v2-2-f09c964e0b96@khu.ac.kr>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath12k: fix chain-mask shift on 64-bit big-endian
-To: Michael Pfeifroth <micpf@westermo.com>,
-        Jeff Johnson
- <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <aqqoAVbsVu574FwT@mpf-ESPRIMO-P9012>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <aqqoAVbsVu574FwT@mpf-ESPRIMO-P9012>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE3MDAzOCBTYWx0ZWRfXzsd/EMok0Q47
- ZlMlb2lqkZ/gAnCQA6tFAsIUZ39OVd/i6IUxSqabRfTymaj1Q7MzgrVuhUh+VhlITlOzA4qCqsj
- FUk6lUjm7ie19+zA64Fybnc2O5ipc8Z9eaK0t/vUHITLaGfDDxsSQh/D0wR825kZ0l4ddfguwHW
- WCBE6fi3ODnPyU/OB5gErJEz9NCpt3+TrbA876kcOX9tblGu1sgSHHDnJ6fgrE7nEXz3lSJ+jnB
- CGlVy1kIhdrF2DHWZxM6pL5ZQ8qeXIqLMsO3HaIGFk0TeXSMJzp9+WpmPm71s/9fj1Gp8NsK2wb
- MBjLY97FDt0izGbjNAGo7i4uwTECzieyAOm+P+i+Kf7KULgL9EUvH6sQSIOVGRDih9+QZ9bcNXa
- QQjAeuvGzvhSXnUlLYpNYsIdKwrdl4EIA+GC/jU6H7nH5DlLUCxuSYTzW0Ncn3OhZ0I/LtcB+0G
- L3z/eMNZwTkTJk/AmJA==
-X-Proofpoint-GUID: ued90zcDIs4O2xthyUu8J24JSIlWaxPs
-X-Proofpoint-ORIG-GUID: ued90zcDIs4O2xthyUu8J24JSIlWaxPs
-X-Authority-Analysis: v=2.4 cv=F9zC5ahN c=1 sm=1 tr=0 ts=6aab598a cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=VwQbUJbxAAAA:8 a=N9GNhs4bAAAA:8 a=EUspDBNiAAAA:8 a=81S0BUt_Dk-okXjJcTQA:9
- a=QEXdDO2ut3YA:10 a=3WC7DwWrALyhR5TkjVHa:22 a=PZhj9NlD-CKO8hVp7yCs:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE3MDAzOCBTYWx0ZWRfX9QE5V8U43Axj
- p5drJvm4+XGTyPLO00AwcxKbtxwPsP6tPI7XEDx8/Ju2pmz5/gWj25KazRCSIfl9IaOQPtow2DW
- MjxOs2xLlVtIjelK93uC6ks+uXhP4U8=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-16_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0
- clxscore=1015 impostorscore=0 suspectscore=0 priorityscore=1501 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609170038
 
-
-
-On 9/16/2026 10:30 PM, Michael Pfeifroth wrote:
-> ath12k_pull_mac_phy_cap_svc_ready_ext() derives the tx/rx chain-mask shift
-> with find_first_bit((unsigned long *)&pdev_cap->rx_chain_mask, 32).
-> 
-> pdev_cap->{tx,rx}_chain_mask are u32, but find_first_bit() treats the
-> pointer as an array of unsigned long. On 64-bit big-endian, unsigned long
-> is 8 bytes, so the u32 value ends up in the high 32 bits of the word while
-> find_first_bit(..., 32) only scans the low 32 bits, i.e. the adjacent
-> struct member. rx_chain_mask_shift is therefore computed as 32,
-> ath12k_mac_setup_ht_vht_cap() evaluates cfg_rx_chainmask >> 32 == 0, and
-> the driver advertises a VHT RX-MCS map with all streams "not supported".
-> mac80211 then rejects the VHT capability ("Ignoring VHT IE ... due to
-> invalid rx_mcs_map"), so the link only comes up as HT40 and never
-> negotiates 80/160 MHz. tx_chain_mask_shift happens to scan a zero word and
-> stays 0, so only the RX side is affected.
-> 
-> Use __ffs() on the mask value instead of pointing find_first_bit() at the
-> u32's storage. __ffs() takes its argument by value, so the shift is
-> computed correctly regardless of word size or endianness. The chain masks
-> are always non-zero here, so __ffs() is well defined.
-> 
-> Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Michael Pfeifroth <micpf@westermo.com>
-
-ath11k has the same issue, interested to fix it as well?
-
-anyway:
-
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-
-
+a2ltd29vc2VvayB2aWEgQjQgUmVsYXkgPGRldm51bGwrNW1naHlicmlkLmtodS5hYy5rckBrZXJu
+ZWwub3JnPiB3cm90ZToNCj4gRnJvbToga2ltd29vc2VvayA8NW1naHlicmlkQGtodS5hYy5rcj4N
+Cj4gDQo+IHJ0bDh4eHh1X3N0YXJ0KCkgYWxsb2NhdGVzIGFuZCBzdWJtaXRzIFJYIFVSQnMgb25l
+IGF0IGEgdGltZS4gSWYgYSBsYXRlcg0KPiBhbGxvY2F0aW9uIGZhaWxzLCBlYXJsaWVyIHJlcXVl
+c3RzIG1heSBhbHJlYWR5IGJlIGFjdGl2ZS4gQWZ0ZXIgYQ0KPiBzdWNjZXNzZnVsIHN1Ym1pc3Np
+b24sIHRoYXQgYWxsb2NhdGlvbiBmYWlsdXJlIGNhbiBhbHNvIGxlYXZlIHJldCBzZXQNCj4gdG8g
+emVyby4gVGhlIGVycm9yIHBhdGggdGhlbiBmcmVlcyBUWCByZXNvdXJjZXMgYW5kIGRpc2FibGVz
+IFJYIGZpbHRlcnMNCj4gd2l0aG91dCBkcmFpbmluZyB0aGUgZWFybGllciBSWCByZXF1ZXN0cywg
+eWV0IHJlcG9ydHMgc3RhcnR1cCBzdWNjZXNzLg0KPiANCj4gU2VwYXJhdGUgcG9vbCBhbGxvY2F0
+aW9uIGZyb20gc3VibWlzc2lvbiBzbyBhbiBhbGxvY2F0aW9uIGZhaWx1cmUgY2FuIGJlDQo+IGhh
+bmRsZWQgYmVmb3JlIGFueSBSWCByZXF1ZXN0IGlzIGFjdGl2ZS4gSW50cm9kdWNlIHJ0bDh4eHh1
+X2FsbG9jX3J4X3VyYnMoKQ0KPiB0byBhbGxvY2F0ZSBhbGwgMzIgd3JhcHBlcnMsIHRoZW4gcnRs
+OHh4eHVfc3RhcnRfcngoKSB0byBzdWJtaXQgdGhlDQo+IGNvbXBsZXRlZCBwb29sLiBSZXR1cm4g
+RU5PTUVNIGZvciBldmVyeSBSWCBvciBUWCBVUkIgcG9vbCBhbGxvY2F0aW9uDQo+IGZhaWx1cmUg
+c28gYSBwYXJ0aWFsIGFsbG9jYXRpb24gaXMgcmVwb3J0ZWQgYXMgYW4gZXJyb3IuDQo+IA0KPiBP
+bmNlIHN1Ym1pc3Npb24gYmVnaW5zLCBrZWVwIEVOT01FTS9FQUdBSU4gZmFpbHVyZXMgcXVldWVk
+IGZvciByZXRyeS4NCj4gRm9yIG90aGVyIHN1Ym1pc3Npb24gZXJyb3JzLCBydGw4eHh4dV9zdGFy
+dF9yeCgpIGZyZWVzIHRoZSB1bnN1Ym1pdHRlZA0KPiByZXF1ZXN0cyBhbmQgcmV0dXJucyB0aGUg
+ZXJyb3IuIFNpbmNlIGVhcmxpZXIgc3VibWlzc2lvbnMgbWF5IGFscmVhZHkgYmUNCj4gYWN0aXZl
+IGF0IHRoYXQgcG9pbnQsIHJvdXRlIHRoZSBvdXRlciBzdGFydCBmYWlsdXJlIHRocm91Z2ggdGhl
+IGV4aXN0aW5nDQo+IHJ0bDh4eHh1X3N0b3AoKSBwYXRoLiBUaGlzIGRyYWlucyBxdWV1ZWQgd29y
+ayBhbmQgYWN0aXZlIHJlcXVlc3RzIGFuZA0KPiBjbGVhbnMgdXAgUkYgc3RhdGUgYW5kIFRYIHJl
+c291cmNlcyB0b2dldGhlci4gSW50ZXJydXB0IFVSQiBzdWJtaXNzaW9uDQo+IGZhaWx1cmUgdXNl
+cyB0aGUgc2FtZSBjbGVhbnVwIHBhdGguDQo+IA0KPiBGaXhlczogMjZmMWZhZDI5YWQ5ICgiTmV3
+IGRyaXZlcjogcnRsOHh4eHUgKG1hYzgwMjExKSIpDQoNCklzIHRoaXMgcGF0Y2ggc3Ryb25nIHRv
+IGhhdmUgYSBGaXggdGFnPw0KDQo+IEFzc2lzdGVkLWJ5OiBHUFQtNiBBc3RyYQ0KPiBTaWduZWQt
+b2ZmLWJ5OiBraW13b29zZW9rIDw1bWdoeWJyaWRAa2h1LmFjLmtyPg0KPiAtLS0NCj4gIGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsOHh4eHUvY29yZS5jIHwgOTkgKysrKysrKysrKysr
+KysrKysrKystLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDcxIGluc2VydGlvbnMoKyksIDI4
+IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnRsOHh4eHUvY29yZS5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9y
+dGw4eHh4dS9jb3JlLmMNCj4gaW5kZXggNzk1YTVlYzJmOGNkNC4uMTkzMmE5ZWMxOTcwYyAxMDA2
+NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMN
+Cj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMNCg0K
+Wy4uLl0NCg0KPiBAQCAtNTkwMCw2ICs1OTIyLDQ0IEBAIHN0YXRpYyB2b2lkIHJ0bDh4eHh1X3J4
+X3VyYl93b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4gICAgICAgICB9DQo+ICB9DQo+
+IA0KPiArc3RhdGljIGludCBydGw4eHh4dV9zdGFydF9yeChzdHJ1Y3QgcnRsOHh4eHVfcHJpdiAq
+cHJpdikNCg0KVGhpcyBpcyB2ZXJ5IHNpbWlsYXIgdG8gcnRsOHh4eHVfcnhfdXJiX3dvcmsoKS4g
+UGxlYXNlIG1lcmdlIHRoZW0uDQoNCj4gK3sNCj4gKyAgICAgICBzdHJ1Y3QgcnRsOHh4eHVfcnhf
+dXJiICpyeF91cmIsICp0bXA7DQo+ICsgICAgICAgdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gKyAg
+ICAgICBMSVNUX0hFQUQobG9jYWwpOw0KPiArICAgICAgIGludCByZXQ7DQo+ICsNCj4gKyAgICAg
+ICBzcGluX2xvY2tfaXJxc2F2ZSgmcHJpdi0+cnhfdXJiX2xvY2ssIGZsYWdzKTsNCj4gKyAgICAg
+ICBsaXN0X3NwbGljZV9pbml0KCZwcml2LT5yeF91cmJfcGVuZGluZ19saXN0LCAmbG9jYWwpOw0K
+PiArICAgICAgIHByaXYtPnJ4X3VyYl9wZW5kaW5nX2NvdW50ID0gMDsNCj4gKyAgICAgICBzcGlu
+X3VubG9ja19pcnFyZXN0b3JlKCZwcml2LT5yeF91cmJfbG9jaywgZmxhZ3MpOw0KPiArDQo+ICsg
+ICAgICAgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHJ4X3VyYiwgdG1wLCAmbG9jYWwsIGxpc3Qp
+IHsNCj4gKyAgICAgICAgICAgICAgIGxpc3RfZGVsX2luaXQoJnJ4X3VyYi0+bGlzdCk7DQo+ICsg
+ICAgICAgICAgICAgICByZXQgPSBydGw4eHh4dV9zdWJtaXRfcnhfdXJiKHByaXYsIHJ4X3VyYik7
+DQo+ICsgICAgICAgICAgICAgICBzd2l0Y2ggKHJldCkgew0KPiArICAgICAgICAgICAgICAgY2Fz
+ZSAwOg0KPiArICAgICAgICAgICAgICAgICAgICAgICBicmVhazsNCj4gKyAgICAgICAgICAgICAg
+IGNhc2UgLUVOT01FTToNCj4gKyAgICAgICAgICAgICAgIGNhc2UgLUVBR0FJTjoNCj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgcnRsOHh4eHVfcXVldWVfcnhfdXJiKHByaXYsIHJ4X3VyYik7DQo+
+ICsgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiArICAgICAgICAgICAgICAgZGVmYXVs
+dDoNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgdXNiX2ZyZWVfdXJiKCZyeF91cmItPnVyYik7
+DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGdvdG8gZnJlZV9yZW1haW5pbmc7DQo+ICsgICAg
+ICAgICAgICAgICB9DQo+ICsgICAgICAgfQ0KPiArDQo+ICsgICAgICAgcmV0dXJuIDA7DQo+ICsN
+Cj4gK2ZyZWVfcmVtYWluaW5nOg0KPiArICAgICAgIGxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShy
+eF91cmIsIHRtcCwgJmxvY2FsLCBsaXN0KSB7DQo+ICsgICAgICAgICAgICAgICBsaXN0X2RlbCgm
+cnhfdXJiLT5saXN0KTsNCj4gKyAgICAgICAgICAgICAgIHVzYl9mcmVlX3VyYigmcnhfdXJiLT51
+cmIpOw0KPiArICAgICAgIH0NCj4gKyAgICAgICByZXR1cm4gcmV0Ow0KPiArfQ0KPiArDQo+ICAv
+Kg0KPiAgICogVGhlIFJUTDg3MjNCVS9SVEw4MTkyRVUgdmVuZG9yIGRyaXZlciB1c2UgY29leGlz
+dGVuY2UgdGFibGUgdHlwZQ0KPiAgICogMC03IHRvIHJlcHJlc2VudCB3cml0aW5nIGRpZmZlcmVu
+dCBjb21iaW5hdGlvbnMgb2YgcmVnaXN0ZXIgdmFsdWVzDQoNClsuLl0NCg0KPiBAQCAtNzQ3OCwx
+MyArNzUyNiw3IEBAIHN0YXRpYyBpbnQgcnRsOHh4eHVfc3RhcnQoc3RydWN0IGllZWU4MDIxMV9o
+dyAqaHcpDQo+ICAgICAgICAgcmV0dXJuIHJldDsNCj4gDQo+ICBlcnJvcl9vdXQ6DQo+IC0gICAg
+ICAgcnRsOHh4eHVfZnJlZV90eF9yZXNvdXJjZXMocHJpdik7DQo+IC0gICAgICAgLyoNCj4gLSAg
+ICAgICAgKiBEaXNhYmxlIGFsbCBkYXRhIGFuZCBtZ210IGZyYW1lcw0KPiAtICAgICAgICAqLw0K
+PiAtICAgICAgIHJ0bDh4eHh1X3dyaXRlMTYocHJpdiwgUkVHX1JYRkxUTUFQMiwgMHgwMDAwKTsN
+Cj4gLSAgICAgICBydGw4eHh4dV93cml0ZTE2KHByaXYsIFJFR19SWEZMVE1BUDAsIDB4MDAwMCk7
+DQo+IC0NCj4gKyAgICAgICBydGw4eHh4dV9zdG9wKGh3LCBmYWxzZSk7DQoNCkJ5IG15IHJldmll
+dywgaXQgaXMgZmluZSB0byBjYWxsIHJ0bDh4eHh1X3N0b3AoKSwgYnV0IGluIGNhc2UgSSBtaXNz
+ZWQNCnNvbWV0aGluZywgcGxlYXNlIHRlc3QgZXZlcnkgJ2dvdG8gZXJyb3Jfb3V0JyB0byBlbnN1
+cmUgaXQgZG9lc24ndA0KZW5jb3VudGVyIHVzZS1iZWZvcmUtaW5pdGlhbGl6YXRpb24uIA0KDQo+
+ICAgICAgICAgcmV0dXJuIHJldDsNCj4gIH0NCj4gDQo+IEBAIC03ODIwLDYgKzc4NjIsNyBAQCBz
+dGF0aWMgaW50IHJ0bDh4eHh1X3Byb2JlKHN0cnVjdCB1c2JfaW50ZXJmYWNlICppbnRlcmZhY2Us
+DQo+ICAgICAgICAgc3Bpbl9sb2NrX2luaXQoJnByaXYtPnR4X3VyYl9sb2NrKTsNCj4gICAgICAg
+ICBJTklUX0xJU1RfSEVBRCgmcHJpdi0+cnhfdXJiX3BlbmRpbmdfbGlzdCk7DQo+ICAgICAgICAg
+c3Bpbl9sb2NrX2luaXQoJnByaXYtPnJ4X3VyYl9sb2NrKTsNCj4gKyAgICAgICBwcml2LT5zaHV0
+ZG93biA9IHRydWU7DQoNCkkgc2VlIG9ubHkgcnRsOHh4eHVfcXVldWVfcnhfdXJiKCkgY2hlY2tz
+IHRoaXMgZmxhZy4gQW55IHJlYXNvbiB3ZSBuZWVkIHRvDQpzZXQgaXQgdHJ1ZSBhdCBwcm9iZT8N
+Cg0KPiAgICAgICAgIElOSVRfV09SSygmcHJpdi0+cnhfdXJiX3dxLCBydGw4eHh4dV9yeF91cmJf
+d29yayk7DQo+ICAgICAgICAgSU5JVF9ERUxBWUVEX1dPUksoJnByaXYtPnJhX3dhdGNoZG9nLCBy
+dGw4eHh4dV93YXRjaGRvZ19jYWxsYmFjayk7DQo+ICAgICAgICAgSU5JVF9ERUxBWUVEX1dPUkso
+JnByaXYtPnVwZGF0ZV9iZWFjb25fd29yaywgcnRsOHh4eHVfdXBkYXRlX2JlYWNvbl93b3JrX2Nh
+bGxiYWNrKTsNCj4gDQo+IC0tDQo+IDIuNDguMQ0KPiANCg0K
