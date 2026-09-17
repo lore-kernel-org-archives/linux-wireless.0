@@ -1,233 +1,125 @@
-Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A744E73C1
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 17:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BED2547064
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 18:36:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789666747; cv=none; b=V3oXQ31PRqmc60rvq9GWvMrmf+9TnM1w/J5n3iew9BejZqAMiozGSC9KxBsBpl2KKfu+BtHBYjz0hqZPb9laOm/p8/ZYFe02iMs6iBoafBfBZNGxQlsE2JSMaCnbSFBCmQ3VuRmTJVJsjxN+/QvDPk3s2Fzdw2211aW8ZacT0Lk=
+	t=1789670214; cv=none; b=S7DCBw+V9WOI0ZV30jh1qqu9GFIacX1qBtKtkAyHd/2rIHEzeifjpVndZ521rxoYrKQgAt5XhIFOg3cN5z/rc1uRbQyc/I8bqhIeZF8OWapcs5w4P+qVaSUAzBFgoKeSRmaYuP8eVmGSOHq8CLqVzgbZBvetHVnylvJosw7XqKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789666747; c=relaxed/simple;
-	bh=KapTej4C0o3i0JdDWH+OS3TmSnMl8SsuYylwDN7IbX4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ddd2S57yK//UYQ0C3wUCzxV5A6qSyMRPzZ1tY8wK5L1m2yr9I53HiQ5AyBlyBc+00toFldw222x1ZquaWW68/o8rMKKreKCoTLZGn9bKa4k+NGQEqdXHnogWG5PVmq3tEC0LMTrmqXUyd2eHHaP0pp4+FOlzBnPR/17NHSSU63M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=C+to8sQw; arc=none smtp.client-ip=217.10.52.160
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
+	s=arc-20240116; t=1789670214; c=relaxed/simple;
+	bh=caATsSuAuq2aB44GhAF/V9le3Dn8YHGPjHe1Ff7AOMw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jpcwY59eZrMwjKnO1ejWo0mJwHj6MheUpbDHRB4pufphVWWf5h+ePiGjncOfbsvTThwfwaPUvr+4GVVw786AsIvGOHeB9nQY9/Xbb2ej1jpYJ/ewMwugsJmjLB2wfCu+rkSpf9++pquHA3HreeVRhZEHtIF8CCIOUfoHPkyQNic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GTYjZR8q; arc=none smtp.client-ip=74.125.225.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="C+to8sQw"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1789666744; x=1821202744;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KapTej4C0o3i0JdDWH+OS3TmSnMl8SsuYylwDN7IbX4=;
-  b=C+to8sQwLw28/5FWmjBSFHptTyc1YSql3DN6+Ql7caS5O7F3kgdWIPuv
-   I1AWqZSLt9oTlYbJufCYpYfcSHcOMfyUhxPda6+mxhTb2pK1pDNeXUy34
-   ynu1Plxq8iSWSUsth9s+p0/fKHeq7tlvhaSDIH3LwgkqC2F8th/Bameud
-   E=;
-X-CSE-ConnectionGUID: bvsiXLsXQ72J5zlx5QdBiQ==
-X-CSE-MsgGUID: I8OtGan+RaiF0zoUZ+yl4g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="147568511"
-X-IronPort-AV: E=Sophos;i="6.27,103,1787004000"; 
-   d="scan'208";a="147568511"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE812.infineon.com) ([172.23.29.38])
-  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2026 19:38:54 +0200
-Received: from MUCSE829.infineon.com (172.23.29.22) by MUCSE812.infineon.com
- (172.23.29.38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Thu, 17 Sep
- 2026 19:38:54 +0200
-Received: from ISCN5CG6022HSR.infineon.com (10.161.6.196) by
- MUCSE829.infineon.com (172.23.29.22) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Thu, 17 Sep 2026 19:38:52 +0200
-From: GirishBukkasagara.Rudrappa <girishbukkasagara.rudrappa@infineon.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <arend.vanspriel@broadcom.com>, <johannes.berg@intel.com>,
-	<brcm80211@lists.linux.dev>, <wlan-kernel-dev-list@infineon.com>,
-	<bogdan.nicolae@gmail.com>, Girish Rudrappa
-	<girishbukkasagara.rudrappa@infineon.com>
-Subject: [PATCH v2] wifi: brcmfmac: Set extsae_pwe parameter to Infineon firmware in SAP mode
-Date: Thu, 17 Sep 2026 17:37:04 +0000
-Message-ID: <20260917173704.6356-1-girishbukkasagara.rudrappa@infineon.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260831061213.240270-1-girishbukkasagara.rudrappa@infineon.com>
-References: <20260831061213.240270-1-girishbukkasagara.rudrappa@infineon.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GTYjZR8q"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f91so850509f8f.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 11:36:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789670211; x=1790275011; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=s8s7qxmENw9kYXUuBikAZMey2aL1SDehVWrjoore8yU=;
+        b=GTYjZR8qOkzmmludZ3dQWdvbYJ3415eo6hS1iAt4prRPsS7clzNv2cn+gXrQfcW1Pa
+         deN3rHGWt31asBuQ1Lvve26hzPHHgjAE5H8MQXSxqYtLBmxcug1drPbX/8T21OUPQNxU
+         C7aiFaEsAOh7b3eqeftp3OL4i6WuQg8QwDYwXyvL7TvYk4nX2Zw0N9MLwXvXLD9LWkt8
+         fbPLLZ/ouPfL4VSltNU8pd0PuPhDDZTZGG6Y5e9XAQsABEt9f54fxbC3J5emcQ3TLAYB
+         qWUMk7rzd+8mKdynrwzUtu1VdqUBnMN3sN25QV2hznbvbusfU/pswhSi8DJH9VtvV3kw
+         Ycwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789670211; x=1790275011;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=s8s7qxmENw9kYXUuBikAZMey2aL1SDehVWrjoore8yU=;
+        b=gUPgssgy/4AhmahoGJhIE+Fu1QKlzCyKk5gHYRxIxTsrV8MYTiemG4Vj7Pv/AxzP+0
+         IzKoNY4Kakl9cPX9lAiQdbHy7XPkrxR3Xbtkgt1M76BOc+xSNkELwwNcZvbNflyGDTrd
+         Y0Lv84Sg4h7p77b7QiLy0QHUZJzhBqD4S6guSEvd8B9K1niHFyV3imzuAyzgMHrSTNP+
+         pfDv+8b28NrzPAHH9dilVFES9mszRtv0f3uSJED8HbpSYxNwZ0k8TeZZfurR3PXKHF2p
+         UvSnksD02ETsAZumh/sScdLfo0hjKE+zJLltP2P8b/ra/kukfa0QPoCeOUC2aZZRefmu
+         KCiw==
+X-Forwarded-Encrypted: i=1; AKwUvBxu6KWjbJETCVDM5kuhCIemDy9ybLyzXhQt5VzHOu6eMYqlmDe6+4J1WyLJeSiPpnjlayWGs8IXzRFp65543g==@vger.kernel.org
+X-Gm-Message-State: AFuF++nXk832YlKgMt8p4ZWRNxOXxjk8ze00vF6ZiPH4w36OcdEaTuaj
+	qHMO3fiaZB4Q/Y0/Ti+MSzDaBZBnPV4VSOjZWMxH5lfJXSC/Sg+y99WS
+X-Gm-Gg: AYBFou2JTiGNok48JY25BaZ8J3NrjiNsbdi19Cuyhy1Tul42DUpZWG5YQp26I86jWkq
+	HKy+QVhyUUSXfv21eal2uLPZG5pY3fRD0+FQcFZWiUzA4Mjwv+687jr2flwXLej0PhEjhuMmDMN
+	hLB7c7AkKB+RXW/AbmHPZW/zMLveNPviLBzEE05og9nuCM5P4ULhR9ivmEV/KfigvPtyYXCaAM1
+	BHhHEPisgmbv2WAOd7dSWLjev9NbJjDKUW4rvoAiT0SEWf56eIMrNgf1VLFaqgiLC2EoBGdAGRF
+	ZszZfCBZiVdLLyKuGIhvxypYyRVVMzUYuFPGYDUfYFrY0JFWPnAILrkHkPC0URp29E5Q5b5qmPp
+	4FoHOXLjDmxcoqM0YDpYQWgjoGD+LcdfuxR78Gv07EW10APLO9nxAo0CxeZ/OwCwqI16vFKBZRs
+	smVVyhEciw6geF11SI4dc8JQhwLaDALEu3I/NQ7jYjDok+9BINU971NmwNv2dJNmUpRaXVaG9tR
+	bhD9nTDw4xoGfJ+1BtKMA+LlM/wYyQWJsYyR0GlElRHkIcs6PmYyjYud4T3VirPdggsi71PH3oL
+	bA==
+X-Received: by 2002:a05:6000:41da:b0:487:1470:52d9 with SMTP id ffacd0b85a97d-48714705333mr4848198f8f.3.1789670210474;
+        Thu, 17 Sep 2026 11:36:50 -0700 (PDT)
+Received: from shift.daheim (p200300d5ff3cee0050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff3c:ee00:50f4:96ff:fe46:beef])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4870bf1fa7dsm17395323f8f.8.2026.09.17.11.36.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Sep 2026 11:36:49 -0700 (PDT)
+Received: from localhost ([127.0.0.1])
+	by shift with esmtp (Exim 4.100)
+	(envelope-from <chunkeey@gmail.com>)
+	id 1x7Gx3-00000002J1F-1beC;
+	Thu, 17 Sep 2026 20:36:48 +0200
+Message-ID: <eb118dd6-94b6-4b08-b237-b1e08206ab6f@gmail.com>
+Date: Thu, 17 Sep 2026 20:36:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MUCSE817.infineon.com (172.23.29.43) To
- MUCSE829.infineon.com (172.23.29.22)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: p54: remove redundant length check in
+ p54_find_ie()
+To: Wang Yan <wangyan01@kylinos.cn>
+Cc: johannes.berg@intel.com, linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org, linville@tuxdriver.com, zilin@seu.edu.cn
+References: <bdca394f-0371-45ad-bfee-b044444ad724@gmail.com>
+ <20260907024941.302630-1-wangyan01@kylinos.cn>
+Content-Language: de-DE
+From: Christian Lamparter <chunkeey@gmail.com>
+In-Reply-To: <20260907024941.302630-1-wangyan01@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Girish Rudrappa <girishbukkasagara.rudrappa@infineon.com>
+On 9/7/26 4:49 AM, Wang Yan wrote:
+> The check in the while loop condition and the bounds check within the
+> loop body guarantee that "pos" is never returned unless the IE is still
+> within skb->len.
+> 
+> Additionally, sizeof(mgmt) evaluates to the pointer size rather than
+> the actual management frame header size, making the check incorrect as
+> well.
+> 
+> Therefore, removing the redundant check is the right fix.
+> 
+> Fixes: e5ea92a7528d ("p54: AP & Ad-hoc testing")
+> Signed-off-by: Wang Yan <wangyan01@kylinos.cn>
+Acked-by: Christian Lamparter <chunkeey@gmail.com>
 
-Parse and configure the extsae_pwe according to the information from the
-supported rate/extended support rate and RSNX IE
-
-Parse the beacon IEs on start_ap() and set the extsae_pwe iovar.
-Set sae_pwe to 2 when the RSNX IE advertises H2E, 1 when an H2E-only
-membership selector is present, 0 otherwise.
-
-The changes are tested with FW Version 7.45.286
-
-Signed-off-by: Girish Rudrappa <girishbukkasagara.rudrappa@infineon.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 77 +++++++++++++++++++
- .../broadcom/brcm80211/brcmfmac/cyw/core.c    |  6 ++
- .../broadcom/brcm80211/brcmfmac/fwvid.h       | 11 +++
- 3 files changed, 94 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 9d8ce7bb046e..a9e5ab5ea292 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5131,6 +5131,79 @@ brcmf_config_ap_mgmt_ie(struct brcmf_cfg80211_vif *vif,
- 	return err;
- }
- 
-+static s32
-+brcmf_parse_configure_sae_pwe(struct brcmf_if *ifp,
-+			      struct cfg80211_ap_settings *settings)
-+{
-+	const struct brcmf_tlv *rsnx_ie;
-+	const struct brcmf_tlv *ext_rate_ie;
-+	const struct brcmf_tlv *supp_rate_ie;
-+	u8 ie_len, i;
-+	u32 wpa_auth = 0;
-+	u32 sae_pwe = 0; /* 0 = Hunting-and-Pecking only, 1 = H2E only, 2 = both */
-+	s32 err = 0;
-+
-+	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_SAE_EXT))
-+		return 0;
-+
-+	err = brcmf_fil_bsscfg_int_get(ifp, "wpa_auth", &wpa_auth);
-+	if (err || (wpa_auth & WPA3_AUTH_SAE_PSK) == 0) {
-+		brcmf_dbg(INFO, "wpa_auth is not SAE:0x%x\n", wpa_auth);
-+		return 0;
-+	}
-+
-+	rsnx_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-+				   settings->beacon.tail_len, WLAN_EID_RSNX);
-+
-+	if (rsnx_ie && rsnx_ie->len &&
-+	    (rsnx_ie->data[0] & WLAN_RSNX_CAPA_SAE_H2E))
-+		sae_pwe = 2;
-+
-+	/* Found rsnx_ie with SAE_H2E, check the bss selector to know if it is
-+	 * a H2E only.
-+	 */
-+
-+	if (sae_pwe == 2) {
-+		supp_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.head,
-+						settings->beacon.head_len,
-+						WLAN_EID_SUPP_RATES);
-+		ext_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-+					       settings->beacon.tail_len,
-+					       WLAN_EID_EXT_SUPP_RATES);
-+		if (ext_rate_ie) {
-+			ie_len = ext_rate_ie->len;
-+			for (i = 0; i < ie_len; i++) {
-+				if ((ext_rate_ie->data[i] & 0x7f) ==
-+				    BSS_MEMBERSHIP_SELECTOR_SAE_H2E) {
-+					sae_pwe = 1;
-+					break;
-+				}
-+			}
-+		}
-+
-+		/* If we cannot found H2E only selector in ext_supp_rate IE,
-+		 * traversal supp_rate IE to make sure it really doesn't exist
-+		 */
-+		if (sae_pwe == 2 && supp_rate_ie) {
-+			ie_len = supp_rate_ie->len;
-+			for (i = 0; i < ie_len; i++) {
-+				if ((supp_rate_ie->data[i] & 0x7f) ==
-+				    BSS_MEMBERSHIP_SELECTOR_SAE_H2E) {
-+					sae_pwe = 1;
-+					break;
-+				}
-+			}
-+		}
-+	}
-+
-+	err = brcmf_fwvid_configure_sae_pwe(ifp, sae_pwe);
-+	if (err == -EOPNOTSUPP)
-+		return 0;
-+
-+	brcmf_dbg(TRACE, "extsae_pwe=%u\n", sae_pwe);
-+	return err;
-+}
-+
- static s32
- brcmf_parse_configure_security(struct brcmf_if *ifp,
- 			       struct cfg80211_ap_settings *settings,
-@@ -5164,6 +5237,10 @@ brcmf_parse_configure_security(struct brcmf_if *ifp,
- 			err = brcmf_configure_wpaie(ifp, tmp_ie, true);
- 			if (err < 0)
- 				return err;
-+
-+			err = brcmf_parse_configure_sae_pwe(ifp, settings);
-+			if (err < 0)
-+				return err;
- 		}
- 	} else {
- 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-index 545eb9aae966..0443207dfe00 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-@@ -367,10 +367,16 @@ static void brcmf_cyw_register_event_handlers(struct brcmf_pub *drvr)
- 			    brcmf_notify_mgmt_tx_status);
- }
- 
-+static int brcmf_cyw_configure_sae_pwe(struct brcmf_if *ifp, u32 sae_pwe)
-+{
-+	return brcmf_fil_iovar_int_set(ifp, "extsae_pwe", sae_pwe);
-+}
-+
- const struct brcmf_fwvid_ops brcmf_cyw_ops = {
- 	.set_sae_password = brcmf_cyw_set_sae_pwd,
- 	.alloc_fweh_info = brcmf_cyw_alloc_fweh_info,
- 	.activate_events = brcmf_cyw_activate_events,
- 	.get_cfg80211_ops = brcmf_cyw_get_cfg80211_ops,
- 	.register_event_handlers = brcmf_cyw_register_event_handlers,
-+	.configure_sae_pwe = brcmf_cyw_configure_sae_pwe,
- };
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
-index f3e011d090f2..56d341a75a53 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.h
-@@ -18,6 +18,7 @@ struct brcmf_fwvid_ops {
- 	int (*activate_events)(struct brcmf_if *ifp);
- 	void (*get_cfg80211_ops)(struct brcmf_pub *drvr);
- 	void (*register_event_handlers)(struct brcmf_pub *drvr);
-+	int (*configure_sae_pwe)(struct brcmf_if *ifp, u32 sae_pwe);
- };
- 
- /* exported functions */
-@@ -40,6 +41,16 @@ static inline void brcmf_fwvid_feat_attach(struct brcmf_if *ifp)
- 	vops->feat_attach(ifp);
- }
- 
-+static inline int brcmf_fwvid_configure_sae_pwe(struct brcmf_if *ifp, u32 sae_pwe)
-+{
-+	const struct brcmf_fwvid_ops *vops = ifp->drvr->vops;
-+
-+	if (!vops || !vops->configure_sae_pwe)
-+		return -EOPNOTSUPP;
-+
-+	return vops->configure_sae_pwe(ifp, sae_pwe);
-+}
-+
- static inline int brcmf_fwvid_set_sae_password(struct brcmf_if *ifp,
- 					       struct cfg80211_crypto_settings *crypto)
- {
--- 
-2.53.0
+> ---
+>   drivers/net/wireless/intersil/p54/main.c | 3 ---
+>   1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+> index 57a62108cbc3..8f921dc4ecd3 100644
+> --- a/drivers/net/wireless/intersil/p54/main.c
+> +++ b/drivers/net/wireless/intersil/p54/main.c
+> @@ -76,9 +76,6 @@ u8 *p54_find_ie(struct sk_buff *skb, u8 ie)
+>   	struct ieee80211_mgmt *mgmt = (void *)skb->data;
+>   	u8 *pos, *end;
+>   
+> -	if (skb->len <= sizeof(mgmt))
+> -		return NULL;
+> -
+>   	pos = (u8 *)mgmt->u.beacon.variable;
+>   	end = skb->data + skb->len;
+>   	while (pos < end) {
 
