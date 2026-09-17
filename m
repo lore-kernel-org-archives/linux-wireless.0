@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F934457DF
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 06:48:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF6F449B19
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 06:48:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789627727; cv=none; b=daxQeNgWm+tUvCWuHji8FN12kNbcxelGjjQXUqwGzIw43zglTb5lebReu4gXeJX7p/erL8p6Klu4oo9DR7Vm6yy9Ozi24QwmHZR/ZpHd1jCGZF/cfeIm1PISYgPU14oFyLtvWbdXM5HNAKWT8drArF+XdZUf2uo5m+FPx3/DJZ0=
+	t=1789627731; cv=none; b=AGguTZ4rTidYY01bq0unTnmr1C1rxNWMO02dEcqzNNXrTfQHT/cxf8r42Exqepj5B/sA+mayClS/y4h2tZ5qcZJJTFBOdyfWJjcmo6eeGhLr/hyJk5P0KWT7qB/ybqSVqNiFX9Vttcx72oGKabSXUJOKPU17JS6aJUHN8fQ6HWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789627727; c=relaxed/simple;
-	bh=Vaksf6mVkDt6qpn4MgBSFQTD9uTAPkA0fjL78cwCe78=;
+	s=arc-20240116; t=1789627731; c=relaxed/simple;
+	bh=CEpJyq/hjS8t5UBqfjZn5pzdPFA9v+Zwsj+HmpyKEvE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hvDbWWR/oeXRAy1SN4gAKTR6ut+7AJyadRKIddvFD6ZWUOcKhS+ljCuag9pdm1qVwRyZOOh0Ryb+WaTtM8NuB9UlRePLd5PVJkbrqOrYGnrehBUqrKJ9ToQh/Bev60kdBA0X01HeJE5HBkQdmvG2fjZ1AfuuF6GnlddLZzGYrKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OVTV6C1I; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=FgyxtyUVm4sMGe83cyOlYkgEpcEFXXMrLB5LA4l/N7bACchsoDo2BZ0dqg9RAD34nxEPvhuqgD8BXTP+Qmlw3k6bPDvU12ENa7k11iRBytKUk6ELRWX5zOcrz0xRP/KZLZhrJX4KoQdpJcSp7VhLxQbgULwrXKRVcoIZ1633j6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jGkKSVob; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OVTV6C1I"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jGkKSVob"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789627724;
+	s=mimecast20190719; t=1789627729;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x33XW/wjXt6WHIS6oNPy0fJBTUtYpgjF1Fs3XuRG47o=;
-	b=OVTV6C1IXegNp8UulnN29yFoM5tEi+VbUDdNeKw+JRi/Czrytb/bcTCSkGvm2vkQUhRXDW
-	jdN/8412ukLwHCPd/MjtSPTKM15IFLdf9VPCC4URn5AhJ383EZ8+eT31O2/HxX0GW6yJtU
-	P3mnMQuYhGnSTSyqkd3iCZvZmQwHCEk=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+	bh=8BvwKJBaZPPO+BAHRJAuAJtP1LgIydgRzkhLQXlvDas=;
+	b=jGkKSVobB/OKbwhmL8sx967ZJpK2V5eVPojdxqs5GhrYflm1oArYINtZ2eZA68Bw7ztpxg
+	i+AXN2kavodgxk5G+dH/aGMnoy8CuZCgVJF6Gb78tkarZlKRMg4n1P36vPXY3GMVkPF4iy
+	vScSzrmbW+LcK0Q74FOLVm2a1ITmnnk=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-692-zgYYo98xPMa2CbqBBl4t5w-1; Thu,
- 17 Sep 2026 02:48:41 -0400
-X-MC-Unique: zgYYo98xPMa2CbqBBl4t5w-1
-X-Mimecast-MFC-AGG-ID: zgYYo98xPMa2CbqBBl4t5w_1789627719
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-468-6o80voZUPnqTsx571nw4Cg-1; Thu,
+ 17 Sep 2026 02:48:45 -0400
+X-MC-Unique: 6o80voZUPnqTsx571nw4Cg-1
+X-Mimecast-MFC-AGG-ID: 6o80voZUPnqTsx571nw4Cg_1789627723
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E9583195F140;
-	Thu, 17 Sep 2026 06:48:36 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CA3451954237;
+	Thu, 17 Sep 2026 06:48:43 +0000 (UTC)
 Received: from fedora.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D02F33003EED;
-	Thu, 17 Sep 2026 06:48:34 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1BA2C3003EED;
+	Thu, 17 Sep 2026 06:48:41 +0000 (UTC)
 From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 To: jjohnson@kernel.org
 Cc: ath11k@lists.infradead.org,
@@ -49,9 +49,9 @@ Cc: ath11k@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v7 1/4] wifi: ath11k: use queue mapping for WCN6750 ring selection
-Date: Thu, 17 Sep 2026 08:48:22 +0200
-Message-ID: <20260917064825.12747-2-jtornosm@redhat.com>
+Subject: [PATCH v7 2/4] wifi: ath11k/ath12k: remove skb parameter from get_ring_selector
+Date: Thu, 17 Sep 2026 08:48:23 +0200
+Message-ID: <20260917064825.12747-3-jtornosm@redhat.com>
 In-Reply-To: <20260917064825.12747-1-jtornosm@redhat.com>
 References: <20260917064825.12747-1-jtornosm@redhat.com>
 Precedence: bulk
@@ -63,63 +63,150 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-WCN6750 selects the TCL ring using skb_get_hash() to distribute
-flows across its 3 TX rings, as introduced in commit 7636c9a6e7d7
-("wifi: ath11k: Add multi TX ring support for WCN6750"). The goal
-was to prevent out-of-order packet delivery that could occur with
-smp_processor_id()-based selection, where packets of the same flow
-could end up on different rings depending on CPU scheduling.
+Change the get_ring_selector hw_ops callback signature from
+get_ring_selector(struct sk_buff *skb) to get_ring_selector(u8 ac),
+removing the dependency on the skb.
 
-Switch to skb_get_queue_mapping() instead, which returns the AC
-(access category) assigned by mac80211 in ieee80211_select_queue().
-This provides the same ordering guarantee: packets of the same TID
-always map to the same AC and therefore always land on the same
-ring, preventing reordering.
+After the previous patch switched WCN6750 from skb_get_hash() to
+skb_get_queue_mapping(), all get_ring_selector implementations fall
+into two categories:
+ - smp_processor_id(): ignores the skb entirely
+ - skb_get_queue_mapping(): only reads the AC value from the skb
 
-Using queue mapping for ring selection also provides QoS-aware
-distribution, where each traffic class gets a deterministic ring
-assignment, rather than the random distribution that flow hashing
-produces. With 3 rings and 4 ACs (VO=0, VI=1, BE=2, BK=3), the
-mapping becomes: VO and BK share ring 0, VI uses ring 1, and BE
-uses ring 2.
+Since the AC is the only information extracted from the skb, pass it
+directly as a u8 parameter instead. Callers in the dp_tx path now
+pass skb_get_queue_mapping(skb), which preserves the exact same
+behavior.
 
-This matches the approach already used by ath12k for WCN7850, which
-has the same ring count and uses skb_get_queue_mapping() for its
-ring selector.
+This change enables a subsequent patch to call get_ring_selector()
+from wake_tx_queue using txq->ac, without needing access to the skb.
+mac80211 guarantees that skb_get_queue_mapping(skb) == txq->ac
+for any skb dequeued from a given txq, since both values are
+derived from the same skb->priority through the same AC mapping.
 
-This change also removes the dependency on skb_get_hash(), which
-is relevant for a subsequent patch that removes the skb parameter
-from the get_ring_selector hw_ops callback entirely, enabling
-TX flow control in wake_tx_queue without requiring a complex peek
-to inspect frames before dequeue.
+No functional change.
 
 Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 ---
 v7: no modification
-v6: https://lore.kernel.org/all/20260811172435.616200-2-jtornosm@redhat.com/
+v6: https://lore.kernel.org/all/20260811172435.616200-3-jtornosm@redhat.com/
 
- drivers/net/wireless/ath/ath11k/hw.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_tx.c       |  2 +-
+ drivers/net/wireless/ath/ath11k/hw.c          | 16 ++++------------
+ drivers/net/wireless/ath/ath11k/hw.h          |  2 +-
+ drivers/net/wireless/ath/ath12k/hw.h          |  2 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c |  2 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c    |  6 +++---
+ 6 files changed, 11 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index cac970c92806..083aca8ff355 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -108,7 +108,7 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 
+ 	pool_id = skb_get_queue_mapping(skb) & (ATH11K_HW_MAX_QUEUES - 1);
+ 
+-	ring_selector = ab->hw_params.hw_ops->get_ring_selector(skb);
++	ring_selector = ab->hw_params.hw_ops->get_ring_selector(skb_get_queue_mapping(skb));
+ 
+ tcl_ring_sel:
+ 	tcl_ring_retry = false;
 diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index 93f9a03c48dc..d679e39dce03 100644
+index d679e39dce03..8a28c1d4c17b 100644
 --- a/drivers/net/wireless/ath/ath11k/hw.c
 +++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -891,13 +891,7 @@ static u32 ath11k_hw_ipq8074_get_tcl_ring_selector(struct sk_buff *skb)
+@@ -876,22 +876,14 @@ static bool ath11k_hw_wcn6855_rx_desc_get_ldpc_support(struct hal_rx_desc *desc)
+ 			 __le32_to_cpu(desc->u.wcn6855.msdu_start.info2));
+ }
  
- static u32 ath11k_hw_wcn6750_get_tcl_ring_selector(struct sk_buff *skb)
- {
--	/* Select the TCL ring based on the flow hash of the SKB instead
--	 * of CPU ID. Since applications pumping the traffic can be scheduled
--	 * on multiple CPUs, there is a chance that packets of the same flow
--	 * could end on different TCL rings, this could sometimes results in
--	 * an out of order arrival of the packets at the receiver.
+-static u32 ath11k_hw_ipq8074_get_tcl_ring_selector(struct sk_buff *skb)
+-{
+-	/* Let the default ring selection be based on current processor
+-	 * number, where one of the 3 tcl rings are selected based on
+-	 * the smp_processor_id(). In case that ring
+-	 * is full/busy, we resort to other available rings.
+-	 * If all rings are full, we drop the packet.
+-	 *
+-	 * TODO: Add throttling logic when all rings are full
 -	 */
--	return skb_get_hash(skb);
-+	return skb_get_queue_mapping(skb);
++static u32 ath11k_hw_ipq8074_get_tcl_ring_selector(u8 ac)
++{
+ 	return smp_processor_id();
+ }
+ 
+-static u32 ath11k_hw_wcn6750_get_tcl_ring_selector(struct sk_buff *skb)
++static u32 ath11k_hw_wcn6750_get_tcl_ring_selector(u8 ac)
+ {
+-	return skb_get_queue_mapping(skb);
++	return ac;
  }
  
  const struct ath11k_hw_ops ipq8074_ops = {
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 4996536fbd14..b6bc8b72d812 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -273,7 +273,7 @@ struct ath11k_hw_ops {
+ 	u16 (*mpdu_info_get_peerid)(struct hal_rx_mpdu_info *mpdu_info);
+ 	bool (*rx_desc_mac_addr2_valid)(struct hal_rx_desc *desc);
+ 	u8* (*rx_desc_mpdu_start_addr2)(struct hal_rx_desc *desc);
+-	u32 (*get_ring_selector)(struct sk_buff *skb);
++	u32 (*get_ring_selector)(u8 ac);
+ };
+ 
+ extern const struct ath11k_hw_ops ipq8074_ops;
+diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
+index 86fb8b719613..65caa7a2349f 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.h
++++ b/drivers/net/wireless/ath/ath12k/hw.h
+@@ -243,7 +243,7 @@ struct ath12k_hw_ops {
+ 	int (*mac_id_to_pdev_id)(const struct ath12k_hw_params *hw, int mac_id);
+ 	int (*mac_id_to_srng_id)(const struct ath12k_hw_params *hw, int mac_id);
+ 	int (*rxdma_ring_sel_config)(struct ath12k_base *ab);
+-	u8 (*get_ring_selector)(struct sk_buff *skb);
++	u8 (*get_ring_selector)(u8 ac);
+ 	bool (*dp_srng_is_tx_comp_ring)(int ring_num);
+ 	bool (*is_frame_link_agnostic)(struct ath12k_link_vif *arvif,
+ 				       struct ieee80211_mgmt *mgmt);
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
+index d2749de44553..74359e8eea47 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
+@@ -111,7 +111,7 @@ int ath12k_wifi7_dp_tx(struct ath12k_pdev_dp *dp_pdev, struct ath12k_link_vif *a
+ 	 * If all rings are full, we drop the packet.
+ 	 * TODO: Add throttling logic when all rings are full
+ 	 */
+-	ring_selector = dp->hw_params->hw_ops->get_ring_selector(skb);
++	ring_selector = dp->hw_params->hw_ops->get_ring_selector(skb_get_queue_mapping(skb));
+ 
+ tcl_ring_sel:
+ 	tcl_ring_retry = false;
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+index d9fdd2fc8298..7436cf70925a 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+@@ -49,7 +49,7 @@ ath12k_wifi7_hw_mac_id_to_srng_id_qcn9274(const struct ath12k_hw_params *hw,
+ 	return 0;
+ }
+ 
+-static u8 ath12k_wifi7_hw_get_ring_selector_qcn9274(struct sk_buff *skb)
++static u8 ath12k_wifi7_hw_get_ring_selector_qcn9274(u8 ac)
+ {
+ 	return smp_processor_id();
+ }
+@@ -83,9 +83,9 @@ ath12k_wifi7_hw_mac_id_to_srng_id_wcn7850(const struct ath12k_hw_params *hw,
+ 	return mac_id;
+ }
+ 
+-static u8 ath12k_wifi7_hw_get_ring_selector_wcn7850(struct sk_buff *skb)
++static u8 ath12k_wifi7_hw_get_ring_selector_wcn7850(u8 ac)
+ {
+-	return skb_get_queue_mapping(skb);
++	return ac;
+ }
+ 
+ static bool ath12k_wifi7_dp_srng_is_comp_ring_wcn7850(int ring_num)
 -- 
 2.54.0
 
