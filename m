@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB7E515988;
-	Fri, 18 Sep 2026 16:28:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6D7502784;
+	Fri, 18 Sep 2026 16:28:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789748898; cv=none; b=m9rBierl1pXGwI3HffRwwpJ+A1870K02t/k43KNt0VSETPpSlYQapumQaqS1REs1+ZBba/0A8c8YxAZXPT3XRZ8sGdMJLFbSELDAZS2LOuYjcXFwYhxGSNYv5VVQnZ/ysr476sY/egCWt2oyO80rqP1gY3yFskeNyV8OZcPpqKY=
+	t=1789748899; cv=none; b=W3jJJxgTJ0a5yjV1fclpMC807yMKI0lyW1a6SahfChKOEu7ooZxT0Z9FYFtIVazkaoTcX+AEoUxnZ9si8qkXPn2WywrCyhs2YNxh2XD4eZdeKZ/pSgncu0zizEY8KsRHFrRkhn/U2jpl6o/UHyQdBjVT6N/UvFQV/D4IhZGahFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789748898; c=relaxed/simple;
-	bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=BZ+b62RjjpKMjLfIYdu5C7CDMQFQ/71cvjFZ5sFXFC46AtOq3B7PIv2/vw47VoUenH9WfjOjos80Ocagsd1vgiPFHY3N/W+GZ7WoDylM6peYB7VpSVI9PSKCYacNZU28wvmfMIqd1rImRkOhc+5YWxktKo/JKKOyxZoXhn5FdlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UB+YS1Us; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789748899; c=relaxed/simple;
+	bh=XDDzM4aSYEc7ZNFEAujEu7CcK5fcN2uK5xdWdBsU3Yw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=YIfv+aGOMtaDPJT3DDOyMFFk9bhPUwl/+h/cJoMqflI0cXhLM+DFy+kMV0P3nMx/XhXTTowvaWaA+mmoqfNkOPKtdOvBEOceA1OFCMD/e54zeEwpid2eO6bsc4I9veGsZb43WanutnqJYICDmfHmbkfN6W4Wpj5u048wwjLPcDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBmlwT23; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UB+YS1Us"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BCFC9C2BCF5;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBmlwT23"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E6202C2BCFD;
 	Fri, 18 Sep 2026 16:28:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789748897;
-	bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=UB+YS1UsxCALsNwNH0jSBd7fW29V3RBvgybAQ4h/xGNdUH/X3IfqjYN8WdmgjfUB3
-	 A//A3CjxLTkRhlJA5ehoK03Lii1bxtQend0rG8TZ16NIEvS5JoRZkaQFsZWNbp18A/
-	 7CKgtAFNV9FjigLPhMQnQr6UxSr68hIbLTgUhVX27qM4AEjcFSW2oTLG6PKXhBXyTP
-	 JyHcm6IOKNzCKAEH7kO6H8xzm6C+jNRqRj8qXEarbrhIhghjCrZiloEq0phxz2yRD1
-	 pHtBIAa8t1f59BWhVVUSxWxh7EHNDVgHodvfTapYuVHhfF0hjKQaKDUzCbLFzX5y0Q
-	 Ly2l/SGGIUbBw==
+	s=k20201202; t=1789748898;
+	bh=XDDzM4aSYEc7ZNFEAujEu7CcK5fcN2uK5xdWdBsU3Yw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=dBmlwT23grQ1r2poQ8pqDyl7bFmXXr8okX80P0N6frqaIobgGvpXPieBP4AYzaB0A
+	 GIjvHG2rMeebcjjagev1uFAvOcZYEUWqMtlV3/YSyejk+PKXYaVhAkprQJX7J31p2d
+	 PNabm1M4g4Kch09jHWMTXvHdCW5WEoT/tcHC2ToUB0w465l9sRiwuC+xmR/1SZpOxF
+	 xDMfvUYby0GOKV/KZPN4eFXD8beFBDQD38O4zRg8UM8JzpbMkrCZDM1wDVb2MBtHWT
+	 I/GyYMssMFl3KVjcME+4N/LsC7djdB75IAAR9Dlmn24y49Y+fLAj55X2gMyMWKvxM6
+	 3O8f+FgXcu3Hw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C0CC982D7;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9747C982E0;
 	Fri, 18 Sep 2026 16:28:17 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH 0/4] net: qrtr: Add support for using identical MHI
- endpoint devices
-Date: Fri, 18 Sep 2026 18:28:12 +0200
-Message-Id: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
+Date: Fri, 18 Sep 2026 18:28:15 +0200
+Subject: [PATCH 3/4] wifi: ath11k: Connect to the QMI server belonging to
+ the device owned by this driver
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,11 +40,10 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIAJxmrWoC/yXMQQ6CQAxG4auQrm3CTECFqxgXUH61BhA7AyEh3
- N1Rl9/ivY0CTBGozjYyLBr0NSa4Q0byaMY7WLtk8rk/5pU789ui8TD3URkTiz+Jb6UsAEepmQw
- 3XX+/y/XvMLdPSPxOaN8/x3mQHnEAAAA=
-X-Change-ID: 20260918-qrtr-multi-ep-c27c2bc54ee1
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260918-qrtr-multi-ep-v1-3-8a06caa368d3@oss.qualcomm.com>
+References: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
+In-Reply-To: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
  "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
  Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
@@ -60,16 +59,16 @@ Cc: linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
  Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2798;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4047;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqrWad4ZoZAEk0cQeZgtJ6b+1eEpkYMcmutGWLA
- bVHEQdUHwSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaq1mnQAKCRBVnxHm/pHO
- 9ajuB/9glk15Vu0tJD0QCmDRJJUz3pwSef4SYXyEyq4KwQWyU8SLii0UBPrZAO8Qc0i91NTNI6o
- U43q/76VuAhZFJW60hvtqrjwOgMelpnds+dpqZER0h26ie9F9MKmgRJLfNhW7Mp8JYMzYSsMBE7
- zSydfaCl33EE+Paw/sQMO1ktG35sGcQSi6pIvTaWBL4pLDRfG2oQHqPkwIrNGXZZ3xNB82jh6aX
- 9xv42TRFy9qRwDQ0/7M/1BpSV4WZ32GfSxzXFKAZoH4BITmySewHu92P1NeI0dsRitKiXZlk016
- Z+Fbq1Hr4crb5FBljkXN4jfcjzVhgEmR4VWmIWBenBt0UcZP
+ bh=LLx7gXAkXsmoLEJnemQrijc01fAxmMC5ydG4+GSiAaI=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqrWafBklBrsZmrt4BmgE8n1YDSIBE/kbZYz5ko
+ ls2iazaKiqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaq1mnwAKCRBVnxHm/pHO
+ 9darB/9GCeWaUd8jk94Xuf0HoNkILR8PQcn/UhXhlNns9OW3ZT1Ng9MTWnwf3b7GCx4j9NZbZXx
+ Wnu+yuDQX0Bg/D6L9GxCp08xIU8auRoCUYTt/oYvETkdtf0RAi5FGzMDeqo2s3AM2ujUjRdYlPt
+ CqytpeDGu5F/w3BTZfLncBSwMiCjkJ/1RS/mrz0TY4peOF+jXhedQKMvXs/vpyzSFUGlVLac2tv
+ Hhg2W4rT9f9b8m96fVFGOueT3dMqzFfGmpjX6fdhAh+RwKutKcaheh/doNat5ts5larfe94HKIw
+ mhXmQFjODQsrLu9lB8xwd8X9qLfhPR/ksV0PqsABTTyJN95K
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -77,69 +76,112 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series reworks the QRTR driver to add support for using identical MHI
-endpoint devices at the same time. Currently, QRTR driver has a limitation on
-using more than one identical MHI endpoint devices like QCS6490 or any Qcom
-Endpoint device making use of QRTR at the same time. Because of the fact that
-these devices will have the identical QRTR node id, they cannot be used at the
-same time, on the same host machine.
+When two identical ath11k PCIe devices are connected to the same host, both
+advertise the WLFW service with the same service and instance id. The QMI
+lookup reports both servers to each device, so a device may connect to the
+firmware running on the other device.
 
-This limitation is a blocker for running upstream kernel on devices like Qcom
-based routers as they often have multiple identical WLAN Endpoint devices
-connected to the Router SoC.
-
-This series supersedes the following 2 series from Juha:
-https://lore.kernel.org/all/20260915054207.2513877-1-juha-matti.tilli@iki.fi
-https://lore.kernel.org/all/20260915074135.2567411-1-juha-matti.tilli@iki.fi
-
-Compared to the series from Juha, this series simplifies the multi-endpoint
-support by computing a unique node id for each MHI endpoint and uses it for the
-internal QRTR book keeping. This ensures that even if the MHI endpoint devices
-have same node ids, the host QRTR will always use a unique node id for each one
-of them.
-
-More details can be found in the individual patches.
-
-Testing
-=======
-
-Juha tested this series on multi ath11k setup by backporting this series to
-6.6.156 kernel. I'd appreciate a formal tested-by tag from Juha and other folks
-CCed to this series.
-
-Merge Strategy
-==============
-
-Since both QRTR and ath drivers are falling under the networking tree, the whole
-series can be merged through netdev tree.
+But now, QRTR provides each MHI endpoint a unique node id which is
+different from the node id announced by the device. So use the same id to
+pick the correct server. Add a get_qrtr_node_id() HIF callback that returns
+the node id derived from the MHI controller index and zero for transports
+that do not assign one. In the new_server callback, skip any service whose
+node id does not match. A node id of zero disables the check, so transports
+that do not assign one keep their current behavior.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Manivannan Sadhasivam (4):
-      net: qrtr: Allow the host QRTR to assign a unique node id
-      net: qrtr: Assign unique node id for MHI endpoints
-      wifi: ath11k: Connect to the QMI server belonging to the device owned by this driver
-      wifi: ath12k: Connect to the QMI server belonging to the device owned by this driver
+ drivers/net/wireless/ath/ath11k/hif.h |  9 +++++++++
+ drivers/net/wireless/ath/ath11k/pci.c |  9 +++++++++
+ drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++++++
+ 3 files changed, 28 insertions(+)
 
- MAINTAINERS                           |  1 +
- drivers/net/wireless/ath/ath11k/hif.h |  9 ++++++
- drivers/net/wireless/ath/ath11k/pci.c |  9 ++++++
- drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++
- drivers/net/wireless/ath/ath12k/hif.h |  9 ++++++
- drivers/net/wireless/ath/ath12k/pci.c |  9 ++++++
- drivers/net/wireless/ath/ath12k/qmi.c | 11 +++++++
- include/net/qrtr.h                    | 21 ++++++++++++
- net/qrtr/af_qrtr.c                    | 61 +++++++++++++++++++++++++++++++----
- net/qrtr/mhi.c                        |  4 ++-
- 10 files changed, 136 insertions(+), 8 deletions(-)
----
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
-change-id: 20260918-qrtr-multi-ep-c27c2bc54ee1
+diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
+index 017fed1b4bd1..0da9025c7ed8 100644
+--- a/drivers/net/wireless/ath/ath11k/hif.h
++++ b/drivers/net/wireless/ath/ath11k/hif.h
+@@ -32,6 +32,7 @@ struct ath11k_hif_ops {
+ 	void (*ce_irq_disable)(struct ath11k_base *ab);
+ 	void (*get_ce_msi_idx)(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
+ 	void (*coredump_download)(struct ath11k_base *ab);
++	int (*get_qrtr_node_id)(struct ath11k_base *ab);
+ };
+ 
+ static inline void ath11k_hif_ce_irq_enable(struct ath11k_base *ab)
+@@ -159,4 +160,12 @@ static inline void ath11k_hif_coredump_download(struct ath11k_base *ab)
+ 		ab->hif.ops->coredump_download(ab);
+ }
+ 
++static inline int ath11k_hif_get_qrtr_node_id(struct ath11k_base *ab)
++{
++	if (!ab->hif.ops->get_qrtr_node_id)
++		return 0;
++
++	return ab->hif.ops->get_qrtr_node_id(ab);
++}
++
+ #endif /* _HIF_H_ */
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index a163168f3617..4d327b5cc98a 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -10,6 +10,7 @@
+ #include <linux/of.h>
+ #include <linux/time.h>
+ #include <linux/vmalloc.h>
++#include <net/qrtr.h>
+ 
+ #include "pci.h"
+ #include "core.h"
+@@ -900,6 +901,13 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+ 	return 0;
+ }
+ 
++static int ath11k_pci_get_qrtr_node_id(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
++
++	return qrtr_host_node_id(ab_pci->mhi_ctrl->index);
++}
++
+ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ 	.start = ath11k_pci_start,
+ 	.stop = ath11k_pcic_stop,
+@@ -921,6 +929,7 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ #ifdef CONFIG_DEV_COREDUMP
+ 	.coredump_download = ath11k_pci_coredump_download,
+ #endif
++	.get_qrtr_node_id = ath11k_pci_get_qrtr_node_id,
+ };
+ 
+ static void ath11k_pci_read_hw_version(struct ath11k_base *ab, u32 *major, u32 *minor)
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 7dc07339b957..dadf78f30b89 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -3170,8 +3170,18 @@ static int ath11k_qmi_ops_new_server(struct qmi_handle *qmi_hdl,
+ 	struct ath11k_qmi *qmi = container_of(qmi_hdl, struct ath11k_qmi, handle);
+ 	struct ath11k_base *ab = qmi->ab;
+ 	struct sockaddr_qrtr *sq = &qmi->sq;
++	int node_id;
+ 	int ret;
+ 
++	/* Identical devices advertise the same QMI services, so connect only to
++	 * the QMI server on this device's node. A node id of 0 means the
++	 * transport has not assigned a unique node id, so accept the server
++	 * unfiltered.
++	 */
++	node_id = ath11k_hif_get_qrtr_node_id(ab);
++	if (node_id && service->node != node_id)
++		return 0;
++
+ 	sq->sq_family = AF_QIPCRTR;
+ 	sq->sq_node = service->node;
+ 	sq->sq_port = service->port;
 
-Best regards,
---  
-மணிவண்ணன் சதாசிவம்
+-- 
+2.43.0
 
 
