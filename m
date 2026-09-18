@@ -1,193 +1,145 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 079ED339366
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 15:25:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB7E515988;
+	Fri, 18 Sep 2026 16:28:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789745141; cv=none; b=ennH/qZ1DmowdYsbqlm79bzn1w5yhWqRwU9WBTR6hTUvLSdrCjDQZo+PeAJo2z1gq4Ww8k3b2N1uQMgBRI3n8ZhpihnUH/3JW3tATp7lq2Y9juD7cxj+LYYx5Ub/rtDxExSMYSdv8NRaSQrwg/jR92gfdagRt/iFR8jnPZ2XS9w=
+	t=1789748898; cv=none; b=m9rBierl1pXGwI3HffRwwpJ+A1870K02t/k43KNt0VSETPpSlYQapumQaqS1REs1+ZBba/0A8c8YxAZXPT3XRZ8sGdMJLFbSELDAZS2LOuYjcXFwYhxGSNYv5VVQnZ/ysr476sY/egCWt2oyO80rqP1gY3yFskeNyV8OZcPpqKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789745141; c=relaxed/simple;
-	bh=IGeEkqV/bRxMcJXz3gB71Lgr6drx7WEjN/ZNB68F+4A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=QzDUpcutr3u0bT/ktTfaPBUQUX8s+iVyGZPBA75FZr4KF1yV7bnfMM66+NCmPx+Mn2KJ4zsiYfqIXSrXyVlxIibynidd2EQ0mmBhn15ZtLsmeFRpsqzwZVBtRnnY1dofuk+7k+TMBXeqeRVkm76bi3l+BvsW5DSyBlBg+HHQ+E4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jekXM1Pj; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=jk6TevFq; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1789748898; c=relaxed/simple;
+	bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=BZ+b62RjjpKMjLfIYdu5C7CDMQFQ/71cvjFZ5sFXFC46AtOq3B7PIv2/vw47VoUenH9WfjOjos80Ocagsd1vgiPFHY3N/W+GZ7WoDylM6peYB7VpSVI9PSKCYacNZU28wvmfMIqd1rImRkOhc+5YWxktKo/JKKOyxZoXhn5FdlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UB+YS1Us; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jekXM1Pj";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="jk6TevFq"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68IDOesA1201885
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 15:25:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	e2X14ijPvU7hbZLqb/jEpzJ7qqwECLW7uzM9cKLErUw=; b=jekXM1PjmQKGFqoV
-	qQRFfHe72i1FGSeSO2ChZNG6wnpeJbrd+rER+FvQO1I9hl2JUx+TZ+QMjzSpu5D+
-	Os+on8fANqLYkdt4apRShB6x5158iy8oWwoVR8VRTh3EPJ3/gGE/RxJZkP5kS34v
-	SM1Hv+TISq3EkTDdNMfgrey5eDYOfYo+EDZ2pQJQsvx9yX/hqKJZJWOm/2xH+7to
-	1F7GbaM/KOnEt/gQOPTGWe2ppgTK+vZeVcclbQ31aF4F9Fwa0tJQt7MN3JRhwxUW
-	JFMT5k9s1GAA0nzIeppJw7YIoTk5m90UDG49akiYBVqeu+blYFWiokgApBUTt7ca
-	3TQBJQ==
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com [209.85.219.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4grxp2teh3-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 15:25:38 +0000 (GMT)
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-90ce8ad8002so18245486d6.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 08:25:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789745138; x=1790349938; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=e2X14ijPvU7hbZLqb/jEpzJ7qqwECLW7uzM9cKLErUw=;
-        b=jk6TevFqZfRGVH1ORWh08qKOM71tgYf5cQ3NTuTmtJtD2tzeTFd//Gpf3xxcpO+Rhk
-         l+cckJyL8CdDBH2fOX+bnVMn+51NWNWeleb6xtRhMJdt8IgngG0FBjUYBM+jh+xCLs0u
-         vM1Dv3+++n27UoHCPYqgt3kBm3pOjH6bYRs+3+DcsWRN8vKVaRfXGB8rI3K6S6Ogsp8p
-         1QG7FLvL0tbO+tFfdl8chVitOFe+PaBAR5ACp4d667zRcQDPnt+SYU8jLJaazq+yZfwY
-         bqENcPPdeW/ZbhC6VT8Wr+2IOtyULzq22UNSSpLn9VqpM3lFgaeeSRJKL3iBTPRNGPJ8
-         V+vQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789745138; x=1790349938;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=e2X14ijPvU7hbZLqb/jEpzJ7qqwECLW7uzM9cKLErUw=;
-        b=DWUdKu37bCUr7xRqnekYVKQIyg7Jahyt39WUn/22DzoCW5pBBKAqLPIWdaOsBtFm/a
-         6unQSPN2/ujZNF00GFFCelM5LupkxhDm2AJLJLphjdHEXBu1r++NVZrM3+oBk6FsDGEk
-         0/WU8XmkyRMgZk2n3EFb9QBRzP0ZZN27t7jBBdwasdYY5L9n44AHp8DlNpWayybohgwd
-         zHFyJAnTXGr/za85dqHY0sGSRhuMi/GXExyo0tVdFbJ0YU6bY1I2Xc+aZbLe2Ri7VoUp
-         B1gSLtdUUGD7/1kyDaseL8bLCNnHa+pVvBytaVVj51E+HBO+gS1eR0kSkmK7H+4GTlCg
-         9PWw==
-X-Forwarded-Encrypted: i=1; AKwUvByuMLlagv33EIUu68kSbK2vgPe9sffJuoPxwjm+PqfzfO1nM0u7UveVIOtx1mVxOoouK8VTaMeO+hawsUDjRw==@vger.kernel.org
-X-Gm-Message-State: AFuF++nTG+l4bbYwMxXfNP6oz36yztlBd/zNGEDpG/aGT0eoBmuk+WAd
-	LQWxLx7KbyVAm9HC85qSDF/wQRkdi9Ctv7hTKeU9d1IkHgAdFT5wBNOGORl/W7RxgUl9nXdFJPC
-	hPunNtEuTsxj/yONN+cv/ERVpZ+TiHhidaseqCCwphxUcHzK/Oq+IQca1qjc6sZdZOQZ7BMr21Y
-	nY0Q==
-X-Gm-Gg: AYBFou3QUpUDyAA+R2bMziilnHFNH4UI+CqCowROnUPZ+1U1aMIj0HGU7++mrrDpK9C
-	8J3RafJX+cAXaFx+zdHAldR6WkBOLIeUAAMNbNO10tEf8yERGILH4W3M4i1S/RRVDoEKCKJIw5Y
-	GspmlhCI+CeIfaislL3Zu1lkVZnVHAKlUVddc6zZH3QJ1KUToCYIaO4x9PGDy/eOElna72YP0W8
-	Q9gWaIYFjMYa9o6BU4fEs1oRgiirG/hccg9lHQIAKAneEPVRp2vv4VDLJMuDwkaqtKFrAdxnT6O
-	0VN7W3XP1x2sALh49MyyouxXcJYUiN61BSz1JNy4r/RTaYlqmIKDIJpPTNPYZiX9ER96mZmLHBs
-	jYL6tA9SNFON78D56MfP7f7bzUUGgscPMnr1FqXUo4alYDlkqZB9ssKf5IjLF
-X-Received: by 2002:ad4:52c8:0:b0:912:ab5:9e0c with SMTP id 6a1803df08f44-91254b57a72mr35036056d6.21.1789745135312;
-        Fri, 18 Sep 2026 08:25:35 -0700 (PDT)
-X-Received: by 2002:ad4:52c8:0:b0:912:ab5:9e0c with SMTP id 6a1803df08f44-91254b57a72mr35035506d6.21.1789745134615;
-        Fri, 18 Sep 2026 08:25:34 -0700 (PDT)
-Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9125802c8d8sm14881656d6.23.2026.09.18.08.25.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Sep 2026 08:25:34 -0700 (PDT)
-Message-ID: <35e7ac7d-534a-4001-b076-56ca3e12bdb3@oss.qualcomm.com>
-Date: Fri, 18 Sep 2026 08:25:32 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UB+YS1Us"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BCFC9C2BCF5;
+	Fri, 18 Sep 2026 16:28:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789748897;
+	bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=UB+YS1UsxCALsNwNH0jSBd7fW29V3RBvgybAQ4h/xGNdUH/X3IfqjYN8WdmgjfUB3
+	 A//A3CjxLTkRhlJA5ehoK03Lii1bxtQend0rG8TZ16NIEvS5JoRZkaQFsZWNbp18A/
+	 7CKgtAFNV9FjigLPhMQnQr6UxSr68hIbLTgUhVX27qM4AEjcFSW2oTLG6PKXhBXyTP
+	 JyHcm6IOKNzCKAEH7kO6H8xzm6C+jNRqRj8qXEarbrhIhghjCrZiloEq0phxz2yRD1
+	 pHtBIAa8t1f59BWhVVUSxWxh7EHNDVgHodvfTapYuVHhfF0hjKQaKDUzCbLFzX5y0Q
+	 Ly2l/SGGIUbBw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C0CC982D7;
+	Fri, 18 Sep 2026 16:28:17 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Subject: [PATCH 0/4] net: qrtr: Add support for using identical MHI
+ endpoint devices
+Date: Fri, 18 Sep 2026 18:28:12 +0200
+Message-Id: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wil6210: Remove %pK and %p
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-wireless@vger.kernel.org
-References: <20260918105632.pDhc9gIB@linutronix.de>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260918105632.pDhc9gIB@linutronix.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE4MDIyMCBTYWx0ZWRfXzhm5Tg2+50lK
- 2ZwhkVtCefdBD2PVeTgI8fTj4+QVCuZFqM3XTmuNhvPP6C8/A5vQVODzGFLPp0Gu7pHMGcin8DL
- DMOWQgZCoapHNeZCQsO0MieTyLX7KE8=
-X-Proofpoint-GUID: MUGrthOjFBzjJxlSZa2fGPKTaKRKkxXC
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE4MDIyMCBTYWx0ZWRfXyErYeLjTXwy+
- gKXCSj+z10rSuTfkcmfiwkEqFE2T0UoVlW9j6um3wBIvOSbuRSyMC8dmQanruyaORujF3WmQR0W
- vzm2QIS5IEcoeajNouTZpnA6FEgP38gB2H/NrKtpfgSob7jQB3WgiOpeHcrqO2taT3aCXHlN95I
- gmGlZOy/G8kGcFKuwVsvPhdLSPUwBayf8QR0SaO69dYlc2f1ORI2bVaPditQFQZCeJbjIoVt2RB
- bfU4NupXcwbQzpCm8wPuPoXwErvpqI9oDVXtwydcWLCBwQEz416iYiYohROAADHs+1Rd07rk6C/
- nF62TK1cf9pdDnUfz+LpbuQsnTgSeri06x7bsk9AMSOfuuuRWKHdCVgmd8omqyaatoRqkk6x3nS
- nlE46exsR5rJO63LbzMqTgWEaYz9wLo4hHdXTVZzYKWA3iOKvIenViuaT7S9YjLp7fgOmcv5Sc/
- pylikRj4UInJQtvPbNg==
-X-Proofpoint-ORIG-GUID: MUGrthOjFBzjJxlSZa2fGPKTaKRKkxXC
-X-Authority-Analysis: v=2.4 cv=cNF1IVeN c=1 sm=1 tr=0 ts=6aad57f2 cx=c_pps
- a=wEM5vcRIz55oU/E2lInRtA==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=dUtfJtYXSmSsDSKrwpYA:9 a=QEXdDO2ut3YA:10 a=OIgjcC2v60KrkQgK7BGD:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-18_04,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0
- bulkscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609180220
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAJxmrWoC/yXMQQ6CQAxG4auQrm3CTECFqxgXUH61BhA7AyEh3
+ N1Rl9/ivY0CTBGozjYyLBr0NSa4Q0byaMY7WLtk8rk/5pU789ui8TD3URkTiz+Jb6UsAEepmQw
+ 3XX+/y/XvMLdPSPxOaN8/x3mQHnEAAAA=
+X-Change-ID: 20260918-qrtr-multi-ep-c27c2bc54ee1
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>, Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Chris Lew <christopher.lew@oss.qualcomm.com>, 
+ Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
+ Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
+ Juha-Matti Tilli <juha-matti.tilli@iki.fi>, 
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2798;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=6Z8qKohBjG+nYdXMxSIz7GwXcSnl7h3FDD5QcnwlKuY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqrWad4ZoZAEk0cQeZgtJ6b+1eEpkYMcmutGWLA
+ bVHEQdUHwSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaq1mnQAKCRBVnxHm/pHO
+ 9ajuB/9glk15Vu0tJD0QCmDRJJUz3pwSef4SYXyEyq4KwQWyU8SLii0UBPrZAO8Qc0i91NTNI6o
+ U43q/76VuAhZFJW60hvtqrjwOgMelpnds+dpqZER0h26ie9F9MKmgRJLfNhW7Mp8JYMzYSsMBE7
+ zSydfaCl33EE+Paw/sQMO1ktG35sGcQSi6pIvTaWBL4pLDRfG2oQHqPkwIrNGXZZ3xNB82jh6aX
+ 9xv42TRFy9qRwDQ0/7M/1BpSV4WZ32GfSxzXFKAZoH4BITmySewHu92P1NeI0dsRitKiXZlk016
+ Z+Fbq1Hr4crb5FBljkXN4jfcjzVhgEmR4VWmIWBenBt0UcZP
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On 9/18/2026 3:56 AM, Sebastian Andrzej Siewior wrote:
-> Commit 71338aa7d050c ("net: convert %p usage to %pK") which is from
-> 2011 and changed the %p annotation for pointer to %pK. Back then the
-> default behaviour for %p was to print the pointer. The %pK modifier was
-> introduced to able to control the behaviour of specific pointer values
-> without changing the behaviour of %p for everyone. It was dedicated to
-> avoid leaking pointers via /proc.
-> 
-> Things changed over time. The default behaviour for %p is now to print a
-> hash pointer which does not leak the address but allows to correlate if
-> two pointers are equal. I intend to remove %pK from the library.
-> The policy on %p is to not introduce new ones. This is somehow in
-> between since it already exists.
-> 
-> The driver uses %p to print the address of skb, %p for the address of a
-> transfer ring and %pK for the address of the status ring.
-> For the skb it is probably enough to print if there is one mapped. The
-> address of the ring probably not matter given the physical is address is
-> shown and it is virtually mapped.
-> 
-> Remove the %p and %pK line from wil_print_.*() so it does not end in
-> debugfs' output (debugfs is not ABI so removing does not break
-> anything).
-> Replace the skb pointer with yes/ no.
+Hi,
 
-NAK. debugfs may not be ABI, but it is a human interface, and you should not
-assume that a human debugger doesn't need the information.
+This series reworks the QRTR driver to add support for using identical MHI
+endpoint devices at the same time. Currently, QRTR driver has a limitation on
+using more than one identical MHI endpoint devices like QCS6490 or any Qcom
+Endpoint device making use of QRTR at the same time. Because of the fact that
+these devices will have the identical QRTR node id, they cannot be used at the
+same time, on the same host machine.
 
-I'm ok with replacing %pK => %p but not ok with removing existing %p[K]
+This limitation is a blocker for running upstream kernel on devices like Qcom
+based routers as they often have multiple identical WLAN Endpoint devices
+connected to the Router SoC.
 
-> 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> ---
->  drivers/net/wireless/ath/wil6210/debugfs.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-> index e06e45323272c..093ec04e4a052 100644
-> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> @@ -80,7 +80,6 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
->  
->  	seq_printf(s, "RING %s = {\n", name);
->  	seq_printf(s, "  pa     = %pad\n", &ring->pa);
-> -	seq_printf(s, "  va     = 0x%p\n", ring->va);
->  	seq_printf(s, "  size   = %d\n", ring->size);
->  	if (wil->use_enhanced_dma_hw && ring->is_rx)
->  		seq_printf(s, "  swtail = %u\n", *ring->edma_rx_swtail.va);
-> @@ -200,7 +199,6 @@ static void wil_print_sring(struct seq_file *s, struct wil6210_priv *wil,
->  	seq_printf(s, "Status Ring %s [ %d ] = {\n",
->  		   sring->is_rx ? "RX" : "TX", sring_idx);
->  	seq_printf(s, "  pa     = %pad\n", &sring->pa);
-> -	seq_printf(s, "  va     = 0x%pK\n", sring->va);
->  	seq_printf(s, "  size   = %d\n", sring->size);
->  	seq_printf(s, "  elem_size   = %zu\n", sring->elem_size);
->  	seq_printf(s, "  swhead = %d\n", sring->swhead);
-> @@ -1140,7 +1138,7 @@ static int txdesc_show(struct seq_file *s, void *data)
->  		   u[0], u[1], u[2], u[3]);
->  	seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
->  		   u[4], u[5], u[6], u[7]);
-> -	seq_printf(s, "  SKB = 0x%p\n", skb);
-> +	seq_printf(s, "  SKB = %s\n", skb ? "yes" : "no");
->  
->  	if (skb) {
->  		skb_get(skb);
+This series supersedes the following 2 series from Juha:
+https://lore.kernel.org/all/20260915054207.2513877-1-juha-matti.tilli@iki.fi
+https://lore.kernel.org/all/20260915074135.2567411-1-juha-matti.tilli@iki.fi
+
+Compared to the series from Juha, this series simplifies the multi-endpoint
+support by computing a unique node id for each MHI endpoint and uses it for the
+internal QRTR book keeping. This ensures that even if the MHI endpoint devices
+have same node ids, the host QRTR will always use a unique node id for each one
+of them.
+
+More details can be found in the individual patches.
+
+Testing
+=======
+
+Juha tested this series on multi ath11k setup by backporting this series to
+6.6.156 kernel. I'd appreciate a formal tested-by tag from Juha and other folks
+CCed to this series.
+
+Merge Strategy
+==============
+
+Since both QRTR and ath drivers are falling under the networking tree, the whole
+series can be merged through netdev tree.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+Manivannan Sadhasivam (4):
+      net: qrtr: Allow the host QRTR to assign a unique node id
+      net: qrtr: Assign unique node id for MHI endpoints
+      wifi: ath11k: Connect to the QMI server belonging to the device owned by this driver
+      wifi: ath12k: Connect to the QMI server belonging to the device owned by this driver
+
+ MAINTAINERS                           |  1 +
+ drivers/net/wireless/ath/ath11k/hif.h |  9 ++++++
+ drivers/net/wireless/ath/ath11k/pci.c |  9 ++++++
+ drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++
+ drivers/net/wireless/ath/ath12k/hif.h |  9 ++++++
+ drivers/net/wireless/ath/ath12k/pci.c |  9 ++++++
+ drivers/net/wireless/ath/ath12k/qmi.c | 11 +++++++
+ include/net/qrtr.h                    | 21 ++++++++++++
+ net/qrtr/af_qrtr.c                    | 61 +++++++++++++++++++++++++++++++----
+ net/qrtr/mhi.c                        |  4 ++-
+ 10 files changed, 136 insertions(+), 8 deletions(-)
+---
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+change-id: 20260918-qrtr-multi-ep-c27c2bc54ee1
+
+Best regards,
+--  
+மணிவண்ணன் சதாசிவம்
+
 
