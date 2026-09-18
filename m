@@ -1,54 +1,71 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4AA1372662
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 02:11:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E5D3C197A
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 03:40:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789697512; cv=none; b=sCj2V13C8knvGoCeYP9vFuqXaRQTiNgFpE/pf+BdN9ZumLkcHlzVmA3ODkGpt0p+BhT1Yorb81MWa4Dvs8o02wTaTkm9LU2AZPSh/odP4UDH0j230/qkfxLD/VzM1KryXt4BybFvNa9xXkkAhmKWN+jZpfl5rVV3mturdrM21zk=
+	t=1789702813; cv=none; b=A6LwWuQ4luJNhTJTKCbPK5VDmymykBF+7d3MZCBVuskN46gl88cD673UUJtuCn+UkJROOUrpmHR4aM/0TD5YlCUJmN3vOX6B9wvPGLq9ZIc2b+yOEQG04gcdmhy7ORVvQc2XoUKKWdi4nTFhaeVt2UZfCjG/aRxMihHoH+XcS2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789697512; c=relaxed/simple;
-	bh=cWx33h403Lja87u81+l5+2ACWlytFdyD0wTJsqqSPfc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kHBbP7I5bdN2dgwBwYqD/9BQCSYPO7u9SHCJJxqN5KuqDzdZc6y2NDOVFaaRQ5mkYt2rFmiw//DSY+d8PlN17QFJASk7QGterhcpPfpAbzTF4e/FX5SPDWYJc9vyabrwli9seY7KLpjLkdDIY4WljqCKHpSBVZKYrGLC9Zud7R0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=nyar/09o; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789702813; c=relaxed/simple;
+	bh=KKItR8FZ9hix+/TL0aQ9eu6vPKiFhpC7kUkQVOqGo7w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lfRkAbbOAsjYQSI28Qjc9d7sCmUdfx41+lCYar2o/RuSdCpG9zf2PddXzf5lIj5Kzin8YCMALsHRZhPcQM7j6RbluH4DZI7/z9k5S10NYWpVeKDdtHXgJHJxiuBpUEXgzJsnL5M9RMUHxUPXom3P7bSiEQExwZbT69Z7eWwuyO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SI0B0ema; arc=none smtp.client-ip=74.125.227.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="nyar/09o"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68I2BiJyA3822722, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789697505; bh=/0xOY6wZOYaKJbx0xDGiaLlmkg8q3TgxzjGyIXy1Za8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=nyar/09oTNghJudkjnq4dEghUfhYayrvn57Rxg2F8ovcuDd2xz9OrQTPzcM6wmK3M
-	 DKAcQVLxGeAfDr3omDZqNPxF1d7XhISc60umrGeNKAwW6X74lF9CGfl2XM+1xxh3Le
-	 aiyANJ2Qn/8xZ+X/1I6ZKr5HE8nB4KPHspk83JlzVu6uWpweC1sirST7yaDa4GPTZI
-	 qnLcQOVz/VQHbFxiZQeTxfJwpmlfTg4i3C1RlKUHWDBB3BgUBh+m2h1oFBmXATo/8s
-	 hDdKHbIkcGJ2Dp1WNqYmSS+gEcga7EIujb08oc4tfM8PX/5ohWoBiINfChjGkHux3h
-	 r3E8hjRknnfRA==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68I2BiJyA3822722
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 18 Sep 2026 10:11:45 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 18 Sep 2026 10:11:44 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 18 Sep 2026 10:11:44 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Fri, 18 Sep 2026 10:11:44 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <lkp@intel.com>, <wenjie.tsai@realtek.com>
-Subject: [PATCH rtw-next] wifi: rtw89: correct dependency of the multicolor LED
-Date: Fri, 18 Sep 2026 10:11:13 +0800
-Message-ID: <20260918021113.25481-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SI0B0ema"
+Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2dd77300825so2823365ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2026 20:40:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789702811; x=1790307611; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ubHKRJ5xVQmev0vSOqthTpsahkuZO16pcf4T5Ysx2tg=;
+        b=SI0B0emaz9dnKc2Ypxl8n4Y8s0CJM55tXYONZv1Fs9rMpag7s9CQvZuz9RvJhjojFL
+         VOyk+iVjWv4Ik97Iic7agVfXzh5I1uJ7m0nQ/ygg4xwS7XFOGGttuv59+YirhPszPTdf
+         3ONQnPctVkHEr/sTViBWB4QiEP2gqii2fWyJSHcSIfJIQh+lKTJXoJIBaS8NGTN9jyUe
+         VclpWzG/16tNlmsE9i/KA5ANhQ8mJkGi38ssT+OZP2aNknZPmuROTocgNYKI3xGpq9oA
+         qhD7qXmRetCvKdy85XcbraarEybbUKT3Iw5B8dnZ1q47qaojx8kkmqYqUBs4SNiGi0BU
+         OPJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789702811; x=1790307611;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ubHKRJ5xVQmev0vSOqthTpsahkuZO16pcf4T5Ysx2tg=;
+        b=aufQU/S/ezI20qoPwxEVL7ZZIfHeyk/YpeOCieANEL9XHRrjnoNBFLzIWXQgX6WWf4
+         COyIQnb/mcVlROyz3PNeCjxnFWxoeahYtRYSzG1z5PFqT+uGPO2yMEANQUjwRraYVmcn
+         cBblxEuTYEGq+YyKyoJGj7QIbjJCmsmAnWnTax8LJCDm9ZxQd58I5AXNv+JFY5hriM5T
+         QHL+aKMK5c2IhYQKt9YhJeME9CGhCQDGql5xpsistPqjXb8dOe+T0Awem/nd7OtzcyWE
+         oIONoOd8AHLlLOmDEByiAPBb8M7bESHLVO8an113OO4fyJpmc908d0hghkwx8bBzb7MM
+         KEmQ==
+X-Gm-Message-State: AFuF++lcYtCy1nNzjjLu7x2mmani2rokQkT2uxmrXV4ps9GCmUWTcuBx
+	R/TqH3bVi/ERyvvnKvatJMgkuhijm5DLeILer6HOSuJJc+AnrBYlg2le
+X-Gm-Gg: AYBFou2WFLY5PLEIJbXhNB78eUYlNnww0DqvTPxxkiFR+OxKb+UBlfKbRZ4jWgwdIXK
+	oSwSnTZ2XmSEjMk/BHlP4tcP36zPH769Lhhhb6t9t8mkvNiAo51E0Gl89m0Y7RDEg7nLwNCRG58
+	/8vOGFxDPrkz5uCFvCV9KdOby4lQv6UJH6G7WJBXksmekdsdgtNyEXu+DYI0A+i7xxt9SXjoBAw
+	DruYLjtMYka3BilM/7AnmHR/NFzd/r1voTv6aiADn+6gBm281lRtKv9vlpsy6zHfYjQh/V4mbhu
+	u0D573QWq81SUeP/IWbWl3cokw7PkXygSsgk82mOZF5nUQ7VY0w/NnxY8g1csILC0EO9TnqmnWY
+	uX7asRHjy/cOgVrp7vDUKTSj366mYCWx7VrL8S3ecy5COaqA2AgTQRzF0W9vnXRvzQfEDTuUEeS
+	dUK1PMSFatbS8MrSfXwRqoHbsxr/odyk6Xzwtwn2kPwR709sF9NlO+CqQTeYuXmnci+rlQqKXpP
+	NakKFVX/+r8Qdp9XOemHGHj+ZavGa3dFpzwsFI=
+X-Received: by 2002:a17:903:2350:b0:2dd:4168:7bd3 with SMTP id d9443c01a7336-2ddb1adec54mr28702315ad.12.1789702811157;
+        Thu, 17 Sep 2026 20:40:11 -0700 (PDT)
+Received: from localhost.localdomain ([2409:8a1e:2e81:7320:79da:8b9b:16b2:8431])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33c284a8a2asm706032eec.1.2026.09.17.20.40.08
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 17 Sep 2026 20:40:10 -0700 (PDT)
+From: Yuchao Zhang <ndaugoing@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yuchao Zhang <ndaugoing@gmail.com>
+Subject: [PATCH 0/1] wifi: mac80211: drop oversized fragments to avoid extra_len overflow
+Date: Fri, 18 Sep 2026 11:40:03 +0800
+Message-ID: <20260918034004.85078-1-ndaugoing@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,48 +73,41 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 
-The rtw89 depends on multicolor LED module, but for the case multicolor
-LED is module and rtw89 is built-in driver, like
+Hi Johannes and mac80211 maintainers,
 
-  CONFIG_LEDS_CLASS_MULTICOLOR=m
-  CONFIG_RTW89=y
-  CONFIG_RTW89_LEDS_MC=y
+During static analysis of fragment reassembly in mac80211, we identified
+a potential 16-bit integer overflow in ieee80211_rx_h_defragment() that
+can be triggered by a sequence of oversized fragments, leading to an
+undersized allocation in pskb_expand_head() followed by skb_over_panic()
+in softirq context.
 
-The linker reports error:
+In commit 69f132236827 ("mac80211: shrink struct
+ieee80211_fragment_entry"), entry->extra_len was narrowed from unsigned
+int to u16. Since up to 16 fragments (frag numbers 0..15) can be received
+in an IEEE 802.11 sequence, a sequence of large incoming fragments can
+cause entry->extra_len to exceed 65535 bytes, wrapping around modulo
+65536. When the final fragment arrives, pskb_expand_head() only allocates
+tailroom for the wrapped-around extra_len, and the subsequent
+skb_put_data() loop overflows the buffer, triggering skb_over_panic().
 
-  ld.lld: error: undefined symbol: led_classdev_multicolor_register_ext
+Because valid MSDUs in IEEE 802.11 are far below U16_MAX (standard MSDU
+is <= 2304 bytes, and A-MSDU cannot be fragmented), we prevent this wrap
+by dropping the frame and purging the queued fragments if accumulating
+the incoming fragment length would exceed U16_MAX.
 
-Avoid this case, and summerize the supported combination as below
+This approach keeps struct ieee80211_fragment_entry completely untouched,
+preserving the structure memory reduction from the aforementioned commit.
 
-  CONFIG_LEDS_CLASS_MULTICOLOR  y      m    m
-  CONFIG_RTW89                  y/m    m    y
-  support                       O      O    X
+Best regards,
+Yuchao Zhang
 
-Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8852CU valve board")
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202609172315.ZYoKvKBS-lkp@intel.com/
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yuchao Zhang (1):
+  wifi: mac80211: drop oversized fragments to avoid extra_len overflow
 
-diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig b/drivers/net/wireless/realtek/rtw89/Kconfig
-index 7c678dd1f6b3..9c6c16af7f35 100644
---- a/drivers/net/wireless/realtek/rtw89/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw89/Kconfig
-@@ -215,7 +215,7 @@ config RTW89_LEDS
- config RTW89_LEDS_MC
- 	bool
- 	depends on RTW89_LEDS
--	depends on LEDS_CLASS_MULTICOLOR
-+	depends on LEDS_CLASS_MULTICOLOR=y || LEDS_CLASS_MULTICOLOR=RTW89_CORE
- 	imply LEDS_TRIGGER_TIMER
- 	default y
- 
+ net/mac80211/rx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-base-commit: 73e3b1c94c7d5b4a113e7cbb42665dc2fe3b9d78
 -- 
-2.25.1
+2.53.0
 
