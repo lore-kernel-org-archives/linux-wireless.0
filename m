@@ -1,83 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533EE3AE6E6;
-	Fri, 18 Sep 2026 01:50:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4AA1372662
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2026 02:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789696214; cv=none; b=TB1qJGo3zTc2crGDaTuvzhP7PmZgYi7kfqBMMVfqrCnwjHLBAY+1XVPKCELGZUou6W9aUs7bmEY11rGWpchK5lj6IdKeFtiMTU1772y2juqXn8JGlJ8Ul8+JuPsv4gmNS0v2rpSx9+2IYvFsltuk5ZcQsWC9grhtnUto+C8wsN4=
+	t=1789697512; cv=none; b=sCj2V13C8knvGoCeYP9vFuqXaRQTiNgFpE/pf+BdN9ZumLkcHlzVmA3ODkGpt0p+BhT1Yorb81MWa4Dvs8o02wTaTkm9LU2AZPSh/odP4UDH0j230/qkfxLD/VzM1KryXt4BybFvNa9xXkkAhmKWN+jZpfl5rVV3mturdrM21zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789696214; c=relaxed/simple;
-	bh=cZlGVswHNPOjYkFOSXLBGQGteAWL251diCFKXICBO6k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=proVvTVDrtEffQ6T7/nY1CXu758P0DDyEi9Sht7Z6b2R7YmH7z6IzAYwcv9JVpefuO1e0H99OzyxhZpRzRbX8ZdniNecvVBq2VHaGTHRkX6Vz8z3fZySOF0zJ77QwlrjSpimD3PnF8wTtqhAinbC8GSD0OGSNrpCpHPG4oTUbtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X1f4kL/8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789697512; c=relaxed/simple;
+	bh=cWx33h403Lja87u81+l5+2ACWlytFdyD0wTJsqqSPfc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kHBbP7I5bdN2dgwBwYqD/9BQCSYPO7u9SHCJJxqN5KuqDzdZc6y2NDOVFaaRQ5mkYt2rFmiw//DSY+d8PlN17QFJASk7QGterhcpPfpAbzTF4e/FX5SPDWYJc9vyabrwli9seY7KLpjLkdDIY4WljqCKHpSBVZKYrGLC9Zud7R0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=nyar/09o; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X1f4kL/8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0DB41F0089B;
-	Fri, 18 Sep 2026 01:49:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789696201;
-	bh=EKMAf9Vzg9bU9tgovjaQo6jPTYOiFpv712sI9S5dxvM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=X1f4kL/8mWyqI7hOJLKnCIh8valDE4NZiwrIugZGtn2eW4dqA49tiNj+WCxhbHGJo
-	 F6SoEDcC6VlPILrAkLl9uPJJMU1U3sdljM6S/vqsgvo55tW3zvIvTXUMfOvZCK9JDC
-	 5ft526LVfDNtX+TxQvmJ5mGdyKOay/5LSXhYYYg0DiSdZE4R0BGFwQovOMFJ+Br/Gt
-	 gzTbWxVwhyZ0/j8aqsfnufJ0/hpvsKJhizERIjuRQZ8yqbd+Xp5Pdbp4s1wkd9JVdd
-	 q6eA/gkNHxtORF/Xh3i7LMypzX6QQk2Ry68xlEBrTmQJr0zqAvFTxhMZHic4vd7atR
-	 jaatjgCRW6bZQ==
-From: Bjorn Andersson <andersson@kernel.org>
-To: Konrad Dybcio <konradybcio@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Alexander Koskovich <AKoskovich@pm.me>,
-	Liam Girdwood <lgirdwood@gmail.com>,
-	Mark Brown <broonie@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-	Rocky Liao <quic_rjliao@quicinc.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Luca Weiss <luca.weiss@fairphone.com>
-Cc: ~postmarketos/upstreaming@lists.sr.ht,
-	phone-devel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Subject: Re: (subset) [PATCH v2 0/7] Enable Bluetooth and WiFi on Fairphone (Gen. 6)
-Date: Thu, 17 Sep 2026 20:49:49 -0500
-Message-ID: <178969618819.1582337.9485761608259229279.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
-References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="nyar/09o"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68I2BiJyA3822722, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789697505; bh=/0xOY6wZOYaKJbx0xDGiaLlmkg8q3TgxzjGyIXy1Za8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=nyar/09oTNghJudkjnq4dEghUfhYayrvn57Rxg2F8ovcuDd2xz9OrQTPzcM6wmK3M
+	 DKAcQVLxGeAfDr3omDZqNPxF1d7XhISc60umrGeNKAwW6X74lF9CGfl2XM+1xxh3Le
+	 aiyANJ2Qn/8xZ+X/1I6ZKr5HE8nB4KPHspk83JlzVu6uWpweC1sirST7yaDa4GPTZI
+	 qnLcQOVz/VQHbFxiZQeTxfJwpmlfTg4i3C1RlKUHWDBB3BgUBh+m2h1oFBmXATo/8s
+	 hDdKHbIkcGJ2Dp1WNqYmSS+gEcga7EIujb08oc4tfM8PX/5ohWoBiINfChjGkHux3h
+	 r3E8hjRknnfRA==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68I2BiJyA3822722
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 18 Sep 2026 10:11:45 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 18 Sep 2026 10:11:44 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 18 Sep 2026 10:11:44 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Fri, 18 Sep 2026 10:11:44 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <lkp@intel.com>, <wenjie.tsai@realtek.com>
+Subject: [PATCH rtw-next] wifi: rtw89: correct dependency of the multicolor LED
+Date: Fri, 18 Sep 2026 10:11:13 +0800
+Message-ID: <20260918021113.25481-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
+The rtw89 depends on multicolor LED module, but for the case multicolor
+LED is module and rtw89 is built-in driver, like
 
-On Fri, 03 Apr 2026 15:52:46 +0200, Luca Weiss wrote:
-> Add the required bits to enable Bluetooth and WiFi on the Milos
-> SoC-based Fairphone (Gen. 6) smartphone.
-> 
-> 
+  CONFIG_LEDS_CLASS_MULTICOLOR=m
+  CONFIG_RTW89=y
+  CONFIG_RTW89_LEDS_MC=y
 
-Applied, thanks!
+The linker reports error:
 
-[2/7] dt-bindings: bluetooth: qcom,wcn6750-bt: Document WCN6755 Bluetooth
-      commit: 15e9f90a4d86c9537e14901898ea1ab88a048169
+  ld.lld: error: undefined symbol: led_classdev_multicolor_register_ext
 
-Best regards,
+Avoid this case, and summerize the supported combination as below
+
+  CONFIG_LEDS_CLASS_MULTICOLOR  y      m    m
+  CONFIG_RTW89                  y/m    m    y
+  support                       O      O    X
+
+Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8852CU valve board")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202609172315.ZYoKvKBS-lkp@intel.com/
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig b/drivers/net/wireless/realtek/rtw89/Kconfig
+index 7c678dd1f6b3..9c6c16af7f35 100644
+--- a/drivers/net/wireless/realtek/rtw89/Kconfig
++++ b/drivers/net/wireless/realtek/rtw89/Kconfig
+@@ -215,7 +215,7 @@ config RTW89_LEDS
+ config RTW89_LEDS_MC
+ 	bool
+ 	depends on RTW89_LEDS
+-	depends on LEDS_CLASS_MULTICOLOR
++	depends on LEDS_CLASS_MULTICOLOR=y || LEDS_CLASS_MULTICOLOR=RTW89_CORE
+ 	imply LEDS_TRIGGER_TIMER
+ 	default y
+ 
+
+base-commit: 73e3b1c94c7d5b4a113e7cbb42665dc2fe3b9d78
 -- 
-Bjorn Andersson <andersson@kernel.org>
+2.25.1
+
