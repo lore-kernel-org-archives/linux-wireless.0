@@ -1,87 +1,81 @@
-Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
+Received: from meesny.iki.fi (meesny.iki.fi [195.140.195.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B84F51815D;
-	Fri, 18 Sep 2026 16:39:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F543955E3;
+	Fri, 18 Sep 2026 16:52:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=195.140.195.201
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789749584; cv=pass; b=kxILnmgvqpawalEawahE3EiHXyGiIRmZNFE5nKexrMzPyUHwzOdQ691a3sb48THBpOyemgoB1djBreHpdjubFhzHTlu45UQO5w2vThbHR51kxm0tcZD2ferVbqAF6VOkWAq87tFcXPeq494edx/vf7y2lliNeW8u+fhFiRKnJIw=
+	t=1789750327; cv=pass; b=DsT9c3+QK+q3sYqLDwT08g+dwcbBvB5uR7MxqVTJSSDjVpZJ6JkyHt3bRprLk7noiV7HflAQrwraKn6DU/ySkkcvSTOeRqS2sncsEP7Bne7WaFt83xmCTfsajaVxOs4nM388FEXCRatwkph+HG5t0x0wwxQlpHuV740BpvqMZG4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789749584; c=relaxed/simple;
-	bh=OaTupvPSXjV4tcDSKwkLoCMZSghlDqaDma0/VaD1crE=;
+	s=arc-20240116; t=1789750327; c=relaxed/simple;
+	bh=ggW8CJoWtogF4vp7qmnYr+2cHYO378fD70zSL4eILSE=;
 	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=TuY6sZOS9PVHVk0ju8nXWqBniaY/5ITlRdfuJDXOIg5H4Snv9wUoYi3AUB7kbzicGy6BIyn3OE5OQVZ4BLTB45nAyAMUPCOKnYHoBzfiXFvtwiQCGmSbxd1Gk32zpQcfL+0UB0SciDgr0T3sWVF5mZeK+NYC6F1bqTVvKQmTHio=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=iAEFtWQN; arc=pass smtp.client-ip=185.185.170.37
+	 Subject:Content-Type; b=K5s6jgT1Ayr/gD7OU0rSNI99BoiBYLNDEvCv5tVGuFdqgsobzD1kz8tTOvfK/A4X7bw5423tQMj4/KBXBuzeWNms1FE/hUw/58YfqfP03hf89Qxtq4unw5clWChWC+MSFzXU4NjyJ8sjUoxgrUMBmtfDXryaRHUv1CwtZmFms4E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (1024-bit key) header.d=iki.fi header.i=@iki.fi header.b=VhzfLo5S; arc=pass smtp.client-ip=195.140.195.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="iAEFtWQN"
+	dkim=pass (1024-bit key) header.d=iki.fi header.i=@iki.fi header.b="VhzfLo5S"
 Received: from fauth-c2-smtp.messagingengine.com (fauth-c2-smtp.messagingengine.com [204.75.18.201])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: jmtilli)
-	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hmdd20yJjz4BKJ0;
-	Fri, 18 Sep 2026 19:39:34 +0300 (EEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
-	t=1789749575;
+	by meesny.iki.fi (Postfix) with ESMTPSA id 4hmdvL4tQ9z10xl;
+	Fri, 18 Sep 2026 19:51:58 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=meesny;
+	t=1789750319;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2bX1EKHp0Quhk+gq7adxCGKb0B+LghpMlLP0cmw2Iew=;
-	b=iAEFtWQNRz7ZhG0NW3u+R5nf2yCYlC6GZiGfIQSHWWikVd3BZEqvKiRqhkh8xqUAfeQQ8y
-	vmYlo7mGFhy8yItjoLXC/GEaimZBLEVl62C7j4SZtkru0inNfCNZEtCEOX9sYmFnlrQrxe
-	MyfzN8/hkhCvuZnI3ClS3aASNu1UDw4zgoAByyeQoimHj0wNfZk1s4t7sXAndb9ozQikEo
-	TgHdb5T6t4Ml8sdO1U0Z0tfO+UAL1qPeSk1hwdyhrbCZ3pOEsB3ygaFpfFJGCvI2WcS2hM
-	W/LrWXTcoTDxGsn/sPRcZm8y5OTRZXfhqqyOxVXKMLT3e+Z86zCPXs6KKakxFw==
-ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1789749575;
-	b=ow1e5bWZPlMwdxa3zBgMYZhowt0Jx9TW5u/7uukf+bC0uJWdfPMtRJq+lxs9jUiU2/L5mv
-	QeuEps9tcxD6cLxQdMvnsPgbK9AxsGhWiI6FDR5cOFvSAsCiRD/rY7VIn0rBfOs3dBGvd/
-	IlZu7atuc3GOeh9KRyla6aUnKjuzcOvVWEYUoP9uy8lOacjAgy9+c3LDhSDfxjaS7wR/Hm
-	IrZxTsl8uYmPudTl+AkB4lxAX/iBY/LYpS/otik+fY0zwGm4R/D9AON4K05f2BCPqet+ph
-	Re3xfOrCNNXjqC1ORaMsrcP/oOiTmjD5TRHMKihcAgSDA7hvxtslYvMt81NXPQ==
+	bh=CFniBaOSSNu6ZtH5eqeRT+EniF5CxizeWe0To5zvrfE=;
+	b=VhzfLo5S4zh0u9wc0N2akvtg+8LkLb2zV7g+rlnt1F7jJA5M8VLZsTXxBiVTtkjH3y7Vbi
+	CtDGuE+/A0BS22iS/1wWAjk85WsBSDObsV3pH5gj2i0x+FonDkvIOmZEqfpCx3dN9cjaag
+	jBZwLfdXE5l6f+fULYigxLHimm2mJuc=
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=meesny; cv=none; t=1789750319;
+	b=S0I0hwUNMpd7V2MfAi17dTDR6Sll29moaKL2IysYVw4MkmDD4bkPcNnAogQIGfNdVd1uc6
+	LQANxPhXS7LmKpMp6Gn75bEe/BuBO2nCrFwSrTKZ0heCwBtS4NusLgpADlXodgJ0uW/nen
+	xmjw2wsmy2iRJs+8bcgpIuuqrtS6N34=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
-	s=lahtoruutu; t=1789749575;
+	s=meesny; t=1789750319;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2bX1EKHp0Quhk+gq7adxCGKb0B+LghpMlLP0cmw2Iew=;
-	b=WZyOtIptY4USOulG5yJ42VHC0cu4JnzGVlYmpfvh4ikc52IMOTDDo0gpZfwpgAGbitKg2/
-	qLm4InJeHJ7c72H8ipq2Gt69rZpbUJdWyHU/XbWs0wjSm3g4FSrzzjDUHGHeCfLDPxikID
-	GggWBmom+ZcKK4PSpabH3eV7UdTDB4IGbLmrJh53npLgrWK8rRIU6LxFUfCx9p2pV2rq8R
-	GLbXsjJ8mN1YZttRYT6z45B0Ef31TerdQP1ueVW6MsS/X4umaL5YKCyMNt+cJ9v/rQaJW4
-	Rl6PJRd6W9pEkQjc/85nq03QdB9XgmqX2vk7e4W5G7VZb8SON1F6pcx36yGBCw==
+	bh=CFniBaOSSNu6ZtH5eqeRT+EniF5CxizeWe0To5zvrfE=;
+	b=QIktM2zi8H0JXvJzWz+bR7zDbMa/pGmgZOoZfFaHYuvzEilfQZ5s+zGiHGFR4vbwEFx00+
+	yLYbDM6scLow6FXE0beGVqOhAjY850Xfwfp8mvNrc2TGN33YHJtC1vrGcnf5WY95RDjPuj
+	gmXUyrs402doWlGJoR9MgNuQ2LyDM7c=
 ARC-Authentication-Results: i=1;
 	ORIGINATING;
 	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
 Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailfauth.ams.internal (Postfix) with ESMTP id 3F094198005C;
-	Fri, 18 Sep 2026 12:39:33 -0400 (EDT)
+	by mailfauth.ams.internal (Postfix) with ESMTP id B1C91198004A;
+	Fri, 18 Sep 2026 12:51:57 -0400 (EDT)
 Received: from ams-imap-13 ([10.64.2.33])
-  by ams-compute-02.internal (MEProxy); Fri, 18 Sep 2026 12:39:33 -0400
-X-ME-Sender: <xms:QmmtaqeMMcYIM05pprdBHW9q_Dsel74suD6rURye1JW5lr8UZ7Icfw>
-    <xme:QmmtavDA-T64SwNcJBHTzegN1wUuft2p04NrdSjTH2Td-COBf2tNbcCPW0wO7cy0_
-    UvUUQfwIMd4W9XgByOhx8sOjRsMJ9QtOpMQ8_iL-HDUJLRWdTjGgavI>
-X-ME-Proxy-Cause: dmFkZTGgrfBZdGn7M8WQTKUJaj1D8vr0/YFLGS6Y6O+RkC9rVsC5GJqpFn3Fe27jJ2IIue
-    BBwj5693w5e8/4dplpgmEgLTfKlZju/Afuw2j/G5cDlzUYKQ3m1oRScdb9OKSPnEhdLAQv
-    vpSNDMP7t/mrrwfZsInHg6rHRdnv38WFBMZlvGNP27WkU/7TxW+HNM/1bFvB+hF9h7pjSo
-    u9rYWBkuhh6evLdJzeJEoEvusgi4E+MZxzPs6D0ZOp8TjeawU0BAKo4Z3c1e7tL+bjgkmi
-    XHW2GyJCOw/5cUEGDbOFwxooi7CDeA4mLH2M8Lk3GHU3YaoYR3qIFwQpN55RY3qksOyaYj
-    nJw8H0/I9oejv3/Wi8kTthvEAA7X0iz5qV/jphCnaX5S18R4bOouTM6MF6o4ElUX0VeCle
-    bGIFVWYuNkXCM8jOrOuL3CII5M4mksxH0+XcHGcxAy09OzKH0dO8DqIeabpCij9QyJ9UfM
-    DvbyRLw2ehOK+viHPEazsWsS5HG7t3EIZDQOGRVF2mJT0YsJlKABGbK4xmKYOBEIyjh9oo
-    ZtBT+VVvspCLCNZEhdLGi7BAM4CEomN5EX06KpCw9vTfJCASjgZxru+3FwZOfn9TaP4npj
-    4LDBn0mqjcWQ8pigmvosMMS68S+gTztclQigXTr6Ez6Bc1WIx1ZWRxeNOEHg
-X-ME-Proxy: <xmx:RWmtarOH03taGg0WXK9V0sd3CNzZ_fFd4j_VjgWortLKjD3xiDhqOA>
-    <xmx:RWmtagdBu8KwNJc95xcn6wihEDHA_xfRXCVPxKAPLfJdgcRsIHUPtw>
-    <xmx:RWmtanOXwHDGhX4MDbwUJmp2meJgvjutV7YIhbK_py5ANs81odKH2A>
-    <xmx:RWmtaiaVgn3sM9-jss19ME0I9SOYvYH2D9oecZCuVehoSAsZzGjsLw>
-    <xmx:RWmtarvoXwp5XTmR_ukN9c5jTfCAquAaPFysOWg11WiUVMfRdIP420h8>
+  by ams-compute-02.internal (MEProxy); Fri, 18 Sep 2026 12:51:57 -0400
+X-ME-Sender: <xms:KmytapBsr5nVa4ZmIXQgAUHhnxcugE7AYvX-BVSdRtLb2oVUesP23w>
+    <xme:KmytaiVtidsR99LVGcbNAtdXQAYhwkcUG4u0grycuuQ5FPvFVWSMTBGw4_ZU8T3fh
+    HAkUljZQ7wbGcNEJyIUYUTqIkJt-xYLCBl6z2yXoGXwnFfDEO1ZH4it>
+X-ME-Proxy-Cause: dmFkZTGNcKeUoS6p/UeL/gMh5UWUFiVWwbx7ey0te+Xw5EsHIe1Jj1XU6ZjsITNOQ19Y+i
+    VO3vGx9rSUSiH+cpHXFrz3vu5iYTny/gJtxLwbH/A9AzR8Y28HIgvPhmGgZWvPjbakCjL2
+    N/asmkHvVR55YKiLvZhYMa8ulw8RrSp1bwaZQ30gIZBNOnaBO72XfV+QAA8qyaai2JgJ6j
+    v1WuIKrPMLrpJoYn143VO76r03KpZy6s4dklI1gj6XxQpxS3xtcj5UTJEoXyFvpBZHDbXa
+    saeU1eyzCus1XNzSNAQA2h6HR/HsRioTLJRfR9X/K7Fq0YTCvlqOn8VfTbE6/UOJBs8fcv
+    NIonDAHwo64bLyPRkOI1KQ3Elyb7xUBnKjpoOAB1+IXONZETBHmbVEJ0QTzk7jRt8qR8yQ
+    Z+U9yeeqKDFVw28zEXiQZd6qMN/w2modqQAR1FbHCE+FhfALnZ1WhwIzLQlEeitZJ1019k
+    Ei2/mry44zBMp0IhyvZw95OZZshGs5VmrpXbBEuOcmbhjvu8Dx4VN5LfsJaq2+foI6E6HN
+    DRXvPJkx24Ux1HGcZLPYjw6cRrWCIMnpYoaY17rorTQQ5WNW55oWBw1er3EuiwsZLuuL86
+    OkSR4QXXmiH/HG3sQA6sppP8DKHzFFSOKec3AO/BSFgp3+ZvqWbxmvdJhv/Q
+X-ME-Proxy: <xmx:LWytatbbSBa4wPl4UqfeGYn_EY5mEACuxOWO7uyDWJQM8F1Nn23bSA>
+    <xmx:LWytaggNcoj0hVvts8pFL-SuQYlbvb0qK--o2GnDbvFPgdccSR69wQ>
+    <xmx:LWytarwI76vUO6slFD6xsrxkI9YGluJ7sKm9vpfcVGz8GcOf1N593g>
+    <xmx:LWytak87TJ9aR6FgmiM4xxz-EUtbf1jjkplUArwf7nReTCSfdJA4Dg>
+    <xmx:LWytaozrkHyLbHBVUwu8yvRvxRwP-4_cmsNp0JVTE5oTWW_uyvTY24GF>
 Feedback-ID: i02414972:Fastmail
 Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id 7CDCEF80089; Fri, 18 Sep 2026 12:39:30 -0400 (EDT)
+	id 5863EF80089; Fri, 18 Sep 2026 12:51:54 -0400 (EDT)
 X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -90,7 +84,7 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-ThreadId: AbqzItSRZteg
-Date: Fri, 18 Sep 2026 19:39:09 +0300
+Date: Fri, 18 Sep 2026 19:51:33 +0300
 From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
 To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>,
  "Manivannan Sadhasivam" <mani@kernel.org>,
@@ -105,12 +99,13 @@ Cc: linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
  "Chris Lew" <christopher.lew@oss.qualcomm.com>,
  "Deepak Kumar Singh" <deepak.singh@oss.qualcomm.com>,
  "Raj Kumar Bhagat" <raj.bhagat@oss.qualcomm.com>,
- "Jeff Hugo" <jeff.hugo@oss.qualcomm.com>
-Message-Id: <da0421b8-bf31-43d1-8d71-520753c8344c@app.fastmail.com>
-In-Reply-To: <20260918-qrtr-multi-ep-v1-3-8a06caa368d3@oss.qualcomm.com>
+ "Jeff Hugo" <jeff.hugo@oss.qualcomm.com>, "Mihai Moldovan" <ionic@ionic.de>,
+ david@3adesign.co.uk, nakonechnij.sergsj@gmail.com
+Message-Id: <cb6766f8-54b9-435f-a69a-e712727dabdb@app.fastmail.com>
+In-Reply-To: <20260918-qrtr-multi-ep-v1-4-8a06caa368d3@oss.qualcomm.com>
 References: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
- <20260918-qrtr-multi-ep-v1-3-8a06caa368d3@oss.qualcomm.com>
-Subject: Re: [PATCH 3/4] wifi: ath11k: Connect to the QMI server belonging to the
+ <20260918-qrtr-multi-ep-v1-4-8a06caa368d3@oss.qualcomm.com>
+Subject: Re: [PATCH 4/4] wifi: ath12k: Connect to the QMI server belonging to the
  device owned by this driver
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
@@ -118,7 +113,7 @@ Content-Transfer-Encoding: 7bit
 On Fri, Sep 18, 2026, at 19:28, Manivannan Sadhasivam via B4 Relay wrote:
 > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > 
-> When two identical ath11k PCIe devices are connected to the same host, both
+> When two identical ath12k PCIe devices are connected to the same host, both
 > advertise the WLFW service with the same service and instance id. The QMI
 > lookup reports both servers to each device, so a device may connect to the
 > firmware running on the other device.
@@ -133,10 +128,22 @@ On Fri, Sep 18, 2026, at 19:28, Manivannan Sadhasivam via B4 Relay wrote:
 > 
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Tested-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
-Tested-on: 2x WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+CC'ing Mihai. He is known to have a platform with two ath12k cards,
+but he said he's been busy recently, so his testing input is uncertain.
 
-(assuming the patch is the same and hasn't been updated since 17.9:
-https://github.com/Mani-Sadhasivam/linux/commits/qrtr-multi-ep/ )
+Also David and Serhii have found the bug at Bugzilla and may
+be able to help with testing. (CC'ing them too)
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=218480
+
+Here's the patchset in an easier-to-access format:
+https://github.com/Mani-Sadhasivam/linux/commits/qrtr-multi-ep/
+
+Also, I have suggested that at $DAYJOB we'd switch to a newer LTS kernel
+with better ath12k support. This may take some time, but there is a
+possibility I'll be able to finally get ath12k cards working. This might
+allow me to test this with ath12k cards, porting the patches to 6.12 or
+6.18 kernel. But that will take time (the kernel switch; backporting is
+easy for such simple patches).
 
 BR, Juha-Matti
