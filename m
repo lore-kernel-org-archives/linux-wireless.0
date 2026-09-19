@@ -1,119 +1,282 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD942DA749
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2026 19:22:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6CF374E48;
+	Sat, 19 Sep 2026 20:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789845766; cv=none; b=oUqkk/KyahLnfLTqn4322n9yBj7IEwHsvVTunIS8ZHPNkNiWq5Dtq5n9dQLMaF5KGnQlztuqOoRuR5spQ3o5elD951L1TIBdkzsBY/QUlEMmKU4OlTYzrMZ6WBQzzdkgwsvJ+yiXUK/RISh9uVPdzoPHZjoTtNsGDDR3Or/0Zrc=
+	t=1789850645; cv=none; b=H3lBRhoaffk40i/l6vJfUG9efagDP6mhRFlbvmL1xdMc4na7UJJHNvZ3Tocgz9SE65dDNphtXxy7OaIA+5vrqXC/Hbrp79uQbpjqLc5GY4T+s7iCLJj9BNBOzZkJ4ii2j+XpCapRF6aw2rM5FSQ9xc3tDQvSnBdFzHwqsDqY7+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789845766; c=relaxed/simple;
-	bh=KdA7cGRwAxWoJkmRE6AukygfZZOpTRPrEMpn/8/qM9o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ufc94bA6wM4XUEsCtdm2dUvcy5WUEAMfNq2rYiFaA1ML/F9Emlfz7hCCNC2A+8Nlr1ZLq9po0MmhAP+Wp63TXZ5ARj3gbV7iy0mR87wd/1lb0SNc+K5WoTbCgRPy5E+rbiWPIDDTU7CNfMkLXk1CuYvQE8cbc1tVatUn7FM5Do0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cnyVGNTy; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789850645; c=relaxed/simple;
+	bh=4W78FwMWh4CkJw7GIiqqdH7RuAbrFba5NTIWdCi/LyU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Kh6mcRPmTi9HRAW+5q/QkMNa509h/ZsHYYoFsHlon9lzjsunR6nzfLexoQgu8xgXVS182VDp5vk3xE4RDv0vqmX1C+/vURxnS/SXl00pRggzJHpm25TTJ1neC9xzcgr4Dkw/8qhVgvb53a0XSZbN15+75EzTzxbUmfWA2aPT4uQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8vfZUvY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cnyVGNTy"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350faaso901828f8f.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2026 12:22:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789845762; x=1790450562; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=y8bMzTcIlQ0jv0JIoHF33vifWOPJhpDzKzOKxwrvPdU=;
-        b=cnyVGNTyiduz6XnswPmc9M88d2tAhhnhjZAojqny6aarMyE5r3gTbIXPtJ3WqVm4/e
-         FkqFxWbr63y3vANQqbL+6sFXsmJJw8b6M7j+uFuxDf/QbfdtdoPhK64CU3IychXN8SUs
-         xGeCIv6TayotW2wNeUxpBwPlSwdhKvk3NeLcFfXBraWqcnstGz7hxZEGPAmeqEyhKac1
-         rAGeV3mdtixCHUcF3pBv446/qqBD/kRDUSThgNJXFKQ2Oq/kLGeHPDjIygKMSXAGyR/O
-         sweYVAKwOCQOeMI5T7SOcNNkZLBZyjAaBJzvIr4yBDDpQ2Vp74oRNkyEGkC6YuM/ZNiF
-         GWNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789845762; x=1790450562;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=y8bMzTcIlQ0jv0JIoHF33vifWOPJhpDzKzOKxwrvPdU=;
-        b=Yi5C1BoueVo2C3CrokNUFclGNBrPzSFOyqyTYkiMUKOpAzrFRhvFlGMzcHvf92AMo1
-         OeuoYF+Y2OEXD2DLXqnPK/leW6RvC9BbgbiMG9Bf8fnSaNv/d3Z4Aj7QJVysiCaIvh1I
-         NMSCQeSpr/w7uqaxyXofCbbE0tsgQyMQGaST7K7fkS2Q7wpSUeygHBn7/bv1n4oZOUpB
-         pk7dHIXN4TFlZSG3Fjry8Rt2CZgpAdCVZ91lpmgv5TnXvzYsVAkQQqzmeHxARqcT/eXK
-         yBGxpoT4C1d5ePYDqkajJkxOR+G1vbUbvmtj6A9/+AFLM5osnk9TRaHQdGbMPWOu8c9I
-         Z1Ww==
-X-Forwarded-Encrypted: i=1; AKwUvByI3LCGPRhukqGAq3bzBHTrlZT/9WntgH2vivN5yw/HHOoFvgKFZtKBNZwL0pux4kVIZTs9QCS2AjZsuJ76CQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++mYj5fGI6hqEt+txqeTezmXvNgm45ub7ZrrKUzbIUUVP0XC5fuK
-	W5S6KK7lX4qgVGcs2kxell9wGmeLxHyeKdoj5jN6WCbd7pQiST7z59PR
-X-Gm-Gg: AYBFou2zW69HDYG0sf40mxJ0vym4L5J1p3rY+NtMXosEmtACTSKQNMGXZk51IAUP4SS
-	BYZeyzFDiXMFOdc1sbvRSMDbRB9lt3A8PFEsD6y5JsLlY2KqdPP0uuwVNVfqwTOo6a7qF7Z6AMv
-	8d4w1qzfioUs/1TFvxMaiczocpJXAp2Ymds7RWL1fscbh5MNA05r8+plZZEQkt7Cy6f4h1uK7ZW
-	BsdpBGzTX7oQVaVmBcotsIYS9xBHccstmbnDqh40W1KdCddmU2u6hYnlbVaubNgYDnsuHmM12+u
-	m5EyeKonNf3Mt7A0YMHaP1lTB7/mUzosasSWRGPaJTAOsFX12/FFCUNoslfUavnyIC5DsFpRngP
-	fC2aC8wZZ84QYLhISps7r1QwWnw/fb6OF/TS9sQlPxpS9YH/NzbWWiJtsdfA2HV5QoNgA3qyUPv
-	maUR1hMKnDP0NXcXYhhsJ3K4EYzV+M7+KzXSCT9Pd21qzR8BPnaF5ssZhcC4GNI+dlR2tUYlhkH
-	p8hX6T4a7AOn77AUkkmO/ainLns5vTsIM7BuVUrPKVR7J+4o6w=
-X-Received: by 2002:a05:6000:27db:10b0:487:218b:bbb0 with SMTP id ffacd0b85a97d-487218bbf19mr4960876f8f.42.1789845761595;
-        Sat, 19 Sep 2026 12:22:41 -0700 (PDT)
-Received: from fedora ([202.47.63.86])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48724460753sm9471875f8f.10.2026.09.19.12.22.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 12:22:41 -0700 (PDT)
-From: Muhammad Bilal <meatuni001@gmail.com>
-To: lachlan.hodges@morsemicro.com
-Cc: dan.callaghan@morsemicro.com,
-	arien.judge@morsemicro.com,
-	johannes@sipsolutions.net,
-	ayman.grais@morsemicro.com,
-	andrew.pope@morsemicro.com,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Muhammad Bilal <meatuni001@gmail.com>
-Subject: [PATCH] wifi: mm81x: check bytes_remaining before reading delimiter
-Date: Sun, 20 Sep 2026 00:22:31 +0500
-Message-ID: <20260919192231.272078-1-meatuni001@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8vfZUvY"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E44C8C2BCFA;
+	Sat, 19 Sep 2026 20:44:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789850645;
+	bh=4W78FwMWh4CkJw7GIiqqdH7RuAbrFba5NTIWdCi/LyU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=F8vfZUvYre9WAhv6mYfyJR5ReD5xJWJSRVVkeDNYQys8vy53VjmNSt3DRt3DMOQj1
+	 XFzD/6QOE4j6AnJN5bZsUTaUjae9lnQ/RRfBu48Zua7DvfQm7xCv+D0rF0NHlfZw5B
+	 kc5/wqsyOfY/W7uCeGNpFEah2h6Vy7Ub7GwgG1rBZI3gMOaBXICqE2W5f0YF7fYgSt
+	 0W+mYaruMZkfviJZX6ShEhuGtgF0xhhr8mFHgdcSML9zvyJsy2uh++8oy1gXBmtijU
+	 V4kmDypBCnTOkLUWXjWlB0kfLqMZJx4i/UkYNv0zxX4m+ZUyqqM+4wYMiGIYHe3QMO
+	 7GmJkgSh1l5TQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7805C982DF;
+	Sat, 19 Sep 2026 20:44:04 +0000 (UTC)
+From: Kim Wooseok via B4 Relay <devnull+5mghybrid.khu.ac.kr@kernel.org>
+Date: Sun, 20 Sep 2026 05:44:05 +0900
+Subject: [PATCH rtw-next v3 2/3] wifi: rtl8xxxu: unwind incomplete receive
+ startup
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260920-codex-rtl-rx-v3-submit-v3-2-883d11351963@khu.ac.kr>
+References: <20260920-codex-rtl-rx-v3-submit-v3-0-883d11351963@khu.ac.kr>
+In-Reply-To: <20260920-codex-rtl-rx-v3-submit-v3-0-883d11351963@khu.ac.kr>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com, kvalo@kernel.org, linux-kernel@vger.kernel.org, 
+ Jes.Sorensen@gmail.com
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789850643; l=6605;
+ i=5mghybrid@khu.ac.kr; s=kernel-20260913; h=from:subject:message-id;
+ bh=OyDx5rqQosEORE8l/erZWFaYVL1RAiawqnAc+isUD8g=;
+ b=AyIU/A7O/gd25EvcDw8HcPXZvk2amnaZxTQiI8/QUnLjF1+cdS8aa2Igk2w7J6cq0qe9YozoV
+ ERUJ/87p5VfBJSWw7dRp39BX6dFeDVxX5l0FYtV/yCCWGoaodwc1X+A
+X-Developer-Key: i=5mghybrid@khu.ac.kr; a=ed25519;
+ pk=1az/6lC8Tmd6BcvyarPc8FWoSxsV/WRr5NLs1v+kjlE=
+X-Endpoint-Received: by B4 Relay for 5mghybrid@khu.ac.kr/kernel-20260913
+ with auth_id=1028
+X-Original-From: Kim Wooseok <5mghybrid@khu.ac.kr>
+Reply-To: 5mghybrid@khu.ac.kr
 
-mm81x_yaps_hw_read_pkts() reads a full 4-byte delimiter and then
-subtracts sizeof(delim) from bytes_remaining on every loop iteration,
-guarded only by "bytes_remaining > 0". If 1-3 bytes are left in the
-window, this reads past the end of the valid data and then subtracts
-4 from a value smaller than 4, driving bytes_remaining negative.
+From: Kim Wooseok <5mghybrid@khu.ac.kr>
 
-A negative bytes_remaining then reaches the total_len > bytes_remaining
-branch, where "bytes_remaining" is passed to memcpy() as the copy
-length. Implicitly converted to size_t, a negative int becomes a
-huge value, turning that memcpy() into a massive out-of-bounds copy.
+rtl8xxxu_start() allocates and submits RX URBs one at a time. If a later
+allocation fails, the error path frees the TX pool but leaves earlier RX
+requests active. A partial TX or RX allocation failure can also leave
+ret at zero, so start reports success despite the incomplete setup.
 
-Bail out of the split loop once fewer than sizeof(delim) bytes remain,
-the same way the existing "end of stream" check bails on a zero
-delimiter.
+Allocate the RX pool before submitting any of it, and return ENOMEM
+whenever a pool allocation fails. Pass start errors through
+rtl8xxxu_stop(), including interrupt URB submission failures, so the
+existing stop path cancels work and releases both active requests and
+partially allocated pools.
 
-Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
-Signed-off-by: Muhammad Bilal <meatuni001@gmail.com>
+Share the submission loop with the RX worker. Both callers keep requests
+that fail with ENOMEM/EAGAIN. For a fatal error during startup, free the
+rest of the unsubmitted batch and return the error so start can unwind.
+In the worker, free only the failed request and continue with the rest
+of the batch.
+
+Keep the allocation loop in a small helper so the setup and error paths
+in start remain easy to follow.
+
+Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
+Assisted-by: GPT-6 Astra
+Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
 ---
- drivers/net/wireless/morsemicro/mm81x/yaps_hw.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtl8xxxu/core.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------
+ 1 file changed, 54 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/yaps_hw.c b/drivers/net/wireless/morsemicro/mm81x/yaps_hw.c
-index 3d641d23c35b..e1102b8fb802 100644
---- a/drivers/net/wireless/morsemicro/mm81x/yaps_hw.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/yaps_hw.c
-@@ -486,6 +486,9 @@ static int mm81x_yaps_hw_read_pkts(struct mm81x_yaps *yaps,
- 		int total_len;
- 		int pkt_size;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+index 795a5ec2f8cd4..5ae3dbf5034ac 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+@@ -58,6 +58,7 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
+ #define RTL8XXXU_TX_URB_LOW_WATER	25
+ #define RTL8XXXU_TX_URB_HIGH_WATER	32
  
-+		if (bytes_remaining < (int)sizeof(delim))
-+			break;
++static void rtl8xxxu_stop(struct ieee80211_hw *hw, bool suspend);
+ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+ 				  struct rtl8xxxu_rx_urb *rx_urb);
+ 
+@@ -5832,6 +5833,27 @@ static void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
+ 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
+ }
+ 
++static int rtl8xxxu_alloc_rx_urbs(struct rtl8xxxu_priv *priv)
++{
++	struct rtl8xxxu_rx_urb *rx_urb;
++	int i;
 +
- 		delim = le32_to_cpu(*((__le32 *)read_ptr));
- 		read_ptr += sizeof(delim);
- 		bytes_remaining -= sizeof(delim);
++	/* No RX work is active until the complete pool has been allocated. */
++	for (i = 0; i < RTL8XXXU_RX_URBS; i++) {
++		rx_urb = kmalloc_obj(struct rtl8xxxu_rx_urb);
++		if (!rx_urb)
++			return -ENOMEM;
++
++		usb_init_urb(&rx_urb->urb);
++		INIT_LIST_HEAD(&rx_urb->list);
++		rx_urb->hw = priv->hw;
++		list_add_tail(&rx_urb->list, &priv->rx_urb_pending_list);
++		priv->rx_urb_pending_count++;
++	}
++
++	return 0;
++}
++
+ static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_priv *priv,
+ 				  struct rtl8xxxu_rx_urb *rx_urb)
+ {
+@@ -5859,32 +5881,21 @@ static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_priv *priv,
+ 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
+ }
+ 
+-static void rtl8xxxu_rx_urb_work(struct work_struct *work)
++static int rtl8xxxu_submit_rx_urbs(struct rtl8xxxu_priv *priv, bool startup)
+ {
+-	struct rtl8xxxu_priv *priv;
+ 	struct rtl8xxxu_rx_urb *rx_urb, *tmp;
+-	struct list_head local;
+ 	unsigned long flags;
++	LIST_HEAD(local);
+ 	int ret;
+ 
+-	priv = container_of(work, struct rtl8xxxu_priv, rx_urb_wq);
+-	INIT_LIST_HEAD(&local);
+-
+ 	spin_lock_irqsave(&priv->rx_urb_lock, flags);
+-
+ 	list_splice_init(&priv->rx_urb_pending_list, &local);
+ 	priv->rx_urb_pending_count = 0;
+-
+ 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
+ 
+ 	list_for_each_entry_safe(rx_urb, tmp, &local, list) {
+ 		list_del_init(&rx_urb->list);
+ 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
+-		/*
+-		 * If out of memory or temporary error, put it back on the
+-		 * queue and try again. Otherwise the device is dead/gone
+-		 * and we should drop it.
+-		 */
+ 		switch (ret) {
+ 		case 0:
+ 			break;
+@@ -5893,11 +5904,30 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
+ 			rtl8xxxu_queue_rx_urb(priv, rx_urb);
+ 			break;
+ 		default:
++			usb_free_urb(&rx_urb->urb);
++			if (startup)
++				goto free_remaining;
+ 			dev_warn(&priv->udev->dev,
+ 				 "failed to requeue urb with error %i\n", ret);
+-			usb_free_urb(&rx_urb->urb);
+ 		}
+ 	}
++
++	return 0;
++
++free_remaining:
++	list_for_each_entry_safe(rx_urb, tmp, &local, list) {
++		list_del(&rx_urb->list);
++		usb_free_urb(&rx_urb->urb);
++	}
++	return ret;
++}
++
++static void rtl8xxxu_rx_urb_work(struct work_struct *work)
++{
++	struct rtl8xxxu_priv *priv;
++
++	priv = container_of(work, struct rtl8xxxu_priv, rx_urb_wq);
++	rtl8xxxu_submit_rx_urbs(priv, false);
+ }
+ 
+ /*
+@@ -7408,7 +7438,6 @@ static void rtl8xxxu_watchdog_callback(struct work_struct *work)
+ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ {
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+-	struct rtl8xxxu_rx_urb *rx_urb;
+ 	struct rtl8xxxu_tx_urb *tx_urb;
+ 	unsigned long flags;
+ 	int ret, i;
+@@ -7423,14 +7452,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	if (priv->usb_interrupts) {
+ 		ret = rtl8xxxu_submit_int_urb(hw);
+ 		if (ret)
+-			goto exit;
++			goto error_out;
+ 	}
+ 
+ 	for (i = 0; i < RTL8XXXU_TX_URBS; i++) {
+ 		tx_urb = kmalloc_obj(struct rtl8xxxu_tx_urb);
+ 		if (!tx_urb) {
+-			if (!i)
+-				ret = -ENOMEM;
++			ret = -ENOMEM;
+ 
+ 			goto error_out;
+ 		}
+@@ -7441,31 +7469,21 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 		priv->tx_urb_free_count++;
+ 	}
+ 
++	ret = rtl8xxxu_alloc_rx_urbs(priv);
++	if (ret)
++		goto error_out;
++
+ 	priv->tx_stopped = false;
+ 
+ 	spin_lock_irqsave(&priv->rx_urb_lock, flags);
+ 	priv->shutdown = false;
+ 	spin_unlock_irqrestore(&priv->rx_urb_lock, flags);
+ 
+-	for (i = 0; i < RTL8XXXU_RX_URBS; i++) {
+-		rx_urb = kmalloc_obj(struct rtl8xxxu_rx_urb);
+-		if (!rx_urb) {
+-			if (!i)
+-				ret = -ENOMEM;
+-
+-			goto error_out;
+-		}
+-		usb_init_urb(&rx_urb->urb);
+-		INIT_LIST_HEAD(&rx_urb->list);
+-		rx_urb->hw = hw;
+-
+-		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
+-		if (ret)
+-			rtl8xxxu_queue_rx_urb(priv, rx_urb);
+-	}
++	ret = rtl8xxxu_submit_rx_urbs(priv, true);
++	if (ret)
++		goto error_out;
+ 
+ 	schedule_delayed_work(&priv->ra_watchdog, 2 * HZ);
+-exit:
+ 	/*
+ 	 * Accept all data and mgmt frames
+ 	 */
+@@ -7478,13 +7496,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	return ret;
+ 
+ error_out:
+-	rtl8xxxu_free_tx_resources(priv);
+-	/*
+-	 * Disable all data and mgmt frames
+-	 */
+-	rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x0000);
+-	rtl8xxxu_write16(priv, REG_RXFLTMAP0, 0x0000);
+-
++	rtl8xxxu_stop(hw, false);
+ 	return ret;
+ }
+ 
+
 -- 
-2.55.0
+2.53.0
+
 
