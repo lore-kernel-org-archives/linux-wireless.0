@@ -1,35 +1,35 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB5142DCBEC
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2026 13:26:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6C1267B89
+	for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2026 13:33:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789824392; cv=none; b=LDfPAiJqOC7rjVrc4k/k9CYLMQ4AyCjYcUN2DQrCx4/mrAYmN72Z3CUUuc4Rrz8mzVjOO+vZ7nrxkloRNCaCE7cMgccO7AsCtjSfIV6Qd5u6eN1x28Fg1wouQKM4cRm0GYZm+D4H3RecBLz78t11Wz3enWv1+S22cR8RGOrk+8s=
+	t=1789824826; cv=none; b=X+f4jnsZZI4Qxi1SFe3LnoGLf3rt+vyHmZ8pVSd1cxORtTBVGK2ZIgEiTx2BYVCzvwxxSLNTzzWLBU30gSLtt9668XWTmAX6NXWMGi4zciNeW/4noj2yw2UfUA9yjiEqq5bS1RufCmlavl9MvAbNq5Tzld5IOZJafmF+3H6SG94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789824392; c=relaxed/simple;
-	bh=qwQt/V/hMMCb4wzKRwfQ5OhcT6sFW5XKYhmFKV5oyX4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Yy4OV2BFUWTqkTI0SRKWBNN6KG85cJ3/c0wxrXUZ6ZC03MsDRlkmuitOPFYKoe8rkenjmHEBW93gZ+jPzlsPSbJXlw6CLsoocs7Nahb+U0k7XKWYgMIMgWGyvnauhlMxb/IeL+oKF3zy2jzyF1yUiDgSqLTZgfJbUdPMLJ/K1k8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=L7ONp/LT; arc=none smtp.client-ip=220.197.31.4
+	s=arc-20240116; t=1789824826; c=relaxed/simple;
+	bh=SvravK9GvfHV9kOrQpmyuli3tRywjmkbVKLeFiMuddc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Vncd6953EJIOyFOcvc1PqRp1tfweTfB8XPgJDWp73LkQn4dlHiXdGNu/30rOWG1cBnU4DuGMFhnVfSHJ+Tcegeh8zZXpU1vPFqYA0RanUcJe2/TFKdlaP+1EN+bGTZf/i9XqyjZrik8cFA/1GVEENKd0X8eqcskioLGD6C5Wp5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YpPgT+Wz; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="L7ONp/LT"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YpPgT+Wz"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=qK
-	BSIum5xdo1AmBm85ZIDrUpAOT6JwDfLLrkNUVsPSA=; b=L7ONp/LTwo84tx7fyu
-	alkl9hs9jY95nxDsY5NqfozTkI8g0pIKCwKl+043SqeS50rlzWEJUJHopmqe7pC8
-	rFlY+eV7qAG59eSUS+A0iJ+a3IGzVarrkpLyTimsfICoSt3brcIuvoD+KKQLSE/5
-	oCWbLbfAuAS5i3aJX3uIyNPe4=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=up
+	BSmdKlqxWRjgJWAJASXsX/Yn3R0fdgfwwvfM3+PxM=; b=YpPgT+WzUOuEeFydfm
+	i4T1AYG9JFS//Jgmru9k6mAZUJR5CaCBM2BRiMyVI9Rz6bKvPl9CSkZSaJtt/6Rv
+	QMpiMHdWlW/zmpG7W5RNXkgkyhe4STPUVjaiFEOnfYamvMYlFVgy1LtrnCIpIwph
+	98vn/ReDExKsTEpaEpVXRmAG0=
 Received: from LAPTOP-BJS5C4G0 (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wA3HiJsja5qM9LBBQ--.1544S2;
-	Sat, 19 Sep 2026 21:26:07 +0800 (CST)
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgAH7sgtj65q0yXyAA--.31088S2;
+	Sat, 19 Sep 2026 21:33:34 +0800 (CST)
 From: Heyang Tan <thy15333007817@163.com>
 To: chunkeey@googlemail.com
 Cc: linux-wireless@vger.kernel.org
 Subject: Re: [PATCH v2] p54: validate firmware record lengths
-Date: Sat, 19 Sep 2026 21:26:04 +0800
-Message-ID: <20260919132604.1455-1-thy15333007817@163.com>
+Date: Sat, 19 Sep 2026 21:33:32 +0800
+Message-ID: <20260919133333.317-1-thy15333007817@163.com>
 X-Mailer: git-send-email 2.51.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -38,30 +38,39 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wA3HiJsja5qM9LBBQ--.1544S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrKryftr4fCFyrXr45ur4DJwb_yoWfArcEvw
-	10gryUuFy8Aa9rGF48Kr4FvFy5uw17XF1rCryxX39rWr9xJwnxAFs7Aa1F9348ZF9xCFW5
-	Ww1DXF4UZw1I9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRE4rWDUUUUU==
-X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC4g-EbmqujW+YpAAA3d
+X-CM-TRANSID:PSgvCgAH7sgtj65q0yXyAA--.31088S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7XrWUZw18tF1UZFWfWr45Jrb_yoW8Jry3pF
+	98t3yYqanYkFn3Z3WkCa18WasavFZ5GrWUXFn5Kw1vyF15ur1vqF10gr1kWay3Ww4UWF1f
+	Crs8JF9akFZ8AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRc6pdUUUUU=
+X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC-g413mqujy7PJQAA3U
 
 Hi Christian,
 
-A short follow-up with the additional firmware evidence:
+Thanks for the PCI/USB testing and the review comments. I will simplify the
+component-ID length check and the component-version handling in the next
+revision.
 
-- The historical daemonizer archive sample fw-softmac/2.13.1.0.arm is
-  available locally. Its published MD5 is
-  8ff41cff31c9323330d6170b54735477; local SHA-256 is
-  190aa5174c6c08632bf0c452c95509f04ae93705efb7dd88444938fd871d2308.
-- Its BR_CODE_DESCR record is 0xb 32-bit words, with rx_start=0x20200 and
-  rx_end=0x27c60, so the 0xa minimum descriptor check remains compatible.
-- I also generated a private truncated-descriptor fixture for parser-boundary
-  testing (SHA-256
-  8dc5f14057d46ae0a08f2406d0119991c645365d2dcf8c71c6f5de6fe0f8ad53).
+Could you also help with one focused parser-only validation on Linux, if
+convenient? The goal is to distinguish the malformed-record boundary from the
+normal firmware compatibility testing:
 
-The fixture is not an official linux-firmware image. I have not yet performed
-kernel/KASAN execution with it or loaded it on real hardware, so this does not
-claim a completed dynamic reproduction or a confirmed CVE.
+1. Run the private truncated-descriptor fixture through the unpatched parser
+   under a KASAN-enabled kernel (a small KUnit/test-module harness is fine;
+   physical p54 hardware should not be required).
+2. Record whether KASAN reports a read beyond the allocated firmware buffer
+   (`fw->data + fw->size`), rather than merely crossing into a following
+   record.
+3. Run the same fixture with the revised patch and confirm it returns
+   `-EINVAL` without a KASAN report.
+
+Fixture SHA-256:
+8dc5f14057d46ae0a08f2406d0119991c645365d2dcf8c71c6f5de6fe0f8ad53
+
+This is a private derived parser-boundary fixture, not an official
+linux-firmware image. I am not claiming a CVE or a completed dynamic
+reproduction until this comparison is available. If the harness is too much
+work, a brief statement that the test cannot be run is also useful.
 
 Regards,
 Heyang Tan
