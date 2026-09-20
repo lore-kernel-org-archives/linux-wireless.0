@@ -1,417 +1,222 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BDC64570D6
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 16:22:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789921377; cv=none; b=Jeb1XPjpQBFaSXtMVod+caL54tHoUz38x3osVjIZT1SUeTHJqS3IlC157vwU5QC9gmA9UCBrPxGEqWpe3fLte1K8CZK6xbrANMxShg1rcwJYTPgvSHZn5nKYaHjBu4NDeX1/7imts85ku9k5pqPJh1wvL9z4JJse/t2Ula9DaME=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789921377; c=relaxed/simple;
-	bh=ZMnGgqvU7CVChtiyItfVSDcmZxMCDYiemvPFOiU+k28=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PBHXAdwiKeMjA4Ze6/vNaLq48oHHwOGovoTSaScGZ7pdHkH8L+JUpZ3SABIW+krzVMe4BRjKxEOd1dM93GD5vMWIg0jAFqBtuwQwGtHlXay2wcAynV0diMHUH8n7Fcq/UVwq56Cbocn6w7ItFdjKaiHEHB/aFFcKxE2rNhsA+tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KoRvx4I3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Td9V3Gdg; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF15F3793A5
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 16:42:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.141
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789922565; cv=pass; b=RRAf/2NH2YZ6WLeCLmw+RbC/hWfr/zihOVBNOEFktGSdOdcFseg7JMCjKXdvbaX6fjndbV8urANKrPQ/QJds34njZHPPyqYHv3cDebSoVCX158CTRr+rS55m8S6mW4XJjDkBfdhLY58JRSZgf8w5QJjVbz732RYeLHHJZboXwx0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789922565; c=relaxed/simple;
+	bh=EkL9YWU3McSB/6TFR7GezgerqmTkHK4AZdOGAsISNn4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BGA4v9MYop90ehI9apqd3EC5g3G0C0Pyz8tBQYXFYA8Vk33r9Fn/qGXn+e+m2a1sx0/f5uRSdjYgH7SvhQWV94fmJCqjuKelYA5NPaG/X8tlWHqzSucwd7mBX6r5zIiOk49ZXy6dthAiH/zNyVT5yqgnVSGnNW5ai9OzPz4TRXk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=wOFinIyw; arc=pass smtp.client-ip=74.125.224.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KoRvx4I3";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Td9V3Gdg"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68KFA2JN3846477
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 16:22:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lcesAFXJlUS5Xl52LOyz6lL2cEjrWb4xoqeOVHeUMP0=; b=KoRvx4I3eaQd+TZ1
-	mQK3bp9BtsMwCz1bTVEiqJCVwVkA4piHCyuHwBq8j/Uccms7wwjQw/07BJF0m5Ji
-	esZMsoJ/jeGMvdEy4BEGuYMveT4BQ6Plv8Qrw14ETSSKP1K2oo9ufWdA8kRdDC/q
-	qb2t3JOG0WAzVhHDgo1/PlPJjNbTK8wVwWawU1HLncnv4bCfAMekeCx3BWV7ZtJq
-	DbN5whVfpu1zX8Y2oiKMc74/+/vypWSBICjQwnqB0ENebqmiLTA/+oaKZ6oAUDN3
-	ymY+3MYSUc1KDw0L6YE0yfVq7aMtaBr8M5xhEfVL3MzDmFzHw7YGE9f7TbmYgD1o
-	PcWfkA==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gsg3f3p2w-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 16:22:54 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-39deb05ef51so3598089a91.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 09:22:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="wOFinIyw"
+Received: by mail-yx2-f13.google.com with SMTP id 00721157ae682-85d440939e3so13844717b3.0
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 09:42:43 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789922563; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AK7XemuNTFINeG3Vry8UKvH8O/47OI+vKDB4acZoRuxti3q+1YZX0+6JgU2m7tZ5qE
+         tGRHC75nb7EtC8k7/ujpjzXAzrv49YNzlmfxX07/XSB0iIUO3xYk0Xtbc4gCvcv9YgYe
+         CyeepUqithCRwTv/po4hAGL8T+VFI17YLFJ9g2iHqt+QS6EZWOswhaWwf6TG2WNjk3ph
+         +pgFHh/Xeu4+gAcab2t3NaT3C7X08FWqeuchT0ycQIHV1ddk/ox8kRHrVlInb1LeOzUa
+         CtBTsp8B5Ma+zx0mVV1Lr1R230E/S1YNewN7Wo+DAqifKSdHZ02rGXFWZoW199i2v1rN
+         mJeQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=nHza7uhFopdEpXjnPqVhCbEMpK63s/WOhYzeeG3B/+A=;
+        fh=3pRAVsp1n9xfVavEEhMak9KDmPwFp75nnRL1bVXrUuE=;
+        b=RPSIIeDr66eRb3p7WonQmhDq0aBHJUEOGEPzyQ0ZWFYSnWpx1QRAT5n8tRvuTNKPVi
+         +ehGVN8MvaaVYdWIncMR4E7ttjlC4Bo13GU/hC7aggcYo7bLkiUErHEAMg5Qx7o0Og5R
+         PuLdoAe9ouyVfux9m9SnyuGRuTRZnuDvmNzrLJuB2kPyEm6PyAS/ZOT4C6SxbiHKlzED
+         bViIto/aCrNTossuuAPOO+K/Dp0/Ev1J6I2vkWLPTYclsbw2ux0QHJ69dCb1Y7rAB37B
+         /tyBCFAjeKtq52sjRebmTwjfYSP3DMdT4m4/Cv6OBUNVyJahXJ2E+MDPUUsrF1pYj2Ju
+         Xw5A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789921374; x=1790526174; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+        d=bairaktaris.de; s=google; t=1789922563; x=1790527363; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=lcesAFXJlUS5Xl52LOyz6lL2cEjrWb4xoqeOVHeUMP0=;
-        b=Td9V3Gdgz5SUe1Lds8QDbMx3dZl/B+vqO7N07IWE7wZYbKZrbH0A5npTeEdBQeWQZQ
-         3XRrn/aG8f1kJqfbjNTvhTjO3BNB1fop9NCt2ja1jZEYSY7fZVx5oOc3pCntvYOUrm1q
-         c75L4S4pZYwPtKGNtbUYSfNqrZy44/vmbzV3InX6bt5O9+kOmf6nmgTFYSVQj02XI5wh
-         Mz7tNlmWrwwtUUBCN2BlEoEJpK0OViHnVs/iuUJTYKNx/WhNuoD3S6w1w/d0iIKZzaJV
-         Q6st0p+LQFoHj3QTUN/I8lFqs4GWScYHewCYAroxT2wgQifbBUu/7YoIY5+01VysjQAY
-         Pw8g==
+        bh=nHza7uhFopdEpXjnPqVhCbEMpK63s/WOhYzeeG3B/+A=;
+        b=wOFinIywN+7CPY/DG8xaJj1czKt4fI0fIP8kFDQyqHZCMaHCTSUqWfmSRy+JL4vjO2
+         9QfYE/f3s3WNXclty9vTTrHpeTRYpIU5kdrDvo88dH/9WPVbrkwwm4TwJLEBAZG3SdzU
+         hDOXR/7Cz7QZ1ufdk1sE2YUheQ3u0rdatuWR6oDaLvgzIyLeglOd5ljr0lBHHiDPNPEW
+         kZtJp7iz8tfhn56sOYOgF/zuvIetyiarCaHqeMInh0BKn9zCwZPNSv60zLr5PpgneHN+
+         zarRBBUaJ8eVS8mQCgH30ukKXRiTt+xNRv7x+1/omrU9/KDBHHUCfpn/+ipFGfKrw13z
+         8ZvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789921374; x=1790526174;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=lcesAFXJlUS5Xl52LOyz6lL2cEjrWb4xoqeOVHeUMP0=;
-        b=04mzB/07MxN8dtE+rlUjdkDs9Nvqi6qkiZwnVvGiZGj83DpcnGZHXminaeczVbf37/
-         PJQyLfPDZoJXhTVT7oGgwFcS2347jZNFgdQiKRbx2xclGF7+1LVijd+hPrVvO/+HLrnT
-         2Z6+WiizC39bQjz3P0h0B4Jqb39CH8co2W7Pw4Vh85R/J7cV4XVbAleosM41avOSGFcR
-         UnLw9Wug0Ize6d6T6U2E5r2GHhQFpVyOy2aqiVuPoge9WO4fK8j/JosGwPDu8JCgcxEA
-         ucv+oteLJ8zTASb2tb5ZvL+htI6DV031P78y7T5TymcP0/s6VwlIDs1W8KRpEXgaW8ZQ
-         ugFg==
-X-Forwarded-Encrypted: i=1; AKwUvBz+OzZXIxFkbvzo6osHeNxiZEbhXXxXpNV36mr/FSEr/J1KP+H23ShYOSopUMHa2QS/jHBIHk2WK4cfLKh+vA==@vger.kernel.org
-X-Gm-Message-State: AFuF++mvJgux77sd3KZ0p1KYz6waJHtDTVUq4ypbaASAhdAxOirYybRa
-	6N6Kz8PvXKbUlGegfhvJyrJJcddS8gsjwsnx4U0zDthUZMnZfgd4XfWlKbLhfU4oxeqa1J2nQ/T
-	DtuP1LmY+1nNAg1D5TNFL8s/97xC5heveGas5iYoUdbtlcTlJN/ow6tUbboaU3/D5b2SquUmufc
-	5p+w==
-X-Gm-Gg: AYBFou2Dorn49sD31rDEF9Oq80JhfXDQg22FPyiRIIAhdolk+kVSCdaBiJdXj/kG10E
-	Gkbb2YZcEDLvpTQvlSdvDoH831w9KuMmJeEhJ0iU/KjUplH4rTBz3rpP/4kaSA7ZcLteL4pqAQR
-	k5MPPfFnVqUTFXHlQqgkjDWzJ2/93iVXHyjfK4TEBlm7VVSIPPCS9XLCz3QpU4dXtT5kIs/gFrR
-	qZOqPN/Tuuq6uEY28Ov/Yg6W3Xnn8oZgbSitA8usedFcRlVXTxXMGuwr2gffJqnRzAKaPKOsWmY
-	YbTCntGdBaAW6tsNjI5WJNny0HE4A5YXexyRM15aUwkgXzLjB5a0eL6EatspmpFYbaIq+TWG4oV
-	hatSMVckPrUbZH+tmQmVdYPuZKXsU
-X-Received: by 2002:a17:90b:3c52:b0:39e:6a81:c91f with SMTP id 98e67ed59e1d1-39e6a81c9a2mr8995926a91.18.1789921373809;
-        Sun, 20 Sep 2026 09:22:53 -0700 (PDT)
-X-Received: by 2002:a17:90b:3c52:b0:39e:6a81:c91f with SMTP id 98e67ed59e1d1-39e6a81c9a2mr8995910a91.18.1789921373234;
-        Sun, 20 Sep 2026 09:22:53 -0700 (PDT)
-Received: from [192.168.1.6] ([171.76.84.44])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-144d55d2269sm12494187c88.11.2026.09.20.09.22.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 20 Sep 2026 09:22:52 -0700 (PDT)
-Message-ID: <d5cd9c2b-a37a-40be-8916-162d9250adce@oss.qualcomm.com>
-Date: Sun, 20 Sep 2026 21:52:48 +0530
+        d=1e100.net; s=20260707; t=1789922563; x=1790527363;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=nHza7uhFopdEpXjnPqVhCbEMpK63s/WOhYzeeG3B/+A=;
+        b=Cj72+WYFBXh/mlyq/V4/w3fMhzuIwDny2wfUVZi+/48iQ9kBES3d1rIcw3KyAIUF/o
+         uLrADD3GBQLT+GqN9yyXZiWNzkY2R+VA4YkEN4FJ0CV+On3uz1gg5nb7KrbQu6lLaqX3
+         QMQXaeSEFSB8M+/8TTHH+61poi1OduR17UMbCK6Y1wHWNh1nVcN+vSCGRLeK6dMAj4kt
+         szgjpqWNGvgs/6aUi8wi9e9VjY2c3PqSmaM0+9tYuC4NQyLTuRnUwnk+GIGkw5c7KouU
+         IemQ6TdpFRz3VeTex3MvW+Rwg+eggIO4yHlUO0lSdt1miCruqUOVkhmLvkHJ8hrlRGGu
+         gCpA==
+X-Forwarded-Encrypted: i=1; AKwUvBxZiUMhEEiBHn8Kjp6+0CSt5KQYdR4pfMUWFJXjpxsMx9qBCGjwS8LwiKGTFZ+vODsSZYEr30Gx1D27SKeqMw==@vger.kernel.org
+X-Gm-Message-State: AFuF++nG3JlAcZ38KLLQYUGXyj7U6CYrbny0TnRsmqM6XMjBjlJSCTCg
+	67Vg8shW4A8d3odnwUrLpYpRSNZwqDkCvx5hrQG1TuZut3dF4CUsLhw9dATyFRR1WMHwRGYYa35
+	wYx32ZPqaFAPpfkufVtqobn7pt0MmbXOAHd1utzhe
+X-Gm-Gg: AYBFou1PuLdWm9lqKs00VodwYSsIlPzqX61NH/RK/Qo4/otaoRPvu6pQ7iqEWBoMkXE
+	lZMgaP7YZBs+Wpb2XyH5jPsCHTzjohWoVB/LtxW7QPoZQHvKnRj2C6bFo8rxX/9CEoyMsvJ54qA
+	jSkOap+M2utgJIJ2bvqbcBVxhWW/3F8+RysC9Mv8mpg0RfJiZLfaAmAqxvExs2DgdxuALEWChU+
+	VbFeC0wDxoq6WwbEVBy4DUninwYCP44VhkbC7tiepWZO5QhYk4E3r44FC/0LAULgNWfExqIMxvp
+	qbiiFSAWqREyWZ4wrYqYPnKlue6nKflByVWcnfWWAOF5jq8GnWbaGpmwunO0xOR7AfI1qitzLqL
+	sf7iz3pFuUOTHLV1XS28pGl6h4G4GWvfs/Ebsj6Jl4+jBI7zKVDBVbMJ5x3q81EIYUhTIqwIttd
+	xl6znZK6luyNHHiPzQPCal2yUVYHTfT4VP1pXLKxIN8IQg2V/V7nDAr/bdotiKIhzdux3R+6Oh3
+	HqGzPy24t6XnONemPvFNFBzY6fdgM8nnVpl9+JBXBTeTPVVY68KCmBbRKjDMH7HTxbyQOjIn0sO
+	eEap6a0Kh5U=
+X-Received: by 2002:a05:690c:315:b0:86f:3b4a:f8b2 with SMTP id
+ 00721157ae682-89730eed53amr31830807b3.16.1789922562709; Sun, 20 Sep 2026
+ 09:42:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 00/15] wifi: SCS and MSCS
-To: Felix Fietkau <nbd@nbd.name>, Vivek Chettri <vchettri@qti.qualcomm.com>,
-        Bhagavathi Perumal S <bhagavathi.pillai@oss.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "ripan.deuri@oss.qualcomm.com" <ripan.deuri@oss.qualcomm.com>
-References: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
- <4c3aee64-d289-4648-9520-edb6518b3d13@oss.qualcomm.com>
- <6ed64b95-57a3-42a2-9280-c98978382fa6@nbd.name>
- <CH0PR02MB8168357184D7A6354A24A338F1BC2@CH0PR02MB8168.namprd02.prod.outlook.com>
- <43012c2f-3623-4211-b2de-de53e39df2e9@nbd.name>
-Content-Language: en-US
-From: Vivek Chettri <vivek.chettri@oss.qualcomm.com>
-In-Reply-To: <43012c2f-3623-4211-b2de-de53e39df2e9@nbd.name>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIwMDIzOSBTYWx0ZWRfX9S3XFc8vtYPG
- npE68f0nxNJVJot4WpF/UmkuFaZMDmgVgCMqrIY/tDl1rasJuFoocmxwAo6xxomydUx+x4eDnmE
- RHqtAkGf4vI+pg2cF3mxDhHkItRltuE=
-X-Proofpoint-ORIG-GUID: O1P44Vi0vW-6Md0IApOjCHEWQLo554Mc
-X-Proofpoint-GUID: O1P44Vi0vW-6Md0IApOjCHEWQLo554Mc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIwMDIzOSBTYWx0ZWRfX62ib9XPos713
- YxUjsnY25ixAGT1ccY+tFRGB2Arfbuj+vEbdZfGZ9qhDTS2jlZTtqQR1eSpI9hNmC8vDS5t08BR
- E9mgLtEuhoUWUlRF5Nj0oVTzg4HX9msLnyn5YbMUfsIbPRcfkiKGEWwXMvxrWQqJrUGmABub/kg
- AA/tN+3OcRqB1g/EBVSycLRMmkjcoddmdvukEhA7O17YTigWQQ8bVm/FaPtXUQdOQKKQsfGPkeq
- GPvieE4MnfNUWj7N2mrSZlQESayvXtEkB4wzdRcBSrQvX16SXSYgisvJ81rpUQq45k2C3SNx6jN
- kRGQmB13xkitEV2vHb2Ruk+NUr+ZrDtJHb6k8y43JwOlDXs9SfOhtci8/T84VqJBIxExjxvXX/G
- +cBb4GLEGTNXiDD/kZoj/Ed4E87ogLsChL5IHZXw/QyBw29GSVAV3ba7XhjKg7lTwsda+1xOvbc
- Ntk1ZqhU7KK9TQ1JniA==
-X-Authority-Analysis: v=2.4 cv=N6S8hG9B c=1 sm=1 tr=0 ts=6ab0085e cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=9Lzk0VLn9KdRuJTV/0+ytA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=07d9gI8wAAAA:8 a=X-kl0NPSs1swFSN-qHAA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=iS9zxrgQBfv6-_F4QbHw:22 a=e2CUPOnPG4QKp8I52DXD:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-20_05,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 phishscore=0 adultscore=0 spamscore=0 suspectscore=0
- priorityscore=1501 clxscore=1011 impostorscore=0 lowpriorityscore=0
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609200239
+References: <20260726221908.104873-1-julius@bairaktaris.de>
+ <20260726221908.104873-3-julius@bairaktaris.de> <CGME20260911075315eucas1p1b4ffb1f57ef187e0a055072ccc0983e3@eucas1p1.samsung.com>
+ <a068a857-a549-4cc2-ae0f-3ef119d3a859@samsung.com> <dd342f3d-36d3-4a85-95ca-6cacb7b834ad@oss.qualcomm.com>
+ <10491411-b500-4e89-bf85-5142ced60aaf@samsung.com>
+In-Reply-To: <10491411-b500-4e89-bf85-5142ced60aaf@samsung.com>
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Date: Sun, 20 Sep 2026 16:42:08 +0000
+X-Gm-Features: AcwNN1X9njNa5bud7U1eFhRRabFMS_lFHDaJorC6mykzTt2Nulm24Bp200Rb6sM
+Message-ID: <CAC1t37Ltrh+BBaEPi8grXnMrDt3qGDH8BA56av-h7=yPCCk0Nw@mail.gmail.com>
+Subject: Re: [PATCH ath-next v2 2/2] wifi: ath11k: disable interrupts during
+ firmware crash recovery
+To: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Baochen Qiang <baochen.qiang@oss.qualcomm.com>, jjohnson@kernel.org, 
+	ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, vasanthakumar.thiagarajan@oss.qualcomm.com, 
+	rameshkumar.sundaram@oss.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
+
+Hi @Baochen,
+
+tested 5 times and it solves the problem. Thanks!
+
+Julius
 
 
-Hi Felix,
-
-
-On 9/14/2026 2:49 AM, Felix Fietkau wrote:
-> Hi Vivek,
-> 
-> On 13.09.26 21:23, Vivek Chettri wrote:
-> 
->> The preference for reusing existing packet-classification infrastructure is
->> driven by the need to have a centralized policy management and policy framework
->> that operates across both software and hardware-offloaded forwarding
->> paths, rather than introducing a separate classifier within the WLAN stack.
->> 
->> 1. Centralized QoS and Policy Management
->> 
->> A centralized policy management framework provides the following advantages:
->> 
->> • A centralized policy database enables end-to-end QoS policy enforcement
->> across different forwarding paths, improving manageability and policy
->> visibility throughout the system.
->> 
->> • SCS/MSCS policies represent only one source of policy management. 
->> Administrators may also configure firewall, QoS, or other policies that
->> must coexist with negotiated WLAN policies.
->> 
->> • Centralized policy management provides clear visibility into the interaction
->> between administrator-defined policies and dynamically negotiated SCS/ MSCS
->> policies, making conflicts easier to detect and manage.
->> 
->> • Implementing packet prioritization independently within mac80211 can introduce
->> policy conflicts or ambiguous precedence when administrator-defined QoS policies
->> overlap with SCS/MSCS-derived priorities.
->> 
->> • A common policy framework helps ensure consistent behavior across software
->> forwarding, bridging, routing, and hardware-offloaded data paths.
-> 
-> I don't think any of this really conflicts with my proposal. A full end-to-
-> end policy framework seems out of scope for direct implementation in
-> hostapd anyway, so it should be an external component.
-
-The proposal is not to implement a full policy framework in hostapd.
-
-Following is the functionality split:
-
-Hostapd:
-	Primarily responsible for SCS/MSCS protocol handling.
-	Processing of the protocol descriptors ie TCLAS and QoS elements.
-	Programming an existing kernel policy framework such as nftable.
-
-Nftables:
-	Policy storage.
-	Classification.
-	Packet marking along with offload enablement.
-
-> hostapd should allow deferring management and policy decisions of client- 
-> requested SCS/MSCS exchanges to external components anyway to support things
-> like EasyMesh well.
-> 
-> Having this separation would help if you intend to push flow classification 
-> for things like wired upstream links, which hostapd should not worry about
-> at all.
-> 
-> In such a scenario, a custom implementation could choose to omit passing
-> full classifiers to mac80211. That said, for most common use cases,
-> including standalone APs and simpler EasyMesh implementations, I believe
-> that using the mac80211 support that I added is the right choice due to the
-> lower complexity and overhead.
-> 
-
-I agree that policy decisions can be delegated to external components for Easy
-Mesh use cases, and I don't see a fundamental conflict there.
-
-While the mac80211-centric approach is looking attractive for simpler
-deployments, we should consider an approach that scales across varied use cases.
-
-In deployments where SCS/MSCS, administrator-defined QoS policies (DSCP), and
-hardware offload mechanisms coexist,having a central source for classification
-can help as follows
-	1. Avoid duplication of policy framework
-	2. Simplify policy interaction, conflict resolution
-	3. Consistent enforcement across different forwarding paths.
-
->> 2. Policy Framework: Considerations and Challenges
->> 
->> A policy framework should help ensure consistent behavior across software 
->> forwarding, bridging, routing, and hardware-offloaded data paths.
->> 
->> The policy framework can be realized using either nftables or tc-flower. Both
->> approaches provide a persistent and centralized repository for traffic 
->> classification and policy enforcement, but differ in integration complexity,
->> feature scope, and deployment model.
->> 
->> Common Capabilities: nftables and tc-flower
->> 
->> • Both nftables and tc-flower maintain centralized rule databases for traffic
->> classification and policy enforcement.
->> 
->> • For software-forwarded traffic, both solutions require flow lookups against
->> installed rules and therefore have broadly comparable classification overhead.
->> 
->> • Both mechanisms can serve as the policy enforcement layer for SCS/MSCS-
->> derived traffic policies.
->> 
->> Advantages of nftables
->> 
->> • nftables provides a unified framework for firewalling, traffic classification,
->> and QoS policy marking.
->> 
->> • nftables can support both software and hardware-accelerated forwarding paths
->> and can be extended to additional offload scenarios with minimal architectural
->> changes.
->> 
->> • Existing support for nftables-based policy handling in hostapd reduces 
->> integration effort and leverages infrastructure that is already available and
->> upstream-ready.
->> 
->> The implementation is done using libmnl, which avoids licensing incompatibility
->> between hostapd (BSD-3-Clause) and libnftnl (GPLv2). This approach was
->> also reviewed with Jouni.
->> 
->> • Using nftables allows SCS/MSCS policies to be integrated into a broader, 
->> system-wide policy framework rather than introducing a WLAN-specific policy
->> engine.
->> 
->> • Using nftables can also facilitate scalability by allowing these rules to
->> be applied at software acceleration decision-making stages. For example, the
->> NFT rule can be cleanly integrated into NFT flow tables as well.
->> 
->> Challenges with a tc-flower-based Approach
->> 
->> • A tc-flower solution would require substantial additional implementation 
->> for rule programming from hostapd.
->> 
->> • tc-flower typically requires qdisc configuration (at a minimum, a clsact 
->> pseudo qdisc) before classification rules can be installed and enforced.
-> 
-> Most of these points are very abstract and in my opinion gloss over a lot of
-> implementation complexity. I'd argue that just because nftables is used to enable
-> offloading in some setups doesn't mean that it handles the different policy
-> aspects of SCS and especially MSCS well, or provides good ways to deal with
-> runtime changes to existing flows.
-> 
-
-I agree that implementation complexity and runtime updates are important
-considerations. For SCS/MSCS cases, nftables address the highlighted concerns
-in following ways
-
-Complexity: not a concern
-  - Linux Kernel NFT Infra provides well defined APIs to program policies
-which satisfies present use cases and does not add much implementation
-complexity or overhead.
-
-Runtime: supported
- - These APIs indeed having support for runtime modifications as per SCS/MSCS
-protocol requirements.
-
-Offload cases: supported seamlessly
- - nftables is already used as a general policy and classification framework
-for both software-forwarded and software/hardware-offloaded traffic.
-
-Protocol classifiers: all mandatory variations supported
- - The classifiers required mandatorily by SCS/MSCS, including cases such as
-TCLAS Type 10 (ESP/SPI Based rules), are supported with nftables.
-
-> I get the impression that your proposal is designed to handle the needs of a
-> single Qualcomm implementation of an out-of-tree policy framework service well,
-> while neglecting in-tree kernel offload mechanisms, as well as standalone
-> AP implementations by pushing extra complexity there.
-> 
-
-The nft based proposal is neither Qualcomm-specific nor based on out-of-tree
-policy framework.
-
-Qualcomm's approach using nftables works for systems with no offload, software
-offload, or hardware offload by leveraging existing upstream infrastructure as
-follows.
-
-	1. SCS policies programmed by hostapd are part of the net filter egress hook
-which maintains classifier info along with QoS identifier (nfttable rule->mark).
-
-	2. Mark field part of the nftable gets populated into connmark of the ct
-during connection establishment.
-
-	3. The connmark information that is populated at the egress hook can be used
-for HW offload programming by the vendor driver
-
-	4. As the SCS policies are added at egress hook this would seamlessly work
-even when software offload(nft flow table) is enabled
-
-SCS/MSCS would simply act as a policy producer, while classification and
-enforcement remain within common in-tree mechanisms.
-
-The goal was not to push Qualcomm out-of tree implementation, but to have a
-solution using existing in-tree kernel mechanisms
-	1. Avoids Duplication of the same coming at mac80211
-	2. Reduces system complexity with centralization.
-
-Qualcomm offload mechanism can work with policy data base built at mac80211
-also; however what we wanted to explore was avoiding non 802.11 network-wide
-policy and classification decisions within mac80211. This helps prevent the
-creation of a parallel policy framework and keeps mac80211 focused on Wi-Fi-
-specific functionality and concepts.
-
-> Let me give you a specific example. On OpenWrt, Ethernet -> WLAN bridge hw flow
-> acceleration works by having a user space daemon that replicates the bridge
-> state, measures L2 flows via eBPF and programs no-sw tc-flower offload rules
-> for L2 flows. On the MTK driver side, the offload core uses the programmed
-> L2 rules to trigger actual hw forwarding. Only for routing/NAT flow offload
-> does nftables get used. The kernel side is fully implemented in upstream
-> kernels without any out-of- tree subsystems.
-> 
-> The forwarding from Ethernet to WLAN works because the kernel code can
-> resolve the hardware path via dev_fill_forward_path and query the relevant
-> metadata (which happens by calling into the WLAN driver through mac80211).
-> 
-
-Thanks for the example.
-
-If both traffic types (bridged and routed) ultimately require policy
-classification and offload decisions, having a common framework could provide
-a single policy repository and a consistent programming model across all
-forwarding paths.
-
-Referring to the following article, can nftables be considered for bridge
-offload as well?
-
-https://lwn.net/Articles/1082320/
-
-> In the series that I've built on top of this one (but not yet posted), the 
-> offload core driver can additionally query the classifier result for a flow
-> at the point where it enables actual offloading (the trigger is PPS
-> threshold exceeded). This works because mac80211 has the active
-> classifiers, allowing the WLAN driver to provide them to the offload core
-> driver.
-> 
-
-If possible, could you share the patches (or a draft branch) for the series
-you mentioned?
-
-We would be interested in reviewing the end-to-end architecture and
-understanding how it integrates with the existing tc and nftables offload
-paths separately.
-
-> This design allows transparently respecting the SCS/MSCS classifier for hw 
-> offloaded flows regardless of which API was used to trigger offload (tc or 
-> nftables). Additionally, the user space components handling the offload for
-> both approches do not have to worry about SCS/MSCS in any way.
-> 
-> I don't see how your hostapd programmed nftables rules approach would handle
-> the same properly.
-> 
->> 3. Summary
->> 
->> • The primary role of SCS/MSCS handling within the WLAN subsystem should be
->> to negotiate and manage QoS policies between the AP and STA.
->> 
->> • Packet classification and policy enforcement should be delegated to a 
->> centralized policy framework such as nftables, which is already designed to
->> manage system-wide traffic policies.
->> 
->> • The WLAN driver remains responsible for mapping classified traffic to the
->> appropriate transmission priorities and ensuring the negotiated QoS behavior
->> is achieved across the data path.
->> 
->> Also, what is the plan for supporting repeaters and backend devices?
-> 
-> Not sure what you mean by backend devices. For repeaters I would use a software
-> component (preferably outside of hostapd/wpa_supplicant but interacting
-> with both), which acts as a repeater for SCS policies requested by local
-> clients (pushing them to the upstream AP) and tells hostapd to install local
-> descriptors where local classification is needed. If you have concerns
-> about specific scenarios, please describe them to me.
-> 
-> Thanks,
-> 
-> - Felix
-
-Thanks!
-Vivek.
+Am Mo., 14. Sept. 2026 um 07:22 Uhr schrieb Marek Szyprowski
+<m.szyprowski@samsung.com>:
+>
+> On 14.09.2026 08:32, Baochen Qiang wrote:
+> > On 9/11/2026 3:53 PM, Marek Szyprowski wrote:
+> >> On 27.07.2026 00:19, Julius Bairaktaris wrote:
+> >>> On IPQ8074 a firmware assert reboots the SoC:
+> >>>
+> >>>   Unable to handle kernel read from unreadable memory at virtual address 0
+> >>>   pc : ath11k_hal_srng_access_begin+0xc/0x60 [ath11k]
+> >>>   lr : ath11k_dp_rx_process_mon_status+0x15c/0xd84 [ath11k]
+> >>>   Call trace:
+> >>>    ath11k_hal_srng_access_begin+0xc/0x60 [ath11k]
+> >>>    ath11k_dp_rx_process_mon_rings+0xa0/0x5d4 [ath11k]
+> >>>    ath11k_dp_service_srng+0x1f4/0x348 [ath11k]
+> >>>    ath11k_ahb_ext_grp_napi_poll+0x34/0xd4 [ath11k_ahb]
+> >>>    __napi_poll+0x38/0x188
+> >>>    net_rx_action+0x120/0x2c0
+> >>>
+> >>> ath11k_core_reconfigure_on_crash() tears the data path down with
+> >>> ath11k_dp_pdev_free(), ath11k_dp_free() and ath11k_hal_srng_clear(),
+> >>> which memsets the ring list. The DP NAPI is still running while that
+> >>> happens, so it services a ring whose address pointer has just been
+> >>> cleared.
+> >>>
+> >>> That function used to disable the interrupts first, until
+> >>> commit d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
+> >>> moved the disable into ath11k_core_reset(). reset_work is only queued
+> >>> from mhi.c and from the debugfs hw-restart handler, so AHB parts never
+> >>> run it on a real firmware crash. Their recovery goes QMI server exit ->
+> >>> restart_work -> ath11k_core_reconfigure_on_crash() ->
+> >>> ath11k_core_qmi_firmware_ready(), and nothing disables the interrupts
+> >>> anywhere along it.
+> >>>
+> >>> Disable them again on the crash path. The reset path has already done
+> >>> so by the time it gets here, hence the ab->is_reset check.
+> >>>
+> >>> This is also why the debugfs hw-restart trigger never showed the
+> >>> problem: it goes through ath11k_core_reset(), the one path that still
+> >>> had the disable.
+> >>>
+> >>> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.12-01460-QCAHKSWPL_SILICONZ-1
+> >>>
+> >>> Fixes: d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
+> >>> Assisted-by: Claude:claude-opus-5
+> >>> Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+> >>
+> >> This patch landed recently in linux-next as commit f7a74e131d3f ("wifi: ath11k:
+> >> disable interrupts during firmware crash recovery"). In my tests I found that it
+> >> causes a regression on QCOM RB5 board during system suspend/resume cycle
+> >> (s2idle):
+> > Hi @Marek, can you please try if below diff can fix this regression? Also, @Julis, can you
+> > please also confirm if it can address your original issue as well?
+>
+>
+> Works fine in my tests, feel free to add:
+>
+> Reported-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+>
+>
+> > diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+> > index d2ed6a0ea7e3..1ad0a47653de 100644
+> > --- a/drivers/net/wireless/ath/ath11k/core.c
+> > +++ b/drivers/net/wireless/ath/ath11k/core.c
+> > @@ -1275,9 +1275,6 @@ int ath11k_core_suspend_late(struct ath11k_base *ab)
+> >       if (ab->actual_pm_policy == ATH11K_PM_WOW)
+> >               return 0;
+> >
+> > -     ath11k_hif_irq_disable(ab);
+> > -     ath11k_hif_ce_irq_disable(ab);
+> > -
+> >       ath11k_hif_power_down(ab, true);
+> >
+> >       return 0;
+> > @@ -2333,17 +2330,9 @@ static int ath11k_core_reconfigure_on_crash(struct ath11k_base *ab)
+> >       int ret;
+> >
+> >       mutex_lock(&ab->core_lock);
+> > +     ath11k_hif_irq_disable(ab);
+> > +     ath11k_hif_ce_irq_disable(ab);
+> >       ath11k_thermal_unregister(ab);
+> > -
+> > -     /*
+> > -      * ath11k_core_reset() already disabled the interrupts on the reset
+> > -      * path; only the firmware crash path reaches here with them live.
+> > -      */
+> > -     if (!ab->is_reset) {
+> > -             ath11k_hif_irq_disable(ab);
+> > -             ath11k_hif_ce_irq_disable(ab);
+> > -     }
+> > -
+> >       ath11k_dp_pdev_free(ab);
+> >       ath11k_cfr_deinit(ab);
+> >       ath11k_spectral_deinit(ab);
+> > @@ -2605,9 +2594,6 @@ static void ath11k_core_reset(struct work_struct *work)
+> >       time_left = wait_for_completion_timeout(&ab->recovery_start,
+> >                                               ATH11K_RECOVER_START_TIMEOUT_HZ);
+> >
+> > -     ath11k_hif_irq_disable(ab);
+> > -     ath11k_hif_ce_irq_disable(ab);
+> > -
+> >       ath11k_hif_power_down(ab, false);
+> >       ath11k_hif_power_up(ab);
+> >
+> Best regards
+> --
+> Marek Szyprowski, PhD
+> Samsung R&D Institute Poland
+>
