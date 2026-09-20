@@ -1,83 +1,105 @@
-Received: from mta1.migadu.com (out-47.mta1.migadu.com [95.215.58.47])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B866E31F99A
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 01:14:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D62A3515D4
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 01:22:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789866889; cv=none; b=on6pi20WihrkAJZXCljbCbBNR9MkhUVaoQMMCuZJq11W6LlHeaKLEFjkXSw2kdVFBr6tvQ6YnOl09L7u//gfUdqSH20RbHj0E2B8OqtRZ/uw0LDNTGLvIM8YeA0/IxkF1gBanaIman+BP4nndLJBl8RVbBWncw+aS5qPzvvK8LQ=
+	t=1789867344; cv=none; b=iTU1KVOpp4qI2a0FSvvWLWABGZBDY7PzSSeuaKgUQCrchX2SdyYb2WXRFdHYO1uB89v5qAztrEjh9zRR0f2mGCAYlOazBruw6qdvDWQy9m0GrN8C55XToK57NCEdRBBJZn8hBJyRvHlIxa9Xz5vdWviGLxaYDDooWVPkslMNnR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789866889; c=relaxed/simple;
-	bh=n8OOl8LnKzoRnOqP3z8cqH/YxfvjQ9J8yGpITcBA72E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bSMNV7C+8TKt8vDszn8dYAdJMdwfUpz9rb1n6xZrD5LX6oGyKpnIBFGydsKwKc/vAa/ZO0CvGDQbkv+3ttasvYWiuiRBQ3GQ0bmAZTH7phbDR7kDl8YvEgQlmbs/IVgfdFRCMGNqRz3+UTseeaS1r+Q5FtlcyvdijGCfY+rmdUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=permerror (bad message/signature format); arc=none smtp.client-ip=95.215.58.47
-Authentication-Results:smtp.subspace.kernel.org; dkim=permerror (bad message/signature format)
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=n8OOl8LnKzoRnOqP3z8cqH/YxfvjQ9J8yGpITcBA72E=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789866885; v=1; x=1790471685;
- b=REXdxl8lR8Y82uiViJpvS2s+lkWtSa5XXT+KQDcVw0xmn2mKZ5dFMyku6ZOvUbUCEv7t85Hy
- PkJQ8d7O33aGW/I0YEjBWeqkGfXUyaxddfrKMglNHEVG3brvBPvPKt5FUtJXZcxuMjnDk35azEK
- K6HQU826jzsyNXa/rbmdUBRc=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2aae6ed2e79647d9;
-	Sun, 20 Sep 2026 01:14:45 +0000
-X-Mizu-Trace-ID: 2aae6ed2e79647d9
-X-Migadu-Flow: FLOW_OUT
-From: sunliming
-To: miriam.rachel.korenblit@intel.com,
-	johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com,
-	daniel.gabay@intel.com
-Cc: kees@kernel.org,
-	elver@google.com,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	sunliming <sunliming@kylinos.cn>,
-	kernel test robot <lkp@intel.com>,
-	Dan Carpenter <error27@gmail.com>
-Subject: [PATCH RESEND] wifi: iwlwifi: pcie: add NULL check for trans->dbg.dest_tlv in dump_monitor
-Date: Sun, 20 Sep 2026 09:14:20 +0800
-Message-ID: <20260920011420.99715-1-sunliming>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1789867344; c=relaxed/simple;
+	bh=LrNTFK8WH8twmKkGuYzuLKuuRf3a77N0UhNxEz92YwU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=ZGMVcsaNCK+ah+oHx2ZfOhrH3ZMYmVgd2nMnk45Mpby0AISn3DSBJQZkGoFBUikn6YHacYDJk4Yals2KZlcMLPJ9F4n2u2WAVg5kopQ7ydbYwx/BKxqNtzSkTcH/kgcctAtAxohdbY+23R8ga7P32WPmmcf+KjREV1Vbp5lqoNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=IH7o2zeS; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="IH7o2zeS"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68K1MGpoC1325635, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1789867337; bh=DQi70DRvk7LZlRqc6HokaFdDP/Taks21qmvcGClHyuM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=IH7o2zeSK6SmEEVF2ZbjioWOzR+q67vfqabNBCv43hK0UuJ1VwIDyMDiXi9A+wHU2
+	 eq5HSvI6tInfuf/DhvCX/vtO+QHepDBK9neGPmi1xokGdPy0fAjkL82cm0mj1RfCwZ
+	 95ASXfK159RnjhCJlw4bkH8unrv2wv/7kgoW1gnegce4ZEFrq1YuHEc0OfLBPi+LQe
+	 QbAg5eNROjT5CE+4MEpGhWu2wj4vwDVCrnAm12VIzc8Y7PGBiuYMBdzOx8rqGeEulz
+	 bTinA2RmlSGRaIgsC7eizM1BNZJraFdw7brTJllEv7AWKT+KX3JwRjSyiugnckDH+q
+	 Q8ceZDnvqqRoQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68K1MGpoC1325635
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Sun, 20 Sep 2026 09:22:16 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Sun, 20 Sep 2026 09:22:16 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Sun, 20 Sep 2026 09:22:16 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Sun, 20 Sep 2026 09:22:16 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Paolo Lazzaroni <eexto@aol.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw88: 8821c: Add HP single-antenna quirk
+Thread-Topic: [PATCH] wifi: rtw88: 8821c: Add HP single-antenna quirk
+Thread-Index: AQHdQdWXUlvmBxMEWUiMWC9yQBgQJLbLu3PQgAiLMICAAnIhsA==
+Date: Sun, 20 Sep 2026 01:22:16 +0000
+Message-ID: <4486aa8a910246deb2eef5ff392f9f37@realtek.com>
+References: <3b3788a7c4f240899e630938a6c7b472@realtek.com>
+ <20260918195927.30118-1-eexto@aol.com>
+In-Reply-To: <20260918195927.30118-1-eexto@aol.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: sunliming <sunliming@kylinos.cn>
+Paolo Lazzaroni <eexto@aol.com> wrote:
+> > If this is the only one platform which needs this kind of quirk. Add an=
+ entry
+> > to rtw_pci_quirks[].
+>=20
+> Regarding rtw_pci_quirks[]:
+>=20
+> The reason I matched the PCI subsystem ID (10ec:c821 [103c:831a]) rather
+> than DMI in rtw_pci_quirks[] is that HP assigns this specific subsystem
+> ID across a family of laptop platforms (e.g. HP 15-da, 15-db, and related
+> chassis) to denote the single physical antenna connected to Aux/S1.
+> This is documented in the OEM Windows driver INF (netrtwlane.inf):
+>   "PCI\VEN_10EC&DEV_C821&SUBSYS_831A103C ;;single ant(connect to right on=
+e S1)"
+>=20
+> If we use DMI matching in rtw_pci_quirks[], it would only match this spec=
+ific
+> laptop SKU ("HP Laptop 15-da0xxx" / "4XW76EA#ABZ"), leaving other HP mode=
+ls
+> sharing this identical 103c:831a single-antenna card with severe signal l=
+oss.
+>=20
+> However, I understand that inspecting PCI structures inside rtw8821c_read=
+_efuse()
+> violates bus abstraction for rtw8821c.c.
+>=20
+> Would you prefer:
+> Option A: Keep the PCI subsystem match, but handle it cleanly in rtw_pci_=
+probe()
+>           (e.g., setting a flag or rfe_option override in rtwdev before c=
+hip setup)?
+> Option B: Add a DMI entry to rtw_pci_quirks[] matching this platform?
 
-Fix below smatch warnings:
-drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c:3527 iwl_trans_pcie_dump_monitor()
-error: we previously assumed 'trans->dbg.dest_tlv' could be null
+I prefer option A, but yes, please handle it cleanly in pci.c.=20
+You can flag a quirk at pci.c, and update rfe_option in 8821c.c.
 
-Fixes: c8a00a6e89ff ("wifi: iwlwifi: pcie: move generation specific
-files to a folder")
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: sunliming <sunliming@kylinos.cn>
----
- drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ping-Ke
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index 28b276c65952..9cea0fe9e578 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -3516,7 +3516,8 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 
- 			iwl_trans_pcie_read_mem(trans, base, fw_mon_data->data,
- 						monitor_len / sizeof(u32));
--		} else if (trans->dbg.dest_tlv->monitor_mode == MARBH_MODE) {
-+		} else if (trans->dbg.dest_tlv &&
-+				(trans->dbg.dest_tlv->monitor_mode == MARBH_MODE)) {
- 			monitor_len =
- 				iwl_trans_pci_dump_marbh_monitor(trans,
- 								 fw_mon_data,
--- 
-2.43.0
 
