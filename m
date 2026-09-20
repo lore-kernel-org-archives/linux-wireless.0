@@ -1,144 +1,60 @@
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward500a.mail.yandex.net (forward500a.mail.yandex.net [178.154.239.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13A5D388881
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 10:49:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F0A83264C8;
+	Sun, 20 Sep 2026 14:07:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789901395; cv=none; b=eTOghPN+UpLg36xt+egbfNzdr0OsALxcxOCHzigpyT4JCzVqPW7dbt9/K9Rhm+XDWs510tFlTM+sHVl/rvbLi9zL21IxJql7gEnh75ewquZ614DTLWYSpxKit16LV6eLjn3Q6fobaddwTbHDl8twDvU+n/Md61V7vF22fsngHUI=
+	t=1789913268; cv=none; b=BZEqAreXUVWHi5Nu6/Hyz2rZ9v5MnfQchIP1QlB6f8U9nyRc+jXAHB8ADjrMskaYeDZEGmEj2RSCk9i+C0pJluV/ZmquXNLbTr4pX6Cb9FAZLiwgUsaR3XWpjwtU8H/kWck/tOcuOVx2xJ5uPBd24pFC+pfk+lzxrRZR19rVxmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789901395; c=relaxed/simple;
-	bh=K20PGmlZpZ/J9S8RSso70aIQOnXGYizeAEu5JbIj8D8=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=pZe9TmmjWwjNeEH0oD7tFt9HCV7ksDzvc4AZZkKoaKgoZmcQXyUz2vTIhJvReDEzS4kWzgCnNJGwhKkfjvLQ9+bnnz4r6FQSIrX/tb+1E3wuVj8eJY3eXodIn4z1TovQwZvVePWaTKAoEth8V9AmgVjynb+g1P/2s3yzc8QgHm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-4b3962f71e7so3707972b6e.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 03:49:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789901393; x=1790506193;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=aHcJOhRW8IlBD1d9Mg6fiEwM4yxVg3OWKuothPl1YU4=;
-        b=JHvV0RJnDvElc5UP3z/edYHjYVc+WBZPLCWCXHbIqOlHm3CwyLWJbhDlmN8VIP8FeN
-         Uup3aXj+4+AjTikrIdA3mK46ybnu4JFiED4ErNztX5qVV81L7x7vtcLpDfyDr76Rmg9B
-         D181pAczGKSO1yvw3iaiH7YY11LdPAz6c2wdYLVoUeS7MnoXjetpFSi/ckYx3s+6A3la
-         jt+sBnrmolM9IC4licLpVbExev3P2NMT+I+b0g1zcNm2UKFoRcBS8j6IclXL+ZBKmYds
-         CEtwPBvYRf39pZvRvYJYeKxt6C1uBhLj/x9vM9KYpyHbzGYetjKuvqAAd+1Fqafm+DN2
-         z38A==
-X-Forwarded-Encrypted: i=1; AKwUvBw7zZm8r+jmD3AbTQ92k1xFekc1NNLNggQCvgq6CG95uiCKnTs9mOp8me1MlV2n5BdRZqt7wOEcwtkHUGnOew==@vger.kernel.org
-X-Gm-Message-State: AFuF++kqaq9MfD0ew4qtSwLBIRE5dukgU1zKXfQheg7Ni0K/6ZmNnsZD
-	CVTzt6vYvixSUYVHP5lxvXbwM76/F644FPZS86wznvj9/U2ux0C/e5PPM41KcD9ZDUX4+uyhauc
-	OE/k0usrBHiIGtfix/YDt6BN9EPwi6dfdkA7Pl8k3Eb/hwcaw1AghE5/rqUQ=
+	s=arc-20240116; t=1789913268; c=relaxed/simple;
+	bh=ggDXQml+3AwD7Hw47o9K814Vwfhlxh4e7ksLSjlixVU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:MIME-Version:Date:
+	 Message-Id:Content-Type; b=hVRpOqlA8holpIEZjeAqkGsp32axpMaqGm3N10zBvKC/J9dqpyAB13xn3i85ohIFcl2kpOb4r6K1KMBVSI3zDS3zQV3wKqXW+I38BoMMKGQOZy3c7BkW70AwxxEAeKOArRhLWeSUsQ5b3TVIyKTRkIxkuu0BT2KSF87X5pwMI2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me; spf=pass smtp.mailfrom=0upti.me; dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b=NyPvplGO; arc=none smtp.client-ip=178.154.239.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0upti.me
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b="NyPvplGO"
+Received: from mail-nwsmtp-mxback-production-main-82.vla.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-82.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:2f23:0:640:4f85:0])
+	by forward500a.mail.yandex.net (postfix) with ESMTPS id BFF46C1223;
+	Sun, 20 Sep 2026 17:07:42 +0300 (MSK)
+Received: from mail.yandex.ru (2a02:6b8:c0f:691:0:640:b58d:0 [2a02:6b8:c0f:691:0:640:b58d:0])
+	by mail-nwsmtp-mxback-production-main-82.vla.yp-c.yandex.net (mxback) with HTTPS id P7aE5u3vjqM0-cwncLNUX;
+	Sun, 20 Sep 2026 17:07:42 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=0upti.me; s=mail;
+	t=1789913262; bh=ggDXQml+3AwD7Hw47o9K814Vwfhlxh4e7ksLSjlixVU=;
+	h=Message-Id:References:Date:Cc:Subject:In-Reply-To:To:From;
+	b=NyPvplGOMOwkBXds1ghR95s9Ac8MUST3/qRWYMh0Mdj+iT1neDTJMcdEyI3ZMXqyl
+	 rx9WVDOTmc/21jq1ueGcxN0dX3MZ4/gexGtT5EqPoGBvmvB3zC+Yik+Pnzz8ou0pYc
+	 jEdmGGDpiEPNicpPhOgBO5sttUTu6Ii5TcoHcr7c=
+Authentication-Results: mail-nwsmtp-mxback-production-main-82.vla.yp-c.yandex.net; dkim=pass header.i=@0upti.me
+Received: by mail-sendbernar-production-main-46.vla.yp-c.yandex.net (sendbernar) with HTTPS id 26bebf9f2deb4af9870c5891ce14b963;
+	Sun, 20 Sep 2026 17:07:41 +0300
+From: Ilya K <me@0upti.me>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+In-Reply-To: <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136>
+References: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd> <529a79bc-dab7-aa41-00bd-c47ecbefaa00@candelatech.com> <471221788538289@323ca970-5bd2-4c6b-b52d-2b863a718615> <3acf531c-bcc7-412b-b3bb-665069260e46@candelatech.com> <2028561788553569@f088f4ec-f441-47a1-b7e4-75a1052aa4df> <2418461788691106@84aa39c5-f501-4e64-8418-6a8b6eb88e21> <eb405366-6574-4e4c-a89d-363751ed848b@candelatech.com> <4175721788798939@f00554c7-d809-471c-9bcf-78e5d8eceab4> <1556871789207706@7dc9deb3-4292-4932-8568-de9b411208d8> <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136>
+Subject: Re:[bug] Triple whammy of mt7996e bugs on 7.2+
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:4b10:b0:6c3:398:8d29 with SMTP id
- 006d021491bc7-6ca9be501b5mr7224156eaf.34.1789901392905; Sun, 20 Sep 2026
- 03:49:52 -0700 (PDT)
-Date: Sun, 20 Sep 2026 03:49:52 -0700
-In-Reply-To: <20260917221205.3214125-1-roryl@candelatech.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6aafba50.514bccd6.255447.0006.GAE@google.com>
-Subject: [syzbot ci] Re: net: cfg80211: Validate monitor channel set against
- radio usage
-From: syzbot ci <syzbot+ci5ae471ec6c7a1072@syzkaller.appspotmail.com>
-To: dylan.eskew@candelatech.com, johannes@sipsolutions.net, 
-	linux-wireless@vger.kernel.org, roryl@candelatech.com
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Yamail [ http://yandex.ru ] 5.0
+Date: Sun, 20 Sep 2026 17:07:41 +0300
+Message-Id: <211851789913261@df1900ea-d467-4ed7-a7f1-de68a4c3e6dd>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-syzbot ci has tested the following series
+> I've picked a few more things from the latest mt76-fixes, specifically these three:
+> - https://lore.kernel.org/all/20260729173632.14387-3-enderaoelyther@gmail.com/
+> - https://lore.kernel.org/all/20260823053739.186748-1-gongtao0607@gmail.com/
+> - https://lore.kernel.org/all/20260901092232.461379-1-nbd@nbd.name/
 
-[v1] net: cfg80211: Validate monitor channel set against radio usage
-https://lore.kernel.org/all/20260917221205.3214125-1-roryl@candelatech.com
-* [PATCH wireless-next] net: cfg80211: Validate monitor channel set against radio usage
-
-and found the following issue:
-UBSAN: shift-out-of-bounds in cfg80211_set_monitor_channel
-
-Full report is available here:
-https://ci.syzbot.org/series/096ed229-0401-4402-9865-92c5b6d81b57
-
-***
-
-UBSAN: shift-out-of-bounds in cfg80211_set_monitor_channel
-
-tree:      wireless-next
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/wireless/wireless-next.git
-base:      3b35f726c20d138fafa154182ee926a419306269
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/7147a923-683e-41dc-b623-05cfe4ac2a30/config
-syz repro: https://ci.syzbot.org/findings/525583ec-5ed7-4adc-aeab-6eb3b293f9ee/syz_repro
-
-------------[ cut here ]------------
-UBSAN: shift-out-of-bounds in net/wireless/chan.c:1831:49
-shift exponent -22 is negative
-CPU: 1 UID: 0 PID: 5855 Comm: syz.1.18 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
- ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
- __ubsan_handle_shift_out_of_bounds+0x36d/0x400 lib/ubsan.c:494
- cfg80211_can_set_monitor_channel net/wireless/chan.c:1831 [inline]
- cfg80211_set_monitor_channel+0x38a/0x8d0 net/wireless/chan.c:1844
- __nl80211_set_channel+0x340/0x990 net/wireless/nl80211.c:4203
- nl80211_set_wiphy+0x127c/0x3050 net/wireless/nl80211.c:-1
- genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
- genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
- genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
- netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2556
- genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
- netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
- netlink_unicast+0x7bd/0x940 net/netlink/af_netlink.c:1345
- netlink_sendmsg+0x813/0xb40 net/netlink/af_netlink.c:1900
- sock_sendmsg_nosec+0x13a/0x180 net/socket.c:800
- __sock_sendmsg net/socket.c:815 [inline]
- ____sys_sendmsg+0x54e/0x850 net/socket.c:2713
- ___sys_sendmsg+0x2a5/0x360 net/socket.c:2767
- __sys_sendmsg net/socket.c:2799 [inline]
- __do_sys_sendmsg net/socket.c:2804 [inline]
- __se_sys_sendmsg net/socket.c:2802 [inline]
- __x64_sys_sendmsg+0x1b1/0x290 net/socket.c:2802
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f7e3a59e159
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f7e3b3d5028 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 00007f7e3a825fa0 RCX: 00007f7e3a59e159
-RDX: 0000000004040000 RSI: 0000200000000040 RDI: 0000000000000003
-RBP: 00007f7e3a63506b R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f7e3a826038 R14: 00007f7e3a825fa0 R15: 00007ffd12ef16a8
- </TASK>
----[ end trace ]---
-
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
-
----
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
-
-To test a fix for this bug, please reply with `#syz test`
-(on a separate line) and attach the patch to the email.
-
-Notes:
-- The patch will be applied on top of the tested series (as an
-  incremental fix).
-- To test a new version of the whole series, please send it directly
-  to syzbot@lists.linux.dev.
-- Arguments like custom git repos and branches are not supported.
+Aaaand it crashed :( I guess I'm officially out of ideas now. Might have to rebase Ben's tree again, but not today...
