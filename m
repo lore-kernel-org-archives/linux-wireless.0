@@ -1,105 +1,204 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013036.outbound.protection.outlook.com [52.101.72.36])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D62A3515D4
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2026 01:22:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789867344; cv=none; b=iTU1KVOpp4qI2a0FSvvWLWABGZBDY7PzSSeuaKgUQCrchX2SdyYb2WXRFdHYO1uB89v5qAztrEjh9zRR0f2mGCAYlOazBruw6qdvDWQy9m0GrN8C55XToK57NCEdRBBJZn8hBJyRvHlIxa9Xz5vdWviGLxaYDDooWVPkslMNnR4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789867344; c=relaxed/simple;
-	bh=LrNTFK8WH8twmKkGuYzuLKuuRf3a77N0UhNxEz92YwU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZGMVcsaNCK+ah+oHx2ZfOhrH3ZMYmVgd2nMnk45Mpby0AISn3DSBJQZkGoFBUikn6YHacYDJk4Yals2KZlcMLPJ9F4n2u2WAVg5kopQ7ydbYwx/BKxqNtzSkTcH/kgcctAtAxohdbY+23R8ga7P32WPmmcf+KjREV1Vbp5lqoNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=IH7o2zeS; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 143223B71CC;
+	Sun, 20 Sep 2026 02:31:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.36
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789871509; cv=fail; b=ZT6ooFUXmnHg+92jmlavWBqWKbZYE9UF8nLoJ+wamKKUJhm4IFUFIIWBHFFA/QTBjSdoAi9bFpgOeTuwg15SDiI/kcK4MkzeZ6VPnAtGoS0qWX+r6msnbkVvUdYI2imh2OAypo7LqdzXNbVDhuH0St6IObrNdiyCI9b3JiZGd5c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789871509; c=relaxed/simple;
+	bh=1DeK4kjYaE+CwS3wofXeQSO7k+lhsTcI3lcrFUIUDio=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Mu+GGI8i8boG6isxM1Z9jXLBuUcVIVhFjq+D2WFJk0Zo7I4QVBnDPuCmsgkCqyADVKrxSDZXenIt09KSZJadoVUFYvlbfxEF6X9UI+nYDSfJ+qFVfF/obf5qmNn7kJ3LmVho8zssaU8VpdSKwr3RgOqftiD2dgbXobkLOWCm/7w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=LX1iDcD2; arc=fail smtp.client-ip=52.101.72.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="IH7o2zeS"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68K1MGpoC1325635, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789867337; bh=DQi70DRvk7LZlRqc6HokaFdDP/Taks21qmvcGClHyuM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=IH7o2zeSK6SmEEVF2ZbjioWOzR+q67vfqabNBCv43hK0UuJ1VwIDyMDiXi9A+wHU2
-	 eq5HSvI6tInfuf/DhvCX/vtO+QHepDBK9neGPmi1xokGdPy0fAjkL82cm0mj1RfCwZ
-	 95ASXfK159RnjhCJlw4bkH8unrv2wv/7kgoW1gnegce4ZEFrq1YuHEc0OfLBPi+LQe
-	 QbAg5eNROjT5CE+4MEpGhWu2wj4vwDVCrnAm12VIzc8Y7PGBiuYMBdzOx8rqGeEulz
-	 bTinA2RmlSGRaIgsC7eizM1BNZJraFdw7brTJllEv7AWKT+KX3JwRjSyiugnckDH+q
-	 Q8ceZDnvqqRoQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68K1MGpoC1325635
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 20 Sep 2026 09:22:16 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 20 Sep 2026 09:22:16 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 20 Sep 2026 09:22:16 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Sun, 20 Sep 2026 09:22:16 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Paolo Lazzaroni <eexto@aol.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] wifi: rtw88: 8821c: Add HP single-antenna quirk
-Thread-Topic: [PATCH] wifi: rtw88: 8821c: Add HP single-antenna quirk
-Thread-Index: AQHdQdWXUlvmBxMEWUiMWC9yQBgQJLbLu3PQgAiLMICAAnIhsA==
-Date: Sun, 20 Sep 2026 01:22:16 +0000
-Message-ID: <4486aa8a910246deb2eef5ff392f9f37@realtek.com>
-References: <3b3788a7c4f240899e630938a6c7b472@realtek.com>
- <20260918195927.30118-1-eexto@aol.com>
-In-Reply-To: <20260918195927.30118-1-eexto@aol.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="LX1iDcD2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=HQMpTHScEGhujRax1NTxSBASq30sy2m/TDDcptSKY/0eLTZhsAREt6LGfzM42OffE3uKBPoAO967lgKkSkWKAQI11rj5DGBfCWG3IBUaTSLPEfuNAK+3wXaCyp29Z1u62rTeHDRbNiUUrAKHscrVgEex/FFt+KdYEgMB2xgip4zv8gRUpfzNuGU0yx0NqRKZ4IaOCwA8V2219cwpUlHAC5fECOmOJZqbH5G2og8NwJsS04LKMgeEW3G//HZ4FDucuYaNQMmCxwsBsMEv5LP3oe08O8/eUzw+Zwtbko++6ZnEdUr3+wmy1VagZ/PC7U8oeItts+z1zA1uXanTxFm32w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OEhjQEfKHehWWyuIrItPzyNzNDYT2EBoe1fqpLlin/o=;
+ b=dMLCRVkIpKFvBzw/mx6rDhBbX3hwQ2eKHLECfpDuDk9ke7H3p4G6lRYpm1iRlPm+mWrb0EmrfKxJmYz8GFO+Kr0sacMw6+XyzcdS1ncbQmrDMeAnD+nkTWMnePM5/MEmLxmiryaZdOVe+UXwmrhaEZ2vjfhCWIazgzNmwyaPhcbQ2eqDftL3RjaKuod5Y7MsJ3ok1R5/gu/eR/LCTPfVJiAD6j0TWEvgu0XBPfsBGTuz3rCryBntIZb3D/raCTdFLH0P44tg2KljWl2oVQdWS4ukl99Z9QCWbghxeiCo487mvEkZ/Dq2wHw7Nah3wNSk3xA9vpjeiweJc4F1LlTiBQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OEhjQEfKHehWWyuIrItPzyNzNDYT2EBoe1fqpLlin/o=;
+ b=LX1iDcD2/zRqD1V0OmKb+Fi/zB3e6P+/CPTEua/1dSwXKQRSHa0PV0/OkakWvVZcGO7jivttV9gaiPaXkZWiOsSG0s2mDPLXvXLDxee1vnA+e05uYVl2FAqfSV6euSkUWWXApJXE1XQytS+uibZgd5/j6pkZg8m0P9cSMr5POPdX3AZl7vSVZCsFAdsVKHhejx1lz5yO84ONLZMUEgWDVUIOy8h6dOoWXHu55JPKdPyE5D/P+DZQgL7gy9mZ4zOEAP2UPUM5VkGwOqq+UqveBbGt/DkMSYUwZ39oaNsm7G8hBoFYbcbu5m/LvAC+RHtV2MNjAPsCBhWwSOTzDSDD3Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from AM8PR04MB7874.eurprd04.prod.outlook.com (2603:10a6:20b:24d::9)
+ by PAXPR04MB9596.eurprd04.prod.outlook.com (2603:10a6:102:23e::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.13; Sun, 20 Sep
+ 2026 02:30:53 +0000
+Received: from AM8PR04MB7874.eurprd04.prod.outlook.com
+ ([fe80::ac38:1699:6f18:c5d9]) by AM8PR04MB7874.eurprd04.prod.outlook.com
+ ([fe80::ac38:1699:6f18:c5d9%6]) with mapi id 15.21.0428.014; Sun, 20 Sep 2026
+ 02:30:52 +0000
+From: "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Peng Fan <peng.fan@nxp.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: use assign_bit() where applicable
+Date: Sun, 20 Sep 2026 10:28:18 +0800
+Message-ID: <20260920022822.3145944-1-peng.fan@oss.nxp.com>
+X-Mailer: git-send-email 2.51.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI3PR03CA0002.apcprd03.prod.outlook.com
+ (2603:1096:4:297::9) To AM8PR04MB7874.eurprd04.prod.outlook.com
+ (2603:10a6:20b:24d::9)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM8PR04MB7874:EE_|PAXPR04MB9596:EE_
+X-MS-Office365-Filtering-Correlation-Id: 59b6a2fd-dccb-44c8-0655-08df16bf3118
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|23010399003|19092799006|366016|18002099003|56012099006|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	PGAGAlN+ugSZnd6tZtprKsQkMDTOnQeTJD3uoNrWXZdILDYcxe0Shi6seru4W7PU+BHe0Jx0xJfXymD8xngOL3RePE5rj8NaGd1TPUthOhkxavfZjTHQOi4VGGkMVkMOa/C7UljTD/asyaCSLecpmrDHYS9Oz5FDKlQxvIIMVZuNM998d2/1PwWkEVWuiJVjFY2vTjd9dxXAeBsdRk60mtAmVAqzkhwzY/LVYv5ixPbAJGJZQtOvEa/e9bw2iNjLrfyiSo3j3n4g5hmy/rdKVG8l1wbaij3C4Y3J1fhDxN0HP5bRjQ72beFUigaqn8o2RAc+D6rGu5ZWgTAoQXP6Mzqli/lcu/dLQvC6KB1g9MSeWzKR/n+vOASpd4a4k6uOkmuyTTmlqzpnk2hFQNlLUw8rUAs7pMdi9XooBk7EvJaKw+KM5CnFahv8yUUZtRW9IqW2fx74ECLRAhIoUAqkHlvnC98TlVfxcEKph90VADptyKDR++BeDaP0sCD875B3zGBbWme3q6VVuplZelciVr3Osrw0mPtPwdb1DDYZVZ2IE2GM9K8kRladBLirFmS/Vgz3p4Hxr+Rz9yZ0CwKtwcBLERcHGkuFh9F0ZgceAQReqay1PjxngyBD907QvxZuayFcXen89UpFGWXAmDDLrD3i1ql9KhkvTRQkeLp5pJs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR04MB7874.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(19092799006)(366016)(18002099003)(56012099006)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?mNILClU96VXfVZPrKa52x91ZLEWBD1clzihezpsRyWtSLgYHa+5ZeCsqmWWk?=
+ =?us-ascii?Q?MRKOqG1NiWxt0TV82MMCEVmF3lTjhbsO2mAbiT/AyHAmLu+OwDWHMIdHT72v?=
+ =?us-ascii?Q?Exrvmr5UrO1tE5ElWOIGpETx/3Vt5C/uQu46RS1x8gwzkxFGc4iqRlpnSGbu?=
+ =?us-ascii?Q?0ly2bpFZFBNc+iSvv8ymzJKDpnIF8ky4BB9sV+2Mt3Pi0GIu3Z5+HRbGxzc4?=
+ =?us-ascii?Q?xRdb1u/4siWNe18Ivgh/O+REV1B6uBAEq7DfUIqwF2ygvyoSmYyi+HzZ0Flo?=
+ =?us-ascii?Q?SiUzgi+b126nFHoqS489Yx3/G0MqmFGlsizGdjlaHtDocj0p5jYvSycoSw4Z?=
+ =?us-ascii?Q?tnqIm7CTDLyOuIu9gbziAWJO3nKrgSa0p0Xgf1gUNNExaslGOUgXqT3W7S3i?=
+ =?us-ascii?Q?vu4LVbOOGaY+j+s/hOwBazpn1zmGDZ08PrDlQoXoDjB2NmN+SI73ps6ceqai?=
+ =?us-ascii?Q?xfi91m+ivfuAIEuz+Mu4ZkTeEzQO471BhjGQBL0LQAk4d4sjO6nkWv05bjmN?=
+ =?us-ascii?Q?ln1NmLNwTryuI2VkXMcs1/71melQVqYKY0g7wAvAvq9/1/b14aYqUGxJ1frW?=
+ =?us-ascii?Q?wUAGBRjrf1RY+Akrl6CxKm/IsdjTUiniJmnOVW/2Q1mrZIqiVPG5UCFArlg0?=
+ =?us-ascii?Q?pb0yCWZEVToUrztQdtCpTEpvF4191tNcFG41dlHsuVLJCmQqe4PQHgXfZA+f?=
+ =?us-ascii?Q?IhWWQXFKBcuk7c/RyVzJcpf0JbKWSH4iA8yQH6FF+5EJZS82arQyYbLYPwid?=
+ =?us-ascii?Q?Py82eF8I54N3p6F4f6e5BPbxRHIgHJhakXtXm+3Yd3PHOWyns2YmcyMPmkq+?=
+ =?us-ascii?Q?0LRl1btZ5AuTi61JIIE6kk2PtpcqgM38KVge7BbGAn9fAfKDua73kydEVe1R?=
+ =?us-ascii?Q?9mJqRZq4V5E2AW5/VI2cNAPU4QRfpX3zDPwnfPsvcSVN+oU/i+YIVdwobIgq?=
+ =?us-ascii?Q?C1a1eNk7r1VDPt7j87Wmkdrp21J7Q1dUYyWqlxbeZKz5hU8BwPHluExWCBt6?=
+ =?us-ascii?Q?3W++KD4O5KM10E2iPa2s1ocf73q2rEms0q/WwbGDB1nAh4qWqK2mzqVSCrB8?=
+ =?us-ascii?Q?S4d72qDlqictpuc2U/rq1uhhVQ1MsNtqjbAbGoF+2Gv8J7tzbCzJaJd+6+fh?=
+ =?us-ascii?Q?DJN9+MqBuvXyqotnhn1nBCwRi49Z6FGp1EYk0/JieiGDl3+VgcsC1J+2qT6m?=
+ =?us-ascii?Q?9iGloovO4epHXdsbgAqDbjojYLw5kS5YHFtEtlg2ai5ZSOzQOvag5WS+MOVR?=
+ =?us-ascii?Q?BLgFfZHPallHSKzaqpKUM4gWMcmWgvKf26VrR6wirDTIWRXviCy32aPbFERd?=
+ =?us-ascii?Q?0Iklz5DW6TAQOIz4TNBmHw0uuX8vazDE3co5gh8WyPPV5NTstRUaNv7G/gii?=
+ =?us-ascii?Q?ias0aX9K4X/P+1/2sOyshEeK610S05OuEnCtGGCs1HqBQcRsJOlGVJJ4ipHQ?=
+ =?us-ascii?Q?YFSDKuTRD//iKcr0m4LYLunQMhFTK7ygVb6iL1f8LdAYpdUy16ySm1l4Bt6u?=
+ =?us-ascii?Q?g3zxE0MqmBlhl0On5bPorgxTyu749q87Hd41DD3I11OUlW5gKYiSieuSuTx/?=
+ =?us-ascii?Q?LGRbx3lSmu7smNGWIAGnZj2Cvre2sj7mqczVv/3dA+DyFsoxhGhvV8B1pZsk?=
+ =?us-ascii?Q?IC/Xrn69AXwzNtdZ/XHORuwNzsXJn8ck3dCnOWJShQtOnTqBTwUClpkc6ogX?=
+ =?us-ascii?Q?sWzdCS2f3i0kLH7rFJ55so4Sztdl9q/7n+qNcvAUxAEtb3gqcR3501LRtXue?=
+ =?us-ascii?Q?AvzVsgwenUAQIRPb8/SiAfbnW2sEhcjrEfn+DZXD4Xk68vTP7u2f?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59b6a2fd-dccb-44c8-0655-08df16bf3118
+X-MS-Exchange-CrossTenant-AuthSource: AM8PR04MB7874.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2026 02:30:52.9225
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 65mR8XwRxHjnGOUfSyCb09qXoF0OVSpIOROZed4dzZ99j6eLGTuV0CQTJwxMrHGkjxO8fHb6E2P9znbc3prq9z1nv1Ypob2B+ewDGrsFRcgwR1FWBfvvMVG6cSll4qbz
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9596
 
-Paolo Lazzaroni <eexto@aol.com> wrote:
-> > If this is the only one platform which needs this kind of quirk. Add an=
- entry
-> > to rtw_pci_quirks[].
->=20
-> Regarding rtw_pci_quirks[]:
->=20
-> The reason I matched the PCI subsystem ID (10ec:c821 [103c:831a]) rather
-> than DMI in rtw_pci_quirks[] is that HP assigns this specific subsystem
-> ID across a family of laptop platforms (e.g. HP 15-da, 15-db, and related
-> chassis) to denote the single physical antenna connected to Aux/S1.
-> This is documented in the OEM Windows driver INF (netrtwlane.inf):
->   "PCI\VEN_10EC&DEV_C821&SUBSYS_831A103C ;;single ant(connect to right on=
-e S1)"
->=20
-> If we use DMI matching in rtw_pci_quirks[], it would only match this spec=
-ific
-> laptop SKU ("HP Laptop 15-da0xxx" / "4XW76EA#ABZ"), leaving other HP mode=
-ls
-> sharing this identical 103c:831a single-antenna card with severe signal l=
-oss.
->=20
-> However, I understand that inspecting PCI structures inside rtw8821c_read=
-_efuse()
-> violates bus abstraction for rtw8821c.c.
->=20
-> Would you prefer:
-> Option A: Keep the PCI subsystem match, but handle it cleanly in rtw_pci_=
-probe()
->           (e.g., setting a flag or rfe_option override in rtwdev before c=
-hip setup)?
-> Option B: Add a DMI entry to rtw_pci_quirks[] matching this platform?
+From: Peng Fan <peng.fan@nxp.com>
 
-I prefer option A, but yes, please handle it cleanly in pci.c.=20
-You can flag a quirk at pci.c, and update rfe_option in 8821c.c.
+Convert open-coded if/else with set_bit/clear_bit the assign_bit API.
 
-Ping-Ke
+Done with Coccinelle semantic patch:
+    // set_bit -> clear_bit => assign_bit
 
+    @@
+    expression cond, bit, addr;
+    @@
+
+    -if (cond)
+    -        set_bit(bit, addr);
+    -else
+    -        clear_bit(bit, addr);
+    +assign_bit(bit, addr, cond);
+
+    @@
+    expression cond, bit, addr;
+    @@
+
+    -if (cond)
+    -        clear_bit(bit, addr);
+    -else
+    -        set_bit(bit, addr);
+    +assign_bit(bit, addr, !cond);
+
+Signed-off-by: Peng Fan <peng.fan@nxp.com>
+---
+ net/mac80211/agg-tx.c          | 5 +----
+ net/mac80211/rx.c              | 5 +----
+ net/mac80211/tests/chan-mode.c | 6 ++----
+ 3 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index ce9fb19d8c18..f3ecdd8601a0 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -212,10 +212,7 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
+ 
+ 	txqi = to_txq_info(txq);
+ 
+-	if (enable)
+-		set_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
+-	else
+-		clear_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
++	assign_bit(IEEE80211_TXQ_AMPDU, &txqi->flags, enable);
+ 
+ 	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+ 	local_bh_disable();
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d6755a4c7d3c..b3990b7a7299 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1692,10 +1692,7 @@ static void sta_ps_start(struct sta_info *sta)
+ 			list_del_init(&txqi->schedule_order);
+ 		spin_unlock(&local->active_txq_lock[txq->ac]);
+ 
+-		if (txq_has_queue(txq))
+-			set_bit(tid, &sta->txq_buffered_tids);
+-		else
+-			clear_bit(tid, &sta->txq_buffered_tids);
++		assign_bit(tid, &sta->txq_buffered_tids, txq_has_queue(txq));
+ 	}
+ 
+ 	sta_info_recalc_tim(sta);
+diff --git a/net/mac80211/tests/chan-mode.c b/net/mac80211/tests/chan-mode.c
+index ab7d38ef6a3a..85dc87215d23 100644
+--- a/net/mac80211/tests/chan-mode.c
++++ b/net/mac80211/tests/chan-mode.c
+@@ -219,10 +219,8 @@ static void test_determine_chan_mode(struct kunit *test)
+ 	/* To force EHT downgrade to HE on punctured 80 MHz downgraded to 40 MHz */
+ 	set_bit(IEEE80211_HW_DISALLOW_PUNCTURING, t_sdata->local.hw.flags);
+ 
+-	if (params->strict)
+-		set_bit(IEEE80211_HW_STRICT, t_sdata->local.hw.flags);
+-	else
+-		clear_bit(IEEE80211_HW_STRICT, t_sdata->local.hw.flags);
++	assign_bit(IEEE80211_HW_STRICT, t_sdata->local.hw.flags,
++		   params->strict);
+ 
+ 	t_sdata->sdata->u.mgd.ht_capa_mask = params->ht_capa_mask;
+ 	t_sdata->sdata->u.mgd.vht_capa = params->vht_capa;
+-- 
+2.51.0
 
