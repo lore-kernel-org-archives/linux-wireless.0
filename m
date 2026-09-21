@@ -1,33 +1,32 @@
-Received: from mta1.migadu.com (out-47.mta1.migadu.com [95.215.58.47])
+Received: from mta0.migadu.com (out-136.mta0.migadu.com [91.218.175.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF70E4BB27C
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 15:44:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7434BB27C
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 15:44:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790005461; cv=none; b=qgsYKmp49GhnDbfWQT/B3X1iZPk0t9gKm567GSOk330XjNHv0N+MbTqiJgmDucC0zgk+d25uaEueFwYp4MzECbfJfnUzW/BkBGJ3GACdkRVyi/veZpU1f6dZh6v0pkBj/oyzDO0dH5WxNEi5hG3UQoiNVknpCjTjloW1UiCs5qg=
+	t=1790005464; cv=none; b=Abdh2jyDlMyJq28rAS2ihjDgwWlbXund8+gXbkivI8B2Q0D5pOca9GN/IJovTkaVTMSTlJV9+UPmnbYIn3KS+3+E+oCd8nOD0pZrv880/0C/D7LIwlcD5Az8OWbjiCCEP2GE8sRUbZ8E0H2diWTnJHseu4qKSOuOAOSv7i392Ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790005461; c=relaxed/simple;
-	bh=tO2/wdzFIqjSBm+PmW6VVNIFQwsO9f7Jn+ikl9RziR8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=J9bPHbCZO2mEg96uinLe3wiEGi8fWjPL9iuOAjyKmolCJuF7G+E3SxO4tDYkIy2jkKub7nfuo+iWnogby9E1SdIHEYJKLldmrw5qCmuV3Cfgy8ziee/vYvawRT+wIVoE6HFet8lM+AXF8NQhefP7KWa8JABXbTObTfBALNrYpbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iulpLCEA; arc=none smtp.client-ip=95.215.58.47
+	s=arc-20240116; t=1790005464; c=relaxed/simple;
+	bh=NEs3frl7AVwgf8OzQU1knx/lK7ppWsXpe37I2BsqKXU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WmKFVNqvYy/08SooegsyIpHLZMarmCJgnxR2Ik5gvY/iRUZ/uv28tCxeLZYPcJcMVYo67LHXjAvOPn5Goa4Ppt7+4SyvyOp6H2BGvY19bQuHLB8lyiqacyZIffw9G090sKYT6L6hDMmUo1K4ZRycGb2029DKyYS5THbbnJbZcyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=edimKvJH; arc=none smtp.client-ip=91.218.175.136
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iulpLCEA"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="edimKvJH"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=tO2/wdzFIqjSBm+PmW6VVNIFQwsO9f7Jn+ikl9RziR8=;
+DKIM-Signature: a=rsa-sha256; bh=NEs3frl7AVwgf8OzQU1knx/lK7ppWsXpe37I2BsqKXU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790005456; v=1; x=1790610256;
- b=iulpLCEARng3TiNfoSXVPoBu5nJj0+WQJpyosVbnDvH5uMvKpR9xTgIhuQmiFJoYCUK8EyAq
- JiXJSYIqDyixaUkApooXUFHAXGDAsHGQueU98ixuXczS2L8Ss3Y28iW8JGV4VTjnZoOLQ2bJUaS
- GUfb7MubKejA5rBtguI21UkE=
+ t=1790005459; v=1; x=1790610259;
+ b=edimKvJH7zWHLFHJUuBVZhzZYUSElXZkoA5uHdbl408UwBm+VFmINKJibt9JkmkerhcDFfyD
+ slzA6mPWVv55Uyf2WgOx8QU1ekyYsVet+8i7BWh53FA3BN8qDk8imrD3Lv2RFlcbfcvwJ6QtWUr
+ 6XzFOt9fyGQEFAm6eD+kT3+8=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id fcebbf188d33cb62;
-	Mon, 21 Sep 2026 15:44:16 +0000
-X-Mizu-Trace-ID: fcebbf188d33cb62
+Received: by smtp.migadu.com with ESMTPS id a90b50435199dc9a;
+	Mon, 21 Sep 2026 15:44:09 +0000
+X-Mizu-Trace-ID: a90b50435199dc9a
 X-Migadu-Flow: FLOW_OUT
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,12 +36,10 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
-Date: Mon, 21 Sep 2026 17:43:43 +0200
-Message-ID: <20260921154347.82317-3-luka.gejak@linux.dev>
+Subject: [PATCH v3 0/6] wifi: rtw88: add RTL8723B/RTL8723BS support
+Date: Mon, 21 Sep 2026 17:43:41 +0200
+Message-ID: <20260921154347.82317-1-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260921154347.82317-1-luka.gejak@linux.dev>
-References: <20260921154347.82317-1-luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,919 +48,173 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the baseband, RF and AGC parameter tables for the RTL8723B, and the
-transmit power limit and power by rate tables, in the layout the shared
-rtw88 phy code expects.
+Hi everyone, sorry for my inactivity in last 10 days. I am currently in
+Russia and will be there until weekend as one of participants of some
+student exchange for 16 year olds. Therefore, as I don't have my own
+internet, I might not be available at all times(maybe only couple of
+times per day).
 
-These are split out from the chip driver so the driver patch that
-follows is easier to read. Nothing references them yet.
+This is the second of two series adding support for the Realtek RTL8723B
+802.11n chipset and its RTL8723BS SDIO variant to rtw88. The preparation
+series has now landed in rtw-next; this series contains only the chip
+register definitions, the BB/RF/AGC tables, the chip driver, the SDIO
+bind, the build glue and the MAINTAINERS entry.
 
-The RTL8723B chip support is based on the initial work by
-Michael Straube <straube.linux@gmail.com>.
-Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
+The preparation series was posted separately as v11 with seven patches and
+is not part of this series. The six patches here apply on the rtw-next
+branch as it stands after those changes were merged, and they can be read
+on their own: apart from the register definitions in reg.h, the chip code
+adds nothing to the shared rtw88 core. The series is split by file and
+dependency so that the register definitions, tables, chip implementation,
+SDIO bind, build glue and MAINTAINERS changes can be reviewed
+independently.
 
-Co-developed-by: Michael Straube <straube.linux@gmail.com>
-Signed-off-by: Michael Straube <straube.linux@gmail.com>
-Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
----
- .../wireless/realtek/rtw88/rtw8723b_table.c   | 862 ++++++++++++++++++
- .../wireless/realtek/rtw88/rtw8723b_table.h   |  18 +
- 2 files changed, 880 insertions(+)
+The driver supports:
+
+  - RTL8723B / RTL8723BS, SDIO only;
+  - 2.4 GHz 802.11n, HT20 and HT40;
+  - one spatial stream;
+  - station mode.
+
+Only station mode has been validated. The common rtw88 core advertises AP
+and IBSS for all chips, so those modes are advertised for RTL8723BS as
+well, but neither has been tested. An out-of-tree tester has reported AP
+mode associating without DHCP completing. The five additional SDIO IDs are
+included for parity with the existing staging driver; only the 0xb723
+device has been exercised.
+
+The chip driver requests:
+
+  rtw88/rtw8723b_fw.bin
+
+This is the version 41 firmware extracted from the Realtek rtl8723bs
+vendor driver. It was submitted separately to linux-firmware with its
+extraction provenance and carries Ping-Ke Shih's Reviewed-by. There is no
+known native rtw88 RTL8723B firmware.
+
+The implementation is based on the initial RTL8723B work by Michael
+Straube:
+
+  https://github.com/mistraube/rtw88/tree/rtl8723bs
+
+Michael's Co-developed-by and Signed-off-by tags are present on the three
+chip-code patches containing code derived from that work.
+
+The known limitations are unchanged. Bluetooth coexistence depends on the
+BT firmware's status reports. During A2DP streaming those reports identify
+a connected link but do not expose the active profile, so the WiFi
+coexistence logic cannot make a correct traffic-aware decision. WiFi
+throughput can fall sharply while audio remains smooth. This is documented
+rather than guessed around in the WiFi driver. The intermittent RTL8723BS
+firmware failure to leave LPS also remains a known limitation;
+instrumentation shows a firmware stall rather than a polling timeout that
+can be fixed by extending the budget.
+
+Testing
+=======
+
+The exact six-commit branch builds with W=1 and links all rtw88 modules
+with real modpost. Sparse and smatch were run over the rtw88 directory.
+Smatch has no finding in the 8723B files; the run reports an existing
+container-of static assertion from include/net/neighbour.h while checking
+usb.c. checkpatch --strict is clean apart from the complex-macro report on
+TRANS_SEQ_END, which is an initializer macro that rtw8703b.c already
+defines in exactly the same way, and the "does MAINTAINERS need updating"
+reminder on the file-adding patches, which the last patch answers. git
+diff --check is clean and all six commits are GPG-signed.
+
+Hardware validation was run at this exact branch, on top of the applied
+preparation series: scan, authentication, association, WPA2 key
+negotiation, DHCP, TCP and UDP traffic in both directions, scans under
+load, link down/up cycles, reconnects and five module reload cycles, with
+a clean dmesg: no warnings, no errors, and no TX-report, H2C or leave-LPS
+messages. An extended soak on the same build added twenty reload and
+reassociate cycles, longer TCP runs and UDP floods in both access
+categories, a 2000 packet ping run, ten scans while connected and idle
+periods with power save: nothing was lost, no queue stalled, and dmesg
+stayed clean. The test machine provides only s2idle, so suspend and resume
+are not covered.
+
+Changes in v3:
+  - moved the chip series onto the rtw-next tip containing the applied
+    preparation series, so no shared-core change is part of this series
+    any more: fw, coex, mac80211, main, rx, sdio, tx and sec are untouched
+    here and come from the preparation series, which also drops the unused
+    rtw_coex_8723bs_ensure_pta_path() helper;
+  - split the previous chip commits into six file-oriented patches,
+    following the series shape from the v2 review: the chip-only register
+    definitions are separated from the chip body, and the body is split
+    further into the tables, the chip driver and the SDIO bind;
+  - added Michael Straube's Co-developed-by and Signed-off-by to the three
+    chip-code patches. v2 credited him in the commit message and in the
+    copyright headers, but carried no tag;
+  - fixed the chip RCR to retain RX FCS handling: WLAN_RCR_CFG now sets
+    BIT_APP_FCS, and every other bit of the value is unchanged. v2 instead
+    carried a shared-core exception that stopped advertising
+    RX_INCLUDES_FCS for this chip and special-cased the RX path. The chip
+    driver sets the bit itself now, so the core keeps its unconditional
+    contract;
+  - added rtw8723b_read_efuse(), which reuses the 8723x efuse reader and
+    fills the chip-specific hardware capability. This chip has no firmware
+    hardware feature report, so without it the usable stream count,
+    antenna count and supported bandwidths stay zero;
+  - efuse access reuses rtw8723x_efuse_grant() instead of open-coding the
+    switch, and only the chip's BT power-cut/output-isolation bit is
+    written on top of it;
+  - power tracking now keeps the TXAGC remnant per path and programs the
+    IQK matrix for the path being tracked, rather than always for path A;
+  - removed the available-page-threshold and reserved-page helpers, which
+    programmed thresholds that were already skipped on SDIO in v2;
+  - set_channel_rf() programs both RF paths from a single path A read
+    instead of read-modify-writing both paths and re-reading them
+    afterwards;
+  - path B's RF switch control is addressed through
+    REG_FPGA0_XA_RF_SW_CTRL, the upper half of the word the shifted mask
+    already selects; 0x0872 would be a 32-bit access on a 2-byte boundary;
+  - IQK delays are sleepable, the IQK failure path logs with rtw_warn()
+    instead of WARN(1, ...), and the RFK debug print uses REG_IQK_RDY
+    instead of the literal 0xe90;
+  - coexistence: raw addresses are replaced by the named registers they
+    were already equal to (REG_BCN_CTRL, REG_BT_TDMA_TIME,
+    REG_BT_STAT_CTRL, REG_GPIO_MUXCFG), the duplicated PTA pin, GNT_BT and
+    enhanced-interrupt writes inside coex_set_rfe_type() are gone, and the
+    antenna-switch registers use the mainline RFE naming;
+  - dropped register definitions that no longer have a user
+    (REG_BT_COEX_CTRL_8723B, REG_FPGA0_XB_RF_SW_CTRL, BIT_DIS_ATIM) and
+    the two rtw8723b.h copies of registers rtw8703b.h already defines;
+  - renamed the CCK swing tables from rtw8732b_* to rtw8723b_* and
+    recorded why row 20 deliberately differs from the v5.2.17 vendor
+    transcription; the values themselves are unchanged from v2;
+  - added the five additional SDIO ids for parity with the staging driver,
+    together with a comment that only 0xb723 has been verified;
+  - the remaining comment, naming and typo cleanups in the chip files. The
+    build glue, MAINTAINERS entry, table contents and copyright headers
+    are unchanged from v2.
+
+Luka Gejak (6):
+  wifi: rtw88: 8723b: add the RTL8723B register definitions
+  wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
+  wifi: rtw88: 8723b: add the RTL8723B chip driver
+  wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+  wifi: rtw88: 8723bs: enable building the RTL8723BS driver
+  MAINTAINERS: add entry for the RTL8723B rtw88 driver
+
+ MAINTAINERS                                   |    7 +
+ drivers/net/wireless/realtek/rtw88/Kconfig    |   18 +
+ drivers/net/wireless/realtek/rtw88/Makefile   |    6 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   31 +
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2938 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723b.h |   12 +
+ .../wireless/realtek/rtw88/rtw8723b_table.c   |  862 +++++
+ .../wireless/realtek/rtw88/rtw8723b_table.h   |   18 +
+ .../net/wireless/realtek/rtw88/rtw8723bs.c    |   67 +
+ 9 files changed, 3959 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
  create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
-new file mode 100644
-index 000000000000..49989da3b8aa
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
-@@ -0,0 +1,862 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/*
-+ * Copyright(c) 2007-2017  Realtek Corporation
-+ * Copyright(c) Michael Straube <straube.linux@gmail.com>
-+ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
-+ */
-+
-+#include "main.h"
-+#include "phy.h"
-+#include "rtw8723b_table.h"
-+
-+static const u32 rtw8723b_mac[] = {
-+	0x02F, 0x00000030,
-+	0x035, 0x00000000,
-+	0x039, 0x00000008,
-+	0x064, 0x00000000,
-+	0x067, 0x00000020,
-+	0x421, 0x0000000F,
-+	0x428, 0x0000000A,
-+	0x429, 0x00000010,
-+	0x430, 0x00000000,
-+	0x431, 0x00000000,
-+	0x432, 0x00000000,
-+	0x433, 0x00000001,
-+	0x434, 0x00000004,
-+	0x435, 0x00000005,
-+	0x436, 0x00000007,
-+	0x437, 0x00000008,
-+	0x43C, 0x00000004,
-+	0x43D, 0x00000005,
-+	0x43E, 0x00000007,
-+	0x43F, 0x00000008,
-+	0x440, 0x0000005D,
-+	0x441, 0x00000001,
-+	0x442, 0x00000000,
-+	0x444, 0x00000010,
-+	0x445, 0x00000000,
-+	0x446, 0x00000000,
-+	0x447, 0x00000000,
-+	0x448, 0x00000000,
-+	0x449, 0x000000F0,
-+	0x44A, 0x0000000F,
-+	0x44B, 0x0000003E,
-+	0x44C, 0x00000010,
-+	0x44D, 0x00000000,
-+	0x44E, 0x00000000,
-+	0x44F, 0x00000000,
-+	0x450, 0x00000000,
-+	0x451, 0x000000F0,
-+	0x452, 0x0000000F,
-+	0x453, 0x00000000,
-+	0x456, 0x0000005E,
-+	0x460, 0x00000066,
-+	0x461, 0x00000066,
-+	0x4C8, 0x000000FF,
-+	0x4C9, 0x00000008,
-+	0x4CC, 0x000000FF,
-+	0x4CD, 0x000000FF,
-+	0x4CE, 0x00000001,
-+	0x500, 0x00000026,
-+	0x501, 0x000000A2,
-+	0x502, 0x0000002F,
-+	0x503, 0x00000000,
-+	0x504, 0x00000028,
-+	0x505, 0x000000A3,
-+	0x506, 0x0000005E,
-+	0x507, 0x00000000,
-+	0x508, 0x0000002B,
-+	0x509, 0x000000A4,
-+	0x50A, 0x0000005E,
-+	0x50B, 0x00000000,
-+	0x50C, 0x0000004F,
-+	0x50D, 0x000000A4,
-+	0x50E, 0x00000000,
-+	0x50F, 0x00000000,
-+	0x512, 0x0000001C,
-+	0x514, 0x0000000A,
-+	0x516, 0x0000000A,
-+	0x525, 0x0000004F,
-+	0x550, 0x00000010,
-+	0x551, 0x00000010,
-+	0x559, 0x00000002,
-+	0x55C, 0x00000050,
-+	0x55D, 0x000000FF,
-+	0x605, 0x00000030,
-+	0x608, 0x0000000E,
-+	0x609, 0x0000002A,
-+	0x620, 0x000000FF,
-+	0x621, 0x000000FF,
-+	0x622, 0x000000FF,
-+	0x623, 0x000000FF,
-+	0x624, 0x000000FF,
-+	0x625, 0x000000FF,
-+	0x626, 0x000000FF,
-+	0x627, 0x000000FF,
-+	0x638, 0x00000050,
-+	0x63C, 0x0000000A,
-+	0x63D, 0x0000000A,
-+	0x63E, 0x0000000E,
-+	0x63F, 0x0000000E,
-+	0x640, 0x00000040,
-+	0x642, 0x00000040,
-+	0x643, 0x00000000,
-+	0x652, 0x000000C8,
-+	0x66E, 0x00000005,
-+	0x700, 0x00000021,
-+	0x701, 0x00000043,
-+	0x702, 0x00000065,
-+	0x703, 0x00000087,
-+	0x708, 0x00000021,
-+	0x709, 0x00000043,
-+	0x70A, 0x00000065,
-+	0x70B, 0x00000087,
-+	0x765, 0x00000018,
-+	0x76E, 0x00000004,
-+};
-+
-+RTW_DECL_TABLE_PHY_COND(rtw8723b_mac, rtw_phy_cfg_mac);
-+
-+static const u32 rtw8723b_agc[] = {
-+	0xC78, 0xFD000001,
-+	0xC78, 0xFC010001,
-+	0xC78, 0xFB020001,
-+	0xC78, 0xFA030001,
-+	0xC78, 0xF9040001,
-+	0xC78, 0xF8050001,
-+	0xC78, 0xF7060001,
-+	0xC78, 0xF6070001,
-+	0xC78, 0xF5080001,
-+	0xC78, 0xF4090001,
-+	0xC78, 0xF30A0001,
-+	0xC78, 0xF20B0001,
-+	0xC78, 0xF10C0001,
-+	0xC78, 0xF00D0001,
-+	0xC78, 0xEF0E0001,
-+	0xC78, 0xEE0F0001,
-+	0xC78, 0xED100001,
-+	0xC78, 0xEC110001,
-+	0xC78, 0xEB120001,
-+	0xC78, 0xEA130001,
-+	0xC78, 0xE9140001,
-+	0xC78, 0xE8150001,
-+	0xC78, 0xE7160001,
-+	0xC78, 0xE6170001,
-+	0xC78, 0xE5180001,
-+	0xC78, 0xE4190001,
-+	0xC78, 0xE31A0001,
-+	0xC78, 0xA51B0001,
-+	0xC78, 0xA41C0001,
-+	0xC78, 0xA31D0001,
-+	0xC78, 0x671E0001,
-+	0xC78, 0x661F0001,
-+	0xC78, 0x65200001,
-+	0xC78, 0x64210001,
-+	0xC78, 0x63220001,
-+	0xC78, 0x4A230001,
-+	0xC78, 0x49240001,
-+	0xC78, 0x48250001,
-+	0xC78, 0x47260001,
-+	0xC78, 0x46270001,
-+	0xC78, 0x45280001,
-+	0xC78, 0x44290001,
-+	0xC78, 0x432A0001,
-+	0xC78, 0x422B0001,
-+	0xC78, 0x292C0001,
-+	0xC78, 0x282D0001,
-+	0xC78, 0x272E0001,
-+	0xC78, 0x262F0001,
-+	0xC78, 0x0A300001,
-+	0xC78, 0x09310001,
-+	0xC78, 0x08320001,
-+	0xC78, 0x07330001,
-+	0xC78, 0x06340001,
-+	0xC78, 0x05350001,
-+	0xC78, 0x04360001,
-+	0xC78, 0x03370001,
-+	0xC78, 0x02380001,
-+	0xC78, 0x01390001,
-+	0xC78, 0x013A0001,
-+	0xC78, 0x013B0001,
-+	0xC78, 0x013C0001,
-+	0xC78, 0x013D0001,
-+	0xC78, 0x013E0001,
-+	0xC78, 0x013F0001,
-+	0xC78, 0xFC400001,
-+	0xC78, 0xFB410001,
-+	0xC78, 0xFA420001,
-+	0xC78, 0xF9430001,
-+	0xC78, 0xF8440001,
-+	0xC78, 0xF7450001,
-+	0xC78, 0xF6460001,
-+	0xC78, 0xF5470001,
-+	0xC78, 0xF4480001,
-+	0xC78, 0xF3490001,
-+	0xC78, 0xF24A0001,
-+	0xC78, 0xF14B0001,
-+	0xC78, 0xF04C0001,
-+	0xC78, 0xEF4D0001,
-+	0xC78, 0xEE4E0001,
-+	0xC78, 0xED4F0001,
-+	0xC78, 0xEC500001,
-+	0xC78, 0xEB510001,
-+	0xC78, 0xEA520001,
-+	0xC78, 0xE9530001,
-+	0xC78, 0xE8540001,
-+	0xC78, 0xE7550001,
-+	0xC78, 0xE6560001,
-+	0xC78, 0xE5570001,
-+	0xC78, 0xE4580001,
-+	0xC78, 0xE3590001,
-+	0xC78, 0xA65A0001,
-+	0xC78, 0xA55B0001,
-+	0xC78, 0xA45C0001,
-+	0xC78, 0xA35D0001,
-+	0xC78, 0x675E0001,
-+	0xC78, 0x665F0001,
-+	0xC78, 0x65600001,
-+	0xC78, 0x64610001,
-+	0xC78, 0x63620001,
-+	0xC78, 0x62630001,
-+	0xC78, 0x61640001,
-+	0xC78, 0x48650001,
-+	0xC78, 0x47660001,
-+	0xC78, 0x46670001,
-+	0xC78, 0x45680001,
-+	0xC78, 0x44690001,
-+	0xC78, 0x436A0001,
-+	0xC78, 0x426B0001,
-+	0xC78, 0x286C0001,
-+	0xC78, 0x276D0001,
-+	0xC78, 0x266E0001,
-+	0xC78, 0x256F0001,
-+	0xC78, 0x24700001,
-+	0xC78, 0x09710001,
-+	0xC78, 0x08720001,
-+	0xC78, 0x07730001,
-+	0xC78, 0x06740001,
-+	0xC78, 0x05750001,
-+	0xC78, 0x04760001,
-+	0xC78, 0x03770001,
-+	0xC78, 0x02780001,
-+	0xC78, 0x01790001,
-+	0xC78, 0x017A0001,
-+	0xC78, 0x017B0001,
-+	0xC78, 0x017C0001,
-+	0xC78, 0x017D0001,
-+	0xC78, 0x017E0001,
-+	0xC78, 0x017F0001,
-+	0xC50, 0x69553422,
-+	0xC50, 0x69553420,
-+	0x824, 0x00390204,
-+};
-+
-+RTW_DECL_TABLE_PHY_COND(rtw8723b_agc, rtw_phy_cfg_agc);
-+
-+static const u32 rtw8723b_bb[] = {
-+	0x800, 0x80040000,
-+	0x804, 0x00000003,
-+	0x808, 0x0000FC00,
-+	0x80C, 0x0000000A,
-+	0x810, 0x10001331,
-+	0x814, 0x020C3D10,
-+	0x818, 0x02200385,
-+	0x81C, 0x00000000,
-+	0x820, 0x01000100,
-+	0x824, 0x00190204,
-+	0x828, 0x00000000,
-+	0x82C, 0x00000000,
-+	0x830, 0x00000000,
-+	0x834, 0x00000000,
-+	0x838, 0x00000000,
-+	0x83C, 0x00000000,
-+	0x840, 0x00010000,
-+	0x844, 0x00000000,
-+	0x848, 0x00000000,
-+	0x84C, 0x00000000,
-+	0x850, 0x00000000,
-+	0x854, 0x00000000,
-+	0x858, 0x569A11A9,
-+	0x85C, 0x01000014,
-+	0x860, 0x66F60110,
-+	0x864, 0x061F0649,
-+	0x868, 0x00000000,
-+	0x86C, 0x27272700,
-+	0x870, 0x07000760,
-+	0x874, 0x25004000,
-+	0x878, 0x00000808,
-+	0x87C, 0x00000000,
-+	0x880, 0xB0000C1C,
-+	0x884, 0x00000001,
-+	0x888, 0x00000000,
-+	0x88C, 0xCCC000C0,
-+	0x890, 0x00000800,
-+	0x894, 0xFFFFFFFE,
-+	0x898, 0x40302010,
-+	0x89C, 0x00706050,
-+	0x900, 0x00000000,
-+	0x904, 0x00000023,
-+	0x908, 0x00000000,
-+	0x90C, 0x81121111,
-+	0x910, 0x00000002,
-+	0x914, 0x00000201,
-+	0xA00, 0x00D047C8,
-+	0xA04, 0x80FF800C,
-+	0xA08, 0x8C838300,
-+	0xA0C, 0x2E7F120F,
-+	0xA10, 0x9500BB78,
-+	0xA14, 0x1114D028,
-+	0xA18, 0x00881117,
-+	0xA1C, 0x89140F00,
-+	0xA20, 0x1A1B0000,
-+	0xA24, 0x090E1317,
-+	0xA28, 0x00000204,
-+	0xA2C, 0x00D30000,
-+	0xA70, 0x101FBF00,
-+	0xA74, 0x00000007,
-+	0xA78, 0x00000900,
-+	0xA7C, 0x225B0606,
-+	0xA80, 0x21806490,
-+	0xB2C, 0x00000000,
-+	0xC00, 0x48071D40,
-+	0xC04, 0x03A05611,
-+	0xC08, 0x000000E4,
-+	0xC0C, 0x6C6C6C6C,
-+	0xC10, 0x08800000,
-+	0xC14, 0x40000100,
-+	0xC18, 0x08800000,
-+	0xC1C, 0x40000100,
-+	0xC20, 0x00000000,
-+	0xC24, 0x00000000,
-+	0xC28, 0x00000000,
-+	0xC2C, 0x00000000,
-+	0xC30, 0x69E9AC44,
-+	0xC34, 0x469652AF,
-+	0xC38, 0x49795994,
-+	0xC3C, 0x0A97971C,
-+	0xC40, 0x1F7C403F,
-+	0xC44, 0x000100B7,
-+	0xC48, 0xEC020107,
-+	0xC4C, 0x007F037F,
-+	0xC50, 0x69553420,
-+	0xC54, 0x43BC0094,
-+	0xC58, 0x00013147,
-+	0xC5C, 0x00250492,
-+	0xC60, 0x00000000,
-+	0xC64, 0x5112848B,
-+	0xC68, 0x47C00BFF,
-+	0xC6C, 0x00000036,
-+	0xC70, 0x2C7F000D,
-+	0xC74, 0x020610DB,
-+	0xC78, 0x0000001F,
-+	0xC7C, 0x00B91612,
-+	0xC80, 0x390000E4,
-+	0xC84, 0x21F60000,
-+	0xC88, 0x40000100,
-+	0xC8C, 0x20200000,
-+	0xC90, 0x00020E1A,
-+	0xC94, 0x00000000,
-+	0xC98, 0x00020E1A,
-+	0xC9C, 0x00007F7F,
-+	0xCA0, 0x00000000,
-+	0xCA4, 0x000300A0,
-+	0xCA8, 0x00000000,
-+	0xCAC, 0x00000000,
-+	0xCB0, 0x00000000,
-+	0xCB4, 0x00000000,
-+	0xCB8, 0x00000000,
-+	0xCBC, 0x28000000,
-+	0xCC0, 0x00000000,
-+	0xCC4, 0x00000000,
-+	0xCC8, 0x00000000,
-+	0xCCC, 0x00000000,
-+	0xCD0, 0x00000000,
-+	0xCD4, 0x00000000,
-+	0xCD8, 0x64B22427,
-+	0xCDC, 0x00766932,
-+	0xCE0, 0x00222222,
-+	0xCE4, 0x00000000,
-+	0xCE8, 0x37644302,
-+	0xCEC, 0x2F97D40C,
-+	0xD00, 0x00000740,
-+	0xD04, 0x40020401,
-+	0xD08, 0x0000907F,
-+	0xD0C, 0x20010201,
-+	0xD10, 0xA0633333,
-+	0xD14, 0x3333BC53,
-+	0xD18, 0x7A8F5B6F,
-+	0xD2C, 0xCC979975,
-+	0xD30, 0x00000000,
-+	0xD34, 0x80608000,
-+	0xD38, 0x00000000,
-+	0xD3C, 0x00127353,
-+	0xD40, 0x00000000,
-+	0xD44, 0x00000000,
-+	0xD48, 0x00000000,
-+	0xD4C, 0x00000000,
-+	0xD50, 0x6437140A,
-+	0xD54, 0x00000000,
-+	0xD58, 0x00000282,
-+	0xD5C, 0x30032064,
-+	0xD60, 0x4653DE68,
-+	0xD64, 0x04518A3C,
-+	0xD68, 0x00002101,
-+	0xD6C, 0x2A201C16,
-+	0xD70, 0x1812362E,
-+	0xD74, 0x322C2220,
-+	0xD78, 0x000E3C24,
-+	0xE00, 0x2D2D2D2D,
-+	0xE04, 0x2D2D2D2D,
-+	0xE08, 0x0390272D,
-+	0xE10, 0x2D2D2D2D,
-+	0xE14, 0x2D2D2D2D,
-+	0xE18, 0x2D2D2D2D,
-+	0xE1C, 0x2D2D2D2D,
-+	0xE28, 0x00000000,
-+	0xE30, 0x1000DC1F,
-+	0xE34, 0x10008C1F,
-+	0xE38, 0x02140102,
-+	0xE3C, 0x681604C2,
-+	0xE40, 0x01007C00,
-+	0xE44, 0x01004800,
-+	0xE48, 0xFB000000,
-+	0xE4C, 0x000028D1,
-+	0xE50, 0x1000DC1F,
-+	0xE54, 0x10008C1F,
-+	0xE58, 0x02140102,
-+	0xE5C, 0x28160D05,
-+	0xE60, 0x00000048,
-+	0xE68, 0x001B2556,
-+	0xE6C, 0x00C00096,
-+	0xE70, 0x00C00096,
-+	0xE74, 0x01000056,
-+	0xE78, 0x01000014,
-+	0xE7C, 0x01000056,
-+	0xE80, 0x01000014,
-+	0xE84, 0x00C00096,
-+	0xE88, 0x01000056,
-+	0xE8C, 0x00C00096,
-+	0xED0, 0x00C00096,
-+	0xED4, 0x00C00096,
-+	0xED8, 0x00C00096,
-+	0xEDC, 0x000000D6,
-+	0xEE0, 0x000000D6,
-+	0xEEC, 0x01C00016,
-+	0xF14, 0x00000003,
-+	0xF4C, 0x00000000,
-+	0xF00, 0x00000300,
-+	0x820, 0x01000100,
-+	0x800, 0x83040000,
-+};
-+
-+RTW_DECL_TABLE_PHY_COND(rtw8723b_bb, rtw_phy_cfg_bb);
-+
-+static const struct rtw_phy_pg_cfg_pair rtw8723b_bb_pg[] = {
-+	{ 0, 0, 0, 0x00000e08, 0x0000ff00, 0x00003800, },
-+	{ 0, 0, 0, 0x0000086c, 0xffffff00, 0x32343600, },
-+	{ 0, 0, 0, 0x00000e00, 0xffffffff, 0x40424444, },
-+	{ 0, 0, 0, 0x00000e04, 0xffffffff, 0x28323638, },
-+	{ 0, 0, 0, 0x00000e10, 0xffffffff, 0x38404244, },
-+	{ 0, 0, 0, 0x00000e14, 0xffffffff, 0x26303436, },
-+};
-+
-+RTW_DECL_TABLE_BB_PG(rtw8723b_bb_pg);
-+
-+static const u32 rtw8723b_rf_a[] = {
-+	0x000, 0x00010000,
-+	0x0B0, 0x000DFFE0,
-+	0xFFE, 0x00000000,
-+	0xFFE, 0x00000000,
-+	0xFFE, 0x00000000,
-+	0x0B1, 0x00000018,
-+	0xFFE, 0x00000000,
-+	0xFFE, 0x00000000,
-+	0xFFE, 0x00000000,
-+	0x0B2, 0x00084C00,
-+	0x0B5, 0x0000D2CC,
-+	0x0B6, 0x000925AA,
-+	0x0B7, 0x00000010,
-+	0x0B8, 0x0000907F,
-+	0x05C, 0x00000002,
-+	0x07C, 0x00000002,
-+	0x07E, 0x00000005,
-+	0x08B, 0x0006FC00,
-+	0x0B0, 0x000FF9F0,
-+	0x01C, 0x000739D2,
-+	0x01E, 0x00000000,
-+	0x0DF, 0x00000780,
-+	0x050, 0x00067435,
-+	0x80002000, 0x00000000, 0x40000000, 0x00000000,
-+	0x051, 0x0006F10E,
-+	0x052, 0x000007D3,
-+	0x90003000, 0x00000000, 0x40000000, 0x00000000,
-+	0x051, 0x0006F10E,
-+	0x052, 0x000007D3,
-+	0x90004000, 0x00000000, 0x40000000, 0x00000000,
-+	0x051, 0x0006F10E,
-+	0x052, 0x000007D3,
-+	0xA0000000, 0x00000000,
-+	0x051, 0x0006B04E,
-+	0x052, 0x000007D2,
-+	0xB0000000, 0x00000000,
-+	0x053, 0x00000000,
-+	0x054, 0x00050400,
-+	0x055, 0x0004026E,
-+	0x0DD, 0x0000004C,
-+	0x070, 0x00067435,
-+	0x80002000, 0x00000000, 0x40000000, 0x00000000,
-+	0x071, 0x0006F10E,
-+	0x072, 0x000007D3,
-+	0x90003000, 0x00000000, 0x40000000, 0x00000000,
-+	0x071, 0x0006F10E,
-+	0x072, 0x000007D3,
-+	0x90004000, 0x00000000, 0x40000000, 0x00000000,
-+	0x071, 0x0006F10E,
-+	0x072, 0x000007D3,
-+	0xA0000000, 0x00000000,
-+	0x071, 0x0006B04E,
-+	0x072, 0x000007D2,
-+	0xB0000000, 0x00000000,
-+	0x073, 0x00000000,
-+	0x074, 0x00050400,
-+	0x075, 0x0004026E,
-+	0x0EF, 0x00000100,
-+	0x034, 0x0000ADD7,
-+	0x035, 0x00005C00,
-+	0x034, 0x00009DD4,
-+	0x035, 0x00005000,
-+	0x034, 0x00008DD1,
-+	0x035, 0x00004400,
-+	0x034, 0x00007DCE,
-+	0x035, 0x00003800,
-+	0x034, 0x00006CD1,
-+	0x035, 0x00004400,
-+	0x034, 0x00005CCE,
-+	0x035, 0x00003800,
-+	0x034, 0x000048CE,
-+	0x035, 0x00004400,
-+	0x034, 0x000034CE,
-+	0x035, 0x00003800,
-+	0x034, 0x00002451,
-+	0x035, 0x00004400,
-+	0x034, 0x0000144E,
-+	0x035, 0x00003800,
-+	0x034, 0x00000051,
-+	0x035, 0x00004400,
-+	0x0EF, 0x00000000,
-+	0x0EF, 0x00000100,
-+	0x0ED, 0x00000010,
-+	0x044, 0x0000ADD7,
-+	0x044, 0x00009DD4,
-+	0x044, 0x00008DD1,
-+	0x044, 0x00007DCE,
-+	0x044, 0x00006CC1,
-+	0x044, 0x00005CCE,
-+	0x044, 0x000044D1,
-+	0x044, 0x000034CE,
-+	0x044, 0x00002451,
-+	0x044, 0x0000144E,
-+	0x044, 0x00000051,
-+	0x0EF, 0x00000000,
-+	0x0ED, 0x00000000,
-+	0x07F, 0x00020080,
-+	0x0EF, 0x00002000,
-+	0x03B, 0x000389EF,
-+	0x03B, 0x000302FE,
-+	0x03B, 0x00028CE6,
-+	0x03B, 0x000200BC,
-+	0x03B, 0x000188A5,
-+	0x03B, 0x00010FBC,
-+	0x03B, 0x00008F71,
-+	0x03B, 0x00000900,
-+	0x0EF, 0x00000000,
-+	0x0ED, 0x00000001,
-+	0x040, 0x000380EF,
-+	0x040, 0x000302FE,
-+	0x040, 0x00028CE6,
-+	0x040, 0x000200BC,
-+	0x040, 0x000188A5,
-+	0x040, 0x00010FBC,
-+	0x040, 0x00008F71,
-+	0x040, 0x00000900,
-+	0x0ED, 0x00000000,
-+	0x082, 0x00080000,
-+	0x083, 0x00008000,
-+	0x084, 0x00049F80,
-+	0x085, 0x00068000,
-+	0x0A2, 0x00080000,
-+	0x0A3, 0x00008000,
-+	0x0A4, 0x00048D80,
-+	0x0A5, 0x00068000,
-+	0x0ED, 0x00000002,
-+	0x0EF, 0x00000002,
-+	0x056, 0x00000032,
-+	0x076, 0x00000032,
-+	0x01F, 0x00001008,
-+	0x001, 0x00000780,
-+};
-+
-+RTW_DECL_TABLE_RF_RADIO(rtw8723b_rf_a, A);
-+
-+/*
-+ * Regd: FCC -> 0, ETSI -> 2, MKK -> 1
-+ * Band: 2.4G -> 0, 5G -> 1
-+ * Bandwidth (bw): 20M -> 0, 40M -> 1, 80M -> 2, 160M -> 3
-+ * Rate Section (rs): CCK -> 0, OFDM -> 1, HT -> 2, VHT -> 3
-+ */
-+static const struct rtw_txpwr_lmt_cfg_pair rtw8723b_txpwr_lmt[] = {
-+	{0, 0, 0, 0, 1, 30},
-+	{2, 0, 0, 0, 1, 26},
-+	{1, 0, 0, 0, 1, 32},
-+	{0, 0, 0, 0, 2, 30},
-+	{2, 0, 0, 0, 2, 26},
-+	{1, 0, 0, 0, 2, 32},
-+	{0, 0, 0, 0, 3, 30},
-+	{2, 0, 0, 0, 3, 26},
-+	{1, 0, 0, 0, 3, 32},
-+	{0, 0, 0, 0, 4, 30},
-+	{2, 0, 0, 0, 4, 26},
-+	{1, 0, 0, 0, 4, 32},
-+	{0, 0, 0, 0, 5, 30},
-+	{2, 0, 0, 0, 5, 26},
-+	{1, 0, 0, 0, 5, 32},
-+	{0, 0, 0, 0, 6, 30},
-+	{2, 0, 0, 0, 6, 26},
-+	{1, 0, 0, 0, 6, 32},
-+	{0, 0, 0, 0, 7, 30},
-+	{2, 0, 0, 0, 7, 26},
-+	{1, 0, 0, 0, 7, 32},
-+	{0, 0, 0, 0, 8, 30},
-+	{2, 0, 0, 0, 8, 26},
-+	{1, 0, 0, 0, 8, 32},
-+	{0, 0, 0, 0, 9, 30},
-+	{2, 0, 0, 0, 9, 26},
-+	{1, 0, 0, 0, 9, 32},
-+	{0, 0, 0, 0, 10, 30},
-+	{2, 0, 0, 0, 10, 26},
-+	{1, 0, 0, 0, 10, 32},
-+	{0, 0, 0, 0, 11, 30},
-+	{2, 0, 0, 0, 11, 26},
-+	{1, 0, 0, 0, 11, 32},
-+	{0, 0, 0, 0, 12, 63},
-+	{2, 0, 0, 0, 12, 26},
-+	{1, 0, 0, 0, 12, 32},
-+	{0, 0, 0, 0, 13, 63},
-+	{2, 0, 0, 0, 13, 26},
-+	{1, 0, 0, 0, 13, 32},
-+	{0, 0, 0, 0, 14, 63},
-+	{2, 0, 0, 0, 14, 63},
-+	{1, 0, 0, 0, 14, 32},
-+	{0, 0, 0, 1, 1, 28},
-+	{2, 0, 0, 1, 1, 28},
-+	{1, 0, 0, 1, 1, 28},
-+	{0, 0, 0, 1, 2, 28},
-+	{2, 0, 0, 1, 2, 32},
-+	{1, 0, 0, 1, 2, 32},
-+	{0, 0, 0, 1, 3, 32},
-+	{2, 0, 0, 1, 3, 32},
-+	{1, 0, 0, 1, 3, 32},
-+	{0, 0, 0, 1, 4, 32},
-+	{2, 0, 0, 1, 4, 32},
-+	{1, 0, 0, 1, 4, 32},
-+	{0, 0, 0, 1, 5, 32},
-+	{2, 0, 0, 1, 5, 32},
-+	{1, 0, 0, 1, 5, 32},
-+	{0, 0, 0, 1, 6, 32},
-+	{2, 0, 0, 1, 6, 32},
-+	{1, 0, 0, 1, 6, 32},
-+	{0, 0, 0, 1, 7, 32},
-+	{2, 0, 0, 1, 7, 32},
-+	{1, 0, 0, 1, 7, 32},
-+	{0, 0, 0, 1, 8, 32},
-+	{2, 0, 0, 1, 8, 32},
-+	{1, 0, 0, 1, 8, 32},
-+	{0, 0, 0, 1, 9, 32},
-+	{2, 0, 0, 1, 9, 32},
-+	{1, 0, 0, 1, 9, 32},
-+	{0, 0, 0, 1, 10, 28},
-+	{2, 0, 0, 1, 10, 32},
-+	{1, 0, 0, 1, 10, 32},
-+	{0, 0, 0, 1, 11, 28},
-+	{2, 0, 0, 1, 11, 32},
-+	{1, 0, 0, 1, 11, 32},
-+	{0, 0, 0, 1, 12, 63},
-+	{2, 0, 0, 1, 12, 32},
-+	{1, 0, 0, 1, 12, 32},
-+	{0, 0, 0, 1, 13, 63},
-+	{2, 0, 0, 1, 13, 28},
-+	{1, 0, 0, 1, 13, 28},
-+	{0, 0, 0, 1, 14, 63},
-+	{2, 0, 0, 1, 14, 63},
-+	{1, 0, 0, 1, 14, 63},
-+	{0, 0, 0, 2, 1, 26},
-+	{2, 0, 0, 2, 1, 26},
-+	{1, 0, 0, 2, 1, 28},
-+	{0, 0, 0, 2, 2, 26},
-+	{2, 0, 0, 2, 2, 32},
-+	{1, 0, 0, 2, 2, 32},
-+	{0, 0, 0, 2, 3, 32},
-+	{2, 0, 0, 2, 3, 32},
-+	{1, 0, 0, 2, 3, 32},
-+	{0, 0, 0, 2, 4, 32},
-+	{2, 0, 0, 2, 4, 32},
-+	{1, 0, 0, 2, 4, 32},
-+	{0, 0, 0, 2, 5, 32},
-+	{2, 0, 0, 2, 5, 32},
-+	{1, 0, 0, 2, 5, 32},
-+	{0, 0, 0, 2, 6, 32},
-+	{2, 0, 0, 2, 6, 32},
-+	{1, 0, 0, 2, 6, 32},
-+	{0, 0, 0, 2, 7, 32},
-+	{2, 0, 0, 2, 7, 32},
-+	{1, 0, 0, 2, 7, 32},
-+	{0, 0, 0, 2, 8, 32},
-+	{2, 0, 0, 2, 8, 32},
-+	{1, 0, 0, 2, 8, 32},
-+	{0, 0, 0, 2, 9, 32},
-+	{2, 0, 0, 2, 9, 32},
-+	{1, 0, 0, 2, 9, 32},
-+	{0, 0, 0, 2, 10, 26},
-+	{2, 0, 0, 2, 10, 32},
-+	{1, 0, 0, 2, 10, 32},
-+	{0, 0, 0, 2, 11, 26},
-+	{2, 0, 0, 2, 11, 32},
-+	{1, 0, 0, 2, 11, 32},
-+	{0, 0, 0, 2, 12, 63},
-+	{2, 0, 0, 2, 12, 32},
-+	{1, 0, 0, 2, 12, 32},
-+	{0, 0, 0, 2, 13, 63},
-+	{2, 0, 0, 2, 13, 26},
-+	{1, 0, 0, 2, 13, 28},
-+	{0, 0, 0, 2, 14, 63},
-+	{2, 0, 0, 2, 14, 63},
-+	{1, 0, 0, 2, 14, 63},
-+	{0, 0, 0, 2, 1, 30},
-+	{2, 0, 0, 2, 1, 32},
-+	{1, 0, 0, 2, 1, 32},
-+	{0, 0, 0, 2, 2, 32},
-+	{2, 0, 0, 2, 2, 32},
-+	{1, 0, 0, 2, 2, 32},
-+	{0, 0, 0, 2, 3, 32},
-+	{2, 0, 0, 2, 3, 32},
-+	{1, 0, 0, 2, 3, 32},
-+	{0, 0, 0, 2, 4, 32},
-+	{2, 0, 0, 2, 4, 32},
-+	{1, 0, 0, 2, 4, 32},
-+	{0, 0, 0, 2, 5, 32},
-+	{2, 0, 0, 2, 5, 32},
-+	{1, 0, 0, 2, 5, 32},
-+	{0, 0, 0, 2, 6, 32},
-+	{2, 0, 0, 2, 6, 32},
-+	{1, 0, 0, 2, 6, 32},
-+	{0, 0, 0, 2, 7, 32},
-+	{2, 0, 0, 2, 7, 32},
-+	{1, 0, 0, 2, 7, 32},
-+	{0, 0, 0, 2, 8, 32},
-+	{2, 0, 0, 2, 8, 32},
-+	{1, 0, 0, 2, 8, 32},
-+	{0, 0, 0, 2, 9, 32},
-+	{2, 0, 0, 2, 9, 32},
-+	{1, 0, 0, 2, 9, 32},
-+	{0, 0, 0, 2, 10, 32},
-+	{2, 0, 0, 2, 10, 32},
-+	{1, 0, 0, 2, 10, 32},
-+	{0, 0, 0, 2, 11, 30},
-+	{2, 0, 0, 2, 11, 32},
-+	{1, 0, 0, 2, 11, 32},
-+	{0, 0, 0, 2, 12, 63},
-+	{2, 0, 0, 2, 12, 32},
-+	{1, 0, 0, 2, 12, 32},
-+	{0, 0, 0, 2, 13, 63},
-+	{2, 0, 0, 2, 13, 32},
-+	{1, 0, 0, 2, 13, 32},
-+	{0, 0, 0, 2, 14, 63},
-+	{2, 0, 0, 2, 14, 63},
-+	{1, 0, 0, 2, 14, 63},
-+	{0, 0, 1, 2, 1, 63},
-+	{2, 0, 1, 2, 1, 63},
-+	{1, 0, 1, 2, 1, 63},
-+	{0, 0, 1, 2, 2, 63},
-+	{2, 0, 1, 2, 2, 63},
-+	{1, 0, 1, 2, 2, 63},
-+	{0, 0, 1, 2, 3, 26},
-+	{2, 0, 1, 2, 3, 26},
-+	{1, 0, 1, 2, 3, 26},
-+	{0, 0, 1, 2, 4, 26},
-+	{2, 0, 1, 2, 4, 28},
-+	{1, 0, 1, 2, 4, 26},
-+	{0, 0, 1, 2, 5, 28},
-+	{2, 0, 1, 2, 5, 28},
-+	{1, 0, 1, 2, 5, 26},
-+	{0, 0, 1, 2, 6, 28},
-+	{2, 0, 1, 2, 6, 28},
-+	{1, 0, 1, 2, 6, 26},
-+	{0, 0, 1, 2, 7, 28},
-+	{2, 0, 1, 2, 7, 28},
-+	{1, 0, 1, 2, 7, 26},
-+	{0, 0, 1, 2, 8, 26},
-+	{2, 0, 1, 2, 8, 28},
-+	{1, 0, 1, 2, 8, 26},
-+	{0, 0, 1, 2, 9, 26},
-+	{2, 0, 1, 2, 9, 28},
-+	{1, 0, 1, 2, 9, 26},
-+	{0, 0, 1, 2, 10, 26},
-+	{2, 0, 1, 2, 10, 28},
-+	{1, 0, 1, 2, 10, 26},
-+	{0, 0, 1, 2, 11, 26},
-+	{2, 0, 1, 2, 11, 26},
-+	{1, 0, 1, 2, 11, 26},
-+	{0, 0, 1, 2, 12, 63},
-+	{2, 0, 1, 2, 12, 26},
-+	{1, 0, 1, 2, 12, 26},
-+	{0, 0, 1, 2, 13, 63},
-+	{2, 0, 1, 2, 13, 26},
-+	{1, 0, 1, 2, 13, 26},
-+	{0, 0, 1, 2, 14, 63},
-+	{2, 0, 1, 2, 14, 63},
-+	{1, 0, 1, 2, 14, 63},
-+	{0, 0, 1, 2, 1, 63},
-+	{2, 0, 1, 2, 1, 63},
-+	{1, 0, 1, 2, 1, 63},
-+	{0, 0, 1, 2, 2, 63},
-+	{2, 0, 1, 2, 2, 63},
-+	{1, 0, 1, 2, 2, 63},
-+	{0, 0, 1, 2, 3, 30},
-+	{2, 0, 1, 2, 3, 30},
-+	{1, 0, 1, 2, 3, 30},
-+	{0, 0, 1, 2, 4, 32},
-+	{2, 0, 1, 2, 4, 30},
-+	{1, 0, 1, 2, 4, 30},
-+	{0, 0, 1, 2, 5, 32},
-+	{2, 0, 1, 2, 5, 30},
-+	{1, 0, 1, 2, 5, 30},
-+	{0, 0, 1, 2, 6, 32},
-+	{2, 0, 1, 2, 6, 30},
-+	{1, 0, 1, 2, 6, 30},
-+	{0, 0, 1, 2, 7, 32},
-+	{2, 0, 1, 2, 7, 30},
-+	{1, 0, 1, 2, 7, 30},
-+	{0, 0, 1, 2, 8, 32},
-+	{2, 0, 1, 2, 8, 30},
-+	{1, 0, 1, 2, 8, 30},
-+	{0, 0, 1, 2, 9, 32},
-+	{2, 0, 1, 2, 9, 30},
-+	{1, 0, 1, 2, 9, 30},
-+	{0, 0, 1, 2, 10, 32},
-+	{2, 0, 1, 2, 10, 30},
-+	{1, 0, 1, 2, 10, 30},
-+	{0, 0, 1, 2, 11, 30},
-+	{2, 0, 1, 2, 11, 30},
-+	{1, 0, 1, 2, 11, 30},
-+	{0, 0, 1, 2, 12, 63},
-+	{2, 0, 1, 2, 12, 32},
-+	{1, 0, 1, 2, 12, 32},
-+	{0, 0, 1, 2, 13, 63},
-+	{2, 0, 1, 2, 13, 32},
-+	{1, 0, 1, 2, 13, 32},
-+	{0, 0, 1, 2, 14, 63},
-+	{2, 0, 1, 2, 14, 63},
-+	{1, 0, 1, 2, 14, 63},
-+};
-+
-+RTW_DECL_TABLE_TXPWR_LMT(rtw8723b_txpwr_lmt);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
-new file mode 100644
-index 000000000000..49291fd1dd9d
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
-@@ -0,0 +1,18 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-+/*
-+ * Copyright(c) 2007-2017  Realtek Corporation
-+ * Copyright(c) Michael Straube <straube.linux@gmail.com>
-+ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
-+ */
-+
-+#ifndef __RTW8723B_TABLE_H__
-+#define __RTW8723B_TABLE_H__
-+
-+extern const struct rtw_table rtw8723b_mac_tbl;
-+extern const struct rtw_table rtw8723b_agc_tbl;
-+extern const struct rtw_table rtw8723b_bb_tbl;
-+extern const struct rtw_table rtw8723b_bb_pg_tbl;
-+extern const struct rtw_table rtw8723b_rf_a_tbl;
-+extern const struct rtw_table rtw8723b_txpwr_lmt_tbl;
-+
-+#endif
 -- 
 2.55.0
 
