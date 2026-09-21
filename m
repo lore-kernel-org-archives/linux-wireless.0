@@ -1,386 +1,158 @@
-Received: from mail-qk2-f42.google.com (mail-qk2-f42.google.com [74.125.230.234])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9898043637C
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 21:18:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.234
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB69521204
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 22:35:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790025507; cv=none; b=V2Hc6cMXNtPOG2iXKCGqTgUUTC5hoDUaVDYYSGro05yp3fDRx8ANMcnol58MBL/J7EHCdFAz8p/BqvkkL4YuEUfVEmma4z3MpmuBd01Vkaq5cmH+4I+XfUGtuiZgmPDdDhoJH20qHXnFwaCy3I3HHihfGXKpqZYTCdAYBpKM3fI=
+	t=1790030110; cv=none; b=GOrnbxw4Y68ntF1k4AsbbGlKD+7Gp0Y2mDK0Qezre+7rZ1/2ekQHc4t6As8jnCIVYNMIbLAyxcI5KDvmMY58NdzvV9g/rEHv6PYF9TKHxioy4LPYwpC/4c33gidvXViKag0acxAFFG2j2TypGlhsINi9ol4n/jWqIk9uY6S5qWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790025507; c=relaxed/simple;
-	bh=Oun0DqHeCwMETcPaSb9KTb2AnAMwyMp483QiKREFRRM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T9Ri24xKIVVa0zWcDQdEXHQS40SCaPPexmjsjsga2neaBkzWn4GmvlkXvy3ggyz9uSW7XvNGTvS7odeOf/a+t9qLXWi2T7EIHmgxMfwwqyRG/qLfgEIp5baoTUKlRAlW99tj1uV3s/Tfx5QkNmhn3ME41nAV484RYsgfEyp7J5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com; spf=pass smtp.mailfrom=brivo.com; dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b=wZQIgc9K; arc=none smtp.client-ip=74.125.230.234
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=brivo.com
+	s=arc-20240116; t=1790030110; c=relaxed/simple;
+	bh=Ib+b6tSQi15Dp/Pl538pLpfZBOpDvIo124gdzFdbfYM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EAV5yCrfq3TaP4fn1tMq8zyC6Iz5tNTjx3uebqbj3uv2HR8p+O9jGNSs3+Yg/FvQ20bJgeXhujnHBIBlLE6BSeNb3K0lF8OOxn/7HIRL9IlGmu6Lu6uxNFF3pWHBfysdUtNqPKjGIOWa+XDlopHmP7tJfZqK+QP66boRFfpyfyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gvkVI+ua; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LckOLiSa; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b="wZQIgc9K"
-Received: by mail-qk2-f42.google.com with SMTP id d75a77b69052e-52fb769ca17so28484701cf.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 14:18:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gvkVI+ua";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LckOLiSa"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68LKewHO1565376
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 22:35:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ZmvyhwYgg5sbh027kGBFN4jtSaonNKU0CwrVCoo4oq0=; b=gvkVI+uaH1E+NajV
+	hTPaghdnDsTmtV2C98OXXhTiAas4EnxSzMbI4TYYuQQrENumFJBf/LsjcEL2Lqcx
+	hduKC2F1DxIUMNEJqxPFHquit7h1lFygrORU1tqlo/87YtwSDyOq21UKFQn1LLT0
+	ig5v9yc47OmytOMP0OBlbPzyCIsm2XZiIdURB75I+ax7IEQCoDfHBf3n/a8zPdJe
+	QvdDM/6hhD4J89bKjW7rnnNl8tafcHL4rLC5bYLYNOE+da370HnbKfkhFeJoNuUw
+	rzcWAukzENJGi4Uj3OV40zv8hRTT6vKAFrqW/Kfd2nXiwVNcyiYQujIf1c/o9BBb
+	ugk1RA==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gu17gua49-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 22:35:07 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-398dc3d8f0fso335759a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 15:35:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=brivo.com; s=google; t=1790025503; x=1790630303; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DjId/0Cj6ytuS0j5VADmUPuYZXdk67Lnv48DskXuzJU=;
-        b=wZQIgc9KzmhQpjkXcOgbgrdacaJZMqIkz6HxAJGaWo6iR2H2rL+cQBgKOhlWEgboWG
-         tXAJpaiukpcAyMaYLnBRrkVBDpc0dSZ1WL5O2Tfdn4E9B4sZ27les9/R949NQ++Y1Z0I
-         Ab6hib79/VasBsEQUuueRFVUqkx8lbhO5vh0WgondkgPDVe4GjsUJINb7uhzYu7JbJml
-         QF3F6CYqAA6po6LwssoTLY04u5DFGRUZbPgzUdsYalCnswX8OXKgyn2F0iemy286Qz0y
-         nkrJrNDgTAXApBFBzPGFjAJ2EhU31u+dzYLYwjnt+UKDmPLYYdAOSAdVaa28J1JNMOuF
-         GLJQ==
+        d=oss.qualcomm.com; s=google; t=1790030107; x=1790634907; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ZmvyhwYgg5sbh027kGBFN4jtSaonNKU0CwrVCoo4oq0=;
+        b=LckOLiSaVPAXkVs/20IohK811l+5KNDou1POVnZ6ly96w6KIKlKT3VcdZF3ACcW0NW
+         fVjaCiOI4QFbXjfIGB1kV7HkvLnjGhQa3QIwQLK9it8JsZjsOEfqVEi3aaHcmaACwGaT
+         lUfLYwVr94FwIEDarxB9Fgd3de2Fx81tV77JXGG5Dh4BWLyOVRPNGwoqGOejjSussYy4
+         Yh7qyzv/VURPGMkXhFMm/wpYYKMMLg9tozUYrI+SmZT+6sr6wRPcT+04mIY4lKPvcQol
+         k313LTbDKlVINSIhdfQOg6oES3AnpLBljs8Eme+fAPJQVxkX2F+jR0Yq4M9/wkvOiqrc
+         FX3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790025503; x=1790630303;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DjId/0Cj6ytuS0j5VADmUPuYZXdk67Lnv48DskXuzJU=;
-        b=VYd8TwfrKTtHOt209xGuiC9x+5CNh2B5zqXUjibvqJyuTMwc0sImdPxKEfCVOXGUdD
-         Q0QehL9cz1NGon1lNBs66m4zy+8bQSSIBpWFzHZcWqEo8Ak9gPNe9VqYWkRLp3Hg/DKE
-         1Q6RefKbfnCCisQTlQVQ4r7qC4HJzvdLVY6iCNmxmpZE4iqXKZA21+KjfZlbTr+R2Xiu
-         LFJFr7NCw/O1CpSiMHjdND4v9eN3U64E+alaLjPsNpKzgKErlGvow1lALjaWHqERDeyh
-         4Qm1pzsMilC3Ouoaq/BxZKXJYLbmq5f5rMMtWn56TSjNSJf7xU89Zb9wXLHJs3DKmjdc
-         gaDQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxh5uW206xfIO9wcVPm+v+rh44Km3WVcI5gjAMpq3BnQBaKlwAXBXFeNUw3loDK17QGgslMa5ypA7gUoB7J1w==@vger.kernel.org
-X-Gm-Message-State: AFuF++mabgUeygMMssN4/w18JjvwzeWShklDhhDNB//rtkA9qCaM2412
-	PmXYU2RWee3UF6DCtWAwCHECkWmHlsieAJ2CCGf2+Kvwa7tHj92xa6xD6b0eJ/hl+0yK52baAIT
-	7LrMDZdW0ufQRi1dBSksl/yazrnsYC7GZq3S7KTomsw/L2ioamZf+MqQrc9tg8GDdVwXpiDrEYY
-	KT6A==
-X-Gm-Gg: AYBFou0FcHdlw0WuxaBvH1BFPe75mtynCpGM04kWTIGUpQ+pC2QgNvp5ZyTYAzExJBw
-	9+f1grfKlnTFEfiSYtQvPTS/BIzyWCJXRwzTRUr3sCInavkDksFZSVX1pxR+w1wRp6p6fx2mQ2D
-	PrYCrtnmti4TfoPYsNoSnDSMhuRF6Rx6+hMSN58G5oJhlQARNV8CDiwyo6iawL7K6dBY7oxpQW5
-	VJA/3+YT+H5tuQWxVF92c8ta+8JJvlAuuD1ouQNmccDX81tWVndzEXfEv4GzW8PjEr+Nqp4vYPK
-	IxVIjtw43CmPi6fFtKYkpknKLkN2IRL4Ev1IjfeiAkLf6bKQJbD2b2BPhx2QEwkT5R5DfV5b1yI
-	FZ5bLwHdPDW219Hie+iTbpDjyZaqpbXIDPLVWgERtzqkOa/1zNsYEb+BuhcjvwbTbcjoV+ILPK5
-	LCYphmDQf0+XszWXmzcC2YUhMIJaz4+pi9bm69v1w3JfG93rsEZzWLFmxPTxN6UtLu
-X-Received: by 2002:ac8:5d15:0:b0:532:d5c5:8eae with SMTP id d75a77b69052e-532d8d47ff4mr26530271cf.27.1790025503159;
-        Mon, 21 Sep 2026 14:18:23 -0700 (PDT)
-Received: from strozzi ([66.193.28.125])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532df63ab0dsm267121cf.26.2026.09.21.14.18.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 14:18:22 -0700 (PDT)
-From: Sean Anderson <sanderson@brivo.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	brcm80211@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	brcm80211-dev-list.pdl@broadcom.com,
-	Sean Anderson <sanderson@brivo.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/4] wifi: brcmfmac: Fix firmware requests racing against SDIO removal
-Date: Mon, 21 Sep 2026 17:18:14 -0400
-Message-ID: <20260921211817.2432341-5-sanderson@brivo.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260921211817.2432341-1-sanderson@brivo.com>
-References: <20260921211817.2432341-1-sanderson@brivo.com>
+        d=1e100.net; s=20260707; t=1790030107; x=1790634907;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ZmvyhwYgg5sbh027kGBFN4jtSaonNKU0CwrVCoo4oq0=;
+        b=XsDOWmvxscYdIQq1JoO3ZO3sWwfCePS9wgApqHmvxi0LTMY9h98+NfKPiaRX3DHexx
+         Q5MgEpf5dR2QX1pZvGQAn6S4FhJWDgbpNKNp5xom88bgWx10wtNYzjcSttIy+439N7nj
+         BO867MRD3mabN29OOBYhwioTGwJ7k/su29JeXJJ9pH8Nc6j8aCwmIiNj1Nci/VoO+C+7
+         w4UjNfFsUdorixGwNPedmgaEnVZK73Z9i6z+1dUBYuQtFtOiv++Gq8gJlE3xw/sjGQVs
+         DxjS8CNP9Z+H7likwEiCOSVEuHt3zt7VA4AJ8vnyU2Nlyf4gOK3ymUuq1TfVVVhFRHTr
+         mrQQ==
+X-Gm-Message-State: AFuF++lAKpoB7Zzfmuqm3ZphfChkyc3gxCQjitqJgVtUGl7HiLYmBwCD
+	iKdx/vvGjaoW+gro5xEVwlxJGKyyi8b9FrEUSHJWRYo/HJ7T2x8ntgSJIacW6DFZkn0nuSB7s8o
+	/h31hBtpGkCAlNLFkps3ZBlIVdnwd5TSILvbSiAKbgEO41G2reBON+P/9dZ4M/qHus7Hzeg==
+X-Gm-Gg: AYBFou2hJIv4NIIiR+8v8IFxRS4FkT1I3/ACkEnBQdzG4VjQ17abafnkaKMUuQfgo7z
+	3g2ICAPhJYSIsChKLIhGPGaOpnDY18RvkTZhBNZjZOb4SPH01wZVSii+qJRF7pMkgGQsbG7b5D/
+	a2sFdCceQvQaN7PHHIvYi8fCVt7hUogY6SUNaYAZrqrX1esLXpXF/uWLFxJe5cc4U+1uciNsyB8
+	CkltXqHsCUDxdb40MYjlCCn8Bz/lS8Ya4cJJl2LiboNCHlUo6gxd8OmP1jVkn6jLvuYjXHJXuS2
+	GlRA1AemmAVr9WvstnAMmPTDQwn6zGZ+TP2BN21u/XVIlrmV5kpfvVVEGN7ivSEhIuh48c6Y2ko
+	TIB9Ksk4rYQyAP6mdUiu3ORFEvOYzDpxNWAp43/Ibypos8Oc8AkAkF8aL9A==
+X-Received: by 2002:a17:90b:4b0a:b0:39e:16e3:44f7 with SMTP id 98e67ed59e1d1-3a0669c780amr868401a91.6.1790030107278;
+        Mon, 21 Sep 2026 15:35:07 -0700 (PDT)
+X-Received: by 2002:a17:90b:4b0a:b0:39e:16e3:44f7 with SMTP id 98e67ed59e1d1-3a0669c780amr868387a91.6.1790030106661;
+        Mon, 21 Sep 2026 15:35:06 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-144f0cc3100sm681215c88.13.2026.09.21.15.35.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Sep 2026 15:35:05 -0700 (PDT)
+Message-ID: <bcd5a280-8184-4457-ae52-47a9e0fe763c@oss.qualcomm.com>
+Date: Mon, 21 Sep 2026 15:35:04 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 6/6] MAINTAINERS: add entry for the RTL8723B rtw88
+ driver
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Michael Straube <straube.linux@gmail.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Bitterblue Smith <rtl8821cerfe2@gmail.com>
+References: <20260921154347.82317-1-luka.gejak@linux.dev>
+ <20260921154347.82317-7-luka.gejak@linux.dev>
+ <45eb7d5908f8fff9a18cba603fd3a4abfe8695f9.camel@sipsolutions.net>
+ <31285267ebc43aab631a4199059a247a8d937814@linux.dev>
+ <c208152fc5cb45e19ae7d4660394dbf2bc5e0271.camel@sipsolutions.net>
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <c208152fc5cb45e19ae7d4660394dbf2bc5e0271.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: igYamvMThY3ffhq6-RHKrKexnIr6vs_3
+X-Authority-Analysis: v=2.4 cv=IewSymqa c=1 sm=1 tr=0 ts=6ab1b11b cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=b1gTVRIz6arP1Kg95IwA:9 a=QEXdDO2ut3YA:10 a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDMzMCBTYWx0ZWRfX7bgeia1PeQtd
+ WexTulswhBryf9gfWxvhzpVpzqXNtxSt2AaAJ+Ud7cV4vt8Y96NoB6g3z4PmsSHGPhbzQLg2hWS
+ e1i6kgsUrYb6iD3Zr9/He2ze3Xutpuc6tst2LGVxpNW4HG6DEtPXKc1UHb4mBuNFXCq+nqtjnJP
+ 7DPLNdG4GcfnY3KhhYAzKdf7zZ5GNPaZIbXbeW2rfWxIYaOX1l27wyhHyP8o+E/N2jAt9PvYg2F
+ 1g934O68vLPJ3Q3iRD99opW6Mnj1fQmyn5z8B2HbqZXOA6TgfjPuG8j1bQ3pPDbl0nTUmGD59fp
+ ohhgfN3eVOfz210zwJzFFdaMylFrGMhSq2+WE3l1jSAFWtAw0zAWbKBK/FmASkXsQOf/Qeu3Rm6
+ TjfR2AoywsPIeiL3cnBdO7DmDujt7bBNaiiWv+4u9dpaXvrmX+6EvaD9FS4BqvA3uJZuoitQ4fW
+ xEGPiAdYyGmkUJUmP3Q==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDMzMCBTYWx0ZWRfX/bnUkDtt+Qy6
+ pv0I1MmVeZmXPcVZlVx7JsP3MoWbJ0beksprMJCJJF8sKA+6lrN7DC2GtmJklmEinoCRkdHqzLv
+ vHFnJF7HgwOe6+XvenqEXXfGJ8zpU6A=
+X-Proofpoint-ORIG-GUID: igYamvMThY3ffhq6-RHKrKexnIr6vs_3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-21_06,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 suspectscore=0
+ lowpriorityscore=0 spamscore=0 phishscore=0 malwarescore=0 adultscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609210330
 
-brcmf_sdio_firmware_callback can race with device removal. If this
-happens it can re-register IRQs, dereference NULL pointers, and cause
-all sorts of havoc. Prevent this by canceling any outstanding firmware
-request as the first step of the removal process.
+On 9/21/2026 11:14 AM, Johannes Berg wrote:
+> On Mon, 2026-09-21 at 16:49 +0000, Luka Gejak wrote:
+>>
+>> It is supposed to work in the same way it works for other driver
+>> maintainers. I would review patches and provide my acked by or
+>> reviewed by them and Ping-Ke would apply them to his rtw-next branch.
+> 
+> I don't think we have a lot of folks below the driver maintainers who s
+> end me pull requests (except Toke maybe?) - but as long as I don't need
+> to deal with it I'm happy, you can figure it out between yourselves :)
+For ath.git there are sub-maintainers for ath5k (Multiple), ath9k (Toke),
+carl9170 (Christian), and wcn36xx (Loic).
 
-When canceling the firmware request, we primarily need to ensure fwctx
-remains valid for all our calls to request_firmware_nowait_cancel. If we
-let it get free'd early then it could get re-used for some unrelated
-firmware request. To avoid this, we follow the same pattern that
-firmware_loader does. But while firmware_loader needs a spinlock, we can
-get away with a single pointer:
+Toke has a linux-wireless patchwork account so the ath9k patches are initially
+assigned to him in patchwork, and he Acks on the list and assigns the
+patchwork records to me when he approves patches.
 
-- When ctxp is NULL, then we can't be canceled
-- When *ctxp == fwctx, we're still alive
-- When *ctxp == NULL, someone else has canceled the request (or we have
-  run our natural course).
-- Whoever clears ctxp is responsible for freeing fwctx.
+For the others the maintainers just Ack on the list, and I take them from there.
 
-There can be up to NR_CPUS requests in-flight at any given time, as each
-(alt) firmware request can create a new firmware request. Eventually,
-one of them will see that ctxp is cleared and stop spawning additional
-requests.
+So the question is do how do you want to handle this in patchwork?
 
-If the firmware load fails while we are removing the device, we can no
-longer attempt to call device_release_driver. This will deadlock. We
-can't do this asynchronously either since we run the risk of releasing a
-totally different driver/device combo. We could techincally do this by
-dropping device_lock before waiting for the firmware to cancel, but that
-seems like a major headache (we would need to make ctxp a separate
-reference-counted allocation).
-
-I also implemented this fix for PCIe but I have only build-tested it.
-I didn't touch USB as it already uses a completion-based system to
-determine when it's OK to remove the driver. I didn't go with this
-approach because we could wait indefinitely for the firmware request to
-complete (such as if the firmware is on a slow device or loaded by
-userspace).
-
-Fixes: bd0e1b1d380e ("brcmfmac: use asynchronous firmware request in SDIO")
-Signed-off-by: Sean Anderson <sanderson@brivo.com>
----
-
- .../broadcom/brcm80211/brcmfmac/bcmsdh.c      |  7 ++++-
- .../broadcom/brcm80211/brcmfmac/bus.h         |  2 ++
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 26 ++++++++++++++++---
- .../broadcom/brcm80211/brcmfmac/firmware.h    | 16 +++++++++++-
- .../broadcom/brcm80211/brcmfmac/pcie.c        | 11 +++++---
- .../broadcom/brcm80211/brcmfmac/sdio.c        |  8 +++---
- .../broadcom/brcm80211/brcmfmac/usb.c         |  6 +++--
- 7 files changed, 63 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 71c2f99cdb711..39916f5a699dd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1126,7 +1126,12 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
- 	if (bus_if) {
- 		sdiodev = bus_if->bus_priv.sdio;
- 
--		/* start by unregistering irqs */
-+		/* Cancel any outstanding firmware request, as it may try to
-+		 * call brcmf_sdiod_intr_register.
-+		 */
-+		brcmf_fw_cancel(sdiodev->dev, &bus_if->fwctx);
-+
-+		/* Now we can unregister irqs */
- 		brcmf_sdiod_intr_unregister(sdiodev);
- 
- 		if (func->num != 1)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 9371c1489948c..81c17a8c235cc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -157,6 +157,7 @@ struct brcmf_bus_stats {
-  * @chip: device identifier of the dongle chip.
-  * @chiprev: revision of the dongle chip.
-  * @fwvid: firmware vendor-support identifier of the device.
-+ * @fwctx: firmware request cancellation context
-  * @always_use_fws_queue: bus wants use queue also when fwsignal is inactive.
-  * @wowl_supported: is wowl supported by bus driver.
-  * @ops: callbacks for this bus instance.
-@@ -178,6 +179,7 @@ struct brcmf_bus {
- 	u32 chip;
- 	u32 chiprev;
- 	enum brcmf_fwvendor fwvid;
-+	void *fwctx;
- 	bool always_use_fws_queue;
- 	bool wowl_supported;
- 	bool removing;		/* device removal in progress; quiesce async work */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 22ff326f1924a..d1da65155e544 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -459,6 +459,7 @@ struct brcmf_fw {
- 	u32 curpos;
- 	unsigned int board_index;
- 	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
-+	void **ctxp;
- };
- 
- #ifdef CONFIG_EFI
-@@ -693,7 +694,7 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
- 		fwctx->req = NULL;
- 	}
- 	fwctx->done(fwctx->dev, ret, fwctx->req);
--	kfree(fwctx);
-+	kfree(xchg(fwctx->ctxp, NULL));
- }
- 
- static void brcmf_fw_request_done_alt_path(const struct firmware *fw, void *ctx)
-@@ -703,7 +704,7 @@ static void brcmf_fw_request_done_alt_path(const struct firmware *fw, void *ctx)
- 	const char *board_type, *alt_path;
- 	int ret = 0;
- 
--	if (fw) {
-+	if (fw || !READ_ONCE(*fwctx->ctxp)) {
- 		brcmf_fw_request_done(fw, ctx);
- 		return;
- 	}
-@@ -755,7 +756,8 @@ static bool brcmf_fw_request_is_valid(struct brcmf_fw_request *req)
- 
- int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 			   void (*fw_cb)(struct device *dev, int err,
--					 struct brcmf_fw_request *req))
-+					 struct brcmf_fw_request *req),
-+			   void **ctxp)
- {
- 	struct brcmf_fw_item *first = &req->items[0];
- 	struct brcmf_fw *fwctx;
-@@ -776,6 +778,8 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 	fwctx->dev = dev;
- 	fwctx->req = req;
- 	fwctx->done = fw_cb;
-+	fwctx->ctxp = ctxp;
-+	WRITE_ONCE(*ctxp, fwctx);
- 
- 	/* First try alternative board-specific path if any */
- 	if (fwctx->req->board_types[0])
-@@ -799,6 +803,22 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 	return 0;
- }
- 
-+void brcmf_fw_cancel(struct device *dev, void **ctxp)
-+{
-+	struct brcmf_fw *fwctx;
-+
-+	fwctx = xchg(ctxp, NULL);
-+	if (!fwctx)
-+		return;
-+
-+	/* Keep canceling requests until they see that we cleared ctxp */
-+	while (request_firmware_nowait_cancel(dev, fwctx,
-+					      brcmf_fw_request_done_alt_path))
-+		;
-+	request_firmware_nowait_cancel(dev, fwctx, brcmf_fw_request_done);
-+	kfree(fwctx);
-+}
-+
- struct brcmf_fw_request *
- brcmf_fw_alloc_request(u32 chip, u32 chiprev,
- 		       const struct brcmf_firmware_mapping mapping_table[],
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index 4002d326fd21b..932899d4086b3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -87,9 +87,23 @@ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
-  * Request firmware(s) asynchronously. When the asynchronous request
-  * fails it will not use the callback, but call device_release_driver()
-  * instead which will call the driver .remove() callback.
-+ *
-+ * ctxp is a (pointer to an) opaque pointer that may be passed to
-+ * brcmf_fw_cancel().
-  */
- int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 			   void (*fw_cb)(struct device *dev, int err,
--					 struct brcmf_fw_request *req));
-+					 struct brcmf_fw_request *req),
-+			   void **ctxp);
-+
-+/**
-+ * brcmf_fw_cancel() - Cancel an outstanding firmware request
-+ * @dev: Device requesting the firmware
-+ * @ctxp: Opaque context pointer filled in by brcmf_fw_get_firmwares()
-+ *
-+ * Cancel an outstanding firmware request identified by @dev and @ctxp, which
-+ * should be the same as passed to brcmf_fw_get_firmwares().
-+ */
-+void brcmf_fw_cancel(struct device *dev, void **ctxp);
- 
- #endif /* BRCMFMAC_FIRMWARE_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 55f4d7b970f28..9eae712b0d98c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1555,6 +1555,8 @@ static int brcmf_pcie_reset(struct device *dev)
- 	struct brcmf_fw_request *fwreq;
- 	int err;
- 
-+	brcmf_fw_cancel(dev, &bus_if->fwctx);
-+
- 	brcmf_pcie_intr_disable(devinfo);
- 
- 	brcmf_pcie_bus_console_read(devinfo, true);
-@@ -1572,7 +1574,8 @@ static int brcmf_pcie_reset(struct device *dev)
- 		return -ENOMEM;
- 	}
- 
--	err = brcmf_fw_get_firmwares(dev, fwreq, brcmf_pcie_setup);
-+	err = brcmf_fw_get_firmwares(dev, fwreq, brcmf_pcie_setup,
-+				     &bus_if->fwctx);
- 	if (err) {
- 		dev_err(dev, "Failed to prepare FW request\n");
- 		kfree(fwreq);
-@@ -2231,7 +2234,6 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
- 	brcmf_err(bus, "Dongle setup failed\n");
- 	brcmf_pcie_bus_console_read(devinfo, true);
- 	brcmf_fw_crashed(dev);
--	device_release_driver(dev);
- }
- 
- static struct brcmf_fw_request *
-@@ -2554,7 +2556,8 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto fail_brcmf;
- 	}
- 
--	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup);
-+	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup,
-+				     &bus->fwctx);
- 	if (ret < 0) {
- 		kfree(fwreq);
- 		goto fail_brcmf;
-@@ -2595,6 +2598,8 @@ brcmf_pcie_remove(struct pci_dev *pdev)
- 	brcmf_pcie_bus_console_read(devinfo, false);
- 	brcmf_pcie_fwcon_timer(devinfo, false);
- 
-+	brcmf_fw_cancel(bus->dev, &bus->fwctx);
-+
- 	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
- 	if (devinfo->ci)
- 		brcmf_pcie_intr_disable(devinfo);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 381801af3ac98..1c32fe5828a2f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4417,8 +4417,6 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	sdio_release_host(sdiod->func1);
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
--	device_release_driver(&sdiod->func2->dev);
--	device_release_driver(dev);
- }
- 
- static struct brcmf_fw_request *
-@@ -4546,7 +4544,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- 	ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
--				     brcmf_sdio_firmware_callback);
-+				     brcmf_sdio_firmware_callback,
-+				     &sdiodev->bus_if->fwctx);
- 	if (ret != 0) {
- 		brcmf_err("async firmware request failed: %d\n", ret);
- 		kfree(fwreq);
-@@ -4581,6 +4580,9 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 			bus->watchdog_tsk = NULL;
- 		}
- 
-+		brcmf_fw_cancel(bus->sdiodev->dev,
-+				&bus->sdiodev->bus_if->fwctx);
-+
- 		/* De-register interrupt handler */
- 		brcmf_sdiod_intr_unregister(bus->sdiodev);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index b41949a9bdc8e..e8c0db0c82689 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1306,7 +1306,8 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
- 	}
- 
- 	/* request firmware here */
--	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2);
-+	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2,
-+				     &bus->fwctx);
- 	if (ret) {
- 		brcmf_err("firmware request failed: %d\n", ret);
- 		kfree(fwreq);
-@@ -1524,7 +1525,8 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- 	if (!fwreq)
- 		return -ENOMEM;
- 
--	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2);
-+	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2,
-+				     &devinfo->bus_pub->bus->fwctx);
- 	if (ret < 0)
- 		kfree(fwreq);
- 
--- 
-2.53.0
-
+/jeff
