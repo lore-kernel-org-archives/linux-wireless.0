@@ -1,36 +1,36 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382BD4949F0;
-	Mon, 21 Sep 2026 12:41:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D37495041;
+	Mon, 21 Sep 2026 12:41:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789994478; cv=none; b=qR5S1zW+CKY9D7tlN6fxfiT0DgYuwwm+Koh/zBnGbVloYk5TIr+R/t03i5FUXQUgDjDT57XmcKnKkuME/2bXkZnjP6bQuA1efz51vG+urKV23plOeLuHroR4UF8NByXaGb3iFYDapbmFO3zrRSTyrA4UN+m6G46reI5g51gbmAM=
+	t=1789994479; cv=none; b=TkQsHRMpE0TFwX7Pd/pImk5yifycx+09SSqoKoebpgec0ls9k11l1OWA8R3WGay4FK0UJ1YUB+5YCslHwYN6zDsrySw4hqUIjJ9Gfj4kiMK7DYXXMggNnJplBpyKWwhvRTzwTI8xGT1YuiOf1diZXHgiE8IRQmJ5uRukErnLql8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789994478; c=relaxed/simple;
-	bh=4xC/ANbmNRhRf8JbGa9zVRkQ15ZiLiGdGeXDx6MQtnk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eS8+bW5N0pOvVH8OmeBGbv+KUaT6DoRs3fnB4DqWbfz+JHYmbWJEY4Dh8yw8T/VzOo4jzr11+6CfigP8Z1izGVFCJnTzrXkMIIt0x11nOsjQSbI+zZ4SFx8WOQ5wSMiLcPYVdCo/F1Mj0LyCullrPXZgHb8ekjwqxFe0E6pOzoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=p+5iydgD; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1789994479; c=relaxed/simple;
+	bh=9XZuk/591Nd1YASdo5dfh09lZ7OJV2y5HJsv5hBeWZA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=p+sGdYGfHkIN+Ftfg7q2EQa83l8VuA3MRQ6doMSCbNsJxR6e6hv+nxaf5E1MYdGxiTAxl6nKgbV/vLdJoEbQ3NKUr47CMa4ps8D8r6dOrEtczlZB12f+fBOld81jSGQObYK9vRwscfKpKi3UnZj0Zu/NvMu/wQkcTYcvHLot0q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=L2N8iH+G; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="p+5iydgD"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="L2N8iH+G"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=0SKbgr9jwGrWUR95ZFlXK6kY4Bb/E+TkmfJXmQCfUP0=; t=1789994477; x=1791204077; 
-	b=p+5iydgD/z+rm6YXhUrP3lMlv9bdDrafiXMGRjENyYRA6RYaTzMXaAH4ZxxYua8wbxxlBF+5+bo
-	oWu8yf+P6UiNnfGSgdG919Tb9jwqHZpzAJTJWewCRowtgbHAFh6qFYx1+byBmgBlV4PyWMwM9l8uY
-	540szu+viLtYP/rDvXtygVfWr4M9jtLb4NWJ0yGpGKPm564HvH/1S6kfRycF9LdKrD8/u4DisTxR3
-	/nfwYLBwS5TrQBJyo0CKip4YrtmKcPktvhWnzSAElU8SWko91pXyAtlfofWE8QbCmfYLg4HGi2t6N
-	3HG4z8DrbpaDH3Toh7V14/VzxogKRyKgNbaA==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=0g0zdLEzwgYv7youadd7hxtTzzMVvcPJupmSGf4i/ug=;
+	t=1789994478; x=1791204078; b=L2N8iH+G3EVUWyFOuhgJWffFhb8v6ZFnRDCFevT1Kuunim2
+	6pEwQ4XptfizOkSV/ltUaPhQeSowoCP02XZSg16ld0GiXoKRIDYoa5qVZWUFIvxwMW6FELmawBGZh
+	drOjJUwZ8qL+16jG8yW4JZn0uVylynX0AnIjYeYe9sWuJCK/UwjC6eIf8GzvbI4sHA0DRsZukzHla
+	IyeFEFWdwnkr1xJ4g5/ImCsRu3WEaKOAQWnyvIpzX0nEAf5DwuSDKvC2D/XSre5Q/RYSWfyU7B5MK
+	4g8PBwRqp1W/BCEDkOe6onw0KihoTiW0XVc8KDMQ6gTfCmICVUOq4GtDEfqKrQ6w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1x8dKY-00000005oVO-05ew;
-	Mon, 21 Sep 2026 14:41:10 +0200
+	id 1x8dKa-00000005oVO-21uW;
+	Mon, 21 Sep 2026 14:41:12 +0200
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
@@ -47,10 +47,12 @@ Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next v3 0/7] Add support for Control Integrity Protocol (CIP)
-Date: Mon, 21 Sep 2026 14:40:49 +0200
-Message-ID: <20260921124048.4146576-9-benjamin@sipsolutions.net>
+Subject: [PATCH wireless-next v3 2/7] wifi: mac80211: add key link_id to debugfs
+Date: Mon, 21 Sep 2026 14:40:51 +0200
+Message-ID: <20260921144048.fee6216d4a22.I262f6ee5af944970707e1d4e6607020fcfe6ba89@changeid>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260921124048.4146576-9-benjamin@sipsolutions.net>
+References: <20260921124048.4146576-9-benjamin@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,65 +63,34 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-This adds the mac80211 support for the new key type and using the
-pairwise key for control frame protection (CFP).
+Add the link_id to the debugfs. This is useful for hwsim tests to
+validate the per-link keys in multi-link tests.
 
-v3:
-- Add debugfs patches for hwsim testing
-- Update for REVmf D3.0
-- Configure CIP in hwsim for further interface types
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+---
+ net/mac80211/debugfs_key.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-v2:
-- adjust rtl8723bs stating driver
-- fix nl80211 attribute insertion
-
-Benjamin Berg (6):
-  wifi: mac80211: add key link_id to debugfs
-  wifi: cfg80211: add Control Integrity Protocol (CIP) APIs
-  wifi: mac80211: add cigtk parameter to ieee80211_gtk_rekey_add
-  wifi: mac80211: add helpers to parse/generate CIP Capabilities
-  wifi: mac80211: add Control Integrity Protocol handling
-  wifi: mac80211_hwsim: claim support for Control Integrity Protocol
-
-Johannes Berg (1):
-  wifi: mac80211: add key flags to debugfs
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c    |  10 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c   |  13 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    |  11 +-
- drivers/net/wireless/intel/iwlwifi/mld/d3.c   |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   6 +-
- drivers/net/wireless/marvell/libertas/cfg.c   |   6 +-
- .../net/wireless/marvell/mwifiex/cfg80211.c   |  12 +-
- .../wireless/microchip/wilc1000/cfg80211.c    |  13 +-
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c   |  11 +-
- .../net/wireless/quantenna/qtnfmac/cfg80211.c |   8 +-
- drivers/net/wireless/realtek/rtw89/wow.c      |   6 +-
- .../wireless/virtual/mac80211_hwsim_main.c    |  35 +++++
- .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c |   9 +-
- include/linux/ieee80211.h                     |  22 ++++
- include/net/cfg80211.h                        |  19 ++-
- include/net/mac80211.h                        |  11 +-
- include/uapi/linux/nl80211.h                  |  14 ++
- net/mac80211/cfg.c                            |  41 ++++--
- net/mac80211/debugfs_key.c                    |  18 ++-
- net/mac80211/ieee80211_i.h                    |   5 +
- net/mac80211/key.c                            |  96 ++++++++++----
- net/mac80211/key.h                            |   3 +-
- net/mac80211/mlme.c                           |  20 ++-
- net/mac80211/parse.c                          |   4 +
- net/mac80211/sta_info.h                       |   2 +
- net/mac80211/util.c                           |  19 +++
- net/wireless/core.h                           |   7 +-
- net/wireless/ibss.c                           |   3 +-
- net/wireless/nl80211.c                        | 124 ++++++++++++++----
- net/wireless/rdev-ops.h                       |  23 ++--
- net/wireless/sme.c                            |  10 +-
- net/wireless/trace.h                          |  37 +++---
- net/wireless/util.c                           |  40 +++++-
- net/wireless/wext-compat.c                    |   8 +-
- 34 files changed, 532 insertions(+), 140 deletions(-)
-
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 79ae3552c55b..3a4f8e9e54dc 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -65,6 +65,7 @@ KEY_CONF_FILE(keyidx, D);
+ KEY_CONF_FILE(hw_key_idx, D);
+ KEY_CONF_FILE_NAMED(conf_flags, flags, X);
+ KEY_FILE(flags, X);
++KEY_CONF_FILE(link_id, D);
+ KEY_READ(ifindex, sdata->name, "%s\n");
+ KEY_OPS(ifindex);
+ 
+@@ -362,6 +363,7 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ 	DEBUGFS_ADD(key);
+ 	DEBUGFS_ADD(ifindex);
+ 	DEBUGFS_ADD(conf_flags);
++	DEBUGFS_ADD(link_id);
+ };
+ 
+ void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
 -- 
 2.55.0
 
