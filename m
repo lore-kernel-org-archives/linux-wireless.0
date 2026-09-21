@@ -1,193 +1,361 @@
-Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com [209.85.160.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5FA3C09F5
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 12:04:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C745848EC69;
+	Mon, 21 Sep 2026 12:16:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789992255; cv=none; b=KJnAAe95D154K8JqZj3SBEid6czXSN4mrwcAUxq7tsIsM8rnRJfePdVNz9KW+fKSLBfE/gFeKDHKcS46K+W1euUW9Ny+NfyQ+rSBSc4dZllKYHV6Vp8h6dJ3bPbXQ+thvaCuPyvsMPrqpOyGjZLHOksd36uPGQBG5UVd/fhm/zY=
+	t=1789993005; cv=none; b=dIHEqpmSjj7TXkGH4BdSuIoZofJWkFdsy1Oa8rYnt7um1/MPjRcIM5gEUBAODXEJg+khet3WfF092U2nRCro2WtMb65pWvEEXDkZNgIUYWY9jn4w/hWRGtO4MWzbhSmWmriq1UJhKGkA9BqMHyAkF9tO8k3jHPjfKh5FNXQCe8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789992255; c=relaxed/simple;
-	bh=V2NAvhreAAB9fNyLU7P2x9rrZQXJtm0Z1JGEMd7t28Y=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=mcF9sWhzN9tCTJA4olG95MwKKX9dMgzHdjmKvalw7diQS/IGuyMdS7AarwluCnPfydBs1erantXXUnLGXqUJIK4UN9yX44PbdDjAEKmAzrfmqRNG+T0JifiqTyY7Vod9Q5e8rBWhtPz7M9MWiMRMoiHlQysG9mcX9tcs3zEZkZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-469debb526fso3584934fac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 05:04:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789992250; x=1790597050;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=LNIyPUr3d9jDospW94D2w+VBWVwYmRIPgaoRAx0vhJM=;
-        b=CcSx3vcDxULE1YIsDPsBvCI2ugvrMeTkfWo47rrfCjIze7tU1UKcPD3Qnx0rqxdAIe
-         8mBwkEXIb5/+K6OtIQtdqegi5WLUes1JAwPO2CqcY2BEulFMqLL316NCs/0EUu79R3sU
-         3uZxabK6N2qlytZYE0H56GAQzUuZ/cMGBGUpNUBQBO3m//vCy0HZCKVrI99yU7IFgUGZ
-         Oq6+u8Zy3LyBW6I0A39yi08P4ew7PpffqUUT5ww8/3PU25M0UAlfEvoR/GIcc3VdT2Jt
-         I+PQC/NJ7KVePes1ymQIX/gdrrN7PcGHhYdWGEo2Dd2/FOPREADxN2xhUYRygf5Qu39M
-         pxlA==
-X-Forwarded-Encrypted: i=1; AKwUvBwTx5Jj+d4qLtRdcn/q89vtZmx67+4qloMGcv+gr3+uSE3gX+gVEJqkIeeOuh6YvTtYFB3HKeJ8Hj8HLyJW6w==@vger.kernel.org
-X-Gm-Message-State: AFuF++l+4pZzU4APaFHc26FAaCPFLhMMezBO+8GpfyzXXaD/Tcljd4aZ
-	Rv6JzMnRQYUhr0uc/wg60w3UfvFtGKoZNmgkpo+t++I+lE0YV16clBZnU0yt+ttCtbetsDEQA7y
-	NQV+CS/0PYTu8D8j5IkEj4PCDZPainE7hSLMmJiVAlHSRTWRulFFQhavLq8E=
+	s=arc-20240116; t=1789993005; c=relaxed/simple;
+	bh=HoRUWZxhCAqdw+8+a4EFqtX1hL+OT8uB4TMYYLT4HNQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F/aHOloRAy+rvG3Kln8jC4ARYbJ1fOiXoEbgLQzH5InWLij+T84SOWP+GSrg57Hte+0o9SKikDca2Ara+OihL8nHPh0mCbwwuinvLJeOoks+fRdq8bClkqfy+hMuR4uhYdVoCapjagtqcD63duZ+KNqp/aXLHF+n1Tw+SRql2Rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=shNsvkIf; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="shNsvkIf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=SQLcL0EabcuQ20fdleihUVnZe9ujpz9riTTTswoADpw=; t=1789993002; x=1791202602; 
+	b=shNsvkIfwxB2iYLgwGOOg1dziy85O1B01PGFGSemIh9HTxi5uogRVhcXvNsPvAZ5mXe6y5mNyED
+	qQ+8P0Jnoq+zUg0dTwr2pzxTQMz4WIrt8d7oYBxtqhdqZ0yeyKQig3+fKBZ3hSTybn7Ur3PViG3pM
+	eGNb38gAOdhNjzr/6Ypb8mH5OPtj/kTd0KAqhR5DpdUJKxEwmdX93SoSv5Q5X9TMLiBtFmQvUmRUp
+	yw5LcryNHhxVvuV18b8DaFFBNe68HDQeML/ezevJZByEvcfl5elfqDjWM+vpNjmI4mF1cNdyDmzh6
+	GOZk8qsOA4k04T1qtZucAMs4xQU60H1qS/PA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x8cwo-00000005nuT-2ISf;
+	Mon, 21 Sep 2026 14:16:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [GIT PULL] wireless-next-2026-09-21
+Date: Mon, 21 Sep 2026 14:13:46 +0200
+Message-ID: <20260921121635.195723-3-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:188c:b0:6b7:83d6:2928 with SMTP id
- 006d021491bc7-6ca9c6552cbmr9841319eaf.43.1789992250478; Mon, 21 Sep 2026
- 05:04:10 -0700 (PDT)
-Date: Mon, 21 Sep 2026 05:04:10 -0700
-In-Reply-To: <20260918170746.3824-1-roryl@candelatech.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ab11d3a.514bccd6.255447.0013.GAE@google.com>
-Subject: [syzbot ci] Re: net: cfg80211: Validate monitor channel set against
- radio usage
-From: syzbot ci <syzbot+ci5f68e9bd92e2cda0@syzkaller.appspotmail.com>
-To: dylan.eskew@candelatech.com, johannes@sipsolutions.net, 
-	linux-wireless@vger.kernel.org, roryl@candelatech.com
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-syzbot ci has tested the following series
+Hi,
 
-[v1] net: cfg80211: Validate monitor channel set against radio usage
-https://lore.kernel.org/all/20260918170746.3824-1-roryl@candelatech.com
-* [PATCH wireless-next] net: cfg80211: Validate monitor channel set against radio usage
+Some more changes - mostly not very interesting I guess.
+I haven't received most driver updates yet.
 
-and found the following issues:
-* UBSAN: shift-out-of-bounds in cfg80211_set_monitor_channel
-* UBSAN: shift-out-of-bounds in corrupted
+Note there are some merge conflicts - most are reasonably
+easy but the bigger net/mac80211/tx.c one is a bit annoying,
+but it's "take the wireless-next version". I've pushed an
+example resolution to the 'merge-2026-09-21' branch in my
+(wireless-next) tree.
+(I had fixed an issue in wireless, but also did some bigger
+refactoring/cleanup in wireless-next that fixed the same
+issue as well, just differently.)
 
-Full report is available here:
-https://ci.syzbot.org/series/8cc9e8b7-7ee7-4960-86f8-d3d32e74b751
+Please pull and let us know if there's any problem.
 
-***
-
-UBSAN: shift-out-of-bounds in cfg80211_set_monitor_channel
-
-tree:      wireless-next
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/wireless/wireless-next.git
-base:      3b35f726c20d138fafa154182ee926a419306269
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/007f6283-0b6e-4ff9-84e0-69128d745e0c/config
-syz repro: https://ci.syzbot.org/findings/ba5a8e20-28a0-4771-b097-95a9703e3244/syz_repro
-
-UBSAN: shift-out-of-bounds in net/wireless/chan.c:1831:49
-shift exponent -22 is negative
-CPU: 0 UID: 0 PID: 5850 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
- ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
- __ubsan_handle_shift_out_of_bounds+0x36d/0x400 lib/ubsan.c:494
- cfg80211_can_set_monitor_channel net/wireless/chan.c:1831 [inline]
- cfg80211_set_monitor_channel+0x38a/0x8d0 net/wireless/chan.c:1844
- __nl80211_set_channel+0x340/0x990 net/wireless/nl80211.c:4203
- nl80211_set_wiphy+0x127c/0x3050 net/wireless/nl80211.c:-1
- genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
- genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
- genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
- netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2556
- genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
- netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
- netlink_unicast+0x7bd/0x940 net/netlink/af_netlink.c:1345
- netlink_sendmsg+0x813/0xb40 net/netlink/af_netlink.c:1900
- sock_sendmsg_nosec+0x13a/0x180 net/socket.c:800
- __sock_sendmsg net/socket.c:815 [inline]
- ____sys_sendmsg+0x54e/0x850 net/socket.c:2713
- ___sys_sendmsg+0x2a5/0x360 net/socket.c:2767
- __sys_sendmsg net/socket.c:2799 [inline]
- __do_sys_sendmsg net/socket.c:2804 [inline]
- __se_sys_sendmsg net/socket.c:2802 [inline]
- __x64_sys_sendmsg+0x1b1/0x290 net/socket.c:2802
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fc73059e159
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fc731480028 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 00007fc730825fa0 RCX: 00007fc73059e159
-RDX: 0000000004040000 RSI: 0000200000000040 RDI: 0000000000000003
-RBP: 00007fc73063506b R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fc730826038 R14: 00007fc730825fa0 R15: 00007ffd4fd500b8
- </TASK>
----[ end trace ]---
+Thanks,
+johannes
 
 
-***
 
-UBSAN: shift-out-of-bounds in corrupted
+The following changes since commit a5249d1d9a618b31e15e191faa4122dc5d9912b1:
 
-tree:      wireless-next
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/wireless/wireless-next.git
-base:      3b35f726c20d138fafa154182ee926a419306269
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/007f6283-0b6e-4ff9-84e0-69128d745e0c/config
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-09-03 10:48:16 -0700)
 
-------------[ cut here ]------------
-UBSAN: shift-out-of-bounds in net/wireless/chan.c:1831:49
-shift exponent -22 is negative
-CPU: 0 UID: 0 PID: 6635 Comm: syz.3.380 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-Call Trace:
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150
- ubsan_epilogue+0xa/0x30
- __ubsan_handle_shift_out_of_bounds+0x36d/0x400
- cfg80211_set_monitor_channel+0x38a/0x8d0
- __nl80211_set_channel+0x340/0x990
- nl80211_set_wiphy+0x127c/0x3050
- genl_family_rcv_msg_doit+0x233/0x340
- genl_rcv_msg+0x614/0x7a0
- netlink_rcv_skb+0x226/0x4a0
- genl_rcv+0x28/0x40
- netlink_unicast+0x7bd/0x940
- netlink_sendmsg+0x813/0xb40
- sock_sendmsg_nosec+0x13a/0x180
- ____sys_sendmsg+0x54e/0x850
- ___sys_sendmsg+0x2a5/0x360
- __x64_sys_sendmsg+0x1b1/0x290
- do_syscall_64+0x166/0x520
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fbeb4b9e159
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fbeb5aef028 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 00007fbeb4e25fa0 RCX: 00007fbeb4b9e159
-RDX: 0000000004040000 RSI: 0000200000000040 RDI: 0000000000000003
-RBP: 00007fbeb4c3506b R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fbeb4e26038 R14: 00007fbeb4e25fa0 R15: 00007ffe46366df8
- </TASK>
----[ end trace ]---
+are available in the Git repository at:
 
+  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git tags/wireless-next-2026-09-21
 
-***
+for you to fetch changes up to 6c0b7357e3c7f365ec51dd8d2b626130ee983ce1:
 
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
+  dt-bindings: net: wireless: Convert WL1251 to DT schema (2026-09-21 10:54:26 +0200)
 
----
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+----------------------------------------------------------------
+More changes, including drivers:
+ - brcmfmac: FT/OKC roaming offload
+ - ath12k: IPQ5332 platform infrastructure
+ - cfg80211/mac80211: non-STA TX/RX infrastructure
+   for MLO to fix address translation bugs
+ - the rest is mostly minor cleanups etc.
 
-To test a fix for this bug, please reply with `#syz test`
-(on a separate line) and attach the patch to the email.
+----------------------------------------------------------------
+Aaradhana Sahu (4):
+      mailmap: add entries for Aaradhana Sahu
+      wifi: ath12k: Free allocated CE IRQs on request_irq() failure
+      wifi: ath12k: Free allocated external IRQs on request_irq() failure
+      wifi: ath12k: add support to load shared firmware on multiPD
 
-Notes:
-- The patch will be applied on top of the tested series (as an
-  incremental fix).
-- To test a new version of the whole series, please send it directly
-  to syzbot@lists.linux.dev.
-- Arguments like custom git repos and branches are not supported.
+Abdun Nihaal (1):
+      wifi: ath11k: Fix possible memory leak in ath11k_dp_srng_setup()
+
+Andrew LaMarche (2):
+      wifi: ath12k: support calibration-variant from device tree
+      dt-bindings: wireless: ath12k: drop qcom,ath12k-calibration-variant
+
+Baochen Qiang (8):
+      wifi: ath12k: signal regd update completion when reg event is dropped
+      wifi: ath12k: use per-radio ab in ath12k_mac_hw_register()
+      wifi: ath12k: protect new_alpha2 access with base_lock
+      wifi: ath12k: skip setting country code during registration when unchanged
+      mailmap: add entries for Baochen Qiang
+      wifi: ath12k: use kernel types instead of userspace stdint types
+      wifi: ath12k: fix stale skb pointers after aligned TX payload shift
+      wifi: ath12k: fix truncated TX buffer DMA address in MSDU ext descriptor
+
+Benjamin Berg (8):
+      wifi: iwlwifi: use link_sta internally to the driver
+      wifi: mac80211: change public RX API to use link stations
+      wifi: mac80211: refactor RX link_id and station handling
+      wifi: mac80211: rework RX packet handling
+      wifi: cfg80211: add attribute for TX/RX denoting there is no station
+      wifi: mac80211: report to cfg80211 when no STA is known for a frame
+      wifi: mac80211: pass station to ieee80211_tx_skb_tid
+      wifi: mac80211: pass error station if non-STA transmit was requested
+
+Bert Karwatzki (1):
+      mac80211: tx: Use info->flags in ieee80211_tx_h_select_key()
+
+Carella Chen (3):
+      wifi: nl80211: add fast roam offload extended feature
+      wifi: brcmfmac: detect firmware FBT and OKC support
+      wifi: brcmfmac: advertise firmware fast roam offload support
+
+Darren Li (2):
+      wifi: brcmfmac: add PMK programming for firmware roaming offload
+      wifi: brcmfmac: report port authorization after offloaded roaming
+
+Deepanshu Kartikey (1):
+      wifi: mac80211: fix stats/preemption in ieee80211_tx_control_port()
+
+Devin Wittmayer (1):
+      wifi: mac80211: fix monitor filter refcount leak
+
+Eduard Bostina (1):
+      dt-bindings: net: wireless: Convert WL1251 to DT schema
+
+Georgi Valkov (2):
+      dt-bindings: net: wireless: add flag marvell,invalid-reg-hint-in-rom
+      wifi: mwifiex: add dt flag to avoid conflict with platform reg domain
+
+Heiner Kallweit (1):
+      libertas: mesh: remove unused and undocumented sysfs attribute groups
+
+Jeff Johnson (3):
+      wifi: ath12k: remove skb->data check in ath12k_wmi_process_tpc_stats()
+      wifi: ath9k: use rcu_dereference_bh() for sta->rates in ath_merge_ratetbl()
+      MAINTAINERS: Replace wireless.wiki.kernel.org links
+
+Johannes Berg (26):
+      wifi: skip DUO params when looking for NPCA
+      wifi: update UHR to Draft_P802.11bn D1.5
+      wifi: mac80211: fix unauthorised port check for encap offload
+      wifi: mac80211: fix key selection for encap offload frames
+      wifi: mac80211: don't send encap offload frames unencrypted
+      wifi: mac80211: drop encap offload frames with a tainted key
+      wifi: nl80211: don't export nl80211_mlo_reconf_add_done()
+      wifi: mac80211: remove ieee80211_sta_ps_transition() return value
+      wifi: mac80211: make ieee80211_is_tx_data() internal
+      wifi: mac80211: fix IEEE80211_TX_CTL_REQ_TX_STATUS mixup
+      wifi: mac80211: tx: simplify control port frame transmission
+      wifi: mac80211: remove cookie from __ieee80211_subif_start_xmit()
+      wifi: mac80211: unshare the skb before building the header
+      wifi: mac80211: report multicast transmission from lookup_ra_sta()
+      wifi: mac80211: set flags/ctrl_flags before ieee80211_build_hdr()
+      wifi: mac80211: store the ack skb before building the header
+      wifi: mac80211_hwsim: fix potential channel crash
+      wifi: mac80211_hwsim: overwrite report SKB
+      Merge tag 'ath-next-20260916' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
+      wifi: mac80211: tests: fix memory leak
+      wifi: mac80211: WARN on 40 MHz HT/HE mismatch
+      wifi: mac80211: allow advertising 20 MHz-only non-AP STA
+      wifi: ieee80211: fix FTM bufferable check
+      wifi: radiotap: correct EHT TB U-SIG 1 B20:25
+      wifi: nl80211: rename no-ACK bitmap to TID bitmap
+      wifi: mac80211: fix multi-link UHR association
+
+Julius Bairaktaris (4):
+      wifi: ath11k: implement CE interrupt enable/disable for AHB
+      wifi: ath11k: disable interrupts during firmware crash recovery
+      wifi: mac80211: fix swapped fq_overlimit/fq_overmemory in aqm debugfs
+      wifi: mac80211: don't reset the TXQ scheduling round number
+
+Jérôme Pouiller (4):
+      wifi: wfx: fix possible device hang during init
+      dt-bindings: net: wireless: wfx: discourage OOB IRQ with SDIO
+      wifi: wfx: fix use-after-free of the cooling work on device removal
+      wifi: wfx: fix error code on unsupported firmware
+
+Kamil Bienkiewicz (1):
+      wifi: ath12k: advertise AP_VLAN interface mode for IPQ5332
+
+Kang Yang (1):
+      wifi: ath12k: preserve PPDU state across monitor status buffers
+
+Karl Mehltretter (1):
+      wifi: mac80211: Fix the return value in mesh_path_add() kernel-doc
+
+Lachlan Hodges (4):
+      wifi: mac80211: don't seed an S1G sta's last_rate
+      wifi: cfg80211: remove duplicate s1g_cap kerneldoc
+      wifi: radiotap: add S1G TLVs and channel frequency
+      wifi: mac80211: report 900MHz channel for S1G band radiotap header
+
+Linkai Gong (1):
+      wifi: ath12k: clear dangling channel pointers on error paths
+
+Manish Dharanenthiran (2):
+      mailmap: add entries for Manish Dharanenthiran
+      wifi: nl80211: add support to configure 6 GHz non-HT duplicate transmission
+
+Maoyi Xie (1):
+      wifi: mac80211_hwsim: send config events to the radio's net namespace
+
+Mariano Baragiola (1):
+      wifi: mac80211: avoid trimming injected FCS twice
+
+Miaoqing Pan (3):
+      wifi: ath11k: fix sporadic WLAN initialization failures
+      wifi: ath11k: fix NULL dereference in ahb remove when QMI init incomplete
+      wifi: ath11k: unregister PM notifier on QMI init failure path
+
+Mikhail Lobanov (1):
+      wifi: ath11k: modify null check logic in ath11k_ce_rx_post_pipe()
+
+Nicolas Escande (1):
+      wifi: ath11k: fix locking problem in ath11k_dp_rx_tid_del_func()
+
+Peng Fan (1):
+      wifi: mac80211: use assign_bit() where applicable
+
+Pengpeng Hou (2):
+      wifi: libertas_tf: validate firmware block extents
+      wifi: libertas: validate firmware block extents
+
+Rameshkumar Sundaram (2):
+      mailmap: add entries for Rameshkumar Sundaram
+      wifi: ath12k: fix DMA unwind for ext MSDU descriptor retry
+
+Rosen Penev (3):
+      wifi: mwifiex: Use flexible array for RX reorder table
+      wifi: b43legacy: Use flexible array for DMA metadata
+      wifi: rt2x00: Use device-managed register buffers
+
+Ryohei Hashimoto (1):
+      wifi: brcmfmac: log the firmware status when a connect fails
+
+Sriram R (1):
+      mailmap: add entries for Sriram R
+
+Stanislaw Gruszka (1):
+      wifi: mac80211: queue frames while off-channel
+
+Vasanthakumar Thiagarajan (1):
+      mailmap: update email address for Vasanthakumar Thiagarajan
+
+Zhiling Zou (1):
+      wifi: mac80211: serialize debugfs netdev rename with recreate
+
+ .mailmap                                           |  13 +-
+ .../bindings/net/wireless/marvell,sd8787.yaml      |   6 +
+ .../bindings/net/wireless/qcom,ath12k-wsi.yaml     |   7 -
+ .../bindings/net/wireless/silabs,wfx.yaml          |   3 +
+ .../devicetree/bindings/net/wireless/ti,wl1251.txt |  64 ---
+ .../bindings/net/wireless/ti,wl1251.yaml           |  85 ++++
+ MAINTAINERS                                        |  40 +-
+ drivers/net/wireless/ath/ath11k/Kconfig            |   3 +
+ drivers/net/wireless/ath/ath11k/ahb.c              |  16 +-
+ drivers/net/wireless/ath/ath11k/ce.c               |   2 +-
+ drivers/net/wireless/ath/ath11k/core.c             |  10 +
+ drivers/net/wireless/ath/ath11k/dp.c               |   2 +
+ drivers/net/wireless/ath/ath11k/dp_rx.c            |  21 +-
+ drivers/net/wireless/ath/ath12k/ahb.c              | 166 ++++++-
+ drivers/net/wireless/ath/ath12k/ahb.h              |   9 +
+ drivers/net/wireless/ath/ath12k/ce.c               |   2 +-
+ drivers/net/wireless/ath/ath12k/core.c             |  23 +
+ drivers/net/wireless/ath/ath12k/dp.c               |   2 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.c           |   2 -
+ drivers/net/wireless/ath/ath12k/dp_rx.c            |  20 +-
+ drivers/net/wireless/ath/ath12k/hw.h               |  20 +-
+ drivers/net/wireless/ath/ath12k/mac.c              |  45 +-
+ drivers/net/wireless/ath/ath12k/pci.c              |  55 ++-
+ drivers/net/wireless/ath/ath12k/qmi.c              |   4 +
+ drivers/net/wireless/ath/ath12k/wifi7/ahb.c        |   3 +
+ drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c     |  23 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c      |  20 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.h      |  12 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c      |  17 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hal_tx.c     |   2 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c         |   9 +-
+ drivers/net/wireless/ath/ath12k/wmi.c              |  22 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   2 +-
+ drivers/net/wireless/broadcom/b43legacy/dma.c      |  24 +-
+ drivers/net/wireless/broadcom/b43legacy/dma.h      |   4 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 129 +++++-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   5 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c       |  17 +-
+ drivers/net/wireless/intel/iwlwifi/mld/agg.h       |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c        |  50 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.h        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/tests/agg.c |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   6 +-
+ drivers/net/wireless/marvell/libertas/if_usb.c     |  10 +-
+ drivers/net/wireless/marvell/libertas/mesh.c       | 506 ---------------------
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c  |  10 +-
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  20 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    |   7 +
+ drivers/net/wireless/marvell/mwifiex/main.h        |   2 +-
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |  25 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.c     | 104 +----
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c     |  67 +--
+ drivers/net/wireless/realtek/rtw89/core.c          |   7 -
+ drivers/net/wireless/silabs/wfx/bh.c               |   6 +-
+ drivers/net/wireless/silabs/wfx/bus_sdio.c         |   1 +
+ drivers/net/wireless/silabs/wfx/main.c             |  37 +-
+ drivers/net/wireless/virtual/mac80211_hwsim.h      |   5 +-
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c |  98 +++-
+ include/linux/ieee80211-eht.h                      |  18 +-
+ include/linux/ieee80211-uhr.h                      | 101 ++--
+ include/linux/ieee80211.h                          |   3 +-
+ include/net/cfg80211.h                             |   6 +-
+ include/net/ieee80211_radiotap.h                   |  68 ++-
+ include/net/mac80211.h                             |  65 +--
+ include/uapi/linux/nl80211.h                       |  27 +-
+ net/mac80211/agg-tx.c                              |   9 +-
+ net/mac80211/ap.c                                  |   3 -
+ net/mac80211/debugfs.c                             |   2 +-
+ net/mac80211/debugfs_netdev.c                      |   8 +-
+ net/mac80211/ht.c                                  |   2 +-
+ net/mac80211/ieee80211_i.h                         |  30 +-
+ net/mac80211/iface.c                               |  12 +-
+ net/mac80211/main.c                                |  13 +-
+ net/mac80211/mesh_pathtbl.c                        |   2 +-
+ net/mac80211/mlme.c                                |  48 +-
+ net/mac80211/offchannel.c                          |  13 +-
+ net/mac80211/rate.c                                |   1 -
+ net/mac80211/rx.c                                  | 466 ++++++++++---------
+ net/mac80211/s1g.c                                 |   8 -
+ net/mac80211/scan.c                                |  10 +-
+ net/mac80211/tdls.c                                |   4 +-
+ net/mac80211/tests/chan-mode.c                     |   6 +-
+ net/mac80211/tests/util.c                          |   6 +-
+ net/mac80211/tx.c                                  | 420 +++++++++--------
+ net/mac80211/util.c                                |   2 +-
+ net/wireless/chan.c                                |  11 +-
+ net/wireless/nl80211.c                             |  38 +-
+ 90 files changed, 1667 insertions(+), 1626 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
