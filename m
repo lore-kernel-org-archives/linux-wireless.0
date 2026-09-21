@@ -1,64 +1,65 @@
-Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
+Received: from mail-qk2-f13.google.com (mail-qk2-f13.google.com [74.125.230.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24F0D4DAFAB
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 21:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D759501289
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 21:18:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790025503; cv=none; b=cuOHsXHlpVQL/MoPMzJRrJT2YCFUA9mPa3dr6g6Iwf9jwPkuZpsdyCLADkkzErqH5N0KeXhL775QRFp61nCPkMWYTGZmh0t+5hWPaTue/EFeGkeg6o4IXA/TlNBeinf/odQQwfEBtAX4UjQZKI7k5h5WpSu6WXcea/UNGErW62E=
+	t=1790025504; cv=none; b=CbENV/84/1dDIDugEnossO6JzarPX1lHE89GwCQ01Q9datAE4FHyI3yKejOZvlYczdVBmpWMcM1O4Bl+MSsE1BR0FhyY+Qk7VLNTPPT1LCYk0+uLN6EgfngJElnngANWhGN5/5mfz0vsPg+sS4eXr2IzT5eTYy40sdomUW4IqbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790025503; c=relaxed/simple;
-	bh=72VPKGFgUFUjrL2n1VYKmbyNf3I0BnnQw/kQ9VbMmhc=;
+	s=arc-20240116; t=1790025504; c=relaxed/simple;
+	bh=VRpXZvIUbinbYCp8XtmrFt27Dn7YUlcSLIPDdw8ygUU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PpcHDjGxnVx2JRVCfzctjo99MBvniuQ2roDiJAoIK7ylJWkZnbRYffeUR7bJpD98yCUi+6gaAHwOzo986qYeXafVFvzg8Hr/7G8efKVCGZZpd3/aQmaHvc7X3xzcPcQu6hSQYtH+gXR6iofODTRNPH81kb6B1WiLkUw3EIksq/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com; spf=pass smtp.mailfrom=brivo.com; dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b=b7AceCuw; arc=none smtp.client-ip=74.125.230.204
+	 MIME-Version; b=uZwUUepMFUStGZduf1pNB9ZzL47/5sCQ6UMXUhtbXeYb6E+q4x4GlIZSDIoPxWzba3WB7GNS3rDNTXcUYS+rL18w9QSJaFEEG1KN4a6CSojElDe69LayQ+Pp03ced+AeZI+yTVKO7VT0sMwRyfBgMbK0nLax3/REZZ476u6GczY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com; spf=pass smtp.mailfrom=brivo.com; dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b=p5JXF1dm; arc=none smtp.client-ip=74.125.230.205
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=brivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b="b7AceCuw"
-Received: by mail-qk2-f12.google.com with SMTP id d75a77b69052e-530301ff353so45383221cf.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 14:18:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b="p5JXF1dm"
+Received: by mail-qk2-f13.google.com with SMTP id d75a77b69052e-530e2f50d01so41393241cf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 14:18:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=brivo.com; s=google; t=1790025501; x=1790630301; darn=vger.kernel.org;
+        d=brivo.com; s=google; t=1790025502; x=1790630302; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3XC9Sb/ipf1691XqMArNePnNNYX36EhvRdBJwfuO0HU=;
-        b=b7AceCuwA7VVTS0jeFvUnrNbSLYisFbfbvuSUGbWdTb/7wGuUTLQLRykIQpWy6g1Dr
-         M+3vUS0gANDzKphd8nH5TjFtPfNOtjd38/1RncKgIk7UQ/ihmBbvvRor4PU8kpz2KLmk
-         2afskiBzuf6DpudC6ESqHhX4UJbCspAIcRtK3x9biSpViNo0ivIsH7awcEsYhV63ydrE
-         je50DMo4WD/tSxZKRhqVwLY3qZ5/GBkByeuU7BnfoeI46MGjfkzwazRIRCmD8lR4lHDP
-         hTPSH67FQ+l7HOtMyu4LL7dO6ZIUudL70vDJGgTow4cLNazSC9XhvQIqpNpe9FKbzHfl
-         kQnw==
+        bh=SnvuzFJ+dz4WWctMbBwhpqeLCGhBdru2A4mbwIW3v84=;
+        b=p5JXF1dmRz3t9HsN+GGYB7YgxVeGocXigSKNl5uAcuU8DZDA/d5yGViKUNV9vdQsB9
+         akc9y29tGl+S1mr8ZP7IBxAWmxdCW9lDg14eWOyhwGP8kkwCZTZ3BPJ6WeVgAI0TRXPg
+         /LAtySmr58SRKRP3MD5wjodCUT8Ya27bHHEC93BAqVybbnP4/JRHLn6R0Og39+BUV0CZ
+         +4PAKxcClG+YwEetrj5Ts453pDMwjlvvi0BudESIHaurjsYxRlh9g/i+MEd+MvdJOfQ3
+         Z3uIAxB823KS4ylknvkqz5DB42475WODnE2MUz5rQoV7BwGq8mFwdLT1hOcmolno+/kA
+         DwRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790025501; x=1790630301;
+        d=1e100.net; s=20260707; t=1790025502; x=1790630302;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3XC9Sb/ipf1691XqMArNePnNNYX36EhvRdBJwfuO0HU=;
-        b=BqdpMz3WeVCB63NV1rvNLkqPkUWmrb/pHhVP4zYJvC8ZQoAWMksLiqApovEJLw6rPl
-         SVBBfKwCb7RIqLwhZqHTWf0m98Ru59qlX1HycWMITx+5rKvr6Nl3nAE8rLDJsjm54XSg
-         jYtHtQ6q3u8Zpf3ANFccCpBuG2B4skzL26lzi8q6cHTpNUH2tUUyxzZaa8eMkowg6Ypy
-         ODPwU3fZ9aknMxLwgofzLgNeTtozQ6vV/dkxqNWkjwkEq5B/BMWNc3TWq6IwJHfMYJug
-         MePSLxstbuzM5VvFWy6cUaEkZyQREYrKNX0tN+4/BjEHyG+EX5fPLIo8QIJCCPzfdzCj
-         bS8Q==
-X-Forwarded-Encrypted: i=1; AKwUvBy2EpapZa0d5gB8pbembO2ff8xmp4eEGf4OlD1S5yA1jPfNgfFdLBSwcpthiPflGeE2pHk8JPJM+/uMWJ9y3g==@vger.kernel.org
-X-Gm-Message-State: AFuF++n+43Ij+77IpqgHOxYfdioksM0siyC5rA+mARjFo9ItOixko2Ih
-	JCI1Cig4IomUMnvj9saivEk3XlyFkIeVna2REmOmPdFUoG5mDKmcu2TrRaKDvMiHW0tYo9GN9fg
-	fvZUgQnTRN+mKYodlY/vujXe3d4VNUUYqIAAr+IzmJ2uVQd2WM7QcOVpDqbQ9cQ==
-X-Gm-Gg: AYBFou2cOSg1l9JDPHhivgjaSwvWKOef/63tWAuxUe4r2+yGTSxbYgyB55orN3ioV5p
-	ETbkZluqpyGskd1LIJSw5uFmoStmXSU5quaISVaWpV4iSBgyOwExfHT0Ns1HKEONbf8GtdBgL4X
-	KlygZ2krv34F7ld/pY6Y5YZWlOlmhuDdKTgd0F1fR0AfUeTCNKX8mEAKsp4kMycKLmsVzayfIRi
-	VSHLeaHVXM3WIXTc6CYqqiY2l00yy7reWX4JZdq6t9/T6QCuQw2pzWak2aEGZhs695vH7azq1FQ
-	xhVu1U0IrbWs00MdXHFbG1Yy8rUSLLfuonMTnjbymLfsAMphG3N7JSncKWPXAM2Mnz3BZOkVzuB
-	s8LOcW6eRZBiACFQrpv1qNij36gc5KPIDuAmV7dj8pR1uQ0x4cdfTYx5ACHRGTxesikSMFIygQk
-	x75/Xe1HxpfrSZt08NMAEX8DUgQ+eu1NHw2iM/WIozHvE3i7kWLLLOezTQo9FmH4o=
-X-Received: by 2002:a05:622a:449:b0:530:b2e4:d598 with SMTP id d75a77b69052e-532dd5508e3mr6762731cf.51.1790025500842;
-        Mon, 21 Sep 2026 14:18:20 -0700 (PDT)
+        bh=SnvuzFJ+dz4WWctMbBwhpqeLCGhBdru2A4mbwIW3v84=;
+        b=ezf4jWd30X2PfLtIto55FY8YWpY+Y5kPNPUuRrRB24iucpNYlwFpdKdSIbRg/PkJqM
+         42VdT55gNYx3K4WEI0L6XTNQgeAsn6+StNdcYbipbBuOM+PQrBqyawwgeB8alCManJ9o
+         hfan4lkTfxvu/4vQRp6HNKdk2oRHBS/ypSmyZ8rEFa1x5XW/sTfePwEWaD73VkW6aBw8
+         fj8g6Xj4j5Wm21/ucbhkaChX6G8sBPfEef8HY1LfbCDz3/lfAScMPf+z3X4CYdy76JrQ
+         r0hEDGE76M5Fkecbj+HfY1tK43eTFYOdw33QVL2/73e9KHd7cbcm9l7zfLdtAaWsN1GB
+         0hgA==
+X-Forwarded-Encrypted: i=1; AKwUvByj5w9uYPEfTzlNzHo4dBe3Gf9DsQ0FuZQpdqdF18HWEU9t7JLBBk+TafrH5hluk+NLSrmhpjnda0lp74bA0Q==@vger.kernel.org
+X-Gm-Message-State: AFuF++nJT1JUrUWvSnDPX3lYHdl3VySfo2x/6CKiieyO8tPYBqiOfRuO
+	gnazozYTVnI+NaGnVhno6Ts9tKp5OTmY0FJzRp27qdIB8jjhM8ii5UBMczgRZdUu8xfoF3o567+
+	HOPHt2jheQ/IWJfajNLHlkjVDDEyh2OMv98F/t1LmhPzl4bco9HTS76o4EBhdmg==
+X-Gm-Gg: AYBFou0R7B4is68eTT7fv3s57ASe7/kCfS1BQsWvVickK7cKeHUZaBeiy4j6IMldjWd
+	WPFQ4NEob/VX4Rt8MJVxchwce/4IaBUBZKvcf2fAhjpFeyRURbDCTuf1GCyBerdrjlOQGUujsh1
+	JpooF8SnOkiTn+jRpamfRZMuYByeF0TqtRZbJnLGu3r35+yu6y506vJ28QRyKeEQf6e3EDl6nnD
+	44QhRDDudz2M4WTWtsiZ+R7w8ggMZOtaQar7sJwd5bI5lN4CInVHw8n9cR4KKH3A6++TbuBwhtT
+	oLbWlyXu+LheSxxSb14uk93735DktDCYt8nITfQs+9astDBoVPD8ePrhKCV3UbiBqNe0/bH0/OX
+	IQILukwPPJ6iPQMfdB5huNJYrpy8EPPYh439MX83OFOL9d8s9fFIYXn7+OMzwT7Yp49TUemN28k
+	uMc0qk9R36XrgPqnG6XjvJ80p7/r87liyamgAiXVwqnxTeGi5nziIjY+nj6G1kahL6cJhgifU/o
+	PI=
+X-Received: by 2002:ac8:5e4f:0:b0:532:ca19:afc1 with SMTP id d75a77b69052e-532d8d8a849mr27485671cf.29.1790025501481;
+        Mon, 21 Sep 2026 14:18:21 -0700 (PDT)
 Received: from strozzi ([66.193.28.125])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532df63ab0dsm267121cf.26.2026.09.21.14.18.20
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532df63ab0dsm267121cf.26.2026.09.21.14.18.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 14:18:20 -0700 (PDT)
+        Mon, 21 Sep 2026 14:18:21 -0700 (PDT)
 From: Sean Anderson <sanderson@brivo.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>,
 	linux-wireless@vger.kernel.org
@@ -67,10 +68,10 @@ Cc: Johannes Berg <johannes.berg@intel.com>,
 	linux-kernel@vger.kernel.org,
 	brcm80211-dev-list.pdl@broadcom.com,
 	Sean Anderson <sanderson@brivo.com>,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH 1/4] wifi: brcmfmac: Fix canceling uninitialized datawork
-Date: Mon, 21 Sep 2026 17:18:11 -0400
-Message-ID: <20260921211817.2432341-2-sanderson@brivo.com>
+	Franky Lin <franky.lin@broadcom.com>
+Subject: [PATCH 2/4] wifi: brcmfmac: Fix brcmf_pno_detach NULL-pointer deference
+Date: Mon, 21 Sep 2026 17:18:12 -0400
+Message-ID: <20260921211817.2432341-3-sanderson@brivo.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260921211817.2432341-1-sanderson@brivo.com>
 References: <20260921211817.2432341-1-sanderson@brivo.com>
@@ -82,41 +83,30 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-datawork is currently initialized in brcmf_attach, but bus_if->drvr is
-created before this in brcmf_alloc. Both of these functions are called
-on firmware load, which may race with device removal. If this happens,
-cancel_work_sync may be called on an uninitialized datawork. Fix this by
-always initializing datawork before we set bus_if->drvr, as this matches
-the condition in brcmf_bus_cancel_reset_work.
+brcmf_pno_attach is called when firmware is loaded, which may not have
+happened yet at removal time. Skip the rest of the cleanup if pi is
+NULL.
 
-Fixes: 43b25879f004c ("wifi: brcmfmac: drain bus_reset work on device removal")
+Fixes: efc2c1fa8e14 ("brcmfmac: add support multi-scheduled scan")
 Signed-off-by: Sean Anderson <sanderson@brivo.com>
 ---
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index dad6f4563d146..a3163120154dd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1298,8 +1298,6 @@ static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
- #endif
- #endif /* CONFIG_INET */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index d9fc94076791d..07d195e4d2832 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -533,6 +533,8 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
+ 	brcmf_dbg(TRACE, "enter\n");
+ 	pi = cfg->pno;
+ 	cfg->pno = NULL;
++	if (!pi)
++		return;
  
--	INIT_WORK(&drvr->bus_reset, brcmf_core_bus_reset);
--
- 	/* populate debugfs */
- 	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
- 	debugfs_create_file("reset", 0600, brcmf_debugfs_get_devdir(drvr), drvr,
-@@ -1349,6 +1347,7 @@ int brcmf_alloc(struct device *dev, struct brcmf_mp_device *settings)
- 	drvr = wiphy_priv(wiphy);
- 	drvr->wiphy = wiphy;
- 	drvr->ops = ops;
-+	INIT_WORK(&drvr->bus_reset, brcmf_core_bus_reset);
- 	drvr->bus_if = dev_get_drvdata(dev);
- 	drvr->bus_if->drvr = drvr;
- 	drvr->settings = settings;
+ 	WARN_ON(pi->n_reqs);
+ 	mutex_destroy(&pi->req_lock);
 -- 
 2.53.0
 
