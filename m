@@ -1,89 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80A07378D8D;
-	Mon, 21 Sep 2026 11:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDC6F489FB2
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 11:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789989956; cv=none; b=g2xgiemIwfwWna+FYlWLGlzxF/z/Z9A6Z5500gywrz9htUu/PLhuqPiEztfhpUlRLv8jaTZZ1d/FwOSyYjCnNfVxX/dqUUi1EvmTbQv+kUNnf/jNQtnruYFJNQmnIC4r9mjvmsuV/pzotc5D2hc7d/bXr7D18GwTes0tuSybmfg=
+	t=1789991508; cv=none; b=QKI96nYOHzvUzjPiB9dFcFhON0FOqHqXQj4QpnuxIPYy0RTewJnO1KuLoHODXsVHZe3xVqIGd2R05Qgg7fenwfMghzmjgaNGF3drhALYiEjVrwNCcD7z7/0zF5JL9ZeXeeofiXMWSO7X7y9wy0UUbRkd0e0/+b5bgtC/Dmn46Eo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789989956; c=relaxed/simple;
-	bh=uPQtscV8Z0GXUBHpFrT+jeW0D1Q6eUCptzebFCXmqdI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UMv+5semD5Bf0FAmyUZ/HpeiS2F+4CjIKHvhS/9ZnQpjv1OWDpO6wyxqxihwABh7ZpvL2C+DOgTq6FmQtGPY/XND8V5hdjMGs6PQLeN/+dZqslxgCL7kF+qyC35F8oE3U00kZEdzr3cO4+QF07nbv9tX2+9rjMIxhC9O8S+q+oM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k9sz3N4G; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789991508; c=relaxed/simple;
+	bh=PYeJW5bTcHcFyRqoD8LOZOnJMT3bFUMUhzn24qlPg2Y=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=hzbNFFjXW4tZDhas+q2n/JYwj8d2X8BwkrVgZHORI6p1DLbZavAuk8jVSiSXjDd4lQTf0rDapPOT/O61HpJbTvEBNFOspGQlu+eD001y+QXgdSAvEylICJ/Mqb7GCv4oj17VKrUbVbNXfgsGzaV7aUKbLYinN5rnShyqOtjWhT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LudeHORO; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k9sz3N4G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E571F1F00893;
-	Mon, 21 Sep 2026 11:25:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789989955;
-	bh=+IU8t1JRfWrIGINdVDCgScYXPyiqDlZ/6ergXEl1tFY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=k9sz3N4GdpeJEzRzX4jMR2FXUFXpxSvoIQYfMv+R2t1GqT2//p4GZwP/X/5+lve4P
-	 yJIZfXwQFM7SRsc7dIWr4GDAzOp5hKtW56b2FfiEkEaAom6R0zXFsILi5cqa0nwAeB
-	 Ipbk3eVN87PthYRWyyCgEO1rsbq8CtAlwQcy3yW8u3YYfLOpzs5/aPSC6AgpZ53slR
-	 YdAvUqqm2cODG7VtK1Pe/zJm31JPk0KQgaJqFDbVat+Ci38dXlb5HDZRJ497kPDFWT
-	 bHMJ8ad+byfEUFK0AMK/xQxgqrqIFfK1246dPIBxqRILgKDGmereFtay3nJ2aZt5mr
-	 9a6T/QpCBEeWw==
-Date: Mon, 21 Sep 2026 13:25:45 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
-Cc: "David S . Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
-	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Jeff Johnson <jjohnson@kernel.org>, linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	ath12k@lists.infradead.org, Bjorn Andersson <andersson@kernel.org>, 
-	Chris Lew <christopher.lew@oss.qualcomm.com>, Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
-	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-Subject: Re: [PATCH 3/4] wifi: ath11k: Connect to the QMI server belonging to
- the device owned by this driver
-Message-ID: <zozo7e42rvf4evl2q5ugrb2ccvkb6l3um56yuqfgi7ghx5rfou@57b4pqg7fpfk>
-References: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
- <20260918-qrtr-multi-ep-v1-3-8a06caa368d3@oss.qualcomm.com>
- <da0421b8-bf31-43d1-8d71-520753c8344c@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LudeHORO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=PYeJW5bTcHcFyRqoD8LOZOnJMT3bFUMUhzn24qlPg2Y=;
+	t=1789991507; x=1791201107; b=LudeHORO3fz+gwtiRqPpFvtG87JspnRgmxLrE9l1eCLa5kH
+	dNzuxzwz48dFik3K2idVSE+yNWnEFXPatgWMdIFSsChuCfXr3pNplO0oNjd/RcuM/uYdSTu25oaIE
+	x6Hm0fd+d5eX+UHT18kdbgE814wlKIeuZu/iX7J3OqxFRdxhIrpV/nmvI4Ig5IURp3VVf8lSMFYI+
+	sMfRKUf5p2msK8NkzEYxy71l1y/yGDfiyg7U47+cvi9yBKAVfphMtsaAZ/KO3sqf7o19KqRQRM/dV
+	G3B/KWfOwbzZVsQQOoGcqpAm6SC6PFhFi9vvbUVbE6GfB8VSLG9KJ3KtUOVMhMEg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1x8cYf-00000005n3v-1GiB;
+	Mon, 21 Sep 2026 13:51:41 +0200
+Message-ID: <48ebf25d157b8c12dff724fb1f6a97a0b45849e0.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v2] wifi: mac80211: Report parent AP BSS
+ parameters for AP_VLAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>, 
+	ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Ganesh Kariganuru Mahabalesh
+	 <quic_gkarigan@quicinc.com>
+Date: Mon, 21 Sep 2026 13:51:40 +0200
+In-Reply-To: <20260915052923.3300269-1-aaradhana.sahu@oss.qualcomm.com>
+References: <20260915052923.3300269-1-aaradhana.sahu@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <da0421b8-bf31-43d1-8d71-520753c8344c@app.fastmail.com>
+X-malware-bazaar: not-scanned
 
-On Fri, Sep 18, 2026 at 07:39:09PM +0300, Juha-Matti Tilli wrote:
-> On Fri, Sep 18, 2026, at 19:28, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > 
-> > When two identical ath11k PCIe devices are connected to the same host, both
-> > advertise the WLFW service with the same service and instance id. The QMI
-> > lookup reports both servers to each device, so a device may connect to the
-> > firmware running on the other device.
-> > 
-> > But now, QRTR provides each MHI endpoint a unique node id which is
-> > different from the node id announced by the device. So use the same id to
-> > pick the correct server. Add a get_qrtr_node_id() HIF callback that returns
-> > the node id derived from the MHI controller index and zero for transports
-> > that do not assign one. In the new_server callback, skip any service whose
-> > node id does not match. A node id of zero disables the check, so transports
-> > that do not assign one keep their current behavior.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> 
-> Tested-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
-> Tested-on: 2x WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
-> 
-> (assuming the patch is the same and hasn't been updated since 17.9:
-> https://github.com/Mani-Sadhasivam/linux/commits/qrtr-multi-ep/ )
-> 
+On Tue, 2026-09-15 at 10:59 +0530, Aaradhana Sahu wrote:
+> AP_VLAN interfaces do not maintain independent BSS configuration.
+> When station information is reported for a 4-address station, BSS
+> parameters are read from the AP_VLAN interface, causing beacon interval,
+> DTIM period and BSS capability flags to be reported incorrectly.
+>=20
+> Read the BSS configuration from the parent AP when populating station
+> information for AP_VLAN interfaces. This ensures that beacon interval,
+> DTIM period, CTS protection, short preamble and short slot time reflect
+> the parent AP configuration for both legacy and MLO station dumps.
+>=20
+> For MLO, the per-link BSS configuration is used so that CTS protection,
+> short preamble and short slot time reflect the configuration of the
+> corresponding parent AP link.
+>=20
+> Only advertise NL80211_STA_INFO_BSS_PARAM when a valid BSS
+> configuration is available. This avoids reporting zero-valued BSS
+> parameters when corresponding BSS configuration is unavailable.
 
-I just sent v2. Could you please test this version? I had made some changes
-while rebasing to net-next/main, so making sure I didn't regress, thanks!
+So ... I guess I can't disagree with that - but is it worth reporting
+any of these parameters at all? They're entirely under control of
+hostapd, so it already _knows_ - is there a separate tool that really
+needs to get them via the station info?
 
-- Mani
+I'd be tempted to just _remove_ these on the AP side rather than making
+the code more complex to report them correctly, in particular since
+basically nobody could actually be using them right now since they're
+just broken ...
 
--- 
-மணிவண்ணன் சதாசிவம்
+johannes
