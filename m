@@ -1,131 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f40.google.com (mail-pz2-f40.google.com [74.125.228.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C67B44F553;
-	Mon, 21 Sep 2026 07:59:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6A2433F8C4
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 08:08:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789977592; cv=none; b=hP0uyiAKeUXrLgxRWTPp3Q29p6TVbw9YBds3dzKObyPZd9+AgzQ7A+2SflMs9dc07aiohTBrKmS5OJKD9coUOyiGNv9NplwsLf3k4jWN0xxKDPA8cUqDwYW8JDDIuoWsr7JhNVC4zedLHoUUF9+HP/r1t+2f0iiyB/3ndgv0Ses=
+	t=1789978127; cv=none; b=IM9gl/U8iF54a3SCGRSGH4hsI3BHKJR14Ce+YNYwe5nQv7Ec5jxm31l7sV1eTaaoKaXD+0hnFS8rgt4fTgUTntE7xgshtBv+GrMgr4jUo8KtsQdPZI1rZmY1zk+8JWX3OuTCQ/xBSDS6vAufJ+cjUTEOdCN/ljL71u5HU2KqfG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789977592; c=relaxed/simple;
-	bh=SmvhrJEU24sW5LU8DytMNLC3sHmZyGqZmfauFRtK3ng=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JboRFWkYseZtE138/V3g9rDfkSm3mXjazqJLiQ1Neif/oJTRnAjlkdn7o3JasXZwMkCSF0wHcVXgDu2N7wki2czu4Kb3RSCFAQMSdlm2S+lGG6ygkX3CwborbEwrVvPM56tDBsEI5zum6GqoD3frh7DMjt97wHoG7sexx4soTFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGQnCm61; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789978127; c=relaxed/simple;
+	bh=0RaQGQqIo9leMXjyzQA0KC9Q+HujEJJke6QT7/KvSNo=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gRiHeVsPwltBnn1tsl8xp2Pf7lhIqq96tA5nDDm4UZU9DM7a+rwsZzjc84rPusc7vgRoRdrkrpENxdvnGVDEeudQchtTyKyzc5bYlLXqQDgibSLQbgV4XNWB+5zbQ84okUOMe0Sx39jSns78c3ch8afFhlD+3+jEG6qibethUms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bVSv3kMC; arc=none smtp.client-ip=74.125.228.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGQnCm61"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DCA58C2BCFA;
-	Mon, 21 Sep 2026 07:59:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789977591;
-	bh=SmvhrJEU24sW5LU8DytMNLC3sHmZyGqZmfauFRtK3ng=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=QGQnCm61dgAVXwQIpNp+lsRzjn4B8gTWeaQhAaugxbJ2ihp26vHQ8c3K8q6oBTiw0
-	 fPAZIaSJfJSb01Vbnia3zd5ksopSsrqN1m5EpHhhZT9jv3Thk+i4hA319FdxcN3UVg
-	 ylvKmJ0EhRSAB1muiKzVk4SMsUtGnCyL9GxxXjTYVTTQVfQcuU/spTcG/tPb/gDkH+
-	 5fEf+XafoJxm76azApq/ty+482QXlELYGTg93wng1oH9npszRkt9J3xkHtxG9ILOhC
-	 YenFAb1TjonV5k+NZRvPcq0ZyTv+ppANgO9kYXYXbX+cne7QAVztGXaf2XdU7qpJnF
-	 9WgaCQ1ibee/Q==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9294C982EE;
-	Mon, 21 Sep 2026 07:59:51 +0000 (UTC)
-From: Kim Wooseok via B4 Relay <devnull+5mghybrid.khu.ac.kr@kernel.org>
-Subject: [PATCH rtw-next v4 0/3] wifi: rtl8xxxu: keep RX requests available
- across transient errors
-Date: Mon, 21 Sep 2026 16:59:48 +0900
-Message-Id: <20260921-codex-rtl-rx-v3-submit-v4-0-eeb09fe8f791@khu.ac.kr>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bVSv3kMC"
+Received: by mail-pz2-f40.google.com with SMTP id d2e1a72fcca58-8748f34b1f2so2564151b3a.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 01:08:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789978126; x=1790582926; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lJf0AoDPq153hT3aZ9zolJbEGD9GJzVcss+BLxpyNVg=;
+        b=bVSv3kMCmbOHD9t1EXb9tFC/DwYBsTtIXFRtmptsDNkCYfr4NYrol30HUMxWhXCrcG
+         NugtI9VMwA04MFK+YqO3jzk0waVYkOzbUyv7Z8ktaJwZP0h6tK7qtSNee/9K+HZDAXaQ
+         k9VvVtzoKhlSq1u+GU8FGZaooM5H3oO9hMOwozpuAdg7iQh9dqlaMF9YeCpe4fs4Trzi
+         Eqn9sDPAn9dIAQmm0caE8yqWZJ0e0LMzWvyofFqFkCCzxnsEs3cRWExXZyVyxYkVsC0S
+         LVdutyaNjzZCaf8dNp+a6oK5OHVsgu6AzNeIlV3YjbTYc+nLMCrENXIJADZfqHZstaTt
+         5wYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789978126; x=1790582926;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lJf0AoDPq153hT3aZ9zolJbEGD9GJzVcss+BLxpyNVg=;
+        b=xkYU66sVEQ1dS0kRylD3xKoLiKozd1NIWu0+RtW0yglaJkK/hxqSpokO2ZJsPbSPvK
+         fw5yaCo9fhFqzhBfuGqWtY9MeDbp169iM9bDQpXLZ3l0t+3cLU+4liMb+Um/kAR9nh/G
+         IwCoWzDQKZFFmF5j9GwXLlGnmx/gf/V96oKQDoSFPZEpZ97b9RgcGBb/SGX4cK0KPN6Q
+         jdin0CEL4l9NwhHQBDelQuVejtz4gi7v+dpytx6a5F6OmT1tsWACtqB4WqnliSOC8H+c
+         f5A2QGywdSlwp2x8I4JURggtV6dGRPeHAw2nL5VcclRkHwCnVZFVH4uvqt9rPVIDRhUb
+         JgVA==
+X-Forwarded-Encrypted: i=1; AKwUvBz1lRcxArBnROTgMKGa4pXz+pJmBJb+Cl5RvJhGtT97niGfeLMxo1i2g0lA4FXlF3wtMJDw+Yl7jlxpPFy9+w==@vger.kernel.org
+X-Gm-Message-State: AFuF++k2YxILRyJqs7EYJ3YRK1acekZEnFEH6FIikc2RARifqLAq0uTI
+	iBDd6AopD8bHyuYWHol+eknsrM9G3LCVIDODQpCWHkSErs04kHL6Kgs3
+X-Gm-Gg: AYBFou1fGTkJgA0OR7H6061rS6aHhwHMglnN/LzyunhQT/F6Lj09V+cXu1P1zg2DFXS
+	7IPb9fHLQ4858tAnPW3GZCBve7p4Wb9E02IduceZGcy/Ekjzyg3Hz3xo8tSTz76nVkMn7WUTwlJ
+	KtQLng/kFUIkXgBM2Ytlxb6CBd99d09FV7DVre4IrnxmjZc3xep3tSaJqi/vMs+j95Od5kJYWHo
+	lA55wS98MdCH8e5rdZ1rNR0PMIKeaWvILdebskJnXQQycKQSWh/OIz8wpEHXII7+Frobo1fZyMs
+	oQTzqEegyNeJ2q5APEkaoGhSUY1uwo2A9IIaYeeIaGkGpOtFSif5RRsMv3+tZMXLcdh5pkmayT7
+	XCNA/wnnzc/pZ96iXW9wyDL93sXMDlxWNy5NFT8mXif8JmfnQYAeBPzl8EvELFkr0QYgqc5PFVt
+	qY6GWEMg8TIS3megrhueCZM5xbs1B9wnXZO2xZKRNc000jGJA5jdM/s7ZatFOVFP5e0QuMRueTN
+	zMPC951BR/WowFBcdTGq3fQtFwW8LI6kN6iW8kAu32EL3ZSdm68y34maGegpnsmxKX6t3AjrOnP
+	KILqR0zoYPk=
+X-Received: by 2002:a05:6a00:1c8d:b0:857:72ba:ff0a with SMTP id d2e1a72fcca58-874dcae6e87mr14283804b3a.18.1789978126122;
+        Mon, 21 Sep 2026 01:08:46 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-227-192.dynamic-ip.hinet.net. [61.228.227.192])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-877a96f8da0sm2842130b3a.32.2026.09.21.01.08.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Sep 2026 01:08:45 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
+Date: Mon, 21 Sep 2026 16:08:40 +0800
+To: Heyang Tan <thy15333007817@163.com>
+Cc: francesco@dolcini.it, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] wifi: nxpwifi: bound histogram debugfs output
+Message-ID: <arDmCFfgOGThdGxX@nxpwireless-Inspiron-14-Plus-7440>
+References: <20260919040253.590-1-thy15333007817@163.com>
+ <20260919040253.590-2-thy15333007817@163.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4VOSw6CMBC9ipm1QyhFAq68h2FRyigVLWZaEEO4u
- y3GtbOa981bwBEbcnDcLcA0GWcGG0C+34HulL0SmjZgyNKsSKssRT20NCP7O/KMk0Q3Ng/jUTQ
- 5qaLKRDgI4SfTxcxb8RnYv9DS7KH+KiFzI+1jb/Q2yhE2rKzuIvVzY+Sj3hnnB35vGye5Nf6bE
- 74Uy1K2QsiDqAp56rsxUTrpGep1XT8V2yEZ+AAAAA==
-X-Change-ID: 20260920-codex-rtl-rx-v3-submit-1b4ea6921111
-To: linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>, 
- Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>, 
- linux-kernel@vger.kernel.org, Kim Wooseok <5mghybrid@khu.ac.kr>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789977589; l=2887;
- i=5mghybrid@khu.ac.kr; s=kernel-20260913; h=from:subject:message-id;
- bh=SmvhrJEU24sW5LU8DytMNLC3sHmZyGqZmfauFRtK3ng=;
- b=zQIRZTigf6m5OBJGnNqPeiVrjGcO35JlN7AJ61tmmv+u+IZrwsHTUYP+5UrCb2gWzQGGySH73
- NPPslW8JH/AAd7rQ1l84s8AMteA49CkH2ar4lFNxyF+xM9iQPEwHGYa
-X-Developer-Key: i=5mghybrid@khu.ac.kr; a=ed25519;
- pk=1az/6lC8Tmd6BcvyarPc8FWoSxsV/WRr5NLs1v+kjlE=
-X-Endpoint-Received: by B4 Relay for 5mghybrid@khu.ac.kr/kernel-20260913
- with auth_id=1028
-X-Original-From: Kim Wooseok <5mghybrid@khu.ac.kr>
-Reply-To: 5mghybrid@khu.ac.kr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260919040253.590-2-thy15333007817@163.com>
 
-rtl8xxxu keeps 32 RX URBs in circulation. Completed requests wait on a
-pending list until more than eight are ready for resubmission. Completion
-errors free their URBs, so a finite run of errors can leave too few
-requests to reach that threshold. Reception can then remain stopped
-after the errors end.
+On Sat, Sep 19, 2026 at 12:02:52 PM +0800, Heyang Tan wrote:
+> nxpwifi_histogram_read() writes histogram entries to a PAGE_SIZE buffer.
+> Each entry is formatted with sprintf(), so enough populated buckets can
+> write past the allocation.
+> 
+> Use scnprintf() with the remaining buffer space when formatting the
+> histogram.
 
-This series preserves those requests across recoverable errors. It also
-fixes an skb leak after failed submission and startup error paths that
-leave requests active or report success after only part of the pool was
-allocated.
+Using seq_file may be a better long-term solution, but the current
+scnprintf() fix looks good to me.
 
-Normal completions and recoverable failures use one pending list and
-one delayed work item. Errors schedule a retry with a 100 ms delay.
-When a normal completion takes the pending count above eight,
-mod_delayed_work(..., 0) brings the work forward. The delay limits
-repeated retries when normal reception is not progressing; it is not a
-minimum wait for each URB. ENOMEM/EAGAIN during submission uses the same
-retry path.
-
-I designed the v3 tests around the error paths changed by this series
-and exercised them on an RTL8192EU with the RX changes backported to the
-Pi's 6.18.46 RT kernel. I checked resource cleanup and reception after
-recovery and restart.
-
-With the same 24 injected EPROTO completions, the unpatched driver
-stopped with eight pending URBs and none in flight. V3 retained all 32
-and received 1,225 packets in 30 seconds without restarting the
-interface.
-
-For the changes in v4, I rebuilt the driver with W=1 after patches 2
-and 3 using the existing ARM64 build configuration. Both builds passed
-without warnings. All three patches pass strict checkpatch and apply
-in order to the base commit.
-
-Assisted-by: GPT-6 Astra
-Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
-
----
-Changes in v4:
-- Leave patch 1 unchanged and add Ping-Ke's Reviewed-by to patch 2.
-- Initialize the RX worker's priv pointer at declaration and add the
-  requested blank lines.
-- Rename the queue helper's retry argument to defer_schedule.
-- Use schedule_delayed_work() for delayed retries. Keep
-  mod_delayed_work() to advance pending work on normal completions,
-  using system_percpu_wq instead of system_wq.
-- Link to v3: https://lore.kernel.org/linux-wireless/20260920-codex-rtl-rx-v3-submit-v3-0-883d11351963@khu.ac.kr/
-
----
-Kim Wooseok (3):
-      wifi: rtl8xxxu: free RX skb when URB submission fails
-      wifi: rtl8xxxu: unwind incomplete receive startup
-      wifi: rtl8xxxu: preserve RX requests across recoverable transfer errors
-
- drivers/net/wireless/realtek/rtl8xxxu/core.c     | 154 +++++++++++++----------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |   2 +-
- 2 files changed, 87 insertions(+), 69 deletions(-)
----
-base-commit: 73e3b1c94c7d5b4a113e7cbb42665dc2fe3b9d78
-change-id: 20260920-codex-rtl-rx-v3-submit-1b4ea6921111
-
-Best regards,
---  
-Kim Wooseok <5mghybrid@khu.ac.kr>
-
-
+Reviewed-by: Jeff Chen <jeff.chen_1@nxp.com>
