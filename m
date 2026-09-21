@@ -1,94 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC97463B7C;
-	Mon, 21 Sep 2026 09:27:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CF89459AD2;
+	Mon, 21 Sep 2026 09:27:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789982828; cv=none; b=j54F9nBMCJ0oj14OkwjaIvegoyqZnYtNOs0H51Wqxl5E5P9F34sZFgJlDCDOyTS2rEt8njhmPTAdumYwOIEVtOmaEttQrH2qTimv+hKY0fcO5fOxmQ5K+3pWO6soEm8J6LiapU816t012D0fNKuxo9Rf2hQKWlH+srDXxcgOXQ0=
+	t=1789982881; cv=none; b=DTLLpMS0WgIr+/Vg0WRxASAiv3tZxz1UQ8CJMcmvEBm0HDhvwrabpRBPzXpuU+qV56pwfFDGWM0pSVYfvYsekDh44IwZXiqi6ZWkKSVcnZ4mrMfftpVfVFrVabzFDXhf9Rq0D1xq0oDUcTFIEToOu+7KLtkC6F09R0vYsDdruGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789982828; c=relaxed/simple;
-	bh=v6JpBp3AArOdnsctwqjfY3ZCGJR9JA0h+WUyTMdr+WI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Lu/0q62QMKvnEHPFB/dbFp+ZQRij6V1cIBlla0vZ4UeCpLiwY6Rb8rzbmGcEn15AN8m2D6E+MhWn1OrXlX+oj22q9vBk4muI2fk0MmU+zsk00fXvCVxns2AgBk3BHf3gTbo9fZ8XCLeJhh59ilmmSQaluUw/Jeu+Ev0jjmeblvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SCPakuZ0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789982881; c=relaxed/simple;
+	bh=mWkBj2vDftGwRUgbR90kZl2tiuVkAriqXm87VBPrK5g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YSboadbWDOS4dHftxDjhy5ola/pPNGBgaxyaEmxjRPXpDJHLEQRk/Ltdq+9mUbJMX7G6y5pl/sbQBaA/NFCcj9sRskQJlQoXMYqFd/T+aeMkS5Ff9DuV7G2FbUOKtkAPY5R7K7tjepTf4Wd/EmrhdKjhkRnHdROAYUeolZxEb8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FUllEETn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SCPakuZ0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C1B31F000FF;
-	Mon, 21 Sep 2026 09:26:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FUllEETn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 351D31F0089A;
+	Mon, 21 Sep 2026 09:27:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789982826;
-	bh=HDN5tiTALp2HjdaynTUWOVRoE4KJy7qUfZYfcVAfO6M=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=SCPakuZ00OQvwOBru74VDnsKgxqtvVnrpR4I4DTicBqplzKxQ1/JHVYalVOy+fBXi
-	 phx16fde0X+tPcXeoa0K3HI7/4FErzYLoUE19z7668esyTacgyXRl2vi0aqLXzrzny
-	 xE3I9ulze6NBKfB8UUyrdOi+/sNT/7ZKDg+Yj4RTK2u9fr8JYKuMo1E5yCg0K9LYcX
-	 9kFWWkaRbnDDmv8uANkCdutrg7zm6ZK2w1zE5nXsd6D3TjbJUPJmmDupo0zzl94mcR
-	 vTNy3USx3CuoctNsxdOYI2NHDisLrB/u7y1ol6g+vlVg4HRks82m8D8b3NVJK4T08o
-	 8wktRkjTt4ZAQ==
-From: Srinivas Kandagatla <srini@kernel.org>
-To: Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
- Johannes Berg <johannes@sipsolutions.net>, 
- Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
- Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
- Rocky Liao <quic_rjliao@quicinc.com>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Simon Horman <horms@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
- Heiner Kallweit <hkallweit1@gmail.com>, 
- Russell King <linux@armlinux.org.uk>, 
- Saravana Kannan <saravanak@kernel.org>, 
- Christian Marangi <ansuelsmth@gmail.com>, 
- Loic Poulain <loic.poulain@oss.qualcomm.com>
-Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
- ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org, 
- netdev@vger.kernel.org, daniel@makrotopia.org, 
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
- Christoph Hellwig <hch@lst.de>, 
- Piotr Kwapulinski <piotr.kwapulinski@intel.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260806-block-as-nvmem-v10-0-be598b2a5606@oss.qualcomm.com>
-References: <20260806-block-as-nvmem-v10-0-be598b2a5606@oss.qualcomm.com>
-Subject: Re: (subset) [PATCH v10 00/10] Support for block device NVMEM
- providers
-Message-Id: <178998281449.889291.7893229102394463283.b4-ty@kernel.org>
-Date: Mon, 21 Sep 2026 10:26:54 +0100
+	s=k20260515; t=1789982879;
+	bh=o76WD5ueuIS8jiqhDq6tTGlPIaeopmRdrnTuiB1O1Jw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=FUllEETnTB2JnIVZt3TLVIWq1oKTCl1xomKsGGP0wQYPT+/AE+PrcIA9/ACJjfoGM
+	 gJoRrMQ8TVCOFPcf4oj41aXQa/VRfEprHkAbJP9Sc7jzW+Lv57XdulivgW31eMZENp
+	 gfhs0x0wnwa4SGs5jdq5/iNTCdy65tdjUx2DEypdchChmERfShYqZ48f0L+nh4Awqr
+	 pLFb8p91m+btLZdfx4NsohAz7712TD6VoMXTo4D65p0bSpCRiNgJn7/QW2U5kfshOh
+	 EgwcJmXr6mFgYvYkWbzq5h39vRSsCG+k2wkx3mt9j8pqQQlyK9kmAgvi1VOHeZNbhK
+	 Z3EWpbU62nWqA==
+Message-ID: <94b19730-b08e-4495-8233-71fe21a6d42f@kernel.org>
+Date: Mon, 21 Sep 2026 10:27:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 04/10] nvmem: layouts: Support fixed-layout as the
+ nvmem device node itself
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>,
+ Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Johannes Berg <johannes@sipsolutions.net>, Jeff Johnson
+ <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+ Rocky Liao <quic_rjliao@quicinc.com>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Simon Horman <horms@kernel.org>, Srinivas Kandagatla <srini@kernel.org>,
+ Andrew Lunn <andrew@lunn.ch>, Heiner Kallweit <hkallweit1@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Saravana Kannan
+ <saravanak@kernel.org>, Christian Marangi <ansuelsmth@gmail.com>
+Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org,
+ netdev@vger.kernel.org, daniel@makrotopia.org,
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+References: <20260806-block-as-nvmem-v10-0-be598b2a5606@oss.qualcomm.com>
+ <20260806-block-as-nvmem-v10-4-be598b2a5606@oss.qualcomm.com>
+Content-Language: en-US
+From: Srinivas Kandagatla <srini@kernel.org>
+In-Reply-To: <20260806-block-as-nvmem-v10-4-be598b2a5606@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
 
 
-On Thu, 06 Aug 2026 16:38:33 +0200, Loic Poulain wrote:
-> On embedded devices, it is common for factory provisioning to store
-> device-specific information, such as Ethernet or WiFi MAC addresses,
-> in a dedicated area of an eMMC partition. This avoids the need for
-> and additional EEPROM/OTP and leverages the persistence of eMMC.
+
+On 8/6/26 3:38 PM, Loic Poulain wrote:
+> of_nvmem_layout_get_container() only looks for a child node named
+> "nvmem-layout" to locate the cell definitions. This does not cover
+> providers whose device tree node is itself the fixed-layout container,
+> such as an eMMC boot partition block device whose fwnode points directly
+> at a "fixed-layout" compatible partitions node.
 > 
-> One example is the Arduino UNO-Q, where the WiFi MAC address and the
-> Bluetooth Device address are stored in the eMMC Boot1 partition.
+> When no "nvmem-layout" child is present, fall back to returning the nvmem
+> device node itself if it is compatible with "fixed-layout", so that its
+> cells are parsed by nvmem_add_cells_from_fixed_layout().
 > 
-> [...]
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> ---
+>  drivers/nvmem/layouts.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+> 
 
-Applied, thanks!
+This change looks independent, applied to nvmem-next.
 
-[04/10] nvmem: layouts: Support fixed-layout as the nvmem device node itself
-        commit: 9c6cab93dcd47c3075d896c777567b9d8f813d18
-
-Best regards,
--- 
-Srinivas Kandagatla <srini@kernel.org>
+--srini
+> diff --git a/drivers/nvmem/layouts.c b/drivers/nvmem/layouts.c
+> index b90584e1b99eab4217cbe7ec48373e18a7caf0dc..efa631ce7283bdd6c8ecda75915911b5e3a33c99 100644
+> --- a/drivers/nvmem/layouts.c
+> +++ b/drivers/nvmem/layouts.c
+> @@ -167,7 +167,18 @@ static int nvmem_layout_bus_populate(struct nvmem_device *nvmem,
+>  
+>  struct device_node *of_nvmem_layout_get_container(struct nvmem_device *nvmem)
+>  {
+> -	return of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
+> +	struct device_node *np;
+> +
+> +	/* Search for nvmem-layout child */
+> +	np = of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
+> +	if (np)
+> +		return np;
+> +
+> +	/* The nvmem of_node is itself a fixed-layout node */
+> +	if (of_device_is_compatible(nvmem->dev.of_node, "fixed-layout"))
+> +		return of_node_get(nvmem->dev.of_node);
+> +
+> +	return NULL;
+>  }
+>  EXPORT_SYMBOL_GPL(of_nvmem_layout_get_container);
+>  
+> 
 
