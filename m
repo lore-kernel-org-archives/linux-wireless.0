@@ -1,111 +1,74 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB933B3C11
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 19:52:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590F2428470
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 20:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790020382; cv=none; b=S1nthyJ0BxQWUAPhzYG6n1hTh+JtWlbT2KeDZN1rsrHaHt1OhyqyhtOie9QloV4FaGp97Lgq7x7wbzkCIGJyxBPQUCkhZRtHSsI5SBKUi6nbdX1JrP9wTg3YzoxWcnTlCG9hZ2T9IoMVtCVsreTT+1jw0vOCqPQ/bZcR7qtRZJs=
+	t=1790021861; cv=none; b=ktekjfFSy/9Dd9oJGiR6g3J3z9D3FHMZQpMHw82s7sWzqonc7SbIfRv0MB4bcyZoWvYx1zP4zk9zrxmI5yghN3m+DYCymjYL93GIBNxq5Px9QJPERfUsTrgmvs8T2zm6lpWFKlWml78NzIPOCau4uCw6GXj6jWlDb/6zd93Wpmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790020382; c=relaxed/simple;
-	bh=aH8F5TG9/0ke0onMaFqQgl0/ELEfSzRzM7rjQgDvZew=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=B12iydAlwmnbzMF/osU71eI9Lqb6lTrZU8lbEOINZDWqVqbI237aHk2RAJ0w0dTVwFPMrv+7/cTQaz3f3FJJJ4fM88ZNJC4jmL3kj5dqWYpvpZHLAt8GqLwS6LLODTNHWBhEy5ycMw/QRkadJgOiCG90zNOY6vRLo7JGzgL2zhk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LSCphxnu; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790021861; c=relaxed/simple;
+	bh=F8AyQBBDCoyRzQlD30bpE6UJKYN2rAmbrxKjpebhWuU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cI7VOl5aP4y/07lSXHqQwtLkJnyOGkwMA4O/1xLTEoXDy+LlaFhBMR9jLdhjPGcFwaktwYuoAbPwApj0Vgj1pcPg2qMRb2BkzbkzvOgIcrYWn6yp5WqlKQhlU1w/NVeHn9mGT/0t1CoteZTYK1GJb/m+Lnys0jASMBq4gPuF6kE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=QnezJudF; arc=none smtp.client-ip=67.231.154.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LSCphxnu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790020380; x=1821556380;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=aH8F5TG9/0ke0onMaFqQgl0/ELEfSzRzM7rjQgDvZew=;
-  b=LSCphxnuAWBtK3JalEpo4ruujEMQW6Ue06U1awc1fmYqT+143mMotZkf
-   hdIGDkPQVY6rmmCCdz7oNIP8AL6gGpr9DJ8aec56JPdXe7VemP9B5RvBh
-   MXAZy/ASLDU0IiWyj2Fg9MRbQwn0bmvuORus9SZPgiMLq2ctR9q2D/0/C
-   a7A73qYqk+gE7q6t4ocgX3+QxugANmVgesnsTjQsrNaGPqpk3n6MuKVy5
-   4SLmKzX4EyTT6/1F2ujdd3z2lOc+X/9nkPDDCgxcs6dLArIcFVwMoA/SD
-   QQwyN9AuNKO7IiQ5fg6Qq/Hc2jzZJmCDmZiE2C66kpafFl9CDB04H45IF
-   Q==;
-X-CSE-ConnectionGUID: 3ocZcQ+TRCWH4Qk59spzlg==
-X-CSE-MsgGUID: 8bgsIfUQTrufpHozEMlWnQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="90435090"
-X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="90435090"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 12:52:59 -0700
-X-CSE-ConnectionGUID: TViok0D2QkmyQTvkKNzrYw==
-X-CSE-MsgGUID: jY+FuEe1TWeX3FxfejhjtA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="3891576"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 12:52:58 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 2/2] wifi: nl80211: reject color-change requests that change 6 GHz power type
-Date: Mon, 21 Sep 2026 22:54:55 +0300
-Message-Id: <20260921224731.1d8727ce4fbf.I1049058ae5e60b7ebcb450d03f6b13cee573eeea@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260921224731.67fbc8a28a2c.I5633284cb4c82ffb4e4e32e6f2dcc9a71fd5b06a@changeid>
-References: <20260921224731.67fbc8a28a2c.I5633284cb4c82ffb4e4e32e6f2dcc9a71fd5b06a@changeid>
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="QnezJudF"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id BB02E3C0073;
+	Mon, 21 Sep 2026 20:17:37 +0000 (UTC)
+Received: from [192.168.0.38] (unknown [136.27.42.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail3.candelatech.com (Postfix) with ESMTPSA id DD34A13C2B0;
+	Mon, 21 Sep 2026 13:17:36 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com DD34A13C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1790021857;
+	bh=F8AyQBBDCoyRzQlD30bpE6UJKYN2rAmbrxKjpebhWuU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=QnezJudFeQ4/eUTN4tA8sGM3Q1EStPNoHOORQrvqaVssi1ZU9rPidKTQNxTfN2Qop
+	 CVc6iD1kaLphdvfzyHpeXTvlHZpriaZsgtI4LGb1zFD+4wm7jHVZBwj9TmCBcF0kU8
+	 1uVcXnCN8x1eHKFY66U6WsPcxeTWaKWFAnHk/DaE=
+Message-ID: <f7788e68-3292-4337-943a-032a838947fe@candelatech.com>
+Date: Mon, 21 Sep 2026 13:17:36 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next v2] net: cfg80211: validate monitor channel
+ set against radio usage
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Dylan Eskew <dylan.eskew@candelatech.com>
+References: <2318ac388c0da7a200c8a1aec0d0af662fdf1ba8.camel@sipsolutions.net>
+ <20260921184605.2699-1-roryl@candelatech.com>
+ <289eaefe3389894758d3ba1b3d24aa73aa630d91.camel@sipsolutions.net>
+Content-Language: en-US
+From: Rory Little <roryl@candelatech.com>
+In-Reply-To: <289eaefe3389894758d3ba1b3d24aa73aa630d91.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MDID: 1790021858-4EfAczE94kXT
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;at1;1790021858;4EfAczE94kXT;<roryl@candelatech.com>;b42792dba290a1257c3f0aaf1c60b0ff
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+>> - Handle error return from cfg80211_get_radio_idx_by_chan
+> Yes, but did you do it correctly? I don't think so?
 
-AP power type is regulatory operating state, so changing it requires
-full AP reconfiguration and validation. Allowing it through
-color-change could bypass stricter checks done in AP setup.
+You mean propagating -EINVAL out to the caller, right? I'd need to 
+handle the n_radio == 0 case to keep the -EBUSY behavior consistent.
 
-Keep color-change behavior limited to color updates only.
+>> - Fixed subject line
+> No? "wifi:" instead of "net:"
 
-Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- net/wireless/nl80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Oops, I read that as a casing comment. Will fix in v3.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0323b9c383b7..919ac18a2e92 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -18944,6 +18944,7 @@ static int nl80211_color_change(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_color_change_settings params = {};
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	enum ieee80211_ap_reg_power reg_power;
- 	struct nlattr **tb;
- 	u16 offset;
- 	int err;
-@@ -19045,6 +19046,15 @@ static int nl80211_color_change(struct sk_buff *skb, struct genl_info *info)
- 			goto out;
- 	}
- 
-+	reg_power =
-+		cfg80211_get_6ghz_power_type(params.beacon_color_change.tail,
-+					     params.beacon_color_change.tail_len, 0);
-+	if (wdev->links[params.link_id].ap.reg_power != reg_power) {
-+		GENL_SET_ERR_MSG(info, "6 GHz power type change not allowed");
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	err = rdev_color_change(rdev, dev, &params);
- 
- out:
--- 
-2.34.1
-
+- Rory
