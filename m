@@ -1,119 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CF89459AD2;
-	Mon, 21 Sep 2026 09:27:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB67457E6F;
+	Mon, 21 Sep 2026 09:56:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789982881; cv=none; b=DTLLpMS0WgIr+/Vg0WRxASAiv3tZxz1UQ8CJMcmvEBm0HDhvwrabpRBPzXpuU+qV56pwfFDGWM0pSVYfvYsekDh44IwZXiqi6ZWkKSVcnZ4mrMfftpVfVFrVabzFDXhf9Rq0D1xq0oDUcTFIEToOu+7KLtkC6F09R0vYsDdruGA=
+	t=1789984575; cv=none; b=NQ+J/Oo5/nz64hlhBWLZu/inZIxOcYkUHOhWgDKTOnueWwIvHflNoWdaWg9tvoFGbvPNrF1adMKXxR2bzlbCZ6TIGkg/XxHIqneQI7bGV5zt+bdJKrvRPEGMh0Ivj1AmBVyuEg/xrnAHwxjFzbStFCTrl6huXWXhQ3mjUoUViXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789982881; c=relaxed/simple;
-	bh=mWkBj2vDftGwRUgbR90kZl2tiuVkAriqXm87VBPrK5g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YSboadbWDOS4dHftxDjhy5ola/pPNGBgaxyaEmxjRPXpDJHLEQRk/Ltdq+9mUbJMX7G6y5pl/sbQBaA/NFCcj9sRskQJlQoXMYqFd/T+aeMkS5Ff9DuV7G2FbUOKtkAPY5R7K7tjepTf4Wd/EmrhdKjhkRnHdROAYUeolZxEb8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FUllEETn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789984575; c=relaxed/simple;
+	bh=d5sYf58LwCo4fn2GyNj30sMSZtjlRRtDgeN8PduQsl8=;
+	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=lDIIg05d5leuGuBemf/6liV/A+7xu3+4T//mODkBEURYRWZcnsLRFOByDigcInlFie+ulBj32I79DSvHFjIm84Uco4+wNg16sPwHff1dY8mbwfxiRB09ZYlLhwTi06M+8A3eZsEL9G0/yiwkSdbY/nZz5tDzOfVydV5PqepKm8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RI5JLT+l; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FUllEETn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 351D31F0089A;
-	Mon, 21 Sep 2026 09:27:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789982879;
-	bh=o76WD5ueuIS8jiqhDq6tTGlPIaeopmRdrnTuiB1O1Jw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=FUllEETnTB2JnIVZt3TLVIWq1oKTCl1xomKsGGP0wQYPT+/AE+PrcIA9/ACJjfoGM
-	 gJoRrMQ8TVCOFPcf4oj41aXQa/VRfEprHkAbJP9Sc7jzW+Lv57XdulivgW31eMZENp
-	 gfhs0x0wnwa4SGs5jdq5/iNTCdy65tdjUx2DEypdchChmERfShYqZ48f0L+nh4Awqr
-	 pLFb8p91m+btLZdfx4NsohAz7712TD6VoMXTo4D65p0bSpCRiNgJn7/QW2U5kfshOh
-	 EgwcJmXr6mFgYvYkWbzq5h39vRSsCG+k2wkx3mt9j8pqQQlyK9kmAgvi1VOHeZNbhK
-	 Z3EWpbU62nWqA==
-Message-ID: <94b19730-b08e-4495-8233-71fe21a6d42f@kernel.org>
-Date: Mon, 21 Sep 2026 10:27:47 +0100
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RI5JLT+l"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=d5sYf58LwCo4fn2GyNj30sMSZtjlRRtDgeN8PduQsl8=; b=R
+	I5JLT+l6geAv8Q9M15dTOwSHhXh7yEFbecJMJf7mCtRmAuQQRvTwGNqgqIsr37Th
+	popjRAM/2438DrjCWSTDR841LuM0g5InHwUx4h0Wl2phaQDMMxLd8JG7IxTlKIbi
+	TZKzZrK/MiDoqpKhxQMzjd516ixufXVSAR6XAd/koo=
+Date: Mon, 21 Sep 2026 17:55:49 +0800 (CST)
+From: CJ <firefly0158@163.com>
+To: kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUG] ath10k: WARNING in ath10k_pci_probe on an unmatched device
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+X-NTES-SC: AL_Qu2TC/WTu00v7ymdZOkdmEsTju82UcS4ufQl245Xc/sEuADE1wYGfV5FGUX59tmTLwSKmzOZcTJQ8uBIdIhWdKEYByzElKiI26s7Nz/UAQ==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 04/10] nvmem: layouts: Support fixed-layout as the
- nvmem device node itself
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>,
- Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Johannes Berg <johannes@sipsolutions.net>, Jeff Johnson
- <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
- Marcel Holtmann <marcel@holtmann.org>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
- Rocky Liao <quic_rjliao@quicinc.com>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Srinivas Kandagatla <srini@kernel.org>,
- Andrew Lunn <andrew@lunn.ch>, Heiner Kallweit <hkallweit1@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Saravana Kannan
- <saravanak@kernel.org>, Christian Marangi <ansuelsmth@gmail.com>
-Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org,
- netdev@vger.kernel.org, daniel@makrotopia.org,
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-References: <20260806-block-as-nvmem-v10-0-be598b2a5606@oss.qualcomm.com>
- <20260806-block-as-nvmem-v10-4-be598b2a5606@oss.qualcomm.com>
-Content-Language: en-US
-From: Srinivas Kandagatla <srini@kernel.org>
-In-Reply-To: <20260806-block-as-nvmem-v10-4-be598b2a5606@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Message-ID: <246f3c73.95eb.1a0c364ac46.Coremail.firefly0158@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:cSgvCgD310Mm_7BqqFpLAA--.44354W
+X-CM-SenderInfo: piluvw1o1qikqy6rljoofrz/xtbC3QXPgWqw-yXDNQAA3g
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-
-
-On 8/6/26 3:38 PM, Loic Poulain wrote:
-> of_nvmem_layout_get_container() only looks for a child node named
-> "nvmem-layout" to locate the cell definitions. This does not cover
-> providers whose device tree node is itself the fixed-layout container,
-> such as an eMMC boot partition block device whose fwnode points directly
-> at a "fixed-layout" compatible partitions node.
-> 
-> When no "nvmem-layout" child is present, fall back to returning the nvmem
-> device node itself if it is compatible with "fixed-layout", so that its
-> cells are parsed by nvmem_add_cells_from_fixed_layout().
-> 
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
-> ---
->  drivers/nvmem/layouts.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-
-This change looks independent, applied to nvmem-next.
-
---srini
-> diff --git a/drivers/nvmem/layouts.c b/drivers/nvmem/layouts.c
-> index b90584e1b99eab4217cbe7ec48373e18a7caf0dc..efa631ce7283bdd6c8ecda75915911b5e3a33c99 100644
-> --- a/drivers/nvmem/layouts.c
-> +++ b/drivers/nvmem/layouts.c
-> @@ -167,7 +167,18 @@ static int nvmem_layout_bus_populate(struct nvmem_device *nvmem,
->  
->  struct device_node *of_nvmem_layout_get_container(struct nvmem_device *nvmem)
->  {
-> -	return of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
-> +	struct device_node *np;
-> +
-> +	/* Search for nvmem-layout child */
-> +	np = of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
-> +	if (np)
-> +		return np;
-> +
-> +	/* The nvmem of_node is itself a fixed-layout node */
-> +	if (of_device_is_compatible(nvmem->dev.of_node, "fixed-layout"))
-> +		return of_node_get(nvmem->dev.of_node);
-> +
-> +	return NULL;
->  }
->  EXPORT_SYMBOL_GPL(of_nvmem_layout_get_container);
->  
-> 
-
+CkhpLAoKCkkgYW0gcmVwb3J0aW5nIGFuIGlzc3VlIHRyaWdnZXJlZCBieSBhIHN5emthbGxlciBy
+ZXByb2R1Y2VyIG9uIExpbnV4CjcuMy4wLXJjMi4gVGhlIGlzc3VlIGlzIHJlcHJvZHVjaWJsZSB3
+aXRoIEhFQUQgY29tbWl0CmRmMjkwODA5MGNkYTM2OGIwMWZmNDM3MDlmNTE4OTAwNzZjNTYxNTcu
+CgoKVGhlIHJlcHJvZHVjZXIgbW91bnRzIHN5c2ZzLCBzZXRzIHRoZSBkcml2ZXJfb3ZlcnJpZGUg
+b2YgUENJIGRldmljZQowMDAwOjAwOjAxLjAgdG8gYXRoMTBrX3BjaSwgYW5kIHRoZW4gd3JpdGVz
+IHRoYXQgZGV2aWNlJ3MgbmFtZSBpbnRvIHRoZQphdGgxMGtfcGNpIGJpbmQgYXR0cmlidXRlLiBU
+aGF0IGZvcmNlcyB0aGUgZHJpdmVyIHRvIHByb2JlIGEgZGV2aWNlIGl0IHdhcwpuZXZlciBtYXRj
+aGVkIGFnYWluc3QsIHNvIHRoZSBkZXZpY2UgaXMgbm90IGEgcmVhbCBhdGgxMGsgcmFkaW8uCgoK
+SW4gYXRoMTBrX3BjaV9wcm9iZSgpLCB0aGUgZHJpdmVyIHJlYWRzIHRoZSBjaGlwIHZlcnNpb24g
+ZnJvbSB0aGUgZGV2aWNlIGFuZApzZWxlY3RzIGJlaGF2aW91ciB3aXRoIGEgc3dpdGNoIG92ZXIg
+dGhhdCB2YWx1ZS4gTm8gY2FzZSBtYXRjaGVzLCBzbyB0aGUKZGVmYXVsdCBicmFuY2ggZXhlY3V0
+ZXMgV0FSTl9PTigxKSBhbmQgdGhlIHByb2JlIHJldHVybnMgLUVPUE5PVFNVUFAuIFRoZQp3YXJu
+aW5nIGNvbWVzIGZyb20gdGhlIHRhc2sgcGVyZm9ybWluZyB0aGUgc3lzZnMgd3JpdGUsIHRocm91
+Z2ggYmluZF9zdG9yZSgpCi0+IGRldmljZV9kcml2ZXJfYXR0YWNoKCkgLT4gcmVhbGx5X3Byb2Jl
+KCkuCgoKVGhpcyBpcyBhIGRyaXZlciBiZWluZyBhc2tlZCB0byBkcml2ZSBoYXJkd2FyZSBpdCBk
+b2VzIG5vdCByZWNvZ25pc2UuIFRoZQp3YXJuaW5nIGlzIGluZm9ybWF0aXZlIHJhdGhlciB0aGFu
+IGEgbWVtb3J5LXNhZmV0eSBwcm9ibGVtLCBidXQgc2luY2UgdGhlCmJpbmQgYXR0cmlidXRlIGlz
+IHdyaXRhYmxlIGJ5IHJvb3QgYW5kIHRoZSBkZXZpY2UgY2FuIGJlIGFueSBQQ0kgZnVuY3Rpb24s
+CnJldHVybmluZyB0aGUgZXJyb3Igd2l0aG91dCB0aGUgV0FSTl9PTiB3b3VsZCBhdm9pZCB0aGUg
+c3BsYXQuIEkgaGF2ZSBub3QKY2hlY2tlZCB3aGV0aGVyIHRoZSB2ZXJzaW9uIHJlZ2lzdGVyIHJl
+YWQgaXRzZWxmIGlzIHZhbGlkIGZvciB0aGlzIGRldmljZS4KCgpUaGlzIGZhaWx1cmUgd2FzIHJl
+cG9ydGVkIGVhcmxpZXIgYWdhaW5zdCB0aGUgbGludXgtNi4xIGxvbmd0ZXJtIHNlcmllcyBhdApo
+dHRwczovL3N5emthbGxlci5hcHBzcG90LmNvbS9idWc/ZXh0aWQ9MzFlYzZiYzNhOTJiOGFhOWYy
+ZjcsIGFuZCB0aGUKcmVwcm9kdWNlciBiZWxvdyBpcyB0aGUgb25lIGZyb20gdGhhdCByZXBvcnQu
+IEl0IHN0aWxsIHJlcHJvZHVjZXMgb24gdGhlCnRlc3RlZCBtYWlubGluZSBrZXJuZWwuCgoKUmVw
+cm9kdWNlcjoKCgpzeXogcmVwcm9kdWNlcjoKVGhlIHJlcHJvZHVjZXIgaXMgdGhlIHByb2dyYW0g
+YmVsb3csIHdoaWNoIHJlcXVpcmVzIG5vIGxhcmdlIGVuY29kZWQgaW1hZ2U6CgoKbWtkaXJhdCgw
+eGZmZmZmZmZmZmZmZmZmOWMsICYoMHg3ZjAwMDAwMDAwMDApPScuL3N5c1x4MDAnLCAweDFmZikK
+bW91bnQoMHgwLCAmKDB4N2YwMDAwMDAwMDAwKT0nLi9zeXNceDAwJywgJigweDdmMDAwMDAwMDA0
+MCk9J3N5c2ZzXHgwMCcsIDB4MCwgMHgwKQpyMCA9IG9wZW5hdCgweGZmZmZmZmZmZmZmZmZmOWMs
+ICYoMHg3ZjAwMDAwMDAwODApPScuL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMDowMDowMS4wL2Ry
+aXZlcl9vdmVycmlkZVx4MDAnLCAweDEsIDB4MCkKd3JpdGUocjAsICYoMHg3ZjAwMDAwMDAwYzAp
+PSdhdGgxMGtfcGNpXHgwMCcsIDB4YikKcjEgPSBvcGVuYXQoMHhmZmZmZmZmZmZmZmZmZjljLCAm
+KDB4N2YwMDAwMDAwMTAwKT0nLi9zeXMvYnVzL3BjaS9kcml2ZXJzL2F0aDEwa19wY2kvYmluZFx4
+MDAnLCAweDEsIDB4MCkKd3JpdGUocjEsICYoMHg3ZjAwMDAwMDAxNDApPScwMDAwOjAwOjAxLjBc
+eDAwJywgMHhkKQoKCmNvbnNvbGUgb3V0cHV0OsKgaHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0Jn
+enpqVkFCCmtlcm5lbCBjb25maWc6IGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3RleHQ/
+dGFnPUtlcm5lbENvbmZpZyZ4PTMxZGZlZmM0YTE0ZWZlYTMKCgpLZXJuZWw6CgoKSEVBRCBjb21t
+aXQ6IGRmMjkwODA5MGNkYTM2OGIwMWZmNDM3MDlmNTE4OTAwNzZjNTYxNTcKZ2l0IHRyZWU6IG1h
+aW5saW5lCmtlcm5lbCB2ZXJzaW9uOiA3LjMuMC1yYzIKdGVzdGVkIHRhZzogdjcuMy1yYzIgKGFu
+bm90YXRlZCB0YWcgb2JqZWN0IDVlMDM2Y2UxMmRlOTFjNmZkNjc0ZGFkMzNiMTY5YzYxNTBiZTJh
+N2EpCgoKTGV0IG1lIGtub3cgaWYgeW91IG5lZWQgbW9yZSBkZXRhaWxzIG9yIHRlc3RpbmcuCgoK
+QmVzdCByZWdhcmRzLApDaGFuZ2ppYW4gTGl1
