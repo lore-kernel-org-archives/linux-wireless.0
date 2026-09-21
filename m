@@ -1,278 +1,149 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42E1F4E0B78
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 17:30:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F504F3910
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 18:00:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790011846; cv=none; b=uBqfrmscIZhPLmXBClMs4U2lZhtecz5D76CecRAqszogNSBbNoadSXS9W2A2FZBCCeG4gb61XhEQC2MHNi1+bUh1JegkoIBo8ERXJp7S/HFgibWAe1AfsplOHbYwhHuFoCQQdR9AvdZG/z+OEUXG14CJruNwk7QW0gTn+MtVGF8=
+	t=1790013612; cv=none; b=i/hwa1QUXJazlZEHh0VeQhRve+tg3vkqvDEA4BDKXXjgobz2cRUQw4l3i+1qusi33iIck9C/TSLtaUE94UlRSnoDNtJED4DtAcXuBujX0hj8ZuZLc/haHisHxJXXTyVDDLmSWBqlyM3Vx8mN0zYnigSCRhyit11KjRLOozzMLts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790011846; c=relaxed/simple;
-	bh=SmkHF4FiGhY6vkAj210MpG+mQj2Z0pAr8tccZVz5/z0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IX1T4OmH0POAU5Hju5lHGMOljiuL23kFiNL2NiN5s9f0jp3gx2cz29n7auM3hH1TtW3reVrqkefrVz5bSZxtBS3d35n9eaCSeIe8NcSdvdiHaoE0Go0OXoL0R0L3+WjHcayHoB5Kir2Ko2WYrk2bsKPgJ64w+6Wy2e/QG9yrgQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fkXtroz1; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790013612; c=relaxed/simple;
+	bh=qnjIr7ufpSiWgcA3UBuiw3KQKetDv48AI0yoqsaVosk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=G+r2+Ag1L83C5usRu6nXnArTz0K9XDuyZNRRxTuKTlctg5hQJowFgj+z+IFfl5IjS4aTnB6KSNI56J8Z0i45Dl2D/3pGQt7HGleauJf+9u+iV1jC0M+TzmF0+jLhUG9g+L2sS1d17qkrc2F8Se2ZxejLuhlsrwonvXW8N/zl5JM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PLY162nA; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YzTyVIHI; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fkXtroz1"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912e2406so17020985e9.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 10:30:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PLY162nA";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YzTyVIHI"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68LFAEPW1677364
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 18:00:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	RXG6SArb6rBNA99uIb237bVvZes3omrjbk8/Rx/1TfQ=; b=PLY162nAhUzCpbGd
+	zr+Bnah07BWjJUgb4qeYJCBx/aoT+Om83QZYjbuWsw0BlSTgnLIRIliQg0TAlPTk
+	nXLerp4fJPHMvGfBc7/cGP9gVeVQ0OdRDbDYXvPZEFXVimisLRzCI9HD8xRHw+y2
+	reMuuU8npVhk5Ufi5qUlC/0UxF2WcpEWaCrhFDW5uNlQx0gvLJej0fIdi3hkOgXa
+	cUt/CP83zHgWRpOLQnH2zKeTcO7v8Nz3gvnMPUx+EXBc5sYqEuHshf92vCmGfO0V
+	qujSlh5QRoRdMH6lohXPkaPelD7qB2slnAanyWyh5GekwGvvvPmIR/C0j3szeoSC
+	BZwfiQ==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gu3cshs94-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 18:00:10 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-39e3dad7ab3so4438252a91.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 11:00:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790011843; x=1790616643; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=s8pWNm66LVdiHzafdbCttJBcf3IazbTGcwd5qfxU4As=;
-        b=fkXtroz1Aezsq76ZTCKm/n5nmmCiFSwMIiqZGJM5VGroxdf5y/Q1Jokpu4Xis/MbVb
-         ToT6Yg0k8V+nxtOsf3gJQQeP1EmowUA8Z3jjlBbyV7FNbg9tNZnsxKl5Y8nEZ8qFbLOu
-         NtRL+yM4pEsAb6BWGkH2d+Hhw/Tm8EUH+cZlFJRWMnei6/YAzM596rPTT1xXxarFXSug
-         imU9OHoopzOz8IZHbDLFJbExl3IR7gmXcXu5RwZF6L15xm0ht0uiVodG7zj3nicg2/mq
-         wQs+gEmqTp2cMXgPMOab0di2/NbpfveKLi/4Qz5RLlvG4M3i/Ivs2hpdbeIeZrEdmYgp
-         pESA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790011843; x=1790616643;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=oss.qualcomm.com; s=google; t=1790013610; x=1790618410; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=s8pWNm66LVdiHzafdbCttJBcf3IazbTGcwd5qfxU4As=;
-        b=KVdfd5Xv2oJMyHHR+rKl/w4QjiDl0BY2+CFJwpHULv7H8/NEMEefwQGG99SBFBM1Ox
-         NKHGbpw1yVPg8xBN37ois58H/DRYpv75DlluxV16mrktsMw9papx9b2WdvvKBplZ4mj2
-         7sL1yfZ2GR27KWPXFaiUsK+1qjCqdeXIOuCkFAt4/RJkWopEp/Qh7/5KIdfCKkprv4mx
-         rO3l8J4RdJIEjnjMRqKlOxHtpXPMO/bNXwRwln99PN5kY9QByV94nw3J+k2C8Pq7Vyie
-         tHpHa8qdwoBIEAXN9PkHE+x9BfNVQ4tmAq8vPmvL2FENitAFABplewS6m0ISzIC58jW5
-         Sivw==
-X-Forwarded-Encrypted: i=1; AKwUvBzuMInF/dGBJjFpEzaSqHjsmIi+A5OlKda5FisO7PS34ZUmtf0yai6dC+7nyXOtYapAd0VNTPVGRI+X6p9OrQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++lJ9qTSyFlcPqD/ow8GlbavTEoIRO0c2FFl0pk6esnCCh1XIGS1
-	KQ9SyNMngYHh8je9DmUB64ByW8S3MteDr3lz+zZfpWvoBJs5HPIUFrAt
-X-Gm-Gg: AYBFou1+ebax/I4YK7x2JUwsPxxWW8pX39lHd1I5KtszDPwugC8kq3fEmXPWSqzi/i4
-	cepOo9uR+8CGRb/Eh5Klyqga6vOdzZ+HqYTPkvQV3G/N8ZwVj5s4iAN+96Lo9lFT78ITJKj/UI/
-	kK0rOm6uGlfH0uSRKun5s0UNd1dA7EHbfNrpm8QC61zIESuKM6J0i04UEexhxxajLDpDz9FbKmC
-	44dLzlEGT9t77q0WTjsYPbFAQY6wwB8yGAvO2w2XCqUca30nTDnjKonL7JPeJYKrBvsGResLDHc
-	gMeM/TJ0x29R1HnISV1BtnT+7NO4J089//YQYPiGRP17Emj+HhdeG1xp/DTbbHOSfz/nFeLxFBI
-	NUdSy5IzuodyXwVxIqpVe7lEwp3bXKV4EAl8jCJ1s5g4UjolgTKG51E0MPS4IN/FAP4fwapwY7/
-	Hut3fkqVFOXinG7Y4fgjFFr/0nf76LKKwd4v3v4ghyY0ZgUxGBcVLUnzkXES8p7y8=
-X-Received: by 2002:a05:600c:34c6:b0:49e:65f2:db64 with SMTP id 5b1f17b1804b1-49fd88607e7mr6562135e9.5.1790011843197;
-        Mon, 21 Sep 2026 10:30:43 -0700 (PDT)
-Received: from vitor-nb ([2001:8a0:c4c6:f00:e34f:2f52:ae98:3e30])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fd8ccd0e1sm6146505e9.6.2026.09.21.10.30.41
+        bh=RXG6SArb6rBNA99uIb237bVvZes3omrjbk8/Rx/1TfQ=;
+        b=YzTyVIHIUTaxxNY2ScmAfOsCEB7obBUjOzVmis/MbfGoxalnsB1fhOzmu4OBAlTm4w
+         05jAbCE95oMRnd/2YDY87CK1J2Y++Km/v4G5dyhzHSKW4zTRh9ZTfU0PF++WNxb5nuYQ
+         BZoKl4PP85VLFLKJYXtsBMAwFFrbn+Didc9+7IJb2t05QelGzLYZ85pMejLGDbXdpn/s
+         1GBfdvScdP5xipD0kO4u5P4W8UgDD24/jmX50cru7GI1L31zJIlO9HAaquOUG346/C0U
+         rBrQ2rTi6YALJZypPlrc7DUgqI07BPNzjBYnRCM8dh8I2nSJTjY4IwrhEftnJoNzxOCv
+         N3QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790013610; x=1790618410;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RXG6SArb6rBNA99uIb237bVvZes3omrjbk8/Rx/1TfQ=;
+        b=O6g09lhM9A9eTuKIp1r5hTL5I1FcjOkeV3Nq8wHhFwuBzZPSUCZuXBl23ZZRNqf1mG
+         GiMF+xzcCLTMpxkWj/b4aoKmVAmjyrlGZYghDsiaOekrUYEuPi6oDXlevMTLzzMqmJsH
+         A4WQmcMUJgHdDDfbnNI5C8+lvb5zuSoQh6z9mWfQC8JeyshMDR8SbAc6ANfqxagcbW9H
+         fZwjn3quYKQjAKPlg/5R2utaFQUEw54i7g/yGkcpFbwCJZKCLkPgu7oiS3/1bMYCE1U5
+         FPsx58ztkC+YzJHbSjgWvkHMQA80nSDjPbl4VLC9N9sgKtYyLvmmqKe4/gibCYL0t+uQ
+         6tFA==
+X-Gm-Message-State: AFuF++kheNmkFtid/vHLB4ML9iZdyHLTlpAorIOAGq2dH6lYsrVAXmaR
+	cKlbBDLizGP9u5zKnzt0NlCWj5jUJHGcKJdO8VKa54PshlduIZ1Kd3WhIctqaiVOzqju3pGoSed
+	7xaY+jQrmGDj07yqzAPycN8Pzy5NdMGY0WmKV90TBJ2t6jbRZTOpSG3lPLXoPR1Immx6vOACICT
+	YG0A==
+X-Gm-Gg: AYBFou0Dn84868N+HBxryVcmNeY/lz8Yec2r6PcIOIDc/hxiFgBPwcYOqFTR7DH7eiq
+	VtvzvIeE2bqS/+8rI9DlxA7/s+b24THMy/6w/8AulZZbrplptd10bBuK01L6bEPUWq1S6L+w5ju
+	M/dZAgvPVACsWlg2r376vgUdIcORKQYwg4iyoDnI02kgZ+xMQdE5j8NwwJTkXB4XDIw+CSuxriZ
+	SttIUFbW8d3U+gPs3Bs6xG1nc9K5qKbLUZbeNhPbwM0u9sCkFM/W5DxYXet81NQQZXrGzSuJLQZ
+	2vuGUlG5iq+C/dhSOXebaLKunNuG8F5m/3fQxc/8OtFkQo5RnLp7LFGBKoXhZpz5/+wIcnYbCBV
+	fGSw3xLYcrYmCC/XMRYWbKzoSxDRrr+CdyK20QBQcsp95eDo+FqmZ0A==
+X-Received: by 2002:a17:90b:5706:b0:39e:6c6a:209e with SMTP id 98e67ed59e1d1-39e6c6a234emr9581506a91.63.1790013609649;
+        Mon, 21 Sep 2026 11:00:09 -0700 (PDT)
+X-Received: by 2002:a17:90b:5706:b0:39e:6c6a:209e with SMTP id 98e67ed59e1d1-39e6c6a234emr9581469a91.63.1790013609195;
+        Mon, 21 Sep 2026 11:00:09 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33c3311a716sm22873198eec.8.2026.09.21.11.00.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 10:30:42 -0700 (PDT)
-From: Vitor Soares <ivitro@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Vitor Soares <vitor.soares@toradex.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	baochen.qiang@oss.qualcomm.com,
-	kang.yang@oss.qualcomm.com
-Subject: [PATCH ath-next v3] wifi: ath12k: advertise interface MAC address pool
-Date: Mon, 21 Sep 2026 18:30:33 +0100
-Message-ID: <20260921173033.846332-2-ivitro@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        Mon, 21 Sep 2026 11:00:08 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>,
+        Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20260908170520.112946-1-toke@redhat.com>
+References: <20260908170520.112946-1-toke@redhat.com>
+Subject: Re: [PATCH] wifi: ath9k: Clean up device initialisation guards
+Message-Id: <179001360837.250336.964591354535633802.b4-ty@oss.qualcomm.com>
+Date: Mon, 21 Sep 2026 11:00:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDI2MyBTYWx0ZWRfX7rXzOfzFQMBF
+ 2ACMxpuyPk5mnsNymohMuJ00ghal9JrmefdkWst33B3chgigQz0cbLt3Utm+ntRewfEYjDJAfmz
+ Iecsh9baQ0zUbP5YTupCzcdUafChmo4=
+X-Proofpoint-GUID: XodVhyg3rMk6LDrGR3o6wLPXWx4_9Nr_
+X-Authority-Analysis: v=2.4 cv=QovLTlyd c=1 sm=1 tr=0 ts=6ab170aa cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=EUspDBNiAAAA:8 a=WD2RVSGR4ZOmZR8fVjQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDI2MyBTYWx0ZWRfX7qgAAKCm0Uw9
+ jVm5l90NDQS4LAC8wSm4xj318GriIkggFqjOlZzBp7seX3d9HFqzEh86juOtCCVi7Py6kHld9C8
+ RFGCgI/3EdFM7SGZdO4k85et9CpwV40Bym0pUNTh4nY7a5GeY/8EukP+AhBm4iQCk9lbwUAeY4E
+ f+jbSgp2MwN3inuIDNQn5xvm8l7KjVtTxwmzwHad3QlN9b8dvIBhkVADz1frl0GuSJ+ROXvQdDT
+ GdxKN34SOotuqjyCkieEOTfQOwMESXYudFzof2S48xhuKDz0IJodNDWHj7U0jdr5CSv8D6BDYbH
+ Fy0dX2tdLe3JIaq5P3Lb2L02ueWu4rnZ4SV3iD0JBGhOMzcpqifb7TWJ0hg7uwb75Yow1kcKVUC
+ 1XYGe8AV25AEcaRwGmJYdbxLsHdiQdeEL0RqTtyLMgje3KP4zen+ku80EKkUYdf8qEjq8p4Piel
+ d1Vm+BNOlVhAr++i9eA==
+X-Proofpoint-ORIG-GUID: XodVhyg3rMk6LDrGR3o6wLPXWx4_9Nr_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-21_05,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 bulkscore=0 impostorscore=0 priorityscore=1501
+ spamscore=0 lowpriorityscore=0 phishscore=0 malwarescore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609210263
 
-From: Vitor Soares <vitor.soares@toradex.com>
 
-ath12k supports creating vdevs with addresses provided by mac80211.
-Userspace can already make concurrent interfaces work by explicitly
-assigning different locally administered addresses.
+On Tue, 08 Sep 2026 19:05:18 +0200, Toke Høiland-Jørgensen wrote:
+> The ath9k driver has a couple of guards against the RX path running
+> until device initialisation has completed. However, they are problematic
+> for several reasons:
+> 
+> - They use smp_wmb() paired with a data_race() annotation, instead of
+>   the idiomatic smb_store_release()/smb_load_acquire() pair.
+> 
+> [...]
 
-However, ath12k does not advertise an address list, so when a second
-interface is created without an explicit address, mac80211 has nothing
-to pick from and falls back to the permanent address. If the first
-interface is already running with that address, bringing up the second
-one fails with -ENOTUNIQ.
+Applied, thanks!
 
-As in ath11k, provide a list of usable addresses so
-ieee80211_assign_perm_addr() can hand each new interface an unused one.
-Keep the first entry as the wiphy's permanent MAC address. Generate the
-remaining entries as locally administered variants by changing only the
-upper nibble of the first octet, which naturally limits the pool to 16
-unique addresses.
+[1/1] wifi: ath9k: Clean up device initialisation guards
+      commit: 1af8dc9ca726cf53767f9c0661171396f95c146a
 
-The cfg80211 definition of wiphy->addresses does not specify where the
-addresses must come from. Some ath12k platforms use it as an interface
-MAC address pool, while others use it for firmware-provided per-radio
-addresses. Gate the generated address pool behind
-advertise_iface_mac_pool and enable it for WCN7850 and QCC2072.
-
-Other platforms keep the existing behavior.
-
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-
-Assisted-by: LLM
-Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
----
-v3:
-- Rename host_alloc_iface_mac to advertise_iface_mac_pool.
-- Clear wiphy->addresses and wiphy->n_addresses during cleanup.
-- Drop the single-radio check and rely on hw_params gating.
-- Enable the generated interface MAC pool for WCN7850 and QCC2072
-  (QCC2072 compile-tested only).
-- Follow kernel block comment style.
-- Link for v2: https://lore.kernel.org/all/20260915152815.254016-2-ivitro@gmail.com/
-
-v2:
-- Gate generated interface MAC address list behind hw_params
-  host_alloc_iface_mac, as suggested by Kang Yang.
-- Enable it only for WCN7850, the only part available for testing here.
-- Add Assisted-by: tag.
-- Link for v1: https://lore.kernel.org/all/20260902082219.3010793-2-ivitro@gmail.com/
----
- drivers/net/wireless/ath/ath12k/hw.h       |  1 +
- drivers/net/wireless/ath/ath12k/mac.c      | 48 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wifi7/hw.c |  6 +++
- 3 files changed, 55 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
-index e790de5737db..c58db8482aa4 100644
---- a/drivers/net/wireless/ath/ath12k/hw.h
-+++ b/drivers/net/wireless/ath/ath12k/hw.h
-@@ -238,6 +238,7 @@ struct ath12k_hw_params {
- 	} client;
- 
- 	bool host_alloc_ml_id;
-+	bool advertise_iface_mac_pool;
- };
- 
- struct ath12k_hw_ops {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index d4116ba0da08..46f5f338f44c 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -14743,6 +14743,50 @@ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
- 	kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
- }
- 
-+static void ath12k_mac_cleanup_mac_address_list(struct ath12k_hw *ah)
-+{
-+	kfree(ah->hw->wiphy->addresses);
-+	ah->hw->wiphy->addresses = NULL;
-+	ah->hw->wiphy->n_addresses = 0;
-+}
-+
-+static void ath12k_mac_setup_mac_address_list(struct ath12k_hw *ah,
-+					      const u8 *mac_addr)
-+{
-+	struct mac_address *addresses;
-+	struct ath12k *ar;
-+	u16 n_addresses;
-+	int i;
-+
-+	ar = ath12k_ah_to_ar(ah, 0);
-+	if (!ar->ab->hw_params->advertise_iface_mac_pool)
-+		return;
-+
-+	/*
-+	 * Only the upper nibble of the first octet is varied, so at most 16
-+	 * addresses can be derived from one base.
-+	 */
-+	n_addresses = min_t(u16, TARGET_NUM_VDEVS(ar->ab), 16);
-+	if (n_addresses <= 1)
-+		return;
-+
-+	addresses = kzalloc_objs(*addresses, n_addresses);
-+	if (!addresses)
-+		return;
-+
-+	ether_addr_copy(addresses[0].addr, mac_addr);
-+	for (i = 1; i < n_addresses; i++) {
-+		ether_addr_copy(addresses[i].addr, mac_addr);
-+		/* set Local Administered Address bit */
-+		addresses[i].addr[0] |= 0x2;
-+
-+		addresses[i].addr[0] += i << 4;
-+	}
-+
-+	ah->hw->wiphy->addresses = addresses;
-+	ah->hw->wiphy->n_addresses = n_addresses;
-+}
-+
- static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- {
- 	struct ieee80211_hw *hw = ah->hw;
-@@ -14762,6 +14806,7 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 
- 	ath12k_mac_cleanup_iface_combinations(ah);
-+	ath12k_mac_cleanup_mac_address_list(ah);
- 
- 	SET_IEEE80211_DEV(hw, NULL);
- }
-@@ -14878,6 +14923,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	wiphy->available_antennas_tx = antennas_tx;
- 
- 	SET_IEEE80211_PERM_ADDR(hw, mac_addr);
-+	ath12k_mac_setup_mac_address_list(ah, mac_addr);
- 	SET_IEEE80211_DEV(hw, ab->dev);
- 
- 	ret = ath12k_mac_setup_iface_combinations(ah);
-@@ -15120,6 +15166,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		ath12k_mac_cleanup_unregister(ar);
- 	}
- 
-+	ath12k_mac_cleanup_mac_address_list(ah);
-+
- 	SET_IEEE80211_DEV(hw, NULL);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index ae8df80928b0..ad362244ed9b 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -445,6 +445,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.advertise_iface_mac_pool = false,
- 	},
- 	{
- 		.name = "wcn7850 hw2.0",
-@@ -539,6 +540,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = false,
-+		.advertise_iface_mac_pool = true,
- 	},
- 	{
- 		.name = "qcn9274 hw2.0",
-@@ -629,6 +631,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.advertise_iface_mac_pool = false,
- 	},
- 	{
- 		.name = "ipq5332 hw1.0",
-@@ -713,6 +716,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.advertise_iface_mac_pool = false,
- 	},
- 	{
- 		.name = "qcc2072 hw1.0",
-@@ -808,6 +812,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = false,
-+		.advertise_iface_mac_pool = true,
- 	},
- 	{
- 		.name = "ipq5424 hw1.0",
-@@ -895,6 +900,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 		},
- 
- 		.host_alloc_ml_id = true,
-+		.advertise_iface_mac_pool = false,
- 	},
- };
- 
+Best regards,
 -- 
-2.55.0
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
