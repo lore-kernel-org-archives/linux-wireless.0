@@ -1,63 +1,64 @@
-Received: from mail-qk2-f41.google.com (mail-qk2-f41.google.com [74.125.230.233])
+Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB08739DBD0
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 21:18:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24F0D4DAFAB
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 21:18:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790025502; cv=none; b=L4Id5yPgtJqkFtxyqhfiu9eK2uXP8ZaNCT7vir2uLKNxDDzrlz2u0fDh2RSIAah/YgSVS7rJvhdnihHH/joaBFQypPDLXCcIzRdSrbmzprrB1BVdawFJZypPlTsxZaVDvhX7jsd1oLrAB6oeqz/JV0AwX7qFaz0a2azhpKNUu+c=
+	t=1790025503; cv=none; b=cuOHsXHlpVQL/MoPMzJRrJT2YCFUA9mPa3dr6g6Iwf9jwPkuZpsdyCLADkkzErqH5N0KeXhL775QRFp61nCPkMWYTGZmh0t+5hWPaTue/EFeGkeg6o4IXA/TlNBeinf/odQQwfEBtAX4UjQZKI7k5h5WpSu6WXcea/UNGErW62E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790025502; c=relaxed/simple;
-	bh=qqUhYyhh0lWhKWnrQLYI0jwX7c0FSpVeehdl6bHeJFk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BHupFC4nhpB5tlrAJ5irCFss0c8J0xf1QYGfSXoeFxw0m0LS+LUfvkw+TVkvwS+5+Bx3NQn4q4pPSWGEquKpfA+qC6cjKnbQMfal4ZifLo5MpN08pyfb+jJgxvjpsZ2JMSWpx3rplF7JS1yqVPncjosKgEojj1faafwCW/Et2+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com; spf=pass smtp.mailfrom=brivo.com; dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b=chu4m58U; arc=none smtp.client-ip=74.125.230.233
+	s=arc-20240116; t=1790025503; c=relaxed/simple;
+	bh=72VPKGFgUFUjrL2n1VYKmbyNf3I0BnnQw/kQ9VbMmhc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PpcHDjGxnVx2JRVCfzctjo99MBvniuQ2roDiJAoIK7ylJWkZnbRYffeUR7bJpD98yCUi+6gaAHwOzo986qYeXafVFvzg8Hr/7G8efKVCGZZpd3/aQmaHvc7X3xzcPcQu6hSQYtH+gXR6iofODTRNPH81kb6B1WiLkUw3EIksq/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com; spf=pass smtp.mailfrom=brivo.com; dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b=b7AceCuw; arc=none smtp.client-ip=74.125.230.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=brivo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=brivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b="chu4m58U"
-Received: by mail-qk2-f41.google.com with SMTP id d75a77b69052e-532c7643bc4so14983691cf.3
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 14:18:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=brivo.com header.i=@brivo.com header.b="b7AceCuw"
+Received: by mail-qk2-f12.google.com with SMTP id d75a77b69052e-530301ff353so45383221cf.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 14:18:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=brivo.com; s=google; t=1790025500; x=1790630300; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Q1DBFyCtj/TBpWi0ynhywHcDx+OLl9aX7xs9S/Wz1mw=;
-        b=chu4m58UeURd4xSqS49PxM2rco7NOcsO28GC4zAfGhI2+A3xpdTiPmDtYnYMPo7VGZ
-         VLzi+nxv6cHpeGmdi/yi9q7kb4tI/OxyQslj/m6lbTRfpziqAYxlTzdOCZTCYrRTBJqR
-         IK0t3o6pO4+UvyqcnWfpSmysg7536hVBiYwRRoclDOgfcl80TgRf5qoOoJUyDMjABJmd
-         K2pu7hR7aSirk6c/Cgvv2YQWQy7TF187m4A94tUrO4tEILjm7VNqsmZS6h4w2pU7lmDs
-         dkyZWBEn8wG0T8QP5A55sP3oeiehime4B5KKs017Jf41BFOrIdSUFdQnYUCZRQ713jJ0
-         85EA==
+        d=brivo.com; s=google; t=1790025501; x=1790630301; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=3XC9Sb/ipf1691XqMArNePnNNYX36EhvRdBJwfuO0HU=;
+        b=b7AceCuwA7VVTS0jeFvUnrNbSLYisFbfbvuSUGbWdTb/7wGuUTLQLRykIQpWy6g1Dr
+         M+3vUS0gANDzKphd8nH5TjFtPfNOtjd38/1RncKgIk7UQ/ihmBbvvRor4PU8kpz2KLmk
+         2afskiBzuf6DpudC6ESqHhX4UJbCspAIcRtK3x9biSpViNo0ivIsH7awcEsYhV63ydrE
+         je50DMo4WD/tSxZKRhqVwLY3qZ5/GBkByeuU7BnfoeI46MGjfkzwazRIRCmD8lR4lHDP
+         hTPSH67FQ+l7HOtMyu4LL7dO6ZIUudL70vDJGgTow4cLNazSC9XhvQIqpNpe9FKbzHfl
+         kQnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790025500; x=1790630300;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Q1DBFyCtj/TBpWi0ynhywHcDx+OLl9aX7xs9S/Wz1mw=;
-        b=BqdYKRLwiZss1B/xaSXUyuBOu4VIY8w5+1W+lWvCKa7vRfh2Ou1ieDJP0Tc3QgUL5y
-         /E+d31NYK0vJGMKoETMAXwEnvE4t6Ix3nnTdj/sgwLTJxjyZG682/n5op6wpTFA3M70Z
-         jEP1aLX3hHhWbZCS3+mfVegTe0aaqAsgdqIrFdPlYGShOPxXnEYfeCRbhBRPfrY16PCi
-         EY05gs1sEOTs/ellypsFnYoxsmUD+RKgksMw3sZi+X72SOL3DPrgDgnXobus+O3A4Y5V
-         3s85W/esphcaeWQl7Fl2owXLAowrXCYVwBJki1nHkY1PJXYVXD/ojKn0X9mkoMytaOOd
-         3ZAA==
-X-Forwarded-Encrypted: i=1; AKwUvByhsyR1wTnanPzuQv3rtw5erWdfRfLwMV5X5I5JNDORMx5Q30lgJ5aebR8z8JtMR6cBiA2rglg7MjYCis2wzg==@vger.kernel.org
-X-Gm-Message-State: AFuF++nnIJnP1xQOV51ajPyDAaX7+tlv8HqPit69tgJs+JtQGl0rv3l8
-	VX40Q82mUsAEJ/s9a8pkX9Ko7MHnMfnLkmG22qm2gS+KKJg6ltBk8uSN7ykBPYjsZ0TbNh1p1zS
-	ny89KWxKl2x9MKTbFTqftk9tvxGOwjvc0LyUGex7RJ+jRhOrbvRetFBROb2DyAA==
-X-Gm-Gg: AYBFou0iaYw9Vzg+wimBVlfRWKejJa3XgnYV7wJ4rF4JyKwrPjofnCjJ2VYffA6MDnd
-	VOdp34sG+RPBvhoH1ZptcNITUa8ZjeTSAgJNM5Yghz5QoEJW3JpHLkrQDNuBiSoZtQWPO9u+f2l
-	gk9V2l8E7vnYBsWsOt1PlwO1bD16AJ74AybtBoaHwJF8bW7vD3L2qIKiBFhn7YQEePFtUVDcf/5
-	fDIqJYeMSrzYVNd53MRSNVvofNP3HcmSX8VlfuZHDao0+evMYVly5AKH78E5sRJ6TBY+DgxNUSl
-	a/AMVAm9MZfMBtPZ3pLGF+flTErod/kmKe6qCyisOEUrM38DPdRBXyF5wCm5GAmQdjS/3MTbyu7
-	0qE7gripdr2pT5GJPdgjAZPOwYtWYOVIhNp6MigqiVAsDboFfVp3WF9KnpIOZIwRJfUieMaFJ8n
-	56snchlJaZbs0hHlMTQr4FOYBa3eyd8+odhJX1YxP6OKZaaONWBB91YrbK6/GJVO0=
-X-Received: by 2002:ac8:5882:0:b0:51c:fc4:a144 with SMTP id d75a77b69052e-532d8d3182bmr26212061cf.4.1790025499820;
-        Mon, 21 Sep 2026 14:18:19 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790025501; x=1790630301;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3XC9Sb/ipf1691XqMArNePnNNYX36EhvRdBJwfuO0HU=;
+        b=BqdpMz3WeVCB63NV1rvNLkqPkUWmrb/pHhVP4zYJvC8ZQoAWMksLiqApovEJLw6rPl
+         SVBBfKwCb7RIqLwhZqHTWf0m98Ru59qlX1HycWMITx+5rKvr6Nl3nAE8rLDJsjm54XSg
+         jYtHtQ6q3u8Zpf3ANFccCpBuG2B4skzL26lzi8q6cHTpNUH2tUUyxzZaa8eMkowg6Ypy
+         ODPwU3fZ9aknMxLwgofzLgNeTtozQ6vV/dkxqNWkjwkEq5B/BMWNc3TWq6IwJHfMYJug
+         MePSLxstbuzM5VvFWy6cUaEkZyQREYrKNX0tN+4/BjEHyG+EX5fPLIo8QIJCCPzfdzCj
+         bS8Q==
+X-Forwarded-Encrypted: i=1; AKwUvBy2EpapZa0d5gB8pbembO2ff8xmp4eEGf4OlD1S5yA1jPfNgfFdLBSwcpthiPflGeE2pHk8JPJM+/uMWJ9y3g==@vger.kernel.org
+X-Gm-Message-State: AFuF++n+43Ij+77IpqgHOxYfdioksM0siyC5rA+mARjFo9ItOixko2Ih
+	JCI1Cig4IomUMnvj9saivEk3XlyFkIeVna2REmOmPdFUoG5mDKmcu2TrRaKDvMiHW0tYo9GN9fg
+	fvZUgQnTRN+mKYodlY/vujXe3d4VNUUYqIAAr+IzmJ2uVQd2WM7QcOVpDqbQ9cQ==
+X-Gm-Gg: AYBFou2cOSg1l9JDPHhivgjaSwvWKOef/63tWAuxUe4r2+yGTSxbYgyB55orN3ioV5p
+	ETbkZluqpyGskd1LIJSw5uFmoStmXSU5quaISVaWpV4iSBgyOwExfHT0Ns1HKEONbf8GtdBgL4X
+	KlygZ2krv34F7ld/pY6Y5YZWlOlmhuDdKTgd0F1fR0AfUeTCNKX8mEAKsp4kMycKLmsVzayfIRi
+	VSHLeaHVXM3WIXTc6CYqqiY2l00yy7reWX4JZdq6t9/T6QCuQw2pzWak2aEGZhs695vH7azq1FQ
+	xhVu1U0IrbWs00MdXHFbG1Yy8rUSLLfuonMTnjbymLfsAMphG3N7JSncKWPXAM2Mnz3BZOkVzuB
+	s8LOcW6eRZBiACFQrpv1qNij36gc5KPIDuAmV7dj8pR1uQ0x4cdfTYx5ACHRGTxesikSMFIygQk
+	x75/Xe1HxpfrSZt08NMAEX8DUgQ+eu1NHw2iM/WIozHvE3i7kWLLLOezTQo9FmH4o=
+X-Received: by 2002:a05:622a:449:b0:530:b2e4:d598 with SMTP id d75a77b69052e-532dd5508e3mr6762731cf.51.1790025500842;
+        Mon, 21 Sep 2026 14:18:20 -0700 (PDT)
 Received: from strozzi ([66.193.28.125])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532df63ab0dsm267121cf.26.2026.09.21.14.18.19
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532df63ab0dsm267121cf.26.2026.09.21.14.18.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 14:18:19 -0700 (PDT)
+        Mon, 21 Sep 2026 14:18:20 -0700 (PDT)
 From: Sean Anderson <sanderson@brivo.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>,
 	linux-wireless@vger.kernel.org
@@ -66,90 +67,56 @@ Cc: Johannes Berg <johannes.berg@intel.com>,
 	linux-kernel@vger.kernel.org,
 	brcm80211-dev-list.pdl@broadcom.com,
 	Sean Anderson <sanderson@brivo.com>,
-	=?UTF-8?q?C=C3=A1ssio=20Gabriel?= <cassiogabrielcontato@gmail.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Fan Wu <fanwu01@zju.edu.cn>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Takashi Iwai <tiwai@suse.de>,
-	driver-core@lists.linux.dev
-Subject: [PATCH 0/4] wifi: brcmfmac: Fix bugs when the device is removed before firmware is loaded
-Date: Mon, 21 Sep 2026 17:18:10 -0400
-Message-ID: <20260921211817.2432341-1-sanderson@brivo.com>
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH 1/4] wifi: brcmfmac: Fix canceling uninitialized datawork
+Date: Mon, 21 Sep 2026 17:18:11 -0400
+Message-ID: <20260921211817.2432341-2-sanderson@brivo.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260921211817.2432341-1-sanderson@brivo.com>
+References: <20260921211817.2432341-1-sanderson@brivo.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-I was working on a different bug, and I noticed that brcmfmac tends to
-crash quite spectacularly when the device gets removed before the
-firmware request completes. This is because brcmfmac does quite a lot of
-initialization that would be normally be done in probe() only when the
-firmware is loaded. I found two general classes of bugs:
+datawork is currently initialized in brcmf_attach, but bus_if->drvr is
+created before this in brcmf_alloc. Both of these functions are called
+on firmware load, which may race with device removal. If this happens,
+cancel_work_sync may be called on an uninitialized datawork. Fix this by
+always initializing datawork before we set bus_if->drvr, as this matches
+the condition in brcmf_bus_cancel_reset_work.
 
-- Some of the remove paths try to clean up things that the firmware
-  request callback sets up, which doesn't work too well if the firmware
-  isn't loaded (patches 1 and 2).
-- The firmware request callback generally assumes that the driver is
-  still alive and kicking. So if it runs after the driver is removed it
-  will procede to access all sorts of memory after it's been free'd.
-
-A fairly-reliable way to trigger these bugs is to edit really_probe in
-drivers/base/dd.c and replace
-
-    IS_ENABLED(CONFIG_DEBUG_TEST_DRIVER_REMOVE)
-
-with
-
-    !strcmp("brcmfmac", drv->name)
-
-Alternatively, you can use the name of the bus's driver.
-
-I have only tested these fixes on SDIO. I would really appreciate if
-someone could test this series on PCIe with the above snippet in their
-kernel (preferably with KASAN).
-
-Right now if the firmware cannot be loaded for whatever reason then the
-firmware request callback will unbind the driver. This is incompatible
-with canceling the firmware request and waiting for it to complete in
-the driver's remove() callback. As such, I removed this behavior so the
-device now sticks around even if we can't load the firmware. If this
-behavior is really, truly desired then we can drop device_lock while
-waiting for the firmware request to complete and attempt to recover from
-the consequences.
-
-
-Sean Anderson (4):
-  wifi: brcmfmac: Fix canceling uninitialized datawork
-  wifi: brcmfmac: Fix brcmf_pno_detach NULL-pointer deference
-  firmware_loader: Return status from request_firmware_nowait_cancel
-  wifi: brcmfmac: Fix firmware requests racing against SDIO removal
-
- drivers/base/firmware_loader/main.c           | 11 +++++---
- .../broadcom/brcm80211/brcmfmac/bcmsdh.c      |  7 ++++-
- .../broadcom/brcm80211/brcmfmac/bus.h         |  2 ++
- .../broadcom/brcm80211/brcmfmac/core.c        |  3 +--
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 26 ++++++++++++++++---
- .../broadcom/brcm80211/brcmfmac/firmware.h    | 16 +++++++++++-
- .../broadcom/brcm80211/brcmfmac/pcie.c        | 11 +++++---
- .../broadcom/brcm80211/brcmfmac/pno.c         |  2 ++
- .../broadcom/brcm80211/brcmfmac/sdio.c        |  8 +++---
- .../broadcom/brcm80211/brcmfmac/usb.c         |  6 +++--
- include/linux/firmware.h                      |  2 +-
- 11 files changed, 75 insertions(+), 19 deletions(-)
-
+Fixes: 43b25879f004c ("wifi: brcmfmac: drain bus_reset work on device removal")
+Signed-off-by: Sean Anderson <sanderson@brivo.com>
 ---
-base-commit: 587858367581b9c55c3690f4e63382ad622719d4
-branch: brcmfmac_firmware_cancel
 
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index dad6f4563d146..a3163120154dd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1298,8 +1298,6 @@ static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
+ #endif
+ #endif /* CONFIG_INET */
+ 
+-	INIT_WORK(&drvr->bus_reset, brcmf_core_bus_reset);
+-
+ 	/* populate debugfs */
+ 	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
+ 	debugfs_create_file("reset", 0600, brcmf_debugfs_get_devdir(drvr), drvr,
+@@ -1349,6 +1347,7 @@ int brcmf_alloc(struct device *dev, struct brcmf_mp_device *settings)
+ 	drvr = wiphy_priv(wiphy);
+ 	drvr->wiphy = wiphy;
+ 	drvr->ops = ops;
++	INIT_WORK(&drvr->bus_reset, brcmf_core_bus_reset);
+ 	drvr->bus_if = dev_get_drvdata(dev);
+ 	drvr->bus_if->drvr = drvr;
+ 	drvr->settings = settings;
 -- 
 2.53.0
 
