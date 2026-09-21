@@ -1,92 +1,144 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15943182D6;
-	Mon, 21 Sep 2026 00:24:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3670F1A268;
+	Mon, 21 Sep 2026 01:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789950299; cv=none; b=CqGCLXiY8qF+JkoH93+M9GR+xpeDgajdXWE5Y1CsTy/keiDAWb3Ey65hxSItXGQIz12YJ85RaDhDsul9FaiWo5Of/hZ/2G6jkGx4SnTfI5AT124UgIgl4htOqYvsNkPPHa+ZGJYwkpyPs6jKM3bvk6siPDJtPlW4LUWH6KaRpso=
+	t=1789953462; cv=none; b=cMbVrJw4S4bGQg3fRHBBTOMLdLjE9ib472H6dfEzodxDSSEYg2p1fC9ISsENgDPvwl678k7gS4LuuZZJdE7DrU+Z0nCHb0Staoipf6Sm0lwC8H3G85HpRNxvyb940gtwpy7P6/Yns9ExeV62zYq5QpuZO0NMJvEYSdq5XnF0h3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789950299; c=relaxed/simple;
-	bh=RTps4b7AgCDUzJ6XTlVnLeDVbfPbV1Q4UVbT5Frtu/E=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=jV0DDG/ULMMU4Liy7HK9t5bUXhLXsYjoqb4JuMHKW8J6xlgU280cR9ULGwwlv2OzXcVnUoJi48erpcem2wrmOZbTFZkK8tJGTbu5sU1Hnh1HWpoNZA603fYM7s+kU5IWkYNRADDMruEJ7GxKzT6xBStDtmgXIBCaiTv6wpPICUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TyhtAqQ5; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1789953462; c=relaxed/simple;
+	bh=UQ8NBmTMd0E4UPS6zoz9vKry1PH3VwbAwCx0NIVupjM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=D5/dYbWZNHnlRd/JfdtN/ZMEhVtrN9uKNFGQ83CdB1EE0Q2KBR9UtKdvCzcjFcmAC/rQaG/luOt9xH756A1mDdQzJsdvRSDHG2sXHx0rxLuYKO8MqYUHik5B3x9f05pfkZ6b/M9x2eyNFmFwo0zy+iKJ1yrDeymVYguL6mGW5nQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OKkp+pe9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TyhtAqQ5"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68L0Oli862112443, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1789950287; bh=RTps4b7AgCDUzJ6XTlVnLeDVbfPbV1Q4UVbT5Frtu/E=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=TyhtAqQ5HfDosoK/ZhaU1lQ1Cp1D0xmbStY90zjU0LefPp6dMNE2HgWZwcog24jkP
-	 7CsIG58XQLzyf07ZbHxJX/CkUbFOYVJKes+jlK+gvSBzdsFdrVZvYJPSBe9TC5L9By
-	 lUMOcrFdtCmbKA++58192HDJI4MczZAIDSfbfk+QOqDlRuTeTMgzYVfmLjJMWW6mMN
-	 +Z3i/yRxoDRn9dq8B22Uc/9R67MjsOliXnqOBaUwCBT3YJUm6s/MZWnXTWsSytL8G+
-	 hYIh0xo+Pc5E221h5n9ztdJwj85/fu0Ry0dwGudfghlioJHsIo7ArtAotOQVgXXDw5
-	 BKUgx7PErSDJg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68L0Oli862112443
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 21 Sep 2026 08:24:47 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 21 Sep 2026 08:24:47 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 21 Sep 2026 08:24:47 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Mon, 21 Sep 2026 08:24:47 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Kim Wooseok <5mghybrid@khu.ac.kr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Jes
- Sorensen" <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v3 3/3] wifi: rtl8xxxu: preserve RX requests
- across recoverable transfer errors
-Thread-Topic: [PATCH rtw-next v3 3/3] wifi: rtl8xxxu: preserve RX requests
- across recoverable transfer errors
-Thread-Index: AQHdSHefc/MCcPjZN023IjBlQWSIu7bW0LzQ///JSYCAAZIJUA==
-Date: Mon, 21 Sep 2026 00:24:47 +0000
-Message-ID: <8d8e60e260254dc2a2cc1f37cd1b3832@realtek.com>
-References: <20260920-codex-rtl-rx-v3-submit-v3-0-883d11351963@khu.ac.kr>
- <20260920-codex-rtl-rx-v3-submit-v3-3-883d11351963@khu.ac.kr>
- <9b5c31541fc8430b9d4205dcdff9e76e@realtek.com>
- <CAH1Bc_yTizX4Cex+GRLeRUtaBdp8jEc2XEyawMzkQsZFpj1QGw@mail.gmail.com>
-In-Reply-To: <CAH1Bc_yTizX4Cex+GRLeRUtaBdp8jEc2XEyawMzkQsZFpj1QGw@mail.gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OKkp+pe9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AACAB1F000FF;
+	Mon, 21 Sep 2026 01:17:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789953460;
+	bh=YDur6IwTSE7iTR0vxd9Zd48PXGF6FvROWSLYkOLIWkQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=OKkp+pe9xIpMgy2kIuEbPoZqVzeihqLQ6TA3Wyi8ZDStD+EeeVhcqIHBZahTRwweH
+	 gDuQGyJGgLjdjZeKSS1Q1f/mP/OAt00rp2UnpAd8x9JboiDWnWQRIXUlUpiKJF8xN2
+	 uwHi13TBks7vz1/jjQsf0kCMQguuDYhC7VISMQd34V/5j5d83h08IBRVk/3IwZOjm/
+	 A8Pk14VPuIQQgNsaq7jLHuIEtYcAs06ZD/uSm3S8MeS0erbL1pOp+iBVErmRdMfHUt
+	 vNURY/YTmu91VgAouiUqxw1RtA0ZShQcdOlUB40TQr1GYpNY2/Hla0iTqYRb6KzyPs
+	 uwzcExwxuI3ag==
+Date: Mon, 21 Sep 2026 03:17:24 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Cc: "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Jeff Johnson <jjohnson@kernel.org>, linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+	ath12k@lists.infradead.org, Bjorn Andersson <andersson@kernel.org>, 
+	Chris Lew <christopher.lew@oss.qualcomm.com>, Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
+	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, Juha-Matti Tilli <juha-matti.tilli@iki.fi>, 
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>
+Subject: Re: [PATCH 0/4] net: qrtr: Add support for using identical MHI
+ endpoint devices
+Message-ID: <j22jk53fhr7nkbb5vcjgp3xw6zoklbt7afzvfetmoh3om3ttsl@pobyf4t3zcsv>
+References: <20260918-qrtr-multi-ep-v1-0-8a06caa368d3@oss.qualcomm.com>
+ <4e0481c1-9288-42d4-94c9-e18da5cf8e5d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4e0481c1-9288-42d4-94c9-e18da5cf8e5d@oss.qualcomm.com>
 
-S2ltIFdvb3Nlb2sgPDVtZ2h5YnJpZEBraHUuYWMua3I+IHdyb3RlOg0KPiA+IE5vdCBwcmVmZXIg
-dXNpbmcgYmFyZSBzeXN0ZW1fd3EuDQo+ID4gQ2FuIGJvdGggdXNlIHNjaGVkdWxlX2RlbGF5ZWRf
-d29yaygpPw0KPiANCj4gSW4gdjMsIHRoZSBlcnJvciBwYXRoIHVzZXMgcXVldWVfZGVsYXllZF93
-b3JrKHN5c3RlbV93cSwgLi4uLCBkZWxheSksDQo+IHdoaWxlIG5vcm1hbCBjb21wbGV0aW9ucyB1
-c2UgbW9kX2RlbGF5ZWRfd29yayhzeXN0ZW1fd3EsIC4uLiwgMCkuDQo+IA0KPiBJIGNhbiByZXBs
-YWNlIHRoZSBlcnJvci1wYXRoIGNhbGwgd2l0aCBzY2hlZHVsZV9kZWxheWVkX3dvcmsoKS4NCj4g
-SG93ZXZlciwgdGhlIG5vcm1hbC1jb21wbGV0aW9uIHBhdGggaXMgaW50ZW5kZWQgdG8gYnJpbmcg
-YW4gZXhpc3RpbmcNCj4gZGVsYXllZCByZXRyeSBmb3J3YXJkIHdoZW4gdGhlIHBlbmRpbmcgY291
-bnQgZXhjZWVkcyB0aGUgYmF0Y2hpbmcNCj4gdGhyZXNob2xkLCB3aGljaCBzY2hlZHVsZV9kZWxh
-eWVkX3dvcmsoLi4uLCAwKSBjYW5ub3QgZG8gYmVjYXVzZSBpdA0KPiBsZWF2ZXMgYW4gYWxyZWFk
-eSBwZW5kaW5nIHRpbWVyIHVuY2hhbmdlZC4NCg0KSSBrbmV3IHRoaXMgcG9pbnQuIERvZXMgaXQg
-bWF0dGVyIHRvIHNjaGVkdWxlIGEgbm9ybWFsIGNhc2UgaW1tZWRpYXRlbHkNCmFmdGVyIGFuIGVy
-cm9yIGNhc2UgKGRlZmVyIHRvIHNjaGVkdWxlKSBoYXBwZW5lZCB3aXRoaW4gMTAwbXM/DQooSnVz
-dCBhbiBvcGVuIHF1ZXN0aW9uKQ0KDQo+IA0KPiBXb3VsZCBpdCBiZSBPSyB0byByZXRhaW4gbW9k
-X2RlbGF5ZWRfd29yaygpIGZvciBub3JtYWwgY29tcGxldGlvbnMsDQo+IGNoYW5naW5nIGl0cyBx
-dWV1ZSBhcmd1bWVudCB0byBzeXN0ZW1fcGVyY3B1X3dxPw0KDQpPSyBpZiBhYm92ZSBxdWVzdGlv
-biBpcyB5ZXMuIA0KDQpPciBib3RoIGNoYW5nZSB0byB1c2UgbW9kX2RlbGF5ZWRfd29yaygpPw0K
-DQo+IA0KPiBXaXRoIHRoYXQgY2hhbmdlLCBzY2hlZHVsZV9kZWxheWVkX3dvcmsoKSB3b3VsZCBz
-ZWxlY3Qgc3lzdGVtX3BlcmNwdV93cQ0KPiBpbnRlcm5hbGx5LCBhbmQgbW9kX2RlbGF5ZWRfd29y
-aygpIHdvdWxkIHVzZSB0aGUgc2FtZSBxdWV1ZSBleHBsaWNpdGx5Lg0KPiANCg0K
+On Fri, Sep 18, 2026 at 11:13:42AM -0700, Jeff Johnson wrote:
+> On 9/18/2026 9:28 AM, Manivannan Sadhasivam via B4 Relay wrote:
+> > Hi,
+> > 
+> > This series reworks the QRTR driver to add support for using identical MHI
+> > endpoint devices at the same time. Currently, QRTR driver has a limitation on
+> > using more than one identical MHI endpoint devices like QCS6490 or any Qcom
+> > Endpoint device making use of QRTR at the same time. Because of the fact that
+> > these devices will have the identical QRTR node id, they cannot be used at the
+> > same time, on the same host machine.
+> > 
+> > This limitation is a blocker for running upstream kernel on devices like Qcom
+> > based routers as they often have multiple identical WLAN Endpoint devices
+> > connected to the Router SoC.
+> > 
+> > This series supersedes the following 2 series from Juha:
+> > https://lore.kernel.org/all/20260915054207.2513877-1-juha-matti.tilli@iki.fi
+> > https://lore.kernel.org/all/20260915074135.2567411-1-juha-matti.tilli@iki.fi
+> > 
+> > Compared to the series from Juha, this series simplifies the multi-endpoint
+> > support by computing a unique node id for each MHI endpoint and uses it for the
+> > internal QRTR book keeping. This ensures that even if the MHI endpoint devices
+> > have same node ids, the host QRTR will always use a unique node id for each one
+> > of them.
+> > 
+> > More details can be found in the individual patches.
+> > 
+> > Testing
+> > =======
+> > 
+> > Juha tested this series on multi ath11k setup by backporting this series to
+> > 6.6.156 kernel. I'd appreciate a formal tested-by tag from Juha and other folks
+> > CCed to this series.
+> > 
+> > Merge Strategy
+> > ==============
+> > 
+> > Since both QRTR and ath drivers are falling under the networking tree, the whole
+> > series can be merged through netdev tree.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> > Manivannan Sadhasivam (4):
+> >       net: qrtr: Allow the host QRTR to assign a unique node id
+> >       net: qrtr: Assign unique node id for MHI endpoints
+> >       wifi: ath11k: Connect to the QMI server belonging to the device owned by this driver
+> >       wifi: ath12k: Connect to the QMI server belonging to the device owned by this driver
+> > 
+> >  MAINTAINERS                           |  1 +
+> >  drivers/net/wireless/ath/ath11k/hif.h |  9 ++++++
+> >  drivers/net/wireless/ath/ath11k/pci.c |  9 ++++++
+> >  drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++
+> >  drivers/net/wireless/ath/ath12k/hif.h |  9 ++++++
+> >  drivers/net/wireless/ath/ath12k/pci.c |  9 ++++++
+> >  drivers/net/wireless/ath/ath12k/qmi.c | 11 +++++++
+> >  include/net/qrtr.h                    | 21 ++++++++++++
+> >  net/qrtr/af_qrtr.c                    | 61 +++++++++++++++++++++++++++++++----
+> >  net/qrtr/mhi.c                        |  4 ++-
+> >  10 files changed, 136 insertions(+), 8 deletions(-)
+> > ---
+> > base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+> 
+> I see this is based upon v7.3-rc1 (current release tree).
+> This series doesn't cleanly apply on the net-next tree.
+> 
+
+Ah, that's bad.
+
+> Are you planning on netdev taking this through current or next?
+> 
+
+-next only. I will respin.
+
+> And an alternate merge strategy would be for netdev to take the first two
+> patches and then after wireless fast-forwards and ath fast-forwards, I could
+> take the last two though the ath tree.
+> 
+
+Unfortunately, ath patches depend on API introduced by the 2nd patch. So they
+can't be applied independently.
+
+I will respin this series on top of ath-next so that the series can be applied
+through netdev next.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
