@@ -1,137 +1,106 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 110A139A04A
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 19:28:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA2363ACA7C
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 19:39:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790018929; cv=none; b=Zs1SsCPXeJB/E9TfbrFvL0A5FAZ2upSEYbSKrExeJHOvg0YpfopaQsQ5m8VrUTYpFSyTTb/v9feOe/jSjRtJhcvS9V1R5RL6nBVeuM8XGKzFhAFqT4mfcm4Dyw4CVVkUbVwZlpdBND/rPGrJOJ+WYKowiL2o4xX8h/xs9iF/+mQ=
+	t=1790019590; cv=none; b=qw5Dh9dYchUWxKdLDZ4do4sK6dNwNSlbLgPqxKQzVKtfYVlKDuEASavdeFKy5HQGx9K4EDVrB36AtRH4n9Oosw0m+f6v5pDp7YIQwRxeGtexed3x5HLx5sj+g+lT2drY5W50LtMIuwFw/e2TofdnmfQWpMIe+QjFy3e4InJVYTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790018929; c=relaxed/simple;
-	bh=4kQw9/OfsCZOeP+w1B4lzcJ+8YOfX44tfHK35dOGEyk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fqerIALVUgEkLHMlmoo18ADDZyC3vFRyxfHmBubBxKYHYzn0FMREHppf8/NKPWnlMVPIe7ljpNjspaY0OdXTIYeVM/zAU1jjeQandfucGNRgvf4E7fEMhna3Qa+toRy90AoCBoZwdYg19zI0A0S8rjVaeYz36B2GcjQuNhttI+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I1XDwk6T; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790019590; c=relaxed/simple;
+	bh=t1DFtvX68cZy3NISZhI1E9+crqPmZBie+sgWlmjNfZc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sNRwTP33/7VRcgFE5rxJ30ut50TWjzwOlzZAScRku9cR7a3VMMFZf7PQDYG8P9MzZcEB/JAM9FlJHbK5mtgctJJppTMSRALTaPDn99GiTfHcb13pUFYMI+qS/fEVubHPrDvi8ffbBtUKpN4OQhSCKubD3R+LGNZwWt4G08wFbpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXCi+50g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I1XDwk6T"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790018923; x=1821554923;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=4kQw9/OfsCZOeP+w1B4lzcJ+8YOfX44tfHK35dOGEyk=;
-  b=I1XDwk6TLUgOffBywi6MHBRLG3ybFc0quyomiHDjePpRM471+ycwLM9i
-   w+iPDmEgK2fEaDY4LvsRo+yGJSf2qD/hNDe0+qkeENFF/Fg11yvr0DX4f
-   1IJ88rs1NWyvXRjV3IF8FWdxWtf/a4gbzmI7NQnMkTI4YdmllxtsHnACG
-   FpSKH9avCJFLb3YjvV1GBAT0m+50Xjh9xaSZoHeYMEhiwtCMsUMje8iIB
-   /bjJjkBhAPtrcly5sraqZABIZyv44pQtK2MxXvvrFDYeJZ1U1gVz5OR9A
-   6ScJvrDXg8RpCxTN37LCniJ5uYbql/xnDJzmVK1M98o1JhmBZ1A+Nygmw
-   A==;
-X-CSE-ConnectionGUID: Q5+CzBQSS3m82fXdtJ4Wsg==
-X-CSE-MsgGUID: Ap6yozHpSSOGRbwr5X0WcA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="78121532"
-X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="78121532"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 12:28:41 -0700
-X-CSE-ConnectionGUID: EGZZWh3cTj29SfyXX+43hg==
-X-CSE-MsgGUID: Cqhc+hICSSCwAtrEMfNyJA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="271317442"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 12:28:39 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: radiotap: add definitions for UHR U-SIG
-Date: Mon, 21 Sep 2026 22:30:38 +0300
-Message-Id: <20260921223016.8f871c68a709.I1cdbb85ac81e33fb84548e8679b78ee1cd1db6c4@changeid>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXCi+50g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3DB1F00898
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 19:39:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790019589;
+	bh=TlEfKXCg5rHiDJTVNsbZVHr7bZvcSttFpXBa5Vfys1Y=;
+	h=References:In-Reply-To:From:Date:Subject:To:List-Id:Cc;
+	b=fXCi+50g/p6esnKbXrT5l4yOjkyme47lIAOq0dB5cRkLF2KIs6GzFdtPXYLVK8yGT
+	 hHCJQER3efnQMbY8TgYuYm9QGDH/WzeDtOnrG+wGe9AHVpPxCtVAk3ngSIV8dz9jrp
+	 bQ9To2081tZyhZ5jugatQkysS+2w37QcjrWvu4JIJp63BbTlPGKyxwavLnTdbtVnaW
+	 Fobv3CAi54ZHj1NKCFrLGnndnW+Mr30RevnGWUeNG7jeflM7bdpHwAyTx/NwLQTtYF
+	 Lcr+p8PmwO+jDPFrJkDAY6Jmds34hq1xguy4oOr4f1u5In14Njq6J8i+MjJNzCNGgf
+	 CVDfgj4SLPxxw==
+Received: by mail-yx2-f43.google.com with SMTP id 956f58d0204a3-67109935888so3363109d50.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 12:39:49 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxRxre2r5bOIwYIkGVS/KOl4nOfyA9GWNcACjWhASzsNYzz65qMxivviQwakkr1js56nN248qY0Vfk5r6UgGw==@vger.kernel.org
+X-Gm-Message-State: AFuF++kD0qz2U6J+xvLdz55lQfYh48Pp4s7qk7zft8O7yR9BVjocSFDo
+	lQs7f1KS/MGddlL+BZ4w5+2d67yKhNA018LT9nr31SlZHqAitgtYKNnzeZ34otUJXFUyhUTnkWb
+	QUV2Hugp0C1fBoWJpnk25xpjrnEvcYJ4=
+X-Received: by 2002:a05:690e:1408:b0:671:70d2:5290 with SMTP id
+ 956f58d0204a3-6718227eb94mr3905390d50.83.1790019588512; Mon, 21 Sep 2026
+ 12:39:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+References: <3c89c245-3a4f-46f0-93eb-a138f10a1ef2@oss.qualcomm.com>
+In-Reply-To: <3c89c245-3a4f-46f0-93eb-a138f10a1ef2@oss.qualcomm.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Mon, 21 Sep 2026 15:39:37 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA4BCQm8yVav7Tcxjyo61jyHpk+W4QbsR2JB+GZAxGpzhQ@mail.gmail.com>
+X-Gm-Features: AcwNN1UJvQ-v6KBYcktupCrDFyB4cuYBhh0oniY8Yx8HTq1Dje0_HKhmeUNPLNQ
+Message-ID: <CA+5PVA4BCQm8yVav7Tcxjyo61jyHpk+W4QbsR2JB+GZAxGpzhQ@mail.gmail.com>
+Subject: Re: [PULL linux-firmware] ath10k, ath11k and ath12k firmware ath-20260921
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org, 
+	ath10k@lists.infradead.org, ath11k@lists.infradead.org, 
+	ath12k@lists.infradead.org, jjohnson@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Johannes Berg <johannes.berg@intel.com>
+Merged and pushed out.
 
-There are three different formats for MU, TB and ELR, add the
-necessary definitions for them.
+https://gitlab.com/kernel-firmware/linux-firmware/-/merge_requests/1270
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- include/net/ieee80211_radiotap.h | 45 +++++++++++++++++++++++++++++++-
- 1 file changed, 44 insertions(+), 1 deletion(-)
+josh
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index ffdfbade25b8..733b5128a6df 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2017		Intel Deutschland GmbH
-- * Copyright (c) 2018-2019, 2021-2022, 2025 Intel Corporation
-+ * Copyright (c) 2018-2019, 2021-2022, 2025-2026 Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -608,6 +608,49 @@ enum ieee80211_radiotap_eht_usig_tb {
- 	IEEE80211_RADIOTAP_EHT_USIG2_TB_B20_B25_TAIL		= 0xfc000000,
- };
- 
-+enum ieee80211_radiotap_uhr_usig_mu {
-+	/* USIG-1 */
-+	IEEE80211_RADIOTAP_UHR_USIG1_MU_BSS_COLOR_2		= 0x0000003f,
-+	IEEE80211_RADIOTAP_UHR_USIG1_MU_B20_B24_DISREGARD	= 0x0000001f,
-+	IEEE80211_RADIOTAP_UHR_USIG1_MU_B25_VALIDATE		= 0x00000020,
-+	/* USIG-2 */
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B0_B1_PPDU_TYPE		= 0x000000c0,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B2_COBF_COSR		= 0x00000100,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B3_B7_PUNCTURED_INFO	= 0x00003e00,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B8_VALIDATE		= 0x00004000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B9_B10_SIG_MCS		= 0x00018000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B11_B15_UHR_SIG_SYMBOLS	= 0x003e0000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B16_B19_CRC		= 0x03c00000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_MU_B20_B25_TAIL		= 0xfc000000,
-+};
-+
-+enum ieee80211_radiotap_uhr_usig_tb {
-+	/* USIG-1 */
-+	IEEE80211_RADIOTAP_UHR_USIG1_TB_B20_B25_DISREGARD	= 0x0000001f,
-+
-+	/* USIG-2 */
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B0_B1_PPDU_TYPE		= 0x000000c0,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B2_VALIDATE		= 0x00000100,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B3_B6_SPATIAL_REUSE_1	= 0x00001e00,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B7_B10_SPATIAL_REUSE_2	= 0x0001e000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B11_B15_DISREGARD	= 0x003e0000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B16_B19_CRC		= 0x03c00000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_TB_B20_B25_TAIL		= 0xfc000000,
-+};
-+
-+enum ieee80211_radiotap_uhr_usig_elr {
-+	/* USIG-1 */
-+	IEEE80211_RADIOTAP_UHR_USIG1_ELR_B20_B24_DISREGARD	= 0x0000001f,
-+	IEEE80211_RADIOTAP_UHR_USIG1_ELR_B25_VALIDATE		= 0x00000020,
-+
-+	/* USIG-2 */
-+	IEEE80211_RADIOTAP_UHR_USIG2_ELR_B0_B1_PPDU_TYPE	= 0x000000c0,
-+	IEEE80211_RADIOTAP_UHR_USIG2_ELR_B2_B12_STA_ID		= 0x0007ff00,
-+	IEEE80211_RADIOTAP_UHR_USIG2_ELR_B13_B15_VALIDATE	= 0x00380000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_ELR_B16_B19_CRC		= 0x03c00000,
-+	IEEE80211_RADIOTAP_UHR_USIG2_ELR_B20_B25_TAIL		= 0xfc000000,
-+};
-+
- /*
-  * ieee80211_radiotap_uhr_elr - content of UHR-ELR TLV (type 37)
-  * see https://www.radiotap.org/fields/UHR-ELR for details
--- 
-2.34.1
-
+On Mon, Sep 21, 2026 at 2:58=E2=80=AFPM Jeff Johnson
+<jeff.johnson@oss.qualcomm.com> wrote:
+>
+> Hi,
+> Here's a new pull request for ath10k, ath11k and ath12k firmware.
+>
+> For ath10k and ath11k there are no changes.
+>
+> For ath12k there are two board updates:
+> QCC2072 hw1.0: Add initial support for CQ2390 targeted for IOT platforms
+> WCN7850 hw2.0: Add support for board-ids 0x201 & 0x202
+>
+> Please let me know if there are any problems.
+>
+> Thanks,
+> /jeff
+>
+> ----------------------------------------------------------------
+>
+> The following changes since commit 2b8daaf611fbade74f26a5b58ec1defe6a02f5=
+e0:
+>
+>   Merge branch 'qcom-fw-version-diff' into 'main' (2026-09-19 17:16:57 +0=
+000)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/ath/linux-firmware.git at=
+h-20260921
+>
+> for you to fetch changes up to e88807ffbf0fce50130cf1f7475acfb8ba365c12:
+>
+>   ath12k: WCN7850 hw2.0: update board-2.bin (2026-09-21 11:50:36 -0700)
+>
+> ----------------------------------------------------------------
+> Jeff Johnson (2):
+>       ath12k: QCC2072 hw1.0: update board-2.bin
+>       ath12k: WCN7850 hw2.0: update board-2.bin
+>
+>  ath12k/QCC2072/hw1.0/board-2.bin | Bin 401232 -> 526720 bytes
+>  ath12k/WCN7850/hw2.0/board-2.bin | Bin 2253964 -> 2431852 bytes
+>  2 files changed, 0 insertions(+), 0 deletions(-)
