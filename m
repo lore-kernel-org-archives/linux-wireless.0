@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E930449B0B
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 20:39:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8B6448CE6
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2026 20:39:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790023183; cv=none; b=X16gY8cgcLOkXB1yZjcECxEuOo42SBDWL+Af/ZxZP26IzAAJy0TjvQlMQuQLeppgbjITgZXU3RJ6YR6j3L5J2obZrnf6P9er1LVFUp9J7/OaALLuPYxW9+W0gF1FCKh5gXzMwzVTEdACkXZXqVMXgZ9e8PUS0Gd1r0zo2Un1eso=
+	t=1790023184; cv=none; b=UP9FjK6naZdNnh0NdAzuEpxwcZzWYlD5gSfmJcAzgwhShs9IZSMBWbaGHSH2sYubQQEvGIWalzCb4v7WeC27axjpriCP5WhHFRTNXaEUtNJXvYkVnjwP3I//h4QQCWMwmhkqWtMfEHqiqnxTj2YDt+CWDBXd6vnppBn9PhEkhkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790023183; c=relaxed/simple;
-	bh=PlzUJSr+2vhdUbJzG+FdBPvFx2/PyX2tXR1hvEjIxpM=;
+	s=arc-20240116; t=1790023184; c=relaxed/simple;
+	bh=npvholtZdCpKTSUoAEOl/CfFRnwFTCSMvnNL/PMuM5I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RKuyCBM7FuJ9uZEhn77NPm1UO7w+eDPSNJ1PdmMVk839QSNSipkCYE7uwxM/Qyjqf85iLlkc44kVLS9WL0iTBKZUKDYBJag16r10Ao6myODEMXLwQGrhocwIdW99+YWvH2/BcgfW+JvNqKBP5TGO8LM1gThOn259KUKDZT8suC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=abptyg4M; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=jM9j/j2XOCXu36LD13z71jHgBin8QinMLhDjd746hPZhi3ttZs3wiSKW9S+a6HO9dHvml1rVGvZapCYbdxqqXBJFwun+Fhg0m+tVX860AZUy1MR34WwqFLBOUlbqfqYdccB6fuHGYQh9OMc4BRjbTB5zhAP51vACuk6WVPKxtl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kl21zplA; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="abptyg4M"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kl21zplA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790023181; x=1821559181;
+  t=1790023183; x=1821559183;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=PlzUJSr+2vhdUbJzG+FdBPvFx2/PyX2tXR1hvEjIxpM=;
-  b=abptyg4MnW84Z7YL0jD32aJIlfibwd5BV56RZv3LTdIHXiV9+sP4aZ43
-   aKG/MuXeHR2dWH49GDxBNveESVmX3HLA0uLhvukO6cHNsmDH8E6oO4LnJ
-   VFih7aJvW2wGKkBVuMcMMj5g3fxj0EaMRIAorgBNHeNOi9AhQDihZips3
-   4mxwwepzGdvuG0U044lTMc7LxdnCdL9SmU8tbD0H9deGxuc6Trpxs3B+R
-   ihkhCDNZOZ2preFHNEYt9XhDNrS7nFMh5oCTt/xW6XmOu/AVWobD5qEhP
-   QeJoC8usStOclj6Itm9tW0GsJJQxS0J67tG5dXUvMqAIej12/KOJ9P/OV
+  bh=npvholtZdCpKTSUoAEOl/CfFRnwFTCSMvnNL/PMuM5I=;
+  b=kl21zplA6Lm6d9ybeEtScn9BODA9MA/VvpuFEavXgWSiNSCQexAreFfr
+   C5cvsaNSB0VkjI182nbcy+wXiB5WeW1JQyPpMLlQXdvAB/YUslTqj3eAH
+   LZ6izK3MIcynEcqXgjPPDUwhG4x7WPgoajjzd8lQ9h+Dp2X1Zyj92nBBU
+   d3ol5YJEOfy3E8HczsZWmpCntWWy3xc7Pu63yoN1qH4KN/V7MsDpoSOGC
+   ovdiqnGIBcmALjMmZACNMwOqnF9aGn3WQmYksNtVZFHy6S+VpOYk6R+sK
+   DHr+t5LL1AOgQd/aW8UkJ6xa48hsTFB2wOm6lxrRuVPExks6mlKba/7Y1
    g==;
-X-CSE-ConnectionGUID: TEuXfgmqQa+AjLW4Q8n24g==
-X-CSE-MsgGUID: W0n8n4/9QX6uNyVLlaPQUA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="78128783"
+X-CSE-ConnectionGUID: J7+DubOkShyqiTMYKKsLkg==
+X-CSE-MsgGUID: m2/lYcQNQhO3DD3zk2LUNA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="78128788"
 X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="78128783"
+   d="scan'208";a="78128788"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 13:39:41 -0700
-X-CSE-ConnectionGUID: PSsp3900QNKdhk3mbH56Dg==
-X-CSE-MsgGUID: aYo05DhHSp2tQalhvBLmFw==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 13:39:42 -0700
+X-CSE-ConnectionGUID: rxBdMGBlTreH9ni2WgzVEQ==
+X-CSE-MsgGUID: t2EiRwfgS1C8xXdw/IPGlg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
-   d="scan'208";a="300762023"
+   d="scan'208";a="300762036"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 13:39:40 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 13:39:41 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Shahar Tzarfati <shahar.tzarfati@intel.com>
-Subject: [PATCH iwlwifi-next 07/15] wifi: iwlwifi: validate TLV length before reading fields
-Date: Mon, 21 Sep 2026 23:41:17 +0300
-Message-Id: <20260921233730.6127e849e40a.If963f766dbe29cbb8c226e163ab678be97240730@changeid>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: pcie: validate txq_id in txq_disable
+Date: Mon, 21 Sep 2026 23:41:18 +0300
+Message-Id: <20260921233730.c96ee7e007bc.Ie593dfd5451be69a5e6deca248a4b443e168ac88@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260921204125.1313346-1-miriam.rachel.korenblit@intel.com>
 References: <20260921204125.1313346-1-miriam.rachel.korenblit@intel.com>
@@ -62,124 +62,47 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Shahar Tzarfati <shahar.tzarfati@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The INI/Yoyo debug TLVs are parsed from an untrusted firmware-debug
-file. The dispatcher only guarantees that the
-TLV length covers the 8-byte common header, yet several per-type
-handlers dereferenced fields located beyond that header before
-checking the TLV length.
+iwl_trans_pcie_txq_disable() computed SCD_TX_STTS_QUEUE_OFFSET(txq_id)
+and dereferenced trans_pcie->txqs.txq[txq_id] before checking that
+txq_id is within range or that the queue was allocated.
 
-Add the missing minimum-length check in iwl_dbg_tlv_config_set() so
-the short TLV is rejected before it is stored, and move the field
-reads in the other handlers to after their existing length checks so
-no field is dereferenced before the buffer is known to be large
-enough.
+Bail out with a WARN_ON when txq_id is out of range or the queue is not
+allocated, and only compute the status address after the checks pass.
+We don't really want to disable the command queue either, so check that
+as well.
 
-Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
-Assisted-by: GitHub-Copilot:claude-opus-4-8
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 34 +++++++++++++------
- 1 file changed, 24 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 11763dec77ec..bd2a9e4b4b5f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -167,11 +167,13 @@ static int iwl_dbg_tlv_alloc_hcmd(struct iwl_trans *trans,
- 				  const struct iwl_ucode_tlv *tlv)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c
+index dc2fe0c4f68c..060074c2871b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c
+@@ -1276,9 +1276,17 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
+ 				bool configure_scd)
  {
- 	const struct iwl_fw_ini_hcmd_tlv *hcmd = (const void *)tlv->data;
--	u32 tp = le32_to_cpu(hcmd->time_point);
-+	u32 tp;
- 
- 	if (le32_to_cpu(tlv->length) <= sizeof(*hcmd))
- 		return -EINVAL;
- 
-+	tp = le32_to_cpu(hcmd->time_point);
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	u32 stts_addr = trans_pcie->scd_base_addr +
+-			SCD_TX_STTS_QUEUE_OFFSET(txq_id);
+ 	static const u32 zero_val[4] = {};
++	u32 stts_addr;
 +
- 	/* Host commands can not be sent in early time point since the FW
- 	 * is not ready
- 	 */
-@@ -194,9 +196,14 @@ static int iwl_dbg_tlv_alloc_region(struct iwl_trans *trans,
- {
- 	const struct iwl_fw_ini_region_tlv *reg = (const void *)tlv->data;
- 	struct iwl_ucode_tlv **active_reg;
--	u32 id = le32_to_cpu(reg->id);
--	u8 type = reg->type;
- 	u32 tlv_len = sizeof(*tlv) + le32_to_cpu(tlv->length);
-+	u32 id;
-+	u8 type;
++	if (WARN_ON(txq_id < 0 ||
++		    txq_id >= trans->mac_cfg->base->num_of_queues ||
++		    txq_id == trans->conf.cmd_queue ||
++		    !trans_pcie->txqs.txq[txq_id]))
++		return;
 +
-+	if (le32_to_cpu(tlv->length) < sizeof(*reg))
-+		return -EINVAL;
-+
-+	id = le32_to_cpu(reg->id);
++	stts_addr = trans_pcie->scd_base_addr +
++		    SCD_TX_STTS_QUEUE_OFFSET(txq_id);
  
- 	/*
- 	 * The higher part of the ID from version 2 is debug policy.
-@@ -205,9 +212,6 @@ static int iwl_dbg_tlv_alloc_region(struct iwl_trans *trans,
- 	if (le32_to_cpu(reg->hdr.version) >= 2)
- 		id &= IWL_FW_INI_REGION_ID_MASK;
- 
--	if (le32_to_cpu(tlv->length) < sizeof(*reg))
--		return -EINVAL;
--
- 	/* for safe use of a string from FW, limit it to IWL_FW_INI_MAX_NAME */
- 	IWL_DEBUG_FW(trans, "WRT: parsing region: %.*s\n",
- 		     IWL_FW_INI_MAX_NAME, reg->name);
-@@ -217,6 +221,8 @@ static int iwl_dbg_tlv_alloc_region(struct iwl_trans *trans,
- 		return -EINVAL;
- 	}
- 
-+	type = reg->type;
-+
- 	if (type <= IWL_FW_INI_REGION_INVALID ||
- 	    type >= IWL_FW_INI_REGION_NUM) {
- 		IWL_ERR(trans, "WRT: Invalid region type %u\n", type);
-@@ -251,13 +257,14 @@ static int iwl_dbg_tlv_alloc_trigger(struct iwl_trans *trans,
- 				     const struct iwl_ucode_tlv *tlv)
- {
- 	const struct iwl_fw_ini_trigger_tlv *trig = (const void *)tlv->data;
--	u32 tp = le32_to_cpu(trig->time_point);
--	u32 rf = le32_to_cpu(trig->reset_fw);
-+	u32 tp, rf;
- 	struct iwl_ucode_tlv *new_tlv;
- 
- 	if (le32_to_cpu(tlv->length) < sizeof(*trig))
- 		return -EINVAL;
- 
-+	tp = le32_to_cpu(trig->time_point);
-+
- 	if (tp <= IWL_FW_INI_TIME_POINT_INVALID ||
- 	    tp >= IWL_FW_INI_TIME_POINT_NUM) {
- 		IWL_ERR(trans,
-@@ -266,6 +273,8 @@ static int iwl_dbg_tlv_alloc_trigger(struct iwl_trans *trans,
- 		return -EINVAL;
- 	}
- 
-+	rf = le32_to_cpu(trig->reset_fw);
-+
- 	IWL_DEBUG_FW(trans,
- 		     "WRT: time point %u for trigger TLV with reset_fw %u\n",
- 		     tp, rf);
-@@ -288,8 +297,13 @@ static int iwl_dbg_tlv_config_set(struct iwl_trans *trans,
- 				  const struct iwl_ucode_tlv *tlv)
- {
- 	const struct iwl_fw_ini_conf_set_tlv *conf_set = (const void *)tlv->data;
--	u32 tp = le32_to_cpu(conf_set->time_point);
--	u32 type = le32_to_cpu(conf_set->set_type);
-+	u32 tp, type;
-+
-+	if (le32_to_cpu(tlv->length) < sizeof(*conf_set))
-+		return -EINVAL;
-+
-+	tp = le32_to_cpu(conf_set->time_point);
-+	type = le32_to_cpu(conf_set->set_type);
- 
- 	if (tp <= IWL_FW_INI_TIME_POINT_INVALID ||
- 	    tp >= IWL_FW_INI_TIME_POINT_NUM) {
+ 	trans_pcie->txqs.txq[txq_id]->frozen_expiry_remainder = 0;
+ 	trans_pcie->txqs.txq[txq_id]->frozen = false;
 -- 
 2.34.1
 
