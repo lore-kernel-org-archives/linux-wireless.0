@@ -1,55 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AC6053CA79
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 11:48:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D22253D0BD
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 11:48:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790077704; cv=none; b=uvwOd+Og5oXMZ6wkG6FeTcUT3IYfmpAuVtnw1n2BQyF1X58qUhuhaINczek3yJsAr1IzD6Ze4LeVCbMC4CktkBgMpK3Y/R1mwjt2k8BeNNGkQG7WmYugm3jr/eQZSfjTYLvIYofOTwEOon1r/bkExxFtoRRT0lKcEbYJSDyNCTI=
+	t=1790077706; cv=none; b=pAGH6ArN5D53u7yJYMnCyI8BJQo8N4GkyTqZmswElCuPjio5rfozTEDhW1MUbxdzSwaJVjhChc/vCuEy9Myr6j6jVzZehi08v4uMp6ONhWx/SPp7ksyOF7OuYO7HRaecY5+DNJY27tWj1t72WMVlnM0nJ9+qOkJI+qX1D0+ijec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790077704; c=relaxed/simple;
-	bh=Uvo+waccC0Hb7KEtY/XVwjDHEatHTzOUe/lYodORO/M=;
+	s=arc-20240116; t=1790077706; c=relaxed/simple;
+	bh=2kMJ0JybYfIQWMjNWT500Ymqze39FFWYo2kkwaRuwkA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=O+QRAtbh5wtoNULudpIMQcts36sBfndfIgLt3ZBJr5ymQiRZcEvhabShI1kLT6FyTaaTwIl3rOI9Z+X8iAhN0OAYxaSk6ejEBlM1cGe3TwTXm0xh5n6jt0vU/jNhTclLZfvLOz6r+POq8q5udxAOS+/e3PmXSIVKAC9AXa+uFBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VKUg2sPZ; arc=none smtp.client-ip=192.198.163.8
+	 MIME-Version; b=P65I8Ms6BwRaqZbYpsU8RY4sWe+YSaqrscmrfctXG7PpvSzl1a3ouyQwItTQ/ZlL/ilXTdnRDJdycRKRttnUlzqfr+vDW069ZmLdcSmYkjQ2RYhFldJ6VuPc3xlES9f7CM36Dp8yoEbIc3dRw8JfCa0Udh/wUiE3+hzTIjJtlm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TXqKeknx; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VKUg2sPZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TXqKeknx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790077703; x=1821613703;
+  t=1790077704; x=1821613704;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Uvo+waccC0Hb7KEtY/XVwjDHEatHTzOUe/lYodORO/M=;
-  b=VKUg2sPZqI98sahS95wl+uwY31HMk6FAAFc08obKcG2dBGVKpj8rCSOJ
-   nbU2gsKgy8U9EV6/3E+8E5GM45ju0oK3l1cqBghO0efGVRfgANoamRCMV
-   8OBCZpaZnnKK/LYplXXawgTwtdbeeOXqr6pBNu6z8NkQkXGdb1cG17c1g
-   q+tMwxSgT7oJxCHn0at0Rgbb04wB4ATWxh1zTEx3vE5CUXpT67av7gOc2
-   /89aFUpq37MasIa4sHBRrtCL/vxxmrfyceRSNM7mp9LoFvfzGv+AaIUla
-   fzyfmi7BKAWbd86enCeZ8Z7cNz5e8OTm7QdoKZiYWJlmzT8ljfR4W0Oqp
+  bh=2kMJ0JybYfIQWMjNWT500Ymqze39FFWYo2kkwaRuwkA=;
+  b=TXqKeknxj543z7aOJGkIQHf+Z6IPLMUwq+04FIohKotPDhnaHhLKxmFH
+   JM5B50AUQ6iT8HLDH11yu0Fvvz1sa7QogWbdYhS5aU8pP+TKFla1t43oH
+   0zPVqdMgVpMxwvKRuGgZxhZNjdrrW4zil2YzdrWEpKeEBap7N6REsP5/w
+   Yg4uN7g+Wj9gyDuzM+DYSNUHZovzKn9ds5Xx66/fHkOSRQvJnSGwg6Ma1
+   6/knmS5rzlUWpkVMWzLayvYSQHzyPDzekZGha4wy8N4I9+bLGIR1VqIJP
+   J/DJPdb2zlXk919vELVsgQZBZixGqaOFHzS1Quxhtzu8NoIa053vpJvXw
    A==;
-X-CSE-ConnectionGUID: RUCobmv2RSKy1Hh50XaQ5g==
-X-CSE-MsgGUID: m3iImpS8Rs2TWdRQ6CoRvA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="108170540"
+X-CSE-ConnectionGUID: Uf6VI+sSS7y+QaP8J4TQLQ==
+X-CSE-MsgGUID: Xm5TmeOBTBiXNI6+m4xvsg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="108170543"
 X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
-   d="scan'208";a="108170540"
+   d="scan'208";a="108170543"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:48:15 -0700
-X-CSE-ConnectionGUID: NC5FKw5LRSasoaR8mC0YRA==
-X-CSE-MsgGUID: AN6UUc/CRKKrM/+hu1GOZA==
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:48:17 -0700
+X-CSE-ConnectionGUID: I353BAApSOeN7gTYjDLa1Q==
+X-CSE-MsgGUID: zw+bIn7dT+GVCJRnYCqNYQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
-   d="scan'208";a="273275400"
+   d="scan'208";a="273275408"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:48:14 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:48:15 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: fix ctxt-info-v2 unwind UAF
-Date: Tue, 22 Sep 2026 14:49:55 +0300
-Message-Id: <20260922144819.be2c3cf96a4e.I207172d76a22c0302575f3383a044700f97a9980@changeid>
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: mld: pass phy status explicitly for sniffer
+Date: Tue, 22 Sep 2026 14:49:56 +0300
+Message-Id: <20260922144819.86c1201ae2f6.I4b10b530325df711c7d229f1c487285a4dfcd294@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260922115002.934469-1-miriam.rachel.korenblit@intel.com>
 References: <20260922115002.934469-1-miriam.rachel.korenblit@intel.com>
@@ -62,90 +63,66 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-A failed ctxt-info-v2 allocation can free prph_scratch/prph_info
-without clearing the stored transport pointers.
+In some cases the frame status is changed to AID_NOT_FOR_US if no data
+is received. Pass the status explicitly so that the PHY data remains
+intact as that simplifies debugging.
 
-Clear stale DMA address/pointer fields during unwind.
-
-Also add an alloc-entry WARN_ON_ONCE/-EBUSY invariant to reject re-entry
-when ctxt/prph/iml state is already populated.
-
-Also, assign iml_len only the allocation.
-
-Assisted-by: GitHubCopilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: 92e87cee465c ("wifi: iwlwifi: mld: update to new sniffer API")
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/pcie/ctxt-info-v2.c  | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-index 06be929a3ca5..1ea23d297713 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2018-2025 Intel Corporation
-+ * Copyright (C) 2018-2026 Intel Corporation
-  */
- #include <linux/dmi.h>
- #include "iwl-trans.h"
-@@ -112,6 +112,14 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
- 	int cmdq_size = max_t(u32, IWL_CMD_QUEUE_SIZE,
- 			      trans->mac_cfg->base->min_txq_size);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index 02bdf6ccbcdc..82da642146a7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -2281,7 +2281,7 @@ void iwl_mld_handle_rsc_notif(struct iwl_mld *mld,
+ #endif /* CONFIG_PM_SLEEP */
  
-+	if (WARN_ON_ONCE(trans_pcie->ctxt_info_v2 || trans_pcie->prph_info ||
-+			 trans_pcie->prph_scratch || trans_pcie->iml ||
-+			 trans_pcie->ctxt_info_dma_addr ||
-+			 trans_pcie->prph_info_dma_addr ||
-+			 trans_pcie->prph_scratch_dma_addr ||
-+			 trans_pcie->iml_dma_addr || trans_pcie->iml_len))
-+		return -EBUSY;
-+
- 	switch (trans->conf.rx_buf_size) {
- 	case IWL_AMSDU_DEF:
- 		return -EINVAL;
-@@ -263,7 +271,6 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
- 	trans_pcie->prph_scratch = prph_scratch;
+ static void iwl_mld_no_data_rx(struct iwl_mld *mld,
+-			       struct napi_struct *napi,
++			       struct napi_struct *napi, u8 status,
+ 			       struct iwl_rx_phy_air_sniffer_ntfy *ntfy)
+ {
+ 	struct ieee80211_rx_status *rx_status;
+@@ -2306,7 +2306,7 @@ static void iwl_mld_no_data_rx(struct iwl_mld *mld,
+ 	/* 0-length PSDU */
+ 	rx_status->flag |= RX_FLAG_NO_PSDU;
  
- 	/* Allocate IML */
--	trans_pcie->iml_len = fw->iml_len;
- 	trans_pcie->iml = dma_alloc_coherent(trans->dev, fw->iml_len,
- 					     &trans_pcie->iml_dma_addr,
- 					     GFP_KERNEL);
-@@ -271,6 +278,7 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
- 		ret = -ENOMEM;
- 		goto err_free_ctxt_info;
+-	switch (ntfy->status) {
++	switch (status) {
+ 	case IWL_SNIF_STAT_PLCP_RX_OK:
+ 		/* we only get here with sounding PPDUs */
+ 		rx_status->zero_length_psdu_type =
+@@ -2365,11 +2365,9 @@ void iwl_mld_handle_phy_air_sniffer_notif(struct iwl_mld *mld,
+ 		return;
+ 
+ 	/* check if there's an old one to release as errored */
+-	if (mld->monitor.phy.valid && !mld->monitor.phy.used) {
+-		/* didn't capture data, so override status */
+-		mld->monitor.phy.data.status = IWL_SNIF_STAT_AID_NOT_FOR_US;
+-		iwl_mld_no_data_rx(mld, napi, &mld->monitor.phy.data);
+-	}
++	if (mld->monitor.phy.valid && !mld->monitor.phy.used)
++		iwl_mld_no_data_rx(mld, napi, IWL_SNIF_STAT_AID_NOT_FOR_US,
++				   &mld->monitor.phy.data);
+ 
+ 	/* old data is no longer valid now */
+ 	mld->monitor.phy.valid = false;
+@@ -2406,7 +2404,7 @@ void iwl_mld_handle_phy_air_sniffer_notif(struct iwl_mld *mld,
  	}
-+	trans_pcie->iml_len = fw->iml_len;
  
- 	memcpy(trans_pcie->iml, fw->iml, fw->iml_len);
+ 	if (ntfy->status != IWL_SNIF_STAT_PLCP_RX_OK || is_ndp) {
+-		iwl_mld_no_data_rx(mld, napi, ntfy);
++		iwl_mld_no_data_rx(mld, napi, ntfy->status, ntfy);
+ 		return;
+ 	}
  
-@@ -280,16 +288,21 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
- 	dma_free_coherent(trans->dev, sizeof(*trans_pcie->ctxt_info_v2),
- 			  trans_pcie->ctxt_info_v2,
- 			  trans_pcie->ctxt_info_dma_addr);
-+	trans_pcie->ctxt_info_dma_addr = 0;
- 	trans_pcie->ctxt_info_v2 = NULL;
- err_free_prph_info:
- 	dma_free_coherent(trans->dev, PAGE_SIZE, prph_info,
- 			  trans_pcie->prph_info_dma_addr);
-+	trans_pcie->prph_info_dma_addr = 0;
-+	trans_pcie->prph_info = NULL;
- 
- err_free_prph_scratch:
- 	dma_free_coherent(trans->dev,
- 			  sizeof(*prph_scratch),
- 			prph_scratch,
- 			trans_pcie->prph_scratch_dma_addr);
-+	trans_pcie->prph_scratch_dma_addr = 0;
-+	trans_pcie->prph_scratch = NULL;
- 	return ret;
- 
- }
 -- 
 2.34.1
 
