@@ -1,167 +1,174 @@
-Received: from mail-yx2-f42.google.com (mail-yx2-f42.google.com [74.125.224.170])
+Received: from mail-vs2-f40.google.com (mail-vs2-f40.google.com [74.125.227.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B38F54E8E04
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 20:40:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790109628; cv=pass; b=g11dUCC0eKRg/Y+GGTABTQ6KMmph8am1j++fdAIYr7ABClHuhW6NWU1r5mrwxN5xamkHQuP/OJbKGc5MFDFuF/A+TTKhQll4mNoeSS6fYB28DzF1hndc3qK9TyMBDblPfbAPGyjoMQR/ph5A85RIuN/oUxaoSEXokNNstCPRyzE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790109628; c=relaxed/simple;
-	bh=2WWl4epRjDFTP4CssGLx0mm/aO/ja1ugVc3Uht6W5xQ=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=t6N30wwd38m/nQsC2+mWISkVHdIh3TPMUkLHbfe2WiCT3oaZ05PdH6ut4cgTlt1OOihwpezkoABupl1T0CltJZbG53ldF3h0kVKib/MsyuzKC83dY6OAyi2J8ehG+3m1FwlCyjbAi275fzOKPX9Kgl2wvktLrkKhh1vCxBGF2Uk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gxjYwXuZ; arc=pass smtp.client-ip=74.125.224.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBBF14EFFB3
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 22:08:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.40
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790114921; cv=none; b=u9H6Ut/q+bFr/YXwIjLFyv+qhEoK5lDvgDSWyQfr0EbmNp5jnwgvLWK1qjaNmEzVDAFGDbuHLMpT22GRARVA2fSMfmeaecdTrxnRf2uYfYAmWOLMYmpOn2gFX8yvMMpmjD5vSS/7Yky7BjBqT7otJtqL0xk1rYZ7AYuXksCwSdY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790114921; c=relaxed/simple;
+	bh=dWLdwJb8d9camCoMsbYnnFHB9HZwJBPNxGr8zbzzxJw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z3QoOy0xJCN5a3BU/LuyvxtFC0iVd5lb+jMhP3McSit0epNrM0HV0nKZ+1YB68zKPHBEv5dSb//Ks2qrqIolgsbkyURBcCsalHeOTFIYduxyaiem37s0De+HN+STcMTuLtWjgyJVE37XtSkC5M11eKbcWLJKiTzXvOdtVt1Qjbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RrlCuqHB; arc=none smtp.client-ip=74.125.227.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gxjYwXuZ"
-Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-672ce86b21aso324025d50.3
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 13:40:12 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790109611; cv=none;
-        d=google.com; s=arc-20260327;
-        b=sanUDJJ8DgQ9DSL5Jy31QSrbuzSE5GNwTvBo/EarETnouB1iUFczZRTQOlRnd2spK1
-         QPnMdEc1zk8EZSvQZ5JTXwXWRiMDxQ3QfnsjQMpLQ9C9K3zREHPljlQP8Hv2IKRyCB89
-         +EjuplVuEKgfQ5DmqivDp0TmAdDI1x5RDSoDS1lSlDOYvkVWrag+0qB6FN6oK0gddbk9
-         HDrS//R8kTS0RUP0z2i/yP5EwaWaJ5C7pJRu9RKamqag5LIEq8pXBO678tVuPAkHrt9s
-         ggjOqFcwjra3UrKlu4SrkyTu586jmUaVf9BobibARbobE1sMwWrzU7T+DH5XRKqk9Xf3
-         k4GA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=8LKk+1yCqqSBPwtpjm5MjX+FdXoGXWtVvIQvMys3AHQ=;
-        fh=257NU1k7yWpMtvADl0QXIxasDlKNfhRrsESSisMuHik=;
-        b=LSSCZ8C3WeFkAQZmsApIRCNZ5rJpnRwHWmikIkc2H9JmTyGbeJbgy5XrO8VIeXURIY
-         P3gzYjUv1nGMwSA3C4/ZU/V2Zs0PrWHGhhOhEygucoiCDzJW4S/xgb2vDfc485DtPIlr
-         +nQl2u/voYfsRH0bcUlggaWJEPR6UWzQXeaJXR/DCnLZSGyCVlHXIVCezLBBTuh0BWSF
-         6/MBsuO2Hf0f5lnCTOk1fawJ4CbxDGMHr9kbttLjy01Mde/yMmnov7P3Dq6hcFcoEiK+
-         X8B8teeGQZ7cLHjPQz06a3PFpdYcul/rIA35a6yDDJ/+9noYGOa6qmqY3B11Q3PsAWti
-         SC2g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RrlCuqHB"
+Received: by mail-vs2-f40.google.com with SMTP id ada2fe7eead31-7a03fe69236so150747137.2
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 15:08:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790109611; x=1790714411; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8LKk+1yCqqSBPwtpjm5MjX+FdXoGXWtVvIQvMys3AHQ=;
-        b=gxjYwXuZ6YbEoNbWf1o3A/UGARKhqIZ6u1l2n+F3gtHwu6Q441PIlDpsGqMizDzdxC
-         7S2ncJKLkEXrUyeOQeMToD/uK6gXwu6EAr5VESapZhzHbEIMbhup1nUs2DCjtIzPWU68
-         XmUfkfcuUw+Pa2Snv30erTkqBCR88D9p+GTXICEwv85oFFISTAcFiL+7+pCZIrCrFRFE
-         fSVxctz6B3Mh8GXVdwfAFx3c+PSO2c7gztQueP4WMLnivagEIgcalcvtdaj39trDXmRa
-         ed8+LZndtm6+uhFmItv4o/MvxXMrSzfw0Xk685bUPL9DJrM8UkKq6fMsesBQuJaptOta
-         OWug==
+        d=gmail.com; s=20251104; t=1790114910; x=1790719710; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HH7Mx1ASGQGZXIkAoii0TJeZ9j5LKy/zgHlKkIF1avg=;
+        b=RrlCuqHBpQDsJ3mhwqCsnUHASIbcb1bzTAGxICMTner549N4mtHQMopHUc3eKbEQRk
+         aHTtE9EAo1A04gfleY/PJLnFQyr60NsVilq2CYhIKFh+rDKPspYGjbApEvevRslb7Uwo
+         bYhulDpC4xCKr6IsgHJLMwbyI7Gn9/2hPrRHmGw+6/0V3u8L817QI0zfcODnPoLb792w
+         XK4DGYG5yD8isHlICS2IA5UdsGi0NFOE1C1LzMmYkmXqQhxD0lSc2EFQebwT+Q37MkDU
+         JWPZU7Cs3ICpk5eGqgn7D0bQrt3HiaL/2zLUyj7B+7mNulUFwAU2nEJrN/wHrSqACt7k
+         6f4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790109611; x=1790714411;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=8LKk+1yCqqSBPwtpjm5MjX+FdXoGXWtVvIQvMys3AHQ=;
-        b=F8bthiIlkPCQYfUS4sF53itB9wmqHNeeQRAoSF3usNOcumS/Kqk+LRcE6PXXzWRKk4
-         gH2Od++1fPBFKtfpAXl5kMYUIbkJ1FtyzFzpUCdiVb1MGybIJO+CB7M9ahDDqgwSCh9D
-         tPslm0ywgkxVzfpwD+kiEAbi+0YmpxwHf2hOMBP05TbIjWKNtTTfUftLohRXuHB+Hd1N
-         f+86Xq/OFkO1yQ89r98Sbr2/BhXvbTAyZ4S+wGgwd1tEWOTZQDrDz6EnvwICmbCg71zi
-         gw2RCgIH32/NfPVxsm4+Vbr66rJONexuJHL0MxNpLf5m5LHIvBjCC/FriqIz2Q1+Xco3
-         dNQg==
-X-Gm-Message-State: AFuF++kNV+pgrZEE9WwVTmdpbBJLG2QGS41PvrxH/+D4gsA9I2pGLPEH
-	kEKgcnbGp78ryfRaFnGS9ExstUeyNbKm/ITqDkW5IPDVxTjV7K0T4c+6aM4FRdJ3n42SsVu/y7T
-	CjxmXrNSy2jPMykEE4fyNvRFKqIe03lNfhydj
-X-Gm-Gg: AYBFou3ya1zXuiqjUqgrBj7qZ1qoTRcVP4zGLPA1kO98hdrIoTFArCPmTBjkXmiEkvP
-	22ln0idO3/5ssJRfgzBSKZlIdq04U5o5kTDEIn3quebstsbn69g8jYfVHwTQZYDdvBqbKZpl0+s
-	xDDfXJ24ugRvWAMsr85XfhZuiMz8WmbCBovfuZSHirFi/6FKIoijTClC1+wVwc+dO0UES1Jyyye
-	gFpduPlk0YFb5K/WOHuTL69TX3GZ14tsIgs8IZbUZBaXYYDkojGpuPA/5D4DCyNsyL+cMeEnJJ1
-	pVpFLERaVFsMIK0RIE+xCCgov3Hes3+UGYLeh1Xa9L2hYPVznEy3FWJgZR+gS6D+i56veO4YPZt
-	XrI7uoLRBzW4bkYY=
-X-Received: by 2002:a05:690e:1343:b0:66c:c7f5:df48 with SMTP id
- 956f58d0204a3-672d5737312mr369236d50.1.1790109610569; Tue, 22 Sep 2026
- 13:40:10 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790114910; x=1790719710;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HH7Mx1ASGQGZXIkAoii0TJeZ9j5LKy/zgHlKkIF1avg=;
+        b=qO/TcZoVCc1zYJT/ZSTOsjKVYoRa4QReaU+pyPlwEIr6vJ/7qNsCXsaMbGDQxkb3lh
+         I/l6+7fDo2ork5ANd4hjrIjQhURzMbH2aGUEPhBC4WUgwNtPRt4Pu27lMk+xBDfM0a90
+         urfNlhxRcVnVQVZ91hufhlqJ8rouPqnpIxkMg5VBrcz9yP5nmOAJ1/8451LroLNleRv7
+         kwoKICkSzAOQ0HtNLwxXNgnvNMXqYRbyBVaS43iwzRs2naExZzRLYpT7awv8OfC8VT9w
+         6ZHMSO7hurhqEETnlfKGynFQbsi4UzcY1qRdVtq76ayyLNnQGQhTEXwI1U0GMAC+jfrp
+         d7Xw==
+X-Gm-Message-State: AFuF++n6VF9+x7xKIgLiybW0dCmml1kyyenJRmHU8hDTMzvATHM8XqWm
+	06fursw/Ku5tHODZf1uHcz41QYtaUj86hOCpJ4UnxatsriNEoU2yHnDPx6iK8myv
+X-Gm-Gg: AYBFou3F2d0B/RullKTS9XOQ3YNpJ7L+MLDhNjIz+MRFKgGzriNvKEiZH7wbDOnxn4D
+	wzV4xzOdHI5t8HSevhLpsj8mTF74uC/lS6IvZ92xERBgzUnL4Hc7KwuUumvzrhWiAuugznrSyHC
+	gm6e+6qvWd+GjEmhNjPbz4/v3/QdR8EyXRXS0Eq8aOhru8ssQDyavM4IMdo45so0Tptj6ViWaEN
+	pAD4vbIDjLZ13k4YqGNkb5rIRWNoHb4z+ejIkGtpdcs6SCduS92U1C8h36C448PYvndqrY63I1g
+	a4VrHFXS4nhOsYnrmPkDSc4/2Wx9ggNV38rz4d2DQtw6lFR93f97ljkmNYndKShH1enfHIMh5DW
+	G+eCyNiOrdW45Kg1FOcLo7jMoXHXeBK+iMHpi0Oa9sWEpSHHScPVIpdS+MFTlZUGPGY3voMOmAH
+	2UaPFewqK6rtRxfIcsgZCvQcf4k/2WDujp5ucwzywjiyeOXTjBa6ByYVOJ9uhD5LmmrVmdAMfie
+	Vc4atzDkAEP81hDQrlrBQF+ja1JVteT8drDNakz6jL14kbUCUwlsl5X35OHu2eeesKzXc7QuQ==
+X-Received: by 2002:a05:6102:5711:b0:7a6:a59e:777e with SMTP id ada2fe7eead31-7ac1c78dc3cmr821363137.16.1790114909612;
+        Tue, 22 Sep 2026 15:08:29 -0700 (PDT)
+Received: from localhost.localdomain (host61.181-1-22.telecom.net.ar. [181.1.22.61])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-985169f579bsm1362564241.3.2026.09.22.15.08.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Sep 2026 15:08:29 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: mt7603: don't drop short frames looped back on PS entry
+Date: Tue, 22 Sep 2026 19:08:14 -0300
+Message-ID: <20260922220814.15070-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Tom Janssens <herrwaldo@gmail.com>
-Date: Tue, 22 Sep 2026 22:39:58 +0200
-X-Gm-Features: AclHuK88cmyEFXyd_rMshdRCilgjP8259GdegHuH_NG85VY0dAA4AfLbB3s-qcc
-Message-ID: <CAAsBusP02gPx6=i6rYqGr71xkUuCzpkG9ujE=DfuG2Y9qmPfXQ@mail.gmail.com>
-Subject: ath10k: QCA6174 hw3.2 DMAR write fault on RX of 802.11k Beacon
- Request (fw WLAN.RM.4.4.1-00309)
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi,
+When a station enters power save, mt7603 has the PSE redirect the frames
+still queued for it back to the host, and mt7603_rx_loopback_skb() parks
+them until the station wakes up.
 
-I'm seeing a reproducible IOMMU (VT-d) DMA write fault from a QCA6174
-that is triggered by received 802.11k Beacon Request frames.
+The handler rejects every frame shorter than a four-address header
+(sizeof(struct ieee80211_hdr), 30 bytes) before looking at it. A
+BlockAck request is 20 bytes and a QoS-Null 26, so both are freed
+without a trace. Since commit b473c0e47f04 ("wifi: mt76: mt7603: fix tx
+queue of loopback packets"), a BAR would also be freed later as a frame
+that is not a bufferable MMPDU, although mac80211 buffers BARs for a
+sleeping station like any other unicast frame.
 
-Client (laptop)
-- Dell XPS 13 9380
-- 02:00.0 Qualcomm Atheros QCA6174 [168c:003e] rev 32, subsystem Rivet
-Networks Killer 1435 [1a56:143a]
-- ath10k_pci: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1a56:143a
-- firmware ver WLAN.RM.4.4.1-00309- api 6 features
-wowlan,ignore-otp,mfp crc32 0793bcf2
-- board_file api 2 crc32 d2863f91
-- htt-ver 3.87 wmi-op 4 htt-op 3
-- Kernel 7.0.0-31-generic (Ubuntu), intel_iommu enabled (default
-DMA/DMA-FQ domain)
+mac80211 queues the BAR with IEEE80211_TX_CTL_REQ_TX_STATUS, so it only
+learns about the loss when the tx status times out, and the recipient
+keeps waiting on its reorder window until then.
 
-Access point
-- Xiaomi Mi Router AX3000T (mediatek/filogic), OpenWrt 25.12.4 r32933-4ccb782af7
-- wpad-openssl 2025.08.26~ca266cc2-r1, dawn 2025.11.07~7414c34a-r1
-- DAWN: update_beacon_reports=20, rrm_mode=pat (source of the 20 s
-beacon requests)
-- 5 GHz, ch 36, 802.11k enabled, PMF active (requests have the
-Protected bit set)
+Check the length against the header length of the actual frame, and
+park a BlockAck request on the queue of its TID, behind the data frames
+it refers to.
 
-Symptom
-While associated, the following appears every ~20 s:
+Found on a TP-Link Archer XR500v (MT7603E) with a client whose Bluetooth
+coexistence toggles PM every ~15 ms under load. To test the change on
+its own, a temporary debugfs switch flipped between the old and the new
+checks every 30 seconds during a bidirectional TCP test, with counters
+on the loop-back path and on the tx status of BARs. With the old check,
+all 92 BARs that came back were freed, and 91 of the 544 BARs queued in
+those phases never got a tx status from the hardware. With this change,
+all 129 BARs that came back were parked and sent again, and 11 of 411
+got no tx status. Throughput was the same with both checks.
 
-  DMAR: DRHD: handling fault status reg 2
-  DMAR: [DMA Write NO_PASID] Request device [02:00.0] fault addr
-0xfc2d1000 [fault reason 0x05] PTE Write access is not set
+Fixes: e004b7006600 ("mt76: mt7603: notify mac80211 about buffered frames in ps queue")
+Assisted-by: LLM
+Signed-off-by: Cristian Papa <pcristian292@gmail.com>
+---
+Testing: the numbers above come from mt76 as packaged by OpenWrt
+(2026.07.01, 59676919) on kernel 6.18, with the temporary switch and
+counters added (not part of this patch; samples straddling a switch left
+out). Its mt7603_rx_loopback_skb() differs from wireless-next only in
+where skb->priority is set. The change also runs on the same device as
+part of a larger local series, including a 30 minute soak. Build-tested
+on mt76.git at be5ce79105, whose mt7603/dma.c is identical to
+wireless-next.
 
-The fault address is different every time. There are no ath10k
-warnings, firmware crashes or restarts, and connectivity is not
-visibly affected.
+Tools: an AI coding assistant (Claude Opus 5.5 in Claude Code) wrote
+the instrumentation, analyzed the captures, and drafted this fix and
+changelog; the tests ran on my device.
 
-Trigger
-An AP-side monitor capture shows that DAWN makes hostapd send the
-client two Radio Measurement Requests every 20 s, 5 s apart:
+ .../net/wireless/mediatek/mt76/mt7603/dma.c    | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-- Beacon Request, op class 129, ch 36, BSSID = the associated AP,
-passive, duration 0.
-  The client answers within 1-2 ms with a Radio Measurement Report,
-mode 0x04 (refused).
-  Body starts: 05 00 67 00 00 26 1d 01 00 05 81 24 00 00 00 00 00 a4
-a9 30 c8 5e 5f 00 ...
-  Reply body:  05 01 67 27 03 01 04 05
-- Beacon Request, op class 129, ch 116, BSSID = a second AP. The
-client sends no reply.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+index 477a9b7a8..491c8c937 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -34,7 +34,7 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	int idx;
+ 	u32 val;
+ 
+-	if (skb->len < MT_TXD_SIZE + sizeof(struct ieee80211_hdr))
++	if (skb->len < MT_TXD_SIZE + 2)
+ 		goto free;
+ 
+ 	val = le32_to_cpu(txd[1]);
+@@ -52,6 +52,9 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	sta = container_of(priv, struct ieee80211_sta, drv_priv);
+ 	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
+ 
++	if (skb->len < MT_TXD_SIZE + ieee80211_hdrlen(hdr->frame_control))
++		goto free;
++
+ 	hwq = wmm_queue_map[IEEE80211_AC_BE];
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		tid = *ieee80211_get_qos_ctl(hdr) &
+@@ -62,6 +65,19 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	} else if (ieee80211_is_data(hdr->frame_control)) {
+ 		skb_set_queue_mapping(skb, IEEE80211_AC_BE);
+ 		hwq = wmm_queue_map[IEEE80211_AC_BE];
++	} else if (ieee80211_is_back_req(hdr->frame_control)) {
++		struct ieee80211_bar *bar = (struct ieee80211_bar *)hdr;
++
++		if (skb->len < MT_TXD_SIZE + sizeof(*bar))
++			goto free;
++
++		tid = (le16_to_cpu(bar->control) &
++		       IEEE80211_BAR_CTRL_TID_INFO_MASK) >>
++		      IEEE80211_BAR_CTRL_TID_INFO_SHIFT;
++		tid &= IEEE80211_QOS_CTL_TAG1D_MASK;
++		qid = tid_to_ac[tid];
++		hwq = wmm_queue_map[qid];
++		skb_set_queue_mapping(skb, qid);
+ 	} else {
+ 		skb_pull(skb, MT_TXD_SIZE);
+ 		if (!ieee80211_is_bufferable_mmpdu(skb))
+-- 
+2.47.3
 
-Using the ath10k tracepoints, each fault precedes the ath10k_wmi_event
-for the ch 36 request (id 0x7001 / mgmt rx, len 152) by a constant 76
-ms (+/- <1 ms) over several cycles. The 5 s / 15 s interleaving of the
-two requests matches the fault/no-fault pattern.
-
-What changes it
-- Stopping DAWN on the AP (no more beacon requests): periodic faults stop.
-- Client disconnected but interface up: faults stop.
-
-No effect
-- AP width 160 -> 80 MHz : faults continue.
-- Disabling ASPM L1 (incl. L1.1/L1.2) on 02:00.0 via sysfs: faults continue.
-- Wi-Fi power save off: faults continue.
-- Continuous traffic: faults continue.
-- Runtime PM: not active (power/control = on), so not a factor.
-
-Additionally, even with DAWN stopped, a single fault appears once
-after each (re)association. I haven't confirmed whether that is also
-RRM-related.
-
-It looks like the firmware writes to a stale or unmapped host buffer
-when it handles an incoming (protected) RRM Beacon Request. I can
-provide the full dmesg, the ath10k trace and the AP-side pcap, and I'm
-happy to test patches or collect more debug data.
-
-Thanks,
-Waldo Janssens
