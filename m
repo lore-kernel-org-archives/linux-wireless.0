@@ -1,44 +1,44 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A508531627
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:18:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4574752FE59
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:18:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790072338; cv=none; b=LjdmBWNpwHL1u7HoXi8TE9qG4UiH8Rsv4vORtxY5ypyZB6NePrSwJ6CyGgaLSvwvc5/GsC7biSRjHP/pUwim0L3rPoBKogIiO8Ww6AyJFqVzZK46jPwKwmYR8DVxY4KTzy4f+d9aQAyOXl+6cIPsaCwjIMvaXALsdAN8wQX5MOM=
+	t=1790072338; cv=none; b=glED7/1IiWe/83bO/j86FtyA17ZLbk59xZAHnPIwbwA/eRlXfsATfh6EPLnS9KLmCnzkyPsfwTmioUzpT+rfGoEfk4VhpwL+kghfnEoSVD/qb9wvqTd6JTW3dL4dw85qDgn3+xv7S7wkPJqT+nKB7e9K84+sZrmMPqNE7r1IhNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790072338; c=relaxed/simple;
-	bh=aATL8urC/WFEqD4WrB7HfiKKR1YNtAIO3SB20V0Pgr0=;
+	bh=1U8Bqm3rxsXz234pxrxMCdV0ym/zlCrblTZewzk3fJY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Epzfboz7Q/n84ZFBqT02riozltLZ5/d1S+emi2fWIXYTzGquP6qgJ1TEBTO86UIVPiGj9cAgCOKoOJNV/5L+qsbO9zNdTqdOLyaJ6jGHc/oUIIE0GW0J2jo43mdk2i11Ll3lhpe/WhhRYiOIjDaMTw7YWnlcIPZwWI9V6CYgecE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=OYD46yme; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=u2wDgEvOtwnJwmYE1/uI67PmyvFePmsXIHgE/Hhd5/xnulFkmccGtukGeC+rJFAKcrcN9FfNaz1ejD+dEQyF1LaULleM40w0PrAHF5wse6WZcV5uuECbrcp9MRqeAWO7DPbRvY2lws86+U/N/FXzTbMm/yzOuCzEglgQxQ4Ap60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=m9sfCta+; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="OYD46yme"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="m9sfCta+"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=ASA91WalDeKvQCgMCVHlOaRSj2txftXR76VfKznVJik=; b=OYD46ymeQ+UDpIyMJZIdYbFwOy
-	zbgONHF8O415VpdF3zzNyTJzeMlDuEKz7qNJ0jPCeYdui11CTv1r5Egy6I1NQIvn8GPw59Yiw7fEA
-	3TVP7FhWpXQx4pwnnfc60LNfrI5vX/bk+2xg5POukxgV6JNLTHPD+yDNM8u/klS+Zsuw=;
+	bh=dxt8WV9+hhqtxqHlq7T9XoUkzTEawo6LDidlya57OZ8=; b=m9sfCta+QTZwmUw7xkejwFlb7L
+	CXKVtz1osrCc60RRId1kB2Yt85buHnVn4lBOAuvzl173YS33qgTgtLmY7kcdSm6ts557Qq9jmMU1g
+	zOcMlynAuhJuMi0E9mPsZ/ZmMFbaxqhISxDYu52CEYR8tcfyMA4lKOZ2atnRNIikHq4U=;
 Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x8xaN-0080aD-0l;
-	Tue, 22 Sep 2026 12:18:51 +0200
+	id 1x8xaO-0080aD-0b;
+	Tue, 22 Sep 2026 12:18:52 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: vivek.chettri@oss.qualcomm.com,
 	bhagavathi.pillai@oss.qualcomm.com,
 	ripan.deuri@oss.qualcomm.com
-Subject: [RFC PATCH 2/5] wifi: mac80211: add a flow priority query
-Date: Tue, 22 Sep 2026 12:18:45 +0200
-Message-ID: <f829d03bc3ac5a361f7d69effb7acea924807ecc.1790072192.git-series.nbd@nbd.name>
+Subject: [RFC PATCH 5/5] wifi: mt76: answer the flow priority query
+Date: Tue, 22 Sep 2026 12:18:48 +0200
+Message-ID: <4f90614d7002b336a5974045312816f6641662c4.1790072192.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.cadd8c50b95a5843991b4ea42462910882ab0982.1790072192.git-series.nbd@nbd.name>
 References: <cover.cadd8c50b95a5843991b4ea42462910882ab0982.1790072192.git-series.nbd@nbd.name>
@@ -50,191 +50,70 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Frames of a flow that the hardware forwards on behalf of the driver
-never pass through mac80211, so the SCS and MSCS rules of the station
-are not applied to them. Add ieee80211_sta_flow_prio(), which lets a
-driver look up the user priority of a flow before it creates an offload
-entry.
-
-Split the rule lookup out of ieee80211_flow_classify(), so that both
-paths apply the same rules in the same order. The lookup works on a
-parsed flow description, since the driver has no frame at hand.
-
-The query fails when a rule refers to a field that the description does
-not carry, since the answer could then differ between frames of the
-flow. The driver must leave such a flow to the software path.
+Implement the WED flow_prio callback by mapping the station index of
+the entry back to the station and passing the query to mac80211. This
+gives offloaded flows the same user priority that the software path
+assigns to their frames.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h | 19 +++++++++-
- net/mac80211/scs.c     | 89 ++++++++++++++++++++++++++++++-------------
- 2 files changed, 82 insertions(+), 26 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h        |  2 ++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mmio.c |  1 +-
+ drivers/net/wireless/mediatek/mt76/wed.c         | 17 +++++++++++++++++-
+ 3 files changed, 20 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c65ebbb3265c..d0ac8493889a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6744,6 +6744,25 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
- 					 const u8 *addr);
- 
- /**
-+ * ieee80211_sta_flow_prio - look up the user priority of a flow
-+ *
-+ * @pubsta: the station the flow is sent to
-+ * @info: the flow as it is sent to @pubsta, after any address translation
-+ * @prio: filled with the user priority, left untouched if no rule matches
-+ *
-+ * For drivers that forward flows in hardware without passing the frames
-+ * through mac80211. The result is the priority that the software path
-+ * assigns to frames of this flow.
-+ *
-+ * Must be called under RCU lock. Does not sleep.
-+ *
-+ * Return: 0 on success, or a negative error if a rule refers to a field
-+ *	that @info does not carry. Such a flow must not be offloaded.
-+ */
-+int ieee80211_sta_flow_prio(struct ieee80211_sta *pubsta,
-+			    const struct cfg80211_flow_info *info, u8 *prio);
-+
-+/**
-  * ieee80211_find_sta_by_ifaddr - find a station on hardware
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-diff --git a/net/mac80211/scs.c b/net/mac80211/scs.c
-index 076e97cddbf1..519f85c897ff 100644
---- a/net/mac80211/scs.c
-+++ b/net/mac80211/scs.c
-@@ -4,6 +4,7 @@
-  *
-  * Copyright (C) 2026 Felix Fietkau <nbd@nbd.name>
-  */
-+#include <linux/export.h>
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
- #include "driver-ops.h"
-@@ -114,40 +115,24 @@ static void ieee80211_scs_sta_fill(struct ieee80211_scs_sta *scs,
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 62b41c8bb7c0..911fc82305e8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1252,6 +1252,8 @@ int mt76_wed_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			  void *type_data);
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+ u32 mt76_wed_init_rx_buf(struct mtk_wed_device *wed, int size);
++int mt76_wed_flow_prio(struct mtk_wed_device *wed, u16 idx,
++		       const struct cfg80211_flow_info *info, u8 *prio);
+ int mt76_wed_offload_enable(struct mtk_wed_device *wed);
+ int mt76_wed_dma_setup(struct mt76_dev *dev, struct mt76_queue *q, bool reset);
+ #else
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
+index fbfbb96a742f..17cbdc570530 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
+@@ -616,6 +616,7 @@ int mt7996_mmio_wed_init(struct mt7996_dev *dev, void *pdev_ptr,
+ 	wed->wlan.release_rx_buf = mt76_wed_release_rx_buf;
+ 	wed->wlan.offload_enable = mt76_wed_offload_enable;
+ 	wed->wlan.offload_disable = mt76_wed_offload_disable;
++	wed->wlan.flow_prio = mt76_wed_flow_prio;
+ 	if (!hif2) {
+ 		wed->wlan.reset = mt7996_mmio_wed_reset;
+ 		wed->wlan.reset_complete = mt76_wed_reset_complete;
+diff --git a/drivers/net/wireless/mediatek/mt76/wed.c b/drivers/net/wireless/mediatek/mt76/wed.c
+index f210a0c57d81..fee172303877 100644
+--- a/drivers/net/wireless/mediatek/mt76/wed.c
++++ b/drivers/net/wireless/mediatek/mt76/wed.c
+@@ -83,6 +83,23 @@ u32 mt76_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
  }
+ EXPORT_SYMBOL_GPL(mt76_wed_init_rx_buf);
  
--/**
-- * ieee80211_flow_classify - give an MSDU the user priority of its stream
-- *
-- * @sta: the receiver
-- * @skb: the MSDU, in IEEE 802.3 format
-- *
-- * Return: %true when it set skb->priority, %false to leave the frame to the
-- *	QoS map.
-- */
--bool ieee80211_flow_classify(struct sta_info *sta, struct sk_buff *skb)
-+static bool ieee80211_flow_lookup(struct sta_info *sta,
-+				  const struct cfg80211_flow_info *info,
-+				  struct cfg80211_scs_verdict *verdict)
- {
- 	struct ieee80211_flow_entry *entry;
--	struct cfg80211_scs_verdict verdict;
- 	struct ieee80211_mscs_sta *mscs;
- 	struct ieee80211_flow_hkey hkey;
--	struct cfg80211_flow_info info;
- 	struct ieee80211_scs_sta *scs;
- 
-+	memset(verdict, 0, sizeof(*verdict));
-+
- 	scs = rcu_dereference(sta->scs);
- 	mscs = rcu_dereference(sta->mscs);
--	if (!scs && !mscs)
--		return false;
--
--	if (!cfg80211_flow_parse(skb, &info))
--		return false;
- 
- 	if (scs) {
--		cfg80211_scs_evaluate(scs->rule, scs->n_rules, &info,
--				      &verdict);
--		if (verdict.match) {
--			skb->priority = verdict.up;
--
-+		cfg80211_scs_evaluate(scs->rule, scs->n_rules, info, verdict);
-+		if (verdict->match)
- 			return true;
--		}
- 	}
- 
- 	/* An SCS match takes precedence over the MSCS */
-@@ -155,20 +140,72 @@ bool ieee80211_flow_classify(struct sta_info *sta, struct sk_buff *skb)
- 		return false;
- 
- 	hkey.sta = sta;
--	if (!cfg80211_flow_key_build(&info, mscs->layout, CFG80211_FLOW_AS_IS,
--				     &hkey.key))
-+	if (!cfg80211_flow_key_build(info, mscs->layout, CFG80211_FLOW_AS_IS,
-+				     &hkey.key)) {
-+		verdict->undecided = true;
-+
- 		return false;
-+	}
- 
- 	entry = rhashtable_lookup(&sta->sdata->bss->flow_tbl, &hkey,
- 				  flow_rht_params);
- 	if (!entry)
- 		return false;
- 
--	skb->priority = min_t(u8, READ_ONCE(entry->up), mscs->up_limit);
-+	verdict->up = min_t(u8, READ_ONCE(entry->up), mscs->up_limit);
-+	verdict->match = true;
-+
-+	return true;
-+}
-+
-+/**
-+ * ieee80211_flow_classify - give an MSDU the user priority of its stream
-+ *
-+ * @sta: the receiver
-+ * @skb: the MSDU, in IEEE 802.3 format
-+ *
-+ * Return: %true when it set skb->priority, %false to leave the frame to the
-+ *	QoS map.
-+ */
-+bool ieee80211_flow_classify(struct sta_info *sta, struct sk_buff *skb)
++/* Called from the PPE receive path under RCU, must not sleep */
++int mt76_wed_flow_prio(struct mtk_wed_device *wed, u16 idx,
++		       const struct cfg80211_flow_info *info, u8 *prio)
 +{
-+	struct cfg80211_scs_verdict verdict;
-+	struct cfg80211_flow_info info;
++	struct mt76_dev *dev = mt76_wed_to_dev(wed);
++	struct ieee80211_sta *sta;
++	struct mt76_wcid *wcid;
 +
-+	if (!rcu_access_pointer(sta->scs) && !rcu_access_pointer(sta->mscs))
-+		return false;
-+
-+	if (!cfg80211_flow_parse(skb, &info))
-+		return false;
-+
-+	if (!ieee80211_flow_lookup(sta, &info, &verdict))
-+		return false;
-+
-+	skb->priority = verdict.up;
- 
- 	return true;
- }
- 
-+int ieee80211_sta_flow_prio(struct ieee80211_sta *pubsta,
-+			    const struct cfg80211_flow_info *info, u8 *prio)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	struct cfg80211_scs_verdict verdict;
-+
-+	if (ieee80211_flow_lookup(sta, info, &verdict)) {
-+		*prio = verdict.up;
-+
++	wcid = __mt76_wcid_ptr(dev, idx);
++	sta = wcid_to_sta(wcid);
++	if (!sta)
 +		return 0;
-+	}
 +
-+	/* A rule refers to a field that @info does not carry */
-+	if (verdict.undecided)
-+		return -EOPNOTSUPP;
-+
-+	return 0;
++	return ieee80211_sta_flow_prio(sta, info, prio);
 +}
-+EXPORT_SYMBOL(ieee80211_sta_flow_prio);
++EXPORT_SYMBOL_GPL(mt76_wed_flow_prio);
 +
- static void ieee80211_flow_entry_free(struct ieee80211_if_ap *ap,
- 				      struct ieee80211_flow_entry *entry)
+ int mt76_wed_offload_enable(struct mtk_wed_device *wed)
  {
+ 	struct mt76_dev *dev = mt76_wed_to_dev(wed);
 -- 
 git-series 0.9.1
