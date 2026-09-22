@@ -1,35 +1,35 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D211852FE32
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:13:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F00530DE6
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:13:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790072031; cv=none; b=iLL/Edv9xqHgb1Umcus60+uwZl5mDB0ZVi7jqYUYi/ZIl3xHelbeSIBLmemoKgl9O4Vs9zqt+RrjOqUR8uKBJa2hotryKGMwLemkwYx97CJpuSOx/9opnHT1KllxrymvfPdtO+dgi97fth6shguUYZ57Jg+BRv5hn5KQ3cbbMok=
+	t=1790072031; cv=none; b=ZzKnL+tvI8jsOTAf2up/Pjp9CZM/7OkTnY+5VJsyLzvR15/2L8J2hEzxvHx+l86heFjScvDQ+DRZn9t8+5V6XkIY2JNNq35AvKxH76t+c2+Kpk0sm5AO3+cCO9e+tTnuWli/1fXnrinVOmOTBBFvd6dBoqJN+8E2cV6s6e9cquU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790072031; c=relaxed/simple;
-	bh=VQiT89SaYZVY+/MvH+bvfA6gxoDIA2wov/hN8TKX9tw=;
+	bh=bruZdQ/I5fyuQ9heus9FbfAMdG13hMWhSU2GvzHVJpg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mO9iQGzPfEI4dnwIYJKjKELv/c2wZUwCFfZF2s9iEAK+Y7STCZ1GQKe7NAQHXuZoiHr33jqZ7Pc2puUM2of4ExpHV0+1GBL0ucpPu3GiKMt1U5TJ7OvS+tAPG0I5njjPDxnxgzLbUfvy5IgL53ZtA/bgDyJm6YDl3szZGOuq72A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=RCCYbAu1; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=u1PUCE0+Ul+1AlNVH1kNxp6UPB6jw9JKKcX+mtkLEUxm9v3xrgBjOa2YRLQzYOQWxdj2VMVs8ohoRz2SrFIxKiBV0PQEjSTFMs5SjS09kZGugA/oHYe65Gkby6IJnVCpVHDlIjMlBsugl1PFJJjjMzhkSu0KO+bHsN5aYlmtXlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ri2fBZMk; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="RCCYbAu1"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ri2fBZMk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=rZksEIOYaxsDzVTL9zM1AexkT2WyY8AWFZ1hHYMA8DM=; b=RCCYbAu15wCNR0bfK8iS6cYAH+
-	Vec1Wk1uYrWi1HDXVXHeEulAxAuFlfne3Hhi3laWBPqDg1Fejy0EUYy5zupE8f1HANwaZ2X648A+N
-	4LBmBZ3QhuJBjK7liC9GvQPWWwF4YDF3OoCz6p+qv6u/V4Z2QK1uL4Re7aZuaHp3WpkM=;
+	bh=SP8/XZjeP+wH4OZEHY7ybqSn4JwYEcfh6Yxsv8Wu/Cc=; b=ri2fBZMk/tOuk0XYLVxStZO+Nb
+	zI1IQviwCLbkY1b/rKa8otpMg+EOignP+Gm/YqEVjNZLhQu84ElSR6TawyNwgm0sbeRai8t44L2VZ
+	eHsiLVA4vl7oDB16B2YrQxhxENvdUBeckQ5StJG01wAhTrfQRJhRGFV4dvRxWmkvOId4=;
 Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x8xVS-00807z-1e;
+	id 1x8xVS-00807z-2U;
 	Tue, 22 Sep 2026 12:13:46 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: johannes@sipsolutions.net,
 	vivek.chettri@oss.qualcomm.com,
 	bhagavathi.pillai@oss.qualcomm.com,
 	ripan.deuri@oss.qualcomm.com
-Subject: [RFC PATCH v2 02/16] wifi: cfg80211: add the flow parser and the MSCS key
-Date: Tue, 22 Sep 2026 12:13:29 +0200
-Message-ID: <61bd657276f8eb652bbe050bf1f4146c59f5005f.1790071773.git-series.nbd@nbd.name>
+Subject: [RFC PATCH v2 03/16] wifi: cfg80211: add the SCS evaluator
+Date: Tue, 22 Sep 2026 12:13:30 +0200
+Message-ID: <71b67decfab5c04f9aaf1c70f201799994f0ba5b.1790071773.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.5f82cb9d25f8f1b63e1994e64a6e9dac538e0ac8.1790071773.git-series.nbd@nbd.name>
 References: <cover.5f82cb9d25f8f1b63e1994e64a6e9dac538e0ac8.1790071773.git-series.nbd@nbd.name>
@@ -51,308 +51,269 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add cfg80211_flow_parse(), which reads the Ethernet header, an optional
-VLAN tag and the IPv4 or IPv6 header of an MSDU into the key layout
-that the TCLAS parser produces, plus the ports of TCP, UDP and SCTP. It
-also records which parameters the frame carries, so that a classifier
-that selects a missing one, such as the ports of a later IP fragment,
-does not match on a zero value.
+Add cfg80211_scs_evaluate(), which walks the active SCS descriptors of
+a peer and returns the user priority of the descriptor that matches an
+MSDU. When several descriptors match, the one that requires the most
+classifier parameters wins, with the count defined in 11.25.2 of IEEE
+802.11-2024. An equal count keeps the first descriptor.
 
-The parser starts from skb->data instead of skb->protocol and the
-network header offset, because a frame forwarded between two stations
-of an AP arrives with skb->protocol set to ETH_P_802_3 and the network
-header reset.
+A filter classifier cannot be answered from the flow key, so it reads
+the frame again, at the IPv4 payload or at the occurrence of the named
+IPv6 next header. Without a frame it does not match.
 
-Add cfg80211_flow_key_build(), which masks the parsed frame down to the
-parameters that an MSCS selects. An AP learns a flow from an uplink
-frame and looks it up on the downlink, so the key can also be built for
-the mirrored direction, with the addresses and the ports swapped.
+Add struct cfg80211_scs_desc, which holds the part of a parsed
+descriptor that the evaluator reads.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/cfg80211.h |  37 +++++++-
- net/wireless/scs.c     | 224 ++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 261 insertions(+)
+ include/net/cfg80211.h |  34 +++++++-
+ net/wireless/scs.c     | 192 ++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 226 insertions(+)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0aaefb02a678..ab9f3ce06b88 100644
+index ab9f3ce06b88..d6021b551384 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4208,6 +4208,43 @@ struct cfg80211_tclas {
- };
+@@ -4245,6 +4245,40 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
+ 			     struct cfg80211_flow_key *key);
  
  /**
-+ * struct cfg80211_flow_info - classifier parameters of one MSDU
++ * struct cfg80211_scs_desc - one SCS descriptor
 + *
-+ * @key: every parameter the source carries, with nothing masked out
-+ * @present: bitmap of &enum cfg80211_flow_field, the parameters the source
-+ *	actually carries. A classifier that names an absent parameter cannot
-+ *	match.
-+ * @skb: the frame the parameters came from, or %NULL when the caller
-+ *	describes a flow rather than a frame. A filter classifier reads the
-+ *	frame again and cannot be evaluated without it.
-+ * @l3_off: offset of the IP header in @skb
++ * @tclas_processing: how the elements of @tclas relate
++ * @id: SCSID, 1 to 255
++ * @up: user priority to assign to a matching MSDU
++ * @n_tclas: number of entries in @tclas
++ * @tclas: the classifier
 + */
-+struct cfg80211_flow_info {
-+	struct cfg80211_flow_key key;
-+	u32 present;
-+	const struct sk_buff *skb;
-+	u16 l3_off;
++struct cfg80211_scs_desc {
++	enum cfg80211_tclas_processing tclas_processing;
++	u8 id;
++	u8 up;
++	u8 n_tclas;
++	struct cfg80211_tclas tclas[] __counted_by(n_tclas);
 +};
-+
-+bool cfg80211_flow_parse(struct sk_buff *skb, struct cfg80211_flow_info *info);
 +
 +/**
-+ * enum cfg80211_flow_dir - direction of a built flow key
++ * struct cfg80211_scs_verdict - result of an SCS evaluation
 + *
-+ * @CFG80211_FLOW_AS_IS: the key describes the frame that was parsed
-+ * @CFG80211_FLOW_MIRRORED: the key describes the reverse direction, with the
-+ *	addresses and the ports swapped
++ * @match: an SCS descriptor matched the MSDU
++ * @scsid: identifier of the matching descriptor
++ * @up: user priority to assign
 + */
-+enum cfg80211_flow_dir {
-+	CFG80211_FLOW_AS_IS,
-+	CFG80211_FLOW_MIRRORED,
++struct cfg80211_scs_verdict {
++	bool match;
++	u8 scsid;
++	u8 up;
 +};
 +
-+bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
-+			     enum cfg80211_flow_dir dir,
-+			     struct cfg80211_flow_key *key);
++void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
++			   const struct cfg80211_flow_info *info,
++			   struct cfg80211_scs_verdict *verdict);
 +
 +/**
   * DOC: Neighbor Awareness Networking (NAN)
   *
   * NAN uses two interface types:
 diff --git a/net/wireless/scs.c b/net/wireless/scs.c
-index b0d6037b1f5e..912a8cdc50a8 100644
+index 912a8cdc50a8..4bfee721f206 100644
 --- a/net/wireless/scs.c
 +++ b/net/wireless/scs.c
-@@ -470,3 +470,227 @@ int cfg80211_parse_tclas_mask(const u8 *elems, size_t len, u32 *fields)
- 	return 0;
+@@ -694,3 +694,195 @@ bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
+ 	return true;
  }
- EXPORT_SYMBOL_IF_CFG80211_KUNIT(cfg80211_parse_tclas_mask);
+ EXPORT_SYMBOL(cfg80211_flow_key_build);
 +
-+#define FLOW_F_PORTS	(FLOW_F(SRC_PORT) | FLOW_F(DST_PORT))
-+
-+static void cfg80211_flow_parse_ports(struct sk_buff *skb,
-+				      unsigned int offset, int proto,
-+				      struct cfg80211_flow_info *info)
-+{
-+	__be16 ports[2], *p;
-+
-+	switch (proto) {
-+	case IPPROTO_TCP:
-+	case IPPROTO_UDP:
-+	case IPPROTO_SCTP:
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	p = skb_header_pointer(skb, offset, sizeof(ports), ports);
-+	if (!p)
-+		return;
-+
-+	info->key.src_port = p[0];
-+	info->key.dst_port = p[1];
-+	info->present |= FLOW_F_PORTS;
-+}
-+
-+static void cfg80211_flow_parse_ipv4(struct sk_buff *skb, unsigned int offset,
-+				     struct cfg80211_flow_info *info)
-+{
-+	struct iphdr iph_buf, *iph;
-+
-+	iph = skb_header_pointer(skb, offset, sizeof(*iph), &iph_buf);
-+	if (!iph || iph->version != 4 || iph->ihl < 5)
-+		return;
-+
-+	info->key.ip_version = 4;
-+	info->key.dscp = ipv4_get_dsfield(iph) >> 2;
-+	info->key.proto = iph->protocol;
-+	memcpy(&info->key.src, &iph->saddr, sizeof(iph->saddr));
-+	memcpy(&info->key.dst, &iph->daddr, sizeof(iph->daddr));
-+	info->present |= FLOW_F(IP_VERSION) | FLOW_F(IP_SRC) | FLOW_F(IP_DST) |
-+			 FLOW_F(DSCP) | FLOW_F(PROTO);
-+
-+	if (iph->frag_off & htons(IP_OFFSET))
-+		return;
-+
-+	cfg80211_flow_parse_ports(skb, offset + iph->ihl * 4, iph->protocol,
-+				  info);
-+}
-+
-+static void cfg80211_flow_parse_ipv6(struct sk_buff *skb, unsigned int offset,
-+				     struct cfg80211_flow_info *info)
++/* Find the payload behind the @instance-th occurrence of the protocol */
++static bool tclas_filter_offset(const struct cfg80211_flow_info *info,
++				const struct cfg80211_tclas_filter *f,
++				unsigned int *off)
 +{
 +	struct ipv6hdr ip6h_buf, *ip6h;
-+	__be16 frag_off = 0;
-+	int l4_off;
++	unsigned int pos = info->l3_off;
++	unsigned int hdrs = 0;
++	u8 instance = 0;
 +	u8 nexthdr;
 +
-+	ip6h = skb_header_pointer(skb, offset, sizeof(*ip6h), &ip6h_buf);
-+	if (!ip6h || ip6h->version != 6)
-+		return;
++	if (info->key.ip_version == 4) {
++		struct iphdr iph_buf, *iph;
 +
-+	info->key.ip_version = 6;
-+	info->key.dscp = ipv6_get_dsfield(ip6h) >> 2;
-+	info->key.flow_label = ip6_flowlabel(ip6h);
-+	info->key.src = ip6h->saddr;
-+	info->key.dst = ip6h->daddr;
-+
-+	/* The classifier matches Next Header, not the layer 4 protocol */
-+	info->key.proto = ip6h->nexthdr;
-+	info->present |= FLOW_F(IP_VERSION) | FLOW_F(IP_SRC) | FLOW_F(IP_DST) |
-+			 FLOW_F(DSCP) | FLOW_F(FLOW_LABEL) | FLOW_F(PROTO);
-+
-+	nexthdr = ip6h->nexthdr;
-+	l4_off = ipv6_skip_exthdr(skb, offset + sizeof(*ip6h), &nexthdr,
-+				  &frag_off);
-+	if (l4_off < 0 || frag_off & htons(IP6_OFFSET))
-+		return;
-+
-+	cfg80211_flow_parse_ports(skb, l4_off, nexthdr, info);
-+}
-+
-+/**
-+ * cfg80211_flow_parse - read the classifier parameters of an MSDU
-+ *
-+ * @skb: the frame, in IEEE 802.3 format
-+ * @info: receives the parameters
-+ *
-+ * Parses from skb->data, since a frame forwarded between two stations
-+ * arrives with skb->protocol set to ETH_P_802_3 and no network header.
-+ *
-+ * Return: %true when @info describes the frame.
-+ */
-+bool cfg80211_flow_parse(struct sk_buff *skb, struct cfg80211_flow_info *info)
-+{
-+	struct ethhdr eth_buf, *eth;
-+	unsigned int offset = ETH_HLEN;
-+	__be16 proto;
-+
-+	memset(info, 0, sizeof(*info));
-+
-+	eth = skb_header_pointer(skb, 0, sizeof(*eth), &eth_buf);
-+	if (!eth)
-+		return false;
-+
-+	ether_addr_copy(info->key.sa, eth->h_source);
-+	ether_addr_copy(info->key.da, eth->h_dest);
-+	info->present = FLOW_F(ETH_SA) | FLOW_F(ETH_DA);
-+	proto = eth->h_proto;
-+
-+	if (skb_vlan_tag_present(skb)) {
-+		info->key.vlan_tci = htons(skb_vlan_tag_get(skb));
-+		info->present |= FLOW_F_VLAN;
-+	} else if (eth_type_vlan(proto)) {
-+		struct vlan_hdr vhdr_buf, *vhdr;
-+
-+		vhdr = skb_header_pointer(skb, offset, sizeof(*vhdr),
-+					  &vhdr_buf);
-+		if (!vhdr)
++		iph = skb_header_pointer(info->skb, pos, sizeof(*iph),
++					 &iph_buf);
++		if (!iph || iph->protocol != f->protocol || f->instance)
 +			return false;
 +
-+		info->key.vlan_tci = vhdr->h_vlan_TCI;
-+		info->present |= FLOW_F_VLAN;
-+		proto = vhdr->h_vlan_encapsulated_proto;
-+		offset += sizeof(*vhdr);
-+	}
-+
-+	/* Use the type behind the VLAN tag, whether it was stripped or not */
-+	info->key.eth_type = proto;
-+	info->present |= FLOW_F(ETH_TYPE);
-+
-+	info->skb = skb;
-+	info->l3_off = offset;
-+
-+	switch (proto) {
-+	case htons(ETH_P_IP):
-+		cfg80211_flow_parse_ipv4(skb, offset, info);
-+		break;
-+	case htons(ETH_P_IPV6):
-+		cfg80211_flow_parse_ipv6(skb, offset, info);
-+		break;
-+	}
-+
-+	return true;
-+}
-+EXPORT_SYMBOL(cfg80211_flow_parse);
-+
-+static void flow_key_swap(struct cfg80211_flow_key *k)
-+{
-+	u8 addr[ETH_ALEN];
-+
-+	memcpy(addr, k->sa, ETH_ALEN);
-+	memcpy(k->sa, k->da, ETH_ALEN);
-+	memcpy(k->da, addr, ETH_ALEN);
-+
-+	swap(k->src, k->dst);
-+	swap(k->src_port, k->dst_port);
-+}
-+
-+static u32 cfg80211_flow_fields_mirror(u32 fields)
-+{
-+	static const u8 pairs[][2] = {
-+		{ CFG80211_FLOW_F_ETH_SA, CFG80211_FLOW_F_ETH_DA },
-+		{ CFG80211_FLOW_F_IP_SRC, CFG80211_FLOW_F_IP_DST },
-+		{ CFG80211_FLOW_F_SRC_PORT, CFG80211_FLOW_F_DST_PORT },
-+	};
-+	unsigned int i;
-+	u32 out = fields;
-+
-+	for (i = 0; i < ARRAY_SIZE(pairs); i++) {
-+		u32 lo = BIT(pairs[i][0]), hi = BIT(pairs[i][1]);
-+
-+		out &= ~(lo | hi);
-+		if (fields & lo)
-+			out |= hi;
-+		if (fields & hi)
-+			out |= lo;
-+	}
-+
-+	return out;
-+}
-+
-+/**
-+ * cfg80211_flow_key_build - build an MSCS lookup key
-+ *
-+ * @info: parsed frame, from cfg80211_flow_parse()
-+ * @fields: classifier parameters of the MSCS, a bitmap of
-+ *	&enum cfg80211_flow_field
-+ * @dir: %CFG80211_FLOW_MIRRORED when @info describes an uplink frame and the
-+ *	key must describe the downlink direction
-+ * @key: receives the key
-+ *
-+ * Everything that @fields does not select stays zero, so the key is hashed and
-+ * compared as a byte string.
-+ *
-+ * Return: %false when @info lacks a parameter that @fields selects, in which
-+ *	case the MSDU is not classified at all.
-+ */
-+bool cfg80211_flow_key_build(const struct cfg80211_flow_info *info, u32 fields,
-+			     enum cfg80211_flow_dir dir,
-+			     struct cfg80211_flow_key *key)
-+{
-+	struct cfg80211_flow_key mirrored;
-+
-+	if (dir == CFG80211_FLOW_AS_IS) {
-+		if (fields & ~info->present)
-+			return false;
-+
-+		flow_key_select(&info->key, fields, key);
++		*off = pos + iph->ihl * 4;
 +
 +		return true;
 +	}
 +
-+	if (cfg80211_flow_fields_mirror(fields) & ~info->present)
++	if (info->key.ip_version != 6)
 +		return false;
 +
-+	mirrored = info->key;
-+	flow_key_swap(&mirrored);
-+	flow_key_select(&mirrored, fields, key);
++	ip6h = skb_header_pointer(info->skb, pos, sizeof(*ip6h), &ip6h_buf);
++	if (!ip6h)
++		return false;
++
++	nexthdr = ip6h->nexthdr;
++	pos += sizeof(*ip6h);
++
++	while (hdrs++ < 8) {
++		struct ipv6_opt_hdr hdr_buf, *hdr;
++
++		if (nexthdr == f->protocol && instance++ == f->instance) {
++			*off = pos;
++
++			return true;
++		}
++
++		if (!ipv6_ext_hdr(nexthdr) || nexthdr == NEXTHDR_NONE)
++			return false;
++
++		hdr = skb_header_pointer(info->skb, pos, sizeof(*hdr),
++					 &hdr_buf);
++		if (!hdr)
++			return false;
++
++		if (nexthdr == NEXTHDR_FRAGMENT)
++			pos += 8;
++		else if (nexthdr == NEXTHDR_AUTH)
++			pos += ipv6_authlen(hdr);
++		else
++			pos += ipv6_optlen(hdr);
++
++		nexthdr = hdr->nexthdr;
++	}
++
++	return false;
++}
++
++static bool tclas_filter_match(const struct cfg80211_tclas *t,
++			       const struct cfg80211_flow_info *info)
++{
++	const struct cfg80211_tclas_filter *f = &t->filter;
++	u8 buf[CFG80211_TCLAS_FILTER_LEN], *p;
++	unsigned int i, off;
++
++	if (!info->skb)
++		return false;
++
++	if (!tclas_filter_offset(info, f, &off))
++		return false;
++
++	p = skb_header_pointer(info->skb, off, f->len, buf);
++	if (!p)
++		return false;
++
++	for (i = 0; i < f->len; i++)
++		if ((p[i] ^ f->value[i]) & f->mask[i])
++			return false;
 +
 +	return true;
 +}
-+EXPORT_SYMBOL(cfg80211_flow_key_build);
++
++static bool tclas_match(const struct cfg80211_tclas *t,
++			const struct cfg80211_flow_info *info)
++{
++	struct cfg80211_flow_key key;
++
++	if (t->type == CFG80211_TCLAS_FILTER)
++		return tclas_filter_match(t, info);
++
++	if (!cfg80211_flow_key_build(info, t->fields, CFG80211_FLOW_AS_IS,
++				     &key))
++		return false;
++
++	return !memcmp(&key, &t->key, sizeof(key));
++}
++
++/* Number of classifier parameters required for a match, see 11.25.2 */
++static u16 tclas_param_count(const struct cfg80211_tclas *t)
++{
++	if (t->type == CFG80211_TCLAS_FILTER)
++		return 1;
++
++	if (t->type == CFG80211_TCLAS_VLAN)
++		return 3;
++
++	return hweight32(t->fields & ~FLOW_F(IP_VERSION));
++}
++
++static bool scs_desc_match(const struct cfg80211_scs_desc *desc,
++			   const struct cfg80211_flow_info *info)
++{
++	unsigned int i;
++	bool any = false;
++
++	for (i = 0; i < desc->n_tclas; i++) {
++		if (tclas_match(&desc->tclas[i], info)) {
++			any = true;
++			continue;
++		}
++
++		if (desc->tclas_processing == CFG80211_TCLAS_PROCESSING_ALL)
++			return false;
++	}
++
++	return any;
++}
++
++static u16 scs_desc_param_count(const struct cfg80211_scs_desc *desc)
++{
++	unsigned int i;
++	u16 count;
++
++	if (desc->tclas_processing != CFG80211_TCLAS_PROCESSING_ALL) {
++		count = U16_MAX;
++		for (i = 0; i < desc->n_tclas; i++)
++			count = min(count, tclas_param_count(&desc->tclas[i]));
++
++		return count == U16_MAX ? 0 : count;
++	}
++
++	count = 0;
++	for (i = 0; i < desc->n_tclas; i++)
++		count += tclas_param_count(&desc->tclas[i]);
++
++	return count;
++}
++
++/**
++ * cfg80211_scs_evaluate - pick the SCS descriptor that matches a flow
++ *
++ * @desc: the active descriptors of one peer
++ * @n_desc: number of entries in @desc
++ * @info: the flow, from cfg80211_flow_parse()
++ * @verdict: receives the result
++ *
++ * When several descriptors match, the one with the most classifier parameters
++ * wins. An equal count keeps the first.
++ */
++void cfg80211_scs_evaluate(struct cfg80211_scs_desc * const *desc, u8 n_desc,
++			   const struct cfg80211_flow_info *info,
++			   struct cfg80211_scs_verdict *verdict)
++{
++	unsigned int i;
++	int best = -1;
++
++	memset(verdict, 0, sizeof(*verdict));
++
++	for (i = 0; i < n_desc; i++) {
++		u16 count;
++
++		if (!scs_desc_match(desc[i], info))
++			continue;
++
++		count = scs_desc_param_count(desc[i]);
++		if (count <= best)
++			continue;
++
++		best = count;
++		verdict->match = true;
++		verdict->scsid = desc[i]->id;
++		verdict->up = desc[i]->up;
++	}
++}
++EXPORT_SYMBOL(cfg80211_scs_evaluate);
 -- 
 git-series 0.9.1
