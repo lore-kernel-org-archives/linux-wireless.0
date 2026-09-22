@@ -1,96 +1,69 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8FFA37F75E;
-	Tue, 22 Sep 2026 02:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B667364EBF;
+	Tue, 22 Sep 2026 02:23:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790042598; cv=none; b=sHKrM0RqBldpIq8tpXzMcrNiD1PcByuNDgJ9cYGk6GoWHNW2chqDz782EvXJXc160drLsfiWyzv07FuDApkWzoOFAQ+jUHE1GCfPRmDXuJKGieR6s/M2w9lGMpIAegPXv5qpmMkO6oOVqIRDMjPtK3hBGoLM6H/snfORK6fOpzY=
+	t=1790043835; cv=none; b=P2aclTaSz0+RVsOt58RTth0TICuOnPvAqedBlcsO6BIWYtHWpF3Hcih0u0TrPQdBXqt8mzHUE+CuAM0GCJo/EUbYBch2EG41iKBUhn/TY3fq6PD38qIb3s/8tNrnMjFwz+RMHuCdEpmDkkK2aS/Fu5mcaaxNL6D2h+JmGJxIx4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790042598; c=relaxed/simple;
-	bh=6sKStPWdjMYC/nDnoTIJleWkVfL7gmdSQTTlR9jcODc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=bDTwY/j34345S5bsqXMpbpuZEyESDi9Py7Q9bpcCRvnenkq56SNeQEcS9y3KCLbqFxyb5KOtLCkusAnzRt/+QDsYGVrNNUjblKf7omomG8xm4fQg3CpbnTQLGm+w5U9JNy0PIPOTVbizD/QfGV1Mw3gMfCb3SSaywDHdg+D2+FA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=uEJjfeoc; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1790043835; c=relaxed/simple;
+	bh=xoq6/jLcqwF9yk9d/FxrRv8Kp4YdOAN79i1PrTAqbZs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=eKta3LoCADOeTYgg6t55t19DEEVYz4/MD/ipfh5y6FWIiheb4UqBvH1/y1vy/S2DZ8y+FV67RltzXNcsWK/c0KUe311S8JtiMlj+hrmOIzGVOLRBJRL1XlWO158SH/HAb+97lRSNWtITQT34pu/mcq3mwxZ4Ua7lBmwUUYYt8GE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KaLdrqos; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="uEJjfeoc"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68M23BCZ03156700, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790042591; bh=FjHE1dL1c7lSBCVZyKu5tXWihe2/df9LwgwDtAvZtKg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=uEJjfeocZcybzv4ywbaZoZV6NsUUHxg3aWjspa4xmUMRB4zHcjQHakxXxMMj2VOZi
-	 0/xQgvdL1mkq8LM+Kk00giUEpJisg6AMa0SYDfrJv77pF0qnqiu/8GXWRljdRVOcji
-	 9oFIv8WmYmcoWybOgXeOMLpfTCirpX8tY2sU04uRYNfOFphxNEU6SUwWMN/ep4Xvum
-	 qlxnzpQ9j9GmRhXGmwzC2hLNQiGm2Ivey+gby7gEEKDSKcv2R6taBMvSPRgDEGUh3r
-	 aZYFNgKfZwU2q7fl3Hh5Kp2Mr8e3F2uysrCi/76dZfly49LADXIFPPVnEpWAALHZ97
-	 5ffPngq9LxkpA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68M23BCZ03156700
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 22 Sep 2026 10:03:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 22 Sep 2026 10:03:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 22 Sep 2026 10:03:11 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Josef Schlehofer <pepe.schlehofer@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH rtw-next] wifi: rtw88: extend the TX report timeout to
- RTL8822BU
-Thread-Topic: [PATCH rtw-next] wifi: rtw88: extend the TX report timeout to
- RTL8822BU
-Thread-Index: AQHdSenJcyZ0zJutbUi+wqdx39QBULbZ2AMg
-Date: Tue, 22 Sep 2026 02:03:11 +0000
-Message-ID: <4c000f11b23c4920b052e8513ad28345@realtek.com>
-References: <20260921165343.8131-1-pepe.schlehofer@gmail.com>
-In-Reply-To: <20260921165343.8131-1-pepe.schlehofer@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KaLdrqos"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86FD21F0089A;
+	Tue, 22 Sep 2026 02:23:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790043834;
+	bh=VJJy58Bp2GJegnzFAIFwaP1Zzk+cIgNcFrNWfEcdySY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=KaLdrqosI+azP5SNxyfJZ8/851yYYC8FqOxX25vJ9OnokOBfQS0sq4mCHH47fYLuu
+	 d18m5D0YIFiYxAbIlInGc4qIduapk7fyBn2Abo9wWZmj3WwicSHDy66PNDTiul3Qd4
+	 n4VP719aNd9u2venpxSkfrXUQOXSdMgISJAG/c+n6RK6cxviHiWfDucb1laQyEyzrv
+	 7IFTveYBrPJ3nJxHI3FcgWD7AVlg0aIec4Kk8D16N/soKnPVLiPBlJ/6Cx/epGbR/X
+	 x8/+pyvuK5BRzk2QOy7UqtXeixNvXziGTb6xu9Vsk5ihE6VSYz4p9HyDwv9rJd8x9S
+	 ucyOU6ekAZ6Mw==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org
+Cc: Sasha Levin <sashal@kernel.org>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	Josef Schlehofer <pepe.schlehofer@gmail.com>
+Subject: Re: wifi: rtw88: backport 737e980e1298 and f24d0d8c3cd7 to 6.18.y and 6.12.y
+Date: Mon, 21 Sep 2026 22:23:43 -0400
+Message-ID: <2026-09-21-daily-reply-0006-re-rtw88-null-data-and-beacon-valid@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260921150005.95894-1-pepe.schlehofer@gmail.com>
+References: <20260921150005.95894-1-pepe.schlehofer@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Josef Schlehofer <pepe.schlehofer@gmail.com> wrote:
-> diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wirele=
-ss/realtek/rtw88/tx.c
-> index 4e110a457..55d7923e1 100644
-> --- a/drivers/net/wireless/realtek/rtw88/tx.c
-> +++ b/drivers/net/wireless/realtek/rtw88/tx.c
-> @@ -208,7 +208,8 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, st=
-ruct sk_buff *skb, u8 sn)
->         __skb_queue_tail(&tx_report->queue, skb);
->         spin_unlock_irqrestore(&tx_report->q_lock, flags);
->=20
-> -       if ((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D &&
-> +       if (((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D ||
-> +             rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8822B) &&
->              rtwdev->hci.type =3D=3D RTW_HCI_TYPE_USB) ||
+>   737e980e1298 ("wifi: rtw88: TX QOS Null data the same way as Null data")
+>       for 6.18.y and 6.12.y. It was merged in v7.1, so 7.1.y and 7.2.y
+>       already have it, and it applies to both trees unmodified. It does
+>       not apply to 6.6.y as is, only because the lines around the changed
+>       one differ there; the changed line itself is identical.
 
-Hi Bitterblue,
+Queued for 6.18, 6.12 and 6.6, thanks. Your reading of 6.6 is right: only the
+surrounding context differs, so the three way merge puts the change on the
+intended line and it went in there too.
 
-It seems like more and more USB chips need this, let's enlarge timeout time
-for all USB devices. Do you have any concern? Need your input.
+>   f24d0d8c3cd7 ("wifi: rtw88: Fix the random "error beacon valid" messages
+>       for USB")
+>       for 6.12.y. It was merged in v6.16 and 6.18.y already has it.
+>       It applies unmodified, to 6.6.y as well should you want it there.
 
->             rtw_is_8723bs(rtwdev))
+Queued for 6.12 and 6.6, thanks.
 
-Also, considering SDIO chips, should we keep original timeout for PCI only?
-
->                 timeout =3D msecs_to_jiffies(2500);
->=20
-> base-commit: 73e3b1c94c7d5b4a113e7cbb42665dc2fe3b9d78
-> --
-> 2.54.0 (Apple Git-157)
-
+-- 
+Thanks,
+Sasha
