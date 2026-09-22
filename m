@@ -1,42 +1,74 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
+Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6520E4A2626
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 19:20:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35885386C22
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 20:07:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790104818; cv=none; b=PZJW+F/FgJLojd64CrUSTLEhpsAUCKsqiRynk0Vs7n4ByOVoN4dlToCYnharrNnVt0++EkPGQuzTZ9SOgKmJvL/s5+GWQmaI1J2M83UBRXUc9HAXLGK19ThspWLA8xHZDvSfyZcj0tp0FDWVQkk+YcXHW58YW+2hi06aLjuMCCc=
+	t=1790107645; cv=none; b=OUng6fzsYhhbpQQSRWPCek02xhroP4MobL1o5MsZ7iQn8KjyKTnExzEzk1+1DXfoQ9s4udnzZ9Q2PYkeYnbTvtkkk28XLZvKsCya4+kBRwePfQnPjhNBZL7Eam0M0ZTA/QP9G0zD843Ae+fYn1/pPDGd2fN2mt+47RFQEQdWWSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790104818; c=relaxed/simple;
-	bh=Ybc2OUJ240JMllCkkEXop1D0Gmz2viRJBCg9r8mScUo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V59lh/BWR4AZ9XVBWopjIzAwiIfuLapyovxwEVK+BdXS9ebIiDEhiuCSabsDZ3SqoBlPnCDLa6PYJqyAjFJkRFL6PUxQ6wBVxqsYhNW/qydh2xsdRsSdUnJ/2np22vgvzi0/FhvicqIxsRYNk4FiEzNFjVECS0fc0b1hUQzmE2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=QSIMPkCy; arc=none smtp.client-ip=148.163.129.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1790107645; c=relaxed/simple;
+	bh=IMkQjgdhefb1LPvjElZJJR8K3ybljP1EVDwWBcHscBU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IpPL9NwlDfWIDm3QecWj6RcuIZn7okO31qeoikVu+lFj0GyQW1z84U6N7K9M0vcOyX5uASB/Ma8GMMNvRi+BZ8xfwBJM6HB3rXTj/MFK8dSjSYWQjbSqE90sgOBi3eT1p3ZVkKbPWfIk+1co4jyDQnwJnCNqHBQgO8wHweWZQjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P+Tl8Ilc; arc=none smtp.client-ip=74.125.225.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="QSIMPkCy"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0B0F0400068
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 19:20:11 +0000 (UTC)
-Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 64EB813C2B0;
-	Tue, 22 Sep 2026 12:20:11 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 64EB813C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1790104811;
-	bh=Ybc2OUJ240JMllCkkEXop1D0Gmz2viRJBCg9r8mScUo=;
-	h=From:To:Cc:Subject:Date:From;
-	b=QSIMPkCy95q+ti0yXcR0PlAnZ5Fs5+Te9AY7UgdwSnFj9g7jYNBeqoLNriGAH1PKC
-	 oHifa2vKK69/tl3s3ZkptT4MY6Yoqaokn8/qnJ2ev/gPnRB+CIHKj1G82kZWsKBzj9
-	 FJCzmHgAySQxOPK5yaS74qxRjEPQYmADZtgHAojs=
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC-v2] wifi: mt76: mt7996: disable NAPI before deleting in dma_cleanup
-Date: Tue, 22 Sep 2026 12:20:05 -0700
-Message-ID: <20260922192005.676962-1-greearb@candelatech.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P+Tl8Ilc"
+Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-482f633cd78so195932f8f.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 13:07:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790107613; x=1790712413; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KsPUs6EBonqM96r2eMKS/17pMpIetLZ9bP0EB0PlUy8=;
+        b=P+Tl8Ilc9f89Ew9+txoB4vCjjeNJx8Yk+q6HK2LXRoo2+gkTEHusokVnjAeSHzNM83
+         SeZYanXx7kO5sD6lid4hR+jJyhr/1QuHJo3ujjc4GqLDcxELszy75Lm3stxaPa6XnpI7
+         hLVFZNkpYnUI5meY11Gra0RD7VnOWcbbgARK+30ppXtcmILDjDkF353jrLqSlhYs44Rn
+         3ZjnfyzTe/EtoSejeEnVbvTd8+MfsEIC+iSpxkaC0gIqjn232E1IJsEOwZmp5T8w0J+q
+         t3lsOE3iWh2KVqWs4lKTig0yFBVFcN0IaQUF2czHY/HvT9rcoyMFTSZDGaRaCgpDqsYY
+         6dFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790107613; x=1790712413;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KsPUs6EBonqM96r2eMKS/17pMpIetLZ9bP0EB0PlUy8=;
+        b=hb8XTY+hHrrYcrvpc61tEdfd6E7LhvuT6eQy8MslfteSy8wUThLT3js5gk9PqtRF+2
+         Sa4vILrmxnoG4DCR/6aD6lWqg+cGR7YUGXlVZy6/OyoxdJ6b9BKiP0Z7s1okzWbKZv1b
+         qAAB4P3hKkAhgC4BgFkVWIFrBu4A9lwEtDfuebJ5BKXfTHM7D1ES6owSkltsVbI/0faO
+         UcFgV3YJxIFaeA4kikkdnyEABANbW24Tb3bJoLHEaRY15KtFTZo6twyCshnTG4APJxJK
+         E3+TOkdTJDlUM6W7XIb1jYbTc+gLHjcLAw55ANZm1bcdYOInpeHhlUEvb3skoTHW/2zi
+         nGsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwa56hoGAOIFXQ9txjR1LJpW84TN3DFGWVesksNuoDXKqTW0clVds0qgGnK/aaPqrsAirv2laBrQ9zoZCiKhw==@vger.kernel.org
+X-Gm-Message-State: AFuF++lHA8q2DhxP5vlHWMYrR3qxbrYw/ZrHRoahPUgbmnz93bEa7Q+r
+	DNZa6e8ura3a6W85W0dnq8kyG6C8ao6mSxOUeJVpH15CmEhN+5X4cO7V
+X-Gm-Gg: AYBFou1ZHGuWoykdfVOlhhi1QHTzyVSW2g7sZCfHBe3FOIuq8M35U3Ar4kOKHbkdOCU
+	7HUHEazgnFxN29k/9XMBgOUfUNHZsQqO+47r+LIW0l7CcMH8z79msH1CIPFSL3ScKehUzqYEZv1
+	kvYKD5H89BjpKcq8jT0PF/MtV4T6ZZ17Z86GdpYXAPxpQxxCDVKgChOaZjpniBpF7pm8Dkrlwln
+	faUyYWaWx7+FpecX0XEFipsRMHGoxG/GR7duqFxxEmGuPf3S+KQ9IjTLe6V3Bvm4kZp8wYxkB7f
+	cOSbzu0cjnvT7dTNDFGpVV/iQ+tXp+HJ7l4nKokCVQOuyS0iR9eOIrgYv8HRQYEKcQgR2ZvZLgc
+	e+mqCUN9b2a6Q/ZGmV7L4WOlkKWhCz+k+y3V5qCVNY4UsEBKA2e28SbRomRzdDuvSLSEawTgTVs
+	csGgWHapTlfi/ji40a3ZukO2HxUIuyhUoDfKBo7ACN5TD8AD1OAoiTaC8t6ROAE3ctCapNaEfza
+	A==
+X-Received: by 2002:a5d:5889:0:b0:488:6526:d60f with SMTP id ffacd0b85a97d-48867011b2cmr1079258f8f.0.1790107613400;
+        Tue, 22 Sep 2026 13:06:53 -0700 (PDT)
+Received: from vitor-nb ([2001:8a0:c4c6:f00:7647:61a8:deea:142f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4886877a2a5sm919062f8f.26.2026.09.22.13.06.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Sep 2026 13:06:52 -0700 (PDT)
+From: Vitor Soares <ivitro@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: Vitor Soares <vitor.soares@toradex.com>,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	baochen.qiang@oss.qualcomm.com,
+	kang.yang@oss.qualcomm.com
+Subject: [PATCH ath-next v4] wifi: ath12k: advertise interface MAC address pool
+Date: Tue, 22 Sep 2026 21:06:42 +0100
+Message-ID: <20260922200643.1133491-2-ivitro@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,266 +76,219 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1790104812-QIG-6_jO639R
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;ut7;1790104812;QIG-6_jO639R;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
-X-PPE-TRUSTED: V=1;DIR=OUT;
 
-From: Ben Greear <greearb@candelatech.com>
+From: Vitor Soares <vitor.soares@toradex.com>
 
-NAPI should be disabled before deleted, this stops
-a warning seen when trying to rmmod mt7996e.
+ath12k supports creating vdevs with addresses provided by mac80211.
+Userspace can already make concurrent interfaces work by explicitly
+assigning different locally administered addresses.
 
-When removing mt7996e module, softirqd would go to 100%
-cpu usage.  It appears the problem is lack of cleanup of
-the irq objects and proper kill of the irq_tasklet.
+However, ath12k does not advertise an address list, so when a second
+interface is created without an explicit address, mac80211 has nothing
+to pick from and falls back to the permanent address. If the first
+interface is already running with that address, bringing up the second
+one fails with -ENOTUNIQ.
 
-NAPI was started on rx queues that had zero ndesc,
-so be sure to start/stop NAPI on those other queues
-by adding a new iterator.
+As in ath11k, provide a list of usable addresses so
+ieee80211_assign_perm_addr() can hand each new interface an unused one.
+Keep the first entry as the wiphy's permanent MAC address. Generate the
+remaining entries as locally administered variants by changing only the
+upper nibble of the first octet, which naturally limits the pool to 16
+unique addresses.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+The cfg80211 definition of wiphy->addresses does not specify where the
+addresses must come from. Some ath12k platforms use it as an interface
+MAC address pool, while others use it for firmware-provided per-radio
+addresses. Gate the generated address pool behind
+advertise_iface_mac_pool and enable it for WCN7850 and QCC2072. The flag
+is read from the first radio, as all radios behind a wiphy are
+expected to have the same setting.
+
+Other platforms keep the existing behavior.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+Tested-on: QCC2072 hw1.0 PCI WLAN.COL.1.0.c2-00074-QCACOLSWPL_V1_TO_SILICONZ-1
+
+Assisted-by: LLM
+Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
+Tested-by: Kang Yang <kang.yang@oss.qualcomm.com>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c      | 18 ++++++++++------
- drivers/net/wireless/mediatek/mt76/mt76.h     |  7 +++++++
- .../net/wireless/mediatek/mt76/mt7996/dma.c   | 10 +++++++++
- .../net/wireless/mediatek/mt76/mt7996/init.c  | 16 +++++++++++++-
- .../net/wireless/mediatek/mt76/mt7996/mac.c   | 21 ++++++++-----------
- .../wireless/mediatek/mt76/mt7996/mt7996.h    |  1 +
- .../net/wireless/mediatek/mt76/mt7996/pci.c   | 11 ++++++++--
- 7 files changed, 63 insertions(+), 21 deletions(-)
+v4:
+- Document why the first radio's hw_params is used.
+- Add QCC2072 Tested-on and Kang Yang's Tested-by.
+- Link for v3: https://lore.kernel.org/ath12k/20260921173033.846332-2-ivitro@gmail.com/
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index a67880a9281c..468d36299567 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -1127,8 +1127,10 @@ static void
- mt76_dma_rx_queue_init(struct mt76_dev *dev, enum mt76_rxq_id qid,
- 		       int (*poll)(struct napi_struct *napi, int budget))
- {
--	netif_napi_add(dev->napi_dev, &dev->napi[qid], poll);
-+	/* This may or may not assign ndesc > 0, add NAPI regardless. */
- 	mt76_dma_rx_fill_buf(dev, &dev->q_rx[qid], false);
-+	dev->q_rx[qid].napified = true;
-+	netif_napi_add(dev->napi_dev, &dev->napi[qid], poll);
- 	napi_enable(&dev->napi[qid]);
+v3:
+- Rename host_alloc_iface_mac to advertise_iface_mac_pool.
+- Clear wiphy->addresses and wiphy->n_addresses during cleanup.
+- Drop the single-radio check and rely on hw_params gating.
+- Enable the generated interface MAC pool for WCN7850 and QCC2072
+  (QCC2072 compile-tested only).
+- Follow kernel block comment style.
+- Link for v2: https://lore.kernel.org/all/20260915152815.254016-2-ivitro@gmail.com/
+
+v2:
+- Gate generated interface MAC address list behind hw_params
+  host_alloc_iface_mac, as suggested by Kang Yang.
+- Enable it only for WCN7850, the only part available for testing here.
+- Add Assisted-by: tag.
+- Link for v1: https://lore.kernel.org/all/20260902082219.3010793-2-ivitro@gmail.com/
+---
+ drivers/net/wireless/ath/ath12k/hw.h       |  1 +
+ drivers/net/wireless/ath/ath12k/mac.c      | 54 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c |  6 +++
+ 3 files changed, 61 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
+index e790de5737db..c58db8482aa4 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.h
++++ b/drivers/net/wireless/ath/ath12k/hw.h
+@@ -238,6 +238,7 @@ struct ath12k_hw_params {
+ 	} client;
+ 
+ 	bool host_alloc_ml_id;
++	bool advertise_iface_mac_pool;
+ };
+ 
+ struct ath12k_hw_ops {
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index d4116ba0da08..c131358efb69 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -14743,6 +14743,56 @@ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
+ 	kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
  }
  
-@@ -1214,13 +1216,17 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
- 	for (i = 0; i < ARRAY_SIZE(dev->q_mcu); i++)
- 		mt76_dma_tx_cleanup(dev, dev->q_mcu[i], true);
- 
--	mt76_for_each_q_rx(dev, i) {
-+	mt76_for_each_q_rx_napi(dev, i) {
- 		struct mt76_queue *q = &dev->q_rx[i];
- 
--		netif_napi_del(&dev->napi[i]);
--		mt76_dma_rx_cleanup(dev, q);
--
--		page_pool_destroy(q->page_pool);
-+		if (q->napified) {
-+			netif_napi_del(&dev->napi[i]);
-+			q->napified = false;
-+		}
-+		if (q->ndesc) {
-+			mt76_dma_rx_cleanup(dev, q);
-+			page_pool_destroy(q->page_pool);
-+		}
- 	}
- 
- 	if (mtk_wed_device_active(&dev->mmio.wed))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 62b41c8bb7c0..827c49ef3edd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -251,6 +251,7 @@ struct mt76_queue {
- 	int buf_size;
- 	bool stopped;
- 	bool blocked;
-+	bool napified;
- 
- 	u8 buf_offset;
- 	u16 flags;
-@@ -1286,10 +1287,16 @@ static inline int mt76_wed_dma_setup(struct mt76_dev *dev, struct mt76_queue *q,
- #define mt76_queue_kick(dev, ...)	(dev)->mt76.queue_ops->kick(&((dev)->mt76), __VA_ARGS__)
- #define mt76_queue_reset(dev, ...)	(dev)->mt76.queue_ops->reset_q(&((dev)->mt76), __VA_ARGS__)
- 
-+/* For all rx queues that have ndesc > 0 */
- #define mt76_for_each_q_rx(dev, i)	\
- 	for (i = 0; i < ARRAY_SIZE((dev)->q_rx); i++)	\
- 		if ((dev)->q_rx[i].ndesc)
- 
-+/* For all rx queues that have ndesc or NAPI enabled */
-+#define mt76_for_each_q_rx_napi(dev, i)			\
-+	for (i = 0; i < ARRAY_SIZE((dev)->q_rx); i++)	\
-+		if ((dev)->q_rx[i].napified || (dev)->q_rx[i].ndesc)
-+
- 
- #define mt76_dereference(p, dev) \
- 	rcu_dereference_protected(p, lockdep_is_held(&(dev)->mutex))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-index 3d9353811a02..48bdbbb7c78f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-@@ -1051,7 +1051,17 @@ void mt7996_dma_reset(struct mt7996_dev *dev, bool force)
- 
- void mt7996_dma_cleanup(struct mt7996_dev *dev)
- {
-+	int i;
-+
- 	mt7996_dma_disable(dev, true);
- 
-+	/* mt76_dma_cleanup will delete the napi and clean up rx-queues,
-+	 * we just need to disable it here to match whatever mt7921 is doing.
-+	 */
-+	mt76_for_each_q_rx_napi(&dev->mt76, i) {
-+		if (dev->mt76.q_rx[i].napified)
-+			napi_disable(&dev->mt76.napi[i]);
-+	}
-+
- 	mt76_dma_cleanup(&dev->mt76);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-index fb635a092584..45fc76cecd04 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -1807,6 +1807,18 @@ int mt7996_register_device(struct mt7996_dev *dev)
- 	return ret;
- }
- 
-+static void mt7996_cleanup_irqs(struct mt7996_dev *dev)
++static void ath12k_mac_cleanup_mac_address_list(struct ath12k_hw *ah)
 +{
-+	struct mt76_dev *mdev = &dev->mt76;
-+	struct pci_dev *pdev = to_pci_dev(mdev->dev);
-+
-+	mt7996_put_hif2(dev, dev->hif2); /* frees hif2 irq */
-+
-+	devm_free_irq(mdev->dev, pdev->irq, dev);
-+	if (!mtk_wed_device_active(&dev->mt76.mmio.wed))
-+		pci_free_irq_vectors(pdev);
++	kfree(ah->hw->wiphy->addresses);
++	ah->hw->wiphy->addresses = NULL;
++	ah->hw->wiphy->n_addresses = 0;
 +}
 +
- void mt7996_unregister_device(struct mt7996_dev *dev)
++static void ath12k_mac_setup_mac_address_list(struct ath12k_hw *ah,
++					      const u8 *mac_addr)
++{
++	struct mac_address *addresses;
++	struct ath12k *ar;
++	u16 n_addresses;
++	int i;
++
++	/*
++	 * wiphy->addresses is per wiphy, so the generated interface MAC
++	 * pool is advertised for the whole ath12k_hw. The hw_params flag is
++	 * expected to be consistent across all radios in an ath12k_hw, so
++	 * use the first radio as the source.
++	 */
++	ar = ath12k_ah_to_ar(ah, 0);
++	if (!ar->ab->hw_params->advertise_iface_mac_pool)
++		return;
++
++	/*
++	 * Only the upper nibble of the first octet is varied, so at most 16
++	 * addresses can be derived from one base.
++	 */
++	n_addresses = min_t(u16, TARGET_NUM_VDEVS(ar->ab), 16);
++	if (n_addresses <= 1)
++		return;
++
++	addresses = kzalloc_objs(*addresses, n_addresses);
++	if (!addresses)
++		return;
++
++	ether_addr_copy(addresses[0].addr, mac_addr);
++	for (i = 1; i < n_addresses; i++) {
++		ether_addr_copy(addresses[i].addr, mac_addr);
++		/* set Local Administered Address bit */
++		addresses[i].addr[0] |= 0x2;
++
++		addresses[i].addr[0] += i << 4;
++	}
++
++	ah->hw->wiphy->addresses = addresses;
++	ah->hw->wiphy->n_addresses = n_addresses;
++}
++
+ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
  {
- 	cancel_work_sync(&dev->dump_work);
-@@ -1825,7 +1837,9 @@ void mt7996_unregister_device(struct mt7996_dev *dev)
- 	if (mt7996_has_hwrro(dev) &&
- 	    !mtk_wed_device_active(&dev->mt76.mmio.wed))
- 		mt7996_rro_msdu_page_map_free(dev);
--	tasklet_disable(&dev->mt76.irq_tasklet);
-+	tasklet_kill(&dev->mt76.irq_tasklet);
-+
-+	mt7996_cleanup_irqs(dev);
+ 	struct ieee80211_hw *hw = ah->hw;
+@@ -14762,6 +14812,7 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
+ 		ath12k_mac_cleanup_unregister(ar);
  
- 	mt76_free_device(&dev->mt76);
+ 	ath12k_mac_cleanup_iface_combinations(ah);
++	ath12k_mac_cleanup_mac_address_list(ah);
+ 
+ 	SET_IEEE80211_DEV(hw, NULL);
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 1cba381a78b8..396024acd645 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -2311,13 +2311,12 @@ mt7996_mac_restart(struct mt7996_dev *dev)
+@@ -14878,6 +14929,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 	wiphy->available_antennas_tx = antennas_tx;
  
- 	/* disable all tx/rx napi */
- 	mt76_worker_disable(&dev->mt76.tx_worker);
--	mt76_for_each_q_rx(mdev, i) {
-+	mt76_for_each_q_rx_napi(mdev, i) {
- 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
- 		    mt76_queue_is_wed_rro(&mdev->q_rx[i]))
- 			continue;
+ 	SET_IEEE80211_PERM_ADDR(hw, mac_addr);
++	ath12k_mac_setup_mac_address_list(ah, mac_addr);
+ 	SET_IEEE80211_DEV(hw, ab->dev);
  
--		if (mdev->q_rx[i].ndesc)
--			napi_disable(&dev->mt76.napi[i]);
-+		napi_disable(&dev->mt76.napi[i]);
+ 	ret = ath12k_mac_setup_iface_combinations(ah);
+@@ -15120,6 +15172,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 		ath12k_mac_cleanup_unregister(ar);
  	}
- 	napi_disable(&dev->mt76.tx_napi);
  
-@@ -2327,17 +2326,15 @@ mt7996_mac_restart(struct mt7996_dev *dev)
- 
- 	mt7996_dma_reset(dev, true);
- 
--	mt76_for_each_q_rx(mdev, i) {
-+	mt76_for_each_q_rx_napi(mdev, i) {
- 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
- 		    mt76_queue_is_wed_rro(&mdev->q_rx[i]))
- 			continue;
- 
--		if (mdev->q_rx[i].ndesc) {
--			napi_enable(&dev->mt76.napi[i]);
--			local_bh_disable();
--			napi_schedule(&dev->mt76.napi[i]);
--			local_bh_enable();
--		}
-+		napi_enable(&dev->mt76.napi[i]);
-+		local_bh_disable();
-+		napi_schedule(&dev->mt76.napi[i]);
-+		local_bh_enable();
- 	}
- 	clear_bit(MT76_MCU_RESET, &dev->mphy.state);
- 	clear_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state);
-@@ -2585,7 +2582,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
- 	mutex_lock(&dev->mt76.mutex);
- 
- 	mt76_worker_disable(&dev->mt76.tx_worker);
--	mt76_for_each_q_rx(&dev->mt76, i) {
-+	mt76_for_each_q_rx_napi(&dev->mt76, i) {
- 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
- 		    mt76_queue_is_wed_rro(&dev->mt76.q_rx[i]))
- 			continue;
-@@ -2645,7 +2642,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
- 	mt7996_for_each_phy(dev, phy)
- 		clear_bit(MT76_RESET, &phy->mt76->state);
- 
--	mt76_for_each_q_rx(&dev->mt76, i) {
-+	mt76_for_each_q_rx_napi(&dev->mt76, i) {
- 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
- 		    mt76_queue_is_wed_rro(&dev->mt76.q_rx[i]))
- 			continue;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index 2a0cdb56f822..79c57e88e107 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -678,6 +678,7 @@ irqreturn_t mt7996_irq_handler(int irq, void *dev_instance);
- u64 __mt7996_get_tsf(struct ieee80211_hw *hw, struct mt7996_vif_link *link);
- int mt7996_register_device(struct mt7996_dev *dev);
- void mt7996_unregister_device(struct mt7996_dev *dev);
-+void mt7996_put_hif2(struct mt7996_dev *dev, struct mt7996_hif *hif);
- int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
- 			struct ieee80211_bss_conf *link_conf,
- 			struct mt76_vif_link *mlink);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
-index b7d9193e042f..5c686cf66d0a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
-@@ -53,11 +53,19 @@ static struct mt7996_hif *mt7996_pci_get_hif2(u32 idx)
- 	return hif;
- }
- 
--static void mt7996_put_hif2(struct mt7996_hif *hif)
-+void mt7996_put_hif2(struct mt7996_dev *dev, struct mt7996_hif *hif)
- {
-+	struct pci_dev *hif2_dev;
++	ath12k_mac_cleanup_mac_address_list(ah);
 +
- 	if (!hif)
- 		return;
+ 	SET_IEEE80211_DEV(hw, NULL);
  
-+	hif2_dev = container_of(hif->dev, struct pci_dev, dev);
-+
-+	devm_free_irq(dev->mt76.dev, hif->irq, dev);
-+	if (!mtk_wed_device_active(&dev->mt76.mmio.wed_hif2))
-+		pci_free_irq_vectors(hif2_dev);
-+
- 	put_device(hif->dev);
- }
+ 	return ret;
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+index ae8df80928b0..ad362244ed9b 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+@@ -445,6 +445,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
  
-@@ -237,7 +245,6 @@ static void mt7996_pci_remove(struct pci_dev *pdev)
+ 		.host_alloc_ml_id = true,
++		.advertise_iface_mac_pool = false,
+ 	},
+ 	{
+ 		.name = "wcn7850 hw2.0",
+@@ -539,6 +540,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
  
- 	mdev = pci_get_drvdata(pdev);
- 	dev = container_of(mdev, struct mt7996_dev, mt76);
--	mt7996_put_hif2(dev->hif2);
- 	mt7996_unregister_device(dev);
- }
+ 		.host_alloc_ml_id = false,
++		.advertise_iface_mac_pool = true,
+ 	},
+ 	{
+ 		.name = "qcn9274 hw2.0",
+@@ -629,6 +631,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
+ 
+ 		.host_alloc_ml_id = true,
++		.advertise_iface_mac_pool = false,
+ 	},
+ 	{
+ 		.name = "ipq5332 hw1.0",
+@@ -713,6 +716,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
+ 
+ 		.host_alloc_ml_id = true,
++		.advertise_iface_mac_pool = false,
+ 	},
+ 	{
+ 		.name = "qcc2072 hw1.0",
+@@ -808,6 +812,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
+ 
+ 		.host_alloc_ml_id = false,
++		.advertise_iface_mac_pool = true,
+ 	},
+ 	{
+ 		.name = "ipq5424 hw1.0",
+@@ -895,6 +900,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+ 		},
+ 
+ 		.host_alloc_ml_id = true,
++		.advertise_iface_mac_pool = false,
+ 	},
+ };
  
 -- 
-2.42.0
+2.55.0
 
