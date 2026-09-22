@@ -1,77 +1,42 @@
-Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72DCD388E72
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 18:02:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6520E4A2626
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 19:20:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790100173; cv=none; b=F/snmMsxCB4QmI9eNZLGj5Uz4TbEcH95vHxjmBoMeMb47omHHBlrGtVYUpSjtyN7rogVdqHfZis48ImIkmc0VlPtThuzf4i+C/RsGb7W9KoS17+1vljtduA303PRKEVBSB2s9u97vi3sIHBsTw+orkZACK7HmXWCKUBIBZpkgow=
+	t=1790104818; cv=none; b=PZJW+F/FgJLojd64CrUSTLEhpsAUCKsqiRynk0Vs7n4ByOVoN4dlToCYnharrNnVt0++EkPGQuzTZ9SOgKmJvL/s5+GWQmaI1J2M83UBRXUc9HAXLGK19ThspWLA8xHZDvSfyZcj0tp0FDWVQkk+YcXHW58YW+2hi06aLjuMCCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790100173; c=relaxed/simple;
-	bh=f4gc6NL/IAXUZyeAjSJZyyxTjzimmJM0MZdfzBMjr8E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ESLwj6YIcYTmy2fsD+Sr0gzFOvfi1IdkAOs76jm34Sg30C0vw7NJ5cOlelY9VroVxjMXsMqSdf2VQqKz1aNeKif6O1R5DdsHllvWPj3NHxGPO7jtuoPvDo3+4rBRZ7AwNhSI4gecnvULim6ytv2ZC5x7+khUPJrvc9WgYsSIL4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai; spf=pass smtp.mailfrom=nebusec.ai; dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b=BLRN+dYp; arc=none smtp.client-ip=74.125.227.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nebusec.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nebusec.ai
+	s=arc-20240116; t=1790104818; c=relaxed/simple;
+	bh=Ybc2OUJ240JMllCkkEXop1D0Gmz2viRJBCg9r8mScUo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V59lh/BWR4AZ9XVBWopjIzAwiIfuLapyovxwEVK+BdXS9ebIiDEhiuCSabsDZ3SqoBlPnCDLa6PYJqyAjFJkRFL6PUxQ6wBVxqsYhNW/qydh2xsdRsSdUnJ/2np22vgvzi0/FhvicqIxsRYNk4FiEzNFjVECS0fc0b1hUQzmE2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=QSIMPkCy; arc=none smtp.client-ip=148.163.129.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nebusec.ai header.i=@nebusec.ai header.b="BLRN+dYp"
-Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-396ccafb751so149864a91.2
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 11:02:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nebusec.ai; s=google; t=1790100171; x=1790704971; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Skm9oBUFwichZa2wYt/07iDX4MVAS8c7WKeyWN7nUwg=;
-        b=BLRN+dYpoq0t1LfMrKpMnFgAAvjl3fWVNuRzZ7CKUm2qj4aw49hE16nwTwujstmNOV
-         wDq3TTPi/yjiDSvYElUz5kB5kJ37WOnVTC9nXgJu/NLNPdSjfM0mov3qUDTicxTsNy36
-         mOKTiEp3RPCqufPJz2FmA9fehPiHjiguaODcfa6+SdltAs3CVU1PPlyZP6DOX4E5g4C5
-         MJWidSGMRKeGDRDsVZ/fVNaNcXK95a8JgyeAqnJEbELUcTi5nJYw0Ro7GgZ5H++Fs9K7
-         GJFTeVtWLQBuw9uO58VK/jWOMF27bh0UyYp02k23SzZfDsJmV5adj2R+/TctnjlETte+
-         K4pA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790100171; x=1790704971;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Skm9oBUFwichZa2wYt/07iDX4MVAS8c7WKeyWN7nUwg=;
-        b=cdOWa//SqVO4zdMf+UvdkgNkjTXOMj/xHJVdkmHwZPQick4xWHA5LZFP97Y1qrE/+q
-         7J7bH7BSpz7AXiR9o/vH7KbbwoTPciLsr2pst1wLJMJrSU3B/RjvFnVREXhYHj5zWfus
-         CZpF9YeJPTV6a2J5wtrN20lN+RQGCHinBNKWh3pMt0G0HuyDDKUEdFZAAkhuvN4BsOiH
-         5osCYTQiQMGK/+jlJDpEyjZGZahDI90YwRl0E7hTS7lC+g77v/mbNT7O4BEWMj+t/IyG
-         RmpYHEKt5ml/bc/MckThOJKtFPOh9neZQSedDNM5heV6OZsYZBE3TvsoOVQXcfAeJGln
-         8sHg==
-X-Gm-Message-State: AFuF++nGB15TC4e9tGcBxrdkGmhJfB0vvWxf7tv37JRV99PGmC3zKbLf
-	Sr7bPGaYMrt+A3i6HiJTxai4NjZTxV0glSCIKLuhVavXpIqcvYaNSyPf4i1ZCAmiFpu2Eyxlugu
-	LsLBhU1OU
-X-Gm-Gg: AYBFou3TN20N6LfrpdmOgdSKDvqOs57KTraCjPn5OVfws8KatgnySw1yaN7jJ2Y/dMe
-	rz8d3U9iTAejXPMOxbvk7vvOx2kpg9XoOFjim9F2+cqqLct5CKos/5dXKBfE1dACt3EWUZqD3ju
-	yRB+p/u4WokYqsRUjzgPlGtf39awPBqPRRh/aA707x2YW/MVvCrpccdjYGWUNKkVZFeKDDjQhTa
-	5ZA14FvOBYxuEVu084ZyBBxbtTSD/AcmLw7cQNsjSeQtKU8GVdZpXiHdzJ+3FSvuH+mTr/yfb33
-	LoQfN+2zo37UdIgvaYgf/dTtLo6czUfV8P8Aeb/6i/iKS6NgsuqnD+b+aMupUC48a6vfizsq2V/
-	29o5FtCausaWAxpeVenuoDL7qrkhO/aT72X4ckKVpBu16ipLtkhCzKEKuX6n67lc7oKifcaB99w
-	NCsTuqt8+hxu0HDfXye+ku8FzRWJ0UDvM9nf8/kXiLJNJSBaSUC5JHriGmgNxd7qXVe/xZOt074
-	CPjB8MW
-X-Received: by 2002:a17:90b:3842:b0:3a0:309d:5549 with SMTP id 98e67ed59e1d1-3a07e54f450mr216670a91.8.1790100171491;
-        Tue, 22 Sep 2026 11:02:51 -0700 (PDT)
-Received: from enjou-Legion-Y7000P-2019 ([167.71.204.91])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a07d9978c4sm621117a91.0.2026.09.22.11.02.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 11:02:51 -0700 (PDT)
-From: Ren Wei <weir@nebusec.ai>
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="QSIMPkCy"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0B0F0400068
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 19:20:11 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
+	by mail3.candelatech.com (Postfix) with ESMTP id 64EB813C2B0;
+	Tue, 22 Sep 2026 12:20:11 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 64EB813C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1790104811;
+	bh=Ybc2OUJ240JMllCkkEXop1D0Gmz2viRJBCg9r8mScUo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=QSIMPkCy95q+ti0yXcR0PlAnZ5Fs5+Te9AY7UgdwSnFj9g7jYNBeqoLNriGAH1PKC
+	 oHifa2vKK69/tl3s3ZkptT4MY6Yoqaokn8/qnJ2ev/gPnRB+CIHKj1G82kZWsKBzj9
+	 FJCzmHgAySQxOPK5yaS74qxRjEPQYmADZtgHAojs=
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	michael-cy.lee@mediatek.com,
-	vega@nebusec.ai,
-	caoruide123@gmail.com,
-	weir@nebusec.ai
-Subject: [PATCH 1/1] wifi: mac80211: reject invalid 320 MHz CSA bandwidth
-Date: Wed, 23 Sep 2026 02:02:23 +0800
-Message-ID: <bd68e360e06135c750397cb6be003a01a834a179.1787222001.git.vega.cover-letter@nebusec.ai>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <cover.1787222001.git.vega.cover-letter@nebusec.ai>
-References: <cover.1787222001.git.vega.cover-letter@nebusec.ai>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC-v2] wifi: mt76: mt7996: disable NAPI before deleting in dma_cleanup
+Date: Tue, 22 Sep 2026 12:20:05 -0700
+Message-ID: <20260922192005.676962-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -79,44 +44,266 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-MDID: 1790104812-QIG-6_jO639R
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;ut7;1790104812;QIG-6_jO639R;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-From: Ruide Cao <caoruide123@gmail.com>
+From: Ben Greear <greearb@candelatech.com>
 
-The HT/VHT channel definition validator can receive a 320 MHz
-bandwidth indication from a received CSA frame on a non-6 GHz link.
-It warns for this unsupported width but continues with an uninitialized
-vht_operation.chan_width, which is then read by
-ieee80211_chandef_vht_oper(). With panic_on_warn enabled, this lets a
-received frame panic the kernel.
+NAPI should be disabled before deleted, this stops
+a warning seen when trying to rmmod mt7996e.
 
-Reject the channel definition before entering the VHT operation
-conversion. This preserves the existing CSA fallback while avoiding
-both the warning and the uninitialized read.
+When removing mt7996e module, softirqd would go to 100%
+cpu usage.  It appears the problem is lack of cleanup of
+the irq objects and proper kill of the irq_tasklet.
 
-Fixes: 21c3f8f95554 ("wifi: mac80211: refactor STA CSA parsing flows")
-Cc: stable@vger.kernel.org
-Reported-by: Vega <vega@nebusec.ai>
-Assisted-by: LLM
-Signed-off-by: Ruide Cao <caoruide123@gmail.com>
-Signed-off-by: Ren Wei <weir@nebusec.ai>
+NAPI was started on rx queues that had zero ndesc,
+so be sure to start/stop NAPI on those other queues
+by adding a new iterator.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/spectmgmt.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c      | 18 ++++++++++------
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  7 +++++++
+ .../net/wireless/mediatek/mt76/mt7996/dma.c   | 10 +++++++++
+ .../net/wireless/mediatek/mt76/mt7996/init.c  | 16 +++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 21 ++++++++-----------
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  1 +
+ .../net/wireless/mediatek/mt76/mt7996/pci.c   | 11 ++++++++--
+ 7 files changed, 63 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index ec622750e1c9..a70ddb83106b 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -111,8 +111,8 @@ validate_chandef_by_ht_vht_oper(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index a67880a9281c..468d36299567 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -1127,8 +1127,10 @@ static void
+ mt76_dma_rx_queue_init(struct mt76_dev *dev, enum mt76_rxq_id qid,
+ 		       int (*poll)(struct napi_struct *napi, int budget))
+ {
+-	netif_napi_add(dev->napi_dev, &dev->napi[qid], poll);
++	/* This may or may not assign ndesc > 0, add NAPI regardless. */
+ 	mt76_dma_rx_fill_buf(dev, &dev->q_rx[qid], false);
++	dev->q_rx[qid].napified = true;
++	netif_napi_add(dev->napi_dev, &dev->napi[qid], poll);
+ 	napi_enable(&dev->napi[qid]);
+ }
  
- 	switch (chan_width) {
- 	case NL80211_CHAN_WIDTH_320:
--		WARN_ON(1);
--		break;
-+		chandef->chan = NULL;
-+		return;
- 	case NL80211_CHAN_WIDTH_160:
- 		vht_oper.chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
- 		vht_oper.center_freq_seg1_idx = vht_oper.center_freq_seg0_idx;
+@@ -1214,13 +1216,17 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
+ 	for (i = 0; i < ARRAY_SIZE(dev->q_mcu); i++)
+ 		mt76_dma_tx_cleanup(dev, dev->q_mcu[i], true);
+ 
+-	mt76_for_each_q_rx(dev, i) {
++	mt76_for_each_q_rx_napi(dev, i) {
+ 		struct mt76_queue *q = &dev->q_rx[i];
+ 
+-		netif_napi_del(&dev->napi[i]);
+-		mt76_dma_rx_cleanup(dev, q);
+-
+-		page_pool_destroy(q->page_pool);
++		if (q->napified) {
++			netif_napi_del(&dev->napi[i]);
++			q->napified = false;
++		}
++		if (q->ndesc) {
++			mt76_dma_rx_cleanup(dev, q);
++			page_pool_destroy(q->page_pool);
++		}
+ 	}
+ 
+ 	if (mtk_wed_device_active(&dev->mmio.wed))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 62b41c8bb7c0..827c49ef3edd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -251,6 +251,7 @@ struct mt76_queue {
+ 	int buf_size;
+ 	bool stopped;
+ 	bool blocked;
++	bool napified;
+ 
+ 	u8 buf_offset;
+ 	u16 flags;
+@@ -1286,10 +1287,16 @@ static inline int mt76_wed_dma_setup(struct mt76_dev *dev, struct mt76_queue *q,
+ #define mt76_queue_kick(dev, ...)	(dev)->mt76.queue_ops->kick(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_reset(dev, ...)	(dev)->mt76.queue_ops->reset_q(&((dev)->mt76), __VA_ARGS__)
+ 
++/* For all rx queues that have ndesc > 0 */
+ #define mt76_for_each_q_rx(dev, i)	\
+ 	for (i = 0; i < ARRAY_SIZE((dev)->q_rx); i++)	\
+ 		if ((dev)->q_rx[i].ndesc)
+ 
++/* For all rx queues that have ndesc or NAPI enabled */
++#define mt76_for_each_q_rx_napi(dev, i)			\
++	for (i = 0; i < ARRAY_SIZE((dev)->q_rx); i++)	\
++		if ((dev)->q_rx[i].napified || (dev)->q_rx[i].ndesc)
++
+ 
+ #define mt76_dereference(p, dev) \
+ 	rcu_dereference_protected(p, lockdep_is_held(&(dev)->mutex))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
+index 3d9353811a02..48bdbbb7c78f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
+@@ -1051,7 +1051,17 @@ void mt7996_dma_reset(struct mt7996_dev *dev, bool force)
+ 
+ void mt7996_dma_cleanup(struct mt7996_dev *dev)
+ {
++	int i;
++
+ 	mt7996_dma_disable(dev, true);
+ 
++	/* mt76_dma_cleanup will delete the napi and clean up rx-queues,
++	 * we just need to disable it here to match whatever mt7921 is doing.
++	 */
++	mt76_for_each_q_rx_napi(&dev->mt76, i) {
++		if (dev->mt76.q_rx[i].napified)
++			napi_disable(&dev->mt76.napi[i]);
++	}
++
+ 	mt76_dma_cleanup(&dev->mt76);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index fb635a092584..45fc76cecd04 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -1807,6 +1807,18 @@ int mt7996_register_device(struct mt7996_dev *dev)
+ 	return ret;
+ }
+ 
++static void mt7996_cleanup_irqs(struct mt7996_dev *dev)
++{
++	struct mt76_dev *mdev = &dev->mt76;
++	struct pci_dev *pdev = to_pci_dev(mdev->dev);
++
++	mt7996_put_hif2(dev, dev->hif2); /* frees hif2 irq */
++
++	devm_free_irq(mdev->dev, pdev->irq, dev);
++	if (!mtk_wed_device_active(&dev->mt76.mmio.wed))
++		pci_free_irq_vectors(pdev);
++}
++
+ void mt7996_unregister_device(struct mt7996_dev *dev)
+ {
+ 	cancel_work_sync(&dev->dump_work);
+@@ -1825,7 +1837,9 @@ void mt7996_unregister_device(struct mt7996_dev *dev)
+ 	if (mt7996_has_hwrro(dev) &&
+ 	    !mtk_wed_device_active(&dev->mt76.mmio.wed))
+ 		mt7996_rro_msdu_page_map_free(dev);
+-	tasklet_disable(&dev->mt76.irq_tasklet);
++	tasklet_kill(&dev->mt76.irq_tasklet);
++
++	mt7996_cleanup_irqs(dev);
+ 
+ 	mt76_free_device(&dev->mt76);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index 1cba381a78b8..396024acd645 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -2311,13 +2311,12 @@ mt7996_mac_restart(struct mt7996_dev *dev)
+ 
+ 	/* disable all tx/rx napi */
+ 	mt76_worker_disable(&dev->mt76.tx_worker);
+-	mt76_for_each_q_rx(mdev, i) {
++	mt76_for_each_q_rx_napi(mdev, i) {
+ 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
+ 		    mt76_queue_is_wed_rro(&mdev->q_rx[i]))
+ 			continue;
+ 
+-		if (mdev->q_rx[i].ndesc)
+-			napi_disable(&dev->mt76.napi[i]);
++		napi_disable(&dev->mt76.napi[i]);
+ 	}
+ 	napi_disable(&dev->mt76.tx_napi);
+ 
+@@ -2327,17 +2326,15 @@ mt7996_mac_restart(struct mt7996_dev *dev)
+ 
+ 	mt7996_dma_reset(dev, true);
+ 
+-	mt76_for_each_q_rx(mdev, i) {
++	mt76_for_each_q_rx_napi(mdev, i) {
+ 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
+ 		    mt76_queue_is_wed_rro(&mdev->q_rx[i]))
+ 			continue;
+ 
+-		if (mdev->q_rx[i].ndesc) {
+-			napi_enable(&dev->mt76.napi[i]);
+-			local_bh_disable();
+-			napi_schedule(&dev->mt76.napi[i]);
+-			local_bh_enable();
+-		}
++		napi_enable(&dev->mt76.napi[i]);
++		local_bh_disable();
++		napi_schedule(&dev->mt76.napi[i]);
++		local_bh_enable();
+ 	}
+ 	clear_bit(MT76_MCU_RESET, &dev->mphy.state);
+ 	clear_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state);
+@@ -2585,7 +2582,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+ 	mt76_worker_disable(&dev->mt76.tx_worker);
+-	mt76_for_each_q_rx(&dev->mt76, i) {
++	mt76_for_each_q_rx_napi(&dev->mt76, i) {
+ 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
+ 		    mt76_queue_is_wed_rro(&dev->mt76.q_rx[i]))
+ 			continue;
+@@ -2645,7 +2642,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
+ 	mt7996_for_each_phy(dev, phy)
+ 		clear_bit(MT76_RESET, &phy->mt76->state);
+ 
+-	mt76_for_each_q_rx(&dev->mt76, i) {
++	mt76_for_each_q_rx_napi(&dev->mt76, i) {
+ 		if (mtk_wed_device_active(&dev->mt76.mmio.wed) &&
+ 		    mt76_queue_is_wed_rro(&dev->mt76.q_rx[i]))
+ 			continue;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index 2a0cdb56f822..79c57e88e107 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -678,6 +678,7 @@ irqreturn_t mt7996_irq_handler(int irq, void *dev_instance);
+ u64 __mt7996_get_tsf(struct ieee80211_hw *hw, struct mt7996_vif_link *link);
+ int mt7996_register_device(struct mt7996_dev *dev);
+ void mt7996_unregister_device(struct mt7996_dev *dev);
++void mt7996_put_hif2(struct mt7996_dev *dev, struct mt7996_hif *hif);
+ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 			struct ieee80211_bss_conf *link_conf,
+ 			struct mt76_vif_link *mlink);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+index b7d9193e042f..5c686cf66d0a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+@@ -53,11 +53,19 @@ static struct mt7996_hif *mt7996_pci_get_hif2(u32 idx)
+ 	return hif;
+ }
+ 
+-static void mt7996_put_hif2(struct mt7996_hif *hif)
++void mt7996_put_hif2(struct mt7996_dev *dev, struct mt7996_hif *hif)
+ {
++	struct pci_dev *hif2_dev;
++
+ 	if (!hif)
+ 		return;
+ 
++	hif2_dev = container_of(hif->dev, struct pci_dev, dev);
++
++	devm_free_irq(dev->mt76.dev, hif->irq, dev);
++	if (!mtk_wed_device_active(&dev->mt76.mmio.wed_hif2))
++		pci_free_irq_vectors(hif2_dev);
++
+ 	put_device(hif->dev);
+ }
+ 
+@@ -237,7 +245,6 @@ static void mt7996_pci_remove(struct pci_dev *pdev)
+ 
+ 	mdev = pci_get_drvdata(pdev);
+ 	dev = container_of(mdev, struct mt7996_dev, mt76);
+-	mt7996_put_hif2(dev->hif2);
+ 	mt7996_unregister_device(dev);
+ }
+ 
 -- 
-2.47.3
+2.42.0
+
