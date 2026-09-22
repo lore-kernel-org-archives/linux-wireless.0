@@ -1,77 +1,116 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46759530DF7
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FE4051D537
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790074271; cv=none; b=Z7JzoG/k5IVNtSjcEEsUG+kZB21wW0fW1q5c1MhLVlXGW80eUT1G0HQ6PsBKhguSzjSTns2Z7XQl7rQyxS3anFngXGlGa5SZEugYS6FI98JWquSLgJqLPwJ12prcqrdDHeLgxSP5apJ8PqQyNCy6UMjNtpEl5wqRXCbEofiyIvc=
+	t=1790074352; cv=none; b=rq+pBYo9OtE802DhVpCn5daQaSbI1GpiqfElpdyIo+laM8Wb3KafHhthyJiyKfTvBGsDeYJ8kAa15mGvIVoAkVkH8sCBp2HC/tkCNtyqooJnDDhbN1kZdIYY+wQsxcCP718Ts2Zoz5hl42EmmEJ6eiPaV4prJJD7j99b8nc5QSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790074271; c=relaxed/simple;
-	bh=JCxQ4KNjfukY/T/evl93jcXFaaRTB82E1iGacrS+oP4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mmrI1vX6vaPGZp1pV512KHPxALownGKo82WL73Bjnge3RSPUegLlG3D/2L093sEv3K/62OwdAmzXIpoR07IrpHDs9FRPcIkoTcepWOAzgAeKnrPo3NDMLtRx4PWjneU6LF6ErFntDCHjAmleb6ikMOLYzO/DcgtsW+nkCPdUtrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=bVZ9N2E/; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1790074352; c=relaxed/simple;
+	bh=pq6AVtR4ORZk5ZcSJKstVuSi7EmOFeHL+4+9G+hZ6H4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AqqTtehd94skIOsn2QIcaNRdI/VmxsLonCnZQMa5e/SNn1TTj0aOQHD8k2qXt+xmWOspm62O9Q2Lof/g0zR92iNYwJpDiONdOJY6Xlp0vJU7oY5mekxvE6v9M8P+Vqx0UwLkfyjxCpmKD8w/LAZQAAHVFm++kwSnFk5oduERe2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JWHafIWa; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="bVZ9N2E/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=JCxQ4KNjfukY/T/evl93jcXFaaRTB82E1iGacrS+oP4=;
-	t=1790074267; x=1791283867; b=bVZ9N2E/Qr7DgorbFCZmf4WjYepSDMOheF0DCv3mUNtK98R
-	VzXxv9nsaxoPNrW8TmZ93qL2qQdbpzQwlUvRzJJIviTZ5hkrpi/qf+zd+tj44dtcbgIVXYsvLNvhe
-	rys75mdg8mewb9QvtD7e0odwLoRAF8+CGlDqpOEE6W0UbZmo7udtywXhGiud2qzYNCQsqYQ648OOt
-	G2mETXVUIHFA/VpZGK9lnoFcayJ4+Wf0LC3bLsa5kZVOFvFBIM+WCoGBfCBRJ3tqK6X9ueJ1OIJGV
-	bUpdJdlCd2reRLCwiKxgwUsj3EWxTdKQvVsAU2Aa9tszQG5ah/izJJfw18UkLi3A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x8y5V-00000006qEw-09J8;
-	Tue, 22 Sep 2026 12:51:01 +0200
-Message-ID: <ee25d1c927d4a618384eb05a210b0f9b2147d055.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next v2] wifi: mac80211: Report parent AP BSS
- parameters for AP_VLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>, 
-	ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Ganesh Kariganuru Mahabalesh
-	 <quic_gkarigan@quicinc.com>
-Date: Tue, 22 Sep 2026 12:51:00 +0200
-In-Reply-To: <ddaf2702-b33e-459c-9efd-098feba33243@oss.qualcomm.com>
-References: <20260915052923.3300269-1-aaradhana.sahu@oss.qualcomm.com>
-	 <48ebf25d157b8c12dff724fb1f6a97a0b45849e0.camel@sipsolutions.net>
-	 <ddaf2702-b33e-459c-9efd-098feba33243@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JWHafIWa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790074345; x=1821610345;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=pq6AVtR4ORZk5ZcSJKstVuSi7EmOFeHL+4+9G+hZ6H4=;
+  b=JWHafIWad9RhX1EWLem5y65vhAtIbFqj8ZKWAdgM8vzj2FpYeyJqWIT1
+   fikCRKJ+Zj27R3IuAoMgGneGEujfKwGTibx+1yesmg+eS6ljUBXoIpFWZ
+   R2xriehAhNGKOka1b5Kej+pw6qkUvRdrjOaMuWc747E/ZF45ckcBb3bnA
+   OQrLLb7t04j2FVEwPrV7vpkgHSNWFVBE5hZhceHE2PpWir6dYlrPmJfco
+   aXl0UH52VK5KdwbXDB4Wxeq1LOM21oJPZ3g6bpaZeuxOxTHxaiYJs1aYW
+   e1Icn6+Ng0l+MKUQPTVzU1w6isX1jxtcHhdQIqCXdSOEGn1l7EZYFLxQ1
+   A==;
+X-CSE-ConnectionGUID: Ga8p/dPaSxWN/olFOE1vRA==
+X-CSE-MsgGUID: AiAmHAo9RD+doHyIE9MIOQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="90533696"
+X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
+   d="scan'208";a="90533696"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 03:52:20 -0700
+X-CSE-ConnectionGUID: ed1l9JT1QlKZ6gCyFUcXug==
+X-CSE-MsgGUID: Cva9gx48RIeON7mz7Lw6bA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
+   d="scan'208";a="4186376"
+Received: from weis0040.iil.intel.com ([10.12.217.108])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 03:52:19 -0700
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 wireless-next] wifi: ieee80211: update DBE capabilities to D1.5
+Date: Tue, 22 Sep 2026 13:54:18 +0300
+Message-Id: <20260922133732.33dcc5dd3aa3.I208b63de3b6b829b2b03918395a5b069df0344a0@changeid>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2026-09-22 at 16:12 +0530, Aaradhana Sahu wrote:
->=20
-> Since all these parameters (beacon interval, DTIM period, CTS protection,
-> short preamble, and short slot time) are already populated in sta_info an=
-d
-> are visible through the iw station dump command, I only made changes for =
-the
-> AP_VLAN case, where these values are currently reported incorrectly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fair, but I suspect that they were really only there for 'iw link'?
+Despite asking for some of this to be changed in the spec
+(the addition of the additional per-160/320 capabilities)
+I forgot to include this in the D1.5 update. Fix it now.
 
-> I am not sure whether any third-party userspace application relies on the=
-se values
-> apart from iw. If we remove these parameters from the AP-side station inf=
-ormation,
-> the iw station dump output will also change. Would that be acceptable?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ include/linux/ieee80211-uhr.h | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-I don't see why not, if nothing relies on it.
+diff --git a/include/linux/ieee80211-uhr.h b/include/linux/ieee80211-uhr.h
+index 665d4b3a5b41..c46cd1689f91 100644
+--- a/include/linux/ieee80211-uhr.h
++++ b/include/linux/ieee80211-uhr.h
+@@ -427,10 +427,21 @@ ieee80211_uhr_oper_dbe_info(const struct ieee80211_uhr_operation *oper)
+ #define IEEE80211_UHR_MAC_CAP_DBE_EHT_MCS_MAP_160_PRES	0x08
+ #define IEEE80211_UHR_MAC_CAP_DBE_EHT_MCS_MAP_320_PRES	0x10
+ 
++/* struct ieee80211_uhr_cap_dbe::bwcap[].cap */
++#define IEEE80211_UHR_MAC_CAP_DBE_CAP_NUM_SND_DIMS		0x07
++#define IEEE80211_UHR_MAC_CAP_DBE_CAP_NON_OFDMA_UL_MUMIMO	0x08
++#define IEEE80211_UHR_MAC_CAP_DBE_CAP_MU_BEAMFORMER		0x10
++#define IEEE80211_UHR_MAC_CAP_DBE_CAP_BEAMFORMEE_SS		0xe0
++
+ struct ieee80211_uhr_cap_dbe {
+ 	u8 cap;
++	u8 max_switch_time_period;
++	u8 mode_change_intvl;
+ 	/* present 0, 1 or 2 times depending on _PRES bits */
+-	struct ieee80211_eht_mcs_nss_supp_bw eht_mcs_map[];
++	struct {
++		struct ieee80211_eht_mcs_nss_supp_bw eht_mcs_map;
++		u8 cap;
++	} __packed bwcap[];
+ } __packed;
+ 
+ /**
+@@ -520,10 +531,10 @@ static inline bool ieee80211_uhr_capa_size_ok(const u8 *data, u8 len,
+ 		dbe = (const void *)cap->variable;
+ 
+ 		if (dbe->cap & IEEE80211_UHR_MAC_CAP_DBE_EHT_MCS_MAP_160_PRES)
+-			needed += sizeof(dbe->eht_mcs_map[0]);
++			needed += sizeof(dbe->bwcap[0]);
+ 
+ 		if (dbe->cap & IEEE80211_UHR_MAC_CAP_DBE_EHT_MCS_MAP_320_PRES)
+-			needed += sizeof(dbe->eht_mcs_map[0]);
++			needed += sizeof(dbe->bwcap[0]);
+ 	}
+ 
+ 	return len >= needed;
+-- 
+2.34.1
 
-johannes
