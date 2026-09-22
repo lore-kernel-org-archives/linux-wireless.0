@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F39351DDEF
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 11:39:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7D8538D9B
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 11:42:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790077181; cv=none; b=HkdY7OjXRtt4ChN17rojK6dZaImA6vm4ysoTDhePHkjZ1Kfe5luDiZ5QsGLBnIr3Gw8GUCxQCJkVF2dHACruxvB3As0MhoX7PR5R6adjjTqCFDgx2sv8QEEXbowXyoPh+XW39B+Xta1vCYIeZybis5SkEBNBFk5xyTInHWZ6hFM=
+	t=1790077332; cv=none; b=cwLaniq3Ox16dPpgPDc7d0GE1uqF3MxjHCHtpVMKZWJ1FCOIPSSsKSbIdyQbvC5QM6VMoUFQayoXWYEkK2ut+psYgvVaVIBOqmHmk6CgBj/xTejL4YOYJyjCp0mhSjKbSw/2oX6bEsdPpk0JKX/GpyjbsULeJMkZZyaJB3RfvFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790077181; c=relaxed/simple;
-	bh=ZoYAsd3PyUwzaf6wlrXAinvcZfiMHEFQXY7FGkhbpRE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=I/KyyjmMqkTQC17ZZuUrA7Sn4Ibo88MHRQR0eJTLPQsnnuP5R6GteVM4CT9t63ZpXMeAWoLO8nn/vuJWSBOwKWQy5Zn8xtnvD5nsYjacO61wb/ed8bts1cPWaccegKVe9vQdInTp4ZN9WGDfNo9ThZR8q2akOSDOH2NABnWCPiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BRwBuD+0; arc=none smtp.client-ip=192.198.163.14
+	s=arc-20240116; t=1790077332; c=relaxed/simple;
+	bh=AOvxjAiX2FRLTsynE8ep23z/TkoMwZabYogr3Pp1r+A=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cYdZ05qQRpkC12U6RS12xSdQuiOPQO+hdHXuqtgQ0khpHlaxARSJiYpAMTnCBn5OQENsfzHsXnpYWqkFEE8OSNoyUWNWcMyqfKgplhbE8xOZ7l65mWqx62qjdYpQPhvwQP2G8ahFUkc7IF7TlCEHH2w2npAp/1B6pD4bdGII4h8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I0ld0465; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BRwBuD+0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I0ld0465"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790077175; x=1821613175;
+  t=1790077330; x=1821613330;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=ZoYAsd3PyUwzaf6wlrXAinvcZfiMHEFQXY7FGkhbpRE=;
-  b=BRwBuD+0P2K2i2f/imBJLNhy3hXEgzAy3cNxKND5r6q6mTQ/tTQjTyKR
-   F8nUWPahEtyrBPxpV724w06AJb33kD2CNlbcTgmTqTFarW4jgXnYQWgGk
-   emjUL4RU4GxvD/i8VflKnpCmg++oShT8fS3YsvI4RGDr1494BfNbJ4yNt
-   /u2n6giZXgdNIsQJXjOL9oklSSsTDovnSjJcq7nXBhwU4OzXpyChyjxXV
-   VwJR19h1yJCrU1UhliLsb51qXuVLCJv/42TyfBb0dwa/KqEj9mWgyI+jH
-   eyAFq4cgWTSeMAUfoIT7OTiKC6Yb7uOlgR7+NlpSyG1aDr8jes6KO2s3+
+  bh=AOvxjAiX2FRLTsynE8ep23z/TkoMwZabYogr3Pp1r+A=;
+  b=I0ld0465suh2yQ9cAfF6XansG4PIjKns5WhrSOi4/l3YZtzJQBEN4Dmf
+   EU70sCBazEGx8BL2/3frYLN1gIbxpNaGsIw0Y2aInxuEvChWs4QgvBHvw
+   BU8WKzAXt2guO4jOW8DOJWqaLPYNsFqWkwl+rwRhlVpPlcSxgnd/M86Kg
+   LljVnZRYKkRpkSUJx/JQfOhak91uG1Be0qRbUl04Iy7AiPj1+r/Z6DQX4
+   TyXkfvaXWd5L+HsmvdPKHiDL2frcdS3YS+T1gEZVLOI+UQLGqmkrlixhV
+   HXKBVYsST+BG1gfrgtd45x8/ZcthbEsafuI+axrMo3PbEeF9Gp+aw781l
    w==;
-X-CSE-ConnectionGUID: PMhGHihQQPaOecTPP+TJCA==
-X-CSE-MsgGUID: 2bDDptqhSM2C/xjUIIq4KA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="90693380"
+X-CSE-ConnectionGUID: 8a1elT4UR0OBLOBN5gXM6g==
+X-CSE-MsgGUID: bERWrjKMQjumPcLTQjqc5w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="90693724"
 X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
-   d="scan'208";a="90693380"
+   d="scan'208";a="90693724"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:39:31 -0700
-X-CSE-ConnectionGUID: s6OMr7r7SeiEPlHhQWt5WA==
-X-CSE-MsgGUID: p3wzL50sSyad+lEhriRspg==
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:42:09 -0700
+X-CSE-ConnectionGUID: qqn+w3w1ST6g5+D7oMRQEw==
+X-CSE-MsgGUID: 8y2VMz2uQnCSh1JmPGet3Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,116,1787036400"; 
-   d="scan'208";a="271653914"
+   d="scan'208";a="271654873"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:39:30 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2026 04:42:08 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Ilan Peer <ilan.peer@intel.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: Restrict probe request rates for minimal content
-Date: Tue, 22 Sep 2026 14:41:29 +0300
-Message-Id: <20260922143146.13a6fab60516.I3ebb1fa5d41622b1a0ddf9d008328fc19ad980a1@changeid>
+Subject: [PATCH wireless-next] wifi: mac80211_hwsim: Support NAN deferred schedule completion
+Date: Tue, 22 Sep 2026 14:44:03 +0300
+Message-Id: <20260922144356.81f62b390ef6.I21654fe82a0065a055a1b958297b2beb4337a1f0@changeid>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -60,59 +60,91 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-When IEEE80211_PROBE_FLAG_MIN_CONTENT is set, restrict the probe
-request supported rates per Draft P802.11bi D5.0 specification:
+Simulate firmware completing a deferred NAN schedule update in
+mac80211_hwsim by calling ieee80211_nan_sched_update_done() from a delayed
+work, so that the completion notification reaches user space after the
+update request returns, as it would with real hardware. This doesn't really
+implement the schedule update flow and doesn't announce anything to the
+peers. However, it should be good enough meanwhile for some minimal testing.
 
-- 2 GHz: only include 1, 2, 5.5, 6, 11, 12, 24 Mb/s
-- 5/6 GHz: only include 6, 12, 24 Mb/s
-
-Also skip the Extended Supported Rates element for minimal
-content probes.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Assisted-by: GitHub-Copilot:claude-opus-4-6
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/util.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ .../net/wireless/virtual/mac80211_hwsim_nan.c | 22 +++++++++++++++++++
+ .../net/wireless/virtual/mac80211_hwsim_nan.h |  3 +++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a96078a6bfa2..1b930fada529 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1283,6 +1283,29 @@ static int ieee80211_put_preq_ies_band(struct sk_buff *skb,
- 	if (band == NL80211_BAND_S1GHZ)
- 		return ieee80211_put_s1g_cap(skb, &sband->s1g_cap);
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
+index 7be64c45babf..2d9f6d7b9251 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
+@@ -906,6 +906,18 @@ mac80211_hwsim_nan_discovery_beacon_timer(struct hrtimer *timer)
+ 	return HRTIMER_RESTART;
+ }
  
-+	/*
-+	 * For EPP minimal content probes, restrict supported rates:
-+	 * - 2 GHz: only 1, 2, 5.5, 6, 11, 12, 24 Mb/s
-+	 * - 5/6 GHz: only 6, 12, 24 Mb/s
-+	 * Do not include Extended Supported Rates element.
-+	 */
-+	if (flags & IEEE80211_PROBE_FLAG_MIN_CONTENT) {
-+		for (i = 0; i < sband->n_bitrates; i++) {
-+			u16 rate = sband->bitrates[i].bitrate;
++static void
++mac80211_hwsim_nan_sched_update_work(struct wiphy *wiphy,
++				     struct wiphy_work *work)
++{
++	struct mac80211_hwsim_data *data =
++		container_of(work, struct mac80211_hwsim_data,
++			     nan.sched_update_work.work);
 +
-+			if (band == NL80211_BAND_2GHZ) {
-+				if (rate != 10 && rate != 20 &&
-+				    rate != 55 && rate != 60 &&
-+				    rate != 110 && rate != 120 &&
-+				    rate != 240)
-+					rate_mask &= ~BIT(i);
-+			} else {
-+				if (rate != 60 && rate != 120 && rate != 240)
-+					rate_mask &= ~BIT(i);
-+			}
-+		}
-+	}
++	if (data->nan.device_vif)
++		ieee80211_nan_sched_update_done(data->nan.device_vif);
++}
 +
- 	err = ieee80211_put_srates_elem(skb, sband, 0,
- 					~rate_mask, WLAN_EID_SUPP_RATES);
- 	if (err)
+ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct cfg80211_nan_conf *conf)
+@@ -922,6 +934,9 @@ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
+ 	data->nan.device_vif = vif;
+ 	data->nan.bands = conf->bands;
+ 
++	wiphy_delayed_work_init(&data->nan.sched_update_work,
++				mac80211_hwsim_nan_sched_update_work);
++
+ 	scoped_guard(spinlock_bh, &data->nan.state_lock) {
+ 		/* Start in the "scan" phase and stay there for a little bit */
+ 		data->nan.phase = MAC80211_HWSIM_NAN_PHASE_SCAN;
+@@ -960,6 +975,7 @@ int mac80211_hwsim_nan_stop(struct ieee80211_hw *hw,
+ 	hrtimer_cancel(&data->nan.slot_timer);
+ 	hrtimer_cancel(&data->nan.resume_txqs_timer);
+ 	hrtimer_cancel(&data->nan.discovery_beacon_timer);
++	wiphy_delayed_work_cancel(hw->wiphy, &data->nan.sched_update_work);
+ 	data->nan.device_vif = NULL;
+ 
+ 	return 0;
+@@ -1296,6 +1312,12 @@ void mac80211_hwsim_nan_local_sched_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	spin_unlock_bh(&data->nan.state_lock);
++
++	/* Simulate firmware completing a deferred schedule update */
++	if (vif->cfg.nan_sched.deferred)
++		wiphy_delayed_work_queue(hw->wiphy,
++					 &data->nan.sched_update_work,
++					 msecs_to_jiffies(10));
+ }
+ 
+ int mac80211_hwsim_nan_peer_sched_changed(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.h b/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
+index 81e105ac7b8e..2801a1d8dcf0 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
+@@ -59,6 +59,9 @@ struct mac80211_hwsim_nan_data {
+ 	 * available in that slot (except DW which is implicit).
+ 	 */
+ 	struct cfg80211_chan_def local_sched[CFG80211_NAN_SCHED_NUM_TIME_SLOTS];
++
++	/* Simulates the firmware completing a deferred schedule update */
++	struct wiphy_delayed_work sched_update_work;
+ };
+ 
+ enum hrtimer_restart
 -- 
 2.34.1
 
