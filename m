@@ -1,49 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD933905EC;
-	Tue, 22 Sep 2026 13:27:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A26043DEC3;
+	Tue, 22 Sep 2026 13:30:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790083677; cv=none; b=LU/YGXSx2NmvvmKKKhxxR5fmVa2DsEkjN4QH1m8Ij2oOEXjlB2FSPN/ZORcHF3BS4nFP+/LE7tMdQ2Cx+9mko8LMfwjyCD1fcFI26uAiQe6PkSyInpnfsRtIyLEzMfZt+2HUDihXQlSatCT7MyQhd/8BkF3+eblQyc4TdWSfbfo=
+	t=1790083859; cv=none; b=uLRFnNbLLewwTlIwFcduOJpt5Omgc1XmfuvOBmMU5fou9zHYebdhJAGKzfXoo77W0Ld4CYmOB089jf5eubp9TOTxBDpa3totCnD2LxcPjwdae1+RCCGOEtI5fh0aMj/mOiX297xVPmNL/RJueSWK4EcJlXcJNprgIziKazMGZI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790083677; c=relaxed/simple;
-	bh=W+zZyY+/XSoXA6X2r9Zl04xwFs+BQBcAmbZKJRydPD8=;
+	s=arc-20240116; t=1790083859; c=relaxed/simple;
+	bh=pWk+vCHIJnjvD6e1PGCGftZo7Nq+trD74kNQogbeQyI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UfKYHFPyH/sKmnGN2zWLiYhysVXxqR5Br2+xZO+R5cRJ+9eXFsYOmIWgMlbKu2bQRDMX+IpIuOWLw9ysCFDAkysTDNCYkC5vlbmDi28YgtUVy8vfLRkxakL4OmqmvlD+KqKpOktn3VVLyqKD//IDi4ED8v2//ENJ3JeCpXhLnZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FwhENWJk; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=IKvl96a172g+5vpW7SxDtbUzao08QbHn/6SYF4Oyd+FLSy3se2ZVNxYsG6kA279U+SEz088R8UBNY9CWUyIGPRCyLWsSzC5iAUfwMOC8f7wxy5UZMAKWKmlyN0gXhu5jT5HXpXzTXnETFP01bAo88G/v4RNpLh+l7RWN86ptvqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsFWXUnP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FwhENWJk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 560641F000FF;
-	Tue, 22 Sep 2026 13:27:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsFWXUnP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88BF61F000FF;
+	Tue, 22 Sep 2026 13:30:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790083676;
-	bh=ApsZVBFkcyb1C7G7ucDacbOxA5hWzpJXw9SDkNt3hYw=;
+	s=k20260515; t=1790083857;
+	bh=eZbT6bofTdrcKmONlOQZmDhDpogwkRooaTcmH+dj7Ik=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FwhENWJkUL+Ph/E/ZL08lyizsjNyTtU6O+wgwczrNQQDJdxOGDr8Xkh7SjPAAT7pT
-	 lnVQgC0Cf7WE3w8On+hyQLcfF2SrM437/whHiUMkQ3DZtWaY8x2ToWjM1eUJQ5ZQZY
-	 qMGenCbLjWe/h8ax5QShb0raOqc+uLsvhMjUCplAmP2hyChI4W5FuhbPGSJc7+Myu0
-	 FkP91zRSSM5mBvItuthSEdtgzWn/vG+JCEVXQ+/kjKJpIEO9ntAyiqHGASa28we9o1
-	 GyOqxEu+9kDUVOGhOnH/9/vyu3oPSD1+i/12DF7cfNd1/hg/r2bHQ5lDI1tq4P9xOh
-	 4HzsuT7Wof19g==
-Date: Tue, 22 Sep 2026 15:27:45 +0200
+	b=WsFWXUnP8NJVnX0eK28aiT7KS95kdrLG0pScdcm5eDf+dFcDv4a1g8FAVTo5Wm5Eq
+	 GEwbruXLERl1GXQQcnd2h4mpiYdxVI6/a/JbLc7htw7f53T9A85W2+3XYlm/Co090L
+	 glSGKATH79oJe1Fw69eI+zPzntl9rpUaCEfRLMHbCdERSkSiXbi2uXpJW7yg/J7o0H
+	 Lv68lAtn/8dCIDvbRKMAgdaKO7IeF0HRZH670xonOyBPVynsbW3Ek3E7vCWHh/ZLC5
+	 0bRxs/2CfZ1UTKv+MrnbfOSlFVSi4T3jsqZh8WM8ucork6iOamSVE8Wb5jrZIivjbe
+	 q65xIIOZaiqUQ==
+Date: Tue, 22 Sep 2026 15:30:48 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Cc: "David S. Miller" <davem@davemloft.net>, 
+To: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
+Cc: "David S . Miller" <davem@davemloft.net>, 
 	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
 	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
 	Jeff Johnson <jjohnson@kernel.org>, linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
 	ath12k@lists.infradead.org, Bjorn Andersson <andersson@kernel.org>, 
 	Chris Lew <christopher.lew@oss.qualcomm.com>, Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>, 
-	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, Juha-Matti Tilli <juha-matti.tilli@iki.fi>, 
-	Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-Subject: Re: [PATCH v2 3/4] wifi: ath11k: Connect to the QMI server belonging
+	Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, Jeff Hugo <jeff.hugo@oss.qualcomm.com>
+Subject: Re: [PATCH v2 4/4] wifi: ath12k: Connect to the QMI server belonging
  to the device owned by this driver
-Message-ID: <irhurowbxxpxrg7j3f4onxboxoxzj5jszyuq5ex5osedmx5k4u@r4d365t6kpze>
+Message-ID: <g63vg7ho5al6f2hfxbgssrisnjl5ui6isxlrv3265ocatvdmay@anmhz3vcxcbo>
 References: <20260921-qrtr-multi-ep-v2-0-27dd80d841a0@oss.qualcomm.com>
- <20260921-qrtr-multi-ep-v2-3-27dd80d841a0@oss.qualcomm.com>
- <3f31a185-b7ba-4ae4-a3c3-874bac0d66b3@oss.qualcomm.com>
+ <20260921-qrtr-multi-ep-v2-4-27dd80d841a0@oss.qualcomm.com>
+ <e7e8a499-9e89-4efa-a99f-18ce7dc37ab5@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,15 +52,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3f31a185-b7ba-4ae4-a3c3-874bac0d66b3@oss.qualcomm.com>
+In-Reply-To: <e7e8a499-9e89-4efa-a99f-18ce7dc37ab5@app.fastmail.com>
 
-On Tue, Sep 22, 2026 at 04:32:07PM +0530, Vasanthakumar Thiagarajan wrote:
-> 
-> 
-> On 9/21/2026 4:53 PM, Manivannan Sadhasivam via B4 Relay wrote:
+On Tue, Sep 22, 2026 at 02:43:05PM +0300, Juha-Matti Tilli wrote:
+> On Mon, Sep 21, 2026, at 14:23, Manivannan Sadhasivam via B4 Relay wrote:
 > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > > 
-> > When two identical ath11k PCIe devices are connected to the same host, both
+> > When two identical ath12k PCIe devices are connected to the same host, both
 > > advertise the WLFW service with the same service and instance id. The QMI
 > > lookup reports both servers to each device, so a device may connect to the
 > > firmware running on the other device.
@@ -73,66 +70,55 @@ On Tue, Sep 22, 2026 at 04:32:07PM +0530, Vasanthakumar Thiagarajan wrote:
 > > that do not assign one. In the new_server callback, skip any service whose
 > > node id does not match. A node id of zero disables the check, so transports
 > > that do not assign one keep their current behavior.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >   drivers/net/wireless/ath/ath11k/hif.h |  9 +++++++++
-> >   drivers/net/wireless/ath/ath11k/pci.c |  9 +++++++++
-> >   drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++++++
-> >   3 files changed, 28 insertions(+)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
-> > index 017fed1b4bd1..0da9025c7ed8 100644
-> > --- a/drivers/net/wireless/ath/ath11k/hif.h
-> > +++ b/drivers/net/wireless/ath/ath11k/hif.h
-> > @@ -32,6 +32,7 @@ struct ath11k_hif_ops {
-> >   	void (*ce_irq_disable)(struct ath11k_base *ab);
-> >   	void (*get_ce_msi_idx)(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
-> >   	void (*coredump_download)(struct ath11k_base *ab);
-> > +	int (*get_qrtr_node_id)(struct ath11k_base *ab);
-> >   };
-> >   static inline void ath11k_hif_ce_irq_enable(struct ath11k_base *ab)
-> > @@ -159,4 +160,12 @@ static inline void ath11k_hif_coredump_download(struct ath11k_base *ab)
-> >   		ab->hif.ops->coredump_download(ab);
-> >   }
-> > +static inline int ath11k_hif_get_qrtr_node_id(struct ath11k_base *ab)
-> > +{
-> > +	if (!ab->hif.ops->get_qrtr_node_id)
-> > +		return 0;
-> > +
-> > +	return ab->hif.ops->get_qrtr_node_id(ab);
-> > +}
-> > +
-> >   #endif /* _HIF_H_ */
-> > diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-> > index a163168f3617..4d327b5cc98a 100644
-> > --- a/drivers/net/wireless/ath/ath11k/pci.c
-> > +++ b/drivers/net/wireless/ath/ath11k/pci.c
-> > @@ -10,6 +10,7 @@
-> >   #include <linux/of.h>
-> >   #include <linux/time.h>
-> >   #include <linux/vmalloc.h>
-> > +#include <net/qrtr.h>
-> >   #include "pci.h"
-> >   #include "core.h"
-> > @@ -900,6 +901,13 @@ static int ath11k_pci_start(struct ath11k_base *ab)
-> >   	return 0;
-> >   }
-> > +static int ath11k_pci_get_qrtr_node_id(struct ath11k_base *ab)
-> > +{
-> > +	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
-> > +
-> > +	return qrtr_host_node_id(ab_pci->mhi_ctrl->index);
 > 
-> nit: since qrtr_host_node_id() returns node_id in unsigned int,
-> may be maintain that in the return type of the callers as well.
-> Mostly harmless as it is unlikely that node_id is allocated with
-> an extremely high id. Either way is fine with me. Same applicable
-> for ath12k patch as well.
+> Tested-by: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
+> Tested-on: 2x WCN7850 hw2.0 WLAN.IOE_HMT.1.1-00018-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1
+> Tested-on: 1x WCN6855 ath11k + 1x WCN7850 ath12k
+> 
+> I'm having some issues with regdb on ath12k cards so I had to test using
+> the low-frequency 2.4GHz channels. I tried updating linux-firmware to
+> 20260810 to match my 6.12.110+multi-QRTR kernel, didn't help. The error
+> is:
+> 
+> ath12k_pci 0001:01:00.0: No reg rules available
+> ath12k_pci 0001:01:00.0: failed to extract regulatory info from received event
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 12 at /drivers/net/wireless/ath/ath12k/wmi.c:5841 ath12k_reg_chan_list_event+0x171/0x1e0 [ath12k]
+> Modules linked in: xt_gmmark(O) xt_bemark(O) w24e2identificator(O) qrtr_mhi ath12k mhi qmi_helpers mac80211 libarc4 cfg80211
+> CPU: 0 UID: 0 PID: 12 Comm: kworker/u8:0 Tainted: G           O       6.12.110-yocto-standard-gec77603762c7 #1
+> Tainted: [O]=OOT_MODULE
+> Hardware name: Freescale LS1021A
+> Workqueue: ath12k_qmi_driver_event ath12k_qmi_driver_event_work [ath12k]
+> Call trace: 
+>  unwind_backtrace from show_stack+0xb/0xc
+>  show_stack from dump_stack_lvl+0x35/0x40
+>  dump_stack_lvl from __warn+0xaf/0xb0
+>  __warn from warn_slowpath_fmt+0xe5/0xe8
+>  warn_slowpath_fmt from ath12k_reg_chan_list_event+0x171/0x1e0 [ath12k]
+>  ath12k_reg_chan_list_event [ath12k] from ath12k_wmi_op_rx+0x219/0xc08 [ath12k]
+>  ath12k_wmi_op_rx [ath12k] from ath12k_htc_rx_completion_handler+0x215/0x2d4 [ath12k]
+>  ath12k_htc_rx_completion_handler [ath12k] from ath12k_ce_recv_process_cb+0x149/0x198 [ath12k]
+>  ath12k_ce_recv_process_cb [ath12k] from ath12k_pci_ce_tasklet+0x13/0x28 [ath12k]
+>  ath12k_pci_ce_tasklet [ath12k] from tasklet_action_common+0x87/0xa8
+>  tasklet_action_common from handle_softirqs+0xbf/0x1b4
+>  handle_softirqs from irq_exit+0x55/0x78
+>  irq_exit from call_with_stack+0xd/0x10
+> ---[ end trace 0000000000000000 ]---
+> 
+> This error happens with 2x ath12k and 1x ath12k 1x ath11k too.
+> 
+> But, the dual ath12k setup works, and the errors are entirely different
+> than what QRTR node id clash does.
+> 
+> So, I believe the patch works.
 > 
 
-Thanks for spotting it. For the sake of correctness, it makes sense to use same
-type everywhere. I'll fix it in next version.
+Thanks a lot for testing. I asked our WLAN team member to test this series on
+multi-ath12k setup and found one issue with QRTR_TYPE_RESUME_TX. After fixing
+it, multi-ath12k setup works fine.
+
+I'll submit v3 with that fix. Please give it a shot on this setup, one final
+time :) Appreciate your help here.
 
 - Mani
 
