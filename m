@@ -1,45 +1,45 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76585530E10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AF0852E07E
 	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 10:13:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790072034; cv=none; b=cLdzXqbamGz19lBbtfMVIGoDlkKk4BNjEexjwERKnMKEvy2Abgtq2I086hts2gUATA58AZlG+uzPOhlke17piaKIIlKfCpazPaxJxqjwszTAoUBHBvar2pVh1AQU7DJgn1PRqKk6QBmVHgwMi2UecObPFec8qgnsoJcGH1eewz8=
+	t=1790072034; cv=none; b=I8Dbevpi4HmZXgXQWAXIjUa+ZeA5KoJUe7C6jwWAmeGOSJVWp4rgkQy6T4jnQPfwycMUY5gVj8ECu6qTIPhBBLRUiQ1+0Xw5k8tfkx6KD509brVmmFTkOCasBTQADCqlwm5YhwTGHmTQnA5oC5O61y5s/haBfLF1gLksLm3HEDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790072034; c=relaxed/simple;
-	bh=iBFDWe32h34GBlp4UVMbity/wYuKZKp7fqIQdv4HLKQ=;
+	bh=zYwoYGzHcco9r7izR/A9aWFi65jHTY1PfIR9AT6whFk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EMEqnl8jUsoBYu2Farq4mR6mhtec/lnDYc4lF3hJlZXXRZS2vIdoFea/G2vgkTSIXj2Bukd7ODgqRNss8QG0V4qmQ1g4tMWznXizTna/F6FywSk2cuplkF3P5edobss/Gr4wk3f4A1K3znJqRF02Nt4b3h+1aQzXbCSVBzUmPQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=i2B+RIYD; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=BlQxp4VtyAKFQJfjCIusnFg7LdiwJdOBKdM5/HGLluIEfCwXUM9Fy+AqpKIVFDdmYXIHeP+PSgi0+QxIiW/0HeDrucOd89jHsvM47Q0/3ydhp0elURjDUMMJrel3jJ1a0+RsmGxkz2FaiAh/x7hrh+21HG4rOaezzIVXEhbMccw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ZyXxDKZ6; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="i2B+RIYD"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZyXxDKZ6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=CMb6o0Wb3BfHSxXYZ2ONTLOk4DQOPGz0jt1nAm8BBTQ=; b=i2B+RIYDOp9/A3ZWmLd4CXZh5U
-	XQuyvBOD76J6hmKuo7Z8HBZo/St9zbPSAP385yV1MjDF0dp2IW8igrildzunnyiMaHy4CSixUiZ8t
-	VUJIESnQU/+CtU0hBstqe+fW46CRaznyVcJ8DX0AuXTONAVa7YmD0EFAa/R0rIFRC/XI=;
+	bh=NfkNbprlL4vVx9ccloq4Mr1K39h2p/osTUHrbytxqAc=; b=ZyXxDKZ6004jkjqO1U5FSssPFW
+	MQet9HkY24uYwvb4DtKMq0UCK5GUHd2/LUlRQ1qbb5a/Id4lnhZjoCkn0xEDvyECNqbE2FYLoKlnp
+	y57/mBzH4ro8I/sfsK3cxrh5S39gqKvAXllEIOjXQEk971xF6ZWtfSUBaYT79LBPzv/A=;
 Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x8xVT-00807z-2Q;
-	Tue, 22 Sep 2026 12:13:47 +0200
+	id 1x8xVU-00807z-0s;
+	Tue, 22 Sep 2026 12:13:48 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	vivek.chettri@oss.qualcomm.com,
 	bhagavathi.pillai@oss.qualcomm.com,
 	ripan.deuri@oss.qualcomm.com
-Subject: [RFC PATCH v2 07/16] wifi: cfg80211: add SCS and MSCS configuration commands
-Date: Tue, 22 Sep 2026 12:13:34 +0200
-Message-ID: <2ec369dde51b73e74272d9e8184b91536067a745.1790071773.git-series.nbd@nbd.name>
+Subject: [RFC PATCH v2 09/16] wifi: mac80211: add SCS and MSCS rule storage
+Date: Tue, 22 Sep 2026 12:13:36 +0200
+Message-ID: <d593b4de1428b474a31b20535d4db77e5e3d0e10.1790071773.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.5f82cb9d25f8f1b63e1994e64a6e9dac538e0ac8.1790071773.git-series.nbd@nbd.name>
 References: <cover.5f82cb9d25f8f1b63e1994e64a6e9dac538e0ac8.1790071773.git-series.nbd@nbd.name>
@@ -51,631 +51,359 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add NL80211_CMD_SET_SCS and NL80211_CMD_SET_MSCS, which install the
-stream classification that a peer requested. Userspace exchanges the
-action frames, holds the dialog tokens and decides the admission
-policy. The commands pass the request down and reply with the status
-code of each descriptor, from which userspace builds the response.
+Implement the set_scs and set_mscs cfg80211 ops and store the result
+per station under RCU, for the transmit and receive paths that follow.
 
-The TCLAS, TCLAS Mask and QoS Characteristics elements are passed as
-raw elements, so that cfg80211 holds the only parser. A malformed or
-unsupported element came from the air, so it is answered with a status
-code in the reply and the netlink return stays zero. A netlink error is
-reserved for what the caller built itself, such as a missing SCSID or
-request type, or a TCLAS Mask that contradicts the request type.
+A request edits the rule set of one station, so the result combines
+its descriptors with those of earlier requests. Rebuild the set as a
+whole into a single allocation that holds the rules and their QoS
+Characteristics octets, so that a reader holds one pointer with one
+lifetime.
 
-A removal names only an SCSID, so its elements are not parsed. Parsing
-them would let a malformed classifier decline the removal, and the
-stream that the peer asked to tear down would stay installed.
-
-SCS also accepts a station interface, which installs the traffic
-description of its own uplink stream. MSCS does not, since only an AP
-mirrors an uplink priority onto the downlink.
+An accepted removal is answered with TCLAS_PROCESSING_TERMINATED, the
+status code reserved for it, whether or not a rule with that SCSID
+existed.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/linux/ieee80211.h    |   3 +-
- include/uapi/linux/nl80211.h |  88 +++++++-
- net/wireless/nl80211.c       | 425 ++++++++++++++++++++++++++++++++++++-
- 3 files changed, 516 insertions(+)
+ net/mac80211/Makefile      |   3 +-
+ net/mac80211/cfg.c         |   2 +-
+ net/mac80211/ieee80211_i.h |   8 +-
+ net/mac80211/scs.c         | 203 ++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.c    |   1 +-
+ net/mac80211/sta_info.h    |  38 +++++++-
+ 6 files changed, 254 insertions(+), 1 deletion(-)
+ create mode 100644 net/mac80211/scs.c
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 722043d8bb2e..4990db36cd54 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1501,6 +1501,9 @@ enum ieee80211_statuscode {
- 	WLAN_STATUS_NO_DIRECT_LINK = 48,
- 	WLAN_STATUS_STA_NOT_PRESENT = 49,
- 	WLAN_STATUS_STA_NOT_QSTA = 50,
-+	WLAN_STATUS_REQUESTED_TCLAS_NOT_SUPPORTED_BY_AP = 56,
-+	WLAN_STATUS_INSUFFICIENT_TCLAS_PROCESSING_RESOURCES = 57,
-+	WLAN_STATUS_TCLAS_PROCESSING_TERMINATED = 97,
- 	/* 802.11s */
- 	WLAN_STATUS_ANTI_CLOG_REQUIRED = 76,
- 	WLAN_STATUS_FCG_NOT_SUPP = 78,
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7fff9ae133e9..ecb11739c5b7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1427,6 +1427,18 @@
-  * @NL80211_CMD_STOP_PD: Stop the PD operation, identified by
-  *	its %NL80211_ATTR_WDEV interface.
-  *
-+ * @NL80211_CMD_SET_SCS: Add, change or remove stream classification service
-+ *	descriptors of the peer given by %NL80211_ATTR_MAC, as requested in an
-+ *	SCS Request frame. The descriptors are in
-+ *	%NL80211_ATTR_SCS_DESCRIPTORS. The reply repeats the attribute with
-+ *	the identifier and the status code of each descriptor. A declined
-+ *	descriptor does not make the command fail.
-+ * @NL80211_CMD_SET_MSCS: Install, change or remove the mirrored stream
-+ *	classification service of the peer given by %NL80211_ATTR_MAC, as
-+ *	requested in an MSCS Request frame or a (Re)Association Request. The
-+ *	parameters are in %NL80211_ATTR_MSCS_DESCRIPTOR. The reply carries
-+ *	the status code in %NL80211_ATTR_STATUS_CODE.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1705,6 +1717,9 @@ enum nl80211_commands {
- 	NL80211_CMD_START_PD,
- 	NL80211_CMD_STOP_PD,
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 36f1e3e2222b..8f8729e44c5f 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -35,7 +35,8 @@ mac80211-y := \
+ 	tdls.o \
+ 	ocb.o \
+ 	airtime.o \
+-	eht.o uhr.o nan.o
++	eht.o uhr.o nan.o \
++	scs.o
  
-+	NL80211_CMD_SET_SCS,
-+	NL80211_CMD_SET_MSCS,
+ mac80211-$(CONFIG_MAC80211_LEDS) += led.o
+ mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a1753335eb9d..04c5947718c3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -6073,6 +6073,8 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.end_cac = ieee80211_end_cac,
+ 	.channel_switch = ieee80211_channel_switch,
+ 	.set_qos_map = ieee80211_set_qos_map,
++	.set_scs = ieee80211_set_scs,
++	.set_mscs = ieee80211_set_mscs,
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 10767666c45c..ff4b17f2d7b6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2214,6 +2214,14 @@ void ieee80211_recalc_txpower(struct ieee80211_link_data *link,
+ 			      bool update_bss);
+ void ieee80211_recalc_offload(struct ieee80211_local *local);
+ 
++/* SCS and MSCS */
++int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
++		      const u8 *peer, struct cfg80211_scs_desc * const *desc,
++		      struct cfg80211_scs_result *res, u8 n_desc);
++int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
++		       const u8 *peer, struct cfg80211_mscs_desc *desc);
++void ieee80211_sta_scs_free(struct sta_info *sta);
 +
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -3190,6 +3205,12 @@ enum nl80211_commands {
-  *	known station to transmit a frame. This is relevant to know whether
-  *	MLD address translation happened or to disable it when sending a frame.
-  *
-+ * @NL80211_ATTR_SCS_DESCRIPTORS: Nested array of SCS descriptors, each one a
-+ *	nested set of &enum nl80211_scs_desc_attr attributes. Used with
-+ *	%NL80211_CMD_SET_SCS in both directions.
-+ * @NL80211_ATTR_MSCS_DESCRIPTOR: Nested set of &enum nl80211_mscs_desc_attr
-+ *	attributes. Used with %NL80211_CMD_SET_MSCS.
+ /* link handling */
+ void ieee80211_link_setup(struct ieee80211_link_data *link);
+ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/scs.c b/net/mac80211/scs.c
+new file mode 100644
+index 000000000000..b8e9fe062ff5
+--- /dev/null
++++ b/net/mac80211/scs.c
+@@ -0,0 +1,203 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Stream classification service (SCS) and mirrored SCS (MSCS)
 + *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3792,6 +3813,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_FRAME_NO_STA,
- 
-+	NL80211_ATTR_SCS_DESCRIPTORS,
-+	NL80211_ATTR_MSCS_DESCRIPTOR,
++ * Copyright (C) 2026 Felix Fietkau <nbd@nbd.name>
++ */
++#include <linux/ieee80211.h>
++#include <net/cfg80211.h>
++#include "ieee80211_i.h"
++#include "sta_info.h"
 +
- 	/* add attributes here, update the policy in nl80211.c */
++/* An hour, in TUs of 1024 microseconds */
++#define IEEE80211_MSCS_TIMEOUT_MAX_TU	3515625
++
++static size_t ieee80211_scs_rule_size(const struct cfg80211_scs_desc *desc)
++{
++	return ALIGN(struct_size(desc, tclas, desc->n_tclas) +
++		     desc->qos_char_len, __alignof__(*desc));
++}
++
++static void *ieee80211_scs_rule_copy(const struct cfg80211_scs_desc *src,
++				     void *pos)
++{
++	size_t len = struct_size(src, tclas, src->n_tclas);
++	struct cfg80211_scs_desc *dst = pos;
++
++	memcpy(dst, src, len);
++	pos += len;
++
++	if (src->qos_char_len) {
++		memcpy(pos, src->qos_char, src->qos_char_len);
++		dst->qos_char = pos;
++	} else {
++		dst->qos_char = NULL;
++	}
++
++	return PTR_ALIGN(pos + src->qos_char_len, __alignof__(*dst));
++}
++
++static u8 ieee80211_scs_rule_find(struct cfg80211_scs_desc * const *rule,
++				  u8 n_rules, u8 id)
++{
++	u8 i;
++
++	for (i = 0; i < n_rules; i++)
++		if (rule[i]->id == id)
++			break;
++
++	return i;
++}
++
++/* @rule points into the old set and into the request, so copy each rule */
++static struct ieee80211_scs_sta *
++ieee80211_scs_sta_build(struct cfg80211_scs_desc * const *rule, u8 n_rules)
++{
++	struct ieee80211_scs_sta *scs;
++	size_t head, size;
++	void *pos;
++	u8 i;
++
++	if (!n_rules)
++		return NULL;
++
++	head = ALIGN(struct_size(scs, rule, n_rules), __alignof__(**rule));
++
++	size = head;
++	for (i = 0; i < n_rules; i++)
++		size += ieee80211_scs_rule_size(rule[i]);
++
++	/* 255 rules with 255 classifiers each exceed what kmalloc hands out */
++	scs = kvzalloc(size, GFP_KERNEL);
++	if (!scs)
++		return ERR_PTR(-ENOMEM);
++
++	/* Set before the array is filled, for __counted_by() */
++	scs->n_rules = n_rules;
++
++	pos = (void *)scs + head;
++	for (i = 0; i < n_rules; i++) {
++		scs->rule[i] = pos;
++		pos = ieee80211_scs_rule_copy(rule[i], pos);
++	}
++
++	return scs;
++}
++
++int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
++		      const u8 *peer, struct cfg80211_scs_desc * const *desc,
++		      struct cfg80211_scs_result *res, u8 n_desc)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_scs_sta *scs, *old;
++	struct cfg80211_scs_desc **rule;
++	struct sta_info *sta;
++	u8 i, n_rules = 0;
++
++	lockdep_assert_wiphy(wiphy);
++
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta)
++		return -ENOENT;
++
++	old = wiphy_dereference(wiphy, sta->scs);
++
++	/* One rule per SCSID bounds the size of the new set */
++	rule = kcalloc((old ? old->n_rules : 0) + n_desc, sizeof(*rule),
++		       GFP_KERNEL);
++	if (!rule)
++		return -ENOMEM;
++
++	if (old) {
++		n_rules = old->n_rules;
++		memcpy(rule, old->rule, n_rules * sizeof(*rule));
++	}
++
++	for (i = 0; i < n_desc; i++) {
++		u8 at = ieee80211_scs_rule_find(rule, n_rules, desc[i]->id);
++
++		if (desc[i]->req_type == NL80211_SCS_REQ_REMOVE) {
++			/* A removal is answered even when no rule matched */
++			res[i].status = WLAN_STATUS_TCLAS_PROCESSING_TERMINATED;
++
++			if (at < n_rules) {
++				n_rules--;
++				memmove(&rule[at], &rule[at + 1],
++					(n_rules - at) * sizeof(*rule));
++			}
++
++			continue;
++		}
++
++		if (at < n_rules)
++			rule[at] = desc[i];
++		else
++			rule[n_rules++] = desc[i];
++	}
++
++	scs = ieee80211_scs_sta_build(rule, n_rules);
++	kfree(rule);
++	if (IS_ERR(scs))
++		return PTR_ERR(scs);
++
++	rcu_assign_pointer(sta->scs, scs);
++	if (old)
++		kvfree_rcu(old, rcu_head);
++
++	return 0;
++}
++
++int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
++		       const u8 *peer, struct cfg80211_mscs_desc *desc)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_mscs_sta *mscs = NULL, *old;
++	struct sta_info *sta;
++	u32 tu;
++
++	lockdep_assert_wiphy(wiphy);
++
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta)
++		return -ENOENT;
++
++	if (desc->req_type != NL80211_SCS_REQ_REMOVE) {
++		mscs = kzalloc_obj(*mscs);
++		if (!mscs)
++			return -ENOMEM;
++
++		mscs->layout = desc->fields;
++		mscs->up_bitmap = desc->up_bitmap;
++		mscs->up_limit = desc->up_limit;
++
++		/*
++		 * Cap at an hour to keep tu * 1024 within the unsigned int
++		 * that usecs_to_jiffies() takes. A timeout of zero jiffies
++		 * would expire an entry at the next collection.
++		 */
++		tu = min(desc->stream_timeout, IEEE80211_MSCS_TIMEOUT_MAX_TU);
++		mscs->timeout = max(1UL, usecs_to_jiffies(tu * 1024));
++	}
++
++	old = wiphy_dereference(wiphy, sta->mscs);
++	rcu_assign_pointer(sta->mscs, mscs);
++	if (old)
++		kfree_rcu(old, rcu_head);
++
++	return 0;
++}
++
++void ieee80211_sta_scs_free(struct sta_info *sta)
++{
++	struct ieee80211_mscs_sta *mscs;
++	struct ieee80211_scs_sta *scs;
++
++	/* Nothing can reach the station any more, so no lock is needed */
++	scs = rcu_dereference_raw(sta->scs);
++	RCU_INIT_POINTER(sta->scs, NULL);
++	kvfree(scs);
++
++	mscs = rcu_dereference_raw(sta->mscs);
++	RCU_INIT_POINTER(sta->mscs, NULL);
++	kfree(mscs);
++}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index fdf00cbf49d8..e14d78b002f1 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -508,6 +508,7 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ 	kfree(sta->mesh);
+ #endif
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -6095,6 +6119,70 @@ enum nl80211_scs_req_type {
++	ieee80211_sta_scs_free(sta);
+ 	sta_info_free_link(&sta->deflink);
+ 	kfree(sta);
+ }
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index ee0d32877c5b..2682b3095474 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -635,6 +635,39 @@ struct ieee80211_sta_removed_link_stats {
  };
  
  /**
-+ * enum nl80211_scs_desc_attr - one SCS descriptor
++ * struct ieee80211_scs_sta - the SCS rule set of one station
 + *
-+ * @__NL80211_SCS_DESC_ATTR_INVALID: invalid
-+ * @NL80211_SCS_DESC_ATTR_ID: SCSID (u8, 1 to 255)
-+ * @NL80211_SCS_DESC_ATTR_REQ_TYPE: request type (u8, see
-+ *	&enum nl80211_scs_req_type)
-+ * @NL80211_SCS_DESC_ATTR_UP: user priority to assign to a matching MSDU
-+ *	(u8, 0 to 7), from the Intra-Access Category Priority element.
-+ *	Required for a downlink descriptor or one without
-+ *	%NL80211_SCS_DESC_ATTR_QOS_CHAR, and rejected otherwise.
-+ * @NL80211_SCS_DESC_ATTR_TCLAS: one or more TCLAS elements and at most one
-+ *	TCLAS Processing element (binary), as received over the air
-+ * @NL80211_SCS_DESC_ATTR_QOS_CHAR: the whole QoS Characteristics element
-+ *	(binary), header included, as received over the air
-+ * @NL80211_SCS_DESC_ATTR_STATUS: IEEE status code (u16), kernel to userspace
++ * @rcu_head: for freeing
++ * @n_rules: number of entries in @rule
++ * @rule: the active descriptors, in the order they were installed
 + *
-+ * @__NL80211_SCS_DESC_ATTR_AFTER_LAST: internal use
-+ * @NL80211_SCS_DESC_ATTR_MAX: highest attribute
++ * One allocation holds this structure, the descriptors it points to and their
++ * QoS Characteristics octets, so the whole set has one lifetime.
 + */
-+enum nl80211_scs_desc_attr {
-+	__NL80211_SCS_DESC_ATTR_INVALID,
-+	NL80211_SCS_DESC_ATTR_ID,
-+	NL80211_SCS_DESC_ATTR_REQ_TYPE,
-+	NL80211_SCS_DESC_ATTR_UP,
-+	NL80211_SCS_DESC_ATTR_TCLAS,
-+	NL80211_SCS_DESC_ATTR_QOS_CHAR,
-+	NL80211_SCS_DESC_ATTR_STATUS,
-+
-+	__NL80211_SCS_DESC_ATTR_AFTER_LAST,
-+	NL80211_SCS_DESC_ATTR_MAX = __NL80211_SCS_DESC_ATTR_AFTER_LAST - 1
++struct ieee80211_scs_sta {
++	struct rcu_head rcu_head;
++	u8 n_rules;
++	struct cfg80211_scs_desc *rule[] __counted_by(n_rules);
 +};
 +
 +/**
-+ * enum nl80211_mscs_desc_attr - the MSCS of one peer
++ * struct ieee80211_mscs_sta - the MSCS of one station
 + *
-+ * @__NL80211_MSCS_DESC_ATTR_INVALID: invalid
-+ * @NL80211_MSCS_DESC_ATTR_REQ_TYPE: request type (u8, see
-+ *	&enum nl80211_scs_req_type)
-+ * @NL80211_MSCS_DESC_ATTR_UP_BITMAP: user priorities that the AP learns
-+ *	from, one bit each (u8)
-+ * @NL80211_MSCS_DESC_ATTR_UP_LIMIT: ceiling for the assigned user priority
-+ *	(u8, 0 to 7)
-+ * @NL80211_MSCS_DESC_ATTR_STREAM_TIMEOUT: minimum lifetime of a learned
-+ *	value, in TUs (u32)
-+ * @NL80211_MSCS_DESC_ATTR_TCLAS_MASK: one or more TCLAS Mask elements
-+ *	(binary), as received over the air. Required for add and change,
-+ *	rejected for remove.
-+ *
-+ * @__NL80211_MSCS_DESC_ATTR_AFTER_LAST: internal use
-+ * @NL80211_MSCS_DESC_ATTR_MAX: highest attribute
++ * @rcu_head: for freeing
++ * @layout: classifier parameters, a bitmap of &enum cfg80211_flow_field
++ * @up_bitmap: user priorities that the AP learns from, one bit each
++ * @up_limit: ceiling for the assigned user priority
++ * @timeout: minimum lifetime of a learned value, in jiffies
 + */
-+enum nl80211_mscs_desc_attr {
-+	__NL80211_MSCS_DESC_ATTR_INVALID,
-+	NL80211_MSCS_DESC_ATTR_REQ_TYPE,
-+	NL80211_MSCS_DESC_ATTR_UP_BITMAP,
-+	NL80211_MSCS_DESC_ATTR_UP_LIMIT,
-+	NL80211_MSCS_DESC_ATTR_STREAM_TIMEOUT,
-+	NL80211_MSCS_DESC_ATTR_TCLAS_MASK,
-+
-+	__NL80211_MSCS_DESC_ATTR_AFTER_LAST,
-+	NL80211_MSCS_DESC_ATTR_MAX = __NL80211_MSCS_DESC_ATTR_AFTER_LAST - 1
++struct ieee80211_mscs_sta {
++	struct rcu_head rcu_head;
++	u32 layout;
++	u8 up_bitmap;
++	u8 up_limit;
++	unsigned long timeout;
 +};
 +
 +/**
-  * enum nl80211_tid_config - TID config state
-  * @NL80211_TID_CONFIG_ENABLE: Enable config for the TID
-  * @NL80211_TID_CONFIG_DISABLE: Disable config for the TID
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 85c010793c53..b7a16a478ad0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -624,6 +624,31 @@ sar_policy[NL80211_SAR_ATTR_MAX + 1] = {
- 	[NL80211_SAR_ATTR_SPECS] = NLA_POLICY_NESTED_ARRAY(sar_specs_policy),
- };
+  * struct sta_info - STA information
+  *
+  * This structure collects information about a station that
+@@ -694,6 +727,8 @@ struct ieee80211_sta_removed_link_stats {
+  *
+  * @fast_tx: TX fastpath information
+  * @fast_rx: RX fastpath information
++ * @scs: SCS rule set, or %NULL
++ * @mscs: MSCS parameters, or %NULL
+  * @tdls_chandef: a TDLS peer can have a wider chandef that is compatible to
+  *	the BSS one.
+  * @frags: fragment cache
+@@ -730,6 +765,9 @@ struct sta_info {
+ 	struct ieee80211_fast_tx __rcu *fast_tx;
+ 	struct ieee80211_fast_rx __rcu *fast_rx;
  
-+/*
-+ * The element parsers validate the binary attributes, so that a malformed
-+ * element is answered with a status code instead of a netlink error.
-+ */
-+static const struct nla_policy
-+nl80211_scs_desc_policy[NL80211_SCS_DESC_ATTR_MAX + 1] = {
-+	[NL80211_SCS_DESC_ATTR_ID] = NLA_POLICY_MIN(NLA_U8, 1),
-+	[NL80211_SCS_DESC_ATTR_REQ_TYPE] =
-+		NLA_POLICY_MAX(NLA_U8, NL80211_SCS_REQ_CHANGE),
-+	[NL80211_SCS_DESC_ATTR_UP] = NLA_POLICY_MAX(NLA_U8, 7),
-+	[NL80211_SCS_DESC_ATTR_TCLAS] = { .type = NLA_BINARY },
-+	[NL80211_SCS_DESC_ATTR_QOS_CHAR] = { .type = NLA_BINARY },
-+	[NL80211_SCS_DESC_ATTR_STATUS] = { .type = NLA_REJECT },
-+};
-+
-+static const struct nla_policy
-+nl80211_mscs_desc_policy[NL80211_MSCS_DESC_ATTR_MAX + 1] = {
-+	[NL80211_MSCS_DESC_ATTR_REQ_TYPE] =
-+		NLA_POLICY_MAX(NLA_U8, NL80211_SCS_REQ_CHANGE),
-+	[NL80211_MSCS_DESC_ATTR_UP_BITMAP] = { .type = NLA_U8 },
-+	[NL80211_MSCS_DESC_ATTR_UP_LIMIT] = NLA_POLICY_MAX(NLA_U8, 7),
-+	[NL80211_MSCS_DESC_ATTR_STREAM_TIMEOUT] = { .type = NLA_U32 },
-+	[NL80211_MSCS_DESC_ATTR_TCLAS_MASK] = { .type = NLA_BINARY },
-+};
-+
- static const struct nla_policy
- nl80211_mbssid_config_policy[NL80211_MBSSID_CONFIG_ATTR_MAX + 1] = {
- 	[NL80211_MBSSID_CONFIG_ATTR_MAX_INTERFACES] = NLA_POLICY_MIN(NLA_U8, 2),
-@@ -1098,6 +1123,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 		NLA_POLICY_FULL_RANGE(NLA_U32, &nl80211_punct_bitmap_range),
- 	[NL80211_ATTR_STA_DUMP_LINK_STATS] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_FRAME_NO_STA] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SCS_DESCRIPTORS] =
-+		NLA_POLICY_NESTED_ARRAY(nl80211_scs_desc_policy),
-+	[NL80211_ATTR_MSCS_DESCRIPTOR] =
-+		NLA_POLICY_NESTED(nl80211_mscs_desc_policy),
- };
- 
- /* policy for the key attributes */
-@@ -18288,6 +18317,390 @@ static int nl80211_set_qos_map(struct sk_buff *skb,
- 	return ret;
- }
- 
-+#define NL80211_MAX_SCS_DESC	255
-+
-+/* A station can install the traffic description of its uplink stream */
-+static int nl80211_scs_iftype_ok(struct net_device *dev)
-+{
-+	switch (dev->ieee80211_ptr->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_STATION:
-+		return 0;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
-+/* Only an AP mirrors an uplink priority onto the downlink */
-+static int nl80211_mscs_iftype_ok(struct net_device *dev)
-+{
-+	switch (dev->ieee80211_ptr->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		return 0;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
-+static u16 nl80211_scs_status(int err)
-+{
-+	switch (err) {
-+	case -EOPNOTSUPP:
-+		return WLAN_STATUS_REQUESTED_TCLAS_NOT_SUPPORTED_BY_AP;
-+	case -ENOSPC:
-+		return WLAN_STATUS_INSUFFICIENT_TCLAS_PROCESSING_RESOURCES;
-+	default:
-+		return WLAN_STATUS_REQUEST_DECLINED;
-+	}
-+}
-+
-+static void nl80211_free_scs_desc(struct cfg80211_scs_desc **desc,
-+				  unsigned int n)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < n; i++)
-+		kfree(desc[i]);
-+
-+	kfree(desc);
-+}
-+
-+static struct cfg80211_scs_desc *
-+nl80211_parse_scs_desc(struct nlattr *attr, struct cfg80211_scs_result *res,
-+		       struct genl_info *info)
-+{
-+	enum cfg80211_tclas_processing processing =
-+		CFG80211_TCLAS_PROCESSING_ABSENT;
-+	struct nlattr *tb[NL80211_SCS_DESC_ATTR_MAX + 1];
-+	const struct ieee80211_qos_char_elem *qos_char = NULL;
-+	struct nlattr *qos_attr, *tclas_attr;
-+	struct cfg80211_scs_desc *desc;
-+	bool wants_up = true;
-+	int n_tclas = 0;
-+	bool remove;
-+	int err;
-+
-+	err = nla_parse_nested(tb, NL80211_SCS_DESC_ATTR_MAX, attr,
-+			       nl80211_scs_desc_policy, info->extack);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	if (!tb[NL80211_SCS_DESC_ATTR_ID] ||
-+	    !tb[NL80211_SCS_DESC_ATTR_REQ_TYPE]) {
-+		GENL_SET_ERR_MSG(info,
-+				 "SCS descriptor without an ID or a request type");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	remove = nla_get_u8(tb[NL80211_SCS_DESC_ATTR_REQ_TYPE]) ==
-+		 NL80211_SCS_REQ_REMOVE;
-+
-+	/* A removal names only an SCSID, the elements are ignored */
-+	qos_attr = remove ? NULL : tb[NL80211_SCS_DESC_ATTR_QOS_CHAR];
-+	if (qos_attr && ieee80211_qos_char_size_ok(nla_data(qos_attr),
-+						   nla_len(qos_attr)))
-+		qos_char = nla_data(qos_attr);
-+
-+	/* An uplink or direct link descriptor carries no user priority */
-+	if (qos_char && ieee80211_qos_char_direction(qos_char) !=
-+			IEEE80211_QOS_CHAR_DIR_DOWNLINK)
-+		wants_up = false;
-+
-+	/* Decline only this descriptor, the rest of the request stands */
-+	if (!remove && (!qos_attr || qos_char) &&
-+	    wants_up != !!tb[NL80211_SCS_DESC_ATTR_UP])
-+		err = -EINVAL;
-+
-+	tclas_attr = remove ? NULL : tb[NL80211_SCS_DESC_ATTR_TCLAS];
-+	if (!err && tclas_attr) {
-+		n_tclas = cfg80211_tclas_count(nla_data(tclas_attr),
-+					       nla_len(tclas_attr));
-+		if (n_tclas < 0) {
-+			err = n_tclas;
-+			n_tclas = 0;
-+		}
-+	}
-+
-+	desc = kzalloc(struct_size(desc, tclas, n_tclas), GFP_KERNEL);
-+	if (!desc)
-+		return ERR_PTR(-ENOMEM);
-+
-+	desc->id = nla_get_u8(tb[NL80211_SCS_DESC_ATTR_ID]);
-+	desc->req_type = nla_get_u8(tb[NL80211_SCS_DESC_ATTR_REQ_TYPE]);
-+	desc->up = nla_get_u8_default(tb[NL80211_SCS_DESC_ATTR_UP], 0);
-+	desc->n_tclas = n_tclas;
-+
-+	if (!err && tclas_attr) {
-+		err = cfg80211_parse_tclas(nla_data(tclas_attr),
-+					   nla_len(tclas_attr), desc->tclas,
-+					   n_tclas, &processing);
-+		if (err) {
-+			desc->n_tclas = 0;
-+			processing = CFG80211_TCLAS_PROCESSING_ABSENT;
-+		}
-+	}
-+
-+	desc->tclas_processing = processing;
-+
-+	if (!err && qos_attr) {
-+		if (!qos_char) {
-+			NL_SET_ERR_MSG(info->extack,
-+				       "bad QoS Characteristics element");
-+			err = -EINVAL;
-+		} else {
-+			desc->qos_char = qos_char;
-+			desc->qos_char_len = nla_len(qos_attr);
-+		}
-+	}
-+
-+	if (err)
-+		res->status = nl80211_scs_status(err);
-+	else if (!cfg80211_scs_desc_valid(desc))
-+		res->status = WLAN_STATUS_REQUEST_DECLINED;
-+
-+	return desc;
-+}
-+
-+static int nl80211_set_scs_reply(struct genl_info *info,
-+				 struct cfg80211_scs_desc * const *desc,
-+				 const struct cfg80211_scs_result *res,
-+				 unsigned int n_desc)
-+{
-+	struct nlattr *list, *entry;
-+	struct sk_buff *msg;
-+	unsigned int i;
-+	size_t size;
-+	void *hdr;
-+
-+	size = nla_total_size(nla_total_size(sizeof(u8)) +
-+			      nla_total_size(sizeof(u16)));
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE + n_desc * size, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
-+			     NL80211_CMD_SET_SCS);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	list = nla_nest_start(msg, NL80211_ATTR_SCS_DESCRIPTORS);
-+	if (!list)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i < n_desc; i++) {
-+		entry = nla_nest_start(msg, i + 1);
-+		if (!entry)
-+			goto nla_put_failure;
-+
-+		if (nla_put_u8(msg, NL80211_SCS_DESC_ATTR_ID, desc[i]->id) ||
-+		    nla_put_u16(msg, NL80211_SCS_DESC_ATTR_STATUS,
-+				res[i].status))
-+			goto nla_put_failure;
-+
-+		nla_nest_end(msg, entry);
-+	}
-+
-+	nla_nest_end(msg, list);
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_reply(msg, info);
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_set_scs(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	unsigned int i, n_desc = 0, n_apply = 0;
-+	struct cfg80211_scs_result *res;
-+	struct cfg80211_scs_desc **desc;
-+	struct nlattr *nla;
-+	int rem, err;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy, NL80211_EXT_FEATURE_SCS))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_SCS_DESCRIPTORS])
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_MLO_LINK_ID]) {
-+		GENL_SET_ERR_MSG(info,
-+				 "SCS rules belong to the MLD, not to a link");
-+		return -EINVAL;
-+	}
-+
-+	err = nl80211_scs_iftype_ok(dev);
-+	if (err)
-+		return err;
-+
-+	nla_for_each_nested(nla, info->attrs[NL80211_ATTR_SCS_DESCRIPTORS], rem)
-+		n_desc++;
-+
-+	if (!n_desc || n_desc > NL80211_MAX_SCS_DESC)
-+		return -EINVAL;
-+
-+	desc = kcalloc(n_desc, sizeof(*desc), GFP_KERNEL);
-+	if (!desc)
-+		return -ENOMEM;
-+
-+	res = kcalloc(n_desc, sizeof(*res), GFP_KERNEL);
-+	if (!res) {
-+		kfree(desc);
-+		return -ENOMEM;
-+	}
-+
-+	i = 0;
-+	nla_for_each_nested(nla, info->attrs[NL80211_ATTR_SCS_DESCRIPTORS],
-+			    rem) {
-+		desc[i] = nl80211_parse_scs_desc(nla, &res[i], info);
-+		if (IS_ERR(desc[i])) {
-+			err = PTR_ERR(desc[i]);
-+			desc[i] = NULL;
-+			goto out;
-+		}
-+
-+		i++;
-+	}
-+
-+	/* Pass only the descriptors that were not declined to the driver */
-+	for (i = 0; i < n_desc; i++) {
-+		if (res[i].status != WLAN_STATUS_SUCCESS)
-+			continue;
-+
-+		swap(desc[i], desc[n_apply]);
-+		swap(res[i], res[n_apply]);
-+		n_apply++;
-+	}
-+
-+	if (n_apply) {
-+		err = rdev_set_scs(rdev, dev,
-+				   nla_data(info->attrs[NL80211_ATTR_MAC]),
-+				   desc, res, n_apply);
-+		if (err)
-+			goto out;
-+	}
-+
-+	err = nl80211_set_scs_reply(info, desc, res, n_desc);
-+
-+out:
-+	kfree(res);
-+	nl80211_free_scs_desc(desc, n_desc);
-+
-+	return err;
-+}
-+
-+static int nl80211_send_status_code(struct genl_info *info, u32 cmd, u16 status)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0, cmd);
-+	if (!hdr || nla_put_u16(msg, NL80211_ATTR_STATUS_CODE, status)) {
-+		nlmsg_free(msg);
-+		return -ENOBUFS;
-+	}
-+
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_reply(msg, info);
-+}
-+
-+static int nl80211_set_mscs(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct nlattr *tb[NL80211_MSCS_DESC_ATTR_MAX + 1];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct cfg80211_mscs_desc desc = {};
-+	u16 status = WLAN_STATUS_SUCCESS;
-+	struct nlattr *mask;
-+	bool remove;
-+	int err;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy, NL80211_EXT_FEATURE_MSCS))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_MSCS_DESCRIPTOR])
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_MLO_LINK_ID]) {
-+		GENL_SET_ERR_MSG(info,
-+				 "an MSCS belongs to the MLD, not to a link");
-+		return -EINVAL;
-+	}
-+
-+	err = nl80211_mscs_iftype_ok(dev);
-+	if (err)
-+		return err;
-+
-+	err = nla_parse_nested(tb, NL80211_MSCS_DESC_ATTR_MAX,
-+			       info->attrs[NL80211_ATTR_MSCS_DESCRIPTOR],
-+			       nl80211_mscs_desc_policy, info->extack);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_MSCS_DESC_ATTR_REQ_TYPE]) {
-+		GENL_SET_ERR_MSG(info,
-+				 "MSCS descriptor without a request type");
-+		return -EINVAL;
-+	}
-+
-+	desc.req_type = nla_get_u8(tb[NL80211_MSCS_DESC_ATTR_REQ_TYPE]);
-+	remove = desc.req_type == NL80211_SCS_REQ_REMOVE;
-+
-+	if (remove == !!tb[NL80211_MSCS_DESC_ATTR_TCLAS_MASK]) {
-+		GENL_SET_ERR_MSG(info,
-+				 "TCLAS Mask does not match the request type");
-+		return -EINVAL;
-+	}
-+
-+	desc.up_bitmap =
-+		nla_get_u8_default(tb[NL80211_MSCS_DESC_ATTR_UP_BITMAP], 0);
-+	desc.up_limit = nla_get_u8_default(tb[NL80211_MSCS_DESC_ATTR_UP_LIMIT],
-+					   7);
-+	desc.stream_timeout =
-+		nla_get_u32_default(tb[NL80211_MSCS_DESC_ATTR_STREAM_TIMEOUT],
-+				    0);
-+
-+	mask = tb[NL80211_MSCS_DESC_ATTR_TCLAS_MASK];
-+	if (mask) {
-+		err = cfg80211_parse_tclas_mask(nla_data(mask), nla_len(mask),
-+						&desc.fields);
-+		if (err) {
-+			status = nl80211_scs_status(err);
-+			goto reply;
-+		}
-+	}
-+
-+	if (!cfg80211_mscs_desc_valid(&desc)) {
-+		status = WLAN_STATUS_REQUEST_DECLINED;
-+		goto reply;
-+	}
-+
-+	err = rdev_set_mscs(rdev, dev,
-+			    nla_data(info->attrs[NL80211_ATTR_MAC]), &desc);
-+	if (err)
-+		return err;
-+
-+	if (remove)
-+		status = WLAN_STATUS_TCLAS_PROCESSING_TERMINATED;
-+
-+reply:
-+	return nl80211_send_status_code(info, NL80211_CMD_SET_MSCS, status);
-+}
-+
- static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -20447,6 +20860,18 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
- 	},
- 	{
-+		.cmd = NL80211_CMD_SET_SCS,
-+		.doit = nl80211_set_scs,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+	},
-+	{
-+		.cmd = NL80211_CMD_SET_MSCS,
-+		.doit = nl80211_set_mscs,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+	},
-+	{
- 		.cmd = NL80211_CMD_ADD_TX_TS,
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.doit = nl80211_add_tx_ts,
++	struct ieee80211_scs_sta __rcu *scs;
++	struct ieee80211_mscs_sta __rcu *mscs;
++
+ #ifdef CONFIG_MAC80211_MESH
+ 	struct mesh_sta *mesh;
+ #endif
 -- 
 git-series 0.9.1
