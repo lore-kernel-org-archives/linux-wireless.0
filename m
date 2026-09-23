@@ -1,54 +1,58 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914A6329E55
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:03:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262E9329E55
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:03:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790168586; cv=none; b=eqPI1vRbkVtQZCul8yhUqXN1+4Ih74I+ds7ERbbNBsV82+SPw7qKyechEv0UZv2x9PqzuxnvKBN1Scq/B0zE0Mm21uSOOVm7PQzWsBbjVzglPXxZ7x2EqQJngMW8b2nSilr+u9IAy8vOVshJMreGYDDeTuopyQran5FczmjlkIM=
+	t=1790168590; cv=none; b=Z/s9OZ07y+Gkpa/QCWuzMJSIQiYq5lE5PRiT3iNMFSx/zoWSRwZEfTmjDj7T9nZkRx5v66krsPUmoDNlbEjuGY6a/CINyn9rjwWJVt8mpzZE4E/MVLH7yE9UYHamCHi+zaUf9zn7Z8+/Lak6wnr5Vfg18rJutdoE2ZBMzaRpbVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790168586; c=relaxed/simple;
-	bh=ZQHYWciTKu4rnifK3vDWMXaxr6Afi4fhHTjPkG0j6Tg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ak0w+TlDokB4kpzipeZ6dnGuoGogRaXftbyKMyn0ujWg83ZWaNKwnAi1TmNX0vFvU3h57zfpbBrGyybgJSgEurFaxVZidjzGkHVjaNZxPiZr3s1+419SpR67R6lXcAevBx+chspijyiwez9YOb4AorQwVYn7iX+HvFB41L9pCEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QNrFbuVb; arc=none smtp.client-ip=192.198.163.19
+	s=arc-20240116; t=1790168590; c=relaxed/simple;
+	bh=3sLHEDNBYyD0eaMWG47Gnn+UH3D8f1+VU2HvFXf60fM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ZVj7WBloeiW25X+miMkdpVUTa+6nUVvRxB94GRm0XZEHURL2dcF5elmX6V2+1gI03hxuvcKgroBlnk63Gk48yS1Sx1KE4lVYLUJEtNytpSHFJlShuHS9QJDb15AYFGQs+LTESmWUDtzUYRoi9Lg2hB+xlHKDX+TWG2iqzEycKyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bjjvcHle; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QNrFbuVb"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bjjvcHle"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790168584; x=1821704584;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ZQHYWciTKu4rnifK3vDWMXaxr6Afi4fhHTjPkG0j6Tg=;
-  b=QNrFbuVbALLKVYN7JBdp0aJQ9pGCb+d2XxIS/anH7xGkz0aiBdn8nFY1
-   eVFZOTIx11CW0mtbvtf6X50E49/NyQEYwfLwrtttcHEXaLHsGV821UNqC
-   aeVWPjyyvW68uYNPiW+4DkkCqCmjGdmwN4lQGKdbA7xqA9Vf88p0jvtOu
-   qZhP/L2si3ugdfPGe5B5LU319EWlwlhldwOIZD0AKaYnNuxwEuT1TyKeV
-   pVuHn3fbs88jYUyxkaD2/dKK5jfu0LckZuK0Y6GgKPe5lrDspXdhim8Pq
-   Ew1egMGCnlbH/GS22KghSSZX4g5o+9UowlslF3hImvTo1sybf3ivioGVF
-   g==;
-X-CSE-ConnectionGUID: 1eI32DjXRnahyy6bnvjXSA==
-X-CSE-MsgGUID: xo0ISSl4SOO8LNU5SvWQTg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="89781313"
+  t=1790168588; x=1821704588;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=3sLHEDNBYyD0eaMWG47Gnn+UH3D8f1+VU2HvFXf60fM=;
+  b=bjjvcHle1RvpELal7GzeQrlHiT+pmhf2J/DnzpVliPp9e77tFAlG6pZt
+   jBIXVuy1qbC5s8OtmNdbLuQOupd5SdKKNZ7X0I21YlQ2ih2ucbuxrMSqQ
+   YBkcA3KDGq+WiSkUS30Gj0imWxF5y3qq8DYJ+iA42GVBvigM/6xuWNA1K
+   3GrbpU+ATTrRdcXlbC2PePcihBfMwWM+kxtC3q6aAgU1qkqkRguoE5FZD
+   FRTrd6huonff8oS4cAKkc5fZmZebjktY7KadlJfGj1hLt7iQUNPnGPtXU
+   XpdIpcygvu9UccXbVPKXGvEJ4LYd9ZZA6iEmz9Gdbx+jR0XvZfkCrx5+l
+   w==;
+X-CSE-ConnectionGUID: t6ynkLp0S52BrEVOPIvr8w==
+X-CSE-MsgGUID: o8TVdhBDSuC/C6gaU9DGrQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="89781319"
 X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="89781313"
+   d="scan'208";a="89781319"
 Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:03 -0700
-X-CSE-ConnectionGUID: wKo67A/BReq1VbL6z1HWLw==
-X-CSE-MsgGUID: 4UVSGlOiSKK+Hkyx+sCR0Q==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:08 -0700
+X-CSE-ConnectionGUID: 1+FzbpBHSr6yWnAXYqmLlw==
+X-CSE-MsgGUID: ePJjsnMDTQGw+jguehmEWw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="4696983"
+   d="scan'208";a="4696991"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:00 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:01 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates - 2026-09-23
-Date: Wed, 23 Sep 2026 16:04:43 +0300
-Message-Id: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH iwlwifi-next 01/15] wifi: iwlwifi: mvm: remove indirection_tbl debugfs entry
+Date: Wed, 23 Sep 2026 16:04:44 +0300
+Message-Id: <20260923160318.bc19cf5a20b9.I04cbf6a929070775a7e0cb04c7330421e6777f4e@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
+References: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,64 +62,95 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Hi,
-Features, cleanups and fixes from our internal tree.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Thanks,
-Miri
+The RSS indirection table debugfs knob is not used, and its pattern
+repetition logic triggered a static analysis out-of-bounds report on
+the trailing copy that forms a one-past-the-end pointer.  Rather than
+reworking unused code, drop the entry entirely.
+
+Assisted-by: GitHub-Copilot:claude-opus-5
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 50 -------------------
+ 1 file changed, 50 deletions(-)
 
-Emmanuel Grumbach (1):
-  wifi: iwlwifi: mvm: remove indirection_tbl debugfs entry
-
-Johannes Berg (3):
-  wifi: iwlwifi: advertise 2xLDPC RX support for UHR
-  wifi: iwlwifi: mld: fix some UHR ELR bits
-  wifi: iwlwifi: mld: correct EHT U-SIG-1 B20:25 report
-
-Miri Korenblit (4):
-  wifi: iwlwifi: support net detect match info version 3
-  wifi: iwlwifi: bump maximum core version for BZ/SC/DR to 108
-  wifi: iwlwifi: mvm: validate mpdu len before relying on it
-  wifi: iwlwifi: support for another device ID
-
-Pagadala Yesu Anjaneyulu (3):
-  wifi: iwlwifi: mvm: debugfs: validate TAS response and loop bounds
-  wifi: iwlwifi: mvm: fix LARI_CONFIG_EXTENSION version check
-  wifi: iwlwifi: add standalone WRSS/EWSS BIOS table loading
-
-Shahar Tzarfati (4):
-  wifi: iwlwifi: uefi: add UEFI GUID Lock Indicator (GLUI) definitions
-  wifi: iwlwifi: uefi: add a way to probe connectivity UEFI variables
-  wifi: iwlwifi: regulatory: use GLUI as root-of-trust for connectivity
-    variables
-  wifi: iwlwifi: mvm: validate BAID from FW
-
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c   |   8 +-
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c   |   2 +-
- .../net/wireless/intel/iwlwifi/cfg/rf-fm.c    |   4 +
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 276 ++++++++++----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |  20 +-
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |   4 +-
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  |  28 +-
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |   6 +-
- .../wireless/intel/iwlwifi/fw/regulatory.c    |  30 +-
- .../wireless/intel/iwlwifi/fw/regulatory.h    |  22 ++
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  13 +-
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c  | 355 +++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h  |  26 ++
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |   6 +-
- .../wireless/intel/iwlwifi/mld/regulatory.c   |   3 +-
- drivers/net/wireless/intel/iwlwifi/mld/rx.c   |   3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  89 +++--
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  65 +---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  26 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |   8 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |   1 +
- 23 files changed, 758 insertions(+), 243 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index b7315598d522..99fb149b8543 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1145,53 +1145,6 @@ iwl_dbgfs_scan_ant_rxchain_write(struct iwl_mvm *mvm, char *buf,
+ 	return count;
+ }
+ 
+-static ssize_t iwl_dbgfs_indirection_tbl_write(struct iwl_mvm *mvm,
+-					       char *buf, size_t count,
+-					       loff_t *ppos)
+-{
+-	struct iwl_rss_config_cmd cmd = {
+-		.flags = cpu_to_le32(IWL_RSS_ENABLE),
+-		.hash_mask = IWL_RSS_HASH_TYPE_IPV4_TCP |
+-			     IWL_RSS_HASH_TYPE_IPV4_UDP |
+-			     IWL_RSS_HASH_TYPE_IPV4_PAYLOAD |
+-			     IWL_RSS_HASH_TYPE_IPV6_TCP |
+-			     IWL_RSS_HASH_TYPE_IPV6_UDP |
+-			     IWL_RSS_HASH_TYPE_IPV6_PAYLOAD,
+-	};
+-	int ret, i, num_repeats, nbytes = count / 2;
+-
+-	ret = hex2bin(cmd.indirection_table, buf, nbytes);
+-	if (ret)
+-		return ret;
+-
+-	/*
+-	 * The input is the redirection table, partial or full.
+-	 * Repeat the pattern if needed.
+-	 * For example, input of 01020F will be repeated 42 times,
+-	 * indirecting RSS hash results to queues 1, 2, 15 (skipping
+-	 * queues 3 - 14).
+-	 */
+-	num_repeats = ARRAY_SIZE(cmd.indirection_table) / nbytes;
+-	for (i = 1; i < num_repeats; i++)
+-		memcpy(&cmd.indirection_table[i * nbytes],
+-		       cmd.indirection_table, nbytes);
+-	/* handle cut in the middle pattern for the last places */
+-	memcpy(&cmd.indirection_table[i * nbytes], cmd.indirection_table,
+-	       ARRAY_SIZE(cmd.indirection_table) % nbytes);
+-
+-	netdev_rss_key_fill(cmd.secret_key, sizeof(cmd.secret_key));
+-
+-	mutex_lock(&mvm->mutex);
+-	if (iwl_mvm_firmware_running(mvm))
+-		ret = iwl_mvm_send_cmd_pdu(mvm, RSS_CONFIG_CMD, 0,
+-					   sizeof(cmd), &cmd);
+-	else
+-		ret = 0;
+-	mutex_unlock(&mvm->mutex);
+-
+-	return ret ?: count;
+-}
+-
+ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+ 					     char *buf, size_t count,
+ 					     loff_t *ppos)
+@@ -1866,8 +1819,6 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
+ MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_clear, 64);
+ MVM_DEBUGFS_WRITE_FILE_OPS(dbg_time_point, 64);
+-MVM_DEBUGFS_WRITE_FILE_OPS(indirection_tbl,
+-			   (IWL_RSS_INDIRECTION_TABLE_SIZE * 2));
+ MVM_DEBUGFS_WRITE_FILE_OPS(inject_packet, 512);
+ MVM_DEBUGFS_WRITE_FILE_OPS(inject_beacon_ie, 512);
+ MVM_DEBUGFS_WRITE_FILE_OPS(inject_beacon_ie_restore, 512);
+@@ -2066,7 +2017,6 @@ void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm)
+ 	MVM_DEBUGFS_ADD_FILE(fw_dbg_clear, mvm->debugfs_dir, 0200);
+ 	MVM_DEBUGFS_ADD_FILE(dbg_time_point, mvm->debugfs_dir, 0200);
+ 	MVM_DEBUGFS_ADD_FILE(send_echo_cmd, mvm->debugfs_dir, 0200);
+-	MVM_DEBUGFS_ADD_FILE(indirection_tbl, mvm->debugfs_dir, 0200);
+ 	MVM_DEBUGFS_ADD_FILE(inject_packet, mvm->debugfs_dir, 0200);
+ 	MVM_DEBUGFS_ADD_FILE(inject_beacon_ie, mvm->debugfs_dir, 0200);
+ 	MVM_DEBUGFS_ADD_FILE(inject_beacon_ie_restore, mvm->debugfs_dir, 0200);
 -- 
 2.34.1
 
