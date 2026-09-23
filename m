@@ -1,90 +1,145 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-yx2-f42.google.com (mail-yx2-f42.google.com [74.125.224.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09AE037DE83;
-	Wed, 23 Sep 2026 02:26:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790130401; cv=none; b=rUhOHCWJvnXBSi07X0qkklCXtlnnE7AIHd7BqmN7dNQYGdncpzpqAsdMiplhzEEgO+G3Je3eu4DdYn5c0k3xvM4mthAwk/A01+Twhl0epIHBVyUwW+S5keQwDLQ2r64q6Om/tSdxRrLmqSJtWIEkuTP1FCrmxzge8csDVqDALSc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790130401; c=relaxed/simple;
-	bh=j7bUQF400pDYiwgMJ+fY6jNBqjzoCFhJMjSVucHap4E=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=XvbNVc0plBOh3H+3PjhUnVv8iq+wrgIIvU1rBa/rM35e00qZXmPMqZNLWRb9KT0q7iJ/3GuJr6VsE4y9e8gGJmhW0TRQcNFJ+teIgHE82LFHNU1eaem4mAPfqZj4xBPQZTDtUxAE3ick8FEcpnNlbbfNVRCqvtzBwImPkBMa60Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=IRNvyDux; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BEB37CD2C
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 03:24:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.170
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790133888; cv=pass; b=GZ4Qs9W7TYXF3CVw350iGPS1Z/2Bi+FYWLuBiz7D5ZVhjvuoJFckyse204BsaLoXhUKse60+91rRQv0JZBQ6V3WEG446phkj7s03FhRxTvnvxh6oqk7V+/XY71aBIo5xVplcE+eg0fAEukIRCf/rH4+cSmwF/XRQv3OeM0wi6/A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790133888; c=relaxed/simple;
+	bh=DSWeIecAf7yMhlXesBdwg+3lyF8bl49YDtQr18mW7LM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uDw3rONLzTsp4c4+THb8hnOhkFLoMp/vbr7QwJDVuqjUIAAO1hGSxrvm/ZBF+XEw567twvLExpMaPKuBuoKnNC8LFVs53OZV3ImxUoj4H0qTuVu7EQnsMMxMfjNqpBgI6yjZ7r77XeQRHfduip5VXk7UmHHpSDks7yZ50SSJW9c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y1pCjiYb; arc=pass smtp.client-ip=74.125.224.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="IRNvyDux"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N2QUTQ04168887, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790130390; bh=quinJoc7LMiQbr3BZ9Nqz5Gn02OufP56+3mq/FhzUls=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=IRNvyDuxN+AKkX9RfHKz7cNiLnmi7wl43KcHbd+FXrtF8elaittsJMiq5Fe0lKOwU
-	 GwcmnxaGjfKvgWC88/SM6U71yNRm0hKUUqJwKkVx5rDjGf81FDRXyuqgI+HhsUQFwa
-	 PJ/2VvxXiNhEaJhHAOQwL+1HP6IffZvE1rV1/yS3v23ZCJiucEBMPqRVlSicaZStcJ
-	 rSz2CgBnVrP8UE9xdNaeDB4WDfTY+tmFr471monqwrfkX/ot4kjRkWSempgN59T2wM
-	 loVuoitqrIyGJ95Syo4ktp0pIvSZQ6I3y+6+MUDibexkDCcDC6dHgAh9a0e7CvCV66
-	 8lJWdwrFwHA5w==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N2QUTQ04168887
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 23 Sep 2026 10:26:30 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 10:26:24 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
- (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 23 Sep 2026 10:26:19 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Kim Wooseok <5mghybrid@khu.ac.kr>, <linux-wireless@vger.kernel.org>
-CC: Ping-Ke Shih <pkshih@realtek.com>, Jes Sorensen <Jes.Sorensen@gmail.com>,
-	Kalle Valo <kvalo@kernel.org>, <linux-kernel@vger.kernel.org>, Kim Wooseok
-	<5mghybrid@khu.ac.kr>
-Subject: Re: [PATCH rtw-next v4 1/3] wifi: rtl8xxxu: free RX skb when URB submission fails
-In-Reply-To: <20260921-codex-rtl-rx-v3-submit-v4-1-eeb09fe8f791@khu.ac.kr>
-References: <20260921-codex-rtl-rx-v3-submit-v4-0-eeb09fe8f791@khu.ac.kr> <20260921-codex-rtl-rx-v3-submit-v4-1-eeb09fe8f791@khu.ac.kr>
-Message-ID: <9199cc45-08ff-4346-b4e7-afbfda32a790@RTKEXHMBS05.realtek.com.tw>
-Date: Wed, 23 Sep 2026 10:26:19 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y1pCjiYb"
+Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-672ce86b21aso555824d50.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2026 20:24:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790133885; cv=none;
+        d=google.com; s=arc-20260327;
+        b=VoRZKtzjVT3nLyui1DMxiTs3JXhN+ppBmN8yo+V8MEGZ6n5XH47+/SaKPllw/1ir0y
+         IHNAazFjBF3oBpJoJsvQPI3LKsZucxyxbKdhpcTtM6KItZq4oqwl2c706sDHL8BpIX6X
+         9pkUAsLqxqgFvVsv+KfBPFST/+c2zVB1XwYY3BUo7ylMS453aqVY7f6ooLuqb8FyBxHM
+         P6SdWUvCh9JLH3dCGp8Gb1vwe9AXJWgusEMBAlcKlWl7ydzPlgxGn2yP1ufBcvtY18HL
+         LmYOnrLp1tkpyjFUxO6/c9sWsRbrJHWysugxOFx6biziyEJ3YPTkaRfvSkQKfzKDHt7g
+         bLtw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=JvJYAxC3BFkryMHCPPUutRIKj2Els96Oe0pXTAumBDM=;
+        fh=gM7U4zh8cHfaC9HwkEfsLrE/YFSAo7GZyH3GmXfcl8c=;
+        b=UXgFHZamk7VBrNoqmXhUpyssOY+pYhQYIiM/SahqHrXeOjqyVXSpGhIwHYlYhkw4oT
+         ihpxhx/ZzDHOvwMEDW1sgKm5h3ic2UYD2mHLC8tIwKicrLZZxx/x/m9FiBw6IdtXP90K
+         75aDV89Z6DUOWOeBW4wkStfN7gDYp9eJnviLyPUzrhvj7vgJ1RwQVZWGimo1QR7i6o6S
+         VTT7lwV3NQtBJliwNV7DNMXJNamtqmS7WQoy+lvAlI5BfJZw9ZRy4CrM2XFBOoObT9hY
+         xoz3OKlu4c93fIRbT5OyMddRIY/0Tg8rTXSQpmURmDckNrKsle6l5R8x139MwVopqhdj
+         PMiw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790133885; x=1790738685; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=JvJYAxC3BFkryMHCPPUutRIKj2Els96Oe0pXTAumBDM=;
+        b=Y1pCjiYb9pLt1lA/IWGNYqvQWIAGoRuvu68pVduzurD6Uw27P9N8WQfKDxGZaAztmA
+         PbrOCocQ6NDFZbM/vdeuQFtzQyP6hWudcqMt7V9V4qn1y7RoIH7vlBpAO1/hsh6jyaua
+         wIlPmajTEy8zA4rX2qRj2VqGuqLbUWF8HS/kWOqNhsdwwdR3B8chUI2gAV6pUy6wXZZ/
+         IN02Z48sYAvQC1eWeYM3m1lN3L1NdKMZP0znwa/Glh1oJLGO8HLKC5pzHlDgJTSfzg+8
+         74JQq/ZBJ3VWRPoyz5Snb8wUlkwau0F/qdNSwM+gsUIFRHQQd8Ncmvik4WMqNdr1glnQ
+         VTUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790133885; x=1790738685;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JvJYAxC3BFkryMHCPPUutRIKj2Els96Oe0pXTAumBDM=;
+        b=MoBZYSoQH27/jXVlvreRwBNMEwGbv+++O+Y5ldJYd6guvqJixaVDZf6sQoT8OPQXeZ
+         PkLpXIpJNaY/woWofA+tXq7buAU1ZfiW0oQ/uPU4y0WuFHYvgakxB4scTC1kxbRQLBzA
+         qn4l+Thfnr2MT/yo3EgJF37Es3nxp/TfasSxo3e3tcahAMejZXA9rxLAfVN9zlkauPNW
+         x8v/cHEirm83PvMBmVN8cHsJDrmLHdK7glyhNn4IMn9cPQ2apZDiGm5ydwRyFIBRKWj1
+         vrNsZAS3L6qu51uL6j/A83wYbGAauZwBwMhco3w5ziMguFrpkRqgPywCJIH7cJBfgrBM
+         L4BQ==
+X-Gm-Message-State: AFuF++l9QvPlFgDLU/5V61JYvJ8D+VoLpDrCF4N4ubnXwUe31pDRo8Dd
+	lmWyx95YjsVAPxGod8Q9pmhA4u6T1PyvEGuiVlSatjsx802n57ILLvmyremF5jxGOK8/ZP1Zn6M
+	0S0DvybBZuFR+sSGsYIOUhmLqDwMqs1A=
+X-Gm-Gg: AYBFou2PfULucrZsMfpwXyHttQ2GQ6+BXSMUo/wedFARIVUWuljljxNNow903EdRyxM
+	fUcB/GQF1dhejJY4hVPrJvtSlAZOjtC07EDitpHlS+6DdvJ7TxOz5Ce+Jhc29KrIdguDrkbxJ2A
+	37b7KA1uUcGa2g4NCRKDust5z4WKe5zccQLaDRN4wFnpopKpPD5BLGgeiEMxC6A4ROor0AbkjYS
+	oJ27B12rZeSCiFtJ0PdY97NFLRzL6JNEUKcuazzGW457VbAOIs8UDts5Hsgkha9Ldb6QoBv/Nzb
+	lDMBMDDSVqMFBnL1My750QRYxotSWncpueyRmeG3fbgJzbbactBahbVmN5K9wq7EMKYy3Gt4bMn
+	uhmurSEvcK9QIeOFg9Lap7POpwS153+UoadBNYL2zz9w=
+X-Received: by 2002:a53:a545:0:b0:668:9230:e266 with SMTP id
+ 956f58d0204a3-672d578373amr531468d50.46.1790133885534; Tue, 22 Sep 2026
+ 20:24:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20260910041047.24437-1-kartikey406@gmail.com>
+In-Reply-To: <20260910041047.24437-1-kartikey406@gmail.com>
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+Date: Wed, 23 Sep 2026 08:54:33 +0530
+X-Gm-Features: AcwNN1U6czatgEZRd1Tuqm5XEJFOVJG01prTEVjnQfkDzzObqmXUjCvs5QK8mCY
+Message-ID: <CADhLXY5MJOvgvW1SSbb8NPDCjicC-83LNHLANLo8mLDQq=OVDQ@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix using smp_processor_id() in preemptible
+ code in ieee80211_tx_control_port()
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzbot+d979bd35c8a76fd1b6f5@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Kim Wooseok <5mghybrid@khu.ac.kr> wrote:
+On Thu, Sep 10, 2026 at 9:40=E2=80=AFAM Deepanshu Kartikey
+<kartikey406@gmail.com> wrote:
+>
+> ieee80211_tx_control_port() can be called from nl80211_tx_control_port()
+> in normal process context via netlink sendmsg(), where BH/preemption
+> is not disabled. dev_sw_netstats_tx_add() uses this_cpu_ptr() internally,
+> which requires preemption to be disabled, triggering a
+> "BUG: using smp_processor_id() in preemptible code" warning.
+>
+> Fix this by moving the local_bh_disable()/local_bh_enable() section to
+> also cover dev_sw_netstats_tx_add() and ieee80211_tpt_led_trig_tx().
+>
+> Fixes: d5a014204a3b ("wifi: mac80211: tx: simplify control port frame tra=
+nsmission")
+> Reported-by: syzbot+d979bd35c8a76fd1b6f5@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3Dd979bd35c8a76fd1b6f5
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+> ---
+>  net/mac80211/tx.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 74ab27534076..7b1a3c63e5dc 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -6687,10 +6687,9 @@ int ieee80211_tx_control_port(struct wiphy *wiphy,=
+ struct net_device *dev,
+>                 return -EINVAL;
+>         }
+>
+> +       local_bh_disable();
+>         dev_sw_netstats_tx_add(dev, 1, skb->len);
+>         ieee80211_tpt_led_trig_tx(local, skb->len);
+> -
+> -       local_bh_disable();
+>         ieee80211_xmit(sdata, sta, skb);
+>         local_bh_enable();
+>         rcu_read_unlock();
+> --
+> 2.34.1
+>
 
-> From: Kim Wooseok <5mghybrid@khu.ac.kr>
-> 
-> When usb_submit_urb() fails, rtl8xxxu_submit_rx_urb() unanchors the URB
-> but leaves the newly allocated skb in urb.context. For ENOMEM/EAGAIN,
-> the RX worker puts the request back on the pending list. The next
-> submission allocates another skb and overwrites that pointer, leaking
-> the previous buffer. Stopping before the retry also leaks it, because
-> pending-list cleanup frees only the URB.
-> 
-> Free the skb and clear urb.context in rtl8xxxu_submit_rx_urb() when
-> submission fails. This keeps buffer allocation and failure cleanup in
-> the same function, so a request returned for retry or teardown no longer
-> owns an skb. Remove the corresponding cleanup from start and the RX
-> worker; they only need to decide whether to retry or free the URB.
-> 
-> Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
-> Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
-> Assisted-by: GPT-6 Astra
-> Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
+Gentle Reminder. Please let me know the status of this patch.
 
-3 patch(es) applied to rtw-next branch of rtw.git, thanks.
+Thanks
 
-9f7edf4e8584 wifi: rtl8xxxu: free RX skb when URB submission fails
-4c58fb8944a2 wifi: rtl8xxxu: unwind incomplete receive startup
-2f77c6669410 wifi: rtl8xxxu: preserve RX requests across recoverable transfer errors
-
----
-https://github.com/pkshih/rtw.git
-
+Deepanshu
