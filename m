@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEC0E50129B;
-	Wed, 23 Sep 2026 12:05:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C6AC51354A;
+	Wed, 23 Sep 2026 12:05:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790165123; cv=none; b=i8qVXaaGXu/ciCQVSfouVr2RQejzrthsDTWLdLOlDIdso56f04DUQsKtF3HqWzY3s1zfcjtWefmhsyTbY0rY4yq6MCrQoUYo+GnLPzVno1GGRgm0n2kNkjsesjEesfAIklkx0V17VH4i4TB2/4fBNbFwM/PEMgyekEfiPJNE5sE=
+	t=1790165125; cv=none; b=fhsJv9gHESh1CXVJAi66D1V5nv/XsWC008JTw0YLZc8JKOzq1ptALIqJ6iH6o1k10vvhnmi5QwG1c8y1lpHjpbq4hf0p2rKe82BIyyG68bDHGoL8Mpdna09tQFqIwZmxz9wvpa5OkzaMqS9kGpjnnvgKgxtXxqCfZknRSjnWtmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790165123; c=relaxed/simple;
-	bh=cL5+YFpsqpZKGpz68YOUSSKCHE8atf18HiZnV4MKXmo=;
+	s=arc-20240116; t=1790165125; c=relaxed/simple;
+	bh=xwjhHq+axtyNZtf3ucpzpJBoQOgD2kDsTykcF1+22VU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=updOnLmt/6V+SApJmNYSxDGOAV7eZkKseQOL+KPKaOtr9UJ8TSkegExib78kegjkYYIJp5cQ5QVBdFi93WxON9e58dC0doscScSEiMDYIJfhRWvs94FHBEJ3EJXnTqmmiOkVvaT12zrKQUmgDmcMD6g8HUjQkk65bWwYFXmB7/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vAK5zYOt; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=uQ0hpIrS5VSbuYoB/tTcZWuH21+LKZ6vcJak7kjKkLIxUvZSOgRYlPE1HdGl5UvBcB2g6SdvUCEV9ZVcSd0y91NBHGp5lDRy5/H/+BuUTVuVJ4p3AaI3/v87uJYXOE82kd5Yn3TtJqiSysitNhZb1yO6uLaVLHhJiabGgkf0Bcg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L0WJviDT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vAK5zYOt"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C1923C4AF0B;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L0WJviDT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 90815C2BD00;
 	Wed, 23 Sep 2026 12:05:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1790165121;
-	bh=cL5+YFpsqpZKGpz68YOUSSKCHE8atf18HiZnV4MKXmo=;
+	bh=xwjhHq+axtyNZtf3ucpzpJBoQOgD2kDsTykcF1+22VU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=vAK5zYOtijl1haOI9gXqsv8ACUPMutJwUPLC6WTnT1AZh3Y6sZE3xXDrp6OiFM7JK
-	 UVObtbnF9HeL0DjifTgJ56SIYL5et9/OfuUH4g97Q1mLDfQJ2Kzxm5yvyumOCH9puM
-	 oaAVBiUpFVCTibcsfJCs9Am84DrNXPNf43UtmpLXD6+bnPe05S6CkClPLU+QZXuPhB
-	 YRa1xpIo76ugmj3f1v8SWVG272xJjlV3vYBBS/hxxBdNEYh4qVoCku9K6f2BZECF97
-	 33lByZA+6YX4xc+SyIuf+wyT3RfRlX9Z5LNHF3qk7wEV4T6lGh9QrygnHV9gbXEHoP
-	 MV3vRJo6IOqgg==
+	b=L0WJviDT2c4j9z652S8+95ezSOvIjOT1EoHGwjEk8dIE+bjnQ9zPfEDFUrJCKt5ZB
+	 rVfj6B+wjHY4L+yXcT62sTpE0Cu5mtHmftvuEN154YK3x0S3oGn8WNSAdqkKxHtL4j
+	 GmZa/lnWsWL71ixP9N+JMVUeTMd5yetmmKd7DrVUsADGoBRVk7gcg48VYpxguD+iB5
+	 ivK6Es2UaFq90I+Vwj1VQ58+XybOKrPryo/+y8vmvu+hYwRawK7DaRcooHXvNyzlBn
+	 GHgFTO0dIeXSCTK8b6Kn1VFWZLPbY/sE/lL1EiWHLVf3zT8MYhXp76vTPel6Xs3e4O
+	 P/EaKufUYdBgg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD9AEC982FA;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DBBCC9830C;
 	Wed, 23 Sep 2026 12:05:21 +0000 (UTC)
 From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
-Date: Wed, 23 Sep 2026 16:05:22 +0400
-Subject: [PATCH ath-next 16/16] wifi: ath11k: add QCN6122 device support
+Date: Wed, 23 Sep 2026 16:05:19 +0400
+Subject: [PATCH ath-next 13/16] wifi: ath11k: add hw ring mask for QCN6122
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260923-ipq5018-qcn6122-mpd-v1-16-86729521a75c@outlook.com>
+Message-Id: <20260923-ipq5018-qcn6122-mpd-v1-13-86729521a75c@outlook.com>
 References: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
 In-Reply-To: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
 To: Johannes Berg <johannes@sipsolutions.net>, 
@@ -55,11 +55,11 @@ Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, 
  George Moussalem <george.moussalem@outlook.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790165117; l=2721;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790165117; l=2926;
  i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
- bh=N0lWRlkViy66JiabYe3wnlNpM0tjJSjRzUVdOXoZ9Gs=;
- b=ToSFrdMAsPUqm34M8ORvBROXcmsCcULlAR9RBecaTVXwiXWOjpr9vkoHJZdK+tfkF0OdSXTgR
- 8mBh+8gPFSZDoPSuVKzWN20Nk8CGHwe/JuaZ7Nci5MMz30OhGbHNugr
+ bh=ZS+ghizA2JnJORyhUeyzkT6PiFQkDEnAqkqpPDbBCt4=;
+ b=oc8KKCzLEqR8y0YejgVoqOfzgsPd1UyzJB67HNuqi3DnHAhkRQIBLSDVrtLi/DS0KcxMFmfNa
+ TamHpCY+jhXAcFEXohGRlgRkT3YCLTi/HayF26SEjdylq2gKXl9JolP
 X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
  pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
 X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
@@ -69,77 +69,87 @@ Reply-To: george.moussalem@outlook.com
 
 From: George Moussalem <george.moussalem@outlook.com>
 
-QCN6122 is a 2x2 11AX PCIe based chipset, but it is attached to the WPSS
-(Wireless Processor SubSystem) Q6 processor, hence it is enumerated
-by the Q6 processor. It is registered to the APSS processor as a
-platform device (AHB).
-
-Q6 firmware segments for QCN6122 are contained within the multi-PD
-version of the shared firmware package for IPQ5018. Each (up to 2)
-QCN6122 radio present runs in its own user PD which the ath11k driver
-manages to power it up or down.
-
-Also, device information like BAR and its size is not known to the APSS
-processor as the chip is enumerated by WPSS Q6. These details are
-fetched over QMI.
-
-The QCN6122 chip supports STA, AP, and MESH modes.
-
-Tested on: Linksys MX2000 and GLiNET B3000 wireless access points for
-prolonged duration tests spanning multiple days with multiple clients
-connected with firmware WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+Add ring mask for QCN6122 and register them in hw params.
 
 Signed-off-by: George Moussalem <george.moussalem@outlook.com>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c  | 7 +++++++
- drivers/net/wireless/ath/ath11k/pcic.c | 9 +++++++++
- 2 files changed, 16 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.c |  1 +
+ drivers/net/wireless/ath/ath11k/hw.c   | 37 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/hw.h   |  1 +
+ 3 files changed, 39 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 26110c927577..51908e779b7c 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -46,6 +46,9 @@ static const struct of_device_id ath11k_ahb_of_match[] = {
- 	{ .compatible = "qcom,ipq5018-wifi",
- 	  .data = (void *)ATH11K_HW_IPQ5018_HW10,
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index cf37975fa4cf..8fa1171b6bdd 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -948,6 +948,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.max_radios = MAX_RADIOS_5018,
+ 		.bdf_addr = 0x4D200000,
+ 		.hw_ops = &ipq5018_ops,
++		.ring_mask = &ath11k_hw_ring_mask_qcn6122,
+ 		.internal_sleep_clock = false,
+ 		.regs = &qcn6122_regs,
+ 		.qmi_service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCN6122,
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 8442fbeb9c58..bb375efd50fe 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -2070,6 +2070,43 @@ const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_wcn6750 = {
  	},
-+	{ .compatible = "qcom,qcn6122-wifi",
-+	  .data = (void *)ATH11K_HW_QCN6122_HW10,
-+	},
- 	{ }
  };
  
-@@ -1395,6 +1398,10 @@ static int ath11k_ahb_setup_msi_resources(struct ath11k_base *ab)
- 	ab->pci.msi.addr_hi = upper_32_bits(msi_addr_iova);
- 
- 	ret = of_property_read_u32_index(ab->dev->of_node, "interrupts", 1, &int_prop);
-+	if (ret == -EINVAL)
-+		ret = of_property_read_u32_index(ab->dev->of_node,
-+						 "interrupts-extended", 2,
-+						 &int_prop);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/ath/ath11k/pcic.c b/drivers/net/wireless/ath/ath11k/pcic.c
-index 2259adc3bbdc..cdcf3df26438 100644
---- a/drivers/net/wireless/ath/ath11k/pcic.c
-+++ b/drivers/net/wireless/ath/ath11k/pcic.c
-@@ -138,6 +138,15 @@ static const struct ath11k_msi_config ath11k_msi_config[] = {
- 		},
- 		.hw_rev = ATH11K_HW_QCA6698AQ_HW21,
- 	},
-+	{
-+		.total_vectors = 13,
-+		.total_users = 2,
-+		.users = (struct ath11k_msi_user[]) {
-+			{ .name = "CE", .num_vectors = 5, .base_vector = 0 },
-+			{ .name = "DP", .num_vectors = 8, .base_vector = 5 },
-+		},
-+		.hw_rev = ATH11K_HW_QCN6122_HW10,
++const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qcn6122 = {
++	.tx  = {
++		ATH11K_TX_RING_MASK_0,
++		ATH11K_TX_RING_MASK_1,
++		ATH11K_TX_RING_MASK_2,
 +	},
- };
++	.rx_mon_status = {
++		0, 0, 0,
++		ATH11K_RX_MON_STATUS_RING_MASK_0,
++	},
++	.rx = {
++		0, 0, 0, 0,
++		ATH11K_RX_RING_MASK_0,
++		ATH11K_RX_RING_MASK_1,
++		ATH11K_RX_RING_MASK_2,
++		ATH11K_RX_RING_MASK_3,
++	},
++	.rx_err = {
++		0, 0, 0, 0, 0, 0, 0, 0,
++		ATH11K_RX_ERR_RING_MASK_0,
++	},
++	.rx_wbm_rel = {
++		0, 0, 0, 0, 0, 0, 0, 0, 0,
++		ATH11K_RX_WBM_REL_RING_MASK_0,
++	},
++	.reo_status = {
++		0, 0, 0,
++		ATH11K_REO_STATUS_RING_MASK_0,
++	},
++	.rxdma2host = {
++		ATH11K_RXDMA2HOST_RING_MASK_0,
++	},
++	.host2rxdma = {
++		ATH11K_HOST2RXDMA_RING_MASK_0,
++	},
++};
++
+ /* Target firmware's Copy Engine configuration for IPQ5018 */
+ const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq5018[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index d9646a491808..2bcfdae9519b 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -296,6 +296,7 @@ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074;
+ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qca6390;
+ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qcn9074;
+ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_wcn6750;
++extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qcn6122;
  
- int ath11k_pcic_init_msi_config(struct ath11k_base *ab)
+ extern const struct ce_ie_addr ath11k_ce_ie_addr_ipq8074;
+ extern const struct ce_ie_addr ath11k_ce_ie_addr_ipq5018;
 
 -- 
 2.53.0
