@@ -1,85 +1,89 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7770F3B776F;
-	Wed, 23 Sep 2026 08:35:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742AD37BE70
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 08:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790152514; cv=none; b=fezvtChQstQ1G5MWtGQcoYlX3CJy9vNzovFJ8pNsD9PMKbdIxZTPVsA9s2ULkZYDQBqKUazTlmtZQhb7jZMpr61vDjEDhaJmYZ9zyyfpyXSwsQrRi9p7nNTT68oSEhkMR6F3K3KO28nIVOBy9xXacH0IC9y8Su0ASMRCmhRLvHU=
+	t=1790153090; cv=none; b=JRNPeh8ZAzztbfQhuv1Q1SQwlAr0fDg5i18gCdeT1RCKT5O4RafDhodZZdkxQ+f2HcbtQ87kHr47zwUUQ/tg1EQlTEnxTMUbUthhpWfe5k8Xr7COohgwAO+ytRb9s1BpWh9nfnyNjlJEjimZ+XFqrhQWcUqrXl16vmh6RQHVwwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790152514; c=relaxed/simple;
-	bh=KomC0RRIPzf4oWXD0y0rcfhZGcojCLF9pTG0YP6l0U8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=udh4oJBQ89UTEZ1MzZxIc5Y6hTjEji8cw3onFSCzlOXeFox8CPAI6JyO6Cm9ZMrcLX16jm7xnajDU4NymgEKKYwM7ou+qy3foVhyRryqezu4aW0AvmP8h8F4wSwRz9tQWx58JeYrTaXS+lyXQVs0Rnvs7hea0F5elCkxErJX4IA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=LI1EIoLX; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1790153090; c=relaxed/simple;
+	bh=5HtiKG4HZiV8G0W9hq66q9T7mdEbG2of2ijEqOGb7g4=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=jO3iOXCazmQiMQQg5TTOF5LO6+yv9WyhAk4dt6LCjUrLZVQWntNnxVo0O4fimyQgTgY2cd9Pjbp+VsxqAl1j6spOs5vteLJNzYzmUFTo4hRBb2Cv4rKaZ35+iCEc2rN/wjR5Q0YpIuP7+6ZljGCEzMuiOMLF9uIV6l5fJx2nWfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sF1FI39c; arc=none smtp.client-ip=91.218.175.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="LI1EIoLX"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N8Yrz16161206, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790152493; bh=KomC0RRIPzf4oWXD0y0rcfhZGcojCLF9pTG0YP6l0U8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=LI1EIoLXptNlHm8xaBYADnXKRlPxeZif+woKHUb0X30BQfO+26qSkErXPvvwnOzf9
-	 KRTMLxMljDZrZsh8ZqflvENObj1O4DQgloM6Bo3seaTpbDj+EscfaBqh/cUEPcwLJD
-	 l6ykzULat25bdL6LLbMiHWIf6nGZmMRmiCwedBeEYr9pKQJM9AJpKjKmBIcERbCBbU
-	 0Jf5NbnrF2Mw0wtKyqXmk37oymjYUsJ10hUEyc/inJp95ZGDKdNGi5+qbIBPpuNKMV
-	 h+7mNmJ6pCUV48D33pb6YbV1oCPJ7YcPiRsj0cVHrUDR7dfny4wMlfBjtgeqoJTkA0
-	 qP3St2LRN/xNg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N8Yrz16161206
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 23 Sep 2026 16:34:53 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 16:34:52 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 16:34:37 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 23 Sep 2026 16:34:37 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
-  Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and
- AGC tables
-Thread-Topic: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and
- AGC tables
-Thread-Index: AQHdSeATpI0NUCgP0kmEYeuJr1vdNLbby2HQ//+FlwCAAIc+QA==
-Date: Wed, 23 Sep 2026 08:34:37 +0000
-Message-ID: <3ce6a66b25274fb0b58f259529359bfe@realtek.com>
-References: <20260921154347.82317-1-luka.gejak@linux.dev>
- <20260921154347.82317-3-luka.gejak@linux.dev>
- <0a6ea4337e004faa97595b1b62d2cad9@realtek.com>
- <6c14fabffc6984a5e7cd91c9b7fe6e4caceeaf70@linux.dev>
-In-Reply-To: <6c14fabffc6984a5e7cd91c9b7fe6e4caceeaf70@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sF1FI39c"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=5HtiKG4HZiV8G0W9hq66q9T7mdEbG2of2ijEqOGb7g4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790153087; v=1; x=1790757887;
+ b=sF1FI39cFDmh6qmEcQWDV0SFQkfdAxfpNw81sU/B8WVCE1sZeZMPieJvSxXKUqhHuk072h9+
+ RbF59Nu1SC0ye9MXrnD5k9adjVz90D8bpThYijzWNBXxUb0Pm5nq/qNFYmuquCo4yljQBGRNEjK
+ muG4tCo7IahOm0ewELDRT5mk=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 656c7f665a49ef96;
+	Wed, 23 Sep 2026 08:44:47 +0000
+X-Mizu-Trace-ID: 656c7f665a49ef96
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Date: Wed, 23 Sep 2026 08:44:47 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <09c6a890906e4d4e93d8dcde41e2b808b7d9582c@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and
+ AGC tables
+To: "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael  
+ Straube" <straube.linux@gmail.com>, "Peter Robinson"
+ <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
+ luka.gejak@linux.dev
+In-Reply-To: <3ce6a66b25274fb0b58f259529359bfe@realtek.com>
+References: <20260921154347.82317-1-luka.gejak@linux.dev>
+ <20260921154347.82317-3-luka.gejak@linux.dev>
+ <0a6ea4337e004faa97595b1b62d2cad9@realtek.com>
+ <6c14fabffc6984a5e7cd91c9b7fe6e4caceeaf70@linux.dev>
+ <3ce6a66b25274fb0b58f259529359bfe@realtek.com>
 
-DQpMdWthIEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4gTHVrYSBHZWph
-ayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiA+ID4gICsvLyBTUERYLUxpY2Vuc2Ut
-SWRlbnRpZmllcjogR1BMLTIuMCBPUiBCU0QtMy1DbGF1c2UNCj4gPiA+ICArLyoNCj4gPiA+ICAr
-ICogQ29weXJpZ2h0KGMpIDIwMDctMjAxNyBSZWFsdGVrIENvcnBvcmF0aW9uDQo+ID4gPiAgKyAq
-IENvcHlyaWdodChjKSBNaWNoYWVsIFN0cmF1YmUgPHN0cmF1YmUubGludXhAZ21haWwuY29tPg0K
-PiA+ID4gICsgKiBDb3B5cmlnaHQoYykgMjAyNC0yMDI2IEx1a2EgR2VqYWsgPGx1a2EuZ2VqYWtA
-bGludXguZGV2Pg0KPiA+ID4NCj4gPiBJJ20gbm90IHN1cmUgaWYgd2Ugc2hvdWxkIGNsYWltIGNv
-cHlyaWdodCB5ZWFyIGJhY2sgdG8gMjAwNz8NCj4gDQo+IFdoYXQgd291bGQgeW91IHByZWZlciwg
-anVzdCB0ZWxsIG1lIGFuZCBJIHdpbGwgY2hhbmdlIGl0Pw0KDQpZb3UgY2FuIHJlZmVyZW5jZSB3
-aGF0IEJpdHRlcmJsdWUgZGlkIFsxXS4gSSBkb24ndCBoYXZlIG11Y2ggc3R1ZHkNCmFib3V0IHRo
-ZSBjb3B5cmlnaHQuIA0KDQpbMV0gMWE3NTQ1Nzg0NjQyICgid2lmaTogcnR3ODg6IEFkZCBydHc4
-ODE0YS57YyxofSIpDQoNCg0K
+September 23, 2026 at 11:34, "Ping-Ke Shih" <pkshih@realtek.com mailto:pk=
+shih@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E >=
+ wrote:
+
+
+>=20
+>=20Luka Gejak <luka.gejak@linux.dev> wrote:
+>=20
+>=20>=20
+>=20> Luka Gejak <luka.gejak@linux.dev> wrote:
+> >  > +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+> >  > +/*
+> >  > + * Copyright(c) 2007-2017 Realtek Corporation
+> >  > + * Copyright(c) Michael Straube <straube.linux@gmail.com>
+> >  > + * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
+> >  >
+> >  I'm not sure if we should claim copyright year back to 2007?
+> >=20=20
+>=20>  What would you prefer, just tell me and I will change it?
+> >=20
+>=20You can reference what Bitterblue did [1]. I don't have much study
+> about the copyright.=20
+>=20
+> [1] 1a7545784642 ("wifi: rtw88: Add rtw8814a.{c,h}")
+>
+
+He uses 2025, so should I copy his line for Realtek copyright header?
+
+Also I will address all comments and send v4 tonight/tomorrow morning.
+
+Best regards,
+Luka Gejak
