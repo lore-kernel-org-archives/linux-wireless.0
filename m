@@ -1,67 +1,65 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C17D3F105B;
-	Wed, 23 Sep 2026 08:59:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2AB5422E08;
+	Wed, 23 Sep 2026 09:04:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790153989; cv=none; b=YojXlRe+xK00hfhASbY19/s0ak6Fm6WeGskq/F8lpK4A1crN7prIb7bIko0EeWJRWvEGE5zHHWfxy59FUsRiUH1X730dasFxkHGPE/gQc3/YV/ZodvXEhZCwk1WmziU8H1AWm8xhkp91iK0+7XZwKdtFRdZgwRF376ZpyliU5jc=
+	t=1790154288; cv=none; b=Hxj2joueTiqZhMZuqevUY6pBV3tEocu+ojwLTJvg9xFuBAkJCo9xUDhP434dRfvNRXglguGWWJ1i/Qi4OVrEH96Nxza5vBbwX9+NJH0c/PwsDJ+RYmCp+mplwg7W5qDHgfUstiluqdJdJmQ/fYQHlPUrAlaxOJaxlwluThbUr5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790153989; c=relaxed/simple;
-	bh=UF/XgH4255aSGWQgDSj8/OqvKw0xbQCie6ZgV1fNFVQ=;
+	s=arc-20240116; t=1790154288; c=relaxed/simple;
+	bh=bQJjiXtTzOqoGmkBZP8ZCJLiWls36N6/2Iha1boc+jk=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=GkDM75M/0enQ/TsKduFVF3MNnIEZkTmNlskvwlHd0deFCTe9xq3ioPEOUtpVhfF2bGv9lao/D0bTDI+wYiHfQ6HbNMHkQFYoMBZK4fHBgo7CLZH6hkHxFqmmj1IXIxoRni+abNug9i40TIM2pibe5FKkt+L9057BotY+yi/bD5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=OgyThMr0; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=YrhXuhvYyg+qePihQeZCENIqlDjbnVcCuUegNrttbc184zzMsYju8YRHXpEt8qy7AS7vcYwM4UQTbuhnT+4V2zelpP3VHdTvmTI4sbyBHjecvvjWxAS1uD6trZE51I72kGEASGURiq6A2tJcNxnvq1VWvP9ifm5nUygv6aMJxEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=pahjhf7K; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="OgyThMr0"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N8xaE13169129, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="pahjhf7K"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N94YJ90172052, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790153977; bh=UF/XgH4255aSGWQgDSj8/OqvKw0xbQCie6ZgV1fNFVQ=;
+	t=1790154274; bh=jeyRsNDIR0xGSsUeZ5dqgd/NeTZVzhL1efROpfADM38=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=OgyThMr0G9FSOugnyo6WPOcFoBAcC7BhzP+Zjtauz56+Q81U6ZLAUXlcgzQORsgm7
-	 AmrgYmtbLOoAuqn/4n5EqbHV2VIOR1nwNYbDgX7RAoAfdnGqmj2S79r9O4txT5TNoq
-	 BT7+ckd8+tWUM6meF03lzBbe2fT/yoZwqam9GtkDSCbE2oh1nlejcjpFE8bqa+oA/W
-	 aT2mmF9ZhdKb/Qx/EtyPGHNEheRuwD/ZhA8r/CWjb8s4V4LaPO3Tqrmm7CTQ57Bapq
-	 r1KOb1EkpnSjEtBrgy9JBsVrKpN5YZLov/rpHARgFgU/gnKFVf2BsDjAFRahfzpf1q
-	 QR65xhreUq6tQ==
+	b=pahjhf7KAByC8RyCRPNfF8fH4tS4OtVjgJP+gnPBdp8e8vcXzblldRZpTR6ZkSmUL
+	 ztfb8WDd/Q1EkD1BfLqyJrzjs7NgQQ5QIyaDOA2QkqAW1BvuCVZleqDzy03K/MhgWv
+	 l8JbP2dpDn4eSu5SNXqndUi6ykS8V8d4atoZjOzzyfp+Ui9RDGXEd2rDnIGaa+9QLQ
+	 uYqsamUMZNpQeSqQDvYH2+np6d3JaHBor1mdMxXPNaniOU48ZZNeUmT+p3/XvMx0Mo
+	 mb1RTvG+kCBMZFhNZPWGvuNywPupVEeqo/V/jpkuUPHDN+2HSt0YUorpKE3RygFzqs
+	 X7hlL4h/2GDfQ==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N8xaE13169129
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N94YJ90172052
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 23 Sep 2026 16:59:37 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	Wed, 23 Sep 2026 17:04:34 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 16:59:36 +0800
+ 15.2.2562.49; Wed, 23 Sep 2026 17:04:34 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 23 Sep 2026 17:04:34 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 23 Sep 2026 16:59:36 +0800
+ 15.02.2562.049; Wed, 23 Sep 2026 17:04:34 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: Luka Gejak <luka.gejak@linux.dev>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
-   Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
+ Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and
- AGC tables
-Thread-Topic: [PATCH v3 2/6] wifi: rtw88: 8723b: add the RTL8723B BB, RF and
- AGC tables
-Thread-Index: AQHdSeATpI0NUCgP0kmEYeuJr1vdNLbby2HQ//+FlwCAAIc+QP//fYCAgACI3aA=
-Date: Wed, 23 Sep 2026 08:59:35 +0000
-Message-ID: <16eeca262aab43a798afeb806e88aac8@realtek.com>
+Subject: RE: [PATCH v3 4/6] wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+Thread-Topic: [PATCH v3 4/6] wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+Thread-Index: AQHdSeAYhR9eRhv8Qk+DJdy7EkB6b7bb4DfA
+Date: Wed, 23 Sep 2026 09:04:34 +0000
+Message-ID: <6f9643f8704c4745a508c0960be85fd4@realtek.com>
 References: <20260921154347.82317-1-luka.gejak@linux.dev>
- <20260921154347.82317-3-luka.gejak@linux.dev>
- <0a6ea4337e004faa97595b1b62d2cad9@realtek.com>
- <6c14fabffc6984a5e7cd91c9b7fe6e4caceeaf70@linux.dev>
- <3ce6a66b25274fb0b58f259529359bfe@realtek.com>
- <09c6a890906e4d4e93d8dcde41e2b808b7d9582c@linux.dev>
-In-Reply-To: <09c6a890906e4d4e93d8dcde41e2b808b7d9582c@linux.dev>
+ <20260921154347.82317-5-luka.gejak@linux.dev>
+In-Reply-To: <20260921154347.82317-5-luka.gejak@linux.dev>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,26 +67,76 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-DQpMdWthIEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4NCj4gPiBMdWth
-IEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4NCj4gPiA+DQo+ID4gPiBM
-dWthIEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4gPiAgPiArLy8gU1BE
-WC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAgT1IgQlNELTMtQ2xhdXNlDQo+ID4gPiAgPiAr
-LyoNCj4gPiA+ICA+ICsgKiBDb3B5cmlnaHQoYykgMjAwNy0yMDE3IFJlYWx0ZWsgQ29ycG9yYXRp
-b24NCj4gPiA+ICA+ICsgKiBDb3B5cmlnaHQoYykgTWljaGFlbCBTdHJhdWJlIDxzdHJhdWJlLmxp
-bnV4QGdtYWlsLmNvbT4NCj4gPiA+ICA+ICsgKiBDb3B5cmlnaHQoYykgMjAyNC0yMDI2IEx1a2Eg
-R2VqYWsgPGx1a2EuZ2VqYWtAbGludXguZGV2Pg0KPiA+ID4gID4NCj4gPiA+ICBJJ20gbm90IHN1
-cmUgaWYgd2Ugc2hvdWxkIGNsYWltIGNvcHlyaWdodCB5ZWFyIGJhY2sgdG8gMjAwNz8NCj4gPiA+
-DQo+ID4gPiAgV2hhdCB3b3VsZCB5b3UgcHJlZmVyLCBqdXN0IHRlbGwgbWUgYW5kIEkgd2lsbCBj
-aGFuZ2UgaXQ/DQo+ID4gPg0KPiA+IFlvdSBjYW4gcmVmZXJlbmNlIHdoYXQgQml0dGVyYmx1ZSBk
-aWQgWzFdLiBJIGRvbid0IGhhdmUgbXVjaCBzdHVkeQ0KPiA+IGFib3V0IHRoZSBjb3B5cmlnaHQu
-DQo+ID4NCj4gPiBbMV0gMWE3NTQ1Nzg0NjQyICgid2lmaTogcnR3ODg6IEFkZCBydHc4ODE0YS57
-YyxofSIpDQo+ID4NCj4gDQo+IEhlIHVzZXMgMjAyNSwgc28gc2hvdWxkIEkgY29weSBoaXMgbGlu
-ZSBmb3IgUmVhbHRlayBjb3B5cmlnaHQgaGVhZGVyPw0KDQpNYXliZSAiQ29weXJpZ2h0KGMpIDIw
-MjYgUmVhbHRlayBDb3Jwb3JhdGlvbiINCg0KSWYgbmVlZGVkLCBtb3JlIGNvcHlyaWdodCBhcmUg
-YWxzbyBva2F5LCBidXQgSSBkb24ndCBrbm93IG11Y2ggYWJvdXQgdGhhdC4NCllvdSBjYW4gc3R1
-ZHkgRG9jdW1lbnRhdGlvbiBvciBzb21ld2hlcmUgdG8ga25vdyBtb3JlLg0KDQo+IA0KPiBBbHNv
-IEkgd2lsbCBhZGRyZXNzIGFsbCBjb21tZW50cyBhbmQgc2VuZCB2NCB0b25pZ2h0L3RvbW9ycm93
-IG1vcm5pbmcuDQoNCk5vIHJ1c2guIERlZXBseSB3aGF0IHJldmlldyB0aGUgcGF0Y2hlcyBiZWZv
-cmUgc2VuZGluZyBpcyBtb3JlIGltcG9ydGFudC4NCkFzIHRoaXMgcGF0Y2hzZXQgaXMgbGFyZ2Ug
-TE9DLCBvbmUgaXRlcmF0aW9uIHNwZW5kcyBtZSBhIGxvdCBvZiB0aW1lLiBJJ2QNCm1pbmltaXpl
-IGl0ZXJhdGlvbiBhcyBmZXcgYXMgcG9zc2libGUuDQoNClBpbmctS2UNCg0K
+
+Luka Gejak <luka.gejak@linux.dev> wrote:
+> Add the SDIO module for the RTL8723BS, the SDIO variant of the
+> RTL8723B. It binds the Realtek SDIO device ids to the shared rtw88 SDIO
+> probe and points it at the RTL8723B chip information.
+>=20
+> The device id table carries the same six ids the staging rtl8723bs
+> driver binds to this chip, so the staging driver can be dropped without
+> losing hardware support. I only have the 0xb723 variant to test with;
+> the other five are included for parity with staging, which has carried
+> them for years, rather than being left behind.
+>=20
+> The driver is not built yet; the Kconfig and Makefile entries follow.
+
+I think no need this. The Kconfig/Makefile is ready in the same patchset.
+
+>=20
+> The RTL8723B chip support is based on the initial work by
+> Michael Straube <straube.linux@gmail.com>.
+> Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
+>=20
+> Co-developed-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> ---
+>  .../net/wireless/realtek/rtw88/rtw8723bs.c    | 67 +++++++++++++++++++
+>  1 file changed, 67 insertions(+)
+>  create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+> b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+> new file mode 100644
+> index 000000000000..f0c0fe6ee2b3
+> --- /dev/null
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+> @@ -0,0 +1,67 @@
+> +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+> +/*
+> + * Copyright(c) 2007-2017  Realtek Corporation
+> + * Copyright(c) Michael Straube <straube.linux@gmail.com>
+> + * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
+> + */
+> +
+> +#include <linux/mmc/sdio_func.h>
+> +#include <linux/mmc/sdio_ids.h>
+> +#include <linux/module.h>
+> +#include "main.h"
+> +#include "rtw8723b.h"
+> +#include "sdio.h"
+> +
+> +static const struct sdio_device_id rtw_8723bs_id_table[] =3D {
+> +       {
+> +               SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK,
+> +                           SDIO_DEVICE_ID_REALTEK_RTW8723BS),
+> +               .driver_data =3D (kernel_ulong_t)&rtw8723b_hw_spec,
+> +       },
+> +       /*
+> +        * The remaining ids are the other RTL8723BS SDIO ids the staging
+> +        * rtl8723bs driver binds to this chip. They have no
+> +        * SDIO_DEVICE_ID_REALTEK_* names in <linux/mmc/sdio_ids.h> and a=
+re
+> +        * carried here for parity with staging; only 0xb723 above has be=
+en
+> +        * verified on hardware.
+> +        */
+
+I think no need this comment.=20
+
+Just keep these IDs, or remove all of them you have not tested.=20
+
+If you think this is important, add to commit message
+
+
