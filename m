@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37CCE497B7D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F484BF941;
 	Wed, 23 Sep 2026 12:05:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790165123; cv=none; b=uRLXZtOCcsEYzEIfek7jJK2jJR/lQ059NqRSkd62J98VrsKB6IJJVJN+AHj/CVmkkZbs2DMPlUdFtS83DdrMXESGL54moxUSqo2ndjQeT2gmpjMXpOT+a62EOv8HVbJ5Mgx2RtbleBbD2bZG7FmqfhzCwe1xaJsmSf4d7OEEn8c=
+	t=1790165123; cv=none; b=a/INbdj7ivs02ojIwA+jgNFN4EGigV94kcibP27wycSRjOXqUzakmm2wfU9WZ17+mELtUC4mvt0i2a6o3YHId/ZVkOBCfvNGc8RdJtZplbVbHhlLNUnxLnqE0+kQg5AAC5E4Xoh+EfNZw0hr+o74cqe5jjr+4bA+4sGnhHxLBlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790165123; c=relaxed/simple;
-	bh=zr9QS4CYGFpHmvIppu1yeUZO9czGWXXQkxsqz13zlWk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=bXyf9Lu/H1STEoiTtx0VQrJ8ru604MlpPkBadEbRYBDCH8ESq/zX/exJTxkRsslyhaGzbFYtIZVWpI58SVqitqU8OC4da4IWEfIfmvZJtW627ZwLlVjwFJjj8UA/O/fehjZ4Ux71/B9oMXTsnqLUnURdQN0UA/KgiHPGfrM063Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MwSvWTVc; arc=none smtp.client-ip=10.30.226.201
+	bh=DP7ZakM0RfG18wmgJmMLdmBWCDvPQiNf/lyndgVxw7o=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=NRKIbctsYf7lESivbd70Be6VtnebQ1EEY4uZiUJI5u/5eb1uBws7aR/7x1abm4TjEwWrg/aEjA89u7o1ln1Ay0IjOg2vZ1jplWIQa2WgA3XKRuNe6TaVMDX4+DAQpXByg8Ek+qoUjMfNcm0Uu1WblcQC2JWOHhZE3CvVxuGJhGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b/niJeLT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MwSvWTVc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DB49EC2BCFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b/niJeLT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B142FC2BCC7;
 	Wed, 23 Sep 2026 12:05:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1790165120;
-	bh=zr9QS4CYGFpHmvIppu1yeUZO9czGWXXQkxsqz13zlWk=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=MwSvWTVcY56qXWggAHOhXgf1HWczyxJ9fr24cScw7M/lMzPPofAK0nfB0dcWdUhI1
-	 uFHoKTehM/gzDjq8Gh00JbMZNnotUTkfeoFUzkID9eHjOUNkEx8Oy8p6bFn8YI97K4
-	 E2s/1+4evWXuf6+0LiiVfqLVavPJsDbqURplfk+A7lVwwoJQhEcXD52Bb67AdlPGGS
-	 ZeSwB9Eq/3p0RjjIxr0JjTmnfAY1Ra9bbTza7izbhmDhQThL+vRn+oK4c7EcaYeXyf
-	 CYLyVGJ4LVQoRj4xVqT/TFXuavPnI0jk19M+OMZU4z8ioHxC9IgTqKNwkiZXXsS7Ex
-	 OWdKzPlbA0plw==
+	bh=DP7ZakM0RfG18wmgJmMLdmBWCDvPQiNf/lyndgVxw7o=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=b/niJeLT2ZU2trAA4Kk1o+BVKX/W+XHzz+VsVKfVInoMY2kmNWK8OpFZI3QNkZVzS
+	 SKkaVbGFUX6qjwMDycKcR9GDKRNYMj3DhSJsFa/Ywhu5oF2lPEiI3zaGdbYRrMAH60
+	 m0u6E6nek5v0qWt+YHuSCBRVQ1xTGNIzNLmrFXRlApjaSyCZ76OfMe6Oo2cFFCuNWL
+	 9uHYl1LvpohKz9V3iRYLNtQAKxStPFyIrLONPQwiYZwUbA8wSb28uXlHIYvCg7GuBC
+	 AoRBhvtlwWUnHG6CZ6FT/4YnZXOph4Y58o0aV8yn05ml6L/tijysn4H4KcGRf6juyE
+	 nOj46akfNDljw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C00BBC982FA;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D35C98309;
 	Wed, 23 Sep 2026 12:05:20 +0000 (UTC)
 From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
-Date: Wed, 23 Sep 2026 16:05:09 +0400
-Subject: [PATCH ath-next 03/16] wifi: ath11k: Register root PD rproc
- notifier
+Subject: [PATCH ath-next 00/16] wifi: ath11k: add MultiPD support for AHB
+ platforms
+Date: Wed, 23 Sep 2026 16:05:06 +0400
+Message-Id: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,9 +41,10 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260923-ipq5018-qcn6122-mpd-v1-3-86729521a75c@outlook.com>
-References: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
-In-Reply-To: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MMQ6DMAxA0asgz1iK3RI1vQpigGDAQ9OQRBUS4
+ u5EHd/w/wlZkkqGd3NCkp9m/YYKahvw2xhWQZ2rgQ1b48igxr0z9MLdB0vM+IkzPi131j9ock6
+ gljHJosf/2sNYNgxyFBiu6wZ5C1dabwAAAA==
+X-Change-ID: 20260910-ipq5018-qcn6122-mpd-46256c31b99e
 To: Johannes Berg <johannes@sipsolutions.net>, 
  Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
  Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
@@ -56,11 +57,11 @@ Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, 
  George Moussalem <george.moussalem@outlook.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790165117; l=10638;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790165117; l=4766;
  i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
- bh=BRJQEz5ssMrbFgr7AS2Nj48GPRPE0J8WJdw2HxrtAY4=;
- b=Shr0bbucP6Re7V/ZVcrJ62SI5KVjjf8uYOu+y5UF7QH69Ww/uTtj6kkgJ4SZJsXUVouLGOoWE
- 6q9Jgb7cmoBDgJiAKkKIHkHEKUoESjectW7Y2vro2wR/pcKO++DBarH
+ bh=DP7ZakM0RfG18wmgJmMLdmBWCDvPQiNf/lyndgVxw7o=;
+ b=6n/qkdAoTe9c56sFXBkMQiIhMPZANlM6ClgA6cmMYrO+R24jrQ8EGwTec/yEhk+Bxot49e/bC
+ h7Yu4a8MouHAdM5V5e2nmXjk7/IEiUYt82kbAHCiVCl1gIRvz+JDaly
 X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
  pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
 X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
@@ -68,388 +69,97 @@ X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
 X-Original-From: George Moussalem <george.moussalem@outlook.com>
 Reply-To: george.moussalem@outlook.com
 
-From: George Moussalem <george.moussalem@outlook.com>
+Add multiPD support for AHB platforms following the approach for ath12k:
+link: https://lore.kernel.org/linux-wireless/20250321-ath12k-ahb-v12-0-bb389ed76ae5@quicinc.com/
+link: https://lore.kernel.org/linux-wireless/20260721065038.126046-1-aaradhana.sahu@oss.qualcomm.com/
 
-In preparation for multi-PD support, register the rproc notifier for the
-Q6 rootPD to monitor its state about power up/down and crash events.
+The IPQ5018 platform is a multiPD platform and the current ath11k driver
+supports standalone IPQ5018 WiFi only. However, IPQ5018 boards come with
+up to two optional SoC-specific QCN6122 WiFi companion chips for 5G/6G
+WiFi.
 
-In non-MPD configurations such as IPQ8074, the rootPD directly provides
-WiFi operation.
+IPQ5018 implements the multi-PD architecture as follows:
 
-In a multi-PD configuration, the rootPD provides resources and services
-to other one or multiple userPDs that provide WiFi operation.
-The rproc driver handles loading and authenticating the firmware image
-of the rootPD, while the ath11k driver boots the rootPD and the userPDs.
+                     +-----------------------------+
+                     |     Q6 Remote Processor     |
+                     |            RootPD           |
+                     +--------------+--------------+
+                                    |
+                                    |
+                                    |
+              +---------------------+---------------------+
+              |                     |                     |
+        +-----v-----+         +-----v-----+         +-----v-----+
+        |  UserPD1  |         |  UserPD2  |         |  UserPD3  |
+        |  IPQ5018  |         | QCN6122 #1|         | QCN6122 #2|
+        |  (Radio)  |         |  (Radio)  |         |  (Radio)  |
+        +-----------+         +-----------+         +-----------+
 
-The root PD must be booted first, so power up the rootPD and wait
-for a power-up notification from the notifier callback before powering
-up the userPDs. Add global driver-level locking to avoid multiple
-threads racing to power up the rootPD.
+The rootPD is responsible for managing the lifecycle of the UserPD and
+shared resources and providing SSR notifiers. There are different
+firmware blobs that include either the rootPD and userPD binaries for
+IPQ5018-only which auto-spawns the userPD for IPQ5018 WiFi, or for
+IPQ5018 and QCN6122 for which the userPDs for each radio must be spawned
+by the ath11k driver.
+
+It's worth noting that QCN6122 does not have its own Q6 firmware blobs.
+Instead, the firmware segments for QCN6122 are included in the MPD
+version of the IPQ5018 firmware blob(s). The QCN6122 M3 firmware does
+come separately and is loaded into the Q6 memory carveout of IPQ5018.
+
+In high-level, the path series covers:
+- Addition of multiPD IPQ5018 binding definition
+- Updates to the ath11k driver to register handle standalone vs multiPD
+  remoteproc boot sequence with required notifiers.
+- Support for loading M3 firmware files during remoteproc boot sequence
+- Ability to set required memory carveouts for Q6, BDF, and M3 firmware
+  segments.
+- Addition of SCM call to manage power state of the internal IPQ5018
+  WiFi radio
+- Driver support for resource acquisition and power up/down of userPDs
+- Binding definition and AHB driver support for QCN6122
 
 Signed-off-by: George Moussalem <george.moussalem@outlook.com>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c | 218 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath11k/ahb.h |  17 ++-
- 2 files changed, 215 insertions(+), 20 deletions(-)
+George Moussalem (16):
+      dt-bindings: net: wireless: ath11k: Sort compatible names alphabetically
+      dt-bindings: net: wireless: ath11k: Add bindings for IPQ5018
+      wifi: ath11k: Register root PD rproc notifier
+      wifi: ath11k: Add support for loading m3 mbn firmware
+      wifi: ath11k: Add ability to set BDF and M3 dump memory addresses
+      firmware: qcom: scm: Add support for setting internal WiFi power mode
+      wifi: ath11k: Register userPD interrupts and SMEM entries
+      wifi: ath11k: Power up userPD
+      wifi: ath11k: Power down userPD
+      dt-bindings: net: wireless: ath11k: Add bindings for QCN6122
+      wifi: ath11k: add hw params for QCN6122
+      wifi: ath11k: add hal regs for QCN6122
+      wifi: ath11k: add hw ring mask for QCN6122
+      wifi: ath11k: update hif and pci ops for QCN6122
+      wifi: ath11k: define userPDs for QCN6122
+      wifi: ath11k: add QCN6122 device support
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 27d01411b6e9..86723a2eb3d2 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -44,6 +44,13 @@ MODULE_DEVICE_TABLE(of, ath11k_ahb_of_match);
- 
- #define ATH11K_IRQ_CE0_OFFSET 4
- 
-+/*
-+ * Global Driver-level Locking:
-+ *  - ath11k_rproc_info_lock: Protects rproc_info allocation/free
-+ */
-+static struct ath11k_ahb_rproc_info *g_rproc_info;
-+static DEFINE_MUTEX(ath11k_rproc_info_lock);
-+
- static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
- 	"misc-pulse1",
- 	"misc-latch",
-@@ -408,21 +415,12 @@ static void ath11k_ahb_stop(struct ath11k_base *ab)
- 
- static int ath11k_ahb_power_up(struct ath11k_base *ab)
- {
--	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
--	int ret;
--
--	ret = rproc_boot(ab_ahb->tgt_rproc);
--	if (ret)
--		ath11k_err(ab, "failed to boot the remote processor Q6\n");
--
--	return ret;
-+	return 0;
- }
- 
- static void ath11k_ahb_power_down(struct ath11k_base *ab, bool is_suspend)
- {
--	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
--
--	rproc_shutdown(ab_ahb->tgt_rproc);
-+	return;
- }
- 
- static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
-@@ -832,24 +830,200 @@ static const struct ath11k_hif_ops ath11k_ahb_hif_ops_wcn6750 = {
- 	.ce_irq_disable = ath11k_pci_disable_ce_irqs_except_wake_irq,
- };
- 
-+static int ath11k_ahb_root_pd_state_notifier(struct notifier_block *nb,
-+					     const unsigned long event, void *data)
-+{
-+	struct ath11k_ahb_rproc_info *rproc_info =
-+		container_of(nb, struct ath11k_ahb_rproc_info, root_pd_nb);
-+
-+	if (event == ATH11K_RPROC_AFTER_POWERUP) {
-+		ath11k_dbg(NULL, ATH11K_DBG_AHB, "Root PD is UP\n");
-+		complete(&rproc_info->rootpd_ready);
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath11k_ahb_register_rproc_notifier(void)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	if (g_rproc_info->root_pd_notifier)
-+		return 0;
-+
-+	g_rproc_info->root_pd_nb.notifier_call = ath11k_ahb_root_pd_state_notifier;
-+
-+	g_rproc_info->root_pd_notifier = qcom_register_ssr_notifier(g_rproc_info->tgt_rproc->name,
-+								    &g_rproc_info->root_pd_nb);
-+	if (IS_ERR(g_rproc_info->root_pd_notifier)) {
-+		ret = PTR_ERR(g_rproc_info->root_pd_notifier);
-+		g_rproc_info->root_pd_notifier = NULL;
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void ath11k_ahb_unregister_rproc_notifier(void)
-+{
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	if (!g_rproc_info->root_pd_notifier)
-+		return;
-+
-+	qcom_unregister_ssr_notifier(g_rproc_info->root_pd_notifier,
-+				     &g_rproc_info->root_pd_nb);
-+	g_rproc_info->root_pd_notifier = NULL;
-+}
-+
-+static struct ath11k_ahb_rproc_info *ath11k_ahb_rproc_info_alloc(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+	struct ath11k_ahb_rproc_info *rproc_info;
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	rproc_info = kzalloc_obj(*rproc_info);
-+	if (!rproc_info)
-+		return NULL;
-+
-+	rproc_info->root_pd_booted = false;
-+	init_completion(&rproc_info->rootpd_ready);
-+	ab_ahb->rproc_info = rproc_info;
-+
-+	return rproc_info;
-+}
-+
- static int ath11k_core_get_rproc(struct ath11k_base *ab)
- {
- 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
- 	struct device *dev = ab->dev;
- 	struct rproc *prproc;
- 	phandle rproc_phandle;
-+	int ret;
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	if (g_rproc_info) {
-+		ab_ahb->rproc_info = g_rproc_info;
-+		return 0;
-+	}
-+
-+	g_rproc_info = ath11k_ahb_rproc_info_alloc(ab);
-+	if (!g_rproc_info)
-+		return -ENOMEM;
- 
- 	if (of_property_read_u32(dev->of_node, "qcom,rproc", &rproc_phandle)) {
- 		ath11k_err(ab, "failed to get q6_rproc handle\n");
--		return -ENOENT;
-+		ret = -ENOENT;
-+		goto err_free_rproc_info;
- 	}
- 
- 	prproc = rproc_get_by_phandle(rproc_phandle);
--	if (!prproc)
--		return dev_err_probe(&ab->pdev->dev, -EPROBE_DEFER, "failed to get rproc\n");
--	ab_ahb->tgt_rproc = prproc;
-+	if (!prproc) {
-+		ret = dev_err_probe(dev, -EPROBE_DEFER,
-+				    "failed to get rproc\n");
-+		goto err_free_rproc_info;
-+	}
-+	g_rproc_info->tgt_rproc = prproc;
- 
- 	return 0;
-+
-+err_free_rproc_info:
-+	ab_ahb->rproc_info = NULL;
-+	kfree(g_rproc_info);
-+	g_rproc_info = NULL;
-+	return ret;
-+}
-+
-+static int ath11k_ahb_boot_root_pd(struct ath11k_base *ab)
-+{
-+	unsigned long time_left;
-+	int ret;
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+	reinit_completion(&g_rproc_info->rootpd_ready);
-+
-+	ret = rproc_boot(g_rproc_info->tgt_rproc);
-+	if (ret < 0) {
-+		ath11k_err(ab, "RootPD boot failed\n");
-+		return ret;
-+	}
-+
-+	time_left = wait_for_completion_timeout(&g_rproc_info->rootpd_ready,
-+						ATH11K_ROOTPD_READY_TIMEOUT);
-+	if (!time_left) {
-+		ath11k_err(ab, "RootPD ready wait timed out\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath11k_ahb_configure_rproc(struct ath11k_base *ab)
-+{
-+	int ret;
-+
-+	mutex_lock(&ath11k_rproc_info_lock);
-+
-+	ret = ath11k_core_get_rproc(ab);
-+	if (ret < 0) {
-+		mutex_unlock(&ath11k_rproc_info_lock);
-+		return ret;
-+	}
-+
-+	ret = ath11k_ahb_register_rproc_notifier();
-+	if (ret < 0) {
-+		ret = dev_err_probe(&ab->pdev->dev, ret,
-+				    "failed to register rproc notifier\n");
-+		goto err_put_rproc;
-+	}
-+
-+	if (g_rproc_info->tgt_rproc->state != RPROC_RUNNING) {
-+		ret = ath11k_ahb_boot_root_pd(ab);
-+		if (ret) {
-+			ath11k_err(ab, "failed to boot the remote processor Q6\n");
-+			goto err_unreg_notifier;
-+		}
-+	}
-+	g_rproc_info->root_pd_booted = true;
-+
-+	mutex_unlock(&ath11k_rproc_info_lock);
-+
-+	return 0;
-+
-+err_unreg_notifier:
-+	ath11k_ahb_unregister_rproc_notifier();
-+
-+err_put_rproc:
-+	rproc_put(g_rproc_info->tgt_rproc);
-+	mutex_unlock(&ath11k_rproc_info_lock);
-+	return ret;
-+}
-+
-+static void ath11k_ahb_deconfigure_rproc(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+	struct ath11k_ahb_rproc_info *rproc_info = ab_ahb->rproc_info;
-+
-+	if (!rproc_info || !g_rproc_info)
-+		return;
-+
-+	mutex_lock(&ath11k_rproc_info_lock);
-+
-+	ath11k_ahb_unregister_rproc_notifier();
-+
-+	if (g_rproc_info->root_pd_booted &&
-+	    g_rproc_info->tgt_rproc->state == RPROC_RUNNING)
-+		rproc_shutdown(g_rproc_info->tgt_rproc);
-+
-+	rproc_put(g_rproc_info->tgt_rproc);
-+	kfree(g_rproc_info);
-+	g_rproc_info = NULL;
-+
-+	mutex_unlock(&ath11k_rproc_info_lock);
- }
- 
- static int ath11k_ahb_setup_msi_resources(struct ath11k_base *ab)
-@@ -1148,6 +1322,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	struct ath11k_base *ab;
- 	const struct ath11k_hif_ops *hif_ops;
- 	const struct ath11k_pci_ops *pci_ops;
-+	struct ath11k_ahb *ab_ahb;
- 	enum ath11k_hw_rev hw_rev;
- 	int ret;
- 
-@@ -1187,6 +1362,8 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	ab->hw_rev = hw_rev;
- 	ab->fw_mode = ATH11K_FIRMWARE_MODE_NORMAL;
- 	platform_set_drvdata(pdev, ab);
-+	ab_ahb = ath11k_ahb_priv(ab);
-+	ab_ahb->ab = ab;
- 
- 	ret = ath11k_pcic_register_pci_ops(ab, pci_ops);
- 	if (ret) {
-@@ -1226,26 +1403,29 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 
- 	ath11k_ahb_init_qmi_ce_config(ab);
- 
--	ret = ath11k_core_get_rproc(ab);
-+	ret = ath11k_ahb_configure_rproc(ab);
- 	if (ret)
- 		goto err_ce_free;
- 
- 	ret = ath11k_core_init(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to init core: %d\n", ret);
--		goto err_ce_free;
-+		goto err_rproc_deconfigure;
- 	}
- 
- 	ret = ath11k_ahb_config_irq(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to configure irq: %d\n", ret);
--		goto err_ce_free;
-+		goto err_rproc_deconfigure;
- 	}
- 
- 	ath11k_qmi_fwreset_from_cold_boot(ab);
- 
- 	return 0;
- 
-+err_rproc_deconfigure:
-+	ath11k_ahb_deconfigure_rproc(ab);
-+
- err_ce_free:
- 	ath11k_ce_free_pipes(ab);
- 
-@@ -1294,7 +1474,7 @@ static void ath11k_ahb_free_resources(struct ath11k_base *ab)
- 	ath11k_ahb_fw_resource_deinit(ab);
- 	ath11k_ce_free_pipes(ab);
- 	ath11k_ahb_ce_unmap(ab);
--
-+	ath11k_ahb_deconfigure_rproc(ab);
- 	ath11k_core_free(ab);
- 	platform_set_drvdata(pdev, NULL);
- }
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.h b/drivers/net/wireless/ath/ath11k/ahb.h
-index 8c1eb1e8e6b1..99a361e0091f 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.h
-+++ b/drivers/net/wireless/ath/ath11k/ahb.h
-@@ -6,6 +6,8 @@
- #ifndef ATH11K_AHB_H
- #define ATH11K_AHB_H
- 
-+#include <linux/remoteproc/qcom_rproc.h>
-+
- #include "core.h"
- 
- #define ATH11K_AHB_RECOVERY_TIMEOUT (3 * HZ)
-@@ -14,6 +16,9 @@
- #define ATH11K_AHB_SMP2P_SMEM_SEQ_NO		GENMASK(31, 16)
- #define ATH11K_AHB_SMP2P_SMEM_VALUE_MASK	0xFFFFFFFF
- 
-+#define ATH11K_ROOTPD_READY_TIMEOUT		(5 * HZ)
-+#define ATH11K_RPROC_AFTER_POWERUP		QCOM_SSR_AFTER_POWERUP
-+
- enum ath11k_ahb_smp2p_msg_id {
- 	ATH11K_AHB_POWER_SAVE_ENTER = 1,
- 	ATH11K_AHB_POWER_SAVE_EXIT,
-@@ -21,8 +26,17 @@ enum ath11k_ahb_smp2p_msg_id {
- 
- struct ath11k_base;
- 
--struct ath11k_ahb {
-+struct ath11k_ahb_rproc_info {
- 	struct rproc *tgt_rproc;
-+
-+	struct completion rootpd_ready;
-+	struct notifier_block root_pd_nb;
-+	void *root_pd_notifier;
-+	bool root_pd_booted;
-+};
-+
-+struct ath11k_ahb {
-+	struct ath11k_base *ab;
- 	struct {
- 		struct device *dev;
- 		struct iommu_domain *iommu_domain;
-@@ -37,6 +51,7 @@ struct ath11k_ahb {
- 		unsigned int smem_bit;
- 		struct qcom_smem_state *smem_state;
- 	} smp2p_info;
-+	struct ath11k_ahb_rproc_info *rproc_info;
- };
- 
- static inline struct ath11k_ahb *ath11k_ahb_priv(struct ath11k_base *ab)
+ .../bindings/net/wireless/qcom,ath11k.yaml         | 569 ++++++++++++++++++++-
+ drivers/firmware/qcom/qcom_scm.c                   |  43 ++
+ drivers/firmware/qcom/qcom_scm.h                   |   2 +
+ drivers/net/wireless/ath/ath11k/ahb.c              | 555 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/ahb.h              |  54 +-
+ drivers/net/wireless/ath/ath11k/core.c             |  99 +++-
+ drivers/net/wireless/ath/ath11k/core.h             |   1 +
+ drivers/net/wireless/ath/ath11k/hif.h              |   9 +
+ drivers/net/wireless/ath/ath11k/hw.c               | 112 ++++
+ drivers/net/wireless/ath/ath11k/hw.h               |  10 +
+ drivers/net/wireless/ath/ath11k/pcic.c             |   9 +
+ drivers/net/wireless/ath/ath11k/qmi.c              |  70 ++-
+ drivers/net/wireless/ath/ath11k/qmi.h              |   3 +-
+ include/linux/firmware/qcom/qcom_scm.h             |   1 +
+ 14 files changed, 1501 insertions(+), 36 deletions(-)
+---
+base-commit: 10cfa109c880092df32e396647b4afdca9be8350
+change-id: 20260910-ipq5018-qcn6122-mpd-46256c31b99e
 
+Best regards,
 -- 
-2.53.0
+George Moussalem <george.moussalem@outlook.com>
 
 
