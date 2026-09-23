@@ -1,749 +1,179 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f47.google.com (mail-vs1-f47.google.com [209.85.217.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F9C51D536
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:03:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F3C55304D1
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:23:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790168607; cv=none; b=rgtN+pqCC3xJpcnpTaPzTpMrYFAxhtgnLSNJEjxGayv4i7Tr4TUUsCPK7lazKGcuOwXR+FmnlOo+4E+aoaIOBTrwrmKlu27BYnACdgNerduwvyVO2LE51Yl0FhvYk7o+keMugjzfer44ZyQ6jFMFgD4Kt2qGK4gQvnC24CEkBdI=
+	t=1790169800; cv=none; b=VApm1EJowSv9++nIyupvQUckFa4ri9EyqnqhWlbzEZYsOWuFF5JD20MM2o2oXPBHi6ZYU6Q8AXnIPaq8y46iBj/VCJyj9hZEk0uZlOLxWvoMgZBTD3SjRtiCGrv0D8qGeNTmb+B1sqeGypNM391Lmu7pxlbMvrlAqoutVsqyhD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790168607; c=relaxed/simple;
-	bh=c7ZLD4z0VIDSU7vz1tWVE5od9XgtLXUayrXUlE1r/Mg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gJqir6fKy2VD3AlNNLc3OmjYSis1IAwgKwN+UNazDt5JIm24xgEOPljRAOiL3CQFB9FQLaLrO61TPCFDFjM1f1ftsMvedzCBkL8T0HUrCmzxsw6hfoZwZwWzoW0+/pX8zPTlz+F4NxZQuPD0e3WOH1KI2Ioy9gUTZE+ybPJKcTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FiRZl9d5; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790169800; c=relaxed/simple;
+	bh=CBMoOcQSJV0envXaeE2VfMihOHslrN6apNgntTtzWDI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QYK4AgvdFFGTg5AwtgYxf9wRPIj6A4HAVFO/FW+Hj5orVIu68TF5/ElJmoLwzDRyXmYiDAArpNcyZpEbhK5E4NQqarLPhAz0EteQ6Qp6hIutekD/+enjqnLx70ih+9yZgPKaWNwR2Bofw0RFZe4YUsWsiFchzy1+d0Lo+J++apg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qly6zEal; arc=none smtp.client-ip=209.85.217.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FiRZl9d5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790168604; x=1821704604;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=c7ZLD4z0VIDSU7vz1tWVE5od9XgtLXUayrXUlE1r/Mg=;
-  b=FiRZl9d5wkdEB/4quwlXnUcaZuPGZOiBnbPY6kW2H7HschrKD+dcg6zT
-   qDhGXmF2vmgmEyCmpeGcgxfWYVeppVA1Mc5lVg4+T944l5vU1C3HE9LRF
-   sHmViRn7Pxo1OiOvBugqd7dlIFKqdvjPy2Vb+qaT3hpEOMXQTEYkBilAx
-   gQwncEGIZ03s5E3R3i/Eprk9iHia07BmIzSops40TYNLyHQF0GZ8pMb5O
-   PpXtVT7L9CvoMk0zCslHB6jpBsKd/Iqb3K4IHyv7WbXId8QQ75EICRjK8
-   /VtE0F7Dun6wBMbjmfd2nMOxX7WK00x+2DrO/mqPOBNGILE92pLNWvSyh
-   A==;
-X-CSE-ConnectionGUID: 6b6tSm3bTACVp+rpvqycbg==
-X-CSE-MsgGUID: vJmgq/l8Sqae05L9ivcgbQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="89781363"
-X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="89781363"
-Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:21 -0700
-X-CSE-ConnectionGUID: r0WMgHiUT7ucjbQYzHSnGQ==
-X-CSE-MsgGUID: lN/dzutUQRWWGX/U0F/RVg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="4697117"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:20 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH iwlwifi-next 15/15] wifi: iwlwifi: add standalone WRSS/EWSS BIOS table loading
-Date: Wed, 23 Sep 2026 16:04:58 +0300
-Message-Id: <20260923160318.9a8eb3ff9512.Id79836e772136e1e38f107b578007faf39b13b4e@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
-References: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qly6zEal"
+Received: by mail-vs1-f47.google.com with SMTP id ada2fe7eead31-78a338fe106so1839009137.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 06:23:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790169797; x=1790774597; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Soq+uaSVZc0Vr6aYGk5pA/lJkY6ZZ4f3sD6Luc3ZKWU=;
+        b=Qly6zEal7zDUel/nZTRy+obsHNnuU6n9CGdfpvMp4dKCjIQhuypPjsMY2yP71WCq5B
+         VS/hEO1wtT52ad5Vqdut49Ur1Skwzzi4yjkdhlxU0NhcsH0LXIQMTjvv4zXZcUD4Nlpx
+         LX5Il51px6sTc1mrsvOYKiReU571qv6d9stYNWR+T2k34j8bHVxYm+qrWe3XIY87yEW5
+         sGFtmZJ8Vc9OKNrZtB5kE0pR6au1k+rbh2a65Xg58R2TDMJ8W+IyKHIMIim6XsR458c+
+         mPbAd4gVlfOohowu+uQ8ozBzLZBkSqzdraVVDgzRWFpvmJb7i/UyKpUEE2olI128UMC0
+         iHkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790169797; x=1790774597;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Soq+uaSVZc0Vr6aYGk5pA/lJkY6ZZ4f3sD6Luc3ZKWU=;
+        b=piTPtXy8Y1RPAh69kgq08NTt8OxlsKgKrqnEJL8d9dicnq4aBrtMu49RXODyphzK3a
+         g1Jxot7am91SYL0hGQWV5dPPcl5+1c9K752Ka2PMcsTy59+UTAVkx3IUVUz7PHqkXm8y
+         85DPY3EEXkvM/95KP0TUjd+NFPLUpTTRrhD/xgNKphKaa1mMECucsBSU6s2BHFHHjsoE
+         DjIOF3udACdfueeFVMaMfvnU/GXfvdwoXqZZdVoFKPl/eDDEoyz+wxncTYeix9ciLBsQ
+         5SQrK+ZxX6mm25b4Kf1jpKRcqDw8qT+3G9n7v8NdJ0XiA0VrzUzki5//UPSVqD2EGXgh
+         BKHw==
+X-Gm-Message-State: AFuF++kb1IXYEnpqTSorNcpR3YIAb1QHWNPGtlV0i1TqaoFTEfZ3Lplu
+	NIFLJaY92h0aNoiIDPsubNo9/1QpVh6v6Mb+hB+yPUDDDWp6GHULgwN4oY/SOAUG
+X-Gm-Gg: AYBFou2ok02bsjUaMrqbnVNnmK/4Fbg8nM1AaTFCf1mtb2DCRk8XLGWA4mzZnYkNxMp
+	OEVZydHFBUCDWaEAux7nsFmWvRbAF7NQ2LVQOIj/k0rjXpnl9Y5C6mPc/emGe7TgVD5xrPjUdXg
+	ry/HvMSt2An3K+JGf7z3FIsNOfJWoo37sWsUe4fIv0pOAYg1hyziM4hA3Szye7kTjcwfXbcqwAu
+	4ocNHPTG+9yhA8rDPz0PBeA7NiWLv9u4j2w5rT6FHtjZyqYZdN68+MIvYbphPoaSKm9MfhPLWVY
+	NZ3Xfpd99dUM3dOHi6cSD8/DEUB3t/R/Ms7pLP1CXGShGOULCkv+BYnQ+AzuR2cewEWfs6zJS8h
+	BZAsgbmLFE40pK7Z4mcbI2BIGhIKPAqMlFPP6UOyzz9mYPujlgkXOFeDCifob8Heq0N/jEJxIfU
+	dB9jXJWzjs++ewz0ZhqhlTcMmJNezPp3Ne3DyaJSmXO2Vuw3NlmsDnvMmsFUIXYABe3ORu4Vk/E
+	nvqzRgOBgW/TJcimDNenZCx4LWjPXW1AY9E9yBiBTZThms=
+X-Received: by 2002:a05:6102:8192:10b0:785:6b42:b7b0 with SMTP id ada2fe7eead31-7aa9df8e032mr4971928137.4.1790169796917;
+        Wed, 23 Sep 2026 06:23:16 -0700 (PDT)
+Received: from localhost.localdomain ([190.177.169.131])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-98517a8ecaesm2910924241.12.2026.09.23.06.23.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 06:23:15 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-mediatek@lists.infradead.org
+Subject: [RFC PATCH 0/2] wifi: mt76: mt7603: bound the frames a station keeps in the hardware
+Date: Wed, 23 Sep 2026 10:22:54 -0300
+Message-ID: <20260923132257.8729-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+mt7603 completes a frame to mac80211 as soon as DMA has copied it, so
+AQL never sees the frames the hardware still holds for a station. On a
+TP-Link Archer XR500v (EN751221 + MT7603E) with one client, counters
+added to upstream mt76 showed the hardware holding about 200 frames for
+a single downloading client, nearly the whole 256-entry tx ring, and up
+to 740 under bidirectional load.
 
-Add support for reading WRSS and EWSS standalone SAR tables
-from the BIOS in the ACPI and UEFI paths.
+With a client that toggles PM often (here a Samsung Galaxy A56 with
+Bluetooth on, which enters power save several times per second under
+load), every PS entry loops all of those frames back to the host, and
+the PS queue keeps only 64 of them. The frames freed per second roughly
+matched the client's TCP retransmissions per second.
 
-WRDS/EWRD tables describe SAR limits for concurrent Wi-Fi
-and Bluetooth operation. When Bluetooth is not active,
-those limits can unnecessarily restrict Wi-Fi transmit power.
-WRSS/EWSS provide separate standalone SAR profiles for Wi-Fi-only
-operation, allowing the firmware to select the appropriate
-higher-power limits while still respecting the platform-specific
-regulatory constraints.
+The series holds a station's tx queues while the hardware owes it too
+many TX statuses (a new MT_WCID_FLAG_TX_HOLD, honoured by the mt76 tx
+scheduler like the non-AQL limit), and sizes the PS queue so that what
+the hardware loops back fits. It depends on "wifi: mt76: mt7603: don't
+drop short frames looped back on PS entry" [1], without which the count
+leaks one frame for every BlockAck request that is looped back.
 
-Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 272 +++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |  16 ++
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |   2 +
- .../wireless/intel/iwlwifi/fw/regulatory.c    |   2 +
- .../wireless/intel/iwlwifi/fw/regulatory.h    |   5 +
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   7 +
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c  | 133 ++++++++-
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h  |  14 +
- 8 files changed, 377 insertions(+), 74 deletions(-)
+This is an RFC because I am not sure a driver-side hold is the approach
+you want. Questions:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index 21470b8ae8e9..7b11316a3062 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -525,6 +525,83 @@ iwl_acpi_parse_chains_table(union acpi_object *table,
- 	return 0;
- }
- 
-+static int
-+iwl_acpi_parse_extended_sar_profiles(union acpi_object *wifi_pkg,
-+				     struct iwl_sar_profile *sar_profiles,
-+				     u8 num_sub_bands, bool has_cdb)
-+{
-+	int n_profiles, pos, ret;
-+	bool enabled;
-+
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER ||
-+	    wifi_pkg->package.elements[2].type != ACPI_TYPE_INTEGER)
-+		return -EINVAL;
-+
-+	if (WARN_ON(ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands >
-+		    ARRAY_SIZE(sar_profiles[0].chains) *
-+		    ARRAY_SIZE(sar_profiles[0].chains[0].subbands)))
-+		return -EINVAL;
-+
-+	enabled = !!(wifi_pkg->package.elements[1].integer.value);
-+	n_profiles = wifi_pkg->package.elements[2].integer.value;
-+
-+	if (n_profiles >= BIOS_SAR_MAX_PROFILE_NUM)
-+		return -EINVAL;
-+
-+	/* the tables start at element 3 */
-+	pos = 3;
-+
-+	BUILD_BUG_ON(ACPI_SAR_NUM_CHAINS_REV0 != ACPI_SAR_NUM_CHAINS_REV1);
-+	BUILD_BUG_ON(ACPI_SAR_NUM_CHAINS_REV2 != 2 * ACPI_SAR_NUM_CHAINS_REV0);
-+
-+	/* parse non-cdb chains for all profiles */
-+	for (int i = 0; i < n_profiles; i++) {
-+		union acpi_object *table = &wifi_pkg->package.elements[pos];
-+
-+		ret = iwl_acpi_parse_chains_table(table,
-+						  sar_profiles[i + 1].chains,
-+						  ACPI_SAR_NUM_CHAINS_REV0,
-+						  num_sub_bands);
-+		if (ret < 0)
-+			return ret;
-+
-+		/* go to the next table */
-+		pos += ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands;
-+	}
-+
-+	if (!has_cdb)
-+		goto set_enabled;
-+
-+	if (WARN_ON(ACPI_SAR_NUM_CHAINS_REV0 * 2 * num_sub_bands >
-+		    ARRAY_SIZE(sar_profiles[0].chains) *
-+		    ARRAY_SIZE(sar_profiles[0].chains[0].subbands)))
-+		return -EINVAL;
-+
-+	/* parse cdb chains for all profiles */
-+	for (int i = 0; i < n_profiles; i++) {
-+		struct iwl_sar_profile_chain *chains;
-+		union acpi_object *table;
-+
-+		table = &wifi_pkg->package.elements[pos];
-+		chains = &sar_profiles[i + 1].chains[ACPI_SAR_NUM_CHAINS_REV0];
-+		ret = iwl_acpi_parse_chains_table(table,
-+						  chains,
-+						  ACPI_SAR_NUM_CHAINS_REV0,
-+						  num_sub_bands);
-+		if (ret < 0)
-+			return ret;
-+
-+		/* go to the next table */
-+		pos += ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands;
-+	}
-+
-+set_enabled:
-+	for (int i = 0; i < n_profiles; i++)
-+		sar_profiles[i + 1].enabled = enabled;
-+
-+	return 0;
-+}
-+
- int iwl_acpi_get_wrds_table(struct iwl_fw_runtime *fwrt)
- {
- 	union acpi_object *wifi_pkg, *table, *data;
-@@ -629,8 +706,12 @@ int iwl_acpi_get_wrds_table(struct iwl_fw_runtime *fwrt)
- 	 */
- 	ret = iwl_acpi_parse_chains_table(table, fwrt->sar_profiles[0].chains,
- 					  num_chains, num_sub_bands);
--	if (!ret && flags & IWL_SAR_ENABLE_MSK)
-+	if (ret)
-+		goto out_free;
-+
-+	if (flags & IWL_SAR_ENABLE_MSK)
- 		fwrt->sar_profiles[0].enabled = true;
-+	fwrt->wrds_table_revision = tbl_rev;
- 
- out_free:
- 	kfree(data);
-@@ -640,8 +721,7 @@ int iwl_acpi_get_wrds_table(struct iwl_fw_runtime *fwrt)
- int iwl_acpi_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- {
- 	union acpi_object *wifi_pkg, *data;
--	bool enabled;
--	int i, n_profiles, tbl_rev, pos;
-+	int tbl_rev;
- 	int ret = 0;
- 	u8 num_sub_bands;
- 
-@@ -713,93 +793,147 @@ int iwl_acpi_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- 	goto out_free;
- 
- read_table:
--	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER ||
--	    wifi_pkg->package.elements[2].type != ACPI_TYPE_INTEGER) {
--		ret = -EINVAL;
-+	ret = iwl_acpi_parse_extended_sar_profiles(wifi_pkg,
-+						   fwrt->sar_profiles,
-+						   num_sub_bands,
-+						   tbl_rev >= 2);
-+	if (ret)
- 		goto out_free;
-+
-+	fwrt->ewrd_table_revision = tbl_rev;
-+
-+out_free:
-+	kfree(data);
-+	return ret;
-+}
-+
-+int iwl_acpi_get_wsss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	union acpi_object *data __free(kfree) = NULL;
-+	union acpi_object *wifi_pkg, *table;
-+	u8 num_chains, num_sub_bands;
-+	int ret, tbl_rev;
-+	u32 flags;
-+
-+	if (fwrt->wrds_table_revision == IWL_BIOS_REVISION_UNSET) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: WRDS table was not read\n");
-+		return -EINVAL;
- 	}
- 
--	if (WARN_ON(ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands >
--		    ARRAY_SIZE(fwrt->sar_profiles[0].chains) *
--		    ARRAY_SIZE(fwrt->sar_profiles[0].chains[0].subbands))) {
--		ret = -EINVAL;
--		goto out_free;
-+	data = iwl_acpi_get_object(fwrt->dev, ACPI_WSSS_METHOD);
-+	if (IS_ERR(data))
-+		return PTR_ERR(data);
-+
-+	switch (fwrt->wrds_table_revision) {
-+	case 3:
-+		wifi_pkg = iwl_acpi_get_wifi_pkg(fwrt->dev, data,
-+						 ACPI_WRDS_WIFI_DATA_SIZE_REV3,
-+						 &tbl_rev);
-+		num_chains = ACPI_SAR_NUM_CHAINS_REV2;
-+		num_sub_bands = ACPI_SAR_NUM_SUB_BANDS_REV3;
-+		break;
-+	case 2:
-+		wifi_pkg = iwl_acpi_get_wifi_pkg(fwrt->dev, data,
-+						 ACPI_WRDS_WIFI_DATA_SIZE_REV2,
-+						 &tbl_rev);
-+		num_chains = ACPI_SAR_NUM_CHAINS_REV2;
-+		num_sub_bands = ACPI_SAR_NUM_SUB_BANDS_REV2;
-+		break;
-+	default:
-+		return -EINVAL;
- 	}
- 
--	enabled = !!(wifi_pkg->package.elements[1].integer.value);
--	n_profiles = wifi_pkg->package.elements[2].integer.value;
-+	if (IS_ERR(wifi_pkg))
-+		return PTR_ERR(wifi_pkg);
- 
--	/*
--	 * Check the validity of n_profiles.  The EWRD profiles start
--	 * from index 1, so the maximum value allowed here is
--	 * ACPI_SAR_PROFILES_NUM - 1.
--	 */
--	if (n_profiles >= BIOS_SAR_MAX_PROFILE_NUM) {
--		ret = -EINVAL;
--		goto out_free;
-+	if (fwrt->wrds_table_revision != tbl_rev) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: WRDS/WSSS revision mismatch (WRDS rev %d, WSSS rev %d)\n",
-+				fwrt->wrds_table_revision,
-+				tbl_rev);
-+		return -EINVAL;
- 	}
- 
--	/* the tables start at element 3 */
--	pos = 3;
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
-+		return -EINVAL;
- 
--	BUILD_BUG_ON(ACPI_SAR_NUM_CHAINS_REV0 != ACPI_SAR_NUM_CHAINS_REV1);
--	BUILD_BUG_ON(ACPI_SAR_NUM_CHAINS_REV2 != 2 * ACPI_SAR_NUM_CHAINS_REV0);
-+	if (WARN_ON(num_chains * num_sub_bands >
-+		    ARRAY_SIZE(fwrt->sar_standalone_profiles[0].chains) *
-+		    ARRAY_SIZE(fwrt->sar_standalone_profiles[0].chains[0].subbands)))
-+		return -EINVAL;
- 
--	/* parse non-cdb chains for all profiles */
--	for (i = 0; i < n_profiles; i++) {
--		union acpi_object *table = &wifi_pkg->package.elements[pos];
-+	IWL_DEBUG_RADIO(fwrt, "Reading WSSS (WRDS Standalone) tbl_rev=%d\n",
-+			tbl_rev);
- 
--		/* The EWRD profiles officially go from 2 to 4, but we
--		 * save them in sar_profiles[1-3] (because we don't
--		 * have profile 0).  So in the array we start from 1.
--		 */
--		ret = iwl_acpi_parse_chains_table(table,
--						  fwrt->sar_profiles[i + 1].chains,
--						  ACPI_SAR_NUM_CHAINS_REV0,
--						  num_sub_bands);
--		if (ret < 0)
--			goto out_free;
-+	flags = wifi_pkg->package.elements[1].integer.value;
- 
--		/* go to the next table */
--		pos += ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands;
--	}
-+	/* position of the actual table */
-+	table = &wifi_pkg->package.elements[2];
- 
--	/* non-cdb table revisions */
--	if (tbl_rev < 2)
--		goto set_enabled;
-+	ret = iwl_acpi_parse_chains_table(table,
-+					  fwrt->sar_standalone_profiles[0].chains,
-+					  num_chains, num_sub_bands);
-+	if (ret)
-+		return ret;
- 
--	if (WARN_ON(ACPI_SAR_NUM_CHAINS_REV0 * 2 * num_sub_bands >
--		    ARRAY_SIZE(fwrt->sar_profiles[0].chains) *
--		    ARRAY_SIZE(fwrt->sar_profiles[0].chains[0].subbands))) {
--		ret = -EINVAL;
--		goto out_free;
-+	if (flags & IWL_SAR_ENABLE_MSK)
-+		fwrt->sar_standalone_profiles[0].enabled = true;
-+
-+	return ret;
-+}
-+
-+int iwl_acpi_get_ewss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	union acpi_object *data __free(kfree) = NULL;
-+	union acpi_object *wifi_pkg;
-+	u8 num_sub_bands;
-+	int tbl_rev;
-+
-+	if (fwrt->ewrd_table_revision == IWL_BIOS_REVISION_UNSET) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: EWRD table was not read\n");
-+		return -EINVAL;
- 	}
- 
--	/* parse cdb chains for all profiles */
--	for (i = 0; i < n_profiles; i++) {
--		struct iwl_sar_profile_chain *chains;
--		union acpi_object *table;
-+	data = iwl_acpi_get_object(fwrt->dev, ACPI_EWSS_METHOD);
-+	if (IS_ERR(data))
-+		return PTR_ERR(data);
- 
--		table = &wifi_pkg->package.elements[pos];
--		chains = &fwrt->sar_profiles[i + 1].chains[ACPI_SAR_NUM_CHAINS_REV0];
--		ret = iwl_acpi_parse_chains_table(table,
--						  chains,
--						  ACPI_SAR_NUM_CHAINS_REV0,
--						  num_sub_bands);
--		if (ret < 0)
--			goto out_free;
-+	switch (fwrt->ewrd_table_revision) {
-+	case 3:
-+		wifi_pkg = iwl_acpi_get_wifi_pkg(fwrt->dev, data,
-+						 ACPI_EWRD_WIFI_DATA_SIZE_REV3,
-+						 &tbl_rev);
-+		num_sub_bands = ACPI_SAR_NUM_SUB_BANDS_REV3;
-+		break;
-+	case 2:
-+		wifi_pkg = iwl_acpi_get_wifi_pkg(fwrt->dev, data,
-+						 ACPI_EWRD_WIFI_DATA_SIZE_REV2,
-+						 &tbl_rev);
-+		num_sub_bands = ACPI_SAR_NUM_SUB_BANDS_REV2;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
- 
--		/* go to the next table */
--		pos += ACPI_SAR_NUM_CHAINS_REV0 * num_sub_bands;
-+	if (IS_ERR(wifi_pkg))
-+		return PTR_ERR(wifi_pkg);
-+
-+	if (fwrt->ewrd_table_revision != tbl_rev) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: EWRD/EWSS revision mismatch (EWRD rev %d, EWSS rev %d)\n",
-+				fwrt->ewrd_table_revision, tbl_rev);
-+		return -EINVAL;
- 	}
- 
--set_enabled:
--	for (i = 0; i < n_profiles; i++)
--		fwrt->sar_profiles[i + 1].enabled = enabled;
-+	IWL_DEBUG_RADIO(fwrt, "Reading EWSS (EWRD Standalone) tbl_rev=%d\n",
-+			tbl_rev);
- 
--out_free:
--	kfree(data);
--	return ret;
-+	return iwl_acpi_parse_extended_sar_profiles(wifi_pkg,
-+						    fwrt->sar_standalone_profiles,
-+						    num_sub_bands,
-+						    fwrt->ewrd_table_revision >= 2);
- }
- 
- int iwl_acpi_get_wgds_table(struct iwl_fw_runtime *fwrt)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index 426b0c51abec..b722beae2f00 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -14,6 +14,8 @@
- 
- #define ACPI_WRDS_METHOD	"WRDS"
- #define ACPI_EWRD_METHOD	"EWRD"
-+#define ACPI_WSSS_METHOD	"WSSS"
-+#define ACPI_EWSS_METHOD	"EWSS"
- #define ACPI_WGDS_METHOD	"WGDS"
- #define ACPI_WRDD_METHOD	"WRDD"
- #define ACPI_SPLC_METHOD	"SPLC"
-@@ -175,6 +177,10 @@ int iwl_acpi_get_wrds_table(struct iwl_fw_runtime *fwrt);
- 
- int iwl_acpi_get_ewrd_table(struct iwl_fw_runtime *fwrt);
- 
-+int iwl_acpi_get_wsss_table(struct iwl_fw_runtime *fwrt);
-+
-+int iwl_acpi_get_ewss_table(struct iwl_fw_runtime *fwrt);
-+
- int iwl_acpi_get_wgds_table(struct iwl_fw_runtime *fwrt);
- 
- int iwl_acpi_get_tas_table(struct iwl_fw_runtime *fwrt,
-@@ -229,6 +235,16 @@ static inline int iwl_acpi_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- 	return -ENOENT;
- }
- 
-+static inline int iwl_acpi_get_wsss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	return -ENOENT;
-+}
-+
-+static inline int iwl_acpi_get_ewss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	return -ENOENT;
-+}
-+
- static inline int iwl_acpi_get_wgds_table(struct iwl_fw_runtime *fwrt)
- {
- 	return 1;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-index d69757b0149d..f62c6a69f0dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-@@ -23,6 +23,8 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 	int i;
- 
- 	memset(fwrt, 0, sizeof(*fwrt));
-+	fwrt->wrds_table_revision = IWL_BIOS_REVISION_UNSET;
-+	fwrt->ewrd_table_revision = IWL_BIOS_REVISION_UNSET;
- 	fwrt->trans = trans;
- 	fwrt->fw = fw;
- 	fwrt->dev = trans->dev;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-index 5dbb3cdb9916..137303e4a29b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-@@ -30,6 +30,8 @@ IWL_EXPORT_SYMBOL(iwl_bios_get_ ## __name)
- 
- IWL_BIOS_TABLE_LOADER(wrds_table);
- IWL_BIOS_TABLE_LOADER(ewrd_table);
-+IWL_BIOS_TABLE_LOADER(wsss_table);
-+IWL_BIOS_TABLE_LOADER(ewss_table);
- IWL_BIOS_TABLE_LOADER(wgds_table);
- IWL_BIOS_TABLE_LOADER(ppag_table);
- IWL_BIOS_TABLE_LOADER(phy_filters);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-index f7bd09195ab4..bd7ea0ff3d19 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-@@ -31,6 +31,7 @@
- 
- #define IWL_SAR_ENABLE_MSK		BIT(0)
- #define IWL_REDUCE_POWER_FLAGS_POS	1
-+#define IWL_BIOS_REVISION_UNSET		0xFF
- 
- /* PPAG gain value bounds in 1/8 dBm */
- #define IWL_PPAG_MIN_LB	-16
-@@ -223,6 +224,10 @@ int iwl_bios_get_wrds_table(struct iwl_fw_runtime *fwrt);
- 
- int iwl_bios_get_ewrd_table(struct iwl_fw_runtime *fwrt);
- 
-+int iwl_bios_get_wsss_table(struct iwl_fw_runtime *fwrt);
-+
-+int iwl_bios_get_ewss_table(struct iwl_fw_runtime *fwrt);
-+
- int iwl_bios_get_wgds_table(struct iwl_fw_runtime *fwrt);
- 
- int iwl_bios_get_ppag_table(struct iwl_fw_runtime *fwrt);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index d0709ab2f593..33ce06f1a60a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -112,6 +112,10 @@ struct iwl_txf_iter_data {
-  *	see &enum iwl_uefi_cnv_guid_status.
-  *	Trust the UEFI variables if locked or in test mode.
-  * @sar_profiles: sar profiles as read from WRDS/EWRD BIOS tables
-+ * @sar_standalone_profiles: standalone sar profiles as read from
-+ *	WSSS/EWSS BIOS tables (for Wi-Fi HB/UHB without concurrent BT)
-+ * @wrds_table_revision: revision of WRDS BIOS table
-+ * @ewrd_table_revision: revision of EWRD BIOS table
-  * @geo_profiles: geographic profiles as read from WGDS BIOS table
-  * @geo_bios_source: see &enum bios_source
-  * @phy_filters: specific phy filters as read from WPFC BIOS table
-@@ -206,6 +210,9 @@ struct iwl_fw_runtime {
- 	bool tpc_enabled;
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
- 	struct iwl_sar_profile sar_profiles[BIOS_SAR_MAX_PROFILE_NUM];
-+	struct iwl_sar_profile sar_standalone_profiles[BIOS_SAR_MAX_PROFILE_NUM];
-+	u8 wrds_table_revision;
-+	u8 ewrd_table_revision;
- 	u8 sar_chain_a_profile;
- 	u8 sar_chain_b_profile;
- 	u8 reduced_power_flags;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index 871d8f5db9c3..79fd95d08732 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -547,11 +547,11 @@ void iwl_uefi_get_uneb_table(struct iwl_trans *trans,
- }
- IWL_EXPORT_SYMBOL(iwl_uefi_get_uneb_table);
- 
--static void iwl_uefi_set_sar_profile(struct iwl_fw_runtime *fwrt,
-+static void iwl_uefi_set_sar_profile(struct iwl_sar_profile *profiles,
- 				     const u8 *vals, u8 prof_index,
- 				     u8 num_subbands, bool enabled)
- {
--	struct iwl_sar_profile *sar_prof = &fwrt->sar_profiles[prof_index];
-+	struct iwl_sar_profile *sar_prof = &profiles[prof_index];
- 
- 	/*
- 	 * Make sure fwrt has enough room to hold the data
-@@ -573,7 +573,7 @@ static void iwl_uefi_set_sar_profile(struct iwl_fw_runtime *fwrt,
- 				vals[chain * num_subbands + subband];
- 	}
- 
--	fwrt->sar_profiles[prof_index].enabled = enabled & IWL_SAR_ENABLE_MSK;
-+	sar_prof->enabled = enabled & IWL_SAR_ENABLE_MSK;
- }
- 
- int iwl_uefi_get_wrds_table(struct iwl_fw_runtime *fwrt)
-@@ -617,8 +617,9 @@ int iwl_uefi_get_wrds_table(struct iwl_fw_runtime *fwrt)
- 	/* The profile from WRDS is officially profile 1, but goes
- 	 * into sar_profiles[0] (because we don't have a profile 0).
- 	 */
--	iwl_uefi_set_sar_profile(fwrt, data->vals, 0,
-+	iwl_uefi_set_sar_profile(fwrt->sar_profiles, data->vals, 0,
- 				 num_subbands, data->mode);
-+	fwrt->wrds_table_revision = data->revision;
- out:
- 	kfree(data);
- 	return ret;
-@@ -670,14 +671,136 @@ int iwl_uefi_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- 		 * save them in sar_profiles[1-3] (because we don't
- 		 * have profile 0).  So in the array we start from 1.
- 		 */
--		iwl_uefi_set_sar_profile(fwrt, &data->vals[i * profile_size],
-+		iwl_uefi_set_sar_profile(fwrt->sar_profiles,
-+					 &data->vals[i * profile_size],
- 					 i + 1, num_subbands, data->mode);
- 
-+	fwrt->ewrd_table_revision = data->revision;
-+
- out:
- 	kfree(data);
- 	return ret;
- }
- 
-+int iwl_uefi_get_wsss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	struct uefi_cnv_var_wrds *data __free(kfree) = NULL;
-+	unsigned long expected_size;
-+	unsigned long size;
-+	int num_subbands;
-+
-+	if (fwrt->wrds_table_revision == IWL_BIOS_REVISION_UNSET) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: WRDS table was not read\n");
-+		return -EINVAL;
-+	}
-+
-+	data = iwl_uefi_get_verified_wifi_var(fwrt,
-+					      IWL_UEFI_WSSS_NAME,
-+					      "WSSS",
-+					      UEFI_SAR_WRDS_TABLE_SIZE_REV2,
-+					      &size);
-+	if (IS_ERR(data))
-+		return PTR_ERR(data);
-+
-+	switch (data->revision) {
-+	case 2:
-+		expected_size = UEFI_SAR_WRDS_TABLE_SIZE_REV2;
-+		num_subbands = UEFI_SAR_SUB_BANDS_NUM_REV2;
-+		break;
-+	case 3:
-+		expected_size = UEFI_SAR_WRDS_TABLE_SIZE_REV3;
-+		num_subbands = UEFI_SAR_SUB_BANDS_NUM_REV3;
-+		break;
-+	default:
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Unsupported UEFI WSSS revision:%d\n",
-+				data->revision);
-+		return -EINVAL;
-+	}
-+
-+	if (size != expected_size)
-+		return -EINVAL;
-+
-+	if (fwrt->wrds_table_revision != data->revision) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: WRDS/WSSS revision mismatch (WRDS rev %d, WSSS rev %d)\n",
-+				fwrt->wrds_table_revision,
-+				data->revision);
-+		return -EINVAL;
-+	}
-+
-+	IWL_DEBUG_RADIO(fwrt, "Reading WSSS (WRDS Standalone) tbl_rev=%d\n",
-+			data->revision);
-+	iwl_uefi_set_sar_profile(fwrt->sar_standalone_profiles,
-+				 data->vals, 0,
-+				 num_subbands,
-+				 data->mode);
-+	return 0;
-+}
-+
-+int iwl_uefi_get_ewss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	struct uefi_cnv_var_ewrd *data __free(kfree) = NULL;
-+	unsigned long expected_size;
-+	unsigned long size;
-+	int num_subbands;
-+	int profile_size;
-+	int i;
-+
-+	if (fwrt->ewrd_table_revision == IWL_BIOS_REVISION_UNSET) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: EWRD table was not read\n");
-+		return -EINVAL;
-+	}
-+
-+	data = iwl_uefi_get_verified_wifi_var(fwrt,
-+					      IWL_UEFI_EWSS_NAME,
-+					      "EWSS",
-+					      UEFI_SAR_EWRD_TABLE_SIZE_REV2,
-+					      &size);
-+	if (IS_ERR(data))
-+		return PTR_ERR(data);
-+
-+	switch (data->revision) {
-+	case 3:
-+		expected_size = UEFI_SAR_EWRD_TABLE_SIZE_REV3;
-+		num_subbands = UEFI_SAR_SUB_BANDS_NUM_REV3;
-+		profile_size = UEFI_SAR_PROFILE_SIZE_REV3;
-+		break;
-+	case 2:
-+		expected_size = UEFI_SAR_EWRD_TABLE_SIZE_REV2;
-+		num_subbands = UEFI_SAR_SUB_BANDS_NUM_REV2;
-+		profile_size = UEFI_SAR_PROFILE_SIZE_REV2;
-+		break;
-+	default:
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Unsupported UEFI EWSS revision:%d\n",
-+				data->revision);
-+		return -EINVAL;
-+	}
-+
-+	if (size != expected_size ||
-+	    data->num_profiles >= BIOS_SAR_MAX_PROFILE_NUM)
-+		return -EINVAL;
-+
-+	if (fwrt->ewrd_table_revision != data->revision) {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"Skipping standalone SAR: EWRD/EWSS revision mismatch (EWRD rev %d, EWSS rev %d)\n",
-+				fwrt->ewrd_table_revision,
-+				data->revision);
-+		return -EINVAL;
-+	}
-+
-+	for (i = 0; i < data->num_profiles; i++)
-+		iwl_uefi_set_sar_profile(fwrt->sar_standalone_profiles,
-+					 &data->vals[i * profile_size],
-+					 i + 1, num_subbands,
-+					 data->mode);
-+
-+	return 0;
-+}
-+
- int iwl_uefi_get_wgds_table(struct iwl_fw_runtime *fwrt)
- {
- 	struct uefi_cnv_var_wgds *data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-index 64fa1a78aacf..f4f7a447e528 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-@@ -15,6 +15,8 @@
- #define IWL_UEFI_WRDS_NAME		L"UefiCnvWlanWRDS"
- #define IWL_UEFI_GLUI_NAME		L"UefiCnvCommonGLUI"
- #define IWL_UEFI_EWRD_NAME		L"UefiCnvWlanEWRD"
-+#define IWL_UEFI_WSSS_NAME		L"UefiCnvWlanWSSS"
-+#define IWL_UEFI_EWSS_NAME		L"UefiCnvWlanEWSS"
- #define IWL_UEFI_WGDS_NAME		L"UefiCnvWlanWGDS"
- #define IWL_UEFI_PPAG_NAME		L"UefiCnvWlanPPAG"
- #define IWL_UEFI_WTAS_NAME		L"UefiCnvWlanWTAS"
-@@ -337,6 +339,8 @@ int iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
- 				 u32 tlv_len, struct iwl_pnvm_image *pnvm_data);
- int iwl_uefi_get_wrds_table(struct iwl_fw_runtime *fwrt);
- int iwl_uefi_get_ewrd_table(struct iwl_fw_runtime *fwrt);
-+int iwl_uefi_get_wsss_table(struct iwl_fw_runtime *fwrt);
-+int iwl_uefi_get_ewss_table(struct iwl_fw_runtime *fwrt);
- int iwl_uefi_get_wgds_table(struct iwl_fw_runtime *fwrt);
- int iwl_uefi_get_ppag_table(struct iwl_fw_runtime *fwrt);
- int iwl_uefi_get_tas_table(struct iwl_fw_runtime *fwrt,
-@@ -399,6 +403,16 @@ static inline int iwl_uefi_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- 	return -ENOENT;
- }
- 
-+static inline int iwl_uefi_get_wsss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	return -ENOENT;
-+}
-+
-+static inline int iwl_uefi_get_ewss_table(struct iwl_fw_runtime *fwrt)
-+{
-+	return -ENOENT;
-+}
-+
- static inline int iwl_uefi_get_wgds_table(struct iwl_fw_runtime *fwrt)
- {
- 	return -ENOENT;
+- Would you rather keep the airtime of each frame accounted until its TX
+  status, so that AQL sees what the hardware holds, instead of a count
+  in the driver?
+- The marks (hold at 96, release at 48) and the PS queue size (tx ring
+  minus 64) were tuned with one client only.
+- If a held station sees neither a TX status nor a loop-back return for
+  a second, its count is reset. In the tests below this happened 0 to 3
+  times in 30 minutes, probably when the client slept for more than a
+  second with frames still in the hardware. Is there a better signal?
+- The raw re-send of the PS queue on wake-up bypasses the hold, so the
+  count can briefly exceed the high mark (up to 134 here).
+
+Either change alone makes things worse, which is why the cap and the PS
+queue size are one patch. In a 30 minute bidirectional test (iperf3
+-P 4, one client, a ping from a wired host every 200 ms) that cycled
+through the four combinations every minute, about 7 minutes each:
+
+                          upstream  bigger PSQ     cap  cap + PSQ
+  frames in hw (max)           748         844      98        134
+  PSQ frees per second          92         213      51          0
+  downlink Mbit/s             12.2        15.2    10.6       17.0
+  seconds without downlink      45         108     111         10
+  longest stall (s)             10          53      16          1
+  retransmits per second      15.4         8.9    10.2        3.0
+  uplink Mbit/s               64.0        60.7    63.8       59.3
+  ping median/p99 (ms)     119/339    145/2915 125/482    130/292
+  pings lost                  6.0%       13.7%    7.5%      0.13%
+
+The stalls come in bursts of PM toggling, with up to 22-28 PS entries
+per second. In the worst stretch, the minute with the cap and the
+bigger queue had 2 seconds without downlink progress, against 20, 41 and
+39 in the neighbouring minutes of the other combinations.
+
+Two shorter runs toggled the cap alone (PS queue of 64) every 30
+seconds, over 60 seconds of download and 300 of bidirectional traffic,
+with a 2.4 GHz wireless headset dongle nearby. In the download phases,
+with the cap: PSQ frees went from 59.5 to 7.3 and from 54.5 to 5.3 per
+second, retransmits from 54.9 to 8.2 and from 58.8 to 9.1 per second,
+the ping median from 38 to 23 and from 32 to 25 ms, and throughput from
+56 to 61 and from 59 to 63 Mbit/s. Bidirectional retransmits went from
+13.5 to 6.0 and from 13.8 to 8.3 per second.
+
+Testing: OpenWrt with kernel 6.18.41 and the mac80211 backport of
+6.18.39, openwrt/mt76 at be5ce79105 plus [1], this series, the board's
+local patches (EEPROM file from DT, two crash fixes, beacon stall
+recovery, fixes for the mt76x2e radio) and debugfs counters that are
+not part of the series. AP on channel 1, HT20. One device and one client
+only: no MT7628/MT7688, and nothing with several busy stations. The
+series is against wireless-next; on openwrt/mt76, where it was built
+and tested, patch 1 only differs in context (mt76_wcid_primary() in the
+non-AQL check).
+
+[1] https://lore.kernel.org/linux-wireless/20260922220814.15070-1-pcristian292@gmail.com/
+
+Tools: an AI coding assistant (Claude Opus 5.5 in Claude Code) wrote the
+instrumentation, analyzed the data, and drafted these patches and this
+letter; the tests ran on my device.
+
+Cristian Papa (2):
+  wifi: mt76: let a driver hold a station's tx queues
+  wifi: mt76: mt7603: bound the frames a station keeps in the hardware
+
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
+ .../wireless/mediatek/mt76/mt7603/debugfs.c   | 32 ++++++++++
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   |  7 ++-
+ .../net/wireless/mediatek/mt76/mt7603/init.c  |  2 +
+ .../net/wireless/mediatek/mt76/mt7603/mac.c   | 58 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7603/main.c  | 20 +++++--
+ .../wireless/mediatek/mt76/mt7603/mt7603.h    | 51 ++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/tx.c       |  7 +++
+ 8 files changed, 172 insertions(+), 6 deletions(-)
+
+
+base-commit: 10cfa109c880092df32e396647b4afdca9be8350
+prerequisite-patch-id: b2c7fb85fb032bec084c6e325be32ea1172af916
 -- 
-2.34.1
+2.47.3
 
