@@ -1,54 +1,54 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39061408017
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 05:45:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6397369D75
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 05:46:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790142360; cv=none; b=N/pLPk8Rd0ooAKZUE4qNCmRNDAM8TgiDKxpXOYuPq0bPTChYkEECyJ+gBM0HdVx61F7YSI/8VNikwWUERDz32RCRyyJikoBRIzbXtP6vnSRFnVTSuiPxDSJw3TDAo1BQr+Td4WJ1eCBvBBOL3sA2BSDDJG5ESNLkwgs3VLnNR7I=
+	t=1790142365; cv=none; b=iz01McXN+23clxUi8GuB8xDpzW4NEaBbx05GBHr1xn3NL3Jf6XGYF9QSP9rYe5Mqdyxz9alrnSShNCn7GggqQpAyIszZx/su2M0S38vkLcMQrpNAtOTyuSnR15StM0vS3ONUSRwM9WyJ0/Par+TqQgGjZWsawjGHiS95tLhI5l4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790142360; c=relaxed/simple;
-	bh=DerqlxMzUBHsaq6uqPvtFHvS2ZQg96ifsAjLblkEYKg=;
+	s=arc-20240116; t=1790142365; c=relaxed/simple;
+	bh=RvCi/azPGbB0H1RoTWPkKLzx9f1RbSsU9Vx2Pjmxex4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XKTYJYzuoa++1rWp1ZvDoiQ5ENRDkMJSFeX3qo1YRVEbcDQKrOifLzUXsfzvhbn80memRbJGPgw/JPpTi+1LS+4GmnyWBkMvp6wesBcpwsdFBfInO+xnChi520KKfDkClubgqJwUqN8kiHuvt6iCaxVFrjB5F/FAF9du3h+tpd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HtLrVVG+; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=MXoFYozz78If2ENuAEIPEAeHo57NrtqfH4fPLRFL9Y9I2VpxnY+9YELRteTqoNkCpVoQ1th9aiE1IflIMkn3Ww8h3iDMjNWvOkMBk4GIvaR+GCNBU6K31KzpOMzeey6pncKih/6yx8mRo1dRGYax+xOXmGYj1zq2LvbJh1uwxkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=J7aVxvtf; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HtLrVVG+"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N5jtWuB097445, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="J7aVxvtf"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68N5jxxS7097477, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790142356; bh=M9I4NU4n7ZogZL4qic7kM6IthOpRNbHuQCKKBZt0L6Y=;
+	t=1790142361; bh=vt0d7h/gcktymn+qksyBeH1DgPXO1zRLllKRFz+QJ0U=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=HtLrVVG+zJsOWBDxuIVA3oohhfpcM10AjGzyDBbDNb8BWLMoq3mUwv+C+R7/jbkVG
-	 wkoYi7L1nBlgE0/wKxWk+j6qamCVL3jbfCv0Yk/8RR/eTMKDQ/0jtN7Ifw+T5fK9jx
-	 UXGycJdolG3zcC77F9Uh5Ts776QbNnVY3vCxj+4P3kKvWnes5jvo17R4L4MbMTBXzy
-	 19nXHqA8f+sgC0v88OfqKcVhfx38FryOzxaOgJGYuPVPX9dio/ktO/VyLOB1Gdt7Iy
-	 oJQ70M1XZJgI1xFhzI5XcOajRGlrUVXxW6Q8a8e/bt02APIciTxcFKk7+dysWHK/G4
-	 z3NQKbItFAj9Q==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N5jtWuB097445
+	b=J7aVxvtfYQ05WWDkS4DQ+LPosgFVwuucHZ0zQIsd6T+78OfPxl1gG8mGP14KXjfs0
+	 DTpaau+AUVMG/NNveibkmvreQ5J4oSlQlmo8nlqQ8+teZ6/li9us9orz/unEqn2nMw
+	 vAsEtBHQr0IsWHpPzIaQ8PPOX1aLcsWI45mlzrsgYjuR88Wvl4ugfuc2lygnWfL6T1
+	 KN1m71rhX7MUJcQab48mCaLDxcsS2LkzkVG4sefx9wEP8hdMl2pr/TyEh60XIGurDn
+	 Aghxi8tVsRJQvDhb6uqI7DP29oj0teQ4NY0XQ8uneVyODcu7EZPUa9cjaZiaEtSyCu
+	 sYq47IWdxJ1WA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68N5jxxS7097477
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:45:55 +0800
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:46:00 +0800
 Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 13:45:53 +0800
+ 15.2.2562.49; Wed, 23 Sep 2026 13:45:59 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 13:45:53 +0800
+ 15.2.2562.49; Wed, 23 Sep 2026 13:45:59 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
  (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 23 Sep 2026 13:45:53 +0800
+ Transport; Wed, 23 Sep 2026 13:45:59 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 2/6] wifi: rtw89: fw: release firmware after recognizing firmware elements
-Date: Wed, 23 Sep 2026 13:45:01 +0800
-Message-ID: <20260923054505.43329-3-pkshih@realtek.com>
+Subject: [PATCH rtw-next 3/6] wifi: rtw89: fw: duplicate firmware suit data by vmalloc to reduce memory fragment
+Date: Wed, 23 Sep 2026 13:45:02 +0800
+Message-ID: <20260923054505.43329-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260923054505.43329-1-pkshih@realtek.com>
 References: <20260923054505.43329-1-pkshih@realtek.com>
@@ -61,92 +61,168 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-The firmware elements are recognized according to hardware variants in
-rtw89_chip_info_setup(), and the last function uses firmware content is
-rtw89_core_setup_rfe_parms(). Release firmware at the end of the function
-if we have duplicated the elements.
+The firmware suit data might be just over 512kB (e.g. 540kB) and actual
+allocation size of devm_kmemdup() can be 1MB, which is a big internal
+fragment. Use vmalooc() instead to reduce fragment.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c |  4 ++++
- drivers/net/wireless/realtek/rtw89/fw.c   | 24 ++++++++++++++---------
- drivers/net/wireless/realtek/rtw89/fw.h   |  1 +
- 3 files changed, 20 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c |  1 +
+ drivers/net/wireless/realtek/rtw89/core.h |  3 ++
+ drivers/net/wireless/realtek/rtw89/fw.c   | 52 ++++++++++++++++++-----
+ 3 files changed, 46 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 0c1c5c8ae8ce..5ca0c401c43a 100644
+index 5ca0c401c43a..e61d7e89882f 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -7388,6 +7388,7 @@ void rtw89_core_rfkill_poll(struct rtw89_dev *rtwdev, bool force)
+@@ -6986,6 +6986,7 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
+ 	}
+ 	INIT_LIST_HEAD(&rtwdev->scan_info.chan_list);
+ 	INIT_LIST_HEAD(&rtwdev->tx_waits);
++	INIT_LIST_HEAD(&rtwdev->fw.dup_data_list);
+ 	INIT_WORK(&rtwdev->ba_work, rtw89_core_ba_work);
+ 	INIT_WORK(&rtwdev->txq_work, rtw89_core_txq_work);
+ 	INIT_DELAYED_WORK(&rtwdev->txq_reinvoke_work, rtw89_core_txq_reinvoke_work);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 4b4500a7a068..d8adf7425a3a 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -6059,6 +6059,7 @@ enum rtw89_fw_feature {
+ struct rtw89_fw_suit {
+ 	enum rtw89_fw_type type;
+ 	const u8 *data;
++	struct list_head list;
+ 	u32 size;
+ 	u8 major_ver;
+ 	u8 minor_ver;
+@@ -6150,6 +6151,8 @@ struct rtw89_fw_info {
+ 	struct rtw89_fw_elm_info elm_info;
+ 	struct rtw89_fw_secure sec;
  
- int rtw89_chip_info_setup(struct rtw89_dev *rtwdev)
- {
-+	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
- 	struct rtw89_efuse *efuse = &rtwdev->efuse;
- 	struct rtw89_hal *hal = &rtwdev->hal;
- 	int ret;
-@@ -7437,6 +7438,9 @@ int rtw89_chip_info_setup(struct rtw89_dev *rtwdev)
- 		   hal->cid, hal->cv, hal->aid, hal->acv, efuse->rfe_type);
- 
- out:
-+	if (fw_req->free_after_probe)
-+		__rtw89_unload_firmware(rtwdev);
++	struct list_head dup_data_list;
 +
- 	rtw89_mac_pwr_off(rtwdev);
+ 	DECLARE_BITMAP(feature_map, NUM_OF_RTW89_FW_FEATURES);
+ };
  
- 	return ret;
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 3cdfb141f075..e4b59690622d 100644
+index e4b59690622d..7c7c0a4f703e 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.c
 +++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -2206,20 +2206,26 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
+@@ -3,6 +3,7 @@
+  */
+ 
+ #include <linux/if_arp.h>
++#include <linux/vmalloc.h>
+ #include "cam.h"
+ #include "chan.h"
+ #include "coex.h"
+@@ -138,15 +139,23 @@ int rtw89_fw_check_rdy(struct rtw89_dev *rtwdev, enum rtw89_fwdl_check_type type
+ }
+ 
+ static const void *__rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
+-						 const void *src, size_t len)
++						 const void *src, size_t len,
++						 bool is_fw_suit)
+ {
+ 	struct rtw89_fw_req_info *fw_req = &rtwdev->fw.req;
+-	const void *dup;
++	void *dup;
+ 
+ 	if (!fw_req->free_after_probe)
+ 		return src;
+ 
+-	dup = devm_kmemdup(rtwdev->dev, src, len, GFP_KERNEL);
++	if (is_fw_suit) {
++		dup = vmalloc(len);
++		if (dup)
++			memcpy(dup, src, len);
++	} else {
++		dup = devm_kmemdup(rtwdev->dev, src, len, GFP_KERNEL);
++	}
++
+ 	if (!dup) {
+ 		/* If failed to memdup, fallback to point to firmware->data. */
+ 		fw_req->free_after_probe = false;
+@@ -161,7 +170,22 @@ static const void *rtw89_fw_elem_dup_if_needed(struct rtw89_dev *rtwdev,
+ {
+ 	size_t len = sizeof(*elm) + le32_to_cpu(elm->size);
+ 
+-	return __rtw89_fw_elem_dup_if_needed(rtwdev, elm, len);
++	return __rtw89_fw_elem_dup_if_needed(rtwdev, elm, len, false);
++}
++
++static const void *rtw89_fw_suit_data_dup_if_needed(struct rtw89_dev *rtwdev,
++						    struct rtw89_fw_suit *fw_suit,
++						    const void *src)
++{
++	struct rtw89_fw_info *fw = &rtwdev->fw;
++	const void *dup;
++
++	dup = __rtw89_fw_elem_dup_if_needed(rtwdev, src, fw_suit->size, true);
++
++	if (dup != src)
++		list_add_tail(&fw_suit->list, &fw->dup_data_list);
++
++	return dup;
+ }
+ 
+ static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
+@@ -680,8 +704,7 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
+ 		if (type != RTW89_FW_NORMAL)
+ 			return -EINVAL;
+ 		fw_suit->size = mfw_len;
+-		fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw,
+-							      fw_suit->size);
++		fw_suit->data = rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, mfw);
+ 		return 0;
+ 	}
+ 
+@@ -725,8 +748,7 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
+ 	}
+ 
+ 	fw_suit->size = mfw_info_size;
+-	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, mfw_info_ptr,
+-						      fw_suit->size);
++	fw_suit->data = rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, mfw_info_ptr);
+ 
+ 	return 0;
+ }
+@@ -866,8 +888,8 @@ int __rtw89_fw_recognize_from_elm(struct rtw89_dev *rtwdev,
+ 		return 1; /* ignore this element (a firmware is taken already) */
+ 
+ 	fw_suit->size = le32_to_cpu(elm->size);
+-	fw_suit->data = __rtw89_fw_elem_dup_if_needed(rtwdev, elm->u.bbmcu.contents,
+-						      fw_suit->size);
++	fw_suit->data =
++		rtw89_fw_suit_data_dup_if_needed(rtwdev, fw_suit, elm->u.bbmcu.contents);
+ 
+ 	return rtw89_fw_update_ver(rtwdev, type, fw_suit);
+ }
+@@ -2206,6 +2228,15 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
  	kfree(elm_info->rfk_log_fmt);
  }
  
--void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
-+void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
- {
- 	struct rtw89_fw_info *fw = &rtwdev->fw;
- 
--	cancel_work_sync(&rtwdev->load_firmware_work);
-+	release_firmware(fw->req.firmware);
- 
--	if (fw->req.firmware) {
--		release_firmware(fw->req.firmware);
-+	/*
-+	 * Directly call this to free firmware early in normal flow. Assign
-+	 * NULL back in case rtw89_free_ieee80211_hw() or tw89_core_deinit()
-+	 * try to release the same one again in error handling paths.
-+	 */
-+	fw->req.firmware = NULL;
-+}
- 
--		/* assign NULL back in case rtw89_free_ieee80211_hw()
--		 * try to release the same one again.
--		 */
--		fw->req.firmware = NULL;
--	}
-+void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
++static void rtw89_unload_firmware_dup_data(struct rtw89_dev *rtwdev)
 +{
 +	struct rtw89_fw_info *fw = &rtwdev->fw;
++	struct rtw89_fw_suit *fw_suit;
 +
-+	cancel_work_sync(&rtwdev->load_firmware_work);
-+	__rtw89_unload_firmware(rtwdev);
++	list_for_each_entry(fw_suit, &fw->dup_data_list, list)
++		vfree(fw_suit->data);
++}
++
+ void __rtw89_unload_firmware(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_fw_info *fw = &rtwdev->fw;
+@@ -2229,6 +2260,7 @@ void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
  
  	kfree(fw->log.fmts);
  	rtw89_unload_firmware_elements(rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 473278f6bbea..cb4209df5843 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -5419,6 +5419,7 @@ rtw89_early_fw_feature_recognize(struct device *device,
- int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
- 		      bool include_bb);
- void rtw89_load_firmware_work(struct work_struct *work);
-+void __rtw89_unload_firmware(struct rtw89_dev *rtwdev);
- void rtw89_unload_firmware(struct rtw89_dev *rtwdev);
- int rtw89_wait_firmware_completion(struct rtw89_dev *rtwdev);
- int rtw89_fw_log_prepare(struct rtw89_dev *rtwdev);
++	rtw89_unload_firmware_dup_data(rtwdev);
+ }
+ 
+ static u32 rtw89_fw_log_get_fmt_idx(struct rtw89_dev *rtwdev, u32 fmt_id)
 -- 
 2.25.1
 
