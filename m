@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB8665172C2
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:03:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D0A522689
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 13:03:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790168590; cv=none; b=bIz/aOSATg0Kvj1IVHWkC/0gv8PEURIYjmnQ3UDYOMocIPwaG1OwlqAILpNrqe8D1Y2K/LM/QGsvN9IAmxmDsOQCfVVVRkg0WayaIqH4LhLz6RROt3i9J5qSrnM/J+u7qJHK3Rvlai2E9QPNX7v8uNe2MVn0zy+IstMm/+yHL+c=
+	t=1790168593; cv=none; b=k0KLFR7ydHhWYjLO+evGkG5DoGxU4lQ1oS+kb/OmYqb85UkrsJ8YFZ98SE77mNSdYisU6oj7PZr2/vpU1Dbnfx5gM/KFegFVSa9qUH+mFKMaG1O9r0U1j6A2anoA/tfknI+X/akSMdIjw59yy7qM90OrsHXpLm/1RpaccoIliLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790168590; c=relaxed/simple;
-	bh=dsmJFNmOq1WAZyxAUUQ0/HZboJo0ERElDm+J0fteFXI=;
+	s=arc-20240116; t=1790168593; c=relaxed/simple;
+	bh=1qxCBtlqLz7E3TAS7tQO90hGBZ7rFSQWtTeBVAR9fdA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QwHLQMIYpK1O3KPbead3F1mTCZK6RgZBWFiybglpWDFH0Lb21/7TMk9yhWmJ5xbUsjSCr7yDBWDAJEmKEcrvIQZjMB3UxLuqyQZ+vk97CIeYrguMZ2vgCHeNSy9HyNfp7sZb1LgcmewyXdVCQDDUpWf+q6qrrKdx2frfsP/xfYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TIPmlQKv; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=bwegRJvv/SNJ/3HvhyZz4mXIrwtKq7HMA4b211yHNG+YgHBUMhVyvukRNa6GDvt0B/K3j4zE9LsIxCQ2+x7Gn52Onl+lATOJ2tZr7u84GseoIA6oDVpEsyMn5bpgHE3pucG45ZP3++dNM7VCBqzNOuGph0YPO3KcWeEdPkO2sfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SwrnSpIq; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TIPmlQKv"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SwrnSpIq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790168589; x=1821704589;
+  t=1790168591; x=1821704591;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=dsmJFNmOq1WAZyxAUUQ0/HZboJo0ERElDm+J0fteFXI=;
-  b=TIPmlQKvlUvrrrpuoxFjeraXMy1GteUyXixJiyQLTEAXxYKcACgmWNs9
-   deRyjoUO/6aynSDxZkPhSlF0OmATFFcOuGn/szgyuikbo+z8ArA2YlBgV
-   DLwhqhR348uKJQcdTUXAERPAQedHnEfAIDXQLb1aa0ZmPuKvNEXaSUSwR
-   0K0P7NqcFwHTaXgqsTn7yCfsjnyVjQIKW4R2qQy6neRY7aLW8JYa6pUi2
-   HTaN0F6r1i6z362TUIfTTB7vC8MUeC9Jcye+gcKDqfzi/b6ti/KN3cuIQ
-   XQHGwh4OY8v+luYukvgbviHpElXVUvLj8Bg9Nw35jVuNGmAPwvBSdlqJs
+  bh=1qxCBtlqLz7E3TAS7tQO90hGBZ7rFSQWtTeBVAR9fdA=;
+  b=SwrnSpIqdzzSAze0DmowH4n4dxGu3y7WJre/TLsnFsNtwSzbHB13UyZ5
+   X5GWQrOe3mqoW57DWLpts0BlJCJvE7vOami62tFDTtFJFmfQT5Hsz0L+P
+   V4icCWf/fu34huVsBHLGOEqC0tdUvWTs4jF+X9RkqjjUrlferCrCvlYQO
+   Fq54KSaXYb/aYL2GZYOW5YiSrwoeunS6IcjzAjJJ5q7ib5L/x9Jr2Vk1R
+   80AogmERKahovlupMWCNhc6haXtkoG+MuB6ORNRjgEFnPPUBzCRdpdVT9
+   FZcgqxYNcPFeHLubRRAKQRjVgIpqiJdqD7KeTegZb8y7Psrk1kp9QgZeR
    w==;
-X-CSE-ConnectionGUID: swsOd4bYRIGVX5OLcnW8PA==
-X-CSE-MsgGUID: mQ1eJ56FSw6Ddpikgx40fQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="89781322"
+X-CSE-ConnectionGUID: 3oe++lLoRkGcyQ5MmiP41g==
+X-CSE-MsgGUID: Uw5UBMxiSHWyHXIceSWr8A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="89781323"
 X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="89781322"
+   d="scan'208";a="89781323"
 Received: from fmviesa012.fm.intel.com ([10.60.135.152])
   by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:08 -0700
-X-CSE-ConnectionGUID: KtK0FWiCSWC1Q2wi0fQ8EQ==
-X-CSE-MsgGUID: wFG6KEx7RYWSMMpnM+sgRw==
+X-CSE-ConnectionGUID: /kRcIZgrTfup2a26+z1NBQ==
+X-CSE-MsgGUID: eQ8hodQ6TG6ZtITQGFFWTQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="4697021"
+   d="scan'208";a="4697028"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:03 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:03:05 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH iwlwifi-next 03/15] wifi: iwlwifi: mvm: fix LARI_CONFIG_EXTENSION version check
-Date: Wed, 23 Sep 2026 16:04:46 +0300
-Message-Id: <20260923160318.27693f88a8d7.Id6a4b91938cd7758c2be3b98379f1057e574cdad@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 04/15] wifi: iwlwifi: advertise 2xLDPC RX support for UHR
+Date: Wed, 23 Sep 2026 16:04:47 +0300
+Message-Id: <20260923160318.9771e88dbc3b.I22693891ed85fd0449ae17106e2502ec4ee2e086@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
 References: <20260923130458.164968-1-miriam.rachel.korenblit@intel.com>
@@ -62,36 +62,41 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The version guard used `< 1` instead of `!= 1`. With `< 1` the
-command would be sent for any firmware version >= 1, including
-future versions that may have a different structure, which could
-trigger a firmware assert due to a size/format mismatch.
+In UHR, currently supported devices have 2x LDPC support.
+Enable the bit.
 
-Fix the check to `!= 1` so the command is only sent when the
-firmware supports exactly version 1.
-
-Fixes: ebc246e1d5a3 ("wifi: iwlwifi: mvm: add LARI_CONFIG_EXTENSION command")
-Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 43a7230f1ab4..06f3b065914b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1526,7 +1526,7 @@ static void iwl_mvm_send_lari_cfg_extension(struct iwl_mvm *mvm)
- 	u32 value;
- 	int ret;
- 
--	if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 0) < 1)
-+	if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 0) != 1)
- 		return;
- 
- 	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG, &value);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 863d5e358152..6bb27d7f1166 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -710,7 +710,8 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 			.has_uhr = true,
+ 			/* Note: asymmetry is fixed later */
+ 			.phy.cap = cpu_to_le32(IEEE80211_UHR_PHY_CAP_ELR_RX |
+-					       IEEE80211_UHR_PHY_CAP_ELR_TX),
++					       IEEE80211_UHR_PHY_CAP_ELR_TX |
++					       IEEE80211_UHR_PHY_CAP_2XLDPC_RX),
+ 			.mac.mac_cap = {
+ 				[0] = IEEE80211_UHR_MAC_CAP0_NPCA_SUPP |
+ 				      IEEE80211_UHR_MAC_CAP0_DPS_SUPP,
+@@ -820,7 +821,8 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 			.has_uhr = true,
+ 			/* Note: asymmetry is fixed later */
+ 			.phy.cap = cpu_to_le32(IEEE80211_UHR_PHY_CAP_ELR_RX |
+-					       IEEE80211_UHR_PHY_CAP_ELR_TX),
++					       IEEE80211_UHR_PHY_CAP_ELR_TX |
++					       IEEE80211_UHR_PHY_CAP_2XLDPC_RX),
+ 		},
+ 	},
+ };
 -- 
 2.34.1
 
