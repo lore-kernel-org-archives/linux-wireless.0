@@ -1,304 +1,226 @@
-Received: from mail-oo1-f80.google.com (mail-oo1-f80.google.com [209.85.161.80])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2C245DF4F
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 07:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.80
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790150373; cv=none; b=g83VikyDFva1F+jR5ZJXSu6TLvAcgaxzsVqggRfSoStjgAkGxs6PqvOSuCPhwm3gbERAVODfMDHMapIEXQgzPbRrDWCykwqsiiWoQsqm4hBHYLJ+/r7DhW4WoSVdvctaA2Mj/jj7rcUrGPdChH0HITv1FZc6YECRwvXypiIl2NU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790150373; c=relaxed/simple;
-	bh=4eh5zOTZC44LleOfaH6juKYJ6+gtEihpaa8gIsJ1ApI=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=iTtiA/Zy9K7MR5+/72TlOWcguoPvU6vQqNtyi5djyaVIHttK0AtAOYkD5tuozCCHyzlT2byCXHMTvqAf7sxq3E918ZnbFZ9JKu0OCj0dcMwvEwatzwsPGEykMIBPszrT2bIxcWO1MKYmJaUAeiwrkm9ILZMur7/QtYaaU/ImDK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f80.google.com with SMTP id 006d021491bc7-6c2d5235ac3so2413560eaf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 00:59:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790150370; x=1790755170;
-        h=content-transfer-encoding:content-type:to:from:subject:message-id
-         :date:mime-version:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7F/Xvf4hTHldLYktQ2+9U+srrjIDEAG1Qfa+m0cEIKw=;
-        b=PleE+4xPiF2ORGzKDzgU+pGG0s0JdUBfKyGpnhcbM1LS3zICeB6U9Bh5n349q3o4l0
-         /+tksdia4xjnzMYFgR/xB3HZpnSAkldYG6d2Lo15T45FLG04EyZRQ6zICR99ycxUSM/A
-         V70OlagIb7AA/gPYm9OZpefi+We8o6LD10UX+c2vC6JrjJC4VWoMNWLmuZZgVn6J5XTi
-         C0u9HPQflE3+nLw2Eid+g+9UjaqPNAxJphpF78MhykDKNw1oa0HpifI+/9OZ5FDRAFyI
-         Qq+JU2FO9BXCHbwGcTSsoBpfyKFeB06fbIwqVHyYOtQFGytZI6XnYWRacOvgMvIDGiFm
-         kUtA==
-X-Forwarded-Encrypted: i=1; AKwUvBwEkgvBsQqM1ihCfWHIWxeGRFJLHYjReITyqYaOEZ4qNtKdCLHFOs/4xNqLncgN7agUvgA5Y3ukjUjeFDX74Q==@vger.kernel.org
-X-Gm-Message-State: AFuF++lYyli0KnvL7/zpA2siE8WUmqjS+EczDroGYywyRe1tKPEWOX1A
-	4zdKMc4VjxScidM3CvBG7OCn02WzhfVrLaHAtvrSdQFdJGLe1D7v7Bt6poQg4zGcGnP7lbOxopH
-	xIFqUkcLIstDqz1g+CNCovT8nWYkVO4CfEc1t7KFqymDj05Gk0s4kuGLE1MM=
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A75A466B0C
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 07:59:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790150378; cv=fail; b=TR7HMvhkA9RLMrJCSjjFWnsDjvHF4/AZaSVA+IYDqjAMsNi1qYE9EYjowhWnOYnkpKWaWVh1pX6jqBnPzrFEEFfwWV8L6//O+fJrloao4XS6twwrjpb0fHY0PMvUHk8WciXxwsyR1CGML9vSdte6vpDPrFNWxgCvlp6jskyd2q0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790150378; c=relaxed/simple;
+	bh=72eGv1BB/qT+H4XJliYWhpoCACNXkbKL9is+jLdq7Vg=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=sBheFI44b1nNDy1rOZIjwa8bwOJiNajCJ8XWlIgjAYyhVeL+Kv2Xp66XZxG2gS9tRvPP9hykm2KI2h+AQJYGOBCve07oQB/baBjiK/w746sAEg/HdPeGQVa7AyF1k1/hmjaRYAWtWMTPy6UnLik5aP1A/KGA+wxINyifSqyGvLU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hUrGIayE; arc=fail smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hUrGIayE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790150374; x=1821686374;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=72eGv1BB/qT+H4XJliYWhpoCACNXkbKL9is+jLdq7Vg=;
+  b=hUrGIayEx5TkXkeBYKKqEU+x2+bHerklMnr9L4TWN6OhPXxjfy3i3qEB
+   t9Zoc7FeJkDvytagaoiEgBSSgvIy3H9vBdqvfet0B1tRYNKuvHssfWQce
+   d+hlay4NNVmSctWgH7fRWHvYkdnxJ+9N3xSEXx01h+68UN5mGINd7/Q/R
+   MmkM6l9kLxFCcXKl8crrXuxAIDmGoYlP4Jktfk9/hDGncLqMwtK7xSqYD
+   zKCmRbrxwxsZ/67scoPYrQNBnHTqghEVF5EZW3XyyqIwMGMRuF52oqwow
+   mQgc9z1zYrEuw1hwYnVGRveb0c8cm8qdJOLDMZnsUrQUihAoDLP78Wq/6
+   w==;
+X-CSE-ConnectionGUID: 2iwiHW8gQDyVe3zqR9tt/A==
+X-CSE-MsgGUID: nUWHJx2QROG4tmlzMSBJRA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="101408676"
+X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
+   d="scan'208";a="101408676"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 00:59:33 -0700
+X-CSE-ConnectionGUID: FXhyK/NNRkWO7wsUxt9lKQ==
+X-CSE-MsgGUID: 3LpfUus0Q2OEUSVtvklFrA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
+   d="scan'208";a="4568872"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by fmviesa011.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 00:59:34 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Wed, 23 Sep 2026 00:59:32 -0700
+Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46 via Frontend Transport; Wed, 23 Sep 2026 00:59:32 -0700
+Received: from BYAPR05CU005.outbound.protection.outlook.com (52.101.85.51) by
+ edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Wed, 23 Sep 2026 00:59:32 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LS3zexYFlMfNtuRl910vY7Ay107dD+uRXbht+fPCF5Nwzjx//THmqoiIkHq27SjQZZ4uK9eifTPngDnOcxRtMP1Nk0plyvYVaTUHw8K3j6XGvtkwVbjUXnl7NymK8tAHSgFp6rLOCgv7Awosm0ApFD7V1VgTyT+ha87Yj8s+hn4AgyNB6/Qd9/RYzTOhA6VfOn8/4a9DhLNOQsqfY610X7lc2i1B1R/PNxtU+8GJFHuCvE++CiEA/1mgIihf84zioBKLo+Bye72CkrP54hbJr47hFdaWWWXXF7P2dTn8pvbh+zr/4gw0NXy/WhxvkFbf82QMCfxa0wPwVQrImGXwtQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=72eGv1BB/qT+H4XJliYWhpoCACNXkbKL9is+jLdq7Vg=;
+ b=BENRL3n4o93aLPJwEkE7eASI330nMFacOjdQ3Wlrvju6vcz22V9dhTN4EG2zDTKfNhud7d7uUFsIBdvbzwiX66TsyM4xaH0hQk0WF0he7yxpAOj6Ds0OE6vb2QtFCQtRO2r8Dgjr8nIqb2VhFglcR921U2wgVgaCzpxhF/0J3BPGdrEBW9+eB5Kd24FmtJJd7mhB1hvVCmTADLcy57o5OTvduC1N/2hKgtkv/+SF/YI/N4GCWnYbCTiLpFfHRBxh/T4YG4PdBOxFLIccNYMorNGIqqVBESelF+jtMh8Ck5IAXz+jKr9udI4uScq3kdm2MSaShuel16y/sqRUWz78ow==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from IA3PR11MB721313.namprd11.prod.outlook.com
+ (2603:10b6:208:626::22) by PH7PR11MB8251.namprd11.prod.outlook.com
+ (2603:10b6:510:1a9::9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.14; Wed, 23 Sep
+ 2026 07:59:28 +0000
+Received: from IA3PR11MB721313.namprd11.prod.outlook.com
+ ([fe80::ece9:28d9:25bf:5805]) by IA3PR11MB721313.namprd11.prod.outlook.com
+ ([fe80::ece9:28d9:25bf:5805%3]) with mapi id 15.21.0451.014; Wed, 23 Sep 2026
+ 07:59:28 +0000
+From: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-firmware@kernel.org" <linux-firmware@kernel.org>, "Grumbach,
+ Emmanuel" <emmanuel.grumbach@intel.com>, "Dreyfuss, Haim"
+	<haim.dreyfuss@intel.com>, "Damary, Guy" <guy.damary@intel.com>,
+	"kyle@infradead.org" <kyle@infradead.org>, "Hutchings, Ben"
+	<ben@decadent.org.uk>, "Yang, You-Sheng" <vicamo.yang@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: iwlwifi firmware update 2026-09-23
+Thread-Topic: iwlwifi firmware update 2026-09-23
+Thread-Index: Ad1LMPTVRisGhJKbQRW/8fkikxJmkw==
+Date: Wed, 23 Sep 2026 07:59:27 +0000
+Message-ID: <IA3PR11MB72131327DCFD903FB8A3F760C9A3822@IA3PR11MB721313.namprd11.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: IA3PR11MB721313:EE_|PH7PR11MB8251:EE_
+x-ms-office365-filtering-correlation-id: 035d0fb4-9c77-4038-13df-08df1948977e
+x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|23010399003|366016|1800799024|56012099006|38070700021|11063799006|10067099003|18002099003;
+x-microsoft-antispam-message-info: 0kfKHck+NWAuQp6ATXHO0hiWO2qRHrda/9th6G8wdDHLHIdNgiPfljdlNntZ8eLnGN8pqjawIj7IH70DCjQP5wjyegtJ/iwkxHhvKgFNWwIXyXaefFUjdNAYP29pd8xmqaf0MHhjfb08FBJIlU6RKze5WaauUEiWYGm+Xm6DOxAtE/FUX+eCLqPXSl/00xLOy7NJvzO0DDZ0eg9iBUnRfIi/UdovKHkRa8qXh9tAKoElK+6V+3gAx8VITfoQ58Loy+gFkZsYedBkhcTt3n7QhWSRWbTOdDuYLS99FaN4psMf/JsnIlNOCjA3Ft1ot+vTFn3AkR3XVN258Qv2guKg2w+UEO1TFKQ7lagh3KRahGb64xg8OfUbESBrCKV4tTUidsrL8CywWCukXngMRm21QFWPeM2gBw+TuxaLtwpdvIlQDMljA/rLxBYMekglxHGFgES+n/iIRUJDh0YmixGQFAd945GsC9GYQEC8LNqcisqKRNJYD7gSlxFMKjpN2MdpNEaT5aLKyXbt/Z65XQNL8hk2e37oJtiVOvAvSk4eO3/yfxirB8bi6z8jRmD14iRgzO8ZEjIHCcQGihc8eF7+tGgQZISBXQJzUm29jBelKNdE/zhlGeqJ2fXdg+96u9fHiGKWgswTDWGqUqTChZcCysv60hxmn+M36wN+GLDSfHonvLUrej4bxWEVsd0kD5vLFWnFQ8V5rotjAeQhJGNG4l/9XSqzP62Yomk1QSOrMLE=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA3PR11MB721313.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(366016)(1800799024)(56012099006)(38070700021)(11063799006)(10067099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?Ynl0Y0NhNWRid29NcHVET2Q2TTY0UWFEczYwRkl3S3FDMW5aMUtBR3o5Y1Vp?=
+ =?utf-8?B?WnRHWmJHSGZuUE92K0V3bFBuemY4bjhIbEVrWHFEVFc1ZDYwRGlJZjlNQzFl?=
+ =?utf-8?B?d3lPL21UQmpWaEtOWGRTQjdHVGlRQ1FwL2RkVTBRMnBPMG1tQmQzakpoNW4z?=
+ =?utf-8?B?NWdUOXRsQXo0OFlDd05qUTE1QjQ2YkxmMkhWRlcxQkIzVW5PSWZHdzIzc3F6?=
+ =?utf-8?B?OFJDUzk3WGxxSit2NHM2SjFKaGNWc3FidDh2NzR4T2JQNUc4R1BEb1liOFk5?=
+ =?utf-8?B?RHUrZjYzamppUGNpSEtqejRPWkp2TXBjcm90OUdudjNGVFlnRUZOd2hHZnAr?=
+ =?utf-8?B?N1BVU2hJK2pWZnNTM3lvNFlmV08rSzQxVlp2U09NQU5OMEt0bTFFR3pXVWJT?=
+ =?utf-8?B?bzNWamE2U2JZTXVhMTRkYWpHZU1EcDkvRTlMRnA1NDIyVkkxcUJydFdtclo4?=
+ =?utf-8?B?RVJ0T3VsUGZBellxQ1RSWllhSWc0a0UyMUIrTkk1UGRCcVNMd1dmZnZ0ZmZX?=
+ =?utf-8?B?MUNha1BMSkxEZGM0TmpCTEJrcWxjQmhZaU14dVh4VXQ1bE1CMXc3bzByTGpq?=
+ =?utf-8?B?VHBjRmxCcFlGanBad3Q4eFdHalVMV2dXajVKT21xSndHemxleTRBRTFJSWRo?=
+ =?utf-8?B?emNCUWJ2RXZYdFI5dFZyMlBHTHk1R0YrV3NlelN1clEwamVCZGk0R0YrSWpC?=
+ =?utf-8?B?eVh1azNIU1gyL0psSzUyTFdtdGdnOVUxYXQ4c0NBTkJSbnFvRXk4dHVOREZn?=
+ =?utf-8?B?ZkFlY0t0UFNPZE5DTlZ1cW9RaGJwLzRIb1c3UytSc25pVWluYTk0WHVNKy9u?=
+ =?utf-8?B?S3RUNjlBVVU3dEFWcWR2NUM2ODRrTnM4YjFmRmM1ZkxIaWtOUW50Q2x1Q1E3?=
+ =?utf-8?B?b3cwamlxRXhJbFZuOWtwNmhPU01BT3A0T21vRGRiZkZMTXFRVkhZTzhHSjNB?=
+ =?utf-8?B?cUlNV3FDbVBVRCtNbk9iSnFOOFJ6Y0dEYWZsNWc1YnFNSWlWaDhYamxzeDAw?=
+ =?utf-8?B?cUdkVHVUeHlNcG9ESHRISU1iQjl3K1FacFpacmlabldaNXJYTEpyY1d0SWI4?=
+ =?utf-8?B?ZndyQ1JGbmpMd3I4VU82SU5zRG1MK0dyV2E5WkhpaTJMZlhsRXhxeDU2WTFs?=
+ =?utf-8?B?SlRJdkZLcHBxVC8xZFVxTitqckExTjJ1dVVMdGdJWGVmZnN1RTBaUXlEaHh5?=
+ =?utf-8?B?QnN5Mllpbk5WY2ZuOTVrZUNxREpNZDlQQjdFVktPKy80d1NOMXEvTHYyZWk5?=
+ =?utf-8?B?RndsOXNKeEo1RWphWWptS3lIR3UrZjc3UUlRZVhwaWxSa3RlcFFkSFEyUGd1?=
+ =?utf-8?B?L1lmUVppWFoxbVFPUkE2UjJlL0xlSExvOXZHMnJ6N1VNLzR2SzdWTzUxNzQ0?=
+ =?utf-8?B?WnVKMUwrSTNVSmQ2ZmowOWlHQXBFUzhiMjdya0ZsVWJGaXJOeVF6TTlnOXdv?=
+ =?utf-8?B?Q01HUkppbDBvVEhCNGNhalp3akluaEltaVFmUXRkTjZSODhEa2xsWVFoblRP?=
+ =?utf-8?B?RGxsS0NCN0E4YU81YTZlRnBSWCt5bEJLZGtFMU9yR1R6NitKVSs1RWJGSmlV?=
+ =?utf-8?B?ZnNPQm10eThKbXUwTmlUTzJBbWpqb3V1NWVqQlNxYnFsSkRUOHpmUmk0WWxl?=
+ =?utf-8?B?OFNWR3MwOWhNdE9nWDJpSG9GS2ZvdFc5bm9RVW9QalJxdk13U2FuN0cxWmU3?=
+ =?utf-8?B?QTlrcm15SjdQd250NVE1Y0FrKzNxWGRuTHNTNlIwR1M1WFdFN1VzTytrZjcr?=
+ =?utf-8?B?THFsZU45Q2lzK0p2Mk9JSUo5STkyUmVtTjhOTHM3MjBDQjJkZWpUSldZMDBM?=
+ =?utf-8?B?Y0dNV25oMjlXQkEwNGU1YStUMW9zUnJTOGZqSFZHMExVRDZQWEhHN1YrVURt?=
+ =?utf-8?B?K3hXTU1yR2FyTGdmTDRQdXpQb2ZYNCtFcDlmYUFqYjIveFRlb0VML0s2RUZR?=
+ =?utf-8?B?Uy9MdXYrMDEyMHRTOXhzYkwvUlFLOXRqYjRVdE5zdnFORUk1eUVTV1lFem1p?=
+ =?utf-8?B?MzVFQk8xN3J6dUNpeUQ2eFNnV3VHNTZkeTczU0Uyb2dTY0FpRy91Y2t6RHI3?=
+ =?utf-8?B?Q0RhbzdXZHNacWttNzdKVXN3REFybkp3QmtoYzdVSlZpbmVBRy9qTFQwYkcy?=
+ =?utf-8?B?TTdhMFpWeXpTR3JJWUZhYml4YVVSTUorWkh2SFFGRTBZcXhFeFpqTVZnejRl?=
+ =?utf-8?B?cElKYzhPL3JzYjdQSHczMXFvU2JGK2NRVmFMc0xDR3crUXhtRnM5SE55YnAr?=
+ =?utf-8?B?NDB1VFhDK3ZWb0syS2lVWG5nN1gyMG1xbUxKdEN5QUpGME9VRTZjbjU4NTh5?=
+ =?utf-8?B?LzhJY1AxNWJMbUFlMWVQamQ0K295bWRXNE9Pc045azBTM3phVHhlTnIvNkpJ?=
+ =?utf-8?Q?JA/x/pgOapCAV6FQ=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a4a:ee06:0:b0:6bf:ebd9:6cb4 with SMTP id
- 006d021491bc7-6d157d8a169mr4187355eaf.8.1790150369772; Wed, 23 Sep 2026
- 00:59:29 -0700 (PDT)
-Date: Wed, 23 Sep 2026 00:59:29 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ab386e1.e8212013.2d060.0006.GAE@google.com>
-Subject: [syzbot] [wireless?] BUG: workqueue lockup in reg_todo
-From: syzbot <syzbot+b733a65a200ab7aa2cbe@syzkaller.appspotmail.com>
-To: davem@davemloft.net, edumazet@google.com, horms@kernel.org, 
-	kuba@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	netdev@vger.kernel.org, pabeni@redhat.com, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Exchange-RoutingPolicyChecked: wCIhWpqk1a6EQwl4PInCdxRsl7w0FVSt7GT0rSMnsX1I5DMApCVleI5Mcg0iN//HM+oYiivZSBWN/ZXOQ6Qbuui45wEA1zz2eCJbaaHfnyuVZyuxC4AZ9VkqxlUUnLiJXuzCuQ3UuEz40Mzfbrc5phzkQJVguNQhaReTT/Fm2xQGwMf423XWOUbudr2WYCDhAQYn6+3EpGx+yIG69aZFHtedB2dOEm9HmVI/cig3vtdc8K/MGEn+21lpd4zkzCNe71mrx9AuNqkYh+4MzQU1nfKyLMEkxA3pBeZJUQNEb+A75NUKGjXSfrBZTaCDOWaCNcROJjw6JSJhFM/idiEhmg==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: IA3PR11MB721313.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 035d0fb4-9c77-4038-13df-08df1948977e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Sep 2026 07:59:27.9450
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: URmUGm1+O6I0dS21g93jfVu04r1aM5lCva7PrJ2RL/Pl4oBjJlHXDkjCmfJRD9Du6JB7QaUix4s7wBAgdTTLvC8A40gmqlUxymXZHvU/mU7EfDT/pwYxNr8fO6iK0zwG
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB8251
+X-OriginatorOrg: intel.com
 
-Hello,
-
-syzbot found the following issue on:
-
-HEAD commit:    38872197cae2 Merge branch 'for-next/fixes' into for-kernelc=
-i
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.g=
-it for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=3D17105405580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3D56ed23170c168d4=
-c
-dashboard link: https://syzkaller.appspot.com/bug?extid=3Db733a65a200ab7aa2=
-cbe
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-=
-1~exp1~20260613092250.77), Debian LLD 22.1.8
-userspace arch: arm64
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/c5963fdd6790/disk-=
-38872197.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/a8c2cab00c45/vmlinux-=
-38872197.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/bde15d173380/Ima=
-ge-38872197.gz.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit=
-:
-Reported-by: syzbot+b733a65a200ab7aa2cbe@syzkaller.appspotmail.com
-
-sched: DL replenish lagged too much
-BUG: workqueue lockup - pool cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 stuck f=
-or 35s!
-Showing busy workqueues and worker pools:
-workqueue events: flags=3D0x100
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D18 refcnt=3D19
-    in-flight: 9:reg_todo for 39s
-    pending: 2*psi_avgs_work, 6*nsim_dev_hwstats_traffic_work, free_obj_wor=
-k, 3*psi_avgs_work, delayed_vfree_work, vmstat_shepherd, 3*ovs_dp_masks_reb=
-alance
-  pwq 6: cpus=3D1 node=3D0 flags=3D0x0 nice=3D0 active=3D9 refcnt=3D10
-    pending: 4*nsim_dev_hwstats_traffic_work, 4*ovs_dp_masks_rebalance, psi=
-_avgs_work
-workqueue events_unbound: flags=3D0x2
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D9 refcnt=3D10
-    in-flight: 237:cfg80211_wiphy_work for 62s cfg80211_wiphy_work ,14:nsim=
-_dev_trap_report_work for 14s ,6551:cfg80211_wiphy_work for 65s cfg80211_wi=
-phy_work ,6553:cfg80211_wiphy_work for 10s ,6550:nsim_dev_trap_report_work =
-for 7s
-    pending: 2*nsim_dev_trap_report_work
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D12 refcnt=3D13
-    in-flight: 6552:nsim_dev_trap_report_work for 9s ,40:cfg80211_wiphy_wor=
-k for 59s cfg80211_wiphy_work ,3416:cfg80211_wiphy_work for 59s cfg80211_wi=
-phy_work ,3118:cfg80211_wiphy_work for 2s ,6548:toggle_allocation_gate for =
-8s ,524:cfg80211_wiphy_work for 17s ,6554:nsim_dev_trap_report_work for 4s
-    pending: 3*nsim_dev_trap_report_work
-workqueue events_power_efficient: flags=3D0x82
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D4 refcnt=3D5
-    in-flight: 5258:reg_check_chans_work for 9s ,373:neigh_periodic_work fo=
-r 30s ,49:wg_ratelimiter_gc_entries for 1s
-    pending: neigh_periodic_work
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D2 refcnt=3D3
-    in-flight: 6555:gc_worker for 8s ,6549:hash_ipportnet6_gc for 4s
-workqueue events_dfl_long: flags=3D0x2
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D7 refcnt=3D8
-    pending: 7*defense_work_handler
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D2
-    in-flight: 5257:defense_work_handler for 8s
-workqueue netns: flags=3D0x6000a
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D5
-    in-flight: 5259:cleanup_net for 74s
-    inactive: cleanup_net
-workqueue mm_percpu_wq: flags=3D0x108
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: vmstat_update
-  pwq 6: cpus=3D1 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: vmstat_update
-workqueue writeback: flags=3D0x4a
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D2
-    in-flight: 289:wb_workfn for 64s
-workqueue ipv6_addrconf: flags=3D0x6000a
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D7
-    in-flight: 134:addrconf_dad_work for 39s
-    inactive: 3*addrconf_dad_work
-workqueue bat_events: flags=3D0x6000a
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D51
-    in-flight: 6547:batadv_tt_purge for 11s
-    inactive: 2*batadv_tt_purge, batadv_bla_periodic_work, batadv_dat_purge=
-, batadv_tt_purge, batadv_bla_periodic_work, batadv_dat_purge, batadv_bla_p=
-eriodic_work, batadv_dat_purge, batadv_mcast_mla_update, 2*batadv_tt_purge,=
- batadv_dat_purge, batadv_bla_periodic_work, batadv_dat_purge, batadv_bla_p=
-eriodic_work, batadv_mcast_mla_update, batadv_bla_periodic_work, batadv_dat=
-_purge, 4*batadv_mcast_mla_update, 5*batadv_iv_send_outstanding_bat_ogm_pac=
-ket, 3*batadv_purge_orig, batadv_iv_send_outstanding_bat_ogm_packet, 3*bata=
-dv_purge_orig, 12*batadv_iv_send_outstanding_bat_ogm_packet
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker
-  pwq 6: cpus=3D1 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_encrypt_worker
-workqueue wg-crypt-wg1: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_encrypt_worker
-workqueue wg-kex-wg0: flags=3D0x6
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D2
-    in-flight: 6546:wg_packet_handshake_send_worker for 0s
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_tx_worker, wg_packet_encrypt_worker
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker
-workqueue wg-crypt-wg1: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker
-workqueue wg-kex-wg0: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_tx_worker, wg_packet_encrypt_worker, wg_packet_decry=
-pt_worker
-workqueue wg-kex-wg2: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_encrypt_worker
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker, wg_packet_decry=
-pt_worker
-  pwq 6: cpus=3D1 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_encrypt_worker
-workqueue wg-kex-wg1: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-crypt-wg1: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_decrypt_worker, wg_packet_encrypt_worker, wg_packet_=
-tx_worker
-workqueue wg-kex-wg2: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker, wg_packet_decry=
-pt_worker
-workqueue wg-crypt-wg1: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_decrypt_worker, wg_packet_encrypt_worker, wg_packet_=
-tx_worker
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D2 refcnt=3D3
-    pending: wg_packet_tx_worker, wg_packet_encrypt_worker
-workqueue wg-crypt-wg0: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_encrypt_worker, wg_packet_tx_worker, wg_packet_decry=
-pt_worker
-workqueue wg-kex-wg1: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-crypt-wg1: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_decrypt_worker, wg_packet_encrypt_worker, wg_packet_=
-tx_worker
-workqueue wg-kex-wg2: flags=3D0x124
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D1 refcnt=3D2
-    pending: wg_packet_handshake_receive_worker
-workqueue wg-kex-wg2: flags=3D0x6
-  pwq 8: cpus=3D0-1 flags=3D0x4 nice=3D0 active=3D1 refcnt=3D2
-    in-flight: 394:wg_packet_handshake_send_worker for 3s
-workqueue wg-crypt-wg2: flags=3D0x128
-  pwq 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 active=3D3 refcnt=3D4
-    pending: wg_packet_decrypt_worker, wg_packet_encrypt_worker, wg_packet_=
-tx_worker
-pool 2: cpus=3D0 node=3D0 flags=3D0x0 nice=3D0 hung=3D35s workers=3D7 idle:=
- 4802 4872 10 4820 870 4902
-pool 8: cpus=3D0-1 flags=3D0x4 nice=3D0 hung=3D0s workers=3D25 idle: 12
-Showing backtraces of busy workers in stalled worker pools:
-pool 2:
-task:kworker/0:0     state:R  running task     stack:0     pid:9     tgid:9=
-     ppid:2      task_flags:0x4208060 flags:0x00000010
-Workqueue: events reg_todo
-Call trace:
- __switch_to+0x2b4/0x6e4 arch/arm64/kernel/process.c:775 (T)
- context_switch kernel/sched/core.c:5526 [inline]
- __schedule+0x1370/0x2d80 kernel/sched/core.c:7277
- preempt_schedule_common+0xd4/0x190 kernel/sched/core.c:7456
- preempt_schedule+0x60/0x78 kernel/sched/core.c:7480
- __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:211 [inline]
- _raw_spin_unlock_irqrestore+0x94/0x98 kernel/locking/spinlock.c:221
- spin_unlock_irqrestore include/linux/spinlock.h:425 [inline]
- __slab_free+0x194/0x1d0 mm/slub.c:5821
- ___cache_free+0x80/0x94 mm/slub.c:6580
- qlink_free mm/kasan/quarantine.c:163 [inline]
- qlist_free_all+0xb4/0x120 mm/kasan/quarantine.c:179
- kasan_quarantine_reduce+0x118/0x124 mm/kasan/quarantine.c:286
- __kasan_slab_alloc+0x2c/0x88 mm/kasan/common.c:350
- kasan_slab_alloc include/linux/kasan.h:253 [inline]
- slab_post_alloc_hook mm/slub.c:4683 [inline]
- slab_alloc_node mm/slub.c:4996 [inline]
- kmem_cache_alloc_noprof+0x268/0x5d4 mm/slub.c:5010
- skb_clone+0x1ac/0x320 net/core/skbuff.c:2119
- do_one_broadcast net/netlink/af_netlink.c:1456 [inline]
- netlink_broadcast_filtered+0x520/0xd58 net/netlink/af_netlink.c:1539
- netlink_broadcast+0x50/0x68 net/netlink/af_netlink.c:1563
- uevent_net_broadcast_untagged lib/kobject_uevent.c:331 [inline]
- kobject_uevent_net_broadcast+0x33c/0x53c lib/kobject_uevent.c:410
- kobject_uevent_env+0x518/0x944 lib/kobject_uevent.c:611
- call_crda net/wireless/reg.c:574 [inline]
- reg_query_database+0x278/0x4e4 net/wireless/reg.c:1116
- reg_process_hint_core net/wireless/reg.c:2681 [inline]
- reg_process_hint+0x1b8/0x990 net/wireless/reg.c:3027
- reg_process_pending_hints net/wireless/reg.c:3115 [inline]
- reg_todo+0x168/0x6a4 net/wireless/reg.c:3206
- process_one_work kernel/workqueue.c:3396 [inline]
- process_scheduled_works+0x91c/0x1250 kernel/workqueue.c:3479
- worker_thread+0x798/0xbd0 kernel/workqueue.c:3560
- kthread+0x304/0x3d4 kernel/kthread.c:436
- ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:838
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA3OTdkMzRlNjIyYjIyNjJjYTA3Nzdl
+OThmZDQwYjFkMjkwMzQxNjlkOg0KDQogIE1lcmdlIGJyYW5jaCAncm9ib3QvcGF0Y2gtMC0xNzg5
+OTcyMDk1JyBpbnRvICdtYWluJyAoMjAyNi0wOS0yMSAxOTo0NTo0MyArMDAwMCkNCg0KYXJlIGF2
+YWlsYWJsZSBpbiB0aGUgR2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cDovL2dpdC5rZXJuZWwu
+b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2xpbnV4LWZpcm13YXJlLmdpdCB0
+YWdzL2l3bHdpZmktZnctMjAyNi0wOS0yMw0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAg
+dG8gYjcyMzU2MTQwODY2MTY5YjY5MmFkMzNhNjlhMGU1YjZlNTk2ZWJkNjoNCg0KICBpd2x3aWZp
+OiBhZGQgQnovU2MgRlcgZm9yIGNvcmUyNC44MC00MSByZWxlYXNlICgyMDI2LTA5LTIzIDEwOjUx
+OjA5ICswMzAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpSZWxlYXNlIENvcmUyNC44MA0KDQoyMDI2LTA5LTIzDQoN
+Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0NCk1pcmkgS29yZW5ibGl0ICg1KToNCiAgICAgIGl3bHdpZmk6IEFkZCBjYy9RdS9R
+dVogZmlybXdhcmVzIGZvciBjb3JlMjQuODAtNDEgcmVsZWFzZQ0KICAgICAgaXdsd2lmaTogdXBk
+YXRlIHR5L1NvL01hIGZpcm13YXJlcyBmb3IgY29yZTI0LjgwLTQxIHJlbGVhc2UNCiAgICAgIGl3
+bHdpZmk6IEFkZCBIci9HZiBmaXJtd2FyZSBmb3IgY29yZTI0LjgwLTQxIHJlbGVhc2UNCiAgICAg
+IGl3bHdpZmk6IFVwZGF0ZSBCei9GbSBmaXJtd2FyZSBmb3IgY29yZTI0LjgwLTQxIHJlbGVhc2UN
+CiAgICAgIGl3bHdpZmk6IGFkZCBCei9TYyBGVyBmb3IgY29yZTI0LjgwLTQxIHJlbGVhc2UNCg0K
+IFdIRU5DRSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDYwICsrKysr
+KysrKysrKysrKysrLS0tLS0tLS0tLQ0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1RdS1iMC1oci1i
+MC03Ny51Y29kZSAgIHwgQmluIDE0MDY1NzYgLT4gMTQwNjU3NiBieXRlcw0KIGludGVsL2l3bHdp
+ZmkvaXdsd2lmaS1RdS1iMC1qZi1iMC03Ny51Y29kZSAgIHwgQmluIDEzMjMyOTYgLT4gMTMyMzI5
+NiBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1RdS1jMC1oci1iMC03Ny51Y29kZSAgIHwg
+QmluIDE0MDY1OTIgLT4gMTQwNjU5MiBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1RdS1j
+MC1qZi1iMC03Ny51Y29kZSAgIHwgQmluIDEzMjMzMTIgLT4gMTMyMzMxMiBieXRlcw0KIGludGVs
+L2l3bHdpZmkvaXdsd2lmaS1RdVotYTAtaHItYjAtNzcudWNvZGUgIHwgQmluIDE0MDY3MjAgLT4g
+MTQwNjcyMCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1RdVotYTAtamYtYjAtNzcudWNv
+ZGUgIHwgQmluIDEzMjMzMjAgLT4gMTMyMzMyMCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lm
+aS1iei1iMC1mbS1jMC1jMTA3LnVjb2RlIHwgQmluIDIxNTk2NjAgLT4gMjE2Mzc1MiBieXRlcw0K
+IGludGVsL2l3bHdpZmkvaXdsd2lmaS1iei1iMC1nZi1hMC0xMDAudWNvZGUgIHwgQmluIDE4Mzc1
+ODQgLT4gMTgzNzU4NCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1iei1iMC1oci1iMC0x
+MDAudWNvZGUgIHwgQmluIDE1ODQ3NjggLT4gMTU4NDc2OCBieXRlcw0KIGludGVsL2l3bHdpZmkv
+aXdsd2lmaS1iei1iMC13aC1iMC1jMTA4LnVjb2RlIHwgQmluIDAgLT4gMjA1NDE4MCBieXRlcw0K
+IGludGVsL2l3bHdpZmkvaXdsd2lmaS1jYy1hMC03Ny51Y29kZSAgICAgICAgIHwgQmluIDEzNjgx
+MDAgLT4gMTM2ODEwMCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1nbC1jMC1mbS1jMC1j
+MTA4LnVjb2RlIHwgQmluIDAgLT4gMjA5MjI0OCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lm
+aS1tYS1iMC1nZi1hMC04OS51Y29kZSAgIHwgQmluIDE3NTI5NzYgLT4gMTc1Mjk3NiBieXRlcw0K
+IGludGVsL2l3bHdpZmkvaXdsd2lmaS1tYS1iMC1nZi1hMC5wbnZtICAgICAgIHwgQmluIDU1MDk2
+IC0+IDU1MDcyIGJ5dGVzDQogaW50ZWwvaXdsd2lmaS9pd2x3aWZpLW1hLWIwLWdmNC1hMC04OS51
+Y29kZSAgfCBCaW4gMTYwNTAxNiAtPiAxNjA1MDE2IGJ5dGVzDQogaW50ZWwvaXdsd2lmaS9pd2x3
+aWZpLW1hLWIwLWdmNC1hMC5wbnZtICAgICAgfCBCaW4gMjc4MjAgLT4gMjc4MjAgYnl0ZXMNCiBp
+bnRlbC9pd2x3aWZpL2l3bHdpZmktbWEtYjAtaHItYjAtODkudWNvZGUgICB8IEJpbiAxNTM5ODM2
+IC0+IDE1Mzk4MzYgYnl0ZXMNCiBpbnRlbC9pd2x3aWZpL2l3bHdpZmktc2MtYTAtZm0tYzAtYzEw
+OC51Y29kZSB8IEJpbiAwIC0+IDIyNTM0NjAgYnl0ZXMNCiBpbnRlbC9pd2x3aWZpL2l3bHdpZmkt
+c2MtYTAtZ2YtYTAtMTAwLnVjb2RlICB8IEJpbiAxODExNTA4IC0+IDE4MTE1MDggYnl0ZXMNCiBp
+bnRlbC9pd2x3aWZpL2l3bHdpZmktc2MtYTAtd2gtYjAtYzEwOC51Y29kZSB8IEJpbiAwIC0+IDIx
+NTEyOTIgYnl0ZXMNCiBpbnRlbC9pd2x3aWZpL2l3bHdpZmktc28tYTAtZ2YtYTAtODkudWNvZGUg
+ICB8IEJpbiAxNzM3MDEyIC0+IDE3MzcwMTIgYnl0ZXMNCiBpbnRlbC9pd2x3aWZpL2l3bHdpZmkt
+c28tYTAtZ2YtYTAucG52bSAgICAgICB8IEJpbiA1NTE3NiAtPiA1NTE1MiBieXRlcw0KIGludGVs
+L2l3bHdpZmkvaXdsd2lmaS1zby1hMC1nZjQtYTAtODkudWNvZGUgIHwgQmluIDE1OTE5ODQgLT4g
+MTU5MTk4NCBieXRlcw0KIGludGVsL2l3bHdpZmkvaXdsd2lmaS1zby1hMC1nZjQtYTAucG52bSAg
+ICAgIHwgQmluIDI3ODYwIC0+IDI3ODYwIGJ5dGVzDQogaW50ZWwvaXdsd2lmaS9pd2x3aWZpLXNv
+LWEwLWhyLWIwLTg5LnVjb2RlICAgfCBCaW4gMTUyNzAwNCAtPiAxNTI3MDA0IGJ5dGVzDQogaW50
+ZWwvaXdsd2lmaS9pd2x3aWZpLXR5LWEwLWdmLWEwLTg5LnVjb2RlICAgfCBCaW4gMTY3OTA4MCAt
+PiAxNjc5MDgwIGJ5dGVzDQogaW50ZWwvaXdsd2lmaS9pd2x3aWZpLXR5LWEwLWdmLWEwLnBudm0g
+ICAgICAgfCBCaW4gNTUwMjAgLT4gNTUwMjAgYnl0ZXMNCiAyOCBmaWxlcyBjaGFuZ2VkLCAzOCBp
+bnNlcnRpb25zKCspLCAyMiBkZWxldGlvbnMoLSkNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaW50ZWwv
+aXdsd2lmaS9pd2x3aWZpLWJ6LWIwLXdoLWIwLWMxMDgudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2
+NDQgaW50ZWwvaXdsd2lmaS9pd2x3aWZpLWdsLWMwLWZtLWMwLWMxMDgudWNvZGUNCiBjcmVhdGUg
+bW9kZSAxMDA2NDQgaW50ZWwvaXdsd2lmaS9pd2x3aWZpLXNjLWEwLWZtLWMwLWMxMDgudWNvZGUN
+CiBjcmVhdGUgbW9kZSAxMDA2NDQgaW50ZWwvaXdsd2lmaS9pd2x3aWZpLXNjLWEwLXdoLWIwLWMx
+MDgudWNvZGUNCg==
