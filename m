@@ -1,395 +1,242 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519FE514742;
-	Wed, 23 Sep 2026 12:05:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5929285058
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 12:50:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790165125; cv=none; b=fi/EfE7j2SMxxjKUF78JB+Qt8+batHcgFDnjTRj4IETm3BJXkkxA5z+fW2dlKvGoHzzArXXt7eI9I6u0/xNbxp2wYgecYztNErihj2ITvdTkCEY9/krIan/iKRDwgINNhd6I4OStzZLbmo3038oJaK0z531RdQZdF9f+mNnA9Pk=
+	t=1790167805; cv=none; b=VqZVLZBWoXdXFMwbfLZkwVBr4ifKUVSBdH0T3sQ5QnBzxIwyjEINOv3qRF/TxZaraeUPplqIK4nPStPWvhy5/87oSz3x+gq8XhhgMN4jJ+vrh0AeQH+mUL9mScIJQPiDrYiKXn+QrxBfoQsioO0PQWXiNC4B+Bsy1D/Nh8OX3IM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790165125; c=relaxed/simple;
-	bh=Z6/Qk3n4xeJSYUtJybmaG4oCwMF/08rA0O1ozW4Hj7w=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=JfmoJJqduEmkpMv9aufTA1NjvGav4zf7hBec3N6/dc5WbidRaKBQ9klXiPw+dV/xU/qzFrHRUc4vYgsxRo8U36izBSyQAJiNifxVi0xAVgvQcLhUeB2Xe9jOTXKrSEBQL4XNWTKhKPrZRuecPkr15CuoeHfITLFTnlarlPq4Jxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9EvgTBR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1790167805; c=relaxed/simple;
+	bh=0PXGenQBMhoVtALNhjHIgS48KlWoNUobuslnHcoyGQk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Sqw/xtPtAtX61hW3GhWtMpw63xSceDC0DQ9bchyYi8ujg+BbQXm4Iyh3TIld+hC7aRGAXMPdyQcJYparnmKaIiz7VyXkr0ib7MeIs+2N+3YxlAueEsSgKKm8ld4/648ShNV6jZo8In4Vhb5tFkofeEqRZ8ULobF8mmF3Z11UB3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=mkbcWNQ2; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=iC2e2+iW; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9EvgTBR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2AB34C2BD01;
-	Wed, 23 Sep 2026 12:05:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790165121;
-	bh=Z6/Qk3n4xeJSYUtJybmaG4oCwMF/08rA0O1ozW4Hj7w=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=X9EvgTBRr32+EqMMWUEaAppxkOL/OtnL6jsEUbj/VyY8+Tc+0XbfS1saS0AMHEpdf
-	 GgHMW6tyGlT8uDXLhk0q9e0CvcVGubQ5esdAB0Q6NOITJRfylwVbN4/kHkqAlt7HzL
-	 8hmgY8WX58VxanfE3mbp3bwcjYBkZ92EA9wYJpn+MkW/jMDVYHZJm/gBCeF+K33DJP
-	 f4CfvPPOUuGyixOmIySk+VyFKshIVJCull+lE2oQ+XlOSkcOlKtTmKvM1S+BgLB2sg
-	 4VnYkXRiDb8kZTivrTT8dB6vwUUnREidgvf4GYItNuAHRRyu/Pd5IyU16zMJ6vDzfd
-	 lsMXh/cs68lPw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17DAEC9830B;
-	Wed, 23 Sep 2026 12:05:21 +0000 (UTC)
-From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
-Date: Wed, 23 Sep 2026 16:05:13 +0400
-Subject: [PATCH ath-next 07/16] wifi: ath11k: Register userPD interrupts
- and SMEM entries
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="mkbcWNQ2";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="iC2e2+iW"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68NBbTl12466532
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 12:50:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	RcdwxsPtDevmgdXTISO9Gx8YiyTOdAORxtcWjdkP/rI=; b=mkbcWNQ2Urld4joy
+	B1GjCm9ILdjZrN5zn6r3f1JtcngsrJEKKduNKM/y1SCr6zovXUtVP8Pwf9FIvF37
+	/PrWikvnjUD7UT/17RUWa76TPiH0bVh73vVroDoubaJMLNqbfFezFxSTrc5u7j8b
+	P7Bj487t7C1fxzshavuGH9YsiTsdZEkxrrCvkEzxCtm3RFjnRxEC4B24fOoRhz3/
+	yu5/OW1hhDlqNOAUFB2WB3BoF1cagfoo3DO/sRD6H4lCunmUx/xkN9roG2hewtro
+	+JoPy0fUJuOQIlUBsq6pGeFnhLBhyl+8PfqISQLxeWFSp6pNmhrzgnzBVMUwSa4M
+	a2i4sA==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4guy2c42jj-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 12:50:02 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cfc52ddc55so7874535ad.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 05:50:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1790167801; x=1790772601; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=RcdwxsPtDevmgdXTISO9Gx8YiyTOdAORxtcWjdkP/rI=;
+        b=iC2e2+iWDNzA+I9jCkyQ8L2+GSmmdUZKPknxDg3tWR9vmwbQsudbqPXG16i/Vx+F+0
+         Y4hApNnk/uYJLSvCKFIYS63GtCjZy2EqjsAohDYmYH1ZmMHUhPYe3uXhZ1N1DFhKprhM
+         7YkPUzMnX6RYeN4RMW5wYztvJF/rvJRo2zrVhtPBO4BeK80bePWrdrVJxRzQz35gCusO
+         rhAKkUs18VpGo2RmgYQJmIDy8raMrZZwb/R7KIhwkxK9Y4EcvopL88u72esFPTJX0iVU
+         sg4mJx+2rZw7ZVjT4qFZCQIx4AGezNBHq1cjdfFjefFYZaCcgXfZuTE2bbHttyEewyxE
+         7mKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790167801; x=1790772601;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=RcdwxsPtDevmgdXTISO9Gx8YiyTOdAORxtcWjdkP/rI=;
+        b=Y5nd6qTYR1h/4m/KLWs6alQ6vAO9lDpYS+pJfRzf3STGiq6SHIZnEzY9NjBVwIoXqx
+         5hbHoKRSyXNXNCfcWTVtV0cxHGUXXnrYVhsOUK99uteijwPei/Mz3yxPhqsbiX6phUmc
+         sccfP1HVWZGkIbnQv8GvMz1YmKI+6HDbpJXCRNxcub7CMMgkFyJSr22Zge3DpYEeWXlW
+         v/Dd9BFoHW09IVZ0t2MnHQ4xl5zqBeP7oGyCp0u4IpnKtUg3157h4qGCQdnWnqcvby16
+         u1vz2ArhJIpkOuenIJPHJfm4uawurkgT5yuhGeA/NWYr/8hkbjVwaVEcgRYvtMGT7vmY
+         ayWQ==
+X-Gm-Message-State: AFuF++lpHenxYgg8FCosdOq7uatDQ7oZCAO3bLEGRsrJl0YPFqoRvC6z
+	UelZQu5Lz72lHIDqugolSPuk61jK9r3OeG80FihTe8z7UrN/EeN0JgnPeBkq9nbLA9unkg7cfSt
+	Jr10rvCcOgldXJteCWJm3D+ouqokRmwUPw4fdnrijWG0TBadIheISZJ22mtcRIYEvIGVpn2SgRq
+	fvhA==
+X-Gm-Gg: AYBFou3Pyevc3h10d4HFOSbk4BL8yBxVWxPlYrdtRInpyHjJYt0cn6tEk2TucebuZVS
+	UH89moYpE/lD/Q5Syzxh4pC1K4hRk57jOrmWbcclWT4M/ZHlRuXFmJzXoe06AKFpZg6NKW5bs06
+	t+j/NybgdpF22YxCxR8fax53uUc7PuLNgUM/ABNoPvxC8+1aX0tnabWsJCAIeteOkgPXmRRP72l
+	rnREF0spTMFRihWnzYtWXQMlZ+Cs2R6tk9Wq5rC/FJmfcOluT4UWyfQzItTag1QxQsGmuxNlSaW
+	9J1vqiBwGaKiizYQsIMb7cvV8YTe4CJcy8/zXKQtp60LX8pVXcvPjnRLPTxPm3Yfcw4r7itHYSj
+	9bdE7+8fAPdsayQgQwA8m2UafvRrTecs6tIAlBCZm7ZA=
+X-Received: by 2002:a17:903:3503:b0:2dd:c053:e0f3 with SMTP id d9443c01a7336-2df69ddf227mr19848305ad.34.1790167801219;
+        Wed, 23 Sep 2026 05:50:01 -0700 (PDT)
+X-Received: by 2002:a17:903:3503:b0:2dd:c053:e0f3 with SMTP id d9443c01a7336-2df69ddf227mr19847995ad.34.1790167800452;
+        Wed, 23 Sep 2026 05:50:00 -0700 (PDT)
+Received: from [192.168.11.104] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df6a5a5157sm9976235ad.14.2026.09.23.05.49.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Sep 2026 05:50:00 -0700 (PDT)
+Message-ID: <5f26c2ef-ace1-4afa-b5a9-0468d692367e@oss.qualcomm.com>
+Date: Wed, 23 Sep 2026 18:19:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next v4 0/8] wifi: ath12k: extend device DP stats for
+ TX and RX observability
+To: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20260819053247.1420393-1-pardeep.kaur@oss.qualcomm.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260819053247.1420393-1-pardeep.kaur@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260923-ipq5018-qcn6122-mpd-v1-7-86729521a75c@outlook.com>
-References: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
-In-Reply-To: <20260923-ipq5018-qcn6122-mpd-v1-0-86729521a75c@outlook.com>
-To: Johannes Berg <johannes@sipsolutions.net>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
- Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
- ath11k@lists.infradead.org, linux-kernel@vger.kernel.org, 
- Vignesh Viswanathan <vignesh.viswanathan@oss.qualcomm.com>, 
- Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>, 
- linux-arm-msm@vger.kernel.org, 
- George Moussalem <george.moussalem@outlook.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790165117; l=10055;
- i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
- bh=7rpr5lypcGKAhre+UQc1WGPdhHabdKnP7DtLs3iPrPY=;
- b=WiChA4t5yACxD/OYP58ovQZ3RNhOIJsQOeGFLG4BJ7b/MvgrZrJ7/bfR4SDpFU2J03zT61yif
- sz/Egm+NbJhAjaD4q43JjOHAGrtB3OLTjEiKDmetlNA1HPo+nGnfUWQ
-X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
- pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
-X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
- with auth_id=364
-X-Original-From: George Moussalem <george.moussalem@outlook.com>
-Reply-To: george.moussalem@outlook.com
+X-Proofpoint-GUID: _SxKFeZFvYWaAmzF0iPiU5mrTEwS-FU9
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIzMDA1MSBTYWx0ZWRfX0nc5OLrHu0uJ
+ 8i/vzfbScoYsq3I5Ab5QlpZfij9BGnWU+XUv3DY2L+CVNq0o7oIdb6/isjp+XNxzg3y3JvTCkrA
+ kW0vjyULpspwqlR7Tc4/L9KB0VLH0jI=
+X-Authority-Analysis: v=2.4 cv=Zsh4uN7G c=1 sm=1 tr=0 ts=6ab3cafa cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=eVs2hV3UTgqw7q_ujHoA:9 a=QEXdDO2ut3YA:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-ORIG-GUID: _SxKFeZFvYWaAmzF0iPiU5mrTEwS-FU9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIzMDA1MSBTYWx0ZWRfX13rs7HgMn55j
+ 5Qowxn7YeerytAkSIXFwKObPTsCLa6++Xm8/2TLzgdHeEjA79eTVYrp/u63LxTNtobSW/TBgkD5
+ 9AoG3MZOSZ44d/g0RUILreEGwxMBXrYlmP8pTAWXo3nfh/GSgfviNqLuK2Sgo2beAZRHhpThV9W
+ vlMWqxdBpS9wpEodHnveKynmLX1sTIkFKwYehEFMq2QY4bA5RYU/fBV8+Y78yAB+C7wYTSDyKIu
+ klHTnVNK7k9ZDqcNG1Q5JJGR+jeW9ofqpOvV3ZsIPlf0uxbT+EZ6mknPzc+cpMApzeICR2bAbI2
+ jj3mb1rwNyMCF7Dk/Ovl3sTagVtXTBbSml2QJzW5UqoLW6LOZNmQNUJwWWhykyc8mIZDvcGEirR
+ pYCYbrUvg1P+k6FlGEGcsjfUDP1sWXzj9EWAk5EEvC1ogNc/1+VVDXAmwDCjP2ED2vyLem+TSaV
+ LtneX3dLcQxMwK9qlsw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-23_04,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 adultscore=0 clxscore=1015 priorityscore=1501 phishscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 spamscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609230051
 
-From: George Moussalem <george.moussalem@outlook.com>
+On 8/19/2026 11:02 AM, Pardeep Kaur wrote:
+> From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+> 
+> Extend ath12k device DP stats for TX and RX path observability.
+> 
+> Patch 1 fixes out-of-bounds array access on TX stats arrays
+> fw_tx_status[], tx_wbm_rel_source[] and tqm_rel_reason[] by adding
+> likely() bounds checks before each increment. The default: case of the
+> switch statement that follows already handles unknown values with
+> ath12k_warn(), so no WARN_ON_ONCE is added for fw_tx_status to avoid
+> double-warning on an out-of-range htt_status value.
+> 
+> Patch 2 renames the local variable wbm_status to htt_status in
+> ath12k_dp_tx_process_htt_tx_complete() to accurately reflect the field
+> origin, and simplifies ts.acked to use true directly.
+> 
+> Patch 3 adds a per-pool TX descriptor allocation failure counter
+> txbuf_na[] indexed by pool_id to track which traffic class ran out of
+> TX descriptors, and exposes it in device_dp_stats debugfs.
+> 
+> Patch 4 adds a write handler to device_dp_stats debugfs so that writing
+> 'reset' clears all device DP stats counters without reloading the driver.
+> Uses simple_write_to_buffer() to correctly handle partial writes and
+> non-zero ppos, consistent with ath12k_write_simulate_fw_crash().
+> 
+> Patch 5 introduces a new dp_stats.h header with the
+> ath12k_wbm_err_drop_reason enum, adds per-drop-reason counters in the
+> WBM RX error path, and exposes them in device_dp_stats debugfs.
+> 
+> Patch 6 adds a 2D sent_to_stack[ring_id][device_id] counter to track
+> successful MSDU deliveries to the network stack, attributed to the ring
+> owner's dp so it is directly comparable with reo_rx[] in the same
+> debugfs file in MLO configurations.
+> 
+> Patch 7 fixes the REO Rx Received debugfs output to use 0-based ring
+> indexing and lowercase "ring%d:" consistent with other ring counters.
+> 
+> Patch 8 adds a dedicated sw_desc_fallback counter to track how often the
+> WBM RX error path falls back to SW descriptor retrieval when HW CC is
+> not done, distinct from actual packet drops.
+> 
+> v4 changes:
+> - Rename WBM_ERR_GET_SW_DESC -> WBM_ERR_DROP_GET_SW_DESC and
+>    WBM_ERR_DESC_PARSE -> WBM_ERR_DROP_DESC_PARSE for naming consistency
+>    with all other enum values in the same enum (patch 5).
+> - Remove extra space before = in wbm_rx_drop[] array initializer (patch 5).
+> - Drop ath12k_warn() on unsupported command in the stats reset handler;
+>    -EINVAL is the correct user-facing mechanism, consistent with all other
+>    .write() handlers in the same file (patch 4).
+> - Fix missing colon in "REO sent to stack" section header; all other
+>    section headers in the same function use ":\n" (patch 6).
+> 
+> v3 changes:
+> - Remove WARN_ON_ONCE for fw_tx_status out-of-range: the default: branch
+>    of the switch already calls ath12k_warn() for unknown htt_status values
+>    so adding WARN_ON_ONCE would double-warn (patch 1).
+> - Replace copy_from_user() with simple_write_to_buffer() in the stats
+>    reset handler to correctly handle split writes and non-zero ppos (patch 4).
+> - Drop Fixes: tag from patch 7; cosmetic debugfs fix not needing backport.
+> 
+> v2 changes:
+> - Fix txbuf_na[] indexing: use pool_id instead of ring_id so the counter
+>    tracks TX descriptor pool exhaustion per traffic class (patch 3).
+> - Fix sent_to_stack[] to use a 2D array [ring_id][device_id] attributed
+>    to the ring owner's dp, making it directly comparable with reo_rx[] in
+>    the same debugfs file in MLO configurations (patch 6).
+> - Fix double-counting of WBM_ERR_DROP_RXDMA_GENERIC: move the increment
+>    inside rxdma_err()'s default: branch (patch 5).
+> - Remove WBM_ERR_INV_PEER_ID, WBM_ERR_DROP_INV_COOKIE and
+>    WBM_ERR_DROP_INV_PUSH_RSN from the drop reason enum; no increment
+>    sites in the datapath (patch 5).
+> - Remove leading space from "WBM Rx Drop Count" section header (patch 5).
+> - Add likely()/WARN_ON_ONCE() bounds check on ring_id for sent_to_stack[]
+>    (patch 6).
+> - Update commit messages for patches 3 and 6 to reflect corrected
+>    semantics.
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6.r1-00402-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+> ---
+> 
+> Aniruddha Mishra (2):
+>    wifi: ath12k: add WBM RX error drop statistics
+>    wifi: ath12k: add WBM SW desc fallback counter
+> 
+> Hariharan Ramanathan (4):
+>    wifi: ath12k: rename wbm_status to htt_status in HTT TX completion
+>    wifi: ath12k: add TCL ring TX buffer allocation failure counter
+>    wifi: ath12k: add device DP stats reset support via debugfs
+>    wifi: ath12k: track per-ring RX sent-to-stack count
+> 
+> Pardeep Kaur (2):
+>    wifi: ath12k: fix out-of-bounds access on TX stats arrays
+>    wifi: ath12k: fix 1-based ring index in REO Rx Received debugfs output
+> 
+>   drivers/net/wireless/ath/ath12k/debugfs.c     | 78 ++++++++++++++++++-
+>   drivers/net/wireless/ath/ath12k/dp.h          | 14 +++-
+>   drivers/net/wireless/ath/ath12k/dp_stats.h    | 25 ++++++
+>   drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c | 52 ++++++++++---
+>   drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c | 27 ++++---
+>   .../net/wireless/ath/ath12k/wifi7/hal_rx.c    |  5 +-
+>   6 files changed, 175 insertions(+), 26 deletions(-)
+>   create mode 100644 drivers/net/wireless/ath/ath12k/dp_stats.h
+> 
+> base-commit: e07447e654476262558bee570f4cf456e2b32565
+> --
+> 2.34.1
+> 
+> 
 
-Q6 and the ath11k driver communicate using SMEM and IRQs.
+Apart from Jeff's comment on commit text of 4/8
 
-Spawn interrupt is triggered once the userPD thread is spawned.
-Ready interrupts denote that the userPD is completely powered up and
-ready. Stop-ack is to acknowledge the ath11k driver that userPD has
-stopped.
-
-The root PD sets the spawn and stop bits in SMEM upon boot which the
-ath11k driver reads to derive the userPD ID.
-
-Set the spawn bit in SMEM to instruct Q6 to spawn a userPD which brings
-up the radio. Similarly, the stop bit is set when a userPD needs to be
-stopped.
-
-Keep track of the userPDs that have been spawned and stopped in the
-global rproc_info structure to determine when the rootPD can be stopped.
-
-Move boot and shutdown of the root PD to probe and remove functions
-respectively. This is to ensure that the root PD is booted before any
-userPDs are spawned. For non-MPD platforms, the this move has no
-functional impact.
-
-Signed-off-by: George Moussalem <george.moussalem@outlook.com>
----
- drivers/net/wireless/ath/ath11k/ahb.c | 176 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath11k/ahb.h |  25 +++++
- 2 files changed, 191 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 9fe2e112dfb8..25f9a992a7d2 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -22,6 +22,13 @@
- #include <linux/soc/qcom/smem.h>
- #include <linux/soc/qcom/smem_state.h>
- 
-+#define ATH11K_UPD_IRQ_WRD_LEN  18
-+static const char *const ath11k_userpd_irq[ATH11K_USERPD_MAX_IRQ] = {
-+	"spawn",
-+	"ready",
-+	"stop-ack",
-+};
-+
- static const struct of_device_id ath11k_ahb_of_match[] = {
- 	/* TODO: Should we change the compatible string to something similar
- 	 * to one that ath10k uses?
-@@ -46,6 +53,15 @@ MODULE_DEVICE_TABLE(of, ath11k_ahb_of_match);
- #define ATH11K_IRQ_CE0_OFFSET 4
- 
- /*
-+ * Multi-UserPD Architecture:
-+ *
-+ * One Q6 RootPD (managed by separate rproc driver) supports multiple
-+ * ath12k UserPDs. Each UserPD represents a WiFi radio instance.
-+ *
-+ * Lifecycle:
-+ *  - RootPD boots when first UserPD probes
-+ *  - All UserPDs share RootPD's SSR notifier
-+ *
-  * Global Driver-level Locking:
-  *  - ath11k_rproc_info_lock: Protects rproc_info allocation/free
-  */
-@@ -831,6 +847,126 @@ static const struct ath11k_hif_ops ath11k_ahb_hif_ops_wcn6750 = {
- 	.ce_irq_disable = ath11k_pci_disable_ce_irqs_except_wake_irq,
- };
- 
-+static int ath11k_ahb_init_userpd(struct ath11k_base *ab, int userpd_id)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	switch (ab->hw_rev) {
-+	case ATH11K_HW_IPQ5018_HW10:
-+		if (userpd_id != ATH11K_AHB_USERPD_ID_1)
-+			return -EINVAL;
-+
-+		ab_ahb->userpd_id = userpd_id;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	g_rproc_info->userpd[userpd_id - 1] = ab_ahb;
-+	g_rproc_info->num_userpd++;
-+
-+	return 0;
-+}
-+
-+static irqreturn_t ath11k_userpd_irq_handler(int irq, void *data)
-+{
-+	struct ath11k_base *ab = data;
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+
-+	if (irq == ab_ahb->userpd_irq_num[ATH11K_USERPD_SPAWN_IRQ]) {
-+		complete(&ab_ahb->userpd_spawned);
-+	} else if (irq == ab_ahb->userpd_irq_num[ATH11K_USERPD_READY_IRQ]) {
-+		complete(&ab_ahb->userpd_ready);
-+	} else if (irq == ab_ahb->userpd_irq_num[ATH11K_USERPD_STOP_ACK_IRQ])	{
-+		complete(&ab_ahb->userpd_stopped);
-+	} else {
-+		ath11k_err(ab, "Invalid userpd interrupt\n");
-+		return IRQ_NONE;
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void ath11k_ahb_cleanup_userpd(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+	struct ath11k_ahb_rproc_info *rproc_info = ab_ahb->rproc_info;
-+
-+	lockdep_assert_held(&ath11k_rproc_info_lock);
-+
-+	if (!rproc_info)
-+		return;
-+
-+	if (rproc_info && ab_ahb->userpd_id > 0 &&
-+	    ab_ahb->userpd_id < ATH11K_AHB_USERPD_ID_MAX) {
-+		rproc_info->userpd[ab_ahb->userpd_id - 1] = NULL;
-+		rproc_info->num_userpd--;
-+		ab_ahb->rproc_info = NULL;
-+	}
-+}
-+
-+static int ath11k_ahb_config_userpd_irq(struct ath11k_base *ab)
-+{
-+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-+	char *upd_irq_name;
-+	int userpd_id;
-+	int i, ret;
-+
-+	ab_ahb->spawn_state = devm_qcom_smem_state_get(&ab->pdev->dev, "spawn",
-+						       &ab_ahb->spawn_bit);
-+	if (IS_ERR(ab_ahb->spawn_state))
-+		return dev_err_probe(&ab->pdev->dev, PTR_ERR(ab_ahb->spawn_state),
-+				     "Failed to acquire spawn state\n");
-+
-+	ab_ahb->stop_state = devm_qcom_smem_state_get(&ab->pdev->dev, "stop",
-+						      &ab_ahb->stop_bit);
-+	if (IS_ERR(ab_ahb->stop_state))
-+		return dev_err_probe(&ab->pdev->dev, PTR_ERR(ab_ahb->stop_state),
-+				     "Failed to acquire stop state\n");
-+
-+	mutex_lock(&ath11k_rproc_info_lock);
-+
-+	userpd_id = ab_ahb->spawn_bit / 8;
-+	ret = ath11k_ahb_init_userpd(ab, userpd_id);
-+	if (ret) {
-+		mutex_unlock(&ath11k_rproc_info_lock);
-+		return ret;
-+	}
-+
-+	mutex_unlock(&ath11k_rproc_info_lock);
-+
-+	for (i = 0; i < ATH11K_USERPD_MAX_IRQ; i++) {
-+		ab_ahb->userpd_irq_num[i] = platform_get_irq_byname_optional(ab->pdev,
-+									     ath11k_userpd_irq[i]);
-+		if (ab_ahb->userpd_irq_num[i] < 0)
-+			return ab_ahb->userpd_irq_num[i];
-+
-+		upd_irq_name = devm_kzalloc(&ab->pdev->dev, ATH11K_UPD_IRQ_WRD_LEN,
-+					    GFP_KERNEL);
-+		if (!upd_irq_name)
-+			return -ENOMEM;
-+
-+		scnprintf(upd_irq_name, ATH11K_UPD_IRQ_WRD_LEN, "UserPD%u-%s",
-+			  ab_ahb->userpd_id, ath11k_userpd_irq[i]);
-+		ret = devm_request_threaded_irq(&ab->pdev->dev, ab_ahb->userpd_irq_num[i],
-+						NULL, ath11k_userpd_irq_handler,
-+						IRQF_TRIGGER_RISING | IRQF_ONESHOT,
-+						upd_irq_name, ab);
-+		if (ret)
-+			return dev_err_probe(&ab->pdev->dev, ret,
-+					     "Request %s irq failed: %d\n",
-+					     ath11k_userpd_irq[i], ret);
-+	}
-+
-+	init_completion(&ab_ahb->userpd_spawned);
-+	init_completion(&ab_ahb->userpd_ready);
-+	init_completion(&ab_ahb->userpd_stopped);
-+
-+	return 0;
-+}
-+
- static int ath11k_ahb_root_pd_state_notifier(struct notifier_block *nb,
- 					     const unsigned long event, void *data)
- {
-@@ -1032,7 +1168,7 @@ static int ath11k_ahb_configure_rproc(struct ath11k_base *ab)
- 	if (ret < 0) {
- 		ret = dev_err_probe(&ab->pdev->dev, ret,
- 				    "failed to register rproc notifier\n");
--		goto err_put_rproc;
-+		goto err_cleanup_userpd;
- 	}
- 
- 	if (ab->hw_params.m3_fw_support &&
-@@ -1057,13 +1193,28 @@ static int ath11k_ahb_configure_rproc(struct ath11k_base *ab)
- 
- 	mutex_unlock(&ath11k_rproc_info_lock);
- 
-+	/*
-+	 * UserPD interrupts are specific to multi-PD configs/firmware only.
-+	 * If interrupts aren't found, continue execution for non-MPD platforms.
-+	 */
-+	ret = ath11k_ahb_config_userpd_irq(ab);
-+	if (ret && ret != -EINVAL && ret != -ENXIO)
-+		return dev_err_probe(&ab->pdev->dev, ret,
-+				     "failed to configure userpd interrupts\n");
-+
- 	return 0;
- 
- err_unreg_notifier:
- 	ath11k_ahb_unregister_rproc_notifier();
- 
--err_put_rproc:
--	rproc_put(g_rproc_info->tgt_rproc);
-+err_cleanup_userpd:
-+	ath11k_ahb_cleanup_userpd(ab);
-+	if (g_rproc_info && !g_rproc_info->num_userpd) {
-+		rproc_put(g_rproc_info->tgt_rproc);
-+		kfree(g_rproc_info);
-+		g_rproc_info = NULL;
-+	}
-+
- 	mutex_unlock(&ath11k_rproc_info_lock);
- 	return ret;
- }
-@@ -1078,15 +1229,19 @@ static void ath11k_ahb_deconfigure_rproc(struct ath11k_base *ab)
- 
- 	mutex_lock(&ath11k_rproc_info_lock);
- 
--	ath11k_ahb_unregister_rproc_notifier();
-+	ath11k_ahb_cleanup_userpd(ab);
- 
--	if (g_rproc_info->root_pd_booted &&
--	    g_rproc_info->tgt_rproc->state == RPROC_RUNNING)
--		rproc_shutdown(g_rproc_info->tgt_rproc);
-+	if (!g_rproc_info->num_userpd) {
-+		ath11k_ahb_unregister_rproc_notifier();
- 
--	rproc_put(g_rproc_info->tgt_rproc);
--	kfree(g_rproc_info);
--	g_rproc_info = NULL;
-+		if (g_rproc_info->root_pd_booted &&
-+		    g_rproc_info->tgt_rproc->state == RPROC_RUNNING)
-+			rproc_shutdown(g_rproc_info->tgt_rproc);
-+
-+		rproc_put(g_rproc_info->tgt_rproc);
-+		kfree(g_rproc_info);
-+		g_rproc_info = NULL;
-+	}
- 
- 	mutex_unlock(&ath11k_rproc_info_lock);
- }
-@@ -1429,6 +1584,7 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	platform_set_drvdata(pdev, ab);
- 	ab_ahb = ath11k_ahb_priv(ab);
- 	ab_ahb->ab = ab;
-+	ab_ahb->userpd_id = 0;
- 
- 	ret = ath11k_pcic_register_pci_ops(ab, pci_ops);
- 	if (ret) {
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.h b/drivers/net/wireless/ath/ath11k/ahb.h
-index 033d6223494b..12e0c4d27a0c 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.h
-+++ b/drivers/net/wireless/ath/ath11k/ahb.h
-@@ -19,6 +19,11 @@
- #define ATH11K_ROOTPD_READY_TIMEOUT		(5 * HZ)
- #define ATH11K_RPROC_AFTER_POWERUP		QCOM_SSR_AFTER_POWERUP
- 
-+enum ath11k_ahb_userpd_id {
-+	ATH11K_AHB_USERPD_ID_1 = 1,
-+	ATH11K_AHB_USERPD_ID_MAX,
-+};
-+
- enum ath11k_ahb_smp2p_msg_id {
- 	ATH11K_AHB_POWER_SAVE_ENTER = 1,
- 	ATH11K_AHB_POWER_SAVE_EXIT,
-@@ -34,10 +39,20 @@ struct ath11k_ahb_rproc_info {
- 	void *root_pd_notifier;
- 	bool root_pd_booted;
- 
-+	u8 num_userpd;
-+	struct ath11k_ahb *userpd[ATH11K_AHB_USERPD_ID_MAX];
-+
- 	/* Bitmap of loaded M3 firmwares indexed by hardware revision */
- 	u32 m3_loaded;
- };
- 
-+enum ath11k_ahb_userpd_irq {
-+	ATH11K_USERPD_SPAWN_IRQ,
-+	ATH11K_USERPD_READY_IRQ,
-+	ATH11K_USERPD_STOP_ACK_IRQ,
-+	ATH11K_USERPD_MAX_IRQ,
-+};
-+
- struct ath11k_ahb {
- 	struct ath11k_base *ab;
- 	struct {
-@@ -55,6 +70,16 @@ struct ath11k_ahb {
- 		struct qcom_smem_state *smem_state;
- 	} smp2p_info;
- 	struct ath11k_ahb_rproc_info *rproc_info;
-+
-+	struct qcom_smem_state *spawn_state;
-+	struct qcom_smem_state *stop_state;
-+	struct completion userpd_spawned;
-+	struct completion userpd_ready;
-+	struct completion userpd_stopped;
-+	u32 userpd_id;
-+	u32 spawn_bit;
-+	u32 stop_bit;
-+	int userpd_irq_num[ATH11K_USERPD_MAX_IRQ];
- };
- 
- static inline struct ath11k_ahb *ath11k_ahb_priv(struct ath11k_base *ab)
-
--- 
-2.53.0
-
-
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
