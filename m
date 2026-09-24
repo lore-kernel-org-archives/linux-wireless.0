@@ -1,113 +1,134 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-215.mta0.migadu.com [91.218.175.215])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8119748550E;
-	Thu, 24 Sep 2026 13:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5CB3CFF55
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 13:30:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.215
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790256061; cv=none; b=mvH0j6aqvkEZxCLP3qdw/sy/gD334r1YVaUjiXpJdPBxJkeLUaE3Vk9zJnZQGe0a0crhgr2kOIq8bSVceuohRHxdE6E760C8EfoHEklg2okjFu4cdLDjYN8qgaffHZYbhKJKZpD4VDHENKAEbrmw0eV8klK5uCqLCZBhxRz01fg=
+	t=1790256608; cv=none; b=hcEWb/tDGVvEd0d7ktIPQFgiZL4qEhUHDIDrdZNFCN4KZY+7cEsoCQhPs7xKWiPli76SXMk3muQbZu8b5a+eguBRAvnyGj4dzBiMPuKeiFMuRNbA9p08DjpWXGRPjkJ/dtyf4e0Kh3wDEwmAMrLbTDIe6wNNy9UTFfITkK8rVTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790256061; c=relaxed/simple;
-	bh=HwthhyVLeALg10vV6t3qDKnfJtJhKjmcFjIIsnOjOHk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kLru2DinJAcAWnEe3dm8EvbZQ7xMp718nfL/ELJBxXgXTqVO/vDupwE4/gStmgs51QxmI0TjcAzd7IhSELw9GheufT16zzTJbaK9dtmon4W2/tpkqwwt2MyLwXtJqVgc9nAKUBQrA9yl7c2vZfOfFeK4AGQAS5VEO0LOZnd1P6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=TG0Ulld8; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1790256608; c=relaxed/simple;
+	bh=Q7yicSputjqRAaiSihpg7uwoEulKD0sbMOpWliDD7xU=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc; b=kKJAv86wKoH/cIpz/uCjRNKV+/3TEDMLXWYJ2qqSE/I0vXTFmOzBDT2sPsyHr9RdDQo+WzaSVtHZPQJskrpIvWBLbufcIv9Etzadof/7pvN34BGHAcJlhmWjrEEwG3lNT+2LzDq0P+RVn2DER2BDhdrliw8duot5Dh0FC1jXUOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Qbuyc4H3; arc=none smtp.client-ip=91.218.175.215
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="TG0Ulld8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=nJ
-	zntUbDfqeoG/uTtpJiDO8MUahdbbleXqqU3yFVq34=; b=TG0Ulld8Z8QDwbH5zo
-	MXu+Gn9XOZp3KOvvoBFf4E8x9IJ1s/osEhLAVkVulolYKVc+Wt0N1o+ahu8ZEz1b
-	e7akDDANl10uOOSJv7XQyQq0lzKl7Z2/bk3eiV2Kex5e+lJuTeHVJzLcLFKA3s93
-	Y0UuIPpXKTL94Lb9z4qRBw3A4=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3d5ROI7Vqq0FrAg--.32720S5;
-	Thu, 24 Sep 2026 21:19:32 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	Javier Tia <floss@jetm.me>,
-	Leon Yen <leon.yen@mediatek.com>,
-	Eason Lai <Eason.Lai@mediatek.com>,
-	Marek Vasut <marex@nabladev.com>,
-	Ville Nummela <ville.nummela@kempower.com>,
-	Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
-	Deren Wu <deren.wu@mediatek.com>,
-	Hao Zhang <hao.zhang@mediatek.com>,
-	Quan Zhou <quan.zhou@mediatek.com>,
-	Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Cc: Jiale Yao <yaojiale02@163.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 3/4] wifi: rsi: unwind add_interface failure
-Date: Thu, 24 Sep 2026 21:19:03 +0800
-Message-Id: <20260924131908.950229-4-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260924131908.950229-1-yaojiale02@163.com>
-References: <20260924131908.950229-1-yaojiale02@163.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Qbuyc4H3"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Q7yicSputjqRAaiSihpg7uwoEulKD0sbMOpWliDD7xU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790256598; v=1; x=1790861398;
+ b=Qbuyc4H392b8HeErCDtSJJgQWIXyXyc2iJ0VPsIa4YveN9IQmeTArwuLq8n4bNKkzcobtAGg
+ tyAqFUTc7CiF5PVmAMKh/2Er/qhMt/Iq4iG3DUlKcwcamv7eYzow8KNkD6ZTkC4XC3I+IL+tw7Z
+ 7uU8RzfJzc+6zjV/4Z7Sj5DQ=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id f5b068c74c8d52c8;
+	Thu, 24 Sep 2026 13:29:58 +0000
+X-Mizu-Trace-ID: f5b068c74c8d52c8
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3d5ROI7Vqq0FrAg--.32720S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Kr47trWfAr1kAFyxXryrZwb_yoW8Ww1Dpr
-	4DK3s0kryrGr4aqw45Ga18ZFyrCan5KrW2kF18G343WF4YvFyfZrn09a4Uua93CFZ5Ja15
-	Ar4qv34Yg3srGrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zifHUkUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzQXpJGq1I2U2OQAA3T
+Date: Thu, 24 Sep 2026 13:29:58 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Tianchu Chen" <tianchu.chen@linux.dev>
+Message-ID: <441ed914aa1db14a140e6263243579f952d5805b@linux.dev>
+TLS-Required: No
+Subject: [PATCH] wifi: ath10k: fix OOB write from unbounded SDIO RX bundle
+ count
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+ jjohnson@kernel.org
+Cc: alagusankar@silex-india.com, quic_wgong@quicinc.com
 
-mac80211 does not call remove_interface() after add_interface() fails, so
-the driver must undo any state it published before returning an error.
+From: Tianchu Chen <flynnnchen@tencent.com>
 
-rsi_mac80211_add_interface() stores the vif in adapter->vifs[] and
-increments sc_nvifs before sending the VAP capabilities command.  If that
-command fails, the function returns without undoing either update.  The
-array entry can therefore refer to vif memory freed by mac80211, while the
-interface count remains inflated.
+An RX event here is one invocation of
+ath10k_sdio_mbox_rxmsg_pending_handler(), triggered by the mailbox
+"RX pending" interrupt.  During such an event the device announces
+pending packets through lookaheads, the first one read from the
+HTC register table, the following ones carried in the trailers of
+the packets just fetched.  ath10k_sdio_mbox_rx_alloc()
+pre-allocates one rx_pkts[] slot per announced packet, after which
+the device transfers exactly that many packets over SDIO.
 
-Clear the vif slot and restore sc_nvifs when setting VAP capabilities
-fails, mirroring the state cleanup in remove_interface().
+A lookahead whose HTC header carries a bundle count K stands for
+K+1 packets.  However, only the raw lookahead count is checked
+against ATH10K_SDIO_MAX_RX_MSGS; the expanded total pkt_cnt is
+never compared against the size of ar_sdio->rx_pkts[] (64 entries),
+the index is simply advanced and written to.  With up to 32
+lookaheads per round (the trailer record limit) each claiming
+K=3D32, the loop stores up to 32 * 33 =3D 1056 struct
+ath10k_sdio_rx_data entries into the 64-entry array, i.e. 992
+entries (~31KB) past its end, overwriting the members that follow
+it in struct ath10k_sdio.
 
-Commit 2fb6480c52f6 ("wifi: mt76: mt7915: unwind state on add_interface
-failure") fixed the same failure-unwind pattern in another wireless driver.
+Add the missing comparison: the current lookahead and its bundled
+packets must fit into the remaining rx_pkts[] slots before any of
+them is allocated.
 
-Fixes: b8bd3a439f35 ("rsi: add/remove interface enhancements for p2p")
+This is expected to keep behavior unchanged on most cases: The new
+check drops exactly when the old code would have written past
+the array and corrupt the driver state.
+
+Discovered by Atuin - Automated Vulnerability Discovery Engine.
+
+Fixes: 8d985555ddaa ("ath10k: enable RX bundle receive for sdio")
 Cc: stable@vger.kernel.org
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
+Assisted-by: LLM
+Signed-off-by: Tianchu Chen <flynnnchen@tencent.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/sdio.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 3faf2235728b..34ddcbc43fdc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -518,6 +518,8 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
- 	if (rsi_set_vap_capabilities(common, intf_mode, vif->addr,
- 				     vif_info->vap_id, vap_status)) {
- 		rsi_dbg(ERR_ZONE, "Failed to set VAP capabilities\n");
-+		adapter->vifs[vap_idx] = NULL;
-+		adapter->sc_nvifs--;
- 		mutex_unlock(&common->mutex);
- 		return -EINVAL;
- 	}
--- 
-2.34.1
-
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireles=
+s/ath/ath10k/sdio.c
+index 65e941b527517..5dc2ad432b099 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -540,7 +540,7 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *a=
+r,
+ {
+ 	struct ath10k_sdio *ar_sdio =3D ath10k_sdio_priv(ar);
+ 	struct ath10k_htc_hdr *htc_hdr;
+-	size_t full_len, act_len;
++	size_t full_len, act_len, bndl_cnt;
+ 	bool last_in_bundle;
+ 	int ret, i;
+ 	int pkt_cnt =3D 0;
+@@ -579,14 +579,23 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k =
+*ar,
+ 			goto err;
+ 		}
+=20
+-=09	if (ath10k_htc_get_bundle_count(
+-			ar->htc.max_msgs_per_htc_bundle, htc_hdr->flags)) {
++		bndl_cnt =3D ath10k_htc_get_bundle_count(
++			ar->htc.max_msgs_per_htc_bundle, htc_hdr->flags);
++
++		/* One rx_pkts[] slot per lookahead plus one per bundled packet */
++		if (bndl_cnt + 1 > ATH10K_SDIO_MAX_RX_MSGS - pkt_cnt) {
++			ath10k_warn(ar,
++				    "rx bundle count %zu exceeds remaining pkt slots\n",
++				    bndl_cnt);
++			ret =3D -ENOMEM;
++			goto err;
++		}
++
++		if (bndl_cnt) {
+ 			/* HTC header indicates that every packet to follow
+ 			 * has the same padded length so that it can be
+ 			 * optimally fetched as a full bundle.
+ 			 */
+-			size_t bndl_cnt;
+-
+ 			ret =3D ath10k_sdio_mbox_alloc_bundle(ar,
+ 							    &ar_sdio->rx_pkts[pkt_cnt],
+ 							    htc_hdr,
+--=20
+2.51.0
