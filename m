@@ -1,53 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48A33475332
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 10:39:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917694749D8
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 10:39:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790246394; cv=none; b=TVr3TaxClBCKoiuHrL6MCmJSIuvQLUqn6fXQsjWX/79VXnaHFOpS8aTCtkWkiNla+z7c184wjR+ETEtMvs+JrAyz8AJYSLvLoxuPe/pIt5QiH7KzYIQCXwlnxmvy8OSskGE19lJLODLCs2tUQ8QMzmkYW3rycC/OB5lHQBV9gCM=
+	t=1790246395; cv=none; b=bZygSDvvxdgZIz6BbfT5LyZlgPqIFZqQfMHUlcq01CZPEDHPkFIhCYuknEGhiExDk+/N+U3lyPKNKTHww8Q1hBsbqEbEbFOR9a4p/EkZ4pvflpNfZtk79AKzy69dDb+zn8aIEEspKOzEaXX1BuNQcaHAu7LBmbFnMJ+X8uU7wAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790246394; c=relaxed/simple;
-	bh=9sg5NnZkciLVGwwM95zEFBeCZgc/3KfAhuyB45xIjGA=;
+	s=arc-20240116; t=1790246395; c=relaxed/simple;
+	bh=Be9HZyuKyY41mic3pfyqmDm0y03ta51b2PK4gSb1Nhk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gdZSW6wqUdv159cV2wlSBASSNGlu8lMx4gi2tNDofttxkbPm0opiqBgai61YFIxzlzHLzeyyzS9gdcBAyrtNRJ5DtUvAWPJbTm4YbPN4VduS/4kq1emVwtAisqHMSBnliC26kacz7HZK62ww5A8xGCTc5tW5Qjp6iKR6hu0OpyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=i/5vXFkq; arc=none smtp.client-ip=192.198.163.18
+	 MIME-Version; b=FHm00cHF5Yw0L+urQbMUgP+O1aukPsvJivzTBIU3Flhhbwx633/I9F/KVyExWmSoGO/Pg/A7u6C2VvbuYDQ7FEHJakocGEYEd9fUdUko8C1RnjMpgqvDZZFDZ43AiqjuG/lHrBMdKnY90eaiVVn6Dim24dAFspJMtrBdRsMSYjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UXdFTWyB; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="i/5vXFkq"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UXdFTWyB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790246392; x=1821782392;
+  t=1790246394; x=1821782394;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9sg5NnZkciLVGwwM95zEFBeCZgc/3KfAhuyB45xIjGA=;
-  b=i/5vXFkqHVi+83cfYSERdnnB97QerVBsc4VUypSzzzliTO5dyijWPczB
-   i9WWhK3fR19v0qZNHMie9jqXiTV98W03kKNM4aguIhOVyzhBUUiLsnPYS
-   K4ODpl/6zhc5dUwkjn2uNd+rP8u0WncVBrqGLIQwtmiNAB7+v2lR29bmN
-   Gy4AjGZxgU+jskib4+9uVKspeCQGQ8pvGshLsSi1S20sa1WwQnmGjeUyB
-   daTW5FNguZcmatROTRR89SEbZBN8kIeT04LRvxXyoZHzTy0SvhHdrE/Vw
-   7LgJeLCd5nXY0btGNnwPDf2nDQCMEswqnueHUmDTzNMJtsvnqeM2pwuSz
+  bh=Be9HZyuKyY41mic3pfyqmDm0y03ta51b2PK4gSb1Nhk=;
+  b=UXdFTWyBODF7Q4f11+iKaO1o5xJQAea+IrO2UYI/UsJTmVDrqxJdjDLI
+   0jym+Ubz9q0EBxXidrEyfi4KUBZwoc7ecTVtT/XSYsZo0FKWTQGonAwqu
+   JkTFVJHXCOnMt1PWMvpvqy/Xqosyexp+9oHq0of7klY01CIOj+IHAD0pt
+   dh4THkUbkAq6sw8AQ6gs8kahd61BulDTnIS1uLc/8Y35A9bo0pvXgQdJY
+   GOY+qqpYEEjH+eZEwQ815ahiWTCNITIO4cuVn4iIDlrjtttYsNtXcckQ1
+   SN+Csvo1B6HE0v6qgXGJTbI6bNQ+9LI5nimvVQ3kRFGFgrRh9mTenpeZO
    w==;
-X-CSE-ConnectionGUID: VHVddh1LRMaAX79TdnDClQ==
-X-CSE-MsgGUID: XXmMWy73SQy9w0fK4czvKQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="90134912"
+X-CSE-ConnectionGUID: 851LzZdaTtaRvDRlBijkjQ==
+X-CSE-MsgGUID: NeHqkmKrSlKRtITXbS4oIA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="90134917"
 X-IronPort-AV: E=Sophos;i="6.27,120,1787036400"; 
-   d="scan'208";a="90134912"
+   d="scan'208";a="90134917"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:52 -0700
-X-CSE-ConnectionGUID: nkVJE4VSSdic0HSBRiNEEw==
-X-CSE-MsgGUID: Jm6sG1BtRbalJvAPufxCSA==
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:53 -0700
+X-CSE-ConnectionGUID: 4CGBKi/uRGODvpmP8eBP4g==
+X-CSE-MsgGUID: uODXy42/RuezG4fzuB7l2A==
 X-ExtLoop1: 1
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:51 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:52 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 14/15] wifi: iwlwifi: drop the orphaned nic_access annotations
-Date: Thu, 24 Sep 2026 13:41:28 +0300
-Message-Id: <20260924133942.511143ed3e33.Iccecaabe0f37525430377ae1c0db6fd7bbf7625a@changeid>
+	Shahar Tzarfati <shahar.tzarfati@intel.com>
+Subject: [PATCH iwlwifi-next 15/15] wifi: iwlwifi: disable HE ER mode
+Date: Thu, 24 Sep 2026 13:41:29 +0300
+Message-Id: <20260924133942.ce2e4278f779.I5dcf9ed88b2b73bc09c81c0d9c841dc624447faf@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260924104129.162876-1-miriam.rachel.korenblit@intel.com>
 References: <20260924104129.162876-1-miriam.rachel.korenblit@intel.com>
@@ -60,131 +60,42 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-commit 5b63d0ae94cc ("compiler-context-analysis: Remove Sparse support")
-deleted the Sparse implementation of the lock annotations.
-__acquires()/__releases()/__acquire()/__release() are gone; the macros
-now only map onto clang's context analysis and expand to nothing for gcc.
+From: Shahar Tzarfati <shahar.tzarfati@intel.com>
 
-The nic_access annotations describe nothing anymore:
- - Every one of them is a __releases() with no matching __acquires().
-   The acquire side was the __cond_lock() wrapper around
-   _iwl_trans_grab_nic_access(), which went away together with
-   __cond_lock() itself. The names don't even agree - PCIe releases
-   nic_access_nobh while the generic wrapper calling it claims
-   nic_access.
+HE ER mode (~3 Mbps) provides marginal range benefit over legacy rates,
+while effective coverage remains constrained by beacon reception. In
+addition, ~3 Mbps is insufficient for laptop connectivity.
 
- - The __acquire()/__release(reg_lock) pairs only existed
-   to silence Sparse
+Furthermore, any range benefit in 5 and 6 GHz is more easily achieved
+by roaming to 2.4 GHz, while avoiding degrading 5 and 6 GHz aggregate
+network capacity with low-rate links. Therefore, disable HE ER mode.
 
-Use lockdep_assert_held() instead, which unlike the annotations actually
-runs, and add the missing assertion to
-iwl_trans_pcie_resched_with_nic_access().
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c |  3 +--
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  3 +--
- .../net/wireless/intel/iwlwifi/pcie/internal.h |  3 +--
- .../net/wireless/intel/iwlwifi/pcie/trans.c    | 18 ++++++------------
- 4 files changed, 9 insertions(+), 18 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index efe657857772..0a6b7b264aa2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -576,8 +576,7 @@ void iwl_trans_resched_with_nic_access(struct iwl_trans *trans)
- 	iwl_trans_pcie_resched_with_nic_access(trans);
- }
- 
--void __releases(nic_access)
--iwl_trans_release_nic_access(struct iwl_trans *trans)
-+void iwl_trans_release_nic_access(struct iwl_trans *trans)
- {
- 	iwl_trans_pcie_release_nic_access(trans);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index a7bb6cee8188..56c5e61b614a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -992,8 +992,7 @@ bool iwl_trans_grab_nic_access(struct iwl_trans *trans);
-  */
- void iwl_trans_resched_with_nic_access(struct iwl_trans *trans);
- 
--void __releases(nic_access)
--iwl_trans_release_nic_access(struct iwl_trans *trans);
-+void iwl_trans_release_nic_access(struct iwl_trans *trans);
- 
- static inline void iwl_trans_schedule_reset(struct iwl_trans *trans,
- 					    enum iwl_fw_error_type type)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index e10aa8e7e061..e6b1cb559a0a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -1161,8 +1161,7 @@ int iwl_trans_pcie_read_config32(struct iwl_trans *trans, u32 ofs,
- 				 u32 *val);
- bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans);
- void iwl_trans_pcie_resched_with_nic_access(struct iwl_trans *trans);
--void __releases(nic_access_nobh)
--iwl_trans_pcie_release_nic_access(struct iwl_trans *trans);
-+void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans);
- void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power);
- int _iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent,
- 		   const struct iwl_mac_cfg *mac_cfg,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 1304d8916424..bda069a6f7eb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2402,10 +2402,10 @@ bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent)
- 
- out:
- 	/*
--	 * Fool sparse by faking we release the lock - sparse will
--	 * track nic_access anyway.
-+	 * Deliberately return with reg_lock held; the caller must drop it via
-+	 * iwl_trans_pcie_release_nic_access(), or explicitly if it wants to
-+	 * keep the NIC awake past the critical section (cmd_hold_nic_awake).
- 	 */
--	__release(&trans_pcie->reg_lock);
- 	return true;
- }
- 
-@@ -2427,24 +2427,19 @@ void iwl_trans_pcie_resched_with_nic_access(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-+	lockdep_assert_held(&trans_pcie->reg_lock);
-+
- 	spin_unlock_bh(&trans_pcie->reg_lock);
- 	cond_resched();
- 	spin_lock_bh(&trans_pcie->reg_lock);
- }
- 
--void __releases(nic_access_nobh)
--iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
-+void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	lockdep_assert_held(&trans_pcie->reg_lock);
- 
--	/*
--	 * Fool sparse by faking we acquiring the lock - sparse will
--	 * track nic_access anyway.
--	 */
--	__acquire(&trans_pcie->reg_lock);
--
- 	if (trans_pcie->cmd_hold_nic_awake)
- 		goto out;
- 	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
-@@ -2460,7 +2455,6 @@ iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
- 	 * scheduled on different CPUs (after we drop reg_lock).
- 	 */
- out:
--	__release(nic_access_nobh);
- 	spin_unlock_bh(&trans_pcie->reg_lock);
- }
- 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 6bb27d7f1166..413dd55115f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -612,7 +612,6 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 					IEEE80211_HE_PHY_CAP7_POWER_BOOST_FACTOR_SUPP |
+ 					IEEE80211_HE_PHY_CAP7_HE_SU_MU_PPDU_4XLTF_AND_08_US_GI,
+ 				.phy_cap_info[8] =
+-					IEEE80211_HE_PHY_CAP8_HE_ER_SU_PPDU_4XLTF_AND_08_US_GI |
+ 					IEEE80211_HE_PHY_CAP8_20MHZ_IN_40MHZ_HE_PPDU_IN_2G |
+ 					IEEE80211_HE_PHY_CAP8_20MHZ_IN_160MHZ_HE_PPDU |
+ 					IEEE80211_HE_PHY_CAP8_80MHZ_IN_160MHZ_HE_PPDU |
+@@ -747,7 +746,6 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 				.phy_cap_info[7] =
+ 					IEEE80211_HE_PHY_CAP7_HE_SU_MU_PPDU_4XLTF_AND_08_US_GI,
+ 				.phy_cap_info[8] =
+-					IEEE80211_HE_PHY_CAP8_HE_ER_SU_PPDU_4XLTF_AND_08_US_GI |
+ 					IEEE80211_HE_PHY_CAP8_DCM_MAX_RU_242,
+ 				.phy_cap_info[9] =
+ 					IEEE80211_HE_PHY_CAP9_TX_1024_QAM_LESS_THAN_242_TONE_RU |
 -- 
 2.34.1
 
