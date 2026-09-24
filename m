@@ -1,141 +1,150 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-vs2-f33.google.com (mail-vs2-f33.google.com [74.125.227.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 087623DB641;
-	Thu, 24 Sep 2026 03:12:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69130253B58
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 03:27:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790219530; cv=none; b=REl7XXGtGq013ubb6+RqcF2mcVb7Sd+QSXDA6JBfmkrIR/TpSqNlzlkFDvJjsbVjFMIVQFrqw+PdxCAD7Oy4FxWY3d2XrcxjR1VbFQbooYxnvakwBnXqa2w7GM7GHARFn3Va6BCVW2KU5fGm0xOE8PJ/p/YnF5+YYwA2TA0n4t4=
+	t=1790220463; cv=none; b=qNZIT3mtkxsvrpspDFjN7cdrK+XQMtzBHLdWY0GTZPrmkfYNr4f2L5QdO5P2jLT5WNtKDYkkemynJd1mN3LwNLd2bW+9n3YUGApFAvQ1bxHFdlDOu22nHZ36wdx/TCwvnz/yKcQAho3FqnBZb2mc5lTKDq8JhLCpGhahYHXV0P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790219530; c=relaxed/simple;
-	bh=Dp2V888LpglsjmyHodeQA8mNyz+qo0+Ue04VwyJAoUY=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=MhX0LEY++c8tgDItD+vVuKYJnPM69IdxhCKo4CnicWRzihWBltRNwIM7e02HSJqMGHW+L4EE0R/Q/7y5eFjv0tGXNHpWUMo1ng5euXjC42m5qYO3VQ/RCi90jI94S6PTp+2Qh0IE0TJKNviaUI3Vvujg8/qX1EyQEHl1CKZPGtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ePk4Piey; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1790220463; c=relaxed/simple;
+	bh=kM6Puz/XpcLqcBqMsx/z2dN1zPM5xT8O+InMRQ90TBc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MR1zPMBPyn3OldBGSlsA6EK3qzsz2G7aHnNIInKJja0GT5Hj+qwr227nSdLU4HfpCv3bQvPKFVyB0S2ydVFxiXSuGVBqclEq8xKCwpAKydPqpSJlCuRmuhSJ+ciMaLaRCU4OS5LciQijnO4YOfPC3mZDdda5opFSXMzXpiavhG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FE5xVPbF; arc=none smtp.client-ip=74.125.227.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ePk4Piey"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68O3Bv6G2840666, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790219517; bh=Dp2V888LpglsjmyHodeQA8mNyz+qo0+Ue04VwyJAoUY=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ePk4PieyZ7dHrPYTketsRUTc8MpOkSMnWIN0jrzoEuu0gCsK7QozKVZ2J3v+AengF
-	 A2PlNQlfUibioGEdyjb+/iQW6dS1H4O0QZdeXMHG94L5SLqDOO6CdmEtNjyPgoFeFH
-	 z8+Gm9rJkP+c8rhyExxdKHd/Q54X8O5OHFkrU5QnrNPfoDd1yaRuuwj7qAHIXFTEU1
-	 NheFwK3zM3CAAJx+DB4C/NtJzP0iph3EV4yxp9GVD8ghQNhud0G64LOhwkRtwFYMIr
-	 fZvdY0rELlMo2+iIw+yUgU5OKL/EZj9VA8ze5ck+H7mYVeQtSxFcEk7FCLxE2XEzBk
-	 Ik/xCIxX51vvw==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68O3Bv6G2840666
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 24 Sep 2026 11:11:57 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 24 Sep 2026 11:11:57 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Thu, 24 Sep 2026 11:11:57 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v3 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-Thread-Topic: [PATCH v3 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-Thread-Index: AQHdSeAWPTTocmDvm0SCIQejTVX877bbzMuQgABkXICAANifIA==
-Date: Thu, 24 Sep 2026 03:11:57 +0000
-Message-ID: <304bbb9a43a74e909eec0dd84d86d528@realtek.com>
-References: <20260921154347.82317-1-luka.gejak@linux.dev>
- <20260921154347.82317-4-luka.gejak@linux.dev>
- <39da13e5cdd840f5a5ab86ded478d07c@realtek.com>
- <DLN10FU8L1PQ.3NK0M6NVQ3Y53@linux.dev>
-In-Reply-To: <DLN10FU8L1PQ.3NK0M6NVQ3Y53@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FE5xVPbF"
+Received: by mail-vs2-f33.google.com with SMTP id 71dfb90a1353d-5caec6d2983so412188e0c.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 20:27:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790220461; x=1790825261; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=S4rkArTvjlD8DucpkVvcyw33LP877dBjJ3f1kqgDbC8=;
+        b=FE5xVPbFqoGl7h/S2K75BZYzeGjsnIkjEQB8b5vr/Qz+wPAsf0x+grbnDgu74tj23C
+         4XUbUbpTvs+nLWZZHSiID79BHJdnVc1oHdVmTXgU1ehSZvOZiRWgX/wLXCJziEBCBZTL
+         rZ3LOqRaVcZ7wH9xdmIdtizVpTNLX5Isg8ZZsh9rjdwg0x4rYEipo/68evScBvjQGKzn
+         ecNUraNRUNb/RX/xtntU4SwSELN8v67BxoKMCRG9MLfVe1rEzuxrfD26cu/0y9dCr9K5
+         t1fyJ06tHAmVLGDZo3B5QNZHNPfOKVHaOsoBBDIk9klRUvQB/FEOV3hxZNAEUgUHn0Q4
+         1pSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790220461; x=1790825261;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=S4rkArTvjlD8DucpkVvcyw33LP877dBjJ3f1kqgDbC8=;
+        b=s7/N1S/i2A6Fk65NBupWH7+hliL7SjmGniewrQlTD6KorOajucYUD4ypu+qTaaO10n
+         oqzfgY+zV0KaYgoIoP3B6d2OzUF8r6cqhSm9rsemJguD0wXzFy7hdvKZD7Y7zAfk7X7q
+         kz98CyWTjU9G1QiJ2yG4UxJZFUOe4T19vP5pZlUVc0Fl8q1YB8I6GPr7DdrU3M5rBVcn
+         0BAuFbbrMQv6VIg4IsN3SJ30DoTupY72OzfV4yj9Tpsed54ULvfZbxxxEiV6ACu5y9dE
+         9wSqIFADqIb3FNM9oyN3t0nVj2ju6AmMO+DmUAdTxvyccewvSe7nI3OMiY5CuI7OR0Z1
+         7ePA==
+X-Gm-Message-State: AFuF++kxJRJRcBCx3NcVtNWn0lraAlD5allnl93W0h12/5dVddk94Buo
+	D5R//Lp8pr5QNSp57Im6kBuZ6X+56bTxXB9c+RhSGgodBFOnetPrK4z3VtFTPhmj
+X-Gm-Gg: AYBFou2vb8eSuOgv2k0IgKUjYzSmXglRIQYn5uTMTf255KGpiBBXJrXngpaStlxNvpX
+	ig+sWJ2AtHbltKr2wwmtxnJn2jpNvi2GGcqy9mIGaiguNraZxwGHs60oPLCgfHqj8tUrbQp7eUY
+	4Vf0UQaXUPlTXz6MQToKeSujwrVj2xi+viix6bAN/GV+SM5vUQjNS9S8K3q/s1dKmKm5We6FRn1
+	qRIa60/2A2HH/e0X8VTdMe92F/t8+STpcDkuPhxyPKqjpskF8atgCfWGEDDA6oDCofFs2AVeb97
+	2ez4enc285lfKUSiChfvbkS8+fl/OA57xoIM1l8r2I6EZFGGdwxgKq4W706PBVKy8dxxG+eUiai
+	N1uNAhUrW2sQ1R/4Cr/N1zuzzfVWkSB3A5bTu9mtzcVf6c0GCMhICbcOw8sSGGPIHnj2Fw7PBV5
+	/01+EiQsz2k+q3kXfm00b9GXs4FQoGAfvVmZ/0W7UCl1Fkz36/SoYTwj8GSbVtpRfZKC7S4R6q5
+	1gKdl6dQYm+Q855VzOBBT4enNnYWjJAXS+eXXEF2AoHg9c=
+X-Received: by 2002:a05:6102:4191:b0:7a8:1817:276f with SMTP id ada2fe7eead31-7af1f61e9f8mr693993137.37.1790220461112;
+        Wed, 23 Sep 2026 20:27:41 -0700 (PDT)
+Received: from localhost.localdomain ([190.177.169.131])
+        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7abf35bcb07sm6107028137.2.2026.09.23.20.27.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 20:27:40 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: feed the station RSSI average from the chain signals
+Date: Thu, 24 Sep 2026 00:26:39 -0300
+Message-ID: <20260924032639.28158-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiA+PiArI2RlZmluZSBN
-QVNLX05FVFRZUEUgICAweDMwMDAwDQo+ID4+ICsjZGVmaW5lIF9ORVRUWVBFKHgpICAgICgoKHgp
-ICYgMHgzKSA8PCAxNikNCj4gPj4gKyNkZWZpbmUgTlRfTElOS19BUCAgICAgMHgyDQo+ID4NCj4g
-PiBUaGUgUE9SVF9TRVRfTkVUX1RZUEUgaW4gcnR3X3ZpZl9wb3J0X2NvbmZpZygpIGRvZXMgc2lt
-aWxhciB0aGluZw0KPiA+IHJlbHlpbmcgb24gc3RhdGljIGNvbnN0IHN0cnVjdCBydHdfdmlmX3Bv
-cnQgcnR3X3ZpZl9wb3J0W10uDQo+ID4NCj4gPiBJcyB0aGF0IG5vdCBzdWl0YWJsZSBmb3IgUlRM
-ODcyM0I/IElmIHNvLCBzaG91bGQgdGhlIGNvbW1vbiBmbG93DQo+ID4gYXZvaWQgUlRMODcyM0I/
-DQo+IA0KPiBJdCBpcyBzdWl0YWJsZSwgYW5kIHRoZSBjb21tb24gZmxvdyBkb2VzIG5vdCBuZWVk
-IHRvIGF2b2lkIFJUTDg3MjNCLg0KPiBQT1JUX1NFVF9ORVRfVFlQRSB3cml0ZXMgdGhlIHNhbWUg
-ZmllbGQgd2l0aCB0aGUgc2FtZSB2YWx1ZToNCj4gcnR3X3ZpZl9wb3J0WzBdLm5ldF90eXBlIGlz
-IGFkZHJlc3MgMHgwMTAwIHdpdGggbWFzayAweDMwMDAwLCB3aGljaCBpcw0KPiBSRUdfQ1IgYml0
-cyAxNzoxNiwgYW5kIHJ0d3ZpZi0+bmV0X3R5cGUgaXMgUlRXX05FVF9NR0RfTElOS0VELCAyLCB0
-aGUNCj4gdmFsdWUgTlRfTElOS19BUCBjYXJyaWVkLg0KPiANCj4gT25seSB0aGUgdGltaW5nIGRp
-ZmZlcnMsIGFuZCB0aGVyZSB0aGUgY29tbW9uIGZsb3cgaXMgdGhlIGJldHRlciBvbmUuDQo+IHJ0
-d19vcHNfYWRkX2ludGVyZmFjZSgpIHNldHMgbmV0X3R5cGUgZnJvbSB0aGUgaW50ZXJmYWNlIHR5
-cGUsDQo+IFJUV19ORVRfTk9fTElOSyBmb3IgYSBzdGF0aW9uLCBhbmQgdGhlIGFzc29jaWF0aW9u
-IHBhdGggbW92ZXMgaXQgdG8NCj4gUlRXX05FVF9NR0RfTElOS0VELCB3cml0aW5nIFJFR19DUiBh
-ZnRlciBib3RoLiBUaGUgY2hpcCBsb2NhbCBjYWxsIHJhbg0KPiBkdXJpbmcgbWFjX2luaXQgYW5k
-IGZvcmNlZCB0aGUgbGlua2VkIHZhbHVlIGJlZm9yZSB0aGVyZSB3YXMgYSBsaW5rLA0KPiBhbmQg
-dGhlIGNvcmUncyB3cml0ZSByZXBsYWNlZCBpdCBhIG1vbWVudCBsYXRlciBpbiBhbnkgY2FzZS4N
-Cj4gDQo+IFNvIHY0IGRyb3BzIHJ0dzg3MjNiX2luaXRfbmV0d29ya190eXBlKCkgd2l0aCBNQVNL
-X05FVFRZUEUsIF9ORVRUWVBFKCkNCj4gYW5kIE5UX0xJTktfQVAsIGFuZCB0aGUgY2hpcCByZWxp
-ZXMgb24gcnR3X3ZpZl9wb3J0W10gbGlrZSB0aGUgb3RoZXJzLg0KPiBObyBvdGhlciBydHc4OCBj
-aGlwIGRlZmluZXMgYSBuZXQgdHlwZSB2YWx1ZSBvZiBpdHMgb3duLg0KDQpDYW4geW91IGFsc28g
-cmV2aWV3IG90aGVyIFJUTDg3MjNCIHNwZWNpZmljIGZ1bmN0aW9ucz8gSSBkaWRuJ3QgcmV2aWV3
-DQp0aGVtIG9uZSBieSBvbmUgYnkgdjMsIGJ1dCBJIHdvbmRlciB3aHkgaXQgbmVlZHMgc3BlY2lm
-aWMgZnVuY3Rpb25zLA0Kbm90IGNvbW1vbiBmbG93LiBJZiBhbnkgb2YgdGhlbSBpcyBuZWNlc3Nh
-cnksIHBsZWFzZSBwb2ludCBvdXQgcmVhc29ucy4NCg0KPiANCj4gPj4gKyAgICAgICAvKiBPdmVy
-cmlkZSB0aGUgZGVmYXVsdCByY3IgZmlsdGVyIGZvciA4NzIzQiAqLw0KPiA+PiArICAgICAgIHJ0
-d2Rldi0+aGFsLnJjciA9IFdMQU5fUkNSX0NGRzsNCj4gPg0KPiA+IFdoeT8gVGhlIGRlZmF1bHQg
-dmFsdWUgZG9lc24ndCB3b3JrIHRvIFJUTDg3MjNCPw0KPiANCj4gVHdvIHRoaW5ncyBzYXkgaXQg
-ZG9lcyBub3QuDQo+IA0KPiBoYWwucmNyIGlzIG5vdCBvbmx5IHdyaXR0ZW4gYXQgaW5pdC4gZncu
-YyBjbGVhcnMgYW5kIHJlc3RvcmVzDQo+IEJJVF9DQlNTSURfQkNOIGluIGl0IGFyb3VuZCB0aGUg
-YmVhY29uIGZpbHRlciwgYW5kIG1hYzgwMjExLmMgdG9nZ2xlcw0KPiBCSVRfQU0sIHNvIHdoYXRl
-dmVyIGlzIGxlZnQgdGhlcmUgaGFzIHRvIGtlZXAgdGhvc2UgYml0cy4NCj4gDQo+IEFuZCB0aGlz
-IGlzIG5vdCBhIHByaXZhdGUgZmlsdGVyLiBJdCBpcyB0aGUgUkNSIHRoYXQgcnR3ODcyM3hfbWFj
-X2luaXQoKQ0KPiB3cml0ZXMgZm9yIHRoZSB3aG9sZSA4NzIzeCBmYW1pbHksIDB4NzAwMDYwY2Us
-IHdpdGggQklUX0FQUF9GQ1MgYWRkZWQuDQo+IFRoZSBnZW5lcmljIGRlZmF1bHQgaXMgYSBkaWZm
-ZXJlbnQgc2V0OiBpdCBoYXMgQklUX1BLVENUTF9ETEVOIGFuZCBsYWNrcw0KPiBCSVRfQ0JTU0lE
-X0RBVEEsIEJJVF9DQlNTSURfQkNOIGFuZCBCSVRfQU1GLCBzbyBpdCBkcm9wcyBleGFjdGx5IHRo
-ZSBiaXRzDQo+IGZ3LmMgbWFuaXB1bGF0ZXMgb24gdGhpcyBjaGlwLg0KPiANCj4gQklUX0FQUF9G
-Q1MgaGFzIHRvIGJlIHNldCBiZWNhdXNlIHJ0dzg4IGFkdmVydGlzZXMgUlhfSU5DTFVERVNfRkNT
-IGZvcg0KPiBldmVyeSBjaGlwIGFuZCB0aGUgc2hhcmVkIDg3MjN4IHZhbHVlIGhhcyBiaXQgMzEg
-Y2xlYXI7IHdpdGhvdXQgaXQNCj4gbWFjODAyMTEgdHJpbXMgZm91ciBieXRlcyBvZiByZWFsIGZy
-YW1lIGRhdGEuIHY0IHNheXMgdGhpcyBhdCB0aGUNCj4gYXNzaWdubWVudC4NCg0KSSB0aGluayB0
-aGUgYmV0dGVyIHdheSBpcyB0byBhc3NpZ24gcHJvcGVyIHJ0d2Rldi0+aGFsLnJjciBwZXIgY2hp
-cA0KaW4gcnR3X2NvcmVfaW5pdCgpLiANCg0KPiANCj4gPj4gKyAgICAgICBydHc4NzIzYl9pbml0
-X2FkYXB0aXZlX2N0cmwocnR3ZGV2KTsNCj4gPj4gKyAgICAgICBydHc4NzIzYl9pbml0X2VkY2Eo
-cnR3ZGV2KTsNCj4gPj4gKyAgICAgICBydHc4NzIzYl9pbml0X3JldHJ5X2Z1bmN0aW9uKHJ0d2Rl
-dik7DQo+ID4NCj4gPiBTbyBSVEw4NzIzQiBpcyB2ZXJ5IGRpZmZlcmVudCBmcm9tIGV4aXN0aW5n
-IGNoaXBzPw0KPiANCj4gTm8sIGFuZCB0aGUgc2libGluZ3Mgd3JpdGUgdGhlIHNhbWUgcmVnaXN0
-ZXJzIHdpdGggdGhlIHNhbWUgdmFsdWVzLg0KDQpDYW4geW91IHJldXNlIHRoZSBleGlzdGluZyBz
-aW5jZSB0aGV5IGFyZSB0aGUgc2FtZT8NCg0KQnkgdGhlIHdheSwgSSBkaWRuJ3Qgb25seSBtZW50
-aW9uIHRoZXNlIHRocmVlIGZ1bmN0aW9ucy4gQXQgaGVyZSB0aGVyZSBhcmUNCm1hbnkgc3BlY2lm
-aWMgZnVuY3Rpb25zLiBQbGVhc2UgYW5hbHl6ZSB0aGVtLiANCihIb25lc3RseSwgSSBkb24ndCBm
-dWxseSByZS1leGFtaW5hdGUgeW91ciBhbmFseXNpcyBpbiBkZXRhaWwsIGFuZCBiZWxpZXZlDQog
-eW91ciByZXN1bHRzLikNCg0KPiANCj4gT25lIG1vcmUsIHdoZXJlIHRoZSByZXZpZXcgYXNrZWQg
-Zm9yIGEgY2hhbmdlIHRoYXQgd2FzIGFscmVhZHkgdGhlcmUuDQo+IFRoZSBkZWNsYXJhdGlvbnMg
-aW4gcnR3ODcyM2JfcmVhc3NlcnRfcnhfcGF0aCgpIHRoYXQgeW91IG1hcmtlZCBmb3INCj4gcmV2
-ZXJzZSBYJ21hcyBvcmRlciBhcmUgYWxyZWFkeSBsb25nZXN0IGZpcnN0LCB0aHJlZSB1MzIgbGlu
-ZXMgZm9sbG93ZWQNCj4gYnkgdHdvIHU4IGxpbmVzLCBhbmQgdGhleSBhcmUgdGhlIHNhbWUgaW4g
-dGhlIHNlbnQgdjMgYW5kIGluIHY0LiBJZiB5b3UNCj4gaGFkIGEgZGlmZmVyZW50IG9yZGVyIGlu
-IG1pbmQsIHRlbGwgbWUgd2hpY2ggYW5kIEkgd2lsbCBhcHBseSBpdC4NCg0KKFBsZWFzZSBxdW90
-ZSB0aGUgY29kZTsgdG8gcmVwbHkgdG8gdGhpcywgSSBuZWVkIHRvIHN3aXRjaCB0byB5b3VyIHBh
-dGNoZXMgYWdhaW4pLg0KDQpJIGNhbiBndWVzcyB5b3Ugd3JpdGUgdTMyIGFuZCB0aGVuIHU4IGZv
-ciBvcHRpbWl6aW5nIHN0YWNrLiBNYXliZSwNCnlvdSBjYW4gcmVuYW1lIHRoZSBuYW1lcyBvciBj
-aGFuZ2UgdHlwZXMuIEp1c3Qga2VlcCByZXZlcnNlIFgnbWFzDQpvcmRlciBhcyBwb3NzaWJsZSBh
-cyB5b3UgY2FuLiBPbmUgZXhjZXB0aW9uIGlzIGRlcmVmZXJlbmNlIHByaW9yIA0KcG9pbnRlciAo
-YnV0IHN0aWxsIGNhbiBjaGFuZ2UgdGhlIGNvZGUgdG8gZml4IHJldmVyc2UgWCdtYXMgb3JkZXIp
-Lg0KQW5vdGhlciBleGNlcHRpb24gaXMgcHV0ICdzdHJ1Y3QnIGRlY2xhcmF0aW9ucyBmaXJzdCwg
-YW5kIHRoZW4NCmZ1bmRhbWVudGFsIGRhdGEgdHlwZS4NCg0KUGxlYXNlIHRyeSB5b3VyIHdheXMg
-dG8gZml0IHNpbXBsZSBydWxlcy4gT3RoZXJ3aXNlLCBpZiBJIGFjY2VwdCB0aGlzLA0KaXQgaXMg
-aGFyZCB0byBtZSB0byBleHBsYWluIHRoZSByZWFzb25zIGlmIG90aGVyIHBlb3BsZSBhc2sgbWUg
-ZGF5cyBsYXRlci4NCg0KUGluZy1LZQ0KDQo=
+mt76_check_sta() adds status->signal of every received frame to the
+station's RSSI average, wcid->rssi, which mt76_get_min_avg_rssi() reads
+for the dynamic sensitivity of mt7603 and mt7615 and for the gain
+control of mt76x0 and mt76x2.
+
+Since commit 4550fb9e9810 ("mt76: improve signal strength reporting"),
+drivers no longer set status->signal: mt76_rx_convert() computes it from
+the chain values when the frame is handed to mac80211, after
+mt76_check_sta() has run. Except on mt7921, which still sets it, the
+average is fed zeros. mt76_get_min_avg_rssi() then returns 0, so mt7603
+and mt7615 leave the sensitivity at its default, and mt76x0 and mt76x2
+fall back to -75 dBm for their gain settings.
+
+Compute the signal from the chain values in mt76_check_sta() as well,
+as mt76_rx_convert() does. On mt7921, the average now follows the same
+combined value that mac80211 gets instead of the strongest chain.
+
+Tested on a TP-Link Archer XR500v with one client, switching between
+the old and the new input every 30 seconds. On the MT7662E (mt76x2),
+the average the AGC works with was -75 dBm, its fallback, with the old
+input and -54 dBm with the new one, while iw reported -54 and -52 dBm
+for the station, and the AGC mostly used its low_gain 2 setting instead
+of 1. On the MT7603E, the station average was 0 with the old input and
+-41 dBm with the new one, while iw reported -42 and -41 dBm. The mt7603
+sensitivity still stayed at its default: a separate bug keeps it from
+leaving 0.
+
+Fixes: 4550fb9e9810 ("mt76: improve signal strength reporting")
+Assisted-by: LLM
+Signed-off-by: Cristian Papa <pcristian292@gmail.com>
+---
+Testing: OpenWrt, kernel 6.18.41 with the mac80211 backport of 6.18.39,
+openwrt/mt76 at be5ce79105 plus this change and the board's local
+patches, with a temporary module parameter selecting the old or the new
+input (not part of this patch). One client; the old-input samples of
+each run come from the same minutes as the new ones.
+
+Tools: an AI coding assistant (Claude Opus 5.5 in Claude Code) found the
+cause, wrote the instrumentation and drafted this change and changelog;
+the tests ran on my device.
+
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index cda5c5d51..4231adb77 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -1471,6 +1471,7 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
+ 	struct ieee80211_hw *hw;
+ 	struct mt76_wcid *wcid = status->wcid;
+ 	u8 tidno = status->qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
++	int signal;
+ 	bool ps;
+ 
+ 	hw = mt76_phy_hw(dev, status->phy_idx);
+@@ -1488,8 +1489,10 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
+ 
+ 	sta = container_of((void *)wcid, struct ieee80211_sta, drv_priv);
+ 
+-	if (status->signal <= 0)
+-		ewma_signal_add(&wcid->rssi, -status->signal);
++	/* status->signal is only set later, by mt76_rx_convert() */
++	signal = mt76_rx_signal(status->chains, status->chain_signal);
++	if (signal <= 0 && signal > -128)
++		ewma_signal_add(&wcid->rssi, -signal);
+ 
+ 	wcid->inactive_count = 0;
+ 
+-- 
+2.47.3
+
