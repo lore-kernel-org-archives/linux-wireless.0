@@ -1,52 +1,52 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 860F24078F9
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 10:39:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F66E46982B
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 10:39:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790246377; cv=none; b=ioELBBzBgT1aFQ1kH72APn1ElzuSc0mpUsfW2pyem/XdUjU2ckIxQQfB/HQCikozkWpsX71jgMpBJ7leDAZZI7CU/SQjFUTxDIPlbowEKtw9/gFrtyKNADDo/maqTUvdpGqg2X/OvHw9ZbcNTaXUcYG+pnKX5uc+pTKevOI7lJQ=
+	t=1790246378; cv=none; b=kUZXFh0Ljr+jDhlSjSK8qoD6QfBhzq0e/ps4awwEK8PINdSYvbrAaMMgYv8tGC5p6h6Kgj31FhaczIiNhkCtUt79pbgSfy2MJibeWNxi8oThG41yBwen5z4HYpowFawqyHsw08B1lwWdqLB3j//UffyxDhKUJ38e29ek8C8bPyQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790246377; c=relaxed/simple;
-	bh=9R52JNKb+1M9weqGkC/6UA416nRgkFMwAwkM8hURmxM=;
+	s=arc-20240116; t=1790246378; c=relaxed/simple;
+	bh=G3YDxvp54FL/yWTQetjO6agr7VsbIEpIGOIAob0FFc4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jA4fXL2bkD+5evH8KlEzfAeo+qVRVC7CpTk+pz3HvaUzhMLHU46rwfhFUAeljZjCYgRr5FCWZykI6G0iIXhhDSUZO4J7ocAVSMXzak1YsIXejhZkGEEjxuTJMZod1xrPnjZECiogd8i8jtNdeMKj/wjTLWqtMeWgTxmr7ersLLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SDWeAYsn; arc=none smtp.client-ip=192.198.163.18
+	 MIME-Version; b=mT3pyS3MIvZ1YYlyOQ8jQDh49e7JS8FJv1mZR0FpXn7zkqOytPEvwQNISSJSEBYxytSBdqb6vQt4StEjr7RhLO23XkYlXQFiFzG/tKJ63l5PcXC8pUpTsoUcjPiEFYwWJRXTpuAj5R25TABRulhchUc5ZW4lZJpjotWqm4aV8hg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dOVmi2UD; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SDWeAYsn"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dOVmi2UD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790246376; x=1821782376;
+  t=1790246377; x=1821782377;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9R52JNKb+1M9weqGkC/6UA416nRgkFMwAwkM8hURmxM=;
-  b=SDWeAYsnoelb9n+TNpeuKTLMl8kxhnUIpmHM2buAw/+IqyERqnWbXmTr
-   +0A27m7WUf95HasdxzWjYg46tkAGbJK9FTBL3K0Ms029m5HGuR8YOSifB
-   hX8UPh+O9LYnhDJxUqQQGqsd3M3th5Os4BWRRB8//vG5qq33Sxaik5W3/
-   ZHqR/BrF+Vs6vlV2+kWXkXnnNgDhTialbINpq3hOOnTtnnD6sTJ/oHNT0
-   qeS3JdT/SBKJ9rsRDBekoBYoTCXwSy6mkgBLR3Po27qOlZ3vZgKSvRwZA
-   d6148roSLqpWayDDiLqUDEgdzNzQQpV37Smt2v/wNiuUZWEq0GoxZ+T61
-   w==;
-X-CSE-ConnectionGUID: h1FT1ymgRyinR43AeRJHGg==
-X-CSE-MsgGUID: dQmw/ap7Sku0nF1ZROvaaw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="90134866"
+  bh=G3YDxvp54FL/yWTQetjO6agr7VsbIEpIGOIAob0FFc4=;
+  b=dOVmi2UDPQrDrWmwO3ycbnYTgtEJwylS3IRPBPKOlYY3sarw/ptPrjCG
+   I8SmkZk1Wj3Wvn3J4wOUBvdvVqjiLbmg2hIUM+lHb9hxexZytqnP1NJp+
+   DXD0lcutZaEd/OBza89NNgvXXtcf2myTPceA+cOyjeIy3mB27/yYq7LHb
+   Bbl0turrVtagzTYsrgcr7C/iNfn8//bL52GuCIFV4+Qb5lmMlmI+ybYML
+   /Z1oNmJSWr47UN1B+CjH88Sc637UqZ09DoaejnfvCBcr5vARlNGndVSsO
+   mwkS8vE6eYOA2kjslA6iJ27rd4+mXqeofej0wJ2HXZZvQh202tvbFsFdf
+   A==;
+X-CSE-ConnectionGUID: 15IpDh6FS6CR0rhQTMf8Jg==
+X-CSE-MsgGUID: DmkMo5F+SkmRcNF8ehD3Bg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="90134870"
 X-IronPort-AV: E=Sophos;i="6.27,120,1787036400"; 
-   d="scan'208";a="90134866"
+   d="scan'208";a="90134870"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:34 -0700
-X-CSE-ConnectionGUID: yjiDcX3IRqu9ohLII8sfJg==
-X-CSE-MsgGUID: KBap9PjeQOGMrGfpM6n7tQ==
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:36 -0700
+X-CSE-ConnectionGUID: BHORdJv3Qx6HSAb2ZKvI3A==
+X-CSE-MsgGUID: bc5OP+I7R8K2UgxvU7VRKA==
 X-ExtLoop1: 1
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:33 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 03:39:35 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 01/15] wifi: iwlwifi: pcie: drop gen1_2 prefix from several functions
-Date: Thu, 24 Sep 2026 13:41:15 +0300
-Message-Id: <20260924133942.682f71989704.I20e77f228e1536c6eb327dc077b030dbea889ac2@changeid>
+Subject: [PATCH iwlwifi-next 03/15] wifi: iwlwifi: Revert "wifi: iwlwifi: pcie: move generation specific files to a folder"
+Date: Thu, 24 Sep 2026 13:41:17 +0300
+Message-Id: <20260924133942.77abfd661413.I25521996309a25ac779cb31f2c93477b25be9ac3@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260924104129.162876-1-miriam.rachel.korenblit@intel.com>
 References: <20260924104129.162876-1-miriam.rachel.korenblit@intel.com>
@@ -59,179 +59,177 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-As a preparation of a future pcie-transport, we added a gen1_2 prefix to
-some functions to distinguish them from the new implementation.
-Since the new pcie-transport will not happen eventaully, remove this
-prefix from those functions.
+This reverts commit a6fafaedb5d6 ("wifi: iwlwifi: pcie: move generation
+specific files to a folder").
+
+The pcie/gen1_2/ subfolder was introduced to prepare for a future
+pcie-transport, which will not happen eventually.
+Move all the files back to the pcie folder and remove the gen1_2 folder.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.c    | 10 +++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  2 +-
- .../intel/iwlwifi/pcie/gen1_2/internal.h      | 19 +++++++++----------
- .../intel/iwlwifi/pcie/gen1_2/trans.c         | 11 +++++------
- 4 files changed, 20 insertions(+), 22 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/Makefile                 | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c              | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c      | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c         | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c               | 2 +-
+ .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/internal.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/rx.c   | 2 +-
+ .../wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans-gen2.c   | 4 ++--
+ .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans.c    | 2 +-
+ .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx-gen2.c  | 0
+ drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx.c   | 0
+ 11 files changed, 12 insertions(+), 12 deletions(-)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/internal.h (99%)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/rx.c (99%)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans-gen2.c (99%)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans.c (99%)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx-gen2.c (100%)
+ rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx.c (100%)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 2a74efe09cf0..6746281350e0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -9,9 +9,9 @@ iwlwifi-objs		+= iwl-utils.o
+ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ 
+ # Bus
+-iwlwifi-objs		+= pcie/ctxt-info.o pcie/ctxt-info-v2.o pcie/drv.o pcie/utils.o
+-iwlwifi-objs		+= pcie/gen1_2/rx.o pcie/gen1_2/tx.o pcie/gen1_2/trans.o
+-iwlwifi-objs		+= pcie/gen1_2/trans-gen2.o pcie/gen1_2/tx-gen2.o
++iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
++iwlwifi-objs		+= pcie/ctxt-info.o pcie/ctxt-info-v2.o pcie/trans-gen2.o pcie/tx-gen2.o
++iwlwifi-objs		+= pcie/utils.o
+ 
+ CFLAGS_pcie/drv.o += -Wno-override-init
+ 
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index a1545e9d2cd8..8cc8f6c4e934 100644
+index 8cc8f6c4e934..24bf45f06746 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -333,14 +333,14 @@ IWL_EXPORT_SYMBOL(iwl_trans_send_cmd);
+@@ -12,7 +12,7 @@
+ #include "iwl-drv.h"
+ #include <linux/dmapool.h>
+ #include "fw/api/commands.h"
+-#include "pcie/gen1_2/internal.h"
++#include "pcie/internal.h"
+ #include "pcie/iwl-context-info-v2.h"
  
- struct iwl_device_tx_cmd *iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- {
--	return iwl_pcie_gen1_2_alloc_tx_cmd(trans);
-+	return iwl_pcie_alloc_tx_cmd(trans);
- }
- IWL_EXPORT_SYMBOL(iwl_trans_alloc_tx_cmd);
+ struct iwl_trans_dev_restart_data {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
+index 1ea23d297713..c75210829ec9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
+@@ -6,7 +6,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-fh.h"
+ #include "iwl-context-info-v2.h"
+-#include "gen1_2/internal.h"
++#include "internal.h"
+ #include "iwl-prph.h"
  
- void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
- 			   struct iwl_device_tx_cmd *dev_cmd)
- {
--	iwl_pcie_gen1_2_free_tx_cmd(trans, dev_cmd);
-+	iwl_pcie_free_tx_cmd(trans, dev_cmd);
- }
- IWL_EXPORT_SYMBOL(iwl_trans_free_tx_cmd);
+ static const struct dmi_system_id dmi_force_scu_active_approved_list[] = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index 7f886200d693..23ec968577bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -6,7 +6,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-fh.h"
+ #include "iwl-context-info.h"
+-#include "gen1_2/internal.h"
++#include "internal.h"
+ #include "iwl-prph.h"
  
-@@ -395,7 +395,7 @@ void iwl_trans_op_mode_enter(struct iwl_trans *trans,
- 
- 	WARN_ON_ONCE(!trans->conf.rx_mpdu_cmd);
- 
--	iwl_pcie_gen1_2_op_mode_enter(trans);
-+	iwl_trans_pcie_op_mode_enter(trans);
- }
- IWL_EXPORT_SYMBOL(iwl_trans_op_mode_enter);
- 
-@@ -821,13 +821,13 @@ IWL_EXPORT_SYMBOL(iwl_trans_is_pm_supported);
- 
- bool iwl_trans_is_ltr_enabled(struct iwl_trans *trans)
- {
--	return iwl_pcie_gen1_2_is_ltr_enabled(trans);
-+	return iwl_pcie_is_ltr_enabled(trans);
- }
- IWL_EXPORT_SYMBOL(iwl_trans_is_ltr_enabled);
- 
- int iwl_trans_activate_nic(struct iwl_trans *trans)
- {
--	return iwl_pcie_gen1_2_activate_nic(trans);
-+	return iwl_pcie_activate_nic(trans);
- }
- IWL_EXPORT_SYMBOL(iwl_trans_activate_nic);
- 
+ static void *_iwl_pcie_ctxt_info_dma_alloc_coherent(struct iwl_trans *trans,
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index a117c378b1f1..04a4fa8ddb79 100644
+index 4fa514ba9975..905482419a9a 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1188,7 +1188,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return -EIO;
- 	}
+@@ -15,7 +15,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+ #include "iwl-prph.h"
+-#include "gen1_2/internal.h"
++#include "internal.h"
  
--	return iwl_pci_gen1_2_probe(pdev, ent, mac_cfg, hw_base, hw_rev);
-+	return _iwl_pci_probe(pdev, ent, mac_cfg, hw_base, hw_rev);
- }
- 
- static void iwl_pci_remove(struct pci_dev *pdev)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-index f0e70b0fedfe..ee3825954f65 100644
+ #define _IS_A(cfg, _struct) __builtin_types_compatible_p(typeof(cfg),	\
+ 							 struct _struct)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+similarity index 99%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+rename to drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index cff02afa4e26..e10aa8e7e061 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-@@ -850,7 +850,7 @@ static inline u16 iwl_txq_gen1_tfd_tb_get_len(struct iwl_trans *trans,
- }
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -22,7 +22,7 @@
+ #include "iwl-io.h"
+ #include "iwl-op-mode.h"
+ #include "iwl-drv.h"
+-#include "pcie/iwl-context-info.h"
++#include "iwl-context-info.h"
  
- static inline struct iwl_device_tx_cmd *
--iwl_pcie_gen1_2_alloc_tx_cmd(struct iwl_trans *trans)
-+iwl_pcie_alloc_tx_cmd(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ /*
+  * RX related structures and functions
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+similarity index 99%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c
+rename to drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 4631e11f2a96..eb70922cf516 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -12,7 +12,7 @@
+ #include "iwl-io.h"
+ #include "internal.h"
+ #include "iwl-op-mode.h"
+-#include "pcie/iwl-context-info-v2.h"
++#include "iwl-context-info-v2.h"
+ #include "fw/dbg.h"
  
-@@ -858,8 +858,8 @@ iwl_pcie_gen1_2_alloc_tx_cmd(struct iwl_trans *trans)
- }
+ /******************************************************************************
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+similarity index 99%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c
+rename to drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index f41cbe62e7aa..39dd963920b3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -5,8 +5,8 @@
+  */
+ #include "iwl-trans.h"
+ #include "iwl-prph.h"
+-#include "pcie/iwl-context-info.h"
+-#include "pcie/iwl-context-info-v2.h"
++#include "iwl-context-info.h"
++#include "iwl-context-info-v2.h"
+ #include "internal.h"
+ #include "fw/dbg.h"
  
- static inline void
--iwl_pcie_gen1_2_free_tx_cmd(struct iwl_trans *trans,
--			    struct iwl_device_tx_cmd *dev_cmd)
-+iwl_pcie_free_tx_cmd(struct iwl_trans *trans,
-+		     struct iwl_device_tx_cmd *dev_cmd)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-@@ -1132,7 +1132,7 @@ static inline void iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans) { }
- void iwl_pcie_rx_allocator_work(struct work_struct *data);
- 
- /* common trans ops for all generations transports */
--void iwl_pcie_gen1_2_op_mode_enter(struct iwl_trans *trans);
-+void iwl_trans_pcie_op_mode_enter(struct iwl_trans *trans);
- int _iwl_trans_pcie_start_hw(struct iwl_trans *trans);
- int iwl_trans_pcie_start_hw(struct iwl_trans *trans);
- void iwl_trans_pcie_op_mode_leave(struct iwl_trans *trans);
-@@ -1164,10 +1164,9 @@ void iwl_trans_pcie_resched_with_nic_access(struct iwl_trans *trans);
- void __releases(nic_access_nobh)
- iwl_trans_pcie_release_nic_access(struct iwl_trans *trans);
- void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power);
--int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
--			 const struct pci_device_id *ent,
--			 const struct iwl_mac_cfg *mac_cfg,
--			 u8 __iomem *hw_base, u32 hw_rev);
-+int _iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent,
-+		   const struct iwl_mac_cfg *mac_cfg,
-+		   u8 __iomem *hw_base, u32 hw_rev);
- void iwl_pcie_gen1_2_remove(struct iwl_trans *trans);
- 
- /* transport gen 1 exported functions */
-@@ -1193,7 +1192,7 @@ int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
- 			   struct iwl_dma_ptr *ptr, size_t size);
- void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr);
- void iwl_pcie_apply_destination(struct iwl_trans *trans);
--int iwl_pcie_gen1_2_activate_nic(struct iwl_trans *trans);
-+int iwl_pcie_activate_nic(struct iwl_trans *trans);
- 
- /* transport gen 2 exported functions */
- int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
-@@ -1223,7 +1222,7 @@ static inline bool iwl_pcie_gen1_is_pm_supported(struct iwl_trans *trans)
- 	return trans_pcie->pm_support;
- }
- 
--static inline bool iwl_pcie_gen1_2_is_ltr_enabled(struct iwl_trans *trans)
-+static inline bool iwl_pcie_is_ltr_enabled(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index 71c4746c61a6..0b46431ce68f 100644
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+similarity index 99%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+rename to drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index db92c5c954e6..4771cf3b3e11 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -1903,7 +1903,7 @@ void iwl_trans_pcie_write_prph(struct iwl_trans *trans, u32 addr, u32 val)
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WDAT, val);
- }
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -28,7 +28,7 @@
+ #include "mei/iwl-mei.h"
+ #include "internal.h"
+ #include "iwl-fh.h"
+-#include "pcie/iwl-context-info-v2.h"
++#include "iwl-context-info-v2.h"
+ #include "pcie/utils.h"
  
--void iwl_pcie_gen1_2_op_mode_enter(struct iwl_trans *trans)
-+void iwl_trans_pcie_op_mode_enter(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-@@ -4076,10 +4076,9 @@ static void iwl_pcie_check_me_status(struct iwl_trans *trans)
- 	schedule_delayed_work(&trans_pcie->me_recheck_wk, HZ);
- }
- 
--int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
--			 const struct pci_device_id *ent,
--			 const struct iwl_mac_cfg *mac_cfg,
--			 u8 __iomem *hw_base, u32 hw_rev)
-+int _iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent,
-+		   const struct iwl_mac_cfg *mac_cfg,
-+		   u8 __iomem *hw_base, u32 hw_rev)
- {
- 	const struct iwl_dev_info *dev_info;
- 	struct iwl_trans_info info = {
-@@ -4240,7 +4239,7 @@ void iwl_pcie_gen1_2_remove(struct iwl_trans *trans)
- 	iwl_trans_pcie_free(trans);
- }
- 
--int iwl_pcie_gen1_2_activate_nic(struct iwl_trans *trans)
-+int iwl_pcie_activate_nic(struct iwl_trans *trans)
- {
- 	const struct iwl_mac_cfg *mac_cfg = trans->mac_cfg;
- 	u32 poll_ready;
+ #define IWL_HOST_MON_BLOCK_PEMON	0x00
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx-gen2.c
+rename to drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c
+rename to drivers/net/wireless/intel/iwlwifi/pcie/tx.c
 -- 
 2.34.1
 
