@@ -1,189 +1,119 @@
-Received: from mta1.migadu.com (out-147.mta1.migadu.com [95.215.58.147])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A843A43DEC8
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2026 21:50:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C52F271456
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 00:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790200238; cv=none; b=CVF6jPrKnx8kOnnDWruq5VGIRKvRqyL+WLjJb1+9itfY5lv042Nozbu/zhTxPywJhaXqOMW+/hcwlyyYbGuqT6Pt9ZaXtHeyAvLuCzk8ViQpHSCkTZDNdE/5kMjrYS3NqjfBHYqNCC08v4hvF6+kKeDvJjwuE4uSo68n9WBjdGU=
+	t=1790210837; cv=none; b=WcqTYh9VH3EgJRk8gQV2rZTsdDaG2dB51Hnsqln9TzCvwNAEDjKzHEIBv87yjCf/PCjW2ABf1r/sy9tGvclJ7mDoFW38mSsqQU8ca8KhU/4MeAB6VbMZSv8pYjMNb553tjj9H1+bh3Va/dTn397iaU8YwrX3VT2OSBNJeDb2T48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790200238; c=relaxed/simple;
-	bh=HPfVi3y1gax+ff5umcyzIricIySLtDF7Qf7jPDLvjBk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:Cc:Subject:From:
-	 References:In-Reply-To; b=CobaU9NI8AQ6WxCv4l8mthnrjK/BB54d0eAhtY4/P7rp1HNh+J3fU+UYQPB7h2KuI/xGM9/H5J0THqCuD8AbB+tV8OdV9FBIp4AiTtGOhrSriTL/swT7CabckrgSlpW1TZUwg4Fgw/bh2j2wAN84/YWVwUH82fVedPwoG5Ictpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RoIVSPD+; arc=none smtp.client-ip=95.215.58.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790210837; c=relaxed/simple;
+	bh=x7g1KZ6LdOCYy9d8lwInI8fCuxRi2vYed/xiO9gKUBI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j8282713eDnRyPwXgdY2x34QEEB4KDtXNdghzzA68hRSuxAbUEgeQDuBtAPDovW6Id+5owzyUgjPD8pONa2M0PB4hSAKHiPBZ4IFMsSKqsXG4/JnOJC9sX40fhqeoT8B9w4lDKkZyoQelDiyYHBVR0mTYOIrRINl3zya6qfLQ7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=jT1u9BOY; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RoIVSPD+"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HPfVi3y1gax+ff5umcyzIricIySLtDF7Qf7jPDLvjBk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790200233; v=1; x=1790805033;
- b=RoIVSPD+PbAQA46zhAMBG7rTAtMe+w3VxsYuNX+fBAnc/WV5+MmNWhlMNyiGcP0S03Ypykx+
- 5lpb0Xf4pXoMOmk7LhOY4cyIfiIlhBkvyG5uLp19j4+/WSTfT/KxbZN9kQ2dq+trOdFrhCLE9pA
- +h1GVCS2pBKwblqjPr5DWPws=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id c37ad1e32183d01a;
-	Wed, 23 Sep 2026 21:50:13 +0000
-X-Mizu-Trace-ID: c37ad1e32183d01a
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="jT1u9BOY"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68O0lCqgD767568, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1790210833; bh=PGYjjIzKfxMlT26PXEKXigJp88d7RQY52hzHtQcjLaQ=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=jT1u9BOYd8Wogc39hvqNXfsrjtYKTkU0mrRbbR+v52oM5WkRGjTwVfY4w5zEIyURe
+	 Bq9u591Pf80KEMv7Yfj1eahonb9e8Sq6lhBF0BBafNUj1hELE1p6YYsrUOOXb+jLIO
+	 3Rrsmj797nIFwCpVom6jVOc+VSKY+IGqDgfIkdFJxL1qbKppMYvQ4RSmayfJjSZnMT
+	 nUEbJmpFiCS5hyGBBLVSKH65HQAn0EUbY9AoE2G4yyoWhg51J32J/Du2bx2bbv3Rgk
+	 klqoInzflyI4KNZuSMb0BYH3h4oHPWVQ3L1j4LsfjzvdUI8AEsC1bJfE8KOjpUj8Tc
+	 KLpKleZl9H6pQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68O0lCqgD767568
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 08:47:12 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 24 Sep 2026 08:47:13 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 24 Sep 2026 08:47:13 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Thu, 24 Sep 2026 08:47:13 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH rtw-next] wifi: rtw88: TX report with long timeout for non-PCIE devices
+Date: Thu, 24 Sep 2026 08:46:37 +0800
+Message-ID: <20260924004637.9958-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 23 Sep 2026 23:50:11 +0200
-Message-Id: <DLN10FU8L1PQ.3NK0M6NVQ3Y53@linux.dev>
-To: "Ping-Ke Shih" <pkshih@realtek.com>, "Luka Gejak" <luka.gejak@linux.dev>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH v3 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-From: "Luka Gejak" <luka.gejak@linux.dev>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260921154347.82317-1-luka.gejak@linux.dev>
- <20260921154347.82317-4-luka.gejak@linux.dev>
- <39da13e5cdd840f5a5ab86ded478d07c@realtek.com>
-In-Reply-To: <39da13e5cdd840f5a5ab86ded478d07c@realtek.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On Wed Sep 23, 2026 at 10:30 AM CEST, Ping-Ke Shih wrote:
-> Luka Gejak <luka.gejak@linux.dev> wrote:
->> Add the Realtek RTL8723B 802.11n chip driver: the chip operations, the
->> power sequences, the efuse layout, the RF and IQ calibration, and the
->> chip specific coexistence handling.
->>=20
+Many USB and SDIO devices can't report TX status within 500 ms, and
+extending to 2500 ms as tested USB/SDIO devices can fix the problem [1].
+To avoid adding chip ID one by one, and this change looks harmless.
+Keep PCIE using short timeout, and others use long timeout.
 
-Thanks for the review. Everything that could be turned into a change is
-in v4, and six of your points are worth an answer as much as a change,
-so here they are.
+[1] https://lore.kernel.org/linux-wireless/20260921165343.8131-1-pepe.schlehofer@gmail.com/
 
->> +#include <linux/unaligned.h>
->> +#include "main.h"
->> +#include "coex.h"
-> [...]
->> +#include "tx.h"
->
-> In increasing alphabet order.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/tx.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtw88/tx.h |  3 ++-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-The list is already in increasing alphabetical order after main.h, and
-main.h cannot be sorted into place. The other rtw88 headers have no
-includes of their own and are written expecting main.h to be first: it is
-what brings in struct rtw_dev and even BIT() and GENMASK(). With mac.h
-ahead of main.h the build stops after 179 error lines, the first of them
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 4e110a457e71..701ed7c4f3f7 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -196,7 +196,7 @@ void rtw_tx_report_purge_timer(struct timer_list *t)
+ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
+ {
+ 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
+-	unsigned long timeout = RTW_TX_PROBE_TIMEOUT;
++	unsigned long timeout;
+ 	unsigned long flags;
+ 	u8 *drv_data;
+ 
+@@ -208,10 +208,10 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
+ 	__skb_queue_tail(&tx_report->queue, skb);
+ 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+ 
+-	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
+-	     rtwdev->hci.type == RTW_HCI_TYPE_USB) ||
+-	    rtw_is_8723bs(rtwdev))
+-		timeout = msecs_to_jiffies(2500);
++	if (rtwdev->hci.type == RTW_HCI_TYPE_PCIE)
++		timeout = RTW_TX_PROBE_TIMEOUT_SHORT;
++	else
++		timeout = RTW_TX_PROBE_TIMEOUT_LONG;
+ 
+ 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index d34cdeca16f1..168f48e87853 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -7,7 +7,8 @@
+ 
+ #define RTK_TX_MAX_AGG_NUM_MASK		0x1f
+ 
+-#define RTW_TX_PROBE_TIMEOUT		msecs_to_jiffies(500)
++#define RTW_TX_PROBE_TIMEOUT_SHORT	msecs_to_jiffies(500)
++#define RTW_TX_PROBE_TIMEOUT_LONG	msecs_to_jiffies(2500)
+ 
+ struct rtw_tx_desc {
+ 	__le32 w0;
 
-  'struct rtw_dev' declared inside parameter list will not be visible
-  outside of this definition or declaration
-  implicit declaration of function 'GENMASK'
-  passing argument 1 of 'rtw_set_channel_mac' from incompatible pointer
-  type
+base-commit: 2f77c66694108785a1f6ae6c5de06453e7f7a91f
+-- 
+2.25.1
 
-I tried the sort and reverted it. A strict order needs main.h added to
-those headers first. I can send that as a separate patch ahead of this
-series, but I would rather not fold a shared header change into the chip
-driver.
-
->> +#define MASK_NETTYPE   0x30000
->> +#define _NETTYPE(x)    (((x) & 0x3) << 16)
->> +#define NT_LINK_AP     0x2
->
-> The PORT_SET_NET_TYPE in rtw_vif_port_config() does similar thing
-> relying on static const struct rtw_vif_port rtw_vif_port[].
->
-> Is that not suitable for RTL8723B? If so, should the common flow
-> avoid RTL8723B?
-
-It is suitable, and the common flow does not need to avoid RTL8723B.
-PORT_SET_NET_TYPE writes the same field with the same value:
-rtw_vif_port[0].net_type is address 0x0100 with mask 0x30000, which is
-REG_CR bits 17:16, and rtwvif->net_type is RTW_NET_MGD_LINKED, 2, the
-value NT_LINK_AP carried.
-
-Only the timing differs, and there the common flow is the better one.
-rtw_ops_add_interface() sets net_type from the interface type,
-RTW_NET_NO_LINK for a station, and the association path moves it to
-RTW_NET_MGD_LINKED, writing REG_CR after both. The chip local call ran
-during mac_init and forced the linked value before there was a link,
-and the core's write replaced it a moment later in any case.
-
-So v4 drops rtw8723b_init_network_type() with MASK_NETTYPE, _NETTYPE()
-and NT_LINK_AP, and the chip relies on rtw_vif_port[] like the others.
-No other rtw88 chip defines a net type value of its own.
-
->> +       /* Override the default rcr filter for 8723B */
->> +       rtwdev->hal.rcr =3D WLAN_RCR_CFG;
->
-> Why? The default value doesn't work to RTL8723B?
-
-Two things say it does not.
-
-hal.rcr is not only written at init. fw.c clears and restores
-BIT_CBSSID_BCN in it around the beacon filter, and mac80211.c toggles
-BIT_AM, so whatever is left there has to keep those bits.
-
-And this is not a private filter. It is the RCR that rtw8723x_mac_init()
-writes for the whole 8723x family, 0x700060ce, with BIT_APP_FCS added.
-The generic default is a different set: it has BIT_PKTCTL_DLEN and lacks
-BIT_CBSSID_DATA, BIT_CBSSID_BCN and BIT_AMF, so it drops exactly the bits
-fw.c manipulates on this chip.
-
-BIT_APP_FCS has to be set because rtw88 advertises RX_INCLUDES_FCS for
-every chip and the shared 8723x value has bit 31 clear; without it
-mac80211 trims four bytes of real frame data. v4 says this at the
-assignment.
-
->> +       rtw8723b_init_adaptive_ctrl(rtwdev);
->> +       rtw8723b_init_edca(rtwdev);
->> +       rtw8723b_init_retry_function(rtwdev);
->
-> So RTL8723B is very different from existing chips?
-
-No, and the siblings write the same registers with the same values.
-
-rtw8703b_phy_set_param() writes REG_SPEC_SIFS, REG_MAC_SPEC_SIFS, REG_SIFS
-and REG_SIFS + 2 with the same 0x100a, ACKTO is 0x40 in both, and
-REG_RETRY_LIMIT uses the same 0x3030 in both. Its four EDCA registers are
-the same magnitudes as here:
-
-  8703b  0x002FA226 VO  0x005EA324 VI  0x005EA42B BE  0x0000A44F BK
-  8723b  0x002FA226 VO  0x005EA324 VI  0x005EA42B BE  0x0000A44F BK
-
-rtw88xxa.c writes REG_RRSR with the same 0xfffff / 0xffff1 pair used here,
-and REG_RESP_SIFS_CCK and REG_RESP_SIFS_OFDM are the pair that only this
-chip and 8822c write. So I read the three helpers as the family pattern
-rather than as something chip specific. Say the word if you would rather
-have them inlined into rtw8723b_phy_set_param() the way 8703b has them;
-that is a smaller diff.
-
->> +static bool rtw8723b_sdio_needs_rx_path_fix(struct rtw_dev *rtwdev)
->
-> What does it mean?
->
-> In many places using this function are not RX path.
-
-Right, the name hid what it is, and it is a test the preparation series
-already provides. The function gates the SDIO only register work: the PAD
-mux restore in post_enable_flow, the path control save and restore around
-IQK, and the trailing re-assert in set_channel. v4 drops the local helper
-and calls rtw_is_8723bs() at those seven places, which is what rx.c, tx.c
-and sdio.c already use.
-
-One more, where the review asked for a change that was already there.
-The declarations in rtw8723b_reassert_rx_path() that you marked for
-reverse X'mas order are already longest first, three u32 lines followed
-by two u8 lines, and they are the same in the sent v3 and in v4. If you
-had a different order in mind, tell me which and I will apply it.
-
-I re-ran the hardware validation on this exact tip after these changes.
-The suite and the soak both pass: association, WPA2, DHCP, throughput,
-latency, scans under traffic, 20/20 reload/reassociate, link cycles and
-reconnects, with no error, TX-report, H2C, LPS or lockdep lines in dmesg,
-and no regression against the branch that was validated before.
-
-Best regards,
-Luka Gejak
