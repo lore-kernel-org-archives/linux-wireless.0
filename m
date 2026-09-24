@@ -1,343 +1,148 @@
-Received: from mta1.migadu.com (out-47.mta1.migadu.com [95.215.58.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC09A3CF1E6
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 08:31:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A948C443E44
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 08:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790238664; cv=none; b=P+HN812/SxsnTZz5jsyN94WjihGODyej175QjsTvAuAmXG1p7hcsSIArqR/FZ/1FmqJx0WQJO+dMyZCGBcj/0T8PlopcWsBbYsnbEJC5RoPsCWLGnwChkQrhvit1EWsmK621tIFHGHacE1nhR5d7RGw4/CSD7VfXNF0s7vryeIc=
+	t=1790240346; cv=none; b=CjkIaOHCawQosMsyUdsVJOEaWs/r36b1wFyzKQM1vwrwZEpiUArVpQFyWpxWIDRFzlq3FKSWyzECFUNqeefXmMxcL7IYwXJRWDBG3TJ/kvFU51b2/m7dwtUvK/d4uktuN2i6sZV4cdVT34WrP2XWEA8Q54XOFIXp2hCyZO9/sR0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790238664; c=relaxed/simple;
-	bh=xLGdQCYH8fv/MMj4Cl6/vPRyWC2T7C08ioRwAvs/MNc=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=Yj857UdWNfuAtJv1SYbQpSB8gyzWfhAr5BLTx5CTX+AScZurB3zo+FEETnx9Asv5+jgVqvc2wTPZ4WiQj7q3Qlie0VfZIBcbA8pFlmpIUD9rWVnBgeJr/Xdw4ZvmzFWnQaLtyfFzJkHvexPRRToo9bC5xhAEz7Z5RLrZT9d1nCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SncIlRNW; arc=none smtp.client-ip=95.215.58.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790240346; c=relaxed/simple;
+	bh=MMqkdQEeH0y0ZhZk9H0JBoQaM9eKcyWjI2P43202SHg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AyMA+aFPz+p0FlI60yL3eIehhF791JY6GXMtK3/+UTdiASCpIjRmyhesocda9W9ldZ53T3B5KxkxQKPsN33sjELHjy/skVrSYAKJeQ4xyVghNhRWYS+JlBAmt+YBDXiHZq/6ZOKU2OjcEAdS+bPu4eZimxN7ITl4vVc8uyf9PRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JJxPL0jc; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=UqE0lpK3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SncIlRNW"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=xLGdQCYH8fv/MMj4Cl6/vPRyWC2T7C08ioRwAvs/MNc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790238659; v=1; x=1790843459;
- b=SncIlRNWYIX7cl54LqKJMaI+QZ2O+7GGZNzKg8jZchf4AQEC65yED8+gspJu4kKuHn8Xz+/k
- 4jleJFG/RSPxQ0JnIDWvNqUaMxfjlyVtwA/nSdlk92ftz4gjGRb5HkMVPRsnN1vQetmzejsTVeI
- qkMdf7S98z6czwyQe/E0mNpE=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 645dadc53ae5ce75;
-	Thu, 24 Sep 2026 08:30:59 +0000
-X-Mizu-Trace-ID: 645dadc53ae5ce75
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JJxPL0jc";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="UqE0lpK3"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68O5eAuF1531708
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 08:59:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	W2qmIEuI6K9ZfvbWp+8gw4YZugR7p65Nd4cMUpTi15E=; b=JJxPL0jcJI1kru5v
+	q6Cs4SWFyAH9PWvEQ7aZVwFmh5S59ChGAHP08SrxVlmcNa2LfF/r1CfA4AOQMp7O
+	cUk6to1M5uQ2P9F6hXdelRkQ/jW2Az/C8mMKlf8yKay73yL/RFvzOhMqTn7jl1G8
+	KJr1Fqko3frE9HYjbya45M49vK+l0Nan+UTt4yRPwHixcwhRNImWmG7QObrmPRuX
+	/5dsK0SdPG+YSOloEMohNQTt9IF+2TIhYTGNi1eWUixY8dAQgh2Grh9CYW/lbiN9
+	+fYJHIuArdk9F5tCYNkUwWMszFUo19eFnBzSSc+1DXLabK0ik9P2TXaKCutUUxfI
+	cAYcNA==
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gvsfgskru-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 08:59:02 +0000 (GMT)
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1437272611eso2843122c88.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2026 01:59:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1790240341; x=1790845141; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=W2qmIEuI6K9ZfvbWp+8gw4YZugR7p65Nd4cMUpTi15E=;
+        b=UqE0lpK3m6tGfCy2agRKiAUAgP8YtIndvOHB/tzoGJ3svk+oy+1zFXG8UOI7MsY5mn
+         unSpVF8QPYr22XvFCQOVJNheWzxXYs5OgSdWZeIVpPNW/v6GPmruvXOL5xVsZa6Vol02
+         wQ3ztJxgltVnyT+CKVFFYpVaz3VWa0HUB88Om3CpPXO7ketdm5Q3b4PbiSJvRQl7IzQp
+         n+S0u8hL4VmGhfNqNTm4PfQRIwaCnJ9lBa4RvSWJPDLYTc3LrJNJungSI3PwdMVpUcea
+         bVXZusbDt5VuSQvL3AmQuoK6XPEjKzffBztZKSFNUV5d6NGTmAJ5VZCDZOtbsdrMCI9D
+         SjBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790240341; x=1790845141;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=W2qmIEuI6K9ZfvbWp+8gw4YZugR7p65Nd4cMUpTi15E=;
+        b=akWW2GPQ1VNJz5AoTLdSCHi99oCsjts6tYiaHTORpzjQnx/ycUypzpyoIJex00hwAU
+         jWtxF2UtjerZolvFyry61JbK8UolYay8CPqPNZ1d8pxtcu/HfoA3UcAZl9sOUgqfj0nc
+         2XmvRyvh5m+tef8DrIIBiSiTbHPqKbt2+shNsx/Z1vHQ1VTuT0tT1ooekyucLvMfYHEW
+         ILX86qFOHj2aYT4hlO3+aGDVJIjOFiEuroCL+qE8ozq0aHAVZL1M+B8aYWwqJSwrBxWT
+         NNR8Kj608qUxFNdWevwarq6UagqRwe477e/P+/av3H4NuL914tzMLMxh7axXrj5VyJFs
+         vhnQ==
+X-Gm-Message-State: AFuF++k9kUcepLmsg3xMXv6LMXsVPV6bS0+kQKHOAbHXsek+/Lm1ZYbj
+	qhgI/TbaxG7ebwDJDh77mBBNANm+Qu8jW8OQO6mz3nzI/mr3347AjhLx4p+EROqKmCFB/olpqh1
+	l+aNlJEW4X3zRG9m4Wy/Pa8Qw3BYVzWFpGAYnrb7OhvcOSpR5xTzy1MNkzmOpTv0goDcePw==
+X-Gm-Gg: AYBFou0IUiWidCQ/nuZil9nvhGt4/LWfdnGRuOrSmNAnHPQcaJaWQkMaKwn++ebQJ1n
+	DxHPfG8R4A46x3DncOu8Pzm0PtvtnTqdZOOwmWvq1GxMZ6uINDYd0/rwg/TQ4YQZGVQvHTAgRig
+	jyuDPFfY8vq4SqPi/KSKFXwTlYoTP8DSqBOO6fAHqMfK7a8YoE6ZO7cvGYLv5zD5KCKKLdRIO+R
+	XK7GfW1yMMq76xPK3KSCgepoEcGR6OMCFnXLob2j7VXZVjOmmXF9FiF/e3bPzeCReOdneEGGPvR
+	T0VOxMitlt+up+GQjVLQ6VwEWKlmthuS2TYOInbqWLfam6MjzuGDJvE7GTU3Ojg/JHwHtwnqWDd
+	7suyICCR6iih7frkPlRBCaQUllotSIVHsfA==
+X-Received: by 2002:a05:701b:4241:20b0:143:5722:55ce with SMTP id a92af1059eb24-14503fcdd8emr1532958c88.38.1790240341430;
+        Thu, 24 Sep 2026 01:59:01 -0700 (PDT)
+X-Received: by 2002:a05:701b:4241:20b0:143:5722:55ce with SMTP id a92af1059eb24-14503fcdd8emr1532939c88.38.1790240340718;
+        Thu, 24 Sep 2026 01:59:00 -0700 (PDT)
+Received: from [10.152.193.243] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-144f949e51asm12621558c88.1.2026.09.24.01.58.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Sep 2026 01:59:00 -0700 (PDT)
+Message-ID: <c9f28565-28e6-46d3-aeac-c78b6d86fc32@oss.qualcomm.com>
+Date: Thu, 24 Sep 2026 14:28:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Thu, 24 Sep 2026 08:30:59 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <92337f29a7dd8d517c2037e857e13eb2612e10e7@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v3 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-To: "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael 
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- luka.gejak@linux.dev
-In-Reply-To: <304bbb9a43a74e909eec0dd84d86d528@realtek.com>
-References: <20260921154347.82317-1-luka.gejak@linux.dev>
- <20260921154347.82317-4-luka.gejak@linux.dev>
- <39da13e5cdd840f5a5ab86ded478d07c@realtek.com>
- <DLN10FU8L1PQ.3NK0M6NVQ3Y53@linux.dev>
- <304bbb9a43a74e909eec0dd84d86d528@realtek.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next v2] wifi: mac80211: Report parent AP BSS
+ parameters for AP_VLAN
+To: Johannes Berg <johannes@sipsolutions.net>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Ganesh Kariganuru Mahabalesh <quic_gkarigan@quicinc.com>
+References: <20260915052923.3300269-1-aaradhana.sahu@oss.qualcomm.com>
+ <48ebf25d157b8c12dff724fb1f6a97a0b45849e0.camel@sipsolutions.net>
+ <ddaf2702-b33e-459c-9efd-098feba33243@oss.qualcomm.com>
+ <ee25d1c927d4a618384eb05a210b0f9b2147d055.camel@sipsolutions.net>
+ <66e6b21e-843a-44ca-bf77-30441a80510e@oss.qualcomm.com>
+ <b76bad90389aad66d9082428f3c969294c6a8d74.camel@sipsolutions.net>
+Content-Language: en-US
+From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+In-Reply-To: <b76bad90389aad66d9082428f3c969294c6a8d74.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=YfoodARf c=1 sm=1 tr=0 ts=6ab4e656 cx=c_pps
+ a=bS7HVuBVfinNPG3f6cIo3Q==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=LQgjkfhuwCsdZD7AzKAA:9 a=QEXdDO2ut3YA:10 a=vBUdepa8ALXHeOFLBtFW:22
+X-Proofpoint-ORIG-GUID: Wvjz4ne1CBClNnd0_l6_DFCLhz8Sh-Pz
+X-Proofpoint-GUID: Wvjz4ne1CBClNnd0_l6_DFCLhz8Sh-Pz
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI0MDAzNyBTYWx0ZWRfX6ojqOFb8Li6x
+ oVlN8h0q/bLUH1vFqLELQjdWFk7gTng2U7OqVZxqUxJVssh4piLUWFvh2fFkNS8zLW3HYaMA85X
+ t3Y6bUPTAowZEMlZxWTxzo1sa9IM3jw=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI0MDAzNyBTYWx0ZWRfX2m2kIyA5idR4
+ LcLw8YhRNC8tY1weMHkgQDR5h5uEZ3VIBY7Hr4jsmukdEKF6lSBBltL57HKk8D3yS6Z7aVQ19p1
+ PzO2X9kakuF6xxQBx1V7HDlSYH5ql1+xKpUKcz74IkvnNQiNMxHv0lWUOpJPNOlmQ2zlsT95QA3
+ daLaueBdoyVfVFLxn+mVB4tCLmdbqTo2A1MxGWBKKUO3MrGwI4YIZXbdA8vv/9hG6QAaizvVEmZ
+ SqYKM0rHvER12ZRaKRI4Cs/IetbRk7GWBNKWDuHNK5DfA+AxJ/RAgnPA6VV6ch9ErBkyXWnZT5v
+ NFuyxn7I0rqcfXE1ipUuQbZPgypaTGLTLJCA6eOpgLaPcL65lpRlpxCreuPp4AgilEfQ+jUc52W
+ 91TuqA9jd+A/GrgnaqpOV4EHcYUgK50a74QHa2s2/++56L+g/gQ1NmYxAzMbnRfyE0UL5uazCUx
+ WDhB2iko4Moxl+scKhg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-24_02,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 clxscore=1015 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609240037
 
-Hi Ping-Ke,
 
-September 24, 2026 at 06:11, "Ping-Ke Shih" <pkshih@realtek.com> wrote:
->=20
->=20Luka Gejak <luka.gejak@linux.dev> wrote:
 
-Answers in the order of your mail. The MAINTAINERS point is in a
-separate reply.
+On 9/24/2026 1:44 PM, Johannes Berg wrote:
+> On Thu, 2026-09-24 at 12:35 +0530, Aaradhana Sahu wrote:
+>>
+>> Would it be reasonable to remove NL80211_STA_INFO_BSS_PARAM only from the AP-side station
+>> information, including AP_VLAN, while retaining it for the STA side?
+> 
+> I think it was added for the STA side, so likely is needed there.
+> 
+> johannes
 
-> Can you also review other RTL8723B specific functions? I didn't review
-> them one by one by v3, but I wonder why it needs specific functions,
-> not common flow. If any of them is necessary, please point out reasons.
->
-> By the way, I didn't only mention these three functions. At here there
-> are many specific functions. Please analyze them.
-> (Honestly, I don't fully re-examinate your analysis in detail, and
-> believe your results.)
-
-I went through the whole file. The part that is already common flow can
-be listed exactly, because those ops point at shared code:
-
-  power_on, power_off        rtw_power_on, rtw_power_off
-  mac_postinit               rtw8723x_mac_postinit
-  set_tx_power_index         rtw8723x_set_tx_power_index
-  false_alarm_statistics     rtw8723x_false_alarm_statistics
-  read_rf, write_rf          rtw_phy_read_rf_sipi,
-                             rtw_phy_write_rf_reg_sipi
-  read_efuse                 rtw8723x_read_efuse, plus the hardware
-                             capability, because this chip has no
-                             hardware feature report: the firmware
-                             reports id 0xfd instead of the C2H
-  efuse_grant                rtw8723x_efuse_grant, plus the 0x6b BT
-                             power cut and output isolation write that
-                             the vendor efuse path does
-
-The calls inside rtw8723b_phy_set_param() are the ones you mean. There
-are twelve of them, and I have to be straight about one thing first:
-there is no shared function to reuse for them. rtw8703b and rtw8723d do
-the same work inline in their own phy_set_param(), and rtw8723x has no
-equivalent. So "reuse the existing" cannot be done by calling something
-that exists today. What is the same, what is not, and the three ways to
-fix it follow.
-
-Same as rtw8703b, value for value:
-
-  REG_SPEC_SIFS, REG_MAC_SPEC_SIFS, REG_SIFS, REG_SIFS + 2   0x100a
-  REG_EDCA_BE, _BK, _VI, _VO           0x005ea42b, 0x0000a44f,
-                                       0x005ea324, 0x002fa226
-  REG_ACKTO                                                0x40
-  REG_RETRY_LIMIT                                          0x3030
-  REG_SLOT, REG_BAR_MODE_CTRL, REG_ATIMWND    0x09, 0x0201ffff, 0x2
-  REG_SINGLE_AMPDU_CTRL, REG_RX_PKT_LIMIT, REG_MAX_AGGR_NUM,
-  REG_PIFS, REG_AMPDU_MAX_TIME         BIT_EN_SINGLE_APMDU, 0x18,
-                                       0x1f, 0, 0x70
-
-8703b has a name for each of these (WLAN_SPEC_SIFS, WLAN_RL_VAL,
-WLAN_BAR_VAL, WLAN_SLOT_TIME, WLAN_RX_PKT_LIMIT, WLAN_MAX_AGG_NR,
-WLAN_PIFS_VAL, WLAN_AMPDU_MAX_TIME). The chip file writes most of them
-as bare numbers, which is why the two look different when they are the
-same, and that is on me. 8723d is not the one to compare with here: it
-uses 0x17, 0x0a and 0x1c for the aggregation values.
-
-Not shared, and I think they have to stay chip local:
-
-  - REG_RESP_SIFS_CCK and REG_RESP_SIFS_OFDM. Only 8723b and 8822c
-    write these in rtw88; neither 8723x sibling does. The comment says
-    why they are set.
-  - the SDIO and page side: REG_BCNQ_BDNY, REG_MGQ_BDNY,
-    REG_WMAC_LBK_BF_HD, REG_TRXFF_BNDY, REG_DWBCN0_CTRL, REG_PBP,
-    REG_SDIO_TX_CTRL. The first six exist in the 8812a/8821a family but
-    not in either 8723x sibling; REG_SDIO_TX_CTRL is an SDIO register and
-    is used from sdio.c and mac.c.
-  - REG_NAV_UPPER and the two REG_PKT_*_LIFE_TIME writes, which appear
-    nowhere else in rtw88.
-  - the rest of the chip's own hardware: the BB and RF configuration
-    and the 3-wire setup, where BB_SEL_BTG differs by HCI type; the two
-    LCK steps (rtw8723b_lck() is a superset of rtw8723x_lck(), it adds
-    the RF_AC standby read and write and the 0xb0 writes around the same
-    poll); the phy status page layout used by query_phy_status and
-    cck_rx_power; the IQK, where rtw8723x_iqk_* gives the register and
-    path control backup and restore and the compare, and the rest of the
-    algorithm and its tables are this chip's; the power track tables;
-    set_channel_bb and set_channel_rf; and the coex antenna, PTA and RFE
-    logic, which each sibling has its own version of.
-
-Here is the accounting for all twelve. init_adaptive_ctrl, init_edca,
-init_retry_function and init_burst_pkt_len are your "the same"
-comment, see the reuse answer below. init_tx_buffer_boundary,
-init_operation_mode and init_beacon_parameters are the chip's own: the
-FIFO page boundaries and REG_TRXFF_BNDY, REG_BWOPMODE which appears
-nowhere else in rtw88, and a beacon control value that differs from
-8703b. init_page_boundary, init_transfer_page_size,
-init_driver_info_size and init_antenna_selection are one write each and
-have no reason beyond naming the step, and 8723d writes REG_LEDCFG2
-inline with the same value. Those four I can fold into phy_set_param()
-so they read like the siblings, or leave them named, your call.
-
-The twelfth is init_wmac_setting(), and it is where I found a real
-problem:
-
-1. rtw8723b_init_wmac_setting() re-implements part of
-   rtw8723x_mac_init(), and one line of it is missing.
-   rtwdev->hal.rxfltmap1 is never set. Every other chip sets it, and
-   rtw_ops_configure_filter() writes it back to REG_RXFLTMAP1 when
-   FIF_CONTROL is turned off, so on this chip that write would put 0
-   into the register. The register itself is written correctly here, it
-   is the cached value that is missing. I did not spot this in v4.
-
-   The fix I would make is to drop rtw8723b_mac_init() and let the chip
-   point at rtw8723x_mac_init(). That writes REG_TCR, RXFLTMAP0/1/2 and
-   sets hal.rxfltmap1. It also writes REG_RCR with the vendor 8723x
-   value, which is fine for this chip: phy_set_param applies the RCR we
-   want after it, and rtw_core_start() applies hal.rcr after that. Then
-   rtw8723b_init_wmac_setting() keeps only the RCR and the two REG_MAR
-   writes, or disappears entirely if the RCR moves to rtw_core_init(),
-   see below.
-
-Outside that block, two more functions carry the same question, and I
-would rather answer them now than in a later review.
-
-2. rtw8723b_fill_txdesc_checksum() is the same body as
-   fill_txdesc_checksum_common(txdesc, 16), which 8812a, 8821a, 8821c,
-   8814a and 8822b already call with the same sixteen words. Only the
-   shared 8723x version inverts the sum, which is what the comment here
-   points at. If the non-inverted sum is deliberate for this chip, I
-   will keep the function and say so; if it is not, the wrapper is the
-   shorter answer.
-
-3. rtw8723b_cfg_ldo25() is empty. The reason is in the vendor code:
-   Hal_EfusePowerSwitch() only touches the 2.5V LDO when bWrite is
-   TRUE, so on a read-only efuse path it is left alone, while the
-   shared rtw8723x helper clears BIT_LDO25_EN whenever it is called
-   with enable false. That is a hardware reason, so the function stays,
-   but I would like the comment to say that instead of what it says
-   now.
-
-> I think the better way is to assign proper rtwdev->hal.rcr per chip
-> in rtw_core_init().
-
-I agree, and here is why the chip did it by hand, so we can pick how to
-do it properly.
-
-The value is the vendor 8723x one, 0x700060ce, plus BIT_APP_FCS, which
-is needed because rtw88 advertises RX_INCLUDES_FCS for every chip. The
-chip cannot just write the register: rtw_core_start() writes hal.rcr to
-REG_RCR after power_on, which runs after phy_set_param(), so a write
-that only touches the register is undone. Assigning hal.rcr is what
-makes it survive, and fw.c and mac80211.c then keep toggling the same
-cached value.
-
-Doing it your way means a per-chip value in rtw_chip_info and the
-assignment in rtw_core_init(). Two things I would want to get right:
-
-  - the per-chip value has to keep BIT_APP_FCS, so it is not the same
-    constant as the shared 8723x one;
-  - rtw8703b and rtw8723d would keep the current default, so this
-    changes nothing for=20them. Today __rtw8723x_mac_init() writes
-    0x700060ce to REG_RCR and rtw_core_start() replaces it with the
-    default, so that write does not survive anyway. Whether the shared
-    value should reach those chips is a separate question and I think
-    it needs its own patch, not this series.
-
-If you prefer, I can put the core change in a small patch before the
-chip series rather than in patch 3, so the chip series stays free of
-core changes.
-
-> Can you reuse the existing since they are the same?
-
-For init_adaptive_ctrl, init_edca and init_retry_function, and also for
-init_burst_pkt_len, which is the same block as the packet burst part of
-rtw8703b_phy_set_param() down to the last write (8703b names BIT(7) as
-BIT_MASK_TXQ_INIT, this file writes BIT(7)): the values are the same,
-but there is nothing to call. The three ways:
-
-  a. inline them into rtw8723b_phy_set_param() in the 8703b order, with
-     the 8703b macro names. This makes the objection go away and patch 3
-     reads like the two siblings. The per-step comments would move or
-     be dropped.
-  b. keep the named functions and give the reason for each. Smallest
-     diff, but it does not really answer "why specific functions".
-  c. move the common part into rtw8723x (a shared
-     rtw8723x_phy_set_param() helper, or just the WLAN_* macros in
-     rtw8723x.h) and call it from 8723b, 8703b and 8723d. Best answer
-     to "they are the same", but it edits the two chips that are already
-     in.
-
-I lean to (a) or (c). Tell me which and I will do it that way.
-
-> (Please quote the code; to reply to this, I need to switch to your
-> patches again).
->
-> I can guess you write u32 and then u8 for optimizing stack. Maybe,
-> you can rename the names or change types. Just keep reverse X'mas
-> order as possible as you can. One exception is dereference prior
-> pointer (but still can change the code to fix reverse X'mas order).
-> Another exception is put 'struct' declarations first, and then
-> fundamental data type.
->
-> Please try your ways to fit simple rules. Otherwise, if I accept this,
-> it is hard to me to explain the reasons if other people ask me days
-> later.
-
-Here is the code you marked, from rtw8723b_reassert_rx_path():
-
-	u32 rf_wlint_before;
-	u32 rx_path_before;
-	u32 fpga0_before;
-	u8 sys_func_before;
-	u8 rf_ctrl_before;
-
-You are right about the cause, it is grouped by type and not by line
-length. It was not for stack packing, the compiler decides the layout
-either way; the grouping just read better to me, which is not a good
-enough reason against a rule. The first assignment in the body is
-sys_func_before, then rf_ctrl_before, fpga0_before, rx_path_before,
-rf_wlint_before, so the block is reverse of use, not reverse of line
-length.
-
-Longest line first would put the two u8 names between the u32 names,
-because of the length of the names, not the types:
-
-	u32 rf_wlint_before;     21
-	u32 rx_path_before;      20
-	u8 sys_func_before;      20
-	u8 rf_ctrl_before;       19
-	u32 fpga0_before;        18
-
-That is why I did not just reorder it. Taking your suggestion of
-renaming, the type grouping and the length order can both hold:
-
-	u32 rf_wlint_before;
-	u32 rx_path_before;
-	u32 fpga0_before;
-	u8 sys_before;
-	u8 rf_before;
-
-If you prefer the plain longest first order with the current names, I
-will do that instead, it is a two line move.
-
-While I was in the file I applied the same check to every declaration
-block, not only that one. Ten others are ordered by type rather than by
-line length:
-
-  rtw8723b_default_cck_index()       u8 swing before u8 i
-  rtw8723b_phy_load_bb_tables()      rfe_def before chip
-  rtw8723b_lck()                     ret after val_ctx and rf_val
-  rtw8723b_iqk_tx_path_a()           sdio_iqk first
-  rtw8723b_iqk_one_round()           a_ok before i
-  rtw8723b_phy_calibration()         final_candidate second, after dm_inf=
-o
-  rtw8723b_pwr_track()               dm_info before efuse
-  rtw8723b_coex_write_bb_sel_btg()   sys_func_before before readback
-  rtw8723b_coex_set_rfe_type()       hci_type first, then aux; coex has
-                                     to stay ahead of coex_rfe, which
-                                     dereferences it
-  rtw8723b_fill_txdesc_checksum()    words before checksum
-
-Two of those (coex_set_rfe_type, and phy_calibration if the structs stay
-together) fall under your exceptions and cannot be fully ordered without
-renaming. So my question is whether you want all of them converted the
-same way as reassert_rx_path(), including renaming where the types and
-the length order disagree, or only the ones that can be fixed by moving
-lines, and the type grouped ones documented as the exception.
-
-What I would like to send in v5, once you say which way you want each:
-
-  - the MAC init block: (a) inline, or (c) shared helper, and the
-    missing hal.rxfltmap1 fixed either way;
-  - the RCR in rtw_core_init() as you asked, in patch 3 or as a patch
-    before the series, with the shared 8723x behaviour left alone;
-  - fill_txdesc_checksum as a wrapper unless the non-inverted sum is
-    deliberate;
-  - the declaration order converted as far as the simple rules go.
-
-On your last sentence, that the reason is hard to explain later if it is
-not written down: whatever we change will carry its reason in the code
-or in the commit message, not only in this mail. The same goes for the
-two things I am asking to keep, cfg_ldo25() and the RESP_SIFS writes,
-which will say why they are there.
-
-I will rebuild, run sparse and smatch, and rerun the hardware suite and
-the reload soak on the new tip before sending. The driver is still
-station only, the five extra SDIO IDs are still untested, and the
-firmware leave LPS stall is still there.
-
-Best regards,
-Luka Gejak
+Thanks for the clarification. I will make the changes accordingly and
+send the next version.
