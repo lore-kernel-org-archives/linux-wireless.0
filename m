@@ -1,89 +1,89 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C4532720C
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F791EBFE0
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790339222; cv=none; b=Rmth7TPJqpQ9V/PLWwZdBwEdzo5Bz/Os84AIj/d2M0K4MwapCJ+2ry8d5U92l3pelull3H9IDaHlIjc7w40QYYAJSC88+OsMTNE5O/3ZDAWaF5CtSJc9jvk0ZWmc3NrWYLxSnR0E2oD0jPfxVD5YMlD0851+ij8cIuHNXf+XVoM=
+	t=1790339224; cv=none; b=nrhJaXiXzEq6BCJIYTqbsh2zEiqW+gbUc71p0GEkDpr/wNKRflcAfdWn7wgYewiJQR8XJfGR/ONR31jDO0SZd692N1NP0oQL53zzDZyR2Xg0MmGCTv2oMJ1Gfkh5UlP/baNmeVHUROvbpbeDGJBLbx7kQKT8FqOv4QgTvjULEzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790339222; c=relaxed/simple;
-	bh=92m/AGutZDokLi66FDq/i9Vv+leO8LbFn+ZC1sw7EXs=;
+	s=arc-20240116; t=1790339224; c=relaxed/simple;
+	bh=6DlQdupdI3sE5KW4WGC+fgLIQP6e+cwnTKfsVyYBx90=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Mbozee6EMWHmqFeYdpyKHBFKeVc+xMkwPOOIOmPvamCpoq3gP1IEFuW/r2jc2gfICvXPyeAWOHy7LIPnKkKi0eVm3Anwu1tyNbaGwCZ13Eg84jDIOpRb5CpGO6YEjixg81JlTPSERq9wZ+77Fd3Nvy0/4+ciO32dSrBy2ctWYeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SOk3bgHT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=eVHeYqdZ; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=XvEQRxUoiQtCaVSHUqs1PYuHxVjv3gkRo0deP12Ipc/FV2mjMEyMrJ9ylX/cD183Lml4XdFb6l+VhcJMvrBgKP6EKR5iKOTbjo9LreXxprbAM6pFmsjMFrpDDpLItkt9XTU47BTbA6UXLzAJTBuRYxsssFUHBlmlBv6fTHFcLkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ZmIWHjNH; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=TqGcHzH7; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SOk3bgHT";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="eVHeYqdZ"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68P5JFaO757087
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:26:59 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ZmIWHjNH";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="TqGcHzH7"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68P4YbjS3532122
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:27:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	WpzxKoiiTSBU1nVnLV1eocr7wH5M9Q65NcNAme4XRV4=; b=SOk3bgHTOvq3AGco
-	jdnOqFQbtyN/OzJT9RN0V4ZsSQYNpIfxBHw9NJzsyBZjLP5sXHFV2T0rpDMMWWKm
-	Np4ak25VSuq2x/r/FfU9OEyUS3bKATHclClDbKwgrFlK4SRk+0OoopDwikFo9zXV
-	HRU+EVr/KN+7afBYn4tGzoQh19PdjQeCNU0R1ZlS6o7Fn2iNWMSLoQ5xHJzP/AHM
-	oiqjTpcvZ21Yzc4iiRQNLCjp/zi3S+bMl931Q2sQ7y/YLRvHJEbTQQAe4re3as/q
-	U2EXVZP+0TN+OLAJcRnweNV+9OZZ59tk1BfVI0eXua6D5RqazkbSTwDNK1TL3+Q/
-	XJQG4g==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gwjq099vu-1
+	AcaOZ2fJU6ffhgF2BemXGqCQZS+ca39vbxcg6RAcAgs=; b=ZmIWHjNH+tQzrCP2
+	+tJr76stlndraye3ZsgeNNwRYxRhzOS4DNNBLwX0OgrgsVMTSAbKpKxtc+mLApz7
+	io2JriGAXcKvkjflFB3FdMGXO+NcLfVLtyl9AlX0qQw7N1ehzB7btt3aHLICsZwr
+	7PowrzjUq59vnVSS2KRYJ8L/9oJtB6mBIpEBfWYHNWSFyXUCWCF6ClzWS2TQWgkL
+	zBQ2D4DK7QeUhFeNuqruwdoiFZDz/8LAV/nH8lFt4d3rkC2PCWtcMvI7N5uWUchc
+	EVowx5xE/MR5j9inUwQevOf2Ezc5G8Z1I3tqYz41jjrWn0QGTt27sSAvI5DfC2EV
+	jscg4Q==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gw94kb4wp-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:26:59 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3968bb86fb7so1004448a91.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 05:26:59 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 12:27:02 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so1088935a91.3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2026 05:27:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1790339218; x=1790944018; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1790339222; x=1790944022; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WpzxKoiiTSBU1nVnLV1eocr7wH5M9Q65NcNAme4XRV4=;
-        b=eVHeYqdZY0qn41RDMHwS0lJEH1Jdz3HRt7jxs9nNI7iNd8h7ofWIv1Tn6JMlnYbQIw
-         yMt7UnSZ2+7fTbFqMm9tIKs+E2NrIXE49Qj15WT2kgM9aEBXhQyYeYf/NLb76J5dlWgv
-         nFUSoQJBAqT92Tt/BCudbwk+Dn0RGw4mRokVoSJ6oELjt/aCYdLDeRtFpkEwduFWmQMa
-         gUZUhJtrSvUpnFPH0ZKH41wXEB1L69FWPOUIKvO4vNlGgH4qrt16ybyBgMu3IWMMuBsT
-         uqt2tXQu+15+3v4cdMyfZjAgMJCU/SScq6uQQNvlGCeOzie1IKcMsDaabW/E84yDL/Xm
-         MYvg==
+        bh=AcaOZ2fJU6ffhgF2BemXGqCQZS+ca39vbxcg6RAcAgs=;
+        b=TqGcHzH7xw05Emg2s4fJhf/VElDwHeGBPzuWPz9TO29b/u0ByCP6XZ2dFkRzGevRXb
+         chy3wWY6POzGwsgshM1OB3xi7QlF/JCCzi5BI3aNUevHApKdoFaIMpeZ3Q8kWybgU0dn
+         kfJwzaV50p2H/dQ7BbYcrNcKeJcRXExNEqbGndQN+6dkbWL5vigGvOKW/GdM7f8L1jyY
+         3z7NEJxiKVJNUuP8xAqEnmqZHA9Oa+TyzxF9txC+dsPh3ih8NBdV3WzLtZw0PgfmM00T
+         IEnhtjlm++rIfe56NoMWpZK2MhkNs6dc03r9K7UD09TVgyCKk8UdN0XFWIru01myWo+1
+         07cA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790339218; x=1790944018;
+        d=1e100.net; s=20260707; t=1790339222; x=1790944022;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=WpzxKoiiTSBU1nVnLV1eocr7wH5M9Q65NcNAme4XRV4=;
-        b=0VXJ1N8fmOBy963gjnl2YNlNlWPYsaj9shNWqgqIKD8fFvmm7K/CRx+g/IfJmSOqw7
-         JKKIB4O0XYiKNa8HiOKvgQbsIXr63Esw1wFM2k1+RvD0yMfEmYwrE84wcMUj01aap2CI
-         NOhq3WMzxfskPeDH453hunaafwnfh7pt1f6a97nvTCXHOFH6/Gy7UBDT5BteAJV6nH0D
-         s/l7gNqotjM8r+aAAF7aTw1ouCwWEWsbCZ+2Syam78vfTSiE0nI1LjL6ttCjGzjnimm9
-         ZgVzXyDaaJpvWc+kxpdtsTfhEirN7YGQkQgRdJhYYDyNQdZWo5VPZJ6Kv0NAIiLipT9N
-         6JrQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxC80uG2B3b0VXIA6MrvoF3JlToxC03OQbZQt/5wveYYjpdGlMQiilDXASHcAEH56nV7rTU/frls/cVfFMjKQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++mdDJ5GD/Q8/xN9XzHI820R7QqxPCZ2imH22rPWXcsdcRY8Ts7k
-	6RAI5EQmkSq3EHHjGC2eNiILryKPzqAsu6FS3SMOfwh30v4oriMBBR0/0CQwHZUIlv1719lA5sB
-	g2l+PMZ5quolmGnRiVmXPp9jWDNk2zSagJG5LZ1O9s05cYu8fuKPIekGI6td1sCKqbu4dCOYvXg
-	OQIA==
-X-Gm-Gg: AYBFou2/dB/FD3haO9WNvcfk57vUYN2AeHUIEuAT0alOO+YLw5ffK5t091Eb/wKFLZi
-	YGfgqSez3V9HliwuCiftcgIjyYzIP60Q4HqOfbNH3UOUEAmw3MSc4Rj/MwlH2vEDJflrHz/VhHc
-	QNEyOnQv98Ya1p3fKj46Df+fnuYYMP6Lnt1a/zYIl3C3/UT44QlkOaBpiK5MNfteDERmoDByJUX
-	rStpDNWEiC9kw4jD54aU494k5pz1UByJYK1JkuB1BB3uFmq1sMVSEuXzIQkv/aHnaf31wPDinau
-	Nq8Cn79UnhXGUe19q4PEQ6PT39RvEL2psnClKeqjJefMtTNKZ3+tcDqJwjtXZhSJV82IRrgEfCh
-	bi21XQeduvuXqB595x/EarIyS7meJAp0NGJS4UCSEMiVaJWhIqPE=
-X-Received: by 2002:a17:90b:39a8:b0:39e:6a81:f349 with SMTP id 98e67ed59e1d1-3a098bb60efmr5046497a91.35.1790339218368;
-        Fri, 25 Sep 2026 05:26:58 -0700 (PDT)
-X-Received: by 2002:a17:90b:39a8:b0:39e:6a81:f349 with SMTP id 98e67ed59e1d1-3a098bb60efmr5046479a91.35.1790339217715;
-        Fri, 25 Sep 2026 05:26:57 -0700 (PDT)
+        bh=AcaOZ2fJU6ffhgF2BemXGqCQZS+ca39vbxcg6RAcAgs=;
+        b=jhlj1UPiL2WpQRJJW1GRAi+mlJnDQqVqrULL7LljRGGlPxvtA6JEm/19f3XwlQMOMm
+         Uz6fF2GFwsQ7VZrQbV8jqgIDPvuQL7N1wJv8hBsFfU6crhr4IcEC/FNVuU78ZNQy8rXY
+         z4uu3JMdJWIhakWh/Svc/hS/1MuzhoHguu8exwwy1zq1b828N0Ey6PJxQPqf/dlgmrzV
+         A4rsq1PFWZm9KZXhf+Tj2S3YCjWTl04LXaXXJrnPsJZ4YhmlWLD7ql5c4HmK2gTnI7OZ
+         DoFXfh2TRERxTlNPCNE0mY8KmBL+/FTi8UZHvXCkhRla/ocbHeHGCvKqMOLU1HaSx+LZ
+         Cwiw==
+X-Forwarded-Encrypted: i=1; AKwUvBwkCgpfznyeV/Fh5hxm7x3ZNRwwypE5jyUjkxtc8KA9Iq++EAaoh3IkfV1cAY26aDIbPNfJYa+eSrHhZW1rHg==@vger.kernel.org
+X-Gm-Message-State: AFuF++masaNg/IT0lw37ckWQzSd2osZ/Diz3tDcc3sr8qMvvCU2XN5rc
+	LM0SDI+OCGWDG/QYnQAXm0/L5+CGy+9+vXMvyTSzJT/wQ2hd/ArVo5CMTlRxbfPJcMH/rqE+Aoz
+	8elbaH3EfP6yJv8HtjtiA0LqZ8leNPD4twGbzl7jZvvxjhznh6+LysqTiKIA9K1GgVZD2q/jaxw
+	TAZf4kuIM=
+X-Gm-Gg: AYBFou1lH8CL2ztJDVpI1/saPDxIIoaq6RkPaLKHB5pET3jqNwHOpfdtHmM6GoPuGG/
+	RSsGbj8pjXMCVikJLOaWWrj7qaMZa2Dsdefar3D3lm15Myf+G5XQvqq10Q5WkG1nkfUhjZ21rB5
+	aFeEK9DwkhpK4NwgL69lZ0RMG3gflv7tO0lBU7Y78LzR8Nw3BbkmNCJnxVufctcPIgxp6SUF1nS
+	2oVrzn28ZLVu4538Ozu0m0WtEM+K36zlVcZl8JLlmmbiufuv0nM8VNozKNfRXhQiI3Z5j8y6crt
+	pGjwfVmQmDksa0umF2L+KlWJK5J0Z27fJXaBLhcSPCgzhVvuD/yl68XuFeH8BVCqBW2PKBczw2I
+	bM+QVCIaEtzYg8Ut/26wWUSvXvQzEWe7HEkm5VH0wepzyMDQv1hE=
+X-Received: by 2002:a17:90b:50:b0:39e:5c88:ce10 with SMTP id 98e67ed59e1d1-3a0bb443ff8mr1713084a91.0.1790339221623;
+        Fri, 25 Sep 2026 05:27:01 -0700 (PDT)
+X-Received: by 2002:a17:90b:50:b0:39e:5c88:ce10 with SMTP id 98e67ed59e1d1-3a0bb443ff8mr1713069a91.0.1790339221103;
+        Fri, 25 Sep 2026 05:27:01 -0700 (PDT)
 Received: from hu-kangyang-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a0b998dbf2sm4401671a91.12.2026.09.25.05.26.56
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a0b998dbf2sm4401671a91.12.2026.09.25.05.26.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Sep 2026 05:26:57 -0700 (PDT)
+        Fri, 25 Sep 2026 05:26:58 -0700 (PDT)
 From: Kang Yang <kang.yang@oss.qualcomm.com>
-Date: Fri, 25 Sep 2026 05:26:37 -0700
-Subject: [PATCH ath-next 7/8] wifi: ath10k: remove now-unused
- driver_recovery completion
+Date: Fri, 25 Sep 2026 05:26:38 -0700
+Subject: [PATCH ath-next 8/8] wifi: ath10k: trigger recovery on PCIe MMIO
+ wake-up failures
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,133 +92,142 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260925-10k-sdio-crash-v1-7-14baf913df94@oss.qualcomm.com>
+Message-Id: <20260925-10k-sdio-crash-v1-8-14baf913df94@oss.qualcomm.com>
 References: <20260925-10k-sdio-crash-v1-0-14baf913df94@oss.qualcomm.com>
 In-Reply-To: <20260925-10k-sdio-crash-v1-0-14baf913df94@oss.qualcomm.com>
 To: ath10k@lists.infradead.org
 Cc: Kang Yang <kang.yang@oss.qualcomm.com>, linux-wireless@vger.kernel.org
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790339204; l=3437;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790339204; l=3453;
  i=kang.yang@oss.qualcomm.com; s=20260921; h=from:subject:message-id;
- bh=92m/AGutZDokLi66FDq/i9Vv+leO8LbFn+ZC1sw7EXs=;
- b=WyvI1CkVtPJkXd5WUOLF5z9g4g2vJfsVmiqtUIoEbJawoxga8TVyx+vgnJr6djTaxTXqypJ1n
- s/oUl4FQYAsBxA5kAlw+IuEZ2D27pCMzjjP2qIU69Mpwkz99lcAqyu5
+ bh=6DlQdupdI3sE5KW4WGC+fgLIQP6e+cwnTKfsVyYBx90=;
+ b=pyn7qwTmLSuu7bN1kmnRtgC+n6zLAzS5sF8LU5fbeUXkF6Dz6Ull/Ncj4SnDjRQ9a6uQdcmA+
+ 3JAyq0brhLdD7CfKbpA33Btefxs1FYdRzSxF2RdU4Fb+6AriyyNkqNZ
 X-Developer-Key: i=kang.yang@oss.qualcomm.com; a=ed25519;
  pk=qz684ZqyU2kfjPKl3UVYeUcHg1oCLfFIhi0n3vK+MFk=
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDA0OSBTYWx0ZWRfX0QKNdK0F5s92
- 96DR85GLHrwKQ8BqwOUS9zHf6HvJZ9BLtfjrFV8QWZlkpR0y0P6ncT0Wzlvp4NcW2nvrNdaBNBb
- dNLwCIcJ16pepmYqvVe+EeCJpMPCB2E=
-X-Proofpoint-GUID: NCJlKCkQGqinwiG6DHSHnHwo6XoKzPZ0
-X-Proofpoint-ORIG-GUID: NCJlKCkQGqinwiG6DHSHnHwo6XoKzPZ0
-X-Authority-Analysis: v=2.4 cv=LNPz05W9 c=1 sm=1 tr=0 ts=6ab66893 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+X-Authority-Analysis: v=2.4 cv=aaj0Dhot c=1 sm=1 tr=0 ts=6ab66896 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=EUspDBNiAAAA:8 a=THAtv8xtLSZw0h4mMwsA:9 a=QEXdDO2ut3YA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDA0OSBTYWx0ZWRfX8+VK2G4ET2Mv
- dzEtZK82wH0et5TJ8VltlKLOED1uqOdRwLeJClxNWe2SiP++vZNWmVV/nbn/wSeiky/8FqVhVBN
- pY8SuEQpUc/SWMVd78IoKo5HtrJyOpdlKKi0CQdJJnFEt3v6Xy06aXjA13WbmCIQtPau4ke96gP
- fGp2tSYrYyLV5NRdXgUEO4v4xyasvxkbLvvVcmpYAoMTRd+zsaUhaxIne9B1EGz8/maKiSIyz2c
- mlQ67Y3Ud5oXzAN+QKSLw0KO2uZ++3VnGrjJL/P2uWQVT8bzVjxCJoMXk6PFnbtfLhKAtfCUJ3h
- +CA59iavQitQq2yoXHmMePv+4mq7IhnO8Uax6kRaKIKXC4xcGK1UexsC9PeHoljYUBkWi4x3eyC
- yERw80mDpVm2KlT1H0x5OEoi8UvII90WaGkWy14ZEBWGYSPEYBzFozyFmyHANgBzgrY0/fquzrh
- 1TJgtE2EfPtnpbBWA+g==
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=EUspDBNiAAAA:8 a=r31ynADB2PxU4kuVuc4A:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-GUID: cXhqCN7dAN-Nup71if_IF26Y3DK_Wjpf
+X-Proofpoint-ORIG-GUID: cXhqCN7dAN-Nup71if_IF26Y3DK_Wjpf
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDA0OSBTYWx0ZWRfX6qe/YEdFV7yK
+ JWiIbOJUKU+TrJhZAUPpQlCxQ3UkCX0VSD+KIo1vpdiNqENXSbaX2yoYuBcaBCwHMz1t1dqX43U
+ 4bpWM7LRPyZala5tzMG9QxdZubYeiwakVS9h36kY9T60KFwsM6nHB77dpzgXc7Egulxy35nxMg3
+ OSEkbJYQpMo3qDys92ajinQrXyQHf2wkvuUa0g7MuDtOVDFNKRX6m5UJD/GvduZI2jeY5ffF6Od
+ S0uJRYMzw3Lp+HYefjuaHavbMpQlXSstaDjGK5jR0CZKYdoAiAYkaIQqDx/9LPyFwljyu+Omxe8
+ tHyhkQwUFuiF6Zl2WnngOXEmp2gEO5W9K2nV+lLS/w4BJfg1f60Bzga7iQIRJ3WfwQ+jO1WpA/1
+ 7D889InPfUZmlIKAg3wWIxciAcracOjKNFDdiUR0o2DknHazP4K33gAF0JvE42m+pT34Otq8wPl
+ 1zfrr9W70EDxjeUvL2g==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDA0OSBTYWx0ZWRfXwtQsiJhxmjtU
+ bjkJNZtkvHj1aQxCL3g2xMjAh8qcyWVQr1XpLUglUQAx4neO+lxaQz+eIa0bT1W1engfzn59jZ+
+ 2BUsiLIKCs7piNmpK6hAS4bZA2/nZ34=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-25_02,2026-09-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 spamscore=0 suspectscore=0 impostorscore=0 malwarescore=0
- adultscore=0 priorityscore=1501 clxscore=1015 bulkscore=0 lowpriorityscore=0
+ suspectscore=0 malwarescore=0 priorityscore=1501 spamscore=0 bulkscore=0
+ clxscore=1015 phishscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609250049
 
-Previous patch removes the recovery monitor's dependency on
-driver_recovery, leaving SNOC removal as the only
-remaining user.
+Commit 77258d409ce4 ("ath10k: enable pci soc powersaving")
+introduced MMIO wake-up handling through ath10k_pci_wake().
 
-Replace the SNOC teardown synchronization with
-cancel_work_sync() and cancel_delayed_work_sync(),
-which already provide the required guarantee that
-recovery work has stopped before resources are freed.
+Current code only logs MMIO wake-up failures and returns.
+This becomes a problem when a PCIe link-down leaves MMIO
+wake-up failures as the earliest indication that the device
+has stopped responding, because the existing recovery
+mechanism is not triggered until higher-layer timeout paths
+expire, for example:
+  failed to wake target for read32 at 0x00036044: -110
+  failed to wake target for write32 of 0xfffff81f at 0x00034834: -110
 
-Remove the now-unused driver_recovery completion and
-associated initialization and cleanup code.
+Improve this by triggering recovery immediately on MMIO
+wake-up failures and by aborting MMIO-driven waits once the
+device enters ATH10K_STATE_WEDGED, because no further forward
+progress is possible after either condition.
+
+This shortens known-failed recovery attempts and helps avoid
+suspend watchdog timeouts on systems where recovery time is
+tightly constrained.
 
 Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00288-QCARMSWPZ-1
 
+Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
 Signed-off-by: Kang Yang <kang.yang@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 3 ---
- drivers/net/wireless/ath/ath10k/core.h | 1 -
- drivers/net/wireless/ath/ath10k/mac.c  | 1 -
- drivers/net/wireless/ath/ath10k/snoc.c | 8 ++++----
- 4 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0a87a577b3f8..8c2ac2ec32d1 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2626,8 +2626,6 @@ static void ath10k_core_restart(struct work_struct *work)
- 	struct ath10k *ar = container_of(work, struct ath10k, restart_work);
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 335bc7c488e4..0c671630cfc9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -478,6 +478,10 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+ 			return 0;
+ 		}
  
--	reinit_completion(&ar->driver_recovery);
--
- 	set_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
++		/* The device cannot wake once it is wedged. */
++		if (ar->state == ATH10K_STATE_WEDGED)
++			return -ESHUTDOWN;
++
+ 		udelay(curr_delay);
+ 		tot_delay += curr_delay;
  
- 	/* Place a barrier to make sure the compiler doesn't reorder
-@@ -3725,7 +3723,6 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 	init_completion(&ar->scan.completed);
- 	init_completion(&ar->scan.on_channel);
- 	init_completion(&ar->target_suspend);
--	init_completion(&ar->driver_recovery);
- 	init_completion(&ar->wow.wakeup_completed);
+@@ -642,6 +646,16 @@ static void ath10k_bus_pci_write32(struct ath10k *ar, u32 offset, u32 value)
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to wake target for write32 of 0x%08x at 0x%08x: %d\n",
+ 			    value, offset, ret);
++		/*
++		 * wake_wait timed out; the device is unresponsive at the
++		 * MMIO level. write32 returns void so the write is
++		 * silently dropped -- kick recovery here instead of
++		 * letting an upper WMI wait notice it seconds later.
++		 * Guards confine this to runtime; cmpxchg dedups.
++		 */
++		if (test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags) &&
++		    ar->state == ATH10K_STATE_ON)
++			ath10k_core_start_recovery(ar);
+ 		return;
+ 	}
  
- 	init_completion(&ar->install_key_done);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index a1ded2cba103..7c961308d7b9 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1067,7 +1067,6 @@ struct ath10k {
- 	} hif;
+@@ -665,6 +679,9 @@ static u32 ath10k_bus_pci_read32(struct ath10k *ar, u32 offset)
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to wake target for read32 at 0x%08x: %d\n",
+ 			    offset, ret);
++		if (test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags) &&
++		    ar->state == ATH10K_STATE_ON)
++			ath10k_core_start_recovery(ar);
+ 		return 0xffffffff;
+ 	}
  
- 	struct completion target_suspend;
--	struct completion driver_recovery;
+@@ -2248,6 +2265,12 @@ static int ath10k_pci_bmi_wait(struct ath10k *ar,
+ 			goto out;
+ 		}
  
- 	const struct ath10k_hw_regs *regs;
- 	const struct ath10k_hw_ce_regs *hw_ce_regs;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d10126351fce..9eb356786d3a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8171,7 +8171,6 @@ static void ath10k_reconfig_complete(struct ieee80211_hw *hw,
- 		ieee80211_wake_queues(ar->hw);
++		/* Stop waiting once the device is wedged. */
++		if (ar->state == ATH10K_STATE_WEDGED) {
++			ret = -ESHUTDOWN;
++			goto out;
++		}
++
+ 		schedule();
+ 	}
  
- 		/* Clear recovery state. */
--		complete(&ar->driver_recovery);
- 		atomic_set(&ar->fail_cont_count, 0);
- 		atomic_set(&ar->pending_recovery, 0);
+@@ -3308,6 +3331,10 @@ int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		if (val & FW_IND_INITIALIZED)
+ 			break;
  
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 8f171ab6f4de..1ec58ec1029b 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1916,10 +1916,10 @@ static void ath10k_snoc_remove(struct platform_device *pdev)
- 
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc remove\n");
- 
--	reinit_completion(&ar->driver_recovery);
--
--	if (test_bit(ATH10K_SNOC_FLAG_RECOVERY, &ar_snoc->flags))
--		wait_for_completion_timeout(&ar->driver_recovery, 3 * HZ);
-+	if (test_bit(ATH10K_SNOC_FLAG_RECOVERY, &ar_snoc->flags)) {
-+		cancel_work_sync(&ar->restart_work);
-+		cancel_delayed_work_sync(&ar->recovery_check_work);
-+	}
- 
- 	ath10k_snoc_free_resources(ar);
- }
++		/* Stop waiting once the device is wedged. */
++		if (ar->state == ATH10K_STATE_WEDGED)
++			break;
++
+ 		if (ar_pci->oper_irq_mode == ATH10K_PCI_IRQ_INTX)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+ 			ath10k_pci_enable_intx_irq(ar);
 
 -- 
 2.34.1
