@@ -1,32 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ED09450906;
-	Fri, 25 Sep 2026 07:43:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CDF457E6E;
+	Fri, 25 Sep 2026 07:43:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790322188; cv=none; b=cQ1kTWChxDPkviZZooH6l//OsjW/frf+SMDr9us1txIfhQneJTFABT5+EF6O2N3k8Sjz6fep3SHQLSkqOZrwTDn0gLNYs+qZyoeRQrL1SCxSOEQBtysJy7lKHMbfpxBpYFJmLu1c0PH7so5lFA9W0EW/Fq7AyYrtStpZWqWQkk8=
+	t=1790322189; cv=none; b=gurDpcs9SJKa+T9MZdP7mvuHnUSibnNTHg+JuhdUOPjssvpadzgpJWQf9q6qzWrSrXhrwWxpWg9QsGxrWUGDi1kK1+pyrrQRGRHgtwFO1BQsOXRHNpU8bc6LUnkwSbBXggTXxHVjXt/KR/p6ZFZAmQ8Luosy8HmOL1B0IXMfnzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790322188; c=relaxed/simple;
-	bh=YNXtFjvyb3GSbT9Bt0H5xnYR5fGff1etDl5cSWGXLzA=;
+	s=arc-20240116; t=1790322189; c=relaxed/simple;
+	bh=1ft0IervDaCJ0LrZVO5115bF4PNdQPQN0xWZmkpk4QI=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=AsGn7A/nyhKKLSaHNTxumoGJDOoLMK8eeUYOK9oRbWTZ/9KXCD5VOUalU3Fh6tIEdqW2nJy7cfvzHFyptmbrBxC330Pe6zrjP5VC9mibJF7vfF/eMysbVvMhF8XufgiTQd/QL+PJO9SQSPgzZHZxkERfWZ0Cca0akNmk+iBQxFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mog7VeWG; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=vBsGL6bEIGQZOtKt0hfDFDOYZWK+9ZsOn9K/12vHznlpKX5Urv5ZdGZhH6er6UnsSrMtQuYqU/Qjp+JPB6wWMwRizIyfB5Jk8Xw7wMFu1o9kkSx2VC8rJlyZhL8UK8ccybv+XCIWiqerJcC+C/MDLL9snDv9eitCqVPXcOS/xXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oMGtJMPL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mog7VeWG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0120D1F00893;
-	Fri, 25 Sep 2026 07:43:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oMGtJMPL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E7481F000FF;
+	Fri, 25 Sep 2026 07:43:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790322186;
-	bh=A+/ZOxHm6vyn+HPmLAm+mBLWT8aujPWodA4YaAiWG1w=;
+	s=k20260515; t=1790322187;
+	bh=df/rcik3ciH0T5j4zVtm4u/LsbXi8S3iVa1QY4LIHQE=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=Mog7VeWGKlsX/h/H8y9ZneWEHujm/9eNGcq2Whb2dos7RQ8azpcuXnCuDhK5mv1Kf
-	 MOTDiL9WWtqcfsljjiwYEo6MLA/K86nEA4zQSEeuhfl8oEqqWB9toFvZ7fqZmWWO1T
-	 EurVyGcYFOg+xn/Qh+6NJQdZSXGebf7fEY0H6i3ymWdYuDwyOLS+iSCqbd1JlO3AQW
-	 tvU3Zro8nD4ZbOM6MPCsJpQ19YbxNPUHw/LaLZ1IdO9bsr90KRpM5NCZeUMktiA9hR
-	 knj3nFveIK3B/J7+JMmd6qkg4wGjr0j2qGducmhP0PS3Ll9jqct/6+DlEpLTm/+Jpj
-	 ki2LIPfhHOqng==
-Subject: Re: [PATCH v3 2/4] net: qrtr: Assign unique node id for MHI endpoints
+	b=oMGtJMPLxzauwign7hBH0kbYO7Rs6BiU+E95eSjN/pktPpNfn7eG4TpZK0GGBiYBt
+	 JIXoXbcRikqA/oUORD+y7kH++JhjcGTf80ieL8d0eFs/Cnd7E8HGZMXkOsd/YqoVJd
+	 NImapjQtPbC6ld9pH3NwfkLv6Jh3zL82sOZK+9I/8t6new75tOiA4dRmKcWCM45tLn
+	 5fzFaaRzRUUbNfx6N33+THUEst8SVvVkVClpuIvKHrWRQJpuf2qVraIZRSv6kn3z/C
+	 Rjz67wlMJ2lQpk/VjC69rdaquOfCfueAtYnjhKwhN/EChzP0GfaVcSvPBUjtCII96Y
+	 +YTdFtrHoFcSA==
+Subject: Re: [PATCH v3 3/4] wifi: ath11k: Connect to the QMI server belonging
+ to the device owned by this driver
 From: netdev-bot+sashiko@kernel.org
 To: manivannan.sadhasivam@oss.qualcomm.com
 Cc: mani@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
@@ -37,10 +38,10 @@ Cc: mani@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
  christopher.lew@oss.qualcomm.com, deepak.singh@oss.qualcomm.com,
  raj.bhagat@oss.qualcomm.com, juha-matti.tilli@iki.fi,
  jeff.hugo@oss.qualcomm.com, vasanthakumar.thiagarajan@oss.qualcomm.com
-Date: Fri, 25 Sep 2026 07:43:04 +0000
-Message-ID: <179032218458.2160803.5581114155035045952@kernel.org>
-In-Reply-To: <20260922-qrtr-multi-ep-v3-2-c00831e88957@oss.qualcomm.com>
-References: <20260922-qrtr-multi-ep-v3-2-c00831e88957@oss.qualcomm.com>
+Date: Fri, 25 Sep 2026 07:43:06 +0000
+Message-ID: <179032218619.2160803.9998831305142493842@kernel.org>
+In-Reply-To: <20260922-qrtr-multi-ep-v3-3-c00831e88957@oss.qualcomm.com>
+References: <20260922-qrtr-multi-ep-v3-3-c00831e88957@oss.qualcomm.com>
 X-sashiko-severity: High
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -51,10 +52,10 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential
+Thank you for your contribution! Sashiko AI review found 1 potential
 issue(s) to consider.
 
-Critical: 0 · High: 2 · Medium: 0 · Low: 0
+Critical: 0 · High: 1 (1) · Medium: 0 · Low: 0
 
 If you believe none of the issues are legitimate, please reply to each
 issue of Medium severity or higher and explain why the AI is wrong.
@@ -62,202 +63,169 @@ If any of them are legitimate and you plan to respin, please let patchwork
 know by including "pw-bot: cr" as a separate line at the end of your reply
 (one such reply per series is enough).
 
-- [High] The reserved host node-id namespace introduced by this patch
-  (`QRTR_NODE_HOST_BASE` = 0x10000, `qrtr_host_node_id()`) is only…
-- [High] `qrtr_endpoint_register()` now performs the `qrtr_nodes` radix-
-  tree insertion at registration time (because net/qrtr/mhi.c:131-132 is…
+- [High] Asymmetric QMI node-id filtering in ath11k:
+  ath11k_qmi_ops_new_server()…
+
+Pre-existing issues:
+- [High] ath11k_qmi_init_service()
+  (drivers/net/wireless/ath/ath11k/qmi.c:3328-3364) never calls…
 
 --
 
-net: qrtr: Assign unique node id for MHI endpoints
+wifi: ath11k: Connect to the QMI server belonging to the device owned by this driver
 
-This adds a new header, include/net/qrtr.h, defining QRTR_NODE_HOST_BASE
-(0x10000) and a helper qrtr_host_node_id() that derives a host assigned
-node id from a per-device index, and switches the MHI endpoint driver to
-register with qrtr_host_node_id(mhi_dev->mhi_cntrl->index) instead of
-QRTR_EP_NID_AUTO.
+This adds a get_qrtr_node_id() HIF callback that returns the QRTR node id
+derived from the MHI controller index, and uses it in
+ath11k_qmi_ops_new_server() to skip WLFW servers advertised by other
+devices.  A node id of zero keeps the previous unfiltered behaviour.
 
-> diff --git a/include/net/qrtr.h b/include/net/qrtr.h
-> new file mode 100644
-> index 0000000000000..745d51b4a6ba6
-> --- /dev/null
-> +++ b/include/net/qrtr.h
-> @@ -0,0 +1,21 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +
-> +#ifndef _NET_QRTR_H
-> +#define _NET_QRTR_H
-> +
-> +#include <linux/types.h>
-> +
-> +/* The offset is chosen carefully to not collide with the node ids allocated by
-> + * the remote nodes. All the remote nodes use node ids in range 0 to 0xffff.
-> + */
-> +#define QRTR_NODE_HOST_BASE 0x10000u
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+> index 7dc07339b9579..9484b0eee1a9f 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+> @@ -3170,8 +3170,18 @@ static int ath11k_qmi_ops_new_server(struct qmi_handle *qmi_hdl,
+>  	struct ath11k_qmi *qmi = container_of(qmi_hdl, struct ath11k_qmi, handle);
+>  	struct ath11k_base *ab = qmi->ab;
+>  	struct sockaddr_qrtr *sq = &qmi->sq;
+> +	unsigned int node_id;
+>  	int ret;
+>  
+> +	/* Identical devices advertise the same QMI services, so connect only to
+> +	 * the QMI server on this device's node. A node id of 0 means the
+> +	 * transport has not assigned a unique node id, so accept the server
+> +	 * unfiltered.
+> +	 */
+> +	node_id = ath11k_hif_get_qrtr_node_id(ab);
+> +	if (node_id && service->node != node_id)
+> +		return 0;
 
 [Severity: High]
-Is the "range 0 to 0xffff" property actually enforced anywhere, or is it
-only a convention documented in this comment?
+Should the skip path return a negative errno instead of 0?
 
-In qrtr_endpoint_post() the v1 path takes the full 32-bit id straight from
-the wire with no upper bound:
+The QMI core only discards the service record when the callback returns a
+negative value:
 
-net/qrtr/af_qrtr.c:qrtr_endpoint_post() {
+drivers/soc/qcom/qmi_interface.c:qmi_recv_new_server() {
 	...
-	cb->src_node = le32_to_cpu(v1->src_node_id);
+	ret = ops->new_server(qmi, svc);
+	if (ret < 0)
+		kfree(svc);
+	else
+		list_add(&svc->list_node, &qmi->lookup_results);
 	...
 }
 
-and the NEW_SERVER handling will insert any 32-bit value into the global
-qrtr_nodes tree:
+and include/linux/soc/qcom/qmi.h documents the consequence:
 
-net/qrtr/af_qrtr.c:qrtr_endpoint_post() {
+ * @new_server:		inform client of a new_server lookup-result, returning
+ *                      successfully from this call causes the library to call
+ *                      @del_server as the service is removed from the
+ *                      lookup-result.
+
+So with return 0 the foreign device's server stays in this handle's
+lookup_results.  The counterpart callback has no node id check:
+
+drivers/net/wireless/ath/ath11k/qmi.c:ath11k_qmi_ops_del_server() {
 	...
-	if (cb->type == QRTR_TYPE_NEW_SERVER) {
-		/* Remote node endpoint can bridge other distant nodes */
-		const struct qrtr_ctrl_pkt *pkt = data + hdrlen;
-		unsigned int server_node = le32_to_cpu(pkt->server.node);
+	ath11k_dbg(ab, ATH11K_DBG_QMI, "wifi fw del server\n");
+	ath11k_qmi_driver_event_post(qmi, ATH11K_QMI_EVENT_SERVER_EXIT, NULL);
+}
 
-		if (server_node != node->ep_nid)
-			qrtr_node_assign(node, server_node);
+When the twin device's WLFW server goes away (its firmware crash/SSR,
+unbind, MHI power down, or a QRTR BYE for its node),
+qmi_recv_del_server()/qmi_recv_bye() match the retained entry and call
+ath11k_qmi_ops_del_server() on this device's handle, which reaches:
+
+drivers/net/wireless/ath/ath11k/qmi.c:ath11k_qmi_driver_event_work() {
+	...
+		case ATH11K_QMI_EVENT_SERVER_EXIT:
+			set_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags);
+			set_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags);
+
+			if (!ab->is_reset)
+				ath11k_core_pre_reconfigure_recovery(ab);
+	...
+}
+
+Can this force a healthy device into crash recovery even though its own
+firmware and MHI channels never went away, with no matching
+SERVER_ARRIVE for its own node to clear the flags?  That would leave the
+cross-device coupling the commit message describes in place on the
+teardown half of the qmi_ops pair.
+
+Would returning -ENODEV here (matching the existing kernel_connect()
+failure return) so the foreign svc is never tracked, and/or applying the
+same node_id && service->node != node_id test in
+ath11k_qmi_ops_del_server(), be the intended behaviour?
+
+Two smaller points on the same hunk: each retained foreign entry also
+causes an extra event post during qmi_handle_release() in
+ath11k_qmi_deinit_service(), and the silent return 0 leaves no
+ath11k_dbg() trace, so a mis-derived node id (no server ever accepted,
+device never comes up) is hard to diagnose.  Would an ath11k_dbg() line
+on the skip path help here?
+
+The same pattern is repeated in the following ath12k commit "wifi:
+ath12k: Connect to the QMI server belonging to the device owned by this
+driver"; nothing later in the series changes the return value here or
+adds a filter to ath11k_qmi_ops_del_server().
+
+[ ... ]
+
+One more observation in the same file, outside the diff:
+
+[Severity: High]
+This isn't a bug introduced by this patch, but ath11k_qmi_init_service()
+does not call qmi_handle_release() on the two failure paths that run
+after qmi_handle_init() has already succeeded:
+
+drivers/net/wireless/ath/ath11k/qmi.c:ath11k_qmi_init_service() {
+	...
+	ab->qmi.event_wq = alloc_ordered_workqueue("ath11k_qmi_driver_event", 0);
+	if (!ab->qmi.event_wq) {
+		ath11k_err(ab, "failed to allocate workqueue\n");
+		return -EFAULT;
+	}
+	...
+	if (ret < 0) {
+		ath11k_warn(ab, "failed to add qmi lookup: %d\n", ret);
+		destroy_workqueue(ab->qmi.event_wq);
+		return ret;
 	}
 	...
 }
 
-Can a remote endpoint (firmware over MHI, or a writer on /dev/qrtr-tun,
-whose bytes reach qrtr_endpoint_post() unmodified via
-qrtr_tun_write_iter()) therefore claim 0x10000 + controller_index before or
-after the genuine MHI endpoint registers?
+By that point qmi_handle_init() has allocated qmi->recv_buf, created
+qmi->wq, and created a bound QRTR socket via qmi_sock_create(), which
+installs:
 
-qrtr_node_assign() drops the insert result while still setting node->nid:
-
-net/qrtr/af_qrtr.c:qrtr_node_assign() {
+drivers/soc/qcom/qmi_interface.c:qmi_sock_create() {
 	...
-	spin_lock_irqsave(&qrtr_nodes_lock, flags);
-	radix_tree_insert(&qrtr_nodes, nid, node);
-	if (node->nid == QRTR_EP_NID_AUTO)
-		WRITE_ONCE(node->nid, nid);
-	spin_unlock_irqrestore(&qrtr_nodes_lock, flags);
-}
-
-so if the id is already taken, does qrtr_node_lookup() resolve it to the
-squatting node, sending unicast qrtr_sendmsg() and name service traffic
-aimed at the host assigned id to the wrong endpoint while the real one
-believes it owns that id?
-
-Note also that qrtr_node_rewrite_ctrl() only rewrites ids equal to
-node->ep_nid, so a bridged server.node of 0x10000 + k reaches the name
-service unchanged and is stored as a server on that node id.
-
-This matters for the rest of the series: the ath11k and ath12k changes use
-the host node id as the device identity filter, for example
-
-drivers/net/wireless/ath/ath12k/qmi.c:ath12k_qmi_ops_new_server() {
-	...
-	node_id = ath12k_hif_get_qrtr_node_id(ab);
-	if (node_id && service->node != node_id)
-		return 0;
+	sock->sk->sk_user_data = qmi;
+	sock->sk->sk_data_ready = qmi_data_ready;
+	sock->sk->sk_error_report = qmi_data_ready;
 	...
 }
 
-If the id can be advertised by another endpoint, does the "device may
-connect to the firmware running on the other device" case the series aims
-to close remain reachable?  Would rejecting remote supplied ids >=
-QRTR_NODE_HOST_BASE in qrtr_endpoint_post()/qrtr_node_assign() make the
-documented invariant real?
+ath11k_core_soc_create() then propagates the error without any QMI
+cleanup:
 
-> +
-> +/* Compute host node id from a per-device index. The index must be unique
-> + * among the host assigned endpoints and smaller than QRTR_NODE_HOST_BASE.
-> + */
-> +static inline unsigned int qrtr_host_node_id(unsigned int index)
-> +{
-> +	return QRTR_NODE_HOST_BASE + index;
-> +}
-> +
-> +#endif /* _NET_QRTR_H */
-
-> diff --git a/net/qrtr/mhi.c b/net/qrtr/mhi.c
-> index 3990da1a65dc4..c920ab61f8487 100644
-> --- a/net/qrtr/mhi.c
-> +++ b/net/qrtr/mhi.c
-
-[ ... ]
-
-> @@ -127,7 +128,8 @@ static int qcom_mhi_qrtr_probe(struct mhi_device *mhi_dev,
->  	if (rc)
->  		return rc;
->  
-> -	rc = qrtr_endpoint_register(&qdev->ep, QRTR_EP_NID_AUTO);
-> +	rc = qrtr_endpoint_register(&qdev->ep,
-> +				    qrtr_host_node_id(mhi_dev->mhi_cntrl->index));
->  	if (rc)
->  		goto err_unprepare;
-
-[Severity: High]
-This is the first caller to pass a concrete nid rather than
-QRTR_EP_NID_AUTO, which moves the qrtr_nodes insertion into the
-registration path.  Should the failure of that insertion be detected here?
-
-qrtr_endpoint_register() calls qrtr_node_assign() and ignores the outcome,
-then publishes the endpoint and returns 0 unconditionally:
-
-net/qrtr/af_qrtr.c:qrtr_endpoint_register() {
+drivers/net/wireless/ath/ath11k/core.c:ath11k_core_soc_create() {
 	...
-	qrtr_node_assign(node, nid);
-
-	mutex_lock(&qrtr_node_lock);
-	list_add(&node->item, &qrtr_all_nodes);
-	mutex_unlock(&qrtr_node_lock);
-	ep->node = node;
-	...
-	return 0;
-}
-
-and qrtr_node_assign() discards radix_tree_insert()'s return value while
-setting node->nid anyway:
-
-net/qrtr/af_qrtr.c:qrtr_node_assign() {
-	...
-	radix_tree_insert(&qrtr_nodes, nid, node);
-	if (node->nid == QRTR_EP_NID_AUTO)
-		WRITE_ONCE(node->nid, nid);
+	ret = ath11k_qmi_init_service(ab);
+	if (ret) {
+		ath11k_err(ab, "failed to initialize qmi :%d\n", ret);
+		return ret;
+	}
 	...
 }
 
-Are there two reachable failure modes here?
+and ath11k_pci_probe() unwinds and frees the containing ath11k_base.
 
-The tree is declared static RADIX_TREE(qrtr_nodes, GFP_ATOMIC) and the
-insert runs under spin_lock_irqsave() with no radix_tree_preload(), so
-inserting key 0x10000 needs to extend the tree height and can return
--ENOMEM under memory pressure.
-
--EEXIST looks reachable too: mhi_unregister_controller() does
-ida_free(&mhi_controller_ida, mhi_cntrl->index), so indexes and the derived
-node ids get recycled, while the previous qrtr_node's radix slots are only
-removed in __qrtr_node_release() on the last kref drop, which a sender
-blocked in qrtr_tx_wait() can delay.
-
-In either case node->nid is 0x10000 + index but qrtr_nodes has no entry (or
-a stale one) for it, and qcom_mhi_qrtr_probe() still returns 0.  Is the
-state permanent?  The condition in qrtr_endpoint_post() that used to retry
-the insert
-
-	if (node->nid == QRTR_EP_NID_AUTO || node->nid == cb->src_node)
-		qrtr_node_assign(node, cb->src_node);
-
-can never be true for a host assigned nid, since 0x10000 + index never
-equals the remote's own id.
-
-That would leave every unicast qrtr_sendmsg() to this node id returning
--ECONNRESET from qrtr_node_lookup() for the life of the device, the receive
-path still stamping cb->src_node = node->nid so servers are advertised on
-an unroutable id, and qrtr_endpoint_unregister() (which walks radix slots
-pointing at the node to build the QRTR_TYPE_BYE notification) emitting no
-BYE at all.
-
-Would it be better for qrtr_node_assign() to return the insert error and
-qrtr_endpoint_register() to propagate it so probe fails visibly?
+Does this leak the recv_buf, the ordered workqueue and the QRTR socket,
+and leave the still-bound socket's sk_user_data and sk_data_ready
+pointing at the freed ath11k_base, so that qmi_data_ready() dereferences
+freed memory for any datagram delivered to that port?
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260922-qrtr-multi-ep-v3-0-c00831e88957%40oss.qualcomm.com
