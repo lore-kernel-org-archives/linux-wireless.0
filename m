@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A3F849DB89;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0BA84A4850;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790343824; cv=none; b=aFoodxOYlLyhIE1ygACUN+su3NuJWDpsEYXOj3UALw26QkjbnBXK4QZ5Bc+qrz9fOkEgJ+a2g4kwzyYNifxtAHE0JJGBEOAF79DsqBn0UL2m7SCD5Kdo/DN/+MxzLJ1xlONc/2xEGKBG/ySeCjYsUAj9tCEt9xx8bAog3PQUMYA=
+	t=1790343824; cv=none; b=u2ElJ5Vrf8mZMJ9Z8/X7vOmxTQ+Jlk732SmAsFEql5WxICZaf3VlYA88r56y2RAUOQXbuXhqDimjRgDULyFI5DJTohiexS2apI8YvsZ9tuLJ27cIV2zTv2jz1xKbxyfDu7YLGEzswaAnJXS/gNB1r0a3ODASl0zid92ebpkYeTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790343824; c=relaxed/simple;
-	bh=QmWeHOUj1xwSmPBlqnJMpEKB8ZmpIUeoECUf3813j6Y=;
+	bh=nmJPK61dKSuzbmAk1gjYeaV46Df5ivDEwUs07HOk/Kk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=jGweHLYeyGLOl2NDHNxc+UrcNToIARA0z2Hqp4AWZCeYKyD1I9hrXHFNyosRXS67EMUyxgjhZFFF22V4di7crIa6NL0uebD3MqMOe+0kC2Ddr2S+p5p/qe/on0A/lQfCLKTVwK9Fk79qansNhfvq2xhkCD0YRlE/ZB8tE/Aj8Mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q7H94SN3; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=BrC6HG5PdL7kUITOFi5hjvvNAm2JK+Dzm4pMPsR5hF9+2TrSgHXVnd+BbslPdUaikun2YeFovwqTx22ddxSCnGrTaylqHOiFHXkkVhmO4FdsRncm1FDhHU9z/+cVT5rK9OA3jpjJZx+PmXEGRxyCYmKsPMquTkIMAfwB6x8vHq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KQRv0ORB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q7H94SN3"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 35F22C2BCFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KQRv0ORB"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9B399C2BCFB;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1790343824;
-	bh=QmWeHOUj1xwSmPBlqnJMpEKB8ZmpIUeoECUf3813j6Y=;
+	bh=nmJPK61dKSuzbmAk1gjYeaV46Df5ivDEwUs07HOk/Kk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=q7H94SN3BUvHUvZmxUlN0wJxuGzDTMPk7lTUNQ90UA/Zi1t/Rb2jhXNIM5sdRnHV8
-	 HUF10ZsGGDPtfBkPhsFkK2YFPwf9lpVhbdUgcxUs148KediGq/Ls1EeMGl87WwBRVI
-	 n4M/r6DSqTX5BYE7MK5h+vIxyBsbCMJ18Duww4vo7S1R9k/U7GJFHydJA6KWgZNGgp
-	 8JdLR4WQyhP+5H5joYCxG/u9O9J4A7lEUkYQOnZjxwWJ0+ugqV9n1NbzNNdQn6Lf3W
-	 0zazVyM5Xb8OvVlAhPsi5oLEnP4CGEftFQcbvsI21OlBh+Oa0hf8QOLe1TVpDzPyK0
-	 P2JaGwf4JHshQ==
+	b=KQRv0ORBHaqrcvXp2UmlqV6riRJEmZfGcCBK38XFZBXCD+ZiaWVpe4ePKjFV6FU9F
+	 Uqn2PX+wg8Rpkp9qcsQxOejUOwbHzARQ9oVKDRiZsqdo0AF8FknqKgZEBTbopif21B
+	 XLESJfC6iuUCivgK6EqXGrf6jbiOHgm/4cwOjABc4nuvg0Zo/k1hBB6fc48rumDFKV
+	 jeeM/FklTBSgh4o2SKxgc96SOdd9kHVEs082rXzA085kxLcaaIfb7RgslYF1xEHUyq
+	 RRSSe4X29sKDbsgvhzwT4g31E96JwT4+KCHMHQDL8YbelJ8KRrqmd9OiErk9ZmYn4H
+	 vKY9G4Gj/Kwrw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EE81C98328;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 856B6C98324;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 From: Michael Reeves via B4 Relay <devnull+michael.reeves077.gmail.com@kernel.org>
-Date: Fri, 25 Sep 2026 23:43:38 +1000
-Subject: [PATCH 03/13] wifi: brcmfmac: Fall back to RSSI-only default join
- preferences
+Date: Fri, 25 Sep 2026 23:43:43 +1000
+Subject: [PATCH 08/13] wifi: brcmfmac: Handle larger firmware band lists
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260925-brcm4388-submit-v1-3-b5cbc2cde2fb@gmail.com>
+Message-Id: <20260925-brcm4388-submit-v1-8-b5cbc2cde2fb@gmail.com>
 References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
@@ -56,12 +55,12 @@ Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
  Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org, 
  Michael Reeves <michael.reeves077@gmail.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=1156;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=4262;
  i=michael.reeves077@gmail.com; s=fedora-20260918;
  h=from:subject:message-id;
- bh=D6m7eaWnIp+UcQ2goCb0mybb908iS4h2gNzgalFLqPY=;
- b=DGEOlG/yM1NwWG2g1L6tHmSsi/MvzotCKiTqj88S5M3lfn0lx1NlJ8AoYMooqcoLzULwpaf3X
- BWOOZ5+l6SqCisJrlwJk8oeeNDQtDB2yBfMnj9dlMoQikmKyyRVsG33
+ bh=IXCeYSIgceZjWOWc+qsBSG21O04vwQ8LYkrU8gH+GkU=;
+ b=hXlnrr95eXuuzDMRikMETKyVXHiWpqmAP8ciWCaTpquP0+ToOPTJ+yASmK8cup3K2FMqEhf2Q
+ kCe1B1Fik1LCXrauWdNAB1yZiaNGn90JD/gYPW1/oxXxw4OcvAANqmw
 X-Developer-Key: i=michael.reeves077@gmail.com; a=ed25519;
  pk=VJ0TvyQ9TvfzYZa908YSE9kpkjFLLD5luv0bERu+boc=
 X-Endpoint-Received: by B4 Relay for
@@ -71,32 +70,129 @@ Reply-To: michael.reeves077@gmail.com
 
 From: Michael Reeves <michael.reeves077@gmail.com>
 
-BCM4388 firmware rejects the default join preference containing a 5 GHz
-RSSI boost with -EBADE, but accepts an RSSI-only preference.
+Some firmware returns more than two entries from BRCMF_C_GET_BANDLIST.
+The fixed two-band response buffer cannot accommodate these lists.
 
-Retry with RSSI-only selection only after -EBADE. Log other errors
-without retrying.
+Use a larger bounded buffer and register only the 2.4 GHz and 5 GHz
+bands handled by this driver path. Ignore duplicate or unknown entries
+so they do not prevent wiphy setup. Skip unsupported bands in chanspec
+lists and scan results before decoding channels.
 
+Co-developed-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Hector Martin <marcan@marcan.st>
 Signed-off-by: Michael Reeves <michael.reeves077@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 48 +++++++++++++++++++---
+ 1 file changed, 43 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index b6027d83e6..2a37b42ca9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -95,6 +95,10 @@ void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
- 	join_pref_params[1].band = 0;
- 	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
- 				       sizeof(join_pref_params));
-+	if (err == -EBADE)
-+		err = brcmf_fil_iovar_data_set(ifp, "join_pref",
-+					       &join_pref_params[1],
-+					       sizeof(join_pref_params[1]));
- 	if (err)
- 		bphy_err(drvr, "Set join_pref error (%d)\n", err);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9d8ce7bb04..5d99708007 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -105,6 +105,8 @@
+ #define BRCMF_MAX_CHANSPEC_LIST \
+ 	(BRCMF_DCMD_MEDLEN / sizeof(__le32) - 1)
+ 
++#define BRCMF_MAX_BANDLIST_ENTRIES	16
++
+ struct brcmf_dump_survey {
+ 	u32 obss;
+ 	u32 ibss;
+@@ -3385,6 +3387,17 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
+ 	return err;
  }
+ 
++static bool brcmf_chanspec_supported(struct brcmf_cfg80211_info *cfg, u16 chanspec)
++{
++	u16 band = chanspec & BRCMU_CHSPEC_D11AC_BND_MASK;
++
++	if (cfg->d11inf.io_type != BRCMU_D11AC_IOTYPE)
++		return true;
++
++	return band == BRCMU_CHSPEC_D11AC_BND_2G ||
++	       band == BRCMU_CHSPEC_D11AC_BND_5G;
++}
++
+ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 				   struct brcmf_bss_info_le *bi)
+ {
+@@ -3406,6 +3419,9 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 		return -EINVAL;
+ 	}
+ 
++	if (!brcmf_chanspec_supported(cfg, le16_to_cpu(bi->chanspec)))
++		return 0;
++
+ 	if (!bi->ctl_ch) {
+ 		ch.chspec = le16_to_cpu(bi->chanspec);
+ 		cfg->d11inf.decchspec(&ch);
+@@ -7163,6 +7179,8 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 
+ 	for (i = 0; i < total; i++) {
+ 		ch.chspec = (u16)le32_to_cpu(list->element[i]);
++		if (!brcmf_chanspec_supported(cfg, ch.chspec))
++			continue;
+ 		cfg->d11inf.decchspec(&ch);
+ 
+ 		if (ch.band == BRCMU_CHAN_BAND_2G) {
+@@ -7764,7 +7782,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	struct ieee80211_supported_band *band;
+ 	u16 max_interfaces = 0;
+ 	bool gscan;
+-	__le32 bandlist[3];
++	__le32 bandlist[BRCMF_MAX_BANDLIST_ENTRIES];
+ 	u32 n_bands;
+ 	int err, i;
+ 
+@@ -7856,8 +7874,20 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	}
+ 	/* first entry in bandlist is number of bands */
+ 	n_bands = le32_to_cpu(bandlist[0]);
+-	for (i = 1; i <= n_bands && i < ARRAY_SIZE(bandlist); i++) {
+-		if (bandlist[i] == cpu_to_le32(WLC_BAND_2G)) {
++	if (n_bands >= ARRAY_SIZE(bandlist)) {
++		brcmf_dbg(INFO, "bandlist count %u exceeds buffer entries %zu\n",
++			  n_bands, ARRAY_SIZE(bandlist) - 1);
++		n_bands = ARRAY_SIZE(bandlist) - 1;
++	}
++
++	for (i = 1; i <= n_bands; i++) {
++		u32 band_id = le32_to_cpu(bandlist[i]);
++
++		switch (band_id) {
++		case WLC_BAND_2G:
++			if (wiphy->bands[NL80211_BAND_2GHZ])
++				break;
++
+ 			band = kmemdup(&__wl_band_2ghz, sizeof(__wl_band_2ghz),
+ 				       GFP_KERNEL);
+ 			if (!band)
+@@ -7873,8 +7903,11 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 
+ 			band->n_channels = ARRAY_SIZE(__wl_2ghz_channels);
+ 			wiphy->bands[NL80211_BAND_2GHZ] = band;
+-		}
+-		if (bandlist[i] == cpu_to_le32(WLC_BAND_5G)) {
++			break;
++		case WLC_BAND_5G:
++			if (wiphy->bands[NL80211_BAND_5GHZ])
++				break;
++
+ 			band = kmemdup(&__wl_band_5ghz, sizeof(__wl_band_5ghz),
+ 				       GFP_KERNEL);
+ 			if (!band)
+@@ -7890,6 +7923,11 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 
+ 			band->n_channels = ARRAY_SIZE(__wl_5ghz_channels);
+ 			wiphy->bands[NL80211_BAND_5GHZ] = band;
++			break;
++		default:
++			brcmf_dbg(INFO, "ignoring unsupported band %u\n",
++				  band_id);
++			break;
+ 		}
+ 	}
+ 
 
 -- 
 2.55.0
