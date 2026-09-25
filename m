@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332E34A68AB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0225D4A4F07;
 	Fri, 25 Sep 2026 13:43:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790343825; cv=none; b=suY47XvUOrOqMHngOBjvU8mhDqjeRneA9ni6kQqfmJZH0SceJFiwH2DEIuU5u5jSsTgkIcGXqxLcrB5Omp7aK2eFQ7Ku7RGOQNCe+Is0oXBMHEo8q4gpVtNKQ9QXyorxeKNpPGVaz1ddTluo9+OiozP4YgOTlFRD/hZI8Ll5aHw=
+	t=1790343825; cv=none; b=UVmB4iCKI0oIVpEJMOAuP/MtM86XOpUaiCM1CrEjC5qJ/TV9KCoMpcFpxcV52SLeAFdiDY+Yfbcmz4ccQDWm2wD/DeUYodoyr5Ho9O1qstqe1bzAJtqYNJpccO8yTIPpwpDh7MiUNd7UxHDrqhV3wVbuyLvGK4uTrQb7XcOqBrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790343825; c=relaxed/simple;
-	bh=J0plH6eue9ZtwmxKolaqA1ZRDV58gANSgRdjYQ/V6HM=;
+	bh=XUfWG6ZEVNOAcs2F7WJeeqcucohTKZc1NRmPGlDmISA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=edZd6RfXx9HhPEjfdCAAtE8pFuNteZYgjzO/HYfaY+iM8IGK+bSJB/+mUdv1/7a2Wokb1163gXwS25CNLFhYiOc6uEt8Avn7Unt71iIooih2b2HYizW4OhcgCCHQThKHnOgQURmKmRH5lQGVRQmL+Ngp6WgQ7Yym00T4Ne51iaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=clG5EImw; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=PrUJxOX6krXybEdiZ6tJ2+rVFZybj2q68Vzs++t0vZ6pJDb9y08xWM0/W8ZL/XEgdpdU6D3Ab/p/rAwklMOa7bZVujaDz5tacCYTfZPt6B6izUc9jVUw6KUShyXSrznPwz2/wBJr2k2uI/dbxPsLWXFxwYpryNG4YqrmL8UHChg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Agdg9gor; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="clG5EImw"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 14E2DC2BCF6;
-	Fri, 25 Sep 2026 13:43:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Agdg9gor"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DB96BC4AF09;
+	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790343825;
-	bh=J0plH6eue9ZtwmxKolaqA1ZRDV58gANSgRdjYQ/V6HM=;
+	s=k20201202; t=1790343824;
+	bh=XUfWG6ZEVNOAcs2F7WJeeqcucohTKZc1NRmPGlDmISA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=clG5EImw+mXZsEmQ3ERFYIWb++79yDCKBAqGMBPr7KgtNvVx5z8jFQAMeuvYfAGOB
-	 6n6+haZJZDlqSKLVyOSeygpCzNwMNBJ0KOoSpOuZTXPZQrG/UrzQid35I7ALa9322N
-	 eFvSZWVBIQMmritAmFPxg6tant7p4z5qTbb4QWiFQiW9R6UEgvGU9fyfsRNmlB3zFZ
-	 vN7lHTJ83QVd7PpuYyZWq2dEixnKYgZMWWv6EssxWJFwQBaIxAIkHVA59Hr0b5uuDt
-	 fvnVsbzgWEIzcFWSja/f4KHIpcPFfra/LQt/pHjGGeUb9ilwH38LoI8EsRcfQFUagW
-	 eKXt25gZRlNrA==
+	b=Agdg9gorO4qluVfaugqDT9b1XLTeHhG+XCHuzb1pQyzkLyp+yiEX5Mfn1emLnl75Y
+	 FcaVvB9vLeTV09wGLJDwMBZXxAfVUi0/RsQu349Rrl/8uP7TdK9Avw6pW8padeXJlH
+	 /lyxlX1m5ZPOOmk4vVRTod6P87K2w+eeSwFkqv4UiD0YBAfRtKBID13WrAa1rOzRQv
+	 epMLu3PdNjTPO0i987CpL9boO1Di2Ks95aql3ZeeP9bbltrFVeEh0y+Sp6Na71AV3f
+	 LGmjY5irKCiqLfYLCiNR/d2EQgHiiKskZBFnC97i3Xlu9JJkU6h/+zEDP4RRu2xd1D
+	 MDUzLMRjCS7xA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01202C98324;
-	Fri, 25 Sep 2026 13:43:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C2EC98321;
+	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 From: Michael Reeves via B4 Relay <devnull+michael.reeves077.gmail.com@kernel.org>
-Date: Fri, 25 Sep 2026 23:43:48 +1000
-Subject: [PATCH 13/13] wifi: brcmfmac: Add BCM4388 support
+Date: Fri, 25 Sep 2026 23:43:46 +1000
+Subject: [PATCH 11/13] wifi: brcmfmac: Support versioned join requests
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260925-brcm4388-submit-v1-13-b5cbc2cde2fb@gmail.com>
+Message-Id: <20260925-brcm4388-submit-v1-11-b5cbc2cde2fb@gmail.com>
 References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
@@ -55,12 +55,12 @@ Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
  Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org, 
  Michael Reeves <michael.reeves077@gmail.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=6944;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=8739;
  i=michael.reeves077@gmail.com; s=fedora-20260918;
  h=from:subject:message-id;
- bh=0ssO1sL/zwTcjM/uwq1dbdxySVDbT2P3POHSvMWy5LY=;
- b=15qzXe8Zs0JsLnL9Pn/RjhYlBaxsVIeRapxQFIYp6sy0SHTGIY+nQBKVoQVMwnETOzvXEaVk3
- uEJR2ldFpjKCde00dCcsJqB0/m3lXkTsBr1C3dhfPvvZSfXbqxRn2fg
+ bh=H6797bY15elnibBmCMfbZQ0bGQ2izjOuvFhiXJumwdk=;
+ b=aa8235GZxSH6+3DblDqDiEtA4DMuDOLiGStlCsNCzIMGBZXcajwnX2Cl5vzXq8aGlSpDfcLHQ
+ swv1HZZ3OoeD+unQ/uoiFyUq5lSkZCWaUlshUHDCYxM6BzYrlCjpDY9
 X-Developer-Key: i=michael.reeves077@gmail.com; a=ed25519;
  pk=VJ0TvyQ9TvfzYZa908YSE9kpkjFLLD5luv0bERu+boc=
 X-Endpoint-Received: by B4 Relay for
@@ -70,166 +70,244 @@ Reply-To: michael.reeves077@gmail.com
 
 From: Hector Martin <marcan@marcan.st>
 
-Add BCM4388 firmware mappings, RAM base and OTP handling, and increase
-the RX posting and completion ring capacities to 2048 items.
+Newer firmware uses version 1 join and association structures with
+explicit version headers.
 
-On BCM4388, DMA_FROM_DEVICE mappings for posted receive buffers cause
-DART read-permission faults followed by firmware DMA failure. Map these
-buffers with DMA_BIDIRECTIONAL to allow device reads as well as writes.
-Keep the existing mapping direction for other chips.
+Query join_ver and build version 1 requests when required. Retain legacy
+layouts for older firmware and fall back to BRCMF_C_SET_SSID when the
+join iovar returns -EBADE. Use the selected association layout for IBSS
+joins too. Report unsupported join versions rather than guessing their
+request layout.
 
 Signed-off-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Daniel Berlin <dberlin@dberlin.org>
 Co-developed-by: Michael Reeves <michael.reeves077@gmail.com>
 Signed-off-by: Michael Reeves <michael.reeves077@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c      |  1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c    |  8 +++++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h    |  4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c      | 12 +++++++++++-
- .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h    |  2 ++
- 5 files changed, 21 insertions(+), 6 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 73 +++++++++++++++++++---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 19 ++++++
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 29 +++++++++
+ 4 files changed, 113 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 253ab45c33..411188010f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -751,6 +751,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_4366_CHIP_ID:
- 	case BRCM_CC_43664_CHIP_ID:
- 	case BRCM_CC_43666_CHIP_ID:
-+	case BRCM_CC_4388_CHIP_ID:
- 		return 0x200000;
- 	case BRCM_CC_4355_CHIP_ID:
- 	case BRCM_CC_4359_CHIP_ID:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 8e5c697e7f..5ad46d7ec6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -12,6 +12,7 @@
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
- 
-+#include <brcm_hw_ids.h>
- #include <brcmu_utils.h>
- #include <brcmu_wifi.h>
- 
-@@ -51,7 +52,7 @@
- #define MSGBUF_TYPE_D2H_MAILBOX_DATA		0x24
- 
- #define NR_TX_PKTIDS				2048
--#define NR_RX_PKTIDS				1024
-+#define NR_RX_PKTIDS				2048
- 
- #define BRCMF_IOCTL_REQ_PKTID			0xFFFE
- 
-@@ -330,7 +331,6 @@ brcmf_msgbuf_init_pktids(u32 nr_array_entries,
- 	return pktids;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2ce7041be6..2a742ae8cc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1653,6 +1653,36 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason,
+ 	brcmf_dbg(TRACE, "Exit\n");
  }
  
--
- static int
- brcmf_msgbuf_alloc_pktid(struct device *dev,
- 			 struct brcmf_msgbuf_pktids *pktids,
-@@ -1695,8 +1695,10 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 						     DMA_TO_DEVICE);
- 	if (!msgbuf->tx_pktids)
- 		goto fail;
-+	/* BCM4388 firmware also reads from posted RX buffers. */
- 	msgbuf->rx_pktids = brcmf_msgbuf_init_pktids(NR_RX_PKTIDS,
--						     DMA_FROM_DEVICE);
-+			drvr->bus_if->chip == BRCM_CC_4388_CHIP_ID ?
-+			DMA_BIDIRECTIONAL : DMA_FROM_DEVICE);
- 	if (!msgbuf->rx_pktids)
- 		goto fail;
++static int brcmf_set_ssid(struct brcmf_if *ifp,
++			  const struct brcmf_join_params *legacy, size_t legacy_size)
++{
++	struct brcmf_join_params_v1_le *params;
++	u32 count = le32_to_cpu(legacy->params_le.chanspec_num);
++	size_t size;
++	int err;
++
++	if (!ifp->drvr->join_version)
++		return brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
++					     (void *)legacy, legacy_size);
++	if (ifp->drvr->join_version != 1)
++		return -EOPNOTSUPP;
++
++	size = struct_size(params, assoc_le.chanspec_list, count);
++	params = kzalloc(size, GFP_KERNEL);
++	if (!params)
++		return -ENOMEM;
++
++	params->ssid_le = legacy->ssid_le;
++	params->assoc_le.version = cpu_to_le16(1);
++	ether_addr_copy(params->assoc_le.bssid, legacy->params_le.bssid);
++	params->assoc_le.chanspec_num = legacy->params_le.chanspec_num;
++	memcpy(params->assoc_le.chanspec_list, legacy->params_le.chanspec_list,
++	       count * sizeof(__le16));
++	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID, params, size);
++	kfree(params);
++	return err;
++}
++
+ static s32
+ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 		      struct cfg80211_ibss_params *params)
+@@ -1791,8 +1821,7 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 	cfg->ibss_starter = false;
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-index 18b56d0789..1d0233c619 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-@@ -8,10 +8,10 @@
- #ifdef CONFIG_BRCMFMAC_PROTO_MSGBUF
  
- #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM	64
--#define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	1024
-+#define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	2048
- #define BRCMF_D2H_MSGRING_CONTROL_COMPLETE_MAX_ITEM	64
- #define BRCMF_D2H_MSGRING_TX_COMPLETE_MAX_ITEM		1024
--#define BRCMF_D2H_MSGRING_RX_COMPLETE_MAX_ITEM		1024
-+#define BRCMF_D2H_MSGRING_RX_COMPLETE_MAX_ITEM		2048
- #define BRCMF_H2D_TXFLOWRING_MAX_ITEM			512
+-	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
+-				     &join_params, join_params_size);
++	err = brcmf_set_ssid(ifp, &join_params, join_params_size);
+ 	if (err) {
+ 		bphy_err(drvr, "WLC_SET_SSID failed (%d)\n", err);
+ 		goto done;
+@@ -2281,6 +2310,30 @@ static void brcmf_set_join_pref(struct brcmf_if *ifp,
+ 		bphy_err(drvr, "Set join_pref error (%d)\n", err);
+ }
  
- #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_ITEMSIZE	40
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 48402eb2ef..32c95b8f51 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -71,6 +71,8 @@ BRCMF_FW_CLM_DEF(4377B3, "brcmfmac4377b3-pcie");
- BRCMF_FW_CLM_DEF(4378B1, "brcmfmac4378b1-pcie");
- BRCMF_FW_CLM_DEF(4378B3, "brcmfmac4378b3-pcie");
- BRCMF_FW_CLM_DEF(4387C2, "brcmfmac4387c2-pcie");
-+BRCMF_FW_CLM_DEF(4388B0, "brcmfmac4388b0-pcie");
-+BRCMF_FW_CLM_DEF(4388C0, "brcmfmac4388c0-pcie");
- BRCMF_FW_CLM_DEF(54591, "brcmfmac54591-pcie");
++static int brcmf_join_v1(struct brcmf_if *ifp,
++			 const struct brcmf_ext_join_params_le *legacy)
++{
++	struct brcmf_ext_join_params_v1_le *params;
++	u32 count = le32_to_cpu(legacy->assoc_le.chanspec_num);
++	size_t size = struct_size(params, assoc_le.chanspec_list, count);
++	int err;
++
++	params = kzalloc(size, GFP_KERNEL);
++	if (!params)
++		return -ENOMEM;
++	params->version = cpu_to_le16(1);
++	params->ssid_le = legacy->ssid_le;
++	params->scan_le = legacy->scan_le;
++	params->assoc_le.version = cpu_to_le16(1);
++	ether_addr_copy(params->assoc_le.bssid, legacy->assoc_le.bssid);
++	params->assoc_le.chanspec_num = legacy->assoc_le.chanspec_num;
++	memcpy(params->assoc_le.chanspec_list, legacy->assoc_le.chanspec_list,
++	       count * sizeof(__le16));
++	err = brcmf_fil_bsscfg_data_set(ifp, "join", params, size);
++	kfree(params);
++	return err;
++}
++
+ static s32
+ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		       struct cfg80211_connect_params *sme)
+@@ -2302,6 +2355,8 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	u32 ssid_len;
  
- /* firmware config files */
-@@ -113,6 +115,8 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_4378_CHIP_ID, 0x0000000F, 4378B1), /* revision ID 3 */
- 	BRCMF_FW_ENTRY(BRCM_CC_4378_CHIP_ID, 0xFFFFFFE0, 4378B3), /* revision ID 5 */
- 	BRCMF_FW_ENTRY(BRCM_CC_4387_CHIP_ID, 0xFFFFFFFF, 4387C2), /* revision ID 7 */
-+	BRCMF_FW_ENTRY(BRCM_CC_4388_CHIP_ID, 0x0000000F, 4388B0),
-+	BRCMF_FW_ENTRY(BRCM_CC_4388_CHIP_ID, 0xFFFFFFF0, 4388C0), /* revision ID 4 */
+ 	brcmf_dbg(TRACE, "Enter\n");
++	if (drvr->join_version > 1)
++		return -EOPNOTSUPP;
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+@@ -2492,14 +2547,15 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	brcmf_set_join_pref(ifp, &sme->bss_select);
+ 
+-	err  = brcmf_fil_bsscfg_data_set(ifp, "join", ext_join_params,
+-					 join_params_size);
++	if (ifp->drvr->join_version == 1)
++		err = brcmf_join_v1(ifp, ext_join_params);
++	else
++		err = brcmf_fil_bsscfg_data_set(ifp, "join", ext_join_params,
++						join_params_size);
+ 	kfree(ext_join_params);
+-	if (!err)
+-		/* This is it. join command worked, we are done */
++	if (err != -EBADE)
+ 		goto done;
+ 
+-	/* join command failed, fallback to set ssid */
+ 	memset(&join_params, 0, sizeof(join_params));
+ 	join_params_size = sizeof(join_params.ssid_le);
+ 
+@@ -2516,8 +2572,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		join_params.params_le.chanspec_num = cpu_to_le32(1);
+ 		join_params_size += sizeof(join_params.params_le);
+ 	}
+-	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
+-				     &join_params, join_params_size);
++	err = brcmf_set_ssid(ifp, &join_params, join_params_size);
+ 	if (err)
+ 		bphy_err(drvr, "BRCMF_C_SET_SSID failed (%d)\n", err);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index fe909f7add..320473970d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -162,6 +162,7 @@ struct brcmf_pub {
+ 	const struct brcmf_fwvid_ops *vops;
+ 	void *vdata;
+ 	struct scan_param_struct_handler scan_param_handler;
++	u16 join_version;
  };
  
- #define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
-@@ -2397,6 +2401,11 @@ static int brcmf_pcie_read_otp(struct brcmf_pciedev_info *devinfo)
- 		base = 0x113c;
- 		words = 0x170;
- 		break;
-+	case BRCM_CC_4388_CHIP_ID:
-+		coreid = BCMA_CORE_GCI;
-+		base = 0x115c;
-+		words = 0x150;
-+		break;
- 	default:
- 		/* OTP not supported on this chip */
- 		return 0;
-@@ -2459,7 +2468,7 @@ static int brcmf_pcie_read_otp(struct brcmf_pciedev_info *devinfo)
+ /* forward declarations */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 44c0082e21..27fa3a7941 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -160,6 +160,10 @@ static void brcmf_feat_wlc_version_overrides(struct brcmf_pub *drv)
  
- static bool brcmf_pcie_request_fw_signature(struct brcmf_pciedev_info *devinfo)
- {
--	return false;
-+	return devinfo->ci->chip == BRCM_CC_4388_CHIP_ID;
+ 	brcmf_dbg(INFO, "WLC version: %d.%d\n", major, minor);
+ 
++	if (major >= 17 || (major == 16 && minor >= 1) ||
++	    (major == 14 && (minor == 2 || minor == 4)))
++		drv->join_version = 1;
++
+ 	for (i = 0; i < ARRAY_SIZE(brcmf_feat_wlcfeat_map); i++) {
+ 		e = &brcmf_feat_wlcfeat_map[i];
+ 		if (major > e->min_ver_major ||
+@@ -297,6 +301,20 @@ static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ 	}
  }
  
- static void brcmf_pcie_setup(struct device *dev, int ret,
-@@ -3114,6 +3123,7 @@ static const struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4377_DEVICE_ID, WCC_SEED),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4378_DEVICE_ID, WCC_SEED),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4387_DEVICE_ID, WCC_SEED),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4388_DEVICE_ID, WCC_SEED),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43752_DEVICE_ID, WCC_SEED),
- 	BRCMF_PCIE_DEVICE(CY_PCIE_54591_DEVICE_ID, CYW),
- 	{ /* end: all zeroes */ }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index df3b67ba4d..f749337a06 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -57,6 +57,7 @@
- #define BRCM_CC_4377_CHIP_ID		0x4377
- #define BRCM_CC_4378_CHIP_ID		0x4378
- #define BRCM_CC_4387_CHIP_ID		0x4387
-+#define BRCM_CC_4388_CHIP_ID		0x4388
- #define CY_CC_4373_CHIP_ID		0x4373
- #define CY_CC_43012_CHIP_ID		43012
- #define CY_CC_43439_CHIP_ID		43439
-@@ -99,6 +100,7 @@
- #define BRCM_PCIE_4377_DEVICE_ID	0x4488
- #define BRCM_PCIE_4378_DEVICE_ID	0x4425
- #define BRCM_PCIE_4387_DEVICE_ID	0x4433
-+#define BRCM_PCIE_4388_DEVICE_ID	0x4434
- #define CY_PCIE_54591_DEVICE_ID		0x4417
++static void brcmf_feat_join_params(struct brcmf_if *ifp)
++{
++	struct brcmf_join_version_le version = {};
++	int err;
++
++	err = brcmf_fil_iovar_data_get(ifp, "join_ver", &version,
++				       sizeof(version));
++	if (!err)
++		ifp->drvr->join_version = le16_to_cpu(version.major);
++	if (ifp->drvr->join_version > 1)
++		bphy_err(ifp->drvr, "unsupported join params v%u\n",
++			 ifp->drvr->join_version);
++}
++
+ static void brcmf_feat_scan_params(struct brcmf_if *ifp)
+ {
+ 	struct brcmf_pub *drvr = ifp->drvr;
+@@ -430,6 +448,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 	brcmf_feat_event_msgs_ext(ifp);
  
- /* brcmsmac IDs */
+ 	brcmf_feat_wlc_version_overrides(drvr);
++	brcmf_feat_join_params(ifp);
+ 	brcmf_feat_firmware_overrides(drvr);
+ 
+ 	brcmf_fwvid_feat_attach(ifp);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index dbba883bba..917966ad70 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -584,6 +584,35 @@ struct brcmf_ext_join_params_le {
+ 	struct brcmf_assoc_params_le assoc_le;
+ };
+ 
++struct brcmf_assoc_params_v1_le {
++	__le16 version;
++	__le16 flags;
++	u8 bssid[ETH_ALEN];
++	__le16 bssid_cnt;
++	__le32 chanspec_num;
++	__le16 chanspec_list[];
++};
++
++struct brcmf_join_params_v1_le {
++	struct brcmf_ssid_le ssid_le;
++	struct brcmf_assoc_params_v1_le assoc_le;
++};
++
++struct brcmf_join_version_le {
++	__le16 version;
++	__le16 length;
++	__le16 major;
++	u8 pad[2];
++};
++
++struct brcmf_ext_join_params_v1_le {
++	__le16 version;
++	__le16 pad;
++	struct brcmf_ssid_le ssid_le;
++	struct brcmf_join_scan_params_le scan_le;
++	struct brcmf_assoc_params_v1_le assoc_le;
++};
++
+ struct brcmf_wsec_key {
+ 	u32 index;		/* key index */
+ 	u32 len;		/* key length */
 
 -- 
 2.55.0
