@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFC284A4406;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9B14A4402;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790343824; cv=none; b=HXYVaV7vndwp4onmt/0YSUzwRPRH2TvZ1UzL1jSZhicXP32U3Hh4ON5S1sfCP1oJ/SKbARdu/Yb4UxRH7zlgbm/EGE9w4q4SuHsO6QAqB6vtaGhY2fzZkaBW3sRxKT4DA/AGd9GacT8aLTvRU/OLFjs1OrU1PkWc9E+U8wS0Ap8=
+	t=1790343824; cv=none; b=vA+1TOSpDZl5tjv/vUWQyLEELz0WWXYETJLtlJ1W3yF327f6V4UQ1fwyonqq7WFK0EFrgWiZdwLhy9nKieFugoTDKegVJQl9nLF/kqPdJCMn9w9cjR+J5wC4uddacSciFat6Eymw5h4MiO2/8nTdjWLzKs9nmyA6n6/jiYaekS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790343824; c=relaxed/simple;
-	bh=2IZcOIMYvjMVyFcdg0P5nb7s41zU8OLy93/0VhzVXkI=;
+	bh=to0uWGBqaUjuri0pWsmWAVjJ6QNfbMJOdppyQ2MSgVY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=rCdwuAEMXlSoJ8muKfJU4m2/53jC1+CwFatVLlMoOVWVN/swWY1IAV2/iqJDDamW0w/1vJ2SU5yBJELJNNDRzn3CRtiEAFEcIU3THaJpugCpmEDFUZMUMwon8RGiByDo30EYEu6oa5ck2FSvM01O6UF8kbLgcYjc77H4eqKFhfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DzgRcekj; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=s0kBxbPYGx+hQZmw9rDzSchUwTLv2vSxW81LwhCQfAzKQQMPwF+NpAw8GG1tM6Z9uX1IueKKJHxQrYda08AEvmuLkshKMw4viGvKtgKiFxQ9qGXI3DyJI2BUpGY6YDks9OyzHNRPdt3H8vMVwowtW9hEFN9Afk0v94xhaSKEBRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Augq7hHY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DzgRcekj"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 82A65C2BCFC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Augq7hHY"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 702D0C2BCFF;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1790343824;
-	bh=2IZcOIMYvjMVyFcdg0P5nb7s41zU8OLy93/0VhzVXkI=;
+	bh=to0uWGBqaUjuri0pWsmWAVjJ6QNfbMJOdppyQ2MSgVY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=DzgRcekjltzCDnMOhElwmLvlzHUjTTEk9Cp1gb56mTWiniZEXnTXFHqm+bIrtqq3j
-	 OoRpjWNaK6d8ba78+K+hux0pijPn6XFJj/dV5Apn7aq3QB1r13kQGhXbcUulG++esn
-	 KBNiwJVeuTiJxpe5AyucOps+oxC58yk19/XA8zTyA0ROrMqlSUp5HZuYsy7pBguB0+
-	 UnejBbo6ZIMewleoKJSMOPtXfQcwwoIIv5wgYazzuAjfomnYPIcnX0lo3ZuZKGaf0W
-	 kbdBLaJ8ueE39kxW2eoVKpPZ3FpkoIyWLStCOW6/HqeN2WORD8AwykOXzDKQxudq9V
-	 lvkSGkAhLqemQ==
+	b=Augq7hHYqS3KyHiAgGtcumEZ7jdxsUB/9G1GCTtHibmUlJde6PkkxvIiWQrS+n2Ij
+	 NbFpS5H6Aj+8v/W5rGoqalo0u4kE6I24Npjj+Irs9tLW65DQm9s3UUeXlwBXo5rZiP
+	 9TXhtZUCcTD3apdrTxWJG8pzRZmvUCnwnvIvob9TN5ZlQ5aYdjz8Mp4nMzTtT7cQCE
+	 YPB8/CMaxBBDU+0E4rwz0H5G7HAAZqt9bpBooZ+FzZhWSsVC/50gBo06sogOk68Mmr
+	 +1RNwbQ1wMaH9V53KA/B4v7SbUyceA93RlGBZ17PN8sLCW+nBpfuQPf3tzIo3fVXUb
+	 4GcxC6yOUyOWw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71449C98321;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C020C9830E;
 	Fri, 25 Sep 2026 13:43:44 +0000 (UTC)
 From: Michael Reeves via B4 Relay <devnull+michael.reeves077.gmail.com@kernel.org>
-Date: Fri, 25 Sep 2026 23:43:42 +1000
-Subject: [PATCH 07/13] wifi: brcmfmac: Use event_msgs_ext for event masks
+Date: Fri, 25 Sep 2026 23:43:41 +1000
+Subject: [PATCH 06/13] wifi: brcmfmac: Load signed PCIe firmware images
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260925-brcm4388-submit-v1-7-b5cbc2cde2fb@gmail.com>
+Message-Id: <20260925-brcm4388-submit-v1-6-b5cbc2cde2fb@gmail.com>
 References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
@@ -55,12 +55,12 @@ Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
  Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org, 
  Michael Reeves <michael.reeves077@gmail.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=13074;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790343821; l=15304;
  i=michael.reeves077@gmail.com; s=fedora-20260918;
  h=from:subject:message-id;
- bh=FRG6tUUizYoumB0K87m2z0Yh8XdJwwc0mIsYEg2R708=;
- b=/jqkdO9EsyE3WGCOaeXPoK3R4L1emZkd3S+BkqTywohjCNDimMV7i/1MWmJGkyK61hecZZM0J
- rIn1E/6f3NoDUANeEIgxtkmwx/K4JRlwDUmdKz6nLy7E1mZp4cI1Z1z
+ bh=wHOqU/qvNOb3HEkBRHU3f00di/B3js3jPhlUWu1N82w=;
+ b=/s+lCIdYv3CQTucs5miJC7t09ICG2/0N3RkQAsT+GxhHQ4MbWKcvDJWY0WjSW7GoLPMshZ44f
+ g8BUW+tcdI6A1fOSbeH8bunnt6EeNBdMNOAL0GQyEoDWdLOJ4H2+Tr8
 X-Developer-Key: i=michael.reeves077@gmail.com; a=ed25519;
  pk=VJ0TvyQ9TvfzYZa908YSE9kpkjFLLD5luv0bERu+boc=
 X-Endpoint-Received: by B4 Relay for
@@ -68,388 +68,467 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Michael Reeves <michael.reeves077@gmail.com>
 Reply-To: michael.reeves077@gmail.com
 
-From: Michael Reeves <michael.reeves077@gmail.com>
+From: Hector Martin <marcan@marcan.st>
 
-BCM4388 firmware rejects the legacy event_msgs query during preinit but
-supports the structured event_msgs_ext command.
+Signed PCIe firmware needs a signature and a memory map describing the
+image, signature, verification status, and bootloader heap.
 
-Probe event_msgs_ext during feature detection and initialize the event
-mask after feature flags are set. Use the extended command when
-supported and retain the legacy path otherwise.
+Request an optional .sig file and write the signature and reverse-TLV
+metadata to device memory. Describe an aligned heap after the firmware
+image, keeping the metadata and end footer outside it. Require NVRAM for
+signed images and preserve their reset vector.
 
-Co-developed-by: Hector Martin <marcan@marcan.st>
+Request the IRQ before starting firmware on chips that use signatures,
+while keeping ring processing disabled until initialization completes.
+
 Signed-off-by: Hector Martin <marcan@marcan.st>
+Co-developed-by: Daniel Berlin <dberlin@dberlin.org>
+Signed-off-by: Daniel Berlin <dberlin@dberlin.org>
+Co-developed-by: Michael Reeves <michael.reeves077@gmail.com>
 Signed-off-by: Michael Reeves <michael.reeves077@gmail.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  23 ----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   5 +-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  39 +++++++
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   2 +
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    | 130 ++++++++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    |   1 +
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  26 +++++
- 7 files changed, 199 insertions(+), 27 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 267 ++++++++++++++++++---
+ 1 file changed, 233 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 2a37b42ca9..93458c2fbc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -269,7 +269,6 @@ static int brcmf_c_process_cal_blob(struct brcmf_if *ifp)
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
- 	struct brcmf_pub *drvr = ifp->drvr;
--	struct brcmf_fweh_info *fweh = drvr->fweh;
- 	u8 buf[BRCMF_DCMD_SMLEN];
- 	struct brcmf_bus *bus;
- 	struct brcmf_rev_info_le revinfo;
-@@ -415,27 +414,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index ad8567e2b9..48402eb2ef 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -80,6 +80,7 @@ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txt");
+ /* per-board firmware binaries */
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.bin");
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.clm_blob");
++MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.sig");
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txcap_blob");
  
- 	brcmf_c_set_joinpref_default(ifp);
- 
--	/* Setup event_msgs, enable E_IF */
--	err = brcmf_fil_iovar_data_get(ifp, "event_msgs", fweh->event_mask,
--				       fweh->event_mask_len);
--	if (err) {
--		bphy_err(drvr, "Get event_msgs error (%d)\n", err);
--		goto done;
--	}
--	/*
--	 * BRCMF_E_IF can safely be used to set the appropriate bit
--	 * in the event_mask as the firmware event code is guaranteed
--	 * to match the value of BRCMF_E_IF because it is old cruft
--	 * that all vendors have.
--	 */
--	setbit(fweh->event_mask, BRCMF_E_IF);
--	err = brcmf_fil_iovar_data_set(ifp, "event_msgs", fweh->event_mask,
--				       fweh->event_mask_len);
--	if (err) {
--		bphy_err(drvr, "Set event_msgs error (%d)\n", err);
--		goto done;
--	}
--
- 	/* Setup default scan channel time */
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_CHANNEL_TIME,
- 				    BRCMF_DEFAULT_SCAN_CHANNEL_TIME);
-@@ -637,4 +615,3 @@ static void __exit brcmfmac_module_exit(void)
- 
- module_init(brcmfmac_module_init);
- module_exit(brcmfmac_module_exit);
--
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index d2ae679856..bb9a0aeb06 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1260,6 +1260,10 @@ static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
- 
- 	brcmf_feat_attach(drvr);
- 
-+	ret = brcmf_fweh_init_events(ifp);
-+	if (ret < 0)
-+		goto fail;
-+
- 	ret = brcmf_proto_init_done(drvr);
- 	if (ret < 0)
- 		goto fail;
-@@ -1613,4 +1617,3 @@ void __exit brcmf_core_exit(void)
- 	brcmf_usb_exit();
- 	brcmf_pcie_exit();
- }
--
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index a3c221117d..d289451644 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/netdevice.h>
- #include <linux/module.h>
-+#include <linux/slab.h>
- 
- #include <brcm_hw_ids.h>
- #include <brcmu_wifi.h>
-@@ -226,6 +227,43 @@ static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
- 	ifp->fwil_fwerr = false;
+ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+@@ -369,6 +370,9 @@ struct brcmf_pciedev_info {
+ 	struct brcmf_mp_device *settings;
+ 	struct brcmf_otp_params otp;
+ 	bool fwseed;
++	char sig_name[BRCMF_FW_NAME_LEN];
++	u32 fw_size;
++	bool skip_reset_vector;
+ #ifdef DEBUG
+ 	u32 console_interval;
+ 	bool console_active;
+@@ -468,6 +472,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 			     struct brcmf_fw_request *fwreq);
+ static struct brcmf_fw_request *
+ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo);
++static bool brcmf_pcie_request_fw_signature(struct brcmf_pciedev_info *devinfo);
+ static void
+ brcmf_pcie_fwcon_timer(struct brcmf_pciedev_info *devinfo, bool active);
+ static void brcmf_pcie_debugfs_create(struct device *dev);
+@@ -1828,26 +1833,174 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
+ 	return 0;
  }
  
-+static void brcmf_feat_event_msgs_ext(struct brcmf_if *ifp)
-+{
-+	struct brcmf_pub *drvr = ifp->drvr;
-+	struct brcmf_fweh_info *fweh = drvr->fweh;
-+	struct brcmf_eventmsgs_ext_le *eventmsgs;
-+	size_t size;
-+	int err;
-+
-+	if (!fweh || fweh->event_mask_len > 0xff)
-+		return;
-+
-+	size = struct_size(eventmsgs, mask, fweh->event_mask_len);
-+	eventmsgs = kzalloc(size, GFP_KERNEL);
-+	if (!eventmsgs)
-+		return;
-+
-+	eventmsgs->version = EVENTMSGS_VER;
-+	eventmsgs->command = EVENTMSGS_NONE;
-+	eventmsgs->len = fweh->event_mask_len;
-+	eventmsgs->maxgetsize = fweh->event_mask_len;
-+
-+	ifp->fwil_fwerr = true;
-+	err = brcmf_fil_iovar_data_get(ifp, "event_msgs_ext", eventmsgs, size);
-+	ifp->fwil_fwerr = false;
-+
-+	if (!err) {
-+		brcmf_dbg(INFO, "enabling feature: %s\n",
-+			  brcmf_feat_names[BRCMF_FEAT_EVENT_MSGS_EXT]);
-+		drvr->feat_flags |= BIT(BRCMF_FEAT_EVENT_MSGS_EXT);
-+	} else {
-+		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
-+			  brcmf_feat_names[BRCMF_FEAT_EVENT_MSGS_EXT], err);
-+	}
-+
-+	kfree(eventmsgs);
-+}
-+
- #define MAX_CAPS_BUFFER_SIZE	768
- static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
- {
-@@ -348,6 +386,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+-struct brcmf_random_seed_footer {
++struct brcmf_rtlv_footer {
+ 	__le32 length;
+ 	__le32 magic;
+ };
  
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_SCAN_V2, "scan_ver");
-+	brcmf_feat_event_msgs_ext(ifp);
- 
- 	brcmf_feat_wlc_version_overrides(drvr);
- 	brcmf_feat_firmware_overrides(drvr);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index 8165a286b6..45a05642bb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -31,6 +31,7 @@
-  * FWAUTH: Firmware authenticator
-  * DUMP_OBSS: Firmware has capable to dump obss info to support ACS
-  * SCAN_V2: Version 2 scan params
-+ * EVENT_MSGS_EXT: Firmware supports event_msgs_ext for event masks
-  * SAE_EXT: SAE authentication handled by user-space supplicant
-  */
- #define BRCMF_FEAT_LIST \
-@@ -59,6 +60,7 @@
- 	BRCMF_FEAT_DEF(SCAN_V2) \
- 	BRCMF_FEAT_DEF(PMKID_V2) \
- 	BRCMF_FEAT_DEF(PMKID_V3) \
-+	BRCMF_FEAT_DEF(EVENT_MSGS_EXT) \
- 	BRCMF_FEAT_DEF(SAE_EXT) \
- 	BRCMF_FEAT_DEF(FBT) \
- 	BRCMF_FEAT_DEF(OKC)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index 1cff4ba769..034f90ad6c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -12,7 +12,9 @@
- #include "debug.h"
- #include "tracepoint.h"
- #include "fweh.h"
-+#include "feature.h"
- #include "fwil.h"
-+#include "fwil_types.h"
- #include "proto.h"
- #include "bus.h"
- #include "fwvid.h"
-@@ -430,6 +432,128 @@ void brcmf_fweh_unregister(struct brcmf_pub *drvr,
- 	drvr->fweh->evt_handler[evt_handler_idx] = NULL;
- }
- 
-+static bool brcmf_fweh_use_event_msgs_ext(struct brcmf_if *ifp)
++struct brcmf_fw_memmap_region {
++	__le32 start;
++	__le32 end;
++};
++
++struct brcmf_fw_memmap {
++	struct brcmf_fw_memmap_region reset_vec;
++	struct brcmf_fw_memmap_region int_vec;
++	struct brcmf_fw_memmap_region rom;
++	struct brcmf_fw_memmap_region mmap;
++	struct brcmf_fw_memmap_region vstatus;
++	struct brcmf_fw_memmap_region fw;
++	struct brcmf_fw_memmap_region sig;
++	struct brcmf_fw_memmap_region heap;
++	struct brcmf_fw_memmap_region stack;
++	struct brcmf_fw_memmap_region prng;
++	struct brcmf_fw_memmap_region nvram;
++};
++
++#define BRCMF_BL_HEAP_START_GAP		0x1000
++#define BRCMF_BL_HEAP_SIZE		0x10000
+ #define BRCMF_RANDOM_SEED_MAGIC		0xfeedc0de
+ #define BRCMF_RANDOM_SEED_LENGTH	0x100
++#define BRCMF_FW_SIG_MAGIC		0xfeedfe51
++#define BRCMF_MEMMAP_MAGIC		0xfeedfe53
++#define BRCMF_VSTATUS_MAGIC		0xfeedfe54
++#define BRCMF_VSTATUS_SIZE		0x28
++#define BRCMF_END_MAGIC			0xfeed0e2d
++
++static int brcmf_pcie_alloc_rtlv(struct brcmf_pciedev_info *devinfo,
++				 u32 *address, u32 type, size_t length)
 +{
-+	return brcmf_feat_is_enabled(ifp, BRCMF_FEAT_EVENT_MSGS_EXT);
-+}
++	struct brcmf_bus *bus = dev_get_drvdata(&devinfo->pdev->dev);
++	u32 fw_top = devinfo->ci->rambase + devinfo->fw_size;
++	u32 start_addr;
++	u32 length_field;
++	struct brcmf_rtlv_footer footer = {
++		.magic = cpu_to_le32(type),
++	};
 +
-+static const char *brcmf_fweh_event_mask_iovar(struct brcmf_if *ifp)
-+{
-+	return brcmf_fweh_use_event_msgs_ext(ifp) ? "event_msgs_ext" :
-+						    "event_msgs";
-+}
-+
-+static int brcmf_fweh_get_event_mask(struct brcmf_if *ifp)
-+{
-+	struct brcmf_pub *drvr = ifp->drvr;
-+	struct brcmf_fweh_info *fweh = drvr->fweh;
-+	struct brcmf_eventmsgs_ext_le *eventmsgs;
-+	size_t size;
-+	u8 fw_len;
-+	int err;
-+
-+	memset(fweh->event_mask, 0, fweh->event_mask_len);
-+
-+	if (!brcmf_fweh_use_event_msgs_ext(ifp))
-+		return brcmf_fil_iovar_data_get(ifp, "event_msgs",
-+						fweh->event_mask,
-+						fweh->event_mask_len);
-+
-+	if (fweh->event_mask_len > 0xff)
++	if (length > 0xfffc)
 +		return -E2BIG;
 +
-+	size = struct_size(eventmsgs, mask, fweh->event_mask_len);
-+	eventmsgs = kzalloc(size, GFP_KERNEL);
-+	if (!eventmsgs)
++	length = ALIGN(length, 4);
++	if (*address < length + sizeof(footer))
 +		return -ENOMEM;
 +
-+	eventmsgs->version = EVENTMSGS_VER;
-+	eventmsgs->command = EVENTMSGS_NONE;
-+	eventmsgs->len = fweh->event_mask_len;
-+	eventmsgs->maxgetsize = fweh->event_mask_len;
-+
-+	err = brcmf_fil_iovar_data_get(ifp, "event_msgs_ext", eventmsgs, size);
-+	if (!err) {
-+		fw_len = eventmsgs->len;
-+		memcpy(fweh->event_mask, eventmsgs->mask,
-+		       min_t(u8, fw_len, fweh->event_mask_len));
-+		if (fw_len != fweh->event_mask_len)
-+			brcmf_dbg(EVENT, "event_msgs_ext returned mask len=%u, driver len=%u\n",
-+				  fw_len, fweh->event_mask_len);
-+	}
-+
-+	kfree(eventmsgs);
-+	return err;
-+}
-+
-+static int brcmf_fweh_set_event_mask(struct brcmf_if *ifp)
-+{
-+	struct brcmf_pub *drvr = ifp->drvr;
-+	struct brcmf_fweh_info *fweh = drvr->fweh;
-+	struct brcmf_eventmsgs_ext_le *eventmsgs;
-+	size_t size;
-+	int err;
-+
-+	if (!brcmf_fweh_use_event_msgs_ext(ifp))
-+		return brcmf_fil_iovar_data_set(ifp, "event_msgs",
-+						fweh->event_mask,
-+						fweh->event_mask_len);
-+
-+	if (fweh->event_mask_len > 0xff)
-+		return -E2BIG;
-+
-+	size = struct_size(eventmsgs, mask, fweh->event_mask_len);
-+	eventmsgs = kzalloc(size, GFP_KERNEL);
-+	if (!eventmsgs)
++	start_addr = *address - length - sizeof(footer);
++	if (start_addr < fw_top) {
++		brcmf_err(bus, "failed to allocate rTLV type 0x%x len 0x%zx\n",
++			  type, length);
 +		return -ENOMEM;
-+
-+	eventmsgs->version = EVENTMSGS_VER;
-+	eventmsgs->command = EVENTMSGS_SET_MASK;
-+	eventmsgs->len = fweh->event_mask_len;
-+	memcpy(eventmsgs->mask, fweh->event_mask, fweh->event_mask_len);
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "event_msgs_ext", eventmsgs, size);
-+
-+	kfree(eventmsgs);
-+	return err;
-+}
-+
-+/**
-+ * brcmf_fweh_init_events() - initialize firmware event mask.
-+ *
-+ * @ifp: primary interface object.
-+ */
-+int brcmf_fweh_init_events(struct brcmf_if *ifp)
-+{
-+	struct brcmf_pub *drvr = ifp->drvr;
-+	struct brcmf_fweh_info *fweh = drvr->fweh;
-+	const char *iovar = brcmf_fweh_event_mask_iovar(ifp);
-+	int err;
-+
-+	brcmf_dbg(EVENT, "using %s for firmware event masks (len=%u)\n", iovar,
-+		  fweh->event_mask_len);
-+
-+	err = brcmf_fweh_get_event_mask(ifp);
-+	if (err) {
-+		bphy_err(drvr, "Get %s error (%d)\n", iovar, err);
-+		return err;
 +	}
 +
-+	/*
-+	 * BRCMF_E_IF can safely be used to set the appropriate bit in the
-+	 * event mask as the firmware event code is guaranteed to match the
-+	 * value of BRCMF_E_IF because it is old cruft that all vendors have.
-+	 */
-+	brcmf_dbg(EVENT, "enable event IF\n");
-+	setbit(fweh->event_mask, BRCMF_E_IF);
++	if (type == BRCMF_RANDOM_SEED_MAGIC)
++		length_field = length;
++	else
++		length_field = length | ((length ^ 0xffff) << 16);
 +
-+	err = brcmf_fweh_set_event_mask(ifp);
++	footer.length = cpu_to_le32(length_field);
++	memcpy_toio(devinfo->tcm + *address - sizeof(footer), &footer,
++		    sizeof(footer));
++	*address = start_addr;
++
++	return 0;
++}
+ 
+-static noinline_for_stack void
+-brcmf_pcie_provide_random_bytes(struct brcmf_pciedev_info *devinfo, u32 address)
++static noinline_for_stack int
++brcmf_pcie_add_random_seed(struct brcmf_pciedev_info *devinfo, u32 *address)
+ {
+ 	u8 randbuf[BRCMF_RANDOM_SEED_LENGTH];
++	int err;
++
++	err = brcmf_pcie_alloc_rtlv(devinfo, address,
++				    BRCMF_RANDOM_SEED_MAGIC,
++				    BRCMF_RANDOM_SEED_LENGTH);
 +	if (err)
-+		bphy_err(drvr, "Set %s error (%d)\n", iovar, err);
++		return err;
+ 
++	brcmf_dbg(PCIE, "Download random seed\n");
+ 	get_random_bytes(randbuf, BRCMF_RANDOM_SEED_LENGTH);
+-	memcpy_toio(devinfo->tcm + address, randbuf, BRCMF_RANDOM_SEED_LENGTH);
++	memcpy_toio(devinfo->tcm + *address, randbuf, BRCMF_RANDOM_SEED_LENGTH);
 +
-+	return err;
++	return 0;
 +}
 +
- /**
-  * brcmf_fweh_activate_events() - enables firmware events registered.
-  *
-@@ -439,6 +563,7 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
- {
- 	struct brcmf_fweh_info *fweh = ifp->drvr->fweh;
- 	enum brcmf_fweh_event_code code;
-+	const char *iovar = brcmf_fweh_event_mask_iovar(ifp);
- 	int i, err;
- 
- 	memset(fweh->event_mask, 0, fweh->event_mask_len);
-@@ -459,10 +584,9 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
- 	if (!brcmf_fwvid_activate_events(ifp))
- 		return 0;
- 
--	err = brcmf_fil_iovar_data_set(ifp, "event_msgs", fweh->event_mask,
--				       fweh->event_mask_len);
-+	err = brcmf_fweh_set_event_mask(ifp);
- 	if (err)
--		bphy_err(fweh->drvr, "Set event_msgs error (%d)\n", err);
-+		bphy_err(fweh->drvr, "Set %s error (%d)\n", iovar, err);
- 	return err;
++static int brcmf_pcie_add_signature(struct brcmf_pciedev_info *devinfo,
++				    u32 *address,
++				    const struct firmware *fwsig)
++{
++	struct brcmf_fw_memmap memmap = {};
++	u32 sig_start, vstatus_start, fw_end, heap_start, heap_end;
++	int err;
++
++	brcmf_dbg(PCIE, "Download firmware signature\n");
++
++	memmap.sig.end = cpu_to_le32(*address);
++	err = brcmf_pcie_alloc_rtlv(devinfo, address, BRCMF_FW_SIG_MAGIC,
++				    fwsig->size);
++	if (err)
++		return err;
++	sig_start = *address;
++	memmap.sig.start = cpu_to_le32(sig_start);
++
++	memmap.vstatus.end = cpu_to_le32(*address);
++	err = brcmf_pcie_alloc_rtlv(devinfo, address, BRCMF_VSTATUS_MAGIC,
++				    BRCMF_VSTATUS_SIZE);
++	if (err)
++		return err;
++	vstatus_start = *address;
++	memmap.vstatus.start = cpu_to_le32(vstatus_start);
++
++	err = brcmf_pcie_alloc_rtlv(devinfo, address, BRCMF_MEMMAP_MAGIC,
++				    sizeof(memmap));
++	if (err)
++		return err;
++
++	fw_end = devinfo->ci->rambase + devinfo->fw_size;
++	heap_start = ALIGN(fw_end + BRCMF_BL_HEAP_START_GAP, 4);
++	heap_end = heap_start + BRCMF_BL_HEAP_SIZE;
++	if (heap_end > *address ||
++	    *address - heap_end < sizeof(struct brcmf_rtlv_footer))
++		return -ENOMEM;
++
++	memmap.fw.start = cpu_to_le32(devinfo->ci->rambase);
++	memmap.fw.end = cpu_to_le32(fw_end);
++	memmap.heap.start = cpu_to_le32(heap_start);
++	memmap.heap.end = cpu_to_le32(heap_end);
++
++	memcpy_toio(devinfo->tcm + sig_start, fwsig->data, fwsig->size);
++	memset_io(devinfo->tcm + vstatus_start, 0, BRCMF_VSTATUS_SIZE);
++	memcpy_toio(devinfo->tcm + *address, &memmap, sizeof(memmap));
++
++	err = brcmf_pcie_alloc_rtlv(devinfo, address, BRCMF_END_MAGIC, 0);
++	if (err)
++		return err;
++
++	devinfo->skip_reset_vector = true;
++	return 0;
++}
++
++static int brcmf_pcie_populate_footers(struct brcmf_pciedev_info *devinfo,
++				       u32 *address,
++				       const struct firmware *fwsig)
++{
++	int err;
++
++	if (devinfo->fwseed) {
++		err = brcmf_pcie_add_random_seed(devinfo, address);
++		if (err)
++			return err;
++	}
++
++	if (fwsig)
++		return brcmf_pcie_add_signature(devinfo, address, fwsig);
++
++	return 0;
  }
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-index e327dd58d2..53c4b58e63 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-@@ -356,6 +356,7 @@ int brcmf_fweh_register(struct brcmf_pub *drvr, enum brcmf_fweh_event_code code,
- 				       void *data));
- void brcmf_fweh_unregister(struct brcmf_pub *drvr,
- 			   enum brcmf_fweh_event_code code);
-+int brcmf_fweh_init_events(struct brcmf_if *ifp);
- int brcmf_fweh_activate_events(struct brcmf_if *ifp);
- void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 			      struct brcmf_event *event_packet,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index e74a23e118..d591f17960 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -1236,4 +1236,30 @@ struct brcmf_mkeep_alive_pkt_le {
- 	u8   data[];
- } __packed;
+ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+-					const struct firmware *fw, void *nvram,
+-					u32 nvram_len)
++					const struct firmware *fw,
++					const struct firmware *fwsig,
++					void *nvram, u32 nvram_len)
+ {
+ 	struct brcmf_bus *bus = dev_get_drvdata(&devinfo->pdev->dev);
+ 	u32 sharedram_addr;
+@@ -1855,19 +2008,30 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+ 	u32 loop_counter;
+ 	int err;
+ 	u32 address;
++	u32 free_start;
+ 	u32 resetintr;
  
-+enum event_msgs_ext_command {
-+	EVENTMSGS_NONE		= 0,
-+	EVENTMSGS_SET_BIT	= 1,
-+	EVENTMSGS_RESET_BIT	= 2,
-+	EVENTMSGS_SET_MASK	= 3,
-+};
++	devinfo->skip_reset_vector = false;
 +
-+#define EVENTMSGS_VER		1
++	if (fwsig && !nvram) {
++		brcmf_err(bus, "NVRAM required for signed firmware\n");
++		err = -ENOENT;
++		goto fail;
++	}
 +
-+/**
-+ * struct brcmf_eventmsgs_ext_le - event_msgs_ext iovar data
-+ *
-+ * @version: structure version.
-+ * @command: requested operation.
-+ * @len: mask size for set, actual firmware mask size for get.
-+ * @maxgetsize: maximum mask size that may be returned by firmware.
-+ * @mask: event mask.
-+ */
-+struct brcmf_eventmsgs_ext_le {
-+	u8 version;
-+	u8 command;
-+	u8 len;
-+	u8 maxgetsize;
-+	u8 mask[] __counted_by(len);
-+};
+ 	brcmf_dbg(PCIE, "Halt ARM.\n");
+ 	err = brcmf_pcie_enter_download_state(devinfo);
+ 	if (err)
+-		return err;
++		goto fail;
+ 
+ 	brcmf_dbg(PCIE, "Download FW %s\n", devinfo->fw_name);
+ 	memcpy_toio(devinfo->tcm + devinfo->ci->rambase,
+ 		    (void *)fw->data, fw->size);
+ 
+ 	resetintr = get_unaligned_le32(fw->data);
++	devinfo->fw_size = fw->size;
+ 	release_firmware(fw);
++	fw = NULL;
+ 
+ 	/* reset last 4 bytes of RAM address. to be used for shared
+ 	 * area. This identifies when FW is running
+@@ -1880,30 +2044,22 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+ 			  nvram_len;
+ 		memcpy_toio(devinfo->tcm + address, nvram, nvram_len);
+ 		brcmf_fw_nvram_free(nvram);
++		nvram = NULL;
+ 
+-		if (devinfo->fwseed) {
+-			size_t rand_len = BRCMF_RANDOM_SEED_LENGTH;
+-			struct brcmf_random_seed_footer footer = {
+-				.length = cpu_to_le32(rand_len),
+-				.magic = cpu_to_le32(BRCMF_RANDOM_SEED_MAGIC),
+-			};
+-
+-			/* Some chips/firmwares expect a buffer of random
+-			 * data to be present before NVRAM
+-			 */
+-			brcmf_dbg(PCIE, "Download random seed\n");
+-
+-			address -= sizeof(footer);
+-			memcpy_toio(devinfo->tcm + address, &footer,
+-				    sizeof(footer));
++		err = brcmf_pcie_populate_footers(devinfo, &address, fwsig);
++		if (err)
++			goto fail;
+ 
+-			address -= rand_len;
+-			brcmf_pcie_provide_random_bytes(devinfo, address);
+-		}
++		free_start = devinfo->ci->rambase + devinfo->fw_size;
++		if ((devinfo->fwseed || fwsig) && address > free_start)
++			memset_io(devinfo->tcm + free_start, 0,
++				  address - free_start);
+ 	} else {
+ 		brcmf_dbg(PCIE, "No matching NVRAM file found %s\n",
+ 			  devinfo->nvram_name);
+ 	}
++	release_firmware(fwsig);
++	fwsig = NULL;
+ 
+ 	sharedram_addr_written = brcmf_pcie_read_ram32(devinfo,
+ 						       devinfo->ci->ramsize -
+@@ -1911,7 +2067,7 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+ 	brcmf_dbg(PCIE, "Bring ARM in running state\n");
+ 	err = brcmf_pcie_exit_download_state(devinfo, resetintr);
+ 	if (err)
+-		return err;
++		goto fail;
+ 
+ 	brcmf_dbg(PCIE, "Wait for FW init\n");
+ 	sharedram_addr = sharedram_addr_written;
+@@ -1925,17 +2081,25 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+ 	}
+ 	if (sharedram_addr == sharedram_addr_written) {
+ 		brcmf_err(bus, "FW failed to initialize\n");
+-		return -ENODEV;
++		err = -ENODEV;
++		goto fail;
+ 	}
+ 	if (sharedram_addr < devinfo->ci->rambase ||
+ 	    sharedram_addr >= devinfo->ci->rambase + devinfo->ci->ramsize) {
+ 		brcmf_err(bus, "Invalid shared RAM address 0x%08x\n",
+ 			  sharedram_addr);
+-		return -ENODEV;
++		err = -ENODEV;
++		goto fail;
+ 	}
+ 	brcmf_dbg(PCIE, "Shared RAM addr: 0x%08x\n", sharedram_addr);
+ 
+ 	return (brcmf_pcie_init_share_ram_info(devinfo, sharedram_addr));
 +
- #endif /* FWIL_TYPES_H_ */
++fail:
++	release_firmware(fw);
++	release_firmware(fwsig);
++	brcmf_fw_nvram_free(nvram);
++	return err;
+ }
+ 
+ 
+@@ -2061,7 +2225,8 @@ static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ {
+ 	struct brcmf_pciedev_info *devinfo = (struct brcmf_pciedev_info *)ctx;
+ 
+-	brcmf_pcie_write_tcm32(devinfo, 0, rstvec);
++	if (!devinfo->skip_reset_vector)
++		brcmf_pcie_write_tcm32(devinfo, 0, rstvec);
+ }
+ 
+ 
+@@ -2290,11 +2455,18 @@ static int brcmf_pcie_read_otp(struct brcmf_pciedev_info *devinfo)
+ #define BRCMF_PCIE_FW_NVRAM	1
+ #define BRCMF_PCIE_FW_CLM	2
+ #define BRCMF_PCIE_FW_TXCAP	3
++#define BRCMF_PCIE_FW_SIG	4
++
++static bool brcmf_pcie_request_fw_signature(struct brcmf_pciedev_info *devinfo)
++{
++	return false;
++}
+ 
+ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 			     struct brcmf_fw_request *fwreq)
+ {
+ 	const struct firmware *fw;
++	const struct firmware *fwsig = NULL;
+ 	void *nvram;
+ 	struct brcmf_bus *bus;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+@@ -2313,6 +2485,8 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	brcmf_pcie_attach(devinfo);
+ 
+ 	fw = fwreq->items[BRCMF_PCIE_FW_CODE].binary;
++	if (fwreq->n_items > BRCMF_PCIE_FW_SIG)
++		fwsig = fwreq->items[BRCMF_PCIE_FW_SIG].binary;
+ 	nvram = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.data;
+ 	nvram_len = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.len;
+ 	devinfo->clm_fw = fwreq->items[BRCMF_PCIE_FW_CLM].binary;
+@@ -2323,6 +2497,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	if (ret) {
+ 		brcmf_err(bus, "Failed to get RAM info\n");
+ 		release_firmware(fw);
++		release_firmware(fwsig);
+ 		brcmf_fw_nvram_free(nvram);
+ 		goto fail;
+ 	}
+@@ -2334,7 +2509,19 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	 */
+ 	brcmf_pcie_adjust_ramsize(devinfo, (u8 *)fw->data, fw->size);
+ 
+-	ret = brcmf_pcie_download_fw_nvram(devinfo, fw, nvram, nvram_len);
++	if (brcmf_pcie_request_fw_signature(devinfo)) {
++		brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
++		ret = brcmf_pcie_request_irq(devinfo);
++		if (ret) {
++			release_firmware(fw);
++			release_firmware(fwsig);
++			brcmf_fw_nvram_free(nvram);
++			goto fail;
++		}
++	}
++
++	ret = brcmf_pcie_download_fw_nvram(devinfo, fw, fwsig, nvram,
++					   nvram_len);
+ 	if (ret)
+ 		goto fail;
+ 
+@@ -2349,9 +2536,11 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 		goto fail;
+ 
+ 	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+-	ret = brcmf_pcie_request_irq(devinfo);
+-	if (ret)
+-		goto fail;
++	if (!devinfo->irq_allocated) {
++		ret = brcmf_pcie_request_irq(devinfo);
++		if (ret)
++			goto fail;
++	}
+ 
+ 	/* hook the commonrings in the bus structure. */
+ 	for (i = 0; i < BRCMF_NROF_COMMON_MSGRINGS; i++)
+@@ -2393,17 +2582,23 @@ static struct brcmf_fw_request *
+ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
+ {
+ 	struct brcmf_fw_request *fwreq;
++	u32 n_fwnames;
+ 	struct brcmf_fw_name fwnames[] = {
+ 		{ ".bin", devinfo->fw_name },
+ 		{ ".txt", devinfo->nvram_name },
+ 		{ ".clm_blob", devinfo->clm_name },
+ 		{ ".txcap_blob", devinfo->txcap_name },
++		{ ".sig", devinfo->sig_name },
+ 	};
+ 
++	n_fwnames = ARRAY_SIZE(fwnames);
++	if (!brcmf_pcie_request_fw_signature(devinfo))
++		n_fwnames--;
++
+ 	fwreq = brcmf_fw_alloc_request(devinfo->ci->chip, devinfo->ci->chiprev,
+ 				       brcmf_pcie_fwnames,
+ 				       ARRAY_SIZE(brcmf_pcie_fwnames),
+-				       fwnames, ARRAY_SIZE(fwnames));
++				       fwnames, n_fwnames);
+ 	if (!fwreq)
+ 		return NULL;
+ 
+@@ -2414,6 +2609,10 @@ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
+ 	fwreq->items[BRCMF_PCIE_FW_CLM].flags = BRCMF_FW_REQF_OPTIONAL;
+ 	fwreq->items[BRCMF_PCIE_FW_TXCAP].type = BRCMF_FW_TYPE_BINARY;
+ 	fwreq->items[BRCMF_PCIE_FW_TXCAP].flags = BRCMF_FW_REQF_OPTIONAL;
++	if (fwreq->n_items > BRCMF_PCIE_FW_SIG) {
++		fwreq->items[BRCMF_PCIE_FW_SIG].type = BRCMF_FW_TYPE_BINARY;
++		fwreq->items[BRCMF_PCIE_FW_SIG].flags = BRCMF_FW_REQF_OPTIONAL;
++	}
+ 	/* NVRAM reserves PCI domain 0 for Broadcom's SDK faked bus */
+ 	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus) + 1;
+ 	fwreq->bus_nr = devinfo->pdev->bus->number;
 
 -- 
 2.55.0
