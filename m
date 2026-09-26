@@ -1,44 +1,42 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742133939B1;
-	Sat, 26 Sep 2026 11:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C9543CE7B
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 12:02:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790422884; cv=none; b=X2tb4qFgndrwAgWl17GKUkSMOOwq/erT6sLcpXWT8Rks++xYn/VZVenrku7DXJq1mji/yPOP6qpoEOZ6bEEJcLeBHZSNehkrSg+XHAqJ59ES5a3FT8tA4CjuMIlO6HulqDmoDHjilZ1mx8MablQkXZJGIy88vyQzSUBGufTXdFg=
+	t=1790424150; cv=none; b=PPtjNFEbKG5wrhnD0er7pGyKBkBK/Ej8FGZeJUNWwHNxFUAoJNGX3nEKTJnGQVdXeH5KiKtEBx2YKcptVHAziYNLokocmcKTx1HDT1xePGt7DKE6gKNLILbCOrbOrPgqOjQO0tPEHzU/O4/sCJ0rOBIATkcSYHRjolp9jXjcJ6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790422884; c=relaxed/simple;
-	bh=Fq5jbDzVIuZw2ej2kHYIGcktq8SPUznJZNRSaMjI0Zs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=i8ZgMxGCaxp8B9sQCQyhiwPmxgpJ1x/gJsZhiBe1QZTj35tZgj4TQ2Csq9/zHcAT1yLf3eVAREyMY8zRz8tM1i4i0bS219lFp+nzT8kdPh4D7QZI/gp2Mo3giTj2ucM0pQy3+bRQBisPg6RQljK3dN3prc4AQkjhfdGaSvqwU1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=OeXLYos5; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1790424150; c=relaxed/simple;
+	bh=v5g2lSZJOiHA6qG+q0NQxPN2jtikigg+d8gMTc43iHQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DHRncwIO0gAPgKmTczYuMz92a1UTGASVa3IedsSDxR7Y2BBiiF2LBj6Rh6FUvzBkU7cyGFh/7eDlFwCMFrM6QuoPyv0pPXkY6Y35uJMylVoz/c6FyvAC8ewMhmh70BTV3eb+6eDJBku4dDaN0eRMef7pYRIg7IPhk4aXvCCx5wU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=YyxTvWOb; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="OeXLYos5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=WU
-	ePfDmCfNLpzcWpvJPtJwMT6WGDZs7a4ovshwuMNTQ=; b=OeXLYos5PK8DUaHnVp
-	PbTSY/2nHlPojLssC33/39ZZSklHF9mf2bylb2eG3jvyTTO9F8QwptJIU6k3u0bb
-	M54YcKH8ytHRQj/Kq/1pWnYvKCNQxB1mJl4TK8mdhI1eJyZGiQe3CGNnwo2AOZCB
-	ogJbB2xN4XhsuzpUTjiL4nWlY=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3_5g2r7dqdKZ3Aw--.46536S2;
-	Sat, 26 Sep 2026 19:40:39 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
-	Govindaraj Saminathan <quic_gsamin@quicinc.com>,
-	Shashidhar Lakkavalli <slakkavalli@datto.com>,
-	Ganesh Sesetti <gseset@codeaurora.org>,
-	Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Cc: Jiale Yao <yaojiale02@163.com>
-Subject: [PATCH] wifi: ath11k: Reject short management RX frames
-Date: Sat, 26 Sep 2026 19:40:37 +0800
-Message-Id: <20260926114037.3231795-1-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="YyxTvWOb"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Xh2bPMlYfOspXsjxu6z8DaPqFna+ilRw9lV8BcEjcqs=; b=YyxTvWObGROMsA+ZddRdnTpNgf
+	YrcJSA1fieuLppex+ulFwPQYvbpLf/zTg745QxyV466PV1Nmp7g7sIIJ0qS55iZUDcqDyhb0wVdpJ
+	QGukkP7Rwa7H4jaZYYeRJTKX0UPqZ4Ta5m4uh0qTBnMy00aW12IfO1mTzlsiY3YoMopg=;
+Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1xAR6g-00AxZk-1t;
+	Sat, 26 Sep 2026 14:02:18 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH wireless] wifi: mac80211: set info->band for 802.3 encap offload frames
+Date: Sat, 26 Sep 2026 14:02:16 +0200
+Message-ID: <20260926120216.4054712-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,44 +44,51 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3_5g2r7dqdKZ3Aw--.46536S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WFWUur43GryxJFW8Zw1fZwb_yoW8Xr4kpF
-	W7KasFkry7AanrJr15AFW8ZayY9anYyFW2gFWrt345uFy5CF15tFn5WF9Yqr15tr45Jr12
-	va1jvrW5Gas5t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRR6wJUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8BeBu2q3rzefgwAA3E
 
-ath11k_pull_mgmt_rx_params_tlv() verifies that the firmware-reported frame
-length fits in the WMI event, but does not ensure that it can hold an IEEE
-802.11 management header. It then sets skb->len to that reported length.
+Unlike the 802.11 TX paths, ieee80211_8023_xmit() does not set
+info->band from the channel context on non-MLD interfaces. It stays at
+0, so ieee80211_get_tx_rates() uses the wrong band for these frames.
 
-ath11k_mgmt_rx_event() subsequently reads frame_control and other header
-fields without another length check. A firmware event with a short buf_len
-can therefore cause an out-of-bounds read.
+Set it the same way as ieee80211_build_hdr(): drop the frame if there is
+no channel context, and leave the band at 0 on MLD interfaces.
 
-Reject frames shorter than a three-address IEEE 802.11 header before
-adjusting the skb to expose the frame.
-
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
+Reported-by: Andrea Pesaresi <andreapesaresi82@gmail.com>
+Fixes: 50ff477a8639 ("mac80211: add 802.11 encapsulation offloading support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/tx.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index bbca275a8289..02cd9764b6fc 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5995,7 +5995,8 @@ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
- 	hdr->tsf_delta =  ev->tsf_delta;
- 	memcpy(hdr->rssi_ctl, ev->rssi_ctl, sizeof(hdr->rssi_ctl));
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c8217f6d146e..b88acb18e04d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4735,6 +4735,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct tid_ampdu_tx *tid_tx = NULL;
+ 	struct sk_buff *seg, *next;
+ 	unsigned int skbs = 0, len = 0;
+@@ -4784,6 +4785,16 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
  
--	if (skb->len < (frame - skb->data) + hdr->buf_len) {
-+	if (hdr->buf_len < sizeof(struct ieee80211_hdr_3addr) ||
-+	    skb->len < (frame - skb->data) + hdr->buf_len) {
- 		ath11k_warn(ab, "invalid length in mgmt rx hdr ev");
- 		return -EPROTO;
- 	}
++	/* MLD transmissions must not rely on the band */
++	if (!ieee80211_vif_is_mld(&sdata->vif)) {
++		chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
++		if (unlikely(!chanctx_conf)) {
++			kfree_skb_list(skb);
++			return;
++		}
++		info->band = chanctx_conf->def.chan->band;
++	}
++
+ 	info->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;
+ 	info->control.vif = &sdata->vif;
+ 
 -- 
-2.34.1
+2.47.3
 
