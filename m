@@ -1,98 +1,89 @@
-Received: from mail.andi.de1.cc (mail.andi.de1.cc [178.238.236.174])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF42274658
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 07:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.238.236.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742133939B1;
+	Sat, 26 Sep 2026 11:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790406045; cv=none; b=iuCyb2DWizaeTXZfJ0ZbkbkgDb6I3yKnwH1YmHNyyjCKJqfMUQ2LzW4rAiCOmj++0biKca1z2SRC9zyt2SUs/7lBk3QLB8+rFT3tngctMsJGb/WZJyc77n/LEkfPW3MfO1MZp3B5H8FfvlRii7Kpu/tuUhEivEgogLcEBT9ZjPg=
+	t=1790422884; cv=none; b=X2tb4qFgndrwAgWl17GKUkSMOOwq/erT6sLcpXWT8Rks++xYn/VZVenrku7DXJq1mji/yPOP6qpoEOZ6bEEJcLeBHZSNehkrSg+XHAqJ59ES5a3FT8tA4CjuMIlO6HulqDmoDHjilZ1mx8MablQkXZJGIy88vyQzSUBGufTXdFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790406045; c=relaxed/simple;
-	bh=fkHy2QRrC5ESJ9xdBOXt6a3B4fKvvVrykffU4U22+5c=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hNXBzNkQRBPtQKIl4ml9kBQ6hf83PhisqY9znQ+Ox//A/UfVIX+Y+ndeCg8iZDzbeE1mw4cCu1G981NCp+G38KctAfe0zkih9EmIz/Tuijfc8+DJKsLMz0B/xtxZAvKeUEMwTAQakqqgTZ35uPPqRLnrt4ANhpSpxZ4ecSMsC3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kemnade.info; spf=pass smtp.mailfrom=kemnade.info; dkim=pass (2048-bit key) header.d=kemnade.info header.i=@kemnade.info header.b=jGR1xOcI; arc=none smtp.client-ip=178.238.236.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kemnade.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kemnade.info
+	s=arc-20240116; t=1790422884; c=relaxed/simple;
+	bh=Fq5jbDzVIuZw2ej2kHYIGcktq8SPUznJZNRSaMjI0Zs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=i8ZgMxGCaxp8B9sQCQyhiwPmxgpJ1x/gJsZhiBe1QZTj35tZgj4TQ2Csq9/zHcAT1yLf3eVAREyMY8zRz8tM1i4i0bS219lFp+nzT8kdPh4D7QZI/gp2Mo3giTj2ucM0pQy3+bRQBisPg6RQljK3dN3prc4AQkjhfdGaSvqwU1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=OeXLYos5; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kemnade.info header.i=@kemnade.info header.b="jGR1xOcI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=kemnade.info; s=20220719; h=References:In-Reply-To:Subject:Cc:To:From:
-	Reply-To:Content-ID:Content-Description;
-	bh=M/FcFSIa0wWtwRh7uVhb2hmR+wUAgWX3VOJzlETWQNU=; t=1790406044; x=1791615644; 
-	b=jGR1xOcItG5OzjA5fH2ZgrKZOL5E4cPzqQEze4k7yT6YhL1l1NsMORM5Hs+1VYGviMNTwaYwSfh
-	L0u+nq/3854b5vzr1qW8ws9ILUzubE5CDAKbhkbsyC3dcD9XooJ7j0HUPYJmLLErnHomuHT9gl1xn
-	iTXHRLjHeTM323xjXIGU8yKu706iDNhOPTCT+xfNrNIrIMO8oXA8ldSmoQ5OFsYph3F9jT6E59GEs
-	G6h/jC81rWFwyDNj4GPqnVKIAzrPnsT1kny54kmkjKnrsr2xmvWsw9oAhOozj0iDFqozIDcEZ5NnL
-	4m6q7iGCp8FN3gH+cLpbrw+G2Pi/nNRx83nQ==;
-Date: Sat, 26 Sep 2026 09:00:26 +0200
-From: Andreas Kemnade <andreas@kemnade.info>
-To: Brian Norris <briannorris@chromium.org>
-Cc: David Lin <yu-hao.lin@nxp.com>, Francesco Dolcini
- <francesco@dolcini.it>, Neeraj Sanjay Kale <neeraj.sanjaykale@nxp.com>,
- =?UTF-8?B?VGFtw6FzIFN6xbFjcw==?= <tszucs@protonmail.ch>,
- "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "lukas@wunner.de" <lukas@wunner.de>
-Subject: Re: [EXT] Re: mwifiex firmware mrvl/sd8987_uapsta.bin missing in
- the firmware git
-Message-ID: <20260926090026.22b00f57@kemnade.info>
-In-Reply-To: <arag95IJHR5FiFo9@google.com>
-References: <20240605160013.6bea8d4d@aktux>
-	<_pNnwoI9WHlb2EY635KdIv6t_goU-ZYp9Vav31jkFOCf9fCE9EeKdyCea2m-L8pgfsKIQvODlnQLhQqmWSYip9e6FFZwaJHL5-u5rdOS_kY=@protonmail.ch>
-	<20240605174709.5043af8f@akair>
-	<20240606101839.GA76158@francesco-nb>
-	<PA4PR04MB9638D1FD47BFBFDDB096C778D1C02@PA4PR04MB9638.eurprd04.prod.outlook.com>
-	<ZmlEny2W0nArOf1T@gaggiata.pivistrello.it>
-	<PA4PR04MB96381A69AD86ED9C9E4AD9CDD1CD2@PA4PR04MB9638.eurprd04.prod.outlook.com>
-	<20260925165814.567c9ab7@kemnade.info>
-	<arag95IJHR5FiFo9@google.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; aarch64-unknown-linux-gnu)
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="OeXLYos5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=WU
+	ePfDmCfNLpzcWpvJPtJwMT6WGDZs7a4ovshwuMNTQ=; b=OeXLYos5PK8DUaHnVp
+	PbTSY/2nHlPojLssC33/39ZZSklHF9mf2bylb2eG3jvyTTO9F8QwptJIU6k3u0bb
+	M54YcKH8ytHRQj/Kq/1pWnYvKCNQxB1mJl4TK8mdhI1eJyZGiQe3CGNnwo2AOZCB
+	ogJbB2xN4XhsuzpUTjiL4nWlY=
+Received: from pc.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3_5g2r7dqdKZ3Aw--.46536S2;
+	Sat, 26 Sep 2026 19:40:39 +0800 (CST)
+From: Jiale Yao <yaojiale02@163.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+	Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
+	Govindaraj Saminathan <quic_gsamin@quicinc.com>,
+	Shashidhar Lakkavalli <slakkavalli@datto.com>,
+	Ganesh Sesetti <gseset@codeaurora.org>,
+	Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Cc: Jiale Yao <yaojiale02@163.com>
+Subject: [PATCH] wifi: ath11k: Reject short management RX frames
+Date: Sat, 26 Sep 2026 19:40:37 +0800
+Message-Id: <20260926114037.3231795-1-yaojiale02@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3_5g2r7dqdKZ3Aw--.46536S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WFWUur43GryxJFW8Zw1fZwb_yoW8Xr4kpF
+	W7KasFkry7AanrJr15AFW8ZayY9anYyFW2gFWrt345uFy5CF15tFn5WF9Yqr15tr45Jr12
+	va1jvrW5Gas5t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRR6wJUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8BeBu2q3rzefgwAA3E
 
-On Fri, 25 Sep 2026 09:27:35 -0700
-Brian Norris <briannorris@chromium.org> wrote:
+ath11k_pull_mgmt_rx_params_tlv() verifies that the firmware-reported frame
+length fits in the WMI event, but does not ensure that it can hold an IEEE
+802.11 management header. It then sets skb->len to that reported length.
 
-> On Fri, Sep 25, 2026 at 04:58:14PM +0200, Andreas Kemnade wrote:
-> > The License terms have in 2.3(b):
-> > "(b)     to copy and distribute as needed, solely in connection with an
-> > Authorized System and for use in combination with a NXP Product,"
-> > 
-> > If I read it correctly, the firmware cannot life in such a repository, since
-> > the repository is used by different machines. Is my interpretation correct?
-re-establishing context again: "such a repository" means that fw packages as
-e.g. alpine packages and then put into the official alpine repositiory.  
-> 
-> I'm no expert and am not providing legal advice.
-> 
-I am not either, but there are NXP people in CC hoping to say something
-more official or finally un-stall this issue.
+ath11k_mgmt_rx_event() subsequently reads frame_control and other header
+fields without another length check. A firmware event with a short buf_len
+can therefore cause an out-of-bounds read.
 
-> I see there is some roughly similar (but a little weaker-soundging)
-> language in some existing linux-firmware licenses. e.g., "permitted
-> solely operating in conjunction with <company> authorized products".
-> 
-Often it is restricting *use* not *distribution*. 
+Reject frames shorter than a three-address IEEE 802.11 header before
+adjusting the skb to expose the frame.
 
-> I also see the linux-firmware README only says:
-> 
->     Your commit **must** contain a `Signed-Off-By:` from someone authoritative on
->     the licensing of the firmware in question (i.e. from within the company
->     that owns the code).
-> 
-> I take that to mean that linux-firmware doesn't really try to own the
-> licensing rules. They defer to the company that owns the IP.
-> 
-There are rules what licenses might forbid and what not in LICENSE-CRITERIA.md.
-At least submitting it to the firmware repo (so from NXP sight a third
-party repo) sounds like some permission for distribution.
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards,
-Andreas
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index bbca275a8289..02cd9764b6fc 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -5995,7 +5995,8 @@ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
+ 	hdr->tsf_delta =  ev->tsf_delta;
+ 	memcpy(hdr->rssi_ctl, ev->rssi_ctl, sizeof(hdr->rssi_ctl));
+ 
+-	if (skb->len < (frame - skb->data) + hdr->buf_len) {
++	if (hdr->buf_len < sizeof(struct ieee80211_hdr_3addr) ||
++	    skb->len < (frame - skb->data) + hdr->buf_len) {
+ 		ath11k_warn(ab, "invalid length in mgmt rx hdr ev");
+ 		return -EPROTO;
+ 	}
+-- 
+2.34.1
+
