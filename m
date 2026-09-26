@@ -1,54 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93A821E7660
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B059128DB55
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790442942; cv=none; b=CRBeD9ZFcgE/JpT6FQeNd04QN1VQTJYjqo72Ud2AVON7UjmFcwJZZ06OtQIq/jAqhrsAUWWZt4xxsiLDMOX4j9q8xIYXkLHFyitiJWEJcq6g3h26DO5Gd5EwMtJ4NR5uP8xj9HSaAIjksNJ3tudFYndfOlwK4R0ZTSBfDDq9s7c=
+	t=1790442944; cv=none; b=byWnpNHGn94Ry+WOPOSTV9uUL6h58FZhySfGYG5x0DS15Cv2c8E0Abn34aEHLg511VkV1QD0m4f7FsOKD+Mz5w/iLerIEK5LzMR3yvfDGxv4/XIdcY19alCGgP19xR5l9MkzNlD93KYGRT5wZcnzrO8bV2G5knMqCXeCWJ2nU/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790442942; c=relaxed/simple;
-	bh=G3YDxvp54FL/yWTQetjO6agr7VsbIEpIGOIAob0FFc4=;
+	s=arc-20240116; t=1790442944; c=relaxed/simple;
+	bh=PxMIeu4hzdo37hidGVKu0O8kVUCrA1q49L4uFUyj2x0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R8FfUosGVK2cEfvp8ujT576bo9g5N1Fvg+Vs1ua64OBFqUB+wycAp8iGS5ArfSmAU06eSnwW+Muj/XCtRso12g+o9vxnlmQDUO56tZNRJN0YyYwd5r9H9l7OrqyKQqWT3Ga6XpGXwKCCU9nT+J7QWVTTYe8mmf+RDklvf/SHSWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Hi+R5Sv1; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=oRXx3pro2rO0TEy8bTfRirvc4A27wnuAUYlvi3lXUYkuhz27NpXKDv8WrJrwrntch+b9Zqu47yolsKcs26Mvug09KBD5WHsvEnvL2uL9OwK+h7XTz2yPREKys4beT8YHYCC3uuuUQz9XdyJboU9fqCoZO3ez9VfvUMMrhTN9PFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QYwoPYUZ; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Hi+R5Sv1"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QYwoPYUZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790442941; x=1821978941;
+  t=1790442943; x=1821978943;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=G3YDxvp54FL/yWTQetjO6agr7VsbIEpIGOIAob0FFc4=;
-  b=Hi+R5Sv1VBdHkBMJc4oYt0JLRylUzcqGk8Z6PahMjkT7GE3kBZqa1vmx
-   QHRwJhj4eue1GzDK5L2zG0MdLv5x1MKrlVdHl+7wUqwie3+SWgfWQp1dt
-   qd9LCHJVEp2OVU43gNQGEpnAIgxKSP8Y1pZTlvoN3U1hPEIIxL0k/f+qt
-   UG0yxurdjSpRR5NHZ1e2kxjhmUG/QQ/dbi+DaMNRVoVsbxVEVU2JXgyfc
-   9gM6CVotyzdYjUcTbXMal/VLt34jao9WABVQiLm2lq4cmtKqxNQbUDkml
-   kSpJAGJ0tgOT7aUYOf6pfGhE/VIb6m0tIduF6TjlVhywX54OQuKKI2lzw
-   Q==;
-X-CSE-ConnectionGUID: y1VdUD4gQhGnW2dhWRw5fQ==
-X-CSE-MsgGUID: OYkeFsY8RT+fM2j5eJH3Kg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533277"
+  bh=PxMIeu4hzdo37hidGVKu0O8kVUCrA1q49L4uFUyj2x0=;
+  b=QYwoPYUZqhQVo350GnnFNiSHN1cETBIQy+vtgmN2cGBB0y1+Py5hkCzM
+   IlKdYf3unOwNf5jyQ5wETmm3KwoJCeIgz/+ZtOA8f6akC77EmP45MCs03
+   UFVn+EZw/hoDp6cXffwQ5bRKYmfE7lnyIu9H9/AWPP3X5Vpx/iMW3xaE7
+   5itvVynVBlyxgAJ3LPpttGGgZIdESUOoS1+XmlrvEQdC6s1ybkFHIxLNB
+   O6yxjlfxlKBYHPUhvMSyXOoSqJN4tH+jdcbptKcMoZzv+zd0PPyQULPn6
+   aT3jS8/YU6paV8MS9KSokqyYOwLWO/jofBRmACNNASOl4hnfjHWBukR95
+   w==;
+X-CSE-ConnectionGUID: t6HOZz/3RDaZa85PL4Ytkg==
+X-CSE-MsgGUID: 9Zw3L0T8SuaSRDmKvo8SQQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533280"
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="100533277"
+   d="scan'208";a="100533280"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:41 -0700
-X-CSE-ConnectionGUID: Ogy80a6dRG6y5y05hD89Xw==
-X-CSE-MsgGUID: uWxs+cTrRaKOudUAuCjetA==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:42 -0700
+X-CSE-ConnectionGUID: oGTj4xB3RgSm6d/DAl9WUg==
+X-CSE-MsgGUID: 86g4WTvpTny+Uxir+PkR3w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="274196927"
+   d="scan'208";a="274196938"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:40 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:41 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 iwlwifi-next 03/15] wifi: iwlwifi: Revert "wifi: iwlwifi: pcie: move generation specific files to a folder"
-Date: Sat, 26 Sep 2026 20:17:22 +0300
-Message-Id: <20260926201527.91ac209ad70d.I25521996309a25ac779cb31f2c93477b25be9ac3@changeid>
+Cc: linux-wireless@vger.kernel.org,
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Subject: [PATCH v2 iwlwifi-next 04/15] wifi: iwlwifi: send standalone SAR to firmware
+Date: Sat, 26 Sep 2026 20:17:23 +0300
+Message-Id: <20260926201527.d5315e93c1ce.Ic02190e91e795dcfe660710721b47de71f2b2c86@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
 References: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
@@ -61,177 +62,350 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-This reverts commit a6fafaedb5d6 ("wifi: iwlwifi: pcie: move generation
-specific files to a folder").
+From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-The pcie/gen1_2/ subfolder was introduced to prepare for a future
-pcie-transport, which will not happen eventually.
-Move all the files back to the pcie folder and remove the gen1_2 folder.
+Plumb the standalone WRSS/EWSS SAR data and
+send the standalone profile to firmware.
 
+Add REDUCE_TX_POWER_CMD version 12 support with the
+IWL_TX_POWER_MODE_SET_STANDALONE_CHAINS set_mode, and rename
+iwl_dev_tx_power_cmd_v11 to iwl_dev_tx_power_cmd_v12 to match the
+updated command layout.
+
+This enables higher transmit power limits for standalone firmware
+operation while preserving the existing concurrent SAR handling.
+
+Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/Makefile                 | 6 +++---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c              | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c      | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c         | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c               | 2 +-
- .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/internal.h | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/rx.c   | 2 +-
- .../wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans-gen2.c   | 4 ++--
- .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans.c    | 2 +-
- .../net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx-gen2.c  | 0
- drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx.c   | 0
- 11 files changed, 12 insertions(+), 12 deletions(-)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/internal.h (99%)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/rx.c (99%)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans-gen2.c (99%)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/trans.c (99%)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx-gen2.c (100%)
- rename drivers/net/wireless/intel/iwlwifi/pcie/{gen1_2 => }/tx.c (100%)
+ .../net/wireless/intel/iwlwifi/fw/api/power.h | 14 ++--
+ .../wireless/intel/iwlwifi/fw/regulatory.c    | 26 ++++--
+ .../wireless/intel/iwlwifi/fw/regulatory.h    |  4 +-
+ .../net/wireless/intel/iwlwifi/mld/power.c    |  2 +-
+ .../wireless/intel/iwlwifi/mld/regulatory.c   | 80 +++++++++++++++++--
+ .../wireless/intel/iwlwifi/mld/regulatory.h   |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  3 +-
+ 7 files changed, 107 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index 2a74efe09cf0..6746281350e0 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -9,9 +9,9 @@ iwlwifi-objs		+= iwl-utils.o
- iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index 115e65ba19f8..4d54a95b98ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -300,7 +300,8 @@ enum iwl_dev_tx_power_cmd_mode {
+ 	IWL_TX_POWER_MODE_SET_ACK = 3,
+ 	IWL_TX_POWER_MODE_SET_SAR_TIMER = 4,
+ 	IWL_TX_POWER_MODE_SET_SAR_TIMER_DEFAULT_TABLE = 5,
+-}; /* TX_POWER_REDUCED_FLAGS_TYPE_API_E_VER_5 */;
++	IWL_TX_POWER_MODE_SET_STANDALONE_CHAINS = 8, /* cmd ver 12+ */
++}; /* TX_POWER_REDUCED_FLAGS_TYPE_API_E_VER_2 */;
  
- # Bus
--iwlwifi-objs		+= pcie/ctxt-info.o pcie/ctxt-info-v2.o pcie/drv.o pcie/utils.o
--iwlwifi-objs		+= pcie/gen1_2/rx.o pcie/gen1_2/tx.o pcie/gen1_2/trans.o
--iwlwifi-objs		+= pcie/gen1_2/trans-gen2.o pcie/gen1_2/tx-gen2.o
-+iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
-+iwlwifi-objs		+= pcie/ctxt-info.o pcie/ctxt-info-v2.o pcie/trans-gen2.o pcie/tx-gen2.o
-+iwlwifi-objs		+= pcie/utils.o
+ #define IWL_NUM_CHAIN_TABLES	1
+ #define IWL_NUM_CHAIN_TABLES_V2	2
+@@ -464,31 +465,34 @@ struct iwl_dev_tx_power_cmd_v10 {
+ 	__le32 flags;
+ } __packed; /* TX_REDUCED_POWER_API_S_VER_10 */
  
- CFLAGS_pcie/drv.o += -Wno-override-init
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index 8cc8f6c4e934..24bf45f06746 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -12,7 +12,7 @@
- #include "iwl-drv.h"
- #include <linux/dmapool.h>
- #include "fw/api/commands.h"
--#include "pcie/gen1_2/internal.h"
-+#include "pcie/internal.h"
- #include "pcie/iwl-context-info-v2.h"
- 
- struct iwl_trans_dev_restart_data {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-index 1ea23d297713..c75210829ec9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
-@@ -6,7 +6,7 @@
- #include "iwl-trans.h"
- #include "iwl-fh.h"
- #include "iwl-context-info-v2.h"
--#include "gen1_2/internal.h"
-+#include "internal.h"
- #include "iwl-prph.h"
- 
- static const struct dmi_system_id dmi_force_scu_active_approved_list[] = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 7f886200d693..23ec968577bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -6,7 +6,7 @@
- #include "iwl-trans.h"
- #include "iwl-fh.h"
- #include "iwl-context-info.h"
--#include "gen1_2/internal.h"
-+#include "internal.h"
- #include "iwl-prph.h"
- 
- static void *_iwl_pcie_ctxt_info_dma_alloc_coherent(struct iwl_trans *trans,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 4fa514ba9975..905482419a9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -15,7 +15,7 @@
- #include "iwl-trans.h"
- #include "iwl-drv.h"
- #include "iwl-prph.h"
--#include "gen1_2/internal.h"
-+#include "internal.h"
- 
- #define _IS_A(cfg, _struct) __builtin_types_compatible_p(typeof(cfg),	\
- 							 struct _struct)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-similarity index 99%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-rename to drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index cff02afa4e26..e10aa8e7e061 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -22,7 +22,7 @@
- #include "iwl-io.h"
- #include "iwl-op-mode.h"
- #include "iwl-drv.h"
--#include "pcie/iwl-context-info.h"
-+#include "iwl-context-info.h"
+-struct iwl_dev_tx_power_cmd_v11 {
++struct iwl_dev_tx_power_cmd_v12 {
+ 	__le16 per_chain[IWL_NUM_CHAIN_TABLES_V2][IWL_NUM_CHAIN_LIMITS][IWL_NUM_SUB_BANDS_V3];
+ 	u8 per_chain_restriction_changed;
+ 	u8 reserved;
+ 	__le32 timer_period;
+ 	__le32 flags;
+-} __packed; /* TX_REDUCED_POWER_API_S_VER_11 */
++} __packed; /* TX_REDUCED_POWER_API_S_VER_11
++	     * TX_REDUCED_POWER_API_S_VER_12
++	     */
  
  /*
-  * RX related structures and functions
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-similarity index 99%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c
-rename to drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 4631e11f2a96..eb70922cf516 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -12,7 +12,7 @@
- #include "iwl-io.h"
- #include "internal.h"
- #include "iwl-op-mode.h"
--#include "pcie/iwl-context-info-v2.h"
-+#include "iwl-context-info-v2.h"
- #include "fw/dbg.h"
- 
- /******************************************************************************
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-similarity index 99%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c
-rename to drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index f41cbe62e7aa..39dd963920b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -5,8 +5,8 @@
+  * struct iwl_dev_tx_power_cmd - TX power reduction command (multiversion)
+  * @common: common part of the command
+  * @v9: version 9 part of the command
+  * @v10: version 10 part of the command
+- * @v11: version 11 part of the command
++ * @v12: version 12 part of the command (also covers v11)
   */
- #include "iwl-trans.h"
- #include "iwl-prph.h"
--#include "pcie/iwl-context-info.h"
--#include "pcie/iwl-context-info-v2.h"
-+#include "iwl-context-info.h"
-+#include "iwl-context-info-v2.h"
- #include "internal.h"
- #include "fw/dbg.h"
+ struct iwl_dev_tx_power_cmd {
+ 	struct iwl_dev_tx_power_common common;
+ 	union {
+ 		struct iwl_dev_tx_power_cmd_v9 v9;
+ 		struct iwl_dev_tx_power_cmd_v10 v10;
+-		struct iwl_dev_tx_power_cmd_v11 v11;
++		struct iwl_dev_tx_power_cmd_v12 v12;
+ 	};
+ } __packed; /* TX_REDUCED_POWER_API_S_VER_9
+ 	     * TX_REDUCED_POWER_API_S_VER_10
+ 	     * TX_REDUCED_POWER_API_S_VER_11
++	     * TX_REDUCED_POWER_API_S_VER_12
+ 	     */
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-similarity index 99%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-rename to drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index db92c5c954e6..4771cf3b3e11 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -28,7 +28,7 @@
- #include "mei/iwl-mei.h"
- #include "internal.h"
- #include "iwl-fh.h"
--#include "pcie/iwl-context-info-v2.h"
-+#include "iwl-context-info-v2.h"
- #include "pcie/utils.h"
+ #define IWL_NUM_GEO_PROFILES		3
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 137303e4a29b..27a5804dbd73 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -247,17 +247,22 @@ IWL_EXPORT_SYMBOL(iwl_sar_geo_fill_table);
  
- #define IWL_HOST_MON_BLOCK_PEMON	0x00
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx-gen2.c
-rename to drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/tx.c
-rename to drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
+ 			      __le16 *per_chain, u32 n_subbands,
+-			      int prof_a, int prof_b)
++			      int prof_a, int prof_b,
++			      const struct iwl_sar_profile *profiles,
++			      bool is_standalone)
+ {
+ 	int profs[BIOS_SAR_NUM_CHAINS] = { prof_a, prof_b };
+ 	int i, j;
+ 
++	BUILD_BUG_ON(ARRAY_SIZE(fwrt->sar_standalone_profiles[0].chains[0].subbands) !=
++		     ARRAY_SIZE(fwrt->sar_profiles[0].chains[0].subbands));
++
+ 	if (WARN_ON_ONCE(n_subbands >
+ 			 ARRAY_SIZE(fwrt->sar_profiles[0].chains[0].subbands)))
+ 		return -EINVAL;
+ 
+ 	for (i = 0; i < BIOS_SAR_NUM_CHAINS; i++) {
+-		struct iwl_sar_profile *prof;
++		const struct iwl_sar_profile *prof;
+ 
+ 		/* don't allow SAR to be disabled (profile 0 means disable) */
+ 		if (profs[i] == 0)
+@@ -268,11 +273,13 @@ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
+ 			return -EINVAL;
+ 
+ 		/* profiles go from 1 to 4, so decrement to access the array */
+-		prof = &fwrt->sar_profiles[profs[i] - 1];
++		prof = &profiles[profs[i] - 1];
+ 
+ 		/* if the profile is disabled, do nothing */
+ 		if (!prof->enabled) {
+-			IWL_DEBUG_RADIO(fwrt, "SAR profile %d is disabled.\n",
++			IWL_DEBUG_RADIO(fwrt,
++					"SAR %sprofile %d is disabled.\n",
++					is_standalone ? "standalone " : "",
+ 					profs[i]);
+ 			/*
+ 			 * if one of the profiles is disabled, we
+@@ -282,8 +289,8 @@ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
+ 			return 1;
+ 		}
+ 
+-		IWL_DEBUG_INFO(fwrt,
+-			       "SAR EWRD: chain %d profile index %d\n",
++		IWL_DEBUG_INFO(fwrt, "SAR %s: chain %d profile index %d\n",
++			       is_standalone ? "standalone" : "EWRD",
+ 			       i, profs[i]);
+ 		IWL_DEBUG_RADIO(fwrt, "  Chain[%d]:\n", i);
+ 		for (j = 0; j < n_subbands; j++) {
+@@ -299,14 +306,17 @@ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
+ 
+ int iwl_sar_fill_profile(struct iwl_fw_runtime *fwrt,
+ 			 __le16 *per_chain, u32 n_tables, u32 n_subbands,
+-			 int prof_a, int prof_b)
++			 int prof_a, int prof_b,
++			 const struct iwl_sar_profile *profiles,
++			 bool is_standalone)
+ {
+ 	int i, ret = 0;
+ 
+ 	for (i = 0; i < n_tables; i++) {
+ 		ret = iwl_sar_fill_table(fwrt,
+ 			&per_chain[i * n_subbands * BIOS_SAR_NUM_CHAINS],
+-			n_subbands, prof_a, prof_b);
++			n_subbands, prof_a, prof_b, profiles,
++			is_standalone);
+ 		if (ret)
+ 			break;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+index bd7ea0ff3d19..e32e107812b1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+@@ -210,7 +210,9 @@ int iwl_sar_geo_fill_table(struct iwl_fw_runtime *fwrt,
+ 
+ int iwl_sar_fill_profile(struct iwl_fw_runtime *fwrt,
+ 			 __le16 *per_chain, u32 n_tables, u32 n_subbands,
+-			 int prof_a, int prof_b);
++			 int prof_a, int prof_b,
++			 const struct iwl_sar_profile *profiles,
++			 bool is_standalone);
+ 
+ bool iwl_is_ppag_approved(struct iwl_fw_runtime *fwrt);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/power.c b/drivers/net/wireless/intel/iwlwifi/mld/power.c
+index 2387f3da5185..6fcbb1a2e8a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/power.c
+@@ -525,7 +525,7 @@ int iwl_mld_set_tx_power(struct iwl_mld *mld,
+ 		.common.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_LINK),
+ 		.common.pwr_restriction = cpu_to_le16(u_tx_power),
+ 	};
+-	int len = sizeof(cmd.common) + sizeof(cmd.v11);
++	int len = sizeof(cmd.common) + sizeof(cmd.v12);
+ 
+ 	if (iwl_fw_lookup_cmd_ver(mld->fw, cmd_id, 10) == 10)
+ 		len = sizeof(cmd.common) + sizeof(cmd.v10);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+index 94dd7cc97ad4..76998e3e3e49 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+@@ -74,6 +74,21 @@ void iwl_mld_get_bios_tables(struct iwl_mld *mld)
+ 					"EWRD SAR BIOS table invalid or unavailable. (%d)\n",
+ 					ret);
+ 
++		ret = iwl_bios_get_wsss_table(&mld->fwrt);
++		if (ret < 0)
++			IWL_DEBUG_RADIO(mld,
++					"WSSS (WRDS Standalone) SAR BIOS table invalid or unavailable. (%d)\n",
++					ret);
++
++		if (!ret) {
++			/* EWSS only extends the standalone SAR profiles from WSSS. */
++			ret = iwl_bios_get_ewss_table(&mld->fwrt);
++			if (ret < 0)
++				IWL_DEBUG_RADIO(mld,
++						"EWSS (EWRD Standalone) SAR BIOS table invalid or unavailable. (%d)\n",
++						ret);
++		}
++
+ 		ret = iwl_bios_get_wgds_table(&mld->fwrt);
+ 		if (ret < 0)
+ 			IWL_DEBUG_RADIO(mld,
+@@ -135,7 +150,9 @@ static int iwl_mld_geo_sar_init(struct iwl_mld *mld)
+ 	return iwl_mld_send_cmd_pdu(mld, cmd_id, &cmd, cmd_size);
+ }
+ 
+-int iwl_mld_config_sar_profile(struct iwl_mld *mld, int prof_a, int prof_b)
++static int
++iwl_mld_config_sar_concurrent_profile(struct iwl_mld *mld, int prof_a,
++				      int prof_b)
+ {
+ 	struct iwl_dev_tx_power_cmd cmd = {
+ 		.common.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_CHAINS),
+@@ -152,8 +169,9 @@ int iwl_mld_config_sar_profile(struct iwl_mld *mld, int prof_a, int prof_b)
+ 		num_subbands = IWL_NUM_SUB_BANDS_V2;
+ 		break;
+ 	case 11:
+-		cmd.v11.flags = cpu_to_le32(mld->fwrt.reduced_power_flags);
+-		cmd_size = sizeof(cmd.common) + sizeof(cmd.v11);
++	case 12:
++		cmd.v12.flags = cpu_to_le32(mld->fwrt.reduced_power_flags);
++		cmd_size = sizeof(cmd.common) + sizeof(cmd.v12);
+ 		num_subbands = IWL_NUM_SUB_BANDS_V3;
+ 		break;
+ 	default:
+@@ -163,12 +181,13 @@ int iwl_mld_config_sar_profile(struct iwl_mld *mld, int prof_a, int prof_b)
+ 	}
+ 
+ 	/* TODO: CDB - support IWL_NUM_CHAIN_TABLES_V2 */
+-	/* v10 and v11 have the same position for per_chain */
+-	BUILD_BUG_ON(offsetof(typeof(cmd), v11.per_chain) !=
++	/* v10 and v12 have the same position for per_chain */
++	BUILD_BUG_ON(offsetof(typeof(cmd), v12.per_chain) !=
+ 		     offsetof(typeof(cmd), v10.per_chain));
+-	ret = iwl_sar_fill_profile(&mld->fwrt, &cmd.v11.per_chain[0][0][0],
++	ret = iwl_sar_fill_profile(&mld->fwrt, &cmd.v12.per_chain[0][0][0],
+ 				   IWL_NUM_CHAIN_TABLES, num_subbands,
+-				   prof_a, prof_b);
++				   prof_a, prof_b,
++				   mld->fwrt.sar_profiles, false);
+ 	/* return on error or if the profile is disabled (positive number) */
+ 	if (ret)
+ 		return ret;
+@@ -176,6 +195,51 @@ int iwl_mld_config_sar_profile(struct iwl_mld *mld, int prof_a, int prof_b)
+ 	return iwl_mld_send_cmd_pdu(mld, REDUCE_TX_POWER_CMD, &cmd, cmd_size);
+ }
+ 
++static int iwl_mld_config_sar_standalone_profile(struct iwl_mld *mld,
++						 int prof_a, int prof_b)
++{
++	struct iwl_dev_tx_power_cmd cmd = {
++		.common.set_mode =
++			cpu_to_le32(IWL_TX_POWER_MODE_SET_STANDALONE_CHAINS),
++	};
++	int ret;
++
++	/* standalone per-chain SAR limits require cmd version 12 */
++	if (iwl_fw_lookup_cmd_ver(mld->fw, REDUCE_TX_POWER_CMD, 10) != 12)
++		return 0;
++
++	ret = iwl_sar_fill_profile(&mld->fwrt,
++				   &cmd.v12.per_chain[0][0][0],
++				   IWL_NUM_CHAIN_TABLES,
++				   IWL_NUM_SUB_BANDS_V3,
++				   prof_a, prof_b,
++				   mld->fwrt.sar_standalone_profiles,
++				   true);
++	/* return on error or if the standalone profile is disabled */
++	if (ret)
++		return ret;
++
++	return iwl_mld_send_cmd_pdu(mld, REDUCE_TX_POWER_CMD, &cmd,
++				    sizeof(cmd.common) + sizeof(cmd.v12));
++}
++
++int iwl_mld_config_sar_profiles(struct iwl_mld *mld, int prof_a, int prof_b)
++{
++	int ret;
++
++	ret = iwl_mld_config_sar_concurrent_profile(mld, prof_a, prof_b);
++	/* return on error or if the profile is disabled (positive number) */
++	if (ret)
++		return ret;
++
++	ret = iwl_mld_config_sar_standalone_profile(mld, prof_a, prof_b);
++	/* standalone profile is optional and may be disabled (positive number) */
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
+ int iwl_mld_init_sar(struct iwl_mld *mld)
+ {
+ 	int chain_a_prof = 1;
+@@ -190,7 +254,7 @@ int iwl_mld_init_sar(struct iwl_mld *mld)
+ 		chain_b_prof = mld->fwrt.sar_chain_b_profile;
+ 	}
+ 
+-	ret = iwl_mld_config_sar_profile(mld, chain_a_prof, chain_b_prof);
++	ret = iwl_mld_config_sar_profiles(mld, chain_a_prof, chain_b_prof);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.h b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.h
+index 5498c19789f4..0877b951f2e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
+ #ifndef __iwl_mld_regulatory_h__
+ #define __iwl_mld_regulatory_h__
+@@ -18,6 +18,6 @@ int iwl_mld_init_sgom(struct iwl_mld *mld);
+ 
+ int iwl_mld_init_sar(struct iwl_mld *mld);
+ 
+-int iwl_mld_config_sar_profile(struct iwl_mld *mld, int prof_a, int prof_b);
++int iwl_mld_config_sar_profiles(struct iwl_mld *mld, int prof_a, int prof_b);
+ 
+ #endif /* __iwl_mld_regulatory_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 0b5b41223a8a..c3402f5e47a0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -911,7 +911,8 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
+ 
+ 	ret = iwl_sar_fill_profile(&mvm->fwrt, per_chain,
+ 				   IWL_NUM_CHAIN_TABLES,
+-				   n_subbands, prof_a, prof_b);
++				   n_subbands, prof_a, prof_b,
++				   mvm->fwrt.sar_profiles, false);
+ 
+ 	/* return on error or if the profile is disabled (positive number) */
+ 	if (ret)
 -- 
 2.34.1
 
