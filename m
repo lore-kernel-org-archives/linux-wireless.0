@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833D736C9CC
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13B9735F5ED
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790442954; cv=none; b=fKRITSSn3t4ekTgQsenuVQc/l2BnqCxT9prkQoQTSsB9P9MQpgQ785HejBC8qEsO+HDtO/xODk0MC73a+/Bz2K8DG5Qk1aMOC7l+mslxYn/Q0xOpV3h8/e8m18QxARW94n4huZOQpC9QBoiGWXPTZgdOfdKdnygmf58RpzShKqc=
+	t=1790442955; cv=none; b=cVGHXtz6FWypLbMqNGX5SzRqIw6o58XTTt1AU5PbFHDjDe3ex2tOO1a/cGuBQ0P5N/sGZkuK00ijAsXNhgkKw1c7iZJYQQ0vYpU9xcRn1DTqrtTMROVFK5gVMfvDX/dA0HWht77GP9tHBs5AJuonmXpnTTXdzaW9xTLr7qzvdM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790442954; c=relaxed/simple;
-	bh=bkdTw6MzykLha6txiYVoimMmPlAmzM0685P9NiuSYLY=;
+	s=arc-20240116; t=1790442955; c=relaxed/simple;
+	bh=Y2LyYraap3PN309hyaUzYpIsei4mg24BhgZ1klPrXIQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=W4VBMLHA9vfgjmBaNjoeRg+AmqHxXTLPKWQ4XiwIgd91cBi/rTmqVA84fVCSonZJsMD4kO3yjBrn0c66VpUqfkx0SsYQDFS4T29FVbs9Dyv6AHwa8qAyjgl0X9r1Nj66MwQE+cPBZlzQQI2HvwMY30wXxbCCKjJaimUZYfurebY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eorA07+o; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=MHDL0XB5W15t4BAdJxA1M0P2H52x/2Mt0cA2nXaWYbKPvjdy3Nwh665OX2fALw6mF9vSL8oQNparV/HZzmLp8za6GfpjT3sUxZ6F686kisutQ3YPlUwhT5ioyKgMqQsnCHarYnzSAyEq7pinfGq8Ikjx86WHjs1aJMYwwVaI0zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YnIUQNdS; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eorA07+o"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YnIUQNdS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790442953; x=1821978953;
+  t=1790442954; x=1821978954;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bkdTw6MzykLha6txiYVoimMmPlAmzM0685P9NiuSYLY=;
-  b=eorA07+ofn9FtUpA1cWB9FYb4KOQtnAsvY9Ycj5gLI4R7eaFZ1BuOOkp
-   NzZFOs2BO6In12JN/8FL4W3nNAF+gIewmMapI1qnVzhOJTGNNMqVRl2nC
-   U+ten+VO907rqB0+ESV6hItWD28+8/hJPvPJd1e7Dya3jg7H/g7mJR5XB
-   bpcVBfl5XUB+NdnsIrH6Fqz52NRgX1rg0WaoOtU7jh5O4nad9QUr6AwnZ
-   npavRh68AVZitTFl45i2hW3TrfzBW16RmqLxV+QzZkXrTTNOYhujX4CSK
-   B5K3HP6qwoH2UnJ/JIAdir/gF64Q1ZTp0lpj/oWZJQu7Djqsd1baj/Kq5
-   A==;
-X-CSE-ConnectionGUID: IiCWTpzPR+WzUqNES0smmQ==
-X-CSE-MsgGUID: p2WRrBWPQm+HezYedTmHXg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533297"
+  bh=Y2LyYraap3PN309hyaUzYpIsei4mg24BhgZ1klPrXIQ=;
+  b=YnIUQNdSbHTsu9Fztb9LYcOFoL8pGAPHzA5Bs9+6FoppnEEQJSnuDsWA
+   +bGvhxkRwjfcku6EJLEBrvrqO/H3CWwEdBsZXv+shkTCUdwpwhAMYms8a
+   6N+DX9p7su+0Ndl1IkSi2NBrnAIxEyPOSDDkyiXbS/4FGrFwPXF0qBpUZ
+   ALjzZ3xZk8KnDo/KNkzyADaAzraHCljhjvBeHe/SoaHtE9ZBehAsCIZ9K
+   cDAtSfBqHBShKWXxnkLQk6bdPGjgXkvhUG2zatY5FWtet4Zsa8LgT3WTE
+   4zg2h4+odmUjYgD0m8t7ydmo7PpwcUYn26YgWAjZ/xcsI4CBw+AywDO1+
+   Q==;
+X-CSE-ConnectionGUID: oFbyAEZRTnun/ebSOFd18A==
+X-CSE-MsgGUID: 8a2M2bW1RYy5aXR1ggyfuw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533299"
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="100533297"
+   d="scan'208";a="100533299"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:53 -0700
-X-CSE-ConnectionGUID: FUIV52TAR1WSnSLh5qo0Eg==
-X-CSE-MsgGUID: mOEvAEw3SqCYYbUEKl85AQ==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:54 -0700
+X-CSE-ConnectionGUID: mMbDIyrUQ9WkiesfzYMpUw==
+X-CSE-MsgGUID: DnxvF5BURX+bHZiSE58R8w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="274197013"
+   d="scan'208";a="274197018"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:52 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:53 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2 iwlwifi-next 11/15] wifi: iwlwifi: move iwl_force_nmi() to where it belongs
-Date: Sat, 26 Sep 2026 20:17:30 +0300
-Message-Id: <20260926201527.c3312fb2f2cc.Ie0d3ea9b23e35d7ff4b67e129c7b97ccb7c6c453@changeid>
+Subject: [PATCH v2 iwlwifi-next 12/15] wifi: iwlwifi: add support for the new MPDU descriptor
+Date: Sat, 26 Sep 2026 20:17:31 +0300
+Message-Id: <20260926201527.cf236c23d1aa.Ie2d919c884f7db8cd76b4cb6a9f4584eb285eea5@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
 References: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
@@ -62,253 +62,73 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-iwl_force_nmi() forces a firmware NMI and has nothing to do with the
-register I/O helpers in iwl-io.c. Move it to iwl-trans.c and rename it
-to iwl_trans_force_nmi() to match the transport API naming.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The firmware now reports in DW-12 bits 31:24 the RU/MRU/DRU that was
+used for the received frame, in trigger-like format.
+
+The MAC context byte moved to bits 31:24 of DW-10.
+It isn't used by the driver, so just follow the new layout.
+
+Assisted-by: LLM
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c    |  5 +++--
- drivers/net/wireless/intel/iwlwifi/iwl-io.c    | 18 ------------------
- drivers/net/wireless/intel/iwlwifi/iwl-io.h    |  1 -
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 18 ++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  2 ++
- .../net/wireless/intel/iwlwifi/mld/debugfs.c   |  2 +-
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c   |  2 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c  |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c  |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c   |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c   |  4 ++--
- 12 files changed, 32 insertions(+), 30 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 8c8d15ac71ac..897538066b7d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2055,7 +2055,7 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 		if (trigger->flags & IWL_FW_DBG_FORCE_RESTART) {
- 			IWL_WARN(fwrt, "Force restart: trigger %d fired.\n",
- 				 trig);
--			iwl_force_nmi(fwrt->trans);
-+			iwl_trans_force_nmi(fwrt->trans);
- 			return 0;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index a8f1edf19bbe..20460534fc99 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -583,7 +583,11 @@ struct iwl_rx_mpdu_desc_v3 {
+ 	/**
+ 	 * @reserved_xsum: reserved high bits in the raw checksum
+ 	 */
+-	__le16 reserved_xsum;
++	u8 reserved_xsum;
++	/**
++	 * @mac_context: MAC context mask, in this DW only from API version 10
++	 */
++	u8 mac_context;
+ 	/* DW11 */
+ 	/**
+ 	 * @rate_n_flags: RX rate/flags encoding
+@@ -603,9 +607,10 @@ struct iwl_rx_mpdu_desc_v3 {
+ 	 */
+ 	u8 channel;
+ 	/**
+-	 * @mac_context: MAC context mask
++	 * @ru: RU/MRU/DRU used for the frame, in trigger-like format;
++	 *	only from API version 10, this byte held @mac_context before
+ 	 */
+-	u8 mac_context;
++	u8 ru;
+ 	/* DW13 */
+ 	/**
+ 	 * @gp2_on_air_rise: GP2 timer value on air rise (INA)
+@@ -647,7 +652,11 @@ struct iwl_rx_mpdu_desc_v3 {
+ 	__le32 reserved[1];
+ } __packed; /* RX_MPDU_RES_START_API_S_VER_3,
+ 	     * RX_MPDU_RES_START_API_S_VER_5,
+-	     * RX_MPDU_RES_START_API_S_VER_6
++	     * RX_MPDU_RES_START_API_S_VER_6,
++	     * RX_MPDU_RES_START_API_S_VER_7,
++	     * RX_MPDU_RES_START_API_S_VER_8,
++	     * RX_MPDU_RES_START_API_S_VER_9,
++	     * RX_MPDU_RES_START_API_S_VER_10
+ 	     */
  
-@@ -2233,7 +2233,8 @@ static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
- 	}
+ /**
+@@ -737,6 +746,8 @@ struct iwl_rx_mpdu_desc {
+ 	     * RX_MPDU_RES_START_API_S_VER_6
+ 	     * RX_MPDU_RES_START_API_S_VER_7
+ 	     * RX_MPDU_RES_START_API_S_VER_8
++	     * RX_MPDU_RES_START_API_S_VER_9
++	     * RX_MPDU_RES_START_API_S_VER_10
+ 	     */
  
- 	if (fwrt->trans->dbg.last_tp_resetfw == IWL_FW_INI_RESET_FW_MODE_STOP_FW_ONLY)
--		iwl_force_nmi(fwrt->trans);
-+		iwl_trans_force_nmi(fwrt->trans);
-+
- out:
- 	if (iwl_trans_dbg_ini_valid(fwrt->trans)) {
- 		iwl_fw_error_dump_data_free(dump_data);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index ef4d97ef0b1b..cc6bf4ea5055 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -10,7 +10,6 @@
- #include "iwl-io.h"
- #include "iwl-csr.h"
- #include "iwl-debug.h"
--#include "iwl-prph.h"
- 
- void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val)
- {
-@@ -216,20 +215,3 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
- 	}
- }
- IWL_EXPORT_SYMBOL(iwl_clear_bits_prph);
--
--void iwl_force_nmi(struct iwl_trans *trans)
--{
--	if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_9000)
--		iwl_write_prph_delay(trans, DEVICE_SET_NMI_REG,
--				     DEVICE_SET_NMI_VAL_DRV, 1);
--	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
--		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
--				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
--	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ)
--		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
--				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
--	else
--		iwl_write32(trans, CSR_DOORBELL_VECTOR,
--			    UREG_DOORBELL_TO_ISR6_NMI_BIT);
--}
--IWL_EXPORT_SYMBOL(iwl_force_nmi);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-index e66b0c2a0467..e4a9f2ba0de9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-@@ -57,7 +57,6 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask);
- void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 ofs,
- 			    u32 bits, u32 mask);
- void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask);
--void iwl_force_nmi(struct iwl_trans *trans);
- 
- /*
-  * UMAC periphery address space changed from 0xA00000 to 0xD00000 starting from
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index ad43cf53e8c5..efe657857772 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -10,6 +10,7 @@
- 
- #include "iwl-trans.h"
- #include "iwl-drv.h"
-+#include "iwl-prph.h"
- #include <linux/dmapool.h>
- #include "fw/api/commands.h"
- #include "pcie/internal.h"
-@@ -452,6 +453,23 @@ void iwl_trans_write_prph(struct iwl_trans *trans, u32 ofs, u32 val)
- 	return iwl_trans_pcie_write_prph(trans, ofs, val);
- }
- 
-+void iwl_trans_force_nmi(struct iwl_trans *trans)
-+{
-+	if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_9000)
-+		iwl_write_prph_delay(trans, DEVICE_SET_NMI_REG,
-+				     DEVICE_SET_NMI_VAL_DRV, 1);
-+	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
-+		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
-+				    UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
-+	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ)
-+		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
-+				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
-+	else
-+		iwl_write32(trans, CSR_DOORBELL_VECTOR,
-+			    UREG_DOORBELL_TO_ISR6_NMI_BIT);
-+}
-+IWL_EXPORT_SYMBOL(iwl_trans_force_nmi);
-+
- int iwl_trans_read_mem(struct iwl_trans *trans, u32 addr,
- 		       void *buf, int dwords)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index f933cba7eee8..a7bb6cee8188 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1055,6 +1055,8 @@ static inline bool iwl_trans_fw_running(struct iwl_trans *trans)
- 
- void iwl_trans_sync_nmi(struct iwl_trans *trans);
- 
-+void iwl_trans_force_nmi(struct iwl_trans *trans);
-+
- int iwl_trans_load_pnvm(struct iwl_trans *trans,
- 			const struct iwl_pnvm_image *pnvm_data,
- 			const struct iwl_ucode_capabilities *capa);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
-index 351a4f177e92..dd4bf7cb6a79 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
-@@ -69,7 +69,7 @@ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mld *mld, char *buf,
- 	if (count == 6 && !strcmp(buf, "nolog\n"))
- 		mld->fw_status.do_not_dump_once = true;
- 
--	iwl_force_nmi(mld->trans);
-+	iwl_trans_force_nmi(mld->trans);
- 
- 	return count;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 4db0f29dd21a..06502f57e823 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1102,7 +1102,7 @@ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mvm *mvm, char *buf,
- 	if (count == 6 && !strcmp(buf, "nolog\n"))
- 		set_bit(IWL_MVM_STATUS_SUPPRESS_ERROR_LOG_ONCE, &mvm->status);
- 
--	iwl_force_nmi(mvm->trans);
-+	iwl_trans_force_nmi(mvm->trans);
- 
- 	return count;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 5bd246e37943..a4f3d3c2bd35 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -5258,7 +5258,7 @@ iwl_mvm_switch_vif_chanctx_swap(struct iwl_mvm *mvm,
- 
- out_restart:
- 	/* things keep failing, better restart the hw */
--	iwl_force_nmi(mvm->trans);
-+	iwl_trans_force_nmi(mvm->trans);
- 	return ret;
- }
- 
-@@ -5294,7 +5294,7 @@ iwl_mvm_switch_vif_chanctx_reassign(struct iwl_mvm *mvm,
- 
- out_restart:
- 	/* things keep failing, better restart the hw */
--	iwl_force_nmi(mvm->trans);
-+	iwl_trans_force_nmi(mvm->trans);
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 817c6dacfacc..a94eaca0b3ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -2703,7 +2703,7 @@ void iwl_mvm_scan_timeout_wk(struct work_struct *work)
- 
- 	IWL_ERR(mvm, "regular scan timed out\n");
- 
--	iwl_force_nmi(mvm->trans);
-+	iwl_trans_force_nmi(mvm->trans);
- }
- 
- static void iwl_mvm_fill_scan_type(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index d1ef0365b932..db3933b0d197 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1493,7 +1493,7 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
- 
- out_err:
- 	WARN(1, "Invalid rxb from HW %u\n", (u32)vid);
--	iwl_force_nmi(trans);
-+	iwl_trans_force_nmi(trans);
- 	return NULL;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 48ae2440cfe1..1304d8916424 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3596,7 +3596,7 @@ void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
- 	if (interrupts_enabled)
- 		iwl_trans_pci_interrupts(trans, false);
- 
--	iwl_force_nmi(trans);
-+	iwl_trans_force_nmi(trans);
- 	while (time_after(timeout, jiffies)) {
- 		u32 inta_hw = iwl_read32(trans, inta_addr);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 26d1530cfa37..496435ea93ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -715,7 +715,7 @@ static void iwl_txq_stuck_timer(struct timer_list *t)
- 
- 	iwl_txq_log_scd_error(trans, txq);
- 
--	iwl_force_nmi(trans);
-+	iwl_trans_force_nmi(trans);
- }
- 
- int iwl_pcie_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq,
-@@ -1105,7 +1105,7 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
- 		if (nfreed++ > 0) {
- 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
- 				idx, txq->write_ptr, r);
--			iwl_force_nmi(trans);
-+			iwl_trans_force_nmi(trans);
- 		}
- 	}
- 
+ #define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
 -- 
 2.34.1
 
