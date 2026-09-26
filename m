@@ -1,54 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0529128DB55
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833D736C9CC
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790442952; cv=none; b=XJGz9tH65AWKKvJpwVIgbJHqyYL3zluiP8lpnFg4v5plQ1DMrRn8MXI7HmLpEpAdNJcVIBmc0Ot55nqqSkbr9zOAMDbcaLBDcd7P/6NksGh5Pvt4MvYFVvoTb26qxq0awazWBvE57wPrxZG2s1OUp2/4FeyGfWB4dANRf1qftm8=
+	t=1790442954; cv=none; b=fKRITSSn3t4ekTgQsenuVQc/l2BnqCxT9prkQoQTSsB9P9MQpgQ785HejBC8qEsO+HDtO/xODk0MC73a+/Bz2K8DG5Qk1aMOC7l+mslxYn/Q0xOpV3h8/e8m18QxARW94n4huZOQpC9QBoiGWXPTZgdOfdKdnygmf58RpzShKqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790442952; c=relaxed/simple;
-	bh=7gJ1lhFBbFpdxHVN23oXfqbbyeqL/fF9iwSPPudDRmY=;
+	s=arc-20240116; t=1790442954; c=relaxed/simple;
+	bh=bkdTw6MzykLha6txiYVoimMmPlAmzM0685P9NiuSYLY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FjlfI1NVeGntiAu2NMf3lL1GURAMJ9yn24rLQdJLq/HXW1tPsd72awkq+ofbQgxWteW6fSaVAcJrCIBhQFYrC2MLXzVRBh7BqC9x4JXt7H624jdU2ilwUKa1BunrgsKwAbHl+PRDPnwbJs7iJEy3JZkRKREiepXnafa/TIGqXsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OEWwQXm/; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=W4VBMLHA9vfgjmBaNjoeRg+AmqHxXTLPKWQ4XiwIgd91cBi/rTmqVA84fVCSonZJsMD4kO3yjBrn0c66VpUqfkx0SsYQDFS4T29FVbs9Dyv6AHwa8qAyjgl0X9r1Nj66MwQE+cPBZlzQQI2HvwMY30wXxbCCKjJaimUZYfurebY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eorA07+o; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OEWwQXm/"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eorA07+o"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790442951; x=1821978951;
+  t=1790442953; x=1821978953;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7gJ1lhFBbFpdxHVN23oXfqbbyeqL/fF9iwSPPudDRmY=;
-  b=OEWwQXm/4V4cS/qKPJC+FCwBMptfoUSJ4XdC5vIw3/56hghnGJwn01lc
-   PAqS8UyckWK40jTUApSHt+ylM6jIEmiuadEOuzBZdz9scaM0cwDMEIjJj
-   3xE4jJg8QHp8ixWruO5+XVeTP4zc1UJyyypnVdrzIpiwD12spdNh6nOXL
-   VdRNRlEJ/WuQhMxJhljgmPDBXtfRGKx1eJb8sPKAU+UZJK8dlO8kq+904
-   1OwcI/O17ppd4QBly8kCwzOYl9xq8ObF9BgLEbVcFhPvkq6j9lO6lp2sg
-   ZESR7Ea8xkrriwJjx6K6BSA0T3YMPIf504aBLZGd114NXCAitQ/88CAxc
-   g==;
-X-CSE-ConnectionGUID: B3bzXiwTSp+eh6L1pCJCfg==
-X-CSE-MsgGUID: QMgmEvJSQ+qYlOOpi2NzHA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533292"
+  bh=bkdTw6MzykLha6txiYVoimMmPlAmzM0685P9NiuSYLY=;
+  b=eorA07+ofn9FtUpA1cWB9FYb4KOQtnAsvY9Ycj5gLI4R7eaFZ1BuOOkp
+   NzZFOs2BO6In12JN/8FL4W3nNAF+gIewmMapI1qnVzhOJTGNNMqVRl2nC
+   U+ten+VO907rqB0+ESV6hItWD28+8/hJPvPJd1e7Dya3jg7H/g7mJR5XB
+   bpcVBfl5XUB+NdnsIrH6Fqz52NRgX1rg0WaoOtU7jh5O4nad9QUr6AwnZ
+   npavRh68AVZitTFl45i2hW3TrfzBW16RmqLxV+QzZkXrTTNOYhujX4CSK
+   B5K3HP6qwoH2UnJ/JIAdir/gF64Q1ZTp0lpj/oWZJQu7Djqsd1baj/Kq5
+   A==;
+X-CSE-ConnectionGUID: IiCWTpzPR+WzUqNES0smmQ==
+X-CSE-MsgGUID: p2WRrBWPQm+HezYedTmHXg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533297"
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="100533292"
+   d="scan'208";a="100533297"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:51 -0700
-X-CSE-ConnectionGUID: NOLu+rz4SrChY1j6njGC8g==
-X-CSE-MsgGUID: SRcWzE8TRJmYucgB4Jd9Xw==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:53 -0700
+X-CSE-ConnectionGUID: FUIV52TAR1WSnSLh5qo0Eg==
+X-CSE-MsgGUID: mOEvAEw3SqCYYbUEKl85AQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="274197007"
+   d="scan'208";a="274197013"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:50 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:52 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 iwlwifi-next 10/15] wifi: iwlwifi: open code iwl_trans_sync_nmi_with_addr()
-Date: Sat, 26 Sep 2026 20:17:29 +0300
-Message-Id: <20260926201527.a2048732f45f.I23611eb40d875c6a69df0c08add3834f6f7d8528@changeid>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2 iwlwifi-next 11/15] wifi: iwlwifi: move iwl_force_nmi() to where it belongs
+Date: Sat, 26 Sep 2026 20:17:30 +0300
+Message-Id: <20260926201527.c3312fb2f2cc.Ie0d3ea9b23e35d7ff4b67e129c7b97ccb7c6c453@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
 References: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
@@ -61,154 +62,253 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-iwl_trans_sync_nmi_with_addr() had a single caller,
-iwl_trans_pcie_sync_nmi(). There is no reason to keep it as a separate
-exported function in iwl-io.c, so embed its body directly in the caller
-and drop the now-unused declaration.
+iwl_force_nmi() forces a firmware NMI and has nothing to do with the
+register I/O helpers in iwl-io.c. Move it to iwl-trans.c and rename it
+to iwl_trans_force_nmi() to match the transport API naming.
 
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 36 -------------------
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |  5 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  5 ---
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 33 +++++++++++++++--
- 4 files changed, 31 insertions(+), 48 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c    |  5 +++--
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c    | 18 ------------------
+ drivers/net/wireless/intel/iwlwifi/iwl-io.h    |  1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 18 ++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  2 ++
+ .../net/wireless/intel/iwlwifi/mld/debugfs.c   |  2 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c   |  2 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c  |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c   |  2 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c   |  4 ++--
+ 12 files changed, 32 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 8c8d15ac71ac..897538066b7d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2055,7 +2055,7 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
+ 		if (trigger->flags & IWL_FW_DBG_FORCE_RESTART) {
+ 			IWL_WARN(fwrt, "Force restart: trigger %d fired.\n",
+ 				 trig);
+-			iwl_force_nmi(fwrt->trans);
++			iwl_trans_force_nmi(fwrt->trans);
+ 			return 0;
+ 		}
+ 
+@@ -2233,7 +2233,8 @@ static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
+ 	}
+ 
+ 	if (fwrt->trans->dbg.last_tp_resetfw == IWL_FW_INI_RESET_FW_MODE_STOP_FW_ONLY)
+-		iwl_force_nmi(fwrt->trans);
++		iwl_trans_force_nmi(fwrt->trans);
++
+ out:
+ 	if (iwl_trans_dbg_ini_valid(fwrt->trans)) {
+ 		iwl_fw_error_dump_data_free(dump_data);
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index 544b8e686dfe..ef4d97ef0b1b 100644
+index ef4d97ef0b1b..cc6bf4ea5055 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -233,39 +233,3 @@ void iwl_force_nmi(struct iwl_trans *trans)
- 			    UREG_DOORBELL_TO_ISR6_NMI_BIT);
+@@ -10,7 +10,6 @@
+ #include "iwl-io.h"
+ #include "iwl-csr.h"
+ #include "iwl-debug.h"
+-#include "iwl-prph.h"
+ 
+ void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+ {
+@@ -216,20 +215,3 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
+ 	}
  }
- IWL_EXPORT_SYMBOL(iwl_force_nmi);
+ IWL_EXPORT_SYMBOL(iwl_clear_bits_prph);
 -
--void iwl_trans_sync_nmi_with_addr(struct iwl_trans *trans, u32 inta_addr,
--				  u32 sw_err_bit)
+-void iwl_force_nmi(struct iwl_trans *trans)
 -{
--	unsigned long timeout = jiffies + IWL_TRANS_NMI_TIMEOUT;
--	bool interrupts_enabled = test_bit(STATUS_INT_ENABLED, &trans->status);
--
--	/* if the interrupts were already disabled, there is no point in
--	 * calling iwl_disable_interrupts
--	 */
--	if (interrupts_enabled)
--		iwl_trans_interrupts(trans, false);
--
--	iwl_force_nmi(trans);
--	while (time_after(timeout, jiffies)) {
--		u32 inta_hw = iwl_read32(trans, inta_addr);
--
--		/* Error detected by uCode */
--		if (inta_hw & sw_err_bit) {
--			/* Clear causes register */
--			iwl_write32(trans, inta_addr, inta_hw & sw_err_bit);
--			break;
--		}
--
--		mdelay(1);
--	}
--
--	/* enable interrupts only if there were already enabled before this
--	 * function to avoid a case were the driver enable interrupts before
--	 * proper configurations were made
--	 */
--	if (interrupts_enabled)
--		iwl_trans_interrupts(trans, true);
--
--	iwl_trans_fw_error(trans, IWL_ERR_TYPE_NMI_FORCED);
+-	if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_9000)
+-		iwl_write_prph_delay(trans, DEVICE_SET_NMI_REG,
+-				     DEVICE_SET_NMI_VAL_DRV, 1);
+-	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
+-		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
+-				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
+-	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ)
+-		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
+-				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
+-	else
+-		iwl_write32(trans, CSR_DOORBELL_VECTOR,
+-			    UREG_DOORBELL_TO_ISR6_NMI_BIT);
 -}
+-IWL_EXPORT_SYMBOL(iwl_force_nmi);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
+index e66b0c2a0467..e4a9f2ba0de9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
+@@ -57,7 +57,6 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask);
+ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 ofs,
+ 			    u32 bits, u32 mask);
+ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask);
+-void iwl_force_nmi(struct iwl_trans *trans);
+ 
+ /*
+  * UMAC periphery address space changed from 0xA00000 to 0xD00000 starting from
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index 24bf45f06746..ad43cf53e8c5 100644
+index ad43cf53e8c5..efe657857772 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -523,11 +523,6 @@ int iwl_trans_d3_resume(struct iwl_trans *trans, bool reset)
- }
- IWL_EXPORT_SYMBOL(iwl_trans_d3_resume);
+@@ -10,6 +10,7 @@
  
--void iwl_trans_interrupts(struct iwl_trans *trans, bool enable)
--{
--	iwl_trans_pci_interrupts(trans, enable);
--}
--
- void iwl_trans_sync_nmi(struct iwl_trans *trans)
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
++#include "iwl-prph.h"
+ #include <linux/dmapool.h>
+ #include "fw/api/commands.h"
+ #include "pcie/internal.h"
+@@ -452,6 +453,23 @@ void iwl_trans_write_prph(struct iwl_trans *trans, u32 ofs, u32 val)
+ 	return iwl_trans_pcie_write_prph(trans, ofs, val);
+ }
+ 
++void iwl_trans_force_nmi(struct iwl_trans *trans)
++{
++	if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_9000)
++		iwl_write_prph_delay(trans, DEVICE_SET_NMI_REG,
++				     DEVICE_SET_NMI_VAL_DRV, 1);
++	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
++		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
++				    UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
++	else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ)
++		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
++				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
++	else
++		iwl_write32(trans, CSR_DOORBELL_VECTOR,
++			    UREG_DOORBELL_TO_ISR6_NMI_BIT);
++}
++IWL_EXPORT_SYMBOL(iwl_trans_force_nmi);
++
+ int iwl_trans_read_mem(struct iwl_trans *trans, u32 addr,
+ 		       void *buf, int dwords)
  {
- 	iwl_trans_pcie_sync_nmi(trans);
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index dfad839dd2e6..f933cba7eee8 100644
+index f933cba7eee8..a7bb6cee8188 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1055,9 +1055,6 @@ static inline bool iwl_trans_fw_running(struct iwl_trans *trans)
+@@ -1055,6 +1055,8 @@ static inline bool iwl_trans_fw_running(struct iwl_trans *trans)
  
  void iwl_trans_sync_nmi(struct iwl_trans *trans);
  
--void iwl_trans_sync_nmi_with_addr(struct iwl_trans *trans, u32 inta_addr,
--				  u32 sw_err_bit);
--
++void iwl_trans_force_nmi(struct iwl_trans *trans);
++
  int iwl_trans_load_pnvm(struct iwl_trans *trans,
  			const struct iwl_pnvm_image *pnvm_data,
  			const struct iwl_ucode_capabilities *capa);
-@@ -1078,8 +1075,6 @@ static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
- 		trans->dbg.external_ini_cfg != IWL_INI_CFG_STATE_NOT_LOADED;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+index 351a4f177e92..dd4bf7cb6a79 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+@@ -69,7 +69,7 @@ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mld *mld, char *buf,
+ 	if (count == 6 && !strcmp(buf, "nolog\n"))
+ 		mld->fw_status.do_not_dump_once = true;
+ 
+-	iwl_force_nmi(mld->trans);
++	iwl_trans_force_nmi(mld->trans);
+ 
+ 	return count;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 4db0f29dd21a..06502f57e823 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1102,7 +1102,7 @@ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mvm *mvm, char *buf,
+ 	if (count == 6 && !strcmp(buf, "nolog\n"))
+ 		set_bit(IWL_MVM_STATUS_SUPPRESS_ERROR_LOG_ONCE, &mvm->status);
+ 
+-	iwl_force_nmi(mvm->trans);
++	iwl_trans_force_nmi(mvm->trans);
+ 
+ 	return count;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5bd246e37943..a4f3d3c2bd35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -5258,7 +5258,7 @@ iwl_mvm_switch_vif_chanctx_swap(struct iwl_mvm *mvm,
+ 
+ out_restart:
+ 	/* things keep failing, better restart the hw */
+-	iwl_force_nmi(mvm->trans);
++	iwl_trans_force_nmi(mvm->trans);
+ 	return ret;
  }
  
--void iwl_trans_interrupts(struct iwl_trans *trans, bool enable);
--
- int iwl_trans_activate_nic(struct iwl_trans *trans);
+@@ -5294,7 +5294,7 @@ iwl_mvm_switch_vif_chanctx_reassign(struct iwl_mvm *mvm,
  
- static inline void iwl_trans_finish_sw_reset(struct iwl_trans *trans)
+ out_restart:
+ 	/* things keep failing, better restart the hw */
+-	iwl_force_nmi(mvm->trans);
++	iwl_trans_force_nmi(mvm->trans);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 817c6dacfacc..a94eaca0b3ed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -2703,7 +2703,7 @@ void iwl_mvm_scan_timeout_wk(struct work_struct *work)
+ 
+ 	IWL_ERR(mvm, "regular scan timed out\n");
+ 
+-	iwl_force_nmi(mvm->trans);
++	iwl_trans_force_nmi(mvm->trans);
+ }
+ 
+ static void iwl_mvm_fill_scan_type(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index d1ef0365b932..db3933b0d197 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1493,7 +1493,7 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
+ 
+ out_err:
+ 	WARN(1, "Invalid rxb from HW %u\n", (u32)vid);
+-	iwl_force_nmi(trans);
++	iwl_trans_force_nmi(trans);
+ 	return NULL;
+ }
+ 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 97bbc3faa98c..48ae2440cfe1 100644
+index 48ae2440cfe1..1304d8916424 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3574,8 +3574,10 @@ void iwl_trans_pci_interrupts(struct iwl_trans *trans, bool enable)
+@@ -3596,7 +3596,7 @@ void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
+ 	if (interrupts_enabled)
+ 		iwl_trans_pci_interrupts(trans, false);
  
- void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
- {
--	u32 inta_addr, sw_err_bit;
-+	bool interrupts_enabled = test_bit(STATUS_INT_ENABLED, &trans->status);
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	unsigned long timeout = jiffies + IWL_TRANS_NMI_TIMEOUT;
-+	u32 inta_addr, sw_err_bit;
+-	iwl_force_nmi(trans);
++	iwl_trans_force_nmi(trans);
+ 	while (time_after(timeout, jiffies)) {
+ 		u32 inta_hw = iwl_read32(trans, inta_addr);
  
- 	if (trans_pcie->msix_enabled) {
- 		inta_addr = CSR_MSIX_HW_INT_CAUSES_AD;
-@@ -3588,7 +3590,34 @@ void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
- 		sw_err_bit = CSR_INT_BIT_SW_ERR;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 26d1530cfa37..496435ea93ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -715,7 +715,7 @@ static void iwl_txq_stuck_timer(struct timer_list *t)
  
--	iwl_trans_sync_nmi_with_addr(trans, inta_addr, sw_err_bit);
-+	/* if the interrupts were already disabled, there is no point in
-+	 * calling iwl_disable_interrupts
-+	 */
-+	if (interrupts_enabled)
-+		iwl_trans_pci_interrupts(trans, false);
-+
-+	iwl_force_nmi(trans);
-+	while (time_after(timeout, jiffies)) {
-+		u32 inta_hw = iwl_read32(trans, inta_addr);
-+
-+		/* Error detected by uCode */
-+		if (inta_hw & sw_err_bit) {
-+			/* Clear causes register */
-+			iwl_write32(trans, inta_addr, inta_hw & sw_err_bit);
-+			break;
-+		}
-+
-+		mdelay(1);
-+	}
-+
-+	/* enable interrupts only if there were already enabled before this
-+	 * function to avoid a case were the driver enable interrupts before
-+	 * proper configurations were made
-+	 */
-+	if (interrupts_enabled)
-+		iwl_trans_pci_interrupts(trans, true);
-+
-+	iwl_trans_fw_error(trans, IWL_ERR_TYPE_NMI_FORCED);
+ 	iwl_txq_log_scd_error(trans, txq);
+ 
+-	iwl_force_nmi(trans);
++	iwl_trans_force_nmi(trans);
  }
  
- static int iwl_trans_pcie_alloc_txcmd_pool(struct iwl_trans *trans)
+ int iwl_pcie_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq,
+@@ -1105,7 +1105,7 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 		if (nfreed++ > 0) {
+ 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
+ 				idx, txq->write_ptr, r);
+-			iwl_force_nmi(trans);
++			iwl_trans_force_nmi(trans);
+ 		}
+ 	}
+ 
 -- 
 2.34.1
 
