@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452D628DB55
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2709935F5ED
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 17:15:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790442957; cv=none; b=Zo5ndK3JD9D5sUsQaOJbSjdfS5Ns8UDLiFGnZTPl07PXSKz/wd6C54PfNNc4nqrKBpZRVrz0T2cldbfCPYAYj48no0XVnWhz2bRoEJ7RBaQZS3XXWpxChfpvy6nw1RFTg7OFc2EiwZnw2PigZGikNT0c5bS50C4jLbzipjchv6c=
+	t=1790442959; cv=none; b=Wen9E1cfOIr9GWXiHVDPBYBKpXQLHODqZ/JhtUphHCLZUay/0Fiu6p+d6fBD2TxQnRDpJmrsoJJBVM/SiD7L5rWFovjDeeH2V+f2x/EC395hcnCiXbJYOoorTg9id4HqRVNZL6aLNEqQjt8y2BcSlqu1LmQ9pBkd/RxWHyPvsnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790442957; c=relaxed/simple;
-	bh=TKp9t3vzPNHsyrL+pBGOd4j280XeKTPGJYMF6WWpS98=;
+	s=arc-20240116; t=1790442959; c=relaxed/simple;
+	bh=9sg5NnZkciLVGwwM95zEFBeCZgc/3KfAhuyB45xIjGA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dCNLVqdcHP06Aj+8HqXmKlbh0uwoGGfx+xZBc3TFKbTIy/Ldvvp3FD21M+ANOCPIt12Ry5k4when4Nu6pOUzpF3gb9Ra8DQ/Wmwjo0PZo1rGg8oVwJCdwOCzPFmTapZZeLr0OULvl95Y6OVG7dJqfLONnlcwIDTVZTF/j77Mbxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VNHlmtyr; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=G7id1jcV3cNRT0QdyM+bZH8iiBelP9l1XoGvE5Rsm9TX+Gq/EyGasJ5ELSEmIq+gDI16Lgxay0aP3Pl8yQ2/zQOj+9RYB4GI+OkqC9SHHBpo9panOObQvSH1EQtwpjrUZ1GG3wbOSyNQoc4wj2BxaA2T7Wpo4BEknBlAqOgcSm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HOoIxEtJ; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VNHlmtyr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HOoIxEtJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790442957; x=1821978957;
+  t=1790442958; x=1821978958;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=TKp9t3vzPNHsyrL+pBGOd4j280XeKTPGJYMF6WWpS98=;
-  b=VNHlmtyrJPo2C/E64Sz4ZOztpj7etaN9oc/ml4qAStLI9ZgMdgohB+Dr
-   n/Gubx4tQJc1IroxHf4UefDObLPE9FK/e99RHoHQnxNIOrVzELiQ7TgWg
-   5UNYBtqFVRhRo1BLxgKzJ7cB0ZQ76V3SsqcPjSov7Wwngqxg0lQjJru2g
-   sHnj6D91OdTHU1ag5gK7eOxOqbuZ1xJoij5LDNyNGCM6o7ad+zFqQRI/3
-   P+Wa3tPjco3iw2gBE/dGJT1EIowW1tMCyP0V12l6ZuJgsrNEPYzOK663a
-   96Pwxklt3v0uKdi1XTREDE+E5uL23T/QFoTEK+groUDBbWoF/TeWnBGhc
+  bh=9sg5NnZkciLVGwwM95zEFBeCZgc/3KfAhuyB45xIjGA=;
+  b=HOoIxEtJB94aXeJGW4crq3EnAcZeYXa2YCUz8/M2G1kMvZISRSXdEi0m
+   uGSMzOXNG0EliwAnQKkDOIVkyi/YeJyBce0rN6sD8onjM2Dj5U/+E1J/y
+   LG6ko/D4L7TMKNpvu/c+Llkj4hmy/M2hmfZKiPN469/aoUrvWfzD6mEcR
+   GL+ImV0I8VZSS7YBLU49QeujrKnF+sPzkLHkWi+UaHDfZANgkuiWV8bTV
+   NH/zsNOwQ8FNDnAKXOM6HC6qd3P4Op7SPedO9iOnwK/gjulX42Hr0r+DM
+   Ol6WbokUEY/lkphLk4Ouu3YjiBShmWODfHu2QLy7Yf1xnJ5n8VMQ61Pay
    A==;
-X-CSE-ConnectionGUID: RcoUHBP/RwOw9kry9aIiBA==
-X-CSE-MsgGUID: tY6q5BmtQpaqvF7P8glMMQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533302"
+X-CSE-ConnectionGUID: eGkL1inSSXuXDEpJUA/fag==
+X-CSE-MsgGUID: NAbuh3J3SgeVX6p/xSoThg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11917"; a="100533303"
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="100533302"
+   d="scan'208";a="100533303"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:56 -0700
-X-CSE-ConnectionGUID: NJ/gnJYyQlqOz++L+1xBPQ==
-X-CSE-MsgGUID: WZnUQ0VYRJCf31UOT0jaaw==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:57 -0700
+X-CSE-ConnectionGUID: MmKcgH+9SaOcitgGz2fNjQ==
+X-CSE-MsgGUID: +wt0V8fITE+TGLSK3QHtvQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,124,1787036400"; 
-   d="scan'208";a="274197026"
+   d="scan'208";a="274197032"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:55 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2026 10:15:56 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2 iwlwifi-next 13/15] wifi: iwlwifi: support RX BAID modify command version 3
-Date: Sat, 26 Sep 2026 20:17:32 +0300
-Message-Id: <20260926201527.46c77de75c0b.Ie41b1d43f945a0c5e2bb68981a0cec0c62111233@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 iwlwifi-next 14/15] wifi: iwlwifi: drop the orphaned nic_access annotations
+Date: Sat, 26 Sep 2026 20:17:33 +0300
+Message-Id: <20260926201527.f818a7e09def.Iccecaabe0f37525430377ae1c0db6fd7bbf7625a@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
 References: <20260926171734.2142723-1-miriam.rachel.korenblit@intel.com>
@@ -62,122 +62,131 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+commit 5b63d0ae94cc ("compiler-context-analysis: Remove Sparse support")
+deleted the Sparse implementation of the lock annotations.
+__acquires()/__releases()/__acquire()/__release() are gone; the macros
+now only map onto clang's context analysis and expand to nothing for gcc.
 
-Version 3 of the RX BAID allocation modify command shrinks the tid
-field to a u8 and adds a window size field, so that the window size
-can be updated while moving a BAID to a new AP. A window size of 0
-tells the firmware to keep the current one, which is what we need
-for now.
+The nic_access annotations describe nothing anymore:
+ - Every one of them is a __releases() with no matching __acquires().
+   The acquire side was the __cond_lock() wrapper around
+   _iwl_trans_grab_nic_access(), which went away together with
+   __cond_lock() itself. The names don't even agree - PCIe releases
+   nic_access_nobh while the generic wrapper calling it claims
+   nic_access.
 
-Add the new layout and pick it based on the command version.
+ - The __acquire()/__release(reg_lock) pairs only existed
+   to silence Sparse
 
-Assisted-by: LLM
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Use lockdep_assert_held() instead, which unlike the annotations actually
+runs, and add the missing assertion to
+iwl_trans_pcie_resched_with_nic_access().
+
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/datapath.h  | 29 +++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mld/agg.c  |  7 ++++-
- 2 files changed, 30 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c |  3 +--
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  3 +--
+ .../net/wireless/intel/iwlwifi/pcie/internal.h |  3 +--
+ .../net/wireless/intel/iwlwifi/pcie/trans.c    | 18 ++++++------------
+ 4 files changed, 9 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-index b17babef71c0..3fbcb2e4bfe0 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-@@ -522,17 +522,34 @@ struct iwl_rx_baid_cfg_cmd_alloc {
- } __packed; /* RX_BAID_ALLOCATION_ADD_CMD_API_S_VER_1 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index efe657857772..0a6b7b264aa2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -576,8 +576,7 @@ void iwl_trans_resched_with_nic_access(struct iwl_trans *trans)
+ 	iwl_trans_pcie_resched_with_nic_access(trans);
+ }
  
- /**
-- * struct iwl_rx_baid_cfg_cmd_modify - BAID modification data
-+ * struct iwl_rx_baid_cfg_cmd_modify_v2 - BAID modification data
-  * @old_sta_id_mask: old station ID mask
-  * @new_sta_id_mask: new station ID mask
-  * @tid: TID of the BAID
+-void __releases(nic_access)
+-iwl_trans_release_nic_access(struct iwl_trans *trans)
++void iwl_trans_release_nic_access(struct iwl_trans *trans)
+ {
+ 	iwl_trans_pcie_release_nic_access(trans);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index a7bb6cee8188..56c5e61b614a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -992,8 +992,7 @@ bool iwl_trans_grab_nic_access(struct iwl_trans *trans);
   */
--struct iwl_rx_baid_cfg_cmd_modify {
-+struct iwl_rx_baid_cfg_cmd_modify_v2 {
- 	__le32 old_sta_id_mask;
- 	__le32 new_sta_id_mask;
- 	__le32 tid;
- } __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_2 */
+ void iwl_trans_resched_with_nic_access(struct iwl_trans *trans);
  
-+/**
-+ * struct iwl_rx_baid_cfg_cmd_modify - BAID modification data
-+ * @old_sta_id_mask: old station ID mask
-+ * @new_sta_id_mask: new station ID mask
-+ * @tid: TID of the BAID
-+ * @reserved: reserved
-+ * @win_size: RX BA session window size to apply to the modified BAID,
-+ *	0 means keep the current one
-+ */
-+struct iwl_rx_baid_cfg_cmd_modify {
-+	__le32 old_sta_id_mask;
-+	__le32 new_sta_id_mask;
-+	u8 tid;
-+	u8 reserved;
-+	__le16 win_size;
-+} __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_3 */
+-void __releases(nic_access)
+-iwl_trans_release_nic_access(struct iwl_trans *trans);
++void iwl_trans_release_nic_access(struct iwl_trans *trans);
+ 
+ static inline void iwl_trans_schedule_reset(struct iwl_trans *trans,
+ 					    enum iwl_fw_error_type type)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index e10aa8e7e061..e6b1cb559a0a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -1161,8 +1161,7 @@ int iwl_trans_pcie_read_config32(struct iwl_trans *trans, u32 ofs,
+ 				 u32 *val);
+ bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans);
+ void iwl_trans_pcie_resched_with_nic_access(struct iwl_trans *trans);
+-void __releases(nic_access_nobh)
+-iwl_trans_pcie_release_nic_access(struct iwl_trans *trans);
++void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans);
+ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power);
+ int _iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent,
+ 		   const struct iwl_mac_cfg *mac_cfg,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 1304d8916424..bda069a6f7eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2402,10 +2402,10 @@ bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent)
+ 
+ out:
+ 	/*
+-	 * Fool sparse by faking we release the lock - sparse will
+-	 * track nic_access anyway.
++	 * Deliberately return with reg_lock held; the caller must drop it via
++	 * iwl_trans_pcie_release_nic_access(), or explicitly if it wants to
++	 * keep the NIC awake past the critical section (cmd_hold_nic_awake).
+ 	 */
+-	__release(&trans_pcie->reg_lock);
+ 	return true;
+ }
+ 
+@@ -2427,24 +2427,19 @@ void iwl_trans_pcie_resched_with_nic_access(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	lockdep_assert_held(&trans_pcie->reg_lock);
 +
- /**
-  * struct iwl_rx_baid_cfg_cmd_remove_v1 - BAID removal data
-  * @baid: the BAID to remove
-@@ -555,7 +572,8 @@ struct iwl_rx_baid_cfg_cmd_remove {
-  * struct iwl_rx_baid_cfg_cmd - BAID allocation/config command
-  * @action: the action, from &enum iwl_rx_baid_action
-  * @alloc: allocation data
-- * @modify: modify data
-+ * @modify_v2: modify data (version 2)
-+ * @modify: modify data (version 3)
-  * @remove_v1: remove data (version 1)
-  * @remove: remove data
-  */
-@@ -563,11 +581,12 @@ struct iwl_rx_baid_cfg_cmd {
- 	__le32 action;
- 	union {
- 		struct iwl_rx_baid_cfg_cmd_alloc alloc;
-+		struct iwl_rx_baid_cfg_cmd_modify_v2 modify_v2;
- 		struct iwl_rx_baid_cfg_cmd_modify modify;
- 		struct iwl_rx_baid_cfg_cmd_remove_v1 remove_v1;
- 		struct iwl_rx_baid_cfg_cmd_remove remove;
--	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_2 */
--} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_2 */
-+	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_3 */
-+} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_3 */
+ 	spin_unlock_bh(&trans_pcie->reg_lock);
+ 	cond_resched();
+ 	spin_lock_bh(&trans_pcie->reg_lock);
+ }
  
- /**
-  * struct iwl_rx_baid_cfg_resp - BAID allocation response
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-index c45c47337509..ea1f02380ad4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-@@ -660,6 +660,7 @@ int iwl_mld_update_sta_baids(struct iwl_mld *mld,
- 		.modify.new_sta_id_mask = cpu_to_le32(new_sta_mask),
- 	};
- 	u32 cmd_id = WIDE_ID(DATA_PATH_GROUP, RX_BAID_ALLOCATION_CONFIG_CMD);
-+	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mld->fw, cmd_id, 2);
- 	int baid;
+-void __releases(nic_access_nobh)
+-iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
++void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
  
- 	/* mac80211 will remove sessions later, but we ignore all that */
-@@ -667,6 +668,7 @@ int iwl_mld_update_sta_baids(struct iwl_mld *mld,
- 		return 0;
+ 	lockdep_assert_held(&trans_pcie->reg_lock);
  
- 	BUILD_BUG_ON(sizeof(struct iwl_rx_baid_cfg_resp) != sizeof(baid));
-+	BUILD_BUG_ON(sizeof(cmd.modify) != sizeof(cmd.modify_v2));
+-	/*
+-	 * Fool sparse by faking we acquiring the lock - sparse will
+-	 * track nic_access anyway.
+-	 */
+-	__acquire(&trans_pcie->reg_lock);
+-
+ 	if (trans_pcie->cmd_hold_nic_awake)
+ 		goto out;
+ 	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
+@@ -2460,7 +2455,6 @@ iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
+ 	 * scheduled on different CPUs (after we drop reg_lock).
+ 	 */
+ out:
+-	__release(nic_access_nobh);
+ 	spin_unlock_bh(&trans_pcie->reg_lock);
+ }
  
- 	for (baid = 0; baid < ARRAY_SIZE(mld->fw_id_to_ba); baid++) {
- 		struct iwl_mld_baid_data *data;
-@@ -683,7 +685,10 @@ int iwl_mld_update_sta_baids(struct iwl_mld *mld,
- 			  "BAID data for %d corrupted - expected 0x%x found 0x%x\n",
- 			  baid, old_sta_mask, data->sta_mask);
- 
--		cmd.modify.tid = cpu_to_le32(data->tid);
-+		if (cmd_ver >= 3)
-+			cmd.modify.tid = data->tid;
-+		else
-+			cmd.modify_v2.tid = cpu_to_le32(data->tid);
- 
- 		ret = iwl_mld_send_cmd_pdu(mld, cmd_id, &cmd);
- 		if (ret)
 -- 
 2.34.1
 
