@@ -1,160 +1,146 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 959B73BB57
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 01:23:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75B57322C73
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 04:38:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790472199; cv=none; b=k3Mr/vE74MuSdgQpyEZa/T3pSJpmE45WyJeGAVPUe2JvTKwYEYDZstMbNyyw/dNCjm3K0g1Yl13B62XqoRGx7w0JjAIreF1aDksWfjzrkF/ugP3cTm78tPRk/HVMw8v523UaSLHUx58hwZSjxLrRMcMQA3iGFrYDu99xm8yuRWs=
+	t=1790483907; cv=none; b=pYd8KVKTwvDLI3iAuu90AZGa+1QNO0IF8P4ILL4hUibWLxcvZQsctyFIcGzPu2210pSEW2EZe9YLYYAZ3DSPb7VCTx3dk1ALqIwlFc1FkuFN5/cGdXHSY/u3evs4QMlCdqvYoWVy1M1fr4Y5+gBO9jGz5OeBN9BBUnEI72j+uF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790472199; c=relaxed/simple;
-	bh=8tbbajoap/6DrjifprPNOaXITTzEiCrPaQzp9bpbBvs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AL3KyEgpePIrbyKJxRCR68bPQ44dxho85n3loH9+U3qzX3sfNghFI3XtHZZdi5pjl8scGFWFuvRrCSZX1LRQoqwMaUXUxqUSNr3k6u7emC7yP33umtdbO9CoMC3N0zUIHkYCEhjrcY4oXmdQRUI6okP4SAGdmPvr2HjJGF7FvrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=perenite.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fhwuadAq; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=perenite.com
+	s=arc-20240116; t=1790483907; c=relaxed/simple;
+	bh=Ajv7AzHdWi4VdbT9O5uOTid4ZouF7coYRBVwDJrgpFE=;
+	h=From:Content-Type:Mime-Version:Subject:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=Zf16sWtzNAulTocjZBh2HTKq4GyupQWHJpIsYPKF2Xzv3dLlZtonXvwjLYaefa4m1YpyVwwqcQTGOe8Zi1WpwqSUXjOHgne2wI8LziV3lkeKfR/1pRg/icTWR11uKw52r3oCS0Y3WigHcAXTfVJDlkI58FuL9s5KvLVbXQbcKdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FVkBl9YZ; arc=none smtp.client-ip=74.125.225.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fhwuadAq"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccead2aecso9062055e9.0
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 18:23:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FVkBl9YZ"
+Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-48881a62e09so988157f8f.2
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2026 21:38:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790472196; x=1791076996; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=bxwshbrxYLFrgDXVSsiEGqJVWdpJpdakWMZ76gQ4IE0=;
-        b=fhwuadAqzylMMwkwgB7rh+JTGO31d8Cn0jc0pfDXT1Hag+arZ3uTpO/Fy29Xs9RuXu
-         6hrtESLWU/l1udl99oQKXWjI/M6ad1Vil/ndcifbTEsx0KCLntP8BabxaC6jJYX6tzeY
-         MuJxhFW0lZ2HhjnJZqKBP6Z9KZVg4PeJJi3FU6xDV7IUw1JOvlp6dbh17+l6NIp6ZdDX
-         x/4IZnVj7C8/WCAma5bhVX+tOP1Ki602F+1VmOhbOyvHliICaxbhwOJZgI5BeXVjeIxU
-         On0RZoaWbZvEQSQ/dKUkIm9YAFC1rs95PqIYV2NQpH1DhrblGQ5l87sYhRcpo604RutS
-         c6fw==
+        d=gmail.com; s=20251104; t=1790483903; x=1791088703; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:subject:mime-version:content-type:from:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=LQfLTONnpPcPqJNkX5STvP3m9LYisOqIEmCiMINFFRA=;
+        b=FVkBl9YZkf0LaujFF47w1d4NM4LmHpZ5Qiu7gGLGSh4ve+L+i+JgttmJZfHDPg/v5R
+         Danus72wzNr39MzXIw1v3qzJLlfNrA+duDarWhUYmru4riXac887ZMcPpDWRjgHQV+TV
+         z5xnopz8EbPtA9xOr1rZq6Dr6I8Hqr1BCbFc2URA3JQr/zh1TsyZxiR9uGaom72mmqd/
+         gIFhuKoD07eV9CU1Xq8cAhDOa5WKpFemAnLbtoX3Ahf/1nzpvMyBa9DfK3DYgdIYrAyI
+         IzphSiUzYYG+8WYTiJZPC2GN8zoikrUJc56AAmTpECuZA8zJAxuDIuj2QBd4CVfbmy4Z
+         HwcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790472196; x=1791076996;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=bxwshbrxYLFrgDXVSsiEGqJVWdpJpdakWMZ76gQ4IE0=;
-        b=bwAwnX0U/PXOocxTmEr9WiRwvIC+JFDJnUMD8Jznw2Bvtp/QVidJxepeOuAuKu6AuY
-         yCdvuSjqlyqZKDmXXpXfliJlD4T4DdNeOtPB+d8uC8rFQ7a786tumCPV03Llu3o4OWA9
-         JzY8mCYScmFLXbtxyl3gWGYNPNmUQFAB7GEZo8CgcMte0RZgYug7YOISipeWGWWVAcR9
-         hwrh+egH3u/xGSeEtVOMCXOC0CGGmHZ/cvYX6wZpNVSomKzwynkpEzP7DGmIh8qUzmvb
-         G9pfph5EE/oHoNqKfa7V8ZP1brdEytLFDW1YEdl6Ps1gEeoAJEGHz9WnqO4oK/Ed/94A
-         T+Bw==
-X-Gm-Message-State: AFuF++nCRPOFkhg9ctbyt8VvDt8ikjtIaNgFbhzIxjcm5TrG66gdSTD7
-	zSA6OaZf2acIq8dW5iHFrCCwEK9WgPVaFF/wDckrhj8zTnPlWHEplLpA
-X-Gm-Gg: AYBFou1DMWBFWQJIsXxgoVDSQWRPJRsnGpbTSoc93XwGvWl4yDprbnNqwzpdayvwlgE
-	+2AuAHUHT423+ICyTY0HW2HrXrr4qmCtu4riKPreexHN6G9rlL1kXJ26+tOxedas68FyKJu2Rmv
-	+orNAS+uSMZV8XcKgxD+8Mebi3j7sb1Rqc5tTSHAGtQdUXyWiLbMo+T15QurwfaLfxB8/+z4Pvc
-	PokWva695VUByiZuDc6xqQHY+AwGU6UBgGnjXkQ+ni2HvDruHEx2GUJUpZvjZEC08t1jZMibCOc
-	yJQ8k6YyT1LLqhNtyHgdhJm6P2SbmzCY1mtGuONrRQvrFUba2AIAWp5xirDQD/qMxVf6unt8Gde
-	XkiqSW7/1yDTIdWiZGHezGGFsOb6qpSBAZpCdQyEdrryqaU6atpXfgSFAQVjfBH+sAtt3NIbAth
-	0s7hNDowxgaMNOlHr5wdeIUNxU8OiL9K+Pg8+HFn2GCN9PJKfwpypFaTLFShYvhbhpmU0N97cfY
-	CvuywzVFO9Xjr3KySS644moJw==
-X-Received: by 2002:a05:600c:19cd:b0:49d:2536:402e with SMTP id 5b1f17b1804b1-49ff06f7a45mr117047985e9.30.1790472195756;
-        Sat, 26 Sep 2026 18:23:15 -0700 (PDT)
-Received: from mac.lan ([2001:861:8b92:2c50:9cf6:601a:85a9:dd7f])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a0017998dbsm27530395e9.14.2026.09.26.18.23.14
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 26 Sep 2026 18:23:15 -0700 (PDT)
-Sender: Benoit Masson <benoit.masson5@gmail.com>
-From: Benoit Masson <benoitm@perenite.com>
-X-Google-Original-From: Benoit Masson <yahoo@perenite.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	stable@vger.kernel.org,
-	Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Subject: [PATCH] wifi: ath12k: order hw group devices by WSI index
-Date: Sun, 27 Sep 2026 03:23:14 +0200
-Message-ID: <20260927012314.34857-1-yahoo@perenite.com>
-X-Mailer: git-send-email 2.54.0
+        d=1e100.net; s=20260707; t=1790483903; x=1791088703;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:subject:mime-version:content-type:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LQfLTONnpPcPqJNkX5STvP3m9LYisOqIEmCiMINFFRA=;
+        b=1KxSDNBRP9L+GSXyYcjkY5q9vMtk6l4fRQvOFICQLO4/JJ0KwE1OT6yzwA8yakfmjs
+         TPiCRAaHV5i4VVgwEO4wIrGe5XBfP19b0iqGNwbOvpX5QqdTNhEGSzLrPtECPyOwSWai
+         qrUc4zeB4oXNEPY95VwIP5pspeDHDHO6WF2RYeqL6u2rq6Y+0pFOcu5vMF4MJqAAKhVC
+         paxk9/PuWZeHthazQFRlpMxP7nkVNlkaFZEdueZSWsvcskdOMga9L4aDaBau6BXDecTB
+         wkmJqPm8J3S2RkOAVG6iT5bnxS+JaymyX+FyEZmzxyeL6tFIOr7XfrqUii6bMds0sJG9
+         7Ocw==
+X-Gm-Message-State: AFq9FYJc9E56lhqA77PWui8hwlrxCcCibnlfgiAeSBDOOwFRYsVXy4yc
+	YAbNUQYqR9bU6gqja/56eW3LxvmoXd+00J1oRnprPTpcQRbtBErVb4Va4TdCshlAFZEfrQ==
+X-Gm-Gg: AYBFou0qvQN4qo+KQbF5cTKFPnkphfiQI6lZzZ/+viU+8Ai0ORaLJWWJKb10QtnlBAB
+	buTvAwLy7lutN6d01lq0lie1dodR5/6Ap157JwE+QKDxR8s7OigJm8o93byaBGtvZi5iu+0eQFo
+	PAEvWCsmtshjN6gSegxkg6n8ZmiSZgESrNnjYATn8XiTNnU+6qm/GtSREyeZQKSrptzsPM4SbUK
+	YuxEOM7onWTC/lban5/FCpd63pZUulr9ZBx5Si/LLfpQAzOcezgM0C7N3+FXvk67xiRehT+C9dl
+	0qPQnVTfFiBxjUGr0X38eByo5AnPqFMCu++mzLry+RDx6XDBkQFqbF58LE3jQDfP/FIipHlRyuc
+	ulAVVUpCfqXwe0YFxRapBVS8CSBT8ckkhBE+XWlfra9AyFyj4MFhnWlJoqaCKBHGdx0vAIo0hLK
+	skZh5ev5HSiXfZbdA7DKebHbb6sFd8S0oZmpwTRxAU4F8fcr+vD0nRnAY0PIZ6MFtgeZA6z1XYG
+	UiCGaovuMi+wvnuMxxC+yk2sW1tU6MeFXBn/6T0x+qLXwfNggoMIrFhvOOSn79tg7XecP/VFCtN
+	m0636ZfwhqUZxqSvcxBvG9s9cWioSijorPVLiO6aCMINCzmrkxIZJHXEoBd6+cBHm623p+f4AVa
+	MzQ0B8J2JNNg883g=
+X-Received: by 2002:a05:6000:2608:b0:487:c43:e606 with SMTP id ffacd0b85a97d-488717165a5mr18078449f8f.15.1790483903343;
+        Sat, 26 Sep 2026 21:38:23 -0700 (PDT)
+Received: from smtpclient.apple (dynamic-2a00-1028-c000-0ddf-c45a-e144-7750-6d8f.ipv6.o2.cz. [2a00:1028:c000:ddf:c45a:e144:7750:6d8f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a354c47sm18990923f8f.15.2026.09.26.21.38.21
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 26 Sep 2026 21:38:22 -0700 (PDT)
+From: Josef Schlehofer <pepe.schlehofer@gmail.com>
+X-Google-Original-From: Josef Schlehofer <Pepe.Schlehofer@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.11\))
+Subject: Re: [PATCH rtw-next] wifi: rtw88: extend the TX report timeout to
+ RTL8822BU
+In-Reply-To: <3d24a4e461dd4e5fbb7aaac66aad1b0b@realtek.com>
+Date: Sun, 27 Sep 2026 06:38:08 +0200
+Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <91FCAEB4-16A4-411A-A436-0803F89F3B7D@gmail.com>
+References: <20260921165343.8131-1-pepe.schlehofer@gmail.com>
+ <4c000f11b23c4920b052e8513ad28345@realtek.com>
+ <96f122e7-2004-43d6-917d-a07027f568a4@gmail.com>
+ <3d24a4e461dd4e5fbb7aaac66aad1b0b@realtek.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+X-Mailer: Apple Mail (2.3901.100.1.1.11)
 
-On multi-chip (WSI/MLO) platforms the devices of a hardware group are
-added to ag->ab[] in PCI probe completion order (ab->device_id =
-ag->num_probed++). PCI probe is asynchronous, so the order in which the
-chips complete firmware bring-up is not stable across boots.
 
-ath12k_mac_allocate() builds the wiphy radio array directly from
-ag->ab[], and takes the wiphy device from the first entry. As a result
-both the wiphy sysfs path and the mapping of radio indices to bands
-change from boot to boot on boards such as the TP-Link Archer BE800,
-which has three single-band QCN9274/QCN9224 radios in one group. A
-persisted hostapd configuration that pins radio0 to a band then attaches
-to a random band.
 
-Order the devices used to build pdev_map[] by ab->wsi_info.index, which
-is derived deterministically from the device tree WSI ring and the
-qcom,wsi-controller node. ath12k already uses wsi_info.index as the
-canonical per-device index for the firmware link IDs in
-ath12k_host_cap_hw_link_id_init().
+> On 24. 9. 2026, at 02:49, Ping-Ke Shih <pkshih@realtek.com> wrote:
+>=20
+> Hi Josef,
+>=20
+> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>> On 22/09/2026 05:03, Ping-Ke Shih wrote:
+>>> Josef Schlehofer <pepe.schlehofer@gmail.com> wrote:
+>>>> diff --git a/drivers/net/wireless/realtek/rtw88/tx.c =
+b/drivers/net/wireless/realtek/rtw88/tx.c
+>>>> index 4e110a457..55d7923e1 100644
+>>>> --- a/drivers/net/wireless/realtek/rtw88/tx.c
+>>>> +++ b/drivers/net/wireless/realtek/rtw88/tx.c
+>>>> @@ -208,7 +208,8 @@ void rtw_tx_report_enqueue(struct rtw_dev =
+*rtwdev, struct sk_buff *skb, u8 sn)
+>>>>        __skb_queue_tail(&tx_report->queue, skb);
+>>>>        spin_unlock_irqrestore(&tx_report->q_lock, flags);
+>>>>=20
+>>>> -       if ((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D &&
+>>>> +       if (((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D ||
+>>>> +             rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8822B) &&
+>>>>             rtwdev->hci.type =3D=3D RTW_HCI_TYPE_USB) ||
+>>>=20
+>>> Hi Bitterblue,
+>>>=20
+>>> It seems like more and more USB chips need this, let's enlarge =
+timeout time
+>>> for all USB devices. Do you have any concern? Need your input.
+>>>=20
+>>=20
+>> It seems fine to me.
+>>=20
+>>>>            rtw_is_8723bs(rtwdev))
+>>>=20
+>>> Also, considering SDIO chips, should we keep original timeout for =
+PCI only?
+>>>=20
+>>=20
+>> This too.
+>>=20
+>=20
+> I sent a patch [1]. Please test if it works to you.=20
+> If so, I'd take my one, and drop this.
+>=20
+> [1] =
+https://lore.kernel.org/linux-wireless/20260924004637.9958-1-pkshih@realte=
+k.com/T/#u
 
-Note that ag->ab[] itself is left untouched: the unassign path indexes it
-by ab->device_id, which is the probe-order id.
+It works for me. I tested it on the same TP-Link Archer T4U v3
+(RTL8812BU, rtw_8822bu) , so please drop mine and take yours.=20
 
-Fixes: 6f245ea0ec6c ("wifi: ath12k: introduce device group abstraction")
-Cc: stable@vger.kernel.org # 6.14+
-Signed-off-by: Benoit Masson <yahoo@perenite.com>
----
- drivers/net/wireless/ath/ath12k/mac.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+If you would like, you can add:
+Tested-by: Josef Schlehofer <pepe.schlehofer@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 99bf5cf..6505255 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -15444,6 +15444,7 @@ static void ath12k_mac_set_device_defaults(struct ath12k_base *ab)
- int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- {
- 	struct ath12k_pdev_map pdev_map[ATH12K_GROUP_MAX_RADIO];
-+	struct ath12k_base *ab_order[ATH12K_MAX_DEVICES] = {};
- 	int mac_id, device_id, total_radio, num_hw;
- 	struct ath12k_base *ab;
- 	struct ath12k_hw *ah;
-@@ -15467,6 +15468,21 @@ int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- 	if (WARN_ON(total_radio > ATH12K_GROUP_MAX_RADIO))
- 		return -ENOSPC;
- 
-+	/*
-+	 * Order the devices deterministically by WSI index instead of PCI
-+	 * probe completion order, so that the wiphy and the radio index to
-+	 * band mapping do not change from boot to boot.
-+	 */
-+	for (i = 0; i < ag->num_devices; i++) {
-+		ab = ag->ab[i];
-+		if (!ab)
-+			continue;
-+		if (WARN_ON(ab->wsi_info.index >= ATH12K_MAX_DEVICES))
-+			return -EINVAL;
-+
-+		ab_order[ab->wsi_info.index] = ab;
-+	}
-+
- 	/* All pdev get combined and register as single wiphy based on
- 	 * hardware group which participate in multi-link operation else
- 	 * each pdev get register separately.
-@@ -15483,12 +15499,12 @@ int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- 	mac_id = 0;
- 	for (i = 0; i < num_hw; i++) {
- 		for (j = 0; j < radio_per_hw; j++) {
--			if (device_id >= ag->num_devices || !ag->ab[device_id]) {
-+			if (device_id >= ag->num_devices || !ab_order[device_id]) {
- 				ret = -ENOSPC;
- 				goto err;
- 			}
- 
--			ab = ag->ab[device_id];
-+			ab = ab_order[device_id];
- 
- 			/*
- 			 * the assumption is all devices within an ah
--- 
-2.54.0 (Apple Git-157)
+It would be nice to have it in the stable kernels, too.
+Thanks!
 
+Josef=
