@@ -1,49 +1,49 @@
 Received: from mail-yx2-f39.google.com (mail-yx2-f39.google.com [74.125.224.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7582472AE
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:04:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D82B231A3B
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:04:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790543042; cv=none; b=T8tT3GkjHh1sCTTDsexg5NRbYD0x+igQXPfxRpV5R/QnXAmtZyTKnDSIVhkeidgTO/ol6k4XSAzqH4waQrjAxrw1+ctpvoa48pKWC+gbNuFuNTlJv2LPx4eWWGbrJDoa0yl6lwmVVmpz41EL1L4LAiQLCBJystrGHGwyMWktKTk=
+	t=1790543046; cv=none; b=m4n8mozvJMijd8iiEh2+U2FSK4dTbW3iJ4erUMNQEukj+XMaNyR0AJgVnY/UFXRuOl/SrHQxE1izxvRrbwOnONJUU6bToR4FByx6x982gL2v9//xKrFWOiJdhWgdTM63wOT1SC4xuhOhXv78jVfzLq0Wr0IYqg1Mg2xlpLofJ/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790543042; c=relaxed/simple;
-	bh=p5Ya4V+IM4LW1JeEl8YghJGIuKeaNFNyJJeicNbaa+s=;
+	s=arc-20240116; t=1790543046; c=relaxed/simple;
+	bh=KS1Rxyxcu3686DN5FMEXBTWZ66Lhip5HDsmSwzdhkn0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pvwDjBnvrvtKyc6ipaQlyoVrEVU8c5liPy+XoF7yQEwtn3qaYtRr1BN5AflRtZSjc9wUVALZS0zMWTL3YMswe3LUlPx/Z9mR/UF/unQ5Vy03if+f40d7ouYYyrzNFgH9r7AT4yqtVoqDKuVRzpR7g+rGAKUWZdCXhkG7Bsvn/9M=
+	 MIME-Version; b=QZ3Po6hBm6auiWtxNk0+fNqQbeVlf6vcVGO3eSeF30QSkNzreRlL2Nf8yXUUmkREG9WY4bWZqUzG1f4U0j6PIs60UoYydmV/aLZL1OrvDdIeabPim8az3IkztiGA1tsTOwSCrXObpi/QtmeN7o94W5A/j2Z5wBvMkpDbRbWWE+g=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.167
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx2-f39.google.com with SMTP id 00721157ae682-8aa75b33a26so2826237b3.2
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:04:00 -0700 (PDT)
+Received: by mail-yx2-f39.google.com with SMTP id 00721157ae682-8a9bfc2e341so6073387b3.0
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:04:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790543040; x=1791147840;
+        d=1e100.net; s=20260707; t=1790543043; x=1791147843;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8TTonhnwGQ3c4+ryD77q2DmYJVEgRAWoW9sUOCsWdn8=;
-        b=SzuOL9MfhcaRNxIbtdbn81i5LDK1d2DRCHiDU0aSMN61OL/QW6QRQZArhU0lBS5WXJ
-         5u/OwhHZ27iLVWrisegrffI4uqV8mnvw9wKAf2c+XCDDAVXVgi8+BatqWUIu6isbbCdT
-         NW76y/3/Nmkc1ptnshFLB9Sfx8ymyYZ0N69nbXMOYnqMavDg1nNk7dmqUnAHbjPwto+4
-         4UfHDHBtxgar9gZLjguZhAXQuULACp0qbNYJRedIOFDdxrA3u3VssIREcdvGq8DWURg+
-         6rSzRR5IlFw1lJTzliR/EECuwfNjKrvcnwh56cNinsZPJOcIKXYj0x2VKgdMzEIZ5eqK
-         fpcQ==
-X-Gm-Message-State: AFq9FYIMDFjDFCGYnkGhLtuLmtJ94yfahb3K+wyNJzMENfQUAkBuGbK0
-	OlHybYxpdYgdml5qEOFyih93khTPSS7puSazUUup8pj47OEmf5wy4/P/
-X-Gm-Gg: AYBFou2WL3nR7103lRZ/kh5Tep4QAyJeP4HTkCkC7dZAJMjZ+Ssma+5AtKE3sBU2xwy
-	xB6LEE6SGPMlLbApjnRi/mzw2DGxttWPukXUPQCBoAnxjXyiADfiX7k6EARNn23t9m9k8DwMqVl
-	WifW2AjV2i0YshjRYJNlom0BJKjbW1h86tzKQ+ZfiIwHHyjAlZzudfFAMN8RQV8lty0jt1rPvSA
-	v9dDp5kSVoHM/whi+XKbdEfGU+UrfOSWJMTmslIzfHAc0O2IDNWMlVOk31qFMvp41QiQMmSw4dv
-	6o9ETlmM1upcXSyP/K9wLYAdQPKRkHAUdGDjq1KpwBmNp2ZESUxWhw/DcU4yRakLAdF+68sYqnb
-	yMefcXVvqGYo7UolJWpUp0JT6p7jwp492orj1IwYlMIzHzBZNCsVc3lkhHPbWq/naNh/d2gu3CE
-	PWVvAUgd1APj6lGUjX+ekqmpgEivXHdoGRbZ83IACSiuLg7xlk6bLyTwR34UdBUQijcM+0Muq9K
-	33CWh9gR8ihrxr8Hat0WyWQfa5bsd6xXtEZMweDMmKGV0+PdsyctUPbEXWH82AKT9fBjA==
-X-Received: by 2002:a05:690c:660b:b0:8a4:b228:26bb with SMTP id 00721157ae682-8a64860b2c2mr55294797b3.8.1790543039743;
-        Sun, 27 Sep 2026 14:03:59 -0700 (PDT)
+        bh=rS3YQYx0uEiGdEuZPQRIfKhfJr0nb88p5R+xsGmGVqE=;
+        b=ILEPGma5sIFqLpJI87I4fSp54GFE7nYqM8Qgj9HmpEIfKRzVgD5GiozEee3Xjkqi4j
+         CFj521pBVrKyQZCvYMESzIkAOO3oPjWhsA/HkLzCoAyPO2fWEmoLaNQmpBJ+aRjOetYu
+         lh5LjQPHuD/LJfs9cOIp3q/JsDLWUno/KdR5ecmElgofaiWx5I8JaLtu9SbPgIEK+aIW
+         k+ZnihY2HqqqrCml8ppsrK4CI5AXxkwLrJ9r829FMaN8AJFj+oKuUF7OtOt64NRrrA8j
+         18Av1CiOs7gmTwa9ZGJBOD9ee6WHf4EEXYfiXCMuSOQoyljgv9hUQFndItZABIaW4web
+         MoPg==
+X-Gm-Message-State: AFq9FYJd2CBk1nRv+ERARZ9wfFZdLsKX6XiPoJGDOFg5AXA52ab1jNXx
+	zQJ++X105cL2AlRUyuT7xDmUBSF/gbWEpBg8a2jHwqFGPJn0w1V+OR0h
+X-Gm-Gg: AYBFou2sXp5whYpNdhhXc2RJLebn3JbF9Pjis56bNLWZYoA9/DeDANteD69klGMXK7p
+	EZmgEnVOFNmcD7K49J/cBYyWNUNnVMlObnQIPVINZzu42jrDZsJ614RR8I+J4wym0NnKmnxFNEt
+	h01KoJc6KLAvMLPWYa2sJx7MhgxiGdOnWTtcsKHqokEmjd92nFocWggNx+JTlleSAuorfVcMHJt
+	NNZsiiAUg/Ua52wkAdAbAwKwpZ6iA9gkm16Bv8Dd/n6ke26cKEIVVbZXALjvbt/unXJtzFlhSxy
+	zeb0Pmcd4uGSgYdLsEcVZ14k14z9QA3NcNyEp4O1zGEMoKlWnwoXJyzBREHnTc+9BdA8e9g5Yg5
+	0tXu0blD7JDs9Hs303eGFaW71qCgmm8JIIHYGuOQyn5RUCYj1ROlMTHGt/WWgzzzgoA/lDAV6cT
+	zDu4U6evWPkiWm5LXGwtt8Uat4RaV/HnR6g3ICydaA/i4vi/k5OYMGwPMOdre71iHwu+vOcAlv9
+	2eIlHvcsLZf3u2jl4Ei7CefJ1eIFfOM6xU1En7a7tt/hUYtwoe8JjK9M+VvXR+eh8fZfg==
+X-Received: by 2002:a05:690c:6d82:b0:8a4:c2ca:181 with SMTP id 00721157ae682-8a64e5bf298mr46142927b3.39.1790543043374;
+        Sun, 27 Sep 2026 14:04:03 -0700 (PDT)
 Received: from sean-HP-EliteBook-830-G6.attlocal.net ([2600:1702:5083:7610:5dd7:b9c7:1078:5394])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.57
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.04.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2026 14:03:58 -0700 (PDT)
+        Sun, 27 Sep 2026 14:04:02 -0700 (PDT)
 From: Sean Wang <sean.wang@kernel.org>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc: linux-wireless@vger.kernel.org,
 	posh.sun@mediatek.com,
 	Jacobs Wu <jacobs.wu@mediatek.com>,
 	Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 11/23] wifi: mt76: mt7925: do not disable RX NAPI twice on unload
-Date: Sun, 27 Sep 2026 16:02:53 -0500
-Message-ID: <20260927210306.737669-12-sean.wang@kernel.org>
+Subject: [PATCH 12/23] wifi: mt76: mt7925: assign the interface WTBL to the NAN management TXQ
+Date: Sun, 27 Sep 2026 16:02:54 -0500
+Message-ID: <20260927210306.737669-13-sean.wang@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260927210306.737669-1-sean.wang@kernel.org>
 References: <20260927210306.737669-1-sean.wang@kernel.org>
@@ -69,49 +69,55 @@ Content-Transfer-Encoding: 8bit
 
 From: Jacobs Wu <jacobs.wu@mediatek.com>
 
-mt7925e_unregister_device() disables every RX NAPI and then calls
-mt792x_dma_cleanup(), whose mt76_dma_cleanup() disables them again.
-The second napi_disable() spins waiting for NAPI_STATE_SCHED, which the
-first one already set and nobody will clear, so module unload hangs in
-D state and the module refcount underflows to -1; only a reboot recovers.
+mac80211 does not allocate vif->txq for a NAN device, so every SDF the
+host sends - multicast discovery and unicast follow-up alike - is queued
+on the dedicated management TXQ (vif->txq_mgmt) with txq->sta == NULL.
 
-Drop the redundant loop and leave the RX NAPI teardown to
-mt76_dma_cleanup(), making driver hot-reload work again.
+mt7925_mac_link_bss_add() only programs the wcid of vif->txq, so the
+management TXQ keeps its initial wcid of 0. The mt76 TXQ scheduler then
+resolves dev->wcid[0], i.e. the global WTBL, and every host-originated
+SDF is transmitted on it. That WTBL only carries the parameters used for
+beacons and has no usable unicast rate, so a unicast follow-up sent on it
+is frequently not heard by the peer and the send is reported as failed.
+Multicast SDFs are unaffected because they need no acknowledgment.
 
+Program the management TXQ with the same interface WTBL that the beacon
+and interface paths already use, which is fully initialised here.
+
+Instrumenting the TX descriptor write shows every follow-up leaving on
+WTBL 0 before the fix and on the interface WTBL after it; a 100-frame
+unicast follow-up burst goes from 92-96 frames received to 100.
+
+Fixes: 0f3605e4f8de ("wifi: mt76: mt7925: wire up NAN operations")
 Co-developed-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Jacobs Wu <jacobs.wu@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index 24585c992ff5..09153d624fd5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -40,7 +40,6 @@ static int mt7925e_init_reset(struct mt792x_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 6c603d57e89f..64853fc7f60e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -447,6 +447,17 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ 		mtxq->wcid = idx;
+ 	}
  
- static void mt7925e_unregister_device(struct mt792x_dev *dev)
- {
--	int i;
- 	struct mt76_connac_pm *pm = &dev->pm;
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 
-@@ -50,8 +49,12 @@ static void mt7925e_unregister_device(struct mt792x_dev *dev)
- 	cancel_work_sync(&dev->reset_work);
- 	cancel_work_sync(&dev->init_work);
- 	mt76_unregister_device(&dev->mt76);
--	mt76_for_each_q_rx(&dev->mt76, i)
--		napi_disable(&dev->mt76.napi[i]);
-+	/* Do not disable the RX NAPIs here: mt76_dma_cleanup(), reached below
-+	 * via mt792x_dma_cleanup(), disables them as part of the generic
-+	 * teardown. Disabling twice makes the second napi_disable() wait
-+	 * forever for NAPI_STATE_SCHED to clear, hanging module unload in D
-+	 * state with the module refcount left at -1.
++	/* A NAN vif has no vif->txq; its SDFs are queued on vif->txq_mgmt,
++	 * whose wcid was never set and defaults to 0 (WTBL 0 has no unicast
++	 * rate), so unicast follow-ups go unacknowledged. Point txq_mgmt at
++	 * the same interface WTBL as the beacon path so SDFs continue to use
++	 * txq_mgmt but with a properly initialised wcid.
 +	 */
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_delayed_work_sync(&dev->mlo_pm_work);
- 	cancel_work_sync(&pm->wake_work);
++	if (vif->txq_mgmt) {
++		mtxq = (struct mt76_txq *)vif->txq_mgmt->drv_priv;
++		mtxq->wcid = idx;
++	}
++
+ out:
+ 	return ret;
+ }
 -- 
 2.43.0
 
