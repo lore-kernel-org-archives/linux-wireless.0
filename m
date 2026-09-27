@@ -1,49 +1,49 @@
-Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
+Received: from mail-yx2-f43.google.com (mail-yx2-f43.google.com [74.125.224.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 870BC231A3B
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21277231A3B
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:03:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790543010; cv=none; b=VQqG8m4uIBAO49Qdnv0qno4UvcnjoGmfs2iqUzgE81AgkjS3NufFsZzRgnM4GxstqAaQMQugTGWTFiOmfYvmWKR+l95Ek2TwijJIih3E7Q3A8Ha1GgrFtAvJ9mdAsQzc7iAeIbCSJsnr3ESrXzUolRSSu1vAC0hbOshCJ2vimj8=
+	t=1790543013; cv=none; b=ZsmCu2CSmoOI7a9bXR35JFQZM/HeAOeAzr8rRTCdp0k/JOYyOsdic5Qic9678rYufeOlDPBY8QErJvkbD02Oy/r82FGYWIwbycjrXMHcnMhxAlODJ7E3S2rOC77/jFrbvN2dw7deWwUVy3ozMn4iiRXZDxgDuZtFi8G/Y6LO4Us=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790543010; c=relaxed/simple;
-	bh=nH5eJK7diJA9NyHsQQ/GdoNMKzGq6Hp2pqZq7PUeOTU=;
+	s=arc-20240116; t=1790543013; c=relaxed/simple;
+	bh=nb/uBbDaAqzBT1c6zEJCH40ieGeDawOJmXfx8Q4HnFc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MBgECyQiICwlWRMSlH9LSzPLmtxUJjMhqlsRepvKXW9Nn9NSeFJyP5Swoo7ibIj+JHkc+EQJ1hwqcKAysLQ7y31fzt0DVBbz3/QZmja7FPGGgLduSoKjQzszFh4Eztkk9b9Cc9MkHQOccR6Ys9TwgFzoU+JY+q0ex7DuDLWGg6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.52
+	 MIME-Version; b=KbBsypDXt7N5Y1iVV8Cq57eAA1hsDoa7jY4EMLBEhl34LTX9GCAK4JKvF48JVQNykzyaDRE8BOdv0IIkJ/AY1x9/PFuN572hGD1CkrXqJxp4K0r8NUBKiT8k6uRf1xPKdRsGERIWi6tds2S9dppwUcXJVqb8ZW/BZJm5JQk4U7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-674784a9f64so775119d50.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:03:29 -0700 (PDT)
+Received: by mail-yx2-f43.google.com with SMTP id 00721157ae682-895353e9051so19519417b3.0
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:03:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790543008; x=1791147808;
+        d=1e100.net; s=20260707; t=1790543011; x=1791147811;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tnVe5wEQo3FDnPgMfTarlYCeiDz8F+kBL76gyVnRNvs=;
-        b=n6ziDcHbn8AsQW/nRvLvTVST+2GUBDC+Rw0uLCwf4VcSWCwZqFwO/FVUafGWmf0ODL
-         ol8hiL5yUbZan9amLcS5njZe7FAGbwzZw7KSJ92t536soySBcpZBcY9pmDSyPVuD686v
-         c6pr8dIVxfWIBRyOjE4ilwFZ0ZpGkWV0IATwXYzj/HoI2XvxQLhbyky8MxIlzpdlq2W+
-         Q/rYxLUurGuTY/3TxA/FnulPg6cWtqHy3qiddGOPb0hZj4Rr/4AFDgIlh+0+rrxd934P
-         TK3rQL8hH1aewhzRdMPDHsArpcSBtKsmeGjyTC/kPVTkhmec9bouLYZ4zex4owWEQ5x4
-         DATw==
-X-Gm-Message-State: AFq9FYIwqdgVbRgUwAKs3hz80AyuxbN4LO2v1pIvAohSz9Rel2E+scaW
-	sK3ZHE4UrzkSMtd9bVYC2NUUpo1ooz5Kc30TCLB0zKLnneVonSAc16CJ
-X-Gm-Gg: AYBFou2Cl487BoAl8qW3X/VCVR2Oi6JCOWhrNU7DeLXI34lMLhDW/4T67gJnNrERNG2
-	lHAXpuTQx49n41DsDq4cMAZjXksw34F3ojjmrNtyAX9V7wEGmGd64rsTlPUbK/xSoFugDYSmH9N
-	qYRbzdv6sBwsmgpttY11SILMrPUbKtPp1w6SRQDmQKs37s3AO+EDZQcL91BtCzqFxgh2TwN5RbY
-	hmq2xSRAaYrqZhsheNWxbcgz2D4lV3lK/uMvUCwOdz1Ofo7zIW/DiZRpNlfpdhn5hFm7Dor6b8+
-	cCHJy585UpCz7gegXOGTbIa2gHtsSl539gnyYh4eFAh2fAuwk0ah2v7ney99bzBeN14pwiTy8KO
-	m6IymPTGZsNJm0qEksq5B+MiUiCu6n0B9uolwHOZg/xK+oJcuLjjbxJok2tJzlK3noXDbIpcXyg
-	WgvFQVPQng6p45kxmSP0RxkdwOHXPxskGxlrnKYCKaHN1Af7AQVl0GhAAjAwhaGagtIR1EETs+k
-	W+mndwAQREH3MgxnTva+s37xtgurJFaEEpOkTMv6T9rKeomtAG9/vNhm/OQtIxvME3u2Vw=
-X-Received: by 2002:a53:d017:0:b0:675:3363:676e with SMTP id 956f58d0204a3-67533636cfamr1249316d50.10.1790543008270;
-        Sun, 27 Sep 2026 14:03:28 -0700 (PDT)
+        bh=b/j2sk0Gu0f7kgmwf66bENo3rsyXQHCPfjXxZSmJeG4=;
+        b=mDC395vEBZIQCfWGf2hHnHsh6DzGICWYctyDFwjdJOMk8WVQ7rfKJXGF7Ha70DDM1C
+         8ynRyQzCUQJxG6TQ9Rg0/hRTjh1ngL5Unf/h3YvTyzQLL9PGEs9UoXDKVDwsTxje+z/x
+         UMadg0qy4URrByCC3kc/rsApZ0GkNPMHmHzukoqQaBqwG/CfyOw479D0iZj1KR9vbEer
+         UtV9css6Pn18yhYZ4sBWTdsYbGSWippvuNbknhyqWDdRvtHVX7liMFrTsHKOWWEpEYkm
+         nhUR9eMr+/xmECVmbYZ6oUKOHrs6kSDUBW+SPEMNjNLfq9Ix4cyzq8lTvIDjfcsClw2P
+         1Zdw==
+X-Gm-Message-State: AFq9FYLpqyFhRt5mmGMym0m083o9UauwwHyuJ3j9SuaCi8Rtm67BVxP2
+	UfNsT0fRQxSuBgX5CUtjPI3Mx2ApB+U31wJM4fU6kPfIEpFfqbg64MpD
+X-Gm-Gg: AYBFou0/1ds61nqHNz8Rht1RgTalvTEW/+q+zceeoO37P+2m2lTs7E4UdxWUaafu9YC
+	jGcKLp1B4hCVIh1IG6vWR/Zb5rAqDS+eBXYCTXDPuzSAUur5xYvpUPVacMpMgPTzSqdJqia934Q
+	i4rr1XPpfkPzfBpodKsPziYhdxl1yvudOS4ctZ+KS7++HBLMu/tnEkpSvx7EmTqCINIvy2x/93Y
+	bLDMnLn1YXeqUlYutyx/EXLOEz2HWEh7W7JsoBL+h/hXoEVkZYei8FSaoU6aXau1gPTjXK304zX
+	SWp78XJVg8rCQGG3wJqxhtx0JrqcMefNuvGi1/xtBfadwkw5rSkxo8QO8+MQ5lFdFfy8RGqX0Ed
+	/F2IikMiBN7+vcjDB6H5Qz4itFZ/2clJ/jw3152FwWnJBK5IifnwYpS8eqiJUP0c9JxdcUbTkoN
+	jai1IS/Juy8kbhXxv/e9X4888QOVAf2lHjCksm/4PJBMAEc69FhRFrDphh2RIsdSyjV3YlA1itI
+	yQWHMDHFQkSD1lBkvY8h67SLV1yTx9NzLQL+imqwO2R+4RL7FyUohqnq8k1yB8EpvqT+Q==
+X-Received: by 2002:a05:690c:e3e1:b0:854:b86b:d206 with SMTP id 00721157ae682-8a6461b8773mr59308197b3.12.1790543011011;
+        Sun, 27 Sep 2026 14:03:31 -0700 (PDT)
 Received: from sean-HP-EliteBook-830-G6.attlocal.net ([2600:1702:5083:7610:5dd7:b9c7:1078:5394])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.26
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2026 14:03:26 -0700 (PDT)
+        Sun, 27 Sep 2026 14:03:29 -0700 (PDT)
 From: Sean Wang <sean.wang@kernel.org>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc: linux-wireless@vger.kernel.org,
 	posh.sun@mediatek.com,
 	Chengwei Yu <chengwei.yu@mediatek.com>,
 	Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 03/23] wifi: mt76: mt7925: implement NAN MAC address randomization
-Date: Sun, 27 Sep 2026 16:02:45 -0500
-Message-ID: <20260927210306.737669-4-sean.wang@kernel.org>
+Subject: [PATCH 04/23] wifi: mt76: mt7925: wire up NAN MAC randomization lifecycle
+Date: Sun, 27 Sep 2026 16:02:46 -0500
+Message-ID: <20260927210306.737669-5-sean.wang@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260927210306.737669-1-sean.wang@kernel.org>
 References: <20260927210306.737669-1-sean.wang@kernel.org>
@@ -69,141 +69,60 @@ Content-Transfer-Encoding: 8bit
 
 From: Chengwei Yu <chengwei.yu@mediatek.com>
 
-Add mt7925_nan_start/stop_mac_randomization() using a per-vif
-delayed_work and period stored in struct mt792x_nan.
+Start mac_rand_work in mt7925_add_interface() and stop it in
+mt7925_remove_interface() so the work item added by prior patches
+is usable and cannot outlive its vif.
 
-Per-vif (not per-dev) because the NAN iface combinations allow up
-to two concurrent NAN_DATA vifs; a single dev-wide field would
-silently lose randomization for the second NDI or let it overwrite
-the first vif's pending work.
+INIT_DELAYED_WORK() is unconditional across all vif types, matching
+how csa_work is already initialized unconditionally -- mvif->nan
+exists on every mt792x_vif so there is nothing NAN-specific to guard.
 
-delayed_work (not timer_list) because the work function calls
-mt7925_nan_set_nmi/ndi_address() which invokes mt76_mcu_send_msg()
-with wait_resp=true; that can sleep, which is not allowed in softirq
-context. This is consistent with scan_work, mlo_pm_work and ps_work
-in this driver.
-
-stop_mac_randomization() must be called without holding the dev
-mutex since the work function acquires it. No caller is wired up
-yet; the next patch does that in add/remove_interface.
+mt7925_nan_stop_mac_randomization() is called before
+mt792x_mutex_acquire(), not inside it: the work function takes the
+same dev mutex, so cancel_delayed_work_sync() while holding it would
+deadlock. This follows the same ordering mt792x_unassign_vif_chanctx()
+uses for csa_work.
 
 Co-developed-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Chengwei Yu <chengwei.yu@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/nan.c   | 59 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7925/nan.h   |  7 +++
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  9 +++
- 3 files changed, 75 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-index abbd3f7b081c..0b94bd4005d4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-@@ -745,6 +745,65 @@ int mt7925_nan_set_ndi_address(struct ieee80211_vif *vif,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index c882952f5df1..3e1c223e8da6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -480,6 +480,12 @@ mt7925_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
  
-+void mt7925_nan_mac_rand_work(struct work_struct *work)
-+{
-+	struct mt792x_vif *mvif = container_of(work, struct mt792x_vif,
-+					       nan.mac_rand_work.work);
-+	struct mt792x_dev *dev = mvif->phy->dev;
-+	struct ieee80211_vif *vif =
-+		container_of((void *)mvif, struct ieee80211_vif, drv_priv);
-+	bool is_nmi = (vif->type == NL80211_IFTYPE_NAN);
-+	u8 addr[ETH_ALEN];
-+	int ret;
+ 	if (vif->type == NL80211_IFTYPE_NAN)
+ 		dev->nan_vif = vif;
 +
-+	mt792x_mutex_acquire(dev);
++	if (vif->type == NL80211_IFTYPE_NAN ||
++	    vif->type == NL80211_IFTYPE_NAN_DATA)
++		INIT_DELAYED_WORK(&mvif->nan.mac_rand_work,
++				  mt7925_nan_mac_rand_work);
 +
-+	if (!mvif->nan.mac_rand_period_sec)
-+		goto out;
-+
-+	eth_random_addr(addr);
-+
-+	ret = is_nmi ? mt7925_nan_set_nmi_address(vif, dev, addr)
-+		     : mt7925_nan_set_ndi_address(vif, dev, addr);
-+
-+	if (ret)
-+		dev_err(dev->mt76.dev,
-+			"NAN: failed to randomize %s address: %d\n",
-+			is_nmi ? "NMI" : "NDI", ret);
-+
-+	ieee80211_queue_delayed_work(mt76_hw(dev), &mvif->nan.mac_rand_work,
-+				     secs_to_jiffies(mvif->nan.mac_rand_period_sec));
-+out:
-+	mt792x_mutex_release(dev);
-+}
-+
-+void mt7925_nan_start_mac_randomization(struct ieee80211_vif *vif,
-+					u32 period_sec)
-+{
-+	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
-+	struct mt792x_dev *dev = mvif->phy->dev;
-+
-+	if (!period_sec)
-+		return;
-+
-+	mvif->nan.mac_rand_period_sec = period_sec;
-+
-+	ieee80211_queue_delayed_work(mt76_hw(dev), &mvif->nan.mac_rand_work, 0);
-+}
-+
-+/*
-+ * Must be called without holding the dev mutex: mt7925_nan_mac_rand_work()
-+ * acquires it, so cancel_delayed_work_sync() here would deadlock against a
-+ * concurrently running instance of that work otherwise.
-+ */
-+void mt7925_nan_stop_mac_randomization(struct ieee80211_vif *vif)
-+{
-+	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
-+
-+	mvif->nan.mac_rand_period_sec = 0;
-+	cancel_delayed_work_sync(&mvif->nan.mac_rand_work);
-+}
-+
- static int mt7925_nan_avail_ctrl_tlv(struct sk_buff *skb,
- 				     struct ieee80211_vif *vif)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.h b/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
-index 9fd349e1cdab..191134825c3b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
-@@ -503,6 +503,13 @@ int mt7925_nan_set_ndi_address(struct ieee80211_vif *vif,
- 			       struct mt792x_dev *dev,
- 			       const u8 *mac_address);
+ out:
+ 	mt792x_mutex_release(dev);
  
-+void mt7925_nan_mac_rand_work(struct work_struct *work);
-+
-+void mt7925_nan_start_mac_randomization(struct ieee80211_vif *vif,
-+					u32 period_sec);
-+
-+void mt7925_nan_stop_mac_randomization(struct ieee80211_vif *vif);
-+
- void mt7925_nan_local_sched_changed(struct mt792x_dev *dev,
- 				    struct ieee80211_vif *vif);
+@@ -493,6 +499,15 @@ mt7925_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+ 	struct mt792x_bss_conf *mconf;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
-index 9722d840c1af..64cca8852359 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
-@@ -181,6 +181,15 @@ struct mt792x_nan {
- 
- 	/* Connection index bitmap, up to NAN_MAX_CONN_CFG peers */
- 	unsigned long conn_bitmap;
-+
 +	/*
-+	 * NMI/NDI MAC address randomization. Kept per-vif (rather than a
-+	 * single pointer on mt792x_dev) because up to two NAN_DATA vifs can
-+	 * coexist (see if_limits_nan_mcc/scc), each needing its own
-+	 * independent randomization period and pending work.
++	 * Stop before taking the dev mutex: mt7925_nan_mac_rand_work()
++	 * acquires it too, so cancel_delayed_work_sync() would deadlock
++	 * against a concurrently running instance if called while held.
 +	 */
-+	struct delayed_work mac_rand_work;
-+	u32 mac_rand_period_sec;
- };
++	if (vif->type == NL80211_IFTYPE_NAN ||
++	    vif->type == NL80211_IFTYPE_NAN_DATA)
++		mt7925_nan_stop_mac_randomization(vif);
++
+ 	mt792x_mutex_acquire(dev);
  
- struct mt792x_vif {
+ 	if (dev->nan_vif == vif)
 -- 
 2.43.0
 
