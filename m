@@ -1,48 +1,49 @@
-Received: from mail-yx2-f40.google.com (mail-yx2-f40.google.com [74.125.224.168])
+Received: from mail-yx2-f41.google.com (mail-yx2-f41.google.com [74.125.224.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 959FD34752F
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91AA2231A3B
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:03:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790542997; cv=none; b=WnLkHmDjZZlL8vnuB2ipmKjey2Hdu+1N8jj2Y0ONLdWIv4ErUgS8vPmKcY2zHwp9J1u+X9KWwzGlUOED63H/5AZu/i4iHr92lfpPIxpTUzap/ZTEuiodwYyL/tsDcfgifazaLQGusAdbY9ZFLEhURVKnYx9THii7ktYwNG54kJs=
+	t=1790543003; cv=none; b=c1bHiPeTtWJGyfTT+n62s0o4mn1BMkS00/HFpfxENRJknsdQpODwipDSvbUJKjI6E5nlxeRXFVg7YR/W0V06oNuKDOfyLg5Twd2xMkWY9mjJtD9pdm8fzZU4IdWSvfMcP4blg6MDgIwjGLaxlImhmGDaKn3VsChYmzcR4QftvgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790542997; c=relaxed/simple;
-	bh=ofaUwOlWPyIfV7Yh+N9j+cIKyJhFTKxhjuMQ1xDP444=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P8OYDLhSZxsEKjZovRpfazm+Jd/0Yj2abUC/BgUzUJ0609ET36xS3Exvyt6iP8WftGF3130r75SQoFqX6p/YxhS8+9d9UPt/d0vMtw57busR6P+jlpNpOtShFQas1UUschpJYZrwE8EWxhNtB6utllhKz2mckYb2BK41b26PNCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.168
+	s=arc-20240116; t=1790543003; c=relaxed/simple;
+	bh=ymg97HhM4uQNO4bW+3XTy8rdmLuv1qcJCnAOe+wk5RQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=UJBGIbwgZtaTV7HXlvJHjbFfiUFOkqBFVge0QxAP7gXjzc7WVRjxdY6hsQzIBVlOPE3/dLsuEZ6pdSPkEdlylwk9obo2KmoggDUz2H6Gj3YX3FBy2AOB4wGbK+lGVXP5oUsuvTcmjv9yx0EgNChtDFuC38PJp5dV0nKx0DKKxuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx2-f40.google.com with SMTP id 00721157ae682-8a87be3ca16so15616937b3.2
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:03:15 -0700 (PDT)
+Received: by mail-yx2-f41.google.com with SMTP id 00721157ae682-8a7c33dbfeeso22085237b3.2
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:03:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790542994; x=1791147794;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=H8OCvE7enPzYeS+ZD/b1+wgUiD3d8fgb6HgQLR5dMYs=;
-        b=UReTR05PJ+Z8vf6v4K4fpP6JN+2wJeiqEshlyIqbMM1Zc0QnaFf83IMSxsWDMlA/QF
-         j6E+6z1NzivXroy1ih1d2j4QNudVyY6bZet3LOrOwH1bFyMni5gz/FPMAK1mlZO/3R7l
-         cnOHczZrOn7R1Du5Q3S7gQRd8kQ/MimfBHluQxdP8D0ObZSnGJElCc44277lgPux15js
-         8dxMFh2V/vbDujngweT1U82xGBXEx6QOTkI5njmSX23lOkp1qcfAc45d+w0Jz6JZFUwF
-         hKmLiiyZeiyi3V/PRRteGVPDO/9yolacUQDudzmBEITzZsiNsGeqwBVc+XgBIK+vwRgT
-         gHXA==
-X-Gm-Message-State: AFq9FYKWvSIT3FdnElWIZSkG/iTYGKZaLXM0+uRDnHj7otCsREZ6bHPI
-	yr1w/FH7I/RqaTQNRXIWr4xshUn6MgsvS7MAO0LA49LGq5ewDTWTpeoY
-X-Gm-Gg: AYBFou2l2HiBrZg+Xda2rAn9nB3G7T+Z/GQ+vJwn9e1d3ybybZoMP5BA/4BcOpJZ3tF
-	YJsRoU/+nL4oIHzHpuUyLYM3o4agJstQoYKfLltR6HsGZSIt4EDNJgTCxXREJHLYwudLH5AKQFp
-	z1JnoCZ/YsmN5wcLSoFlEkWU0yJDE2xAkFa+mobfLMkP13ETwpaYrSoMwAEDv7a7iB7XVXcC4I4
-	s9xKzmlr1DrrZZRP/C2BKulFk6yEMw9oSJ/TjFVZx0el0uOUUT6sxToXqOHBeg3ymjHvXQE7+xH
-	fuLYwC6NSBZ6VtYWdujpz9jAspt6sW8IWSLqUy/s0zzqDCui3iWccvXFN29i0x3gUxNz+JJz3UH
-	T43T3Kw6grz42N6EHOKAUWBaMcxMSiYgGsQOglDVxHIpKhrhe2R+nFwfxc+t+drkO4vitvV+LXy
-	rMldVSdHYkylhkG9jWo+lhqICWiKhtPDjjO0iIayYGyQLe18lhVeYUxsqhlKiU001lD1n0pN74f
-	8+b03klTl04U8EKZ8X3rXgih4gl7AptL+SmYpR8rqE//+EGmFA2U+xqybwU3yibM8QgxQ==
-X-Received: by 2002:a05:690c:ec5:b0:89a:63da:fa96 with SMTP id 00721157ae682-8a648ec58e4mr47317247b3.81.1790542994491;
-        Sun, 27 Sep 2026 14:03:14 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790543001; x=1791147801;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=yHU4nEGW7+kHgbtl043kdQcpDp7Ms+JDgnl3vA2EDIo=;
+        b=uTL839KnMD1s8vBFpaJBtpOlamy2Ab7xDUIVYWbrBz6LY93hBJAxJx+JVMbP9HYyh5
+         5gpFVzxkKJlmmreviDASaQYytG0f3oHM3FjENWrkND3KZAYpftrd7e8eTrDq7yiXwCyL
+         XXMSozYpNGDzxtqQNBn35eydoYAndlwZC6kx3kjtmqCqoFOIG0FA43q70t4SpF10dtSO
+         oYYYexQg+hw018e7tUW3FjQXVl/43WsLKqX8JjcBdrB/AdNp8rP5t/I2rSqt5lrA1sXe
+         9bCiXKJB7ohchoOcNdC4wsaM8ek62SIligw6a9Gcqsl55pjcBO2LmIH2dahCTbOYLGCR
+         GQSg==
+X-Gm-Message-State: AFq9FYIZmDRIsOon09WB15buaOm2plCldZDgZAOMMmQioxC0PPFl5xQW
+	5avn38KDR79jJ+jSbKbxGI5rKMMifTu8B/lKGmpGjDomxmCmXOF+DRa7
+X-Gm-Gg: AYBFou0umjFEjHKb5Pqj/pzOT+Ym1FGogTNq+jRQjuagHjgRkrApWy9HTMOX7DfrWoc
+	IqECOa4Qjegtw7buuhcBRgNYri+tKZAUOG95/ZPZkRjT9lcrCzfOLGGomkWXZJMAXtRJB5Ju33M
+	4lyGFUVS+lksA76QoFrJvJPxlFdB9pUWmL74aH5OqEe+M//M6qTjSNDVooe3bFvN9EvSsaRXPWI
+	lsvXuhmS8wj5Pu7VfME3k37Y7sPKOo6e2hCbueY01IUx/KvHMDpDuamHl13UzzOAR0/JeMwkRCs
+	qWjjb+CAXtp2yIyrXaHOQsYNYUtgfDoXGonAuRtcuTpCY5+P/Gwr17kYbydaeLlueA/ZVrHaiyP
+	vV3uyGI9zLPQPGcDktqcZsNV/ob2uD7occ0bi7IyQoVMwXeE5EM2makmJx9d83U3k6CfiBw82/y
+	Ky5RKvNYJm/ybqE4ZaiuF4LaPJqCIBJ28IgUvbycD5LpZkPUNLrsk8ijZAUgDbYwxyHHFpFSRrS
+	RK3s3opLPvdOfKZhJG4ZHgDDkgYALnm1e/nxESIgOFoP/CidP+c/hcfID2Hob2MMzB3iQ==
+X-Received: by 2002:a05:690c:a79c:b0:8a8:8456:a970 with SMTP id 00721157ae682-8a88456bccfmr20134317b3.68.1790543001580;
+        Sun, 27 Sep 2026 14:03:21 -0700 (PDT)
 Received: from sean-HP-EliteBook-830-G6.attlocal.net ([2600:1702:5083:7610:5dd7:b9c7:1078:5394])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.13
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2026 14:03:14 -0700 (PDT)
+        Sun, 27 Sep 2026 14:03:21 -0700 (PDT)
 From: Sean Wang <sean.wang@kernel.org>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org,
@@ -50,11 +51,14 @@ Cc: linux-wireless@vger.kernel.org,
 	yu-ching.liu@mediatek.com,
 	jenhao.yang@mediatek.com,
 	posh.sun@mediatek.com,
-	Sean Wang <sean.wang@kernel.org>
-Subject: [PATCH 00/23] wifi: mt76: mt7925: add NAN security and improve NDP reliability (part 2)
-Date: Sun, 27 Sep 2026 16:02:42 -0500
-Message-ID: <20260927210306.737669-1-sean.wang@kernel.org>
+	Chengwei Yu <chengwei.yu@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>
+Subject: [PATCH 01/23] wifi: mt76: mt7925: make NMI address TLV tail padding explicit
+Date: Sun, 27 Sep 2026 16:02:43 -0500
+Message-ID: <20260927210306.737669-2-sean.wang@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260927210306.737669-1-sean.wang@kernel.org>
+References: <20260927210306.737669-1-sean.wang@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -63,69 +67,39 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This is part 2 of the MT7925 NAN work. It continues the 15-patch series
-that fixed NAN operation and NDP performance:
+From: Chengwei Yu <chengwei.yu@mediatek.com>
 
-https://lore.kernel.org/all/20260824195227.12589-1-sean.wang@kernel.org/
+struct mt7925_nan_nmi_addr_tlv is __packed __aligned(4). tag+len+
+nmi_addr is 10 bytes, so the aligned attribute already inserts 2
+bytes of implicit tail padding to round the struct up to 12 bytes;
+sizeof() is unchanged by this patch.
 
-This series adds NAN MAC address randomization, low power event control,
-and key management for secure NAN and NAN data interfaces. It also makes
-unicast management TX respect peer availability and discovery windows,
-and fixes shared BSS teardown, cluster event ordering, and device removal
-and frame lifetime issues found during NDP setup and teardown.
+Every sibling NAN TLV struct in this file (cluster_id, sync_rssi,
+peer_rec, map_sta_rec, ...) declares its tail padding as an explicit
+reserved[] member instead of relying on implicit compiler padding.
+Make mt7925_nan_nmi_addr_tlv consistent with that convention, and
+give the field a name so it shows up (zeroed) in TLV dumps instead
+of appearing as anonymous struct padding.
 
-The 23 patches here cover the mt76 follow-up work. The separate mac80211
-NAN receive-filter change is not included in this series.
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Chengwei Yu <chengwei.yu@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7925/nan.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Chengwei Yu (10):
-  wifi: mt76: mt7925: make NMI address TLV tail padding explicit
-  wifi: mt76: mt7925: add NMI/NDI MAC address setter helpers
-  wifi: mt76: mt7925: implement NAN MAC address randomization
-  wifi: mt76: mt7925: wire up NAN MAC randomization lifecycle
-  wifi: mt76: mt7925: add NAN low power event control on suspend/resume
-  wifi: mt76: mt7925: implement NAN key management MCU command
-  wifi: mt76: mt7925: add per-peer RX IGTK/BIGTK and RX GTK WTBLs
-  wifi: mt76: mt7925: add NDC-aware TX GTK table for NAN_DATA
-  wifi: mt76: mt7925: implement mt7925_nan_set_key for NAN security
-  wifi: mt76: mt7925: install NAN BIP keys standalone in sta_key_tlv
-
-Jacobs Wu (13):
-  wifi: mt76: mt7925: do not disable RX NAPI twice on unload
-  wifi: mt76: mt7925: assign the interface WTBL to the NAN management
-    TXQ
-  wifi: mt76: mt7925: do not deactivate shared NAN BSS on peer STA
-    removal
-  wifi: mt76: gate NAN unicast mgmt by peer availability via STA queues
-  wifi: mt76: mt7925: hold NAN mgmt TX to the discovery window
-  wifi: mt76: mt7925: double the retry budget for NAN unicast management
-  wifi: mt76: mt7925: let TX status of DW-held NAN frames outlive the DW
-    period
-  wifi: mt76: mt7925: defer the NAN joined-cluster event out of
-    NAN_START
-  wifi: mt76: mt7925: steer NAN handshake frames by committed-bitmap
-    state
-  wifi: mt76: mt7925: disable only the RX NAPI instances that exist
-  wifi: mt76: mt7925: stop queueing resets once the device is being
-    removed
-  wifi: mt76: mt7925: bound the lifetime of NAN unicast management
-    frames
-  wifi: mt76: mt7925: always deliver the joined-cluster event through
-    the deferred work
-
- drivers/net/wireless/mediatek/mt76/mt76.h     |   1 +
- .../net/wireless/mediatek/mt76/mt7925/mac.c   |  23 +
- .../net/wireless/mediatek/mt76/mt7925/main.c  | 147 +++-
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  30 +-
- .../net/wireless/mediatek/mt76/mt7925/mcu.h   |  11 +
- .../wireless/mediatek/mt76/mt7925/mt7925.h    |   3 +
- .../net/wireless/mediatek/mt76/mt7925/nan.c   | 710 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7925/nan.h   | 131 ++++
- .../net/wireless/mediatek/mt76/mt7925/pci.c   |  19 +-
- .../wireless/mediatek/mt76/mt7925/pci_mac.c   |  58 +-
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  98 +++
- .../net/wireless/mediatek/mt76/mt792x_core.c  |  34 +-
- drivers/net/wireless/mediatek/mt76/tx.c       |  25 +-
- 13 files changed, 1248 insertions(+), 42 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.h b/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
+index d81d84a222d9..297c2856578e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.h
+@@ -346,6 +346,7 @@ struct mt7925_nan_nmi_addr_tlv {
+ 	__le16 tag;
+ 	__le16 len;
+ 	u8 nmi_addr[ETH_ALEN];
++	u8 reserved[2];
+ } __packed __aligned(4);
+ 
+ struct mt7925_nan_avail_ctrl_tlv {
 -- 
 2.43.0
+
