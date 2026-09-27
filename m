@@ -1,49 +1,49 @@
-Received: from mail-yx2-f40.google.com (mail-yx2-f40.google.com [74.125.224.168])
+Received: from mail-yx2-f39.google.com (mail-yx2-f39.google.com [74.125.224.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A96231A3B
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:03:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7582472AE
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 21:04:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790543037; cv=none; b=cHrA/llUoldvA/ePxcRqacdfyYGjZvGlddVL9rWLZ11PzNJtS/KTDikoir3pM5yqXXt86KDMs7uqm7jTLxdwiCYaHqGxBRHj5iMNbZ4O3vGqwcudfvmT/kqaSJVCq11YHXSx5gpi1KroLi2c0XV0SavJ5OVL9Dmp02NfdfI0jEY=
+	t=1790543042; cv=none; b=T8tT3GkjHh1sCTTDsexg5NRbYD0x+igQXPfxRpV5R/QnXAmtZyTKnDSIVhkeidgTO/ol6k4XSAzqH4waQrjAxrw1+ctpvoa48pKWC+gbNuFuNTlJv2LPx4eWWGbrJDoa0yl6lwmVVmpz41EL1L4LAiQLCBJystrGHGwyMWktKTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790543037; c=relaxed/simple;
-	bh=w4L7GGPIQoshak4HbTecdDMcIcy1RX5G2Mihgl8atJw=;
+	s=arc-20240116; t=1790543042; c=relaxed/simple;
+	bh=p5Ya4V+IM4LW1JeEl8YghJGIuKeaNFNyJJeicNbaa+s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cqz4+/5V9lHjhRQOQPuI/26maOgUEgtio2lHB072j/vmnTyXwdrKJRXe4/BfcpqdJZ0g+82WAXilc1gtYtOmVFu/3tItEGBwmd+MWl3S3mn1f+hFSqDO9LilZThjiki4FMuv8IjrwPMLts5nSNZ2qhLuuz+uNi+r2vuQpYz8Nd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.168
+	 MIME-Version; b=pvwDjBnvrvtKyc6ipaQlyoVrEVU8c5liPy+XoF7yQEwtn3qaYtRr1BN5AflRtZSjc9wUVALZS0zMWTL3YMswe3LUlPx/Z9mR/UF/unQ5Vy03if+f40d7ouYYyrzNFgH9r7AT4yqtVoqDKuVRzpR7g+rGAKUWZdCXhkG7Bsvn/9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.167
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx2-f40.google.com with SMTP id 00721157ae682-8a886c555eeso17705747b3.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:03:55 -0700 (PDT)
+Received: by mail-yx2-f39.google.com with SMTP id 00721157ae682-8aa75b33a26so2826237b3.2
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2026 14:04:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790543035; x=1791147835;
+        d=1e100.net; s=20260707; t=1790543040; x=1791147840;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=skVQMSALO8vNJg9eTzKOXnpwu/ZZsTQZ4qhOnqD3fsY=;
-        b=LjYYXuPlbVovHxwbnj9mv+dE1gQer8CN7b4TPTZINn6iPPjk35ynjOjFTAT4mcb1Jj
-         xDnBd1P6+ApAP+2pspgnCMpelDC8bOhusV66mqZ6+rSMFID92aiz+TnprXfgNtJ16CVV
-         Xue/J1aZAM4MIoBG7RCYusv6TPOPsfR/l99rmu9GZbpFbk0Pq/WH4lBzb1lCshyGbSuO
-         /i6lYFy2dXonk/ecsxDuxe/0mC8BtHf2xxd0WV1PJ8t2pJsrRdx5u6vyAWhBVGV1Vkb3
-         qL81T70zLOEKaiPGwfA9RoGYzdvO23mFweeutRyeNa630AhnU1yUt+if3Qs8KoM8feqj
-         2Tew==
-X-Gm-Message-State: AFq9FYIGP7xCzHguVATKCR4DJMJk65aWTFbxFJhVdObCYqpWJHcgaY9w
-	YqA3O57Qz6UPiTb6I3vnmtvHE4kXQXKUrhuIQFTfP//GUXKPMJAI0vPifoXPrFE6
-X-Gm-Gg: AYBFou237iIrSc1dDAWE33EGUqU8Arj3crQ+lEQWFNr473m98f4s87A+Jtlq0WRJoXD
-	o+n/KfOWx94MnY/IDkyW/GlCPxtEB0xqBtZ/VSNYAz/wCAvScHCbutHXFq9Uz4SITmyqDvkmTTs
-	RW9mH7IZh5eno8BXXibc1nY1hU/EewmI9Kc/N8gkG4OgIWt2PBc5w1vvHMdD4yR/1Fo3ydmM0Jx
-	Dvfe6SF8FI2hkWMqlN3Mn9Rv4cijePNbkHcKY4QeW/VWpGkNnARJ+5UkyW6KrL5QE8AktgKloBZ
-	xbMifieeI7xopx/gLTKbzJx+E7NHjXl7S9drvT04uoRJn/+4XY1undFjh0Kk+28rA8sEiTgYr3k
-	488DO+SFn/TsIS+2ZZ8qQ2Kc2pU9lA1RYsMlcPIdQckpanp0xnWa6gnUMWnwwXTIco6HQjpqL3q
-	7OWhuDgZnhsaRahPlg6bz7zymtRRf8L9OMZe/bxrkFGwr8pFe7xtuKAiSrO4r3ZsC8eKuDkuoLg
-	0AiF0a9uixkxzReovJ3o6CdhC91RpKAUhE1vvYQ8l3mzEhiGzsqn5dQ/6zR/awRYF5EUw==
-X-Received: by 2002:a05:690c:a607:b0:81e:abe2:9a3b with SMTP id 00721157ae682-8a86ca4e2a3mr15878547b3.10.1790543035150;
-        Sun, 27 Sep 2026 14:03:55 -0700 (PDT)
+        bh=8TTonhnwGQ3c4+ryD77q2DmYJVEgRAWoW9sUOCsWdn8=;
+        b=SzuOL9MfhcaRNxIbtdbn81i5LDK1d2DRCHiDU0aSMN61OL/QW6QRQZArhU0lBS5WXJ
+         5u/OwhHZ27iLVWrisegrffI4uqV8mnvw9wKAf2c+XCDDAVXVgi8+BatqWUIu6isbbCdT
+         NW76y/3/Nmkc1ptnshFLB9Sfx8ymyYZ0N69nbXMOYnqMavDg1nNk7dmqUnAHbjPwto+4
+         4UfHDHBtxgar9gZLjguZhAXQuULACp0qbNYJRedIOFDdxrA3u3VssIREcdvGq8DWURg+
+         6rSzRR5IlFw1lJTzliR/EECuwfNjKrvcnwh56cNinsZPJOcIKXYj0x2VKgdMzEIZ5eqK
+         fpcQ==
+X-Gm-Message-State: AFq9FYIMDFjDFCGYnkGhLtuLmtJ94yfahb3K+wyNJzMENfQUAkBuGbK0
+	OlHybYxpdYgdml5qEOFyih93khTPSS7puSazUUup8pj47OEmf5wy4/P/
+X-Gm-Gg: AYBFou2WL3nR7103lRZ/kh5Tep4QAyJeP4HTkCkC7dZAJMjZ+Ssma+5AtKE3sBU2xwy
+	xB6LEE6SGPMlLbApjnRi/mzw2DGxttWPukXUPQCBoAnxjXyiADfiX7k6EARNn23t9m9k8DwMqVl
+	WifW2AjV2i0YshjRYJNlom0BJKjbW1h86tzKQ+ZfiIwHHyjAlZzudfFAMN8RQV8lty0jt1rPvSA
+	v9dDp5kSVoHM/whi+XKbdEfGU+UrfOSWJMTmslIzfHAc0O2IDNWMlVOk31qFMvp41QiQMmSw4dv
+	6o9ETlmM1upcXSyP/K9wLYAdQPKRkHAUdGDjq1KpwBmNp2ZESUxWhw/DcU4yRakLAdF+68sYqnb
+	yMefcXVvqGYo7UolJWpUp0JT6p7jwp492orj1IwYlMIzHzBZNCsVc3lkhHPbWq/naNh/d2gu3CE
+	PWVvAUgd1APj6lGUjX+ekqmpgEivXHdoGRbZ83IACSiuLg7xlk6bLyTwR34UdBUQijcM+0Muq9K
+	33CWh9gR8ihrxr8Hat0WyWQfa5bsd6xXtEZMweDMmKGV0+PdsyctUPbEXWH82AKT9fBjA==
+X-Received: by 2002:a05:690c:660b:b0:8a4:b228:26bb with SMTP id 00721157ae682-8a64860b2c2mr55294797b3.8.1790543039743;
+        Sun, 27 Sep 2026 14:03:59 -0700 (PDT)
 Received: from sean-HP-EliteBook-830-G6.attlocal.net ([2600:1702:5083:7610:5dd7:b9c7:1078:5394])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.52
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8a86103149dsm35389017b3.40.2026.09.27.14.03.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2026 14:03:53 -0700 (PDT)
+        Sun, 27 Sep 2026 14:03:58 -0700 (PDT)
 From: Sean Wang <sean.wang@kernel.org>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org,
@@ -51,11 +51,11 @@ Cc: linux-wireless@vger.kernel.org,
 	yu-ching.liu@mediatek.com,
 	jenhao.yang@mediatek.com,
 	posh.sun@mediatek.com,
-	Chengwei Yu <chengwei.yu@mediatek.com>,
+	Jacobs Wu <jacobs.wu@mediatek.com>,
 	Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 10/23] wifi: mt76: mt7925: install NAN BIP keys standalone in sta_key_tlv
-Date: Sun, 27 Sep 2026 16:02:52 -0500
-Message-ID: <20260927210306.737669-11-sean.wang@kernel.org>
+Subject: [PATCH 11/23] wifi: mt76: mt7925: do not disable RX NAPI twice on unload
+Date: Sun, 27 Sep 2026 16:02:53 -0500
+Message-ID: <20260927210306.737669-12-sean.wang@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260927210306.737669-1-sean.wang@kernel.org>
 References: <20260927210306.737669-1-sean.wang@kernel.org>
@@ -67,53 +67,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Chengwei Yu <chengwei.yu@mediatek.com>
+From: Jacobs Wu <jacobs.wu@mediatek.com>
 
-mt7925_mcu_sta_key_tlv() packs a BIP_CMAC_128 key together with the CCMP
-key that sta_key_conf cached from an earlier key installation on the same
-link: cipher_id BIP_CMAC_128, key_len 32, the CCMP key in the first 16
-bytes and the CMAC key in the second 16, indexed by the CCMP key's id.
-That matches STA/AP mode, where the IGTK always follows the GTK on the
-same WTBL.
+mt7925e_unregister_device() disables every RX NAPI and then calls
+mt792x_dma_cleanup(), whose mt76_dma_cleanup() disables them again.
+The second napi_disable() spins waiting for NAPI_STATE_SCHED, which the
+first one already set and nobody will clear, so module unload hangs in
+D state and the module refcount underflows to -1; only a reboot recovers.
 
-A NAN interface has no such pairing. No CCMP key is ever installed on a
-NAN or NAN_DATA interface WTBL, so sta_key_conf is still zeroed when a NAN
-TX IGTK/BIGTK arrives: the command would carry 16 bytes of zeros as the
-first half of the key material and key_id 0 instead of the real 4-7 key
-index.
-
-Restrict the combined-key path to non-NAN interfaces so that a NAN BIP key
-takes the generic path instead and is installed standalone, with its own
-keyidx and its own 16-byte key material.
+Drop the redundant loop and leave the RX NAPI teardown to
+mt76_dma_cleanup(), making driver hot-reload work again.
 
 Co-developed-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Chengwei Yu <chengwei.yu@mediatek.com>
+Signed-off-by: Jacobs Wu <jacobs.wu@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 76dcbbffabfc..d494753cdf04 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -1378,7 +1378,15 @@ mt7925_mcu_sta_key_tlv(struct mt76_wcid *wcid,
- 		if (cipher == CONNAC3_CIPHER_NONE)
- 			return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index 24585c992ff5..09153d624fd5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -40,7 +40,6 @@ static int mt7925e_init_reset(struct mt792x_dev *dev)
  
--		if (cipher == CONNAC3_CIPHER_BIP_CMAC_128) {
-+		/* STA/AP mode installs the IGTK together with the CCMP GTK that
-+		 * sta_key_conf cached earlier on the same link.  NAN has no such
-+		 * pairing: no CCMP key is ever installed on a NAN interface WTBL,
-+		 * so sta_key_conf would contribute a zero key and a stale key_id.
-+		 * Install the NAN BIP key standalone via the generic path instead.
-+		 */
-+		if (cipher == CONNAC3_CIPHER_BIP_CMAC_128 &&
-+		    vif->type != NL80211_IFTYPE_NAN &&
-+		    vif->type != NL80211_IFTYPE_NAN_DATA) {
- 			sec->cipher_id = CONNAC3_CIPHER_BIP_CMAC_128;
- 			sec->key_id = sta_key_conf->keyidx;
- 			sec->key_len = 32;
+ static void mt7925e_unregister_device(struct mt792x_dev *dev)
+ {
+-	int i;
+ 	struct mt76_connac_pm *pm = &dev->pm;
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+ 
+@@ -50,8 +49,12 @@ static void mt7925e_unregister_device(struct mt792x_dev *dev)
+ 	cancel_work_sync(&dev->reset_work);
+ 	cancel_work_sync(&dev->init_work);
+ 	mt76_unregister_device(&dev->mt76);
+-	mt76_for_each_q_rx(&dev->mt76, i)
+-		napi_disable(&dev->mt76.napi[i]);
++	/* Do not disable the RX NAPIs here: mt76_dma_cleanup(), reached below
++	 * via mt792x_dma_cleanup(), disables them as part of the generic
++	 * teardown. Disabling twice makes the second napi_disable() wait
++	 * forever for NAPI_STATE_SCHED to clear, hanging module unload in D
++	 * state with the module refcount left at -1.
++	 */
+ 	cancel_delayed_work_sync(&pm->ps_work);
+ 	cancel_delayed_work_sync(&dev->mlo_pm_work);
+ 	cancel_work_sync(&pm->wake_work);
 -- 
 2.43.0
 
