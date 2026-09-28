@@ -1,67 +1,67 @@
 Received: from mail-wm2-f6.google.com (mail-wm2-f6.google.com [74.125.225.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2D93546C1
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 07:55:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F97C36A341
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 07:59:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790582106; cv=none; b=dakrynWm5W822w8Xra1Tw8vevrlCWMKcTSK3B5j/Io6SqGXs3S91TBRc8gWUiqYFBnlnTS0s2mtp2jivzCCMyTPizSVnxrUSwNkTvMVnnFHckC020gBbPKbgrIHzUykROtDteJ/AnTUwLy0VxsSrsUYmDu1wT6YGdjDvNTEfrqw=
+	t=1790582353; cv=none; b=EwPeCBj0+glyhN5cI/YdbXdpkdA/0ZZJGQyOHozW4zP0TfQ3q6tg9cMLGtFBPL5PE+mk5rJjEnIu/gL2nkxoq/5OZPup2Ow9cRDt5o44TB4+HsKrhMF7nKUzuJAYs71qG8CyVB544gk2N4GkLelWMIGwQQmE0cXQ1GPxiyUReqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790582106; c=relaxed/simple;
-	bh=b8alYS8//PbcHqgx8jRmmDZzchvUgilx76oq+rn8QMk=;
+	s=arc-20240116; t=1790582353; c=relaxed/simple;
+	bh=ED+sBRr3QhMO5/4gS/VqfY8k9EZbHBPa7Fm+KPqc9as=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MxTZYMkrpGIhsUuyD7HYlHVz2607hSE5wYRfkQOu4yX+Tnb3uFX/l4VuBdKBZRNzJtd95uqOWol0gl+N61l5XTR524yZXyyH8lBSnWU+0auBTHQsOhtrkvH7582WHinneJQGfsFY6r8jvPFHQ4kAxFNeAj04BrV6XrIVAW3P2D4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=a3DrdT6Z; arc=none smtp.client-ip=74.125.225.134
+	 In-Reply-To:Content-Type; b=ERZzQWGFUi7F4bYPnC9hGLmpkAqNOeZI2z+xkMk1rnadxDOKRc6VYPwm5UpZDvOQA31ZhWkdV6TOdKDE7EcXzdJxzADfitr+QUzOTO2OGsAQLB7Gm0mtmGrq509lqA/ksNB8K2XLpcDZdVExlCJg9lAoH/vEUrGZ2shR0ueU3v4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=JPihjfMb; arc=none smtp.client-ip=74.125.225.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="a3DrdT6Z"
-Received: by mail-wm2-f6.google.com with SMTP id 5b1f17b1804b1-4a0054e5976so1535835e9.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 00:55:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="JPihjfMb"
+Received: by mail-wm2-f6.google.com with SMTP id 5b1f17b1804b1-49fe4ca1052so6650505e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 00:59:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1790582102; x=1791186902; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1790582349; x=1791187149; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=31XUkSRJuqJIxbyoM09CJAfu/QARGMWZ93NvtWQGmao=;
-        b=a3DrdT6ZD4ThIMfFpURBub57KClHU3uQAjzWuaMsUo/PnyMxV0LN82P1aOvaSIeNVU
-         cOVcVgXSY2SBad0Cxeu8hOfL85eIeUQ3faRNAxqqxgx1RBj+p/OZk/7eunMTh4x9rwWu
-         /oK6rb0k4Oi2DZ4PgX5gKaVaUIpt85VG2/PzIUO7ETSdQlqKYILWqncuweeO2umthmiL
-         /ov28wI+O+16GiZVCXAgjY5NWFOzy+lSWYoguoQh6wfUEv1QKqOdhmbkOG/4DStTYmqd
-         7lo5F+MmQ/lep9PKBPjmzNJsG3uyIEyYXh0gfJ4IF9hktscqUaTe7jh9TN9IM8Jdc6py
-         yOCQ==
+        bh=XhysCFeCFrK6Hy/AV9kl1/zr3IXUOwo2mfXgBsYx8sE=;
+        b=JPihjfMb3WY76x+yDC/RJKaFkXn/ssSQGuprdvgCJ3E76w9JNPtkZc+0KoaVwmKZYT
+         qKSwIAyohTIK8g0aukoajF4Wi0acP3C/4JUVISb7LW60+gPc0zJc7cflaDHwLdsZP3+/
+         hF/i6tA4Y8ESnzEfFKPwH6eNVu/ghuq6Vg90dkH6yWRForln4mK1aFYPLSoI2ozPaF5X
+         XOGQ4bKEkv3LLpq8VeP9Q8RMVs0oRqxm/vMg5xTmNz5S/Tc5LwDS1lbb3UKzItV7X3UN
+         OSvUVfXwrCizrL3GJT+ZdssP3Ts9PcJnPcczPqhMuqnZaInLhpqqUhdENvYWkrqer3OT
+         NH0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790582102; x=1791186902;
+        d=1e100.net; s=20260707; t=1790582349; x=1791187149;
         h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=31XUkSRJuqJIxbyoM09CJAfu/QARGMWZ93NvtWQGmao=;
-        b=uBjQHxqJr+MvkGNH7CXNJJlGGRfMzdibsV8EqpmWsdoYPFz/Tz9qJ9UGnRKSLUc9UA
-         +RDlR5LBAD7NWJLLpXVBNIdtV5tcd8e5fyeOBuEcKwKJp7XVGSo3rrDcYlK1UapynGzF
-         WoRKBr8oyYkJzpi2nsKlr1WPkIbs1PZGxLJYvvPj+JgRRegx1oncZMRcw9trPiosVwZq
-         4CH7eRuIgbU+BuJBcIe/Ju9jaFEUN+solcPHs98an1skV56fGSj5NZwykkG2XLwe8jnP
-         gP7t3VvrX57VkzCcnv3nPll2+hzyPyij6CyHYKIse9LaIC41N/TOIkKXNRV2Fw8NpjUq
-         4lWg==
-X-Gm-Message-State: AFuF++lWncKdtulpkwNxiAeGL3thcLC0z4BrKp2SMyLYKmxfY4aNLBk4
-	0BW1CJtobUBwZ4wOcDwBF3LAZ9FbqYWetPSAhsRuxI8NbViVu2QI0o0uSA69rQKNMHI=
-X-Gm-Gg: AYBFou0KzV5s3Sz6AEXYLAPq5vMAF1ZutPIZG75gAN9DLiX66/Mwte0WEGH3jgIZrwg
-	Gso4dpoQU3clxNAGdKGAscI7l862UJKLpLJGjI6ACcQ22W2NYk5yUpHvwvIghlSbarMBAJq6RGk
-	msTsJhDG9X1gRKSo0YysdWOxvpU4BrG3uZTJNxB5RagsRTY/fJINp95RC9NAQvU/J0vo446R6va
-	jhwwmd2nzyQ+2FsV0bG21TSa3Vp9Q7HgSDGmjARGqS19qTasp+TJn/rkgoc2l1RBlzHTTZUUnSQ
-	el8nlkWG40ZDsXybZ6RX3cj1rROit8jbFrSPsnSgWFo5uhOBSTn4zoXfwPD3QI7+SojeXRVhMsc
-	ezNeGFDCUFni9oNIdHT9qfOlElMED/s9RrcuxyVP6MvHZ8jMaT4bTdrxxNwRx649kulp2vrMrTG
-	WDWSG769ATb9bBUPFVMdZzpGx+1A4Uga7h87qdcFmyxTN0PGbeoNa7KQP+0qi/1pai0CTTQVlNA
-	dpkaaQmETIhr+fwVKTl+IrmA6henT/GWc1cGQSRXxw=
-X-Received: by 2002:a05:600c:8719:b0:49e:6c11:c4fc with SMTP id 5b1f17b1804b1-49fe66c8a5amr224841855e9.7.1790582102485;
-        Mon, 28 Sep 2026 00:55:02 -0700 (PDT)
+        bh=XhysCFeCFrK6Hy/AV9kl1/zr3IXUOwo2mfXgBsYx8sE=;
+        b=BhShD6y8t6cvknCoIsmaGYCyUL/gTjPG0Q+06CUTr2S0ToRZFo77h0HOfqghmSV7kJ
+         G0TWFBxdOZRW4yhHLEWcjJpBQ9nXui4/06zRJSCoWTudoZe/n0NSHiwkKJfs8/YZdjRv
+         Ad9LMAEz/ExrtMrViq4m6VM4fWS/Ymq7/8kTlucBzN2Rfv9OqRwpP835OXlsKVkDA9Sy
+         r9/ghTttcdysDWzRA9UGP4lUqIPELc2fCY/8xfZxenMWP5unWVqHG2vo6TpN2n0wC31v
+         fVJqqGfsM6LzaYsvUtjTtiQav2EYzgrcTEiuBJTntC9LtF6BH96sBxQ5SRBhrGGnPaKM
+         nf1A==
+X-Gm-Message-State: AFuF++maeBLdQzYfMI4RaxK5tqnUeGPGi8mE0xdeAtT29uKyBRO5oasY
+	Rn5G1kEdNqHVPzL6OCw47b4J5n/rkce867XCrTa7HWiKvHt6uqn6Obguf6t5D/fMFh8=
+X-Gm-Gg: AYBFou3FffEQGZMVbL9/WW43QpkUx1yM2rOM6d6Jw0sZB/vHMP+4hrJSwYIXTB7zlxA
+	rpPA5WQMt7fQpwJTGAiCfcRTv+aZMOGgAHzScyV6xYHCzLEkTkxoRe92Gxn8e7gboJWjbOv4eGG
+	TEAbwHQS/QG79vf4sX8sFknEn5EvaibmBd2Q6l+yiGkiMw5X7yXEwQYq/Kl9eGTVz0WpgeyHRKp
+	eeY2iY3vKuFs6C0O5AkUC7h5fzwCUqoqXxzrP2+xr2tch20RfyPilCTmD4NjgLEpOUGOUtfAgDR
+	JKC6mpgk6pQQkGbTJ7R0nZ7kU5SkEMmgzOBp8hSiQbS1XWWGwvAaYysw8wvDKzF9t9pjCwVGJVS
+	u8PCpCsggy0oJkJRi91tI3wnjpkKMJka4FXjyjHV6oI8CZxhzF8cx/5ZOi3C8jras+Os+ppAO69
+	snryCDO8rU+pDfoDBLI+XF3czJRYAjBVLFcrwYLyp3Tg0OJABKv0kCuB2B1hwjo0skENrBb9EQw
+	driAGLR2PS46dCGy2aa+APCW0BlOAk82VGbsAswXMsjKrt1e+hPsg==
+X-Received: by 2002:a05:600c:a4c:b0:49c:fa20:cc08 with SMTP id 5b1f17b1804b1-49fe67060cemr213903135e9.31.1790582349255;
+        Mon, 28 Sep 2026 00:59:09 -0700 (PDT)
 Received: from [192.168.0.38] (static-246-51-231-77.ipcom.comunitel.net. [77.231.51.246])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a00178bebasm128950675e9.11.2026.09.28.00.55.01
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a007be0761sm21702035e9.3.2026.09.28.00.59.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Sep 2026 00:55:02 -0700 (PDT)
-Message-ID: <c2f3dd05-97a8-43c8-9825-46f62cb5d41e@suse.com>
-Date: Mon, 28 Sep 2026 09:55:00 +0200
+        Mon, 28 Sep 2026 00:59:08 -0700 (PDT)
+Message-ID: <bafa7204-1025-4db6-974b-1491d3cc48a6@suse.com>
+Date: Mon, 28 Sep 2026 09:59:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,14 +69,14 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] wifi: brcmfmac: Add per-board clm_blob firmware
- binaries
+Subject: Re: [PATCH 2/2] wifi: brcmfmac: Add clm_blob firmware for
+ brcmfmac43456-sdio
 To: Benjamin Drung <benjamin.drung@canonical.com>,
  Arend van Spriel <arend.vanspriel@broadcom.com>
 Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
  brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
 References: <20260923203739.2560527-1-benjamin.drung@canonical.com>
- <20260923203739.2560527-2-benjamin.drung@canonical.com>
+ <20260923203739.2560527-3-benjamin.drung@canonical.com>
 Content-Language: en-US, ca-ES, es-ES
 From: Matthias Brugger <mbrugger@suse.com>
 Autocrypt: addr=mbrugger@suse.com; keydata=
@@ -122,7 +122,7 @@ Autocrypt: addr=mbrugger@suse.com; keydata=
  LV6nybxdRG/jp8ZQdQQixPA9azZDzuTu+NjKtzIA5qtfZfmm8xC+kAwAMZ/ZnfCsKwN0bbnD
  YfO3B5Q131ASmu0kbwY03Mw4PhxDzZNrt4a89Y95dq5YkMtVH2Me1ZP063cFCCYCkvEAK/C8
  PVrr2NoUqi/bxI8fFQJD1jVj8K0=
-In-Reply-To: <20260923203739.2560527-2-benjamin.drung@canonical.com>
+In-Reply-To: <20260923203739.2560527-3-benjamin.drung@canonical.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -133,24 +133,12 @@ On 23/09/2026 22:37, Benjamin Drung wrote:
 > including the brcmfmac kernel module:
 > 
 > ```
-> /usr/lib/firmware/brcm/brcmfmac43430-sdio.raspberrypi,3-model-b.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43430b0-sdio.raspberrypi,model-zero-2-w.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43436-sdio.raspberrypi,model-zero-2-w.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,3-model-a-plus.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,3-model-b-plus.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,4-compute-module.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,4-model-b.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,5-compute-module.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,5-model-b.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,500.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43456-sdio.raspberrypi,4-compute-module.clm_blob.zst
-> /usr/lib/firmware/brcm/brcmfmac43456-sdio.raspberrypi,400.clm_blob.zst
+> /usr/lib/firmware/brcm/brcmfmac43436-sdio.clm_blob.zst
+> /usr/lib/firmware/brcm/brcmfmac43456-sdio.clm_blob.zst
 > ```
 > 
-> Commit 885f256f61f9 ("brcmfmac: Add clm_blob firmware files to modinfo")
-> added clm_blob firmware binaries, but did not add them for per-board
-> firmware binaries. So add a similar glob for the per-board firmware
-> binaries.
+> So include the clm_blob firmware file for brcmfmac43456-sdio similar to
+> the other firmware files.
 > 
 > Bug-Ubuntu: https://launchpad.net/bugs/2168109
 > Signed-off-by: Benjamin Drung <benjamin.drung@canonical.com>
@@ -158,19 +146,20 @@ On 23/09/2026 22:37, Benjamin Drung wrote:
 Reviewed-by: Matthias Brugger <mbrugger@suse.com>
 
 > ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index 381801af3ac9..3cff0f1fe25f 100644
+> index 3cff0f1fe25f..cea52d408817 100644
 > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -631,6 +631,7 @@ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.txt");
->   
->   /* per-board firmware binaries */
->   MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.bin");
-> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.clm_blob");
->   
->   static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
->   	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
+> @@ -618,7 +618,7 @@ BRCMF_FW_CLM_DEF(43430A1, "brcmfmac43430-sdio");
+>   BRCMF_FW_DEF(43430B0, "brcmfmac43430b0-sdio");
+>   BRCMF_FW_CLM_DEF(43439, "brcmfmac43439-sdio");
+>   BRCMF_FW_CLM_DEF(43455, "brcmfmac43455-sdio");
+> -BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+> +BRCMF_FW_CLM_DEF(43456, "brcmfmac43456-sdio");
+>   BRCMF_FW_CLM_DEF(4354, "brcmfmac4354-sdio");
+>   BRCMF_FW_CLM_DEF(4356, "brcmfmac4356-sdio");
+>   BRCMF_FW_DEF(4359, "brcmfmac4359-sdio");
 
