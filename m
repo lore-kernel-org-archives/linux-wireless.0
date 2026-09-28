@@ -1,137 +1,89 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mail-10698.protonmail.ch (mail-10698.protonmail.ch [79.135.106.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33E9E288C81
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 12:44:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C0404CA787
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 13:42:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790599446; cv=none; b=irGiK2iLDGztCMG/WPwvSE0secXiI+mkTAx2kZK7r3HlbEbWX9DjgwhIbBl7HJstx9p5iZHbjEkDXzhOR6kyJ3ZbCkDOshZBw17NJI44wwV6Jmyan1Qor7PPYX8J/4xaxjGwsPOJujv1/wZF6PT0W4QpebSk53WUhcNYtURqF0w=
+	t=1790602980; cv=none; b=Yvrq7f5AmyLJKFJ5BfUOGsDQVIRfwXLpLBl7YGIcmaLrnorxJUuL+s/IaOzTZiH06+J3UUyBsmYzQaHe+sBBmWgB9GzS3uT+yVtUbN43pZ8wP6mTgUVyw4W7t62Zi+f87zbecdOGNtz5oH02c1mACO6p4F+XEWzfKOg/lYccwlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790599446; c=relaxed/simple;
-	bh=6TmpMUv6Ec6AaRhu+KwR3MRAgXSL+DsREJtKNR+AHpU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=r3WsupUTIO6zU7r5HU200vqyiGDl0Q1pYesakzhTZ4S5/sV7szruYJvGJe+wVOwTqTtbzIpXrDcCAaY9XXW5cOUrWTspQl1yo4BdDQaLYMoVrqJ1BS0EoTsRgOup11WCdvtvP1r+dxVD9fMRQ5mE62HG3VwfLq5HXrC3yPi2GGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=fa67IVWO; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1790602980; c=relaxed/simple;
+	bh=b5b4nT0lasVhh8LZ17W/xUA0ZetiKOmUcfV0l+PgSaU=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hp05kFewSUli7T0PEWgoRrDgwyIHaBpf8uSmKFodyIazrFoTvEoFLgT1lDfrhujB/KBY/wjf2g6eRPEyjWpxGssbjx28ekYgAV8yQJuXKl4IbSG5aAke56xDOW5jRd2IzCV2YlmrjhXSNmCeikWhwkTOUcHV62a0Np9RChpULvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=bukzr/ZU; arc=none smtp.client-ip=79.135.106.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fa67IVWO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=EIx5y66/UiaI8UFnI02NqL5b6Ad7Y1xquINE0pSCIsI=;
-	t=1790599445; x=1791809045; b=fa67IVWOOscyYFdNaJlE2c9G84JToU01a1nqpE6+3J3MTwN
-	wCwAi/U4bT0LuNnikXm3h3xc5TOkocGqWBGd+/18jRDt0NyCQPXeYnrvYK0EeKHOsOMwdjh1UPIFW
-	17fti+w+oKnh4+d9PggG2Ul6qC3/6uv68Uf8/xVaweKYHs0pw+Ulj75AEg3F896Loaj++34RHZsil
-	EL0vOiQOoc27DgsB4eoDC1BCED7oof6xxnmZSmKLWpj5Nd84snTyHx8u4GdBbxTyXuoErS2Hp/SXD
-	eHLuXya4E/3wcLsjNz6BnkdsijEjNSjY1f8WrgC5OXiX/b8Lmf7onq4zttuAlFZg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xBAiA-0000000DYZt-11au;
-	Mon, 28 Sep 2026 14:44:02 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 2/2] wifi: cfg80211: type-check (extended) element search functions
-Date: Mon, 28 Sep 2026 14:43:59 +0200
-Message-ID: <20260928144358.36f6d12bb231.I0f8702dc218b56470017d2fcf8fff2980946e818@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260928144357.2e38718bb504.I8b07b323ba83173b570bc07ed61f4130b8aff04f@changeid>
-References: <20260928144357.2e38718bb504.I8b07b323ba83173b570bc07ed61f4130b8aff04f@changeid>
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="bukzr/ZU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=protonmail2; t=1790602967; x=1790862167;
+	bh=b5b4nT0lasVhh8LZ17W/xUA0ZetiKOmUcfV0l+PgSaU=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=bukzr/ZUPxhIC+nRyefTTXyl9Bu3+rSgNHdf7EGOez+iuBrbah14gvwyfWefC/Q9D
+	 ywFmoY3W9srhGzcazQ/4Dw7ADL6Xe1lN0MaLb3tC9U+Fd9t/TWKjWPTjkMmj/ZegMg
+	 9M2Z57ag24be+CIuOqZuuDHz8M8gzYrqCN8SqAOwijTM7isEablr08+7K6bXZAuOkP
+	 H3gu0IJ5WeuAuF0zjGYxyJc7RgyDAAhcSZMYNNAkeu4k6S/RT2QEZhUo0WpbW1tr24
+	 3SAETZCzb+ruZF/IGY+K2upg83g0tB2sOUk5cOp+0SZHthvC1kkc4XfzT7tCHZx/ZO
+	 A/h0rJU8eplww==
+Date: Mon, 28 Sep 2026 13:42:42 +0000
+To: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+From: "andreas.wendleder" <andreas.wendleder@proton.me>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: =?utf-8?Q?AW:_BCM4360_AC-PHY_support_for_b43_=E2=80=94_reverse-engineered,_seeking_guidance_on_a_clean_path_upstream?=
+Message-ID: <ih-lXs5OlHxMhydtcZFtKNhGg3cGlR137CEMZ07_zFQcfCYAImW6MRWPDjkdwy-xK9bIwpDK9ImgerqHmQMsAxX3ckEjsiN8QoCSlpvIsSM=@proton.me>
+In-Reply-To: <rOzY3WnW4q5L1osv7iagU81dLGldzZEsu3EqHxmH4d7Z4vxubBYvRNT0vsrbr8n-CUSEYyXxGFE3h9PHLHgePjm3_rMK_B_0m5loTpyxX-M=@proton.me>
+References: <rOzY3WnW4q5L1osv7iagU81dLGldzZEsu3EqHxmH4d7Z4vxubBYvRNT0vsrbr8n-CUSEYyXxGFE3h9PHLHgePjm3_rMK_B_0m5loTpyxX-M=@proton.me>
+Feedback-ID: 189422222:user:proton
+X-Pm-Message-ID: f1a41cc7eebde86c161a6d436ac62854c9386129
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
+I've been working on adding 802.11ac AC-PHY support to b43 for the BCM4360 =
+(MacBookAir6,1), since b43's existing phy_ac.c has only ever been a skeleto=
+n (allocate/free plumbing, no real init or tuning) and Broadcom's own wl dr=
+iver is the only thing that's ever actually worked on this chip.
 
-When constants are given as the first argument for the element
-or extended element ID, make sure they're from the right enum
-by tagging the argument accordingly.
+I want to be upfront about how I got there, since it directly affects what =
+(if anything) is submittable: I reverse-engineered wl.ko =E2=80=94 decompil=
+ing it and capturing its live register/SHM writes on real hardware =
+=E2=80=94 and used that to write a working driver. That driver is not clean=
+-room and I'm not proposing to submit it as-is; having the proprietary driv=
+er's decompiled logic in view while writing it is a real provenance problem=
+, not just a style one.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 17 +++++++++++------
- net/wireless/scan.c    |  3 ++-
- 2 files changed, 13 insertions(+), 7 deletions(-)
+What I am hoping is more useful: I've since written up a functional specifi=
+cation =E2=80=94 chip bring-up, channel tuning, TX/RX header formats, and t=
+he specific pitfalls that cost real debugging time (a frame-lifetime regist=
+er that silently stalls connections if left unset, an RX status bit that lo=
+oks like "decrypt error" but fires on unencrypted frames too) =E2=80=94 des=
+cribing the hardware's required behavior in my own words, with the intent t=
+hat someone who's never seen wl.ko or my driver could implement a working d=
+river from just that document and the 802.11 spec. It's honest about what i=
+t doesn't include (the actual calibration/tuning table numbers, firmware, b=
+43's existing generic infrastructure) and upfront that I'm not qualified to=
+ judge its legal soundness alone.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b603f1804cc2..2e3dfee85019 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -7858,7 +7858,8 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
-  * byte array to match.
-  */
- const struct element *
--cfg80211_find_elem_match(u8 eid, const u8 *ies, unsigned int len,
-+cfg80211_find_elem_match(enum ieee80211_eid eid,
-+			 const u8 *ies, unsigned int len,
- 			 const u8 *match, unsigned int match_len,
- 			 unsigned int match_offset);
- 
-@@ -7887,7 +7888,7 @@ cfg80211_find_elem_match(u8 eid, const u8 *ies, unsigned int len,
-  * byte array to match.
-  */
- static inline const u8 *
--cfg80211_find_ie_match(u8 eid, const u8 *ies, unsigned int len,
-+cfg80211_find_ie_match(enum ieee80211_eid eid, const u8 *ies, unsigned int len,
- 		       const u8 *match, unsigned int match_len,
- 		       unsigned int match_offset)
- {
-@@ -7920,7 +7921,7 @@ cfg80211_find_ie_match(u8 eid, const u8 *ies, unsigned int len,
-  * having to fit into the given data.
-  */
- static inline const struct element *
--cfg80211_find_elem(u8 eid, const u8 *ies, int len)
-+cfg80211_find_elem(enum ieee80211_eid eid, const u8 *ies, int len)
- {
- 	return cfg80211_find_elem_match(eid, ies, len, NULL, 0, 0);
- }
-@@ -7940,7 +7941,8 @@ cfg80211_find_elem(u8 eid, const u8 *ies, int len)
-  * Note: There are no checks on the element length other than
-  * having to fit into the given data.
-  */
--static inline const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
-+static inline const u8 *cfg80211_find_ie(enum ieee80211_eid eid,
-+					 const u8 *ies, int len)
- {
- 	return cfg80211_find_ie_match(eid, ies, len, NULL, 0, 0);
- }
-@@ -7961,10 +7963,13 @@ static inline const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
-  * having to fit into the given data.
-  */
- static inline const struct element *
--cfg80211_find_ext_elem(u8 ext_eid, const u8 *ies, int len)
-+cfg80211_find_ext_elem(enum ieee80211_eid_ext ext_eid,
-+		       const u8 *ies, int len)
- {
-+	u8 _ext_eid = ext_eid;
-+
- 	return cfg80211_find_elem_match(WLAN_EID_EXTENSION, ies, len,
--					&ext_eid, 1, 0);
-+					&_ext_eid, 1, 0);
- }
- 
- /**
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index caa9c6495f20..8fedfaeba4e0 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1436,7 +1436,8 @@ void cfg80211_bss_flush(struct wiphy *wiphy)
- EXPORT_SYMBOL(cfg80211_bss_flush);
- 
- const struct element *
--cfg80211_find_elem_match(u8 eid, const u8 *ies, unsigned int len,
-+cfg80211_find_elem_match(enum ieee80211_eid eid,
-+			 const u8 *ies, unsigned int len,
- 			 const u8 *match, unsigned int match_len,
- 			 unsigned int match_offset)
- {
--- 
-2.55.0
+The driver itself works: verified WPA2 association, DHCP, and sustained sta=
+ble traffic on 2.4 GHz, on both the kernel this project started on and, as =
+of today, kernel 7.2.7 with no code changes needed. 5 GHz, hardware crypto,=
+ and full RF calibration are out of scope so far.
+Given b43 is listed Orphan, I don't have a specific person to ask, so: has =
+this kind of provenance situation =E2=80=94 a reverse-engineered spec inten=
+ded to enable an independent clean-room implementation =E2=80=94 come up be=
+fore for a wireless driver here? Is that a viable path at all, and if so, w=
+hat would you want to see before it's worth anyone's time to attempt the cl=
+ean-room side?
 
+Thanks for reading this far.
+
+Andreas
