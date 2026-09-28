@@ -1,96 +1,60 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BFBA4F96CC;
-	Mon, 28 Sep 2026 19:32:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602F94FECEF
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 21:33:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790623952; cv=none; b=ctSzAK1UZP/7C8TweXjsUJgtphUIx43AjcKfqg1fM6G83fSZdxNHoXn5R/Jcn1JhuRhS6ai88+7pl0sLJcnwlAvd3nsYKgw1Q/AnLTIp6Q6R+bWpd/Nkicxi5BmsI+Q+qLYWaUgM0dI99tnvpo+/Iv/oNdOumRgT9YFwwJGKT78=
+	t=1790631209; cv=none; b=ff+D8fkKBDfW79a8pI2iogrwzIqFy0uG42QVNd5MQGWlw+vQ6soVzNjXOSbLAlPNI9TXSkxsxesyxxRFOuK9VN1LazWlKfzEDhQn9l78MK+FpesdCQ/0dc6eAeAFee7n+lk0UNkj1xnzAmfUxeFkShpHqvtCd0anxd6zMrH6S2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790623952; c=relaxed/simple;
-	bh=XvLlRT91OKxntugB1PUh2tIiqmHjaW3Whglr3pIB2V0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nboYGU6tU7V3psTsnYS2SCNT8OgSYJCVq97yuQYNFCT8rWM9P+aR16DGOKndTG9/9zttWgPipQSlwqcKYDQ5VY1ENhb1CLBe7WFfYROZ5IZq+Kl+swXuhtVLGr157q902skzlYGh9d5DfsvlRt4yei9h/utSlysvklg2LpyFE8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=2LzWKnsW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=X/48X4YI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=dJ1lyYCO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=PB5cSkJX; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="2LzWKnsW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="X/48X4YI";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="dJ1lyYCO";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="PB5cSkJX"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 2ADF921BF6;
-	Mon, 28 Sep 2026 19:32:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790623944; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cQJanie8EYQn8rJ3v6cUjqxfZzTtx4sUVWsNMC80pjk=;
-	b=2LzWKnsWNf98Yanu/VBeAy+NXB6EUW8FkUHEpyA7QXCsXAuP2rBnqNl4xWNAILp/pEEPR6
-	ZYO0XMFwlMYFKqetSZdr7MkqJo2T5h/zLrhpm7YU9T0CBz16NibZeUikZKRCxXLekwpvaB
-	d1xmpfJDbQHJhIrT7L5/8NHRvWY8mNw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790623944;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cQJanie8EYQn8rJ3v6cUjqxfZzTtx4sUVWsNMC80pjk=;
-	b=X/48X4YIFSRs6KjBzc7568RRZLKYIsN84EpWX2sRbpr0Nk8TGQ6Fxh7qULwJwP57m6m4e4
-	ThG6BzsrdO80OiCg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=dJ1lyYCO;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=PB5cSkJX
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790623940; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cQJanie8EYQn8rJ3v6cUjqxfZzTtx4sUVWsNMC80pjk=;
-	b=dJ1lyYCOEaON9wtV2Fvj4FDAuT2H0PDe56i73ICdbTbUBorjtrpOX5bqdLJls2IJrz5pgt
-	usaNYr1wydesu5rWNKIE/e7lfYRcR4CfH2V7mt2lM1BtZc3Rowsz+dTZ0rW1QiTrbzuXIK
-	wPrmO5pNuh2stwzTpEdbbBBPe9311yI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790623940;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cQJanie8EYQn8rJ3v6cUjqxfZzTtx4sUVWsNMC80pjk=;
-	b=PB5cSkJXFo3d0kxB0QdStweXD/8I8hJSoAcwK6dNf/QQPhUe1/Vikasx8C+NnfVWRfqM/W
-	I0Kdp2m7185c+pBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6F6BD1352C;
-	Mon, 28 Sep 2026 19:32:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 4RBiFn3AumpWOAAAD6G6ig:T15
-	(envelope-from <fmancera@suse.de>); Mon, 28 Sep 2026 19:32:19 +0000
-From: Fernando Fernandez Mancera <fmancera@suse.de>
-To: netdev@vger.kernel.org
-Cc: horms@kernel.org,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	edumazet@kernel.org,
-	davem@davemloft.net,
-	Fernando Fernandez Mancera <fmancera@suse.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 14/16 net-next v2] wifi: mac80211: replace CONFIG_INET with CONFIG_IPV4 guards
-Date: Mon, 28 Sep 2026 21:30:10 +0200
-Message-ID: <20260928193046.6698-15-fmancera@suse.de>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260928193046.6698-1-fmancera@suse.de>
-References: <20260928193046.6698-1-fmancera@suse.de>
+	s=arc-20240116; t=1790631209; c=relaxed/simple;
+	bh=yQmN9ueNDx7oub64Hh/xzDJO6RCrU+L/hm+XnPcuf0A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VjMKexfUOQLS8aitnYmN7WRDogu0C9m5M1E6YIYQKqboh6MShWiY6iQXQZV4bkqQhPUvcP0N8xXjH42eEnZ4RNv46L9lKtnINcKZgOiWEhDsr7kFuigy8u5aSwkBZX3yMgEslqU2obr1iQaM82fiV5j+uJQTFmGK8x/7tENxHIc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=perenite.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.225.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=perenite.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-485984ebf5cso2807986f8f.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 14:33:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790631203; x=1791236003;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wyL1tn+mP5nVx2w+7Pq20gMgeqZvEvpVrUK6ny4B9pc=;
+        b=UKWJ+lP3e9uou8eZST7Usl9HORvmVsrtJW2NOXedxND7erNDXrc1hxi3FrnchqoqLC
+         bnH//oHD9ZQ5plWUm3rAaGXe3CzrYjPGgnkJuCrK2JTu/jvIkMQvHHb2WoxSc8qwjSgk
+         KJXn9TJjKRDFF1giEqeKWzOnXHj4kLqZupu1FZ66vV87IdECuFJ5qZQ+fxpmGCaquTGq
+         qAnRq9yMB0Pjpk4PUCPop1lnadIO2bfQANTv75MYtKWqt9nVctIaWIh7nmNUaXOqchiP
+         mVm5YCKzhKrtecIT+Yxr7SKk/kYn6+YDAAgb2B5tdnpgfnFip3oRAtOsZoIai65zxLiO
+         PDfA==
+X-Gm-Message-State: AFq9FYKGGUWPmxpKZH/NjiBKFP0NnQU/jgu97sh2Wow4z76IT6yv7eZw
+	IvfwXvpDsHxB/z+fP/Bapb9vtcl5xAsdupGpwkldm0B9u/lb7QvU+qlIfTRP1rsCkG8=
+X-Gm-Gg: AYBFou25hb2OlbY8i5uYP3kcmLg4vJ9qIfOAcPgE9OrBhUbLmqovIXJO5567T78ATjc
+	I+t/AW7EXezSUSZGSnaUxrGUmbV5+R4kVjI9HdtZtBGV28eefeV6H95FlFrsoQym/LIKHQ2iz6P
+	ngMr/C6U1e+urUlOFFuu7ILE8/e+XLMd7ktV3l0rfitTIxgoWf0LNHIcn9fO6mjzvkfaCb8zr7z
+	CfwKtfJ+i53ZTfJ2MSZBYloDYFe1GVraD4bUtgSsuafLngEOPlaf+TJZWvQbI8MueDDjSI1lK4L
+	poTtc5iMj2pJQTV29bYgV+Hm48sWd2Wx33PS/TA2esUUe64FQkI674igNC9Q9C8gqOcvScq79Nk
+	Aa7rzWLCrRNrjY27vbG+QhwO4oK9350B7FmqpRJ6XjQ2WrzZHGngv9wZYkNscS7oAZB1vxM8Bxi
+	r4CG7TKSIDo2veS49HuPJZQ1Fbblfsqw9NUHOFPQ0DBDKPHCOWJx4dw/TLMrLZk2v8yEk3bbW6g
+	c5XNDDX01AtpA==
+X-Received: by 2002:a5d:5d12:0:b0:48a:eeef:b4a7 with SMTP id ffacd0b85a97d-48aeeefb641mr1919631f8f.48.1790631203458;
+        Mon, 28 Sep 2026 14:33:23 -0700 (PDT)
+Received: from mac.net ([2001:861:8b92:2c50:ca1:5b1b:d140:af71])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a34a4e9sm25993824f8f.11.2026.09.28.14.33.22
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 28 Sep 2026 14:33:23 -0700 (PDT)
+From: Benoit Masson <yahoo@perenite.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	stable@vger.kernel.org,
+	Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Benoit Masson <yahoo@perenite.com>
+Subject: [PATCH v3] wifi: ath12k: assign device id from the WSI index
+Date: Mon, 28 Sep 2026 23:33:22 +0200
+Message-ID: <20260928213322.98949-1-yahoo@perenite.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -98,98 +62,56 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -3.01
-X-Rspamd-Queue-Id: 2ADF921BF6
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Level: 
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Flag: NO
 
-Historically, the mac80211 subsystem used CONFIG_INET to guard
-IPv4-specific address notifiers, assuming that if IP networking was
-enabled, IPv4 was guaranteed to be present. As part of the effort to
-make CONFIG_IPV4 optional, this assumption is no longer valid.
+Devices of a hardware group are added to ag->ab[] in PCI probe
+completion order (ab->device_id = ag->num_probed++), which is not
+stable across boots. The wiphy radio array is built from ag->ab[] and
+the wiphy device is taken from its first entry, so the wiphy sysfs
+path and the mapping of radio indices to bands change on every boot.
 
-Update the conditional compilation guards around the IPv4 address change
-notifier and its associated registration routines to explicitly check
-for IS_ENABLED(CONFIG_IPV4). This ensures the mac80211 subsystem
-compiles successfully without undefined references when building an
-IPv6-only kernel.
+Persisted wireless configurations reference radios by index (e.g.
+OpenWrt/hostapd "radio0"), so such a configuration attaches to a
+random band at each boot. This affects any multi-chip group with
+single-band radios, e.g. TP-Link Archer BE800 (three QCN9274/QCN9224
+radios in one group).
 
-Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
+Store each ab in ag->ab[] at its wsi_info.index, which is derived from
+the device tree WSI ring and is therefore deterministic.
+ag->num_probed remains the group device counter. The unassign path is
+unchanged, it already indexes ag->ab[] by ab->device_id.
+
+Suggested-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Fixes: 6f245ea0ec6c ("wifi: ath12k: introduce device group abstraction")
+Cc: stable@vger.kernel.org # 6.14+
+Signed-off-by: Benoit Masson <yahoo@perenite.com>
 ---
- net/mac80211/main.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Changes in v3:
+- Expand the commit message with the problem statement (why this
+  matters for stable).
+- No code change since v2.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7816395681fa..1a0fa55db861 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -558,7 +558,7 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_restart_hw);
+Changes in v2:
+- Set ab->device_id from wsi_info.index in ath12k_core_hw_group_assign()
+  instead of reordering pdev_map[] in ath12k_mac_allocate(), as suggested
+  by Rameshkumar. mac.c is no longer modified.
+
+ drivers/net/wireless/ath/ath12k/core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 99bf5cf..6505255 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -2029,7 +2029,8 @@ exit:
+ 		goto invalid_group;
+ 	}
  
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- static int ieee80211_ifa_changed(struct notifier_block *nb,
- 				 unsigned long data, void *arg)
- {
-@@ -1655,7 +1655,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	wiphy_unlock(hw->wiphy);
- 	rtnl_unlock();
+-	ab->device_id = ag->num_probed++;
++	ag->num_probed++;
++	ab->device_id = wsi->index;
+ 	ag->ab[ab->device_id] = ab;
+ 	ab->ag = ag;
  
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
- 	result = register_inetaddr_notifier(&local->ifa_notifier);
- 	if (result)
-@@ -1673,11 +1673,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- #if IS_ENABLED(CONFIG_IPV6)
-  fail_ifa6:
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
- #endif
- #endif
--#if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-+#if IS_ENABLED(CONFIG_IPV4)
-  fail_ifa:
- #endif
- 	wiphy_unregister(local->hw.wiphy);
-@@ -1705,7 +1705,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 	tasklet_kill(&local->tx_pending_tasklet);
- 	tasklet_kill(&local->tasklet);
- 
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
- #endif
- #if IS_ENABLED(CONFIG_IPV6)
 -- 
-2.55.0
+2.46.0
 
