@@ -1,151 +1,102 @@
-Received: from mail-ej2-f42.google.com (mail-ej2-f42.google.com [74.125.228.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E61B34D797C
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 14:04:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730CB4DA9C8;
+	Mon, 28 Sep 2026 14:24:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790604289; cv=none; b=RB/wtAo+lLsNe0abau6oCBB6yuCQP4JYGiCLhA+AdxRk6nvznjvqUx/ELmo0I+jA2nBPM0B7BraPpO6Qby6WxarlqL5P7Q5ZWFjnV4eS7wAwR61wzI4qi66dQ9T7l7975J2HnulzlIHkJUFI3sV7srxV/j2iD2cjw3C2D4/dGCc=
+	t=1790605479; cv=none; b=GysuMqHNMBeFnLonMoJw9jy6iavWcqNkrvDuHzR46LVnmSgyj1I2+/7AN4axEi9lhOwxWe/R451uNXClrLVoi6KIoXleTAYhcLEwt69rGuiGEdaNmp2ThQEy3UY/XrnbrIEHgLasF2/Wn1qI5m/jorF/MI1tTKP4kkpcwOyL9BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790604289; c=relaxed/simple;
-	bh=jASAzubG3/1Ohs8axuhKUesKhQPmDAaQp2vTWGVMH3E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UrORPu4ydHQ4+U855BV2tPxIM8IqdYEylbRV+KYpIGyFI5SOtfHxcDAVpNSYa5/HVjH0AEFVpM6BAemlurV6BrMcjT4xfJjV/MDZqUdSL9mF50eLgqBDFb7WsYp/OSibOZUmT/gRndnvkkEOdut8hNJBa05lmhRA0Z+J02tAB5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ATsYI9Ni; arc=none smtp.client-ip=74.125.228.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790605479; c=relaxed/simple;
+	bh=6hO0k1pgsw2vurDF0IHMdTPmWJmark3y3VgHYLvVF+k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WKzSKrfZxjfyHZDpcBqoX2HAE3kdsWOHTcb70A1CSWk3YBI+FWOYipw9LAAHiinNLLda821ixCaQ8pi5w6yynXrFENxxG3ENBApWTdVkw2/eJ0jG4YsE9WVM+UE3849DfKkKxX7ar5A1b++RbG8rwqv96dH3z8vVNoIRFmspKbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsY5mKi0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ATsYI9Ni"
-Received: by mail-ej2-f42.google.com with SMTP id a640c23a62f3a-c2b40e4744eso265521366b.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 07:04:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790604282; x=1791209082; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Yyby6O267E21VPls7mPdTMnZ7y58yWOOybub5QTr35o=;
-        b=ATsYI9NivXJRCcHDRh48QqOLCcLrNnDSGjkWnctqcCbtc83z6kW5gJK//8LcePMDbQ
-         ikY+Xee8ExBIW8vyb9ufYBqeIlh6zuHeF9paUW9/p00pG00oe/oWI0Tt8rtLVw/zC5pR
-         rrruCU/FOMOfqEJ7rRgYGSdUKXXzJAXh/0PyA/oAPhyXHIw5li+r2itcYPs13Xt7YZv6
-         04BolMswg4LbQjyFAPPHzICIprpHXgUzyoavoyFuBCRTINKmgOaNYKri2z11p+CGOKhe
-         dd6TNpts6kFVn3iwuOEkqVggjqKy+kB2PjgGXA7vAeFc8Rk71HD52xDypsVXuIShSFY8
-         fGtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790604282; x=1791209082;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Yyby6O267E21VPls7mPdTMnZ7y58yWOOybub5QTr35o=;
-        b=YLoKK/xpL1IB4MM+gBDRH07+ndGkSWRYt/s3en+8kw5t1jKKdJ9EgeilJNqTnS94a/
-         az87VpjVcVbhNqqh5oDaPCVmuNgMAduHea/2ICcfCqmgHMtbL+w0N/n8UuADzgDFwi/U
-         3c37JFpm31jV5Y4+mIrC3ZdEH8K2BLYKO+sMKpAA1w+gwvpg5n0Zsv6sXEDg75eQVpP8
-         27LP2iip0Mn+xCkcrkBE7uKWMkTtFh/F6QTOJ5JSh1XXPGRNiJSTpMbGkiMGdRIJtWhZ
-         2PPuUOAeHk5MhAIbdznGzmw7Z92WCiqaFPYmxB7ErEUddPfGf/Vlz6AjJDpdtMKzqIwU
-         +mYQ==
-X-Gm-Message-State: AFuF++n5xsC+Q4SOk1JQWd3VnF8uSXzNk5Uqwg5GdVSkw/KaW7vPApEr
-	5xy+lWAtMsW0Nm/qkwhOk3nHBUKMtcfsWcg74TERO8cJdyiqfA8LZbKd
-X-Gm-Gg: AYBFou3KS50pvySIX2cRgHSC2Z01i7lcwwf/YUX9CMVXMsMnZJjLuc74N6tYmn+WiU+
-	kF1DBIu+I8lLmryvJqF7Bw7sBXn/VU+DEb8yQsddDuCSb6iqVaNJPg17CD4Wjzg41c83YXVP/dh
-	kq6Xm7B+QubyVUeGIy3jyDZeZhd+GSORt6jq+6rZr76J/4AS0FusjE3RTK57t+UGBs2CuxtWs5C
-	dlTkVTCX1e9mpUpI0t+K50BbTRU+UTRhSZdm6XjWeNc+Z6GjcDYTy6gG5uAV2vf96MTvQnOuKTH
-	yKS5PEEvHOt0EiPWDGtAIped2GPsulZc5hrG/PyDhAAv4K87NZdEHrAaoaj2VygD1QdiZJE4OaO
-	v48u3jUprqeLkI2+Q8u0ICwJGv66CtN97YjR6pWQs6OA92ZR4ZG7BjhEgZXDT4cV/5Tbooi6llX
-	d1FnMYDCO2mqBY8DI0/OEr2rg1nHR55iazB0rzmTsd9pNeONF8SC+DHIh0FnC1F4NGbMzsis5u9
-	MY=
-X-Received: by 2002:a17:907:c0e:b0:c2a:fd19:8fa5 with SMTP id a640c23a62f3a-c2afd19cdccmr542265366b.34.1790604282009;
-        Mon, 28 Sep 2026 07:04:42 -0700 (PDT)
-Received: from home.powerhub ([2a0a:ef40:1484:7a01:a8cc:a863:c2a1:d5cd])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2dd68a6f18sm179642666b.52.2026.09.28.07.04.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 07:04:40 -0700 (PDT)
-From: Quentin Strydom <qstrydom0@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Quentin Strydom <qstrydom0@gmail.com>
-Subject: [PATCH] wifi: ath10k: fix Bluetooth RX on ASUS QCA6174 when WLAN is down
-Date: Mon, 28 Sep 2026 15:03:56 +0100
-Message-ID: <20260928140356.13247-1-qstrydom0@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsY5mKi0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E04521F000FF;
+	Mon, 28 Sep 2026 14:24:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790605478;
+	bh=fXbrnW1fWsR72eYJ8bpmbgEXsg8SPc9tkZGjT0raZT4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ZsY5mKi0O2i5njNF+4luqOavNLmwMJkpa+LsT476fT7jMEIM+QAUV2RF5/OVVlcpx
+	 2MXiYDcu3mi0kk33JfH5gOS137f6DHVh9iHJ+4QnN1NnxHrh6MJGHkNepeQF29V2fE
+	 a/ktJRiwkFeLuBW4fJaKYAEW4fi9IvMtBZKU/6DPk1QsQsGU5W9aIJf/M/pdu2cthu
+	 wEZsT0Yoi2E9i4BQ99Lr/UxQP2Vj/hJejPcjbxmoZU+79CtPIv9nNMfDcvOQTmsynm
+	 T3B/cM4hDlP//mj88ekzWgVo23C5FyWItaV6Qy+AAJ+exxxPx6knI6oPSgYCQVDbYi
+	 hiNXtW46WcXkw==
+Date: Mon, 28 Sep 2026 15:24:34 +0100
+From: Lee Jones <lee@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] wifi: mac80211: ignore PM bit in non-bufferable
+ MMPDUs for PS start
+Message-ID: <20260928142434.GA2112133@google.com>
+References: <20260928100508.3487525-1-lee@kernel.org>
+ <9b3efaebb9f5460f6bfaaa284fd235e76c940361.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b3efaebb9f5460f6bfaaa284fd235e76c940361.camel@sipsolutions.net>
 
-On an ASUS QCA6174 PCI device with subsystem ID 1043:8751,
-Bluetooth receive sensitivity is severely reduced when the WLAN
-interface is left down. This is particularly visible when Ethernet is
-used for network connectivity and the WLAN interface is never started.
+On Mon, 28 Sep 2026, Johannes Berg wrote:
 
-With WLAN down, a nearby BLE advertiser is received at roughly -95 dBm
-instead of the expected -60 dBm. Bringing the WLAN interface up restores
-normal Bluetooth sensitivity.
+> On Mon, 2026-09-28 at 10:05 +0000, Lee Jones wrote:
+> > Per IEEE 802.11, the Power Management subfield in the Frame Control
+> > field is reserved in non-bufferable management frames (such as
+> > Authentication, Association Request, and Reassociation Request) and a
+> > station remains in Active mode during authentication and association.
+> > 
+> > When commit 9fef65443388 ("mac80211: always update the PM state of a
+> > peer on MGMT / DATA frames") allowed non-bufferable management frames
+> > to update peer power-save state so that re-authenticating stations
+> > could transition from doze to awake (sta_ps_end()), it also allowed
+> > non-bufferable management frames with the Power Management bit set to
+> > transition an awake station into power-save mode (sta_ps_start()).
+> > 
+> > Restrict wake-to-doze transitions (sta_ps_start()) in
+> > ieee80211_rx_h_sta_process() to data, action, disassociation, and
+> > deauthentication frames using hdr->frame_control (avoiding inspecting
+> > encrypted action frame payloads prior to ieee80211_rx_h_decrypt()) while
+> > preserving doze-to-wake transitions (sta_ps_end()).
+> > 
+> 
+> This doesn't make sense to me - you don't really say why you're making
+> this change other than saying what the spec says, but then you're
+> explicitly not spec compliant both ways - without any explanation either
+> way?
 
-Tracing and register-level testing showed that the QCA6174 warm reset
-performed from ath10k_pci_hif_stop() causes the Bluetooth sensitivity
-drop. In particular, asserting SOC_RESET_CONTROL_CPU_WARM_RST_MASK
-reproduces the bad state. Conversely, asserting SOC_GLOBAL_RESET during
-a QCA6174 cold reset restores normal Bluetooth reception.
+Fair point, sorry for that.
 
-Perform an additional cold reset after the normal hif_stop safe reset
-for the affected ASUS subsystem. Scope the workaround to 1043:8751 to
-avoid changing reset behaviour for other QCA6174 and ath10k devices.
+The commit message was purposely vague due to the fact that the change
+fixes a security issue and I didn't want to publish a HOWTO guide for
+exploiting it.  However, I obviously overdid it a little and left out
+the reasoning you'd need to review the patch.  The short version is that
+an unauthenticated peer can currently change an associated station's
+power save state with frames that shouldn't be able to have that
+capability which can be used against the station.
 
-The workaround was tested with Bluetooth enabled and disabled during
-cold boot, with WLAN left down, through repeated WLAN up/down cycles
-while associated to a Wi-Fi access point with traffic. Bluetooth receive
-sensitivity remained normal and WLAN could subsequently be started and
-stopped normally.
+Happy to send you the details off-list.
 
-Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00309-
+Plans for v2 with your blessing:
 
-Signed-off-by: Quentin Strydom <qstrydom0@gmail.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ - Rewrite the commit message to explain the problem and the reasoning
+   properly, rather than just quoting the spec.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 335bc7c488e4..4a3c5ce63733 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2069,10 +2069,20 @@ void ath10k_pci_flush(struct ath10k *ar)
- 	ath10k_pci_buffer_cleanup(ar);
- }
- 
-+static bool ath10k_pci_needs_bt_cold_reset(struct ath10k_pci *ar_pci)
-+{
-+	struct pci_dev *pdev = ar_pci->pdev;
-+
-+	return pdev->device == QCA6174_2_1_DEVICE_ID &&
-+	       pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
-+	       pdev->subsystem_device == 0x8751;
-+}
-+
- static void ath10k_pci_hif_stop(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	unsigned long flags;
-+	int ret;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif stop\n");
- 
-@@ -2096,6 +2106,14 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 	 */
- 	ath10k_pci_safe_chip_reset(ar);
- 
-+	if (ath10k_pci_needs_bt_cold_reset(ar_pci)) {
-+		ret = ath10k_pci_cold_reset(ar);
-+		if (ret)
-+			ath10k_warn(ar,
-+				    "failed to cold reset after hif stop: %d\n",
-+				    ret);
-+	}
-+
- 	ath10k_pci_flush(ar);
- 
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+ - Make the PM handling consistent in both directions, so it doesn't
+   honour the bit in one case and ignore it in the other, while keeping
+   the re-authenticating station case from 9fef65443388 working.
+
+Does that work for you?
+
+
 -- 
-2.43.0
-
+Lee Jones
