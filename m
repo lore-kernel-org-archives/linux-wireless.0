@@ -1,89 +1,151 @@
-Received: from mail-10698.protonmail.ch (mail-10698.protonmail.ch [79.135.106.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej2-f42.google.com (mail-ej2-f42.google.com [74.125.228.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C0404CA787
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 13:42:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E61B34D797C
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 14:04:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790602980; cv=none; b=Yvrq7f5AmyLJKFJ5BfUOGsDQVIRfwXLpLBl7YGIcmaLrnorxJUuL+s/IaOzTZiH06+J3UUyBsmYzQaHe+sBBmWgB9GzS3uT+yVtUbN43pZ8wP6mTgUVyw4W7t62Zi+f87zbecdOGNtz5oH02c1mACO6p4F+XEWzfKOg/lYccwlI=
+	t=1790604289; cv=none; b=RB/wtAo+lLsNe0abau6oCBB6yuCQP4JYGiCLhA+AdxRk6nvznjvqUx/ELmo0I+jA2nBPM0B7BraPpO6Qby6WxarlqL5P7Q5ZWFjnV4eS7wAwR61wzI4qi66dQ9T7l7975J2HnulzlIHkJUFI3sV7srxV/j2iD2cjw3C2D4/dGCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790602980; c=relaxed/simple;
-	bh=b5b4nT0lasVhh8LZ17W/xUA0ZetiKOmUcfV0l+PgSaU=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hp05kFewSUli7T0PEWgoRrDgwyIHaBpf8uSmKFodyIazrFoTvEoFLgT1lDfrhujB/KBY/wjf2g6eRPEyjWpxGssbjx28ekYgAV8yQJuXKl4IbSG5aAke56xDOW5jRd2IzCV2YlmrjhXSNmCeikWhwkTOUcHV62a0Np9RChpULvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=bukzr/ZU; arc=none smtp.client-ip=79.135.106.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	s=arc-20240116; t=1790604289; c=relaxed/simple;
+	bh=jASAzubG3/1Ohs8axuhKUesKhQPmDAaQp2vTWGVMH3E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UrORPu4ydHQ4+U855BV2tPxIM8IqdYEylbRV+KYpIGyFI5SOtfHxcDAVpNSYa5/HVjH0AEFVpM6BAemlurV6BrMcjT4xfJjV/MDZqUdSL9mF50eLgqBDFb7WsYp/OSibOZUmT/gRndnvkkEOdut8hNJBa05lmhRA0Z+J02tAB5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ATsYI9Ni; arc=none smtp.client-ip=74.125.228.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="bukzr/ZU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail2; t=1790602967; x=1790862167;
-	bh=b5b4nT0lasVhh8LZ17W/xUA0ZetiKOmUcfV0l+PgSaU=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=bukzr/ZUPxhIC+nRyefTTXyl9Bu3+rSgNHdf7EGOez+iuBrbah14gvwyfWefC/Q9D
-	 ywFmoY3W9srhGzcazQ/4Dw7ADL6Xe1lN0MaLb3tC9U+Fd9t/TWKjWPTjkMmj/ZegMg
-	 9M2Z57ag24be+CIuOqZuuDHz8M8gzYrqCN8SqAOwijTM7isEablr08+7K6bXZAuOkP
-	 H3gu0IJ5WeuAuF0zjGYxyJc7RgyDAAhcSZMYNNAkeu4k6S/RT2QEZhUo0WpbW1tr24
-	 3SAETZCzb+ruZF/IGY+K2upg83g0tB2sOUk5cOp+0SZHthvC1kkc4XfzT7tCHZx/ZO
-	 A/h0rJU8eplww==
-Date: Mon, 28 Sep 2026 13:42:42 +0000
-To: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-From: "andreas.wendleder" <andreas.wendleder@proton.me>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: =?utf-8?Q?AW:_BCM4360_AC-PHY_support_for_b43_=E2=80=94_reverse-engineered,_seeking_guidance_on_a_clean_path_upstream?=
-Message-ID: <ih-lXs5OlHxMhydtcZFtKNhGg3cGlR137CEMZ07_zFQcfCYAImW6MRWPDjkdwy-xK9bIwpDK9ImgerqHmQMsAxX3ckEjsiN8QoCSlpvIsSM=@proton.me>
-In-Reply-To: <rOzY3WnW4q5L1osv7iagU81dLGldzZEsu3EqHxmH4d7Z4vxubBYvRNT0vsrbr8n-CUSEYyXxGFE3h9PHLHgePjm3_rMK_B_0m5loTpyxX-M=@proton.me>
-References: <rOzY3WnW4q5L1osv7iagU81dLGldzZEsu3EqHxmH4d7Z4vxubBYvRNT0vsrbr8n-CUSEYyXxGFE3h9PHLHgePjm3_rMK_B_0m5loTpyxX-M=@proton.me>
-Feedback-ID: 189422222:user:proton
-X-Pm-Message-ID: f1a41cc7eebde86c161a6d436ac62854c9386129
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ATsYI9Ni"
+Received: by mail-ej2-f42.google.com with SMTP id a640c23a62f3a-c2b40e4744eso265521366b.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 07:04:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790604282; x=1791209082; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Yyby6O267E21VPls7mPdTMnZ7y58yWOOybub5QTr35o=;
+        b=ATsYI9NivXJRCcHDRh48QqOLCcLrNnDSGjkWnctqcCbtc83z6kW5gJK//8LcePMDbQ
+         ikY+Xee8ExBIW8vyb9ufYBqeIlh6zuHeF9paUW9/p00pG00oe/oWI0Tt8rtLVw/zC5pR
+         rrruCU/FOMOfqEJ7rRgYGSdUKXXzJAXh/0PyA/oAPhyXHIw5li+r2itcYPs13Xt7YZv6
+         04BolMswg4LbQjyFAPPHzICIprpHXgUzyoavoyFuBCRTINKmgOaNYKri2z11p+CGOKhe
+         dd6TNpts6kFVn3iwuOEkqVggjqKy+kB2PjgGXA7vAeFc8Rk71HD52xDypsVXuIShSFY8
+         fGtg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790604282; x=1791209082;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Yyby6O267E21VPls7mPdTMnZ7y58yWOOybub5QTr35o=;
+        b=YLoKK/xpL1IB4MM+gBDRH07+ndGkSWRYt/s3en+8kw5t1jKKdJ9EgeilJNqTnS94a/
+         az87VpjVcVbhNqqh5oDaPCVmuNgMAduHea/2ICcfCqmgHMtbL+w0N/n8UuADzgDFwi/U
+         3c37JFpm31jV5Y4+mIrC3ZdEH8K2BLYKO+sMKpAA1w+gwvpg5n0Zsv6sXEDg75eQVpP8
+         27LP2iip0Mn+xCkcrkBE7uKWMkTtFh/F6QTOJ5JSh1XXPGRNiJSTpMbGkiMGdRIJtWhZ
+         2PPuUOAeHk5MhAIbdznGzmw7Z92WCiqaFPYmxB7ErEUddPfGf/Vlz6AjJDpdtMKzqIwU
+         +mYQ==
+X-Gm-Message-State: AFuF++n5xsC+Q4SOk1JQWd3VnF8uSXzNk5Uqwg5GdVSkw/KaW7vPApEr
+	5xy+lWAtMsW0Nm/qkwhOk3nHBUKMtcfsWcg74TERO8cJdyiqfA8LZbKd
+X-Gm-Gg: AYBFou3KS50pvySIX2cRgHSC2Z01i7lcwwf/YUX9CMVXMsMnZJjLuc74N6tYmn+WiU+
+	kF1DBIu+I8lLmryvJqF7Bw7sBXn/VU+DEb8yQsddDuCSb6iqVaNJPg17CD4Wjzg41c83YXVP/dh
+	kq6Xm7B+QubyVUeGIy3jyDZeZhd+GSORt6jq+6rZr76J/4AS0FusjE3RTK57t+UGBs2CuxtWs5C
+	dlTkVTCX1e9mpUpI0t+K50BbTRU+UTRhSZdm6XjWeNc+Z6GjcDYTy6gG5uAV2vf96MTvQnOuKTH
+	yKS5PEEvHOt0EiPWDGtAIped2GPsulZc5hrG/PyDhAAv4K87NZdEHrAaoaj2VygD1QdiZJE4OaO
+	v48u3jUprqeLkI2+Q8u0ICwJGv66CtN97YjR6pWQs6OA92ZR4ZG7BjhEgZXDT4cV/5Tbooi6llX
+	d1FnMYDCO2mqBY8DI0/OEr2rg1nHR55iazB0rzmTsd9pNeONF8SC+DHIh0FnC1F4NGbMzsis5u9
+	MY=
+X-Received: by 2002:a17:907:c0e:b0:c2a:fd19:8fa5 with SMTP id a640c23a62f3a-c2afd19cdccmr542265366b.34.1790604282009;
+        Mon, 28 Sep 2026 07:04:42 -0700 (PDT)
+Received: from home.powerhub ([2a0a:ef40:1484:7a01:a8cc:a863:c2a1:d5cd])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2dd68a6f18sm179642666b.52.2026.09.28.07.04.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Sep 2026 07:04:40 -0700 (PDT)
+From: Quentin Strydom <qstrydom0@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath10k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Quentin Strydom <qstrydom0@gmail.com>
+Subject: [PATCH] wifi: ath10k: fix Bluetooth RX on ASUS QCA6174 when WLAN is down
+Date: Mon, 28 Sep 2026 15:03:56 +0100
+Message-ID: <20260928140356.13247-1-qstrydom0@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
-I've been working on adding 802.11ac AC-PHY support to b43 for the BCM4360 =
-(MacBookAir6,1), since b43's existing phy_ac.c has only ever been a skeleto=
-n (allocate/free plumbing, no real init or tuning) and Broadcom's own wl dr=
-iver is the only thing that's ever actually worked on this chip.
+On an ASUS QCA6174 PCI device with subsystem ID 1043:8751,
+Bluetooth receive sensitivity is severely reduced when the WLAN
+interface is left down. This is particularly visible when Ethernet is
+used for network connectivity and the WLAN interface is never started.
 
-I want to be upfront about how I got there, since it directly affects what =
-(if anything) is submittable: I reverse-engineered wl.ko =E2=80=94 decompil=
-ing it and capturing its live register/SHM writes on real hardware =
-=E2=80=94 and used that to write a working driver. That driver is not clean=
--room and I'm not proposing to submit it as-is; having the proprietary driv=
-er's decompiled logic in view while writing it is a real provenance problem=
-, not just a style one.
+With WLAN down, a nearby BLE advertiser is received at roughly -95 dBm
+instead of the expected -60 dBm. Bringing the WLAN interface up restores
+normal Bluetooth sensitivity.
 
-What I am hoping is more useful: I've since written up a functional specifi=
-cation =E2=80=94 chip bring-up, channel tuning, TX/RX header formats, and t=
-he specific pitfalls that cost real debugging time (a frame-lifetime regist=
-er that silently stalls connections if left unset, an RX status bit that lo=
-oks like "decrypt error" but fires on unencrypted frames too) =E2=80=94 des=
-cribing the hardware's required behavior in my own words, with the intent t=
-hat someone who's never seen wl.ko or my driver could implement a working d=
-river from just that document and the 802.11 spec. It's honest about what i=
-t doesn't include (the actual calibration/tuning table numbers, firmware, b=
-43's existing generic infrastructure) and upfront that I'm not qualified to=
- judge its legal soundness alone.
+Tracing and register-level testing showed that the QCA6174 warm reset
+performed from ath10k_pci_hif_stop() causes the Bluetooth sensitivity
+drop. In particular, asserting SOC_RESET_CONTROL_CPU_WARM_RST_MASK
+reproduces the bad state. Conversely, asserting SOC_GLOBAL_RESET during
+a QCA6174 cold reset restores normal Bluetooth reception.
 
-The driver itself works: verified WPA2 association, DHCP, and sustained sta=
-ble traffic on 2.4 GHz, on both the kernel this project started on and, as =
-of today, kernel 7.2.7 with no code changes needed. 5 GHz, hardware crypto,=
- and full RF calibration are out of scope so far.
-Given b43 is listed Orphan, I don't have a specific person to ask, so: has =
-this kind of provenance situation =E2=80=94 a reverse-engineered spec inten=
-ded to enable an independent clean-room implementation =E2=80=94 come up be=
-fore for a wireless driver here? Is that a viable path at all, and if so, w=
-hat would you want to see before it's worth anyone's time to attempt the cl=
-ean-room side?
+Perform an additional cold reset after the normal hif_stop safe reset
+for the affected ASUS subsystem. Scope the workaround to 1043:8751 to
+avoid changing reset behaviour for other QCA6174 and ath10k devices.
 
-Thanks for reading this far.
+The workaround was tested with Bluetooth enabled and disabled during
+cold boot, with WLAN left down, through repeated WLAN up/down cycles
+while associated to a Wi-Fi access point with traffic. Bluetooth receive
+sensitivity remained normal and WLAN could subsequently be started and
+stopped normally.
 
-Andreas
+Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00309-
+
+Signed-off-by: Quentin Strydom <qstrydom0@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 335bc7c488e4..4a3c5ce63733 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2069,10 +2069,20 @@ void ath10k_pci_flush(struct ath10k *ar)
+ 	ath10k_pci_buffer_cleanup(ar);
+ }
+ 
++static bool ath10k_pci_needs_bt_cold_reset(struct ath10k_pci *ar_pci)
++{
++	struct pci_dev *pdev = ar_pci->pdev;
++
++	return pdev->device == QCA6174_2_1_DEVICE_ID &&
++	       pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
++	       pdev->subsystem_device == 0x8751;
++}
++
+ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	unsigned long flags;
++	int ret;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif stop\n");
+ 
+@@ -2096,6 +2106,14 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	 */
+ 	ath10k_pci_safe_chip_reset(ar);
+ 
++	if (ath10k_pci_needs_bt_cold_reset(ar_pci)) {
++		ret = ath10k_pci_cold_reset(ar);
++		if (ret)
++			ath10k_warn(ar,
++				    "failed to cold reset after hif stop: %d\n",
++				    ret);
++	}
++
+ 	ath10k_pci_flush(ar);
+ 
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+-- 
+2.43.0
+
