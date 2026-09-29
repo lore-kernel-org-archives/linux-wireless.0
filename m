@@ -1,130 +1,123 @@
-Received: from mta0.migadu.com (out-104.mta0.migadu.com [91.218.175.104])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D30A36195B
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 19:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AD74483B4;
+	Tue, 29 Sep 2026 19:28:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790709101; cv=none; b=BK1WxhgtOqAFkaHoNoI3b8J5WjDbVAyrcLbaZ1E2iwDuohC6FRZrBMMMM7b9J6zYmx2UJ9Hxd6KWx44/4xNB9tfk7gV9NGc30rLTVYHm8SGL3KptE228XN5vRXJ4vsVz9P/r0TbXvgPN4ucngz/aCFMBHKXL3SwsvROT/UjFVy4=
+	t=1790710102; cv=none; b=MHrPtgr1NOApB+Zshl4YP1uhCtxXo4Y/gmb8LZi/RfdunwSOupjapitccNRcP42Dbo/3BXCLvYghKQ3LomaAae8WXPR9NPZBkWHiJw1E3mt/pWtPXYELAUeLwpSML4YZVReKgC25KVmn9plIpbKoJ+4IIVZlpqRe3hdjjfp6ABA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790709101; c=relaxed/simple;
-	bh=JfVPwfuojVZMZlRIrq/IrnSUzs93t53tkFi/otplTA0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gFqX+2Rng3x99oBFD7i7EqEkuUq2uweP2x1A7nCHc93/fqcQovAN8e0Hj0aimJmY7NmFqfWZAjsh115LdwD2ohZ1clIGPIYb9E/jyO3WvRtdYDDGNQzhqD7iL7LEWEgI59WVp2fKcQC44A2Ph8LLrhKZfHS4dcM4FLPDbBez5WM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QXzeglYC; arc=none smtp.client-ip=91.218.175.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790710102; c=relaxed/simple;
+	bh=O0Omiyq/KcRHNIGn7ewYt7swzYz69/cx2EweUWG4Vkw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GwF7GHvzAH77XntEWTCrpN3Sd83H3L0t4OsufXUPA4fh+gxH2LjQSgnLE4Jb72m9XD0L9XFf46yLsMqwcpPhCSmmyGlxBFOjYIXpLQnd80yY+fAFm36XkDBMPBKstIYsnvZ9l94AK1RNckal+Z5+cTJ+v7ItrUF5Oq/IVetNQmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NuegzX1U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QXzeglYC"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JfVPwfuojVZMZlRIrq/IrnSUzs93t53tkFi/otplTA0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790709097; v=1; x=1791313897;
- b=QXzeglYCDJNMJJNUY3qmqsWhJAJzmkoAuSJGv4/MeMjbn+2RqsMcmpjNJSfX3PqETnjmvxoy
- Ce6BXrXX0I9c9lsPZTMRcN1FJHxsVZl9kw6KM2lTYzSvBVGMnMW7T0gsgp+n3tqfjBC/BFZNE20
- 8s/qzqUnTLB6l2Rv21Rhwn0Q=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a126e1739c00e298;
-	Tue, 29 Sep 2026 19:11:37 +0000
-X-Mizu-Trace-ID: a126e1739c00e298
-X-Migadu-Flow: FLOW_OUT
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Mehmet Fide <mehmet.fide@gmail.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com,
-	Luka Gejak <luka.gejak@linux.dev>
-Subject: Re: [PATCH rtw-next 1/2] wifi: rtw88: download the beacon the reserved page was built with
-Date: Tue, 29 Sep 2026 19:11:36 +0000
-Message-ID: <20260929191136.1315-1-luka.gejak@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260929124400.3856049-2-mehmet.fide@gmail.com>
-References: <20260929124400.3856049-2-mehmet.fide@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NuegzX1U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2AA1F000FF;
+	Tue, 29 Sep 2026 19:28:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790710100;
+	bh=WPq1lDMEISVN+4Wuw6T9MQdT1Hadq3U5RnwOvLWqtiI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NuegzX1UKYqn/UPWpQSpkyHmTr3d3g03TW7g+C5olyCVAouYMAlk6oBFelgupSEYt
+	 8VH+lhlaHXzsRENC+xixzvC9g3gG1JhjwQbpK1+PPlyLDOkVoDZwMw54PdnOTqHnq9
+	 23BqfIn1ooJac4iV67+OB+G++SPLudSAyWBQjfLTJto0vIz1jeglLhKYZIb2gJyYYD
+	 rCpDS1itH8K8mtMEfHh90+S1AxiFcCCGE1T1I5gfiawCG/Brf2LpyLUEoDvE/5lwTw
+	 mlyRMAtmt8JrRhyjPUQl6Wc3IdFvauM9SLa6oJlXsruUTfGpJ3LHiZFDp63CpPWnIq
+	 /EcVbqkJAeV3g==
+Date: Tue, 29 Sep 2026 21:28:11 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>
+Cc: "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Jeff Johnson <jjohnson@kernel.org>, linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+	ath12k@lists.infradead.org, Bjorn Andersson <andersson@kernel.org>, 
+	Chris Lew <christopher.lew@oss.qualcomm.com>, Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
+	Juha-Matti Tilli <juha-matti.tilli@iki.fi>, Jeff Hugo <jeff.hugo@oss.qualcomm.com>
+Subject: Re: [PATCH v3 2/4] net: qrtr: Assign unique node id for MHI endpoints
+Message-ID: <4dt7cguc4trc5i55ot3numuzz3nolbcpgtl4iztxw4a7b46v23@relb42cpotlz>
+References: <20260922-qrtr-multi-ep-v3-0-c00831e88957@oss.qualcomm.com>
+ <20260922-qrtr-multi-ep-v3-2-c00831e88957@oss.qualcomm.com>
+ <7aed969d-0868-4c9c-967e-7766dbba427e@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <7aed969d-0868-4c9c-967e-7766dbba427e@oss.qualcomm.com>
 
-On Tue, 29 Sep 2026, Mehmet Fide wrote:
+On Tue, Sep 29, 2026 at 10:15:52PM +0530, Deepak Kumar Singh wrote:
+> 
+> On 9/22/2026 7:11 PM, Manivannan Sadhasivam via B4 Relay wrote:
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > 
+> > Now that the QRTR driver allows using the unique node id for each device,
+> > which is different from the node id received from the remote node, compute
+> > a unique node id using a new API, qrtr_host_node_id().
+> > 
+> > This API takes the 'index' parameter and adds it to QRTR_NODE_HOST_BASE,
+> > whose value is outside of the node id range used by the remote nodes (0 to
+> > 0xffff).
+> > 
+> > Finally, call the new API from MHI endpoint driver by passing the MHI
+> > controller index as the parameter. The MHI controller index is unique for
+> > each controller, thereby for each MHI endpoint device.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> >   MAINTAINERS        |  1 +
+> >   include/net/qrtr.h | 21 +++++++++++++++++++++
+> >   net/qrtr/mhi.c     |  4 +++-
+> >   3 files changed, 25 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index df8ab9b82402..9c8bb086be28 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -22511,6 +22511,7 @@ QUALCOMM IPC ROUTER (QRTR) DRIVER
+> >   M:	Manivannan Sadhasivam <mani@kernel.org>
+> >   L:	linux-arm-msm@vger.kernel.org
+> >   S:	Maintained
+> > +F:	include/net/qrtr.h
+> >   F:	include/trace/events/qrtr.h
+> >   F:	include/uapi/linux/qrtr.h
+> >   F:	net/qrtr/
+> > diff --git a/include/net/qrtr.h b/include/net/qrtr.h
+> > new file mode 100644
+> > index 000000000000..745d51b4a6ba
+> > --- /dev/null
+> > +++ b/include/net/qrtr.h
+> > @@ -0,0 +1,21 @@
+> > +/* SPDX-License-Identifier: GPL-2.0 */
+> > +
+> > +#ifndef _NET_QRTR_H
+> > +#define _NET_QRTR_H
+> > +
+> > +#include <linux/types.h>
+> > +
+> > +/* The offset is chosen carefully to not collide with the node ids allocated by
+> > + * the remote nodes. All the remote nodes use node ids in range 0 to 0xffff.
+> > + */
+> > +#define QRTR_NODE_HOST_BASE 0x10000u
+> 
+> Can it be exposed with include/uapi/linux/qrtr.h also. There are user space clients like modem manager
+> which need to calculate modified node id to distinguish same service from multi modem over mhi.
+> This is same as wlan use case.
+> 
 
-> Besides the extra work, every beacon fetch advances the DTIM count and,
-> while a channel switch is announced, the CSA countdown; doing it twice
-> per update lets a countdown that starts at 2 reach 0, which mac80211
-> warns about. Keep the beacon skb from the page build and download that.
-[...]
-> @@ -1744,25 +1745,25 @@ static int rtw_download_beacon(struct rtw_dev *rtwdev)
->  		return -EINVAL;
->  	}
->  
-> -	skb = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
-> +	/* the beacon kept by rtw_build_rsvd_page() */
-> +	skb = rsvd_pkt->skb;
->  	if (!skb) {
->  		rtw_err(rtwdev, "failed to get beacon skb\n");
-> -		return -ENOMEM;
-> +		return -ENOENT;
->  	}
->  
->  	ret = rtw_download_drv_rsvd_page(rtwdev, skb->data, skb->len);
->  	if (ret)
->  		rtw_err(rtwdev, "failed to download drv rsvd page\n");
->  
-> -	dev_kfree_skb(skb);
-> -
->  	return ret;
->  }
->  
-[...]
-> @@ -1791,6 +1792,12 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
->  free:
->  	kfree(buf);
->  
-> +	/* free the beacon kept by rtw_build_rsvd_page() */
-> +	rsvd_pkt = list_first_entry(&rtwdev->rsvd_page_list,
-> +				    struct rtw_rsvd_page, build_list);
-> +	kfree_skb(rsvd_pkt->skb);
-> +	rsvd_pkt->skb = NULL;
-> +
->  	return ret;
->  }
+I'm OK with exposing the final nid to the userspace, but not just the offset and
+asking client to calculate the nid on its own.
 
-This breaks hardware scan offload while an AP is active.
+Will implement this final nid ABI in next version.
 
-rtw_download_beacon() no longer fetches a beacon of its own. It reads
-rsvd_pkt->skb, and rtw_fw_download_rsvd_page() clears that skb right
-before it returns:
+- Mani
 
-	if (rtwdev->ap_active) {
-		ret = rtw_download_beacon(rtwdev);
-		if (ret)
-			rtw_err(rtwdev, "HW scan download beacon failed\n");
-	}
-
-rtw_hw_scan_offload() takes that branch without building a reserved page
-first, so nothing repopulates the skb. Since the store has already run from
-BSS_CHANGED_BEACON when the AP started, rsvd_pkt->skb is NULL by the time a
-scan begins and rtw_download_beacon() returns -ENOENT:
-
-	skb = rsvd_pkt->skb;
-	if (!skb) {
-		rtw_err(rtwdev, "failed to get beacon skb\n");
-		return -ENOENT;
-	}
-
-rtw_ops_hw_scan() then treats the error as a failed scan and aborts it.
-
-Before this patch the scan path worked because rtw_download_beacon() called
-rtw_get_rsvd_page_skb() itself.
-
-Could the scan path fetch its own beacon, or could the retained skb be
-released only after the standalone download, with care taken to not
-advance the CSA countdown twice?
-
-Best regards,
-Luka Gejak
+-- 
+மணிவண்ணன் சதாசிவம்
