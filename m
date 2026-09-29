@@ -1,87 +1,115 @@
-Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDA6D3CB2C7
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 16:30:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F385351C33E;
+	Tue, 29 Sep 2026 16:33:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790699426; cv=none; b=TqxrPJpOFsuXpom6ELeSyxjoBI3ks+uWY2E8TjZZ+f++tK88HOAWilpUajeSfdsrsvsnkO7InXRNG+j2x5ayyutJDQbAIF9Q2/Fd7BDCmp8jYhZR8iuX90IRHi5bneQvR8T7sRFrKTkVtUG9Ih/RdvJ2kI+qX4s1v590a6VmIFA=
+	t=1790699584; cv=none; b=I7IzY7JFrnipejRVdOIYM4341zdXy1u7k0meMttMqKKnfnjuazg4Aej6VpraMCwFFm82yqiquQGT0c/Bh/xaNpx8UKDV3Ss3RKG920kMjeO+aUEqx2unqBUUasjYYd2/RJhCvi7SUYVeZCLJ91/6wnS/QG1ugQLstr1kXxfxDxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790699426; c=relaxed/simple;
-	bh=yZLzULU2uih8NUS1IvSltwPGoqS/nnlu9ISb0E8Wc+o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=onzeYHIwyFco7JMe2XzLZE5InySzpldmX6MJ74rJvJJ06Vzn+tq9/Jd77Z0ZZ1b6IofzGnM00cnxtteZmlGlPm8WKVfzog9RPOfloA5e+7PCNYi2YVkjKFCzewgwKthm6LMtkzCA2bmCeGCDVPWF9EnogblzwiAesnHonzj+Fe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ed/vECsa; arc=none smtp.client-ip=74.125.225.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790699584; c=relaxed/simple;
+	bh=M9ynqIpgrPrsaaforEaebtCSBtxUAGGFzr/xRYxiCEU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=CMLQ/IBE0LBN7HDnuWaGItzghInt8c7xt9CVaYIxBzIGYU/mEkBqGpRSVhmiKbUhIocJbxo+/AkUIeHBKbzUN03MFTB5tP323celLNtu7pTpC72Wr4cNoXQtZspzEnBHXj033lEABAp61rbmVPGH7GPnCFPg5d5ByxsYqmuCZhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=pmOyb4bM; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ed/vECsa"
-Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-48af0707d41so547038f8f.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 09:30:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790699423; x=1791304223; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yZLzULU2uih8NUS1IvSltwPGoqS/nnlu9ISb0E8Wc+o=;
-        b=Ed/vECsa2wbKYImD7D/SitTRJZ1iUhem0kP+Dt2nlr28Gm+2V33Jn1Du6yORAYHAok
-         YC3b/rx/6H7zmedPSSNYFVCvhUvCkCR9yEqLgJ8TC3mucvDyVvDXo7WmZ6iOVA61cpfx
-         b/nd4lCSdHj2jFYeViT5T1kaeXtn3Iau4Z4c/HlBQ9WhNjDkwagrUOb5AGdgC6bY/Uef
-         sVLieE5V1sBP2nfioflJo48sh0hB1fAXHC+Zu6lwYTSqVLFcWVWMohjbd4hmtIY3Str7
-         YsJtNGj/I1Wj7LO7+FBClJM/4uPN+LHS4w245mvB4VyS7eYa/CWmYUbCXqOVPfdHJhNn
-         cT3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790699423; x=1791304223;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yZLzULU2uih8NUS1IvSltwPGoqS/nnlu9ISb0E8Wc+o=;
-        b=mz9xNbKUBUWCYv4iQGvmwt+aQO/wscnlbFWzeHXPrZHi5fvZ0gIOUlO5fWuflZ4R77
-         ukoAAe4u9Nh4GojWkZ00O3Lg7rBPirAyiDdOwa99UnpM0ZbAvf7yn/fQcs7oGbU66f0a
-         UTDEJRmSbcGhV1HDuYF/Nst7AoblQZEoWA8Pmja/x+jcRv5mpi/5FjR7WCKmm0MIZMju
-         716ufgRXjUdideSihcItRRuw17PzILAVCCVOc6tXfOLM+JbkLSJ+ScX5moZi0IN1wG3Y
-         5/4gZxNTPBOwaNwBs/vX662LAP4jz1tjQbbECMXhLMLjguI1iVizmUkZ6EQQMn6uwVNF
-         6uWQ==
-X-Gm-Message-State: AFq9FYJJZ5gHq62si4BFX40br9Avq1+8UjvEtYdKEnuKM+zMeG/pt5Gb
-	d1XVVVEAYjlF7eGXPR5SDGQtmnblNfsFeVkXIzlAZpo9ucVxbgbf54A=
-X-Gm-Gg: AYBFou2/bkiVIK0ywCJVX3zqrMBL3U1fs4qNosoNsVMHeNQXNc3OiDg7JPbXJhXqcSY
-	CIYfKt0RUN1OaHxF6QOL0Qb1DTg+3jBhyD52lxEkYzFR8UQANODXyQBu4NztxnFmItRB48lnby3
-	/K43RcxnxtUBqiamM2FW+UQcsnF4G738XAGc6d0Nyh8jD3FHs0MwHFjykle+iu4vYCX+V0guA2o
-	hVPeYS4FUxOd3FRZIe5d2tugHpCahyJEjSSGSbGX2gAHmsATFVN+bFz8e2L2t4h5mQZcTM6yKqD
-	TKkxeGNUehG9TqfLbthpwGZbfIOqBzbzQRj+evkxL+Ms+VSKbkkUmjRPvUhQ+VsL4pHYgLR4y+p
-	t4lJo8vmMfa2QfAnOGpspMLiRCZ/hYtwvfwBRc5YXVGApEDW7aDQ/a7AARx3wQYM0xM6w7nbS+4
-	zISGuPSoKy/l6M0vH0pbbmTImaoaRnocakVn4hX/ry6btkD6jdyqR4z2+8bNaxGcgYdZ9IdW1LT
-	QjdQJ6JgABgpHf0q/rt7xW0iNX4OiK64uOKmPVOmzohr0WxcEYki+hY8KjcezlIfPc/6uFevoqC
-	J5IxLbNrPebB+A==
-X-Received: by 2002:a05:6000:2893:b0:488:7fdb:46b5 with SMTP id ffacd0b85a97d-48af1b2e134mr5635978f8f.20.1790699422665;
-        Tue, 29 Sep 2026 09:30:22 -0700 (PDT)
-Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48af502cf08sm5879746f8f.9.2026.09.29.09.30.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2026 09:30:21 -0700 (PDT)
-Sender: N B <gen.benner@gmail.com>
-From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="pmOyb4bM"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=NjFgvSSC1jcBqJxa7KmFR2SqKxMrTZQsYjrInIMQ+Yw=;
+	t=1790699582; x=1791909182; b=pmOyb4bM2srHMAHRiOSpd7yL8Mt6RJSx7YvQXbMehaa/2DU
+	Y+/qjIUBSBS/DEy/qe7OlQ/XLdfscZjloSyTNlQsMnAXmaJBmUJCwkbJT5Cc1FaWho8oikqgkoQM+
+	DX3hkQ3YGy+ACehr7xf1mT2fEIqsNdvgbuXbaf+YHJ+oiZZUcWd0Biz6jjrZjBjLYICwyGbreabRy
+	GoQw+MTY2Y5s3woRZik7a7ZvJdm1pix/9GZ5ugDmypkbk7/JlTHI5EME9oTze1SBl7FDS7OugM8JN
+	xJeRZk1cC1Z3yTKYyF7bfpSrW2juBx/NCjMfCsaEmnUQ8YrBJ6LxK32wg+ZKneRg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xBalF-0000000FAWd-3ih7;
+	Tue, 29 Sep 2026 18:32:58 +0200
+Message-ID: <d8227c92ab9c752dc6b591945ea8f9c5e3cc6223.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/1] wifi: mac80211: ignore PM bit in non-bufferable
+ MMPDUs for PS start
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lee Jones <lee@kernel.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Luca Coelho
+	 <luciano.coelho@intel.com>, linux-wireless@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH ath-next v4 0/8] wifi: ath9k: fix register access and spectral scan filter handling on ath9k_htc
-Date: Tue, 29 Sep 2026 19:30:15 +0300
-Message-ID: <20260929163015.1779285-1-nerijus.bendziunas@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260916173429.403889-1-nerijus.bendziunas@gmail.com>
-References: <20260916173429.403889-1-nerijus.bendziunas@gmail.com>
+Date: Tue, 29 Sep 2026 18:32:57 +0200
+In-Reply-To: <20260928142434.GA2112133@google.com>
+References: <20260928100508.3487525-1-lee@kernel.org>
+	 <9b3efaebb9f5460f6bfaaa284fd235e76c940361.camel@sipsolutions.net>
+	 <20260928142434.GA2112133@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-Hi Toke,
+On Mon, 2026-09-28 at 15:24 +0100, Lee Jones wrote:
+>=20
+> The commit message was purposely vague due to the fact that the change
+> fixes a security issue and I didn't want to publish a HOWTO guide for
+> exploiting it.  However, I obviously overdid it a little and left out
+> the reasoning you'd need to review the patch.  The short version is that
+> an unauthenticated peer can currently change an associated station's
+> power save state with frames that shouldn't be able to have that
+> capability which can be used against the station.
+>=20
+> Happy to send you the details off-list.
 
-Gentle ping on this series. Please let me know if any changes are needed.
+I think I've (conceptually) known about this issue for ... years?
 
-Thanks,
-Nerijus
+First, arguably wake-to-doze are _less_ interesting to attack, since
+then the TIM bit will end up getting set and if the STA isn't sleeping
+it'll see the beacon and recover fairly easily (though not entirely sure
+we actually implement that in mac80211), and if it keeps sending traffic
+then the state corruption is short-lived.
+OTOH, corrupting doze-to-wake could lead to traffic getting dropped if
+TX filtering status isn't implemented well on the AP side/driver since
+the STA is actually sleeping and won't see any frames.
+
+Second, I don't think in general this issue is fixable, and while it's
+good to implement this closer to the spec, security wise it doesn't
+really do anything as is?
+
+If, for example, there's any bufferable MMPDU the attacker can just
+replay it - we've been doing this before MIC/replay check forever
+(unless that's offloaded). It can also - although this is harder -
+intercept and modify the PM bit, since it's not protected by the AAD.
+
+It's also wrong that we're doing this *after* the reorder buffer, since
+that potentially holds the frames for a long time, and the spec says to
+look at the PM bit after the frame exchange sequence completes (REVmf
+11.2.3.2). We should fix that too, but it doesn't really matter for this
+discussion:
+
+Any unprotected complete frame exchange sequence can modify the state
+anyway, QoS NDP for example.
+
+>  - Rewrite the commit message to explain the problem and the reasoning
+>    properly, rather than just quoting the spec.
+>=20
+>  - Make the PM handling consistent in both directions, so it doesn't
+>    honour the bit in one case and ignore it in the other, while keeping
+>    the re-authenticating station case from 9fef65443388 working.
+>=20
+> Does that work for you?
+
+Well, I think it's really only a spec compliance cleanup, but then we
+might as well try to fix some of the other issues?
+
+I also think we might be better off making sure that as a client we
+handle the TIM indicating traffic while awake and send a wake frame, and
+perhaps checking AP side handles filtered/un-acked traffic well.
+
+johannes
