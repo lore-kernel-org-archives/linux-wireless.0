@@ -1,98 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098E250E58F;
-	Tue, 29 Sep 2026 10:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC457513554
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 11:28:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790678534; cv=none; b=pdrNkNu0CrhbKg/yOYmaJB8RV/MpQDqOC7O+CHhZlkT7Dx0NquBrpHTTFbP4rfA8oMbm11hQrNzUTDnHps0Me7uQHNJ8F8tR1h+BxIIjvS2sdpnDUN6czW2Bx9SvPlpXPtMxb4ggM9WW2kheMiP6nszwoAzeuBiW3NH6yaMQJHA=
+	t=1790681324; cv=none; b=CHlAIvxTJ3Xz7s+gmdS1APA3StLhevJ52TG1u5IJEktsgt8lVaZhebOQttZW0uI1e+wl8L7TG7tSrLCGTzS2UWJPwMjJ4NHE/e27ohMMtirp6YqcU8iUOLsQ9THGm4zJk6ZFPhJ8qwL9Uzb0GcHfFxJ/6rua0k6u5XTBWHwEY90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790678534; c=relaxed/simple;
-	bh=yTXg3i8Y1WV7SDCAGzf0mEhZSM2ecpcM+IQ9OOQiWAk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=urdTmTEGJZYT5xpNyHSDg94KXy1jDs27w/l0Ezm64A1NZO42ZBsIL+npc8rqqjHGHacvbQ+GpHg3od7fsmxN54uA+/Z3PP3m3f3VPq8nMwey3PYGwaZjTEkhexyyZDHTfalxF9xGr7oS5BOWNTv3aMPPB393VOB2y9y/pMZ1QYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lUdy/4mi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790681324; c=relaxed/simple;
+	bh=ZBa3gaUTaTOyPuN/5ooC6LTU4/MdZhzDpQ3MTFuSS2c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ShigzLwuSdGheXYcueB6ytiruEuj7skWVmQIRRwAO3rqDbDh58KUdrBk2CUA+201Fcrv8TWVXF/czEtIlU0TfCjhWudAnI9AIpAF/P557B9Qk8o5TcHGU2MdPGKy/Ytuy/q8VNmRU1ToefMeH3EYqBT4DGyBRSAq1aQgP27IiV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XqYCwuKd; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lUdy/4mi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 129F51F000FF;
-	Tue, 29 Sep 2026 10:42:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790678523;
-	bh=+45Tm9BeypxjenadJlBsDLE7aYfc9ERlVgGJD9aall0=;
-	h=From:To:Cc:Subject:Date;
-	b=lUdy/4miip/vZydEjfnL/1NHG+KU3ETqAnXFu2LF+HMn1N+wMeH835UIUNvm3+gig
-	 hoN1KeqDcWBgEwHqH7rYSSyCwJ3Ye5J7n/yCTSrBAMRfyeA1HHjT9W0/C+t2+BZkkX
-	 C2mOL9TxbQ9a1ENt92kduLwuk3hR2addgZNQjgMn62NXrFYBj3cwv+SqobyyF2EdjD
-	 NTNMGCaTlglreC3QPNhw14bAD/BbqgzpWEz9mpRrtKlTni+nOlmXDL77kWiPL7eBjO
-	 DTA1UJQ21a6Zxi85loNKXBIKJt7HJqEKg0i8VZFwXlQ34bBL2bOud1PsGeebVqjcqh
-	 dLGv3vA3uJIrw==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	Johnson Tsai <wenjie.tsai@realtek.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: rtw89: fix LED dependencies
-Date: Tue, 29 Sep 2026 12:41:52 +0200
-Message-ID: <20260929104159.3236854-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XqYCwuKd"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e6598dd44so25677675e9.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 04:28:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790681321; x=1791286121; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pV97q4mybuw1DI03bfEUmgOfqE6zUAQHLrZA1UwEz5s=;
+        b=XqYCwuKdjA56DCpW1V4ZPw4gLLoP96ECM8RJ4YbHAajpmIWGbsIFZGEvV6MgAgDq0d
+         5KPxbzaDA8JC93xCNnWJvfNc4l0NN6w8wQQEwFRNV5/17fft7wz5vVzIn6YcJbCjf59U
+         /w1yRhNNgThYxxJX08cXl5OZza4y642ysewJE4wVyMVuMfCJHv4S6gc/p+fSruxQULZW
+         aACuM3W8/OwbH+8dO2F9kMf+oiYnEdzWkQNPo3HXf4evN2xnkDQ1dxDgXZQtQ9ASDXna
+         dZBOGdSaOoPstPwIWzhvpoIiif2QnGE+FuXPIHcmHBHDUmEi5hp8260R61YqKSn59Gt2
+         Jbqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790681321; x=1791286121;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=pV97q4mybuw1DI03bfEUmgOfqE6zUAQHLrZA1UwEz5s=;
+        b=j7xDgnAGSH3/ZBNA3pWe95qSLG/LHxnKR9kljvzjbw7w3rw5Hjs4S1q6p/jAv1NpVO
+         j7VV11yljGQG05z5GXCVPliDGpz69CRxv77dtF5dDOyIopLV9qEtyRCKqwS/bosD/RWO
+         y9d2gkxEdFF00jlGZ6V/F63p28vNwUUtjzIZYL655LSbFZiyLPcAqQPtuMz34UsZ9f/R
+         T/tUsFxnA8LW7gAcXIMdoahWQOacH13yQwY6rlv0d7oqYpw4e8sCTI5hnzxwr3HlBDnS
+         uZMkun8xNSOZIrWV8DVrmPtUT7K7+R7w3C+LL0iCSGgkO06jvA5YLVXfK2QgkKj2iBZ7
+         eyNQ==
+X-Gm-Message-State: AFuF++nV7qazgCWd3c4sS4F8LLZ+T4Sn03iC4YyXJYBMUefW0Vyg/Xd8
+	q2Ub+fmWPS53vnhAzn2YOOnQOX4rZ988w10z8C6Xdmj8rbPodMJy9A4g
+X-Gm-Gg: AYBFou2ESzp3fkmbTpi0JEnpS2IALvepcahTHojRnRfnf4/r5jExvNEIkb5pXNxEqRW
+	GOY2FBjE2rC/Xzu9Bf9SjtWhNbqOvwesNlZghHHEaA/dgWnLvEXmCCKEyg/U1jw0d7/TZCvBSxR
+	pydO6WXHkDjyQUPjU6Ct48m6omHYvCcfMPb3LI7sSRG1xCbzzQY1aiM0I4AZjNHGPFrld12Zv/P
+	UTQHRsrbqwt33EecrVU9UQw+F9KGPSDfCbqTtLr1ZoSFy/Gn5HDnutXd+IvRF6HrKFJ3RTOwxre
+	O2EsVTSxdYBrpbfRB5HM6HBfElQkHwXdpNeQDQuGbQPdfLbAG0BcfFZithO8WPKWuibFU2hSxG1
+	UTUVf3s6dvIm5d+xa1ToI/oAWIbeSFzWr8ARTy+ql9MqJVh+DV/f5OZe3iZFltmtGSpGM70NaFl
+	TxsVFaroi86tV8lv6IPDrPCT5HcCbxe8z6y5ev5z+qbiikGAjityaJYgPMPyR7nY/F
+X-Received: by 2002:a05:600c:138f:b0:49f:cbf3:551c with SMTP id 5b1f17b1804b1-49fe66cc5camr263078945e9.12.1790681320689;
+        Tue, 29 Sep 2026 04:28:40 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48af5056b1bsm3312755f8f.17.2026.09.29.04.28.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 29 Sep 2026 04:28:40 -0700 (PDT)
+Message-ID: <c5f27f7f-6536-4a22-87d8-4f5def76177c@gmail.com>
+Date: Tue, 29 Sep 2026 14:28:38 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
+To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Michael Straube <straube.linux@gmail.com>,
+ Peter Robinson <pbrobinson@gmail.com>
+References: <20260923213557.186205-1-luka.gejak@linux.dev>
+ <20260923213557.186205-4-luka.gejak@linux.dev>
+ <6ad11268-9f09-4618-8b44-ab0744cf0a52@gmail.com>
+ <a978a803-a641-4af4-b38b-f3c9b423ef63@gmail.com>
+ <70785221599240049a8747750b6cf0369f8368d5@linux.dev>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <70785221599240049a8747750b6cf0369f8368d5@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Arnd Bergmann <arnd@arndb.de>
+On 29/09/2026 13:13, Luka Gejak wrote:
+> September 27, 2026 at 19:29, "Bitterblue Smith" <rtl8821cerfe2@gmail.com mailto:rtl8821cerfe2@gmail.com?to=%22Bitterblue%20Smith%22%20%3Crtl8821cerfe2%40gmail.com%3E > wrote:
+> 
+> 
+>>
+>> On 27/09/2026 18:21, Bitterblue Smith wrote:
+>>
+>>>
+>>> On 24/09/2026 00:35, Luka Gejak wrote:
+>>>
+> 
+>>>> +	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO) {
+>>>> +		rtw_write16_set(rtwdev, REG_PWR_DATA,
+>>>> +				BIT_EEPRPAD_RFE_CTRL_EN);
+>>>> +
+>>>> +		/*
+>>>> +		 * rtw_mac_power_on() sets PAD mux bits this chip must not have;
+>>>> +		 * restore the SDIO PAD mux before RF and coex setup.
+>>>> +		 */
+> 
+>> By the way, rtw_mac_power_on() doesn't touch REG_PAD_CTRL1
+>> for this chip.
+> 
+> It does, through rtw_mac_pre_system_cfg(), which rtw_mac_power_on() calls
+> at mac.c:382. At mac.c:111 that function reads REG_PAD_CTRL1, ORs in
+> BIT_PAPE_WLBT_SEL and BIT_LNAON_WLBT_SEL and writes it back, for every
+> HCI type including SDIO. So the bits are set during power on and the SDIO
+> PAD mux has to have them cleared, which is what rtw8723b_sdio_restore_pad_ctrl()
+> does. The comment in rtw8723b_post_enable_flow() names that function and the
+> two bits now.
 
-The rtw89 driver fails to build when multicolor LED support is in
-a loadable module but the rtw89 driver is built-in:
+That code is not reachable with this chip.
 
-aarch64-linux-ld: drivers/net/wireless/realtek/rtw89/led_mc.o: in function `rtw89_led_mc_brightness_set':
-led_mc.c:(.text+0x50): undefined reference to `led_mc_calc_color_components'
-aarch64-linux-ld: drivers/net/wireless/realtek/rtw89/led_mc.o: in function `rtw89_led_mc_init':
-led_mc.c:(.text+0x434): undefined reference to `led_classdev_multicolor_register_ext'
-
-The problem is a misunderstanding of how Kconfig dependencies
-work, as the 'imply' keyword is not sufficient to enable a
-a user-visible dependency, and the boolean 'RTW89_LEDS_MC'
-symbol cannot determine whether linking against the MC code is
-valid.
-
-Address this by using the correct construct to determing whether
-linking agains the MAC80211_LEDS and LEDS_CLASS_MULTICOLOR
-code is possible, respectively.
-
-Fixes: d910631ff352 ("wifi: rtw89: add LED support to reflect the wireless association status")
-Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8852CU valve board")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/realtek/rtw89/Kconfig | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig b/drivers/net/wireless/realtek/rtw89/Kconfig
-index 7c678dd1f6b3..4000ae344544 100644
---- a/drivers/net/wireless/realtek/rtw89/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw89/Kconfig
-@@ -208,15 +208,13 @@ config RTW89_DEBUGFS
- config RTW89_LEDS
- 	bool
- 	depends on RTW89_CORE
--	depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
--	imply MAC80211_LEDS
-+	depends on MAC80211_LEDS=y || MAC80211_LEDS=RTW89_CORE
- 	default y
- 
- config RTW89_LEDS_MC
- 	bool
- 	depends on RTW89_LEDS
--	depends on LEDS_CLASS_MULTICOLOR
--	imply LEDS_TRIGGER_TIMER
-+	depends on LEDS_CLASS_MULTICOLOR=y || LEDS_CLASS_MULTICOLOR=RTW89_CORE
- 	default y
- 
- endif
--- 
-2.53.0
+> 
+> Best regards,
+> Luka Gejak
 
