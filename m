@@ -1,49 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-104.mta0.migadu.com [91.218.175.104])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8653E560ABD;
-	Tue, 29 Sep 2026 18:51:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D30A36195B
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 19:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790707875; cv=none; b=JoiIXKdCfi6zFq8p6dSeJfEOTEpO+/W3k3RMTMqpKWcGUKlnE4IsHrLRzqQQMcqL+5tPcAIy7iBycahI3mQuLlIVd3jevbN5D9qa52U0vObIoYxh8ZlKi7imi2cw3hUx8IgdGFgZw11VVoww5MLfaF8odfhVsdC1IbI7XnOvryA=
+	t=1790709101; cv=none; b=BK1WxhgtOqAFkaHoNoI3b8J5WjDbVAyrcLbaZ1E2iwDuohC6FRZrBMMMM7b9J6zYmx2UJ9Hxd6KWx44/4xNB9tfk7gV9NGc30rLTVYHm8SGL3KptE228XN5vRXJ4vsVz9P/r0TbXvgPN4ucngz/aCFMBHKXL3SwsvROT/UjFVy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790707875; c=relaxed/simple;
-	bh=2AKEd8ickgoIIQuv9EjCJAnoc0hhWDCJ8mIaPvsu5vA=;
+	s=arc-20240116; t=1790709101; c=relaxed/simple;
+	bh=JfVPwfuojVZMZlRIrq/IrnSUzs93t53tkFi/otplTA0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qky1es4iIHTVoTF/S+COF/cb41nYg3Gr59aphv3H3OOGe69gQz3UBGZfvC/KxflAdQZkUPMtDp2SrdbAhFdIdmqmii9SbcyoS24eifgD8Zjl7F6XnHNxCsCleuZunH1ojBuoaolc6lPIYXbXFtBw8RMOWRNLdv4F7zyoOcMASHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tk2XoWII; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=gFqX+2Rng3x99oBFD7i7EqEkuUq2uweP2x1A7nCHc93/fqcQovAN8e0Hj0aimJmY7NmFqfWZAjsh115LdwD2ohZ1clIGPIYb9E/jyO3WvRtdYDDGNQzhqD7iL7LEWEgI59WVp2fKcQC44A2Ph8LLrhKZfHS4dcM4FLPDbBez5WM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QXzeglYC; arc=none smtp.client-ip=91.218.175.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tk2XoWII"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 556101F000FF;
-	Tue, 29 Sep 2026 18:51:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790707871;
-	bh=uOwy2R9ycU/4Vrle3YkExgT8YD1TJOiSb3ryhwkzJ5I=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Tk2XoWIIx0Ha0Yzpc/XL3tHAatTmYDESctgQ6FqkVwiw+S0Q5hFAyVQKa9Ek4KsVK
-	 9cHZcM5Jc0IGZIKIbO+bGP8xXSt2sQN98bBsiAu8hLHdJl7Bky/0O0EzyzwCle4xyi
-	 THMmznIxEY2C370gkSDhgoVfAJlPGdFkuXoEeu7Wsjmg/e5kO3r9R/m6u5FRKVdPCR
-	 sC55ONyyImmw2oHrXdMaxi83fH1eFKtDLH50q7vuC0SflIEqy4P9rTwegfy9fsp1Zu
-	 u/bpNZ2gscdP6QmECx+2NZM97r3s/iKxfx41vk7q856WoZsyv9IVtVuQ0LKkfBmJeo
-	 +Ed4qyjRMFfaQ==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	Artem Dinaburg <artem@trailofbits.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Baochen Qiang <quic_bqiang@quicinc.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	ath12k@lists.infradead.org,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QXzeglYC"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=JfVPwfuojVZMZlRIrq/IrnSUzs93t53tkFi/otplTA0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790709097; v=1; x=1791313897;
+ b=QXzeglYCDJNMJJNUY3qmqsWhJAJzmkoAuSJGv4/MeMjbn+2RqsMcmpjNJSfX3PqETnjmvxoy
+ Ce6BXrXX0I9c9lsPZTMRcN1FJHxsVZl9kw6KM2lTYzSvBVGMnMW7T0gsgp+n3tqfjBC/BFZNE20
+ 8s/qzqUnTLB6l2Rv21Rhwn0Q=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a126e1739c00e298;
+	Tue, 29 Sep 2026 19:11:37 +0000
+X-Mizu-Trace-ID: a126e1739c00e298
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	quic_jjohnson@quicinc.com
-Subject: Re: [PATCH 6.6.y 0/2] wifi: ath12k: backport CVE-2024-40979 fixes
-Date: Tue, 29 Sep 2026 14:50:50 -0400
-Message-ID: <2026-09-29-daily-reply-0007-re-ath12k-cve-2024-40979-6-6@kernel.org>
+	mehmet.fide@screeningeagle.com,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: Re: [PATCH rtw-next 1/2] wifi: rtw88: download the beacon the reserved page was built with
+Date: Tue, 29 Sep 2026 19:11:36 +0000
+Message-ID: <20260929191136.1315-1-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260929025856.85683-1-artem@trailofbits.com>
-References: <20260929025856.85683-1-artem@trailofbits.com>
+In-Reply-To: <20260929124400.3856049-2-mehmet.fide@gmail.com>
+References: <20260929124400.3856049-2-mehmet.fide@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -52,12 +51,80 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-> These patches are a backport for CVE-2024-40979 on 6.6.y.
-> The second patch depends on the first, so I kept the upstream ordering
-> instead of folding either change into the other.
+On Tue, 29 Sep 2026, Mehmet Fide wrote:
 
-Queued the pair for 6.6, thanks.
+> Besides the extra work, every beacon fetch advances the DTIM count and,
+> while a channel switch is announced, the CSA countdown; doing it twice
+> per update lets a countdown that starts at 2 reach 0, which mac80211
+> warns about. Keep the beacon skb from the page build and download that.
+[...]
+> @@ -1744,25 +1745,25 @@ static int rtw_download_beacon(struct rtw_dev *rtwdev)
+>  		return -EINVAL;
+>  	}
+>  
+> -	skb = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
+> +	/* the beacon kept by rtw_build_rsvd_page() */
+> +	skb = rsvd_pkt->skb;
+>  	if (!skb) {
+>  		rtw_err(rtwdev, "failed to get beacon skb\n");
+> -		return -ENOMEM;
+> +		return -ENOENT;
+>  	}
+>  
+>  	ret = rtw_download_drv_rsvd_page(rtwdev, skb->data, skb->len);
+>  	if (ret)
+>  		rtw_err(rtwdev, "failed to download drv rsvd page\n");
+>  
+> -	dev_kfree_skb(skb);
+> -
+>  	return ret;
+>  }
+>  
+[...]
+> @@ -1791,6 +1792,12 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
+>  free:
+>  	kfree(buf);
+>  
+> +	/* free the beacon kept by rtw_build_rsvd_page() */
+> +	rsvd_pkt = list_first_entry(&rtwdev->rsvd_page_list,
+> +				    struct rtw_rsvd_page, build_list);
+> +	kfree_skb(rsvd_pkt->skb);
+> +	rsvd_pkt->skb = NULL;
+> +
+>  	return ret;
+>  }
 
--- 
-Thanks,
-Sasha
+This breaks hardware scan offload while an AP is active.
+
+rtw_download_beacon() no longer fetches a beacon of its own. It reads
+rsvd_pkt->skb, and rtw_fw_download_rsvd_page() clears that skb right
+before it returns:
+
+	if (rtwdev->ap_active) {
+		ret = rtw_download_beacon(rtwdev);
+		if (ret)
+			rtw_err(rtwdev, "HW scan download beacon failed\n");
+	}
+
+rtw_hw_scan_offload() takes that branch without building a reserved page
+first, so nothing repopulates the skb. Since the store has already run from
+BSS_CHANGED_BEACON when the AP started, rsvd_pkt->skb is NULL by the time a
+scan begins and rtw_download_beacon() returns -ENOENT:
+
+	skb = rsvd_pkt->skb;
+	if (!skb) {
+		rtw_err(rtwdev, "failed to get beacon skb\n");
+		return -ENOENT;
+	}
+
+rtw_ops_hw_scan() then treats the error as a failed scan and aborts it.
+
+Before this patch the scan path worked because rtw_download_beacon() called
+rtw_get_rsvd_page_skb() itself.
+
+Could the scan path fetch its own beacon, or could the retained skb be
+released only after the standalone download, with care taken to not
+advance the CSA countdown twice?
+
+Best regards,
+Luka Gejak
