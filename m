@@ -1,73 +1,38 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B584A38A71F
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 03:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249823CA4A0;
+	Tue, 29 Sep 2026 03:57:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790652867; cv=none; b=rdolLocwrA+rmyX3CBmQ5eA5Y+0jpbtxs23Uivwz6rjSkPhk0BtL4MALSM66vBY7I5geWZcAZxRpG7lDALf2juKBrV57QC4PxM/49iBwbdMtf5jvyW3+2G6tQlw8qG67coobaIVtkekSMbcO3UVODtvx8JvGFj9MMq5CN4ZYvXA=
+	t=1790654252; cv=none; b=cJwG+1xV5gvUWErL8YWvlowMuX/h6/bT8BV7LJE3BmE9b9dAHGECdTFhCAy2DtYqlAKQw+yRrJXuDhCmFbqwDKOBzU+1tHXYcNc3cvMaVk/mZ5/WufpmngCmOHY9qIy+Z11dZg+W7noHYK/sQfo/cfppikJjCOYJtEbflllzhrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790652867; c=relaxed/simple;
-	bh=VxwXC2ymXKg74iOjqM9DjfTdB1xIYPBNvf4/+U+F+Sg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uJyQuJQ31xZuvFGPml4+To7TDNfssjrPujHDEIP8eS0GHMAU2cgQoY8QFG5l8YYzaPCfuQzR34PaTuDaKn197WpUL86t3vGwUgjFZep8b5Ez9f2BKmNghLNfgB35jFmCIH96QNvzTV+lEoIRmJwXI1yLKWXZER/2GebanvoG1Gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=UsKJJukW; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	s=arc-20240116; t=1790654252; c=relaxed/simple;
+	bh=yfByeOMZtpbUNuuFkWDTJ8P5sGTXNwZSFa75tHTOAFA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ll11GrAZJKtjt77/rR0N8GSA0fABdqMtNtXy2b87s+6vKLQ/7f4fGOJtPeiFO7USsa+4/JojKSkhKFwGsS0FpV4KjOhhBIWfqTxjayEcgn3XTfaDTGzVrRajhsplmeF4N2Eo27yWjfhxUoowJ+rv5PUzLQOmv0w6CuhAIpBQitU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lVVOLZMT; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="UsKJJukW"
-Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-39dacf053eeso1862278a91.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 20:34:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1790652865; x=1791257665; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=siXZRHtc0EzHRD/AbY1MMiRZMS/5vni0rs/ARWRBsZg=;
-        b=UsKJJukW0xIQR4Pprbgh1/3hmuoEuu5IZO0IWtk2KnrsoB7V6kkXrFHC14Y3CY91A4
-         zu6HdzSQrZw9krjqGCXAh6juv6Gs7BqWizRVmszEEJujqCH+s9UXx9lYOMIG4RDtr1i7
-         wm+Vqpjws87YoB0AfBK2PVfctUPaMPj2U3i8LQwlzQ2N4B9v0Ptn9gfwGzzmAxSEnnH8
-         +s3q0O91B01j/GM5JJdA5J1cHS9Nk3zMkQRHPmUZ3sGyFJLptiCDhnUIXD7sE+fZxWhw
-         YNDaPKwkOt+WetVN9+zUtr1CoAmTARDCzYyc2sGxP8NZu6ricX1sEUeLDX8kJHqpTz2S
-         frYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790652865; x=1791257665;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=siXZRHtc0EzHRD/AbY1MMiRZMS/5vni0rs/ARWRBsZg=;
-        b=k6ne5cELI/fKtKqn+i1DKOs9qMoarf5IUMIIytAIBlwynuv87AJw2pRKE19oPB7hL+
-         hanHASrv10ey4TMRylQ5q8uijTDiGgPAEgFJY3enM7BJyQb1jZkIOnyHnsdoUMJRtxvz
-         pW89WIG3V1dAQvuzG8dLNe3GoGCSrG0fGQQT2hg77K2m57lz0aQa2zl7Xn1d5BHT/QNv
-         pNFwvEsd24rON0nlnJ24/l6INGESO1Cb7P0o4Nl6CIPD4Nkv/AbL9ey/rI+U91P0K0IE
-         TdUaz9UUHHzaNGZKb5KELhUxVj+7dkNNOIbLjXjqXuSk9ACZhYIayJE+gA1QIO3yIILO
-         ILIQ==
-X-Forwarded-Encrypted: i=1; AKwUvBziQRyuDrT2HWPVPLxMIQphL1giuDaGgoW66yZb5cuupcQPc+oyl5gs1Ngr/D6IBafEgTg5lO1GNWB8KlVMGw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIg7FrTpGft5WzXLV6CUFpOGu/7dnEInM3hOhEABQwk6TPaS9QF
-	KoxtpDhbZDJwRTzXzEy15s3Pb08jRw+derY/4iJQtVAr7wluwIVWtqBdTKMac5Jk/Q0uOdwKN4j
-	xVqXrrRTC6Q==
-X-Gm-Gg: AYBFou25iELu7inMCQbAT4szlCUpNnys4vo2GP6S9e6y8E/FkhZdQDhVw/7vlensWdr
-	0nmmt6k8LfcgEElEpHjlDS4MEVp5Jhnh8/73YFx4jAHupXtsX2+pwqTuNjv+F7apGKB3STxn7aW
-	9YV5DV/Bzu8qhzjJ8GFyrTR/tPc0zL+oHQVatazvJjC0Nh2Q3IFPcxFneE9uLHbKeb49GDESXBN
-	hTjmvcT9gBGKPRXP2aIsJ1804G+ObkdI8UZ1Pd9DlQ+u8FxfKb5W9s5rWREY2LizSG6QxSZwDvU
-	Yh+Ov2y+N5UYIFrprSZX1pMqs5epnXSsFuyrB4/1PCQDRBBqKAnYmV1kVDHx3K/JQkq8TIWuwM2
-	Rm4DrI88UMrEYW3XxmBQF90TWwlTfMmNsyq/P3YabpgFeYWwJJv17pMV7n5C+MpsPWaJsg1Ldhk
-	qHQwN3JKx8b6YUBgw9kO40Isrx3L48xbabat19fuCLrwzndeGbLDlxJPGYKD+4hqiHxkFMhtRWT
-	enMFp/SFvegBbOTmUe7dQjHosG3Nn1quBiStsLtFcmCsPQBntg0UlrEIOQLxviB
-X-Received: by 2002:a17:90a:ac8:b0:3a4:a619:9e6a with SMTP id 98e67ed59e1d1-3a4a619a4bdmr112878a91.41.1790652864893;
-        Mon, 28 Sep 2026 20:34:24 -0700 (PDT)
-Received: from MMA-10015.sydney.mm.lcl (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a498fb91d6sm887594a91.4.2026.09.28.20.34.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 20:34:24 -0700 (PDT)
-From: samuele.yang@morsemicro.com
-To: lachlan.hodges@morsemicro.com,
-	dan.callaghan@morsemicro.com
-Cc: arien.judge@morsemicro.com,
-	linux-wireless@vger.kernel.org,
-	Samuele Yang <samuele.yang@morsemicro.com>
-Subject: [PATCH wireless-next] wifi: mm81x: start beaconing on beacon enable not interface add
-Date: Tue, 29 Sep 2026 13:34:08 +1000
-Message-ID: <20260929033408.69266-1-samuele.yang@morsemicro.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lVVOLZMT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=qW
+	9qfPoo8fYX/EwwTC0Q4IvfBmGgQcmIU1Bg5KLbhlQ=; b=lVVOLZMTsb1q1fBxaQ
+	JUaTcdoLPGtZbKnuz/tRdhdW9s3PG3rMbZq4TXXJ8Cx4cYqM0ci7FHZAmRyv5GNj
+	F03WnAg/h2skN3OnneMtx6oREcsS7jpqgF2eHmp6KrPXV59UCwllsehAqrS9AfIQ
+	O6kJmOrYhrqed3cCHCo5XyIcs=
+Received: from SH-NB-0474.wuqi-tech.com (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3X7URN7tqaY62BQ--.10925S2;
+	Tue, 29 Sep 2026 11:57:12 +0800 (CST)
+From: Huang Xiangping <huangxiangping88@163.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Huang Xiangping <huangxiangping88@163.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: cfg80211: process pending events before connect/disconnect requests
+Date: Tue, 29 Sep 2026 11:56:49 +0800
+Message-ID: <20260929035649.33538-1-huangxiangping88@163.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -75,62 +40,82 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3X7URN7tqaY62BQ--.10925S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXw4fCFyxKry5tr1kAF43ZFb_yoW5Ar43pF
+	y0gFZ3Kwn8Gr13Gwn3AF10gF95Zw4kJa15ZryqgFyYyas0gr18tr4kKF15Ar13Gr93Aa4U
+	Zr40qanrGFyDua7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEO6psUUUUU=
+X-CM-SenderInfo: xkxd0wx0ld0wpslqwmqy6rljoofrz/xtbC+BhdB2q7NxinewAA3Y
 
-From: Samuele Yang <samuele.yang@morsemicro.com>
+cfg80211 reports connect results and disconnects through wdev->event_list,
+processed asynchronously by cfg80211_event_work(). The state that
+cfg80211_connect() and cfg80211_disconnect() reason about can therefore
+lag behind what the driver has already reported.
 
-Currently we only initialise and start the beaconing process when the
-AP interface is first added. If the BSS alone is reconfigured and
-beaconing is temporarily stopped, the subsequent call to re-enable
-the beacon via BSS_CHANGED_BEACON_ENABLED is ignored and beaconing will
-be permanently stopped until the interface is completely re-added.
+cfg80211_disconnect() relies on that asynchronous processing on purpose:
+when the interface is connected it leaves wdev->u.client.ssid_len alone,
+expecting __cfg80211_disconnected() to clear it later:
 
-To fix, move the beaconing start/stop to mm81x_mac_ops_bss_info_changed
-and react accordingly to info->enable_beacon and just keep the per-vif
-work item init in the add_interface callback.
+	if (!wdev->connected)
+		wdev->u.client.ssid_len = 0;
 
-Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
-Signed-off-by: Samuele Yang <samuele.yang@morsemicro.com>
+If userspace reconnects before that deferred clear has run,
+cfg80211_connect() installs the new SSID and the queued EVENT_DISCONNECTED
+then wipes it again, together with wdev->connected, wdev->connect_keys and
+wdev->conn_owner_nlportid.
+
+The connection result of the new connection is subsequently processed with
+ssid_len == 0, so the BSS lookup in __cfg80211_connect_result() cannot
+match any BSS and WARN_ON(bss_not_found) triggers, dropping the connection
+result and leaving userspace waiting for a connection that is never
+reported. The same happens in cfg80211_roamed(). The zero ssid_len
+additionally defeats the -EALREADY and connection-owner checks of the
+following request, as both are skipped when ssid_len is zero.
+
+Fix this by draining the pending events before the connect and disconnect
+handlers inspect the interface state. Both run under the wiphy mutex,
+which cfg80211_process_rdev_events() requires, so no new lock ordering is
+introduced; this mirrors what cfg80211_change_iface() already does.
+
+Fixes: 51e13359cd5e ("cfg80211: fix connect/disconnect edge cases")
+Cc: stable@vger.kernel.org
+Signed-off-by: Huang Xiangping <huangxiangping88@163.com>
 ---
- drivers/net/wireless/morsemicro/mm81x/mac.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ net/wireless/sme.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
-index 4485748518b4..e61978c28ae4 100644
---- a/drivers/net/wireless/morsemicro/mm81x/mac.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
-@@ -1356,11 +1356,10 @@ static void mm81x_mac_beacon_work(struct work_struct *work)
- 		mm81x_mac_send_buffered_bc(mors, vif);
- }
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 2a719b5c487e..e887c30567ec 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -1445,6 +1445,13 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
  
--static void mm81x_mac_beacon_init(struct mm81x_vif *mors_vif)
-+static void mm81x_mac_beacon_start(struct mm81x_vif *mors_vif)
- {
- 	struct mm81x *mors = mm81x_vif_to_mors(mors_vif);
+ 	lockdep_assert_wiphy(wdev->wiphy);
  
--	INIT_WORK(&mors_vif->u.ap.beacon_work, mm81x_mac_beacon_work);
- 	mm81x_mac_beacon_irq_enable(mors_vif, true);
- 	atomic_inc(&mors->num_bcn_vifs);
- }
-@@ -1583,7 +1582,9 @@ static void mm81x_mac_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		mm81x_cmd_config_beacon_timer(mors, mors_vif,
- 					      info->enable_beacon);
++	/*
++	 * Pending events may still change the state we're about to reason
++	 * about (e.g. a deferred disconnect clearing ssid_len), so process
++	 * them before looking at it.
++	 */
++	cfg80211_process_rdev_events(rdev);
++
+ 	/*
+ 	 * If we have an ssid_len, we're trying to connect or are
+ 	 * already connected, so reject a new SSID unless it's the
+@@ -1551,6 +1558,13 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
  
--		if (!info->enable_beacon)
-+		if (info->enable_beacon)
-+			mm81x_mac_beacon_start(mors_vif);
-+		else
- 			mm81x_mac_beacon_finish(mors_vif);
- 	}
+ 	lockdep_assert_wiphy(wdev->wiphy);
  
-@@ -2261,7 +2262,7 @@ static int mm81x_mac_ops_add_interface(struct ieee80211_hw *hw,
- 	rcu_assign_pointer(mors->vifs[mors_vif->id], vif);
++	/*
++	 * Pending events may still change the state we're about to reason
++	 * about (e.g. a deferred disconnect clearing ssid_len), so process
++	 * them before looking at it.
++	 */
++	cfg80211_process_rdev_events(rdev);
++
+ 	kfree_sensitive(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
  
- 	if (vif->type == NL80211_IFTYPE_AP)
--		mm81x_mac_beacon_init(mors_vif);
-+		INIT_WORK(&mors_vif->u.ap.beacon_work, mm81x_mac_beacon_work);
- 
- 	ret = mm81x_cmd_get_capabilities(mors, mors_vif->id, &mors->fw_caps);
- 	if (ret) {
 -- 
-2.55.0
+2.53.0
 
