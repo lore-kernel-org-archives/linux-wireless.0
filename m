@@ -1,67 +1,38 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E6E513554
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 11:28:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A1EF4E9C10
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 12:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790681336; cv=none; b=kTingm/MGFGgYlXX+nuLjXdToIuuyYU9GzLw2EZy4cYL+neOm2BqtPeozyq2EMO8AvjTUI0KpnQXxl6wDUNzDqGN1kZQcNVM0Bk8kRuhyIiylrzaFkx84vLmA+2TPtvcTB+3TREcJdHXge63KCh4JN158PSHg0DFBC5gE8DKAg8=
+	t=1790684109; cv=none; b=O7Fq6+kqRVP+jD4b0Gf4ZtkylV3k5LwnbNpxrLoJKaNUFGP758rrqbbmcbWZeDOunwTP2zJIeXUXz/F5djkIPBiItFjxswaNZ8cC8AtbxfVwGcB8RnDNWq3z3M/DhGnZlP22+til5XbjQotztuNwu1ZtTgVjFUCYPCHReRRS1tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790681336; c=relaxed/simple;
-	bh=3rECaaDdvw9zHdYh7ey/aO7GO4AYepJPYKFKK3tSYbw=;
+	s=arc-20240116; t=1790684109; c=relaxed/simple;
+	bh=SSYHkj8qKjCj2Se4vF5Xnbj9WEKB8bKIkSuGwF/bHQA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DYFOkMAcM2XYoi9jkHl50c4YyVjm53wZraaez3LDJQyphsJsI+wRXpnntVXCHZxt9wYQ7fgdKZSdV0MtNAEfjfSmN4QWlndPxJjy0Yuo0yy3TclRbt//2SvRYj7OeWYs2lUKTsaJeAQWZ9ybawuSpMHpJ3qThFqX4uWTK/rPxMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SryipYNi; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=eDRaDeS2AtyvB+N/UD2remMZIpGELhu83X2SniVQewvZ96Z8bVWd6vL25hrGCYM/ygV+oGlXOseIqzakZ42HrjcKDR4bcanuB4xtUr1ARYEBYl084I/283Gb/HqSTwobALnrNyI8PH2lwxHR7mpf0QU1m7x9TFuIB8Z6e6yXBP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=sykKvZZk; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SryipYNi"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d391aso30573315e9.2
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 04:28:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790681333; x=1791286133; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Jh3L4jOl68rMmEvxUQPodbuSF+NO7zAX0NywwnnROiQ=;
-        b=SryipYNiaj9w1oly1YZ7hAT3/hiUxSa7KXDzGoi3HuKAehF0b13csuvvUEmFoSTXiw
-         Vg3VDNA3DmVjp+fe65v1E01ui5J8Vh+aFfRVPtq/iKFq0WGf0e5GBpCmq/movBVY3vK9
-         lST1iPgiYrKnDrqH2EB89peFrTJ2zwMd+Bh5AQ8jvDVB15etKy+qMIPMKeuHE2JBTc69
-         W5koNcSCQ0yxGN30DNaZ4LosyOFDTJPqYjYarZrce7vCy58h8gFOYLC8Jqc2t//OBp06
-         r6XmuW2gwJJitWAMiodhs5bEG9K/uocgQMcCN//hzlAm8PvpLxzKWCgrgA0U0M0WlpFg
-         tm4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790681333; x=1791286133;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Jh3L4jOl68rMmEvxUQPodbuSF+NO7zAX0NywwnnROiQ=;
-        b=O651v95Jf++HUmvuBIvsScurb8XMoOss6Aljhg8t7p62hiwxxuhyTVRub7ZKibuLyd
-         nlAQyqzFOiwqCYS5MW9J0BHTTQ482sMQrKp2AxQSPwn46z9sSmcjCPxUW6kd13pCfew6
-         w5LM35qxdrZh7QcafUhW/QdrpSM76OGkQcBhCAHXLrXSKx8L9T+T7SUN8CbX4LZcoX3I
-         Nqm5+AbNBCyiWQon5DGW2WIOiOgsO1duu6GD0wHLBVouB+7LvonPKnf5bXMo3p+SPCRE
-         JhxRt4bO1qfm2QYzfjk6RNz3Ht2xWIEVcxwa53Xolx69fHDsT9l7W6VcPPEtm4KGTNan
-         82Hw==
-X-Gm-Message-State: AFuF++lRHL0Ph+b33ek4hgaT+L3Kw3mIxF1GgcAkxefglkgieDLqDRZG
-	fTc13S7DMFYDMDog2eXSJAGwETyd9Ymg889B1GWgyl3RIdvUMD+i1ih9
-X-Gm-Gg: AYBFou354YSwTBEVoSZe235ncY+yEmKHM08XOh4+P8DR/YYetzkzrs/wNuGeADXsEuG
-	ml2kamuFD38lSRSlOSOmEVOBymEPHpce79f2fhK5mEhzhCcxY0k1mJbbFL7rXm1+eEGdlsIyBFj
-	jdOshFXka3nqwZ7b5dt2jdaBSNWC8gSEAVBpCJBJgzJWdobUh609TZWgPBlpdf9O8Ld/a/O65pg
-	HLfVlYF1b+gsCwW1rjyl5WS2wPabiMhzJrBbY6nNuwMxmNBbHSAtWTIBOXkNpFmREmWj2UKfkz5
-	ncYkcVSQhCgfBYUmz4zKLBDYj7RItM4tQNreNwck+QlUDh1OtkUFNocrc+de2nvWhqFaTozxH7F
-	8fWuva0Qcm+NuhxayilIBz5WTBukZ1H/CrMJ1vzHSP69D/UDcsjkJlWiyt5WSkfvpdGrKADbkUH
-	7Z8ERj7IR6uUkAyLvhfDSr8C0s2TjI8vWStsuqw/Q+n0Gmhjb+XkUbmQUAYoaqUwUP+8cjefbUU
-	cXp1w==
-X-Received: by 2002:a05:600c:1c25:b0:4a0:561:d0fa with SMTP id 5b1f17b1804b1-4a00561d337mr96977135e9.18.1790681332360;
-        Tue, 29 Sep 2026 04:28:52 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48af507611csm3153555f8f.22.2026.09.29.04.28.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 29 Sep 2026 04:28:51 -0700 (PDT)
-Message-ID: <a1ef423d-519d-47bb-be6c-d413a8421943@gmail.com>
-Date: Tue, 29 Sep 2026 14:28:50 +0300
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="sykKvZZk"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=vIzbWg9SkfDJJUsq6lZnHSzkk1u0FFkRtVQyJXwWoGA=; b=sykKvZZk0c5JAULO0+NY0/olmP
+	cWSwWXdG+uPYubg+FzdwezQhM5onm8mG/IQWgYINGDNcIJhx1x8NdIDJ2/5TfH1+9uYhp+aw/AlAj
+	YOuwCxjY+IsZ7RrkY0TvpAFpZZlOmkb55Oz3PENcUr8DkOMHUtYL2OpB5df92WYb6PNc=;
+Received: from p54a434bb.dip0.t-ipconnect.de ([84.164.52.187] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1xBWja-00CuOa-02;
+	Tue, 29 Sep 2026 14:14:58 +0200
+Message-ID: <085bd870-0ec1-4b92-bc99-dfbfe3c7132e@nbd.name>
+Date: Tue, 29 Sep 2026 14:14:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,644 +40,455 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>
-References: <20260923213557.186205-1-luka.gejak@linux.dev>
- <20260923213557.186205-4-luka.gejak@linux.dev>
- <6ad11268-9f09-4618-8b44-ab0744cf0a52@gmail.com>
- <845297728a153af0edb5404d88e59cc4ebe4d4cf@linux.dev>
+Subject: Re: [RFC PATCH 00/15] wifi: SCS and MSCS
+To: Vivek Chettri <vivek.chettri@oss.qualcomm.com>,
+ Vivek Chettri <vchettri@qti.qualcomm.com>,
+ Bhagavathi Perumal S <bhagavathi.pillai@oss.qualcomm.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+ "ripan.deuri@oss.qualcomm.com" <ripan.deuri@oss.qualcomm.com>
+References: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
+ <4c3aee64-d289-4648-9520-edb6518b3d13@oss.qualcomm.com>
+ <6ed64b95-57a3-42a2-9280-c98978382fa6@nbd.name>
+ <CH0PR02MB8168357184D7A6354A24A338F1BC2@CH0PR02MB8168.namprd02.prod.outlook.com>
+ <43012c2f-3623-4211-b2de-de53e39df2e9@nbd.name>
+ <d5cd9c2b-a37a-40be-8916-162d9250adce@oss.qualcomm.com>
+ <3132508e-3b02-41bb-8d93-28f30ef3a864@nbd.name>
+ <5cd8adcf-2c52-49b0-802c-d995eaf8960f@oss.qualcomm.com>
+From: Felix Fietkau <nbd@nbd.name>
 Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <845297728a153af0edb5404d88e59cc4ebe4d4cf@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+In-Reply-To: <5cd8adcf-2c52-49b0-802c-d995eaf8960f@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 29/09/2026 13:10, Luka Gejak wrote:
-> September 27, 2026 at 17:21, "Bitterblue Smith" <rtl8821cerfe2@gmail.com mailto:rtl8821cerfe2@gmail.com?to=%22Bitterblue%20Smith%22%20%3Crtl8821cerfe2%40gmail.com%3E > wrote:
-> 
->>
->>
->> On 24/09/2026 00:35, Luka Gejak wrote:
-> 
->>> +static u8 rtw8723b_default_ofdm_index(struct rtw_dev *rtwdev)
->>> +{
->>> +	u32 val32;
->>> +	u32 swing;
->>> +	u8 i;
->>> +
->>> +	swing = rtw_read32_mask(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE,
->>> +				OFDM_SWING_MASK);
->>> +
->>> +	for (i = 0; i < RTW_OFDM_SWING_TABLE_SIZE; i++) {
->>> +		val32 = rtw8723b_ofdm_swing_table[i];
->>> +
->>> +		if (val32 >= 0x100000)
->>> +			val32 >>= __ffs(OFDM_SWING_MASK);
-> 
->> Isn't this the same as u32_get_bits(val32, OFDM_SWING_MASK) ?
-> 
-> Yes. It is u32_get_bits() now, and the if goes away with it.
-> 
->>> +		if (val32 >= 0x100000)
->>> +			val32 >>= __ffs(OFDM_SWING_MASK);
-> 
->> Also, every value in the table is bigger than 0x100000, so no need for if.
-> 
-> There is no val32 left to test.
-> 
->>> +static void rtw8723b_post_enable_flow(struct rtw_dev *rtwdev)
->>> +{
->>> +	/*
->>> +	 * Enable falling edge triggered interrupts and GPIO9 interrupt mode.
->>> +	 * The power-on sequence sets both, but it runs before the firmware is
->>> +	 * downloaded, so reassert them here as the vendor driver does.
->>> +	 */
->>> +	rtw_write8_set(rtwdev, 0x0049, BIT(1));
->>> +	rtw_write8_set(rtwdev, 0x0063, BIT(1));
-> 
->> This seems like bit 25 of REG_GPIO_PIN_CTRL_2.
-> 
-> It is. That write is rtw_write32_set(REG_GPIO_PIN_CTRL_2, BIT(25)) now.
-> The write above it is bit 9 of REG_GPIO_INTM.
-> 
->>> +static void rtw8723b_phy_lck(struct rtw_dev *rtwdev)
->>> +{
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdfbe0);
-> 
->> We have a name for 0xb0: RF_SYN_PFD. Not sure if it's the right name here.
-> 
-> I have decided to use it.
-> 
->>> +static void rtw8723b_init_tx_buffer_boundary(struct rtw_dev *rtwdev)
->>> +{
->>> +	u8 val8 = TX_TOTAL_PAGE_NUMBER_8723B + 1;
->>> +
->>> +	rtw_write8(rtwdev, REG_BCNQ_BDNY, val8);
->>> +	rtw_write8(rtwdev, REG_MGQ_BDNY, val8);
->>> +	rtw_write8(rtwdev, REG_WMAC_LBK_BF_HD, val8);
->>> +	rtw_write8(rtwdev, REG_TRXFF_BNDY, val8);
->>> +	rtw_write8(rtwdev, REG_DWBCN0_CTRL + 1, val8);
-> 
->> __priority_queue_cfg_legacy() already takes care of these. Is it
->> necessary to set them again here?
-> 
-> No. init_tx_buffer_boundary() and init_page_boundary() are both gone.
-> 
->>> +static void rtw8723b_init_transfer_page_size(struct rtw_dev *rtwdev)
->>> +{
->>> +	rtw_write8(rtwdev, REG_PBP, 0x11);
-> 
->> We have some macros for this in reg.h right under REG_PBP. You can use
->> them with u8_encode_bits().
-> 
-> Done, u8_encode_bits(PBP_128, PBP_RX_MASK) and the same for TX.
-> 
->>> +static void rtw8723b_init_driver_info_size(struct rtw_dev *rtwdev)
->>> +{
->>> +	/* NOTE: also is done in rtw_drv_info_cfg */
-> 
->> If it's done there do you have to do it again here?
-> 
-> No. init_driver_info_size() is gone.
-> 
->>> +static void rtw8723b_init_wmac_setting(struct rtw_dev *rtwdev)
->>> +{
->>> +	/*
->>> +	 * The vendor's 8723x filter value plus BIT_APP_FCS, which rtw88
->>> +	 * needs because it advertises RX_INCLUDES_FCS. It is assigned to
->>> +	 * hal.rcr and not merely written because rtw_core_start()
->>> +	 * rewrites REG_RCR from hal.rcr after power_on, which would undo
->>> +	 * a register-only write; fw.c toggles BIT_CBSSID_BCN in it.
->>> +	 */
->>> +	rtwdev->hal.rcr = WLAN_RCR_CFG;
-> 
->> Is it necessary to change the default value assigned in rtw_core_init()?
-> 
-> No, that is where it belngs. hal.rcr is assigned in rtw_core_init() per
-> chip now. It is a patch of its own at the beggining of the series.
-> 
->>> +	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
->>> +
->>> +	rtw_write32(rtwdev, REG_MAR, 0xffffffff);
->>> +	rtw_write32(rtwdev, REG_MAR + 4, 0xffffffff);
->>> +
->>> +	rtw_write16(rtwdev, REG_RXFLTMAP2, WLAN_RX_FILTER2);
->>> +	rtw_write16(rtwdev, REG_RXFLTMAP1, WLAN_RX_FILTER1);
-> 
->> Please also update rtwdev->hal.rxfltmap1 when you change REG_RXFLTMAP1:
->> https://lore.kernel.org/linux-wireless/2a52d718-9e46-47f2-84a1-d8e7b1ed89a8@gmail.com/
-> 
-> You are right, and the reuse turns out to be the fix. The chip uses
-> rtw8723x_mac_init() now, which writes REG_RXFLTMAP0/1/2 and sets
-> hal.rxfltmap1. rtw8723b_mac_init() and rtw8723b_init_wmac_setting() are
-> both gone.
-> 
->>> +static void rtw8723b_init_operation_mode(struct rtw_dev *rtwdev)
->>> +{
->>> +	rtw_write8(rtwdev, REG_BWOPMODE, BIT_BWOPMODE_20MHZ);
-> 
->> I don't see this in the vendor driver v5.2.17.1.
-> 
-> After rechecking it myself, me neither. init_operation_mode() and the
-> REG_BWOPMODE defines are gone.
-> 
->>> +static void rtw8723b_init_antenna_selection(struct rtw_dev *rtwdev)
->>> +{
->>> +	rtw_write8(rtwdev, REG_LEDCFG2, WLAN_ANT_SEL);
->>> +}
->>> +
->>> +#define RF_AC	0x00
-> 
->> You can use the existing RF_MODE name for this.
-> 
-> Done, the local RF_AC is gone.
-> 
->>> +static void rtw8723b_lck(struct rtw_dev *rtwdev)
->>> +{
->>> +	u32 rf_mode = 0, lc_cal;
->>> +	int ret;
->>> +	u8 val_ctx;
->>> +	u8 rf_val;
->>> +
->>> +	val_ctx = rtw_read8(rtwdev, REG_CTX);
->>> +
->>> +	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0)
-> 
->> No need to compare.
-> 
-> Dropped.
-> 
->>> +	/* 3. Read RF reg18 */
->>> +	lc_cal = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, MASK12BITS);
->>> +
->>> +	/* 4. Set LC calibration begin	bit15 */
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdfbe0);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, MASK12BITS, lc_cal | BIT_LCK);
->>> +
->>> +	ret = read_poll_timeout(rtw_read_rf, rf_val, rf_val != 0x1,
->>> +				10000, 1000000, false,
->>> +			 rtwdev, RF_PATH_A, RF_CFGCH, BIT_LCK);
-> 
->> checkpatch should catch alignment issues like this. Please always run it.
-> 
-> Fixed, and I am running it. checkpatch --strict is clean except the
-> MAINTAINERS reminder on the patches that add files and the comllex-macro
-> report on TRANS_SEQ_END, which rtw8703b.c already has.
-> 
->>> +	if (ret)
->>> +		rtw_warn(rtwdev, "failed to poll LCK status bit\n");
->>> +
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdffe0);
->>> +
->>> +	/* Restore original situation */
->>> +	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0) {
->>> +		rtw_write8(rtwdev, REG_CTX, val_ctx);
->>> +
->>> +		rtw_write_rf(rtwdev, RF_PATH_A, RF_AC, MASK12BITS, rf_mode);
->>> +	} else {
->>> +		rtw_write8(rtwdev, REG_TXPAUSE, 0x00);
->>> +	}
-> 
->> I think the vendor driver is using MASK12BITS (0xfff) by mistake in
->> this function. It doesn't make any sense, it should be RFREG_MASK
->> (0xfffff) instead.
-> 
-> Agreed, and that function is gone. The chip had its own lck carrying the
-> shared one plus the RF_MODE standby read and write and the two RF_SYN_PFD
-> writes. The RF_MODE pair only runs in the continuous TX branch, which
-> this driver never enters, and rtw8723b_phy_lck() already does the
-> RF_SYN_PFD pair at RF configuration. So rtw8723b calls rtw8723x_lck()
-> now, the way 8703b and 8723d do, and that one reads RF_CHNLBW with
-> RFREG_MASK. Test results are the same with it dropped.
+Hi Vivek,
 
-Why drop this function? You don't know what RF_SYN_PFD is for.
-Maybe it's required every time it does LC calibration?
 
+On 26.09.26 07:07, Vivek Chettri wrote:
+> On 9/22/2026 3:35 PM, Felix Fietkau wrote:
+>> Hi Vivek,
+>> 
+>> On 20.09.26 18:22, Vivek Chettri wrote:
+>> 
+>>> The proposal is not to implement a full policy framework in hostapd.
+>>>
+>>> Following is the functionality split:
+>>>
+>>> Hostapd:
+>>>     Primarily responsible for SCS/MSCS protocol handling.
+>>>     Processing of the protocol descriptors ie TCLAS and QoS elements.
+>>>     Programming an existing kernel policy framework such as nftable.
+>>>
+>>> Nftables:
+>>>     Policy storage.
+>>>     Classification.
+>>>     Packet marking along with offload enablement.
+>> 
+>> I'm not sure that nftables is a good policy storage for SCS/MSCS.
+>> In my proposal, all accepted SCS descriptors sent to mac80211 are enforced without direct policy override. That is by design, because it is expected by the standard.
+>> If system policy contradicts SCS descriptors requested by the stations, that's fundamentally an admission problem that needs to be dealt with in user space before descriptors ever reach mac80211, so that the station is told what is accepted and what isn't.
+>> 
 > 
->>> +static u32 rtw8723b_iqk_ant_switch_path(struct rtw_dev *rtwdev)
->>> +{
->>> +	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_SDIO)
->>> +		return rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB ? 0x280 : 0x0;
->>> +
->>> +	/* Scan and connect use the PTA mux, so calibrate the path they use. */
->>> +	return (rtwdev->efuse.bt_setting & BIT(6)) ? 0x80 : 0x200;
+> We believe admission control can still be handled through a centralized policy database.
+> Instead of always giving SCS/MSCS requests higher priority,
+> administrators could choose whether SCS/MSCS policies or existing system policies take precedence.
+> This provides flexibility for different deployments.
+> When policy conflicts occur, the centralized policy layer can make an admission decision before enforcement,
+> rather than automatically prioritizing SCS/MSCS requests.
 > 
->> This function would be clearer if you don't use the ternary
->> operator at all.
+> Consider a deployment where a station successfully negotiates an SCS stream
+> for a video application and the corresponding QoS policy is accepted and programmed.
+> Later, an administrator updates the network policy to de prioritize or block that traffic class,
+> for example due to congestion, bandwidth quotas, or enterprise policy requirements.
 > 
-> Rewritten without it.
-> 
->> Not sure this logic is correct. The check in the vendor driver is
->> like this:
->>
->> bool shared_ant = bt_setting & BIT(0);
->> if (USB) {
->> 	if (shared_ant)
->> 		ant_path = RF_PATH_B;
->> 	else
->> 		ant_path = RF_PATH_A;
->> } else {
->> 	if (bt_setting & BIT(6))
->> 		ant_path = RF_PATH_B;
->> 	else
->> 		ant_path = RF_PATH_A;
->> }
->> if (!shared_ant || ant_path == RF_PATH_A)
->> 	return 0;
->> else
->> 	return 0x280;
->>
->> I didn't see 0x80 and 0x200 in the IQK code.
-> 
-> It follows the vendor now, shared_ant from bit 0 and ant_path from bit 6,
-> returning 0 or 0x280. The 0x80 and 0x200 are gone.
-> 
->>> +static void rtw8723b_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
->>> +{
->>> +	u32 rf_cfgch;
->>> +
->>> +	rf_cfgch = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK);
->>> +
->>> +	rf_cfgch &= ~RFCFGCH_CHANNEL_MASK;
->>> +	rf_cfgch |= channel & RFCFGCH_CHANNEL_MASK;
-> 
->> This is what u32(p)_replace_bits is for.
-> 
-> Done, now using u32p_replace_bits().
-> 
->>> +
->>> +	rf_cfgch &= ~RFCFGCH_BW_MASK;
->>> +	switch (bw) {
->>> +	case RTW_CHANNEL_WIDTH_20:
->>> +		rf_cfgch |= RFCFGCH_BW_20M;
->>> +		break;
->>> +	case RTW_CHANNEL_WIDTH_40:
->>> +		rf_cfgch |= RFCFGCH_BW_40M;
->>> +		break;
->>> +	default:
->>> +		break;
->>> +	}
-> 
->> bw is only going to be 20 or 40, so a simple if would be shorter.
-> 
-> This is the one I left alone, the bandwidth assignment is still a single
-> ternary.
-> 
->>> +static void rtw8723b_set_channel(struct rtw_dev *rtwdev, u8 channel,
->>> +				 u8 bw, u8 primary_chan_idx)
->>> +{
->>> +	rtw8723b_set_channel_rf(rtwdev, channel, bw);
->>> +	rtw_set_channel_mac(rtwdev, channel, bw, primary_chan_idx);
->>> +	rtw8723b_set_channel_bb(rtwdev, bw, primary_chan_idx);
-> 
->> I don't think the vendor driver v5.2.17.1 does the stuff below:
-> 
->>> +	rtw8723b_reassert_rx_path(rtwdev);
->>> +
->>> +	if (rtw_is_8723bs(rtwdev)) {
->>> +		bool keep_pta_owner;
->>> +
->>> +		keep_pta_owner = test_bit(RTW_FLAG_SCANNING, rtwdev->flags) ||
->>> +				 (rtw_read32(rtwdev, REG_PAD_CTRL1) &
->>> +				  BIT_PAPE_WLBT_SEL);
->>> +		rtw8723b_sdio_restore_pad_ctrl(rtwdev, keep_pta_owner);
->>> +
->>> +		rtw_write8(rtwdev, REG_RF_CTRL, WLAN_RF_CTRL_ENABLE);
->>> +		fsleep(1000);
->>> +
->>> +		/*
->>> +		 * RF_WLINT bits 0-1 gate the data path into the BB and a prior
->>> +		 * IQK or coex run can leave them blocking TX, so re-arm them.
->>> +		 */
->>> +		rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK,
->>> +			     0x0780);
->>> +	}
-> 
->> If this driver doesn't work without it, you probably have a bug
->> somewhere.
-> 
-> The block is still there. I did not find a bug, and I have not found a
-> reason to delete it either. rtw8723b_reassert_rx_path() has a comment
-> saying what it puts back, and where the PAD bits come from is in my reply
-> to your other mail.
+> In a centralized policy model, the new administrative policy can be viewed and compared
+> against the previously accepted SCS policy, the conflict can be detected.
+> With the SCS policy in mac80211, the admin is not even aware of the policies.
+> The SCS session can be re-evaluated or torn down as appropriate.
+> This ensures that policy changes made after SCS admission can still be enforced consistently across the system.
 
-So the driver doesn't work if you delete this part?
+That doesn't really make much sense to me. If SCS policy is accepted, 
+then centralized policy changes that affect it must go through the user 
+space component that deals with SCS admission.
 
-> 
->>> +	/* enable path A PA in TX IQK mode */
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
->>> +		     sdio_iqk ? 0x18000 : 0x20000);
-> 
->> Where does 0x18000 come from? The vendor driver v5.2.17.1 uses 0x20000 here.
-> 
-> That value was mine and it is wrong. The vendor's value is used now.
-> 
->>> +	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N,
->>> +		    sdio_iqk ? 0x821303ea : 0x821403ea);
-> 
->> Here, too, it uses the second value.
-> 
-> Same, the vendor's value.
-> 
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
->>> +		     sdio_iqk ? 0x18000 : 0x30000);
-> 
->> Vendor driver uses the second value.
-> 
-> 0x30000 now.
-> 
->>> +	/* IQK setting */
->>> +	rtw_write32(rtwdev, REG_TXIQK_11N, 0x01007c00);
->>> +	rtw_write32(rtwdev, REG_RXIQK_11N, 0x01004800);
->>> +
->>> +	/* path-A IQK setting */
->>> +	rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x18008c1c);
->>> +	rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x38008c1c);
->>> +	rtw_write32(rtwdev, REG_TX_IQK_TONE_B, 0x38008c1c);
->>> +	rtw_write32(rtwdev, REG_RX_IQK_TONE_B, 0x38008c1c);
->>> +
->>> +	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N,
->>> +		    sdio_iqk ? 0x82130ff0 : 0x82160ff0);
-> 
->> Here as well.
-> 
-> Also the vendor's value, in the RX path RF_MODE_TABLE_ADDR write.
-> 
->>> +	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A RX IQK step2!\n");
->>> +
->>> +	/* modify RX IQK mode */
->>> +	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
->>> +		     sdio_iqk ? 0x18000 : 0x30000);
-> 
->> Here as well.
-> 
-> And in the REG_RXIQK_PI_A_11N write.
-> 
->>> +	/* leave IQK mode */
->>> +	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
->>> +
->>> +	/* Check failed */
-> 
->> No need for a comment that just repeats what the name of the function
->> already says.
-> 
->>> +	/* path-A IQK setting */
->>> +	rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x38008c1c);
->>> +	rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x18008c1c);
->>> +	rtw_write32(rtwdev, REG_TX_IQK_TONE_B, 0x38008c1c);
->>> +	rtw_write32(rtwdev, REG_RX_IQK_TONE_B, 0x38008c1c);
->>> +
->>> +	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N, 0x82110000);
->>> +	rtw_write32(rtwdev, REG_RXIQK_PI_A_11N,
->>> +		    sdio_iqk ? 0x2813001f : 0x2816001f);
-> 
->> Here as well.
-> 
-> All three are gone.
-> 
->>> +	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK, 0x30000);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0001f);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xf7fb7);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, 0xed, 0x20, 0x1);
->>> +	rtw_write_rf(rtwdev, RF_PATH_A, 0x43, RFREG_MASK, 0x60fbd);
->>> +
->>> +	for (i = 0; i < PATH_IQK_RETRY; i++) {
->>> +		a_ok = rtw8723b_iqk_tx_path_a(rtwdev);
->>> +		if (a_ok == IQK_TX_OK) {
-> 
->> If you invert the condition, this block with long lines can be
->> indented less.
-> 
-> Inverted.
-> 
->>> +
->>> +	if (a_ok == 0x0)
->>> +		rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A IQK fail!\n");
->>> +
->>> +	/* rtl8723b is 1T1R, so path B is not calibrated. */
-> 
->> It looks like the vendor driver is calibrating path B as well
->> (phy_path_b_iqk_8723b() and phy_path_b_rx_iqk_8723b()) when the device
->> has two antennas, and only path A when the device has one antenna.
-> 
-> Path B is still not calibrated, so path A only. The comment now says what
-> you said, that the vendor calibrates it when the board is not 1-antenna
-> and that this driver does not support that case. I would rather not add
-> IQK code I cannot test on a 1x1 card.
-> 
->>> +	memset(result, 0, sizeof(result));
->>> +
->>> +	rtw8723b_lck(rtwdev);
->>> +	rtw8723b_inform_rfk_status(rtwdev, true);
->>> +
->>> +	/* The LTE path GNT backup that 8723d does is not needed on SDIO. */
->>> +	rtw8723x_iqk_backup_path_ctrl(rtwdev, &backup);
->>> +	rtw8723x_iqk_backup_regs(rtwdev, &backup);
->>> +
->>> +	/* save default GNT_BT */
->>> +	bt_control = rtw_read32(rtwdev, REG_BT_CONTROL_8723B);
->>> +
->>> +	for (i = IQK_ROUND_0; i <= IQK_ROUND_2; i++) {
->>> +		if (!rtw_is_8723bs(rtwdev))
->>> +			rtw8723x_iqk_config_path_ctrl(rtwdev);
-> 
->> I didn't see this in the RTL8723BE or RTL8723BU drivers. I guess it was
->> copied from another chip?
-> 
-> It was. The iqk_config_path_ctrl() and restore calls are gone.
-> 
->>> +	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] final_candidate is %x\n",
->>> +		final_candidate);
->>> +
->>> +	for (i = IQK_ROUND_0; i < IQK_ROUND_SIZE; i++)
->>> +		rtw_dbg(rtwdev, RTW_DBG_RFK,
->>> +			"[IQK] Result %u: rege94_s1=%x rege9c_s1=%x regea4_s1=%x regeac_s1=%x rege94_s0=%x rege9c_s0=%x regea4_s0=%x regeac_s0=%x %s\n",
->>> +			i,
->>> +			result[i][0], result[i][1], result[i][2], result[i][3],
->>> +			result[i][4], result[i][5], result[i][6], result[i][7],
->>> +			final_candidate == i ? "(final candidate)" : "");
-> 
->> You can make this two calls to rtw_dbg to avoid such a long line.
-> 
-> Two calls now.
-> 
->>> +static void rtw8723b_pwrtrack_set_cck_pwr(struct rtw_dev *rtwdev, s8 swing_idx,
->>> +					  s8 txagc_idx)
->>> +{
->>> +	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
->>> +
->>> +	dm_info->txagc_remnant_cck = txagc_idx;
->>> +
->>> +	swing_idx = clamp_t(s8, swing_idx, 0, RTW_CCK_SWING_TABLE_SIZE - 1);
->>> +
->>> +	BUILD_BUG_ON(ARRAY_SIZE(rtw8723b_cck_pwr_regs) !=
->>> +		     ARRAY_SIZE(rtw8723b_cck_swing_table_ch1_ch13[0]));
->>> +
->>> +	/* Only ch1-13 is wired up; channel 14 is Japan-only and unreachable. */
-> 
->> If I change my country code to JP and trigger a scan, rtw88 visits
->> channel 14.
-> 
-> Right. Channel 14 selects rtw8723b_cck_swing_table_ch14 now.
-> 
->>> +	for (int i = 0; i < ARRAY_SIZE(rtw8723b_cck_pwr_regs); i++)
->>> +		rtw_write8(rtwdev, rtw8723b_cck_pwr_regs[i],
-> 
->> These register addresses are consecutive values, there is no need
->> to put them in an array.
-> 
-> The array is gone, it loops over the eight consecutive registers from
-> 0x0a22.
-> 
->>> +	delta = rtw_phy_pwrtrack_get_delta(rtwdev, RF_PATH_A);
->>> +
->>> +	/* NOTE: also done in rtw_phy_pwrtrack_get_delta */
-> 
->> Is it necessary to do it again?
-> 
-> No. The clamp is only in rtw_phy_pwrtrack_get_delta() now.
-> 
->>> +iqk:
->>> +	if (do_iqk)
->>> +		rtw8723b_phy_calibration(rtwdev);
-> 
->> The vendor driver doesn't redo IQK here.
-> 
-> 8723d and 8703b in rtw88 both call phy_calibration() from phy_pwrtrack()
-> when rtw_phy_pwrtrack_need_iqk() returns true, so I kept it and match the
-> other chips.
+Unilaterally dropping the classification policy based on centralized 
+policy updates without also notifying the station by tearing down the 
+SCS descriptor is a protocol violation. Also, if classification is torn 
+down, any installed QoS characteristics belonging to the same descriptor 
+must be removed as well.
 
-Different chips can have different needs...
+Changes to SCS policy must be sent as unsolicited SCS response, e.g. 
+with TCLAS_PROCESSING_TERMINATED_POLICY_CONFLICT.
 
-> 
->>> +static void rtw8723b_pwr_track(struct rtw_dev *rtwdev)
->>> +{
->>> +	struct rtw_efuse *efuse = &rtwdev->efuse;
->>> +	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
->>> +
->>> +	if (efuse->power_track_type != 0) {
->>> +		rtw_warn(rtwdev, "unsupported power track type\n");
-> 
->> This function runs every two seconds, forever. Please put this
->> warning elsewhere, like rtw8723b_read_efuse(), to avoid filling
->> the kernel log. (Or create rtw_warn_once()).
-> 
-> Moved to rtw8723b_read_efuse().
-> 
->>> +static void rtw8723b_coex_cfg_ant_buffer(struct rtw_dev *rtwdev)
->>> +{
->>> +	u8 sys_func_before;
->>> +
->>> +	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
->>> +	if ((sys_func_before & WLAN_SYS_FUNC_BB_ENABLE) !=
->>> +	    WLAN_SYS_FUNC_BB_ENABLE) {
->>> +		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
->>> +			       WLAN_SYS_FUNC_BB_ENABLE);
->>> +		usleep_range(10, 11);
->>> +	}
-> 
->> Not sure why you need to touch REG_SYS_FUNC_EN here. The vendor
->> driver doesn't do it.
-> 
-> That is gone from rtw8723b_coex_cfg_ant_buffer().
-> 
->>> +	rtw_write8_set(rtwdev, REG_PWR_DATA + 1,
->>> +		       BIT_EEPRPAD_RFE_CTRL_EN >> 8);
->>> +	rtw8723b_coex_write8_verify(rtwdev, REG_RFE_CTRL_E, 0xff);
-> 
->> The vendor driver uses a normal rtw_write8() here.
-> 
-> coex_write8_verify() is gone and the call is a plain rtw_write8() now.
-> 
->>> +		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
->>> +			       WLAN_SYS_FUNC_BB_ENABLE);
->>> +		usleep_range(10, 11);
->>> +	}
->>> +
->>> +	rtw_write32(rtwdev, REG_BB_SEL_BTG, value);
->>> +	readback = rtw_read32(rtwdev, REG_BB_SEL_BTG);
->>> +	if (readback == value)
->>> +		return readback;
->>> +
->>> +	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, WLAN_SYS_FUNC_BB_ENABLE);
->>> +	usleep_range(10, 11);
->>> +	rtw_write32(rtwdev, REG_BB_SEL_BTG, value);
->>> +
->>> +	return rtw_read32(rtwdev, REG_BB_SEL_BTG);
-> 
->> All this looks strange too. What happens if you eliminate this function
->> and write REG_BB_SEL_BTG with a simple rtw_write32()?
-> 
-> Nothing, it works. The function is gone and every call site does a plain
-> rtw_write32() now.
-> 
->>> +	.query_phy_status	= rtw8723b_query_phy_status,
->>> +	.read_rf		= rtw_phy_read_rf_sipi,
->>> +	.write_rf		= rtw_phy_write_rf_reg_sipi,
->>> +	.set_tx_power_index	= rtw8723x_set_tx_power_index,
->>> +	.rsvd_page_dump		= NULL,
->>> +	.set_antenna		= NULL,
->>> +	.cfg_ldo25		= rtw8723b_cfg_ldo25,
->>> +	.efuse_grant		= rtw8723b_efuse_grant,
->>> +	.set_ampdu_factor	= NULL,
->>> +	.false_alarm_statistics	= rtw8723x_false_alarm_statistics,
->>> +	.phy_calibration	= rtw8723b_phy_calibration,
->>> +	.dpk_track		= NULL,
->>> +	/* REG_CSRATIO does not exist on this chip generation. */
->>> +	.cck_pd_set		= NULL,
-> 
->> You can use rtw88xxa_phy_cck_pd_set() from rtw88xxa.c for this
->> chip too.
-> 
-> Done, and it has a consequence you should know about. The chip driver
-> calls into rtw88xxa.c now, so RTW88_8723B selects RTW88_88XXA, which makes
-> rtw88_8723b.ko depend on rtw88_88xxa.ko and pulls that PCI chip module
-> into an SDIO only build. 8821A and 8812A select it the same way, it
-> builds and loads clean, and it was on the card for a suite and a soak.
-> Say so if you would rather not have the dependency and I will put the
-> function in the chip driver instead. The same file carries the adaptive
-> control and EDCA init now as well, because the chip was writing the same
-> values, so the dependency does more than that one call.
-> 
+I'd consider this an advantage of my design because the relevant SCS 
+state is kept in one place without accidental partial drop due to 
+external actions.
 
-A better idea: move rtw88xxa_phy_cck_pd_set() to phy.c and don't depend
-on rtw88_88xxa. That can be a separate patch, of course.
+>>>>> 2. Policy Framework: Considerations and Challenges
+>>>>>
+>>>>> A policy framework should help ensure consistent behavior across software forwarding, bridging, routing, and hardware-offloaded data paths.
+>>>>>
+>>>>> The policy framework can be realized using either nftables or tc-flower. Both
+>>>>> approaches provide a persistent and centralized repository for traffic classification and policy enforcement, but differ in integration complexity,
+>>>>> feature scope, and deployment model.
+>>>>>
+>>>>> Common Capabilities: nftables and tc-flower
+>>>>>
+>>>>> • Both nftables and tc-flower maintain centralized rule databases for traffic
+>>>>> classification and policy enforcement.
+>>>>>
+>>>>> • For software-forwarded traffic, both solutions require flow lookups against
+>>>>> installed rules and therefore have broadly comparable classification overhead.
+>>>>>
+>>>>> • Both mechanisms can serve as the policy enforcement layer for SCS/MSCS-
+>>>>> derived traffic policies.
+>>>>>
+>>>>> Advantages of nftables
+>>>>>
+>>>>> • nftables provides a unified framework for firewalling, traffic classification,
+>>>>> and QoS policy marking.
+>>>>>
+>>>>> • nftables can support both software and hardware-accelerated forwarding paths
+>>>>> and can be extended to additional offload scenarios with minimal architectural
+>>>>> changes.
+>>>>>
+>>>>> • Existing support for nftables-based policy handling in hostapd reduces integration effort and leverages infrastructure that is already available and
+>>>>> upstream-ready.
+>>>>>
+>>>>> The implementation is done using libmnl, which avoids licensing incompatibility
+>>>>> between hostapd (BSD-3-Clause) and libnftnl (GPLv2). This approach was
+>>>>> also reviewed with Jouni.
+>>>>>
+>>>>> • Using nftables allows SCS/MSCS policies to be integrated into a broader, system-wide policy framework rather than introducing a WLAN-specific policy
+>>>>> engine.
+>>>>>
+>>>>> • Using nftables can also facilitate scalability by allowing these rules to
+>>>>> be applied at software acceleration decision-making stages. For example, the
+>>>>> NFT rule can be cleanly integrated into NFT flow tables as well.
+>>>>>
+>>>>> Challenges with a tc-flower-based Approach
+>>>>>
+>>>>> • A tc-flower solution would require substantial additional implementation for rule programming from hostapd.
+>>>>>
+>>>>> • tc-flower typically requires qdisc configuration (at a minimum, a clsact pseudo qdisc) before classification rules can be installed and enforced.
+>>>>
+>>>> Most of these points are very abstract and in my opinion gloss over a lot of
+>>>> implementation complexity. I'd argue that just because nftables is used to enable
+>>>> offloading in some setups doesn't mean that it handles the different policy
+>>>> aspects of SCS and especially MSCS well, or provides good ways to deal with
+>>>> runtime changes to existing flows.
+>>>>
+>>>
+>>> I agree that implementation complexity and runtime updates are important
+>>> considerations. For SCS/MSCS cases, nftables address the highlighted concerns
+>>> in following ways
+>>>
+>>> Complexity: not a concern
+>>>    - Linux Kernel NFT Infra provides well defined APIs to program policies
+>>> which satisfies present use cases and does not add much implementation
+>>> complexity or overhead.
+>> 
+>> You can claim that, but reading the QSDK implementation of the hostapd/nft integration code gives me the opposite impression.
+>> 
+> 
+> While the implementation is not particularly complex,
+> its size is largely driven by the need to implement wrapper APIs
+> for programming nftables rules via Netlink messages.
+> 
+> Due to licensing constraints, libnftnl cannot be used directly with hostapd,
+> requiring the use of libmnl and direct construction of Netfilter Netlink messages.
+> 
+> Much of the code therefore consists of standard message encoding and communication
+> with existing nftables kernel interfaces rather than complex policy or algorithmic logic.
 
->>> +	.txgi_factor = 1,
->>> +	.is_pwr_by_rate_dec = true,
->>> +	.max_power_index = 0x3f,
->>> +	.csi_buf_pg_num = 0,
->>> +	.band = RTW_BAND_2G,
->>> +	.page_size = TX_PAGE_SIZE,
->>> +	.dig_min = 0x20,
->>> +	.usb_tx_agg_desc_num = 1,
-> 
->> The RTL8723BU vendor driver v5.2.17 sets this to 6.
-> 
-> usb_tx_agg_desc_num is 6 now.
-> 
->>> +	/* same shared table as the sibling rtw8703b and rtw8723d */
->>> +	.prioq_addrs = &rtw8723x_common.prioq_addrs,
->>> +	/* used only in pci.c, not needed for SDIO devices */
->>> +	.intf_table = NULL,
->>> +	.dig = rtw8723x_common.dig,
->>> +	.dig_cck = rtw8723x_common.dig_cck,
-> 
->> This chip doesn't have dig_cck.
-> 
-> You are right, and I had to reread the vendor tree to figure out why.
-> ODM_IC_PHY_STATUE_NEW_TYPE is 8197F | 8822B | 8723D | 8821C | 8710B, no
-> 8723B in it, so that write never runs here. dig_cck is NULL.
-> 
-> Best regards,
-> Luka Gejak
+It's still a significant amount of code that we would not need in my 
+approach.
 
+>>> Runtime: supported
+>>>   - These APIs indeed having support for runtime modifications as per SCS/MSCS
+>>> protocol requirements.
+>>>
+>>> Offload cases: supported seamlessly
+>>>   - nftables is already used as a general policy and classification framework
+>>> for both software-forwarded and software/hardware-offloaded traffic.
+>>>
+>>> Protocol classifiers: all mandatory variations supported
+>>>   - The classifiers required mandatorily by SCS/MSCS, including cases such as
+>>> TCLAS Type 10 (ESP/SPI Based rules), are supported with nftables.
+>> 
+>> One aspect this ignores is intra-AP forwarding handled by mac80211.
+>> 
+> 
+> This should not be a major concern.
+> In such scenarios, traffic can be forwarded via the bridge using hairpin mode,
+> 
+> In addition, upcoming peer-isolation support introduces per-peer controls for intra-AP forwarding,
+> either at the mac80211 or bridge layer.
+> This would allow SCS/MSCS clients to be configured to use bridge-based hairpin forwarding
+> and for other clients we can still do forwarding from mac80211.
+> 
+> As a result, intra-AP forwarding does not fundamentally alter the architectural considerations discussed here.
+> 
+> The same policy classification, storage, and forwarding mechanisms
+> can continue to be applied through the common policy framework,
+> while keeping network-wide policy decisions outside of mac80211.
+
+So you plan to make hostapd selectively switch clients using SCS or MSCS 
+over to bridge hairpin by configuring peer specific isolation and 
+hairpin mode? A bit cumbersome, but I guess it could work.
+>>>> I get the impression that your proposal is designed to handle the needs of a
+>>>> single Qualcomm implementation of an out-of-tree policy framework service well,
+>>>> while neglecting in-tree kernel offload mechanisms, as well as standalone
+>>>> AP implementations by pushing extra complexity there.
+>>>>
+>>>
+>>> The nft based proposal is neither Qualcomm-specific nor based on out-of-tree
+>>> policy framework.
+>>>
+>>> Qualcomm's approach using nftables works for systems with no offload, software
+>>> offload, or hardware offload by leveraging existing upstream infrastructure as
+>>> follows.
+>>>
+>>>     1. SCS policies programmed by hostapd are part of the net filter egress hook
+>>> which maintains classifier info along with QoS identifier (nfttable rule->mark).
+>>>
+>>>     2. Mark field part of the nftable gets populated into connmark of the ct
+>>> during connection establishment.
+>>>
+>>>     3. The connmark information that is populated at the egress hook can be used
+>>> for HW offload programming by the vendor driver
+>> 
+>> Having the driver make DSCP tagging decisions based on connmark seems like a band-aid hack to me. connmark can be used by the user for multiple purposes, including policy related decisions.
+>> Relying on it in the driver for a specific purpose seems like a bad idea to me.
+> 
+> We understand the concern that connmark is a generic field and may be used for other policy decisions.
+> However, using conntrack marks for QoS-related state is already an established pattern in the kernel networking stack.
+> 
+> The NET_ACT_CTINFO documentation explicitly states:
+> 
+> ▎ "Current actions transfer connmark stored DSCP into ipv4/v6 diffserv and/or to transfer connmark to packet mark.
+> Both are useful for restoring egress based marks back onto ingress connections for qdisc priority mapping purposes."
+> 
+> This is further reinforced by the upstream commit introducing act_ctinfo (Kevin Darbyshire-Bryant, 2019),
+> which explains the motivation directly:
+> 
+> ▎ "Ingress classification is traditionally a challenging task since iptables rules haven't yet run
+> and tc filter/eBPF programs are pre-NAT lookups...
+> Thus marking the connection in some manner on egress for later restoration of classification on ingress is easier to implement."
+> 
+> This indicates that carrying QoS classification information in conntrack state,
+> and consuming it later for QoS-related decisions, is already an intended and documented use case within the kernel.
+> Importantly, our proposal does not have the driver read connmark directly.
+> The connmark → skb->mark translation is performed by an explicit, nftables rule. The driver only consumes skb->mark.
+> Therefore, the proposal is not introducing a new semantic for connmark,
+> but leveraging a mechanism that is already used for QoS-related classification and priority handling.
+
+Having this mapping as an explicit action is not the same as introducing 
+it as a private contract between one particular driver and the system 
+configuration. An important goal of offloads in the Linux network stack 
+is to stay as close as possible to the software configuration mechanisms 
+of the Linux user space network API.
+In my opinion, adding magic reinterpretation of generic fields by the 
+driver violates that principle.
+
+How does driver consuming skb->mark even work in the SCS case? Which 
+driver would consume it?
+For packets flowing from ethernet to WLAN, does that mean you intercept 
+packets in ath12k tx and read skb->mark there in order to update the UP?
+
+Either way, abusing connmark for SCS means you can't use connmark 
+elsewhere for policy decisions on flows that might hit WLAN.
+Another gotcha for administrators to be aware of.
+>>>     4. As the SCS policies are added at egress hook this would seamlessly work
+>>> even when software offload(nft flow table) is enabled
+>>>
+>>> SCS/MSCS would simply act as a policy producer, while classification and
+>>> enforcement remain within common in-tree mechanisms.
+>> 
+>> I also don't see how nft handles MSCS well. It learns per flow from the TID of received uplink frames, with a per station classifier mask, UP bitmap, UP limit, entry timeout and entry limit. How does a dynamic nft set expresses "record the UP of this uplink flow under this station's mask, expire it after this station's timeout, cap it at this station's limit".
+> 
+> Our proposal for MSCS is that mac80211 parses the uplink priority for a client with active
+> MSCS session, it updates the skb->mark which then updates the conmark in the ingress hook.
+> 
+> Since the mirror flow is part of the same ct,
+> we can extract the meta data and update for the down link flow as well.
+
+Updating skb->mark from mac80211 based on UP does not make much sense to 
+me, because it's yet another abuse of a generic field for a specific 
+purpose.
+>>> The goal was not to push Qualcomm out-of tree implementation, but to have a
+>>> solution using existing in-tree kernel mechanisms
+>>>     1. Avoids Duplication of the same coming at mac80211
+>>>     2. Reduces system complexity with centralization.
+>>>
+>>> Qualcomm offload mechanism can work with policy data base built at mac80211
+>>> also; however what we wanted to explore was avoiding non 802.11 network-wide
+>>> policy and classification decisions within mac80211. This helps prevent the
+>>> creation of a parallel policy framework and keeps mac80211 focused on Wi-Fi-
+>>> specific functionality and concepts.
+>> 
+>> While I do agree that avoiding duplication is useful, I believe in this case it comes at a cost that makes it seem like a bad trade-off to me.
+>> The main reason for that is the unhandled gaps and the extra overhead it introduces.
+>> 
+>> Gaps:
+>>  - mac80211 intra-AP forwarding not handled
+>>  - TC offload API not handled
+>>  - hw offload depends on abusing existing fields
+>> 
+>> Costs:
+>>  - mandatory conntrack
+>>  - mandatory extra packet filter table
+>>  - complexity of translating standard mandated behavior into nft rulesets, which do not always align well.
+>>  - extra subsystem dependency
+>> 
+>>>> Let me give you a specific example. On OpenWrt, Ethernet -> WLAN bridge hw flow
+>>>> acceleration works by having a user space daemon that replicates the bridge
+>>>> state, measures L2 flows via eBPF and programs no-sw tc-flower offload rules
+>>>> for L2 flows. On the MTK driver side, the offload core uses the programmed
+>>>> L2 rules to trigger actual hw forwarding. Only for routing/NAT flow offload
+>>>> does nftables get used. The kernel side is fully implemented in upstream
+>>>> kernels without any out-of- tree subsystems.
+>>>>
+>>>> The forwarding from Ethernet to WLAN works because the kernel code can
+>>>> resolve the hardware path via dev_fill_forward_path and query the relevant
+>>>> metadata (which happens by calling into the WLAN driver through mac80211).
+>>>>
+>>>
+>>> Thanks for the example.
+>>>
+>>> If both traffic types (bridged and routed) ultimately require policy
+>>> classification and offload decisions, having a common framework could provide
+>>> a single policy repository and a consistent programming model across all
+>>> forwarding paths.
+>>>
+>>> Referring to the following article, can nftables be considered for bridge
+>>> offload as well?
+>>>
+>>> https://lwn.net/Articles/1082320/
+>> 
+>> So you're saying we should force user space away from existing actively used offload APIs because they don't fit into your design?
+>> 
+> 
+> The goal is not to replace or discourage existing offload APIs.
+> The bridge offload solutions based on tc flower that you mentioned
+> can continue to be used where they already fit the deployment needs.
+> The point is that, for SCS/MSCS policy enforcement and offload,
+> using a common framework such as nftables across both bridged and routed traffic
+> may provide a single policy store and a consistent programming model.
+> 
+> This is not a requirement. Vendors can choose the approach that best fits their architecture and offload capabilities.
+> Some may continue using separate bridge and routing mechanisms, while others may prefer a unified framework.
+> Our proposed approach remains compatible with existing offload mechanisms for two reasons:
+> 1. The egress path is already part of the transmit flow, where SCS policy matching can be performed
+>     and the resulting QoS state encoded in conntrack metadata.
+> 2. Hardware offload continues to use the standard ndo offload APIs,
+>     allowing drivers to extract the required QoS information without introducing new offload interfaces.
+> 
+> Following are the high level view of the flows for pure SW, nft flowtable offload(Bridging/Routing/NAT)
+> 
+> 1. Software Flow
+> 
+> 
+>                                                  │
+>                                                  │
+>                                                  │
+>                                                  │1. Packets of flow
+>                                                  │
+>        ┌────────────┐  ┌────────────┐   ┌────────▼────────┐  2. Initial packet, set conmark
+>        │  ingress   │  │  forward   │   │     egress      │  Subsequent packets, skb->mark = conmark
+>        └────────────┘  └────────────┘   └────┬────────────┘
+>                                              │
+>                                              │                       netfilter
+>    ──────────────────────────────────────────┼────────────────────────────────────
+>                                              │                       mac80211
+>                                     ┌────────▼──────────┐                +
+>                                     │      mac80211     │          vendor driver
+>                                     └────────┬──────────┘
+>                                              │
+>                                     ┌────────▼──────────┐
+>                                     │   vendor driver   │
+>                                     └───────────────────┘
+>                                     3. Use skb mark data,
+>                                        program the HW descriptors
+> 
+> 
+> 
+> 2. nft flowtable offload flow
+> 
+> 
+>                      │  1. flowtable rules created
+>                      │      (Bridged/Routed Flows)
+>                      │
+>                ┌─────▼──────┐
+>                │    nft     │
+>                └─────┬──────┘
+>         userspace    │
+>         ─────────────┼──────────────────────────────────────────────────────────────────────────────
+>         kernel       │
+>                      │                             │                            │
+>                      │                             │                            │
+>                      │                             │                            │
+>                      │                             │ 5. Flow state              │3. Inital packets of flow
+>    2. ndo_tc_setup   │                             │    CT ESTABLISHED          │
+>                      │       ┌────────────┐ ┌──────▼─────┐             ┌────────▼────────┐
+>                      │       │  ingress   │ │  forward   │             │   egress        │  4. Initial packet, set conmark
+>                      │       └────────────┘ └──────┬─────┘             └─────────────────┘
+>                      │                             │ 6. flow_block_cb
+>                      │                             │    (flow data)
+>                      │                             │
+>                      │                             │
+>                      │                             │
+>                      │                             │                                               netfilter
+>                    ──┼─────────────────────────────┼────────────────────────────────────────────────────────────
+>                      │                             │                                               mac80211
+>             ┌────────▼───────────┐       ┌─────────▼─────────┐                                         +
+>             │      mac80211      │       │   vendor driver   │                                   vendor driver
+>             └────────────────────┘       └───────────────────┘
+>                                           7. Use con mark QoS data
+>                                              program the HW
+> 
+This setup flow is not compatible with the L2 offload rules programmed 
+by bridger. bridger programs offload rules based on MAC address tuples. 
+The hardware flow table uses them to trigger hw offloading of recognized 
+L4 tuples. It considers both directions separately.
+
+When it's time to offload a flow based on a packet flowing from ethernet 
+to wireless, the hw offload engine needs to know the tag that shall be 
+applied after forwarding. How would this even work in your approach?
+
+In my approach, I deal with this issue by allowing the driver to query 
+the output tag through callbacks at offload bind time, as well as 
+reacting to SCS descriptor changes for existing flows (through the 
+unbind trigger).
+
+That makes it completely independent of nft vs tc-flower created flows, 
+or even L2 vs L4 offload rules.
+
+I don't see anything in your approach that could support this without 
+forcing users to create flow offload rules through nft instead of tc.
+If you do, please let me know and describe the exact chain of events.
+
+- Felix
