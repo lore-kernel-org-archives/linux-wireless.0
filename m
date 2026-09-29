@@ -1,63 +1,64 @@
-Received: from mail-dy2-f19.google.com (mail-dy2-f19.google.com [74.125.229.19])
+Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E813D331A
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 02:59:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6182B3C2B8F
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2026 02:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790650746; cv=none; b=spJHYUjmwzp860yUUaGOv4uzd0+Evg+azngaMtmsKnPHls7YMA2kWImXaxMxShdMsaZuCgluBKBrX20cNeje01V2erfqlKxRZ7ECM6q7SdE2g92MmK1ksbyEfnJAdfiF2qu7tcsOgdfVcXtcCcphS9MCDtN5zKm2M3fWQBmueN8=
+	t=1790650748; cv=none; b=HkA07s9bBcSOmONNCODgYx3ALRdUP07a7r7xVfvNul4N89bApD1n7byS9Yk7vpE0GRtJKhrvty066ttTnxAgrVWKxCDqJ3qGZYoVnG/qiyF4lMAL46kcF5Xl+689/up5kt74DyeANB2lRgCggRsyjr+UxL6RXP0ygXYOeshOGaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790650746; c=relaxed/simple;
-	bh=HJyTeXVijHdk4eWMa4QoVfAxeX/wDGbJNl64bB2L/eM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qhHOpLsyMV3KrXQLgq/wQx6nM8N7GEAptcSdrJ/8sVIg4jrUTqPj33D95l7BJK2Bix708WTy59UUhqM0ebFpmq7fCk0ZHQFiekCSojFRZUSHdh8X4/7Xrs6ECBRKtSFTkBdyv0kaZWxqD0nAn8DRd7nSBKh0qERJc/zBlKbxdNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=adxscrNS; arc=none smtp.client-ip=74.125.229.19
+	s=arc-20240116; t=1790650748; c=relaxed/simple;
+	bh=R+OeSbxoAWNLSxz61jl19A3bJcZeqOhotzsemQIFDzA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BinH8Tpj8GkvwP6ropqCml/f1QDZ5+QviJZCAt3yWlRExO2xboAiLTfpSTINZVykRRQKoW9QHA1nFpHcHQPUWMjutWyXf28iN8WogWj/bHTyYoTKmavwV3DkatT2v5195CnhDkBBVVtdNY0dE64y5Gf2kP3wzs/8ROAp27mKCGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=ShmuWe79; arc=none smtp.client-ip=74.125.229.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="adxscrNS"
-Received: by mail-dy2-f19.google.com with SMTP id 5a478bee46e88-3413069aa25so2439300eec.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 19:59:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="ShmuWe79"
+Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-33e630052ebso4288488eec.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2026 19:59:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1790650742; x=1791255542; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UFhWeC8nK54inRKs6I+y3KfLb6ie98THlXPGgVHMi+o=;
-        b=adxscrNS0SZFlILvax0Rwzos3fkSpLC8i/kEVM/kXJ3D8ZD86ZQFb5k4bzeUy9/p+n
-         jYDJLv+MggeJLPyBausWyooZaHjoTMxZDB5SImSzcvHM4tBwWHbwlvIQsds/7YekO0oy
-         m/fqWezeDh0pOKZKNT7Fbet6NtOnAF2C5H72T6PUlci5PRGujDDrdZqucVDCFrB7OcyJ
-         kCNxM9Uz42fVnW4K0ge6LNoYuP1NGuduAxO0fZ0SEJ5UqdWp0QMxbVIgo3cEikKmKI38
-         D0oYEi59FtEsbAUYOJokjBY4/XKRYhwcbaNAASh1RCxSU8tuP8hmWzH+y8k9sTXlA1TA
-         YotQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790650742; x=1791255542;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=trailofbits.com; s=google; t=1790650743; x=1791255543; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=UFhWeC8nK54inRKs6I+y3KfLb6ie98THlXPGgVHMi+o=;
-        b=MXHHV3Ha7cXRXO1NhnwRta/qQ5PPgOdAFFlMZm7wdE/4AKp6Hchnn1T1Ii+PDpJ2XD
-         hlYvXynVfw/XA1xbe7yODs6POGohmMkb99PglbocT09JHxzJGdPWR9r8M/9/xzjmOvbn
-         ycYpnDZESDt/WaP1NfpnT9OQJA07F0Dia/zTnpGciGh3WnSSgCMiKZldWgFBjXXe3wyo
-         ePz9uekOeozlJXSwlmkVtOFTcrtGBLuWS/TVAMd9TKQdVQ/zqcOwy58Zw12b1Xdh1rGr
-         gu1jORVhFLx6QVtMBYsgfX+tqk3qcDhWYQnYYyfQ6c62r7htgA3bWAV3PxtkwZCD+V6P
-         hhhg==
-X-Forwarded-Encrypted: i=1; AKwUvBx4qTllQ7y0GNmZS3eMO0Did+hlrEhMmUFgR1uNUlKDx7ufJ7lWRXrZzTQiS7+h/Gte1nOA6TZ4nCGv6dfidw==@vger.kernel.org
-X-Gm-Message-State: AFuF++k2/JNvByhqbHZvwg3lfBn2F+UAYezgXR6huVs5h5rxKP56MZOK
-	ovnzgp3KI6y7dKXCmZI23EFrtw69rx+Kd8exBaXP3h11iMK5iFaKtKl8x0depLCka4w=
-X-Gm-Gg: AYBFou1Orp9Uu1d00lOrUlG3sgZ1APKhhuqGHYo4sF1TlZ3eQS1jT3EvLzFL01+hEKX
-	5ivGd6IxCVmY1CmInw63YXmJbCABqCEk1KNYJMrwOrTBYHRyz01jPQpz7xIc0RgK9iCnm0QV5tU
-	hf8LwMaUjEJBK/P28srcdF1nIC4WRD0C97QNqAAySWEGrDn4npb4iTPjbMFPllhXd/rbXgM01lw
-	SAcvEN3C7fc6ON6JKh8vCub9hZcntHvZF9lN0mdrIvmendWOlLi4ROajVUVFC1sUUD5bMJKObKv
-	YOqjIKay1xdVP2nvbAohKkNLeGbwDtzbIpV5r/UMDAeYxVQ43x2XizZU+iBhje0GJcLEkBSveJn
-	BMlbuKvYnR4Hpi7qfkHWn2AXNljc9Rzb5ue4n1WGvm04fiB2VGNntXeAYcAyojj4GvrgPYmcjX0
-	UzNYm8vZojN+mgSwrfyEYHtSWQFBXgZfFbD7nksWJ3mvoPJivNeVTt3/chCfiLQie4/r6X4agwH
-	vgX98+N0VSWcdrUfAHLClnz4mP3T/H6ZsrlGL9dtf49/81gww3HpmS8f+foP+ZJ2hToB208Afe7
-	QxAyWbU=
-X-Received: by 2002:a05:7301:1f15:b0:33e:6bd8:8f1a with SMTP id 5a478bee46e88-3426cfdf68cmr15624231eec.0.1790650741745;
-        Mon, 28 Sep 2026 19:59:01 -0700 (PDT)
+        bh=hOMETCPD6rhV8uZSv0/8O7XOYDjSnTdePZNVI177FQs=;
+        b=ShmuWe79rCHt+PVRIy48e1bQBkceG3dgar4hDuo+GwHOcPBihfZ1PfTFqbKSmCE0vi
+         8yEmhBqzA2qFqpeIqbdRUAG4pVljh8eHjgZEjObNCCoV8mwUGrVR4RVPnyi4fpaK3/xP
+         GCgeSociyVdS3LtaRlhqNCwmm5/yr4TlQkENq0pwGOAulQTa/u2l7KoMJzzNroncSr+M
+         UYLseGFJCJDj2y4wySXIPwckyOlaTcsv3Ks2SZ57rxcoIEVsebt9lXMS3p5qwYezrs+E
+         Hr+nPL9eeUOrp8CdaR0vo7ulZ2QZ/o2L/dLRLQPi7Dl1CtxrP+yHGY9sk133Y9oysbXj
+         ljIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790650743; x=1791255543;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hOMETCPD6rhV8uZSv0/8O7XOYDjSnTdePZNVI177FQs=;
+        b=tkM10TX2ib9dkD1U14FtHZFACvlsILxRBGlvzGAv4tmI2eadOt+E2pH8ZEMvXdq9hu
+         V8yw7ZXtP1cmxGGN/bc3tUcZS79Pmc38gt57GnBWCLI7m8x9UWhTvNcmUDtPYyk3OG7L
+         RTRxWjZopsuf8mrjqQlRtGdrSYbIIqTJ4PPnWH2/rry5v4lN5Z0hYyJ+YsbtEwy4NVcR
+         6lAIK/TePy0fiJpboWwb6DoluJgaWCi7T/t+CsbHrmVq6Knk447FqlrcARYKxWr+DnwG
+         m3aiN6MrmT4Ig+iD241HfBntC8ZREbSMcv03e+gxrZG3bh4bijkN1xIsw07XDcFDqINT
+         gUiw==
+X-Forwarded-Encrypted: i=1; AKwUvBxSkHLBKlGp2he0Vwlm02dCYzzigPnnerCuVOuph9H8ENYiYs3desp4rKDcZKubOBQMds/Bg7RbXXIdJKPUPg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJjdA1BPYCczhg9QTDKHz7gwJNve80wUVdvCtREAucenYK2EY1h
+	B0SnYuU1NWXRIVg49ujaWOUDgsFcGKZ25D2/m8mYiROYB8qOMz4ZIC58oxnN5IB9ySQ=
+X-Gm-Gg: AYBFou18zX5jpGMbL5O29ybsPY4tj6lV4sFwow76KspRekwhbT+ahszu0cifq1HxfI7
+	QWSqWVKeSFdjE4wFrGDtD+QtizOFkGviY0gdU2vNHcGlsrFu0zbmWwIYHB7rOTO+x9jHQGePVUo
+	Qi3JasaXc5UNaYFjo58UsqD3dJLofD0Wnv4/BzH3aPz7vZt7oQnah8+QG85fSPTfoLa/N8YJ5Aa
+	azQicSygw/va553B1X0wfTrNMOaF5NWcSYOyeIg5pgHBiA5NcCgKkgu0/HXwpKg6qZ3MymadQ3X
+	qkIZDN2KPvz3ZxQMhbhJzxS92LcamOgL3IDwEXERJQw60g9ZuUFMFS+vHZu06wprx2s5uOpqOB3
+	iT88DNbwd7Ry6/rL7NGpbYvyYlm6m1NHJsKFekywxsWu9xKcR0tAbNiMBbjMGXI3fahpvWI3ypt
+	XHLXZz07r6ift50PTAFrUNJFoet4ENQsqF/gn+UW7gbfAdZIpQg1su9l1UZI4RbsAQHf6+ciFuM
+	zN5ZGMmPIstpkg6bg5oCpRbcsVic4wL2HUUYcs+AbizX8IPpuiPuGcCoh4hpu1B3HNQvQA=
+X-Received: by 2002:a05:693c:20c9:10b0:343:4ed7:6825 with SMTP id 5a478bee46e88-3434ed76a39mr10306743eec.41.1790650743013;
+        Mon, 28 Sep 2026 19:59:03 -0700 (PDT)
 Received: from localhost.localdomain ([2603:8001:5f01:8bab:3481:cbb6:f339:9e4e])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34571658054sm13111683eec.8.2026.09.28.19.59.00
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34571658054sm13111683eec.8.2026.09.28.19.59.01
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 28 Sep 2026 19:59:01 -0700 (PDT)
+        Mon, 28 Sep 2026 19:59:02 -0700 (PDT)
 From: Artem Dinaburg <artem@trailofbits.com>
 To: stable@vger.kernel.org
 Cc: Artem Dinaburg <artem@trailofbits.com>,
@@ -69,11 +70,14 @@ Cc: Artem Dinaburg <artem@trailofbits.com>,
 	ath12k@lists.infradead.org,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	quic_jjohnson@quicinc.com
-Subject: [PATCH 6.6.y 0/2] wifi: ath12k: backport CVE-2024-40979 fixes
-Date: Mon, 28 Sep 2026 22:58:52 -0400
-Message-ID: <20260929025856.85683-1-artem@trailofbits.com>
+	quic_jjohnson@quicinc.com,
+	Kalle Valo <quic_kvalo@quicinc.com>
+Subject: [PATCH 6.6.y 1/2] wifi: ath12k: fix kernel crash during resume
+Date: Mon, 28 Sep 2026 22:58:53 -0400
+Message-ID: <20260929025856.85683-2-artem@trailofbits.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260929025856.85683-1-artem@trailofbits.com>
+References: <20260929025856.85683-1-artem@trailofbits.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -82,21 +86,205 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+
+[ Upstream commit 303c017821d88ebad887814114d4e5966d320b28 ]
+
+Currently during resume, QMI target memory is not properly handled, resulting
+in kernel crash in case DMA remap is not supported:
+
+BUG: Bad page state in process kworker/u16:54  pfn:36e80
+page: refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x36e80
+page dumped because: nonzero _refcount
+Call Trace:
+ bad_page
+ free_page_is_bad_report
+ __free_pages_ok
+ __free_pages
+ dma_direct_free
+ dma_free_attrs
+ ath12k_qmi_free_target_mem_chunk
+ ath12k_qmi_msg_mem_request_cb
+
+The reason is:
+Once ath12k module is loaded, firmware sends memory request to host. In case
+DMA remap not supported, ath12k refuses the first request due to failure in
+allocating with large segment size:
+
+ath12k_pci 0000:04:00.0: qmi firmware request memory request
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 7077888
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 8454144
+ath12k_pci 0000:04:00.0: qmi dma allocation failed (7077888 B type 1), will try later with small size
+ath12k_pci 0000:04:00.0: qmi delays mem_request 2
+ath12k_pci 0000:04:00.0: qmi firmware request memory request
+
+Later firmware comes back with more but small segments and allocation
+succeeds:
+
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 262144
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288
+ath12k_pci 0000:04:00.0: qmi mem seg type 4 size 65536
+ath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288
+
+Now ath12k is working. If suspend is triggered, firmware will be reloaded
+during resume. As same as before, firmware requests two large segments at
+first. In ath12k_qmi_msg_mem_request_cb() segment count and size are
+assigned:
+
+	ab->qmi.mem_seg_count == 2
+	ab->qmi.target_mem[0].size == 7077888
+	ab->qmi.target_mem[1].size == 8454144
+
+Then allocation failed like before and ath12k_qmi_free_target_mem_chunk()
+is called to free all allocated segments. Note the first segment is skipped
+because its v.addr is cleared due to allocation failure:
+
+	chunk->v.addr = dma_alloc_coherent()
+
+Also note that this leaks that segment because it has not been freed.
+
+While freeing the second segment, a size of 8454144 is passed to
+dma_free_coherent(). However remember that this segment is allocated at
+the first time firmware is loaded, before suspend. So its real size is
+524288, much smaller than 8454144. As a result kernel found we are freeing
+some memory which is in use and thus crashed.
+
+So one possible fix would be to free those segments during suspend. This
+works because with them freed, ath12k_qmi_free_target_mem_chunk() does
+nothing: all segment addresses are NULL so dma_free_coherent() is not called.
+
+But note that ath11k has similar logic but never hits this issue. Reviewing
+code there shows the luck comes from QMI memory reuse logic. So the decision
+is to port it to ath12k. Like in ath11k, the crash is avoided by adding
+prev_size to target_mem_chunk structure and caching real segment size in it,
+then prev_size instead of current size is passed to dma_free_coherent(),
+no unexpected memory is freed now.
+
+Also reuse m3 buffer.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+[ Backport to 6.6.y: carried target-memory reuse and prev_size tracking;
+  the target already retains core resources and reuses M3, whose size
+  check follows in patch 2. ]
+
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://msgid.link/20240419034034.2842-1-quic_bqiang@quicinc.com
+Assisted-by: LLM
+Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
+---
 Hi Greg, Sasha, and wifi ath12k maintainers,
 
-These patches are a backport for CVE-2024-40979 on 6.6.y.
-The second patch depends on the first, so I kept the upstream ordering
-instead of folding either change into the other.
+I am working through the small CVE backports still missing from 6.6.y.
+This one addresses CVE-2024-40979. It tracks the actual target-memory
+allocation sizes across firmware resume requests.
 
-Both patches are already present in 6.12.y, 6.18.y, and 7.2.y. Could you
-please queue this series for 6.6.y?
+The fix is already present in 6.12.y, 6.18.y, and 7.2.y, but not in 6.6.y.
+The target-specific adjustment is recorded in the bracketed note above.
 
-AI assistance: An LLM helped identify, adapt, and validate these backports;
-I reviewed the resulting code and validation evidence.
+Could you please queue it for 6.6.y?
+
+CVE: CVE-2024-40979
+Upstream: 303c017821d88ebad887814114d4e5966d320b28
+
+AI assistance: An LLM helped identify, adapt, and validate this backport; I
+reviewed the resulting code and validation evidence.
 
 Thanks,
-Artem
+Artem Dinaburg
 
-Series:
-  1. wifi: ath12k: fix kernel crash during resume
-  2. wifi: ath12k: check M3 buffer size as well whey trying to reuse it
+ drivers/net/wireless/ath/ath12k/qmi.c | 20 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/qmi.h |  2 ++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index c49f585cc39656..7a9868dbab02d7 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -2152,8 +2152,9 @@ static void ath12k_qmi_free_target_mem_chunk(struct ath12k_base *ab)
+ 	for (i = 0; i < ab->qmi.mem_seg_count; i++) {
+ 		if (!ab->qmi.target_mem[i].v.addr)
+ 			continue;
++
+ 		dma_free_coherent(ab->dev,
+-				  ab->qmi.target_mem[i].size,
++				  ab->qmi.target_mem[i].prev_size,
+ 				  ab->qmi.target_mem[i].v.addr,
+ 				  ab->qmi.target_mem[i].paddr);
+ 		ab->qmi.target_mem[i].v.addr = NULL;
+@@ -2179,6 +2180,19 @@ static int ath12k_qmi_alloc_target_mem_chunk(struct ath12k_base *ab)
+ 		case M3_DUMP_REGION_TYPE:
+ 		case PAGEABLE_MEM_REGION_TYPE:
+ 		case CALDB_MEM_REGION_TYPE:
++			/* Firmware reloads in recovery/resume. Reuse an
++			 * unchanged allocation rather than allocating it again.
++			 */
++			if (chunk->v.addr) {
++				if (chunk->prev_type == chunk->type &&
++				    chunk->prev_size == chunk->size)
++					goto this_chunk_done;
++
++				dma_free_coherent(ab->dev, chunk->prev_size,
++						  chunk->v.addr, chunk->paddr);
++				chunk->v.addr = NULL;
++			}
++
+ 			chunk->v.addr = dma_alloc_coherent(ab->dev,
+ 							   chunk->size,
+ 							   &chunk->paddr,
+@@ -2197,6 +2211,10 @@ static int ath12k_qmi_alloc_target_mem_chunk(struct ath12k_base *ab)
+ 					    chunk->type, chunk->size);
+ 				return -ENOMEM;
+ 			}
++
++			chunk->prev_type = chunk->type;
++			chunk->prev_size = chunk->size;
++this_chunk_done:
+ 			break;
+ 		default:
+ 			ath12k_warn(ab, "memory type %u not supported\n",
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
+index 4c1ba3196a403d..a996c6d57aa7b8 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.h
++++ b/drivers/net/wireless/ath/ath12k/qmi.h
+@@ -97,6 +97,8 @@ struct ath12k_qmi_event_msg {
+ struct target_mem_chunk {
+ 	u32 size;
+ 	u32 type;
++	u32 prev_size;
++	u32 prev_type;
+ 	dma_addr_t paddr;
+ 	union {
+ 		void __iomem *ioaddr;
+-- 
+2.39.5
+
