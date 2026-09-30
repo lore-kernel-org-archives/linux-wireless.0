@@ -1,138 +1,161 @@
-Received: from mta0.migadu.com (out-145.mta0.migadu.com [91.218.175.145])
+Received: from mta1.migadu.com (out-185.mta1.migadu.com [95.215.58.185])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 075985349BB
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 21:49:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD23E46AF2F
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 22:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.185
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790804995; cv=none; b=rvAw0Iiyfdikst530yOqCTUWi/lfYCqzEdlym/gfIF2AP6JxhyTpmYiSHXt2b3861rzhjU6toEDs+YwgwLRu5CVWOQ5937UmOBOtRrQ7a2AIHA5iA6ozUuGQ5snXpV+htuVcMQQzoZnyL68stwRd5+KZUYahi8+ePwrt5i6mCeo=
+	t=1790808759; cv=none; b=LWNWN6P1eq6H1UcxkDVgF26fkK2Mcak7Pt5q/wpQpivX0061saZEnTwaweY9FMfHjQoUxCCEoEEQail0Q3EsLGugvynLXCM6xSf8mhHPN933ez2qRfy3dwk6IBli2i5JMiL1PzPhzwUEzEPNSqdrEYlL0VDr/Gb1vRK77Jx6Ubw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790804995; c=relaxed/simple;
-	bh=5i1ANq/Smk5Laa7zjnvg47gWby2Li5Aw4qx1cKOpiKE=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=DZqc1lkwfa6WayUsQoHQ76e+NNxRaeHMy0OU4zGbawte68gnQvurCaUm+9hkLzR4S28tWhec2fwscHQbOwhnyqo0nn3K8fgRK2f/HNqWB4HcQ0E7MDUCjUQG1mf5ueOwyn9sCs3OI8NCFBjyyEHsz2cpCFHXft6aJHE202QTH44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=crNQHk3i; arc=none smtp.client-ip=91.218.175.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790808759; c=relaxed/simple;
+	bh=uLd4SDI8mcMrk1niHVwEFhzNyvAhma1OM3HOiPXmZxU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jY/piPFC6KMhqOxWe2ZlgbXvwUoA4JIenxQGMhSAPp5VK/vfDuFBgtJo3iijwwDVw5Ph++R2VTxkdHYA3xiFXG69AldDbQH6+qQ6PNIMKrlbTrZ4rUR99IBdeTuTriOJW42K90jLpmcLC39K5sN+KOB0yIijCZiaXzYatkjxZsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=F/sDlV+o; arc=none smtp.client-ip=95.215.58.185
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="crNQHk3i"
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="F/sDlV+o"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5i1ANq/Smk5Laa7zjnvg47gWby2Li5Aw4qx1cKOpiKE=;
- c=simple/simple; d=linux.dev;
+DKIM-Signature: a=rsa-sha256; bh=uLd4SDI8mcMrk1niHVwEFhzNyvAhma1OM3HOiPXmZxU=;
+ c=simple/simple; d=justthetip.ca;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790804988; v=1; x=1791409788;
- b=crNQHk3iERe7HaWZlpjUWKtX2mlY3p7cwbLJR9F/vcr8gQXfxUPHbtQFqvceu1FvA9LM7lL8
- fBmTrikTY0HJQA3dz1EioGbM4mRI6qoW+ENEpxaC6euutD1o2tr5g5Qv3EL7np12RI2Eyxoa7YJ
- cbyeq6zD5XnkZF0yOWocuErI=
+ t=1790808749; v=1; x=1791413549;
+ b=F/sDlV+opP9hGCB+2cArmMWmEEDIeu8F141EI+AYAScbd9tkE7IvFAsN2ZT/HNQaVZmJaLzm
+ AAEF4agESINubglG60fNIzn2KvTNwzn70SQvaWVT8OsQlzkQxUwfkNADAfTa1CDaTB1Mw3rWLaJ
+ jssbxJa9z6mFsJtzCQusbCHkjksGgg4+kLvHIyCPphtpAh3D3aB5EHaXqemaX3K3pXrDLuaCn3f
+ f+OjseGsabfSZfa4h2TB1pZFGpMyYDH2vJXr/KddGHeT9pHnFm5YXub/QshpLeMOChqfOF9PMb0
+ TgNt6TSRA4wGtVM3A+zn4+L5EeXA3ihhGmvJwZfEQVAfQ==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 627e79e027d2c8b3;
-	Wed, 30 Sep 2026 21:49:48 +0000
-X-Mizu-Trace-ID: 627e79e027d2c8b3
+Received: by smtp.migadu.com with ESMTPS id fae8c6ae68c24c26;
+	Wed, 30 Sep 2026 22:52:27 +0000
+X-Mizu-Trace-ID: fae8c6ae68c24c26
 X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Deren Wu <deren.wu@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Chris <hoopyfrood42@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: move the channel survey when the channel changes
+Date: Wed, 30 Sep 2026 15:52:24 -0700
+Message-ID: <20260930225224.2280198-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Wed, 30 Sep 2026 21:49:47 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <dbebd1c7deff61626d9f5daaf32332b0ca11f457@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v5 rtw-next 2/7] wifi: rtw88: assign the RCR per chip in
- rtw_core_init
-To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, luka.gejak@linux.dev
-In-Reply-To: <0f32b66a-c5fe-407a-92ff-387c3fe39e64@gmail.com>
-References: <20260930091604.52891-1-luka.gejak@linux.dev>
- <20260930091604.52891-3-luka.gejak@linux.dev>
- <d398a8dd-a182-4e69-8f5e-12a820594093@gmail.com>
- <3c53130d1d4738a9b3173806264fc1d0b5682072@linux.dev>
- <a6ea2df9-b2c9-4417-ade4-f3947f36d139@gmail.com>
- <5b31fdb4474eea9b9403fc6ff466994b62a79fd3@linux.dev>
- <0f32b66a-c5fe-407a-92ff-387c3fe39e64@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-September 30, 2026 at 23:46, "Bitterblue Smith" <rtl8821cerfe2@gmail.com =
-mailto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3Crtl8821=
-cerfe2%40gmail.com%3E > wrote:
+mt7921 and mt7925 report every survey counter against one channel and
+never mark the one in use. Both use channel contexts, so the code that
+moves the survey never runs.
 
+Move it when a context is assigned or changed, after booking the time
+spent on the old channel.
 
->=20
->=20On 01/10/2026 00:29, Luka Gejak wrote:
->=20
->=20>=20
->=20> September 30, 2026 at 23:27, "Bitterblue Smith" <rtl8821cerfe2@gmai=
-l.com mailto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3Cr=
-tl8821cerfe2%40gmail.com%3E > wrote:
-> >=20=20
->=20>=20=20
->=20>=20
->=20> >=20
->=20> > On 30/09/2026 23:36, Luka Gejak wrote:
-> > >=20
->=20>  September 30, 2026 at 20:03, "Bitterblue Smith" <rtl8821cerfe2@gma=
-il.com mailto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3C=
-rtl8821cerfe2%40gmail.com%3E > wrote:
-> >=20=20
->=20>=20=20
->=20>=20
->=20>  On 30/09/2026 12:15, Luka Gejak wrote:
-> >=20
->=20>  The receive control word is the same for every chip today. The gen=
-eric
-> >  default is written in rtw_core_init(), so a chip that needs a differ=
-ent
-> >  value has to overwrite it afterwards, in its own init path, far away
-> >  from where the default is decided.
-> >=20
->=20>  I still don't understand why RTL8723B(S) would need a different va=
-lue.
-> >=20
->=20>=20=20
->=20>  Because 0x700060ce is what the vendor driver leaves in REG_RCR for=
- this
-> >  chip, and it is what rtw8723x_mac_init() already writes for it. I ha=
-ve
-> >  both from tracing this card: a register dump at the end of
-> >  rtl8723bs_hal_init prints RCR=3D0x700060ce, and the same dump in rtw=
-88
-> >  matched it field for field.
-> >=20=20
->=20>  The default is a different filter. It sets BIT_PKTCTL_DLEN, which =
-the
-> >  8723B vendor HAL and rtlwifi's rtl8723be never set, and it clears
-> >  BIT_AMF, BIT_CBSSID_DATA and BIT_CBSSID_BCN, which the vendor value
-> >  sets. Four bits in total.
-> >=20
->=20> >=20
->=20> > It will work fine...
-> > >=20
->=20>=20=20
->=20>  Want me to drop the patch?
-> >=20
->=20Yes. If you check the vendor drivers for the other chips,
-> they're all in the same situation.
->=20
+Tested on MT7922 over PCIe, MT7921AU and MT7925 over USB.
 
-Ok,=20I will drop it in v6.
+Fixes: 41ac53c899bd ("wifi: mt76: mt7921: introduce chanctx support")
+Reported-by: Chris <hoopyfrood42@gmail.com>
+Closes: https://lore.kernel.org/linux-wireless/CAHaeJsT8O8Nhq351hFp3NAL8e0iU85N-LBdYZ9nYHFHVy7t_hQ@mail.gmail.com/
 
-> >=20
->=20> That value does not survive rtw_core_start(), which writes REG_RCR =
-from
-> >  hal.rcr after power_on. The field is what keeps it. BIT_APP_FCS is t=
-he only
-> >  bit added on top, because rtw88 advertises RX_INCLUDES_FCS.
-> >=20=20
->=20>  Best regards,
-> >  Luka Gejak
-> >=20
->=20> >=20
->=20> >=20
->=20> >
-> >
->
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c   | 17 +++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h       |  2 ++
+ .../net/wireless/mediatek/mt76/mt7921/main.c    |  1 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c    |  2 ++
+ .../net/wireless/mediatek/mt76/mt792x_core.c    |  1 +
+ 5 files changed, 23 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index cda5c5d51aab..e2e567ca968e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -1045,6 +1045,23 @@ void mt76_update_survey(struct mt76_phy *phy)
+ }
+ EXPORT_SYMBOL_GPL(mt76_update_survey);
+ 
++/* For drivers that retune without __mt76_set_channel(): book the time spent
++ * on the old channel before moving the survey to the new one.
++ */
++void mt76_set_survey_channel(struct mt76_phy *phy,
++			     struct cfg80211_chan_def *chandef)
++{
++	if (!chandef->chan)
++		return;
++
++	mt76_update_survey(phy);
++
++	phy->chandef = *chandef;
++	phy->main_chandef = *chandef;
++	phy->chan_state = mt76_channel_state(phy, chandef->chan);
++}
++EXPORT_SYMBOL_GPL(mt76_set_survey_channel);
++
+ int __mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
+ 		       bool offchannel)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 62b41c8bb7c0..2cbe9884ab46 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1548,6 +1548,8 @@ void mt76_sta_ps_transition(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ bool mt76_has_tx_pending(struct mt76_phy *phy);
+ int mt76_update_channel(struct mt76_phy *phy);
+ void mt76_update_survey(struct mt76_phy *phy);
++void mt76_set_survey_channel(struct mt76_phy *phy,
++			     struct cfg80211_chan_def *chandef);
+ void mt76_update_survey_active_time(struct mt76_phy *phy, ktime_t time);
+ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ 		    struct survey_info *survey);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index ef5081549d0e..9774934cc3fb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -1414,6 +1414,7 @@ mt7921_change_chanctx(struct ieee80211_hw *hw,
+ 	} else {
+ 		mt76_connac_mcu_uni_set_chctx(mvif->phy->mt76, &mvif->bss_conf.mt76, ctx);
+ 	}
++	mt76_set_survey_channel(mvif->phy->mt76, &ctx->def);
+ 	mt792x_mutex_release(phy->dev);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 4264c392527e..8fd29ad05162 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -2053,6 +2053,7 @@ mt7925_change_chanctx(struct ieee80211_hw *hw,
+ 						      link_conf, ctx);
+ 		}
+ 	}
++	mt76_set_survey_channel(mvif->phy->mt76, &ctx->def);
+ 
+ 	mt792x_mutex_release(phy->dev);
+ }
+@@ -2389,6 +2390,7 @@ static int mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 
+ 	mconf->mt76.ctx = ctx;
+ 	mctx->bss_conf = mconf;
++	mt76_set_survey_channel(mvif->phy->mt76, &ctx->def);
+ 	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index 0ad33f74c228..6a0d5b2c2d59 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -472,6 +472,7 @@ int mt792x_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 	mutex_lock(&dev->mt76.mutex);
+ 	mvif->bss_conf.mt76.ctx = ctx;
+ 	mctx->bss_conf = &mvif->bss_conf;
++	mt76_set_survey_channel(&dev->mphy, &ctx->def);
+ 	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	return 0;
