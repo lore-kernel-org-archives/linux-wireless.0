@@ -1,115 +1,74 @@
-Received: from mta0.migadu.com (out-98.mta0.migadu.com [91.218.175.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BFDD36E47E
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 08:44:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E8F35AC1C
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 08:47:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790757863; cv=none; b=eXaxltxIpzcfP/YaVfMcTHmN7rWvnbtAbf4L9PAVmRBfZaUHTIvLL4AQTE1hHBTZtQJnD/QVmTOzz7d+/L7MpVtm1lsS0pL1kFBzmexot3q6S3KQUfKwEnw8Hg82xa+QBg92yJGN4xsAhBVjDlQAMUQ+TCNvCEektS5j1haTerY=
+	t=1790758057; cv=none; b=QgxrNSmfDEX2fG4fWYWeTK1FTCQwf6rrSwYsOo7sHI7dzJyzThWVoJf4c65mcHeIUIPJLmLuDqxvF4rMelJWp0owCogoevnDtRI319A7KgVrUsZ2RzPrng596uIo1fdUoqx0xwC3Bd2s3u3ujaW633aV6MDW90s5Fypr9V4G2UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790757863; c=relaxed/simple;
-	bh=n+W+jPGoYg2/hHnOKtH5i4OIFi7mz38e5TDOsBrfFcY=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=aj3Ppzfbtywx2V9UuQMxUW1i7OvH9pmnZHiAxs1JZ4sCx0dkrSMqyIUw/6cZ9el2tk2z4HBNBh99WHWz1KfxrKJmaX0eoLI1lYh6y4V3jp8ZCw1UKlb+UtytuQJvroHD73gD4RHoeCu5t6TZwMjKDP/BoVTjwZXVdASYBwYwp/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iocvKYIL; arc=none smtp.client-ip=91.218.175.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790758057; c=relaxed/simple;
+	bh=9mo2j5ebg7lf333f0rUwb61fbp+yJJ55XaBBgGJLR3I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NGaZjBn7aQZen6djwmn2IGgeX70ix78QKsm4jE9LeyQG6if2T25zAliT9rce7jj9HAqe+bp4JNxCErzeu8yNNTvPK1mKPwMKV9h3RG+XR2pe1sEGcuMnZFvtWRUrnqpOPJsbs4Mi3F5nTGv3F3m0NVCcCFfEMD5lko6Qn6yw1eM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=l1pF7nG9; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iocvKYIL"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=n+W+jPGoYg2/hHnOKtH5i4OIFi7mz38e5TDOsBrfFcY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790757856; v=1; x=1791362656;
- b=iocvKYILZWE2PXJ7gMi1vdrqPvTu9txNCEQsKOV8C74A4vi3hVASQctBZczXF2txgBtS52pk
- qzV/Q2yKZnNZmhSWXw3Sg6t+xEEJxez6pk31U3CF8TTPa5XRfQg1rVup//PvSVhHwIFlkg6EXwq
- TIh5GzArVthF1bcAbuaWzL58=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f778752b4a353e56;
-	Wed, 30 Sep 2026 08:44:16 +0000
-X-Mizu-Trace-ID: f778752b4a353e56
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="l1pF7nG9"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=UEWF1WVIpG1QppevXZ34VlhwwNM6vg++gG0TVKxijgg=; b=l1pF7nG9cvByWa9Nv7Fk5QVOxl
+	SvvSBhoYMLIPXhaTx1yQAvaZ2BNVCtWe0gAq726AW0HTzuE/QSXMMTtwOq5zDP9ZjztTsTg9XAWRa
+	2l0xP2PzDTADg+L6q3OTTaPKmGFtDJWbh83hwsfdCnd73EqQVoECvfk4F66wCzhCQBus=;
+Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1xBpyP-00DQsA-1F;
+	Wed, 30 Sep 2026 10:47:33 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH wireless-next] wifi: mac80211_hwsim: reserve headroom for software encryption
+Date: Wed, 30 Sep 2026 10:47:29 +0200
+Message-ID: <20260930084729.3000295-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Wed, 30 Sep 2026 08:44:16 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <0846c6b806603106e99346edfa1663efb08a7595@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v4 3/6] wifi: rtw88: 8723b: add the RTL8723B chip driver
-To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, luka.gejak@linux.dev
-In-Reply-To: <c5f27f7f-6536-4a22-87d8-4f5def76177c@gmail.com>
-References: <20260923213557.186205-1-luka.gejak@linux.dev>
- <20260923213557.186205-4-luka.gejak@linux.dev>
- <6ad11268-9f09-4618-8b44-ab0744cf0a52@gmail.com>
- <a978a803-a641-4af4-b38b-f3c9b423ef63@gmail.com>
- <70785221599240049a8747750b6cf0369f8368d5@linux.dev>
- <c5f27f7f-6536-4a22-87d8-4f5def76177c@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-September 29, 2026 at 13:28, "Bitterblue Smith" <rtl8821cerfe2@gmail.com =
-mailto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3Crtl8821=
-cerfe2%40gmail.com%3E > wrote:
+mac80211_hwsim accepts CCMP and GCMP keys in mac80211_hwsim_set_key()
+and encrypts unicast data frames itself in mac80211_hwsim_tx(), through
+ieee80211_encrypt_tx_skb(). It asks mac80211 to reserve tailroom for the
+MIC, but not headroom for the CCMP or GCMP header.
 
+Reserve the header as driver headroom.
 
->=20
->=20On 29/09/2026 13:13, Luka Gejak wrote:
->=20
->=20>=20
->=20> September 27, 2026 at 19:29, "Bitterblue Smith" <rtl8821cerfe2@gmai=
-l.com mailto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3Cr=
-tl8821cerfe2%40gmail.com%3E > wrote:
-> >=20=20
->=20>=20=20
->=20>=20
->=20> >=20
->=20> > On 27/09/2026 18:21, Bitterblue Smith wrote:
-> > >=20
->=20>  On 24/09/2026 00:35, Luka Gejak wrote:
-> >=20
->=20>=20=20
->=20>  + if (rtw_hci_type(rtwdev) =3D=3D RTW_HCI_TYPE_SDIO) {
-> >  + rtw_write16_set(rtwdev, REG_PWR_DATA,
-> >  + BIT_EEPRPAD_RFE_CTRL_EN);
-> >  +
-> >  + /*
-> >  + * rtw_mac_power_on() sets PAD mux bits this chip must not have;
-> >  + * restore the SDIO PAD mux before RF and coex setup.
-> >  + */
-> >=20=20
->=20>=20
->=20> >=20
->=20> > By the way, rtw_mac_power_on() doesn't touch REG_PAD_CTRL1
-> > >  for this chip.
-> > >=20
->=20>=20=20
->=20>  It does, through rtw_mac_pre_system_cfg(), which rtw_mac_power_on(=
-) calls
-> >  at mac.c:382. At mac.c:111 that function reads REG_PAD_CTRL1, ORs in
-> >  BIT_PAPE_WLBT_SEL and BIT_LNAON_WLBT_SEL and writes it back, for eve=
-ry
-> >  HCI type including SDIO. So the bits are set during power on and the=
- SDIO
-> >  PAD mux has to have them cleared, which is what rtw8723b_sdio_restor=
-e_pad_ctrl()
-> >  does. The comment in rtw8723b_post_enable_flow() names that function=
- and the
-> >  two bits now.
-> >=20
->=20That code is not reachable with this chip.
->=20
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-My=20bad, I missed the wcpu check.
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index b9446577ff49..c98c862678a2 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -5906,6 +5906,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	hw->queues = 5;
+ 	hw->offchannel_tx_hw_queue = 4;
++	hw->extra_tx_headroom = IEEE80211_CCMP_HDR_LEN;
+ 
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, CHANCTX_STA_CSA);
+-- 
+2.47.3
 
-I removed the call and the comment.
-
-Best regards,
-Luka Gejak
