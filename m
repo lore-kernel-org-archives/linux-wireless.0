@@ -1,63 +1,43 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52EFD4CEE62
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 12:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943FE4DAF86;
+	Wed, 30 Sep 2026 12:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790770170; cv=none; b=bPMKWyo5/c09zw/mCpVsLa5fIGMWzO7zboS/WwLqadB8bdjnGn9impOA6HQLpb8OCWhMQDkL4Rm9+p905YCMy1NoJ5bhoDBBI/LFyvlHntW2pZV+YTfAC4yzAptjYsX1EZF0JUAmnQ7QDUa5kRYqAipKITDQKz+R7ZIw9O1gEZ4=
+	t=1790772293; cv=none; b=MF2yzDfzI5F5wC9Y3D4q4L6eQMrtjg7OmBcyU1I9JfFLZRCjl9l9OXtMCh7pipJ1Wd79Mtz5TnCT7yX2quDkCqs3T9wrN/3XIYpFgC/WrUHUGibPf6ZLo+V74jMtkMqdXoSdj4N/F+tKFFZ/v2vXBqn4pYTN/xrLwYMiCCXnWrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790770170; c=relaxed/simple;
-	bh=m9DXyAV2T1PBYUAoEe2imt3tO09tXB6zdVxsrArYk40=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Oe804ZD+iC1Z2VtnBJeJeSdSlsaa+DyLflbH8Yl+MGUz9pPdmuZtSApIPPOxv28qhnBWemPd0R2+ApXlsw74lqn2E0bDgGEHpxljsWfuVWkA2pcZSNJhPoOKItYd/SQJbc/BBlNi69IdlJRi6AdGJlYaDCC48kOCPCtk+b9dC/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=X9dKVYCd; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790772293; c=relaxed/simple;
+	bh=BdwF+8ZzyQ042BBSxwyVYcS3B9mwB4pPVPRu+FMrADk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ihyIoga9Kq66ISzURp8Is4HPPOgaQ8HAGMXB0jXf9Bogh7ZS9aZ+9/d9ffoaw+9mOrXlchV8s6OZOVkZ8CQfhswaIexK4zu6zhip3sFC4JqjCDi1FrubHgYqaE78I3EG3fRoU813OxCg08DGB787jhdGOoMeDXaPEa0nd5dUtb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=I32Saich; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="X9dKVYCd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790770168;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Vjcf7hIfj9XS3LK0g8mrm5vFSLMh8C4+ka79NqwVkOU=;
-	b=X9dKVYCdtLCpi9ZeZyU2qKfdIKMzD4X/ZEHJMnyreclFuvJXMnnOC6igP3Zh1SA8F4OR+M
-	Pm4Ey9Tze0DzqdNLdw5SBKwaPe9MdbtJEc9+ii1ix+yfaoTtmDuyAh1GBa/dbQnOA5qDTY
-	74/wimMLnH6Sb4VSVgNqhHXZ9LABC5Q=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-149-SwMAQ0_CPk6ADd-iQQCgng-1; Wed,
- 30 Sep 2026 08:09:25 -0400
-X-MC-Unique: SwMAQ0_CPk6ADd-iQQCgng-1
-X-Mimecast-MFC-AGG-ID: SwMAQ0_CPk6ADd-iQQCgng_1790770163
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7D1E1195C279;
-	Wed, 30 Sep 2026 12:09:23 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EBD021800345;
-	Wed, 30 Sep 2026 12:09:20 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: herbert@gondor.apana.org.au,
-	davem@davemloft.net,
-	johannes@sipsolutions.net,
-	miriam.rachel.korenblit@intel.com
-Cc: ilan.peer@intel.com,
-	emmanuel.grumbach@intel.com,
-	linux-crypto@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v2 5/5] wifi: iwlwifi: reduce encryption error message to debug level in FIPS mode
-Date: Wed, 30 Sep 2026 14:08:28 +0200
-Message-ID: <20260930120829.383408-6-jtornosm@redhat.com>
-In-Reply-To: <20260930120829.383408-1-jtornosm@redhat.com>
-References: <20260930120829.383408-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="I32Saich"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=8g32t+zO2en2kH3VFzkAJ6Vw2Oa4E3Ow1IoHEpnHW7Q=; t=1790772289; x=1791981889; 
+	b=I32SaichSKa8uPtYDj9/X2ZHMSnYDWSpClmq3cspPNwuJZUPiZctsnlEhIYRo+Fflq53COLYn36
+	fjIodEuSpMja8mbKZi9DLL5XyT3DA7u+Of5w48H+IS2dYuEx9n5LJBdxIFbudvVFOB8yaHqEEUj6i
+	vtzg6wSn8Y/P8oqGteorTR+ykL/Ic/WsJh6j2cBor08DOzvdUuEFSZbT/DbCXCxgHJOhsNNh1XeUQ
+	CXLKyU9VrnokWjw4QQXUMPILjRPdCnCSfK0tZfPKxLiOy2Bf0yIGQVZEmU8Lj8tnV/+DAr7VSjhyE
+	DVtXheGqiS2jf4sSqhHnrI4qFbf18KSaxzeQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xBtfx-0000000GPWy-1bTn;
+	Wed, 30 Sep 2026 14:44:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [GIT PULL] wireless-2026-09-30
+Date: Wed, 30 Sep 2026 14:43:00 +0200
+Message-ID: <20260930124440.224799-3-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -66,54 +46,140 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+X-malware-bazaar: not-scanned
 
-In FIPS mode, the firmware may report
-RX_MPDU_RES_STATUS_SEC_ENC_ERR (0x707) for frames received
-before keys are installed. This triggers the warning:
-  "iwlwifi: Unhandled alg: 0x707"
+Hi,
 
-This is expected behavior — mac80211 software crypto handles
-decryption on the host CPU. Reduce the message from IWL_WARN to
-IWL_DEBUG_RX in FIPS mode to avoid false-positive warnings
-during normal operation, while preserving warnings for actual
-unexpected conditions.
+Things aren't really slowing down by that much, unfortunately, but
+these are mostly fairlyh obvious changes.
 
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v2: No modification
-v1: https://lore.kernel.org/all/20260629121213.597038-3-jtornosm@redhat.com/ 
+Note there will be a merge conflict with ieee80211_lookup_ra_sta()
+when this gets pulled into net-next which made it static, and here
+we add another argument to the function.
 
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Please pull and let us know if there's any problem.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 7f0b4f5daa21..6d223ef75bb4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -6,6 +6,7 @@
-  */
- #include <linux/etherdevice.h>
- #include <linux/skbuff.h>
-+#include <linux/fips.h>
- #include "iwl-trans.h"
- #include "mvm.h"
- #include "fw-api.h"
-@@ -494,6 +495,14 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		return 0;
- 	case RX_MPDU_RES_STATUS_SEC_CMAC_GMAC_ENC:
- 		break;
-+	case RX_MPDU_RES_STATUS_SEC_ENC_ERR:
-+		if (fips_enabled) {
-+			IWL_DEBUG_RX(mvm,
-+				     "FIPS mode: firmware cannot decrypt, status: 0x%x\n",
-+				     status);
-+			break;
-+		}
-+		fallthrough;
- 	default:
- 		/*
- 		 * Sometimes we can get frames that were not decrypted
--- 
-2.55.0
+Thanks,
+johannes
 
+
+
+The following changes since commit b5a051f6b840d48f159166ef073d3021989bfb50:
+
+  Merge tag 'net-7.3-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-09-17 10:40:48 -0700)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2026-09-30
+
+for you to fetch changes up to 6f63e919fe1e335b8abcb3a28bfd4804a98d875a:
+
+  wifi: mac80211: fix slab-out-of-bounds read in ieee80211_monitor_select_queue() (2026-09-28 11:11:19 +0200)
+
+----------------------------------------------------------------
+Still more fixes coming in, notably:
+ - ath11k: avoid running out of stations on HW restart
+ - mac80211:
+   - drop too large fragmented MPDUs
+   - mesh path handling fixes
+   - validation improvements
+   - reject CSA with bad 320 MHz bandwidth
+ - cfg80211: fix RTS for single radio devices
+
+----------------------------------------------------------------
+Aamir Ahmed (1):
+      wifi: wfx: validate MIB read length before copying to caller
+
+Cen Zhang (Microsoft) (1):
+      wifi: mac80211: fix slab-out-of-bounds read in ieee80211_monitor_select_queue()
+
+Felix Fietkau (2):
+      wifi: mac80211: prevent AP VLAN tx from other interfaces
+      wifi: mac80211: set info->band for 802.3 encap offload frames
+
+Georgios Karantzas (1):
+      wifi: ath9k_htc: bound TX aggregation to MAX_TX_BUF_SIZE
+
+Guangshuo Li (1):
+      wifi: iwlegacy: 3945: free EEPROM data on remove
+
+Heyang Tan (1):
+      wifi: p54: validate firmware record lengths
+
+Johannes Berg (1):
+      Merge tag 'ath-current-20260921' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
+
+Nicolas Escande (1):
+      wifi: ath11k: reset ar->num_stations on hardware start
+
+Pengpeng Hou (1):
+      wifi: ath9k: reject short WMI command responses
+
+Ruide Cao (1):
+      wifi: mac80211: reject invalid 320 MHz CSA bandwidth
+
+Stanislaw Gruszka (1):
+      wifi: cfg80211: fix RTS threshold setting for single-radio PHY
+
+Tianchu Chen (1):
+      wifi: cw1200: fix TX padding OOB read leaking heap data to device
+
+Toke Høiland-Jørgensen (1):
+      wifi: ath9k: Clean up device initialisation guards
+
+Wentao Liang (1):
+      wifi: wlcore: Fix runtime PM leak in wlcore_remove()
+
+Yuchao Zhang (1):
+      wifi: mac80211: drop oversized fragments to avoid extra_len overflow
+
+Yuqi Xu (3):
+      wifi: mac80211: minstrel_ht: validate fixed rate index
+      wifi: mac80211: handle empty FILS association request payload
+      wifi: mac80211: validate TX status rate metadata
+
+Zhao Li (6):
+      wifi: mac80211: release mesh path quota on failed additions
+      wifi: mac80211: account proxy paths against the mesh path limit
+      wifi: mac80211: drain PS delivery work during station teardown
+      wifi: mac80211: shut down RX BA session timer on teardown
+      wifi: mac80211: keep fallback association elements alive
+      wifi: cfg80211: preserve hidden-group beacon IE ownership
+
+Zhiling Zou (2):
+      wifi: mac80211: count only matching reservations in reserved switch
+      wifi: mac80211: keep paired old chanctx alive
+
+Zihan Xi (1):
+      wifi: mac80211: fix mesh fast xmit path deletion UAF
+
+ drivers/net/wireless/ath/ath11k/mac.c          |  1 +
+ drivers/net/wireless/ath/ath9k/hif_usb.c       | 21 +++---
+ drivers/net/wireless/ath/ath9k/htc.h           |  1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c  |  7 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |  8 +--
+ drivers/net/wireless/ath/ath9k/wmi.c           | 28 +++++---
+ drivers/net/wireless/ath/ath9k/wmi.h           |  1 +
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c |  1 +
+ drivers/net/wireless/intersil/p54/fwio.c       | 42 ++++++++++--
+ drivers/net/wireless/silabs/wfx/hif_tx.c       |  4 +-
+ drivers/net/wireless/st/cw1200/bh.c            |  8 ++-
+ drivers/net/wireless/st/cw1200/txrx.c          | 14 ++++
+ drivers/net/wireless/ti/wlcore/main.c          |  4 +-
+ net/mac80211/agg-rx.c                          |  2 +-
+ net/mac80211/chan.c                            | 50 ++++++++++++---
+ net/mac80211/drop.h                            |  1 +
+ net/mac80211/fils_aead.c                       |  8 +++
+ net/mac80211/ieee80211_i.h                     |  2 +-
+ net/mac80211/iface.c                           |  4 +-
+ net/mac80211/mesh_pathtbl.c                    | 30 +++++++--
+ net/mac80211/mlme.c                            |  4 +-
+ net/mac80211/rc80211_minstrel_ht.c             | 89 +++++++++++++++++++++++---
+ net/mac80211/rx.c                              |  6 ++
+ net/mac80211/spectmgmt.c                       |  4 +-
+ net/mac80211/sta_info.c                        |  6 +-
+ net/mac80211/status.c                          | 70 ++++++++++++++++++++
+ net/mac80211/tx.c                              | 45 +++++++++----
+ net/wireless/nl80211.c                         | 11 ++--
+ net/wireless/scan.c                            | 22 ++++---
+ 29 files changed, 395 insertions(+), 99 deletions(-)
