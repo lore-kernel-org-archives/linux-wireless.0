@@ -1,64 +1,62 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C58B440BCC8
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909743B42C5
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:44:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790753229; cv=none; b=lRvlVOkPlrj6eQQsYiNQ9PdFESaDoKelmlBE6+ZgOT5wDopfHh260qR3NU9u+XjLi0J8kEEikoANMhmVtYCFyxbVNLJVRTHgceY3rXLMeyXFWxX+SsJ4uPSRLNbtgS1KncH8Y7Jc/f0mMqS/2wyh3+rPEgyGRnou2fUOZ0sXjYM=
+	t=1790754290; cv=none; b=An8yNgEkABS8M5pE1u/MQlyq9/QeewhqRTpX7s3kS2kbqZX4asTLc9ATHMqQTnDx4DTkOuQGXL0CdgWPQofJSiHMsDrugHwQsv4mdD0yxL4FhXhNWrFWa6yvmBOX9untyXGY+ILOndcLOSJ2EbnrkPkzEfzedrc2wwVqvYhLKrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790753229; c=relaxed/simple;
-	bh=bHLJL5B7MvFZaFWnj48RHwfjVHKRLYwyTAtbbTpBQb0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AxPQ+YjdXbdgXRLNQ/zi8H7bbUJWLttss54xFDASrnDWg2bSxWIMClD8VWGzJkwqWEPSjVShC4IFGRHj22NL0BFIcgrWdXzap+PnE9fMNuqiRkGlN/HoJaD9I+UAbMtVlW6LOqzE0CpLTwIHpQzCpqQkaYLApLJQGbuMWh33W2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X6MIp9yy; arc=none smtp.client-ip=74.125.225.140
+	s=arc-20240116; t=1790754290; c=relaxed/simple;
+	bh=LDVQ7lyg+1YS+lGp9uMmKlAPQeI0BGbetpenCTNZP4M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R7ZIUfx4oiKL+8wzEkNU1zQHr2KVQwkKWHiscGV6dq6yq6eih5coDmmEfNHZ29Wj4PCdZdXQf2MnqwT/2LltJeKiE/bJR97MRmq3ArGELUT4diySwboB4LKUf+W9PwX4rpS1i2CwEW4p+9RHGQs47++PO4+LjZaTxYfikUXcMF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PUMvNXgG; arc=none smtp.client-ip=74.125.225.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X6MIp9yy"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ffde3cec6so20352845e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 00:27:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PUMvNXgG"
+Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-48b01c41135so167263f8f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 00:44:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790753226; x=1791358026; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qLFV8VQJPR2EUGQBE7Yw6RyHTydVlS4Yy5dyO7hAtvE=;
-        b=X6MIp9yyhRT3nGwHx/kYX/95zOAXUmKE8dTu0HLU/nM2qTBzc66/tMXyxBJTgGPMQG
-         U89qSev34cPMN+jEpWgd+X6QC0qAVEymLM3tgTkQayR8F55g6m0oXMi63W314ii6OnNV
-         OL0S9Pq90SxWgFxSE2O1vfOGX83JOjOcqQD7/esvlpVdNLTmjvDzMOLnxK3WU0Id7Xzj
-         qwd3sadZQbJ8ZpFXvCWmwRyxCetpzFwgmTw3bacxFEsCPY4naydMXoy44HhLccyzV0Kd
-         wvfOcSKEwcJOFK4EQYHe/oHu710G7kALi1QLTScHjFQFcxw2Pm2aPTOscPldNBVyV7Br
-         e1sg==
+        d=gmail.com; s=20251104; t=1790754287; x=1791359087; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aP3HpmdVFomE22DhxX8rVgzIVeQZvs2xgSWS4MOQb8k=;
+        b=PUMvNXgGOfQeulr935xCGc/pRvA4axgkmAm8l54Fa3YBFtIu30RcpM6x3fhfmqbSAN
+         Zk4sArm+HUYaCyh3SoDEtpmpPvPBK+vu7wyYzhuAS6Uz4U+F5J8lAgDNEoBQat0uVBhH
+         jVDc0ESqJqI7/e8am/atl53qbK5WUTH2YjNeocXnORER13SlChEZXL0w7jzTObX8NDNe
+         +UJPXAD5aLWJ5CwKj2HKimAekq6bx4QcQAreYc0m1gH622XHH2wAGRS/xitjoZ+ZdB3L
+         y9hoDv0Yf2FORtQcQibgJMy1cwfyNPWmD2rg4UUf95GkPDhpfusRKzvXe82TMvNIthB4
+         ompw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790753226; x=1791358026;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qLFV8VQJPR2EUGQBE7Yw6RyHTydVlS4Yy5dyO7hAtvE=;
-        b=hAY62CISWcSVMGGJCrd888eGtucVlf0Mm1042eTc0WQ2iUEAvSScFuzryX5z1dKhg9
-         xWuHCC5t/zYjaNpkpszf8SbWE5uh+Hwrmh7Aof5muRs+yEpDnK9d8u0btikI6akkJn77
-         Mit/I8iRpQcNmi+CSzRtZs5s04GbhQizf3Ra/bvexx1g8SSO3OwifJGOCiHAiPHRStou
-         z49pQ0Q3JgvMlZxrs0yZEk8Plx0PMHTLX2GqcaGpszonV+DLVYYUjmrydNXtIvRtzmao
-         nbodnoOVKf4dmd4uIu/s/gKylUd+e8ALlJrlxIVuo0zfIFJQqSP0tDmkQdnrnt8EOKlE
-         YuRA==
-X-Forwarded-Encrypted: i=1; AKwUvBwadkp7HwyqD4k4rd5MmfaLRibAXeFeh5OOimEtbst32QPypBG9YMVXs20HVLx4LPWg/Ykd7UJmOQdwiitA+w==@vger.kernel.org
-X-Gm-Message-State: AFuF++njsKyTbdZyZU0e8I4RFCm2SALCEjpupc9sAVIHlyf6N5USnaRY
-	YVH1zdFrCSnbuOuqG3s2lItbvz+eLQToghaRADXgjxNA6Csr/2b1JO3B
-X-Gm-Gg: AYBFou2SWGvOtwhQcpPC6Xf4NoRz2PELMgmdoGKBcXj4kkHbOvgntBa5hiSmqteyR8I
-	+tscRmgbhsvK2QmQxX4UxdW3zsWXXEOF0RdcitXxFFA3aZGKJ1qNBtuLDcYitJJOKOeM+e5uvG4
-	L6wS53Fz4MQJfJLpEHbG+lY3bqIqC3rTujaflyQmyp960chkzIPlgyPRlUaQqpaZOuvRNorsauA
-	iDMuAxUF6y7FD0Ev9B6eozahPe2uzgydPN6ndMFaSpBSb35uLyHXXBZmozEje04c6t+tSIeTkcN
-	K0rhkhpY08Cr8mBp8Cyc+hVf2SKhcgZAihAzaRBw0Nacv9Kk82dGvKIBf41uQhfGgiUGSkitiz/
-	BMoVIgtyT4BAEW5P0cC7XYjQp+5H5vldL+fKK/aEXjPvlVeJRJihieOYn/01W5pkxUjVWP34s59
-	WjP4b5ZKJp/5y2JNZ+B7ujUVOZAyozMxyWTsDixoKn9CEVUkBTyZB/4e1uSsaRmEciI0Fafi9yX
-	dHO
-X-Received: by 2002:a05:600c:46cf:b0:49f:e4ca:e1d with SMTP id 5b1f17b1804b1-4a01b115536mr6566685e9.27.1790753225797;
-        Wed, 30 Sep 2026 00:27:05 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790754287; x=1791359087;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aP3HpmdVFomE22DhxX8rVgzIVeQZvs2xgSWS4MOQb8k=;
+        b=eTH0w42Dk/Y+9BVGFhXHchkQ022bC4m7TVL5Fti5HbRt0MBnxVB8pA2dvj4ujuHIqa
+         hx20Yl3UbzaiJYb7ubU/+KPsLFby1c3K0gT7mHYvIoVpnUxtcakfQWRjjuCAC8uDLe6b
+         Qu3htGtXxGcNJlc38uOaielw1A+cCyVCb15wRTN+6zOjf1N80Qj/80d34W5+uvRGa1Ju
+         0cptuO7mqMAMdsz+r0bs4C5vHfKs4H5aaUBn51yto4fLhOWlMUCcfl+LGSEuKHbcMi6P
+         KS4K14fvazDLWAecSyZcTzTL2t/NQNIiz+a/wZcpxgOrbnwXIyQSFZb60jAl/udzU1LU
+         h5SQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz0xXk8sAuiZuiPvuTded6/5ZiswgHYMwPqjdwM3H+qJ3Xp9pD+WZaXNOLMhDktY/rfDZEMq+8E0vhVPTqiag==@vger.kernel.org
+X-Gm-Message-State: AFuF++l7oYuVeyeHqdfwOpSultXB4EZA1gMXib6qeZ2tI/QQH3tMxJJF
+	VKkvOVvn1of8OKaOoNADZRFP/DHCur2uNLxyw/NMUDp6MoA4ztoD+q+L
+X-Gm-Gg: AYBFou0PeIQfBWubsBdMQw/0OPELqF3ZHQyoeXVdDhPWgxlYjxxKA6sZYU0YDzEAPCi
+	FxQOPqXYXiKvgJIwnqY0+dHEQIP+MmteLFDyD7+rIT7aJ6Fgwx/BqXNcoe+IrNyYQGnsHC+bzZA
+	tlezSZUXNwFOK/eyetG/6azJzWZDnTvSrJdScPhOechyyOKWxIfCaTES95TQlcKkj8IiALwvijz
+	gxOyCU0Oyqb96SPpPONpfmB9tXauIGjaMC+3qvE0sZtc5DT3JhdG2rEcKeIghiHsiURs5k0nKOH
+	bnf45auu0Rsw+AUAyt/3CDXWHR218ELFPUicl7Sgct89IoLM6oTcKTaimjVtLdbBStwbHaAnT8f
+	ZE1uD6II+IYfA4Xb/TXEZY8TGew8qhOY7c6/QHyu0vShhwGA/GZzzTmGFZJ5aU0BcCVlJfFesbZ
+	wjLnlCbeLfmTDlRYv8ohNOFgquwEHdpqMYMpcZuKOZ8P5QKEwAcBjhbOzjFlAzf1aHJ70goRqMZ
+	6z0
+X-Received: by 2002:a05:600c:1f84:b0:49c:eb04:1c49 with SMTP id 5b1f17b1804b1-4a01b00c503mr6110215e9.13.1790754286577;
+        Wed, 30 Sep 2026 00:44:46 -0700 (PDT)
 Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a017504518sm32000775e9.13.2026.09.30.00.27.04
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a017bad33fsm23934595e9.4.2026.09.30.00.44.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 00:27:05 -0700 (PDT)
+        Wed, 30 Sep 2026 00:44:45 -0700 (PDT)
 From: Mehmet Fide <mehmet.fide@gmail.com>
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Luka Gejak <luka.gejak@linux.dev>,
@@ -66,12 +64,10 @@ Cc: Luka Gejak <luka.gejak@linux.dev>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	mehmet.fide@screeningeagle.com
-Subject: Re: [PATCH rtw-next 2/2] wifi: rtw88: support channel switch in AP mode
-Date: Wed, 30 Sep 2026 09:27:04 +0200
-Message-ID: <20260930072704.1981414-1-mehmet.fide@gmail.com>
+Subject: [PATCH rtw-next v2 0/2] wifi: rtw88: channel switch in AP mode
+Date: Wed, 30 Sep 2026 09:44:42 +0200
+Message-ID: <20260930074444.1991223-1-mehmet.fide@gmail.com>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <bef3467b008b4bc790ae2baedc1f4625@realtek.com>
-References: 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,21 +76,46 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Ping-Ke,
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-On 2026-09-30 Ping-Ke Shih wrote:
-> No need to mention rtw89, which you have mentioned in cover letter.
+hostapd's CHAN_SWITCH fails on an rtw88 AP because the driver does not
+announce channel switch support, so the only way to move the AP to
+another channel is to stop and start it, and every client drops.
 
-Dropped in v2.
+This adds the support the way rtw89 has it (edba3f107844 "wifi: rtw89:
+implement channel switch support"). The first patch is needed for it:
+rtw_fw_download_rsvd_page() fetched the beacon from mac80211 twice per
+update, which advanced the CSA countdown twice per beacon interval.
 
-> > +       rtwvif->rtwdev = rtwdev;
->
-> Move to be first statement of this function followed by a blank line.
+Tested on 6.12.111 with RTL8821CU and RTL8822BU as an AP (hostapd 2.11,
+one and two stations): CHAN_SWITCH with counts 1 to 5, the stations
+follow without loss; aborted countdowns and STA mode scans are clean.
+The hw scan path is compile-tested only, these firmwares have no scan
+offload.
 
-Both this and the INIT_DELAYED_WORK() are gone in v2: the work is now a
-single wiphy_delayed_work in struct rtw_dev, initialised in
-rtw_core_init(), so add_interface no longer touches it and a hw restart
-cannot re-init an armed work.
+v2:
+- rtw_download_beacon() takes the beacon from the page build and fetches
+  its own for the hw scan; v1 left the scan with -ENOENT (Luka Gejak).
+- a hw scan is refused while a switch is announced (Ping-Ke).
+- one wiphy delayed work per device instead of a delayed work per vif:
+  serialized with mac80211, not re-initialized by a hw restart, checks
+  RTW_FLAG_RUNNING, cancelled on stop_ap, vif removal and WoWLAN
+  suspend, covers IBSS; it starts one beacon interval after the
+  countdown beacon so the count on air is not skipped.
+- commit message of 2/2 without the rtw89 reference (Ping-Ke).
 
-Best regards,
-Mehmet
+
+Mehmet Fide (2):
+  wifi: rtw88: download the beacon the reserved page was built with
+  wifi: rtw88: support channel switch in AP mode
+
+ drivers/net/wireless/realtek/rtw88/fw.c       | 75 +++++++++++++++----
+ drivers/net/wireless/realtek/rtw88/fw.h       |  1 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 46 ++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     |  4 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ 5 files changed, 113 insertions(+), 14 deletions(-)
+
+-- 
+2.55.0
+
