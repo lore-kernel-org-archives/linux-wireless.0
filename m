@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741CB476680
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:18:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2C694766B7
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:18:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790759882; cv=none; b=Mk6Sa0C/zb4DSWMbUYughJ7uewwNdaUlXxv0HRTC7TAUFteNLFX7Foz5QpKiZhTl7DU6nQywVnKOjqXgND48YxoPRLkMsoTQtRxmPBS6tWgG09QV3E4Wg75c8d5KVeEcgWlB3Kzvf8FehlIubk9/dU345CaIhWoAyxOEp4G93pU=
+	t=1790759883; cv=none; b=RJxYqN/ZnLEsad3jQzqsWtVchiDvqKAEZ+EBNXWNjXoCC9Ag7yW8YbWn5XpesYEUVNrz6p+7/v55rI8j5K1gisWU8nuzPY8q+6QNLNDgy/EyIgxHuuhcuDGT7pjc534KrstSvQarccRpvLJturNjdVmaLKBZoZkmgeiloW4Ffhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790759882; c=relaxed/simple;
-	bh=3GftMHPVlyZBoDIDr2pcqILa2F1/w1uu/2VVKhKqLwk=;
+	s=arc-20240116; t=1790759883; c=relaxed/simple;
+	bh=BmdwAUAxQjVlY9p83woU5bRNedhu+Qth3t888vx4Vd4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LmSwV89x6GzHU1ESUFrWY33DRnQhqxvLFcJ4VuMpwDXZtprbLBWUrAZnnGy7gqsI95nmG+3WtuzQ9jc0DWQX+e4cOxutIIaDLWu4+vK1r+GBmY+2/w8zHSZN7SnzpwSYpMFC9Pb2G7TKVFEqcKIxvyQH7mg/c+HbmbcZ2KbzYjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mCRYYb2q; arc=none smtp.client-ip=198.175.65.19
+	 MIME-Version; b=RUx0YR0Y2DJkM+vQw+GB22++rXhRJHm3CGBYgf7DqjTHWi7c22lQJRgZzKF4s+scRz+shqZmhzHxyok1lm0SgT/NqyfPOrRLCmwrSW+W//iNNs951xD5G/UjznPnuPYAAwsBEc6sFDc0vU8cGRo6sWHsNvyfGMKTSg0aK1GY79U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EulBD+q3; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mCRYYb2q"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EulBD+q3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790759881; x=1822295881;
+  t=1790759882; x=1822295882;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=3GftMHPVlyZBoDIDr2pcqILa2F1/w1uu/2VVKhKqLwk=;
-  b=mCRYYb2qOf7+Lg/MMns1gRDAqCrYSblcTOap4pBPkceLrjaawd7FTUj1
-   2cg0RGcRYhLi8Rz72d1gMAc3EqIZQSc53IUGPQvqdgkHT04LtglQ76nVl
-   Rx8eCOV/Dft3TZZ0kIjC6wrwfPRPTltd5i6NhceXkkgbwAfg1sZCGWG8Q
-   280iR/9MQBSC7Zx12w+HI8ciiwwltciFbXXqhaB6NnvG4IQ0Kqs30//oA
-   4CGMqINKErm8tT2KLroNwtj6D33pgFcfOJAYU22TXkL9l+zK6NI+ycAj+
-   /jxDDpAR/3xnx1X0bmF1Y+tBhY7d3l7mfTADEzwYpBVV2B60sSQGPp4L+
-   w==;
-X-CSE-ConnectionGUID: eUqqDstCQHu8QKV+9n1Cgw==
-X-CSE-MsgGUID: 6eSunei5SXGZjWlGGhRwGw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="90447015"
+  bh=BmdwAUAxQjVlY9p83woU5bRNedhu+Qth3t888vx4Vd4=;
+  b=EulBD+q3kYvJDB0kZY6yIpK/oAHE3Cga/e+3+/g05FRv1SszyAulEn6S
+   5tEw0QnhXHCsWlxu3L6YbcFUW5w3PMUIQb2ueMqmACuWI1CBEyngcbWlX
+   cXtGmeeHrYLO/bRRNAwilGJjdDyt5r+XxulfpRoRyqdVraMTnr1qQJczz
+   lHnRh6OKxDnGayhgtIbiLEaC3u4s/zv9PoDtmlYxgHBiE1ZklvZrNKoZV
+   p6Vm2BneJATSYgOJwMD8ajje601vecxHtZkynrpxRiNPQa0x3wVyP9Qnu
+   nFqJ3UyuCRJ51xmaQXwaG6TjH8OqaBRpUyPkq4tD+toYs++nc6NXSHY2V
+   g==;
+X-CSE-ConnectionGUID: lxn821BuQIeyWi2v7ZiLuA==
+X-CSE-MsgGUID: 17+zelTSQAeNJBkeeEvsVg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="90447017"
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="90447015"
+   d="scan'208";a="90447017"
 Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:18:01 -0700
-X-CSE-ConnectionGUID: XKFrT9vxQpSg7lUOEp4GnQ==
-X-CSE-MsgGUID: dHDAVgtHRrqaN/++eZqZEQ==
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:18:02 -0700
+X-CSE-ConnectionGUID: UasCN24qQeCxvaA2QjlcQA==
+X-CSE-MsgGUID: JkSFju8yTZ2TMDIu6PSSCQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="275673513"
+   d="scan'208";a="275673519"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:17:59 -0700
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:18:01 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 iwlwifi-next 03/15] wifi: iwlwifi: mld: fake a valid NSS field when needed
-Date: Wed, 30 Sep 2026 12:19:40 +0300
-Message-Id: <20260930121740.2589668e377b.Ib41003bd4e10f0fe6d7f4aa1038291be330c3175@changeid>
+	Daniel Gabay <daniel.gabay@intel.com>
+Subject: [PATCH v2 iwlwifi-next 04/15] wifi: iwlwifi: mld: add gp2 timestamps to TX commands
+Date: Wed, 30 Sep 2026 12:19:41 +0300
+Message-Id: <20260930121740.a5016741a467.Ie4d4af8d7100a656a8469edc0c38ec81b0b58860@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260930091952.1490467-1-miriam.rachel.korenblit@intel.com>
 References: <20260930091952.1490467-1-miriam.rachel.korenblit@intel.com>
@@ -63,55 +62,482 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Daniel Gabay <daniel.gabay@intel.com>
 
-We hit a WARNING in mac80211 in sniffer that complains that
-rx_status->nss is 0. This happens on frames that the firmware doesn't
-really understand and when that happens, somehow the STBC bit is set.
-The driver divides the number of antennas by 2 to get the NSS with STBC
-set because each stream requires 2 antennas. Since NSTS=1, NSS end up
-being 0.
+TX command v12 adds a driver timestamp in the gp2 clock domain.
+Firmware uses it to age out frames deferred by CCA for more than
+four seconds. Without it, a blocked queue can stall until the
+datapath monitor fires LMAC assert 0x4433.
 
-Since we don't have devices with more than 2 antennas, just consider
-that when we receive STBC traffic, we have one spatial stream.
+Reading the gp2 register per frame is too expensive for the TX path.
+Instead, use a worker to measure its offset from host boottime and
+publish the offset and validity deadline using atomic stores. TX
+then estimates gp2 without allocation or locking for timestamp reads.
 
-Since this problem has been seen on HE traffic only, don't apply this
-logic on VHT / HT code paths.
+TX requests a refresh after five seconds, while the estimate remains
+valid for ten seconds to tolerate worker delays and bound clock drift.
+Successful refreshes require no periodic work while traffic is idle.
+A failed read invalidates the estimate and schedules a retry after
+roughly one second, rounded for timer coalescing, even without traffic.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Invalidate the estimate before D3 entry and firmware shutdown, and
+refresh it on resume or reload because gp2 restarts with firmware.
+Frames without a valid estimate carry a zero timestamp, which firmware
+ignores.
+
+Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
+Assisted-by: LLM
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/rx.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  11 +-
+ .../wireless/intel/iwlwifi/mld/constants.h    |   4 +
+ drivers/net/wireless/intel/iwlwifi/mld/d3.c   |   5 +
+ drivers/net/wireless/intel/iwlwifi/mld/fw.c   |   7 +-
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c |   2 +
+ drivers/net/wireless/intel/iwlwifi/mld/mld.c  |  13 ++
+ drivers/net/wireless/intel/iwlwifi/mld/mld.h  |   6 +
+ drivers/net/wireless/intel/iwlwifi/mld/ptp.c  |  12 +-
+ drivers/net/wireless/intel/iwlwifi/mld/tx.c   | 130 ++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mld/tx.h   |  36 ++++-
+ 10 files changed, 209 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-index 5f18aa551af5..8fa438fd7815 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-@@ -553,7 +553,10 @@ iwl_mld_decode_he_tb_phy_data(struct iwl_mld_rx_phy_data *phy_data,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 31d3336726b4..9d9eb320db7b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+ #ifndef __iwl_fw_api_tx_h__
+@@ -292,6 +292,9 @@ struct iwl_tx_cmd_v9 {
+  * @dram_info: FW internal DRAM storage
+  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
+  *	cleared. Combination of RATE_MCS_*; format depends on version
++ * @driver_timestamp: gp2 time, in microseconds, assigned before queueing the
++ *	MPDU. Firmware uses it to detect frames blocked for too long.
++ *	Zero means no timestamp. Used from TX_CMD_API_S_VER_12.
+  * @reserved: reserved
+  * @hdr: 802.11 header
+  */
+@@ -301,10 +304,12 @@ struct iwl_tx_cmd {
+ 	__le32 offload_assist;
+ 	struct iwl_dram_sec_info dram_info;
+ 	__le32 rate_n_flags;
+-	u8 reserved[8];
++	__le32 driver_timestamp;
++	u8 reserved[4];
+ 	struct ieee80211_hdr hdr[];
+ } __packed; /* TX_CMD_API_S_VER_10,
+-	     * TX_CMD_API_S_VER_11
++	     * TX_CMD_API_S_VER_11,
++	     * TX_CMD_API_S_VER_12
+ 	     */
  
- 	nsts = le32_get_bits(phy_data->ntfy->sigs.he_tb.tb_rx1,
- 			     OFDM_UCODE_TRIG_BASE_RX_NSTS) + 1;
--	rx_status->nss = nsts >> !!(rate_n_flags & RATE_MCS_STBC_MSK);
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/constants.h b/drivers/net/wireless/intel/iwlwifi/mld/constants.h
+index 890abcab3837..bfd5398510ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/constants.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/constants.h
+@@ -39,6 +39,10 @@
+ 
+ #define IWL_MLD_TPT_COUNT_WINDOW (5 * HZ)
+ 
++#define IWL_MLD_TX_GP2_VALID_PERIOD	(10 * HZ)
++#define IWL_MLD_TX_GP2_REFRESH_MARGIN	(5 * HZ)
++#define IWL_MLD_TX_GP2_RETRY_PERIOD	HZ
 +
-+	rx_status->nss = nsts;
-+	if (rate_n_flags & RATE_MCS_STBC_MSK)
-+		rx_status->nss = 1;
+ #define IWL_MLD_DIS_RANDOM_FW_ID                false
+ #define IWL_MLD_D3_DEBUG                        false
+ #define IWL_MLD_NON_TRANSMITTING_AP	        false
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+index 6d8ede336d59..7a7d07a7914d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+@@ -5,6 +5,7 @@
+ #include "mld.h"
+ 
+ #include "d3.h"
++#include "tx.h"
+ #include "power.h"
+ #include "hcmd.h"
+ #include "iface.h"
+@@ -1610,6 +1611,8 @@ int iwl_mld_no_wowlan_suspend(struct iwl_mld *mld)
+ 
+ 	iwl_mld_low_latency_stop(mld);
+ 
++	iwl_mld_tx_gp2_stop(mld);
++
+ 	ret = iwl_mld_update_device_power(mld, true);
+ 	if (ret) {
+ 		IWL_ERR(mld,
+@@ -1663,6 +1666,8 @@ int iwl_mld_no_wowlan_resume(struct iwl_mld *mld)
+ 
+ 	iwl_mld_low_latency_restart(mld);
+ 
++	iwl_mld_tx_gp2_start(mld);
++
+ 	return iwl_mld_update_device_power(mld, false);
  }
  
- static void
-@@ -589,7 +592,9 @@ iwl_mld_decode_he_phy_data(struct iwl_mld_rx_phy_data *phy_data,
- 		break;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/fw.c b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
+index e5866d89176d..7891afd556a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
+@@ -1,9 +1,10 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
  
--	rx_status->nss = nsts >> !!(rate_n_flags & RATE_MCS_STBC_MSK);
-+	rx_status->nss = nsts;
-+	if (rate_n_flags & RATE_MCS_STBC_MSK)
-+		rx_status->nss = 1;
+ #include "mld.h"
++#include "tx.h"
  
- 	he->data1 |= cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_LDPC_XSYMSEG_KNOWN |
- 				 IEEE80211_RADIOTAP_HE_DATA1_DOPPLER_KNOWN);
+ #include "fw/api/alive.h"
+ #include "fw/api/scan.h"
+@@ -355,6 +356,8 @@ void iwl_mld_stop_fw(struct iwl_mld *mld)
+ {
+ 	lockdep_assert_wiphy(mld->wiphy);
+ 
++	iwl_mld_tx_gp2_stop(mld);
++
+ 	iwl_abort_notification_waits(&mld->notif_wait);
+ 
+ 	iwl_fw_dbg_stop_sync(&mld->fwrt);
+@@ -542,6 +545,8 @@ int iwl_mld_start_fw(struct iwl_mld *mld)
+ 	if (ret)
+ 		goto error;
+ 
++	iwl_mld_tx_gp2_start(mld);
++
+ 	return 0;
+ 
+ error:
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index 0b121114d47c..e05bdbd3e1a9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -2168,6 +2168,8 @@ static int iwl_mld_resume(struct ieee80211_hw *hw)
+ 
+ 	iwl_mld_low_latency_restart(mld);
+ 
++	iwl_mld_tx_gp2_start(mld);
++
+ 	return 0;
+ }
+ #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+index b7b1e3686336..95d6f36b9fd9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+@@ -35,6 +35,17 @@ MODULE_IMPORT_NS("IWLWIFI");
+ 
+ static const struct iwl_op_mode_ops iwl_mld_ops;
+ 
++int iwl_mld_get_systime(struct iwl_mld *mld, u32 *gp2)
++{
++	*gp2 = iwl_read_prph(mld->trans,
++			     mld->trans->mac_cfg->base->gp2_reg_addr);
++
++	if (*gp2 == 0x5a5a5a5a)
++		return -EINVAL;
++
++	return 0;
++}
++
+ static int __init iwl_mld_init(void)
+ {
+ 	int ret = iwl_opmode_register("iwlmld", &iwl_mld_ops);
+@@ -425,6 +436,8 @@ iwl_op_mode_mld_start(struct iwl_trans *trans, const struct iwl_rf_cfg *cfg,
+ 	/* Configure transport layer with the opmode specific params */
+ 	iwl_mld_configure_trans(op_mode);
+ 
++	iwl_mld_tx_gp2_init(mld);
++
+ 	/* needed for regulatory init */
+ 	rtnl_lock();
+ 	/* Needed for sending commands */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.h b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
+index 37f41b504b54..a9e65b216fd3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mld.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
+@@ -29,6 +29,7 @@
+ #include "notif.h"
+ #include "scan.h"
+ #include "rx.h"
++#include "tx.h"
+ #include "thermal.h"
+ #include "low_latency.h"
+ #include "constants.h"
+@@ -196,6 +197,7 @@
+  *	being IBSS manager for that time and needing to respond to probe
+  *	requests
+  * @ptp_data: data of the PTP clock
++ * @tx_gp2: gp2 timestamping state for TX commands
+  * @time_sync: time sync data.
+  * @ftm_initiator: FTM initiator data
+  * @nan_device_vif: points to the NAN device vif if exists
+@@ -306,6 +308,8 @@ struct iwl_mld {
+ 
+ 	struct ptp_data ptp_data;
+ 
++	struct iwl_mld_tx_gp2 tx_gp2;
++
+ 	struct iwl_mld_time_sync_data __rcu *time_sync;
+ 
+ 	struct ftm_initiator_data ftm_initiator;
+@@ -572,6 +576,8 @@ iwl_mld_fw_id_to_link_conf(struct iwl_mld *mld, u8 fw_link_id)
+ 
+ #define MSEC_TO_TU(_msec)	((_msec) * 1000 / 1024)
+ 
++int iwl_mld_get_systime(struct iwl_mld *mld, u32 *gp2);
++
+ void iwl_mld_add_vif_debugfs(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif);
+ void iwl_mld_add_link_debugfs(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
+index 1ac85d6ce1d7..9f7d17dbdee1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2025 Intel Corporation
++ * Copyright (C) 2025 - 2026 Intel Corporation
+  */
+ 
+ #include "mld.h"
+@@ -19,16 +19,6 @@
+ #define IWL_PTP_WRAP_TIME	(3600 * HZ)
+ #define IWL_PTP_WRAP_THRESHOLD_USEC	(5000)
+ 
+-static int iwl_mld_get_systime(struct iwl_mld *mld, u32 *gp2)
+-{
+-	*gp2 = iwl_read_prph(mld->trans, mld->trans->mac_cfg->base->gp2_reg_addr);
+-
+-	if (*gp2 == 0x5a5a5a5a)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+ static void iwl_mld_ptp_update_new_read(struct iwl_mld *mld, u32 gp2)
+ {
+ 	IWL_DEBUG_PTP(mld, "PTP: last_gp2=%u, new gp2 read=%u\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.c b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
+index 2df6643a5aa8..aac7d43bffd1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
+@@ -2,6 +2,7 @@
+ /*
+  * Copyright (C) 2024 - 2026 Intel Corporation
+  */
++#include <linux/timekeeping.h>
+ #include <net/ip.h>
+ 
+ #include "tx.h"
+@@ -20,6 +21,132 @@
+ 
+ #define MAX_ANT_NUM 2
+ 
++static u32 iwl_mld_tx_gp2_host_us(void)
++{
++	return div_u64(ktime_get_boottime_ns(), NSEC_PER_USEC);
++}
++
++/* Returns the gp2 for the TX command, or 0 to leave the frame unstamped.
++ * Sets @refresh when the estimate expired or is about to.
++ */
++static u32
++iwl_mld_tx_gp2_from_est(u32 delta_us, unsigned long valid_until, u32 host_us,
++			unsigned long now, bool *refresh)
++{
++	u32 gp2;
++
++	*refresh = time_after_eq(now, valid_until -
++				 IWL_MLD_TX_GP2_REFRESH_MARGIN);
++
++	if (time_after_eq(now, valid_until))
++		return 0;
++
++	gp2 = host_us + delta_us;
++
++	/* 0 means no timestamp; use 1 for a valid wrapped value. */
++	return gp2 ?: 1;
++}
++
++static u32
++iwl_mld_tx_gp2_timestamp(struct iwl_mld *mld)
++{
++	unsigned long valid_until =
++		atomic_long_read_acquire(&mld->tx_gp2.valid_until);
++	bool refresh = false;
++	u32 gp2;
++
++	if (!valid_until)
++		return 0;
++
++	gp2 = iwl_mld_tx_gp2_from_est(atomic_read(&mld->tx_gp2.delta_us),
++				      valid_until, iwl_mld_tx_gp2_host_us(),
++				      jiffies, &refresh);
++
++	if (refresh)
++		wiphy_delayed_work_queue(mld->wiphy, &mld->tx_gp2.wk, 0);
++
++	return gp2;
++}
++
++static void iwl_mld_tx_gp2_refresh(struct iwl_mld *mld)
++{
++	unsigned long valid_until, delay;
++	u32 gp2, host_us;
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	if (!mld->fw_status.running)
++		return;
++
++#ifdef CONFIG_PM_SLEEP
++	if (mld->fw_status.in_d3)
++		return;
++#endif
++
++	if (iwl_mld_get_systime(mld, &gp2))
++		goto retry;
++
++	host_us = iwl_mld_tx_gp2_host_us();
++	valid_until = jiffies + IWL_MLD_TX_GP2_VALID_PERIOD;
++
++	/* Keep arithmetic in u32 to match firmware wraparound semantics. */
++	atomic_set(&mld->tx_gp2.delta_us, gp2 - host_us);
++	atomic_long_set_release(&mld->tx_gp2.valid_until, valid_until ?: 1);
++
++	IWL_DEBUG_TX(mld, "gp2 sync: gp2=%u host_us=%u delta_us=%u\n",
++		     gp2, host_us, gp2 - host_us);
++	return;
++
++retry:
++	/* Stop new TX readers from requesting immediate retries. */
++	atomic_long_set(&mld->tx_gp2.valid_until, 0);
++	delay = round_jiffies_relative(IWL_MLD_TX_GP2_RETRY_PERIOD);
++	wiphy_delayed_work_queue(mld->wiphy, &mld->tx_gp2.wk, delay);
++}
++
++static void iwl_mld_tx_gp2_wk(struct wiphy *wiphy, struct wiphy_work *wk)
++{
++	struct iwl_mld *mld = container_of(wk, struct iwl_mld, tx_gp2.wk.work);
++	unsigned long valid_until = atomic_long_read(&mld->tx_gp2.valid_until);
++
++	/* TX may have queued this work using an older estimate. */
++	if (valid_until &&
++	    time_before(jiffies, valid_until - IWL_MLD_TX_GP2_REFRESH_MARGIN))
++		return;
++
++	iwl_mld_tx_gp2_refresh(mld);
++}
++
++void iwl_mld_tx_gp2_init(struct iwl_mld *mld)
++{
++	atomic_set(&mld->tx_gp2.delta_us, 0);
++	atomic_long_set(&mld->tx_gp2.valid_until, 0);
++	wiphy_delayed_work_init(&mld->tx_gp2.wk, iwl_mld_tx_gp2_wk);
++}
++
++void iwl_mld_tx_gp2_start(struct iwl_mld *mld)
++{
++	lockdep_assert_wiphy(mld->wiphy);
++
++	if (iwl_fw_lookup_cmd_ver(mld->fw, TX_CMD, 0) < 12)
++		return;
++
++	iwl_mld_tx_gp2_refresh(mld);
++}
++
++/* TX is quiesced before stopping the refresh work. */
++void iwl_mld_tx_gp2_stop(struct iwl_mld *mld)
++{
++	lockdep_assert_wiphy(mld->wiphy);
++
++	if (iwl_fw_lookup_cmd_ver(mld->fw, TX_CMD, 0) < 12)
++		return;
++
++	wiphy_delayed_work_cancel(mld->wiphy, &mld->tx_gp2.wk);
++
++	atomic_long_set(&mld->tx_gp2.valid_until, 0);
++}
++
+ /* Toggles between TX antennas. Receives the bitmask of valid TX antennas and
+  * the *index* used for the last TX, and returns the next valid *index* to use.
+  * In order to set it in the tx_cmd, must do BIT(idx).
+@@ -588,6 +715,9 @@ iwl_mld_fill_tx_cmd(struct iwl_mld *mld, struct sk_buff *skb,
+ 	tx_cmd->flags = cpu_to_le16(flags);
+ 
+ 	tx_cmd->rate_n_flags = rate_n_flags;
++
++	tx_cmd->driver_timestamp =
++		cpu_to_le32(iwl_mld_tx_gp2_timestamp(mld));
+ }
+ 
+ /* Caller of this need to check that info->control.vif is not NULL */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.h b/drivers/net/wireless/intel/iwlwifi/mld/tx.h
+index 520f15f9d33c..0a9a2e4abcab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.h
+@@ -1,11 +1,15 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2024 Intel Corporation
++ * Copyright (C) 2024, 2026 Intel Corporation
+  */
+ #ifndef __iwl_mld_tx_h__
+ #define __iwl_mld_tx_h__
+ 
+-#include "mld.h"
++#include <linux/atomic.h>
++#include <net/mac80211.h>
++
++struct iwl_mld;
++struct iwl_rx_packet;
+ 
+ #define IWL_MLD_INVALID_QUEUE		0xFFFF
+ #define IWL_MLD_INVALID_DROP_TX		0xFFFE
+@@ -74,4 +78,32 @@ u8 iwl_mld_get_lowest_rate(struct iwl_mld *mld,
+ void iwl_mld_tx_skb(struct iwl_mld *mld, struct sk_buff *skb,
+ 		    struct ieee80211_txq *txq);
+ 
++/**
++ * struct iwl_mld_tx_gp2 - gp2 timestamping state for TX commands
++ *
++ * Reading gp2 directly in the TX path is too costly. Instead, TX lazily
++ * schedules @wk to refresh gp2 in process context and adds @delta_us to the
++ * host clock to timestamp queued frames.
++ *
++ * A zero @valid_until leaves frames unstamped, including on older firmware
++ * without TX_CMD v12. A deadline that wraps to zero is published as one.
++ * Failed refreshes clear @valid_until, leaving @delta_us for old readers, and
++ * schedule a retry with %IWL_MLD_TX_GP2_RETRY_PERIOD rounded for timer
++ * coalescing, even without further TX traffic. Old readers may retry sooner.
++ *
++ * @delta_us: gp2 minus host time, in microseconds, modulo 2^32;
++ *	valid while @valid_until is nonzero and has not expired
++ * @valid_until: jiffies deadline for the offset, or zero when disabled
++ * @wk: worker that refreshes the offset and retries failures
++ */
++struct iwl_mld_tx_gp2 {
++	atomic_t delta_us;
++	atomic_long_t valid_until;
++	struct wiphy_delayed_work wk;
++};
++
++void iwl_mld_tx_gp2_init(struct iwl_mld *mld);
++void iwl_mld_tx_gp2_start(struct iwl_mld *mld);
++void iwl_mld_tx_gp2_stop(struct iwl_mld *mld);
++
+ #endif /* __iwl_mld_tx_h__ */
 -- 
 2.34.1
 
