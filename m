@@ -1,145 +1,161 @@
-Received: from mail-oi2-f13.google.com (mail-oi2-f13.google.com [74.125.231.205])
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414BF4F93DB
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 15:12:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.205
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790781163; cv=none; b=j+LfoukMpmil/GKt90W62A5KRyij+JW/Ewx6hRYw7CX6CXnRCDH9fAELPCngCGRd8DGYGUeLTtFL7pUeCjxY7fhLa8/CU03bh+yjcKf1VS93oc8H9ty7++AZfma6xyRghcx+jktwIC65mxiO+sDQEvWh3sxUlUeb84/kSeve+zw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790781163; c=relaxed/simple;
-	bh=N5TwGmCOg73FQhkQUlqK26vGWZ+6twK0jOc1jidbG9w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=se5A/DY+TNusn38aZU+Srm0i8oupD7AJvmtcQ5ULQkS3MW0s5Trq5Wib7tjVPPBUlR1HVJT3GYDW+j41Xv7O7GdrL45KZqxOKX5xMLrpwSY/CPk1LOr5/djIhCxLeoUAug+YjOAlXW4AJRWUFTMejYs/YumR0KkH6Wp7Iy38mC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=F2LynHut; arc=none smtp.client-ip=74.125.231.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D76B4F4036
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 16:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790786974; cv=pass; b=lguzqAdc5pqGghd8jtKI6YbalDS4ibYKvsS6B1b+s2YN3dVQ318aH9qOzfP91EKhAN359tLtzHkqWgu6P30Zg/JoikFcYHIM+2fLDI1zW2xLLcJijBiLoPkaUD7of8Dd3g3nES6Kd1ZuzSap9u4NzInOaBLTLH5nHrdzruT7Y/U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790786974; c=relaxed/simple;
+	bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=qs8UhBodkD0chXvR+B8+jgXLrJJeVWgTEGUi3nrM+wTG2O4OMk1kwx2x+l7NTiAqYg7Lr5uWbbMVHXt80o1c9CHj+s3yr+Eno5yaAI8gJd6Mb7cO+b2IukwuceGYqnDb0oqMTjDNGqh5FQy9vlnOlKeR1YY6UPDlbc4jUokzdMY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tCcTd+DL; arc=pass smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="F2LynHut"
-Received: by mail-oi2-f13.google.com with SMTP id 5614622812f47-4c3b639adbcso5291502b6e.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 08:12:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tCcTd+DL"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-910704e63a9so9175776d6.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:49:32 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790786971; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Dweyd4kdv1S48YzId3UM2VdvwK4+oDMsTd6KU7F4V5APC7gcylmJm2M5X7i936jwi+
+         KYvPoL7JWNnf94waeZycXaF8/XmjkQmVYDW5Fw7622wtUqGcPYJVMBNkipHTPDWfp58e
+         ssqBs3ijCFqu7aOmTJpaQi1vG4TvLCiXVJrBcFLUCB01wk0ZrHibRxOuaYkkZ+Y/lzSh
+         o3QbOZADlb3vK4GE6OxQPQkSg8WsRE1t4Vh8sK3xV/dtXbfD0M6eU5xcEgoI/I/l/idc
+         /caeVhkaHmLnSqtcLCPzR+Zuxav1bBm+vZKAqTE7KoNyiHJnARaCsH5uqhNcTWkju7wo
+         otaw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
+        fh=/SvzJGxJVq68NlDMZmOEhfggtxQkpLraiUIYNwL3bwQ=;
+        b=C8sGH1hLHkqXxgMnQ4MeMWrpchpD0gAxLy8tYBpd29FlJIiBeORi2UtxTHD0sO8qoQ
+         tngi0vM9lao/lgiJ+I2kdaRqYnyzbYsVGywxnvvOsphMAJSvclQVk7ikzeqrwxH7LkCg
+         amIKKbte1LRLRghhlZxl+vzeVCdlEl5Qhs5mlQnB2FBM5ukpBl/bBWpxu7sx9w0YtgJ+
+         G+ymzoAO9K1zdl42CkEqpe9oWQqp0aPUQyJXS0IKECkf4Gwu9d1SR7lyLcvPpolcfayc
+         m/dI48qXS3pQCyZmXam6CPe0z/a4E78PCsjjE+9GL5rOqUkpihc/d8LcbHaInRvXuaDC
+         Z1Dg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790781152; x=1791385952; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
-        b=F2LynHutv0ZOmuF8vmFQU0cyqiI4GB5kyNhWNIcFmTm03ZYDlIdoeMvOS1ol6pHe7P
-         1opniFMp9w/1hoNxwBw1abApRh1Po/j0x2ZuaQZgt0r7WvI/GTEHkvv7KKThQRNgUeDk
-         U3vhG4nOcBSBbCwSBzxPAF2/N9kbmWUuQeOCbbHXQ+GZ3OEDXh8iCi7m7OhysGURcFuR
-         MYdYJN3ZhgKPd9PQq1QsBlgi+KBVppXhOjswSN+K42z+R3efFI3SH3JDdd9Kub164vap
-         FKr2jNuW6GBhqs4aVFIb+0YT7DujIACVvy1vKyp41BAFenyWoJ63gl+3RGCO5hghcRCU
-         QQ9w==
+        d=gmail.com; s=20251104; t=1790786971; x=1791391771; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
+        b=tCcTd+DLGs9sBdlnQcXaucopfITBrPe8XKjYki/asPhXRYRLkfn235gBE0TPPTgYZd
+         Kqh27H9NiszDnZVQFl3NvUeTlJfFSoaw7a1DA9Hmyrp5b/Qr0LTBYDNzOjMXjaRvIab3
+         afU6ljijFKYgKAXyOyOvz9MNq08Aq9dxgFCbZVeM3yIw+ZALhtIavcPtMo4dFXI8MMaw
+         zf4LkB3YbZ75tpeb1WpjFiqx8lvm9vTF3LdIM/o2FSQGa76srPKMG62qeBJR6dAohaUP
+         XoA0tj3H4+lHp4+0FSjloYcCbdW4qr2Qaax6XEeHezQSFuXxoUHLY5/4udcVtKIZDUW2
+         sEqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790781152; x=1791385952;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
-        b=nZ0tB7WtrKOBwB6spqusd7n+OjvfxfV90FLF0TizhAsOXpMV8tp0g1NuHfX2Ij5C3k
-         AnITx4pEgzEQExSXNq2VQfnzT+/sYStoC/Rx+CeSV9es9YK98v/qD65Pk/VktttItXsL
-         5w2uutc9ItsnsTF4Qyu11P676pAzfXSu3Vl3bT1nCuqIU+8R37i8CFr9+qBKO3BzyHQG
-         x2KgOsvE9xgEtr3amZfZy4P0AMBPYc452Ol8SBURwPks457tLEMQLRYSoYmkpm1inLK9
-         NRhFgyoviaWCCte9Ap1jPFTzE7BplvbgInv3HdlZYZDPguZoNpSpqkGtRdIFMEMur6cv
-         5TVg==
-X-Forwarded-Encrypted: i=1; AKwUvByayc2NLzRe6qRHZb9+PqJqivPfp2uJIsvEZSbbZXmCaHmN+cAZdtLH9q19qzWmJaj9t8JeMyQYvk7DDBstGA==@vger.kernel.org
-X-Gm-Message-State: AFuF++l+9NubeHjYZuRYNarfuCr/Aa7PpY45Vv9wC5Z+fQlROubM96kV
-	9lN8ahfJ2QGR+wiAVsSKHcH0X7yAVE5uptLvPBd0gHHNq9uFKfN6YBEVrWAUAPsGNMI=
-X-Gm-Gg: AYBFou1fw9J44smYilgc1E4iXohU/34Wp+nAhTl+On1aFB4f1R8Y1Hgdv3gyDZ/EVZk
-	hdXJaWQ5Eu0IUqSwu9xvqQHLv8NJ+q8Y5mcgg2tgM6adH2UiCzAQlLdi4r3uPr/5jQfu9g9IFhs
-	cm9jgr56XKbv/yUmgWSbGaIPxPCWQosIAUxV50uE/01GgV29zw4faHmuyqBMcEo7wcYxpXfA4je
-	HGvUH5bMYlhOHcebx6pwa88B+G8bNen5Dxyw1nJjiXzEj55YT3sxFARslZlyk1SlDwP6+iddXLB
-	b7Wx0dWqiwsfAnd1HJQCkckpTwIOg7AJTxHnG2kSIUyWeuU4ir4f9oH1fz/45+hxaortkrnPXXj
-	fUAlqrJiCP/zzPwZamyUUTKPGjXiRxCvjuVkkuz5oW9AN6C40SLp5XwcFZYaSs/w8bAMSaBURNh
-	M158ULnjoRmvZNJ0ayHXlzz+f+juEfragxuxniAKrCT25o
-X-Received: by 2002:a05:6808:23cd:b0:4d6:90d3:e187 with SMTP id 5614622812f47-4f1b9a4dd1fmr1463609b6e.48.1790781151901;
-        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
-Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4f1b61be7d8sm1076055b6e.17.2026.09.30.08.12.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xBvyv-0000000BwZW-3H3V;
-	Wed, 30 Sep 2026 12:12:29 -0300
-Date: Wed, 30 Sep 2026 12:12:29 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org,
-	johannes@sipsolutions.net, mani@kernel.org, yishaih@nvidia.com,
-	skolothumtho@nvidia.com, kevin.tian@intel.com,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Message-ID: <20260930151229.GR163130@ziepe.ca>
-References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-4-jtornosm@redhat.com>
+        d=1e100.net; s=20260707; t=1790786971; x=1791391771;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
+        b=p3yW7jWVC27PD3Pnu8mwGeRDdTINC7Jb2+L29psdenj6+zeSevBlVy1OAwx5ExW4oZ
+         x/sJYvYftwsPDxIqoy4OPD+XuAYpQ9Xg37Z9pzHllovDmSpDsIQeOWriGgpzMFSZJS4x
+         Gq5PUF2KtwWYw+DDpV5S0BzvOCGK/xFvuiAIwyoKPL4RxMFMvYgoXcK9qPSyz/QY3UcX
+         dTTUC6GvPm0IAnC1qSyuhdYd36vkfszYBlTzkaamamgqVV37SNV02WLFP10dT8mDqA+g
+         m3FiBwRfxYodtN1YU8jeHofOmJz+jpgBHfk9YUzoIrmB1sSGufCecIQyYj9iqRp4/EDV
+         VvSQ==
+X-Gm-Message-State: AFq9FYKjpkP6/3hsB9IJOxiQf8UI8YW3fehhzrZvDmjoqNnB7TYRX6wg
+	SkAXB+UmvmoRJ5mr18Jhd3I0OJWs+smLtxoPkhC0oNx5syvDi02QKWNqE9AsHSnGhTC+SPn8/Du
+	4G9p8LK4+Gb1wpsEatdHyMY1lMt4KFRzlM0cSJRBCiw==
+X-Gm-Gg: AYBFou1pFCJwBxD0YBrgE+L4hzdSjTPc0uDIcgTV5HTjcEQ6mGedBARL3J/3JGGs57/
+	Nm0RBWobyhD6qi/0Xl2rnLNPsGqCTKqQkHS8m0zpNCfzz3o+B6idrMh7sYEkZk7SgKwqMaTx/M7
+	qWDl+8ECKNZwrs9iY9/50a78eMOVGPbC9GkvM36FHqv3Csh4keKBK08RK58MSzaKkaXh3ZisTkc
+	p7TMuW59cEYanOd2ePJS3r9T+Mg+vtRT2v7onl6E1ai7a9HuR8ls+HUn4d739M2atQIsWyVEhf5
+	x4SwAiEu2s0iNe1YLfXiwEsYPSZ6TlVSkQyG/plwrjNW7CBN4w+YtzLE/864t8NPMUvBwu9cYBx
+	lGDfQLKz3/0cANXtJEE4k3zbSxHjQUScrEbmO6vLu7ed0
+X-Received: by 2002:a05:6214:54c5:b0:90c:a989:a68a with SMTP id
+ 6a1803df08f44-917aa2f093bmr3499616d6.11.1790786971288; Wed, 30 Sep 2026
+ 09:49:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260930140833.576941-4-jtornosm@redhat.com>
+From: Claudio Gratton <cla20gra@gmail.com>
+Date: Wed, 30 Sep 2026 18:49:19 +0200
+X-Gm-Features: AclHuK8KG73Rdozl3C21tUCJ3Qj_vy52lU6tUV5dAYIHAggwiXb0lvze3F5m_BU
+Message-ID: <CAGohoTay793z6HftCY-1m+DP0yCJ1eeB+q4p5-z7+bOnrOWOCQ@mail.gmail.com>
+Subject: mt7925e: endpoint keeps a stale zero-latency LTR after s2idle resume,
+ blocks package C6/C10 (Panther Lake laptop)
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, 
+	shayne.chen@mediatek.com, sean.wang@mediatek.com, 
+	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Sep 30, 2026 at 04:08:29PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Add VFIO variant driver for Qualcomm PCIe devices that require
-> MSI address passthrough for VM operation.
-> 
-> Qualcomm ath11k and ath12k WiFi devices have embedded interrupt
-> controllers that require physical host MSI addresses programmed to
-> device registers. In VMs, the driver only sees virtualized guest
-> addresses, causing firmware initialization to fail.
-> 
-> This variant driver:
-> 1. Caches physical host MSI values after allocation
-> 2. Writes them to extended config space with magic signature "QMSI"
-> 3. VM drivers discover and use these values automatically
+Hi,
 
-You should probably explain a little be more here
+I may have found a resume issue with the MT7925 PCIe Wi-Fi card
+(mt7925e) on a Panther Lake laptop. I am not sure whether the driver,
+the firmware or the platform is at fault, so I'm asking here first.
+Everything below is marked either "measured" or "guess".
 
-1) Linux VM driver fills up the normal MSI-X table
-2) HW has some non-MSI-X table registers
-3) Linux VM driver pokes into the interrupt layer and extracts
-   one of the MSX-X table entries addr/data pair
-4) Linux VM driver now programs that copied addr/data pair into #2
+Hardware / software
+- HP OmniBook 7 14-hg0xxx, Core Ultra X7 358H (Panther Lake), Wi-Fi/BT
+MT7925, mt7925e at 0000:2c:00.0, root port 0000:00:1c.0
+- Reproduced on Arch linux 7.2.3.arch1-3 and on linux-omarchy 7.2.5-3
+(Arch config plus patches). Not tested on a vanilla mainline kernel.
 
-This is, of course, all wrong. These days it should be using one of
-our mechanisms to allow devices to have their own private MSI
-registers.
+Symptom (measured)
+- Fresh boot: the PMC LTR table (/sys/kernel/debug/pmc_core/ltr_show)
+shows SOUTHPORT_B = 0x0 and the package reaches PC10 at idle.
+- After the first s2idle resume in a boot, SOUTHPORT_B reads
+0x80008000 (valid, zero latency) and stays there. The package then
+stays in PC2 (PC6/PC10 residency 0%) although everything else is idle.
+- Idle power on battery is roughly 0.5 W higher while it is stuck
+(about 3.1-3.6 W vs 2.0-3.1 W, screen on). I also changed other things
+in the same period (a Bluetooth autosuspend workaround), so treat the
+0.5 W as approximate. With "echo 1 > ltr_ignore" the package reaches
+PC10 again.
 
-I forget if this is the right way for PCI, but the driver can call
+Why I think it is this Wi-Fi card (measured)
+- Unloading mt7925e changes SOUTHPORT_B to a constant 0x88418841.
+- Toggling the Wi-Fi radio (rfkill), NVMe I/O bursts and an empty USB4
+port do not change it.
 
-  platform_device_msi_init_and_alloc_irqs()
+State across the resume (measured, one suspend cycle, "systemctl suspend")
+- Before suspend: SOUTHPORT_B = 0x0.
+- Immediately after resume, before any userspace hook: SOUTHPORT_B = 0x80008000.
+- Endpoint 2c:00.0 stays in D0; DevCtl2 = 0x0409 (LTR Mechanism Enable
+set) and the LTR capability max snoop/no-snoop latency 0x100f/0x100f
+are identical before and after.
+- Root port 00:1c.0: DevCtl2 = 0x0400 and LnkCtl = 0x0c43, unchanged.
+- No kernel messages from mt7925e or PCI during the resume.
 
-And directly program the MSI registers with their own special
-interrupts vectors, no copying from MSI-X.
+Workaround that fixes it (measured)
+- About 6 s after resume, clear and re-set DevCtl2 bit 10 (LTR
+Mechanism Enable) on the endpoint, 0.3 s apart:
+setpci -s 2c:00.0 CAP_EXP+0x28.w=<old & ~0x0400>; sleep 0.3; setpci -s
+2c:00.0 CAP_EXP+0x28.w=<old>
+The endpoint then sends a fresh LTR message, SOUTHPORT_B returns to
+0x0 and PC10 residency comes back (about 28% of samples in my run,
+idle 1.99 W with the screen on).
+- I run it from a systemd-sleep hook as a stop-gap. It has fixed the
+state after every resume I have tried, including a repeat this
+afternoon.
 
-If the driver is fixed to work like this, as it should be, then it
-fully breaks the scheme you propose here. That's not good.
+What I do not know (guess)
+- My guess is that the chip or its firmware re-sends a "0 latency" LTR
+message at resume and never sends the update. I cannot rule out that
+the driver or the platform leaves something unprogrammed; the
+unchanged config space only shows that it is not a PCI-level
+difference I can see.
+- I have not checked whether other MT7925/MT7922 platforms, or
+Intel/AMD systems, show the same.
 
-The problem here is not really a qcom problem, and treating it as a
-qcom quirk is why it keeps being stuck, IMHO.
+Questions
+1. Has anyone seen the same behaviour, and is it known on the firmware side?
+2. If it is a driver issue, would re-triggering the LTR message at
+resume (as above) be acceptable in mt7925e, or is there a cleaner way?
 
-The real issue is that this device MSI scheme does not work in VMs at
-all. It does not work because the VM IRQ design requires the VM to
-trap and modify all the MSI addr/data pairs at the register write.
+I can provide full logs, run patches or test firmware versions.
 
-The technically clean solution is to redo the VMMs so they don't
-require that, ie use interrupt remapping so the VM's view of the
-addr/data pair matches physical. That's super hard and will probably
-never happen.
-
-But! Now that we have these device MSI domains I wonder if there is
-some half option to provide a hypercall so the device MSI domains can
-call out to the hypervisor to get the true physical addr/data pair to
-program?
-
-This is fundamentally an irq layer issue in Linux, not a qcom one.
-
-Jason
+Thanks,
+Claudio Gratton
