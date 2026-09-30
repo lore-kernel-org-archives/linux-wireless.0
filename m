@@ -1,111 +1,162 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E803B47E1
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:03:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45DE62F7EE0;
+	Wed, 30 Sep 2026 09:07:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790759005; cv=none; b=XShTaxxvGq2d1aySziYruhBpHjwVdDpYTw/cRS7Gk6u41oDxOQnB4LqKHwgvr32RpxJ8z/e8bsAzcLCVskbhTdL/TcHG6aXZT6Sbuhngi7qPdpyxMaAMO7RNSJ6offyAZRUXI4bV4/0ecAzh3+ow/IlVKkixIQxD4f2vL14escE=
+	t=1790759254; cv=none; b=hQar7swaO8ER8LEbWnY0h8D93N4k/HIhmBrJQIsWbrML3uLjcz2w3lK5JTxZEb5O/wvsABhBrecw9QDclAC8wa2GyCUMGqhQX2UP9EZmKaky3nHvHp/ZT3K/2lForF/E98XLSIZ+LbIsQXYKffwIbB91FYcexS9mHOzTIjSHg8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790759005; c=relaxed/simple;
-	bh=lzG1B8JkumQhMMcqRC85E4tpIbI1G9NwFtIC2hJHWmo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jdQB9EhqUOpqSai04F80De68elTw1sfjOJ4kvnLM4GjJ2E0K8nonMM/gbWY4eHAN0Ll4bJxdKTeOPRFo11Jn1uHofRDPOm/7TXC8WwWCfGynobS1Q2qG9oDIf1XinttF75gSjVhKjPTiEatNciDQ6jr9VNp/qkLB1OpUkMHfQro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AM3O1ni3; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790759254; c=relaxed/simple;
+	bh=ChlTGHjr10CpdsVAnYLDjpXBK54SzMjwRRWJeALLfy8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f+jki3VB5qcmaDUglyVRO5t6if3sFThKkCiZaZiyp7Kct71T5Xcmlbg9HZVA7jeGYUTOgYJ08gfIVxChCS17MLLhWiDagtflyxauy9G1dbFCieQK/Dr6mSU6rm1Q3XSIixjwiDbHBoqORu+mOcWdlzI4u88J0fmlQONXwOLB9Y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=JawMr1Ih; arc=none smtp.client-ip=119.15.109.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AM3O1ni3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790759004; x=1822295004;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=lzG1B8JkumQhMMcqRC85E4tpIbI1G9NwFtIC2hJHWmo=;
-  b=AM3O1ni3ol8RcWBA5ixB/jZZ4Goy59OX6aCZYxoQdCCb6CzIhveXXUY5
-   NJabGkYdBOVoBwLIcxIJNxNFl21iD9Mzqbu+pIv6x5xPuHTdUgJXupgYv
-   Wz9VMCdCUVeFVeCYz7Wyc8Xo6rgokz238Y5CcZMnXeNJRT4Ah235AJQVZ
-   bvkRZ0mdnBWuX/phWxNqZhnGni98u6vqXIb9jCAF/irUz4LG1dDl33lVC
-   +LO0sKbjMgtfi2wXF8DoBSC/tSoV6bAPVwCGeV28DIMiEd1F/Zoy1JlK4
-   MTlTIlsagrYNlFucMoo+3zlGkOroIzPI263G7M2r2rhW9Vd+3DBvVXwB1
-   A==;
-X-CSE-ConnectionGUID: yXYJEEQQQ5WapTszp9B8AQ==
-X-CSE-MsgGUID: MT4/xckJTgGy4p6/kn5/NA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="93978375"
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="93978375"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:03:23 -0700
-X-CSE-ConnectionGUID: +W6ZyE9XQomseRFRZQkirA==
-X-CSE-MsgGUID: 0oQ6F765TCW2fzqd2Nr9DA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="273724538"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:03:21 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: set SP in reg connectivity with any channel
-Date: Wed, 30 Sep 2026 12:05:18 +0300
-Message-Id: <20260930120507.2ba7e2905019.I6d589cf60434ba9d3e007fe4537c8c8e2aeb7415@changeid>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="JawMr1Ih"
+Received: from Hawking.lan (hawking.lan [10.0.1.4])
+	by www.nmnhosting.com (Postfix) with ESMTP id AFD04403EF;
+	Wed, 30 Sep 2026 19:07:14 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
+	t=1790759234;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Qd3Y01Zb2wytfqLwRJBQWcQjrURdNpO0DRg//Fuks3c=;
+	b=JawMr1IhI+W51eReUac5BjzN7/hgPS1yqlU+3sRH3ZE5Nc7x/pgkoAr63PjOHQ+YTutIsK
+	sUm1sxAADEf/xz8AB+i4ppbe85UJlvnDuvHUgh168Wb3kaTnj8sigDjBdaz573DtmTTjTp
+	BkRWJ/YcXcfkAaP4aPAS0xua/vwwuoGtlpOYyRAhDjG+tAFnPMoS58SLAVDYajbcCA8ZcZ
+	IDwVM4h2KL6IfmWNvTlvhvLQAol6gtkPxNgQm1AMn0vkQhePPrY/WjufIyUGEqv8xlrNsZ
+	nyr0rYoTw+ycu4MJWHWlK/5T61QHulH/2We4uiD/DTeBpzy/5Pfdn7AArPRb9g==
+X-GPT-Reason: legitimate; the email is a technical software patch
+	submission for the Linux kernel, which perfectly aligns with the
+	personal/professional context of the recipient (alastair@d-silva.org)
+	and sender (alastair@d-silva.org); the content is highly specific
+	technical documentation including a code diff (rtw88: sdio), hardware
+	register details (REG_SDIO_HISR), and empirical timing measurements;
+	authentication is consistent as the From and Return-Path domains
+	match the recipient's domain, and there are no phishing indicators
+	such as urgency, suspicious links, or requests for sensitive information.
+From: Alastair D'Silva <alastair@d-silva.org>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Alastair D'Silva <alastair@d-silva.org>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Wed, 30 Sep 2026 19:07:14 +1000
+Message-ID: <20260930090714.2779699-1-alastair@d-silva.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+In rtw_sdio_handle_interrupt(), the HISR status register is cleared using
+Write-1-to-Clear (W1C) semantics. However, the driver masks out the
+REG_SDIO_HISR_RX_REQUEST bit in the local 'hisr' variable before writing
+it back, causing a 0 to be written to that bit. This prevents the RX
+request interrupt from being acknowledged and cleared in hardware, trapping
+the CPU core in an infinite interrupt storm loop (starving the RCU preempt
+kthread and locking up the system).
 
-The regulatory connectivity element is informational and for
-debug, per spec, but that didn't stop some situations/tests
-from requiring certain bits to be set, notably the SP bit to
-be set if any channel is available for AFC client behaviour,
-even if that seems to reduce the utility of the bit.
+Masking out the bit in software was originally intended to allow
+budget-limited polling without losing interrupts. However, because the
+status register was never acknowledged, the hardware interrupt line
+remained asserted continuously.
 
-Set the bit accordingly by initialising the flags to NO_AFC
-and then masking for all enabled channels.
+Resolve this by adopting the standard interrupt masking pattern:
+1. Mask interrupts via rtw_sdio_disable_interrupt(rtwdev) upon entry.
+2. Acknowledge pending status bits via rtw_write32(rtwdev, REG_SDIO_HISR,
+   hisr) without clearing REG_SDIO_HISR_RX_REQUEST from the writeback mask.
+3. Service the pending interrupt events (rtw_sdio_rx_isr).
+4. Re-enable interrupts via rtw_sdio_enable_interrupt(rtwdev).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Any packet arriving over the air while interrupts are masked latches
+REG_SDIO_HISR_RX_REQUEST in hardware. Unmasking HIMR restores the interrupt
+mask and immediately re-asserts the SDIO interrupt line (DAT[1]), causing
+ksdioirqd to run another pass and drain the new packets.
+
+Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation for SDIO based chipsets")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- net/mac80211/util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+v2:
+  - Drop the complex drain-and-recheck inside rtw_sdio_rx_isr() and budget
+    bypass logic from v1.
+  - Implement clean HIMR masking (rtw_sdio_disable_interrupt() on entry,
+    rtw_sdio_enable_interrupt() on exit), matching the PCI driver model as
+    suggested by Ping-Ke Shih and the Realtek internal team.
+  - Verified on physical RTL8821CS hardware (Allwinner H618 / Mellow Fly-C5).
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9e1749d2e427..44feb80274c6 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2731,13 +2731,13 @@ int ieee80211_put_he_cap(struct sk_buff *skb,
- void ieee80211_put_reg_conn(struct ieee80211_sub_if_data *sdata,
- 			    struct sk_buff *skb)
- {
-+	u32 flags = IEEE80211_CHAN_NO_6GHZ_AFC_CLIENT;
- 	struct ieee80211_local *local = sdata->local;
- 	u8 reg_conn = IEEE80211_REG_CONN_LPI_VALID |
- 		      IEEE80211_REG_CONN_LPI_VALUE |
- 		      IEEE80211_REG_CONN_SP_VALID;
- 	struct ieee80211_supported_band *sband;
- 	bool available_channels = false;
--	u32 flags = 0;
- 	int i;
+Empirical Testbed & Timing Measurements:
+----------------------------------------
+To address concerns regarding bus overhead and packet loss during the masked
+window, rtw_sdio_handle_interrupt() was instrumented with nanosecond ktime
+timestamps on an Allwinner H618 board with RTL8821CS SDIO Wi-Fi under
+continuous saturation traffic (38.0 Mbps TCP / 34.4 Mbps UDP with 0% loss):
+
+1. Bus Overhead (average over 18,660 interrupts):
+   - Disable HIMR:     13.88 us (min: 10.00 us, max: 74.83 us)
+   - Acknowledge HISR: 13.69 us (min: 8.91 us, max: 39.33 us)
+   - RX ISR work:     204.78 us (min: 48.66 us, max: 5.07 ms)
+   - Enable HIMR:      14.46 us (min: 9.54 us, max: 52.79 us)
+   - Total ISR time:  280.32 us
+   Toggling HIMR accounts for ~28.35 us (~10% of total ISR duration) and is
+   negligible compared to payload data transfers over SDIO.
+
+2. Hardware Latching & No FIFO Stall:
+   - In 1,251 out of 18,660 interrupts (6.7%), new packets arrived over the
+     air while interrupts were masked during FIFO drainage.
+   - Reading REG_SDIO_HISR immediately prior to unmasking confirmed that
+     REG_SDIO_HISR_RX_REQUEST was latched in hardware in every instance.
+   - Unmasking HIMR immediately re-asserted DAT[1], causing ksdioirqd to
+     service the newly arrived packets. Zero packets were left stuck in FIFO.
+   - Injecting artificial delays up to 2000 us before unmasking increased
+     masked arrivals to 16.4% while maintaining 0% extra packet loss and
+     zero stalls.
+
+ drivers/net/wireless/realtek/rtw88/sdio.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index 5b40d74b16ee..ff707f207a83 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -1087,16 +1087,21 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
+ 	rtwsdio->irq_thread = current;
  
- 	sband = local->hw.wiphy->bands[NL80211_BAND_6GHZ];
-@@ -2747,7 +2747,7 @@ void ieee80211_put_reg_conn(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < sband->n_channels; i++) {
- 		if (sband->channels[i].flags & IEEE80211_CHAN_DISABLED)
- 			continue;
--		flags |= sband->channels[i].flags;
-+		flags &= sband->channels[i].flags;
- 		available_channels = true;
- 	}
+ 	hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
++	if (!hisr)
++		goto out;
++
++	rtw_sdio_disable_interrupt(rtwdev);
++	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+ 
+ 	if (hisr & REG_SDIO_HISR_TXERR)
+ 		rtw_sdio_tx_err_isr(rtwdev);
+-	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
+-		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
++	if (hisr & REG_SDIO_HISR_RX_REQUEST)
+ 		rtw_sdio_rx_isr(rtwdev);
+-	}
+ 
+-	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
++	/* Unmasking HIMR re-asserts the IRQ line if new packets arrived */
++	rtw_sdio_enable_interrupt(rtwdev);
+ 
++out:
+ 	rtwsdio->irq_thread = NULL;
+ }
  
 -- 
-2.34.1
+2.53.0
 
