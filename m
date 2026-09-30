@@ -1,124 +1,102 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-229.mta1.migadu.com [95.215.58.229])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02867479862;
-	Wed, 30 Sep 2026 09:23:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD8BC3D6CA3
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 10:06:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.229
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790760198; cv=none; b=LJKSahOGhqvVjiNd1TySB4VbKYn+cCvzh2ipGOe5p0+cMVwiYkMR1siLZYdBsU/hbFmcuLwLQnFZwCmWs8KKLkYnFXHIZ0Byfar9l9TsDTexh9M59ewq30C9evkoAOvPTThK5kc0AY4xRyfeemFunr2nGYkj8SUDPZ6CBCBVPwo=
+	t=1790762796; cv=none; b=io0N626R3fn9ccFV2L8pnfnvqneWJZiHe8WT83WMvRaaUpymZ1J4yBAbyeuY5AQ7XH64TpHOJfBgS7cmBhUlV0uPd7LT8tbm1Bzg+qV5xzD1iYmuRSyWc7OHQLR7MIcBnUEBeHltqxWgrGcZ8dFF6m/9AFxWN2BIRNT1HQ7NHy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790760198; c=relaxed/simple;
-	bh=Mo0ozK2toom/+IoL8b8z9I/pnPqqUbQ+h08FWCN+Nz8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HQGYVSfM/CTDR+5e6YV1I0yi+8tI8KM97Jxu2BZglnEa3bQ0I4kJLXcVf+Z5dT01cjGuh3SdiWdwR8ABWw4EwkDJsD2xJ35hKnpx3LYKvVM/VEHrQ3hbLTCyMMipCMvYMNXUwHb+q8Grv35h8ONbgVw325NI3FC8YSQ3Mj+YHP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fpjdw8Fp; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790762796; c=relaxed/simple;
+	bh=9nvl85Z6QtFWRFbLYnO5GWIjhJ87TJx9hTTk0Zsecrs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=o95cHsb987r8ePVT0zntSJ5FjIXKZS86JtrvKVsJmeXt1dPcfzz5T7i7nRasB9d4SI1vCCrrmOmCgz4UjLVgmOJ31I7KaHMKaahdaBP44woV2/wlNv8ArHfNKT1/2wczgZAWZ2vxBcQmVvpLbho/zdtxvSf7ZIv0Jm5tzMgGeSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=DWcl1WGD; arc=none smtp.client-ip=95.215.58.229
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fpjdw8Fp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790760197; x=1822296197;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Mo0ozK2toom/+IoL8b8z9I/pnPqqUbQ+h08FWCN+Nz8=;
-  b=fpjdw8FpzEok5lqzfXRXIEb/4Dzdyy+jnoP99Kda3FKnhyFbvzI3oWHZ
-   nd/Ppwuig+MP/T4LFGv+OqL4vRxJzkffVZu1Vbt2/BbwMC2WeRMuV1CSH
-   JVI/QRTkAoHDVuk7UOywVbsbpUJflXcNvKbU/X3UWVcIZdC30eCKtFFoO
-   tmSYbT7hl78vSx1VmbSY+wS0vaoLZ4FN083BzB5mNotRp/+72e8YHRzrc
-   NOHAl30gtc6vkyXbEFHpvTd1WvGX9PWcPPORCPsIgvNt0uRkNtGLGsFU1
-   YmmhcTfjWzsVvxDQB8PcbGTiJ9ddl8lCbvbGk3ekggmeApH3w6n4DR1ox
-   w==;
-X-CSE-ConnectionGUID: rcfCXPatSCq48M7kz/T6VA==
-X-CSE-MsgGUID: HWAX6ZlzTYeD3KMX6z+jfg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102020385"
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="102020385"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:23:17 -0700
-X-CSE-ConnectionGUID: dzjfWPVUQiu86d9zV+tvgw==
-X-CSE-MsgGUID: TjZDkk3LTOO7erQ5d0rV6A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="275202818"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:23:14 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="DWcl1WGD"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=9nvl85Z6QtFWRFbLYnO5GWIjhJ87TJx9hTTk0Zsecrs=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790762791; v=1; x=1791367591;
+ b=DWcl1WGDcji4K1jQaqX73xaR7IjQFmk/0wiKCPA3LTNxt9Ua8OMSkPDIzpEyWpQ4rkUMnC9i
+ n7pkj20nHV92vDScYb4c9fVt+crQ75q1DjC+QRkH9kur8ayBn2AtKdbhsfII6ggzVd7D1UQ7NlK
+ eb9dJ5p6PVnM/z3svF6mkWY0=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d540dcc667c71fe4;
+	Wed, 30 Sep 2026 10:06:31 +0000
+X-Mizu-Trace-ID: d540dcc667c71fe4
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Alastair D'Silva <alastair@d-silva.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-fixes 5/5] wifi: iwlwifi: mvm: fix VHT NSS reporting on pre-MQ devices
-Date: Wed, 30 Sep 2026 12:25:07 +0300
-Message-Id: <20260930122439.67a780de1fc6.Ia9429e120ea269c781a36d5fa2fe601c7deb1a39@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260930122439.f8a1ea3af242.I282fab02ab2f183633df0f070229fb5a2d5c9ec3@changeid>
-References: <20260930122439.f8a1ea3af242.I282fab02ab2f183633df0f070229fb5a2d5c9ec3@changeid>
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: Re: [PATCH v2] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Wed, 30 Sep 2026 10:06:29 +0000
+Message-ID: <20260930100629.14270-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260930090714.2779699-1-alastair@d-silva.org>
+References: <20260930090714.2779699-1-alastair@d-silva.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Alastair,
 
-iwl_mvm_rx_rx_mpdu() and iwl_mvm_rx_handle_tcm() parse the rate_n_flags
-they get from struct iwl_rx_phy_info, which is in the version 1 format.
-There, the number of spatial streams minus one is encoded in bits 4-5,
-i.e. RATE_VHT_MCS_NSS_MSK, but both of them used RATE_MCS_NSS_MSK.
+This breaks the drain loop on the 8051 parts. The early write clears
+REG_SDIO_HISR_RX_REQUEST before rtw_sdio_rx_isr() runs, but the 8051 branch
+of the loop uses that bit to decide whether another request is pending:
 
-This used to work by accident: RATE_MCS_NSS_MSK was BIT(4), which
-overlaps the low bit of the version 1 field, and that is enough for our
-2x2 devices. Since the version 3 rate format was introduced,
-RATE_MCS_NSS_MSK is BIT(5), which is always 0 in a version 1 rate, so
-every received VHT frame is now reported as single stream.
+> +	rtw_sdio_disable_interrupt(rtwdev);
+> +	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+> [...]
+> +	if (hisr & REG_SDIO_HISR_RX_REQUEST)
+>  		rtw_sdio_rx_isr(rtwdev);
 
-On an 8260 this shows up as half the actual rate being reported:
+		if (rtw_chip_wcpu_8051(rtwdev)) {
+			hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
+		} else {
+			hisr = REG_SDIO_HISR_RX_REQUEST;
+		}
+	} while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUEST);
 
-	rx bitrate: 390.0 MBit/s VHT-MCS 8 80MHz short GI VHT-NSS 1
+In the v1 thread Ping-Ke relayed that the hardware clears the bit once the
+RX buffer is empty, and that a software clear means no new interrupt unless
+a new packet arrives. So the first re-read after the write returns 0, the
+loop stops after one request, and the rest of the FIFO waits for the next
+packet.
 
-instead of 780.0 MBit/s with VHT-NSS 2.
+The 8821CS cannot show this, since 3081 parts never read HISR there.
+RTL8723CS, RTL8723DS and the RTL8723BS once its glue lands are the 8051
+SDIO parts, so please run the test on one of those, or leave RX_REQUEST out
+of the early write and let the hardware drop it.
 
-Devices using the multi-queue RX path are not affected, they convert the
-rate to the version 3 format before parsing it.
+This also needs a rebase for rtw-next. The 8723BS mask sits between this
+block and the old write:
 
-Fixes: 3592c0083fb2 ("wifi: iwlwifi: mvm: fix beacon template/fixed rate")
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221685
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+	if (rtw_is_8723bs(rtwdev))
+		hisr &= RTW_SDIO_HISR_CLEAR_MASK;
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index ab1eb2eb0c3c..59dbbdd4aa35 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -257,7 +257,7 @@ static void iwl_mvm_rx_handle_tcm(struct iwl_mvm *mvm,
- 				ARRAY_SIZE(thresh_tpt)))
- 			return;
- 		thr = thresh_tpt[rate_n_flags & RATE_VHT_MCS_RATE_CODE_MSK];
--		thr *= 1 + FIELD_GET(RATE_MCS_NSS_MSK, rate_n_flags);
-+		thr *= 1 + FIELD_GET(RATE_VHT_MCS_NSS_MSK, rate_n_flags);
- 	}
- 
- 	thr <<= ((rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK_V1) >>
-@@ -502,7 +502,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
- 				RATE_MCS_STBC_POS;
- 		rx_status->nss =
--			FIELD_GET(RATE_MCS_NSS_MSK, rate_n_flags) + 1;
-+			FIELD_GET(RATE_VHT_MCS_NSS_MSK, rate_n_flags) + 1;
- 		rx_status->rate_idx = rate_n_flags & RATE_VHT_MCS_RATE_CODE_MSK;
- 		rx_status->encoding = RX_ENC_VHT;
- 		rx_status->enc_flags |= stbc << RX_ENC_FLAG_STBC_SHIFT;
--- 
-2.34.1
+	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
 
+Moving the write up as posted puts the raw value back, undefined bits
+included, which is the resume storm on 8723BS that the mask exists to
+avoid.
+
+One smaller thing, the early write also consumes anything already queued
+when the handler starts, so what the 64K budget leaves behind waits for the
+next packet too, on 3081 as well.
+
+Best regards,
+Luka Gejak
