@@ -1,349 +1,282 @@
 Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258BE5187F2
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 18:04:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F45E33A6F1
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 18:54:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790791455; cv=none; b=uvdQ3iPAS6vDzyaOchMeuGhRBnUIseRWHnawQ1LWBNLZidEwVtKlEX3600XC9IYupKl+ykiD0VwpuNJmAncO4Xeplx680Qy958DLpX8qXGvmsFOj/ypsgW5jeLnaGTeOFsjSm11VcdOpZGN6uDVLdEc43X0lUBBG98RFNLDhxUA=
+	t=1790794470; cv=none; b=pmeSaMb9OrV1zrZVU09SrDZxZiVkFkT6g4Hq7FACMS6m2Jk9DYdposkSkOJgzZDf9n4JL2I7+pNlca1URdpaG0tas3FsI2XnBInq4RZRjvMRJWrS0gbYQTFIfX51o1SGzt/X7a/Kh1ilUzoneL8QtJ5Zo9Q0r5BfepYA+NQYyS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790791455; c=relaxed/simple;
-	bh=QIG1zvSUGauIoXtqtHh2yufnecHZavhFDmqcR25makY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pSzbmFs4ZrJX7Tgo1rHw+l7z1+FWQ+h2uGwIz3e6Wx57IrHRXFq3Pi3gYjujKLrtF4we1Q1YdohQlt/uaHMcTimIH7Bn5zhBW/LvzSLgG6WEfQ5evlcFgfQJgSEU9qmIHXm+4FU4ennPoSAmrH/5D/PiIVvkfbn27bwoxURfJxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g7g5Gpbv; arc=none smtp.client-ip=74.125.225.140
+	s=arc-20240116; t=1790794470; c=relaxed/simple;
+	bh=UCFeSMOs+Qi6rlEif4wp5NL4CT/HAxxrve974CVtz4U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gNg8gDI5O99Dvf2+H1Zd1XIpDbJqTGAIgko22a2reIXhI/5eljExQcd+dfWSd3A8K5bi7RiMqnGNlt+WF8ENfHbIgDnsqrU1zD0incAiZxXWXajAX1I9QTgZjw4WZjnDswX7bm/2XIvhAZtu6McdfcC/G3Em1xun8MQX5ny7zhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TFaeoRf2; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g7g5Gpbv"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ffde3cec6so25057495e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 11:04:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TFaeoRf2"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49fff6f0f87so29446845e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 11:54:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790791451; x=1791396251; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=e36HxZ24cTROxvIeKoBoxdqQGOepjEsy2kiFHXydvxA=;
-        b=g7g5GpbvKSf8lxUP0Ex77aQuer5Uu0yPkIwfSwUX4yIXFWdgfyBcUNCSy3r3J9i11R
-         zLM2gG/d5UXXPb0S3AtdTVj2IXMNGxXuj3jzSpudT7otSoP5GHQsBwEkUA2aIj8DP0rj
-         nQfmATWR+WmHjypZGC5P8KXgPvPutI9w/KufdGV+ndbRgCQW5DDdhIfOtVaM0tDyjzIB
-         Y26JGzwX+oZ9x8ewcX5Y5DiwqVuz9BF1panZKKvUWa2EmhLS6uEShT4UeemZFw2IQ+dy
-         9re4XL9KpT5dIjVm37n/XtbItCKi9kIZpFCRPjU0oa68hv5hJ06YYQ2tX3hqT7N1Rgmx
-         PQ0A==
+        d=gmail.com; s=20251104; t=1790794466; x=1791399266; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aIRe9J9nM9kojEK5e8In+q+vzA6ofCEVTiqwmV0m+zo=;
+        b=TFaeoRf2YUJF4S8c0d5gRvToQSkRN7xpVFpxJ85wJjCyv7smv5eZPX2JbczHu7PofJ
+         u5czZAzrmB5bnovhiEbNAlU9Sd90DLb0zjm0DaEKGOYiqfa1dVrxH66yOw/QoMPpETD5
+         93SfSkN1qqWVE9F/YN7uMTzqTAqYeqEUckd7c48+4XTpm8pAXGJeuRmJevhLILcenLvN
+         /rKnBoKvp8wtZLnU6bJp2riTNAv9PFR7sxTtp2z/hjsyk888DZ10y9sdyZGQEJtv0ZBt
+         eKphJG2L8/X4YW1mMBBUMZG6Iw71Q87JyiSi12G0ljKb/ZSZLmnaP9aRC9sT48f9hVn8
+         SSZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790791451; x=1791396251;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1790794466; x=1791399266;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=e36HxZ24cTROxvIeKoBoxdqQGOepjEsy2kiFHXydvxA=;
-        b=vb/oyWq7Bns3jxlmElMmbfnniYWUQwjH/EkBUUIV4uycuRThb5OmBmCeMFkglRJopd
-         o6LvvOFsqWe34yN/RfyWA0355u+osg2MZGYwJqC7SvUqhFDz11i1+SL4RVXOqe9FR/Nz
-         b95LFJqLUkTFuf43kbyLKH1uqmRYAtFEdefFZJwHh8v+lPBUH6pNbqAJfEjx8MIF2x4b
-         iB4YwfM/fIY5r3LqrgXc4ReoMKuozjD8cKaTSqtFcqMfFfFXz2cPQzeVeFRege7CGWI4
-         nLl649YVIRQdgbbSzMC3sqe5/7NiW+lZAGtKbFSRc1ULbeZ1XJ7hq3kFz112OHDM5qGR
-         WDIA==
-X-Gm-Message-State: AFuF++kH/9VAoGSSuAlFOHqQ1tEzOIkoIVfXDKL+SpV+lQ7txf6C2nI/
-	Gh3ggIvb2iAfbxDGPJXhz61us+Ym4LtLaKyvwK1kIa8/+TwNoH/MGFyf
-X-Gm-Gg: AYBFou0OhKIQucqee+ENOPdIl4XAfspXUvlo6fAlboejS19N5tPLyTEeXNAchO8FOAu
-	dueh7NDAKMCngDxTgGHusFU85oGphp/9xqN7j9FkY1J7rCaNpRG0tO/8RqKLJoD59CGKUddDAYw
-	8sXwoRlbpB4MSNYwxa5/3g1s5iHDLbktqXHc5vosWsxckyM9mBsmwiLf7g1M0glA0euSd5d+V0x
-	N7t+VEx+ILLutqg1KwVkG1xNXSj75UpC+uBDFhhLh8qFkds+vgTVGF3S7dOWA9VR+BaLogqvaVT
-	RQY1m79oRq6G4/f34m3vYDpB5+OwPEOrOQNWSWQVqjN5+bX23Gb5CP2QIX1fyJKWao2SaaSUqfi
-	5Vn68xKA02P21R6Sjn+A7gM6b3T+MlFl8LGVp8gTtWf+vh5z9Me3DFFP0NE1zkU8LYTwLZY4ska
-	viOmgdRWgjmnZImOC6FbO9CK7eqqkul5hHvwTuXDLhz6BDeyYmxMAD/cJZtQZtHbDbfgmoDaW6o
-	705igEzSj9GGkfH
-X-Received: by 2002:a05:600c:354e:b0:4a0:1eb1:133b with SMTP id 5b1f17b1804b1-4a01eb113acmr7148175e9.12.1790791450972;
-        Wed, 30 Sep 2026 11:04:10 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01cf9b1fasm10196965e9.4.2026.09.30.11.04.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Sep 2026 11:04:10 -0700 (PDT)
-Message-ID: <17f1504d-4a27-48f1-9c8e-e84a3416c383@gmail.com>
-Date: Wed, 30 Sep 2026 21:04:09 +0300
+        bh=aIRe9J9nM9kojEK5e8In+q+vzA6ofCEVTiqwmV0m+zo=;
+        b=tTGdRQlm37wTUkTtS9FjLkVIGDNm7pojPwxXTmB/xFkyEMbwaARx/rCBcsYm7VDsUB
+         sJF+sUz1+OFi7A8O2p64qj9TH/aX2KLPtPWmXwPJHaGigVYCK4XiX22SccSN7gMX/gtk
+         Q5FKbh/Z+vl/1KK5wBdTZPxzhsMg6jhChUJbnEt1Xna76rh2r0A+4X+58oJxe9L8chxJ
+         PKdincqyalbABdlgn9rCkQR9ZZmZWNgDkTRWSybgwNd29aaTPRIvWRDYpk2yeqwKmt26
+         GCUf+V2XSCeJuYZ7bGllyCMtUY4MQy3FS6bEZjU/13mtKe8ZYRu5Ht477KOADhDluDf3
+         PkTQ==
+X-Gm-Message-State: AFuF++mtP7whI5+w5qLFLQ9D17KTF3V/Bb5cMDaOUWGVXO7MR1W6nE1g
+	MZIgw8PS2EyJOOhGHoyJRUUEq1CUMiN5lhlQ6U429zuA7Ke+7AivO6h1EKCT5QVJ
+X-Gm-Gg: AYBFou1+lOmJ2P3r/GdhCF57kRKodfG4KlWyVlHmJkxcRhiATGmrcEpYax23v/0GU+h
+	L2GKV0Q0r2yFktWnmpEAquSP1W9NKiN8DUMtr/cpvnToMmk1w3KHrZOh+VFqM06e3LBq2nud9fR
+	I6vC7qEFKFBPlF/hqMvvRvv8xJZREctRjt8mcc5D7y7e0PskKIeCTl/5hdlOBDaJ9HSuF+7r5PB
+	dEbEj/+7u0JqEJ+t2If0bwCYhmBoiM2l+MIuVvFYABH4jVK6tFnBU4nY1fMRz749K8cnInfmhQ1
+	zCpvNDkfzhVB2keoLU0n2d2goskC0FpzudhNr+4XoXfRwjJnXGf5NcpYK+efuykjpqddCFth2bL
+	KUgt8mEr2enEPVIcDSyrVLVWs8tbNk80Q7oXE28ge64u4G9cMZlx9iHkkydd3uOWZQSgxRRl1m/
+	N4Hh1RIzijv2JYiSNMz40WJnofRp/ppKtjV0M/66SnH8Tm0/t+mtTT0nUJZJR+U6PfY7Brhqajs
+	I3djOpOuaJNaWdzJGiFw4zzZn603Mp6vxQOMiujWBrv4F/Em4eVM146xMlKVOiamJvt8buPwA1o
+	MdApJtlTNNMbi9lnMtNakAvIn+X9C7KujUMTIdAFDAiuHhfHzf0Dhy1KjPeEraoRuCVRHlOgzYG
+	i
+X-Received: by 2002:a05:600c:3b99:b0:49d:1840:4fd2 with SMTP id 5b1f17b1804b1-4a01aff6a1bmr50678345e9.23.1790794466174;
+        Wed, 30 Sep 2026 11:54:26 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-2a02-3100-b2b3-0101-b51c-a607-3dcc-3979.310.pool.telefonica.de. [2a02:3100:b2b3:101:b51c:a607:3dcc:3979])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01fa137basm1542095e9.1.2026.09.30.11.54.25
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 30 Sep 2026 11:54:25 -0700 (PDT)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Karl Mehltretter <kmehltretter@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Clark Williams <clrkwllms@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: brcmfmac: avoid sleeping tx locks in netpoll context
+Date: Wed, 30 Sep 2026 20:54:17 +0200
+Message-Id: <20260930185417.61865-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 rtw-next 1/7] wifi: rtw88: move the shared 88xxa init
- helpers into the core
-To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>
-References: <20260930091604.52891-1-luka.gejak@linux.dev>
- <20260930091604.52891-2-luka.gejak@linux.dev>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260930091604.52891-2-luka.gejak@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 30/09/2026 12:15, Luka Gejak wrote:
-> The adaptive control, EDCA and CCK power detect helpers in rtw88xxa.c
-> program values that are not specific to that chip family. The RTL8723B
-> needs all three of them, which would make that chip select RTW88_88XXA
-> and pull in a whole chip module for three helpers.
-> 
-> Move the CCK power detect setter to phy.c as rtw_phy_cck_pd_set(), where
-> the rest of the CCK power detect code and the level enum already live,
-> and the two MAC init helpers to mac.c as rtw_mac_init_adaptive_ctrl()
-> and rtw_mac_init_edca(). The chips that need them call the core
-> versions, so rtw88xxa.c no longer provides any of them.
-> 
-> The two REG_USTIME_* writes are not carried over. rtw88xxa_power_on()
-> writes the same values a few lines later, and rtw_set_channel_mac()
-> writes them again on every channel set, so the register state of the
-> existing chips does not change.
-> 
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> ---
->  drivers/net/wireless/realtek/rtw88/mac.c      | 22 +++++++
->  drivers/net/wireless/realtek/rtw88/mac.h      |  2 +
->  drivers/net/wireless/realtek/rtw88/phy.c      | 38 +++++++++++
->  drivers/net/wireless/realtek/rtw88/phy.h      |  1 +
->  drivers/net/wireless/realtek/rtw88/rtw8812a.c |  2 +-
->  drivers/net/wireless/realtek/rtw88/rtw8821a.c |  2 +-
->  drivers/net/wireless/realtek/rtw88/rtw88xxa.c | 65 +------------------
->  drivers/net/wireless/realtek/rtw88/rtw88xxa.h |  1 -
->  8 files changed, 67 insertions(+), 66 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-> index eaa928bab240..83f142f61df5 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac.c
-> +++ b/drivers/net/wireless/realtek/rtw88/mac.c
-> @@ -1419,3 +1419,25 @@ int rtw_mac_postinit(struct rtw_dev *rtwdev)
->  
->  	return chip->ops->mac_postinit(rtwdev);
->  }
-> +
-> +void rtw_mac_init_adaptive_ctrl(struct rtw_dev *rtwdev)
-> +{
-> +	rtw_write32_mask(rtwdev, REG_RRSR, 0xfffff, 0xffff1);
-> +	rtw_write16(rtwdev, REG_RETRY_LIMIT, 0x3030);
-> +}
-> +EXPORT_SYMBOL(rtw_mac_init_adaptive_ctrl);
-> +
-> +void rtw_mac_init_edca(struct rtw_dev *rtwdev)
-> +{
-> +	rtw_write16(rtwdev, REG_SPEC_SIFS, 0x100a);
-> +	rtw_write16(rtwdev, REG_MAC_SPEC_SIFS, 0x100a);
-> +
-> +	rtw_write16(rtwdev, REG_SIFS, 0x100a);
-> +	rtw_write16(rtwdev, REG_SIFS + 2, 0x100a);
-> +
-> +	rtw_write32(rtwdev, REG_EDCA_BE_PARAM, 0x005EA42B);
-> +	rtw_write32(rtwdev, REG_EDCA_BK_PARAM, 0x0000A44F);
-> +	rtw_write32(rtwdev, REG_EDCA_VI_PARAM, 0x005EA324);
-> +	rtw_write32(rtwdev, REG_EDCA_VO_PARAM, 0x002FA226);
-> +}
-> +EXPORT_SYMBOL(rtw_mac_init_edca);
+With the default fcmode=0, netpoll calls ndo_start_xmit() with hard
+interrupts disabled and reaches brcmf_sdio_bus_txdata() directly. The
+function takes txq_lock with spin_lock_bh(), and the queue helper takes
+the embedded sk_buff_head lock. These locks may sleep on PREEMPT_RT.
+On non-RT, spin_unlock_bh() can run pending networking softirqs before
+netpoll releases the transmit lock, causing a recursive transmit
+deadlock.
 
-No one said anything about moving these functions. Please put them back.
+Use spin_trylock() for IRQ-disabled calls and enqueue with the unlocked
+skb helper while holding txq_lock. On PREEMPT_RT, reject hard IRQ and NMI
+callers, where rt-spinlocks cannot be acquired. If the lock is busy or
+the queue is full, return through the existing drop path. Do not evict an
+older packet from this context. Suppress the queue-full printk because
+netconsole can recursively enter this path.
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
-> index b73af90ee1d7..b7adc4dd0255 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac.h
-> +++ b/drivers/net/wireless/realtek/rtw88/mac.h
-> @@ -30,6 +30,8 @@
->  
->  void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
->  			 u8 primary_ch_idx);
-> +void rtw_mac_init_adaptive_ctrl(struct rtw_dev *rtwdev);
-> +void rtw_mac_init_edca(struct rtw_dev *rtwdev);
->  int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
->  		       const struct rtw_pwr_seq_cmd * const *cmd_seq);
->  int rtw_mac_power_on(struct rtw_dev *rtwdev);
-> diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-> index e2ac5c6fd500..ee16474ac026 100644
-> --- a/drivers/net/wireless/realtek/rtw88/phy.c
-> +++ b/drivers/net/wireless/realtek/rtw88/phy.c
-> @@ -811,6 +811,44 @@ static void rtw_phy_cck_pd(struct rtw_dev *rtwdev)
->  		chip->ops->cck_pd_set(rtwdev, level);
->  }
->  
-> +void rtw_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
-> +{
-> +	static const u8 pd[CCK_PD_LV_MAX] = {0x40, 0x83, 0xcd, 0xdd, 0xed};
-> +	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-> +
-> +	/* Override rtw_phy_cck_pd_lv_link(). It implements something
-> +	 * like type 2/3/4. We need type 1 here.
-> +	 */
-> +	if (rtw_is_assoc(rtwdev)) {
-> +		if (dm_info->min_rssi > 60) {
-> +			new_lvl = CCK_PD_LV3;
-> +		} else if (dm_info->min_rssi > 35) {
-> +			new_lvl = CCK_PD_LV2;
-> +		} else if (dm_info->min_rssi > 20) {
-> +			if (dm_info->cck_fa_avg > 500)
-> +				new_lvl = CCK_PD_LV2;
-> +			else if (dm_info->cck_fa_avg < 250)
-> +				new_lvl = CCK_PD_LV1;
-> +			else
-> +				return;
-> +		} else {
-> +			new_lvl = CCK_PD_LV1;
-> +		}
-> +	}
-> +
-> +	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
-> +		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
-> +
-> +	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
-> +		return;
-> +
-> +	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
-> +	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
-> +
-> +	rtw_write8(rtwdev, REG_CCK_PD_TH, pd[new_lvl]);
-> +}
-> +EXPORT_SYMBOL(rtw_phy_cck_pd_set);
-> +
->  static void rtw_phy_pwr_track(struct rtw_dev *rtwdev)
->  {
->  	rtwdev->chip->ops->pwr_track(rtwdev);
-> diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
-> index 8449936497bb..8a843aac7350 100644
-> --- a/drivers/net/wireless/realtek/rtw88/phy.h
-> +++ b/drivers/net/wireless/realtek/rtw88/phy.h
-> @@ -65,6 +65,7 @@ void rtw_phy_config_swing_table(struct rtw_dev *rtwdev,
->  				struct rtw_swing_table *swing_table);
->  void rtw_phy_set_edcca_th(struct rtw_dev *rtwdev, u8 l2h, u8 h2l);
->  void rtw_phy_adaptivity_set_mode(struct rtw_dev *rtwdev);
-> +void rtw_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl);
->  void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
->  			 struct rtw_rx_pkt_stat *pkt_stat);
->  void rtw_phy_tx_path_diversity(struct rtw_dev *rtwdev);
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8812a.c b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> index 2078eb6e3628..781b66ccde67 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-> @@ -929,7 +929,7 @@ static const struct rtw_chip_ops rtw8812a_ops = {
->  	.set_ampdu_factor	= NULL,
->  	.false_alarm_statistics	= rtw88xxa_false_alarm_statistics,
->  	.phy_calibration	= rtw8812a_phy_calibration,
-> -	.cck_pd_set		= rtw88xxa_phy_cck_pd_set,
-> +	.cck_pd_set		= rtw_phy_cck_pd_set,
->  	.pwr_track		= rtw8812a_pwr_track,
->  	.config_bfee		= NULL,
->  	.set_gid_table		= NULL,
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821a.c b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> index cab85203b828..6096d3b8e41b 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-> @@ -875,7 +875,7 @@ static const struct rtw_chip_ops rtw8821a_ops = {
->  	.set_ampdu_factor	= NULL,
->  	.false_alarm_statistics	= rtw88xxa_false_alarm_statistics,
->  	.phy_calibration	= rtw8821a_phy_calibration,
-> -	.cck_pd_set		= rtw88xxa_phy_cck_pd_set,
-> +	.cck_pd_set		= rtw_phy_cck_pd_set,
->  	.pwr_track		= rtw8821a_pwr_track,
->  	.config_bfee		= NULL,
->  	.set_gid_table		= NULL,
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> index 2eaadcfec4cb..c95405eacfa3 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
-> @@ -520,29 +520,6 @@ static void rtw88xxa_init_wmac_setting(struct rtw_dev *rtwdev)
->  	rtw_write32(rtwdev, REG_MAR + 4, 0xffffffff);
->  }
->  
-> -static void rtw88xxa_init_adaptive_ctrl(struct rtw_dev *rtwdev)
-> -{
-> -	rtw_write32_mask(rtwdev, REG_RRSR, 0xfffff, 0xffff1);
-> -	rtw_write16(rtwdev, REG_RETRY_LIMIT, 0x3030);
-> -}
-> -
-> -static void rtw88xxa_init_edca(struct rtw_dev *rtwdev)
-> -{
-> -	rtw_write16(rtwdev, REG_SPEC_SIFS, 0x100a);
-> -	rtw_write16(rtwdev, REG_MAC_SPEC_SIFS, 0x100a);
-> -
-> -	rtw_write16(rtwdev, REG_SIFS, 0x100a);
-> -	rtw_write16(rtwdev, REG_SIFS + 2, 0x100a);
-> -
-> -	rtw_write32(rtwdev, REG_EDCA_BE_PARAM, 0x005EA42B);
-> -	rtw_write32(rtwdev, REG_EDCA_BK_PARAM, 0x0000A44F);
-> -	rtw_write32(rtwdev, REG_EDCA_VI_PARAM, 0x005EA324);
-> -	rtw_write32(rtwdev, REG_EDCA_VO_PARAM, 0x002FA226);
-> -
-> -	rtw_write8(rtwdev, REG_USTIME_TSF, 0x50);
-> -	rtw_write8(rtwdev, REG_USTIME_EDCA, 0x50);
-> -}
-> -
->  static void rtw88xxau_tx_aggregation(struct rtw_dev *rtwdev)
->  {
->  	const struct rtw_chip_info *chip = rtwdev->chip;
-> @@ -1103,8 +1080,8 @@ int rtw88xxa_power_on(struct rtw_dev *rtwdev)
->  	rtw_write32_mask(rtwdev, REG_CR, 0x30000, 0x2);
->  
->  	rtw88xxa_init_wmac_setting(rtwdev);
-> -	rtw88xxa_init_adaptive_ctrl(rtwdev);
-> -	rtw88xxa_init_edca(rtwdev);
-> +	rtw_mac_init_adaptive_ctrl(rtwdev);
-> +	rtw_mac_init_edca(rtwdev);
->  
->  	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL, BIT(7));
->  	rtw_write8(rtwdev, REG_ACKTO, 0x80);
-> @@ -1947,44 +1924,6 @@ void rtw88xxa_phy_pwrtrack(struct rtw_dev *rtwdev,
->  }
->  EXPORT_SYMBOL(rtw88xxa_phy_pwrtrack);
->  
-> -void rtw88xxa_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
-> -{
-> -	static const u8 pd[CCK_PD_LV_MAX] = {0x40, 0x83, 0xcd, 0xdd, 0xed};
-> -	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-> -
-> -	/* Override rtw_phy_cck_pd_lv_link(). It implements something
-> -	 * like type 2/3/4. We need type 1 here.
-> -	 */
-> -	if (rtw_is_assoc(rtwdev)) {
-> -		if (dm_info->min_rssi > 60) {
-> -			new_lvl = CCK_PD_LV3;
-> -		} else if (dm_info->min_rssi > 35) {
-> -			new_lvl = CCK_PD_LV2;
-> -		} else if (dm_info->min_rssi > 20) {
-> -			if (dm_info->cck_fa_avg > 500)
-> -				new_lvl = CCK_PD_LV2;
-> -			else if (dm_info->cck_fa_avg < 250)
-> -				new_lvl = CCK_PD_LV1;
-> -			else
-> -				return;
-> -		} else {
-> -			new_lvl = CCK_PD_LV1;
-> -		}
-> -	}
-> -
-> -	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
-> -		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
-> -
-> -	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
-> -		return;
-> -
-> -	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
-> -	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
-> -
-> -	rtw_write8(rtwdev, REG_CCK_PD_TH, pd[new_lvl]);
-> -}
-> -EXPORT_SYMBOL(rtw88xxa_phy_cck_pd_set);
-> -
->  MODULE_AUTHOR("Realtek Corporation");
->  MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821a/8811a/8812a common code");
->  MODULE_LICENSE("Dual BSD/GPL");
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> index 09a45c1a4129..d9c8db58909c 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
-> @@ -170,6 +170,5 @@ bool rtw88xxa_iqk_finish(int average, int threshold,
->  void rtw88xxa_phy_pwrtrack(struct rtw_dev *rtwdev,
->  			   void (*do_lck)(struct rtw_dev *rtwdev),
->  			   void (*do_iqk)(struct rtw_dev *rtwdev));
-> -void rtw88xxa_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl);
->  
->  #endif
+The flow-control callback takes another spinlock, so defer it when an
+IRQ-disabled enqueue reaches TXHI. The data worker rechecks the bus state
+and queue length under txq_lock before stopping the queue. Existing TXLOW
+handling wakes the queue after it drains.
 
+This fixes the direct SDIO transmit path used by fcmode=0. Modes 1 and 2
+take the FWS lock first and need a separate change.
+
+Fixes: ac3d9dd034e5 ("netpoll: make ndo_poll_controller() optional")
+Cc: stable@vger.kernel.org
+Assisted-by: LLM
+Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+---
+Testing:
+
+- This revision passed W=1 sdio.o builds on x86_64 PREEMPT_RT and
+  x86_64 PREEMPT kernels.
+- This exact revision, together with the netpoll v2 fixes, passed 10/10
+  counted physical boots across a Pi 400 and Pi 500+: three RT and two
+  non-RT boots per board. The softirq trigger delivered 64/64 records on
+  every boot with no driver drop. Every lock-contention run freed all 64
+  skbs without timeout, and every TXHI queue stop subsequently woke.
+- Each board and kernel flavor completed a 1,800-second numbered stream,
+  ten repeated TXHI cycles and a Wi-Fi reconnect. No counted boot
+  reported an atomic-sleep warning, new lockdep splat, stall or lockup.
+- The exact revision passed combined RT and non-RT QEMU softirq,
+  lock-contention and TXHI stop/drain/wake tests.
+- An unpatched PREEMPT_RT Pi 400 reproduced the atomic-sleep report. An
+  unpatched non-RT Pi 400 deadlocked and produced 32 RCU stall reports.
+- An unpatched PREEMPT_RT Pi 500+ reproduced 21 atomic-sleep reports.
+- All brcmfmac tests used the default fcmode=0.
+
+ .../broadcom/brcm80211/brcmfmac/sdio.c        | 91 +++++++++++++++++--
+ 1 file changed, 85 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 381801af3a..170450306d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -516,6 +516,7 @@ struct brcmf_sdio {
+ 	bool dpc_running;
+ 
+ 	bool txoff;		/* Transmit flow-controlled */
++	bool txoff_pending;	/* Deferred transmit flow control */
+ 	struct brcmf_sdio_count sdcnt;
+ 	bool sr_enabled; /* SaveRestore enabled */
+ 	bool sleeping;
+@@ -2796,8 +2797,53 @@ static bool brcmf_sdio_prec_enq(struct pktq *q, struct sk_buff *pkt, int prec)
+ 	return p != NULL;
+ }
+ 
++/*
++ * The caller holds txq_lock with hard IRQs disabled. Avoid the skb queue
++ * lock, which may sleep on PREEMPT_RT.
++ */
++static bool brcmf_sdio_prec_enq_irqoff(struct pktq *q, struct sk_buff *pkt,
++				       int prec)
++{
++	struct sk_buff_head *list = &q->q[prec].skblist;
++
++	if (pktq_pfull(q, prec) || pktq_full(q))
++		return false;
++
++	__skb_queue_tail(list, pkt);
++	q->len++;
++	if (q->hi_prec < prec)
++		q->hi_prec = prec;
++
++	return true;
++}
++
++static bool brcmf_sdio_txq_lock(struct brcmf_sdio *bus, bool irq_off)
++		__cond_acquires(true, &bus->txq_lock)
++{
++	if (irq_off) {
++		if (IS_ENABLED(CONFIG_PREEMPT_RT) &&
++		    (in_hardirq() || in_nmi()))
++			return false;
++		return spin_trylock(&bus->txq_lock);
++	}
++
++	spin_lock_bh(&bus->txq_lock);
++	return true;
++}
++
++static void brcmf_sdio_txq_unlock(struct brcmf_sdio *bus, bool irq_off)
++		__releases(&bus->txq_lock)
++{
++	if (irq_off)
++		spin_unlock(&bus->txq_lock);
++	else
++		spin_unlock_bh(&bus->txq_lock);
++}
++
+ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ {
++	bool irq_off = irqs_disabled();
++	bool enqueued;
+ 	int ret = -EBADE;
+ 	uint prec;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -2826,22 +2872,39 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	bus->sdcnt.fcqueued++;
+ 
+ 	/* Priority based enq */
+-	spin_lock_bh(&bus->txq_lock);
++	if (!brcmf_sdio_txq_lock(bus, irq_off)) {
++		skb_pull(pkt, bus->tx_hdrlen);
++		return -EBUSY;
++	}
++
+ 	/* reset bus_flags in packet cb */
+ 	*(u16 *)(pkt->cb) = 0;
+-	if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
++	if (irq_off)
++		enqueued = brcmf_sdio_prec_enq_irqoff(&bus->txq, pkt, prec);
++	else
++		enqueued = brcmf_sdio_prec_enq(&bus->txq, pkt, prec);
++
++	if (!enqueued) {
+ 		skb_pull(pkt, bus->tx_hdrlen);
+-		brcmf_err("out of bus->txq !!!\n");
++		/* Avoid netconsole recursion. */
++		if (!irq_off)
++			brcmf_err("out of bus->txq !!!\n");
+ 		ret = -ENOSR;
+ 	} else {
+ 		ret = 0;
+ 	}
+ 
+ 	if (pktq_len(&bus->txq) >= TXHI) {
+-		bus->txoff = true;
+-		brcmf_proto_bcdc_txflowblock(dev, true);
++		if (irq_off) {
++			WRITE_ONCE(bus->txoff_pending, true);
++		} else {
++			WRITE_ONCE(bus->txoff_pending, false);
++			bus->txoff = true;
++			brcmf_proto_bcdc_txflowblock(dev, true);
++		}
+ 	}
+-	spin_unlock_bh(&bus->txq_lock);
++
++	brcmf_sdio_txq_unlock(bus, irq_off);
+ 
+ #ifdef DEBUG
+ 	if (pktq_plen(&bus->txq, prec) > qcount[prec])
+@@ -3754,6 +3817,21 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 	}
+ }
+ 
++static void brcmf_sdio_deferred_txflowblock(struct brcmf_sdio *bus)
++{
++	if (!READ_ONCE(bus->txoff_pending))
++		return;
++
++	spin_lock_bh(&bus->txq_lock);
++	WRITE_ONCE(bus->txoff_pending, false);
++	if (bus->sdiodev->state == BRCMF_SDIOD_DATA && !bus->txoff &&
++	    pktq_len(&bus->txq) >= TXHI) {
++		bus->txoff = true;
++		brcmf_proto_bcdc_txflowblock(bus->sdiodev->dev, true);
++	}
++	spin_unlock_bh(&bus->txq_lock);
++}
++
+ static void brcmf_sdio_dataworker(struct work_struct *work)
+ {
+ 	struct brcmf_sdio *bus = container_of(work, struct brcmf_sdio,
+@@ -3763,6 +3841,7 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
+ 	wmb();
+ 	while (READ_ONCE(bus->dpc_triggered)) {
+ 		bus->dpc_triggered = false;
++		brcmf_sdio_deferred_txflowblock(bus);
+ 		brcmf_sdio_dpc(bus);
+ 		bus->idlecount = 0;
+ 	}
+
+base-commit: 6f63e919fe1e335b8abcb3a28bfd4804a98d875a
+-- 
+2.53.0
