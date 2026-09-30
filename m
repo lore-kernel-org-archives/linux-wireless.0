@@ -1,142 +1,166 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from fout-b4-smtp.messagingengine.com (fout-b4-smtp.messagingengine.com [202.12.124.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91075463B8C
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:50:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83EA9453A33;
+	Wed, 30 Sep 2026 07:52:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790754631; cv=none; b=UnJ8/pGNrv4wV534AhDDcBPJ0N6skGVNaYpjj1OvCd9t0XBo3Aya4RA5D4bLosceYaPLxPmeQaDibS69/aVLvaYwbgNP/TnyK5lqp/8EcmNfeHDWpPFaNRf5F1Snzrdb2kz7ZrxTD7CS+hmos5kDCWLxtfJSzdU5zbx1n7EvDkg=
+	t=1790754765; cv=none; b=eekkenuwar4Yt9OFIoBpW+xVhUPLEzrsd/I63FKIJp5xLL0uo5VEDzAHGYqb1ZtpVy1kk9STQZ6lZCDN9LxE4On+sFDriUvI9DMBCDizu8mEQLL7cdcrvaSpfioXp1qnR5Ep4L+vz/qAbe1qbNyOElWl6ymsjhXMYr94DXzNA0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790754631; c=relaxed/simple;
-	bh=vDby/m/EEjMDeptiVNNOT544ZpplCT9d9G9DGGJ1b+k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pHRKZ8DS6iPCG0YiKwnUSJG0eYbhbEXxHcZTQnIw0dHz+Qg+uk3Fcf8DnrPldZg9Sd/Cwe15w5FpVofdrBLvVAyjo9bboRMCbYO9QYt6L4NhanbuDYcHpauEdRvPpmsp/+EFgxJDZI5YZYOuGM5UHxEld6szSigzx6MsweNhAdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EjWqrAn4; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790754765; c=relaxed/simple;
+	bh=+ZUjpI1bbEQ+Y3jyaObrNhgx4hKta9AFmHyIBk+ib0Y=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=LW2zkb0sonGgnQ/Mq9gHD+O/rp53Wgk6ff5YNVnweaIzATsBF7U4o0ap8WI6ca6g8b/ItEkwytMO/W9SkVZD11NmIxzAFLjEhnw8OX/HY1lyzvXLO9Owiw2fpjoF9dSkMhcjE3BG8ZHfHf0FbPU28f7b4TeK1Kp3DF3HcYQcJDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=mkDauZe8; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=d9hRquuf; arc=none smtp.client-ip=202.12.124.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EjWqrAn4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790754630; x=1822290630;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vDby/m/EEjMDeptiVNNOT544ZpplCT9d9G9DGGJ1b+k=;
-  b=EjWqrAn4M4XvgbECawZt0M7J64XHVFIwrWYRK9i6ANu6UYeJ/P0KeBXJ
-   +aHm2rRi9+lyHsp+5LbMakzlakooc2y/cswX/OkMCEc+oeZPOHhTbgOBX
-   TflIEczi7bhORSo/9iLsu4NIst+6oE0E8+3m27tI4Ho85T+4T0tLGpTHO
-   /dNq8wJCAEJFVQj0jxB6ljfKUBMMyYz0oVMmXIBfqlWzZ48QQGIT9b3TB
-   nw7ohmJYcvtORTJMFcxsy5ijg13meHpzghDlygPw3CUK+SDGGubuXe+FE
-   DurlMaafeesTBATurr+6srWTQwJD0kbhXM2OeBh9q6QezXk8h51K6GF2x
-   Q==;
-X-CSE-ConnectionGUID: gLqj9b8uRZ6es9WBNrOmoA==
-X-CSE-MsgGUID: 6I973uc2Rv26iT5UVA4AvQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="95296496"
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="95296496"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:50:29 -0700
-X-CSE-ConnectionGUID: My4dWSZ9SKqpF0HFY8KeFA==
-X-CSE-MsgGUID: nE8aElr8SAm3xGd9ONMsIA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="278961365"
-Received: from weba0534.iind.intel.com ([10.66.226.131])
-  by orviesa004.jf.intel.com with ESMTP; 30 Sep 2026 00:50:27 -0700
-From: Sai Teja Aluvala <aluvala.sai.teja@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: kiran.k@intel.com,
-	chethan.tumkur.narayan@intel.com,
-	Sai Teja Aluvala <aluvala.sai.teja@intel.com>
-Subject: [PATCH v1 1/1] rfkill: add rfkill_hard_blocked() helper
-Date: Wed, 30 Sep 2026 13:12:07 +0530
-Message-ID: <3305da8e844c9d0a5de5848b596d16de8d462048.1790752797.git.aluvala.sai.teja@intel.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <cover.1790752797.git.aluvala.sai.teja@intel.com>
-References: <cover.1790752797.git.aluvala.sai.teja@intel.com>
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="mkDauZe8";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="d9hRquuf"
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfout.stl.internal (Postfix) with ESMTP id 91C671D00715;
+	Wed, 30 Sep 2026 03:52:41 -0400 (EDT)
+Received: from ams-imap-03 ([10.64.2.23])
+  by ams-compute-02.internal (MEProxy); Wed, 30 Sep 2026 03:52:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790754760;
+	 x=1790841160; bh=LogGlCJ0mVEO3OVB8MrJLtlRZkt6j829s0jF8jKE/FQ=; b=
+	mkDauZe836rveNeLxwAwB/9HKis53swdNDZJoCsZV55bT8nffQmtfNuWGETEyGyU
+	kaqQc5XA5O7Nrd/0GOpSg5aRAlbBrPfL204IP3QHIprmwD55uEkztLW8nOjNlMbm
+	V4nYnj2J8JV9+ZVrRDiU67KNnryGuYoYzpRgvjKeVaRhWP29PXdRKdAJGMlnIpBK
+	Yifh2/7HFRkVVw6UKfkc5pPYhq/bID2xrK41qyAVosQJM6yYXSzxViG+TFYTVS0e
+	6knSeN899yrjjDqBCmI4Josv5GAsU68KO615A8qJm9FWBTIrAFvhyLcaCbObAmHx
+	cEfbmeligx2jQKLQFsuKmQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790754760; x=
+	1790841160; bh=LogGlCJ0mVEO3OVB8MrJLtlRZkt6j829s0jF8jKE/FQ=; b=d
+	9hRquufQpG6Nwd8APPlsH69OKkCBmFqLm7cKmrNATEQkTJ6oOpeEZB2kYA19OcDv
+	BNukcb25lNrVl2vYD1EXIp9I8ejTCkDNsioepVnchZ1ycLmF5aZgsKNnjvz5vygE
+	37E1m7xhxQc+v5Y1vTvyIrb5vH/feGDWqt7YYScQbc7ccG8josKoRjMYN94OUG18
+	mSqjvLFEFerG5/6iFTX9IzWyMJbvGL6HHPONgnsX3+wIqX7p/h2TfELlGoYZ2KB1
+	xqMZ/FpzbN7+eOaslXVGgvil3Ee+wKfEbS6TApF7jTjwaZz0Vl23OPFtlEPtYsgc
+	jBLcP9PsTETEhtIFnbXqQ==
+X-ME-Sender: <xms:xr-8anR4neW_irO6Xt81-Gcpmk0rHtZWNumHCBt8GnOt1b7vXnqx6w>
+    <xme:xr-8ajlVw7zUl8yv_OjLbAZopfEpWSHa5pjOnsxPZOksftdKbQu8QwJTNJjbfuFde
+    WJjx0mjqaznK2G8xh-SLKvIAR98wMsO11xXUSkosjtAuiYVD34-eUmJ>
+X-ME-Proxy-Cause: dmFkZTGmX3wTdRV6d8JIY92p9Kp+huUcE/MQojo/VtO81/18ppr1ZR60bB7cP9Z5dOW8Jd
+    g3BQq01QNYnzP9beah9vomnv9RxIu1Rl6lyeABnLkHMRBqEsGmICIGaOv+tCpiUu1uslIJ
+    CXnHvzQMeeZCebbce0vPSS1sGXrNgMxcL6/ZjboqZMvDigBgDkttHG74h26DS46VMp28IM
+    3sCyUDKXwn0ec/fP46Hd3pQEf8vu5C4mBsaTf8d04IaXcxoflzNR93a2lvnbcB1a+iw/VS
+    0WylwrtgcOsx3jVqFe/vJHZ1QogFQAq19Ck5m2wcRQ6GfVNuKzIbOjikCVatiw6P3vQ7mT
+    eYkSUIXZM7TJ0tAz6/lV9YqymRwuXcBoBb4IYSumSTDodqHeZUlHb8SjBnnM84ZVdtRhG3
+    W0a+tF8U7f9TYiGA6LK1QIWTZSPUzefH73PJt9kkfct0ZGMY6QYQb0iXmObkIlbP6DVsYC
+    Qxvz/y4YDAKDyrY1hu3IdPT+m7ZOgRtMgaZNG3CX2F6m5UPzM+f3LzMdLNhhb1y/wShw0+
+    mmHt8OUVXn8vubm9zyQGc1jYLml4pkwxqnmyZ85KuMWMd0edcWy3RWWdUStLVNMtE15wUO
+    qJr9bnIC6GSHqhUV4464OWZbhKORjFjSBJkLr0l6JXfCEIRGCln8g+Ob6aEw
+X-ME-Proxy: <xmx:x7-8anR38iDq9w28QBGq6FOEm4s6t4Voky-Ja_H_Q_9EG1qvNFoWSA>
+    <xmx:x7-8ajszryQnLXWfTqn3rkGQcPJpVtMsQdxcBo4NJP3eGOsZiJfI0g>
+    <xmx:x7-8ar1IDHl389fgq4qVW6khd6ORnavnL0ygZeM_GnrKYnDDqaH2Bw>
+    <xmx:x7-8asXKnoYj37sZdNYEzGzmSq5H44stY4KKuQxv4SeFCKpHncHXcg>
+    <xmx:yL-8agio6XC88-D1E-_QnLbBXgS9aehcUAzCg6obnywC6PlGk8Uzsb7t>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 9B1B932A008A; Wed, 30 Sep 2026 03:52:38 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ThreadId: AeRYNq7l0AL7
+Date: Wed, 30 Sep 2026 09:52:18 +0200
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "Arnd Bergmann" <arnd@kernel.org>,
+ "Johnson Tsai" <wenjie.tsai@realtek.com>
+Cc: "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <0162247f-ca33-4152-bd32-255343c7216b@app.fastmail.com>
+In-Reply-To: <1bde7ea5999c4915b184bf2fcb904901@realtek.com>
+References: <20260929104159.3236854-1-arnd@kernel.org>
+ <1bde7ea5999c4915b184bf2fcb904901@realtek.com>
+Subject: Re: [PATCH] wifi: rtw89: fix LED dependencies
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-rfkill_blocked() reports the effective block state, i.e. set when the
-device is either hardware or software blocked, and rfkill_soft_blocked()
-reports only the software state. There is no equivalent accessor for
-the hardware-only state, and struct rfkill is opaque to drivers, so a
-caller that needs to distinguish a hardware block from a software block
-cannot do so.
+On Wed, Sep 30, 2026, at 02:28, Ping-Ke Shih wrote:
+> Arnd Bergmann <arnd@kernel.org> wrote:
+>> The problem is a misunderstanding of how Kconfig dependencies
+>> work, as the 'imply' keyword is not sufficient to enable a
+>> a user-visible dependency, and the boolean 'RTW89_LEDS_MC'
+>> symbol cannot determine whether linking against the MC code is
+>> valid.
+>
+> People intend to weakly select the dependency. I think keeping
+> 'imply' is harmless.
 
-Add rfkill_hard_blocked(), which reads RFKILL_BLOCK_HW under
-rfkill->lock in the same way as rfkill_soft_blocked(), together with a
-stub returning false when CONFIG_RFKILL is disabled.
+Whoever those 'people' are, please tell them to stop using 'imply'.
 
-The first user is the Bluetooth HCI debugfs force_hw_rfkill test hook,
-which must report and compare against the hardware state only.
+It's obviously harmless in the sense that it doesn't do enforce
+anything, it just make it more error-prone:
 
-Signed-off-by: Sai Teja Aluvala <aluvala.sai.teja@intel.com>
----
- include/linux/rfkill.h | 12 ++++++++++++
- net/rfkill/core.c      | 13 +++++++++++++
- 2 files changed, 25 insertions(+)
+ - the first 'imply' only works because MAC80211_LEDS has
+   the same dependency as RTW89_LEDS, so it works as a 'select'
+   as long as the dependencies don't change. If the dependency
+   were to change, the only difference is that imply makes it
+   harder to debug because it skips the helpful message from
+   kconfig.
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index deea02a034c3..9877ed4ea6ab 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -231,6 +231,13 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw);
-  */
- bool rfkill_blocked(struct rfkill *rfkill);
- 
-+/**
-+ * rfkill_hard_blocked - Query hardware block state
-+ *
-+ * @rfkill: rfkill struct
-+ */
-+bool rfkill_hard_blocked(struct rfkill *rfkill);
-+
- /**
-  * rfkill_soft_blocked - Query soft rfkill block state
-  *
-@@ -310,6 +317,11 @@ static inline bool rfkill_blocked(struct rfkill *rfkill)
- 	return false;
- }
- 
-+static inline bool rfkill_hard_blocked(struct rfkill *rfkill)
-+{
-+	return false;
-+}
-+
- static inline bool rfkill_soft_blocked(struct rfkill *rfkill)
- {
- 	return false;
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 9e143c4bfe6a..684139591e9d 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -979,6 +979,19 @@ bool rfkill_blocked(struct rfkill *rfkill)
- }
- EXPORT_SYMBOL(rfkill_blocked);
- 
-+bool rfkill_hard_blocked(struct rfkill *rfkill)
-+{
-+	unsigned long flags;
-+	u32 state;
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	state = rfkill->state;
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+
-+	return !!(state & RFKILL_BLOCK_HW);
-+}
-+EXPORT_SYMBOL(rfkill_hard_blocked);
-+
- bool rfkill_soft_blocked(struct rfkill *rfkill)
- {
- 	unsigned long flags;
--- 
-2.53.0
+- the second 'imply' turns on a random symbol from another
+  subsystem, which is discouraged.
 
+- we already have a mix of 'depends on' and 'select'
+  for the LED support, which can lead to circular dependencies
+  and other problems. Adding a third way can only make it
+  worse.
+
+>> Address this by using the correct construct to determing whether
+>> linking agains the MAC80211_LEDS and LEDS_CLASS_MULTICOLOR
+>> code is possible, respectively.
+>> 
+>> Fixes: d910631ff352 ("wifi: rtw89: add LED support to reflect the wireless association status")
+>> Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8852CU valve board")
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>>  drivers/net/wireless/realtek/rtw89/Kconfig | 6 ++----
+>>  1 file changed, 2 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig
+>> b/drivers/net/wireless/realtek/rtw89/Kconfig
+>> index 7c678dd1f6b3..4000ae344544 100644
+>> --- a/drivers/net/wireless/realtek/rtw89/Kconfig
+>> +++ b/drivers/net/wireless/realtek/rtw89/Kconfig
+>> @@ -208,15 +208,13 @@ config RTW89_DEBUGFS
+>>  config RTW89_LEDS
+>>         bool
+>>         depends on RTW89_CORE
+>> -       depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
+>
+> I remember we fixed to this style years ago by imitating ath10k and iwlwifi,
+> which they look like that still. 
+
+ath10k doesn't use ieee80211_led but seems to just duplicate that code.
+
+I do see that my version also got it wrong, as the 
+
++	depends on MAC80211_LEDS=y || MAC80211_LEDS=RTW89_CORE
+
+line is nonsense with MAC80211_LEDS being a 'bool' symbol.
+
+The way this was meant to be used is to have
+
+config RTW89_LEDS
+      def_bool RTW89_CORE && MAC80211_LEDS
+
+or you can skip the symbol entirely and replace all the
+CONFIG_RTW89_LEDS checks in source code and Makefile with
+'#ifdef CONFIG_MAC80211_LEDS', see ath5k and ath9k for instance.
+
+     Arnd
