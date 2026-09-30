@@ -1,111 +1,184 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD0751AFCE
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:09:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8314E0B60
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:09:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790777361; cv=none; b=oF2iav0QowJXKdg6wxUNjFZgzR/KLSKZvRvnTJosPf9l5PCvACL1ND18ECQCxSguvGRSz+ih3BoG5aOAjt82IMgilisqb4iAXVifLMMmlX6A1BKBlWYzzhaQLELCHlg5lrH/eHDFxp6YaIjN5gu+AVqjXol4kQZheLJRm7OZ/GY=
+	t=1790777364; cv=none; b=RRhcykro/fVYGh8B1w1tHPgU+wKKB2shLT/0wOi+MAro/80JUMJ83+hIdEHbv8z92Kh1N0ggjei2m+Fo2QvlcvvTxXi4CiuPaWtqpp0aVcSOn00ObQDRUkbgfe2UyRh+44S8h5wkYFqhLaDPwKRJ1ko2pX9VqhK8BGyUCPiws+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790777361; c=relaxed/simple;
-	bh=BN8qNZrn5KUe47KrPph76MRZuWYXHDzUb9aSvc4F6Tw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SFsxe/JkZkjtFAF6lu126biBZRV1NE44k3JQljXj02iLBDn8EWiXrVkVFUAclDBd0QsWPef7ex7VAmcS9DP35zVQzocD/LtFj1eyi++LDSCKxUY4+Uw3Cd9DrH6bFSn/tonidGz9TCl3VrQ1hHcx7BfvbxpGY7ucqi5RH2c63Vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=6wind.com; spf=pass smtp.mailfrom=6wind.com; dkim=pass (2048-bit key) header.d=6wind.com header.i=@6wind.com header.b=BusD2SQM; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=6wind.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=6wind.com
+	s=arc-20240116; t=1790777364; c=relaxed/simple;
+	bh=VXYSIpNBzjljxOOTtdon4+ERsroM+GnS8vRAxuANfWs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=u/ydoAR+OvTc6yK0wAymhk9vwawmfY5FBCfQhap3gd3ESglp+LvTPDzD5nXfNItKBrB8SdgxL0d4UQF8faxrMofB/LAefnzagw/TA6Nq+KixqBOcV8NapWGUOj1dVX7qBjnQ565fI2K6Gc06Doej4oQjndieE6zFqfZ/ZIhQqFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UO9k3RCN; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=6wind.com header.i=@6wind.com header.b="BusD2SQM"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-4843af75de5so636150f8f.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:09:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=6wind.com; s=google; t=1790777339; x=1791382139; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:organization
-         :content-language:from:references:cc:to:subject:reply-to:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=tdG34iKbPg/dwz5nj8mIvaNch6v4ZkxNF8npErR5dgw=;
-        b=BusD2SQMeNc9qIwPavPHiOm5OZWZJV90oDDI/3iC5w1Nd0OUfddlgAhdKoB/0O3aHL
-         geVMedIw7bU58L8CMt54+jF7iW8pqbUcmTxvrXDrGMFBb16mEGtxG4teFELoOapcFfLp
-         bMxVW2Mg8N/M+t2vcQybJEhlIqus9xRCQKJVr0bu9qgZPY0uc+5ZQ8jO2h4AWGVDUPE7
-         8iBVT/CCxZ9Th8+YeiFUZJufc27/PvZR6oq51kmJl5f3ez0lnDor1UmOlPsh4hHW2Ly5
-         IhZ127CjZqiUc5xhm8xHrN2nvS4bmyoy8RO+C0HNRBXuxim08CVrZ8nunlzddNnGbfxH
-         jYSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790777339; x=1791382139;
-        h=content-transfer-encoding:content-type:in-reply-to:organization
-         :content-language:from:references:cc:to:subject:reply-to:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=tdG34iKbPg/dwz5nj8mIvaNch6v4ZkxNF8npErR5dgw=;
-        b=fn6XCb1Z2UpXIxSy2nPRg+Y75GJo9wNi9CQQlrRBJubBEz9DQk5IdvJAhLuGfmFN3z
-         7yJzZMM6ZU6TtxHZVygpxKZsw/kvGY2WlJbUTl/JvWGi5dxEvIOpr5BqazOh9qY9VazL
-         CEllVHN+jI1AU64fDQcLEVESL75scO7C8PStZmOSOSoq+bo2rAHkWtek6bvyFjAX0PFg
-         A9OGLhUJaXCrBzvYgsAIce8Vb9NkqEwgMRtm5+9aoiRLnTW2cHjhMR7LnYlbn1dIKdY1
-         omjLBKsJ2jmbRGIXtj+AIcyp9+XresSdMSSnrJmELZXTbSerZfHLtR5+77GtWNwfiJ31
-         LT/A==
-X-Forwarded-Encrypted: i=1; AKwUvBzg9AOqPCd9tFdfaS1nttmPfWou3Tp9+fKquE1qFuq291X/KZvHplMpBMmthVEnHotEt7O1d5V0oHO8A/2AJw==@vger.kernel.org
-X-Gm-Message-State: AFuF++nVCFiKbnY/Ng8hgZsu+35w97u8h6OoK93BwHOCr3csgybuK35W
-	ZmFNNAuaUphL2/mn8dCLvmtKFl5S+x/Y/b72kacF+I49DGtkZwRq9UVY2h75bVjYeuU=
-X-Gm-Gg: AYBFou18Cmiwq++kKpX9n9zP4ygKP0pfqBBzi/W5Q99yXjL82d1P6QNsuD+HBCMDw0m
-	IYJMSD2MR88Mh2QA8HR2TJYHfouuZjOOYp7BMScbuVaQbR38r+7vtnw4pFp9qqrSmueFSycjTEK
-	5s7u4dgu/cw2jU4fQtISF2uBMmmsXp9vqo86CLx3keNIZICDbuf1vSHM+Y2+D+civVbk4WlaPjk
-	0+NuuJWID0b5fDG3/Bbb2qyg0Rp59p8nOYG2ixLosa9Z4kD55sZYKj9Q7p1sORpNoJTIgsG0v4x
-	dJ6HUrmpgXt4HxH/oLWOEqltVwdXRedoFVzGNQmVpBmzxOHAKGUcX7wvPTzWz1R1VPSLeBl6s40
-	vs5EieSdACyXkNxj9qzGt2SDgdj6hGLiH1jrQtAVFaq2F/zT/p8U38IUIh1tPCH77Kbj/a8Z2mR
-	OfOgyuEWwkXLQpIJOlDVft+rSrWdvTqLQoo1LPQrxrO8ePqh9k2Qp1lmtiPEj1O9A8I97sSa1gu
-	nBbZzajtCdT4byN50uHrDquY6dfhOXEj913erNeN3Gria1bjcw=
-X-Received: by 2002:a05:600c:628b:b0:49e:6683:d227 with SMTP id 5b1f17b1804b1-4a01ab4dde1mr25863645e9.0.1790777339323;
-        Wed, 30 Sep 2026 07:08:59 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:ab7:2110:6a1d:efff:fe52:1959? ([2a01:e0a:ab7:2110:6a1d:efff:fe52:1959])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01e64c322sm2327035e9.4.2026.09.30.07.08.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Sep 2026 07:08:58 -0700 (PDT)
-Message-ID: <7d8f1378-d5a6-4a87-82cd-98eb794f85f2@6wind.com>
-Date: Wed, 30 Sep 2026 16:08:57 +0200
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UO9k3RCN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790777354;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=p3xqmKVAFV4WbQWRk7ZQhQ7LMEFnygykagJl6VwnyQI=;
+	b=UO9k3RCN5WMT0N1dqd0XUxvEHuECzVYmftS+qvQuLb0/JA99Pre8UnuB7l3YBB3Hb2MGIL
+	mHDxh8q8dsw35kA10bRA1bBI65OSukcDTpz7VkzInRo2HxtJTvdFYYTpwYSdkpIVFVNGdc
+	wo+7ISbgkZSLp5yjUgs/Cuc/64eohec=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-307-SOCXgrpmO5qWs48VnazhLw-1; Wed,
+ 30 Sep 2026 10:09:09 -0400
+X-MC-Unique: SOCXgrpmO5qWs48VnazhLw-1
+X-Mimecast-MFC-AGG-ID: SOCXgrpmO5qWs48VnazhLw_1790777347
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 098451954B1D;
+	Wed, 30 Sep 2026 14:09:07 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 717C31956044;
+	Wed, 30 Sep 2026 14:09:02 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org,
+	jjohnson@kernel.org
+Cc: johannes@sipsolutions.net,
+	mani@kernel.org,
+	jgg@ziepe.ca,
+	yishaih@nvidia.com,
+	skolothumtho@nvidia.com,
+	kevin.tian@intel.com,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH 1/7] PCI: Add pci_find_free_ext_cap_offset() helper
+Date: Wed, 30 Sep 2026 16:08:27 +0200
+Message-ID: <20260930140833.576941-2-jtornosm@redhat.com>
+In-Reply-To: <20260930140833.576941-1-jtornosm@redhat.com>
+References: <20260930140833.576941-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: nicolas.dichtel@6wind.com
-Subject: Re: [PATCH net-next v9 2/6] net: change netdev_hw_addr_list count
- through helpers
-To: Yuyang Huang <sigefriedhyy@gmail.com>
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
- Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
- Andrew Lunn <andrew+netdev@lunn.ch>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>,
- "David S. Miller" <davem@davemloft.net>, David Ahern <dsahern@kernel.org>,
- Donald Hunter <donald.hunter@gmail.com>, Eric Dumazet <edumazet@google.com>,
- Ido Schimmel <idosch@nvidia.com>, Jacob Keller <jacob.e.keller@intel.com>,
- Jakub Kicinski <kuba@kernel.org>, Johannes Berg <johannes@sipsolutions.net>,
- Kees Cook <kees@kernel.org>, Kory Maincent <kory.maincent@bootlin.com>,
- Kuniyuki Iwashima <kuniyu@google.com>,
- Nikolaos Gkarlis <nickgarlis@gmail.com>, Paolo Abeni <pabeni@redhat.com>,
- Sabrina Dubroca <sd@queasysnail.net>, Shuah Khan <shuah@kernel.org>,
- Simon Horman <horms@kernel.org>, Stanislav Fomichev <sdf.kernel@gmail.com>,
- Vadim Fedorenko <vadim.fedorenko@linux.dev>,
- Willem de Bruijn <willemb@google.com>, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20260930112842.21323-1-sigefriedhyy@gmail.com>
- <20260930112842.21323-3-sigefriedhyy@gmail.com>
- <235a33c2-7138-4815-820d-793568757d95@6wind.com>
- <CA+7S2v+VaVYksOpuUKzo+DoWZ97M_XKvnMr8cCcgwTkrOxsvEw@mail.gmail.com>
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Content-Language: en-US
-Organization: 6WIND
-In-Reply-To: <CA+7S2v+VaVYksOpuUKzo+DoWZ97M_XKvnMr8cCcgwTkrOxsvEw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Le 30/09/2026 à 15:43, Yuyang Huang a écrit :
->> If you respin a version, you can use netdev_hw_addr_list_count() in
->> __hw_addr_list_snapshot() also.
-> 
-> Thanks, will do if there is a v10.
-Thanks. FYI, please don't top post:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n336
+Add helper function to find free space in PCI extended configuration
+space. This is needed by VFIO variant drivers that need to use unused
+extended config space for device-specific purposes, such as passing
+metadata to VMs.
+
+The function scans the extended capability chain and returns an offset
+to a gap of at least the requested size. This allows drivers to safely
+use extended config space without conflicting with existing capabilities.
+
+Use case: The qcom-vfio-pci variant driver uses this to find space for
+caching host MSI addresses that need to be passed to Qualcomm device
+firmware in VMs.
+
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+ drivers/pci/pci.c   | 54 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  3 +++
+ 2 files changed, 57 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f7cfcc00090..7fa261140457 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -552,6 +552,60 @@ u16 pci_find_ext_capability(struct pci_dev *dev, int cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ext_capability);
+ 
++/**
++ * pci_find_free_ext_cap_offset - Find free space in extended config
++ * @dev: PCI device to query
++ * @size: Minimum size needed (in bytes)
++ *
++ * Scans the extended capability chain to find a gap of at least @size bytes
++ * in the extended configuration space (0x100-0xFFF). This can be used by
++ * drivers that need to use unused extended config space for device-specific
++ * purposes (e.g., VFIO quirks for VM passthrough).
++ *
++ * Returns the offset to free space, or 0 if no suitable gap found.
++ */
++int pci_find_free_ext_cap_offset(struct pci_dev *dev, size_t size)
++{
++	int pos = PCI_CFG_SPACE_SIZE;
++	int last_cap_start = 0;
++	int free_offset;
++	u32 header;
++	int next;
++
++	if (!pci_is_pcie(dev))
++		return 0;
++
++	while (pos >= PCI_CFG_SPACE_SIZE) {
++		if (pci_read_config_dword(dev, pos, &header))
++			break;
++
++		if (header == 0 || header == 0xffffffff)
++			break;
++
++		last_cap_start = pos;
++		next = PCI_EXT_CAP_NEXT(header);
++		if (!next)
++			break;
++		pos = next;
++	}
++
++	/*
++	 * Use space after the last capability. We align to the next capability
++	 * boundary (typically 4-byte aligned). Start at a safe offset past the
++	 * last capability - capabilities vary in size, so use a conservative
++	 * offset. Most extended capabilities are <= 64 bytes.
++	 */
++	if (last_cap_start) {
++		free_offset = last_cap_start + 64;
++		free_offset = ALIGN(free_offset, 4);
++		if (PCI_CFG_SPACE_EXP_SIZE - free_offset >= size)
++			return free_offset;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_find_free_ext_cap_offset);
++
+ /**
+  * pci_get_dsn - Read and return the 8-byte Device Serial Number
+  * @dev: PCI device to query
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..5d1ccbb2ed29 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1287,6 +1287,7 @@ u8 pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ u8 pci_find_next_ht_capability(struct pci_dev *dev, u8 pos, int ht_cap);
+ u16 pci_find_ext_capability(struct pci_dev *dev, int cap);
+ u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 pos, int cap);
++int pci_find_free_ext_cap_offset(struct pci_dev *dev, size_t size);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap);
+ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec);
+@@ -2160,6 +2161,8 @@ static inline u8 pci_find_next_capability(struct pci_dev *dev, u8 post, int cap)
+ { return 0; }
+ static inline u16 pci_find_ext_capability(struct pci_dev *dev, int cap)
+ { return 0; }
++static inline int pci_find_free_ext_cap_offset(struct pci_dev *dev, size_t size)
++{ return 0; }
+ 
+ static inline u64 pci_get_dsn(struct pci_dev *dev)
+ { return 0; }
+-- 
+2.53.0
+
