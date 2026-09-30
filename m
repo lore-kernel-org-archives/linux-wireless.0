@@ -1,131 +1,115 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf2-f12.google.com (mail-lf2-f12.google.com [74.125.229.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D18313293
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790777481; cv=none; b=YtM1cJ6Q22T9XHfE1N15gX9rBarToE+Qf8eqqAuLKJ0XKZdHRkWzM58wKzZ2xeiabpboEtXzg/Fn1/TTCCGokprfnEq3K1C6xU86TChe5yB41hRJJU5eyPvXIoUOXAy6kOlEyUPIztFV56zvaCMBOfK1OhjizVCLs7zMG7ACYHA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790777481; c=relaxed/simple;
-	bh=u/sYFJ0IFoVAn4mTeL9RLHFvHzVSFq6mlMEPEuqFX/c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MnJEKHQUCXSHj6N3sLSoHatSiuUt1Ecf17tJfC2EXP90CRFkKopAFNFhjZGLdnF7Bd9rTOYxaf3rFbvjyZBwbQGQkYmbi4qoDNycD92cc+6X35+On8FR88D9OPs0kVhzoIb4csDelDzCNqoFGSNaMgog2dNpMQjVtdS5yF+XWeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aFppREF5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E14154F7CC3
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:13:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.204
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790777633; cv=pass; b=J0LAuGxOaXWoQ5crjN0OIHthBg8mIXLOX/Qw72PKu0LfEAjEcNFnXNA/4LDhgx3VwBcf6xYIgjui2rfFfBcKzsmpE1cit+FawRdOJP/xyG1AGVCUfCu+DpbJSy3cZWuwmGaQW3PZW+5riCpJyadRSgVa3ItDzI+WGu+uZVKM6Tc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790777633; c=relaxed/simple;
+	bh=ouiP/s84DTBB3CgCBBKgMRlCvmNQLtc3ruMbeozhkFE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XNQrevl7JRgioBOLsnTG3U6XU0uRAX12+UJsf5V7kCHPSR3pQDXr6j4D8Z/eA+H1v5Kg24kmAvoUhDiW0dcW/E0yMxcBsxUUYt784DHMhMskAxbA37BmA09LhIB0sbzqoAMmq0TkdFxBzCbLr6HlB2W370e0u5qaWySD5g9aOGk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HU3JuVoh; arc=pass smtp.client-ip=74.125.229.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aFppREF5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790777456;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=kog7asmMh6wog1adNQUGIn243OW/BEgANRMVLg38o7k=;
-	b=aFppREF54KingHqSYMXXK8CqSuRg3vGmH8wVsDgVbIz1h/i4v/xZpcylOCBxMH2PdnDLZe
-	UYu6g4CRlHYcZuPCD14f3S4V/Gtsq0gPdEshxkxXNbI5kZE6Q7Wx6lQVo3/SvRO62niZ8Z
-	H2gmWyydK5HnudFD/e8p1k3ctflteGE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-543-DJl6E92WOv2gFGzQ13y3SA-1; Wed,
- 30 Sep 2026 10:10:53 -0400
-X-MC-Unique: DJl6E92WOv2gFGzQ13y3SA-1
-X-Mimecast-MFC-AGG-ID: DJl6E92WOv2gFGzQ13y3SA_1790777451
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EF668197700A;
-	Wed, 30 Sep 2026 14:10:50 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 18C2C1956044;
-	Wed, 30 Sep 2026 14:10:46 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org,
-	jjohnson@kernel.org
-Cc: johannes@sipsolutions.net,
-	mani@kernel.org,
-	jgg@ziepe.ca,
-	yishaih@nvidia.com,
-	skolothumtho@nvidia.com,
-	kevin.tian@intel.com,
-	linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
-Date: Wed, 30 Sep 2026 16:10:45 +0200
-Message-ID: <20260930141045.577212-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HU3JuVoh"
+Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5ba390408cdso1496487e87.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:13:45 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790777623; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Ym4tNEx48pe+BmkGd2YTfCfbeup7GSD4VsGE46df7GEIB1uONXIIKGe0uDLQ9NA8pt
+         7IOOqOe7yC128xB0cxDXLpRGr53/QobEwWGBRv4mCFU8qSenJNHFo55o+uoy+7BSWJEh
+         ouKGril2R46xZKK7o4wqy+l4AKMEymSufd7l8ZdZAv8L7umWbipY6WNdBMfjfU68GzBM
+         g+C8b2dh8vhlKZHFeFekOkpeCFvqkLuTZj4jwpLF1hb3QhvzrSYXAcQOFsl53RgSF8/u
+         VTXjJAroNAVkfgduIPs35fcQNfLL70h7s2iyjztjdwuYGxfxnNiAvBsZdFExPEUFZnyI
+         JTjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=ouiP/s84DTBB3CgCBBKgMRlCvmNQLtc3ruMbeozhkFE=;
+        fh=pFFJZdh6vwPk0kUmeCmc6y1jmwfEEEKhAT0Y2sQWgKg=;
+        b=K9Wzq0RtYzRWPhYc9rLoYQwJBczmmAupGggViDgVMtr87ATpj7QpHArKZsgD9ZF2cr
+         +LgxXUrwx/e5fBlv4KxD4vJVPEagR9e1I69Jr+kGqBTHkeuso/yGzmVaTMhljcguj8ED
+         3bXeBy7nqW5M0eFq6p8f5UnLTF4L6xfJIFkPJnmGfSCxJeM+rKk7+BIFjUJrBZOVBwDF
+         P7U3EZw/j+lnLOHlUrA0xThOlzoTyZDF5YTJxEgAUY4yeaesopl2Dr6PdD3r4xjG5UXR
+         ZZVTYF4QRNlhm/vYzRWGw0ZINJ53MLsP8/5CCEWRS/BKLFXUi1j1hP+lcVaJro9W6evO
+         kKvw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790777623; x=1791382423; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ouiP/s84DTBB3CgCBBKgMRlCvmNQLtc3ruMbeozhkFE=;
+        b=HU3JuVohcapnkuT8TmF6+QOx52bOpVZAIps9S3IPbbRkpGnKxCBUKjQ5SbyfqArTOW
+         C3tBoIfVqFT/Zgk16U6c8b5ZL0PdV+DKRu03OKT53E4v3wwsuH+s99FpvD05bMUSMQWK
+         r1HS4HOk5yHhzYyqNRbXvHUzAKpAr76Jd+aOjvdcjzfvK+GogJC9lRbg5lmmEU5tWvcC
+         4g5bKAZP/3taB8vETUKvANeLgTnSf7S3LuSfWVqbTR/3OlYDZ0+UGhkOoK5S1JGyXaVb
+         gr4DU4amAbBsMRTFQcDr6truIB2LF7VRMohFAcHkSR8Cgbrdma5dDhj+HmILILEUiNCF
+         FVEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790777623; x=1791382423;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=ouiP/s84DTBB3CgCBBKgMRlCvmNQLtc3ruMbeozhkFE=;
+        b=r9DMtGK5riaYYd6nhQeXZoWfTOBsd0w8mm+0e97sBKLm4hUSePioZXLG75EGjhsqr9
+         TumFrAHdrz5JqqFGWMIlRV7nQYGt4NAkCQ3imIvfIgCq2pi11XJVpiptT8X8ygZ/J7ax
+         PXrpzc/Yk0DNZbN31PvoU+qZaLoFJA0exeEI7YV9/EOUZxlKnvPTKL9GhDrxzAmYNoJc
+         ry4SaKAWiy4tHpajJ+KdaadTYbH+f1E64dBEX7BvgOm2jpe3BctlhC56r39HD4PGvKh5
+         h9xC692p722OUiyUbBPBvVDByESLXk3rwxAts8Gd7kjrENAczttSqWRrI6Bm2NXtF4cP
+         RZnw==
+X-Forwarded-Encrypted: i=1; AKwUvBzpo8fi65kMoLbbGr6WB1zM4S5FM0xlHZMdBQx9aY1w0k/cTNyPFEXahJzWmBpnXDoyQ5AhqIRjmRzCd/p4aA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJxNDU5WBV2kmL9zq3E95yN/LxGBEVmavUqiPSL8TQCmwW57kWz
+	MrhFRQyNoup5zZ8s0jHhjypmI5tTGK3tlNf20Y9t1+CfRZ2AdrYv++DPUvobbxBCXp7yIlqkcQ7
+	Pu4jj24Np0jIny1Jq/kl87vLEj9D+7mc=
+X-Gm-Gg: AYBFou33sVpmszDKK10yybs5DfbW1i9iS+I4ySN7aq4YcToU0T4X7jCu5QfnaOh6K+M
+	6mxNHGOUSWoVWP5jGaVjqK4pnoYXzc7IXgPoqoYYYHuxk/o9bU/38aQ/CdFP0gxYuAnQ6w6apQS
+	3RySprEM24QPsxRF2fRdUCgdZ6TSnBDHGSMjtlIYrx1PAWq1dPLqn2cPzMN/2UvGzquWuGKvkR3
+	w6Dp21DMcaD1tYNsGZtCBqJOF902+piBtrMo/WHoHKZ/vZYYblGDgFXfq85XdwWyGY+pPnuekRT
+	Qgz/nR4GaonfCjdwcp3OLobAuuslJoaUbGu9k50Qr53ag/3+sEeo2kplsiK9fROR4vwj3Fgu8Yg
+	Y0vzPW6yuQZqr1MsO4U0vjsuYtwOWkiiTfCSzN0CCU1zM
+X-Received: by 2002:a05:6512:6884:10b0:5b8:f472:2e66 with SMTP id
+ 2adb3069b0e04-5ba405e9177mr509267e87.25.1790777623133; Wed, 30 Sep 2026
+ 07:13:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+References: <20260930112842.21323-1-sigefriedhyy@gmail.com>
+ <20260930112842.21323-3-sigefriedhyy@gmail.com> <235a33c2-7138-4815-820d-793568757d95@6wind.com>
+ <CA+7S2v+VaVYksOpuUKzo+DoWZ97M_XKvnMr8cCcgwTkrOxsvEw@mail.gmail.com> <7d8f1378-d5a6-4a87-82cd-98eb794f85f2@6wind.com>
+In-Reply-To: <7d8f1378-d5a6-4a87-82cd-98eb794f85f2@6wind.com>
+From: Yuyang Huang <sigefriedhyy@gmail.com>
+Date: Wed, 30 Sep 2026 23:13:39 +0900
+X-Gm-Features: AclHuK-ds-pquglK1wdrfnVLrVe9lO-XLy96JgNFg8PNJqutvY6kezkk22pc8Pg
+Message-ID: <CA+7S2v+hEK09FDv4jLrp3yGLxeFMde0j3FJ-TBytLxQ1Uoq=dQ@mail.gmail.com>
+Subject: Re: [PATCH net-next v9 2/6] net: change netdev_hw_addr_list count
+ through helpers
+To: nicolas.dichtel@6wind.com
+Cc: Ajay Singh <ajay.kathat@microchip.com>, 
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>, "David S. Miller" <davem@davemloft.net>, 
+	David Ahern <dsahern@kernel.org>, Donald Hunter <donald.hunter@gmail.com>, 
+	Eric Dumazet <edumazet@google.com>, Ido Schimmel <idosch@nvidia.com>, 
+	Jacob Keller <jacob.e.keller@intel.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Johannes Berg <johannes@sipsolutions.net>, Kees Cook <kees@kernel.org>, 
+	Kory Maincent <kory.maincent@bootlin.com>, Kuniyuki Iwashima <kuniyu@google.com>, 
+	Nikolaos Gkarlis <nickgarlis@gmail.com>, Paolo Abeni <pabeni@redhat.com>, 
+	Sabrina Dubroca <sd@queasysnail.net>, Shuah Khan <shuah@kernel.org>, Simon Horman <horms@kernel.org>, 
+	Stanislav Fomichev <sdf.kernel@gmail.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>, 
+	Willem de Bruijn <willemb@google.com>, linux-kernel@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-This series enables Qualcomm ath11k/ath12k WiFi devices to work in VM
-passthrough scenarios, addressing a long-standing issue where these
-devices fail to initialize when passed through to VMs via VFIO.
+> Thanks. FYI, please don't top post:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n336
 
-Qualcomm ath11k/ath12k WiFi devices have been broken in VM passthrough
-since they were introduced. The devices use an embedded interrupt
-controller that requires physical host MSI addresses programmed to
-device registers, but in VMs the driver only sees virtualized guest
-addresses. This causes firmware initialization to fail with errors like
-"BHI offset: 0xffffffff is out of range".
-
-Multiple attempts have been made to solve this over the past 2 years:
-
-March 2024: Workaround using module parameters [1]
-  - Required manually copying MSI values from host to VM
-  - Rejected by Johannes Berg as too manual, suggested VMM solution
-
-August 2024: QEMU + kernel solution by Alex Williamson [2]
-  - Kernel disables MSI virtualization, QEMU intercepts config writes
-  - Uses brute force pattern matching to infer MSI data writes
-  - Stuck as RFC - no progress in 8+ months
-
-No action from Qualcomm: Despite multiple reports, no vendor solution
-
-The solution in this series provides a clean, kernel-only solution that
-addresses the previous concerns.
-
-Architecture:
-1. qcom-vfio-pci variant driver caches physical host MSI values and
-   exposes them via extended config space with magic signature "QMSI"
-   In this way, device-specific hardware quirks belong only in kernel
-   drivers, not userspace, independent of the tools used.
-   This follows the established VFIO variant driver pattern used by
-   other drivers like mlx5-vfio-pci (netdev tree) and nvgrace-gpu (platform
-   tree).
-2. VM drivers (ath11k/ath12k) automatically discover and use cached values
-3. PCIe link recovery handles VM timing variations
-
-Thoroughly tested: 3 VMs across 2 WiFi generations, all devices successfully
-initialized and are ready for use.
-- VM1: ath11k (WCN6855)
-- VM2: ath11k (WCN6855)
-- VM3: ath12k (WCN7850)
-
-[1] https://lore.kernel.org/all/20240322104912.94811-1-jtornosm@redhat.com/
-[2] https://lore.kernel.org/kvm/20240812170014.1583783-1-alex.williamson@redhat.com/
-[3] Original problem report:
-    https://lore.kernel.org/all/fc6bd06f-d52b-4dee-ab1b-4bb845cc0b95@quicinc.com/
-
-Jose Ignacio Tornos Martinez (7):
-  PCI: Add pci_find_free_ext_cap_offset() helper
-  vfio: Add qcom_vfio.h header for MSI cache protocol
-  vfio/pci: Add qcom-vfio-pci variant driver
-  ath11k: Add PCIe link recovery retry for VMs
-  ath11k: Use VFIO MSI cache when available
-  ath12k: Add PCIe link recovery retry for VMs
-  ath12k: Use VFIO MSI cache when available
---
-2.53.0
-
+Thanks for the reminder, will be more careful next time.
