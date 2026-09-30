@@ -1,105 +1,171 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD996364EA4;
-	Wed, 30 Sep 2026 11:40:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 320F54A8430
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 12:08:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790768430; cv=none; b=dMuS6C22u5MZzPYw39S08F3cDNQ9XpK/Gr8m9GxY0H3bAiCbNOy9yjsl/jWtgwTD7J8mKt3Itbmb15qa1fIPBxXGi0yrHPB9RnuZsbzUYtUbNKmJlJO05RAnUDSJ4UCpNaQKsEwJjOhLL8sr0oN5U7sTXwRSwFj7/OGsDhDN1LQ=
+	t=1790770125; cv=none; b=D1Z9P7XTZn/HmHKS9xEzKOBiCNrDpGOEDkduVz3/B3dgWoqI/i7Pzh8j6p317IOkpA76n2R9ImshH4hnRzqol5BBR8uEwlaWKwwuQK+muy0CLtXGg+nSvj43tWA2uFstbauYLy57rrAM+RwD4dXXwl/oTCvF1hpXdxt/lSeuyF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790768430; c=relaxed/simple;
-	bh=yAOnnwevtoD+Wz31eFyGSfUtSJZQIvw/mltJV+SrsEo=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aKPie6G0J9xFU9LilahiAQSifx8sNEhkGzlpl1bSdtkTJrhdiFaiNSHmHGv1b0L8D01RzG55emYw5sPPfm6+RxD8sHXzV84G3gxl3kVDONGP+CkE9NoE5GBXQQFRr7LBEzgSIlsDcKUMg1dxxS/2FLdx53bGDFbV4zf4rPvIMSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oJbfxDDi; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1790770125; c=relaxed/simple;
+	bh=PUZyVtL/WwsyN3mMHzNBsiMogc4tTnXgQ0B4qRVLOkI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DDWKPFXFMgocvtwQfLEgHPdB0Tva2udHWU30vgRzJwttS21bUWQAyuoTZeZer1LZGGGYAgbMtyJXcVgXxpzDKYp1Zti5Oh3xnt194gOeFjkhdObmT7gC86OhVRI2xG+uoCa4dsudSFgX2S7LriUL/WzHyJ+Gqqd8ToBwJ/ngggo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aPZb7mWN; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oJbfxDDi"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=yAOnnwevtoD+Wz31eFyGSfUtSJZQIvw/mltJV+SrsEo=;
-	t=1790768428; x=1791978028; b=oJbfxDDiv2l0HEguvHfEOxwJyVpXd38cLNtxcWGLH5Ut56+
-	kktP3KOtRaE4cDUXp2+bC8h4a/9lOY9ZlswGu7JfO0fH87pscXqX+cBZ0XzdTrAu5ZKKAIFnWG2lt
-	bhdkF3fHDrF1dPhohN1T1aV+SZTx4xpXM3YDGOmD+tbWQ4WMB1UEJfocnHLzfEn1KaYkmqUEGXYQb
-	dV1ew4FLNekdpJrlJ/pPPEq+qpUsrdYY7Cp8Bo8SHXsKXe7wVy5sT96DgPT9FmtCQqeeIYUJ1ZJAY
-	tiaWnjy3RWqCfoNrJOT7gnmXw2ffs3CzmB4ouottmPj5r0jxc0xJVKIMLXvfo41Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xBsff-0000000GMHy-3MVx;
-	Wed, 30 Sep 2026 13:40:24 +0200
-Message-ID: <a612cb0f1cfc09b7ec7f494f22f8cc8d3ba61f10.camel@sipsolutions.net>
-Subject: Re: [PATCH v1 1/1] rfkill: add rfkill_hard_blocked() helper
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sai Teja Aluvala <aluvala.sai.teja@intel.com>, 
-	linux-wireless@vger.kernel.org
-Cc: kiran.k@intel.com, chethan.tumkur.narayan@intel.com, Luiz Augusto von
- Dentz	 <luiz.dentz@gmail.com>, linux-bluetooth@vger.kernel.org
-Date: Wed, 30 Sep 2026 13:40:23 +0200
-In-Reply-To: <3305da8e844c9d0a5de5848b596d16de8d462048.1790752797.git.aluvala.sai.teja@intel.com>
-References: <cover.1790752797.git.aluvala.sai.teja@intel.com>
-	 <3305da8e844c9d0a5de5848b596d16de8d462048.1790752797.git.aluvala.sai.teja@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aPZb7mWN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790770123;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=9rhp3IqEZms1d4OK2w2EJagR67qK0XPrx1WrGr8q7e8=;
+	b=aPZb7mWND6mRHoxOCfLWxJrD7hc8PINFVqbqpCv6A6kVCFVlg87eCwgnCnzMdlzzR4IL+/
+	vXFTDTht0WyMmPxq7mMKLqsx6IqlBLv3b6KjC5hhJxm5+hY+l2S5syLcdVIsmycqb2Gqf1
+	Wgkv5Cp7JMsWdG+/ww9Vq7iU9fxMunA=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-532-c5OWs_w9Meq6ozMcBP6Q5A-1; Wed,
+ 30 Sep 2026 08:08:41 -0400
+X-MC-Unique: c5OWs_w9Meq6ozMcBP6Q5A-1
+X-Mimecast-MFC-AGG-ID: c5OWs_w9Meq6ozMcBP6Q5A_1790770120
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 76044190F9D3;
+	Wed, 30 Sep 2026 12:08:37 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 68B701800612;
+	Wed, 30 Sep 2026 12:08:34 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: herbert@gondor.apana.org.au,
+	davem@davemloft.net,
+	johannes@sipsolutions.net,
+	miriam.rachel.korenblit@intel.com
+Cc: ilan.peer@intel.com,
+	emmanuel.grumbach@intel.com,
+	linux-crypto@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+Date: Wed, 30 Sep 2026 14:08:23 +0200
+Message-ID: <20260930120829.383408-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Wed, 2026-09-30 at 13:12 +0530, Sai Teja Aluvala wrote:
-> rfkill_blocked() reports the effective block state, i.e. set when the
-> device is either hardware or software blocked, and rfkill_soft_blocked()
-> reports only the software state. There is no equivalent accessor for
-> the hardware-only state, and struct rfkill is opaque to drivers, so a
-> caller that needs to distinguish a hardware block from a software block
-> cannot do so.
->=20
-> Add rfkill_hard_blocked(), which reads RFKILL_BLOCK_HW under
-> rfkill->lock in the same way as rfkill_soft_blocked(), together with a
-> stub returning false when CONFIG_RFKILL is disabled.
->=20
-> The first user is the Bluetooth HCI debugfs force_hw_rfkill test hook,
-> which must report and compare against the hardware state only.
+Commits 5241526dede9 ("wifi: mac80211: don't send keys to driver when
+fips_enabled") and 0636800c8ee1 ("wifi: iwlwifi: disable certain features
+for fips_enabled") disabled WiFi functionality under FIPS mode because
+Intel firmware autonomously sends some management frames without
+FIPS-validated integrity protection.
 
-Probably should CC Bluetooth list (done now) for a change that's prep
-for BT infrastructure.
+While this is technically correct, it leaves FIPS-required environments
+with no WiFi connectivity at all, since WPA3-SAE mandates MFP and without
+MFP_CAPABLE the client cannot even associate.
 
-The user is:
+The data encryption paths (CCMP/GCMP via PTK/GTK) are handled by mac80211
+software crypto using FIPS-approved algorithms on the host CPU. The known
+gap was management frame integrity protection on the TX side, where
+firmware bypasses the host crypto stack.
 
-https://lore.kernel.org/linux-bluetooth/af7525184b7c910d8f5bc313805ac312937=
-11c19.1790752799.git.aluvala.sai.teja@intel.com/
+This series introduces an opt-in fips_exception=<bitmap> kernel boot
+parameter and an exported fips_allows() helper function that allows
+administrators who understand the firmware limitation to explicitly
+choose connectivity over strict compliance. The FIPS_EXCEPTION flag uses
+generic WIFI_MFP naming (not iwlwifi-specific) since the mac80211 key
+blocking affects all drivers. The default behavior remains exactly as the
+original commits implemented.
 
-which does two things with it:
+v1 (2 patches) unconditionally re-enabled MFP without addressing
+the firmware limitation for robust action frames and was rejected.
+v2 replaces this with an opt-in exception, extends coverage to all
+disabled features (key delivery, Beacon Protection, EHT, 6GHz,
+A-MSDU, MLO) and both driver paths (mvm + mld), and adds SW_MGMT_TX
+for host-side management frame protection.
 
- 1) refuse debugfs write when it's already hw-blocked by some real hw
+AddBA (TX aggregation setup) cannot be fixed this way because firmware
+creates these frames autonomously (TX_AMPDU_SETUP_IN_HW), bypassing
+mac80211's TX path. The only observed degradation with the exception
+active is reduced uplink throughput: firmware-created AddBA requests
+are silently discarded by the AP, so TX aggregation is not established.
+Downlink aggregation (AP to STA) works normally. No other functionality
+is observed to be affected. Since the AP drops unprotected
+firmware-autonomous frames rather than accepting them, the system
+remains secure — those frames are simply not considered.
 
- 2) show the rfkill's hw-blocked status in debugfs read
+Multicast robust management frames (e.g. group-addressed deauth in AP
+mode) are protected by IGTK via AES-CMAC/GMAC, which mac80211 handles in
+software. Firmware-generated multicast management frames may lack
+integrity protection, but a STA does not generate these normally.
 
-The tool that's intended to use the debugfs file is this:
+Spectrum Management / CSA: a STA does not send CSA (AP-only).
+On the RX/STA side, re-enabling MFP and Beacon Protection
+(patches 2/3) restores the existing mac80211 protection layers:
+1. MFP (patch 3) drops unprotected Spectrum Management action
+   frames — these are robust action frames (category 0)
+2. Beacon Protection (patch 3) validates beacon CSA IEs via BIGTK
+3. Unprotectable Extended CSA (Public action, category 4) only
+   blocks TX queues and requires beacon confirmation before channel
+   switch (ieee80211_sta_process_chanswitch)
+Spectrum Management responses from the STA (e.g. Measurement
+Report) are built by mac80211, not firmware, so they go through
+the normal TX path and are protected by SW_MGMT_TX (patch 4).
+On the TX/AP side, beacons are built from mac80211 template and
+protected by Beacon Protection (BIGTK) when re-enabled.
 
-https://lore.kernel.org/linux-bluetooth/66971d6f85d714f2728b29fada7136d5a2f=
-bb3c2.1790752800.git.aluvala.sai.teja@intel.com/
+WoWLAN remains disabled under FIPS regardless of the exception flag,
+as it requires all traffic to be handled by firmware crypto during
+suspend (the host CPU is not available for mac80211 software crypto).
 
-It implicitly uses the write part by failing if the write fails, and
-explicitly uses the read part by checking that it applied.
+Patch details:
+Patch 1: Adds the fips_exception infrastructure (boot parameter,
+         read-only sysctl, fips_allows() helper)
+Patch 2: Gates the mac80211 key blocking with fips_allows() so keys
+         can reach the firmware for data traffic
+Patch 3: Gates the iwlwifi feature disabling with fips_allows(),
+         restoring MFP, Beacon Protection, EHT, 6GHz, A-MSDU sizes
+         and MLO support
+Patch 4: Best effort to force software encryption for unicast
+         management frames (CCMP/GCMP). It sets
+         IEEE80211_KEY_FLAG_SW_MGMT_TX on pairwise CCMP/GCMP keys when the
+         exception is active, forcing mac80211 to encrypt unicast robust
+         management frames (SA Query, deauth, disassoc) in software using
+         FIPS-approved CCMP/GCMP, the same mechanism used by ath9k, ath5k,
+         carl9170, mt76x02, rtw88, rtw89, rtlwifi, ... and other drivers.
+Patch 5: Reduces firmware decryption error message to debug level in
+         FIPS mode. Same as v1 patch 2/2, accepted upstream but not
+         yet landed.
 
-The write part could be easily checked in the tool from userspace via
-rfkill sysfs (it already accesses that), and the validation against
-sysfs already happens on the read as well there, so IMHO neither is
-necessary - the tool could check sysfs before starting the test and
-abort if it's already hw blocked before, and the debugfs read isn't
-necessary at all since it reflects the exact same value as the rfkill
-sysfs read, so validating both is useless.
+Tested on Intel WiFi 6E AX210 with fips=1 fips_exception=0x1:
+- WPA3-SAE connection with MFP required succeeds
+- iw station dump confirms "MFP: yes"
+- Data traffic (TX/RX) works normally
 
+v2: complete, improve and justify
+    consider and analyze the feedback from Johannes Berg
+v1: https://lore.kernel.org/all/20260629121213.597038-1-jtornosm@redhat.com/
 
-However, if BT folks disagree with my assessment then feel free to just
-merge this patch along with the user.
+Jose Ignacio Tornos Martinez (5):
+  crypto: fips: add fips_exception kernel boot parameter and
+    fips_allows() helper
+  wifi: mac80211: allow keys to driver with fips_exception
+  wifi: iwlwifi: restore FIPS-disabled features with fips_exception
+  wifi: iwlwifi: use software crypto for management frames in FIPS
+    exception mode
+  wifi: iwlwifi: reduce encryption error message to debug level in FIPS
+    mode
 
-johannes
+-- 
+2.55.0
+
