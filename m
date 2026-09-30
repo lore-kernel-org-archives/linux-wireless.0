@@ -1,145 +1,89 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D226547060;
-	Wed, 30 Sep 2026 00:28:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE96DEEC3
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 01:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790728115; cv=none; b=Ylm82ewBWroBKmVpDYZFdGjHLX1HsQJK5ZhF57VNh17y/SgCEhHDDW0Z3axw4ctedJkTEnRPf8N6cpHmwkZUMoM9oDN2VMAk8E1M3kHJzvOSQOO+VPa52ZHkl/ns/qrRPk1j1NtXcAKftko7de/RNtaCIthsPqmGbxMBvHPQ8mw=
+	t=1790733406; cv=none; b=LNaPwXQWQpEDkuo32Quk0yGhkHwx7eT1c5P1fLFpobPuHx+uD+vwui0mRYc+kGlPVz7tKxSdAgZtQNJEqnMc0kB62tPIXfB7ZiOwnv3ecDyGOZeJGbMBvtDcAxx/X3OUsUEodA/4QeCOX5xvXIEtxmwt7g4cQc4/J2u8XsbmbpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790728115; c=relaxed/simple;
-	bh=bn5BM88IqhxyYWQIrR8H3oJUeo3800OHPMfxgxHNSgg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZfOqhpdtauosMoLpnsIse/SkVXz98zZFhj9XZ+N2tL8QfgRy8mEUscUQ2ZABsUnicQdT+QcPBftI4iKomTVp5yUWKrzb7yVN9QJg6qACo2yDgKc7DNsz4usS6ah1al2xAiXxSUoW4i/tnxRfoYGKnaz77v5IAnEeft9pQK7koJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=NyzbsZcx; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1790733406; c=relaxed/simple;
+	bh=zSeQEa48qDxDZdhTC6R2Csej1tp6iDv/IrOb/4iqqhU=;
+	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type; b=NB413xEBSBOzKB+K3PBDfZDjOImBtRYfJR3IwR76t7G4sR2vWtrVN/joHpcGucAzE6InuBYShBAFpgT9oOuNPAR3APpp4vwanzK5KmB3y4u4m7OREqDwqsQuEAeyhz85xgNxBzyFgfQ7M3Lw+Rmox4NUjQ9ePh0JRd2vu4/RCHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=C2gLVFsd; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="NyzbsZcx"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68U0S5xI41717719, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="C2gLVFsd"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68U1ugGcB1759117, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790728085; bh=UVbxKIrRHY3UU0zg2IgJRNIu0MpqTRcgLCgmmFCJVB8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=NyzbsZcx+HIz7QToMTm5V+rJK+HKkET8cBJ6l2m2Bp6LCl2A5UCuqtWjhz76uBBKg
-	 OEqD73ok2Nithduga62SsdPdg6cdmjd2NmxE+HMiGoUH3N2pYXbh1mmMsoekNfhngG
-	 D2YgXCfH49OeiPqpMdEzsHL1yd7yY2oVTmDPeynSm7bs0FEthZLuDdmMljgJQbLBeb
-	 rvZ9FRyu0y01ydBj3PtwKyepQ5tZYlo8MI33Xi2xEA2Y54r08d24fChX1pET28WE4h
-	 7EzOziPDJioemnV9XvDlKJllkwW/P6wx0zz/dzCVmISzZtjjWs4UiRVRrEVDTQvDqD
-	 5dJdedf7ZSEHA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68U0S5xI41717719
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 30 Sep 2026 08:28:05 +0800
+	t=1790733402; bh=cj4HB6awrysrrHzLgHSCSoj2U6JvJHXcpoBrJn4tYgc=;
+	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type;
+	b=C2gLVFsdaEBMqSG1oGiHtDpEzge+iDZY0jGTKGYRR2Gzhzxuu82/5/v0GNzd2yBi5
+	 m68uduAWfBr8hDNODY/e1oGVh0KxDlvR8Vcmyx6a5MjPvQOqmkmEkOQl6aLAAf8D8W
+	 f/q0DqlSBpceFb93prXLQIOXkaJrqndcoBKv/S9DwYL0vfhvdoE8rAAXgGB7jYswbU
+	 6UJCcxtxOe/qyvpOCdvczH7l4AWptn1z19umAEbD61NhChe/SJgHN38y+nxjTmH5Pr
+	 whCUegQTKwFn/rHGTwwDchEHLEcBaBc+ayEZc/ONs6wosDD28usEWHMd/tfPUjTrbW
+	 r9zm8YppUcJXQ==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68U1ugGcB1759117
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:56:42 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 30 Sep 2026 08:28:05 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ 15.2.2562.49; Wed, 30 Sep 2026 09:56:42 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 30 Sep 2026 08:28:05 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 30 Sep 2026 08:28:05 +0800
+ 15.2.2562.49; Wed, 30 Sep 2026 09:56:42 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Wed, 30 Sep 2026 09:56:42 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Arnd Bergmann <arnd@kernel.org>, Johnson Tsai <wenjie.tsai@realtek.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] wifi: rtw89: fix LED dependencies
-Thread-Topic: [PATCH] wifi: rtw89: fix LED dependencies
-Thread-Index: AQHdT/8uPx21cNsIcEC+oww+Nsu2prbmQl0w
-Date: Wed, 30 Sep 2026 00:28:05 +0000
-Message-ID: <1bde7ea5999c4915b184bf2fcb904901@realtek.com>
-References: <20260929104159.3236854-1-arnd@kernel.org>
-In-Reply-To: <20260929104159.3236854-1-arnd@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+CC: <kevin_yang@realtek.com>
+Subject: Re: [PATCH rtw-next 1/6] wifi: rtw89: fw: duplicate recognized firmware elements
+In-Reply-To: <20260923054505.43329-2-pkshih@realtek.com>
+References: <20260923054505.43329-1-pkshih@realtek.com> <20260923054505.43329-2-pkshih@realtek.com>
+Message-ID: <d3924e77-51b6-408e-aef3-537270091774@RTKEXHMBS05.realtek.com.tw>
+Date: Wed, 30 Sep 2026 09:56:42 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 
-Arnd Bergmann <arnd@kernel.org> wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
->=20
-> The rtw89 driver fails to build when multicolor LED support is in
-> a loadable module but the rtw89 driver is built-in:
->=20
-> aarch64-linux-ld: drivers/net/wireless/realtek/rtw89/led_mc.o: in functio=
-n
-> `rtw89_led_mc_brightness_set':
-> led_mc.c:(.text+0x50): undefined reference to `led_mc_calc_color_componen=
-ts'
-> aarch64-linux-ld: drivers/net/wireless/realtek/rtw89/led_mc.o: in functio=
-n `rtw89_led_mc_init':
-> led_mc.c:(.text+0x434): undefined reference to `led_classdev_multicolor_r=
-egister_ext'
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-This was also found by kernel test robot [1], and addressed by patch [2].
+> The firmware file contains variant elements for variant hardware, and
+> currently whole firmware content is persistent. However, RTL8922DE has many
+> variants and firmware file become grown to over 4MB, but actually size of
+> necessary duplicate elements are about 1.0MB.
+> 
+> To reduce memory usage, duplicate recognized firmware elements as
+> persistent memory, and will release firmware by next coming patch.
+> 
+> However, firmware for early chips doesn't have many variant elements, and
+> no need to duplicate memory for the purpose, so do it only if firmware
+> size is over 2MB.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-[1] https://lore.kernel.org/oe-kbuild-all/202609172315.ZYoKvKBS-lkp@intel.c=
-om/
-[2] https://patch.msgid.link/20260918021113.25481-1-pkshih@realtek.com
+6 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
->=20
-> The problem is a misunderstanding of how Kconfig dependencies
-> work, as the 'imply' keyword is not sufficient to enable a
-> a user-visible dependency, and the boolean 'RTW89_LEDS_MC'
-> symbol cannot determine whether linking against the MC code is
-> valid.
+504bbf01735f wifi: rtw89: fw: duplicate recognized firmware elements
+f31a3a3afab1 wifi: rtw89: fw: release firmware after recognizing firmware elements
+0ba6a2d26fef wifi: rtw89: fw: duplicate firmware suit data by vmalloc to reduce memory fragment
+86e0056aaaf3 wifi: rtw89: led: check if board variant assigns led desc
+af5905e22a43 wifi: rtw89: support variants of FW elements
+e55ca4e813e5 wifi: rtw89: 8852cu: take board ID 1 for FW elements 28de/2432
 
-People intend to weakly select the dependency. I think keeping
-'imply' is harmless.
-
->=20
-> Address this by using the correct construct to determing whether
-> linking agains the MAC80211_LEDS and LEDS_CLASS_MULTICOLOR
-> code is possible, respectively.
->=20
-> Fixes: d910631ff352 ("wifi: rtw89: add LED support to reflect the wireles=
-s association status")
-> Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8852=
-CU valve board")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/net/wireless/realtek/rtw89/Kconfig | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig
-> b/drivers/net/wireless/realtek/rtw89/Kconfig
-> index 7c678dd1f6b3..4000ae344544 100644
-> --- a/drivers/net/wireless/realtek/rtw89/Kconfig
-> +++ b/drivers/net/wireless/realtek/rtw89/Kconfig
-> @@ -208,15 +208,13 @@ config RTW89_DEBUGFS
->  config RTW89_LEDS
->         bool
->         depends on RTW89_CORE
-> -       depends on LEDS_CLASS=3Dy || LEDS_CLASS=3DMAC80211
-
-I remember we fixed to this style years ago by imitating ath10k and iwlwifi=
-,
-which they look like that still.=20
-
-> -       imply MAC80211_LEDS
-> +       depends on MAC80211_LEDS=3Dy || MAC80211_LEDS=3DRTW89_CORE
->         default y
->=20
->  config RTW89_LEDS_MC
->         bool
->         depends on RTW89_LEDS
-> -       depends on LEDS_CLASS_MULTICOLOR
-> -       imply LEDS_TRIGGER_TIMER
-> +       depends on LEDS_CLASS_MULTICOLOR=3Dy || LEDS_CLASS_MULTICOLOR=3DR=
-TW89_CORE
->         default y
->=20
->  endif
-> --
-> 2.53.0
+---
+https://github.com/pkshih/rtw.git
 
