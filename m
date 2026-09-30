@@ -1,132 +1,98 @@
-Received: from e3i606.smtp2go.com (e3i606.smtp2go.com [158.120.86.94])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1712C476CE6
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.86.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F84D4718E9
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:23:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790760110; cv=none; b=cr2DbScqaVAVv3lbUBuhp5rdCxS5CxFppQvQNScRxcC8cvoKWjTwdgNjL0GVS4QVruMtCIjf74LgKCe8UPuWgh0DRTCfM5S8l0CJySLn10qzSolnIK11b7QCv7iYNYzPIzAonvJqdWwKl4QXsoQg2Mijz5YEFhDR1M40BjUoAsI=
+	t=1790760191; cv=none; b=tfVQwNDqR69Cry4vKGK5vo/0IJsP0wsxJf8/uiV7Dw50p69d3uk9WMeUy1ERWXmAX6IUCHshJHgbmDjBTGWpoUAmN+kdjMGU4OLWSH7ObMo1b4lErWQ80LEERUKedZ88vDoEJRiwCLszgTCyXpH2O+0cb7X6ocGjwElVfGERN3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790760110; c=relaxed/simple;
-	bh=+3jvQTT5vdJhXYkEIxp2WFF2mukSvY5JKAAYNtgivtc=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EGRGnVnIc0rigEvEMScg6A5IAM+30oktwciXdrijGUt8zkdpnegpwopR6Ly+I6NID2VY/dZaMfmjSjmp3ksIv8duNOQXp2c7x5KEmGW5EcypQJMhn5DRr471oq6pm3f8p0Ubedo7rCPN7+AU4omKITOwMfvNPTN+j6etFyPFgAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=frumar.it; spf=pass smtp.mailfrom=em856510.frumar.it; dkim=pass (2048-bit key) header.d=frumar.it header.i=@frumar.it header.b=k2kFPDUt; arc=none smtp.client-ip=158.120.86.94
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=frumar.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em856510.frumar.it
+	s=arc-20240116; t=1790760191; c=relaxed/simple;
+	bh=3NjvVFPDjMEIU6wP8x3WVqT0gAfQB54VVu1g6dR7HwM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ps0bLXGtNo236eRGQW3c4oFPOykCs892JAXniR2jNfVjK6Uh8WUVMe+dhrLQLFRQ6nzpzbELQbeyqoXFT2dMJ8Sgim3dN7eScld2YNc1ShqFeSSpyMCvFQFzLjzVE+iMcaZJZqrUdsjzDyPCbaGV5k47WgnZOYq1JGocKHZlyxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Vi7sFpeI; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=frumar.it header.i=@frumar.it header.b="k2kFPDUt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=frumar.it;
- i=@frumar.it; q=dns/txt; s=s856510; t=1790760104; h=from : subject :
- to : message-id : date : list-unsubscribe : list-unsubscribe-post;
- bh=VcLzYdI+bcl/9bs5nLlyou7ncxVkKv4i1VIVfRZG4kE=;
- b=k2kFPDUtd1N7eznM3wx3jyfYux28M6rsv4GT88JYjHqwOQLN7atOU1GsezQAFeom5Dgwv
- TPTyK9aDSF2zEMY8JhFHnkcR4vBwfxuWpcmpIaw/gkz7H/P0pIqAuRf1YGwATb97oWco0GD
- EYFhXAWE7fS2wfIv8oOFRak5a0/+esPJAjaGumViWJQNIjuzNbDFh8CfmYKaTs40LdzNDte
- +Ncf5/xVIsNwOf+FQLs7Lw7U0e0TXg/lzIpgkGLbDRnARafwlC6gxk4YpZ1Fr7Og+pO0az+
- QlTv5nbH+okAZRGz7F0mYHh8QfI9QKINcWRYDB+oDhnDsbaRqwaagVT8bRKw==
-Received: from [10.104.244.142] (helo=frumar.it)
-	by smtpcorp.com with esmtpsa (TLS1.2:ECDHE_SECP256R1__RSA_SHA512__AES_256_GCM:256:SECP256R1)
-	(Exim 4.100.1)
-	(envelope-from <pierluigi.frullani@frumar.it>)
-	id 1xBqVR-FnQW0hPl4w4-nrA6
-	for linux-wireless@vger.kernel.org;
-	Wed, 30 Sep 2026 09:21:41 +0000
-Received: (qmail 18088 invoked from network); 30 Sep 2026 09:21:37 -0000
-Received: (simscan 1.4.6 ppid 18082 pid 18084 t 0.0412s)
- (scanners:  attach: 1.4.6 clamav: 1.4.2/m:63/d:28138); 30 Sep 0126 09:21:37 -0000
-Received: from 93-39-211-185.ip77.fastwebnet.it (HELO topolinux.localnet) (pigi@93.39.211.185)
-  by frumar.it with ESMTPA; 30 Sep 2026 09:21:37 -0000
-From: PierluigiFrullani <pierluigi.frullani@frumar.it>
-To: linux-wireless@vger.kernel.org
-Subject: Problems with rtw89 on 5Ghz wlans.
-Date: Wed, 30 Sep 2026 11:21:36 +0200
-Message-ID: <10543730.tdPhlSkOF2@topolinux>
-Organization: Frumar
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Vi7sFpeI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790760191; x=1822296191;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=3NjvVFPDjMEIU6wP8x3WVqT0gAfQB54VVu1g6dR7HwM=;
+  b=Vi7sFpeIwrnosUcuH0u1XD2AENo3g7Ba1s3RXa4p2fVFj9YWIPGDVD1G
+   vIz2leh9DlKTKcefRraHbL8h6VBCDW0AESw89xJ62Y5OoQM9Ih+qpg2hL
+   6W4N4FXkv01JLPzX5qJGe7BxuQa4x7vybz5rTHJHksBkcVNjTgLp+XLnx
+   OR+KXH0/xN+DMWX8xZpVGP4XIePqzi21hgttqOg9IBphSpoyO+TW1RaBR
+   b2V/ZT0ulMo9p6AdD93TzugUUcCvOXwP6YH22UC9q9d/C/LLE9x1Kt8Ok
+   rJGsu9yY7xnr26M2cKp5y7UMap/wOPtpqWPzxW1J4SEs0Lqz8q7sBw53P
+   A==;
+X-CSE-ConnectionGUID: OwJY0dQETPaSrM1SxbyEkA==
+X-CSE-MsgGUID: kTDPlbb8SYu2rgt7kCj8xA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102020371"
+X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
+   d="scan'208";a="102020371"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:23:10 -0700
+X-CSE-ConnectionGUID: VcypHz36Sa2E7FZX5PsJzQ==
+X-CSE-MsgGUID: 2ICe1cJJTRmGOzqvwkJuDg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
+   d="scan'208";a="275202751"
+Received: from weis0040.iil.intel.com ([10.12.217.108])
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:23:08 -0700
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: miriam.rachel.korenblit@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH iwlwifi-fixes 1/5] wifi: iwlwifi: mvm: debugfs: avoid zero divisor in RSS writer
+Date: Wed, 30 Sep 2026 12:25:03 +0300
+Message-Id: <20260930122439.f8a1ea3af242.I282fab02ab2f183633df0f070229fb5a2d5c9ec3@changeid>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 856510m:856510aMebZ-d:856510syQkgwy6sU
-X-smtpcorp-track: rXOilee4b8sb.GKU7npYj-3yV.fSpATARC7bU
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-Hello all,
-    I'm using Linux Mint 22.1 with kernel 7.0.0-34-generic and a 
-02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller [1T1R] [10ec:b85b] 
-that has lot of issues with the 5Ghz wlan.
-The problem is that has a very low sensitivity and can detect, in linux, these wlans only when I'm a few feet from access point.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+Reject writes that produce nbytes==0 before pattern repetition logic
+that divides and mods by nbytes.
 
-I've then swapped the driver with https://github.com/morrownr/rtw89 and found the same behaviour.
-I've then opened an issue there :
- https://github.com/morrownr/rtw89/issues/128 and the peoples there managed to find the culprit and patch his driver that now works perfectly.
-For my understanding the problem was that my card ( may card model ? ) ( rfe_type 41 ) has only one antenna and is not correctly selected b y the driver.
+Assisted-by: GitHubCopilot:GPT-5.3-Codex
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Looking into the https://github.com/pkshih/rtw/blob/rtw-next/drivers/net/wireless/realtek/rtw89  code I can see that is really similar so then patche applied in the morrownr could possibly apply  also to the vanilla kernel driver.
-
-
-Patch is rather easy and with this patch allied and this driver loaded now the 5Ghz is perfectly working.
-
-
-Would you be interessed in pushing this patch also here ?
-
-
-In case, this is the patch ( also with the comments to verify that the driver loaded is the one that is patched ) :
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index df396fbfca26..81a4be7a593d 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -3244,6 +3244,14 @@ static int rtw89_mac_setup_phycap_part0(struct rtw89_dev *rtwdev)
-     tx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_TX_NUM);
-     rx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_RX_NUM);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index e6b9896dc4ac..ae04f84fe9ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2023, 2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2023, 2025-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -1226,6 +1226,9 @@ static ssize_t iwl_dbgfs_indirection_tbl_write(struct iwl_mvm *mvm,
+ 	};
+ 	int ret, i, num_repeats, nbytes = count / 2;
  
-+    if (chip->chip_id == RTL8852B && efuse->rfe_type == 41 &&
-+        tx_nss == 1 && tx_ant == 2 && rx_nss == 1 && rx_ant == 2) {
-+        tx_ant = 1;
-+        rx_ant = 1;
++	if (!nbytes || nbytes > sizeof(cmd.indirection_table))
++		return -EINVAL;
 +
-+        rtw89_warn(rtwdev, "fix more stuff for RFE 41\n");
-+    }
-+
-     hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
-     hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index 356623341f65..c9ee3c76cfc9 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -771,6 +771,15 @@ static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
-     } else {
-         md->ant.type = BTC_ANT_SHARED;
-         md->bt0_pos = BTC_BT_BTG;
-+
-+        if (md->rfe_type == 41) {
-+            md->ant.num = 1;
-+            md->ant.single_pos = RF_PATH_B;
-+            md->ant.btg_pos = RF_PATH_B;
-+            md->ant.stream_cnt = 1;
-+
-+            rtw89_warn(rtwdev, "fix stuff for RFE 41\n");
-+        }
-     }
-     rtwdev->btc.btg_pos = md->ant.btg_pos;
-     rtwdev->btc.ant_type = md->ant.type;
-
-
-
-All credits must absolutelly go to  dubhater (   https://github.com/dubhater ) that did all troubleshooting and wrote the patch.
- 
-My interest in this is only to have a (vanilla) kernel version of this driver that works correctly as lot of problems are reported by peoples using the same chip.
-
-
-
-Thanks
-
-
-Pierluigi 
-
+ 	ret = hex2bin(cmd.indirection_table, buf, nbytes);
+ 	if (ret)
+ 		return ret;
+-- 
+2.34.1
 
