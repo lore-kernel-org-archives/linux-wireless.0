@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62CE7457E66
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:54:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17A7C459AD2
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:55:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790754901; cv=none; b=dknlSszPSbZ6ZYPMyjDzUG2omrqZ+9zSrjyZWNYfF0yKZZqBAhvdaWRTnnba+FjryQ1e2BmQy2SAnxa/+PH6wHjLgqIuLBz3qXRHaL7km/xrHcCE5CPF8vTtuHPJUasJMeffukstG4U0OxTOhF5kszzT6+6fwCZJfKYBm5EHiNY=
+	t=1790754904; cv=none; b=HtJ3bMLOTiELHsnIzkOxrPASSsdrNIlVmUUWWpAq45xUJWdebKGRFhsyrUXYdMFHfbSz+Uwmepy9Q674aX7TasUmgOoFjzisAv0AwNfA7v0/SDE/90R5aFzUIAIyX/6hrzrAAG++8NEofOAVZOv/zjYAtEWTotXgaq6ozV3ie5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790754901; c=relaxed/simple;
-	bh=J3uJDKWz6X+i950ti0wLEp1YkyaMJlFsYlQdmp851Bw=;
+	s=arc-20240116; t=1790754904; c=relaxed/simple;
+	bh=jOKZqjzRwnHRWzTTj2gGYavOslfdoVZHUiojHEAyoH0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=goyBEnAu3F8Jr9PBd5nfCi1ptRyVsyVBaLmNGbNe12Xt61p0241vFMbSU9A0dtOiOm4bEKw0bGc4eRMJn8hheMasPqXAsaag9hWZ2nmZABfgchglGTqfAKhpV4KX0TzPNVQ+0xy88rz4UliwHDEZpL9H+klMzTHNCref3l5QBaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HacnGIVx; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=E/+mLlC/II/HLlphJb0VkR6Qc8jtorl3gWN8wH8L9BCCX7Pp8nElkZYYRuWrjuAaL+C9XvFckFuj5Dg88TIO/Vz/mSABAAfcIjbMXowbJyZzPCDWe9rAgO6U4kSO7XNe9U/qfp/sVkfRkhnhXOpKkU2JFYX6Vkr4dKfadLXzcqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FOGl9gi4; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HacnGIVx"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FOGl9gi4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790754899; x=1822290899;
+  t=1790754901; x=1822290901;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=J3uJDKWz6X+i950ti0wLEp1YkyaMJlFsYlQdmp851Bw=;
-  b=HacnGIVxNfpK80h/A/Zmsq6+r2QQuiLYuAW7YeA0ZSgFCvWokjvg1mkN
-   qyg3AglEoDqYdrzjKaWBx+zSz7n9ngB4YQ3xskMzvISTHMgMYyC4nWoPN
-   /wpLFwt+IhGSQgUffjjQlzZZLkJWCNJAvqONp9LJxocxKlj5qFQ3+ie9S
-   EiH+gWFa3fI2XGC4HIvKOyBEfon+9LlWZk8zIRgW6aj/irTvH/ZqWwOrL
-   1pWFmwAOCHOfQbmQKy3A2lMjMJLHbm9ujEWSvRdnsUU22c/LlaEKBDI3u
-   HQXqs/Y8EzUyZE5mOWmIvmsfXGJ8kUc5yHPDLNxm0+nukLVmeQE6vKddm
-   g==;
-X-CSE-ConnectionGUID: pKQ2HTpXRWKTmNu4cPl/2A==
-X-CSE-MsgGUID: 7amy1AmmRQaClAX/lEPKFg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="95296826"
+  bh=jOKZqjzRwnHRWzTTj2gGYavOslfdoVZHUiojHEAyoH0=;
+  b=FOGl9gi47BntUtRVzhZxi0TbzOt9tcgsqjcNgu7skQas4EOc4GdT6N3y
+   4Ux9w0HpLyJ+89OZHE8xfSE3FQVVn466Mf48hpgw258oQaqZ9ngrDvMJK
+   nd8MSM5qQNFF0Zg+K/4NZIx/uzsdf7+BrrwpO76NkbCDb8r8DzpY/vw+K
+   TwiQ9fOHI4ZnEV8itHURYS2wdIwqFj+1KhBIQgjHVecavgBZprRr1LadY
+   vNtpbCMD0qfObSNuWLAlJ1MPSu2xwJEoXKQ6iXIMX/JG1bjCMm9CsgKmJ
+   W54vpi3qRDrMj8GwElscrWj2OZ4TABYjI8oZr+w795lXlDJyxPPRR7gqZ
+   w==;
+X-CSE-ConnectionGUID: ttzelGueQfKvL+PDQwobDA==
+X-CSE-MsgGUID: 9nb0ILfDQvCpV/sfpzAhVw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="95296827"
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="95296826"
+   d="scan'208";a="95296827"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:54:59 -0700
-X-CSE-ConnectionGUID: l5UeiKuYSe+Cvb8U/78SDw==
-X-CSE-MsgGUID: DV4tYU+JTHeP0JRCLDAlqw==
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:55:00 -0700
+X-CSE-ConnectionGUID: FNd/zmT+TWGOe3FkHUgL2g==
+X-CSE-MsgGUID: y2OBy8htRAKsaAbn10io0Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="278962933"
+   d="scan'208";a="278962937"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:54:58 -0700
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:54:59 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: collapse iwl_read_prph_no_grab() into the transport API
-Date: Wed, 30 Sep 2026 10:56:36 +0300
-Message-Id: <20260930104825.38a4273ec7a6.I329ccec5de9d0a6ec87538aceabce17149258841@changeid>
+Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: pcie: rename pcie-internal functions
+Date: Wed, 30 Sep 2026 10:56:37 +0300
+Message-Id: <20260930104825.d9902d3ac94c.I5867c6f937d569349e1950733361bf83a5e49fbb@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260930075643.1264585-1-miriam.rachel.korenblit@intel.com>
 References: <20260930075643.1264585-1-miriam.rachel.korenblit@intel.com>
@@ -62,153 +62,148 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-iwl_read_prph_no_grab() was a thin wrapper that read via
-iwl_trans_read_prph_no_grab() and emitted the ioread_prph32 tracepoint.
-Fold the tracepoint into the bus-specific implementation
-(iwl_trans_pcie_read_prph()) and remove the wrapper, so callers use the
-transport API (or the pcie primitive from within pcie) directly.
-
-No functional change intended.
+Functions that are in pcie level should have the pcie prefix.
+In particular, the functions renamed in this commit are easy to be
+confused with the generic trans ones. Rename those functions to have a
+pcie prefix.
 
 Assisted-by: GitHubCopilot:claude-opus-4.8
 Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dump.c    |  6 +++---
- drivers/net/wireless/intel/iwlwifi/iwl-io.c     | 15 ++++-----------
- drivers/net/wireless/intel/iwlwifi/iwl-io.h     |  5 ++---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  9 ++++++---
- 4 files changed, 15 insertions(+), 20 deletions(-)
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 28 +++++++++----------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  4 +--
+ .../net/wireless/intel/iwlwifi/pcie/utils.h   | 12 ++++----
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-index eef89c141564..7b9e98a21704 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-@@ -360,7 +360,7 @@ static void iwl_fwrt_dump_fseq_regs(struct iwl_fw_runtime *fwrt)
- 
- 	for (i = 0; i < ARRAY_SIZE(fseq_regs); i++)
- 		IWL_ERR(fwrt, "0x%08X | %s\n",
--			iwl_read_prph_no_grab(trans, fseq_regs[i].addr),
-+			iwl_trans_read_prph_no_grab(trans, fseq_regs[i].addr),
- 			fseq_regs[i].str);
- 
- 	iwl_trans_release_nic_access(trans);
-@@ -398,8 +398,8 @@ void iwl_fwrt_dump_error_logs(struct iwl_fw_runtime *fwrt)
- 		     count++, pc_data++)
- 			IWL_ERR(fwrt, "%s: 0x%x\n",
- 				pc_data->pc_name,
--				iwl_read_prph_no_grab(fwrt->trans,
--						      pc_data->pc_address));
-+				iwl_trans_read_prph_no_grab(fwrt->trans,
-+							    pc_data->pc_address));
- 		iwl_trans_release_nic_access(fwrt->trans);
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index bc3ef107c4eb..515d6b2becc9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -38,17 +38,10 @@ void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
- }
- IWL_EXPORT_SYMBOL(iwl_write_direct32);
- 
--u32 iwl_read_prph_no_grab(struct iwl_trans *trans, u32 ofs)
--{
--	u32 val = iwl_trans_read_prph_no_grab(trans, ofs);
--	trace_iwlwifi_dev_ioread_prph32(trans->dev, ofs, val);
--	return val;
--}
--
- u32 iwl_read_prph(struct iwl_trans *trans, u32 ofs)
- {
- 	if (iwl_trans_grab_nic_access(trans)) {
--		u32 val = iwl_read_prph_no_grab(trans, ofs);
-+		u32 val = iwl_trans_read_prph_no_grab(trans, ofs);
- 
- 		iwl_trans_release_nic_access(trans);
- 
-@@ -74,7 +67,7 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
- {
- 	if (iwl_trans_grab_nic_access(trans)) {
- 		iwl_trans_write_prph_no_grab(trans, ofs,
--					     iwl_read_prph_no_grab(trans, ofs) |
-+					     iwl_trans_read_prph_no_grab(trans, ofs) |
- 					     mask);
- 		iwl_trans_release_nic_access(trans);
- 	}
-@@ -86,7 +79,7 @@ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 ofs,
- {
- 	if (iwl_trans_grab_nic_access(trans)) {
- 		iwl_trans_write_prph_no_grab(trans, ofs,
--					     (iwl_read_prph_no_grab(trans, ofs) &
-+					     (iwl_trans_read_prph_no_grab(trans, ofs) &
- 					      mask) | bits);
- 		iwl_trans_release_nic_access(trans);
- 	}
-@@ -98,7 +91,7 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
- 	u32 val;
- 
- 	if (iwl_trans_grab_nic_access(trans)) {
--		val = iwl_read_prph_no_grab(trans, ofs);
-+		val = iwl_trans_read_prph_no_grab(trans, ofs);
- 		iwl_trans_write_prph_no_grab(trans, ofs, (val & ~mask));
- 		iwl_trans_release_nic_access(trans);
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-index b33bc4822e5c..a26c6525ec40 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-@@ -29,7 +29,6 @@ static inline int iwl_poll_bits(struct iwl_trans *trans, u32 addr, u32 bits,
- void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value);
- 
- 
--u32 iwl_read_prph_no_grab(struct iwl_trans *trans, u32 ofs);
- u32 iwl_read_prph(struct iwl_trans *trans, u32 ofs);
- void iwl_write_prph_delay(struct iwl_trans *trans, u32 ofs,
- 			  u32 val, u32 delay_ms);
-@@ -55,8 +54,8 @@ static inline u32 iwl_umac_prph(struct iwl_trans *trans, u32 ofs)
- 
- static inline u32 iwl_read_umac_prph_no_grab(struct iwl_trans *trans, u32 ofs)
- {
--	return iwl_read_prph_no_grab(trans, ofs +
--				     trans->mac_cfg->umac_prph_offset);
-+	return iwl_trans_read_prph_no_grab(trans, ofs +
-+					   trans->mac_cfg->umac_prph_offset);
- }
- 
- static inline u32 iwl_read_umac_prph(struct iwl_trans *trans, u32 ofs)
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 8dc8924564e5..709c2499ffc8 100644
+index 709c2499ffc8..ce7d01a36688 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1893,10 +1893,13 @@ static u32 iwl_trans_pcie_prph_msk(struct iwl_trans *trans)
- u32 iwl_trans_pcie_read_prph(struct iwl_trans *trans, u32 reg)
- {
- 	u32 mask = iwl_trans_pcie_prph_msk(trans);
-+	u32 val;
+@@ -334,8 +334,8 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 	u32 dl_cfg_reg;
  
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_RADDR,
- 			       ((reg & mask) | (3 << 24)));
--	return iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
-+	val = iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
-+	trace_iwlwifi_dev_ioread_prph32(trans->dev, reg, val);
-+	return val;
+ 	/* Force XTAL ON */
+-	iwl_trans_set_bit(trans, CSR_GP_CNTRL,
+-			  CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
++	iwl_pcie_set_bit(trans, CSR_GP_CNTRL,
++			 CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
+ 
+ 	ret = iwl_trans_pcie_sw_reset(trans, true);
+ 
+@@ -344,8 +344,8 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 
+ 	if (WARN_ON(ret)) {
+ 		/* Release XTAL ON request */
+-		iwl_trans_clear_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
++		iwl_pcie_clear_bit(trans, CSR_GP_CNTRL,
++				   CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
+ 		return;
+ 	}
+ 
+@@ -396,12 +396,12 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+ 	/* Activates XTAL resources monitor */
+-	iwl_trans_set_bit(trans, CSR_MONITOR_CFG_REG,
+-			  CSR_MONITOR_XTAL_RESOURCES);
++	iwl_pcie_set_bit(trans, CSR_MONITOR_CFG_REG,
++			 CSR_MONITOR_XTAL_RESOURCES);
+ 
+ 	/* Release XTAL ON request */
+-	iwl_trans_clear_bit(trans, CSR_GP_CNTRL,
+-			    CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
++	iwl_pcie_clear_bit(trans, CSR_GP_CNTRL,
++			   CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
+ 	udelay(10);
+ 
+ 	/* Release APMG XTAL */
+@@ -2359,7 +2359,7 @@ bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent)
+ 	}
+ 
+ 	/* this bit wakes up the NIC */
+-	iwl_trans_set_bit(trans, CSR_GP_CNTRL, write);
++	iwl_pcie_set_bit(trans, CSR_GP_CNTRL, write);
+ 	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_8000)
+ 		udelay(2);
+ 
+@@ -2452,11 +2452,11 @@ void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
+ 	if (trans_pcie->cmd_hold_nic_awake)
+ 		goto out;
+ 	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
+-		iwl_trans_clear_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_BZ_MAC_ACCESS_REQ);
++		iwl_pcie_clear_bit(trans, CSR_GP_CNTRL,
++				   CSR_GP_CNTRL_REG_FLAG_BZ_MAC_ACCESS_REQ);
+ 	else
+-		iwl_trans_clear_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++		iwl_pcie_clear_bit(trans, CSR_GP_CNTRL,
++				   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 	/*
+ 	 * Above we read the CSR_GP_CNTRL register, which will flush
+ 	 * any previous writes, but we need the write that clears the
+@@ -2681,7 +2681,7 @@ void iwl_trans_pcie_set_bits_mask(struct iwl_trans *trans, u32 reg,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	spin_lock_bh(&trans_pcie->reg_lock);
+-	_iwl_trans_set_bits_mask(trans, reg, mask, value);
++	iwl_pcie_set_bits_mask(trans, reg, mask, value);
+ 	spin_unlock_bh(&trans_pcie->reg_lock);
  }
  
- void iwl_pcie_write_prph_no_grab(struct iwl_trans *trans, u32 addr, u32 val)
-@@ -3938,10 +3941,10 @@ static void get_crf_id(struct iwl_trans *iwl_trans,
- 	iwl_pcie_write_umac_prph_no_grab(iwl_trans, WFPM_CTRL_REG, val);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index f5aa456180d8..cd744f7002b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -205,8 +205,8 @@ static void iwl_pcie_clear_cmd_in_flight(struct iwl_trans *trans)
+ 	}
  
- 	/* Read crf info */
--	info->hw_crf_id = iwl_read_prph_no_grab(iwl_trans, sd_reg_ver_addr);
-+	info->hw_crf_id = iwl_trans_pcie_read_prph(iwl_trans, sd_reg_ver_addr);
+ 	trans_pcie->cmd_hold_nic_awake = false;
+-	iwl_trans_clear_bit(trans, CSR_GP_CNTRL,
+-			    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++	iwl_pcie_clear_bit(trans, CSR_GP_CNTRL,
++			   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 	spin_unlock(&trans_pcie->reg_lock);
+ }
  
- 	/* Read cnv info */
--	info->hw_cnv_id = iwl_read_prph_no_grab(iwl_trans, CNVI_AUX_MISC_CHIP);
-+	info->hw_cnv_id = iwl_trans_pcie_read_prph(iwl_trans, CNVI_AUX_MISC_CHIP);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/utils.h b/drivers/net/wireless/intel/iwlwifi/pcie/utils.h
+index 2d92bff513df..74c23ec199e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/utils.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/utils.h
+@@ -36,8 +36,8 @@ static inline void iwl_pcie_write_umac_prph_no_grab(struct iwl_trans *trans,
+ 				    val);
+ }
  
- 	/* For BZ-W, take B step also when A step is indicated */
- 	if (CSR_HW_REV_TYPE(info->hw_rev) == IWL_CFG_MAC_TYPE_BZ_W)
+-static inline void _iwl_trans_set_bits_mask(struct iwl_trans *trans,
+-					    u32 reg, u32 mask, u32 value)
++static inline void iwl_pcie_set_bits_mask(struct iwl_trans *trans,
++					  u32 reg, u32 mask, u32 value)
+ {
+ 	u32 v;
+ 
+@@ -51,16 +51,16 @@ static inline void _iwl_trans_set_bits_mask(struct iwl_trans *trans,
+ 	iwl_trans_pcie_write32(trans, reg, v);
+ }
+ 
+-static inline void iwl_trans_clear_bit(struct iwl_trans *trans,
++static inline void iwl_pcie_clear_bit(struct iwl_trans *trans,
+ 				       u32 reg, u32 mask)
+ {
+-	_iwl_trans_set_bits_mask(trans, reg, mask, 0);
++	iwl_pcie_set_bits_mask(trans, reg, mask, 0);
+ }
+ 
+-static inline void iwl_trans_set_bit(struct iwl_trans *trans,
++static inline void iwl_pcie_set_bit(struct iwl_trans *trans,
+ 				     u32 reg, u32 mask)
+ {
+-	_iwl_trans_set_bits_mask(trans, reg, mask, mask);
++	iwl_pcie_set_bits_mask(trans, reg, mask, mask);
+ }
+ 
+ #endif /* __iwl_pcie_utils_h__ */
 -- 
 2.34.1
 
