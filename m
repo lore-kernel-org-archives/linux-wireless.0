@@ -1,161 +1,315 @@
-Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp-42a9.mail.infomaniak.ch (smtp-42a9.mail.infomaniak.ch [84.16.66.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D76B4F4036
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 16:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.140
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790786974; cv=pass; b=lguzqAdc5pqGghd8jtKI6YbalDS4ibYKvsS6B1b+s2YN3dVQ318aH9qOzfP91EKhAN359tLtzHkqWgu6P30Zg/JoikFcYHIM+2fLDI1zW2xLLcJijBiLoPkaUD7of8Dd3g3nES6Kd1ZuzSap9u4NzInOaBLTLH5nHrdzruT7Y/U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790786974; c=relaxed/simple;
-	bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=qs8UhBodkD0chXvR+B8+jgXLrJJeVWgTEGUi3nrM+wTG2O4OMk1kwx2x+l7NTiAqYg7Lr5uWbbMVHXt80o1c9CHj+s3yr+Eno5yaAI8gJd6Mb7cO+b2IukwuceGYqnDb0oqMTjDNGqh5FQy9vlnOlKeR1YY6UPDlbc4jUokzdMY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tCcTd+DL; arc=pass smtp.client-ip=74.125.230.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE25511202
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 16:51:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=84.16.66.169
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790787066; cv=none; b=pLwv5s18v9zOOfG36M7k0hxMFmHZ+DM2cDdmUBb4pwwzOfq+2sCfb3ANwRFFPbt9MpHGuACE4ArtkCZkC3FYB25RJbIB+AFC9onLqHaM9DnteYJV4aaOE7rVkUMan7lVqHaRSzGfgogG3MEOMY4dzZFWSXdcQFs65YP1V1T5uvU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790787066; c=relaxed/simple;
+	bh=tPmMRt+fbon84goSMryDxiLW8itNfAjjy1Ac7Ps011A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oQxVlzGkoJAK1B12H2F+mw+s0eDCDfxWLd4FutNkfBQYQUBAQi9Qs6b/i/ltG6Picb3OMKH80tSHW2Y5L6iEA07tmpKGYIihmgNwUOJHmgd/WjyEEHNRYZZw3GR4SXQnbHBgk1obvL5hl0bUPogYSCReXCL/5wZWZlRub5C0ouE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=etik.com; spf=pass smtp.mailfrom=etik.com; dkim=pass (1024-bit key) header.d=etik.com header.i=@etik.com header.b=Uxad+iiO; arc=none smtp.client-ip=84.16.66.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=etik.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=etik.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tCcTd+DL"
-Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-910704e63a9so9175776d6.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:49:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790786971; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Dweyd4kdv1S48YzId3UM2VdvwK4+oDMsTd6KU7F4V5APC7gcylmJm2M5X7i936jwi+
-         KYvPoL7JWNnf94waeZycXaF8/XmjkQmVYDW5Fw7622wtUqGcPYJVMBNkipHTPDWfp58e
-         ssqBs3ijCFqu7aOmTJpaQi1vG4TvLCiXVJrBcFLUCB01wk0ZrHibRxOuaYkkZ+Y/lzSh
-         o3QbOZADlb3vK4GE6OxQPQkSg8WsRE1t4Vh8sK3xV/dtXbfD0M6eU5xcEgoI/I/l/idc
-         /caeVhkaHmLnSqtcLCPzR+Zuxav1bBm+vZKAqTE7KoNyiHJnARaCsH5uqhNcTWkju7wo
-         otaw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
-        fh=/SvzJGxJVq68NlDMZmOEhfggtxQkpLraiUIYNwL3bwQ=;
-        b=C8sGH1hLHkqXxgMnQ4MeMWrpchpD0gAxLy8tYBpd29FlJIiBeORi2UtxTHD0sO8qoQ
-         tngi0vM9lao/lgiJ+I2kdaRqYnyzbYsVGywxnvvOsphMAJSvclQVk7ikzeqrwxH7LkCg
-         amIKKbte1LRLRghhlZxl+vzeVCdlEl5Qhs5mlQnB2FBM5ukpBl/bBWpxu7sx9w0YtgJ+
-         G+ymzoAO9K1zdl42CkEqpe9oWQqp0aPUQyJXS0IKECkf4Gwu9d1SR7lyLcvPpolcfayc
-         m/dI48qXS3pQCyZmXam6CPe0z/a4E78PCsjjE+9GL5rOqUkpihc/d8LcbHaInRvXuaDC
-         Z1Dg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790786971; x=1791391771; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
-        b=tCcTd+DLGs9sBdlnQcXaucopfITBrPe8XKjYki/asPhXRYRLkfn235gBE0TPPTgYZd
-         Kqh27H9NiszDnZVQFl3NvUeTlJfFSoaw7a1DA9Hmyrp5b/Qr0LTBYDNzOjMXjaRvIab3
-         afU6ljijFKYgKAXyOyOvz9MNq08Aq9dxgFCbZVeM3yIw+ZALhtIavcPtMo4dFXI8MMaw
-         zf4LkB3YbZ75tpeb1WpjFiqx8lvm9vTF3LdIM/o2FSQGa76srPKMG62qeBJR6dAohaUP
-         XoA0tj3H4+lHp4+0FSjloYcCbdW4qr2Qaax6XEeHezQSFuXxoUHLY5/4udcVtKIZDUW2
-         sEqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790786971; x=1791391771;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=m/oaydNeB7KKez2Jzp2jljrx95qkFNgazQFseegu3Nw=;
-        b=p3yW7jWVC27PD3Pnu8mwGeRDdTINC7Jb2+L29psdenj6+zeSevBlVy1OAwx5ExW4oZ
-         x/sJYvYftwsPDxIqoy4OPD+XuAYpQ9Xg37Z9pzHllovDmSpDsIQeOWriGgpzMFSZJS4x
-         Gq5PUF2KtwWYw+DDpV5S0BzvOCGK/xFvuiAIwyoKPL4RxMFMvYgoXcK9qPSyz/QY3UcX
-         dTTUC6GvPm0IAnC1qSyuhdYd36vkfszYBlTzkaamamgqVV37SNV02WLFP10dT8mDqA+g
-         m3FiBwRfxYodtN1YU8jeHofOmJz+jpgBHfk9YUzoIrmB1sSGufCecIQyYj9iqRp4/EDV
-         VvSQ==
-X-Gm-Message-State: AFq9FYKjpkP6/3hsB9IJOxiQf8UI8YW3fehhzrZvDmjoqNnB7TYRX6wg
-	SkAXB+UmvmoRJ5mr18Jhd3I0OJWs+smLtxoPkhC0oNx5syvDi02QKWNqE9AsHSnGhTC+SPn8/Du
-	4G9p8LK4+Gb1wpsEatdHyMY1lMt4KFRzlM0cSJRBCiw==
-X-Gm-Gg: AYBFou1pFCJwBxD0YBrgE+L4hzdSjTPc0uDIcgTV5HTjcEQ6mGedBARL3J/3JGGs57/
-	Nm0RBWobyhD6qi/0Xl2rnLNPsGqCTKqQkHS8m0zpNCfzz3o+B6idrMh7sYEkZk7SgKwqMaTx/M7
-	qWDl+8ECKNZwrs9iY9/50a78eMOVGPbC9GkvM36FHqv3Csh4keKBK08RK58MSzaKkaXh3ZisTkc
-	p7TMuW59cEYanOd2ePJS3r9T+Mg+vtRT2v7onl6E1ai7a9HuR8ls+HUn4d739M2atQIsWyVEhf5
-	x4SwAiEu2s0iNe1YLfXiwEsYPSZ6TlVSkQyG/plwrjNW7CBN4w+YtzLE/864t8NPMUvBwu9cYBx
-	lGDfQLKz3/0cANXtJEE4k3zbSxHjQUScrEbmO6vLu7ed0
-X-Received: by 2002:a05:6214:54c5:b0:90c:a989:a68a with SMTP id
- 6a1803df08f44-917aa2f093bmr3499616d6.11.1790786971288; Wed, 30 Sep 2026
- 09:49:31 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=etik.com header.i=@etik.com header.b="Uxad+iiO"
+Received: from smtp-3-0001.mail.infomaniak.ch (smtp-3-0001.mail.infomaniak.ch [10.4.36.108])
+	by smtp-4-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4hw1JZ3f9Zz8Z1
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 18:50:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=etik.com;
+	s=20210927; t=1790787054;
+	bh=YNHZ+7rGRAlI1tCmAXMpng03DJZ24AzCUirnUl7KIFE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Uxad+iiOgt0IiU2xOiybn3VvgZidrIUdF8Ix2c3DgM3PfUR48bKA//ABmEZzoVdNg
+	 5I5Ox2gPuwqedVePz1ebGPXN4PW7ZT6F+0N82WrRHI8n13tdp+Tl7dnnS17h/0W6VB
+	 pRoDkmYeq7rOIHIsXiyO5b0c/wtNRUDYHIbOm7fo=
+Received: from unknown by smtp-3-0001.mail.infomaniak.ch (Postfix) with ESMTPA id 4hw1JY5p51zcg4;
+	Wed, 30 Sep 2026 18:50:53 +0200 (CEST)
+From: Eduard Hart <eduard.hart@etik.com>
+To: jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH ath-next] wifi: ath11k: use smaller DP rings on low-memory systems
+Date: Wed, 30 Sep 2026 18:50:52 +0200
+Message-ID: <20260930165052.4998-1-eduard.hart@etik.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Claudio Gratton <cla20gra@gmail.com>
-Date: Wed, 30 Sep 2026 18:49:19 +0200
-X-Gm-Features: AclHuK8KG73Rdozl3C21tUCJ3Qj_vy52lU6tUV5dAYIHAggwiXb0lvze3F5m_BU
-Message-ID: <CAGohoTay793z6HftCY-1m+DP0yCJ1eeB+q4p5-z7+bOnrOWOCQ@mail.gmail.com>
-Subject: mt7925e: endpoint keeps a stale zero-latency LTR after s2idle resume,
- blocks package C6/C10 (Panther Lake laptop)
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, 
-	shayne.chen@mediatek.com, sean.wang@mediatek.com, 
-	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Feedback-ID: :df975dad7d14b05:ham:e0a7e91052d2b43
+X-Infomaniak-Routing: alpha
 
-Hi,
+The data path rings are sized for systems with plenty of RAM. On
+IPQ5018 boards with 256 MiB of RAM and a second radio (e.g. QCN6122),
+the RX buffers and TX completion rings of both radios take so much
+memory that the system runs out of memory shortly after bringing up
+both interfaces.
 
-I may have found a resume issue with the MT7925 PCIe Wi-Fi card
-(mt7925e) on a Panther Lake laptop. I am not sure whether the driver,
-the firmware or the platform is at fault, so I'm asking here first.
-Everything below is marked either "measured" or "guess".
+Like ath12k does in ath12k_core_get_memory_mode(), look at the total
+system RAM and pick a low-memory DP profile when it is below 256 MiB.
+Reserved memory regions are not part of totalram, so boards with 512 MiB
+stay well above the threshold and keep the current ring sizes.
 
-Hardware / software
-- HP OmniBook 7 14-hg0xxx, Core Ultra X7 358H (Panther Lake), Wi-Fi/BT
-MT7925, mt7925e at 0000:2c:00.0, root port 0000:00:1c.0
-- Reproduced on Arch linux 7.2.3.arch1-3 and on linux-omarchy 7.2.5-3
-(Arch config plus patches). Not tested on a vanilla mainline kernel.
+The low-memory profile uses:
+  TX completion ring:     32768 -> 2048
+  RXDMA buffer ring:       4096 -> 1024
+  RXDMA monitor status:    1024 ->  512
+  RXDMA monitor buffer:    4096 ->  128
+  RXDMA monitor dest:      2048 ->  128
 
-Symptom (measured)
-- Fresh boot: the PMC LTR table (/sys/kernel/debug/pmc_core/ltr_show)
-shows SOUTHPORT_B = 0x0 and the package reaches PC10 at idle.
-- After the first s2idle resume in a boot, SOUTHPORT_B reads
-0x80008000 (valid, zero latency) and stays there. The package then
-stays in PC2 (PC6/PC10 residency 0%) although everything else is idle.
-- Idle power on battery is roughly 0.5 W higher while it is stuck
-(about 3.1-3.6 W vs 2.0-3.1 W, screen on). I also changed other things
-in the same period (a Bluetooth autosuspend workaround), so treat the
-0.5 W as approximate. With "echo 1 > ltr_ignore" the package reaches
-PC10 again.
+The TX completion ring size is also used for the tx_status FIFO and the
+IDR range of outstanding TX buffers, so ATH11K_TX_COMPL_NEXT() now wraps
+at the selected ring size instead of the compile-time constant.
 
-Why I think it is this Wi-Fi card (measured)
-- Unloading mt7925e changes SOUTHPORT_B to a constant 0x88418841.
-- Toggling the Wi-Fi radio (rfkill), NVMe I/O bursts and an empty USB4
-port do not change it.
+With this, both radios of a TP-Link RE700X (IPQ5018 + QCN6122, 256 MiB)
+stay up under load (4-6 clients) with 14-37 MiB of RAM available and no
+OOM, about the same as a 256 MiB build that shrinks the rings at compile
+time.
 
-State across the resume (measured, one suspend cycle, "systemctl suspend")
-- Before suspend: SOUTHPORT_B = 0x0.
-- Immediately after resume, before any userspace hook: SOUTHPORT_B = 0x80008000.
-- Endpoint 2c:00.0 stays in D0; DevCtl2 = 0x0409 (LTR Mechanism Enable
-set) and the LTR capability max snoop/no-snoop latency 0x100f/0x100f
-are identical before and after.
-- Root port 00:1c.0: DevCtl2 = 0x0400 and LnkCtl = 0x0c43, unchanged.
-- No kernel messages from mt7925e or PCI during the resume.
+Tested-on: IPQ5018 hw1.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+Tested-on: QCN6122 hw1.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
-Workaround that fixes it (measured)
-- About 6 s after resume, clear and re-set DevCtl2 bit 10 (LTR
-Mechanism Enable) on the endpoint, 0.3 s apart:
-setpci -s 2c:00.0 CAP_EXP+0x28.w=<old & ~0x0400>; sleep 0.3; setpci -s
-2c:00.0 CAP_EXP+0x28.w=<old>
-The endpoint then sends a fresh LTR message, SOUTHPORT_B returns to
-0x0 and PC10 residency comes back (about 28% of samples in my run,
-idle 1.99 W with the screen on).
-- I run it from a systemd-sleep hook as a stop-gap. It has fixed the
-state after every resume I have tried, including a repeat this
-afternoon.
+Signed-off-by: Eduard Hart <eduard.hart@etik.com>
+---
+ drivers/net/wireless/ath/ath11k/dp.c    | 50 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/dp.h    | 13 ++++++-
+ drivers/net/wireless/ath/ath11k/dp_rx.c |  9 +++--
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 12 +++---
+ 4 files changed, 69 insertions(+), 15 deletions(-)
 
-What I do not know (guess)
-- My guess is that the chip or its firmware re-sends a "0 latency" LTR
-message at resume and never sends the update. I cannot rule out that
-the driver or the platform leaves something unprogrammed; the
-unchanged config space only shows that it is not a PCI-level
-difference I can see.
-- I have not checked whether other MT7925/MT7922 platforms, or
-Intel/AMD systems, show the same.
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index be65d73b904b..2db4f98ed446 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -5,6 +5,8 @@
+  */
+ 
+ #include <linux/export.h>
++#include <linux/mm.h>
++#include <linux/sizes.h>
+ #include "core.h"
+ #include "dp_tx.h"
+ #include "hal_tx.h"
+@@ -414,7 +416,7 @@ static int ath11k_dp_srng_common_setup(struct ath11k_base *ab)
+ 
+ 		ret = ath11k_dp_srng_setup(ab, &dp->tx_ring[i].tcl_comp_ring,
+ 					   HAL_WBM2SW_RELEASE, wbm_num, 0,
+-					   DP_TX_COMP_RING_SIZE);
++					   dp->profile->tx_comp_ring_size);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to set up tcl_comp ring (%d) :%d\n",
+ 				    i, ret);
+@@ -1047,6 +1049,45 @@ void ath11k_dp_free(struct ath11k_base *ab)
+ 	/* Deinit any SOC level resource */
+ }
+ 
++static const struct ath11k_dp_profile_params ath11k_dp_profile_default = {
++	.tx_comp_ring_size = DP_TX_COMP_RING_SIZE,
++	.rxdma_buf_ring_size = DP_RXDMA_BUF_RING_SIZE,
++	.rxdma_mon_status_ring_size = DP_RXDMA_MON_STATUS_RING_SIZE,
++	.rxdma_monitor_buf_ring_size = DP_RXDMA_MONITOR_BUF_RING_SIZE,
++	.rxdma_monitor_dst_ring_size = DP_RXDMA_MONITOR_DST_RING_SIZE,
++};
++
++static const struct ath11k_dp_profile_params ath11k_dp_profile_low_mem = {
++	.tx_comp_ring_size = 2048,
++	.rxdma_buf_ring_size = 1024,
++	.rxdma_mon_status_ring_size = 512,
++	.rxdma_monitor_buf_ring_size = 128,
++	.rxdma_monitor_dst_ring_size = 128,
++};
++
++static const struct ath11k_dp_profile_params *
++ath11k_dp_get_profile(struct ath11k_base *ab)
++{
++	struct sysinfo si;
++	u64 total_ram;
++
++	si_meminfo(&si);
++	total_ram = (u64)si.totalram * si.mem_unit;
++
++	/* Reserved memory (firmware, TZ, ...) is not part of totalram, so a
++	 * 512 MiB board reports well above 256 MiB while a 256 MiB board with
++	 * two radios does not have enough memory for the default rings.
++	 */
++	if (total_ram < SZ_256M) {
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "using low memory DP ring sizes (%llu MiB RAM)\n",
++			   total_ram / SZ_1M);
++		return &ath11k_dp_profile_low_mem;
++	}
++
++	return &ath11k_dp_profile_default;
++}
++
+ int ath11k_dp_alloc(struct ath11k_base *ab)
+ {
+ 	struct ath11k_dp *dp = &ab->dp;
+@@ -1057,6 +1098,7 @@ int ath11k_dp_alloc(struct ath11k_base *ab)
+ 	int i;
+ 
+ 	dp->ab = ab;
++	dp->profile = ath11k_dp_get_profile(ab);
+ 
+ 	INIT_LIST_HEAD(&dp->reo_cmd_list);
+ 	INIT_LIST_HEAD(&dp->reo_cmd_cache_flush_list);
+@@ -1084,7 +1126,8 @@ int ath11k_dp_alloc(struct ath11k_base *ab)
+ 	if (ret)
+ 		goto fail_link_desc_cleanup;
+ 
+-	size = sizeof(struct hal_wbm_release_ring) * DP_TX_COMP_RING_SIZE;
++	size = sizeof(struct hal_wbm_release_ring) *
++	       dp->profile->tx_comp_ring_size;
+ 
+ 	for (i = 0; i < ab->hw_params.hal_params->num_tx_rings; i++) {
+ 		idr_init(&dp->tx_ring[i].txbuf_idr);
+@@ -1092,7 +1135,8 @@ int ath11k_dp_alloc(struct ath11k_base *ab)
+ 		dp->tx_ring[i].tcl_data_ring_id = i;
+ 
+ 		dp->tx_ring[i].tx_status_head = 0;
+-		dp->tx_ring[i].tx_status_tail = DP_TX_COMP_RING_SIZE - 1;
++		dp->tx_ring[i].tx_status_tail =
++			dp->profile->tx_comp_ring_size - 1;
+ 		dp->tx_ring[i].tx_status = kmalloc(size, GFP_KERNEL);
+ 		if (!dp->tx_ring[i].tx_status) {
+ 			ret = -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index 84f66839f0c6..62e2c43da407 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -78,7 +78,7 @@ struct dp_rxdma_ring {
+ 	int bufs_max;
+ };
+ 
+-#define ATH11K_TX_COMPL_NEXT(x)	(((x) + 1) % DP_TX_COMP_RING_SIZE)
++#define ATH11K_TX_COMPL_NEXT(dp, x)	(((x) + 1) % (dp)->profile->tx_comp_ring_size)
+ 
+ struct dp_tx_ring {
+ 	u8 tcl_data_ring_id;
+@@ -206,7 +206,6 @@ struct ath11k_pdev_dp {
+ #define DP_TCL_DATA_RING_SIZE		512
+ #define DP_TCL_DATA_RING_SIZE_WCN6750	2048
+ #define DP_TX_COMP_RING_SIZE		32768
+-#define DP_TX_IDR_SIZE			DP_TX_COMP_RING_SIZE
+ #define DP_TCL_CMD_RING_SIZE		32
+ #define DP_TCL_STATUS_RING_SIZE		32
+ #define DP_REO_DST_RING_MAX		4
+@@ -254,8 +253,18 @@ struct ath11k_hp_update_timer {
+ 	struct ath11k_base *ab;
+ };
+ 
++/* DP ring sizes that depend on the available system memory */
++struct ath11k_dp_profile_params {
++	u32 tx_comp_ring_size;
++	u32 rxdma_buf_ring_size;
++	u32 rxdma_mon_status_ring_size;
++	u32 rxdma_monitor_buf_ring_size;
++	u32 rxdma_monitor_dst_ring_size;
++};
++
+ struct ath11k_dp {
+ 	struct ath11k_base *ab;
++	const struct ath11k_dp_profile_params *profile;
+ 	enum ath11k_htc_ep_id eid;
+ 	struct completion htt_tgt_version_received;
+ 	u8 htt_tgt_ver_major;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 6d95f7b343a5..64063c3f1983 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -578,7 +578,8 @@ static int ath11k_dp_rx_pdev_srng_alloc(struct ath11k *ar)
+ 	ret = ath11k_dp_srng_setup(ar->ab,
+ 				   &dp->rx_refill_buf_ring.refill_buf_ring,
+ 				   HAL_RXDMA_BUF, 0,
+-				   dp->mac_id, DP_RXDMA_BUF_RING_SIZE);
++				   dp->mac_id,
++				   ab->dp.profile->rxdma_buf_ring_size);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to setup rx_refill_buf_ring\n");
+ 		return ret;
+@@ -613,7 +614,7 @@ static int ath11k_dp_rx_pdev_srng_alloc(struct ath11k *ar)
+ 		ret = ath11k_dp_srng_setup(ar->ab,
+ 					   srng,
+ 					   HAL_RXDMA_MONITOR_STATUS, 0, dp->mac_id + i,
+-					   DP_RXDMA_MON_STATUS_RING_SIZE);
++					   ab->dp.profile->rxdma_mon_status_ring_size);
+ 		if (ret) {
+ 			ath11k_warn(ar->ab,
+ 				    "failed to setup rx_mon_status_refill_ring %d\n", i);
+@@ -636,7 +637,7 @@ static int ath11k_dp_rx_pdev_srng_alloc(struct ath11k *ar)
+ 	ret = ath11k_dp_srng_setup(ar->ab,
+ 				   &dp->rxdma_mon_buf_ring.refill_buf_ring,
+ 				   HAL_RXDMA_MONITOR_BUF, 0, dp->mac_id,
+-				   DP_RXDMA_MONITOR_BUF_RING_SIZE);
++				   ab->dp.profile->rxdma_monitor_buf_ring_size);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab,
+ 			    "failed to setup HAL_RXDMA_MONITOR_BUF\n");
+@@ -645,7 +646,7 @@ static int ath11k_dp_rx_pdev_srng_alloc(struct ath11k *ar)
+ 
+ 	ret = ath11k_dp_srng_setup(ar->ab, &dp->rxdma_mon_dst_ring,
+ 				   HAL_RXDMA_MONITOR_DST, 0, dp->mac_id,
+-				   DP_RXDMA_MONITOR_DST_RING_SIZE);
++				   ab->dp.profile->rxdma_monitor_dst_ring_size);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab,
+ 			    "failed to setup HAL_RXDMA_MONITOR_DST\n");
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index cac970c92806..a67aea979f8c 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -122,7 +122,7 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 
+ 	spin_lock_bh(&tx_ring->tx_idr_lock);
+ 	ret = idr_alloc(&tx_ring->txbuf_idr, skb, 0,
+-			DP_TX_IDR_SIZE - 1, GFP_ATOMIC);
++			dp->profile->tx_comp_ring_size - 1, GFP_ATOMIC);
+ 	spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 
+ 	if (unlikely(ret < 0)) {
+@@ -701,17 +701,17 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 
+ 	ath11k_hal_srng_access_begin(ab, status_ring);
+ 
+-	while ((ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head) !=
++	while ((ATH11K_TX_COMPL_NEXT(dp, tx_ring->tx_status_head) !=
+ 		tx_ring->tx_status_tail) &&
+ 	       (desc = ath11k_hal_srng_dst_get_next_entry(ab, status_ring))) {
+ 		memcpy(&tx_ring->tx_status[tx_ring->tx_status_head],
+ 		       desc, sizeof(struct hal_wbm_release_ring));
+ 		tx_ring->tx_status_head =
+-			ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head);
++			ATH11K_TX_COMPL_NEXT(dp, tx_ring->tx_status_head);
+ 	}
+ 
+ 	if (unlikely((ath11k_hal_srng_dst_peek(ab, status_ring) != NULL) &&
+-		     (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head) ==
++		     (ATH11K_TX_COMPL_NEXT(dp, tx_ring->tx_status_head) ==
+ 		      tx_ring->tx_status_tail))) {
+ 		/* TODO: Process pending tx_status messages when kfifo_is_full() */
+ 		ath11k_warn(ab, "Unable to process some of the tx_status ring desc because status_fifo is full\n");
+@@ -721,12 +721,12 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 
+ 	spin_unlock_bh(&status_ring->lock);
+ 
+-	while (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail) != tx_ring->tx_status_head) {
++	while (ATH11K_TX_COMPL_NEXT(dp, tx_ring->tx_status_tail) != tx_ring->tx_status_head) {
+ 		struct hal_wbm_release_ring *tx_status;
+ 		u32 desc_id;
+ 
+ 		tx_ring->tx_status_tail =
+-			ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail);
++			ATH11K_TX_COMPL_NEXT(dp, tx_ring->tx_status_tail);
+ 		tx_status = &tx_ring->tx_status[tx_ring->tx_status_tail];
+ 		ath11k_dp_tx_status_parse(ab, tx_status, &ts);
+ 
+-- 
+2.54.0 (Apple Git-157)
 
-Questions
-1. Has anyone seen the same behaviour, and is it known on the firmware side?
-2. If it is a driver issue, would re-triggering the LTR message at
-resume (as above) be acceptable in mt7925e, or is there a cleaner way?
-
-I can provide full logs, run patches or test firmware versions.
-
-Thanks,
-Claudio Gratton
