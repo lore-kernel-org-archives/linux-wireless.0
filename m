@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-106.mta0.migadu.com [91.218.175.106])
+Received: from mta0.migadu.com (out-107.mta0.migadu.com [91.218.175.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9E5447AF75
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:16:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55A34772A8
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:16:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790759783; cv=none; b=YpRlxYkWLfVnmb18F0WnfnWI4wo8iCcmKq1zt4LHy4MGjppE6rjzjJd5BMPgiq/vUwMLC6G+SIBELHLhjiC8M7dB56q54+J6f6vWtH7dUiPxzuFtfKTYUchL5P4LK6uJVXRx7vNb7PPwCMnXudbZCtZYSp34HWD6pSkuE8q33fQ=
+	t=1790759785; cv=none; b=i+nDHcJrRkUVQmemBh7i2b3pnCpFRsZCbgO3vNNRWQ9mK9cwKlHaW+j4raI65SuW7GNUOl6468Kq1HQ+s7tvcQdv/lFBtzD9d5m7+kT5RAooOzcZLF+yCM6gZ1ePjvcvzu6G4nj9sDZ4LS2T8g5797hYFzMvqUAOip2cWFnuBgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790759783; c=relaxed/simple;
-	bh=GF+U/hw7WcPHBVh+HSbJ3knj3l/vkqtYcF1qErvdvEI=;
+	s=arc-20240116; t=1790759785; c=relaxed/simple;
+	bh=Ca5BbrAJIBa3O09AXU0PUuW4/9AxSHHQmz5hoAQr6OY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PYQb2hi3EjwVRVVWk5KocHgg+BFhFY4VHYL0nQurYG5gaKvvIT4JtRHndDjhQ8tHE5N79x/AED4TpO4d2AFhR1yucD5+FNjaWPIcEw5VilQWNodyOc+TqNmfG4RK+yh5kBhIQ8lSd5SSnZ7q0koORNPfr4Ot32Khmc9Dv1VCq2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=W5dq33Mk; arc=none smtp.client-ip=91.218.175.106
+	 MIME-Version; b=IUxjN5hhv5ybQOs4RWKfkV54iPzeGJL+gQdK6aqSUBMPnlCJCSRIk6CmLY2T8qCPIx5D8deUPdjDZwKoSDP6KjCOLNc/tTYeIvSt+ODfSexwGWLkfXXjKHe52vCzMMdyki5tUP4C/S0G2cu4S4znzeEMCQRIINwMxHnnczBJalQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fuH8Id5l; arc=none smtp.client-ip=91.218.175.107
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="W5dq33Mk"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fuH8Id5l"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=GF+U/hw7WcPHBVh+HSbJ3knj3l/vkqtYcF1qErvdvEI=;
+DKIM-Signature: a=rsa-sha256; bh=Ca5BbrAJIBa3O09AXU0PUuW4/9AxSHHQmz5hoAQr6OY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790759779; v=1; x=1791364579;
- b=W5dq33MkSJyq99qN/Hna0BMF3LoQRn6eYXExTpeo2Wu68NoyfE1iSuYs2V7WE3rCe3dpTjaY
- GVdjL+xTN4fZQxNd5ojX8DRmCDEhaDd+hRuxqo/AF2QYrvaad1FA3HNzygdv5y+68dG5KAd/QZ/
- HNZSItR207zrAaEzj0pliCFw=
+ t=1790759780; v=1; x=1791364580;
+ b=fuH8Id5l9SaMRGwv93NHc/aogoNqBdvmKU5Huj0EriR/K3p01uTEeZuUiMRNgoG36UTSGvPQ
+ gbY2SIQJQAeCqLdjZYySSyglCNnQHVZeKCoD6D/iwXKPU+8Ptnb27Em+Q5yR49+yMJiQpYKVGJs
+ Mtwj3XC8mzkbwsDqOStMjHPI=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a14b5202803427cd;
-	Wed, 30 Sep 2026 09:16:19 +0000
-X-Mizu-Trace-ID: a14b5202803427cd
+Received: by smtp.migadu.com with ESMTPS id d01d68e6b6dd3b1a;
+	Wed, 30 Sep 2026 09:16:20 +0000
+X-Mizu-Trace-ID: d01d68e6b6dd3b1a
 X-Migadu-Flow: FLOW_OUT
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,9 +37,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v5 rtw-next 6/7] wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
-Date: Wed, 30 Sep 2026 11:16:03 +0200
-Message-ID: <20260930091604.52891-7-luka.gejak@linux.dev>
+Subject: [PATCH v5 rtw-next 7/7] wifi: rtw88: 8723bs: enable building the RTL8723BS driver
+Date: Wed, 30 Sep 2026 11:16:04 +0200
+Message-ID: <20260930091604.52891-8-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260930091604.52891-1-luka.gejak@linux.dev>
 References: <20260930091604.52891-1-luka.gejak@linux.dev>
@@ -51,93 +51,70 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the SDIO module for the RTL8723BS, the SDIO variant of the
-RTL8723B. It binds the Realtek SDIO device ids to the shared rtw88 SDIO
-probe and points it at the RTL8723B chip information.
+Now that the chip support, firmware interface, coexistence, power
+management and the SDIO transfer and association paths are all in place,
+add the Kconfig symbols and Makefile rules that build the RTL8723B chip
+module and the RTL8723BS SDIO front end.
 
-The device id table carries the same six ids the staging rtl8723bs
-driver binds to this chip, so the staging driver can be dropped without
-losing hardware support. I only have the 0xb723 variant to test with.
-The other five are included for parity with staging, which has carried
-them for years, rather than being left behind.
-
-The RTL8723B chip support is based on the initial work by
-Michael Straube <straube.linux@gmail.com>.
-Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
-
-Co-developed-by: Michael Straube <straube.linux@gmail.com>
-Signed-off-by: Michael Straube <straube.linux@gmail.com>
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- .../net/wireless/realtek/rtw88/rtw8723bs.c    | 59 +++++++++++++++++++
- 1 file changed, 59 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+ drivers/net/wireless/realtek/rtw88/Kconfig  | 18 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/Makefile |  6 ++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723bs.c b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
-new file mode 100644
-index 000000000000..62ad44db20de
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
-@@ -0,0 +1,59 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2026  Realtek Corporation
-+ * Copyright(c) Michael Straube <straube.linux@gmail.com>
-+ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
-+ */
+diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
+index 3736f290bd42..e1f40d6785e6 100644
+--- a/drivers/net/wireless/realtek/rtw88/Kconfig
++++ b/drivers/net/wireless/realtek/rtw88/Kconfig
+@@ -36,6 +36,10 @@ config RTW88_8703B
+ 	tristate
+ 	select RTW88_8723X
+ 
++config RTW88_8723B
++	tristate
++	select RTW88_8723X
 +
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/module.h>
-+#include "main.h"
-+#include "rtw8723b.h"
-+#include "sdio.h"
+ config RTW88_8723D
+ 	tristate
+ 	select RTW88_8723X
+@@ -159,6 +163,20 @@ config RTW88_8723CS
+ 
+ 	  If you choose to build a module, it'll be called rtw88_8723cs.
+ 
++config RTW88_8723BS
++	tristate "Realtek 8723BS SDIO wireless network adapter"
++	depends on MMC
++	select RTW88_CORE
++	select RTW88_SDIO
++	select RTW88_8723B
++	help
++	  Select this option to enable support for 8723BS chipset
 +
-+static const struct sdio_device_id rtw_8723bs_id_table[] = {
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK,
-+			    SDIO_DEVICE_ID_REALTEK_RTW8723BS),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK, 0x0523),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK, 0x0525),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK, 0x0623),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK, 0x0626),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{
-+		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK, 0x0627),
-+		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
-+	},
-+	{}
-+};
-+MODULE_DEVICE_TABLE(sdio, rtw_8723bs_id_table);
++	  This module adds support for the 8723BS 802.11n SDIO
++	  wireless network adapter.
 +
-+static struct sdio_driver rtw_8723bs_driver = {
-+	.name = KBUILD_MODNAME,
-+	.id_table = rtw_8723bs_id_table,
-+	.probe = rtw_sdio_probe,
-+	.remove = rtw_sdio_remove,
-+	.shutdown = rtw_sdio_shutdown,
-+	.drv = {
-+		.pm = &rtw_sdio_pm_ops,
-+	}
-+};
-+module_sdio_driver(rtw_8723bs_driver);
++	  If you choose to build a module, it'll be called rtw88_8723bs.
 +
-+MODULE_AUTHOR("Luka Gejak <luka.gejak@linux.dev>");
-+MODULE_AUTHOR("Michael Straube <straube.linux@gmail.com>");
-+MODULE_DESCRIPTION("Realtek 802.11n wireless 8723bs driver");
-+MODULE_LICENSE("Dual BSD/GPL");
+ config RTW88_8723DU
+ 	tristate "Realtek 8723DU USB wireless network adapter"
+ 	depends on USB
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index 0b3da05a2938..6889b3796449 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -55,6 +55,12 @@ rtw88_8703b-objs		:= rtw8703b.o rtw8703b_tables.o
+ obj-$(CONFIG_RTW88_8723CS)	+= rtw88_8723cs.o
+ rtw88_8723cs-objs		:= rtw8723cs.o
+ 
++obj-$(CONFIG_RTW88_8723B)	+= rtw88_8723b.o
++rtw88_8723b-objs		:= rtw8723b.o rtw8723b_table.o
++
++obj-$(CONFIG_RTW88_8723BS)	+= rtw88_8723bs.o
++rtw88_8723bs-objs		:= rtw8723bs.o
++
+ obj-$(CONFIG_RTW88_8723D)	+= rtw88_8723d.o
+ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+ 
 -- 
 2.55.0
 
