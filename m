@@ -1,55 +1,55 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 269C4432E60
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 06:46:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3CA431ED83
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 06:46:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790750806; cv=none; b=ccaFFQDdWy9gf/+N6L0of7kTRVT5pED94jcsdUr9pjPKtKmkD5lTbpYZlt/RgdpjMv58eyz3spW/LL361dfpR7dvFSruL1yJf8+oAkssJN85weTZSiZcpe6WGlGIwtzUlHuUIqTkWI1dFT9+yM/DO3zEF7zMC+4vkZMTWk9YSRo=
+	t=1790750808; cv=none; b=nPS5OCqNKjt34QPV/f7JFQWY4wsY1Cn/Hd55+rCHmW7gnHoPVcOGvWkVVr4cDi1N1NlCkmuU/jdWWD6vOCmFOQnrmS5YijM4uEHAEt5pgo0+t91MFgmsWZwF/Ly9VKW7ozOA+EK9Gk6bS89EDLDLr6eQvl40+hJRLMTXpgnDJuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790750806; c=relaxed/simple;
-	bh=yRj1t8wr0lryMmdM2fs8ruskbl3eOS8RTdVoQ0SmTf0=;
+	s=arc-20240116; t=1790750808; c=relaxed/simple;
+	bh=y4zdWSaB3yUW2s63sXZEgB06lkrme5hwpa5KaXAtRnc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mCFmyxXOgTN4r4eUoRy28zxpO3lKUWK+lT3czFM/xGjiMct/9chsHNTP0GxdOblTWSDJ4VUx7VG4Wluah5f+Tnx507eIIZnZffIb3oTlaZf86CjTDqQMSVKvfbGryDn/qCUX4t5GlSh3gcgyaG6fxMOVkA758GtJEafptT9h15A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=wy0PmLMn; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=SLLGMkzUCxUWcCRjdYW+89u3lOukkONJbboRR6EeIyObVPpStmZmACVIXX8WUcxrJujQVzPvREYFVK26HmbCyMXL4Zd+pVyIPw7eDngwHFiKl/MCX7xAxEsYr/KWkIqIhxdWa4j2w3Wb3xIe7nIfTSdtlpAz/lde3g8BKwsF4zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=n9PRNfah; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="wy0PmLMn"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68U6kYzhD1883042, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="n9PRNfah"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 68U6kcGmB1883076, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790750794; bh=Sce+NpdQQO/J0lPHiYmLFwOJ/yP5evLIu4GeEQfXW4I=;
+	t=1790750798; bh=znelBt7MoLLStHEdiNmDeh7FloU+YpeutnCM62Fyglc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=wy0PmLMnFGZYfSRUhYZ7YJpEYnJPfBSYbG9a9HoHIrDG3plR3K+NiAP5Z+0EOah80
-	 Be26ZP2A14+9Js853OqBaFZjByHLtuaqBTIMyb/nLN/nzet76K68B+uZUhNyxO9mJ3
-	 BVs+BWyLUCKaC9EFBcxBz/vXKfwLLmoD5fHaaswVJwUFNp2JMXlpEPBdOfCB5h+OHm
-	 nTSe+UmYMYxxZKnA5HskJ+v+a19DphQRlI43bb4g1rQ66x26aQIuPZ+Wp27q8DQSt2
-	 K3Mo1lhS+yWWvI3IGiySQpP/ax7UVrwXkS4SCr9HRvJi0bGfkMFUDP/9BF4IXEKQQd
-	 OwV6EbcxNnVeQ==
+	b=n9PRNfahu0QerGYn/rCvTPeynwrFfdmnq7fTCiLE17hi83X2sufQhX0N9lzns5dtG
+	 TvMWEuz8k00n/nkXBr7qwJmxp/lGHAyF/KEkuQbglU5iz8RrpeDzWJuQCX8WWqQqDm
+	 RlAqb7CLwLUq7ftx5rOYbvxsZ/apfzHZcAN7GVnejhswQ3gAtyYhKby8bNBsnWlQT5
+	 jTjj1iIRFImjXsjvdPEml45Eh7m9O1b7v/Zp7sTuxyb22OC8VHaB4lfv1r72cOhVtB
+	 HqyWWF4DXmhA7Tu4emrqvqGq6Juptw1coIK2Kv9k3dgGrMZ1cDz6egucaM9lIvGiI9
+	 WRCTnswajCrlg==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68U6kYzhD1883042
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 68U6kcGmB1883076
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:46:34 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:46:38 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 30 Sep 2026 14:46:34 +0800
+ 15.2.2562.49; Wed, 30 Sep 2026 14:46:39 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 30 Sep 2026 14:46:32 +0800
+ 15.2.2562.49; Wed, 30 Sep 2026 14:46:38 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
  (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 30 Sep 2026 14:46:32 +0800
+ Transport; Wed, 30 Sep 2026 14:46:38 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <gary.chang@realtek.com>, <echuang@realtek.com>,
 	<wenjie.tsai@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 5/6] wifi: rtw89: phy: write full data for BB gain table type 15
-Date: Wed, 30 Sep 2026 14:45:23 +0800
-Message-ID: <20260930064524.39403-6-pkshih@realtek.com>
+Subject: [PATCH rtw-next 6/6] wifi: rtw89: pack I/O during RF nctl init to reduce execution time
+Date: Wed, 30 Sep 2026 14:45:24 +0800
+Message-ID: <20260930064524.39403-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260930064524.39403-1-pkshih@realtek.com>
 References: <20260930064524.39403-1-pkshih@realtek.com>
@@ -62,30 +62,36 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Eric Huang <echuang@realtek.com>
+From: Johnson Tsai <wenjie.tsai@realtek.com>
 
-Type 15 gain-table records now encode the FEM index in bits 31:16 and
-the gain-table version in bits 15:0.
+Wrap the register writes of rtw89_phy_init_rf_nctl() with
+rtw89_io_pack/unpack so they are batched into single bus transactions,
+reducing API execution time.
 
-Signed-off-by: Eric Huang <echuang@realtek.com>
+8852C USB2.0 AMD B450 initialization time:
+    rtw89_phy_init_rf_nctl                  5355 ms -> 10 ms
+
+Signed-off-by: Johnson Tsai <wenjie.tsai@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy_be.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/phy.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy_be.c b/drivers/net/wireless/realtek/rtw89/phy_be.c
-index b94754d38673..73c98ae358ad 100644
---- a/drivers/net/wireless/realtek/rtw89/phy_be.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy_be.c
-@@ -434,7 +434,7 @@ static void rtw89_phy_config_bb_gain_be(struct rtw89_dev *rtwdev,
- 		rtw89_phy_cfg_bb_gain_op1db_be(rtwdev, arg, reg->data);
- 		break;
- 	case 15:
--		rtw89_phy_write32_idx(rtwdev, reg->addr & 0xFFFFF, MASKHWORD,
-+		rtw89_phy_write32_idx(rtwdev, reg->addr & 0xFFFFF, MASKDWORD,
- 				      reg->data, RTW89_PHY_0);
- 		break;
- 	case 4:
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index 074865665b16..795920b899d9 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -2071,7 +2071,10 @@ static void rtw89_phy_init_rf_nctl(struct rtw89_dev *rtwdev)
+ 	rtw89_phy_preinit_rf_nctl(rtwdev);
+ 
+ 	nctl_table = elm_info->rf_nctl ? elm_info->rf_nctl : chip->nctl_table;
++
++	rtw89_io_pack(rtwdev);
+ 	rtw89_phy_init_reg(rtwdev, nctl_table, false, rtw89_phy_config_bb_reg, NULL);
++	rtw89_io_unpack(rtwdev);
+ 
+ 	if (chip->nctl_post_table)
+ 		rtw89_rfk_parser(rtwdev, chip->nctl_post_table);
 -- 
 2.25.1
 
