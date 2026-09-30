@@ -1,56 +1,59 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E325A3655F0
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:01:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 114A83655F0
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 09:01:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790758862; cv=none; b=HWSgQ9SIG05qhYJqpqpxf6lqWtB9cR1TTTTAt49tsjT9rTK6/DLKr8+nkhZl3yQIs4iJWVd8vtW5XN2FERBZCuR48V46o3zvCKJlttUBhk4fSKr00an0M6+rXhVSeOj5RVvJdptUpJox0rE3CvVmOB6T3bkpgqTlbYQO9j2Er10=
+	t=1790758866; cv=none; b=tHn6wdDQGAajqDXHDIh8SgZl2DhOsEKfIOfxwhi3F/U5PbYAqgJOm1LW/Y/ex3sdTq/5Eb34aP2HbzdLXECP2A++H79kDXewathmRkQc+ht7wuR/XwCzNhGsxlsH1YsLaafJWZGs3PhyphvgWeBDggQiDXeqVZRE9fM4JCVu2Pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790758862; c=relaxed/simple;
-	bh=lFaMKbMuKv9tKAlb8aZVhhTUjQ5NcM8X3M+SHaoMvco=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=knpwdffDN2WeAes2e7CYmHjCqZJYvBbuA+5yErP+HPZOibeZ5IMBjW/cGU2NM5mufXhACLDFuuO/dB0oJ7j3t6cYfPqVmTLqrsqjHaGLOvy+dEqbe3ZsbecQTOEcGM8evrrytkbRJsHyjeq4wiolpI+89g45Cx2i5HnDl7MQ3Tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FGQyOBmL; arc=none smtp.client-ip=192.198.163.11
+	s=arc-20240116; t=1790758866; c=relaxed/simple;
+	bh=P4nULrjjahqiHFZjwZW6vODo/Ei2yE/EzHgLyNiFDHc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=rocnrWERHW4DZAY3poOgPVPHcXg3O1f7L1piPpXslBkwSfEJWpvfvcJIgAjBMPA+qPKHKYzhFR63Ww/aicNNpfn8W2Yx21xJDhS+WVf+Oc9hR9B92B08iswmJOiTfUprA2IqH1yXg+uqhPuOYMKuHNdffKxd47xsJR2wpbs1Ysw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZGRs9Q35; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FGQyOBmL"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZGRs9Q35"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790758861; x=1822294861;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=lFaMKbMuKv9tKAlb8aZVhhTUjQ5NcM8X3M+SHaoMvco=;
-  b=FGQyOBmLVoIN3cf8WnSjV1w7yGHqZNoHg/xWqmBEh5oK6eUGuGRzb2qt
-   Kd2tKmWERDnvtF5zF+JYNxYWaoPH3xBAGi5yvxsDfREA2axHIhpuNDPjT
-   Z5/py2xH+6m+Pag0md98f5YEEkS2rSz/b17cRx+Oe2x79i29HkKCjbZgC
-   p250cza1e8cTsQXeboZhXily/0VgsKEOyUOLs4rb/tjG7afiEiFpSvsn3
-   0ymSkNWhQzsBxd/BuuXvs+I/16qKAFYq/VIKuDvyNP/Frp85lcvRAvvCx
-   2BMbPmh71UCx05vBkr1aGd/hS/va3MFnGxJlkL8T1AqDLRkUH/Inht2fX
-   A==;
-X-CSE-ConnectionGUID: w2EzJ3e4Q2aEHpicujxV8w==
-X-CSE-MsgGUID: v4p6mOMPQU+jpc+de91gEA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102062814"
+  t=1790758865; x=1822294865;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=P4nULrjjahqiHFZjwZW6vODo/Ei2yE/EzHgLyNiFDHc=;
+  b=ZGRs9Q35VdDA3BGeOcIlNa3NoRFyYe08qCGmwv5uX/OeRy4oHzR1J5md
+   mZYi4u54boG39Cq/v26tPyg/Sfbt9ubMqlBJUjZnxSrwkOgQNxae8jM14
+   pARxV7QoJCQ8TvQ30hIiTsEteeoCKAT454hAhZmjdHGxo+VLN2HoSM1iU
+   Tp8vsN6vcbtoMsxKP/+33ulK2mc2aK5zdKy96WvYrGXC3VmbU2myyl803
+   /lfr6B4L52jHOU357ripyvGWqdZ08f6az4XYzidfbBtz3fVE8cwvH63LN
+   f1LXNNLTipD5i0WwyK0qFAuT7MQIzp3OMbYp1276f1HAzKHCl25XOWY01
+   w==;
+X-CSE-ConnectionGUID: C0NgY9trTYaQthB/ihqtSA==
+X-CSE-MsgGUID: S6a/rtH2TcWFp0//Bnul7Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102062822"
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="102062814"
+   d="scan'208";a="102062822"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:01:00 -0700
-X-CSE-ConnectionGUID: 81imFtiBQk+QHPqH1FxavQ==
-X-CSE-MsgGUID: djzvY4dCQpmbakUSy1666w==
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:01:05 -0700
+X-CSE-ConnectionGUID: OSEiix0MT5GQ8g7eY70ZPA==
+X-CSE-MsgGUID: YNiK2yEBStWS/dmSSDa+9Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="274240814"
+   d="scan'208";a="274240822"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:00:59 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 02:01:00 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>,
 	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 wireless-next 1/2] wifi: cfg80211: add protected TWT assoc flag
-Date: Wed, 30 Sep 2026 12:02:56 +0300
-Message-Id: <20260930120021.1eb6760356f2.Ie4962eaca97be29c7f08043d615534c7aeb3f370@changeid>
+Subject: [PATCH v2 wireless-next 2/2] wifi: mac80211: fix and clean up protected TWT support
+Date: Wed, 30 Sep 2026 12:02:57 +0300
+Message-Id: <20260930120021.844fde440b63.I80999965c70e50d756ab62833fc7f53f2481cf3d@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260930120021.1eb6760356f2.Ie4962eaca97be29c7f08043d615534c7aeb3f370@changeid>
+References: <20260930120021.1eb6760356f2.Ie4962eaca97be29c7f08043d615534c7aeb3f370@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -62,95 +65,164 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Protected TWT support is indicated in RSNX, but RSNX may
-be used from security profile now, and not be present in
-the association response frame, so the logic in mac80211
-to determine it doesn't/won't really work.
-
-Add a flag for wpa_supplicant to indicate if protected
-TWT is supported in the association, it can easily check
-this based on the RSNX data that was used.
+The "twt_protected" flag in the link/bss_conf information
+really isn't right since this is negotiated via RSNX and
+therefore cannot differ per link. Move it to be a per-STA
+indication and also derive it from the new assoc request
+flag since that gets used with security profile.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
-Resending again with the following mac80211 cleanup
+ .../net/wireless/intel/iwlwifi/mld/iface.c    |  4 +++-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  3 ++-
+ include/net/mac80211.h                        |  4 ++--
+ net/mac80211/ieee80211_i.h                    |  1 +
+ net/mac80211/mlme.c                           | 21 ++++++++++++-------
+ 5 files changed, 21 insertions(+), 12 deletions(-)
 
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/nl80211.c       | 8 ++++++++
- 3 files changed, 15 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b603f1804cc2..bdf01b9f8ac7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3407,6 +3407,7 @@ struct cfg80211_ml_reconf_req {
-  * @ASSOC_REQ_SPP_AMSDU: SPP A-MSDUs will be used on this connection (if any)
-  * @ASSOC_REQ_DISABLE_UHR: Disable UHR
-  * @ASSOC_REQ_CIP: Enable Control Integrity Protocol
-+ * @ASSOC_REQ_PROTECTED_TWT: Enable protected TWT
-  */
- enum cfg80211_assoc_req_flags {
- 	ASSOC_REQ_DISABLE_HT			= BIT(0),
-@@ -3419,6 +3420,7 @@ enum cfg80211_assoc_req_flags {
- 	ASSOC_REQ_SPP_AMSDU			= BIT(7),
- 	ASSOC_REQ_DISABLE_UHR			= BIT(8),
- 	ASSOC_REQ_CIP				= BIT(9),
-+	ASSOC_REQ_PROTECTED_TWT			= BIT(10),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+index 2b837c6fa5fe..0307abff5644 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+@@ -241,6 +241,8 @@ static void iwl_mld_fill_mac_cmd_sta(struct iwl_mld *mld,
+ 				     struct ieee80211_vif *vif, u32 action,
+ 				     struct iwl_mac_config_cmd *cmd)
+ {
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct ieee80211_sta *ap_sta = mld_vif->ap_sta;
+ 	struct ieee80211_bss_conf *link;
+ 	u32 twt_policy = 0;
+ 	int link_id;
+@@ -290,7 +292,7 @@ static void iwl_mld_fill_mac_cmd_sta(struct iwl_mld *mld,
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 75d4c5d6a7a3..7dae0860a1b8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3228,6 +3228,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_CIP_CAPABILITIES: The Control Integrity Protocol for the
-  *	station.
-  *
-+ * @NL80211_ATTR_ASSOC_PROTECTED_TWT: Enable protected TWT for the association,
-+ *	requires protected TWT support (flag attribute)
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3833,6 +3836,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_ASSOC_CIP,
- 	NL80211_ATTR_CIP_CAPABILITIES,
+ 		if (link->twt_requester)
+ 			twt_policy |= TWT_SUPPORTED;
+-		if (link->twt_protected)
++		if (ap_sta && ap_sta->twt_protected)
+ 			twt_policy |= PROTECTED_TWT_SUPPORTED;
+ 		if (link->twt_broadcast)
+ 			twt_policy |= BROADCAST_TWT_SUPPORTED;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index b2c5be22c293..b41b4bbf0049 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -644,11 +644,12 @@ __le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
+ u32 iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(struct iwl_mvm *mvm,
+ 					    struct ieee80211_vif *vif)
+ {
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	u32 twt_policy = 0;
  
-+	NL80211_ATTR_ASSOC_PROTECTED_TWT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ 	if (vif->bss_conf.twt_requester && IWL_MVM_USE_TWT)
+ 		twt_policy |= TWT_SUPPORTED;
+-	if (vif->bss_conf.twt_protected)
++	if (mvmvif->ap_sta && mvmvif->ap_sta->twt_protected)
+ 		twt_policy |= PROTECTED_TWT_SUPPORTED;
+ 	if (vif->bss_conf.twt_broadcast)
+ 		twt_policy |= BROADCAST_TWT_SUPPORTED;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cb9f8e14b3b6..a24d849b8f9c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -640,7 +640,6 @@ struct ieee80211_bss_npca_params {
+  *	mode only, set if the AP advertises TWT responder role)
+  * @twt_responder: does this BSS support TWT requester (relevant for managed
+  *	mode only, set if the AP advertises TWT responder role)
+- * @twt_protected: does this BSS support protected TWT frames
+  * @twt_broadcast: does this BSS support broadcast TWT
+  * @use_cts_prot: use CTS protection
+  * @use_short_preamble: use 802.11b short preamble
+@@ -812,7 +811,6 @@ struct ieee80211_bss_conf {
+ 	bool he_support;
+ 	bool twt_requester;
+ 	bool twt_responder;
+-	bool twt_protected;
+ 	bool twt_broadcast;
+ 	/* erp related data */
+ 	bool use_cts_prot;
+@@ -2728,6 +2726,7 @@ struct ieee80211_link_sta {
+  * @spp_amsdu: indicates whether the STA uses SPP A-MSDU or not.
+  * @epp_peer: indicates that the peer is an EPP peer.
+  * @cip: indicates whether the STA uses control frame protection or not.
++ * @twt_protected: does this STA support protected TWT frames
+  * @nmi: For NDI stations, pointer to the NMI station of the peer.
+  * @nan_sched: NAN peer schedule for this station. Valid only for NMI stations.
+  * @ext_mld_capa_ops: the MLD's extended MLD capabilities and operations
+@@ -2750,6 +2749,7 @@ struct ieee80211_sta {
+ 	u16 eml_cap;
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 16c63383923b..06b30bfea270 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1100,6 +1100,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_FRAME_NO_STA] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_ASSOC_CIP] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CIP_CAPABILITIES] = { .type = NLA_U8 },
-+	[NL80211_ATTR_ASSOC_PROTECTED_TWT] = { .type = NLA_FLAG },
- };
+ 	bool cip;
++	bool twt_protected;
  
- /* policy for the key attributes */
-@@ -13421,6 +13422,13 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 		req.flags |= ASSOC_REQ_CIP;
+ 	struct ieee80211_sta_aggregates *cur;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1430527d216c..b571019bd05a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -487,6 +487,7 @@ struct ieee80211_mgd_assoc_data {
+ 	bool s1g;
+ 	bool spp_amsdu;
+ 	bool cip;
++	bool protected_twt;
+ 
+ 	s8 assoc_link_id;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3a17d1ccd32a..173afe176891 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6169,13 +6169,6 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
+ 						  link_sta);
+ 
+ 		bss_conf->he_support = link_sta->pub->he_cap.has_he;
+-		if (elems->rsnx && elems->rsnx_len &&
+-		    (elems->rsnx[0] & WLAN_RSNX_CAPA_PROTECTED_TWT) &&
+-		    wiphy_ext_feature_isset(local->hw.wiphy,
+-					    NL80211_EXT_FEATURE_PROTECTED_TWT))
+-			bss_conf->twt_protected = true;
+-		else
+-			bss_conf->twt_protected = false;
+ 
+ 		*changed |= ieee80211_recalc_twt_req(sdata, sband, link,
+ 						     link_sta, elems);
+@@ -6208,7 +6201,6 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
+ 	} else {
+ 		bss_conf->he_support = false;
+ 		bss_conf->twt_requester = false;
+-		bss_conf->twt_protected = false;
+ 		bss_conf->eht_support = false;
+ 		bss_conf->epcs_support = false;
  	}
+@@ -7016,6 +7008,18 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
  
-+	if (nla_get_flag(info->attrs[NL80211_ATTR_ASSOC_PROTECTED_TWT])) {
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_PROTECTED_TWT))
-+			return -EINVAL;
-+		req.flags |= ASSOC_REQ_PROTECTED_TWT;
-+	}
+ 	sta->sta.spp_amsdu = assoc_data->spp_amsdu;
+ 	sta->sta.cip = assoc_data->cip;
++	sta->sta.twt_protected = assoc_data->protected_twt;
 +
- 	req.link_id = nl80211_link_id_or_invalid(info->attrs);
++	/*
++	 * backward compatibility - assumes that RSNX will not
++	 * indicate anything (if present at all) _less_ than
++	 * security profile RSNX content might
++	 */
++	if (elems->rsnx && elems->rsnx_len &&
++	    (elems->rsnx[0] & WLAN_RSNX_CAPA_PROTECTED_TWT) &&
++	    wiphy_ext_feature_isset(local->hw.wiphy,
++				    NL80211_EXT_FEATURE_PROTECTED_TWT))
++		sta->sta.twt_protected = true;
  
- 	if (info->attrs[NL80211_ATTR_MLO_LINKS]) {
+ 	if (ieee80211_vif_is_mld(&sdata->vif)) {
+ 		if (!elems->ml_basic)
+@@ -10596,6 +10600,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	assoc_data->spp_amsdu = req->flags & ASSOC_REQ_SPP_AMSDU;
+ 	assoc_data->cip = req->flags & ASSOC_REQ_CIP;
++	assoc_data->protected_twt = req->flags & ASSOC_REQ_PROTECTED_TWT;
+ 
+ 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
+ 		err = -EBUSY;
 -- 
 2.34.1
 
