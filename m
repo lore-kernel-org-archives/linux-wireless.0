@@ -1,95 +1,65 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 936264F68CB;
-	Wed, 30 Sep 2026 13:55:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE51251990F
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 14:08:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790776520; cv=none; b=PbrUV8b4XkZirhimddYNNaAmzeXW6FufW1Vo+5E/7UyVEM6/ficmBQiSKOxsMW32/aFOz/aGKNid2iHlfMv0vq5/zyLJssfQuZxzSOOn1nscmtqNzFvbRaxgoMH0FJ1YeW5gwuYXRNWR56HevuuEF7XL2GTokfDcasX6qsZ8epw=
+	t=1790777337; cv=none; b=WnnoeVBYA05Y0L0jINTCgqoD51JyPO4fVDsOmxgY6Mt/PkOAZ5jVkTTKCPfZxX9sgrrIlb+IeNhE+uR0VZpHx7Sm8Z72Fh10mhicjHf5P1/buYD0EipHnKtLPjYh8B5m/4x8s+wdyjj2eiYKcrFqMaRwI8miX48BXVqyjXbrZFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790776520; c=relaxed/simple;
-	bh=khIoAs17NPuqov3hZ1I5P4D7APCOwpU8h83sk72MxLQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=q+bRuQkhGeEhWNn0YUUS/euoeni/ckJiW0VFz7VnWdhu3sSdIRAFLPXuekz/RpnXRYhsNGqy+L3u4IaTRjmjD9vvn5s4yERVy8cY5SwryAE4D3LVaYWW5OWyBqWzN/U3m3hbmMfnvwxSJCibjPt3F2aHyozxsB3Jd1iMtvd5Q/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=O0TddSI2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=EkpqSW5t; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=B2h8kmRl; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=APeTw1Fh; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1790777337; c=relaxed/simple;
+	bh=u/sYFJ0IFoVAn4mTeL9RLHFvHzVSFq6mlMEPEuqFX/c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Lkir1zZXIttc/XyNhDh6n6eirxznKG/VHSMoKobC/7y7iTXdt62QyM0yPD1AWpawv2Ss+vRPPmlNi8KQYjop+v0OO4fdvWfbRVgNtL0Q89dgjMcbS3gNEJnR2wjY7l5ngP4Xnloe3KvG4tm5nLoe/9n1Xx9gmXDrXghifpYPqIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bNi0/Fjk; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="O0TddSI2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="EkpqSW5t";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="B2h8kmRl";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="APeTw1Fh"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bNi0/Fjk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790777328;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=kog7asmMh6wog1adNQUGIn243OW/BEgANRMVLg38o7k=;
+	b=bNi0/FjkqUktJSiyrqDa8uJSOyrJAanve00go2hRbjbUZpqFP1/TpUPCK4wBBpgvyHVYdg
+	BX7VyCJTDJ0XUeI0u/YXiobjlSZ1EYGQSKydwdQvtNjmI4phoclX5I0F9VppUZtWSSgS9O
+	f/Wg20qwku5xVbxhfb+6VZleZ7uN74M=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-195-ukPi9VarMwyl1rb-JwJdFw-1; Wed,
+ 30 Sep 2026 10:08:44 -0400
+X-MC-Unique: ukPi9VarMwyl1rb-JwJdFw-1
+X-Mimecast-MFC-AGG-ID: ukPi9VarMwyl1rb-JwJdFw_1790777321
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 5A1C721E93;
-	Wed, 30 Sep 2026 13:54:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790776492; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rBD2fm7jkBI8ZbufJ/IEgu6LDxjnVtU1SSntyNb6WUc=;
-	b=O0TddSI20SYRS6+DiLMtdIJrfyzB/bDfTCzPKwa0OzT4fxclmMgoyJVWI1Gt/R57djV16w
-	6/lg4hzLuFLUnzoKt0W6cELDRnuf/Nv2Ef3ilnFX90v07jnrLo9qdwLhO6GW9y/ahIHzuA
-	B2NOecMCfZGN3WKZBZof/KtgqJjInhk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790776492;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rBD2fm7jkBI8ZbufJ/IEgu6LDxjnVtU1SSntyNb6WUc=;
-	b=EkpqSW5ttNdK9yHOf3Fi99WyQsSuNvQP7AN0g2B5BVuEUxKykBWYRlWq3j00Jpk13z8gaE
-	ZtcCAu1bSrUWOvAA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790776488; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rBD2fm7jkBI8ZbufJ/IEgu6LDxjnVtU1SSntyNb6WUc=;
-	b=B2h8kmRl7KHSFOg+d5kyTA6qtoTMBEc4e914ZtjPKFSfzuxdHiatdrIEk1aSFDeEnyL6+z
-	AFiDLsbmGEMYtb0+P82pymZPVUm7hkIuGaVcViedm0oK9fwUG545kEbRKDMVXDfxpnOG36
-	5Rjz0qOsTo+6rI+s0jfDlrBBn9U2o+0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790776488;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rBD2fm7jkBI8ZbufJ/IEgu6LDxjnVtU1SSntyNb6WUc=;
-	b=APeTw1FhkxeVd2eDPl58UWWoWD/lBgU53fGIfzQUV8ag/0qiWg3fT7Vh/J1LVkSNRy3I58
-	7xE1uAjj5zqbbDAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9FEAE13AC2;
-	Wed, 30 Sep 2026 13:54:47 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fJXpHGIUvWqUTwAAD6G6ig:T15
-	(envelope-from <fmancera@suse.de>); Wed, 30 Sep 2026 13:54:47 +0000
-From: Fernando Fernandez Mancera <fmancera@suse.de>
-To: netdev@vger.kernel.org
-Cc: horms@kernel.org,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	edumazet@kernel.org,
-	davem@davemloft.net,
-	Fernando Fernandez Mancera <fmancera@suse.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BB63A1955F19;
+	Wed, 30 Sep 2026 14:08:39 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B95001956044;
+	Wed, 30 Sep 2026 14:08:34 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org,
+	jjohnson@kernel.org
+Cc: johannes@sipsolutions.net,
+	mani@kernel.org,
+	jgg@ziepe.ca,
+	yishaih@nvidia.com,
+	skolothumtho@nvidia.com,
+	kevin.tian@intel.com,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 14/16 net-next v3] wifi: mac80211: replace CONFIG_INET with CONFIG_IPV4 guards
-Date: Wed, 30 Sep 2026 15:52:57 +0200
-Message-ID: <20260930135334.4739-15-fmancera@suse.de>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260930135334.4739-1-fmancera@suse.de>
-References: <20260930135334.4739-1-fmancera@suse.de>
+Subject: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
+Date: Wed, 30 Sep 2026 16:08:26 +0200
+Message-ID: <20260930140833.576941-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -97,92 +67,65 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-6.76 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.16)[-0.822];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_HAS_DN(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLrr9ek4ud4f4qwi71m7motjzt)];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	RCVD_TLS_ALL(0.00)[]
-X-Spam-Score: -6.76
-X-Spam-Level: 
-X-Spam-Flag: NO
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Historically, the mac80211 subsystem used CONFIG_INET to guard IPv4-specific
-address notifiers, assuming that if IP networking was enabled, IPv4 was
-guaranteed to be present. As part of the effort to make CONFIG_IPV4 optional,
-this assumption is no longer valid.
+This series enables Qualcomm ath11k/ath12k WiFi devices to work in VM
+passthrough scenarios, addressing a long-standing issue where these
+devices fail to initialize when passed through to VMs via VFIO.
 
-Update the conditional compilation guards around the IPv4 address change
-notifier and its associated registration routines to explicitly check
-for IS_ENABLED(CONFIG_IPV4). This ensures the mac80211 subsystem
-compiles successfully without undefined references when building an
-IPv6-only kernel.
+Qualcomm ath11k/ath12k WiFi devices have been broken in VM passthrough
+since they were introduced. The devices use an embedded interrupt
+controller that requires physical host MSI addresses programmed to
+device registers, but in VMs the driver only sees virtualized guest
+addresses. This causes firmware initialization to fail with errors like
+"BHI offset: 0xffffffff is out of range".
 
-Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
----
- net/mac80211/main.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Multiple attempts have been made to solve this over the past 2 years:
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7816395681fa..1a0fa55db861 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -558,7 +558,7 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_restart_hw);
- 
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- static int ieee80211_ifa_changed(struct notifier_block *nb,
- 				 unsigned long data, void *arg)
- {
-@@ -1655,7 +1655,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	wiphy_unlock(hw->wiphy);
- 	rtnl_unlock();
- 
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
- 	result = register_inetaddr_notifier(&local->ifa_notifier);
- 	if (result)
-@@ -1673,11 +1673,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- #if IS_ENABLED(CONFIG_IPV6)
-  fail_ifa6:
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
- #endif
- #endif
--#if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-+#if IS_ENABLED(CONFIG_IPV4)
-  fail_ifa:
- #endif
- 	wiphy_unregister(local->hw.wiphy);
-@@ -1705,7 +1705,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 	tasklet_kill(&local->tx_pending_tasklet);
- 	tasklet_kill(&local->tasklet);
- 
--#ifdef CONFIG_INET
-+#if IS_ENABLED(CONFIG_IPV4)
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
- #endif
- #if IS_ENABLED(CONFIG_IPV6)
--- 
-2.55.0
+March 2024: Workaround using module parameters [1]
+  - Required manually copying MSI values from host to VM
+  - Rejected by Johannes Berg as too manual, suggested VMM solution
+
+August 2024: QEMU + kernel solution by Alex Williamson [2]
+  - Kernel disables MSI virtualization, QEMU intercepts config writes
+  - Uses brute force pattern matching to infer MSI data writes
+  - Stuck as RFC - no progress in 8+ months
+
+No action from Qualcomm: Despite multiple reports, no vendor solution
+
+The solution in this series provides a clean, kernel-only solution that
+addresses the previous concerns.
+
+Architecture:
+1. qcom-vfio-pci variant driver caches physical host MSI values and
+   exposes them via extended config space with magic signature "QMSI"
+   In this way, device-specific hardware quirks belong only in kernel
+   drivers, not userspace, independent of the tools used.
+   This follows the established VFIO variant driver pattern used by
+   other drivers like mlx5-vfio-pci (netdev tree) and nvgrace-gpu (platform
+   tree).
+2. VM drivers (ath11k/ath12k) automatically discover and use cached values
+3. PCIe link recovery handles VM timing variations
+
+Thoroughly tested: 3 VMs across 2 WiFi generations, all devices successfully
+initialized and are ready for use.
+- VM1: ath11k (WCN6855)
+- VM2: ath11k (WCN6855)
+- VM3: ath12k (WCN7850)
+
+[1] https://lore.kernel.org/all/20240322104912.94811-1-jtornosm@redhat.com/
+[2] https://lore.kernel.org/kvm/20240812170014.1583783-1-alex.williamson@redhat.com/
+[3] Original problem report:
+    https://lore.kernel.org/all/fc6bd06f-d52b-4dee-ab1b-4bb845cc0b95@quicinc.com/
+
+Jose Ignacio Tornos Martinez (7):
+  PCI: Add pci_find_free_ext_cap_offset() helper
+  vfio: Add qcom_vfio.h header for MSI cache protocol
+  vfio/pci: Add qcom-vfio-pci variant driver
+  ath11k: Add PCIe link recovery retry for VMs
+  ath11k: Use VFIO MSI cache when available
+  ath12k: Add PCIe link recovery retry for VMs
+  ath12k: Use VFIO MSI cache when available
+--
+2.53.0
 
