@@ -1,58 +1,56 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F58945D5F5
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 07:55:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D2B63C0A19
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 08:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790754910; cv=none; b=ElcNYhoHaYIPG+6Ws7eNUKOOm0aDKEMDUYko9eIyZc3JItiDcnwvwgDDe0fHL4ihk4XGfTz/DB5auiXPYBz/yXIuyMw/J8dxRuATBw1vNHjHACRbOhCBRZai5bKyS+AnfAbF1G9+rvdWdtt0BX5MLUCJrXiYP8M6M3UL4nBrMBU=
+	t=1790755631; cv=none; b=lzEYSG3HfHXP0q+itG7iexvX84phJIV8hJpicEuyA0TkMHdq59dp1u3WbmAii4UF62+Ej4iQ+PADnv5rewqbPupTdR2xRpaagDzcHOR6UE24kfR1v21kgV0UFIJ/8BpJSs4JGUBw/7HtPVb7yY3SF3eARKICRG7RUvBQ+aoB5sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790754910; c=relaxed/simple;
-	bh=eOLQdp9qIif6T5+vt5GglzHKqV8LxNIBD/cC5Yn1s6I=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=b4X+p80mQDPpAPwUcnPV1WWEQ+nKFxVdreofuMlUuqRtMo3CYA0nWGf9zSgv24pycMhkBM1poncgkb2bxuyM1RxkLOg1oyIZxlUY+Hj+YkW8LCknKDSLjqf4/q3JA1aliMUE0NjLC8Mjw0tu/3USIlELRscEXGjRmbGsFIIBCZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IQsApaDe; arc=none smtp.client-ip=192.198.163.12
+	s=arc-20240116; t=1790755631; c=relaxed/simple;
+	bh=GLawVvR5i816OxFSeK1Rs8n6C0Ll4Jkd2OCmFTFYXlg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ppJGAlFtdRYmc3WhNqTA/EgGnPS1kIdG0fqzOU7YULiXsVcvAt3au+DsE8rF3eUQ1uZWatdQ0OJHi69gmsGYRdC1xZwybf+HLRe8GF0B9sYXCAIH6Sk3v4/7PKUAanxoXXOq64M7X9Q5GtJGaK8RrFfwUSaldVKhbaqqgd54Uqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=meNgjWxy; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IQsApaDe"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="meNgjWxy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790754909; x=1822290909;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=eOLQdp9qIif6T5+vt5GglzHKqV8LxNIBD/cC5Yn1s6I=;
-  b=IQsApaDeJu2jNiCxZ+44Ic5SCwy+WfgIEHy2usVs7Fnjd40bD3aOZ1el
-   7bjjnIgFO0GBdpMPDM4+Q7FjeDzJw72abuMvKdAqwQDpQXpLWC6ipJqU4
-   Z/L2iVPtHdidXoQf40v6V1BD+ZmMT55dA3O5BW0sq4WmzEMu9BH9+/PZi
-   Ik+MqiVGU0lEjqfquM/0OF9YdsjlcAobaAFH8XYriRMSvL3gukqewwwNR
-   hV2geiUQgpL/PaGuGae8oEhwWSpwc0VZPpjewi1yAaCV8OTQ36qltFUt4
-   bdwM4L8xgayHG6I6Ov+NNWi5KDTIxJWQG/TJ64puKV6eNSGTeMiRqfwqR
-   w==;
-X-CSE-ConnectionGUID: A/leEFP7ROefFDeRoKnREQ==
-X-CSE-MsgGUID: aNYjTENqSrq4hkjHAZF0xg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="95296840"
+  t=1790755630; x=1822291630;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=GLawVvR5i816OxFSeK1Rs8n6C0Ll4Jkd2OCmFTFYXlg=;
+  b=meNgjWxyEoLwIiooRKkAFWQdYHF+FxZ31+yRBl5zIFJf8cEtv+WFUK3L
+   kOvSntcsovajZgIIGlem6e5lWyiwLFVzKBG8Uo2q0o+Duvms3Rci/ghgH
+   gkl0uHxQ44gITPdct76E8DfKwhTQJUqfM7tDWs6js8jR3ls21OVTG96ZQ
+   aGYy09GZVA90D5Ty8X+WIxuTmrFK7BhdW8/jDN5Az7fyqeoXZ/nA+la6U
+   8jJldBhdxXDx8qdPbEsgarJEviYClf98+pR+OO6hC6FrKhj8FG3d7BV+b
+   exkb8RoUZvGfDqOtr1GNYkeaecQ4S83FZ7FKp38CG24E6qkq8AhFjHOVd
+   A==;
+X-CSE-ConnectionGUID: H2vhLG10QVK0kJQH11CLMw==
+X-CSE-MsgGUID: 6YbZ9TyTSme99Mthwe1O4w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="79053658"
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="95296840"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:55:09 -0700
-X-CSE-ConnectionGUID: W5u1icC6Rl+vOtoQ5LuJVQ==
-X-CSE-MsgGUID: mnCS9sP4SYyyDMRSHKEDfA==
+   d="scan'208";a="79053658"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 01:07:01 -0700
+X-CSE-ConnectionGUID: 95k1kUQDQ1W/yLXAigKFIw==
+X-CSE-MsgGUID: I5WuzlOBSweO0lfIz2j/2w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="278963021"
+   d="scan'208";a="313562398"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:55:08 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 01:07:00 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: miriam.rachel.korenblit@intel.com
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 15/15] wifi: iwlwifi: mld: remove unused fields from the firmware API
-Date: Wed, 30 Sep 2026 10:56:43 +0300
-Message-Id: <20260930104825.56b2350ccd51.Iac2bd1f57b2c4bbdfe33efab31111a7de02bdf16@changeid>
+	Johannes Berg <johannes.berg@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH wireless-next] wifi: cfg80211: add protected TWT assoc flag
+Date: Wed, 30 Sep 2026 11:08:57 +0300
+Message-Id: <20260930110610.1eb6760356f2.Ie4962eaca97be29c7f08043d615534c7aeb3f370@changeid>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260930075643.1264585-1-miriam.rachel.korenblit@intel.com>
-References: <20260930075643.1264585-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -62,83 +60,95 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-ENABLE_STORE_BEACON is not defined in the firmware API and is never set
-by the driver.
+Protected TWT support is indicated in RSNX, but RSNX may
+be used from security profile now, and not be present in
+the association response frame, so the logic in mac80211
+to determine it doesn't/won't really work.
 
-STA_CONFIG_CMD's trig_rnd_alloc was never used by the firmware either.
+Add a flag for wpa_supplicant to indicate if protected
+TWT is supported in the association, it can easily check
+this based on the RSNX data that was used.
 
-Remove both.
-
-Assisted-by: LLM
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/d3.h | 3 +--
- drivers/net/wireless/intel/iwlwifi/mld/sta.c   | 7 +------
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h       | 2 ++
+ include/uapi/linux/nl80211.h | 5 +++++
+ net/wireless/nl80211.c       | 8 ++++++++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-index d3bed0216df4..9f7407c4f980 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
-  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b603f1804cc2..bdf01b9f8ac7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3407,6 +3407,7 @@ struct cfg80211_ml_reconf_req {
+  * @ASSOC_REQ_SPP_AMSDU: SPP A-MSDUs will be used on this connection (if any)
+  * @ASSOC_REQ_DISABLE_UHR: Disable UHR
+  * @ASSOC_REQ_CIP: Enable Control Integrity Protocol
++ * @ASSOC_REQ_PROTECTED_TWT: Enable protected TWT
   */
-@@ -366,7 +366,6 @@ enum iwl_wowlan_flags {
- 	ENABLE_L3_FILTERING	= BIT(1),
- 	ENABLE_NBNS_FILTERING	= BIT(2),
- 	ENABLE_DHCP_FILTERING	= BIT(3),
--	ENABLE_STORE_BEACON	= BIT(4),
- 	HAS_BEACON_PROTECTION	= BIT(5),
+ enum cfg80211_assoc_req_flags {
+ 	ASSOC_REQ_DISABLE_HT			= BIT(0),
+@@ -3419,6 +3420,7 @@ enum cfg80211_assoc_req_flags {
+ 	ASSOC_REQ_SPP_AMSDU			= BIT(7),
+ 	ASSOC_REQ_DISABLE_UHR			= BIT(8),
+ 	ASSOC_REQ_CIP				= BIT(9),
++	ASSOC_REQ_PROTECTED_TWT			= BIT(10),
  };
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-index 7957ac11b0cd..97f013330f06 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-@@ -465,8 +465,8 @@ int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
- 	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
- 	struct iwl_sta_cfg_cmd cmd = {};
- 	int fw_id = iwl_mld_fw_sta_id_from_link_sta(mld, link_sta);
--	bool is_6ghz, uora_exists;
- 	u32 link_mask;
-+	bool is_6ghz;
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 75d4c5d6a7a3..7dae0860a1b8 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3228,6 +3228,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_CIP_CAPABILITIES: The Control Integrity Protocol for the
+  *	station.
+  *
++ * @NL80211_ATTR_ASSOC_PROTECTED_TWT: Enable protected TWT for the association,
++ *	requires protected TWT support (flag attribute)
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3833,6 +3836,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_ASSOC_CIP,
+ 	NL80211_ATTR_CIP_CAPABILITIES,
  
- 	lockdep_assert_wiphy(mld->wiphy);
++	NL80211_ATTR_ASSOC_PROTECTED_TWT,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
-@@ -479,7 +479,6 @@ int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
- 			return -EINVAL;
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 16c63383923b..06b30bfea270 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1100,6 +1100,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_FRAME_NO_STA] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_ASSOC_CIP] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CIP_CAPABILITIES] = { .type = NLA_U8 },
++	[NL80211_ATTR_ASSOC_PROTECTED_TWT] = { .type = NLA_FLAG },
+ };
  
- 		is_6ghz = false;
--		uora_exists = false;
- 
- 		link_mask = iwl_mld_get_nan_link_mask(mld);
- 	} else {
-@@ -495,7 +494,6 @@ int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
- 
- 		link_mask = BIT(mld_link->fw_id);
- 		is_6ghz = link->chanreq.oper.chan->band == NL80211_BAND_6GHZ;
--		uora_exists = link->uora_exists;
+ /* policy for the key attributes */
+@@ -13421,6 +13422,13 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 		req.flags |= ASSOC_REQ_CIP;
  	}
  
- 	cmd.sta_id = cpu_to_le32(fw_id);
-@@ -554,9 +552,6 @@ int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
- 	}
++	if (nla_get_flag(info->attrs[NL80211_ATTR_ASSOC_PROTECTED_TWT])) {
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_PROTECTED_TWT))
++			return -EINVAL;
++		req.flags |= ASSOC_REQ_PROTECTED_TWT;
++	}
++
+ 	req.link_id = nl80211_link_id_or_invalid(info->attrs);
  
- 	if (link_sta->he_cap.has_he) {
--		cmd.trig_rnd_alloc =
--			cpu_to_le32(uora_exists ? 1 : 0);
--
- 		/* PPE Thresholds */
- 		iwl_mld_fill_pkt_ext(mld, link_sta, &cmd.pkt_ext);
- 
+ 	if (info->attrs[NL80211_ATTR_MLO_LINKS]) {
 -- 
 2.34.1
 
