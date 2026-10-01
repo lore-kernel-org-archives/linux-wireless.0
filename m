@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85C54A8FED
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 13:18:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647AD50E594
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 13:18:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790860730; cv=none; b=IxlAo9b2Ydvzy3/oGwwfufRb2HK755jJolrwjaTbQGPILYLmBrBq7SXz3t3s45oy0wpzLablylKP8jDc9vO1pHa/LJFCcnUjxIBz7e2m6xVBYGw2vT0WGhF/PsbQOxEThZ/GiLM9f+16jSPl4qI8nijwt0yPQzTsX7lyjGWrB9M=
+	t=1790860732; cv=none; b=R0f2NA0JZhXKsNcC1NXM1J0GQwn37VIPBZkJrR9OCxk2KnbzN+ab3kdy09jtPzqdyD/lOFdNRX4UyVGreaIk/NfUtQhBaEXmOIf/R4nD+7ITidsA9SEAGkelnJAoyUVZYZbwfqE6U4/ba5Ono/82CdSzyLdXUnT1BX9ATmLyPZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790860730; c=relaxed/simple;
-	bh=mtUj/Dg9ap+p+6sIvBivLGV6pM7IgXFRf7tFg2VjrbY=;
+	s=arc-20240116; t=1790860732; c=relaxed/simple;
+	bh=3zQpX4OyZfcjksLzRfJ8GDo5bsj2vsKOCzWhR+f8oMA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=vDcexYpio+rflZBG6haagTpcmx7caL2ubtijtrOJ9TwYhk68kDsdCLx+aOMicXri+tSYJ/av7oyZmj6Q+rpBNGO7g0n1lj0K2HiwCBeay7Lex7HG1qi1MawzURioGDK2N6/krCRjbPgsr+Y1p2WrRBFUROd757VakbxFgVPuA4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iPlXZGKU; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=TV3o2NXDWXkzAVNoZveuXUYLHuBY/gWamyyJK11nhbr5ivP4gSY2hZvWniA7lkagmhN0yDd7ipbD7okwvyw6nMLaTj6eYYwKOuzODhzv1bxtnbDgH+azF3ZGBL19d7IFP28ib1mzna0lwlb4ih9OYN2WxwVdbcnggPwQ/DKZeGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XxxLcgBX; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iPlXZGKU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XxxLcgBX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790860728; x=1822396728;
+  t=1790860729; x=1822396729;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mtUj/Dg9ap+p+6sIvBivLGV6pM7IgXFRf7tFg2VjrbY=;
-  b=iPlXZGKU1flyiOGyNzjHsGyb9LrNqfP/MBG7ZCv2mrubMemHzk47d2Pi
-   KaaFc9Q92p0ANF68GFvknetgTdAn2TGoDoWOCt3aYyHyUdIrD6pRG0LRs
-   W/1OPuXnZP2IP82+kgFh5AZ+fuLzg8yW5RSKSSfe3NI7WRVg9mK9s5+qm
-   NfiCFc6qkuOgFlCOeOSQtACW8b0LPpbqgioRzpg2HqAFFKt+WqSAW6kDl
-   O6uhYAHWqNhBHmHibEMEPi2xZY/seo/9VMCvJZVx8M/G0VHliht2yZasL
-   HtioKJJlORmNaRkGcYuRuWxFwdEEVdffGtEunsotCuc9Q9GxQ++o4a6UV
-   A==;
-X-CSE-ConnectionGUID: YYo+60L/Sr6Nlu3W+4oMOA==
-X-CSE-MsgGUID: V8taSZUrQfSQWRWCp1nTiw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11921"; a="95423637"
+  bh=3zQpX4OyZfcjksLzRfJ8GDo5bsj2vsKOCzWhR+f8oMA=;
+  b=XxxLcgBXexdhSrbSJwz36B4InJGEmfv+zIFbLu9SRDKXOxqSQUL709h6
+   xP2/LO+M/wO/5BKaJQS9fincoNEcURwgiQUKoPBumevJ1fXInNc1j6BYe
+   IjCBemo91NB8Ej6EjYzqCMqWBpjRTqKWgDoUkXdcWy3HppYvHZHUR1xBj
+   ky43ex9Lahtv4KHvbyhS71d0v8gF+pDbcnxuatZgITrQ4U+G3VfQK5gxP
+   6LxxlMpKZp39wLQ+nAdIb0SyTYqUnNeHD3maA8UMNDDIsp4KgoHQUoqyo
+   +g6Rswxev9n2KVyQggyYtdSgFI6NfvL+aYY05phnz300MSlRupVTmMFO6
+   g==;
+X-CSE-ConnectionGUID: 2v+5E0P7T0iJ7xAqS9neHQ==
+X-CSE-MsgGUID: 8AAzZnw5TD+9fhd6TwRKkA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11921"; a="95423639"
 X-IronPort-AV: E=Sophos;i="6.27,134,1787036400"; 
-   d="scan'208";a="95423637"
+   d="scan'208";a="95423639"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:18:47 -0700
-X-CSE-ConnectionGUID: 8mQRK7V9QnK3ww2+RO9lsQ==
-X-CSE-MsgGUID: kl9bVANfR+qykA63bISZHA==
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:18:48 -0700
+X-CSE-ConnectionGUID: k8B5iVrBRcOOyYH9WAmkGA==
+X-CSE-MsgGUID: QKY0H0SKRCe+5ASIPa3uoA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,134,1787036400"; 
-   d="scan'208";a="305485555"
+   d="scan'208";a="305485558"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:18:46 -0700
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:18:48 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: mld: set RX_FLAG_FAILED_PLCP_CRC for bad U-SIG CRC
-Date: Thu,  1 Oct 2026 16:20:24 +0300
-Message-Id: <20261001161715.cda01742eff8.I824c410fefd4022973403c1cf18f47459e34c4b2@changeid>
+Subject: [PATCH iwlwifi-next 12/15] wifi: iwlwifi: advertise UHR Co-BF support
+Date: Thu,  1 Oct 2026 16:20:25 +0300
+Message-Id: <20261001161715.6c5fc579f2d8.I0cdf7516e95181e31c33fde374216fb6bc8f4aa1@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261001132028.3352787-1-miriam.rachel.korenblit@intel.com>
 References: <20261001132028.3352787-1-miriam.rachel.korenblit@intel.com>
@@ -64,71 +64,28 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There are a number of places checking for the U-SIG CRC and
-then reporting if it failed, but we should set the failed
-PLCP CRC top-level radiotap flag for easier discarding of
-such packets in users such as wireshark. Do that with a new
-helper function, to avoid doing it in so many places.
+This is supported by hardware, advertise it. We'll
+have to separately work on enabling it in firmware
+if the AP supports it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/rx.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-index 9ba68564bf98..e1964e570012 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-@@ -816,6 +816,14 @@ iwl_mld_radiotap_put_tlv(struct sk_buff *skb, u16 type, u16 len)
- 	(_usig)->value |= LE32_DEC_ENC(in_value, dec_bits, _enc_bits); \
- } while (0)
- 
-+static void
-+iwl_mld_check_bad_usig_crc(struct ieee80211_rx_status *rx_status,
-+			   struct ieee80211_radiotap_eht_usig *usig)
-+{
-+	if (usig->common & cpu_to_le32(IEEE80211_RADIOTAP_EHT_USIG_COMMON_BAD_USIG_CRC))
-+		rx_status->flag |= RX_FLAG_FAILED_PLCP_CRC;
-+}
-+
- static void iwl_mld_decode_eht_usig_tb(struct iwl_mld_rx_phy_data *phy_data,
- 				       struct ieee80211_radiotap_eht_usig *usig)
- {
-@@ -878,6 +886,7 @@ static void iwl_mld_decode_eht_usig_non_tb(struct iwl_mld_rx_phy_data *phy_data,
- static void iwl_mld_decode_eht_usig(struct iwl_mld_rx_phy_data *phy_data,
- 				    struct sk_buff *skb)
- {
-+	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	u32 he_type = phy_data->rate_n_flags & RATE_MCS_HE_TYPE_MSK;
- 	__le32 usig_a1 = phy_data->ntfy->sigs.eht.usig_a1;
- 	__le32 usig_a2 = phy_data->ntfy->sigs.eht.usig_a2_eht;
-@@ -941,6 +950,8 @@ static void iwl_mld_decode_eht_usig(struct iwl_mld_rx_phy_data *phy_data,
- 		iwl_mld_decode_eht_usig_tb(phy_data, usig);
- 	else
- 		iwl_mld_decode_eht_usig_non_tb(phy_data, usig);
-+
-+	iwl_mld_check_bad_usig_crc(rx_status, usig);
- }
- 
- static void
-@@ -1448,6 +1459,7 @@ static void iwl_mld_decode_uhr_usig_non_tb(struct iwl_mld_rx_phy_data *phy_data,
- static void iwl_mld_decode_uhr_usig(struct iwl_mld_rx_phy_data *phy_data,
- 				    struct sk_buff *skb)
- {
-+	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	u32 he_type = phy_data->rate_n_flags & RATE_MCS_HE_TYPE_MSK;
- 	struct ieee80211_radiotap_eht_usig *usig;
- 	__le32 usig_a1 = phy_data->ntfy->sigs.uhr.usig_a1;
-@@ -1507,6 +1519,8 @@ static void iwl_mld_decode_uhr_usig(struct iwl_mld_rx_phy_data *phy_data,
- 		iwl_mld_decode_uhr_usig_non_tb(phy_data, usig);
- 		break;
- 	}
-+
-+	iwl_mld_check_bad_usig_crc(rx_status, usig);
- }
- 
- static void iwl_mld_decode_uhr_tb(struct iwl_mld_rx_phy_data *phy_data,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index ed2b094c1ad7..31badfa35f97 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -716,6 +716,7 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 				      IEEE80211_UHR_MAC_CAP0_DPS_SUPP,
+ 				[1] = IEEE80211_UHR_MAC_CAP1_DUO_SUPP |
+ 				      IEEE80211_UHR_MAC_CAP1_DBE_SUPP,
++				[4] = IEEE80211_UHR_MAC_CAP4_CO_BF_SUPP,
+ 			},
+ 		},
+ 	},
 -- 
 2.34.1
 
