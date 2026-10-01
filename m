@@ -1,145 +1,136 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18F7A489FB3
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 07:20:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C4A13DA5A3;
+	Thu,  1 Oct 2026 07:37:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790839211; cv=none; b=rTdQ1DTFZnfp/Y9BUxYKZ2VHcnAh1iq+Y7gDIDIqJHjGMB/evTnx22tA0DwbU0E8smYUTJC2cZI4yk1cbmOXvsSBcL9cKo9q5aveTBiRIUUJ4gwwT0Wid9M1hP/BBcS9WdsYPEVPxcfy6RyQY5cmdsgF/ai0dt8TAP1HEeF8I7g=
+	t=1790840260; cv=none; b=Vc5We2QmX71wbDA812Wob8Fl9e1sZucO2ruHE6F2ggSA9wIn6CWT3GIzUUjt1TonnF/R2mRd6D8tW9e893LRl2M7VF4EE3n1+rgfSIHKeuY3aLf7JlYchFI3kwYhXeoM8p9yQCGZBNKR+LJ63/DHU350bLVFYPXswJnMIIRlBic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790839211; c=relaxed/simple;
-	bh=v9FOpcXK4LkHcbJyyNWDWuCMQhtIwmwjXV3fOKhmq0I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o7o4poogM4eMckDqwFVsWB5YD2esbanGPz7lQ2ei1pQ7Vtue/hQ3CpiXptciqpZmePacFdN2XoZuzH/0M/vY20uKZJuXFQLClXrKI5A1p/EyRIAj0HZQCFLpOO2r3dvqrYyB+H9qSCmkVXZdfqyw9fcd3yJK1ooG1Q/xTR5EYBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hapbG2Y2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790840260; c=relaxed/simple;
+	bh=UiHlbN6JO+38M0NHYQ6YdG919LW3YMtEtW2boekRz8c=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=SUbXk1zqk+huuQ3rA+QgxwvmmkC0PbsUg1mLsra/nSAWT9kuv16BYP4rXX6LWaV765IdLOWZMAYI+Z2UpLLp/Sg2VgCa8OnwQA/chAvjEeoUoJJmyCFB+ntw8L9zmUMab295+VIp8PzjcSya94bm74JBgCdZMV6yvJjdh87Lscg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=hRcDw7MZ; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hapbG2Y2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790839199;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7Bmie9JTdC7GvOREgQKIaVbNDMTF41K5ZHDK/CLSZFA=;
-	b=hapbG2Y2Q7VQbIk4kwLl9G7tsxcPe2rw6SZAlqkp+RuzKZbPewLJ8AyI7R6F1+MgvLjAIJ
-	h1DI7AOer/53P1eQjwBvPMKXR5vrO9z/jMWq2ZMyZvk+l9o8mdCTs0zI761p5MZ10Menry
-	xcGXGfLANExdkaEpFH9pyPBUEXdYpDY=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-361-3KcQEm1XMWOnIp_ceFAq8Q-1; Thu,
- 01 Oct 2026 03:19:55 -0400
-X-MC-Unique: 3KcQEm1XMWOnIp_ceFAq8Q-1
-X-Mimecast-MFC-AGG-ID: 3KcQEm1XMWOnIp_ceFAq8Q_1790839193
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 502561953977;
-	Thu,  1 Oct 2026 07:19:52 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 59D061956089;
-	Thu,  1 Oct 2026 07:19:47 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jgg@ziepe.ca
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	skolothumtho@nvidia.com,
-	yishaih@nvidia.com
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Date: Thu,  1 Oct 2026 09:19:45 +0200
-Message-ID: <20261001071945.83116-1-jtornosm@redhat.com>
-In-Reply-To: <20260930151229.GR163130@ziepe.ca>
-References: <20260930151229.GR163130@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="hRcDw7MZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=kCKep5BKuURXfC25icw8yxRw6hM7YFCvbMlLzOcfVeg=;
+	t=1790840257; x=1792049857; b=hRcDw7MZipLTjJZf7QxldkWFk9yfRjfJKHruB+M4BJKBQE8
+	ynzGVMeknFlicPzH4SKxla0GeFJSWhyvlR/3Y8369Adve4ulm6sliTXz8La8mBmhrNOLYWvyy2qtj
+	1wxNEoV2CmN1t/aZ17dtLTKgioDvI7Xm3RJe/YfdCCuhGXwVks3WZJys3T9ZPOufkH1dIRXAxZqiD
+	4zK2EksgDT3uFP5YBaOqg+ktv/j710OK4HUUvB+WTHN9lDXmjGZ5U6ZJSVnMUFu9q+wL6webeQaJi
+	woRNKXOVluxyQafTdh5OeMcQpHNAISgLmtsmucR0FADiaSaAImc4u8zv6WqUbY7g==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xCBM0-0000000HWrR-2m9Q;
+	Thu, 01 Oct 2026 09:37:20 +0200
+Message-ID: <47ebbd91b4bdb57723be40608349eff9ced1f34b.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, 
+	herbert@gondor.apana.org.au, davem@davemloft.net, 
+	miriam.rachel.korenblit@intel.com
+Cc: ilan.peer@intel.com, emmanuel.grumbach@intel.com, 
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Thu, 01 Oct 2026 09:37:19 +0200
+In-Reply-To: <20260930120829.383408-1-jtornosm@redhat.com>
+References: <20260930120829.383408-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-malware-bazaar: not-scanned
 
-Hi Jason,
+Hi Jose,
 
-Thank you for the review.
+I'm super confused by this, it looks like mostly random code changes to
+not really do anything useful any more ... Nor do the code changes seem
+to actually be doing what you describe.
 
-You're right that the commit message should better explain the current
-driver behavior. The flow today is:
+> Commits 5241526dede9 ("wifi: mac80211: don't send keys to driver when
+> fips_enabled") and 0636800c8ee1 ("wifi: iwlwifi: disable certain features
+> for fips_enabled") disabled WiFi functionality under FIPS mode because
+> Intel firmware autonomously sends some management frames without
+> FIPS-validated integrity protection.
+>=20
+> While this is technically correct, it leaves FIPS-required environments
+> with no WiFi connectivity at all, since WPA3-SAE mandates MFP and without
+> MFP_CAPABLE the client cannot even associate.
 
-1. Linux allocates MSI-X vectors (standard PCI MSI-X table)
-2. The Qualcomm firmware has its own interrupt controller with
-   private registers that need to be programmed with MSI addr/data
-3. The ath11k/ath12k driver extracts the addr/data from the MSI
-   descriptor and programs the firmware's private registers
-4. In a VM, the driver only sees virtual (IOVA) addr/data, but
-   the firmware's private writes bypass the IOMMU, so they need
-   the physical host values
+Arguably, that's what FIPS wanted. It mandates that you cannot give keys
+to the device since it's not certified, and therefore it cannot do the
+necessary functionality for these connections.
 
-I'll improve the commit message.
+I can understand why you don't like it, and I guess we can try to find
+ways around it like what you fundamentally seem to try to be doing here,
+i.e. formulate an exception to the policies.
 
-Regarding platform_device_msi_init_and_alloc_irqs(), I agree that
-moving the driver to device MSI domains would be cleaner on the
-driver side. However, even with that change, I think the VM problem
-remains exactly the same: the device MSI domain in the VM would
-allocate virtual addr/data pairs, and the firmware's private interrupt
-controller still needs the physical host values. The problem is not
-how the driver allocates MSI vectors, but that the firmware writes
-to its own registers bypassing the IOMMU.
+But I think you should actually formulate the exception that you *want*
+first and then implement it, not randomly poke holes into the code and
+call it done.
 
-Also, the VFIO variant driver scheme would not fully break if the
-driver moved to device MSI domains. The variant driver caches host
-MSI values from the MSI descriptor, regardless of the allocation
-method. The hook point may need adaptation, but the fundamental
-approach (host caches physical values, VM reads them) remains valid.
+> Patch 1: Adds the fips_exception infrastructure (boot parameter,
+>          read-only sysctl, fips_allows() helper)
 
-Regarding the hypercall idea for device MSI domains, I think that
-would be an interesting direction worth exploring as a generic
-solution, but that's a multi-subsystem effort that will take time to
-design and land. If there is any existing work or design discussion
-in this direction, I'd be happy to look into it and contribute.
-In the meantime, the VFIO variant driver provides an immediate path
-for users with deployed hardware, using an established kernel
-pattern. For now, it could coexist and be replaced later on when
-everything is ready.
+Not my domain, but I'd argue that design documentation I ask for above
+should somehow make it into the documentation for this parameter so taht
+administrators can actually make an informed decision.
 
-I completely agree that this could theoretically affect any device
-with private MSI registers. However, in practice, I'm only aware of
-this specific behavior in Qualcomm ath11k/ath12k firmware, where the
-device's interrupt controller requires the host physical MSI
-addresses to be programmed directly. I haven't seen this in other
-devices, which is why I think a device-specific approach seems
-appropriate, and the VFIO variant driver pattern fits well for this,
-following the same pattern as mlx5-vfio-pci and nvgrace-gpu for
-their own device-specific needs. I'd be happy to incorporate any
-ideas or suggestions to improve the approach, make it acceptable,
-and allow finally to use these devices from VMs.
+> Patch 2: Gates the mac80211 key blocking with fips_allows() so keys
+>          can reach the firmware for data traffic
 
-It's also worth noting that the PCI reset support for these devices
-has already landed in linux-next (commit 290153d46d1a "PCI: Add
-device-specific reset for Qualcomm devices") [1], solving the
-device reset path for VFIO passthrough. This MSI series is the
-remaining piece, with both in place, these Qualcomm WiFi devices
-would be fully operational in VMs for the first time.
+This patch is mostly wrong. If the exception is called "MFP" then
+there's no need to pass all keys, and in fact the way you implemented
+it, I don't even see how it doesn't end up with HW crypto after all.
 
-[1] https://lore.kernel.org/all/20260721081301.205374-1-jtornosm@redhat.com/
+> Patch 3: Gates the iwlwifi feature disabling with fips_allows(),
+>          restoring MFP, Beacon Protection, EHT, 6GHz, A-MSDU sizes
+>          and MLO support
 
-Thanks
+This is also partially wrong - you didn't really understand this and
+just undid everything?
 
-Best regards
-Jose Ignacio
+> Patch 4: Best effort to force software encryption for unicast
+>          management frames (CCMP/GCMP). It sets
+>          IEEE80211_KEY_FLAG_SW_MGMT_TX on pairwise CCMP/GCMP keys when th=
+e
+>          exception is active, forcing mac80211 to encrypt unicast robust
+>          management frames (SA Query, deauth, disassoc) in software using
+>          FIPS-approved CCMP/GCMP, the same mechanism used by ath9k, ath5k=
+,
+>          carl9170, mt76x02, rtw88, rtw89, rtlwifi, ... and other drivers.
 
+This makes no sense at all.
+
+> Patch 5: Reduces firmware decryption error message to debug level in
+>          FIPS mode. Same as v1 patch 2/2, accepted upstream but not
+>          yet landed.
+
+That seems reasonable.
+
+I'm not going to reply to the individual patches, but I observe that you
+didn't understand IGTK functionality, WoWLAN, A-MSDUs, or maybe
+encryption offload in general. From what I can tell, your patches are
+mostly equivalent to turning FIPS off for wifi.
+
+I don't know where to go from here. I don't think I'm going to teach you
+all the necessary things here in the context of an upstream review, or
+redo the patches correctly myself. Maybe you can approach Intel over the
+distro channel Redhat has and ask them to help. Which will almost
+certainly end up falling back to me, but at least then we can support it
+and it's accounted for.
+
+johannes
