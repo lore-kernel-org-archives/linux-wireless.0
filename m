@@ -1,289 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC56408615;
-	Thu,  1 Oct 2026 23:31:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8332E88A4
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 23:41:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790897489; cv=none; b=GlnTpf/6RqsLnPz3EntiuaHmwPE7pm9ytr7Ww/IqynEphnr9h0tErW4q4ZxT+BvlzdIVhvKTFXcpYVRgyZv3hASL3dLGTVeNeweln3v/Ze+MV1AipFsQE3ShaA2OW+BJfQ/uG4oEgsh5s1xzpY2OyaycJZz+kwoMParVKrVlq7E=
+	t=1790898117; cv=none; b=Of0EV/GG5Gh9qHqQEFM7Ti3nm+q4/I+PzGvtO8lf/pkDRaLdSLp9hfF9hcMWAX8FtjwzfkI6FyYO+GrcStY7Obe23st+vvEaz4NIV/wHmrHpA7/AKS4tyFwKphE9MPCxdF1wcrtrrL0B0Tgjmp3fPuZprRVe3N4Zja52VRzrwGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790897489; c=relaxed/simple;
-	bh=yHoK5/M9JnTz7Ng6K1DHM5c7dOYEWdkOYo30j3alhnY=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=o8nnr2S6pjsrQOSzKpQa7YfMAoEHRO3WvSAoB1BiIEgl/V+gjdJ9BdZWSceOh8QrPlYFf1Xc/5o7xjBoB+bHW5WQ3qvpG4GV1bO2W8/KZpBT95joOvGAHC5Pk4L81AGasbN/GVPnt1yYXBcSP4d5VhYsM6UP+qd2vkaKE60Oh0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oBqd2it8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790898117; c=relaxed/simple;
+	bh=k8FV0AuY/UnTXAbRfnvFY/B3Ch7+YNxyw8EB7UJBX+o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NFWzU8KKEG9h17k8yXw3NaDEg1P+etybkY503uS8HqQh5pliTCVTLtqkr4hi1I8lo9PgVwnmIJAiBGhbRhyYeYhDNUe0rIa2MjgJS/GGV19n58yMd3ntePE/VrdGK8/EC12vX8qLzBItMXPhjd/NGyx8h5pxVhFN+SG8UgsvIQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GZSRXl+z; arc=none smtp.client-ip=74.125.225.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oBqd2it8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2CFA1F000FF;
-	Thu,  1 Oct 2026 23:31:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790897483;
-	bh=yiXcC5dhj1ExtDQ3X8mwdkDL4YYrIXwmL6+zTcnQGf0=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=oBqd2it8kMlVkLpqxllavkWr9L35Qfrk9Sb1Ij2qiEGfbG7j7U0bBn74ufdODNYLC
-	 23I1rk5YvcbVuWUa2bOMT3WlqW7TxeOABc07/1UsDzC/v+YFfgeApM4bO1I1ZO4D4D
-	 TH1rHYowaJWYQGABj+ix7IRtSzedQhU6nMb774/mh7oxYxvH09rRq++aBFO3a3367L
-	 bsaGgSE8jg4wlKJ60rqjovYZJSs+j+lVOO9Ev9y7rjgkA01IXS9InLhjJ/FVX04wu7
-	 9B9uzP9tI33MSEZUn9LrpOjSgAhwdMJQNIKOfjt+6b5eYd8PoGk4SVR15YSA/Wz66L
-	 hgwehQGk94+Qg==
-Subject: Re: [PATCH net-next v9 4/6] net: add AF_PACKET multicast dumps
-From: netdev-bot+sashiko@kernel.org
-To: sigefriedhyy@gmail.com
-Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com,
- andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net,
- dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com,
- idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org,
- johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com,
- kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com,
- pabeni@redhat.com, sd@queasysnail.net, shuah@kernel.org, horms@kernel.org,
- sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 01 Oct 2026 23:31:21 +0000
-Message-ID: <179089748154.434549.15968186317991628500@kernel.org>
-In-Reply-To: <20260930112842.21323-5-sigefriedhyy@gmail.com>
-References: <20260930112842.21323-5-sigefriedhyy@gmail.com>
-X-sashiko-severity: Medium
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GZSRXl+z"
+Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e6598dd44so44243595e9.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 16:41:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790898114; x=1791502914; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=x2eHfLXSxsUxHEfJdm6K8VExNqrOwW+s9I9FDdxMVoY=;
+        b=GZSRXl+zGEAyAwjkC+sAg1bbC9dc5LWDmYkhWUK5/oaSl34zKmwHL0YNoO6SKjZpnc
+         1wzQhpZFzfzdhl+lJiLpaPerEcRQLMfwOk7/3EFZ069BTQXPsJSEXTqTh0MZSRzpqhAx
+         6fyuV6P0wl+pHC5bP/edM89m2Hlle5hqjMX4frLQg2FYE1ZMktpMnvN8pA1W3pZUZE8A
+         3QBvGA7rHzgxVnCJ2kI4rLOHGGskGzqlpIo8h8pEGY5ZspNTYAV2iTdM+QRE4+rDKMr5
+         C3ogMRhomK7JvZEg9eaLY03yKhcm9DVxrEs1fzZR+PtVbZQyFEbRnio11YAarX1Zs4+3
+         Xbag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790898114; x=1791502914;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=x2eHfLXSxsUxHEfJdm6K8VExNqrOwW+s9I9FDdxMVoY=;
+        b=kRN9hyjgoQHdAkSs3eLnV5IxuRBJC7VZ+90SFFLVPMqZ3BCLOkvIcgXQk6Osaw1Mfo
+         uTc7EHra4uc2OFuAmor0vvZ0oYvnV4buQ+IN1MccPjKMLHWluQ9xsgF6mr34qlKljp5y
+         rQVD1c9nnixIFU07i4qMM31ehAFuHRmhN4ciHgGMpZZ0AgDS0h2JQfeX+v56rsQViuEl
+         WiM818oVejcDbVRObx3+xrjZ5/1CIubKyMU2Dj6T44jntzdXT4IpLJycjxYKjo3pmlI9
+         Yx7+86O7AnOUi/5TozCSuC+gbCkTItf2CH/7SO7predCvhEezaSEBIPedCi+dmt1LkZj
+         NFkA==
+X-Gm-Message-State: AFuF++m+R26qQPHQyDEbc07Ek7jBymJF6an/+qVNnUyLKZYDFnYmRWIY
+	i0CH7q9IYf1mTR+0DsxX8V/0Olaz3crsqZFVUpyyNTKCCo7F5vjD/Zxv
+X-Gm-Gg: AYBFou3Ypp8bp2LwuFEZ1dffFKb8uzypTsY+bSlCX+mBaxPCFEadNnq5TvRUyap1nvc
+	bjxZYtrntJhRq6nmo/fOwKnPD6LdIF2mf8ZUYfBa8xiG0rbPz82UqTSPj3w0j1ClHVd5uGE5imF
+	n0K9dqbp6T/J7OrfHwI7DfPwH/5xt4SrKHbrIi4UGWjQEjfpPgPhrvAE60O0UEcy/kMwJXSL8wa
+	avwPpIkiKR9PDcqlB6xyamwLfN6/h1gz2xQlNZyjCxE2WKXrCnB/UrVkpzJOQIUiK5cqoV7l56P
+	mMPi5EYFJWFlGotRkXl0Ds7EDtW622b50D5QWRHKKeuwQNjolmHDOLXd7qWFpeJIhuQRwg0fYiL
+	ZjUNxXztiHmhinHDujdNTj4GrhE1sUzT2BWjppPfKDOlY5ECMgbHSOQncQmkJuQrMFO4iy+PSR9
+	ViT+VHPSCmy5SGmPMJO3KFAvR6YYI+b2axi9Fll2pztasKQaQ+zWDfXbqskBya4FXmkXusJt7m1
+	q1mFWBZZwD6SHJdub7f1t6JhOO/roUs9McrLQDZ7Rwv6RAeMqWFaxhxBE95GBNeGq8whqOvGuNP
+	gFGR5QpwE+ehO3cU040ORCQ9Wlq3dChy692hElv0zn+ldjuxVe2Ia2GkMCL3HBIEQQu58UdUYWk
+	3Ggz61UrQOg==
+X-Received: by 2002:a05:600c:620c:b0:49c:fa20:cbfd with SMTP id 5b1f17b1804b1-4a027583fb0mr16121105e9.20.1790898114308;
+        Thu, 01 Oct 2026 16:41:54 -0700 (PDT)
+Received: from MBP-von-Karl.localdomain (dynamic-2a02-3100-b3ca-3a01-3deb-81e4-0dc4-fbe8.310.pool.telefonica.de. [2a02:3100:b3ca:3a01:3deb:81e4:dc4:fbe8])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a0280dc6e7sm30779645e9.15.2026.10.01.16.41.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Oct 2026 16:41:53 -0700 (PDT)
+Date: Fri, 2 Oct 2026 01:41:51 +0200
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	g@mbp-von-karl.localdomain
+Cc: linux-wireless@vger.kernel.org, 
+	Arend van Spriel <arend.vanspriel@broadcom.com>, Clark Williams <clrkwllms@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+	linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: brcmfmac: avoid sleeping tx locks in netpoll
+ contextg
+Message-ID: <ar7vLt5kQ2HJoJY9@gmail.com>
+References: <20260930185417.61865-1-kmehltretter@gmail.com>
+ <20261001075755.3MilPS2C@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261001075755.3MilPS2C@linutronix.de>
 
-Thank you for your contribution! Sashiko AI review found 4 potential
-issue(s) to consider.
+On Thu, Oct 01, 2026 at 09:57:55AM +0100, Sebastian Andrzej Siewior wrote:
+> On 2026-09-30 20:54:17 [+0200], Karl Mehltretter wrote:
+> > This fixes the direct SDIO transmit path used by fcmode=0. Modes 1 and 2
+> > take the FWS lock first and need a separate change.
+> 
+> Is this the only affected driver?
 
-Critical: 0 · High: 0 · Medium: 1 · Low: 3
+I also reproduced a sleeping-lock warning with 8139cp on PREEMPT_RT
+using QEMU's RTL8139C+ device. Enabling a dynamic netconsole target caused
+the printer thread to enter cp_start_xmit() with hard interrupts disabled:
 
-If you believe none of the issues are legitimate, please reply to each
-issue of Medium severity or higher and explain why the AI is wrong.
-If any of them are legitimate and you plan to respin, please let patchwork
-know by including "pw-bot: cr" as a separate line at the end of your reply
-(one such reply per series is enough).
+  BUG: sleeping function called from invalid context
+  in_atomic(): 0, irqs_disabled(): 1, pid: 107, name: pr/netcon0
+  hardirqs last disabled at netpoll_send_skb+0x1c8/0x3d0
+  rt_spin_lock
+  cp_start_xmit+0x31/0x8b6 [8139cp]
+  netpoll_start_xmit+0x18e/0x260
+  netpoll_send_skb+0x37a/0x3d0
+  netconsole_write+0x56d/0x820
 
-- [Medium] Concurrent device removal can end an unfiltered AF_PACKET
-  RTM_GETMULTICAST dump early without setting NLM_F_DUMP_INTR.
-- [Low] The commit message gives a false reason for not extending the FDB
-  dump.
-- [Low] At this commit, Documentation/netlink/specs/rt-addr.yaml does not
-  describe the new AF_PACKET multicast dump: - The ifa-flags enum stops…
-- [Low] dev_mc_genid is only bumped through the __hw_addr_count_*
-  helpers, i.e. when a dev->mc entry is added or removed.
+That was one reproduction on the netdev base a7bfaba4823e. I have not
+established how many drivers are affected.
 
---
+Source inspection also identified 8139too and macb as candidates: their
+transmit paths take ordinary spinlock_t locks. I have not reproduced the
+warning with either driver.
 
-net: add AF_PACKET multicast dumps
+The earlier netpoll/NBCON discussion concerns NAPI polling and
+scheduler-lock deadlocks, rather than this driver-lock warning:
 
-This adds an unlocked RTM_GETMULTICAST dump handler for ifa_family
-AF_PACKET. For each device it reports every dev->mc entry in the ifaddrmsg
-format, with IFA_MULTICAST, IFA_MC_USERS and a new IFA_F_GLOBAL flag. Dump
-consistency comes from sampling dev_mc_genid plus dev_base_seq into cb->seq,
-so NLM_F_DUMP_INTR gets set when either changes.
+https://lore.kernel.org/linux-rt-devel/20260618111554.2n0pP_O9@linutronix.de/
 
-> The default FDB dump also walks dev->mc, but only for Ethernet devices
-> without an ndo_fdb_dump of their own, so bridge, vxlan or macvlan
-> devices never show their multicast filter there, and it has no users
-> count or global_use bit.
+> Do you have maybe a backtrace?
+> 
 
-[Severity: Low]
-Is this accurate for bridge and macvlan?
+This is the original Pi 400 report on 7.3-rc3 with PREEMPT_RT. That kernel
+also had unrelated allocation-test patches applied. DEBUG_ATOMIC_SLEEP
+was disabled, so this report is the BH-disable warning:
 
-macvlan uses the default helper directly:
+  DEBUG_LOCKS_WARN_ON(this_cpu_read(softirq_ctrl.cnt))
+  WARNING: kernel/softirq.c:199 at __local_bh_disable_ip+0xd8/0x200
+  CPU#0: pr/netcon0/769
+  Call trace:
+   __local_bh_disable_ip+0xd8/0x200
+   brcmf_sdio_bus_txdata+0x90/0x2b0 [brcmfmac]
+   brcmf_proto_bcdc_txdata+0x90/0xb0 [brcmfmac]
+   brcmf_proto_bcdc_tx_queue_data+0x60/0xa0 [brcmfmac]
+   brcmf_netdev_start_xmit+0x164/0x390 [brcmfmac]
+   netpoll_start_xmit+0x160/0x218
+   netpoll_send_skb+0x208/0x2b0
+   netpoll_send_udp+0x298/0x478
+   netconsole_write+0x440/0x7a0
+   netconsole_write_basic+0x20/0x40
+   nbcon_emit_next_record+0x208/0x2a8
+   nbcon_emit_one+0xc8/0x110
+   nbcon_kthread_func+0x184/0x210
 
-drivers/net/macvlan.c:
-	.ndo_fdb_dump		= ndo_dflt_fdb_dump,
-
-br_fdb_dump() also falls back to it for unfiltered dumps:
-
-net/bridge/br_fdb.c:br_fdb_dump() {
-	...
-	if (!filter_dev) {
-		err = ndo_dflt_fdb_dump(skb, cb, dev, NULL, idx);
-	...
-}
-
-rtnl_fdb_dump() calls a device's own ndo_fdb_dump with filter_dev == NULL.
-ndo_dflt_fdb_dump() then walks both dev->uc and dev->mc for ARPHRD_ETHER
-devices.
-
-So "bridge fdb show" seems to already list dev->mc for bridge masters and
-macvlan devices. Only vxlan fits the description.
-
-The other reasons (no users count, no global_use bit, changing the
-"bridge fdb show" output) may still hold. Could this paragraph be
-corrected?
-
-> diff --git a/net/core/dev_addr_lists.c b/net/core/dev_addr_lists.c
-> index 783c62895249b..948dc25635938 100644
-> --- a/net/core/dev_addr_lists.c
-> +++ b/net/core/dev_addr_lists.c
-
-[ ... ]
-
-> @@ -1219,6 +1223,197 @@ void dev_mc_init(struct net_device *dev)
->  }
->  EXPORT_SYMBOL(dev_mc_init);
->  
-> +static int dev_mc_fill_addr(struct sk_buff *skb, const struct net_device *dev,
-> +			    const struct netdev_hw_addr *ha, u32 portid,
-> +			    u32 seq, unsigned int flags, int netnsid)
-> +{
-> +	u32 ifa_flags = ha->global_use ? IFA_F_GLOBAL : 0;
-
-[ ... ]
-
-> +	if ((netnsid >= 0 &&
-> +	     nla_put_s32(skb, IFA_TARGET_NETNSID, netnsid)) ||
-> +	    nla_put(skb, IFA_MULTICAST, dev->addr_len, ha->addr) ||
-> +	    nla_put_u32(skb, IFA_MC_USERS, ha->refcount) ||
-> +	    nla_put_u32(skb, IFA_FLAGS, ifa_flags)) {
-
-[Severity: Low]
-At this commit, Documentation/netlink/specs/rt-addr.yaml doesn't yet
-describe this dump:
-
-  - the ifa-flags enum ends at stable-privacy, so bit 12 (IFA_F_GLOBAL),
-    emitted here in IFA_FLAGS, has no name
-  - the getmulticast op doc still says "Get / dump IPv4/IPv6 multicast
-    addresses."
-  - the reply attributes do not include flags or target-netnsid, and the
-    dump request declares no attributes even though target-netnsid is
-    accepted
-
-The next patch in the series, "netlink: specs: rt-addr: document AF_PACKET
-multicast dumps", fixes all of this. It adds global after stable-privacy,
-adds flags and target-netnsid to the reply and target-netnsid to the
-request, and rewrites the op doc. Nothing is left over at the end of the
-series.
-
-Would it make sense to fold the spec update into this patch, so the spec
-and the kernel match at every commit?
-
-> +	    nla_put_u32(skb, IFA_FLAGS, ifa_flags)) {
-> +		nlmsg_cancel(skb, nlh);
-> +		return -EMSGSIZE;
-> +	}
-> +
-> +	nlmsg_end(skb, nlh);
-> +	return 0;
-> +}
-> +
-> +/* Combine dev_mc_genid and dev_base_seq to detect changes, like
-> + * inet_base_seq().
-> + */
-> +static u32 dev_mc_base_seq(const struct net *net)
-> +{
-> +	u32 res = atomic_read(&net->dev_mc_genid) +
-> +		  READ_ONCE(net->dev_base_seq);
-
-[Severity: Low]
-This isn't a bug, but dev_mc_genid is only bumped from the __hw_addr_count_*
-helpers, i.e. when a dev->mc entry is added or removed. In-place updates to
-the two fields exported here don't bump it:
-
-net/core/dev_addr_lists.c:__hw_addr_add_ex() {
-	...
-			if (global) {
-				/* check if addr is already used as global */
-				if (ha->global_use)
-					return 0;
-				else
-					ha->global_use = true;
-			}
-	...
-			ha->refcount++;
-			return 0;
-	...
-}
-
-net/core/dev_addr_lists.c:__hw_addr_del_entry() {
-	...
-	if (global)
-		ha->global_use = false;
-	...
-	if (--ha->refcount)
-		return 0;
-	...
-}
-
-The dump resumes by list position, and these updates never add, remove or
-reorder entries. So nothing is skipped or repeated, which matches the IPv4
-dev_addr_genid convention.
-
-However, the struct net comment ("bumped on dev->mc changes") and the
-commit message ("so a change since the previous device or dump round sets
-NLM_F_DUMP_INTR") describe more than that. Could they say membership
-changes instead?
-
-[ ... ]
-
-> +	s_ifindex = ctx->ifindex;
-> +	for_each_netdev_dump(filter.tgt_net, dev, ctx->ifindex) {
-> +		/* The device the dump stopped at is gone, do not skip
-> +		 * entries of the next one.
-> +		 */
-> +		if (dev->ifindex != s_ifindex)
-> +			ctx->addr_idx = 0;
-> +		err = dev_mc_dump_dev(dev, skb, cb, &ctx->addr_idx, flags,
-> +				      filter.netnsid);
-> +		if (err < 0)
-> +			break;
-> +	}
-> +out:
-> +	/* A round that dumps no device, e.g. the one it stopped at is gone,
-> +	 * still needs the NLMSG_DONE check to see the change.
-> +	 */
-> +	cb->seq = dev_mc_base_seq(filter.tgt_net);
-
-[Severity: Medium]
-Can a concurrent unregister still end this dump early without
-NLM_F_DUMP_INTR?
-
-unlist_netdevice() removes the device from the xarray before it bumps
-dev_base_seq:
-
-net/core/dev.c:unlist_netdevice() {
-	...
-	xa_erase(&net->dev_by_index, dev->ifindex);
-
-	netdev_for_each_altname(dev, name_node)
-		netdev_name_node_del(name_node);
-
-	/* Unlink dev from the device chain */
-	list_del_rcu(&dev->dev_list);
-	netdev_name_node_del(dev->name_node);
-	hlist_del_rcu(&dev->index_hlist);
-
-	dev_base_seq_inc(dev_net(dev));
-}
-
-The handler is registered with RTNL_FLAG_DUMP_UNLOCKED. So the next dump
-round can run while the RTNL holder is preempted between xa_erase() and
-dev_base_seq_inc().
-
-Take a round that returns -EMSGSIZE partway through device D. That leaves
-ctx->ifindex == D->ifindex, ctx->addr_idx == k, and
-cb->prev_seq == cb->seq == G.
-
-D, which is down, is then unregistered or moved to another netns. dev->mc
-isn't flushed until later in unregister_netdevice_many_notify(), so
-dev_mc_genid doesn't change either.
-
-In the next round, for_each_netdev_dump() no longer finds D. The
-dev_mc_dump_dev() calls on later devices and the sample at out: both read
-G again. netlink_dump_done()->nl_dump_check_consistent() then sees
-seq == prev_seq, and NLMSG_DONE is sent without NLM_F_DUMP_INTR.
-
-Userspace would get entries 0..k-1 of D and no sign that the rest are
-missing. The unlocked IPv4 and IPv6 dumps rely on the same dev_base_seq
-ordering, but this path is new in this patch.
-
-The commit message says this case is covered ("also when the last round
-dumps nothing because the device it stopped at is gone"). Does that fully
-hold with this ordering?
-
--- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260930112842.21323-1-sigefriedhyy%40gmail.com
+Thanks,
+Karl
