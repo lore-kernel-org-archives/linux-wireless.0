@@ -1,115 +1,82 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-24425.protonmail.ch (mail-24425.protonmail.ch [109.224.244.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CFB3AFCEB
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 11:54:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6D6F49A3C3
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 12:06:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790855680; cv=none; b=Rq0CxuJzS8E4AJfOLo/h0EOmoKrGLPXzQ5WFU/ic5yuI2r4aoOLyDUIwr2GYMTHnz7i+7Gc5D9Eg2z0nBZtHEcypPRDrJAZgYtN2x6OKFu0/wdGAca0GYHzuY7aBk5/zyBr+sP/qBNx1QLk7tsXe7bAKDB6/nLqUXMhXFcvRSPU=
+	t=1790856389; cv=none; b=dXFaOksiv+eII9YpV1l/vAmdU7Q9Gma4tcJVi9xbFcFOqtERwH9nBEWjGn29ZowrKCEk6AXWY+wv4Qqv4znYR2I7LHkyao2TZqY/uSGoiSjVzJL4yS7sq4dlMkx/JIiLUirh7lpXPhOSi719zQoHygJkNBDYlNtBrWBnvqxULho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790855680; c=relaxed/simple;
-	bh=baCT4wfTg+IGi44EpWy/Yu1MX338NQxsuAkGvm/V0ME=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OFTqEijT+LzCM3bsqM8GIhUXT3Iv3Ljmv+kWwma3qfdGI5YXty2osVjO7RffR3KMwSRDxTMU7uRlDemr8ylx8hhvPLefoYimXo14hcI5FNmBQzg6VHiGxv4vZJJWyFhI4Kz+EqmN+O7re1Qp3ir36Svo/aVFeF6dALztjGYiMGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SY4Uhoz3; arc=none smtp.client-ip=74.125.225.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790856389; c=relaxed/simple;
+	bh=yCNvhw0ESgJSzLHMeRdALP7byAYkz+hVEMOqeWIptR8=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XbWFOrue/bz8dGc8HbPnc5SHbDmLB47JXxY0Jnbj4HlBaI5JmSmY5RRVEsSSqPoPMzdG1LdGGm25kPzUSzud/Ifphfnvv1LsLiIwV5O3yyzN8rcedL+91fBLZB+CTIvwD8eXDVfz1OGFILrbzIGMQ3VfN+YfsUhb5zfxolOkW4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=WreAFIcl; arc=none smtp.client-ip=109.224.244.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SY4Uhoz3"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-4a022e9cbebso3706345e9.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 04:54:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790855672; x=1791460472; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=baCT4wfTg+IGi44EpWy/Yu1MX338NQxsuAkGvm/V0ME=;
-        b=SY4Uhoz33STtlz44uQtBpzJDF2+/79IyRD3CtMi5WlFIznWUaEKF4SniZHPcdxfLbC
-         DPmr/B0BA/go6eALuf1qYwF2YEptp8NEp4mlNUFkCH3zWVbnsE24xAsx3JJQmJ7g5hdK
-         ggJPPKZf8cyd4+ERWKOJ65Irq+0ScwqKD7uSGhR4CFs4qXBIGlsm00Z94GGQAAILY4zb
-         AECts98hCuhNBNMuAYduAWHhKpuBaB6oSGXbfPooJvXTbvxsmnqeUWZKsnjCIfVneqJ8
-         UZ4bMaI+sdfCVqM4/LAEnbdohpo+OtuIoavkhfqB4+R0nnQSUANEGLuiUvtS0dtPTTwC
-         cuAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790855672; x=1791460472;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=baCT4wfTg+IGi44EpWy/Yu1MX338NQxsuAkGvm/V0ME=;
-        b=Fb2CtNy4OshH5GJ39z2dFf8a6L50mjrMn64V6/dBX/LXzOWOwxopTV9bkRV9Tith1U
-         wKz3/FmIXCClK6zj4e2usbqp4IAxmvO+0fnn97mYxyKv1lGJ2nP850NA1CKAy5L0eCAM
-         HREy1l8am99XIjETAHYT0qNM33aYXJVdOvfkREx42F64C2bsnPdQRPLA5j384RyBeddK
-         WkWxG1tFe7eQppqNrSKMdUWfIOODfRNZd/VgqYyFAvdRuSghDMP4RJx1JptH2bhggjmw
-         ldf1rzE2JuplP24SXB+nH2gRQGybXK+hSPkMFPdT09AoToLeI+vrV9SVUu6MiSVAO3h0
-         j0ZA==
-X-Forwarded-Encrypted: i=1; AKwUvBx/aSZUwhGDZLKt9urVfVjv682egtcbHMU1E2Avc1PTZln7sTXX6+jAI6RN+bwnlJ71+ijwClBi+1jBW1Thog==@vger.kernel.org
-X-Gm-Message-State: AFuF++lur9fMkTV8LOCmQKqib45IrqTT1NYPfhRu39Kxx2cFeAQaYAQj
-	EAjUCVu2OkqlRf4V2CxrOF5498ptd74mOXrXDiCE2HpcmwP/QkXRXQxU
-X-Gm-Gg: AYBFou2BibWw4JhQJMYOppaWBOwtV2IKa3dpv9rHkDOE67K6pHPQ1RjZchPG2Qy/Hzn
-	fjIikNQrTq0ecNtDqhBptCnmchDlfCrJXRbitWGBejYlPMWSptNzxKHb1pzwnFyhofNTOlnZv7c
-	Hb3g5cQYDY5QEyq8uokaZsTLwHe9buczte5+GWDMjLdXUDJ9kCAck7vHMDycLaNP37d7EC9anXX
-	+FzAhF9MKrk2Ri1Lh+so/iz6nieUzR731BDT7OI26qr9pKygjB/gMfFPviTV5F/wzMZciJG0DlT
-	apbuaKSCrZSF8/8rjA8FsmepCeO9UtbwrOmBU0Vssfy+hy3Go5tg4Ach2CIPSoxzr0VCOiea3t1
-	xVCZ+BDeFK7eWurnWe3W/19u0KxzgLWAKB7038U1WmxQUx91pKaCNsbc9v43cEiS2u5mfenIHYP
-	tUsR5msnE7LTGNbzK+Hm9j4ISUa8RAXn+ZjL/k0Sf9qhn3vpOoAxPut5I9PzO4CNxfZ2xlm0Hp6
-	dTM
-X-Received: by 2002:a05:600c:3b9f:b0:4a0:1b21:2628 with SMTP id 5b1f17b1804b1-4a01b212757mr76481705e9.23.1790855671923;
-        Thu, 01 Oct 2026 04:54:31 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01f938f89sm56229115e9.9.2026.10.01.04.54.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Oct 2026 04:54:31 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: Re: [PATCH rtw-next v2 2/2] wifi: rtw88: support channel switch in AP mode
-Date: Thu,  1 Oct 2026 13:54:30 +0200
-Message-ID: <20261001115430.2979761-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261001071822.17746-1-luka.gejak@linux.dev>
-References: 
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="WreAFIcl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=pkwlngjezrc55cpgk2kl6o2nye.protonmail2; t=1790856369;
+	x=1791115569; bh=yCNvhw0ESgJSzLHMeRdALP7byAYkz+hVEMOqeWIptR8=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=WreAFIcl+KJXRYeohDn0Nh1PVT8Oxqi5sXz4X5uIEVz8lMsJ4W823KFavDCbwuPqd
+	 BrM5CXUcgQM7ciiW+KMJmCQdbUETo4jxxiJSfRzXpsW1P4XMKZfoZ4/90o6kcPNvIf
+	 rig11QZZIRWRBAMprKf2lPH+V150zMw/S3lDq7rVv13awIVjnhAQ+WO2OLAffOebQF
+	 ziiLwNK8jdDefs67y7sJt4jiGuicFRbEPOuFry0ewxwDK3KhCQiPxhH1GUZfg5llms
+	 Rp/9Q7DNzCdY/73xKMRzMn74Kj/Ulja6xpVcHGwtAS4S2gwOX3gBTPuHTJdTMqDjg5
+	 zsiePUSxIyPMw==
+Date: Thu, 01 Oct 2026 12:06:05 +0000
+To: Alessio Ferri <alessio.ferri@mythread.it>
+From: "andreas.wendleder" <andreas.wendleder@proton.me>
+Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: =?utf-8?Q?AW:_Re:_BCM4360_AC-PHY_support_for_b43_=E2=80=94_reverse-engineered,_seeking_guidance_on_a_clean_path_upstream?=
+Message-ID: <BGzX01_Xw0eP0rtUaqPn6IyCeg06zqkSQ8qKQoE38fN4Pzu_QmUjvB-pw5RuEdVn3hXqB3UAMap8WSTwRa8i6Zfg8XUmkhUEBavoBwppNmM=@proton.me>
+In-Reply-To: <20261001080225.000011d9@mythread.it>
+References: <rOzY3WnW4q5L1osv7iagU81dLGldzZEsu3EqHxmH4d7Z4vxubBYvRNT0vsrbr8n-CUSEYyXxGFE3h9PHLHgePjm3_rMK_B_0m5loTpyxX-M=@proton.me> <d6tVX7HBAW4Qnebx5Enj79edWG_LVmnRT0bjhcfv9bb1h0cewrTEDHK-VVoSy0NZcMzv3FB8OVEyTFNgA7rs_zaplEfiLXdwcCqhYDeonMo=@proton.me> <20260929105859.364ea71b@DELL-MOBILE03.ad.smart.it> <oYmDL00YinKfSdWHxkjmqPRGHWmeA_0SCR6tpafsgCvGyqYAEKuCt0kg7w_C47be5hm7IwFsxRnulMhvPFJEXQNDaDPgZNzMIQ0vfRKnOLw=@proton.me> <20260929113109.2c561844@DELL-MOBILE03.ad.smart.it> <OG0AU4A6pMu865qvxpXQjF7NvEP6p2bwR_IZRaLxONsn_3Gdxm00PiOOaGuWbYy-AmxhLGRyz29ZPtUKzDwsKJk_UjTLAU1bctgCzdWlNlE=@proton.me> <20260929221321.000023a7@mythread.it> <e3-qmDjhrTX2hFaCfmyNZHcixISRArPiYm-26_-33mbTBdryG2n375GF-6ewiqoXzodKocGBPYO2l3kWmr2wlJ9X8GK9-F3lUqmhnDP_TXI=@proton.me> <20261001080225.000011d9@mythread.it>
+Feedback-ID: 189422222:user:proton
+X-Pm-Message-ID: 21d4d098aa2330498780e262331bf02ad6f12de0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Luka,
+Hi Alessio,
 
-On 2026-10-01 Luka Gejak wrote:
-> This work is not the only one that re-downloads the page. Every page download
-> fetches a beacon, through rtw_get_rsvd_page_skb():
-[...]
-> A station that wakes up in power save during the countdown is enough, so one
-> interval can move the count twice, for example 4 on air and then 2, and a fetch
-> that lands after the counter reached 1 makes mac80211 log "beacon TX faster than
-> countdown". Can the set_tim work skip the download while a switch is announced?
-> rtw_fw_csa_beacon_work() rebuilds the page one interval later, so the new TIM
-> still gets out and the countdown keeps one step per interval.
+Thanks for the 2.4 GHz trace work. Short status, then the questions.
 
-You are right, I had only looked at the paths the series touches. v3
-makes rtw_fw_update_beacon_work() return without a download while the
-vif that owns the beacon page has csa_active set; the csa work rebuilds
-the page, TIM included, within the interval.
+Status: b43 now runs as the daily connection on my MacBookAir6,1 (BCM4360, =
+core rev 42, radio 2069 rev 4). The 2.4 GHz station works with legacy rates=
+ and a TX status fix. Upload is about 18 Mbit/s and download about 10.
 
-I went through the other callers of rtw_fw_download_rsvd_page() for the
-same pattern. One more is reachable with an AP: set_key downloads the
-page for the PG deep-sleep backup, so a station installing a key during
-the countdown would add a step on a chip with that mode; v3 skips that
-download the same way. BSS_CHANGED_BEACON during a countdown re-arms
-the csa work timer, so that download replaces the step instead of
-adding one; the hw scan is refused while a switch is announced; the
-WoWLAN downloads run after suspend cancelled the work; the ASSOC
-download is station mode.
+The open problem: only about 21% of fresh inits can transmit. The state is =
+fixed at init. In a bad init the PHY holds CRS|TXF and every TX ends in a P=
+HY transmission error, so auth frames are never ACKed. A reload wrapper ret=
+ries until an init connects, which takes 2-5 tries. I've ruled out temperat=
+ure, DMA, ASPM, PLL lock, clocks, TX core mask, TX power control, the CRS t=
+hreshold and the MAC setup order.
 
-I will check it with a station in power save during the countdown and
-watch for mac80211's "beacon TX faster than countdown" before and after.
+I've updated the clean-room spec (=C2=A710 covers this) and can send it if =
+it's useful.
 
-Best regards,
-Mehmet
+Questions:
+
+Do you have a bus-level trace (wl-mmio-trap) of a 2.4 GHz cold init and fir=
+st transmit on a BCM4360 (agcombo or TG789vac), including the calibration p=
+hase? I'd diff it against mine at register level.
+Can your harness score our driver's register-write sequence against your ca=
+ptures? That would show where we diverge without hardware tests.
+Does stock wl ever give you a "bad init" on any of your boards (the PHY can=
+not transmit until the next reset)? That would tell us whether the cause is=
+ in our init or in the chip.
+
+If your 2.4 GHz support lands, I'll test it on this laptop right away.
+
+Thanks,
+Andreas
