@@ -1,71 +1,72 @@
 Received: from mail-ej2-f41.google.com (mail-ej2-f41.google.com [74.125.228.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E4948E0F4
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 07:37:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B33C372EEE
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 07:37:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790840263; cv=none; b=IZS0c3j7Ps419bLv///ry+SxhX3uu8GBWhWqOKK+LN15QStKTyyctv7fvEkDli1CLVYeeuce9riVSlp4XxJNnwNxw6/frm8Ni5QmXoU/gXXRhr/wjeFiz+vMe//0hF8zdWrYnLu1w+9VwwSDUhgUTzQusfqqpqrA14Unt/bFS+k=
+	t=1790840267; cv=none; b=W6MfVnNDKYlgTDLaT2pzs7gdih6Q8rxS/tMWbiBF+ytmV3aIJaU3k212WrEaLlEVR5DRh3YUIM8LkvAdFGq9NvpkuMQjvOsJ3PmaOkyp1apxCTxdC4xw1XvPqcRCpQmtTVX5uVCNgfs2jUKD3dhSLmiFj5V0Sif+8uFWrcdQBws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790840263; c=relaxed/simple;
-	bh=5PFIbh3eDdhQjUnbfiSfXkew41IVq3oenFWuGyTLgns=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=QQgR0crjkdWUvkAa/rpv9vzGyeUp2BoEFvL/2d3NeDIrHxz4F7jdCuVH0dshKsH/QaGndbHAqqYIB8aeZZNCLDDOwqIL+VrsCnyb0+H/NJQ7zCNuqrvl/r4Uo+omx0glxkvcLjYOMNRM2+Ku5n/PZ9Nhkz8Uk8ohWrIRW6HX7QM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qln76CWH; arc=none smtp.client-ip=74.125.228.169
+	s=arc-20240116; t=1790840267; c=relaxed/simple;
+	bh=Ze6CRBSJW2k7BKCvDJ3wxrtyl/fCa77TZ0wRC2E4nek=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V1D/3vjNqlHvI91MQ4DN/Ny2yKbHxIN3EBV+B+GZoBqZLvKZSmGNkyZQiPDKAI08htPJj/+NpuEADa3GCPCdtB0mlTMtrmKAX6qUgiLBkcxlxYKQSOQtdu7mwiPcWQZDWI6jKd8cDkumupjQbNtWrD2qmVtGLLQcgDcC/kBLBWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KsVxUpcx; arc=none smtp.client-ip=74.125.228.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qln76CWH"
-Received: by mail-ej2-f41.google.com with SMTP id a640c23a62f3a-c2e3507d4a9so85164966b.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 00:37:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KsVxUpcx"
+Received: by mail-ej2-f41.google.com with SMTP id a640c23a62f3a-c2e30a06b59so151958966b.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 00:37:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790840260; x=1791445060; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WF+NPJiXy9Vnmi5WHh+QYbvLk/ut+YzrNBY7oFb/Eyc=;
-        b=qln76CWHMJERoBNe3fgRKzv1gP92aA18sucD9L3nmym9AhPmSEv1IuFVnQUKc7qbSt
-         Fe2dkdKrJT8g2DbkSpDNZzD715auE/760uyzWUce34dgud1/eoUlItT0wJcDguDJnHMl
-         kZC24LoC0Qfwmvnay7K2fR9ZRzhsxM/KKXN5mGVZktU3MimxLARbEB5EaSCshiztn5R1
-         /UN7+Dogf8OGwLwCo+E8LueqagQi54/oTUp/32ReuxhnfpmOmDaLJ7SToLhMWGV8f+56
-         jnIidPfbiPdW69ZEwBdc+1uX0jZkquqf8cFBHqJDQhJ8DcP2Fuh4iAipVW5a9L3aQe1o
-         Zg9A==
+        d=gmail.com; s=20251104; t=1790840264; x=1791445064; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=gsL3ia+o/1e43RyZen5AJRoAaq5/bgRELxN/6vFLbTg=;
+        b=KsVxUpcxICBBmtyxkZ+5Itftg0ujtPzq4xiouWZ6UA5M1FkROanZwgkOtgVs0bvIa6
+         rXSrTmhzrsY2XpFnpfmNvSgliBMpqayTPk8MqNsbk4Tm0+1XZUeBCnOjMhV835sVlHXl
+         R5ikhe6AqwGLiUXCYWQg4vlFWe23GpkAjc5pYmoFjHSHnbLwiJ1/3/8xK5iirtQumcV8
+         GlGmvZ4GBZHOZSHcc0nVdu4SPzzCViWP9SjEA8J9hixJuXl3z5FrVbIqOLxy0pzWVBF2
+         yvoeWUd6zNgqRykxpOTrRW/iyPk1RV89q4ev9hanwoRouUuiYSqa4V83+mwq1wBgQP5d
+         tQyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790840260; x=1791445060;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=WF+NPJiXy9Vnmi5WHh+QYbvLk/ut+YzrNBY7oFb/Eyc=;
-        b=dFfpcrRT7tUQfZ6/MnKq3ukoMdenej/CWmaw8e0iqwQJJIjSqrrb1vc3qY84J0mFDK
-         j983cXRSXo29WBEVZMgpaqtU+koHDDbNOsgoDEU3+32bITPl0ySW5La8o3vfIED5JinA
-         o5Cs/5CXbOzlp3R429CwXvm34EW+b7Jll6BoLLBI4FM2aw2fb0KX9xCs+fLvWmB0mkCw
-         a1yP5qLdb/DgnCt57wIt65OKAO9/rgwwCqBLNxjTzhxD/PgpbcyQSlr9RHAzt8my/kue
-         mjbN8aRF2u76Vmfk8/Vhwv8fiB2YEztxQ5BpoPl/qUQulGbt1C0sAAfwXAfL3A/fNAmv
-         MOUg==
-X-Gm-Message-State: AFuF++kjiQosU1J8JtPbQyDzdmYxi5x8hKN0vCc+fYplunkeUwnF1OJn
-	TK1nBmthXMIZfx7YcgVeLlxqDlh5KmkrkxMBK7yC9GRuQ85PEm3bEKWgoH8mFAy0y1enPw==
-X-Gm-Gg: AYBFou2OsQksCEp41ZZBCx54v/nmjaOkWfNov4v6qrwZGMyaLfW4W6sUd+wUJGCxK5C
-	BhY+oQoImVqV0iqaFkoUVtlsqptw8cO730BSjsaWECc3fZjwwNatI24h4m4M0sXo1U9AbSNPYG3
-	20HN4AVYhxh9Y7wJRbzrkRG9Ux88vj4/ATDzQTCGk4wlTFCJpZVL7sMs3h2rxDxOP/F4TXO5ZJy
-	xwDUEIiP09L2OiMV9pxyocugDBXgeU2gwG0T2uTBdAI+f4h9c0+gFt1TzsbVpCjpCIHQz/IfOLy
-	Vp8/ztH3rWueYWFeHw+Wl982jOzbzkv8YYRZJAch/Es5gHkgsFXH9pMX8PK3CZVrOlRgUy6/diy
-	ArRixhv2GLzp46KVHIgx2JlxKHAL3YrKOvhsbGQijqmoBkY+CH7FaDk0DKgN0ymL5PAw+6d0V70
-	R4fDl5bae7RiaylLKJYlp+KiBDGnBd9XqasI7E8e6MqS/X89Io0ZLpPPBF5St1MsRGjp4=
-X-Received: by 2002:a17:906:478d:b0:c2d:fc0b:551a with SMTP id a640c23a62f3a-c2e233cc313mr310528166b.0.1790840259645;
-        Thu, 01 Oct 2026 00:37:39 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790840264; x=1791445064;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=gsL3ia+o/1e43RyZen5AJRoAaq5/bgRELxN/6vFLbTg=;
+        b=HjbHYmBltl54hvLc1XHYeUcdmlGwZF5nnzdfjU95UQ8Un+56qyvkkN32hMhGAWA/er
+         /N9qnOr9jyTO+DshGBo4Jd9FUXUiaNz05+KRireHld2Y4e4GWZSyvho2Y4Jtlf5I5hUV
+         3AViwvYplOLVa0oH+j/L12ER3+THe7+9R/5cBdd+OqTqqY97utPWSitK+IQRc3LYtK+N
+         +vxNRg2SYct9/p/XMH6ssd0WAAiBW3bWTWCZbQW/QmgqXzsZVvO+qvtlvLXIUjpPKdU8
+         ajEYcQmtGi3hH2Ghit2IHaK3GX6Bo1f1ftYuTi8GiQYAbT8x7ZB9v+T2zbsAoX6rYTR9
+         P9fQ==
+X-Forwarded-Encrypted: i=1; AKwUvByOWMcQ4+FPUXelT/IxQSHVd5crtay25Ol1uY+lUxvnV5aDLTXWgZ/978gg+lUslhq3CJKAFMHfangJnUCkmQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++nMZXnF6VmxjXNh2MaYL+vRQVheF008hV0v5v0QnimhmA73OlbD
+	UQOYLgM4e5/wNqPrYUjnBzcOYu59a5LRgSX3EO/4oBzmefaVft8NOoB7pC4uwXRrKI3UOQ==
+X-Gm-Gg: AYBFou3ESV0eJr7BncRf7UzNmlEoMKWvQFSrxB4Feolm8+ki4jWLNBEHAy2MYaD1k5C
+	rqzD63/C5/J+m39e/mUaG5gpZHSmLt8dNFmmHAqR2usYFTBSmQQLWcXZP5VZdYQlshjY7qHAxef
+	7OK08o9Lf/5+0pUJPKdBi1ADTWujimP4Czz3b5MftAODJFUY1nBVdv8/8KGbZcHe4qt/kCU5hij
+	EMJwOkurBqOA39WmXHFPzajZODJIXi5f1T2u/lfvjF4N0Q33lo/LiEtyOQCjaQHuxxhlgIi77dm
+	iaUAUrZrLZ3MKy9k6FF6Dii22T3rbGY+WZqTh+gammd09E575Zvf8IkjO2tyaEzrqR1piV+zUj9
+	qmNOYuS2bRDrIqBr+FCQ/tuXfMO7dZ0BP+hE6599Yjgc3hZ9gOtu12zmJ0cLJT5HkkVUvwa2haa
+	rAZjSUxyBIelSIu+lGU4br2POVzXOETF9FnwSXk82ojtciX1+kQRZTy7mS7MPScuPEF+M=
+X-Received: by 2002:a17:907:d8a:b0:c26:1648:a065 with SMTP id a640c23a62f3a-c2e23d94c70mr325917166b.32.1790840264416;
+        Thu, 01 Oct 2026 00:37:44 -0700 (PDT)
 Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2e31d36795sm97826266b.38.2026.10.01.00.37.38
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2e31d4297bsm101151566b.45.2026.10.01.00.37.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Oct 2026 00:37:39 -0700 (PDT)
-Date: Thu, 1 Oct 2026 10:37:35 +0300
+        Thu, 01 Oct 2026 00:37:43 -0700 (PDT)
+Date: Thu, 1 Oct 2026 10:37:40 +0300
 From: Dan Carpenter <error27@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	b43-dev@lists.infradead.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] wifi: NULL terminate some user strings
-Message-ID: <cover.1790839793.git.error27@gmail.com>
+To: b43-dev@lists.infradead.org
+Cc: "David S. Miller" <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: [PATCH 1/3] wifi: b43: don't pass unterminated string to sscanf()
+Message-ID: <b396713e697c7411b23a2157e2102c347ac900bc.1790839793.git.error27@gmail.com>
+References: <cover.1790839793.git.error27@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,19 +75,35 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <cover.1790839793.git.error27@gmail.com>
 
-These strings come from the user and they need to be NUL terminated.
+The "buf" buffer is a PAGE_SIZE and allocated with kzalloc().  We store
+a string from the user in it and then pass it to sscanf() in the write
+functions such as shm32write__write_file().  Only a few numbers are
+stored in the buffer so it never comes close to filling up the whole
+PAGE_SIZE.  Reserve the last character of the page for a NUL terminator.
 
-Dan Carpenter (3):
-  wifi: b43: don't pass unterminated string to sscanf()
-  wifi: b43legacy: debugfs: NUL terminate string in debugfs
-  wifi: carl9170: NUL terminate string in debugfs
+This is debugfs so it's root only.
 
- drivers/net/wireless/ath/carl9170/debug.c         | 5 +++--
- drivers/net/wireless/broadcom/b43/debugfs.c       | 2 +-
- drivers/net/wireless/broadcom/b43legacy/debugfs.c | 2 +-
- 3 files changed, 5 insertions(+), 4 deletions(-)
+Fixes: 75388acd0cd8 ("[B43LEGACY]: add mac80211-based driver for legacy BCM43xx devices")
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/broadcom/b43/debugfs.c b/drivers/net/wireless/broadcom/b43/debugfs.c
+index 31a1ff00c1a4..173ef5db90fc 100644
+--- a/drivers/net/wireless/broadcom/b43/debugfs.c
++++ b/drivers/net/wireless/broadcom/b43/debugfs.c
+@@ -557,7 +557,7 @@ static ssize_t b43_debugfs_write(struct file *file,
+ 
+ 	if (!count)
+ 		return 0;
+-	if (count > PAGE_SIZE)
++	if (count >= PAGE_SIZE)
+ 		return -E2BIG;
+ 	dev = file->private_data;
+ 	if (!dev)
 -- 
 2.53.0
 
