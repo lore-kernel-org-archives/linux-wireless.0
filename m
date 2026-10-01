@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-176.mta1.migadu.com [95.215.58.176])
+Received: from mta0.migadu.com (out-206.mta0.migadu.com [91.218.175.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75244456DE6
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 07:17:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B02236215E
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 07:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790839026; cv=none; b=UNfQInouCJ9cFOrjimCePwv9C0ymMjzzzPxY3mtjqmQpHx6QVL05VBS/cWw3UR0lvspd/nr1oQOZL36LmwjI69PdCOxYTeFgpfFeCbqCkQ4myQL0t1KeNC81llxGi+qlmYSpFyNTiURP2DYNBVLTnvGT4H+s7DQich1Cj1toJpE=
+	t=1790839119; cv=none; b=sGxp9CVblTyiizLVextvGdgHOl1ZhutuDJM7LccY1wA2gmFnErFUDW7I/h2K3ZCaHQaaCXSChB0yZVHPWSZM8/I4uQuuBAl97q2rZmkkI1UvClDtgWgfPUDs99pAdZg+XXxcbxA9vnCxCzqXje1axVLqRK5c9Hhk+e1pwjac3Ug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790839026; c=relaxed/simple;
-	bh=5ONaKtwCsrMAYKtTppGb6lZliXkZCnHoiIE1DiweM7E=;
+	s=arc-20240116; t=1790839119; c=relaxed/simple;
+	bh=WH7hQfcmj5GQBZj88d306OKfQggBKeDcQQIJkpAwENg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P3Ewu+Bg+gVsPV/aPVcn2JM9M/nLeodjdHRyMXTQ1ArWJXZLyTnJed2R1p/q9H5pD1XekknV42exBV7Slyt05hZ1MhjBiWY10DEfADlpWmVDtF1atFd6uSpyXBChkeSJyLLDY3f1BU+VUSJSonZog/lSjzOkGonIGAVG0NyrOaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xnPLPcVv; arc=none smtp.client-ip=95.215.58.176
+	 MIME-Version; b=f05JRbf0CplSD2I7bVPOU0jFw3SbxFTLnXcXufuU/O2E3F7/iU5/TDDryPjvWGjdYZXY4kmaaV6D0iY/lPFOLwRiOh/4r0Q8pxl4AV9m0llO60z2b9revW4SbzNQlg53zCKLo0AsuuZeSgAjBtUMllqVxtr00G7EA/1NY12SN20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HdtZoK8Z; arc=none smtp.client-ip=91.218.175.206
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xnPLPcVv"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HdtZoK8Z"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5ONaKtwCsrMAYKtTppGb6lZliXkZCnHoiIE1DiweM7E=;
+DKIM-Signature: a=rsa-sha256; bh=WH7hQfcmj5GQBZj88d306OKfQggBKeDcQQIJkpAwENg=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790839017; v=1; x=1791443817;
- b=xnPLPcVvkM56kZs3RvkiNT5oDc7n2xAfRaCzEBXGuDWqRC1PbsZrBtD3vaYEzEvO3SP/refR
- LVPCtnp7G86hNcPJ1gXMg/AKFR4tt7F4wvEPC2goKla0urDZVG3Lop4gCgQ2WIvBVLqgo2OrWFv
- wkfBNwj741YPPVWeRzYDiu90=
+ t=1790839114; v=1; x=1791443914;
+ b=HdtZoK8ZUoQJngz+NS8frnPcBcFfeV3zI8Rey8tC49tMYuirUE2bOmFI5bpl6qwInw76LHhh
+ QNhrHSc3w7MBUplhNXwRim7VPOB6nbNavixUZXpl1Q+QgtEMV7MxMY9QCYyuRBC4mribr8LX5Pd
+ RuQfjm6Z5G8qX+0mHXIxLbcY=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a18b7bcd28f59343;
-	Thu, 01 Oct 2026 07:16:57 +0000
-X-Mizu-Trace-ID: a18b7bcd28f59343
+Received: by smtp.migadu.com with ESMTPS id c2559732ab146b67;
+	Thu, 01 Oct 2026 07:18:34 +0000
+X-Mizu-Trace-ID: c2559732ab146b67
 X-Migadu-Flow: FLOW_OUT
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Mehmet Fide <mehmet.fide@gmail.com>
@@ -37,12 +37,12 @@ Cc: Ping-Ke Shih <pkshih@realtek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: Re: [PATCH v2 1/2] wifi: rtw88: download the beacon the reserved page was built with
-Date: Thu,  1 Oct 2026 07:16:56 +0000
-Message-ID: <20261001071656.16499-1-luka.gejak@linux.dev>
+Subject: Re: [PATCH v2 2/2] wifi: rtw88: support channel switch in AP mode
+Date: Thu,  1 Oct 2026 07:18:22 +0000
+Message-ID: <20261001071822.17746-1-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260930074444.1991223-2-mehmet.fide@gmail.com>
-References: <20260930074444.1991223-2-mehmet.fide@gmail.com>
+In-Reply-To: <20260930074444.1991223-3-mehmet.fide@gmail.com>
+References: <20260930074444.1991223-3-mehmet.fide@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,40 +53,55 @@ Content-Transfer-Encoding: 8bit
 
 On Wed, 30 Sep 2026, Mehmet Fide wrote:
 
-> -		if (page == 0)
-> +		if (page == 0) {
->  			page += rtw_len_to_page(rsvd_pkt->skb->len +
->  						                  tx_desc_sz, page_size);
-> +			/* the caller downloads it once more on its own */
-> +			*beacon = rsvd_pkt->skb;
-> +		} else {
-[...]
->   free:
-> +	dev_kfree_skb(beacon);
->  	kfree(buf);
+> @@ -1813,6 +1813,47 @@ void rtw_fw_update_beacon_work(struct work_struct *work)
+> +	if (!ieee80211_beacon_cntdwn_is_complete(vif, 0)) {
+> +		rtw_fw_download_rsvd_page(rtwdev);
+> +		rtw_send_rsvd_page_h2c(rtwdev);
+> +
+> +		wiphy_delayed_work_queue(wiphy, &rtwdev->csa_beacon_work,
+> +					                   usecs_to_jiffies(delay));
 
-beacon is written in that branch only, and the caller declares it without an
-initialiser while the free at the end frees whatever it holds. The first page
-always takes that branch today, but the caller cannot see that, so a later
-change in the build would free a stack value. Would you mind initialising it to
-NULL?
+This work is not the only one that re-downloads the page. Every page download
+fetches a beacon, through rtw_get_rsvd_page_skb():
 
-> @@ -2345,7 +2353,7 @@ int rtw_hw_scan_offload(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
->  out:
->  	if (rtwdev->ap_active) {
-> -		ret = rtw_download_beacon(rtwdev);
-> +		ret = rtw_download_beacon(rtwdev, NULL);
->  		if (ret)
->  			rtw_err(rtwdev, "HW scan download beacon failed\n");
+	case RSVD_BEACON:
+		skb_new = ieee80211_beacon_get_tim(hw, vif, &tim_offset, NULL, 0);
+		rsvd_pkt->tim_offset = tim_offset;
+		break;
 
-The cover says this path is compile tested only. The feature comes from the
-firmware header rather than from the chip:
+and mac80211 moves the countdown on that fetch, not once per beacon that is
+transmitted:
 
-	fw->feature = feature & FW_FEATURE_SIG ? feature : 0;
+	if (beacon->cntdwn_counter_offsets[0]) {
+		if (!is_template)
+			ieee80211_beacon_update_cntdwn(vif, link->link_id);
 
-so another firmware for the same hardware can reach it, and this is the path
-that v1 got wrong. Can it be run once on a device whose firmware has scan
-offload?
+		ieee80211_set_beacon_cntdwn(sdata, beacon, link);
+	}
+
+rtw_ops_set_tim() queues update_beacon_work:
+
+	ieee80211_queue_work(hw, &rtwdev->update_beacon_work);
+
+and the work itself re-downloads the page:
+
+void rtw_fw_update_beacon_work(struct work_struct *work)
+{
+	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
+					                              update_beacon_work);
+
+	mutex_lock(&rtwdev->mutex);
+	rtw_fw_download_rsvd_page(rtwdev);
+	rtw_send_rsvd_page_h2c(rtwdev);
+	mutex_unlock(&rtwdev->mutex);
+}
+
+A station that wakes up in power save during the countdown is enough, so one
+interval can move the count twice, for example 4 on air and then 2, and a fetch
+that lands after the counter reached 1 makes mac80211 log "beacon TX faster than
+countdown". Can the set_tim work skip the download while a switch is announced?
+rtw_fw_csa_beacon_work() rebuilds the page one interval later, so the new TIM
+still gets out and the countdown keeps one step per interval.
 
 Best regards,
 Luka Gejak
