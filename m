@@ -1,194 +1,241 @@
-Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D6D13ECBED
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 04:45:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F8F233EB10
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 04:54:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790829946; cv=none; b=bFPcplwXS9XcrZ9crfqoFvubbyovzqQsibqK3T6Ui1u9PqSMD2cuu27x/u5fxfuSvhY2dtW23Hq96H2giM13XiNrjpF0XwT5SuTD4sRYUHNRwruHA5beBVaJwDrmZ+algBM8jokljO9T4EX/dFtPNgMkvMpgj4e/4aaJ73xTAUA=
+	t=1790830478; cv=none; b=d2Vk3TCt0kiQNcBcgvMBsaYK+SKMiWygxWNTdvtOWwv86GE3R0+dGY9tb0NigDUmShGJSI8cgXbuINlJATuAY8tO+HTgkr2SX2njAEHVmuQ8H5gBbBUEoKRDllWlCv0uaG18jMlpJLCuVk5CdLbhr65rqhqp8cwqwOlvE1LBqf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790829946; c=relaxed/simple;
-	bh=Kl59HLPtGA0YGI1jSQ31FQyI2MljJt0I0JDgqMd96vQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=QJgOesmDm0y2bg9mOykM7fvn0zriKO3T8WySfS7rqWyzrIpy882Uw6XTN8Evsqcne2qyIJJ11Z+Z9rurSTJjp4LX0MnO6gzTvj8LgcoHzmC3uL8W1Hub3wJneLAbXgaT2wKvyUTSmm2XzYJs+q3YP8RrDJaNKzaAGqVN0V48bJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KtGUEc1M; arc=none smtp.client-ip=74.125.229.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790830478; c=relaxed/simple;
+	bh=6q9QmzOFtceiT0vvB2p1QXKt8A23U50oKIYANTrX/q8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BLUDmP3gGvJjG3UTabKiGV4eGjLghGXvug0E8c1kfvSPfbl10mhOLtOh5rK3RcpTKpeERYYHuJxD5Py1gwSVkZ1PLfsJVZjmvBGcaar54y0SIhuL2PVZ/bVgpja8i/FY6pliyBhAfyloPTPlylWxxUq7HAP/rJLCR4RLMCdghCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SYRiPtgr; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZRSnZ5ln; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KtGUEc1M"
-Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-34b48100af4so2076019eec.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 21:45:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SYRiPtgr";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZRSnZ5ln"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6913gBNK1510265
+	for <linux-wireless@vger.kernel.org>; Thu, 1 Oct 2026 04:54:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=4c7jfFqxmhLr9o+XB64iUPxfI/4uYoeDsuw
+	6aJpSHSc=; b=SYRiPtgr3DOIzNyjk2TNaXDYR2QhlwDtyJmAkgFJSB8wMJtoT4H
+	BY5KE7JPpCt1LMg8h68qX8qVYyBtbZhUfomAUzMDlO9u+FG89UXPp1v6BkKWhJ4Z
+	HdBlbK4Gzfzb1Qlkevmhcx+913LnBo0lmJ7D4m4PhjjB1Kp9cWokbso5KRfokUOy
+	n8irGuJwuAHSN/bphObJSm+7egnZOp7bg87790RpuwNlhvwmd1bzITaY7gkcruDG
+	FGeyLszxd/qUfH9BacKSPdErcq/slbrCsS6l0ryqmm6KGgYqOncwOzvP9/AC3t2m
+	o/Bx/t7VVoWMsZV4qVqM69K8GDJHBgxJWiA==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h10bkc6p4-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 04:54:36 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so7259205a91.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 21:54:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790829942; x=1791434742; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=YUMtS5RjOq3z0OjJOB6QJzFPbiRJk8TU9R7d+42yRmI=;
-        b=KtGUEc1MpzaMNdo0AEU8WdAS4UbLweNXb6eZ6LJPvwu2fuQ12KMrCLQWB3qMOidHUu
-         S/BJPNxFmZg4isUf3JwxrbCmP7NKOr2F/ERwoFSGkuHpEAzXBZ8FOM++VkeVxu6x+LlA
-         yysfDny6CuPAPStbeQde1Gn5oaW8dTpybOUVq7M+03gL9cOs5FOz3ocC0cFOZEisHJWV
-         n2n1HD4qzipBXpQx2tDw46PYEvlF2nCwMhqtGoQRdquPf7xxU0UBJLUiD+/IWzDiqpfB
-         GJYGdg6jSzg9JfX/RmiX9AVoUkbhXC3muRBDsm9uG/gwhhcBScfCwuIDLZvSx8Eca04Y
-         lLoQ==
+        d=oss.qualcomm.com; s=google; t=1790830475; x=1791435275; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4c7jfFqxmhLr9o+XB64iUPxfI/4uYoeDsuw6aJpSHSc=;
+        b=ZRSnZ5lnNQnp5aXGCU8If1F1qaGQ1BNdSt3d5XQ3V/7nUhqhm9wl/DlqkWDKWkq+Yp
+         L05GQWuqAnQNhUWALxR7pZlvswP/IFUxs1aIYRE+kz1jhZ1h5sqmQ4EljmLWc8ZR9akE
+         N2FFuJm7CMcVHryJ6cclaL3RoVc/Yt/LgpHMUD5MaanBvgkmOAUtUFfpUTGeN4TjYg0v
+         McpL4NpvxxbgJmseHBhKy7BXQt67PZuaaSEcy25yL7xZlb1Fjs1bK5KLTequ9YCgkWU7
+         XSAieHoyTLeDc1RTmWUEvwAOQFBHZ/3CI26SkdtrCYvHYdaSj00ncEY14OQUM08MsdEO
+         d9PQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790829942; x=1791434742;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YUMtS5RjOq3z0OjJOB6QJzFPbiRJk8TU9R7d+42yRmI=;
-        b=sEvvOBPhnefMJHkiY5PGZxPdZxSpgilolIHOUJEwlJ6C0fPpUjfZBsuzmX6BGerNK6
-         adZp523vSk/r8JJPveorJ6Xa728eGVGjkdphDBTBnYQaZB+rdAZ4S0rMg3Ixo6Prk/sQ
-         foOJYLppRf83GqS2NBDeHMxJ08Wd17n+nxyl1K4TF5mSERqg8CMas+nStmEANddELiRV
-         lrECD7S9UytS8E3vPP7iFibB9iSb/Ziz0WlJSq8ZdlXlGhz+L1T4ut2kzr3Ro6PVsdAJ
-         of19g6sGq5f22pthDqqtQ5cwzp8vb/D4JKRBmuEnR/seZV1/G8KhHJhgnBIp4GA0Cpr3
-         vfhA==
-X-Forwarded-Encrypted: i=1; AKwUvByOCfLsxmlKu2/eGbSROFzPUqPcJmRiF1hee4BG8oBCW3YPrs3X55cLtzOY5NIalRTF5GYzwlJqwlZRafxJLQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKXADkAwEExrSpCbjgvzRP1v6uxOOeXaGVgXkZUfRFtfNr+VNmX
-	kHd3vXWQURHU6t6ho9KOFLzpE8vAUdk59VYAdmKK2Sl3oRtkNO8fXkGcrimg7Kel
-X-Gm-Gg: AYBFou0Nyu6vDxJdfucNOjtLFI/kCFzzN0xYIUXqwuNuVktcqd2hzwBWSxn/92VMv8W
-	GlCosXtPIXhxYFlhfzCCf1iNgFtLTg6AE75+d0XEU2JGO6r/Irk7pwbvRUWWAwWOTBuFZ/lhXH1
-	sy4VuzULXpGYwykMAumaH0NC3yVaQDJaHOSR0tRVYdEX9WjdFpOzyZgNQGXIjbyr8MZ1E0PmgZN
-	40VMZ4v97xP/9po+FEUPBBPlwlug5C3ws0ws5HD1U35pClUKB6+X13q13/78BUW09Ui3zEjXHyc
-	04dysKskk6/OPmh6Nfo8/lOhpm0kJ2FaNqMgshowOLL3UeIl3E80Fum+bAfPwQ9WwnanPx4oYY1
-	ZwlFbK0mpzjVpl9MdS/MJbinC65wf5nV/9J8SsN1yWm2upDHhaTA0ESvUCaRnpjrx2r7Oc5eI2r
-	pbIBn8EqBu0qIPZpLSLY9ojLxHqKI7LNVJn6zsbvKfVQ89cgZufuH+7wEioVjNg5240ncTHntRd
-	Xx2uedpZcpeE4Gc06dajyr7MR8vkzEu7nx5AZf3FrErF47mgPkJOVpqKMQeQIw=
-X-Received: by 2002:a05:7301:730e:b0:34c:d1f2:b56d with SMTP id 5a478bee46e88-34cdc0cd8a4mr3523736eec.25.1790829942306;
-        Wed, 30 Sep 2026 21:45:42 -0700 (PDT)
-Received: from dtor-ws.sjc.corp.google.com ([2a00:79e0:2ebe:8:9835:e0ad:476f:74a9])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34db3e3414asm3891332eec.19.2026.09.30.21.45.41
+        d=1e100.net; s=20260707; t=1790830475; x=1791435275;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4c7jfFqxmhLr9o+XB64iUPxfI/4uYoeDsuw6aJpSHSc=;
+        b=U3mvTqRXOR0fm5Z5Ih7HqRmwlODQ7FIh/XE4RO1wy3ZHXZifI832vmMNRShZQ80R/A
+         PIkEmZaHmQO30zbYESk8baUNa/mgqyJ1C2JspX9nR8zEnrFZEfUwMUCB3NJIs0YeRQMO
+         xVr45APp91SbzysFqnEBB0iJkI+uT2zKAyDquWxET7bRYFywK5IuuFT0jU+OPBczIWSi
+         RvSEgk73YPNkWRMHyTQkNYl02Ny0vZoQRB/lmn2Ejv3KXQ/8aoOJwLmS7iAw/6CTIGkX
+         3B/8xT3QyImqrt5SJW6Mrzwrqt4HcHfJ+gTmADgU/t/b0cdQnWgJmWha20OMs+8Q2WT1
+         4NBg==
+X-Gm-Message-State: AFq9FYKKTf0GXHKDQtt/Zj+SbaVWYoO1lnW7lB0JqUBSZw4v1J7bpJCp
+	SAvhrPtzIPRxwpiQyV/2z84RrUJZPDnTr7YR+tGzu2Cg6/dWaAEECPbLI8fEWldSKMGT/lfpmbf
+	Hud2OAclom8kR6t3gj97aQ2jEZ/m5DZ/hioVJJGKhw63JGUMH66rIJTxec3EEn0zSU7Jb7Q==
+X-Gm-Gg: AYBFou2ikPfwAAowcnCDVN86PEWwcS2+FwTmnhNLzEYajJfuMcnwQB1UGJ6azsIjX3x
+	ZmND08aODWXWPtdN1nTgb3V9eE56hZb5VGde5Wewo90W/W55VOni9/UbJ5kCbDE/W5r0NLDYi+Q
+	ik3/XM1/U9PLP6jQUF+swiu/Aw1RlGcfeISLeMx4uvRWpr7fv57c0VCjvw7b7ESTD8uLRDPQxsn
+	cVdDT5asVNxUHg79w1U1HSkck6nmYPppRnjxlKOfldB9IpMX1AYh78luYdhVKWCF9LiFkRSrRzS
+	yR39Kt2O1nCQM0onVn9G3WrUN+nJYIUWelkUBjNxDnXqwJhOc41cuv7guO3N74/qO7s9TH/v7r8
+	uPHPNgyjQ0FKWfygsy6Xb8o6U2EdQeWc7cD3691cQw6ScJ+xgCf8zimYg3kJS9fQheLq4t9n7L9
+	bcjTE+WMnxru9ZkRkf07M8Ew==
+X-Received: by 2002:a17:90b:4fc1:b0:3a4:97ea:f0d6 with SMTP id 98e67ed59e1d1-3a4d18eeb70mr2887122a91.42.1790830474819;
+        Wed, 30 Sep 2026 21:54:34 -0700 (PDT)
+X-Received: by 2002:a17:90b:4fc1:b0:3a4:97ea:f0d6 with SMTP id 98e67ed59e1d1-3a4d18eeb70mr2887103a91.42.1790830474298;
+        Wed, 30 Sep 2026 21:54:34 -0700 (PDT)
+Received: from hu-aarasahu-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a4f44f5299sm2332772a91.17.2026.09.30.21.54.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 21:45:41 -0700 (PDT)
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Date: Wed, 30 Sep 2026 21:45:31 -0700
-Subject: [PATCH 2/2] wifi: carl9170: Revert "carl9170: devres-ing
- hwrng_register usage"
+        Wed, 30 Sep 2026 21:54:32 -0700 (PDT)
+From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, jjohnson@kernel.org,
+        baochen.qiang@oss.qualcomm.com,
+        vasanthakumar.thiagarajan@oss.qualcomm.com,
+        Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+Subject: [PATCH ath-next v2] wifi: ath12k: Fix NAPI resource leaks in AHB external IRQ paths
+Date: Thu,  1 Oct 2026 10:24:23 +0530
+Message-Id: <20261001045423.493121-1-aaradhana.sahu@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260930-carl9170-reverts-v1-2-7033b5716c14@gmail.com>
-References: <20260930-carl9170-reverts-v1-0-7033b5716c14@gmail.com>
-In-Reply-To: <20260930-carl9170-reverts-v1-0-7033b5716c14@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>, 
- Kalle Valo <kvalo@kernel.org>
-Cc: Christian Lamparter <chunkeey@gmail.com>, 
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-X-Mailer: b4 0.17-dev-6c14f
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: ndF3fzYMAJAM-cM2UO-25YdCupc8A6ad
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAxMDAxOSBTYWx0ZWRfXyT8KnvtV8DjU
+ HjvnKJnc4JYcFcQJLwzUMvFH65K1AJbMUkEkjO2dJ7xh77Q//kn1jMdb3cQ+8EpNn7O2OCQP4FY
+ eW9tCpVBolW5gWeILt+sHbGDCs/Vj+O048FGW89AICg3TLaQXFo9NcS6FcPM+bLHbVnruqFXCsB
+ kLt5YjNKhJeZBTnE75wzaLOoZ+hS0cDV0vGfF9D9Ih6KTHo/JcUsMVY45PxXMVw4+DY46xviWIf
+ 1V1PwV+UihxCQIQ8NEvOnXVkPS6Y5NjbhQ4DOlu73NRCIBcpURDl1GjPmqwxirB9pq8mDFfpsCk
+ RM/Ch/TNtu3wmz9DJcUqvE71r1FbCSeJ9UFdoNiDK2KMX5Z/XgHeH3mXQ46f9cI4MPAmpC16Rv6
+ j7+NMAOx1xdftx/vRabjO3uPb7NPrQ7OoHRF2INyfZiqlytGqEj3atpotFGiowPuUkTIMd2cqfD
+ ZaOXYzp0Ov361Xav8Tg==
+X-Authority-Analysis: v=2.4 cv=MZn5KJ/f c=1 sm=1 tr=0 ts=6abde78c cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8
+ a=2RwGnRjxY74BYPqWGSQA:9 a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAxMDAxOSBTYWx0ZWRfXwgeWntEpocyL
+ Akuo1ol2+wYPEmEScqbnpVpRVD1yTR0yybh5qECu2sGZdoWDBLeby53Izdh2LqwfUJbIXZ3p74v
+ 2RMri7giYkhNODLxJtFQrqfxiptHMy8=
+X-Proofpoint-ORIG-GUID: ndF3fzYMAJAM-cM2UO-25YdCupc8A6ad
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-01_02,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 spamscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 clxscore=1015 impostorscore=0 adultscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2610010019
 
-This reverts commit 23de0fa0d2a05ff71c7bc8df9d12c9f23be83f13.
+Currently, NAPI instances and their associated netdevs allocated for AHB
+external IRQ groups are not released when external IRQ configuration
+fails. They are also not freed when arch_init() fails after
+ath12k_ahb_config_irq() succeeds during probe, or when the driver is
+unloaded.
 
-carl9170_register() is invoked asynchronously from the
-request_firmware_nowait() callback after carl9170_usb_probe() has
-already returned, and carl9170_usb_disconnect() calls
-carl9170_unregister() followed immediately by carl9170_free(), which
-frees struct ar9170 (including struct hwrng ar->rng.rng and
-ar->rng.name).
+Fix this by adding a common cleanup helper to release the NAPI instances
+and associated netdevs. Call it from the external IRQ configuration error
+path, probe error path, and driver cleanup path.
 
-Registering the hardware random number generator via
-devm_hwrng_register(&ar->udev->dev, &ar->rng.rng) ties its
-unregistration to the parent struct usb_device rather than the driver
-lifecycle. Furthermore, if carl9170_rng_get() fails at the end of
-carl9170_register_hwrng(), or when the interface is disconnected and
-carl9170_free() frees struct ar9170 before devres_release_all() runs,
-the embedded struct hwrng remains registered on the global rng_list in
-freed memory, causing a use-after-free.
+Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.6-01275-QCAHKSWPL_SILICONZ-1
 
-Fixes: 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Fixes: 6cee30f0da75 ("wifi: ath12k: add AHB driver support for IPQ5332")
+Fixes: 614c23e24ee8 ("wifi: ath12k: Support arch-specific DP device allocation")
+Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |  1 +
- drivers/net/wireless/ath/carl9170/main.c     | 29 +++++++++++++++++++++++++---
- 2 files changed, 27 insertions(+), 3 deletions(-)
+v2:
+  -Remove unnecessary irq_grp->napi_ndev NULL check.
+---
+ drivers/net/wireless/ath/ath12k/ahb.c | 41 ++++++++++++++++++++++++---
+ 1 file changed, 37 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index e66e3e2ae952..03a94a5a209b 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -454,6 +454,7 @@ struct ar9170 {
- # define CARL9170_HWRNG_CACHE_SIZE	CARL9170_MAX_CMD_PAYLOAD_LEN
- 	struct {
- 		struct hwrng rng;
-+		bool initialized;
- 		char name[30 + 1];
- 		u16 cache[CARL9170_HWRNG_CACHE_SIZE / sizeof(u16)];
- 		unsigned int cache_idx;
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 702b6d113b18..8ca76e9044de 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1545,7 +1545,7 @@ static int carl9170_rng_get(struct ar9170 *ar)
- 
- 	BUILD_BUG_ON(RB > CARL9170_MAX_CMD_PAYLOAD_LEN);
- 
--	if (!IS_ACCEPTING_CMD(ar))
-+	if (!IS_ACCEPTING_CMD(ar) || !ar->rng.initialized)
- 		return -EAGAIN;
- 
- 	count = ARRAY_SIZE(ar->rng.cache);
-@@ -1591,6 +1591,14 @@ static int carl9170_rng_read(struct hwrng *rng, u32 *data)
- 	return sizeof(u16);
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+index 85360365aa4b..9b77632bd1bf 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/ahb.c
+@@ -191,6 +191,26 @@ static void __ath12k_ahb_ext_irq_disable(struct ath12k_base *ab)
+ 	}
  }
  
-+static void carl9170_unregister_hwrng(struct ar9170 *ar)
++static void ath12k_ahb_free_napi_for_group(struct ath12k_ext_irq_grp *irq_grp)
 +{
-+	if (ar->rng.initialized) {
-+		hwrng_unregister(&ar->rng.rng);
-+		ar->rng.initialized = false;
-+	}
++	netif_napi_del(&irq_grp->napi);
++	free_netdev(irq_grp->napi_ndev);
++	irq_grp->napi_ndev = NULL;
 +}
 +
- static int carl9170_register_hwrng(struct ar9170 *ar)
++static void ath12k_ahb_free_napi(struct ath12k_base *ab, int num_ext_irq_grp)
++{
++	int i;
++
++	for (i = 0; i < num_ext_irq_grp; i++)
++		ath12k_ahb_free_napi_for_group(&ab->ext_irq_grp[i]);
++}
++
++static void ath12k_ahb_free_ext_napi(struct ath12k_base *ab)
++{
++	ath12k_ahb_free_napi(ab, ATH12K_EXT_IRQ_GRP_NUM_MAX);
++}
++
+ static void ath12k_ahb_ext_grp_enable(struct ath12k_ext_irq_grp *irq_grp)
  {
- 	int err;
-@@ -1601,14 +1609,25 @@ static int carl9170_register_hwrng(struct ar9170 *ar)
- 	ar->rng.rng.data_read = carl9170_rng_read;
- 	ar->rng.rng.priv = (unsigned long)ar;
+ 	int i;
+@@ -622,8 +642,10 @@ static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
+ 		irq_grp->grp_id = i;
  
--	err = devm_hwrng_register(&ar->udev->dev, &ar->rng.rng);
-+	if (WARN_ON(ar->rng.initialized))
-+		return -EALREADY;
-+
-+	err = hwrng_register(&ar->rng.rng);
- 	if (err) {
- 		dev_err(&ar->udev->dev, "Failed to register the random "
- 			"number generator (%d)\n", err);
- 		return err;
+ 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+-		if (!irq_grp->napi_ndev)
+-			return -ENOMEM;
++		if (!irq_grp->napi_ndev) {
++			ret = -ENOMEM;
++			goto free_napi_ndev;
++		}
+ 
+ 		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
+ 			       ath12k_ahb_ext_grp_napi_poll);
+@@ -675,12 +697,19 @@ static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
+ 					       ath12k_ahb_ext_interrupt_handler,
+ 					       IRQF_TRIGGER_RISING,
+ 					       irq_name[irq_idx], irq_grp);
+-			if (ret)
++			if (ret) {
+ 				ath12k_warn(ab, "failed request_irq for %d\n", irq);
++				ath12k_ahb_free_napi_for_group(irq_grp);
++				goto free_napi_ndev;
++			}
+ 		}
  	}
  
--	return carl9170_rng_get(ar);
-+	ar->rng.initialized = true;
+ 	return 0;
 +
-+	err = carl9170_rng_get(ar);
-+	if (err) {
-+		carl9170_unregister_hwrng(ar);
-+		return err;
-+	}
-+
-+	return 0;
++free_napi_ndev:
++	ath12k_ahb_free_napi(ab, i);
++	return ret;
  }
- #endif /* CONFIG_CARL9170_HWRNG */
  
-@@ -2053,6 +2072,10 @@ void carl9170_unregister(struct ar9170 *ar)
+ static int ath12k_ahb_config_irq(struct ath12k_base *ab)
+@@ -1353,7 +1382,7 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+ 	ret = ab_ahb->device_family_ops->arch_init(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "AHB arch_init failed %d\n", ret);
+-		goto err_rproc_deconfigure;
++		goto err_free_irq;
  	}
- #endif /* CONFIG_CARL9170_WPC */
  
-+#ifdef CONFIG_CARL9170_HWRNG
-+	carl9170_unregister_hwrng(ar);
-+#endif /* CONFIG_CARL9170_HWRNG */
+ 	ret = ath12k_core_init(ab);
+@@ -1367,6 +1396,9 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+ err_deinit_arch:
+ 	ab_ahb->device_family_ops->arch_deinit(ab);
+ 
++err_free_irq:
++	ath12k_ahb_free_ext_napi(ab);
 +
- 	carl9170_cancel_worker(ar);
- 	cancel_work_sync(&ar->restart_work);
+ err_rproc_deconfigure:
+ 	mutex_lock(&ath12k_rproc_info_lock);
+ 	ath12k_ahb_deconfigure_rproc(ab);
+@@ -1409,6 +1441,7 @@ static void ath12k_ahb_free_resources(struct ath12k_base *ab)
+ 	struct platform_device *pdev = ab->pdev;
+ 	struct ath12k_ahb *ab_ahb = ath12k_ab_to_ahb(ab);
  
++	ath12k_ahb_free_ext_napi(ab);
+ 	ath12k_hal_srng_deinit(ab);
+ 	ath12k_ce_free_pipes(ab);
+ 	ath12k_ahb_resource_deinit(ab);
 
+base-commit: b64812cb6cec118f6c59a4ec2bd4848db17f6bb2
 -- 
-2.56.0.rc1.315.gc6ed9934b7-goog
+2.34.1
 
