@@ -1,112 +1,136 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64B363FC5DD
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 13:31:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3372C299943;
+	Thu,  1 Oct 2026 14:06:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790861492; cv=none; b=g4RvihHkLoWnGBKsmjG8l87usGb8jGhVQQLl8dKY0qF+vpY8EbL4jeRgxpJRABUAZvGoGW7LvbVdritDLuFzyyXWdqC7a8+yg2mUn2vjd69G7XmzBNOep3GsBJZZN1tWit2r2HgTvpNhifdYJc+/A4NeMTUjMpMtaKXus2Vj+xI=
+	t=1790863603; cv=none; b=Vvv+M13gFz3X9KMulrGEd+mdDUXELhntw9G6Ce/BTT8bN7QQgKuYvV347v6PglN/Faz32FQr+wMwA7lG3GWLFXMwTQ2O9g84dyna+hiOwcmTMKATiHCaqVYEzA7l5GntDvdSceqz+0JRtpmIShk5VWsBd/RWmfzdczMIQfSaBtU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790861492; c=relaxed/simple;
-	bh=0b1YVKaPOaxE8IN/ykeJkOh3KlVqzUv+nOkosYRt5Yw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OD4FraOQJGoUrj7C2oMhg/JBLZ7Z/ojgGRyewA70rt+OPWBEYc/kkYqTlqLLLFvaMZjphb1AmrnqzQgkTE5Vuf+2Enc/vy4ifPqRdUnfUP7i9Ym2ZnEAy8SCpfg7D4pRSSCJ6KKQ9/Ql3I0Q9lkWqVvKrBNbvevoaKx4WN15cFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LnsE2Z3N; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790863603; c=relaxed/simple;
+	bh=cN6C8charlXIxIHvfz4L0XceiAypmdBBCLB3zTOSP7I=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=NWtn+knwSIah4exujSiEMIbfFQtluMDP0ZNIgFzHgKccnILgxVJKGHrLqTUlI9f704G/bwLSsJimh09SWu7ShYF+JwVnGOsZKg/DOnsdK5MQlWHCuEhY31bpj6gD8LazkHyTjicp4qLcYTRkk7zRA8T+Z02frBGlmr+aLgt+p8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Ys8mu+vs; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LnsE2Z3N"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790861488; x=1822397488;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=0b1YVKaPOaxE8IN/ykeJkOh3KlVqzUv+nOkosYRt5Yw=;
-  b=LnsE2Z3NeGssTRblkphQSKd/81LLCwPj7pLO4ZPlfZGcGLtty8l0u9k+
-   +FJkfjMmf+LJ40HdmQv3IlLlrSM4mQQ+aCGD7JU6y5rbfYgQ+boDS5o3T
-   fOf3zxHAGIudAAHi5ElH9mHGUj2nRwnIrciiSwVC4lAUaX+mSEpOFi+iJ
-   F9zmOjxZenIGOEnPeORnQ0UyIaze7xgrXU+XdK3eziHMr2yLJF9nVfdhD
-   wdjZcra8KO4TiKnnB/I/xRgYl+NsimOHz0taNyrO8wySwqs7ZKlxOQI2E
-   6ADG6yTufBtCnX1dC0kg/oQ3OaUrzClZ0qVNnde5dBDGgEyij32wWv1CG
-   g==;
-X-CSE-ConnectionGUID: RmwQQsBFSbCm2ZYWKW5hWA==
-X-CSE-MsgGUID: j29BMKFGR3WHYkb6LZoLeg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11922"; a="90750535"
-X-IronPort-AV: E=Sophos;i="6.27,134,1787036400"; 
-   d="scan'208";a="90750535"
-Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:31:23 -0700
-X-CSE-ConnectionGUID: u+iTQITcRVmFaMHqZHZmjQ==
-X-CSE-MsgGUID: hF7Mmqm4QayOU3NylzVJSw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,134,1787036400"; 
-   d="scan'208";a="26457"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 06:31:21 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH wireless-next 6/7] wifi: mac80211_hwsim: nan: use ieee80211_is_nan_beacon() helper
-Date: Thu,  1 Oct 2026 16:33:10 +0300
-Message-Id: <20261001162941.f926f9060f9d.Ib6dbab5e2740108a037f284b243fb456958a2f17@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261001133311.3367683-1-miriam.rachel.korenblit@intel.com>
-References: <20261001133311.3367683-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Ys8mu+vs"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=cN6C8charlXIxIHvfz4L0XceiAypmdBBCLB3zTOSP7I=;
+	t=1790863601; x=1792073201; b=Ys8mu+vsx7FDV7vAwxW0OsLLnC8H66tPiHBJJDO4IPhWrws
+	VNgHnfYgEbk5kZMbXLah4mdCF3MUYN0AGDgIcAWOu8r4ARQSZi0Zt/yd1rejFcw6CwgFD8AJfVg0V
+	yVKh6c8kbO23gp+Cv/oQzYgHOQ9yoNRCH6NTnz5OT1WJ1BNFoSRczGRyLsmciR9xXv/Qw5H3528S0
+	t86EnAhUeH8TTYqC1fUr42Fd9YhWSBTECFGbr0R6XZOhcvRLKM51TN/Q5V3iN4aBWCeUDCplM06V3
+	1mItMFcVEP1D7GhkUCSbydwScTNA6BBUEGvzGttD4zFk+eAZ/o8hcx3IJMv8UlKA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xCHQh-00000000AfF-0oXW;
+	Thu, 01 Oct 2026 16:06:35 +0200
+Message-ID: <5cb9e89db758fd3af22d3a168a93406fef82c5c2.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
+	herbert@gondor.apana.org.au, ilan.peer@intel.com,
+ linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
+Date: Thu, 01 Oct 2026 16:06:34 +0200
+In-Reply-To: <20261001130853.137567-1-jtornosm@redhat.com>
+References: 
+	<47ebbd91b4bdb57723be40608349eff9ced1f34b.camel@sipsolutions.net>
+	 <20261001130853.137567-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-From: Ilan Peer <ilan.peer@intel.com>
+Hi Jose,
 
-Use the new ieee80211_is_nan_beacon() helper to identify NAN beacons
-instead of open-coding the cluster ID and vendor element checks.
+> Based on the discussion around v1, I tried to prepare a more complete
+> proposal addressing the concerns raised there (AddBA, CSA, robust
+> action frames). I understand I may have gone too broad and missed
+> some aspects of how encryption offload works internally, without
+> access to firmware documentation it is difficult to get everything
+> right.
 
-Assisted-by: GitHubCopilot:claude-opus-5
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/virtual/mac80211_hwsim_nan.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+I don't think that's necessarily it.
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-index 2d9f6d7b9251..fab6bd9e3cfb 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-@@ -230,9 +230,7 @@ void mac80211_hwsim_nan_rx(struct ieee80211_hw *hw,
- 	ssize_t data_len;
- 	u8 slot;
- 
--	/* Need a NAN vendor element at the start */
--	if (skb->len < (offsetofend(struct ieee80211_mgmt, u.beacon) + 6) ||
--	    !ieee80211_is_beacon(mgmt->frame_control))
-+	if (!ieee80211_is_nan_beacon(mgmt, skb->len))
- 		return;
- 
- 	data_len = skb->len - offsetofend(struct ieee80211_mgmt, u.beacon);
-@@ -279,17 +277,6 @@ void mac80211_hwsim_nan_rx(struct ieee80211_hw *hw,
- 	if (rx_status.signal < NAN_RSSI_MIDDLE)
- 		return;
- 
--	/* Needs to be a valid NAN cluster ID in A3 */
--	if (get_unaligned_be32(mgmt->bssid) != ((WLAN_OUI_WFA << 8) | 0x01))
--		return;
--
--	/* We are only interested in NAN beacons */
--	if (nan_elem->id != WLAN_EID_VENDOR_SPECIFIC ||
--	    nan_elem->datalen < 4 ||
--	    get_unaligned_be32(nan_elem->data) !=
--	    (WLAN_OUI_WFA << 8 | WLAN_OUI_TYPE_WFA_NAN))
--		return;
--
- 	u8 *nan_defragmented __free(kfree) = kzalloc(data_len, GFP_ATOMIC);
- 	if (!nan_defragmented)
- 		return;
--- 
-2.34.1
+> Just to clarify a few points, WoWLAN was intentionally kept disabled
+> in the patches (both mvm and mld paths), precisely because it requires
+> all traffic via firmware crypto during suspend.
 
+Yes, it does remain disabled, but then (for example) why allow
+set_rekey_offload() to go through - it's clearly not necessary.
+
+> IGTK handling was not
+> changed either, as mac80211 already handles it in software. A-MSDUs
+> are not directly MFP-related, fair point, but they were part of the
+> same commit being reverted, because patch 2 and patch 3 are just
+> reverting some parts of the FIPS disabling to try to get it working
+> again under the exception.
+
+But again, what are you actually trying to achieve?
+
+If you want big A-MSDUs, then you need hardware crypto, which you allow
+now, which would seem to _completely_ defeat the purpose of FIPS here
+(to protect data, if you read it charitably vs. just saying it's for
+paper-pushing).
+
+OTOH, why does IGTK matter so much to you? That particular key has no
+relation to data protection, so arguably *that* could still be
+offloaded. But you're doing it all precisely the other way around.
+
+Hence - again - my request for you spelling out what you're actually
+trying to achieve, rather than throwing random code at me.
+
+> Patch 2: In v1, I only re-enabled MFP_CAPABLE without passing keys
+> to firmware, the result was connection but no data traffic. That is
+> why I added key delivery in v2. Is it possible to keep software
+> crypto for data while having a functional connection, or does the
+> firmware require keys installed to pass frames? This would help me
+> understand the correct approach.
+
+Well, it does work without MFP, so fundamentally the firmware can pass
+data without having keys?
+
+> Patch 3: I can narrow this to the minimum needed. Some features
+> (EHT, 6GHz) depend on MFP so I included them, but I agree it
+> could be more selective.
+
+That's not the point - the point is that there are different
+dependencies and you didn't think about _why_ something is disabled. Not
+all of this is all related to MFP.
+
+> Patch 4: The intent was host-side crypto for management frames via
+> SW_MGMT_TX (same mechanism as ath9k, rtw89, etc.), but I understand
+> this depends on how patch 2 is resolved.
+
+But again, the way you did that doesn't make any sense.
+
+> Ultimately, I just want to fix a problem affecting our customers who
+> are interested in keeping WiFi working, accepting that some lower-level
+> management frames are not FIPS-compliant while the important part for
+> them, data encryption, is.
+
+Which is the opposite of what you actually did.
+
+> I don't want to bother you with more patches without guidance. I can
+> try to engage Intel on this, but any help, recommendation on the right
+> approach to try to solve this in some way would be appreciated.
+
+I really do think it starts with spelling out what you (or your
+customers) actually want, and what trade-offs wrt. FIPS you're willing
+to accept.
+
+johannes
