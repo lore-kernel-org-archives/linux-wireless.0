@@ -1,83 +1,49 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+Received: from mta1.migadu.com (out-28.mta1.migadu.com [95.215.58.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DFF9361675
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 05:01:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E6C46F48C
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 06:02:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790830885; cv=none; b=L0Q9NgioyIVLmLtwo/4LAkQ/XxkZqpdV3Z+jGzg68+Zx1Gl8emyN0jSVPoiFUz4rs+HBj3BJ+EoeD8BYT4FrjPAz8SiXhfs/faNlwbEL9bp7u9SGSrrJeEys/qg3DAyTqYy4aZnHFlE2rRx5QFNhAVYq2YTowrKz6klwka53Q2c=
+	t=1790834565; cv=none; b=tLzbqxcJGddJkTR7aze3Tn5iTqvh1T+gOEMb62flxLKyZtiImDwcX98MB6saHSe+aV4ifMKbmBQqitb9UJCYho8PTOrKZ0oGhEgcpSxSPgFRGitM9BrfoaJ4+kpGLrL0UMIPZLjRN/ygpMHUOd+z/4JeDBCg0SViXOsjna89dFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790830885; c=relaxed/simple;
-	bh=LB1sY84a1EE+3kSSw4xtbjuyLg1kQRZO7UTUKIYXGMo=;
+	s=arc-20240116; t=1790834565; c=relaxed/simple;
+	bh=ONHwvlafLxqOwWtTKBLJQM46MsZG63waYc7Ovsluscs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jwdl9nKGAHU8iQyRiHScbsh/KiA7/OfNBHWU1hLflS4uTOXpmwCiwgDy8sCRUMx1tO6Up8/G0H/c5jJX/rNOj6Jzbq0o/x7yIU2LfNTPh9osPaJ2t/VXB38WEjMznAhfkdiCcKLwkzHUPNO83BH8XKb8g3rDvuuvtlD39O77Mag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RoVc71j2; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version; b=h2GepJCDp/6RYndDOHpnu6UwhCC8gCbYYUdz55ZXL6UFPGA4Qq+bxjheyHvI6ve7DqpZFF7Bru71r3M2u/6cNF4YC3fo+SWBsK2J2mwtFFAzpUaH3VdrXd0LRCHLFVAv8oZb2uZP6vMwD3mQIKw2Q3kWuIM3XXg9jbCIpPkX9Vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ahrIkfdT; arc=none smtp.client-ip=95.215.58.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RoVc71j2"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d747ed9866so43660125ad.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 22:01:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790830880; x=1791435680; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VTxV+1nEYr5jusQwn3L4od+0vUpR+87EIFrgdrNzUZg=;
-        b=RoVc71j2mX+Q5evTGwASdtomsgJFX6LyGmM0T8WH308T+798n9bW6H+F5yJjgM/gXN
-         s/5kO4DupWobHRRjL3SK4OKOzs1ggBscJHC2lt5CdekZxFi5olhUZ2FALxuSYdbBlClM
-         uu3KNedqaHFQJV70Tx1uo7QR2XZSCSsKVaS1vRQ6hhVzi2qjacsXY0tZrpFeRmWpxMoP
-         1bnzbEWjfbKHlsDxpm7eiUVu8bkUhDamxGOkgtqUvFuiPZCVnT9712SXHZT/T+6eUjN9
-         tO1uHrkk0ck98rAac5+h/UHTZGypfaFK8ryYSilbKKVitYBJg6JII0t46cMK+i9j4pFl
-         wEgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790830880; x=1791435680;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VTxV+1nEYr5jusQwn3L4od+0vUpR+87EIFrgdrNzUZg=;
-        b=DSPEUgHZ66pNJwaVLa1gcHBAUC1m6MERagn6la/I2Na5SpvIHL88SxV7S/pzZOH4jo
-         vt5KotNNk0fo3XWHTYdGqaMJqJdM52Fqmf662s5OIe3mxmolHkhpTtHlpW+PJ6jH2G7n
-         j1FCmVqYw7AA+il4iDxVDzxYSuWFEUqfTxn9wZi/W5KmJMVWf/+udPtrouqBFEubAPzG
-         Ha9p1l0QnKRDB/LioShyCvJvz+HFvPLjGAKabUbw2VHm/nZHsu+LAIu1SzLeMN3fvSCE
-         VsmhBRYguHFhN/jFyGk1xHYqXP/Lzd6mG0LFkTVKmXpm5lPlMwBLJOQNr0cvMZPWGIWP
-         1wxg==
-X-Forwarded-Encrypted: i=1; AKwUvBwhoSeddo1nWkHWfbJCZrRQJc8pyQGy/RpBqXbd7wnq92Vzkb+31Re9lOE7bG3stmQvwGzDpwy3h3sDP60csQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIZJYeaqkt0xZZxKUE9Er4E8uii69CYbd2KSchjEyklCodVTTv5
-	WewQVyzlDVnv6gNY/dQP5XdSz+bRUCytX1mOkCKBSgvqWWqrWf5aPyZu
-X-Gm-Gg: AYBFou0V7AMvI/tlNDp4AiR8AT5SSLKAfxueNNjNYokn7Tdb3x+5ttL2mpGY6L72Hcb
-	5xYtFHaofu5jdyTsF+MqFK19zWezV54eDk7ax7THlI5k3YbvNXd1u2uOSsNkHC6orwY6VT7/rqq
-	BAWLtRQlxg8cnyjJltiDrJjttvk0m+XfogoNDdC2eEzKViAqWJKhWySZ/97HE5hZH5/m/E0bHwJ
-	MTVINFQaEEhYJHLkowT1IYucpf2WMQXmJm9DHa1oocy3zjeiC72BSm/3YGhfVyWiHhkHPyDeDbX
-	RCZIqxdF0bNgQN4N7dgQM5LZ+fhSeaFonaNWeZpuGs3VVse38v1+u6rWMzIcUHj5DS/abEsCRGj
-	LZz+51nu5doLgdxFRbIdDqbixx7GQwGtU7ouD/L65fKAlaqwce9YgjNgPStQ6VUaXFsGQUKKSak
-	xstfVvI/jHeAvOUTBBZL6pc3w9DC/++R0HANAQAmkZ4L6KTX7mPa8q0ngzi5CftDHUc0QiOrWi7
-	TmKW6qztPMlje9K9exuTA==
-X-Received: by 2002:a17:902:ce8c:b0:2e2:cc25:b232 with SMTP id d9443c01a7336-2e2e4b75346mr29200155ad.42.1790830879917;
-        Wed, 30 Sep 2026 22:01:19 -0700 (PDT)
-Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e300b21912sm5112085ad.54.2026.09.30.22.01.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 22:01:19 -0700 (PDT)
-From: Zhan Xusheng <zhanxusheng1024@gmail.com>
-X-Google-Original-From: Zhan Xusheng <zhanxusheng@xiaomi.com>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Gabay <daniel.gabay@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Avraham Stern <avraham.stern@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Richard Cochran <richardcochran@gmail.com>,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ahrIkfdT"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ONHwvlafLxqOwWtTKBLJQM46MsZG63waYc7Ovsluscs=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790834556; v=1; x=1791439356;
+ b=ahrIkfdTqyLz3d21ADnyivDKDAM1fD5EcQvOYnZ2BOHIVAkbAdkrwZuUJkHv39wgQ29cusJ+
+ nmyEM4BQmXzYVteogEGAyfgdFBE5dIH1IWS4BAfliNNSXO3H40vXU5VIbYqmgMNQHHLkj2FzUNt
+ h9xycMfDrayyzuyNzUeviDpI=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id dfba6b55da3cb7ed;
+	Thu, 01 Oct 2026 06:02:36 +0000
+X-Mizu-Trace-ID: dfba6b55da3cb7ed
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Alastair D'Silva <alastair@d-silva.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
 	linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Zhan Xusheng <zhanxusheng@xiaomi.com>
-Subject: [PATCH v2 2/2] wifi: iwlwifi: mld: Fix GP2 to nanoseconds overflow on 32-bit
-Date: Thu,  1 Oct 2026 13:01:03 +0800
-Message-ID: <20261001050103.860584-3-zhanxusheng@xiaomi.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261001050103.860584-1-zhanxusheng@xiaomi.com>
-References: <20261001050103.860584-1-zhanxusheng@xiaomi.com>
+	stable@vger.kernel.org,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: Re: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Thu,  1 Oct 2026 06:02:12 +0000
+Message-ID: <20261001060213.24759-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261001000303.3505264-2-alastair@d-silva.org>
+References: <20261001000303.3505264-2-alastair@d-silva.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -86,45 +52,58 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Same problem as the mvm driver: scale_update_gp2 is a u32 GP2 timestamp
-in microseconds and NSEC_PER_USEC is 1000L, so on 32-bit
+Hi Alastair,
 
-	u64 scale_time_gp2_ns = mld->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
+The split looks good to me.
 
-truncates to 32 bits for any GP2 value above 4.295 s.
+One issue with acknowledging the request up front:
 
-iwl_mld_ptp_gettime() and iwl_mld_ptp_get_crosstimestamp() in the same
-file already cast to u64 before multiplying.  Do the same here.
+> +	rtw_sdio_disable_interrupt(rtwdev);
+> +	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
 
-Fixes: d1e879ec600f ("wifi: iwlwifi: add iwlmld sub-driver")
-Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
----
- drivers/net/wireless/intel/iwlwifi/mld/ptp.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+When dev_alloc_skb() fails, rtw_sdio_rxfifo_recv() returns without
+reading the port:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
-index 9f7d17dbdee1..643664d35772 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
-@@ -49,7 +49,8 @@ static void iwl_mld_ptp_update_new_read(struct iwl_mld *mld, u32 gp2)
- u64 iwl_mld_ptp_get_adj_time(struct iwl_mld *mld, u64 base_time_ns)
- {
- 	struct ptp_data *data = &mld->ptp_data;
--	u64 scale_time_gp2_ns = mld->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
-+	u64 scale_time_gp2_ns = (u64)mld->ptp_data.scale_update_gp2 *
-+				NSEC_PER_USEC;
- 	u64 res;
- 	u64 diff;
- 	s64 scaled_diff;
-@@ -149,7 +150,7 @@ static int iwl_mld_ptp_adjfine(struct ptp_clock_info *ptp, long scaled_ppm)
- 
- 	spin_lock_bh(&data->lock);
- 	data->scale_update_adj_time_ns =
--		iwl_mld_ptp_get_adj_time(mld, gp2 * NSEC_PER_USEC);
-+		iwl_mld_ptp_get_adj_time(mld, (u64)gp2 * NSEC_PER_USEC);
- 	data->scale_update_gp2 = gp2;
- 
- 	/* scale_update_adj_time_ns now relects the configured delta, the
--- 
-2.43.0
+	skb = dev_alloc_skb(bufsz);
+	if (!skb)
+	  return;
 
+but the loop counts the bytes anyway:
+
+		rtw_sdio_rxfifo_recv(rtwdev, rx_len);
+
+		total_rx_bytes += rx_len;
+
+so a few failed reads burn the 64K budget and the loop exits with the
+FIFO still full. The request is already cleared by then, and only a new
+packet sets it again, which may never come if the FIFO is full and the
+sender is paused. 8051 does not have this problem because it leaves the
+bit to hardware. Can rtw_sdio_rxfifo_recv() report the failure, so the
+loop can stop and retry instead? The read error just below the allocation
+leaves the FIFO in the same state.
+
+Same function, the enable at the end:
+
+> +	/* Unmasking HIMR re-asserts the IRQ line if new packets arrived */
+> +	rtw_sdio_enable_interrupt(rtwdev);
+
+It also runs when the device has been stopped. ksdioirqd can still run a
+handler that was signalled before rtw_sdio_stop() released the host, and
+stop only writes HIMR as zero:
+
+	static void rtw_sdio_stop(struct rtw_dev *rtwdev)
+	{
+		rtw_sdio_disable_interrupt(rtwdev);
+	}
+
+rtwsdio->irq_mask still has RX_REQUEST and CPWM1, so this puts the mask
+back and arms the stopped device again. PCI clears rtwpci->running in its
+stop path and only re-enables while it is still set:
+
+	if (rtwpci->running)
+		rtw_pci_enable_interrupt(rtwdev, rtwpci, rx);
+
+Can you add something like that here?
+
+Best regards,
+Luka Gejak
