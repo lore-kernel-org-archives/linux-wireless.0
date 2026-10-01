@@ -1,64 +1,64 @@
-Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6CEB3CCFCB
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 05:01:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DFF9361675
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 05:01:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790830878; cv=none; b=JbHf/qdBuAkFcZ7P4B3ZbAhaRo2f85uVWQWRbEfYP5BtO6/lZDxypUsXyosks9SSBJuSu49yxz0XC3pmCvSNZ7Ng4gDM417bhK4rRvCtnNAzrRTVq8e7S7gqwMo5a19nUs93H9oUiN66apDezoCPJiH+Oc5zQTNxX3AFztXnA9k=
+	t=1790830885; cv=none; b=L0Q9NgioyIVLmLtwo/4LAkQ/XxkZqpdV3Z+jGzg68+Zx1Gl8emyN0jSVPoiFUz4rs+HBj3BJ+EoeD8BYT4FrjPAz8SiXhfs/faNlwbEL9bp7u9SGSrrJeEys/qg3DAyTqYy4aZnHFlE2rRx5QFNhAVYq2YTowrKz6klwka53Q2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790830878; c=relaxed/simple;
-	bh=8YZJ69ey0sPd+XzFNKSH5elxOenalI+CtLxC5znIJ+g=;
+	s=arc-20240116; t=1790830885; c=relaxed/simple;
+	bh=LB1sY84a1EE+3kSSw4xtbjuyLg1kQRZO7UTUKIYXGMo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DK6nSFvKwWwGsa0O3E8F7k2rGCyHpwIOAtdk5GDS4RdExBOuPvooie3WLfPriWiukA4lyK8kvfw4ZH1orA38Qn4+Fd3q4K4REjNkrmIVKmALO3599BA8AVL6LjeC6t5aCj9T3y/I0lcgFOuJiEk1OLImzS06lrMm4oiPmwK5cGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JDt35WUa; arc=none smtp.client-ip=74.125.227.141
+	 MIME-Version; b=Jwdl9nKGAHU8iQyRiHScbsh/KiA7/OfNBHWU1hLflS4uTOXpmwCiwgDy8sCRUMx1tO6Up8/G0H/c5jJX/rNOj6Jzbq0o/x7yIU2LfNTPh9osPaJ2t/VXB38WEjMznAhfkdiCcKLwkzHUPNO83BH8XKb8g3rDvuuvtlD39O77Mag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RoVc71j2; arc=none smtp.client-ip=74.125.227.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JDt35WUa"
-Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2d747ee1f9bso29225515ad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 22:01:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RoVc71j2"
+Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d747ed9866so43660125ad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2026 22:01:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790830876; x=1791435676; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790830880; x=1791435680; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=SP7oNfhQpc8o2+FdFv2zFrXCBPchs9tdxw8AkWMX6rc=;
-        b=JDt35WUaZmXzC6q8LMCJF8R/KU9Px3eRLWpaUnfazyID19xUUitmGq9lqy7OxxVoDn
-         kSTxAfMObA32BqFEtZsCr82meQ3KluKv5KE+aDQbb33dTo/15QH8tz3GL/2uylo4O1ld
-         UoQNM4boRh/F0jM7yEq3P/SUIj3UI/8CBIMpxZtZlaxGcG4WvkxCpmJxoAf+XqxvOlqt
-         L1FhD2tEIXpZUodxvXspIaqcCcJVPk0Y/E8mb27ZS96qEMaDa/J0XlVz6jDglssF9M/N
-         eK2zKbThCmaZwT7uWOnu8ru6Oyd6xa2Zsdgv6V2esu2TdnjJM2shsfCxfRlBMklHH+o/
-         Drkw==
+        bh=VTxV+1nEYr5jusQwn3L4od+0vUpR+87EIFrgdrNzUZg=;
+        b=RoVc71j2mX+Q5evTGwASdtomsgJFX6LyGmM0T8WH308T+798n9bW6H+F5yJjgM/gXN
+         s/5kO4DupWobHRRjL3SK4OKOzs1ggBscJHC2lt5CdekZxFi5olhUZ2FALxuSYdbBlClM
+         uu3KNedqaHFQJV70Tx1uo7QR2XZSCSsKVaS1vRQ6hhVzi2qjacsXY0tZrpFeRmWpxMoP
+         1bnzbEWjfbKHlsDxpm7eiUVu8bkUhDamxGOkgtqUvFuiPZCVnT9712SXHZT/T+6eUjN9
+         tO1uHrkk0ck98rAac5+h/UHTZGypfaFK8ryYSilbKKVitYBJg6JII0t46cMK+i9j4pFl
+         wEgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790830876; x=1791435676;
+        d=1e100.net; s=20260707; t=1790830880; x=1791435680;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SP7oNfhQpc8o2+FdFv2zFrXCBPchs9tdxw8AkWMX6rc=;
-        b=1bF1BwbqxWUkxhfRp6DT+hlhtX4pNFH20j4J0rgdKuxEj1Qf2wbWhty688jZXZyosb
-         9iR+22HTAvC/RqZVEpOnSnnFbiCyeS56+x9zgHoiTZY42oyD6oqYokCU/Q/6Yz3KkuLQ
-         362WUjvODqmnPtJYwIVfvq9GhSDcC3xfi+74q2mEsaTiCmSWJehosZ9XGBHPahvQg4Hq
-         fgN7Ndrf7m3CIiwrR331x33Te9UV1zh4OjcT53nL83BxtlAvPu69NHrIAGEkPqZZPhPX
-         G2ZQvv4IH+U6hSkCTgiFGajzsm2U62ayzun3IFvLrlyyLj2gVFF+/+MKCE/P8IVpUSwN
-         ZVRQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwApjxsRQ+GlyTaEvZnuLffjWbb9/SWRfyumGGtmagf8o5K1TLruOB1tc3Z0YEjtWbX3zsPgNRCZZjdy6WcKQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIOK9gX50ml5rIHpDXJxJ22X1Y66hUVVTysXidx6hy+jdnCVImH
-	3d7G5rxvqh96RqCgGlE2UZxf7wznBlbFl4j9FKpAaOARK0+OxX//10U3
-X-Gm-Gg: AYBFou057vfzLni7OpaxyfyjkqR1uDLz6VP+HYK1cA0QU+qa64WQvONUJDZ8UZVHfFy
-	ivBbyOWix4SLW65inydYpH1inDA8dWd06sH/NW+8hWh3fs25//hQxcou0itzFDDhqu2/BugNW9g
-	FAo2QCCzsy4LnU9WGSMunJcmdPvBQLvSeZ4djYJC9JotjTcq7KLDKWrUCaTJWsSUdXOfW+V8lep
-	ROUeNb8XmvRN5nAP0Lbn3nynXO11Mdbw8WwB45cN3qLw2up3EXYK18ZqIuhyrPiNSG/LBunbdgu
-	fZEwAENfvhQWseJpIyhEs5pKJQytWUxuf4SYnpyqoQm2S0ijKULaTnTw0LuftWIlmWhP9uFWmfD
-	v8kaLjAVrG39xRcvo20qj2IqxZT+ygympf/YFOg/QHiB1okVqaHGQ5ju5UJMBmvgYShWUYXkN4s
-	hF009JcNADUSoBZGQhNG34FTteLlvmZkE7ZBJ8CmxsAebx2OwOZMCInpJ8HirpMheQRUK8BCmg/
-	c0OnJZjY5A=
-X-Received: by 2002:a17:902:ebc6:b0:2dd:c100:7cc8 with SMTP id d9443c01a7336-2e2e4b34ae1mr32499205ad.68.1790830875905;
-        Wed, 30 Sep 2026 22:01:15 -0700 (PDT)
+        bh=VTxV+1nEYr5jusQwn3L4od+0vUpR+87EIFrgdrNzUZg=;
+        b=DSPEUgHZ66pNJwaVLa1gcHBAUC1m6MERagn6la/I2Na5SpvIHL88SxV7S/pzZOH4jo
+         vt5KotNNk0fo3XWHTYdGqaMJqJdM52Fqmf662s5OIe3mxmolHkhpTtHlpW+PJ6jH2G7n
+         j1FCmVqYw7AA+il4iDxVDzxYSuWFEUqfTxn9wZi/W5KmJMVWf/+udPtrouqBFEubAPzG
+         Ha9p1l0QnKRDB/LioShyCvJvz+HFvPLjGAKabUbw2VHm/nZHsu+LAIu1SzLeMN3fvSCE
+         VsmhBRYguHFhN/jFyGk1xHYqXP/Lzd6mG0LFkTVKmXpm5lPlMwBLJOQNr0cvMZPWGIWP
+         1wxg==
+X-Forwarded-Encrypted: i=1; AKwUvBwhoSeddo1nWkHWfbJCZrRQJc8pyQGy/RpBqXbd7wnq92Vzkb+31Re9lOE7bG3stmQvwGzDpwy3h3sDP60csQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIZJYeaqkt0xZZxKUE9Er4E8uii69CYbd2KSchjEyklCodVTTv5
+	WewQVyzlDVnv6gNY/dQP5XdSz+bRUCytX1mOkCKBSgvqWWqrWf5aPyZu
+X-Gm-Gg: AYBFou0V7AMvI/tlNDp4AiR8AT5SSLKAfxueNNjNYokn7Tdb3x+5ttL2mpGY6L72Hcb
+	5xYtFHaofu5jdyTsF+MqFK19zWezV54eDk7ax7THlI5k3YbvNXd1u2uOSsNkHC6orwY6VT7/rqq
+	BAWLtRQlxg8cnyjJltiDrJjttvk0m+XfogoNDdC2eEzKViAqWJKhWySZ/97HE5hZH5/m/E0bHwJ
+	MTVINFQaEEhYJHLkowT1IYucpf2WMQXmJm9DHa1oocy3zjeiC72BSm/3YGhfVyWiHhkHPyDeDbX
+	RCZIqxdF0bNgQN4N7dgQM5LZ+fhSeaFonaNWeZpuGs3VVse38v1+u6rWMzIcUHj5DS/abEsCRGj
+	LZz+51nu5doLgdxFRbIdDqbixx7GQwGtU7ouD/L65fKAlaqwce9YgjNgPStQ6VUaXFsGQUKKSak
+	xstfVvI/jHeAvOUTBBZL6pc3w9DC/++R0HANAQAmkZ4L6KTX7mPa8q0ngzi5CftDHUc0QiOrWi7
+	TmKW6qztPMlje9K9exuTA==
+X-Received: by 2002:a17:902:ce8c:b0:2e2:cc25:b232 with SMTP id d9443c01a7336-2e2e4b75346mr29200155ad.42.1790830879917;
+        Wed, 30 Sep 2026 22:01:19 -0700 (PDT)
 Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e300b21912sm5112085ad.54.2026.09.30.22.01.13
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e300b21912sm5112085ad.54.2026.09.30.22.01.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 22:01:15 -0700 (PDT)
+        Wed, 30 Sep 2026 22:01:19 -0700 (PDT)
 From: Zhan Xusheng <zhanxusheng1024@gmail.com>
 X-Google-Original-From: Zhan Xusheng <zhanxusheng@xiaomi.com>
 To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
@@ -72,9 +72,9 @@ Cc: Johannes Berg <johannes@sipsolutions.net>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Zhan Xusheng <zhanxusheng@xiaomi.com>
-Subject: [PATCH v2 1/2] wifi: iwlwifi: mvm: Fix GP2 to nanoseconds overflow on 32-bit
-Date: Thu,  1 Oct 2026 13:01:02 +0800
-Message-ID: <20261001050103.860584-2-zhanxusheng@xiaomi.com>
+Subject: [PATCH v2 2/2] wifi: iwlwifi: mld: Fix GP2 to nanoseconds overflow on 32-bit
+Date: Thu,  1 Oct 2026 13:01:03 +0800
+Message-ID: <20261001050103.860584-3-zhanxusheng@xiaomi.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261001050103.860584-1-zhanxusheng@xiaomi.com>
 References: <20261001050103.860584-1-zhanxusheng@xiaomi.com>
@@ -86,71 +86,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-scale_update_gp2 and gp2_on_air_rise are u32 GP2 timestamps in
-microseconds.  NSEC_PER_USEC is 1000L, so on 32-bit the products are
-computed in 32-bit arithmetic and truncated before being widened:
+Same problem as the mvm driver: scale_update_gp2 is a u32 GP2 timestamp
+in microseconds and NSEC_PER_USEC is 1000L, so on 32-bit
 
-	u64 last_gp2_ns = mvm->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
+	u64 scale_time_gp2_ns = mld->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
 
-A GP2 value above (U32_MAX / 1000) us, i.e. 4.295 s, wraps.  GP2 is a
-free-running counter that wraps every 2^32 us, so almost its whole range
-is affected and the PTP clock jumps.
+truncates to 32 bits for any GP2 value above 4.295 s.
 
-The neighbouring conversions in the same files already cast:
+iwl_mld_ptp_gettime() and iwl_mld_ptp_get_crosstimestamp() in the same
+file already cast to u64 before multiplying.  Do the same here.
 
-	gp2_ns = iwl_mvm_ptp_get_adj_time(mvm, (u64)gp2 * NSEC_PER_USEC);
-
-Cast the remaining ones the same way.  The i386 build of
-iwl_mvm_ptp_get_adj_time() changes from "imul $0x3e8,...,%ecx" to
-"mull", i.e. from a 32-bit product to a 32x32->64 one.
-
-mvm/ptp.c:219 is already u64 and needs no change.
-
-Fixes: a2f49f7d52a9 ("wifi: iwlwifi: mvm: implement PHC clock adjustments")
-Fixes: 0e49e940d1bc ("wifi: iwlwifi: mvm: add an option to use ptp clock for rx timestamp")
+Fixes: d1e879ec600f ("wifi: iwlwifi: add iwlmld sub-driver")
 Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ptp.c  | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/ptp.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-index 49dcb1388007..5f33e2f8fb2a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-@@ -47,7 +47,7 @@ static void iwl_mvm_ptp_update_new_read(struct iwl_mvm *mvm, u32 gp2)
- u64 iwl_mvm_ptp_get_adj_time(struct iwl_mvm *mvm, u64 base_time_ns)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
+index 9f7d17dbdee1..643664d35772 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
+@@ -49,7 +49,8 @@ static void iwl_mld_ptp_update_new_read(struct iwl_mld *mld, u32 gp2)
+ u64 iwl_mld_ptp_get_adj_time(struct iwl_mld *mld, u64 base_time_ns)
  {
- 	struct ptp_data *data = &mvm->ptp_data;
--	u64 last_gp2_ns = mvm->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
-+	u64 last_gp2_ns = (u64)mvm->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
+ 	struct ptp_data *data = &mld->ptp_data;
+-	u64 scale_time_gp2_ns = mld->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
++	u64 scale_time_gp2_ns = (u64)mld->ptp_data.scale_update_gp2 *
++				NSEC_PER_USEC;
  	u64 res;
  	u64 diff;
+ 	s64 scaled_diff;
+@@ -149,7 +150,7 @@ static int iwl_mld_ptp_adjfine(struct ptp_clock_info *ptp, long scaled_ppm)
  
-@@ -259,7 +259,7 @@ static int iwl_mvm_ptp_adjfine(struct ptp_clock_info *ptp, long scaled_ppm)
- 	 */
- 	gp2 = iwl_mvm_get_systime(mvm);
+ 	spin_lock_bh(&data->lock);
  	data->scale_update_adj_time_ns =
--		iwl_mvm_ptp_get_adj_time(mvm, gp2 * NSEC_PER_USEC);
-+		iwl_mvm_ptp_get_adj_time(mvm, (u64)gp2 * NSEC_PER_USEC);
+-		iwl_mld_ptp_get_adj_time(mld, gp2 * NSEC_PER_USEC);
++		iwl_mld_ptp_get_adj_time(mld, (u64)gp2 * NSEC_PER_USEC);
  	data->scale_update_gp2 = gp2;
- 	data->wrap_counter = 0;
- 	data->delta = 0;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index c01c704929ba..e9146c38a81c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -2021,7 +2021,9 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
  
- 	if (mvm->rx_ts_ptp && mvm->monitor_on) {
- 		u64 adj_time =
--			iwl_mvm_ptp_get_adj_time(mvm, phy_data->gp2_on_air_rise * NSEC_PER_USEC);
-+			iwl_mvm_ptp_get_adj_time(mvm,
-+						 (u64)phy_data->gp2_on_air_rise *
-+						 NSEC_PER_USEC);
- 
- 		rx_status->mactime = div64_u64(adj_time, NSEC_PER_USEC);
- 		rx_status->flag |= RX_FLAG_MACTIME_IS_RTAP_TS64;
+ 	/* scale_update_adj_time_ns now relects the configured delta, the
 -- 
 2.43.0
 
