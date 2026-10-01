@@ -1,204 +1,171 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-73.mta0.migadu.com [91.218.175.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24DB14F5DE1
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 09:13:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50424EB864
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 09:18:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790846035; cv=none; b=EX5rD5kbw/7GfJMeWsYcVXo8amfanKV9UCSkxWnmYkPthTHPuVFr4qRxxiTKnvgEGG9l1W/VUvV2leI57hY6AvCZwY0ubEQt9PaaFDv4Lj+X9oNgY+b9qKr/hNPqQyZhFLLF8yFFAyAFn4tk75x3xocqWi+Gegb5UodyJHkKqis=
+	t=1790846325; cv=none; b=GliI8Xbm8tQRhH930tMRgljtmtt97kqI5R6Gvi8FakLzB9UH3BWRjQbD135nWezG0uQtpYSHcm0epKhuNqLPSDO2BI6xteZ7KnU5kvEasxgM1fyTDv93/sL7Kjaw/BSTgfMCh3KNDhAmT5Dz1PCeIOl6K1A49bAsbiViLrCu1eI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790846035; c=relaxed/simple;
-	bh=eppgexe6cQRaVSUc/LRRsqHD+y8q/knFMiTV2F4uLcQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=c7Ib1FWC1gksInncAehrBbzvy1lBUHcWaGgCouy2Vf38h2Uwk9ZtHH64h1BXZgYssB1hOpFcul4sszolRgPBS0ka7Pul5IjHU7Kfa/l/FF4Q7HCgNmLMu+KN6g1kdAjmd0UGKK4Iz/IfWci3zvB3rNPa2Jf2YQLXSm3UZ5CxNWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RryxN585; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=caquMgR7; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1790846325; c=relaxed/simple;
+	bh=EbMqWJCS2xGgGnvPEqXPpoQSb9q8iQA3GjRYK26q9NY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rH352bcREh+tk4UX6T8Ma2n+BKJGwuwU+MIOzrSezS0z4SBFFeOQnE5DE0S0v4k20OpVNfot1fp17RK3QKhv7FJ/qwjea+GRVHevzDWQJje56/y6jw8fQoFdHFJiho5VbXd14ku5M8iVD8sKHwp5pXg2WP4Qpv9bYJfD4hwbD78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tJBzFl/A; arc=none smtp.client-ip=91.218.175.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RryxN585";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="caquMgR7"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6916xPYo2806285
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Oct 2026 09:13:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=XOFKMvOewvgJINNEKpQtKr
-	YF70XUZuosc2RHyGToySY=; b=RryxN585c2kZ0j6SXYjtbRpiQELu/2r0pOhSHg
-	Qr1NjQI9DsFJ7dCLMDCBMXXkiJBJ6UNSG1t0RdBUV45whNiprZ0gk6/X9k/bW8Dy
-	IC7aZxy23AZ4MB9rwhSAyZdtthWzV+4BfOMtDEPMmRx5OtmG4Pgy2Zz8VUh0YRwu
-	MOva/maUp3x8Elyn10TTQM3UqlhAKzE9daL2WfQnS+Lh8UWon6I8AD6gjLbYgDJ8
-	kK8EcUQjbLqFwNAhn6qJ40eHIKQYb7x1nbfiZhv/hVLeLG3LAW19WuVwjoaW2dV8
-	lWVupgbxtzS1PsZuxBRal9BJQM4uq9v9e67S7DJdq3iwuiGw==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h1hvkgrxc-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 09:13:51 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-34bbf2e3c5cso4530482eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 02:13:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1790846031; x=1791450831; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=XOFKMvOewvgJINNEKpQtKrYF70XUZuosc2RHyGToySY=;
-        b=caquMgR7fb3nCi4T1/bs+RtcMbiItn0/mk0hm5YNXdn2cxRzCQXJSZfQRGsZi3WhoM
-         3uvD6Ql3ieSinQMHVgX3mJmoMdpAOeQ9e6TLsq5cW8YIWRtJfkl4bWpC0lJDf4T7iMtY
-         ftSUOE5v5xUUkFG38Gif427gGuCXWzVaQkm1ebZAdrj1utMzODfGoEVkSHdfXP6r6U7f
-         1y/EF2tKT53Q5a0Oy8g4gEGN4viNOTCGjVVT4mKyIDYKHERMzJEhVstfdhQe7ywxo+E9
-         tRAvd755ITkdPn10bfe2dFCGwhNIBsHg6qGKq8uVPbsjEtY2N6DfMh0Lk0LbRnmGmutV
-         AmfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790846031; x=1791450831;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=XOFKMvOewvgJINNEKpQtKrYF70XUZuosc2RHyGToySY=;
-        b=hqKR3XGS6CmrQbwvkatZRLktXs3R9Ryi3DQYlBd6j0KteZci3CCMdnSYFlYIhCqBaE
-         sBSCYgtYSSV0Zps316btGq4Ieta5BgMlxUQwrjyCyzetwFqNnROGUxX+08RedbjQPzgc
-         xp8DmAyuuhIIziFm+P2Yy77cgyryE2zqdlyRC5s47RKlb5KX9xKfSsN/iUX3uu5dbNn3
-         qzeS3wrZ7in9MZljNu+77IWEtpaSOhmAXdmR9trmIcypzblRlD63EVpfR2uZWF/7TrVI
-         RYDRNRBih2Hla+p48fIXSMPutFohjy46u+uvUUcoVUTygM6FTTCthmcWgh6UjXIRLPql
-         HLiw==
-X-Gm-Message-State: AFuF++n/Jtwa0NA4sKqANKflxbYgRX0dv4568rmSAHKpogzvXM5LOXN+
-	1ipOD3c1NLzUbwOdg42C/j6vK3KCjkdO7sMwHKO+XKO1Uf9DQLuxpRuSh2RVTTUre6EnO26HJ5e
-	u0iLAWdsGIaXedJvDCXXZa9J5p5hONeN+haA5hQfA8Ta3xj0X4Sdq3g/Cfrd+1S5cHusd3Q==
-X-Gm-Gg: AYBFou24WKXFC6AKwj/Yx3uEGHoYUh7QYTqeidJwnmiKW4CsUJIpdtuC1tUbzdlsshU
-	mtQZRLADf/4VSJwWbKiOPwMhMPjNLLUEGPKKQ7AuAZsUo+yfWUmhYwyyuY8hMgHXQ+Ul04jcZp5
-	Gu+uHput2lzwYj3A/j3pI/BSKOBmgJuMMHpdGc7OPStwAZO9nc2+Xad8hoscfuKSPyNIBAn+upe
-	S05P9IiEIJFqHXhNP3GA8ZEvnnbMVWFjxdbYeRPvl1MKEDkh7zR2KLs+3QkE9SkmyDoa0Pp3KRN
-	4G7f+JuJi77p9YMtI9wEVZAStuDr/HNL6NzapfH+KR84S2D4z+74nkszzXS2/pZJCWdQDAuB5g3
-	ZbRL3n+xVWeqMvdHD5CmxGG4am4nddO948yCZzcWMCvAton20NW0tkl65zafA5TdNIRlSfmVhcL
-	K5nFV+6uzU6DeqeXJTxgSxvncrYlaCcH+l
-X-Received: by 2002:a05:7300:ae81:b0:342:94b:aa28 with SMTP id 5a478bee46e88-34ce0839716mr4765103eec.27.1790846030888;
-        Thu, 01 Oct 2026 02:13:50 -0700 (PDT)
-X-Received: by 2002:a05:7300:ae81:b0:342:94b:aa28 with SMTP id 5a478bee46e88-34ce0839716mr4765071eec.27.1790846030196;
-        Thu, 01 Oct 2026 02:13:50 -0700 (PDT)
-Received: from hu-mdharane-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34db5016caasm5717534eec.30.2026.10.01.02.13.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Oct 2026 02:13:49 -0700 (PDT)
-From: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>
-Date: Thu, 01 Oct 2026 14:43:45 +0530
-Subject: [PATCH wireless-next v3] wifi: mac80211: Guard FILS discovery and
- unsolicited broadcast probe response
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tJBzFl/A"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=EbMqWJCS2xGgGnvPEqXPpoQSb9q8iQA3GjRYK26q9NY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790846320; v=1; x=1791451120;
+ b=tJBzFl/A3aI0mBFpsn7qYHHS6h5jtmnsxJq7Im88083wLOqFHnaZ/ua7ffvsMUq86p55Q264
+ 0nXLspBbtC6TyjrfChAr5VVwug9PACnkWjzTJIbRFTkIM1PWScJk5DNWHFAHqGr5cYalUDLClAj
+ rdKls2tS7GXrkl7gChlPra5c=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 89bc88340c188995;
+	Thu, 01 Oct 2026 09:18:40 +0000
+X-Mizu-Trace-ID: 89bc88340c188995
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: [PATCH rtw-next v6 0/6] wifi: rtw88: add RTL8723B/RTL8723BS support
+Date: Thu,  1 Oct 2026 11:18:29 +0200
+Message-ID: <20261001091835.67909-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261001-fils-v3-1-55c5628f9d1d@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIAEgkvmoC/3WOQW7CMBBFr4K8rpHHGDtm1XsgFrE9BlchoZ4QQ
- Ch3rxO6ANFuRvqaef/NnRHmhMQ2izvLOCRKXVvC6mPB/KFu98hTKJlJIbWowPCYGuIBjAHtvTQ
- VsHJ6yhjTda7ZskvK2CARb/Has91jTWf3hb6fqibgkKjv8m3WDjBjr4YBOHChvbNgZVA1fnZEy
- +9z3fjueFyWMdU8GCmemLUOUVkR187pd2b6ZpDPvuqXlYWVtfMQol6hs//77AujFCqIBlSE6g/
- fOI4/c133I2QBAAA=
-X-Change-ID: 20260817-fils-d17716cc2781
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>
-X-Mailer: b4 0.16-dev-5ef6c
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAxMDAzNiBTYWx0ZWRfX+PQ80WjPqkJc
- XL+EN8z8bTiOA3+Zr6sHosICjyGeNd+CpI1GxtN64j79dRrpyrQpU2xpFPdtA5EOGcSctgnagyw
- 7QXubYoixuHof4H8TbbM5qhOw0wFJQA=
-X-Proofpoint-ORIG-GUID: jE7UjKnushCvZcEtJ1XWuHF5ZBw9QSgc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAxMDAzNiBTYWx0ZWRfX65BaIFDsOLZe
- TnJ1IvbpJcbhy6PSM1JzBwZYhHD3KFX51dgv/LwD3A2nkyYhL+RhwcSjMSNJlh3rcWaNL4Xec1i
- E3xhiy0xyCMY2owQzb6ryFxp3HrxkupcUrmoio+SpQkEPblwSzyjEmGBqnHQx4aDqRhxtqIKJfG
- 4JQhHggH5Aj60ZL2WtM0kOYk8stCHrRPZinP3+Gj4BsKB9mDfI/X8kRP/A/klaQu5E6EQSZHnZ/
- cRe3ijt0IOu4xBL4LeHLueT2DHYD+DOuEbIk6Hd75YSAGds5WylwwuJhD5urXt6nZEO9RNvQnfj
- oNpxAL9MIeLdK9gUtX4PEi8OdMehY290bjSFR+DjBNrPdHTetIbf+vScM/SNISO9mZtlDRnvc3K
- cmxoorDMy8DZYNRbQSKFt94FdFABHgt6HSR5x53cSq68dvHoSiD3yAgmsSFMNnCl5JcOYRIKn23
- LupKmhlK14Sr58dTNUQ==
-X-Authority-Analysis: v=2.4 cv=IY8Symqa c=1 sm=1 tr=0 ts=6abe244f cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=bC-a23v3AAAA:8 a=EUspDBNiAAAA:8 a=j3Oc6Xy6ULSXj8zZAogA:9 a=QEXdDO2ut3YA:10
- a=bBxd6f-gb0O0v-kibOvt:22 a=FO4_E8m0qiDe52t0p3_H:22
-X-Proofpoint-GUID: jE7UjKnushCvZcEtJ1XWuHF5ZBw9QSgc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-01_03,2026-09-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 phishscore=0 malwarescore=0 lowpriorityscore=0 spamscore=0
- bulkscore=0 impostorscore=0 priorityscore=1501 clxscore=1015 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610010036
+Content-Transfer-Encoding: 8bit
 
-According to IEEE Std 802.11-2024, subclause 11.45.2.1 FILS Discovery
-frame transmission, only a transmitting BSS shall transmit a FILS
-Discovery frame. Currently, BSS_CHANGED_FILS_DISCOVERY is set
-unconditionally for all the BSSs. Hence, add a check to allow setting
-the FILS Discovery flag only for a transmitting BSS.
+This is the second of two series adding support for the Realtek RTL8723B
+802.11n chipset and its RTL8723BS SDIO variant to rtw88. The preparation
+series has landed in rtw-next, so this series carries the chip register
+definitions, the BB/RF/AGC tables, the chip driver, the SDIO bind and the
+build glue.
 
-Similarly, IEEE Std 802.11-2024, subclause 26.17.2.3.2 AP behavior for
-fast passive scanning, mentions that unsolicited broadcast probe
-response frame shall be transmitted only by a transmitting BSS. Hence,
-add a check to allow setting the BSS_CHANGED_UNSOL_BCAST_PROBE_RESP only
-for a transmitting BSS.
+The first patch is the only shared-core change. It moves the CCK power
+detect setter out of rtw88xxa.c into phy.c as rtw_phy_cck_pd_set(), so this
+chip can use it without pulling in rtw88_88xxa. The six chip patches apply
+on top of it and can be read on their own.
 
-Currently in user-space there is no restriction on sending this for
-non-transmitting BSS, thus it may send these for those BSSs as well.
-While this is not a valid configuration, returning an error here could
-be fatal because failing 'start_ap' or 'update_ap' operation would result
-in failure of bringing up those BSSs. Thus, to maintain the compatibility
-with existing user-space, ignore the config for non-transmitting BSS silently.
+The driver supports:
 
-Signed-off-by: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>
----
-Changes in v3:
-- Modified comments based on the feedback from Johannes
+  - RTL8723B / RTL8723BS, SDIO only
+  - 2.4 GHz 802.11n, HT20 and HT40
+  - one spatial stream
+  - station mode
 
-Changes in v2:
-- Updated commit message to mention why the config is silently ignored,
-  instead of error. Also added code comments to mention the same.
-- Link to v1: https://patch.msgid.link/20260820-fils-v1-1-56df490f5bb6@oss.qualcomm.com
----
- net/mac80211/cfg.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Only station mode has been validated. The common rtw88 core advertises AP
+and IBSS for all chips, so those modes are advertised for RTL8723BS as
+well, but neither has been tested. An out-of-tree tester has reported AP
+mode associating without DHCP completing. The five additional SDIO IDs are
+included for parity with the existing staging driver, and only the 0xb723
+device has been exercised.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 23f4f9ec86d0..6fa2a0d4b8b2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1138,7 +1138,15 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
- 	struct fils_discovery_data *new, *old = NULL;
- 	struct ieee80211_fils_discovery *fd;
- 
--	if (!params->update)
-+	/*
-+	 * This configuration is only applicable to transmitting BSSes.
-+	 *
-+	 * Current user-space version may also set this for non-transmitting
-+	 * BSSes. While this is not a valid configuration, to maintain the
-+	 * compatibility with the existing user-space ignore the configuration
-+	 * for non-transmitting BSS silently.
-+	 */
-+	if (!params->update || link_conf->nontransmitted)
- 		return 0;
- 
- 	fd = &link_conf->fils_discovery;
-@@ -1173,7 +1181,15 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- {
- 	struct unsol_bcast_probe_resp_data *new, *old = NULL;
- 
--	if (!params->update)
-+	/*
-+	 * This configuration is only applicable to transmitting BSSes.
-+	 *
-+	 * Current user-space version may also set this for non-transmitting
-+	 * BSSes. While this is not a valid configuration, to maintain the
-+	 * compatibility with the existing user-space ignore the configuration
-+	 * for non-transmitting BSS silently.
-+	 */
-+	if (!params->update || link_conf->nontransmitted)
- 		return 0;
- 
- 	link_conf->unsol_bcast_probe_resp_interval = params->interval;
+The chip driver requests:
 
----
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
-change-id: 20260817-fils-d17716cc2781
+  rtw88/rtw8723b_fw.bin
+
+This is the version 41 firmware extracted from the Realtek rtl8723bs
+vendor driver. It was submitted separately to linux-firmware with its
+extraction provenance and carries Ping-Ke Shih's Reviewed-by. There is no
+known native rtw88 RTL8723B firmware.
+
+The implementation is based on the initial RTL8723B work by Michael
+Straube:
+
+  https://github.com/mistraube/rtw88/tree/rtl8723bs
+
+Michael's Co-developed-by and Signed-off-by tags are present on the three
+chip-code patches containing code derived from that work.
+
+The known limitations are unchanged. Bluetooth coexistence depends on the
+BT firmware's status reports. During A2DP streaming those reports identify
+a connected link but do not expose the active profile, so the WiFi
+coexistence logic cannot make a correct traffic-aware decision. WiFi
+throughput can fall sharply while audio remains smooth. This is documented
+rather than guessed around in the WiFi driver. The intermittent RTL8723BS
+firmware failure to leave LPS also remains, and instrumentation shows a
+firmware stall rather than a polling timeout that a longer budget would
+fix.
+
+Testing
+=======
+
+The exact six-commit branch builds with W=1, with no new warnings, and
+links all rtw88 modules with real modpost. Sparse and smatch were run over
+the rtw88 directory. Sparse is clean. Smatch reports nothing in the 8723B
+files, and its only output is an existing container_of static assertion
+from include/net/neighbour.h while checking usb.c. checkpatch --strict is
+clean apart from the complex-macro report on TRANS_SEQ_END, which is an
+initializer macro that rtw8703b.c already defines in the same way, and the
+"does MAINTAINERS need updating" reminder on the file-adding patches, which
+the existing REALTEK WIRELESS DRIVER (rtw88) entry already answers with its
+F: line. git diff --check is clean and all six commits are GPG-signed.
+
+Hardware validation covered module identity, boot, scan,
+authentication, association, WPA2 key negotiation and DHCP, TCP and UDP
+traffic in both directions, ten scans while connected, and twenty module
+reload and reassociate cycles. dmesg is clean, with no warnings, no errors
+and no TX-report, H2C or leave-LPS messages. The extended soak added six 30
+second TCP runs, UDP saturation in both access categories with no loss, a
+2000 packet ping run with no loss, and three idle power save periods with a
+clean wake. The test machine provides only s2idle, so suspend and resume
+are not covered.
+
+Changes in v6:
+  - the CCK power detect setter is the only helper that moves. The adaptive
+    control and EDCA helpers go back to rtw88xxa.c unchanged, so mac.c and
+    mac.h are not touched by this series at all;
+  - dropped the per-chip RCR patch. Every vendor chip lets rtw_core_start()
+    overwrite the value its init path wrote, so the RTL8723B does the same;
+  - the chip driver writes the adaptive control and EDCA registers itself
+    again, as it did in v4;
+  - REG_CCK_SWING moved to reg.h, the SDIO Tx control write is now guarded
+    by an HCI type check, and two IQK debug statements are aligned;
+  - the IQK matrix locals use lowercase names;
+  - subject tags are now [PATCH rtw-next vN n/n], matching the list.
+
+Luka Gejak (6):
+  wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
+  wifi: rtw88: 8723b: add the RTL8723B register definitions
+  wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
+  wifi: rtw88: 8723b: add the RTL8723B chip driver
+  wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+  wifi: rtw88: 8723bs: enable building the RTL8723BS driver
+
+ drivers/net/wireless/realtek/rtw88/Kconfig    |   18 +
+ drivers/net/wireless/realtek/rtw88/Makefile   |    6 +
+ drivers/net/wireless/realtek/rtw88/phy.c      |   39 +
+ drivers/net/wireless/realtek/rtw88/phy.h      |    1 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   34 +
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2588 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723b.h |   14 +
+ .../wireless/realtek/rtw88/rtw8723b_table.c   |  861 ++++++
+ .../wireless/realtek/rtw88/rtw8723b_table.h   |   17 +
+ .../net/wireless/realtek/rtw88/rtw8723bs.c    |   59 +
+ drivers/net/wireless/realtek/rtw88/rtw8812a.c |    2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821a.c |    2 +-
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.c |   38 -
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.h |    1 -
+ 14 files changed, 3639 insertions(+), 41 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+
+-- 
+2.55.0
 
