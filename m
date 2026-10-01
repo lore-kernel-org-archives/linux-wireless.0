@@ -1,122 +1,149 @@
-Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B75E479882
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 18:30:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC5E371889
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 18:31:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790879436; cv=none; b=P7dVFzPvHfN55lFSHpcD0tQgTLTpqcg+eHTM6eia4KfPBw214TjCNyM4kHk5VORZgrdQxHXLKyFjdTuJnvKFO2wvPuAhm/KSqkAKeW+wtxHPNEhdBMTCgjGzxAUYTByCe2Pq7aTbb4iRKYiobnHK46Edv8HXCtblhGf1D1bDVfE=
+	t=1790879503; cv=none; b=FPDfS26v7rBmYF9k7hX/wQMKbU96OVTlb2092OxXUfremmkf6Brbw/D3rEY7QrLfIHi/rgPUaudu2uhnN5KXf0jakNDQw/+4IqBJ2lu3e9l+1Zi5I0WOsMrx6fuHULTsG7jC/XvBagiM+XhBipY+yJoxyAJGzqAX4134BFFbOxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790879436; c=relaxed/simple;
-	bh=O2wKXAfkN2dFdnmpYinOxhV2lTAlfy6Db2AKWcznGlQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=q5nArmSm3Ukc3KG1CwGjIwwV/akE5l9vafDvavYVUBvAOnfyv/yPGzuvzol8sThD3AJjgxWF9JYgdDf8kYLu3KVBRVOA4N9Th9zMJUiVXm1VCSIFWgKMOmswJUpBarHpejAIbQ3yCRZ6Tep1GXclNyLw2KxN/TaDYkNE6176i98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kw9b0XKS; arc=none smtp.client-ip=74.125.225.98
+	s=arc-20240116; t=1790879503; c=relaxed/simple;
+	bh=0oyauBl6iy2ZifpKVasUhDF7aKF+oAlAHo3gCFAS77o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OSp1y2N161sB1fBRNE/20joCkXGc52ZYpCwA9IXM73ldFyo4WmcGMde8aIksHPVwG5oPZkOe73+6p+BDsTUM0hYJEJ9lvLyz2r7qiwdGGw1dbfvX7Bb8xASnSpSu5NVwqSEzq5G7ZUqO1CbDUXqSUPTEdY2I3qwlV0rWf1CVR+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oo1gJUnv; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kw9b0XKS"
-Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-48b00a0ac65so1343856f8f.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 11:30:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oo1gJUnv"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e66390995so40180925e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 11:31:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790879433; x=1791484233; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=e5Gu6M674xuod4k8h/Bldv75c8R3MnHXqCgB0KSdcRo=;
-        b=kw9b0XKSqUMmqJyAcye0cIqVhrnxjBf4mK62G0l246Itc1xvb1X1T7cytjIQ+EZQrN
-         tcBppQUFL12a6zo2KrIKU/bWvd0peOZTkqlTDJnPpWOoK4wW+NDkMHXQKAwyCoHwxN0J
-         UP44mFcfMXMAnZUMzMZbbGRpK8cTPiRzd1aZxLK6zVEih5xXSDKIhy5kMYN0T1hRDVTl
-         GrTmFYDaISEJV7orbolIN9uyFmw/NxHG/y1EQupWBycw+gWcUXvbhN3EQMCC1ijp/ZQV
-         ZoseOW4Q5wZYnKIf+iiIL1B2Ntt8yurzFk0cSlrmHM0M4kfdj3Mt82BYtel4OMZwrbaL
-         5/xA==
+        d=gmail.com; s=20251104; t=1790879500; x=1791484300; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=eiEvPw1UURfB7Z9K+obJnHUM1Q1nDrcGFgGMmLM91NM=;
+        b=oo1gJUnven3N4EIAhstIr4cR5rqfJefm9M+BiINbmPgorao4zAzA2k51kCoECsH3AC
+         TGbTXY32nsueZypbTzFr5JOq5h4bu+uQod370JRsQyD0GrVaaZ5e5rw70Ho98zz2qb3b
+         WKBYoAgSt4FnymHuBXAKCBiVI7cHOCWcHdYHF/BdfBXV5YDMJfbygbhM0TA+o15lXEft
+         KUDILORE8PyDwIYGxKNgaeKv+rmPoyOLLPqmyRco0bMv+UbNLewNxMNKFfcbgPi0SEJM
+         n1yXvvPmG00CDcyWoAFDKqgxpK3zUdvfDzwFqNi9fePIRB+ltSo+2egVDy0l53Ncyn8B
+         JJbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790879433; x=1791484233;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=e5Gu6M674xuod4k8h/Bldv75c8R3MnHXqCgB0KSdcRo=;
-        b=zYwXfu3KQTeNZmS2tOsfwvMiG6ItEd+ZDzejZhL1Hf84BjvIDOtWeCXJA6vpt31RK9
-         I7Wda0CQGvO7SJVWr2/ncIPdtL240VtHPF368N9WpNgO1PE8vlPLCPfCVj6TrpXCj66F
-         wBAEG7kImjSymMEUIUgOWL1xrIUdB8KdLO2sgREQDqOIe4q9Tyw835lioG6m8mfz82UA
-         ahMH/iP+FHeBl0Seje8IU9jsnKuuiPLEflKdwt05P3Qi4h2O4QMlfTnJSXsj+fZtkiai
-         mPNCz9RrE6iUbUq7olBDqpQrgOdRloWKKbNERwzQCRljsl8ia80Ie/i8kMK2g0RqD+BC
-         RK1g==
-X-Gm-Message-State: AFq9FYL+bvZwMAi9R3EJ/H7phC8jtxQV1IA/+ZB1GAUIGVZd9CsCRSk+
-	LDJbMDIzJ2Ljv+IyZolqrxQmynsCzUgDzfC620S07oA4tNvP77mh+HxC
-X-Gm-Gg: AYBFou1319ukda4UWmMP+m9EabZD9H3en0luXXuf1Hmld0+wtrW3alU3HRR4Z7m0Zya
-	1RyMXumlv8DUV25Jro1Zg9oc5foIot+u/6bvV7xDFUTjJVW4LFL/6MZaBVTCOCDwlcfGQX2z10I
-	3DCHOSjZ7IIroFfNuylu1+PJhw5/GJr084y+E25zjEIBirGtJA1bRR25rJY/HXE1c3hVbfs0Qzi
-	zOns7GGDWR+69YrcOa02Y48HbYGN2IfTIFcM4Dw2WLwnIqHUmUzYSkUCAQFSNzOxp/Z3jkAPzri
-	VbziXYTSI1ka2EIuBhZ/SYPuTxf0boUvTBr4lkBUWsMoYywuBlATN1UP5LyMQbDlzhKzc+rPPFd
-	9B1sWUSmvonZ06D4ZaOu6CeWZoJJlUX3U49624MiKQidBAIVSfQvkzSHteXijrlpNikzzLPvuwu
-	o/dl4H1Z4Ds3UxfHT+LaaD8/D5Ebp0ONT5ngv15IuNv5eOLdDT4FZKF6HoZmD6iwzCSalpnjvTj
-	HAaXCfDLtqluxzN0Fl5yNoe2l3nmJ+a41DDHkK5OpUYJwapv7VHToZHdAaMsd/6r7RoT+wCc88m
-	2w==
-X-Received: by 2002:a05:6000:1866:b0:48b:a57:a139 with SMTP id ffacd0b85a97d-48b12750ecbmr819778f8f.36.1790879432612;
-        Thu, 01 Oct 2026 11:30:32 -0700 (PDT)
-Received: from shift.daheim (p200300d5ff3cee0050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff3c:ee00:50f4:96ff:fe46:beef])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48b382fe9cesm50938f8f.42.2026.10.01.11.30.30
+        d=1e100.net; s=20260707; t=1790879500; x=1791484300;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eiEvPw1UURfB7Z9K+obJnHUM1Q1nDrcGFgGMmLM91NM=;
+        b=aKB4vtGAKBVNWaqWezC/t70fGwmOnELVGhdhmRH60TapjAngtULRdj77hdegc2Vhww
+         1BULjtYPClxhsvxGH4xlYHc/lKQnunnZtlrAM5GzGPbJnWqz6gQRjPIHx7igK97tmXdS
+         Xt12YqCuJe//HZCLiiEjU0OONFNIkYFF9E+t5s11/ByTqbanT2fVLeFJzkAvD0LRI7ln
+         uqFLGy27z2wGQSwZ4IlpGeGMyugCvyrXNJS1zZCGVe4KgjPZSvpv8dUpa236vMfjGAmI
+         Z/u/eZFdsksQ00ZJNTJlRCWtCBvv2nxVMNzC5v9a2rFacfEed54PkUWMlS+/ZeKnOwwA
+         6UQA==
+X-Gm-Message-State: AFuF++nmO8X7Jv/DrfTgZNbVwHmndIWrtUttU+bP9rGNPs0oViG8mwjR
+	9UozSi9sTX8boMc5QsKoFIKJGfPqigepB/tN72NU5pqIdKRt/bJ3trqU
+X-Gm-Gg: AYBFou1DamHNdxdYmLZurAnLkaeNC189Y3YZbywDhxn3BYeV+VGko0cXhWXgZsgmrun
+	KD8Fwq6MnX6CdfR+UlW9ZBNK5QexmKV4HIdK7BqVPiUrhdUPWVGXd8DNctndWhB50jO8LXh71ZX
+	o1wibl9uzSuAHapbuqQder/DecavoCr9nEEt6NsIuyjJf4LaA76nvJPiVjDeMnVl8rUTv1g++hp
+	vI2dgh7gqjCoTAIM/ylQena4Vure4O0IJiOfXqHUPN8iWZLhWDMl5jWAXXnz75Yv79h/dIuOy1l
+	UV40l13jJmSktpqHojyjeFpjBFXu+Bt6hDoFKeEQVscDTlNcjnBcURH0mlFVTNih0ACNZ2Xaja1
+	S2wVOh+06Q0/caKco76xo0Ay9G2zLT0AjEbnnvC9cJk8l/D/Yb6MUuo2u+KgbdERI6Um06NUJp9
+	aBf1seFFBFcHsAHUCCf0L/3h5lE8b6bz3SF7z5wYVK685p+CMXEhw50HLAcaPwYTlzsUg=
+X-Received: by 2002:a05:600c:46cc:b0:4a0:1c0e:b057 with SMTP id 5b1f17b1804b1-4a0274e9935mr8840615e9.4.1790879500118;
+        Thu, 01 Oct 2026 11:31:40 -0700 (PDT)
+Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a0280dc6e7sm5532535e9.15.2026.10.01.11.31.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Oct 2026 11:30:31 -0700 (PDT)
-Received: from localhost ([127.0.0.1])
-	by shift.daheim with esmtp (Exim 4.100.1)
-	(envelope-from <chunkeey@gmail.com>)
-	id 1xCLWB-00000000KG0-2UMn;
-	Thu, 01 Oct 2026 20:30:29 +0200
-Message-ID: <1a007951-8e77-4ca5-8dc2-093251357e0a@gmail.com>
-Date: Thu, 1 Oct 2026 20:30:29 +0200
+        Thu, 01 Oct 2026 11:31:39 -0700 (PDT)
+Date: Thu, 1 Oct 2026 21:31:32 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] wifi: carl9170: NUL terminate string in debugfs
+Message-ID: <ar6nBMGUaqRPnRv_@stanley.mountain>
+References: <cover.1790839793.git.error27@gmail.com>
+ <674270ab4aeefa1982362c0ea4132427e14f15eb.1790839793.git.error27@gmail.com>
+ <e550f231-87cd-4220-a17e-d0288516ef9e@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] wifi: carl9170: revert broken devres conversions for
- input and hwrng
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Kalle Valo <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20260930-carl9170-reverts-v1-0-7033b5716c14@gmail.com>
-Content-Language: de-DE, en-US
-From: Christian Lamparter <chunkeey@gmail.com>
-In-Reply-To: <20260930-carl9170-reverts-v1-0-7033b5716c14@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e550f231-87cd-4220-a17e-d0288516ef9e@gmail.com>
 
-On 10/1/26 6:45 AM, Dmitry Torokhov wrote:
-> Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
-> 87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
-> the HWRNG and WPS button input device registrations in carl9170 to
-> devres attached to the parent struct usb_device (&ar->udev->dev) and
-> removed the explicit unregistration calls from carl9170_unregister().
+On Thu, Oct 01, 2026 at 07:58:13PM +0200, Christian Lamparter wrote:
+> On 10/1/26 9:37 AM, Dan Carpenter wrote:
+> > The "buf" buffer comes from the user.  We use it to store a number or
+> > two so it doesn't need to be large.  It gets passed to sscanf() in the
+> > write functions such as carl9170_debugfs_erp_write().  Ensure that
+> > buffer is NUL terminated.
+> > 
+> > This is debugfs so it's root only.
 > 
-> Because carl9170_register() runs asynchronously from the
-> request_firmware_nowait() callback after probe has returned, and
-> carl9170_usb_disconnect() frees struct ar9170 immediately in the
-> interface disconnect callback before devres_release_all() runs, both the
-> WPS input device (along with its ar->wps.name and ar->wps.phys strings)
-> and the embedded struct hwrng remain registered after struct ar9170 has
-> been freed, leading to use-after-free bugs.
+> Sure.
+> > 
+> > Fixes: 00c4da27a421 ("carl9170: firmware parser and debugfs code")
+> > Signed-off-by: Dan Carpenter <error27@gmail.com>
+> Acked-by: Christian Lamparter <chunkeey@gmail.com>
+> 
+> > ---
+> >   drivers/net/wireless/ath/carl9170/debug.c | 5 +++--
+> >   1 file changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
+> > index 0498df2a2160..bc6c8e0b1d16 100644
+> > --- a/drivers/net/wireless/ath/carl9170/debug.c
+> > +++ b/drivers/net/wireless/ath/carl9170/debug.c
+> > @@ -119,7 +119,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+> >   	if (!count)
+> >   		return 0;
+> > -	if (count > PAGE_SIZE)
+> > +	if (count >= PAGE_SIZE)
+> heh. It's unnecessary to change this for the max. two numbers we get.
+> But I'm curious if this is a change that an AI tool added?
 
-? Do I have a different source there ?
+No.  The other two patches used kzalloc() to allocate their buffers so
+changing "> PAGE_SIZE" to ">= PAGE_SIZE" fixed the bug.  But as I was
+writing this, I decided that there was no way I was going to let people
+allocat PAGE_SIZE + 1 bytes...  :P  Plus, since I was adding a byte
+later it kind of maintained the status quo to subtract one here.
 
-carl9170_usb_disconnect() does a wait_for_completion(&ar->fw_load_wait)
-before doing anything.
+I did use AI to write the Smatch check.  ;)
 
-For this completion to be "completed" either the firmware loader callback
-went as far as running through all the initialization (includes
-carl9170_register(), which registers the WPS button + rng) successfully
-and the device is up.
+> 
+> But yeah, it's still fine.
+> 
+> >   		return -E2BIG;
+> >   	ar = file->private_data;
+> > @@ -131,7 +131,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+> >   	if (!dfops->write)
+> >   		return -ENOSYS;
+> > -	buf = vmalloc(count);
+> > +	buf = vmalloc(count + 1);
+> 
+> I think there's also a vzalloc...
+> 
 
-or if there was a grave error (usb protocol error, firmware not responding
-the way we want) and the driver basically has to give up... (but then
-carl9170_register would have never been able to even get as far as
-registering the wps + rng)
+I was more considering changing this to kzalloc() but I decided that
+was too much change.
 
-Cheers,
-Christian
+> >   	if (!buf)
+> >   		return -ENOMEM;
+> > @@ -139,6 +139,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+> >   		err = -EFAULT;
+> >   		goto out_free;
+> >   	}
+> > +	buf[count] = '\0';
+> which would eliminate that. But yeah, this is fine as well.
+
+Thanks!
+
+regards,
+dan carpenter
 
