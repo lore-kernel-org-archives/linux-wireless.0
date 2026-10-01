@@ -1,126 +1,183 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f37.google.com (mail-pz2-f37.google.com [74.125.228.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10DBD4949E0;
-	Thu,  1 Oct 2026 16:54:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790873692; cv=none; b=RPCFYgQWgM5TEYYToLR8aLAyCrzSDkBAD96SXbyvER3B0EJ2We6bgllLAXX1gXVNC0Z3fLP+GLDOI86LLwZpO3GFdeEEAi/FFkqX9j2keZDO4Zc0LIUJs0JMzTTisOaEdgJ1ijo/hAzKj5n5j3zob3o8B38m4q4ATOS9SdJHoA0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790873692; c=relaxed/simple;
-	bh=yXq+gcSfkIaoIKjLI8CEojYIwNl8HUAmTygaWX14pa4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=knsbZEWOAkgaU1pM8Wqf55JG5M4E1W+rVtPmcSyaQqgVMUDzQ4bWfpWJEDBeRgVCT9PyKCTj5xszh7KWQctPnS91ifatWByLCheU8IV4SBuwlJZKpMVVfNKIg9pQPM+YPcOfmDKNMq+YFdOhbd+jc0NaHP2GvEjLR/j1ZwWHNvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=vM/EbmY7; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F370D522F03
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 17:06:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790874411; cv=pass; b=qML+w9g1AEam30xlouKeUQOHsix6xJJxpcbKnGgNfLkZkF1MQXK+p2uoxCaRLPYWJMEwOWoCdFPFQa5l0e44PfrU4jCV4+in+kYsRVp17SW5Mye4cRTV4OfL0PAFd0pgESEFGGeoKa6IWDlQArzLBAqB+3qKEbYAaoMFMiyEBnE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790874411; c=relaxed/simple;
+	bh=RqJN6fq+yDADBSewZeA9s6xeKTZgGpuwyz8QKWMviCE=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ubGgPueC16CTstMN76cnEfIX9R8ZCXVpISakmjDUwgAYsHObl2U4vCcHR06JTxiQaAm8zA5UZbpXm1BvjivzuEwdhdp0H/bMhZbuEAydIg/7uV5UbeN43sJ0EvcCuhdRb4Sy4T8VnpxngIJFXlYp9gPIqnPIHxkU+iHdv+Vjhsc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D4N8GPsb; arc=pass smtp.client-ip=74.125.228.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="vM/EbmY7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=yXq+gcSfkIaoIKjLI8CEojYIwNl8HUAmTygaWX14pa4=;
-	t=1790873689; x=1792083289; b=vM/EbmY7xD+ZfcgQXTRpEx+8EZMOPNA0HFlKleGEMlgavWL
-	qc8Incr7UzxjwA197Z9Y19pLS2d8nCS8vuX+83IW/t/1QCbtLXUtkaDbvQ4A8C2sadQoqOLA+1SHO
-	qUiuv0omUL4pP+mCWqJCFrjFkGaKpxjB4sWLy5ylvTRUdGuechBfRcHBf2xiocaIdTOOK4RFQi2Y9
-	rPEvhz52SRyQnf4YZ2NitS6dePHxHl7MJrbQ56DpYXNL6GsI2+REL3uCsgRi0hqCYFqeotcnTNRNk
-	/tC+R8cS5hOBB/U5wVgJv/h4cq7C4syz0A9jJ6ffs+Djci/sx3vPC4k1cIjPTFww==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xCJVS-00000000Fda-431u;
-	Thu, 01 Oct 2026 18:19:39 +0200
-Message-ID: <eac35c39724254fe0b208d50130cd6a6737ee407.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
-	herbert@gondor.apana.org.au, ilan.peer@intel.com,
- linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
-Date: Thu, 01 Oct 2026 18:19:38 +0200
-In-Reply-To: <20261001155924.168311-1-jtornosm@redhat.com>
-References: 
-	<5cb9e89db758fd3af22d3a168a93406fef82c5c2.camel@sipsolutions.net>
-	 <20261001155924.168311-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D4N8GPsb"
+Received: by mail-pz2-f37.google.com with SMTP id 41be03b00d2f7-cc7c4c92477so2317502a12.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 10:06:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790874395; cv=none;
+        d=google.com; s=arc-20260327;
+        b=kYoh+wB8ziT2nDzuEvaRtBPyPrutg3fwaSf+37PYa5rffDluLG7Tpe6UDapEq1QstX
+         ZByw7N6e0OtmItuZPsp4ZtIFiFc5TOxViQ9a513mL5pbRc/MmWjyn8+YkpOxG6c9f39a
+         Eg6mNgneZZDUH5YFxk+X52PaDR8DE05o6LCAa2RwLN1Rukno8Cg7rNcXj/IiE0786NQB
+         p38IvVjaLCrmXTnSrxT39PZh13ZoCKenRBWPwfHklVLSkutqYgfMfAQPJnD3k8jjQfT7
+         Plitdikvig7129ZmW7M9ZL7s25G2iE5ZSLdbSd50LcunpsJvj2NQT8zFwwjLeJTYrhLx
+         5GTg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=K5JT11P54xRVumRmWyIJX3lpFbuqWLog7+Jy6AcnxAM=;
+        fh=PP/whk6UaXLnVOIlOxkM8+X9+lOT86+4o8M68YAJ3/8=;
+        b=VGBe6SD9ejqiF4cmgRhPZS6D7+K9/DceNyGrb51ijfNISuYytWTWZhzEc7k5w4BceH
+         JyX9tFpbY8dwfSiC/vJKikQv5QOopqM5BSKPCIeE3DhnerPSmmb2khMb/wPT1RuQUk/6
+         B3uX6L0n62xUg5WZrwtq96D3aFY5hLkSgqIhWWL/ecgFviHlKjENGV/UiuaM9RPJb9TY
+         1Tm1Gu/UMe4re82zBYvdw9vMvcowqC31uVpQpUqjfmsYAxaC6UVhmTHeCAFsMI3DtXYy
+         sz9+7mpwGsmbHMmzgIXzZGesmuyCY1C+OAQbrEZnjG0LSmkdyUESgUorEGUWCgJ2Ivvz
+         b/xw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790874395; x=1791479195; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=K5JT11P54xRVumRmWyIJX3lpFbuqWLog7+Jy6AcnxAM=;
+        b=D4N8GPsbFV3ciwOZ9+rJ51atq8DlWImMJTSUeNfk67SPTvHrPLSjt/ysM6S1fBcprf
+         NH622lFieryAu8PnY7svS8rwQXoXM3ig3NkikbhP9ey26+c2gK8Y+v7iaYEMu5Y6CqZC
+         rzUszAEl27STOPNnnr9r9SNAvcTWczA96ZZAm+fhKFgJqEqsCp3n6I/RXQE9/NRW92Ip
+         BFdws52tbt0atzRksIE4//9jnPJyX7fOw59fDFnhqs50dl0ztPaxNpfRHkTRoQ6bOetz
+         p0tWWeyEh+xBKJrI4ZQ/RDAyVW9AIf+ioclTryRST6wp5CoJEs3Z2QmguDdbJIBPpZOR
+         x4Fg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790874395; x=1791479195;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=K5JT11P54xRVumRmWyIJX3lpFbuqWLog7+Jy6AcnxAM=;
+        b=E4XHHHyfijqNxjhM5AVfct+BtAiwGpt9wdDuyOgBYNjno9VPSgRAelPdA71sJk+I81
+         dMmBCJ/emZI55S2dH4Fn9/R2PPTnx6l6slCxdDn3Eo/+h+wFXmCSKVBwVIgwrfO0Rs6U
+         P+t3dozM3JNaXMcGMMViOW3qDEy7nPsm00537FgQCrkaUmSwJh+dsfqpireEm7njd1+K
+         VtqiNsk5gM1H+U3aLcmVN/hGFSpLlKxo7xxqz4qdN/aANrJU/MLI+RoE6zDHD6GH7nFH
+         d85k/uGbvVt3qpyh/P562buLrQLdh0CcZRO+lJG60Hk/aoDGGRKxxJoQPOuyf7C3JLp0
+         JF+A==
+X-Gm-Message-State: AFuF++ks4DrFAyiHaTcxDwsFEnAmvY58l4mYFIv3hzQMQsfdZd1syleL
+	Z/dOgZLeEb7ugzFLzX6U9CzqvsPoku807YO21PNJG+aZOT8LqZwnNAboDgAgEKDsgjAu4om6FGv
+	a9orbMzXb/9SeWY2X+HPNZp4CaT5M02GHa/me
+X-Gm-Gg: AYBFou1dCQDsr8JnsuC7Fj7BS3GmF+ySf9QF+f+v5L9swAFre6BFD3Gro8HjzC1wFWb
+	8jtVoljCrK+1gdFOV+Vs27KZTCR/TkmZXxosd6MDnOc2SIdHkohQFINu9cA6et5+oZSd/30+9li
+	7Pp0EzTB4KmyrqGRqIcORajDnIG03pkJf65SGdgy1Fhg02BOEdLyMnCotQfZgHORY7+WjkobN3s
+	+G7avcK2BPoYr7VNbh3pujkvVYK00RzYaqlWAteS3zv08W7tdVQUJp7JOKtX6Sdtlf9uZfXH38I
+	NlVqj1aCI8umVTm/Z8O8fgmMFfk4XfkdcNo0f0fV+trQXdz4vsqbEZwL
+X-Received: by 2002:a05:6a20:258d:b0:3db:3e1c:8585 with SMTP id
+ adf61e73a8af0-3e0bcf3bf12mr26815637.27.1790874395258; Thu, 01 Oct 2026
+ 10:06:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+From: Chris <hoopyfrood42@gmail.com>
+Date: Thu, 1 Oct 2026 13:06:21 -0400
+X-Gm-Features: AclHuK8ovqgMPyMZkpNuwKx9QccSBKEru8WYA4MHzH9Zpk_niBC0KU9-4oQIiGM
+Message-ID: <CAHaeJsTkLGnUhssCDCTsc3=y5FidHCsQ+_AwK_xsgeKw+TZCSg@mail.gmail.com>
+Subject: [BUG] wifi: mt76: mt7925u: skb_under_panic in EHT radiotap (monitor mode)
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Deren Wu <deren.wu@mediatek.com>, Ming Yen Hsieh <mingyen.hsieh@mediatek.com>, 
+	Devin Wittmayer <lucid_duck@justthetip.ca>
+Content-Type: text/plain; charset="UTF-8"
 
 Hi,
 
-> What I would like and what we need is: data encryption stays in
-> software (FIPS-compliant), WiFi connectivity works, and we accept
-> that some management frame protection is not fully FIPS-validated.
+An MT7925 USB adapter (Netgear A9000) in monitor mode panicked my laptop
+with an skb_under_panic in the EHT radiotap code. This is separate from
+the TXRX_NOTIFY crash fixed by feeff151c83e (that fix is applied here)
+and from the survey issue I reported on 2026-09-26.
 
-Fair.
+Setup: Ubuntu 7.0.0-34-generic, with mt76 rebuilt from Ubuntu's source
+plus feeff151c83e and Devin's "move the channel survey" v2;
+mt76_connac_lib is Ubuntu's own. The adapter is in monitor mode, hopping
+across 2.4, 5 and 6 GHz channels, with Wi-Fi 7 APs nearby. It has
+happened once in about 2.5 days of scanning. From the kdump log:
 
-> > Well, it does work without MFP, so fundamentally the firmware can pass
-> > data without having keys?
->=20
-> That is what I would expect, but in v1 I only re-enabled MFP_CAPABLE
-> without passing any keys to firmware and got connection but no data
-> traffic. Looking at the code, mac80211 SW crypto plumbing works
-> correctly when drv_set_key() does not install keys in hardware,
-> and the TX path sets IWL_TX_FLAGS_ENCRYPT_DIS for pre-encrypted
-> frames. So the host side should handle it. My suspicion is that
-> firmware changes its behavior when MFP is negotiated, expecting
-> keys to be installed, and drops encrypted data frames it cannot
-> decrypt instead of forwarding them to the host. The SEC_ENC_ERR
-> messages I saw in v1 were likely from management frames, not data.
-> Any guidance on this would help me take the right approach for v3.
+  skbuff: skb_under_panic: text:ffffffffc16f4a3c len:164 put:16
+head:ffff8d4132ca3000 data:ffff8d4132ca2ff0 tail:0x94 end:0xec0
+dev:<NULL>
+  kernel BUG at net/core/skbuff.c:214!
+  Oops: invalid opcode: 0000 [#1] SMP PTI
+  CPU: 0 UID: 0 PID: 1076104 Comm: mt76-usb-rx phy Kdump: loaded
+Tainted: G        W IOE       7.0.0-34-generic #34-Ubuntu
+PREEMPT(lazy)
+  RIP: 0010:skb_panic+0x59/0x5b
+  Call Trace:
+   <TASK>
+   skb_push.cold+0x14/0x14
+   mt76_connac3_mac_radiotap_push_tlv+0x1c/0x80 [mt76_connac_lib]
+   mt76_connac3_mac_decode_eht_radiotap+0x7a/0x1d0 [mt76_connac_lib]
+   mt7925_queue_rx_skb+0x686/0xde0 [mt7925_common]
+   mt76u_process_rx_entry+0x2eb/0x330 [mt76_usb]
+   mt76u_rx_worker+0xeb/0x2b0 [mt76_usb]
+   __mt76_worker_fn+0x58/0xa0 [mt76]
+   kthread+0xf7/0x130
+   ret_from_fork+0x195/0x2a0
+   ret_from_fork_asm+0x1a/0x30
+   </TASK>
 
-I don't _think_ it does that. It does behave a bit differently for MFP,
-but that's wrt. management frames.
+As far as I can tell from the source, mt76_connac3_mac_decode_eht_radiotap()
+pushes the EHT TLV (48 bytes) and the U-SIG TLV (16 bytes) in front of
+the frame without checking the headroom. mt7925u sets MT_DRV_RX_DMA_HDR,
+so mt76u_build_rx_skb() builds the skb over the rx buffer with nothing
+reserved. The only headroom left is the RX descriptor that
+mt7925_mac_fill_rx() pulls. A descriptor of just the base words and the
+P-RXV (group 3), with no C-RXV (group 5), is 32 + 16 = 48 bytes, which
+matches head/data above. The EHT TLV takes all of it, and the U-SIG
+push (put:16) runs past skb->head. The code came in with 97d7ab9f51ec
+("wifi: mt76: mt7925: add EHT radiotap support in monitor mode").
+mt76_connac3_mac.c in wireless-next today is identical to the copy I
+built from.
 
-Fundamentally, in this case the driver (even mac80211) shouldn't install
-(data) keys to hardware.
+I'm now running with the change below. It leaves the EHT fields out
+when there's no room for them:
 
-> > That's not the point - the point is that there are different
-> > dependencies and you didn't think about _why_ something is disabled.
-> > Not all of this is all related to MFP.
->=20
-> Fair point. These dependencies were not documented in the original
-> disabling commits, so I treated everything as a single block to
-> revert. Could you clarify which features depend on MFP, which on
-> HW crypto, and which on other reasons? That would help me get
-> the separation right.
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c
+@@ -210,6 +210,16 @@ void mt76_connac3_mac_decode_eht_radiotap(struct
+sk_buff *skb, __le32 *rxv,
+       "Should push tlv at the top of mac hdr"))
+  return;
 
-I'd need to sit down and (re-)derive that, but I don't recall it being
-particularly tricky - just boils down to the various dependencies
-between features.
++ /* The TLVs are pushed in front of the frame, into its headroom. On USB
++ * the skb is built over the rx buffer itself, so that headroom is only
++ * the RX descriptor just pulled: 48 bytes with the P-RXV and no C-RXV,
++ * less than the 64 the EHT and U-SIG TLVs take, and skb_push() past
++ * skb->head is a kernel BUG. Leave the EHT fields out then.
++ */
++ if (skb_headroom(skb) < 2 * sizeof(struct ieee80211_radiotap_tlv) +
++ sizeof(*eht) + sizeof(u32) + sizeof(*usig))
++ return;
++
+  eht = mt76_connac3_mac_radiotap_push_tlv(skb, IEEE80211_RADIOTAP_EHT,
+  sizeof(*eht) + sizeof(u32));
+  usig = mt76_connac3_mac_radiotap_push_tlv(skb, IEEE80211_RADIOTAP_EHT_USIG,
 
-> Spelled out: data encryption (PTK/GTK) must stay in software
-> (FIPS-compliant). We accept that firmware-autonomous management
-> frames (like AddBA) are not FIPS-protected. We accept reduced
-> uplink throughput from missing TX aggregation. We do not need
-> big A-MSDUs or WoWLAN. The goal is a working WPA3-SAE connection
-> with FIPS-compliant data path.
+Two smaller things I noticed while reading it, in case they're useful:
 
-Presumably that would mean IGTK/BIGTK can be offloaded and remain
-working, but TK/GTK can't be known to the firmware since it's not FIPS
-certified.
+- With no C-RXV, the decode still reads rxv[4], rxv[5], rxv[8], rxv[9]
+  and rxv[13]. Those lie past the 4-word P-RXV, in the frame itself. A
+  mac80211 warning a day earlier, from mt76u_rx_worker ("Rate marked as
+  an EHT rate but data is invalid: MCS:0, NSS:15"), may come from the
+  same kind of frame, but I haven't confirmed that.
+- Even with a C-RXV, the TLVs are written over the end of the descriptor
+  before all of rxv has been read. With groups 1, 2 and 4 also present,
+  the U-SIG TLV's memset lands on rxv[12..15], so DATA0_SPATIAL_REUSE
+  (rxv[13]) always reads 0.
 
-I mean, you _could_ push this further and keep almost all features: you
-still give PTK/GTK to firmware but don't use the offload mechanisms for
-data frames; though presumably then you'd not consider the result "good
-enough" since then a non-certified component (the firmware/hardware)
-holds the keys...?
+I worked this out with the help of an AI coding assistant (Claude), from
+the kdump log and the driver source. I'm happy to test patches on this
+adapter.
 
-> Also, is the general approach of an opt-in boot parameter
-> (fips_exception) to keep the default behavior unchanged
-> acceptable, or would you prefer a different mechanism?
+Thanks,
 
-I have no opinion on that, I guess the crypto folks should chime in
-about that. Having something very obvious makes sense to me, vs. having
-it at wifi or even driver level.
-
-johannes
+Chris Kelly
