@@ -1,162 +1,149 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lahtoruutu.iki.fi (lahtoruutu.iki.fi [185.185.170.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85287511E8C
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 14:06:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790863605; cv=none; b=HvDr4mVUOxqEGw1u+ZzqLGyPhqm20Jg7zan8rcty3N5nT1fpUyh7zvlrVzod6hBmJ5YqdKWxSu8eyZQ9WwjAaPv4aaKDMrBoE7d1PkLZ2q8W6dDloLuIOa6ScOm8lQbgWUfq/3Q5QsGrei9NnFh8s6Wus1wiMcffJuNT+4Zwnyc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790863605; c=relaxed/simple;
-	bh=sGLEpzcPVNllIfLpktgwJKZsixaHiclIoijoTPQYclM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=IRGw7tL+74Ep4IbRNc3ms1UxSf8iTOSdPpsxXIZGitbVK0xRRY8K8FEpTgnDYLMbVuOduXtCbFZd+VVeuKer6pSzGTwf+7gJ33zg9Oh5jAsON1okVL/tWicO26UOXqfYUBJ0pN9hGPr+GPsKEsq+jSRMrOMxpG56mV9hKup1HqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ldg6a492; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CF455218BC;
+	Thu,  1 Oct 2026 14:30:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.185.170.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790865052; cv=pass; b=rjDBt11HT3gv/m604IGjAcmw8ai1Mc8gU+Q4qff/00KcJJE7v0na6Gqa3J/oMWrRYus3I1osg90LuB8nhxf4i9Y8JLLWv6pq+b5UpPvjIK4BBrRKRFXIEKasT2mOH5EKJQnnn7gpUF61vx3pk4U3B/gjfilalhVZUFqn8NaVLf0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790865052; c=relaxed/simple;
+	bh=fh3mHGVp2bOdCQOsMBmhI2ZiToofIndaNbGggmqwne0=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=bBtkjbRPHy91rVwl9l+Mo/b23XqNtnD6YjZByu055b3zl5oVTCixMC4QvGn9F69R+3nN2l7Y1SGTIj9FV9YjRC5CSRadEhpsHQSBs4f4NCWmSbO0CTAk7mBTAei75RnA7JUpDXJYcRi5ohkEdA3nHIphB0lxDlQtw6Kqigm6eZ8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi; spf=pass smtp.mailfrom=iki.fi; dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b=NvuTh+S3; arc=pass smtp.client-ip=185.185.170.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iki.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iki.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ldg6a492"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d822dso48726695e9.2
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 07:06:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790863602; x=1791468402; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=m6l1ddHXrzpQe38WEZnaB9cZIrrtbI67e2zdTJ3dzc8=;
-        b=Ldg6a492Zn4A8/PIkMA7QG3RqcyEzrGOf38PfOS1hmebx1PLGfVce2QEug+btwvnvF
-         eAutJdMARbGjaSl58kA/k6oOVHIPkRy3hHSFXie14gqO6EGipFOnahmrWcoXwE662dUn
-         ou9hQoMEc5KGQQOXiUcYqkDyRQc02Azyu5krgzZfnclWPQyUd5aIGwIYY96eiuSq1R0U
-         Wi1Z+LN1/eRpumwRsvB7lZd2Yj8Qghiy6oErAF63wk58q9XO1FdRuMEG9K7IgBlZF4Dm
-         +t5otGzrR/RFKnH/WgEQptWTwRLxOEMmIxVscGGGiizI6v6dB+HSOCyoW72PJaowsQTG
-         weHA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790863602; x=1791468402;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=m6l1ddHXrzpQe38WEZnaB9cZIrrtbI67e2zdTJ3dzc8=;
-        b=oF6tcjufIn8//OSnJOp94Kwa9rdM+beIMPQ8Ynd1T7ISPbCVvELwiplpYO6FquWoCs
-         KawqfyVfzSVCqMfTQkUOh5unfDro2ykgn6hROT6aUYF9Eqb5LgSSYIsQ+Gbl2bTR2R6T
-         2svTxgpcAGqJnQxBDCUHYJXC8GRapa6SP4uXv6Q5xWVfhXgyL9LmjYWhmaI9Bgi0laRA
-         GCCpUvn6RV+p0gG1dlg2L0CxSWvVKf2LoSBKxEyEoSPjTBNHS7udzRCnJy0f+F2nyXl/
-         InE+FdevibCLhVSvitnIrgJwvBf75ZDWw+gEtnK7vhchJZooC+1C9g44gWUPY+XuDY4F
-         t9wA==
-X-Forwarded-Encrypted: i=1; AKwUvByKYP9ApInVHKKiZu/CnK+HFAOeSTZgr3aPq0rQbDsuXoxEhcAlpVHAvIUxvIEy0qXpoqR9mzEYxzieCd1BPQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++lDhtNZ0FXcmOWMuFGRwzpYq7Alya0efbSAeOO0Kc3JdCx0Q0vN
-	+MmWTS3cHdH68rypLp/JoBgd4VwjWhS6aBaCwPpnobRiTRBFE5nKmxIlvfcu2Q==
-X-Gm-Gg: AYBFou1Ix5grCoWWtXCkVKA35cNdj7vMieNweS4f5i+Iz12GrafISSYjvJ80bWp2o0t
-	v44RYhoHvENiD5NgahBJ3MDVYQ7ub5tzla1Zoiq8XL3mcubN5Z5LNuWoHbO4ovqap3D8d4/k2fx
-	oe9152jX5sLQuXDI0AbZpJ+VR1s1UgfazitLwyKeU4AAfuMVTGisgzWQ4rMiqU50thVT33tO9b/
-	IjArIzHkeMAelmNc2T3iIWgPshmrM583ek/HyoYmBqrHD8OM3Djv6VkEFaabbrgjFDUdDYiI6M+
-	wsShIbM3uC70nASOCGSI2T51ENpsn6559MrR5LbvvWdD37Murn5H2gwp6JQb7q5najJCSyV/kYF
-	zo+U0t12858/fSTH6eBx0I9HohDAbzSEXf2oNGHhAg9/jAEclpEvGxMImgSamgle00dh8qP5Aon
-	k1ajLqWB4vxEljGTZxycMaP7d0kOKBijOCmoY8sL0PaWJZnL6qafzHb6XGSnYMYgMjBP9sJaVU8
-	XMSHpmeCANmw10I
-X-Received: by 2002:a05:600c:4e41:b0:4a0:1723:2d90 with SMTP id 5b1f17b1804b1-4a01ad7d018mr73552235e9.4.1790863601467;
-        Thu, 01 Oct 2026 07:06:41 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01f979f4fsm75744305e9.4.2026.10.01.07.06.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Oct 2026 07:06:40 -0700 (PDT)
-Message-ID: <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
-Date: Thu, 1 Oct 2026 17:06:39 +0300
+	dkim=pass (2048-bit key) header.d=iki.fi header.i=@iki.fi header.b="NvuTh+S3"
+Received: from fauth-c2-smtp.messagingengine.com (fauth-c2-smtp.messagingengine.com [204.75.18.201])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: jmtilli)
+	by lahtoruutu.iki.fi (Postfix) with ESMTPSA id 4hwYwz3cJKz49PxK;
+	Thu, 01 Oct 2026 17:20:51 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi; s=lahtoruutu;
+	t=1790864451;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fh3mHGVp2bOdCQOsMBmhI2ZiToofIndaNbGggmqwne0=;
+	b=NvuTh+S3YGCUHb+4Wo3bxFnyGFFa1xfjBNQiXHS886DnRmR+xll8iZkVvFQTuUsqguvJaI
+	7Z1iTWxnLeXG35RjfrRFBTzQGdYPPQc7GTDaVEmX3pOWTH8RfcaGMpJC8H0l20eBspI/uR
+	0aDdBi864XMh/fSFimDeVreeDMF9kH/ujibVpocM3UdR4VahGQBSi5mxjnhI4HbGgkjD/M
+	rEnnjo894nc62U/sDBoJHZo5D75y1UX627lrrMmObG3CkDq0K4vKERgckHHQ2Hrcb7hdJ+
+	e0YB2gPdu2cXV7AaSsqLEXKRPvqS/K2ep9qWdrGLvNFbSSnfqRVkZacMPy9j9A==
+ARC-Seal: i=1; a=rsa-sha256; d=iki.fi; s=lahtoruutu; cv=none; t=1790864451;
+	b=EvKyBKjflPtmo2JuDNh4EXOgHkAV3JQo1c5IVSRAC88PgC6c0y+geSaMwd6d0Xe4sg5w2R
+	yzgjrPSZjduQKwX9fnq7oTCII52FBTT2JDXG4QcZyqSNcDvpa+Hw8kuD72lnKzn7+4fGsy
+	82WRc5xjS66sDcwEWIypG+ZfLy76MtDiqclilYzf2HCCSjn0JdlLL1TYFeV0/o4Cz0YOfM
+	zpDYMtizdvoGDjUfXDLrsD14SECGlGqZR3pxc2WBVCXR8PasC1TXHZf19X1psCKJZo3CSQ
+	elqiUeEePosPoTW5mhFCmhX1HzuleuTOzgf/8iU30sISm9JXw/O5zia3e2dJbg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=iki.fi;
+	s=lahtoruutu; t=1790864451;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fh3mHGVp2bOdCQOsMBmhI2ZiToofIndaNbGggmqwne0=;
+	b=gf7WRUHKgtGuIFUaL8SvsftioKspdPBbGrI0i+MQMScY3RTZMx93n8xiqeiVLOGaaR2cMR
+	EX1Q3j7UR82H/RffroUN30otBnBtN/Vopbr6C+dEenZLYpPrmC6KXNzdaGdY6obkPuWej1
+	rBu7cd45fqGTSuhD6wawpmyhuhdTuEsxreCux4V2eRn8GTokk6uld3KsA3gTVt/E8GqUR4
+	YQLAkxhIi+knWHNv954uc8O5g3KzPTggcfCgwIyspYWDl1EynlEcM0WGCgs8kgnK3UtvfM
+	pO9igQGlGLHFQpOIZED0UUnQq/IehEBZvSDoWJyjeab5fcvD0MnZSjRAlMfPJg==
+ARC-Authentication-Results: i=1;
+	ORIGINATING;
+	auth=pass smtp.auth=jmtilli smtp.mailfrom=juha-matti.tilli@iki.fi
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfauth.ams.internal (Postfix) with ESMTP id C25A9198003A;
+	Thu,  1 Oct 2026 10:20:49 -0400 (EDT)
+Received: from ams-imap-13 ([10.64.2.33])
+  by ams-compute-02.internal (MEProxy); Thu, 01 Oct 2026 10:20:49 -0400
+X-ME-Sender: <xms:P2y-at5Sq2K2YBXmoamxP3_aegmdBY88kcXAEm3CjsS37unnNGaOlA>
+    <xme:P2y-av1xmuX4fZgneKrDgZobXyMcQT5ZiuMNAFLouu1tO96A7GKWAXw-67NYUQPk9
+    7F0sk3hc8OKxye5MB_nEWthdVolyvKtGtY2D9nN_o37r6Ag0fIBN68s>
+X-ME-Proxy-Cause: dmFkZTEalv8rOj2Uj3+4YFCUjdY/jYEb/+9gtNNrCuYEzSg/QJULIbYWKJ1VzCB/eCjHp6
+    kfyShI04ct/CIcgZMVclZs6vAFYUtJQiVdI09AQwptSTRrOuR88rxCE6cQxvjs8rTz/v+T
+    mnEMYXmbDqWqQNsxamR7ByALCwVQ780Vapo8pwgxZ38PmYyLc/lkFKJ9hMnlJ+grHwGGHI
+    FGMvYeL/D0s8RH/kvjcilPzTiLhDB4XxarKa/426kQ2ek9K5MLJXPouMuiX8WK8RZu+l9I
+    GVTWdqZaq0T/2A1/yYQGikTFvz3vyNJ2LkT3mXtTThp5+4jMPTjGl2Q2OOx9oeQN3ud0uA
+    wUxl1jw6ut4i+cic/zrSufGHZGBkHi2d9Dkh0/uqVzLdUPhnqYOh+Hpg0XDwmdthr4Qtwz
+    o2JyQsQ7mGssAQLe/XweruY/GYqcDOqxIz4kIjmPOaO5ARMZEi4k8iuo/QjQphqW3PxiAZ
+    7kXs/OxmDe4kWuMGzzRC2a780ta6UscrViCOcspVNUy5w2TEEvXxzoCiDS/PVSIQ863PUR
+    nIh/zqdLtXjXi6Cc2+BkfNUUn1xj7tpCxsrGPGc8CdvsCi1uWBRgDgWsiy+OJHn8at3/a7
+    iZWEvMJhoVtyDiuYQhhot+otiBduMBtyee/dtPcCz4ISZHtCjNOusIxmy0+w
+X-ME-Proxy: <xmx:QWy-aiFkC4gpk_Pl-MUOTzG8-khCCwSXOcQgAdbxIqi0EEoxEs_Vfw>
+    <xmx:QWy-ajze2VroZWdrYm6Q8u3cYVzfql40lsa5gJbClFHuNVwDYRePmA>
+    <xmx:QWy-ajDKjy4Vko2m8TDkF3lF7_3ridpKXSC8Bu5OLUkS4BH6n6vOeQ>
+    <xmx:QWy-aiWmM15F7kbqvcJIIMJqfzwy0MNDozQSvEHpWU2AH2GfZuBgyg>
+    <xmx:QWy-ali2M8V1ecKfKNxSBx0bQieQpAQS6KVM3mqmPcZiKMRdz2NblIfr>
+Feedback-ID: i02414972:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 2DCD6F80094; Thu,  1 Oct 2026 10:20:47 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Problems with rtw89 on 5Ghz wlans.
-To: PierluigiFrullani <pierluigi.frullani@frumar.it>,
- linux-wireless@vger.kernel.org
-References: <10543730.tdPhlSkOF2@topolinux>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <10543730.tdPhlSkOF2@topolinux>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-ThreadId: A0G5p0OZ_htJ
+Date: Thu, 01 Oct 2026 17:20:27 +0300
+From: "Juha-Matti Tilli" <juha-matti.tilli@iki.fi>
+To: "Marcel Holtmann" <marcel@holtmann.org>
+Cc: "Manivannan Sadhasivam" <mani@kernel.org>,
+ "Deepak Kumar Singh" <deepak.singh@oss.qualcomm.com>,
+ "David S . Miller" <davem@davemloft.net>,
+ "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
+ "Paolo Abeni" <pabeni@redhat.com>, "Simon Horman" <horms@kernel.org>,
+ "Jeff Johnson" <jjohnson@kernel.org>, linux-arm-msm@vger.kernel.org,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ ath12k@lists.infradead.org, "Bjorn Andersson" <andersson@kernel.org>,
+ "Chris Lew" <christopher.lew@oss.qualcomm.com>,
+ "Raj Kumar Bhagat" <raj.bhagat@oss.qualcomm.com>,
+ "Jeff Hugo" <jeff.hugo@oss.qualcomm.com>
+Message-Id: <19433f85-4cf1-4ec1-a26f-0eab7df062df@app.fastmail.com>
+In-Reply-To: <0A4EB216-06E0-4A7D-A0FD-821DD371773B@holtmann.org>
+References: <20260922-qrtr-multi-ep-v3-0-c00831e88957@oss.qualcomm.com>
+ <20260922-qrtr-multi-ep-v3-2-c00831e88957@oss.qualcomm.com>
+ <7aed969d-0868-4c9c-967e-7766dbba427e@oss.qualcomm.com>
+ <13BFC5B0-77E6-48F2-B857-37686EA1DB2C@holtmann.org>
+ <05e539f8-bb7c-4038-8a83-8ab0d1a5b917@app.fastmail.com>
+ <m657dtesuagn7vdajsuzjb4mfysf5xabsu3s6n6lujj7yb3z4p@m2e7e3n4zyev>
+ <10091679-7567-42C2-B77E-EFD95CEDD649@holtmann.org>
+ <6e0ed085-07d0-46f0-97dd-b8d942842e1f@app.fastmail.com>
+ <0A4EB216-06E0-4A7D-A0FD-821DD371773B@holtmann.org>
+Subject: Re: [PATCH v3 2/4] net: qrtr: Assign unique node id for MHI endpoints
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 30/09/2026 12:21, PierluigiFrullani wrote:
-> Hello all,
->     I'm using Linux Mint 22.1 with kernel 7.0.0-34-generic and a 
-> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller [1T1R] [10ec:b85b] 
-> that has lot of issues with the 5Ghz wlan.
-> The problem is that has a very low sensitivity and can detect, in linux, these wlans only when I'm a few feet from access point.
-> 
-> 
-> I've then swapped the driver with https://github.com/morrownr/rtw89 and found the same behaviour.
-> I've then opened an issue there :
->  https://github.com/morrownr/rtw89/issues/128 and the peoples there managed to find the culprit and patch his driver that now works perfectly.
-> For my understanding the problem was that my card ( may card model ? ) ( rfe_type 41 ) has only one antenna and is not correctly selected b y the driver.
-> 
-> Looking into the https://github.com/pkshih/rtw/blob/rtw-next/drivers/net/wireless/realtek/rtw89  code I can see that is really similar so then patche applied in the morrownr could possibly apply  also to the vanilla kernel driver.
-> 
-> 
-> Patch is rather easy and with this patch allied and this driver loaded now the 5Ghz is perfectly working.
-> 
-> 
-> Would you be interessed in pushing this patch also here ?
-> 
-> 
-> In case, this is the patch ( also with the comments to verify that the driver loaded is the one that is patched ) :
-> diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-> index df396fbfca26..81a4be7a593d 100644
-> --- a/drivers/net/wireless/realtek/rtw89/mac.c
-> +++ b/drivers/net/wireless/realtek/rtw89/mac.c
-> @@ -3244,6 +3244,14 @@ static int rtw89_mac_setup_phycap_part0(struct rtw89_dev *rtwdev)
->      tx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_TX_NUM);
->      rx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_RX_NUM);
->  
-> +    if (chip->chip_id == RTL8852B && efuse->rfe_type == 41 &&
-> +        tx_nss == 1 && tx_ant == 2 && rx_nss == 1 && rx_ant == 2) {
-> +        tx_ant = 1;
-> +        rx_ant = 1;
-> +
-> +        rtw89_warn(rtwdev, "fix more stuff for RFE 41\n");
-> +    }
-> +
->      hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
->      hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
->  
-> diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-> index 356623341f65..c9ee3c76cfc9 100644
-> --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-> +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-> @@ -771,6 +771,15 @@ static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
->      } else {
->          md->ant.type = BTC_ANT_SHARED;
->          md->bt0_pos = BTC_BT_BTG;
-> +
-> +        if (md->rfe_type == 41) {
-> +            md->ant.num = 1;
-> +            md->ant.single_pos = RF_PATH_B;
-> +            md->ant.btg_pos = RF_PATH_B;
-> +            md->ant.stream_cnt = 1;
-> +
-> +            rtw89_warn(rtwdev, "fix stuff for RFE 41\n");
-> +        }
->      }
->      rtwdev->btc.btg_pos = md->ant.btg_pos;
->      rtwdev->btc.ant_type = md->ant.type;
-> 
-> 
-> 
-> All credits must absolutelly go to  dubhater (   https://github.com/dubhater ) that did all troubleshooting and wrote the patch.
->  
-> My interest in this is only to have a (vanilla) kernel version of this driver that works correctly as lot of problems are reported by peoples using the same chip.
-> 
-> 
-> 
-> Thanks
-> 
-> 
-> Pierluigi 
+On Wed, Sep 30, 2026, at 17:33, Marcel Holtmann wrote:
+> > Well, in defense of Manivannan's patchset it currently works for PCI=
++AHB
+> > setups better than the last version of that by Denis/Mihai/me (altho=
+ugh=20
+> > I could easily fix that), and it may be simpler for userspace to
+> > continue using nid than having to bind to an endpoint, which requires
+> > more changes in userspace code.
+> >=20
+> > The userspace just needs to know the nid.
+>=20
+> and existing userspace? You can _NOT_ break existing userspace.
+>=20
+> Don=E2=80=99t you need to re-write all existing QRTRIPC packets to act=
+ually even make this work?
 
-Hi,
+Well, from what I understand this rewriting is the plan.
 
-Two other people reported the same problem recently. I decided to wait
-for them to say if the patch helps or not. But I will send the patch
-anyway next week.
+It is true that if someone has a single card, the nid changes, thus
+maybe breaking userspace if the userspace has hardcoded nid.
+
+But if someone has multiple cards, the breakage to userspace is less
+with this patch, since userspace can keep on using the same code and
+just change the nid, whereas with the endpoint_id patch, the userspace
+needs code changes to bind to an endpoint.
+
+BR, Juha-Matti
