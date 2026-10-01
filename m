@@ -1,136 +1,162 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3372C299943;
-	Thu,  1 Oct 2026 14:06:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85287511E8C
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 14:06:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790863603; cv=none; b=Vvv+M13gFz3X9KMulrGEd+mdDUXELhntw9G6Ce/BTT8bN7QQgKuYvV347v6PglN/Faz32FQr+wMwA7lG3GWLFXMwTQ2O9g84dyna+hiOwcmTMKATiHCaqVYEzA7l5GntDvdSceqz+0JRtpmIShk5VWsBd/RWmfzdczMIQfSaBtU=
+	t=1790863605; cv=none; b=HvDr4mVUOxqEGw1u+ZzqLGyPhqm20Jg7zan8rcty3N5nT1fpUyh7zvlrVzod6hBmJ5YqdKWxSu8eyZQ9WwjAaPv4aaKDMrBoE7d1PkLZ2q8W6dDloLuIOa6ScOm8lQbgWUfq/3Q5QsGrei9NnFh8s6Wus1wiMcffJuNT+4Zwnyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790863603; c=relaxed/simple;
-	bh=cN6C8charlXIxIHvfz4L0XceiAypmdBBCLB3zTOSP7I=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NWtn+knwSIah4exujSiEMIbfFQtluMDP0ZNIgFzHgKccnILgxVJKGHrLqTUlI9f704G/bwLSsJimh09SWu7ShYF+JwVnGOsZKg/DOnsdK5MQlWHCuEhY31bpj6gD8LazkHyTjicp4qLcYTRkk7zRA8T+Z02frBGlmr+aLgt+p8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Ys8mu+vs; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1790863605; c=relaxed/simple;
+	bh=sGLEpzcPVNllIfLpktgwJKZsixaHiclIoijoTPQYclM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=IRGw7tL+74Ep4IbRNc3ms1UxSf8iTOSdPpsxXIZGitbVK0xRRY8K8FEpTgnDYLMbVuOduXtCbFZd+VVeuKer6pSzGTwf+7gJ33zg9Oh5jAsON1okVL/tWicO26UOXqfYUBJ0pN9hGPr+GPsKEsq+jSRMrOMxpG56mV9hKup1HqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ldg6a492; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Ys8mu+vs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=cN6C8charlXIxIHvfz4L0XceiAypmdBBCLB3zTOSP7I=;
-	t=1790863601; x=1792073201; b=Ys8mu+vsx7FDV7vAwxW0OsLLnC8H66tPiHBJJDO4IPhWrws
-	VNgHnfYgEbk5kZMbXLah4mdCF3MUYN0AGDgIcAWOu8r4ARQSZi0Zt/yd1rejFcw6CwgFD8AJfVg0V
-	yVKh6c8kbO23gp+Cv/oQzYgHOQ9yoNRCH6NTnz5OT1WJ1BNFoSRczGRyLsmciR9xXv/Qw5H3528S0
-	t86EnAhUeH8TTYqC1fUr42Fd9YhWSBTECFGbr0R6XZOhcvRLKM51TN/Q5V3iN4aBWCeUDCplM06V3
-	1mItMFcVEP1D7GhkUCSbydwScTNA6BBUEGvzGttD4zFk+eAZ/o8hcx3IJMv8UlKA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xCHQh-00000000AfF-0oXW;
-	Thu, 01 Oct 2026 16:06:35 +0200
-Message-ID: <5cb9e89db758fd3af22d3a168a93406fef82c5c2.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
-	herbert@gondor.apana.org.au, ilan.peer@intel.com,
- linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
-Date: Thu, 01 Oct 2026 16:06:34 +0200
-In-Reply-To: <20261001130853.137567-1-jtornosm@redhat.com>
-References: 
-	<47ebbd91b4bdb57723be40608349eff9ced1f34b.camel@sipsolutions.net>
-	 <20261001130853.137567-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ldg6a492"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d822dso48726695e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 07:06:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790863602; x=1791468402; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=m6l1ddHXrzpQe38WEZnaB9cZIrrtbI67e2zdTJ3dzc8=;
+        b=Ldg6a492Zn4A8/PIkMA7QG3RqcyEzrGOf38PfOS1hmebx1PLGfVce2QEug+btwvnvF
+         eAutJdMARbGjaSl58kA/k6oOVHIPkRy3hHSFXie14gqO6EGipFOnahmrWcoXwE662dUn
+         ou9hQoMEc5KGQQOXiUcYqkDyRQc02Azyu5krgzZfnclWPQyUd5aIGwIYY96eiuSq1R0U
+         Wi1Z+LN1/eRpumwRsvB7lZd2Yj8Qghiy6oErAF63wk58q9XO1FdRuMEG9K7IgBlZF4Dm
+         +t5otGzrR/RFKnH/WgEQptWTwRLxOEMmIxVscGGGiizI6v6dB+HSOCyoW72PJaowsQTG
+         weHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790863602; x=1791468402;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=m6l1ddHXrzpQe38WEZnaB9cZIrrtbI67e2zdTJ3dzc8=;
+        b=oF6tcjufIn8//OSnJOp94Kwa9rdM+beIMPQ8Ynd1T7ISPbCVvELwiplpYO6FquWoCs
+         KawqfyVfzSVCqMfTQkUOh5unfDro2ykgn6hROT6aUYF9Eqb5LgSSYIsQ+Gbl2bTR2R6T
+         2svTxgpcAGqJnQxBDCUHYJXC8GRapa6SP4uXv6Q5xWVfhXgyL9LmjYWhmaI9Bgi0laRA
+         GCCpUvn6RV+p0gG1dlg2L0CxSWvVKf2LoSBKxEyEoSPjTBNHS7udzRCnJy0f+F2nyXl/
+         InE+FdevibCLhVSvitnIrgJwvBf75ZDWw+gEtnK7vhchJZooC+1C9g44gWUPY+XuDY4F
+         t9wA==
+X-Forwarded-Encrypted: i=1; AKwUvByKYP9ApInVHKKiZu/CnK+HFAOeSTZgr3aPq0rQbDsuXoxEhcAlpVHAvIUxvIEy0qXpoqR9mzEYxzieCd1BPQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++lDhtNZ0FXcmOWMuFGRwzpYq7Alya0efbSAeOO0Kc3JdCx0Q0vN
+	+MmWTS3cHdH68rypLp/JoBgd4VwjWhS6aBaCwPpnobRiTRBFE5nKmxIlvfcu2Q==
+X-Gm-Gg: AYBFou1Ix5grCoWWtXCkVKA35cNdj7vMieNweS4f5i+Iz12GrafISSYjvJ80bWp2o0t
+	v44RYhoHvENiD5NgahBJ3MDVYQ7ub5tzla1Zoiq8XL3mcubN5Z5LNuWoHbO4ovqap3D8d4/k2fx
+	oe9152jX5sLQuXDI0AbZpJ+VR1s1UgfazitLwyKeU4AAfuMVTGisgzWQ4rMiqU50thVT33tO9b/
+	IjArIzHkeMAelmNc2T3iIWgPshmrM583ek/HyoYmBqrHD8OM3Djv6VkEFaabbrgjFDUdDYiI6M+
+	wsShIbM3uC70nASOCGSI2T51ENpsn6559MrR5LbvvWdD37Murn5H2gwp6JQb7q5najJCSyV/kYF
+	zo+U0t12858/fSTH6eBx0I9HohDAbzSEXf2oNGHhAg9/jAEclpEvGxMImgSamgle00dh8qP5Aon
+	k1ajLqWB4vxEljGTZxycMaP7d0kOKBijOCmoY8sL0PaWJZnL6qafzHb6XGSnYMYgMjBP9sJaVU8
+	XMSHpmeCANmw10I
+X-Received: by 2002:a05:600c:4e41:b0:4a0:1723:2d90 with SMTP id 5b1f17b1804b1-4a01ad7d018mr73552235e9.4.1790863601467;
+        Thu, 01 Oct 2026 07:06:41 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01f979f4fsm75744305e9.4.2026.10.01.07.06.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 01 Oct 2026 07:06:40 -0700 (PDT)
+Message-ID: <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
+Date: Thu, 1 Oct 2026 17:06:39 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+User-Agent: Mozilla Thunderbird
+Subject: Re: Problems with rtw89 on 5Ghz wlans.
+To: PierluigiFrullani <pierluigi.frullani@frumar.it>,
+ linux-wireless@vger.kernel.org
+References: <10543730.tdPhlSkOF2@topolinux>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <10543730.tdPhlSkOF2@topolinux>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Jose,
+On 30/09/2026 12:21, PierluigiFrullani wrote:
+> Hello all,
+>     I'm using Linux Mint 22.1 with kernel 7.0.0-34-generic and a 
+> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller [1T1R] [10ec:b85b] 
+> that has lot of issues with the 5Ghz wlan.
+> The problem is that has a very low sensitivity and can detect, in linux, these wlans only when I'm a few feet from access point.
+> 
+> 
+> I've then swapped the driver with https://github.com/morrownr/rtw89 and found the same behaviour.
+> I've then opened an issue there :
+>  https://github.com/morrownr/rtw89/issues/128 and the peoples there managed to find the culprit and patch his driver that now works perfectly.
+> For my understanding the problem was that my card ( may card model ? ) ( rfe_type 41 ) has only one antenna and is not correctly selected b y the driver.
+> 
+> Looking into the https://github.com/pkshih/rtw/blob/rtw-next/drivers/net/wireless/realtek/rtw89  code I can see that is really similar so then patche applied in the morrownr could possibly apply  also to the vanilla kernel driver.
+> 
+> 
+> Patch is rather easy and with this patch allied and this driver loaded now the 5Ghz is perfectly working.
+> 
+> 
+> Would you be interessed in pushing this patch also here ?
+> 
+> 
+> In case, this is the patch ( also with the comments to verify that the driver loaded is the one that is patched ) :
+> diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+> index df396fbfca26..81a4be7a593d 100644
+> --- a/drivers/net/wireless/realtek/rtw89/mac.c
+> +++ b/drivers/net/wireless/realtek/rtw89/mac.c
+> @@ -3244,6 +3244,14 @@ static int rtw89_mac_setup_phycap_part0(struct rtw89_dev *rtwdev)
+>      tx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_TX_NUM);
+>      rx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_RX_NUM);
+>  
+> +    if (chip->chip_id == RTL8852B && efuse->rfe_type == 41 &&
+> +        tx_nss == 1 && tx_ant == 2 && rx_nss == 1 && rx_ant == 2) {
+> +        tx_ant = 1;
+> +        rx_ant = 1;
+> +
+> +        rtw89_warn(rtwdev, "fix more stuff for RFE 41\n");
+> +    }
+> +
+>      hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
+>      hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
+>  
+> diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+> index 356623341f65..c9ee3c76cfc9 100644
+> --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+> +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+> @@ -771,6 +771,15 @@ static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
+>      } else {
+>          md->ant.type = BTC_ANT_SHARED;
+>          md->bt0_pos = BTC_BT_BTG;
+> +
+> +        if (md->rfe_type == 41) {
+> +            md->ant.num = 1;
+> +            md->ant.single_pos = RF_PATH_B;
+> +            md->ant.btg_pos = RF_PATH_B;
+> +            md->ant.stream_cnt = 1;
+> +
+> +            rtw89_warn(rtwdev, "fix stuff for RFE 41\n");
+> +        }
+>      }
+>      rtwdev->btc.btg_pos = md->ant.btg_pos;
+>      rtwdev->btc.ant_type = md->ant.type;
+> 
+> 
+> 
+> All credits must absolutelly go to  dubhater (   https://github.com/dubhater ) that did all troubleshooting and wrote the patch.
+>  
+> My interest in this is only to have a (vanilla) kernel version of this driver that works correctly as lot of problems are reported by peoples using the same chip.
+> 
+> 
+> 
+> Thanks
+> 
+> 
+> Pierluigi 
 
-> Based on the discussion around v1, I tried to prepare a more complete
-> proposal addressing the concerns raised there (AddBA, CSA, robust
-> action frames). I understand I may have gone too broad and missed
-> some aspects of how encryption offload works internally, without
-> access to firmware documentation it is difficult to get everything
-> right.
+Hi,
 
-I don't think that's necessarily it.
-
-> Just to clarify a few points, WoWLAN was intentionally kept disabled
-> in the patches (both mvm and mld paths), precisely because it requires
-> all traffic via firmware crypto during suspend.
-
-Yes, it does remain disabled, but then (for example) why allow
-set_rekey_offload() to go through - it's clearly not necessary.
-
-> IGTK handling was not
-> changed either, as mac80211 already handles it in software. A-MSDUs
-> are not directly MFP-related, fair point, but they were part of the
-> same commit being reverted, because patch 2 and patch 3 are just
-> reverting some parts of the FIPS disabling to try to get it working
-> again under the exception.
-
-But again, what are you actually trying to achieve?
-
-If you want big A-MSDUs, then you need hardware crypto, which you allow
-now, which would seem to _completely_ defeat the purpose of FIPS here
-(to protect data, if you read it charitably vs. just saying it's for
-paper-pushing).
-
-OTOH, why does IGTK matter so much to you? That particular key has no
-relation to data protection, so arguably *that* could still be
-offloaded. But you're doing it all precisely the other way around.
-
-Hence - again - my request for you spelling out what you're actually
-trying to achieve, rather than throwing random code at me.
-
-> Patch 2: In v1, I only re-enabled MFP_CAPABLE without passing keys
-> to firmware, the result was connection but no data traffic. That is
-> why I added key delivery in v2. Is it possible to keep software
-> crypto for data while having a functional connection, or does the
-> firmware require keys installed to pass frames? This would help me
-> understand the correct approach.
-
-Well, it does work without MFP, so fundamentally the firmware can pass
-data without having keys?
-
-> Patch 3: I can narrow this to the minimum needed. Some features
-> (EHT, 6GHz) depend on MFP so I included them, but I agree it
-> could be more selective.
-
-That's not the point - the point is that there are different
-dependencies and you didn't think about _why_ something is disabled. Not
-all of this is all related to MFP.
-
-> Patch 4: The intent was host-side crypto for management frames via
-> SW_MGMT_TX (same mechanism as ath9k, rtw89, etc.), but I understand
-> this depends on how patch 2 is resolved.
-
-But again, the way you did that doesn't make any sense.
-
-> Ultimately, I just want to fix a problem affecting our customers who
-> are interested in keeping WiFi working, accepting that some lower-level
-> management frames are not FIPS-compliant while the important part for
-> them, data encryption, is.
-
-Which is the opposite of what you actually did.
-
-> I don't want to bother you with more patches without guidance. I can
-> try to engage Intel on this, but any help, recommendation on the right
-> approach to try to solve this in some way would be appreciated.
-
-I really do think it starts with spelling out what you (or your
-customers) actually want, and what trade-offs wrt. FIPS you're willing
-to accept.
-
-johannes
+Two other people reported the same problem recently. I decided to wait
+for them to say if the patch helps or not. But I will send the patch
+anyway next week.
