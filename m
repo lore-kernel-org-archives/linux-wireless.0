@@ -1,98 +1,158 @@
-Received: from mail.holtmann.org (mail.holtmann.org [81.169.141.235])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EDE652CCD7;
-	Thu,  1 Oct 2026 15:40:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.169.141.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBFF23264CB
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 15:59:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790869207; cv=none; b=i5KIop03KJL6rMXR48ryA16r9vKdoIRQI5wh9oe1iTRqZ/X+2TLuxkRuuDD5GfCXMA90SrYDxnSxHevzoh+iRkUMM8DDXhKKZ6hUMrg6/UY6SmgqkyeDVCy0PG2ljZN4+2Ws55FFLEUA3pWTdgseV44oLt1aM6HNihs6DzVDkD4=
+	t=1790870382; cv=none; b=W7IfYGy3M4+0WjOVg8bdXV+5giX77y0jOjBARuSRHrWLsoIKnAUntWEMptoGLt2i5uHhhKmgKAFnARIr7uGDmmz5suZIlvYId/pK0HXULlotEJfnJPHY7ZblX2dM4a9IbGYVYrQr/Wi284hFiwZpnIGddxqCmYp1TBGZm53vZPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790869207; c=relaxed/simple;
-	bh=vw1rj845XftbG9SUjyzYpshHEzKeJ159aAiFNfiYTUA=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=Ccug37HfQfL6QfmyZe2rGcxXTDIHvYZCWhp6EoeEF/f0GeQNwQ4+Lbad5ieD6+E8MeIJkAhQWqdh7jiVoUb7JIo49eCCXZz/43b94cUm/Av52efvi0F/DwPcRMhfM6ReOG+dH+UImdga5Hp/whpHsDZ+pSw9kPHcb77caOq6iJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=holtmann.org; spf=pass smtp.mailfrom=holtmann.org; arc=none smtp.client-ip=81.169.141.235
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=holtmann.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=holtmann.org
-Received: from smtpclient.apple (p5b0a9ac0.dip0.t-ipconnect.de [91.10.154.192])
-	by mail.holtmann.org (Postfix) with ESMTPSA id A906FFF12A;
-	Thu, 01 Oct 2026 17:39:57 +0200 (CEST)
-Content-Type: text/plain;
-	charset=utf-8
+	s=arc-20240116; t=1790870382; c=relaxed/simple;
+	bh=VSOQRqkRi9QhMTkEEnVtkYBylSOIqf7jD4LzCWJyB1U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=r5C1mwjGhFMiUT5F+kuCiNM1wzT+8T5LsSO5/z1DAg7IfPXFHu//uBwg/xX7tMoDbLuGVnY+h7z/TiB+ANF2itWvJKTIMgS3mnuffoMqKVNlONNj0Vmsm93YTmZyaCAnVryrmPTyCcuhGahmc8tPMFCT5jCqqoM7qoPR2G62n/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DT6Kui1Y; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DT6Kui1Y"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790870377;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VSOQRqkRi9QhMTkEEnVtkYBylSOIqf7jD4LzCWJyB1U=;
+	b=DT6Kui1YJeMMtvGkNK6J+S7zyZImCokAoSVxgoSbR8CHkMFdobhi5ggyPa2gWCZUfKF6A+
+	8BwZ2r9qF2N+Rxxqogr+TVEtXBMHoGtafYLvjpkUjkZ5hq76cNDcGR8XrSc6nG5T2pC70d
+	mFJhtX9c5/vTrTjbZOOKvrzd1nk+Qc4=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-73-0C8GnYawMNOvZcs4wuQPzg-1; Thu,
+ 01 Oct 2026 11:59:31 -0400
+X-MC-Unique: 0C8GnYawMNOvZcs4wuQPzg-1
+X-Mimecast-MFC-AGG-ID: 0C8GnYawMNOvZcs4wuQPzg_1790870370
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 20CA618005B4;
+	Thu,  1 Oct 2026 15:59:29 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E611E1956089;
+	Thu,  1 Oct 2026 15:59:25 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net,
+	emmanuel.grumbach@intel.com,
+	herbert@gondor.apana.org.au,
+	ilan.peer@intel.com,
+	jtornosm@redhat.com,
+	linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	miriam.rachel.korenblit@intel.com
+Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+Date: Thu,  1 Oct 2026 17:59:24 +0200
+Message-ID: <20261001155924.168311-1-jtornosm@redhat.com>
+In-Reply-To: <5cb9e89db758fd3af22d3a168a93406fef82c5c2.camel@sipsolutions.net>
+References: <5cb9e89db758fd3af22d3a168a93406fef82c5c2.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH v3 2/4] net: qrtr: Assign unique node id for MHI endpoints
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <19433f85-4cf1-4ec1-a26f-0eab7df062df@app.fastmail.com>
-Date: Thu, 1 Oct 2026 17:39:47 +0200
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
- Deepak Kumar Singh <deepak.singh@oss.qualcomm.com>,
- "David S . Miller" <davem@davemloft.net>,
- Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>,
- Jeff Johnson <jjohnson@kernel.org>,
- linux-arm-msm@vger.kernel.org,
- netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org,
- ath12k@lists.infradead.org,
- Bjorn Andersson <andersson@kernel.org>,
- Chris Lew <christopher.lew@oss.qualcomm.com>,
- Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>,
- Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <A709172A-40F7-4986-B7D3-02A422F6584A@holtmann.org>
-References: <20260922-qrtr-multi-ep-v3-0-c00831e88957@oss.qualcomm.com>
- <20260922-qrtr-multi-ep-v3-2-c00831e88957@oss.qualcomm.com>
- <7aed969d-0868-4c9c-967e-7766dbba427e@oss.qualcomm.com>
- <13BFC5B0-77E6-48F2-B857-37686EA1DB2C@holtmann.org>
- <05e539f8-bb7c-4038-8a83-8ab0d1a5b917@app.fastmail.com>
- <m657dtesuagn7vdajsuzjb4mfysf5xabsu3s6n6lujj7yb3z4p@m2e7e3n4zyev>
- <10091679-7567-42C2-B77E-EFD95CEDD649@holtmann.org>
- <6e0ed085-07d0-46f0-97dd-b8d942842e1f@app.fastmail.com>
- <0A4EB216-06E0-4A7D-A0FD-821DD371773B@holtmann.org>
- <19433f85-4cf1-4ec1-a26f-0eab7df062df@app.fastmail.com>
-To: Juha-Matti Tilli <juha-matti.tilli@iki.fi>
-X-Mailer: Apple Mail (2.3901.100.1.1.12)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Hi Juha-Matti,
+Hi Johannes,
 
->>> Well, in defense of Manivannan's patchset it currently works for =
-PCI+AHB
->>> setups better than the last version of that by Denis/Mihai/me =
-(although=20
->>> I could easily fix that), and it may be simpler for userspace to
->>> continue using nid than having to bind to an endpoint, which =
-requires
->>> more changes in userspace code.
->>>=20
->>> The userspace just needs to know the nid.
->>=20
->> and existing userspace? You can _NOT_ break existing userspace.
->>=20
->> Don=E2=80=99t you need to re-write all existing QRTRIPC packets to =
-actually even make this work?
->=20
-> Well, from what I understand this rewriting is the plan.
->=20
-> It is true that if someone has a single card, the nid changes, thus
-> maybe breaking userspace if the userspace has hardcoded nid.
->=20
-> But if someone has multiple cards, the breakage to userspace is less
-> with this patch, since userspace can keep on using the same code and
-> just change the nid, whereas with the endpoint_id patch, the userspace
-> needs code changes to bind to an endpoint.
+> Yes, it does remain disabled, but then (for example) why allow
+> set_rekey_offload() to go through - it's clearly not necessary.
 
-the general rule for Linux is to _not_ break existing userspace.
+Ok, understood, set_rekey_offload() is not needed with WoWLAN
+disabled, that was an oversight.
 
-Regards
+> But again, what are you actually trying to achieve?
 
-Marcel
+What I would like and what we need is: data encryption stays in
+software (FIPS-compliant), WiFi connectivity works, and we accept
+that some management frame protection is not fully FIPS-validated.
+
+> If you want big A-MSDUs, then you need hardware crypto, which you allow
+> now, which would seem to _completely_ defeat the purpose of FIPS here
+> (to protect data, if you read it charitably vs. just saying it's for
+> paper-pushing).
+
+Analyzing it again with your comment, you are right about A-MSDUs,
+if there is no HW crypto then big A-MSDUs are not possible anyway,
+so restoring A-MSDU sizes was wrong.
+
+> OTOH, why does IGTK matter so much to you? That particular key has no
+> relation to data protection, so arguably *that* could still be
+> offloaded. But you're doing it all precisely the other way around.
+
+And you are right about IGTK, it has no relation to data protection
+so it could be offloaded, and I should not have kept it in software
+while sending PTK/GTK to firmware. That was indeed the opposite.
+
+> Well, it does work without MFP, so fundamentally the firmware can pass
+> data without having keys?
+
+That is what I would expect, but in v1 I only re-enabled MFP_CAPABLE
+without passing any keys to firmware and got connection but no data
+traffic. Looking at the code, mac80211 SW crypto plumbing works
+correctly when drv_set_key() does not install keys in hardware,
+and the TX path sets IWL_TX_FLAGS_ENCRYPT_DIS for pre-encrypted
+frames. So the host side should handle it. My suspicion is that
+firmware changes its behavior when MFP is negotiated, expecting
+keys to be installed, and drops encrypted data frames it cannot
+decrypt instead of forwarding them to the host. The SEC_ENC_ERR
+messages I saw in v1 were likely from management frames, not data.
+Any guidance on this would help me take the right approach for v3.
+
+> That's not the point - the point is that there are different
+> dependencies and you didn't think about _why_ something is disabled.
+> Not all of this is all related to MFP.
+
+Fair point. These dependencies were not documented in the original
+disabling commits, so I treated everything as a single block to
+revert. Could you clarify which features depend on MFP, which on
+HW crypto, and which on other reasons? That would help me get
+the separation right.
+
+> But again, the way you did that doesn't make any sense.
+
+I just reverted the necessary parts (to me) to the previous working
+state. I can narrow it once I understand the correct separation.
+
+> Which is the opposite of what you actually did.
+
+Understood. The patches gave data keys to firmware (defeating FIPS
+for data) while keeping management keys in software. The correct
+approach should be the reverse: keep PTK/GTK in software for
+FIPS-compliant data encryption, and offload IGTK if needed since
+it has no data relation. Happy to rework this properly for v3.
+
+> I really do think it starts with spelling out what you (or your
+> customers) actually want, and what trade-offs wrt. FIPS you're
+> willing to accept.
+
+Spelled out: data encryption (PTK/GTK) must stay in software
+(FIPS-compliant). We accept that firmware-autonomous management
+frames (like AddBA) are not FIPS-protected. We accept reduced
+uplink throughput from missing TX aggregation. We do not need
+big A-MSDUs or WoWLAN. The goal is a working WPA3-SAE connection
+with FIPS-compliant data path.
+
+Also, is the general approach of an opt-in boot parameter
+(fips_exception) to keep the default behavior unchanged
+acceptable, or would you prefer a different mechanism?
+
+Thanks
+
+Best regards
+Jose Ignacio
 
