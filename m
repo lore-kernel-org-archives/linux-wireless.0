@@ -1,205 +1,145 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-dy2-f41.google.com (mail-dy2-f41.google.com [74.125.229.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0FCE175A85
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 17:02:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7164D502545
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 17:10:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790960535; cv=none; b=sVvi0z9hPfg4DvSN2/Rm9yhT9UAm1m1KUC/fEWrZZlPeokY1wA+fNwcSmvldLeuzxBCkNVrWjcPnM1CDeclm1Vcdjd/ryARS6Qnyoa/T9tW2iyfLOwE8HRTKLB0JzkVZdXek7fOUP0wLkkQIFcOqba54PMuH1mte0m2ED9UOebU=
+	t=1790961057; cv=none; b=AxlyNeSskZIM/THPDlV0XNUSAYIj6VnhjGHe7cfSc6Uh9drxNBTF9X52qgtl6RLKq1lSvM8iongqTeC0azh8GF07KhGuZ9GSZeY3M+7SkItERJ+bV3yEFPJwHaulyqpkxAvo1qnwxxjADHb6/vyr3CRtSKxxuIGiV+ZXVZPgpQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790960535; c=relaxed/simple;
-	bh=FE/PZv5JfuAwaqpVABOUabbsa29Yfo5y6YCeVvuNU9s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=UbWdSKQsw5jBw5QhTR1sLY8drrYyrP7dKhLUF/y5ROlvGHc/jDouyDIoQHADpGUoFGSOFthcUyrS7DytoYy+NLTn245jw17QFcTR2htReNweYZhI2+z+zlUrHNBK+5ZJbyxsBjAMaVcRr1yMv+QQhKvEl/vxx5aQYFyygb9SI8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BB9bwhOA; arc=none smtp.client-ip=209.85.221.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790961057; c=relaxed/simple;
+	bh=mrxPXIId1qTShZKGlHGgNQz6PnSRa6+MIliC3LYulx4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZNSqz0NHTQ1lgZt64XTj8AlGufE8Sh5wwdjqkb/joN2ifQsLkIo0a/VPBwhFw0DXddJ8rnX7HAtOG6GlpUfcTVtm5KtXG2NShgEYzDEAnYSlVdd1IFmxYcY0J0f+CrTYw8lvrskLgO7ELrG36/qQJGcC57BExVO3lifoPWGiHrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jIsrR6ZC; arc=none smtp.client-ip=74.125.229.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BB9bwhOA"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-48870973bddso20904f8f.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 10:02:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jIsrR6ZC"
+Received: by mail-dy2-f41.google.com with SMTP id 5a478bee46e88-34d2d25127aso1780226eec.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 10:10:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790960532; x=1791565332; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aeb40aOeb6u3o0dJC11RO5hP4rQ2MaG7wkG0NhPfMOQ=;
-        b=BB9bwhOA5HGshkrWUwnLjfapS0+7i9srem6iGFE9leO2mp4qf3IThTr796yrQyeRJ+
-         l8BoWvpZAEMlpVHOtQw7ot8tdLOUsIZSEEt80KVdnelu0pgHD5GQ0Kz0YO1FJ73TBIJj
-         FLQMnuCjdcO4eNemUZWkNQjUASFMF9l6aroD2OCJpWo9vwLoFOlEtSNCfXMnzQ7mbiLS
-         8HPZ9/1g3BxgwKcRs0rrDs3tshp4WUVmQWy90GWUqEZAUsSmgdOPfeTFcMV2kGyroXcS
-         csdUZiykejF7+hgErpq+ykxDd80PeusEax0TZaAfff6f8jina/LB0SGuGnkp7rNc40cr
-         jEPg==
+        d=ziepe.ca; s=google; t=1790961048; x=1791565848; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
+        b=jIsrR6ZCYoXUg62SeoHiJ6U1qQmTUvfmHWogxM0qjQgpdxTBR38CREigK8nBVg837B
+         KemCEloefIFs0d6V2TsfLG+gXof4Lczn1A3R8NHqVJVEIGVHb/IebK+RpIye8M3zMs8i
+         YTJWrFKclhx7CxJS5QL7+5f//INbWiK4y09jMHkcmwqjDq7GovOeOKTKri8BnYz4SJ/F
+         Wb6KjoEp6g56AjVLR/e/dFRyT7rfM39Ade1CK3Dx+VZ1t0EdbRskxub4VkpZ+yFH9FCS
+         4N5joGr5LsAuBrkxXGtJbCwSMI+3e4PJkLhKF7HnXpwKcgm3GyDvhTJqShefFqKWZr60
+         C7mQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790960532; x=1791565332;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=aeb40aOeb6u3o0dJC11RO5hP4rQ2MaG7wkG0NhPfMOQ=;
-        b=o99f/9V0HcStJw35U+QJNXd49n4TGM2VdvWvVfAdkxn3rKxlia7whFjTgSjke9NWcj
-         /fXaPtfHcjViOP0gDKNq2CHAPca4gstOY3nLelEWfzyW5aFjaC6GwG3CIuFAPjbfbXgr
-         9L3ulo94O9yGUH5Hpy3Zg08WcBMfb2n401t5kINeWkexQhrIH/Z9qY5KpKdgN2OKamTZ
-         myOIzgtpSPfoajpNnMawJXXb9u0KdP7s21kHVTC/vj/MiG7L1bmOx61FQSBbODc9WWP1
-         FyA25dez/ETxhPQcBAWoS32i6hl2u99pE2Jso7KNGjIosJo7lMi+R7SKY/41Xd/L4Gkx
-         lcNw==
-X-Forwarded-Encrypted: i=1; AKwUvBwGNupHVZ4255bk/JChaivNwO6Vfo8NJZeO09h+BSufRyA2+XcFyEADCm0M526crzO6rDhM8xzlVpxNuO4Zqw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIUpo3LyJNHD6RMhh0fMKzyznjyvnbehgoL5vNXBF7SSTqbm3xe
-	u0zOKMNspJCx+T19W734eaAKD/Oq+G4X78vMRfnaTXHKkYvTfvC/QZj8
-X-Gm-Gg: AYBFou1sR5OlQ5yruz63CJ76hufxJx708+NZ6u8P/IbuktdpJSQz2wWimum1PZLvpWG
-	6S96Ta2ud5tCeY+ULCKbdj+RXYSq3qhlXcoWeVIKwLq7mzcvPueSCO+0GSN5bDu01Kf3JdkavSD
-	DK1UMhoSyiYk5vr2xlct3YhSj32SBXvCVJJvepMm0SiM7NNjuCMLQo5RedXrOyiOoKuee+BAHJy
-	jO71LG76vn71ppi9Nrom+JI6sDGTLREZkVC2DtzWoMn2cGUONBgr8fcDVxUApIcDgojsJkStsqK
-	kvlFi2fnVOZDOWuhNvwMFOlPhepey/6V0SnNs0+AnXSAUtTQblHjouzmLIg0YHLdrTRCLRyvoyZ
-	0byEiB74MjwCyGVVuccrPzpAuFz1ckxGOXCECigsdge9lW99/aOsaTs/36Cqkri1tgDzY5xxGz3
-	FxGjzmWJ0Ku43UeWB2eOYNKF/bQ65GxLYf+loHmxIXrMgQE+Z0d9AsVPpk5lnrYoRnAoJDvtI+8
-	pWDqA==
-X-Received: by 2002:a05:6000:4112:b0:48b:1145:3a37 with SMTP id ffacd0b85a97d-48b11455218mr7797838f8f.13.1790960530911;
-        Fri, 02 Oct 2026 10:02:10 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48b380fab11sm6728331f8f.16.2026.10.02.10.02.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Oct 2026 10:02:10 -0700 (PDT)
-Message-ID: <dc900baa-a3c7-4962-a11e-9a949af92340@gmail.com>
-Date: Fri, 2 Oct 2026 20:02:09 +0300
+        d=1e100.net; s=20260707; t=1790961048; x=1791565848;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
+        b=ThtvTefXHfRyJOqdD9yFIougCv90zrPJShcBz2hFG4qn5wYr+0MyZTF5H064cVmfV0
+         +q7Hm1BHvrlGfBAy9kaNFC3kLjcgH04sriE8Upf63bpSR/AZeGrNk8txCjofC6yDkdXc
+         HSw/dpPke0nE01kA0U7rwERBb9vfD6xy3MvWIGI4fSL35bzDDWprFkRAhB7p9dBZMq7n
+         u7TXkp1cMtDdjRoOCFXbAEAxyYUDNVbDRDEPy3GqjZWdZjgWk/nhCMZxTo7qspWCksxC
+         +cMqL6ytojuzzYYuamNesSDcY3q90HfIpe1uU6SficQ53pRaZITv4cU6bfza28IZbceW
+         ssWw==
+X-Forwarded-Encrypted: i=1; AKwUvByCo6bbGBlZViy8q5flPUyH6S9gnIOCF92B5S3Qg4XmPsPlAKxPq6ZobjmsugWeVXeSFrYHwtjJ8mLWmcwPYw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLGw92jfTQSvYqtMKCLmnCk5Waj/dQQDO+eCbY3vSRO9XM+O0Lt
+	IOUqFJyMUY54tlAGOUy/+NFgctVEVs//cdp3NdAe7FTgkEam7iWiK7tRzbi+QKXcqJ4=
+X-Gm-Gg: AYBFou3Lj8YRy38QKKZBoMC5Nt8etew1UiUYaGzf3VEg1Nl+jk9QqIr8AS+SIR7KGYN
+	rwSnGq0a2PoSLWMcZKAwzkzbloUaD10HtLYugokJTINeUnvY2lQGmJds56KLH7FVAWRUk9focan
+	PnCgWQuhSaZgJpd8EuZSHlj1lkckzIzJCA2G2/+7F299VT7m8nSZunkrtpUno/5Q+EHsMKweXZN
+	ZxpiiHyQrM7LxiOu8yAUii0GvLw8KWS7yPl5aSLA1ze6IU2spUob5xE2DSylnVP+Mop7v6QQfbq
+	miOQDVzXeiMw86LSHSZvFCAVdLDuevi2I41fC4CQOhv6BeEbZbn7MmAxdljXtYauL+Z2d4hnwgA
+	+lNXykCB78VUnFRc/KfIL9H23fvasxLNy1kUO8kfjr7teCSUzBKoyy2G9zq8nBd8JnU6dVYcnl0
+	0ZOwj9ayZBaUjENiSYZbu1zf3IPip1ohJ0PC923IOgI8tf
+X-Received: by 2002:a05:7300:e5c2:b0:34b:b410:9352 with SMTP id 5a478bee46e88-34f14f18c8cmr3725477eec.1.1790961048034;
+        Fri, 02 Oct 2026 10:10:48 -0700 (PDT)
+Received: from ziepe.ca ([130.41.10.202])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3510850f86bsm4509703eec.11.2026.10.02.10.10.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Oct 2026 10:10:47 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xCgmU-00000000BiY-09Yw;
+	Fri, 02 Oct 2026 14:10:46 -0300
+Date: Fri, 2 Oct 2026 14:10:46 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: alex@shazbot.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, bhelgaas@google.com,
+	jjohnson@kernel.org, johannes@sipsolutions.net,
+	kevin.tian@intel.com, kvm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mani@kernel.org, skolothumtho@nvidia.com, yishaih@nvidia.com
+Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
+Message-ID: <20261002171046.GA32083@ziepe.ca>
+References: <20260930151229.GR163130@ziepe.ca>
+ <20261001071945.83116-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Problems with rtw89 on 5Ghz wlans.
-To: Ping-Ke Shih <pkshih@realtek.com>,
- PierluigiFrullani <pierluigi.frullani@frumar.it>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <10543730.tdPhlSkOF2@topolinux>
- <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
- <980970f8b4934572aafbd6f5f6020436@realtek.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <980970f8b4934572aafbd6f5f6020436@realtek.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261001071945.83116-1-jtornosm@redhat.com>
 
-On 02/10/2026 06:44, Ping-Ke Shih wrote:
-> Hi Bitterblue,
-> 
-> I just quickly give some comments before you send patch.
-> 
-> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
->> On 30/09/2026 12:21, PierluigiFrullani wrote:
->>> Hello all,
->>>     I'm using Linux Mint 22.1 with kernel 7.0.0-34-generic and a
->>> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless
->> Network Controller [1T1R] [10ec:b85b]
->>> that has lot of issues with the 5Ghz wlan.
->>> The problem is that has a very low sensitivity and can detect, in linux, these wlans only when I'm
->> a few feet from access point.
->>>
->>>
->>> I've then swapped the driver with https://github.com/morrownr/rtw89 and found the same behaviour.
->>> I've then opened an issue there :
->>>  https://github.com/morrownr/rtw89/issues/128 and the peoples there managed to find the culprit and
->> patch his driver that now works perfectly.
->>> For my understanding the problem was that my card ( may card model ? ) ( rfe_type 41 ) has only one
->> antenna and is not correctly selected b y the driver.
->>>
->>> Looking into the https://github.com/pkshih/rtw/blob/rtw-next/drivers/net/wireless/realtek/rtw89
->> code I can see that is really similar so then patche applied in the morrownr could possibly apply  also
->> to the vanilla kernel driver.
->>>
->>>
->>> Patch is rather easy and with this patch allied and this driver loaded now the 5Ghz is perfectly working.
->>>
->>>
->>> Would you be interessed in pushing this patch also here ?
->>>
->>>
->>> In case, this is the patch ( also with the comments to verify that the driver loaded is the one that
->> is patched ) :
->>> diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
->>> index df396fbfca26..81a4be7a593d 100644
->>> --- a/drivers/net/wireless/realtek/rtw89/mac.c
->>> +++ b/drivers/net/wireless/realtek/rtw89/mac.c
->>> @@ -3244,6 +3244,14 @@ static int rtw89_mac_setup_phycap_part0(struct rtw89_dev *rtwdev)
->>>      tx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_TX_NUM);
->>>      rx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_RX_NUM);
->>>
->>> +    if (chip->chip_id == RTL8852B && efuse->rfe_type == 41 &&
-> 
-> Can we add a quirk instead of checking IC and its rfe type?
-> I guess there might be more than one cases afterward. 
-> 
+On Thu, Oct 01, 2026 at 09:19:45AM +0200, Jose Ignacio Tornos Martinez wrote:
 
-I think that should work.
+> Regarding platform_device_msi_init_and_alloc_irqs(), I agree that
+> moving the driver to device MSI domains would be cleaner on the
+> driver side. However, even with that change, I think the VM problem
+> remains exactly the same: the device MSI domain in the VM would
+> allocate virtual addr/data pairs, and the firmware's private interrupt
+> controller still needs the physical host values.
 
->>> +        tx_nss == 1 && tx_ant == 2 && rx_nss == 1 && rx_ant == 2) {
->>> +        tx_ant = 1;
->>> +        rx_ant = 1;
->>> +
->>> +        rtw89_warn(rtwdev, "fix more stuff for RFE 41\n");
-> 
-> I think you will change rtw89_warn() to debug level in formal patch, right?
-> 
+Yes, I'm not saying it fixes the problem..
 
-The messages will be gone completely. I only added them to be
-sure that Pierluigi is testing the patched code.
+> Also, the VFIO variant driver scheme would not fully break if the
+> driver moved to device MSI domains. The variant driver caches host
+> MSI values from the MSI descriptor, regardless of the allocation
+> method. The hook point may need adaptation, but the fundamental
+> approach (host caches physical values, VM reads them) remains valid.
 
->>> +    }
->>> +
->>>      hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
->>>      hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
->>>
->>> diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
->> b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
->>> index 356623341f65..c9ee3c76cfc9 100644
->>> --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
->>> +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
->>> @@ -771,6 +771,15 @@ static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
->>>      } else {
->>>          md->ant.type = BTC_ANT_SHARED;
->>>          md->bt0_pos = BTC_BT_BTG;
->>> +
->>> +        if (md->rfe_type == 41) {
-> 
-> Use the same quirk by the way. 
-> 
+It breaks because VFIO will only cache *actual* MSI-X table entries,
+it does not have visibility into anything that
+platform_device_msi_init_and_alloc_irqs()
 
-This was the initial version of the patch. Since then I changed
-it to check hal->tx_nss and hal->rx_nss, to mirror what the
-vendor driver does. Is that okay?
+The only reason this works for you at all is because the driver
+hackily copies the vectors from the real MSI-X table so it can look in
+the "cache" to find their true physical versions.
 
->>> +            md->ant.num = 1;
->>> +            md->ant.single_pos = RF_PATH_B;
->>> +            md->ant.btg_pos = RF_PATH_B;
->>> +            md->ant.stream_cnt = 1;
->>> +
->>> +            rtw89_warn(rtwdev, "fix stuff for RFE 41\n");
->>> +        }
->>>      }
->>>      rtwdev->btc.btg_pos = md->ant.btg_pos;
->>>      rtwdev->btc.ant_type = md->ant.type;
->>>
->>>
->>>
->>> All credits must absolutelly go to  dubhater (   https://github.com/dubhater ) that did all
->> troubleshooting and wrote the patch.
->>>
->>> My interest in this is only to have a (vanilla) kernel version of this driver that works correctly
->> as lot of problems are reported by peoples using the same chip.
->>>
->>>
->>>
->>> Thanks
->>>
->>>
->>> Pierluigi
->>
->> Hi,
->>
->> Two other people reported the same problem recently. I decided to wait
->> for them to say if the patch helps or not. But I will send the patch
->> anyway next week.
-> 
+Which is my general objection, I would like to see the driver to use
+platform_device_msi_init_and_alloc_irqs() and don't want to get stuck
+unable to do that because it would break this.
 
+> Regarding the hypercall idea for device MSI domains, I think that
+> would be an interesting direction worth exploring as a generic
+> solution, but that's a multi-subsystem effort that will take time to
+> design and land.
+
+Yes, but it does actually solve the problem in all its forms..
+
+> I completely agree that this could theoretically affect any device
+> with private MSI registers. However, in practice, I'm only aware of
+> this specific behavior in Qualcomm ath11k/ath12k firmware, where the
+> device's interrupt controller requires the host physical MSI
+> addresses to be programmed directly. 
+
+Everyone else seems to know this stuff doesn't work for
+virtualization and doesn't try to do something like that.
+
+> It's also worth noting that the PCI reset support for these devices
+> has already landed in linux-next (commit 290153d46d1a "PCI: Add
+> device-specific reset for Qualcomm devices") [1], solving the
+> device reset path for VFIO passthrough. This MSI series is the
+> remaining piece, with both in place, these Qualcomm WiFi devices
+> would be fully operational in VMs for the first time.
+
+Why do people care so much about this? I always thought it was a bit
+odd?
+
+Jason
