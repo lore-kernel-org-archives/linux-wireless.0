@@ -1,73 +1,45 @@
-Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+Received: from mta0.migadu.com (out-37.mta0.migadu.com [91.218.175.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E730043B3E3
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 07:31:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95C942124F
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 07:39:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790926300; cv=none; b=j6/7ltDkm2Z/c3CvMhXlk0PFnND4/MmSkFUx0a6gR4B5MhGAr3rcYbwrJ4Gx6wqL1y2bj8HZpjJ6xfN0Yza61XJVIAGEV+BklZqo5J6vTQCWho9Hpx21kNY8o6vGsI2EIxv8x3GMXUJwiW2ApBjPpNhjpXZrqfaMRQY2eSnF0oY=
+	t=1790926745; cv=none; b=CrEbE8WLF949WyZD3yE2c5S0xdeoe5kfdHStSP7WOnYhvTMIB6a1xOMnOcX+yXe35bIqNYqK4m4vhYN9BFYnKgpwGQYOxB4LTG+d4jCPZPL9OIANmh4ZijwS3HsRp2t7EeTd0M9TXDKL9XBHkv7SjBdbzeIV39T36qnfJu7zq2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790926300; c=relaxed/simple;
-	bh=QAc8xqolKMhnFc4n2h5Lc4/VRYS9pH6wKkjG4TYq/OU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZrinPltREErLXNrGczu0spv04+/W3pG9u27Vm8aDt2Ab2A3WSn0ydrYBzwYI2DH3rl2UNoVAcALvgT+xvnoReG4CnXrDon8q1HipqnLbs3gD46y5NSW/Y275JQlqtF7zUYV94kKhSRtYBlrLaTYLpyEHm9LFAYHqxtlPyMTmGXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=zDOIZWp2; arc=none smtp.client-ip=74.125.227.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	s=arc-20240116; t=1790926745; c=relaxed/simple;
+	bh=pgvj98cf+Q4WAH7wg/ZJM2HiaSMOXqdz9TBq7+3m0vw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aaBpDN02KQjIcummDTQC8De1Zod8fdOjGDZZu+OKkhJhWIgeJWIPcijIkEYZiAMvRDEf39uOD2soVVhAdFi54t4lQPvdrzVFRvRS/e2VYkmFTOAjrmzOtz0tfSB7eoWBy0t0vl3NQOaUj6e82Um3eo8KeCJrWS2BRxWpWSEoJtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gc6GGaL1; arc=none smtp.client-ip=91.218.175.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="zDOIZWp2"
-Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396ccc02279so4376121a91.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 00:31:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1790926293; x=1791531093; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=CfNgV+Movfd08NzXFyzavOI5VoeEpH3sAI7z4dm43oI=;
-        b=zDOIZWp2OSXu9FFUQZET8XtEBKlD84TbdcNCFmu9raQSC+/zrFuNefOPGxc0yK9SK4
-         /ZC8jBeSuHtMGltnJQYtnkZnNPXi2chh+qAhK8pVh3PgNZyzDPeM3mQ9Nz2Mp2ZScCUt
-         +tkv0XaJtYNI1u5qayLgEz1ZoeNkqV+PzLSSMhbaTZJD67wrPq1roQ1CIIGncgkoE1WS
-         o68ouRQlMLmGssnFElGq5zNtbVqlDq/5JKDkBO0wHw/acJQQoV/7hm2uvntWfQdnP95l
-         2FNZQw61ZP/OfTJz8cD+qgpGEnJiMOgcz8ophg0nFaI8sDMzszWMDsGHcf89/h6C8zB/
-         6C7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790926293; x=1791531093;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=CfNgV+Movfd08NzXFyzavOI5VoeEpH3sAI7z4dm43oI=;
-        b=NyXYUvayNDQZCy56znibeO4Q0Qi7/tQg3jQ48QSNG0QIdvrzOUxsL96XprjoI7OMeo
-         OlsUFvu9s6HwEJ38RxGHkugC5bIMNeNT2/O/HFLu72NuSVTMB4aSaRQ3EnQKfWO/Kk76
-         F8AO2lSyFP5WD4nQWGnrLscJ1fh1giv863N/emO4o9tlkaPFLQ/X2BAlUyheALv25r0o
-         eLSG6PCudpxUHGCthLXLopj84dEZNpR6sfY5x6EnoIZzsn6wEpPgQ9ilAm6wFDWjl41A
-         U0yY+IiD3hDq4NQlwqK5A+rL329vP0L2wrnlpwcOVlluygpJaidof9kE3E0DT2jnTEZn
-         GlYw==
-X-Gm-Message-State: AFq9FYIawFaABrVF7AtE0idQcasz6FMUlfsy53822zoTgYF29WC3WMJt
-	Y3YYSWWsh/UIwSrqqcrW9DAIp+AhCArRmKSpbhOHS5abkujEchZoLs1qe+k9zc6XmQQuiEdKztf
-	6aILmis8=
-X-Gm-Gg: AYBFou1UqsJToSQ4Gaxjzu+Cbsh1ml2Nx5liovaJ48riE6QlTHs8luApESqmvoyaXX8
-	N5TwOpjQd1QFzN1X6v7NE22A+hIhy1tuquh1zkJdaN73sZTUg/hfCoxjXpY1xQVX8BL57ozxRy1
-	rwuhf4S1piszm2NErgHW16Y2F3/nz5iVIsNDUSAwV9a4DTCU5RwqWSZrWhBXg0aWABayCTdkm3N
-	aFco8UF04lyOBvP7fHfDw/0cHT717cUXKMYGugFFaE8WzRfQ8ASuTY3AVzcGAiG1+h1xDRYxh78
-	LeKVIZvj6wkJurFwb9P1RVHU5eeRy85iZDn22YTPsJA3AeNPvuLIO/952TqWY/ZDjvRILUBwthX
-	UdqiLvEpHEW2FcWDNMwmQP9bUD7fUe/sdCohrpxsqHadkIU8LpKCwkDM3wnBql//0E+WTgY4cZ/
-	g21opgI98S3V/y9YvV/5AgOIH7WlzWM65R9pm2NiGuhXhEaM6f/mY3a+NoD5vZD6v++KBXRcYcv
-	zArz3v7Ll2qdDmKQr5imagwG4cxA7Hlp84tHXCUEAZV0DjehvXXrwlksnJQX4cm9+qjhISvoKx/
-	9v0=
-X-Received: by 2002:a17:90b:2f45:b0:3a4:f146:5440 with SMTP id 98e67ed59e1d1-3a6ce98e12emr2063814a91.60.1790926292356;
-        Fri, 02 Oct 2026 00:31:32 -0700 (PDT)
-Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc9f7383535sm583243a12.20.2026.10.02.00.31.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2026 00:31:32 -0700 (PDT)
-From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
-To: johannes@sipsolutions.net
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gc6GGaL1"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=pgvj98cf+Q4WAH7wg/ZJM2HiaSMOXqdz9TBq7+3m0vw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790926740; v=1; x=1791531540;
+ b=gc6GGaL1WiOlXj1zoqtVCZcR/DdpPaqurHxZ+4edixcY2oLP84bLPCnR2H9Om1YhLTPdy+7I
+ aA/2/K3nK8clxV9jBUPkQ8QwMXwVnZeo28uViSOI/LYCXTbBPJcILqJZ6Xg8fzgf3VWeVFR5MUt
+ 8cLEQLUulnY4iXb6moUhto3Q=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 315de3adac3917a5;
+	Fri, 02 Oct 2026 07:39:00 +0000
+X-Mizu-Trace-ID: 315de3adac3917a5
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
-	benjamin.berg@intel.com,
-	arien.judge@morsemicro.com,
-	Lachlan Hodges <lachlan.hodges@morsemicro.com>
-Subject: [PATCH RFC wireless-next] wifi: mac80211: correct rx freq handling for S1G
-Date: Fri,  2 Oct 2026 17:29:54 +1000
-Message-ID: <20261002072954.1168872-1-lachlan.hodges@morsemicro.com>
-X-Mailer: git-send-email 2.43.0
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: [PATCH rtw-next v7 0/6] wifi: rtw88: add RTL8723B/RTL8723BS support
+Date: Fri,  2 Oct 2026 09:38:39 +0200
+Message-ID: <20261002073845.31486-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,238 +48,120 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-6d531b9af16e ("wifi: mac80211: rework RX packet handling") reworked
-Rx frame handling with a specific focus on MLD, but it also introduced
-some changes for non-MLD interfaces. Previously when a station was
-looked up (either because the driver did not pass one or handling
-a management frame) it was done via hdr->addr2 and that was it. Now
-the received frames frequency is validated against the links
-control channel alongside the station lookup.
+This is the second of two series adding support for the Realtek RTL8723B
+802.11n chipset and its RTL8723BS SDIO variant to rtw88. The preparation
+series has landed in rtw-next, so this series carries the chip register
+definitions, the BB/RF/AGC tables, the chip driver, the SDIO bind and the
+build glue.
 
-S1G has a unique feature where the control or primary channel can
-either be 1MHz or 2MHz. However there is _always_ a 1MHz primary.
-S1G drivers advertise these 1MHz primaries but it means if a 2MHz
-primary is used the control channel inside the chandef may not be
-the channel used to pass management frames. As a result, the rework
-causes the following two issues on an S1G link:
+The first patch is the only shared-core change. It moves the CCK power
+detect setter out of rtw88xxa.c into phy.c as rtw_phy_cck_pd_set(), so this
+chip can use it without pulling in rtw88_88xxa. The six chip patches apply
+on top of it and can be read on their own.
 
-1. When data frames are passed to mac80211 without a station (for
-   example using ieee80211_rx_ni()) the frames rx status frequency
-   is compared against the 1MHz control frequency used by the link
-   via ieee80211_rx_valid_freq. Since the rx status reported is of
-   the center frequency of transmission (i.e either the operating
-   channel or the 2MHz primary in the case of multicast/EAPOL etc.)
-   these frames are _all_ dropped.
+The driver supports:
 
-2. In the case of protected management frames such as ADDBA, deauths
-   etc. the station is always looked up so it does not matter if a
-   station is passed from the driver, the frequency conversion against
-   the 1MHz control channel will always fail and these frames will be
-   dropped.
+  - RTL8723B / RTL8723BS, SDIO only
+  - 2.4 GHz 802.11n, HT20 and HT40
+  - one spatial stream
+  - station mode
 
-For regular, unprotected management frames such as assoc requests,
-auth etc. these frames don't depend on a station and are matched via
-BSSID so are unaffected by this change.
+Only station mode has been validated. The common rtw88 core advertises AP
+and IBSS for all chips, so those modes are advertised for RTL8723BS as
+well, but neither has been tested. An out-of-tree tester has reported AP
+mode associating without DHCP completing. The five additional SDIO IDs are
+included for parity with the existing staging driver, and only the 0xb723
+device has been exercised.
 
-To fix, we can reuse the logic implemented in 31e7681da78d ("wifi:
-mac80211: correctly initialise S1G chandef for STA") where we find
-the sibling 1MHz and calculate the 2MHz center frequency. For the
-ocassional protected management frames this is fine, obviously it
-is still ideal for drivers to pass the station directly to mac80211
-such that the lookup avoids needing the extra work of finding the
-2MHz center frequency.
+The chip driver requests:
 
-Fixes: 6d531b9af16e ("wifi: mac80211: rework RX packet handling")
-Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
----
+  rtw88/rtw8723b_fw.bin
 
-A followup question:
+This is the version 41 firmware extracted from the Realtek rtl8723bs
+vendor driver. It was submitted separately to linux-firmware with its
+extraction provenance and carries Ping-Ke Shih's Reviewed-by. There is no
+known native rtw88 RTL8723B firmware.
 
-1. is rx_status->freq always meant to be the control channel? For
-   management frames obviously makes sense but for data frames
-   sent on a wider channel wouldn't this be set to the operating
-   channel? Especially for i.e sniffer? The mm81x driver reports
-   it like this but maybe it should just report the control channel?
-   I guess my confusion stems from that if we have a data frame
-   wouldn't we compare against the chandefs frequency? Or am I
-   misunderstanding something?
+The implementation is based on the initial RTL8723B work by Michael
+Straube:
 
-Thanks,
-lachlan
+  https://github.com/mistraube/rtw88/tree/rtl8723bs
 
----
- include/net/mac80211.h     |  2 ++
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/mlme.c        | 36 ++-----------------------------
- net/mac80211/rx.c          | 43 ++++++++++++++++++++++++++++++++------
- 4 files changed, 44 insertions(+), 40 deletions(-)
+Michael's Co-developed-by and Signed-off-by tags are present on the three
+chip-code patches containing code derived from that work.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cb9f8e14b3b6..b2a7857f9503 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1741,6 +1741,8 @@ enum mac80211_rx_encoding {
-  * @freq: frequency the radio was tuned to when receiving this frame, in MHz
-  *	This field must be set for management frames, but isn't strictly needed
-  *	for data (other) frames - for those it only affects radiotap reporting.
-+ *	For S1G, when operating on a 2MHz primary channel, this may be the
-+ *	center frequency of the 2MHz primary rather than the 1MHz primary.
-  * @freq_offset: @freq has a positive offset of 500Khz.
-  * @signal: signal strength when receiving this frame, either in dBm, in dB or
-  *	unspecified depending on the hardware capabilities flags
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1430527d216c..2ad93cb462ad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2012,6 +2012,9 @@ void ieee80211_clear_fast_rx(struct sta_info *sta);
- 
- bool ieee80211_is_our_addr(struct ieee80211_sub_if_data *sdata,
- 			   const u8 *addr, int *out_link_id);
-+bool __ieee80211_rx_valid_freq(struct wiphy *wiphy,
-+			       struct ieee80211_rx_status *status,
-+			       const struct cfg80211_chan_def *chandef);
- 
- /* AP code */
- void ieee80211_ap_rx_queued_frame(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3a17d1ccd32a..8a07d14b4c43 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -8091,38 +8091,6 @@ static bool ieee80211_mgd_ssid_mismatch(struct ieee80211_sub_if_data *sdata,
- 	return memcmp(elems->ssid, cfg->ssid, cfg->ssid_len);
- }
- 
--static bool
--ieee80211_rx_beacon_freq_valid(struct ieee80211_local *local,
--			       struct ieee80211_mgmt *mgmt,
--			       struct ieee80211_rx_status *rx_status,
--			       struct ieee80211_chanctx_conf *chanctx)
--{
--	u32 pri_2mhz_khz;
--	struct ieee80211_channel *s1g_sibling_1mhz;
--	u32 pri_khz = ieee80211_channel_to_khz(chanctx->def.chan);
--	u32 rx_khz = ieee80211_rx_status_to_khz(rx_status);
--
--	if (rx_khz == pri_khz)
--		return true;
--
--	if (!chanctx->def.s1g_primary_2mhz)
--		return false;
--
--	/*
--	 * If we have an S1G interface with a 2MHz primary, beacons are
--	 * sent on the center frequency of the 2MHz primary. Find the sibling
--	 * 1MHz channel and calculate the 2MHz primary center frequency.
--	 */
--	s1g_sibling_1mhz = cfg80211_s1g_get_primary_sibling(local->hw.wiphy,
--							    &chanctx->def);
--	if (!s1g_sibling_1mhz)
--		return false;
--
--	pri_2mhz_khz =
--		(pri_khz + ieee80211_channel_to_khz(s1g_sibling_1mhz)) / 2;
--	return rx_khz == pri_2mhz_khz;
--}
--
- static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 				     struct ieee80211_hdr *hdr, size_t len,
- 				     struct ieee80211_rx_status *rx_status)
-@@ -8176,8 +8144,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 		return;
- 	}
- 
--	if (!ieee80211_rx_beacon_freq_valid(local, mgmt, rx_status,
--					    chanctx_conf)) {
-+	if (!__ieee80211_rx_valid_freq(local->hw.wiphy, rx_status,
-+				       &chanctx_conf->def)) {
- 		rcu_read_unlock();
- 		return;
- 	}
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b3990b7a7299..9a29928a3a52 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -5318,11 +5318,41 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
- 	dev_kfree_skb(skb);
- }
- 
--static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data *link)
-+bool __ieee80211_rx_valid_freq(struct wiphy *wiphy,
-+			       struct ieee80211_rx_status *status,
-+			       const struct cfg80211_chan_def *chandef)
-+{
-+	u32 pri_khz = ieee80211_channel_to_khz(chandef->chan);
-+	u32 rx_khz = ieee80211_rx_status_to_khz(status);
-+	struct ieee80211_channel *sibling;
-+
-+	if (rx_khz == pri_khz)
-+		return true;
-+
-+	/* Any non-S1G case from here is not a valid freq */
-+	if (!cfg80211_chandef_is_s1g(chandef))
-+		return false;
-+
-+	if (!chandef->s1g_primary_2mhz)
-+		return false;
-+
-+	/*
-+	 * Find the sibling 1MHz channel of the 2MHz primary to calculate
-+	 * the 2MHz primary center frequency.
-+	 */
-+	sibling = cfg80211_s1g_get_primary_sibling(wiphy, chandef);
-+	if (!sibling)
-+		return false;
-+
-+	return rx_khz == (pri_khz + ieee80211_channel_to_khz(sibling)) / 2;
-+}
-+
-+static bool ieee80211_rx_valid_freq(struct ieee80211_rx_status *status,
-+				    struct ieee80211_link_data *link)
- {
- 	struct ieee80211_chanctx_conf *conf;
- 
--	if (!freq || link->sdata->vif.type == NL80211_IFTYPE_NAN ||
-+	if (!status->freq || link->sdata->vif.type == NL80211_IFTYPE_NAN ||
- 	    link->sdata->vif.type == NL80211_IFTYPE_NAN_DATA)
- 		return true;
- 
-@@ -5330,7 +5360,8 @@ static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data *link)
- 	if (!conf || !conf->def.chan)
- 		return false;
- 
--	return freq == conf->def.chan->center_freq;
-+	return __ieee80211_rx_valid_freq(link->sdata->local->hw.wiphy, status,
-+					 &conf->def);
- }
- 
- /*
-@@ -5430,7 +5461,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 				continue;
- 
- 			link = &sta->sdata->deflink;
--			if (!ieee80211_rx_valid_freq(status->freq, link))
-+			if (!ieee80211_rx_valid_freq(status, link))
- 				continue;
- 
- 			if (rx_data_pending) {
-@@ -5454,7 +5485,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 			sdata =	sta->sdata;
- 			link = rcu_dereference(sdata->link[link_sta->link_id]);
- 
--			if (!ieee80211_rx_valid_freq(status->freq, link))
-+			if (!ieee80211_rx_valid_freq(status, link))
- 				continue;
- 
- 			if (rx_data_pending) {
-@@ -5524,7 +5555,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		 * RX using the station.
- 		 */
- 		if (link_sta && link &&
--		    ieee80211_rx_valid_freq(status->freq, link)) {
-+		    ieee80211_rx_valid_freq(status, link)) {
- 			if (rx_data_pending) {
- 				ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 				rx_data_pending = false;
+The known limitations are unchanged. Bluetooth coexistence depends on the
+BT firmware's status reports. During A2DP streaming those reports identify
+a connected link but do not expose the active profile, so the WiFi
+coexistence logic cannot make a correct traffic-aware decision. WiFi
+throughput can fall sharply while audio remains smooth. This is documented
+rather than guessed around in the WiFi driver. The intermittent RTL8723BS
+firmware failure to leave LPS also remains, and instrumentation shows a
+firmware stall rather than a polling timeout that a longer budget would
+fix.
+
+Testing
+=======
+
+The exact six-commit branch builds with W=1, with no new warnings, and
+links all rtw88 modules with real modpost. Sparse and smatch were run over
+the rtw88 directory. Sparse is clean. Smatch reports nothing in the 8723B
+files, and its only output is an existing container_of static assertion
+from include/net/neighbour.h while checking usb.c. checkpatch --strict is
+clean apart from the complex-macro report on TRANS_SEQ_END, which is an
+initializer macro that rtw8703b.c already defines in the same way, and the
+"does MAINTAINERS need updating" reminder on the file-adding patches, which
+the existing REALTEK WIRELESS DRIVER (rtw88) entry already answers with its
+F: line. git diff --check is clean and all six commits are GPG-signed.
+
+Hardware validation covered module identity, boot, scan,
+authentication, association, WPA2 key negotiation and DHCP, TCP and UDP
+traffic in both directions, ten scans while connected, and twenty module
+reload and reassociate cycles. dmesg is clean, with no warnings, no errors
+and no TX-report, H2C or leave-LPS messages. The extended soak added six 30
+second TCP runs, UDP saturation in both access categories with no loss, a
+2000 packet ping run with no loss, and three idle power save periods with a
+clean wake. The test machine provides only s2idle, so suspend and resume
+are not covered.
+
+Changes in v7:
+  - dropped rtw8723b_sdio_restore_pad_ctrl() and its two remaining call
+    sites. The register it adjusted is only written by
+    rtw_mac_pre_system_cfg(), which returns before that write for 8051
+    chips, so nothing in the driver sets the bits the function cleared and
+    the hardware default already has them clear.
+  - rtw8723b_fill_txdesc_checksum() now uses fill_txdesc_checksum_common()
+    from tx.h. The now unused linux/unaligned.h include is dropped.
+
+Luka Gejak (6):
+  wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
+  wifi: rtw88: 8723b: add the RTL8723B register definitions
+  wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
+  wifi: rtw88: 8723b: add the RTL8723B chip driver
+  wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+  wifi: rtw88: 8723bs: enable building the RTL8723BS driver
+
+ drivers/net/wireless/realtek/rtw88/Kconfig    |   18 +
+ drivers/net/wireless/realtek/rtw88/Makefile   |    6 +
+ drivers/net/wireless/realtek/rtw88/phy.c      |   39 +
+ drivers/net/wireless/realtek/rtw88/phy.h      |    1 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   34 +
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2550 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723b.h |   14 +
+ .../wireless/realtek/rtw88/rtw8723b_table.c   |  861 ++++++
+ .../wireless/realtek/rtw88/rtw8723b_table.h   |   17 +
+ .../net/wireless/realtek/rtw88/rtw8723bs.c    |   59 +
+ drivers/net/wireless/realtek/rtw88/rtw8812a.c |    2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821a.c |    2 +-
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.c |   38 -
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.h |    1 -
+ 14 files changed, 3601 insertions(+), 41 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+
 -- 
-2.43.0
+2.55.0
 
