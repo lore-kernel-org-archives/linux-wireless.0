@@ -1,126 +1,87 @@
-Received: from mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519DB427FBB
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 07:23:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA8F43550A
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 07:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790925829; cv=none; b=LilqBRfkiNdYwTm1G6K1pg5IJMI+Ca3yLscHAUY/hMTXqQ3op3Eewy+KJCSTOtaT6bT4XWniY3ANxDRn+HqREzwKXOqiloCTSmzSAoX6SQG2/URcsjfMg2Pe7xB7orKZbwwATby0BMB6E0/ucsoYWHqlYGWw7V/YNjfpFmELzWU=
+	t=1790925974; cv=none; b=Rkf4iZ7Gn3Epdxdurl/oayXInY5TgEDF4kWzFEy5Vhp+n0S9we0VMIx78SKslvzQ4RcBSbxOfULTkJMCY4kaX2E4jYIIs2PSELPR6/xagL1EDM3qMQ8qhcP5dx5fkKns83R8EpntI+n2tJUsCDIBSXhNEvYNI1qJ9TAklRxcAWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790925829; c=relaxed/simple;
-	bh=aehX07tXcClaa0qrFr7rI9C7ikNEWSssO6nsmHIatUQ=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=TBqmn55eDlSQQ3h/iJJe6nSzilGwuYbqBbjdLEmzDGPAKOUmtiAD18jz+jrlbIxokMMRtQY3W7Mr0mHI3L6IQ7aRE3FlU96R4hwZ4aeoUeBcZX7W1Z0QTMTXZut9OvuW4xUGuM/iS+pXrcZVAUBMdsf94Huo2z9pw9ondOWhvV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=isP/iQu7; arc=none smtp.client-ip=95.215.58.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790925974; c=relaxed/simple;
+	bh=bCKVWw09fEeMa2E9A+KEs5NJ+erboHSTHW2J6PAbrqA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Z1ioAKiMWfP+S1ZsZL7NX81+iMWTCa9HpSp7hHw9veGM8we8Nmk2mAhy6IdCSPeY37s3ikOaunzG8PY+uCwSCKuUmzr439Mnt7rUSOmYM8K32VCRXXvPxuvOomW89IrjKuqEnSZgvB5BSWurbHed93l4A1KeteNdlLYsEprMdd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=CJCdC7Gw; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="isP/iQu7"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=aehX07tXcClaa0qrFr7rI9C7ikNEWSssO6nsmHIatUQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790925816; v=1; x=1791530616;
- b=isP/iQu7FuYOBT9ByB+d2ubcLBvN30xxqoO4r52UG/8rVGmRFgiw7P98RphTSshplNkz4v5e
- pRJ15KHQ/Ljj63JQbVuhGPG448tRhC7fV6OWakHaHeEAYf0hJK8Ynw/LwEaqN729lwhRvDY5OiJ
- 7dUsVnFbTXarhT37ajA1rXi4=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 21994e6c724f157f;
-	Fri, 02 Oct 2026 07:23:36 +0000
-X-Mizu-Trace-ID: 21994e6c724f157f
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="CJCdC7Gw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=Sn9a5GdxgCC+M1lrZDVmU8oFDwLcYHUSIpFbKIZSO4M=;
+	t=1790925971; x=1792135571; b=CJCdC7GwH6BrcB9llR2ta5DpujvgnNN+UCPj0n6248xSB4g
+	/cEbqhBkg54YjDlZWkfxvzwspXgudG+KF8MH6HrRKW/opHyhWcUIccoceNJK0z9K5GfRZCe2WGOj9
+	2vh3ynBaTVJzvplLJKu81rrPSABut0c8Ul9his3kP22C1GUjiEJVN34r8ckkPMWCvoGjVIf+IIvN0
+	sYdfcXjybt4WtSt4HkQSPIMoDaHDVHvGkrePzo0BZMdgiFj4FJ0i6mE6O7/D/gey3k2J3acRqlY0t
+	PFYRuS6ipKkc2LjiNXLHjuielbpjnvuUyC6/S/Mh7WfZtDkXjutft+fy0O03UNkQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xCXef-00000001GDh-1Xp5;
+	Fri, 02 Oct 2026 09:26:05 +0200
+Message-ID: <8f58e34fa9962d3967dfa792fa2d724db89e4452.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 7/7] wifi: mac80211_hwsim: add NAN Instant
+ Communication support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>, 
+ Benjamin Berg <benjamin.berg@intel.com>
+Date: Fri, 02 Oct 2026 09:26:04 +0200
+In-Reply-To: <20261001162941.7e69a74a7ba5.Ib1a57bccf328a19dc55b914ccab73d023fe0876f@changeid>
+References: <20261001133311.3367683-1-miriam.rachel.korenblit@intel.com>
+	 <20261001162941.7e69a74a7ba5.Ib1a57bccf328a19dc55b914ccab73d023fe0876f@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Fri, 02 Oct 2026 07:23:36 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <a2b6f0773b075286fedf0014fd5b6634d3a5ec2e@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v6 4/6] wifi: rtw88: 8723b: add the RTL8723B
- chip driver
-To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, luka.gejak@linux.dev
-In-Reply-To: <10b9f8b9-87e1-43c9-8c15-27f5475f5f09@gmail.com>
-References: <20261001091835.67909-1-luka.gejak@linux.dev>
- <20261001091835.67909-5-luka.gejak@linux.dev>
- <10b9f8b9-87e1-43c9-8c15-27f5475f5f09@gmail.com>
+X-malware-bazaar: not-scanned
 
-October 1, 2026 at 22:39, "Bitterblue Smith" <rtl8821cerfe2@gmail.com mai=
-lto:rtl8821cerfe2@gmail.com?to=3D%22Bitterblue%20Smith%22%20%3Crtl8821cer=
-fe2%40gmail.com%3E > wrote:
+On Thu, 2026-10-01 at 16:33 +0300, Miri Korenblit wrote:
+
+> @@ -263,15 +300,26 @@ void mac80211_hwsim_nan_rx(struct ieee80211_hw *hw,
+>  		slot =3D hwsim_nan_slot_from_tsf(rx_status.mactime);
+>  	}
+> =20
+> +	/* (overly) simplify things, only track 2.4 GHz here */
+> +	if (rx_status.freq !=3D 2437)
+> +		return;
+
+comments should generally help ... I see it removed below but maybe make
+it better while touching it :)
 
 
->=20
->=20On 01/10/2026 12:18, Luka Gejak wrote:
->=20
->=20>=20
-[...]
->=20>  +static void rtw8723b_sdio_restore_pad_ctrl(struct rtw_dev *rtwdev=
-,
-> >  + bool keep_pta_owner)
-> >  +{
-> >  + u32 before;
-> >  + u32 after;
-> >  +
-> >  + if (!rtw_is_8723bs(rtwdev))
-> >  + return;
-> >  +
-> >  + before =3D rtw_read32(rtwdev, REG_PAD_CTRL1);
-> >  + after =3D before & ~(BIT_LNAON_WLBT_SEL | BIT_SW_DPDT_SEL_DATA);
-> >  + if (keep_pta_owner)
-> >  + after |=3D BIT_PAPE_WLBT_SEL;
-> >  + else
-> >  + after &=3D ~BIT_PAPE_WLBT_SEL;
-> >  + if (after =3D=3D before)
-> >  + return;
-> >  +
-> >  + rtw_write32(rtwdev, REG_PAD_CTRL1, after);
-> >  +}
-> >=20
->=20Is this function still needed if rtw_mac_pre_system_cfg() doesn't
-> touch REG_PAD_CTRL1?
->=20
+> +	scoped_guard(spinlock_bh, &data->nan.state_lock) {
+> +		/*
+> +		 * Fall back to the device default if user space did not
+> +		 * configure it
+> +		 */
+> +		data->nan.discovery_beacon_interval =3D
+> +			conf->discovery_beacon_interval ? : 100;
 
-Not=20needed anymore, I missed it. It and its call sites are removed in v=
-7.
+That seems like the totally wrong place - should probably make that
+default in cfg80211? Or is there a reason to believe it would need to be
+device-specific?
 
-> >=20
->=20> +
-[...]
-> >  +static void rtw8723b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
-> >  + struct rtw_tx_pkt_info *pkt_info,
-> >  + u8 *txdesc)
-> >  +{
-> >  + struct rtw_tx_desc *tx_desc =3D (struct rtw_tx_desc *)txdesc;
-> >  + const u8 *data =3D txdesc;
-> >  + int words =3D 32 / 2;
-> >  + u16 checksum =3D 0;
-> >  +
-> >  + /* Unlike the shared 8723x helper, the checksum is not inverted he=
-re. */
-> >  + le32p_replace_bits(&tx_desc->w7, 0, RTW_TX_DESC_W7_TXDESC_CHECKSUM=
-);
-> >  +
-> >  + while (words--) {
-> >  + checksum ^=3D get_unaligned_le16(data);
-> >  + data +=3D sizeof(__le16);
-> >  + }
-> >  +
-> >  + le32p_replace_bits(&tx_desc->w7, checksum,
-> >  + RTW_TX_DESC_W7_TXDESC_CHECKSUM);
-> >=20
->=20This function can just call fill_txdesc_checksum_common() from tx.h.
->=20
+> -	data->nan.notify_dw =3D conf->enable_dw_notification;
 
-Thanks, I didn't catch it. It does call it in v7.
+Some of the refactoring in this commit is just confusing, like this just
+disappearing. Please split the refactoring off first.
 
-Best regards,
-Luka Gejak
+johannes
