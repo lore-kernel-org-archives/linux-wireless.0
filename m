@@ -1,120 +1,161 @@
-Received: from vtj.irix.systems (vtj.irix.systems [82.76.27.144])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50719378D8D;
-	Fri,  2 Oct 2026 12:28:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.76.27.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D33AE2E718B
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 15:01:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790944127; cv=none; b=VEy35MicYc56X/rzrU6Ms5pcq6u5mIyPSojiK78Z+TwaSTc2NTpKO9Qu4LrReTcQh4csg+TTHV/OEnibzvEMzlXIBCsk+cNutuFqk8vAwB/bXStJFXymKEoDEGsteT67j78qd/cggjCAJ+Be5klWG1CvOzpZ70KSOdLMGCCaSVQ=
+	t=1790953289; cv=none; b=E4tmu/z6HUzBuJxVJ6jJr7yUFZxtg8Y9NObNIwZFspDXbYPXNOj11/+M7X1+Nf03g0pNdV6hjH+EwvADOjeErmfJ8vO7x/1dXfiiTjaZAFjtPVpWVUIaR0kSWRLLB1jfVrQbrJfX/gaAeDCS1fz2pachBHVVxYmgRVNkV542XqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790944127; c=relaxed/simple;
-	bh=T32RCJPcmKUxupyxyWUnbI9LHj31Sj8cK6hf1Ws/qYY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hlwEpgduSBt6wIJIJ52cCGp4FFKWiIF0NCP+VZytyvenln/2ZlpZfJz68FxOYEV5Rx4xLalRupY7Myj03HnYgQbmKLxKCvnZe/Udam8BuN6tIgQXWmKymwyjAsbqS1D+F/ANgAcXbWFThY9P7RPVzF7Ph1q6RVn8FeTtxBD3Ql0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=h9DX/AVQ; arc=none smtp.client-ip=82.76.27.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andrei-z.com
+	s=arc-20240116; t=1790953289; c=relaxed/simple;
+	bh=ShR78d2EjI1Kut4vJt9V0tyGLW84tjXkCQvZuKH1+7M=;
+	h=From:Date:Subject:To:Cc:Message-ID:MIME-Version:Content-Type; b=sbvatt/BSlZkMB/SlpOZ0cmvnKg4huroro2TQ+CCKtv4urY+QvG+8NNvD2Xv5/wtHJcwxOeIOVvTxHkNyBWi+CAPRp4Hq5H7KYjfgr9yfoHRmaFTCJRMfKTeWWrW4IIj19c7z8New4VZWTjRTd2LC1DA1WcR6nCkVaN2V9jgIVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZN8Rm/O4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="h9DX/AVQ"
-Received: from MAILGW-BIG.big.vtj.corp.irix.systems (localhost [127.0.0.1])
-	by vtj.irix.systems (Proxmox) with ESMTP id B127DB35C;
-	Fri, 02 Oct 2026 15:19:22 +0300 (EEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=andrei-z.com; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:from:from:message-id:mime-version:reply-to:subject:subject:to
-	:to; s=sig1; bh=CUSQwQ8vAjSojfF/giLhvIKYInkvHMUZuOWv7KAxxtE=; b=
-	h9DX/AVQtCNoVfzwftVQCwuZRgsaw62AnCKRowXTBJnhF055xAYjh/JxAl6otQWn
-	ySk5hnQ0+CGCOJhgLMAyfWCuxGEUblna5j+Mju0QtxfRIoAgnEskLyrcDP8Q0vKH
-	EzsHsmEeP0ZJl9DgEPApJYvhEDR4tccbTy1Pb1nUsuxERcrToBKRgc1P3q/Xnk7i
-	mFpQ2nC2t/H0/FV7+bUCTMJuLVf49DYq1ZJt13Bsis7U2tRLBovnscDJEw0/vhgc
-	Rxp2GxsyjiKYvdMFEyjfH5DEIYDU+rEjFPGoi+/sqChq79fYB32iQI2i+RIO+Rtv
-	chmucIWA1gzUlj7vWoJ36w==
-Received: from VTJ-MX.corp.irix.systems (unknown [IPv6:2a02:2f04:1:9c24::6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by vtj.irix.systems (Proxmox) with ESMTPS id 3F131B273;
-	Fri, 02 Oct 2026 15:19:20 +0300 (EEST)
-Received: from workspace.corp.irix.systems (2a02:2f04:1:9c23::c) by
- VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 2 Oct 2026 15:19:19 +0300
-From: Andrei-Alexandru Bleortu <me@andrei-z.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-CC: <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wifi: ath11k: handle HTT PPDU ID format indication
-Date: Fri, 2 Oct 2026 15:19:14 +0300
-Message-ID: <20261002121914.994458-1-me@andrei-z.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZN8Rm/O4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 85303C2BCF4;
+	Fri,  2 Oct 2026 15:01:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1790953289;
+	bh=ShR78d2EjI1Kut4vJt9V0tyGLW84tjXkCQvZuKH1+7M=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=ZN8Rm/O4t21i1pLeOL2SAbVEYHJnwlhwSeQ3KKgUu81SgeCXY7JlE8YtBovfLMkhS
+	 NHW72nCGG3156mdxiNzPV9ksTNjkBUd6YHz04QXS+xG/I3Pjy7/x2pLPyWZ4wfCquD
+	 H+UB0eZ5xIDP8NCiziL2zMdMf+SKrWjCmW5sH0h/UXIO/7dPOd6lBha1DLwOtL7eyX
+	 XO/0/hR0vTlB3Wy1EMkalsvYdgcCVkytWvZVH+M5Hy5A7kkwaYyQBbstRKVQA52SCO
+	 m2z8obqhaLuipTWQLpyx/vAgcDsLnqjcVfp8NTY10sSr1R9qs/HMiXIgWMGpARHEoD
+	 XJaBPaUCr4Blg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722EECA5FDD;
+	Fri,  2 Oct 2026 15:01:29 +0000 (UTC)
+From: Miguel Garcia via B4 Relay <devnull+miguelgarciaroman8.gmail.com@kernel.org>
+Date: Fri, 02 Oct 2026 17:00:58 +0200
+Subject: [PATCH v3] wifi: mwifiex: replace deprecated strcpy() with
+ strscpy()
+To: Brian Norris <briannorris@chromium.org>
+Cc: Francesco Dolcini <francesco@dolcini.it>, 
+ linux-wireless@vger.kernel.org, 
+ Miguel Garcia <miguelgarciaroman8@gmail.com>
+Message-ID: <179095325825.1998848.2691205243435840007.mwifiex-strscpy-v3@gmail.com>
+X-Mailer: b4 0.13.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) To
- VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790953258; l=3986;
+ i=miguelgarciaroman8@gmail.com; s=default; h=from:subject:message-id;
+ bh=IVwajOKSRUqDnlhmPDEYuZeAEQwdQ6oxaUangjNedkw=;
+ b=wOxWhwS9HYD3T3A7PwS6u0CV8Mf95VIxWy/iX1Dg7i0bq5WwhyY+lxCbcR/Iu/CuubGSHfDc/
+ 1BhfiLIS35sCVU5HkeQ//qi/A+SLQGjaoOkOTdiZfQSjaXrKu4vF/pz
+X-Developer-Key: i=miguelgarciaroman8@gmail.com; a=ed25519;
+ pk=EtrxRdQ/icT1qmJwjNNAVoBUhKKWwrhU2m6QT/xu6bM=
+X-Endpoint-Received: by B4 Relay for miguelgarciaroman8@gmail.com/default
+ with auth_id=1101
+X-Original-From: Miguel Garcia <miguelgarciaroman8@gmail.com>
+Reply-To: miguelgarciaroman8@gmail.com
 
-Firmware from WLAN.HK 2.8 onwards sends HTT_T2H_PPDU_ID_FMT_IND (0x30)
-once per radio at bring-up. It describes how the firmware packs a PPDU
-ID: for each field (HW scheduler command id, ring, sequence index,
-link, command type, TQM command, MAC id and CRC) whether it is present,
-its width and its bit offset.
+From: Miguel Garcia <miguelgarciaroman8@gmail.com>
 
-ath11k only ever compares PPDU IDs and never decodes them, so it has no
-use for this layout, but the unknown message type ends up in the
-default case and logs
+Replace the six strcpy() calls in mwifiex_pcie_get_fw_name() with
+strscpy(), using sizeof(adapter->fw_name) as the destination size.
 
-  htt event 48 not handled
-
-at warning level on every boot. Add the message type and dump the
-message at the ATH11K_DBG_DP_HTT debug level instead.
-
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+All six firmware names, including their terminating NUL bytes, fit in
+the 32-byte array, so the selected firmware names remain unchanged.
+Also simplify the function comment.
 
 Assisted-by: LLM
-Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
+Signed-off-by: Miguel Garcia <miguelgarciaroman8@gmail.com>
 ---
-Found and fixed with an AI coding assistant (Claude Code), which also
-drafted this changelog. Tested on a Ubiquiti UniFi U6 Enterprise
-(IPQ5018 + 2x QCN9074) running 7.2.8 with the OpenWrt backports ath11k:
-the warning is gone from both QCN9074 radios. On ath-next the patch is
-compile-tested (W=1) only.
+v3:
+- New standalone thread, with no In-Reply-To. v2 was a reply and
+  Patchwork stored it as a comment rather than as a patch.
+- Subject prefix is "wifi: mwifiex:". v1 omitted "wifi:" and v2 used
+  "wifi: pcie:".
+- adapter->fw_name is a 32-byte array. v1 described it as 64 bytes.
+- Keep the comment accepted by Brian Norris. Do not add a sentence
+  about strscpy(), realign the version/magic masks, or insert the
+  blank lines v2 added between cases.
+- No Reviewed-by tag is carried forward from v1.
 
- drivers/net/wireless/ath/ath11k/dp.h    | 1 +
- drivers/net/wireless/ath/ath11k/dp_rx.c | 5 +++++
- 2 files changed, 6 insertions(+)
+v1: https://lore.kernel.org/linux-wireless/20250705133600.186441-1-miguelgarciaroman8@gmail.com/
+v2: https://lore.kernel.org/linux-wireless/20250723151718.367623-1-miguelgarciaroman8@gmail.com/
+Brian Norris: https://lore.kernel.org/linux-wireless/aG1lcWYjk9GARp1P@google.com/
+Johannes Berg: https://lore.kernel.org/linux-wireless/294d5e91279556b59586f0812eee4ac809d7b011.camel@sipsolutions.net/
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
-index 84f66839f0c6..bace81c453e1 100644
---- a/drivers/net/wireless/ath/ath11k/dp.h
-+++ b/drivers/net/wireless/ath/ath11k/dp.h
-@@ -1033,6 +1033,7 @@ enum htt_t2h_msg_type {
- 	HTT_T2H_MSG_TYPE_PPDU_STATS_IND = 0x1d,
- 	HTT_T2H_MSG_TYPE_EXT_STATS_CONF = 0x1c,
- 	HTT_T2H_MSG_TYPE_BKPRESSURE_EVENT_IND = 0x24,
-+	HTT_T2H_MSG_TYPE_PPDU_ID_FMT_IND = 0x30,
- };
+AI assistance: Grok (xAI, grok-4.7) prepared this v3 from the reviewed
+thread, edited these six call sites, and ran checkpatch.pl --strict,
+git diff --check, git apply --check, and the targeted pcie.o build.
+Codex reviewed the diff and refined the commit message. No device was tested.
+
+
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a9425e9a94f4..7ad193841c2e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3098,9 +3098,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ }
  
- #define HTT_TARGET_VERSION_MAJOR 3
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 6d95f7b343a5..a22cf1b9f43a 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -1747,6 +1747,11 @@ void ath11k_dp_htt_htc_t2h_msg_handler(struct ath11k_base *ab,
- 	case HTT_T2H_MSG_TYPE_BKPRESSURE_EVENT_IND:
- 		ath11k_htt_backpressure_event_handler(ab, skb);
+ /*
+- * This function gets the firmware name for downloading by revision id
+- *
+- * Read revision id register to get revision id
++ * Get firmware name for download by revision ID
+  */
+ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ {
+@@ -3110,7 +3108,8 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 
+ 	switch (card->dev->device) {
+ 	case PCIE_DEVICE_ID_MARVELL_88W8766P:
+-		strcpy(adapter->fw_name, PCIE8766_DEFAULT_FW_NAME);
++		strscpy(adapter->fw_name, PCIE8766_DEFAULT_FW_NAME,
++			sizeof(adapter->fw_name));
  		break;
-+	case HTT_T2H_MSG_TYPE_PPDU_ID_FMT_IND:
-+		/* The bit layout of the firmware's PPDU IDs; ath11k only compares them. */
-+		ath11k_dbg_dump(ab, ATH11K_DBG_DP_HTT, NULL, "htt ppdu id format: ",
-+				skb->data, skb->len);
-+		break;
+ 	case PCIE_DEVICE_ID_MARVELL_88W8897:
+ 		mwifiex_write_reg(adapter, 0x0c58, 0x80c00000);
+@@ -3118,13 +3117,16 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 		revision_id &= 0xff00;
+ 		switch (revision_id) {
+ 		case PCIE8897_A0:
+-			strcpy(adapter->fw_name, PCIE8897_A0_FW_NAME);
++			strscpy(adapter->fw_name, PCIE8897_A0_FW_NAME,
++				sizeof(adapter->fw_name));
+ 			break;
+ 		case PCIE8897_B0:
+-			strcpy(adapter->fw_name, PCIE8897_B0_FW_NAME);
++			strscpy(adapter->fw_name, PCIE8897_B0_FW_NAME,
++				sizeof(adapter->fw_name));
+ 			break;
+ 		default:
+-			strcpy(adapter->fw_name, PCIE8897_DEFAULT_FW_NAME);
++			strscpy(adapter->fw_name, PCIE8897_DEFAULT_FW_NAME,
++				sizeof(adapter->fw_name));
+ 
+ 			break;
+ 		}
+@@ -3139,9 +3141,11 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 		if (revision_id == PCIE8997_A1 &&
+ 		    magic == CHIP_MAGIC_VALUE &&
+ 		    version == CHIP_VER_PCIEUART)
+-			strcpy(adapter->fw_name, PCIEUART8997_FW_NAME_V4);
++			strscpy(adapter->fw_name, PCIEUART8997_FW_NAME_V4,
++				sizeof(adapter->fw_name));
+ 		else
+-			strcpy(adapter->fw_name, PCIEUSB8997_FW_NAME_V4);
++			strscpy(adapter->fw_name, PCIEUSB8997_FW_NAME_V4,
++				sizeof(adapter->fw_name));
+ 		break;
  	default:
- 		ath11k_warn(ab, "htt event %d not handled\n", type);
  		break;
 -- 
-2.47.3
+2.43.0
+
 
 
