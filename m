@@ -1,118 +1,175 @@
-Received: from mail-lf2-f13.google.com (mail-lf2-f13.google.com [74.125.229.205])
+Received: from mail-vs2-f35.google.com (mail-vs2-f35.google.com [74.125.227.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71FE3429825
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 10:13:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033BE47DD6E
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 10:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.227.35
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790936020; cv=pass; b=nNvQTC3UtnFKjovWv5LMulm/45e9LQOHbuRPWclOxBaRo1LBQHal/ZaIcbPFZ4q4uCtOqf7SezxFzkl9CWjVh3eJ/L0bzI2lURrsn9aXmyfrzttjA6zyNKOmjlpEU9GlzrYICJP5Y1GKGqF6vvvQqhLrOW8ceMVLYKSUvDVWxnY=
+	t=1790937910; cv=pass; b=m78GEDwHTKdxdM7eOX4U2E2hUUJ/CJPKEYEIp2Ok5zQGsNWAfzJ504oPL0Ld43TuYEIlNufoByebjGijRCEVibMHHY+k7tWGQQxP9B65x297zPPHyADI2rE3voWc4kf+rS23Wcx/Kk5MizJSdx5CdLjkCBKGT/mNjhDN4poNnDo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790936020; c=relaxed/simple;
-	bh=R31dQDnJ53ap5GeH4hbi3ZM97krFZBGuCEodpNOsenA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aHkR01AGRcxHwXkrB4srdVIE83QjxL4ShfvchrQyYVvVEaL+9A1sX1Qqz1vmuTKuaa8Fue5abr1U+bOZRKItHrnly9/FgmP6x2qHSvipgpPrvZzSHH/QCLIbGGdoEYWiqgRZ1pX2WYo6lpFu61dbinLONyDSv4LepK5koc9Kgtk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dzoImABX; arc=pass smtp.client-ip=74.125.229.205
+	s=arc-20240116; t=1790937910; c=relaxed/simple;
+	bh=RMW1S/w84MpDzUDHWdyQSao1BRRlj+PxT3yRhEJvAOM=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=NhglOTIEcKw+ooTX/OMQOmLjqJ3u2XiQS2GjVeYjy/BospDLiEfVwb6akgMT5hWBhFs1nDgqxmo5MD8PAwe0WBtoT9jNG6tVoPUp8cGeu9nO9UeOPFtcMhcZSXGcn4rUO+lqTrX7esL3TtOzUmuefQfqufKO+hcgdfgN/v5/+Qg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M6DEaBVt; arc=pass smtp.client-ip=74.125.227.35
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dzoImABX"
-Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5ba447469b1so1542633e87.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 03:13:38 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790936016; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M6DEaBVt"
+Received: by mail-vs2-f35.google.com with SMTP id ada2fe7eead31-7bf9eb881f7so1082542137.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 03:45:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790937908; cv=none;
         d=google.com; s=arc-20260327;
-        b=LRkhTy55HAz518b4MEWgicdEoq3+x/AAMmBJ8GQbUIIQ/VRk7xBGSKweiBMDjYVNjE
-         3XCMf/kGLCzwTC5ugIh6h3h8pzFb3v1EsKKcBeIgBCKEeXNqMSPxzswTUBkegMqTu2mZ
-         mqrZ8E3MwpRveCJaao9reFQgE6ExIcTyiehi1Luo2DCK41Bm7l8T48yh0VzMITO8Bp1L
-         TGnWx1MG0Z3tyooct1YkZK/+PQABW7BOS2OoYAlVwBlyaWnmtU7QtIrEAwOentq6u+b1
-         WEJN9opvq4vEgZwsDYN5rkhl0NUqy5g2dQ5x/f6Rt3zTOaEuD0tzzDAU0BVNpmA92PY7
-         Fnjg==
+        b=oQ9e0Ps0FS+3FKy+kCqPPL2wkqF0kw64AmctpbxxJsRSWeELUO72TRW+gDbsQjFfAl
+         PdTX0/PdbX+lWT/SYdmFsqOE/iM+lSHlb5VcemJJnfk4EGylSvE1ny5Tcg/f+cf8cdrZ
+         eOX8+xW/o49N2ufTM5ThcJUaZqU5ycmgXSmMFgi96YFvRTTWgNqOjstZxrxgijx0ZdnI
+         b6ZpVtyS0hAvQtQfd0/qQezK8ovqRTxSezXvUspRpF6Sr5nhHN0hF3vgXCTNaSOmu74v
+         sNUxVUuIJRzROcTCvms+fxOuX1HdGPRutdw4t9LW1YmzN/2rGx1VSkyH8aJh0hKjl/HK
+         mPxw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=YtQs44M5gzBLsCq+UUJQkpTtJc7hzbbbWNdnDCJs0yY=;
-        fh=CdZmGP5xBBiQDJh3OFH9BWJop+qKSFIqdagy/W5hBiU=;
-        b=cXMCDE5Ww+04TRBwChruAXTo71SlByKhocUvA2ck395jJtB743K5NvpO9mahxXJ7f0
-         4OIYyp3NF/OVwK1oAATOO8XmmCwMeNUHdaB3mFsk5mTIeouu9IFyWRqmbh254YW0V0GY
-         KBOkzMFNHWU6/YB/Qu4DMOZaG+3FweqWCej5yODseydWabjVWCyvl1+UmsSn6vxOcv/E
-         UqCM1cuOx/bZooQYRwT9rnJfjvojiWaNzyIJUYl5EflUzrhDb0m1O7HYH+AafqqZmVZM
-         HAGODZWs9AN2KhN9PO1GgH6LSJUQf8wGwPo/HvX2elmI8te9GhKcBMBx3jXxXqTAZFul
-         bhWQ==;
+         :mime-version:dkim-signature;
+        bh=NvsDI9OStdZYXScGSi/orF65l/6sbhTFh+TJKJ7Fcqo=;
+        fh=SB+iNamqw04pSbLtNx3lJQeGsQjT1FLlR/rGwc0pBlI=;
+        b=I3qK//4D9Brmb0JDI8+JHk/WXobLF70FPCK9PLndhGjaY8wkRuwBBUWUi1DIBgqcdG
+         L4p1esaAGbhoGfk40wOkPt78kfh8y9MiG69eiROjGLEGJ7SDZcLoDOmEph2KkqSN8PRS
+         ycyvcKJ2Ca0F/D1wvS49EoaWyqUaT3CcxBNbcnlHQkc5P0DkvNX9fQLrDfdP5zXoofQA
+         ArVWSAeyrljTRFipCsZE+P37B7E0u76UDXAqMMQBXvMwCglc6rak4jtQTu8cMspzVS6d
+         g9djIf+JDhqp6lrnAeT7Qzk0/TbEIVg/yADR9ibNrwXHOBEr9CaZ09W6w3rSNxnvLZAp
+         aYTA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790936016; x=1791540816; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790937908; x=1791542708; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=YtQs44M5gzBLsCq+UUJQkpTtJc7hzbbbWNdnDCJs0yY=;
-        b=dzoImABXSK2Gn5sUjxkaIb3Ut06JZ5GtduYxFB+DlVlZxUZXLMXBxKtl9w5wb8jKmN
-         869QAukK38CFKwy5AW1Wl/eSoSBulkQ9FYMFHJPXX65uanH6t15vx8mYbkA2Rp2+ETQc
-         91gou23YDlaZVvHG9ZnL2ad6tnx7JY29xRZ+wMVqo6syg6pc5xswPPskxc/p7WiI/HwM
-         5oHGaMz9xGzb5IvxIpqM205iFpKjvQ2fPi1oYxKrsI6Q2IeerGYiXYF5Lm1fjAPsQHiW
-         dVT/sBCTxzfQu4ULOo9wOWQgSUGEy+aaADXdcPdak0rAqz5Vu/qZkvHos4pdlou5Jj8l
-         KxKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790936016; x=1791540816;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=YtQs44M5gzBLsCq+UUJQkpTtJc7hzbbbWNdnDCJs0yY=;
-        b=OcU7JAscpasZBduV+dsZcqhkj68qAT9Ua4pIPedkWDNNfNrGsNOrDODRh1rHHOLbTF
-         whrW0BYvYrrU2hFD1D03LduziT6YydACXALAsMnPjkcG+titqVMe4QWnxRGxUmTVkNd0
-         h5Ks1RwdMhrHfZuoBSPgMiewpk/ydO8jMR6W/o01c9+ZtgBW/2O68WNB1QoGue4rbJgh
-         IRcjzWtMrkgY9NdZB6OcI+BEnSMWdhc7QQn1T7u6Fqzmp9VQGdZ95omXYM+zi2y3HYNN
-         Z/lKvEFsZRUOiMm8geFmJF+AsEOO8eQuWBCnpab76rbsA1QU7YO88L5CN3TVqtEnL+aL
-         zjMA==
-X-Forwarded-Encrypted: i=1; AKwUvBwh4OBLwg+UPu4joNn65tLk6sEECTYGqgKcHyNKdh6YHpUfVNYu+k7qlevbvXvloLO+uaRIivmmg4DyjByzMw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIbw0r/TJwv75GFdF3/N1jfd/FZO13bayilitKnosc3OZFQCvnK
-	hR9UGLTwiV+V+ECpuODRmroAPNISoUrYQo6a6FPiFv9Ti9/10pI8+U1CffPh0TFeQkl1xJXaTj+
-	gQizecUsi8Uk41vCc+YvR6mrSF77HinY=
-X-Gm-Gg: AYBFou3z6Of6o+m/uJhQheJRjcROS5hbOy2MR6NG3KUSsnhvWFEHTi1b7q3kb2+VLim
-	Tn8vpOncYKNERZg7yiNa9BIw+Oyb+VZr9ZshChMSCsILMSFw+UrPb0shaDW15kuY0jt+gZFyCsT
-	21SS8PDvpCkgaGijsGyZkKEywybsNwuxITbWnHx0SH/m0ldYretsSKdvMmjJO3nPksbnfY5WGzS
-	w5CUgV5TmEN91bO/5NeddUrkmDhFfKbezwzRaVVfqzFIbDX0DZSWF6OjtGlNFc6Aafze+HWpUp+
-	8A/S+C9juEiIuXXsIjnTpAiopweaxStSMF9Gj6Y4vm6nUTaZ8zy3300VSesRsvh9XZ3f1TrPjhv
-	8sRGk3fVgUf8=
-X-Received: by 2002:a05:6512:2346:b0:5ba:3888:705b with SMTP id
- 2adb3069b0e04-5bb9bb22cb8mr661934e87.54.1790936016247; Fri, 02 Oct 2026
- 03:13:36 -0700 (PDT)
+        bh=NvsDI9OStdZYXScGSi/orF65l/6sbhTFh+TJKJ7Fcqo=;
+        b=M6DEaBVt7gLP74p2i/1rSy9TtK/EM85ulIln8zZOWC7Fy3BvCeY8Li6XDp86L0AeXL
+         i+cC9YDhepB5tY65jOP4esO8bOjHKNAlrftmP0lZ/2uv3xYBA09Angp88gRKmN59ZmKL
+         kiJjKyJKWF9iND/Mb6da9ymZGCXms2p9NVv0BZlPBt24WVb6ZlMV3XNdJWlwtgwpNWk9
+         nkDalj9JSwbbHBvktfRanGJihYGJXGlw5e6eMVV/rkEgpAnjtxcWX5LWwPXKVeoeLcEZ
+         SYk3bnjxdfqMoaQCbIYw4cKjGKCm/GzOf6CFMoMLqR2JXYiGOIDzeOECkeSD75j2/pQw
+         /WRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790937908; x=1791542708;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=NvsDI9OStdZYXScGSi/orF65l/6sbhTFh+TJKJ7Fcqo=;
+        b=UzFKNausMUI0VVe9TmY9qdsUPPcDipeD6sffE116lNzZsQp/Rvi+MtxQ2tePRdxC/2
+         FkQ3dr54GGOnRO7nfXxoRqKq2ovzH9jeLGOVdv9myPtjxkJDcZd5g+Ry2GYuY1i1GkPX
+         VinPSWRE5hrFCsGT6By4lXBd2crLRe+uZTRO0fu11+BjxpOs76lcy31BJHTyk6h2n80V
+         4NGrxeFL7gUDYyi2ZFJxRI03JQicLhhdeVIq5/FrLo4wTUB6NudvUrNqBwJtIrULL9pV
+         JIHrfiFBkjpblGsSNmYsEIPzxqHPeqrVYaoONc1gJVVy2U99ISlt2WL7aE2EJ55ln2/u
+         zTww==
+X-Gm-Message-State: AFq9FYI/n8VNLf1iCwYze6kBCQVWYbxvTZVXDOCkmN3Kfv4G0wc5hBY3
+	wtYuMhrVc63/zhvQaMDDhRfqcdZXnNv2qr+0Ojp7c8u+fdNpxXblwTGfrBLgF1g6znzdJ6NlP6e
+	E1+3OgJfXwq/6c+N0kI5ZLxk7gACnw5VikB6vi6PT0Q==
+X-Gm-Gg: AYBFou1aI1Iq5UC0mfiwzpsS5vWjuHbizsjgka6TfHStLuKFe4NJls8FAnUpDMpyZG2
+	b0+bWSyH3KT1AqsxmsAgJSeSM337qni6Zsxx82KZI1nMFAiIc0mAn2wjKtLB4cn9LfYKr6aMZf+
+	27Vl4GJYBeW+DMA1UheaWfJRbjlUPGI6h9ZmFI99Fphft6xSPWB1/GHIensIUOXpYAeSho4p6E2
+	YKmsmV8prsy153eK3jSQiRPI6tNf2ZjxlAQQhRCDN/E/Smd4mObjBA86kvvntwX3uWy81t8Dp11
+	b9jdS/jqcVBBpKBkDj3SCzaLRUSor7lYSdGbUf4EYYPc1yGjfeDwiu8=
+X-Received: by 2002:a05:6102:5121:b0:7b4:6e46:4cb6 with SMTP id
+ ada2fe7eead31-7c0f498c5fdmr671089137.6.1790937907743; Fri, 02 Oct 2026
+ 03:45:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260930112842.21323-6-sigefriedhyy@gmail.com> <179089748368.434549.14167408771777474746@kernel.org>
-In-Reply-To: <179089748368.434549.14167408771777474746@kernel.org>
-From: Yuyang Huang <sigefriedhyy@gmail.com>
-Date: Fri, 2 Oct 2026 19:13:25 +0900
-X-Gm-Features: AclHuK9nykm4Rn1HobyHFdYa8n2y3hHFC_CiwY1QwI6PRZQntiimuWrJxRLpDDc
-Message-ID: <CA+7S2vJCT+PzSvFtmL9disx8t8nAMZvEMULcL=97v4p6MDyPcw@mail.gmail.com>
-Subject: Re: [PATCH net-next v9 5/6] netlink: specs: rt-addr: document
- AF_PACKET multicast dumps
-To: netdev-bot+sashiko@kernel.org
-Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com, 
-	andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net, 
-	dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com, 
-	idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org, 
-	johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com, 
-	kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com, 
-	pabeni@redhat.com, sd@queasysnail.net, shuah@kernel.org, horms@kernel.org, 
-	sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+From: Arttu Pitou At <arttu.pitou@gmail.com>
+Date: Fri, 2 Oct 2026 17:44:35 +0700
+X-Gm-Features: AclHuK8ZZ3xv2ZvObBYo4EhsiYKzhiCNdOaHfYxeOUlh-c0TKMy_rwUMjJOXN9E
+Message-ID: <CAFnd8PdQA-1WHd_w4ODdXnN-+XiQDfLr4FNMYNXXHzOZY56XPA@mail.gmail.com>
+Subject: wireless-regdb: Cambodia (KH) entry omits TRC-approved 5725-5850 MHz
+ WLAN band
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, info@trc.gov.kh
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> - [Low] The patch adds `target-netnsid` to the getmulticast dump request
->   with no condition, and writes doc text on which request semantics=E2=80=
-=A6
+Hi,
 
-Fair, will mention target-netnsid in that sentence if there is a v10.
+I am reporting an apparent omission in the Cambodia (KH) regulatory
+database entry.
 
-> - [Low] In Documentation/netlink/specs/rt-addr.yaml, the getmulticast
->   operation still has a `do` section, and its doc still starts with "Get=
-=E2=80=A6
+The current wireless-regdb KH entry is:
 
-Pre-existing issue.
+country KH: DFS-ETSI
+        (2402 - 2482 @ 40), (20)
+        (5170 - 5250 @ 80), (20), AUTO-BW
+        (5250 - 5330 @ 80), (20), DFS, AUTO-BW
+        (5490 - 5710 @ 160), (27), DFS
+
+There is no rule covering the 5725-5850 MHz WLAN band.
+
+However, the Telecommunication Regulator of Cambodia issued Type
+Approval Certificate RF-TA-2022-1104 in 2022 for the Astronautics
+AFS6460 Connectivity Module.
+
+The certificate explicitly lists these WLAN Tx/Rx ranges:
+
+    2400 - 2483.5 MHz
+    5150 - 5350 MHz
+    5470 - 5725 MHz
+    5725 - 5850 MHz
+
+Source:
+https://www.astronautics.com/wp-content/uploads/2022/11/Cambodia-RadioCerti=
+ficate-AFS6460.pdf
+
+I encountered this as a real interoperability failure rather than by
+auditing db.txt.
+
+An ISP-supplied Huawei HG8145V5 access point in Phnom Penh operates on
+5745 MHz (channel 149) and advertises a Country Information Element of
+KH.
+
+On Ubuntu 24.04.5, Linux 6.8.0-139-generic, using the in-kernel rtw88
+driver with an RTL8821CE client, the sequence is reproducible:
+
+    CTRL-EVENT-REGDOM-CHANGE init=3DCOUNTRY_IE type=3DCOUNTRY alpha2=3DKH
+    CTRL-EVENT-CONNECTED
+    ~5 seconds later:
+        nl80211: kernel reports: Channel is disabled
+    ~55 seconds later:
+        CTRL-EVENT-DISCONNECTED reason=3D3 locally_generated=3D1
+        CTRL-EVENT-REGDOM-CHANGE init=3DCORE type=3DWORLD
+
+The client then reconnects, receives the KH Country IE again, and the
+cycle repeats approximately once per minute.
+
+For example:
+
+    10:10:18 COUNTRY_IE alpha2=3DKH
+    10:10:18 CONNECTED
+    10:10:23 Channel is disabled
+    10:11:18 DISCONNECTED reason=3D3 locally_generated=3D1
+    10:11:18 REGDOM WORLD
+
+    10:11:23 COUNTRY_IE alpha2=3DKH
+    10:11:23 CONNECTED
+    10:11:28 Channel is disabled
+
+Channel 149 at 5745 MHz falls within the 5725-5850 MHz WLAN range
+explicitly listed by the 2022 TRC Type Approval Certificate.
+
+I am happy to prepare and submit the corresponding db.txt patch.
+
+The certificate establishes the permitted WLAN frequency range, but it
+does not state a general Cambodian maximum EIRP for that range, so I
+have deliberately not guessed a power limit for the regulatory
+database entry.
+
+If there is an existing convention or source used for the KH power
+limits, I can incorporate that into the patch.
+
+Signed-off-by: Arttu Pitou At
+
+Arttu Pitou At - =E1=9E=A2=E1=9E=B6=E1=9E=8F=E1=9E=96=E1=9E=B7=E1=9E=91=E1=
+=9E=BC
+Edu | AI & Cloud Architecture | DevOps | Cybersecurity
+Phnom Penh, Cambodia
+Website: https://working-draft.org
