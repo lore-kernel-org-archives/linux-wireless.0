@@ -1,146 +1,170 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8332E88A4
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Oct 2026 23:41:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55AE1F5825;
+	Fri,  2 Oct 2026 00:22:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790898117; cv=none; b=Of0EV/GG5Gh9qHqQEFM7Ti3nm+q4/I+PzGvtO8lf/pkDRaLdSLp9hfF9hcMWAX8FtjwzfkI6FyYO+GrcStY7Obe23st+vvEaz4NIV/wHmrHpA7/AKS4tyFwKphE9MPCxdF1wcrtrrL0B0Tgjmp3fPuZprRVe3N4Zja52VRzrwGg=
+	t=1790900552; cv=none; b=p1gHWCX94Pmv6B+NaWwQ7PA3unwdOA88pbbgT7jZrzFBna0ooS/ML0EmN9fgmd+CRHD6FUDpynHhWldfuG7j0alebTVDEPGsZv4xTTBex3tfkUrpMAKtfwfgpgGb7eaHUavBTqjY6ttmiao033ndCX6BvFgKRmXOjxbvig/FQOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790898117; c=relaxed/simple;
-	bh=k8FV0AuY/UnTXAbRfnvFY/B3Ch7+YNxyw8EB7UJBX+o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NFWzU8KKEG9h17k8yXw3NaDEg1P+etybkY503uS8HqQh5pliTCVTLtqkr4hi1I8lo9PgVwnmIJAiBGhbRhyYeYhDNUe0rIa2MjgJS/GGV19n58yMd3ntePE/VrdGK8/EC12vX8qLzBItMXPhjd/NGyx8h5pxVhFN+SG8UgsvIQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GZSRXl+z; arc=none smtp.client-ip=74.125.225.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790900552; c=relaxed/simple;
+	bh=FA2n0hgi/Iogpb+esMIigXB9gAPNNg+U5IlCe5ZP2Ds=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=EOpvmcTvC1D0VfxJBjvJJr/97MGkOs++HEA/E97I+C1RAkTtFekKCfxoHf3IGBcfiS6sGqCZmvnXzPlt+Ys6n/rLRRCyoxIfDl6jOd0YanLaMwmDntaS3A76NcV4KE3Y6ecW+/ouS1mSS+GehQVwhYpPe+pakIEKw9QJU2Gi6XQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=EP8m4qhI; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GZSRXl+z"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e6598dd44so44243595e9.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 16:41:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790898114; x=1791502914; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=x2eHfLXSxsUxHEfJdm6K8VExNqrOwW+s9I9FDdxMVoY=;
-        b=GZSRXl+zGEAyAwjkC+sAg1bbC9dc5LWDmYkhWUK5/oaSl34zKmwHL0YNoO6SKjZpnc
-         1wzQhpZFzfzdhl+lJiLpaPerEcRQLMfwOk7/3EFZ069BTQXPsJSEXTqTh0MZSRzpqhAx
-         6fyuV6P0wl+pHC5bP/edM89m2Hlle5hqjMX4frLQg2FYE1ZMktpMnvN8pA1W3pZUZE8A
-         3QBvGA7rHzgxVnCJ2kI4rLOHGGskGzqlpIo8h8pEGY5ZspNTYAV2iTdM+QRE4+rDKMr5
-         C3ogMRhomK7JvZEg9eaLY03yKhcm9DVxrEs1fzZR+PtVbZQyFEbRnio11YAarX1Zs4+3
-         Xbag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790898114; x=1791502914;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=x2eHfLXSxsUxHEfJdm6K8VExNqrOwW+s9I9FDdxMVoY=;
-        b=kRN9hyjgoQHdAkSs3eLnV5IxuRBJC7VZ+90SFFLVPMqZ3BCLOkvIcgXQk6Osaw1Mfo
-         uTc7EHra4uc2OFuAmor0vvZ0oYvnV4buQ+IN1MccPjKMLHWluQ9xsgF6mr34qlKljp5y
-         rQVD1c9nnixIFU07i4qMM31ehAFuHRmhN4ciHgGMpZZ0AgDS0h2JQfeX+v56rsQViuEl
-         WiM818oVejcDbVRObx3+xrjZ5/1CIubKyMU2Dj6T44jntzdXT4IpLJycjxYKjo3pmlI9
-         Yx7+86O7AnOUi/5TozCSuC+gbCkTItf2CH/7SO7predCvhEezaSEBIPedCi+dmt1LkZj
-         NFkA==
-X-Gm-Message-State: AFuF++m+R26qQPHQyDEbc07Ek7jBymJF6an/+qVNnUyLKZYDFnYmRWIY
-	i0CH7q9IYf1mTR+0DsxX8V/0Olaz3crsqZFVUpyyNTKCCo7F5vjD/Zxv
-X-Gm-Gg: AYBFou3Ypp8bp2LwuFEZ1dffFKb8uzypTsY+bSlCX+mBaxPCFEadNnq5TvRUyap1nvc
-	bjxZYtrntJhRq6nmo/fOwKnPD6LdIF2mf8ZUYfBa8xiG0rbPz82UqTSPj3w0j1ClHVd5uGE5imF
-	n0K9dqbp6T/J7OrfHwI7DfPwH/5xt4SrKHbrIi4UGWjQEjfpPgPhrvAE60O0UEcy/kMwJXSL8wa
-	avwPpIkiKR9PDcqlB6xyamwLfN6/h1gz2xQlNZyjCxE2WKXrCnB/UrVkpzJOQIUiK5cqoV7l56P
-	mMPi5EYFJWFlGotRkXl0Ds7EDtW622b50D5QWRHKKeuwQNjolmHDOLXd7qWFpeJIhuQRwg0fYiL
-	ZjUNxXztiHmhinHDujdNTj4GrhE1sUzT2BWjppPfKDOlY5ECMgbHSOQncQmkJuQrMFO4iy+PSR9
-	ViT+VHPSCmy5SGmPMJO3KFAvR6YYI+b2axi9Fll2pztasKQaQ+zWDfXbqskBya4FXmkXusJt7m1
-	q1mFWBZZwD6SHJdub7f1t6JhOO/roUs9McrLQDZ7Rwv6RAeMqWFaxhxBE95GBNeGq8whqOvGuNP
-	gFGR5QpwE+ehO3cU040ORCQ9Wlq3dChy692hElv0zn+ldjuxVe2Ia2GkMCL3HBIEQQu58UdUYWk
-	3Ggz61UrQOg==
-X-Received: by 2002:a05:600c:620c:b0:49c:fa20:cbfd with SMTP id 5b1f17b1804b1-4a027583fb0mr16121105e9.20.1790898114308;
-        Thu, 01 Oct 2026 16:41:54 -0700 (PDT)
-Received: from MBP-von-Karl.localdomain (dynamic-2a02-3100-b3ca-3a01-3deb-81e4-0dc4-fbe8.310.pool.telefonica.de. [2a02:3100:b3ca:3a01:3deb:81e4:dc4:fbe8])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a0280dc6e7sm30779645e9.15.2026.10.01.16.41.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Oct 2026 16:41:53 -0700 (PDT)
-Date: Fri, 2 Oct 2026 01:41:51 +0200
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	g@mbp-von-karl.localdomain
-Cc: linux-wireless@vger.kernel.org, 
-	Arend van Spriel <arend.vanspriel@broadcom.com>, Clark Williams <clrkwllms@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
-	linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: brcmfmac: avoid sleeping tx locks in netpoll
- contextg
-Message-ID: <ar7vLt5kQ2HJoJY9@gmail.com>
-References: <20260930185417.61865-1-kmehltretter@gmail.com>
- <20261001075755.3MilPS2C@linutronix.de>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="EP8m4qhI"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6920M9Fs83379008, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1790900529; bh=41gja881XwSD6Xcq97M62x8f1R1dF9f+sI6SMpG01yE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=EP8m4qhIHCZbmP0hQtqgFlrhg6ZsqSK4kdHV7kOvJLkSZieKQRgxIIb/O6nWIIpya
+	 TcRTSnlsji/vQToiU/ktJmYeYhSOSmVUQItPagok96CvchCa7LmoHVa+zf3DtUhVDB
+	 eaVAOZ/NXFzvQ/0pEMrh98qIw7q8s7mLCa7fwvSnNjnWgM6tvyWEWiluqTU91cp6jr
+	 W1hH1B2HFBnXqZPv3veVE9f3nwiPN1G+9ewZcnEDJntgaFkTV4frHl4FAwIA/dOOJB
+	 xxcdAKg0rYE8YDm7af3Zhk7+uw88xKdBk1hh+Z67MWTEcqgiUdDoETEtgV7xC+GHP/
+	 Q7qYJrGwtfx2A==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6920M9Fs83379008
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 2 Oct 2026 08:22:09 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 2 Oct 2026 08:22:09 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 2 Oct 2026 08:22:09 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Fri, 2 Oct 2026 08:22:09 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Arnd Bergmann <arnd@arndb.de>, Arnd Bergmann <arnd@kernel.org>, "Johnson
+ Tsai" <wenjie.tsai@realtek.com>
+CC: "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw89: fix LED dependencies
+Thread-Topic: [PATCH] wifi: rtw89: fix LED dependencies
+Thread-Index: AQHdT/8uPx21cNsIcEC+oww+Nsu2prbmQl0w///4wwCAAyqZYA==
+Date: Fri, 2 Oct 2026 00:22:09 +0000
+Message-ID: <bdb19ff5e0bc456cb035a1aa0124612f@realtek.com>
+References: <20260929104159.3236854-1-arnd@kernel.org>
+ <1bde7ea5999c4915b184bf2fcb904901@realtek.com>
+ <0162247f-ca33-4152-bd32-255343c7216b@app.fastmail.com>
+In-Reply-To: <0162247f-ca33-4152-bd32-255343c7216b@app.fastmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261001075755.3MilPS2C@linutronix.de>
 
-On Thu, Oct 01, 2026 at 09:57:55AM +0100, Sebastian Andrzej Siewior wrote:
-> On 2026-09-30 20:54:17 [+0200], Karl Mehltretter wrote:
-> > This fixes the direct SDIO transmit path used by fcmode=0. Modes 1 and 2
-> > take the FWS lock first and need a separate change.
-> 
-> Is this the only affected driver?
+Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wed, Sep 30, 2026, at 02:28, Ping-Ke Shih wrote:
+> > Arnd Bergmann <arnd@kernel.org> wrote:
+> >> The problem is a misunderstanding of how Kconfig dependencies
+> >> work, as the 'imply' keyword is not sufficient to enable a
+> >> a user-visible dependency, and the boolean 'RTW89_LEDS_MC'
+> >> symbol cannot determine whether linking against the MC code is
+> >> valid.
+> >
+> > People intend to weakly select the dependency. I think keeping
+> > 'imply' is harmless.
+>=20
+> Whoever those 'people' are, please tell them to stop using 'imply'.
+>=20
+> It's obviously harmless in the sense that it doesn't do enforce
+> anything, it just make it more error-prone:
+>=20
+>  - the first 'imply' only works because MAC80211_LEDS has
+>    the same dependency as RTW89_LEDS, so it works as a 'select'
+>    as long as the dependencies don't change. If the dependency
+>    were to change, the only difference is that imply makes it
+>    harder to debug because it skips the helpful message from
+>    kconfig.
+>=20
+> - the second 'imply' turns on a random symbol from another
+>   subsystem, which is discouraged.
+>=20
+> - we already have a mix of 'depends on' and 'select'
+>   for the LED support, which can lead to circular dependencies
+>   and other problems. Adding a third way can only make it
+>   worse.
+>=20
 
-I also reproduced a sleeping-lock warning with 8139cp on PREEMPT_RT
-using QEMU's RTL8139C+ device. Enabling a dynamic netconsole target caused
-the printer thread to enter cp_start_xmit() with hard interrupts disabled:
+Agree. I'll remove these two discouraged 'imply'.=20
 
-  BUG: sleeping function called from invalid context
-  in_atomic(): 0, irqs_disabled(): 1, pid: 107, name: pr/netcon0
-  hardirqs last disabled at netpoll_send_skb+0x1c8/0x3d0
-  rt_spin_lock
-  cp_start_xmit+0x31/0x8b6 [8139cp]
-  netpoll_start_xmit+0x18e/0x260
-  netpoll_send_skb+0x37a/0x3d0
-  netconsole_write+0x56d/0x820
+> >> Address this by using the correct construct to determing whether
+> >> linking agains the MAC80211_LEDS and LEDS_CLASS_MULTICOLOR
+> >> code is possible, respectively.
+> >>
+> >> Fixes: d910631ff352 ("wifi: rtw89: add LED support to reflect the wire=
+less association status")
+> >> Fixes: 721d90c8509a ("wifi: rtw89: add multicolor LED support for RTL8=
+852CU valve board")
+> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> >> ---
+> >>  drivers/net/wireless/realtek/rtw89/Kconfig | 6 ++----
+> >>  1 file changed, 2 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig
+> >> b/drivers/net/wireless/realtek/rtw89/Kconfig
+> >> index 7c678dd1f6b3..4000ae344544 100644
+> >> --- a/drivers/net/wireless/realtek/rtw89/Kconfig
+> >> +++ b/drivers/net/wireless/realtek/rtw89/Kconfig
+> >> @@ -208,15 +208,13 @@ config RTW89_DEBUGFS
+> >>  config RTW89_LEDS
+> >>         bool
+> >>         depends on RTW89_CORE
+> >> -       depends on LEDS_CLASS=3Dy || LEDS_CLASS=3DMAC80211
+> >
+> > I remember we fixed to this style years ago by imitating ath10k and iwl=
+wifi,
+> > which they look like that still.
+>=20
+> ath10k doesn't use ieee80211_led but seems to just duplicate that code.
+>=20
+> I do see that my version also got it wrong, as the
+>=20
+> +       depends on MAC80211_LEDS=3Dy || MAC80211_LEDS=3DRTW89_CORE
+>=20
+> line is nonsense with MAC80211_LEDS being a 'bool' symbol.
+>=20
+> The way this was meant to be used is to have
+>=20
+> config RTW89_LEDS
+>       def_bool RTW89_CORE && MAC80211_LEDS
+>=20
 
-That was one reproduction on the netdev base a7bfaba4823e. I have not
-established how many drivers are affected.
+I'd keep first block as
 
-Source inspection also identified 8139too and macb as candidates: their
-transmit paths take ordinary spinlock_t locks. I have not reproduced the
-warning with either driver.
+        depends on LEDS_CLASS=3Dy || LEDS_CLASS=3DMAC80211
 
-The earlier netpoll/NBCON discussion concerns NAPI polling and
-scheduler-lock deadlocks, rather than this driver-lock warning:
+mac80211 implements ieee80211_get_assoc_led_name() used by this driver as
 
-https://lore.kernel.org/linux-rt-devel/20260618111554.2n0pP_O9@linutronix.de/
+  static inline const char *ieee80211_get_assoc_led_name(struct ieee80211_h=
+w *hw)
+  {
+  #ifdef CONFIG_MAC80211_LEDS
+	  return __ieee80211_get_assoc_led_name(hw);
+  #else
+	  return NULL;
+  #endif
+  }
 
-> Do you have maybe a backtrace?
-> 
+That means if CONFIG_MAC80211_LEDS wasn't defined, driver can still use
+ieee80211_get_assoc_led_name() as default trigger, but just NULL.
+More, use space can adjust LED trigger via sysfs, so having LED support
+is still usable if LEDS_CLASS exists.
 
-This is the original Pi 400 report on 7.3-rc3 with PREEMPT_RT. That kernel
-also had unrelated allocation-test patches applied. DEBUG_ATOMIC_SLEEP
-was disabled, so this report is the BH-disable warning:
+Ping-Ke
 
-  DEBUG_LOCKS_WARN_ON(this_cpu_read(softirq_ctrl.cnt))
-  WARNING: kernel/softirq.c:199 at __local_bh_disable_ip+0xd8/0x200
-  CPU#0: pr/netcon0/769
-  Call trace:
-   __local_bh_disable_ip+0xd8/0x200
-   brcmf_sdio_bus_txdata+0x90/0x2b0 [brcmfmac]
-   brcmf_proto_bcdc_txdata+0x90/0xb0 [brcmfmac]
-   brcmf_proto_bcdc_tx_queue_data+0x60/0xa0 [brcmfmac]
-   brcmf_netdev_start_xmit+0x164/0x390 [brcmfmac]
-   netpoll_start_xmit+0x160/0x218
-   netpoll_send_skb+0x208/0x2b0
-   netpoll_send_udp+0x298/0x478
-   netconsole_write+0x440/0x7a0
-   netconsole_write_basic+0x20/0x40
-   nbcon_emit_next_record+0x208/0x2a8
-   nbcon_emit_one+0xc8/0x110
-   nbcon_kthread_func+0x184/0x210
-
-Thanks,
-Karl
