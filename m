@@ -1,94 +1,75 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A8E3E1D07
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 06:51:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F197935C6B7
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 07:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790923912; cv=none; b=kVdhHM6PI0t82+p19twFNR6H3YjcVitNrnuSs9mAFDsxW/4fmx4fx60He/F1loS6EN7skHFHIGV8pkBzfic0sIA8WUvXPZAZIvI0/V4jKUek2g4EHWDCSZB9soOfXRr4GB2vg/AuthneeJv8de0AqSeAFGVtSvc3aeaiSICtwSQ=
+	t=1790924637; cv=none; b=LgLtcFDj5WrC9xJI8obdk3iqfFjvSgy4xDgcsOYgJyLBrGq+ANxi1aSq+0CzsK9Szl0h+qxD/6zPghMasgR/no1tE5tEhIgxHalZ44ioTkWIJrHL4AVqdQ0LNvvwkE5nIfSuiv2cpriJyp/5iI64kP35qByVXPX4wAP/PE751rk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790923912; c=relaxed/simple;
-	bh=ttz08Elmk9xgs4+PFWDRTyIHbJmNDb27Cin+3zfXb7E=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DRn3twZioY868hQqYc0AAN67DcO/72//zhjmEC4GnlafOUCa0KEz44AIClmHSgJLfdt1/bqoFuxyBzw8vZDfj/VbBrhjcKAmI9iYOcZYxn4RGNHJUyLBmJtah9CQvCzqs+QWX5ALIBfejjXdMggsRZPN7Mr+QKcK3XCQ5xvcMOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=AbCoDged; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1790924637; c=relaxed/simple;
+	bh=RxYQm4jWlugMyB0H8K4RozDe7Yt5KpYut74NDdIscSU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=SH4tjNI6CGVhOsXrITT1pua1iFkfBzJebgYFZzVwq4I+SOodbUhFyEmOFXs7E/lk261jL6tMSYu6yTo7j8XJSUtI/QoMYliBbDcYFaS00gc9VXRcI78Sma2OvrfgIcAoz4S5ByGwPQj+XlV1qZVGiE0OLT7CsyH4D1R6v4WuUys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LCUVvTzd; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="AbCoDged"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6926pfliF3629355, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790923901; bh=WBRXK/JKuhohrUoDSoKuafVaSIoNSi+tl5XIKCysS7w=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=AbCoDgedYLYkW+dkfkp/e0uZmt7/DYYR4mWi1vnGbCAqzNvg84Ut1J9Mw4nWcFvU3
-	 Vn8bGQ1Y2xRrOgmFfIUT6cWZB5pu/bjMwWrMzIoOvNDz9R1mHVKxyCVXPYoJnxRmIb
-	 QQ3tqraeWyDuwND2ZF1XxqSWJI4ulgFsjNmfvZZTJ6Ghqcy3TbqzW1UHCGxa9tDmN6
-	 YaSXBzElMxOdcuJf7pdfWgw+i/sVFdijWixmg2mw4Wt4ProYg9kr6m859BEnxMTkXs
-	 am6may4hRlCaX2s4cGIkQvo1lvNdSvVsTwSIS63AD2Si+gpdCM3yvhvz39jkY9RrHA
-	 h01a+09wcvZEQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6926pfliF3629355
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 2 Oct 2026 14:51:41 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 2 Oct 2026 14:51:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 2 Oct 2026 14:51:41 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Fri, 2 Oct 2026 14:51:41 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <arnd@arndb.de>
-Subject: [PATCH rtw-next] wifi: rtw89: remove discouraged imply from Kconfig LED
-Date: Fri, 2 Oct 2026 14:50:58 +0800
-Message-ID: <20261002065058.13535-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LCUVvTzd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=RxYQm4jWlugMyB0H8K4RozDe7Yt5KpYut74NDdIscSU=;
+	t=1790924636; x=1792134236; b=LCUVvTzdrcoENiFoVOG04iX+zm7nUTSmcmcN/QMGIPUgJ3w
+	lh8mFS1X9JNFcRLHZpgO8JRsLKOqhAiwqlgrFAwT2S2Rkf+UUXD5G0tbinyLWyl+bnj81RmRkHwtI
+	vu/wFdCF+NvWSiUgjpsoU/gjqxkz7m6SjqYykU92PKD94UckxPA3zjXrvksoHF6MfbX/ziuuqlhw6
+	qEwQB0WIJNRf94gnaOGcahOu7eHudKEsSl1QvA4pks6L/Fyq8asjT3801WznnEFn1xYrjqQCu3ayZ
+	MH4T3mICI/YhGdd7DYNfIu13lijFz17q7ib5cySrfjWMCGP2BaNOVOYJyLgjwbow==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xCXJA-00000001FEo-2B14;
+	Fri, 02 Oct 2026 09:03:52 +0200
+Message-ID: <a130a88a3976e587450c730487be383f2448f80b.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 3/7] wifi: cfg80211: nan: check Rx
+ registration for NAN beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>
+Date: Fri, 02 Oct 2026 09:03:51 +0200
+In-Reply-To: <20261001162941.788c566446b6.I691a657e94dacc4e15d9a3b6d3fe95e5984ad999@changeid>
+References: <20261001133311.3367683-1-miriam.rachel.korenblit@intel.com>
+	 <20261001162941.788c566446b6.I691a657e94dacc4e15d9a3b6d3fe95e5984ad999@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+X-malware-bazaar: not-scanned
 
-The 'imply' in Kconfig to weakly and implicitly select dependencies is
-discouraged. Remove them to simply logic.
+On Thu, 2026-10-01 at 16:33 +0300, Miri Korenblit wrote:
+> From: Ilan Peer <ilan.peer@intel.com>
+>=20
+> Instant Communication requires user space to track the NAN beacons, so
+> let it register for Rx of beacons on a NAN interface, but allow it
+> only if the driver advertises Instant Communication support.
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Closes: https://lore.kernel.org/linux-wireless/7cdc36a9-aadd-4636-8a29-847d89638c8d@app.fastmail.com/T/#t
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/Kconfig | 2 --
- 1 file changed, 2 deletions(-)
+I think that commit message is misleading - this change doesn't let
+userspace register for beacons, it only *doesn't* let it do that if IC
+isn't supported.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig b/drivers/net/wireless/realtek/rtw89/Kconfig
-index 9c6c16af7f35..0899f0c25612 100644
---- a/drivers/net/wireless/realtek/rtw89/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw89/Kconfig
-@@ -209,14 +209,12 @@ config RTW89_LEDS
- 	bool
- 	depends on RTW89_CORE
- 	depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
--	imply MAC80211_LEDS
- 	default y
- 
- config RTW89_LEDS_MC
- 	bool
- 	depends on RTW89_LEDS
- 	depends on LEDS_CLASS_MULTICOLOR=y || LEDS_CLASS_MULTICOLOR=RTW89_CORE
--	imply LEDS_TRIGGER_TIMER
- 	default y
- 
- endif
+But is that even useful? Even with the change you could still register
+for beacons when IC isn't even turned on, so the check doesn't do much.
 
-base-commit: 7cde94dab0e74434ccc0a387d7ad373fb3becda0
--- 
-2.25.1
+It seems to me a check at wiphy registration time that beacons were
+allowed if NAN IC is supported would be clearer, and the opposite is
+kind of pointless anyway since NAN IC doesn't need to be enabled, and
+then you can probably register for beacons all you want without ever
+getting them.
 
+johannes
