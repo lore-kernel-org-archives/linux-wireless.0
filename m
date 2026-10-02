@@ -1,143 +1,161 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-b7-smtp.messagingengine.com (fout-b7-smtp.messagingengine.com [202.12.124.150])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C1235675C
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 03:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2566636AB44
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 06:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790912719; cv=none; b=N5/I6NMzaXscsBNgraD1USfMgkg07E7YXlMEGPoWceijiHTslafOiJffLy5fUBp1DXYFE/Dr1gnKYkyxSGZiCBDfxSAKG1e/rN3m/LJKcsFrxNQpjjNPzgeZytNZbIfTnyiZY762fbzl8SxAfqPN/oUXMnq+oRSWp4flalWGKho=
+	t=1790921548; cv=none; b=J9f/TPVjQzWRaQFpJrm27nW5t3tpYauTknyBph7+CnoVU3VUfCXq113PtK6g2XESxkDt1ORJHHRCxkeKAJqTAOtknONtPiHiYItMtk/FMjEECMPj1V6B08Elore3VYj7S61oIyXnNx1OcuDuQfQm6Tnw3NoMCnLoPeD37N9U+Ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790912719; c=relaxed/simple;
-	bh=0u4gh3PXsOce3gjulXyA439G0vcYS06QWrQR/nNcH4Q=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=SrwpKRd09gGyCp4iF+XDbuZU9QJLfO/R0m5PFyLmhmr/bTCcW8UhJpiRQApO1zxueuvr7eMVcRqEA/8Q/vBaTWRsGB3tJvuq/yZwlzMakhrfhCUnF/vnpJz5YUgsuyF3kFIAufnJSkvPugH+6++lCjeMZriLPIWmcnDZCLDy5Nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=hf36K94f; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1790921548; c=relaxed/simple;
+	bh=ZJhiHHieDWa/62asdMDop3cTpqq1JaHuH6QMHtyZ0u8=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=JiBbwhYNIzeY8ofGOpMLUX5uTL+tka2ge3zGo5oK5CH155+8tp6mGkVrzFKNav+E78W7Xh+qAg/hwXm2k2YnMer+ukQlmWzZYZTzLQxGR5kUxUUlcsTI1imUmJrOoDH+22EmlfWGWhpRx6Cbm+Iydt+ReLA0/Ra7Jew8srerzuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=WJhTWp1e; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jCp8uG3q; arc=none smtp.client-ip=202.12.124.150
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="hf36K94f"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6923ixB233522227, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1790912699; bh=0u4gh3PXsOce3gjulXyA439G0vcYS06QWrQR/nNcH4Q=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=hf36K94fegI5UelFb+fXutmievd3dPH39zeMBDi8IcXuT/LnwfHIYq/xEIiFOGhLw
-	 sf1ylHh2yU48XeKsajUaTauEID7UuExJsLV9NC7NkbCLv7wkLi6xybrfpcH7cj63sP
-	 1wcrOe/gA/vtXHBERsOoqVpsS7rBl+17m4wBMfHcoGo/PodAMXopEIa4MAT5ygnB+Q
-	 C5dX1QCwNMa3LeHAGBpn+xgLFOVX/SxP/4xLs7KJjTwCmq0uQuJgBcbYQIuZasHKQx
-	 VsbxdgV4d+KOPsiHsVubejTLzsgTmDXaliMGh4HIxeybkLM2VBxfiVT8sJtoE5iERp
-	 DCdOJAMMDYULA==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6923ixB233522227
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 2 Oct 2026 11:44:59 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 2 Oct 2026 11:45:00 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 2 Oct 2026 11:45:00 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Fri, 2 Oct 2026 11:45:00 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>, PierluigiFrullani
-	<pierluigi.frullani@frumar.it>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: Problems with rtw89 on 5Ghz wlans.
-Thread-Topic: Problems with rtw89 on 5Ghz wlans.
-Thread-Index: AQHdUbIXZzaQd5SyqECo2+yEOIu5GLbpk9HQ
-Date: Fri, 2 Oct 2026 03:44:59 +0000
-Message-ID: <980970f8b4934572aafbd6f5f6020436@realtek.com>
-References: <10543730.tdPhlSkOF2@topolinux>
- <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
-In-Reply-To: <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="WJhTWp1e";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jCp8uG3q"
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfout.stl.internal (Postfix) with ESMTP id 3B9FA1D000E5
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 02:12:24 -0400 (EDT)
+Received: from ams-imap-03 ([10.64.2.23])
+  by ams-compute-02.internal (MEProxy); Fri, 02 Oct 2026 02:12:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790921540;
+	 x=1791007940; bh=NeBUYbgCO/IE36aDtEKxMWQQk1AwYdLSXOayI0OIQ6w=; b=
+	WJhTWp1eh+JmixtFrFZBM8VTzzZFhpDkO4DYJowg1QUz3E7tA3qm/c7y+AMaTt/I
+	yuXYZxBbsoJNm2zLEw1Pd8m9gGC19gUCPzkyn1w/Lg/Wq+rNnwcxSSn20XZCFAN5
+	zB70zVCS06mzExT8/XylWCkSLtkBA3F+H8lCqlI+aSizm2cPA+blYZWD2oPKc1r2
+	7MtyH+Y3XM2FdQumIRkQYWFolSPK3GLtC/gAyYtZ4dRK0hAWcsZUCMHqx2/Jaggz
+	JAXadB9jP9R6ke2//azHDF5RMCamE1JKuHGeFBS4TPXIR4ZGsuiDP84v41o0K5gX
+	q9aZVo+309zO7tlTCDVzAg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790921540; x=
+	1791007940; bh=NeBUYbgCO/IE36aDtEKxMWQQk1AwYdLSXOayI0OIQ6w=; b=j
+	Cp8uG3qHwcM7476pqa+iLQBYsGmVLHg5zlwwoaktscpZ3i5Sk78Yc8kqH1/I4W+Y
+	GhSzdbxJYYBBlbH70+xr1Mwh/fWYd8a7fMGoijNmtKJGsuub1+UUqVMgrt7sODvS
+	cYWMhiK2rzc85ZsQ9DlEIkcUxhOOIikrZGbcmVx5uSvE6g0xtvJxWcArkdmWJZ5n
+	WxO9QJpuTf0bXyyX3P0UefeYFGPjRPUi1NjhDDuyWdrSU+CqWOwvvKDnAlHwZnhV
+	dJs7jOIMOFbCCl9o7S0eBGb0P6I3i3YX8w3kmBebXRUnnR+GIWhJC27jEFfeYS6Q
+	ccnHCiumFm+k9wxy2MIGA==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
+	action=sign d=arndb.de a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1790921540; d=arndb.de;
+	mf=PGFybmRAYXJuZGIuZGU+;
+	rt=PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=;
+	s=fm1:rsa-sha256:jijWyI0U25cSjavwLLXUmzdSGMLw//e38pSKm0mFLGyJ5Ak
+	x1lW1E2EpyJnpyAA10LsJpIQbLKPGWsCXql4uiAIFq0CTJWzQQB2anokYH7U8q7d
+	ltgZRdUeUPniwyI4Oxde0roRiAaHAEAa6GazhkGTBil3DnaB+RaX1NcDK/NoVEYl
+	QEMN4SNNe/kNBjNshV4wHHWgOhr4mj/F+rAXiKWHkrDLJ2w9Bqpy4X2ye4tG4VEn
+	xqlVqGFZCaCkS6pcDnLsbZ1de+J1CdetbpckvwL52nVpn/mPmkznIlKE3RM3Q8Tl
+	Yjm9g7ve9envQAxuY5AMr6heprtIESueVT5KoxA==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:Ey9Ympoyxvs5hQgFtBNJdjCUG/CpYcZBTbkdtGAD6H8=:ZJhiHHieDWa/62asdMDop3cTpqq1JaHuH6QMHtyZ0u8=;
+X-ME-Sender: <xms:Qku_avHAfX99dSUZBoJvD3nP8ymXTtnsID0ocSLbQ5n0E6lvJ8Lz_w>
+    <xme:Qku_anKAnvvuax6VF4HnoyR-z1PzHCfUPuo_oNjvOhe8TUZyBjVinWErFVNLoFl6P
+    lF1v9dYeUrM0T6RYlypLGy0EEPKTxv8GQywCAqzkijkpKTQjbVXjEKV>
+X-ME-Proxy-Cause: dmFkZTEJ0cgKY5xWsCsHXL6spKR81ICBzKWlkmPZLF+WzyPnGSPKlNV9zXcJGFbRtcReVo
+    F/zec6VYkQSfgRjJzVUBTwtQUM+Gp32Tsn4nEXHrVyEq04PMNhEg7q47r5/ahbv5xVVkxK
+    7t92Rubl7vSuZpxLUUGGMzz4CKMHcAJZKbzg6rho3d3eHaF2H6TR8WDzXs1qdTj6K/8DwG
+    LYcDyay8eJkN7sNFlsU3eGwmkwwLWSmuRmn5VLE1oxEW89VpBCGOGSbyGeAd1wpI4O+upU
+    5hGqx1tRuYope+Mc10TeKNfw1jBoKRS+c3uUOoWlTNJmJGi3ZkcwCaiCFEF/lC+izaamkM
+    UkWgHAt6w/u/xrp9N+q50DWjeZs10LpkYb/P/wqx4z14ShWDw1x/HEsEyLPB7I37zR2Adf
+    u+4Y5m9MEnsJ+Oio5jVT3uig/EqmF96+K0UEt0mhFx0+StnRHVgebMSI14PgelgwHMOXFg
+    Yedl3kvWUin/OTs/oYp2S+eJ3EsnX+FVRshp8YO3YNtz9c4s+w8FXYkNgQ/nnpmxfW5LXx
+    LSFWP1BsgMcC9M3oPEpseTzqimOmx9Kb12gEMD2uz3ZN3VfY/miCDpK95+jAP6JIp2JsHz
+    AcsfhOyLATgr6lsJxoa1jYQJPj+0Nhhc8axl0tHJavwTkPzDHu+SvMTuekcA
+X-ME-Proxy: <xmx:Q0u_ajzH0mzXszrMFH6qbGQzv1aTiTjtlXz3v613MVy2D3zJZJJG1w>
+    <xmx:Q0u_aiozF3Z3KBHpY0t_V5AxBhx3PtcE9DaE-YNsS5Wilcrd7VMlTw>
+    <xmx:Q0u_ai6JXrWknpgM7EE0NzYtD_mz1lGRq-osu1f0duz-CZAnDlVq5g>
+    <xmx:Q0u_apeYK24JcrezlCvIVqNPrW6wyGDpbqKSKMGWPqyWtNEx2RUrtg>
+    <xmx:REu_ajqOBHO8RKItUfY5p-DvRGKk32Iou39iAz_9cKZVvrlnoTuVpRX7>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 6517832A008A; Fri,  2 Oct 2026 02:12:18 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-ThreadId: AeRYNq7l0AL7
+Date: Fri, 02 Oct 2026 08:11:58 +0200
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "Arnd Bergmann" <arnd@kernel.org>,
+ "Johnson Tsai" <wenjie.tsai@realtek.com>
+Cc: "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <7cdc36a9-aadd-4636-8a29-847d89638c8d@app.fastmail.com>
+In-Reply-To: <bdb19ff5e0bc456cb035a1aa0124612f@realtek.com>
+References: <20260929104159.3236854-1-arnd@kernel.org>
+ <1bde7ea5999c4915b184bf2fcb904901@realtek.com>
+ <0162247f-ca33-4152-bd32-255343c7216b@app.fastmail.com>
+ <bdb19ff5e0bc456cb035a1aa0124612f@realtek.com>
+Subject: Re: [PATCH] wifi: rtw89: fix LED dependencies
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-SGkgQml0dGVyYmx1ZSwNCg0KSSBqdXN0IHF1aWNrbHkgZ2l2ZSBzb21lIGNvbW1lbnRzIGJlZm9y
-ZSB5b3Ugc2VuZCBwYXRjaC4NCg0KQml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFp
-bC5jb20+IHdyb3RlOg0KPiBPbiAzMC8wOS8yMDI2IDEyOjIxLCBQaWVybHVpZ2lGcnVsbGFuaSB3
-cm90ZToNCj4gPiBIZWxsbyBhbGwsDQo+ID4gICAgIEknbSB1c2luZyBMaW51eCBNaW50IDIyLjEg
-d2l0aCBrZXJuZWwgNy4wLjAtMzQtZ2VuZXJpYyBhbmQgYQ0KPiA+IDAyOjAwLjAgTmV0d29yayBj
-b250cm9sbGVyIFswMjgwXTogUmVhbHRlayBTZW1pY29uZHVjdG9yIENvLiwgTHRkLiBSVEw4ODUy
-QkUgUENJZSA4MDIuMTFheCBXaXJlbGVzcw0KPiBOZXR3b3JrIENvbnRyb2xsZXIgWzFUMVJdIFsx
-MGVjOmI4NWJdDQo+ID4gdGhhdCBoYXMgbG90IG9mIGlzc3VlcyB3aXRoIHRoZSA1R2h6IHdsYW4u
-DQo+ID4gVGhlIHByb2JsZW0gaXMgdGhhdCBoYXMgYSB2ZXJ5IGxvdyBzZW5zaXRpdml0eSBhbmQg
-Y2FuIGRldGVjdCwgaW4gbGludXgsIHRoZXNlIHdsYW5zIG9ubHkgd2hlbiBJJ20NCj4gYSBmZXcg
-ZmVldCBmcm9tIGFjY2VzcyBwb2ludC4NCj4gPg0KPiA+DQo+ID4gSSd2ZSB0aGVuIHN3YXBwZWQg
-dGhlIGRyaXZlciB3aXRoIGh0dHBzOi8vZ2l0aHViLmNvbS9tb3Jyb3duci9ydHc4OSBhbmQgZm91
-bmQgdGhlIHNhbWUgYmVoYXZpb3VyLg0KPiA+IEkndmUgdGhlbiBvcGVuZWQgYW4gaXNzdWUgdGhl
-cmUgOg0KPiA+ICBodHRwczovL2dpdGh1Yi5jb20vbW9ycm93bnIvcnR3ODkvaXNzdWVzLzEyOCBh
-bmQgdGhlIHBlb3BsZXMgdGhlcmUgbWFuYWdlZCB0byBmaW5kIHRoZSBjdWxwcml0IGFuZA0KPiBw
-YXRjaCBoaXMgZHJpdmVyIHRoYXQgbm93IHdvcmtzIHBlcmZlY3RseS4NCj4gPiBGb3IgbXkgdW5k
-ZXJzdGFuZGluZyB0aGUgcHJvYmxlbSB3YXMgdGhhdCBteSBjYXJkICggbWF5IGNhcmQgbW9kZWwg
-PyApICggcmZlX3R5cGUgNDEgKSBoYXMgb25seSBvbmUNCj4gYW50ZW5uYSBhbmQgaXMgbm90IGNv
-cnJlY3RseSBzZWxlY3RlZCBiIHkgdGhlIGRyaXZlci4NCj4gPg0KPiA+IExvb2tpbmcgaW50byB0
-aGUgaHR0cHM6Ly9naXRodWIuY29tL3Brc2hpaC9ydHcvYmxvYi9ydHctbmV4dC9kcml2ZXJzL25l
-dC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5DQo+IGNvZGUgSSBjYW4gc2VlIHRoYXQgaXMgcmVhbGx5
-IHNpbWlsYXIgc28gdGhlbiBwYXRjaGUgYXBwbGllZCBpbiB0aGUgbW9ycm93bnIgY291bGQgcG9z
-c2libHkgYXBwbHkgIGFsc28NCj4gdG8gdGhlIHZhbmlsbGEga2VybmVsIGRyaXZlci4NCj4gPg0K
-PiA+DQo+ID4gUGF0Y2ggaXMgcmF0aGVyIGVhc3kgYW5kIHdpdGggdGhpcyBwYXRjaCBhbGxpZWQg
-YW5kIHRoaXMgZHJpdmVyIGxvYWRlZCBub3cgdGhlIDVHaHogaXMgcGVyZmVjdGx5IHdvcmtpbmcu
-DQo+ID4NCj4gPg0KPiA+IFdvdWxkIHlvdSBiZSBpbnRlcmVzc2VkIGluIHB1c2hpbmcgdGhpcyBw
-YXRjaCBhbHNvIGhlcmUgPw0KPiA+DQo+ID4NCj4gPiBJbiBjYXNlLCB0aGlzIGlzIHRoZSBwYXRj
-aCAoIGFsc28gd2l0aCB0aGUgY29tbWVudHMgdG8gdmVyaWZ5IHRoYXQgdGhlIGRyaXZlciBsb2Fk
-ZWQgaXMgdGhlIG9uZSB0aGF0DQo+IGlzIHBhdGNoZWQgKSA6DQo+ID4gZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvbWFjLmMgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9yZWFsdGVrL3J0dzg5L21hYy5jDQo+ID4gaW5kZXggZGYzOTZmYmZjYTI2Li44MWE0YmU3
-YTU5M2QgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
-OS9tYWMuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvbWFj
-LmMNCj4gPiBAQCAtMzI0NCw2ICszMjQ0LDE0IEBAIHN0YXRpYyBpbnQgcnR3ODlfbWFjX3NldHVw
-X3BoeWNhcF9wYXJ0MChzdHJ1Y3QgcnR3ODlfZGV2ICpydHdkZXYpDQo+ID4gICAgICB0eF9hbnQg
-PSB1MzJfZ2V0X2JpdHMocGh5Y2FwLT53MywgUlRXODlfQzJIUkVHX1BIWUNBUF9XM19BTlRfVFhf
-TlVNKTsNCj4gPiAgICAgIHJ4X2FudCA9IHUzMl9nZXRfYml0cyhwaHljYXAtPnczLCBSVFc4OV9D
-MkhSRUdfUEhZQ0FQX1czX0FOVF9SWF9OVU0pOw0KPiA+DQo+ID4gKyAgICBpZiAoY2hpcC0+Y2hp
-cF9pZCA9PSBSVEw4ODUyQiAmJiBlZnVzZS0+cmZlX3R5cGUgPT0gNDEgJiYNCg0KQ2FuIHdlIGFk
-ZCBhIHF1aXJrIGluc3RlYWQgb2YgY2hlY2tpbmcgSUMgYW5kIGl0cyByZmUgdHlwZT8NCkkgZ3Vl
-c3MgdGhlcmUgbWlnaHQgYmUgbW9yZSB0aGFuIG9uZSBjYXNlcyBhZnRlcndhcmQuIA0KDQo+ID4g
-KyAgICAgICAgdHhfbnNzID09IDEgJiYgdHhfYW50ID09IDIgJiYgcnhfbnNzID09IDEgJiYgcnhf
-YW50ID09IDIpIHsNCj4gPiArICAgICAgICB0eF9hbnQgPSAxOw0KPiA+ICsgICAgICAgIHJ4X2Fu
-dCA9IDE7DQo+ID4gKw0KPiA+ICsgICAgICAgIHJ0dzg5X3dhcm4ocnR3ZGV2LCAiZml4IG1vcmUg
-c3R1ZmYgZm9yIFJGRSA0MVxuIik7DQoNCkkgdGhpbmsgeW91IHdpbGwgY2hhbmdlIHJ0dzg5X3dh
-cm4oKSB0byBkZWJ1ZyBsZXZlbCBpbiBmb3JtYWwgcGF0Y2gsIHJpZ2h0Pw0KDQo+ID4gKyAgICB9
-DQo+ID4gKw0KPiA+ICAgICAgaGFsLT50eF9uc3MgPSB0eF9uc3MgPyBtaW5fdCh1OCwgdHhfbnNz
-LCBjaGlwLT50eF9uc3MpIDogY2hpcC0+dHhfbnNzOw0KPiA+ICAgICAgaGFsLT5yeF9uc3MgPSBy
-eF9uc3MgPyBtaW5fdCh1OCwgcnhfbnNzLCBjaGlwLT5yeF9uc3MpIDogY2hpcC0+cnhfbnNzOw0K
-PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkv
-cnR3ODg1MmIuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1
-MmIuYw0KPiA+IGluZGV4IDM1NjYyMzM0MWY2NS4uYzllZTNjNzZjZmM5IDEwMDY0NA0KPiA+IC0t
-LSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1MmIuYw0KPiA+ICsr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1MmIuYw0KPiA+IEBA
-IC03NzEsNiArNzcxLDE1IEBAIHN0YXRpYyB2b2lkIHJ0dzg4NTJiX2J0Y19zZXRfcmZlKHN0cnVj
-dCBydHc4OV9kZXYgKnJ0d2RldikNCj4gPiAgICAgIH0gZWxzZSB7DQo+ID4gICAgICAgICAgbWQt
-PmFudC50eXBlID0gQlRDX0FOVF9TSEFSRUQ7DQo+ID4gICAgICAgICAgbWQtPmJ0MF9wb3MgPSBC
-VENfQlRfQlRHOw0KPiA+ICsNCj4gPiArICAgICAgICBpZiAobWQtPnJmZV90eXBlID09IDQxKSB7
-DQoNClVzZSB0aGUgc2FtZSBxdWlyayBieSB0aGUgd2F5LiANCg0KPiA+ICsgICAgICAgICAgICBt
-ZC0+YW50Lm51bSA9IDE7DQo+ID4gKyAgICAgICAgICAgIG1kLT5hbnQuc2luZ2xlX3BvcyA9IFJG
-X1BBVEhfQjsNCj4gPiArICAgICAgICAgICAgbWQtPmFudC5idGdfcG9zID0gUkZfUEFUSF9COw0K
-PiA+ICsgICAgICAgICAgICBtZC0+YW50LnN0cmVhbV9jbnQgPSAxOw0KPiA+ICsNCj4gPiArICAg
-ICAgICAgICAgcnR3ODlfd2FybihydHdkZXYsICJmaXggc3R1ZmYgZm9yIFJGRSA0MVxuIik7DQo+
-ID4gKyAgICAgICAgfQ0KPiA+ICAgICAgfQ0KPiA+ICAgICAgcnR3ZGV2LT5idGMuYnRnX3BvcyA9
-IG1kLT5hbnQuYnRnX3BvczsNCj4gPiAgICAgIHJ0d2Rldi0+YnRjLmFudF90eXBlID0gbWQtPmFu
-dC50eXBlOw0KPiA+DQo+ID4NCj4gPg0KPiA+IEFsbCBjcmVkaXRzIG11c3QgYWJzb2x1dGVsbHkg
-Z28gdG8gIGR1YmhhdGVyICggICBodHRwczovL2dpdGh1Yi5jb20vZHViaGF0ZXIgKSB0aGF0IGRp
-ZCBhbGwNCj4gdHJvdWJsZXNob290aW5nIGFuZCB3cm90ZSB0aGUgcGF0Y2guDQo+ID4NCj4gPiBN
-eSBpbnRlcmVzdCBpbiB0aGlzIGlzIG9ubHkgdG8gaGF2ZSBhICh2YW5pbGxhKSBrZXJuZWwgdmVy
-c2lvbiBvZiB0aGlzIGRyaXZlciB0aGF0IHdvcmtzIGNvcnJlY3RseQ0KPiBhcyBsb3Qgb2YgcHJv
-YmxlbXMgYXJlIHJlcG9ydGVkIGJ5IHBlb3BsZXMgdXNpbmcgdGhlIHNhbWUgY2hpcC4NCj4gPg0K
-PiA+DQo+ID4NCj4gPiBUaGFua3MNCj4gPg0KPiA+DQo+ID4gUGllcmx1aWdpDQo+IA0KPiBIaSwN
-Cj4gDQo+IFR3byBvdGhlciBwZW9wbGUgcmVwb3J0ZWQgdGhlIHNhbWUgcHJvYmxlbSByZWNlbnRs
-eS4gSSBkZWNpZGVkIHRvIHdhaXQNCj4gZm9yIHRoZW0gdG8gc2F5IGlmIHRoZSBwYXRjaCBoZWxw
-cyBvciBub3QuIEJ1dCBJIHdpbGwgc2VuZCB0aGUgcGF0Y2gNCj4gYW55d2F5IG5leHQgd2Vlay4N
-Cg0K
+On Fri, Oct 2, 2026, at 02:22, Ping-Ke Shih wrote:
+> Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Wed, Sep 30, 2026, at 02:28, Ping-Ke Shih wrote:
+>> - we already have a mix of 'depends on' and 'select'
+>>   for the LED support, which can lead to circular dependencies
+>>   and other problems. Adding a third way can only make it
+>>   worse.
+>> 
+>
+> Agree. I'll remove these two discouraged 'imply'. 
+
+Ok, thanks!
+
+>> The way this was meant to be used is to have
+>> 
+>> config RTW89_LEDS
+>>       def_bool RTW89_CORE && MAC80211_LEDS
+>> 
+>
+> I'd keep first block as
+>
+>         depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
+>
+> mac80211 implements ieee80211_get_assoc_led_name() used by this driver as
+>
+>   static inline const char *ieee80211_get_assoc_led_name(struct 
+> ieee80211_hw *hw)
+>   {
+>   #ifdef CONFIG_MAC80211_LEDS
+> 	  return __ieee80211_get_assoc_led_name(hw);
+>   #else
+> 	  return NULL;
+>   #endif
+>   }
+>
+> That means if CONFIG_MAC80211_LEDS wasn't defined, driver can still use
+> ieee80211_get_assoc_led_name() as default trigger, but just NULL.
+> More, use space can adjust LED trigger via sysfs, so having LED support
+> is still usable if LEDS_CLASS exists.
+
+Right, this should work and is consistent with how other wireless
+drivers do this.
+
+I think it would be nicer to just use MAC80211_LEDS as a simple
+dependency as I suggested above. If we do that, it should
+be done the same way for all the wireless drivers, but that
+is a probably something for another day.
+
+       Arnd
