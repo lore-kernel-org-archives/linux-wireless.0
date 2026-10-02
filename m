@@ -1,272 +1,143 @@
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC41344DAA
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 03:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C1235675C
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 03:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790912428; cv=none; b=muRxOjiISTKWC02ksiLfACfEJLRSaZDbi446Kmd2gck/bMBQvCfyEeJ7kwB+z2WEgesRjogAD90fEYAbQJi9rtj0oIp2Am629tSedv6bO4VcTCR2J5ZwyI2JGQUFSjtmrnLgey3whHkI1W/FGU50+4FaHSYmhqYGRD680G9Xr0g=
+	t=1790912719; cv=none; b=N5/I6NMzaXscsBNgraD1USfMgkg07E7YXlMEGPoWceijiHTslafOiJffLy5fUBp1DXYFE/Dr1gnKYkyxSGZiCBDfxSAKG1e/rN3m/LJKcsFrxNQpjjNPzgeZytNZbIfTnyiZY762fbzl8SxAfqPN/oUXMnq+oRSWp4flalWGKho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790912428; c=relaxed/simple;
-	bh=7DEnIPBCCKwg3iRZ58S7DgxGVdPCoT4ozRQnpe3AmZc=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=FPMWTYOLNCg4dNKbzjhMOj0eo7H0/C5sOvUU9hkM6NtCOTH41BwJsxnb4oSxFzKu1ZNqxURUYNzkbDhbXZEPSDgckt6UVC1rrDuE1W1Cyw1kmxea5irr1RHg3qgMlBEdsKYzmL6FdH54OS1wZi1PAP0FONjhDAt46uoQgq+8gTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-4c307941971so2404833b6e.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 20:40:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790912425; x=1791517225;
-        h=content-type:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=kMwz3JG6cUfXRqV2RJX7PZeX+DHxAQ564iCLriDAmU0=;
-        b=IEVrJmdeySc97Zhg6hja2WufpdHQrOkayTCfYotHzzM5tPglJ5e8T3/k6cY3rSFQTy
-         CADlOw4jCwBfsji1xORW4Up5axTvbGAH7nL7nUIs6mlbXVzdpEQbU9ktke6fZcYHuJLl
-         /a/OcFig7GSMxPDDZzMy/XxxVL/tQApde/8+RXoChWY69h26xolQrxWlJxjcbB/nJ9/I
-         Z+46W2VGSTUZBO+oGruu9AIF51HpyXdoGSPYbHD7TJbOzt7+wdVZYb1iKFFnI1ytuCUI
-         GxLxckD4AUJyCKekrCNcxzWxJYwXcH/CfQqOr/pQ03PsY9uFMqEd4EWk11fMOFhF2bjX
-         VIJQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwr1dGSWO/V4NXR8UxbMFKIlZ5Axycf6R9BQUCgkYLg056y0ZC39e+1cpjsNGfWGriW/kX8dPeE4mVjYeaKXA==@vger.kernel.org
-X-Gm-Message-State: AFuF++mL9O4pAdByn9lJ3I/gijPQc5UiGEATdzhK+gBUASzIDHn8D4l9
-	Vq20ILSVcaKdtKC8hTR2g09MzCK9jCn1eKVD/VgKndJN5rpzQ4uksJxsG9kt42fXhhnehdaMEqV
-	iXlFG/1UVjQF/KwSROKDwn2XHV3oppP1U0t7yk7wTzCOqkwwPteUMVg18IUc=
+	s=arc-20240116; t=1790912719; c=relaxed/simple;
+	bh=0u4gh3PXsOce3gjulXyA439G0vcYS06QWrQR/nNcH4Q=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=SrwpKRd09gGyCp4iF+XDbuZU9QJLfO/R0m5PFyLmhmr/bTCcW8UhJpiRQApO1zxueuvr7eMVcRqEA/8Q/vBaTWRsGB3tJvuq/yZwlzMakhrfhCUnF/vnpJz5YUgsuyF3kFIAufnJSkvPugH+6++lCjeMZriLPIWmcnDZCLDy5Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=hf36K94f; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="hf36K94f"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6923ixB233522227, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1790912699; bh=0u4gh3PXsOce3gjulXyA439G0vcYS06QWrQR/nNcH4Q=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=hf36K94fegI5UelFb+fXutmievd3dPH39zeMBDi8IcXuT/LnwfHIYq/xEIiFOGhLw
+	 sf1ylHh2yU48XeKsajUaTauEID7UuExJsLV9NC7NkbCLv7wkLi6xybrfpcH7cj63sP
+	 1wcrOe/gA/vtXHBERsOoqVpsS7rBl+17m4wBMfHcoGo/PodAMXopEIa4MAT5ygnB+Q
+	 C5dX1QCwNMa3LeHAGBpn+xgLFOVX/SxP/4xLs7KJjTwCmq0uQuJgBcbYQIuZasHKQx
+	 VsbxdgV4d+KOPsiHsVubejTLzsgTmDXaliMGh4HIxeybkLM2VBxfiVT8sJtoE5iERp
+	 DCdOJAMMDYULA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6923ixB233522227
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 2 Oct 2026 11:44:59 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 2 Oct 2026 11:45:00 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 2 Oct 2026 11:45:00 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Fri, 2 Oct 2026 11:45:00 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>, PierluigiFrullani
+	<pierluigi.frullani@frumar.it>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+Subject: RE: Problems with rtw89 on 5Ghz wlans.
+Thread-Topic: Problems with rtw89 on 5Ghz wlans.
+Thread-Index: AQHdUbIXZzaQd5SyqECo2+yEOIu5GLbpk9HQ
+Date: Fri, 2 Oct 2026 03:44:59 +0000
+Message-ID: <980970f8b4934572aafbd6f5f6020436@realtek.com>
+References: <10543730.tdPhlSkOF2@topolinux>
+ <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
+In-Reply-To: <fab16229-8e70-41a8-83f3-5d04c6035a43@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:c161:b0:4c4:a240:9c3a with SMTP id
- 5614622812f47-4f526a4f2eamr1151205b6e.4.1790912425656; Thu, 01 Oct 2026
- 20:40:25 -0700 (PDT)
-Date: Thu, 01 Oct 2026 20:40:25 -0700
-In-Reply-To: <6a74a7ae.01d0871a.3a0d52.001f.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6abf27a9.b50370da.302ea9.0008.GAE@google.com>
-Subject: Re: [syzbot] [nvme?] possible deadlock in __sock_release (2)
-From: syzbot <syzbot+2398b0f6924a70b7de12@syzkaller.appspotmail.com>
-To: hch@lst.de, johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	netdev@vger.kernel.org, sagi@grimberg.me, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
 
-syzbot has found a reproducer for the following issue on:
-
-HEAD commit:    d24e8ac715de Merge tag 'net-7.3-rc6' of git://git.kernel.o..
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-console output: https://syzkaller.appspot.com/x/log.txt?x=161b2725580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=7d012d9c67977ee4
-dashboard link: https://syzkaller.appspot.com/bug?extid=2398b0f6924a70b7de12
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1443cbf5580000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+2398b0f6924a70b7de12@syzkaller.appspotmail.com
-
-nvme nvme0: failed to connect socket: -512
-======================================================
-WARNING: possible circular locking dependency detected
-syzkaller #0 Not tainted
-------------------------------------------------------
-syz-executor294/6008 is trying to acquire lock:
-ffff888028dcf540 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:1024 [inline]
-ffff888028dcf540 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}, at: __sock_release+0x86/0x260 net/socket.c:734
-
-but task is already holding lock:
-ffffffff8ff50aa0 (nvmf_dev_mutex){+.+.}-{4:4}, at: nvmf_dev_write+0xa6/0xb60 drivers/nvme/host/fabrics.c:1402
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #4 (nvmf_dev_mutex){+.+.}-{4:4}:
-       lock_acquire kernel/locking/lockdep.c:5942 [inline]
-       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
-       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
-       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
-       nvmf_dev_show+0x26/0x210 drivers/nvme/host/fabrics.c:1446
-       seq_read_iter+0x32f/0x1270 fs/seq_file.c:231
-       seq_read+0x344/0x4d0 fs/seq_file.c:163
-       vfs_read+0x1e4/0xb40 fs/read_write.c:572
-       ksys_read+0x12a/0x250 fs/read_write.c:716
-       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #3 (&p->lock){+.+.}-{4:4}:
-       lock_acquire kernel/locking/lockdep.c:5942 [inline]
-       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
-       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
-       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
-       seq_read_iter+0xe1/0x1270 fs/seq_file.c:183
-       kernfs_fop_read_iter+0x46c/0x610 fs/kernfs/file.c:290
-       __kernel_read+0x397/0xad0 fs/read_write.c:532
-       integrity_kernel_read+0x7e/0xb0 security/integrity/iint.c:28
-       ima_calc_file_hash_tfm+0x25e/0x350 security/integrity/ima/ima_crypto.c:222
-       ima_calc_file_hash+0x1e3/0x380 security/integrity/ima/ima_crypto.c:280
-       ima_collect_measurement+0x94f/0xb30 security/integrity/ima/ima_api.c:300
-       process_measurement+0xdfe/0x2350 security/integrity/ima/ima_main.c:425
-       ima_file_check+0xc3/0x110 security/integrity/ima/ima_main.c:685
-       security_file_post_open+0xc4/0x210 security/security.c:2755
-       do_open fs/namei.c:4839 [inline]
-       path_openat+0x5cd/0x2440 fs/namei.c:5000
-       do_file_open+0x20e/0x430 fs/namei.c:5029
-       do_sys_openat2+0x10f/0x1e0 fs/open.c:1417
-       do_sys_open fs/open.c:1423 [inline]
-       __do_sys_openat fs/open.c:1439 [inline]
-       __se_sys_openat fs/open.c:1434 [inline]
-       __x64_sys_openat+0x12d/0x210 fs/open.c:1434
-       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #2 (&ima_iint_mutex_key[depth]){+.+.}-{4:4}:
-       lock_acquire kernel/locking/lockdep.c:5942 [inline]
-       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
-       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
-       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
-       process_measurement+0x5ab/0x2350 security/integrity/ima/ima_main.c:319
-       ima_file_check+0xc3/0x110 security/integrity/ima/ima_main.c:685
-       security_file_post_open+0xc4/0x210 security/security.c:2755
-       do_open fs/namei.c:4839 [inline]
-       path_openat+0x5cd/0x2440 fs/namei.c:5000
-       do_file_open+0x20e/0x430 fs/namei.c:5029
-       file_open_name+0x1c3/0x3e0 fs/open.c:1375
-       filp_open+0x2e/0x50 fs/open.c:1392
-       kernel_read_file_from_path_initns+0xec/0x240 fs/kernel_read_file.c:159
-       fw_get_filesystem_firmware drivers/base/firmware_loader/main.c:549 [inline]
-       _request_firmware+0x733/0x13c0 drivers/base/firmware_loader/main.c:873
-       request_firmware+0x35/0x50 drivers/base/firmware_loader/main.c:948
-       reg_reload_regdb+0x85/0x460 net/wireless/reg.c:1067
-       genl_family_rcv_msg_doit+0x214/0x300 net/netlink/genetlink.c:1114
-       genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
-       genl_rcv_msg+0x560/0x800 net/netlink/genetlink.c:1209
-       netlink_rcv_skb+0x159/0x420 net/netlink/af_netlink.c:2575
-       genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
-       netlink_unicast_kernel net/netlink/af_netlink.c:1338 [inline]
-       netlink_unicast+0x585/0x850 net/netlink/af_netlink.c:1364
-       netlink_sendmsg+0x8b0/0xda0 net/netlink/af_netlink.c:1919
-       sock_sendmsg_nosec net/socket.c:800 [inline]
-       __sock_sendmsg net/socket.c:815 [inline]
-       __sys_sendto+0x48b/0x4e0 net/socket.c:2281
-       __do_sys_sendto net/socket.c:2288 [inline]
-       __se_sys_sendto net/socket.c:2284 [inline]
-       __x64_sys_sendto+0xe0/0x1c0 net/socket.c:2284
-       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #1 (cb_lock){++++}-{4:4}:
-       lock_acquire kernel/locking/lockdep.c:5942 [inline]
-       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
-       down_read+0x99/0x4c0 kernel/locking/rwsem.c:1574
-       genl_release+0x7e/0x1d0 net/netlink/genetlink.c:697
-       netlink_release+0x105e/0x2000 net/netlink/af_netlink.c:735
-       __sock_release+0xb3/0x260 net/socket.c:735
-       sock_close+0x1c/0x30 net/socket.c:1526
-       __fput+0x3ff/0xb50 fs/file_table.c:512
-       fput_close_sync+0x118/0x250 fs/file_table.c:617
-       __do_sys_close fs/open.c:1560 [inline]
-       __se_sys_close fs/open.c:1545 [inline]
-       __x64_sys_close+0x8b/0x120 fs/open.c:1545
-       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #0 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}:
-       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
-       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
-       validate_chain kernel/locking/lockdep.c:3952 [inline]
-       __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
-       lock_acquire kernel/locking/lockdep.c:5942 [inline]
-       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
-       down_write+0x8b/0x1f0 kernel/locking/rwsem.c:1631
-       inode_lock include/linux/fs.h:1024 [inline]
-       __sock_release+0x86/0x260 net/socket.c:734
-       sock_close+0x1c/0x30 net/socket.c:1526
-       __fput+0x3ff/0xb50 fs/file_table.c:512
-       __fput_sync+0xd7/0x100 fs/file_table.c:604
-       nvme_tcp_alloc_queue.isra.0+0xd6d/0x1770 drivers/nvme/host/tcp.c:1985
-       nvme_tcp_alloc_admin_queue drivers/nvme/host/tcp.c:2171 [inline]
-       nvme_tcp_configure_admin_queue+0x26/0x530 drivers/nvme/host/tcp.c:2325
-       nvme_tcp_setup_ctrl+0xa4/0xa20 drivers/nvme/host/tcp.c:2455
-       nvme_tcp_create_ctrl+0x970/0xd90 drivers/nvme/host/tcp.c:3083
-       nvmf_create_ctrl drivers/nvme/host/fabrics.c:1361 [inline]
-       nvmf_dev_write+0x4ee/0xb60 drivers/nvme/host/fabrics.c:1408
-       vfs_write+0x2aa/0x1050 fs/read_write.c:685
-       ksys_write+0x12a/0x250 fs/read_write.c:739
-       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-other info that might help us debug this:
-
-Chain exists of:
-  &sb->s_type->i_mutex_key#13 --> &p->lock --> nvmf_dev_mutex
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(nvmf_dev_mutex);
-                               lock(&p->lock);
-                               lock(nvmf_dev_mutex);
-  lock(&sb->s_type->i_mutex_key#13);
-
- *** DEADLOCK ***
-
-locks held by syz-executor294/6008: 1, last CPU#2:
- #0: ffffffff8ff50aa0 (nvmf_dev_mutex){+.+.}-{4:4}, at: nvmf_dev_write+0xa6/0xb60 drivers/nvme/host/fabrics.c:1402
-
-stack backtrace:
-CPU: 2 UID: 0 PID: 6008 Comm: syz-executor294 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
- print_circular_bug.cold+0x178/0x1be kernel/locking/lockdep.c:2087
- check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2219
- check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
- check_prevs_add kernel/locking/lockdep.c:3328 [inline]
- validate_chain kernel/locking/lockdep.c:3952 [inline]
- __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
- lock_acquire kernel/locking/lockdep.c:5942 [inline]
- lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
- down_write+0x8b/0x1f0 kernel/locking/rwsem.c:1631
- inode_lock include/linux/fs.h:1024 [inline]
- __sock_release+0x86/0x260 net/socket.c:734
- sock_close+0x1c/0x30 net/socket.c:1526
- __fput+0x3ff/0xb50 fs/file_table.c:512
- __fput_sync+0xd7/0x100 fs/file_table.c:604
- nvme_tcp_alloc_queue.isra.0+0xd6d/0x1770 drivers/nvme/host/tcp.c:1985
- nvme_tcp_alloc_admin_queue drivers/nvme/host/tcp.c:2171 [inline]
- nvme_tcp_configure_admin_queue+0x26/0x530 drivers/nvme/host/tcp.c:2325
- nvme_tcp_setup_ctrl+0xa4/0xa20 drivers/nvme/host/tcp.c:2455
- nvme_tcp_create_ctrl+0x970/0xd90 drivers/nvme/host/tcp.c:3083
- nvmf_create_ctrl drivers/nvme/host/fabrics.c:1361 [inline]
- nvmf_dev_write+0x4ee/0xb60 drivers/nvme/host/fabrics.c:1408
- vfs_write+0x2aa/0x1050 fs/read_write.c:685
- ksys_write+0x12a/0x250 fs/read_write.c:739
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fb8f5809ede
-Code: 08 0f 85 f5 e1 ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 90 41 57 41 56 4d 89 c6 41 55 4d 89 cd 41 54 55 53 48 83 ec 08
-RSP: 002b:00007fb8f57b21a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 00007fb8f57b26c0 RCX: 00007fb8f5809ede
-RDX: 0000000000000037 RSI: 00007fb8f5859618 RDI: 0000000000000003
-RBP: 0000000000000021 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: ffffffffffffffd0
-R13: 0000000000000002 R14: 00007ffdf198cb10 R15: 00007ffdf198cbf8
- </TASK>
-
-
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+SGkgQml0dGVyYmx1ZSwNCg0KSSBqdXN0IHF1aWNrbHkgZ2l2ZSBzb21lIGNvbW1lbnRzIGJlZm9y
+ZSB5b3Ugc2VuZCBwYXRjaC4NCg0KQml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFp
+bC5jb20+IHdyb3RlOg0KPiBPbiAzMC8wOS8yMDI2IDEyOjIxLCBQaWVybHVpZ2lGcnVsbGFuaSB3
+cm90ZToNCj4gPiBIZWxsbyBhbGwsDQo+ID4gICAgIEknbSB1c2luZyBMaW51eCBNaW50IDIyLjEg
+d2l0aCBrZXJuZWwgNy4wLjAtMzQtZ2VuZXJpYyBhbmQgYQ0KPiA+IDAyOjAwLjAgTmV0d29yayBj
+b250cm9sbGVyIFswMjgwXTogUmVhbHRlayBTZW1pY29uZHVjdG9yIENvLiwgTHRkLiBSVEw4ODUy
+QkUgUENJZSA4MDIuMTFheCBXaXJlbGVzcw0KPiBOZXR3b3JrIENvbnRyb2xsZXIgWzFUMVJdIFsx
+MGVjOmI4NWJdDQo+ID4gdGhhdCBoYXMgbG90IG9mIGlzc3VlcyB3aXRoIHRoZSA1R2h6IHdsYW4u
+DQo+ID4gVGhlIHByb2JsZW0gaXMgdGhhdCBoYXMgYSB2ZXJ5IGxvdyBzZW5zaXRpdml0eSBhbmQg
+Y2FuIGRldGVjdCwgaW4gbGludXgsIHRoZXNlIHdsYW5zIG9ubHkgd2hlbiBJJ20NCj4gYSBmZXcg
+ZmVldCBmcm9tIGFjY2VzcyBwb2ludC4NCj4gPg0KPiA+DQo+ID4gSSd2ZSB0aGVuIHN3YXBwZWQg
+dGhlIGRyaXZlciB3aXRoIGh0dHBzOi8vZ2l0aHViLmNvbS9tb3Jyb3duci9ydHc4OSBhbmQgZm91
+bmQgdGhlIHNhbWUgYmVoYXZpb3VyLg0KPiA+IEkndmUgdGhlbiBvcGVuZWQgYW4gaXNzdWUgdGhl
+cmUgOg0KPiA+ICBodHRwczovL2dpdGh1Yi5jb20vbW9ycm93bnIvcnR3ODkvaXNzdWVzLzEyOCBh
+bmQgdGhlIHBlb3BsZXMgdGhlcmUgbWFuYWdlZCB0byBmaW5kIHRoZSBjdWxwcml0IGFuZA0KPiBw
+YXRjaCBoaXMgZHJpdmVyIHRoYXQgbm93IHdvcmtzIHBlcmZlY3RseS4NCj4gPiBGb3IgbXkgdW5k
+ZXJzdGFuZGluZyB0aGUgcHJvYmxlbSB3YXMgdGhhdCBteSBjYXJkICggbWF5IGNhcmQgbW9kZWwg
+PyApICggcmZlX3R5cGUgNDEgKSBoYXMgb25seSBvbmUNCj4gYW50ZW5uYSBhbmQgaXMgbm90IGNv
+cnJlY3RseSBzZWxlY3RlZCBiIHkgdGhlIGRyaXZlci4NCj4gPg0KPiA+IExvb2tpbmcgaW50byB0
+aGUgaHR0cHM6Ly9naXRodWIuY29tL3Brc2hpaC9ydHcvYmxvYi9ydHctbmV4dC9kcml2ZXJzL25l
+dC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5DQo+IGNvZGUgSSBjYW4gc2VlIHRoYXQgaXMgcmVhbGx5
+IHNpbWlsYXIgc28gdGhlbiBwYXRjaGUgYXBwbGllZCBpbiB0aGUgbW9ycm93bnIgY291bGQgcG9z
+c2libHkgYXBwbHkgIGFsc28NCj4gdG8gdGhlIHZhbmlsbGEga2VybmVsIGRyaXZlci4NCj4gPg0K
+PiA+DQo+ID4gUGF0Y2ggaXMgcmF0aGVyIGVhc3kgYW5kIHdpdGggdGhpcyBwYXRjaCBhbGxpZWQg
+YW5kIHRoaXMgZHJpdmVyIGxvYWRlZCBub3cgdGhlIDVHaHogaXMgcGVyZmVjdGx5IHdvcmtpbmcu
+DQo+ID4NCj4gPg0KPiA+IFdvdWxkIHlvdSBiZSBpbnRlcmVzc2VkIGluIHB1c2hpbmcgdGhpcyBw
+YXRjaCBhbHNvIGhlcmUgPw0KPiA+DQo+ID4NCj4gPiBJbiBjYXNlLCB0aGlzIGlzIHRoZSBwYXRj
+aCAoIGFsc28gd2l0aCB0aGUgY29tbWVudHMgdG8gdmVyaWZ5IHRoYXQgdGhlIGRyaXZlciBsb2Fk
+ZWQgaXMgdGhlIG9uZSB0aGF0DQo+IGlzIHBhdGNoZWQgKSA6DQo+ID4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvbWFjLmMgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9yZWFsdGVrL3J0dzg5L21hYy5jDQo+ID4gaW5kZXggZGYzOTZmYmZjYTI2Li44MWE0YmU3
+YTU5M2QgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
+OS9tYWMuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvbWFj
+LmMNCj4gPiBAQCAtMzI0NCw2ICszMjQ0LDE0IEBAIHN0YXRpYyBpbnQgcnR3ODlfbWFjX3NldHVw
+X3BoeWNhcF9wYXJ0MChzdHJ1Y3QgcnR3ODlfZGV2ICpydHdkZXYpDQo+ID4gICAgICB0eF9hbnQg
+PSB1MzJfZ2V0X2JpdHMocGh5Y2FwLT53MywgUlRXODlfQzJIUkVHX1BIWUNBUF9XM19BTlRfVFhf
+TlVNKTsNCj4gPiAgICAgIHJ4X2FudCA9IHUzMl9nZXRfYml0cyhwaHljYXAtPnczLCBSVFc4OV9D
+MkhSRUdfUEhZQ0FQX1czX0FOVF9SWF9OVU0pOw0KPiA+DQo+ID4gKyAgICBpZiAoY2hpcC0+Y2hp
+cF9pZCA9PSBSVEw4ODUyQiAmJiBlZnVzZS0+cmZlX3R5cGUgPT0gNDEgJiYNCg0KQ2FuIHdlIGFk
+ZCBhIHF1aXJrIGluc3RlYWQgb2YgY2hlY2tpbmcgSUMgYW5kIGl0cyByZmUgdHlwZT8NCkkgZ3Vl
+c3MgdGhlcmUgbWlnaHQgYmUgbW9yZSB0aGFuIG9uZSBjYXNlcyBhZnRlcndhcmQuIA0KDQo+ID4g
+KyAgICAgICAgdHhfbnNzID09IDEgJiYgdHhfYW50ID09IDIgJiYgcnhfbnNzID09IDEgJiYgcnhf
+YW50ID09IDIpIHsNCj4gPiArICAgICAgICB0eF9hbnQgPSAxOw0KPiA+ICsgICAgICAgIHJ4X2Fu
+dCA9IDE7DQo+ID4gKw0KPiA+ICsgICAgICAgIHJ0dzg5X3dhcm4ocnR3ZGV2LCAiZml4IG1vcmUg
+c3R1ZmYgZm9yIFJGRSA0MVxuIik7DQoNCkkgdGhpbmsgeW91IHdpbGwgY2hhbmdlIHJ0dzg5X3dh
+cm4oKSB0byBkZWJ1ZyBsZXZlbCBpbiBmb3JtYWwgcGF0Y2gsIHJpZ2h0Pw0KDQo+ID4gKyAgICB9
+DQo+ID4gKw0KPiA+ICAgICAgaGFsLT50eF9uc3MgPSB0eF9uc3MgPyBtaW5fdCh1OCwgdHhfbnNz
+LCBjaGlwLT50eF9uc3MpIDogY2hpcC0+dHhfbnNzOw0KPiA+ICAgICAgaGFsLT5yeF9uc3MgPSBy
+eF9uc3MgPyBtaW5fdCh1OCwgcnhfbnNzLCBjaGlwLT5yeF9uc3MpIDogY2hpcC0+cnhfbnNzOw0K
+PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkv
+cnR3ODg1MmIuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1
+MmIuYw0KPiA+IGluZGV4IDM1NjYyMzM0MWY2NS4uYzllZTNjNzZjZmM5IDEwMDY0NA0KPiA+IC0t
+LSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1MmIuYw0KPiA+ICsr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1MmIuYw0KPiA+IEBA
+IC03NzEsNiArNzcxLDE1IEBAIHN0YXRpYyB2b2lkIHJ0dzg4NTJiX2J0Y19zZXRfcmZlKHN0cnVj
+dCBydHc4OV9kZXYgKnJ0d2RldikNCj4gPiAgICAgIH0gZWxzZSB7DQo+ID4gICAgICAgICAgbWQt
+PmFudC50eXBlID0gQlRDX0FOVF9TSEFSRUQ7DQo+ID4gICAgICAgICAgbWQtPmJ0MF9wb3MgPSBC
+VENfQlRfQlRHOw0KPiA+ICsNCj4gPiArICAgICAgICBpZiAobWQtPnJmZV90eXBlID09IDQxKSB7
+DQoNClVzZSB0aGUgc2FtZSBxdWlyayBieSB0aGUgd2F5LiANCg0KPiA+ICsgICAgICAgICAgICBt
+ZC0+YW50Lm51bSA9IDE7DQo+ID4gKyAgICAgICAgICAgIG1kLT5hbnQuc2luZ2xlX3BvcyA9IFJG
+X1BBVEhfQjsNCj4gPiArICAgICAgICAgICAgbWQtPmFudC5idGdfcG9zID0gUkZfUEFUSF9COw0K
+PiA+ICsgICAgICAgICAgICBtZC0+YW50LnN0cmVhbV9jbnQgPSAxOw0KPiA+ICsNCj4gPiArICAg
+ICAgICAgICAgcnR3ODlfd2FybihydHdkZXYsICJmaXggc3R1ZmYgZm9yIFJGRSA0MVxuIik7DQo+
+ID4gKyAgICAgICAgfQ0KPiA+ICAgICAgfQ0KPiA+ICAgICAgcnR3ZGV2LT5idGMuYnRnX3BvcyA9
+IG1kLT5hbnQuYnRnX3BvczsNCj4gPiAgICAgIHJ0d2Rldi0+YnRjLmFudF90eXBlID0gbWQtPmFu
+dC50eXBlOw0KPiA+DQo+ID4NCj4gPg0KPiA+IEFsbCBjcmVkaXRzIG11c3QgYWJzb2x1dGVsbHkg
+Z28gdG8gIGR1YmhhdGVyICggICBodHRwczovL2dpdGh1Yi5jb20vZHViaGF0ZXIgKSB0aGF0IGRp
+ZCBhbGwNCj4gdHJvdWJsZXNob290aW5nIGFuZCB3cm90ZSB0aGUgcGF0Y2guDQo+ID4NCj4gPiBN
+eSBpbnRlcmVzdCBpbiB0aGlzIGlzIG9ubHkgdG8gaGF2ZSBhICh2YW5pbGxhKSBrZXJuZWwgdmVy
+c2lvbiBvZiB0aGlzIGRyaXZlciB0aGF0IHdvcmtzIGNvcnJlY3RseQ0KPiBhcyBsb3Qgb2YgcHJv
+YmxlbXMgYXJlIHJlcG9ydGVkIGJ5IHBlb3BsZXMgdXNpbmcgdGhlIHNhbWUgY2hpcC4NCj4gPg0K
+PiA+DQo+ID4NCj4gPiBUaGFua3MNCj4gPg0KPiA+DQo+ID4gUGllcmx1aWdpDQo+IA0KPiBIaSwN
+Cj4gDQo+IFR3byBvdGhlciBwZW9wbGUgcmVwb3J0ZWQgdGhlIHNhbWUgcHJvYmxlbSByZWNlbnRs
+eS4gSSBkZWNpZGVkIHRvIHdhaXQNCj4gZm9yIHRoZW0gdG8gc2F5IGlmIHRoZSBwYXRjaCBoZWxw
+cyBvciBub3QuIEJ1dCBJIHdpbGwgc2VuZCB0aGUgcGF0Y2gNCj4gYW55d2F5IG5leHQgd2Vlay4N
+Cg0K
