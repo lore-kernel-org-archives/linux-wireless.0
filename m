@@ -1,189 +1,272 @@
-Received: from mail-10697.protonmail.ch (mail-10697.protonmail.ch [79.135.106.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3726C192D8A
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 02:49:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC41344DAA
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2026 03:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790909389; cv=none; b=U6nV0Ue2pqEusyio1g4bSxRsppPfSybjLUZrcFbfz3d9MW9C46M/AM4rVQ3Wv7CRdEbvOwchJhu9pA9HvTaM5HYOyeptD6QZ/R+KHa0tUK3W/q601jG0EELlQ35fk2mEp8HPzWM0IFEIh/hSJBM9xZMia8414J6lCHWi9vyftw0=
+	t=1790912428; cv=none; b=muRxOjiISTKWC02ksiLfACfEJLRSaZDbi446Kmd2gck/bMBQvCfyEeJ7kwB+z2WEgesRjogAD90fEYAbQJi9rtj0oIp2Am629tSedv6bO4VcTCR2J5ZwyI2JGQUFSjtmrnLgey3whHkI1W/FGU50+4FaHSYmhqYGRD680G9Xr0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790909389; c=relaxed/simple;
-	bh=NtgAXm2AY4dCx6yXpwt/+3ab8yqkCfLMYOQgP/A5pL8=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Q/1PygaI5uyYFbh+DzPtfm3nkS8MfAJ5BiIAd7bXvtEsv7lpSWPHZKxH62ClF7NJcJyWWOdbYxw6tQ5//s73Th+CUXNiHCuIiusuKJ3DnKqx/GzKl3pADfLhiAYn1UbrgmuRWwRb/MD4CobTrrISC5sj8LEwsHtsXsT5D7vu8jQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=IeBIwQil; arc=none smtp.client-ip=79.135.106.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="IeBIwQil"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail2; t=1790909374; x=1791168574;
-	bh=l1gGDrgbK8T5dc/HknqE5dRjmD+cBJxXQ6C9XM9TUiY=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=IeBIwQilp8JD74HwQTF7AiiZyxa8RJpTsFva2s8/VoLI25+SWzCw9uoWhuDwyiX11
-	 g9uxlKvutiCkZEQtHLTASUZYMyF5Bu61w1fm5lJt8+mgjE/gZixiWJQ3n+LL9Dm8k5
-	 yAvcYcu9Y7aNBJhehlyQ9a2L7iS+vugm2NkD5QA6zdJM9dgv0vqJxDLfHQHNkmRstJ
-	 okRAuXObI5v1UvnwEWk+15bNwvUIBVLY5+MUv3gSw+HK0CJzJEVmimKJV5DSseyvW5
-	 2p3/ZmFVlnnvlZ5MFsTRf4oRMbIVEMqG47cHiQNAIjd0g06WfduuKvzTw7I4VWmkq7
-	 ToPUN2qilyNzw==
-Date: Fri, 02 Oct 2026 02:49:30 +0000
-To: "pkshih@realtek.com" <pkshih@realtek.com>
-From: Adilson <aoleandro@proton.me>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wifi: rtw89: 8852AE: zero SMA in addr CAM for virtual monitor vif, and ~200 ms delay before first TX attempt of injected unicast
-Message-ID: <b41nlcULR-r_hxbVG6EOsjESlvS4yT_ArYlWgP26g34UKbdoMRoLxMd2pLl4h0L6sB1GOAGr2pT2ofsCRXAcJSqm4lxEWIwH4gTZbjFVmiI=@proton.me>
-Feedback-ID: 225530312:user:proton
-X-Pm-Message-ID: 327e77a324c2513b9333c2e979879caf9802b0ac
+	s=arc-20240116; t=1790912428; c=relaxed/simple;
+	bh=7DEnIPBCCKwg3iRZ58S7DgxGVdPCoT4ozRQnpe3AmZc=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=FPMWTYOLNCg4dNKbzjhMOj0eo7H0/C5sOvUU9hkM6NtCOTH41BwJsxnb4oSxFzKu1ZNqxURUYNzkbDhbXZEPSDgckt6UVC1rrDuE1W1Cyw1kmxea5irr1RHg3qgMlBEdsKYzmL6FdH54OS1wZi1PAP0FONjhDAt46uoQgq+8gTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-4c307941971so2404833b6e.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2026 20:40:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790912425; x=1791517225;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=kMwz3JG6cUfXRqV2RJX7PZeX+DHxAQ564iCLriDAmU0=;
+        b=IEVrJmdeySc97Zhg6hja2WufpdHQrOkayTCfYotHzzM5tPglJ5e8T3/k6cY3rSFQTy
+         CADlOw4jCwBfsji1xORW4Up5axTvbGAH7nL7nUIs6mlbXVzdpEQbU9ktke6fZcYHuJLl
+         /a/OcFig7GSMxPDDZzMy/XxxVL/tQApde/8+RXoChWY69h26xolQrxWlJxjcbB/nJ9/I
+         Z+46W2VGSTUZBO+oGruu9AIF51HpyXdoGSPYbHD7TJbOzt7+wdVZYb1iKFFnI1ytuCUI
+         GxLxckD4AUJyCKekrCNcxzWxJYwXcH/CfQqOr/pQ03PsY9uFMqEd4EWk11fMOFhF2bjX
+         VIJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwr1dGSWO/V4NXR8UxbMFKIlZ5Axycf6R9BQUCgkYLg056y0ZC39e+1cpjsNGfWGriW/kX8dPeE4mVjYeaKXA==@vger.kernel.org
+X-Gm-Message-State: AFuF++mL9O4pAdByn9lJ3I/gijPQc5UiGEATdzhK+gBUASzIDHn8D4l9
+	Vq20ILSVcaKdtKC8hTR2g09MzCK9jCn1eKVD/VgKndJN5rpzQ4uksJxsG9kt42fXhhnehdaMEqV
+	iXlFG/1UVjQF/KwSROKDwn2XHV3oppP1U0t7yk7wTzCOqkwwPteUMVg18IUc=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-Received: by 2002:a05:6808:c161:b0:4c4:a240:9c3a with SMTP id
+ 5614622812f47-4f526a4f2eamr1151205b6e.4.1790912425656; Thu, 01 Oct 2026
+ 20:40:25 -0700 (PDT)
+Date: Thu, 01 Oct 2026 20:40:25 -0700
+In-Reply-To: <6a74a7ae.01d0871a.3a0d52.001f.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6abf27a9.b50370da.302ea9.0008.GAE@google.com>
+Subject: Re: [syzbot] [nvme?] possible deadlock in __sock_release (2)
+From: syzbot <syzbot+2398b0f6924a70b7de12@syzkaller.appspotmail.com>
+To: hch@lst.de, johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, sagi@grimberg.me, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Ping-Ke,
+syzbot has found a reproducer for the following issue on:
 
-I am working on Linux interoperability with Apple's AirDrop, using a
-userspace AWDL implementation (OWL, from TU Darmstadt's SEEMOO Lab) on
-top of a monitor interface with radiotap injection. While testing on an
-RTL8852AE I found two issues in the monitor/injection path. The first
-has a cause and an experimental fix; the second is a question about
-firmware behavior.
+HEAD commit:    d24e8ac715de Merge tag 'net-7.3-rc6' of git://git.kernel.o..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=161b2725580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7d012d9c67977ee4
+dashboard link: https://syzkaller.appspot.com/bug?extid=2398b0f6924a70b7de12
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1443cbf5580000
 
-With the fix for (1) and a workaround for (2), a complete transfer of a
-small test file from a current macOS to this card now succeeds
-(discovery, request and upload, with the received file identical to
-the original). So the fix seems useful in practice, and the remaining
-delay is the main obstacle to a clean implementation.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+2398b0f6924a70b7de12@syzkaller.appspotmail.com
 
-Setup:
-- RTL8852AE, PCIe 10ec:8852, firmware 0.13.36.2 (52acc807)
-- kernel 7.2.8; the rtw89 directory is identical to upstream v7.2.8
-- passive monitor interface (rtw89 does not support active monitor),
-  injected data frames at a fixed rate of 12 Mb/s via radiotap
-- peer: a MacBook, on channel 149
+nvme nvme0: failed to connect socket: -512
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+syz-executor294/6008 is trying to acquire lock:
+ffff888028dcf540 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:1024 [inline]
+ffff888028dcf540 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}, at: __sock_release+0x86/0x260 net/socket.c:734
 
-I checked rtw-next and wireless-next as of October 1, 2026 and found no
-changes touching these paths.
+but task is already holding lock:
+ffffffff8ff50aa0 (nvmf_dev_mutex){+.+.}-{4:4}, at: nvmf_dev_write+0xa6/0xb60 drivers/nvme/host/fabrics.c:1402
 
-1) The virtual monitor vif gets SMA 00:00:00:00:00:00 in the addr CAM
+which lock already depends on the new lock.
 
-I understand that a passive monitor interface is not expected to ACK.
-The problem is that, when injecting, the peer then retransmits every
-frame it sends back to us: in a 40-packet ping test, the peer sent 15
-original frames and 89 retries. The concrete cause seems to be the
-address of the virtual monitor vif.
 
-rtw89 sets WANT_MONITOR_VIF. Without active monitor, mac80211 does not
-pass the monitor netdev to the driver and creates the virtual monitor
-vif in ieee80211_add_virtual_monitor(). That vif is allocated zeroed and
-reaches the driver without an address. rtw89 copies it into
-rtwvif->mac_addr and rtwvif_link->mac_addr, and rtw89_mac_add_vif()
-then programs the addr CAM (rtw89_mac_vif_init() -> rtw89_fw_h2c_cam()
--> rtw89_cam_fill_addr_cam_info()) with SMA =3D 00:00:00:00:00:00, and
-TMA =3D the zero BSSID. A debugfs dump of the addr CAM (mac_mem_dump)
-confirms it: entry 0 is valid, with both SMA and TMA zero.
+the existing dependency chain (in reverse order) is:
 
-For context, mac80211 marks passive monitor interfaces with
-vif->addr_valid =3D false, not with a zero address; the zero address comes
-only from the internal virtual monitor vif, which is what rtw89 receives
-with WANT_MONITOR_VIF. So the question is rather what rtw89 should
-program into the addr CAM for that vif when frames are injected through
-it.
+-> #4 (nvmf_dev_mutex){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       nvmf_dev_show+0x26/0x210 drivers/nvme/host/fabrics.c:1446
+       seq_read_iter+0x32f/0x1270 fs/seq_file.c:231
+       seq_read+0x344/0x4d0 fs/seq_file.c:163
+       vfs_read+0x1e4/0xb40 fs/read_write.c:572
+       ksys_read+0x12a/0x250 fs/read_write.c:716
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Experimental fix: when the vif is a monitor vif and its address is all
-zeros, use the permanent address of the device before the CAM is
-programmed (behind a module parameter, default off, in my test build).
-With it, the addr CAM entry carries the real address, and in the same
-40-ping test the peer's retries dropped from 89 to 1, with no
-duplicates in the ping. So in this mode the hardware does ACK unicast
-frames addressed to it once the SMA is set. Managed mode is unaffected:
-the change only acts on a monitor vif with a zero address, and since
-ieee80211_open() rejects any netdev without a valid address, only the
-virtual monitor vif (which has no netdev) can reach the driver that
-way.
+-> #3 (&p->lock){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       seq_read_iter+0xe1/0x1270 fs/seq_file.c:183
+       kernfs_fop_read_iter+0x46c/0x610 fs/kernfs/file.c:290
+       __kernel_read+0x397/0xad0 fs/read_write.c:532
+       integrity_kernel_read+0x7e/0xb0 security/integrity/iint.c:28
+       ima_calc_file_hash_tfm+0x25e/0x350 security/integrity/ima/ima_crypto.c:222
+       ima_calc_file_hash+0x1e3/0x380 security/integrity/ima/ima_crypto.c:280
+       ima_collect_measurement+0x94f/0xb30 security/integrity/ima/ima_api.c:300
+       process_measurement+0xdfe/0x2350 security/integrity/ima/ima_main.c:425
+       ima_file_check+0xc3/0x110 security/integrity/ima/ima_main.c:685
+       security_file_post_open+0xc4/0x210 security/security.c:2755
+       do_open fs/namei.c:4839 [inline]
+       path_openat+0x5cd/0x2440 fs/namei.c:5000
+       do_file_open+0x20e/0x430 fs/namei.c:5029
+       do_sys_openat2+0x10f/0x1e0 fs/open.c:1417
+       do_sys_open fs/open.c:1423 [inline]
+       __do_sys_openat fs/open.c:1439 [inline]
+       __se_sys_openat fs/open.c:1434 [inline]
+       __x64_sys_openat+0x12d/0x210 fs/open.c:1434
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Would a patch along these lines be acceptable upstream? And would it
-be enough for, or a step towards, advertising ACTIVE_MONITOR on these
-chips? The fix could also key on addr_valid instead of testing for a
-zero address, if you prefer.
+-> #2 (&ima_iint_mutex_key[depth]){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       process_measurement+0x5ab/0x2350 security/integrity/ima/ima_main.c:319
+       ima_file_check+0xc3/0x110 security/integrity/ima/ima_main.c:685
+       security_file_post_open+0xc4/0x210 security/security.c:2755
+       do_open fs/namei.c:4839 [inline]
+       path_openat+0x5cd/0x2440 fs/namei.c:5000
+       do_file_open+0x20e/0x430 fs/namei.c:5029
+       file_open_name+0x1c3/0x3e0 fs/open.c:1375
+       filp_open+0x2e/0x50 fs/open.c:1392
+       kernel_read_file_from_path_initns+0xec/0x240 fs/kernel_read_file.c:159
+       fw_get_filesystem_firmware drivers/base/firmware_loader/main.c:549 [inline]
+       _request_firmware+0x733/0x13c0 drivers/base/firmware_loader/main.c:873
+       request_firmware+0x35/0x50 drivers/base/firmware_loader/main.c:948
+       reg_reload_regdb+0x85/0x460 net/wireless/reg.c:1067
+       genl_family_rcv_msg_doit+0x214/0x300 net/netlink/genetlink.c:1114
+       genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
+       genl_rcv_msg+0x560/0x800 net/netlink/genetlink.c:1209
+       netlink_rcv_skb+0x159/0x420 net/netlink/af_netlink.c:2575
+       genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
+       netlink_unicast_kernel net/netlink/af_netlink.c:1338 [inline]
+       netlink_unicast+0x585/0x850 net/netlink/af_netlink.c:1364
+       netlink_sendmsg+0x8b0/0xda0 net/netlink/af_netlink.c:1919
+       sock_sendmsg_nosec net/socket.c:800 [inline]
+       __sock_sendmsg net/socket.c:815 [inline]
+       __sys_sendto+0x48b/0x4e0 net/socket.c:2281
+       __do_sys_sendto net/socket.c:2288 [inline]
+       __se_sys_sendto net/socket.c:2284 [inline]
+       __x64_sys_sendto+0xe0/0x1c0 net/socket.c:2284
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-2) Injected unicast waits ~200 ms before the first TX attempt
+-> #1 (cb_lock){++++}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       down_read+0x99/0x4c0 kernel/locking/rwsem.c:1574
+       genl_release+0x7e/0x1d0 net/netlink/genetlink.c:697
+       netlink_release+0x105e/0x2000 net/netlink/af_netlink.c:735
+       __sock_release+0xb3/0x260 net/socket.c:735
+       sock_close+0x1c/0x30 net/socket.c:1526
+       __fput+0x3ff/0xb50 fs/file_table.c:512
+       fput_close_sync+0x118/0x250 fs/file_table.c:617
+       __do_sys_close fs/open.c:1560 [inline]
+       __se_sys_close fs/open.c:1545 [inline]
+       __x64_sys_close+0x8b/0x120 fs/open.c:1545
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Injected unicast data frames reach the peer much later than injected
-multicast. Your series from November 2025 (rate/bw/GI for injected
-packets) is included in this kernel; it does not seem to touch this
-wait. What I measured:
+-> #0 (&sb->s_type->i_mutex_key#13){+.+.}-{4:4}:
+       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+       validate_chain kernel/locking/lockdep.c:3952 [inline]
+       __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       down_write+0x8b/0x1f0 kernel/locking/rwsem.c:1631
+       inode_lock include/linux/fs.h:1024 [inline]
+       __sock_release+0x86/0x260 net/socket.c:734
+       sock_close+0x1c/0x30 net/socket.c:1526
+       __fput+0x3ff/0xb50 fs/file_table.c:512
+       __fput_sync+0xd7/0x100 fs/file_table.c:604
+       nvme_tcp_alloc_queue.isra.0+0xd6d/0x1770 drivers/nvme/host/tcp.c:1985
+       nvme_tcp_alloc_admin_queue drivers/nvme/host/tcp.c:2171 [inline]
+       nvme_tcp_configure_admin_queue+0x26/0x530 drivers/nvme/host/tcp.c:2325
+       nvme_tcp_setup_ctrl+0xa4/0xa20 drivers/nvme/host/tcp.c:2455
+       nvme_tcp_create_ctrl+0x970/0xd90 drivers/nvme/host/tcp.c:3083
+       nvmf_create_ctrl drivers/nvme/host/fabrics.c:1361 [inline]
+       nvmf_dev_write+0x4ee/0xb60 drivers/nvme/host/fabrics.c:1408
+       vfs_write+0x2aa/0x1050 fs/read_write.c:685
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-- mac80211 to driver: 5 to 19 us (bpftrace on the TX path).
-- With the default retry settings, the peer's ACK (seen in an
-  over-the-air capture) arrives 150 to 469 ms after the driver hands the
-  frame to the hardware.
-- TX status: every unicast frame without a peer ACK fails with status
-  1 (retry limit exceeded); none with status 2 or 3.
-- With a per-frame retry limit in the TX descriptor
-  (DATA_TXCNT_LMT_SEL, the same field the driver already uses for USB,
-  set here by a second experimental change, since on PCIe the driver
-  does not write it), the limit is honored. Answered pings out of 40,
-  before the fix in (1): limit 1: 0, limit 2: 3, limit 4: 4,
-  default: 15. With a limit of 1, the failure status arrives 148 ms or
-  more after the handoff; subtracting the ~8.5 ms status latency, the
-  single attempt happens 140 to 445 ms after the handoff (32 of 40
-  frames between 160 and 220 ms). So the wait happens before the first
-  attempt, not between retries.
-- Injected multicast frames usually get their TX status within 2.7 to
-  9.6 ms; a few outliers took up to ~200 ms.
-- The wait does not line up with a 102.4 ms beacon grid, and behaves
-  like a delay counted from the handoff. (Our userspace stack always
-  hands frames off at the same phase of its own slot schedule, so I
-  cannot fully separate the two.)
-- MACID_SLEEP_0 and SS_MACID_PAUSE_0 read zero in 10,466 samples each,
-  taken every ~6 ms during traffic with the stock driver, so macid 0
-  does not seem to be sleeping or paused.
-- Power save cannot be turned off on the monitor interface: "iw dev
-  wlan0 set power_save off" returns -EOPNOTSUPP (-95), so I could not
-  rule it out from userspace.
-- Setting SPE_RPT on these frames did not produce any C2H TX RPT on
-  PCIe: with RTW89_DBG_TXRX enabled, the debug message in
-  rtw89_mac_c2h_tx_rpt(), which is printed before the skb lookup, never
-  appeared.
-- The fix in (1) does not change the wait.
+other info that might help us debug this:
 
-Workaround: since the wait behaves like a delay from the handoff, our
-userspace stack now hands unicast frames to the driver earlier than the
-peer's availability window, with a descriptor retry limit of 4 (set by
-the same experimental driver change). Calibrating the lead time, with
-the fix for (1) in place: 140 ms gave 33/40 answered pings, 180 ms gave
-28/40 and 220 ms gave 13/40, against 3/40 with the same settings and no
-early handoff. So the wait is stable enough to be compensated. With 140
-ms, the transfer above completed. It works, but it is tuned to this
-card and firmware.
+Chain exists of:
+  &sb->s_type->i_mutex_key#13 --> &p->lock --> nvmf_dev_mutex
 
-My guesses, untested: injected unicast goes out through macid 0, with no
-station context. The driver already sets a fixed rate for these frames
-(use_rate and dis_data_fb in rtw89_core_tx_update_injection()) and does
-not request aggregation (no IEEE80211_TX_CTL_AMPDU), so does the
-firmware hold or aggregate unicast on its own when the macid has no
-station entry? Other possibilities: a slow path for unicast to an
-address with no addr CAM or station entry, or the "no link" role of the
-monitor port making it defer unicast.
+ Possible unsafe locking scenario:
 
-What is the firmware waiting for in this case? Is there a descriptor
-field, an H2C command, or a CAM or station setup that makes injected
-unicast go out immediately, as multicast does?
-Would the diag_mac or diag_bb debugfs entries from your series help to
-see what the firmware is waiting for?
+       CPU0                    CPU1
+       ----                    ----
+  lock(nvmf_dev_mutex);
+                               lock(&p->lock);
+                               lock(nvmf_dev_mutex);
+  lock(&sb->s_type->i_mutex_key#13);
 
-Disclosure: I did this investigation with the help of an AI assistant
-(Claude, by Anthropic), which I used to read the driver code, write the
-measurement scripts and the experimental patches, and draft this
-message. All measurements were run by me on my own hardware, and I
-have reviewed every claim above and can answer questions about it.
+ *** DEADLOCK ***
 
-I can share the measurement scripts, captures (with personal data
-removed) and the experimental patches.
+locks held by syz-executor294/6008: 1, last CPU#2:
+ #0: ffffffff8ff50aa0 (nvmf_dev_mutex){+.+.}-{4:4}, at: nvmf_dev_write+0xa6/0xb60 drivers/nvme/host/fabrics.c:1402
 
-Thanks,
-Adilson
+stack backtrace:
+CPU: 2 UID: 0 PID: 6008 Comm: syz-executor294 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_circular_bug.cold+0x178/0x1be kernel/locking/lockdep.c:2087
+ check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2219
+ check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+ check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+ validate_chain kernel/locking/lockdep.c:3952 [inline]
+ __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+ lock_acquire kernel/locking/lockdep.c:5942 [inline]
+ lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+ down_write+0x8b/0x1f0 kernel/locking/rwsem.c:1631
+ inode_lock include/linux/fs.h:1024 [inline]
+ __sock_release+0x86/0x260 net/socket.c:734
+ sock_close+0x1c/0x30 net/socket.c:1526
+ __fput+0x3ff/0xb50 fs/file_table.c:512
+ __fput_sync+0xd7/0x100 fs/file_table.c:604
+ nvme_tcp_alloc_queue.isra.0+0xd6d/0x1770 drivers/nvme/host/tcp.c:1985
+ nvme_tcp_alloc_admin_queue drivers/nvme/host/tcp.c:2171 [inline]
+ nvme_tcp_configure_admin_queue+0x26/0x530 drivers/nvme/host/tcp.c:2325
+ nvme_tcp_setup_ctrl+0xa4/0xa20 drivers/nvme/host/tcp.c:2455
+ nvme_tcp_create_ctrl+0x970/0xd90 drivers/nvme/host/tcp.c:3083
+ nvmf_create_ctrl drivers/nvme/host/fabrics.c:1361 [inline]
+ nvmf_dev_write+0x4ee/0xb60 drivers/nvme/host/fabrics.c:1408
+ vfs_write+0x2aa/0x1050 fs/read_write.c:685
+ ksys_write+0x12a/0x250 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fb8f5809ede
+Code: 08 0f 85 f5 e1 ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 90 41 57 41 56 4d 89 c6 41 55 4d 89 cd 41 54 55 53 48 83 ec 08
+RSP: 002b:00007fb8f57b21a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007fb8f57b26c0 RCX: 00007fb8f5809ede
+RDX: 0000000000000037 RSI: 00007fb8f5859618 RDI: 0000000000000003
+RBP: 0000000000000021 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: ffffffffffffffd0
+R13: 0000000000000002 R14: 00007ffdf198cb10 R15: 00007ffdf198cbf8
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
