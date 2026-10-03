@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC71B424655;
-	Sat,  3 Oct 2026 21:02:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE572BEFF5;
+	Sat,  3 Oct 2026 21:04:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791061370; cv=none; b=dX9/wMLsymM4JiEUEeX/kS7xV7u6ID7sL7rXNUj6GlTI2fltxIwfzslF9q9o6xBsWgw5E3lbVRI2MpSz2AO4cEMtBx91sI5qUCxdb9H94QCVGjQ5jGPXDuIjgnXZx68wSje9U7TYo37L9ciDGvRAi5w+rb879+/c0maKmNHnBk0=
+	t=1791061444; cv=none; b=ChkKXGXMKSJg4I5rOT8QvkNGGkia4zB5lw9b+jG+0mFqVm4/MBh+rjKyJQguAypwPhXtOnT5mvk4fFiK0KKo0AY+ayxad6nwVL35kfv2Ay7y8UoydYGNQlK65rDyCqQfDccltmUHAR5Q+eOsVCLalatuwLgZ+s+12KXUtCgtWJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791061370; c=relaxed/simple;
-	bh=MubDMqpVZVxxHvQC9nFxRXWZ706SfPuCgG/aWwhq64k=;
+	s=arc-20240116; t=1791061444; c=relaxed/simple;
+	bh=h/0SdBHtS0y0nc1YeS1VydBYv5/5/6l6a414Lgw90f4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YSVPy4bluQ3kb/UeJsB9gbJBUjUUEj5DgMNUBAM0iNp7Y7IrbAwrAg7tPm5iSYkDS2T/LeBmYv3bUByW4LwZbh3o81XSxE0uz/UBuu/8MQ8z+WaAd8xtmRwuLEf9huzNb9YPDZqZXy7Vkc+W2fqfihxFbnuXE18m38kULDwGH/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CguJFy1S; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=VU/Mem5KDsl+22TUJ7lip4S85ptUzn9pat73T/ATnx/f3tlMY/X7K5UahxiSTUMH4yGO0OHEvK7VzbYeGcudM6STutR+kkWSbb3nVITDTfSWJELgX9qxb3/VgejDM7mjaZL8uQxKKAStWKw6wLmQCh8bL4SzCxLre77Tvzr9ZcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOHPdgcB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CguJFy1S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1EB1F0089B;
-	Sat,  3 Oct 2026 21:02:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOHPdgcB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41C561F0089B;
+	Sat,  3 Oct 2026 21:03:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791061366;
-	bh=8cIdndPyOHMf56UK9tLY6SNuenfeu2ZIWB6f+X1P2ks=;
+	s=k20260515; t=1791061443;
+	bh=jZz1Kj8TjYNquMY6qMQQHQiwtsTvfFCS+qTsMxTiZIY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=CguJFy1ST3HdW+k9La9ASkiBrEJFGCNeh9+zBskr65UTdcDEXVE4s81iLOtJxVsNF
-	 oUX1UxvMs36qO39J6PfVtZIDJ5I9G/51oUcwa0CmJQHQbJco0ZPe7c7js2ufnl7Nhc
-	 K5aTHV+JWur5iXM8gJeW8uf+b8xLp4W+InPATMtOHL7j9QA/exDIZzLeEhM5y9s06I
-	 WhlrohO0DFxeXWRjL5qh2N3jRkwUaWNKiIVWZcHRGYgkSeZ1ruzbIQtFmLGG1kv+py
-	 el6ymg9lZR3bMUGI6RV0pMyiJDVendAogvKJn9A+fcgD8OxK8C2y5/aUATrHekdz6K
-	 XEUlnLLVLJB9g==
-Message-ID: <70c91780-a18f-487d-8036-92c0e3e68e55@kernel.org>
-Date: Sat, 3 Oct 2026 23:02:41 +0200
+	b=cOHPdgcBxLt3QHgtC8FYXVO0q5wis6boFjRo1kkZQpdjuXH2L02AqdQjmvDDK7YcV
+	 XPH04/HqMS0u19K5tsKJKn2V0AXjD24oO5C9bX21V+CoQubtjP7NuyqNDV07i0n3aH
+	 mxKvnSuM6DdNMMgtZTGmX40fotwMfQDtwgrdxoQBsB2tfd7gx4qFCQFdV3mBlihtD7
+	 Q6FDc5174H1+WT39i/Gt/MQWnXQVxHApDoNW4LsBL4Od2J9TANYN/o32Q89g4YgBOF
+	 O1sjiRggEQkw//DnyNF48g5M6gf8Vzygog5uHOBi8Is5/mN9Oo8ELH5mrByXA+X0oQ
+	 0zQqp+zAxj6Wg==
+Message-ID: <1a6c64a9-b351-4bb3-8051-8a521cec0a4e@kernel.org>
+Date: Sat, 3 Oct 2026 23:03:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] dt-bindings: net: wireless: qcom,ath11k-pci: add
- QCN9074
+Subject: Re: [PATCH 2/4] dt-bindings: arm: qcom: add Ubiquiti UniFi U6
+ Enterprise
 To: Andrei-Alexandru Bleortu <me@andrei-z.com>,
  Abel Vesa <abelvesa@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
  Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
@@ -47,7 +47,7 @@ Cc: ath11k@lists.infradead.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-wireless@vger.kernel.org
 References: <20261003083410.3126453-1-me@andrei-z.com>
- <20261003083410.3126453-2-me@andrei-z.com>
+ <20261003083410.3126453-3-me@andrei-z.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -93,22 +93,19 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20261003083410.3126453-2-me@andrei-z.com>
+In-Reply-To: <20261003083410.3126453-3-me@andrei-z.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 03/10/2026 10:34, Andrei-Alexandru Bleortu wrote:
-> QCN9074 is a PCIe 802.11ax radio that boards such as the IPQ5018-based
-> Ubiquiti UniFi U6 Enterprise solder down, two of them on different
-> bands. Like the other ath11k PCIe devices, each needs
-> qcom,calibration-variant to select its board data. Document its PCI ID.
-> 
-> No supplies are added: on these boards the radio's rails are fixed and
-> not under software control.
+> Document the Ubiquiti UniFi U6 Enterprise, an IPQ5018 based access
+> point.
 > 
 > Assisted-by: LLM
+
+I am still surprised people use LLM for such single liners.
+
 > Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
-> ---
 
 
 Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
