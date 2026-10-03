@@ -1,34 +1,34 @@
-Received: from mta0.migadu.com (out-101.mta0.migadu.com [91.218.175.101])
+Received: from mta1.migadu.com (out-113.mta1.migadu.com [95.215.58.113])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F151438331F
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Oct 2026 23:31:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09296352020
+	for <linux-wireless@vger.kernel.org>; Sat,  3 Oct 2026 23:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791070265; cv=none; b=TtxU0pWdiK7VPO92SUAHAdf/MwDCpDURJEO7/X4HruAkhVbXXUNEvo6m2I6oqJrT8WxHzrdT3MtmCLRGf950wYUFlEx8iutmXUzxXdJTR4IVJqrYb0qTep18mouulSWbKIppnn1SnaDiRzKaH4X9odV6+rCVRNpEAlODyX4SVMc=
+	t=1791071392; cv=none; b=Cz2eTKTa27EudrGruDU92W2kJbn3AA3p+r8uboHZq3Mmtbqf0+ewyqXRjJuuwuygrZrR7nlfOnQFGdh65GQLHaoxXAZthbWqnzkd+OGKFfRCgWdV/Bz0GVN89B/0uwjcSQmJhd1rqCgOc2cbnzx0N/TMUl6EqAECgfINHZ9x1n8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791070265; c=relaxed/simple;
-	bh=Xw1FjG3l+X5v/tmL+AFv+0fYunh6K0cphgfqBQpcsDM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FmLqoTzFl/6yxwSNpkLeZuUyepMsp1R2kytNJfIouCggBmtHoeabVT6We9sZzei9jZlSgBwesmN0e73Kzj3ALMPUdryfOPLhH9bH1Kk/ic10/bHn7vkwZyL4uDvD3jDfGi5LpqGzV42JaZ4WPrZTRz278xknInINXj+GwDgZBjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=LoIZVhnD; arc=none smtp.client-ip=91.218.175.101
+	s=arc-20240116; t=1791071392; c=relaxed/simple;
+	bh=xl4GPcatPDKKUjDT7CDuYUyfau6OOsS9xvgfmbROSqc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HGQiY/QTrr24FDr6uXFMjDV5NU77ry9BCZKd1/r1+P75r0/lAF6WtaHbYx+/PodZvk/AKiNAhlI2U+Q5gQj98QbPG8wSjKa9i9P/f32/nTvvE+IIJCPTeSzrkV06CfnrYn7eCOYVPtxO+MpZ4S1z/JW1xaPsCUQBbqE6FwD9C1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=sPQ7gGb6; arc=none smtp.client-ip=95.215.58.113
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="LoIZVhnD"
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="sPQ7gGb6"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Xw1FjG3l+X5v/tmL+AFv+0fYunh6K0cphgfqBQpcsDM=;
+DKIM-Signature: a=rsa-sha256; bh=xl4GPcatPDKKUjDT7CDuYUyfau6OOsS9xvgfmbROSqc=;
  c=simple/simple; d=justthetip.ca;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791070259; v=1; x=1791675059;
- b=LoIZVhnDBTzw4tmm2bQcHILWhM8IEt3Rfdn5QuopCAu45qYdG4d6wqIFUA3TKrgwu306aYP2
- QcaWKpKoARndNWIXJ/7H/OsSfVdKZkb788ybIuNrEzscFTGB7QC7E50BI5i8C8VsbKfZfG89DCM
- xLrUn8DMNQhjNuN+hu9/ymMMaVKmFNveKyUU0weYpvDF8ve8ttX5k/rBV+YSBB8Ua+K1Cd69Tmc
- IhN2IrXs8wqWM7axrtc8v6+hKqGNrn+Yl/QL4p5AR1NY/XRypb0o1d1PR5CA4cC+Pjxzv/k2S2R
- awUmW14YG9SHXX2LjGDucgLGRKusGFmZ3OoaWH16K35cg==
+ t=1791071387; v=1; x=1791676187;
+ b=sPQ7gGb6BAfQmWRqMNl8fj4Rsq/LpO113aTNzxZzfJEdJbwwfCmdxje/59JhsXTMbbt2DXgJ
+ A+31lDT/+ckb/pH7/KVy/I78ezw7Zh95IrW7f66NzdzG+TPii+KApOgxCqSYBc1ypY9WOIP1k07
+ AejzTZ8r8OfUOXaufH2pIooCmBKBpSX/a9Dd7+5gNq5rV1WF58c3tXWLldeNIH1T7nmhYleGPdx
+ pTOLjoQMl+PUlQzGKOGVIvReReZj5rmGiLibHPPqnYJpzKfy+6qdJvJcofpPA68FekgMaMPGqWI
+ w2tGLoySjzTlHeZa8EvkA0mFClasLmEkdvXShTL3zVpGA==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8392b3fc8d7e1049;
-	Sat, 03 Oct 2026 23:30:59 +0000
-X-Mizu-Trace-ID: 8392b3fc8d7e1049
+Received: by smtp.migadu.com with ESMTPS id b4c22351e5f5a4a7;
+	Sat, 03 Oct 2026 23:49:47 +0000
+X-Mizu-Trace-ID: b4c22351e5f5a4a7
 X-Migadu-Flow: FLOW_OUT
 From: Devin Wittmayer <lucid_duck@justthetip.ca>
 To: Felix Fietkau <nbd@nbd.name>,
@@ -38,14 +38,12 @@ Cc: Shayne Chen <shayne.chen@mediatek.com>,
 	Sean Wang <sean.wang@mediatek.com>,
 	Deren Wu <deren.wu@mediatek.com>,
 	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	JB Tsai <jb.tsai@mediatek.com>,
-	Eason Lai <eason.lai@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-mediatek@lists.infradead.org,
 	stable@vger.kernel.org
-Subject: [PATCH RESEND wireless] wifi: mt76: take rcu_read_lock in the USB/SDIO tx completion path
-Date: Sat,  3 Oct 2026 16:30:56 -0700
-Message-ID: <20261003233056.94497-1-lucid_duck@justthetip.ca>
+Subject: [PATCH RESEND wireless] wifi: mt76: mt7925: cancel mlo_pm_work on the USB stop path
+Date: Sat,  3 Oct 2026 16:49:44 -0700
+Message-ID: <20261003234944.96066-1-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -55,81 +53,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The USB and SDIO completion path reads a station pointer that RCU
-protects, without holding the read lock. Lockdep catches it on the
-first association:
+Every other teardown path cancels this work, PCIe unbind included. USB
+unbind does not: PCIe has its own unregister hook for it, while USB
+shares a generic one and the stop callback that would have covered it is
+replaced in probe.
 
-  mt76.h:1305 suspicious rcu_dereference_check() usage!
-  no locks held by mt76-usb-status/1254.
-   mt7925_usb_sdio_tx_complete_skb+0x119/0x130 [mt7925_common]
-   mt76_queue_tx_complete+0x27/0x60 [mt76]
-   mt76u_status_worker+0xed/0x1e0 [mt76_usb]
+That cancel came in commit 81faf578320d ("wifi: mt76: mt7925: cancel
+mlo_pm_work on stop"), whose last line says it covers both buses. That's
+mine and it's a boo-boo.
 
-  mt7925/mac.c:856 suspicious rcu_dereference_check() usage!
-   mt7925_tx_check_aggr.part.0+0xc2/0xe0 [mt7925_common]
-   mt7925_usb_sdio_tx_complete_skb+0xa0/0x130 [mt7925_common]
+Give the USB path its own stop that cancels the work first.
 
-mt7921 does the same, and warns once instead of twice because its
-aggregation check reads the default link directly. The DMA path makes
-the same reads but completes from softirq, so it stays quiet.
+Two-link MLO on a Netgear A9000, work armed then the interface down:
 
-Take the read lock around the lookup and the check.
+                   stock    patched
+    stop ran        3/3      3/3
+    work still ran  3/3      0/3
 
-Tested on 7.2-rc5 with lockdep, fresh module load per arm, 4000
-packets each and no change to the link:
+Skipping the stop entirely leaves both builds running it, so the zero is
+the cancel.
 
-                             splats before   after
-    MT7925  Netgear A9000          2           0
-    MT7921  Alfa                   1           0
-    mt7921e same kernel            0           0
-
-Fixes: dc66a129adf1 ("wifi: mt76: add a wrapper for wcid access with validation")
-Fixes: c22769de2509 ("wifi: mt76: mt7925u: use connac3 tx aggr check in tx complete")
+Fixes: 276a56883257 ("wifi: mt76: mt7925: update the power-saving flow")
 Cc: stable@vger.kernel.org
 Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 3 +++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/usb.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index e69978184f68..ad1352ddf1fc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -831,11 +831,14 @@ void mt7921_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+index 1757023ea70d..db6fd014447b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+@@ -147,6 +147,15 @@ static int mt7925u_mac_reset(struct mt792x_dev *dev)
+ 	return err;
+ }
  
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
++static void mt7925u_stop(struct ieee80211_hw *hw, bool suspend)
++{
++	struct mt792x_dev *dev = mt792x_hw_dev(hw);
 +
-+	rcu_read_lock();
- 	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
- 
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
- 		mt76_connac2_tx_check_aggr(sta, txwi);
-+	rcu_read_unlock();
- 
- 	skb_pull(e->skb, headroom);
- 	mt76_tx_complete_skb(mdev, e->wcid, e->skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 101f571b027f..45bc79727426 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1687,11 +1687,14 @@ void mt7925_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
- 
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
++	cancel_delayed_work_sync(&dev->mlo_pm_work);
 +
-+	rcu_read_lock();
- 	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
++	mt792xu_stop(hw, suspend);
++}
++
+ static int mt7925u_probe(struct usb_interface *usb_intf,
+ 			 const struct usb_device_id *id)
+ {
+@@ -193,7 +202,7 @@ static int mt7925u_probe(struct usb_interface *usb_intf,
+ 	if (!ops)
+ 		return -ENOMEM;
  
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
- 		mt7925_tx_check_aggr(sta, e->skb, wcid);
-+	rcu_read_unlock();
+-	ops->stop = mt792xu_stop;
++	ops->stop = mt7925u_stop;
  
- 	skb_pull(e->skb, headroom);
- 	mt76_tx_complete_skb(mdev, e->wcid, e->skb);
+ 	mdev = mt76_alloc_device(&usb_intf->dev, sizeof(*dev), ops, &drv_ops);
+ 	if (!mdev)
 -- 
 2.55.0
 
