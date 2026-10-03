@@ -1,121 +1,123 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF1C3905EC;
-	Sat,  3 Oct 2026 10:20:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5DEE41378E;
+	Sat,  3 Oct 2026 10:22:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791022819; cv=none; b=VKOu++Wt9mVZ4656E6YMfQdkgZK3ll6mQdOZPi/DbXmnlja6wcEQ8xXfH6/0/jb4nJ3bPJolz8gh7D7KdyQEAJ9iWOt9NfwgZ9Rt8ps3MRv8Zxh58dhFO2r7qj76DZi5ngmmmf6C9XJ2jF4ibasUPWF5X6w91uwwm6RuSHAZLec=
+	t=1791022958; cv=none; b=jeMcWn3k1YxKBOXgzu5ATALn5rihwZ0q2a7qAQhcyinvoFoJqlhJ58nGQeQQ3nZlqkIbIEWlTk8qVQeEcs1LXcBvQfvFmGRZsW6Bav0GQsxgc/YApGKiGyOvDkocsVWt2kld7utlL4+jUwCf+cNc8oBdlFInMy6JiIWG1DvQsaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791022819; c=relaxed/simple;
-	bh=V48hnmGwm5Zxzh//0DXpviOCCNy2P9IUTo2RKpAvg8s=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=aCn7OvQ767KQ+qCx3XVJ2ism2NXExnd5KC0iLF0VJTYdOCaFOSqThdu7J9+PSG4XIhiLtqw8cfewTKy2QO0u1zXSjXXwIEidrlc+b8ZVlFHz3e4Qii8g0Gy32OeI/Zm34uNSBYYjTjx9rGHkx9bsfUKcU2ieeVuwNPFEbzjodMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pWfHVPKV; arc=none smtp.client-ip=220.197.31.2
+	s=arc-20240116; t=1791022958; c=relaxed/simple;
+	bh=OvkC8Ak0od0aDwF+zPCA7ymzYYL+KvnWU2x6jJM+vLo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=Jc8loshNvY/6zWvmIda1QjlbMtzfZ3KDP5/inwrPeDBksP4Qy3lbKOm6dKo9i6nC1ANzyXk+A3PNNogpuXS59cetAmwPxjQt7+fogRtnsfdnvMLGCPphjFlnXHQQEbjMnYU5ND807NcHB+X15xMmtZqFruGyo+G8dgN6p04DcWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MB97Y/q0; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pWfHVPKV"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MB97Y/q0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=HX
-	ZZg6hcOZR13yuP5Pno2uBQWWVd5X5M6BD9+YK7sug=; b=pWfHVPKVqagQoYVFFt
-	3gsspefLzKQAfAughoECQZiPujV91ViV+LRHEZMLT+hvq80PRGl1Q8T370wsED1n
-	Z/hWADTi7VVfN/1JsRMXyOpY55hsBCMXCUIpM0j8gEykpQ/3hvl9O23lYmnq3vhT
-	OsocvjP5HZiJ1xwRxc2hyftdc=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3f8bC1sBqnrifCA--.20254S2;
-	Sat, 03 Oct 2026 18:19:47 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Baochen Qiang <quic_bqiang@quicinc.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Cc: Jiale Yao <yaojiale02@163.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: ath12k: validate MAC/PHY capability count before saving
-Date: Sat,  3 Oct 2026 18:19:43 +0800
-Message-Id: <20261003101944.596546-1-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=OvkC8Ak0od0aDwF+zPCA7ymzYYL+KvnWU2x6jJM+vLo=; b=M
+	B97Y/q0xrrReRlu5KC9sYbsUniQjvS8pnJX9rbcpnyNX2cMOlWZ7wQdNKe+LNQ4o
+	OxuBvxxrkq//KkkRQ7BTx95UZCosi4B135uISxa6hltLNR54OpdkMJH1h3YnP4bD
+	jsceTZUmUjHT5Y+crtvfGXKGuxYtLoJvVhFH7w6Ktw=
+Date: Sat, 3 Oct 2026 18:22:07 +0800 (CST)
+From: "jiale yao" <19888972804@163.com>
+To: "Baochen Qiang" <baochen.qiang@oss.qualcomm.com>
+Cc: "Jeff Johnson" <jjohnson@kernel.org>,
+	"Baochen Qiang" <quic_bqiang@quicinc.com>,
+	"Vasanthakumar Thiagarajan" <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re:Re: [PATCH] wifi: ath12k: validate MAC/PHY capability count
+ before saving
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <bb1831c7-9281-434b-8324-ea93e3d08e33@oss.qualcomm.com>
+References: <20260925121739.2061979-1-yaojiale02@163.com>
+ <bb1831c7-9281-434b-8324-ea93e3d08e33@oss.qualcomm.com>
+X-NTES-SC: AL_Qu2SA/yZvUEp4SWaYukdmE8Uges8WcC0svki1YJUc+4GhzHBwiABbHpeBEnt4NmlFwSNnAm9ShFy8/5qb6BZCBucED2rynwL3IB5ycHYDg==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3f8bC1sBqnrifCA--.20254S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAry7WF47Gr18uF1xJw1DJrb_yoW5GFyxpF
-	43ZrnrtFWrJF47Ww4DJw4UJa4Fvws5Kw4fKFy7Ka4rW3Z5ArnrX3WFvFWjyFyrKws5WF1U
-	Kr4Iv3y0kFW5tFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEubyLUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wOw6mrA1sPNzQAA3J
+Message-ID: <1a47e7a8.1453.1a101490eaf.Coremail.19888972804@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:jygvCgD3dxZP18Bqk0cHAA--.9443W
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzg-TDmrA109KrAAA3I
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-Firmware supplies the hardware mode count and the PHY bitmap for each
-mode in the service-ready-ext event. ath12k_wmi_save_all_mac_phy_info()
-uses those bitmaps to populate svc_ext_info->mac_phy_info, but the
-destination is a fixed array of ATH12K_MAX_MAC_PHY_CAP elements.
-
-If the total number of advertised PHY entries exceeds that limit, the
-loop writes beyond mac_phy_info and corrupts adjacent memory.
-
-ath12k_wmi_mac_phy_caps_parse() allocates the source array for
-tot_phy_id entries and rejects excess capability TLVs. However, if the
-event contains fewer capability TLVs than advertised, the remaining
-allocated entries stay zeroed and are saved as invalid PHY information.
-
-After parsing the MAC/PHY capability TLVs, validate the destination
-capacity and reject an incomplete capability list before saving any
-entries.
-
-Fixes: 062ade23991e ("wifi: ath12k: parse and save hardware mode info from WMI_SERVICE_READY_EXT_EVENTID event for later use")
-Cc: stable@vger.kernel.org
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
-
----
-
-Changes in v2:
-- Refer to the service-ready-ext event.
-- Describe a short capability list as a correctness issue instead of a
-  source-buffer overrun.
-- Move the checks after MAC/PHY capability parsing and use '<' for the
-  reachable count mismatch.
-
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index d5160af60e00..3e812c79a649 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -5050,6 +5050,7 @@ static int ath12k_wmi_svc_rdy_ext_parse(struct ath12k_base *ab,
- 					u16 tag, u16 len,
- 					const void *ptr, void *data)
- {
-+	struct ath12k_svc_ext_info *svc_ext_info = &ab->wmi_ab.svc_ext_info;
- 	struct ath12k_wmi_pdev *wmi_handle = &ab->wmi_ab.wmi[0];
- 	struct ath12k_wmi_svc_rdy_ext_parse *svc_rdy_ext = data;
- 	int ret;
-@@ -5094,6 +5095,22 @@ static int ath12k_wmi_svc_rdy_ext_parse(struct ath12k_base *ab,
- 				return ret;
- 			}
- 
-+			if (svc_rdy_ext->tot_phy_id >
-+			    ARRAY_SIZE(svc_ext_info->mac_phy_info)) {
-+				ath12k_warn(ab, "too many PHY entries %u (max %zu)\n",
-+					    svc_rdy_ext->tot_phy_id,
-+					    ARRAY_SIZE(svc_ext_info->mac_phy_info));
-+				return -EINVAL;
-+			}
-+
-+			if (svc_rdy_ext->n_mac_phy_caps < svc_rdy_ext->tot_phy_id) {
-+				ath12k_warn(ab,
-+					    "not enough MAC/PHY caps %u, expected %u\n",
-+					    svc_rdy_ext->n_mac_phy_caps,
-+					    svc_rdy_ext->tot_phy_id);
-+				return -EINVAL;
-+			}
-+
- 			ath12k_wmi_save_all_mac_phy_info(ab, svc_rdy_ext);
- 
- 			svc_rdy_ext->mac_phy_done = true;
--- 
-2.34.1
-
+QXQgMjAyNi0wOS0yOSAxMTozMjozMywgIkJhb2NoZW4gUWlhbmciIDxiYW9jaGVuLnFpYW5nQG9z
+cy5xdWFsY29tbS5jb20+IHdyb3RlOgo+Cj4KPk9uIDkvMjUvMjAyNiA4OjE3IFBNLCBKaWFsZSBZ
+YW8gd3JvdGU6Cj4+IEZpcm13YXJlIHN1cHBsaWVzIHRoZSBoYXJkd2FyZSBtb2RlIGNvdW50IGFu
+ZCB0aGUgUEhZIGJpdG1hcCBmb3IgZWFjaAo+PiBtb2RlIGluIHRoZSBzZXJ2aWNlLXJlYWR5IGV2
+ZW50Cj4KPnRvIGJlIGFjY3VyYXRlLCBpdCBpcyBzZXJ2aWNlIHJlYWR5IGV4dCBldmVudC4gd2Ug
+ZG8gaGF2ZSBhbm90aGVyIGV2ZW50IG5hbWVkIHNlcnZpY2UgcmVhZHkuCj4KPj4gQSBtaXNtYXRj
+aAo+PiBiZXR3ZWVuIHRoZSBhZHZlcnRpc2VkIHRvdGFsIGFuZCB0aGUgbnVtYmVyIG9mIHBhcnNl
+ZCBjYXBhYmlsaXR5IFRMVnMgY2FuCj4+IGFsc28gbWFrZSB0aGUgc291cmNlIHBvaW50ZXIgYWR2
+YW5jZSBiZXlvbmQgaXRzIGFsbG9jYXRpb24uCj4KPlRoaXMgY2xhaW0gZG9lc24ndCBob2xkLiBU
+aGUgc291cmNlIGJ1ZmZlciBtYWNfcGh5X2NhcHMgaXMga3phbGxvYydkIGZvciB0b3RfcGh5X2lk
+Cj5lbGVtZW50cywgYW5kIHRoZSBsb29wJ3MgbWFjX3BoeV9jYXArKyBydW5zIGV4YWN0bHkgdG90
+X3BoeV9pZCB0aW1lcyB0b3RhbCwgc28gdGhlIHNvdXJjZQo+cG9pbnRlciByZWFkcyBhdCBtb3N0
+IHRvdF9waHlfaWQgZW50cmllcyChqiBwcmVjaXNlbHkgdGhlIGFsbG9jYXRpb24gYm91bmQsIG5l
+dmVyIHBhc3QgaXQuCj4KPlRoZSBuX21hY19waHlfY2FwcyA+IHRvdF9waHlfaWQgY2FzZSBpcyBh
+bHJlYWR5IHJlamVjdGVkIGF0IHBhcnNlIHRpbWUgaW4KPmF0aDEya193bWlfbWFjX3BoeV9jYXBz
+X3BhcnNlKCkuIFRoZSBvbmx5IG1pc21hdGNoIHRoYXQgY2FuIGFjdHVhbGx5IHJlYWNoCj5zYXZl
+X2FsbF9tYWNfcGh5X2luZm8oKSBpcyBuX21hY19waHlfY2FwcyA8IHRvdF9waHlfaWQsIGluIHdo
+aWNoIGNhc2UgdGhlIGxvb3AgcmVhZHMKPnplcm9lZC1idXQtYWxsb2NhdGVkIHNvdXJjZSBlbnRy
+aWVzIGFuZCBwb3B1bGF0ZXMgbWFjX3BoeV9pbmZvIHdpdGggYWxsLXplcm8gUEhZIGluZm8goaog
+YQo+Y29ycmVjdG5lc3MgYnVnLCBub3QgYSBzb3VyY2UtYnVmZmVyIG92ZXJydW4uCj4KPj4gCj4+
+IFZhbGlkYXRlIGJvdGggY291bnRzIGJlZm9yZSB3cml0aW5nIGFueSBlbnRyaWVzIGFuZCBwcm9w
+YWdhdGUgdGhlIGVycm9yIHRvCj4+IHRoZSBzZXJ2aWNlLXJlYWR5IHBhcnNlci4KPj4gCj4+IEZp
+eGVzOiAwNjJhZGUyMzk5MWUgKCJ3aWZpOiBhdGgxMms6IHBhcnNlIGFuZCBzYXZlIGhhcmR3YXJl
+IG1vZGUgaW5mbyBmcm9tIFdNSV9TRVJWSUNFX1JFQURZX0VYVF9FVkVOVElEIGV2ZW50IGZvciBs
+YXRlciB1c2UiKQo+PiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwo+PiBTaWduZWQtb2ZmLWJ5
+OiBKaWFsZSBZYW8gPHlhb2ppYWxlMDJAMTYzLmNvbT4KPj4gLS0tCj4+ICBkcml2ZXJzL25ldC93
+aXJlbGVzcy9hdGgvYXRoMTJrL3dtaS5jIHwgMjIgKysrKysrKysrKysrKysrKysrKystLQo+PiAg
+MSBmaWxlIGNoYW5nZWQsIDIwIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCj4+IAo+PiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEyay93bWkuYyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMmsvd21pLmMKPj4gaW5kZXggZDUxNjBhZjYwZTAwLi41
+OWFjMTdmMGQ0OGQgMTAwNjQ0Cj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgx
+Mmsvd21pLmMKPj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEyay93bWkuYwo+
+PiBAQCAtNTAwNCw3ICs1MDA0LDcgQEAgYXRoMTJrX3dtaV9zYXZlX21hY19waHlfaW5mbyhzdHJ1
+Y3QgYXRoMTJrX2Jhc2UgKmFiLAo+PiAgCQkJCQlfX2xlMzJfdG9fY3B1KG1hY19waHlfY2FwLT5o
+aWdoXzVnaHpfY2hhbl9mcmVxKTsKPj4gIH0KPj4gIAo+PiAtc3RhdGljIHZvaWQKPj4gK3N0YXRp
+YyBpbnQKPj4gIGF0aDEya193bWlfc2F2ZV9hbGxfbWFjX3BoeV9pbmZvKHN0cnVjdCBhdGgxMmtf
+YmFzZSAqYWIsCj4+ICAJCQkJIHN0cnVjdCBhdGgxMmtfd21pX3N2Y19yZHlfZXh0X3BhcnNlICpz
+dmNfcmR5X2V4dCkKPj4gIHsKPj4gQEAgLTUwMTUsNiArNTAxNSwyMCBAQCBhdGgxMmtfd21pX3Nh
+dmVfYWxsX21hY19waHlfaW5mbyhzdHJ1Y3QgYXRoMTJrX2Jhc2UgKmFiLAo+PiAgCXUzMiBod19t
+b2RlX2lkLCBwaHlfYml0X21hcDsKPj4gIAl1OCBod19pZHg7Cj4+ICAKPj4gKwlpZiAoc3ZjX3Jk
+eV9leHQtPnRvdF9waHlfaWQgPiBBUlJBWV9TSVpFKHN2Y19leHRfaW5mby0+bWFjX3BoeV9pbmZv
+KSkgewo+PiArCQlhdGgxMmtfd2FybihhYiwgInRvbyBtYW55IFBIWSBlbnRyaWVzICV1IChtYXgg
+JXp1KVxuIiwKPj4gKwkJCSAgICBzdmNfcmR5X2V4dC0+dG90X3BoeV9pZCwKPj4gKwkJCSAgICBB
+UlJBWV9TSVpFKHN2Y19leHRfaW5mby0+bWFjX3BoeV9pbmZvKSk7Cj4+ICsJCXJldHVybiAtRUlO
+VkFMOwo+PiArCX0KPj4gKwo+PiArCWlmIChzdmNfcmR5X2V4dC0+bl9tYWNfcGh5X2NhcHMgIT0g
+c3ZjX3JkeV9leHQtPnRvdF9waHlfaWQpIHsKPgo+cGVyIGNvbW1lbnQgYWJvdmUsIHNob3VsZCB3
+ZSB1c2UgJzwnIGluc3RlYWQgb2YgJyE9JyA/Cj4KPkJlc2lkZXMsIEkgdGhpbmsgdGhlIHJpZ2h0
+IHBsYWNlIGZvciBzdWNoIGNoZWNrIHNob3VsZCBiZSBpbgo+YXRoMTJrX3dtaV9zdmNfcmR5X2V4
+dF9wYXJzZSgpLCByaWdodCBiZWZvcmUgYXRoMTJrX3dtaV9zYXZlX2FsbF9tYWNfcGh5X2luZm8o
+KSBhbmQgYWZ0ZXIKPm1hYyBwaHkgY2FwIHBhcnNlID8KClRoYW5rcyBmb3IgeW91ciByZXZpZXcs
+IHlvdSBhcmUgYWxsIHJpZ2h0LCBob3cgYWJvdXQgdGhpcyBuZXcgb25lPwoKaHR0cHM6Ly9sb3Jl
+Lmtlcm5lbC5vcmcvYWxsLzIwMjYxMDAzMTAxOTQ0LjU5NjU0Ni0xLXlhb2ppYWxlMDJAMTYzLmNv
+bQoKPgo+PiArCQlhdGgxMmtfd2FybihhYiwgImludmFsaWQgbnVtYmVyIG9mIE1BQy9QSFkgY2Fw
+cyAldSwgZXhwZWN0ZWQgJXVcbiIsCj4+ICsJCQkgICAgc3ZjX3JkeV9leHQtPm5fbWFjX3BoeV9j
+YXBzLAo+PiArCQkJICAgIHN2Y19yZHlfZXh0LT50b3RfcGh5X2lkKTsKPj4gKwkJcmV0dXJuIC1F
+SU5WQUw7Cj4+ICsJfQo+PiArCj4+ICAJbWFjX3BoeV9pbmZvID0gJnN2Y19leHRfaW5mby0+bWFj
+X3BoeV9pbmZvWzBdOwo+PiAgCW1hY19waHlfY2FwID0gc3ZjX3JkeV9leHQtPm1hY19waHlfY2Fw
+czsKPj4gIAo+PiBAQCAtNTA0NCw2ICs1MDU4LDggQEAgYXRoMTJrX3dtaV9zYXZlX2FsbF9tYWNf
+cGh5X2luZm8oc3RydWN0IGF0aDEya19iYXNlICphYiwKPj4gIAkJCXBoeV9iaXRfbWFwID4+PSAx
+Owo+PiAgCQl9Cj4+ICAJfQo+PiArCj4+ICsJcmV0dXJuIDA7Cj4+ICB9Cj4+ICAKPj4gIHN0YXRp
+YyBpbnQgYXRoMTJrX3dtaV9zdmNfcmR5X2V4dF9wYXJzZShzdHJ1Y3QgYXRoMTJrX2Jhc2UgKmFi
+LAo+PiBAQCAtNTA5NCw3ICs1MTEwLDkgQEAgc3RhdGljIGludCBhdGgxMmtfd21pX3N2Y19yZHlf
+ZXh0X3BhcnNlKHN0cnVjdCBhdGgxMmtfYmFzZSAqYWIsCj4+ICAJCQkJcmV0dXJuIHJldDsKPj4g
+IAkJCX0KPj4gIAo+PiAtCQkJYXRoMTJrX3dtaV9zYXZlX2FsbF9tYWNfcGh5X2luZm8oYWIsIHN2
+Y19yZHlfZXh0KTsKPj4gKwkJCXJldCA9IGF0aDEya193bWlfc2F2ZV9hbGxfbWFjX3BoeV9pbmZv
+KGFiLCBzdmNfcmR5X2V4dCk7Cj4+ICsJCQlpZiAocmV0KQo+PiArCQkJCXJldHVybiByZXQ7Cj4+
+ICAKPj4gIAkJCXN2Y19yZHlfZXh0LT5tYWNfcGh5X2RvbmUgPSB0cnVlOwo+PiAgCQl9IGVsc2Ug
+aWYgKCFzdmNfcmR5X2V4dC0+ZXh0X2hhbF9yZWdfZG9uZSkgewo=
