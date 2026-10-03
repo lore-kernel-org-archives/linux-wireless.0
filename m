@@ -1,38 +1,39 @@
 Received: from vtj.irix.systems (vtj.irix.systems [82.76.27.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED5744F566;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90ED344E66D;
 	Sat,  3 Oct 2026 15:55:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.76.27.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791042965; cv=none; b=FhTUDVq1Bm+VUpD/Gv858I8/2iOqaZ79TPQlUbHIYqYaXX/JBxBVqjH32/tH/kBbGyyasPm0sorsTdccRUjtE+FlsArI71xvySHOADgb+s8TzOs90tM6LSZXdPmuf5P49Zu9tNIOqgwMbHoAie7BEw114MkAVPxkLdLFth5vBz4=
+	t=1791042969; cv=none; b=DYVlHDCUabSOUIxgqqLW8/Fq0P+o8h5+EueNmG4vC8zND84og2OG5jEq/lQzcfD+4YiuK8OwIvJ+L8J9SS8GRWOZrQO0dVXxVuRK4XaruwstNHHyj1lfhBWpz/TmJ8oDxskr/Ss/ivsAxLiGKlOOC3TMhQ85nCb7hGVGhlPOECo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791042965; c=relaxed/simple;
-	bh=q4SP1PeCbVK8jyAhfSJBnYf0nqYW/pJ7yUHAiyTeZdU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rCUKwzhFmJOnmqLDLNNTh6LNG7YO2udEahLgiE28KEOjq7amSEM0MVI4V2MRazHFvJTEqfwHUi2ocxF5srucpzIJwEczf+Me+MLiXpOySfWoLcNlyoVTT+i4lNgX0HherLnlXFe25ZoPg1bgQzVKBVBv0NPuE7WLKMsXV8MqPwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=Dp7yRJmR; arc=none smtp.client-ip=82.76.27.144
+	s=arc-20240116; t=1791042969; c=relaxed/simple;
+	bh=uV5mbUIQd3fKYj6e3meqTeTtc3MmOvdIOIgcLPXYz3Q=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XppxToCPm3qUGbWEm9mIr9io1SwK3XOSBfsjqqcTcFenkcTxpTj7VXz4haFNt45+hjbrKtsDdn0iRF1pjCJL20xvO0eoj7oolUecxKyZMG4Bgz419QX3g/R/xPf8y91+p38lRVkqGTIKkRiE8tMFfl8wU9R0rYMtD6JOK0twLQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=a5UhJq/r; arc=none smtp.client-ip=82.76.27.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="Dp7yRJmR"
-Received: from MAILGW-BIG.big.vtj.corp.irix.systems (localhost [127.0.0.1])
-	by vtj.irix.systems (Proxmox) with ESMTP id 4FA71E1C3;
+	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="a5UhJq/r"
+Received: from MAILGW-HP.hp.vtj.corp.irix.systems (localhost [127.0.0.1])
+	by vtj.irix.systems (Proxmox) with ESMTP id BF8961603B;
 	Sat, 03 Oct 2026 18:55:48 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=andrei-z.com; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:from:from:message-id:mime-version:reply-to:subject:subject:to
-	:to; s=sig1; bh=XvIrXc1fFfzKNgh15SbDAaaz7UPjmjrI0Y9cfPx7zxg=; b=
-	Dp7yRJmRLVkGNZctwULHvBw+rfVifuZiaZfAnptPRTjFQlxDMpB3Hj5RiSI/PdBL
-	xY1slMbiHdUXubmCQg6AH38Novku61Pw2dNrREroH0qnGZxkh0sihSGYQgcW8ebc
-	SGlrHWmYAUyeF634OPJ9nxpaKCoX56KcZHl52M+/D36PxveF8vRRU8Kk5qfId7sH
-	OWyWTlBcZ9GuIvVsbVWurqEPwS9ysW0Oe2PK+BCrodMKe4nJRZupuJcjeMkzRJvp
-	4vSGTsCInEvpZayrCtPH+O3FiQTcDlcC58GCsF4Ubp74ifhnJKN/F3LRuytzMyxq
-	HDLYTFjacItKqcXENnaSkA==
+	:from:from:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=sig1; bh=z4ZWY2lYUWLTnEVfGSFV
+	Ya6IQCkfgmn3BeS8my0FevU=; b=a5UhJq/rblD21Q5QmLvrHHrLbOqnV0YaKYbe
+	fq3sTcNIwUQypAzVVytVL8Y+JYwFQR/nxF//EhJA0q/sUoCwGpJuAghiOejlxK9x
+	jZllmtJ1Tb+hxmX+0KE/GjcofLP5n+4uaOVL9jxSCCkaJN0c8IJ0yKI0BD64o+sW
+	vOMn+w6DRAPKEpftIvEHHotMhWE7X4hD1qj64aJ97kCpgwchVmXTjeIbZAOV4ble
+	dSz5oi6rTgP6naChDci8gjGxN/4OGN6IM6efgkID0pwA1qY5wOt3MCa8eCzqxfE1
+	X2IOXV+5rzeQuSQhF0j+L03vuL+Di+PzE2/qZQnE5JLLj2RVxw==
 Received: from VTJ-MX.corp.irix.systems (unknown [IPv6:2a02:2f04:1:9c24::6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by vtj.irix.systems (Proxmox) with ESMTPS id D11DEE16F;
-	Sat, 03 Oct 2026 18:55:47 +0300 (EEST)
+	by vtj.irix.systems (Proxmox) with ESMTPS id 0201B15CF5;
+	Sat, 03 Oct 2026 18:55:48 +0300 (EEST)
 Received: from workspace.corp.irix.systems (2a02:2f04:1:9c23::c) by
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -42,10 +43,12 @@ To: Jeff Johnson <jjohnson@kernel.org>, Johannes Berg
 	<johannes@sipsolutions.net>
 CC: <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH 0/4] wifi: ath11k: beacon protection and firmware airtime fairness
-Date: Sat, 3 Oct 2026 18:55:38 +0300
-Message-ID: <20261003155542.96363-1-me@andrei-z.com>
+Subject: [PATCH 1/4] wifi: ath11k: add a debugfs file listing the firmware WMI services
+Date: Sat, 3 Oct 2026 18:55:39 +0300
+Message-ID: <20261003155542.96363-2-me@andrei-z.com>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261003155542.96363-1-me@andrei-z.com>
+References: <20261003155542.96363-1-me@andrei-z.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,65 +60,52 @@ Content-Type: text/plain
 X-ClientProxiedBy: VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) To
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6)
 
-Firmware features ath11k does not use yet, found while bringing up a
-Ubiquiti UniFi U6 Enterprise (IPQ5018 with two QCN9074) with the data
-path offloaded to NSS: a debugfs view of the firmware's services, beacon
-protection and firmware airtime fairness, plus the mac80211 change the
-last one needs.
+Whether a feature is available often comes down to a WMI service bit
+the firmware reports at boot, and ath11k only logs the ext services,
+at debug level. List every set bit of the service map in
+<soc>/wmi_services, as ath10k's file of the same name does, so the
+capabilities of a given firmware build can be read directly.
 
-Patch 1 lists the firmware's WMI service bits in debugfs, as ath10k
-does: whether a feature exists is usually a service bit, and ath11k only
-logs part of the map at debug level.
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+Tested-on: IPQ5018 hw1.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
-Patch 2 is beacon protection, following ath12k's implementation: the
-firmware signs beacons with the BIGTK. Checked over the air on both
-chips: every beacon in a monitor capture carried a Management MIC
-element whose BIP-CMAC-128 MIC verifies against the BIGTK hostapd
-installed (624 of 624; none with another radio's key), and a
-wpa_supplicant client verified the SSID from a protected beacon.
+Assisted-by: LLM
+Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
+---
+ drivers/net/wireless/ath/ath11k/debugfs.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Patch 3 is Felix Fietkau's mac80211 change from OpenWrt, which gives
-drivers the station airtime weight (sta_set_airtime_weight). Patch 4
-needs it; it is included unchanged, with his authorship.
-
-Patch 4 is firmware airtime fairness: per-station airtime shares the
-firmware schedules by, derived from the stations' airtime weights. With
-the data path offloaded, mac80211's own airtime scheduler never sees the
-frames, so the firmware is the only place fairness can happen there. A
-station capped at 10% under strict scheduling drops from 885 to
-122 Mbit/s and recovers when uncapped; at its normal fair share
-throughput is unchanged (900 Mbit/s on 5 GHz HE80). The firmware needs
-its ATF group defined before it accepts shares, which the commit
-message details.
-
-Patch 3 is for mac80211; the others go through the ath tree, and patch 4
-depends on patch 3.
-
-The patches were written with an AI coding assistant (Claude Code),
-which also drafted the changelogs; the testing above was done on the
-device.
-
-Andrei-Alexandru Bleortu (3):
-  wifi: ath11k: add a debugfs file listing the firmware WMI services
-  wifi: ath11k: support beacon protection
-  wifi: ath11k: support firmware airtime fairness
-
-Felix Fietkau (1):
-  wifi: mac80211: notify driver on airtime weight changes
-
- drivers/net/wireless/ath/ath11k/core.h    |   2 +
- drivers/net/wireless/ath/ath11k/debugfs.c |  15 ++
- drivers/net/wireless/ath/ath11k/mac.c     | 166 +++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/wmi.c     |  99 +++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h     |  58 +++++++-
- include/net/mac80211.h                    |   5 +
- net/mac80211/cfg.c                        |   6 +-
- net/mac80211/driver-ops.c                 |   4 +
- net/mac80211/driver-ops.h                 |  19 +++
- net/mac80211/sta_info.c                   |   7 +-
- net/mac80211/trace.h                      |  27 ++++
- 11 files changed, 400 insertions(+), 8 deletions(-)
-
-
-base-commit: f0406245cb9855e6318335a8a223551354291a46
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
+index 70922612d..75d2e81c7 100644
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -851,6 +851,18 @@ static const struct file_operations fops_sram_dump = {
+ 	.llseek = default_llseek,
+ };
+ 
++static int ath11k_wmi_services_show(struct seq_file *m, void *v)
++{
++	struct ath11k_base *ab = m->private;
++	unsigned int i;
++
++	for_each_set_bit(i, ab->wmi_ab.svc_map, WMI_MAX_EXT2_SERVICE)
++		seq_printf(m, "%u\n", i);
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(ath11k_wmi_services);
++
+ int ath11k_debugfs_pdev_create(struct ath11k_base *ab)
+ {
+ 	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
+@@ -862,6 +874,9 @@ int ath11k_debugfs_pdev_create(struct ath11k_base *ab)
+ 	debugfs_create_file("soc_dp_stats", 0400, ab->debugfs_soc, ab,
+ 			    &fops_soc_dp_stats);
+ 
++	debugfs_create_file("wmi_services", 0400, ab->debugfs_soc, ab,
++			    &ath11k_wmi_services_fops);
++
+ 	if (ab->hw_params.sram_dump.start != 0)
+ 		debugfs_create_file("sram", 0400, ab->debugfs_soc, ab,
+ 				    &fops_sram_dump);
 
