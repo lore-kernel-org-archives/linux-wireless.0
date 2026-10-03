@@ -1,127 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF02A3D6688;
-	Sat,  3 Oct 2026 09:29:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F5D3B0AD6;
+	Sat,  3 Oct 2026 09:59:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791019747; cv=none; b=r+/ei0l7+5aF43hHnLihmIuUv9xrsz0/pWH9ZBO0HH8Sd2KQbVEs0hsh7Z70L4YijrnGKJ9PjMO0/J3+5/nqzzcaBL6du+tO4pccTSHJskaWFFodOXfugN/wM5BVBX0tNqKgnorRMXYVerj6Egb4UzjB+JvGwa3ayx59toIcsng=
+	t=1791021581; cv=none; b=cBgMt+i+IYbiRK3KgMAhvdvyctdR+hKwvEqEN+LJHX0GJQmy2HhvJ6YtEXfj2nvPBF9CnY//hfbDoA1e9fngf4uXRlloC0e6E3Z6lZse2lCTOUUa28MC8g2PIaFfUV/6qJdaIeY5+C6jfAYLBXLWOTzp8da0msxyae9HLYne6OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791019747; c=relaxed/simple;
-	bh=iPpFlSvoGoSZedaiM9Xxm/LNDLmWUEjryJqeQqxqT9M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lGJmrVA8yrmBrwxM0bfJ3O14EYKZRZFv5hybp4b/uDtBlUVMZiNE7Sdlv90xHly7ee4K1lmP5IHDkghwexbyHQOfQxWKqJuTI4PVgAgbUi2A3iIAJwIsHMgdtgFrzmPFWXpEsBn4w8UWvJEmkV0ofmznejHbodcH95IU2eB1kXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKlCT8kN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791021581; c=relaxed/simple;
+	bh=xoqqc/e6RBc1ZqduwnWzbNUHv3mjvmDbFqpOTKYYhjQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=csZ7LdqAjcI2AmLc2EXxSVpwP6U2meCfHes8JLMSPC/N6y9d267QheOP056BBf4nuXtyfIQfT6h38r1Gj50zO+VETOtYkUG0khXc1exqI3aUPcz4zt/sOKTd28vnFYvSgxnwiuqQz8S8xKcDoBX9cr2uELD+3aYOXgo1KqOsyOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=SCyKpqTS; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKlCT8kN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3C0D1F0089B;
-	Sat,  3 Oct 2026 09:28:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791019743;
-	bh=6NARaYH/kJOu/A5Fms6Mxa9yIa9KJ0pnqXM8PPqhcAs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=fKlCT8kNG2pJQhJsj01FnwsRt6fJtcaEzpAxal6pR0NeMsEnnFiNkz8O3QbYgCtKx
-	 bF1NLvwOrtmVm/gWfw2lRP+koa6oIUV6jZijVW5b0xnUc6jntAJ9PgDt865htMKPPh
-	 8A6INJnfLRuZoY3B4hPKhHZ7fxkieJCthxdpyJ00MoOLQJVAKpLd0pWOz8KWmiNP7h
-	 bidnaKnfcqvzxluIXzYdBIN97xx2c1xeN2A58BRosp+WtXiXotK8Tx5NHdHqyFxwLY
-	 VYjlwBLgZrrFheL24UK+koV6lPpih//wjmVhbIExBjt9dduAbcYyjtfNbCHa4OA/xH
-	 +aWaTBOkaGqeQ==
-Message-ID: <01b38753-d66e-48e3-a5b2-1482afd5c0c2@kernel.org>
-Date: Sat, 3 Oct 2026 11:28:56 +0200
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="SCyKpqTS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=hM
+	+05E1a1mh/WwKjkgJQR1/fatfBwyc/hZAhxEXV5ac=; b=SCyKpqTS4lzBXhg49u
+	dsjRTbSCKLzcNtC1nBNh1krBsMb1mQUPvIqwDJfiLjKiCgylJc69lRrfqSe5X9yR
+	tqivRJcqh3xiam/3Cw7AhvZ48lx/roZO9Jj/N8dOW/JmOLQlqtUxsZPq3SIlJURU
+	D/lqRwAUNM3JEmNyyHkMxWndI=
+Received: from pc.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDHl2Dy0cBq4TNFCA--.53805S2;
+	Sat, 03 Oct 2026 17:59:15 +0800 (CST)
+From: Jiale Yao <yaojiale02@163.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	Dan Carpenter <error27@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Cc: Jiale Yao <yaojiale02@163.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: [PATCH] wifi: ath12k: Reserve space for a string terminator
+Date: Sat,  3 Oct 2026 17:59:13 +0800
+Message-Id: <20261003095913.575108-1-yaojiale02@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 2/3] wifi: ath12k: honour disable-rfkill from the
- device tree
-To: Franz <franzelfranzel@gmail.com>, Jeff Johnson <jjohnson@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Abel Vesa
- <abelvesa@kernel.org>, ath12k@lists.infradead.org,
- linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261003091509.4822-1-franzelfranzel@gmail.com>
- <20261003091509.4822-3-franzelfranzel@gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20261003091509.4822-3-franzelfranzel@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDHl2Dy0cBq4TNFCA--.53805S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7XrWDWFy5GF1kWry5tF4kCrg_yoW8Jr4kp3
+	ykWw129Fy8ur17G3s5GFn3Za4FganxWry2gFWqv34ruFs5Zr1Fqr1YgFW8Wry8Ca98uF1j
+	9a1jkr1xZr95t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pitEf5UUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzhN7tWrA0fMG-gAA3j
 
-On 03/10/2026 11:15, Franz wrote:
-> ath12k_core_rfkill_config() skips the hardware rfkill setup only when
-> ACPI says so. DT-based boards have no equivalent. On the Microsoft
-> Surface Pro 11 (X1E80100), the WCN7850 rfkill input reads as "radio
-> off", so the interface is hard-blocked:
-> 
->   iwd: Error bringing interface 4 up: Operation not possible due to RF-kill
-> 
-> Also skip the setup when the device's DT node has "disable-rfkill". The
-> PCI core attaches the node to the pci_dev, so ab->dev->of_node sees it.
-> 
-> Tested on a Surface Pro 11 with next-20260929 and the matching DT
-> change: the interface comes up and connects (5 GHz, 160 MHz).
-> 
-> Assisted-by: Claude:claude-opus-5-5
+ath12k_write_htt_stats_type() accepts count == size, which fills the
+zero-initialized buffer without a terminating NUL. sscanf() then reads
+beyond the buffer.
 
-LLM, see docs.
+Reject input that leaves no room for the trailing NUL.
 
+Fixes: 8c7a5031a6b0 ("wifi: ath12k: Fix buffer overflow in debugfs")
+Reviewed-by: Dan Carpenter <error27@gmail.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
+---
+ drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Franz <franzelfranzel@gmail.com>
+diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
+index b772181a496e..f84f1828275a 100644
+--- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
++++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
+@@ -6190,7 +6190,7 @@ static ssize_t ath12k_write_htt_stats_type(struct file *file,
+ 	const int size = 32;
+ 	int num_args;
+ 
+-	if (count > size)
++	if (count >= size)
+ 		return -EINVAL;
+ 
+ 	char *buf __free(kfree) = kzalloc(size, GFP_KERNEL);
+-- 
+2.34.1
 
-Please read submitting patches document carefully to understand what is
-needed when sending patch, e.g. what you need to certify with your full
-name.
-
-Your LLM cannot certify anything.
-
-Best regards,
-Krzysztof
