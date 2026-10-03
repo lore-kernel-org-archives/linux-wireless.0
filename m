@@ -1,127 +1,152 @@
-Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BF5B1F938
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Oct 2026 02:11:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8A32FE07D;
+	Sat,  3 Oct 2026 04:01:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790993519; cv=none; b=rLuCqQ4GghWrTn82HDMTvpm1Cq6dOULTsF4Nw485c+Qg2n81Vtme0K9sALrpFASTmkjKcIbe7VcbF0MVfkrttjJJOcP+D61a7f+UWG9B4El7Y0pnyx3pfEln0lOjRK7Ajr1K0OQO9nOVC6NTQ38zvuJpwTMuuddZWnWf44TPA8U=
+	t=1791000077; cv=none; b=XmcGNdJ3Y2jHCQJnilxROyTpcvxrX491zmyew+TYnHTDIfMeM8jVWIam81zTlKYHuFzelxsjqsSHuMxvjTun2F2d9hSbye8yoqCk7idXEoOfNqahgnZsEBqkP4w0HGg6jo0ZZmeOff847fpt80VxVL67iLWWJjyLnAP0rvIKQKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790993519; c=relaxed/simple;
-	bh=5ba+AIFlGWceY3fXdaiAzze9Fa+HRQbU3Qoi67Cxed8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kiKdGUPIPFt01zCQ1A9KIeBcIAZKYxGZ1SYZXOU1PGpLZh5kMGj29TjtDatA7Tx+3wnj17nyh6cC6EV3Ceeh18gQwBhIzin6uBrszP+3MCGTW+3kX9RxKkWnsUf2+iLhNpQLMFRCAEIvAm8BRBHzDewEAZU2C0shDqdsrYsBsyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i02COPYn; arc=none smtp.client-ip=74.125.229.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791000077; c=relaxed/simple;
+	bh=f5h6+uE//hPuyiaEYnN+lMXschfoTE+xy8vqFBa4O5g=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=i4eh7ewVRq3NfK7SeSDKKDWqNAS0pR5G9Y5cloHQ4X+DbmSVQy7YRkZGrHWitRBvFPHQQU8UTa8upF4h2kT6/PyHbKb4jecZWkaYB/8HmfO1RcEhprJP2erLt0nDQzXfRxsCEP/xHQ+ORXOBr8+2SqrJy4k7IHzHN2PNjQRFm0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UUQvAwtp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i02COPYn"
-Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-34b48100af4so158047eec.3
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2026 19:11:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790993517; x=1791598317; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=L190hWySRAxyQE87dH/KusnmVEu7556vLx/BbFXjBgc=;
-        b=i02COPYnYsErH1fIEF/4efcCkIvyfYznmL5BzXiXmbutcMgrYIGvo1et1r99EaTimD
-         hdUX/NBopTrs48o+GvnG0HWMrz55HKVMxb2bT7GSCAIdAxPWI030nseEVt11QqW/poTJ
-         1ukN5zmNJT3mQysKwuV1A1D5yR72ZSnqiSqqBYAXVx09ENuHPsHdAPcWH6Qo7Axhb1TO
-         o+l1OvlHSYo4geKbm/4/b07ZVKMLpeJkU9II55iudAHyE5VcjHH37HcDXpA9Ui/SOe47
-         xnU/8ozrRu2N33XJLrVW4lvISUUGR8/YItjehS9sgSdnnBpNlKfG/g3f1kfzeoTinCFj
-         Mxyw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790993517; x=1791598317;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=L190hWySRAxyQE87dH/KusnmVEu7556vLx/BbFXjBgc=;
-        b=daZ8XAfmwttEoIri19TarBFCE4hLMZuunPlvWnpkV4C4BMETYPaLFyzr+LrKoMV62s
-         BhBpOeDQ7AIv6xwBH+gwCpJzA7MYfCpSMZUM/rl6c0hVI2Q7u2BevnfofycjhzW1rj9a
-         7sksfeUH+YGQxMyb68/4vWZl/9zWp2BMlsFYd86apuhGChOWT998ke3iEOxoKpSwkNJE
-         l+S5TyX0IwoN4QRUkqm+0PlFI2xBZ/r4Fs3yR/bB/gmgroC+OVVXF/j5rCKyGLGUwGv4
-         zf3c1NWH663Fy6evvvyZt+XwWZGIfPfVtTXS5iE5ClDkIPOzzYmqCR6Y4NN/7PrcwjmW
-         HyKQ==
-X-Gm-Message-State: AFuF++mzATj2yzffCdmheCFkeRtP9udBOECAaSEJV/QtaMsXvFmklp7o
-	8TQ0fDv30tXx3Y4rXIYKSYhkpNvFOOQx+sUcEsdyEmEA7NGKa9RTnHmB
-X-Gm-Gg: AYBFou1kvZte6WMdM7waJX5GUa30vcZvgYEUtDmCcufhtaETD/AvXIli2tpQlJyaZgg
-	onG9qlDaeXSjc7/HnLndEETU/a6RcyZER03FXp6EJlhUfPIpQYrixFmbXc5wjxdYeZrsFQbqpll
-	en397axgu1gPSrjgD/Jp5giBSKDwj7XhnaoLa+m/QvVSuEUnrf453CH2b2q83RZPEhdDpjWCUgR
-	OcCm7obYdG+EEQ+35DwtbzgJXHj0khHq43JujCWyGo2mMyjQAk2jJM5CwrC5DGJIAz+jCioCCwE
-	VTj7cxywvJcOxGsf8AXz2gxuaXvJKcR3Oyv3cxdgU4GWpvYhPWLuISdqEKyYpsw1p5ciWH9Kdyo
-	mfsIQzeV3JaKxHJzwpke5THyQfk7nuCFDFPPY4hRqXEvECiT54Vqaz3RsCRdyhOoX1ttcN0Mggm
-	MLO+zfTWHjaiTUjnUzt/BmQiRGOv215PtZFNcbppOL2XoVD9gsFXjz/PlaJtoJN9aifR7SxZuIR
-	4LY2zOJiFq9z77UoO1ff/7Ilr44bEv34eSQGnC68kXMp30/pGuATkIQhATJrXmqG8juOeYvmw==
-X-Received: by 2002:a05:701b:2505:b0:143:6080:668f with SMTP id a92af1059eb24-14f5b9fb5c5mr5271144c88.7.1790993517103;
-        Fri, 02 Oct 2026 19:11:57 -0700 (PDT)
-Received: from deepanshu-Legion-Pro-5-16AFR10.. ([2405:201:682f:383f:a40e:1ae:8931:c183])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-151fc87346bsm2316287c88.8.2026.10.02.19.11.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2026 19:11:55 -0700 (PDT)
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-To: toke@toke.dk,
-	jeff.johnson@oss.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Deepanshu Kartikey <kartikey406@gmail.com>,
-	syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
-Subject: [PATCH] wifi: ath9k: stop WMI event tasklet from rescheduling itself on probe failure
-Date: Sat,  3 Oct 2026 07:41:47 +0530
-Message-ID: <20261003021147.7461-1-kartikey406@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UUQvAwtp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6AE36C2BCB9;
+	Sat,  3 Oct 2026 04:01:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791000077;
+	bh=f5h6+uE//hPuyiaEYnN+lMXschfoTE+xy8vqFBa4O5g=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=UUQvAwtpZ67DrttWtT8aFsfJ3MSvBzkqi/NY8s8ra9IBzztXJeRXqgmANUJGFLqiJ
+	 J1tzPqRtbTkcVSBFTSeSAGeVTE8m16Mk6pmo7YZZvLlYU5+5HOFUWwRsCF1NP6gJgw
+	 6HTKoF3PTG/F4/825sWPA7kyIBlAq0fq4xmhROowSY6lD61C08FjrWFG6DipHTqGLW
+	 aUdl5uhuiG12D9HvHpDpyl/Nm9BBBzZ03qL18iiGWiuChDuiX9sioLB2z88H87UlpR
+	 Zvv/YvN4kmwd8BX+3sW5SfaMGKiuJqsHdZyJOEVFbfug5IudQl1qTn7QhVFxVICN33
+	 ZE1xosRNVH+ZQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 553D8CA5FE3;
+	Sat,  3 Oct 2026 04:01:17 +0000 (UTC)
+From: Ryan Leung via B4 Relay <devnull+untilscour.protonmail.com@kernel.org>
+Date: Sat, 03 Oct 2026 04:01:04 +0000
+Subject: [PATCH mt76 v4] wifi: mt76: mt7915: fix thermal zone
+ use-after-free
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261003-mt7915-unregister-thermal-v4-1-8ed55f6f5535@protonmail.com>
+X-B4-Tracking: v=1; b=H4sIAP99wGoC/43OQQ7CIBAF0KsY1mKAlpG68h7GBaWDxdhiABtN0
+ 7tL68KFxricyfz3ZyQRg8NIdquRBBxcdL7PQ7leEdPq/oTUNXkmgglgilW0S9uKS3rrA55cTBh
+ oajF0+kKVQMWkAa40kJy/BrTuvtgHkmNAjq9tvNVnNGlm57s2Mz48lhcGvly/2jj70TZwyqmBR
+ m7r0tQFqP01+OT7TrvLxvhuKRvE35zInNDMSq4bK8F+5Yo3VzH4xRWZQ1uLhgECt+UHN03TE9o
+ kqjF9AQAA
+X-Change-ID: 20260809-mt7915-unregister-thermal-82e805c618a6
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
+ Sean Wang <sean.wang@mediatek.com>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
+ Ryan Leung <untilscour@protonmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791000078; l=3169;
+ i=untilscour@protonmail.com; s=20260906; h=from:subject:message-id;
+ bh=GpWxbqGcv8Ae741uGW3yrEwKs0Hqc32weJvR+Cw/Ptw=;
+ b=Yz0bH8whhpFsbkVm/I35YXyLgLMvRcSrLMcj2NqZlsRJ2e4NG1sVSXkkZjL5bfU2O/yIjAk8U
+ r1jBTk14M7NC5iAySPa195W2H6E2GgIu2Bdmk/qIiMR9j1b2SATFUzd
+X-Developer-Key: i=untilscour@protonmail.com; a=ed25519;
+ pk=eCaNcoQNRWYKZ9D7KbOGKvQVK2YFguJXZxglTtAR7Xk=
+X-Endpoint-Received: by B4 Relay for untilscour@protonmail.com/20260906
+ with auth_id=1011
+X-Original-From: Ryan Leung <untilscour@protonmail.com>
+Reply-To: untilscour@protonmail.com
 
-Since the init guards were consolidated, ath9k_wmi_event_tasklet()
-reschedules itself until priv->initialized is set. If
-ath9k_init_device() fails, initialized is never set, so the tasklet
-keeps rescheduling itself while the probe error path calls
-ath9k_destroy_wmi() and frees struct wmi. tasklet_action_common() then
-touches the freed tasklet, causing a slab-use-after-free.
+From: Ryan Leung <untilscour@protonmail.com>
 
-Make the tasklet drop its queued events and stop rescheduling once
-wmi->stopped is set, and call tasklet_kill() before freeing wmi in
-ath9k_destroy_wmi(). The probe error path already sets stopped and
-kills the RX URBs first, so the tasklet cannot be re-armed afterwards.
+The thermal zone registered via devm_thermal_of_zone_register() on the
+parent device is never torn down when the phy is unregistered, so the
+thermal core can still dereference it after the phy is freed.
 
-Fixes: 1af8dc9ca726 ("wifi: ath9k: Clean up device initialisation guards")
-Reported-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=e91dc13b1b37759b3d9f
-Tested-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
-Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+Unregister the thermal zone alongside the cooling device in
+mt7915_unregister_thermal(). Also clear phy->tzone and phy->cdev after
+unregistering so the function is safe to call when only a subset of
+the objects were registered, e.g. after a partially failed
+mt7915_thermal_init().
+
+While at it, include the band index in the thermal zone registration
+warning to help identify which band failed on multi-band chips.
+
+Fixes: 313f1a27ebcb ("wifi: mt76: mt7915: add thermal zone device registration")
+Signed-off-by: Ryan Leung <untilscour@protonmail.com>
 ---
- drivers/net/wireless/ath/ath9k/wmi.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Changes in v4:
+- Drop the mt7915_unregister_thermal() call on the hwmon failure path
+  which was added in commit
+  https://github.com/nbd168/wireless/commit/0438f51a9af4b5138d1d7117fa8343bbe6fa32f0
+  ("wifi: mt76: mt7915: unregister thermal cooling device on hwmon failure")
+- Update commit message: remove the now-fixed hwmon failure leak
+  description and reword accordingly.
+- Link to v3: https://patch.msgid.link/20260906-mt7915-unregister-thermal-v3-1-efb2d06e61f4@protonmail.com
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 4a08babb6d9d..f8b174b0f209 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -122,6 +122,10 @@ void ath9k_stop_wmi(struct ath9k_htc_priv *priv)
- 
- void ath9k_destroy_wmi(struct ath9k_htc_priv *priv)
+Changes in v3:
+- Clear phy->tzone/phy->cdev in mt7915_unregister_thermal() after
+  unregistering, making it idempotent.
+- Link to v2: https://patch.msgid.link/20260810-mt7915-unregister-thermal-v2-1-2a0f51adf56f@protonmail.com
+
+Changes in v2:
+- Unwind cdev/tzone registration in mt7915_thermal_init() on hwmon registration failure.
+- Link to v1: https://patch.msgid.link/20260810-mt7915-unregister-thermal-v1-1-c6d57b4cb368@protonmail.com
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index ca46a203aa48..1f1f0c109c83 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -200,11 +200,17 @@ static void mt7915_unregister_thermal(struct mt7915_phy *phy)
  {
-+	struct wmi *wmi = priv->wmi;
+ 	struct wiphy *wiphy = phy->mt76->hw->wiphy;
+ 
++	if (phy->tzone) {
++		devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
++		phy->tzone = NULL;
++	}
 +
-+	tasklet_kill(&wmi->wmi_event_tasklet);
-+	skb_queue_purge(&wmi->wmi_event_queue);
- 	kfree(priv->wmi);
+ 	if (!phy->cdev)
+ 		return;
+ 
+ 	sysfs_remove_link(&wiphy->dev.kobj, "cooling_device");
+ 	thermal_cooling_device_unregister(phy->cdev);
++	phy->cdev = NULL;
  }
  
-@@ -148,6 +152,10 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
- 
- 	/* Check if ath9k_init_device() completed. */
- 	if (!smp_load_acquire(&priv->initialized)) {
-+		if (READ_ONCE(wmi->stopped)) {
-+			skb_queue_purge(&wmi->wmi_event_queue);
-+			return;
-+		}
- 		tasklet_schedule(t);
- 		return;
+ static int mt7915_thermal_init(struct mt7915_phy *phy)
+@@ -238,8 +244,8 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
+ 	if (IS_ERR(phy->tzone)) {
+ 		if (PTR_ERR(phy->tzone) != -ENODEV)
+ 			dev_warn(phy->dev->mt76.dev,
+-				 "failed to register thermal zone: %ld\n",
+-				 PTR_ERR(phy->tzone));
++				 "failed to register thermal zone %d: %ld\n",
++				 phy->mt76->band_idx, PTR_ERR(phy->tzone));
+ 		phy->tzone = NULL;
  	}
--- 
-2.43.0
+ 
+
+---
+base-commit: f49defea7668d8c68ec19fa085ef3da6075561c7
+change-id: 20260809-mt7915-unregister-thermal-82e805c618a6
+
+Best regards,
+--  
+Ryan Leung <untilscour@protonmail.com>
+
 
