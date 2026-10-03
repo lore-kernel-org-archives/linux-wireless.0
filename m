@@ -1,42 +1,41 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F5D3B0AD6;
-	Sat,  3 Oct 2026 09:59:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF1C3905EC;
+	Sat,  3 Oct 2026 10:20:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791021581; cv=none; b=cBgMt+i+IYbiRK3KgMAhvdvyctdR+hKwvEqEN+LJHX0GJQmy2HhvJ6YtEXfj2nvPBF9CnY//hfbDoA1e9fngf4uXRlloC0e6E3Z6lZse2lCTOUUa28MC8g2PIaFfUV/6qJdaIeY5+C6jfAYLBXLWOTzp8da0msxyae9HLYne6OY=
+	t=1791022819; cv=none; b=VKOu++Wt9mVZ4656E6YMfQdkgZK3ll6mQdOZPi/DbXmnlja6wcEQ8xXfH6/0/jb4nJ3bPJolz8gh7D7KdyQEAJ9iWOt9NfwgZ9Rt8ps3MRv8Zxh58dhFO2r7qj76DZi5ngmmmf6C9XJ2jF4ibasUPWF5X6w91uwwm6RuSHAZLec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791021581; c=relaxed/simple;
-	bh=xoqqc/e6RBc1ZqduwnWzbNUHv3mjvmDbFqpOTKYYhjQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=csZ7LdqAjcI2AmLc2EXxSVpwP6U2meCfHes8JLMSPC/N6y9d267QheOP056BBf4nuXtyfIQfT6h38r1Gj50zO+VETOtYkUG0khXc1exqI3aUPcz4zt/sOKTd28vnFYvSgxnwiuqQz8S8xKcDoBX9cr2uELD+3aYOXgo1KqOsyOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=SCyKpqTS; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1791022819; c=relaxed/simple;
+	bh=V48hnmGwm5Zxzh//0DXpviOCCNy2P9IUTo2RKpAvg8s=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=aCn7OvQ767KQ+qCx3XVJ2ism2NXExnd5KC0iLF0VJTYdOCaFOSqThdu7J9+PSG4XIhiLtqw8cfewTKy2QO0u1zXSjXXwIEidrlc+b8ZVlFHz3e4Qii8g0Gy32OeI/Zm34uNSBYYjTjx9rGHkx9bsfUKcU2ieeVuwNPFEbzjodMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pWfHVPKV; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="SCyKpqTS"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pWfHVPKV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=hM
-	+05E1a1mh/WwKjkgJQR1/fatfBwyc/hZAhxEXV5ac=; b=SCyKpqTS4lzBXhg49u
-	dsjRTbSCKLzcNtC1nBNh1krBsMb1mQUPvIqwDJfiLjKiCgylJc69lRrfqSe5X9yR
-	tqivRJcqh3xiam/3Cw7AhvZ48lx/roZO9Jj/N8dOW/JmOLQlqtUxsZPq3SIlJURU
-	D/lqRwAUNM3JEmNyyHkMxWndI=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=HX
+	ZZg6hcOZR13yuP5Pno2uBQWWVd5X5M6BD9+YK7sug=; b=pWfHVPKVqagQoYVFFt
+	3gsspefLzKQAfAughoECQZiPujV91ViV+LRHEZMLT+hvq80PRGl1Q8T370wsED1n
+	Z/hWADTi7VVfN/1JsRMXyOpY55hsBCMXCUIpM0j8gEykpQ/3hvl9O23lYmnq3vhT
+	OsocvjP5HZiJ1xwRxc2hyftdc=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDHl2Dy0cBq4TNFCA--.53805S2;
-	Sat, 03 Oct 2026 17:59:15 +0800 (CST)
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3f8bC1sBqnrifCA--.20254S2;
+	Sat, 03 Oct 2026 18:19:47 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Jeff Johnson <jjohnson@kernel.org>,
 	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Dan Carpenter <error27@gmail.com>,
+	Baochen Qiang <quic_bqiang@quicinc.com>,
 	linux-wireless@vger.kernel.org,
 	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
 Cc: Jiale Yao <yaojiale02@163.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Subject: [PATCH] wifi: ath12k: Reserve space for a string terminator
-Date: Sat,  3 Oct 2026 17:59:13 +0800
-Message-Id: <20261003095913.575108-1-yaojiale02@163.com>
+	stable@vger.kernel.org
+Subject: [PATCH v2] wifi: ath12k: validate MAC/PHY capability count before saving
+Date: Sat,  3 Oct 2026 18:19:43 +0800
+Message-Id: <20261003101944.596546-1-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -45,41 +44,78 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHl2Dy0cBq4TNFCA--.53805S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7XrWDWFy5GF1kWry5tF4kCrg_yoW8Jr4kp3
-	ykWw129Fy8ur17G3s5GFn3Za4FganxWry2gFWqv34ruFs5Zr1Fqr1YgFW8Wry8Ca98uF1j
-	9a1jkr1xZr95t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pitEf5UUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzhN7tWrA0fMG-gAA3j
+X-CM-TRANSID:_____wD3f8bC1sBqnrifCA--.20254S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAry7WF47Gr18uF1xJw1DJrb_yoW5GFyxpF
+	43ZrnrtFWrJF47Ww4DJw4UJa4Fvws5Kw4fKFy7Ka4rW3Z5ArnrX3WFvFWjyFyrKws5WF1U
+	Kr4Iv3y0kFW5tFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEubyLUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wOw6mrA1sPNzQAA3J
 
-ath12k_write_htt_stats_type() accepts count == size, which fills the
-zero-initialized buffer without a terminating NUL. sscanf() then reads
-beyond the buffer.
+Firmware supplies the hardware mode count and the PHY bitmap for each
+mode in the service-ready-ext event. ath12k_wmi_save_all_mac_phy_info()
+uses those bitmaps to populate svc_ext_info->mac_phy_info, but the
+destination is a fixed array of ATH12K_MAX_MAC_PHY_CAP elements.
 
-Reject input that leaves no room for the trailing NUL.
+If the total number of advertised PHY entries exceeds that limit, the
+loop writes beyond mac_phy_info and corrupts adjacent memory.
 
-Fixes: 8c7a5031a6b0 ("wifi: ath12k: Fix buffer overflow in debugfs")
-Reviewed-by: Dan Carpenter <error27@gmail.com>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+ath12k_wmi_mac_phy_caps_parse() allocates the source array for
+tot_phy_id entries and rejects excess capability TLVs. However, if the
+event contains fewer capability TLVs than advertised, the remaining
+allocated entries stay zeroed and are saved as invalid PHY information.
+
+After parsing the MAC/PHY capability TLVs, validate the destination
+capacity and reject an incomplete capability list before saving any
+entries.
+
+Fixes: 062ade23991e ("wifi: ath12k: parse and save hardware mode info from WMI_SERVICE_READY_EXT_EVENTID event for later use")
+Cc: stable@vger.kernel.org
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
----
- drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
-index b772181a496e..f84f1828275a 100644
---- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
-+++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
-@@ -6190,7 +6190,7 @@ static ssize_t ath12k_write_htt_stats_type(struct file *file,
- 	const int size = 32;
- 	int num_args;
+---
+
+Changes in v2:
+- Refer to the service-ready-ext event.
+- Describe a short capability list as a correctness issue instead of a
+  source-buffer overrun.
+- Move the checks after MAC/PHY capability parsing and use '<' for the
+  reachable count mismatch.
+
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index d5160af60e00..3e812c79a649 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -5050,6 +5050,7 @@ static int ath12k_wmi_svc_rdy_ext_parse(struct ath12k_base *ab,
+ 					u16 tag, u16 len,
+ 					const void *ptr, void *data)
+ {
++	struct ath12k_svc_ext_info *svc_ext_info = &ab->wmi_ab.svc_ext_info;
+ 	struct ath12k_wmi_pdev *wmi_handle = &ab->wmi_ab.wmi[0];
+ 	struct ath12k_wmi_svc_rdy_ext_parse *svc_rdy_ext = data;
+ 	int ret;
+@@ -5094,6 +5095,22 @@ static int ath12k_wmi_svc_rdy_ext_parse(struct ath12k_base *ab,
+ 				return ret;
+ 			}
  
--	if (count > size)
-+	if (count >= size)
- 		return -EINVAL;
++			if (svc_rdy_ext->tot_phy_id >
++			    ARRAY_SIZE(svc_ext_info->mac_phy_info)) {
++				ath12k_warn(ab, "too many PHY entries %u (max %zu)\n",
++					    svc_rdy_ext->tot_phy_id,
++					    ARRAY_SIZE(svc_ext_info->mac_phy_info));
++				return -EINVAL;
++			}
++
++			if (svc_rdy_ext->n_mac_phy_caps < svc_rdy_ext->tot_phy_id) {
++				ath12k_warn(ab,
++					    "not enough MAC/PHY caps %u, expected %u\n",
++					    svc_rdy_ext->n_mac_phy_caps,
++					    svc_rdy_ext->tot_phy_id);
++				return -EINVAL;
++			}
++
+ 			ath12k_wmi_save_all_mac_phy_info(ab, svc_rdy_ext);
  
- 	char *buf __free(kfree) = kzalloc(size, GFP_KERNEL);
+ 			svc_rdy_ext->mac_phy_done = true;
 -- 
 2.34.1
 
