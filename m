@@ -1,110 +1,466 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from vtj.irix.systems (vtj.irix.systems [82.76.27.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1778944605B;
-	Sat,  3 Oct 2026 15:51:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A6F4508E0;
+	Sat,  3 Oct 2026 15:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.76.27.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791042706; cv=none; b=U3jHTmmMqwlWbV8GWikoZNJ6W8WpKe8hqx9lOlQZXwM0NJ+r0o4S6oJJiJoKVtBiF3KV6ByUZF1N6bhaGctHfcwjzlaO0ihudEOSs1GYjBte5LrF+b1ivahAxnOnvGEmsluCNLe2Eoa90n/1l200OozysQ2O2iocnphjSCCbA+Q=
+	t=1791042966; cv=none; b=t+EQ53kij1zSumhtauJ9fmPZJGUAfu4fZpmVMKs5/1KPQnCSch+Hs6znLmOfR1Q9O92q1GgSwLJDSvWFgtQQO7MTvUUJ2E49S0ccZCiaqrHpC8iG2EmW2Y34g7V7BqXJtuToyYjf5s9IXJ4R9p+khhS+t/ax8yEO0nK9yG8opJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791042706; c=relaxed/simple;
-	bh=e1vKh2q2bAik4aanQLqwwfix2JTwK1OUaKj0xHiHhOY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JMncqNkt+9hlZ7ARDlkZpBg8kq1ikEyVwegLoVFJU18AhnENyI3pD6Q0dqWcRTcGI3szALnEaoXd2eW5uDv+x0t2MzTDgB+Ee2ExHVXBWSBA9Z7qco/gxDRMKeohXlK8TVcWMUhi61DQDuRu7dcr7SetWYLjhqejjPM93R7ciog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=nT0BeXRX; arc=none smtp.client-ip=67.231.154.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1791042966; c=relaxed/simple;
+	bh=6BoyLmKKVUADKlRjY6Qly4+EN3MbRbM1j+xtbOD21WY=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EbFBI4dz+hW0b8+Lwyu+de3D+O3j8Rq4QwEps3EdwJjfkiLThIhLLLOX2AOb7y0w5o7xzEGSPZieeEATQyBZDJzXIhL6ppz1AV7DeFzyJHSuhqI57MONQC1pVSlPoNTT2FPNDnxZm42hFgH2WU2ZMnliORwRj9ixn1ybE6n9b+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=F9iBCuzy; arc=none smtp.client-ip=82.76.27.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="nT0BeXRX"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 8D9A48007F;
-	Sat,  3 Oct 2026 15:51:35 +0000 (UTC)
-Received: from [192.168.1.23] (unknown [98.97.37.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="F9iBCuzy"
+Received: from MAILGW-HP.hp.vtj.corp.irix.systems (localhost [127.0.0.1])
+	by vtj.irix.systems (Proxmox) with ESMTP id A93A21603C;
+	Sat, 03 Oct 2026 18:55:49 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=andrei-z.com; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:from:from:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=sig1; bh=63yYoZXH046bBLlEvAcf
+	7d3d/BLIj7mrMLlDLX+HIx8=; b=F9iBCuzygfhJAR8j3d9tlLTz/GMsfKBg6h0l
+	NxDUBBDUE0yvPiRQSneiYHnLqMWN4w0RH2mJRrByW59+JVZmUr/DUudKb1KBmfdB
+	xedJgI1ZKCxuO2AyKJlEL5/oSbktsL7WtAXQuYkiHWz9cZrNCUWh3wBBhfM8RzI/
+	cBQCVIiLozbJ9XquUx3r95BbzCe45r+h+MDfjoSmj/lqEfbuRqhRZC1B4LgxBcrt
+	q7NsL+IGFvfoSCpNpfF3jE8/JemVkp9DWlfE+fcnGmtFSUzGb7G77MBEX5zMKIQd
+	YDALeyp74osin9AgyB1YH2x79+fTJrHU5Aj+9zNH3zJ7a+jB1w==
+Received: from VTJ-MX.corp.irix.systems (unknown [10.57.36.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id BE5A813C2B0;
-	Sat,  3 Oct 2026 08:51:34 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com BE5A813C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1791042694;
-	bh=e1vKh2q2bAik4aanQLqwwfix2JTwK1OUaKj0xHiHhOY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nT0BeXRXWR7B2r5NAzyWMjCxRtExDyVDmIN+O/taY7XJDoCKoBvr84XMlctey+Xhz
-	 DT6desBQG+FMI3niKyjNHnX8ShwqvM3iGNvNwwhir/pMtI/+3KbpUhArUjeYC7x+D6
-	 /mrxT3/PTkvSYdJKjLCbXjb0q97fqXn7VO4QwNHU=
-Message-ID: <c4286904-2a9a-41fd-93ce-be57964909f6@candelatech.com>
-Date: Sat, 3 Oct 2026 08:51:34 -0700
+	by vtj.irix.systems (Proxmox) with ESMTPS id 772681603A;
+	Sat, 03 Oct 2026 18:55:48 +0300 (EEST)
+Received: from workspace.corp.irix.systems (2a02:2f04:1:9c23::c) by
+ VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Sat, 3 Oct 2026 18:55:48 +0300
+From: Andrei-Alexandru Bleortu <me@andrei-z.com>
+To: Jeff Johnson <jjohnson@kernel.org>, Johannes Berg
+	<johannes@sipsolutions.net>
+CC: <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 4/4] wifi: ath11k: support firmware airtime fairness
+Date: Sat, 3 Oct 2026 18:55:42 +0300
+Message-ID: <20261003155542.96363-5-me@andrei-z.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261003155542.96363-1-me@andrei-z.com>
+References: <20261003155542.96363-1-me@andrei-z.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug] Triple whammy of mt7996e bugs on 7.2+
-To: Ilya K <me@0upti.me>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- linux-mediatek@lists.infradead.org
-References: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd>
- <529a79bc-dab7-aa41-00bd-c47ecbefaa00@candelatech.com>
- <471221788538289@323ca970-5bd2-4c6b-b52d-2b863a718615>
- <3acf531c-bcc7-412b-b3bb-665069260e46@candelatech.com>
- <2028561788553569@f088f4ec-f441-47a1-b7e4-75a1052aa4df>
- <2418461788691106@84aa39c5-f501-4e64-8418-6a8b6eb88e21>
- <eb405366-6574-4e4c-a89d-363751ed848b@candelatech.com>
- <4175721788798939@f00554c7-d809-471c-9bcf-78e5d8eceab4>
- <1556871789207706@7dc9deb3-4292-4932-8568-de9b411208d8>
- <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136>
- <211851789913261@df1900ea-d467-4ed7-a7f1-de68a4c3e6dd>
- <143991791036721@40be7595-980b-4665-ba66-1601e10a0899>
-Content-Language: en-MW
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <143991791036721@40be7595-980b-4665-ba66-1601e10a0899>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1791042696-OXx-lt94Esen
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;at1;1791042696;OXx-lt94Esen;<greearb@candelatech.com>;6f76c88c2c731de9ad886e575864f8cc
-X-PPE-TRUSTED: V=1;DIR=OUT;
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) To
+ VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6)
 
-On 10/3/26 07:12, Ilya K wrote:
-> OK, so another update: my current branch which is basically 7.2.8 + bpi-r4 specific stuff + any patches from Ben's tree that touch net/wireless or mt76 code (http://github.com/K900/linux/tree/bpi-r4-728-ct) survived an entire week of no crashes, which is a very good sign. Unfortunately, it's still >500 commits with a total of +20k -2k lines of diff, so I'll have to go through it again and strip it down even more before I can have any idea of what is actually helping...
-> 
+Firmware with WMI_TLV_SERVICE_ATF schedules airtime between stations
+itself, in proportion to per-station shares the host gives it in parts
+per thousand. Enable it at init (resource config flag) and on each
+radio, advertise NL80211_EXT_FEATURE_AIRTIME_FAIRNESS, and send the
+shares of all AP stations of the radio, derived from their airtime
+weights (sta_set_airtime_weight), whenever a station associates or
+leaves or user space changes a weight.
 
-Hello Ilya,
+The firmware schedules a station only within the share of its ATF group,
+so group 0, which every station belongs to, first gets the whole radio
+(WMI_ATF_SSID_GROUPING_REQUEST_CMDID, fair policy). Without the group,
+the firmware passes no data at all to a station that has a share.
 
-Going back to your original report, your logs showed a lockup.  We have added a bunch of mac80211
-patches to deal with failing hardware around this path.  This was primarily done for working
-around iwlwifi issues, I have not seen mtk7996 hit this path.  Our kernel should warn pretty loudly
-in this case, so if you are still hitting it you should see signs.
+Both are needed: without the resource config flag the firmware takes the
+shares but does not enforce them. With them, a station capped at 100/1000
+under strict scheduling falls from 885 to 122 Mbit/s downlink and
+recovers once uncapped, and at its full fair share it runs at full rate.
 
-[59002.686052] Hardware became unavailable during restart.
-[59002.692099] WARNING: net/mac80211/util.c:1959 at ieee80211_reconfig+0x254/0x1ad8 [mac80211], CPU#2: kworker/2:3/26768
-[59002.702894] Modules linked in: wireguard sch_cake mt7996e mt76_connac_lib rtc_pcf8563 at24 mt76 mac80211 libarc4 cfg80211 rfkill nft_queue nft_nat 
-nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_masq nft_ct nft_chain_nat nf_nat nft_flow_offload nf_flow_table_inet nf_flow_table nf_tables mtk_ge_soc 
-mtk_phy_lib sfp tag_mtk mtk_eth mt7530_mmio mt7530 dsa_core governor_passive hsr bridge cmdlinepart pcs_mtk_usxgmii stp llc sm4 spinand phy_mtk_xsphy reset_gpio 
-rt5190a_regulator pcs_mtk_lynxi phy_mtk_xfi_tphy phylink mdio_i2c pwm_mediatek lvts_thermal pwm_fan mtk_cci_devfreq ramoops reed_solomon tcp_bbr sch_fq_codel 
-amneziawg nf_conntrack libcurve25519 libchacha20poly1305 libchacha libpoly1305 nf_defrag_ipv6 ip6_udp_tunnel nf_defrag_ipv4 udp_tunnel fuse zram 842_decompress 
-842_compress lz4hc_compress nvme nvme_core nvme_keyring mmc_block dm_mod nvme_auth pcie_mediatek_gen3 rpmb_core
-[59002.780906] CPU: 2 UID: 0 PID: 26768 Comm: kworker/2:3 Not tainted 7.2.2 #1-NixOS PREEMPTLAZY
-[59002.789512] Hardware name: Banana Pi BPI-R4 (2x SFP+) (DT)
-[59002.794988] Workqueue: events_freezable ieee80211_restart_work [mac80211]
-[59002.801949] pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-[59002.808902] pc : ieee80211_reconfig+0x254/0x1ad8 [mac80211]
-[59002.814622] lr : ieee80211_reconfig+0x254/0x1ad8 [mac80211]
+This matters most where the data path does not pass mac80211's queues,
+such as NSS offload, where mac80211's own airtime scheduler never sees
+the frames.
 
-And, if you can reproduce the deadlock with lockdep enabled, that may
-help.  Your original logs didn't show the problem part of the lockup
-as far as I could tell, just processes blocked on acquiring rtnl.
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
 
-Thanks,
-Ben
+Assisted-by: LLM
+Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
+---
+ drivers/net/wireless/ath/ath11k/core.h |   1 +
+ drivers/net/wireless/ath/ath11k/mac.c  | 105 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.c  |  97 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h  |  53 +++++++++++++
+ 4 files changed, 256 insertions(+)
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 31eee25c0..bb5f730c8 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -542,6 +542,7 @@ struct ath11k_per_peer_cfr_capture {
+ 
+ struct ath11k_sta {
+ 	struct ath11k_vif *arvif;
++	u16 airtime_weight;
+ 
+ 	/* the following are protected by ar->data_lock */
+ 	u32 changed; /* IEEE80211_RC_* */
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 57cc6dbdd..7a03c12d2 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -6732,6 +6732,16 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
+ 		goto err;
+ 	}
+ 
++	if (test_bit(WMI_TLV_SERVICE_ATF, ab->wmi_ab.svc_map)) {
++		ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_ATF_DYNAMIC_ENABLE,
++						1, pdev->pdev_id);
++		if (ret) {
++			ath11k_err(ab, "failed to enable airtime fairness: %d\n",
++				   ret);
++			goto err;
++		}
++	}
++
+ 	ret = ath11k_wmi_send_dfs_phyerr_offload_enable_cmd(ar, pdev->pdev_id);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to offload radar detection: %d\n",
+@@ -9985,6 +9995,90 @@ static int ath11k_mac_station_remove(struct ath11k *ar,
+ 	return ret;
+ }
+ 
++#define ATH11K_ATF_PEERS_PER_CMD 32
++
++struct ath11k_mac_atf_iter {
++	struct ath11k_wmi_atf_peer_arg *peers;
++	u16 *weights;
++	u32 num, max, total;
++};
++
++static void ath11k_mac_atf_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct ath11k_mac_atf_iter *it = data;
++	struct ath11k_sta *arsta = ath11k_sta_to_arsta(sta);
++
++	if (it->num == it->max || !arsta->arvif ||
++	    arsta->arvif->vdev_type != WMI_VDEV_TYPE_AP)
++		return;
++
++	ether_addr_copy(it->peers[it->num].addr, sta->addr);
++	it->peers[it->num].vdev_id = arsta->arvif->vdev_id;
++	it->weights[it->num] = arsta->airtime_weight;
++	it->total += arsta->airtime_weight;
++	it->num++;
++}
++
++/* Firmware airtime fairness: give every station of the radio its share of
++ * the airtime, in proportion to its airtime weight. The firmware schedules
++ * a station only by the share of its group, so group 0 (every station's)
++ * gets the whole radio first.
++ */
++static int ath11k_mac_atf_update(struct ath11k *ar)
++{
++	struct ath11k_mac_atf_iter it = { .max = ar->max_num_stations };
++	u32 i, n;
++	int ret = 0;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	if (!test_bit(WMI_TLV_SERVICE_ATF, ar->ab->wmi_ab.svc_map))
++		return 0;
++
++	it.peers = kcalloc(it.max, sizeof(*it.peers), GFP_KERNEL);
++	it.weights = kcalloc(it.max, sizeof(*it.weights), GFP_KERNEL);
++	if (!it.peers || !it.weights) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ieee80211_iterate_stations_atomic(ar->hw, ath11k_mac_atf_iter, &it);
++
++	for (i = 0; i < it.num; i++)
++		it.peers[i].units = max_t(u32, 1, div_u64((u64)WMI_ATF_DENOMINATION *
++							  it.weights[i], it.total));
++
++	ret = ath11k_wmi_send_atf_group(ar, 0, WMI_ATF_DENOMINATION);
++	if (ret)
++		goto out;
++
++	for (i = 0; i < it.num; i += n) {
++		n = min_t(u32, it.num - i, ATH11K_ATF_PEERS_PER_CMD);
++		ret = ath11k_wmi_send_peer_atf_request(ar, &it.peers[i], n,
++						       i + n < it.num);
++		if (ret)
++			break;
++	}
++
++out:
++	kfree(it.weights);
++	kfree(it.peers);
++	return ret;
++}
++
++static void ath11k_mac_op_sta_set_airtime_weight(struct ieee80211_hw *hw,
++						 struct ieee80211_vif *vif,
++						 struct ieee80211_sta *sta, u16 weight)
++{
++	struct ath11k_sta *arsta = ath11k_sta_to_arsta(sta);
++	struct ath11k *ar = hw->priv;
++
++	mutex_lock(&ar->conf_mutex);
++	arsta->airtime_weight = weight;
++	ath11k_mac_atf_update(ar);
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_sta *sta,
+@@ -10012,6 +10106,7 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 	    new_state == IEEE80211_STA_NONE) {
+ 		memset(arsta, 0, sizeof(*arsta));
+ 		arsta->arvif = arvif;
++		arsta->airtime_weight = IEEE80211_DEFAULT_AIRTIME_WEIGHT;
+ 		arsta->peer_ps_state = WMI_PEER_PS_STATE_DISABLED;
+ 		INIT_WORK(&arsta->update_wk, ath11k_sta_rc_update_wk);
+ 		INIT_WORK(&arsta->set_4addr_wk, ath11k_sta_set_4addr_wk);
+@@ -10043,6 +10138,9 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 		mutex_unlock(&ar->ab->tbl_mtx_lock);
+ 
+ 		ath11k_cfr_decrement_peer_count(ar, arsta);
++
++		if (vif->type == NL80211_IFTYPE_AP)
++			ath11k_mac_atf_update(ar);
+ 	} else if (old_state == IEEE80211_STA_AUTH &&
+ 		   new_state == IEEE80211_STA_ASSOC &&
+ 		   (vif->type == NL80211_IFTYPE_AP ||
+@@ -10052,6 +10150,8 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 		if (ret)
+ 			ath11k_warn(ar->ab, "Failed to associate station: %pM\n",
+ 				    sta->addr);
++		else if (vif->type == NL80211_IFTYPE_AP)
++			ath11k_mac_atf_update(ar);
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		/* Set arsta bw and prev bw */
+@@ -10143,6 +10243,7 @@ static const struct ieee80211_ops ath11k_ops = {
+ 	.sta_state                      = ath11k_mac_op_sta_state,
+ 	.sta_set_4addr                  = ath11k_mac_op_sta_set_4addr,
+ 	.sta_set_txpwr			= ath11k_mac_op_sta_set_txpwr,
++	.sta_set_airtime_weight		= ath11k_mac_op_sta_set_airtime_weight,
+ 	.link_sta_rc_update		= ath11k_mac_op_sta_rc_update,
+ 	.conf_tx                        = ath11k_mac_op_conf_tx,
+ 	.set_antenna			= ath11k_mac_op_set_antenna,
+@@ -10684,6 +10785,10 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 		wiphy_ext_feature_set(ar->hw->wiphy,
+ 				      NL80211_EXT_FEATURE_BEACON_PROTECTION);
+ 
++	if (test_bit(WMI_TLV_SERVICE_ATF, ar->ab->wmi_ab.svc_map))
++		wiphy_ext_feature_set(ar->hw->wiphy,
++				      NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
++
+ 	ar->hw->wiphy->mbssid_max_interfaces = TARGET_NUM_VDEVS(ab);
+ 	ar->hw->wiphy->ema_max_profile_periodicity = TARGET_EMA_MAX_PROFILE_PERIOD;
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 2c3e14a65..28f5d606a 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -4468,6 +4468,100 @@ int ath11k_wmi_set_hw_mode(struct ath11k_base *ab,
+ 	return 0;
+ }
+ 
++int ath11k_wmi_send_atf_group(struct ath11k *ar, u32 group_id, u32 units)
++{
++	struct ath11k_pdev_wmi *wmi = ar->wmi;
++	struct wmi_atf_ssid_grp_request_cmd *cmd;
++	struct wmi_atf_group_info *grp;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	int ret;
++
++	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, sizeof(*cmd) + TLV_HDR_SIZE + sizeof(*grp));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_atf_ssid_grp_request_cmd *)skb->data;
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ATF_SSID_GRP_REQUEST) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
++	cmd->pdev_id = ar->pdev->pdev_id;
++
++	tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
++	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_STRUCT) |
++		      FIELD_PREP(WMI_TLV_LEN, sizeof(*grp));
++	grp = (struct wmi_atf_group_info *)tlv->value;
++	grp->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ATF_GROUP_INFO) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*grp) - TLV_HDR_SIZE);
++	grp->atf_group_id = group_id;
++	grp->atf_group_units = units;
++	grp->atf_group_flags = WMI_ATF_GROUP_POLICY_FAIR;
++
++	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_ATF_SSID_GROUPING_REQUEST_CMDID);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to send atf group request: %d\n", ret);
++		dev_kfree_skb(skb);
++		return ret;
++	}
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "cmd atf group %u units %u\n", group_id, units);
++
++	return 0;
++}
++
++int ath11k_wmi_send_peer_atf_request(struct ath11k *ar,
++				     const struct ath11k_wmi_atf_peer_arg *peers,
++				     u32 num_peers, bool more)
++{
++	struct ath11k_pdev_wmi *wmi = ar->wmi;
++	struct wmi_peer_atf_request_cmd *cmd;
++	struct wmi_atf_peer_info *info;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	u32 i, pdev_id = ar->pdev->pdev_id;
++	int ret, len;
++
++	len = sizeof(*cmd) + TLV_HDR_SIZE + num_peers * sizeof(*info);
++	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_peer_atf_request_cmd *)skb->data;
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_PEER_ATF_REQUEST) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
++	cmd->num_peers = num_peers;
++	cmd->pdev_id = pdev_id;
++	cmd->atf_flags = WMI_PEER_ATF_REQ_FLAG_FULL_UPDATE |
++			 WMI_PEER_ATF_REQ_FLAG_PDEV_ID_VALID;
++	if (more)
++		cmd->atf_flags |= WMI_PEER_ATF_REQ_FLAG_PENDING_CMDS;
++
++	tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
++	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_STRUCT) |
++		      FIELD_PREP(WMI_TLV_LEN, num_peers * sizeof(*info));
++	info = (struct wmi_atf_peer_info *)tlv->value;
++
++	for (i = 0; i < num_peers; i++, info++) {
++		info->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ATF_PEER_INFO) |
++				   FIELD_PREP(WMI_TLV_LEN, sizeof(*info) - TLV_HDR_SIZE);
++		ether_addr_copy(info->peer_macaddr.addr, peers[i].addr);
++		info->atf_units = peers[i].units;
++		info->vdev_id = peers[i].vdev_id;
++		info->pdev_id = pdev_id;
++	}
++
++	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_PEER_ATF_REQUEST_CMDID);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to send peer atf request: %d\n", ret);
++		dev_kfree_skb(skb);
++		return ret;
++	}
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "cmd peer atf request pdev %u peers %u%s\n",
++		   pdev_id, num_peers, more ? " (more)" : "");
++
++	return 0;
++}
++
+ int ath11k_wmi_cmd_init(struct ath11k_base *ab)
+ {
+ 	struct ath11k_wmi_base *wmi_ab = &ab->wmi_ab;
+@@ -4483,6 +4577,9 @@ int ath11k_wmi_cmd_init(struct ath11k_base *ab)
+ 		     ab->wmi_ab.svc_map))
+ 		config.is_reg_cc_ext_event_supported = 1;
+ 
++	if (test_bit(WMI_TLV_SERVICE_ATF, ab->wmi_ab.svc_map))
++		config.flag1 |= WMI_RSRC_CFG_FLAG1_ATF_CONFIG_ENABLE;
++
+ 	memcpy(&wmi_ab->wlan_resource_config, &config, sizeof(config));
+ 
+ 	init_param.res_cfg = &wmi_ab->wlan_resource_config;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index ae8b4cc08..53cce7fd7 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -212,6 +212,7 @@ enum wmi_cmd_group {
+ 	WMI_GRP_TWT            = 0x3e,
+ 	WMI_GRP_MOTION_DET     = 0x3f,
+ 	WMI_GRP_SPATIAL_REUSE  = 0x40,
++	WMI_GRP_ATM            = 0x45,
+ };
+ 
+ #define WMI_CMD_GRP(grp_id) (((grp_id) << 12) | 0x1)
+@@ -2354,6 +2355,7 @@ struct wmi_init_cmd {
+ } __packed;
+ 
+ #define WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64 BIT(5)
++#define WMI_RSRC_CFG_FLAG1_ATF_CONFIG_ENABLE BIT(6)
+ #define WMI_RSRC_CFG_FLAG2_CALC_NEXT_DTIM_COUNT_SET BIT(9)
+ #define WMI_RSRC_CFG_FLAG1_ACK_RSSI BIT(18)
+ 
+@@ -3631,6 +3633,53 @@ struct ath11k_wmi_p2p_noa_info {
+ 
+ #define WMI_BCN_TMPL_BEACON_PROTECTION_EN BIT(0)
+ 
++/* Airtime fairness: a share is in parts per thousand of the radio's airtime */
++#define WMI_ATF_DENOMINATION			1000
++#define WMI_PEER_ATF_REQ_FLAG_FULL_UPDATE	BIT(0)
++#define WMI_PEER_ATF_REQ_FLAG_PENDING_CMDS	BIT(1)
++#define WMI_PEER_ATF_REQ_FLAG_PDEV_ID_VALID	BIT(2)
++#define WMI_ATF_GROUP_POLICY_FAIR		0
++
++#define WMI_ATF_SSID_GROUPING_REQUEST_CMDID	WMI_TLV_CMD(WMI_GRP_ATM)
++/* Outside enum wmi_tlv_tag: its WMI_TAG_MAX sizes the TLV policy table. */
++#define WMI_TAG_ATF_SSID_GRP_REQUEST		0x346
++#define WMI_TAG_ATF_GROUP_INFO			0x347
++
++struct wmi_atf_ssid_grp_request_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++} __packed;
++
++struct wmi_atf_group_info {
++	u32 tlv_header;
++	u32 atf_group_id;
++	u32 atf_group_units;
++	u32 atf_group_flags;
++} __packed;
++
++struct wmi_peer_atf_request_cmd {
++	u32 tlv_header;
++	u32 num_peers;
++	u32 pdev_id;
++	u32 atf_flags;
++} __packed;
++
++struct wmi_atf_peer_info {
++	u32 tlv_header;
++	struct wmi_mac_addr peer_macaddr;
++	u32 atf_units;
++	u32 atf_groupid;
++	u32 atf_units_reserved;
++	u32 vdev_id;
++	u32 pdev_id;
++} __packed;
++
++struct ath11k_wmi_atf_peer_arg {
++	u8 addr[ETH_ALEN];
++	u32 vdev_id;
++	u32 units;
++};
++
+ struct wmi_bcn_tmpl_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -6453,6 +6502,10 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 			  bool restart);
+ int ath11k_wmi_set_peer_param(struct ath11k *ar, const u8 *peer_addr,
+ 			      u32 vdev_id, u32 param_id, u32 param_val);
++int ath11k_wmi_send_atf_group(struct ath11k *ar, u32 group_id, u32 units);
++int ath11k_wmi_send_peer_atf_request(struct ath11k *ar,
++				     const struct ath11k_wmi_atf_peer_arg *peers,
++				     u32 num_peers, bool more);
+ int ath11k_wmi_pdev_set_param(struct ath11k *ar, u32 param_id,
+ 			      u32 param_value, u8 pdev_id);
+ int ath11k_wmi_pdev_set_ps_mode(struct ath11k *ar, int vdev_id,
 
