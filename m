@@ -1,99 +1,125 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FA823B9D97;
-	Sat,  3 Oct 2026 09:21:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0893B3AE6E5;
+	Sat,  3 Oct 2026 09:24:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791019313; cv=none; b=tDmDxt5WWV2irIrY1iqwNC5+EBWQ0oJklut4jTxfxKePvmbMesSCNus898vpFznZBvQBJXRmI/a9KPc1kpDCumRGI2G6xReaWia/uKabeY+Uw9DPQU+ZrJMqzE7rzypbZi+kBKX3V7llJ0EWot+Mu/MlBWSS3wfJAsn1/ls/4/U=
+	t=1791019474; cv=none; b=WshwUNJSl5rKmaCtnP2/mO5mYoD5TKrwkb3IZIixXlw3+HgFvHtN++l4l8eX+0QPb8BKoV+u9S/6NnXtXjMCvrBj7pn71kcgofk4ghKVxPkkUa+Nibvn8AxAV3WlgHkiP9g81nNotRVfi4yoYVuDq3VRnFBRr12CkrTI2z2AeJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791019313; c=relaxed/simple;
-	bh=P+WYJazsFhLKmSqczxPf/ms0L8fgL0loTd1fpuQ1uQk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=H7e4DJuDiaZUEZDcxNv79If4OGa0Nh17k6VhSc1yDH14XXyE9DDq31WDcq9hdS1UHrCJ9lONBHGz8Dm4+50pHPDbTRNZIDV1mtOC1OV0HW7nOmBnehgHaco8s3cX94OmpD7jxIPN1N0ofO/WBggC2eIVEW8eziBlXTCJJ9EtVYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=NbGJkTcV; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1791019474; c=relaxed/simple;
+	bh=t7+b9RGY9B2xgmRAdzgwC0iX58AfMLrIAj6jYe4r+8w=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=QhpqEGsA20NHGJsUIK1xPiGW2TNxicPaeMgZVpC0fWo6Q53g2Jc6Oo6HmxUd4nXgwRazOtf4DvEulu3qsmKmpJVV0Z/yKPT1AyJUK5KRbyyW9Vok7XSuaDKTrUX2gQDAzTnypTvbQSvF1AJTVccoEq/XBHgXdQF9rpZO9UZLamM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=AVPVjtmG; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="NbGJkTcV"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="AVPVjtmG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=AF
-	ojHjA+4FDN4JhFb5+uFEMCc+xZ9O93LXDyh2k/6GM=; b=NbGJkTcVNbx9d34ixE
-	FIMoN7zt/+04JJqHuln4jZqRxm6xwFd41lIBUgKlbaVfCrefiJc5D8PgIEQ2Qvk7
-	Rb84NX0YrHwe/wvCYoIsu6cCkZwR0A9nCWJ1q9lorRETwhArejV7XgCADevC2uCU
-	rTIei32CLCWzd07tRBnM6YyJY=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3n1YCycBqC7WjCQ--.62376S2;
-	Sat, 03 Oct 2026 17:21:07 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Shashidhar Lakkavalli <slakkavalli@datto.com>,
-	Bhagavathi Perumal S <bperumal@codeaurora.org>,
-	Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
-	Govindaraj Saminathan <quic_gsamin@quicinc.com>,
-	Sriram R <quic_srirrama@quicinc.com>,
-	Carl Huang <quic_cjhuang@quicinc.com>,
-	Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>,
-	Wen Gong <quic_wgong@quicinc.com>,
-	Ramya Gnanasekar <quic_rgnanase@quicinc.com>,
-	linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org
-Cc: Jiale Yao <yaojiale02@163.com>
-Subject: [PATCH v2 0/5] wifi: ath: avoid IDR mutation while iterating
-Date: Sat,  3 Oct 2026 17:20:57 +0800
-Message-Id: <20261003092104.520135-1-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=t7+b9RGY9B2xgmRAdzgwC0iX58AfMLrIAj6jYe4r+8w=; b=A
+	VPVjtmG7JKd2zPI+as26lkclMlzJKHfebKmCFNZ7VqHHPEN8juWCAAt24kV0ZV02
+	ul7LMtd2X36TEri/z90aAaClxUSmdYtilendwisnx3vhYNy/Z366yKs4apLKt8eN
+	D4gjl9mXzy1w7ygeFDDm0rrxexdezf8JmGzrQMczzc=
+Date: Sat, 3 Oct 2026 17:23:57 +0800 (CST)
+From: "jiale yao" <19888972804@163.com>
+To: "Rameshkumar Sundaram" <rameshkumar.sundaram@oss.qualcomm.com>
+Cc: "Jeff Johnson" <jjohnson@kernel.org>,
+	"Bhagavathi Perumal S" <quic_bperumal@quicinc.com>,
+	"Balamurugan Selvarajan" <quic_bselvara@quicinc.com>,
+	"Baochen Qiang" <quic_bqiang@quicinc.com>,
+	"Wen Gong" <quic_wgong@quicinc.com>,
+	"Carl Huang" <quic_cjhuang@quicinc.com>,
+	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re:Re:Re: [PATCH 4/5] wifi: ath12k: avoid IDR mutation during
+ pending mgmt TX cleanup
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <77a815e.77f1.1a0e71f6167.Coremail.19888972804@163.com>
+References: <20260926154824.75224-1-yaojiale02@163.com>
+ <20260926154824.75224-5-yaojiale02@163.com>
+ <773e57da-a9d3-41dc-805c-cb38b38b1dc4@oss.qualcomm.com>
+ <77a815e.77f1.1a0e71f6167.Coremail.19888972804@163.com>
+X-NTES-SC: AL_Qu2SA/yatkwo4SKZbekdmE8Uges8WcC0svki1YJUc+4GhzHBwiABbHpeBEnt4NmlFwSNnAm9ShFy8/5qb6BZe/A9UfNxBrVm0ZRiXauR+g==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3n1YCycBqC7WjCQ--.62376S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJrWxAw4kuF1kKryUKrW3KFg_yoW8WFyDpF
-	4fu3Wa9F1xZrsrtr1fJw4xJFyrWan3CF1YgrZrCa4ruF4rCF1rtF1Yq3WfXFyUAFWxG3W2
-	93yUtr1fCr92y3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piY9akUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzgQ+eGrAyQShsQAA37
+Message-ID: <5fb79006.12d7.1a10113cca9.Coremail.19888972804@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:jygvCgD3v1KtycBqfEUHAA--.63341W
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8A1oomrAya0powAA3z
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-The ath10k, ath11k, and ath12k cleanup paths walk an IDR while removing
-the current entry. idr_for_each() retains radix-tree iterator state across
-the callback, so that removal can invalidate the walk.
-
-Use idr_for_each_entry() in each cleanup path. It performs a fresh
-idr_get_next() lookup for every iteration, allowing the current entry to
-be removed safely before its skb is released. Keeping the existing locked
-removal helpers also ensures that a concurrent TX completion cannot find
-an IDR entry which points to an already freed skb.
-
-Changes in v2:
-- Rework the ath11k and ath12k pending management TX cleanup patches to
-  remove each IDR entry before freeing its skb, as pointed out by
-  Rameshkumar and Jeff.
-- Use idr_for_each_entry() for the pending cleanup callers instead of
-  leaving freed skb pointers in the IDR until idr_destroy().
-
-Jiale Yao (5):
-  wifi: ath10k: avoid IDR mutation during TX cleanup
-  wifi: ath11k: avoid IDR mutation during pending mgmt TX cleanup
-  wifi: ath11k: avoid IDR mutation during vif mgmt TX cleanup
-  wifi: ath12k: avoid IDR mutation during pending mgmt TX cleanup
-  wifi: ath12k: avoid IDR mutation during vif mgmt TX cleanup
-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  7 ++++-
- drivers/net/wireless/ath/ath11k/core.c   |  3 +--
- drivers/net/wireless/ath/ath11k/mac.c    | 33 ++++++++++++------------
- drivers/net/wireless/ath/ath11k/mac.h    |  2 +-
- drivers/net/wireless/ath/ath12k/core.c   |  3 +--
- drivers/net/wireless/ath/ath12k/mac.c    | 33 ++++++++++++------------
- drivers/net/wireless/ath/ath12k/mac.h    |  2 +-
- 7 files changed, 44 insertions(+), 39 deletions(-)
-
--- 
-2.34.1
-
+QXQgMjAyNi0wOS0yOCAxNjoyNjoyOCwgImppYWxlIHlhbyIgPDE5ODg4OTcyODA0QDE2My5jb20+
+IHdyb3RlOgo+QXQgMjAyNi0wOS0yOCAxMzo0OTo1NCwgIlJhbWVzaGt1bWFyIFN1bmRhcmFtIiA8
+cmFtZXNoa3VtYXIuc3VuZGFyYW1Ab3NzLnF1YWxjb21tLmNvbT4gd3JvdGU6Cj4+T24gOS8yNi8y
+MDI2IDk6MTggUE0sIEppYWxlIFlhbyB3cm90ZToKPj4+IGF0aDEya19tYWNfdHhfbWdtdF9wZW5k
+aW5nX2ZyZWUoKSBpcyBwYXNzZWQgYXMgYW4gaWRyX2Zvcl9lYWNoKCkKPj4+IGNhbGxiYWNrIGFu
+ZCByZW1vdmVzIHRoZSBjdXJyZW50IGVudHJ5IGZyb20gdHhtZ210X2lkci4gVGhpcyBjYW4KPj4+
+IGludmFsaWRhdGUgdGhlIHJhZGl4LXRyZWUgaXRlcmF0b3IgcmV0YWluZWQgYnkgaWRyX2Zvcl9l
+YWNoKCkuCj4+PiAKPj4+IEJvdGggY2FsbGVycyBkZXN0cm95IHRoZSBJRFIgaW1tZWRpYXRlbHkg
+YWZ0ZXIgdGhlIHdhbGssIHNvIHJlbW92aW5nCj4+PiBlYWNoIGVudHJ5IGluIHRoZSBjYWxsYmFj
+ayBpcyB1bm5lY2Vzc2FyeS4gU3BsaXQgc2tiIHJlbGVhc2UgZnJvbSBJRFIKPj4+IHJlbW92YWwg
+YW5kIGxldCB0aGUgY2FsbGJhY2sgcmVsZWFzZSB0aGUgc3VwcGxpZWQgc2tiIHdpdGhvdXQgdXBk
+YXRpbmcKPj4+IHRoZSBJRFIuIFRoZSBmb2xsb3dpbmcgaWRyX2Rlc3Ryb3koKSB0ZWFycyBkb3du
+IHRoZSBJRFIgaXRzZWxmLgo+Pj4gCj4+PiBGaXhlczogZDg4OTkxMzIwNWNmICgid2lmaTogYXRo
+MTJrOiBkcml2ZXIgZm9yIFF1YWxjb21tIFdpLUZpIDcgZGV2aWNlcyIpCj4+PiBTaWduZWQtb2Zm
+LWJ5OiBKaWFsZSBZYW8gPHlhb2ppYWxlMDJAMTYzLmNvbT4KPj4+IC0tLQo+Pj4gICBkcml2ZXJz
+L25ldC93aXJlbGVzcy9hdGgvYXRoMTJrL21hYy5jIHwgMjUgKysrKysrKysrKysrKysrLS0tLS0t
+LS0tLQo+Pj4gICAxIGZpbGUgY2hhbmdlZCwgMTUgaW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25z
+KC0pCj4+PiAKPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTJr
+L21hYy5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEyay9tYWMuYwo+Pj4gaW5kZXgg
+OTliZjVjZjc5ZDEwLi43Njk1YjIxMTQ5ZDEgMTAwNjQ0Cj4+PiAtLS0gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9hdGgvYXRoMTJrL21hYy5jCj4+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGgvYXRoMTJrL21hYy5jCj4+PiBAQCAtOTE2NiwxOCArOTE2NiwxMSBAQCBzdGF0aWMgdm9pZCBh
+dGgxMmtfbWdtdF9vdmVyX3dtaV90eF9kcm9wKHN0cnVjdCBhdGgxMmsgKmFyLCBzdHJ1Y3Qgc2tf
+YnVmZiAqc2tiKQo+Pj4gICAJCXdha2VfdXAoJmFyLT50eG1nbXRfZW1wdHlfd2FpdHEpOwo+Pj4g
+ICB9Cj4+PiAgIAo+Pj4gLXN0YXRpYyB2b2lkIGF0aDEya19tYWNfdHhfbWdtdF9mcmVlKHN0cnVj
+dCBhdGgxMmsgKmFyLCBpbnQgYnVmX2lkKQo+Pj4gK3N0YXRpYyB2b2lkIGF0aDEya19tYWNfdHhf
+bWdtdF9mcmVlX3NrYihzdHJ1Y3QgYXRoMTJrICphciwKPj4+ICsJCQkJCXN0cnVjdCBza19idWZm
+ICptc2R1KQo+Pj4gICB7Cj4+PiAtCXN0cnVjdCBza19idWZmICptc2R1Owo+Pj4gICAJc3RydWN0
+IGllZWU4MDIxMV90eF9pbmZvICppbmZvOwo+Pj4gICAKPj4+IC0Jc3Bpbl9sb2NrX2JoKCZhci0+
+dHhtZ210X2lkcl9sb2NrKTsKPj4+IC0JbXNkdSA9IGlkcl9yZW1vdmUoJmFyLT50eG1nbXRfaWRy
+LCBidWZfaWQpOwo+Pj4gLQlzcGluX3VubG9ja19iaCgmYXItPnR4bWdtdF9pZHJfbG9jayk7Cj4+
+PiAtCj4+PiAtCWlmICghbXNkdSkKPj4+IC0JCXJldHVybjsKPj4+IC0KPj4+ICAgCWRtYV91bm1h
+cF9zaW5nbGUoYXItPmFiLT5kZXYsIEFUSDEyS19TS0JfQ0IobXNkdSktPnBhZGRyLCBtc2R1LT5s
+ZW4sCj4+PiAgIAkJCSBETUFfVE9fREVWSUNFKTsKPj4+ICAgCj4+PiBAQCAtOTE4NywxMSArOTE4
+MCwyMyBAQCBzdGF0aWMgdm9pZCBhdGgxMmtfbWFjX3R4X21nbXRfZnJlZShzdHJ1Y3QgYXRoMTJr
+ICphciwgaW50IGJ1Zl9pZCkKPj4+ICAgCWF0aDEya19tZ210X292ZXJfd21pX3R4X2Ryb3AoYXIs
+IG1zZHUpOwo+Pj4gICB9Cj4+PiAgIAo+Pj4gK3N0YXRpYyB2b2lkIGF0aDEya19tYWNfdHhfbWdt
+dF9mcmVlKHN0cnVjdCBhdGgxMmsgKmFyLCBpbnQgYnVmX2lkKQo+Pj4gK3sKPj4+ICsJc3RydWN0
+IHNrX2J1ZmYgKm1zZHU7Cj4+PiArCj4+PiArCXNwaW5fbG9ja19iaCgmYXItPnR4bWdtdF9pZHJf
+bG9jayk7Cj4+PiArCW1zZHUgPSBpZHJfcmVtb3ZlKCZhci0+dHhtZ210X2lkciwgYnVmX2lkKTsK
+Pj4+ICsJc3Bpbl91bmxvY2tfYmgoJmFyLT50eG1nbXRfaWRyX2xvY2spOwo+Pj4gKwo+Pj4gKwlp
+ZiAobXNkdSkKPj4+ICsJCWF0aDEya19tYWNfdHhfbWdtdF9mcmVlX3NrYihhciwgbXNkdSk7Cj4+
+PiArfQo+Pj4gKwo+Pj4gICBpbnQgYXRoMTJrX21hY190eF9tZ210X3BlbmRpbmdfZnJlZShpbnQg
+YnVmX2lkLCB2b2lkICpza2IsIHZvaWQgKmN0eCkKPj4+ICAgewo+Pj4gICAJc3RydWN0IGF0aDEy
+ayAqYXIgPSBjdHg7Cj4+PiAgIAo+Pj4gLQlhdGgxMmtfbWFjX3R4X21nbXRfZnJlZShhciwgYnVm
+X2lkKTsKPj4+ICsJYXRoMTJrX21hY190eF9tZ210X2ZyZWVfc2tiKGFyLCBza2IpOwo+Pgo+PnRo
+aXMgbm93IGtlZXBzIHRoZSBmcmVlZCBza2JzIGluIHRoZSBpZHIgZm9yIHRoZSB3aG9sZSB0aW1l
+IAo+Pmlkcl9mb3JfZWFjaCgpIHJ1bnMgYXMgb3Bwb3NlZCB0byBwcmV2aW91cyBpbXBsZW1lbnRh
+dGlvbiB3aGljaCByZW1vdmVkIAo+PnRoZSBpZHIgZW50cnkgYXMgd2VsbCB3aGljaCBsb29rZWQg
+c2FmZS4KPgo+VGhhbmtzIGZvciB0aGUgcmV2aWV3Lgo+Cj5UaGUgb3JpZ2luYWwgaXNzdWUgaXMg
+dGhlIHNhbWUgYXMgdGhlIG9uZSBmaXhlZCBieSBjb21taXQgYzM4YjFlMTk0ODVhCj4oImZpcm13
+YXJlOiBhcm1fc2NtaTogQXZvaWQgSURSIHVwZGF0ZXMgd2hpbGUgY2xlYW5pbmcgY2hhbm5lbHMi
+KS4KPmF0aDEya19tYWNfdHhfbWdtdF9wZW5kaW5nX2ZyZWUoKSBpcyBjYWxsZWQgZnJvbSBpZHJf
+Zm9yX2VhY2goKSwgYW5kCj5hdGgxMmtfbWFjX3R4X21nbXRfZnJlZSgpIHJlbW92ZXMgdGhlIGN1
+cnJlbnQgZW50cnkgZnJvbSB0aGF0IHNhbWUgSURSCj5iZWZvcmUgdGhlIGl0ZXJhdG9yIGFkdmFu
+Y2VzLiBUaGlzIGNhbiBpbnZhbGlkYXRlIHRoZSBpdGVyYXRvciBzdGF0ZS4KPgo+WW91IGFyZSBy
+aWdodCB0aGF0IG15IHBhdGNoIGxlYXZlcyBmcmVlZCBza2IgcG9pbnRlcnMgaW4gdGhlIElEUiB1
+bnRpbAo+aWRyX2Rlc3Ryb3koKSwgd2hpY2ggaXMgdW5kZXNpcmFibGUuCj4KPkkgd2lsbCBzZW5k
+IGEgdjIgdXNpbmcgaWRyX2Zvcl9lYWNoX2VudHJ5KCksIHdoaWNoIHBlcmZvcm1zIGEgZnJlc2gK
+Pmlkcl9nZXRfbmV4dCgpIGxvb2t1cCBmb3IgZWFjaCBpdGVyYXRpb24uIFRoZSBlbnRyeSB3aWxs
+IHRoZW4gYmUgcmVtb3ZlZAo+ZnJvbSB0aGUgSURSIGJlZm9yZSBpdHMgc2tiIGlzIGZyZWVkLCBh
+dm9pZGluZyBib3RoIHRoZSBpbnZhbGlkIGl0ZXJhdG9yCj5zdGF0ZSBhbmQgc3RhbGUgc2tiIHBv
+aW50ZXJzLgp2MiBpbiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyNjEwMDMwOTIxMDQu
+NTIwMTM1LTEteWFvamlhbGUwMkAxNjMuY29tLwo+Cj5UaGFua3MsCj5KaWFsZQo+Cj4KPj4KPj4K
+Pj4+ICAgCj4+PiAgIAlyZXR1cm4gMDsKPj4+ICAgfQo+Pgo+Pgo+Pi0tIAo+PlJhbWVzaAo=
