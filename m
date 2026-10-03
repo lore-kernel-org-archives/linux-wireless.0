@@ -1,84 +1,47 @@
-Received: from mail-wr2-f33.google.com (mail-wr2-f33.google.com [74.125.225.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597DB3AFCFE
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Oct 2026 09:15:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3543B7753;
+	Sat,  3 Oct 2026 09:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791018945; cv=none; b=bqyz1rh4ivFh4IW7OaXYqPgpGx3x/cCCwL8opROnXJOyVFomVwKL5rTlLphVO7r4Ety3chfEATUiPYdvBUUHoUw/k+wo7VNFCXKNuVhXv5BknlX0t4LycukHTrcOHHx+g7riU3C8vThdhbh2Vhle9vZG8dZX8vhzz3FVWbHO1zc=
+	t=1791019299; cv=none; b=pAYhgpiF4ny7tKU1BWoJmxMxEEChwo86k2y3FtYdjcAJ6MFTpFhubEzTf+fo6qmAJncC8YE5Swhp+hTmARs50lyrlC3kaTVgTchgJsFT2/+Nz6xIiM85NDwJPLZfoLzoIFRH0neFsDR2QIs7jmzKwfABsitDEvPHbB5G76YuKMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791018945; c=relaxed/simple;
-	bh=5Amsj13Ypf+VNbZXqe2Aip4i68WKcfoJI3MkINWORYs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rE4xI1W0CKPaIXzmOMHtslJDO/1AS5gxI5a37OHAphUsoeS7pZJMPp1ZKPVZBxibwGlm/9/9N2bBQ96jb1FwV3ldNRtuHkGbLuv+DJycIhB1DC8cPwyCFExygIB67Zn8lr/MhWKYfmhHsullMgZNHD4nD85rK2pfYvDKj/7Lc/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KuoQv8oS; arc=none smtp.client-ip=74.125.225.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791019299; c=relaxed/simple;
+	bh=8pyfJHeZrvClrGX9gUKcU8/qOmQb5eWAxSWUyR4tQrI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=AtuXnSGMXyFtVq9axDQ6Iatsy9k1Uwkqu6gRqbHOQUxymVBMjRQcRc7jTi6hOdsZalpypT0hYnbNY9HDAGq/542rEIpSlxXRqJt1P37fCFvqrQYC4+bAtJZ860uWvqm4lRFuH94berzUtGefYWKi1eUYK9X9ROvl7J5RHBs9A6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RR6GMvHy; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KuoQv8oS"
-Received: by mail-wr2-f33.google.com with SMTP id ffacd0b85a97d-48b104f6aa3so95876f8f.0
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2026 02:15:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791018941; x=1791623741; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=EL7Wt7gCvxigatArl4vYdYfYVLxu4uqJTJstEATQ4Rk=;
-        b=KuoQv8oSidVn5GsKfTxOq11yuq8ZhuV1nwJ00BuiMrqVHuHD1G4mWS6cvwiPJZptEO
-         qzQTTAd5cFrF9MAjvoKNOZgS/K7TmSUfDhVbHrUnstp6T/Igou1ATf/lwUaEo+3SDbHa
-         xcO1wuUr8NvjE/9MubWS0sVij+uXZMQt/WJW0IBfvJjgGZVSJYs2C90rnyGDA9GnDLU6
-         o6aQKSZukNOsEP4cMqNUN3NSeu2+blA76zvg1NVhAnIadlgmgEiB3j+D5vDDX4VcdBYX
-         5TmZC69xKbWzQlxIpHWhzn2cjifKY3oN1yXXaM23Iy/EOa0ii+XZ58duPNkfFCshk5r+
-         sdpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791018941; x=1791623741;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EL7Wt7gCvxigatArl4vYdYfYVLxu4uqJTJstEATQ4Rk=;
-        b=pxeq+ejGEEJPQS946x6iUmqhxnDMY11D2f9oDZWs//AQXy64OFsryMYjvhKBIU1v4Q
-         yv5jT6u5dxWrENUsr2mj39b1CzEB44yBrdUjf3N8ZG/VFNFPRi+JXdFxfk6aDucsnWbQ
-         Egyp6lD7IrKzXKF//KgiWh6v0IAmTX0nczbGeRbUl3h8l9C2RXrWU2dQ8an628Hedg4C
-         Pn14q5l/3ahtFhi/v1VXpI9xShzHgKcHsQUtvH8rXZOvj2MkGV9xAlCd1HrdmvrN9Int
-         PKmw6Dt3ajOdAH8guK0bmFs1OQkx9smKWjNAohtHhhmugNDXYv9bbwjcYKJs4Dsd8GS6
-         1MwQ==
-X-Forwarded-Encrypted: i=1; AKwUvByCinoVSwz6Zr+zXIEbKeXKm3I9QjwCzwn9yztYvesir/rsiGMVUdl2NPGcgw20mbKAEmy0i3aVWGSIe7F1gg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJP8TNV5j7uxXG8soWrPAmnfUDDmKXQD2Y+aLnqaoCZ2W0ttvsK
-	K7ijrvmBCib+Yc6aYNIvrh69WraMwuzLs1b8gBL89O+OHOqs/r3PT0qo
-X-Gm-Gg: AYBFou16N5chdVbh6Q/KVFmEvaxm4eJJ2dCI3MlFkHHe1vtAi/DWk8wnCloq0/YUtuy
-	VrlTVpo/pRCnKrrTLuhUECNVqWjCtKMP+PBO7AUs5Fyn6/VEWZd/eMQgQTwHtVNu7yr8MaUZ2pW
-	nYBE3zZXXhCIsM+weEPeZ/ktmXIxf7Ehau/X+J+aQJCsjNr8mflgbaZw5rdUOwxLCm7YyISWqF+
-	l2yJKCOX0BNCSbroPRM1QYrl20n08pQf8U0qfDyX8nkV3t7AGMcldGJ7PaRmIXbUjHMdtts3T2m
-	Ug2AC7jrHN8Gv/8ehI+M9kPdFm4cTzoFIBjY4ZbUlNIsMQ3m0aX8j5kqr/zrfiJFm1TWelP6XEJ
-	jN+uLQAoM+JKmJQsOBJ/YbniFk80344Ofq3k7SsFR11LK5cwns6xQgThWcAQG0DYoTzjcSQtHSw
-	BgIsDuLNVd46/+Sfzbslc/vN/RY2TpGiZk26487F3AOvrSzRTW1dUq68qfIoctlkSf9LjNwyGQA
-	3K43eVu1go=
-X-Received: by 2002:a05:6000:2c0a:b0:48b:7179:59da with SMTP id ffacd0b85a97d-48b71795ad8mr8328190f8f.1.1791018941391;
-        Sat, 03 Oct 2026 02:15:41 -0700 (PDT)
-Received: from FranzSP11.fritz.box ([31.31.60.25])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48b82253dc9sm11336161f8f.3.2026.10.03.02.15.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 Oct 2026 02:15:40 -0700 (PDT)
-From: Franz <franzelfranzel@gmail.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RR6GMvHy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=+M
+	26q6jZ9Bjj1t5nPehKPJpfjHJapIPhP4g+LU0QHr4=; b=RR6GMvHy0CCs/kGh6N
+	a3o6QW/5KJZk/3q/7oqBm6as1g1+Y882n2rmvtdwvyeJv2zWLJM/hZ+SS2n2k714
+	kpVOau8WaqcuNIIkY29iH9/Zvec/OftafhSZpo3endpvLvdz1sAKj9Ejf5pzTH3d
+	9QPaC7PDV8lTlwNDOY5GRRWiY=
+Received: from pc.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3n1YCycBqC7WjCQ--.62376S6;
+	Sat, 03 Oct 2026 17:21:12 +0800 (CST)
+From: Jiale Yao <yaojiale02@163.com>
 To: Jeff Johnson <jjohnson@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Abel Vesa <abelvesa@kernel.org>,
-	ath12k@lists.infradead.org,
+	Carl Huang <quic_cjhuang@quicinc.com>,
+	Baochen Qiang <quic_bqiang@quicinc.com>,
+	Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>,
+	Wen Gong <quic_wgong@quicinc.com>,
+	Kalle Valo <kvalo@kernel.org>,
 	linux-wireless@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
+	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH RFC 3/3] arm64: dts: qcom: x1-microsoft-denali: disable WCN7850 hardware rfkill
-Date: Sat,  3 Oct 2026 11:15:09 +0200
-Message-ID: <20261003091509.4822-4-franzelfranzel@gmail.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261003091509.4822-1-franzelfranzel@gmail.com>
-References: <20261003091509.4822-1-franzelfranzel@gmail.com>
+Cc: Jiale Yao <yaojiale02@163.com>
+Subject: [PATCH v2 4/5] wifi: ath12k: avoid IDR mutation during pending mgmt TX cleanup
+Date: Sat,  3 Oct 2026 17:21:01 +0800
+Message-Id: <20261003092104.520135-5-yaojiale02@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261003092104.520135-1-yaojiale02@163.com>
+References: <20261003092104.520135-1-yaojiale02@163.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -86,32 +49,88 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3n1YCycBqC7WjCQ--.62376S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJFyxtw47urW8KF4xtF4fKrg_yoW5KFyxpF
+	W8uF9rAFyUCw4UXws5JF4xCa4rX3WDJws2kr4kCa4rWF98Xr1FqF1YqFy3Jry0yF45tFyY
+	93yjyr18Gwn8t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pijQ6AUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzgg-eWrAyQiiAQAA3I
 
-The WCN7850 hardware rfkill input reads as "radio off" on the Surface
-Pro 11, which keeps Wi-Fi hard-blocked. Mark it as unusable.
+The pending management TX cleanup walks txmgmt_idr with idr_for_each(),
+and its callback removes the current entry. This can invalidate the
+radix-tree iterator retained by idr_for_each().
 
-Tested by adding the property to the installed DTB with fdtput, on
-next-20260929 with the matching ath12k change.
+Use idr_for_each_entry() so every iteration starts with a fresh lookup.
+Continue to remove each entry under txmgmt_idr_lock before freeing its skb,
+preventing concurrent TX completion from finding a stale skb pointer.
 
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Franz <franzelfranzel@gmail.com>
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- arch/arm64/boot/dts/qcom/x1-microsoft-denali.dtsi | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath12k/core.c |  3 +--
+ drivers/net/wireless/ath/ath12k/mac.c  | 12 ++++++------
+ drivers/net/wireless/ath/ath12k/mac.h  |  2 +-
+ 3 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/x1-microsoft-denali.dtsi b/arch/arm64/boot/dts/qcom/x1-microsoft-denali.dtsi
-index a71c29762..36592b8ed 100644
---- a/arch/arm64/boot/dts/qcom/x1-microsoft-denali.dtsi
-+++ b/arch/arm64/boot/dts/qcom/x1-microsoft-denali.dtsi
-@@ -1009,6 +1009,8 @@ wifi@0 {
- 		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
- 		vddpcie0p9-supply = <&vreg_pmu_pcie_0p9>;
- 		vddpcie1p8-supply = <&vreg_pmu_pcie_1p8>;
-+
-+		disable-rfkill;
- 	};
- };
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 262a2045309b..e9aa5e4e999d 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -1514,8 +1514,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
+ 			complete_all(&ar->thermal.wmi_sync);
  
+ 			wake_up(&ar->dp.tx_empty_waitq);
+-			idr_for_each(&ar->txmgmt_idr,
+-				     ath12k_mac_tx_mgmt_pending_free, ar);
++			ath12k_mac_tx_mgmt_pending_free(ar);
+ 			idr_destroy(&ar->txmgmt_idr);
+ 			wake_up(&ar->txmgmt_empty_waitq);
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 99bf5cf79d10..c0acb92b7320 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -9187,13 +9187,13 @@ static void ath12k_mac_tx_mgmt_free(struct ath12k *ar, int buf_id)
+ 	ath12k_mgmt_over_wmi_tx_drop(ar, msdu);
+ }
+ 
+-int ath12k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
++void ath12k_mac_tx_mgmt_pending_free(struct ath12k *ar)
+ {
+-	struct ath12k *ar = ctx;
+-
+-	ath12k_mac_tx_mgmt_free(ar, buf_id);
++	struct sk_buff *msdu;
++	int buf_id;
+ 
+-	return 0;
++	idr_for_each_entry(&ar->txmgmt_idr, msdu, buf_id)
++		ath12k_mac_tx_mgmt_free(ar, buf_id);
+ }
+ 
+ static int ath12k_mac_vif_txmgmt_idr_remove(int buf_id, void *skb, void *ctx)
+@@ -14725,7 +14725,7 @@ static struct wiphy_iftype_ext_capab ath12k_iftypes_ext_capa[] = {
+ 
+ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
+ {
+-	idr_for_each(&ar->txmgmt_idr, ath12k_mac_tx_mgmt_pending_free, ar);
++	ath12k_mac_tx_mgmt_pending_free(ar);
+ 	idr_destroy(&ar->txmgmt_idr);
+ 
+ 	kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
+index aba98afd4365..ae44ebfd9bd9 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.h
++++ b/drivers/net/wireless/ath/ath12k/mac.h
+@@ -173,7 +173,7 @@ struct ath12k *ath12k_mac_get_ar_by_pdev_id(struct ath12k_base *ab, u32 pdev_id)
+ void ath12k_mac_drain_tx(struct ath12k *ar);
+ void ath12k_mac_peer_cleanup_all(struct ath12k *ar);
+ void ath12k_mac_dp_peer_cleanup(struct ath12k_hw *ah);
+-int ath12k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
++void ath12k_mac_tx_mgmt_pending_free(struct ath12k *ar);
+ enum rate_info_bw ath12k_mac_bw_to_mac80211_bw(enum ath12k_supported_bw bw);
+ enum ath12k_supported_bw ath12k_mac_mac80211_bw_to_ath12k_bw(enum rate_info_bw bw);
+ enum hal_encrypt_type ath12k_dp_tx_get_encrypt_type(u32 cipher);
 -- 
-2.56.0
+2.34.1
 
