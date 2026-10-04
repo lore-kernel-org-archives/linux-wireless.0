@@ -1,223 +1,278 @@
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E125339AD3B
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 17:07:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791133644; cv=pass; b=jNkgYr+0/eA3ZnV2imoqdGzJe66QVO/gadZPX5wcKb1oMNdLDjnZuJcnsD7BSfNQopaGQ7CwVJ49TeugPkX7oc86YAyw1X+I8gVR2QQwlg/jH6+wihqP+4zuTUXOz3F+OARu2DBeUBvvyIa3fZR2EnSIPGsu+B04fCKuYZIOJ8c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791133644; c=relaxed/simple;
-	bh=HjGJP5tD91XNGYXee3E7zuvEtsEPqCl8cbOoLpn3IwM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FVicMm5s9lIcLWjxEL2Vt8dmYnsNwr2uDheceVJ2IIMkIB1VgoBywRhDV3VI507dV9rsLHb1bpKLF9lYb/IZWXXp8FasdxBHoGL5eyK0z5zx9Hr9ubNwLnAkjkuR7CE6wj7hAIp8HW7lJx0HKFJGp/s8kzVK3OWjmR3MivA5j+Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=Yrh4My5i; arc=pass smtp.client-ip=74.125.224.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2313046D096;
+	Sun,  4 Oct 2026 17:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791134549; cv=none; b=blea7/hB4aULEDUtlLTmq71WEIkP5Tf8pk2HuZCEKUZuXF+LcpYieSAM8gAUBA2K0BSKtRK10p3UPP8/pwbW8T2Ot1sOajGcplxMHRpiPx56kKYZpxsbnSNtkdk5BQXkjDA2l8fC0MQcsZFC+hPuqJmYNNl0EF5XLXj6WYNKrz4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791134549; c=relaxed/simple;
+	bh=a5U+72tKI9vxb9cehQbCiyroyWRVx59lcQpxUFkcpMw=;
+	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=UaAcCA3FjfCZEAEaiJmYmqMMCaJ3pTn7td0KIyiFpM9FPB0aCU+1963pSlhPofMl1dKSgHm8cs7czvhf9sUENmkQl7QODTZEsjvkv/wTLeiwKtqRX5U/568GfktY01/yZolArdQgsw0TC7jAY2Uyq3V/9v/Cv5p0Z/CrILA1wNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fIC/M/UM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="Yrh4My5i"
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-677dbe051d4so98984d50.0
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2026 10:07:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791133642; cv=none;
-        d=google.com; s=arc-20260327;
-        b=M7UVqrcsOsF0fiIdbhhuVyF2GYbcjW4iP5IKpHTL0JqmIvLaBwNnbWz+8Ds7c0pkfO
-         6PNoSvPFruIil6igFHHJ7jqqc1oGWeagQk5dLpbRS2Z7V0PUo5YNhHuhoebGEyQx5Y8B
-         Rc61fuFcHIsiJvIO6x89tcvLQCpRpHBeWpTLF9mo2Vm19Nf039iMkui+ZFalyIPtAcVz
-         HJ0Csmnbl4XYv4HnSKhl21x1XGhmCIFTurFjw3C/3pukBHjjiwuiTfcuBJ18oFyPV/3M
-         gyTFGoCC+OS6HH72lDVvtEouY8N/UEuKy/peZOMX/XYc7UljZfEhPe6N+xydAhPiWQGm
-         6+8w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
-        fh=ulGGoC5sAR5/bUU8RqERRd97YGipBL49ZKARiXrUmPw=;
-        b=g0k54xOJAUGmnk/PEO2fZpv9Ks+28jwstZqNkZeX6D3ViIyPBTJGvoDfPWuGPmvEhC
-         9IYx64rgQ+Qw4D2HVWWZrm5Z39v0djsgsZgSDeRufgEDSQq82LdzgsvZ81m/EKI8EE06
-         KMvuxUYFH3NcvrMORoowLOJp0Q0nxe3kvF4DOFbymSqWrKaAPYiMBt41qhtTr5GrsaWZ
-         jKcq56qgCxq2UX2gvnhVolcEKye1LzPJd4vYWamr6D8ZSh21rUWQseHDfoMTWaHnneZc
-         pa+/P852C4JaDAw4DKTjAVujtIzqx3pTXlzBLKXMs61q13aBGLniThXtpi6Y1g2FqyfS
-         jjaQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1791133642; x=1791738442; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
-        b=Yrh4My5ifuOyepCADBL6Tv8hL6qDC7oYeN51sF3/05cEpv0FXSaCLNXKbpg3Bee7pJ
-         U+0WeQhLIjgJzDC/E0nYHRdS0f8rcj1eFalbH0tnfnroxKi4pg+qKthRTSL+ah5Tn5y+
-         3stIVfSe/9MB+ZZ2zDB0F+2+zCQzFDOaWTkWj7CoRkkCzMXUqebfRlgZqJ6AAKH3oRMx
-         Ear9DE80BlKlO0wM431et1cWthkySN409VChlQfxBlD0ChEonkB2jJP9Hx585C8XnR1n
-         eWCWSFaSvq5P6cYndHlR0L4aW13zd+dxMyGvXR09Vh+EygOCXYUol13ISEq4RaUdN55r
-         +Crg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791133642; x=1791738442;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
-        b=HW8rvGWdSpPuBRKlUr13GV5PQjoDx9W/9QytYO19oQx+eVJrCN6/ac+u2T95iS2Y9f
-         J13RtEd/KD2yvbD4zSppQ53U63SLxTvJIU2jQx1EqgPTDaYSf10FmuZz81BuZhEyk2fN
-         ya6QssZFHCeivN9GNWL5SFdpPL95uL9Y/7DcL98Ks8iuVjNr/Gsdx/RT2hyJnuESONB4
-         Ev5aLBPJW6nSYH2vgkN79PJFYRgney89uewqhs/VG5K7swIbdU3l8wCBh0HsGqciC/16
-         UmF+f/eUWuVgBICIfOarvgtkgNIxFKobSd/u32tZKokdzjUUZ1+CV6l9kX+QKyXYRmn9
-         I1pA==
-X-Forwarded-Encrypted: i=1; AKwUvBy4aJM5Leaf8Cfab4tqW+6JEqTX21pD9EQfcJ8v+5nASyoBE7hV+1V2Nqojm94E8zE8Bfm+Dpt6p3CWbyWXYA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKGiUcgK9WNmQJ/yWzPAWJRdBOtKbx1IE8VT/IaqpQd1JEEUWog
-	YQ7Xahb+F5jDWfO1fT3IZe1oWX6dg/Ina0t4PJbzmK+08egqE3WKGOF+nrGFZAg0LLBtdU92GXj
-	7DK/pYaRgsExGOq4cys4nw8m+iTfTuA36rtXgKZv3
-X-Gm-Gg: AYBFou0v7hSrrjMKS3fMBDCCgBIO8Iyp4jL1CelvDZZPpdNRd4CkxQyCIgcfwQK7O6g
-	i7ln+1b81mrzDzsg+dKIZlu0nfKEGDtM5NFeVS99tihlMtSlsn/Pal5qMDfiWAeB3PJlaFOkGx0
-	2KDDLpSqdFc8WlQJ7G+zahWd/3fr0niETWUXd41J6gk1i8r5Ey88Pd94KEQiPCqzJSYGYT20s3C
-	Zy3lt/WYmkmE5wAcdsJgHjOUSe+8/iBk3qUDMCNecu6NT0G5pNntzKx+3yinYmK5yhsloMEkCA2
-	rcE8rCayGyqm0/w1ERkNsORe6jr9Wh9VC2/SKngRuClUwtW6IMzbfdmV8e24QYZ/rsPx64NUw82
-	5Uinx0D54nfvp3NJU6oWOVi0uwGBnEoWBQbLY0FnEUPtpbQ9RLcXZcP89faenxnTKvmRClGxyxt
-	tKQch3V9dRuBTF6Xnx+BuSgjF687tqtacLOeVcZVaCAaDNlFWgmt6N1z0Tjbq2VlVkuLYGzuPrA
-	AXIkVQ56kiFPTCfF40OszIrOD///ynDaI1naQYtTlNwkUo58Sq0cmBbUCvzWecNRHX/PKtACERC
-	7CdQ09sKhXjoGvA=
-X-Received: by 2002:a05:690c:a786:b0:873:5bb2:6c37 with SMTP id
- 00721157ae682-8ae94efdc33mr12232817b3.62.1791133641779; Sun, 04 Oct 2026
- 10:07:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fIC/M/UM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E27D1F000FF;
+	Sun,  4 Oct 2026 17:22:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791134547;
+	bh=eNDOPZYZSMHNd1Bs7oNDiHexizZgAb5SQSZyBYVU8FY=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=fIC/M/UMgvYKdKP+wVB3ybwVreqsK7r5T0sUW9wMGVw6PfdSfW1pfbaZJiwTHiFbI
+	 Tb3ZdCp9MDfB6CPQSv8XH0zgR+O+vP5Hh6QcpRRpFWzV57mbhpkkW3xJCJ3JdrPh9P
+	 76/PKTkfRk87kDT86LrYHXvad5sb2CSovAuOZhQi/n7BJlqxi1pammob9TbnDydYDf
+	 YDONp+wAgujSd985iZm1hvvPS9r9OChHl118GnyrKis9me7VV3b/DmeKvuKxBhOdzo
+	 vIKJfFMorXZDAH2ReC6kYGZzuVopJ94ht53oyz8ggomY+jnlBsrq8foLeYV3zatlmj
+	 NPBdRbM3niYWw==
+Subject: Re: [PATCH 02/16 net-next v3] net: core: add IPv4 fallback stubs and
+ guards for CONFIG_IPV4=n
+From: netdev-bot+sashiko@kernel.org
+To: fmancera@suse.de
+Cc: netdev@vger.kernel.org, horms@kernel.org, kuba@kernel.org,
+ pabeni@redhat.com, edumazet@kernel.org, davem@davemloft.net,
+ johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Date: Sun, 04 Oct 2026 17:22:26 +0000
+Message-ID: <179113454679.434549.8561549828918413865@kernel.org>
+In-Reply-To: <20260930135334.4739-3-fmancera@suse.de>
+References: <20260930135334.4739-3-fmancera@suse.de>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260908135319.754140-1-julius@bairaktaris.de>
- <20260908135319.754140-8-julius@bairaktaris.de> <CABkEBKa0pEB9cL1+yoOF0OQSkYb7T1ji36oJ3sVYYV+Nc-_dcg@mail.gmail.com>
-In-Reply-To: <CABkEBKa0pEB9cL1+yoOF0OQSkYb7T1ji36oJ3sVYYV+Nc-_dcg@mail.gmail.com>
-From: Julius Bairaktaris <julius@bairaktaris.de>
-Date: Sun, 4 Oct 2026 17:06:46 +0000
-X-Gm-Features: AclHuK-EedBupHUek5v73mxQfgY0Ojo9131n1X7zqgfDB2Zu8K3FpAglHH7v6fQ
-Message-ID: <CAC1t37+c3WG8SDLkuK6qzYj1Af0TSGS=5eNwCnGhKPooAys1Zw@mail.gmail.com>
-Subject: Re: [PATCH ath-next v4 7/9] wifi: ath11k: charge received airtime to
- the station deficit
-To: Tamizh Raja <tamizh.raja@oss.qualcomm.com>
-Cc: jjohnson@kernel.org, linux-wireless@vger.kernel.org, 
-	ath11k@lists.infradead.org, linux-kernel@vger.kernel.org, toke@toke.dk, 
-	sven@narfation.org, quic_vthiagar@quicinc.com, john@phrozen.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-That's true, I will incorporate a fix in v5.
-Thanks for looking into it!
+Thank you for your contribution! Sashiko AI review found 5 potential
+issue(s) to consider.
 
-Julius
+Critical: 0 · High: 0 · Medium: 2 · Low: 3
 
-Am Di., 29. Sept. 2026 um 16:11 Uhr schrieb Tamizh Raja
-<tamizh.raja@oss.qualcomm.com>:
->
-> On Tue, Sep 8, 2026 at 7:23=E2=80=AFPM Julius Bairaktaris <julius@bairakt=
-aris.de> wrote:
-> >
-> > mac80211's airtime scheduler is configured to account both directions:
-> > local->airtime_flags is AIRTIME_USE_TX | AIRTIME_USE_RX, and
-> > ieee80211_sta_register_airtime() adds the received airtime to the same
-> > deficit the transmit side subtracts from. ath11k passes zero for it, so
-> > an access point serving a station that mostly uploads charges that
-> > station nothing for the medium it occupies, and the deficit that decide=
-s
-> > whose queue is served next describes half the traffic.
-> >
-> > Register the duration the hardware reports for each received PPDU. It
-> > arrives in the RXPCU PPDU end TLV on the monitor status ring, which is
-> > subscribed for every radio, and ath11k already accumulates it as the
-> > station's rx_duration. Charging it once per PPDU matches what the
-> > transmit side registers, whereas an estimate rebuilt per MSDU counts th=
-e
-> > preamble and the interframe space once for every subframe of an
-> > aggregate.
-> >
-> > The PPDU end user stats TLV that names the TID is not in the default
-> > monitor status filter, so the airtime is charged to best effort, the
-> > access category the deficit arbitrates the bulk of the traffic in. The
->
-> This means the resulting fairness accounting is only an approximation
-> and can leave VO/VI deficits
-> uncharged while accumulating all received airtime against BE
->
-> > call is made after ab->base_lock is dropped, under the rcu read lock th=
-e
-> > loop holds, as the tx completion path does; base_lock is contended by
-> > every tx completion. A PPDU from a peer with no station entry is not
-> > charged to anyone.
-> >
-> > Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
-> >
-> > Assisted-by: Claude:claude-opus-5
-> > Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
-> > ---
-> >  drivers/net/wireless/ath/ath11k/dp_rx.c | 15 +++++++++++++++
-> >  1 file changed, 15 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wire=
-less/ath/ath11k/dp_rx.c
-> > index 68472e1e748a..a7b9bb295728 100644
-> > --- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-> > +++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-> > @@ -5270,6 +5270,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k=
-_base *ab, int mac_id,
-> >         struct sk_buff_head skb_list;
-> >         struct ath11k_peer *peer;
-> >         struct ath11k_sta *arsta;
-> > +       struct ieee80211_sta *sta;
-> >         int num_buffs_reaped =3D 0;
-> >         u32 rx_buf_sz;
-> >         u16 log_type;
-> > @@ -5324,6 +5325,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k=
-_base *ab, int mac_id,
-> >                         continue;
-> >                 }
-> >
-> > +               sta =3D NULL;
-> >                 rcu_read_lock();
-> >                 spin_lock_bh(&ab->base_lock);
-> >                 peer =3D ath11k_peer_find_by_id(ab, ppdu_info->peer_id)=
-;
-> > @@ -5337,12 +5339,25 @@ int ath11k_dp_rx_process_mon_status(struct ath1=
-1k_base *ab, int mac_id,
-> >
-> >                 arsta =3D ath11k_sta_to_arsta(peer->sta);
-> >                 ath11k_dp_rx_update_peer_stats(arsta, ppdu_info);
-> > +               sta =3D peer->sta;
-> >
-> >                 if (ath11k_debugfs_is_pktlog_peer_valid(ar, peer->addr)=
-)
-> >                         trace_ath11k_htt_rxdesc(ar, skb->data, log_type=
-, rx_buf_sz);
-> >
-> >  next_skb:
-> >                 spin_unlock_bh(&ab->base_lock);
-> > +
-> > +               /* The airtime a station spends transmitting is taken f=
-rom
-> > +                * the others, so its deficit is charged for it too, wi=
-th the
-> > +                * duration the hardware measured for the whole PPDU, a=
-s on
-> > +                * the transmit side. The TLV that names the TID is not=
- in
-> > +                * the default monitor status filter, so the charge goe=
-s to
-> > +                * BE. Outside base_lock, which tx completion contends =
-for;
-> > +                * sta is held by the rcu read lock.
-> > +                */
-> > +               if (sta && ppdu_info->rx_duration)
-> > +                       ieee80211_sta_register_airtime(sta, 0, 0,
-> > +                                                      ppdu_info->rx_du=
-ration);
-> >                 rcu_read_unlock();
-> >
-> >                 dev_kfree_skb_any(skb);
-> > --
-> > 2.53.0
-> >
-> >
->
->
-> --
-> - Tamizh.
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [Medium] With CONFIG_IPV4=n, the new ip_setsockopt()/ip_getsockopt()
+  stubs make every SOL_IP option return -EAFNOSUPPORT.
+- [Medium] The patch adds `if (!IS_ENABLED(CONFIG_IPV4)) return
+  -EAFNOSUPPORT;` at the top of dev_ifconf() (net/core/dev_ioctl.c).
+- [Low] Baseline decision: false (not a real bug by the end of the
+  series).
+- [Low] The patch changes the INDIRECT_CALL_INET_1() gate in
+  include/linux/indirect_call_wrapper.h from CONFIG_INET to CONFIG_IPV4.
+- [Low] The CONFIG_IPV4=n stub of ip_route_output_flow() in
+  include/net/route.h is a function definition with an unnamed first…
+
+--
+
+net: core: add IPv4 fallback stubs and guards for CONFIG_IPV4=n
+
+This commit adds static inline stubs to include/net/ip.h and
+include/net/route.h for use when CONFIG_IPV4 is disabled. It also adds
+IS_ENABLED(CONFIG_IPV4) guards to generic networking code so that code
+links without IPv4. Finally, it gates the INDIRECT_CALL_INET() and
+INDIRECT_CALL_INET_1() helpers on CONFIG_IPV4 instead of CONFIG_INET.
+
+> diff --git a/include/linux/indirect_call_wrapper.h b/include/linux/indirect_call_wrapper.h
+> index 0e4340ecd857a..583efbc034466 100644
+> --- a/include/linux/indirect_call_wrapper.h
+> +++ b/include/linux/indirect_call_wrapper.h
+
+[ ... ]
+
+> -#if IS_ENABLED(CONFIG_INET)
+> +#if IS_ENABLED(CONFIG_IPV4)
+>  #define INDIRECT_CALL_INET_1(f, f1, ...) INDIRECT_CALL_1(f, f1, __VA_ARGS__)
+>  #else
+>  #define INDIRECT_CALL_INET_1(f, f1, ...) f(__VA_ARGS__)
+
+[Severity: Low]
+Does INDIRECT_CALL_INET_1() need to be gated on CONFIG_IPV4?
+
+Every f1 passed to this macro is a TCP core function that is still built
+when IPV4=n: tcp_release_cb, tcp_leave_memory_pressure,
+tcp_stream_memory_free and tcp_bpf_bypass_getsockopt. tcpv6_prot uses
+all of them as well.
+
+For example, release_sock() in net/core/sock.c has:
+
+	INDIRECT_CALL_INET_1(sk->sk_prot->release_cb,
+			     tcp_release_cb, sk);
+
+Consider a CONFIG_IPV4=n, CONFIG_IPV6=y kernel with retpolines. There,
+release_sock(), sk_leave_memory_pressure(), sk_stream_memory_free() and
+BPF_CGROUP_RUN_PROG_GETSOCKOPT would make an indirect call instead of
+the direct tcp_* call.
+
+INDIRECT_CALL_INET() above keeps an IPv6 fast path, but
+INDIRECT_CALL_INET_1() loses it. Could this macro stay gated on
+CONFIG_INET?
+
+> diff --git a/include/net/ip.h b/include/net/ip.h
+> index 6f602df72ee62..194a464c443af 100644
+> --- a/include/net/ip.h
+> +++ b/include/net/ip.h
+
+[ ... ]
+
+> @@ -225,27 +235,58 @@ int ip_append_data(struct sock *sk, struct flowi4 *fl4,
+
+[ ... ]
+
+> +static inline struct sk_buff *ip_finish_skb(struct sock *sk, struct flowi4 *fl4)
+> +{
+> +	return ERR_PTR(-EAFNOSUPPORT);
+> +}
+
+[Severity: Low]
+The real ip_finish_skb() calls __ip_make_skb(), which only returns NULL
+or a valid skb. Its callers check only for NULL:
+
+	skb = ip_finish_skb(sk, fl4);
+	if (!skb)
+		goto out;
+
+Later in the series, both callers, udp_push_pending_frames() and
+ip_push_pending_frames(), end up in objects that are built only with
+CONFIG_IPV4. udp_v6_push_pending_frames() also guards its call with
+IS_ENABLED(CONFIG_IPV4).
+
+So this stub looks unreachable. At this commit CONFIG_IPV4 is still
+def_bool y, so the stub isn't compiled at all.
+
+Should the stub return NULL to match the return contract of the real
+function?
+
+[ ... ]
+
+> @@ -813,24 +854,60 @@ int ip_options_rcv_srr(struct sk_buff *skb, struct net_device *dev);
+
+[ ... ]
+
+> +static inline int ip_setsockopt(struct sock *sk, int level, int optname,
+> +				sockptr_t optval, unsigned int optlen)
+> +{
+> +	return -EAFNOSUPPORT;
+> +}
+> +
+> +static inline int ip_getsockopt(struct sock *sk, int level, int optname,
+> +				char __user *optval, int __user *optlen)
+> +{
+> +	return -EAFNOSUPPORT;
+> +}
+> +#endif
+
+[Severity: Medium]
+With CONFIG_IPV4=n, do these stubs remove SOL_IP options that IPv6
+sockets rely on?
+
+ipv6_setsockopt() and ipv6_getsockopt() forward SOL_IP to these
+functions for AF_INET6 sockets:
+
+net/ipv6/ipv6_sockglue.c:ipv6_setsockopt() {
+    ...
+	if (level == SOL_IP && sk->sk_type != SOCK_RAW)
+		return ip_setsockopt(sk, level, optname, optval, optlen);
+    ...
+}
+
+MPTCP also calls ip_setsockopt() directly, from
+mptcp_setsockopt_sol_ip_set() and mptcp_setsockopt_v4_set_tos().
+
+Some of these options work for any address family and have no SOL_IPV6
+equivalent, such as IP_BIND_ADDRESS_NO_PORT and IP_LOCAL_PORT_RANGE.
+The only code that sets INET_FLAGS_BIND_ADDRESS_NO_PORT and the
+per-socket local_port_range is in ip_sockglue.c. By the end of the
+series that file is built only with CONFIG_IPV4. However, __inet6_bind()
+and the port range selection still read that state for IPv6 sockets.
+
+On an IPv6-only kernel, this call would then fail with EAFNOSUPPORT:
+
+	setsockopt(fd6, SOL_IP, IP_BIND_ADDRESS_NO_PORT, ...)
+
+The commit message says:
+
+    This behaves as IPv6 code does.
+
+However, CONFIG_IPV6=n doesn't remove any options from IPv4 sockets. Is
+this loss of IPv6 socket functionality intended?
+
+> diff --git a/include/net/route.h b/include/net/route.h
+> index 6b55de2e4df88..8c21881eb5f4f 100644
+> --- a/include/net/route.h
+> +++ b/include/net/route.h
+> @@ -169,8 +169,16 @@ static inline struct rtable *__ip_route_output_key(struct net *net,
+>  	return ip_route_output_key_hash(net, flp, NULL);
+>  }
+>  
+> +#if IS_ENABLED(CONFIG_IPV4)
+>  struct rtable *ip_route_output_flow(struct net *, struct flowi4 *flp,
+>  				    const struct sock *sk);
+> +#else
+> +static inline struct rtable *ip_route_output_flow(struct net *, struct flowi4 *flp,
+> +						  const struct sock *sk)
+> +{
+> +	return ERR_PTR(-EAFNOSUPPORT);
+> +}
+> +#endif
+
+[Severity: Low]
+Will this stub build with all supported compilers once the later patch
+in the series makes CONFIG_IPV4=n selectable?
+
+The stub is a function definition whose first parameter has no name.
+gnu11 doesn't allow that; only C23 does. GCC 8 through 10 reject it with
+"parameter name omitted", and Documentation/process/changes.rst lists
+GCC 8.1 as the minimum version. Clang warns that this is a C23
+extension, which breaks CONFIG_WERROR builds.
+
+Naming the parameter (struct net *net) would avoid this.
+
+> diff --git a/net/core/dev_ioctl.c b/net/core/dev_ioctl.c
+> index 164643140a523..a10921aa3e23f 100644
+> --- a/net/core/dev_ioctl.c
+> +++ b/net/core/dev_ioctl.c
+> @@ -44,6 +44,9 @@ int dev_ifconf(struct net *net, struct ifconf __user *uifc)
+>  	size_t size;
+>  	int len, total = 0, done;
+>  
+> +	if (!IS_ENABLED(CONFIG_IPV4))
+> +		return -EAFNOSUPPORT;
+> +
+
+[Severity: Medium]
+Does this early return change SIOCGIFCONF behaviour on existing
+CONFIG_INET=n kernels?
+
+CONFIG_IPV4 is only defined inside "if INET" in net/Kconfig. That means
+IS_ENABLED(CONFIG_IPV4) evaluates to 0 whenever CONFIG_INET=n.
+
+Before this patch, those kernels used the !CONFIG_INET stub in
+include/linux/inetdevice.h:
+
+static inline int inet_gifconf(struct net_device *dev, char __user *buf,
+			       int len, int size)
+{
+	return 0;
+}
+
+So SIOCGIFCONF succeeded and returned ifc_len = 0.
+
+sock_ioctl() passes SIOCGIFCONF to dev_ifconf() for any socket family,
+for example AF_UNIX, AF_PACKET or AF_NETLINK. On CONFIG_INET=n kernels
+the ioctl now fails with EAFNOSUPPORT. The inet_gifconf() stub also
+becomes unreachable.
+
+Could the inet_gifconf() stub be gated on CONFIG_IPV4 instead, and this
+early return dropped? That would keep the existing result of success
+with an empty list.
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260930135334.4739-1-fmancera%40suse.de
