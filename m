@@ -1,128 +1,223 @@
-Received: from mail-yw1-f226.google.com (mail-yw1-f226.google.com [209.85.128.226])
+Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6414239AD3B
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 17:07:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.226
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791133628; cv=none; b=qDWC2eOwtj7pFwGnvrgDRtd2GiCpqPiZn8/SutaV/EfQ53qTls7bE605NSQLHJTdVjdqq/Z6PiJxXsQGhqzpSUTXLDYC1XkISUdlKR1aulKPDijsmFPio0NxkLwZgDHpb+CrIybH3b7dEqDrFzGSJhNdOii5gDfQVgKCh4UH5xY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791133628; c=relaxed/simple;
-	bh=OaAGxpPZexR6MyHBBVyckzT+rR4fO+d68d30SXtglZ0=;
-	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=dfOAa0WX+6cPqLkHjlbv5oclLrfIac9cfJnCcg06W3ADnlTXN/eXP4phKoxCwnnM1706XzEO1UnVEjqgFcRqBDL2wN3oxrFzttUL22annDQJuVEcJuBvsMzu8lsTmEOnInH7h1K+/czO1QFmU6naUaAVBYl2YyOKvpb9oeX6Hn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Nzz4Anwp; arc=none smtp.client-ip=209.85.128.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E125339AD3B
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 17:07:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791133644; cv=pass; b=jNkgYr+0/eA3ZnV2imoqdGzJe66QVO/gadZPX5wcKb1oMNdLDjnZuJcnsD7BSfNQopaGQ7CwVJ49TeugPkX7oc86YAyw1X+I8gVR2QQwlg/jH6+wihqP+4zuTUXOz3F+OARu2DBeUBvvyIa3fZR2EnSIPGsu+B04fCKuYZIOJ8c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791133644; c=relaxed/simple;
+	bh=HjGJP5tD91XNGYXee3E7zuvEtsEPqCl8cbOoLpn3IwM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FVicMm5s9lIcLWjxEL2Vt8dmYnsNwr2uDheceVJ2IIMkIB1VgoBywRhDV3VI507dV9rsLHb1bpKLF9lYb/IZWXXp8FasdxBHoGL5eyK0z5zx9Hr9ubNwLnAkjkuR7CE6wj7hAIp8HW7lJx0HKFJGp/s8kzVK3OWjmR3MivA5j+Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=Yrh4My5i; arc=pass smtp.client-ip=74.125.224.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Nzz4Anwp"
-Received: by mail-yw1-f226.google.com with SMTP id 00721157ae682-8aea7b7ca0cso494987b3.2
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2026 10:07:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791133626; x=1791738426;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from
-         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Tk+Gtt99hoarKyP0vohBXkdpiLY0JgLAZUcS9Y0MMUo=;
-        b=QKgSfohpnXlvnPUDH3vGFEVnGN0deWJ9R+O3HBPFYMVWGi3v2N5U45MGsBrw3ttASy
-         QQCdkkUKlkC5oUGSW/BvePMVEKX1Ih3Ghs4SG5PPRWIJ8FJjBMIXsN4XkLOlx6MmLJ9v
-         +nhCugywg2tlLAAhbpQB8eod8jRGRrMgXnQu0QTi1IBNQf7ufTOmft8e8ZvsocGhSlLG
-         4QlMa2x2VH+0qQHtOqQ2koiPIVsyT1Z9tu7T+PdrNQtZRUi21Pn6U/OjIm5CZD393a1G
-         tlJ3skLgHkSOjX5qkxgce7M/qxtRrg32eiKPdN71mtpHwmunR+af1dbLWMok3ex3Bhb/
-         TL/w==
-X-Gm-Message-State: AFq9FYL1otyKLlTd4Yw3AI5ewZn3TTBrOjpgZixnhsrGHIirtH7Bf8Us
-	QU+Pirvyms+a73lqK2zsvfz0kmJ4wf/BS75uSZruWyNqDHkAhLqNHFRitjtCjctBcspE8XDkNfV
-	D3GQQzxvgw9dbHE1jGtVolpIVzAEGazX3A8d4slzW1obKHl2i6reQ91h+f4UEaoH8otLnJe5Cwb
-	2RAhya8Y+unTeW6BSLgFuDH/NmxdPTH3eygvxAr14JB315R5aOLbrTvXJhrifZN32jMgNJsmNMS
-	S1JmjkB4ID4xSueool2+uxHgRyx
-X-Gm-Gg: AYBFou3SIEu4NWYkoRodIv/HZTzGxD4F3nEOL7w5LqOFgAi15QXwKaaQ1OkqMbyYGP3
-	y/iaiGHqehRr9mWJb/qP5Mje943KvafSBFov2uxxPrby0Sqtgz7DXp0yW7kIdNUp1J5u90fySdQ
-	y5kIljQiOu4tod5gxcWbrpRXosBxvjq7O8XL7K5JgXXihWoHJrh7wLWb4ODQ+wnY37hOingTobe
-	Fr1yBufsXbAuW5QPm5bqaoOinbGrd3AwURXCBRxzEs5iPx0p3nzE0Y4w78lfrk73F4FFF5mKoXi
-	3cdzk7k+l4bHtb64KFazy8TvH692I09QJrr5SPjmyeku5K3Cpn1wCmcUhQta3frHFZJK5ahrbuk
-	2VQ6dJA7TbxBMYROcrtvrmgjZRGndaFQ4w4HWKlTZeg6kZMhDTxKPFW9tfn0qOy04lfJlpE+mAP
-	3j1QW2DUXXr38W8AxvMNfm6o1HBIlNpQUW7iYH7uXZDQ==
-X-Received: by 2002:a05:690e:11c3:b0:677:bbbe:e50b with SMTP id 956f58d0204a3-677bbbee84cmr1733928d50.25.1791133626149;
-        Sun, 04 Oct 2026 10:07:06 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
-        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-677c1bee20dsm879053d50.35.2026.10.04.10.07.05
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 04 Oct 2026 10:07:06 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-91961d4b31bso16452896d6.0
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2026 10:07:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="Yrh4My5i"
+Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-677dbe051d4so98984d50.0
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2026 10:07:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791133642; cv=none;
+        d=google.com; s=arc-20260327;
+        b=M7UVqrcsOsF0fiIdbhhuVyF2GYbcjW4iP5IKpHTL0JqmIvLaBwNnbWz+8Ds7c0pkfO
+         6PNoSvPFruIil6igFHHJ7jqqc1oGWeagQk5dLpbRS2Z7V0PUo5YNhHuhoebGEyQx5Y8B
+         Rc61fuFcHIsiJvIO6x89tcvLQCpRpHBeWpTLF9mo2Vm19Nf039iMkui+ZFalyIPtAcVz
+         HJ0Csmnbl4XYv4HnSKhl21x1XGhmCIFTurFjw3C/3pukBHjjiwuiTfcuBJ18oFyPV/3M
+         gyTFGoCC+OS6HH72lDVvtEouY8N/UEuKy/peZOMX/XYc7UljZfEhPe6N+xydAhPiWQGm
+         6+8w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
+        fh=ulGGoC5sAR5/bUU8RqERRd97YGipBL49ZKARiXrUmPw=;
+        b=g0k54xOJAUGmnk/PEO2fZpv9Ks+28jwstZqNkZeX6D3ViIyPBTJGvoDfPWuGPmvEhC
+         9IYx64rgQ+Qw4D2HVWWZrm5Z39v0djsgsZgSDeRufgEDSQq82LdzgsvZ81m/EKI8EE06
+         KMvuxUYFH3NcvrMORoowLOJp0Q0nxe3kvF4DOFbymSqWrKaAPYiMBt41qhtTr5GrsaWZ
+         jKcq56qgCxq2UX2gvnhVolcEKye1LzPJd4vYWamr6D8ZSh21rUWQseHDfoMTWaHnneZc
+         pa+/P852C4JaDAw4DKTjAVujtIzqx3pTXlzBLKXMs61q13aBGLniThXtpi6Y1g2FqyfS
+         jjaQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1791133625; x=1791738425; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Tk+Gtt99hoarKyP0vohBXkdpiLY0JgLAZUcS9Y0MMUo=;
-        b=Nzz4Anwpr4nyl9lr//JL/U5RPemMFmcdndIZIw5RUyz6c9C2bZFePRXGyndBPWuNaG
-         9DuchsKg3xCxjj6EBf6Z5zmzcF8eLEXaNqsdlXn1YnJwiA7E86BHlH5U5KNdt3/lfnBt
-         08xtYoUIsjdEVJY2VrlkbCLDSD5aHjs27J9hM=
-X-Received: by 2002:a05:6214:2406:b0:917:a646:7fa2 with SMTP id 6a1803df08f44-917c007b625mr176709846d6.21.1791133625110;
-        Sun, 04 Oct 2026 10:07:05 -0700 (PDT)
-X-Received: by 2002:a05:6214:2406:b0:917:a646:7fa2 with SMTP id 6a1803df08f44-917c007b625mr176709306d6.21.1791133624551;
-        Sun, 04 Oct 2026 10:07:04 -0700 (PDT)
-Received: from [192.168.178.59] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-917e0c17b8esm67871456d6.43.2026.10.04.10.07.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 04 Oct 2026 10:07:03 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Nathan Chancellor <nathan@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>
-Date: Sun, 04 Oct 2026 19:07:01 +0200
-Message-ID: <1a107e21b08.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <1a107d87260.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-References: <20260916064454.GA3635613@ax162>
- <1a107d87260.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-User-Agent: AquaMail/2.7.0 (build: 200700061)
-Subject: Re: -Wconstant-conversion in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+        d=bairaktaris.de; s=google; t=1791133642; x=1791738442; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
+        b=Yrh4My5ifuOyepCADBL6Tv8hL6qDC7oYeN51sF3/05cEpv0FXSaCLNXKbpg3Bee7pJ
+         U+0WeQhLIjgJzDC/E0nYHRdS0f8rcj1eFalbH0tnfnroxKi4pg+qKthRTSL+ah5Tn5y+
+         3stIVfSe/9MB+ZZ2zDB0F+2+zCQzFDOaWTkWj7CoRkkCzMXUqebfRlgZqJ6AAKH3oRMx
+         Ear9DE80BlKlO0wM431et1cWthkySN409VChlQfxBlD0ChEonkB2jJP9Hx585C8XnR1n
+         eWCWSFaSvq5P6cYndHlR0L4aW13zd+dxMyGvXR09Vh+EygOCXYUol13ISEq4RaUdN55r
+         +Crg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791133642; x=1791738442;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pLU+H3Rg/9OU3qmdYRdJ32ZsOLhx+ZoCaNo1XPLyUvY=;
+        b=HW8rvGWdSpPuBRKlUr13GV5PQjoDx9W/9QytYO19oQx+eVJrCN6/ac+u2T95iS2Y9f
+         J13RtEd/KD2yvbD4zSppQ53U63SLxTvJIU2jQx1EqgPTDaYSf10FmuZz81BuZhEyk2fN
+         ya6QssZFHCeivN9GNWL5SFdpPL95uL9Y/7DcL98Ks8iuVjNr/Gsdx/RT2hyJnuESONB4
+         Ev5aLBPJW6nSYH2vgkN79PJFYRgney89uewqhs/VG5K7swIbdU3l8wCBh0HsGqciC/16
+         UmF+f/eUWuVgBICIfOarvgtkgNIxFKobSd/u32tZKokdzjUUZ1+CV6l9kX+QKyXYRmn9
+         I1pA==
+X-Forwarded-Encrypted: i=1; AKwUvBy4aJM5Leaf8Cfab4tqW+6JEqTX21pD9EQfcJ8v+5nASyoBE7hV+1V2Nqojm94E8zE8Bfm+Dpt6p3CWbyWXYA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKGiUcgK9WNmQJ/yWzPAWJRdBOtKbx1IE8VT/IaqpQd1JEEUWog
+	YQ7Xahb+F5jDWfO1fT3IZe1oWX6dg/Ina0t4PJbzmK+08egqE3WKGOF+nrGFZAg0LLBtdU92GXj
+	7DK/pYaRgsExGOq4cys4nw8m+iTfTuA36rtXgKZv3
+X-Gm-Gg: AYBFou0v7hSrrjMKS3fMBDCCgBIO8Iyp4jL1CelvDZZPpdNRd4CkxQyCIgcfwQK7O6g
+	i7ln+1b81mrzDzsg+dKIZlu0nfKEGDtM5NFeVS99tihlMtSlsn/Pal5qMDfiWAeB3PJlaFOkGx0
+	2KDDLpSqdFc8WlQJ7G+zahWd/3fr0niETWUXd41J6gk1i8r5Ey88Pd94KEQiPCqzJSYGYT20s3C
+	Zy3lt/WYmkmE5wAcdsJgHjOUSe+8/iBk3qUDMCNecu6NT0G5pNntzKx+3yinYmK5yhsloMEkCA2
+	rcE8rCayGyqm0/w1ERkNsORe6jr9Wh9VC2/SKngRuClUwtW6IMzbfdmV8e24QYZ/rsPx64NUw82
+	5Uinx0D54nfvp3NJU6oWOVi0uwGBnEoWBQbLY0FnEUPtpbQ9RLcXZcP89faenxnTKvmRClGxyxt
+	tKQch3V9dRuBTF6Xnx+BuSgjF687tqtacLOeVcZVaCAaDNlFWgmt6N1z0Tjbq2VlVkuLYGzuPrA
+	AXIkVQ56kiFPTCfF40OszIrOD///ynDaI1naQYtTlNwkUo58Sq0cmBbUCvzWecNRHX/PKtACERC
+	7CdQ09sKhXjoGvA=
+X-Received: by 2002:a05:690c:a786:b0:873:5bb2:6c37 with SMTP id
+ 00721157ae682-8ae94efdc33mr12232817b3.62.1791133641779; Sun, 04 Oct 2026
+ 10:07:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+References: <20260908135319.754140-1-julius@bairaktaris.de>
+ <20260908135319.754140-8-julius@bairaktaris.de> <CABkEBKa0pEB9cL1+yoOF0OQSkYb7T1ji36oJ3sVYYV+Nc-_dcg@mail.gmail.com>
+In-Reply-To: <CABkEBKa0pEB9cL1+yoOF0OQSkYb7T1ji36oJ3sVYYV+Nc-_dcg@mail.gmail.com>
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Date: Sun, 4 Oct 2026 17:06:46 +0000
+X-Gm-Features: AclHuK-EedBupHUek5v73mxQfgY0Ojo9131n1X7zqgfDB2Zu8K3FpAglHH7v6fQ
+Message-ID: <CAC1t37+c3WG8SDLkuK6qzYj1Af0TSGS=5eNwCnGhKPooAys1Zw@mail.gmail.com>
+Subject: Re: [PATCH ath-next v4 7/9] wifi: ath11k: charge received airtime to
+ the station deficit
+To: Tamizh Raja <tamizh.raja@oss.qualcomm.com>
+Cc: jjohnson@kernel.org, linux-wireless@vger.kernel.org, 
+	ath11k@lists.infradead.org, linux-kernel@vger.kernel.org, toke@toke.dk, 
+	sven@narfation.org, quic_vthiagar@quicinc.com, john@phrozen.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-resending...
+That's true, I will incorporate a fix in v5.
+Thanks for looking into it!
 
+Julius
 
-Op 16 september 2026 08:45:59 schreef Nathan Chancellor <nathan@kernel.org>:
-
-> Hi Arend,
+Am Di., 29. Sept. 2026 um 16:11 Uhr schrieb Tamizh Raja
+<tamizh.raja@oss.qualcomm.com>:
 >
-> After [1] landed in clang main, I am seeing the following warning
-> (turned error with CONFIG_WERROR=y / W=e):
+> On Tue, Sep 8, 2026 at 7:23=E2=80=AFPM Julius Bairaktaris <julius@bairakt=
+aris.de> wrote:
+> >
+> > mac80211's airtime scheduler is configured to account both directions:
+> > local->airtime_flags is AIRTIME_USE_TX | AIRTIME_USE_RX, and
+> > ieee80211_sta_register_airtime() adds the received airtime to the same
+> > deficit the transmit side subtracts from. ath11k passes zero for it, so
+> > an access point serving a station that mostly uploads charges that
+> > station nothing for the medium it occupies, and the deficit that decide=
+s
+> > whose queue is served next describes half the traffic.
+> >
+> > Register the duration the hardware reports for each received PPDU. It
+> > arrives in the RXPCU PPDU end TLV on the monitor status ring, which is
+> > subscribed for every radio, and ath11k already accumulates it as the
+> > station's rx_duration. Charging it once per PPDU matches what the
+> > transmit side registers, whereas an estimate rebuilt per MSDU counts th=
+e
+> > preamble and the interframe space once for every subframe of an
+> > aggregate.
+> >
+> > The PPDU end user stats TLV that names the TID is not in the default
+> > monitor status filter, so the airtime is charged to best effort, the
+> > access category the deficit arbitrates the bulk of the traffic in. The
 >
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:224:18: error: 
-> implicit conversion from 'int' to 's8' (aka 'signed char') changes value 
-> from 128 to -128 [-Werror,-Wconstant-conversion]
-> 224 |         {0, 0, 0, 0, 0, 128},
-> |         ~               ^~~
+> This means the resulting fairness accounting is only an approximation
+> and can leave VO/VI deficits
+> uncharged while accumulating all received airtime against BE
 >
-> As far as I can tell, this has been present since the original commit
-> that added brcm80211 to the tree
+> > call is made after ab->base_lock is dropped, under the rcu read lock th=
+e
+> > loop holds, as the tx completion path does; base_lock is contended by
+> > every tx completion. A PPDU from a peer with no station entry is not
+> > charged to anyone.
+> >
+> > Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+> >
+> > Assisted-by: Claude:claude-opus-5
+> > Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+> > ---
+> >  drivers/net/wireless/ath/ath11k/dp_rx.c | 15 +++++++++++++++
+> >  1 file changed, 15 insertions(+)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wire=
+less/ath/ath11k/dp_rx.c
+> > index 68472e1e748a..a7b9bb295728 100644
+> > --- a/drivers/net/wireless/ath/ath11k/dp_rx.c
+> > +++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+> > @@ -5270,6 +5270,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k=
+_base *ab, int mac_id,
+> >         struct sk_buff_head skb_list;
+> >         struct ath11k_peer *peer;
+> >         struct ath11k_sta *arsta;
+> > +       struct ieee80211_sta *sta;
+> >         int num_buffs_reaped =3D 0;
+> >         u32 rx_buf_sz;
+> >         u16 log_type;
+> > @@ -5324,6 +5325,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k=
+_base *ab, int mac_id,
+> >                         continue;
+> >                 }
+> >
+> > +               sta =3D NULL;
+> >                 rcu_read_lock();
+> >                 spin_lock_bh(&ab->base_lock);
+> >                 peer =3D ath11k_peer_find_by_id(ab, ppdu_info->peer_id)=
+;
+> > @@ -5337,12 +5339,25 @@ int ath11k_dp_rx_process_mon_status(struct ath1=
+1k_base *ab, int mac_id,
+> >
+> >                 arsta =3D ath11k_sta_to_arsta(peer->sta);
+> >                 ath11k_dp_rx_update_peer_stats(arsta, ppdu_info);
+> > +               sta =3D peer->sta;
+> >
+> >                 if (ath11k_debugfs_is_pktlog_peer_valid(ar, peer->addr)=
+)
+> >                         trace_ath11k_htt_rxdesc(ar, skb->data, log_type=
+, rx_buf_sz);
+> >
+> >  next_skb:
+> >                 spin_unlock_bh(&ab->base_lock);
+> > +
+> > +               /* The airtime a station spends transmitting is taken f=
+rom
+> > +                * the others, so its deficit is charged for it too, wi=
+th the
+> > +                * duration the hardware measured for the whole PPDU, a=
+s on
+> > +                * the transmit side. The TLV that names the TID is not=
+ in
+> > +                * the default monitor status filter, so the charge goe=
+s to
+> > +                * BE. Outside base_lock, which tx completion contends =
+for;
+> > +                * sta is held by the rcu read lock.
+> > +                */
+> > +               if (sta && ppdu_info->rx_duration)
+> > +                       ieee80211_sta_register_airtime(sta, 0, 0,
+> > +                                                      ppdu_info->rx_du=
+ration);
+> >                 rcu_read_unlock();
+> >
+> >                 dev_kfree_skb_any(skb);
+> > --
+> > 2.53.0
+> >
+> >
 >
-> a9533e7ea3c4 ("Staging: Add initial release of brcm80211 - Broadcom 802.11n 
-> wireless LAN driver.")
 >
-> based on my reading of drivers/staging/brcm80211/phy/wlc_phy_n.c. Should
-> this final value be changed to -128 or should there be some other fix?
-
-To be honest I don't know. If I looked at the proprietary driver code that 
-table entry is still there with exactly the same values. So to be type 
-correct while preserving the same value it should be -128. However, looking 
-at the table entry struct it is an index so that sounds odd.
-
-Regards,
-Arend
-
-
-
+> --
+> - Tamizh.
