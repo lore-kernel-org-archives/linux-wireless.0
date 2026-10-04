@@ -1,81 +1,77 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9833F54C4
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 20:11:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B164C4A99C6
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791144679; cv=none; b=LxuVwdB71fmywpeoSvAuhgIXBzuUIM3Df4EEUhdakw164nSQcRFliuwWnVYuzjG7mSRBK0BGaxW636tTqGydRW1/vcXKhUgTy8L0aKEPB5Dfla33yJXzl7w9ZTyyz6jNV1ie4TurWC6fOfisdk4CsPg3SHte+iGqzIjJiZRnPT4=
+	t=1791150312; cv=none; b=t4WTfrZVCTKy5K1maB4s4Oq9fOOY9RT/LlZ7vf7/Eq1j0o199GIjEJkA0QpOvnd/YkiVRaDGYccP3Q6GJXwW4V7O4DbS4XFYJPJR0AogXgIOA5LUF+o2bfDcVRSKCCHX/pWcjCCDiS1i8CGCq3/9qd5AF0BrfqeADr7vwroYNek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791144679; c=relaxed/simple;
-	bh=LLOkn0+G94RKjf6YHFK9L4Pnw0NtPwMcFFF3c5IghqI=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cDg6661LYSROGrDVwcgV6n6UFfOR/sztpgyZB1X4nPXDldpuCPgEoNNNtz7CjwGJ4hmFsLEpvDRolxAO8fl+EdM3wuuaxhCDucPzDtS8cd35T4MNTp1MO3hWXFC46avoxvb4VXpZVzpHHr77BQBolx210eaaRGcZ9eojQ4C9HAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=xVCZY78j; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1791150312; c=relaxed/simple;
+	bh=ffK4sThrNLPFdcgc2k8oz4HoBGe3RSnzteG9+d9zbS8=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=UH4/I88oF7+j1dhATR5ArLhwk1tJB9NWpkOYvE7tVrFvdEOVe0iUyRYq9rMAjWRKDB7BBLUBuDXH5GhwICZfmU5r86MOAzTN/2rtclirMWCGhB1z+bD8dLBXUT2idNLepNQQg7bVmltRV2nZORKxQ1IZDSV2VuXh5ZopWguvzR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=RLX4E85Y; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="xVCZY78j"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="RLX4E85Y"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=6Gg0kE0KqBWiA3jybB99zBhEw2kK/hXZxJeAOB8U5QM=;
-	t=1791144677; x=1792354277; b=xVCZY78jZj/tlJVVG8HkLz9obk8vXiXJK7XDkpTGSKToLyM
-	ne2cfSuEwWILcYUHAvx3jR5/iNKM9YELOGtc+H5e/Gz5PwLWfqtPnjQrLIpXGH0T7OwauUKmhGKAz
-	ip3wVVjJVxg/8GRvUOHALdN3rbJiJts/S16lomy6Tdx5y7f3FE9h20kunZtuqvtjnH4GnrtcL/JsS
-	sQ8vtEsVCY0jNNYsFjlwOA2k8mgWoMImPRzssXAl3J/Nrz1toxcTbyw3AOuuMN7JLbqOeu5Xup1mn
-	j+7HuHGWAjd7/74wgoo5sogBDzkTOlTB3/bOqAev3ykPdsCLwvfkBLt40ymxKihQ==;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=K4w4r2b07iTMMP5sqdoP7Ri/9lLsqYd7mzaOBJ9rMrg=; t=1791150310; x=1792359910; 
+	b=RLX4E85YBj9iAjIPKokPwin9RPXiQmXPvq0M8I+2HRhHs1IsRCKzt3wPxnhFT5jhia1vx42rnEQ
+	VgMnJDH2ivSAVD+ZKaHn5a0Zn5WEj+y8Bxt+zT5FPJay8TKJ2NP4OGLP6jLqeVLM/ZsSN+UUA8WyA
+	k3lztzTkyiVsW5Af6BPnuW2NGKdqyjCQ6N0Bmy72uECgc/nY875W+zLXF8YAxqrakZBmBBmWAvz4A
+	akLamh4s+9h1fhHK9EzIMQIuPm2BUTu2L9odvFZ2xAfAuobSBC9T2GVxBcn0UuOfxWcxgdirm5NoC
+	yoQFInU/f4V8Fj5r9VVrHDtMC9N+H6ZpEgJg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDSY8-00000004MAU-2FDU
+	id 1xDU16-00000004OqT-08DU
 	for linux-wireless@vger.kernel.org;
-	Sun, 04 Oct 2026 22:11:08 +0200
-Message-ID: <e326af8e0b64b477359fbb5576130451179a2b82.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for
- commands that don't want it
+	Sun, 04 Oct 2026 23:45:08 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Date: Sun, 04 Oct 2026 22:11:07 +0200
-In-Reply-To: <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
-References: <20261004190122.1559001-20-johannes@sipsolutions.net>
-	 <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+Subject: [RFC PATCH 00/12] wifi: AP side locking improvements
+Date: Sun,  4 Oct 2026 23:40:46 +0200
+Message-ID: <20261004214504.1636783-14-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Sun, 2026-10-04 at 21:01 +0200, Johannes Berg wrote:
->=20
-> @@ -19703,10 +19795,8 @@ static int nl80211_pre_doit(const struct genl_sp=
-lit_ops *ops,
->  		if (internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
->  		    !wdev_running(wdev)) {
->  			err =3D -ENETDOWN;
+This obviously goes on top of my (fixed) RTNL redux series.
 
-Ohh. Nice race - possibly only in hwsim tests.
+The idea here is that wiphy mutex can be held for quite a bit
+of time (e.g. waiting for firmware), but beacon updates (e.g.
+with the critical update design I had proposed a long while
+back) and other things should be fast.
 
-hostapd can now react to RTM_NEWLINK so quickly that this rejects the
-calls - previously we took rtnl and that avoided seeing !wdev_running().
+So with this not all things require wiphy mutex. These are:
 
-I'll fix it by inserting an rtnl_lock()/rtnl_unlock() here:
+ - beacon and related template updates
+   (this one needs driver opt-in),
+ - mgmt frame TX,
+ - control port TX, and
+ - peer probe.
 
-> +	if (!need_rtnl) {
-> +		if (rdev)
-> +			get_device(&rdev->wiphy.dev);
-> +		if (wdev)
-> +			wdev_id =3D wdev->identifier;
-> +		rcu_read_unlock();
-> +	}
+This does make the implementation slightly more complex, but
+the added complexity is almost entirely in mac80211 (and some
+in cfg80211), unless a driver wants to opt in to unlocked
+beacon/template updates, which it has to implement itself for
+obvious reasons.
 
-of course only if it needs NETDEV_UP, wdev->is_running is false and
-netif_running() is true - that'll wait for the notifier to finish.
+I think we probably want this even without the critical update
+design we're still debating, but I thought I'd throw this out
+here because a lot of the discussion has been focused on the
+latencies throughout the stack, and I never thought they were
+fundamental. QED ;-)
 
 johannes
+
