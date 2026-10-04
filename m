@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B83048F84B
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 19:01:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF02348FF83
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 19:01:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791140500; cv=none; b=LgThWPLKvejJiWyN4EQS4h57/KzSPaPR3YMxF4b0Am3VYVTWX+vWqB2OluCOg4YLHtEFMRC707SX9zyiP2KDkkpAY2sRGR7rOJyGLt13i09YQAGT6j7Q2xVRzRF135klaPI+i+FhwevuSyhVLYxWm45CqmLlrD42uRZjmnf+w4I=
+	t=1791140501; cv=none; b=WvKnzf3/cea2YbIOZAuLprbAe1DxJyndVOdivmfs9Q4RHMYtDcf+JW+68+GtlJwm00twoMdQgTa7TUBWGmRMUdFSk1u+Kew+HinbNow4QxNapnxLKf9sHs4qofdTVtYbZA5dw4QGlWuAhicRawQkmJM/EipnLc5jvluyzsFFsTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791140500; c=relaxed/simple;
-	bh=onXdVHi0ENNq9EkqT3iqbFYoFAoHXJSsNpm1G0SMVig=;
+	s=arc-20240116; t=1791140501; c=relaxed/simple;
+	bh=Brqi3d+sbklxDoWB9ZIQDOtmsaBgnA3dgLtruhJuETs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tC8mXJSMkVIHGIvsAZ6IKqRIGAbEcxPPPc4cPqzJRRFuq/hSJfmZCSiM7daLprYu5cP1HeTwQ9XGpujBDnmxigHXDKz+GUtUHC1x1V5/g7GjRuJOsyMBSsZKQjuqpKkxB3fQkw+mTn7R24/V4I/5oMaf6P2EHbH7zjeChlt6d5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=dyMym2ba; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=kLRSZaptG++3mFaOIxnIwo3XslUZ/q/0dJvlpyFf74I7qu7vVKoychaozvx5amHDkLFa4jBrOZ9N2jgVuS09f9Vxx/FRE1YTA2NzJkkrg/r+YtMqAp/Lf0Xv1d8tq95Gt7iLLq8sZP9FJimdeMn+oqT165vwS45k079A2irFuL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OYvPQ8oF; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="dyMym2ba"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OYvPQ8oF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=j+B4fao7XJ7kMq7Lc+pjD7P2svqTNAK3kj2+N2ujEpY=;
-	t=1791140495; x=1792350095; b=dyMym2ba9x7v3eyxOBlNWxAJygGQUDq1q3P2KjD7z/BWoVG
-	cqRlstTzO1xSi8iq782KRPwPHwOz9rM5jdcU2K3msgVeQsFD/mYTlRsFtTVQ91e9jU6QV6kzo1TaM
-	NNNGAMnOjW2TCTdbIIJYq20o6hYehxdEXDYFZYrFuRGd9M1wLD1A4U6HZvH0QA+02Fhas2b+bb0V7
-	fPVEa/OtHAYcWTqyWc4nXSnkouGl/NVHB8yo7ySX70U80RQ1x1yEExf8m5yBQufkkjRD8224hXGxr
-	CduAnCwxrOiAUF/b/ff7b/ttCtK94SAsunu87+cabWY3sQamrwYomwuKppE5ceRw==;
+	Resent-Cc:Resent-Message-ID; bh=C+D7dnrVlBYW0zMlMpohbhwPzfPuOeDoZhbyTVl+ipE=;
+	t=1791140496; x=1792350096; b=OYvPQ8oFeqxNfW1CvUXYT5dBJo8SZGENUKiAvUYMWXVDtjT
+	oYyDal6RChuFbdLrY8HoxYaPoRm7GXIl5pQkaXem32rpiRYmVrAkSrQhL25ACSWIIVR6gR1tqPHSz
+	lr+Cug8uYrYOwgBdaNjq0TUpHu7qBvZ6na+AlhX5JYvSxBZK8EAEVNguj5atoQY3PQhsEg9jhsG3U
+	NH0Z7w1oGFdo7wlOClWC5COFA6BVgsjnHbICD73aPaK6tTKrt3BxQcHwrd27imz0iigYgPOeppzr2
+	Cmo0qISSVusHncClfz7FUxFH3XsGMmnjKcDFO3nvfhRreceLp68KPVKY7CnAA33Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDRSk-00000004Jlo-3aJs;
-	Sun, 04 Oct 2026 21:01:31 +0200
+	id 1xDRSn-00000004Jlo-2XfG;
+	Sun, 04 Oct 2026 21:01:33 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 08/18] wifi: mac80211_hwsim: call cfg80211 event with wiphy mutex
-Date: Sun,  4 Oct 2026 21:01:22 +0200
-Message-ID: <20261004210122.9115c6c1cc20.I4a45533cc3a020c472f7d90f33e854d7a89b2d3a@changeid>
+Subject: [PATCH wireless-next 12/18] wifi: ath: use freq_reg_info() under RCU
+Date: Sun,  4 Oct 2026 21:01:26 +0200
+Message-ID: <20261004210122.b7978a289e36.I44fbb6c36186a6b14a68d6f8f1010c30c69441bd@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261004190122.1559001-20-johannes@sipsolutions.net>
 References: <20261004190122.1559001-20-johannes@sipsolutions.net>
@@ -50,27 +50,27 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-These functions really require the wiphy mutex (though
-they're not yet documented as such), call them with it.
+This will soon be required, because there won't be the
+RTNL to protect everything. Use RCU for freq_reg_info().
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
+ drivers/net/wireless/ath/regd.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 762f99eb15e4..59c540d2677b 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -1133,6 +1133,8 @@ static ssize_t hwsim_background_cac_write(struct file *file,
- 	if (copy_from_user(buf, user_buf, count))
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index f15e7bd690b5..cedb5e43b9e4 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -268,6 +268,8 @@ static void ath_force_clear_no_ir_chan(struct wiphy *wiphy,
+ {
+ 	const struct ieee80211_reg_rule *reg_rule;
  
-+	guard(wiphy)(data->hw->wiphy);
++	guard(rcu)();
 +
- 	/* Check if background radar channel is configured */
- 	if (!data->radar_background_chandef.chan)
- 		return -ENOENT;
+ 	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+ 	if (IS_ERR(reg_rule))
+ 		return;
 -- 
 2.55.0
 
