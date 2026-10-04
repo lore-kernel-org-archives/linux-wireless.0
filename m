@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F1AE4734F5;
-	Sun,  4 Oct 2026 17:22:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 630304749E9;
+	Sun,  4 Oct 2026 17:22:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791134555; cv=none; b=PH6KS9P7GMgqrIQC68B9AK9qNp5EBmucKZyXw/slByDj3tRsTNvSt+BA+PrSeLpf7OVrmTQgl4pn5llYnaGXGVbcB7DHCY0DxMRWfmaVUAOdkeefRvCLVn3Ttj1++Nyf5vAIV+kcI1ul1D881bSDDR3OtNQ1zWW2nnDPI6vDD1U=
+	t=1791134556; cv=none; b=ubLkt22WSt32SbnYz2k5NPqBZmdNaP7Sdyh5CZ3yUPVSkrr8PNv+yh0O3e1fGqhE+hQbEFP4SiGetb2iqX9Gsl32Wu+AW6sdNhLGCA/sv68/L9MVv3qef9TT39fzpBrEuXaDM1j0pLZ87hWDwU57++qbWSf/INq5d08+iVpyC4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791134555; c=relaxed/simple;
-	bh=cgM39JgT0JhEMdTkME3rZIou5+AOOyImjiKx6rsTU5A=;
+	s=arc-20240116; t=1791134556; c=relaxed/simple;
+	bh=7EKlz4n/sCcw2PS/RnvcaR2iWzD7jE0Ar6ZB5tSA10Q=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gjWcs7uUOQd+e6XxRL8+6nePBdQR/EkJiVclwrw/rMQzaX9kVvgL2u3pJ7ypN5E6fkPaljzdI1yQR3knllx026kmTq0K41QsfZwTmteRuau7r9r8C0PsQH5diz9sukKjraX0svl27nbaesvl04cV7Q/biFF0EjQ2Uq+x0LuVf1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RXDad1kC; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=Q6pm5ZWqXvO/jae9D2sxvK30x9FqjZ7QE4P8qkVwEvmarNi3BASyxw1hggvOoxKEfSohn+23uk+yc414lzFgzvkaRmMxJcVFuJSNqZjbd7tY8myGlfCoIAgvxDi8z/Xea6o9YYywMrVH3cAD/vfMOgWfV4TsR7wwHQReLMOT1es=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h5FMpNF6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RXDad1kC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B501B1F000FF;
-	Sun,  4 Oct 2026 17:22:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h5FMpNF6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6F3E1F00893;
+	Sun,  4 Oct 2026 17:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791134554;
-	bh=IbGfhZZ3o4EK+nriuG8tV3snE42Nz3NPGV26T9e9aq8=;
+	s=k20260515; t=1791134555;
+	bh=2IIrHae1/F8Om1bnSbvJecoHyR+00lsfbMVFUxiko58=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=RXDad1kC8PvcZXiwCMBPkHvN2NEfEk+GquoNqxi1TB+D9pxMoUTgVVI803MWU5Fyz
-	 JsOM2TWa5YWNxdaEqnwY9N97NZkbXy1QZfftNrqfLWSy0cIktH2suFUzPQCi5utn8w
-	 54X7aaK24nXh3zaAcctaFqoCQ9TJPQgpc01XLd6/DpZbykRLHPsZ5RYhM52RxR5QD2
-	 wMUPvd8uFtnGumtmIdma20VtdDDdxgTq6/eHS5m0eEqXak70pPFbMW50+obo58kc3x
-	 GNE9vaEIxNXeBvQY/ci/XdhGM+xSETcJqZkTn+BLLpZ6+HaqL1tIsVtCY0P7GyZfkZ
-	 bqeOs+PpjvDcQ==
-Subject: Re: [PATCH 09/16 net-next v3] ipv4: fib: split common nexthop logic
- to fib_core.c
+	b=h5FMpNF62kzLRibfyXWbNznvIHTq5Cu3wV8mVG/Vq7FsvTytSV4pwvjTMsrtWOXV3
+	 R51kjQAr1bIXbnTX32taqJejwtOyldE01oyXjY1mipM7QNKEHeBQ2lSoGx3iJiXHa/
+	 pW4Yhsk82mJL9fq+9LPyK9TyI9+Y8nIeYQfT2yM8kHNd6U3bP4M8912jknzmYxJBjm
+	 PU74ihS2kdYso1X3yZLnPEJXIXZ8Ay9Ucz2o2V7xwOLG2jGhqY1gKrEEPCdR2o9jEw
+	 6vt39lXdVZHZL23RjDgzzbcKXd6zlmP95ueZyXmEpcH/Yky7unvz23+mhNE4BsYBa8
+	 IU3o24vrjArVA==
+Subject: Re: [PATCH 11/16 net-next v3] ipv4: disable IPv4-only sysctls when
+ CONFIG_IPV4=n
 From: netdev-bot+sashiko@kernel.org
 To: fmancera@suse.de
 Cc: netdev@vger.kernel.org, horms@kernel.org, kuba@kernel.org,
  pabeni@redhat.com, edumazet@kernel.org, davem@davemloft.net,
  johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
  linux-kernel@vger.kernel.org
-Date: Sun, 04 Oct 2026 17:22:33 +0000
-Message-ID: <179113455332.434549.11224802436845886459@kernel.org>
-In-Reply-To: <20260930135334.4739-10-fmancera@suse.de>
-References: <20260930135334.4739-10-fmancera@suse.de>
-X-sashiko-severity: Low
+Date: Sun, 04 Oct 2026 17:22:34 +0000
+Message-ID: <179113455439.434549.2885225995379440090@kernel.org>
+In-Reply-To: <20260930135334.4739-12-fmancera@suse.de>
+References: <20260930135334.4739-12-fmancera@suse.de>
+X-sashiko-severity: Medium
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,115 +48,108 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found more severe
-issue(s) in other patches of this series. This mail is only an FYI, in case
-you want to address the nit picks below when you respin.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue(s) to consider.
 
-Low priority / nit picks for your consideration:
+Critical: 0 · High: 0 · Medium: 1 · Low: 0
 
-- [Low] net/core/Makefile adds fib_core.o to the unconditional obj-y list
-  next to fib_notifier.o, so it is built into every CONFIG_NET kernel,…
-- [Low] The patch rewrote the section comment in include/net/ip_fib.h
-  from "/* Exported by fib_frontend.c */" to "/* Exported by…
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [Medium] The patch moves the net.ipv4.fib_multipath_hash_seed entry of
+  ipv4_net_table (net/ipv4/sysctl_net_ipv4.c, lines 1644-1650) inside…
 
 --
 
-ipv4: fib: split common nexthop logic to fib_core.c
+ipv4: disable IPv4-only sysctls when CONFIG_IPV4=n
 
-This moves the shared nexthop init/release helpers, fib_nexthop_info(),
-fib_add_nexthop(), rtm_ipv4_policy and ip_valid_fib_dump_req() out of
-net/ipv4 into a new net/core/fib_core.c. The goal is to let IPv6 use them
-without the IPv4 routing stack. It also adds CONFIG_IPV4=n stubs for
-several FIB helpers in ip_fib.h and route.h.
+This commit moves the IPv4-specific entries of ipv4_net_table into a new
+IS_ENABLED(CONFIG_IPV4) block at the end of the table. Those sysctls are
+then not registered on kernels built without IPv4. Handlers and min/max
+variables used only by those entries are marked __maybe_unused.
 
-> diff --git a/include/net/ip_fib.h b/include/net/ip_fib.h
-> index 0a35355fb0f33..6058e53fa3dec 100644
-> --- a/include/net/ip_fib.h
-> +++ b/include/net/ip_fib.h
-
-[ ... ]
-
-> @@ -442,7 +448,7 @@ static inline bool fib_dscp_masked_match(dscp_t dscp, const struct flowi4 *fl4)
->  	return dscp == (fl4->flowi4_dscp & INET_DSCP_LEGACY_TOS_MASK);
->  }
->  
-> -/* Exported by fib_frontend.c */
-> +/* Exported by net/core/fib_core.c */
->  extern const struct nla_policy rtm_ipv4_policy[];
->  void ip_fib_init(void);
->  int fib_gw_from_via(struct fib_config *cfg, struct nlattr *nla,
-
-[Severity: Low]
-Does this heading still describe the whole block? Only rtm_ipv4_policy
-moved to fib_core.c. The other declarations under it are still defined in
-net/ipv4/fib_frontend.c:
-
-  ip_fib_init()
-  fib_gw_from_via()
-  fib_compute_spec_dst()
-  fib_info_nh_uses_dev()
-  fib_validate_source()
-  fib_unmerge()
-
-The reverse happens further down in the same header.
-fib_nh_common_init() and fib_nh_common_release() are now defined in
-net/core/fib_core.c, but their declarations are still under the older
-heading:
-
-/* Exported by fib_semantics.c */
-...
-int fib_nh_common_init(struct net *net, struct fib_nh_common *nhc,
-...
-void fib_nh_common_release(struct fib_nh_common *nhc);
-
-Could rtm_ipv4_policy get its own fib_core.c heading, with the
-fib_nh_common_* declarations moved under it? As written, ip_fib_init() or
-fib_validate_source() could look available when CONFIG_IPV4=n. The
-headings are still like this at the end of the series.
+> diff --git a/net/ipv4/sysctl_net_ipv4.c b/net/ipv4/sysctl_net_ipv4.c
+> index 0e7fef5973db6..6096e9e4d82d8 100644
+> --- a/net/ipv4/sysctl_net_ipv4.c
+> +++ b/net/ipv4/sysctl_net_ipv4.c
 
 [ ... ]
 
-> diff --git a/net/core/Makefile b/net/core/Makefile
-> index c20e520358b8e..315e437a49d8c 100644
-> --- a/net/core/Makefile
-> +++ b/net/core/Makefile
-> @@ -12,7 +12,7 @@ obj-$(CONFIG_SYSCTL) += sysctl_net_core.o
->  obj-y		     += dev.o dev_api.o dev_addr_lists.o dst.o netevent.o \
->  			neighbour.o rtnetlink.o utils.o link_watch.o filter.o \
->  			sock_diag.o dev_ioctl.o tso.o sock_reuseport.o \
-> -			fib_notifier.o xdp.o flow_offload.o gro.o \
-> +			fib_notifier.o fib_core.o xdp.o flow_offload.o gro.o \
->  			netdev-genl.o netdev-genl-gen.o netdev_work.o gso.o
+> @@ -1656,6 +1469,196 @@ static const struct ctl_table ipv4_net_table[] = {
+>  		.extra1		= SYSCTL_ONE_THOUSAND,
+>  		.extra2		= &tcp_rto_max_max,
+>  	},
+> +#if IS_ENABLED(CONFIG_IPV4)
 
-[Severity: Low]
-Should fib_core.o be gated on CONFIG_INET? As written, it is built into
-every CONFIG_NET kernel, including CONFIG_INET=n ones.
+[ ... ]
 
-Everything in fib_core.c is INET specific. That covers the fnhe and
-rtable cache teardown, rtm_ipv4_policy, ip_valid_fib_dump_req(),
-fib_nexthop_info() and fib_add_nexthop(). The callers are in net/ipv4 and
-net/ipv6, and both of those need INET.
+> +#ifdef CONFIG_IP_ROUTE_MULTIPATH
 
-The only caller outside INET is net/mpls/af_mpls.c, and it already
-skips ip_valid_fib_dump_req() when INET is off:
+[ ... ]
 
-#if IS_ENABLED(CONFIG_INET)
-static int mpls_valid_fib_dump_req(...)
-{
-	return ip_valid_fib_dump_req(net, nlh, filter, cb);
+> +	{
+> +		.procname	= "fib_multipath_hash_seed",
+> +		.data		= &init_net,
+> +		.maxlen		= sizeof(u32),
+> +		.mode		= 0644,
+> +		.proc_handler	= proc_fib_multipath_hash_seed,
+> +	},
+> +#endif
+
+[Severity: Medium]
+Is fib_multipath_hash_seed really IPv4-only? The commit message says it
+hides "the sysctls that are related to IPv4 only". However, the IPv6
+datapath also uses this seed.
+
+The shared helper in include/net/ip_fib.h is built whenever
+CONFIG_IP_ROUTE_MULTIPATH is set:
+
+include/net/ip_fib.h:fib_multipath_hash_from_keys() {
+    ...
+	mp_seed = READ_ONCE(net->ipv4.sysctl_fib_multipath_hash_seed.mp_seed);
+	fib_multipath_hash_construct_key(&hash_key, mp_seed);
+    ...
 }
-#else
 
-So on !INET kernels this is unused code plus an unused
-EXPORT_SYMBOL_GPL(ip_valid_fib_dump_req). The same Makefile already gates
-an INET-only object this way:
+IPv6 ECMP reaches it through rt6_multipath_hash() and its custom hash
+helpers in net/ipv6/route.c:
 
-ifdef CONFIG_INET
-obj-$(CONFIG_BPF_SYSCALL) += bpf_ksock.o
-endif
+rt6_multipath_hash()->fib_multipath_hash_from_keys()
 
-This does not break the !INET build today. The rule is still
-unconditional at the end of the series.
+IP_ROUTE_MULTIPATH depends only on IP_ADVANCED_ROUTER, not on IPV4. Also,
+ipv4_sysctl_init_net() still calls proc_fib_multipath_hash_set_seed(net, 0)
+for every netns.
+
+Take a kernel with CONFIG_IPV4=n, CONFIG_IPV6=y and
+CONFIG_IP_ROUTE_MULTIPATH=y. That becomes possible once "ipv4: make
+CONFIG_IPV4 boolean" later in this series makes IPV4 selectable. Won't
+IPv6 multipath hashing then keep using a random seed that userspace can
+no longer set?
+
+There is no net.ipv6 copy of this seed. net/ipv6/sysctl_net_ipv6.c only
+has its own fib_multipath_hash_policy. The NETEVENT_IPV4_MPATH_HASH_UPDATE
+notification sent from proc_fib_multipath_hash_seed() for offload drivers
+would also never be sent.
+
+Documentation/networking/ip-sysctl.rst describes this sysctl as:
+
+  The seed value used when calculating hash for multipath routes. Applies
+  to both IPv4 and IPv6 datapath. Only present for kernels built with
+  CONFIG_IP_ROUTE_MULTIPATH enabled.
+
+proc_fib_multipath_hash_seed() is marked __maybe_unused in this patch.
+That suggests the IPV4=n with IP_ROUTE_MULTIPATH=y case was expected.
+
+Should this entry stay outside the CONFIG_IPV4 block, guarded only by
+CONFIG_IP_ROUTE_MULTIPATH?
+
+> +	{
+> +		.procname	= "fib_notify_on_flag_change",
+
+[ ... ]
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260930135334.4739-1-fmancera%40suse.de
