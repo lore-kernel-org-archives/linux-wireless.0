@@ -1,53 +1,50 @@
 Received: from vtj.irix.systems (vtj.irix.systems [82.76.27.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D1C38AC75;
-	Sun,  4 Oct 2026 11:17:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F0A3B585F;
+	Sun,  4 Oct 2026 11:18:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.76.27.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791112630; cv=none; b=e8EE1cFb6ou6WH8Dz7xpZ5WKdSJKFbImt0CqIlwakF73upKR1FaGpcu8OpJBaDK/rExQjvh1m9F1IeY0WaAnsaaflZzvqEw6SzSvm0GLhQeIkdkTxQWa6kU8DMewaj87ISZ2L8KiIn+2qvKNpeeZI6UBq4qfZbvnHCiAsAnlzz4=
+	t=1791112697; cv=none; b=FMRHFnjj26ZN7sKONNVHTQehpO1MxZGEM0v4LBqKShPFUUV3bTwfDs6HS77Wv8s8OgOm9tv0mbDuU1k+OvSREGO1E2Wk8YqZsNVcs03ElnJSYDmkoAoHSPCSFablzIPH4kqJQ17elzUsy/BYJiaFvpO53pR1wiVYzO8Quu4fe1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791112630; c=relaxed/simple;
-	bh=596JaCT6Mp1AbJhS7IYhR4+cm7Ylya50lKXNzDbv124=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q/O0Ygcvmh8hOthVvn545KtSw2CRtcyehFdFeIsHgrykvsjmiY8rvYrPploPrh82w1yWlv20mibqmzetD+LvRsbMa4LdlncFmsubCK87SAIFLfC10TpHqQ8EkUs/d90JofzBErhYTRN23IPpNsGUraKYTt0ANP5Hk3BLcE7CiHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=IdeMgywM; arc=none smtp.client-ip=82.76.27.144
+	s=arc-20240116; t=1791112697; c=relaxed/simple;
+	bh=gHUiKaMXzHFbFuj9bt+g89vOWaKFGoV4n+t64jc33yI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=af7aDF0bKGGa5+FpHfdmHAneJm5Y8LgkYyALcTpXOsv6vQTaddGlA6KTB3nELYxt5+IHMh8/HPPPDmfGAy5Tk99jhEAxyX4X88C6o+ccBz+KS7hnTsKque7l2zxy+2mLOA2LLQctvt+nQG5p3Xx85SRS2KZuKkDOy/deYiC19fI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=RLLwMX1J; arc=none smtp.client-ip=82.76.27.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="IdeMgywM"
-Received: from MAILGW-HP.hp.vtj.corp.irix.systems (localhost [127.0.0.1])
-	by vtj.irix.systems (Proxmox) with ESMTP id 56F6A1BA68;
-	Sun, 04 Oct 2026 14:17:07 +0300 (EEST)
+	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="RLLwMX1J"
+Received: from MAILGW-DELL.dell.vtj.corp.irix.systems (localhost [127.0.0.1])
+	by vtj.irix.systems (Proxmox) with ESMTP id 078F513C31;
+	Sun, 04 Oct 2026 14:18:14 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=andrei-z.com; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:from:from:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=sig1; bh=EVdHbBvroDmI1dupR9CV
-	wLwG1vstFP2aGg4Ap+XLLLs=; b=IdeMgywM4XBcsTaZ4w4A8tN65zlt8wf7SuO5
-	bDWqN8SbIbgF4/MYzKk/5T6GidTkSdQvkiVTDUYL5mqfVWChlK2XFxHZRo1ksIKt
-	MSqaEaOSJzYbmyfVCmAT4RDf1XIHDp7Mck7lvfLwwTNYIBe0eAtOiDlrlqWECNVl
-	qGbF/Gt07nL7mTFjH5tkaAQriOt+SNTAHCvBcFN3hofbID6ttBLO04BJDAFUe9Nk
-	mtd8TrWHpE4Y83AINyqrR60W4mgkCu4S0ktiFN4u1OWVkroqOxIhgeZDoHH8cdx4
-	wLb430b+XFOy9Xz/T6wkKEjWvdVNaotcEcd1sAxdc6KWGSHn+Q==
+	:from:from:message-id:mime-version:reply-to:subject:subject:to
+	:to; s=sig1; bh=z14jOlj3j4hOPmIKQRS6Z8i1b6d3wA/Dft6otIb+H9I=; b=
+	RLLwMX1JL8m8yq+zaea709O7zEBxrAHDafnrzB/a9G0abCAfrRJOX9v9Oog7VeTl
+	w2TsY8PYRrOZx49n4+j0r4XgLKP8nrGCSas1cCvU51oA16hZf0dPp42qN/ACTSIW
+	o1IA6B9BDJGLdwoMoRw6lWhgLuBA2mdkPC6CbdMa7DEeeUAL2eGeUnlEz5//jWoh
+	mildzP0VPI8TB+geuIGtnBMNoPH7HaoZeBrMqxK5+BRzz4oS00oZkG6+5MIWOqcr
+	kf6ow7AQWcFaHRyxet+6rIfuu0mTf0aL5WkK3xv00cQbj5vVIa/h2fp9M+1i5AYL
+	LFxN7heTXbph1htDKTeJHw==
 Received: from VTJ-MX.corp.irix.systems (unknown [10.57.36.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by vtj.irix.systems (Proxmox) with ESMTPS id 917BE1BA67;
-	Sun, 04 Oct 2026 14:17:06 +0300 (EEST)
+	by vtj.irix.systems (Proxmox) with ESMTPS id 086F413C30;
+	Sun, 04 Oct 2026 14:18:13 +0300 (EEST)
 Received: from workspace.corp.irix.systems (2a02:2f04:1:9c23::c) by
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 4 Oct 2026 14:17:06 +0300
+ 15.2.2562.49; Sun, 4 Oct 2026 14:18:12 +0300
 From: Andrei-Alexandru Bleortu <me@andrei-z.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>, Felix
- Fietkau <nbd@nbd.name>
-Subject: [PATCH wireless-next 2/2] wifi: mac80211: keep the BSS color while a color change is pending
-Date: Sun, 4 Oct 2026 14:14:50 +0300
-Message-ID: <e696e399eee2f42c2907c45c85aa894705bee1bf.1791111135.git.me@andrei-z.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+CC: <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH ath-next 0/5] wifi: ath11k: WMI services debugfs and HE AP fixes
+Date: Sun, 4 Oct 2026 14:18:02 +0300
+Message-ID: <cover.1791111135.2.git.me@andrei-z.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1791111135.1.git.me@andrei-z.com>
-References: <cover.1791111135.1.git.me@andrei-z.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,40 +56,50 @@ Content-Type: text/plain
 X-ClientProxiedBy: VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) To
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6)
 
-When a BSS color change starts, mac80211 tells the driver that the BSS
-color is disabled, as the Beacon frames say during the countdown, but it
-also sets the color to 0. While the BSS Color Disabled subfield is 1, an
-HE STA shall keep using its nonzero color, the one it used before, in the
-BSS_COLOR of the HE PPDUs it transmits (IEEE Std 802.11-2024, 26.11.4),
-and a driver can only do so if it still knows the color.
+A debugfs file listing the firmware's WMI services, and fixes for an
+ath11k HE AP found by checking it against IEEE Std 802.11-2024, each
+tested on a QCN9074:
 
-Keep the current color and only clear enabled.
+1. debugfs: wmi_services lists the services the firmware advertises.
+   Earlier posted in the airtime fairness series, now split by tree;
+   since v2 the commit message no longer claims to match ath10k's
+   output.
+2. Probe Responses during a channel switch carried the initial count:
+   ath11k never counted down mac80211's CSA counter (as ath12k does).
+3. Without spatial reuse parameters, an AP enabled non-SRG OBSS PD at
+   -62 dBm; it now stays off, as in ath12k.
+4. A 6 GHz AP never sent its per-20 MHz power limits to firmware (the
+   TPC command was station only); it now does as an LPI AP, as in
+   ath12k.
+5. The hardware DSCP-TID tables used the class selector bits, while
+   cfg80211 maps DSCP to UP per RFC 8325 section 4; checked on air
+   through the firmware's per-TID peer statistics (CS1->1, AF21->3,
+   EF->6, CS6->7).
 
-Assisted-by: LLM
-Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
----
- net/mac80211/cfg.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+None of them depends on the mac80211 series sent alongside.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 28f99a8f8a..e68edf833f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -5807,8 +5807,13 @@ ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
- 
- 	cfg80211_color_change_started_notify(sdata->dev, params->count, link_id);
- 
-+	/* While the color is disabled, the BSS keeps using its current color
-+	 * (IEEE Std 802.11-2024, 26.11.4)
-+	 */
- 	if (changed)
--		ieee80211_color_change_bss_config_notify(link, 0, 0, changed);
-+		ieee80211_color_change_bss_config_notify(link,
-+							 link_conf->he_bss_color.color,
-+							 0, changed);
- 	else
- 		/* if the beacon didn't change, we can finalize immediately */
- 		ieee80211_color_change_finalize(link);
+The patches by me were written with an AI coding assistant (Claude
+Code), which also drafted the changelogs; the testing described was done
+on the hardware.
+
+v2 of patch 1: https://lore.kernel.org/all/20261003155542.96363-2-me@andrei-z.com/
+
+Andrei-Alexandru Bleortu (5):
+  wifi: ath11k: add a debugfs file listing the firmware WMI services
+  wifi: ath11k: count down channel switch announcements in mac80211
+  wifi: ath11k: leave OBSS PD off when spatial reuse is not configured
+  wifi: ath11k: set the 6 GHz transmit power limits of an AP
+  wifi: ath11k: map DSCP to TID as cfg80211 does by default
+
+ drivers/net/wireless/ath/ath11k/core.h    |  2 ++
+ drivers/net/wireless/ath/ath11k/debugfs.c | 15 +++++++++++
+ drivers/net/wireless/ath/ath11k/hal_tx.c  | 30 +++++++++++-----------
+ drivers/net/wireless/ath/ath11k/mac.c     | 31 +++++++++++++++--------
+ drivers/net/wireless/ath/ath11k/wmi.c     | 23 +++++++++++++----
+ 5 files changed, 71 insertions(+), 30 deletions(-)
+
+
+base-commit: f49defea7668d8c68ec19fa085ef3da6075561c7
 -- 
 2.47.3
 
