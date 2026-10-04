@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C7C14908B0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CC194908BD
 	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 19:01:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791140496; cv=none; b=R9hPs02rtSgLpAs01J0JFiKBBfiELIP4mISzHlJBojm3lNviduxokuh6H4nnPfRIKPBvemPJjo0fwAbDH6sguz0RbMyqFbYLLnfqpIk8TaoNc2Ig+AF7MrAd2abCzWdUj2Cf3MFK8BKa9zehThddcgxcZzsuBqqy0Zv8qIDPybc=
+	t=1791140500; cv=none; b=AKvRxo8kIvhPgl7aLwU4BzJvWBQKK7UNShkD8Du1kjFKlDainLx5nyEWTlmWGjbu84D3k+fqYMfj7QcoA3kUPkRTs0XkQsBQPeT3ouYpVe9Faxv9Aw0B9LOEqycLWML0OPc7RG8Re29yyu2jsN1BMPmKo3EM3AIW0vblxObJhu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791140496; c=relaxed/simple;
-	bh=Ggx7YCPV8DiBKUJQw/ld6e89HhPDQ/Esh93gyIlfgTc=;
+	s=arc-20240116; t=1791140500; c=relaxed/simple;
+	bh=H794tgkQCfulG6xKfONTiI3clnXCkjb241Xc/DXU9fI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KvvueRzUMHH9BGwUr7W88N/WJOte2bNwbc8TNQywxHOP8FH4WltVv6JD5xCWIqhDu3Mygms+96RY70S3WtBKW3T6DgYihavGSsYUyzYDWXi9fFUYMqDaxBJPcfsbaYuRyHDUnH6fOY2bYYv0yYN+yaKjCqF0Wq8ZxsX3UGgNgfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OwDF7Ec8; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=sqEhirK+ufg0VyQyis4ddK4jU8gJQoWCfBpEED59YEGykigrNkX/PfK6+Aa96DP35r4t+iHeqpYPKS+9HVCX8YhsUXQZ1jvhdjizbK7XhDOKG6vocSj8oEsH9pxZwjSUiK/3WGbHr2b4ifAlYMhnSUCHsZ0tZQdAK9gTAWRO6oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KtG9KQDV; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OwDF7Ec8"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KtG9KQDV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+A9XeHp9X/IoG4iSejLfuSqCFefG/c0Q3yQV/5qQFWI=;
-	t=1791140493; x=1792350093; b=OwDF7Ec8ROV+FhOfKMQamvhFSefG5Pk0aEFG4XueWcYhsev
-	Q/vCMxcr9V3Dlh5zN7CIc6ARDpIWLPhoA/6VTM1hVb5IIOQsWkd+mi3pU7bL8TAVR+jl6vW59UpCX
-	mVG7XKULZIr2KFAeLDgQIKX9t6w6c43/RNmSjxsxoKfwGbyOPUlRI7j0jNpTMyxCKPq0HI4a4taQv
-	adHIrACzSwskZB8ptn2q8tBYKfmvDjNWhEw8a7RYWLwQgfBHaF7COuxD6/wwip0TqiBn8ltQe86+O
-	s+g6nFW+GwkIM366lEPfB1hF3uW9xqmUbhs+8kJojBspLKJEctWDbAiMM+sDFPow==;
+	Resent-Cc:Resent-Message-ID; bh=me92KwpU/LoEttXmoBDbc9ZoiXraIAUVgWgOqGrq2vw=;
+	t=1791140493; x=1792350093; b=KtG9KQDVyPGJtDXzA2Ynjs6ru5aYAxqhoP8oPDMf1KusbIv
+	fKWF284FffLzmWAcFrJ4bo9QpdlSBvJRMHzO5izDeVw1/N2kQGTsXbjzFEsV9Tv/WgqOgXnyUr9ko
+	TOsGLyuZEnkrlofIyBrfRTeKIuiWFsOO6lqxF2dg8pkVBnT97Bth+mk93aJe9L/QvgLbYej/dMq/d
+	5GxETcbRhmblxI6TjnWuVj9J95gUDM9kui+ygKxwwQyfPKF4bCjhE53yDLzlOQ706Xd6xgqLfIAZE
+	ld9o30OEmQd83gHPNiutrBae107EeN02R6ntXJDUgbF5LLrPbg01/HjMoCFaOc8Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDRSh-00000004Jlo-1JE9;
-	Sun, 04 Oct 2026 21:01:27 +0200
+	id 1xDRSj-00000004Jlo-0H79;
+	Sun, 04 Oct 2026 21:01:29 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for commands that don't want it
-Date: Sun,  4 Oct 2026 21:01:17 +0200
-Message-ID: <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
+Subject: [PATCH wireless-next 05/18] wifi: cfg80211: reg: update channels under wiphy mutex
+Date: Sun,  4 Oct 2026 21:01:19 +0200
+Message-ID: <20261004210122.061bb113e846.Id85777e278fbcf05b1ae1c42d2424acf6ed75fd6@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261004190122.1559001-20-johannes@sipsolutions.net>
 References: <20261004190122.1559001-20-johannes@sipsolutions.net>
@@ -50,286 +50,165 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We currently always take the RTNL for the lookup only
-to drop it again if the command doesn't want it, but
-now that we can do lookups with RCU, do that unless
-the command still wants RTNL anyway.
+Regulatory code updates channels holding only RTNL. Since
+I removed RTNL everywhere, most reading code doesn't take
+it, so it races with the updates.
 
-This basically just means looking up under RCU, then
-holding a reference briefly, and checking state (and
-link IDs) under the wiphy mutex when it's acquired to
-avoid races on unregistration etc.
+Update the relevant regulatory data under wiphy mutex to
+avoid (most of?) those races.
 
-Commands that don't want either mutex can only work
-with netdevs since wdevs could go away, so warn on
-others. None such can exist since there are no flags
-for it, and I noted there it wouldn't be valid.
+Some drivers acquire the wiphy mutex, so don't cover the
+calls to the regulatory notifiers.
+
+For beacon hints the order of operation changes, and the
+driver notifier will be called only once later, but that
+seems acceptable (even better) to drivers as I see it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.c    |   5 +-
- net/wireless/nl80211.c | 144 ++++++++++++++++++++++++++++++++++-------
- 2 files changed, 123 insertions(+), 26 deletions(-)
+ net/wireless/reg.c | 55 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 21 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a6bba5e83f0d..ed6b5d3c148e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1259,6 +1259,9 @@ int wiphy_register(struct wiphy *wiphy)
- 	}
- 
- 	cfg80211_debugfs_rdev_add(rdev);
-+
-+	rdev->wiphy.registered = true;
-+
- 	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
- 	wiphy_unlock(&rdev->wiphy);
- 
-@@ -1305,8 +1308,6 @@ int wiphy_register(struct wiphy *wiphy)
- 				break;
- 		}
- 	}
--
--	rdev->wiphy.registered = true;
- 	rtnl_unlock();
- 
- 	res = rfkill_register(rdev->wiphy.rfkill);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ee4d0112d6b8..a40dcdf18cad 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -225,6 +225,46 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- 	return __cfg80211_rdev_from_attrs(netns, info->attrs);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b7ef479a74f0..1a67d146bf2b 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2145,31 +2145,32 @@ static void reg_call_notifier(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, request);
  }
  
-+/*
-+ * Lock the given wiphy, put the device and double-check it's
-+ * still valid to use.
-+ *
-+ * Returns with wiphy mutex held unless there was an error.
-+ */
-+static struct wireless_dev *
-+nl80211_lock_and_recheck(struct cfg80211_registered_device *rdev,
-+			 struct net *netns, u32 wdev_id)
-+{
-+	struct wireless_dev *wdev;
-+
-+	wiphy_lock(&rdev->wiphy);
-+
-+	if (!rdev->wiphy.registered ||
-+	    !net_eq(wiphy_net(&rdev->wiphy), netns) ||
-+	    (wdev->netdev && !net_eq(dev_net(wdev->netdev), netns))) {
-+		wiphy_unlock(&rdev->wiphy);
-+		put_device(&rdev->wiphy.dev);
-+		return ERR_PTR(-ENODEV);
-+	}
-+
-+	/*
-+	 * unregistration blocks on wiphy mutex,
-+	 * so we don't need this now
-+	 */
-+	put_device(&rdev->wiphy.dev);
-+
-+	if (!wdev_id)
-+		return NULL;
-+
-+	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-+		if (wdev->identifier == wdev_id)
-+			return wdev;
-+	}
-+	wiphy_unlock(&rdev->wiphy);
-+
-+	return ERR_PTR(-ENODEV);
-+}
-+
- static int validate_beacon_head(const struct nlattr *attr,
- 				struct netlink_ext_ack *extack)
+-static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
++static bool handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
+ 			      struct reg_beacon *reg_beacon)
  {
-@@ -19641,6 +19681,18 @@ nl80211_epcs_cfg(struct sk_buff *skb, struct genl_info *info)
- 		 NL80211_FLAG_NO_WIPHY_MTX |		\
- 		 NL80211_FLAG_NEED_RTNL)
- 
-+/*
-+ * Note: a
-+ *	SELECTOR(...,
-+ *		 NL80211_FLAG_NO_WIPHY_MTX |
-+ *		 NL80211_FLAG_NEED_WDEV)
-+ * or
-+ *	SELECTOR(..., NL80211_FLAG_NO_WIPHY_MTX)
-+ *
-+ * isn't valid - nothing would ensure the device stays around,
-+ * need at least a netdev, the wiphy mutex, or RTNL.
-+ */
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
+ 	bool channel_changed = false;
+ 	struct ieee80211_channel chan_before;
+-	struct regulatory_request *lr = get_last_request();
 +
- enum nl80211_internal_flags_selector {
- #define SELECTOR(_, name, value)	NL80211_IFL_SEL_##name,
- 	INTERNAL_FLAG_SELECTORS(_)
-@@ -19658,41 +19710,81 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 			    struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = NULL;
-+	struct net *netns = genl_info_net(info);
- 	struct wireless_dev *wdev = NULL;
- 	struct net_device *dev = NULL;
--	u32 internal_flags;
-+	bool need_rtnl, locked = false;
-+	u32 internal_flags, wdev_id = 0;
- 	int err;
++	lockdep_assert_wiphy(wiphy);
  
- 	if (WARN_ON(ops->internal_flags >= ARRAY_SIZE(nl80211_internal_flags)))
- 		return -EINVAL;
+ 	sband = wiphy->bands[reg_beacon->chan.band];
+ 	chan = &sband->channels[chan_idx];
  
- 	internal_flags = nl80211_internal_flags[ops->internal_flags];
-+	need_rtnl = internal_flags & NL80211_FLAG_NEED_RTNL;
-+
-+	if (need_rtnl)
-+		rtnl_lock();
-+	else
-+		rcu_read_lock();
+ 	if (likely(!ieee80211_channel_equal(chan, &reg_beacon->chan)))
+-		return;
++		return false;
  
--	rtnl_lock();
- 	if (internal_flags & NL80211_FLAG_NEED_WIPHY) {
--		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
-+		rdev = cfg80211_get_dev_from_info(netns, info);
- 		if (IS_ERR(rdev)) {
- 			err = PTR_ERR(rdev);
--			goto out_unlock;
-+			goto out_lookup;
- 		}
--		info->user_ptr[0] = rdev;
- 	} else if (internal_flags & NL80211_FLAG_NEED_NETDEV ||
- 		   internal_flags & NL80211_FLAG_NEED_WDEV) {
--		wdev = __cfg80211_wdev_from_attrs(NULL, genl_info_net(info),
--						  info->attrs);
-+		wdev = __cfg80211_wdev_from_attrs(NULL, netns, info->attrs);
- 		if (IS_ERR(wdev)) {
- 			err = PTR_ERR(wdev);
--			goto out_unlock;
-+			goto out_lookup;
- 		}
+ 	if (chan->beacon_found)
+-		return;
++		return false;
  
- 		dev = wdev->netdev;
- 		dev_hold(dev);
- 		rdev = wiphy_to_rdev(wdev->wiphy);
-+	}
+ 	chan->beacon_found = true;
  
-+	if (!need_rtnl) {
-+		if (rdev)
-+			get_device(&rdev->wiphy.dev);
-+		if (wdev)
-+			wdev_id = wdev->identifier;
-+		rcu_read_unlock();
-+	}
-+
-+	if (rdev && !(internal_flags & NL80211_FLAG_NO_WIPHY_MTX)) {
-+		if (need_rtnl) {
-+			wiphy_lock(&rdev->wiphy);
-+		} else {
-+			/* without rtnl, things may have changed since lookup */
-+			wdev = nl80211_lock_and_recheck(rdev, netns, wdev_id);
-+			if (IS_ERR(wdev)) {
-+				err = PTR_ERR(wdev);
-+				goto out;
-+			}
-+		}
-+		locked = true;
-+	} else if (rdev && !need_rtnl) {
-+		/*
-+		 * Without any mutex need a netdev to keep it alive, see
-+		 * also the note about selectors - the WARN can't happen
-+		 * without wrong selectors and those don't exist.
-+		 */
-+		put_device(&rdev->wiphy.dev);
-+		if (WARN_ON(!dev)) {
-+			err = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	if (wdev) {
- 		if (internal_flags & NL80211_FLAG_NEED_NETDEV) {
- 			if (!dev) {
- 				err = -EINVAL;
--				goto out_unlock;
-+				goto out;
- 			}
+ 	if (!reg_is_world_roaming(wiphy))
+-		return;
++		return false;
  
- 			info->user_ptr[1] = dev;
-@@ -19703,10 +19795,8 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 		if (internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
- 		    !wdev_running(wdev)) {
- 			err = -ENETDOWN;
--			goto out_unlock;
-+			goto out;
- 		}
--
--		info->user_ptr[0] = rdev;
+ 	if (wiphy->regulatory_flags & REGULATORY_DISABLE_BEACON_HINTS)
+-		return;
++		return false;
+ 
+ 	chan_before = *chan;
+ 
+@@ -2178,11 +2179,10 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
+ 		channel_changed = true;
  	}
  
- 	if (internal_flags & NL80211_FLAG_MLO_VALID_LINK_ID) {
-@@ -19714,7 +19804,7 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 
- 		if (!wdev) {
- 			err = -EINVAL;
--			goto out_unlock;
-+			goto out;
- 		}
- 
- 		/* MLO -> require valid link ID */
-@@ -19722,13 +19812,13 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 		    (!link_id ||
- 		     !(wdev->valid_links & BIT(nla_get_u8(link_id))))) {
- 			err = -EINVAL;
--			goto out_unlock;
-+			goto out;
- 		}
- 
- 		/* non-MLO -> no link ID attribute accepted */
- 		if (!wdev->valid_links && link_id) {
- 			err = -EINVAL;
--			goto out_unlock;
-+			goto out;
- 		}
- 	}
- 
-@@ -19736,22 +19826,28 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 		if (info->attrs[NL80211_ATTR_MLO_LINK_ID] ||
- 		    (wdev && wdev->valid_links)) {
- 			err = -EINVAL;
--			goto out_unlock;
-+			goto out;
- 		}
- 	}
- 
--	if (rdev && !(internal_flags & NL80211_FLAG_NO_WIPHY_MTX)) {
--		wiphy_lock(&rdev->wiphy);
--		/* we keep the mutex locked until post_doit */
-+	info->user_ptr[0] = rdev;
-+	/* we keep the mutex locked until post_doit */
-+	if (locked)
- 		__release(&rdev->wiphy.mtx);
+-	if (channel_changed) {
++	if (channel_changed)
+ 		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
+-		if (wiphy->flags & WIPHY_FLAG_CHANNEL_CHANGE_ON_BEACON)
+-			reg_call_notifier(wiphy, lr);
 -	}
--	if (!(internal_flags & NL80211_FLAG_NEED_RTNL))
--		rtnl_unlock();
- 
- 	return 0;
--out_unlock:
--	rtnl_unlock();
-+out:
-+	if (locked)
-+		wiphy_unlock(&rdev->wiphy);
- 	dev_put(dev);
-+	if (need_rtnl)
-+		rtnl_unlock();
-+	return err;
-+out_lookup:
-+	if (need_rtnl)
-+		rtnl_unlock();
-+	else
-+		rcu_read_unlock();
- 	return err;
++
++	return channel_changed;
  }
  
+ /*
+@@ -2194,14 +2194,20 @@ static void wiphy_update_new_beacon(struct wiphy *wiphy,
+ {
+ 	unsigned int i;
+ 	struct ieee80211_supported_band *sband;
++	bool changed = false;
+ 
+ 	if (!wiphy->bands[reg_beacon->chan.band])
+ 		return;
+ 
+ 	sband = wiphy->bands[reg_beacon->chan.band];
+ 
+-	for (i = 0; i < sband->n_channels; i++)
+-		handle_reg_beacon(wiphy, i, reg_beacon);
++	scoped_guard(wiphy, wiphy) {
++		for (i = 0; i < sband->n_channels; i++)
++			changed |= handle_reg_beacon(wiphy, i, reg_beacon);
++	}
++
++	if (changed && wiphy->flags & WIPHY_FLAG_CHANNEL_CHANGE_ON_BEACON)
++		reg_call_notifier(wiphy, get_last_request());
+ }
+ 
+ /*
+@@ -2546,11 +2552,15 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 
+ 	lr->dfs_region = get_cfg80211_regdom()->dfs_region;
+ 
+-	for (band = 0; band < NUM_NL80211_BANDS; band++)
+-		handle_band(wiphy, initiator, wiphy->bands[band]);
++	/* the notifier is called below, so ignore beacon hint changes */
++	scoped_guard(wiphy, wiphy) {
++		for (band = 0; band < NUM_NL80211_BANDS; band++)
++			handle_band(wiphy, initiator, wiphy->bands[band]);
++
++		reg_process_beacons(wiphy);
++		reg_process_ht_flags(wiphy);
++	}
+ 
+-	reg_process_beacons(wiphy);
+-	reg_process_ht_flags(wiphy);
+ 	reg_call_notifier(wiphy, lr);
+ }
+ 
+@@ -3166,12 +3176,14 @@ static void reg_process_pending_beacon_hints(void)
+ {
+ 	struct cfg80211_registered_device *rdev;
+ 	struct reg_beacon *pending_beacon, *tmp;
++	LIST_HEAD(pending);
+ 
+ 	/* This goes through the _pending_ beacon list */
+ 	spin_lock_bh(&reg_pending_beacons_lock);
++	list_splice_tail_init(&reg_pending_beacons, &pending);
++	spin_unlock_bh(&reg_pending_beacons_lock);
+ 
+-	list_for_each_entry_safe(pending_beacon, tmp,
+-				 &reg_pending_beacons, list) {
++	list_for_each_entry_safe(pending_beacon, tmp, &pending, list) {
+ 		list_del_init(&pending_beacon->list);
+ 
+ 		/* Applies the beacon hint to current wiphys */
+@@ -3181,8 +3193,6 @@ static void reg_process_pending_beacon_hints(void)
+ 		/* Remembers the beacon hint for new wiphys or reg changes */
+ 		list_add_tail(&pending_beacon->list, &reg_beacon_list);
+ 	}
+-
+-	spin_unlock_bh(&reg_pending_beacons_lock);
+ }
+ 
+ static void reg_process_self_managed_hint(struct wiphy *wiphy)
+@@ -3571,8 +3581,11 @@ static void restore_regulatory_settings(bool reset_user, bool cached)
+ 	for_each_rdev(rdev) {
+ 		if (rdev->wiphy.regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+ 			continue;
+-		if (rdev->wiphy.regulatory_flags & REGULATORY_CUSTOM_REG)
++		if (rdev->wiphy.regulatory_flags & REGULATORY_CUSTOM_REG) {
++			guard(wiphy)(&rdev->wiphy);
++
+ 			restore_custom_reg_settings(&rdev->wiphy);
++		}
+ 	}
+ 
+ 	if (cached && (!is_an_alpha2(alpha2) ||
 -- 
 2.55.0
 
