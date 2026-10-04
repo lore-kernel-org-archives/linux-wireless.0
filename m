@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF534AA1F1
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0FD330659
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791150316; cv=none; b=KSVgxPIin8Mo0cKqRIe5ECGK9hCXeUjiZe85W046EX5KFsWv01D0s9rylMNXVNAwh63sEFTCOyYOFSLYooklaup4h93v1M2jJbOgTq6R37uo4TlXKMqSqGF/RNojORpYBZOH9y1j1k385qyurHvKqJSNlRW8pOKGd0ok93eUKC8=
+	t=1791150318; cv=none; b=e8iQWYWqDzMiEYiGJqXtMyV7YNU4tmxUAY4DojR6XzvewG2c1FtBccJ+hO4vZKIq1F2rmxwYSRnmwAJkqdY8SU4YKlgzR6GQWuzbIOTibT+PjEKVvzRi8cPZqybiFIScLgFpe9uQ9c+onBZzfCkmguSw33O3zDgnLmzC5/NvaB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791150316; c=relaxed/simple;
-	bh=sDiNFttyqxvqMHa8DT0XkvjJAtHvZwgTD8qFrBaBCDk=;
+	s=arc-20240116; t=1791150318; c=relaxed/simple;
+	bh=aI8KNlVq+dqDE/5wr1XIs9W79DQbeXa89dlz+Pk2Fos=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YgL+2Y+I98RpuJHeIE797dGXeOTwEuPPeLC48ycscR56jPQzgBszZTJs0xICYIiA764EDpf2wryDDLZo0veNCuejnwBGkHNC2PyZMh7UHKjFpdsZ5CUr9H+yS9i9sjXd1GBiUBo+ViQwhLpkbl1LlxzSyJfbOYIIzvFcKPxEcMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Uzy7xCFD; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=WXuxPMdc64UUNU7iWR895XT+AKu+91Rf6psZCyVCCpl6hZIWKFQozFV3owt65ux/5GZIdiDNqfLd6uFcZVGHuEQ0Qyt97azD98xfaJCyZmsOc9Thh9J6KVBFe0HBC1jjkvbRxgbgUwUkhja41apamWUe/PTKsaNx9KNBuLW8UQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=obrh2pyx; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Uzy7xCFD"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="obrh2pyx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=MqLhyzUSlfUcw2h9Z8dTCf632yUHpwqhxtdx2nJkKyI=;
-	t=1791150314; x=1792359914; b=Uzy7xCFDHnc6UVZaRZ/218yTYiMhqGE9oRE2fghWcvJJfjn
-	vQeOPq0lSVrB/RXZXGArsJpqkPEapLo+ZFzBysTA/jOc7Ru2hH/d9vbrW9g7/rjrvullLtcMxGB8i
-	OZ/xi8I0QivzbNhVLa9KsSvJGFDbhdah+bB2AGcb6Hb92zD/JXGHA1j5nIBGbSyFz8h31b+LCcBl6
-	9WH8hDv2q+rCG2+h65HknWTNCDuOtIY2m6lMyNUsWBXWHfhEKYANJsaC201gwbxDKiBZ1PFwkLQns
-	0fEQj2RULzu17w9DwvMyqKj8pAI4PtwrR3KG7iXyQxftibmxIjuiK+u5mYuaF97Q==;
+	Resent-Cc:Resent-Message-ID; bh=nn3Q9f3zteASoHYBKBOEPJlKexiRiQQz7ORxN2nDn9o=;
+	t=1791150316; x=1792359916; b=obrh2pyx5Q6T9Kxt9QYARmnFTiR52Zq4JZV9jgUgSMTjDMs
+	r3qxR/418Vu8NH12W1/cWWHTBsd5F4pj1ryotdQHzqLg/LOJNTEkfBC6scYEFUusZ69nMVOJ5Bjzp
+	0lYnhq2Pu5NHSgJ1svTzFj8xTev5DlOD+MAFt3Tp/oo7UH42TIairvezWRBRaPkJb/5EluZNP2SKv
+	H9wrHOuU17iYfMHfukDxeY0c6swNfHCq7IDmfyY9pGr9fFszjE7MkpAxD2ifBtAjBEU09UKdYVzbW
+	sS1CJIqUKTuuXCHJoPJhBVc/7NjsXwCAnQryCT9uKQJ7/jESbaJQ3jbunJ/U9JEQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDU19-00000004OqT-49OP;
-	Sun, 04 Oct 2026 23:45:12 +0200
+	id 1xDU1B-00000004OqT-0yJA;
+	Sun, 04 Oct 2026 23:45:13 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 05/12] wifi: cfg80211: make cookie counter atomic
-Date: Sun,  4 Oct 2026 23:40:51 +0200
-Message-ID: <20261004234504.16cb3efd0cd2.I83ec404d833100a798181234c797c558400c7145@changeid>
+Subject: [RFC PATCH 07/12] wifi: mac80211: refactor mgmt frames TX
+Date: Sun,  4 Oct 2026 23:40:53 +0200
+Message-ID: <20261004234504.fdbcc3ab78ca.I4848c3eeb2aaf327712233f0bdb38bb48bdbbba6@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261004214504.1636783-14-johannes@sipsolutions.net>
 References: <20261004214504.1636783-14-johannes@sipsolutions.net>
@@ -50,44 +50,280 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The cookie counter is currently protected by the
-wiphy mutex, but in order to be able to transmit
-management frames without holding that, we need
-to assign cookies atomically.
+Refactor ieee80211_mgmt_tx() into on-channel and frame
+building helper functions so we can later implement the
+new mgmt_tx_unlocked() method.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.h | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ net/mac80211/offchannel.c | 225 +++++++++++++++++++++-----------------
+ 1 file changed, 122 insertions(+), 103 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index dfcb9ed5035b..90d59bac4701 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -82,7 +82,9 @@ struct cfg80211_registered_device {
- 	/* protected by RTNL only */
- 	int num_running_ifaces;
- 	int num_running_monitor_ifaces;
--	u64 cookie_counter;
-+
-+	/* atomic for unlocked users */
-+	atomic64_t cookie_counter;
- 
- 	/* BSSes/scanning */
- 	spinlock_t bss_lock;
-@@ -170,10 +172,10 @@ cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
- 
- static inline u64 cfg80211_assign_cookie(struct cfg80211_registered_device *rdev)
- {
--	u64 r = ++rdev->cookie_counter;
-+	u64 r = atomic64_inc_return(&rdev->cookie_counter);
- 
- 	if (WARN_ON(r == 0))
--		r = ++rdev->cookie_counter;
-+		r = atomic64_inc_return(&rdev->cookie_counter);
- 
- 	return r;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index c46cb81fab22..27ca2984826f 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -814,6 +814,124 @@ int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 	return ieee80211_cancel_roc(local, cookie, false);
  }
+ 
++static bool
++ieee80211_mgmt_tx_need_offchan(struct ieee80211_sub_if_data *sdata,
++			       struct cfg80211_mgmt_tx_params *params,
++			       const struct ieee80211_mgmt *mgmt,
++			       bool mlo_sta, int *link_id)
++{
++	struct ieee80211_chanctx_conf *chanctx_conf = NULL;
++	int i;
++
++	guard(rcu)();
++
++	/* Check all the links first */
++	for (i = 0; i < ARRAY_SIZE(sdata->vif.link_conf); i++) {
++		struct ieee80211_bss_conf *conf;
++
++		conf = rcu_dereference(sdata->vif.link_conf[i]);
++		if (!conf)
++			continue;
++
++		chanctx_conf = rcu_dereference(conf->chanctx_conf);
++		if (!chanctx_conf)
++			continue;
++
++		if (mlo_sta && params->chan == chanctx_conf->def.chan &&
++		    ether_addr_equal(sdata->vif.addr, mgmt->sa)) {
++			*link_id = i;
++			break;
++		}
++
++		if (ether_addr_equal(conf->addr, mgmt->sa)) {
++			/* If userspace requested Tx on a specific link
++			 * use the same link id if the link bss is matching
++			 * the requested chan.
++			 */
++			if (sdata->vif.valid_links &&
++			    params->link_id >= 0 && params->link_id == i &&
++			    params->chan == chanctx_conf->def.chan)
++				*link_id = i;
++
++			break;
++		}
++
++		chanctx_conf = NULL;
++	}
++
++	if (!chanctx_conf)
++		return true;
++
++	return params->chan && params->chan != chanctx_conf->def.chan;
++}
++
++static struct sk_buff *
++ieee80211_mgmt_tx_skb(struct ieee80211_sub_if_data *sdata,
++		      struct cfg80211_mgmt_tx_params *params,
++		      u64 cookie, gfp_t gfp)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	u32 flags;
++	u8 *data;
++
++	if (params->dont_wait_for_ack)
++		flags = IEEE80211_TX_CTL_NO_ACK;
++	else
++		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
++			IEEE80211_TX_CTL_REQ_TX_STATUS;
++
++	if (params->no_cck)
++		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + params->len);
++	if (!skb)
++		return NULL;
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	data = skb_put_data(skb, params->buf, params->len);
++
++	/* Update CSA counters */
++	if (sdata->vif.bss_conf.csa_active &&
++	    (sdata->vif.type == NL80211_IFTYPE_AP ||
++	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
++	     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
++	    params->n_csa_offsets) {
++		int i;
++		struct beacon_data *beacon = NULL;
++
++		rcu_read_lock();
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP)
++			beacon = rcu_dereference(sdata->deflink.u.ap.beacon);
++		else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++			beacon = rcu_dereference(sdata->u.ibss.presp);
++		else if (ieee80211_vif_is_mesh(&sdata->vif))
++			beacon = rcu_dereference(sdata->u.mesh.beacon);
++
++		if (beacon)
++			for (i = 0; i < params->n_csa_offsets; i++)
++				data[params->csa_offsets[i]] =
++					beacon->cntdwn_current_counter;
++
++		rcu_read_unlock();
++	}
++
++	IEEE80211_SKB_CB(skb)->flags = flags;
++	IEEE80211_SKB_CB(skb)->control.flags |= IEEE80211_TX_CTRL_DONT_USE_RATE_MASK;
++
++	skb->dev = sdata->dev;
++
++	/* make a copy to preserve the frame contents in case of encryption */
++	if (!params->dont_wait_for_ack &&
++	    ieee80211_attach_ack_skb(local, skb, &cookie, gfp)) {
++		kfree_skb(skb);
++		return NULL;
++	}
++
++	return skb;
++}
++
+ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		      struct cfg80211_mgmt_tx_params *params, u64 cookie)
+ {
+@@ -825,21 +943,10 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	bool need_offchan = false;
+ 	bool mlo_sta = false;
+ 	int link_id = -1;
+-	u32 flags;
+ 	int ret;
+-	u8 *data;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (params->dont_wait_for_ack)
+-		flags = IEEE80211_TX_CTL_NO_ACK;
+-	else
+-		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+-			IEEE80211_TX_CTL_REQ_TX_STATUS;
+-
+-	if (params->no_cck)
+-		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
+-
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!sdata->vif.cfg.ibss_joined)
+@@ -927,52 +1034,9 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		   sdata->vif.type == NL80211_IFTYPE_NAN_DATA) {
+ 		/* Frames can be sent during NAN schedule */
+ 	} else if (!need_offchan) {
+-		struct ieee80211_chanctx_conf *chanctx_conf = NULL;
+-		int i;
+-
+-		rcu_read_lock();
+-		/* Check all the links first */
+-		for (i = 0; i < ARRAY_SIZE(sdata->vif.link_conf); i++) {
+-			struct ieee80211_bss_conf *conf;
+-
+-			conf = rcu_dereference(sdata->vif.link_conf[i]);
+-			if (!conf)
+-				continue;
+-
+-			chanctx_conf = rcu_dereference(conf->chanctx_conf);
+-			if (!chanctx_conf)
+-				continue;
+-
+-			if (mlo_sta && params->chan == chanctx_conf->def.chan &&
+-			    ether_addr_equal(sdata->vif.addr, mgmt->sa)) {
+-				link_id = i;
+-				break;
+-			}
+-
+-			if (ether_addr_equal(conf->addr, mgmt->sa)) {
+-				/* If userspace requested Tx on a specific link
+-				 * use the same link id if the link bss is matching
+-				 * the requested chan.
+-				 */
+-				if (sdata->vif.valid_links &&
+-				    params->link_id >= 0 && params->link_id == i &&
+-				    params->chan == chanctx_conf->def.chan)
+-					link_id = i;
+-
+-				break;
+-			}
+-
+-			chanctx_conf = NULL;
+-		}
+-
+-		if (chanctx_conf) {
+-			need_offchan = params->chan &&
+-				       (params->chan !=
+-					chanctx_conf->def.chan);
+-		} else {
+-			need_offchan = true;
+-		}
+-		rcu_read_unlock();
++		need_offchan = ieee80211_mgmt_tx_need_offchan(sdata, params,
++							      mgmt, mlo_sta,
++							      &link_id);
+ 	}
+ 
+ 	if (need_offchan && !params->offchan) {
+@@ -980,56 +1044,11 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		goto out_unlock;
+ 	}
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + params->len);
++	skb = ieee80211_mgmt_tx_skb(sdata, params, cookie, GFP_KERNEL);
+ 	if (!skb) {
+ 		ret = -ENOMEM;
+ 		goto out_unlock;
+ 	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	data = skb_put_data(skb, params->buf, params->len);
+-
+-	/* Update CSA counters */
+-	if (sdata->vif.bss_conf.csa_active &&
+-	    (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
+-	     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
+-	    params->n_csa_offsets) {
+-		int i;
+-		struct beacon_data *beacon = NULL;
+-
+-		rcu_read_lock();
+-
+-		if (sdata->vif.type == NL80211_IFTYPE_AP)
+-			beacon = rcu_dereference(sdata->deflink.u.ap.beacon);
+-		else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+-			beacon = rcu_dereference(sdata->u.ibss.presp);
+-		else if (ieee80211_vif_is_mesh(&sdata->vif))
+-			beacon = rcu_dereference(sdata->u.mesh.beacon);
+-
+-		if (beacon)
+-			for (i = 0; i < params->n_csa_offsets; i++)
+-				data[params->csa_offsets[i]] =
+-					beacon->cntdwn_current_counter;
+-
+-		rcu_read_unlock();
+-	}
+-
+-	IEEE80211_SKB_CB(skb)->flags = flags;
+-	IEEE80211_SKB_CB(skb)->control.flags |= IEEE80211_TX_CTRL_DONT_USE_RATE_MASK;
+-
+-	skb->dev = sdata->dev;
+-
+-	if (!params->dont_wait_for_ack) {
+-		/* make a copy to preserve the frame contents
+-		 * in case of encryption.
+-		 */
+-		ret = ieee80211_attach_ack_skb(local, skb, &cookie, GFP_KERNEL);
+-		if (ret) {
+-			kfree_skb(skb);
+-			goto out_unlock;
+-		}
+-	}
+ 
+ 	if (!need_offchan) {
+ 		ieee80211_tx_skb_tid(sdata, skb,
 -- 
 2.55.0
 
