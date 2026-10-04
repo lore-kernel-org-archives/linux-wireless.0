@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D4094A8FD7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF534AA1F1
 	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791150316; cv=none; b=YhKjO+nw8N1iw3WdsAFOfLqHiUCC7w7zBprRWyUOJs3g9WD5397ODeyD5lIRNLmTRGMdSvbI9f84vMwuXZh41hCriWA77Aut2Q6Ao+xYxiGq8PeOfsWhTVlKFFIgEjyZs8EP/2Hds/NR+dk5wrK0m/hzjJZQYfDcuzl84pvm/ek=
+	t=1791150316; cv=none; b=KSVgxPIin8Mo0cKqRIe5ECGK9hCXeUjiZe85W046EX5KFsWv01D0s9rylMNXVNAwh63sEFTCOyYOFSLYooklaup4h93v1M2jJbOgTq6R37uo4TlXKMqSqGF/RNojORpYBZOH9y1j1k385qyurHvKqJSNlRW8pOKGd0ok93eUKC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791150316; c=relaxed/simple;
-	bh=nr9SLKKESDPNUWDkJ6tW7JYxrU8FoCM9XImjgb75f/4=;
+	bh=sDiNFttyqxvqMHa8DT0XkvjJAtHvZwgTD8qFrBaBCDk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gu9BhLaK6khtqOp9QDH44QpjTnhWAlJylru/42lSddlkzz2aRm0aVTqbg8cEflt57wYU3UVfqr1d5G3AYCgjXGBPnRDF+xYf9EGlcD4kgp97bkkORaFDxoPCQGNqSO/qxozWbOrisEwZ8+ut4w+RKHylnWNkQui6qEIDR14aYKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=RvtWcQjN; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=YgL+2Y+I98RpuJHeIE797dGXeOTwEuPPeLC48ycscR56jPQzgBszZTJs0xICYIiA764EDpf2wryDDLZo0veNCuejnwBGkHNC2PyZMh7UHKjFpdsZ5CUr9H+yS9i9sjXd1GBiUBo+ViQwhLpkbl1LlxzSyJfbOYIIzvFcKPxEcMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Uzy7xCFD; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="RvtWcQjN"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Uzy7xCFD"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SIfHjfwtmJey6uk5PIHxyZwaKEwLbiY75xNGqy2PXxs=;
-	t=1791150314; x=1792359914; b=RvtWcQjNp2O5uOBqyEZk+D7uv3oEzhOgrY1c7odjRUqiNDk
-	K/qN75dBPqW7dueWVJQQPLuBGC9eaHnhaqkOmuMbwgtLPGoLhylD5P8rDIiS+MVvY8O3Pp/DFJtD6
-	IKaBg5TrLQ8i+Ka0+gR0GcrDXu35lTelR+saKfjXlyf8SdRySTnc2l27wBBabCOkPPGXk2oRdKui/
-	uR15OMsj0QFQI1e4XHJyAFCheBQ4jf69Dy4hEiQDHKwqDrsd0GQhmBSIOXabphZ30KuFlO5c0voDN
-	puGkYocb5twkqR8xzODxl1bmZNK4O9ZiQ4iKmGO7XJgxkF9lqAg2aR4igSVoDKpQ==;
+	Resent-Cc:Resent-Message-ID; bh=MqLhyzUSlfUcw2h9Z8dTCf632yUHpwqhxtdx2nJkKyI=;
+	t=1791150314; x=1792359914; b=Uzy7xCFDHnc6UVZaRZ/218yTYiMhqGE9oRE2fghWcvJJfjn
+	vQeOPq0lSVrB/RXZXGArsJpqkPEapLo+ZFzBysTA/jOc7Ru2hH/d9vbrW9g7/rjrvullLtcMxGB8i
+	OZ/xi8I0QivzbNhVLa9KsSvJGFDbhdah+bB2AGcb6Hb92zD/JXGHA1j5nIBGbSyFz8h31b+LCcBl6
+	9WH8hDv2q+rCG2+h65HknWTNCDuOtIY2m6lMyNUsWBXWHfhEKYANJsaC201gwbxDKiBZ1PFwkLQns
+	0fEQj2RULzu17w9DwvMyqKj8pAI4PtwrR3KG7iXyQxftibmxIjuiK+u5mYuaF97Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDU18-00000004OqT-35qM;
-	Sun, 04 Oct 2026 23:45:11 +0200
+	id 1xDU19-00000004OqT-49OP;
+	Sun, 04 Oct 2026 23:45:12 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 04/12] wifi: mac80211_hwsim: support lockless beacon updates
-Date: Sun,  4 Oct 2026 23:40:50 +0200
-Message-ID: <20261004234504.33769a084c1c.I811ea72fc189eb20bbc07b27cfaf9ffd420a70c9@changeid>
+Subject: [RFC PATCH 05/12] wifi: cfg80211: make cookie counter atomic
+Date: Sun,  4 Oct 2026 23:40:51 +0200
+Message-ID: <20261004234504.16cb3efd0cd2.I83ec404d833100a798181234c797c558400c7145@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261004214504.1636783-14-johannes@sipsolutions.net>
 References: <20261004214504.1636783-14-johannes@sipsolutions.net>
@@ -50,28 +50,44 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We just use ieee80211_beacon_get_template_ema_list() or
-ieee80211_beacon_get() here to transmit the beacons, so
-there's no need to implement update_beacon() and we can
-just set NL80211_EXT_FEATURE_UPDATE_BEACON.
+The cookie counter is currently protected by the
+wiphy mutex, but in order to be able to transmit
+management frames without holding that, we need
+to assign cookies atomically.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/core.h | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 59c540d2677b..c93c8d61d1c0 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -6010,6 +6010,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			      NL80211_EXT_FEATURE_EXT_KEY_ID);
- 	wiphy_ext_feature_set(hw->wiphy,
- 			      NL80211_EXT_FEATURE_ASSOC_FRAME_ENCRYPTION);
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_UPDATE_BEACON);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index dfcb9ed5035b..90d59bac4701 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -82,7 +82,9 @@ struct cfg80211_registered_device {
+ 	/* protected by RTNL only */
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+-	u64 cookie_counter;
++
++	/* atomic for unlocked users */
++	atomic64_t cookie_counter;
  
- 	hw->wiphy->interface_modes = param->iftypes;
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+@@ -170,10 +172,10 @@ cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
  
+ static inline u64 cfg80211_assign_cookie(struct cfg80211_registered_device *rdev)
+ {
+-	u64 r = ++rdev->cookie_counter;
++	u64 r = atomic64_inc_return(&rdev->cookie_counter);
+ 
+ 	if (WARN_ON(r == 0))
+-		r = ++rdev->cookie_counter;
++		r = atomic64_inc_return(&rdev->cookie_counter);
+ 
+ 	return r;
+ }
 -- 
 2.55.0
 
