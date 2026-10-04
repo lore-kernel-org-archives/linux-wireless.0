@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F4B3CE0A7;
-	Sun,  4 Oct 2026 17:22:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A942470136;
+	Sun,  4 Oct 2026 17:22:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791134550; cv=none; b=KRFRS+O/8A8Hub+N9ggNcEccZtMI7nkmSgyyEYyTQsdpZPO52QZWcqiTP/RxBCYLw81saARnx6y70HnZDfaW/vcmGqElPNUByj1BBDo4n4JserUoa3qucFW5J559lVw2VO8u86/+pgKj5G2wj+DGlQlg2iCkZM9VNaT69uG23RA=
+	t=1791134551; cv=none; b=lbk8flYneYPnlKvFjPxXCyFiuh0Fz5ITlViGvTd4vb8nee3KOmIpc5qRjUIpHbQlUEOiNy6IgKejmSGnf2+0vdNEU4kTH6/uRiuomriZwesO7guXeZzCivDgDKV4/n4Nwgl2H19I3QDqQbCEtnjkjXW22ZANJqdP7muTY4gQkkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791134550; c=relaxed/simple;
-	bh=sOjIy8vMcvdUVTr2Rm5CJ/+C732zG6WL4Zm3oBqdVcQ=;
+	s=arc-20240116; t=1791134551; c=relaxed/simple;
+	bh=iWSVvItrKdVD9z33iBD/5AsqOW7bANHtPvjvnkU/2vU=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Nof3rgEXD2GsL+f9aw2UM3fXWz2W3mKzni0EsgEBUF4v+yEkuN57b+SuhWm2n3A8IvSqVDahBFKTJ77KbsC9ixAFEum9pfJefogB6OHFEL98iJB7pUbwA8Hms4sT9EchEBQsCHKllFR04aX6R3SB5SxEe9vDPrxAEK8lYD3P8bQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WEzkomZG; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=DlE6qb50aTCZRkn5cPSyz1bC76h1rQyQyADeQHlayU92JE7RvnI2skLyO/zzjFgvDj/cJ9ZM37gVCeMvbNzvrPOHHwRFU8K3vdW9ZQGzwBzxH7us9qZUD+KBbLeIss7TqALN5t2U/ms+QonX4V7C7Ns/AHXwSNgZC8+omix+yj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XkpAbdTU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WEzkomZG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 545251F00893;
-	Sun,  4 Oct 2026 17:22:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XkpAbdTU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CF11F00898;
+	Sun,  4 Oct 2026 17:22:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791134548;
-	bh=Ox5PicThKcTKUH1oAfZmNYAoTGVYCoNsV39Vcm0+seg=;
+	s=k20260515; t=1791134549;
+	bh=XvDEY04TBmTI419C5pWTYZMsxdbHGFH7BtIty3ahjDo=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=WEzkomZGrQgqyeNOexm4UlJPGl1tUrx8YjOPPBbcSiJLKwznLF1hLKpcKLLLyxeDH
-	 +x5UZonp1blmLYdv7it/br4r6nphh9gV5B+uM6/U400LoHF6W3iuTB9rvbK0IqsjOm
-	 2VUMfu+5b4Whbze8DaHy37dcNbIlny2PCaWxwKrWn7NBZOzY17+XaxKszr/37WMFK9
-	 3Pl2zLyRlMS9nPhhQcnkoggtZc2eyombbYUthaZybwd1TQfh7qhp9KRh9SD64M/aGy
-	 SAR07uecgHsFesYrPW28NgcLonWemnr2tDbm4xtuUrpf0YDl4pr1Bw+D8lUGZw8i0E
-	 n7y7r2NF75IkA==
-Subject: Re: [PATCH 03/16 net-next v3] net: inet: relocate ip_generic_getfrag
- and guard IPv4 socket logic
+	b=XkpAbdTUmlW4ZATAhOG/6+mvCRIFNsfxBNJO07X83cNfmMCw+zW5xaZnGLUAxY5Gs
+	 Zu5xJl+/uCh9NgRRTUo1a/zvNpLAoppbP4Bms4Nz8A3Ugf86dkPGHgxgfFpBHW8YWX
+	 scf97XSyEIbTMUPkZ2X08SR6e0PyWBkwnmBOhrQos16mHjMon+Qz+IPb3CHziUpFij
+	 ECIQ7VPAm/GCMFZ0KbWSotgPtA4TsboYNLzGpXZJE2UfdESiTXIzP0v5l/c0Ko13SU
+	 4hljMCjfwc8uNukSQQ/NSBl3AAtqohUQnHnN+hj0lSRPO46Iib9fFOJSqpnUeFaU2d
+	 6eaPrJQx1hVCQ==
+Subject: Re: [PATCH 04/16 net-next v3] tcp: move protocol agnostic TCP
+ functions out of tcp_ipv4.c
 From: netdev-bot+sashiko@kernel.org
 To: fmancera@suse.de
 Cc: netdev@vger.kernel.org, horms@kernel.org, kuba@kernel.org,
  pabeni@redhat.com, edumazet@kernel.org, davem@davemloft.net,
  johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
  linux-kernel@vger.kernel.org
-Date: Sun, 04 Oct 2026 17:22:27 +0000
-Message-ID: <179113454791.434549.11395243650100357877@kernel.org>
-In-Reply-To: <20260930135334.4739-4-fmancera@suse.de>
-References: <20260930135334.4739-4-fmancera@suse.de>
-X-sashiko-severity: Critical
+Date: Sun, 04 Oct 2026 17:22:29 +0000
+Message-ID: <179113454900.434549.10353532629691425979@kernel.org>
+In-Reply-To: <20260930135334.4739-5-fmancera@suse.de>
+References: <20260930135334.4739-5-fmancera@suse.de>
+X-sashiko-severity: Low
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,289 +48,226 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 5 potential
-issue(s) to consider.
+Thank you for your contribution! Sashiko AI review found more severe
+issue(s) in other patches of this series. This mail is only an FYI, in case
+you want to address the nit picks below when you respin.
 
-Critical: 1 · High: 0 · Medium: 1 · Low: 3
+Low priority / nit picks for your consideration:
 
-If you believe none of the issues are legitimate, please reply to each
-issue of Medium severity or higher and explain why the AI is wrong.
-If any of them are legitimate and you plan to respin, please let patchwork
-know by including "pw-bot: cr" as a separate line at the end of your reply
-(one such reply per series is enough).
+- [Low] The commit message understates the user-visible changes.
+- [Low] union bpf_tcp_iter_batch_item and struct bpf_tcp_iter_state were
+  file-local in tcp_ipv4.c and are now moved into the widely included…
 
-- [Critical] This patch makes inet_init() skip inet4_init() when
-  CONFIG_IPV4=n.
-- [Medium] When CONFIG_IPV4=n, inet_gso_segment() now always returns
-  ERR_PTR(-EPROTONOSUPPORT).
-- [Low] The commit message does not describe the boot-time init
-  restructuring, which changes behaviour on every kernel because…
-- [Low] Baseline decision: false (resolved later in the series).
-- [Low] Baseline decision: false (resolved later in the series).
+Pre-existing issues:
+- [Medium] This problem wasn't introduced by this patch, but the
+  relocated TCP BPF iterator can call vfree() while holding a plain…
 
 --
 
-net: inet: relocate ip_generic_getfrag and guard IPv4 socket logic
+tcp: move protocol agnostic TCP functions out of tcp_ipv4.c
 
-This patch moves ip_generic_getfrag() from ip_output.c to af_inet.c and
-adds CONFIG_IPV4 guards in af_inet.c for IPv4 ioctls, protocol
-registration, bind, release and GSO. It splits inet_init() into
-inet4_init() and inet4_late_init() so the IPv4-only parts can be skipped.
-It also rejects IPv4-mapped IPv6 addresses in __inet6_bind() and
-__ip6_datagram_connect() when IPv4 is disabled.
+This moves the protocol agnostic TCP code (proc and BPF iterators,
+tcp_twsk_unique(), tcp_add_backlog(), the pernet ops and more) from
+tcp_ipv4.c into tcp.c, so it still builds with CONFIG_IPV4=n. It also
+renames tcp_v4_destroy_sock() to tcp_destroy_sock() and guards the
+IPv4-mapped paths in tcp_ipv6.c. Finally, it changes the /proc/net/sockstat
+and /proc/net/snmp output for IPv4-less builds.
 
-> diff --git a/net/ipv4/af_inet.c b/net/ipv4/af_inet.c
-> index d9421ac38d78c..a9d46a178f9ab 100644
-> --- a/net/ipv4/af_inet.c
-> +++ b/net/ipv4/af_inet.c
+> In addition, guard IPv4 code around IPv6 TCP implementation. This
+> ensures that IPv4-mapped IPv6 sockects are rejected with a proper error
+> code when IPv4 stack is disabled.
+>
+> Please note that this commit also addresses how /proc/net/sockstat
+> output is handled for all protocols. The implementation now force the
+> inuse attrtibute to be zero when CONFIG_IPV4=n but the shared stats are
+> represented correctly.
+
+[Severity: Low]
+Is this description complete? sockstat_seq_show() zeroes the TCP, UDP and
+RAW inuse counters, but it drops the FRAG: line entirely instead of
+zeroing it:
+
+    if (IS_ENABLED(CONFIG_IPV4))
+        seq_printf(seq,  "FRAG: inuse %u memory %lu\n",
+    ...
+
+/proc/net/snmp changes too, and the message doesn't mention it:
+
+- snmp_seq_show() leaves out the Ip:, Icmp: and IcmpMsg: sections.
+- snmp_seq_show_tcp_udp() gains a first argument, so the output starts
+  with "Tcp:" instead of "\nTcp:".
+
+These output formats only show up in CONFIG_IPV4=n builds. Those become
+selectable in the later commit "ipv4: make CONFIG_IPV4 boolean", so
+IPv6-only kernels would see procfs format changes that aren't documented.
+
+Some structural changes are not mentioned either:
+
+- register_pernet_subsys(&tcp_sk_ops) and bpf_iter_register() move from
+  tcp_v4_init() into tcp_init(), where they now run unconditionally.
+- tcp_bpf_v4_build_proto() is now gated on CONFIG_IPV4.
+- struct bpf_tcp_iter_state and union bpf_tcp_iter_batch_item move into
+  include/net/tcp.h.
+
+About "rejected with a proper error code": only tcp_v6_connect() returns
+an error (-ENETUNREACH). The other guards return no error to anyone:
+
+- tcp_v6_conn_request() does goto drop.
+- tcp_v6_syn_recv_sock() returns NULL.
+- tcp_v6_do_rcv() calls kfree_skb() and returns 0.
+
+These guards seem to be there to avoid references to IPv4 symbols on
+paths that can't run once IPv4 is compiled out.
+
+Could the commit message describe these changes more precisely?
+
+> diff --git a/include/net/tcp.h b/include/net/tcp.h
+> index 96a1a23e47fac..04d487a19b178 100644
+> --- a/include/net/tcp.h
+> +++ b/include/net/tcp.h
 
 [ ... ]
 
-> @@ -1371,6 +1412,9 @@ struct sk_buff *inet_gso_segment(struct sk_buff *skb,
->  	int ihl;
->  	int id;
->  
-> +	if (!IS_ENABLED(CONFIG_IPV4))
-> +		return ERR_PTR(-EPROTONOSUPPORT);
+> @@ -2855,6 +2855,20 @@ struct sk_psock;
+>  #ifdef CONFIG_BPF_SYSCALL
+>  int tcp_bpf_update_proto(struct sock *sk, struct sk_psock *psock, bool restore);
+>  void tcp_bpf_clone(const struct sock *sk, struct sock *newsk);
 > +
->  	skb_reset_network_header(skb);
->  	nhoff = skb_network_header(skb) - skb_mac_header(skb);
->  	if (unlikely(!pskb_may_pull(skb, sizeof(*iph))))
+> +union bpf_tcp_iter_batch_item {
+> +	struct sock *sk;
+> +	__u64 cookie;
+> +};
+> +
+> +struct bpf_tcp_iter_state {
+> +	struct tcp_iter_state state;
+> +	unsigned int cur_sk;
+> +	unsigned int end_sk;
+> +	unsigned int max_sk;
+> +	union bpf_tcp_iter_batch_item *batch;
+> +};
+> +
 
-[Severity: Medium]
+[Severity: Low]
+Do these definitions need to go into include/net/tcp.h?
 
-With CONFIG_IPV4=n, this rejects all IPv4 GSO. However, ipv4_offload_init()
-still registers the IPv4 GRO callbacks without any guard:
+After this patch, and still at the end of the series, net/ipv4/tcp.c is
+the only user of union bpf_tcp_iter_batch_item and struct
+bpf_tcp_iter_state. All of the BPF TCP iterator code now lives there, so
+both types could stay file-local in tcp.c. That would keep iterator
+internals out of a widely included header.
 
-	net_hotdata.ip_packet_offload = (struct packet_offload) {
-		.type = cpu_to_be16(ETH_P_IP),
-		.callbacks = {
-			.gso_segment = inet_gso_segment,
-			.gro_receive = inet_gro_receive,
-			.gro_complete = inet_gro_complete,
-		},
-	};
-
-An IPv6-only kernel can still forward IPv4 frames at L2, for example
-through a bridge, OVS, tc redirect, VXLAN/Geneve over an IPv6 underlay, or
-ip4ip6 via ip4ip6_gso_segment(). In that case IPv4 TCP/UDP traffic still
-gets GRO-merged. TSO skbs from tap, virtio and packet sockets are also
-still accepted.
-
-If the egress device needs software GSO, are these packets dropped?
-
-validate_xmit_skb()
-  skb_gso_segment()
-    skb_mac_gso_segment()
-      inet_gso_segment()
-        return ERR_PTR(-EPROTONOSUPPORT);
-
-The guard seems to be needed only because ip_send_check() is out of line
-in ip_output.c. Would moving ip_send_check() into shared code avoid this?
-
-This is still present at the end of the series. The commit message also
-doesn't mention the GSO change.
+>  #ifdef CONFIG_BPF_STREAM_PARSER
+>  struct strparser;
+>  int tcp_bpf_strp_read_sock(struct strparser *strp, read_descriptor_t *desc,
 
 [ ... ]
 
-> @@ -1959,6 +2001,45 @@ static int __init inet_init(void)
->  
->  	ip_init();
->  
-> +	return 0;
+> diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+> index 3ac4856852794..1f0fc46136ead 100644
+> --- a/net/ipv4/tcp.c
+> +++ b/net/ipv4/tcp.c
 
 [ ... ]
 
-> +static int __init inet_init(void)
+> @@ -1458,6 +1464,1115 @@ int tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
+
+[ ... ]
+
+> +static int bpf_iter_tcp_realloc_batch(struct bpf_tcp_iter_state *iter,
+> +				      unsigned int new_batch_sz, gfp_t flags)
 > +{
-> +	int rc;
+> +	union bpf_tcp_iter_batch_item *new_batch;
 > +
-> +	sock_skb_cb_check_size(sizeof(struct inet_skb_parm));
+> +	new_batch = kvmalloc_objs(*new_batch, new_batch_sz,
+> +				   flags | __GFP_NOWARN);
+> +	if (!new_batch)
+> +		return -ENOMEM;
 > +
-> +	if (IS_ENABLED(CONFIG_IPV4)) {
-> +		rc = inet4_init();
-> +		if (rc)
-> +			return rc;
+> +	memcpy(new_batch, iter->batch, sizeof(*iter->batch) * iter->end_sk);
+> +	kvfree(iter->batch);
+> +	iter->batch = new_batch;
+> +	iter->max_sk = new_batch_sz;
+> +
+> +	return 0;
+> +}
+
+[ ... ]
+
+> +	/* Batch size was too small. */
+> +	bpf_iter_tcp_unlock_bucket(seq);
+> +	bpf_iter_tcp_put_batch(iter);
+> +	err = bpf_iter_tcp_realloc_batch(iter, expected * 3 / 2,
+> +					 GFP_USER);
+> +	if (err) {
+> +		iter->cur_sk = 0;
+> +		iter->end_sk = 0;
+> +		return ERR_PTR(err);
 > +	}
 > +
+> +	sk = bpf_iter_tcp_resume(seq);
+> +	if (!sk)
+> +		return NULL; /* Done */
+> +
+> +	expected = bpf_iter_fill_batch(seq, &sk);
+> +	if (likely(!sk))
+> +		goto done;
+> +
+> +	/* Batch size was still too small. Hold onto the lock while we try
+> +	 * again with a larger batch to make sure the current bucket's size
+> +	 * does not change in the meantime.
+> +	 */
+> +	err = bpf_iter_tcp_realloc_batch(iter, expected, GFP_NOWAIT);
 
-[Severity: Critical]
+[Severity: Medium]
+This is a pre-existing issue, not one introduced by this patch; the same
+code is already in tcp_ipv4.c. Since it is being moved anyway: can this
+call vfree() while a plain spinlock is held?
 
-With CONFIG_IPV4=n, is the inet_peer slab cache ever created?
+The first reallocation uses GFP_USER with the bucket unlocked. For more
+than about 512 entries the size exceeds PAGE_SIZE. kvmalloc() then tries
+kmalloc() with __GFP_NORETRY and can fall back to vmalloc(), so
+iter->batch may end up vmalloc-backed.
 
-The only way to reach ip_init() is through inet4_init(). ip_init() is also
-the only caller of inet_initpeers():
+In the listening state, bpf_iter_tcp_resume() retakes the bucket lock in
+listening_get_first() with a plain spin_lock:
 
-net/ipv4/ip_output.c:ip_init() {
-	ip_rt_init();
-	inet_initpeers();
-	...
-}
+    spin_lock(&ilb2->lock);
 
-inet_initpeers() is the only place that sets peer_cachep:
+Concurrent listen() calls may have grown the bucket past the new capacity
+in the meantime. If so, this GFP_NOWAIT reallocation runs with the lock
+held, and on success:
 
-net/ipv4/inetpeer.c:inet_initpeers() {
-	...
-	peer_cachep = KMEM_CACHE(inet_peer, SLAB_HWCACHE_ALIGN | SLAB_PANIC);
-}
+bpf_iter_tcp_realloc_batch()
+    kvfree(iter->batch)
+        vfree()
 
-inetpeer.o is built as obj-y and IPv6 still uses it. For example, a remote
-host that sends a UDP datagram to a closed IPv6 port ends up here:
+vfree() only defers when in_interrupt() is true:
 
-icmpv6_send()
-  icmp6_send()
-    icmpv6_xrlim_allow()
-      inet_getpeer_v6(net->ipv6.peers, &fl6->daddr)
-        inet_getpeer()
-          kmem_cache_alloc(peer_cachep, GFP_ATOMIC)
+    if (unlikely(in_interrupt())) {
+        vfree_atomic(addr);
+        return;
+    }
+    ...
+    might_sleep();
 
-On a lookup miss, peer_cachep is NULL at this point. Would that cause a
-NULL pointer dereference in softirq context?
+This runs in process context under a plain spin_lock with BH enabled, so
+in_interrupt() is false. vfree() would then call might_sleep() and tear
+down the area synchronously while ilb2->lock is held. GFP_NOWAIT only
+limits the new allocation, not the freeing of the old buffer. The
+established case uses spin_lock_bh(), so vfree_atomic() is used there.
 
-ip6_forward() redirect handling and ndisc_send_redirect() reach the same
-allocation through inet_getpeer_v6().
+With CONFIG_DEBUG_ATOMIC_SLEEP this would give a "sleeping function
+called from invalid context" splat.
 
-CONFIG_IPV4 is still def_bool y at this commit. The problem remains at the
-end of the series, where the final patch makes CONFIG_IPV4 selectable.
-Should inet_initpeers() be moved out of the IPv4-only init path?
+Would it make sense to free the old batch only after the bucket has been
+unlocked?
 
->  	/* Initialise per-cpu ipv4 mibs */
->  	if (init_ipv4_mibs())
->  		panic("%s: Cannot init ipv4 mibs\n", __func__);
-> @@ -1980,35 +2061,20 @@ static int __init inet_init(void)
->  	if (icmp_init() < 0)
->  		panic("Failed to create the ICMP control socket.\n");
->  
-> -	/*
-> -	 *	Initialise the multicast router
-> -	 */
-> -#if defined(CONFIG_IP_MROUTE)
-> -	if (ip_mr_init())
-> -		pr_crit("%s: Cannot init ipv4 mroute\n", __func__);
-> -#endif
-> -
->  	if (init_inet_pernet_ops())
->  		pr_crit("%s: Cannot init ipv4 inet pernet ops\n", __func__);
->  
-> -	ipv4_proc_init();
-> -
-> -	ipfrag_init();
-> +#ifdef CONFIG_PROC_FS
-> +	if (ip_misc_proc_init())
-> +		pr_crit("%s: Cannot init ipv4 misc proc\n", __func__);
-> +#endif
-
-[Severity: Low]
-
-ip_misc_proc_init() now runs even when CONFIG_IPV4=n. In that
-configuration, net->ipv4.fqdir (set up through ipfrag_init()) and
-net->ipv4.devconf_all (set up by devinet) are never initialized.
-
-Would reading /proc/net/sockstat or /proc/net/snmp make sockstat_seq_show()
-or snmp_seq_show_ipstats() dereference NULL?
-
-This looks resolved later in the series. The patch "tcp: move protocol
-agnostic TCP functions out of tcp_ipv4.c" wraps two things in
-IS_ENABLED(CONFIG_IPV4):
-
-- the FRAG line in sockstat_seq_show()
-- the snmp_seq_show_ipstats(), icmp_put() and icmpmsg_put() calls in
-  snmp_seq_show()
-
-netstat_seq_show() only reads net->mib counters, which init_ipv4_mibs()
-always allocates. Since CONFIG_IPV4 is def_bool y at this commit, the
-intermediate state can't be reached.
-
->  
-> -	dev_add_pack(&ip_packet_type);
-> +	if (IS_ENABLED(CONFIG_IPV4))
-> +		inet4_late_init();
->  
+> +	if (err) {
+> +		bpf_iter_tcp_unlock_bucket(seq);
+> +		return ERR_PTR(err);
+> +	}
 
 [ ... ]
-
-> @@ -2028,12 +2094,8 @@ static int __init ipv4_proc_init(void)
->  		goto out_udp;
->  	if (ping_proc_init())
->  		goto out_ping;
-> -	if (ip_misc_proc_init())
-> -		goto out_misc;
->  out:
->  	return rc;
-> -out_misc:
-> -	ping_proc_exit();
->  out_ping:
->  	udp4_proc_exit();
->  out_udp:
-
-[Severity: Low]
-
-This isn't a bug, but the commit message doesn't describe the init
-restructuring. That restructuring changes behaviour on default kernels,
-since CONFIG_IPV4 is def_bool y at this commit.
-
-ip_mr_init() calls register_pernet_subsys(&ipmr_net_ops). It now runs after
-init_inet_pernet_ops() and ip_misc_proc_init() instead of before them. This
-changes the pernet init order and the reverse exit order.
-
-ip_misc_proc_init() has also moved out of ipv4_proc_init():
-
-- it now runs before the raw, tcp4, udp4 and ping proc registrations
-- it runs even if those registrations fail
-- if it fails, it only prints pr_crit() and no longer unwinds the ping,
-  udp4, tcp4 and raw proc entries
-
-The message also doesn't mention the new guards in inet_gso_segment(),
-around ip_mc_drop_socket() in inet_release(), and in
-inet_sk_reselect_saddr().
-
-There is also a typo in the commit message:
-
-    This patch moves the generic ip_generec_getfrag() from ip_output.c to
-    af_inet.c.
-
-ip_generec_getfrag() should be ip_generic_getfrag().
-
-Could the commit message be updated to cover these changes?
-
-[ ... ]
-
-> diff --git a/net/ipv6/datagram.c b/net/ipv6/datagram.c
-> index 191c9733ff9fa..079d1951405b9 100644
-> --- a/net/ipv6/datagram.c
-> +++ b/net/ipv6/datagram.c
-
-[ ... ]
-
-> @@ -186,7 +186,7 @@ int __ip6_datagram_connect(struct sock *sk, struct sockaddr_unsized *uaddr,
->  	if (addr_type & IPV6_ADDR_MAPPED) {
->  		struct sockaddr_in sin;
->  
-> -		if (ipv6_only_sock(sk)) {
-> +		if (!IS_ENABLED(CONFIG_IPV4) || ipv6_only_sock(sk)) {
->  			err = -ENETUNREACH;
->  			goto out;
->  		}
-
-[Severity: Low]
-
-The v4-mapped rejection here and in __inet6_bind() doesn't cover
-tcp_v6_connect()->tcp_v4_connect() or udpv6_sendmsg()->udp_sendmsg(). With
-CONFIG_IPV4=n, can those paths still be reached at this commit?
-
-This looks handled later in the series. "tcp: move protocol agnostic TCP
-functions out of tcp_ipv4.c" adds this to tcp_v6_connect():
-
-	if (!IS_ENABLED(CONFIG_IPV4) || ipv6_only_sock(sk))
-		return -ENETUNREACH;
-
-The same patch also guards tcp_v6_conn_request(), tcp_v6_syn_recv_sock()
-and tcp_v6_do_rcv().
-
-The UDP split later in the series guards the v4-mapped paths in
-udpv6_sendmsg(), udp_v6_push_pending_frames() and udp6_hash4(). CONFIG_IPV4
-can't be disabled until the final patch, so no intermediate state is
-affected.
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260930135334.4739-1-fmancera%40suse.de
