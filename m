@@ -1,47 +1,47 @@
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011069.outbound.protection.outlook.com [52.101.65.69])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011026.outbound.protection.outlook.com [52.101.65.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676C234A3A5
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 16:47:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6619934A3A5
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 16:47:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.26
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791132447; cv=fail; b=FEnBkBi6jHyxut8emjINgpKFLG4AurY4faL3SHaMVPzfAtcqDZW4HK+5N9MOpupENqAiXOF5+nu5jp+J9NIUooWahz6OrdsidDsKY4nZlFEgFzm7TXa83hQFMe7PJmHLyU3/x1fkFdPGrMoEKac4VgAj1Jb5ryQeTStLKo8aBs8=
+	t=1791132454; cv=fail; b=bzgse2yBHdiyn6m6tac1SXMiKvLDuCG2Xnc5/XBGZSJ2le8+YhE9/Mu0y1vQd6Ea4SuE0b8LQjyvPzS4N5tn78CN9UeawOzzNCbSFYWBTSv97Uo+aPt1lLlidqK6SMTlb+R/WqyVcWqDGfDj/y0kXf0QbKHC0f/co3cplR226yk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791132447; c=relaxed/simple;
-	bh=S48rA4hS+ViRuoAPcxTXBQdyvqH5Rynp9hX36R9121g=;
+	s=arc-20240116; t=1791132454; c=relaxed/simple;
+	bh=MDV/fTW37ncHEl1gPALpinYOIBD5EV//WVaC+u1coVE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=p2JqtyuFkVp76wN5IgapUpkcCvsH0iLqbZIcoBBBjS3ptC7HNHCaf3kAO2sjdzVwQ9dQuuLe+zURYH01hi3BWlrM62EhcDNNJ9CsJvtRsIaqOKATSDG075owD46FLqA2WYxfbK9Dx6nD0mnJ6Z3Ut2lk9YCq4VcMKFgQq84GNfU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=igjibrGL; arc=fail smtp.client-ip=52.101.65.69
+	 Content-Type:MIME-Version; b=fSHVLjWcGG88k5PPAnHzmNmFko+GdtG8EA7K+BOWXU+Ojmf3B2w7HHH9VsKbgEKj4KjEmrMlu6F63Ez1EF5QHv8k8kCpRZcQKfwpS3Z09iee1ooYBFKLT6pjJGFKeKtzR5rNaUMiepIWxjdGXNZjYNgp5S5JMT1wXMdTdmfBi38=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=sgsH4wci; arc=fail smtp.client-ip=52.101.65.26
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="igjibrGL"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="sgsH4wci"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BolHva+VcwS1iBPRNB6eldEBc6omaQREkQ0M2cYBoypYsqvriT0EV9X/LLMgKXewAmEZVpNJ2xRnXvV+we1FLa3m62vzl34JPyn6hPmWvmy85mg5XNd67sc3LfN9m82590Dg7sHBWo+NEMepcz9zm2p/dvp/+6WlCFLf3bVYsplU+lKaJA1tpso8OcGZP8wtMj2tHfTC+LCNlHI5XkwnMwwKSwfx4/YjDjaLC5GFos9fiWjumUltbRb+H1uPM6Zn5MiWBQfTas91uGSTtUu/2wBFYxoATkHif/E+zlTWaoeuHWz9qHkkOQLo7dKcB68RbEo3iOI0kKKqzjifCRDdBQ==
+ b=Lat7HS+TpKGhn8oUJSMKCARVnnztD4oFyRPZCJTPOgtIw1o7j4cc2lV5quPrQ0L7V1Lg/z8uCz1plZCPS10qWCm1Y5BEKc0W4mZQ2t1PgKZR9untMo5vG+ePmPaJG8Q8/54QIu0Ql5qZDJjFnWMAdn1yZOhujCfXyCPcyaHlVFr+5xmtJXzRGiAVTfFUFq7dCSUu33tKmfcu0FFq7L+Exhywm0JW2rFgDZP8EEFyBaNnjqRMLnCwUKt1qoHoF4ME9f8sXeAd5K/g0YTOBNC9i7/be1AYCzYj8iZhFWdqFNWQoOInwxDmVlQGTdCFovDFy4OIBFpGaoVTStNETfHLHQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kkkMpZDM8lUKVdPyUjI7WPk1sdn9EW8Mv44TIpZeweQ=;
- b=xw7y1osX3lwWRIy9mAopvqGzidg5NC1ztqV+i/XnD6EaSisIfjGkq6ssqlHAgje3SjYnUjmnzWWTZ3kv07l7J48ROijBNEbrCn35+N8WEZDEByW39G6Vrc4HR4h0dzo6MpCYJyMmWfYoTkvSM8e49pmtqZu1fIM1Aoo1Mw/O+LazeHFvhzeYOqwqJ+OqAsqExNjeuZAiQkZAX4p1hjddPyEW1AhJ+3ZoluRC3k6dtjDwPVxCWQp4qLL3UbaBYHBp+eRFcQK0ej6IkivuW3OHXcKwOhahoYGXBE3pvgCNS2Ls9RhavPcO7dRNXIYxKqImypemO1yTY+F1koBiR/TPyQ==
+ bh=Vk6uHI226KGYl4Rv+20h5tWwqDyhwCpOUyui55plNmI=;
+ b=voY7tVZCPT28gYFv5MHXKHGZgqm8Doqh/qeUNuHIPnyjP/axNF+a8QwzMt69xD2B+wmhVgq26XT/2NBaCiMf9qzQp1wJ0g0Zy6TT45jzMwzQNSt9GnHU83XATvsDaziV+goH/IZnIIumZHuToh08+q0KqDN7SvGGWgVf4vmgo0l7s0FMJImy4aRW9PkZn37HhZMZ+C1Yy+Mvw8YUubZVPwSfBz91FwtZSgB+L7U+mxe8j6mJDy79P4r1YhFHdhz+sZT8nIClSPyZcki9tX9/M3v6fgl0j07X7o+Fe8N6FlFgGAP197duoPyAVLfJboyqrlbMRY8kqaOEX19NB2XhMA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kkkMpZDM8lUKVdPyUjI7WPk1sdn9EW8Mv44TIpZeweQ=;
- b=igjibrGLLJPY8p6miWhPxynkupX4sMYGE8l5wwdVv1fKutyEYXSIyiq319RY/+uXr99GbbwaL88ZzOFtUqZP+ShE/7RlosVCKLII39n1jH9FUYJ/X64fVwiFlDDNU4FXktUkTwGMHr3d3t+sbSFOAuImlxTSmsK0Hf9q+AkRroOmU4CXH06Ukqgm/a0AgTiuUpPjpPla0LhDgXQqAy8g+zEo8lZtPZSPzofBw4RKeYBmblnOQ/dSHiX/i8iSzj9UcN2KGXrO508QWvZqZx+ZjFRQLqPeUAg1Rjd3iuc9Isrdz9oBgEWzwXWsIgA4gtY93HC3mO+gk52izUtC40hH1w==
+ bh=Vk6uHI226KGYl4Rv+20h5tWwqDyhwCpOUyui55plNmI=;
+ b=sgsH4wcibVVx41r7l3jyFRDyDRwahJZz6S8MNj3NErd5++2lUcTxEOEWGihpADLhW+f0r78fniaNXJ9ILTGX+NqRbPQprlLgB0x0kdodcF7PGy5Cc9yiOwtWEfLmohVZ4Qe5qJaM6kR4+yK8BsgTVAqlbhAM3QMm1m22jsa6bXp4nfys64ehMaq4XlzJBJM+fpjD3dhWnb10Eysl9em4mqRlNIW2MVr1kuhcJm7MIezHrL8UzBCXe4QBNdwTw9LLo3gkRMz/2zc43yus857bgBZ+lmtWr6Y2zzwjtJrWv7a8/DXaHS1RDmKVFr1FIFa5qD7so8vwdnm/1N91A15a0w==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
  by AS8PR04MB7637.eurprd04.prod.outlook.com (2603:10a6:20b:29d::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Sun, 4 Oct
- 2026 16:47:23 +0000
+ 2026 16:47:30 +0000
 Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
  ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
  ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0451.022; Sun, 4 Oct 2026
- 16:47:23 +0000
+ 16:47:29 +0000
 From: jeff.chen_1@oss.nxp.com
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
@@ -50,16 +50,16 @@ Cc: johannes@sipsolutions.net,
 	arend.vanspriel@broadcom.com,
 	benjamin.berg@intel.com,
 	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: [PATCH nxpwifi-next v2 1/3] wifi: nl80211: vendor-cmd: add NXP vendor command definitions
-Date: Mon,  5 Oct 2026 00:46:27 +0800
-Message-Id: <20261004164629.2860677-2-jeff.chen_1@oss.nxp.com>
+Subject: [PATCH nxpwifi-next v2 2/3] wifi: nxpwifi: add firmware TRPC command support
+Date: Mon,  5 Oct 2026 00:46:28 +0800
+Message-Id: <20261004164629.2860677-3-jeff.chen_1@oss.nxp.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261004164629.2860677-1-jeff.chen_1@oss.nxp.com>
 References: <20261004164629.2860677-1-jeff.chen_1@oss.nxp.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: AS4P189CA0027.EURP189.PROD.OUTLOOK.COM
- (2603:10a6:20b:5db::16) To VE1PR04MB7280.eurprd04.prod.outlook.com
+X-ClientProxiedBy: AS4P192CA0033.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:20b:658::27) To VE1PR04MB7280.eurprd04.prod.outlook.com
  (2603:10a6:800:1af::22)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -69,177 +69,243 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|AS8PR04MB7637:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3a57057c-64cd-40d3-bf09-08df223729f0
+X-MS-Office365-Filtering-Correlation-Id: 95955914-565a-46e5-4f1f-08df22372de0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|19092799006|1800799024|376014|18002099003|22082099003|6133799003|3023799007|10067099003|56012099006|11063799006;
+	BCL:0;ARA:13230040|23010399003|366016|19092799006|1800799024|376014|18002099003|22082099003|6133799003|10067099003|56012099006|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	RsgsjvqwF9Yx0y53+xev9AU2mNxI62qJ6Vo3Iv9PcByNDgtaa+/ciecY3rJHVh21m+yRjxlDpRRVBxwqypqBstylOAR2XaPv9AWNgnlW6HyJb9X7oZ64swWN0uNP4HFn8/lFGyR9/bTkH9RSKcOfkSX3LWjBsDyhgkT785zKCB7q4XV++c8zZyF5gJkkrXRkRGZmq2XTpXjtY4cbvOmCcZ2jGlmk6u9F+b8plHHI9sMZGWkeh2smjHQP6tVofOt9kr9nnwBbmKOoITFPRZNOyQ818WK3QwHIV1QvNcLOsPiNbTtL5TWzOyqsEsaaOI9vaelfakPkPG14XgiKyg6TK4q7TMBa+CEQTcK03T5WQ47gKS2SsI46w6B6Pk2EesU9D2V6aTq831+XMW0+EnXcMQKwDZhVJXg8EWyURP9EdWDOWrTCZiOjnKwqRuAglu2icLKD9VvH0ZYzYoSDFtQXFrxeSK1V/mdmg+8YksN5WLEp4JhLcuJ8hrWP5dgpp0UoIS9+ZXQTh1mK9SkA+dIX04st49szNatVCVKc+0u8xm9agzh5IaXvaGMBorvAp7OyptrBk9iFp/T48ZBgKlDvJS1DL4G564lOQ6pUfm5S7zMYGec+yUNAryOwj55uiBxYklUezCCa4nfVAFHoCJ9rUTmZJRE3EIwxtY3T1ORL50s=
+	ypwez4dn7jIw/TyOlFc9g3mSOze0MCHheXhdsGWpAhmojIIpZ75nFm9tpFCUPazbP/kNgB0XAIo+Zk824P9Du3wEfU57/D0UntsG6pkCdy8AP9ZI4TUfaekzseij51rXHeuUFkfAYczo5eUM+gPr4rMpmWdWV+EJ0zMQPJB2aeoleeacFRk0e4EpJy7MBoio5gLa6ueUO1NMCWl5XKIkinXfz7pIHcw0YLfZb2ic3eSBRYihQLweFWpCxbttA03TtWYrsTyb35QsmGdvtjkJPK6MFM6ZI6GFai/xm5WODFV5OICjUr9cyW3bB/YFLu++FzIs3urAtZ45AdvCKOCsyLhegjVCE2hYdjwTL15P4CjhXSrFBMv3pB5cQzwL9nCjtvQ4JcxzWBSWelkDsuIP2b6fOk66p8szJRTzhrkd1imZL9VQX6ruxlfh/8x3oBz2cQnYb/hiqK7CLdAP3pn3erlTBaVJAeenNlQOn2LTmSnF8jnoPUv63DxGUT9ZgV0DpEEYRg1Y0dZtZOotqzbBGQeMofoRjOMHGjN7bssrimHM0ZzPBKGe46/MuQ1DLifWM8wPm313/3y5yPZ3qhxEiIWfG/jlsEBP5l3aQQ33i906iHa/I+yGpgHzxzWgPrMTqK3uTnKH0yXlcSpfwmc5lzY+kArD/NvLmfx3Npvm60o=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(19092799006)(1800799024)(376014)(18002099003)(22082099003)(6133799003)(3023799007)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(19092799006)(1800799024)(376014)(18002099003)(22082099003)(6133799003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BKLBP0zGAb6dBEEVQL31S4Whk97/otbVcwfT15Gz6bH39RTUi2TDbzSI1oiv?=
- =?us-ascii?Q?SVAygBAhpx25LOBuicstrmnkwj7ZW8QFH8pLFyC4nYfoGOKuBjTcZJf5000s?=
- =?us-ascii?Q?1CmOW8Ct7hbQjS6bHzSKIAow51WqNi/gXjBebO9Godvvi/W7bsUaxLQWI2GE?=
- =?us-ascii?Q?1Xp3Gqod3jCnrypn7rrOA3+TVrk4asmpfr5Wj39x/PwHJmPZjKDK3NfbFKZf?=
- =?us-ascii?Q?viB90p2jjqy50YqAjDpqepvyOBvj28tD1jASAUSdwg8xd/0Z5/wFjj+eiyFd?=
- =?us-ascii?Q?M9oCYMwcBph2mSoXTaKjmNeVyLJUyHYQ92jD78BfE2yUg1BoqrLVmqCFgH9z?=
- =?us-ascii?Q?S5F73yzL2kgsUoJnzGM3hFy0xn7A6iMLGN8fT88/rCX8PaQHqkYI+nJxEBw0?=
- =?us-ascii?Q?haKQscBpaZ28ILC5sQvavDpaqDoqJdIj3uHnD0jaG1Er3kkogXpdlNCvl+On?=
- =?us-ascii?Q?3Em6rF1X00YaQ0rabi/sDuYShYg2hOB6/qzmki5LUr973rrlsssEzTPMdLKB?=
- =?us-ascii?Q?rjuj7njEhcLpmrzD9qd4JXv+CYP8DLDcZwbrk/7UXs94miqrSkscFU2vA2O7?=
- =?us-ascii?Q?kDI8mZQ/v647ggw9ZITkpi0h65wCxcDEkeBCwhw/vUULdxaSKhISO/4A9HiX?=
- =?us-ascii?Q?kxjIV33raCjcsVJ6I6CLop31gXP9s/Rco9LEXjp1O2S9rTlYJfWIEzJZcxQm?=
- =?us-ascii?Q?iioHPSjyAdyycz8m20b8kpOYqrN3/AFSrC+QhGWRKqUK7Yh2GhuPAfBgIXzP?=
- =?us-ascii?Q?kDiZ+Rj0ezWePFplKnhPp2nsKy1ljn2MC2GcxGl/quR7akYgxCWdSgf8NuPv?=
- =?us-ascii?Q?fAmKIQZCx6ZQ99lhREKKACMZcCO7i89hCATgOPSPuBtNJSCw27W3qE5gZq/+?=
- =?us-ascii?Q?tTzDKlXvGr4hma2haoSGFDaEqfQbf8Crf7KQMyXJ0wilp2eZl3ImoBthiz4g?=
- =?us-ascii?Q?dBUzoNHtf0WBBwRb5PTq3Df7J7ZwGNHn2YVz5R/aIN792+LGuf0gB4KccU1L?=
- =?us-ascii?Q?GeMMixoB9UoOoX8C+LU1khQs+v0pwwoyn/PMCfgCWe8UveIu0zT/fTRBqDlm?=
- =?us-ascii?Q?kK/9jVGy86C6if6gEBfJdRPgT5GWjGZpYsh2tA2lKgXV1eQ0Yz9L0A7y0u/7?=
- =?us-ascii?Q?i4R/i3bvGVesaie9vF5FxY5rfCIPoQF/usTaqPx5x+oy3e6/WRwRFWaSrjfA?=
- =?us-ascii?Q?3Hq7HZuIcLR8ZUn9fn7bGiLMPwaW8yTXjRazcmKhGFhUSiOF2nnnAOGsIrm3?=
- =?us-ascii?Q?ypJoPaZci36XXI7kyqZn++f/5dbAljFyr0UMUPvFm+uyW+bBR0wRY3KkNjLp?=
- =?us-ascii?Q?PJPaHpZaiVyV40fFe6vKgQp15r+i5DZrtytDSQPDy9pj76oSASNbyJYlC/jd?=
- =?us-ascii?Q?yVb+AZYLrZWgU0dBMJnVI97PNaoVGU+3A6oiaNv/Rc+zlRgrz2rc5eA2bAVJ?=
- =?us-ascii?Q?DPDK/oEswq0iTahvnvwr11YTDB0xwUVVakyAJdI6Z7ggnIQUdDsunLytZkBG?=
- =?us-ascii?Q?VbwPRnmghcSDgWMX2fN9UhwAKekf0PQb4nozvwRezxHYWrO/YefDEa83FESs?=
- =?us-ascii?Q?tpoSoSqe8I9pjOrx7AyH3fInUSgzZqT3GkJ1gMyFgBZAtMIeQQ5tzPkst6OS?=
- =?us-ascii?Q?Ak0jpL4q/w3O3oF3H17yBIEIBueRrakDQXcUlKu/FlemmN4khkN84pOtlFQk?=
- =?us-ascii?Q?qtLZaV4gjILjol9bAKLfDFS2hDmT0ZJHT/jWki1trrnuNA6c4wFvOkomxa90?=
- =?us-ascii?Q?IoDEjyLycUqBSUEpKmmgDicnjMEvj8OsJm32IiaQOZkk6Wz/xh0D?=
+	=?us-ascii?Q?4X/RrllMj5h7yM6NRjtSem/zoUEIeyp0QhvVOT9xNPD+lWSbZbdIuD7IprJF?=
+ =?us-ascii?Q?lmolP6Ao6B8v8tNAFh9/JR4757QC98HNqUp+gDu26Pof3ZMaANARk6A0oMa8?=
+ =?us-ascii?Q?xgAyzCMf2ruASjwnZBYJNsy6ltraXXteK8E1eyxfvLf03evKW7QFwYU89QyS?=
+ =?us-ascii?Q?k1jDC6SJ8iUQ9lIY/KLQlEmmqV/MSRVmlXaraeVIUeeobUsTbY/yAOnz4a+e?=
+ =?us-ascii?Q?wzoL1J9Mz5BJilikj8LAJeOQ9t/P+f3k94Ae9or1St1cP7No9BVmXkkqnpS/?=
+ =?us-ascii?Q?E+GCn0sY3Fd4uqpz1J/ViZqPjX/b9y6X/RSBD3jHGQ6FYcU3aVHp6EAhh/4p?=
+ =?us-ascii?Q?EQp9Xrh+VZoUQ6yw91DJ0pPLtpI0mBYMtKKeOS1X4SIGg4wPM/GhddYmZ7kz?=
+ =?us-ascii?Q?/D+CNUBTVveytwTtxyVO8IXyLEuc9QUa9loTnhYWGwUIBpqx2J/mn6aMfMLC?=
+ =?us-ascii?Q?vgCHa7Gk80PObk9KKH9kFeSIc/pg7F6UI5Ux8Klsp4MtmWLHX3nE4z/sfrk6?=
+ =?us-ascii?Q?MaipRFQ59nKCBodLxrLU6aM4vVm7U+uKwpSylAOiDXY6kbd+RtB/ITYfun8K?=
+ =?us-ascii?Q?UTskQL8kFcChoHlmsVbYPQoh1JNbT4A0Lv7ZAVac8Js/62LhkKerJ3O/i9NI?=
+ =?us-ascii?Q?P7KVmgwvfA5aAwJxqROglH4Dn90IfDsyPR2T2JWWhhpZfNaxwPOmDfpq4KIO?=
+ =?us-ascii?Q?bxZ4vdlxnnxt26BFf9lt2CcD9eKDJbJ2b9gUhpI3Ew0XiaWpCiE83PK0Td6Z?=
+ =?us-ascii?Q?EioMKv+ZOO1q0FZM9jfrV/MCfxbn+5iafPAm3F2eq8JM5o36G1U7Y7Xp+ENG?=
+ =?us-ascii?Q?PqUvyyna65bwlDUr3752fu9XVSoKPiGulq9v0qeVI07zxZAPw9fUayd91lBJ?=
+ =?us-ascii?Q?eqHf/jINm1y0mzT2VRPZgVvXFdrPUl4yFC81L4Jzp0y5EG5wF9G8OvaTM2Ms?=
+ =?us-ascii?Q?+fLUlwloZOyADWCVO19m48VYQnEDxk5yTLM/Z/BtJUDZAPEcTFru7B46oJm+?=
+ =?us-ascii?Q?6KniDq6gAU/rrYHlnski9q7vjbQvhureByQe5los8LPbRrZNbpvbhQMlp08r?=
+ =?us-ascii?Q?ZlgBfFLsmAbS6xUfD+WTO+DUPLigs/u0HclJy0tTN40QG07vAOXYV9KcoB6K?=
+ =?us-ascii?Q?t3TCyt47AC6AEyv9RTkcg3O2amgbqnSddzG7lC4Espkv1OEHFgfvu1kxoMgt?=
+ =?us-ascii?Q?itRYYrwH6LAOhrfEJRcLOd2+WK312G2/8zDv1aQiBnqrvmwi8ijHUEUtB+c/?=
+ =?us-ascii?Q?X5N1NlXfY42t0+wWK8PYq4EtMIja4KDvdm5xs8aSz4zuCeeYyxrxskZ+8HtR?=
+ =?us-ascii?Q?CjmnJzxXSaa51d4U+HhJmOcjRa74M2UX8Q3FK0oaB+p02XK9wT2boNVZn2IF?=
+ =?us-ascii?Q?jhnwPY/WoiGDw2qQSy7SNs8axEcQJ+3fzfb/ZBja4KG00qtvGgPGtLGleMeE?=
+ =?us-ascii?Q?I/uTtLhROAwZT8LLD2dMi8OrLeC2qSOVihm2tt74WfF02AmB6L/zbtO/AUsQ?=
+ =?us-ascii?Q?7DUAKT4soi+6yMmAQCH9BABiuY92jjk36owOJ9uLeBq6FZMUEOMjEghs4W3q?=
+ =?us-ascii?Q?XY0T+21DYxK6+9PoZYosOSiELjjs+lHOyk3IIDNKG2mtnbH7XfD5PjJAXtz9?=
+ =?us-ascii?Q?zsSYtMTRKMxL0D4l9MiKRrfZRCVlgIpRO+HxTnyxH/M7Ga4bwrTvcGYGBPAm?=
+ =?us-ascii?Q?vu47OY2k/GVLPJh47gcPIo8CmGj/jl9KrvqmMtWZIG+N2eHcQPC5Wb1NRK8f?=
+ =?us-ascii?Q?Axk3CN26Wdq18JsPSgWGrmHY9aUGQnTuSe9gKeic8ZLCD+ELDs9a?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3a57057c-64cd-40d3-bf09-08df223729f0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 95955914-565a-46e5-4f1f-08df22372de0
 X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2026 16:47:23.4988
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2026 16:47:29.9112
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sLXgY97nwT/y0gwEdMG8y7+087pT0s9MsruQ47IDvqzeR0TtMHwq+SLDeXMQw0dVjCdPuY5UXqbKpdhoMjW0oitDV3zl1AZcAZiVXtn0TA0zEPfr5KEv+EM29ERiGI1N
+X-MS-Exchange-CrossTenant-UserPrincipalName: M0W83Zomvk8YF2UkHSe9Kutvg2X096Mniu2hEHJa06f7jUI98F/cZL5lJZdhnR+AUzfBTnJ4JupVYo7RbQb982NuIkEVmzMcMpz+ZxKeDheL3rkHMuNuAAtrHh7hpJmk
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7637
 
 From: Jeff Chen <jeff.chen_1@nxp.com>
 
-Add NXP vendor command and attribute definitions for use with
-NL80211_CMD_VENDOR.
-
-The initial user of this interface is the Transmit Rate-based Power
-Control (TRPC) configuration command.
-
-The TRPC table is a firmware-defined ABI that contains TX power limit
-data. Existing nl80211 TX power interfaces allow TX power levels to be
-configured, but do not provide an interface for exchanging TRPC table
-data between userspace and firmware.
-
-Therefore, the TRPC configuration interface is exposed through a vendor
-command. The kernel does not interpret the TRPC table contents and only
-passes the table data between userspace and firmware.
-
-Example use cases include:
-- Reading firmware TX power limit configuration for verification.
-- Updating platform-specific TX power limit tables.
-- Supporting manufacturing, validation, regulatory, and platform
-  bring-up workflows that require access to firmware-defined TX power
-  limit data.
+Add support for the firmware channel TRPC configuration command used to
+retrieve and update TX power limit data.
 
 Assisted-by: LLM
 Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
 ---
- include/uapi/linux/nl80211-vnd-nxp.h | 81 ++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
- create mode 100644 include/uapi/linux/nl80211-vnd-nxp.h
+ drivers/net/wireless/nxp/nxpwifi/cfg.h     | 11 ++++
+ drivers/net/wireless/nxp/nxpwifi/fw.h      |  8 +++
+ drivers/net/wireless/nxp/nxpwifi/main.h    |  2 +
+ drivers/net/wireless/nxp/nxpwifi/sta_cfg.c |  8 +++
+ drivers/net/wireless/nxp/nxpwifi/sta_cmd.c | 67 ++++++++++++++++++++++
+ 5 files changed, 96 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211-vnd-nxp.h b/include/uapi/linux/nl80211-vnd-nxp.h
-new file mode 100644
-index 000000000000..261504690fcc
---- /dev/null
-+++ b/include/uapi/linux/nl80211-vnd-nxp.h
-@@ -0,0 +1,81 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * NXP vendor command definitions for nl80211
-+ *
-+ * Copyright 2026 NXP
-+ */
-+
-+#ifndef __VENDOR_CMD_NXP_H__
-+#define __VENDOR_CMD_NXP_H__
-+
-+#define NXP_OUI		0x006037
-+
-+/**
-+ * enum nxp_vendor_cmd - supported NXP vendor commands
-+ *
-+ * @NXP_VENDOR_CMD_TXPOWER_LIMIT: Access firmware Transmit Rate-based
-+ *      Power Control (TRPC) configuration. The command uses the
-+ *      attributes defined by &enum nxp_txpwr_attrs.
-+ *
-+ *      SET operations provide TRPC table data through
-+ *      %NXP_ATTR_TXPWR_DATA. GET operations return the requested TRPC
-+ *      table in %NXP_ATTR_TXPWR_DATA.
-+ *
-+ *      The kernel does not interpret the TRPC table contents and only
-+ *      passes the table data between userspace and firmware.
-+ */
-+enum nxp_vendor_cmd {
-+	NXP_VENDOR_CMD_TXPOWER_LIMIT,
+diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg.h b/drivers/net/wireless/nxp/nxpwifi/cfg.h
+index 8627a3372978..4c0558ed483e 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/cfg.h
++++ b/drivers/net/wireless/nxp/nxpwifi/cfg.h
+@@ -755,6 +755,17 @@ struct nxpwifi_ds_coalesce_cfg {
+ 	struct nxpwifi_coalesce_rule rule[NXPWIFI_COALESCE_MAX_RULES];
+ };
+ 
++/* Host-side helper for the channel TRPC command. */
++struct nxpwifi_ds_chan_trpc_cfg {
++	u32 len;
++	u16 action;
++	u16 subband;
++	u8 tlvbuffer[];
 +};
 +
-+/**
-+ * enum nxp_txpwr_action - operation for %NXP_ATTR_TXPWR_ACTION
-+ *
-+ * @NXP_TXPWR_ACTION_GET: Retrieve the TRPC table for the selected
-+ *	subband.
-+ * @NXP_TXPWR_ACTION_SET: Update the TRPC table for the selected
-+ *	subband using data from %NXP_ATTR_TXPWR_DATA.
-+ */
-+enum nxp_txpwr_action {
-+	NXP_TXPWR_ACTION_GET,
-+	NXP_TXPWR_ACTION_SET,
-+};
++/* Upper bound on the TRPC TLV table exchanged with the firmware. */
++#define NXPWIFI_MAX_TRPC_BUF (4 * 1024)
 +
-+/**
-+ * enum nxp_txpwr_subband - firmware TRPC subband selectors
-+ *
-+ * The selector values are defined by the firmware Transmit Rate-based
-+ * Power Control (TRPC) interface.
-+ *
-+ * @NXP_TXPWR_SUBBAND_2G: 2.4 GHz band.
-+ * @NXP_TXPWR_SUBBAND_5G_0: 5 GHz subband 0.
-+ * @NXP_TXPWR_SUBBAND_5G_1: 5 GHz subband 1.
-+ * @NXP_TXPWR_SUBBAND_5G_2: 5 GHz subband 2.
-+ * @NXP_TXPWR_SUBBAND_5G_3: 5 GHz subband 3.
-+ */
-+enum nxp_txpwr_subband {
-+	NXP_TXPWR_SUBBAND_2G	= 0x00,
-+	NXP_TXPWR_SUBBAND_5G_0	= 0x10,
-+	NXP_TXPWR_SUBBAND_5G_1	= 0x11,
-+	NXP_TXPWR_SUBBAND_5G_2	= 0x12,
-+	NXP_TXPWR_SUBBAND_5G_3	= 0x13,
-+};
+ struct nxpwifi_11ax_he_cap_cfg {
+ 	u16 id;
+ 	u16 len;
+diff --git a/drivers/net/wireless/nxp/nxpwifi/fw.h b/drivers/net/wireless/nxp/nxpwifi/fw.h
+index 188110b020cf..0de5d2fc9242 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/fw.h
++++ b/drivers/net/wireless/nxp/nxpwifi/fw.h
+@@ -386,6 +386,7 @@ enum NXPWIFI_802_11_PRIVACY_FILTER {
+ #define HOST_CMD_CAU_REG_ACCESS                    0x00ed
+ #define HOST_CMD_SET_BSS_MODE                      0x00f7
+ #define HOST_CMD_PCIE_DESC_DETAILS                 0x00fa
++#define HOST_CMD_CHAN_TRPC_CONFIG                  0x00fb
+ #define HOST_CMD_802_11_NET_MONITOR                0x0102
+ #define HOST_CMD_802_11_SCAN_EXT                   0x0107
+ #define HOST_CMD_COALESCE_CFG                      0x010a
+@@ -2373,6 +2374,12 @@ struct host_cmd_twt_cfg {
+ 	u8 val[];
+ } __packed;
+ 
++struct host_cmd_chan_trpc_cfg {
++	__le16 action;
++	__le16 subband;
++	u8 tlvbuffer[];
++} __packed;
 +
-+/**
-+ * enum nxp_vendor_attr_txpwr_limit - TX power limit vendor attributes
-+ * @NXP_ATTR_TXPWR_UNSPEC: Unspecified attribute.
-+ * @NXP_ATTR_TXPWR_ACTION: Operation from &enum nxp_txpwr_action..
-+ * @NXP_ATTR_TXPWR_SUBBAND: Target subband.
-+ * @NXP_ATTR_TXPWR_DATA: Firmware-defined TRPC table data.
-+ */
-+enum nxp_txpwr_attrs {
-+	NXP_ATTR_TXPWR_UNSPEC,
-+	NXP_ATTR_TXPWR_ACTION,
-+	NXP_ATTR_TXPWR_SUBBAND,
-+	NXP_ATTR_TXPWR_DATA,
+ struct host_cmd_ds_command {
+ 	__le16 command;
+ 	__le16 size;
+@@ -2447,6 +2454,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_11ax_cmd ax_cmd;
+ 		struct host_cmd_ds_802_11_net_monitor net_mon;
+ 		struct host_cmd_twt_cfg twt_cfg;
++		struct host_cmd_chan_trpc_cfg ch_trpc_cfg;
+ 	} params;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/nxp/nxpwifi/main.h b/drivers/net/wireless/nxp/nxpwifi/main.h
+index b25a6a4f2936..9ae017bdc6ca 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/main.h
++++ b/drivers/net/wireless/nxp/nxpwifi/main.h
+@@ -1415,6 +1415,8 @@ int nxpwifi_get_wakeup_reason(struct nxpwifi_private *priv, u16 action,
+ 			      struct nxpwifi_ds_wakeup_reason *wakeup_reason);
+ int nxpwifi_get_chan_info(struct nxpwifi_private *priv,
+ 			  struct nxpwifi_channel_band *channel_band);
++int nxpwifi_chan_trpc_cfg(struct nxpwifi_private *priv, int cmd_type,
++			  struct nxpwifi_ds_chan_trpc_cfg *ch_trpc);
+ void nxpwifi_coex_ampdu_rxwinsize(struct nxpwifi_adapter *adapter);
+ void nxpwifi_11n_delba(struct nxpwifi_private *priv, int tid);
+ int nxpwifi_send_domain_info_cmd_fw(struct wiphy *wiphy, enum nl80211_band band);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sta_cfg.c b/drivers/net/wireless/nxp/nxpwifi/sta_cfg.c
+index 56cf63fbf7fe..650de6156912 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sta_cfg.c
++++ b/drivers/net/wireless/nxp/nxpwifi/sta_cfg.c
+@@ -1175,3 +1175,11 @@ int nxpwifi_get_chan_info(struct nxpwifi_private *priv,
+ 				HOST_ACT_GEN_GET, 0, channel_band,
+ 				NXPWIFI_SYNC_CMD);
+ }
 +
-+	__NXP_ATTR_TXPWR_AFTER_LAST,
-+	NXP_ATTR_TXPWR_MAX = __NXP_ATTR_TXPWR_AFTER_LAST - 1
-+};
++int nxpwifi_chan_trpc_cfg(struct nxpwifi_private *priv, int cmd_type,
++			  struct nxpwifi_ds_chan_trpc_cfg *ch_trpc)
++{
++	return nxpwifi_send_cmd(priv, HOST_CMD_CHAN_TRPC_CONFIG,
++				ch_trpc->action, 0, ch_trpc,
++				cmd_type == NXPWIFI_SYNC_CMD);
++}
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
+index 9bfa4aebc3e5..c255dc0195b6 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
++++ b/drivers/net/wireless/nxp/nxpwifi/sta_cmd.c
+@@ -3033,6 +3033,70 @@ nxpwifi_ret_sta_twt_cfg(struct nxpwifi_private *priv,
+ 	return nxpwifi_ret_twt_cfg(priv, resp, data_buf);
+ }
+ 
++static int nxpwifi_cmd_chan_trpc_cfg(struct nxpwifi_private *priv,
++				     struct host_cmd_ds_command *cmd,
++				     u16 cmd_no, void *data_buf, u16 cmd_action,
++				     u32 cmd_type)
++{
++	struct host_cmd_chan_trpc_cfg *chan_trpc_cfg = &cmd->params.ch_trpc_cfg;
++	struct nxpwifi_ds_chan_trpc_cfg *usr_chan_trpc_cfg =
++		(struct nxpwifi_ds_chan_trpc_cfg *)data_buf;
++	u32 hdr_len = sizeof(chan_trpc_cfg->action) +
++		      sizeof(chan_trpc_cfg->subband);
 +
-+#endif /* __VENDOR_CMD_NXP_H__ */
++	/* usr_chan_trpc_cfg->len covers action, subband, and TRPC data.
++	 * Reject lengths outside the supported command payload range.
++	 */
++	if (usr_chan_trpc_cfg->len < hdr_len ||
++	    usr_chan_trpc_cfg->len > hdr_len + NXPWIFI_MAX_TRPC_BUF)
++		return -EINVAL;
++
++	cmd->command = cpu_to_le16(cmd_no);
++	cmd->size = cpu_to_le16(S_DS_GEN + usr_chan_trpc_cfg->len);
++
++	memcpy(chan_trpc_cfg, &usr_chan_trpc_cfg->action,
++	       usr_chan_trpc_cfg->len);
++
++	return 0;
++}
++
++static int nxpwifi_ret_chan_trpc_cfg(struct nxpwifi_private *priv,
++				     struct host_cmd_ds_command *resp,
++				     u16 cmdresp_no, void *data_buf)
++{
++	struct host_cmd_chan_trpc_cfg *chan_trpc_cfg =
++		&resp->params.ch_trpc_cfg;
++	struct nxpwifi_ds_chan_trpc_cfg *usr_chan_trpc_cfg =
++		(struct nxpwifi_ds_chan_trpc_cfg *)data_buf;
++
++	if (chan_trpc_cfg->action == HOST_ACT_GEN_GET) {
++		u16 resp_size = le16_to_cpu(resp->size);
++		u16 resp_len;
++
++		if (resp_size < S_DS_GEN)
++			return -EINVAL;
++
++		resp_len = resp_size - S_DS_GEN;
++		/* The firmware response contains action, subband, and TRPC
++		 * data. Validate that the payload length is within bounds.
++		 */
++		if (resp_len < sizeof(chan_trpc_cfg->action) +
++			       sizeof(chan_trpc_cfg->subband) ||
++		    resp_len > sizeof(chan_trpc_cfg->action) +
++			       sizeof(chan_trpc_cfg->subband) +
++			       NXPWIFI_MAX_TRPC_BUF) {
++			nxpwifi_dbg(priv->adapter, ERROR,
++				    "chan_trpc bad resp len: %u\n", resp_len);
++			return -EINVAL;
++		}
++
++		usr_chan_trpc_cfg->len = resp_len;
++		memcpy(&usr_chan_trpc_cfg->action, chan_trpc_cfg, resp_len);
++	}
++
++	return 0;
++}
++
+ static const struct nxpwifi_cmd_entry cmd_table_sta[] = {
+ 	{.cmd_no = HOST_CMD_GET_HW_SPEC,
+ 	.prepare_cmd = nxpwifi_cmd_sta_get_hw_spec,
+@@ -3217,6 +3281,9 @@ static const struct nxpwifi_cmd_entry cmd_table_sta[] = {
+ 	{.cmd_no = HOST_CMD_TWT_CFG,
+ 	.prepare_cmd = nxpwifi_cmd_sta_twt_cfg,
+ 	.cmd_resp = nxpwifi_ret_sta_twt_cfg},
++	{.cmd_no = HOST_CMD_CHAN_TRPC_CONFIG,
++	.prepare_cmd = nxpwifi_cmd_chan_trpc_cfg,
++	.cmd_resp = nxpwifi_ret_chan_trpc_cfg},
+ };
+ 
+ /*
 -- 
 2.34.1
 
