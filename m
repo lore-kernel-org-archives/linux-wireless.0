@@ -1,53 +1,50 @@
 Received: from vtj.irix.systems (vtj.irix.systems [82.76.27.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E68EB40B109;
-	Sun,  4 Oct 2026 11:23:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B49411A0B;
+	Sun,  4 Oct 2026 11:24:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.76.27.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791113023; cv=none; b=Y4nn6MrsRISmO/hG6g0gqhvslkJmM/idq7w/qxmUi0dqKVcMclbJQcKA8s5tmevh/UemfrebYs/DwctOy9xQvbkNmSIA1ZfjHE6oZ7MtAgCv2UwaNQDWm5ZfvJlwYyypFgCKwvWUlPCOIaJ8pMGBY1h0AE1Lra1Ww2ixia3VGf0=
+	t=1791113089; cv=none; b=b1KX9kqRNrdn4/N+eLwx3HZhATAs/1lzmnY/anyKcoFi3kbyMFdDAaqOqD32nc1JtN7O/H2ev+H311ePNOfliiRBqQ4Zu/p6freGBb7YaR+RR0ugf9F70+IluiV3ynJ6+X6EzkW8GNwZH/xCKR3vzSCAzRnQsUOoHBlVy8P6uzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791113023; c=relaxed/simple;
-	bh=qLb7tA3vBiEFPLz0uKYk2DzyBBEVt6rm03PcH/Tx9xs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AgxBxAwLqbMu/t/hxaicz+c2V1F1k5jOngTXg1LDrGBc8ZsoYbM6T0Ck0XKJjr57dZWOnR8DWqJvVql8pJ1YL0EaLIjoujtR+za9/jjaImkOSSi2rqY31+cjEHO9RBBMQcnJ3StpOHSs5kjSvDds0PMUfNyuE4DerxT5hlIdE9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=aCemBFGz; arc=none smtp.client-ip=82.76.27.144
+	s=arc-20240116; t=1791113089; c=relaxed/simple;
+	bh=mkS23j0OH2i2rWCyMiqhNF7buEnTprSLfoy3D6h4Mw4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RJ7eTwt2DHP93TKdDQ0DY30Qq7NES5nr9rXoUNMm+ZrX8HMurY11KnPz2L1JXNakSHW2SlCXA2ohp4p4ojLgRRwmdhtgdqAj5oeUGQJFhrb+fFZ3A+6NkuLN9ny42CiAzeL8zhYlAp10tYpr03Sh3e6jg5RBUeIGbDefa6v83ME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com; spf=pass smtp.mailfrom=andrei-z.com; dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b=bny5b1ky; arc=none smtp.client-ip=82.76.27.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andrei-z.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="aCemBFGz"
-Received: from MAILGW-HP.hp.vtj.corp.irix.systems (localhost [127.0.0.1])
-	by vtj.irix.systems (Proxmox) with ESMTP id E19631BBB3;
-	Sun, 04 Oct 2026 14:23:39 +0300 (EEST)
+	dkim=pass (2048-bit key) header.d=andrei-z.com header.i=@andrei-z.com header.b="bny5b1ky"
+Received: from MAILGW-DELL.dell.vtj.corp.irix.systems (localhost [127.0.0.1])
+	by vtj.irix.systems (Proxmox) with ESMTP id 90DDD13D2B;
+	Sun, 04 Oct 2026 14:24:46 +0300 (EEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=andrei-z.com; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:from:from:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=sig1; bh=HjmGNy9+5i4EYioG2mjT
-	Wb6R3JieWsNYIsTGT1wtIFc=; b=aCemBFGzygvc5Fa/LiedRKYKC+lCGqnlWK9z
-	ABJ9N1fXLLE3kpeGYteWsy29mzwuPyrZZufB4CgQTZF8zW8L0l5univeLLCOtlre
-	W5Awcs6msANvuvgeHo974/7CoTpCwzpsNR+UwpsW642dGP0CnKxxVUvGIFvfAEPU
-	cs2lifheN/c7YVJTwaBo9ZF0sgcBdYTAs7uX7rJgXQ0LVRLG8HimZ5unUxnQ4nJJ
-	W9K2UZBIRkC/Fz2DRO+CRayERPahhRcjoK7RLWD5wcsVNDtM8AHTlQjv2enMObTy
-	ZF8YWY8eEVIci85+wdC8zF/eVG2zL4B6l9RmufMVK1nNWtMksg==
+	:from:from:message-id:mime-version:reply-to:subject:subject:to
+	:to; s=sig1; bh=KMk7EA10g1nkTDaHhk/5Ru/VTE9WAOox/BmBAwF5SKg=; b=
+	bny5b1kyzHoXCdfkgciYDzScUPd9nqJMLyql3fxR9canggn0jUfkxK/qEO9DZdX8
+	KQ13EOwZydxJa8rWQQtZCugzj5U5FQb8gT6FJZj2u8Xx/54+RTH5o99B2pHm3jtv
+	VbU/v8fG1Pcak7fxhFeOyC99VUwLGqPiE0shpLLKf6OJOYPHTr2gpLJ0iJEmOL2S
+	5Ybs4svX1vZoxy7ixN/B951Pdg+bXc+NvwxPJ0XCrgAbjheTsJq+zupWkYefSfZo
+	ydRXcd5eLi9ZN2DigOIWC36d8q+kVtnSjoWV4Ad4voxvLm/qPpfJdmh91PhI0qVD
+	aan9KDLEahH+xrC3yK1Njg==
 Received: from VTJ-MX.corp.irix.systems (unknown [10.57.36.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by vtj.irix.systems (Proxmox) with ESMTPS id 375831BAC2;
-	Sun, 04 Oct 2026 14:23:39 +0300 (EEST)
+	by vtj.irix.systems (Proxmox) with ESMTPS id 993B413D2A;
+	Sun, 04 Oct 2026 14:24:45 +0300 (EEST)
 Received: from workspace.corp.irix.systems (2a02:2f04:1:9c23::c) by
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Sun, 4 Oct 2026 14:23:38 +0300
+ 15.2.2562.49; Sun, 4 Oct 2026 14:24:45 +0300
 From: Andrei-Alexandru Bleortu <me@andrei-z.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 CC: <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH ath-next 5/5] wifi: ath11k: map DSCP to TID as cfg80211 does by default
-Date: Sun, 4 Oct 2026 14:18:07 +0300
-Message-ID: <23e008aae70cc20169686c84f61139237fa1eb6e.1791111135.git.me@andrei-z.com>
+	<linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH ath-next 0/2] wifi: ath11k: firmware airtime fairness, BSS color while disabled
+Date: Sun, 4 Oct 2026 14:24:38 +0300
+Message-ID: <cover.1791111135.3.git.me@andrei-z.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1791111135.2.git.me@andrei-z.com>
-References: <cover.1791111135.2.git.me@andrei-z.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,71 +56,49 @@ Content-Type: text/plain
 X-ClientProxiedBy: VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6) To
  VTJ-MX.corp.irix.systems (2a02:2f04:1:9c24::6)
 
-Where the hardware classifies frames by their DSCP, it takes the TID
-from the DSCP-TID tables ath11k programs, all of them with the DSCP's
-class selector bits. cfg80211, which classifies the frames mac80211
-queues, follows RFC 8325 section 4 instead (commit 6fdb8b8781d5
-("wifi: cfg80211: Update the default DSCP-to-UP mapping")), as does
-Wi-Fi QoS Management. The two disagree for AF1x and CS2 (UP 0, not 1
-and 2), AF2x (UP 3, best effort, not 2, background), CS3 and AF3x (UP 4,
-not 3), VA and EF (UP 6, voice, not 5, video) and CS6 (UP 7, not 6).
+Two ath11k patches that need the mac80211 changes in "[PATCH
+wireless-next 0/2] wifi: mac80211: airtime weight op, BSS color during
+a color change" (<cover.1791111135.1.git.me@andrei-z.com>):
 
-Program the tables with cfg80211's default mapping.
+1. Firmware airtime fairness (ATF) on the QCN9074 and IPQ5018, using
+   Felix Fietkau's sta_set_airtime_weight op. Changes since v2: the
+   command ID and TLV tags sit in their enums; a radio whose firmware
+   refuses ATF keeps working without it; the commit message says the
+   122 Mbit/s cap was measured with the firmware's strict scheduling
+   set, which the patch does not do.
+2. Keep the BSS color in the vdev parameter while the color is disabled
+   during a color change (IEEE Std 802.11-2024, 26.11.4); with mac80211
+   now keeping the color, the firmware gets it instead of 0.
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+They are based on ath-next with that series applied, and can wait for
+it to reach ath-next.
 
-Assisted-by: LLM
-Signed-off-by: Andrei-Alexandru Bleortu <me@andrei-z.com>
----
- drivers/net/wireless/ath/ath11k/hal_tx.c | 30 ++++++++++++------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+The patches by me were written with an AI coding assistant (Claude
+Code), which also drafted the changelogs; the testing described was done
+on the hardware.
 
-diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.c b/drivers/net/wireless/ath/ath11k/hal_tx.c
-index b7e9b1cdd7..c42d9d4f53 100644
---- a/drivers/net/wireless/ath/ath11k/hal_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/hal_tx.c
-@@ -11,26 +11,26 @@
- 
- #define DSCP_TID_MAP_TBL_ENTRY_SIZE 64
- 
--/* dscp_tid_map - Default DSCP-TID mapping
-+/* dscp_tid_map - Default DSCP-TID mapping, the one cfg80211_classify8021d()
-+ * uses without a QoS map: the DSCP's class selector bits, except where RFC 8325
-+ * section 4 maps the DiffServ service class differently.
-  *
-- * DSCP        TID
-- * 000000      0
-- * 001000      1
-- * 010000      2
-- * 011000      3
-- * 100000      4
-- * 101000      5
-- * 110000      6
-- * 111000      7
-+ * DSCP              TID
-+ * AF11-13, CS2      0
-+ * AF21-23           3
-+ * CS3, AF31-33      4
-+ * VA, EF            6
-+ * CS6               7
-+ * any other         DSCP >> 3
-  */
- static const u8 dscp_tid_map[DSCP_TID_MAP_TBL_ENTRY_SIZE] = {
- 	0, 0, 0, 0, 0, 0, 0, 0,
--	1, 1, 1, 1, 1, 1, 1, 1,
--	2, 2, 2, 2, 2, 2, 2, 2,
--	3, 3, 3, 3, 3, 3, 3, 3,
-+	1, 1, 0, 1, 0, 1, 0, 1,
-+	0, 2, 3, 2, 3, 2, 3, 2,
-+	4, 3, 4, 3, 4, 3, 4, 3,
- 	4, 4, 4, 4, 4, 4, 4, 4,
--	5, 5, 5, 5, 5, 5, 5, 5,
--	6, 6, 6, 6, 6, 6, 6, 6,
-+	5, 5, 5, 5, 6, 5, 6, 5,
-+	7, 6, 6, 6, 6, 6, 6, 6,
- 	7, 7, 7, 7, 7, 7, 7, 7,
- };
- 
+v2 also carried beacon protection, now dropped: with the firmware
+signing beacons, a client that enforces beacon protection (Intel BE200,
+iwlmld) lost every beacon on QCN9074 and IPQ5018, with either BIGTK
+index and with or without a host-built MME. Until it is known what the
+firmware needs, BIP stays in software and the feature is not advertised.
+
+v2: https://lore.kernel.org/all/20261003155542.96363-1-me@andrei-z.com/
+
+Andrei-Alexandru Bleortu (2):
+  wifi: ath11k: support firmware airtime fairness
+  wifi: ath11k: keep the BSS color while it is disabled
+
+ drivers/net/wireless/ath/ath11k/core.h |   1 +
+ drivers/net/wireless/ath/ath11k/mac.c  | 116 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/wmi.c  |  97 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h  |  51 +++++++++++
+ 4 files changed, 260 insertions(+), 5 deletions(-)
+
+
+base-commit: f49defea7668d8c68ec19fa085ef3da6075561c7
+prerequisite-patch-id: 0ce384d8e432a5ffedf43b8e02dd2576a52fb3fb
+prerequisite-patch-id: f606f9dee7c5cdf33bf5f06e985885fd9deaf90a
 -- 
 2.47.3
 
