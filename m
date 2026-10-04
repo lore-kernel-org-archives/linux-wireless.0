@@ -1,50 +1,50 @@
-Received: from mta1.migadu.com (out-113.mta1.migadu.com [95.215.58.113])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09296352020
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Oct 2026 23:49:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395353AA9EF
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 03:46:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791071392; cv=none; b=Cz2eTKTa27EudrGruDU92W2kJbn3AA3p+r8uboHZq3Mmtbqf0+ewyqXRjJuuwuygrZrR7nlfOnQFGdh65GQLHaoxXAZthbWqnzkd+OGKFfRCgWdV/Bz0GVN89B/0uwjcSQmJhd1rqCgOc2cbnzx0N/TMUl6EqAECgfINHZ9x1n8=
+	t=1791085570; cv=none; b=XsV5gHeVvhGnmaSx3W6PwoJCdPjyImuBSPPan70MCMcQ5j3Sjsao8e5bSQ5krBOIqI7MAm8eRE7/UC55cTsnOlIGJZ9XAhPIPYNb5jECIeTHjXr+01lA1dXBy1Irj3dottxTRWZIiUD7ZhZjtx3Ssbfg7vpGjT4uRJHj81/aYLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791071392; c=relaxed/simple;
-	bh=xl4GPcatPDKKUjDT7CDuYUyfau6OOsS9xvgfmbROSqc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HGQiY/QTrr24FDr6uXFMjDV5NU77ry9BCZKd1/r1+P75r0/lAF6WtaHbYx+/PodZvk/AKiNAhlI2U+Q5gQj98QbPG8wSjKa9i9P/f32/nTvvE+IIJCPTeSzrkV06CfnrYn7eCOYVPtxO+MpZ4S1z/JW1xaPsCUQBbqE6FwD9C1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=sPQ7gGb6; arc=none smtp.client-ip=95.215.58.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1791085570; c=relaxed/simple;
+	bh=nFnjqy+luD61nzIYSHZgy06kVxoUCCFfUXHWyzd3h8c=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qjeI2hRaiSZ103GRKvaRdED2j0GIIg4P5v5itCVUR3Db814PJysXAJXu8LhbXMROldRItJWKjZCtFDVixuBSeUry/GsbNpJtNCwLB2eBw24Ga3lPDXJz5Zv6O1T1PnTsd+48uRc0k5bkyILXMc6V09XTOrvsklL9s72QeUKpE/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=jJL542EE; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="sPQ7gGb6"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=xl4GPcatPDKKUjDT7CDuYUyfau6OOsS9xvgfmbROSqc=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791071387; v=1; x=1791676187;
- b=sPQ7gGb6BAfQmWRqMNl8fj4Rsq/LpO113aTNzxZzfJEdJbwwfCmdxje/59JhsXTMbbt2DXgJ
- A+31lDT/+ckb/pH7/KVy/I78ezw7Zh95IrW7f66NzdzG+TPii+KApOgxCqSYBc1ypY9WOIP1k07
- AejzTZ8r8OfUOXaufH2pIooCmBKBpSX/a9Dd7+5gNq5rV1WF58c3tXWLldeNIH1T7nmhYleGPdx
- pTOLjoQMl+PUlQzGKOGVIvReReZj5rmGiLibHPPqnYJpzKfy+6qdJvJcofpPA68FekgMaMPGqWI
- w2tGLoySjzTlHeZa8EvkA0mFClasLmEkdvXShTL3zVpGA==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id b4c22351e5f5a4a7;
-	Sat, 03 Oct 2026 23:49:47 +0000
-X-Mizu-Trace-ID: b4c22351e5f5a4a7
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Deren Wu <deren.wu@mediatek.com>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND wireless] wifi: mt76: mt7925: cancel mlo_pm_work on the USB stop path
-Date: Sat,  3 Oct 2026 16:49:44 -0700
-Message-ID: <20261003234944.96066-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="jJL542EE"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6943k5Zf9829246, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791085565; bh=mFlcUfCkP4CBE3dw/8YsAq9WKJ8+Dat8ixcfpVBxVmI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=jJL542EEKfWpaWkS8MDfYyGvEHDIFOfH1u8Cy/TDQkJ7J48QwaGvKCuhv+yNRPoYq
+	 fJPDls7G3KXXBO4OS/J9pkkHziVbKb5w5Jq9K4+cujKrL9aZaPUkNsDxSLvzIej8Ng
+	 6XPyt9BvNvFMRLsJet49LzpOdvcxIsKYiU3oWMKnRNdykR0SsX9M16aPOnWxepdEDg
+	 x0V78tMkA/eNp3oeFUtS3sz18WVvkVauTe6+hBLVCAOhe30S+qULzFcfrWDf9Ce87N
+	 NR/9aloWx1u3yD2b2PmKwqM0U7kwBuTBeFnF8Sk8JcfCIMgvKP12ubxYbuEkBomXKS
+	 wiLDaL2fIWrrg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6943k5Zf9829246
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Sun, 4 Oct 2026 11:46:05 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Sun, 4 Oct 2026 11:46:05 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Sun, 4 Oct 2026 11:46:05 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ku920601@realtek.com>
+Subject: [PATCH rtw-next 00/15] wifi: rtw89: coex: update BT-coexistence along changes of newer firmware
+Date: Sun, 4 Oct 2026 11:45:05 +0800
+Message-ID: <20261004034520.33695-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -52,63 +52,48 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Every other teardown path cancels this work, PCIe unbind included. USB
-unbind does not: PCIe has its own unregister hook for it, while USB
-shares a generic one and the stop callback that would have covered it is
-replaced in probe.
+The BT-coexsitence in firmware is continuous to develop to support
+dual BT feature. To cowork with the feature, more conditions are
+considered in driver side. Add them accordingly.
 
-That cancel came in commit 81faf578320d ("wifi: mt76: mt7925: cancel
-mlo_pm_work on stop"), whose last line says it covers both buses. That's
-mine and it's a boo-boo.
+Ching-Te Ku (15):
+  wifi: rtw89: coex: fix RF band check in _set_rf_trx_para() and its
+    propagation
+  wifi: rtw89: coex: track per-HW-band WL role fields with arrays
+  wifi: rtw89: coex: show per-HW-band MLO state in WL status dump
+  wifi: rtw89: coex: add outsrc-set-info v7 for BT SPDT state
+  wifi: rtw89: coex: compute WL/BT cross-talk interference maps
+  wifi: rtw89: coex: add 1SS MIMO-PS decision for dual-BT CIS
+  wifi: rtw89: coex: add firmware 0.35.119.3 support for RTL8922A/D
+  wifi: rtw89: coex: raise default BT TX power to 10 dBm
+  wifi: rtw89: coex: bind the RF band in use while WL is doing RFK
+  wifi: rtw89: coex: store BT TX power per device and per RF band
+  wifi: rtw89: coex: set the WL/BT antenna map on shared-antenna chips
+  wifi: rtw89: coex: use the right switch-type enum on RTL8922D
+  wifi: rtw89: phy: Implement API to control BTG to turn on/off BT TX/RX
+  wifi: rtw89: coex: turn BT TX/RX on and off through the BTG control
+  wifi: rtw89: coex: set rf_combination in _update_wl_mlo_info()
 
-Give the USB path its own stop that cancels the work first.
+ drivers/net/wireless/realtek/rtw89/coex.c     | 736 +++++++++++++++---
+ drivers/net/wireless/realtek/rtw89/core.h     |  79 +-
+ drivers/net/wireless/realtek/rtw89/fw.c       | 191 ++++-
+ drivers/net/wireless/realtek/rtw89/fw.h       |  12 +
+ drivers/net/wireless/realtek/rtw89/phy.h      |  12 +
+ drivers/net/wireless/realtek/rtw89/phy_be.c   |  18 +
+ drivers/net/wireless/realtek/rtw89/reg.h      |   2 +
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |   5 +
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |   5 +
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |   5 +
+ .../net/wireless/realtek/rtw89/rtw8852bt.c    |   6 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |   5 +
+ drivers/net/wireless/realtek/rtw89/rtw8922a.c |   2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8922d.c |   3 +-
+ 14 files changed, 936 insertions(+), 145 deletions(-)
 
-Two-link MLO on a Netgear A9000, work armed then the interface down:
 
-                   stock    patched
-    stop ran        3/3      3/3
-    work still ran  3/3      0/3
-
-Skipping the stop entirely leaves both builds running it, so the zero is
-the cancel.
-
-Fixes: 276a56883257 ("wifi: mt76: mt7925: update the power-saving flow")
-Cc: stable@vger.kernel.org
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
- drivers/net/wireless/mediatek/mt76/mt7925/usb.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-index 1757023ea70d..db6fd014447b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
-@@ -147,6 +147,15 @@ static int mt7925u_mac_reset(struct mt792x_dev *dev)
- 	return err;
- }
- 
-+static void mt7925u_stop(struct ieee80211_hw *hw, bool suspend)
-+{
-+	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-+
-+	cancel_delayed_work_sync(&dev->mlo_pm_work);
-+
-+	mt792xu_stop(hw, suspend);
-+}
-+
- static int mt7925u_probe(struct usb_interface *usb_intf,
- 			 const struct usb_device_id *id)
- {
-@@ -193,7 +202,7 @@ static int mt7925u_probe(struct usb_interface *usb_intf,
- 	if (!ops)
- 		return -ENOMEM;
- 
--	ops->stop = mt792xu_stop;
-+	ops->stop = mt7925u_stop;
- 
- 	mdev = mt76_alloc_device(&usb_intf->dev, sizeof(*dev), ops, &drv_ops);
- 	if (!mdev)
+base-commit: 7cde94dab0e74434ccc0a387d7ad373fb3becda0
 -- 
-2.55.0
+2.25.1
 
