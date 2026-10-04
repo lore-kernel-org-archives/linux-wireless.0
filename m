@@ -1,81 +1,81 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F224921AC
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 19:01:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9833F54C4
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 20:11:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791140506; cv=none; b=oKuMIjLC+yXZWlwch9EkLtYvcnIDMB5LuFaHmYV9scwkNpyFtCFfEwHZ4wblMNEsTBMMj2CBiQoe/sjO9p1Yv59AZhF5XcGl34/Rw7Fknp5dbx2YLkuNfaFXu5UxtaZZLPo8Cb17AHgkRa/oxzW56jto3kAz5w6o7XD+uBIBm0Q=
+	t=1791144679; cv=none; b=LxuVwdB71fmywpeoSvAuhgIXBzuUIM3Df4EEUhdakw164nSQcRFliuwWnVYuzjG7mSRBK0BGaxW636tTqGydRW1/vcXKhUgTy8L0aKEPB5Dfla33yJXzl7w9ZTyyz6jNV1ie4TurWC6fOfisdk4CsPg3SHte+iGqzIjJiZRnPT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791140506; c=relaxed/simple;
-	bh=GAkLGAehrqsG08iT9FwDk7Y2W8ZyfVKWK6o1qi6sXlc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fix3DYfwqfjrAOz2Xup1qkCxO9qPbc1SPXUdbB3fP+sBV38JJQJMvjNtE5yxRx4Y8DFw6BqqpWzYX+AJmZbp90jN7D6zb2FB5Bb6HldDHjyz/z76xi7vjeX8YhyvAmspIR0qlVhqeRrA1gHHStkgcEbwlxFs7cdsDBfjqR6sC20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LOZsA+sM; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1791144679; c=relaxed/simple;
+	bh=LLOkn0+G94RKjf6YHFK9L4Pnw0NtPwMcFFF3c5IghqI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=cDg6661LYSROGrDVwcgV6n6UFfOR/sztpgyZB1X4nPXDldpuCPgEoNNNtz7CjwGJ4hmFsLEpvDRolxAO8fl+EdM3wuuaxhCDucPzDtS8cd35T4MNTp1MO3hWXFC46avoxvb4VXpZVzpHHr77BQBolx210eaaRGcZ9eojQ4C9HAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=xVCZY78j; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LOZsA+sM"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="xVCZY78j"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=UBAFI+qUYoDu+PyyqViz/f+Yc5r9vjnhuWWJG9bDILM=;
-	t=1791140502; x=1792350102; b=LOZsA+sMpHLiG7owaGmZGD0qOrbnthqjcuyof0HDdIC35/k
-	mJ7lTnk7zcMSyQxlUnbvryKbH6PHHheyLwSfX26YNs4RoBoZDMmN98kT0SOtZ4I/S+nS8Ol0igaK3
-	dgaYCwm/YfgjVwL83PGpK/H3GSu+N1xaUA46n0+7hOgl4R2QPQOya+IZUfyXkkEOG0k9b2iK1daSd
-	tTVr6yten4Q7hjUUpMZbH2RBT4rCOP/wkUXkRqqPyOcREJb/nAb7e/HjEhanFKTLWzoMynJZOzfLc
-	eaoQTCqWdm/ZAQPjYoiPtYSDLTpffaa2xPjp7azC34GjPTSGU2GTu+F3MDGWPHdw==;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=6Gg0kE0KqBWiA3jybB99zBhEw2kK/hXZxJeAOB8U5QM=;
+	t=1791144677; x=1792354277; b=xVCZY78jZj/tlJVVG8HkLz9obk8vXiXJK7XDkpTGSKToLyM
+	ne2cfSuEwWILcYUHAvx3jR5/iNKM9YELOGtc+H5e/Gz5PwLWfqtPnjQrLIpXGH0T7OwauUKmhGKAz
+	ip3wVVjJVxg/8GRvUOHALdN3rbJiJts/S16lomy6Tdx5y7f3FE9h20kunZtuqvtjnH4GnrtcL/JsS
+	sQ8vtEsVCY0jNNYsFjlwOA2k8mgWoMImPRzssXAl3J/Nrz1toxcTbyw3AOuuMN7JLbqOeu5Xup1mn
+	j+7HuHGWAjd7/74wgoo5sogBDzkTOlTB3/bOqAev3ykPdsCLwvfkBLt40ymxKihQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDRSr-00000004Jlo-1LYw;
-	Sun, 04 Oct 2026 21:01:37 +0200
+	id 1xDSY8-00000004MAU-2FDU
+	for linux-wireless@vger.kernel.org;
+	Sun, 04 Oct 2026 22:11:08 +0200
+Message-ID: <e326af8e0b64b477359fbb5576130451179a2b82.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for
+ commands that don't want it
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 17/18] wifi: ath12k: read wiphy regd under RCU
-Date: Sun,  4 Oct 2026 21:01:31 +0200
-Message-ID: <20261004210122.503a8e059418.Ieeec0e112066ccefeac6b746fdfd268611c2cc65@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261004190122.1559001-20-johannes@sipsolutions.net>
+Date: Sun, 04 Oct 2026 22:11:07 +0200
+In-Reply-To: <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
 References: <20261004190122.1559001-20-johannes@sipsolutions.net>
+	 <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2026-10-04 at 21:01 +0200, Johannes Berg wrote:
+>=20
+> @@ -19703,10 +19795,8 @@ static int nl80211_pre_doit(const struct genl_sp=
+lit_ops *ops,
+>  		if (internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
+>  		    !wdev_running(wdev)) {
+>  			err =3D -ENETDOWN;
 
-Part of the RTNL removal here means the notifier will no
-longer hold the RTNL, so rcu_dereference_rtnl() can't be
-used any more. Use an RCU critical section which works
-either way, we don't have access to the cfg80211_mutex
-in the drivers.
+Ohh. Nice race - possibly only in hwsim tests.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath12k/reg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+hostapd can now react to RTM_NEWLINK so quickly that this rejects the
+calls - previously we took rtnl and that avoided seeing !wdev_running().
 
-diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wireless/ath/ath12k/reg.c
-index 89abf2e87ad1..d7065fa73c50 100644
---- a/drivers/net/wireless/ath/ath12k/reg.c
-+++ b/drivers/net/wireless/ath/ath12k/reg.c
-@@ -33,7 +33,9 @@ static bool ath12k_regdom_changes(struct ieee80211_hw *hw, char *alpha2)
- {
- 	const struct ieee80211_regdomain *regd;
- 
--	regd = rcu_dereference_rtnl(hw->wiphy->regd);
-+	guard(rcu)();
-+
-+	regd = get_wiphy_regdom(hw->wiphy);
- 	/* This can happen during wiphy registration where the previous
- 	 * user request is received before we update the regd received
- 	 * from firmware.
--- 
-2.55.0
+I'll fix it by inserting an rtnl_lock()/rtnl_unlock() here:
 
+> +	if (!need_rtnl) {
+> +		if (rdev)
+> +			get_device(&rdev->wiphy.dev);
+> +		if (wdev)
+> +			wdev_id =3D wdev->identifier;
+> +		rcu_read_unlock();
+> +	}
+
+of course only if it needs NETDEV_UP, wdev->is_running is false and
+netif_running() is true - that'll wait for the notifier to finish.
+
+johannes
