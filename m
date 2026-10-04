@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 296484AA01B
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B66940961C
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 21:45:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791150314; cv=none; b=L/1da/6YVwubANqDazn/+v6Obfv08JfILtG24RPFN5C03lPTohtpcIklfVeLFPbJ8DGXEUWf6s72EGJS3pWjZxXYFPbThETjYQ7yyGezxPcavBQDswOxN690I6Wgt0JtcWiVX78Nj4UjnZ+RIZNCYSjCciuzaU1J2MigKYKLG0k=
+	t=1791150315; cv=none; b=niDHT77WcNGevoAeA6jIfJMRkC5R8BPxto31PiXJcy3ZMQbLJJ4HGxIKOMg8HZ/SjrOplkswl5B3t5G9ZgEinOm180KjA1QzNiBkqeVQKZMRXW0oYbjb3Xu1D3TYt5qOocASqach1OWYlTdqDHBxgrOyY3CCDnREA1Lz1EIy+Vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791150314; c=relaxed/simple;
-	bh=HMaz55tF6nhlshnzK9Ju8D/b9b9C+f+EJatPOuHhaR4=;
+	s=arc-20240116; t=1791150315; c=relaxed/simple;
+	bh=g4HDNQmBEmeSmXJdPk7biVYVk7bDGM+uKXo4vQSv+XA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YWI4xOhxXeUARvuplA1X0ZQUJPM8hBN9h2iMNvZEKwyqtagqLiaCdyxAKVANKf3VY0MZgKwjo96ZIh7Fhx0Pgn1RcW33QWCyl6QZakQRcKt1eTF/TWKE0Ki2WYIwaLnpGqrL+m4JocXvvZoMWpfuJak6MmwUTITaqGp+Ue//JrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=I9x+YgJt; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=ZCVDjaZgzPr55xPXy4yAGXBY0d5S86NHRoRUIK05BsejZVBcqY0a/p2FUFJXV7pi1GBQVbhE0ikaM6Z7Bp/SrZQizidi1qwGfSG22M4p8rfPD6its0+VIcoqOFKdryGpnZbrLlsgVM/ItPLKZyrKmnt+4vTzqPp2osR9PMdyODQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NmyxZ6WO; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="I9x+YgJt"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NmyxZ6WO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=lCAi0BeeihgyGgSF93cdFe6ohN0pveoVmyNWalePF9Y=;
-	t=1791150312; x=1792359912; b=I9x+YgJt1PYbIex7uGSDfTUu5mvvOH1HA1z4OIGkPRKbLf2
-	4dabT7Itbk+/WKAo/0dH7iXx7tuLf1H8j+OZswdrPVsnoCOmu4TbRFVeJJkKuH2Yi6f1o/1b3/FtD
-	WVvncbHvbDibkeH/pwyHfgE8Htum9rkcJtJidvQyW5I+3gbHwNQt3oOxHCH4A96yfN9YC84ULHOGK
-	XwzQMq5EA1pd/CzVIsQknYLdrYD33mUCrNV34xVSjeHbmtdm3LyFvB5cOF34OEuwigxrLoLDhg0zh
-	Yp+Myy2cAQP/sOor6G3VqsAQ0p0Ztx4r7fGSgxxl6jZUVfVLlUCjK7EL9wtqgvFA==;
+	Resent-Cc:Resent-Message-ID; bh=Ih/osuUlB5v56zpQ9NLgQFg79kV9YyCxFSJlbCc1xOY=;
+	t=1791150312; x=1792359912; b=NmyxZ6WOOIgwWA9fk7el/3MFIdP9V5QIH3d1hblwXBhAiwJ
+	9Qh84YsCDdHHFxa8BOaKxLos8lTzhUhlbnOz1wvmSXA+dZbgXSX5sbw1NHE7GRuA603KJkEK/v/kf
+	MX7Do0brdPTfI0wHvWX1qyU4vhdPFM5xXUP4W3DAtBBZffCRXeJ1hoFDZibo1iv0+4/Y9JnbjMjPD
+	ZBS4k/zhWz9bbjF7P8r/ocCGDH8PBVx+/h66pfOEQN5BX/nMR9pxBhnXStSF3yaFYjPkl9qHBKi8c
+	HT6zmV/46pYMmzDj28XrACcwkUWt1IMQzlAw4zryD7CCijbscmkm0ItW1mMZslCQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDU16-00000004OqT-39dv;
-	Sun, 04 Oct 2026 23:45:08 +0200
+	id 1xDU17-00000004OqT-2BJh;
+	Sun, 04 Oct 2026 23:45:09 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 01/12] wifi: mac80211: protect AP template pointers with a spinlock
-Date: Sun,  4 Oct 2026 23:40:47 +0200
-Message-ID: <20261004234504.2fa820f54486.Iba8a15c4d37e441642b6df68c33ef8c97340e9a9@changeid>
+Subject: [RFC PATCH 02/12] wifi: nl80211: add NL80211_CMD_UPDATE_BEACON
+Date: Sun,  4 Oct 2026 23:40:48 +0200
+Message-ID: <20261004234504.60646efbf678.I174b47b65aca1bbaaf6a74d64fa0e264f84028b4@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261004214504.1636783-14-johannes@sipsolutions.net>
 References: <20261004214504.1636783-14-johannes@sipsolutions.net>
@@ -50,228 +50,500 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The AP's beacon, presp etc. templates are only updated under
-wiphy mutex right now. Prepare for being able to update them
-without the wiphy mutex by using a (per-link) spinlock for
-them.
+Updating beacon and related templates with NL80211_CMD_SET_BEACON
+requires the wiphy mutex, which can get contended, delaying the
+updates.
+
+Add a NL80211_CMD_UPDATE_BEACON operation that can only do beacon
+template updates, not other configuration changes, but is called
+without the wiphy mutex. If something requires the mutex then the
+driver can return -EAGAIN, to go through the normal change_beacon
+with wiphy mutex held.
+
+Also with this support updating multiple beacons for an MLD at
+the same time, just to further reduce round-trips if desired.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         | 66 +++++++++++++-------------------------
- net/mac80211/ieee80211_i.h | 18 +++++++++++
- net/mac80211/link.c        |  1 +
- 3 files changed, 42 insertions(+), 43 deletions(-)
+ include/net/cfg80211.h       |   5 +
+ include/uapi/linux/nl80211.h |  16 ++
+ net/wireless/nl80211.c       | 312 +++++++++++++++++++++++++++++------
+ net/wireless/rdev-ops.h      |  11 ++
+ net/wireless/trace.h         |  14 +-
+ 5 files changed, 307 insertions(+), 51 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bd1a857c812d..41d62e199851 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1122,13 +1122,11 @@ ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 			 const struct ieee80211_color_change_settings *cca,
- 			 struct ieee80211_link_data *link)
- {
--	struct probe_resp *new, *old;
-+	struct probe_resp *new;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 76edfe5765c8..ba66fb45dc12 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4943,6 +4943,9 @@ struct mgmt_frame_regs {
+  * @start_ap: Start acting in AP mode defined by the parameters.
+  * @change_beacon: Change the beacon parameters for an access point mode
+  *	interface. This should reject the call when AP mode wasn't started.
++ * @update_beacon: Update the beacon and other templates like @change_beacon,
++ *	but called without the wiphy mutex held. May return -EAGAIN to have
++ *	it fall back to @change_beacon with the wiphy mutex held.
+  * @stop_ap: Stop being an AP, including stopping beaconing.
+  *
+  * @add_station: Add a new station.
+@@ -5358,6 +5361,8 @@ struct cfg80211_ops {
+ 			    struct cfg80211_ap_settings *settings);
+ 	int	(*change_beacon)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_ap_update *info);
++	int	(*update_beacon)(struct wiphy *wiphy, struct net_device *dev,
++				 struct cfg80211_ap_update *info);
+ 	int	(*stop_ap)(struct wiphy *wiphy, struct net_device *dev,
+ 			   unsigned int link_id);
  
- 	if (!resp || !resp_len)
- 		return 1;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 75d4c5d6a7a3..e3c137a7c4c8 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1458,6 +1458,16 @@
+  *	keep their non-evacuable marking, removed channels lose it, and newly
+  *	added channels are evacuable by default; issue this command again to
+  *	change the non-evacuable set.
++ * @NL80211_CMD_UPDATE_BEACON: Update the beacon and other templates of an AP
++ *	interface, but only that. Same attributes as %NL80211_CMD_SET_BEACON,
++ *	%NL80211_ATTR_BEACON_HEAD and %NL80211_ATTR_BEACON_TAIL are required,
++ *	configuration changes such as %NL80211_ATTR_FTM_RESPONDER rejected.
++ *	This doesn't acquire the wiphy mutex internally, so it's faster, but
++ *	cannot update any other configuration.
++ *	For MLO a single link is set with %NL80211_ATTR_MLO_LINK_ID as usual
++ *	and multiple can be nested in %NL80211_ATTR_MLO_LINKS but then the
++ *	update isn't atomic if any failures happen.
++ *	Only supported with %NL80211_EXT_FEATURE_UPDATE_BEACON.
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1738,6 +1748,8 @@ enum nl80211_commands {
  
--	old = sdata_dereference(link->u.ap.probe_resp, sdata);
--
- 	new = kzalloc(sizeof(struct probe_resp) + resp_len, GFP_KERNEL);
- 	if (!new)
- 		return -ENOMEM;
-@@ -1143,9 +1141,7 @@ ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	else if (cca)
- 		new->cntdwn_counter_offsets[0] = cca->counter_offset_presp;
+ 	NL80211_CMD_NAN_SET_NON_EVAC_CHANNELS,
  
--	rcu_assign_pointer(link->u.ap.probe_resp, new);
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.probe_resp, new);
- 
- 	return 0;
- }
-@@ -1156,7 +1152,7 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
- 					struct ieee80211_bss_conf *link_conf,
- 					u64 *changed)
- {
--	struct fils_discovery_data *new, *old = NULL;
-+	struct fils_discovery_data *new = NULL;
- 	struct ieee80211_fils_discovery *fd;
- 
- 	if (!params->update)
-@@ -1166,20 +1162,15 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
- 	fd->min_interval = params->min_interval;
- 	fd->max_interval = params->max_interval;
- 
--	old = sdata_dereference(link->u.ap.fils_discovery, sdata);
- 	if (params->tmpl && params->tmpl_len) {
- 		new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
- 		if (!new)
- 			return -ENOMEM;
- 		new->len = params->tmpl_len;
- 		memcpy(new->data, params->tmpl, params->tmpl_len);
--		rcu_assign_pointer(link->u.ap.fils_discovery, new);
--	} else {
--		RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
- 	}
- 
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.fils_discovery, new);
- 
- 	*changed |= BSS_CHANGED_FILS_DISCOVERY;
- 	return 0;
-@@ -1192,28 +1183,22 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_bss_conf *link_conf,
- 				     u64 *changed)
- {
--	struct unsol_bcast_probe_resp_data *new, *old = NULL;
-+	struct unsol_bcast_probe_resp_data *new = NULL;
- 
- 	if (!params->update)
- 		return 0;
- 
- 	link_conf->unsol_bcast_probe_resp_interval = params->interval;
- 
--	old = sdata_dereference(link->u.ap.unsol_bcast_probe_resp, sdata);
--
- 	if (params->tmpl && params->tmpl_len) {
- 		new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
- 		if (!new)
- 			return -ENOMEM;
- 		new->len = params->tmpl_len;
- 		memcpy(new->data, params->tmpl, params->tmpl_len);
--		rcu_assign_pointer(link->u.ap.unsol_bcast_probe_resp, new);
--	} else {
--		RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
- 	}
- 
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.unsol_bcast_probe_resp, new);
- 
- 	*changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
- 	return 0;
-@@ -1613,12 +1598,9 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 		_changed |= BSS_CHANGED_FTM_RESPONDER;
- 	}
- 
--	rcu_assign_pointer(link->u.ap.beacon, new);
-+	ap_tmpl_replace(link, link->u.ap.beacon, new);
- 	sdata->u.ap.active = true;
- 
--	if (old)
--		kfree_rcu(old, rcu_head);
--
- 	ieee80211_update_ap_bandwidth(link, params);
- 
- 	*changed |= _changed;
-@@ -1920,11 +1902,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 
- 	err = drv_start_ap(sdata->local, sdata, link_conf);
- 	if (err) {
--		old = sdata_dereference(link->u.ap.beacon, sdata);
--
--		if (old)
--			kfree_rcu(old, rcu_head);
--		RCU_INIT_POINTER(link->u.ap.beacon, NULL);
-+		ap_tmpl_replace(link, link->u.ap.beacon, NULL);
- 
- 		if (ieee80211_num_beaconing_links(sdata) == 0)
- 			sdata->u.ap.active = false;
-@@ -2052,16 +2030,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	old_beacon = sdata_dereference(link->u.ap.beacon, sdata);
--	if (!old_beacon)
-+	if (!sdata_dereference(link->u.ap.beacon, sdata))
- 		return -ENOENT;
--	old_probe_resp = sdata_dereference(link->u.ap.probe_resp,
--					   sdata);
--	old_fils_discovery = sdata_dereference(link->u.ap.fils_discovery,
--					       sdata);
--	old_unsol_bcast_probe_resp =
--		sdata_dereference(link->u.ap.unsol_bcast_probe_resp,
--				  sdata);
- 	old_s1g_short_beacon =
- 		sdata_dereference(link->u.ap.s1g_short_beacon, sdata);
- 
-@@ -2082,10 +2052,20 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	/* remove beacon and probe response */
--	RCU_INIT_POINTER(link->u.ap.beacon, NULL);
--	RCU_INIT_POINTER(link->u.ap.probe_resp, NULL);
--	RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
--	RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
-+	scoped_guard(spinlock, &link->ap_tmpl_lock) {
-+		old_beacon = ap_tmpl_dereference(link, link->u.ap.beacon);
-+		old_probe_resp = ap_tmpl_dereference(link,
-+						     link->u.ap.probe_resp);
-+		old_fils_discovery =
-+			ap_tmpl_dereference(link, link->u.ap.fils_discovery);
-+		old_unsol_bcast_probe_resp =
-+			ap_tmpl_dereference(link,
-+					    link->u.ap.unsol_bcast_probe_resp);
-+		RCU_INIT_POINTER(link->u.ap.beacon, NULL);
-+		RCU_INIT_POINTER(link->u.ap.probe_resp, NULL);
-+		RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
-+		RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
-+	}
- 	RCU_INIT_POINTER(link->u.ap.s1g_short_beacon, NULL);
- 	kfree_rcu(old_beacon, rcu_head);
- 	if (old_probe_resp)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1430527d216c..02e50dcef27e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1151,6 +1151,9 @@ struct ieee80211_link_data {
- 		struct ieee80211_link_data_ap ap;
- 	} u;
- 
-+	/* protects replacing the u.ap template pointers, also without wiphy mutex */
-+	spinlock_t ap_tmpl_lock;
++	NL80211_CMD_UPDATE_BEACON,
 +
- 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
+ 	/* add new commands above here */
  
- 	struct ieee80211_bss_conf *conf;
-@@ -1165,6 +1168,21 @@ struct ieee80211_link_data {
- #endif
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -7173,6 +7185,9 @@ enum nl80211_feature_flags {
+  *	offload in station mode, including Fast Transition or Opportunistic
+  *	Key Caching.
+  *
++ * @NL80211_EXT_FEATURE_UPDATE_BEACON: Driver supports
++ *	%NL80211_CMD_UPDATE_BEACON.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -7256,6 +7271,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SET_KEY_LTF_SEED,
+ 	NL80211_EXT_FEATURE_PROBE_AP,
+ 	NL80211_EXT_FEATURE_FAST_ROAM_OFFLOAD,
++	NL80211_EXT_FEATURE_UPDATE_BEACON,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2ed6dd84b42f..b342a7b133d5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7563,15 +7563,87 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static int nl80211_parse_ap_update(struct cfg80211_registered_device *rdev,
++				   struct nlattr *attrs[],
++				   struct ieee80211_channel *chan,
++				   struct cfg80211_ap_update *params,
++				   struct netlink_ext_ack *extack)
++{
++	struct nlattr *attr;
++	int err;
++
++	err = nl80211_parse_beacon(rdev, attrs, &params->beacon, chan, extack);
++	if (err)
++		return err;
++
++	attr = attrs[NL80211_ATTR_FILS_DISCOVERY];
++	if (attr) {
++		err = nl80211_parse_fils_discovery(rdev, attr,
++						   &params->fils_discovery);
++		if (err)
++			return err;
++	}
++
++	attr = attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP];
++	if (attr) {
++		err = nl80211_parse_unsol_bcast_probe_resp(rdev, attr,
++							   &params->unsol_bcast_probe_resp);
++		if (err)
++			return err;
++	}
++
++	attr = attrs[NL80211_ATTR_S1G_SHORT_BEACON];
++	if (attr) {
++		err = nl80211_parse_s1g_short_beacon(rdev, attr,
++						     &params->s1g_short_beacon);
++		if (err)
++			return err;
++	}
++
++	return 0;
++}
++
++static int nl80211_change_beacon(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev,
++				 struct cfg80211_ap_update *params)
++{
++	struct cfg80211_beaconing_check_config beacon_check = {};
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	unsigned int link_id = params->beacon.link_id;
++	int err;
++
++	/* recheck beaconing is permitted with possibly changed power type */
++	beacon_check.iftype = wdev->iftype;
++	beacon_check.relax = true;
++	beacon_check.reg_power =
++		cfg80211_get_6ghz_power_type(params->beacon.tail,
++					     params->beacon.tail_len, 0);
++	if (!cfg80211_reg_check_beaconing(&rdev->wiphy,
++					  &wdev->links[link_id].ap.chandef,
++					  &beacon_check))
++		return -EINVAL;
++
++	err = rdev_change_beacon(rdev, dev, params);
++	if (!err)
++		wdev->links[link_id].ap.reg_power = beacon_check.reg_power;
++
++	return err;
++}
++
++static void nl80211_free_ap_update(struct cfg80211_ap_update *params)
++{
++	kfree(params->beacon.mbssid_ies);
++	kfree(params->beacon.rnr_ies);
++	kfree(params);
++}
++
+ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct cfg80211_beaconing_check_config beacon_check = {};
+ 	unsigned int link_id = nl80211_link_id(info->attrs);
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_ap_update *params;
+-	struct nlattr *attr;
+ 	int err;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+@@ -7588,57 +7660,190 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 	if (!params)
+ 		return -ENOMEM;
+ 
+-	err = nl80211_parse_beacon(rdev, info->attrs, &params->beacon,
+-				   wdev->links[link_id].ap.chandef.chan,
+-				   info->extack);
+-	if (err)
+-		goto out;
+-
+-	/* recheck beaconing is permitted with possibly changed power type */
+-	beacon_check.iftype = wdev->iftype;
+-	beacon_check.relax = true;
+-	beacon_check.reg_power =
+-		cfg80211_get_6ghz_power_type(params->beacon.tail,
+-					     params->beacon.tail_len, 0);
+-	if (!cfg80211_reg_check_beaconing(&rdev->wiphy,
+-					  &wdev->links[link_id].ap.chandef,
+-					  &beacon_check)) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+-	attr = info->attrs[NL80211_ATTR_FILS_DISCOVERY];
+-	if (attr) {
+-		err = nl80211_parse_fils_discovery(rdev, attr,
+-						   &params->fils_discovery);
+-		if (err)
+-			goto out;
+-	}
+-
+-	attr = info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP];
+-	if (attr) {
+-		err = nl80211_parse_unsol_bcast_probe_resp(rdev, attr,
+-							   &params->unsol_bcast_probe_resp);
+-		if (err)
+-			goto out;
+-	}
+-
+-	attr = info->attrs[NL80211_ATTR_S1G_SHORT_BEACON];
+-	if (attr) {
+-		err = nl80211_parse_s1g_short_beacon(rdev, attr,
+-						     &params->s1g_short_beacon);
+-		if (err)
+-			goto out;
+-	}
+-
+-	err = rdev_change_beacon(rdev, dev, params);
++	err = nl80211_parse_ap_update(rdev, info->attrs,
++				      wdev->links[link_id].ap.chandef.chan,
++				      params, info->extack);
+ 	if (!err)
+-		wdev->links[link_id].ap.reg_power = beacon_check.reg_power;
++		err = nl80211_change_beacon(rdev, dev, params);
+ 
++	nl80211_free_ap_update(params);
++	return err;
++}
++
++static struct cfg80211_ap_update *
++nl80211_parse_link_update(struct cfg80211_registered_device *rdev,
++			  struct net_device *dev, struct nlattr *attrs[],
++			  struct netlink_ext_ack *extack)
++{
++	struct nlattr *link_attr = attrs[NL80211_ATTR_MLO_LINK_ID];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	unsigned int link_id = nl80211_link_id(attrs);
++	u16 valid_links = READ_ONCE(wdev->valid_links);
++	struct cfg80211_ap_update *params;
++	struct ieee80211_channel *chan;
++	int err;
++
++	/* without locks this is racy, the driver needs to check again */
++	if (valid_links ? !link_attr || !(valid_links & BIT(link_id)) :
++			  !!link_attr)
++		return ERR_PTR(-EINVAL);
++
++	if (attrs[NL80211_ATTR_FTM_RESPONDER] ||
++	    attrs[NL80211_ATTR_HE_BSS_COLOR] ||
++	    attrs[NL80211_ATTR_S1G_SHORT_BEACON]) {
++		NL_SET_ERR_MSG(extack, "cannot change configuration in update");
++		return ERR_PTR(-EINVAL);
++	}
++
++	if (!attrs[NL80211_ATTR_BEACON_HEAD] ||
++	    !attrs[NL80211_ATTR_BEACON_TAIL]) {
++		NL_SET_ERR_MSG(extack, "beacon head and tail are required");
++		return ERR_PTR(-EINVAL);
++	}
++
++	chan = READ_ONCE(wdev->links[link_id].ap.chandef.chan);
++	if (!chan || !READ_ONCE(wdev->links[link_id].ap.beacon_interval))
++		return ERR_PTR(-EINVAL);
++
++	params = kzalloc_obj(*params);
++	if (!params)
++		return ERR_PTR(-ENOMEM);
++
++	err = nl80211_parse_ap_update(rdev, attrs, chan, params, extack);
++	if (err) {
++		nl80211_free_ap_update(params);
++		return ERR_PTR(err);
++	}
++
++	return params;
++}
++
++static int nl80211_update_link_beacon(struct cfg80211_registered_device *rdev,
++				      struct net_device *dev,
++				      struct cfg80211_ap_update *params)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	unsigned int link_id = params->beacon.link_id;
++
++	/* a power type change needs regulatory checks under the wiphy mutex */
++	if (cfg80211_get_6ghz_power_type(params->beacon.tail,
++					 params->beacon.tail_len, 0) !=
++	    READ_ONCE(wdev->links[link_id].ap.reg_power))
++		return -EAGAIN;
++
++	return rdev_update_beacon(rdev, dev, params);
++}
++
++static int
++nl80211_update_link_beacon_locked(struct cfg80211_registered_device *rdev,
++				  struct net_device *dev,
++				  struct cfg80211_ap_update *params)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	unsigned int link_id = params->beacon.link_id;
++
++	lockdep_assert_wiphy(&rdev->wiphy);
++
++	if (!rdev->wiphy.registered || !wdev_running(wdev))
++		return -ENETDOWN;
++
++	if (wdev->valid_links ? !(wdev->valid_links & BIT(link_id)) : link_id)
++		return -ENOLINK;
++
++	if (!wdev->links[link_id].ap.beacon_interval)
++		return -EINVAL;
++
++	return nl80211_change_beacon(rdev, dev, params);
++}
++
++static int nl80211_update_beacon(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_ap_update *params[IEEE80211_MLD_MAX_NUM_LINKS] = {};
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	unsigned long need_lock = 0;
++	unsigned int n = 0, i;
++	struct nlattr *link;
++	u16 links = 0;
++	int rem, err = 0;
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++		return -EOPNOTSUPP;
++
++	if (!rdev->ops->update_beacon || !rdev->ops->change_beacon ||
++	    !wiphy_ext_feature_isset(&rdev->wiphy,
++				     NL80211_EXT_FEATURE_UPDATE_BEACON))
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_MLO_LINKS]) {
++		params[0] = nl80211_parse_link_update(rdev, dev, info->attrs,
++						      info->extack);
++		if (IS_ERR(params[0]))
++			return PTR_ERR(params[0]);
++		n = 1;
++	} else {
++		struct nlattr **attrs = kzalloc_objs(*attrs, NUM_NL80211_ATTR);
++
++		if (!attrs)
++			return -ENOMEM;
++
++		nla_for_each_nested(link, info->attrs[NL80211_ATTR_MLO_LINKS],
++				    rem) {
++			struct cfg80211_ap_update *p;
++
++			err = nla_parse_nested(attrs, NL80211_ATTR_MAX, link,
++					       NULL, info->extack);
++			if (err)
++				break;
++
++			p = nl80211_parse_link_update(rdev, dev, attrs,
++						      info->extack);
++			if (IS_ERR(p)) {
++				err = PTR_ERR(p);
++				break;
++			}
++
++			/* also ensures we don't overflow params[] */
++			if (links & BIT(p->beacon.link_id)) {
++				nl80211_free_ap_update(p);
++				err = -EINVAL;
++				break;
++			}
++			links |= BIT(p->beacon.link_id);
++			params[n++] = p;
++		}
++
++		kfree(attrs);
++		if (!err && !n)
++			err = -EINVAL;
++		if (err)
++			goto out;
++	}
++
++	/* try updates without wiphy mutex first */
++	for (i = 0; i < n; i++) {
++		err = nl80211_update_link_beacon(rdev, dev, params[i]);
++		if (err == -EAGAIN)
++			__set_bit(i, &need_lock);
++		else if (err)
++			goto out;
++	}
++
++	err = 0;
++	if (need_lock) {
++		wiphy_lock(&rdev->wiphy);
++		for_each_set_bit(i, &need_lock, n) {
++			err = nl80211_update_link_beacon_locked(rdev, dev,
++								params[i]);
++			if (err)
++				break;
++		}
++		wiphy_unlock(&rdev->wiphy);
++	}
+ out:
+-	kfree(params->beacon.mbssid_ies);
+-	kfree(params->beacon.rnr_ies);
+-	kfree(params);
++	for (i = 0; i < n; i++)
++		nl80211_free_ap_update(params[i]);
+ 	return err;
+ }
+ 
+@@ -20888,6 +21093,13 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.flags = GENL_ADMIN_PERM,
+ 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP),
+ 	},
++	{
++		.cmd = NL80211_CMD_UPDATE_BEACON,
++		.doit = nl80211_update_beacon,
++		.flags = GENL_UNS_ADMIN_PERM,
++		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
++					 NL80211_FLAG_NO_WIPHY_MTX),
++	},
  };
  
-+#define ap_tmpl_dereference(link, p)					\
-+	rcu_dereference_protected(p, lockdep_is_held(&(link)->ap_tmpl_lock))
-+
-+#define ap_tmpl_replace(link, p, new)					\
-+do {									\
-+	typeof(ap_tmpl_dereference(link, p)) __old;			\
-+									\
-+	spin_lock(&(link)->ap_tmpl_lock);				\
-+	__old = rcu_replace_pointer(p, new,				\
-+				    lockdep_is_held(&(link)->ap_tmpl_lock));\
-+	spin_unlock(&(link)->ap_tmpl_lock);				\
-+	if (__old)							\
-+		kfree_rcu(__old, rcu_head);				\
-+} while (0)
-+
- struct ieee80211_sub_if_data {
- 	struct list_head list;
+ static struct genl_family nl80211_fam __ro_after_init = {
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 1f1311c20e94..95882c8972d2 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -183,6 +183,17 @@ static inline int rdev_change_beacon(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
  
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 931950a10508..ce1c95b40cd9 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -126,6 +126,7 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
- 	link->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 	link->user_power_level = sdata->local->user_power_level;
- 	link_conf->txpower = INT_MIN;
-+	spin_lock_init(&link->ap_tmpl_lock);
++static inline int rdev_update_beacon(struct cfg80211_registered_device *rdev,
++				     struct net_device *dev,
++				     struct cfg80211_ap_update *info)
++{
++	int ret;
++	trace_rdev_update_beacon(&rdev->wiphy, dev, info);
++	ret = rdev->ops->update_beacon(&rdev->wiphy, dev, info);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline int rdev_stop_ap(struct cfg80211_registered_device *rdev,
+ 			       struct net_device *dev, unsigned int link_id)
+ {
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 83007a824010..f5fa2fb76474 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -740,7 +740,7 @@ TRACE_EVENT(rdev_start_ap,
+ 		  __entry->inactivity_timeout, __entry->link_id)
+ );
  
- 	wiphy_work_init(&link->csa.finalize_work,
- 			ieee80211_csa_finalize_work);
+-TRACE_EVENT(rdev_change_beacon,
++DECLARE_EVENT_CLASS(rdev_ap_update,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 struct cfg80211_ap_update *info),
+ 	TP_ARGS(wiphy, netdev, info),
+@@ -788,6 +788,18 @@ TRACE_EVENT(rdev_change_beacon,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->link_id)
+ );
+ 
++DEFINE_EVENT(rdev_ap_update, rdev_change_beacon,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_ap_update *info),
++	TP_ARGS(wiphy, netdev, info)
++);
++
++DEFINE_EVENT(rdev_ap_update, rdev_update_beacon,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_ap_update *info),
++	TP_ARGS(wiphy, netdev, info)
++);
++
+ TRACE_EVENT(rdev_stop_ap,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 unsigned int link_id),
 -- 
 2.55.0
 
