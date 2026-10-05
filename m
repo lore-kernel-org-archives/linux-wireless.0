@@ -1,70 +1,115 @@
-Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [178.154.239.84])
+Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFB32931C3
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 08:47:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA42831F99C;
+	Mon,  5 Oct 2026 08:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791190075; cv=none; b=gCmWs1DBP9TYHPuVY9xV5tq2VxQnz9p2omSr8Z1LJOGU5n2vs32jbfoK7vASrSEim7qnuRH69y68cXbrfe88Dc1sKNvYjVvKKpVX+Kr+/W4TvoHp7YJzZ7SLhbHagPoXcvhegeqAlLcPN4VFIfeOwXvrrCrhTZhKP7ejS5LumM0=
+	t=1791190139; cv=none; b=AwIlNTPlavG/PLeaC7IXJbI+5RNztZlstNWu3eL2T4elPFSsov+Riu3zP2IBnE+H0M4dyZZb35alcHUkRHZLlOGBLe12awMRVhYZTYOj3on9vKQXOSCWqzSO28xKVlH5ydlYnMBbj/G4FyrXs1dGUJVKEvNuJ5qazcbCF92CU2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791190075; c=relaxed/simple;
-	bh=y66mAkGFtYumwXbasGAwLTGZ9g9v/epVA9CiizSsOOc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S4SR+cteY7NJhV3ylUa8xK9r/bm10/+P6FhD5dVfa0l8U2TFTOFty6rbUJCeUP/dYva2pR+VwO1giLiqOsD23MdRIh6CJwUyHTD/k7vo8/gdnHmbfot0qBgBbvtVAz2egLtzP2Bh3Bh0k4hOj+TkgMzlLRu5J7fyyjCrCMRAOVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=FQoVvVyg; arc=none smtp.client-ip=178.154.239.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1791190139; c=relaxed/simple;
+	bh=oPWkjWg41TNUE04xhDpSpS7bYgwU2kmq3kHdMmzAhzQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U+OlEnyQp8mpKoDWT1uQ2OuMTwBpS3eI49uqZhqKwlI2h6d8bbo7KRVT7Wdv5nDmKjn0GUazo107pHx4talsyYeMVT9ldqbDpw6euVcb4e38/AgU6GJhNGFs3cp1+MM6h+yiNcSebm0mN+pqKuk/PxXALdZMCoX5hVfEkYm4+G0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=kdoeIwoR; arc=none smtp.client-ip=119.15.109.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="FQoVvVyg"
-Received: from mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net [IPv6:2a02:6b8:c15:340d:0:640:ad51:0])
-	by forward101a.mail.yandex.net (postfix) with ESMTPS id B387681587;
-	Mon, 05 Oct 2026 11:47:43 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (smtp) with ESMTPSA id blGMiWmlcCg0-tMk8ytWj;
-	Mon, 05 Oct 2026 11:47:43 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1791190063; bh=y66mAkGFtYumwXbasGAwLTGZ9g9v/epVA9CiizSsOOc=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=FQoVvVygO7oVZXIRScgdhan8tiYf2Hbp/8FfZsm8pt1cI37BsHMCaOecZGfM640KQ
-	 FM2jiy5UxwYnuiiosyVEZwpnledl7CWc8L+9PH/zWHtlnGBsjdY5XHRFgIHJalMadR
-	 sBRN5JxdVX61OmOyFhgEq4oAzvM1FlVux5mQWXHM=
-Authentication-Results: mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: dolph-in@yandex.ru
-To: Michele Dionisio <michele.dionisio@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>, linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH wireless 1/1] wifi: brcmfmac: fix P2P device removal race in brcmf_detach()
-Date: Mon, 05 Oct 2026 15:47:27 +0700
-Message-ID: <_Omamail_GwNDiHfr-hNonI6e5s0RUw.omamail@yandex.ru>
+	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="kdoeIwoR"
+Received: from Hawking.lan (hawking.lan [10.0.1.4])
+	by www.nmnhosting.com (Postfix) with ESMTP id 2C15C405F6;
+	Mon,  5 Oct 2026 19:48:49 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
+	t=1791190129;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=zVk+ZEyRiebUcVpWneJ9O6QSQ3pNCVDyiFPoQJxOOXo=;
+	b=kdoeIwoR1RHPan41nS9o+cbWAqr7CDipe10ilce3QTd8Klm6PP/E16z3J9CYmp5HXj9DXr
+	o1l7xSP/JDlDwWuZAgqZiFLDod61FjNW29WSU2Yb23JdUZmZaly26dHvCwfUGx36ulFhVN
+	1YoK55r4pjMRdLYVvVTdZ2OFV1W8t23m3CzADnvJOAN9WGXEMRf+yrxycgz/cLaAJ1ZAUq
+	N92ZA/ns/3jufy33jamf9k9fnBAhmmDH/ve1OYLEn79QmxYB1T7YcVcgQ1Urdpgoe9P4D+
+	Mf6WGeRCEyVefeONNW9cwjQlrBYENVF7qV/xICudepXeBFb4D9y5nNkuHZlHkw==
+X-GPT-Reason: legitimate; This email is a technical software patch
+	submission for a Linux kernel driver (rtw88), which perfectly aligns
+	with the personal/technical nature of the alastair@d-silva.org
+	mailbox; the From domain matches the recipient's domain, and the
+	content is highly specific, professional, and devoid of any marketing,
+	urgency, or phishing indicators; the presence of specific hardware
+	validation details (Allwinner H618 board) and commit message logs
+	further confirms its authenticity as a developer communication.
+From: Alastair D'Silva <alastair@d-silva.org>
+To: linux-wireless@vger.kernel.org,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>
+Cc: Luka Gejak <luka.gejak@linux.dev>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Alastair D'Silva <alastair@d-silva.org>
+Subject: [PATCH rtw-next v4 0/4] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Mon,  5 Oct 2026 19:48:45 +1100
+Message-ID: <20261005084849.3109337-1-alastair@d-silva.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 
-SGkgTWljaGVsZSwKCkkgcmFuIGludG8gdGhlIHNhbWUgY3Jhc2ggb24gYSBQQ0llIGNhcmQsIHNv
-IGhlcmUgaXMgc29tZSB0ZXN0aW5nIGZyb20KdGhlIGhhcmR3YXJlIHNpZGUuCgpUaGlzIGlzIGEg
-TWFjQm9va1BybzE0LDMgKDIwMTcpIHdpdGggYSBCQ000MzYwMiwgeDg2XzY0LCBrZXJuZWwgNy4y
-LjUuCkZvciBzbGVlcCBvbiB0aGlzIG1hY2hpbmUgSSB1c2UgYSBob29rIHRoYXQgdW5iaW5kcyB0
-aGUgZGV2aWNlIGZyb20KYnJjbWZtYWMgYmVmb3JlIHMyaWRsZSBhbmQgcmViaW5kcyBpdCBvbiBy
-ZXN1bWUuIHdwYV9zdXBwbGljYW50ICh1bmRlcgpOZXR3b3JrTWFuYWdlcikgaGFzIGEgUDJQIGRl
-dmljZSBvbiBpdC4gV2l0aCB0aGUgc3RvY2sgbW9kdWxlLCB0aGUKc2Vjb25kIHN1c3BlbmQgY3Jh
-c2hlZCB3aXRoIHRoZSBzYW1lIEdQRiBhdCAweGRlYWQwMDAwMDAwMDAxMjI6CgogIF9jZmc4MDIx
-MV91bnJlZ2lzdGVyX3dkZXYKICBicmNtZl9wMnBfaWZwX3JlbW92ZWQKICBicmNtZl9yZW1vdmVf
-aW50ZXJmYWNlCiAgYnJjbWZfZGV0YWNoCiAgYnJjbWZfcGNpZV9yZW1vdmUKCllvdXIgcGF0Y2gg
-YXBwbGllcyB0byA3LjIuNSB3aXRoIGEgc21hbGwgb2Zmc2V0LiBJIGJ1aWx0IGJyY21mbWFjIHdp
-dGgKaXQgYW5kIGxldCB0aGUgbWFjaGluZSBzdXNwZW5kIGFuZCB3YWtlIHVwIGJ5IGl0c2VsZiAo
-cnRjd2FrZSkgMzAKdGltZXMuIEkgYWxzbyBhZGRlZCBhIGNvdXBsZSBvZiB0ZW1wb3JhcnkgcHJp
-bnRzIHRvIHRoZSBuZXcgYnJhbmNoIGluCmJyY21mX2RldGFjaCgpLCBiZWNhdXNlIEkgd2FudGVk
-IHRvIHNlZSB0aGUgcmFjZSBhY3R1YWxseSBoYXBwZW4sIG5vdApqdXN0IGEgcnVuIG9mIGx1Y2t5
-IGN5Y2xlcy4KCkl0IGhhcHBlbmVkIDMgdGltZXMgb3V0IG9mIDMwLiBFYWNoIHRpbWUgYnJjbWZf
-ZGV0YWNoKCkgc2F0IG9uIHRoZQpsb2NrcyBmb3IgYWJvdXQgMS41IHMgKHRoYXQncyB0aGUgQlJD
-TUZfVklGX0VWRU5UX1RJTUVPVVQgd2FpdCBpbgpicmNtZl9wMnBfZGVsX3ZpZigpKSwgYnJjbWZf
-cDJwX2RlbF92aWYoKSByZW1vdmVkIHRoZSBQMlAgaW50ZXJmYWNlLAphbmQgdGhlbiBicmNtZl9k
-ZXRhY2goKSBmb3VuZCBpZmxpc3RbaV0gYWxyZWFkeSBOVUxMIGFuZCBza2lwcGVkIGl0LgpJbiA3
-IG1vcmUgY3ljbGVzIHRoZXJlIHdhcyBub3RoaW5nIHRvIHdhaXQgZm9yIGFuZCBicmNtZl9kZXRh
-Y2goKQpyZW1vdmVkIHRoZSBpbnRlcmZhY2UgaXRzZWxmLiBObyBvb3BzIGFuZCBubyBsaXN0IG9y
-IHJlZmNvdW50Cndhcm5pbmdzIGFueXdoZXJlIGluIHRoZSBydW4sIGFuZCBXaS1GaSByZWNvbm5l
-Y3RlZCBmaW5lIGFmdGVyd2FyZHMuCgpUZXN0ZWQtYnk6IFNlcmdleSBBcm1vZGluIDxkb2xwaC1p
-bkB5YW5kZXgucnU+CgpUaGFua3MgZm9yIGZpeGluZyB0aGlzIQoKU2VyZ2V5
+On 3081-based SDIO chips (e.g. RTL8821CS, RTL8822CS), hardware does not
+automatically clear the REG_SDIO_HISR_RX_REQUEST status bit when the RX
+FIFO is empty. Masking this bit out in software before writing back to
+HISR prevented it from ever being acknowledged in hardware, trapping the
+CPU core in an infinite interrupt storm that locked up the system upon
+receiving network traffic.
+
+This series fixes the interrupt storm on 3081 chips and addresses
+related SDIO lifecycle and error handling issues:
+
+- Patch 1 returns error codes from rtw_sdio_rxfifo_recv() on allocation
+  or read failures so the caller stops immediately instead of burning
+  through the loop budget.
+- Patch 2 tracks operational state via rtwsdio->running and cancels
+  the TX worker synchronously on stop, preventing work items from
+  accessing powered-down hardware.
+- Patch 3 fixes the interrupt storm by splitting
+  rtw_sdio_handle_interrupt() into 8051 and 3081 paths. On 3081,
+  interrupts are masked via HIMR, acknowledged via W1C writeback,
+  serviced, and re-enabled.
+- Patch 4 refactors rtw_sdio_rx_isr() into separate 8051 and 3081 variants
+  to clarify the differences in register width and HISR handling without
+  any logic changes.
+
+Hardware Validation:
+Validated on an Allwinner H618 board (Mellow Fly-C5) with RTL8821CS SDIO:
+- Bidirectional TCP throughput: 36.5 Mbps RX / 36.4 Mbps TX (over wlan0).
+- Repeated interface down/up cycles verified clean with zero storms or
+  hangs.
+
+Differences in v4:
+- Split pre-existing lifecycle and error handling issues into separate
+  patches (Patches 1 and 2) prior to the storm fix (per Luka Gejak).
+- Guard HIMR re-enabling with rtwsdio->running in the 3081 handler.
+- Significantly reduced and streamlined commit messages across the series
+  (per Ping-Ke Shih).
+- Clarified in Patch 4 that it is a refactoring without logic changes,
+  highlighting register width and HISR behavior (per Ping-Ke Shih).
+- Tagged with rtw-next in subject prefix for NIPA testing.
+
+Alastair D'Silva (4):
+  wifi: rtw88: sdio: Handle allocation and read errors in
+    rtw_sdio_rxfifo_recv
+  wifi: rtw88: sdio: Track running state and cancel TX worker on stop
+  wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+  wifi: rtw88: sdio: Split rtw_sdio_rx_isr into 8051 and 3081 variants
+
+ drivers/net/wireless/realtek/rtw88/sdio.c | 128 +++++++++++++++-------
+ drivers/net/wireless/realtek/rtw88/sdio.h |   1 +
+ 2 files changed, 91 insertions(+), 38 deletions(-)
+
+-- 
+2.53.0
+
