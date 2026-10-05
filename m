@@ -1,147 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-7.mta0.migadu.com [91.218.175.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8861A6839
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 04:18:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A8B922083
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 04:40:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791173943; cv=none; b=eRX4G3WFuZe0KV2c2FZaLUEGZ/UMhT140oUZBZjzSeQA6ew2gJbeohyL+q8NHUWyh/kKfOnLoKzvqymPNoopLLJslRkECtFpIZPYYOmDJZcHGyyOxD3t/eW+Owve5FQTRjGZOS1n0S2Ph/2eOkPwyti1cwt/Bzo5Rme2BwMZalw=
+	t=1791175210; cv=none; b=NJiQ7tirhqpM+ArcYuH8aAM0rjAPfVZi/BLXcrol4KK3yIgUGSSnBxOAaO8QL04DlMpx9mUQIqn1P6aUWtSf9Vrp4ltXDKL/TbRg7FgCJ9u6jRq0Md5Ct+eKR+Ou7wxuzu/vEYs2I6/U85BjeBCowZ3mBF0T54eTsA1qRV04t08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791173943; c=relaxed/simple;
-	bh=7lDBluEQR4X2g1geuIZMoMOgJ0rUI2zR2nUyugoyHN0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=br3mCRYS9nlMSd8isEqI23sLYqlB3nY/n660X8gcdJ3Jc5pEo6163gUlxTvWroQJury6QM0LLzyxlE8iaLq/0HIQdCQDy2DeLRmQIVyw/drJuugKsdwlnSEtUeNH+ak/SQ1Qo/NzyhuC5HITvFudd8hhxH65PXNSnNginE+Yb7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KGUqmQfn; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1791175210; c=relaxed/simple;
+	bh=lcftc0xj9lMKoVImH9pwEX76uF/NZ9v9EpX2kIMVyCo=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=KOVaytPvAtUs0skV7JDL9YbhO6nbXYC5ZxCr77/A/DVqo9Scktl5HQTHjf9yEdx28TZCXqTmho6xXmnSuI7dtMQ4sd59IhHjH155fMO/MP+f8u5XYIEn/jC46+t1/okChHKZjG8XQUigrrjGTTEhCXQGdUhGjRbEeQ7iXJVsue8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qzeMqqAv; arc=none smtp.client-ip=91.218.175.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KGUqmQfn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791173940; x=1822709940;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=7lDBluEQR4X2g1geuIZMoMOgJ0rUI2zR2nUyugoyHN0=;
-  b=KGUqmQfn2owhEAbY0e15iEXTjdzya4CVMsGpzOoDnYS3DFW8fVtjw17N
-   cmI8GKqcHhlWUBDiCMflzTQJu+WQNIeZFIikywQJgW18QTuX9uMyQZYvF
-   bv43BS2zB9uD/5RLrATXWGETscPJBiHXhWsGmcvKYiz8sNffojXdMhmXD
-   DftA1RSIcNo2NwJma3qf+CiVcOo7BVR80uXHw9K1z1EY8jG8k6HzMmx5y
-   N673+2ESsZtBAgPkPZhya7A/TooxHCE7t2djhtYL1nyKMfPfgX2ZaSFHC
-   xf7OtPJmCQyiRFOjeI/Onf9T9vEOayHRPr6972PBzhpfVsDndqDmhCAV4
-   g==;
-X-CSE-ConnectionGUID: k8H4dcdiSA6eMnCIOlTfRw==
-X-CSE-MsgGUID: zxc+9fKVRhK3zRaFsKSzlA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="91943811"
-X-IronPort-AV: E=Sophos;i="6.27,141,1787036400"; 
-   d="scan'208";a="91943811"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2026 21:18:59 -0700
-X-CSE-ConnectionGUID: kmWAmnpeRLSwkXfPzVbrpA==
-X-CSE-MsgGUID: OjYZV8VITb6nddj6FPF7ew==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,141,1787036400"; 
-   d="scan'208";a="284797723"
-Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 04 Oct 2026 21:18:57 -0700
-Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xDaAB-00000000VKj-14Qh;
-	Mon, 05 Oct 2026 04:18:55 +0000
-Date: Mon, 5 Oct 2026 12:18:28 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for
- commands that don't want it
-Message-ID: <202610051243.rHmDLV0g-lkp@intel.com>
-References: <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qzeMqqAv"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=lcftc0xj9lMKoVImH9pwEX76uF/NZ9v9EpX2kIMVyCo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791175206; v=1; x=1791780006;
+ b=qzeMqqAvKPvEjHBxw63QymVPk3eiXL6pRYWCdb9Y+REktTrrIwj5JaeTo87+SeXn5+xZasGt
+ nBGSmXzlXpUFY6LQlXTObALZceZ8NcVlg8toPs8I5VnnLi1Hs3U5uOKGUtCGgqPl4bHbUf/qHVp
+ BhkYInPbjROhS5Ova2c1zJVU=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 81e8c01bc103a4b5;
+	Mon, 05 Oct 2026 04:39:56 +0000
+X-Mizu-Trace-ID: 81e8c01bc103a4b5
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
+Date: Mon, 05 Oct 2026 04:39:55 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <6ef33599cc268fa12e4663461248f1700969df34@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
+ interrupt storm
+To: "Ping-Ke Shih" <pkshih@realtek.com>, "Alastair D'Silva"
+ <alastair@d-silva.org>, linux-wireless@vger.kernel.org
+Cc: "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>, "Ulf Hansson"
+ <ulfh@kernel.org>, "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Kalle
+ Valo" <kvalo@kernel.org>, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, luka.gejak@linux.dev
+In-Reply-To: <661b9fc47ce942a491f8c53d90fdf39a@realtek.com>
+References: <20261001000303.3505264-1-alastair@d-silva.org>
+ <20261001000303.3505264-2-alastair@d-silva.org>
+ <661b9fc47ce942a491f8c53d90fdf39a@realtek.com>
 
-Hi Johannes,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on wireless-next/main]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/wifi-cfg80211-track-netdev-running-state-under-wiphy-mutex/20261004-210115
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09%40changeid
-patch subject: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for commands that don't want it
-config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20261005/202610051243.rHmDLV0g-lkp@intel.com/config)
-compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 5f609f950d2e80addf5566623013db68394334db)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261005/202610051243.rHmDLV0g-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610051243.rHmDLV0g-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> net/wireless/nl80211.c:244:7: warning: variable 'wdev' is uninitialized when used here [-Wuninitialized]
-     244 |             (wdev->netdev && !net_eq(dev_net(wdev->netdev), netns))) {
-         |              ^~~~
-   net/wireless/nl80211.c:238:27: note: initialize the variable 'wdev' to silence this warning
-     238 |         struct wireless_dev *wdev;
-         |                                  ^
-         |                                   = NULL
-   1 warning generated.
+October 5, 2026 at 05:35, "Ping-Ke Shih" <pkshih@realtek.com mailto:pkshi=
+h@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wr=
+ote:
 
 
-vim +/wdev +244 net/wireless/nl80211.c
+>=20
+>=20Alastair D'Silva <alastair@d-silva.org> wrote:
+>=20
+>=20>=20
+>=20> 8051 and 3081 SDIO chipsets handle the REG_SDIO_HISR_RX_REQUEST sta=
+tus bit
+> >  differently:
+> >=20=20
+>=20>  - 8051-based chips (e.g. RTL8723BS, RTL8723CS, RTL8723DS):
+> >  The hardware automatically clears REG_SDIO_HISR_RX_REQUEST once the =
+RX
+> >  buffer is empty. Software must not clear this bit, because the drain
+> >  loop in rtw_sdio_rx_isr() re-reads REG_SDIO_HISR across iterations t=
+o
+> >  decide whether more requests are pending. Clearing it in software
+> >  terminates the loop after a single request, stranding the remainder =
+of
+> >  the FIFO. Additionally, RTL8723BS requires RTW_SDIO_HISR_CLEAR_MASK =
+to
+> >  avoid undefined bits causing resume storms.
+> >=20=20
+>=20>  - 3081-based chips (e.g. RTL8821CS, RTL8822CS):
+> >  The hardware does not automatically clear REG_SDIO_HISR_RX_REQUEST w=
+hen
+> >  the RX buffer is empty. Masking this bit out in software before writ=
+ing
+> >  back to HISR prevented it from ever being acknowledged in hardware,
+> >  trapping the CPU core in an infinite interrupt storm loop that starv=
+ed
+> >  RCU and locked up the system. Furthermore, on 3081 chips the physica=
+l
+> >  RX FIFO capacity is at most 24 KB (16 KB on RTL8821CS, 24 KB on
+> >  RTL8822CS), which is well within the 64 KB loop budget.
+> >=20=20
+>=20>  As the number of architecture-specific special cases has grown (16=
+-bit vs
+> >  32-bit register widths, differing HISR writeback timing, synthetic l=
+oop
+> >  flags, and RTL8723BS resume masking), attempting to accommodate both
+> >  architectures within a single monolithic handler has become fragile =
+and
+> >  prone to cross-architecture regressions.
+> >=20=20
+>=20>  Resolve this by making rtw_sdio_handle_interrupt() a dispatcher wi=
+th
+> >  separate paths for 8051 and 3081:
+> >=20=20
+>=20>  1. 8051 chips preserve the existing unmasked writeback behavior, l=
+eaving
+> >  REG_SDIO_HISR_RX_REQUEST for hardware to drop and respecting
+> >  RTW_SDIO_HISR_CLEAR_MASK on RTL8723BS.
+> >  2. 3081 chips adopt the interrupt masking pattern: disable HIMR,
+> >  acknowledge pending status bits in HISR via W1C, service the pending
+> >  events, and re-enable HIMR. Any packet arriving during servicing
+> >  latches REG_SDIO_HISR_RX_REQUEST in hardware and re-asserts the IRQ =
+line
+> >  once unmasked.
+> >=20=20
+>=20>  Splitting into separate handlers isolates these quirks cleanly and
+> >  simplifies future maintenance.
+> >=20=20
+>=20>  Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation fo=
+r SDIO based chipsets")
+> >=20
+>=20At this moment, did it support 3081-seris already?
+> I feel this tag is too serious.=20
+>=20
+> >=20
+>=20> Cc: stable@vger.kernel.org
+> >  Assisted-by: LLM
+> >  Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+> >=20
+>=20Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+>
 
-   227	
-   228	/*
-   229	 * Lock the given wiphy, put the device and double-check it's
-   230	 * still valid to use.
-   231	 *
-   232	 * Returns with wiphy mutex held unless there was an error.
-   233	 */
-   234	static struct wireless_dev *
-   235	nl80211_lock_and_recheck(struct cfg80211_registered_device *rdev,
-   236				 struct net *netns, u32 wdev_id)
-   237	{
-   238		struct wireless_dev *wdev;
-   239	
-   240		wiphy_lock(&rdev->wiphy);
-   241	
-   242		if (!rdev->wiphy.registered ||
-   243		    !net_eq(wiphy_net(&rdev->wiphy), netns) ||
- > 244		    (wdev->netdev && !net_eq(dev_net(wdev->netdev), netns))) {
-   245			wiphy_unlock(&rdev->wiphy);
-   246			put_device(&rdev->wiphy.dev);
-   247			return ERR_PTR(-ENODEV);
-   248		}
-   249	
-   250		/*
-   251		 * unregistration blocks on wiphy mutex,
-   252		 * so we don't need this now
-   253		 */
-   254		put_device(&rdev->wiphy.dev);
-   255	
-   256		if (!wdev_id)
-   257			return NULL;
-   258	
-   259		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-   260			if (wdev->identifier == wdev_id)
-   261				return wdev;
-   262		}
-   263		wiphy_unlock(&rdev->wiphy);
-   264	
-   265		return ERR_PTR(-ENODEV);
-   266	}
-   267	
+Hi Ping-Ke,
+I think you missed my review at [1].
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Best regards,
+Luka Gejak
+
+[1]:https://lore.kernel.org/all/20261001060213.24759-1-luka.gejak@linux.d=
+ev/
