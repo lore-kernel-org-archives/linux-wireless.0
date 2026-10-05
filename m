@@ -1,69 +1,697 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic.asd.mail.yahoo.com (sonic-uswe1-0019.asd.mail.yahoo.com [34.2.72.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C36EB37DE99
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 12:44:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B648A44780F
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 13:13:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.2.72.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791204264; cv=none; b=fHICByD6DBgKojqWbfQOorzM6oO2d36S+9VvdzSYBWzOCQROqlpSw56b8uX81iRYCgEKIR5rurOP8mKusGPNE0a5AV8SQq+JAHOeuXbpsBYIMuFlJD8T5wX/Nw/kq/04jUVjM/8Vx4VFBmttn0V8cQeYuOU2C9Qs+x94XxW7VoA=
+	t=1791205995; cv=none; b=VEwwP9uDZZGBWeh8aW03C8IweiUIN7e+g/g/Cu/eQCs3p3kX+ETBMRONNqWrJ/sExON1JvN93pd4esM0PyjVmty73QB8bmqhwsMop8XvMjlcXWOPYEGQ/vx9D3TsC1burjCUYmUixhGS24ByE1pnmCozWDP8+IiHuCOyKAwcw/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791204264; c=relaxed/simple;
-	bh=aQrg+MzWEb3JQcw0hzjC4IMHX4htf9QanQhV+BM5ED4=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=rbCBcDayVg7kkqTA3T1CNsV55SMqF5fSbegEUCX17mUdnNCOxw1TF71Mysnrd+Y15noiaKuDIVpGkS6SgpjQsH70RaoPoOhgtGvVccIwo0lCrXGsMjoSpt82Y+/9n4qf4WoTdJbouySHhzPkukA4UvkQMB0XACdrNXhPQ23LP3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=o+Hih0wL; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791205995; c=relaxed/simple;
+	bh=lPZKXLwrGpJXF4TeWi6OD6zVGztFaIRjSu2WBRabopg=;
+	h=Date:From:To:Cc:Message-ID:References:Subject:MIME-Version:
+	 Content-Type; b=AJoA/1iEcgXCP/bO2VWUR0OJu2zDDpQMrCeq8S26iVMH9vXJ2AwG0gaVlDAueLOWNERHHoNsDn8CRwKhABPJbHl19UvuXjQZsPTaXON5cCIRd3cBIxem1hdFhutgmETXbad4GACGEsCugRPynfEmEqvEig9m7lQpF6AflptMfDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=LA77Eeu7; arc=none smtp.client-ip=34.2.72.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="o+Hih0wL"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=aQrg+MzWEb3JQcw0hzjC4IMHX4htf9QanQhV+BM5ED4=;
-	t=1791204262; x=1792413862; b=o+Hih0wL3PrTTPCOGuXtvhteqgA7GK7vgiyhFt+A/SGUPqG
-	pU5FZd89kmI0jSFp1hMq6g+MkkNUS6if9gCgys6ZxGmzLyYQjGs0znRsX9rK/UWYYbH1p9L3JG2a5
-	jN5sOyYXOKpZVe37tZpsZSxfwsHVkLkGI5gg2FNbqcmV77eEugdD+VNlG6VeuMmf+OBeh4DGTee3S
-	TtMAazy9Zzo3Y+YuogGY1X+KbCEyhgKYflQ0ZzBpWA2v0086mi9D3h5npwdHRkl8tDlZpoBuIWN9/
-	oFvk2noDlhgLqrLvAYvtJu9LvjNU7Z+CO2EUB4TO4mneO1dxIDSGqr62qI+LmxfQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDi3I-00000005J7c-0KUp
-	for linux-wireless@vger.kernel.org;
-	Mon, 05 Oct 2026 14:44:20 +0200
-Message-ID: <31185bc5614afbdb56ffd266f5e81941b45b3498.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v2 00/13] wifi: lock contention improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 05 Oct 2026 14:44:19 +0200
-In-Reply-To: <20261005101057.1992330-15-johannes@sipsolutions.net>
-References: <20261005101057.1992330-15-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="LA77Eeu7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1791205992; bh=xBwmA9eEBNQfT1l9mv3YE9raUDwb8iK9A6B8XZHyN4k=; h=Date:From:To:Cc:References:Subject:From:Subject:Reply-To; b=LA77Eeu7KL97wmj+qHyQNqbU+g5Vlz3unW8qkAyVpYFHPDy3qj4Nxad0Fj86ezoYe+B29vM7mpeJugpT2jMvrq75DtieirNcTB7qE/EMW4czMNuP0QUhD2tbpiw9KE69RqytbDiJacNTdjA11M/4AiwoESEA5RjDJvOOlGH1WOOCMmIRyRquEbXwN5Eds3DfJAGZrBCUqcOivQTYE3JcOwSx4t8Fz+pC7UDxddzrHHkKAhnIKoufFgrQNvVEprMRMhw9BD3lI1Ijl/3CbeNue9YaI56Ol/JaPW6KROC0q52z9gU4Nh1a+6a8cVoF/FFjdsmFVYtRmdmBPNKNCk6nGQ==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1791205992; bh=cdg03mRAZ0+1FKIGeQhQYuLFHG30ZAXZ7dSnmImthW4=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=fWQK3gooN1Y0iFAjvxSm7glsVEArF7FYRXiZMxaf33XaW9B/r7JfXLmSrjEXgjFXF1wEqrWseQ8v0dWkXL8xRm4O5kulLgqOSHE+iL+OyR3rAtS+9lksjQKr0pSKkbdz/06WhWI9frTiXg3Mz/WRzyiAmhNRpsmr8KMZJ4gT5Hl2K7yyhAmqDZnBthN3k+gEZIx5kz/DcuLuZEzMnnt5inuW0Wp5uBJ9Y7K2+XBb9BdHevwDvfueHDg+E1DRu1wjgQUXLw1Sj+1caOu4hLJmdxkRbEkAdtL6FrB8qWGfhb8NcFL69iUcr/t2xHzDFAmRPRXkKjK+pcXaYv0jlGKFsQ==
+X-YMail-OSG: ePJWAy8VM1l3IFpi0P13uK6j_zgHX0w9jdtJkDdvezTn1wtWiqup_cHc5xehW9R
+ 1T5s9XGYWreLDM9WL0jV_X42VmZip56mxYz.Giu39TzmMo5GgiXLk7aZ4hLkQtyqfAt6g3TwtCCV
+ VyFHcWewM6oso_UdH..d085cQ3HsuRTqo9RvmQptdLGPiNQD0GBs7IXjc6m59iJnRQk.HjyEGLEh
+ 6O4jhYTryXiNTTbWQJBmESCOVE33BNox30R8GUSu0RXKR_hlHH_dsVVvJuRhu25l8eUxEgIxrxrV
+ 5BFHNntMJu7EZZu82WIsbkCVLPqwd8WZaE0UsFZevdnpS3Y50ubC9RlFN0RfyC.0FF809FAvu9mw
+ GNcNyciG9zvZjrjduRA1kyVWuzkG.z6W3S.lmtImlIOLDLYcJhvYcmFgP7b2RDCp06ipqISdPIS8
+ lbLnprg1aNsBwF3rxs0rhGfTRnoaXLbPj4PNqI09LWmgmIClLoVhDZB5b4wpiVZq4VuZ6R9iXl4W
+ eoreuUI.2rfJVvXUJcxtqTN8S3ndgPKQLHdx.rM1idBuYCrIGXKaP2CplgfyhfmsVmFob8p76Pj8
+ efbDPD30qnjtiGlc4O9Af6NJz9xGVq2x6L_nL0rkkrO6pYt5y4.Z.LwnxkD_5cst47EPpuNoMW1p
+ utcKIu9G3YsZkD_U9zPtiVKVJEno6aJOpScU6wZLU7XLWokjxVdtGH2.bT9MX_Ew.6k9ygwuJXrX
+ iQ.ETIBctwI9ksJyAWO3wo2_GYQ_lyQ6GB9q4ip4gnyp3eWm2By8vXVIs9na25Atvqhd2rhcp7QK
+ Th3Dw4o7fGCIcV7qSbIGMOwJHES2ulz7u0lQ2C2WDRrVf03ycNl8I_2U2JxHoEGCbJnZqfopiHxU
+ 8kY9oREMHuysGHbLTllrV6XhozRgyYmfUscG8Utq9Pyl8znPB0vjZYjUX1UvPL1tz7.7.sA2HJE2
+ gx9bnyrpDbF..wU_sNsDCccbykrkQSgsOO_ASEaCOdsMZnBehxmrqh2gh2AVE0EMCpX5oqP5bTQH
+ _D0PlEFEgfKwi8hB5Q.cjh2GXhIIUw_Ja7QjntELiSywCiKTnGnUzZgX2NqvGKlCsIbsESg5ISnA
+ KbGTe.GViyoYNzgJnY2jd0BRXCR_K8n8eDOn3nta1f4k6pOI.N7v0LK.K1FlZj64S2nrWurgua0C
+ edDA_kHwxTGxuW5POGb2b51HPGPQTEbMwXvxmwBOHw68I_u3CwK5I3_icN29YLp2Xp1HuJIn9dQM
+ ZZsCIwgHp2HG8v8Dgh1cp5ngHACu.z12awGeDSsfdKpgsuVM.V4nFttj.aGV4jt2FwkqMGabG5bT
+ I4w6L6zoCCIRBaVcg59oE3Yo_KnP2JGw7wtrE1Ib3s1GY.UAwosKWf834p6Vyk_ueQlh8n7d2AuN
+ pVQ7rUtDNncl1O1Oo9B1jtEjQh9OZhhJRs04apV_C8TOWE30lRArudjORdAR48g5kOczNakmHsc.
+ koDgJBlqlkpaaDu1eY_A.7vGz1qrU1q2wk_K1uskNxPhe11fsaNgmj4FMBfHYHzpgY9ZPUYuoG7X
+ .nQ0hJgZGbEHBgZfl0RTFXr5ZCC77QaQhqFwas39s8ydlPtWDTLRMKrpSp4CybCh44a0SZ9XldKN
+ 2kCxswEh8imwk3Zh_dTYmtkPz.I0ANQqYZOxNm1Qo3ruo.ZH7AJwC_fcO4eDs0w.IpcrA7WQxAvN
+ vcsJVos0bGqEUavZIdPopms.hOd4Dq.0.w_IGMTjE.lmS_nfLkB0kvMkNCYngAL5YzPMGzMCboK2
+ foXEms_8wRdTGiXJij35Z8ZFQR86ParvQTEFyrdlGuj.ThSngc3USTTSs3z03wXXWjFtTNrjTov6
+ H6QV.xcESfy5Zi1RqrPYa3pVIMGP2h9FPMJnrKaKDAZq5Sqp4N_iUjAI6vfofB95uQliM.Fbxy46
+ yLASH57st8M1CzKl8jr3VNxzX9SaVqW6FyX6ek4gU6GmOYTnJaKZW50YaY51RXE03Rfv0lvvRQsr
+ hB.aYf3vP9V2GuJmIoJmeJ_DxiVVbR_E0yn8c92pfJM10P8AFknyGSjJuQNzhHbdbSWACe0r4iR6
+ 7S9EJ3rLDzKQ1awl3qdbRJTJgCliwP2Rjmij6upAO.LfO.OG.g7IcRw--
+X-Sonic-MF: <tbmostafa@yahoo.com>
+X-Sonic-ID: 5c62b319-0119-439f-9419-4d9fe235d8a2
+Received: from sonic.gate.mail.ne1.yahoo.com by mail-asdoutdeli-p-cin-uswe1-prod-sonicconsumer-svc-101 with HTTP; Mon, 5 Oct 2026 13:13:12 +0000
+Date: Mon, 5 Oct 2026 13:12:40 +0000 (UTC)
+From: Tamer Ahmed <tbmostafa@yahoo.com>
+To: Andrei Rusu de Castro <arc@empyreal.works>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	Devin Wittmayer <lucid_duck@justthetip.ca>, 
+	Jonas Hort <jonas.hort@posteo.de>, Felix Fietkau <nbd@nbd.name>, 
+	Lorenzo Bianconi <lorenzo@kernel.org>, 
+	Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, 
+	Sean Wang <sean.wang@mediatek.com>, Sean Wang <sean.wang@kernel.org>, 
+	Thorsten Leemhuis <regressions@leemhuis.info>, 
+	"regressions@lists.linux.dev" <regressions@lists.linux.dev>, 
+	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>
+Message-ID: <1069791187.985419.1791205960502@mail.yahoo.com>
+References: <1069791187.985419.1791205960502.ref@mail.yahoo.com>
+Subject: Re: [PATCH v2] wifi: mt76: mt7925: keep MLD membership consistent
+ during link add
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_985418_134265376.1791205960502"
+X-Mailer: WebService/1.1.26668 YMailCLDNovation
 
-On Mon, 2026-10-05 at 12:06 +0200, Johannes Berg wrote:
-> As before, on top of the series I just sent:
-> https://lore.kernel.org/linux-wireless/20261005100525.1991059-20-johannes=
-@sipsolutions.net/
->=20
-> The idea is the same: make some methods unlocked to avoid lock
-> contention on the wiphy mutex, adding also a new "update beacon"
-> method (but that needs driver opt-in, for iwlwifi that'd be ~40
-> lines changed since it can send commands async).
+------=_Part_985418_134265376.1791205960502
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_985417_1084682357.1791205960483"
 
-Enabling this also for get/dump station isn't horrible either and might
-help with those use cases Qualcomm has, but it does require another two
-driver methods (if they have [link_]sta_statistics).
+------=_Part_985417_1084682357.1791205960483
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-But who knows - feedback on this first please :)
+Hi Andrei,
 
-johannes
+I tested v2 on an MT7925 PCIe card against a DD-WRT Wi-Fi 7 AP that
+advertises three links (2.4, 5 and 6 GHz). Results below, in case they
+help.
+
+Setup:
+- MT7925 PCIe (14c3:7925, subsystem 103c:8c94), firmware
+=C2=A0 WIFI_RAM_CODE 20260813113118 / patch 20260813113015a
+- Fedora 44, kernel 7.2.8-200.fc44; mt76 rebuilt out of tree from the
+=C2=A0 7.2.8 sources with the patches listed below
+- AP: <router model and DD-WRT build>, one MLO SSID with three links;
+=C2=A0 WPA3-SAE
+- wpa_supplicant 2.11 with hostap commit b048a294a ("MLD: Iterate
+=C2=A0 per-link in wpa_clear_keys() for MLO group keys") backported; withou=
+t
+=C2=A0 it, every intra-MLD reconnect logged "link ID must be set for MLO
+=C2=A0 group key" and often failed
+- Test: 15 minutes, ~1 MB/s download, nl80211 rescan every 60 s,
+=C2=A0 gateway ping plus HTTP probe every 5 s
+
+Results:
+
+1) Stock 7.2.8: a two-link (5+6 GHz) association stalled after about
+=C2=A0 =C2=A0160 s. Traffic stopped without any disconnect, and a scan was =
+left
+=C2=A0 =C2=A0pending ("Reject scan trigger since one is already pending"). =
+The
+=C2=A0 =C2=A0same signature appeared after about 2 h on a 2.4+6 GHz associa=
+tion.
+
+2) 7.2.8 + v2 alone: MLO associations failed (AP-side 4-way handshake
+=C2=A0 =C2=A0timeouts). After MLO teardown, associations to a separate lega=
+cy
+=C2=A0 =C2=A0SSID on the same AP were repeatedly deauthenticated by the AP =
+with
+=C2=A0 =C2=A0reason 6 (Class 2 frame received from nonauthenticated STA),
+=C2=A0 =C2=A0followed by SA Query timeouts on the STA. This matches what
+=C2=A0 =C2=A0"wifi: mt76: mt7925: restore the legacy BSS after MLO teardown=
+"
+=C2=A0 =C2=A0describes. I did not isolate whether v2 contributed.
+
+3) 7.2.8 + the seven mt76 commits below + your v2 (eight patches in
+=C2=A0 =C2=A0total): PASS. 900 s on a three-link (2.4+5+6 GHz) association:
+=C2=A0 =C2=A0176/176 probes OK, no disconnects. All 61 full-band scans comp=
+leted
+=C2=A0 =C2=A0(median 8.4 s, max 10.0 s), none stuck.
+
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: guard BSS capability lookups
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: check the owner of a remain-on-channel requ=
+est
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: fix lock inversion between dev->mut=
+ex and iflist_mtx
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: check drv_pmctrl return in the PCIe=
+ reset path
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: restore the reset state when fw_pmc=
+trl fails
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: fix the lock inversion in suspend a=
+nd resume
+=C2=A0 =C2=A0 =C2=A0wifi: mt76: mt7925: restore the legacy BSS after MLO te=
+ardown
+
+Caveats: this is a single 15-minute run on a backported 7.2.8 base,
+and I did not bisect which of the commits above, besides v2, are
+required. I'm continuing to run it day to day and can report back.
+Tested-by: Tamer Ahmed <tbmostafa@yahoo.com>
+
+Thanks for working on this.
+
+------=_Part_985417_1084682357.1791205960483
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head></head><body><div class=3D"yahoo-style-wrap" style=3D"font-fami=
+ly:courier new, courier, monaco, monospace, sans-serif;font-size:13px;"><di=
+v dir=3D"ltr" data-setdir=3D"false"><div dir=3D"ltr" data-setdir=3D"false">=
+<div>Hi Andrei,<br><br>I tested v2 on an MT7925 PCIe card against a DD-WRT =
+Wi-Fi 7 AP that<br>advertises three links (2.4, 5 and 6 GHz). Results below=
+, in case they<br>help.<br><br>Setup:<br>- MT7925 PCIe (14c3:7925, subsyste=
+m 103c:8c94), firmware<br>&nbsp; WIFI_RAM_CODE 20260813113118 / patch 20260=
+813113015a<br>- Fedora 44, kernel 7.2.8-200.fc44; mt76 rebuilt out of tree =
+from the<br>&nbsp; 7.2.8 sources with the patches listed below<br>- AP: &lt=
+;router model and DD-WRT build&gt;, one MLO SSID with three links;<br>&nbsp=
+; WPA3-SAE<br>- wpa_supplicant 2.11 with hostap commit b048a294a ("MLD: Ite=
+rate<br>&nbsp; per-link in wpa_clear_keys() for MLO group keys") backported=
+; without<br>&nbsp; it, every intra-MLD reconnect logged "link ID must be s=
+et for MLO<br>&nbsp; group key" and often failed<br>- Test: 15 minutes, ~1 =
+MB/s download, nl80211 rescan every 60 s,<br>&nbsp; gateway ping plus HTTP =
+probe every 5 s<br><br>Results:<br><br>1) Stock 7.2.8: a two-link (5+6 GHz)=
+ association stalled after about<br>&nbsp; &nbsp;160 s. Traffic stopped wit=
+hout any disconnect, and a scan was left<br>&nbsp; &nbsp;pending ("Reject s=
+can trigger since one is already pending"). The<br>&nbsp; &nbsp;same signat=
+ure appeared after about 2 h on a 2.4+6 GHz association.<br><br>2) 7.2.8 + =
+v2 alone: MLO associations failed (AP-side 4-way handshake<br>&nbsp; &nbsp;=
+timeouts). After MLO teardown, associations to a separate legacy<br>&nbsp; =
+&nbsp;SSID on the same AP were repeatedly deauthenticated by the AP with<br=
+>&nbsp; &nbsp;reason 6 (Class 2 frame received from nonauthenticated STA),<=
+br>&nbsp; &nbsp;followed by SA Query timeouts on the STA. This matches what=
+<br>&nbsp; &nbsp;"wifi: mt76: mt7925: restore the legacy BSS after MLO tear=
+down"<br>&nbsp; &nbsp;describes. I did not isolate whether v2 contributed.<=
+br><br>3) 7.2.8 + the seven mt76 commits below + your v2 (eight patches in<=
+br>&nbsp; &nbsp;total): PASS. 900 s on a three-link (2.4+5+6 GHz) associati=
+on:<br>&nbsp; &nbsp;176/176 probes OK, no disconnects. All 61 full-band sca=
+ns completed<br>&nbsp; &nbsp;(median 8.4 s, max 10.0 s), none stuck.<br><br=
+>&nbsp; &nbsp; &nbsp;wifi: mt76: mt7925: guard BSS capability lookups<br>&n=
+bsp; &nbsp; &nbsp;wifi: mt76: check the owner of a remain-on-channel reques=
+t<br>&nbsp; &nbsp; &nbsp;wifi: mt76: mt7925: fix lock inversion between dev=
+-&gt;mutex and iflist_mtx<br>&nbsp; &nbsp; &nbsp;wifi: mt76: mt7925: check =
+drv_pmctrl return in the PCIe reset path<br>&nbsp; &nbsp; &nbsp;wifi: mt76:=
+ mt7925: restore the reset state when fw_pmctrl fails<br>&nbsp; &nbsp; &nbs=
+p;wifi: mt76: mt7925: fix the lock inversion in suspend and resume<br>&nbsp=
+; &nbsp; &nbsp;wifi: mt76: mt7925: restore the legacy BSS after MLO teardow=
+n<br><br>Caveats: this is a single 15-minute run on a backported 7.2.8 base=
+,<br>and I did not bisect which of the commits above, besides v2, are<br>re=
+quired. I'm continuing to run it day to day and can report back.</div><br><=
+/div><div dir=3D"ltr" data-setdir=3D"false">Tested-by: Tamer Ahmed &lt;tbmo=
+stafa@yahoo.com&gt;<br><br>Thanks for working on this.</div><br></div></div=
+></body></html>
+------=_Part_985417_1084682357.1791205960483--
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0001-wifi-mt76-mt7925-guard-BSS-capability-lookups.patch"
+Content-ID: <1d39fb26-00b2-4781-8fc0-5a0c107cdf94@yahoo.com>
+
+RnJvbSA2NjEwM2U2OTRlM2JhYWUxM2RlOTczOTE4NDIyNGFjZmNiZmJmYjdiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWFuIFdhbmcgPHNlYW4ud2FuZ0BtZWRpYXRlay5jb20+CkRh
+dGU6IFdlZCwgMjQgSnVuIDIwMjYgMTk6MTg6MjcgLTA1MDAKU3ViamVjdDogW1BBVENIIDEvOF0g
+d2lmaTogbXQ3NjogbXQ3OTI1OiBndWFyZCBCU1MgY2FwYWJpbGl0eSBsb29rdXBzCgptdDc5MjUg
+QlNTIHNldHVwIG1heSBkZXJlZmVyZW5jZSBtaXNzaW5nIGNoYW5uZWwgZGF0YSBvciBxdWVyeSBI
+RSA2IEdIegpjYXBhYmlsaXRpZXMgZm9yIGFuIGlmdHlwZSB3aXRob3V0IEhFIHN1cHBvcnQuCgpH
+dWFyZCBib3RoIGxvb2t1cHMgYmVmb3JlIGFkZGluZyBOQU4gcGF0aHMgdGhhdCBjYW4gdXNlIHBh
+cnRpYWxseQpjb25maWd1cmVkIEJTUyBzdGF0ZS4KCkNvLWRldmVsb3BlZC1ieTogU3RlbGxhIExp
+dSA8eXUtY2hpbmcubGl1QG1lZGlhdGVrLmNvbT4KU2lnbmVkLW9mZi1ieTogU3RlbGxhIExpdSA8
+eXUtY2hpbmcubGl1QG1lZGlhdGVrLmNvbT4KQ28tZGV2ZWxvcGVkLWJ5OiBKZXJlbXkgWXUgPGNo
+ZW5nd2VpLnl1QG1lZGlhdGVrLmNvbT4KU2lnbmVkLW9mZi1ieTogSmVyZW15IFl1IDxjaGVuZ3dl
+aS55dUBtZWRpYXRlay5jb20+ClNpZ25lZC1vZmYtYnk6IFNlYW4gV2FuZyA8c2Vhbi53YW5nQG1l
+ZGlhdGVrLmNvbT4KTGluazogaHR0cHM6Ly9wYXRjaC5tc2dpZC5saW5rLzIwMjYwNjI1MDAxODM0
+LjQ3NTA5NC0zLXNlYW4ud2FuZ0BrZXJuZWwub3JnClNpZ25lZC1vZmYtYnk6IEZlbGl4IEZpZXRr
+YXUgPG5iZEBuYmQubmFtZT4KLS0tCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3
+OTI1L21jdS5jICAgfCAyNiArKysrKysrKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMjAg
+aW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tY3UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jCmluZGV4IDUzYzE0MjMuLjU2NTE4YzQgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jCisr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jCkBAIC0y
+Mzc4LDExICsyMzc4LDE4IEBAIHZvaWQgbXQ3OTI1X21jdV9ic3NfcmxtX3RsdihzdHJ1Y3Qgc2tf
+YnVmZiAqc2tiLCBzdHJ1Y3QgbXQ3Nl9waHkgKnBoeSwKIHsKIAlzdHJ1Y3QgY2ZnODAyMTFfY2hh
+bl9kZWYgKmNoYW5kZWYgPSBjdHggPyAmY3R4LT5kZWYgOgogCQkJCQkJICAmbGlua19jb25mLT5j
+aGFucmVxLm9wZXI7Ci0JaW50IGZyZXExID0gY2hhbmRlZi0+Y2VudGVyX2ZyZXExLCBmcmVxMiA9
+IGNoYW5kZWYtPmNlbnRlcl9mcmVxMjsKLQllbnVtIG5sODAyMTFfYmFuZCBiYW5kID0gY2hhbmRl
+Zi0+Y2hhbi0+YmFuZDsKIAlzdHJ1Y3QgYnNzX3JsbV90bHYgKnJlcTsKKwllbnVtIG5sODAyMTFf
+YmFuZCBiYW5kOworCWludCBmcmVxMSwgZnJlcTI7CiAJc3RydWN0IHRsdiAqdGx2OwogCisJaWYg
+KFdBUk5fT05fT05DRSghY2hhbmRlZiB8fCAhY2hhbmRlZi0+Y2hhbikpCisJCXJldHVybjsKKwor
+CWZyZXExID0gY2hhbmRlZi0+Y2VudGVyX2ZyZXExOworCWZyZXEyID0gY2hhbmRlZi0+Y2VudGVy
+X2ZyZXEyOworCWJhbmQgPSBjaGFuZGVmLT5jaGFuLT5iYW5kOworCiAJdGx2ID0gbXQ3Nl9jb25u
+YWNfbWN1X2FkZF90bHYoc2tiLCBVTklfQlNTX0lORk9fUkxNLCBzaXplb2YoKnJlcSkpOwogCXJl
+cSA9IChzdHJ1Y3QgYnNzX3JsbV90bHYgKil0bHY7CiAJcmVxLT5jb250cm9sX2NoYW5uZWwgPSBj
+aGFuZGVmLT5jaGFuLT5od192YWx1ZTsKQEAgLTI1MjAsOCArMjUyNyw4IEBAIG10NzkyNV9nZXRf
+cGh5X21vZGVfZXh0KHN0cnVjdCBtdDc2X3BoeSAqcGh5LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAq
+dmlmLAogCQkJZW51bSBubDgwMjExX2JhbmQgYmFuZCwKIAkJCXN0cnVjdCBpZWVlODAyMTFfbGlu
+a19zdGEgKmxpbmtfc3RhKQogewotCXN0cnVjdCBpZWVlODAyMTFfaGVfNmdoel9jYXBhICpoZV82
+Z2h6X2NhcGE7Ci0JY29uc3Qgc3RydWN0IGllZWU4MDIxMV9zdGFfZWh0X2NhcCAqZWh0X2NhcDsK
+KwlzdHJ1Y3QgaWVlZTgwMjExX2hlXzZnaHpfY2FwYSAqaGVfNmdoel9jYXBhID0gTlVMTDsKKwlj
+b25zdCBzdHJ1Y3QgaWVlZTgwMjExX3N0YV9laHRfY2FwICplaHRfY2FwID0gTlVMTDsKIAlfX2xl
+MTYgY2FwYSA9IDA7CiAJdTggbW9kZSA9IDA7CiAKQEAgLTI1MjksMTEgKzI1MzYsMTggQEAgbXQ3
+OTI1X2dldF9waHlfbW9kZV9leHQoc3RydWN0IG10NzZfcGh5ICpwaHksIHN0cnVjdCBpZWVlODAy
+MTFfdmlmICp2aWYsCiAJCWhlXzZnaHpfY2FwYSA9ICZsaW5rX3N0YS0+aGVfNmdoel9jYXBhOwog
+CQllaHRfY2FwID0gJmxpbmtfc3RhLT5laHRfY2FwOwogCX0gZWxzZSB7CisJCWNvbnN0IHN0cnVj
+dCBpZWVlODAyMTFfc3RhX2hlX2NhcCAqaGVfY2FwOwogCQlzdHJ1Y3QgaWVlZTgwMjExX3N1cHBv
+cnRlZF9iYW5kICpzYmFuZDsKIAogCQlzYmFuZCA9IHBoeS0+aHctPndpcGh5LT5iYW5kc1tiYW5k
+XTsKLQkJY2FwYSA9IGllZWU4MDIxMV9nZXRfaGVfNmdoel9jYXBhKHNiYW5kLCB2aWYtPnR5cGUp
+OwotCQloZV82Z2h6X2NhcGEgPSAoc3RydWN0IGllZWU4MDIxMV9oZV82Z2h6X2NhcGEgKikmY2Fw
+YTsKKworCQloZV9jYXAgPSAoYmFuZCA9PSBOTDgwMjExX0JBTkRfNkdIWikgPworCQkJIGllZWU4
+MDIxMV9nZXRfaGVfaWZ0eXBlX2NhcChzYmFuZCwgdmlmLT50eXBlKSA6IE5VTEw7CisKKwkJaWYg
+KGhlX2NhcCkgeworCQkJY2FwYSA9IGllZWU4MDIxMV9nZXRfaGVfNmdoel9jYXBhKHNiYW5kLCB2
+aWYtPnR5cGUpOworCQkJaGVfNmdoel9jYXBhID0gKHN0cnVjdCBpZWVlODAyMTFfaGVfNmdoel9j
+YXBhICopJmNhcGE7CisJCX0KIAogCQllaHRfY2FwID0gaWVlZTgwMjExX2dldF9laHRfaWZ0eXBl
+X2NhcChzYmFuZCwgdmlmLT50eXBlKTsKIAl9Ci0tIAoyLjU1LjAKCg==
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0002-wifi-mt76-check-the-owner-of-a-remain-on-channel-req.patch"
+Content-ID: <22902252-a16a-0b00-e0bc-628ad3226630@yahoo.com>
+
+RnJvbSBhZWNmZWVlNTQ4ZTRlZWU4N2Y0N2ZhNDA5MDZlYTQxMmZmMmU5N2YyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBGZWxpeCBGaWV0a2F1IDxuYmRAbmJkLm5hbWU+CkRhdGU6IFR1
+ZSwgMTggQXVnIDIwMjYgMTI6NTg6MjIgKzAwMDAKU3ViamVjdDogW1BBVENIIDIvOF0gd2lmaTog
+bXQ3NjogY2hlY2sgdGhlIG93bmVyIG9mIGEgcmVtYWluLW9uLWNoYW5uZWwKIHJlcXVlc3QKCm12
+aWYtPnJvY19waHkgcG9pbnRzIHRvIHRoZSBwaHkgb2YgdGhlIHJlcXVlc3QgdGhhdCBzdGFydGVk
+IGxhc3QgZm9yIHRoZQppbnRlcmZhY2UuIFRoYXQgcmVxdWVzdCBjYW4gZW5kLCBhbmQgdGhlIHBo
+eSBjYW4gc3RhcnQgYSByZXF1ZXN0IGZvciBhCmRpZmZlcmVudCBpbnRlcmZhY2UuIFRoZSBkcml2
+ZXIgZG9lcyBub3QgYWx3YXlzIGNsZWFyIHRoZSBwb2ludGVyLgoKVHdvIGNhbGxlcnMgdHJ1c3Qg
+dGhlIHBvaW50ZXI6CgotIG10NzZfdmlmX2NsZWFudXAoKSBhYm9ydHMgdGhlIHJlcXVlc3Qgb24g
+dGhhdCBwaHkgd2hlbiB0aGUgZHJpdmVyIHJlbW92ZXMKICB0aGUgaW50ZXJmYWNlLgotIG10NzZf
+Y2FuY2VsX3JlbWFpbl9vbl9jaGFubmVsKCkgYWJvcnRzIHRoZSByZXF1ZXN0IG9uIHRoYXQgcGh5
+IGZvciB0aGUKICBpbnRlcmZhY2UuCgpJZiB0aGUgcGh5IGhvbGRzIGEgcmVxdWVzdCBmb3IgYSBk
+aWZmZXJlbnQgaW50ZXJmYWNlLCBib3RoIGNhbGxlcnMgYWJvcnQgdGhlCndyb25nIHJlcXVlc3Qu
+IFRoZSByZXF1ZXN0IG9mIHRoZSBpbnRlcmZhY2Ugc3RheXMgYWN0aXZlLiBJdHMgd29yayB0aGVu
+IHJ1bnMKYWZ0ZXIgdGhlIGRyaXZlciByZW1vdmVzIHRoZSBpbnRlcmZhY2UuIFRoZSB3b3JrIHRl
+YXJzIHRoZSBsaW5rIGRvd24gdGhyb3VnaAp0aGUgZnJlZWQgYnNzX2NvbmYuCgpDb21wYXJlIHBo
+eS0+cm9jX3ZpZiB3aXRoIHRoZSBpbnRlcmZhY2UgaW4gYm90aCBjYWxsZXJzIGJlZm9yZSB0aGUg
+YWJvcnQuCgpMaW5rOiBodHRwczovL3BhdGNoLm1zZ2lkLmxpbmsvMjAyNjA4MTgxMjU4MjUuMzk1
+NTM4LTItbmJkQG5iZC5uYW1lClNpZ25lZC1vZmYtYnk6IEZlbGl4IEZpZXRrYXUgPG5iZEBuYmQu
+bmFtZT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L2NoYW5uZWwuYyAg
+fCAyICstCiBkcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L21hYzgwMjExLmMgfCAy
+ICstCiAyIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L2NoYW5uZWwuYyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvY2hhbm5lbC5jCmluZGV4IDI4YWQ3
+YmMuLjFkMjYzNTYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvY2hhbm5lbC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvY2hh
+bm5lbC5jCkBAIC00MjMsNyArNDIzLDcgQEAgaW50IG10NzZfY2FuY2VsX3JlbWFpbl9vbl9jaGFu
+bmVsKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LAogCXN0cnVjdCBtdDc2X3ZpZl9kYXRhICptdmlm
+ID0gbWxpbmstPm12aWY7CiAJc3RydWN0IG10NzZfcGh5ICpwaHkgPSBtdmlmLT5yb2NfcGh5Owog
+Ci0JaWYgKCFwaHkpCisJaWYgKCFwaHkgfHwgcGh5LT5yb2NfdmlmICE9IHZpZikKIAkJcmV0dXJu
+IDA7CiAKIAltdDc2X2Fib3J0X3JvYyhwaHkpOwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tYWM4MDIxMS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVk
+aWF0ZWsvbXQ3Ni9tYWM4MDIxMS5jCmluZGV4IGY5MjI3NzcuLmI4NjNhOTIgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbWFjODAyMTEuYworKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L21hYzgwMjExLmMKQEAgLTIxMDYsNyArMjEw
+Niw3IEBAIHZvaWQgbXQ3Nl92aWZfY2xlYW51cChzdHJ1Y3QgbXQ3Nl9kZXYgKmRldiwgc3RydWN0
+IGllZWU4MDIxMV92aWYgKnZpZikKIAogCXJjdV9hc3NpZ25fcG9pbnRlcihtdmlmLT5saW5rWzBd
+LCBOVUxMKTsKIAltdDc2X2Fib3J0X3NjYW4oZGV2KTsKLQlpZiAobXZpZi0+cm9jX3BoeSkKKwlp
+ZiAobXZpZi0+cm9jX3BoeSAmJiBtdmlmLT5yb2NfcGh5LT5yb2NfdmlmID09IHZpZikKIAkJbXQ3
+Nl9hYm9ydF9yb2MobXZpZi0+cm9jX3BoeSk7CiB9CiBFWFBPUlRfU1lNQk9MX0dQTChtdDc2X3Zp
+Zl9jbGVhbnVwKTsKLS0gCjIuNTUuMAoK
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0003-wifi-mt76-mt7925-fix-lock-inversion-between-dev-mute.patch"
+Content-ID: <54f3ccec-2025-b054-59ea-20e347bb544b@yahoo.com>
+
+RnJvbSBhOTU4N2VhMTgwYTU4MDYzY2U1Mjg2ZTY0MDM3ZjkzYWM3NzU2MTA4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBEZXZpbiBXaXR0bWF5ZXIgPGx1Y2lkX2R1Y2tAanVzdHRoZXRp
+cC5jYT4KRGF0ZTogU3VuLCA5IEF1ZyAyMDI2IDIxOjUzOjM4IC0wNzAwClN1YmplY3Q6IFtQQVRD
+SCAzLzhdIHdpZmk6IG10NzY6IG10NzkyNTogZml4IGxvY2sgaW52ZXJzaW9uIGJldHdlZW4gZGV2
+LT5tdXRleAogYW5kIGlmbGlzdF9tdHgKCm10NzkyNV9jb25maWcoKSBoYXMgdGhlIHNhbWUgaW52
+ZXJzaW9uIGFzIG10NzkyMV9jb25maWcoKTogaXQgaG9sZHMKZGV2LT5tdXRleCBhY3Jvc3MgaWVl
+ZTgwMjExX2l0ZXJhdGVfYWN0aXZlX2ludGVyZmFjZXMoKSwgd2hpY2ggdGFrZXMKbG9jYWwtPmlm
+bGlzdF9tdHgsIHdoaWxlIG1hYzgwMjExIGNhbGxzIGRydl91bmFzc2lnbl92aWZfY2hhbmN0eCgp
+IHdpdGgKaWZsaXN0X210eCBhbHJlYWR5IGhlbGQuCgouY29uZmlnIGlzIG9ubHkgcmVhY2hlZCB0
+aHJvdWdoIGRydl9jb25maWcoKSwgd2hpY2ggYXNzZXJ0cyB0aGUgd2lwaHkKbXV0ZXgsIHNvIHVz
+ZSBpZWVlODAyMTFfaXRlcmF0ZV9hY3RpdmVfaW50ZXJmYWNlc19tdHgoKSBoZXJlIHRvby4KCkZp
+eGVzOiBjOTQ4YjVkYTZiYmUgKCJ3aWZpOiBtdDc2OiBtdDc5MjU6IGFkZCBNZWRpYXRlayBXaS1G
+aTcgZHJpdmVyIGZvciBtdDc5MjUgY2hpcHMiKQpTaWduZWQtb2ZmLWJ5OiBEZXZpbiBXaXR0bWF5
+ZXIgPGx1Y2lkX2R1Y2tAanVzdHRoZXRpcC5jYT4KTGluazogaHR0cHM6Ly9wYXRjaC5tc2dpZC5s
+aW5rLzIwMjYwODEwMDQ1MzM4LjExODkyMy0zLWx1Y2lkX2R1Y2tAanVzdHRoZXRpcC5jYQpTaWdu
+ZWQtb2ZmLWJ5OiBGZWxpeCBGaWV0a2F1IDxuYmRAbmJkLm5hbWU+Ci0tLQogZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jIHwgNiArKystLS0KIDEgZmlsZSBj
+aGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jCmluZGV4IDlmMDgwZGEuLjk4
+MmNiZDggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3
+OTI1L21haW4uYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210Nzky
+NS9tYWluLmMKQEAgLTgxOCw5ICs4MTgsOSBAQCBzdGF0aWMgaW50IG10NzkyNV9jb25maWcoc3Ry
+dWN0IGllZWU4MDIxMV9odyAqaHcsIGludCByYWRpb19pZHgsIHUzMiBjaGFuZ2VkKQogCX0KIAog
+CWlmIChjaGFuZ2VkICYgSUVFRTgwMjExX0NPTkZfQ0hBTkdFX01PTklUT1IpIHsKLQkJaWVlZTgw
+MjExX2l0ZXJhdGVfYWN0aXZlX2ludGVyZmFjZXMoaHcsCi0JCQkJCQkgICAgSUVFRTgwMjExX0lG
+QUNFX0lURVJfUkVTVU1FX0FMTCwKLQkJCQkJCSAgICBtdDc5MjVfc25pZmZlcl9pbnRlcmZhY2Vf
+aXRlciwgZGV2KTsKKwkJaWVlZTgwMjExX2l0ZXJhdGVfYWN0aXZlX2ludGVyZmFjZXNfbXR4KGh3
+LAorCQkJCQkJCUlFRUU4MDIxMV9JRkFDRV9JVEVSX1JFU1VNRV9BTEwsCisJCQkJCQkJbXQ3OTI1
+X3NuaWZmZXJfaW50ZXJmYWNlX2l0ZXIsIGRldik7CiAJfQogCiBvdXQ6Ci0tIAoyLjU1LjAKCg==
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0004-wifi-mt76-mt7925-check-drv_pmctrl-return-in-the-PCIe.patch"
+Content-ID: <d7d952fe-6fff-e87a-2ba9-62fc83758038@yahoo.com>
+
+RnJvbSAwZGU4ZWQ0MTM0YjVlYTczMWY4NGFkYzlkY2Y1YzA1NTAxYTdiMDhmIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBEZXZpbiBXaXR0bWF5ZXIgPGx1Y2lkX2R1Y2tAanVzdHRoZXRp
+cC5jYT4KRGF0ZTogU3VuLCA5IEF1ZyAyMDI2IDEzOjU1OjU5IC0wNzAwClN1YmplY3Q6IFtQQVRD
+SCA0LzhdIHdpZmk6IG10NzY6IG10NzkyNTogY2hlY2sgZHJ2X3BtY3RybCByZXR1cm4gaW4gdGhl
+IFBDSWUKIHJlc2V0IHBhdGgKCm10NzkyNWVfbWFjX3Jlc2V0KCkgaWdub3JlcyB0aGUgcmV0dXJu
+IHZhbHVlIG9mCm10NzkyeGVfbWN1X2Rydl9wbWN0cmwoKSwgdW5saWtlIHRoZSB0d28gcG1jdHJs
+IGNhbGxzIGxhdGVyIGluIHRoZSBzYW1lCmZ1bmN0aW9uLiBXaGVuIHRoZSBkcml2ZXItb3duIGhh
+bmRzaGFrZSBmYWlscywKX19tdDc5MnhlX21jdV9kcnZfcG1jdHJsKCkgcmV0dXJucyAtRUlPIHdp
+dGhvdXQgcmVpbml0aWFsaXNpbmcgV1BETUEgb3IKY2xlYXJpbmcgTVQ3Nl9TVEFURV9QTSwgYW5k
+IHRoZSByZXNldCBjYXJyaWVzIG9uOiBpdCB3cml0ZXMgdGhlCmludGVycnVwdCBlbmFibGUgcmVn
+aXN0ZXJzLCBjeWNsZXMgTkFQSSwgcmVzZXRzIFdQRE1BIGFuZCBjYWxscwptdDc5MjVfcnVuX2Zp
+cm13YXJlKCkgb24gYSBjaGlwIHRoZSBkcml2ZXIgZG9lcyBub3Qgb3duLgoKUmV0dXJuIHRoZSBl
+cnJvciBpbnN0ZWFkLiBUaGUgY2FsbCBpcyB0aGUgZmlyc3Qgc3RhdGVtZW50IGluIHRoZQpmdW5j
+dGlvbiwgYmVmb3JlIE1UNzZfUkVTRVQgaXMgc2V0IGFuZCBiZWZvcmUgdGhlIFRYIHdvcmtlciBh
+bmQgTkFQSQphcmUgZGlzYWJsZWQsIHNvIG5vdGhpbmcgbmVlZHMgdW53aW5kaW5nLgoKRml4ZXM6
+IGM5NDhiNWRhNmJiZSAoIndpZmk6IG10NzY6IG10NzkyNTogYWRkIE1lZGlhdGVrIFdpLUZpNyBk
+cml2ZXIgZm9yIG10NzkyNSBjaGlwcyIpClNpZ25lZC1vZmYtYnk6IERldmluIFdpdHRtYXllciA8
+bHVjaWRfZHVja0BqdXN0dGhldGlwLmNhPgpMaW5rOiBodHRwczovL3BhdGNoLm1zZ2lkLmxpbmsv
+MjAyNjA4MDkyMDU1NTkuMzIxMTYtMS1sdWNpZF9kdWNrQGp1c3R0aGV0aXAuY2EKU2lnbmVkLW9m
+Zi1ieTogRmVsaXggRmlldGthdSA8bmJkQG5iZC5uYW1lPgotLS0KIGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L3BjaV9tYWMuYyB8IDQgKysrLQogMSBmaWxlIGNoYW5n
+ZWQsIDMgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L3BjaV9tYWMuYyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L3BjaV9tYWMuYwppbmRleCA5NzY4Mzk0Li4y
+Y2U5YWQwIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210
+NzkyNS9wY2lfbWFjLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9t
+dDc5MjUvcGNpX21hYy5jCkBAIC03Myw3ICs3Myw5IEBAIGludCBtdDc5MjVlX21hY19yZXNldChz
+dHJ1Y3QgbXQ3OTJ4X2RldiAqZGV2KQogCWNvbnN0IHN0cnVjdCBtdDc5MnhfaXJxX21hcCAqaXJx
+X21hcCA9IGRldi0+aXJxX21hcDsKIAlpbnQgaSwgZXJyOwogCi0JbXQ3OTJ4ZV9tY3VfZHJ2X3Bt
+Y3RybChkZXYpOworCWVyciA9IG10NzkyeGVfbWN1X2Rydl9wbWN0cmwoZGV2KTsKKwlpZiAoZXJy
+KQorCQlyZXR1cm4gZXJyOwogCiAJbXQ3Nl9jb25uYWNfZnJlZV9wZW5kaW5nX3R4X3NrYnMoJmRl
+di0+cG0sIE5VTEwpOwogCi0tIAoyLjU1LjAKCg==
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0005-wifi-mt76-mt7925-restore-the-reset-state-when-fw_pmc.patch"
+Content-ID: <1c4b0cf2-cb66-e775-988d-2507d0ef259c@yahoo.com>
+
+RnJvbSBlZmI0NDllMDg3Mjc0NzA3MmYxYjM4M2JkNTlkZTFjZWM4ZGVlYmZiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBGZWxpeCBGaWV0a2F1IDxuYmRAbmJkLm5hbWU+CkRhdGU6IFRo
+dSwgMjcgQXVnIDIwMjYgMTg6MjE6MTUgKzAyMDAKU3ViamVjdDogW1BBVENIIDUvOF0gd2lmaTog
+bXQ3NjogbXQ3OTI1OiByZXN0b3JlIHRoZSByZXNldCBzdGF0ZSB3aGVuCiBmd19wbWN0cmwgZmFp
+bHMKCm10NzkyNWVfbWFjX3Jlc2V0KCkgcmV0dXJucyBkaXJlY3RseSB3aGVuIG10NzkyeGVfbWN1
+X2Z3X3BtY3RybCgpCmZhaWxzLCBsZWF2aW5nIE1UNzZfUkVTRVQgc2V0IGFuZCB0aGUgVFggd29y
+a2VyIHBhcmtlZC4gRXZlcnkgb3RoZXIKZXJyb3IgcGF0aCBqdW1wcyB0byBvdXQsIHdoaWNoIGNs
+ZWFycyBib3RoLiBtdDc5MjVfbWFjX3Jlc2V0X3dvcmsoKQpjbGVhcnMgbmVpdGhlciwgc28gb25j
+ZSBldmVyeSByZXNldCBhdHRlbXB0IGZhaWxzIHRoZXJlLCBUWCBzdGF5cwpibG9ja2VkIHVudGls
+IGFub3RoZXIgcmVzZXQgc3VjY2VlZHMuCgpKdW1wIHRvIG91dCBpbnN0ZWFkLgoKRml4ZXM6IGM5
+NDhiNWRhNmJiZSAoIndpZmk6IG10NzY6IG10NzkyNTogYWRkIE1lZGlhdGVrIFdpLUZpNyBkcml2
+ZXIgZm9yIG10NzkyNSBjaGlwcyIpCkxpbms6IGh0dHBzOi8vcGF0Y2gubXNnaWQubGluay8yMDI2
+MDgyNzE2MjExNS4xNDQ5NzU3LTEtbmJkQG5iZC5uYW1lClNpZ25lZC1vZmYtYnk6IEZlbGl4IEZp
+ZXRrYXUgPG5iZEBuYmQubmFtZT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
+dDc2L210NzkyNS9wY2lfbWFjLmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24o
+KyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
+YXRlay9tdDc2L210NzkyNS9wY2lfbWFjLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRl
+ay9tdDc2L210NzkyNS9wY2lfbWFjLmMKaW5kZXggMmNlOWFkMC4uYTJlZjdhMCAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvcGNpX21hYy5jCisr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L3BjaV9tYWMuYwpA
+QCAtMTI5LDcgKzEyOSw3IEBAIGludCBtdDc5MjVlX21hY19yZXNldChzdHJ1Y3QgbXQ3OTJ4X2Rl
+diAqZGV2KQogCiAJZXJyID0gbXQ3OTJ4ZV9tY3VfZndfcG1jdHJsKGRldik7CiAJaWYgKGVycikK
+LQkJcmV0dXJuIGVycjsKKwkJZ290byBvdXQ7CiAKIAllcnIgPSBfX210NzkyeGVfbWN1X2Rydl9w
+bWN0cmwoZGV2KTsKIAlpZiAoZXJyKQotLSAKMi41NS4wCgo=
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0006-wifi-mt76-mt7925-fix-the-lock-inversion-in-suspend-a.patch"
+Content-ID: <2d456352-c0e7-e89b-0da2-9242dc8dfaa4@yahoo.com>
+
+RnJvbSBhYzVkMjk4MTVkNDMyYWE2YzAxNDIwNmE4ZGFmY2ViMDYwNTYxY2U0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBEZXZpbiBXaXR0bWF5ZXIgPGx1Y2lkX2R1Y2tAanVzdHRoZXRp
+cC5jYT4KRGF0ZTogU2F0LCAyOSBBdWcgMjAyNiAyMzo0MjowMSAtMDcwMApTdWJqZWN0OiBbUEFU
+Q0ggNi84XSB3aWZpOiBtdDc2OiBtdDc5MjU6IGZpeCB0aGUgbG9jayBpbnZlcnNpb24gaW4gc3Vz
+cGVuZCBhbmQKIHJlc3VtZQoKU2FtZSBhcyB0aGUgcHJldmlvdXMgcGF0Y2gsIG90aGVyIGRyaXZl
+ci4KCkZpeGVzOiBjOTQ4YjVkYTZiYmUgKCJ3aWZpOiBtdDc2OiBtdDc5MjU6IGFkZCBNZWRpYXRl
+ayBXaS1GaTcgZHJpdmVyIGZvciBtdDc5MjUgY2hpcHMiKQpTaWduZWQtb2ZmLWJ5OiBEZXZpbiBX
+aXR0bWF5ZXIgPGx1Y2lkX2R1Y2tAanVzdHRoZXRpcC5jYT4KTGluazogaHR0cHM6Ly9wYXRjaC5t
+c2dpZC5saW5rLzIwMjYwODMwMDY0MjAxLjkyMjg1LTMtbHVjaWRfZHVja0BqdXN0dGhldGlwLmNh
+ClNpZ25lZC1vZmYtYnk6IEZlbGl4IEZpZXRrYXUgPG5iZEBuYmQubmFtZT4KLS0tCiBkcml2ZXJz
+L25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tYWluLmMgfCAxNiArKysrKysrKy0t
+LS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQoK
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21h
+aW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21haW4uYwpp
+bmRleCA5ODJjYmQ4Li5iM2UzMjY4IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+ZWRpYXRlay9tdDc2L210NzkyNS9tYWluLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVk
+aWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jCkBAIC0xNjQ4LDEwICsxNjQ4LDEwIEBAIHN0YXRpYyBp
+bnQgbXQ3OTI1X3N1c3BlbmQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsCiAJbXQ3OTJ4X211dGV4
+X2FjcXVpcmUoZGV2KTsKIAogCWNsZWFyX2JpdChNVDc2X1NUQVRFX1JVTk5JTkcsICZwaHktPm10
+NzYtPnN0YXRlKTsKLQlpZWVlODAyMTFfaXRlcmF0ZV9hY3RpdmVfaW50ZXJmYWNlcyhodywKLQkJ
+CQkJICAgIElFRUU4MDIxMV9JRkFDRV9JVEVSX1JFU1VNRV9BTEwsCi0JCQkJCSAgICBtdDc5MjVf
+bWN1X3NldF9zdXNwZW5kX2l0ZXIsCi0JCQkJCSAgICAmZGV2LT5tcGh5KTsKKwlpZWVlODAyMTFf
+aXRlcmF0ZV9hY3RpdmVfaW50ZXJmYWNlc19tdHgoaHcsCisJCQkJCQlJRUVFODAyMTFfSUZBQ0Vf
+SVRFUl9SRVNVTUVfQUxMLAorCQkJCQkJbXQ3OTI1X21jdV9zZXRfc3VzcGVuZF9pdGVyLAorCQkJ
+CQkJJmRldi0+bXBoeSk7CiAKIAltdDc5MnhfbXV0ZXhfcmVsZWFzZShkZXYpOwogCkBAIC0xNjY2
+LDEwICsxNjY2LDEwIEBAIHN0YXRpYyBpbnQgbXQ3OTI1X3Jlc3VtZShzdHJ1Y3QgaWVlZTgwMjEx
+X2h3ICpodykKIAltdDc5MnhfbXV0ZXhfYWNxdWlyZShkZXYpOwogCiAJc2V0X2JpdChNVDc2X1NU
+QVRFX1JVTk5JTkcsICZwaHktPm10NzYtPnN0YXRlKTsKLQlpZWVlODAyMTFfaXRlcmF0ZV9hY3Rp
+dmVfaW50ZXJmYWNlcyhodywKLQkJCQkJICAgIElFRUU4MDIxMV9JRkFDRV9JVEVSX1JFU1VNRV9B
+TEwsCi0JCQkJCSAgICBtdDc5MjVfbWN1X3NldF9zdXNwZW5kX2l0ZXIsCi0JCQkJCSAgICAmZGV2
+LT5tcGh5KTsKKwlpZWVlODAyMTFfaXRlcmF0ZV9hY3RpdmVfaW50ZXJmYWNlc19tdHgoaHcsCisJ
+CQkJCQlJRUVFODAyMTFfSUZBQ0VfSVRFUl9SRVNVTUVfQUxMLAorCQkJCQkJbXQ3OTI1X21jdV9z
+ZXRfc3VzcGVuZF9pdGVyLAorCQkJCQkJJmRldi0+bXBoeSk7CiAKIAlpZWVlODAyMTFfcXVldWVf
+ZGVsYXllZF93b3JrKGh3LCAmcGh5LT5tdDc2LT5tYWNfd29yaywKIAkJCQkgICAgIE1UNzkyeF9X
+QVRDSERPR19USU1FKTsKLS0gCjIuNTUuMAoK
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0007-wifi-mt76-mt7925-restore-the-legacy-BSS-after-MLO-te.patch"
+Content-ID: <57a7eba1-467a-3e1b-3b07-0d9edf6f2e7a@yahoo.com>
+
+RnJvbSA3YTQ0N2ExNDUwYzU2ZTU4ZWM3ZWY2NTYxMDhhYjFhNjA0ODVlZDIxIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBYXJvbiBNYSA8YWFyb24ubWFAY2Fub25pY2FsLmNvbT4KRGF0
+ZTogV2VkLCAyNiBBdWcgMjAyNiAxMjozNjo1OCArMDgwMApTdWJqZWN0OiBbUEFUQ0ggNy84XSB3
+aWZpOiBtdDc2OiBtdDc5MjU6IHJlc3RvcmUgdGhlIGxlZ2FjeSBCU1MgYWZ0ZXIgTUxPCiB0ZWFy
+ZG93bgoKUmVtb3ZpbmcgdGhlIGxhc3QgbGluayBvZiBhbiBNTEQgaW50ZXJmYWNlIGxlYXZlcyB0
+aGUgZmlybXdhcmUgd2l0aCB0aGUKTUxEIEJTUyBhbmQgREVWIGVudHJ5OiB0aGUgcmVtb3ZhbCBs
+b29wIHNraXBzIHRoZSBkZWZsaW5rLCBhbmQgdGhlCmh3ZWlnaHQxNihtdmlmLT52YWxpZF9saW5r
+cykgZmFsbGJhY2sgcmVhZHMgdGhlIHN0YWxlIHByZS11cGRhdGUKdmFsaWRfbGlua3MsIHdoaWNo
+IGlzIHN0aWxsIG5vbi16ZXJvLiBUaGUgZW50cnkga2VlcHMgdGhlIHBlci1saW5rIE1BQwphZGRy
+ZXNzLCBzbyBldmVyeSBzdWJzZXF1ZW50IGxlZ2FjeSBhc3NvY2lhdGlvbiBmYWlscyBhdXRoZW50
+aWNhdGlvbgp1bnRpbCB0aGUgaW50ZXJmYWNlIGlzIHJlbW92ZWQgb3IgdGhlIG1vZHVsZSBpcyBy
+ZWxvYWRlZC4KClJlbW92ZSB0aGUgZGVmbGluayBCU1MgYW5kIGFkZCBpdCBiYWNrIGFzIGEgbGVn
+YWN5IEJTUyBvbiB0aGUgdHJhbnNpdGlvbgp0byB6ZXJvIGxpbmtzLgoKRml4ZXM6IDY5YWNkNmQ5
+MTBiMCAoIndpZmk6IG10NzY6IG10NzkyNTogYWRkIG10NzkyNV9jaGFuZ2VfdmlmX2xpbmtzIikK
+U2lnbmVkLW9mZi1ieTogQWFyb24gTWEgPGFhcm9uLm1hQGNhbm9uaWNhbC5jb20+Ckxpbms6IGh0
+dHBzOi8vcGF0Y2gubXNnaWQubGluay8yMDI2MDgyNjA0MzY1OC4yMjU1NTUzLTEtYWFyb24ubWFA
+Y2Fub25pY2FsLmNvbQpTaWduZWQtb2ZmLWJ5OiBGZWxpeCBGaWV0a2F1IDxuYmRAbmJkLm5hbWU+
+Ci0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jIHwg
+MTIgKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdlZCwgMTIgaW5zZXJ0aW9ucygrKQoKZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21haW4uYyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21haW4uYwppbmRleCBi
+M2UzMjY4Li40NTM1MDgzIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRl
+ay9tdDc2L210NzkyNS9tYWluLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsv
+bXQ3Ni9tdDc5MjUvbWFpbi5jCkBAIC0yMjIwLDYgKzIyMjAsMTggQEAgbXQ3OTI1X2NoYW5nZV92
+aWZfbGlua3Moc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2
+aWYsCiAKIAltdmlmLT52YWxpZF9saW5rcyA9IG5ld19saW5rczsKIAorCS8qIFJlc3RvcmUgdGhl
+IGxlZ2FjeSBCU1MgYWZ0ZXIgZGlzYWJsaW5nIE1MTyAqLworCWlmIChvbGRfbGlua3MgJiYgIW5l
+d19saW5rcykgeworCQltdDc5MnhfbWFjX2xpbmtfYnNzX3JlbW92ZShkZXYsICZtdmlmLT5ic3Nf
+Y29uZiwKKwkJCQkJICAgJm12aWYtPnN0YS5kZWZsaW5rKTsKKwkJZXJyID0gbXQ3OTI1X21hY19s
+aW5rX2Jzc19hZGQoZGV2LCAmdmlmLT5ic3NfY29uZiwKKwkJCQkJICAgICAgJm12aWYtPnN0YS5k
+ZWZsaW5rKTsKKwkJaWYgKGVyciA8IDApIHsKKwkJCW10NzkyeF9tdXRleF9yZWxlYXNlKGRldik7
+CisJCQlyZXR1cm4gZXJyOworCQl9CisJfQorCiAJbXQ3OTJ4X211dGV4X3JlbGVhc2UoZGV2KTsK
+IAogCXJldHVybiAwOwotLSAKMi41NS4wCgo=
+
+------=_Part_985418_134265376.1791205960502
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0008-wifi-mt76-mt7925-keep-MLD-membership-consistent-duri.patch"
+Content-ID: <34c7b0e1-eba6-13c3-2ff1-af7af3314082@yahoo.com>
+
+RnJvbSA5YWM0NWE2MzRkODU3ZDVjMTQxZTA5ZDkzYjBlZjFhMTM3N2VhYWUxIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbmRyZWkgUnVzdSBkZSBDYXN0cm8gPGFyY0BlbXB5cmVhbC53
+b3Jrcz4KRGF0ZTogU3VuLCA0IE9jdCAyMDI2IDE1OjQ5OjAyICswMDAwClN1YmplY3Q6IFtQQVRD
+SCA4LzhdIHdpZmk6IG10NzY6IG10NzkyNToga2VlcCBNTEQgbWVtYmVyc2hpcCBjb25zaXN0ZW50
+IGR1cmluZwogbGluayBhZGQKCm10NzkyNV9tYWNfbGlua19zdGFfYWRkKCkgc2VuZHMgYW4gQVNT
+T0MgdXBkYXRlIGZvciB0aGUgcHJpbWFyeSBXQ0lECmJlZm9yZSBzZW5kaW5nIHRoZSB1cGRhdGUg
+Zm9yIGEgbmV3IHNlY29uZGFyeSBXQ0lELiBUaGUgbmV3IGxpbmsgaXMKcHVibGlzaGVkIGluIG1z
+dGEtPmxpbmtbXSBhbmQgbXN0YS0+dmFsaWRfbGlua3Mgb25seSBhZnRlciBib3RoIGNvbW1hbmRz
+CnN1Y2NlZWQuCgpTZWxlY3RpbmcgdGhlIHNlY29uZGFyeSBlbnRyeSBmcm9tIHRoZSBzdWJqZWN0
+IG9mIGVhY2ggY29tbWFuZCBnaXZlcwp0aGUgcHJpbWFyeSBTVEFfUkVDX01MRCBvbmUgbGluayBh
+bmQgdGhlIHNlY29uZGFyeSBTVEFfUkVDX01MRCB0d28KbGlua3MuIEVudW1lcmF0aW5nIHB1Ymxp
+c2hlZCBsaW5rcyBhbG9uZSBzdGlsbCBvbWl0cyB0aGUgcGVuZGluZyBsaW5rCmZyb20gdGhlIHBy
+aW1hcnkgY29tbWFuZC4gRmlybXdhcmUtYm91bmQgY29tbWFuZCBjYXB0dXJlcyByZXByb2R1Y2UK
+dGhpcyBuPTEvbj0yIHNlcXVlbmNlIGR1cmluZyBhIHNlY29uZGFyeSBhZGRpdGlvbi4KCkJ1aWxk
+IGVhY2ggTUxEIFRMViBmcm9tIHRoZSBzdGF0aW9uJ3MgcHVibGlzaGVkIGxpbmtzIGFuZCBhbiBl
+eHBsaWNpdApwZW5kaW5nIGxpbmsuIFBhc3MgdGhlIGluaXRpYWxpemVkIHBlbmRpbmcgbGluayB0
+aHJvdWdoIGJvdGggYWRkLXRpbWUKc3RhdGlvbiB1cGRhdGVzLCBpbmNsdWRpbmcgdGhlIHVwZGF0
+ZSB3aG9zZSBzdWJqZWN0IGlzIHRoZSBwcmltYXJ5LgpLZWVwIHRoZSBwcmltYXJ5IGZpcnN0LCBi
+b3VuZCBlbnRyaWVzIGJ5IHRoZSBmaXJtd2FyZSBhcnJheSwgYW5kIHNraXAKbGlua3Mgd2l0aG91
+dCBzdGF0aW9uIGFuZCBCU1Mgc3RhdGUuIE90aGVyIHVwZGF0ZSBjYWxsZXJzIGhhdmUgbm8KcGVu
+ZGluZyBsaW5rLgoKVGhpcyBsZWF2ZXMgbXN0YS0+bGlua1tdIHB1YmxpY2F0aW9uIGFmdGVyIHN1
+Y2Nlc3NmdWwgbGluayBzZXR1cCBhbmQKcHJlc2VydmVzIHRoZSBleGlzdGluZyBhZGQtZmFpbHVy
+ZSBjbGVhbnVwLiBUaGUgcGVuZGluZyBwb2ludGVyIGlzIHVzZWQKc3luY2hyb25vdXNseSB0byBw
+b3B1bGF0ZSB0aGUgY29tbWFuZCwgbm90IHN0b3JlZCBpbiBzaGFyZWQgc3RhdGUuCgpGaXhlczog
+ZmY2NDNiODFiYzM4ICgid2lmaTogbXQ3NjogbXQ3OTI1OiBwYXNzIG1saW5rIGFuZCBtY29uZiB0
+byBzdGFfbWxkX3RsdigpIikKTGluazogaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvbGludXgtd2ly
+ZWxlc3MvMDY2YjMwY2MtYTllNi00YWViLTk2NGQtNzE1NTFlOGVhM2VmQHBvc3Rlby5kZS8KU2ln
+bmVkLW9mZi1ieTogQW5kcmVpIFJ1c3UgZGUgQ2FzdHJvIDxhcmNAZW1weXJlYWwud29ya3M+ClRl
+c3RlZC1ieTogSm9uYXMgSG9ydCA8am9uYXMuaG9ydEBwb3N0ZW8uZGU+ClRlc3RlZC1ieTogRGV2
+aW4gV2l0dG1heWVyIDxsdWNpZF9kdWNrQGp1c3R0aGV0aXAuY2E+Ci0tLQogLi4uL25ldC93aXJl
+bGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tYWMuYyAgIHwgIDIgKy0KIC4uLi9uZXQvd2lyZWxl
+c3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbWFpbi5jICB8IDE2ICsrLS0tCiAuLi4vbmV0L3dpcmVs
+ZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jICAgfCA1OSArKysrKysrKysrKysrKystLS0t
+CiAuLi4vd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbXQ3OTI1LmggICAgfCAgMyArLQog
+NCBmaWxlcyBjaGFuZ2VkLCA2MCBpbnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkKCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tYWMuYyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21hYy5jCmluZGV4IGI1
+MmI2NzguLjBjNDAwNDMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVr
+L210NzYvbXQ3OTI1L21hYy5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvbXQ3OTI1L21hYy5jCkBAIC0xMzAzLDcgKzEzMDMsNyBAQCBtdDc5MjVfdmlmX2Nvbm5lY3Rf
+aXRlcih2b2lkICpwcml2LCB1OCAqbWFjLAogCQkJCQkgICAgdHJ1ZSwgTlVMTCk7CiAJCW10Nzky
+NV9tY3Vfc3RhX3VwZGF0ZShkZXYsIE5VTEwsIHZpZiwKIAkJCQkgICAgICAmbXZpZi0+c3RhLmRl
+ZmxpbmssIHRydWUsCi0JCQkJICAgICAgTVQ3Nl9TVEFfSU5GT19TVEFURV9OT05FKTsKKwkJCQkg
+ICAgICBNVDc2X1NUQV9JTkZPX1NUQVRFX05PTkUsIE5VTEwpOwogCQltdDc5MjVfbWN1X3VuaV9h
+ZGRfYmVhY29uX29mZmxvYWQoZGV2LCBodywgdmlmLCB0cnVlKTsKIAl9CiB9CmRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tYWluLmMgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tYWluLmMKaW5kZXggNDUzNTA4
+My4uMzY5Mjk5ZSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
+Ni9tdDc5MjUvbWFpbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYv
+bXQ3OTI1L21haW4uYwpAQCAtOTY5LDcgKzk2OSw3IEBAIHN0YXRpYyBpbnQgbXQ3OTI1X21hY19s
+aW5rX3N0YV9hZGQoc3RydWN0IG10NzZfZGV2ICptZGV2LAogCSAgICBsaW5rX3N0YSA9PSBtbGlu
+ay0+cHJpX2xpbmspIHsKIAkJcmV0ID0gbXQ3OTI1X21jdV9zdGFfdXBkYXRlKGRldiwgbGlua19z
+dGEsIHZpZiwKIAkJCQkJICAgIG1saW5rLCB0cnVlLAotCQkJCQkgICAgTVQ3Nl9TVEFfSU5GT19T
+VEFURV9OT05FKTsKKwkJCQkJICAgIE1UNzZfU1RBX0lORk9fU1RBVEVfTk9ORSwgTlVMTCk7CiAJ
+CWlmIChyZXQpCiAJCQlnb3RvIG91dF9wbTsKIAl9IGVsc2UgaWYgKGllZWU4MDIxMV92aWZfaXNf
+bWxkKHZpZikgJiYKQEAgLTk5MSwxOSArOTkxLDE5IEBAIHN0YXRpYyBpbnQgbXQ3OTI1X21hY19s
+aW5rX3N0YV9hZGQoc3RydWN0IG10NzZfZGV2ICptZGV2LAogCiAJCXJldCA9IG10NzkyNV9tY3Vf
+c3RhX3VwZGF0ZShkZXYsIG1saW5rLT5wcmlfbGluaywgdmlmLAogCQkJCQkgICAgcHJpX21saW5r
+LCB0cnVlLAotCQkJCQkgICAgTVQ3Nl9TVEFfSU5GT19TVEFURV9BU1NPQyk7CisJCQkJCSAgICBN
+VDc2X1NUQV9JTkZPX1NUQVRFX0FTU09DLCBtbGluayk7CiAJCWlmIChyZXQpCiAJCQlnb3RvIG91
+dF9wbTsKIAogCQlyZXQgPSBtdDc5MjVfbWN1X3N0YV91cGRhdGUoZGV2LCBsaW5rX3N0YSwgdmlm
+LAogCQkJCQkgICAgbWxpbmssIHRydWUsCi0JCQkJCSAgICBNVDc2X1NUQV9JTkZPX1NUQVRFX0FT
+U09DKTsKKwkJCQkJICAgIE1UNzZfU1RBX0lORk9fU1RBVEVfQVNTT0MsIG1saW5rKTsKIAkJaWYg
+KHJldCkKIAkJCWdvdG8gb3V0X3BtOwogCX0gZWxzZSB7CiAJCXJldCA9IG10NzkyNV9tY3Vfc3Rh
+X3VwZGF0ZShkZXYsIGxpbmtfc3RhLCB2aWYsCiAJCQkJCSAgICBtbGluaywgdHJ1ZSwKLQkJCQkJ
+ICAgIE1UNzZfU1RBX0lORk9fU1RBVEVfTk9ORSk7CisJCQkJCSAgICBNVDc2X1NUQV9JTkZPX1NU
+QVRFX05PTkUsIE5VTEwpOwogCQlpZiAocmV0KQogCQkJZ290byBvdXRfcG07CiAJfQpAQCAtMTIx
+MSw3ICsxMjExLDcgQEAgc3RhdGljIHZvaWQgbXQ3OTI1X21hY19saW5rX3N0YV9hc3NvYyhzdHJ1
+Y3QgbXQ3Nl9kZXYgKm1kZXYsCiAJbWVtc2V0KG1saW5rLT5haXJ0aW1lX2FjLCAwLCBzaXplb2Yo
+bWxpbmstPmFpcnRpbWVfYWMpKTsKIAogCW10NzkyNV9tY3Vfc3RhX3VwZGF0ZShkZXYsIGxpbmtf
+c3RhLCB2aWYsIG1saW5rLCB0cnVlLAotCQkJICAgICAgTVQ3Nl9TVEFfSU5GT19TVEFURV9BU1NP
+Qyk7CisJCQkgICAgICBNVDc2X1NUQV9JTkZPX1NUQVRFX0FTU09DLCBOVUxMKTsKIAogCW10Nzky
+eF9tdXRleF9yZWxlYXNlKGRldik7CiB9CkBAIC0xMjU0LDcgKzEyNTQsNyBAQCBzdGF0aWMgdm9p
+ZCBtdDc5MjVfbWFjX2xpbmtfc3RhX3JlbW92ZShzdHJ1Y3QgbXQ3Nl9kZXYgKm1kZXYsCiAJbXQ3
+Nl9jb25uYWNfcG1fd2FrZSgmZGV2LT5tcGh5LCAmZGV2LT5wbSk7CiAKIAltdDc5MjVfbWN1X3N0
+YV91cGRhdGUoZGV2LCBsaW5rX3N0YSwgdmlmLCBtbGluaywgZmFsc2UsCi0JCQkgICAgICBNVDc2
+X1NUQV9JTkZPX1NUQVRFX05PTkUpOworCQkJICAgICAgTVQ3Nl9TVEFfSU5GT19TVEFURV9OT05F
+LCBOVUxMKTsKIAltdDc5MjVfbWFjX3d0YmxfdXBkYXRlKGRldiwgbWxpbmstPndjaWQuaWR4LAog
+CQkJICAgICAgIE1UX1dUQkxfVVBEQVRFX0FETV9DT1VOVF9DTEVBUik7CiAKQEAgLTE4OTUsNyAr
+MTg5NSw3IEBAIG10NzkyNV9zdGFydF9hcChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0
+IGllZWU4MDIxMV92aWYgKnZpZiwKIAogCWVyciA9IG10NzkyNV9tY3Vfc3RhX3VwZGF0ZShkZXYs
+IE5VTEwsIHZpZiwKIAkJCQkgICAgJm12aWYtPnN0YS5kZWZsaW5rLCB0cnVlLAotCQkJCSAgICBN
+VDc2X1NUQV9JTkZPX1NUQVRFX05PTkUpOworCQkJCSAgICBNVDc2X1NUQV9JTkZPX1NUQVRFX05P
+TkUsIE5VTEwpOwogb3V0OgogCW10NzkyeF9tdXRleF9yZWxlYXNlKGRldik7CiAKQEAgLTIwMzks
+NyArMjAzOSw3IEBAIHN0YXRpYyB2b2lkIG10NzkyNV92aWZfY2ZnX2NoYW5nZWQoc3RydWN0IGll
+ZWU4MDIxMV9odyAqaHcsCiAJaWYgKGNoYW5nZWQgJiBCU1NfQ0hBTkdFRF9BU1NPQykgewogCQlt
+dDc5MjVfbWN1X3N0YV91cGRhdGUoZGV2LCBOVUxMLCB2aWYsCiAJCQkJICAgICAgJm12aWYtPnN0
+YS5kZWZsaW5rLCB0cnVlLAotCQkJCSAgICAgIE1UNzZfU1RBX0lORk9fU1RBVEVfQVNTT0MpOwor
+CQkJCSAgICAgIE1UNzZfU1RBX0lORk9fU1RBVEVfQVNTT0MsIE5VTEwpOwogCQltdDc5MjVfbWN1
+X3NldF9iZWFjb25fZmlsdGVyKGRldiwgdmlmLCB2aWYtPmNmZy5hc3NvYyk7CiAKIAkJaWYgKGll
+ZWU4MDIxMV92aWZfaXNfbWxkKHZpZikpCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9tZWRpYXRlay9tdDc2L210NzkyNS9tY3UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
+dGVrL210NzYvbXQ3OTI1L21jdS5jCmluZGV4IDU2NTE4YzQuLjE3NTAyMGYgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jCisrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTI1L21jdS5jCkBAIC0xOTcxLDE0
+ICsxOTcxLDE4IEBAIG10NzkyNV9tY3Vfc3RhX21sZF90bHYoc3RydWN0IHNrX2J1ZmYgKnNrYiwK
+IAkJICAgICAgIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsCiAJCSAgICAgICBzdHJ1Y3QgaWVl
+ZTgwMjExX3N0YSAqc3RhLAogCQkgICAgICAgc3RydWN0IG10NzkyeF9ic3NfY29uZiAqbWNvbmYs
+Ci0JCSAgICAgICBzdHJ1Y3QgbXQ3OTJ4X2xpbmtfc3RhICptbGluaykKKwkJICAgICAgIHN0cnVj
+dCBtdDc5MnhfbGlua19zdGEgKm1saW5rLAorCQkgICAgICAgc3RydWN0IG10NzkyeF9saW5rX3N0
+YSAqcGVuZGluZykKIHsKIAlzdHJ1Y3QgbXQ3OTJ4X3ZpZiAqbXZpZiA9IChzdHJ1Y3QgbXQ3OTJ4
+X3ZpZiAqKXZpZi0+ZHJ2X3ByaXY7CiAJc3RydWN0IG10NzkyeF9zdGEgKm1zdGEgPSAoc3RydWN0
+IG10NzkyeF9zdGEgKilzdGEtPmRydl9wcml2OwogCXN0cnVjdCBtdDc5MnhfZGV2ICpkZXYgPSBt
+dmlmLT5waHktPmRldjsKKwl1bnNpZ25lZCBsb25nIHZhbGlkID0gbXN0YS0+dmFsaWRfbGlua3M7
+CiAJc3RydWN0IG10NzkyeF9ic3NfY29uZiAqbWNvbmZfcHJpOwogCXN0cnVjdCBzdGFfcmVjX21s
+ZCAqbWxkOworCXVuc2lnbmVkIGludCBsaW5rX2lkOwogCXN0cnVjdCB0bHYgKnRsdjsKKwl1OCBt
+YXhfbGlua3M7CiAJdTggY250ID0gMDsKIAogCS8qIFByaW1hcnkgbGluayBhbHdheXMgdXNlcyBk
+cml2ZXIncyBkZWZsaW5rIFdDSUQuICovCkBAIC0yMDA3LDExICsyMDExLDQ0IEBAIG10NzkyNV9t
+Y3Vfc3RhX21sZF90bHYoc3RydWN0IHNrX2J1ZmYgKnNrYiwKIAltbGQtPmxpbmtbY250XS53bGFu
+X2lkID0gY3B1X3RvX2xlMTYobXN0YS0+ZGVmbGluay53Y2lkLmlkeCk7CiAJbWxkLT5saW5rW2Nu
+dCsrXS5ic3NfaWR4ID0gbWNvbmZfcHJpLT5tdDc2LmlkeDsKIAotCS8qIE9wdGlvbmFsbHkgZW5j
+b2RlIHRoZSBjdXJyZW50bHktdXBkYXRlZCBzZWNvbmRhcnkgbGluay4gKi8KLQlpZiAobWxpbmsg
+JiYgbWxpbmsgIT0gJm1zdGEtPmRlZmxpbmsgJiYgbWNvbmYpIHsKLQkJbWxkLT5zZWNvbmRhcnlf
+aWQgPSBjcHVfdG9fbGUxNihtbGluay0+d2NpZC5pZHgpOwotCQltbGQtPmxpbmtbY250XS53bGFu
+X2lkID0gY3B1X3RvX2xlMTYobWxpbmstPndjaWQuaWR4KTsKLQkJbWxkLT5saW5rW2NudCsrXS5i
+c3NfaWR4ID0gbWNvbmYtPm10NzYuaWR4OworCS8qIERlc2NyaWJlIHRoZSBzYW1lIHN0YXRpb24g
+bGlua3MgaW4gZWFjaCBwZXItV0NJRCBTVEFfUkVDX01MRCwKKwkgKiByYXRoZXIgdGhhbiBzZWxl
+Y3RpbmcgdGhlIHNlY29uZGFyeSBmcm9tIHRoZSBjdXJyZW50IGNvbW1hbmQuCisJICovCisJbWF4
+X2xpbmtzID0gQVJSQVlfU0laRShtbGQtPmxpbmspOworCisJLyogQWRkaW5nIGEgc2Vjb25kYXJ5
+IGxpbmsgdXBkYXRlcyBib3RoIHByaW1hcnkgYW5kIHNlY29uZGFyeSBTVEEKKwkgKiByZWNvcmRz
+IGJlZm9yZSBwdWJsaXNoaW5nIHRoZSBuZXcgbGluayBpbiBtc3RhLT5saW5rW10uIEluY2x1ZGUg
+aXQKKwkgKiBpbiBib3RoIGNvbW1hbmRzIHdpdGhvdXQgbW92aW5nIHRoYXQgcHVibGljYXRpb24g
+YmVmb3JlIHN1Y2Nlc3MuCisJICovCisJaWYgKHBlbmRpbmcgJiYgcGVuZGluZyAhPSAmbXN0YS0+
+ZGVmbGluaykKKwkJdmFsaWQgfD0gQklUKHBlbmRpbmctPndjaWQubGlua19pZCk7CisKKwlmb3Jf
+ZWFjaF9zZXRfYml0KGxpbmtfaWQsICZ2YWxpZCwgSUVFRTgwMjExX01MRF9NQVhfTlVNX0xJTktT
+KSB7CisJCXN0cnVjdCBtdDc5MnhfbGlua19zdGEgKm1saW5rX3NlYzsKKwkJc3RydWN0IG10Nzky
+eF9ic3NfY29uZiAqbWNvbmZfc2VjOworCisJCWlmIChjbnQgPT0gbWF4X2xpbmtzKQorCQkJYnJl
+YWs7CisKKwkJaWYgKGxpbmtfaWQgPT0gbXN0YS0+ZGVmbGlua19pZCkKKwkJCWNvbnRpbnVlOwor
+CisJCW1saW5rX3NlYyA9IG10NzkyeF9zdGFfdG9fbGluayhtc3RhLCBsaW5rX2lkKTsKKwkJaWYg
+KCFtbGlua19zZWMgJiYgcGVuZGluZyAmJiBsaW5rX2lkID09IHBlbmRpbmctPndjaWQubGlua19p
+ZCkKKwkJCW1saW5rX3NlYyA9IHBlbmRpbmc7CisJCWlmICghbWxpbmtfc2VjIHx8IG1saW5rX3Nl
+YyA9PSAmbXN0YS0+ZGVmbGluaykKKwkJCWNvbnRpbnVlOworCisJCW1jb25mX3NlYyA9IHJjdV9k
+ZXJlZmVyZW5jZV9wcm90ZWN0ZWQobXZpZi0+bGlua19jb25mW2xpbmtfaWRdLAorCQkJCQkJICAg
+ICAgbG9ja2RlcF9pc19oZWxkKCZkZXYtPm10NzYubXV0ZXgpKTsKKwkJaWYgKCFtY29uZl9zZWMp
+CisJCQljb250aW51ZTsKKworCQlpZiAoY250ID09IDEpCisJCQltbGQtPnNlY29uZGFyeV9pZCA9
+IGNwdV90b19sZTE2KG1saW5rX3NlYy0+d2NpZC5pZHgpOworCisJCW1sZC0+bGlua1tjbnRdLnds
+YW5faWQgPSBjcHVfdG9fbGUxNihtbGlua19zZWMtPndjaWQuaWR4KTsKKwkJbWxkLT5saW5rW2Nu
+dCsrXS5ic3NfaWR4ID0gbWNvbmZfc2VjLT5tdDc2LmlkeDsKIAl9CiAKIAltbGQtPmxpbmtfbnVt
+ID0gY250OwpAQCAtMjAzMCw3ICsyMDY3LDggQEAgbXQ3OTI1X21jdV9zdGFfcmVtb3ZlX3Rsdihz
+dHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCiBzdGF0aWMgaW50CiBtdDc5MjVfbWN1X3N0YV9jbWQoc3Ry
+dWN0IG10NzZfcGh5ICpwaHksCi0JCSAgIHN0cnVjdCBtdDc2X3N0YV9jbWRfaW5mbyAqaW5mbykK
+KwkJICAgc3RydWN0IG10NzZfc3RhX2NtZF9pbmZvICppbmZvLAorCQkgICBzdHJ1Y3QgbXQ3OTJ4
+X2xpbmtfc3RhICpwZW5kaW5nKQogewogCXN0cnVjdCBtdDc5MnhfdmlmICptdmlmID0gKHN0cnVj
+dCBtdDc5MnhfdmlmICopaW5mby0+dmlmLT5kcnZfcHJpdjsKIAlzdHJ1Y3QgbXQ3Nl9kZXYgKmRl
+diA9IHBoeS0+ZGV2OwpAQCAtMjA3MSw3ICsyMTA5LDcgQEAgbXQ3OTI1X21jdV9zdGFfY21kKHN0
+cnVjdCBtdDc2X3BoeSAqcGh5LAogCQlpZiAoaW5mby0+c3RhdGUgIT0gTVQ3Nl9TVEFfSU5GT19T
+VEFURV9OT05FKSB7CiAJCQltdDc5MjVfbWN1X3N0YV9tbGRfdGx2KHNrYiwgaW5mby0+dmlmLAog
+CQkJCQkgICAgICAgaW5mby0+bGlua19zdGEtPnN0YSwKLQkJCQkJICAgICAgIG1jb25mLCBtbGlu
+ayk7CisJCQkJCSAgICAgICBtY29uZiwgbWxpbmssIHBlbmRpbmcpOwogCiAJCQltdDc5MjVfbWN1
+X3N0YV9laHRfbWxkX3Rsdihza2IsIGluZm8tPnZpZiwgaW5mby0+bGlua19zdGEtPnN0YSk7CiAJ
+CX0KQEAgLTIwOTYsNyArMjEzNCw4IEBAIGludCBtdDc5MjVfbWN1X3N0YV91cGRhdGUoc3RydWN0
+IG10NzkyeF9kZXYgKmRldiwKIAkJCSAgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwKIAkJCSAg
+c3RydWN0IG10NzkyeF9saW5rX3N0YSAqbWxpbmssCiAJCQkgIGJvb2wgZW5hYmxlLAotCQkJICBl
+bnVtIG10NzZfc3RhX2luZm9fc3RhdGUgc3RhdGUpCisJCQkgIGVudW0gbXQ3Nl9zdGFfaW5mb19z
+dGF0ZSBzdGF0ZSwKKwkJCSAgc3RydWN0IG10NzkyeF9saW5rX3N0YSAqcGVuZGluZykKIHsKIAlz
+dHJ1Y3QgbXQ3OTJ4X3ZpZiAqbXZpZiA9IChzdHJ1Y3QgbXQ3OTJ4X3ZpZiAqKXZpZi0+ZHJ2X3By
+aXY7CiAJaW50IHJzc2kgPSAtZXdtYV9yc3NpX3JlYWQoJm12aWYtPmJzc19jb25mLnJzc2kpOwpA
+QCAtMjExNCw3ICsyMTUzLDcgQEAgaW50IG10NzkyNV9tY3Vfc3RhX3VwZGF0ZShzdHJ1Y3QgbXQ3
+OTJ4X2RldiAqZGV2LAogCWluZm8ud2NpZCA9ICZtbGluay0+d2NpZDsKIAlpbmZvLm5ld2x5ID0g
+c3RhdGUgIT0gTVQ3Nl9TVEFfSU5GT19TVEFURV9BU1NPQzsKIAotCXJldHVybiBtdDc5MjVfbWN1
+X3N0YV9jbWQoJmRldi0+bXBoeSwgJmluZm8pOworCXJldHVybiBtdDc5MjVfbWN1X3N0YV9jbWQo
+JmRldi0+bXBoeSwgJmluZm8sIHBlbmRpbmcpOwogfQogCiBpbnQgbXQ3OTI1X21jdV9zZXRfYmVh
+Y29uX2ZpbHRlcihzdHJ1Y3QgbXQ3OTJ4X2RldiAqZGV2LApkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjUvbXQ3OTI1LmggYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyNS9tdDc5MjUuaAppbmRleCA0Y2MyNTk0Li41Yzcx
+Nzc5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210Nzky
+NS9tdDc5MjUuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210Nzky
+NS9tdDc5MjUuaApAQCAtMjc4LDcgKzI3OCw4IEBAIGludCBtdDc5MjVfbWN1X3N0YV91cGRhdGUo
+c3RydWN0IG10NzkyeF9kZXYgKmRldiwKIAkJCSAgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwK
+IAkJCSAgc3RydWN0IG10NzkyeF9saW5rX3N0YSAqbWxpbmssCiAJCQkgIGJvb2wgZW5hYmxlLAot
+CQkJICBlbnVtIG10NzZfc3RhX2luZm9fc3RhdGUgc3RhdGUpOworCQkJICBlbnVtIG10NzZfc3Rh
+X2luZm9fc3RhdGUgc3RhdGUsCisJCQkgIHN0cnVjdCBtdDc5MnhfbGlua19zdGEgKnBlbmRpbmcp
+OwogaW50IG10NzkyNV9tY3Vfc2V0X2NoYW5faW5mbyhzdHJ1Y3QgbXQ3OTJ4X3BoeSAqcGh5LCB1
+MTYgdGFnKTsKIGludCBtdDc5MjVfbWN1X3NldF90eChzdHJ1Y3QgbXQ3OTJ4X2RldiAqZGV2LCBz
+dHJ1Y3QgaWVlZTgwMjExX2Jzc19jb25mICpic3NfY29uZik7CiBpbnQgbXQ3OTI1X21jdV9zZXRf
+ZWVwcm9tKHN0cnVjdCBtdDc5MnhfZGV2ICpkZXYpOwotLSAKMi41NS4wCgo=
+
+------=_Part_985418_134265376.1791205960502--
