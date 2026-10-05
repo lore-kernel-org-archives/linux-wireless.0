@@ -1,129 +1,97 @@
-Received: from mta0.migadu.com (out-168.mta0.migadu.com [91.218.175.168])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E27639150A
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:52:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D9D3AB288;
+	Mon,  5 Oct 2026 20:55:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233581; cv=none; b=ZWaZ94SumuBSuz8fUeXYbuM9AdLhUhpJH1y9W1QMtK7WMk5Q24mvULciPEfCk5vysEFNA92u4ULueuWQKIVMnBAm12YC2iNh67qr68hrwM5Tu/UUNnb0LhIntAM22Nto+GC/ADXxBV8obVQPhKWSIXngNsuHM1JRuLYSS4rUHJs=
+	t=1791233746; cv=none; b=CF/43Tg/B4YArZ8vnmwb/bXdtKq7718NokwjClWsSVAyEingWtBF+4Jv/L5bnwWIbHhX9huVEne9YHywsBqrPUzhlYkdfUKHb4+/XedvQ3smqkPgjFtQp9KdP0RxV32wAYEZsqwR0VTm4ZkidERU81MvI/fgtqMrGCt2ZfQL+w4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791233581; c=relaxed/simple;
-	bh=Wog0iRSGKClsxMyBudxgkKM7R3EtgCsLpg841Y7blQ8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t1XjfU/OnEk64SffKhIcxf5lScbPhb2IVjLocCQtD5qPvYLFp/lm3DRGjC7PInui44o7n/btDXwTWi3Dv7MRTgAtMRXSxd67afCfEbTDjRHIf1KRFTheqfkRPN2PJRMVxIphhbxwfGymA7J7hqu917ZRSS5iXslDRQ0xhklK408=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=GkRL9Ui9; arc=none smtp.client-ip=91.218.175.168
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1791233746; c=relaxed/simple;
+	bh=7ekFXvzem1Gyk0ZXiZZO+Q2FRg+laRcuHg8wg7vBabw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Ul3j9HZovVsdz5fn1K9KhG4Fyaii0KxH/6gjxITV9vTI9BIZ18ZTYJe126a/j0eq+PpD8o/IRGORP7MaHCCqQ4fJg0oU5+SNIrw7/m1OY5Wpru3jvCzdfBEExl0lIvSYK4QOIYwr7jS3/IdurEjWSHS7ZOISOUfc41m4ahYzxhw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=mljDJI9b; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="GkRL9Ui9"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Wog0iRSGKClsxMyBudxgkKM7R3EtgCsLpg841Y7blQ8=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791233573; v=1; x=1791838373;
- b=GkRL9Ui96MIsiaCYbto9pJY337hIOBGQ8CK4WxYoeOb6Y6aOXd3akhPcuNeVrfykmSqAm6MU
- stzLARhAYZyzBIdhFuQdWqi/TiwQipVfksJtSuX6+MT7CvwyZKewbaeR4xyFXJq8N9/1XcadJ9c
- SBW7kaUYO83gY/IpJZ8t0WJlcxnbDSBX7zTVNHnNdvn35FVtGBA8cU4oXKqwoEb6saoOGJbUBhR
- OBggB4SgdaSrmgCJZQlbkFUiQadFS75Y0ZxgN8UO9YQzq8QTzGnF5bFhoix+qM1SGtzp8jUkbD+
- /1M0zSEUpzEFmNW/pyvGQU+fCyHDOqGgO0jwDMPL5eOLQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 12bd7bdb79995992;
-	Mon, 05 Oct 2026 20:52:43 +0000
-X-Mizu-Trace-ID: 12bd7bdb79995992
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Deren Wu <deren.wu@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Mark Anthony Agarro <markanthonyagarro@gmail.com>
-Subject: [PATCH wireless] wifi: mt76: mt76_connac: scan 6 GHz wildcard requests passively on connac2
-Date: Mon,  5 Oct 2026 13:52:40 -0700
-Message-ID: <20261005205240.241136-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="mljDJI9b"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=7ekFXvzem1Gyk0ZXiZZO+Q2FRg+laRcuHg8wg7vBabw=;
+	t=1791233744; x=1792443344; b=mljDJI9bzVaR6f5NceNi7URJaBZJApKxTw7qifotuw9bbkG
+	8T8GX4G03RS7r9PNel7i7TBnRZWLFPip0OyBJpo8mbZJ/T/3XN++a6A0D6Zmpb9ldhj85Z1UZGDHR
+	0jx1cQzOhU0bb2UbijLzDzP6BrHBVbWViVzLnnTj9wL6tl9nKPOJJ1Rb7qqv9tKutpuzspUaTXx5S
+	dYzyLjkadGU7Yvd/LtojKfyfsdpFkCjbxrS7Z8j/KWALIwwUL2t/B2xFmpuD0CLN+uiNI4umlB1c0
+	Vv0ZXSsOItJGTFnrkSBZhxuKep7I+0ayRDjD2GMzhh6BGpb12guQScue/+RO59tg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xDpij-00000005dJR-0l0y;
+	Mon, 05 Oct 2026 22:55:37 +0200
+Message-ID: <289161e6ddaf18fa63a55623c75d700850fd57b6.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
+	herbert@gondor.apana.org.au, ilan.peer@intel.com,
+ linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
+Date: Mon, 05 Oct 2026 22:55:35 +0200
+In-Reply-To: <20261005164521.1037345-1-jtornosm@redhat.com>
+References: 
+	<4ede9873924541b7bed3fc09f5b8c8eb0415ea40.camel@sipsolutions.net>
+	 <20261005164521.1037345-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-From: Mark Anthony Agarro <markanthonyagarro@gmail.com>
+Hi,
 
-With WIPHY_FLAG_SPLIT_SCAN_6GHZ cfg80211 puts the 6 GHz channels in a
-request of their own and lists the APs it wants to find there in
-scan_6ghz_params. mt76_connac_mcu_hw_scan() does not read them, and the
-connac2 scan command has no field for per-target data (only a single
-bssid), so a wildcard request is sent as an active scan with an empty
-SSID. On an MT7922 the firmware then listens for about 58 ms on a
-single channel, shorter than a 102.4 ms beacon interval, and the AP used
-for testing does not answer a broadcast probe request, so the beacon is
-often missed. A scan of channel 37 (6135 MHz) found the AP in 9 to 17
-of 30 attempts, and wpa_supplicant, which scans 6 GHz this way after
-the legacy bands, ended up on 5 GHz in about four connections in ten.
+> With the minimum changes on top of the fips_allows() infrastructure
+> (patch below), I have bidirectional data working with SW crypto.
+> mac80211 handles CCMP encryption/decryption on the host, firmware
+> has no data keys.
 
-Send the wildcard-only 6 GHz request as a passive scan (scan_type 0, no
-probe requests). The single-channel window becomes about 119 ms. The
-6 GHz stage is identified by sreq->scan_6ghz and not by counting
-channels. Requests with a directed SSID stay active, legacy-band
-requests are untouched, and mt7925 builds its own command from the RNR
-targets and does not use this function.
+No keys at all, but yeah.
 
-Tested on an MT7922 (PCIe), kernel 7.3.0-rc4, one UniFi AP with a PSC
-channel 37 BSS, same boot, random order, 30 scans per cell:
+What are you testing with now? Still MFP?
 
-                             before    after
-  wildcard 6135 MHz           9/30     30/30
-  5320 + 6135 MHz            10/30     30/30
-  explicit passive           30/30     30/30
-  directed SSID              30/30     30/30
-  5320 MHz only              30/30     30/30
-  2.4 GHz channels           30/30     30/30
+> However, I had to disable RX AMPDU aggregation to make RX work.
+> Without PTK in firmware, firmware does not set the correct bits
+> in the Block Ack bitmap, since it cannot validate the received
+> frames. The AP assumes frames were not received, retransmits,
+> and eventually gives up. TX AMPDU works fine because the AP has
+> the keys and sends correct BA back to the STA.
 
-wpa_supplicant cold start picked 6 GHz in 18 of 30 attempts before and
-in 30 of 30 after; the 6 GHz stage takes about 0.35 s longer. Sending
-scan_type 1 with no probe requests behaves like the unmodified request,
-while scan_type 0 with probe requests works, so the effect comes from
-the scan type and the listen window, not from the probes.
+That doesn't really make sense. How can TX A-MPDU work when you have
+MFP, this was the bit you disabled earlier even with all the other work?
+And the firmware has to send the AddBA request, so that can't make it
+through??
 
-Not tested: non-PSC channels, scheduled scan, other APs, MT7921 and
-MT7902 parts. This does not fix the 4-way handshake timeout in #106.
+> Disabling RX AMPDU forces individual frame ACKs, which work at
+> the PHY level without keys. The throughput cost is significant:
+> ~12-30 Mbps instead of ~500 Mbps with HW crypto.
 
-Fixes: 0e5911bb7cc9 ("wifi: mt76: mt7921: fix non-PSC channel scan fail")
-Signed-off-by: Mark Anthony Agarro <markanthonyagarro@gmail.com>
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+That almost seems low (11g maxed out at ~24 Mbps with 54 Mbps PHY rate),
+but depends on the channel width and MCS.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 2f925d22b9aa..d684fd306fee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -1850,6 +1850,18 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 	req->ssid_type_ext = n_ssids ? BIT(0) : 0;
- 	req->ssids_num = n_ssids;
- 
-+	/* cfg80211 splits the 6 GHz channels into their own request and
-+	 * describes the APs to look for in scan_6ghz_params, which this
-+	 * command cannot carry. As an active wildcard scan the firmware only
-+	 * listens for a short time per channel and often misses the beacon.
-+	 * Scan the wildcard-only 6 GHz stage passively; directed scans stay
-+	 * active.
-+	 */
-+	if (is_connac2(phy->dev) && sreq->scan_6ghz && !n_ssids) {
-+		req->scan_type = 0;
-+		req->probe_req_num = 0;
-+	}
-+
- 	duration = is_connac2(phy->dev) ? 0 : MT76_CONNAC_SCAN_CHANNEL_TIME;
- 	/* increase channel time for passive scan */
- 	if (!sreq->n_ssids)
--- 
-2.55.0
+> Analyzing the Block Ack protocol, I think the BA bitmap only
+> requires the Sequence Number (from the unencrypted MAC header) and
+> CRC validation (PHY-level). So neither could require decryption keys.
+> Could we allow this behavior?
+> Is there a firmware mode where firmware acknowledges all CRC-valid
+> frames in the BA regardless of decryption status?
 
+I'd have said it should already work that way.
+
+johannes
