@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B8772E975E
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 10:11:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08B4A4582E6
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 10:11:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791195076; cv=none; b=tD0sYDoGT8PDG8JlHoNGe898PB5jBns0r2f6dtArZQohSgPXIOTQOymIQv09qoyGC97wrMa+bNO6QzEDwYXXEE4wOxLHRg1NJA6vGw64AYQ8vs0o04fsULy9eFiTNCdwsxar3lb7hUi0Yr2MYNGGGfsklBQ7SPTNgzIBeL0UY3E=
+	t=1791195076; cv=none; b=V+dYqnYf3j5h4ImUzAzuw1IGlDyF8aaCNvG7n7mpr9UdY8e+TTDLYBl0AiDBMRMou64W8yw85FacdgCcvi443LsFu4ICZHo6yIt4AleCCcRt+ODoU69yF+e2HGxD35Gu6nxT6vk0m2OrIwQzKuV/NDwkR6iZ63sTsR9LSSfOseY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791195076; c=relaxed/simple;
-	bh=vw1d4+FrNE3Jr+L89xbAa3t12QN3HcDLyBQAE2g9ogk=;
+	bh=qL4fU8I5N4X9t8LLn4Crt3PkY96P5EAamW16AcaF+R8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j93Xq8H8C1WK5Sn5WyLC/9JvF3IIs2+3z96zPpXm4an3IhIL5Htp6mM2RaC58CyT1uGc6eyxBMWoumUOiqRITxTSeMqPoS9B4nY5XJVsQDGhLvPSWbyoESTp06Rn+PsY+H5beBao3DQaHr3y7oTo/1y8n32P0Kcehq5WfjGEMqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=rYvZEMkB; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=UA3pMHs4x+8lzHSYKRcydXZEFZoVST6jBeUBlkeOLqb2H0bcibcaDEVtoaWZWiW8KvWA0Y4pqai3AFsrWHvgPGxOwWCMhdDgilWeQiu+M8BE37ySGroWaHGdusDFZOt23r8CB+irxj0oL9AWuTJHBhD+t2xiUiyg/7Hrt2OL2hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=r5R1Ea9v; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rYvZEMkB"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="r5R1Ea9v"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=sMohHznHLlbb//ZtTUfK6+vkkOhidjod+a6hBQmVDQc=;
-	t=1791195074; x=1792404674; b=rYvZEMkB3rmNsorzlNMZXsptW0PTlHyaQZRO5x48lRtTQ5m
-	uCtq8URSLdD039J8cfWQz6QHqExM232hnhdjk872vrVJxvBZwxPF63nkFM5h8fzzwPXvFWomG8cfV
-	iC+XMQ+5ej1dq43FKfYg7XCAWOJMuCyhJCbXPuSIZYSRd3YQxnuWT3CcckI6pbMHrjcSwvs1aQ7iw
-	On22KjmyUo2r31gTDlXmqq91ceVDRzx0LsC5RutGRoMg+rmu4++M/2N5GW9IsisbvFHgqhCM+Hm/N
-	lE7Yk/Q3bkheLAtlGM5g2b4WO01kThXso3yZ0LSU1oXZuL0Vp8BTkKES8cRVaX6A==;
+	Resent-Cc:Resent-Message-ID; bh=31EETAx0XEBT6M7TTzJ1h6hpOGS562q6eTKB5pou79w=;
+	t=1791195075; x=1792404675; b=r5R1Ea9v41EsM578BB0n3DWalSPdCkLUb64O76hLzDSRGh4
+	3ZRRDQsv/ue+4AMY+4W8L8XPGZe0KlLCjb3WDzhSmvOCeuVJe5N/++izb5l0RVW3QLVjLQF1W7obJ
+	bOzoYYoMlw9+pM//jcuVGC41e0Ix0rByaz3nnF6ah71j6kkAXk7dRE17r3jCz+yPT/IX9RYPGAjmp
+	nMuE2MqhIjVI8Gr2wZy3ydLqeznhGyC+0CBPQxlyKX/RqEwRZqkT8Lf1+rp31LzHByLfy6S7dd3UR
+	fuMXP0XRW9+J9XJOF7q5P7NRlJLw/YKAhXrcVXgKwh5vAgnZm/NrfkPk6rDifRJA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDff5-00000005CGx-3Yy6;
+	id 1xDff6-00000005CGx-2j0n;
 	Mon, 05 Oct 2026 12:11:12 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 11/13] wifi: nl80211: probe peers without wiphy mutex
-Date: Mon,  5 Oct 2026 12:06:27 +0200
-Message-ID: <20261005121058.6319fb734db6.I2f462bfffa96feb8dcc4386bc35ebc25d877a92f@changeid>
+Subject: [RFC PATCH v2 12/13] wifi: mac80211: don't require wiphy mutex for control port TX
+Date: Mon,  5 Oct 2026 12:06:28 +0200
+Message-ID: <20261005121058.4ffa997d40b8.Ica8bba30018704a7c776f2ef08e6f2571cd8f8c4@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261005101057.1992330-15-johannes@sipsolutions.net>
 References: <20261005101057.1992330-15-johannes@sipsolutions.net>
@@ -50,46 +50,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-None of the drivers implementing probe_peer (mac80211,
-wil6210, nxpwifi) need the wiphy mutex for it, so we
-can just not take it. Document that as well.
+The wiphy mutex was only required for the cookie counter,
+but that's been in cfg80211 for a while. The rest is just
+datapath, so can work under RCU, just need to be careful
+to handle interface type changes.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 5 ++++-
- net/wireless/nl80211.c | 3 ++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ net/mac80211/tx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 73d9e86493ff..1c5130e5f5f3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5143,7 +5143,10 @@ struct mgmt_frame_regs {
-  *
-  * @probe_peer: probe a connected peer (AP: STA MAC required; STA: no MAC),
-  *	must use the @cookie as provided which is later passed to
-- *	cfg80211_probe_status().
-+ *	cfg80211_probe_status(). Called without the wiphy mutex, so the
-+ *	interface type may have changed/be changing and the MAC may be
-+ *	%NULL even in AP mode (if runtime type changes are supported),
-+ *	drivers must check for that.
-  *
-  * @set_noack_map: Set the NoAck Map for the TIDs.
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b9d0aaa6fc6c..51f2d7de8638 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -20798,7 +20798,8 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.doit = nl80211_probe_peer,
- 		.flags = GENL_UNS_ADMIN_PERM,
--		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
-+					 NL80211_FLAG_NO_WIPHY_MTX),
- 	},
- 	{
- 		.cmd = NL80211_CMD_REGISTER_BEACONS,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1953ec35c783..46134bda1e8f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -6600,9 +6600,6 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+ 	u32 flags = 0;
+ 	int err;
+ 
+-	/* mutex lock is only needed for incrementing the cookie counter */
+-	lockdep_assert_wiphy(local->hw.wiphy);
+-
+ 	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
+ 	 * or Pre-Authentication
+ 	 */
+@@ -6661,6 +6658,14 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+ 	 * AF_PACKET
+ 	 */
+ 	rcu_read_lock();
++
++	/* do_stop() synchronizes RCU before the interface type can change */
++	if (!ieee80211_sdata_running(sdata)) {
++		dev_kfree_skb(skb);
++		rcu_read_unlock();
++		return -ENETDOWN;
++	}
++
+ 	err = ieee80211_lookup_ra_sta(sdata, skb, &sta, true);
+ 	if (err) {
+ 		dev_kfree_skb(skb);
 -- 
 2.55.0
 
