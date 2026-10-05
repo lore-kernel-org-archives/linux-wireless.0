@@ -1,98 +1,81 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D582282F01;
-	Mon,  5 Oct 2026 05:28:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C009460;
+	Mon,  5 Oct 2026 05:31:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791178137; cv=none; b=iqzmWheT6pb6uD5MAyGbTGhoUD54uzRDBUN4WZ7EsloHGavgsV3nupdfcRD/UFpL02QxOXGbP5jXhC6f3eK4fvrqCiBYnu+Zhbcv0bTdml040TsambYhWnrdQRIaO3KjTzxc9r0u+wrrPNvx2mIBBTckTJoY9sk+gF+nXv021s8=
+	t=1791178268; cv=none; b=pK5MoBmyg5z8dICjYC2alFZhAAhKy4SsT0Q2ZaBr826EgfSrgHH5+FyrM/Cxr6+kgqkPjzUCM+cI9FryCtJgOXlT5Z7y1BeX8rAr3Kuzt5NtXGoPliue9Lr+N3wkSqget1myvR1NFGu2MxQOoCmilNhrNGSHLNOWNTOnDcDJP5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791178137; c=relaxed/simple;
-	bh=6s5ZiJW9H5BxZ10Xc6+uFdxmz3iBFZeiiHPyR668OT4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ypsa51g0BA8SpJ0O1xVeU1bwM52Cuv+a2DAc/3kZ6Tce0QmTJQln+58d9paZ8A9ioUWkXYuE3HAQ0ba45XSA0q0twD1ZjDeWHOoVrHw7vzXRD2HJ2vrYhStIDmg0gMo3cyou5q/QRCkl3x027sur7szYWhcBSV1FHRj1GG3tbzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=lUxdyouf; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791178268; c=relaxed/simple;
+	bh=ZB4D+4teW5DXUeFs9cCbrVbL/WvsoSbXiBRjVLIMe/Y=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tX35b8ePQBVZflyfPK3w5vOumol6vYnDY60iMxTns3srqZbUD+lW/I8PESPkcri51WlmDkvZYDyfLgp2JVP2Fncpq0oiKhL9Q33fRgzU1xAsG3kWakyvemt8nSGwP/PMo+iQqt070ReSc5+1PkBs04LeGqIU2CT+QcwhJl2caNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=AmTzkeGK; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="lUxdyouf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Gmv/BREUz+MsqVB/to1nDdqKmhVJMCtJ+1Miv/c9cNw=;
-	t=1791178136; x=1792387736; b=lUxdyoufjy6KXBwlRVA7HBexM8U78TwEHR3QxGa/Uka5fLZ
-	GFKjacjR4tX2G7QqI1swxmwmMVV7Eha02xWfkKS3NfNoLbe/IgTLub42T9Lr9FV3hY34M/8V4AiQY
-	3KiNWiRXzA1pg1bFxx8GsSiJ4tMW8rvCV57Yyv2J88NOV8qDqouqSVgV7gKe8Vgic6fcTTDLYvDZ1
-	i6I65YjR5u3GtgqI2I8b5R2AWdVShOWmD7LkTBre8eRY0TEruBPjTRQ30mFcINlVlAEQLjqrcAtAW
-	O1dzEv52g5qkLG0GFYXKKhQunZNU3F36Jfm4ePlvIReuT352WC37MGuuw/hGAc+w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDbFr-00000005197-2XfA;
-	Mon, 05 Oct 2026 07:28:51 +0200
-Message-ID: <1130811ccc70721c60e66c3038bf1ec517af1cb4.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 03/18] wifi: nl80211: avoid rtnl for
- commands that don't want it
-From: Johannes Berg <johannes@sipsolutions.net>
-To: kernel test robot <lkp@intel.com>, linux-wireless@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev
-Date: Mon, 05 Oct 2026 07:28:50 +0200
-In-Reply-To: <202610051243.rHmDLV0g-lkp@intel.com>
-References: 
-	<20261004210122.3b67fb1a6a69.I9c4f85fb60160f377a24c1b8e5173966744e5f09@changeid>
-	 <202610051243.rHmDLV0g-lkp@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="AmTzkeGK"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6955Ufr261690584, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791178241; bh=ZB4D+4teW5DXUeFs9cCbrVbL/WvsoSbXiBRjVLIMe/Y=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=AmTzkeGKKp0fsaIJTSKZL1KXJBQQrQQRMOTH9pbQGx7Tpmk0OgyrbjXGhXRirh1px
+	 SOeoCycuJ1lncQCvt+PwTx9CKpCF4Z6BGF9hogfiPpIr4qscTCeYlHpYWvFiKF5nHt
+	 oaamP3UF2sl0D/Vxyz56awrUTz7BU/gn41zIjDISeyEEBmCGGQcZZia12ndSFs4bqW
+	 +jDShjoixlRSnYgrVhKpia1iAD81xuqwT0VAsa6NVW0np+JBcwB43L/ILy1QiWx544
+	 DOrF7Uh9wezdcGEm52D6JrevmgLWeGKaqBDbHVsOID+T1v0uXvw63kC267jUQEshO2
+	 xud03HVEmwwhg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6955Ufr261690584
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 5 Oct 2026 13:30:41 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 13:30:41 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 13:30:41 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 5 Oct 2026 13:30:41 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>, Alastair D'Silva
+	<alastair@d-silva.org>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Ulf Hansson
+	<ulfh@kernel.org>, Jernej Skrabec <jernej.skrabec@gmail.com>, Kalle Valo
+	<kvalo@kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>
+Subject: RE: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
+ interrupt storm
+Thread-Topic: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
+ interrupt storm
+Thread-Index: AQHdUThjHehNiw0xlkuYT1bxT/PheLbuUbcg//+M34CAAJPnEA==
+Date: Mon, 5 Oct 2026 05:30:40 +0000
+Message-ID: <c852aa23403e4ec7ad80a17a6dc18d0e@realtek.com>
+References: <20261001000303.3505264-1-alastair@d-silva.org>
+ <20261001000303.3505264-2-alastair@d-silva.org>
+ <661b9fc47ce942a491f8c53d90fdf39a@realtek.com>
+ <6ef33599cc268fa12e4663461248f1700969df34@linux.dev>
+In-Reply-To: <6ef33599cc268fa12e4663461248f1700969df34@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
 
-On Mon, 2026-10-05 at 12:18 +0800, kernel test robot wrote:
->=20
-> > > net/wireless/nl80211.c:244:7: warning: variable 'wdev' is uninitializ=
-ed when used here [-Wuninitialized]
->      244 |             (wdev->netdev && !net_eq(dev_net(wdev->netdev), ne=
-tns))) {
->          |              ^~~~
-
-Yes ... noticed that too, just slightly too late.
-
->    net/wireless/nl80211.c:238:27: note: initialize the variable 'wdev' to=
- silence this warning
->      238 |         struct wireless_dev *wdev;
->          |                                  ^
->          |                                   =3D NULL
-
-That'd be pointless.
-
->  > 244		    (wdev->netdev && !net_eq(dev_net(wdev->netdev), netns))) {
-
-that line
-
->    245			wiphy_unlock(&rdev->wiphy);
->    246			put_device(&rdev->wiphy.dev);
->    247			return ERR_PTR(-ENODEV);
->    248		}
->    249=09
->    250		/*
->    251		 * unregistration blocks on wiphy mutex,
->    252		 * so we don't need this now
->    253		 */
->    254		put_device(&rdev->wiphy.dev);
->    255=09
->    256		if (!wdev_id)
->    257			return NULL;
->    258=09
->    259		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
->    260			if (wdev->identifier =3D=3D wdev_id)
->    261				return wdev;
-
-needs to move here.
-
-johannes
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBJIHRoaW5rIHlvdSBt
+aXNzZWQgbXkgcmV2aWV3IGF0IFsxXS4NCj4gDQo+IFsxXTpodHRwczovL2xvcmUua2VybmVsLm9y
+Zy9hbGwvMjAyNjEwMDEwNjAyMTMuMjQ3NTktMS1sdWthLmdlamFrQGxpbnV4LmRldi8NCg0KSSBm
+ZWVsIGxpa2UgdGhhdCBtaWdodCBiZSBleGlzdGluZyBpc3N1ZT8gSWYgc28sIHVzZSBvdGhlciBw
+YXRjaGVzIHRvIGZpeA0KdGhlbS4gDQoNCg0K
