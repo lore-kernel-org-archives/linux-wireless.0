@@ -1,90 +1,70 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [178.154.239.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1EA9400DF6
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 08:43:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFB32931C3
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 08:47:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791189834; cv=none; b=M1+uEYz1gQY2FZoT/QgUzE0vbtm5UgdD2InLiV+DVsxTFckoQVxKwACt++Gr0X/R47cak1v1lxmj58svp5zXVV4k8J2QBnr0mkuI31IVmoir/JGm5YqGfyOs6RO3sJ+thDwtCk98X/JWdqXwuFhYDsB3ojwW2QXpORxaU3WaGh0=
+	t=1791190075; cv=none; b=gCmWs1DBP9TYHPuVY9xV5tq2VxQnz9p2omSr8Z1LJOGU5n2vs32jbfoK7vASrSEim7qnuRH69y68cXbrfe88Dc1sKNvYjVvKKpVX+Kr+/W4TvoHp7YJzZ7SLhbHagPoXcvhegeqAlLcPN4VFIfeOwXvrrCrhTZhKP7ejS5LumM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791189834; c=relaxed/simple;
-	bh=j5CT5uilFsWBe6KvghEbMcuaNCzI3OgyA7C9uA6Flvw=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ZsO8YEWrXkOqudTz+eWrYBq/mhAhmuMcgNn2PcBL6ztDJ+byvBte16sAaPJ4Mzeg4hfatCtj7ubZ0+W4vGtoJoiJkFRT1Efd3IbXQT2zLOq9TM+pz8ITQSTBsPNAPh0ds7izMu37J5FI/4xd4OsOzZzSxrdUd7XeAjhFU59jFVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HxlRGlnF; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791190075; c=relaxed/simple;
+	bh=y66mAkGFtYumwXbasGAwLTGZ9g9v/epVA9CiizSsOOc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S4SR+cteY7NJhV3ylUa8xK9r/bm10/+P6FhD5dVfa0l8U2TFTOFty6rbUJCeUP/dYva2pR+VwO1giLiqOsD23MdRIh6CJwUyHTD/k7vo8/gdnHmbfot0qBgBbvtVAz2egLtzP2Bh3Bh0k4hOj+TkgMzlLRu5J7fyyjCrCMRAOVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=FQoVvVyg; arc=none smtp.client-ip=178.154.239.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HxlRGlnF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=twFldm5+E2Klgae48XSP868AlybiJG2g3DLqIECKuyM=;
-	t=1791189833; x=1792399433; b=HxlRGlnFR74Mawfun5QMHzOc5Eld3WlD5jFdN4wSGzkRy07
-	p89y1EBK/Uv05MHFnM3QyvpD6H4nCi9GLvRNjcJe137qbvPoQe+wWQHniWn3i+Q7TSUeWdaL7dYjr
-	2WdC0xEJjP0ZrJYUn1Xc1t1seKbl6N1fZwUIffw8Qis9PUwbPfccgjOyfsMY7jkcguf06SgMhJ7Yq
-	e986SUfTQ1dL9KjDhgt37oEVZcKi9jHfIh3uMQfWx7L9jHO5xrTU9xb4UESkcB7/tcXXa32iULCvt
-	XaiyNcKqCyMDx9cj8MsVZTg25HCoIaH6ODx9Q6ltbuTXZIHi2l8H1B6v2d3hZREw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDeIY-000000058Fl-2NzA
-	for linux-wireless@vger.kernel.org;
-	Mon, 05 Oct 2026 10:43:50 +0200
-Message-ID: <0fb4ac3a33933c64b8660a5cdd1e5c357d345717.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH 00/12] wifi: AP side locking improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 05 Oct 2026 10:43:49 +0200
-In-Reply-To: <20261004214504.1636783-14-johannes@sipsolutions.net>
-References: <20261004214504.1636783-14-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="FQoVvVyg"
+Received: from mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net [IPv6:2a02:6b8:c15:340d:0:640:ad51:0])
+	by forward101a.mail.yandex.net (postfix) with ESMTPS id B387681587;
+	Mon, 05 Oct 2026 11:47:43 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (smtp) with ESMTPSA id blGMiWmlcCg0-tMk8ytWj;
+	Mon, 05 Oct 2026 11:47:43 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1791190063; bh=y66mAkGFtYumwXbasGAwLTGZ9g9v/epVA9CiizSsOOc=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=FQoVvVygO7oVZXIRScgdhan8tiYf2Hbp/8FfZsm8pt1cI37BsHMCaOecZGfM640KQ
+	 FM2jiy5UxwYnuiiosyVEZwpnledl7CWc8L+9PH/zWHtlnGBsjdY5XHRFgIHJalMadR
+	 sBRN5JxdVX61OmOyFhgEq4oAzvM1FlVux5mQWXHM=
+Authentication-Results: mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: dolph-in@yandex.ru
+To: Michele Dionisio <michele.dionisio@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>, linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH wireless 1/1] wifi: brcmfmac: fix P2P device removal race in brcmf_detach()
+Date: Mon, 05 Oct 2026 15:47:27 +0700
+Message-ID: <_Omamail_GwNDiHfr-hNonI6e5s0RUw.omamail@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-On Sun, 2026-10-04 at 23:40 +0200, Johannes Berg wrote:
-> This obviously goes on top of my (fixed) RTNL redux series.
->=20
-> The idea here is that wiphy mutex can be held for quite a bit
-> of time (e.g. waiting for firmware), but beacon updates (e.g.
-> with the critical update design I had proposed a long while
-> back) and other things should be fast.
->=20
-> So with this not all things require wiphy mutex. These are:
->=20
->  - beacon and related template updates
->    (this one needs driver opt-in),
->  - mgmt frame TX,
->  - control port TX, and
->  - peer probe.
->=20
-> This does make the implementation slightly more complex, but
-> the added complexity is almost entirely in mac80211 (and some
-> in cfg80211), unless a driver wants to opt in to unlocked
-> beacon/template updates, which it has to implement itself for
-> obvious reasons.
-
-Thinking about this some more, there are a couple of corner cases I
-don't like:
-
- - the semantics of "only for netdevs" and the get_device() in the
-   implementation are strange
-
- - because of that, we can't do this for non-AP, and NAN would benefit
-
-If we add a refcount_t to wdevs for this, and then use wdev_hold()
-instead of dev_hold() (which uses the netdev dev_hold if it's there)
-then it starts working for everything and the implementation gets nicer
-too.
-
-I'll rework it accordingly for the next round.
-
-johannes
+SGkgTWljaGVsZSwKCkkgcmFuIGludG8gdGhlIHNhbWUgY3Jhc2ggb24gYSBQQ0llIGNhcmQsIHNv
+IGhlcmUgaXMgc29tZSB0ZXN0aW5nIGZyb20KdGhlIGhhcmR3YXJlIHNpZGUuCgpUaGlzIGlzIGEg
+TWFjQm9va1BybzE0LDMgKDIwMTcpIHdpdGggYSBCQ000MzYwMiwgeDg2XzY0LCBrZXJuZWwgNy4y
+LjUuCkZvciBzbGVlcCBvbiB0aGlzIG1hY2hpbmUgSSB1c2UgYSBob29rIHRoYXQgdW5iaW5kcyB0
+aGUgZGV2aWNlIGZyb20KYnJjbWZtYWMgYmVmb3JlIHMyaWRsZSBhbmQgcmViaW5kcyBpdCBvbiBy
+ZXN1bWUuIHdwYV9zdXBwbGljYW50ICh1bmRlcgpOZXR3b3JrTWFuYWdlcikgaGFzIGEgUDJQIGRl
+dmljZSBvbiBpdC4gV2l0aCB0aGUgc3RvY2sgbW9kdWxlLCB0aGUKc2Vjb25kIHN1c3BlbmQgY3Jh
+c2hlZCB3aXRoIHRoZSBzYW1lIEdQRiBhdCAweGRlYWQwMDAwMDAwMDAxMjI6CgogIF9jZmc4MDIx
+MV91bnJlZ2lzdGVyX3dkZXYKICBicmNtZl9wMnBfaWZwX3JlbW92ZWQKICBicmNtZl9yZW1vdmVf
+aW50ZXJmYWNlCiAgYnJjbWZfZGV0YWNoCiAgYnJjbWZfcGNpZV9yZW1vdmUKCllvdXIgcGF0Y2gg
+YXBwbGllcyB0byA3LjIuNSB3aXRoIGEgc21hbGwgb2Zmc2V0LiBJIGJ1aWx0IGJyY21mbWFjIHdp
+dGgKaXQgYW5kIGxldCB0aGUgbWFjaGluZSBzdXNwZW5kIGFuZCB3YWtlIHVwIGJ5IGl0c2VsZiAo
+cnRjd2FrZSkgMzAKdGltZXMuIEkgYWxzbyBhZGRlZCBhIGNvdXBsZSBvZiB0ZW1wb3JhcnkgcHJp
+bnRzIHRvIHRoZSBuZXcgYnJhbmNoIGluCmJyY21mX2RldGFjaCgpLCBiZWNhdXNlIEkgd2FudGVk
+IHRvIHNlZSB0aGUgcmFjZSBhY3R1YWxseSBoYXBwZW4sIG5vdApqdXN0IGEgcnVuIG9mIGx1Y2t5
+IGN5Y2xlcy4KCkl0IGhhcHBlbmVkIDMgdGltZXMgb3V0IG9mIDMwLiBFYWNoIHRpbWUgYnJjbWZf
+ZGV0YWNoKCkgc2F0IG9uIHRoZQpsb2NrcyBmb3IgYWJvdXQgMS41IHMgKHRoYXQncyB0aGUgQlJD
+TUZfVklGX0VWRU5UX1RJTUVPVVQgd2FpdCBpbgpicmNtZl9wMnBfZGVsX3ZpZigpKSwgYnJjbWZf
+cDJwX2RlbF92aWYoKSByZW1vdmVkIHRoZSBQMlAgaW50ZXJmYWNlLAphbmQgdGhlbiBicmNtZl9k
+ZXRhY2goKSBmb3VuZCBpZmxpc3RbaV0gYWxyZWFkeSBOVUxMIGFuZCBza2lwcGVkIGl0LgpJbiA3
+IG1vcmUgY3ljbGVzIHRoZXJlIHdhcyBub3RoaW5nIHRvIHdhaXQgZm9yIGFuZCBicmNtZl9kZXRh
+Y2goKQpyZW1vdmVkIHRoZSBpbnRlcmZhY2UgaXRzZWxmLiBObyBvb3BzIGFuZCBubyBsaXN0IG9y
+IHJlZmNvdW50Cndhcm5pbmdzIGFueXdoZXJlIGluIHRoZSBydW4sIGFuZCBXaS1GaSByZWNvbm5l
+Y3RlZCBmaW5lIGFmdGVyd2FyZHMuCgpUZXN0ZWQtYnk6IFNlcmdleSBBcm1vZGluIDxkb2xwaC1p
+bkB5YW5kZXgucnU+CgpUaGFua3MgZm9yIGZpeGluZyB0aGlzIQoKU2VyZ2V5
