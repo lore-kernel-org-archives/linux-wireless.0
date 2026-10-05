@@ -1,209 +1,183 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013066.outbound.protection.outlook.com [52.101.83.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6AA4AC159
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 14:37:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791211086; cv=none; b=tKoLnTd886bGmOrjoK7p4wiQ6/XiUSDsQzY4O4Gt7h6bXlFTKFDIXQi6TKiW/ggqP5+2yH/0+niXziRx0CLiE8/xwhu8psIfuiMG9BWmpA3Ilb1huF4RS7dj/M7k90uISYfenu/3Lp+6bz77joVPB69Gc2b/rafKpBOpWEja1Uw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791211086; c=relaxed/simple;
-	bh=2SzhxrWuyWL8OXijp7aZ7p5Wq1jUPOcr0yrxzKmNLyM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XZD7zpChcQwfgALqcxGKHBnCQnI1bNGMDHLQB5R79vHMfUhR5iNScQp5XHkGm6Kvh4fS/NOCMfWDQDFDmxR9rpsbsHoOjJRYhdG+v9sIxijOz9BXIGra6h1yzVZE8ZagGoKzoYDezyS7VK7e/CnPWDs5gxqT9s3HkFXCpq7VzBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JOW+uXb3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Zvx6oON0; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E564AD4C7
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 14:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.66
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791211218; cv=fail; b=IUtOp5+SRWVwbCY8SjzhyYjuoturzbzdovwrNhEK1FclUUNvHCSfL+I8dKS+pp+WYziRqDCde2jDXy4rSOIjdT2XWDYZm+GHhapWKbTSYWgLhc/NYXJxC666Q4FTNIu5gt3ykpwGo8w0k17x8Zp5CW/BzPaugGiVqCB4ye/NjGA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791211218; c=relaxed/simple;
+	bh=xmuL29pjQMbi/5WeO2oW0l0AcASaFr6DHfCIjcZJxME=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=sPRfcrF6wwoQ6E/4Rcc7yv76sR+PwqaknI/gyJRjWLIgkj9jJ7YzybqQ40vuq52OJ1YizHkhDkAeTvN/Gm62/WaE68hnZFoXXU7o6TDUJJQeI/ysXOcocGKOGcNIrrS4DMvuIcYw9pIJ17lt87vDPL2MFPuB4h9E5ObO21fAxFI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=AQ9gTycP; arc=fail smtp.client-ip=52.101.83.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JOW+uXb3";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Zvx6oON0"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 695EP51h2214862
-	for <linux-wireless@vger.kernel.org>; Mon, 5 Oct 2026 14:37:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2eIAsOhaVPTC3xP3VsP6J8u+4Zt4CiPhaYh6vvOX53I=; b=JOW+uXb3RPBy2i2f
-	k0Rq0bqa9hOX+IVfUvD9Hc15GGu/Shfe8BhdR12q0zA6YCSS3XOOc6qgbspcAAxX
-	etRk7wp3EbCbLZm7VgWZNsoOQMND1Qz6cTqndtdcG8k6t4z6aMomDkQmcKbMiOgW
-	aUjlNuZU6utIH9HRoTVqNxQPLhVE76omG/uGadDW6FW6XS+eCGsIiBALvxMnDChE
-	36WlmRAX7Ru0QtqhJ7eDOBp2uCZtlOiE2SCO4BPgrWAPWoNNl6gpN2nGep1SwiOp
-	LvcRlmt3FdYmy8DhzMsDw+muG5wiaZNbEhqLy/JX7RLBoMSQXLrAR998KYFW8ZPR
-	i70CXg==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h3xgytmvr-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 14:37:50 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-39b6416441eso2796229a91.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 07:37:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791211069; x=1791815869; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2eIAsOhaVPTC3xP3VsP6J8u+4Zt4CiPhaYh6vvOX53I=;
-        b=Zvx6oON0bfWFlX+u9Yl8Ma6aHmTWwBKrRRF3QW6/MCtpykVGhjdCWyrZ8AtTT0qjRQ
-         O+X7h1tKaqsGGY5DT1aZYdQ0nR6wLE+0NXyX5IzHxPjNG5JBd3MbndVHqh7QpiCS7O9S
-         /TokC+18TUw1al4Mig1Hk1SPcMDWyfkwah2d41qD/KJwcMTUFkJH6X1SaRxsj6JqVqRm
-         u3wkHs1u1Xp76bAOU79fdekxa18fMV7HZDnYA+/T/kobfJeDu0bwqnG6LxQz1r4EpSPO
-         SZ9VvidD65hR+kmOfJYFtV/e9ckQz+6dwp2Leem8XD42eS9Zk3qSF9rw4E/JgwHPH6ts
-         6QCg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791211069; x=1791815869;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2eIAsOhaVPTC3xP3VsP6J8u+4Zt4CiPhaYh6vvOX53I=;
-        b=ZhEk/jHXEkIZYseZ4rHzrhD/6KJcbdKGk+purF6K4xoeNhZkIu7NuiZHx1jUc4cnsG
-         3zmYB3tOPYQxkCmnoajsfVLznHx9rDN8RCyb3iJxyHYV4b2xrogJlu0LNjgiHccYL+CH
-         my0UMwLHC7iTZDMdqZ+TgNsViJOp/1jhR8+kAzsNQmMqncknHZCD7OUQ6ifz+9kBLxA3
-         MdhABj9LqE2OQVh//kKXMV5NNqGdAvXP1LhMpT3M4tBehak17RuZS14Fyh14VcYKyET1
-         kELRS0rjZzvwuJf/ZSuuT4JMpIZG1lnR7QTfdyqltGJdo3BIeIjGxcPiVXAGFkbxkwqo
-         r/SA==
-X-Forwarded-Encrypted: i=1; AKwUvByh/PxB2NiHi8whrISA4OQKgqA+fvz0MGaAQRWr0xyK0FTF4IOC14fomgJEfCo0ZYm/fOcZjGtcz0n8yZUr9Q==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIGWf3z4KCHm/VHjGI98GVGETEMtO2xiXrnklzYx58zEU8TyEeP
-	xs7pIv5pEIyD4qYIkukKZizir8+EZWt0/b7CFGbEzE/EQJbGxco6VRYUORRjLBhS+yHDs95bk2G
-	IBgjDN0M6lfKzYdqSoT/fy6VspuBSdZNqzZKC+ucpqnPJQ3bsEejyXPKulgiKt9rQ4t7jnA==
-X-Gm-Gg: AYBFou0WSF8ANVWcOrlNNaxOBMxO/9s/rJwGe0TTaRoFlOpnYHMFZQEMEAeUlW+eS3T
-	WL/JhFUZ2x36X6d0qgbaB7C90P4CTZ0R/9lbIog+dkUXaeP+36HJDnQjKn+m+NNvb0EB9WgS58G
-	fbRFyqKyT91lfi28XYMGE875x8VJIKT1RVkKix6cy+vNRioWHQKJDZ8+fit/3667uI2cnjIN+Xm
-	vYvi0a64SE6llruPEQAbz5SE3ImEhP+mRs2CC8p6nULtAKGxkGd5d2rv0hBk2ov5kJ8bxsLzl+Z
-	qYx1Tws4tazyefW/6fVJFYCL0kAwvEpKCtYFeGDMNg9XDOz9iwimA4LZ3xAPBM2gbO3oulcOPU2
-	tzXpL/BOdvnTSN3zllUQFFsGkEcswGtVIJiIZFhhLqiLIwnuvegZE8H3rTw==
-X-Received: by 2002:a17:90a:e7ce:b0:3a7:8c68:6446 with SMTP id 98e67ed59e1d1-3a78c687f95mr6625966a91.63.1791211069321;
-        Mon, 05 Oct 2026 07:37:49 -0700 (PDT)
-X-Received: by 2002:a17:90a:e7ce:b0:3a7:8c68:6446 with SMTP id 98e67ed59e1d1-3a78c687f95mr6625943a91.63.1791211068860;
-        Mon, 05 Oct 2026 07:37:48 -0700 (PDT)
-Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a6dcbdd97fsm7594125a91.0.2026.10.05.07.37.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Oct 2026 07:37:48 -0700 (PDT)
-Message-ID: <d791e70f-9c3f-4916-94de-8d76517339bf@oss.qualcomm.com>
-Date: Mon, 5 Oct 2026 07:37:46 -0700
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="AQ9gTycP"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=TGzGqYRNz8A3FJLcTg9ogE2PFYtAMztv+uedOyl7GJ6I+fk1lMjOydaA1J92I3JRhlHxVxaK4r9JDsKjfo1cqhxUOmcWrOYHdRgFiqKsP2zpkHNqKiFNa0fW1Uk3J+XgyP18Ofkx3KcTDP6kCUFuhcOz9xG4akp7MzOh73pLjsS0jqwnRA664aMUnaAY6Pps4oTpQnuhEMNncd6it4u10t0Igac2Od0Qy4jl0fwd5ohCeYCJtc1zI3t6FQVDNuK++dsJdLYzIJ3t/cva2BMZsciUW9UJYpgJTjA0wzFpRJsa6bpMOtBAMAOHwN8HH83bmuSLQF5t88ID/xL8maUxww==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=+9d3t53U6wHbdtErsi4mFzv7gEIWfzRWlMhHvGjvOqE=;
+ b=YisChNl2IX0vkJFNLlzgwnSnXY39c1OhsT5vjdSFmQda2DONTdtaWhqqpx6jM3Vk0ND13z4G+TRLEW21z0cqd5Tha+yB6VrBkZb/bbwqvrL9sJ1jJscDAKARxMBFB7cr3ibOAHfmAabcukc2OoX7iCIYOC2/3lw8f+0WBIM06SzDriFwGkUKlqbsgMC1/IzNUonmh++KR9d5HSqUW/CAgJ8L877OkVg2i8E6Povbkhz/J+f7qMo6dDFP8IghZ8tmaQN4CVhE+czmZDAx3F6sfg+dFqLGHiGtnO8nW5LuPuLRsqtUwP+Q9jWKRBL+Kd8yTn9JcVTfs8F8+HlWg3FTKQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+9d3t53U6wHbdtErsi4mFzv7gEIWfzRWlMhHvGjvOqE=;
+ b=AQ9gTycPdpuYFs0h6wpRhhHPcV/XY8yG94jZWikuiBQ6VOChxqFR7sxpoIIYr5dmJvKF4eyNDnPYzjnELQEUjZpy3QMltcCxvNi3BAvpR6ngXNmycSrwYSBL0jErbzCqWMm5FHKqi8UYlFdQSvjjt4e9KnUW5sPePSIbgLPDW9V4Kx+ovFv3ikyyyDusX8noZWgOrz+eoRwimKgevUWyWfmj9yXsKDdHSHqg/erKi6e+1CJiCLs37PVOxdWeFdZf+AxxgDos5s8+RW+yNjNdAdaTIghmCOKajdeyi8Xmjj+qNNnou8ugJLSBJLQV+DiBxDjow9RYGPg77/xNKTyulg==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
+ by PAXPR04MB8623.eurprd04.prod.outlook.com (2603:10a6:102:21a::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Mon, 5 Oct
+ 2026 14:40:00 +0000
+Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
+ ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
+ ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0451.022; Mon, 5 Oct 2026
+ 14:40:00 +0000
+From: jeff.chen_1@oss.nxp.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: pull-request: nxpwifi-next-20260929-v3
+Date: Mon,  5 Oct 2026 22:39:45 +0800
+Message-Id: <20261005143945.2880386-1-jeff.chen_1@oss.nxp.com>
+X-Mailer: git-send-email 2.34.1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SI1PR02CA0033.apcprd02.prod.outlook.com
+ (2603:1096:4:1f6::14) To VE1PR04MB7280.eurprd04.prod.outlook.com
+ (2603:10a6:800:1af::22)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath12k: skip hardware rfkill setup on Microsoft
- Surface Pro 11
-To: =?UTF-8?Q?Fran=C3=A7ois_Roux?= <franzelfranzel@gmail.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Konrad Dybcio
- <konradybcio@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        =?UTF-8?Q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>,
-        Dale Whinham <daleyo@gmail.com>, ath12k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20261004165132.4313-1-franzelfranzel@gmail.com>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20261004165132.4313-1-franzelfranzel@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: a8Au1zQpMTfEW4uDvSpQWqnKuEiQiJ7P
-X-Proofpoint-ORIG-GUID: a8Au1zQpMTfEW4uDvSpQWqnKuEiQiJ7P
-X-Authority-Analysis: v=2.4 cv=A6b5rKWG c=1 sm=1 tr=0 ts=6ac3b63e cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
- a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=7PQHMOqyCB17KHk-lU0A:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA1MDA1NyBTYWx0ZWRfX9B/kIVQBkZCq
- ULaispJTDneqMu/fsWWkvvQO0QiGZDxXToA9cQY5O7zNuoc+GDfKDSaZu4Ty6AOE9DmHqTuGQnW
- rptS63YLHq+1/w946Gu9LJDcBzKuFk1oED7mxGgxsuFCQEtxEwKK1xiN0f2huNUtVNt/PYw79y/
- jVx81i7LjYYGO6T+/2Zfin9GpZMBkHA+FXg8u8Mp3AASMOZYE1/NVMiatwn4XJ8OSy1YrnAFJL6
- dg4AXe+oYwBTHdFstgswogiukd0dktkaGGoSy+TY/Q8Q/ezGODHHVCVXCsVYZM8vY8TVfgkayNg
- XdrmcImojA5IRy2aCqSaXnmSytts5hACtFM4s0Dynj52Na12MxYA5lLflC4m055PnVEgv9gFC7V
- hv1FMAXe19N3WTC0RDUipKjvPVYPkBU9e4Z8CPK7vr2VS9WB1zzy4H/2H1cawBNv8tTDG/9C29F
- 5UDiPqZt6xPLor53/rw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA1MDA1NyBTYWx0ZWRfX4V5uN9zVulrL
- Fcb733MgBSeyLQvjVlhJWRrhApxGHD+JJXhZ87Mf+5+F9fBn8Y0EdVHfW/fD2j22WSK+r5ZE/e3
- iulSC95XOcHnCdBlOIwFGgDZi6LWb/I=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-05_04,2026-10-05_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 spamscore=0 lowpriorityscore=0 bulkscore=0 suspectscore=0
- priorityscore=1501 impostorscore=0 phishscore=0 malwarescore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610050057
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|PAXPR04MB8623:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4fbde93f-252c-4c8e-8d31-08df22ee888d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|19092799006|23010399003|376014|11063799006|56012099006|10067099003|18002099003|6133799003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	W/iiFYBBLKevEc7tbQg2EfrIEUgLO91FlvcBHpDBEd49KZRZNtiDnOfHDjtH5/2LDdFvg2GO7o0gftfE9YzwIoPopezRTjJv/YQO7OiRGc/PMFeJ6q0XDtyrrmGyTOzZ04HPnU5Bi8hCrfDibfdprEGsVy677Ur5g1ubtdu5VZM/p8VScQiDcL1N9rYQ/2+8ukcnRBjNJRxuHjHFtZgUnuNpvRF/euwAlrV15YGZdLz4HVP+2yzQY9ucHk9lGu1HtR0SsCeWzR8iD4gFwcgWG87Jl/p8+dDx15YK6nwHmQS3GAWXYngEdC/UK2NlFB1Itkv1sZ87Blrbe6sWTO1UiOW261sCPLue4ijcsRn14/SNY1laGinMfGM3S7OimHAOSIAk4Iz4BQAkbmh6D7iQ97cUvEhUEmZZ/p73ypIKzjZ8hUZ9IRWRPJDmt0opr8Lpl764fbObf2HBS5Ixvv+30TscHkD7a51C//X/qqp0mN1bX3NYcjrecCBRRE0PGddnIDE/Qiog4/GIdHJJpodjgL7Hz2iWD3+4rwzVlJUMwUtRKKjQK/06nrzmFVjyxfS7chbkLHkAFxKmzXvT/BmmWuDO1xxxeEoW/vJamAJ7LSJm+qha+9hlVqEtCND4cSwI2rnPReE43CdahP68f0JWRc0E/YL+Cu0+DNojmKQ8NNg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(19092799006)(23010399003)(376014)(11063799006)(56012099006)(10067099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NWREY1loZG9ndm9CdkRSZ2hicnpIK3RGOGJjcU1xSnpGSEJYRjl3UUdLMENR?=
+ =?utf-8?B?UFR5LzVBd2NIclIwbkJlTjB4Vi82S3Q1UllxL2lycm9ndzJrOWFxN1l0ZEFq?=
+ =?utf-8?B?T29XV0laQ2MxNTlIdzVFR1FFUW1OTEpPYlVVQWYwRXA1ODFTRDBTRHZQeWNO?=
+ =?utf-8?B?WGplNDg3dGJ2WC9hdmFGNEp4cjg1V21RYzZMajIzbDNSQ1BtRVF6T0ZQVGNk?=
+ =?utf-8?B?SnIyb2UxdkZhTzVtanVoTzVHcGtpSnRrVlNWNHVlSWY0OWFGWi9tTDFFMFNr?=
+ =?utf-8?B?MFd5UFNaVnBpcGhwZEZHMm5KRmdnWjhaQUNVRG90QXd1bFRSZ1RsZVBOTXRH?=
+ =?utf-8?B?emtyWGRPc05abWdFNS8xN1pscXIrZWl5c09QeW54NWUxSjJtZ2VpaGRpVm1N?=
+ =?utf-8?B?ZkFEM1NHbFpFbllDcHBuZHdjcU5pVnMxQ3NTOGlkR0s3cC9qZEtSOTRQQVJw?=
+ =?utf-8?B?bVhINjNPeCszV2d1Z2F1Rlo3eitRT2t4VTUyc1dqSlJIMVRFWERva09IQlAx?=
+ =?utf-8?B?Y2doWE9VWjg2WUZkVDhWRzhLUzJ6MndWbzNWMExobFZhZERZK2o2ajk2ajVN?=
+ =?utf-8?B?KzB2Uy9EaXVzZHAyUXdnaWh2ckhQUkRXaVh4N3VBK3JleUVNcDZPMVlYeldr?=
+ =?utf-8?B?SUFmcUg1UzZPSndZaFZpWkxDSzBVaURSdjgwNUQ1MEtMY2RxWG5rblNtZFdE?=
+ =?utf-8?B?TEd3bmZ6c2hSMStLaWErRUFnV2tMV09jWG5xNGlPQThmanVSZHluVDVaV2Ra?=
+ =?utf-8?B?bmE1d0dCMXBJOTFibk9EaFltdHp4ZUlxdzdRSlZCOTEyWXJMVjZpSFRFRkhm?=
+ =?utf-8?B?NkZna0xOVldkSkYybmVsb1haeGFjdmtPSjNCdWsvczl2QXFKYXdDUWVzUjUv?=
+ =?utf-8?B?VXFKMTVqUzk3ZU1RUkNwYUVraThsUTFRU0wzV2ZjUGNSVGpWdkcrUnd6bWhO?=
+ =?utf-8?B?YU45ZkFTM3hZZyt2b1RDc2ViUVRtdlNnZFVaUEhQMXMrT3F5MHZyK0Rtckxy?=
+ =?utf-8?B?dGs4aUwwTHlCMk53QzlrMVpLSTJoZmRnR0pPM25JQ1F1WXV6RDNjWjJFRmxX?=
+ =?utf-8?B?VGVKL2NySEdIdUgyRFZacUxiVGtUeWsyT291Uld1TmxGRFFJaDJ1UEZheDBu?=
+ =?utf-8?B?ZnAySGR4M1hPaGYvUTFKUkRLZ3lKTUswYmZTRjNJSFBlL1N1ekw3Rm56WDZC?=
+ =?utf-8?B?SmpqYndSaUZ1K0xDVXh4eHcvYjhwL1NvMVAwUWhsSFpqU2hDbWQ1ay9idVhZ?=
+ =?utf-8?B?SUthU0NTRVF5a1A1Q0syYzI4Zzh4TXdtdk5POGJzRDEvZElFOGNjc0N2RVo2?=
+ =?utf-8?B?bXBqQlBwREkwbnJ2dUo4R3hTV1JkTGVnU1VWNnJzMjBoWVczQ3JiUHdSRldp?=
+ =?utf-8?B?Y0YrZm9iZTY2ekcvUWRiclhJMk5WL29PQ25tNEpTNENKeVRXc2VZRGY1a2RK?=
+ =?utf-8?B?TzVJSUdiN0wyaTRFYllMdnora2lWcUNNdGJxTmtaUTk0QzZqSVAyS1lSRmFl?=
+ =?utf-8?B?ZERhMUZraThUR2xLRWJ0Wk9jTzQ5NXJCNis3d0VDQkN5Q0NzM2U4Yk5RcHhm?=
+ =?utf-8?B?N3BYeW1hOENIWVh2SS9hUmN0NVRBSGJFY0ExYi9oS0kzWTljaUZ1UlVhQ0hz?=
+ =?utf-8?B?SEZuVG04VGxVZmtqUlh4cWp4TmttMy9YWDVkS3BuOXN0Y3YxZ2RwVm1ZSTkw?=
+ =?utf-8?B?ZXRLbHJWREduM3VrWGRPRWQxVUc4L0VMQVEvREs3RDBGd1FSNVZXWmVoeXMx?=
+ =?utf-8?B?M3dmNGFqTXFiMEtrM1VXNXE3WGF2UENnK0JOSTlvS2J0R09MQk8yQUk1RXhN?=
+ =?utf-8?B?MkVzTGsxaFkvZDdVT0lRREtQSWtGSGVNZnpZclhQV1FMTDlycnVNTjdhNUUr?=
+ =?utf-8?B?Qm5pTG8rakREcW96VXBiMEZRejJEaTNBOHZKUmFWbVJjTEQxbXYvNDBPZ1Zq?=
+ =?utf-8?B?aXY1SVBwWTdqMHcwU3M3YTJUdXlkckpHdVEza2pKa1ZNbmZPTWFSbVNLNWU4?=
+ =?utf-8?B?dmQ5aCtFRFRKV01vN1I0UWNrYlFvREx4NDRsUkMyTlYzRlpoVFBhNUYzSHFq?=
+ =?utf-8?B?cHc3WVRNeDN4RVpYRnVBTWR6SWdDc3VxTTBVSmFtQ1Y3YmN2N0JMeEpYWHRZ?=
+ =?utf-8?B?L2t2UmJmMk9QWFJvdmx5eEdmZ3B3RkVaZjVXMkZ2NW81aDcxSVVlVUlXVFBH?=
+ =?utf-8?B?ZkNyMkdPQU5VYjExbE4xbW9PcmhZY2MveEhjYzBHK0pUSlhnS1cwVVFwWmNm?=
+ =?utf-8?B?b3MzZ01oQnN6STdRekZReDJPZEx5VDk5M0tRWUgyS2YyNHBBRjhVUzk1eUNM?=
+ =?utf-8?B?Ukk5aktXdVhnQUo4b3lBZGk0aTRMRnB3dy8zUUNKWHl6YlpnQWpwdjdFVkll?=
+ =?utf-8?Q?An+IzUruMY7CxDvwWdnaMmfzhdsMr4DGg77fB?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4fbde93f-252c-4c8e-8d31-08df22ee888d
+X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 14:39:59.9509
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Fd+/ZjPwPHQ1yrhmcZ8pZL4z1NQ9hu1ndX5VgLrJxTjEAd08LNKoNaO6hhDqN3vx3dIAGlvIfnROPOnTXlQ9CWq59tUYiVuI01v19+o8EQ2nMd6fCYxOCtK/JV6HgLQU
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8623
 
-On 10/4/2026 9:51 AM, François Roux wrote:
-> On the Microsoft Surface Pro 11 (X1E80100, "microsoft,denali"), the
-> WCN7850 hardware rfkill input reads as "radio off" and the OS has no
-> way to control it. ath12k enables hardware rfkill handling, so Wi-Fi
-> stays hard-blocked:
-> 
->   iwd: Error bringing interface 4 up: Operation not possible due to RF-kill
-> 
-> ACPI platforms can opt out through ath12k_acpi_get_disable_rfkill(),
-> but DT platforms cannot. A DT property was proposed for this and
-> rejected, because it describes what the OS should do rather than the
-> hardware. The suggested alternative was to handle this machine in the
-> driver, keyed on the board compatible and the device ID, until a
-> connector binding can describe a broken rfkill line. Do that.
-> 
-> Tested on a Surface Pro 11 with next-20260929, booted with the
-> unmodified mainline DTB: the interface is no longer blocked and
-> connects.
-> 
-> Link: https://lore.kernel.org/all/2ixwny6hzumlqmok5cjwutvtk7nzmx4t3dhxc44ao4l2u755pj@n6m7jyxf2o62/
-> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> Assisted-by: LLM
-> Signed-off-by: François Roux <franzelfranzel@gmail.com>
-> ---
-> This replaces my RFC series "Allow DT boards to disable WCN7850 hardware
-> rfkill", which duplicated the disable-rfkill DT property already proposed
-> and rejected in the Surface Pro 11 series:
-> 
-> https://lore.kernel.org/all/20261003091509.4822-1-franzelfranzel@gmail.com/
-> https://lore.kernel.org/all/20251220-surface-sp11-for-next-v5-2-16065bef8ef3@gmail.com/
-> 
-> The code is Manivannan's suggestion from that thread. Jérôme reported
-> there that the Surface Laptop 7 (microsoft,romulus13/15) has the same
-> problem. I left it out because I cannot test it.
-> 
->  drivers/net/wireless/ath/ath12k/core.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-> index 0c72948f3..dc41a2a7d 100644
-> --- a/drivers/net/wireless/ath/ath12k/core.c
-> +++ b/drivers/net/wireless/ath/ath12k/core.c
-> @@ -83,6 +83,16 @@ static int ath12k_core_rfkill_config(struct ath12k_base *ab)
->  	if (ath12k_acpi_get_disable_rfkill(ab))
->  		return 0;
->  
-> +	/*
-> +	 * TODO: On the Microsoft Surface Pro 11, the OS cannot control the
-> +	 * WCN7850 hardware rfkill input, which reads as "radio off". Keep
-> +	 * hardware rfkill disabled there. Ideally this would come from the
-> +	 * connector node of the board DT, but that binding does not exist
-> +	 * yet, so handle it in the driver for now.
-> +	 */
-> +	if (of_machine_is_compatible("microsoft,denali") && ab->id.device == 0x1107)
-> +		return 0;
-> +
+Hi Johannes,
+ 
+v3 fixes the commit formatting issue you pointed out.
+Please pull the following nxpwifi updates.
+ 
+Thanks,
+Jeff
 
-my preference would to to break this out into a separate table-driven function
-so that if other devices have this issue they would just need to add to the table.
+The following changes since commit 21b4248bfa0f410fa22202fc2c82f4808d672cda:
 
-reference ath11k_core_get_usecase_firmware() as a table-driven solution for a
-different device-specific problem (selects different firmware for specific
-compatibles).
+  Merge tag 'ath-next-20260927' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath (2026-09-28 11:49:26 +0200)
 
+are available in the Git repository at:
 
->  	for (i = 0; i < ab->num_radios; i++) {
->  		ar = ab->pdevs[i].ar;
->  
-> 
-> base-commit: 6474fa070f2b8013b4b87350b775b8c3be6e8aac
-> prerequisite-patch-id: aafe3fac38f4020441979665509928f8cc832095
+  https://github.com/nxp-upstream/nxpwifi-next.git tags/nxpwifi-next-20260929-v3
 
+for you to fetch changes up to 93a443bb4e91183101f2a5faf826c41293aedcce:
+
+  wifi: nxpwifi: bound debug info output (2026-10-05 21:53:08 +0800)
+
+----------------------------------------------------------------
+nxpwifi patches for Linux v7.4 (PR #1)
+- Add IW610 SDIO support
+- Fix error handling issues
+- Add bounds checking for debugfs output
+- Validate variable-length IE parsing
+
+----------------------------------------------------------------
+Aamir Ahmed (1):
+      wifi: nxpwifi: validate variable IE lengths in beacon parser
+
+Heyang Tan (2):
+      wifi: nxpwifi: bound histogram debugfs output
+      wifi: nxpwifi: bound debug info output
+
+Jeff Chen (6):
+      mmc: sdio: add NXP IW610 device ID
+      mmc: core: add NXP IW610 base ID and block size quirk
+      wifi: nxpwifi: Add support for SDIO-based IW610
+      wifi: nxpwifi: Limit channel width based on firmware capability
+      wifi: nxpwifi: fix return value check in change_vif_to_sta/ap
+      wifi: nxpwifi: fix missing error codes in _nxpwifi_fw_dpc()
+
+ drivers/mmc/core/quirks.h                   |  3 ++
+ drivers/net/wireless/nxp/nxpwifi/11ax.c     |  2 ++
+ drivers/net/wireless/nxp/nxpwifi/11n.c      |  4 ++-
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c |  6 ++--
+ drivers/net/wireless/nxp/nxpwifi/debugfs.c  | 31 ++++++++++++---------
+ drivers/net/wireless/nxp/nxpwifi/fw.h       |  2 ++
+ drivers/net/wireless/nxp/nxpwifi/main.c     | 15 ++++++++--
+ drivers/net/wireless/nxp/nxpwifi/scan.c     | 18 ++++++++++++
+ drivers/net/wireless/nxp/nxpwifi/sdio.c     | 16 +++++++++++
+ drivers/net/wireless/nxp/nxpwifi/sdio.h     |  1 +
+ drivers/net/wireless/nxp/nxpwifi/util.c     | 43 +++++++++++++++++------------
+ drivers/net/wireless/nxp/nxpwifi/util.h     |  1 +
+ include/linux/mmc/sdio_ids.h                |  2 ++
+ 13 files changed, 105 insertions(+), 39 deletions(-)
