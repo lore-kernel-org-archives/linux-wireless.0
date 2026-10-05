@@ -1,45 +1,50 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-168.mta0.migadu.com [91.218.175.168])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740FF380FD8
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E27639150A
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:52:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.168
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233410; cv=none; b=E0X7vazm1ZTYdSXsZDEzOge6Z2jyj2UWHCMs3CB1wZ9eTwY60ysQHVdkcbXSE4adhXMwwewy7yQK/8+CfURFQ6F40uCeZuzlTv/p402fOvequE5GFveotyvg6iX0Pi593hejliYSSQPw47W64qGWfwLvcs3yJlUKGT2K/egYAK4=
+	t=1791233581; cv=none; b=ZWaZ94SumuBSuz8fUeXYbuM9AdLhUhpJH1y9W1QMtK7WMk5Q24mvULciPEfCk5vysEFNA92u4ULueuWQKIVMnBAm12YC2iNh67qr68hrwM5Tu/UUNnb0LhIntAM22Nto+GC/ADXxBV8obVQPhKWSIXngNsuHM1JRuLYSS4rUHJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791233410; c=relaxed/simple;
-	bh=rSwBQguv4Teq8oOgIfrxXthGTFIbt+2GuA0TEI7JfFM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=igoTe/huIidVYA9yOogsmqFmmJFT/exKpK3QMtcL4nKQMeHKgdUyut8TnJce1DKGWNYqPCnM8A3uoh0v1B8EkpouFKRaYCbbjzxhT85ZCw+sLk8PEznKHLyMhxQMxooFFg8jBTFx8jz5RcUmbmnImOs9yi6YyJjepT3JQC3YYHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qLm26rms; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791233581; c=relaxed/simple;
+	bh=Wog0iRSGKClsxMyBudxgkKM7R3EtgCsLpg841Y7blQ8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t1XjfU/OnEk64SffKhIcxf5lScbPhb2IVjLocCQtD5qPvYLFp/lm3DRGjC7PInui44o7n/btDXwTWi3Dv7MRTgAtMRXSxd67afCfEbTDjRHIf1KRFTheqfkRPN2PJRMVxIphhbxwfGymA7J7hqu917ZRSS5iXslDRQ0xhklK408=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=GkRL9Ui9; arc=none smtp.client-ip=91.218.175.168
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qLm26rms"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=5ODUUxWnA+hLb+TblYTPCDh4KRhLjHzcSioyFRK+e74=;
-	t=1791233405; x=1792443005; b=qLm26rmsAaBwUHo2MhOW6URhyLI0B5pqQvHRaTwbiFffHFW
-	qNoL0rGmHu6wwELJicwncw/6U8htG/z7bHi28s7Ld0AtrTL3NADY0zAc9VX688hqeyNur7O6j9qFq
-	ssKZJU3yNtlVUsAcf34rh05ivuWb0YF8HiFYGk8xY5PhfnairVdZNuEeS76O/h8Z3Mb82Tst8vd9V
-	rWoBzqd7/+JKZQ46u9mqH5DLGCFplnLkSsWDmHYNOlBBjC5H6dzhWmp5cdFbGnw6kk3aBprdzgmFr
-	250mR9uxuMgmo/bdFOx0WO6qM6Ply2z+Kc9cJ3+8LOS1fp52NAcRNNvGmGAYSKoA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDpdF-00000005cw8-3NKQ;
-	Mon, 05 Oct 2026 22:49:57 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 06/10] wifi: mac80211: limit injected HT/VHT MCSes
-Date: Mon,  5 Oct 2026 22:47:57 +0200
-Message-ID: <20261005224950.68e210b8487a.I2ee0e4664c54cf31002eb9e4f5190fd05ff4130f@changeid>
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="GkRL9Ui9"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Wog0iRSGKClsxMyBudxgkKM7R3EtgCsLpg841Y7blQ8=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791233573; v=1; x=1791838373;
+ b=GkRL9Ui96MIsiaCYbto9pJY337hIOBGQ8CK4WxYoeOb6Y6aOXd3akhPcuNeVrfykmSqAm6MU
+ stzLARhAYZyzBIdhFuQdWqi/TiwQipVfksJtSuX6+MT7CvwyZKewbaeR4xyFXJq8N9/1XcadJ9c
+ SBW7kaUYO83gY/IpJZ8t0WJlcxnbDSBX7zTVNHnNdvn35FVtGBA8cU4oXKqwoEb6saoOGJbUBhR
+ OBggB4SgdaSrmgCJZQlbkFUiQadFS75Y0ZxgN8UO9YQzq8QTzGnF5bFhoix+qM1SGtzp8jUkbD+
+ /1M0zSEUpzEFmNW/pyvGQU+fCyHDOqGgO0jwDMPL5eOLQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 12bd7bdb79995992;
+	Mon, 05 Oct 2026 20:52:43 +0000
+X-Mizu-Trace-ID: 12bd7bdb79995992
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Deren Wu <deren.wu@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Mark Anthony Agarro <markanthonyagarro@gmail.com>
+Subject: [PATCH wireless] wifi: mt76: mt76_connac: scan 6 GHz wildcard requests passively on connac2
+Date: Mon,  5 Oct 2026 13:52:40 -0700
+Message-ID: <20261005205240.241136-1-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261005204950.2303430-12-johannes@sipsolutions.net>
-References: <20261005204950.2303430-12-johannes@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,82 +53,77 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mark Anthony Agarro <markanthonyagarro@gmail.com>
 
-With radiotap injection the HT/VHT MCSes can be just
-about anything, but that can later get problematic.
+With WIPHY_FLAG_SPLIT_SCAN_6GHZ cfg80211 puts the 6 GHz channels in a
+request of their own and lists the APs it wants to find there in
+scan_6ghz_params. mt76_connac_mcu_hw_scan() does not read them, and the
+connac2 scan command has no field for per-target data (only a single
+bssid), so a wildcard request is sent as an active scan with an empty
+SSID. On an MT7922 the firmware then listens for about 58 ms on a
+single channel, shorter than a 102.4 ms beacon interval, and the AP used
+for testing does not answer a broadcast probe request, so the beacon is
+often missed. A scan of channel 37 (6135 MHz) found the AP in 9 to 17
+of 30 attempts, and wpa_supplicant, which scans 6 GHz this way after
+the legacy bands, ended up on 5 GHz in about four connections in ten.
 
-Limit them to the rates the device reports, which is
-presumably going to be a subset of what mac80211 can
-do, except for HT MCS 32 which some devices report as
-supported, but then TX status can't deal with it.
+Send the wildcard-only 6 GHz request as a passive scan (scan_type 0, no
+probe requests). The single-channel window becomes about 119 ms. The
+6 GHz stage is identified by sreq->scan_6ghz and not by counting
+channels. Requests with a directed SSID stay active, legacy-band
+requests are untouched, and mt7925 builds its own command from the RNR
+targets and does not use this function.
 
-If it's not supported just ignore the config.
+Tested on an MT7922 (PCIe), kernel 7.3.0-rc4, one UniFi AP with a PSC
+channel 37 BSS, same boot, random order, 30 scans per cell:
 
-Assisted-by: LLM
-Fixes: dfdfc2beb0dd ("mac80211: Parse legacy and HT rate in injected frames")
-Fixes: 646e76bb5daf ("mac80211: parse VHT info in injected frames")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+                             before    after
+  wildcard 6135 MHz           9/30     30/30
+  5320 + 6135 MHz            10/30     30/30
+  explicit passive           30/30     30/30
+  directed SSID              30/30     30/30
+  5320 MHz only              30/30     30/30
+  2.4 GHz channels           30/30     30/30
+
+wpa_supplicant cold start picked 6 GHz in 18 of 30 attempts before and
+in 30 of 30 after; the 6 GHz stage takes about 0.35 s longer. Sending
+scan_type 1 with no probe requests behaves like the unmodified request,
+while scan_type 0 with probe requests works, so the effect comes from
+the scan type and the listen window, not from the probes.
+
+Not tested: non-PSC channels, scheduled scan, other APs, MT7921 and
+MT7902 parts. This does not fix the 4-way handshake timeout in #106.
+
+Fixes: 0e5911bb7cc9 ("wifi: mt76: mt7921: fix non-PSC channel scan fail")
+Signed-off-by: Mark Anthony Agarro <markanthonyagarro@gmail.com>
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
 ---
- net/mac80211/tx.c | 33 ++++++++++++++++++++++++++++++---
- 1 file changed, 30 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ff493e9203e3..34f3a4ac7278 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2172,6 +2172,27 @@ static bool ieee80211_rate_bw_usable(u16 rate_flags,
- 	return width <= cfg80211_chandef_get_width(chandef);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 2f925d22b9aa..d684fd306fee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1850,6 +1850,18 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 	req->ssid_type_ext = n_ssids ? BIT(0) : 0;
+ 	req->ssids_num = n_ssids;
  
-+static bool
-+ieee80211_vht_tx_rate_supported(const struct ieee80211_sta_vht_cap *vht_cap,
-+				u8 mcs, u8 nss)
-+{
-+	u16 map = le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map);
-+
-+	if (!vht_cap->vht_supported)
-+		return false;
-+
-+	switch ((map >> (2 * (nss - 1))) & 3) {
-+	case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+		return mcs <= 7;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+		return mcs <= 8;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+		return mcs <= 9;
-+	default:
-+		return false;
++	/* cfg80211 splits the 6 GHz channels into their own request and
++	 * describes the APs to look for in scan_6ghz_params, which this
++	 * command cannot carry. As an active wildcard scan the firmware only
++	 * listens for a short time per channel and often misses the beacon.
++	 * Scan the wildcard-only 6 GHz stage passively; directed scans stay
++	 * active.
++	 */
++	if (is_connac2(phy->dev) && sreq->scan_6ghz && !n_ssids) {
++		req->scan_type = 0;
++		req->probe_req_num = 0;
 +	}
-+}
 +
- bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
- 				 struct net_device *dev,
- 				 const struct cfg80211_chan_def *chandef,
-@@ -2368,14 +2389,20 @@ bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
- 					hweight8(info->control.antennas))
- 				info->control.antennas = 0;
- 
--			info->control.rates[0].idx = rate;
-+			/* MCS 32 and up aren't handled, e.g. by TX status */
-+			if (sband && sband->ht_cap.ht_supported && rate < 32 &&
-+			    sband->ht_cap.mcs.rx_mask[rate / 8] & BIT(rate % 8))
-+				info->control.rates[0].idx = rate;
- 		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
- 			/* reset antennas if not enough */
- 			if (vht_nss > hweight8(info->control.antennas))
- 				info->control.antennas = 0;
- 
--			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
--					       vht_nss);
-+			if (sband &&
-+			    ieee80211_vht_tx_rate_supported(&sband->vht_cap,
-+							    vht_mcs, vht_nss))
-+				ieee80211_rate_set_vht(info->control.rates,
-+						       vht_mcs, vht_nss);
- 		} else if (sband) {
- 			for (i = 0; i < sband->n_bitrates; i++) {
- 				if (rate * 5 != sband->bitrates[i].bitrate)
+ 	duration = is_connac2(phy->dev) ? 0 : MT76_CONNAC_SCAN_CHANNEL_TIME;
+ 	/* increase channel time for passive scan */
+ 	if (!sreq->n_ssids)
 -- 
 2.55.0
 
