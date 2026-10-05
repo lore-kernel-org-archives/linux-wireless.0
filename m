@@ -1,61 +1,44 @@
-Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CF240A95F;
-	Mon,  5 Oct 2026 08:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53AE044A408
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 09:44:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791190170; cv=none; b=X/vVwWlraQH/+HHrzWgzSH2cu0bVPdl28aBJ+Mkl3U8nudOjYUfQ/62WGhYp2hSQdvTjUEt3IWUmxn5/TGTVr/pszoPbTMxLaUOyMoVHD93epBH4dutGr8Yc6R8TAcL//neLxKABRSGg6HJEjhUkuZWqN7n3MGEO9VGr5+giDYQ=
+	t=1791193466; cv=none; b=Xbg3NCYTyG2BE9pgRvvriGEDKbHg+a3JwNEI6BqJWOAxYfGybHwXIXPMbMIGlZBa/sT7wAyDiLgYOfin9FLawYm/9cGDtJfZogv2wwFCYJtpzXTEuY8HpTXw24Hl8/Wbi5yISOWrhAS6mdoUR5oqlJFy3UXAO7PHY/LX5yjBmhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791190170; c=relaxed/simple;
-	bh=kawkzcMAtBLCtija+Jyr8gsMxXqYDt/q8ae3xcHWSFQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XINVNkYe+IcNNyLPP/tynjCyUkiyQYUsHnp2h5gPTPajstJpWSbdjUTIyHCdeiV558zC5R6xwO6J+63WjbcjUpAAjgdpMTCZ8w2Glqk/lJ3RIuyiqlUnFVbZRF9oU+dhQ7P0ELezu1NB6PAsPIf6oyegZHSRSkSHz1AAmyyNIWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=mPmTzUBC; arc=none smtp.client-ip=119.15.109.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
+	s=arc-20240116; t=1791193466; c=relaxed/simple;
+	bh=Lc4MIyOuqOV9PrOFrUe01P9IlgTrnM+Es6a8LiOPwRw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q8I4dZTeMNRYiwcYvdVtG9GpM1N6578zHbmL4ZhHqZ6BoWyJ88MGk+MeTTMbm2V7dsR8a3dzBC2nf7E7R2GJP/pyjXTOpV9+AVWJQ2fBDYSNhJryUSyJPVEpeE/lklAw5on78i3mQC+Ej2Gz5knri3B0b9lNcv5M2D6U5RPoias=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=u+STiLKV; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="mPmTzUBC"
-Received: from Hawking.lan (hawking.lan [10.0.1.4])
-	by www.nmnhosting.com (Postfix) with ESMTP id 6D19F42DAC;
-	Mon,  5 Oct 2026 19:49:17 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
-	t=1791190157;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O1XKMkJpYnvbxUlu+WxfAOsWKe8oWGBMCMFWNSNDQww=;
-	b=mPmTzUBChZtZFn5ZOhdj03swICEzSVX5koxXt9jP6CdM5g5+RfseyHyWtRZWcUULIdyV9H
-	l80qwZ1vq/D5QttDRJUo8LclQiBCVhmYhoxk8+Wn8cfcCVTO5OrbqcDsdC8B7AX+ocwm3C
-	h8WE6JcXJDPi886dntxTtpiTcREzHlao4to5lqlub74B/MQqI3kDoYSRvN8HXHhL+HWtkV
-	ZBoZgcS2h/MCdoGtxlg9K/mNKNnix/GDaG+RpH46uRcGa75mproVtjpwjWsPZo2XBH2y59
-	qVAmS5bCx/2uMZunsNyyHEDsSoweWRxVby/z3hPK/kT24SCSlrNieuBGMcJUpw==
-X-GPT-Reason: legitimate_transactional_personal_code_submission.
-	The email is a technical patch submission for a Linux kernel driver
-	(rtw88), which perfectly aligns with the personal/professional
-	identity of the sender (alastair@d-silva.org). The content contains
-	a standard "diff" format showing code refactoring for WiFi drivers,
-	includes specific technical logic regarding register sizes (8051
-	vs 3081), and lacks any phishing markers, urgency, or suspicious
-	links. The mailbox is expected to receive such professional/technical
-	correspondence.
-From: Alastair D'Silva <alastair@d-silva.org>
-To: linux-wireless@vger.kernel.org,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Ulf Hansson <ulfh@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Alastair D'Silva <alastair@d-silva.org>
-Subject: [PATCH rtw-next v4 4/4] wifi: rtw88: sdio: Split rtw_sdio_rx_isr into 8051 and 3081 variants
-Date: Mon,  5 Oct 2026 19:48:49 +1100
-Message-ID: <20261005084849.3109337-5-alastair@d-silva.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261005084849.3109337-1-alastair@d-silva.org>
-References: <20261005084849.3109337-1-alastair@d-silva.org>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="u+STiLKV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=B9/e4GodqHsXiw0Dsl2LgPp/7lkL3jgvyTgMF1iyV7c=; t=1791193462; x=1792403062; 
+	b=u+STiLKVcXSSCwMz3txl10AGCScMPUM1sDe63AHM2gS06erZe6dhlyKDtd1cucdRTKCRbk+gD7W
+	WCeLyNZHw5nlvcAZ1t+VmgxCfKtRmJBz1QlmJGUO+vPkUiSbuxzRukTxCPgO20djzGKf+sUtYuQMA
+	lQUJddzTZ/AeUoLYTAwYg5++upsfEZlpMVsyur5qFH+4D69MMcyJ2N1arsQz0cOGMVTAU7fnD/GkN
+	XI+4N3TjlggHEHL6Lqf7LIBCHpHYLLyF1PQSWSn/AMVmqw6vunJwYlOdaPYDBo9kJXA94xdeLZ7vv
+	bAdsueHho8QiGKb1yeTuTJNWi8kBZeznjBrQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xDfF2-00000005Ayx-1Y5o;
+	Mon, 05 Oct 2026 11:44:16 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Jouni Malinen <j@w1.fi>
+Subject: [PATCH wireless-next] wifi: mac80211: fix non-MLD link ID handling
+Date: Mon,  5 Oct 2026 11:44:14 +0200
+Message-ID: <20261005114413.816905704456.Ib59a1ecce6ad74b23e4382e03cf3c113cbbdea2e@changeid>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,116 +47,72 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Split rtw_sdio_rx_isr() into separate 8051 and 3081 variants to be
-clear. The two differences between the architectures are:
-- Register size: REG_SDIO_RX0_REQ_LEN is 16-bit on 8051, 32-bit on 3081.
-- HISR behavior: 8051 re-reads REG_SDIO_HISR on each iteration, while
-  3081 drains based on rx_len without re-reading HISR.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is a refactoring without any logic changes.
+In mac80211 the deflink link IDs for non-MLO are set to
+zero to match the array index where their pointer lives.
+However, the rx->link_id is expected to be -1 in these
+cases, so just mapping it to the link/sta_link link_id
+broke a few things such as reporting of spurious 4-addr
+frames.
 
-Assisted-by: LLM
-Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+Set the link ID to -1 in these cases.
+
+Reported-by: Jouni Malinen <j@w1.fi>
+Fixes: 6d531b9af16e ("wifi: mac80211: rework RX packet handling")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/realtek/rtw88/sdio.c | 57 +++++++++++++----------
- 1 file changed, 32 insertions(+), 25 deletions(-)
+ net/mac80211/rx.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index c74644bf14ba..8f4d18b03f68 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1426,17 +1426,13 @@ static int rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
- 	return 0;
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f5893f9c07c6..804a0dc1e35c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4345,7 +4345,10 @@ static bool ieee80211_rx_data_set_link_sta(struct ieee80211_rx_data *rx,
+ 	if (!rx->link)
+ 		return false;
  
--static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
-+static void rtw_sdio_rx_isr_8051(struct rtw_dev *rtwdev)
- {
- 	u32 rx_len, hisr, total_rx_bytes = 0;
- 	int ret;
+-	rx->link_id = rx->link->link_id;
++	if (ieee80211_vif_is_mld(&sta->sdata->vif))
++		rx->link_id = rx->link->link_id;
++	else
++		rx->link_id = -1;
+ 	rx->link_sta = link_sta;
  
- 	do {
--		if (rtw_chip_wcpu_8051(rtwdev))
--			rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
--		else
--			rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
+ 	return true;
+@@ -5292,6 +5295,7 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
+ 	struct ieee80211_fast_rx *fast_rx;
+ 	struct ieee80211_rx_data rx;
+ 	struct sta_info *sta;
++	int link_id = -1;
+ 
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+@@ -5308,11 +5312,11 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
+ 		goto drop;
+ 
+ 	sta = container_of(link_pubsta->sta, struct sta_info, sta);
+-	if (!ieee80211_rx_data_set_sta(&rx, sta, link_pubsta->link_id))
++	if (sta->sta.valid_links)
++		link_id = link_pubsta->link_id;
++	if (!ieee80211_rx_data_set_sta(&rx, sta, link_id))
+ 		goto drop;
+ 
+-	rx.link_id = link_pubsta->link_id;
 -
-+		rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
- 		if (!rx_len)
- 			break;
+ 	fast_rx = rcu_dereference(rx.sta->fast_rx);
+ 	if (!fast_rx)
+ 		goto drop;
+@@ -5575,7 +5579,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 		rx.sdata = sdata;
+ 		rx.local = sdata->local;
+ 		rx.link = link;
+-		rx.link_id = link->link_id;
++		rx.link_id = link != &sdata->deflink ? link->link_id : -1;
+ 		rx.sta = NULL;
+ 		rx.link_sta = NULL;
  
-@@ -1446,33 +1442,44 @@ static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
- 
- 		total_rx_bytes += rx_len;
- 
--		if (rtw_chip_wcpu_8051(rtwdev)) {
--			/* Stop if no more RX requests are pending, even if
--			 * rx_len could be greater than zero in the next
--			 * iteration. This is needed because the RX buffer may
--			 * already contain data while either HW or FW are not
--			 * done filling that buffer yet. Still reading the
--			 * buffer can result in packets where
--			 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
--			 * end of the buffer.
--			 */
--			hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
--		} else {
--			/* RTW_WCPU_3081 chips have improved hardware or
--			 * firmware and can use rx_len unconditionally.
--			 */
--			hisr = REG_SDIO_HISR_RX_REQUEST;
--		}
-+		/* Stop if no more RX requests are pending, even if
-+		 * rx_len could be greater than zero in the next
-+		 * iteration. This is needed because the RX buffer may
-+		 * already contain data while either HW or FW are not
-+		 * done filling that buffer yet. Still reading the
-+		 * buffer can result in packets where
-+		 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
-+		 * end of the buffer.
-+		 */
-+		hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
- 	} while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUEST);
- }
- 
-+static void rtw_sdio_rx_isr_3081(struct rtw_dev *rtwdev)
-+{
-+	u32 rx_len, total_rx_bytes = 0;
-+	int ret;
-+
-+	do {
-+		rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
-+		if (!rx_len)
-+			break;
-+
-+		ret = rtw_sdio_rxfifo_recv(rtwdev, rx_len);
-+		if (ret)
-+			break;
-+
-+		total_rx_bytes += rx_len;
-+	} while (total_rx_bytes < SZ_64K);
-+}
-+
- static void rtw_sdio_handle_interrupt_8051(struct rtw_dev *rtwdev, u32 hisr)
- {
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
- 		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
--		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_8051(rtwdev);
- 	}
- 
- 	/*
-@@ -1496,7 +1503,7 @@ static void rtw_sdio_handle_interrupt_3081(struct rtw_dev *rtwdev, u32 hisr)
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST)
--		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_3081(rtwdev);
- 
- 	/* Unmasking HIMR re-asserts the IRQ line if new packets arrived */
- 	if (rtwsdio->running)
 -- 
-2.53.0
+2.55.0
 
