@@ -1,79 +1,90 @@
-Received: from mail-139-mta247.mxyeet.net (mail-139-mta247.mxyeet.net [23.172.139.247])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD5C372B32
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 06:46:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.172.139.247
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C923371D01;
+	Mon,  5 Oct 2026 06:57:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791182814; cv=none; b=nAo0jlvDMcEfQdvpsDgIWffDj2U4DPVrhp1kUgZR7BfEgSd8ZKmAf8uWleB5BAX5dlkb9MVWEJGYBSzbWhwsbvIxDs0K2ZC0AdJBMAbjZrhKAa8zF6Zl8aFB+BOWD4zwFmX7oekVcFjI6ZplSrTUb/C0ufBryXq2ym6iIDjXNUo=
+	t=1791183475; cv=none; b=agHV4pbbPP+7twOuplTpJThIbj519te3+yFc8fOZph0tFxdl9NcOyS50ZOQAGqXRmfC2cAhVReI8Y0KQ40l9fpqOgAi1hb66st8ZSQMQgAfpbfnUrm+mRFE1/XsHGJedE3hkLBLn7p/wcYLRGa+qxWwzmW/sDzRPZmv7Ys4E17w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791182814; c=relaxed/simple;
-	bh=TNinW+JRhebAFuylBEWnK6vZV2oH/SSym98xcVEJtVA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pmqZzslZ7lYF4ilKTcYkMkudq/hVTWwjf6ATgLMShdvnZMutRg8i4HyazGmKn/uVyfEmk5H8c7mHC1N1Q8FWMkGvcORhZCfs7V3XDa9jM6PQqS3dsi4/FVBsH4oQ1UE/3QJoLxJ4+xJDpBEoeAOh238wHfIN95bth3XtGs4cTqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endrik.dev; spf=pass smtp.mailfrom=endrik.dev; dkim=pass (2048-bit key) header.d=endrik.dev header.i=@endrik.dev header.b=0suPi18D; arc=none smtp.client-ip=23.172.139.247
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endrik.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=endrik.dev
+	s=arc-20240116; t=1791183475; c=relaxed/simple;
+	bh=cakKebxd6SYR3mrRpNebAr69JFunqZ4AtJnzIzKfmks=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Y06rPT1EnLp5edhJzUzu2C0+xr/cHoDQluKGXLZvdi+/9BRL8IwZb1p4vESHWhTABQ+jOih/7zfdzPfS97SfrXOiBFK2UStVpmj8M6enyoT+eu082gPWnsvj/GDZBjhOsEKXoocy0E+T7OP/VA3cxr+eRVct+gR+T884s2orupg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=i4zioz4F; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=endrik.dev header.i=@endrik.dev header.b="0suPi18D"
-Received: from lu-shared04.cpanelplatform.com [2602:faa9:3000::1006] (Authenticated sender: relay@mxyeet.net)
- by mail-139-mta247.mxyeet.net (MailFilter Outbound) with ESMTPSA id 1a10acbfdda00089d7.003
- for <linux-wireless@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 05 Oct 2026 06:41:43 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=endrik.dev;
-	s=default; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Unsubscribe-Post:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=TNinW+JRhebAFuylBEWnK6vZV2oH/SSym98xcVEJtVA=; b=0suPi18DMldeDVX8YwPEoS9ubn
-	klefZbl+2Q6v+ignBD6YPf+8o/pe7f1Zu2slRD5z0p47B9w9zM4SHUTkBKiT71F5teL9zr/hMuqTA
-	7QYsbjUjYWB5ORSpaF6fULBQ2u9FCI7m5KKL1bW8xwtst+shff5f13+C6MZa4Lnx6+NL7mPXOgZD3
-	lVCU8AaPZvVQRea3D56a3WagvWsbqeo3BjyKcsncH4uyBH7qNvgvGSUe7igmA5B4diZYg9kPuZ/p8
-	gyW+SNgWkitYfz2a4TFuUcSqXVflLriKjk1qZ/j4wLUeq3y+Ic6+stmuixTYszJwiGg8L3li/CoM7
-	TOV0Zxiw==;
-Received: from [85.253.174.246] (port=36680 helo=noether.localdomain)
-	by lu-shared04.cpanelplatform.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.100.1)
-	(envelope-from <git@endrik.dev>)
-	id 1xDcOL-0000000EnUD-2NpI;
-	Mon, 05 Oct 2026 08:41:41 +0200
-From: Endrik Einberg <git@endrik.dev>
-To: netdev-bot+sinfo@kernel.org
-Cc: Endrik Einberg <git@endrik.dev>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: iwlwifi: mld: include VI packets in low latency detection
-Date: Mon,  5 Oct 2026 09:40:40 +0300
-Message-ID: <20261005064107.145800-1-git@endrik.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <179115079203.1402591.13378681769152307097@kernel.org>
-References: <179115079203.1402591.13378681769152307097@kernel.org>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="i4zioz4F"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6956vNi051722935, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791183443; bh=cakKebxd6SYR3mrRpNebAr69JFunqZ4AtJnzIzKfmks=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=i4zioz4FFbjazCODfYhyRl8PVfrUadFgFT2pNWMtvmG7lcR2uNrzej3nx/QBIeNX2
+	 MB80mlkYgwGsaakLTXGWSFKUnzqx+w4swaJmcJIs7FBCBbYOEOJd1gBj1LznR0rAKY
+	 J9nQAiOXvrRUW7wEDHM2gKM+8U4iDJuCB3cT57JjDeEq2dzGwNiZOV1o1IW+wRjZt+
+	 csNdYHp+7Eca2EiuXksxxchwa8XFApnBm08mZIXBvhaGzUBH0Rlqoxp4stRTpg43oO
+	 FTElritKtmGJvtsHhaf1g0AV9Bxcsg94N6nKeDMVdXGgFkbdm2uoXPkdo+jV/qTgtC
+	 44+ybIbJ42Czg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6956vNi051722935
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 5 Oct 2026 14:57:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 14:57:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 14:57:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 5 Oct 2026 14:57:23 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Alastair D'Silva <alastair@d-silva.org>, Luka Gejak
+	<luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Ulf Hansson
+	<ulfh@kernel.org>, Jernej Skrabec <jernej.skrabec@gmail.com>, Kalle Valo
+	<kvalo@kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>
+Subject: RE: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
+ interrupt storm
+Thread-Topic: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
+ interrupt storm
+Thread-Index: AQHdUThjHehNiw0xlkuYT1bxT/PheLbuUbcg//+M34CAAJPnEP//jsQAgACJRnA=
+Date: Mon, 5 Oct 2026 06:57:23 +0000
+Message-ID: <f99dd5a0de9343c495b072ced41f9298@realtek.com>
+References: <20261001000303.3505264-1-alastair@d-silva.org>
+	 <20261001000303.3505264-2-alastair@d-silva.org>
+	 <661b9fc47ce942a491f8c53d90fdf39a@realtek.com>
+	 <6ef33599cc268fa12e4663461248f1700969df34@linux.dev>
+	 <c852aa23403e4ec7ad80a17a6dc18d0e@realtek.com>
+ <9bb2ad98540bd716d00a0eb0b4faf3593c06cc7a.camel@d-silva.org>
+In-Reply-To: <9bb2ad98540bd716d00a0eb0b4faf3593c06cc7a.camel@d-silva.org>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-From-Rewrite: unmodified, there is a forwarder that points to the actual sender.
-X-AuthUser: endrik@endrik.dev
-X-NCN-Id: qrBpiUCfTMOkjygEbw==
 
-Hi,
-
-This was discovered during Wi-Fi troubleshooting with LLM assistance,
-then confirmed through runtime testing and manual code inspection.
-
-Synthetic video-priority UDP traffic did not automatically
-activate low-latency mode, whereas voice-priority traffic did
-(observed through the iwlmld debugfs state).
-
-This is definitely not a theoretical bug.
-Whether it causes actual noticeable performance issues is unconfirmed.
-
-Thanks,
-Endrik
+QWxhc3RhaXIgRCdTaWx2YSA8YWxhc3RhaXJAZC1zaWx2YS5vcmc+IHdyb3RlOg0KPiBPbiBNb24s
+IDIwMjYtMTAtMDUgYXQgMDU6MzAgKzAwMDAsIFBpbmctS2UgU2hpaCB3cm90ZToNCj4gPiBMdWth
+IEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4gPiBJIHRoaW5rIHlvdSBt
+aXNzZWQgbXkgcmV2aWV3IGF0IFsxXS4NCj4gPiA+DQo+ID4gPiBbMV06aHR0cHM6Ly9sb3JlLmtl
+cm5lbC5vcmcvYWxsLzIwMjYxMDAxMDYwMjEzLjI0NzU5LTEtbHVrYS5nZWpha0BsaW51eC5kZXYv
+DQo+ID4NCj4gPiBJIGZlZWwgbGlrZSB0aGF0IG1pZ2h0IGJlIGV4aXN0aW5nIGlzc3VlPyBJZiBz
+bywgdXNlIG90aGVyIHBhdGNoZXMgdG8gZml4DQo+ID4gdGhlbS4NCj4gPg0KPiANCj4gWWVzLCBp
+dCdzIGFuIGV4aXN0aW5nIGlzc3VlIC0gSSBjYW4gc3VibWl0IHRoYXQgaW4gYSBzZXBhcmF0ZSBz
+ZXJpZXMgaWYgeW91IHByZWZlci4NCg0KWWVzLCBwbGVhc2UuIA0KDQpJZiB0aGlzIHNlcmllcyBp
+c24ndCBodXJyeSwgcGxlYXNlIHB1dCBpbnRvIHRoZSBzYW1lIHNlcmllcy4gDQooSSdkIHNlbmQg
+cHVsbC1yZXF1ZXN0IGZvciBjdXJyZW50IC1uZXh0IGN5Y2xlIHRoaXMgd2Vlay4pDQoNClBpbmct
+S2UNCg0K
