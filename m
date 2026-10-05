@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980D3455601
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 14:30:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3114534AE
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Oct 2026 14:30:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791124224; cv=none; b=Ak9367OGi0D7XNeh6Dt54poALKQRQTKSbWfxILrbXtaE2s4LargbNskXsfQuySZebjDeKNsELRXN1Y9ZfQm2h5TBoaDh/02SiFjyK6O7NLQB6MDejuNSUV7MIZZzcKKv0IzkhnUJam4hrKsy76VakLOSly4gWfpLAbBFleYDQok=
+	t=1791124227; cv=none; b=WQFvcJWareAvsXp77WSdXVbIIrretiMyuE4E3on3B3ecnZCgQ3UsGP8+NadUgMPvlkeX8AdoyTNXyF1ZJ2liRQ9tF8at/U4lpjGzzrrdfP07hwaybMxZWu/zGxfXY6eJ7+RqetfKBqHttni6Z109twCH8WwvCWckqoR78t7DdEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791124224; c=relaxed/simple;
-	bh=mOgBICNgpTUljn4oqy8MHXnmaPwZWeGCdfBhI2BY/u8=;
+	s=arc-20240116; t=1791124227; c=relaxed/simple;
+	bh=y6jIroXQiQReTcWxVXS6AgM8t1chRAm/c5Cf/qBhyLA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iblOT3GRo1TMW61aqyC5DiZf5+pErfBrSAkLwnKeV23dtgLRTo3Qdvr6K9VOdqHWPv9TXkfhuivb3FWz7JxWJPc17uuKbmW7rfUvTS26QNoyrERqRLGrAeY/2eSbKGQ5xb1IOgqcNFtAmkdJi27qOn3L6/eEwJfwxTM2InWbzEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D0J2cxnp; arc=none smtp.client-ip=198.175.65.9
+	 MIME-Version; b=X6qXhNsMgag6x2+A9Of5qbrrAjPMiDIcarr9u/O5tavH9jkvEifFJ3gvRe7hXToru70bhHdynFN58xzA0RIDK4FXKxvtMpTpgmjaDiUZUJQXQDgvS3hgnVwl/Ye9n+b4jQfyh01CckHo04WEX0/uLbzqCbOBCyb1b90y56XF4SI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=j1Mtby5M; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D0J2cxnp"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="j1Mtby5M"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791124224; x=1822660224;
+  t=1791124226; x=1822660226;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mOgBICNgpTUljn4oqy8MHXnmaPwZWeGCdfBhI2BY/u8=;
-  b=D0J2cxnpZh0sXWAFrvPEnbdz+nOhHVf6qsDQ9G0/QFFnfQxzjCX8Rfsn
-   U6KNdUuJ+1GT7mkc6qerqIZG3j6WRruLpjujctxAVC4FuJHDbd6ec3zcX
-   ead4cL+vsXZJ0kaJPrvyEb4zGjTCl2nLNV3wMOHKT33klidQZQKGEm9In
-   8gKv1urQfaIG/XHlrEvFEZcZWMtqbmBQiKwpRim/9FKeiGHnzoZN+QqYC
-   ogxaC8TDYWHyobKooui7rjI1G2KE1ZE32fGrr4V06UH/9Nal02qLK2xq6
-   WQsF3iPxQrCHsREW+Fh6DGnv2MHTcApwCYIbVk+eJzTEuM/jrMG4cQkzh
-   A==;
-X-CSE-ConnectionGUID: CDXX/SJxTtCTiwHoKO7psQ==
-X-CSE-MsgGUID: hakzWoMtQDSPX3IWtE6vpQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="113591436"
+  bh=y6jIroXQiQReTcWxVXS6AgM8t1chRAm/c5Cf/qBhyLA=;
+  b=j1Mtby5M3x6g3HOEXTRGiZlDSYcfys1nk9cF7rwrhRIqfSMECVfrIQ4k
+   gbelU7BOs2IdOk0JiTYLHCPEp+drPq/i3Fxp64snQr1aICn9UX2sJ7DQQ
+   ftv38ryP1bleXUHpBKnAfwFx91KehgWkTb65yf7QiGZxFzQZS6jXMgzmr
+   u/2xEYA/qy570SvLFs+DoOeSNZbcRybyY0WLmu58g9tMMi5LXnnZ4fx7C
+   hRWwREeTc40P9wp29jNPe3fy9ovnosFwppN7EoRGgNtQpXaXOlqEPR0SR
+   AwjhZ9DBAmrMAJZVU4J3Cqbl5h75zXh7KSPzs23aIBurE7F5dVI+xki4X
+   w==;
+X-CSE-ConnectionGUID: b9eANL2TQVGriO10gku4xA==
+X-CSE-MsgGUID: 3GNXRMjvSjSLhVWJIZJgBw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="113591439"
 X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
-   d="scan'208";a="113591436"
+   d="scan'208";a="113591439"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2026 07:30:24 -0700
-X-CSE-ConnectionGUID: +5Wn+Q7hQye/f3tqNnCobQ==
-X-CSE-MsgGUID: q5ujxwi9TI6oSfl6YeQYYg==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2026 07:30:25 -0700
+X-CSE-ConnectionGUID: ZzkFaSshSGucO7RqipB6ww==
+X-CSE-MsgGUID: yP6zSdyoSp67bzeNOTomwA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
-   d="scan'208";a="304576909"
+   d="scan'208";a="304576915"
 Received: from weis0041.iil.intel.com ([10.12.217.187])
-  by fmviesa001.fm.intel.com with ESMTP; 04 Oct 2026 07:30:22 -0700
+  by fmviesa001.fm.intel.com with ESMTP; 04 Oct 2026 07:30:23 -0700
 From: Ilan Peer <ilan.peer@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Ilan Peer <ilan.peer@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH v3 08/11] wifi: mac80211_hwsim: nan: use ieee80211_is_nan_beacon() helper
-Date: Mon,  5 Oct 2026 11:44:55 +0300
-Message-ID: <20261005084458.3666739-9-ilan.peer@intel.com>
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 09/11] wifi: mac80211_hwsim: nan: prepare for more configurable NAN settings
+Date: Mon,  5 Oct 2026 11:44:56 +0300
+Message-ID: <20261005084458.3666739-10-ilan.peer@intel.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261005084458.3666739-1-ilan.peer@intel.com>
 References: <20261005084458.3666739-1-ilan.peer@intel.com>
@@ -62,49 +61,113 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use the new ieee80211_is_nan_beacon() helper to identify NAN beacons
-instead of open-coding the cluster ID and vendor element checks.
+In preparation for handling more of the NAN configuration setting, do
+some refactoring and cleanup:
+
+ - Extract mac80211_hwsim_nan_set_config() and call it both when NAN is
+   started and when the configuration changes.
+ - Add NAN_BEACON_ELEM_LEN instead of the hardcoded 27.
 
 Assisted-by: GitHubCopilot:claude-opus-5
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_nan.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+ .../net/wireless/virtual/mac80211_hwsim_nan.c | 32 +++++++++++++++----
+ 1 file changed, 25 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-index 2d9f6d7b9251..fab6bd9e3cfb 100644
+index fab6bd9e3cfb..2b30933ef2f9 100644
 --- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
 +++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-@@ -230,9 +230,7 @@ void mac80211_hwsim_nan_rx(struct ieee80211_hw *hw,
- 	ssize_t data_len;
- 	u8 slot;
+@@ -33,6 +33,9 @@ static_assert(DW0_TSF_MASK + 1 == 8192 * 1024);
+ #define NAN_RSSI_CLOSE (-60)
+ #define NAN_RSSI_MIDDLE (-75)
  
--	/* Need a NAN vendor element at the start */
--	if (skb->len < (offsetofend(struct ieee80211_mgmt, u.beacon) + 6) ||
--	    !ieee80211_is_beacon(mgmt->frame_control))
-+	if (!ieee80211_is_nan_beacon(mgmt, skb->len))
- 		return;
++/* Size of the NAN vendor element carrying the mandatory attributes */
++#define NAN_BEACON_ELEM_LEN		27
++
+ /* Quiet time at the end of each slot where TX is suppressed */
+ #define NAN_CHAN_SWITCH_TIME_US		256
  
- 	data_len = skb->len - offsetofend(struct ieee80211_mgmt, u.beacon);
-@@ -279,17 +277,6 @@ void mac80211_hwsim_nan_rx(struct ieee80211_hw *hw,
- 	if (rx_status.signal < NAN_RSSI_MIDDLE)
- 		return;
+@@ -685,7 +688,7 @@ mac80211_hwsim_nan_tx_beacon(struct mac80211_hwsim_data *data,
+ {
+ 	struct ieee80211_vendor_ie nan_ie = {
+ 		.element_id = WLAN_EID_VENDOR_SPECIFIC,
+-		.len = 27 - 2,
++		.len = NAN_BEACON_ELEM_LEN - 2,
+ 		.oui = { u32_get_bits(WLAN_OUI_WFA, 0xff0000),
+ 			 u32_get_bits(WLAN_OUI_WFA, 0xff00),
+ 			 u32_get_bits(WLAN_OUI_WFA, 0xff) },
+@@ -694,7 +697,7 @@ mac80211_hwsim_nan_tx_beacon(struct mac80211_hwsim_data *data,
+ 	size_t alloc_size =
+ 		IEEE80211_TX_STATUS_HEADROOM +
+ 		offsetofend(struct ieee80211_mgmt, u.beacon) +
+-		27 /* size of NAN vendor element */;
++		NAN_BEACON_ELEM_LEN;
+ 	struct ieee80211_nan_master_indication master_indication;
+ 	struct ieee80211_nan_attr nan_attr;
+ 	struct ieee80211_mgmt *mgmt;
+@@ -905,11 +908,20 @@ mac80211_hwsim_nan_sched_update_work(struct wiphy *wiphy,
+ 		ieee80211_nan_sched_update_done(data->nan.device_vif);
+ }
  
--	/* Needs to be a valid NAN cluster ID in A3 */
--	if (get_unaligned_be32(mgmt->bssid) != ((WLAN_OUI_WFA << 8) | 0x01))
--		return;
++static int mac80211_hwsim_nan_set_config(struct mac80211_hwsim_data *data,
++					 struct cfg80211_nan_conf *conf)
++{
++	data->nan.notify_dw = conf->enable_dw_notification;
++
++	return 0;
++}
++
+ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct cfg80211_nan_conf *conf)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
++	int err;
+ 
+ 	if (vif->type != NL80211_IFTYPE_NAN)
+ 		return -EINVAL;
+@@ -917,6 +929,10 @@ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
+ 	if (data->nan.device_vif)
+ 		return -EALREADY;
+ 
++	err = mac80211_hwsim_nan_set_config(data, conf);
++	if (err)
++		return err;
++
+ 	/* set this before starting the timer, as preemption might occur */
+ 	data->nan.device_vif = vif;
+ 	data->nan.bands = conf->bands;
+@@ -945,8 +961,6 @@ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
+ 
+ 	ether_addr_copy(data->nan.cluster_id, conf->cluster_id);
+ 
+-	data->nan.notify_dw = conf->enable_dw_notification;
 -
--	/* We are only interested in NAN beacons */
--	if (nan_elem->id != WLAN_EID_VENDOR_SPECIFIC ||
--	    nan_elem->datalen < 4 ||
--	    get_unaligned_be32(nan_elem->data) !=
--	    (WLAN_OUI_WFA << 8 | WLAN_OUI_TYPE_WFA_NAN))
--		return;
+ 	return 0;
+ }
+ 
+@@ -983,13 +997,17 @@ int mac80211_hwsim_nan_change_config(struct ieee80211_hw *hw,
+ 
+ 	wiphy_debug(hw->wiphy, "nan_config_changed: changes=0x%x\n", changes);
+ 
++	if (changes & CFG80211_NAN_CONF_CHANGED_CONFIG) {
++		int err = mac80211_hwsim_nan_set_config(data, conf);
++
++		if (err)
++			return err;
++	}
++
+ 	/* Handle only the changes we care about for simulation purposes */
+ 	if (changes & CFG80211_NAN_CONF_CHANGED_BANDS)
+ 		data->nan.bands = conf->bands;
+ 
+-	if (changes & CFG80211_NAN_CONF_CHANGED_CONFIG)
+-		data->nan.notify_dw = conf->enable_dw_notification;
 -
- 	u8 *nan_defragmented __free(kfree) = kzalloc(data_len, GFP_ATOMIC);
- 	if (!nan_defragmented)
- 		return;
+ 	if (changes & CFG80211_NAN_CONF_CHANGED_PREF) {
+ 		scoped_guard(spinlock_bh, &data->nan.state_lock)
+ 			data->nan.master_pref = conf->master_pref;
 -- 
 2.55.0
 
