@@ -1,104 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87BD313E36;
-	Mon,  5 Oct 2026 16:41:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96564CEE55
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 16:45:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791218504; cv=none; b=lQelC+a5pOt9Q6hBYUZalkjGNoqU7s6erOLmtblwvSOHEWE0aZgY9HUFmCn0gxOvvYadXT5XwG1VeAC7EQ5i3BfznfQxM5QdaluE/8FHd9sRlc4PP25uRySY7gvbG3ZIIYqFfZ8EJoM+BJIo4C+wklMK0g5W4znjs/SqrLYAzIk=
+	t=1791218736; cv=none; b=A6GDPuLBolNFpBVRIUHCRlnTOtXo2wcoq5oJrefX1UVhs3y2U7rRw2zCZbI48kC8Mc8xl+caLXLfQ3R6qEqaK7/V68WIF8Vrd4+3nJVZyMLkNWD37jBlMXs7bjUFHAF7hFI7CKHMXt9Tc5LyvGUchScBpQ3m2TI2XGHlGa4mK90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791218504; c=relaxed/simple;
-	bh=+X2OntxrMTq2KSrF/FK1TbUaOawdn0FYEbaeGy3cIa8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=bk/ekS7blznSbsrS59suNtJBpd4B8kuKpDksrDi8BkSViGMmN8xWIAB0w/Sh1QSKv3bCuGa7mPYcm4HI1fYuFD+w2SpkNdVJK8Osah/skvFFRzLAJ2/HKMRhyy2qCapQ58C8UjtJZkyYCQ3wa4oFk+ZTmzOkoyzluuO1YutNy2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hmEars6e; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791218736; c=relaxed/simple;
+	bh=7D6Gl2egxCSHnlxTzxwYRhz1lqivuXqCWdEjUWKxNjc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OAIXPVU5xWXNw1L5F2VkbjwhtX6A0u6ZUhzv5AP4J6odQ7OHjjh8+7cwJxqXwsNeDI4oWF0VSMEiyo9ZQ6F5tuAs7/KEy/uV1YePuobyTocI4NuxGJ6FYNGCZCQpWLr+Omi6VqWJHdMDu5ar+WUGH2HBWsCKwlRq+Eau+6egEgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CDkz99wR; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hmEars6e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E841F000FF;
-	Mon,  5 Oct 2026 16:41:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791218503;
-	bh=ACSssUGKie/5eVZn/j7clwXvC4MTmISK/f7AzHTT/3A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=hmEars6ew5+YbrRD+7XLCHSA9cc1J3iBUUrqtEQ7cEbqkGUIC2ch7qbL8VmiPjUQT
-	 XlduUY3JUBTpbVMnZx+7LLH9rETL1YIlR+PwqK2+x1iNA60y3QJ4+sYhvWVFhBKm0i
-	 MEkiWKRHfQVXfTW82ZNrJ2R3AfKVdKuHLEdmL7FMpxQVwIkoWT8vPUEOnPLnPCHTjw
-	 8Pv+aQmncE1OfyyDaAqYzTbv96s/SCAZh/SviCUvZCmltKHAA0rm0ksnofutqgH2SX
-	 cMokhwVuYDjTOFpUKbQSD8k1vKLUskl58yfzGvTyHX+hRbLxdtTqLglJgZEw8KmJZq
-	 DwXOhjqIy9FZQ==
-Date: Mon, 5 Oct 2026 11:41:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, mani@kernel.org,
-	jjohnson@kernel.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v15 0/2] PCI: Add device-specific reset for Qualcomm
- devices
-Message-ID: <20261005164141.GA574887@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CDkz99wR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791218733;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CpyQBAbjoL+kog2eecxlfPx2SlC8rsPqvGk/Sf5CfWA=;
+	b=CDkz99wRAVgqvYCFrNy/eUrCt3klaf/7z4dZZe3bnPFk1mRp9OI+Lr+KMCdcMqV7DmbyFs
+	HNErHBFzpdaufY3BU9JOLZ65DCLf7+ZzKmDRss9zAzHqmW09e5Lo7YxFHUard1/rfFXXZF
+	rhRPl3AMIUPYSy/JalxzfzhLyqRieEo=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-155-abrwgGzRO3Ck7eDIxy74tA-1; Mon,
+ 05 Oct 2026 12:45:28 -0400
+X-MC-Unique: abrwgGzRO3Ck7eDIxy74tA-1
+X-Mimecast-MFC-AGG-ID: abrwgGzRO3Ck7eDIxy74tA_1791218727
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 34E021953956;
+	Mon,  5 Oct 2026 16:45:26 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0FFC71800446;
+	Mon,  5 Oct 2026 16:45:22 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net,
+	emmanuel.grumbach@intel.com,
+	herbert@gondor.apana.org.au,
+	ilan.peer@intel.com,
+	jtornosm@redhat.com,
+	linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	miriam.rachel.korenblit@intel.com
+Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
+Date: Mon,  5 Oct 2026 18:45:21 +0200
+Message-ID: <20261005164521.1037345-1-jtornosm@redhat.com>
+In-Reply-To: <4ede9873924541b7bed3fc09f5b8c8eb0415ea40.camel@sipsolutions.net>
+References: <4ede9873924541b7bed3fc09f5b8c8eb0415ea40.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261005105436.83962-1-jtornosm@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Mon, Oct 05, 2026 at 12:54:34PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
-> lack working reset methods for VFIO passthrough scenarios. These devices
-> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-> broken bus reset.
-> 
-> Standard reset methods were already disabled for these devices by commit
-> 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm WCN6855/WCN7850 WiFi,
-> SDX62/SDX65 modems") because they were not working (quirk_no_bus_reset).
-> 
-> VFIO attempts to reset devices on every reassignment:
-> - For the listed modems, without a proper reset capability, these devices
-> never successfully initialize even on first VM assignment.
-> - For the listed WLAN devices, without a working reset method, the attempt
-> fails. On clean VM shutdown, the guest driver properly deinitializes the
-> device via .shutdown/.remove callbacks, leaving it in a usable state despite
-> the failed reset. However, on unclean VM termination (crash, force-off), the
-> guest driver callbacks are not triggered, the device remains in an undefined
-> state (DMA active, interrupts enabled, etc.), and without a working reset it
-> cannot be reused.
-> 
-> Add device-specific reset methods using BAR-space hardware reset registers
-> that exist in these devices:
-> 
->   Patch 1: SDX62/SDX65 modem reset via MHI SoC reset
->   Patch 2: WCN6855/WCN7850 WLAN reset via SoC global reset
-> 
-> These are true hardware reset mechanisms (not power management or firmware
-> error recovery), providing proper device reset for VFIO scenarios, allowing
-> to enforce isolation between successive passthrough users.
-> 
-> Testing shows stable operation over 100+ VM crash/reset cycles. Device-
-> specific reset is position #1 in the reset hierarchy, so these devices
-> will use hardware reset as their primary reset method.
-> 
-> Jose Ignacio Tornos Martinez (2):
->   PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
->   PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
-> 
->  drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 116 insertions(+)
+Hi Johannes,
 
-Applied to pci/reset for v7.4, thanks!
+Following your guidance, I have been working on the v3 approach:
+PTK/GTK software-only. Let me share my results, although spoiler,
+I think I need a bit more of guidance.
 
-> ---
-> v15: Address Bjorn Helgaas feedback:
->   - Explain the relationship with 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm
->     WCN6855/WCN7850 WiFi, SDX62/SDX65 modems") and previous status.
->   - No code changes from v14, only commit message clarifications (Mani's
->     Reviewed-by and Alex's Acked-by retained)
-> v14: https://lore.kernel.org/all/20260917071651.14174-1-jtornosm@redhat.com/
-> 
-> --
-> 2.54.0
-> 
+With the minimum changes on top of the fips_allows() infrastructure
+(patch below), I have bidirectional data working with SW crypto.
+mac80211 handles CCMP encryption/decryption on the host, firmware
+has no data keys.
+
+However, I had to disable RX AMPDU aggregation to make RX work.
+Without PTK in firmware, firmware does not set the correct bits
+in the Block Ack bitmap, since it cannot validate the received
+frames. The AP assumes frames were not received, retransmits,
+and eventually gives up. TX AMPDU works fine because the AP has
+the keys and sends correct BA back to the STA.
+
+Disabling RX AMPDU forces individual frame ACKs, which work at
+the PHY level without keys. The throughput cost is significant:
+~12-30 Mbps instead of ~500 Mbps with HW crypto.
+
+Analyzing the Block Ack protocol, I think the BA bitmap only
+requires the Sequence Number (from the unencrypted MAC header) and
+CRC validation (PHY-level). So neither could require decryption keys.
+Could we allow this behavior?
+Is there a firmware mode where firmware acknowledges all CRC-valid
+frames in the BA regardless of decryption status?
+That would allow RX aggregation with SW-only crypto and recover most of
+the throughput.
+
+The minimal diff on top of the fips_allows() infrastructure:
+(only applying 1/5 and 5/5 patches)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -462,7 +462,7 @@
+-	if (!fips_enabled)
++	if (fips_allows(FIPS_EXCEPTION_WIFI_MFP))
+ 		ieee80211_hw_set(hw, MFP_CAPABLE);
+
+@@ -1041,7 +1041,8 @@
+-		if (!iwl_enable_rx_ampdu()) {
++		if (!iwl_enable_rx_ampdu() ||
++		    (fips_enabled && fips_allows(FIPS_EXCEPTION_WIFI_MFP))) {
+ 			ret = -EINVAL;
+
+The first change restores MFP_CAPABLE when the FIPS exception is
+set, so WPA3-SAE association works. The second change rejects
+AddBA RX requests in FIPS mode, forcing individual PHY-level ACKs.
+
+Thank you for your help
+
+Best regards
+Jose Ignacio
+
