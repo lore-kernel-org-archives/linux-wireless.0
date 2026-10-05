@@ -1,162 +1,112 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012036.outbound.protection.outlook.com [52.101.66.36])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAEA63C4176
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 08:31:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.36
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791189106; cv=fail; b=htJGK3B5toAEtM39WThllAM/7X9LRLZByWKJ/oOGiTS4FCSa3l95fri666O75d3s4LiVNI9y1K15ufH0m2V4VJ/5uzQvVFF0bepww1EK+LOhAe5qomZdhzZxmdCV51aIyIHn2XBleW3Fvq/47B+WEHZsfXySo9KrrnVzWcTOPcE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791189106; c=relaxed/simple;
-	bh=aO5Jj3o27Uw7SF1euosf4Q5+emJRRyjfQHKPyXWkuBs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=SKd6rfqSGTL0i2w24jSD7Pm3dS5PSSDkvh1AFfqj8B3nEL7JDUwdY6zmLPG4B2CffUHTsGgVdeqmJGTm+aKLXK/KSaaNddc+7suDcautTj1Mecmp1ol3XeKplV9ZxWH0+Kn4xX/WTLJmG8Ezn+y3MMJMHCnlBMKYHRxOEMgZDf8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=nNquOgTD; arc=fail smtp.client-ip=52.101.66.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D643C9880
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 08:31:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791189121; cv=none; b=BxwiOsXb2cdA5xpS/EcKPvrMSlVD0MkGQX700/B5lyNcgoYxa/+7tZR2OU6RKPLMDBq5aog8qVG0v0e9b7uiR8pfSR1aLfihRj+SERs30poIry6/nrMqea1ti7GFjrwpLge9ni1EoQKBxqsFDhvC+OVsLNlA+7ltW7ASbASu45U=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791189121; c=relaxed/simple;
+	bh=Yom26i+bHKMHZsJ7KtA4YjRtFxhjChIbeP/SGucb9rM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=goOrfPitgEQBdi7bNmhPUV2wuzkzLLmZcLz5ZGlUGhVeaEuh87cY4GC0pTKK3lhLQl9WIoBLbbPD54T8CeWVewHk9jJ7NY2nJnHvTr+yiaop5VL6aI3hOOP6ZO6ESSfuRfD11ZiP68Ed/cd7fAVM3sRmObS2AD/H0sRfIYZcG8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=gw4qfBL5; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="nNquOgTD"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LrDKoGc0YJFd7xgujIUUZ0iCWlYGhyb0H1vs4Xor5x+h5LSIAczw28PVU8kL82HUoE9+GtUHLIWY4ZeZfdc09LgnZDZYvNbNJBygKiQnhvKnNIXmgEzW3yEqla0+cvJw6zFqELhoZLSzIElMdTaWyLFRtfbt1YS+9ZT6HCBN0PKQu2Oh6TkH8T+wEpISrhzQEugIwzJftcLtp99xH/Q0jVW9yd8vyUPnZdgY4MskszeSFkBmfOAB43804ChW3DPHForpEyVD94pvpaB/rNUvTotIvSF6s+L9BSxsFF/aqlWtc8ZFmpf5BGnDGMDULDRBiG3Y8RhSfwXqFNaYw/6x6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XzOg86OQafTaG2Nlwo1CrRayY9VjfkrZy5s0wzZli7o=;
- b=HHtN5/R3K4BFemSlQ84A+ExA447oZ+N2ezx4YlbU9qqV+h+9ASi63zcxszdeir5dz+l39DsumrKG/vHkKHhF1SrrYPLUTF4kj8zHBSyUWZElIeO1+NgqfA6R+UiJXmlfh4HPnzB7emTAeb05FUlEmlUIyAUXV1LLdNz7MYH/TmgPKuum8kNcsDCT51pZNZyBZF7tSkolgU4yOvIr4fGNJgX+vZy4Vp4RzCGLNRXhUWlR56YfC/qHBWN0PTcBs2jvFUXKqbWPcjorIuqUYFeS4QQznslY89L8XxRBYvzoPqbKl0Vs7+Zq3YlVK3MaKCYUGg1ARcsrV6SHOmF2+Vn+gQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XzOg86OQafTaG2Nlwo1CrRayY9VjfkrZy5s0wzZli7o=;
- b=nNquOgTD1gLgxpeZHCtaw9eCXUt3wNslw8f0exWlLZphEblCo2mWFZ4DoACsZSUIkn9IxL5Agv58o1kG+ZkU1nF9/uRSTs8xUQUCg4J/WihO2d1xWYLK3tb7FdNE1EmeaW53WXlkBHVHdXKWhTu/2IDaWwgCyFu0LBDZCwnFE17KhTFPvZHdLRc/1SuojhSchqnSQMQp9qOL/cKWWTugjDmrPkP8mtmAeI91gudtaKIFpbNCOyXKf4J/OV+M+FnhoAQKpw6SGlScfwL8Lbt4RGD/nqXd6wkAYh/4dMcTVoB79ZBPLAPHdt6yf+3gh6V5FnLt6x3Mt/RkevkJAG2IcQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
- by AM7PR04MB7174.eurprd04.prod.outlook.com (2603:10a6:20b:11a::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Mon, 5 Oct
- 2026 08:31:36 +0000
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0451.022; Mon, 5 Oct 2026
- 08:31:36 +0000
-From: jeff.chen_1@oss.nxp.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	francesco@dolcini.it,
-	kees+treewide@kernel.org,
-	arend.vanspriel@broadcom.com,
-	benjamin.berg@intel.com
-Subject: Re:[PATCH nxpwifi-next v3 1/3] wifi: nl80211: vendor-cmd: add NXP vendor command definitions
-Date: Mon,  5 Oct 2026 16:31:21 +0800
-Message-Id: <20261005083121.2876637-1-jeff.chen_1@oss.nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261005054414.2874415-2-jeff.chen_1@oss.nxp.com>
-References: <20261005054414.2874415-2-jeff.chen_1@oss.nxp.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AM0PR10CA0018.EURPRD10.PROD.OUTLOOK.COM
- (2603:10a6:208:17c::28) To VE1PR04MB7280.eurprd04.prod.outlook.com
- (2603:10a6:800:1af::22)
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="gw4qfBL5"
+X-UUID: 31d1cb22c09711f1b1788b6acf885367-20261005
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=ZpEvfrOsnzxI0Usk6ogp8zsWy48ijEzIpAKQBgY7nB8=;
+	b=gw4qfBL59EbyaB5Ntx9htrNZMQEjymHihFj/l9otIRJGep48No7VopN8zy6eq0VpmeDe7Q7/1afMg+4ZsmXhxoxHBvnaCy1aFj3X1vCIluPFnYK1j5HpYlppFg5k2WOOOyJh6AqjthvFh+AG9JqbT0sQcxPK3dtudArfMUEYNt8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.20,REQID:199872b9-2d74-4022-adb7-dc0e0e5dd045,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:291e20b,CLOUDID:02133ef2-e4ea-449d-852e-8cc3f93cc1bb,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 31d1cb22c09711f1b1788b6acf885367-20261005
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+	(envelope-from <anthony.liu@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1746189951; Mon, 05 Oct 2026 16:31:43 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Mon, 5 Oct 2026 16:31:42 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Mon, 5 Oct 2026 16:31:42 +0800
+From: Anthony Liu <anthony.liu@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <Sean.Wang@mediatek.com>, <Leon.Yen@mediatek.com>,
+	<Quan.Zhou@mediatek.com>, <Ryder.lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <kun.wu@mediatek.com>, <jb.tsai@mediatek.com>,
+	<emery.hsin@mediatek.com>, <linux-wireless@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, Anthony Liu <anthony.liu@mediatek.com>
+Subject: [PATCH v4 0/5] mt76: optimize mt7922/mt7928 T-put per Tx/Rx stats
+Date: Mon, 5 Oct 2026 16:31:40 +0800
+Message-ID: <20261005083140.104609-1-anthony.liu@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|AM7PR04MB7174:EE_
-X-MS-Office365-Filtering-Correlation-Id: a143095c-c06e-402f-49c6-08df22bb11a6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|376014|23010399003|366016|1800799024|6133799003|18002099003|22082099003|10067099003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	4r0lFwipssf8I3eiG6z2JVvHiMooleF/tyNIneurVQw+ewwE0QkCsPMgeOmaQoXdKnUK4Ur0RRXWjqNYJJ4oS5RwXR7DAgmmXv4Y3sPwwMqdCEbfet5NStukf3CA+Pwzf38td2j4k6GpieZB6+63wP9XCXV3OnfKmz/iF0QUknh9CC+rBciEsrGRDsji8faxBDb8wlnLRFYQK5lEVwYFkQ2BjFgeTMtz/IZyeDSBVGR3MPmTXTojOGWu73cIP2qsdlNjCiaO7lzAF63mtGUeYXhEUXYj0ETI1KNKHByf1akRalabJDsR2GHobDN7pBrW5ctW3XWBqTLtbVrCVPXp5uHfWVJyz1At+Z+yho2Pt463HXp1qhsSwExDC9eHSAiYe5g0HaZ6aL3gPCojKOCmybXVV2rmBjESonBu9gxfIIlxCA17Wkq6qeRNVTiLVagJovCDtMOdocyhMesYMh7oEWVLKmJGju72FnnlXpMvXw+2dVX8rMe9DLIZWTiEaYETxxATkrfx9qsOuKSImEksNOEcY+eRTHH61acQpk8fUA21ePeKi4rnfiUgln4Mf/MfxDphyKrPxuMmv7DhOmO2Pn9tGiJs+IcDAAxD1cvK8lNR1vaUgO0lDFT+qF+hx+aoU2uIgc+WP96bogQbAP4/B7NYOe1Ca2weE1xZ844ikGE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(376014)(23010399003)(366016)(1800799024)(6133799003)(18002099003)(22082099003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZFVnSndRV29uZ3lWY0xrLzZVQUEyZ29VaTk5ZDIrZmkxcDZaWDJUVkFSV25z?=
- =?utf-8?B?NEwvRWc2UWIzdUVWNmgyamZTY2dzeXVTNVJCY0paQ1FvTUFaSGNWeDFIMTdy?=
- =?utf-8?B?ZWVGZXNjRmxBQ1pIc0o5OGk0YmNMd2s1Y2xLRCtoYmNvVlBDcmVXL2tHYnQv?=
- =?utf-8?B?bHEvZWNwbkpjRTdQK2NpWWJNNjkvT3hIc1RXTkc5K1JxNGM0OTIrRy9qcjRv?=
- =?utf-8?B?WHlJWjZnSkY1cmxXWEFhZE12ckFZYmtWWVJlR3JNMS82MEZVcWc4VG4zWmQv?=
- =?utf-8?B?V054WTNzN3d3SWZiYlY2VTJzbTN1Y0d5ajNEeW1UM2E3NVVmMWdpM0EyeEQy?=
- =?utf-8?B?UDZHNm5pZWVTSFc5OHNFbVlvaGZ2YTBqdTRkcHJ4MDYvcnQ1MUVCTnUzUFNB?=
- =?utf-8?B?bGRJYXlHT3lXWC9YZ29EZER1T01qZ1NuT1RvdWMzb2VEQ2pKVEJPYzJUd2p0?=
- =?utf-8?B?UkZ6TmxHaVJoN1ZJSzlxRnBzamFmTVlDcUY2YXhDZXMzVElRZzFrNnZRY0ZQ?=
- =?utf-8?B?MmhrSHJ2aE5yREpLeWI1UFRYaFRrRDhIU2ROOFMraGZFL0VVdGNnQTZENW5F?=
- =?utf-8?B?Y09wUXZ6N1hqeUV3dDd5QlJxejZMb0ZlWjgxS1VJbUxvVWVXZXdDVnA5elIy?=
- =?utf-8?B?Z0NOcHo2OHU5ajBzeUR3TGxPWmhGYi9NNUk3MytXbDZKQXVlT0pDSUM3OGF3?=
- =?utf-8?B?YXREbWRMT3dFM2s2Y2hEUnh5U0NtZUppWHllUGFoNHlOYmNFeC91SEM1bUJj?=
- =?utf-8?B?RjBZWERYRmVQL3BSSS9ZNml6cDNEck1wMU1jRUtkeEhjOGNSM3poRTliZ0N1?=
- =?utf-8?B?aXdESjY0R3lYb0tVZ0tHWVBMRlVWUlZnSUYzZlY4Ly9mSG80ZHdxWVFEaU9E?=
- =?utf-8?B?MkE3RERNLzY1R0pYWHBmQlAvM1ErNzBTNjV5bEdxcXZiUGRxYXdRY3lVbWhY?=
- =?utf-8?B?QTZneVBjemcrSFU5QXNpRmp5Z1lzL0JyK25FR3ZYdXZTQXhlYUdOR1NTaW8r?=
- =?utf-8?B?b3BOU2F3OEZ1MkJDdFJHTzdwOWp0a1l0Y08xRXlyVGU5Q0JTdFZlUktqb0Zm?=
- =?utf-8?B?endWOWJGMW0wQXdwZGRFU0k0TnJPcGtwZCt4YjZOblU1Y0NPcDYzYWhZU0VX?=
- =?utf-8?B?QmdKejhCVUFMSlkrd1VOaWhXSElDOXhGMDV0QXQrT2hldVhtNDEzMVlESml6?=
- =?utf-8?B?THZVKzhWeVFmek91U3N2K3ZKMndwUlRPVVA4bWtOeGhGWEdYaXQ2SllLUVhB?=
- =?utf-8?B?cU43TVRiaFdqMEE1NzNGRFgrc0ZwV3JINDZpTDNPakZvWmt3K28wYTJVamdQ?=
- =?utf-8?B?bDJrMkRYdnFkK3lDN0RxRzk5LzVkY3hlL0t6bWUxVDE5VGJnZmF6WVFZSjN3?=
- =?utf-8?B?YklJczhBQnJ2aUtwV1lmV1JkVUEvdnlMOUt5WkNKMHBLQk01VzlHZTFvdC9P?=
- =?utf-8?B?N1FSYnR4eWxJWGhZSklZaTJwdXdnNUVJcUxqbXNJL3U4YWtORGY3d0xzcGRL?=
- =?utf-8?B?R25McjdlMW9KRzVlVXMwSEJ4NWc4YmZ1aEwwM0IzeEc2YWV6M1R5WlZQWHA3?=
- =?utf-8?B?clVteUpQbk9XZFY4TnpqVlRSOHZQZjNJV01UTDBMamI5djhIYTlsTU1SRGVl?=
- =?utf-8?B?bUl3QlJTYzJPWklrOVdSTUM0NGU5Y0dyZUo0TXlrK3J4Q3ZqMjlCdnpMVlQx?=
- =?utf-8?B?MEtTMi9JamFhd3lCUmRBS2hRQU9RZmNTVmY5SkNyWlQzZk84VFZWN2lkRlNN?=
- =?utf-8?B?dmNkUWVLR3UwQzBHVUtUVm5DN3R1VTVQcC9STEJEZEdkQzdLdmNHMERHdEZS?=
- =?utf-8?B?THVmMTFUU0o3eE9nTFBvcTlmUllxSDAwT2lzcmRVMnE3VUJUNzhXbFV6QWhV?=
- =?utf-8?B?RW0yc2VrOHlOc2xxclJoUjFiNW9LUXhNT3VIb0pNWWJwMFpnSVYwZUZrM2o5?=
- =?utf-8?B?L2k2T21OV3pFaWY0dEFuNE84Z2l0UDVyaWI3cEY3Yk1taE55Y3BKOVFJQnF1?=
- =?utf-8?B?cm43Qy9MQlErazI1MldJOS9BdUVtN3BncldCYy96OVhMdENkdUU2Y0VJQVhv?=
- =?utf-8?B?NFdQaGNpSGxQeG1XV2VneVpxUGFNNFhTcDQvdkRqTGJ1clRxK2pHQ1VZMjJn?=
- =?utf-8?B?ay83ODhUQ1ZqSXJhYTZLcUplUS9iQ1A1Nk9RcFdvcEx6MWl1SDZTUWRmMDhI?=
- =?utf-8?B?VWtlMWtpU0dsSU1LZnFLb2txQlFYUkRrOUQ5SGZtTkovNFp1NkJnOXpJQWor?=
- =?utf-8?B?MUFQNi8rWlZ0N0ZvdVBPcmphOGEyd2o1aTRic1hmcGtvcTJJY3JCWDBIS0xo?=
- =?utf-8?B?ZURRMEgwWDJaRElWZDZZb2hCc2ZGVSt1N2R6YVZYaks0bW40TmI0Ynh0eHAx?=
- =?utf-8?Q?Q7cpeP1k0MftgnkcVeVDU37oEE9irH3s6k00/?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a143095c-c06e-402f-49c6-08df22bb11a6
-X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 08:31:36.3044
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: m0SEfcZ5xj6qPHayRFaYCM7OXm92kJVcNMWXTD1oRv4f/X/so/6iaS5xj/H60uOaRHrarvtWiNLFf9h3alKEYNzzsAG4Yks3yyfXb2PuxjygDaA/dLiNFJSq/yJIWyAd
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB7174
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On 10/5/2026 1:49 PM, Johannes Berg wrote:
->> Example use cases include:
->> - Reading firmware TX power limit configuration for verification.
->> - Updating platform-specific TX power limit tables.
->> - Supporting manufacturing, validation, regulatory, and platform
->>    bring-up workflows that require access to firmware-defined TX power
->>    limit data.
-> 
-> But ... none of this really needs full support on every production
-> device, so it could just be debugfs?
-> 
-> johannes
+This series adds:
+1. Read the HW charactistics flag from ACPI BIOS.
+2. If the HW needs, collect and update Tx/Rx statistics to FW.
+3. FW can then decide how to adjust PCIe link to improve T-put.
 
-Hi Johannes
+Anthony Liu (5):
+  [PATCH 01/05] wifi: mt76: refactor chip_config to accept generic
+    commands
+  [PATCH 02/05] wifi: mt76: refactor chip_cfg commands to be a generic
+    API
+  [PATCH 03/05] wifi: mt76: add ACPI MTFG option for bus configuration
+  [PATCH 04/05] wifi: mt76: add PCIe speed tuning for mt7922/mt7928
+  [PATCH 05/05] wifi: mt76: mt7922/mt7928: send Tx/Rx statistics to FW
+    for link tuning
 
-Sorry, the examples were not very precise.
- 
-The TRPC table is product-specific and is typically provided by the
-module vendor or OEM. It depends on the RF characteristics of the
-final product and may also vary by regulatory region.
- 
-This is not intended only for manufacturing or validation. It is used
-to read and update firmware TX power limit configuration on deployed
-systems.
- 
-I can clarify this in the next revision if needed.
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   |   2 +-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  54 ++++-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  60 ++++-
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |  38 +++-
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |   5 +
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   |   4 +
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |   2 +
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   |   8 +
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   |   8 +
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   |  47 +++-
+ .../net/wireless/mediatek/mt76/mt7925/init.c  |   2 +
+ .../net/wireless/mediatek/mt76/mt7925/mac.c   |   4 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c  |   4 +
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt7925/mcu.h   |   1 -
+ .../net/wireless/mediatek/mt76/mt7925/pci.c   |  14 ++
+ .../wireless/mediatek/mt76/mt7925/pci_mac.c   |   8 +
+ drivers/net/wireless/mediatek/mt76/mt792x.h   |  57 +++++
+ .../wireless/mediatek/mt76/mt792x_acpi_sar.c  |   1 +
+ .../net/wireless/mediatek/mt76/mt792x_core.c  | 211 ++++++++++++++++++
+ 20 files changed, 526 insertions(+), 10 deletions(-)
 
-rgards,
-Jeff
+
+base-commit: 86b8d5b18d9712ae0001f078d1893c2dceac0bdb
+-- 
+2.45.2
+---
+V3 -> V4: Add cover letter, fix crash (misuse of deflink) in mt792x_perf_account_rx().
+V2 -> V3: Remove Gerrit-only: Change-Id.
+V1 -> V2: Remove not needed lines copied from internal commits.
+
