@@ -1,49 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B270C4825CD;
-	Mon,  5 Oct 2026 13:14:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E67D04854ED;
+	Mon,  5 Oct 2026 13:23:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791206071; cv=none; b=igY4bVDZtbY0IixCVMLrjOATbD8p/IXoxJcauxg/eCdoWjpzi3BH3QY5oA7N1v8Pe3cZgdS/wMADXcWFqszZQ3fVR/gDs0kh/M5kFOD3xbQj0hReeH7PFzWENvY9i8+Ma6mcZ5tF1SCAyXMieEOzWR9zPC6ZrNywNdFzFofxhz8=
+	t=1791206652; cv=none; b=SlVtT8ltD3bH+/9vDg6spzXvSnHqkksp2QDSdi5VERKpqSChkTJ210iynS3F6dUae0BZ23M1Y/hV7vnzuE/Gg9RnqYkltFYzzp03HsLkihrFCO1/3whCHNVbCAqCN1Il3Msr7SpSRRrACIh9JrQy0C4yp73Z74vpwakRAjztSvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791206071; c=relaxed/simple;
-	bh=65VyyGajm/xg2ros0aURKRbNtrWlyUynlzIogiOsLek=;
+	s=arc-20240116; t=1791206652; c=relaxed/simple;
+	bh=A+4D2pYQnfQBNEnlY28Bqy8nfojKzjtXM6s/gD/AH4s=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=j6HtngbNJxsUZr9HVlO13vRmE6K6OTDGFYkZ05oAzMMRVquLoDQF1aPtGurbUUSitGJX9/H1W1GspSYfQHwhOsbiqHKUHidDBoUzKrIFozXlDAcQotVjjtdmW+iYEirYlI7rTahmZWMwWhwdsrck4AsWjyRuhA17gdd9eY9W5wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Kyu/U9ZX; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=kPrRLxS/JZzSJbfYBu/QB7Xeoo5itnAbBLNudOUV3OBfiqYlOJWoHHC0cIzbbtTz7WdrPPWU4lRD1wvFOlvoqEIBqFs5Qcp/G5hSLwA5yGCtxRMFACMD2iPno78NSo0+nRIrdEXSVhfDPp7if6VDLMljBGykJ5oxfof/NeQC+64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=BCEwkBCV; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Kyu/U9ZX"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="BCEwkBCV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=65VyyGajm/xg2ros0aURKRbNtrWlyUynlzIogiOsLek=;
-	t=1791206069; x=1792415669; b=Kyu/U9ZXN+Igbqjk6vCB6fSM9mDnicyA6jMmgtwCzWxO7+a
-	bj6eq3Tj4l8ZWmZpJ4Pqu8GCk2OGE8i6tRN/z8MY0v3HIxLj+uj4/mSWSvVaSgDBH1kwfNRRoWfQO
-	cBMaf86GZmlSQscDM2+X/ZFGrXcu2k/dCot3lLIsiv1n8Ol05d5i+oToqevilpvcaZrsvXFs8DM2n
-	6gKWmlmPFR+JZ1ioviFiz3PqD3jfYL+ofQAS9L3dsQTjzhpZTImwbbYdzwB4/gi5/wHs1aretD7S1
-	zoKF089XOVHIZEaIHKPgrVEnVsTXFczXg1upi6NxgLSoAhJcfXTAuAyXCnrd5zGg==;
+	Resent-Cc:Resent-Message-ID; bh=A+4D2pYQnfQBNEnlY28Bqy8nfojKzjtXM6s/gD/AH4s=;
+	t=1791206623; x=1792416223; b=BCEwkBCVhlPKpOVdtBDGEsHmBcgecutjg1nB2TKhYbqfBBA
+	7BtvLQdPAlfyX75WvzH9iXwDwBG4kK6Gt3h1cnY8yTgYc7O8NK0buuuil3XTQZ4yXxiCBwI0yuA8G
+	RLbDYxyOCzt6y26BvxZkx+FkmhHu15zaX3CdA8ReO/JY0YuSnDP9iSruwhra6AZnTNntrpDbh+UlE
+	tQouxM9hZ92v9qCAk/DAx2g0b5CMpiaYwqAroW9RRdASG5ZYf5cKMFz/WsXXN10UjQ2MGNzMqxyWM
+	XTKIbUx3EjZxfJyVUmr/sBqYRf/8I2dWxyrps88xY4uplmxxoY8A+Wqvr/Clo5Jg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDiWL-00000005Ki7-1iYf;
-	Mon, 05 Oct 2026 15:14:22 +0200
-Message-ID: <7360e480d5eb194dc7c16c6e82944dfb73f3892f.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: iwlegacy: 3945: protect sysfs TX power update
- with mutex
+	id 1xDif4-00000005L8L-2qL9;
+	Mon, 05 Oct 2026 15:23:22 +0200
+Message-ID: <00a4a6b9aec9329b5d5901c5ce72e2cd3203f2d4.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: iwlegacy: serialize watchdog updates with device
+ teardown
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <stf_xl@wp.pl>, Runyu Xiao <runyu.xiao@seu.edu.cn>
-Cc: "David S . Miller" <davem@davemloft.net>, "John W . Linville"
-	 <linville@tuxdriver.com>, Zhu Yi <yi.zhu@intel.com>, 
+To: Runyu Xiao <runyu.xiao@seu.edu.cn>, Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>, Kalle Valo <kvalo@kernel.org>, 
 	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	stable@vger.kernel.org, Jianhao Xu <jianhao.xu@seu.edu.cn>
-Date: Mon, 05 Oct 2026 15:14:20 +0200
-In-Reply-To: <20260929181458.GA17064@wp.pl>
-References: <20260929123329.2135878-1-runyu.xiao@seu.edu.cn>
-	 <20260929181458.GA17064@wp.pl>
+Date: Mon, 05 Oct 2026 15:23:21 +0200
+In-Reply-To: <20261004114519.1233305-1-runyu.xiao@seu.edu.cn>
+References: <20261004114519.1233305-1-runyu.xiao@seu.edu.cn>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
@@ -55,25 +53,19 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Tue, 2026-09-29 at 20:14 +0200, Stanislaw Gruszka wrote:
-> On Tue, Sep 29, 2026 at 08:33:29PM +0800, Runyu Xiao wrote:
-> > The sysfs tx_power store handler calls il3945_hw_reg_set_txpower(), who=
-se
-> > command path requires il->mutex to be held. The callback bypasses the m=
-utex
-> > used by the other 3945 control paths, triggering the lockdep assertion =
-and
-> > allowing concurrent TX power updates to race with other command or stat=
-e
-> > transitions. Serialize the update with the same mutex.
-> >=20
-> > Fixes: b481de9ca074 ("[IWLWIFI]: add iwlwifi wireless drivers")
-> > Cc: stable@vger.kernel.org
-> > Assisted-by: LLM
-> > Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On Sun, 2026-10-04 at 19:45 +0800, Runyu Xiao wrote:
+> The writable wd_timeout debugfs file changes il->cfg->wd_timeout, but the
+> iwl3945 configuration is shared and const. The handler also rearms the
+> watchdog without taking il->mutex. The down paths hold this mutex, delete
+> the timer, and then free the TX queues, so an unlocked debugfs write can
+> rearm the timer after deletion. The callback can then access the queues
+> after they have been freed.
+>=20
+> Store wd_timeout in per-device state. Serialize the debugfs update with
+> the down paths and only arm the watchdog while TX queues exist. Use
+> READ_ONCE() and WRITE_ONCE() for accesses that do not hold il->mutex.
+>=20
 
-I think we should rather remove these files: custom, undocumented sysfs
-shouldn't be there anyway...
+That's a stupid commit log, I can see what you changed.
 
 johannes
