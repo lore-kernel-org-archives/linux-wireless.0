@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6306634A76F;
-	Mon,  5 Oct 2026 23:49:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DA2C456E1E;
+	Mon,  5 Oct 2026 23:49:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791244148; cv=none; b=RhTfYgwFT4yy013bCcpKzHlYuVQp8g+wBL/fphgituiEW7h+jido+Rcodopxjj9qOr1xi0uxH7OCh5T0UpoLsPoK3qXOfGtC4XQAH4XDnrObP1FKv3kGlSuQL/gIs1G0L9CXCK/IRRBg/FoB1vIfszYmL0jlIeOH0rj5IzWYYqI=
+	t=1791244189; cv=none; b=ETk0YV/runBfZNml3AWt97ibVR9pdLQwbl3mJ9zVcbMXROVANJROmuswrP52xoLl7IHQMfo4uOrVYek4AU4vtEplgCfRysXSvHHulvFrCjB55BK+VORYc373lj3YR5tiUq5DtSSN/1XzFXwp2890UlzA/58cWp/t8IB4/wdXoOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791244148; c=relaxed/simple;
-	bh=HqLf8VVxoiTH9Udv5tH/iyyRsmrAHBfLYZ04E7n5lTY=;
+	s=arc-20240116; t=1791244189; c=relaxed/simple;
+	bh=f7LOH7H2f4WUJs84cTbO3REd4wPdn1m4OYbzv5efXg8=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KceicwdoE99H6HBoeFYischEz95EWlPNOol6/2fmjGlzQNFXkaerWWAORWgAwWq8z7HZASVijiWLEn9rZaOiplLG3Um25Wn+mr2gs/fx/mymE7OZluDcE4hkWMXDDemit5jBw3E9YyY+hItaoOOv0OvNqTQbRT7WrMPFKxg5sFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fCQRZMpL; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=X4dIzMarrFCR7alFGhYDaUuP5B3Pj+yWfSSKuut7dl4bChwWKqDrAVQtqpxs93RyDU8963jCP5BGYhzAQk9oB0sXB+HuryM7Yc/VmY0Ub5pZbLLWZOze/vE1bxEKIzTOASa3JkSN2xU+ttqfeMsfEo+2GuR/XIa+NAKqKyyheFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FIZkpETz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fCQRZMpL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E31431F000FF;
-	Mon,  5 Oct 2026 23:49:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FIZkpETz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A041F000FF;
+	Mon,  5 Oct 2026 23:49:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791244146;
-	bh=KxRdC6ToGXOVMaL534okFwCFyQQ3QITmrTk+6oG7wSQ=;
+	s=k20260515; t=1791244188;
+	bh=tncH384WWqvonNdxO2KdvDGijT7bz/Cse9qfsImGrcI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=fCQRZMpLLTe36EySszimHDMNdG92kitSzREZ6RxbFmQ4v837toY4setf9N3QkvHuf
-	 1enXYmn30/PC2ia51vgL3oSXyCw1G1S2DSqXrEy9wRTzFDGLRQslE4jpr8d8thVNgd
-	 T+exY4EjMW7tJT4NX+xJPgv+T6QkBUH7dmw7GphEuiNL5CGUqS/ykyVMNBBDLln8BB
-	 m0iiHDVDHtYQyJ0utKHsrS9+0zNlHMcstV7hnXttt/o4U3CmaW0zRKFTkHrZZjIZFr
-	 Xqgtud/WCPgLvljEk1XRGPopwiXkG27X4G9k8rZoQtGcfqcpU0SS7uB1m9UL4MaEaQ
-	 BnR5kw5GjWOuA==
-Date: Mon, 5 Oct 2026 16:49:05 -0700
+	b=FIZkpETz2N7G9H5jaoB6Kyw4LPn5BrEQ6J48C5kq/eA4MjcNmOIcJONgaUxUM1r2E
+	 nmTk9qspUaR0UZt9Be2Yb1CM0mUWUPnq5ud3d5iIubROwoSKdlorsO33fLpiv2oj8G
+	 +ndh3ZtrW6+pU206u1xY7eIUxuPndK/7AOWM/6ShpgfroQ8RJPwQfe1tuEixttL2ph
+	 hVrCvNdgvpK86cOSa3dE09XwbjZQqCXSg+CaNra7RrExRtNPH+sKkAYvSKwEgF1o8W
+	 Z0pYG7RLNIMtHs1dVSrnrnQmY2IxUVgzsDoTKzh36XjyQRLFZQ++aGtJw95UdGwVDR
+	 lbawhiQ5KIEkQ==
+Date: Mon, 5 Oct 2026 16:49:46 -0700
 From: Jakub Kicinski <kuba@kernel.org>
 To: Yuyang Huang <sigefriedhyy@gmail.com>
 Cc: Ajay Singh <ajay.kathat@microchip.com>, Aleksandr Loktionov
@@ -45,12 +45,11 @@ Cc: Ajay Singh <ajay.kathat@microchip.com>, Aleksandr Loktionov
  <willemb@google.com>, linux-kernel@vger.kernel.org,
  linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
  netdev@vger.kernel.org
-Subject: Re: [PATCH net-next v9 3/6] net: add a generation counter for
- dev->mc changes
-Message-ID: <20261005164905.3d5b6749@kernel.org>
-In-Reply-To: <20260930112842.21323-4-sigefriedhyy@gmail.com>
+Subject: Re: [PATCH net-next v9 4/6] net: add AF_PACKET multicast dumps
+Message-ID: <20261005164946.25da19c2@kernel.org>
+In-Reply-To: <20260930112842.21323-5-sigefriedhyy@gmail.com>
 References: <20260930112842.21323-1-sigefriedhyy@gmail.com>
-	<20260930112842.21323-4-sigefriedhyy@gmail.com>
+	<20260930112842.21323-5-sigefriedhyy@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,12 +59,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 30 Sep 2026 20:28:39 +0900 Yuyang Huang wrote:
->  void netif_rx_mode_init(struct net_device *dev)
->  {
->  	__hw_addr_init(&dev->rx_mode_addr_cache);
-> +	dev->rx_mode_addr_cache.owner = dev;
+On Wed, 30 Sep 2026 20:28:40 +0900 Yuyang Huang wrote:
+> +	netdev_for_each_mc_addr(ha, dev) {
+> +		if (addr_idx < *s_addr_idx) {
+> +			addr_idx++;
+> +			continue;
+> +		}
+> +		err = dev_mc_fill_addr(skb, dev, ha, NETLINK_CB(cb->skb).portid,
+> +				       cb->nlh->nlmsg_seq, flags, netnsid);
+> +		if (err < 0)
+> +			break;
+> +		nl_dump_check_consistent(cb, nlmsg_hdr(skb));
 
-There's no need to set this?
+Why are you checking this on every iteration?
 
->  	timer_setup(&dev->rx_mode_retry_timer, netif_rx_mode_retry, 0);
+> +		addr_idx++;
+> +	}
+
+The changes still lack polish IMO.
