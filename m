@@ -1,90 +1,106 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F187147728E
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 10:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A2946D09A;
+	Mon,  5 Oct 2026 10:33:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791195078; cv=none; b=ZsJBhKQPXIuLxtf4xKViZBuQPrAqSgg+I1RL1NAihF3Iy52TACbbevRSCELDvyY9wzfE7JXHuSDqzt0k8FJ7w4pTHhtD2LZ0jdzHwj4fh+fDKfsXkcr+86J1RCzW+wCoY5ZdMtxDQiojd8nDL6vZcxObIkgLigA1vq+UoC88qDQ=
+	t=1791196387; cv=none; b=MJVy1M8U5x1Bkf0dP8dNpz9nlbUY2EiDD21PQjVqqpK7vw/wzALEuxdsTuBSlPKY8KWUpQXiR+l2kVkNLiVGUurbajkRqjt5PVcuhEPtvMfCQMXD2Vu5Ox8Lv/Ne15XpApqbzWnsBF1YksPZdU6QowDHxhS4pFRLHquGDVUnmb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791195078; c=relaxed/simple;
-	bh=AIfudOnyQII/Hm8byu+1F7dIK6v3uVWRrB3FSqNjcM4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FwCGJ4tnkGC1ONN5pdL6bgSBXqI1oR1PyVQETHDnzbTC5QvmyOgWWIdr+5e+j89aYneuQE9TyMLff5wMb8R2GdNHdPxKFwykqlUTqt+l5T4RP6Rvb2dtgkNPJTvplOMH+MqEm9kmNFp3ANj9Y/hqTq4dP1IE+wxJG7FY+nrOBUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=loZYSo1o; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791196387; c=relaxed/simple;
+	bh=HeYnKht+rbXkuUa4EohCDb03waSQr6SlS8L/YvVyIcI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=qOV5u9GlmJiz306NsASNY1vCHAmpOUqSdomi8JiAUUXDESdRIBZ1JK3yBEWpJQV8MSUXS5ekf727vFoImaOt4iSeiI/zHSbCG13nr6H4Z2OH2+QCelyiQu+PKMGhzCVcIQ1eLL2WwxfMRh7OxgT+1Q3OFZj+wqW7HiKy+CI4Zag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XIKbOsTL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="loZYSo1o"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=GXKq+vyNgRXeEdfQfaj+N9aRCfHk9NVziiNYa/7MEOk=;
-	t=1791195077; x=1792404677; b=loZYSo1oxCVgn+MhY30W3iLeZFGNjug+9XUXHfJxVF7vpSk
-	SRNUxqHC3sZy32aBmb8OC6hllF4VTpuuSilWEivv+9O/ih9Rk3SvujMya7SbrzTM6aDBQHgi3x6Rh
-	Kqq6oEjZKyei1zF0EcgtwT5SxJT5IXLiUb66fZ7ma7Ir8VsjGrtgJLkiuSkYhmWiFzEzBrzhvxSMC
-	1hWHC0FU5vsY3hrCXGOtMX3IhbUsRUaqeLpZMkALXlA4/Gm80+/mZL0hirg8xIMA0m+IjFJXPvi8Q
-	I9LCmMSg4lIvxl82Nbs2zS9ggXaDWZDnOGr2k1c/38BqhQU3NMpvete5Kk8rhsjg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDff7-00000005CGx-10J3;
-	Mon, 05 Oct 2026 12:11:13 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 13/13] wifi: nl80211: transmit control port frames without wiphy mutex
-Date: Mon,  5 Oct 2026 12:06:29 +0200
-Message-ID: <20261005121058.df85b18d4d6a.I30d12968a0d4ab7a4ac8d0995a9ab7583b0ce2ef@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261005101057.1992330-15-johannes@sipsolutions.net>
-References: <20261005101057.1992330-15-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XIKbOsTL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 619791F000FF;
+	Mon,  5 Oct 2026 10:33:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791196386;
+	bh=mJAWf/W409wQdx9doBOu157lRcmZ2hxa/1jrWIjHjcM=;
+	h=From:Date:Subject:To:Cc;
+	b=XIKbOsTLThS/39UM4QHfq9nlzcCJ1R0cIhknq74mI4QBHNxaliTFmlLNd/f398uyH
+	 puooWoXQmtSZbuJECh1j93tK/2E+OFNdUMc/2r5xbLLeW8RcDuT/08PhI7KFyR36v1
+	 r21t85yWTIwlUA8scSga1+drWWdTZ8vZ0NSLBQoUVAQ8U5Po//9OtgKfKIUOl0kjVg
+	 3DkM1s+wbon/NJuL8RaoUOb1i6H9TXBUf0bg5Mil9y6ivrgVPf0UgiI15tpDHY+6eQ
+	 G7qRvTeiazBFvk4Xmpz5rKTh5J8rhk8iiK8d6s/hyPTEk0Bsl8oyfBQmHirb7sAlQB
+	 FK0KPuKYjMNHg==
+From: Nathan Chancellor <nathan@kernel.org>
+Date: Mon, 05 Oct 2026 12:32:59 +0200
+Subject: [PATCH] wifi: brcmsmac: Adjust txpwrindex value in
+ nphy_ipa_rxcal_gaintbl_2GHz
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261005-brcmsmac-clang-24-constant-conversion-v1-1-a30c5692d582@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWNQQrCMBBFr1Jm7UAa00K8irhIx4mO2FQysQild
+ zfR3X98eG8D5SyscOo2yLyKypIq9IcO6B7SjVGulcEaO/bGDDhlmnUOhPSsN1qHtCQtIZU2Vs7
+ NgEw++nh0g/MjVNcrc5TPr3O+/Fnf04OpNDns+xdb4z/UiQAAAA==
+X-Change-ID: 20261005-brcmsmac-clang-24-constant-conversion-ec9f9f345496
+To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
+ linux-wireless@vger.kernel.org
+Cc: brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+ linux-kernel@vger.kernel.org, llvm@lists.linux.dev, stable@vger.kernel.org, 
+ Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2170; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=HeYnKht+rbXkuUa4EohCDb03waSQr6SlS8L/YvVyIcI=;
+ b=owGbwMvMwCUmm602sfCA1DTG02pJDFmHa+7OqKl//f6v2ekg54VvzsyYEW1z5dVbjVl3dqZ/P
+ cCfey3QrKOUhUGMi0FWTJGl+rHqcUPDOWcZb5yaBDOHlQlkCAMXpwBMJMOP4X+CcVz9hJmGs4qY
+ LULjbtzJitWcmjn7arPuF3n/+LBvvaaMDBPqTweXba2dYlH4ZPFrsYPJqnY2Wz/5rC79q8yj/2P
+ 7Z14A
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 
-From: Johannes Berg <johannes.berg@intel.com>
+After a recent change in clang to warn on signed char conversions within
+array initializers [1], there is a warning (or error with
+CONFIG_WERROR=y / W=e) from nphy_ipa_rxcal_gaintbl_2GHz:
 
-Only mac80211 currently implements tx_control_port, and it
-no longer needs the wiphy mutex, so don't take it here.
+  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:224:18: error: implicit conversion from 'int' to 's8' (aka 'signed char') changes value from 128 to -128 [-Werror,-Wconstant-conversion]
+    224 |         {0, 0, 0, 0, 0, 128},
+        |         ~               ^~~
+  1 error generated.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This value was introduced in the original staging merge of brcmsmac in
+commit a9533e7ea3c4 ("Staging: Add initial release of brcm80211 - Broadcom
+802.11n wireless LAN driver.") and it is the same in the proprietary
+driver [2]. Presumably it is correct since there have been no reported issues,
+so update the value to '-128' to be type correct and clear up the warning.
+
+Cc: stable@vger.kernel.org
+Fixes: a9533e7ea3c4 ("Staging: Add initial release of brcm80211 - Broadcom 802.11n wireless LAN driver.")
+Link: https://github.com/llvm/llvm-project/commit/a5ef934a8d295dc03be3960f2b3744ec2e53238e [1]
+Link: https://lore.kernel.org/1a107e21b08.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com/ [2]
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
 ---
- include/net/cfg80211.h | 1 +
- net/wireless/nl80211.c | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1c5130e5f5f3..49c6600c024b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5265,6 +5265,7 @@ struct mgmt_frame_regs {
-  * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
-  *	tells the driver that the frame should not be encrypted. A @cookie
-  *	value of 0 means the caller does not want TX status reporting.
-+ *	Called without the wiphy mutex.
-  *
-  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
-  *	Statistics should be cumulative, currently no way to reset is provided.
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 51f2d7de8638..4e956f12c390 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -21033,7 +21033,8 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.doit = nl80211_tx_control_port,
- 		.flags = GENL_UNS_ADMIN_PERM,
--		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
-+					 NL80211_FLAG_NO_WIPHY_MTX),
- 	},
- 	{
- 		.cmd = NL80211_CMD_GET_FTM_RESPONDER_STATS,
--- 
-2.55.0
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index 86cfa3e87a04..9ddd5d519893 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -221,7 +221,7 @@ static const struct nphy_ipa_txrxgain nphy_ipa_rxcal_gaintbl_5GHz[] = {
+ };
+ 
+ static const struct nphy_ipa_txrxgain nphy_ipa_rxcal_gaintbl_2GHz[] = {
+-	{0, 0, 0, 0, 0, 128},
++	{0, 0, 0, 0, 0, -128},
+ 	{0, 0, 0, 0, 0, 70},
+ 	{0, 0, 0, 0, 0, 20},
+ 	{0, 0, 0, 3, 0, 20},
+
+---
+base-commit: d24e8ac715de2e16a53c144005b1863660a5fbea
+change-id: 20261005-brcmsmac-clang-24-constant-conversion-ec9f9f345496
+
+Best regards,
+--  
+Cheers,
+Nathan
 
