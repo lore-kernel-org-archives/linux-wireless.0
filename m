@@ -1,61 +1,68 @@
-Received: from mta1.migadu.com (out-92.mta1.migadu.com [95.215.58.92])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE713757EA
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 02:44:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B010137923;
+	Mon,  5 Oct 2026 02:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791168276; cv=none; b=Fe3M3QsAlo3l9kk5WhqQ5iY5LgpkYo/ARdUVTiWJncA4YjH+HyWdi6+iZbfIGr5HtXbMKL8Zs8Wk3krys//trbSyXJjBon8YnOU4B+p4PLCG1TB3ZKlx8Z3arIKaANdamp1DOkSatl0wRrd9hNLIr4DkCL9nV2HboPCuAlokwho=
+	t=1791168575; cv=none; b=mFAW/6jyIHd0ko4kHyQOF3jzNhC1Wg3mT+INyV4PkkMZrfOOUFDjjbV4jBKxbQY4+1+IuX91Oz2E1KWweyyAxcKOriCtVOtTUwv7i7U0e2Jmx6M40QSkB1l8yuFMEdIWnsZtsAJszzNeDqUp0Zzgz0OMh/K0bGQnT5Lu3gKSuxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791168276; c=relaxed/simple;
-	bh=4+oVFRM4GfDtzhNlYe798i332jr//6Fy6ecJ1GrKyl0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nrx6h5HkZyHnclZSEzoURfGNWacX/jfg+ZflqAeyTPvCzvodqFsrnkKtCto7gnTnMjZjKsArDxI4DITfNMc5aExS+AZWjwcbjNgWjpzckBSust42zEog7Ac01BRpEjJjUkkDGuyU8ldsMbf2uuk7IdfmLyfgR673IB1gl47d6CM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=EudYtato; arc=none smtp.client-ip=95.215.58.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1791168575; c=relaxed/simple;
+	bh=TeNOui+d+8wVzQ53YLWRSoVcQwhb7zeXCCMpW/ipLZY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=CzOqa9LwShq/21EWFNI4+6tVA20MGET9l/VyJHa8HA0D+Bq8HwuQJ2HY0H2fi37GStUVdJwRCf37tvAK9q1l/pqupV1rozQJ9LGdgtnXIq4wUCQJgXb20wKvXyT6yJ3TcwI2VZeXKdJxZJErujimCx48EyrZWaQ36SQgRIaV0fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=VEvt6dwt; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="EudYtato"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4+oVFRM4GfDtzhNlYe798i332jr//6Fy6ecJ1GrKyl0=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791168271; v=1; x=1791773071;
- b=EudYtatoU3a5LkeAEHtYKRkpfO02k0+SK8O088uU45zBANISIVq4HvjHxqzUAbg9LGIobAYK
- BrZ+ryY4SbGX36M2gxKx2Z0Ni/sqAw76TVmmRFgBzdHuBeeX7/d74WqQbOFbpL6uU1G7fm4uqBR
- bpfB7QqiG+MuepIrxG6R0jC9oBLStnhI/uNM4Hy97v8lgYyQIs+r7NacqBXK6ckzJTCftbmYCAG
- hqrKuKBxVefXnINioAJXKezkPVcaZHM2GYYQzseb6L3m2ULL/jCFpLcWg2G2rOZWx33i2IYoYqD
- XxYazYDOsBtnvMTcV9hoD0zC3G6nKp8URZrcVY3kj31KQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4523754c24812559;
-	Mon, 05 Oct 2026 02:44:31 +0000
-X-Mizu-Trace-ID: 4523754c24812559
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Andrei Rusu de Castro <arc@empyreal.works>
-Cc: linux-wireless@vger.kernel.org, Jonas Hort <jonas.hort@posteo.de>,
- Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>, Sean Wang <sean.wang@kernel.org>,
- Thorsten Leemhuis <regressions@leemhuis.info>, regressions@lists.linux.dev,
- linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v2] wifi: mt76: mt7925: keep MLD membership consistent
- during link add
-Date: Sun, 04 Oct 2026 19:44:27 -0700
-Message-ID: <179116826771.8124.9499876634833237978@justthetip.ca>
-In-Reply-To: <20261004-mt7925-mld-v2-248bb5e6404f@empyreal.works>
-References: <503eb10e-80cf-493e-95fd-04fc0f94ce01@posteo.de>
- <e4bc5ce3-9a6f-4365-9d36-f6440ded0865@posteo.de>
- <c64f5fa6-4c61-45b6-a513-b971e59d7723@posteo.de>
- <476e7721-580e-4a6b-86e5-5ed782a2c7ec@leemhuis.info>
- <c9f984c4-e3c4-4e41-a502-99db97ce724b@posteo.de>
- <20260829221319.25334-1-lucid_duck@justthetip.ca>
- <d245c4b1-dfba-4507-85a2-c6883f5eae64@posteo.de>
- <20261003180334.83575-1-lucid_duck@justthetip.ca>
- <20261004-mt7925-mld-v2-results-248bb5e6404f@empyreal.works>
- <20261004-mt7925-mld-v2-248bb5e6404f@empyreal.works>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="VEvt6dwt"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6952nEUe91595954, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791168555; bh=TeNOui+d+8wVzQ53YLWRSoVcQwhb7zeXCCMpW/ipLZY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=VEvt6dwt7sDuckOPqGHWuTNCwZhSM52MQLNKBcZFi/Syku/dqcwCzDVqdKYYc2D/D
+	 42+ZMosxgVHiB+y55IjU/jdkVslZaM/SrbZWd3gtmVQirdruHmzuiKsOznvKk5Ij7j
+	 PW5VMub4OD2gi+z3yWRGjGGrtY0YqXjLHxG443f8wfhTChNO8TsEFR7eS84Mm4WZo+
+	 vrkVmaYClRRs72sKMKB5l4FXhMYSpZ9aPsVogwIRvU1hMOjViJC1ox13OmqG/Z/T+9
+	 P9Mt2rrIYRmsqe+riWh+G4ZWfXuJ1mz/LVyuUfhOv7G9hQMIDpNKjlhjaeGu5dQKHX
+	 D95NiWmmhtktw==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6952nEUe91595954
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 5 Oct 2026 10:49:15 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 10:49:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 5 Oct 2026 10:49:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 5 Oct 2026 10:49:15 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+CC: Luka Gejak <luka.gejak@linux.dev>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "mehmet.fide@screeningeagle.com"
+	<mehmet.fide@screeningeagle.com>
+Subject: RE: [PATCH rtw-next v2 1/2] wifi: rtw88: download the beacon the
+ reserved page was built with
+Thread-Topic: [PATCH rtw-next v2 1/2] wifi: rtw88: download the beacon the
+ reserved page was built with
+Thread-Index: AQHdUK+UZva0FMvhREW6x54LpFWhtLbuRr+w
+Date: Mon, 5 Oct 2026 02:49:14 +0000
+Message-ID: <d19dd7073b9d4cdab5e4e1b2d841bca9@realtek.com>
+References: <20260930074444.1991223-1-mehmet.fide@gmail.com>
+ <20260930074444.1991223-2-mehmet.fide@gmail.com>
+In-Reply-To: <20260930074444.1991223-2-mehmet.fide@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -63,27 +70,24 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Andrei Rusu de Castro wrote:
-> USB hardware and the reporter's FritzBox setup remain untested here.
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
+> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+>=20
+> rtw_fw_download_rsvd_page() downloads the beacon twice: once as part of
+> the reserved page and once more on its own, so that the firmware ends up
+> with a TX descriptor that describes the beacon rather than the whole
+> page. The second download fetched a new beacon from mac80211 instead of
+> downloading the one the page already holds.
+>=20
+> Besides the extra work, every beacon fetch advances the DTIM count and,
+> while a channel switch is announced, the CSA countdown; doing it twice
+> per update lets a countdown that starts at 2 reach 0, which mac80211
+> warns about. Hand the beacon skb out of the page build and download
+> that. The hw scan, which downloads the beacon without a page build,
+> keeps fetching its own.
+>=20
+> Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Tested on a Netgear A9000 (MT7925U, USB), Linux 7.2.6, firmware
-20260813113118, morrownr/mt76 at ce4ee3e, against a two-link mt7996
-AP MLD on 5745 and 6135 MHz.
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Your STA_REC_MLD capture reproduces here. Without v2 the AP got
-nothing on 5745 in any run I checked. With v2, 5745 carried traffic
-under the scan load from my earlier report:
 
-                                      stock          v2
-  scan load, 600 s, mean per ~10 s    249, 267 MB    801, 837 MB
-  scan load, 600 s, lowest ~10 s      126 B, 33 MB   643, 687 MB
-  scan load, share of bytes on 5745   0              about 60%
-  scanning off, share on 5745         0              0
-
-Stock dipped under that load but did not stall for good this time, so
-the stall result is Jonas's run, not mine.
-
-Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
-
-Thanks,
-Devin
