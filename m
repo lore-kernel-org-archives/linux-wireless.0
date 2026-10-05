@@ -1,88 +1,132 @@
-Received: from mta1.migadu.com (out-3.mta1.migadu.com [95.215.58.3])
+Received: from mail-pz2-f36.google.com (mail-pz2-f36.google.com [74.125.228.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC45379CD
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 17:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 477E74D5966
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 17:46:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791221784; cv=none; b=UJwWnE0b4CWp7A5NZFVemcwKHpyq5XwRGSV2harDa/7iwjKF9n21pNiclw7QFvWFh1ed1CX+2w0EdGkAHuo7vSXw5tk4+IETHMcgOmL/flkou1DwKeionFiDLiX9CS/LEXOtVdE/GwHJ22GZjHUb8EulQh4bsLKCjfDCbq7t5Hc=
+	t=1791222412; cv=none; b=F108c0WpahdSSL5xvWxeB8kYLaXnrBEGhIpjxMDV0AdmfO51Sq9pnTpc3g4xeXOm5NfWrGYfm2PChwHLE9x/8SyWrImzFF4ErqVRTbjM0natEffpaTbnvnset/osT/6PjUF4ZrWX/9EyoU1fw5pPBRy24nlFz1Y1/OEI07LBUJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791221784; c=relaxed/simple;
-	bh=yP8A1byxGUfAEH7vJdKOrAmVZp+pcAUAE2t16424ffo=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=ebhVeuZ1778PS/KH06skdUSCy8ur6U96yHZbGV6PlBL/yAik4jgBPT0QvZzZQqq/vLEPaFs3FQSRik2MZQKrf47IflWRnZgAVnjQRFuPDDv7KDQdyu8d6NXQAuo9IhD1SAMUpAgM8Hybq2amd4xBKdM/OVRXp8wSYzt0SkJWzC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ajTnuqIh; arc=none smtp.client-ip=95.215.58.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791222412; c=relaxed/simple;
+	bh=5cj+0pZvvYEP8223id1jPXjYzN5HTrhGP38RDvoBEX8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=edPsy7g8qKfm0TpVRRnOectHoSFEeM4rVbwTNPBWPCmY1WhkDAEbNP7CQIxwU/dqD1R6iN4ypmafot2lUBcXeGK8aZQJpam4v+jhBFlahesOmUqbSyP5ND9XQ1f6umqCMON15fxDONJIX0HqkeQg9mkRcHRns7WQiDBTAX23M7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=DruPxoNq; arc=none smtp.client-ip=74.125.228.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ajTnuqIh"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yP8A1byxGUfAEH7vJdKOrAmVZp+pcAUAE2t16424ffo=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791221780; v=1; x=1791826580;
- b=ajTnuqIh1JH3gCRka/I5ZN9FP0NRlZIQNmKB+x5Od2b8C8ZuVvK+N7W71MXDEHZODENCFQJ0
- ddIih72mE81zv5XbwFLAATuZjJHBSFhw8hnX7twmpOpls7ScHB4c81fz1wUO4bgt+UGm/M5Jawo
- yazfE8lIBbblPBd3VEk1HRHI=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id cd67e994554adfbf;
-	Mon, 05 Oct 2026 17:36:20 +0000
-X-Mizu-Trace-ID: cd67e994554adfbf
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="DruPxoNq"
+Received: by mail-pz2-f36.google.com with SMTP id d2e1a72fcca58-88a9f57bd42so1017666b3a.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 10:46:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1791222410; x=1791827210; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=V5ykIF8N5/re7TcPUO71wZKt5W6G9KvCjhpDqyGS/p0=;
+        b=DruPxoNqse8ghhho8NRwuZCReWRaLNO6TVCIuEO9se9Z2gsUeJD5ZLlE11dOTZeAmO
+         xdj1scAGouJWq2zAkjVpxHga4mqj3tzknlEXtJwpx1JzvB1Vmyg8Ae3LRSgs/p2R661H
+         dAusfQS3U2J4v5vtoaaIkoOWw2nL1spVFo5dI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791222410; x=1791827210;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=V5ykIF8N5/re7TcPUO71wZKt5W6G9KvCjhpDqyGS/p0=;
+        b=yEcbOd+CMCCi62lWlndOZE0lA4eMHNRTmoxNyT2MI5qUgoQRbiACM6Ltg/m1zWAqfx
+         bNTMUl8EMXaYY/+u0Hz+Hv3Tzd4U3QaIwlY49vmTwuRAgWsYoqcI5q4taIHpc+FsFBfQ
+         QeI/o7CEYEVj76gBEUgicXR2/AO1BePpETY2Kq/yT1YGaPNkNfHolXRudO1LcMiyPoB8
+         v5G7U3hXByt6YqblNdgkSUUfE3pkvC1WmSD6reb73AdsGFw6f6i2+wKLD6tPomfmwi8I
+         xrf+Fep+6UGDasanf6c5KR7OCqqy11HO+FguVz12+fGpzQBafz5fVQ6m84/yEEfNyV3L
+         9qdQ==
+X-Gm-Message-State: AFuF++nvPjtdJqJI65kzbimMaOulxtCG+mwyzxi7T6xW2ZFCJ9ICu4QK
+	3r9cfDFjf8Kkuxqx0SSIOQ1dyr6MgB9HdCjV01MI1RCNtzlQNKRbAyvLYxxTeGqGww==
+X-Gm-Gg: AYBFou3koydEh0aDUj0pEqJvVcC1NIkjBb+K4R3SJbNUklcV0ji+aodcYebQtC/G/S1
+	psBk42IcldrItRgpa8wbD/Pg1EK2D9P1vOAz9sgIZp22pcKhYG+RGyKuBqzQ1KcDL22BXBKqk37
+	8uNFiuE1i0NLSczhG5GCHNaqHt+idF1VfcJNf80noawOY/gTb+5OJSiuzU6pWK9PcVB/g9wh3Q6
+	IcjNii7TbORtTu6v1gsdkxDtCRuSl8wUEdJz0MQzI9ZqTMZrWpkYxs0eYMgIGWgqZaFVezfW2Eh
+	Zc5Dqlpxnudn4KwKZacKS6h5RpK5XS9I8OADanvpRqqaEH5rO9U5mm8CxpwQmc/fopMQiGj175S
+	W+i4u0Fg7Y9yIb6ghCcbFUScY1N4XMjJfiDrL9fa9XPGVc7zCwhXylZ0GSWdoiN7maSDmdZWTl4
+	ut9b7KzWc9bEMd0BhzC4q95l9SJh6haWlVdOQEVt+SsX93xGyh7p7n9j8/mVvheAp0AYgSSJmXG
+	y3UV2cG8wlraqwYk2a4xpdZjMStxxuuy5+h
+X-Received: by 2002:a05:6a00:3403:b0:881:1fb6:a81 with SMTP id d2e1a72fcca58-88af2689f85mr10997444b3a.3.1791222410606;
+        Mon, 05 Oct 2026 10:46:50 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:3452:be62:94e:a46d])
+        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-88b0c3a4862sm3842600b3a.32.2026.10.05.10.46.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Oct 2026 10:46:49 -0700 (PDT)
+Date: Mon, 5 Oct 2026 10:46:48 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+	Francesco Dolcini <francesco@dolcini.it>
+Subject: Re: [PATCH wireless-next v2 09/18] wifi: cfg80211: document wiphy
+ mutex for radar/CAC events
+Message-ID: <asPiiI6-JpMd3vKr@google.com>
+References: <20261005100525.1991059-20-johannes@sipsolutions.net>
+ <20261005120526.fe5960ae72ab.I57002ac3e57d2ac4613eb0cb0e6d17bedccf0cbd@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 05 Oct 2026 17:36:20 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <64b006322730e0a078983458932dae35255e65dc@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v3 1/2] wifi: rtw88: download the beacon the
- reserved page was built with
-To: "Mehmet Fide" <mehmet.fide@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- mehmet.fide@screeningeagle.com, luka.gejak@linux.dev
-In-Reply-To: <20261005143523.130287-2-mehmet.fide@gmail.com>
-References: <20261005143523.130287-1-mehmet.fide@gmail.com>
- <20261005143523.130287-2-mehmet.fide@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261005120526.fe5960ae72ab.I57002ac3e57d2ac4613eb0cb0e6d17bedccf0cbd@changeid>
 
-October 5, 2026 at 16:35, "Mehmet Fide" <mehmet.fide@gmail.com mailto:meh=
-met.fide@gmail.com?to=3D%22Mehmet%20Fide%22%20%3Cmehmet.fide%40gmail.com%=
-3E > wrote:
+On Mon, Oct 05, 2026 at 12:03:36PM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The DFS state of channels and the CAC state of the wdev is
+> protected by the wiphy mutex, so the radar and CAC events
+> must be reported by drivers with the wiphy mutex held. In
+> mac80211 we do this, but some drivers don't yet:
+>  - mwifiex/nxpwifi have an event handling worker,
 
+FWIW, one of the two contexts that call cfg80211_cac_event() in mwifiex
+does *not* (by inspection) seem to hold this. Is this something you'd
+prefer individual driver users/maintainers resolve?
 
->=20
->=20From: Mehmet Fide <mehmet.fide@screeningeagle.com>
->=20
->=20rtw_fw_download_rsvd_page() downloads the beacon twice: once as part =
-of
-> the reserved page and once more on its own, so that the firmware ends u=
-p
-> with a TX descriptor that describes the beacon rather than the whole
-> page. The second download fetched a new beacon from mac80211 instead of
-> downloading the one the page already holds.
->=20
->=20Besides the extra work, every beacon fetch advances the DTIM count an=
-d,
-> while a channel switch is announced, the CSA countdown; doing it twice
-> per update lets a countdown that starts at 2 reach 0, which mac80211
-> warns about. Hand the beacon skb out of the page build and download
-> that. The hw scan, which downloads the beacon without a page build,
-> keeps fetching its own.
->=20
->=20Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+>  - qtnfmac also does it from event processing, and
+>  - mt7915 and mt7996 don't acquire a mutex for background
+>    radar events.
+> 
+> Document the requirement.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
+>  include/net/cfg80211.h | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 9cb536fc8cb8..eb376a54a07f 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -9794,6 +9794,7 @@ void cfg80211_cqm_beacon_loss_notify(struct net_device *dev, gfp_t gfp);
+>   * @gfp: context flags
+>   *
+>   * This function is called when a radar is detected on the current chanenl.
+> + * Must be called with the wiphy mutex held.
+>   */
+>  void __cfg80211_radar_event(struct wiphy *wiphy,
+>  			    struct cfg80211_chan_def *chandef,
+> @@ -9839,7 +9840,7 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+>   *
+>   * This function is called when a Channel availability check (CAC) is finished
+>   * or aborted. This must be called to notify the completion of a CAC process,
+> - * also by full-MAC drivers.
+> + * also by full-MAC drivers. Must be called with the wiphy mutex held.
+>   */
+>  void cfg80211_cac_event(struct net_device *netdev,
+>  			const struct cfg80211_chan_def *chandef,
 
-Patch 1 looks good to me.
+Should we add an assert to this API?
 
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+	lockdep_assert_wiphy(wiphy);
 
-Best regards,
-Luka Gejak
+> -- 
+> 2.55.0
+> 
+> 
