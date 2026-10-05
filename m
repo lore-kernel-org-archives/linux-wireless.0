@@ -1,90 +1,103 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C923371D01;
-	Mon,  5 Oct 2026 06:57:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD963365A19
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 07:22:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791183475; cv=none; b=agHV4pbbPP+7twOuplTpJThIbj519te3+yFc8fOZph0tFxdl9NcOyS50ZOQAGqXRmfC2cAhVReI8Y0KQ40l9fpqOgAi1hb66st8ZSQMQgAfpbfnUrm+mRFE1/XsHGJedE3hkLBLn7p/wcYLRGa+qxWwzmW/sDzRPZmv7Ys4E17w=
+	t=1791184935; cv=none; b=qTUBAkuHsvIH3eLO+Z2Xq0wU/ktTu18ws42RHAMpmgKaFL4Nx6dLMMMUWqKmpPqd/P0ypclHjAUdJ9o1TNR38CpbqsdomgMO72lQc+S6rAAGs1mgx+8vMgD2M8ajeEmr2QYC7ZKYxQZWgP9Gu9b2KE22M4MS82eA72GKt3DzqDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791183475; c=relaxed/simple;
-	bh=cakKebxd6SYR3mrRpNebAr69JFunqZ4AtJnzIzKfmks=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Y06rPT1EnLp5edhJzUzu2C0+xr/cHoDQluKGXLZvdi+/9BRL8IwZb1p4vESHWhTABQ+jOih/7zfdzPfS97SfrXOiBFK2UStVpmj8M6enyoT+eu082gPWnsvj/GDZBjhOsEKXoocy0E+T7OP/VA3cxr+eRVct+gR+T884s2orupg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=i4zioz4F; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791184935; c=relaxed/simple;
+	bh=f9Ae0kSRR7PYMUThkHWYZ9GNyvCCn05bttXurW6/pwI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IXy3SPzd2I0SBFcVjK3TfJyJNjnM5qgstjeB79ucnZQbj7XIsOA52un6WigZ1zCOx2HiFf8I7Fh4qu0eJXmbgfs/UsJ7tWG76OFtczw6EMp5kcer/gBUVld4/S8dH/CJGslf1gqe+PYQxv2l9hscU2L9LmLUKBsbnOvgPet4fw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLJV6CYZ; arc=none smtp.client-ip=74.125.225.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="i4zioz4F"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6956vNi051722935, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791183443; bh=cakKebxd6SYR3mrRpNebAr69JFunqZ4AtJnzIzKfmks=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=i4zioz4FFbjazCODfYhyRl8PVfrUadFgFT2pNWMtvmG7lcR2uNrzej3nx/QBIeNX2
-	 MB80mlkYgwGsaakLTXGWSFKUnzqx+w4swaJmcJIs7FBCBbYOEOJd1gBj1LznR0rAKY
-	 J9nQAiOXvrRUW7wEDHM2gKM+8U4iDJuCB3cT57JjDeEq2dzGwNiZOV1o1IW+wRjZt+
-	 csNdYHp+7Eca2EiuXksxxchwa8XFApnBm08mZIXBvhaGzUBH0Rlqoxp4stRTpg43oO
-	 FTElritKtmGJvtsHhaf1g0AV9Bxcsg94N6nKeDMVdXGgFkbdm2uoXPkdo+jV/qTgtC
-	 44+ybIbJ42Czg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6956vNi051722935
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 5 Oct 2026 14:57:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 5 Oct 2026 14:57:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 5 Oct 2026 14:57:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Mon, 5 Oct 2026 14:57:23 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Alastair D'Silva <alastair@d-silva.org>, Luka Gejak
-	<luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-CC: Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Ulf Hansson
-	<ulfh@kernel.org>, Jernej Skrabec <jernej.skrabec@gmail.com>, Kalle Valo
-	<kvalo@kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
- interrupt storm
-Thread-Topic: [PATCH v3 1/2] wifi: rtw88: sdio: Fix unhandled RX request
- interrupt storm
-Thread-Index: AQHdUThjHehNiw0xlkuYT1bxT/PheLbuUbcg//+M34CAAJPnEP//jsQAgACJRnA=
-Date: Mon, 5 Oct 2026 06:57:23 +0000
-Message-ID: <f99dd5a0de9343c495b072ced41f9298@realtek.com>
-References: <20261001000303.3505264-1-alastair@d-silva.org>
-	 <20261001000303.3505264-2-alastair@d-silva.org>
-	 <661b9fc47ce942a491f8c53d90fdf39a@realtek.com>
-	 <6ef33599cc268fa12e4663461248f1700969df34@linux.dev>
-	 <c852aa23403e4ec7ad80a17a6dc18d0e@realtek.com>
- <9bb2ad98540bd716d00a0eb0b4faf3593c06cc7a.camel@d-silva.org>
-In-Reply-To: <9bb2ad98540bd716d00a0eb0b4faf3593c06cc7a.camel@d-silva.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLJV6CYZ"
+Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-48b01c4f4daso1123144f8f.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 00:22:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791184931; x=1791789731; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dZj6Eci+NMqKG860mEExd65tievRgf9ZIO6Ixjz+rTA=;
+        b=FLJV6CYZKp3VG0OP6ULg45G1gFjXY8ouneEFa2DkQ4Nk7YcYnffR/8oZqlAMqmzx0T
+         m1WLNvmZZtxLlFgLj2Fo3PQVYK++mIAEVzGniLaBJkyeB5BMKqKQEKSow0rfHU3U184d
+         iz4xKQYuG6fD9PY0u1GVOdlLTP25D14fAKwfxHpEuzsVTN6JwUTAPZrfBmjONbo/vov8
+         6bAD3HC4sfzXBP252gUlE6yAT0w6ZSePnlQMPqkh7404U4Ngccv3/4uVe88OcG/qN85l
+         Fo00Zu9KMyIoQCMtneHHiJHwjauFFs2kUOt60QBOktWg3GUA6QJxC1bfVwSRvITSOZvd
+         wRQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791184931; x=1791789731;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=dZj6Eci+NMqKG860mEExd65tievRgf9ZIO6Ixjz+rTA=;
+        b=P/NbdCZJUz4RtsG0KU5JeejWsy0BaxwZosOxgc1tBSYeQePM2PF5hd2u6zQYAQcshv
+         NuaQLHW+kiDBEuWSEQgfhOrUYx9otCBCFcpdLX8SMIy2uIcrUorFQtkU9oRseAYx9P7Z
+         EjlrzDRsSo7dCR2DLjqOi1IFc+XuyHrZBzEU2IW+VqXVCubzpBf/upFVxTi19IMdaj0T
+         zMWsUV3Fl7c72DPodJ1OjvjLJj8Cb9ZnYDy1R5EOqtG0EP3yCESNTFSr4SzVk4tGe7RS
+         j8zj3WqKRiXwaFdwIEELxek/W1Jkt9RrgaO6WNSU4qQOSnkmV7/RdY9hZZWWiw5LO+EV
+         dhdw==
+X-Forwarded-Encrypted: i=1; AKwUvBzhFzgTYrakhpRlCe1xiVAP3wkQE6XTBFL1kRoFN6a80BxOqb6deM3Yyg80klYhetRk4bfsUSrCZrcgHBuShw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJlXq7tVOgRGugbEmP/I5BOztPE/aBYWTSQGhl4TlkPU3Y+dcIv
+	2XkljlunPBl/cBNsNktSZBVkz16bVu8XPmYyZy4R9NMlzPP95vtj1Rdc
+X-Gm-Gg: AYBFou0GDYhgnMmepDmddndB1iaYUyI/6a8+XqxA/f7tD/CWazjXMJ4gxlLTnLo0Zva
+	R8Xtk7b8SaYPQdTD1z/ad4JgKc7bXKvLqaZk6bTyAFKm2euBZO/afK2SgS0dUgxSIMOSBkNLb3W
+	mQfhDiKWxpfhWvCITOOuuTgZJElUIqALbOfFPy6ovLdVNghxwn6B2igcy50z1dkITA2tsrW6knk
+	MORcIz5N4sUthQOwfkNX94M4VZqhR+wC00kIpDgygd+y6d4QV0J05yJyWuMCPsfUqq9fo8kd9+c
+	JYBZtuoF2K3ywhsmkBKeMmekyWDUbLNp+Lh5Wsf8VAZCOzMpIZ0m0VRUx2LN5ZoHsaO/VNLq+kt
+	svSWMu8aauFWLOa6Jqk/Bl/6YOHQ8dB7UP49gYYwXjrl9ZVaJQCuEe2RdCXcKTq/ALmPLZQVsw0
+	RO2XtCTUOItSXRr5BLNv+bxKCx68M98S02z4UDrjEqaTQcGrp08ekvG3jPbA59IBUBkGu5+jJKm
+	HOM
+X-Received: by 2002:a05:6000:25e5:b0:488:6bcb:ec92 with SMTP id ffacd0b85a97d-48b1271cc86mr16432633f8f.17.1791184931267;
+        Mon, 05 Oct 2026 00:22:11 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c622affadsm1642847f8f.40.2026.10.05.00.22.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2026 00:22:10 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mehmet.fide@screeningeagle.com
+Subject: [PATCH ath-current 0/2] wifi: ath9k_htc: start ANI for an AP interface at the right time
+Date: Mon,  5 Oct 2026 09:22:07 +0200
+Message-ID: <20261005072209.4101009-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-QWxhc3RhaXIgRCdTaWx2YSA8YWxhc3RhaXJAZC1zaWx2YS5vcmc+IHdyb3RlOg0KPiBPbiBNb24s
-IDIwMjYtMTAtMDUgYXQgMDU6MzAgKzAwMDAsIFBpbmctS2UgU2hpaCB3cm90ZToNCj4gPiBMdWth
-IEdlamFrIDxsdWthLmdlamFrQGxpbnV4LmRldj4gd3JvdGU6DQo+ID4gPiBJIHRoaW5rIHlvdSBt
-aXNzZWQgbXkgcmV2aWV3IGF0IFsxXS4NCj4gPiA+DQo+ID4gPiBbMV06aHR0cHM6Ly9sb3JlLmtl
-cm5lbC5vcmcvYWxsLzIwMjYxMDAxMDYwMjEzLjI0NzU5LTEtbHVrYS5nZWpha0BsaW51eC5kZXYv
-DQo+ID4NCj4gPiBJIGZlZWwgbGlrZSB0aGF0IG1pZ2h0IGJlIGV4aXN0aW5nIGlzc3VlPyBJZiBz
-bywgdXNlIG90aGVyIHBhdGNoZXMgdG8gZml4DQo+ID4gdGhlbS4NCj4gPg0KPiANCj4gWWVzLCBp
-dCdzIGFuIGV4aXN0aW5nIGlzc3VlIC0gSSBjYW4gc3VibWl0IHRoYXQgaW4gYSBzZXBhcmF0ZSBz
-ZXJpZXMgaWYgeW91IHByZWZlci4NCg0KWWVzLCBwbGVhc2UuIA0KDQpJZiB0aGlzIHNlcmllcyBp
-c24ndCBodXJyeSwgcGxlYXNlIHB1dCBpbnRvIHRoZSBzYW1lIHNlcmllcy4gDQooSSdkIHNlbmQg
-cHVsbC1yZXF1ZXN0IGZvciBjdXJyZW50IC1uZXh0IGN5Y2xlIHRoaXMgd2Vlay4pDQoNClBpbmct
-S2UNCg0K
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+
+ath9k_htc starts ANI for an AP interface in add_interface, before a
+channel and the calibration data exist. When the bring-up stalls
+between add_interface and the first channel configuration, the first
+ANI tick dereferences a NULL ah->caldata and the device does not
+recover. Patch 1 removes that start. Patch 2 starts ANI once the
+interface beacons, which is where ath9k_htc_vif_reconfig() already
+re-arms it after a channel change; without it ANI and the periodic
+calibration never ran during a normal AP start.
+
+Tested with AR9271 on 6.18.48 and on a 6.12 product kernel: the oops
+reproduces on every start with a 500 ms delay after add_interface and
+is gone with the series; an hour as an AP, station mode, a channel
+switch, hostapd disable/enable and a restart are clean.
+
+Mehmet Fide (2):
+  wifi: ath9k_htc: do not start ANI before the first channel is set
+  wifi: ath9k_htc: start ANI when an AP interface begins to beacon
+
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+-- 
+2.55.0
+
