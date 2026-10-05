@@ -1,53 +1,72 @@
-Received: from mail-139-mta251.mxyeet.net (mail-139-mta251.mxyeet.net [23.172.139.251])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AF5B4AA3F1
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 14:42:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.172.139.251
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0C434B2049
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 14:56:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791211382; cv=none; b=n+gv0hIZWbZ7f3z9mxrtKd+8tI/ryyh6BoGX/U0nqWh3yNFUMdRrDz7DHM/oBY+ai37oUImYU6AWLjFpV6y33T6tk0gzAyEjc0CCoKeHDmh/EtXrAvbcty/bDYNXR3ZY5Ktf35VfuvZohhkWJuRKVyKGHh1F41Pv1V/CAsxoYUs=
+	t=1791212172; cv=none; b=R+BtHEMA2QOhqODvgZP8wb0BxQOxEHIrNQTKNParlWVSnZDyeyoaz4i5dzajA6urLvEyeouOgatWb2EJI8Bq0tPBCt3whuB5nFFl2SFvFvYIYi3nxk2TG3eu129QXgnL3hjcxiPfn/5bUGoiAjiDxgeS1l31jxNdTVUwwRXoxN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791211382; c=relaxed/simple;
-	bh=9YGDjY1vYVijQB92yUeELjAVI0R337sPyorF2am+YUY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=STLCPF3p4y45l08c7DdzzN/OQQlDK098msGNWJHCwNbfr6byVS4nSo8vG4xwuCbHoqYjIj0/7hghqhnnBoK46kDZkmBN3+GENaawJbWbHXA2qAeUMQscBnCuwyDtWJeoaKcmhXzN+THfxMgMpPoypIdzp/IPLZyXAGA3Qy3UGsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endrik.dev; spf=pass smtp.mailfrom=endrik.dev; dkim=pass (2048-bit key) header.d=endrik.dev header.i=@endrik.dev header.b=4TQ04GJc; arc=none smtp.client-ip=23.172.139.251
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endrik.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=endrik.dev
+	s=arc-20240116; t=1791212172; c=relaxed/simple;
+	bh=EiBKd8GStOUfIpi/gjn/hGQ8S/hVfxafHK2alIdzNwA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ORSJ0SfxsVugMmD0wYR+D9okt6VBwyjVCO8bzjWNc7zFyTArX+eUxqNz9qr6U/T6e880KB9BcWwnGFSQDxlzSOYqHxK8YGfsqEoCV3ddNWf+Q4jCLTZbSNpVuK0jzLl2zWmxvzbXcyiA7ZMtSrG0Uxy8kJN99gAVtAysQ1kPQA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z7WsM2bQ; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=endrik.dev header.i=@endrik.dev header.b="4TQ04GJc"
-Received: from lu-shared04.cpanelplatform.com [2602:faa9:3000::1006] (Authenticated sender: relay@mxyeet.net)
- by mail-139-mta251.mxyeet.net (MailFilter Outbound) with ESMTPSA id 1a10c84748e00089d7.002
- for <linux-wireless@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 05 Oct 2026 14:42:49 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=endrik.dev;
-	s=default; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-	List-Unsubscribe-Post:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=g22i9c42czROMUzVLasefPbOfPkxQ+xpmXjci54RXu8=; b=4TQ04GJcdmZyMYCPl58nhTEC+i
-	uJZJitngO2gHu5VDJGWQjP/DBqC6XIC0XaH7T/3k4jDy9EW/fQTcwI2ffJG15yejkXBgKy9o8iTDq
-	4rAIZ9a/uUg+GOe7nqMyOWtae5sXgXqtvjVaYk2iMGZk0S8867sQ2r9xgkZDOCNY9Lq+9OpCg58hM
-	iqYVNCc9AMYeHc9B4im5o5VmiHWaUb+1UUdljzRIiMUdMeR6T7gVZmA+qbPd69BItZzAuNSdrsmwD
-	zmhZwIQGmT6kb5KjZkUHkhNSSvogh6AHPAI5VvqBk9zqFFuYdWHQOMbWu1oi4SiGk4may7S8Ni3yu
-	l36eVFgA==;
-Received: from 85-253-174-246.ip.elisa.ee ([85.253.174.246]:43792 helo=noether.localdomain)
-	by lu-shared04.cpanelplatform.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.100.1)
-	(envelope-from <git@endrik.dev>)
-	id 1xDjtv-00000003E8N-3NmA;
-	Mon, 05 Oct 2026 16:42:47 +0200
-From: Endrik Einberg <git@endrik.dev>
-To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Endrik Einberg <git@endrik.dev>
-Subject: [PATCH v2] wifi: iwlwifi: mld: include VI packets in low latency detection
-Date: Mon,  5 Oct 2026 17:42:25 +0300
-Message-ID: <20261005144225.170280-1-git@endrik.dev>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z7WsM2bQ"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-49d05d51553so13681225e9.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 07:56:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791212166; x=1791816966; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VEexO2lvA+9AjS4iDd6WKJuFeAIzg+vRwOGVTItlkVc=;
+        b=Z7WsM2bQuOZWo0SPiHgIrBU9rVRCOw4GciHSKe9Y8KC2b6yE+/mhUg3FR6AVaEqCb+
+         ImiIK6fCbJcPDTF4uH9Uw+AALKtFhzphqWw5zg/EVOTgYvkGn3xMP7wCVqinktJLqg+S
+         4vcqBqJ6tjIZvqw8Ddkgm2vwTUlfv1ArzQ1t1ppPzm3ai/ZSSe4lkM8RsGguVOHZyhBl
+         /0U6UCla35XUNTtgo7ORpegTMeonTjcZO86Iet9fbuXB+j2Tt5tx+Bu6E1IeZsMzzJZ9
+         MVwmClGlROIN4gV+nqgb/IcVR1DzhJ/pEItXFOkf0O+8UC2dVBGM6LUsg5UBSxUPMYg/
+         CnLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791212166; x=1791816966;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VEexO2lvA+9AjS4iDd6WKJuFeAIzg+vRwOGVTItlkVc=;
+        b=W6RqCZmRmF45QARCrJnLXY338siXshxE25lZOubyLQ2M1q8P/J166ka/XAi9JsgwiZ
+         xwVA9elK2F63UjDb1lUPGBZD6YA8OxZJ4K461o4jY+DZs7FzEh3dGl/UL5LD9FMpX2Oe
+         AtHlybWWeJBFj6IoyXluP6d+ZtmguFBhAzC3UfRr7oq2gd4G4uTqe+Q9KWFa+tMSx5Al
+         eHTIwg1Mtv4H6tCUygJ56mx7pBvjIi9Ij/hJcnsYaDxzOQgrTRYuZ2GwiGPwxsMKh6C1
+         EIyj7OCwslZLQXlC7rJcIjO9qv6X48UxYhHFdzO/8M64DP8Ssj5zGIjqnZDLSmA8jgt2
+         KntA==
+X-Forwarded-Encrypted: i=1; AKwUvBw9vo8N00TFBbn9TWpkL8wT3MGegHt/X5JfLLJ5E5UqVDV18D8ELYHdkqrjjlYsmQi/oeYru8xD6mE9ghmTTQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++m3rjW927dEZ2iGKH+5EWMeo4vij7zd0PKvQ7lcsyDErkt97Zp/
+	HoN4ETzyYu+jRT03gIrRLu7gI0OQ4u5gpXK7o64ivpjjKOolwUtRoG8W
+X-Gm-Gg: AYBFou1CYc6ybSmiv6GvIHEIS+/qTNAdh1FMZDpELVuJGLr2isuM1EbsrcvDRr7Vw7u
+	t1A7jcgqRFxihSoHApxDGRUfH7J0YR7stZJDsQ5nblQqiWAu+r8ja+qEZq8IkRwQbyKVoEBx8Go
+	pgp8GoYFT3BP1OfKFTU/YIzVMW4v2Y7b6q1e0FmAq2g0nKokL/UKXzDY2Zzy9BpHyVlNlzVz+tS
+	0S6rh95dFPMtaG5hW4cxYweo71a0iXo9AgewGUJhfc5udKL68OuKSss6O86k91sPaaJInn2GZLJ
+	l7lR5srnpixDc5l6XaJTdXui9Ihk9OyFic5IsK65+tcCZ6BsnMqbT6zSCbwyfkZ4yGpRtOmxn//
+	VVa79/krDIQFKcoZ3zi+pz0W8pDSokUGiIi4oSzC02PHYjk6siiw3sCx6J4+EMnZuAe21iyqtE8
+	9x3reFzeSamVgwTGsiTh3yv8iaPDasaoP08JuXYeKyL17wAXG6NMyndxkHoQ842YNLJfVyJvK+9
+	DPd
+X-Received: by 2002:a05:600c:c16d:b0:4a1:717b:7976 with SMTP id 5b1f17b1804b1-4a1717b79eamr47242805e9.35.1791212165729;
+        Mon, 05 Oct 2026 07:56:05 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1776cfe45sm12380115e9.1.2026.10.05.07.56.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2026 07:56:05 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: stable@vger.kernel.org
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	mehmet.fide@screeningeagle.com
+Subject: Please apply 13221be72034 ("wifi: rtw88: Handle C2H_ADAPTIVITY in rtw_fw_c2h_cmd_handle()") to 6.6.y and 6.12.y
+Date: Mon,  5 Oct 2026 16:56:04 +0200
+Message-ID: <20261005145604.134614-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,50 +74,27 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-From-Rewrite: unmodified, there is a forwarder that points to the actual sender.
-X-AuthUser: endrik@endrik.dev
-X-NCN-Id: qrBpiUCfTMOkjygEbw==
 
-iwl_mld_is_vo_vi_pkt() checks whether the mapped access category
-is less than IEEE80211_AC_VI.
-Since mac80211 defines IEEE80211_AC_VO as 0 and IEEE80211_AC_VI as 1,
-this only matches voice traffic and excludes video traffic.
+Hi,
 
-This was discovered during Wi-Fi troubleshooting with LLM assistance,
-then confirmed through runtime testing and manual code inspection.
-Synthetic video-priority UDP traffic did not automatically
-activate low-latency mode, whereas voice-priority traffic did
-(observed through the iwlmld debugfs state).
+please consider
 
-Include IEEE80211_AC_VI as intended,
-matching behaviour of iwlmvm's iwl_mvm_calc_tcm_stats().
-Explicitly specify the two values to match,
-avoiding such issues from enum value comparison in the future.
+  13221be72034 ("wifi: rtw88: Handle C2H_ADAPTIVITY in rtw_fw_c2h_cmd_handle()")
 
-Fixes: d1e879ec600f ("wifi: iwlwifi: add iwlmld sub-driver")
-Signed-off-by: Endrik Einberg <git@endrik.dev>
----
-Changes in v2:
-- Match IEEE80211_AC_VO and _VI explicitly, as suggested by Miri.
-- Describe how the issue was discovered and confirmed.
+for the 6.6.y and 6.12.y stable trees. It is in mainline since 6.14 and
+applies cleanly to both.
 
- drivers/net/wireless/intel/iwlwifi/mld/low_latency.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Without it rtw_fw_adaptivity_result() runs from the USB RX work: it
+reads three registers as arguments of rtw_dbg(), which is an empty
+inline when CONFIG_RTW88_DEBUG is off, so the reads still happen there.
+Over USB a register read sleeps. On 6.12.112 with an RTL8822CU, the
+only rtw88 chip with adaptivity support, this gave "Voluntary context
+switch within RCU read-side critical section" in rtw_usb_rx_handler()
+-> rtw_fw_c2h_cmd_rx_irqsafe() -> rtw_usb_read32() within a minute of
+starting an AP, followed by "xHCI host controller not responding,
+assume dead", which took every USB device on the board with it. With
+the commit applied the same board ran the AP through a channel switch
+test session without a message.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
-index a4ddc32e2860..e7482623111c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
-@@ -257,7 +257,8 @@ static bool iwl_mld_is_vo_vi_pkt(struct ieee80211_hdr *hdr)
- 	if (tid >= IWL_MAX_TID_COUNT)
- 		return false;
- 
--	return tid_to_mac80211_ac[tid] < IEEE80211_AC_VI;
-+	return tid_to_mac80211_ac[tid] == IEEE80211_AC_VI ||
-+	       tid_to_mac80211_ac[tid] == IEEE80211_AC_VO;
- }
- 
- void iwl_mld_low_latency_update_counters(struct iwl_mld *mld,
--- 
-2.53.0
-
+Thanks,
+Mehmet
