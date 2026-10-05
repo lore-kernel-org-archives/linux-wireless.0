@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2CA236AB77
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:50:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8831337C119
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:50:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233403; cv=none; b=u511rIOXumkYxY36aCD0yx1gsDN+eePgMcAdSwkc2vDmuwd+ePfqWmh56INSEEO7lcyel35xzCem/AdJ1GMcuO7iQoRRdqmBJ6Yj6HDscN6Z7IWQ/R13Br59Eat8Milyi3rUEESyvwYLaWPB33w4ACxPTP/XMpOY7jSHPMhR2qE=
+	t=1791233403; cv=none; b=c7L9AL5BWu0ft7KvfU8ZJLoQDDbtnVK2IulCRMRiI9cC95Q/A/ksc/lW9T1OSHm31iV4fjx1Y9vBHSqk8S8HTB5M25mb6yoaz5df/f63Si9WGg9YL7aEmYVBqtJn5HCuT3vsWQacC289lukWimo/ERQCeTDIEgjyc46r4tiu6j8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791233403; c=relaxed/simple;
-	bh=BDkRmWp3yH04s1t36wgYkhPesvga+QSKj/Igljv5nME=;
+	bh=E0a/YeEU4RCGVQbq9CadLSgBxltTcwaTqzOZBzavxWw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KbzBVSmwWrpZylA5V0UulZoLJIDCwFleysQkBdYd9gtlh5eNoU8YQYtsIFhnmgOO0rQJwaVAxT6V5/HpFICGH7fGFt0PtEfuN6IyzgCAbMQOo1QNH2ViAKyLOA9cFlg+7CFpo3BRiJGUwVXdnnpclF6LbaoSTW8yI9lBE5+Y3Ik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=nEonrEr2; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=ZLsLviK/awHvdCZWHF/dHT4muKLfOpbJ7XO5yc2tu3hiCv1CF739KG3HRONe/E0KB4LWbN2xugCtcdO6KJ+sE/TcMyLGvfiv2WrlKN4nSQgqUK792+PCt/1I0D0EuSB/QtWtohDuulCXt7E0UtE99JHkLP/NTEhg3DtzQ0AQluU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=tiAtZuEd; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="nEonrEr2"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tiAtZuEd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=IcTs8hTcRcGZt4jkRM1EJRdAES5LZBoHijwL9jfZ9rI=;
-	t=1791233401; x=1792443001; b=nEonrEr2aZn8sx3rPRiox7YWrK8AvP+DN7jrDB59Iv4KZcM
-	9tBYdpSDDqpPCdb7iMn8PVZiAxkRJ+LV68nGzL0ZHAXX3s6ceiSD5/tVyIDFInZ6JsLMC/bHn6Ltv
-	78vTu7MWhgDSi7byB0sNDq1g60JaPqSJ+8mXooTgW31JqcA/w9q3LUZ0GozTvaXIW3vl7uTDa9czZ
-	VZZPj0lvrfpoLxyAAzCwExctjAVIOMQTIhLaJUdVb2OvFaSrfs/4saSii/lkt3toeCPQL9RDCQIIq
-	NeQjYA6g1y4gQR8bpTANC7o9/evtOPQmGSDUA+9X48lCjhzCDDRSMByrC/ipjlgw==;
+	Resent-Cc:Resent-Message-ID; bh=NUvQEo5raINciW6i9Ud8TAcspRL+h/l2Ir1VUfPr7O8=;
+	t=1791233402; x=1792443002; b=tiAtZuEdrEpV+v4bvEzSbJqTFKU37Zi95sbv6chG3vrG4B9
+	Tjqo8iuIgIo7rMCrDvHT9rVQ4+2zl9hBcqUMAE/VCKX4qlaKXL6rKS70JO3RL7R9OY7n11lxJVmrp
+	fAuqbfeEC9TUKliZ16lVTOe0+ormrIMi48K6/h3RzIv+KmitUbepArsoEqm2m6WxmnWE0M0tjgNY6
+	YIcxbCqFahlCf3lfEghmZ1TKIxvjPj0z8QKmwcd24MDTVLD3es7IrPv/BrNAcGcIgzdWzNUOfjSbe
+	M2wvMDZOqY+4ciYQ/W6opwsusRY3E30MvJPyZu76g3yZUumJAIGFkh2l5oH8GELA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDpdG-00000005cw8-3bpo;
-	Mon, 05 Oct 2026 22:49:59 +0200
+	id 1xDpdC-00000005cw8-0rXq;
+	Mon, 05 Oct 2026 22:49:54 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/10] wifi: mac80211: fix mbssid/rnr allocation in beacon data
-Date: Mon,  5 Oct 2026 22:47:59 +0200
-Message-ID: <20261005224950.2f554b2c7c10.Ie961eb6b1435f956446e052936258758b966c67f@changeid>
+Subject: [PATCH 01/10] wifi: mac80211: clear fragment cache entry 'is_protected'
+Date: Mon,  5 Oct 2026 22:47:52 +0200
+Message-ID: <20261005224950.c3e4106f34d5.I866c0862db031c3a810d2333acdd22e2733d2b8c@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261005204950.2303430-12-johannes@sipsolutions.net>
 References: <20261005204950.2303430-12-johannes@sipsolutions.net>
@@ -50,107 +50,35 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-These structs are placed after the tail, but that can make
-them unaligned. Change the order so the structs are after
-one another, and then followed by the head/tail/elements.
+In practice, we probably shouldn't end up with a fragmented
+frame that's protected, filled into the cache, finished or
+dropped and then the next frame is unprotected, since only
+unicast data frames can be fragmented.
+
+However, tools complain and it's more correct to be able to
+do this (e.g. an unencrypted fragmented EAPOL _could_, at
+least in theory, happen), so clear the flag when the entry
+is reused.
 
 Assisted-by: LLM
-Fixes: 2b3171c6fe0a ("mac80211: MBSSID beacon handling in AP mode")
+Fixes: 7e44a0b597f0 ("mac80211: prevent attacks on TKIP/WEP as well")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c | 53 +++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 22 deletions(-)
+ net/mac80211/rx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 69002d740a58..d0d14f621588 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1511,6 +1511,7 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct beacon_data *new, *old;
- 	int new_head_len, new_tail_len;
- 	int size, err;
-+	u8 *pos;
- 	u64 _changed = BSS_CHANGED_BEACON;
- 	struct ieee80211_bss_conf *link_conf = link->conf;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 1121e650b0dd..bd8ae24ed1be 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2284,6 +2284,7 @@ ieee80211_reassemble_add(struct ieee80211_fragment_cache *cache,
+ 	entry->rx_queue = rx_queue;
+ 	entry->last_frag = frag;
+ 	entry->check_sequential_pn = false;
++	entry->is_protected = false;
+ 	entry->extra_len = 0;
  
-@@ -1538,20 +1539,16 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	/* new or old multiple BSSID elements? */
- 	if (params->mbssid_ies) {
- 		mbssid = params->mbssid_ies;
--		size += struct_size(new->mbssid_ies, elem, mbssid->cnt);
--		if (params->rnr_ies) {
--			rnr = params->rnr_ies;
--			size += struct_size(new->rnr_ies, elem, rnr->cnt);
--		}
--		size += ieee80211_get_mbssid_beacon_len(mbssid, rnr,
--							mbssid->cnt);
-+		rnr = params->rnr_ies;
- 	} else if (old && old->mbssid_ies) {
- 		mbssid = old->mbssid_ies;
-+		rnr = old->rnr_ies;
-+	}
-+
-+	if (mbssid) {
- 		size += struct_size(new->mbssid_ies, elem, mbssid->cnt);
--		if (old->rnr_ies) {
--			rnr = old->rnr_ies;
-+		if (rnr)
- 			size += struct_size(new->rnr_ies, elem, rnr->cnt);
--		}
- 		size += ieee80211_get_mbssid_beacon_len(mbssid, rnr,
- 							mbssid->cnt);
- 	}
-@@ -1563,26 +1560,38 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	/* start filling the new info now */
- 
- 	/*
--	 * pointers go into the block we allocated,
--	 * memory is | beacon_data | head | tail | mbssid_ies | rnr_ies
-+	 * pointers go into the block we allocated, the order in memory is
-+	 *  - struct beacon_data
-+	 *  - struct mbssid_ies (including variable array)
-+	 *  - struct rnr_ies (including variable array)
-+	 *  - beacon head
-+	 *  - beacon tail
-+	 *  - mbssid/rnr elements
-+	 * so that the structs (which contain pointers) are all aligned
- 	 */
--	new->head = ((u8 *) new) + sizeof(*new);
--	new->tail = new->head + new_head_len;
--	new->head_len = new_head_len;
--	new->tail_len = new_tail_len;
--	/* copy in optional mbssid_ies */
-+	pos = (u8 *)(new + 1);
- 	if (mbssid) {
--		u8 *pos = new->tail + new->tail_len;
--
- 		new->mbssid_ies = (void *)pos;
- 		pos += struct_size(new->mbssid_ies, elem, mbssid->cnt);
--		pos += ieee80211_copy_mbssid_beacon(pos, new->mbssid_ies,
--						    mbssid);
- 		if (rnr) {
- 			new->rnr_ies = (void *)pos;
- 			pos += struct_size(new->rnr_ies, elem, rnr->cnt);
--			ieee80211_copy_rnr_beacon(pos, new->rnr_ies, rnr);
- 		}
-+	}
-+
-+	new->head = pos;
-+	new->head_len = new_head_len;
-+	pos += new_head_len;
-+	new->tail = pos;
-+	new->tail_len = new_tail_len;
-+	pos += new_tail_len;
-+
-+	/* copy in optional mbssid_ies */
-+	if (mbssid) {
-+		pos += ieee80211_copy_mbssid_beacon(pos, new->mbssid_ies,
-+						    mbssid);
-+		if (rnr)
-+			ieee80211_copy_rnr_beacon(pos, new->rnr_ies, rnr);
- 		/* update bssid_indicator */
- 		if (new->mbssid_ies->cnt && new->mbssid_ies->elem[0].len > 2)
- 			link_conf->bssid_indicator =
+ 	return entry;
 -- 
 2.55.0
 
