@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DD337F01B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22FC380FDF
 	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 20:50:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233405; cv=none; b=f0uCbSHHOvI7ySBSM48jvpIFDV1icpSTG6Jh4eM0ZoJ0a2PXe8ZWILCv94K+OLNnHkNTCRZzZnP+h+E3/lLEhXOKZ5phBKBEsDbXadc9IqAowwz9mYocAUFxEY/kdJAGaDY8T3B7+k6bkj/O7Nln7Dj4LcwEpH+pnV6ah/eg0h8=
+	t=1791233405; cv=none; b=IkOI/LeJ8FbDT1+hGj1+vL8GlV4LFhu16ANoMKQ40uA7WCMuCapwV0AkPagI/eC7Z/6IQO0KUX1H7bUHpFV2AW/Z9js0R09jvxx3yEkSFMGlk2qZ426IdH592kJsGhKtTQ0N2jpcUgroltFwurC98z1t+4ywDZk4bWv2ZE0xU9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791233405; c=relaxed/simple;
-	bh=PhJd5I9w21yzdDnTVGBW7qDDDQJbhEjHtsf76N8Gss0=;
+	bh=mJEr4tsvIknqg3vx+Jy+OOnz9AhbTRNHPJS8ARGzCpE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MIoVo1g+90c0JgbISgJjTXEbmZmBVs1e5yH58pQkdflFHKA8ZAhjFSs0OJeNISp1v6GpyS72c63xjkUR8ciugNBrSAP7pBHiVM/u5WENSjpxnNNFzDzhYx8rrTceJD/FKHxBjiT6oFofL4a5Z1btHXKURoxYSoS8YAH5mZj7Z28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Y9eq4kZZ; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=IBlZ1dx1TUcIXV+AsAXYimeDeBtyEYAsRo/FRpm1yMNWkKVUV7beYLfhTxHOe1spt5CTl140UadXmjDwO915mVV8qud+Fa4OhwV1iw0K3zMy2IEZDfk0BJtJCboKvNKZoredAr7qzbXIbMyspzL7bz0dEBUPndZzOCMd/goBh2s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LWJdVOYF; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Y9eq4kZZ"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LWJdVOYF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=lGB6F+BjR2UgEctrzU16AmCtFNbI6+lCWlhIv7P/3oA=;
-	t=1791233403; x=1792443003; b=Y9eq4kZZa3unmMA+hmtYciU0cyFrdkfFqUCIB3DyNXiaMQB
-	6SKEN+3C5VW7mB5MXoxFURoXpq9eRpKtRXJDfm5PqLLQ/oE3XBkUQ2de/dr9YOMcTVbWll6LyJhma
-	+SbunSzjsxs74+KQ/uCNIq1Kczr1EM6ZHeIcJ3aGFUwaaPNl0vnfN1QbIU2IYF6h29jDwy4VCRq4d
-	Chugayx0Q+VvQA016S13j/fPyal+A2EZ32Wi1Jewj6ZJTb1nu/Q4RB3bKvK4NaBvEeqO5rHh/dvbQ
-	re0SvyWmuV+vZSb/eOHFIv6rfvlzHAyfcuGy2Xx9hrq8u3el0F8Yj0YBmAN4w2rg==;
+	Resent-Cc:Resent-Message-ID; bh=kMDZ8VsgRmfrtNECWYzQTjGxJM3CAbvRKRK1sQ0YXsI=;
+	t=1791233404; x=1792443004; b=LWJdVOYF21z2KKBM6Hv7XY8SaOWgeAwVjx1kETbkgZklbNe
+	b3QofPjw6OEu/TQYJXziwbSegjmoJ6ylPHkpuG+i5YV+n3CAyoRx4EcrTF2wm4c37gOTFgvbTUbWo
+	Qs8RXFtaMW5CrjG5qOzY565wWnUmkOIbXkmhNQtKUmFS8er9dXSjtw1VhBUttwEcxav3MD6RWkpWE
+	Fp54Nf4jPJvDuEPYvf2y3Vb2P1pittEHHW5VCVarf5o0dcjm+B5s6xW8GdlXMC7uY+KW9KDjW1n0p
+	sdLOcIpxk8qM5V6R7Q17PS8c3gMfqFmSaFA7/pO49vFNbMzQPea2rmd+4vUN2zSw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDpdH-00000005cw8-3sxZ;
-	Mon, 05 Oct 2026 22:50:00 +0200
+	id 1xDpdC-00000005cw8-3TdV;
+	Mon, 05 Oct 2026 22:49:54 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/10] wifi: mac80211: don't read runt headers in injection
-Date: Mon,  5 Oct 2026 22:48:00 +0200
-Message-ID: <20261005224950.0f3c3e88abde.I03477f2444a9f2cb2888d00320ac7c4504f150a3@changeid>
+Subject: [PATCH 02/10] wifi: mac80211: mesh: use hlist_add_head_rcu()
+Date: Mon,  5 Oct 2026 22:47:53 +0200
+Message-ID: <20261005224950.e0db543145e1.Ieaf30d3546e8ff63ccf400f6fb26e027c218721f@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261005204950.2303430-12-johannes@sipsolutions.net>
 References: <20261005204950.2303430-12-johannes@sipsolutions.net>
@@ -50,42 +50,30 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-For injection we only check the header is in the skb
-head, but e.g. ACK/CTS are really short, and we then
-try to use A2 anyway. Require A1 (no S1G extension
-frames) and use A2 only when present.
+The mesh paths walk list used under RCU, so we must use
+hlist_add_head_rcu() to publish an entry. Fix one place
+that didn't do that.
 
 Assisted-by: LLM
+Fixes: b4c3fbe63601 ("mac80211: Use linked list instead of rhashtable walk for mesh tables")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_pathtbl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 34f3a4ac7278..27294466958d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2471,7 +2471,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 7b2f71186dfb..0485a979b3c2 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -712,7 +712,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
+ 						  &new_mpath->rhash,
+ 						  mesh_rht_params);
+ 	if (!mpath)
+-		hlist_add_head(&new_mpath->walk_list, &tbl->walk_head);
++		hlist_add_head_rcu(&new_mpath->walk_list, &tbl->walk_head);
+ 	spin_unlock_bh(&tbl->walk_lock);
  
--	if (skb_headlen(skb) < len_rthdr + hdrlen)
-+	if (skb_headlen(skb) < len_rthdr +
-+			       max_t(int, hdrlen,
-+				     offsetofend(struct ieee80211_hdr, addr1)))
- 		goto fail;
- 
- 	/*
-@@ -2505,7 +2507,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 		if (tmp_sdata->vif.type == NL80211_IFTYPE_MONITOR ||
- 		    tmp_sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			continue;
--		if (ether_addr_equal(tmp_sdata->vif.addr, hdr->addr2)) {
-+		if (hdrlen >= offsetofend(struct ieee80211_hdr, addr2) &&
-+		    ether_addr_equal(tmp_sdata->vif.addr, hdr->addr2)) {
- 			sdata = tmp_sdata;
- 			break;
- 		}
+ 	if (mpath) {
 -- 
 2.55.0
 
