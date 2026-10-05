@@ -1,110 +1,69 @@
-Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558BB221FD4
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 11:55:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.161.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791201314; cv=pass; b=Z4WNzWGywPCGh8MWrpmNXxEZ2yAJ3X+5G7jfgouskv5u0RyCJIx4xT106KV3yj1JZjf4DJMbIKzgvQyFLLnQ81rW5+Bd2a/vfhhyl1rEkbxE8ErBLNBe/te1dlqCZGjNY4cvFsDyK4W5GEeqdOyxG7t6Rwe+OOIE9of7h7Rjc4A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791201314; c=relaxed/simple;
-	bh=exRxIskWFNPYOwkKeipQ9T2aVSUzJuVpO/XknTmBsP8=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=iXl2Tq07+0m+BNcQbTqUHBjsH7qrkzN9ZNyFiJ+XGmphNH+yces9xfUJ3wzoN45nLBPiDHkfHGOEp967t0iS0DKVMbwSuwtYNJeHmZdeeCeqhGImCtGAHJgv0FIqhttSZ53WfM6ixVYayuS8nzLHzxtuPjkp6FwQtKlaFMuvFjc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S6uC99lz; arc=pass smtp.client-ip=209.85.161.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C36EB37DE99
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 12:44:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791204264; cv=none; b=fHICByD6DBgKojqWbfQOorzM6oO2d36S+9VvdzSYBWzOCQROqlpSw56b8uX81iRYCgEKIR5rurOP8mKusGPNE0a5AV8SQq+JAHOeuXbpsBYIMuFlJD8T5wX/Nw/kq/04jUVjM/8Vx4VFBmttn0V8cQeYuOU2C9Qs+x94XxW7VoA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791204264; c=relaxed/simple;
+	bh=aQrg+MzWEb3JQcw0hzjC4IMHX4htf9QanQhV+BM5ED4=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=rbCBcDayVg7kkqTA3T1CNsV55SMqF5fSbegEUCX17mUdnNCOxw1TF71Mysnrd+Y15noiaKuDIVpGkS6SgpjQsH70RaoPoOhgtGvVccIwo0lCrXGsMjoSpt82Y+/9n4qf4WoTdJbouySHhzPkukA4UvkQMB0XACdrNXhPQ23LP3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=o+Hih0wL; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S6uC99lz"
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-6d7a9e2eb24so1084986eaf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 04:55:13 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791201312; cv=none;
-        d=google.com; s=arc-20260327;
-        b=OB581PSJb/+t6C8Rc3i0OiT8lT6QLbm1kGU3omMhl0V0JArdgzSaQh0qHXDtlu7+IG
-         vD6l3+v7sV0k3x/+jO/jytt58QQODxPN0YW2XymwLTFfMC3tzMAcS44tPBHNp/24fMYy
-         DF/Sh9WD/nTCSzH2RY45bkXBkmbBOmg62YKO4/ow4BjGCFwb+qBcWF1YK1YlEOaf4z4x
-         a12x+ZwS5g5rp/TptQlBz65LCPfeDE/sZ4IqmxjJoTbScl0E0zQz4TfDYHfoAOw1FFXS
-         vEmctZSjPCxouSioY745m88YUQShyKVFq0yjou0ll+Ar+XKLYBY3d4hkifM5tUYXHB8L
-         3NzQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=exRxIskWFNPYOwkKeipQ9T2aVSUzJuVpO/XknTmBsP8=;
-        fh=xGxUdzwdbyRoNAZKBE29esoEL+aGDjDZsQAkUwahFfo=;
-        b=l76Ojyfed7ZdBlavvPOXlQGTCH5Zlav/2BLC3uEajvl712jSuSIS9POt7lB5kmQcMh
-         L4q29OeowqC66BvTtBwqW1zAXL3Nr3Z1Z1gPOyZ4Mb9rFHQQQVwxKC7yqtg/EaD28Ity
-         Y08ni/Zv7TVHQFbZMMUTP1cE9tMP6GSY+KJhLmNuVn0o5a57O1dMI6j24692fYwXYw8T
-         tNCTGbw5IKlNd0+WIFxykIRhKDnaiB+8Q4/8TEze3p7XYb8hZ3rS0RVj8j0lQDXBltA3
-         eVBNYAO33L+8Kpm1GxKCXlBPbT/2v16bWS6GsePnmz4/tjzqQLHmyr5A+ju1w/DcT8zj
-         IwTw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791201312; x=1791806112; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=exRxIskWFNPYOwkKeipQ9T2aVSUzJuVpO/XknTmBsP8=;
-        b=S6uC99lz/5N/rmWnw4dcfsYSXetEiN/5rIFnUQYoOaj3I3hFuWV4+QYNG6VGrszP2/
-         kznNCOuv6FleQvhHDsbN+qQpKhiQQzqmpNUNjJfcXNd/KTFXp05bkpRVrijp/OPcrbXY
-         pvHCTyGr7PXtENxSlXIgu6nJjGsKLfW3/+qy7guep3GUk4zFLwtu4BmAE5fAttSRHO6m
-         2wOnmgCit/PPq0oRxOMC3g/BdE1V4qzqScllBEI9KKigpL8Nmpz8Z8TyR1nFyRzpVDNB
-         TCwx/hlMiTC7LQCOn14cvU6tffllzUIdIBib2cGHqCy0Jz4bLzpZ/cQRs05XCVcwXO9q
-         8LcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791201312; x=1791806112;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=exRxIskWFNPYOwkKeipQ9T2aVSUzJuVpO/XknTmBsP8=;
-        b=vcf21IupvVXsam1z1U8luFjCA4yEgjAuaXrrlGiCmuvoZnFcnKK83CTYbAjjJgTfas
-         hZcBZ8fLlGj2GoDl2F0zvDyKdbkrDgbgBQzuYNmWnu8Fcp3MfJoNnvoNJ0i5QCGANt8S
-         Os+xOSLlmkI1qiAXAPGLadY+bmmWuydVYLz6sQcm7pCQbBU+quYLrd+6V5bh6WrxPWMV
-         E5qIFPs0aBubUseyCvvpa+cSNEqrPXlakjCgHuV+dLBWZ2ld3cFadMjH2b2lIzLiEN/0
-         OjHC5IGXjgeaWYNv6u+yJTOfFQ9UQdbA3HsYc4Ld6lAYc7wU/hLZTfIUh4hx89xVQYJp
-         lQyQ==
-X-Gm-Message-State: AFuF++lqc/Ssv0eeHpcGLDBQ8QxnJOvVrqXZWtN6bp68PP12GZXwh3OY
-	zQxF2mWvilWlXEgRsP1xoMmwGxIfk2EHLMOhymSqSCQh4TpJWdBnrx2g5GvQ4Othn3dE488e+Lb
-	l4SqLbrQg7pJymHeVQm4u1kRoTFyrevM9n9zd/9Q=
-X-Gm-Gg: AYBFou34dBRj2g6YGWvrAXqTGgLiv1iaQlHHhzjbLMUBiXwwfQNfOAmSKRtwsMYS65B
-	te+0WXWbHkVsxhhc4+b0hFuSKN3ugQyO6cGPLPLPEaHRgL8CUYp4PLMuaK4UMPQEO0EUssdniXc
-	9DYkpfsQhx9VB8poq0gX0vsI2VekbsVjlG+orb59ENiEh/Z+En0jJLnUxIhrflGixVj3XnylBcj
-	IqMQuYxJab2fjiZucoTn0Ar7sx8/PnugLFQYIYAQ6d65JLWReNyK//AsFMsms+yQHptg8ORfdB5
-	d3IpHOCWk7GGUNUGbb6JCzZGGYSwJ4nvBmtQ78KMk54WYrKWujThCjpe40k7VF2ojG0lou1nUAC
-	YT1wbHC6IZW1uAA==
-X-Received: by 2002:a05:6820:c0cd:20b0:6e0:ad2a:8afc with SMTP id
- 006d021491bc7-6e0ad2a8bffmr3862415eaf.49.1791201312096; Mon, 05 Oct 2026
- 04:55:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="o+Hih0wL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=aQrg+MzWEb3JQcw0hzjC4IMHX4htf9QanQhV+BM5ED4=;
+	t=1791204262; x=1792413862; b=o+Hih0wL3PrTTPCOGuXtvhteqgA7GK7vgiyhFt+A/SGUPqG
+	pU5FZd89kmI0jSFp1hMq6g+MkkNUS6if9gCgys6ZxGmzLyYQjGs0znRsX9rK/UWYYbH1p9L3JG2a5
+	jN5sOyYXOKpZVe37tZpsZSxfwsHVkLkGI5gg2FNbqcmV77eEugdD+VNlG6VeuMmf+OBeh4DGTee3S
+	TtMAazy9Zzo3Y+YuogGY1X+KbCEyhgKYflQ0ZzBpWA2v0086mi9D3h5npwdHRkl8tDlZpoBuIWN9/
+	oFvk2noDlhgLqrLvAYvtJu9LvjNU7Z+CO2EUB4TO4mneO1dxIDSGqr62qI+LmxfQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xDi3I-00000005J7c-0KUp
+	for linux-wireless@vger.kernel.org;
+	Mon, 05 Oct 2026 14:44:20 +0200
+Message-ID: <31185bc5614afbdb56ffd266f5e81941b45b3498.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v2 00/13] wifi: lock contention improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 05 Oct 2026 14:44:19 +0200
+In-Reply-To: <20261005101057.1992330-15-johannes@sipsolutions.net>
+References: <20261005101057.1992330-15-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Zack Johnson <cyrillios90@gmail.com>
-Date: Mon, 5 Oct 2026 14:55:00 +0300
-X-Gm-Features: AclHuK-YB60pTyUsA3_9rXw7WQR39HKLMGiEFHfLb_6pEUIXQssDGEJywx4PA90
-Message-ID: <CADi5oX+e+QKQXqgmVU0Rurcw51shCGhBef2V5nExxvBPnQohpQ@mail.gmail.com>
-Subject: rtw89: RTL8922AE slow RX (MCS 0) on 5 GHz with Wi-Fi 7 MLD mesh, fine
- on Windows
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-malware-bazaar: not-scanned
 
-Hardware: Realtek RTL8922AE (AzureWave subsystem 6011), PCIe Driver:
-rtw89-dkms-git r2010.faad399 (also tested in-kernel rtw89_8922ae)
-Kernel: 7.2.9-1-cachyos (CachyOS) Firmware: linux-firmware 20260916,
-rtw89/rtw8922a_fw-4.bin, version 0.35.80.3 (8ef4f0cf). Also ran "make
-install_fw" from the morrownr/rtw89 repo: same version and hash after
-reboot.Setup: Wi-Fi 7 mesh node, 5 GHz channel 48, WPA3 (SAE, H2E).
-Connects as MLD (wifi_generation=7, ap_mld_addr present). Signal -74
-to -78 dBm.Problem on Linux: - Receive rate often collapses to 8.6
-Mbit/s EHT-MCS 0, downloads 20-50 KB/s - After connecting, IPv4 DHCP
-can take a minute or more, or not complete - Once it worked well: ~5
-MB/s, pings 28-58 ms, 0% loss, but this is not repeatable - 2.4 GHz
-works but only ~1 MB/s - dmesg occasionally: "timed out to flush
-queues"Same PC on Windows (Realtek driver 6102.24.145.100, dated
-4/6/2026): same node (BSSID 3c:64:cf:0f:0e:03), 5 GHz channel 48,
-802.11be, WPA3 H2E, receive rate 2882 Mbps, full speed.Already tried,
-no change: power save off (disable_ps_mode=Y), ASPM L1/L1SS off, band
-lock, WPA3 vs WPA2 profile, iwd instead of wpa_supplicant, community
-driver vs in-kernel driver, repo firmware install.LTS kernel 6.18.55
-result: <fill in after the test>Question: is multi-link (MLO) on the
-8922AE known to have problems, and is there a way to disable it on the
-client?
+On Mon, 2026-10-05 at 12:06 +0200, Johannes Berg wrote:
+> As before, on top of the series I just sent:
+> https://lore.kernel.org/linux-wireless/20261005100525.1991059-20-johannes=
+@sipsolutions.net/
+>=20
+> The idea is the same: make some methods unlocked to avoid lock
+> contention on the wiphy mutex, adding also a new "update beacon"
+> method (but that needs driver opt-in, for iwlwifi that'd be ~40
+> lines changed since it can send commands async).
+
+Enabling this also for get/dump station isn't horrible either and might
+help with those use cases Qualcomm has, but it does require another two
+driver methods (if they have [link_]sta_statistics).
+
+But who knows - feedback on this first please :)
+
+johannes
