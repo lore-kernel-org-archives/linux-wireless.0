@@ -1,97 +1,211 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D9D3AB288;
-	Mon,  5 Oct 2026 20:55:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5722E3DAABC
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2026 22:13:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233746; cv=none; b=CF/43Tg/B4YArZ8vnmwb/bXdtKq7718NokwjClWsSVAyEingWtBF+4Jv/L5bnwWIbHhX9huVEne9YHywsBqrPUzhlYkdfUKHb4+/XedvQ3smqkPgjFtQp9KdP0RxV32wAYEZsqwR0VTm4ZkidERU81MvI/fgtqMrGCt2ZfQL+w4=
+	t=1791238386; cv=none; b=uLiw5gnECMm3gkIfGApWydTTHsJ928kpa5HGU0Jzh2xewCH6Z734te6FopjHYAAHe1ro8ATNJqRJ0/egqoGdU0XjEzFFJyvw0vVb5y9fXwsx4Gdj05kO3/AHR9y/T0NPvtlWnyfIk0glz8+xOeSVTUyu025ga6Li0953n1bwRZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791233746; c=relaxed/simple;
-	bh=7ekFXvzem1Gyk0ZXiZZO+Q2FRg+laRcuHg8wg7vBabw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ul3j9HZovVsdz5fn1K9KhG4Fyaii0KxH/6gjxITV9vTI9BIZ18ZTYJe126a/j0eq+PpD8o/IRGORP7MaHCCqQ4fJg0oU5+SNIrw7/m1OY5Wpru3jvCzdfBEExl0lIvSYK4QOIYwr7jS3/IdurEjWSHS7ZOISOUfc41m4ahYzxhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=mljDJI9b; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791238386; c=relaxed/simple;
+	bh=i5CKSl8IrnIy6451W8SH6rkIRyPCVpOpbQu4VN2bgdU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=bSb67tshxTaLKlVEpvVUr6m5ySfq4Ks9B3YJoVXoWbR6/KdygnEc/l1eY6UQAGAUe8aZrDjawc6k4KL7qB6T6RldehBEGLfZRa3Tedd44s8kUuwYSYyXN7k/aOcSA77gweJQbMAX+RpgNm0F3SlJlV2NK/1yfWPawQXyDaD+00Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GK4qsAMT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="mljDJI9b"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=7ekFXvzem1Gyk0ZXiZZO+Q2FRg+laRcuHg8wg7vBabw=;
-	t=1791233744; x=1792443344; b=mljDJI9bzVaR6f5NceNi7URJaBZJApKxTw7qifotuw9bbkG
-	8T8GX4G03RS7r9PNel7i7TBnRZWLFPip0OyBJpo8mbZJ/T/3XN++a6A0D6Zmpb9ldhj85Z1UZGDHR
-	0jx1cQzOhU0bb2UbijLzDzP6BrHBVbWViVzLnnTj9wL6tl9nKPOJJ1Rb7qqv9tKutpuzspUaTXx5S
-	dYzyLjkadGU7Yvd/LtojKfyfsdpFkCjbxrS7Z8j/KWALIwwUL2t/B2xFmpuD0CLN+uiNI4umlB1c0
-	Vv0ZXSsOItJGTFnrkSBZhxuKep7I+0ayRDjD2GMzhh6BGpb12guQScue/+RO59tg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDpij-00000005dJR-0l0y;
-	Mon, 05 Oct 2026 22:55:37 +0200
-Message-ID: <289161e6ddaf18fa63a55623c75d700850fd57b6.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
-	herbert@gondor.apana.org.au, ilan.peer@intel.com,
- linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
-Date: Mon, 05 Oct 2026 22:55:35 +0200
-In-Reply-To: <20261005164521.1037345-1-jtornosm@redhat.com>
-References: 
-	<4ede9873924541b7bed3fc09f5b8c8eb0415ea40.camel@sipsolutions.net>
-	 <20261005164521.1037345-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GK4qsAMT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CC63FC2BCC7;
+	Mon,  5 Oct 2026 22:13:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791238385;
+	bh=i5CKSl8IrnIy6451W8SH6rkIRyPCVpOpbQu4VN2bgdU=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=GK4qsAMTOwKCcoChIxFbrsFEJTxc4UQKsm8hriUVTZxV2p+kW6c/9ldVJ+brFV9TN
+	 FW3mF+5QJL9GAaY6mCHsWKpN0RXqUGA0SkwVd/61A8v5KD6aA8rQh2PU7g6P04SW3v
+	 HfQP3FAvCMvTKQ8RBYUM37Q+BrRSuDDEYetiehXAi4LSwFmjOhsYLuDnNK+6Ic6T8V
+	 PPLlcXA7aHdyAcLMhYZV8npsQAX6hM23Qxh+Nb2R3gZrMYpOmzgMilEMIrms6xOWs1
+	 4IAKkM0Ti7AVC+64jzdCdQHgitkSctG6oPj/AdgunkkhKp0qqElRN43Z3C1bdKuZy4
+	 EOkVdGH5YADkQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7973CA5FCE;
+	Mon,  5 Oct 2026 22:13:05 +0000 (UTC)
+From: =?utf-8?q?Caio_Jord=C3=A3o_Calisto_via_B4_Relay?= <devnull+caio.jcalisto.gmail.com@kernel.org>
+Date: Mon, 05 Oct 2026 15:13:03 -0700
+Subject: [PATCH RFC wireless-next] wifi: mac80211: deauth the old AP MLD
+ when roaming without FT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20261005-mlo-roam-deauth-v1-1-a863e35a190b@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MzQrCMBAGX6Xs2YUk/oFXwQfwKh5C88UutIlsa
+ lsofXejxxmYWalABYUuzUqKSYrkVMHuGmo7n15gCZXJGXeyxhx56DNr9gMH+M/YsQttDPa8txE
+ HqtVbEWX5Hx90v11/bhZFj1I4YRnpuW1fu0TiLncAAAA=
+X-Change-ID: 20261005-mlo-roam-deauth-2dcfd1731fe4
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, 
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+ =?utf-8?q?Caio_Jord=C3=A3o_Calisto?= <caio.jcalisto@gmail.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791238385; l=6782;
+ i=caio.jcalisto@gmail.com; s=b4-20261005; h=from:subject:message-id;
+ bh=jk1onJJXvWGT2KWmiejrqd3BEoTS4blc9Lg3Qb5bKz4=;
+ b=Z3ghWNewP4QRpJq2pXa9dcly+0cKw4Rxb8BnsCGScl5BRtYZQlL4PxffAKjCvzjAGRFB1yrOQ
+ zr3lljMdk5uDkPodSB1+ZjSfLJG5Q+8LSMQUYHt3ZLoi9pMmN/Oa501
+X-Developer-Key: i=caio.jcalisto@gmail.com; a=ed25519;
+ pk=a3chPQaRqMBVlrmx3pXPNsOkBA86+kINTxEWwB2xpjE=
+X-Endpoint-Received: by B4 Relay for caio.jcalisto@gmail.com/b4-20261005
+ with auth_id=1119
+X-Original-From: =?utf-8?q?Caio_Jord=C3=A3o_Calisto?= <caio.jcalisto@gmail.com>
+Reply-To: caio.jcalisto@gmail.com
 
-Hi,
+From: Caio Jordão Calisto <caio.jcalisto@gmail.com>
 
-> With the minimum changes on top of the fips_allows() infrastructure
-> (patch below), I have bidirectional data working with SW crypto.
-> mac80211 handles CCMP encryption/decryption on the host, firmware
-> has no data keys.
+When userspace SME (wpa_supplicant) roams, it requests authentication
+with the new AP while we are still associated. ieee80211_mgd_auth() then
+drops the current association locally ("disconnect from AP %pM for new
+auth to %pM") but passes tx=false to ieee80211_set_disassoc(), so the
+old AP is never told that we left.
 
-No keys at all, but yeah.
+That breaks roaming between the two co-located BSSs (2.4 GHz and 5 GHz,
+same SSID) of an AT&T residential Wi-Fi 7 gateway when the station is
+associated as a non-AP MLD (Intel BE200, iwlwifi/iwlmld). The first
+association attempt on the new BSS gets no response, going back to the
+old BSS is rejected three times with status 30 and a comeback time of
+1 TU, and after that the gateway ignores every association request from
+this station on both BSSs for about five minutes, even across a reboot
+of the client:
 
-What are you testing with now? Still MFP?
+  wlp8s0f0: disconnect from AP 8e:66:37:xx:xx:58 for new auth to 8e:66:37:xx:xx:60
+  wlp8s0f0: authenticated
+  wlp8s0f0: associate with 8e:66:37:xx:xx:60 (try 1/3)
+  wlp8s0f0: associate with 8e:66:37:xx:xx:60 (try 2/3)
+  wlp8s0f0: associate with 8e:66:37:xx:xx:60 (try 3/3)
+  wlp8s0f0: association with 8e:66:37:xx:xx:60 timed out
+  wlp8s0f0: authenticated
+  wlp8s0f0: associate with 8e:66:37:xx:xx:58 (try 1/3)
+  wlp8s0f0: RX AssocResp from 8e:66:37:xx:xx:58 (capab=0x1431 status=30 aid=0)
+  wlp8s0f0: 8e:66:37:xx:xx:58 rejected association temporarily; comeback duration 1 TU (1 ms)
+  [... 2 more times ...]
+  wlp8s0f0: association with 8e:66:37:xx:xx:58 timed out
 
-> However, I had to disable RX AMPDU aggregation to make RX work.
-> Without PTK in firmware, firmware does not set the correct bits
-> in the Block Ack bitmap, since it cannot validate the received
-> frames. The AP assumes frames were not received, retransmits,
-> and eventually gives up. TX AMPDU works fine because the AP has
-> the keys and sends correct BA back to the STA.
+All 8 roams between the two BSSs failed this way, 6 triggered by BSS
+Transition Management requests from the AP and 2 by wpa_supplicant's
+bgscan. In the same logs, the two moves to the other BSS that were
+preceded by a deauth (one sent locally, one sent by the AP) associated
+on the first attempt.
 
-That doesn't really make sense. How can TX A-MPDU work when you have
-MFP, this was the bit you disabled earlier even with all the other work?
-And the firmware has to send the AddBA request, so that can't make it
-through??
+When the current association is an MLO one and the new authentication is
+not FT, transmit the Deauthentication frame to the AP MLD we are leaving
+instead of only building it for the cfg80211 event. It goes through the
+same path as a userspace-requested deauth, while the keys are still
+installed, so it is protected when MFP is in use. Leave FT alone because
+the current association must stay valid until the FT reassociation
+completes, and leave non-MLO associations alone to keep the behaviour
+change small.
 
-> Disabling RX AMPDU forces individual frame ACKs, which work at
-> the PHY level without keys. The throughput cost is significant:
-> ~12-30 Mbps instead of ~500 Mbps with HW crypto.
+With this change the next 4 roams between the two BSSs (3 triggered by
+BTM requests, 1 by bgscan) associated on the first attempt.
 
-That almost seems low (11g maxed out at ~24 Mbps with 54 Mbps PHY rate),
-but depends on the channel width and MCS.
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Caio Jordão Calisto <caio.jcalisto@gmail.com>
+---
+Notes for reviewers (not for the commit log):
 
-> Analyzing the Block Ack protocol, I think the BA bitmap only
-> requires the Sequence Number (from the unencrypted MAC header) and
-> CRC validation (PHY-level). So neither could require decryption keys.
-> Could we allow this behavior?
-> Is there a firmware mode where firmware acknowledges all CRC-valid
-> frames in the BA regardless of decryption status?
+- RFC: this is arguably a workaround for an AP-side problem. I could not
+  capture frames on air; the AP-side explanation (a stale MFP-protected
+  entry for the non-AP MLD) is inferred from the client logs.
 
-I'd have said it should already work that way.
+- Tool disclosure: the log analysis, the code change and this text were
+  produced with an AI assistant (Claude) working from the logs of my
+  machine and the kernel source. The installation and the on-air test
+  were done on my hardware.
 
-johannes
+- Testing: only on a distribution kernel, Ubuntu 7.0.0-38.38-generic
+  (based on 7.0.14), which was tainted by out-of-tree modules (nvidia,
+  vboxdrv). Not reproduced on mainline. The hunk below is against
+  v7.3-rc5, where this block of ieee80211_mgd_auth() is identical; it
+  was not checked against the wireless-next tip. An unpatched
+  out-of-tree build of net/mac80211 against the Ubuntu headers
+  reproduces the distro module's .text byte for byte, and with the
+  patch only ieee80211_mgd_auth() changes.
+
+- Setup: Lenovo 83ME, Intel BE200 (PCI 272b/00f4), firmware
+  101.6e695a70.0 gl-c0-fm-c0-c101.ucode, NetworkManager 1.54.3,
+  wpa_supplicant from Ubuntu 26.04 (2.11 in the archive). AT&T fiber
+  gateway (model not checked); SAE and MFP in use, as far as the client
+  log shows. wpa_supplicant reports ap_mld_addr equal to the BSSID on
+  each band ("[link 1]" on 2.4 GHz, "[link 0]" on 5 GHz), so each BSS
+  appears to be its own single-link AP MLD.
+
+- With the patch (kernel log, MAC addresses shortened):
+
+    18:13:14 wlp8s0f0: disconnect from AP 8e:66:37:xx:xx:60 for new auth to 8e:66:37:xx:xx:58 (sending deauth)
+    18:13:15 wlp8s0f0: associated
+    18:14:10 wlp8s0f0: disconnect from AP 8e:66:37:xx:xx:58 for new auth to 8e:66:37:xx:xx:60 (sending deauth)
+    18:14:10 wlp8s0f0: associated
+    18:19:07 wlp8s0f0: disconnect from AP 8e:66:37:xx:xx:60 for new auth to 8e:66:37:xx:xx:58 (sending deauth)
+    18:19:07 wlp8s0f0: associated
+    18:22:38 wlp8s0f0: disconnect from AP 8e:66:37:xx:xx:58 for new auth to 8e:66:37:xx:xx:60 (sending deauth)
+    18:22:38 wlp8s0f0: associated
+
+- wpa_supplicant prints "nl80211: kernel reports: link ID must be set
+  for MLO group key" three times at every roam, failed or not. It looks
+  unrelated.
+
+- Questions: is sending the deauth here acceptable, or should this be
+  limited further or done in wpa_supplicant before it requests the new
+  authentication?
+---
+ net/mac80211/mlme.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6ec45a9f7..9e900f196 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -10099,13 +10099,28 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (ifmgd->associated) {
+ 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++		bool tx;
++
++		/*
++		 * When a non-AP MLD leaves its AP MLD for another AP without
++		 * using FT, tell the old AP MLD that we are gone instead of
++		 * silently dropping the association. Some AP MLD
++		 * implementations keep the MFP-protected MLD-level entry of
++		 * the non-AP MLD around and then ignore, or temporarily
++		 * reject (status 30), every (re)association attempt of the
++		 * same non-AP MLD on their other co-located BSSs until that
++		 * stale entry expires minutes later.
++		 */
++		tx = ieee80211_vif_is_mld(&sdata->vif) &&
++		     req->auth_type != NL80211_AUTHTYPE_FT;
+ 
+ 		sdata_info(sdata,
+-			   "disconnect from AP %pM for new auth to %pM\n",
+-			   sdata->vif.cfg.ap_addr, auth_data->ap_addr);
++			   "disconnect from AP %pM for new auth to %pM%s\n",
++			   sdata->vif.cfg.ap_addr, auth_data->ap_addr,
++			   tx ? " (sending deauth)" : "");
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_UNSPECIFIED,
+-				       false, frame_buf);
++				       tx, frame_buf);
+ 
+ 		ieee80211_report_disconnect(sdata, frame_buf,
+ 					    sizeof(frame_buf), true,
+
+---
+base-commit: 49e1f44dc3a659ff450eafe59375e2590ad5cf33
+change-id: 20261005-mlo-roam-deauth-2dcfd1731fe4
+
+Best regards,
+-- 
+Caio Jordão Calisto <caio.jcalisto@gmail.com>
+
+
