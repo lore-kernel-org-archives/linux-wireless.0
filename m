@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-118.mta0.migadu.com [91.218.175.118])
+Received: from mta0.migadu.com (out-115.mta0.migadu.com [91.218.175.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B5345A28E
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 13:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 468BF4570F9
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 13:07:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791292039; cv=none; b=PvkY26yif88QA6bqqrcjmcPSWhoMmPmhAp2p4Gli6KC303FXDfDxkCYviadM0PYiCYYEWecxyz7b4b7smDI7zACL66b4V70D5Jqytp2mfunkf0ffqn0fmdEozRsjJhT41mQ068rLHtCr+jcr1YJi9K8lK5Z/65H3t1wV5xmhR0I=
+	t=1791292040; cv=none; b=he58XCZ2SLG5ZyfTH+Ooi5M/84LzDXSKwVkzMShzNh2fug/bhKHFduTzuWInrODLy8xj6bHOJwol5NOQlZdWfjogSHzOJhUgyZ6rBDg6i2sdCHabriAYwuT2BrnomaJMezzPh5naIfnOKkd49DIHjcQA7BfQhivHS9+xfewgEtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791292039; c=relaxed/simple;
-	bh=XoywHfKWSMNZzejXXYvAXwmDX3AVn+m3CuZNwIwXAe8=;
+	s=arc-20240116; t=1791292040; c=relaxed/simple;
+	bh=sUF5rnTlc3q7ne3YUkEzxmHVC+gDdriLBeP3hDFXBnw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vGpU2D1nGfgOmbb6DD4AzWfUFVb6R0zpU6k29s1QcXgrr2LCWiXCMhZwrerCYJD2DB0OLkE3Jj47XZmZBCpqolScL/nIOrS/UuNGawTy85Mdob+aVfTcVpW07tAQYc4Jayj3Kg8U1w1iDLcLlHWSjlDy/GXa4l4yS3G4u5EstqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rfuE4SzZ; arc=none smtp.client-ip=91.218.175.118
+	 MIME-Version; b=SxXUelspzaIJGFbC8gX0ymIRmX4j6FrUGxfJCGHWmI7BgJTaZj4JlXa/yqyvGs3apygzJUz/PeQ3T3NL0tF7ylKNgfm5oAZf7BiQnU1Gvq0ezZLnZByjaIcB6pMOLLq7sOxO8f+vBxsPZ9T7+YdZwJOQTtXoIdEGIqLb6elLFMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kh9EePea; arc=none smtp.client-ip=91.218.175.115
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rfuE4SzZ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kh9EePea"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=XoywHfKWSMNZzejXXYvAXwmDX3AVn+m3CuZNwIwXAe8=;
+DKIM-Signature: a=rsa-sha256; bh=sUF5rnTlc3q7ne3YUkEzxmHVC+gDdriLBeP3hDFXBnw=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791292034; v=1; x=1791896834;
- b=rfuE4SzZ06tHg2ZbJ8VdNULW8hR3tsG9Q5u8TNzGOcs+rZsoo6l5AD0vCsk+cQVzcwK3Mz3i
- AIlfVnrsbP/VtXBHueVqq+SrXdFwbWQIbKSrMj0kl4J+0FYKQXXDxOVK8xCNWCA92ZpDlQ4UdQt
- +whzYEQTBCdPFFQJruAD/KzQ=
+ t=1791292033; v=1; x=1791896833;
+ b=kh9EePea5r0GUyK5zFFv8IxqbbjRdpK5/kSdxzT7PN9gtcVWEOQKrsHhXpC1wPPSxr6ZxsQ0
+ la5yfpHB14m+KX96lOCoqozRT0hhL9sKJOpwYWrQgtmgT9+6RgDBu9QlydSyAWue02mawNFGEqE
+ 7heflnkcZRGFWGF8ySyxT2iI=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 74bf45c5ca40593c;
-	Tue, 06 Oct 2026 13:07:14 +0000
-X-Mizu-Trace-ID: 74bf45c5ca40593c
+Received: by smtp.migadu.com with ESMTPS id 4bcdb91bceb6a33c;
+	Tue, 06 Oct 2026 13:07:13 +0000
+X-Mizu-Trace-ID: 4bcdb91bceb6a33c
 X-Migadu-Flow: FLOW_OUT
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -37,9 +37,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH rtw-next v8 2/7] wifi: rtw88: 8723b: add the RTL8723B register definitions
-Date: Tue,  6 Oct 2026 15:06:56 +0200
-Message-ID: <20261006130701.120460-3-luka.gejak@linux.dev>
+Subject: [PATCH rtw-next v8 1/7] wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
+Date: Tue,  6 Oct 2026 15:06:55 +0200
+Message-ID: <20261006130701.120460-2-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261006130701.120460-1-luka.gejak@linux.dev>
 References: <20261006130701.120460-1-luka.gejak@linux.dev>
@@ -51,162 +51,175 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the register offsets and bit definitions the RTL8723B driver uses,
-including the power and system function bits, the BT antenna and efuse
-control registers, the packet lifetime and MAC ID drop registers, the
-FPGA0 HSSI and RF switch control registers, and the RFE antenna path
-registers.
+The CCK power detect setter in rtw88xxa.c programs values that are not
+specific to that chip family. The RTL8723B wants the same setter, but
+pulling in the whole rtw88_88xxa module for one helper is not worth it.
+
+Move it to phy.c as rtw_phy_cck_pd_set(), where the rest of the CCK power
+detect code and the level enum already live. rtw8812a and rtw8821a call
+the core version, so rtw88xxa.c no longer provides it. No logical
+changes have been made at all.
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/reg.h | 34 ++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/net/wireless/realtek/rtw88/phy.c      | 39 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/phy.h      |  1 +
+ drivers/net/wireless/realtek/rtw88/rtw8812a.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821a.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.c | 38 ------------------
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.h |  1 -
+ 6 files changed, 42 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 0b9ba6f37680..afcdb66fdb9a 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -8,7 +8,9 @@
- #define REG_SYS_FUNC_EN		0x0002
- #define BIT_FEN_EN_25_1		BIT(13)
- #define BIT_FEN_ELDR		BIT(12)
-+#define BIT_FEN_PPLL		BIT(7)
- #define BIT_FEN_PCIEA		BIT(6)
-+#define BIT_FEN_DIO_PCIE	BIT(5)
- #define BIT_FEN_CPUEN		BIT(2)
- #define BIT_FEN_USBA		BIT(2)
- #define BIT_FEN_BB_GLB_RST	BIT(1)
-@@ -19,6 +21,7 @@
- #define BIT_PFM_WOWL		BIT(3)
- #define BIT_APFM_OFFMAC		BIT(9)
- #define REG_APS_FSMCO		0x0004
-+#define BIT_EN_PDN		BIT(4)
- #define APS_FSMCO_MAC_ENABLE	BIT(8)
- #define APS_FSMCO_MAC_OFF	BIT(9)
- #define APS_FSMCO_HW_POWERDOWN	BIT(15)
-@@ -67,6 +70,9 @@
- #define BIT_SHIFT_LDO25_VOLTAGE	4
- #define BIT_LDO25_EN		BIT(7)
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index e2ac5c6fd500..e2515a662bb3 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -811,6 +811,45 @@ static void rtw_phy_cck_pd(struct rtw_dev *rtwdev)
+ 		chip->ops->cck_pd_set(rtwdev, level);
+ }
  
-+#define REG_PWR_DATA		0x0038
-+#define BIT_EEPRPAD_RFE_CTRL_EN	BIT(11)
++void rtw_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
++{
++	static const u8 pd[CCK_PD_LV_MAX] = {0x40, 0x83, 0xcd, 0xdd, 0xed};
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
 +
- #define REG_ACLK_MON		0x3e
++	/*
++	 * Override rtw_phy_cck_pd_lv_link(). It implements something
++	 * like type 2/3/4. We need type 1 here.
++	 */
++	if (rtw_is_assoc(rtwdev)) {
++		if (dm_info->min_rssi > 60) {
++			new_lvl = CCK_PD_LV3;
++		} else if (dm_info->min_rssi > 35) {
++			new_lvl = CCK_PD_LV2;
++		} else if (dm_info->min_rssi > 20) {
++			if (dm_info->cck_fa_avg > 500)
++				new_lvl = CCK_PD_LV2;
++			else if (dm_info->cck_fa_avg < 250)
++				new_lvl = CCK_PD_LV1;
++			else
++				return;
++		} else {
++			new_lvl = CCK_PD_LV1;
++		}
++	}
++
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
++		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
++
++	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
++		return;
++
++	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
++	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
++
++	rtw_write8(rtwdev, REG_CCK_PD_TH, pd[new_lvl]);
++}
++EXPORT_SYMBOL(rtw_phy_cck_pd_set);
++
+ static void rtw_phy_pwr_track(struct rtw_dev *rtwdev)
+ {
+ 	rtwdev->chip->ops->pwr_track(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index 8449936497bb..8a843aac7350 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -65,6 +65,7 @@ void rtw_phy_config_swing_table(struct rtw_dev *rtwdev,
+ 				struct rtw_swing_table *swing_table);
+ void rtw_phy_set_edcca_th(struct rtw_dev *rtwdev, u8 l2h, u8 h2l);
+ void rtw_phy_adaptivity_set_mode(struct rtw_dev *rtwdev);
++void rtw_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl);
+ void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
+ 			 struct rtw_rx_pkt_stat *pkt_stat);
+ void rtw_phy_tx_path_diversity(struct rtw_dev *rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8812a.c b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
+index 2078eb6e3628..781b66ccde67 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8812a.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
+@@ -929,7 +929,7 @@ static const struct rtw_chip_ops rtw8812a_ops = {
+ 	.set_ampdu_factor	= NULL,
+ 	.false_alarm_statistics	= rtw88xxa_false_alarm_statistics,
+ 	.phy_calibration	= rtw8812a_phy_calibration,
+-	.cck_pd_set		= rtw88xxa_phy_cck_pd_set,
++	.cck_pd_set		= rtw_phy_cck_pd_set,
+ 	.pwr_track		= rtw8812a_pwr_track,
+ 	.config_bfee		= NULL,
+ 	.set_gid_table		= NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821a.c b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
+index cab85203b828..6096d3b8e41b 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821a.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
+@@ -875,7 +875,7 @@ static const struct rtw_chip_ops rtw8821a_ops = {
+ 	.set_ampdu_factor	= NULL,
+ 	.false_alarm_statistics	= rtw88xxa_false_alarm_statistics,
+ 	.phy_calibration	= rtw8821a_phy_calibration,
+-	.cck_pd_set		= rtw88xxa_phy_cck_pd_set,
++	.cck_pd_set		= rtw_phy_cck_pd_set,
+ 	.pwr_track		= rtw8821a_pwr_track,
+ 	.config_bfee		= NULL,
+ 	.set_gid_table		= NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
+index 2eaadcfec4cb..c298fa0fb2a6 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
+@@ -1947,44 +1947,6 @@ void rtw88xxa_phy_pwrtrack(struct rtw_dev *rtwdev,
+ }
+ EXPORT_SYMBOL(rtw88xxa_phy_pwrtrack);
  
- #define REG_GPIO_MUXCFG		0x0040
-@@ -105,6 +111,12 @@
- #define BIT_BTGP_SPI_EN		BIT(20)
- #define BIT_LED1DIS		BIT(15)
- #define BIT_SW_DPDT_SEL_DATA	BIT(0)
-+#define REG_BT_ANT_SEL		0x0067
-+#define BIT_BT_SEL_BY_WIFI	BIT(5)
-+/* 0x006b is the high byte of the 16 bit register at 0x006a. */
-+#define REG_BT_EFUSE_CTRL	0x006b
-+#define BIT_BT_PWR_CUT		BIT(6)
-+#define BIT_BT_OUT_ISO		BIT(7)
- #define REG_WL_BT_PWR_CTRL	0x0068
- #define BIT_BT_FUNC_EN		BIT(18)
- #define BIT_BT_DIG_CLK_EN	BIT(8)
-@@ -301,6 +313,8 @@
- #define REG_HMEBOX3		0x01DC
- #define REG_LLT_INIT		0x01E0
- #define BIT_LLT_WRITE_ACCESS	BIT(30)
-+#define REG_RFK_FW_ACK		0x01E7
-+#define BIT_RFK_FW_ACK		BIT(0)
- #define REG_HMEBOX0_EX		0x01F0
- #define REG_HMEBOX1_EX		0x01F4
- #define REG_HMEBOX2_EX		0x01F8
-@@ -429,6 +443,8 @@
- #define REG_ARFRH5		0x04A8
- #define REG_SW_AMPDU_BURST_MODE_CTRL 0x04BC
- #define BIT_PRE_TX_CMD		BIT(6)
-+#define REG_PKT_VO_VI_LIFE_TIME	0x04C0
-+#define REG_PKT_BE_BK_LIFE_TIME	0x04C2
- #define REG_QUEUE_CTRL		0x04C6
- #define BIT_PTA_WL_TX_EN	BIT(4)
- #define BIT_PTA_EDCCA_EN	BIT(5)
-@@ -437,6 +453,8 @@
- #define REG_PROT_MODE_CTRL	0x04C8
- #define REG_MAX_AGGR_NUM	0x04CA
- #define REG_BAR_MODE_CTRL	0x04CC
-+#define REG_MACID_PKT_DROP0	0x04D0
-+#define REG_MACID_PKT_SLEEP	0x04D4
- #define REG_PRECNT_CTRL		0x04E5
- #define BIT_BTCCA_CTRL		(BIT(0) | BIT(1))
- #define BIT_EN_PRECNT		BIT(11)
-@@ -520,6 +538,7 @@
- #define BIT_UC_MD_EN		BIT(16)
- #define BIT_RXSK_PERPKT		BIT(15)
- #define BIT_HTC_LOC_CTRL	BIT(14)
-+#define BIT_AMF			BIT(13)
- #define BIT_RPFM_CAM_ENABLE	BIT(12)
- #define BIT_TA_BCN		BIT(11)
- #define BIT_RCR_ADF		BIT(11)
-@@ -546,6 +565,7 @@
- #define REG_ACKTO		0x0640
- #define REG_EIFS		0x0642
- #define REG_NAV_CTRL		0x0650
-+#define REG_NAV_UPPER		0x0652
- #define REG_WMAC_TRXPTCL_CTL	0x0668
- #define BIT_RFMOD		(BIT(7) | BIT(8))
- #define BIT_RFMOD_80M		BIT(8)
-@@ -581,6 +601,7 @@
- #define REG_BT_COEX_V2		0x0762
- #define BIT_GNT_BT_POLARITY	BIT(12)
- #define BIT_LTE_COEX_EN		BIT(7)
-+#define REG_BT_CONTROL		0x0764
- #define REG_GNT_BT		0x0765
- #define BIT_PTA_SW_CTL		GENMASK(4, 3)
- #define REG_BT_COEX_ENH_INTR_CTRL	0x76E
-@@ -606,12 +627,20 @@
- #define BIT_RX_PSEL_RST		(BIT(28) | BIT(29))
- #define REG_TXPSEL		0x080C
- #define REG_RX_GAIN_EN		0x081c
-+#define REG_FPGA0_XA_HSSI_PARM2	0x0824
-+#define HSSI_3WIRE_ADDR_LEN	0x400
-+#define HSSI_3WIRE_DATA_LEN	0x800
- #define REG_CCASEL		0x082C
-+#define REG_FPGA0_XB_HSSI_PARM2	0x082C
- #define REG_PDMFTH		0x0830
- #define REG_BWINDICATION	0x0834
- #define REG_CCA2ND		0x0838
- #define REG_L1PKTH		0x0848
- #define REG_CLKTRK		0x0860
-+#define REG_FPGA0_XA_RF_INT_OE	0x0860
-+#define REG_FPGA0_XB_RF_INT_OE	0x0864
-+#define REG_FPGA0_XA_RF_SW_CTRL	0x0870
-+#define RFSI_RFENV		0x10
- #define REG_CSI_MASK_SETTING1	0x0874
- #define REG_NBI_SETTING		0x087c
- #define BIT_NBI_ENABLE		BIT(13)
-@@ -630,6 +659,9 @@
- #define REG_PSD			0x0910
- #define BIT_PSD_INI		GENMASK(23, 22)
- #define REG_SINGLE_TONE_CONT_TX	0x0914
-+#define REG_RFE_CTRL_ANTA_SRC	0x0930
-+#define REG_RFE_CTRL_ANT_SW	0x0944
-+#define BIT_RFE_CTRL_ANT_SW_SEL	GENMASK(1, 0)
- #define REG_AGC_TABLE		0x0958
- #define REG_RFE_CTRL_E		0x0974
- #define REG_2ND_CCA_CTRL	0x0976
-@@ -649,6 +681,7 @@
- #define REG_CCA_MF		0x0a20
- #define BIT_MBC_WIN		GENMASK(5, 4)
- #define REG_CCK0_TX_FILTER1	0x0a20
-+#define REG_CCK_SWING		0x0a22
- #define REG_CCK0_TX_FILTER2	0x0a24
- #define REG_CCK0_DEBUG_PORT	0x0a28
- #define REG_CCK0_FAREPORT	0x0a2c
-@@ -683,6 +716,7 @@
- #define REG_RX_IQC_AB_A		0x0c10
- #define REG_RX_IQC_CD_A		0x0c14
- #define REG_TXSCALE_A		0x0c1c
-+#define REG_B_RXIQI		0x0c1c
- #define BB_SWING_MASK		GENMASK(31, 21)
- #define REG_TX_AGC_A_CCK_11_CCK_1		0xc20
- #define REG_TX_AGC_A_OFDM18_OFDM6		0xc24
+-void rtw88xxa_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
+-{
+-	static const u8 pd[CCK_PD_LV_MAX] = {0x40, 0x83, 0xcd, 0xdd, 0xed};
+-	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+-
+-	/* Override rtw_phy_cck_pd_lv_link(). It implements something
+-	 * like type 2/3/4. We need type 1 here.
+-	 */
+-	if (rtw_is_assoc(rtwdev)) {
+-		if (dm_info->min_rssi > 60) {
+-			new_lvl = CCK_PD_LV3;
+-		} else if (dm_info->min_rssi > 35) {
+-			new_lvl = CCK_PD_LV2;
+-		} else if (dm_info->min_rssi > 20) {
+-			if (dm_info->cck_fa_avg > 500)
+-				new_lvl = CCK_PD_LV2;
+-			else if (dm_info->cck_fa_avg < 250)
+-				new_lvl = CCK_PD_LV1;
+-			else
+-				return;
+-		} else {
+-			new_lvl = CCK_PD_LV1;
+-		}
+-	}
+-
+-	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
+-		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
+-
+-	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
+-		return;
+-
+-	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
+-	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
+-
+-	rtw_write8(rtwdev, REG_CCK_PD_TH, pd[new_lvl]);
+-}
+-EXPORT_SYMBOL(rtw88xxa_phy_cck_pd_set);
+-
+ MODULE_AUTHOR("Realtek Corporation");
+ MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821a/8811a/8812a common code");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
+index 09a45c1a4129..d9c8db58909c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
+@@ -170,6 +170,5 @@ bool rtw88xxa_iqk_finish(int average, int threshold,
+ void rtw88xxa_phy_pwrtrack(struct rtw_dev *rtwdev,
+ 			   void (*do_lck)(struct rtw_dev *rtwdev),
+ 			   void (*do_iqk)(struct rtw_dev *rtwdev));
+-void rtw88xxa_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl);
+ 
+ #endif
 -- 
 2.55.0
 
