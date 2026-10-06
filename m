@@ -1,98 +1,94 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-213.mta0.migadu.com [91.218.175.213])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF9F36494B
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 08:40:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070E037DABD
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:05:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.213
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791276034; cv=none; b=VvQuYal7KRetoYjSPoOkx/+a9k37W9wyB/l+kAxDDY7wXaKwHp5C08vxCnyVRyoO7sEN/SFJ77eca3SEqBDr3H1qxqVHwo23AkOTRoXNP3z2+lId0M5Rgi+YnHvJ0FgLgQuC8hnGnmCbk4WdJ8ClntkS6n5O/3/GWFnAVIE0wns=
+	t=1791277505; cv=none; b=HMiBTe53vvZwE+1iB8PMhSQBjlY5Mui7cjCv0tgPDkksmI/Ccc58Q7OQ2O+2ELA6q3UXJRX4RXJO9cRSj3w02ER9M3djEZWdRE1pskogX87lebiszHSPQLb9Vq2DF2uxq29ZmmdRe0BDXPFAuS2qjwBq/pvhW7zWAvIZiKctlxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791276034; c=relaxed/simple;
-	bh=xxSTO/xdQBco7iQpYIT0E3BtjsQC7FGn/b+5e6zl/4M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uOqo2mzAfP9tvG55TGqpVsVAQo6OTrugZltJ6rjoriORwt6HcM1t5knnArxpgwEm8hZI7OW9pyCm1SMdD9f0+PbAK6hnGkoszFFTHuWjOWRVjytLkENAIMqc7vg6PiocGGy0ZDUh3oCikB4/nS7YRVw/wC2ODgvRZzpj6XHGerY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=YsdyO5nA; arc=none smtp.client-ip=212.77.101.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1791277505; c=relaxed/simple;
+	bh=pSKJ8t+N5gHFjx4NjV1mBfzDMvP7QspArwWL52ezD5g=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=J0AtGOknAzGF071kshir7gUKy/haDxTNdCs0kwKjDVhjngdOH0+KcOSdJuPyaBoBXxbPOmsdyeJwChNx9AeTK2svtfj7iqTQdUfSgRBuZDjAFvEW2Th/xAn63I/n370D3tulfvnUe7LYh+VmsqRTUTNsy1lpAg4ELiYzuECKyFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=OUIPxQg1; arc=none smtp.client-ip=91.218.175.213
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="YsdyO5nA"
-Received: (wp-smtpd smtp.wp.pl 27085 invoked from network); 6 Oct 2026 10:40:24 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1791276024; bh=u32rIA+ebJvRNAzsi0CEVF/UH8RYqLgEbKPGOr3aUIA=;
-          h=From:To:Cc:Subject;
-          b=YsdyO5nAov4/rdsWF5G6OERvOS5oBxNUv4HQLw5pPM+TuxDbNLJU+4FS0r3IyvQEh
-           WnQsQHDmWLgNKAMJHiNeS617RV8CgnHYtREnVSPUo0r6mNIl6YV50zeprfm6RDqqN8
-           vhFaPy3btGJZbAPtq8XnHtpTZnZcA/iFPUf5MvROobjE+EKMK+Qsucnzx1bFX+AfFC
-           tANjK4QXVqFvyupXs4OqJU5q8qd2FiqCqKmasNtqA+uKLh+ahNqhzDFhjq26Je7tsV
-           dd0EfQyWK8PrzBDjJxC4HKTyXXhuivRZ2d9IGMJDldRUV1swMlxS+Su9M0CJkAdmwi
-           vN7sDP426ZtcQ==
-Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <runyu.xiao@seu.edu.cn>; 6 Oct 2026 10:40:24 +0200
-Date: Tue, 6 Oct 2026 10:40:23 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Runyu Xiao <runyu.xiao@seu.edu.cn>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>, Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: Re: [PATCH] wifi: iwlegacy: serialize watchdog updates with device
- teardown
-Message-ID: <20261006084023.GA28327@wp.pl>
-References: <20261004114519.1233305-1-runyu.xiao@seu.edu.cn>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="OUIPxQg1"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=pSKJ8t+N5gHFjx4NjV1mBfzDMvP7QspArwWL52ezD5g=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791277501; v=1; x=1791882301;
+ b=OUIPxQg1mzzrcphQ3Ao2I9g1GJwvyu8bdKWRmmWsdxuZaP7J7fQofVL8FQs3BgHsu6ZcH68z
+ xHPsoA8q/A/wterfe7dtmKp/NmaQCuWkcCFxAm872n80anzlEmSBq/u1w1ng69QFDEKoht6W+Bz
+ dTbt1J+oiJwIWZVNDW9ACq1g=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id cf1a0565370f02ca;
+	Tue, 06 Oct 2026 09:05:01 +0000
+X-Mizu-Trace-ID: cf1a0565370f02ca
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261004114519.1233305-1-runyu.xiao@seu.edu.cn>
-X-WP-MailID: daa2ea11ae5572eb5b65c94f5f4eaa40
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [8eNh]                               
+Date: Tue, 06 Oct 2026 09:05:01 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <39e05b490d5c6f90ea122e1c9a83ce8bad94e735@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B
+ chip driver
+To: "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael   
+ Straube" <straube.linux@gmail.com>, "Peter Robinson"
+ <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
+ luka.gejak@linux.dev
+In-Reply-To: <9f11a1ee89aa22a2ce23238b5ac968463f6e79a2@linux.dev>
+References: <20261002073845.31486-1-luka.gejak@linux.dev>
+ <20261002073845.31486-5-luka.gejak@linux.dev>
+ <aa7d919d98304ee095990735f39095ac@realtek.com>
+ <DLWXWMOGZGX9.UANQJR9PZYWG@linux.dev>
+ <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
+ <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
+ <f23d5ed909c746ad851bd1038966d271@realtek.com>
+ <9f11a1ee89aa22a2ce23238b5ac968463f6e79a2@linux.dev>
 
-On Sun, Oct 04, 2026 at 07:45:19PM +0800, Runyu Xiao wrote:
-> The writable wd_timeout debugfs file changes il->cfg->wd_timeout, but the
-> iwl3945 configuration is shared and const. The handler also rearms the
-The cfg in il_priv is not const. What would possibly make sense is
-take _all_ modified fields out, and make it const then.
+October 6, 2026 at 09:07, "Luka Gejak" <luka.gejak@linux.dev mailto:luka.=
+gejak@linux.dev?to=3D%22Luka%20Gejak%22%20%3Cluka.gejak%40linux.dev%3E > =
+wrote:
 
-> watchdog without taking il->mutex. The down paths hold this mutex, delete
-> the timer, and then free the TX queues, so an unlocked debugfs write can
-> rearm the timer after deletion. The callback can then access the queues
-> after they have been freed.
-> 
-> Store wd_timeout in per-device state. Serialize the debugfs update with
-> the down paths and only arm the watchdog while TX queues exist. Use
-> READ_ONCE() and WRITE_ONCE() for accesses that do not hold il->mutex.
-> 
-> Fixes: 1dc80798a8ca ("iwlegacy: constify local structures")
-This is wrong tag. At least for watchdog stop races.
 
-> --- a/drivers/net/wireless/intel/iwlegacy/debug.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/debug.c
-> @@ -1284,8 +1284,12 @@ il_dbgfs_wd_timeout_write(struct file *file, const char __user *user_buf,
->  	if (timeout < 0 || timeout > IL_MAX_WD_TIMEOUT)
->  		timeout = IL_DEF_WD_TIMEOUT;
->  
-> -	il->cfg->wd_timeout = timeout;
-> -	il_setup_watchdog(il);
-> +	mutex_lock(&il->mutex);
-> +	WRITE_ONCE(il->wd_timeout, timeout);
-> +	if (il->txq)
-> +		il_setup_watchdog(il);
-This will not work for 4965. Possibly il->is_open could be used as
-check. But maybe we should just remove possibility of setting
-wd_timeout, I need to think about it.
+>=20
+>=20October 6, 2026 at 07:29, "Ping-Ke Shih" <pkshih@realtek.com mailto:p=
+kshih@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E =
+> wrote:
+>=20
+>=20>=20
+>=20> Luka Gejak <luka.gejak@linux.dev> wrote:
+> >=20=20
+>=20>=20=20
+>=20>  >
+> >  > However, including rtw8703b.h from another chip driver is
+> >  > already established, rtw8723cs.c includes it to reuse rtw8703b_hw_=
+spec.
+> >  >
+> >  As I know, 8723CS and 8723B are mutual alias, no?
+> >=20=20
+>=20>  As far as I know, they are not. They are different chips.
+> >=20=20
+>=20>  fix typo.
+> >=20=20
+>=20>  8723CS and 8703B are mutual alias, no?
+> >=20
+>=20Possibly, but either way I will move, so it shared.
 
-Regards
-Stanislaw
-> +	mutex_unlock(&il->mutex);
-> +
->  	return count;
->  }
->  
-> -- 
-> 2.34.1
+Followup: the things I am moving will be exact copy paste, unedited or
+anything so take that into consideration when reviewing that patch.
+
+Best regards,
+Luka Gejak
