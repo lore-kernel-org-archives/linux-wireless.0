@@ -1,353 +1,141 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA2073B961F
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:43:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A03AE32A3C9
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:57:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791279797; cv=none; b=I2eqSm3Kgn0q/35HQAJIKbWliptS51wQVrIQqVNwWN+EYqfmUsQLxE/5MlwFZqnDaq8Go93pAsbuB1+7J1Wb3zFYMW5Eaa7110PO+Be2f1wRVQ/FlO6oHbjog9X71XddQCJTXIH+yGCN2mM2wod/e+fHurKiZXqn+7eItiCC9aE=
+	t=1791280653; cv=none; b=JtDB1g7jXmFnmcF3KRgaW7AKuPMbv0lHTFxzal5OfTASUYaX0a/NPOQ3bhVWbWg2LHU60Qh1y96IsEQdhViNpOgXQl8SV2zDZa1on/JEm0qupkrlYP92WzT0INtFKPqc3xaFktMzEbHgX1rqzLUmWh5i8VxXzgpQ2p+3oU9A0e8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791279797; c=relaxed/simple;
-	bh=PI9JdG8RKUds1bXg2cg0muGbBKUxJhzK4cN2ffiJZ1U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=G2pnjwbWg3H7IUMzK9elVL3i+C93EezwJQfSKn+RX5lhhT8I8l1ba2ai7WC7cWbuiA+ZWjENs/K6IIe5tyWXooknKYdGBQ0DO8cqG0ldZJA8NBEUBeecOFcFP9Mgi8acr1LOYgBusD9gTTj8ngYfCDAYCFUC5v5TKGi3TRtZrNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZHI5j5ON; arc=none smtp.client-ip=209.85.218.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791280653; c=relaxed/simple;
+	bh=yJFht4V2iJltpVGCKvx6nYIJCuYiPSgmeMC13XysX8k=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=gOTU14LvaCP4fr8fWOmyKNywZuN5X1UWNklI2ManhjTc+lBwUGjkOJjc8KC1eEsInD3wkoaw7T+dW0UrTaKSCy2TwVAAP637vPwg9xD0bz2TxT3WM1zlb4vltI6cpyldwO0GCZDKFE9A2PSFO/PNzrcnczsuLg2DlM/3h3wKsro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=i1xWxA2t; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZHI5j5ON"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c2e36c3478aso398882866b.0
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 02:43:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791279794; x=1791884594; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=sKZMczwgWcdJJIgzlUEuriqeYRN99r4Avg0hTCaOGbs=;
-        b=ZHI5j5ONYbo+Ivq2I2YgK8njNtRzp/P2pvWamPXw3enNXwBO7UU2hf7q0uo2g+uK2T
-         DAQH00/BKnolgZtAnVO8WFmI+h1KOQZpHeM3RdLqlanJpHwmQ3bNUlxy4+gA24fIbKXT
-         UG8RjohjBnzOResHJcMo6PJT3gK+OaxvYIaCFRzGIV1G8M30Yjqx4M4f5EgsUbiAp5g9
-         y5gtyJ0K40ARJvDJ5PXi6D1yaAhGYitKFuJHrWj2ZBrb5ruNngn/2vFw0dWzM3GPe5O/
-         vJcvwMZHA7SBKjNdN0SUS8i77FUAbm4pbQSKi7zGqZtH+0c9ZkO6MKvaWqmzi1YW+Qbp
-         z55A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791279794; x=1791884594;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sKZMczwgWcdJJIgzlUEuriqeYRN99r4Avg0hTCaOGbs=;
-        b=046zmw7PgVWVsROn2U5mhPOcfA+iATraMimySuIa7RX/VW7NEIMa2ORhAzWnZRMc7r
-         Yj/QtgfF5GAgNnX/7hKXTZPqewKtbyOW9JBR7f6R+xJeG51V73S1V0xNge1UEoGOlcKV
-         Ii1zV/21ETKgnYr4W4aPBayixfygJjKszUYvcDWvBy0vmHnJoGmUIe+ojmwxN/JNG9Sa
-         qnQjAkFWsb9q5TvajpxwmH6R6OEAw7GbNrjW1ItFgYpQVVkhLpHvoDI+EX2T4ZUGGeVA
-         Suj5vwBQVHwk09RnRWy+kNoPdHF2oidNhdInW015gLRWZipCX8qYvwE7WSBbIqNRD53C
-         nkSw==
-X-Gm-Message-State: AFuF++kXjnkIV5PLGJwlX9hcYmJ/GU5EuXu72+qqVUpqokUw0XTcNYLk
-	h6pdckcGW41tWQgCN9i2Fd6eBOWJYIJ+T92sTbXMFCrrc+NgINlHk1z7
-X-Gm-Gg: AYBFou1w/n4nxfqXpLPmaj1LlsbP52HKAxrOSfhjeeK4kYLqhPyv41J6rv3DNjGSIK4
-	YlAw96PgyC89ScQbifp255DKaDpCRH02S1SW0QtNE68w5vEqxxXIHE8oUyd7OTjxiunBS8LtoJ0
-	yG45L6ChYhxocZOuv7cts8pZsM/T+Z3FI4bQDcIPVrI6hF8qBtZA5jLqed4E7kncBrYmXVjAR4F
-	vbgVVoUE+A7dnsm3xVEuxFXamIl7yyTc5DQ9ixkkGshuKL/DLAAO4zndg4xguNuutXbf7XKGjBb
-	943tJH7VbD2X/DXfSUeXUq9M+/NSUXSPzgFkaVXR5kpxwf4BzO1cobhZmuE8fGE6xW7J0TmqUz5
-	W6ZRgvlvssw7dnDOooUCqQwdS3GlSBpcVip6ZjM9nkQhJ/B9NLoYrECcbk6ynlXZXEdDoT29eHA
-	uahLcyXY8u+IuqK99AVDbvwQZY0asdbNmIi17VBvvUmul8CXqFatWXTAR/eGpMlOCDCEA3D74Kc
-	JmLwAQ2nQODcw==
-X-Received: by 2002:a17:906:c107:b0:c2d:d27d:ef88 with SMTP id a640c23a62f3a-c316a0734f9mr105156866b.42.1791279793825;
-        Tue, 06 Oct 2026 02:43:13 -0700 (PDT)
-Received: from Quarx2k-PC.lan ([92.124.138.168])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c31562da31esm183753966b.38.2026.10.06.02.43.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Oct 2026 02:43:13 -0700 (PDT)
-From: Nikolai Semendiaev <agent00791@gmail.com>
-To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	jjohnson@kernel.org,
-	wabsie@gmail.com
-Subject: [PATCH 2/2] wifi: ath12k: use private page-frag caches for RXDMA rings
-Date: Tue,  6 Oct 2026 15:41:47 +0600
-Message-ID: <7bb1b30324eea87b53a8c585566842a1a0ec7d06.1791279304.git.agent00791@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1791233788.git.agent00791@gmail.com>
-References: <cover.1791233788.git.agent00791@gmail.com>
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="i1xWxA2t"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:Cc:To:Subject:From:
+	MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Zo6fdLQ/fx63w8CriAI1TihPzK+FMMG0FW/YWlDOsmw=; b=i1xWxA2t5dYQSovTMp4MFgDpVI
+	J7LZMvYzBVNaVwYoMrKKTur5f+FCDvfnkZ5rrKEuIA99DpDeWCX+dYKIY7vPCyeWyzaN8/fESyk2L
+	HtPOz3veGi/hi6cmp56nOZlTI99csgqN7blLdb95UsfJTozfGCmgP/DDk7jsvdTnkIIU=;
+Received: from p54a434bb.dip0.t-ipconnect.de ([84.164.52.187] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1xE1vM-00GrQn-1c;
+	Tue, 06 Oct 2026 11:57:28 +0200
+Message-ID: <897a86ce-a8ba-436b-9564-085932423487@nbd.name>
+Date: Tue, 6 Oct 2026 11:57:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Felix Fietkau <nbd@nbd.name>
+Subject: pull request: mt76-fixes 2026-10-05 v2
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Language: en-US
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-RXDMA buffers allocated with dev_alloc_skb() share per-CPU page-fragment
-caches with other network users. Long-lived ring buffers can pin mostly
-unused 32-KiB backing pages as short-lived network allocations cycle
-through those caches. On QCN9274, OOM was observed during sustained WAN
-downloads when Ethernet and ath12k processing shared a CPU.
+Hi,
 
-Give regular and monitor RXDMA rings private page-fragment caches. The
-existing refill SRNG locks serialize cache access. Preserve NET_SKB_PAD,
-allocation flags and the DMA mapping and unmapping operations.
+Here's my updated mt76-fixes pull request for 7.3
+It contains fewer patches now.
 
-Drain each monitor cache after releasing its IDR-owned buffers, and the
-regular RX cache after releasing its cookie-conversion descriptors.
-Disable external IRQ/NAPI processing before non-reset crash teardown;
-the reset worker already does so.
+- Felix
 
-Use skb_reserve() for DMA alignment because skb_pull() cannot advance
-an empty skb. Allocate extra alignment space for monitor status buffers
-to preserve at least RX_MON_STATUS_BUF_SIZE of DMA capacity.
+The following changes since commit d24e8ac715de2e16a53c144005b1863660a5fbea:
 
-Based on Mark Ruvald Pedersen's ath11k per-ring page-fragment isolation.
+   Merge tag 'net-7.3-rc6' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-10-01 06:41:59 -0700)
 
-Link: https://lore.kernel.org/linux-wireless/20260719215817.2468580-4-wabsie@gmail.com/
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+are available in the Git repository at:
 
-Signed-off-by: Nikolai Semendiaev <agent00791@gmail.com>
----
- drivers/net/wireless/ath/ath12k/core.c   |  3 ++
- drivers/net/wireless/ath/ath12k/dp.c     |  3 ++
- drivers/net/wireless/ath/ath12k/dp.h     |  3 ++
- drivers/net/wireless/ath/ath12k/dp_mon.c | 29 +++++++++------
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 45 +++++++++++++++++++++---
- drivers/net/wireless/ath/ath12k/dp_rx.h  |  2 ++
- 6 files changed, 69 insertions(+), 16 deletions(-)
+   https://github.com/nbd168/wireless tags/mt76-fixes-2026-10-05
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index 0c72948f3..8216f344e 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1390,6 +1390,9 @@ static int ath12k_core_reconfigure_on_crash(struct ath12k_base *ab)
- {
- 	int ret, total_vdev;
- 
-+	if (!ab->is_reset)
-+		ath12k_hif_irq_disable(ab);
-+
- 	mutex_lock(&ab->core_lock);
- 	ath12k_link_sta_rhash_tbl_destroy(ab);
- 	ath12k_thermal_unregister(ab);
-diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
-index 83f9edfab..7c097c506 100644
---- a/drivers/net/wireless/ath/ath12k/dp.c
-+++ b/drivers/net/wireless/ath/ath12k/dp.c
-@@ -4,6 +4,7 @@
-  * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  */
- 
-+#include <linux/page_frag_cache.h>
- #include "core.h"
- #include "dp_tx.h"
- #include "hif.h"
-@@ -1020,6 +1021,8 @@ static void ath12k_dp_cc_cleanup(struct ath12k_base *ab)
- 
- 	spin_unlock_bh(&dp->rx_desc_lock);
- 
-+	page_frag_cache_drain(&dp->rx_refill_buf_ring.frag_cache);
-+
- 	/* TX Descriptor cleanup */
- 	for (i = 0; i < ATH12K_HW_MAX_QUEUES; i++) {
- 		spin_lock_bh(&dp->tx_desc_lock[i]);
-diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
-index c53eac20b..0b68bd8ba 100644
---- a/drivers/net/wireless/ath/ath12k/dp.h
-+++ b/drivers/net/wireless/ath/ath12k/dp.h
-@@ -11,6 +11,7 @@
- #include "hw.h"
- #include "dp_htt.h"
- #include "dp_cmn.h"
-+#include <linux/mm_types.h>
- #include <linux/rhashtable.h>
- 
- #define MAX_RXDMA_PER_PDEV     2
-@@ -51,6 +52,7 @@ struct dp_srng {
- 
- struct dp_rxdma_mon_ring {
- 	struct dp_srng refill_buf_ring;
-+	struct page_frag_cache frag_cache;
- 	struct idr bufs_idr;
- 	/* Protects bufs_idr */
- 	spinlock_t idr_lock;
-@@ -59,6 +61,7 @@ struct dp_rxdma_mon_ring {
- 
- struct dp_rxdma_ring {
- 	struct dp_srng refill_buf_ring;
-+	struct page_frag_cache frag_cache;
- 	int bufs_max;
- };
- 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
-index 709507d44..8b2b81b46 100644
---- a/drivers/net/wireless/ath/ath12k/dp_mon.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include "dp_mon.h"
-+#include "dp_rx.h"
- #include "debug.h"
- #include "dp_tx.h"
- #include "peer.h"
-@@ -44,15 +45,17 @@ struct sk_buff
- 	struct sk_buff *skb;
- 	dma_addr_t paddr;
- 
--	skb = dev_alloc_skb(RX_MON_STATUS_BUF_SIZE);
-+	skb = ath12k_dp_rx_alloc_skb(&rx_ring->frag_cache,
-+				     RX_MON_STATUS_BUF_SIZE +
-+				     RX_MON_STATUS_BUF_ALIGN);
- 
- 	if (!skb)
- 		goto fail_alloc_skb;
- 
- 	if (!IS_ALIGNED((unsigned long)skb->data,
- 			RX_MON_STATUS_BUF_ALIGN)) {
--		skb_pull(skb, PTR_ALIGN(skb->data, RX_MON_STATUS_BUF_ALIGN) -
--			 skb->data);
-+		skb_reserve(skb, PTR_ALIGN(skb->data, RX_MON_STATUS_BUF_ALIGN) -
-+			    skb->data);
- 	}
- 
- 	paddr = dma_map_single(ab->dev, skb->data,
-@@ -598,14 +601,16 @@ int ath12k_dp_mon_buf_replenish(struct ath12k_base *ab,
- 	ath12k_hal_srng_access_begin(ab, srng);
- 
- 	while (req_entries > 0) {
--		skb = dev_alloc_skb(DP_RX_BUFFER_SIZE + DP_RX_BUFFER_ALIGN_SIZE);
-+		skb = ath12k_dp_rx_alloc_skb(&buf_ring->frag_cache,
-+					     DP_RX_BUFFER_SIZE +
-+					     DP_RX_BUFFER_ALIGN_SIZE);
- 		if (unlikely(!skb))
- 			goto fail_alloc_skb;
- 
- 		if (!IS_ALIGNED((unsigned long)skb->data, DP_RX_BUFFER_ALIGN_SIZE)) {
--			skb_pull(skb,
--				 PTR_ALIGN(skb->data, DP_RX_BUFFER_ALIGN_SIZE) -
--				 skb->data);
-+			skb_reserve(skb,
-+				    PTR_ALIGN(skb->data, DP_RX_BUFFER_ALIGN_SIZE) -
-+				    skb->data);
- 		}
- 
- 		paddr = dma_map_single(ab->dev, skb->data,
-@@ -687,15 +692,17 @@ int ath12k_dp_mon_status_bufs_replenish(struct ath12k_base *ab,
- 	num_remain = req_entries;
- 
- 	while (num_remain > 0) {
--		skb = dev_alloc_skb(RX_MON_STATUS_BUF_SIZE);
-+		skb = ath12k_dp_rx_alloc_skb(&rx_ring->frag_cache,
-+					     RX_MON_STATUS_BUF_SIZE +
-+					     RX_MON_STATUS_BUF_ALIGN);
- 		if (!skb)
- 			break;
- 
- 		if (!IS_ALIGNED((unsigned long)skb->data,
- 				RX_MON_STATUS_BUF_ALIGN)) {
--			skb_pull(skb,
--				 PTR_ALIGN(skb->data, RX_MON_STATUS_BUF_ALIGN) -
--				 skb->data);
-+			skb_reserve(skb,
-+				    PTR_ALIGN(skb->data, RX_MON_STATUS_BUF_ALIGN) -
-+				    skb->data);
- 		}
- 
- 		paddr = dma_map_single(ab->dev, skb->data,
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index cfaf26ae2..a0ea0d51e 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -5,9 +5,12 @@
-  */
- 
- #include <linux/fips.h>
-+#include <linux/gfp.h>
- #include <linux/ieee80211.h>
- #include <linux/kernel.h>
-+#include <linux/page_frag_cache.h>
- #include <linux/skbuff.h>
-+#include <net/sock.h>
- #include "core.h"
- #include "debug.h"
- #include "hw.h"
-@@ -68,6 +71,35 @@ static void ath12k_dp_rx_enqueue_free(struct ath12k_dp *dp,
- 	spin_unlock_bh(&dp->rx_desc_lock);
- }
- 
-+struct sk_buff *ath12k_dp_rx_alloc_skb(struct page_frag_cache *cache,
-+				       unsigned int len)
-+{
-+	gfp_t gfp_mask = GFP_ATOMIC | __GFP_NOWARN;
-+	struct sk_buff *skb;
-+	void *data;
-+
-+	len += NET_SKB_PAD;
-+	len = SKB_HEAD_ALIGN(len);
-+
-+	if (sk_memalloc_socks())
-+		gfp_mask |= __GFP_MEMALLOC;
-+
-+	/* Refill paths serialize the per-ring cache with the SRNG lock. */
-+	data = page_frag_alloc(cache, len, gfp_mask);
-+	if (!data)
-+		return NULL;
-+
-+	skb = build_skb(data, len);
-+	if (!skb) {
-+		page_frag_free(data);
-+		return NULL;
-+	}
-+
-+	skb_reserve(skb, NET_SKB_PAD);
-+
-+	return skb;
-+}
-+
- /* Returns number of Rx buffers replenished */
- int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
- 				struct dp_rxdma_ring *rx_ring,
-@@ -114,16 +146,17 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
- 	}
- 
- 	while (num_remain > 0) {
--		skb = dev_alloc_skb(DP_RX_BUFFER_SIZE +
--				    DP_RX_BUFFER_ALIGN_SIZE);
-+		skb = ath12k_dp_rx_alloc_skb(&rx_ring->frag_cache,
-+					     DP_RX_BUFFER_SIZE +
-+					     DP_RX_BUFFER_ALIGN_SIZE);
- 		if (!skb)
- 			break;
- 
- 		if (!IS_ALIGNED((unsigned long)skb->data,
- 				DP_RX_BUFFER_ALIGN_SIZE)) {
--			skb_pull(skb,
--				 PTR_ALIGN(skb->data, DP_RX_BUFFER_ALIGN_SIZE) -
--				 skb->data);
-+			skb_reserve(skb,
-+				    PTR_ALIGN(skb->data, DP_RX_BUFFER_ALIGN_SIZE) -
-+				    skb->data);
- 		}
- 
- 		paddr = dma_map_single(dp->dev, skb->data,
-@@ -193,6 +226,8 @@ static int ath12k_dp_rxdma_mon_buf_ring_free(struct ath12k_base *ab,
- 	idr_destroy(&rx_ring->bufs_idr);
- 	spin_unlock_bh(&rx_ring->idr_lock);
- 
-+	page_frag_cache_drain(&rx_ring->frag_cache);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
-index 827004745..99b989b69 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.h
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
-@@ -232,6 +232,8 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
- 				struct dp_rxdma_ring *rx_ring,
- 				struct list_head *used_list,
- 				int req_entries);
-+struct sk_buff *ath12k_dp_rx_alloc_skb(struct page_frag_cache *cache,
-+				       unsigned int len);
- int ath12k_dp_rx_pdev_mon_attach(struct ath12k *ar);
- int ath12k_dp_rx_peer_frag_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_id);
- 
--- 
-2.43.0
+for you to fetch changes up to 52f6a065e0810c739a5dabd33a58047f08100f50:
 
+   wifi: mt76: mt7996: fix uninitialized buf read in mt7996_variant_fem_init() (2026-10-06 11:50:52 +0200)
+
+----------------------------------------------------------------
+mt76 fixes for 7.3
+
+- mt7925 ACPI SAR fixes
+- MLO fixes
+- sta handling fixes
+- mt7915 napi disable fix
+
+----------------------------------------------------------------
+Aaron Ma (1):
+       wifi: mt76: mt7925: restore the legacy BSS after MLO teardown
+
+Cristian Papa (1):
+       wifi: mt76: mt7603: initialize global station WCID
+
+Devin Wittmayer (2):
+       wifi: mt76: mt7925: don't put the band auto marker in TGID
+       wifi: mt76: mt792x: pick the SAR table layout from the table itself
+
+Felix Fietkau (4):
+       wifi: mt76: mt7996: program a link again if the driver holds it
+       wifi: mt76: mt7996: take over connection monitoring
+       wifi: mt76: account non-AQL frames per peer rather than per link
+       wifi: mt76: use ALTX queue for packets to disassociated stations
+
+Junjie Cao (1):
+       wifi: mt76: mt792x: treat 0xff ACPI SAR entries as no limit
+
+Lu Huang (1):
+       wifi: mt76: mt7996: fix uninitialized buf read in mt7996_variant_fem_init()
+
+Nicolas Cavallari (1):
+       wifi: mt76: mt7915: disable rx napi when removing device
+
+Tao Gong (1):
+       wifi: mt76: mt7996: fix struct mt7996_mcu_wed_rro_ba_delete_event layout
+
+  drivers/net/wireless/mediatek/mt76/mt76.h            |   7 ++++++
+  drivers/net/wireless/mediatek/mt76/mt7603/init.c     |   1 +
+  drivers/net/wireless/mediatek/mt76/mt7915/init.c     |   6 ++++++
+  drivers/net/wireless/mediatek/mt76/mt7915/main.c     |   2 ++
+  drivers/net/wireless/mediatek/mt76/mt7925/mac.c      |   3 ++-
+  drivers/net/wireless/mediatek/mt76/mt7925/main.c     |  12 +++++++++++
+  drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 134 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------------------
+  drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.h |   2 ++
+  drivers/net/wireless/mediatek/mt76/mt7996/init.c     |   3 ++-
+  drivers/net/wireless/mediatek/mt76/mt7996/main.c     |  10 ++++++++-
+  drivers/net/wireless/mediatek/mt76/mt7996/mcu.h      |   3 +++
+  drivers/net/wireless/mediatek/mt76/tx.c              |  14 ++++++++----
+  12 files changed, 144 insertions(+), 53 deletions(-)
