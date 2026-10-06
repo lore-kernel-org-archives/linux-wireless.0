@@ -1,115 +1,84 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABE663D88E0
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 11:19:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8200A370ADF
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 11:48:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791285542; cv=none; b=C3nxH9+0PV3EuKxPVrKdH26XfY2IvfYgrARCKowwbcCSEKlzT34qGoVbgg1fzvNlV8Gq016v6s3exRC8Wflztd+YSDXPNHNzIh39X533YRD3cfN1a2o+krueBVRqIvcVdQSiQhk9hvu2B4KmJrZz4kJ/8HCtb8eS5QSpwQjmVVo=
+	t=1791287312; cv=none; b=WRyh4BtZJkm94udztvx+ECehY/9lTsYGu/ZNRsAeifASRKINavU8UOux3fhL0RNIdzA5ChZH7jgjU7TxKR7VEF1+8wVcWj1Y8mXGRS+jXnz4eeOt39+pxDQhs4baXV8bDRzvL+4mmgcmbpOw1AK2DhZnOQtbCh3VsVtVgbC0v20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791285542; c=relaxed/simple;
-	bh=T9pQLHtkTws6ReeUvx+8dHa8B2SrtK8aEWmbBiNo0o4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NdAdnYFaOpoHjdcYzwtOxGvH1WGyHAQ4RwGnB9fjs/8pmC+EL9PRgWW0MH69fYTifCd/WRppmPk+rIKrZktV9uNoaQSJONB6aHyxsTVMEuSckL9Cz3ZnXiHY2l0ZvnSxRk6skOxQq+0wz1pbFEEpP2CxJt5eJQji1eiafdUOiJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LxzelV5a; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791287312; c=relaxed/simple;
+	bh=cr9hHYMB2tYTAMI1fcibd/WSAHGzMrbP0ig4jEuoGm4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DgAWUgm4eAMBXTqn7Oc/CEF1yVBAG7TCGDPGUTjA2trwcxJaiFrH1U3Q5HQVR8XQhYTGMEoGA+v8Jo2iccLpu9FHrhY5SwPE1xEhMUzjw/4tGRGMOW+IhPICyXgUWsogm0yEJjJpGiB5UgQighWAovsRn2WfURZt6og+x0I05kM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=singe.za.net; spf=pass smtp.mailfrom=white.za.net; dkim=pass (1024-bit key) header.d=singe.za.net header.i=@singe.za.net header.b=niiakKds; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=singe.za.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=white.za.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LxzelV5a"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-48afcfc4bf5so2254548f8f.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 04:19:00 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=singe.za.net header.i=@singe.za.net header.b="niiakKds"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a018dc1f98so6020925e9.3
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 04:48:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791285539; x=1791890339; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=lbWPBQuVRiue4AC08Y5e154S6RcmoKslymnN0Vvmfhw=;
-        b=LxzelV5aud9Wnv1J9wVSZXTPhQvi7hAFXQOpvPF0YTwXFfs9ye9oI+Prou4aw++EcB
-         1wqQRopugMAcPy4zlA32Cwy/kjuDnSs+MpNkPQKbJTB/MdvDRZKsmoC5Y/Q/AhTA5PQ0
-         9qBMb3aWTR/M79nQVJuV3qjz8tRw4MoZ4a36NmadUR2fpLEOHgrmqXs/felXOdtZvlMG
-         MivoqHKygUV8c7pZuW8K+4S8BZ5hpfPUCTgXiy1sKTGoqbxmIvda59XqlnMTSBJZ4XtF
-         gKS/9fpzeeEUhHqw7aVrp2af567EwKFuR3mLe2YwDwlFHPQdM8Rk/UTUvT0c1Zh+5/yL
-         nyyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791285539; x=1791890339;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=singe.za.net; s=google; t=1791287308; x=1791892108; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=lbWPBQuVRiue4AC08Y5e154S6RcmoKslymnN0Vvmfhw=;
-        b=NQ1xyHDwEAnvPCseSHoGfqQbPZRH41VOc6sKxRWL/4p2q97WuZVhnvZmi57eRRnEBp
-         R7RFs+lYgKM4wa8r9ESxG5lMMc0JpS+6kaoVGv4HuCl8Wx6RZYvyD6Jkehq53e611vcs
-         cx14Mp8H4fFpynrZnjEWm0RAZRFJVA+2FMcGibnImJkTMGed12x9ohyjRF5h/THEMjkJ
-         O8aKLyQ4hltLk5HQPEtTbJFGNlFSHMAM6Ay4M/eNFv0Qz5mC4gsj5F1uuhg39c1bxqhj
-         3FPp1H2VHqxleYgfIqv0Evki1i78Ni/JRatw2G4XLkrv3Oy08CpxWDHNG0VDWzltcUvw
-         aNzA==
-X-Gm-Message-State: AFq9FYJ9xFbgxDQ6n8f9mveJuv1YYqgIrbSqliaW7dUOLxUaMoMSI8+J
-	RV9YXrejNXOA0VwZgASo63j2xbLX+q2J3Rsla2ldvSt5IbO/2B1BF9Vd
-X-Gm-Gg: AYBFou0MVzw0AkHZVYVq0omoaymXRErfPwitaPokizV6HyVrqU8KhHZm5IQosP1ceSd
-	0bkkcxPEMbStAW4qNcw90I9Ogha7kWmqvGNWKWRyATpHoJgizmNH2Wk7qBo2H8vPEiILPycVFUO
-	sbMx5JIXfUGP1kNdazJdDo0P48YkAydALg7KaBj6hezT2gh3F0qsiZMMOtLPP94UYGKIj9KHw5u
-	xj2eL+iDQlO+zDFHOdFeFmQR3+Fxef1jp8qS6yOcmhoiLJNFCl/Jd0a+0LOQVotBHgdBEzXLx1T
-	AMCD5LbLbD5mCiNFXZ/ITBwbCpY+IGbwJkTgpyTKHkozJ2wf821tcUKRtIQJvjVcD5u87bPob2L
-	xjjvAMl9EaLY03VJhhMMkHEvDo22ijMPqfQFLjGDVJeVBeAA2P7GRb/bRZNn56l3yNvAUyhGCik
-	94tbJCBbw1RSUzeNKmLEOrXzVp+8MbHXq0P8hpZtpAWON62742dQoyQtfYzB/8jxofFdLjGwWXh
-	vQUCQ==
-X-Received: by 2002:a05:6000:1a85:b0:487:490:8391 with SMTP id ffacd0b85a97d-48c6d160060mr2104906f8f.16.1791285538622;
-        Tue, 06 Oct 2026 04:18:58 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c6d264fcbsm2172381f8f.47.2026.10.06.04.18.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Oct 2026 04:18:58 -0700 (PDT)
-Message-ID: <3a57c874-ab57-4ca2-98a9-d5cf4fdf285b@gmail.com>
-Date: Tue, 6 Oct 2026 14:18:55 +0300
+        bh=cr9hHYMB2tYTAMI1fcibd/WSAHGzMrbP0ig4jEuoGm4=;
+        b=niiakKds946+mbzjxmWnswuNtrOqy4VdRPtUOWB51sxmVhE4riYd8Kw5Vkf+ymUAuJ
+         inUiiY44VskJmx11abRd3BxEeUj4nuSYeuRemhkBV28vENkS4sJjCAtbjs/V8NE/iidr
+         J4dtj/JzeaukzrMSzDys12z6YkCCOQxasQCoE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791287308; x=1791892108;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=cr9hHYMB2tYTAMI1fcibd/WSAHGzMrbP0ig4jEuoGm4=;
+        b=kLKdVp6s7yN7IJhQpGD6BUbhn7OEqyOoWEMb6yeVRJzm9N3gOqeUg0M/Ism+mHus7L
+         0XvTqCnmaiOngegbmp5Q4jhNcGZu6mzcXRgezXWyuY9M/6yy+yhbiE30uam1fkaBKbDP
+         M7375C6hykiVmz53DWiBThHJPDZuq4yLrlyZLGpqo4vXE5otJHIgHyhW4tl0mWS+44tn
+         dMT1VaPC0l1nY7c8mk4XHMjhH57urL0dOiqTDSVj9H4sRhCUXvZg1tegsrWmtq1Tav/a
+         iBWlSSRfZy+GwiPZFlxkQfbr19J8FtS1PnlYrYiaSx94/zD3gC9pQOvrRygiYUsTf5nW
+         2qCw==
+X-Gm-Message-State: AFuF++kIWHurBPWNR3Kpk0T+WDUxUmLjAi79H2D7ln5WKBtOCOjCADol
+	ve23uH5Z5pJPaMKQRs3pj4FZX0EGQG78JFWCUVA4nO/uJUm6T8xowJZPdZHdehOBBZg=
+X-Gm-Gg: AYBFou3aipxh4IscufGUmzBf9rG4qkkku7nQTBP+VOM37KjT+xeMw4a3rmgDpcfur0k
+	omCRLNvKNan9hDZciXc1cw0QZuz9qoUp/WNOjHoCuJchES3mciHZUc9N1zKj26nwlR2nVJSyWDU
+	JhcPwllwzdSn/FR82twwWiGrgqgg8TUGtx9jni0x0NvEOLVkJa6JM1kxDoRadVLuV7dKlwotpCy
+	PpsevYijhegpewtbaWe3Fneq5cM0/WU9Q7PZIW3xDqYxRMrfugI0NJ7oOXydgBfe69NoPDPv21D
+	UmJyyFhVlA4LGALESFPJ7m1weldQdnuXfTpMjjtpK8T+QFN5Fb+pljXqCyfiSr2dcJjwBJ+sOWm
+	RYWi8YajnDUb9gVFMKcag2jvb51WP3mXtu9Xm9IiewH5Z6RMSbyIxMfYG5d4DcCjcAjw453JZcn
+	oUYdI0XIZN2DpJEYWQn4nAXEJkQ7YNKEOJPxwVpDz9TT/ItaMpB2sG847tou7teanyoQ5ead8A5
+	SKC3FlTb6U0kHsPNnC9hSDg85o=
+X-Received: by 2002:a05:600d:82c1:b0:4a0:1a7f:2abf with SMTP id 5b1f17b1804b1-4a17b536decmr21973265e9.7.1791287306355;
+        Tue, 06 Oct 2026 04:48:26 -0700 (PDT)
+Received: from localhost.localdomain ([102.33.233.50])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a178ca806fsm65783405e9.3.2026.10.06.04.48.23
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 06 Oct 2026 04:48:25 -0700 (PDT)
+From: github@singe.za.net
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	github@singe.za.net
+Subject: Re: [PATCH] wifi: cfg80211: allow zero HE OBSS PD offsets
+Date: Tue,  6 Oct 2026 13:47:03 +0200
+Message-ID: <20261006114703.29021-1-github@singe.za.net>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <a5f74bb1113b5841a4a5359ba615cc114f41a1cd.camel@sipsolutions.net>
+References: <a5f74bb1113b5841a4a5359ba615cc114f41a1cd.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B chip
- driver
-To: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>
-References: <20261002073845.31486-1-luka.gejak@linux.dev>
- <20261002073845.31486-5-luka.gejak@linux.dev>
- <aa7d919d98304ee095990735f39095ac@realtek.com>
- <DLWXWMOGZGX9.UANQJR9PZYWG@linux.dev>
- <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 06/10/2026 03:39, Ping-Ke Shih wrote:
-> Luka Gejak <luka.gejak@linux.dev> wrote:
->> On Mon Oct 5, 2026 at 8:08 AM CEST, Ping-Ke Shih wrote:
->>> Luka Gejak <luka.gejak@linux.dev> wrote:
->> [...]
->>>> +/*
->>>> + * Shares the receive PHY status layout, the SDIO aggregation burst fields
->>>> + * and a few baseband registers with the RTL8703B; reuse that header.
->>>> + */
->>>> +#include "rtw8703b.h"
->>>
->>> Which layout you are using?
->>> Should you move the layout to rtw8723x.h ?
->>>
->>
->> The layout I reuse is the RTL8703B receive PHY status structure, struct
->> phy_status_8703b, together with the SDIO aggregation burst fields and four
->> baseband registers. 
-> 
-> Let's use another patch to move the struct out of rtw8703b.h, and rename
-> to phy_status_8723x for example.
-> 
+Hi Johannes,
 
-The same struct could be used by other chips in the future, like
-RTL8192EE/RTL8192EU and RTL8188FU/RTL8189FS.
+Thanks. I followed up with a hostapd workaround, which Jouni has now applied:
 
+https://git.w1.fi/cgit/hostap/commit/?id=5b156e272a0266ca6be0f394192bad42b0ff176c
+
+Regards,
+Dominic
