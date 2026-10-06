@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8284A3F25
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 20:59:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A874A43FA
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 20:59:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791320388; cv=none; b=LtjV09h7H88OyboKXCJ/z1lYeBjaPBwLgXVCGhHC2GWRFR2upqpWZc7gtrZui+/ZU2ZepyP97+W+uAPAaeFdHJzw7QHqDzYYybOG0Ky40lavz9VV/axuSCRycirrHwJXedo3TPWSQ5ABD1Wc/+g9JGysX+fxLWNzarFRp3FUTAY=
+	t=1791320388; cv=none; b=Wu5JJ1YQ2QNwJIbMFxS93EPnqrJkF4+fVYfO23V72tTcZpt8teNM95EU1TWSCIa4qlSIzDfflP9K6Zmr4+Y8g6sl1e0LpFtxM3tNQL/8+2Gjs7fSiG5+Zmmv4f/x1oHc5fdogrUi9jmqCKGS/MZ1LhoL/TPDLKoV0QK/Xs4PEyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791320388; c=relaxed/simple;
-	bh=xsZHukiDb5GFiKU/tpfIAcRsYtJUQFtyxnLsKOcomco=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eKIEK5f9qzTMNe7F+te8ZZQXVoUD+zOIApTcOiCYO5v/+6w7eg42AMqphqZ/qJuNyHHetjpGyQKJkXSnPLVNzClAq2ti3b/YQis8qMeUVjSJLW4HBV3ZWJcE4iKMOLT+mGxc4z06+6TzOjZchXbFye/B9DTuwDTEWevNicX+L+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Z0N60m0c; arc=none smtp.client-ip=46.4.11.11
+	bh=KtM8bHdwu1MP+R5A5F6XxyVooXicA+QjByWep2qE2/g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=M7m5QmYc7MOvKB+Meqwsre6+BmqUYiTaA+LeNczojCXdd8d04+8SNXIdek9blti86L/I4TB9mB80rwZxyxvbQOOArTb1YxcULC4wHMqwSKMskN469nvQlFrOzNug2GXyzzTfhePajzVsMtJK8jJSnLbHXASDB0fpg6WEcfXeFck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=JD6bOI9y; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Z0N60m0c"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JD6bOI9y"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=efIHySm4e+O21kbZfeX3wTiep8/PUCu238ZF28c+Bqk=; b=Z0N60m0cgyYu8G0TRfC+/tq2nT
-	ctOlsKAG1Ky/ZGbKNj87cfMD05jHcst9mLWHPrYswxI+59xxTWIle01Z8UBZDvToZ1/277q+34r7J
-	7JwVq7E/w+bc+1+zDxHAglOoxngp8M9bsO5nxIGe00sTEpJcqNpIF5mtJKwmmFNcuxQA=;
+	bh=odyAf/8YTtisl4OC9TFp4TrXuliPEARq9DN55VxrfEc=; b=JD6bOI9yNNN7N8Huoj1lyzCRmu
+	4PDWRKNfyvxH9ikuWSL6+dJQaHa+/t0gz6vamEZQg0sANe8fnBS2omknRhlPIOtxcJrAStf+VO10e
+	kVcMeMpd5G0MOw2GBCBaizc6UQVCUAkDFDt8gtQAogjf4YHkRxAD6UUNsDwP0FBqvor0=;
 Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xECGF-00HAg3-1Y
-	for linux-wireless@vger.kernel.org;
-	Tue, 06 Oct 2026 22:59:43 +0200
+	id 1xECGG-00HAg3-05;
+	Tue, 06 Oct 2026 22:59:44 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 24/27] wifi: mt76: mt7996: restore a station link that returns after a removal
-Date: Tue,  6 Oct 2026 22:59:33 +0200
-Message-ID: <20261006205936.669125-24-nbd@nbd.name>
+Cc: John Crispin <john@phrozen.org>
+Subject: [PATCH mt76-next 27/27] wifi: mt76: mt7996: disable the RX NAPIs before the DMA cleanup
+Date: Tue,  6 Oct 2026 22:59:36 +0200
+Message-ID: <20261006205936.669125-27-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261006205936.669125-1-nbd@nbd.name>
 References: <20261006205936.669125-1-nbd@nbd.name>
@@ -48,120 +48,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When mt7996_mac_sta_change_links() removes a link from a station, it
-keeps the msta_link and the firmware entry of the link. Commit
-e077071e7ac4 ("wifi: mt76: mt7996: fix teardown command for an MLD
-peer") removed the per-link DISCONNECT command for MLD peers, and a link
-that comes back must not get a second STA_REC with EXTRA_INFO_NEW,
-which commit 8e3e7567b8c1 ("mt76: mt7915: add sta_rec with
-EXTRA_INFO_NEW for the first time only") says can remove the entry. A
-link that comes back is therefore not connected again, and gets no rate
-control, keys or authorization.
+From: John Crispin <john@phrozen.org>
 
-On removal, reset only the driver state of the link: its TWT flows, the
-TX state and the key index. When the link comes back with its entry
-still connected, send it the header translation state, rate control,
-its keys and, for an authorized station, the CONN_STATE_PORT_SECURE
-update without EXTRA_INFO_NEW, which also carries the header
-translation state. Send the 4-address PS leave request and the block
-ack sessions as for a new link, since the link can come back as a link
-other than the primary link.
+mt7996_unregister_device() leaves the RX NAPIs enabled, so
+mt76_dma_cleanup() deletes enabled NAPIs and destroys page pools that
+are still bound to them. On rmmod, the kernel warns in
+__netif_napi_del_locked() for every RX queue and in
+page_pool_disable_direct_recycling(). Until the IRQ tasklet is disabled,
+an interrupt can still schedule a NAPI that was already deleted.
 
-Fixes: e8c819df0243 ("wifi: mt76: mt7996: Destroy active sta links in mt7996_mac_sta_remove()")
+Disable every RX NAPI that was added before the MCU exit and the DMA
+cleanup. This includes the host RRO queues: mt76_dma_init() skips them,
+but mt7996_dma_rro_start() adds their NAPIs later when WED is not
+active, so a check for mt76_queue_is_wed_rro() would miss them.
+
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Signed-off-by: John Crispin <john@phrozen.org>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 33 +++++++++++++++++--
- 1 file changed, 30 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 89e9ef855a78..9965ac136bec 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1263,6 +1263,7 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 	INIT_LIST_HEAD(&msta_link->wcid.poll_list);
- 	msta_link->sta = msta;
- 	msta_link->connected = false;
-+	msta_link->wcid.tx_info = 0;
- 	msta_link->wcid.sta = 1;
- 	msta_link->wcid.idx = idx;
- 	msta_link->wcid.link_id = link_id;
-@@ -1699,7 +1700,7 @@ mt7996_mac_sta_links_sync(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 			  unsigned long add)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index 2db63c3be9d1..ad9919c516e7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -1810,6 +1810,8 @@ int mt7996_register_device(struct mt7996_dev *dev)
+ 
+ void mt7996_unregister_device(struct mt7996_dev *dev)
  {
- 	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
--	unsigned long new_links = 0, updated;
-+	unsigned long new_links = 0, resumed = 0, joined, updated;
- 	unsigned int link_id;
- 	int err;
- 
-@@ -1713,6 +1714,8 @@ mt7996_mac_sta_links_sync(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
- 		if (!msta_link->connected)
- 			new_links |= BIT(link_id);
-+		else if (!(msta_link->wcid.tx_info & MT_WCID_TX_INFO_SET))
-+			resumed |= BIT(link_id);
- 	}
- 
- 	err = mt7996_mac_sta_links_event(dev, vif, sta, new_links,
-@@ -1720,17 +1723,40 @@ mt7996_mac_sta_links_sync(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 	if (err)
- 		return err;
- 
-+	for_each_set_bit(link_id, &resumed, IEEE80211_MLD_MAX_NUM_LINKS) {
-+		struct mt7996_sta_link *msta_link;
-+		struct mt7996_vif_link *link;
++	int i;
 +
-+		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
-+		link = mt7996_vif_link(dev, vif, link_id);
-+
-+		if (msta->conn_state != CONN_STATE_PORT_SECURE) {
-+			err = mt7996_mcu_wtbl_update_hdr_trans(dev, vif, link,
-+							       msta_link);
-+			if (err)
-+				return err;
-+		}
-+
-+		err = mt7996_mcu_add_rate_ctrl(dev, msta, vif, link_id, false);
-+		if (err)
-+			return err;
-+
-+		msta_link->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	cancel_work_sync(&dev->dump_work);
+ 	cancel_work_sync(&dev->wed_rro.work);
+ 	cancel_work_sync(&dev->reset_work);
+@@ -1820,6 +1822,10 @@ void mt7996_unregister_device(struct mt7996_dev *dev)
+ 	mt7996_coredump_unregister(dev);
+ 	mt76_unregister_device(&dev->mt76);
+ 	mt7996_wed_rro_free(dev);
++	for (i = 0; i < ARRAY_SIZE(dev->mt76.napi); i++) {
++		if (dev->mt76.napi[i].dev)
++			napi_disable(&dev->mt76.napi[i]);
 +	}
-+
- 	mt7996_mac_sta_links_set_keys(dev, vif, sta, links & add);
- 
- 	updated = new_links;
- 	if (msta->conn_state == CONN_STATE_PORT_SECURE) {
-+		updated |= resumed;
- 		err = mt7996_mac_sta_links_event(dev, vif, sta, updated,
- 						 MT76_STA_EVENT_AUTHORIZE);
- 		if (err)
- 			return err;
- 	}
- 
--	for_each_set_bit(link_id, &new_links, IEEE80211_MLD_MAX_NUM_LINKS) {
-+	joined = new_links | resumed;
-+	for_each_set_bit(link_id, &joined, IEEE80211_MLD_MAX_NUM_LINKS) {
- 		struct mt7996_sta_link *msta_link;
- 		struct mt7996_vif_link *link;
- 
-@@ -1751,7 +1777,7 @@ mt7996_mac_sta_links_sync(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 			return err;
- 	}
- 
--	return mt7996_mac_sta_links_ba_add(dev, vif, sta, new_links);
-+	return mt7996_mac_sta_links_ba_add(dev, vif, sta, new_links | resumed);
- }
- 
- static void
-@@ -1825,6 +1851,7 @@ mt7996_mac_sta_change_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mutex_lock(&dev->mt76.mutex);
- 
-+	mt7996_mac_sta_links_reset(dev, vif, sta, rem);
- 	mt7996_mac_sta_remove_links(dev, vif, sta, rem, false);
- 	mt7996_mac_sta_links_bss_add(dev, vif, sta, add);
- 	ret = mt7996_mac_sta_add_links(dev, vif, sta, add);
+ 	mt7996_mcu_exit(dev);
+ 	mt7996_tx_token_put(dev);
+ 	mt7996_dma_cleanup(dev);
 -- 
 2.47.3
 
