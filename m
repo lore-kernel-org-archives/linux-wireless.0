@@ -1,149 +1,127 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5BC3BB687
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:26:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B7D39FCCC
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:42:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791278762; cv=none; b=oX6WCHEnwBquiBOQ9cpTJ4tYYTB57rzt8XEC+klhqxxuQHpENZ+sVnWfLBUcs1Vsm7d1LA+QVH7+jnOEMQONk5V1RnqRto1Gx1lmqM4eT5wD/uGa6mqGWogO77vtVVt/lA2gzcGjN2BWyiHb0TvXvaqCMLD9QZu9wew9o5ItED8=
+	t=1791279779; cv=none; b=Buo8NDXgqWEbTR9WTHxk1+r2mJoZyjl/zPKML5jB2ElRZuAt/IfxoqUtRFIJVM1tFVmhshV9cVThejwmFm9qFMscRfXhAI27vIMeOzKF5h5Pn0u99124o1ybThWV+pcQGBYXTZlkYMKoU8Qa/ruBxMzPyrG8A72hFSvT/dizwJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791278762; c=relaxed/simple;
-	bh=rvoCfkt6JKTfM4pyiK2zycW6kUL/pZtYO23p1+2prC0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JBqGeOPCOCZbiy571ua82HvTGjZdfLOXslOsFX67VsrYv9MKtv4oXEv+JMx0rrCECN5sBBQ6BKEgmP8YoM0z0XDycZN7hbJR41nW+bfJ5fEfnJteOm28MVhMP331bLjc7Zn6XKFoVtXbntmNeOg7j3dIjRtJMeW4QpSQXyhpYAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=cbFBOFwE; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1791279779; c=relaxed/simple;
+	bh=cbkvs+o3ytk+CJwsqpyVkqfrcwA0nlzD05q7zoEq9hA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RB0Pxhq/+Mu6NQi5SRkVbTrxX01Uttd/D4TwWBakjjRacEF4lqjTIl2ifpbcdAqecNeeUdpmIFf9O+xjL+cIDWArT1lQ7W8K+fLM6R8PiySYrfXDtQuk9QzGS4YXWsquBS2+ssj+DaPvIz+lkaKaPDwHoQVA8qwkTpWYwBrbw1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z5GIiE9+; arc=none smtp.client-ip=209.85.218.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="cbFBOFwE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=F3rilO8Ga7DTvA+Nv87c5I1cpSI7cgFoLmBkXO3Wgkw=; b=cbFBOFwEiQsV0cgOIIuKoQ1PBP
-	ZaQ/jBmflQ2/aG187W+a3RZX7M69ExPYG9xLm47Dy2yppAWogm6CLfn5bJ8GEkxSwnIvvonX08EEf
-	xs55vV6JFEqPSi8+MqVImN8Do8/4UbwlaxCtnWoLilddUbZMwKpcKSerCEBZm9um/dJ4=;
-Received: from p54a434bb.dip0.t-ipconnect.de ([84.164.52.187] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xE1Qq-00GqWr-11;
-	Tue, 06 Oct 2026 11:25:56 +0200
-Message-ID: <8dec78e7-1f4a-4d68-a592-15ad0f1fdac0@nbd.name>
-Date: Tue, 6 Oct 2026 11:25:55 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z5GIiE9+"
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-c315869241fso209314766b.0
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 02:42:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791279776; x=1791884576; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=w1Pwz4NjkdSqfWaloOa4OtuYhXBcLt6Eb4swx56Ymeo=;
+        b=Z5GIiE9+aHTFBq1rD8b3Y6VZ0y02eAQ/WK5iENVA1erAJ6PuJkYXrp7h+j8s6k2tFH
+         5ZVyMPJ2n6VQFILS7ClXclISm4T+prfR3tjVCuj6ufRbkYdMc7TR5N0YfVuGfxmoYDq7
+         grwGiwaTG0UYgSFyiu2yhNICz/KZaVMkCg7zM1F5lBlYgkxC3XZ0C/dANw5V7/WwCHWO
+         6qPe8z6L8tVkTrctIWZFLsdWj2xHZXAbdgrqnHg8dkfhPqHWiwlUcdEwU3/MHwyb6iO8
+         knhIrSlzc5CnydN6V0IxPjW5TpkE7Oz8+5g9NStLuwASbLepsokm6mE3K2r+23QBPznJ
+         wQlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791279776; x=1791884576;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=w1Pwz4NjkdSqfWaloOa4OtuYhXBcLt6Eb4swx56Ymeo=;
+        b=OEk15JmMeUpRjKxMEP8gu/snB3Njkmb0PHplc/VZvimWTFBBHJYnjBk9aCmhXkd47E
+         zN7wg0FhuxCJBFjf5cSFH+JlPWheb2oAlIsNl4Gdxlu1+REG+jtQsEfJdD91nozOK0Px
+         mZ98W9i30V+CJH3+Ec91i2838pkrIRsU/mZI7F7LqE5NNsvzJLGHYJ7unrdbtUjIH0WH
+         XhCQGDHoSPvDzmD50664pSBm25etNHMXHE5R9EhN2pgNLKJcm/jk4i2B2jHAdMV73Kjs
+         gqWgX3CV3x2U+ck4VpKEWAg3lFpgVuHGb+4IzNMF69RoTSHDrMgjXsB5IabuYDuBuzsp
+         DpJg==
+X-Gm-Message-State: AFuF++m5s6owwWLZ/dsbfLuLklN2uEy9ErBDMKWh8HRa/okp6eTrAnUX
+	Ha6QTlRvZT/QQfFykI5Kx4EebVQvPyq3zjaai+g0+0B4/9ulRc+de9aM
+X-Gm-Gg: AYBFou3MFXAjFSUWu7xElqWBSB7hBRGiPCSJ2XMrvNPCkjKq8Tt50gUSeFmWHd8aoiu
+	Hm+acI75iJnzt4CaPurxAyYWQlmi5Jv030faxLUd44UZCjR/pV90Jjc/h+w5Wcaf5ZHEkWdCYZh
+	+EC3FfyiDSgL8eeoJ27ue7+LpmKWpqlfkUBpTTcSTgfKeMMAt4vI1C4vIGjSsbUo3tYXBgAghgC
+	Cv/RLQbJKax5/vjr0DEnXdyeIUW3Awe/QRFUsc6r+HGLtEJLUo0g+XCNfINP9ZTl0DO/wqaQA4b
+	UXk0wkBGeiYEHTJAMH0iciFBxUh3pzXQOsFix8LE/GqtqheUabTW3mj9eRcM3UK1mfqajCOEiwS
+	NE38QEucy++Nfz1t2TR2XS3/H6Zsf8S0zJup8+Hx3CKbsDWMvrEWPyyFjo/NS8LnnBlGl2VsJRD
+	bhY6f6cEhW9lx+Od7ytyzxNCy1MQpgi8xlfmc0+ndDlSwB+JoUqElWDi7kQ0IftAWowFi0awqsi
+	uM=
+X-Received: by 2002:a17:907:e102:b0:c2e:7df5:cda7 with SMTP id a640c23a62f3a-c2e7df5d380mr445606866b.33.1791279775699;
+        Tue, 06 Oct 2026 02:42:55 -0700 (PDT)
+Received: from Quarx2k-PC.lan ([92.124.138.168])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c31562da31esm183753966b.38.2026.10.06.02.42.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Oct 2026 02:42:55 -0700 (PDT)
+From: Nikolai Semendiaev <agent00791@gmail.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	jjohnson@kernel.org,
+	wabsie@gmail.com
+Subject: [PATCH 0/2] wifi: ath12k: isolate RXDMA page-fragment caches
+Date: Tue,  6 Oct 2026 15:41:45 +0600
+Message-ID: <cover.1791233788.git.agent00791@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/23] wifi: mt76: mt7925: add NMI/NDI MAC address setter
- helpers
-To: Sean Wang <sean.wang@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
- yu-ching.liu@mediatek.com, jenhao.yang@mediatek.com, posh.sun@mediatek.com,
- Chengwei Yu <chengwei.yu@mediatek.com>, Sean Wang <sean.wang@mediatek.com>
-References: <20260927210306.737669-1-sean.wang@kernel.org>
- <20260927210306.737669-3-sean.wang@kernel.org>
-Content-Language: en-US
-From: Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260927210306.737669-3-sean.wang@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 27.09.26 23:02, Sean Wang wrote:
-> From: Chengwei Yu <chengwei.yu@mediatek.com>
-> 
-> Add mt7925_nan_set_nmi_address() and mt7925_nan_set_ndi_address() for
-> runtime MAC address changes: NMI goes through the MCU (firmware owns
-> the hardware address), NDI updates vif->addr directly.
-> 
-> Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-> Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-> Signed-off-by: Chengwei Yu <chengwei.yu@mediatek.com>
-> ---
->   .../net/wireless/mediatek/mt76/mt7925/nan.c   | 48 +++++++++++++++++++
->   .../net/wireless/mediatek/mt76/mt7925/nan.h   |  8 ++++
->   2 files changed, 56 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-> index 8a59f7b1aee2..abbd3f7b081c 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-> @@ -697,6 +697,54 @@ void mt7925_nan_mcu_event(struct mt792x_dev *dev, struct sk_buff *skb)
->   	}
->   }
->   
-> +int mt7925_nan_set_nmi_address(struct ieee80211_vif *vif,
-> +			       struct mt792x_dev *dev,
-> +			       const u8 *mac_address)
-> +{
-> +	struct mt76_dev *mdev = &dev->mt76;
-> +	struct {
-> +		u8 rsv[4];
-> +		struct mt7925_nan_nmi_addr_tlv nmi_addr_tlv;
-> +	} nmi_cmd = {
-> +		.nmi_addr_tlv = {
-> +			.tag = cpu_to_le16(NAN_UNI_CMD_CHANGE_NMI_ADDRESS),
-> +			.len = cpu_to_le16(sizeof(struct mt7925_nan_nmi_addr_tlv)),
-> +		},
-> +	};
-> +
-> +	if (!dev || !vif || !mac_address)
-> +		return -EINVAL;
-> +
-> +	if (is_zero_ether_addr(mac_address) ||
-> +	    is_multicast_ether_addr(mac_address))
-> +		return -EINVAL;
-> +
-> +	memcpy(nmi_cmd.nmi_addr_tlv.nmi_addr, mac_address, ETH_ALEN);
-> +
-> +	return mt76_mcu_send_msg(mdev, MCU_UNI_CMD(NAN), &nmi_cmd,
-> +				 sizeof(nmi_cmd), true);
-> +}
-> +
-> +int mt7925_nan_set_ndi_address(struct ieee80211_vif *vif,
-> +			       struct mt792x_dev *dev,
-> +			       const u8 *mac_address)
-> +{
-> +	if (!dev || !vif || !mac_address)
-> +		return -EINVAL;
-> +
-> +	if (is_zero_ether_addr(mac_address) ||
-> +	    is_multicast_ether_addr(mac_address))
-> +		return -EINVAL;
-> +
-> +	/*
-> +	 * The NDI address is not managed by firmware; it is the vif's own
-> +	 * hardware address, so updating it locally is sufficient.
-> +	 */
-> +	memcpy(vif->addr, mac_address, ETH_ALEN);
-What about bss_conf->addr and the netdev addr. Do those need to be updated?
+Hi,
 
-- Felix
+This series adapts Mark Ruvald Pedersen's ath11k page-fragment cache
+changes to ath12k. On QCN9274, sustained WAN traffic
+can exhaust memory when Ethernet and Wi-Fi run on the same CPU.
+Long-lived RXDMA buffers share per-CPU page-fragment caches with other
+network users and can pin mostly unused 32-KiB backing pages.
+
+Patch 1 makes external IRQ transitions follow the NAPI state so that
+crash recovery can safely quiesce RXDMA before teardown. Patch 2 gives
+regular and monitor RXDMA rings private caches and drains them after
+their buffers have been released. It also fixes alignment of empty
+skbs and preserves monitor status buffer capacity after alignment.
+
+The series is based on ath.git main at:
+388d3c42e8aba1cfc3c6d2c52877a46d8cf740db (Linux 7.3-rc5).
+Runtime measurements were made on Linux 6.18.54, with Ethernet and
+Wi-Fi IRQs on CPU0:
+
+  Hardware: QCN9274 hw2.0 PCI
+  Firmware: WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+
+Two 45-second downloads showed peak order-3 memory growth of 54 and
+68 MiB. An earlier unpatched 45-second test grew by 187 MiB, and longer
+unpatched downloads reached OOM.
+
+A five-minute download at about 660 Mbps transferred 24.8 GB without
+OOM. Peak growth was 105 MiB, falling to 35 MiB above baseline after
+one minute idle.
+
+Thanks,
+Nikolai
+
+Nikolai Semendiaev (2):
+  wifi: ath12k: make external IRQ control idempotent
+  wifi: ath12k: use private page-frag caches for RXDMA rings
+
+ drivers/net/wireless/ath/ath12k/ahb.c    |  4 +--
+ drivers/net/wireless/ath/ath12k/core.c   |  3 ++
+ drivers/net/wireless/ath/ath12k/dp.c     |  3 ++
+ drivers/net/wireless/ath/ath12k/dp.h     |  3 ++
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 29 +++++++++------
+ drivers/net/wireless/ath/ath12k/dp_rx.c  | 45 +++++++++++++++++++++---
+ drivers/net/wireless/ath/ath12k/dp_rx.h  |  2 ++
+ drivers/net/wireless/ath/ath12k/pci.c    |  6 ++--
+ 8 files changed, 73 insertions(+), 22 deletions(-)
+
+
+base-commit: 388d3c42e8aba1cfc3c6d2c52877a46d8cf740db
+-- 
+2.43.0
+
