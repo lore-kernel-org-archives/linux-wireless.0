@@ -1,46 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177563812F6
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 07:15:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B8C38E5C5
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 07:44:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791270907; cv=none; b=OssBdlCt3lIugFr5ptQusEZ1CD3ReRpnZ0XPejSZiZCw/LafjJMgmZABX/vuGo0+yTk4V3H8RI7wHJD4SwLtuRIKBNO56RTIsT1+EDfCtIF4VDhzbbcOL/HR2Wl1COyaUylyq6R+AEASsZt0YAkQeD1DNPdf0qPbSLRFXnW7rKs=
+	t=1791272675; cv=none; b=lsqvqRn6h4TXYYqnDSASAABFZ/um8W8JTEOuZSDjC4bcuGbiJSy4yNVvmAphNbxy7B1YZPGKJjES5UheUuIYuWpD3WOtd6zhXtxzTRoPFUwK6clwkjXpe+dYAjD5dx6z4vvaFDlvHoXgB4RYGTjbr98hGJ6tfY5AEEeF2KHk/+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791270907; c=relaxed/simple;
-	bh=o1oLphuqmiswyZMKGrNkDTUIRMUMVNXDHs4za8xzywI=;
+	s=arc-20240116; t=1791272675; c=relaxed/simple;
+	bh=MOIOsCArn9K3dbCms5X/hAI+3yYgK1ixZRs4KbK9sCA=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=A7K2FJrJtGLkfX+bwhqhmSoGrfqpWP/HdLAtvIlkiP8I7+W7SGypz+u1qwZ4heVu9CiswYnvbmcRAc4OMiDOzkUrt5uedkcXFEnPresQyBnP2QUu3BuidFtekIHLYz3s8jrxUvtXon8sCrtp3adCHN7saSK0UruAFNc2s6nESKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=nANisy8b; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=erp+ItvgIRasiJNHnBXVLxAdUAEEYKhyBeE/eHEbBJTTZMRbT/FK1T5IVzJlqjLvQ3TnZN4JdUSkQL1S1ShH5AwoSeiwecyc6iw+B6qgwvseLlSQv1dDIntTlBrTAh2bI+3RolYbs3RRxEHUwjQqAPY/7yTUcUs2xB8Jvc6Et64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=F428oBqr; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="nANisy8b"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="F428oBqr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=o1oLphuqmiswyZMKGrNkDTUIRMUMVNXDHs4za8xzywI=;
-	t=1791270906; x=1792480506; b=nANisy8bW5ti0BAwzCKRzTBPg6UyqGcPV/k01hFDvjkrqvM
-	jRRa0Ytr8PESMPjSat+ijDx8EXfbV02763gIMfmminm0+Uy7qwxeXMvQXqoyg4SSifBOYurpCrIJW
-	/cVK7Xs/kv4D9yCY57ggC/6WLkOu8Cat4goIHmRvFS8sRVgccuzsJsY9oJhsrpy3q3kh6EgZTnioc
-	M5Kot6jJtzVjLziYY2Rf9GhTafl5GrnRaCOmaToPqFF0dDuJOvyS6HqjWxqwTUB/aOzR6PBjAAXle
-	xQ/gp/bk7K+hmGT+92frLR35Fwp0XNZ8ke+GHqt9EotIXE2MZxCAiXguqqrSbOSw==;
+	Resent-Cc:Resent-Message-ID; bh=sg0+2jbOZFQyKWVMb7LUBe+KQuAavnM8Q2Kwdmu605c=;
+	t=1791272673; x=1792482273; b=F428oBqr0eqQfDGiR46PvKqCaBa89Kwmfw3KO5isAFe+hmi
+	q08LTERTaWR8pzjz0OkNzQ5DotGF7yFPrS6oMRqGgj3ChvfwxjJ4JzKUK3i96IgwKK1U+bv7F4008
+	c1Ck3UnhoYLsfjgStyVicNIPQv36e66EEPmrdnL0NGchmfoGNxX/NEpjYbferjacB6Ki0ZsiK3V1O
+	YSF2D+YZ5CJyon2Zafrt04xpfKPM0aWc82WPKDttEOzcnEv6zInFogO+dxo810RcvzQLDvx7/7u8X
+	fw+OhqWfyH2fw1TjjRBBzeamHYnAiuioP7B5p56bFaUWGhBF4mEtBcyqsXH84aiA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xDzO8-00000006OuY-2f4T;
-	Tue, 06 Oct 2026 09:15:00 +0200
-Message-ID: <623f20912fee5ed614e3a884f54c116bb8f2944c.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH 00/12] wifi: AP side locking improvements
+	id 1xDzqf-00000006Q8L-2VX9;
+	Tue, 06 Oct 2026 09:44:30 +0200
+Message-ID: <da737a625b8ee416ffcaea37ab9c84e705634c4c.camel@sipsolutions.net>
+Subject: Re: [PATCH RFC wireless-next] wifi: mac80211: correct rx freq
+ handling for S1G
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
-	linux-wireless@vger.kernel.org
-Cc: "ath12k@lists.infradead.org" <ath12k@lists.infradead.org>
-Date: Tue, 06 Oct 2026 09:14:59 +0200
-In-Reply-To: <3db68884-f6b5-499c-9959-7eec59ba40cd@oss.qualcomm.com>
-References: <20261004214504.1636783-14-johannes@sipsolutions.net>
-	 <3db68884-f6b5-499c-9959-7eec59ba40cd@oss.qualcomm.com>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Cc: linux-wireless@vger.kernel.org, benjamin.berg@intel.com, 
+	arien.judge@morsemicro.com
+Date: Tue, 06 Oct 2026 09:44:28 +0200
+In-Reply-To: <20261002072954.1168872-1-lachlan.hodges@morsemicro.com> (sfid-20261002_093135_409872_DAA7268A)
+References: <20261002072954.1168872-1-lachlan.hodges@morsemicro.com>
+	 (sfid-20261002_093135_409872_DAA7268A)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
@@ -52,59 +53,77 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Mon, 2026-10-05 at 19:05 -0700, Jeff Johnson wrote:
-> With both the redux and this series applied, I prompted my review agent:
-> prior to the 2 patchsets (18 patches and 12 patches) ath12k relied upon t=
-he
-> wiphy mutex to serialize many of the mac80211 operations. are any ath12k
-> object references now subject to new race conditions with this entire set=
- of
-> 30 patches applied?
-
-:)
-
-> The reply:
-> <LLM>
-> New Race: ath12k_reg_notifier vs ath12k_mac_op_start/ath12k_mac_op_stop o=
-n
-> ah->state
-
-That's a fair point, but easy to resolve - we can just lock the wiphy in
-the loop of notify_self_managed_wiphys(). It already can't go away since
-we have cfg80211_mutex. Looking slightly deeper, we should guarantee
-that we hold the wiphy mutex for a bunch of these operations to the
-driver, and that needs more than a single line of code, but looks
-totally doable.
-
-> Pre-existing but Newly Exposed: ath12k_regd_update vs ath12k_reg_notifier=
- on
-> ah->regd_updated
+On Fri, 2026-10-02 at 17:29 +1000, Lachlan Hodges wrote:
 >=20
-> ath12k_regd_update() is called from ath12k_regd_update_work (a workqueue)=
- and
-> reads then writes ah->regd_updated with no lock at all. ath12k_reg_notifi=
-er()
-> writes ah->regd_updated =3D false also with no lock. These two were alrea=
-dy
-> concurrent before the series =E2=80=94 workqueue items are not serialized=
- by RTNL =E2=80=94 so
-> this is not a new problem introduced by the patches. However, RTNL previo=
-usly
-> prevented the reg notifier from being called while a mac op was running,
-> which reduced the window. That window is now wider.
+> +++ b/include/net/mac80211.h
+> @@ -1741,6 +1741,8 @@ enum mac80211_rx_encoding {
+>   * @freq: frequency the radio was tuned to when receiving this frame, in=
+ MHz
+>   *	This field must be set for management frames, but isn't strictly need=
+ed
+>   *	for data (other) frames - for those it only affects radiotap reportin=
+g.
+> + *	For S1G, when operating on a 2MHz primary channel, this may be the
+> + *	center frequency of the 2MHz primary rather than the 1MHz primary.
 
-I don't think it's correct about that widening very much, "RTNL ...
-prevented ... while a mac op was running" isn't true for most
-operations, only start/stop (roughly), and e.g. sta_state changes the
-state here.
+Should it really say "may be"? Vs. something more specific about being
+1/2 MHz center depending on how it was transmitted/received?
 
-But you'll need to fix that locally in the driver anyway.
+> -static bool ieee80211_rx_valid_freq(int freq, struct ieee80211_link_data=
+ *link)
+> +bool __ieee80211_rx_valid_freq(struct wiphy *wiphy,
+> +			       struct ieee80211_rx_status *status,
+> +			       const struct cfg80211_chan_def *chandef)
+> +{
+> +	u32 pri_khz =3D ieee80211_channel_to_khz(chandef->chan);
+> +	u32 rx_khz =3D ieee80211_rx_status_to_khz(status);
+> +	struct ieee80211_channel *sibling;
+> +
+> +	if (rx_khz =3D=3D pri_khz)
+> +		return true;
+
+This is also in the original, but now it's called more I think, might
+make sense to check them before conversion to kHz? But not sure what the
+compiler would do here for the *1000.
+
+> +	/* Any non-S1G case from here is not a valid freq */
+> +	if (!cfg80211_chandef_is_s1g(chandef))
+> +		return false;
+> +
+> +	if (!chandef->s1g_primary_2mhz)
+> +		return false;
+> +
+> +	/*
+> +	 * Find the sibling 1MHz channel of the 2MHz primary to calculate
+> +	 * the 2MHz primary center frequency.
+> +	 */
+> +	sibling =3D cfg80211_s1g_get_primary_sibling(wiphy, chandef);
+> +	if (!sibling)
+> +		return false;
+> +
+> +	return rx_khz =3D=3D (pri_khz + ieee80211_channel_to_khz(sibling)) / 2;
 
 
-I'm working also on adding clang context analysis to all of this, but
-I've only _just_ (yesterday) worked out our internal build systems to
-have clang 23 to be able to actually validate it, and will obviously
-need to redo the (very small) adjustments in cfg80211 on top of this
-series. Then we can annotate such things with clang and the right lock.
+All of this gets really complex, IMHO.
+
+Maybe here's another thought: we have
+
+	u16 freq: 13, freq_offset: 1;
+
+What if we make that
+
+	u16 freq: 13, freq_offset: 1,
+	    s1g_width_2mhz: 1;
+
+(or something, handwaving about the name) and ask that the driver puts
+the 1 MHz center frequency into freq/_offset (so mac80211's comparison
+on RX is just =3D=3D), but we can still get back the right frequency to
+report further out (scan, radiotap) again? Or use two bits (above/below)
+then we don't even need to have the sibling channel lookup (we'd just
+believe the driver).
+
+I don't know, I'm just thinking out loud, but I feel like maybe that'd
+make it more likely we don't break it (again) when we have HT/VHT/etc.
+in mind?
 
 johannes
