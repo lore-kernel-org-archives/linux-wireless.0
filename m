@@ -1,97 +1,212 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-118.mta0.migadu.com [91.218.175.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6B1041D4F1;
-	Tue,  6 Oct 2026 12:38:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B5345A28E
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 13:07:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.118
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791290336; cv=none; b=fzCb0DgWKjk1ofjuGI6PtbqbSl0JK+wmmL4izcCsxyAvXFL5u+cQ1DNvHAtUCpP9pFNPgz82Bl326zFYcwWxEAj89jDHJQG9lcreJdcjQHTSkIlOmF/070FyvLWzaIG+KU7L27b9QGhyAC5Ve+KQ60XeXWhwFRWaH1sDf7oGpOM=
+	t=1791292039; cv=none; b=PvkY26yif88QA6bqqrcjmcPSWhoMmPmhAp2p4Gli6KC303FXDfDxkCYviadM0PYiCYYEWecxyz7b4b7smDI7zACL66b4V70D5Jqytp2mfunkf0ffqn0fmdEozRsjJhT41mQ068rLHtCr+jcr1YJi9K8lK5Z/65H3t1wV5xmhR0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791290336; c=relaxed/simple;
-	bh=i3Zue9L0U3QnYoExb9bKHR3RA6ghMefAuJkvqnzB6ns=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=VjAmMlVBu/4PFqHAwIakoIq0eexM2gW9f6KIdHLv7K6K2kUKMS1wghBR0/Mf1fzVwLH2u49vtVU9kPnRnbUqTE6A2R+/lI6w4iL3eGfXXzRrk3gvupU9Wgx34nILXzSnSVMiT0LQkT/qqEcJ4QCsdggZdTo6E/HBC7wAFBO8O/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=F9iFGrIU; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791292039; c=relaxed/simple;
+	bh=XoywHfKWSMNZzejXXYvAXwmDX3AVn+m3CuZNwIwXAe8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=vGpU2D1nGfgOmbb6DD4AzWfUFVb6R0zpU6k29s1QcXgrr2LCWiXCMhZwrerCYJD2DB0OLkE3Jj47XZmZBCpqolScL/nIOrS/UuNGawTy85Mdob+aVfTcVpW07tAQYc4Jayj3Kg8U1w1iDLcLlHWSjlDy/GXa4l4yS3G4u5EstqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rfuE4SzZ; arc=none smtp.client-ip=91.218.175.118
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="F9iFGrIU"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 696CcWuuD2926181, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791290312; bh=i3Zue9L0U3QnYoExb9bKHR3RA6ghMefAuJkvqnzB6ns=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=F9iFGrIUlrWpu0yF+pG1jgLLBJfm1gyipslj3FrmesE2RWtcKPYbi4PDTdsbW5w3G
-	 AIQjuGM0mxIq+REq19Aamp4ZrrJ9ZYvv7+k2mq0DUWXC5dguCXs5t+gewY7fJPmY5F
-	 NPA32YjJvChlGwxmtrPSyvSCgsTtERlkOW5b0b5akqwmRUI8BpXlnPwW0e0p9X7gik
-	 FSvpY0YKi3ONDyp+bt+SvXYY4IeiANrIjhWrTuAwRc18eHeORBtw3SjNgunjBE/vuN
-	 IJBbjF9qkBHp92tsJDBcfRhRuKliX/wFS0WXbiFz+ovcm+tjzhOeQHiULGVN/2tAmO
-	 YRNLTr9DOlcKA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 696CcWuuD2926181
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 6 Oct 2026 20:38:32 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 20:38:33 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 6 Oct 2026 20:38:33 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
-     Straube" <straube.linux@gmail.com>, Peter Robinson
-	<pbrobinson@gmail.com>, Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B chip
- driver
-Thread-Topic: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B
- chip driver
-Thread-Index: AQHdUkEe+6mTN1t+pkmrNCm0JOCqYbbudRJA///7x4CAAT4DAP//vViAgACViMD//5Y3AAAEHvmAAANfhgAAFMArtQ==
-Date: Tue, 6 Oct 2026 12:38:32 +0000
-Message-ID: <6e16f94786e24c89bea429f1370f4e59@realtek.com>
-References: <20261002073845.31486-1-luka.gejak@linux.dev>
- <20261002073845.31486-5-luka.gejak@linux.dev>
- <aa7d919d98304ee095990735f39095ac@realtek.com>
- <DLWXWMOGZGX9.UANQJR9PZYWG@linux.dev>
- <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
- <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
- <f23d5ed909c746ad851bd1038966d271@realtek.com>
- <9f11a1ee89aa22a2ce23238b5ac968463f6e79a2@linux.dev>
- <39e05b490d5c6f90ea122e1c9a83ce8bad94e735@linux.dev>,<3abafff88a4607572817675c246ba50ca277b976@linux.dev>
-In-Reply-To: <3abafff88a4607572817675c246ba50ca277b976@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rfuE4SzZ"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XoywHfKWSMNZzejXXYvAXwmDX3AVn+m3CuZNwIwXAe8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791292034; v=1; x=1791896834;
+ b=rfuE4SzZ06tHg2ZbJ8VdNULW8hR3tsG9Q5u8TNzGOcs+rZsoo6l5AD0vCsk+cQVzcwK3Mz3i
+ AIlfVnrsbP/VtXBHueVqq+SrXdFwbWQIbKSrMj0kl4J+0FYKQXXDxOVK8xCNWCA92ZpDlQ4UdQt
+ +whzYEQTBCdPFFQJruAD/KzQ=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 74bf45c5ca40593c;
+	Tue, 06 Oct 2026 13:07:14 +0000
+X-Mizu-Trace-ID: 74bf45c5ca40593c
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: [PATCH rtw-next v8 2/7] wifi: rtw88: 8723b: add the RTL8723B register definitions
+Date: Tue,  6 Oct 2026 15:06:56 +0200
+Message-ID: <20261006130701.120460-3-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261006130701.120460-1-luka.gejak@linux.dev>
+References: <20261006130701.120460-1-luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Luka Gejak <luka.gejak@linux.dev> wrote:
->=20
-> October 6, 2026 at 11:05, "Luka Gejak" <luka.gejak@linux.dev mailto:luka.=
-gejak@linux.dev?to=3D%22Luka%20Gejak%22%20%3Cluka.gejak%40linux.dev%3E > wr=
-ote:
->=20
-> >
-> > October 6, 2026 at 09:07, "Luka Gejak" <luka.gejak@linux.dev mailto:luk=
-a.gejak@linux.dev?to=3D%22Luka%20Gejak%22%20%3Cluka.gejak%40linux.dev%3E > =
-wrote:
-> >
-> > Followup: the things I am moving will be exact copy paste, unedited or
-> > anything so take that into consideration when reviewing that patch.
->=20
-> Or would you rather me fix those style issues? Your choice as I will have=
- both versions ready.
->=20
+Add the register offsets and bit definitions the RTL8723B driver uses,
+including the power and system function bits, the BT antenna and efuse
+control registers, the packet lifetime and MAC ID drop registers, the
+FPGA0 HSSI and RF switch control registers, and the RFE antenna path
+registers.
 
-Not very sure why style you meant?
+Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/reg.h | 34 ++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-I assume you meant coding style. Then, fix them.=20
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 0b9ba6f37680..afcdb66fdb9a 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -8,7 +8,9 @@
+ #define REG_SYS_FUNC_EN		0x0002
+ #define BIT_FEN_EN_25_1		BIT(13)
+ #define BIT_FEN_ELDR		BIT(12)
++#define BIT_FEN_PPLL		BIT(7)
+ #define BIT_FEN_PCIEA		BIT(6)
++#define BIT_FEN_DIO_PCIE	BIT(5)
+ #define BIT_FEN_CPUEN		BIT(2)
+ #define BIT_FEN_USBA		BIT(2)
+ #define BIT_FEN_BB_GLB_RST	BIT(1)
+@@ -19,6 +21,7 @@
+ #define BIT_PFM_WOWL		BIT(3)
+ #define BIT_APFM_OFFMAC		BIT(9)
+ #define REG_APS_FSMCO		0x0004
++#define BIT_EN_PDN		BIT(4)
+ #define APS_FSMCO_MAC_ENABLE	BIT(8)
+ #define APS_FSMCO_MAC_OFF	BIT(9)
+ #define APS_FSMCO_HW_POWERDOWN	BIT(15)
+@@ -67,6 +70,9 @@
+ #define BIT_SHIFT_LDO25_VOLTAGE	4
+ #define BIT_LDO25_EN		BIT(7)
+ 
++#define REG_PWR_DATA		0x0038
++#define BIT_EEPRPAD_RFE_CTRL_EN	BIT(11)
++
+ #define REG_ACLK_MON		0x3e
+ 
+ #define REG_GPIO_MUXCFG		0x0040
+@@ -105,6 +111,12 @@
+ #define BIT_BTGP_SPI_EN		BIT(20)
+ #define BIT_LED1DIS		BIT(15)
+ #define BIT_SW_DPDT_SEL_DATA	BIT(0)
++#define REG_BT_ANT_SEL		0x0067
++#define BIT_BT_SEL_BY_WIFI	BIT(5)
++/* 0x006b is the high byte of the 16 bit register at 0x006a. */
++#define REG_BT_EFUSE_CTRL	0x006b
++#define BIT_BT_PWR_CUT		BIT(6)
++#define BIT_BT_OUT_ISO		BIT(7)
+ #define REG_WL_BT_PWR_CTRL	0x0068
+ #define BIT_BT_FUNC_EN		BIT(18)
+ #define BIT_BT_DIG_CLK_EN	BIT(8)
+@@ -301,6 +313,8 @@
+ #define REG_HMEBOX3		0x01DC
+ #define REG_LLT_INIT		0x01E0
+ #define BIT_LLT_WRITE_ACCESS	BIT(30)
++#define REG_RFK_FW_ACK		0x01E7
++#define BIT_RFK_FW_ACK		BIT(0)
+ #define REG_HMEBOX0_EX		0x01F0
+ #define REG_HMEBOX1_EX		0x01F4
+ #define REG_HMEBOX2_EX		0x01F8
+@@ -429,6 +443,8 @@
+ #define REG_ARFRH5		0x04A8
+ #define REG_SW_AMPDU_BURST_MODE_CTRL 0x04BC
+ #define BIT_PRE_TX_CMD		BIT(6)
++#define REG_PKT_VO_VI_LIFE_TIME	0x04C0
++#define REG_PKT_BE_BK_LIFE_TIME	0x04C2
+ #define REG_QUEUE_CTRL		0x04C6
+ #define BIT_PTA_WL_TX_EN	BIT(4)
+ #define BIT_PTA_EDCCA_EN	BIT(5)
+@@ -437,6 +453,8 @@
+ #define REG_PROT_MODE_CTRL	0x04C8
+ #define REG_MAX_AGGR_NUM	0x04CA
+ #define REG_BAR_MODE_CTRL	0x04CC
++#define REG_MACID_PKT_DROP0	0x04D0
++#define REG_MACID_PKT_SLEEP	0x04D4
+ #define REG_PRECNT_CTRL		0x04E5
+ #define BIT_BTCCA_CTRL		(BIT(0) | BIT(1))
+ #define BIT_EN_PRECNT		BIT(11)
+@@ -520,6 +538,7 @@
+ #define BIT_UC_MD_EN		BIT(16)
+ #define BIT_RXSK_PERPKT		BIT(15)
+ #define BIT_HTC_LOC_CTRL	BIT(14)
++#define BIT_AMF			BIT(13)
+ #define BIT_RPFM_CAM_ENABLE	BIT(12)
+ #define BIT_TA_BCN		BIT(11)
+ #define BIT_RCR_ADF		BIT(11)
+@@ -546,6 +565,7 @@
+ #define REG_ACKTO		0x0640
+ #define REG_EIFS		0x0642
+ #define REG_NAV_CTRL		0x0650
++#define REG_NAV_UPPER		0x0652
+ #define REG_WMAC_TRXPTCL_CTL	0x0668
+ #define BIT_RFMOD		(BIT(7) | BIT(8))
+ #define BIT_RFMOD_80M		BIT(8)
+@@ -581,6 +601,7 @@
+ #define REG_BT_COEX_V2		0x0762
+ #define BIT_GNT_BT_POLARITY	BIT(12)
+ #define BIT_LTE_COEX_EN		BIT(7)
++#define REG_BT_CONTROL		0x0764
+ #define REG_GNT_BT		0x0765
+ #define BIT_PTA_SW_CTL		GENMASK(4, 3)
+ #define REG_BT_COEX_ENH_INTR_CTRL	0x76E
+@@ -606,12 +627,20 @@
+ #define BIT_RX_PSEL_RST		(BIT(28) | BIT(29))
+ #define REG_TXPSEL		0x080C
+ #define REG_RX_GAIN_EN		0x081c
++#define REG_FPGA0_XA_HSSI_PARM2	0x0824
++#define HSSI_3WIRE_ADDR_LEN	0x400
++#define HSSI_3WIRE_DATA_LEN	0x800
+ #define REG_CCASEL		0x082C
++#define REG_FPGA0_XB_HSSI_PARM2	0x082C
+ #define REG_PDMFTH		0x0830
+ #define REG_BWINDICATION	0x0834
+ #define REG_CCA2ND		0x0838
+ #define REG_L1PKTH		0x0848
+ #define REG_CLKTRK		0x0860
++#define REG_FPGA0_XA_RF_INT_OE	0x0860
++#define REG_FPGA0_XB_RF_INT_OE	0x0864
++#define REG_FPGA0_XA_RF_SW_CTRL	0x0870
++#define RFSI_RFENV		0x10
+ #define REG_CSI_MASK_SETTING1	0x0874
+ #define REG_NBI_SETTING		0x087c
+ #define BIT_NBI_ENABLE		BIT(13)
+@@ -630,6 +659,9 @@
+ #define REG_PSD			0x0910
+ #define BIT_PSD_INI		GENMASK(23, 22)
+ #define REG_SINGLE_TONE_CONT_TX	0x0914
++#define REG_RFE_CTRL_ANTA_SRC	0x0930
++#define REG_RFE_CTRL_ANT_SW	0x0944
++#define BIT_RFE_CTRL_ANT_SW_SEL	GENMASK(1, 0)
+ #define REG_AGC_TABLE		0x0958
+ #define REG_RFE_CTRL_E		0x0974
+ #define REG_2ND_CCA_CTRL	0x0976
+@@ -649,6 +681,7 @@
+ #define REG_CCA_MF		0x0a20
+ #define BIT_MBC_WIN		GENMASK(5, 4)
+ #define REG_CCK0_TX_FILTER1	0x0a20
++#define REG_CCK_SWING		0x0a22
+ #define REG_CCK0_TX_FILTER2	0x0a24
+ #define REG_CCK0_DEBUG_PORT	0x0a28
+ #define REG_CCK0_FAREPORT	0x0a2c
+@@ -683,6 +716,7 @@
+ #define REG_RX_IQC_AB_A		0x0c10
+ #define REG_RX_IQC_CD_A		0x0c14
+ #define REG_TXSCALE_A		0x0c1c
++#define REG_B_RXIQI		0x0c1c
+ #define BB_SWING_MASK		GENMASK(31, 21)
+ #define REG_TX_AGC_A_CCK_11_CCK_1		0xc20
+ #define REG_TX_AGC_A_OFDM18_OFDM6		0xc24
+-- 
+2.55.0
 
-Ping-Ke
