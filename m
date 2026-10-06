@@ -1,81 +1,81 @@
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+Received: from mail-lf2-f13.google.com (mail-lf2-f13.google.com [74.125.229.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9657E2D837C
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 00:55:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8279D2BEC2B
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 01:09:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.205
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791248106; cv=pass; b=e8FmC68N93wEt71tzJzXBNFp04yyK3MP1tEh5q6ZdQUYzIlMr36fK950ejb+dXrvh8J1VNbFEw5IbuHqGmSjprB0t7PxlCKXHIMyFqN6f6Xyx8HNcYqb7YFnz9JBkjbU8bYaZTH18AdifaOgrilrre9vDfFd9P32d6cDm/4wyBc=
+	t=1791248954; cv=pass; b=RjQ7J3s/1BFl3R4bjP0BalEhkL/g8k2G/M7eqpOEmYLbZf7Wl2b05SD/MoLCQ1jsoEQoabTJmn3V0oZsySf6ZirSCpwHEsfdVP5oZNY5buBfEQfM3a7hNy1vuT8raHlMkoVoBOAx6OideX6Yuu79kq3g481u8q1bazTkbhmxEKs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791248106; c=relaxed/simple;
-	bh=WlUUULkXecDA3FrqNMgGGTCq58pBRHG2vpFkFbVh+ZE=;
+	s=arc-20240116; t=1791248954; c=relaxed/simple;
+	bh=FQPZMOJ4kPISPNG5soX6XJknF05kL4vWkbTpQ6PZ6YE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KtN7HQ/4SPM00YDvwEpWq58gJaQxnKg0VdoeuUiHOxjzgoHmPzD2zGlExLkfPvnCvOlUevPgkRfPk1zV6M+7SWmef/QHtSjZMnlde+mVxJZOU7la9JgCw/eBE6nQnjTfGDFIcD4s/N0B1r8YfGqIQBkaG6HRjbmSQHNnes1HqHg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bW/qOGkn; arc=pass smtp.client-ip=209.85.208.172
+	 To:Cc:Content-Type; b=qp3tpysTtXTEelrAUPQeyRzsnkrLW8xviLYdupZKppA2QTNjQm96auS3vG04VHchHZU2dn0F1OF19ZmrubRsPF78LlT/fewCey8e4uEKGZE+T3RWv76U+wtdlRNk04ED3ETroFJk2uMV+068c8RnCXQh+LbYZrwttqN2g3F52fE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gD1zBwY6; arc=pass smtp.client-ip=74.125.229.205
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bW/qOGkn"
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a595487d43so19612651fa.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 17:55:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791248103; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gD1zBwY6"
+Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5ba437ee7f7so1830012e87.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 18:09:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791248950; cv=none;
         d=google.com; s=arc-20260327;
-        b=qhOLZLWbuo0dYciHUOFWqqnFjAQo8DuA814lAdUcsFtQpxwwQUUYFvX04feAXC1qYE
-         5QAbXC+Ylqjo/OmxZfM0Rb0ysrzIf8RC8NDTlY5IK0F5fcit0I/RLIocYdv5SqyqTSqc
-         Slex+JDZ3hWH6LK5zCn0M0XNg8qeVlRNECxJjAR4UoF4DWlW5ZNBUnH+H0nFifw6wD9v
-         KbkQknr8vKwd+rW6qTp6UfZH56rXxeLh6tP83ijOfRdRUbuTaXDNN1SfE35xQ4nXK3CR
-         f5BsT9ef2MChM+7i2QcHCjfBIOZyDKPUXn/nWgzlX69Rc3QGB2fhKQEB9l7Lyzf36v1M
-         OTCg==
+        b=ESZv6V8VqtUuwvcicZjR8filLV73Gpi2N0Uvg0nxvad/cZq3xdRsnY9xLvauFwHdPh
+         J7TYDQSmCJ0uZyRSs4WORPGN2jHa/9UGYiByBVJWBHfw60suP++Tl1/mbyQtSiG0uGF5
+         kicJ7JO/YibYSD88KzH4ZL73U/oc2PojgxUpXdHxZzUdLa1vDW+J/4nTeDyV+sTc6HkB
+         Iu60cuwTxD58DVxUFWeQmHt2GM5pB/mvVyVnvPyN1zpgwz4gSmN84sBdyNc8EKEZAxnz
+         w6rH0AJ6oTD3GxtRLcd07hLR0VAscpqO7w9/T4VPpBnACnOQTBB+JsHojqbuTEddjMCz
+         jsvw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=pcCvTZJFLUHdSKFVu50rhTAVsHuaYlG7ZNshew9spyg=;
-        fh=ibxPtsKhLvcn5h03QB+VFbAGiX7BrfFW9VIrfk5WBZg=;
-        b=dCzXX1J2OLAvbzHFVqkOr6W10wIQ7YIt5jfSz87HlB1b5yFE2ecvjohqkFDvg1vHYC
-         iwH949Oa2e3eSqCgNtGmDvWbPpDHeb+Jh7JErmzNHY+jS9yFRqdlJsni6dTkbBxleUM8
-         37k7DzjwjW/gZbeLPD5pXBcGzxq8T6A7TOuGFvDam32Uoa/YwEJ3wBhhXtmKBHG5Ohrr
-         WGmp2CD8JaJ4uznamb1FmiSBQoLZ/Xe8LBptaLog7K/veueTJp01ra5vffD6tHIt9Sbi
-         W9SFG2VnCVF63oO1JpyWNkplk0WZPeUlihhb/kdOmIAMsoTla3rTA45F9bO9yIoIz32b
-         uvXA==;
+        bh=kkoJa2a5Pb+V2YqC92sylMEECtxCIMpFTVrO4IIataM=;
+        fh=t06aOLRQQTt9G8otXhsyqN6qKu+zZhZRSvP+vj45HNo=;
+        b=oZ3q0RULvuLseQF1j58v97HRQuEqt78Phj7JwQcIGS0TlK33aRCIrZoaxdFa7EVF5n
+         BJi+L29rVcYNfXpAl1bnfiEO+yVaMpzOX792m0vWL8QMQsLaH/TcAE0RP2a8tfWdhb32
+         k5Yd2UK6z8h3i3qRPr2v9lmWrPh8MCd0vOOTnuqAlGMkrZPhfveU3jHNg/0Az48P+zko
+         JovNb1p1evfasG+4Xubx/2FFJsrWiTA33EzuJ9QLl691he7U8f4j7TZI5k9nBk8hN2+Z
+         YOITJK84+piuwwFKc9zpmoqN+F7xSwn4qLy8nTJasWwQm+aEDeoCm7tc/w4zbSwJO9Zg
+         IMeA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791248103; x=1791852903; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791248950; x=1791853750; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=pcCvTZJFLUHdSKFVu50rhTAVsHuaYlG7ZNshew9spyg=;
-        b=bW/qOGkn8Oq3ecnO3iORBbazJd2D788Dq6dJ3XWYfSdzJ6LwitRqTlwk46xelWflAV
-         gbFGss68KaNVq7/giUy8G1imnN6qjgFYeGlGP4GkDjeI8mHeQmcGyZgO4DR8xgQBojFd
-         BKAducA6nlvACC39vidsPLdmEkBBidl4l2tNV/l5BL7wKH5f6DmhVfHjAJLGGC/tuXxf
-         XPSg+NTKeoCQzyOfEj2Mr8SDCLinsVL+iKUdl+/XWcioaKkJhM5Lz5jlM0d6+rFN5Eup
-         dsFU9EjsHCawKIEUoxk67BFgonn5q5/8iVgi+JTenRCQhQu2rV7HNn+TLaxFHZFC3alU
-         N2cw==
+        bh=kkoJa2a5Pb+V2YqC92sylMEECtxCIMpFTVrO4IIataM=;
+        b=gD1zBwY63aneQEdRWI9O2+XhnWcnhenMpHkzDzfmr+2Q0LFpCQWs1J5ADzGW0KIPCt
+         TOVS/UekxLDmL8+mKDkGKcZoayDRSgPcaYe3huif6OIc4UFMTbeo/s7sE6I0e5mM7VJP
+         MLbb856XtAlNuVJ37tpT385z3EfGY9bqI7JBkRjVo2EQYN2brSintBa7xGik1bXmKiMV
+         Hj4jG50TAT6qRMV/bAcLy5cDg15aUa8iM0fI3YSrYZKXwKa/2D5HUZuiACWPFyS+n20W
+         QrSiwLGMTbXOqMLQ8na9nYcMRMPtLKzWDcZg15qjiZLozv4DR73uHJZy62lPzFmgxDja
+         3w2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791248103; x=1791852903;
+        d=1e100.net; s=20260707; t=1791248950; x=1791853750;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=pcCvTZJFLUHdSKFVu50rhTAVsHuaYlG7ZNshew9spyg=;
-        b=aVjK7W7Yj/h3brm1GOhDdCeUuLoOxk25WnqSeMO1rHWzoMBcMzg2YfqPsKGRiqVYUc
-         tzjCxwCPkFwwhCkz43d5nDH2eYcHicSeuP/7n1n6ea3twpzg53KQcP73gzaw3uJQvMt7
-         Ffz5/4VQNifzXM6dYKfj9ypFoeymt0KGPb/qna+QAZbRxcESQZpcpvk0E7os+4JhtLqJ
-         A9i1feKwrALht79kVC+0IQOFgVthwvkUWXwaU9op1OclgIYhL0ILol6hhjtnJL1TX9XS
-         6aKQEL4OBAPFUQiD4k6Rko8Ot/6F4XjGhN0UirGMJnyU4zsskVAVnsPEL94upS0535WN
-         iiyA==
-X-Forwarded-Encrypted: i=1; AKwUvBz+Be7lqN7sxAvDgphmDAslU1ubvdPIPuZMRBd1bfvptBmwkvpPqDu60zK8oGYZR5KU5WoL9jokV3INR9WFlQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ9hf1DUvA3xz4hvU9U0k0qGJKzgL1fKKhs+qq3hCBc63cXjH4l
-	mbiglzm0hheMwQDQvVuPuaFD+pKG3QnyKGFpld+Eg8/INc6JfMtjscMm8R2+C1cI7GXOI5CnWkr
-	uvlWuS7hpoZAb4uvk2ayP55WxkjeNdtY=
-X-Gm-Gg: AYBFou2r4gGa1nV2Z/+Z8RSgv+K2+ouMl09PMTf126BZR9TdiurlYCugw1YsGEZ6dA6
-	vEYj2QVnKJx8dZSwv8qLoHyJ5qPCCxDHh1dnt58no+cojJ1GipktxdHT/hb0vva26LffHyNMNsg
-	QYD2S/KquzA0giGsmIbC26Z1nLsnT4FDXr6Dd4z3ItTiFiNyKWd/GHhz3na06vC+wadPPD/FHfA
-	kzoRUsISR2pf2/GTLdAat05N9RiyCkyI41YN7lzTjoIG3jk+iM7zaSROjqjzeelrkxCVG8QTzWv
-	8pzAmMfVpcT9wunBFSSciMk9A10yF6srNkmCsYsoH0AfcR/MF5DI2gPerJC9/kQ//+rHh22rinN
-	JfPqBiGP1Dg6bSRK0FALrB2w=
-X-Received: by 2002:a05:651c:a10e:10b0:3a6:48ab:7973 with SMTP id
- 38308e7fff4ca-3a974f7c448mr16424921fa.26.1791248102355; Mon, 05 Oct 2026
- 17:55:02 -0700 (PDT)
+        bh=kkoJa2a5Pb+V2YqC92sylMEECtxCIMpFTVrO4IIataM=;
+        b=Vbc48THkcSdx08bffF4TRony7caQ/R4Y8wqmaZ86BNVhL0Lyg23zJQ5EO1E2Nm53Ox
+         orhMKxg3GJYUgxmOhTr7FbvI4UIYSNQTOihtZYtm0sHZIlULMCP9dNXecvKmTHFP4SAd
+         TD2JQOQtmLUEq8BYUaB09A8V6wtaBJ1L804No2m0bClvjjSqh4pqMBfBkT/pLVMhX00B
+         0mVUf2Tknfc7rKFPSuRWnNWhJ+g1rcUBsX+Qhbpp6IgZy0yFanBdHO5jPzfxOe+3xk5I
+         6yQwfmGUGQFAUCtautY6LaZLvtiEmAWwaABJnW8r/scHV6iTa/XZ0U6okukiMFJt4BGy
+         FSmg==
+X-Forwarded-Encrypted: i=1; AKwUvByBhQUitrTdqkGX4UCRX+KGApyJI7TiwyGOBkvNhVMayQgfCCsneK4Fh39v8LcDrnfAbQ9MDdxAyp8j4pSxSA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJqCmy3YnB03dubQD5woHCDdUpRFoWbyumGuV/nda+CsSsVknwy
+	7E5Yc4z7IKFocsh2HsOZRkbshXUpZqrjzoL4EO7UsVQomS7UcP9Ke59ZCShrdmUdFfPnB5h75m3
+	MugXU0ZES2TzS3PDcE8+weLCxKQFv/rA=
+X-Gm-Gg: AYBFou0LpieunpNX12Mq3CxqIFgSdG2MwQZ9aT+Tpy46TrWoxi9X6iEJ79lk5SXQ3Ar
+	IsTPs7Hm1I2qZ77QjGxvX8vYAeHr7E0XwKM48yKjNLBXTlBKer7F1MeD0PvqD2hQCNZm/cFVmIr
+	QW6RFS5cGKAeIJy0gKqtPEuA2KzsIFEfvN/3hFu+7Q8eRe+1jfQS/9cNaDPDUYmV6qR20mkDLw4
+	oYC6ZH09ggc+JgEpRi29Z0tlRaqsRq5uQekCrMyPaUrmifLuLlln58EqxODi+3X3d/ONNHQLtg1
+	nzPfT6s6P38vmhWuViNU+gmI1W4AMQSec+25f/i/x5WbjcxXwOVUSC5VxN1voXjItQuyPFFhbxe
+	8elguTAj32dE=
+X-Received: by 2002:a05:6512:2523:b0:5bc:b091:e78d with SMTP id
+ 2adb3069b0e04-5bcb091e7e6mr4148625e87.37.1791248950470; Mon, 05 Oct 2026
+ 18:09:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -83,13 +83,13 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260930112842.21323-1-sigefriedhyy@gmail.com>
- <20260930112842.21323-4-sigefriedhyy@gmail.com> <20261005164905.3d5b6749@kernel.org>
-In-Reply-To: <20261005164905.3d5b6749@kernel.org>
+ <20260930112842.21323-5-sigefriedhyy@gmail.com> <20261005164946.25da19c2@kernel.org>
+In-Reply-To: <20261005164946.25da19c2@kernel.org>
 From: Yuyang Huang <sigefriedhyy@gmail.com>
-Date: Tue, 6 Oct 2026 09:54:52 +0900
-X-Gm-Features: AclHuK_fRzWbaSoo1jAzXFCqAnGNXFcKoa-i0NxMDceG-eS6OpMe7FREJUP2sdo
-Message-ID: <CA+7S2vL2n+XTZHoSyitmQy59tAnKjJvErvZw-PdKaMx4-Deq6w@mail.gmail.com>
-Subject: Re: [PATCH net-next v9 3/6] net: add a generation counter for dev->mc changes
+Date: Tue, 6 Oct 2026 10:09:00 +0900
+X-Gm-Features: AclHuK-bztab4w1lM2DovGlyn5DZ8ZhMm-bLH4zjSTjG2-Wv3eC_T9ovpy0ACZk
+Message-ID: <CA+7S2v+XZjnzxpucTBAaKqLp8FtF92cyHBbrQF8G5D3uT3r8Hg@mail.gmail.com>
+Subject: Re: [PATCH net-next v9 4/6] net: add AF_PACKET multicast dumps
 To: Jakub Kicinski <kuba@kernel.org>
 Cc: Ajay Singh <ajay.kathat@microchip.com>, 
 	Aleksandr Loktionov <aleksandr.loktionov@intel.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
@@ -107,20 +107,17 @@ Cc: Ajay Singh <ajay.kathat@microchip.com>,
 	netdev@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-> > + dev->rx_mode_addr_cache.owner = dev;
+> > + err = dev_mc_fill_addr(skb, dev, ha, NETLINK_CB(cb->skb).portid,
+> > +       cb->nlh->nlmsg_seq, flags, netnsid);
+> > + if (err < 0)
+> > + break;
+> > + nl_dump_check_consistent(cb, nlmsg_hdr(skb));
 >
-> There's no need to set this?
+> Why are you checking this on every iteration?
 
-No, only dev->mc is looked at. It was set for all the lists of a device
-after Nicolas's comment on v7:
+Right, we don't need to check it on every iteration, I will fix it in v10.
 
-```
-  There are several lists owned by a device (dev->dev_addrs, dev->uc,
-  dev->mc, dev->rx_mode_addr_cache), the name 'owner' does not reflect
-  that it is set only when the list is dev->mc.
-  I wonder if the name should be changed or if __hw_addr_init() should
-  be updated to always set owner when the list is owned by a device.
-```
+> The changes still lack polish IMO.
 
-v10 takes the other option: the field becomes mc_dev, set for dev->mc
-only.
+I will go over the series again for v10. If you have something
+specific in mind, a pointer would help.
