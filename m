@@ -1,100 +1,142 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 014D91E9B3D
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 15:40:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B791D3F12F0
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 16:17:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791301228; cv=none; b=DHaXTwkV4xpPcRzIHj0H+Nkj98IzJNty1Wdz+W060KyvLERV12HL+GGA5HZXNc0WcYxtD6oGvP6WcGf0OiMqnklJNLOmpklwUW3JQnIk1YC5GP2iI7gk8K5M3pPUu6Ctr82L/GxHstVBGwNEC+kHX2IW9gdTnyUqN1gOXTna/4Y=
+	t=1791303480; cv=none; b=MWl8FQ5wj7Ni8P+gsYg5kek89l8yzM+130ixQS5T36KfiUxMZmLTGkwHvnYA9+adFJ5uEhw+MCn1NKqVD20QBqLqGBN1F34HiIhPyiMuQyFDu09Rv2g6D8EOvlbcQ3Z858f20fCcU64MRrNyaGHimqeI5u810mUgiohv7WX/ovk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791301228; c=relaxed/simple;
-	bh=dTILSIf+qTFIf8yhAaAnpeUUHKo/uvJl4hjKFtG8LJQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pZC+viF+TB+z1oePfsoCaOIPjNaFdVwhhCuXTjjunsLQIq1CkaZBQx4aR4zu/g4IawtQ7RHT2Bb0xXUT6yFSH25jcxutm25q8znQN1La0IQgI4mD0jIgLbiR8tfxePw/YN8tL5aSHLY2sAb6Hw9fA0CeiW10cRqsyxlTsmdn+eI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=lGT0EV1h; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1791303480; c=relaxed/simple;
+	bh=B1Mdpk03iIpWeMkqOfV1qprInLhjCazDZYQpMs3zUx8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RTEbsVqNX/sNnKrcq3JTXAoSY76UKMcwh84/IBE8+B1/VsMmKhUhU6XyolawK7qhwxefAamAAzuijrU6o+cKeSSIkFjEWy9/apKVWbVJ1GvOnXGWqVZDGDacxnqzj/JdK8oXwtzfTBu4M4SA0dgx9nNGTKNWgR/PTbwlXwDxM+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UptOmR/L; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="lGT0EV1h"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=rxl3tZbFF5iOdiovHswFmJJfkFXMsEGerLI8jCvxhiQ=; b=lGT0EV1hgifFh5K9NRNV//HE/r
-	W03paMPd7YZTaZ+iTx2dVHn5J6amgAZOW14lCzfllKIazqgOEnDT4ycQ6ya55SgL9iQQWmtHCyFJZ
-	G7fDDwHCGvsAAjDwi41AzJVTaW3ItBt28ryDEW0HahQ76vd+LBFv/HThvVQjAddQb694=;
-Received: from p54a434bb.dip0.t-ipconnect.de ([84.164.52.187] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xE7H5-00H1SN-32;
-	Tue, 06 Oct 2026 17:40:15 +0200
-Message-ID: <8a070d0a-177f-41a3-bddf-0f8b06e82baa@nbd.name>
-Date: Tue, 6 Oct 2026 17:40:15 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UptOmR/L"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a061a13884so8367885e9.3
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 09:17:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791303477; x=1791908277; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=rj+ANBVjGQUDryG59riqH/2PuEnYDgs9HpOk5Pb5AgQ=;
+        b=UptOmR/Ljm5GHsdlffR+mAJFcjMDJn1UPlZf7I1qGo1jIPTaR5ybO7SoJ3PU4DrcIP
+         Zy2ksJ0OfXgvWgE+C9GlZre4Aehyr1j8WOqMuntb1lPCtXxsb8XO+kVty9BsdqGpxhrA
+         B+dqyhyeHx68h9tvWwqurwEYoRT4C/0ZVYIuj9+FGPg4qhi93jfwttvdfqntEsNUDvs0
+         BpbYgKByYmastLGeLAep3zrq55KDeO8xbiGZX3HLGZcxEengHRYM7vK9RnDJIknY3BZB
+         qv8+zE770M3aJuHUmn3lURwi8wES5AkRzlpI9lmdpUwWh0X3AucglsDQaP2EN+4uuuIN
+         3swA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791303477; x=1791908277;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=rj+ANBVjGQUDryG59riqH/2PuEnYDgs9HpOk5Pb5AgQ=;
+        b=Nq+ZfVUXYlJk9mmzWSzRtKg4erhUVm1p4Srb40WmihFWZEmclds8u3Soulfm6MRK0b
+         /JRE0+WMVIXIkAsJ2lTTjwUSXd1xryQxN+aSv6ML652v1IYA2cjrRATGrJ9kgBcwR7ab
+         zqn0lEtfiDMZxK5B0n29xQglQJQaq5gmr52QjIxe18VeWvwRaEdM82GhqODHF4ZsCKPg
+         NJ1Z02/UM3tdsFK8krVVNnNGsAQgIz6VfeyJGwVReLNg9IUMMWUijH9kjiRimpypIStC
+         IF5eqFrm/4ewb90TtB8Gn5iCSLH9tgL9xCKq/8vFat1o2cvTVRMWfDpY4w8Cf5xWG+aP
+         yLPA==
+X-Forwarded-Encrypted: i=1; AKwUvBxMP8sTvd3au1g2Kt12CPH5/85dTMvp1n2XDw9t1N05uQnsEdUBvnt9CKKoOF5yjRvQ52JFhkOlbRN6wgQWWg==@vger.kernel.org
+X-Gm-Message-State: AFuF++nstTl1hCU+OuQMo88K+s3n+uYndSKr9XooXmAwi6Qol2M34Wlw
+	PU4Yf+otgFhs2YZKp2qFlSj3LBCpIbMOO2DU2fU3lHxQePQkwdPurtLm
+X-Gm-Gg: AYBFou2LsAZ9F0t62OtKZTexp3qGMXSwzIGFUoPaFKLifbZK/Mg9npavY9bVYp+8mJa
+	2eSTTzwSqC7i5lwA2hSmlLHSwEVNyqA0oVSuA+dtWH7ddQLhhJKpCeCrxYPT510hmykklewa1K+
+	dNM4Fz0NQCZ8TTlB5vyABKlbE5088hwOBLL2se/Qq8eL8lFQ5hH/61ODHA9lfsPANvwV0baJcyy
+	jzzegg2w45VC7AAjfPIBj7xiiyAJaaBaLTqo9216l0Q4FfQ6YbCVdzMHpe/jDk9aEmOlioikzmW
+	IpAYbfcd6od/eyPSoMeKaARMcbj7Z1SKOWI7YawDBRotlmD5ntRA6VbGeEpiuZjZ+L9WugZFZ/N
+	u0XqzbwgksfJjEW5Fx+I9FzoYWRMYB8DZIx47qVd0zhIkiphQX4cvaFSc7Tkq+qrZ1gvhqaoh/0
+	PpR8HHXyZhYCwMpjT1xiZWA3DRD11flbiD3EbPvJgGIZ1zTjIkV4NKGltIX7aeIV0+d/QHFaNs8
+	vYkuY0Xg5mupedIwdxcGQ==
+X-Received: by 2002:a05:600c:8b09:b0:4a0:1b14:e283 with SMTP id 5b1f17b1804b1-4a17b4f4276mr32986425e9.1.1791303476638;
+        Tue, 06 Oct 2026 09:17:56 -0700 (PDT)
+Received: from FranzSP11.tail2d6612.ts.net ([31.31.60.25])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a03ff20831sm275692765e9.4.2026.10.06.09.17.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Oct 2026 09:17:54 -0700 (PDT)
+From: =?UTF-8?q?Fran=C3=A7ois=20Roux?= <franzelfranzel@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Diederik de Haas <diederik@cknow-tech.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: nl80211: don't WARN on a missing self-managed regdom
+Date: Tue,  6 Oct 2026 18:17:44 +0200
+Message-ID: <20261006161744.3804-1-franzelfranzel@gmail.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: mt76: mt7928: only do CLC hw type sanity check on
- MT7925
-To: JB Tsai <jb.tsai@mediatek.com>, lorenzo@kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
- Sean.Wang@mediatek.com, Quan.Zhou@mediatek.com, Ryder.Lee@mediatek.com,
- litien.chang@mediatek.com, Charlie-cy.Wu@mediatek.com
-References: <20260909055750.929102-1-jb.tsai@mediatek.com>
-Content-Language: en-US
-From: Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260909055750.929102-1-jb.tsai@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 09.09.26 07:57, JB Tsai wrote:
-> From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
-> 
-> mt7925_load_clc() is shared by MT7925, MT7927 and MT7928 (0x7935 is
-> folded into 0x7928 in pci.c). The hw type sanity check it does on every
-> CLC region is MT7925-specific twice over: the encap bits live at
-> efuse offset MT_EE_HW_TYPE (0xa71) in the MT7925 layout, and only
-> MT7925 CLC blobs carry that hw type in their t0/t2 header. On
-> MT7927/MT7928 the driver therefore reads a byte that means nothing on
-> those parts and compares it against a header field that was never
-> populated, so a mismatch silently skips every CLC region and leaves
-> phy->clc[] empty - no country/regd table gets installed at all.
-> 
-> Gate both the efuse read and the two header checks on is_mt7925(), so
-> MT7927/MT7928 accept the CLC regions from their own firmware as-is.
-> No functional change for MT7925: PCIe still reads 0xa71 and filters by
-> encap type, USB still runs with hw_encap = 0 as before.
-> 
-> Fixes: 356b39285559 ("wifi: mt76: connac3: refactor CLC header type validation logic")
-Patch doesn't apply, and I can't find the commit mentioned above.
+nl80211_get_reg_do() has a WARN_ON() for a self-managed wiphy without a
+private regdomain. Userspace can trigger it with a plain
+NL80211_CMD_GET_REG request.
 
-- Felix
+Drivers can register such a wiphy first and set its regdomain later.
+ath12k, for example, calls ieee80211_register_hw() and only then applies
+the regdomain with ath12k_regd_update(). iwd queries the regdomain of a
+new wiphy as soon as it shows up, so it can hit that window at boot:
+
+  WARNING: net/wireless/nl80211.c:10828 at nl80211_get_reg_do+0x1d0/0x1fc [cfg80211], CPU#5: iwd/721
+  Call trace:
+   nl80211_get_reg_do+0x1d0/0x1fc [cfg80211] (P)
+   genl_family_rcv_msg_doit+0xd0/0x138
+   genl_rcv_msg+0x58/0xd4
+   netlink_rcv_skb+0x5c/0x140
+   genl_rcv+0x34/0x4c
+   netlink_unicast+0x31c/0x39c
+   netlink_sendmsg+0x188/0x400
+
+The same trace has been reported with an Intel BE200 (iwlwifi). The dump
+variant, nl80211_get_reg_dump(), already skips a wiphy without a
+regdomain without warning.
+
+Keep returning -EINVAL, but drop the WARN_ON(). The same change was
+posted in 2021 but was never applied.
+
+Seen on a Microsoft Surface Pro 11 (WCN7850, ath12k) in 3 of 4 boots
+with next-20260929.
+
+Fixes: 1bdd716cbcca ("cfg80211: return private regdom for self-managed devices")
+Reported-by: Diederik de Haas <diederik@cknow-tech.com>
+Closes: https://lore.kernel.org/all/DL5P72WYQVOQ.23G9D01OY3BAA@cknow-tech.com/
+Link: https://lore.kernel.org/all/iwlwifi.20210409123755.ba2ea961f4ae.I8fde32d3196e860efa3b4ec464c42194195b42ec@changeid/
+Assisted-by: LLM
+Signed-off-by: François Roux <franzelfranzel@gmail.com>
+---
+ net/wireless/nl80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a18240455..2589491af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10824,8 +10824,12 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
+ 
+ 		regdom = get_wiphy_regdom(wiphy);
+ 
+-		/* a self-managed-reg device must have a private regdom */
+-		if (WARN_ON(!regdom && self_managed)) {
++		/*
++		 * A self-managed-reg device gets its private regdom from the
++		 * driver, which may happen only after the wiphy is registered.
++		 * Userspace can ask before that, so don't WARN.
++		 */
++		if (!regdom && self_managed) {
+ 			err = -EINVAL;
+ 			goto nla_put_failure_rcu;
+ 		}
+
+base-commit: 6474fa070f2b8013b4b87350b775b8c3be6e8aac
+-- 
+2.56.0
+
