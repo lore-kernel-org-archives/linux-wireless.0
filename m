@@ -1,80 +1,94 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B96D3B71D9;
-	Tue,  6 Oct 2026 07:55:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A878D3932EE
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 07:55:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791273309; cv=none; b=RPfFyes1zDLqzmtfy5lYUI2fFnCtHKF0vQpEhu4WjOVOSvwZmtlPhBL7AtZVNVoD63z/EkcHjAiIYW16Ew4dwLANAXvHrAgxiolGzQt2e6yiF9p64thMfp9u9koSeIhFj6m5FrgmliRJonP+vpxbcLS6rBmQxIzlcE68/j2h1yc=
+	t=1791273345; cv=none; b=c6dIbMjU6R5syoJFMqSJefQcmt8uTLZ8MOBTyoltXbnlMa8n3rOkNW4iBFC7x5LgODiiuebU9GVUwq+rGd1amwN34tVnwyQwUAFGi3tkEiAlLK/KcToMRE0OLddvgDgo7u0vd2OBr+lZd/eT/hZVOG3MdFaAGkTXg3e4TxLaRQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791273309; c=relaxed/simple;
-	bh=z0tqKrok6FkCdJeZUFOvi57EJoAXeks1dSGJhkh+Aqc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=j7XlMgjj9heCj+8F/CA0RiSuxgM2r16RopSrB+yabnUU13ctGFrzQmnJNSWORATPLspFEsz05U6dQTjrkmT544Je+znhmQ6d0zd0APQSokvtXpZuTKvKFzokHbaRWhW6AR6JiU9RH5yx+bRbBgd0sbE5jL7E5Sx5FvBZu65jlM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=uP6nYJLn; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791273345; c=relaxed/simple;
+	bh=/6VCxIoRLnavcfWlTZ/l3aFzZ4khwANHfmIrxFMbKJw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=VE5OMFqA2rDxsCDe0gcihFWI8W3vbyoX+s+Smsf9j9Wms7x/P2sBOrGIkXuoGI6EokUauT3sZwNQWQX980T9xfpnKneH4MW6RKiqT64UxkUKUqM/IYVhvdLh6yCKQ2YTmE3EAD5as0lrk+lZid4bYT6ZWI8m7euN2rct6DiVLIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=dWvdex17; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="uP6nYJLn"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6967ssnK72742414, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791273295; bh=z0tqKrok6FkCdJeZUFOvi57EJoAXeks1dSGJhkh+Aqc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=uP6nYJLnV2g77iKv7n9iCyfJUWhreeQ+jfceFhjLwyiNrnqVECx60luQxWE2o8TdP
-	 kNofzhCGHzB9LLH3I9QwO+8AYk+h44moOKqR6VegnXAKtb+7TpOV6CiqJJUb1lTPwP
-	 ftdH3yAeWsF0LyO53vgXo628eEfvghriWe1YW9i8JMJIPiVCjdxddWDgyhm6QSjaPr
-	 oYMKfU3K3SGJepvHHsG8/ee3FF9ti9TEHfJTlDqtTYX9D6VdBePuqDwuYO6y3ifC2Z
-	 g8VG8/dTS1N6Kfj+errh7BS78tHbc3NIEOQI+UWNOwg21buHM3TKcqqN/rhD7y3t7d
-	 nsRyIg3c9Ul0w==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6967ssnK72742414
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 6 Oct 2026 15:54:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 15:54:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 6 Oct 2026 15:54:54 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Mehmet Fide <mehmet.fide@gmail.com>
-CC: Luka Gejak <luka.gejak@linux.dev>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "mehmet.fide@screeningeagle.com"
-	<mehmet.fide@screeningeagle.com>
-Subject: RE: [PATCH rtw-next v3 2/2] wifi: rtw88: support channel switch in AP
- mode
-Thread-Topic: [PATCH rtw-next v3 2/2] wifi: rtw88: support channel switch in
- AP mode
-Thread-Index: AQHdVNbGRyo/aSSZhk+/tharL8dRjLbvr7cw///uFICAAIevQA==
-Date: Tue, 6 Oct 2026 07:54:54 +0000
-Message-ID: <3002971ac7824b0b9cafa852e0e81e8b@realtek.com>
-References: <151d3d60da614e00b3a94bebd4f4f3a8@realtek.com>
- <20261006074627.372751-1-mehmet.fide@gmail.com>
-In-Reply-To: <20261006074627.372751-1-mehmet.fide@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="dWvdex17"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=/6VCxIoRLnavcfWlTZ/l3aFzZ4khwANHfmIrxFMbKJw=;
+	t=1791273343; x=1792482943; b=dWvdex17D4hHNYo9WuFJoxHuZotmO3MFAaOvZEUfxl8JWxL
+	9gE08NVKXwAjPHhMwUh306bFrBTiexymif4V7NLUpzS94j1onm4h2ge0WStZhQ4nCVtF/KSlk5kok
+	srcNO9jLCAxU2lOBR6cG0AZOJFlydUl1AQwala1DSWoFC+bePgyeZjBjwzJzIP1a+CBKucHNyag8B
+	HbBAEVzFqsjnuX/ayBuaW12RVQUJDUvVR8/D3CCi9XpcxOWAzd7WMLWvdupRYNLXoLPzUcC77mXaI
+	FUqiW4h5Jr1ushLZrmv5T1vqBwwEKByu7RGr/IwtjbpcODCNgI/I7JblGiu21X5g==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xE01T-00000006Qha-1hDg;
+	Tue, 06 Oct 2026 09:55:39 +0200
+Message-ID: <52f1488ca882edc3901a7559dc4afee4fb8351e7.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH 00/12] wifi: AP side locking improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+	linux-wireless@vger.kernel.org
+Cc: "ath12k@lists.infradead.org" <ath12k@lists.infradead.org>
+Date: Tue, 06 Oct 2026 09:55:38 +0200
+In-Reply-To: <623f20912fee5ed614e3a884f54c116bb8f2944c.camel@sipsolutions.net>
+References: <20261004214504.1636783-14-johannes@sipsolutions.net>
+		 <3db68884-f6b5-499c-9959-7eec59ba40cd@oss.qualcomm.com>
+	 <623f20912fee5ed614e3a884f54c116bb8f2944c.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
-Mehmet Fide <mehmet.fide@gmail.com> wrote:
-> > Will it be a problem just unconditionally initializing csa work?
+On Tue, 2026-10-06 at 09:14 +0200, Johannes Berg wrote:
+> On Mon, 2026-10-05 at 19:05 -0700, Jeff Johnson wrote:
+> > With both the redux and this series applied, I prompted my review agent=
+:
+> > prior to the 2 patchsets (18 patches and 12 patches) ath12k relied upon=
+ the
+> > wiphy mutex to serialize many of the mac80211 operations. are any ath12=
+k
+> > object references now subject to new race conditions with this entire s=
+et of
+> > 30 patches applied?
 >=20
-> It was: a hardware restart replays add_interface() with the work still
-> armed, and initialising it again would lose the pending timer. With the
-> work in rtw_dev the question does not arise any more.
+> :)
+>=20
+> > The reply:
+> > <LLM>
+> > New Race: ath12k_reg_notifier vs ath12k_mac_op_start/ath12k_mac_op_stop=
+ on
+> > ah->state
+>=20
+> That's a fair point,
 
-Can we stop the work properly before hardware restart?
-I just don't want many flags (conditions).=20
+Actually, I think it was wrong: ah->state is only used within the
+NL80211_REGDOM_SET_BY_DRIVER block, which is already only called in
+reg_process_self_managed_hint(), which already holds wiphy mutex. It
+might be correct about ah->regd_updated in this case, but then it found
+that was _already_ racy.
 
-Ping-Ke
+> but easy to resolve - we can just lock the wiphy in
+> the loop of notify_self_managed_wiphys(). It already can't go away since
+> we have cfg80211_mutex. Looking slightly deeper, we should guarantee
+> that we hold the wiphy mutex for a bunch of these operations to the
+> driver, and that needs more than a single line of code, but looks
+> totally doable.
 
+That's probably still desired so we have _any_ locking, but needs to
+drop the wiphy mutex in ath12k and rtw89.
+
+johannes
