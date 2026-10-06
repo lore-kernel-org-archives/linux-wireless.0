@@ -1,115 +1,127 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C019F377EBF;
-	Tue,  6 Oct 2026 05:29:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2095F2D2394
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 06:07:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791264567; cv=none; b=P7l7w3HR7IQMyo1ues1OmePxJ9Difb3R/TUkxcCe2PFfxBSBIxunwZQ77r+sNQ/K/8r7lEziiuNP6FIj/jEaqlUi3S/mxg3knWzFIM1kW/3vs/hKTlmWcw6/wc2W3Qecl9OmO4r5LRLpZumitfc3LE38J75aS5JYTwdXljQVX5M=
+	t=1791266825; cv=none; b=XkAGp4ChUZUySnHAMly66QX2oVM0QoIlnwO/ibBG8cH1kEVBt50csH8KxAXTCm+f7s8nBmR8LarCT/vnDjekFZNsbMF0vqSKrvfKVQfj4u7THgmg9Gr6/MbD1Q7IFeeDbc/P0lA+2S/q3izP8/qet8gZ8nUgPR53ZlCpjQWsr1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791264567; c=relaxed/simple;
-	bh=qydEbsAEnOqPy1tM1wey7IB+3sJMbbLOvbn7P/7qDoI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=sVWUZJ+QBGJ6MxW7mIeo2JJMbAgHTfL/qsx6/zOjxbJxzB9g6UkCGTHcqQZe0AjMzVkwZYUiXkaNgCelgmhyjKcHNDAjUB3kvFfb5/zhTiwR5LryANxEEx3Rnc/k7k0QUUA2hSMh2B6mnPcdNt+U4BUPFvk7Yq+KXpZu4rdQK9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=QKATaimF; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791266825; c=relaxed/simple;
+	bh=17P5Hs/lV+mbUDdyiyeGJu60W4itGS0u2/XcJK415qo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rRLH9SwXoqo3edWwz5XOfUQcUBVCCpUasyfQ9zl6VJKpqIYuA1563TbMXaEDz5nyY7IWYJXTjtut5YOIuqQO3Kta8UdGBuVu2nY0SDJ3hwJ897N0+n+9UjU/pOYDcEygUnwf/nORpE0RdmE+UF4LJQG6wm0PeDtpqC9O8N/q/mg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=KHQ3DgMr; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="QKATaimF"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6965TBQc82627167, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791264551; bh=qydEbsAEnOqPy1tM1wey7IB+3sJMbbLOvbn7P/7qDoI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=QKATaimFSHBUtHCIn8pCUf0qLzXlo8nmBuBFrOPZLb2+85l60k49rLqXlVK1SBodJ
-	 gWXi3Os7gHNFwQP5rmICyFqnAjhN7dNDrGpeWymujwXNKiiKTfCwDDxiowX4tqp6xH
-	 L3Fe+6QSR8yKdqKdWUEBGYTQYRa3R/vlhyJcFo1/+CAUIb403aWVvLNVCZSNr3fO8l
-	 dMHGHtA8K7z8Gmsj9lCqiB4427k4SIdy8CVrj/tlaKlKA4nl3piNH8xxONqdAm+mxd
-	 cuwdU6TF5eMrEpzt7s/yJ3SAuWe3G2XD7d5Cefhzpyp4AfrN2Ys/pvIBW/1Se2OeGu
-	 Ft/bZqTWrfA8Q==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6965TBQc82627167
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 6 Oct 2026 13:29:11 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 13:29:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 13:29:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 6 Oct 2026 13:29:11 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
-  Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B chip
- driver
-Thread-Topic: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B
- chip driver
-Thread-Index: AQHdUkEe+6mTN1t+pkmrNCm0JOCqYbbudRJA///7x4CAAT4DAP//vViAgACViMA=
-Date: Tue, 6 Oct 2026 05:29:11 +0000
-Message-ID: <f23d5ed909c746ad851bd1038966d271@realtek.com>
-References: <20261002073845.31486-1-luka.gejak@linux.dev>
- <20261002073845.31486-5-luka.gejak@linux.dev>
- <aa7d919d98304ee095990735f39095ac@realtek.com>
- <DLWXWMOGZGX9.UANQJR9PZYWG@linux.dev>
- <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
- <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
-In-Reply-To: <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="KHQ3DgMr"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3a813079a55so164509a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2026 23:07:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1791266823; x=1791871623; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=9FjCCulmOBZkxKv2Rx89VTM7WOvTYZFoREE1tHLMK5Y=;
+        b=KHQ3DgMrSuOEcnsOKVLr2BiM5vYFWZUuERfBV1cXd4vcL1sqqFqiKvJmFTyoD8bSCJ
+         3a10VUCoiq4z6zrgC1X9eGVMkKwc/W9DElLYy2UcaLMEt1QLZbnNF3L3si6IBTby92lZ
+         AIs5nqf4YkgeJp7WZYBXqWEP55WrIil0lrOx4ERRNjYib5NR4khyuLM+88YLv4hAR1rf
+         oCZDwn0TnLw5O0rX0k+yZfWcdvWrGJayCE2Bph27WkmmvF2CywIK73ecgIfwAZm0pzvh
+         ydHm/ymE2eVBmJNKC1hsGKMkiAtlWi5QNPy4OZK6tohbkAzGYP7qQHCuZYcQJCG2apJM
+         RM3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791266823; x=1791871623;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=9FjCCulmOBZkxKv2Rx89VTM7WOvTYZFoREE1tHLMK5Y=;
+        b=D3ukpeqx6INVHU3fk9bDl7WPVBEmiVpNdqA3Fi+54CWQ3LNdPB5seEVGzEeSbzAxQU
+         GNLEMm5hWbM3SjhyOSNv7IpS5rgo6p4mSClWd/QngBhP4MDlG2U4gAmsij03JWZalsAO
+         xg1xoWGTsWCOP7FwDilO3kOQ8X/EPQTn+CMcZdmSah9KCiUDXbQmQ/siimt74gkvR1Ye
+         /J5fLqyWhNUlBwa1aOUetDzRU+ftC65olye7oBYJ8ktIvJGdo6M+sis8UAP2TFGAkDXf
+         dGSU9BBjNonZ1WDMjdtvI1pNH6/VZ+VPIcqdnbpYxWRdjqmoyN4rdpw7OhJpYcDhxwxU
+         lqOg==
+X-Gm-Message-State: AFq9FYKxjNd/mSJ9+bbVZrwTz7OQKLgx9ZQvYvZwCgMrcyon5tq/SEQU
+	tg2rgHyHVQjUyFIEQwyQLApx+A3AJMtzsnSfoNjseecAYUSJRNKiyrBmWJt5WcJuE3dvtFguukO
+	ovbvJ
+X-Gm-Gg: AYBFou0v+WnBElj6KFGDLHGEuAQWLHQEDeMfxftFcEo/7S+AF2APcLfV+MSFEBnIf4e
+	Cuzy3goZyIzzcNpRqGdbrzYRlm5feNbcrkewTK802cFA0yDPyF/va9kYoV+dqpl4ey4dCUXCmCc
+	tEKF6nE4kedAwXI2zSoT4yAm8Xyg/ASBX3LiLZTlFwSZAZ5MLWNg8DccmkXAZ3VXK8kUJ5lbgAQ
+	YrpmSsGJC+eopDO0xtT1lAnDeDufqQMbS80ktkK0LSVIebrqLwGiNCl7vMtrCeIIa0cc64uZYmZ
+	QJEOByO0MlwrT/ZmQJhIaHyOHdztz6BmuTDAdLf2f1Z2nJdo2M8QR5Y+wezBk0JO1hF3iO6OEfh
+	n/MKgaBf7u7LKVP2bOwqHjz0iK4P7GbBw0K5WDAzou0Qzdr0GLSJAQ0wqUNxcrME4LBG/R3LK4u
+	lv34uhPNA5/cWEVQbh9WSlseHGKRe2CX43/0Jy/0vQkDb505NrZaKq8+/l4uYve8MyNPfv+SJGB
+	OZqwc5StylM2peRD4kp29LBE89F4+h/PP1ttA==
+X-Received: by 2002:a17:90b:3b8f:b0:3a7:96d:feaf with SMTP id 98e67ed59e1d1-3a87368575emr220187a91.16.1791266823277;
+        Mon, 05 Oct 2026 23:07:03 -0700 (PDT)
+Received: from localhost ([60.227.235.15])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a853889388sm3584337a91.2.2026.10.05.23.07.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2026 23:07:02 -0700 (PDT)
+Date: Tue, 6 Oct 2026 17:06:59 +1100
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, benjamin.berg@intel.com, 
+	arien.judge@morsemicro.com
+Subject: Re: [PATCH RFC wireless-next] wifi: mac80211: correct rx freq
+ handling for S1G
+Message-ID: <wuvncofp5z6iugj6gu7uvfj2d7fra6ymikyfnwfmwoyok3lys4@p65d3ycvnub2>
+References: <20261002072954.1168872-1-lachlan.hodges@morsemicro.com>
+ <640a58333ee31c09703cf6f591d96933374093df.camel@sipsolutions.net>
+ <yobzz5gqn2mb2mogqlxmwrilrzp5orz7up656p7zgvjukfp4jy@kv4f2szn2gkl>
+ <fecc3de9ceec2ca6dbd49194c1963cc3456fe566.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <fecc3de9ceec2ca6dbd49194c1963cc3456fe566.camel@sipsolutions.net>
 
-THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiA+ID4NCj4gPiA+IEhv
-d2V2ZXIsIGluY2x1ZGluZyBydHc4NzAzYi5oIGZyb20gYW5vdGhlciBjaGlwIGRyaXZlciBpcw0K
-PiA+ID4gIGFscmVhZHkgZXN0YWJsaXNoZWQsIHJ0dzg3MjNjcy5jIGluY2x1ZGVzIGl0IHRvIHJl
-dXNlIHJ0dzg3MDNiX2h3X3NwZWMuDQo+ID4gPg0KPiA+IEFzIEkga25vdywgODcyM0NTIGFuZCA4
-NzIzQiBhcmUgbXV0dWFsIGFsaWFzLCBubz8NCj4gDQo+IEFzIGZhciBhcyBJIGtub3csIHRoZXkg
-YXJlIG5vdC4gVGhleSBhcmUgZGlmZmVyZW50IGNoaXBzLg0KDQpmaXggdHlwby4NCg0KODcyM0NT
-IGFuZCA4NzAzQiBhcmUgbXV0dWFsIGFsaWFzLCBubz8NCg0KPiANCj4gPiA+DQo+ID4gPiArLyoN
-Cj4gPiA+ICArICogUm93IDIwICgtNi4wIGRCKSBpbnRlbnRpb25hbGx5IGRvZXMgbm90IG1hdGNo
-IHRoZSB2NS4yLjE3IHZlbmRvciBkcml2ZXIsDQo+ID4gPg0KPiA+ID4gIEkgcmVhbGx5IGRvbid0
-IHdhbnQgdG8gbWVudGlvbiB2ZW5kb3IgZHJpdmVyIGhlcmUuIElmIHlvdSByZWFsbHkgbmVlZCBp
-dCwNCj4gPiA+ICBtZW50aW9uIGl0IGluIGNvbW1pdCBtZXNzYWdlIG9yIGNvdmVyLWxldHRlci4N
-Cj4gPiA+DQo+ID4gPiAgKyAqIHdoaWNoIGhhcyAweDFjLCAweDFhLCAweDE4LCAweDEyLCAweDBl
-LCAweDA4IHRoZXJlLiBFdmVyeSBvdGhlciByb3cgYWdyZWVzLg0KPiA+ID4gICsgKiBUaGUgdmFs
-dWVzIGJlbG93IGFyZSB3aGF0IHJ0bDg3MjNiZSwgdGhlIG1haW5saW5lIGRyaXZlciBmb3IgdGhp
-cyBzYW1lDQo+ID4gPiAgKyAqIGNoaXAsIHVzZXMgYXQgdGhlIHNhbWUgaW5kZXgsIGFuZCB0aGV5
-IGFyZSBhbHNvIHdoYXQgdGhlIHZlbmRvcidzIG93bg0KPiA+ID4gICsgKiBjY2tfc3dpbmdfdGFi
-bGVfY2gxX2NoMTNfOTJlIGFuZCB0aGUgc3RhZ2luZyBydGw4NzIzYnMgZHJpdmVyIHVzZS4gVGhl
-eQ0KPiA+ID4gICsgKiBhbHNvIHRyYWNrIHRoZSAwLjUgZEIgc3RlcCBvZiB0aGUgc3Vycm91bmRp
-bmcgcm93czogYWdhaW5zdCByb3cgMzIgYXMgMCBkQiwNCj4gPiA+ICArICogMHgxYiBpcyB3aXRo
-aW4gMC4wNiBvZiB0aGUgaWRlYWwgLTYuMCBkQiB2YWx1ZSB3aGlsZSAweDFjIGlzIDAuOTQgYXdh
-eSwNCj4gPiA+ICArICogdGhlIGxhcmdlc3QgZXJyb3IgYW55d2hlcmUgaW4gdGhlIHRhYmxlLiBU
-cmVhdCB0aGUgdmVuZG9yIHJvdyBhcyB0aGUNCj4gPiA+ICArICogYW5vbWFseSBhbmQgZG8gbm90
-ICJmaXgiIHRoaXMgdG93YXJkcyBpdC4NCj4gPiA+DQo+ID4gPiAgQW5kIHlvdSBoYXZlIGNvbW1l
-bnRzIGVhY2ggcm93LiBJcyBpdCBzdGlsbCBuZWVkIHRoaXMgYmxvY2sgY29tbWVudCB0byBleHBs
-YWluPw0KPiA+ID4NCj4gPiA+DQo+ID4gPiAgSSBhZ3JlZSwgd2lsbCBkcm9wIHZlbmRvciByZWZl
-cmVuY2UgYW5kIGJsb2NrIGNvbW1lbnQuDQo+ID4gPg0KPiA+IEknbSBub3Qgc3VyZSBpZiBMTE0g
-d3JpdGVzIHRoaXM/IExMTSBhbHdheXMgd3JpdGUgdmVyYm9zZSBjb21tZW50cyBmb3INCj4gPiBl
-YWNoIGxpbmUgaXQgYWRkZWQuIEp1c3QgYXNrIExMTSB0byB3cml0ZSBzZWxmLWV4cGxhaW5lZCBj
-b2RlLg0KPiANCj4gTm8sIEkgd3JvdGUgaXQgYmVjYXVzZSBvbmx5IDEgcm93IGRpZmZlcnMgZnJv
-bSB2ZW5kb3IgZHJpdmVyIGFuZCBJDQo+IHRob3VnaHQgSSBzaG91bGQgbWVudGlvbiBpdC4NCg0K
-Tm8gd29ycmllcy4gSnVzdCByZW1vdmUgdGhlbS4NCg0KPiA+ID4NCj4gPiA+IFNvIEkgd291bGQN
-Cj4gPiA+ICBwcmVmZXIgdG8gbGVhdmUgYm90aCB0YWJsZXMgYXMgdGhleSBhcmUuIElmIHlvdSB3
-YW50IHRoZSB1bnVzZWQgZmllbGRzIGxpc3RlZCBhcyBkdW1taWVzDQo+ID4gPiAgdG8gcGluIHRo
-ZSBvcmRlciwgSSBjYW4gYWRkIHRoZW0sIGJ1dCB0aGUgc2VxdWVuY2UgaXRzZWxmIHdvdWxkIG5v
-dCBjaGFuZ2UuDQo+ID4gPg0KPiA+IEkgd2lsbCB0aGluayBhIGJpdCBob3cgdG8gYWxpZ24gdGhl
-c2UgbWVzc2VkIHRhYmxlcy4NCj4gDQo+IEkgdW5kZXJzdGFuZC4gSSBhbSBnb25uYSBzZW5kIHY4
-IHRvZGF5LCBhbmQgZG8geW91IHRoaW5rIHRoYXQgdjggY291bGQNCj4gYmUgbWVyZ2VkLCBzbyBk
-cml2ZXIgbGFuZHMgaW4gNy40IHJlbGVhc2U/DQoNCkkgdGhpbmsgb25seSBtaW5vciBjaGFuZ2Vz
-IGFyZSBuZWVkZWQsIGl0IGlzIHBvc3NpYmxlIHRvIGdldCBtZXJnZWQgaW50byA3LjQNClRoZSBt
-ZXNzZWQgdGFibGVzIGNhbiBiZSBpZ25vcmVkIGZvciBub3cuIA0KDQpQaW5nLUtlDQoNCg==
+On Mon, Oct 05, 2026 at 03:53:01PM +0200, Johannes Berg wrote:
+> On Fri, 2026-10-02 at 19:54 +1000, Lachlan Hodges wrote:
+> > > 
+> > > >    For
+> > > >    management frames obviously makes sense but for data frames
+> > > >    sent on a wider channel wouldn't this be set to the operating
+> > > >    channel? Especially for i.e sniffer? The mm81x driver reports
+> > > >    it like this but maybe it should just report the control channel?
+> > > 
+> > > So .. are you saying you always report the _overall_ center frequency,
+> > > even for 4/8/16 MHz widths, or just for 1 MHz vs 2 MHz primary?
+> > 
+> > Yes, our firmware reports the frame at the overall center frequency,
+> > even for 4/8/16 MHz widths. Looking at our out of tree shim driver
+> > (5G mapping) it does the same thing i.e report the center frequency
+> > of 40/80/160 channel which is probably why mm81x does this.
+> 
+> I guess that makes some sense.
+> 
+> > Anyways this is not really a big deal knowing that we can just
+> > override it with the 1MHz control channel.
+> 
+> Sure, but should you?
+
+Okay so I did some more testing (sorry for all the back and forth :))
+and I think hard coding the 1MHz control actually has some tricky
+edge cases such as scanning while passing traffic, since while we are
+scanning we'd need to pass the correct channel we received the probe
+response on (since we do hwscan).
+
+Additionally just thinking about the problem as a whole, it would be
+more correct to just let mac80211 actually handle this whole scenario
+of 1 vs 2MHz primary since after all they are both "control" channels.
+We already do this for beacons so moving the logic such that all
+management frames are handled makes sense to me. Then for data frames
+the station can just be passed so this is bypassed anyway.
+
+Let me know what you think, maybe re-review the original patch and I
+can resend if needed.
+
+Thanks,
+lachlan
