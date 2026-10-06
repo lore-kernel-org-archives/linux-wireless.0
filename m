@@ -1,38 +1,38 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58D023A9879
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:20:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5BC3BB687
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 09:26:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791278439; cv=none; b=OdmfNN0zX0RH0KV7g1iewP1F+omg/iIn+6kjw53Bp7cWGPZwvMsfXX3G/ZIt32/iU2turdDXXLlTaI3GT0NNnlIPowpghczL2deRiUVl1cVuUMVPX2QG3UKClkIcu2CNYTarne0WuYVzV+RTKQIFBAiq3+nfRYoCreDoK0/BpeM=
+	t=1791278762; cv=none; b=oX6WCHEnwBquiBOQ9cpTJ4tYYTB57rzt8XEC+klhqxxuQHpENZ+sVnWfLBUcs1Vsm7d1LA+QVH7+jnOEMQONk5V1RnqRto1Gx1lmqM4eT5wD/uGa6mqGWogO77vtVVt/lA2gzcGjN2BWyiHb0TvXvaqCMLD9QZu9wew9o5ItED8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791278439; c=relaxed/simple;
-	bh=i56mde9c1bAooizZTZzEAy8uE75WXwl6B7DQGGU4bQA=;
+	s=arc-20240116; t=1791278762; c=relaxed/simple;
+	bh=rvoCfkt6JKTfM4pyiK2zycW6kUL/pZtYO23p1+2prC0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uVOjXtO5MQwI/yFShtUG6aQNhYqkpRgn/MJCcZ5ruYy6v5XIY2eMhYoloClqaOC6LvK4dqAaC8Ws8A87IU9XT1hTNKoDQG0pO1rNS7QmTaeg9Q166N5zFLuhVyxismGmNfwCEmLPJWh9RuYlhdiGBZVIT/Ltl+ZSyq9nYkgCfeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ZU/x8Vxc; arc=none smtp.client-ip=46.4.11.11
+	 In-Reply-To:Content-Type; b=JBqGeOPCOCZbiy571ua82HvTGjZdfLOXslOsFX67VsrYv9MKtv4oXEv+JMx0rrCECN5sBBQ6BKEgmP8YoM0z0XDycZN7hbJR41nW+bfJ5fEfnJteOm28MVhMP331bLjc7Zn6XKFoVtXbntmNeOg7j3dIjRtJMeW4QpSQXyhpYAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=cbFBOFwE; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZU/x8Vxc"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="cbFBOFwE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
 	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
 	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
 	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
 	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=o9huabkVuiEVa9+YJyxDZZulkE2ksEl+ebzBkLNAGbI=; b=ZU/x8VxcKOrc0/twjlSLtL0lwW
-	V4fv2L2SwbzL6Gd6oR8Vs8Hl2sf3fUCPsUELOoGY8UAnXSr96sobsOHB2xgAyw43j+IdjbNL+xoqZ
-	gJBNbZ8/CaDGcJHoEc977qX8wCeFAOP61FwuT4WtuK0tbPpzs8UQJ64dEkeWwbxxS5oc=;
+	bh=F3rilO8Ga7DTvA+Nv87c5I1cpSI7cgFoLmBkXO3Wgkw=; b=cbFBOFwEiQsV0cgOIIuKoQ1PBP
+	ZaQ/jBmflQ2/aG187W+a3RZX7M69ExPYG9xLm47Dy2yppAWogm6CLfn5bJ8GEkxSwnIvvonX08EEf
+	xs55vV6JFEqPSi8+MqVImN8Do8/4UbwlaxCtnWoLilddUbZMwKpcKSerCEBZm9um/dJ4=;
 Received: from p54a434bb.dip0.t-ipconnect.de ([84.164.52.187] helo=nf.local)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xE1Le-00GqJM-02;
-	Tue, 06 Oct 2026 11:20:34 +0200
-Message-ID: <0424acc3-9545-4d6c-8171-ab8b33d20638@nbd.name>
-Date: Tue, 6 Oct 2026 11:20:31 +0200
+	id 1xE1Qq-00GqWr-11;
+	Tue, 06 Oct 2026 11:25:56 +0200
+Message-ID: <8dec78e7-1f4a-4d68-a592-15ad0f1fdac0@nbd.name>
+Date: Tue, 6 Oct 2026 11:25:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,16 +40,16 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/23] wifi: mt76: mt7925: add NDC-aware TX GTK table for
- NAN_DATA
+Subject: Re: [PATCH 02/23] wifi: mt76: mt7925: add NMI/NDI MAC address setter
+ helpers
 To: Sean Wang <sean.wang@kernel.org>
 Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
  yu-ching.liu@mediatek.com, jenhao.yang@mediatek.com, posh.sun@mediatek.com,
  Chengwei Yu <chengwei.yu@mediatek.com>, Sean Wang <sean.wang@mediatek.com>
 References: <20260927210306.737669-1-sean.wang@kernel.org>
- <20260927210306.737669-9-sean.wang@kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
+ <20260927210306.737669-3-sean.wang@kernel.org>
 Content-Language: en-US
+From: Felix Fietkau <nbd@nbd.name>
 Autocrypt: addr=nbd@nbd.name; keydata=
  xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
  ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
@@ -73,34 +73,77 @@ Autocrypt: addr=nbd@nbd.name; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
  cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260927210306.737669-9-sean.wang@kernel.org>
+In-Reply-To: <20260927210306.737669-3-sean.wang@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 27.09.26 23:02, Sean Wang wrote:
 > From: Chengwei Yu <chengwei.yu@mediatek.com>
 > 
-> NAN TX GTK is NDC-scoped: every station in the same NAN Data Cluster
-> shares one key, and a single NAN_DATA vif can join multiple NDCs
-> concurrently. Add mt792x_nan.nan_tx_gtk_table[] (up to
-> MT792X_MAX_NAN_NDC = 8 RCU on-demand entries, one per NDC) and route
-> interface-directed NAN_DATA multicast through the matching WTBL in
-> mt792x_tx(), falling back to the interface WTBL when no entry exists.
-> 
-> Teardown lives in mt7925_remove_interface(), not the shared
-> mt792x_remove_interface(): NAN_DATA vifs are mt7925-only so cleanup
-> in the shared path would never run.
-> 
-> NOTE: NDC selection from skb context is not yet implemented; the
-> lookup always picks the first installed entry until mt7925_nan_set_key()
-> populates the table.
+> Add mt7925_nan_set_nmi_address() and mt7925_nan_set_ndi_address() for
+> runtime MAC address changes: NMI goes through the MCU (firmware owns
+> the hardware address), NDI updates vif->addr directly.
 > 
 > Co-developed-by: Sean Wang <sean.wang@mediatek.com>
 > Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 > Signed-off-by: Chengwei Yu <chengwei.yu@mediatek.com>
-I don't see anything in the code that fills nan_tx_gtk_table.
-Am I missing something here?
-
-Thanks,
+> ---
+>   .../net/wireless/mediatek/mt76/mt7925/nan.c   | 48 +++++++++++++++++++
+>   .../net/wireless/mediatek/mt76/mt7925/nan.h   |  8 ++++
+>   2 files changed, 56 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
+> index 8a59f7b1aee2..abbd3f7b081c 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
+> @@ -697,6 +697,54 @@ void mt7925_nan_mcu_event(struct mt792x_dev *dev, struct sk_buff *skb)
+>   	}
+>   }
+>   
+> +int mt7925_nan_set_nmi_address(struct ieee80211_vif *vif,
+> +			       struct mt792x_dev *dev,
+> +			       const u8 *mac_address)
+> +{
+> +	struct mt76_dev *mdev = &dev->mt76;
+> +	struct {
+> +		u8 rsv[4];
+> +		struct mt7925_nan_nmi_addr_tlv nmi_addr_tlv;
+> +	} nmi_cmd = {
+> +		.nmi_addr_tlv = {
+> +			.tag = cpu_to_le16(NAN_UNI_CMD_CHANGE_NMI_ADDRESS),
+> +			.len = cpu_to_le16(sizeof(struct mt7925_nan_nmi_addr_tlv)),
+> +		},
+> +	};
+> +
+> +	if (!dev || !vif || !mac_address)
+> +		return -EINVAL;
+> +
+> +	if (is_zero_ether_addr(mac_address) ||
+> +	    is_multicast_ether_addr(mac_address))
+> +		return -EINVAL;
+> +
+> +	memcpy(nmi_cmd.nmi_addr_tlv.nmi_addr, mac_address, ETH_ALEN);
+> +
+> +	return mt76_mcu_send_msg(mdev, MCU_UNI_CMD(NAN), &nmi_cmd,
+> +				 sizeof(nmi_cmd), true);
+> +}
+> +
+> +int mt7925_nan_set_ndi_address(struct ieee80211_vif *vif,
+> +			       struct mt792x_dev *dev,
+> +			       const u8 *mac_address)
+> +{
+> +	if (!dev || !vif || !mac_address)
+> +		return -EINVAL;
+> +
+> +	if (is_zero_ether_addr(mac_address) ||
+> +	    is_multicast_ether_addr(mac_address))
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * The NDI address is not managed by firmware; it is the vif's own
+> +	 * hardware address, so updating it locally is sufficient.
+> +	 */
+> +	memcpy(vif->addr, mac_address, ETH_ALEN);
+What about bss_conf->addr and the netdev addr. Do those need to be updated?
 
 - Felix
