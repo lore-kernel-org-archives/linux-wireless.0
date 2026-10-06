@@ -1,160 +1,175 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 017704A2A50
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 17:18:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.172
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791307092; cv=pass; b=uMb4jEKZ0vy7I6sVwMzb/h2YaPIlBHAwm7Wc5G17pChrrqWGZGHip59B/fiSPc5fIqRZYK/w79QLhsoFb7FCkmqJJIuMc8yXIG55ZXLaXxQEwYQfiwXXCj/3W/SsiALPGiAo3g7+t7aVkbqZ49Z88FJmFwayrX58zIJcfwEWs9s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791307092; c=relaxed/simple;
-	bh=Z7RWaUukp2vJp/lKLw/pvzkwQI1/3q3Xs3o+sRxD9Bw=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=r79jX9WUptPVOHtpSaQOrUHam5dAEXWE/zJEqa2x25zCt2LzbvVwZfO48mP9RUVoxOxqBidUjGPtxbmvFeYZ7iPMJtQbX44tq3DEKuxRTLYwNqToV3mMto0oJGxvyjmHRh9XY/9TXiAekwpUTOFMT0LAOJ/86m+5om1o7s+f3wU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NS8wAura; arc=pass smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81CE3A63FB
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 17:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791308251; cv=none; b=Wdo1/AYcM+OSt5I3bOoKp5saRXkirCxA+9KfudiaHhfDj+QVOIrKCbV9GcJrMwJvdovIJM9NilkwQ3CfmMyRHxiVLSYWjFr90qDkKc+usUKfySrvUz1hsXlxNC72DQL+IOHWPEWwpDdnFLMiA8A3+9p6n7OPZfVoy0Er0ekSuFs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791308251; c=relaxed/simple;
+	bh=0ebOJUmNDojLq4UZigX+Ct/JXaXsABkT6lxncgtl28k=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=Tfu2hddzQeDmfvur3XNmXt8t6yNag8SD+0NC9R5lNEVNd5p7HVFpKKn03WpdsZWoxLDl3qbJlpDoFIwivRuSS1BsS08mpczgBNZ8s9hySZy+NzI1oGIvyVP0wlrBBi5VwoofZics8Jq1rkayu1F50yiK1ThM5G3+m8a1SAFUs/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ldP0Gu9c; arc=none smtp.client-ip=209.85.221.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NS8wAura"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-53396adbc53so32911561cf.3
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 10:18:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791307088; cv=none;
-        d=google.com; s=arc-20260327;
-        b=gzszTGRF7Cev3Ny6ScCq+YumXd8lt6THNG2y7xqHYTluKj5qSMYbEAo8VpvqhbqzWE
-         lTfcxKa2LE6YMkGANIj0H2HHSTCLEwn/irlzDsFKMMYXnMSjnPMeeOyZBAiBx1I5z9uG
-         sGR31VpNAVByd1nOxc2yuUEZ7y/6T9zbZnJqAhqQ2uzbTCIkLej+2begrlcZZy2G8QsI
-         GluXAMnz8EPVhHUFJP0jck5jPLcuuX8kys914dyU7KplBQ5kC8fx1GJlp4M/RkDJ56bj
-         TmzmIOm1nCqOzMeoqFd3/5GoQhevhDVPK4JNSb5GuTyh0QarqOsol8TlcKnzWaI+iEfi
-         NKoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=IYoFhdR6a50T0V6unvIVYfJRbGq2pHrg3/lVy4LzpxI=;
-        fh=biOthnk5BxDARXC2JC6lJC6G8EmFR3L0T2E/HzaCDX0=;
-        b=sI/bLDvwxBYNGemGT87oeBLoLJNfYIu2Irywwi73/Abvr5m0YFlc4mYn5Va9cZh+ns
-         eGJYlfzGgVSj3oDN3nijB+wiLsXfzQeM9SG02H4xe8H1ZBEyyZvrMhm9sm4tWdGatjkU
-         aNCE7/1ZirzQU5ozIq22IQBF10iIyyJIAb1XzGiQfhp1o9Cckz6RtyKHS5XAJRvIXj0a
-         PBt4DkW7EOWNry62Lsy6wn/ZYJo04XuvCykozhLCHKeOveDKThw7Jt4O4o5cnLuDuAvN
-         du5M8RnmWQ237sDPBUYbp8BbBaEyuDILOYmr/iY+ZbDvLKuImN2HH4sc6tT8bX7S6SXH
-         Y9uQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ldP0Gu9c"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48b042c0759so844296f8f.2
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 10:37:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791307088; x=1791911888; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IYoFhdR6a50T0V6unvIVYfJRbGq2pHrg3/lVy4LzpxI=;
-        b=NS8wAurax6ZQjMqroLtD2uG3W5wKTZqoOwZRScKOwQb6iDn3zexcZWHlswLia4V7Pe
-         B02lMR2dG6gQxSKIWfYMUM6NBzlnqdGdHoDttB3GantZD56+nBG9huKymXvwTwHVpzsx
-         ikpmoLNULv2gu3cQw/KWrybGjOtAdWV0xlygVABT9RFtwkw08WzP1gvCaaO86qfHhzkb
-         yhh7pvdjFCmf6SMZ27TELBBgIV2U6jSTtQDYlncb6lLprdnoCt9YNZE4l24KxQkcFnBx
-         T1RUgI+5A+5oZfJjjPeoSQnGsEZe3RYoLzzgJ2YFYsqIo6GewzjWv2PUZQw5IxRqn+8j
-         Y0rQ==
+        d=gmail.com; s=20251104; t=1791308248; x=1791913048; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=zk839aWaTKcocqIv3KupLsgi1STfa+JQtgE6jf4fHQ0=;
+        b=ldP0Gu9cZv2va0VxeK7iMO8QHdfK/L1v5ME9AEdK8HqegzS+Zcz/XwdV28qlTnlzq3
+         jIW45Ufdz996Y2Dttit7ijiToSS+VfHvbyCIow2EL88tHKByqaijylbbjNqDVEJLw3M3
+         Ep9WyzMDavAlM9Drqnrvi99Xd1Cgl8NhMHDet/VbPPP5rO59pEwLMq7e5bH3AXEe82cH
+         dlGgjS7Bla5h8QiQIvOOerNEmxN4uqxl1somunevkEm004s0zyvMUrsOoki0/vX+QkoI
+         UxDkuTWbEuIAei4YmiEsPIxY/yjeAnQL52ViSZVbb7PsQ7/HVOIx/1hVRooGZpu+UmMJ
+         +8dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791307088; x=1791911888;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=IYoFhdR6a50T0V6unvIVYfJRbGq2pHrg3/lVy4LzpxI=;
-        b=R1qkc7KFPCZLwMj4k4qQgKo94UR0kG97q982QfaWxTjEyY0l5IVIAGF98+x6vNqjjv
-         RGTKNetTaFftsLn7LnAeQR3VPJ1pYfOM5nS3/ALQxhETYvF8O5p0jNIC055ucTof7ucZ
-         AhTThj3+Pb//bn7RRQIABAk58h/+FvL9r2zjdRv8J5Wrj1i+g/gk2gEa9EYeRF8b4d9x
-         KSZ2v/7xq7EJ9BxohW+c50BrOYUjzmw8QWz5S4ejMk/wdI0Q8lHNIg6ef/K2R42TocA3
-         LHpQJlyGPyH7m1THFiLtVUnZ1bxOvoaP8Cn0tpI0D6RHUyDSk+CPhbY9ytD5KVJlNv/p
-         9a/Q==
-X-Gm-Message-State: AFuF++n4Eua+qunJfnHpZvOWxNlmg2pPrF+hTkKo0SEClxrNGA2O8+WZ
-	SMqoOkKhI0d7QA4EIzRNkHZlPEtC6DcqcgdKGHx2fjgznFbCLoiJq+19E+dMA7gBlrmaBbXn+Jp
-	GqJpOjC8hfS5iK75hbuNDPr/ErWgoj6TrnJHnp2R/oeto
-X-Gm-Gg: AYBFou1W/JM34g+eZaBhKv3LZajh1U7BZPqNiJqR+lngPzEOMpX8RXUUbnqp48eN6wl
-	WRQiPyvXmK8bU7WhIp57yKWrkkES6eL+kd6Dev9OZqrq24lWAMkhWmid3xJgIp72GnuPYxnUv60
-	RgD/lOqNcbte7k9TVrvDHt0uHNCmqRi3lZ1joSuo+tSeiw/RplOe8nr3/13HWGgH8NBgD275cut
-	eKgWr1Zkg5WI8FgVBuSMRPnQnZQC4trKDgG2pvPpncy5jXFWoQCPt7ejUJTE+rUsQlT7QjTCZJo
-	Nv6tYJ25V9V8o5qdnqqqSh3yow7LtFA94DOFUgfyTwKK1ROiUJYO2mHIJF4Ww5RPdgz73LKp+dF
-	BCMo1DNFhIPZ3fTE+Ik0FDT3LP3Uxeeew
-X-Received: by 2002:a05:620a:2584:b0:93e:795c:9d07 with SMTP id
- af79cd13be357-93e8f382b1emr394780685a.35.1791307088187; Tue, 06 Oct 2026
- 10:18:08 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791308248; x=1791913048;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=zk839aWaTKcocqIv3KupLsgi1STfa+JQtgE6jf4fHQ0=;
+        b=EcDTLjet2DpoIHZWSQmBzAQ/v5NzOtyVlzZdUe8lWmtk27XeQAS7qs+qaMqO91l25k
+         B3ltAm/4YkdL5ZmTJnFzBNlE0j1kA/dUkp+buMsPpGvDZ2BrvwNDJAH+QOcrZ9FTKrMu
+         EUoWTKGFwuDz8n10an5zLotus5r8rkALeKlJjMfZVWAEtQxAIT4E/xZuFyh7c2VJHfk6
+         cFUeMmpmUDfAok2D3NIo9bGw4kfo+ChOSGAeQ9m/LlDkvFq4itAODQG/TPy2fjt+6C5R
+         8cD1wXlLNSqeezHmz0M/d1rpDb+aestP5dF6GBf/JTqZ9XlXv1tANbn2aFM2oZTMenrQ
+         /+xg==
+X-Gm-Message-State: AFq9FYKNBAiCxvYZQq4LA0DX1cEWolYHnkEgBhgvKaQKcFPlmsf5ZHGD
+	Go8I/WH5Zc0OXgcvpGZ4v1rjq7SJ13LgKttgBkNdCO1WGttTZM+hQptmuLYHvQ==
+X-Gm-Gg: AYBFou1N91eAQXH9bT9yI50V8xhBymDUv7VoPM5CCa6JOhdY0lAfT19yPh/qowvaYDx
+	tVgudzCJmVZ2VLMKR41DDauQbJif8E7rrPASPxvJH3vIPEpzMSZsAlA83zsMBxIKpREMdK8Y24I
+	3958tdAL4mx4RMhANF4HCznAkBZF/2/8cx5cEfqYmiFGdEZOE9ncOR3ufQZjA2dXVx5trNH+TET
+	FdoibSGxTBd/FAOfgAYe71Pru4XNRd4wmWKh9A5lhci+/i48VZJB/9hEw3JRPelYH/q86bS0OEq
+	+7UYHbddIxNHzlwH9v+5PolfPUaAqTkTcu2VoIojZ/jNnxdy8YJiy76s1PN7cru2qQ2qepHGnZE
+	pq6L0ST9b1L8QRJuAXmZ1wN31wkOcH40OuIYIDzw8vMNHySQvxQGcUi6CNDp3LvILLWu8xJoSkO
+	V4bekdonEpQVEvf2gu3/z0DQ3Fd/xGRkRQ3xmayACdL12NQPj/YPsGuN6wBrWOmLm03cEWLup5Q
+	vryhw==
+X-Received: by 2002:a05:6000:46da:b0:48c:5306:c11a with SMTP id ffacd0b85a97d-48c7276ecebmr220454f8f.24.1791308247840;
+        Tue, 06 Oct 2026 10:37:27 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c71d3d3eesm817796f8f.53.2026.10.06.10.37.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 06 Oct 2026 10:37:27 -0700 (PDT)
+Message-ID: <826c8df5-2ee2-4a6a-93d1-2ec4f16840e5@gmail.com>
+Date: Tue, 6 Oct 2026 20:37:26 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: =?UTF-8?B?0JPQtdC+0YDQs9C40Lkg0JHQtdGA0LjQtNC30LU=?= <game.advencher229@gmail.com>
-Date: Tue, 6 Oct 2026 20:17:56 +0300
-X-Gm-Features: AclHuK9rzk0D650Q1s01qstkldc1WfPiCtqEKEuBYsW4iS9PUILAiEQMdqamknI
-Message-ID: <CAEhAYcrrRyZvNU4i+jznPW4jxS1F_s5iH6AMZE4_mVgLbtAhXQ@mail.gmail.com>
-Subject: Subject: [REGRESSION] mt7921e: ~20% lower throughput on first
- association after boot (7.1/7.2), reconnect restores it
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
-	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
-	regressions@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+ PierluigiFrullani <pierluigi.frullani@frumar.it>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH rtw-next] wifi: rtw89: Override antenna number for
+ RTL8852BE-VS
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi,
+RTL8852BE-VS (PCI ID 10ec:b85b, RFE type 41) has only one spatial stream
+and likely one physical antenna, but the firmware reports two antennas.
+This results in the driver configuring the wrong RF path, which leads to
+very poor reception. Users complain that 5 GHz networks are not visible.
 
-On my laptop the MT7921 (PCIe, mt7921e) gets about 20% lower TCP
-throughput on the first association after boot with 7.1.10 and 7.2.8.
-Simply re-associating (NetworkManager "connection up" on the same
-profile, nothing else changed) immediately restores full speed.
-6.18.55 is fast right from boot.
+Hardcode the number of antennas for this RFE type to one, and the
+correct RF path for the Bluetooth coexistence code. This is what the
+vendor driver does.
 
-Hardware / software
-- Lenovo IdeaPad 5 Pro 16ACH6 (82L5), Ryzen 7 5800H
-- 03:00.0 MEDIATEK MT7921 [14c3:7961], subsystem 17aa:e0bc,
-  ASIC revision 79610010
-- WM firmware ____010000, build 20260224110949 (linux-firmware
-  20260916; the MT7961 files are identical to 20260622)
-- Arch Linux kernels: 6.18.55-1-lts (good), 7.1.10-arch1-1 (bad),
-  7.2.8-arch1-2 (bad)
-- NetworkManager 1.58.1, wpa_supplicant 2.12, WPA3-SAE, CCMP
-- AP: TP-Link 802.11ac router (no HE), 5 GHz channel 48, 80 MHz
-- iw reports the same rates in both states (VHT-MCS 9, NSS 2, 80 MHz,
-  SGI, 866.7 Mbit/s rx/tx), signal -37..-52 dBm
+Closes: https://lore.kernel.org/linux-wireless/10543730.tdPhlSkOF2@topolinux/
+Closes: https://github.com/morrownr/rtw89/issues/128
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.h     |  1 +
+ drivers/net/wireless/realtek/rtw89/mac.c      |  5 +++++
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c | 22 ++++++++++++++++++-
+ 3 files changed, 27 insertions(+), 1 deletion(-)
 
-Measurement
-4 and 8 parallel HTTP downloads and 4 parallel uploads (curl, 8 s
-each) to an Ookla speedtest server 3-7 ms away (ping min/avg),
-bound directly to wlan0. The ISP plan tops out at ~530 Mbit/s,
-which is also what a phone on the same AP gets, so "fast" below is
-capped by the uplink.
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 7e74b5c9ed49..71f00b07c77c 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -6529,6 +6529,7 @@ enum rtw89_quirks {
+ 	RTW89_QUIRK_THERMAL_PROT_VCORE,
+ 	RTW89_QUIRK_HW_INFO_SYSFS,
+ 	RTW89_QUIRK_DISABLE_2GHZ,
++	RTW89_QUIRK_1ANT,
+ 
+ 	NUM_OF_RTW89_QUIRKS,
+ };
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index ad849e4b4a50..098b2372e65b 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -3244,6 +3244,11 @@ static int rtw89_mac_setup_phycap_part0(struct rtw89_dev *rtwdev)
+ 	tx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_TX_NUM);
+ 	rx_ant = u32_get_bits(phycap->w3, RTW89_C2HREG_PHYCAP_W3_ANT_RX_NUM);
+ 
++	if (test_bit(RTW89_QUIRK_1ANT, rtwdev->quirks)) {
++		tx_ant = 1;
++		rx_ant = 1;
++	}
++
+ 	hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
+ 	hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+index c3c53a6b8119..9d834ea36c1a 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+@@ -353,6 +353,19 @@ static const struct rtw89_btc_fbtc_mreg rtw89_btc_8852b_mon_reg[] = {
+ static const u8 rtw89_btc_8852b_wl_rssi_thres[BTC_WL_RSSI_THMAX] = {70, 60, 50, 40};
+ static const u8 rtw89_btc_8852b_bt_rssi_thres[BTC_BT_RSSI_THMAX] = {50, 40, 30, 20};
+ 
++static int rtw8852b_read_efuse(struct rtw89_dev *rtwdev, u8 *log_map,
++			       enum rtw89_efuse_block block)
++{
++	int ret;
++
++	ret = rtw8852bx_read_efuse(rtwdev, log_map, block);
++
++	if (rtwdev->efuse.rfe_type == 41)
++		set_bit(RTW89_QUIRK_1ANT, rtwdev->quirks);
++
++	return ret;
++}
++
+ static void rtw8852b_pwr_sps_ana(struct rtw89_dev *rtwdev)
+ {
+ 	rtw89_write16(rtwdev, R_AX_SPS_ANA_ON_CTRL2, RTL8852B_DEFAULT_SPS_ANA);
+@@ -768,6 +781,13 @@ static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
+ 	} else {
+ 		md->ant.type = BTC_ANT_SHARED;
+ 		md->bt0_pos = BTC_BT_BTG;
++
++		if (test_bit(RTW89_QUIRK_1ANT, rtwdev->quirks)) {
++			md->ant.num = 1;
++			md->ant.single_pos = RF_PATH_B;
++			md->ant.btg_pos = RF_PATH_B;
++			md->ant.stream_cnt = 1;
++		}
+ 	}
+ 	rtwdev->btc.btg_pos = md->ant.btg_pos;
+ 	rtwdev->btc.ant_type = md->ant.type;
+@@ -851,7 +871,7 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
+ 	.write_rf		= rtw89_phy_write_rf_v1,
+ 	.set_channel		= rtw8852b_set_channel,
+ 	.set_channel_help	= rtw8852b_set_channel_help,
+-	.read_efuse		= rtw8852bx_read_efuse,
++	.read_efuse		= rtw8852b_read_efuse,
+ 	.read_phycap		= rtw8852bx_read_phycap,
+ 	.fem_setup		= NULL,
+ 	.data_setup		= NULL,
+-- 
+2.55.0
 
-Results in Mbit/s (ranges over 2-3 rounds)
-
-  kernel   state                                  down     up
-  6.18.55  right after boot                       525-531  510-538
-  7.2.8    first association, ~5 h uptime         402-431  470-483
-  7.2.8    first association, fresh boot          340-431  368-430
-  7.2.8    first association, fresh boot          426-443  409-472
-  7.2.8     -> same boot, reconnect only          520-531  525-538
-  7.1.10   first association, fresh boot          359-426  421-496
-  7.1.10    -> regdb installed, RU, reconnect     519-531  521-537
-  7.1.10    -> regdomain back to 00, reconnect    522-530  530-539
-  7.1.10    -> modprobe -r + modprobe mt7921e     516-526  536-539
-              (plus one outlier at 388 down)
-
-The slow state persists for the whole session: on one 7.2.8 boot the
-journal shows a single association at boot and it was still slow
-about 5 hours later. The fast state after a reconnect has so far been
-observed for about 10 minutes without another re-association.
-
-Ruled out
-- power_save off (iw): no meaningful change (+~3%)
-- PCIe ASPM: disabling L1.1/L1.2 and then L1 for 03:00.0 via sysfs
-  on 7.1.10: no change
-- Regulatory: slow both with regulatory.db missing (world regdomain
-  00) and with wireless-regdb installed (driver sets RU before the
-  association). After a reconnect it is fast with either 00 or RU.
-- Firmware: the same files on all kernels
-- Association parameters are the same on the slow and the fast
-  association (SAE, PTK=CCMP GTK=CCMP)
-
-Not tested yet: Bluetooth coexistence (the combo chip's BT is powered
-with no devices connected; hci0 finishes setup ~4 s before the first
-Wi-Fi association) and suspend/resume. I have not bisected yet. I can
-test patches, enable debug options or try more kernels if that helps;
-I also have ethtool -S and station dumps from both states.
-
-#regzbot introduced: v6.18..v7.1
-
-Thanks,
-Georgy B.
