@@ -1,143 +1,115 @@
-Received: from mta0.migadu.com (out-224.mta0.migadu.com [91.218.175.224])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A2B6547072
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 04:44:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C019F377EBF;
+	Tue,  6 Oct 2026 05:29:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791261901; cv=none; b=c1dQCviSaEyD4SlhqdcOmcY0wnLrXD9i5myUsXCASuEiF9YSh80jW/5uLSDzUjUyjiYjesmkUQ7kuTPPuwd8z+PNgCyhJkoFd8I8Cx7m9iz3Yr++O+VZqDFKbL5FRgFQLIOHkiG8I8V15lp3HwI+7nBTp1kDgSv8rBL3gT+QvkY=
+	t=1791264567; cv=none; b=P7l7w3HR7IQMyo1ues1OmePxJ9Difb3R/TUkxcCe2PFfxBSBIxunwZQ77r+sNQ/K/8r7lEziiuNP6FIj/jEaqlUi3S/mxg3knWzFIM1kW/3vs/hKTlmWcw6/wc2W3Qecl9OmO4r5LRLpZumitfc3LE38J75aS5JYTwdXljQVX5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791261901; c=relaxed/simple;
-	bh=LvTzX7cb6p8OiIRr0hc3ZNBGkEWS0lY1HmU+S902xDI=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=EHWiH53PjRVqUDyp44+pqcomyyHjRh/3oDWxuSuv0lQJRfqkL7/8fbNWEbnYQDPN4QULfwt9a9CX9OOAx75PWXzegSkx9t2YTaafBNx6IF2PVA5qC5QXL6aNIdk9DAPvoj9DMqgyQcxKGQn5Kqt3OegDAdnvjqz0K+TXM7yY5zE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ja/NyRp4; arc=none smtp.client-ip=91.218.175.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791264567; c=relaxed/simple;
+	bh=qydEbsAEnOqPy1tM1wey7IB+3sJMbbLOvbn7P/7qDoI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=sVWUZJ+QBGJ6MxW7mIeo2JJMbAgHTfL/qsx6/zOjxbJxzB9g6UkCGTHcqQZe0AjMzVkwZYUiXkaNgCelgmhyjKcHNDAjUB3kvFfb5/zhTiwR5LryANxEEx3Rnc/k7k0QUUA2hSMh2B6mnPcdNt+U4BUPFvk7Yq+KXpZu4rdQK9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=QKATaimF; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ja/NyRp4"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=LvTzX7cb6p8OiIRr0hc3ZNBGkEWS0lY1HmU+S902xDI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791261897; v=1; x=1791866697;
- b=Ja/NyRp4xpiLhi6obGBjF5HIwjZWvYMC36l8q2dra+My74o0z8TL6oWWgD1AAqOwOrbNf5CD
- DFWN10i6+j+h+7Qscd50+tRhXx438npXcARYQfgWkqaPQV7X3PXuI+2RdCTW1Etuz87m6rRAsJM
- Nw3dt45bSenlMR6DVe6l3Dfc=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4802f2a4ace27c64;
-	Tue, 06 Oct 2026 04:44:46 +0000
-X-Mizu-Trace-ID: 4802f2a4ace27c64
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="QKATaimF"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6965TBQc82627167, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791264551; bh=qydEbsAEnOqPy1tM1wey7IB+3sJMbbLOvbn7P/7qDoI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=QKATaimFSHBUtHCIn8pCUf0qLzXlo8nmBuBFrOPZLb2+85l60k49rLqXlVK1SBodJ
+	 gWXi3Os7gHNFwQP5rmICyFqnAjhN7dNDrGpeWymujwXNKiiKTfCwDDxiowX4tqp6xH
+	 L3Fe+6QSR8yKdqKdWUEBGYTQYRa3R/vlhyJcFo1/+CAUIb403aWVvLNVCZSNr3fO8l
+	 dMHGHtA8K7z8Gmsj9lCqiB4427k4SIdy8CVrj/tlaKlKA4nl3piNH8xxONqdAm+mxd
+	 cuwdU6TF5eMrEpzt7s/yJ3SAuWe3G2XD7d5Cefhzpyp4AfrN2Ys/pvIBW/1Se2OeGu
+	 Ft/bZqTWrfA8Q==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6965TBQc82627167
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 6 Oct 2026 13:29:11 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 6 Oct 2026 13:29:11 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 6 Oct 2026 13:29:11 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Tue, 6 Oct 2026 13:29:11 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+  Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B chip
+ driver
+Thread-Topic: [PATCH rtw-next v7 4/6] wifi: rtw88: 8723b: add the RTL8723B
+ chip driver
+Thread-Index: AQHdUkEe+6mTN1t+pkmrNCm0JOCqYbbudRJA///7x4CAAT4DAP//vViAgACViMA=
+Date: Tue, 6 Oct 2026 05:29:11 +0000
+Message-ID: <f23d5ed909c746ad851bd1038966d271@realtek.com>
+References: <20261002073845.31486-1-luka.gejak@linux.dev>
+ <20261002073845.31486-5-luka.gejak@linux.dev>
+ <aa7d919d98304ee095990735f39095ac@realtek.com>
+ <DLWXWMOGZGX9.UANQJR9PZYWG@linux.dev>
+ <359ea3a6857d4aba9c83876a10f7f9e8@realtek.com>
+ <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
+In-Reply-To: <a1d007fffc35466a2d63a3fe6839286f3488d7be@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 06 Oct 2026 04:44:46 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <4d0885941b74480c7fd6399b9dff7ed64540a87e@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v4 2/4] wifi: rtw88: sdio: Track running state
- and cancel TX worker on stop
-To: "Ping-Ke Shih" <pkshih@realtek.com>, "Alastair D'Silva"
- <alastair@d-silva.org>, linux-wireless@vger.kernel.org, "Kalle Valo"
- <kvalo@kernel.org>
-Cc: "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>, "Jernej
- Skrabec" <jernej.skrabec@gmail.com>, "Ulf Hansson" <ulfh@kernel.org>,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org,
- luka.gejak@linux.dev
-In-Reply-To: <6665409e1d374c1face4936b827a6a9d@realtek.com>
-References: <20261005084849.3109337-1-alastair@d-silva.org>
- <20261005084849.3109337-3-alastair@d-silva.org>
- <6665409e1d374c1face4936b827a6a9d@realtek.com>
 
-October 6, 2026 at 04:03, "Ping-Ke Shih" <pkshih@realtek.com mailto:pkshi=
-h@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wr=
-ote:
-
-
->=20
->=20Alastair D'Silva <alastair@d-silva.org> wrote:
->=20
->=20>=20
->=20> When rtw_sdio_stop() disables interrupts, in-flight interrupt handl=
-ers or
-> >  delayed TX work may still run against a powered-down device.
-> >=20=20
->=20>  Track the operational state in rtwsdio->running (similar to PCI), =
-check it
-> >  at the entry of rtw_sdio_handle_interrupt() and rtw_sdio_tx_handler(=
-), and
-> >  cancel the TX worker synchronously in rtw_sdio_stop().
-> >=20=20
->=20>  Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation fo=
-r SDIO based chipsets")
-> >  Cc: stable@vger.kernel.org
-> >  Assisted-by: LLM
-> >  Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> >  ---
-> >  drivers/net/wireless/realtek/rtw88/sdio.c | 12 ++++++++++++
-> >  drivers/net/wireless/realtek/rtw88/sdio.h | 1 +
-> >  2 files changed, 13 insertions(+)
-> >=20=20
->=20>  diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/n=
-et/wireless/realtek/rtw88/sdio.c
-> >  index e39284b71837..d2f4d7e8bc83 100644
-> >  --- a/drivers/net/wireless/realtek/rtw88/sdio.c
-> >  +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-> >  @@ -1054,6 +1054,7 @@ static int rtw_sdio_8723bs_check_rqpn(struct r=
-tw_dev *rtwdev)
-> >=20=20
->=20>  static int rtw_sdio_start(struct rtw_dev *rtwdev)
-> >  {
-> >  + struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> >  u32 clear;
-> >=20=20
->=20>  if (rtw_is_8723bs(rtwdev)) {
-> >  @@ -1075,6 +1076,7 @@ static int rtw_sdio_start(struct rtw_dev *rtwd=
-ev)
-> >  rtw_write32(rtwdev, REG_SDIO_HISR, clear);
-> >  }
-> >=20=20
->=20>  + rtwsdio->running =3D true;
-> >=20
->=20Is there existing race between start/stop/interrupt? Need a lock?
->=20
->=20>=20
->=20> rtw_sdio_enable_interrupt(rtwdev);
-> >=20=20
->=20>  return 0;
-> >  @@ -1082,7 +1084,11 @@ static int rtw_sdio_start(struct rtw_dev *rtw=
-dev)
-> >=20=20
->=20>  static void rtw_sdio_stop(struct rtw_dev *rtwdev)
-> >  {
-> >  + struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> >  +
-> >  + rtwsdio->running =3D false;
-> >  rtw_sdio_disable_interrupt(rtwdev);
-> >  + cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
-> >=20
->=20I think this is the major statement added by this patch, but I'm not =
-sure
-> if this is actually needed. (Maybe, Luka can help this)
->=20
-
-I=20will take a look at this series later during the day.
-
-> By 'git blame', the work is added by
-> 28eaf7971a20 ("wifi: rtw88: sdio: add TX back-pressure and retry on pag=
-e starvation")
->=20
->=20Maybe, the fixes tag should be 28eaf7971a20. I think there is no way =
-to apply this
-> to 65371a3f14e7 (your fixes tag)
->=20
->
-
-Best=20regards,
-Luka Gejak
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiA+ID4NCj4gPiA+IEhv
+d2V2ZXIsIGluY2x1ZGluZyBydHc4NzAzYi5oIGZyb20gYW5vdGhlciBjaGlwIGRyaXZlciBpcw0K
+PiA+ID4gIGFscmVhZHkgZXN0YWJsaXNoZWQsIHJ0dzg3MjNjcy5jIGluY2x1ZGVzIGl0IHRvIHJl
+dXNlIHJ0dzg3MDNiX2h3X3NwZWMuDQo+ID4gPg0KPiA+IEFzIEkga25vdywgODcyM0NTIGFuZCA4
+NzIzQiBhcmUgbXV0dWFsIGFsaWFzLCBubz8NCj4gDQo+IEFzIGZhciBhcyBJIGtub3csIHRoZXkg
+YXJlIG5vdC4gVGhleSBhcmUgZGlmZmVyZW50IGNoaXBzLg0KDQpmaXggdHlwby4NCg0KODcyM0NT
+IGFuZCA4NzAzQiBhcmUgbXV0dWFsIGFsaWFzLCBubz8NCg0KPiANCj4gPiA+DQo+ID4gPiArLyoN
+Cj4gPiA+ICArICogUm93IDIwICgtNi4wIGRCKSBpbnRlbnRpb25hbGx5IGRvZXMgbm90IG1hdGNo
+IHRoZSB2NS4yLjE3IHZlbmRvciBkcml2ZXIsDQo+ID4gPg0KPiA+ID4gIEkgcmVhbGx5IGRvbid0
+IHdhbnQgdG8gbWVudGlvbiB2ZW5kb3IgZHJpdmVyIGhlcmUuIElmIHlvdSByZWFsbHkgbmVlZCBp
+dCwNCj4gPiA+ICBtZW50aW9uIGl0IGluIGNvbW1pdCBtZXNzYWdlIG9yIGNvdmVyLWxldHRlci4N
+Cj4gPiA+DQo+ID4gPiAgKyAqIHdoaWNoIGhhcyAweDFjLCAweDFhLCAweDE4LCAweDEyLCAweDBl
+LCAweDA4IHRoZXJlLiBFdmVyeSBvdGhlciByb3cgYWdyZWVzLg0KPiA+ID4gICsgKiBUaGUgdmFs
+dWVzIGJlbG93IGFyZSB3aGF0IHJ0bDg3MjNiZSwgdGhlIG1haW5saW5lIGRyaXZlciBmb3IgdGhp
+cyBzYW1lDQo+ID4gPiAgKyAqIGNoaXAsIHVzZXMgYXQgdGhlIHNhbWUgaW5kZXgsIGFuZCB0aGV5
+IGFyZSBhbHNvIHdoYXQgdGhlIHZlbmRvcidzIG93bg0KPiA+ID4gICsgKiBjY2tfc3dpbmdfdGFi
+bGVfY2gxX2NoMTNfOTJlIGFuZCB0aGUgc3RhZ2luZyBydGw4NzIzYnMgZHJpdmVyIHVzZS4gVGhl
+eQ0KPiA+ID4gICsgKiBhbHNvIHRyYWNrIHRoZSAwLjUgZEIgc3RlcCBvZiB0aGUgc3Vycm91bmRp
+bmcgcm93czogYWdhaW5zdCByb3cgMzIgYXMgMCBkQiwNCj4gPiA+ICArICogMHgxYiBpcyB3aXRo
+aW4gMC4wNiBvZiB0aGUgaWRlYWwgLTYuMCBkQiB2YWx1ZSB3aGlsZSAweDFjIGlzIDAuOTQgYXdh
+eSwNCj4gPiA+ICArICogdGhlIGxhcmdlc3QgZXJyb3IgYW55d2hlcmUgaW4gdGhlIHRhYmxlLiBU
+cmVhdCB0aGUgdmVuZG9yIHJvdyBhcyB0aGUNCj4gPiA+ICArICogYW5vbWFseSBhbmQgZG8gbm90
+ICJmaXgiIHRoaXMgdG93YXJkcyBpdC4NCj4gPiA+DQo+ID4gPiAgQW5kIHlvdSBoYXZlIGNvbW1l
+bnRzIGVhY2ggcm93LiBJcyBpdCBzdGlsbCBuZWVkIHRoaXMgYmxvY2sgY29tbWVudCB0byBleHBs
+YWluPw0KPiA+ID4NCj4gPiA+DQo+ID4gPiAgSSBhZ3JlZSwgd2lsbCBkcm9wIHZlbmRvciByZWZl
+cmVuY2UgYW5kIGJsb2NrIGNvbW1lbnQuDQo+ID4gPg0KPiA+IEknbSBub3Qgc3VyZSBpZiBMTE0g
+d3JpdGVzIHRoaXM/IExMTSBhbHdheXMgd3JpdGUgdmVyYm9zZSBjb21tZW50cyBmb3INCj4gPiBl
+YWNoIGxpbmUgaXQgYWRkZWQuIEp1c3QgYXNrIExMTSB0byB3cml0ZSBzZWxmLWV4cGxhaW5lZCBj
+b2RlLg0KPiANCj4gTm8sIEkgd3JvdGUgaXQgYmVjYXVzZSBvbmx5IDEgcm93IGRpZmZlcnMgZnJv
+bSB2ZW5kb3IgZHJpdmVyIGFuZCBJDQo+IHRob3VnaHQgSSBzaG91bGQgbWVudGlvbiBpdC4NCg0K
+Tm8gd29ycmllcy4gSnVzdCByZW1vdmUgdGhlbS4NCg0KPiA+ID4NCj4gPiA+IFNvIEkgd291bGQN
+Cj4gPiA+ICBwcmVmZXIgdG8gbGVhdmUgYm90aCB0YWJsZXMgYXMgdGhleSBhcmUuIElmIHlvdSB3
+YW50IHRoZSB1bnVzZWQgZmllbGRzIGxpc3RlZCBhcyBkdW1taWVzDQo+ID4gPiAgdG8gcGluIHRo
+ZSBvcmRlciwgSSBjYW4gYWRkIHRoZW0sIGJ1dCB0aGUgc2VxdWVuY2UgaXRzZWxmIHdvdWxkIG5v
+dCBjaGFuZ2UuDQo+ID4gPg0KPiA+IEkgd2lsbCB0aGluayBhIGJpdCBob3cgdG8gYWxpZ24gdGhl
+c2UgbWVzc2VkIHRhYmxlcy4NCj4gDQo+IEkgdW5kZXJzdGFuZC4gSSBhbSBnb25uYSBzZW5kIHY4
+IHRvZGF5LCBhbmQgZG8geW91IHRoaW5rIHRoYXQgdjggY291bGQNCj4gYmUgbWVyZ2VkLCBzbyBk
+cml2ZXIgbGFuZHMgaW4gNy40IHJlbGVhc2U/DQoNCkkgdGhpbmsgb25seSBtaW5vciBjaGFuZ2Vz
+IGFyZSBuZWVkZWQsIGl0IGlzIHBvc3NpYmxlIHRvIGdldCBtZXJnZWQgaW50byA3LjQNClRoZSBt
+ZXNzZWQgdGFibGVzIGNhbiBiZSBpZ25vcmVkIGZvciBub3cuIA0KDQpQaW5nLUtlDQoNCg==
