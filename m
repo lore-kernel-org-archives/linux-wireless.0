@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BA3949C4DA
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 20:59:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229D44A2E24
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2026 20:59:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791320388; cv=none; b=WICyQokCEkbnuHTd3evu0uGWz+u1JQnwNGhhLAs9zv3reegH2IOVUYrTmAoS8gQI2b5aKnQgGfSjyR6ZaXeZ4q0kIqGI+gC/2J+qHfpAFX4oNoucpEREcWwwWo4xscU/qoZ/f7sXgWZiuchBlSYKUyO4z0Y+RjXusMtav1d3d+s=
+	t=1791320388; cv=none; b=CdBip+Jwet227P4APvhG688AiIHkGlwEcRbFyZj0KGTvKm5XrXswEVnksz4dDaPge6RBzSS0u7e5OvNnQuH0TAoJ9G0f/tiWDvUYhRkcZ+15VpAa5nO71IhAgk289W9Qyla++qPaj2yl5KW6eJpLuL4MFDAUgk7NhWMfygbSfMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791320388; c=relaxed/simple;
-	bh=lANzvdGKXvXEvJZLXSquH35/7IZ72p5ksY14Ix7mQXc=;
+	bh=mthd0ETg9K/lpux80HE7gUbZGYDkJRbmNDnFpXcICTY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h9IhWuq8R8/e41vWyzOd6rMF+XWjincS7fFM9gmCU32OSEON5Owk500jX3UoFAkzCLsIJs/BOHQNuGPJW90M8EroL2YmDF6BHE9W6wui6OH0gSL8EU9JzI2jnhYycZrIXDtAf5YEZm7wSwScMbhLhgn3KZwDGEDF3UDb7DdR+xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=XvbWtkR9; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=tW4WwhSIDuc9/cBL1XkobD/Levau6xEsnLIV2rh8cATn4Pkk/aAboDCF6qrUpi6djvthqdHyPlDct9Xb9kZqVeBEXMOMoXERAHY+bfTyx2nQQoC6qlalPomQh/Q+L0yojb7jthovfFFop7yqkTt2UR8TwgFs89jTS0rDq0x6T80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=YBeB4TD9; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XvbWtkR9"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="YBeB4TD9"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=0ZZ4/BLpwwzINm/U9axZ7xwmm81h+ggkeuFBQaMGhJM=; b=XvbWtkR9Zg3FxLnhISaEfSaKPT
-	+KsDEo0LCkjTcLJfDu8mGdET7slMRBjPGTld9f/gnXqwfgwpR6Yqkd1tqoAAPjTR+brY/12KDBkCv
-	i1ixv7rl7gtMlhbCnp3Z219vqfGKu6chKM9TyJWXX+w0AWgKuwiWYR8iQLP0vDgrDEWQ=;
+	bh=ZkjOXl4TzRPxjEF5RhwFHCOynQCGMuW49K4RupTblyI=; b=YBeB4TD9PFf3/dq02lXtEmWlek
+	fHAfN7kkGeQbZXbljffw9KYNSTizn/KW+zmPCv29eYtdWtlDejQBjUWaBstzX/pxqoK3DKXrV9ZEx
+	fM5EQ66esXgLkrEAkh307/T/+nC3ZAA33fGQIOaQXffHqcMPu4PXtL2wnbltxB4HGD48=;
 Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1xECGD-00HAg3-1U
+	id 1xECGE-00HAg3-3B
 	for linux-wireless@vger.kernel.org;
-	Tue, 06 Oct 2026 22:59:41 +0200
+	Tue, 06 Oct 2026 22:59:43 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 12/27] wifi: mt76: mt7996: pick the secondary link from links with driver state
-Date: Tue,  6 Oct 2026 22:59:21 +0200
-Message-ID: <20261006205936.669125-12-nbd@nbd.name>
+Subject: [PATCH mt76-next 21/27] wifi: mt76: mt7996: set up the BSS of a late station link before its peer
+Date: Tue,  6 Oct 2026 22:59:30 +0200
+Message-ID: <20261006205936.669125-21-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261006205936.669125-1-nbd@nbd.name>
 References: <20261006205936.669125-1-nbd@nbd.name>
@@ -48,125 +48,116 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt7996_mac_sta_init_link() takes the secondary link from
-sta->valid_links. On a station interface mac80211 creates driver state
-only for active links, since drv_change_sta_links() masks both link
-sets with vif->active_links. With three valid links of which links 0
-and 2 are active, seclink_id then points at link 1, which has no
-mt7996_sta_link. mt7996_tx_prepare_skb() maps odd TIDs to seclink_id,
-keeps the primary wcid for them and passes the inactive link id to
-mt7996_mac_write_txwi(), which finds no vif link and falls back to OMAC
-and WMM index 0.
+On association, a station link gets its BSS_INFO with the BSSID and
+its broadcast STA_REC from BSS_CHANGED_BSSID before the peer STA_REC is
+created, and mt7996_link_info_changed() notes that station mode maps
+the peer entry through the BSSID. For a link that becomes active later,
+_ieee80211_set_active_links() calls drv_change_sta_links() first and
+reports BSS_CHANGED_BSSID for the link only afterwards.
 
-Choose the secondary link among the links that have driver state and
-are valid, and choose it again whenever such a link is added, restored
-or removed. A removed secondary link now hands over to another
-remaining link instead of the primary one, and a secondary link that
-was promoted to primary gets a successor.
+Send the BSS_INFO and the broadcast STA_REC of an added station link
+from mt7996_mac_sta_change_links() before its peer entry is set up when
+the station is already associated, in the order of an association. The
+later BSS_CHANGED_BSSID finds the BSSID recorded and does not add the
+broadcast entry as new again.
 
-Fixes: 85cd5534a3f2 ("wifi: mt76: mt7996: use correct link_id when filling TXD and TXP")
+This prepares for bringing up such links in the following change.
+
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 42 +++++++++++++------
- 1 file changed, 30 insertions(+), 12 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/main.c  | 72 +++++++++++++------
+ 1 file changed, 52 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 5207def2fd36..9de455939125 100644
+index d90ada7f0f2a..4f3ebe4cee65 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1133,6 +1133,32 @@ mt7996_sta_init_txq_wcid(struct ieee80211_sta *sta, int idx)
- 	}
+@@ -1439,26 +1439,6 @@ mt7996_mac_sta_add_links(struct mt7996_dev *dev, struct ieee80211_vif *vif,
+ 	return err;
  }
  
-+static u8
-+mt7996_sta_seclink_get(struct mt7996_dev *dev, struct mt7996_sta *msta)
+-static int
+-mt7996_mac_sta_change_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			    struct ieee80211_sta *sta, u16 old_links,
+-			    u16 new_links)
+-{
+-	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+-	unsigned long add = new_links & ~old_links;
+-	unsigned long rem = old_links & ~new_links;
+-	int ret;
+-
+-	mutex_lock(&dev->mt76.mutex);
+-
+-	mt7996_mac_sta_remove_links(dev, vif, sta, rem, false);
+-	ret = mt7996_mac_sta_add_links(dev, vif, sta, add);
+-
+-	mutex_unlock(&dev->mt76.mutex);
+-
+-	return ret;
+-}
+-
+ static int
+ mt7996_mac_sta_add(struct mt7996_dev *dev, struct ieee80211_vif *vif,
+ 		   struct ieee80211_sta *sta)
+@@ -1598,6 +1578,58 @@ mt7996_mac_sta_event(struct mt7996_dev *dev, struct ieee80211_vif *vif,
+ 	return err;
+ }
+ 
++static void
++mt7996_mac_sta_links_bss_add(struct mt7996_dev *dev, struct ieee80211_vif *vif,
++			     struct ieee80211_sta *sta, unsigned long links)
 +{
-+	struct mt7996_sta_link *msta_link;
++	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
 +	unsigned int link_id;
 +
-+	if (msta->deflink_id == IEEE80211_LINK_UNSPECIFIED)
-+		return IEEE80211_LINK_UNSPECIFIED;
++	if (vif->type != NL80211_IFTYPE_STATION ||
++	    msta->conn_state == CONN_STATE_DISCONNECT)
++		return;
 +
-+	msta_link = mt7996_sta_link_protected(dev, msta, msta->seclink_id);
-+	if (msta->seclink_id != msta->deflink_id && msta_link &&
-+	    msta_link->wcid.link_valid)
-+		return msta->seclink_id;
++	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
++		struct ieee80211_bss_conf *link_conf;
++		struct mt7996_vif_link *link;
++		struct mt7996_phy *phy;
 +
-+	for (link_id = 0; link_id < ARRAY_SIZE(msta->link); link_id++) {
-+		if (link_id == msta->deflink_id)
++		link_conf = link_conf_dereference_protected(vif, link_id);
++		if (!link_conf || !link_conf->bssid ||
++		    is_zero_ether_addr(link_conf->bssid))
 +			continue;
 +
-+		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
-+		if (msta_link && msta_link->wcid.link_valid)
-+			return link_id;
-+	}
++		link = mt7996_vif_link(dev, vif, link_id);
++		if (!link)
++			continue;
 +
-+	return msta->deflink_id;
++		phy = mt7996_vif_link_phy(link);
++		if (phy)
++			mt7996_vif_link_bss_add(phy, vif, link_conf, link, true);
++	}
 +}
 +
- static int
- mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 			 struct ieee80211_bss_conf *link_conf,
-@@ -1155,7 +1181,6 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 	if (msta->deflink_id == IEEE80211_LINK_UNSPECIFIED) {
- 		msta_link = &msta->deflink;
- 		msta->deflink_id = link_id;
--		msta->seclink_id = msta->deflink_id;
- 		mt7996_sta_init_txq_wcid(sta, idx);
- 	} else {
- 		msta_link = kzalloc_obj(*msta_link);
-@@ -1163,11 +1188,6 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 			mt76_wcid_mask_clear(dev->mt76.wcid_mask, idx);
- 			return -ENOMEM;
- 		}
--
--		if (msta->seclink_id == msta->deflink_id &&
--		    (sta->valid_links & ~BIT(msta->deflink_id)))
--			msta->seclink_id = __ffs(sta->valid_links &
--						 ~BIT(msta->deflink_id));
- 	}
- 
- 	INIT_LIST_HEAD(&msta_link->rc_list);
-@@ -1186,6 +1206,7 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 	ewma_signal_init(&msta_link->wcid.rssi);
- 
- 	rcu_assign_pointer(msta->link[link_id], msta_link);
-+	msta->seclink_id = mt7996_sta_seclink_get(dev, msta);
- 
- 	mt7996_mac_wtbl_update(dev, idx, MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
- 	mt7996_mcu_add_sta(dev, link_conf, link_sta, link, msta_link,
-@@ -1223,10 +1244,7 @@ void mt7996_mac_sta_remove_link(struct mt7996_dev *dev,
- 
- 		if (msta->deflink_id == link_id) {
- 			msta->deflink_id = IEEE80211_LINK_UNSPECIFIED;
--			if (msta->seclink_id == link_id) {
--				/* no secondary link available */
--				msta->seclink_id = msta->deflink_id;
--			} else {
-+			if (msta->seclink_id != link_id) {
- 				struct mt7996_sta_link *msta_seclink;
- 
- 				/* switch to the secondary link */
-@@ -1239,10 +1257,9 @@ void mt7996_mac_sta_remove_link(struct mt7996_dev *dev,
- 						msta_seclink->wcid.idx);
- 				}
- 			}
--		} else if (msta->seclink_id == link_id) {
--			msta->seclink_id = msta->deflink_id;
- 		}
- 		msta_link->wcid.link_valid = false;
-+		msta->seclink_id = mt7996_sta_seclink_get(dev, msta);
- 	}
- 
- 	if (flush) {
-@@ -1319,6 +1336,7 @@ mt7996_mac_sta_add_links(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 		msta_link = mt76_dereference(msta->link[link_id], &dev->mt76);
- 		if (msta_link) {
- 			msta_link->wcid.link_valid = true;
-+			msta->seclink_id = mt7996_sta_seclink_get(dev, msta);
- 			continue;
- 		}
- 
++static int
++mt7996_mac_sta_change_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta, u16 old_links,
++			    u16 new_links)
++{
++	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	unsigned long add = new_links & ~old_links;
++	unsigned long rem = old_links & ~new_links;
++	int ret;
++
++	mutex_lock(&dev->mt76.mutex);
++
++	mt7996_mac_sta_remove_links(dev, vif, sta, rem, false);
++	mt7996_mac_sta_links_bss_add(dev, vif, sta, add);
++	ret = mt7996_mac_sta_add_links(dev, vif, sta, add);
++
++	mutex_unlock(&dev->mt76.mutex);
++
++	return ret;
++}
++
+ static void
+ mt7996_mac_sta_remove(struct mt7996_dev *dev, struct ieee80211_vif *vif,
+ 		      struct ieee80211_sta *sta)
 -- 
 2.47.3
 
