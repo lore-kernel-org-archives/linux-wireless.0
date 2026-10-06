@@ -1,65 +1,64 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72A41F63D9;
-	Tue,  6 Oct 2026 02:06:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 496DF1F63D9;
+	Tue,  6 Oct 2026 02:09:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791252374; cv=none; b=GCxpMK7XkvHXkj5hoRNMzVZ9GIgyYIRnBFld8Z7FtF6vXy6KGp9ZpvcuTFH7Tx0E2pqsJTd17ESznTOsdM/azb2URfeXLxAHGHf2llNi98KRXMBV2z9SSQ2ZGnLMa9bUSFUkxWzNqdq3Jgu0LUe5PIo6v4Z+NC+06cRSdo0B4x4=
+	t=1791252558; cv=none; b=YhKMGfm61ovotBLOsbZrBOyOPR33hbF9rarw8OV3dj9Gkat6K6+GqYbGGIcFqbdzkLYKvBALIL7KW5q5v+THfBFCpnLtMDB40BZNlygzSdGjXYNEM50jcpQf5Sf7UMJOf5urhaDZgmdLW1SEMTgxrBXbN+7tQ8DTIOoL5yvZHGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791252374; c=relaxed/simple;
-	bh=+VNC3tGI5gjA1gVGpucnQBUir6Ag+84zGG5Pvhilf3c=;
+	s=arc-20240116; t=1791252558; c=relaxed/simple;
+	bh=3ottqOmBN4Wo+w1BMDfmgqHHuzS4Su0pmGlPhwkuOyQ=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KFoN1lv+iK8QwViE6NO5PHS7RV9xSDVTyGETRgMS6mTZmyQ0EYwRz8zTlcTbRJYL4qSNz8HJt4ftiU7sfHY7xfaIyyyQywHNHZt7JDA2s4xCqOJx6HFo+MDsnIE7Y4i7wC4uwbzDu4ZZSnjPU0ViWlLhAIje5wBE4sjD9iFjPZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=KZbVYZbO; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=cLyH+MWuDLmS3N6ZlwIKJ0OtRQaEMJqMnro7bdj4700/CUEvy4wzaW4GgWTbBP8pv+St6KOc3MBbLO/DziRgtNUIJXIJHLq6iIl9BoizV5M2CfclCyNM+orrDbg2PVOdNH65UEZ+6P8it+kuKkn+JKDL9+qDfT/pv82MHJT3+H4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=AiXUowHs; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="KZbVYZbO"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69625lM022461081, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="AiXUowHs"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69628o7322462138, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791252347; bh=zrARIFLPTpKyiMUrsr4CRAeQgwU57lbyuLUZr8wFi1w=;
+	t=1791252530; bh=fbyAlXUJjTciw2fak58IzyI3J8S+q0g6yKmD6SPFDWw=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=KZbVYZbOaQ2JSCzSnBBgKhuRpJIwdzrODpyqpJaIfSsHWe4VDFlNLPN1VqLPl10wf
-	 ml/sSaMnSkh1ddD5RUDzCv1u3jh921pM9qcIYUbZBrU6lA4lTh24pOcY9v8vHZtuEu
-	 D/V7YbpwttK4/cehEvXmMRxE3ngKMD5ii08fcufuuSIHykbsZAfM75fr8IxDook5KE
-	 vqvLxclbX1Ya1nsnb6qLDL/YCrvluf4W1CouS/teErMckT4NVn6qRefkk8P6ZBFLBT
-	 FByVX9YV8fpRoIS2Kcgxkc+H7I3h8C+E3b01bgkGO5rlYeZ06W/OXbqhkvanBvBEex
-	 4Z9rkUsWR1tJA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69625lM022461081
+	b=AiXUowHsy2MpiDWiEBN7nfmttPQwW/scd5QuomLrZiIYIsl+v5FE1uv+UcJhtKFfx
+	 N+xqjmd77hSV/uiH7okkPZC2WlXjYd1NTK3sCxn9S1Vfd5NQrxbRQm/yhvyFnJHjZ6
+	 nWMjvL902gRHoA8orSkIIzCkcWxS52aZ+SyM3erVg/QCy2+dIhvBwaZ8z+kXsujIbV
+	 XRJkg8NMr9D1TBE/q/ofWCEQ8yq+oo2HL9HxBJalEAFBRc689LgpWTomztoLDkDyd1
+	 zom/zCgsT6W14g2588SpSyJc0JofJgWtacu/Ro9DsrpQTVc7kjRtlwFZYmg0o5BEgK
+	 vQgWWDshuM7jg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69628o7322462138
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 6 Oct 2026 10:05:47 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 10:05:47 +0800
+	Tue, 6 Oct 2026 10:08:50 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 6 Oct 2026 10:05:47 +0800
+ 15.2.2562.49; Tue, 6 Oct 2026 10:08:50 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 6 Oct 2026 10:08:49 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 6 Oct 2026 10:05:47 +0800
+ 15.02.2562.049; Tue, 6 Oct 2026 10:08:49 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: Alastair D'Silva <alastair@d-silva.org>, "linux-wireless@vger.kernel.org"
 	<linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>
 CC: Luka Gejak <luka.gejak@linux.dev>, Martin Blumenstingl
 	<martin.blumenstingl@googlemail.com>, Jernej Skrabec
 	<jernej.skrabec@gmail.com>, Ulf Hansson <ulfh@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v4 3/4] wifi: rtw88: sdio: Fix unhandled RX
- request interrupt storm
-Thread-Topic: [PATCH rtw-next v4 3/4] wifi: rtw88: sdio: Fix unhandled RX
- request interrupt storm
-Thread-Index: AQHdVKaFGpmA7OCHDkKW5a8Cyqr61bbvxOWw
-Date: Tue, 6 Oct 2026 02:05:47 +0000
-Message-ID: <0b69a0e2d5b246f4a576640c07b8172b@realtek.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v4 4/4] wifi: rtw88: sdio: Split rtw_sdio_rx_isr
+ into 8051 and 3081 variants
+Thread-Topic: [PATCH rtw-next v4 4/4] wifi: rtw88: sdio: Split rtw_sdio_rx_isr
+ into 8051 and 3081 variants
+Thread-Index: AQHdVKaLchx00TtWGUua9TwlnVUPurbvxasw
+Date: Tue, 6 Oct 2026 02:08:49 +0000
+Message-ID: <121a23706c144a898e71441ed89c3cb3@realtek.com>
 References: <20261005084849.3109337-1-alastair@d-silva.org>
- <20261005084849.3109337-4-alastair@d-silva.org>
-In-Reply-To: <20261005084849.3109337-4-alastair@d-silva.org>
+ <20261005084849.3109337-5-alastair@d-silva.org>
+In-Reply-To: <20261005084849.3109337-5-alastair@d-silva.org>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -72,26 +71,38 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 Alastair D'Silva <alastair@d-silva.org> wrote:
-> +static void rtw_sdio_handle_interrupt_3081(struct rtw_dev *rtwdev, u32 h=
-isr)
-> +{
-> +       struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> +
-> +       rtw_sdio_disable_interrupt(rtwdev);
-> +       rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
-> +
-> +       if (hisr & REG_SDIO_HISR_TXERR)
-> +               rtw_sdio_tx_err_isr(rtwdev);
-> +       if (hisr & REG_SDIO_HISR_RX_REQUEST)
-> +               rtw_sdio_rx_isr(rtwdev);
-> +
-> +       /* Unmasking HIMR re-asserts the IRQ line if new packets arrived =
-*/
-> +       if (rtwsdio->running)
+> Split rtw_sdio_rx_isr() into separate 8051 and 3081 variants to be
+> clear. The two differences between the architectures are:
+> - Register size: REG_SDIO_RX0_REQ_LEN is 16-bit on 8051, 32-bit on 3081.
+> - HISR behavior: 8051 re-reads REG_SDIO_HISR on each iteration, while
+>   3081 drains based on rx_len without re-reading HISR.
+>=20
+> This is a refactoring without any logic changes.
+>=20
+> Assisted-by: LLM
+> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 
-I think here needs a lock
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-> +               rtw_sdio_enable_interrupt(rtwdev);
-> +}
-> +
+
+[...]
+
+> +               /* Stop if no more RX requests are pending, even if
+
+nit: keep first line of block comment as empty.=20
+
+> +                * rx_len could be greater than zero in the next
+> +                * iteration. This is needed because the RX buffer may
+> +                * already contain data while either HW or FW are not
+> +                * done filling that buffer yet. Still reading the
+> +                * buffer can result in packets where
+> +                * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
+> +                * end of the buffer.
+> +                */
+> +               hisr =3D rtw_read32(rtwdev, REG_SDIO_HISR);
+>         } while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUE=
+ST);
+>  }
+>=20
+
 
