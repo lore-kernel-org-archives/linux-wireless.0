@@ -1,575 +1,346 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF1648C8B9
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 11:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D4F49690C
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 11:35:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791372285; cv=none; b=aGRkzWmqv5PIDTJB4IhdziQizk+kyftodSsL1ue+lgvGP/6yuImXIiooEUKKI7j+XDOCu+QTpfoeaYecro7kCD2m3eynGCBDMNZtco58O9e8wLHQuTRyu+tMyGfjwg8mVaS+VAjC3EGR+9RSnWH9d7LCfI1ALtJrASR8gGgZFDo=
+	t=1791372967; cv=none; b=KVgcqePWIK9RnljAEK/ppzq4vK5u3NgzR+Jnj4s030TPDD+l5wsLt3fh1ylB9Aokk+wa1w2LZGSJJ7y3Wpl1I8+Mj9uZuwql9Ee2nacIFd8Nn9N04ON7di/6R8ejbpwo9zrL7d9GxjJDRdPo59l11wtoIyWhJZFTFD8cRowoxCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791372285; c=relaxed/simple;
-	bh=B8M69wVJnOP3DgXRKiHGA1aNC80d8UrHKwZXPNs4sm0=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QvHUbHU0aAy2wGqlUZXhCJC7S+SO0QuCV8eja833RmItlk2C16WkpEpXh08bZG18pOXbKhWy3aZw3c3YckfMljIbnLg4Li0LqYT1qSe9PuW0d5NmMciN5Pxw/mxa0abK2oRsvYB36dncmnk3Et0R0EwsNtCgnWtt0svVp3B5m4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=keIh7+LV; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1791372967; c=relaxed/simple;
+	bh=Jf937isbMSjdNsEyM4+i0aVGJWxxRN4bP6juvpbAabk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=US5CVOZXmgvm17pqgF0dAbvhi7bPdVrseUPjdqBYScGMO+aLBsN3RBQ3ivsKEzHQBlQHWgD8BOr1PJx3L0us0kQTA55C/R1eabIcefEnIPnk2GHAzJUSZXboBsD0xXuxW6pPBkEgkekvpN13+2LxEZWz3hORh9DOq0I3Iua+aJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nj/no8C8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=PZDwPJWR; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="keIh7+LV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=JR9ztBLVKOE2VRxf6Kdz7Kim+VHLSIWkkUT5lp5ES2k=; b=keIh7+LVtcPv6Lxfmh3yRfbtT1
-	u7G2rf2yyR7vyNJBhagL77QCqP3s4HGIHwdNWayQgYjVY322mmvn7Ai+ISN+MbkTbHu+GcnnGI9ei
-	lny/a+eCSc+ul9yPC3mn7ros7jKIXZj1fskhpYi9dIxYvNH+GvH47OloywOi2EU6iZys=;
-Received: from p200300cadf12010000000000000005bb.dip0.t-ipconnect.de ([2003:ca:df12:100::5bb] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1xEPl1-00HY5A-2v
-	for linux-wireless@vger.kernel.org;
-	Wed, 07 Oct 2026 13:24:23 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 7/9] wifi: mt76: scan all radios of a request at the same time
-Date: Wed,  7 Oct 2026 13:24:17 +0200
-Message-ID: <20261007112419.1277594-7-nbd@nbd.name>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261007112419.1277594-1-nbd@nbd.name>
-References: <20261007112419.1277594-1-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nj/no8C8";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="PZDwPJWR"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 697BV0BL2969244
+	for <linux-wireless@vger.kernel.org>; Wed, 7 Oct 2026 11:35:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Nmz35Ni0+dtT362qMHoufJDeftmuh3Qb7H5vQYCOXew=; b=nj/no8C86rebNLv3
+	44z9MDYtr6oOWOCov8z6vtsLtttXIr12nsTQA/55VxBfl9pXM0sr7A2XsJR6r68P
+	40q94QvTDvS5X2lwpRXEdP3N9owZ4PIwjklv/VzDAcdIBI74NP1k33E5R2rZqEVH
+	29BHbXrxeFuR1dJGLDOzWx+AwFiER1wowActHcfxvpm+pJ6HbXYjLBE+DZRLldvg
+	VIgN6V+RbX9WBNXpo//SKuNrN/zYM57kyezIt7vZYx5E4/9lxKHJ6c2+aJd4khql
+	nH0qyj47TrvK06FAP28ekMtCPnTn0JfIfCt3jTdxZ2v5YyYG0yD62ZkkFLg6uUBi
+	PbP9vQ==
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h5c6u1v4t-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 11:35:37 +0000 (GMT)
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-88f7b357bb4so55696b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 04:35:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1791372937; x=1791977737; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Nmz35Ni0+dtT362qMHoufJDeftmuh3Qb7H5vQYCOXew=;
+        b=PZDwPJWRO3dwnrE5aE1sYKVd1/hQpKrjb976uEZ09DTg0EOl3+0wx/oUKEBWlosucb
+         8uz/n+5ZsS8RekBsQVgwFGeByg9FCRxApHoDArwSthubx8QDdAHalBk7MedTZnIcIqff
+         qSLd38UWyg1nnAuLxKH8TwywH5Ijicq+8F6UmVOVXhqReYjJdiyX8k44+sE21BnV7BIt
+         v2q7s1S2wLd/HQ7N+goZQryZTK5Vh2TIDyG8/CZoS7zhAtTEQOl17pnUfk8C44Nj9bKf
+         bf58yqdnHEGtFy+dL82D/TEU6OAjnENiihfQmGlRIyfHDUh74bJeoLvkbqekKxmG6vBF
+         0w9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791372937; x=1791977737;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Nmz35Ni0+dtT362qMHoufJDeftmuh3Qb7H5vQYCOXew=;
+        b=iTk39KBe0yR5+obV8z/+YC7EWCtCk6nHz/ViINZkcS029eJ7o5Tw9mh+nTIs1oDSGA
+         8o8KX6sArQkPwvrswuRXwmE3+rf96xcJgX8bDmRBTGH8r/sB7+xPvIqrDmFs+7vNvQHT
+         evRf6PLtfsEOHF0nZs32TrOo1u0rNyFRtzHn06uIWOT0t5I+JuLFiv33HPD8BrkNv55T
+         cJ7WMKb/yOGHbxh3snxx/2mR48dt4DCQ4egYVIyKlGifr98BA4HXMreve8nljeHHh0PD
+         3d4sNQJHA9nkdflGSFyqCgKCx+OS6eINTaJ1NEl7sFRdApuTBrZSYy0rG6r//LUrZ/Rm
+         gYAg==
+X-Gm-Message-State: AFuF++kI/JBEpC4/r5rwMp/fJJpITphuvdZrHdw768ClMm2FpDByFT38
+	hxBR/nAL6/0LmsMwCphOpe35Ff7fCHJ1ORrv7JiPyeO5SPLcWvMjhI1Hdskigmja6tE4nsSq5Az
+	YVXKCd5ssFiZ6V6bBzoQG9VvXC/qdZBn0A3tfZqhvjm2qNqGjFAfZVELP3uqRjC0jjAHk5clezt
+	wc
+X-Gm-Gg: AYBFou22zIcXpiYZmb/+wSCxbC1IDUcPW7I5VBAmHP+aWWysusa76Cv2BoK331GoPpb
+	0uL+y8/wXakOtRj4Jg2mbf6zy5vCsesLwYZAkbWfB+4swz4WMMbfD69LyzfAZzXJ1JWUnCDPs30
+	DTnsElA3gKfkwpjIOPwG5zVQNo3wxfHWBkzcbSnfvquG5fXj45Zyk8CCl73cJvqDFtweR6OF+ei
+	wTpfkqGLU+11YbTurP/u7Sc2dXPTEOSfG31m6sgttup4Y0Br/aox+GqGQpz0UtBBzmDeA8SOT5r
+	H0i0MtS8RqokCyFN853y6plqnUoHPz0ii7ZsZ2ZdH2rN8DYbh/8HnW1F/cPZVj4YyNm56Ym9b3q
+	SjIItMOB194g1qgqQ8AcmEcdLqv01PVAD737/tc3ogZX2gd9/SH702S9xXCQ7iCKEgvYQO09Fwr
+	mcHPhlKxYSH5Ff6pGf
+X-Received: by 2002:a05:6a00:288a:b0:882:23ce:f51e with SMTP id d2e1a72fcca58-891b4ce43c2mr1402647b3a.30.1791372936871;
+        Wed, 07 Oct 2026 04:35:36 -0700 (PDT)
+X-Received: by 2002:a05:6a00:288a:b0:882:23ce:f51e with SMTP id d2e1a72fcca58-891b4ce43c2mr1402627b3a.30.1791372936207;
+        Wed, 07 Oct 2026 04:35:36 -0700 (PDT)
+Received: from [10.50.61.110] (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89183a8c76csm1251343b3a.0.2026.10.07.04.35.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 Oct 2026 04:35:35 -0700 (PDT)
+Message-ID: <369a95a2-2fe7-4827-9686-eeb88c5e0087@oss.qualcomm.com>
+Date: Wed, 7 Oct 2026 17:05:33 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next v2 09/16] wifi: mac80211: Define layouts for
+ SMD BSS Transition context
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <20260924-smd-v2-0-bb40094da1d4@oss.qualcomm.com>
+ <20260924-smd-v2-9-bb40094da1d4@oss.qualcomm.com>
+ <fc91329053c0cbedecf51bcccd4a0e74eba850e5.camel@sipsolutions.net>
+Content-Language: en-US
+From: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
+In-Reply-To: <fc91329053c0cbedecf51bcccd4a0e74eba850e5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA3MDA0NiBTYWx0ZWRfX364zpt82ady8
+ /U60qwo30cyL8ZSxjScNlVG7/t5KD3kZr5gHk/9BHPNsi5ENl33juEsL/MmeX6kkkm24E6qweQk
+ PMYEGQvKMOYOzDTSnxyzU2FgoiNMWhA=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA3MDA0NiBTYWx0ZWRfX521M7M0JwwGH
+ xu0UNgmwMCjsVS1+OU5gMBW17IFY6EhC5DUUNVe9QW306rSCK4aAslewgHBu1Nxy0KVRkxxOghK
+ j3zcSJPvUdcH532z9/dpGbIqBu1WLBKmnh1JkMClZxJxpIsOq7KDnEmZ60QkPWm0SbumvJpNGOx
+ 6uCQeQKvU0DbyENPwa0gCQm2ikhvxAumGJ61JA1E1GtlSvM5QoE2hw98Os1y3/02nJweQMb++em
+ jabLe1x3kuTUE4/k7FJTKu+bJcOhwzv25CXPgvGaQ7QJKQtOGaTsyiKJEnkN3UORQ/Wg81w1Zy/
+ 73BRJxLsrZwdekdsiaq4WvktK0C/9zXtwhwBhBt9RaHCWOk6A4/TpICv0yI/yo7rArbeTwKUkHv
+ 7tsqEiBEvIqH7yrZlB16sp4JCJe0xSxsXXZQOampz4nSd//Y6U7tI8/C1EAqUS4GX/DmIjXMryt
+ SDlUfENfijAreGuaVug==
+X-Proofpoint-ORIG-GUID: DTUjkwleBmS1dlBeuTXEa6SzLyW4nFPp
+X-Authority-Analysis: v=2.4 cv=T5EZ3PKQ c=1 sm=1 tr=0 ts=6ac62e89 cx=c_pps
+ a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=EUspDBNiAAAA:8 a=I2K72IQzrYoTmYq68goA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=OpyuDcXvxspvyRM73sMx:22
+X-Proofpoint-GUID: DTUjkwleBmS1dlBeuTXEa6SzLyW4nFPp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-07_04,2026-10-06_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 phishscore=0 priorityscore=1501 impostorscore=0 malwarescore=0
+ clxscore=1015 bulkscore=0 adultscore=0 spamscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610070046
 
-From: John Crispin <john@phrozen.org>
 
-A device with several radios on one wiphy has one scan state for the
-whole device, and mt76_hw_scan() picks the radio from the band of the
-first channel. A scan therefore covers one radio, and mac80211 visits
-the bands one after another.
 
-Run the scan on every radio that has a channel in the request, and let
-each radio visit only its own channels. Report the scan as complete
-once all radios are done, and as aborted if any of them aborted.
+On 10/02/2026 01:39 am, Johannes Berg wrote:
+> [dropping CC's, I have no idea why you CC'ed hardening?!?]
+> 
+> On Thu, 2026-09-24 at 08:10 +0530, Pooventhiran G wrote:
+>> IEEE P802.11bn/D2.0, Aug 2026, subclause 37.16.9, defines the context
+>> data to be transported during SMD BSS Transition (ST) laid out in
+>> subclause 37.16. The station's context data is attached to the ST
+>> Preparation or Execution Request action frames so that userspace
+>> receives the context along with the relevant frame.
+>>
+>> Define the context data: per-TID sequence numbers (SN) in downlink (DL)
+>> and uplink (UL) directions, packet number (PN) in DL, per-TID packet
+>> numbers in UL, and per-TID BlockAck session parameters in DL and UL;
+>> along with this, define an optional driver context. This data is used by
+>> drivers to report the context along with the frame SKB.
+> 
+> 
+> Just a couple of _very_ quick comments, having imported this to my tree
+> to compare notes with the client side implementation I'm working on:
+> 
+>> Signed-off-by: Pooventhiran G <pooventhiran.g@oss.qualcomm.com>
+>> ---
+>>  include/linux/ieee80211-uhr.h | 86 +++++++++++++++++++++++++++++++++++++++++++
+> 
+> This isn't really mac80211 (commit subject), but I also don't think this
+> should be defined here at all. I mean, I get why - the spec defines what
+> needs to be transferred, but it doesn't actually define the _layout_ of
+> the data and it's never used over the air, so I think it'd be confusing
+> to have it here anyway.
+> 
+> Probably should define it in cfg80211.h instead, since it's used all the
+> way through nl80211 down to the driver(s)?
+> 
 
-Build the probe request from the IEs of the band of the channel and the
-common IEs, because a request can now hold the IEs of several bands.
+Sure, Johannes. I will move this to cfg80211.
 
-A driver can now set SINGLE_SCAN_ON_ALL_BANDS to scan all of its radios
-in parallel with one request.
+>>  1 file changed, 86 insertions(+)
+>>
+>> diff --git a/include/linux/ieee80211-uhr.h b/include/linux/ieee80211-uhr.h
+>> index c3f87d4c8bec..e6aaef9ae9e6 100644
+>> --- a/include/linux/ieee80211-uhr.h
+>> +++ b/include/linux/ieee80211-uhr.h
+>> @@ -649,6 +649,92 @@ struct ieee80211_uhr_mode_change_tuple {
+>>  	u8 variable[];
+>>  } __packed;
+>>  
+>> +/*
+>> + * Context information carried in SMD BSS Transition (refer IEEE P802.11bn/D2.0,
+>> + * Aug 2026, subclause 37.16.9.
+>> + */
+>> +#define IEEE80211_SMD_CTX_NUM_VALID_CTX    8
+> 
+> Why is there such an arbitrary limitation?
+> 
 
-Signed-off-by: John Crispin <john@phrozen.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/channel.c  |  12 +-
- drivers/net/wireless/mediatek/mt76/mac80211.c |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  27 ++-
- drivers/net/wireless/mediatek/mt76/scan.c     | 215 ++++++++++++------
- 4 files changed, 173 insertions(+), 85 deletions(-)
+It was defined for the BITMAPs usage but I will clean this up as I will
+replace BITMAP with individual valid:1 bitfields.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
-index 75f0db3bc4f0..192276cf19fd 100644
---- a/drivers/net/wireless/mediatek/mt76/channel.c
-+++ b/drivers/net/wireless/mediatek/mt76/channel.c
-@@ -41,7 +41,7 @@ int mt76_add_chanctx(struct ieee80211_hw *hw,
- 	if (WARN_ON_ONCE(!phy))
- 		return ret;
- 
--	if (dev->scan.phy == phy)
-+	if (mt76_phy_scanning(phy))
- 		mt76_abort_scan(dev);
- 
- 	mutex_lock(&dev->mutex);
-@@ -66,7 +66,7 @@ void mt76_remove_chanctx(struct ieee80211_hw *hw,
- 	if (WARN_ON_ONCE(!phy))
- 		return;
- 
--	if (dev->scan.phy == phy)
-+	if (mt76_phy_scanning(phy))
- 		mt76_abort_scan(dev);
- 
- 	mutex_lock(&dev->mutex);
-@@ -114,7 +114,7 @@ int mt76_assign_vif_chanctx(struct ieee80211_hw *hw,
- 	bool mlink_alloc = false;
- 	int ret = 0;
- 
--	if (dev->scan.vif == vif && dev->scan.phy == phy)
-+	if (dev->scan.vif == vif && mt76_phy_scanning(phy))
- 		mt76_abort_scan(dev);
- 
- 	mutex_lock(&dev->mutex);
-@@ -161,7 +161,7 @@ void mt76_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	struct mt76_phy *phy = ctx->phy;
- 	struct mt76_dev *dev = phy->dev;
- 
--	if (dev->scan.vif == vif && dev->scan.phy == phy)
-+	if (dev->scan.vif == vif && mt76_phy_scanning(phy))
- 		mt76_abort_scan(dev);
- 
- 	mutex_lock(&dev->mutex);
-@@ -209,7 +209,7 @@ int mt76_switch_vif_chanctx(struct ieee80211_hw *hw,
- 			continue;
- 
- 		if (phy->chanctx != new_ctx) {
--			if (dev->scan.phy == phy)
-+			if (mt76_phy_scanning(phy))
- 				mt76_abort_scan(dev);
- 
- 			cancel_delayed_work_sync(&phy->mac_work);
-@@ -376,7 +376,7 @@ int mt76_remain_on_channel(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mutex_lock(&dev->mutex);
- 
--	if (phy->roc_vif || dev->scan.phy == phy ||
-+	if (phy->roc_vif || mt76_phy_scanning(phy) ||
- 	    test_bit(MT76_MCU_RESET, &dev->phy.state) ||
- 	    test_bit(MT76_RESTART, &dev->phy.state)) {
- 		ret = -EBUSY;
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 2584c0e2a2c9..c9762082f473 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -432,6 +432,7 @@ mt76_phy_init(struct mt76_phy *phy, struct ieee80211_hw *hw)
- 	INIT_LIST_HEAD(&phy->tx_list);
- 	spin_lock_init(&phy->tx_lock);
- 	INIT_DELAYED_WORK(&phy->roc_work, mt76_roc_complete_work);
-+	INIT_DELAYED_WORK(&phy->scan_work, mt76_scan_work);
- 
- 	if ((void *)phy != hw->priv)
- 		return 0;
-@@ -729,7 +730,6 @@ mt76_alloc_device(struct device *pdev, unsigned int size,
- 	INIT_LIST_HEAD(&dev->txwi_cache);
- 	INIT_LIST_HEAD(&dev->rxwi_cache);
- 	dev->token_size = dev->drv->token_size;
--	INIT_DELAYED_WORK(&dev->scan_work, mt76_scan_work);
- 	spin_lock_init(&dev->scan_lock);
- 
- 	for (i = 0; i < ARRAY_SIZE(dev->q_rx); i++)
-@@ -2338,7 +2338,7 @@ void mt76_rx_beacon(struct mt76_phy *phy, struct sk_buff *skb)
- 		.bssid = hdr->addr3,
- 	};
- 
--	mt76_scan_rx_beacon(phy->dev, phy->chandef.chan);
-+	mt76_scan_rx_beacon(phy, phy->chandef.chan);
- 
- 	if (!phy->num_sta)
- 		return;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 09b9507250f9..9e851dea71d9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -877,6 +877,15 @@ struct mt76_phy {
- 	struct ieee80211_vif *roc_vif;
- 	struct mt76_vif_link *roc_link;
- 
-+	struct delayed_work scan_work;
-+	struct {
-+		struct ieee80211_channel *chan;
-+		struct mt76_vif_link *mlink;
-+		int chan_idx;
-+		bool beacon_wait;
-+		bool beacon_received;
-+	} scan;
-+
- 	struct mt76_chanctx *chanctx;
- 
- 	struct mt76_channel_state *chan_state;
-@@ -1013,17 +1022,12 @@ struct mt76_dev {
- 
- 	u32 rxfilter;
- 
--	struct delayed_work scan_work;
- 	spinlock_t scan_lock;
- 	struct {
--		struct cfg80211_scan_request *req;
--		struct ieee80211_channel *chan;
-+		struct ieee80211_scan_request *req;
- 		struct ieee80211_vif *vif;
--		struct mt76_vif_link *mlink;
--		struct mt76_phy *phy;
--		int chan_idx;
--		bool beacon_wait;
--		bool beacon_received;
-+		unsigned long phy_mask;
-+		bool aborted;
- 	} scan;
- 
- #ifdef CONFIG_NL80211_TESTMODE
-@@ -1396,6 +1400,11 @@ mt76_phy_hw(struct mt76_dev *dev, u8 phy_idx)
- 	return mt76_dev_phy(dev, phy_idx)->hw;
- }
- 
-+static inline bool mt76_phy_scanning(struct mt76_phy *phy)
-+{
-+	return test_bit(phy->band_idx, &phy->dev->scan.phy_mask);
-+}
-+
- static inline u8 *
- mt76_get_txwi_ptr(struct mt76_dev *dev, struct mt76_txwi_cache *t)
- {
-@@ -1623,7 +1632,7 @@ int mt76_get_rate(struct mt76_dev *dev,
- int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		 struct ieee80211_scan_request *hw_req);
- void mt76_cancel_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
--void mt76_scan_rx_beacon(struct mt76_dev *dev, struct ieee80211_channel *chan);
-+void mt76_scan_rx_beacon(struct mt76_phy *phy, struct ieee80211_channel *chan);
- void mt76_rx_beacon(struct mt76_phy *phy, struct sk_buff *skb);
- void mt76_beacon_mon_check(struct mt76_phy *phy);
- void mt76_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index 4a5cdb4efc61..ada7a8984971 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -4,16 +4,26 @@
-  */
- #include "mt76.h"
- 
--static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
-+static struct mt76_phy *
-+mt76_scan_chan_phy(struct ieee80211_hw *hw, struct ieee80211_channel *chan)
- {
--	struct mt76_phy *phy = dev->scan.phy;
--	struct cfg80211_scan_info info = {
--		.aborted = abort,
--	};
-+	struct mt76_phy *phy = hw->priv;
-+
-+	if (hw->wiphy->n_radio > 1)
-+		return phy->dev->band_phys[chan->band];
-+
-+	return phy;
-+}
-+
-+static void mt76_scan_phy_complete(struct mt76_phy *phy, bool abort)
-+{
-+	struct mt76_dev *dev = phy->dev;
-+	struct cfg80211_scan_info info = {};
-+	struct ieee80211_hw *hw = phy->hw;
- 
- 	lockdep_assert_held(&dev->mutex);
- 
--	if (!phy)
-+	if (!mt76_phy_scanning(phy))
- 		return;
- 
- 	clear_bit(MT76_SCANNING, &phy->state);
-@@ -37,39 +47,64 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
- 		 */
- 		phy->offchannel = false;
- 	}
--	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
-+	mt76_put_vif_phy_link(phy, dev->scan.vif, phy->scan.mlink);
-+	memset(&phy->scan, 0, sizeof(phy->scan));
-+
-+	clear_bit(phy->band_idx, &dev->scan.phy_mask);
-+	if (abort)
-+		dev->scan.aborted = true;
-+
-+	if (dev->scan.phy_mask)
-+		return;
-+
-+	info.aborted = dev->scan.aborted;
- 	memset(&dev->scan, 0, sizeof(dev->scan));
--	ieee80211_scan_completed(phy->hw, &info);
-+	ieee80211_scan_completed(hw, &info);
- }
- 
- void mt76_abort_scan(struct mt76_dev *dev)
- {
--	spin_lock_bh(&dev->scan_lock);
--	dev->scan.beacon_wait = false;
--	spin_unlock_bh(&dev->scan_lock);
-+	struct mt76_phy *phy;
-+	int i;
- 
--	cancel_delayed_work_sync(&dev->scan_work);
-+	for (i = 0; i < ARRAY_SIZE(dev->phys); i++) {
-+		phy = dev->phys[i];
-+		if (!phy)
-+			continue;
-+
-+		spin_lock_bh(&dev->scan_lock);
-+		phy->scan.beacon_wait = false;
-+		spin_unlock_bh(&dev->scan_lock);
-+
-+		cancel_delayed_work_sync(&phy->scan_work);
-+	}
- 
- 	mutex_lock(&dev->mutex);
--	mt76_scan_complete(dev, true);
-+	for (i = 0; i < ARRAY_SIZE(dev->phys); i++) {
-+		phy = dev->phys[i];
-+		if (phy)
-+			mt76_scan_phy_complete(phy, true);
-+	}
- 	mutex_unlock(&dev->mutex);
- }
- EXPORT_SYMBOL_GPL(mt76_abort_scan);
- 
- static void
--mt76_scan_send_probe(struct mt76_dev *dev, struct cfg80211_ssid *ssid)
-+mt76_scan_send_probe(struct mt76_phy *phy, struct cfg80211_ssid *ssid)
- {
--	struct cfg80211_scan_request *req = dev->scan.req;
-+	struct mt76_dev *dev = phy->dev;
-+	struct cfg80211_scan_request *req = &dev->scan.req->req;
-+	struct ieee80211_scan_ies *ies = &dev->scan.req->ies;
- 	struct ieee80211_vif *vif = dev->scan.vif;
--	struct mt76_vif_link *mvif = dev->scan.mlink;
--	enum nl80211_band band = dev->scan.chan->band;
--	struct mt76_phy *phy = dev->scan.phy;
-+	struct mt76_vif_link *mvif = phy->scan.mlink;
-+	enum nl80211_band band = phy->scan.chan->band;
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	u8 link_id;
- 
- 	skb = ieee80211_probereq_get(phy->hw, vif->addr, ssid->ssid,
--				     ssid->ssid_len, req->ie_len);
-+				     ssid->ssid_len,
-+				     ies->len[band] + ies->common_ie_len);
- 	if (!skb)
- 		return;
- 
-@@ -80,8 +115,10 @@ mt76_scan_send_probe(struct mt76_dev *dev, struct cfg80211_ssid *ssid)
- 		ether_addr_copy(hdr->addr3, req->bssid);
- 	}
- 
--	if (req->ie_len)
--		skb_put_data(skb, req->ie, req->ie_len);
-+	if (ies->len[band])
-+		skb_put_data(skb, ies->ies[band], ies->len[band]);
-+	if (ies->common_ie_len)
-+		skb_put_data(skb, ies->common_ies, ies->common_ie_len);
- 
- 	skb->priority = 7;
- 	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-@@ -106,65 +143,77 @@ mt76_scan_send_probe(struct mt76_dev *dev, struct cfg80211_ssid *ssid)
- 	rcu_read_unlock();
- }
- 
--void mt76_scan_rx_beacon(struct mt76_dev *dev, struct ieee80211_channel *chan)
-+void mt76_scan_rx_beacon(struct mt76_phy *phy, struct ieee80211_channel *chan)
- {
--	struct mt76_phy *phy;
-+	struct mt76_dev *dev = phy->dev;
- 
- 	spin_lock(&dev->scan_lock);
- 
--	if (!dev->scan.beacon_wait || dev->scan.beacon_received ||
--	    dev->scan.chan != chan)
-+	if (!phy->scan.beacon_wait || phy->scan.beacon_received ||
-+	    phy->scan.chan != chan)
- 		goto out;
- 
--	phy = dev->scan.phy;
--	if (!phy)
--		goto out;
--
--	dev->scan.beacon_received = true;
--	ieee80211_queue_delayed_work(phy->hw, &dev->scan_work, 0);
-+	phy->scan.beacon_received = true;
-+	ieee80211_queue_delayed_work(phy->hw, &phy->scan_work, 0);
- 
- out:
- 	spin_unlock(&dev->scan_lock);
- }
- 
--void mt76_scan_work(struct work_struct *work)
-+static int mt76_scan_next_chan_idx(struct mt76_phy *phy)
- {
--	struct mt76_dev *dev = container_of(work, struct mt76_dev,
--					    scan_work.work);
--	struct cfg80211_scan_request *req = dev->scan.req;
--	struct cfg80211_chan_def chandef = {};
--	struct mt76_phy *phy = dev->scan.phy;
--	int duration = HZ / 9; /* ~110 ms */
--	bool beacon_rx, offchannel = true;
-+	struct cfg80211_scan_request *req = &phy->dev->scan.req->req;
- 	int i;
- 
--	if (!phy || !req)
-+	for (i = phy->scan.chan_idx; i < req->n_channels; i++)
-+		if (mt76_scan_chan_phy(phy->hw, req->channels[i]) == phy)
-+			return i;
-+
-+	return -1;
-+}
-+
-+void mt76_scan_work(struct work_struct *work)
-+{
-+	struct mt76_phy *phy = container_of(work, struct mt76_phy,
-+					    scan_work.work);
-+	struct mt76_dev *dev = phy->dev;
-+	struct cfg80211_scan_request *req;
-+	struct cfg80211_chan_def chandef = {};
-+	int duration = HZ / 9; /* ~110 ms */
-+	bool beacon_rx, offchannel = true;
-+	int i, idx;
-+
-+	if (!dev->scan.req || !mt76_phy_scanning(phy))
- 		return;
- 
-+	req = &dev->scan.req->req;
-+
- 	spin_lock_bh(&dev->scan_lock);
--	beacon_rx = dev->scan.beacon_wait && dev->scan.beacon_received;
--	dev->scan.beacon_wait = false;
-+	beacon_rx = phy->scan.beacon_wait && phy->scan.beacon_received;
-+	phy->scan.beacon_wait = false;
- 	spin_unlock_bh(&dev->scan_lock);
- 
- 	if (beacon_rx)
- 		goto probe;
- 
--	if (dev->scan.chan_idx >= req->n_channels) {
-+	idx = mt76_scan_next_chan_idx(phy);
-+	if (idx < 0) {
- 		mutex_lock(&dev->mutex);
--		mt76_scan_complete(dev, false);
-+		mt76_scan_phy_complete(phy, false);
- 		mutex_unlock(&dev->mutex);
- 		return;
- 	}
- 
--	if (dev->scan.chan && phy->num_sta && phy->offchannel) {
--		dev->scan.chan = NULL;
-+	if (phy->scan.chan && phy->num_sta && phy->offchannel) {
-+		phy->scan.chan = NULL;
- 		mt76_set_channel(phy, &phy->main_chandef, false);
- 		mt76_offchannel_notify(phy, false);
- 		goto out;
- 	}
- 
--	dev->scan.chan = req->channels[dev->scan.chan_idx++];
--	offchannel = mt76_offchannel_chandef(phy, dev->scan.chan, &chandef);
-+	phy->scan.chan = req->channels[idx];
-+	phy->scan.chan_idx = idx + 1;
-+	offchannel = mt76_offchannel_chandef(phy, phy->scan.chan, &chandef);
- 
- 	if (offchannel)
- 		mt76_offchannel_notify(phy, true);
-@@ -175,8 +224,8 @@ void mt76_scan_work(struct work_struct *work)
- 
- 	if (chandef.chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)) {
- 		spin_lock_bh(&dev->scan_lock);
--		dev->scan.beacon_received = false;
--		dev->scan.beacon_wait = true;
-+		phy->scan.beacon_received = false;
-+		phy->scan.beacon_wait = true;
- 		spin_unlock_bh(&dev->scan_lock);
- 		goto out;
- 	}
-@@ -186,16 +235,16 @@ void mt76_scan_work(struct work_struct *work)
- 		duration = HZ / 16; /* ~60 ms */
- 	local_bh_disable();
- 	for (i = 0; i < req->n_ssids; i++)
--		mt76_scan_send_probe(dev, &req->ssids[i]);
-+		mt76_scan_send_probe(phy, &req->ssids[i]);
- 	local_bh_enable();
- 
- out:
--	if (dev->scan.chan && phy->offchannel)
-+	if (phy->scan.chan && phy->offchannel)
- 		duration = max_t(int, duration,
- 			         msecs_to_jiffies(req->duration +
- 						  (req->duration >> 5)));
- 
--	ieee80211_queue_delayed_work(dev->phy.hw, &dev->scan_work, duration);
-+	ieee80211_queue_delayed_work(phy->hw, &phy->scan_work, duration);
- }
- 
- int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-@@ -203,37 +252,67 @@ int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct mt76_phy *phy = hw->priv;
- 	struct mt76_dev *dev = phy->dev;
-+	unsigned long phy_mask = 0;
- 	struct mt76_vif_link *mlink;
--	int ret = 0;
-+	int i, ret = 0;
- 
--	if (hw->wiphy->n_radio > 1) {
--		phy = dev->band_phys[req->req.channels[0]->band];
-+	for (i = 0; i < req->req.n_channels; i++) {
-+		phy = mt76_scan_chan_phy(hw, req->req.channels[i]);
- 		if (!phy)
- 			return -EINVAL;
-+
-+		phy_mask |= BIT(phy->band_idx);
- 	}
- 
- 	mutex_lock(&dev->mutex);
- 
--	if (dev->scan.req || phy->roc_vif ||
--	    test_bit(MT76_MCU_RESET, &dev->phy.state) ||
-+	if (dev->scan.req || test_bit(MT76_MCU_RESET, &dev->phy.state) ||
- 	    test_bit(MT76_RESTART, &dev->phy.state)) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
- 
--	mlink = mt76_get_vif_phy_link(phy, vif);
--	if (IS_ERR(mlink)) {
--		ret = PTR_ERR(mlink);
--		goto out;
-+	for_each_set_bit(i, &phy_mask, ARRAY_SIZE(dev->phys)) {
-+		if (dev->phys[i]->roc_vif) {
-+			ret = -EBUSY;
-+			goto out;
-+		}
- 	}
- 
--	memset(&dev->scan, 0, sizeof(dev->scan));
--	dev->scan.req = &req->req;
-+	for_each_set_bit(i, &phy_mask, ARRAY_SIZE(dev->phys)) {
-+		phy = dev->phys[i];
-+		mlink = mt76_get_vif_phy_link(phy, vif);
-+		if (IS_ERR(mlink)) {
-+			ret = PTR_ERR(mlink);
-+			goto put_links;
-+		}
-+
-+		memset(&phy->scan, 0, sizeof(phy->scan));
-+		phy->scan.mlink = mlink;
-+	}
-+
-+	dev->scan.req = req;
- 	dev->scan.vif = vif;
--	dev->scan.phy = phy;
--	dev->scan.mlink = mlink;
--	set_bit(MT76_SCANNING, &phy->state);
--	ieee80211_queue_delayed_work(dev->phy.hw, &dev->scan_work, 0);
-+	dev->scan.phy_mask = phy_mask;
-+	dev->scan.aborted = false;
-+
-+	for_each_set_bit(i, &phy_mask, ARRAY_SIZE(dev->phys)) {
-+		phy = dev->phys[i];
-+		set_bit(MT76_SCANNING, &phy->state);
-+		ieee80211_queue_delayed_work(phy->hw, &phy->scan_work, 0);
-+	}
-+
-+	goto out;
-+
-+put_links:
-+	for_each_set_bit(i, &phy_mask, ARRAY_SIZE(dev->phys)) {
-+		phy = dev->phys[i];
-+		if (!phy->scan.mlink)
-+			break;
-+
-+		mt76_put_vif_phy_link(phy, vif, phy->scan.mlink);
-+		phy->scan.mlink = NULL;
-+	}
- 
- out:
- 	mutex_unlock(&dev->mutex);
--- 
-2.47.3
+>> +/**
+>> + * struct ieee80211_smd_ctx_ba - BlockAck parameters for DL and UL
+>> + *
+>> + * @amsdu_supported: Peer's capability to support A-MSDU within A-MPDU.
+>> + * @ba_policy: BlockAck policy (0 = delayed BlockAck, 1 = immediate BlockAck)
+>> + * @buffer_size: Reorder buffer size from ADDBA Request (10-bit, max 1023)
+>> + * @timeout: BlockAck session timeout
+>> + * @ext_no_frag: ADDBA Extension fragmentation support
+>> + * @extfrag_level: ADDBA Extension HE fragmentation level
+>> + * @ext_buffer_size: ADDBA Extension buffer size; combined with @buffer_size as
+>> + *	(@ext_buffer_size << 10 | @buffer_size) to get the full reorder
+>> + *	buffer size
+>> + */
+>> +struct ieee80211_smd_ctx_ba {
+>> +	bool amsdu_supported;
+>> +	u8 ba_policy;
+>> +	u16 buffer_size;
+>> +	u16 timeout;
+>> +	bool ext_no_frag;
+>> +	u8 extfrag_level;
+>> +	u16 ext_buffer_size;
+>> +};
+> 
+> What about WinStartO?
+> 
+> Though I honestly lost track of where the spec is going with all the
+> options of transfer/not transfer - need to try to catch up next week.
+> 
+
+In ath12k implementation, WinStartO functionality to not exceed the BA window
+on the target AP MLD is achieved differently. But I will translate that to
+using WinStartO so that it is more generic.
+
+>> +/**
+>> + * struct ieee80211_smd_ctx - IEEE 802.11bn SMD Roaming Context (refer
+>> + *	IEEE P802.11bn/D2.0, Aug 2026, subclause 37.16.9)
+>> + *
+>> + * @valid_ctx_bmap: Bitmap indicating which context fields are valid;
+>> + *	bit positions defined by IEEE80211_SMD_CTX_VALID_* constants
+>> + * @pn_len: Length of PN in bytes; varies by cipher type
+>> + *	(e.g. CCMP (6), GCMP-256 (16))
+>> + * @dl: Down-link context data
+>> + * @dl.valid_tid_bmap: valid DL TIDs for which context is present
+>> + * @dl.sn: DL SN per-TID to be assigned next
+>> + * @dl.pn: DL PN to be assigned next
+>> + * @dl.ba: DL BlockAck parameters per-TID for the BlockAck session
+>> + * @ul: Up-link context data
+>> + * @ul.valid_tid_bmap: valid UL TIDs for which context is present
+>> + * @ul.sn: UL SN per-TID to be checked next
+>> + * @ul.pn: UL PN per-TID to be checked next
+>> + * @ul.ba: UL BlockAck parameters per-TID for the BlockAck session
+>> + * @drv_ctx_size: Number of valid bytes in @drv_ctx.
+>> + * @drv_ctx: Variable-sized array of driver-specific context, counted by
+>> + *	@drv_ctx_size. Opaque to the wireless core; interpreted by drivers.
+>> + */
+>> +struct ieee80211_smd_ctx {
+>> +	DECLARE_BITMAP(valid_ctx_bmap, IEEE80211_SMD_CTX_NUM_VALID_CTX);
+> 
+> This seems overly complex for ... 4 bits? Could just have individual
+> valid:1 bitfield entries or something?
+> 
+
+Yeah, I will change valid_ctx_bmap to bitfields.
+
+>> +	u8 pn_len;
+>> +
+>> +	struct {
+>> +		DECLARE_BITMAP(valid_tid_bmap, IEEE80211_SMD_CTX_NUM_TIDS);
+>> +		u16 sn[IEEE80211_SMD_CTX_NUM_TIDS];
+> 
+> Aren't there more counters, e.g. for mgmt frames?
+> 
+
+Since std does not define it explicitly, ath12k implementation transfers this
+in the driver data separately. But I will move this to proper definitions
+since mgmt queues need to continue anyways.
+
+>> +		u8 pn[IEEE80211_SMD_CTX_MAX_PN_LEN];
+>> +		struct ieee80211_smd_ctx_ba ba[IEEE80211_SMD_CTX_NUM_TIDS];
+>> +	} dl;
+> 
+> It feels like there should be some information here about "how many
+> frames are buffered for each TID" and mac80211 could increment that by
+> however many are buffered there, both to give the AP an ability to
+> estimate the downlink drain time, as well as how much to bump the PN
+> forward to by? Although the latter could just be like 1 million and
+> nobody cares.
+> 
+
+Estimating the draining period is a work-in-progress and this series (and its
+corresponding ath12k implementation) does not support it. Current
+implementation works with a static configuration. I will add the required
+changes as part upstreaming the dynamic estimation support.
+
+Reg the PN offset, based on the below std language (subclause 37.16.9), the DL
+SN and PN getting transferred here are already offset to reserve some space
+for draining. I will add the required documentation to establish that.
+
+`
+NOTE 1—When the current AP MLD determines the next SN to be assigned for DL
+individually addressed Data frames of each TID, the current AP MLD accounts
+for some reserved set of SNs so that any DL MSDUs of that TID from the DS to
+the current AP for the non-AP MLD can still be assigned SN that is less than
+the “Next SN”. This reserved set of SNs also depends on when the “Next SN” is
+sent to the target AP MLD—i.e., during ST preparation or during ST execution.
+If the former, then more SNs need to be reserved because new DL MSDUs may keep
+arriving the current AP MLD from the DS during the preparation timeout.
+
+NOTE 2—When the current AP MLD determines the starting PN to be assigned for
+DL individually addressed frames by the target AP MLD, the current AP MLD
+selects a starting PN high enough such that the PN values used for the DL
+frames from the target AP MLD will not repeat any PN values that were used by
+the current AP MLD.
+`
+
+>> +	struct {
+>> +		DECLARE_BITMAP(valid_tid_bmap, IEEE80211_SMD_CTX_NUM_TIDS);
+> 
+> again I think the whole DECLARE_BITMAP is a bit of a contortion when
+> really you needed ... a u8? perhaps a u16 or u32 when accounting for
+> mgmt? still not longer than the "unsigned long" this results in, and
+> seems way more understandable?
+> 
+> (and wouldn't even have the kernel-doc problem)
+> 
+
+Yeah, I will clean up BITMAPs.
+
+>> +		u16 sn[IEEE80211_SMD_CTX_NUM_TIDS];
+>> +		u8 pn[IEEE80211_SMD_CTX_NUM_TIDS][IEEE80211_SMD_CTX_MAX_PN_LEN];
+> 
+> Does this even need to be per TID? I guess I could see that maybe it
+> must be, but if so you forgot mgmt frames here too?
+> 
+
+Yes, UL PN is maintained per TID. I will add proper definitions for UL mgmt
+information as well.
+
+> I'd also love for you to think about hwsim supporting this - in that
+> case mac80211 maintains a lot of this data. Having mac80211 fill in some
+> data unconditionally though seems brittle - what if the driver just
+> forgot the PN and then mac80211 says "sure the PN is 0" because
+> something, so ideally drivers would somehow say "this should be filled
+> in from mac80211 software state" or something.
+> 
+
+Yes, it is in the pipeline. I will add hwsim changes as well to this series.
+For end-to-end upstream validation, if there is STA SMD support in upstream,
+we can leverage that; otherwise, I will have some minimal changes locally just
+to support AP testing and submit the AP changes. For hwsim, I will add APIs to
+fill in these data that mac80211 maintains.
+
+> johannes
 
