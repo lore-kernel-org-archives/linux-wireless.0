@@ -1,167 +1,165 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D724749DD
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 09:35:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08082481AAD;
+	Wed,  7 Oct 2026 09:37:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791365738; cv=none; b=DQwgpsKOpF3gvMEDL+jfng1RlKnicp73PPL7mkcI4M/slQQY8AEQodss2leiTMmT0as3vCAw5RPmKkokkKYfix+4axJOkywnY5VLBjFVjj1iyMHdDK/I0Qq6b+jLYtpRwIzXiK123uOoRyQ2p/lZjVXIiN/kuXhIKBaeQvyI2Uc=
+	t=1791365849; cv=none; b=Pq40tlNTsKwCLEHE9DZZ7edlb11cDqmaVciU55E6on2hYJWXb8b3H3Ew555BnWdk3DF7VVGHTN5yhxvvX8SqlSlw2egG5XN7sB4JCa/Ofw++zJBvppv8E12cZznuzHkEw//cVmLJ0OzAqFsyPbBvmFnDGU+UiGxFVemNdKfFlRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791365738; c=relaxed/simple;
-	bh=sukgP5Yz3NvqLS1QVziCClY+uJh7JmyNTFZNJP94JnE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JmbMpOkalbQWucpr7oqmw3OONB+h/UNzJ1+k7UmBa2RS7EiW3vadpCwn1px462jsBusdoccuqajo0esp2Q8UJ9S+jUOXBdBqg9k5a1SLgcjcUra9mlJccetPNoI8MdqPDyXectuL0kbCT0tsW6WIj4N9xiwGFMlthikMa1fqw/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Kj116TiJ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VL9M9w17; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1791365849; c=relaxed/simple;
+	bh=f2JXT+MHfpwNcVy+Cu2UmZ2nFKZ5RPQubv1NHR7hOm8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=a5/h5KtnP8j0wLtJKGR/E9xN7GNSTbs5a06giM3sc/3HmOBHlLAisBkV/Ft43keKFa8YUF1xRV8RlcPvyMGI0ySS7+RJbzCKRow5vyIFabFp0nmFEn6V5z5LZZ6hKGgDxg96AZWVeHt3zyL1Hr4awxUqvUKqHWM9hnffO3oriyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=f3lix.dev@gmx.de header.b=b6mWtmZx; arc=none smtp.client-ip=212.227.15.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Kj116TiJ";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VL9M9w17"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6977jrw52312929
-	for <linux-wireless@vger.kernel.org>; Wed, 7 Oct 2026 09:35:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	FWHBpKt1zMgFknbQah/VG7jCcJ0lGDysyv+pzjzXw44=; b=Kj116TiJ1liFsAdP
-	EPU+WEWBIHdO1GVW4MLVqZK8qsjfeqw7LLRPlscuIYy9UE3V09Av4qHBWVLrG0iQ
-	Al2go6ZFr+priuiQov75UVvbuV1VLd5WgmiRbmacTdxxE/g2jFYofOJejNWEdtl/
-	8x9uu2gPiJWLAqXnWpzoMOoc/5OydJtojgsrRTFDrPAUE4zVrMw0gWnIJmD4keQB
-	xAsDkV4d1NTQQoouh2K72oeOfybyOxecxSlQhJi3T6DCwMvrPgxLn9BoK17F+QyN
-	8uDuEsQLDY0Wu3xSvKJX5n5228lSbni+M6GokcePJt0dtgUf0/drhqVbNvbgSCZU
-	76rGQA==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h53asksf9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 09:35:23 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-3510a481ae9so7485265eec.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 02:35:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791365723; x=1791970523; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FWHBpKt1zMgFknbQah/VG7jCcJ0lGDysyv+pzjzXw44=;
-        b=VL9M9w17kQ76N04nJBtQQVz4KmKbfBaSMlWEinQ3PKsXlU4oNmvGI+IRKg+ZZFGlcw
-         pBFS6NGvI+ff7P9JfB9jxvSNSuLD6lMV79TLtdLSvInM13Ui1srK1p5uZbTtaUlTnay/
-         bASik4ztdT8x7i9qYVuzetPrIpBA+y4KoMbLR3Iv/zn5BtcjmxKqZPWvp3m+ko6CeSHQ
-         bZQfodUjhwtMPL5eGh+VWmLmeg1F+Cz+fGD615VOm29ZFuNmN7edxixJ4K3dnyMveYRB
-         jZEZoOR5gxD5O6whI860ax4KO45KA7zvyJbG5rL/aqWZrh113Pqq+oEj45n9Z1OIpjqt
-         g/tQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791365723; x=1791970523;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FWHBpKt1zMgFknbQah/VG7jCcJ0lGDysyv+pzjzXw44=;
-        b=kq75c9In0OU1R00AqImvQ/1wiBeJu/OTwoHwKuDHX3fq6GUVSBtBN1X253lyVsnGpx
-         9ym1xeuEAeXDnhT4a2Y28t2XJmWda8oVccLkitQ6Cq1JXiSx4pnfQ013OaRisVGr8NOi
-         H5NRWttmlPJAzABvGjFFz/55HAm4HlpcEhlIdPjhTBmOlom5sZU6VpmgdKE+LrDBrIVi
-         FPpJkA5Tc3L6ZhjGbRvnMWytFr2771JIfei6ucDavqKSOV0uKxeO4EMHlpC2nvY7xezG
-         BHm0vwo3jE2WRV0G2bCRpJPDSpkgit/ovjy9MO0g3lGu7XD2y96meOQwCdqxO8qRwTof
-         aEqA==
-X-Forwarded-Encrypted: i=1; AKwUvBzh8dUTUcZFPA4LzClmQOagTYUHjCebch4bOOA/1Uc83oow48YIqFJYKJ9AlvVtBAJox7CEJvbOGLk14J1giA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIFgvOjaIg4wzbLQnJDWczaBAC7yQw8HiA9AIx6s4wd5Z/bveOK
-	TBmpXofECVYS4n4/lN6+0j19VjiBOko4GRwouak5jnQ7FiuRAZOb+78idout7aSwJiZd0G52Sn9
-	l8DQxdhe2TwJUT5EdtwiM2iwsa07rvnfIw+ngfFNlUNt88GYr3imiwjo0er6klA/SgqEJGw==
-X-Gm-Gg: AYBFou3E/wenIu5DzDitPM30mvT9zGxbrh1REYtD96G4WHONQDhcq1UHwmtaqqV4UXL
-	+/1rE2PiNOIHa7CCiPFGbg8eh3wC4PTTb44ch7X6aGRn+j8MRDVfMEZAsn49LSYddbjap95BU0T
-	T4QQoLCwVUewhEIBi9vQ5njn5nVnEAolmYGm0/+WlpirmLbGEdmbWaQU3Gcdk9PDcmMIH6BbDey
-	UZw//9becgDwxBonJsT8B4GGf6tAG0FPxNGohOr0csnNxZM7UqsN7M1YGwpwIs4msxt/Ni8toOQ
-	+fqn0JBGi/0Q99FrGx/UvzRhD9dRjkxUaZpeHOHSd6pcpqwAaRlM0ZhEgFti597Kfet8hyVzlhs
-	tCrUs/Jodm6/o3qqvvvOrhMma8dMK9zwTXxtWL4rP
-X-Received: by 2002:a05:7301:670a:b0:351:4d03:c6a with SMTP id 5a478bee46e88-3515dd4c790mr2842778eec.12.1791365722823;
-        Wed, 07 Oct 2026 02:35:22 -0700 (PDT)
-X-Received: by 2002:a05:7301:670a:b0:351:4d03:c6a with SMTP id 5a478bee46e88-3515dd4c790mr2842036eec.12.1791365714103;
-        Wed, 07 Oct 2026 02:35:14 -0700 (PDT)
-Received: from [10.152.199.23] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3515afa61e8sm7406692eec.22.2026.10.07.02.35.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Oct 2026 02:35:13 -0700 (PDT)
-Message-ID: <6f6efa34-8e87-49db-bef2-e552c9abf0fb@oss.qualcomm.com>
-Date: Wed, 7 Oct 2026 15:05:08 +0530
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=f3lix.dev@gmx.de header.b="b6mWtmZx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
+	s=s31663417; t=1791365833; x=1791970633; i=f3lix.dev@gmx.de;
+	bh=f2JXT+MHfpwNcVy+Cu2UmZ2nFKZ5RPQubv1NHR7hOm8=;
+	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
+	 References:MIME-Version:Content-Type:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=b6mWtmZxoqPlV5xEQeBu92q8W1bJiZ8v4u9ZgW5BT0x8pxLNVlhBUOOy4j5EpPc1
+	 x+7nZWKNEJOEVdy1FAKQ2rmv6mHU8gBmiQBs3bR3hFsIcX621/sv5sVvF2NLU1m00
+	 A05/tb2kRFgfo6DSjdnNONTivcCWGlJzZSyQN1yJfDmEJLb2hLTSfKoMZD9lSwv3E
+	 1YDbBHB9Rpqvq6l14evsjfSTf69lEqB84l1dfNyZ8A5CoGxW42DlNnjMHeJJVbILm
+	 dNhEY8p3/1uFbV8mLTHUMT6U/Z86DX6syrSNT8A6JGBZyYpTpDkrv+AQ9ChMhWSMH
+	 fKb3zQauhiDlJzTZpw==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from client.hidden.invalid by mail.gmx.net (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MdvmO-1wdg9m3gCE-00l1bd; Wed, 07
+ Oct 2026 11:37:12 +0200
+From: Felix Hoffmann <f3lix.dev@gmx.de>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Cc: linux-wireless@vger.kernel.org,
+	Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Arien Judge <arien.judge@morsemicro.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless] wifi: mm81x: validate YAPS receive framing
+Date: Wed,  7 Oct 2026 11:30:13 +0200
+Message-ID: <20261007093013.17116-1-f3lix.dev@gmx.de>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <lrsghye5vfzs5o4pljrbm2ubfcxgc3mkcpyc2sbutsq6td6qug@36liwxdx6j5i>
+References: <20260910201030.85862-1-f3lix.dev@gmx.de> <lrsghye5vfzs5o4pljrbm2ubfcxgc3mkcpyc2sbutsq6td6qug@36liwxdx6j5i>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next v4] wifi: ath12k: advertise interface MAC address
- pool
-To: Vitor Soares <ivitro@gmail.com>, Jeff Johnson <jjohnson@kernel.org>
-Cc: Vitor Soares <vitor.soares@toradex.com>, linux-wireless@vger.kernel.org,
-        ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
-        baochen.qiang@oss.qualcomm.com, kang.yang@oss.qualcomm.com
-References: <20260922200643.1133491-2-ivitro@gmail.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260922200643.1133491-2-ivitro@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: LIiEbt10lmrJs62dsACsbYawmwy0V7sc
-X-Proofpoint-GUID: LIiEbt10lmrJs62dsACsbYawmwy0V7sc
-X-Authority-Analysis: v=2.4 cv=Xt5vqlF9 c=1 sm=1 tr=0 ts=6ac6125b cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=m8ToADvmAAAA:8 a=EUspDBNiAAAA:8 a=PJUtwoy5LLMsS-UO4yUA:9 a=QEXdDO2ut3YA:10
- a=bBxd6f-gb0O0v-kibOvt:22 a=kCrBFHLFDAq2jDEeoMj9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA3MDAzOCBTYWx0ZWRfX2NRSdp12jxsq
- LuE7jZHQIULYS4aXm/nxWxEUY+WUd64B552he4Ge1/DtHSwBYPIjO0ZBcwfzvOnwN27ClsS3UU2
- ZKXxpv4T9EXMcpqLkDdSr5x1kilZ60pPAMNMnngoJ/nE5VVA2l+cCnKVWcpgT+MGtClCoZU0w9p
- DNhAowhL5ALiqWGNQnbW7No13XV3M8eL/+KBhiy6U/cXm4Q75HfyoZmCmijmI3ZVfESK3bdS9t8
- om8aZ/DLoQq+hA5hCacoVuTtIo7hROJrB4ghTx9fKPla0zr6SMyvKKqQcTGYa2CalmkO5/uLzwm
- siy4qED56DNCJsKSUtOOZKf7vlB3Jni+jSV/Tg91haLHMshDw+4qhRNAHPVEPu+8LGeIzBGMFrb
- 59dINm073d0k8Y5OKuciA6xx0KmCFfzV/a8f7riB019z+EZlTUgDxVmZQdJCnEdXPmHE0HCBg8K
- fWjqIDeOHmBQMZi06pQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA3MDAzOCBTYWx0ZWRfX5SckjkJQvdf5
- /qNlhbhcCQlZlY2X1SHwKN784NJ27HM9YGaku+8HsC3mBuuv1RacA8z8btByHbK20ZYq4PxRM54
- W8IbgAE0ZeXAFzd8zhqgK8IRBG1GzJI=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-07_03,2026-10-06_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 adultscore=0 malwarescore=0 clxscore=1015 phishscore=0
- impostorscore=0 suspectscore=0 spamscore=0 bulkscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610070038
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:V2GzszlTBFIthwqGnuYWkV26gv8Typg2SY5M4Pv9VtOuWphPP9o
+ L8L31mkdPeV9Zyx9IDC4W/XKWI0rSEd/k7zmAYpLd8hp5eu4wgF6rODEKBrXyXvGfJVTHIv
+ Jfl9Iox/LRfKMZfEhOorGtX3OYzb6DfPPBWSL02onFcNBcbNpev59sCbJrVUXXD5F8XDi/Z
+ fHmZcJPIGoh31kzte7N1A==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:MQ2NG/dkevI=;rtGULF8M/rhczC0PyekY9oILiV2
+ +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
 
-On 9/23/2026 1:36 AM, Vitor Soares wrote:
-> From: Vitor Soares <vitor.soares@toradex.com>
-> 
-> ath12k supports creating vdevs with addresses provided by mac80211.
-> Userspace can already make concurrent interfaces work by explicitly
-> assigning different locally administered addresses.
-> 
-> However, ath12k does not advertise an address list, so when a second
-> interface is created without an explicit address, mac80211 has nothing
-> to pick from and falls back to the permanent address. If the first
-> interface is already running with that address, bringing up the second
-> one fails with -ENOTUNIQ.
-> 
-> As in ath11k, provide a list of usable addresses so
-> ieee80211_assign_perm_addr() can hand each new interface an unused one.
-> Keep the first entry as the wiphy's permanent MAC address. Generate the
-> remaining entries as locally administered variants by changing only the
-> upper nibble of the first octet, which naturally limits the pool to 16
-> unique addresses.
-> 
-> The cfg80211 definition of wiphy->addresses does not specify where the
-> addresses must come from. Some ath12k platforms use it as an interface
-> MAC address pool, while others use it for firmware-provided per-radio
-> addresses. Gate the generated address pool behind
-> advertise_iface_mac_pool and enable it for WCN7850 and QCC2072. The flag
-> is read from the first radio, as all radios behind a wiphy are
-> expected to have the same setting.
-> 
-> Other platforms keep the existing behavior.
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> Tested-on: QCC2072 hw1.0 PCI WLAN.COL.1.0.c2-00074-QCACOLSWPL_V1_TO_SILICONZ-1
-> 
-> Assisted-by: LLM
-> Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
-> Tested-by: Kang Yang <kang.yang@oss.qualcomm.com>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Hi Lachlan,
+
+Thank you for the review.
+
+Yes, YAPS_DELIM_GET_PKT_SIZE() makes the intent clearer. I have changed v2
+to use it through the signed pkt_size local, so encoded sizes below the
+reserved page remain negative and are rejected. The upper-bound check adds
+YAPS_RESERVED_PAGE_SIZE back to preserve its existing encoded-size semantics.
+
+I will send v2 as a separate thread.
+
+Thanks,
+Felix
