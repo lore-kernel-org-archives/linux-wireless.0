@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C99638AC64
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 16:11:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADC2363C48
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 16:11:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791389466; cv=none; b=Hox+U+HmS3Qs5sxsUrwlYYpJc6RnmtW6OUuN0PAK8b523RNaNVV1QLSCYKW/51+cIg9nQRnpncraerWeH9ROSIynNC6eaBtNfQ0VZAax/WXAl4o2Ygdrr0HvlGSKnwaNUNc2DpC5Nq/jgRmV0vT3mekJlRWJSUGjQaiKXj1wvg8=
+	t=1791389466; cv=none; b=ABYFQyZ/6i7rLG+K2Y8lMHl7xXJQbSdM7YuTGBZ0QAEhXXjG2Lfp6g/DA8QdnOTgsmrKehcAD+CosI1mOAtKA1/9PTHWMX3Pd84KZE1LfR107OLnVePPmS3j3hm3D8VMHUAQT1B/PU0c2lB4QPxbAKUar3uJsaPqXKqT4Ffil8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791389466; c=relaxed/simple;
-	bh=aOvUNvQuFHT07alrd6uaAmzpuLbKjD/TQN1n90tak6k=;
+	bh=S0FnPBi5k3AG7vcAtO3Zx3qFFTOKLRhXN5mj6i4ItIM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tDPME1L2hGQFTs4EKFCGT43zvMflq/AyDd6nIm+ivlJJOoz4uLeEFYmwCtVzo8I7lkViBophtL+pVnHggNw/ZQbTAG3gdCq+cHVjVJYz8iiAAjZYUCrqw59yOF2Js0SOfEuF5fxlQyldL2cIMMFMM0G+g3g+vXw8r0My0XeU8o4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=rZyx5mPp; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=R7LKp3pDZEmG28hkUXuqBPVfegxcHbtmjuYRMyRPdZYpH7/JpxYZp4LnOaxcubhBVabJmN5Jdes/hkJTEEOLEoz0zlIIkJ+1fsDO5lb0XxQ7XD8UBSup8rknwXmC0EMGu+w1vsc9KnyMlsMINQAzMnytZGnrgCkhqis1CsBGGLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=JRXRGKzY; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rZyx5mPp"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="JRXRGKzY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=wbv74tdI69A91fbK3lobVvqsPTIYNC+iStxWjZtXxvk=;
-	t=1791389464; x=1792599064; b=rZyx5mPpMl3meQ3+3iKRhn4oXN7vleg+tK8wV0AAva7V4lN
-	YP8PVCt6PXAR7qta1empX25q8JcVXNT80/Pzi1eyDulq5qbfzsFS/VuMXz2mETuGONmvTs/R99UTO
-	Hey1q9aRrKGQHMtsIgQjWPlTtUYGlRr8QchQzhxzULds9bPtHCi4qFgd5E8TxrzbMDs7asM+vuiuI
-	Cbbsn5GSNd1KahmkcelMlP64NLMDr/67WoHjc5xYuGu289AHpb9Wxp8EvKV4DkQmE+Q2i2WMOkTh+
-	Z/7c32bKseRHNRLqkmcDU94yvNlNouu1ACDInEYFVVSizR7ZtSRRDinuSujb/qLg==;
+	Resent-Cc:Resent-Message-ID; bh=UayRxc0dkO4FwO71TbtLObyi5UkSFugzr5kQwEJfSvA=;
+	t=1791389465; x=1792599065; b=JRXRGKzYn/k2QWcMRlecSTxLaPWd6FU9TDVGMIZclyJHxA0
+	2LR8J/Y1wcslQOpm3kHQI7YTKC9cMQtZ4yVv35fnj+5tjwINGrQh84PXzOsiPH1MNGL/cuyzelyGQ
+	FYoQO81j30BoHLPqC0+aGnmWcNP/ibSNU+SnBBFebi1016gNxRHbpRvJM1TdbgqTGJfaF078UoJwB
+	rNRhSY0BKz7tNJoH1FYEg0NpgJVZflroF/7Q2iInT/y2D11BTTYH/yN7YKVuNccBM/2jCe6i1lFlI
+	y+flXeWv1z3+t6tMrzAabnSXFSQTqKIA89ympZ0MAUpuuuRQQQ9ncqMxEXkEExlg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xEUEP-00000008DV1-47vg;
+	id 1xEUEQ-00000008DV1-2PTc;
 	Wed, 07 Oct 2026 18:11:02 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 3/4] wifi: mac80211: implement unlocked STA statistics
-Date: Wed,  7 Oct 2026 18:09:47 +0200
-Message-ID: <20261007181056.bbea8c0be375.Ieb92e4c6599a198a116fa6a4f7944219c6d32932@changeid>
+Subject: [RFC PATCH 4/4] wifi: ath12k: implement unlocked station statistics
+Date: Wed,  7 Oct 2026 18:09:48 +0200
+Message-ID: <20261007181056.a809081196f8.I25af744cd23ebd73142a6170798a9fff90dfe34e@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261007161056.340373-6-johannes@sipsolutions.net>
 References: <20261007161056.340373-6-johannes@sipsolutions.net>
@@ -50,537 +50,263 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Implement the new cfg80211 unlocked STA statistics. If
-the driver has an operation, then we need to always do
-the locked again, so return -EAGAIN unconditionally if
-it has a locked but not atomic operation, but drivers
-can implement the new atomic methods to provide needed
-data atomically (and can also return -EAGAIN).
-
-This should, given a driver without any ops or adding
-the atomic ops, reduce wiphy mutex contention.
+Most of the time we just return cached statistics, that
+can be done unlocked. If querying the firmware is needed,
+return -EAGAIN to fall back to the locked version.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h    |  18 ++++++
- net/mac80211/cfg.c        | 120 ++++++++++++++++++++++++++++----------
- net/mac80211/driver-ops.c |  76 ++++++++++++++++++++++++
- net/mac80211/driver-ops.h |  46 ++++-----------
- net/mac80211/sta_info.c   |  54 ++++++++++-------
- net/mac80211/sta_info.h   |  10 +++-
- 6 files changed, 233 insertions(+), 91 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c      | 117 +++++++++++++++------
+ drivers/net/wireless/ath/ath12k/mac.h      |   8 ++
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c |   2 +
+ 3 files changed, 94 insertions(+), 33 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2a61079e3975..a1a6409b44c1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4369,6 +4369,13 @@ struct ieee80211_prep_tx_info {
-  *	Statistics that the driver doesn't fill will be filled by mac80211.
-  *	The callback can sleep.
-  *
-+ * @sta_statistics_atomic: Like @sta_statistics, but called under RCU, so it
-+ *	must be atomic. This is called instead of @sta_statistics if available,
-+ *	but may return -EAGAIN to fall back to @sta_statistics with the wiphy
-+ *	mutex held.
-+ *	Note that it's not guaranteed this will always be called first, some
-+ *	(internal) calls may call @sta_statistics directly.
-+ *
-  * @link_sta_statistics: Get link statistics for this station. For example with
-  *	beacon filtering, the statistics kept by mac80211 might not be
-  *	accurate, so let the driver pre-fill the statistics. The driver can
-@@ -4378,6 +4385,9 @@ struct ieee80211_prep_tx_info {
-  *	Statistics that the driver doesn't fill will be filled by mac80211.
-  *	The callback can sleep.
-  *
-+ * @link_sta_statistics_atomic: Like @link_sta_statistics, with the same
-+ *	locking/retry semantics as @sta_statistics_atomic. Must be atomic.
-+ *
-  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
-  *	bursting) for a hardware TX queue.
-  *	Returns a negative error code on failure.
-@@ -4883,6 +4893,10 @@ struct ieee80211_ops {
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_sta *sta,
- 			       struct station_info *sinfo);
-+	int (*sta_statistics_atomic)(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 196b807210de..c8af44c333cb 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -920,7 +920,8 @@ struct ath12k *ath12k_get_ar_by_vif(struct ieee80211_hw *hw,
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k_link_vif *arvif;
+ 
+-	lockdep_assert_wiphy(hw->wiphy);
++	/* also used under RCU for station statistics */
++	lockdep_assert(lockdep_is_held(&hw->wiphy->mtx) || rcu_read_lock_held());
+ 
+ 	/* If there is one pdev within ah, then we return
+ 	 * ar directly.
+@@ -931,7 +932,7 @@ struct ath12k *ath12k_get_ar_by_vif(struct ieee80211_hw *hw,
+ 	if (!(ahvif->links_map & BIT(link_id)))
+ 		return NULL;
+ 
+-	arvif = wiphy_dereference(hw->wiphy, ahvif->link[link_id]);
++	arvif = rcu_dereference_wiphy(hw->wiphy, ahvif->link[link_id]);
+ 	if (arvif && arvif->is_created)
+ 		return arvif->ar;
+ 
+@@ -13737,10 +13738,11 @@ static void ath12k_mac_put_chain_rssi(struct station_info *sinfo,
+ 	}
+ }
+ 
+-void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+-				  struct ieee80211_vif *vif,
+-				  struct ieee80211_sta *sta,
+-				  struct station_info *sinfo)
++static int ath12k_mac_sta_statistics(struct ieee80211_hw *hw,
 +				     struct ieee80211_vif *vif,
 +				     struct ieee80211_sta *sta,
-+				     struct station_info *sinfo);
- 	int (*conf_tx)(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
- 		       unsigned int link_id, u16 ac,
-@@ -4898,6 +4912,10 @@ struct ieee80211_ops {
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_link_sta *link_sta,
- 				    struct link_station_info *link_sinfo);
-+	int (*link_sta_statistics_atomic)(struct ieee80211_hw *hw,
++				     struct station_info *sinfo,
++				     bool atomic)
+ {
+ 	struct ath12k_sta *ahsta = ath12k_sta_to_ahsta(sta);
+ 	struct ath12k_dp_link_peer_rate_info rate_info = {};
+@@ -13752,12 +13754,17 @@ void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	struct ath12k *ar;
+ 	bool db2dbm;
+ 
+-	lockdep_assert_wiphy(hw->wiphy);
++	/* station interfaces query the firmware, which sleeps */
++	if (atomic && ahsta->ahvif->vdev_type == WMI_VDEV_TYPE_STA)
++		return -EAGAIN;
++
++	if (!atomic)
++		lockdep_assert_wiphy(hw->wiphy);
+ 
+ 	arsta = &ahsta->deflink;
+ 	ar = ath12k_get_ar_by_vif(hw, vif, arsta->link_id);
+ 	if (!ar)
+-		return;
++		return 0;
+ 
+ 	dp = ath12k_ab_to_dp(ar->ab);
+ 	ath12k_dp_link_peer_get_sta_rate_info_stats(dp, arsta->addr, &rate_info);
+@@ -13791,23 +13798,22 @@ void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	/* TODO: Use real NF instead of default one. */
+ 	signal = rate_info.rssi_comb;
+ 
+-	params.pdev_id = ath12k_mac_get_target_pdev_id(ar);
+-	params.vdev_id = 0;
+-	params.stats_id = WMI_REQUEST_VDEV_STAT;
++	if (ahsta->ahvif->vdev_type == WMI_VDEV_TYPE_STA) {
++		params.pdev_id = ath12k_mac_get_target_pdev_id(ar);
++		params.vdev_id = 0;
++		params.stats_id = WMI_REQUEST_VDEV_STAT;
+ 
+-	if (!signal &&
+-	    ahsta->ahvif->vdev_type == WMI_VDEV_TYPE_STA &&
+-	    !(ath12k_mac_get_fw_stats(ar, &params))) {
+-		signal = arsta->rssi_beacon;
+-		ath12k_fw_stats_reset(ar);
+-	}
++		if (!signal && !ath12k_mac_get_fw_stats(ar, &params)) {
++			signal = arsta->rssi_beacon;
++			ath12k_fw_stats_reset(ar);
++		}
+ 
+-	params.stats_id = WMI_REQUEST_RSSI_PER_CHAIN_STAT;
+-	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL)) &&
+-	    ahsta->ahvif->vdev_type == WMI_VDEV_TYPE_STA &&
+-	    !(ath12k_mac_get_fw_stats(ar, &params))) {
+-		ath12k_mac_put_chain_rssi(sinfo, arsta);
+-		ath12k_fw_stats_reset(ar);
++		params.stats_id = WMI_REQUEST_RSSI_PER_CHAIN_STAT;
++		if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL)) &&
++		    !ath12k_mac_get_fw_stats(ar, &params)) {
++			ath12k_mac_put_chain_rssi(sinfo, arsta);
++			ath12k_fw_stats_reset(ar);
++		}
+ 	}
+ 
+ 	spin_lock_bh(&ar->data_lock);
+@@ -13830,7 +13836,7 @@ void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	peer = ath12k_dp_link_peer_find_by_addr(dp, arsta->addr);
+ 	if (!peer) {
+ 		spin_unlock_bh(&dp->dp_lock);
+-		return;
++		return 0;
+ 	}
+ 
+ 	sinfo->tx_retries = peer->tx_retry_count;
+@@ -13839,13 +13845,32 @@ void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+ 
+ 	spin_unlock_bh(&dp->dp_lock);
++	return 0;
++}
++
++void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  struct ieee80211_sta *sta,
++				  struct station_info *sinfo)
++{
++	ath12k_mac_sta_statistics(hw, vif, sta, sinfo, false);
+ }
+ EXPORT_SYMBOL(ath12k_mac_op_sta_statistics);
+ 
+-void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       struct ieee80211_link_sta *link_sta,
+-				       struct link_station_info *link_sinfo)
++int ath12k_mac_op_sta_statistics_atomic(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					struct ieee80211_sta *sta,
++					struct station_info *sinfo)
++{
++	return ath12k_mac_sta_statistics(hw, vif, sta, sinfo, true);
++}
++EXPORT_SYMBOL(ath12k_mac_op_sta_statistics_atomic);
++
++static int ath12k_mac_link_sta_statistics(struct ieee80211_hw *hw,
 +					  struct ieee80211_vif *vif,
 +					  struct ieee80211_link_sta *link_sta,
-+					  struct link_station_info *link_sinfo);
- 
- 	/**
- 	 * @ampdu_action:
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c2af0599e59c..9ca40c20f185 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1018,31 +1018,63 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
- }
- 
-+static int __ieee80211_dump_station(struct ieee80211_sub_if_data *sdata,
-+				    int idx, u8 *mac,
-+				    struct station_info *sinfo, bool locked)
-+{
-+	struct sta_info *sta;
-+	int ret;
-+
-+	sta = sta_info_get_by_idx(sdata, idx);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	memcpy(mac, sta->sta.addr, ETH_ALEN);
-+	ret = __sta_set_sinfo(sta, sinfo, true, locked);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Add accumulated removed link data to sinfo data for
-+	 * consistency for MLO
-+	 */
-+	if (sinfo->valid_links)
-+		sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+
-+	return 0;
-+}
-+
- static int ieee80211_dump_station(struct wiphy *wiphy, struct wireless_dev *wdev,
- 				  int idx, u8 *mac, struct station_info *sinfo)
++					  struct link_station_info *link_sinfo,
++					  bool atomic)
  {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	int ret = -ENOENT;
+ 	struct ath12k_sta *ahsta = ath12k_sta_to_ahsta(link_sta->sta);
+ 	struct ath12k_fw_stats_req_params params = {};
+@@ -13855,16 +13880,22 @@ void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+ 	s8 signal;
+ 	bool db2dbm;
  
--	lockdep_assert_wiphy(local->hw.wiphy);
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
--	sta = sta_info_get_by_idx(sdata, idx);
--	if (sta) {
--		ret = 0;
--		memcpy(mac, sta->sta.addr, ETH_ALEN);
--		sta_set_sinfo(sta, sinfo, true);
-+	return __ieee80211_dump_station(sdata, idx, mac, sinfo, true);
-+}
- 
--		/* Add accumulated removed link data to sinfo data for
--		 * consistency for MLO
--		 */
--		if (sinfo->valid_links)
--			sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+/* driver must have atomic ops (or none), otherwise we need the mutex */
-+static bool ieee80211_sta_stats_need_mtx(struct ieee80211_local *local)
-+{
-+	const struct ieee80211_ops *ops = local->ops;
- 
--	}
-+	return (ops->sta_statistics && !ops->sta_statistics_atomic) ||
-+	       (ops->link_sta_statistics && !ops->link_sta_statistics_atomic);
-+}
- 
--	return ret;
-+static int ieee80211_dump_station_unlocked(struct wiphy *wiphy,
-+					   struct wireless_dev *wdev,
-+					   int idx, u8 *mac,
-+					   struct station_info *sinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+
-+	if (ieee80211_sta_stats_need_mtx(sdata->local))
+-	lockdep_assert_wiphy(hw->wiphy);
++	/* station interfaces query the firmware, which sleeps */
++	if (atomic && ahsta->ahvif->vdev_type == WMI_VDEV_TYPE_STA)
 +		return -EAGAIN;
-+
-+	guard(rcu)();
-+	return __ieee80211_dump_station(sdata, idx, mac, sinfo, false);
- }
  
- static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
-@@ -1053,30 +1085,54 @@ static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	return drv_get_survey(local, idx, survey);
- }
+-	arsta = wiphy_dereference(hw->wiphy, ahsta->link[link_sta->link_id]);
++	if (!atomic)
++		lockdep_assert_wiphy(hw->wiphy);
++
++	arsta = rcu_dereference_wiphy(hw->wiphy,
++				      ahsta->link[link_sta->link_id]);
  
-+static int __ieee80211_get_station(struct ieee80211_sub_if_data *sdata,
-+				   const u8 *mac, struct station_info *sinfo,
-+				   bool locked)
-+{
-+	struct sta_info *sta;
-+	int ret;
-+
-+	sta = sta_info_get_bss(sdata, mac);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	ret = __sta_set_sinfo(sta, sinfo, true, locked);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Add accumulated removed link data to sinfo data for
-+	 * consistency for MLO
-+	 */
-+	if (sinfo->valid_links)
-+		sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+
-+	return 0;
-+}
-+
- static int ieee80211_get_station(struct wiphy *wiphy,
- 				 struct wireless_dev *wdev,
- 				 const u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	int ret = -ENOENT;
- 
--	lockdep_assert_wiphy(local->hw.wiphy);
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
--	sta = sta_info_get_bss(sdata, mac);
--	if (sta) {
--		ret = 0;
--		sta_set_sinfo(sta, sinfo, true);
-+	return __ieee80211_get_station(sdata, mac, sinfo, true);
-+}
- 
--		/* Add accumulated removed link data to sinfo data for
--		 * consistency for MLO
--		 */
--		if (sinfo->valid_links)
--			sta_set_accumulated_removed_links_sinfo(sta, sinfo);
--	}
-+static int ieee80211_get_station_unlocked(struct wiphy *wiphy,
-+					  struct wireless_dev *wdev,
-+					  const u8 *mac,
-+					  struct station_info *sinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 
--	return ret;
-+	if (ieee80211_sta_stats_need_mtx(sdata->local))
-+		return -EAGAIN;
-+
-+	guard(rcu)();
-+	return __ieee80211_get_station(sdata, mac, sinfo, false);
- }
- 
- static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
-@@ -6255,7 +6311,9 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.del_station = ieee80211_del_station,
- 	.change_station = ieee80211_change_station,
- 	.get_station = ieee80211_get_station,
-+	.get_station_unlocked = ieee80211_get_station_unlocked,
- 	.dump_station = ieee80211_dump_station,
-+	.dump_station_unlocked = ieee80211_dump_station_unlocked,
- 	.dump_survey = ieee80211_dump_survey,
- #ifdef CONFIG_MAC80211_MESH
- 	.add_mpath = ieee80211_add_mpath,
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 49753b73aba2..ffdaf9143b9b 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -633,3 +633,79 @@ int drv_change_sta_links(struct ieee80211_local *local,
- 
- 	return 0;
- }
-+
-+int drv_sta_statistics(struct ieee80211_local *local,
-+		       struct ieee80211_sub_if_data *sdata,
-+		       struct ieee80211_sta *sta,
-+		       struct station_info *sinfo,
-+		       bool locked)
-+{
-+	int ret;
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return 0;
-+
-+	trace_drv_sta_statistics(local, sdata, sta);
-+
-+	if (!locked) {
-+		might_sleep();
-+		lockdep_assert_wiphy(local->hw.wiphy);
-+
-+		ret = 0;
-+
-+		if (local->ops->sta_statistics)
-+			local->ops->sta_statistics(&local->hw,
-+						   &sdata->vif,
-+						   sta, sinfo);
-+	} else {
-+		ret = -EAGAIN;
-+
-+		if (local->ops->sta_statistics_atomic)
-+			ret = local->ops->sta_statistics_atomic(&local->hw,
-+								&sdata->vif,
-+								sta, sinfo);
-+	}
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
-+int drv_link_sta_statistics(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    struct ieee80211_link_sta *link_sta,
-+			    struct link_station_info *link_sinfo,
-+			    bool locked)
-+{
-+	int ret;
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return 0;
-+
-+	if (locked) {
-+		might_sleep();
-+		lockdep_assert_wiphy(local->hw.wiphy);
-+
-+		ret = 0;
-+
-+		if (local->ops->link_sta_statistics)
-+			local->ops->link_sta_statistics(&local->hw,
-+							&sdata->vif,
-+							link_sta,
-+							link_sinfo);
-+	} else {
-+		ret = -EAGAIN;
-+
-+		if (local->ops->sta_statistics_atomic)
-+			ret = local->ops->link_sta_statistics_atomic(&local->hw,
-+								     &sdata->vif,
-+								     link_sta,
-+								     link_sinfo);
-+	}
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return 0;
-+}
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index accd89bbc1fb..83dd15f2daf6 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -617,42 +617,16 @@ static inline void drv_sta_rate_tbl_update(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
--static inline void drv_sta_statistics(struct ieee80211_local *local,
--				      struct ieee80211_sub_if_data *sdata,
--				      struct ieee80211_sta *sta,
--				      struct station_info *sinfo)
--{
--	might_sleep();
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
+ 	if (!arsta)
 -		return;
--
--	trace_drv_sta_statistics(local, sdata, sta);
--	if (local->ops->sta_statistics)
--		local->ops->sta_statistics(&local->hw, &sdata->vif, sta, sinfo);
--	trace_drv_return_void(local);
--}
--
--static inline void drv_link_sta_statistics(struct ieee80211_local *local,
--					   struct ieee80211_sub_if_data *sdata,
--					   struct ieee80211_link_sta *link_sta,
--					   struct link_station_info *link_sinfo)
--{
--	might_sleep();
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
++		return 0;
+ 
+ 	ar = ath12k_get_ar_by_vif(hw, vif, arsta->link_id);
+ 	if (!ar)
 -		return;
--
--	trace_drv_link_sta_statistics(local, sdata, link_sta);
--	if (local->ops->link_sta_statistics)
--		local->ops->link_sta_statistics(&local->hw, &sdata->vif,
--						link_sta, link_sinfo);
--	trace_drv_return_void(local);
--}
-+int drv_sta_statistics(struct ieee80211_local *local,
-+		       struct ieee80211_sub_if_data *sdata,
-+		       struct ieee80211_sta *sta,
-+		       struct station_info *sinfo,
-+		       bool locked);
-+int drv_link_sta_statistics(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    struct ieee80211_link_sta *link_sta,
-+			    struct link_station_info *link_sinfo,
-+			    bool locked);
++		return 0;
  
- int drv_conf_tx(struct ieee80211_local *local,
- 		struct ieee80211_link_data *link, u16 ac,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index d761847b70b3..5c95ffee257d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2822,7 +2822,7 @@ static u32 sta_estimate_expected_throughput(struct sta_info *sta,
- 	u32 duration;
- 	u8 band;
- 
--	conf = sdata_dereference(bss_conf->chanctx_conf, sta->sdata);
-+	conf = rcu_dereference_wiphy(hw->wiphy, bss_conf->chanctx_conf);
- 	if (!conf)
- 		return 0;
- 	band = conf->def.chan->band;
-@@ -2835,15 +2835,15 @@ static u32 sta_estimate_expected_throughput(struct sta_info *sta,
- 	return ((1024 * USEC_PER_SEC) / duration) * 8;
- }
- 
--static void sta_set_link_sinfo(struct sta_info *sta,
--			       struct link_sta_info *link_sta_info,
--			       struct link_station_info *link_sinfo,
--			       struct ieee80211_link_data *link,
--			       bool tidstats)
-+static int sta_set_link_sinfo(struct sta_info *sta,
-+			      struct link_sta_info *link_sta_info,
-+			      struct link_station_info *link_sinfo,
-+			      struct ieee80211_link_data *link,
-+			      bool tidstats, bool locked)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_sta_rx_stats *last_rxstats;
--	int i, ac, cpu;
-+	int i, ac, cpu, ret;
- 	u32 thr = 0;
- 
- 	last_rxstats = sta_get_last_rx_stats(link_sta_info);
-@@ -2857,9 +2857,10 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 
- 	ether_addr_copy(link_sinfo->addr, link_sta_info->addr);
- 
--	drv_link_sta_statistics(sta->local, sdata,
--				link_sta_info->pub,
--				link_sinfo);
-+	ret = drv_link_sta_statistics(sta->local, sdata, link_sta_info->pub,
-+				      link_sinfo, locked);
-+	if (ret)
-+		return ret;
- 
- 	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
- 			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
-@@ -3027,7 +3028,7 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+ 	db2dbm = test_bit(WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT,
+ 			  ar->ab->wmi_ab.svc_map);
+@@ -13873,7 +13904,7 @@ void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+ 	peer = ath12k_dp_link_peer_find_by_addr(ar->ab->dp, arsta->addr);
+ 	if (!peer) {
+ 		spin_unlock_bh(&ar->ab->dp->dp_lock);
+-		return;
++		return 0;
  	}
  
- 	if (tidstats && !cfg80211_link_sinfo_alloc_tid_stats(link_sinfo,
--							     GFP_KERNEL)) {
-+							     GFP_ATOMIC)) {
- 		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++)
- 			sta_set_tidstats(sta, link_sta_info,
- 					 &link_sinfo->pertid[i], i, false);
-@@ -3075,15 +3076,17 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 		link_sinfo->filled |=
- 			BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
+ 	link_sinfo->rx_duration = peer->rx_duration;
+@@ -13934,9 +13965,29 @@ void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+ 			db2dbm ? signal : signal + ATH12K_DEFAULT_NOISE_FLOOR;
+ 		link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
  	}
 +
 +	return 0;
- }
- 
--void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
--		   bool tidstats)
-+int __sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
-+		    bool tidstats, bool locked)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	u32 thr = 0;
--	int i, ac, cpu;
-+	int i, ac, cpu, ret;
- 	struct ieee80211_sta_rx_stats *last_rxstats;
- 
- 	last_rxstats = sta_get_last_rx_stats(&sta->deflink);
-@@ -3097,7 +3100,10 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		sinfo->rx_beacon = sdata->deflink.u.mgd.count_beacon_signal;
- 
--	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
-+	ret = drv_sta_statistics(local, sdata, &sta->sta, sinfo, locked);
-+	if (ret)
-+		return ret;
-+
- 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
- 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
- 			 BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME) |
-@@ -3258,7 +3264,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 	}
- 
--	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_KERNEL)) {
-+	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_ATOMIC)) {
- 		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++)
- 			sta_set_tidstats(sta, &sta->deflink,
- 					 &sinfo->pertid[i], i, true);
-@@ -3355,17 +3361,19 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		for_each_valid_link(sinfo, link_id) {
- 			struct link_station_info *link_sinfo = sinfo->links[link_id];
- 
--			link_sta = wiphy_dereference(sta->local->hw.wiphy,
--						     sta->link[link_id]);
--			link = wiphy_dereference(sdata->local->hw.wiphy,
--						 sdata->link[link_id]);
-+			link_sta = rcu_dereference_wiphy(sta->local->hw.wiphy,
-+							 sta->link[link_id]);
-+			link = rcu_dereference_wiphy(sdata->local->hw.wiphy,
-+						     sdata->link[link_id]);
- 
- 			if (!link_sta || !link_sinfo || !link) {
- 				sinfo->valid_links &= ~BIT(link_id);
- 				continue;
- 			}
--			sta_set_link_sinfo(sta, link_sta, link_sinfo, link,
--					   tidstats);
-+			ret = sta_set_link_sinfo(sta, link_sta, link_sinfo, link,
-+						 tidstats, locked);
-+			if (ret)
-+				return ret;
- 			if (!thr &&
- 			    (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
- 				est_thr += link_sinfo->expected_throughput;
-@@ -3375,6 +3383,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 			sinfo->expected_throughput = est_thr;
- 		}
- 	}
-+
-+	return 0;
- }
- 
- u32 sta_get_expected_throughput(struct sta_info *sta)
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index f409f6a3afa1..8942541375b2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -989,8 +989,14 @@ static inline int sta_info_flush(struct ieee80211_sub_if_data *sdata,
- void sta_set_rate_info_tx(struct sta_info *sta,
- 			  const struct ieee80211_tx_rate *rate,
- 			  struct rate_info *rinfo);
--void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
--		   bool tidstats);
-+int __sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
-+		    bool tidstats, bool locked);
-+
-+static inline void sta_set_sinfo(struct sta_info *sta,
-+				 struct station_info *sinfo, bool tidstats)
-+{
-+	__sta_set_sinfo(sta, sinfo, tidstats, true);
 +}
++
++void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_link_sta *link_sta,
++				       struct link_station_info *link_sinfo)
++{
++	ath12k_mac_link_sta_statistics(hw, vif, link_sta, link_sinfo, false);
+ }
+ EXPORT_SYMBOL(ath12k_mac_op_link_sta_statistics);
  
- void sta_set_accumulated_removed_links_sinfo(struct sta_info *sta,
- 					     struct station_info *sinfo);
++int ath12k_mac_op_link_sta_statistics_atomic(struct ieee80211_hw *hw,
++					     struct ieee80211_vif *vif,
++					     struct ieee80211_link_sta *link_sta,
++					     struct link_station_info *link_sinfo)
++{
++	return ath12k_mac_link_sta_statistics(hw, vif, link_sta, link_sinfo,
++					      true);
++}
++EXPORT_SYMBOL(ath12k_mac_op_link_sta_statistics_atomic);
++
+ int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
+ 					   struct ieee80211_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
+index aba98afd4365..530672fd8da7 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.h
++++ b/drivers/net/wireless/ath/ath12k/mac.h
+@@ -311,10 +311,18 @@ void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  struct ieee80211_sta *sta,
+ 				  struct station_info *sinfo);
++int ath12k_mac_op_sta_statistics_atomic(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					struct ieee80211_sta *sta,
++					struct station_info *sinfo);
+ void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_link_sta *link_sta,
+ 				       struct link_station_info *link_sinfo);
++int ath12k_mac_op_link_sta_statistics_atomic(struct ieee80211_hw *hw,
++					     struct ieee80211_vif *vif,
++					     struct ieee80211_link_sta *link_sta,
++					     struct link_station_info *link_sinfo);
+ int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+ 				    struct ieee80211_channel *chan,
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+index aec7c652808c..8a721afa05a3 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
+@@ -1207,7 +1207,9 @@ static const struct ieee80211_ops ath12k_ops_wifi7 = {
+ 	.get_survey			= ath12k_mac_op_get_survey,
+ 	.flush				= ath12k_mac_op_flush,
+ 	.sta_statistics			= ath12k_mac_op_sta_statistics,
++	.sta_statistics_atomic		= ath12k_mac_op_sta_statistics_atomic,
+ 	.link_sta_statistics		= ath12k_mac_op_link_sta_statistics,
++	.link_sta_statistics_atomic	= ath12k_mac_op_link_sta_statistics_atomic,
+ 	.remain_on_channel              = ath12k_mac_op_remain_on_channel,
+ 	.cancel_remain_on_channel       = ath12k_mac_op_cancel_remain_on_channel,
+ 	.change_sta_links               = ath12k_mac_op_change_sta_links,
 -- 
 2.56.0
 
