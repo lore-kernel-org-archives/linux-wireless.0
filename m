@@ -1,71 +1,74 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E85D3CE4B1
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 21:39:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2943E7630
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 21:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791409155; cv=none; b=hKCB+vVZQTWWyegDFt/mzMlmclMFIAwJZyy8mHGBhfg+R4KRpZcwgwgRpjSi/ClK7LMWZ9nvVg1vlwddHBB1sVG6/lDAOMws1rfdQ8gSYe7RnMyS8ZpkPZ9VXm69A1AlWR0sMgXHz5gKfcTQVPaGw/y69JnijJXlqEo6WUch/Qs=
+	t=1791409160; cv=none; b=NNXTDJYgAkFMAG9KHUNCSaHYkQP26qZsHueMcfkIuWhMstd/C71J3rC01BADoTRzpWVUHt1oJB7Ck2DQugrcYtfzuM4yLKmrPP9VyiyPYHao35jSbNCIzNssajrw2/v1rnp2BsoZy7+nqCxswdyiWeu88ZJ1fJjiS/LxbD8ckOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791409155; c=relaxed/simple;
-	bh=jg0nE0/8qv9inVm5vneqL79dhm6Knkaz76y/tAUD3ak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aKNXF4UcPiQdGTHqfamHsJuqF0FY+zUG1fkLLDVAsozik73TT5Qhx+NbG95ZmXMPA3M/Py6RyahUNw745qTwDMYMsBa6iu3A9OPTrCBkXpJvwaUYCCq1EkQwIqT22YQC2ov4BtiHqK0mg4+ByFflI1MPfyz++LRe4wQVxwT1faA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hons+nf8; arc=none smtp.client-ip=209.85.167.52
+	s=arc-20240116; t=1791409160; c=relaxed/simple;
+	bh=qv9rxTd0Hc9BHi43iLj6LCNvrEmdLH9xqf5EhgvBuGk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P8iFnYCa+Mw3GTf3Ig8pjN/2nJDNfkpAaY6HqRpEKqxT0rS6Rxk3tVGhQhUsAmv72l+NQXQg5kcKNpPJvzIxnA5UNVfzRefD7qmki/8qU1Ia3ZoiLuGTxxzTvetbd1OAg7yXCXRib/7N8iAw2wbKU7Zev+Rt9nyfGcYDAOzQFRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JA2nBwfi; arc=none smtp.client-ip=209.85.208.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hons+nf8"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5b2b92065ffso4012940e87.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 14:39:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JA2nBwfi"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a9787a156eso18233671fa.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 14:39:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791409152; x=1792013952; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+Z8CfWUeO+BpA0EWxBPHQDHuoY5+JehiGP0c5OUk/IA=;
-        b=Hons+nf83hyaQZWf9f+cuh8t/CExzeZHLKHpVujOuMKbU+T/p9eS44U5K7UHSKrzZ/
-         GRFyMuxAQdN9PxPUe8m99Ynn798tuM8iETK7Zn0FNoMy1Bb+eidFd76aXxMClC+dSfE0
-         N98CDMiWKrwB/GYDErQf0afD0VAmAWzmmRr6BYFuOQw6+RsyfLRdr7W76yJkmpLzAmkq
-         Cm4ak7KDtyUId2fmgEeFkeSJPjpQWs8tA1dfj7AEJK3G9d52FiOnjgvXDXXBcjEAicJd
-         oT0rhPgv/P132JCLwUt7aASf9xhrwB3gtR3m0/omisgyO+IGRgNTGzOe0Kz8G7H7qWvG
-         apBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791409152; x=1792013952;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1791409157; x=1792013957; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=+Z8CfWUeO+BpA0EWxBPHQDHuoY5+JehiGP0c5OUk/IA=;
-        b=FdrVDPRYG5X8b4jVThJuFTjrIb4XlDU8QYQjdJ7Dzd62+iAh/v3Il5GlAsVyDlyK2C
-         +EENIMhH84g2d4MhDFv/w3eobLYlVy16l1QuQ6IPUyISY6p7fQB8sXgyyNv2N6m3RwTl
-         kWwNmMO8PQcOPSjRLR5uEIqRIfts6D1F+eH99JWy7ddu87RD5Gwvah4t0t3uVVUEwSrT
-         AKIJuOLaPcdwqa/39jnRZkzDLFGmnBNG6QcLu4NNtg1JpkyCoNR17ajSpnBftOf9hEKP
-         j15XVPo1qbRiggNeBLXPyB78XQsJm9r6pb/MTr0z0ma987++rTwMNfas8aFB3EmYXR1l
-         V+5g==
-X-Gm-Message-State: AFq9FYJCSQlHQ7IMjY3fqPsm2ajxSfqzPCAp7zu5HyFlNbjBU7/0Ol9H
-	C86Ce4VzNKkvAdTN9OUTjpC0c9NCwQYZHfTpOjjsNpdUEd/eX6RjjoH/ofWhj+2NLb0rVUCszJU
-	=
-X-Gm-Gg: AYBFou2J+VUQZHIIWTBfXHYzUwRlwegMqksIsgRqPs6GAJuPXl/E24Jar8ONqpCNeMt
-	WUob3HRrbBYURK5VAUiG/GdOr7Pa7Yi4Sqk9zKwdSMTqrdR+N9Yanivg9EUGbwi2QXrUTcmvvcm
-	VrgAfAkbKC105E4a19MFtGROl7cOdq27lBpBerlHyz1a9grAhXiNIft1ai2yxfGo2uwz998Usl0
-	+DL43BXZcNojY53PSQ9+KcSPeodoc3RauITgoChg7cElbRBJO5/0GEJtR6DyyREhdgBrQ0oUt6T
-	A1vqsgEiEBj7bSJM4lY5ViahXnFYXfOnR4nKLcRfYYHHYTmT9tQ8+Acsr0G09hOwjo66Gb0M56t
-	nSRDGQEncW2j1RTtnYndbnIfkdawIvY8QnMlpsr0j2w+QvI5EQdPXmVJXqEDOksvbFOAeaAh/pp
-	1J/DL7CvItNkNGxTDemnGn/BtreCohJwWbeZIJIELntFnnT5VEM0Xm41xRFIO6cjDnB1Cef0kno
-	zmM
-X-Received: by 2002:a05:6512:33d3:b0:5b6:1a7c:aa1a with SMTP id 2adb3069b0e04-5bcd07442b0mr1332608e87.50.1791409152110;
-        Wed, 07 Oct 2026 14:39:12 -0700 (PDT)
+        bh=HL50aAuTc7iXXkRUx082+O87VcrVi0CqO+VpMmcaNUY=;
+        b=JA2nBwfi/H/K7ADaoAkZqU2LjUrJqrRyPR/rh7ziKF4/eeTLKeASp3OSEgbXa5oz+u
+         0ewmYHXAA4u7wWU212so66fPxeD/FFFCJMuHDAYBXlNB7+9xaRL87dPOAMrk42Cl+krL
+         sa81raBz1Y4Ja/Fv+8vn/Q/58w/EFBgXcg6oTGslvrKn8Qyae5ONutLgjbRCXoGaV1AI
+         XKF4fmvBkVNZknOo9Xi6inC1nOoSyTPNIFCOc2nD2u5Pk89PF93S0l6/pLEY139RY0hc
+         oz0S2IeLLiAWR5UXwi1GES/9a55d6l3JdefUJmGnfuKbI3xEkZltPV+26dFMR7p7LIOx
+         sU/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791409157; x=1792013957;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HL50aAuTc7iXXkRUx082+O87VcrVi0CqO+VpMmcaNUY=;
+        b=ZLbBne9pY8cfOU2qdD6JSooRZEfqqOOtSO06DcVz71JmUD4PWA+rLkGZp1CrWZ10Ll
+         gH4I493oe29JF80DNHC04aZu0QfzgYZtlVxbQMZd5yvHMiaDWopsGRLs4z0RTKXggajA
+         O8XlzeU3VFWevetij1RiCD8838kHNqhAJSSBC8bs2e4b0dH+pbb2zYTz3Xd1nGBfQV4n
+         ZkiCfd/rz9/XDo+dyOnDFzaTJbf5BI0kKuaJP/KfDm3Dfg9WaMbyeRXzRN2Y5ox5ibwr
+         j0Acv1rNzqChIimFA1EEyxQvdwgbmljHj/WULLEhYXUBBRJABJjgTYOq4tNH8VNKZ2u2
+         XvWg==
+X-Gm-Message-State: AFq9FYKBdrINwDZHBRlRXdrT2TriYQOYI8962xx7sX5PFf3Q86sJPLza
+	33/P6UiRi0axZ6z5eESOFjHILtotoR0WD5BC+V0BA8NuLduMOsCHStym
+X-Gm-Gg: AYBFou11p1SY12vfQwlnV6FluYkYAGj2KWiAlG4pHwuNAK68YSxWVp08iTSbLM7c4F4
+	v2N01XzeoU+63ZkFRGoG11lCWOXGp5nJcwknR//L0vjrD0HkiUeNZA3uMo4QaaoB9xSrW21G8TD
+	rdE6r+1QuUelVIBX8HSUeXNSs1FUMxowADbKHnWS48oQ3yQxk6vKaPrnSVdw5BIJctK/t1c/+7F
+	vjkCzaqoo75Id02IDpDp+4ffhdusV2aOSRNO82VKEAHDy8+cXOhkSvUVl/bw3OJgY1t5FQqGGq2
+	84xXXdM+0Wu6YDAzRDaHG1v0NgZA8m1ToGHdUyGNUcsHe8UD4bO0OhjIx4ZyPvn0iGOWDu7lIiA
+	xsRkEZWTswhuaHUMLLB48Mn6if/1c/I2Mg92W8iM8yg20iT/+9BUKV7+F0SLfXCHm//TuP3K5yp
+	r3saogFn4by9BY0Pxr6OD3pmhsBEGFcdyZfmlaz2s/znYPEu+7IROCG0BPFXsxj3W/92EQgnyNn
+	Ok=
+X-Received: by 2002:a2e:bc0c:0:b0:3a6:55fa:a63 with SMTP id 38308e7fff4ca-3a9a2cf9a53mr8216851fa.16.1791409156559;
+        Wed, 07 Oct 2026 14:39:16 -0700 (PDT)
 Received: from Quarx2k-PC.lan ([92.124.138.168])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a9ae563df4sm1241411fa.30.2026.10.07.14.39.10
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a9ae563df4sm1241411fa.30.2026.10.07.14.39.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 14:39:11 -0700 (PDT)
+        Wed, 07 Oct 2026 14:39:16 -0700 (PDT)
 From: Nikolai Semendiaev <agent00791@gmail.com>
 To: ath12k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
 	jjohnson@kernel.org,
 	wabsie@gmail.com
-Subject: [PATCH v2 0/2] wifi: ath12k: isolate RXDMA page-fragment caches
-Date: Thu,  8 Oct 2026 03:38:27 +0600
-Message-ID: <cover.1791408913.git.agent00791@gmail.com>
+Subject: [PATCH v2 1/2] wifi: ath12k: make external IRQ control idempotent
+Date: Thu,  8 Oct 2026 03:38:28 +0600
+Message-ID: <ccca0d5d087b862c3b41ab4d3c5849ca0dc2d32b.1791408913.git.agent00791@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1791408913.git.agent00791@gmail.com>
+References: <cover.1791408913.git.agent00791@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,61 +77,77 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+The AHB external IRQ helpers change the hardware IRQ state even when
+NAPI is already in the requested state. PCI has a device-wide enabled
+bit guard, but also changes each group's IRQ state outside its NAPI
+state check.
 
-This series adapts Mark Ruvald Pedersen's ath11k page-fragment cache
-changes to ath12k. On QCN9274, sustained WAN traffic
-can exhaust memory when Ethernet and Wi-Fi run on the same CPU.
-Long-lived RXDMA buffers share per-CPU page-fragment caches with other
-network users and can pin mostly unused 32-KiB backing pages.
+Tie each group's hardware IRQ transition to its NAPI state transition.
+Mask IRQs before disabling NAPI and enable NAPI before unmasking IRQs.
+This permits an extra IRQ disable before crash-recovery RXDMA teardown
+without increasing the IRQ disable depth.
 
-Patch 1 makes external IRQ transitions follow the NAPI state so that
-crash recovery can safely quiesce RXDMA before teardown. Patch 2 gives
-regular and monitor RXDMA rings private caches and drains them after
-their buffers have been released. It also fixes alignment of empty
-skbs and preserves monitor status buffer capacity after alignment.
+Based on Mark Ruvald Pedersen's ath11k IRQ lifecycle fix.
 
-The series is based on ath.git main at:
-388d3c42e8aba1cfc3c6d2c52877a46d8cf740db (Linux 7.3-rc5).
-Runtime measurements were made on Linux 6.18.54, with Ethernet and
-Wi-Fi IRQs on CPU0:
+Link: https://lore.kernel.org/linux-wireless/20260719215817.2468580-3-wabsie@gmail.com/
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
 
-  Hardware: QCN9274 hw2.0 PCI
-  Firmware: WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+Signed-off-by: Nikolai Semendiaev <agent00791@gmail.com>
+---
+ drivers/net/wireless/ath/ath12k/ahb.c | 4 ++--
+ drivers/net/wireless/ath/ath12k/pci.c | 6 ++----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-Two 45-second downloads showed peak order-3 memory growth of 54 and
-68 MiB. An earlier unpatched 45-second test grew by 187 MiB, and longer
-unpatched downloads reached OOM.
-
-A five-minute download at about 660 Mbps transferred 24.8 GB without
-OOM. Peak growth was 105 MiB, falling to 35 MiB above baseline after
-one minute idle.
-
-Thanks,
-Nikolai
-
-Changes in v2:
-- Include linux/bug.h before linux/page_frag_cache.h in dp.c to make
-  WARN_ON_ONCE available on Alpha. This fixes the build error reported
-  by the kernel test robot:
-  https://lore.kernel.org/oe-kbuild-all/202610072103.1v2wWX3z-lkp@intel.com/
-
-Nikolai Semendiaev (2):
-  wifi: ath12k: make external IRQ control idempotent
-  wifi: ath12k: use private page-frag caches for RXDMA rings
-
- drivers/net/wireless/ath/ath12k/ahb.c    |  4 +--
- drivers/net/wireless/ath/ath12k/core.c   |  3 ++
- drivers/net/wireless/ath/ath12k/dp.c     |  4 +++
- drivers/net/wireless/ath/ath12k/dp.h     |  3 ++
- drivers/net/wireless/ath/ath12k/dp_mon.c | 29 +++++++++------
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 45 +++++++++++++++++++++---
- drivers/net/wireless/ath/ath12k/dp_rx.h  |  2 ++
- drivers/net/wireless/ath/ath12k/pci.c    |  6 ++--
- 8 files changed, 74 insertions(+), 22 deletions(-)
-
-
-base-commit: 388d3c42e8aba1cfc3c6d2c52877a46d8cf740db
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+index 85360365a..a5eaf5bf5 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/ahb.c
+@@ -182,8 +182,8 @@ static void __ath12k_ahb_ext_irq_disable(struct ath12k_base *ab)
+ 	for (i = 0; i < ATH12K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath12k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 
+-		ath12k_ahb_ext_grp_disable(irq_grp);
+ 		if (irq_grp->napi_enabled) {
++			ath12k_ahb_ext_grp_disable(irq_grp);
+ 			napi_synchronize(&irq_grp->napi);
+ 			napi_disable(&irq_grp->napi);
+ 			irq_grp->napi_enabled = false;
+@@ -326,8 +326,8 @@ static void ath12k_ahb_ext_irq_enable(struct ath12k_base *ab)
+ 		if (!irq_grp->napi_enabled) {
+ 			napi_enable(&irq_grp->napi);
+ 			irq_grp->napi_enabled = true;
++			ath12k_ahb_ext_grp_enable(irq_grp);
+ 		}
+-		ath12k_ahb_ext_grp_enable(irq_grp);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index af0e882fd..d2a7b6719 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -458,9 +458,8 @@ static void __ath12k_pci_ext_irq_disable(struct ath12k_base *ab)
+ 	for (i = 0; i < ATH12K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath12k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 
+-		ath12k_pci_ext_grp_disable(irq_grp);
+-
+ 		if (irq_grp->napi_enabled) {
++			ath12k_pci_ext_grp_disable(irq_grp);
+ 			napi_synchronize(&irq_grp->napi);
+ 			napi_disable(&irq_grp->napi);
+ 			irq_grp->napi_enabled = false;
+@@ -1108,9 +1107,8 @@ void ath12k_pci_ext_irq_enable(struct ath12k_base *ab)
+ 		if (!irq_grp->napi_enabled) {
+ 			napi_enable(&irq_grp->napi);
+ 			irq_grp->napi_enabled = true;
++			ath12k_pci_ext_grp_enable(irq_grp);
+ 		}
+-
+-		ath12k_pci_ext_grp_enable(irq_grp);
+ 	}
+ 
+ 	set_bit(ATH12K_FLAG_EXT_IRQ_ENABLED, &ab->dev_flags);
 -- 
 2.43.0
 
