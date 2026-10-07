@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD523E49EC;
-	Wed,  7 Oct 2026 20:51:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC29F392836;
+	Wed,  7 Oct 2026 20:58:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791406311; cv=none; b=CjTzWgYj3nAeHTwYqHyXRLz0uBypO24I2nCKwCxQsYNwljXsi0d1nWvEOCL+srCSOzqq3nbiQ72c/pqMExgr4Z9ykiOg8NJwKff2xwICs5bIPSANBs3GdoPt7NqIwW0cPs9KmXMSBfeYapSyLP1rROHCzr7p/toj6KXHC19ZIRU=
+	t=1791406714; cv=none; b=OgRwUZDVGDh/wvbjrc0nu020wZBUmaaM2a9xcxx9LZkGWuWxpzt8YUyV5TG5dkVJlETBEcSAHC4tUkOmnNAK/0XDv39/35sdJzOpbr0Hjdlo31nYyDWTBWkdO6qq5i2awUpwn7WCrxluoQEFLld0CXTqCJlqJTT15xIZk4SSVe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791406311; c=relaxed/simple;
-	bh=xB8eJcFZMizyvL+JJCNxvUQQ0QVIj9ms6HZeWAihsR8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OMPxfpRG9JfOjBTzXmlI5nYqjoIBSdd9ZQ85mkLN52DkBhppw3EGthinT3RWRvvf7ZpdgT5eUDixJ5fzi22EPafkjVA3rwx/qVvM7fKNTMXpIxa5FWPKSyUyDgApojecVdLDX386kcLVq88QHjsZ9SapbInMh7TVg2/wcawHspQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=accQB3ML; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1791406714; c=relaxed/simple;
+	bh=iy1LS0C2QMrCaLxAqAZmVWmZt3eW/d2g8ku+6sdlfWI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ngULOMSXV65Ukp76RMwBWOV9km6D7VAWfvmAtpzJijBvDH8GweDbUZIeoIROyk6VAx/q+/vaI/4Hm/DFQQlgecsRN1vHitK2rM7XlFMqrNHWjVjjqkrTtF6V0W8DDdJB4c9JXEeMw+0qUX0+id1eRjSba/zfGmGNDeuQQ4ulStw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=M4G1KOnd; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="accQB3ML"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="M4G1KOnd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:Content-Type:
 	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
 	Resent-Message-ID:In-Reply-To:References;
-	bh=Z+zlD0ZVD6h7lZsXTpDTosXtwOwiTccJ5XNukNMEl84=; t=1791406309; x=1792615909; 
-	b=accQB3MLENoFz0f/seyelBGU95ed9Z61RCjol7QzNDcrAyF56tPAKK2iFphu9mN2v3nMI8sCAdv
-	wo2XtH30X8KDftjENt4JmCiaujglq2wK5HRotwRTY2B6xNGeYgwWR8Qr3P+UbN7NBKQopGTpqxDUM
-	AqCdKfkWIlg5y+oZVut8JM5yxernssqbaVsmw7jEJ1Tm7Fx655NSrGsYMvicotCoOnsrNkP9CYgwH
-	+8oXkOiW9g3E43nPzvIEstIjlUeusPIgZR5NJ2z0i1TiR1gmAlA5sdNIa9S5tKn8yD5RZOhxxtHO8
-	KRAcfoiQNe4FPIFiMx8ZivEHLtXW57m7mb6Q==;
+	bh=ay4z3GniYzsCTi7q2jajnUo8JDHtZuNjIvYlZVR0uUI=; t=1791406712; x=1792616312; 
+	b=M4G1KOndAw3qucF2jzYAFHg93TS1sEjndR4pWKgYQ9i4omWEES9wKYvfZCPBHmJFZGrzWxRrvQF
+	/7y3VGyr/Z3AV3k6zP0a3nv6OYPYakSqVCaaVjJ5PyEIJCu5/RmwT4ECirAQp/j4xesLkqAvAFmis
+	YJ0TjKdvZh9WMuzOBFblH7qSP2Yv00WQZVH8RNpylyf5jWK3G0QAHvwtunUZJRavVSEnhiwXzLZwq
+	7qjPYSNpyVzWo9Zk2ivkBgy//x3qYIVEJeWZErQM2Yaf139L+xHIsXgO7KgoN9J/kO1BtNOyJI6PK
+	zMH1fnkzUfbXPwrNLtRnT/Vdrq/NPJ6rXemw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xEYc7-00000008OEM-0Gc0;
-	Wed, 07 Oct 2026 22:51:47 +0200
+	id 1xEYib-00000008OSN-48DJ;
+	Wed, 07 Oct 2026 22:58:30 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: netdev@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [GIT PULL] wireless-2026-10-07
-Date: Wed,  7 Oct 2026 22:49:59 +0200
-Message-ID: <20261007205143.464714-3-johannes@sipsolutions.net>
+Subject: [GIT PULL] wireless-next-2026-10-07
+Date: Wed,  7 Oct 2026 22:57:00 +0200
+Message-ID: <20261007205827.467974-3-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -50,12 +50,13 @@ X-malware-bazaar: not-scanned
 
 Hi,
 
-So ... I pushed back as hard as I could, and Felix reduced
-by ~25 patches, and I told everyone I need to get fixes much
-earlier in the cycle.
+Nothing much going on in wireless-next. However, next time
+I hope to land my RTNL-redux series which will (almost)
+completely wean the wireless stack off the RTNL, except in
+places where we need it for netdev register/unregister/etc.
 
-Nevertheless, I ended up with 25 fixes (not counting merges).
-Hope that's OK, otherwise we'll try to whittle it down more.
+I need to see what's going on with the per-netns mutex now,
+can we already use that instead?
 
 Please pull and let us know if there's any problem.
 
@@ -64,109 +65,170 @@ johannes
 
 
 
-The following changes since commit d24e8ac715de2e16a53c144005b1863660a5fbea:
+The following changes since commit f49defea7668d8c68ec19fa085ef3da6075561c7:
 
-  Merge tag 'net-7.3-rc6' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-10-01 06:41:59 -0700)
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-10-01 11:02:44 -0700)
 
 are available in the Git repository at:
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2026-10-07
+  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git tags/wireless-next-2026-10-07
 
-for you to fetch changes up to 9727d1c4e1c971fc42b049b645fdda6852758835:
+for you to fetch changes up to b6f009284138884c4b07bbef7b07d780aa9b5daf:
 
-  Revert "wifi: libertas: reject short monitor TX frames" (2026-10-07 22:48:10 +0200)
-
-----------------------------------------------------------------
-Some more fixes:
- - ath12k: revert broken panic handler
- - mt76: SAR/MLO/STA/NAPI fixes
- - nxpwifi: race fixes, validation
- - libertas: revert botched frame size fix
- - brcmfmac: fix crash on P2P removal
- - mac80211: fix WARN on downlink OFDMA frames
+  wifi: mac80211: use the AP address as RA for a 4-addr MLO station (2026-10-06 21:05:18 +0200)
 
 ----------------------------------------------------------------
-Aaron Ma (1):
-      wifi: mt76: mt7925: restore the legacy BSS after MLO teardown
+Not too much going on:
+ - brcmfmac: plenty of improvements
+ - mac80211: NAN Instant Communications support
+ - iwlegacy: remove sysfs
+ - nxpwifi: IW610 support
+ - couple of fixes for recent regressions
 
-Cristian Papa (1):
-      wifi: mt76: mt7603: initialize global station WCID
+----------------------------------------------------------------
+Aamir Ahmed (1):
+      wifi: nxpwifi: validate variable IE lengths in beacon parser
 
-David Carlier (2):
-      wifi: nxpwifi: fix inverted check in Tx BA stream entry deletion
-      wifi: nxpwifi: do not delete Rx reorder entries under RCU
+Aaradhana Sahu (1):
+      wifi: mac80211: Do not report BSS parameters in AP station info
 
-Devin Wittmayer (2):
-      wifi: mt76: mt7925: don't put the band auto marker in TGID
-      wifi: mt76: mt792x: pick the SAR table layout from the table itself
+Aloka Dixit (2):
+      Revert "wifi: mac80211: do not use old MBSSID elements"
+      wifi: mac80211: remove redundant null check in ieee80211_assign_beacon()
 
-Felix Fietkau (4):
-      wifi: mt76: mt7996: program a link again if the driver holds it
-      wifi: mt76: mt7996: take over connection monitoring
-      wifi: mt76: account non-AQL frames per peer rather than per link
-      wifi: mt76: use ALTX queue for packets to disassociated stations
+Andrei-Alexandru Bleortu (1):
+      wifi: mac80211: keep the BSS color while a color change is pending
 
-François Roux (1):
-      wifi: mac80211: don't estimate airtime for unsupported rate widths
+Benjamin Drung (2):
+      wifi: brcmfmac: Add per-board clm_blob firmware binaries
+      wifi: brcmfmac: Add clm_blob firmware for brcmfmac43456-sdio
 
-Johannes Berg (4):
-      Merge tag 'mt76-fixes-2026-10-05' of https://github.com/nbd168/wireless
-      Merge tag 'nxpwifi-fixes-20261006-v2' of https://github.com/nxp-upstream/nxpwifi-next
-      Merge tag 'ath-current-20261006' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
-      Revert "wifi: libertas: reject short monitor TX frames"
+Dan Carpenter (3):
+      wifi: b43: don't pass unterminated string to sscanf()
+      wifi: b43legacy: debugfs: NUL terminate string in debugfs
+      wifi: carl9170: NUL terminate string in debugfs
 
-Junjie Cao (1):
-      wifi: mt76: mt792x: treat 0xff ACPI SAR entries as no limit
+Dominic White (1):
+      wifi: cfg80211: allow zero HE OBSS PD offsets
 
-Linmao Li (7):
-      wifi: nxpwifi: protect sta_list against concurrent add and delete
-      wifi: nxpwifi: delete the station entry on the uAP deauth event
-      wifi: nxpwifi: wait for the wakeup timer before the adapter is freed
-      wifi: nxpwifi: free the aggregation buffer when the RA list disappears
-      wifi: nxpwifi: zero the channel statistics array
-      wifi: nxpwifi: fix the authentication frame length handling
-      wifi: nxpwifi: handle authentication frame allocation failures
+Felix Fietkau (2):
+      wifi: mac80211_hwsim: reserve headroom for software encryption
+      wifi: mac80211: use the AP address as RA for a 4-addr MLO station
 
-Lu Huang (1):
-      wifi: mt76: mt7996: fix uninitialized buf read in mt7996_variant_fem_init()
+Girish Rudrappa (1):
+      wifi: brcmfmac: Set extsae_pwe parameter to Infineon firmware in SAP mode
 
-Michele Dionisio (1):
-      wifi: brcmfmac: fix P2P device removal race in brcmf_detach()
+Heyang Tan (2):
+      wifi: nxpwifi: bound histogram debugfs output
+      wifi: nxpwifi: bound debug info output
 
-Nicolas Cavallari (1):
-      wifi: mt76: mt7915: disable rx napi when removing device
+Huang Xiangping (1):
+      wifi: cfg80211: process pending events before connect/disconnect requests
 
-Tao Gong (1):
-      wifi: mt76: mt7996: fix struct mt7996_mcu_wed_rro_ba_delete_event layout
+Ilan Peer (11):
+      wifi: cfg80211: nan: add Instant Communication support
+      wifi: mac80211: nan: Update NAN configuration copy
+      wifi: cfg80211: nan: check Rx registration for NAN beacons
+      wifi: cfg80211: do not use NAN beacons to update the BSS table
+      wifi: mac80211: nan: allow Rx registration for NAN beacons
+      wifi: mac80211: accept NAN beacons only when IC is enabled
+      wifi: ieee80211: add NAN service ID list attribute definitions
+      wifi: mac80211_hwsim: nan: use ieee80211_is_nan_beacon() helper
+      wifi: mac80211_hwsim: nan: prepare for more configurable NAN settings
+      wifi: mac80211_hwsim: nan: Handle more of the NAN configuration
+      wifi: mac80211_hwsim: add NAN Instant Communication support
 
-Yingying Tang (1):
-      Revert "wifi: ath12k: add panic handler"
+Janne Grunau (1):
+      wifi: brcmfmac: cfg80211: Report port_authorized for 4-way HS offload
 
- drivers/net/wireless/ath/ath12k/core.c             |  33 +----
- drivers/net/wireless/ath/ath12k/core.h             |   3 -
- drivers/net/wireless/ath/ath12k/hif.h              |   9 --
- drivers/net/wireless/ath/ath12k/pci.c              |   8 --
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  27 ++++-
- drivers/net/wireless/marvell/libertas/tx.c         |   7 --
- drivers/net/wireless/mediatek/mt76/mt76.h          |   7 ++
- drivers/net/wireless/mediatek/mt76/mt7603/init.c   |   1 +
- drivers/net/wireless/mediatek/mt76/mt7915/init.c   |   6 +
- drivers/net/wireless/mediatek/mt76/mt7915/main.c   |   2 +
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c    |   3 +-
- drivers/net/wireless/mediatek/mt76/mt7925/main.c   |  12 ++
- .../net/wireless/mediatek/mt76/mt792x_acpi_sar.c   | 134 ++++++++++++++-------
- .../net/wireless/mediatek/mt76/mt792x_acpi_sar.h   |   2 +
- drivers/net/wireless/mediatek/mt76/mt7996/init.c   |   3 +-
- drivers/net/wireless/mediatek/mt76/mt7996/main.c   |  10 +-
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.h    |   3 +
- drivers/net/wireless/mediatek/mt76/tx.c            |  14 ++-
- drivers/net/wireless/nxp/nxpwifi/11n.c             |   2 +-
- drivers/net/wireless/nxp/nxpwifi/11n_aggr.c        |   1 +
- drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c   |  11 +-
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c        |  31 +++--
- drivers/net/wireless/nxp/nxpwifi/init.c            |   2 +-
- drivers/net/wireless/nxp/nxpwifi/main.c            |   4 +-
- drivers/net/wireless/nxp/nxpwifi/uap_event.c       |   1 +
- drivers/net/wireless/nxp/nxpwifi/util.c            |   8 +-
- net/mac80211/airtime.c                             |  18 +++
- 27 files changed, 230 insertions(+), 132 deletions(-)
+Jeff Chen (6):
+      mmc: sdio: add NXP IW610 device ID
+      mmc: core: add NXP IW610 base ID and block size quirk
+      wifi: nxpwifi: Add support for SDIO-based IW610
+      wifi: nxpwifi: Limit channel width based on firmware capability
+      wifi: nxpwifi: fix return value check in change_vif_to_sta/ap
+      wifi: nxpwifi: fix missing error codes in _nxpwifi_fw_dpc()
+
+Johannes Berg (7):
+      wifi: mac80211: fix TPE in channel switch wrapper parsing
+      wifi: ieee80211: type-check (extended) element functions
+      wifi: cfg80211: add protected TWT assoc flag
+      wifi: mac80211: fix and clean up protected TWT support
+      wifi: mac80211: set SP in reg connectivity with any channel
+      Merge tag 'nxpwifi-next-20260929-v3' of https://github.com/nxp-upstream/nxpwifi-next
+      wifi: mac80211: fix non-MLD link ID handling
+
+Manish Dharanenthiran (1):
+      wifi: mac80211: Guard FILS discovery and unsolicited broadcast probe response
+
+Nathan Chancellor (1):
+      wifi: brcmsmac: Adjust txpwrindex value in nphy_ipa_rxcal_gaintbl_2GHz
+
+Pengpeng Hou (1):
+      wifi: brcmfmac: bound NVRAM comment parsing
+
+Raj Ojha (1):
+      wifi: mac80211: acquire wiphy lock for unlisted sdata teardown
+
+Sebastian Reichel (1):
+      wifi: brcmfmac: Improve D3 substate entering timeout handling
+
+Stanislaw Gruszka (3):
+      wifi: iwlegacy: set debug level using debugfs
+      wifi: iwlegacy: 4965: remove custom sysfs files
+      wifi: iwlegacy: 3945: remove custom sysfs files
+
+Vinícius Ramon Fontanela (1):
+      wifi: brcmfmac: allow ISO3166 fallback for BCM4350
+
+ drivers/mmc/core/quirks.h                          |   3 +
+ drivers/net/wireless/ath/carl9170/debug.c          |   5 +-
+ drivers/net/wireless/broadcom/b43/debugfs.c        |   2 +-
+ drivers/net/wireless/broadcom/b43legacy/debugfs.c  |   2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  98 ++++-
+ .../broadcom/brcm80211/brcmfmac/cyw/core.c         |   6 +
+ .../broadcom/brcm80211/brcmfmac/firmware.c         |  13 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/fwvid.h   |  11 +
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  10 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |   3 +-
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        |   2 +-
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c     | 441 +--------------------
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c     | 121 ------
+ drivers/net/wireless/intel/iwlegacy/debug.c        |   3 +
+ drivers/net/wireless/intel/iwlwifi/mld/iface.c     |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |   3 +-
+ drivers/net/wireless/nxp/nxpwifi/11ax.c            |   2 +
+ drivers/net/wireless/nxp/nxpwifi/11n.c             |   4 +-
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c        |   6 +-
+ drivers/net/wireless/nxp/nxpwifi/debugfs.c         |  31 +-
+ drivers/net/wireless/nxp/nxpwifi/fw.h              |   2 +
+ drivers/net/wireless/nxp/nxpwifi/main.c            |  15 +-
+ drivers/net/wireless/nxp/nxpwifi/scan.c            |  18 +
+ drivers/net/wireless/nxp/nxpwifi/sdio.c            |  16 +
+ drivers/net/wireless/nxp/nxpwifi/sdio.h            |   1 +
+ drivers/net/wireless/nxp/nxpwifi/util.c            |  43 +-
+ drivers/net/wireless/nxp/nxpwifi/util.h            |   1 +
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c |   8 +-
+ drivers/net/wireless/virtual/mac80211_hwsim_nan.c  | 245 ++++++++++--
+ drivers/net/wireless/virtual/mac80211_hwsim_nan.h  |   7 +
+ include/linux/ieee80211-nan.h                      |  28 ++
+ include/linux/ieee80211.h                          |  17 +-
+ include/linux/mmc/sdio_ids.h                       |   2 +
+ include/net/cfg80211.h                             |  28 +-
+ include/net/mac80211.h                             |   4 +-
+ include/uapi/linux/nl80211.h                       |  17 +
+ net/mac80211/cfg.c                                 |  35 +-
+ net/mac80211/ieee80211_i.h                         |   1 +
+ net/mac80211/iface.c                               |  26 +-
+ net/mac80211/main.c                                |   7 +-
+ net/mac80211/mlme.c                                |  23 +-
+ net/mac80211/parse.c                               |   5 +-
+ net/mac80211/rx.c                                  |  20 +-
+ net/mac80211/sta_info.c                            |  49 ++-
+ net/mac80211/tx.c                                  |   4 +-
+ net/mac80211/util.c                                |   4 +-
+ net/wireless/core.c                                |  12 +
+ net/wireless/nl80211.c                             |  36 +-
+ net/wireless/scan.c                                |   9 +-
+ net/wireless/sme.c                                 |  14 +
+ 50 files changed, 729 insertions(+), 738 deletions(-)
