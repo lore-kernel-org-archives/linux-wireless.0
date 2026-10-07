@@ -1,100 +1,92 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-48.mta0.migadu.com [91.218.175.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58013EC81D;
-	Wed,  7 Oct 2026 08:17:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 059C45B206
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 08:25:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791361072; cv=none; b=Xq8dQtuc+SyQiBPTWx7Kl6HFEqg4L0jC9OxrerOI2tvHoTD2/08wHJrwga1KKtOA4DXBZzuXy2WHujIBKAUzZ1IvH3X5lRexukiFRlF94qOhURPvUQahhrEKLtV3g9q5nZ/hy54sDZjvLZvyNC9cuS85FB5tzwdPqnnMDA0/CXI=
+	t=1791361512; cv=none; b=oxBzW64hvU3FQ4a6o7UXaOhi3zOhJqGGHYRfZ/YQk3nv+mbXu/+uO36iIyWDmrg6Fyz77ZnPhKH454S/m7ftWl78oviR41munt9LBSOpO22etc9QXpBAIN95qYCOWWUxmSXIMAljisovewy7YHXI6oNwdf83UuIt5MV0SbfFmUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791361072; c=relaxed/simple;
-	bh=guNkVnH/A1z2dX1P+JZFWZ1BRvUMX+SZpvKtpQfmXqc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=fhhBWJstrBoESl8OW7kLVLtOD8vgWNFnSHdyO1VIoddEXxtj8ZYaLVqQfplZAtLV+dNpVqN53sWRbaWXZrQM25neHvKaQSQJ6QRfSNbujlkHqVKH1HGHDOvxDHQ+q14fp+tdjBOBuvRKWfL7hfJEyHzfXl4te0TcYiZTX8v0Tic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=O9iQ4ygx; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791361512; c=relaxed/simple;
+	bh=3Rd/a5nXdmgzi0cgbrX6gvWKTXtTz3BGHEkq0QQ5b9o=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=Mq7pxFppltH4Ha+P+xlJsgPGeVEb7ClbrRCAR7n0Bu7rMHZKcBGtWMwg5fYy0RuqIHcKJ99YRaGpHUkz9Ngejd49orFyK17gFHgfdGNZtBL/tZzuNDfU/9samYhFFK1TVwGPZLd1GnK5X7v1BWc9c6kE3PFRbRXiF+s5z7Ln8TQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tJTKCvF7; arc=none smtp.client-ip=91.218.175.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="O9iQ4ygx"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6978HTgfC3668123, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791361051; bh=YwfVYxvMHGjXQC4CAP2uAl0or44eFtlRoEKxP/vp6Mg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=O9iQ4ygxpBrpBUmDsVJZ3VXeqN1AbwZb2Qq7IhzcGUdv/1HvjTjpHZTHHgAghMFM8
-	 e95E/q4ZAicicCsx5hD7YhXMng5g/dIiZlo7na0XatVLZdUeW7OV5htbw/aTVfQ9qw
-	 KK6vMJ//A8wmOsau0WbESsTLbz0zGTM1RN3ZkQ14X34cl/jEtHJVHDRRpmlQp9GsgW
-	 7gYV3VoOcNQlaYgdctVTaD6fjZrRUji0pR/M09/pJFOMQzDXX9Vn8J8ZJw5zpquKuO
-	 Sb79kG3uE19R/9aFjQLZihDKcpSLlQNBXNy+Q/u+FpjHiAtMyfhTzvYK7J5G+g/AZw
-	 WKV9aJTturKNw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6978HTgfC3668123
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 7 Oct 2026 16:17:31 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 7 Oct 2026 16:17:29 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 7 Oct 2026 16:17:25 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 7 Oct 2026 16:17:25 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Mehmet Fide <mehmet.fide@gmail.com>
-CC: "luka.gejak@linux.dev" <luka.gejak@linux.dev>, "rtl8821cerfe2@gmail.com"
-	<rtl8821cerfe2@gmail.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "mehmet.fide@screeningeagle.com"
-	<mehmet.fide@screeningeagle.com>
-Subject: RE: [PATCH rtw-next v4 2/2] wifi: rtw88: support channel switch in AP
- mode
-Thread-Topic: [PATCH rtw-next v4 2/2] wifi: rtw88: support channel switch in
- AP mode
-Thread-Index: AQHdViKsq55Ir0Z0UEaMXTAuIl77ILbxm64g//+YSwCAAIdD4A==
-Date: Wed, 7 Oct 2026 08:17:25 +0000
-Message-ID: <ea472899e65e4140990b15603e23d0ee@realtek.com>
-References: <63ac6992e6614de1a085131964974ff1@realtek.com>
- <20261007080930.2473263-1-mehmet.fide@gmail.com>
-In-Reply-To: <20261007080930.2473263-1-mehmet.fide@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tJTKCvF7"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=3Rd/a5nXdmgzi0cgbrX6gvWKTXtTz3BGHEkq0QQ5b9o=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791361508; v=1; x=1791966308;
+ b=tJTKCvF7kSenp3hlIG4zuo3haq3Qr7Fzvx5Au9LvLg8pQpM9x2QHCQx0P8uSIcssupyHhtyg
+ qMnDreFmt4nKKSxsIPvXIt5i+7IstehOG8rTW31xVKUeTI6zJE8YBpR6HrIaI8aaAUHgtUr2jQi
+ bAqGmvKRcOXJTaZBU05cVSzw=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4a9baa7efef0d618;
+	Wed, 07 Oct 2026 08:24:58 +0000
+X-Mizu-Trace-ID: 4a9baa7efef0d618
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Date: Wed, 07 Oct 2026 08:24:56 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <df4a73de51784e35c15a39e85e4dae9629ba1132@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v8 5/7] wifi: rtw88: 8723b: add the RTL8723B
+ chip driver
+To: "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael 
+ Straube" <straube.linux@gmail.com>, "Peter Robinson"
+ <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
+ luka.gejak@linux.dev
+In-Reply-To: <3db085e6c3c14545ac9fd4221e0715ed@realtek.com>
+References: <20261006130701.120460-1-luka.gejak@linux.dev>
+ <20261006130701.120460-6-luka.gejak@linux.dev>
+ <3db085e6c3c14545ac9fd4221e0715ed@realtek.com>
 
-Mehmet Fide <mehmet.fide@gmail.com> wrote:
-> On 2026-10-07 Ping-Ke Shih wrote:
-> > > -                       rtw_fw_download_rsvd_page(rtwdev);
-> > > -                       rtw_send_rsvd_page_h2c(rtwdev);
-> > > +                       if (!rtw_fw_csa_active(rtwdev)) {
-> >
-> > Does it actually happen to AP mode?
-> >
-> > If it could happen, check the condition by conf->csa_active (like below=
-)?
+October 7, 2026 at 04:57, "Ping-Ke Shih" <pkshih@realtek.com mailto:pkshi=
+h@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wr=
+ote:
+
+
 >=20
-> Not for the AP interface: mac80211 raises BSS_CHANGED_ASSOC for a
-> station interface only. The hunk is for the STA+AP combination the
-> driver registers for the 8822C, and it does happen there: with an AP
-> on an RTL8822CU counting down from channel 6 to 11, a station interface
-> on the same device that had a fresh scan result associated with an AP
-> on channel 11 while the countdown ran, so BSS_CHANGED_ASSOC arrived in
-> the middle of it. That download would rebuild the reserved page with a
-> fresh beacon. conf belongs to the station there, so conf->csa_active
-> would say nothing about the AP; that is why the check is on
-> rtwdev->csa_vif.
+>=20Luka Gejak <luka.gejak@linux.dev> wrote:
+>=20
+>=20>=20
+>=20> Add the Realtek RTL8723B 802.11n chip driver: the chip operations, =
+the
+> >  power sequences, the efuse layout, the RF and IQ calibration, and th=
+e
+> >  chip specific coexistence handling.
+> >=20=20
+>=20>  The RTL8723B chip support is based on the initial work by
+> >  Michael Straube <straube.linux@gmail.com>.
+> >  Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
+> >=20=20
+>=20>  Co-developed-by: Michael Straube <straube.linux@gmail.com>
+> >  Signed-off-by: Michael Straube <straube.linux@gmail.com>
+> >  Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> >  Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+> >=20
+>=20Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+>
 
-Got it. Add a comment to point out "STA+AP combination" then.
+Hi Ping-Ke,
 
-And, agree with your other reply.=20
+Thanks for helping and reviewing the series throughout this
+upstreaming process. Just one question, when is the series planned to
+be applied to rtw-next? I am planning to send a patch to staging to
+remove staging rtl8723bs and I need to have information when is it
+landing.
 
-Ping-Ke
-
+Best regards,
+Luka Gejak
