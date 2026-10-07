@@ -1,54 +1,57 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25872319617
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 01:11:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE6E1C861D
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 01:11:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791335515; cv=none; b=dzndpQ1RODM+zv+LoMXYuSCt9aLGgkFRGloumiUYNzSu5fUbGx9y5GQboSkRE1ntADjs5chHeI2PSPLLsxsY+wtmxsWpHG9VpEvWnjRR8a5zpxQmt6IrxspUeRRIKaV1jnRDhwR9HlbnhzSI3MBqN2lD4OpmJjvRubQJhKKuUnc=
+	t=1791335520; cv=none; b=slqoLBoDCanTePPYBsJxT9lbniHh0hGOsX5qm2Qd0A8Bjc2pm1kGdw6skON8cJ1327hRW2c3IYFdRdTmB6ydPSUYuAgZD3LArdKoT7vto92vXu/NvtOc6dtc1EOXK0o6oj9uIdb76/iNVKktfs85p1lQAfZ/VSXpiDw0DHuNEgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791335515; c=relaxed/simple;
-	bh=tfwpSf6cK/7wgZO3SI0caT3dlHz31BCetoXzCNKgNeU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=iX9K6vaFKVLU9SpYeeKSuluGtMAi5LQEuGJWgOttiqI6+/jtjGjQ/dRIfHMxQFmbUwh7xircLWv3Yn3S3IkGg1lz0rGIYeJ8GmbU02dz39yC6eaQb4LoUqwNfdCQcG9ZbmLPAs/IZjtUZB8wpl9gTNHYIXctvXbLKzA/uwqvmt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=hpnKXVPj; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1791335520; c=relaxed/simple;
+	bh=oOE8FxFEBKeQ541fDzEwY9isvLlRSTfV0cro5Q4kPsE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AuwVDfiCaM53RLFoe8ClCkvdDu9Oz6462X2NWu9S9AmV+NWGPcx7u4imPFdpukPGNIuVGumzdofjD9wUivE+LPZokD/+8777LJsG6grI8I1Hfkjfr6AXxeTMGowxI3eOijCTCvw2illNWAynrCNxHJ5wkPe8MgRGmxca0+Xgyf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=fvGP++jq; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="hpnKXVPj"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6971BiJkA3403750, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="fvGP++jq"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6971BtclE3403821, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791335504; bh=4YBOqUiyEuuL2113i28MhGcrE93n6FqthBzVub8O+DI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=hpnKXVPjv9qKwDA1IxzgIPrvLvyZHBeZy9Y4eRrgztdEaomwrX1smSLs0bvVJoBrY
-	 NPN9tocMzALcu1b0cMi91T0DzQOt8HJINxoU2TSbflnkN89S8McWFKotsKqESvak8x
-	 boV+svFfDJ0FGu8RGxDKLVy+T76vUY+fbEaAZvUpxCPvMk5WOx2lzbu952ldUHRBdM
-	 QZ7emgxoguGKKvfbs6fyoq1teVFpxgtBPCuzBrOE0mt4Ws4ArWzdef/WrW6fGcwrcv
-	 6ojpu/G+0AEUy8KC6qm2+7WjUefuBgyAduVH3sf8CZp6Xx0MdwWyaNy2bTvIVWw+ao
-	 u2H4Jw7GLJJQg==
+	t=1791335515; bh=OZ/+YhmQ4AN2UNGH27FYFK/an0tZhUm83BsXa7OTx2E=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type;
+	b=fvGP++jqcMl2BXo7CYqdoibgUbkHECbQdKRVJM43n+h9VCgQeHmtLFQFfQeINgJXK
+	 pJHJ0Tz386rYK5s+Q4IiMXnw+GTjzQEk4kw1Xm+IzdxjGhBthBRSrfTEinopaDJ0Uh
+	 +EBCiiZUVK2cVzlKHZSJ211xzNBhDyQqGBnAGQmoxZ1p/fh+ZaQlj8+6ViJ6f6MiP2
+	 3HKLYywR//Pyc7pe/vzWdvgSuRBRhuyy9IUNy41vzRWTUcjauCV7hV8aYZneswoOlT
+	 sO6JjNOap554QdKt6FFuJZTd9BHhkRcgwRCzQgsVe12vcXo3ga1Dodp8qc0mf9nxcZ
+	 5b6hlsKDTm3nA==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6971BiJkA3403750
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6971BtclE3403821
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 7 Oct 2026 09:11:44 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+	for <linux-wireless@vger.kernel.org>; Wed, 7 Oct 2026 09:11:55 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 7 Oct 2026 09:11:45 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ 15.2.2562.49; Wed, 7 Oct 2026 09:11:56 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 7 Oct 2026 09:11:45 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ 15.2.2562.49; Wed, 7 Oct 2026 09:11:55 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Wed, 7 Oct 2026 09:11:45 +0800
+ Transport; Wed, 7 Oct 2026 09:11:55 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 rtw-next 0/3] wifi: rtw89: 8922d: increase firmware format to 1
-Date: Wed, 7 Oct 2026 09:10:54 +0800
-Message-ID: <20261007011057.12125-1-pkshih@realtek.com>
+Subject: [PATCH v2 rtw-next 2/3] wifi: rtw89: regd: add NZ/BR/AR for individual TX power settings
+Date: Wed, 7 Oct 2026 09:10:56 +0800
+Message-ID: <20261007011057.12125-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20261007011057.12125-1-pkshih@realtek.com>
+References: <20261007011057.12125-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,33 +61,49 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-The firmware commands/events formats are changed since 0.35.119.0, and
-BT-coxistence has much changes needed implementation in driver side.
-Update the firmware format version to support newer formats and features.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-v2:
- - add patch 2/3 to support NZ/BR/AR specific regulation.
- - in patch 3/3, mention the changes of patch 2/3 is one of reason
-   to increase the fw version.
+Add NZ (New Zealand), BR (Brazil) and Add AR (Argentina) into Realtek
+regulatory enum. Some chipsets may need individual TX power settings
+for them.
 
-Ching-Te Ku (1):
-  wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to
-    9.24.2
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2: new in v2
+---
+ drivers/net/wireless/realtek/rtw89/core.h | 3 +++
+ drivers/net/wireless/realtek/rtw89/regd.c | 3 +++
+ 2 files changed, 6 insertions(+)
 
-Ping-Ke Shih (1):
-  wifi: rtw89: 8922d: update supported firmware format to 1
-
-Zong-Zhe Yang (1):
-  wifi: rtw89: regd: add NZ/BR/AR for individual TX power settings
-
- drivers/net/wireless/realtek/rtw89/coex.c     | 2 +-
- drivers/net/wireless/realtek/rtw89/core.h     | 3 +++
- drivers/net/wireless/realtek/rtw89/regd.c     | 3 +++
- drivers/net/wireless/realtek/rtw89/rtw8922d.c | 4 ++--
- 4 files changed, 9 insertions(+), 3 deletions(-)
-
-
-base-commit: 7cde94dab0e74434ccc0a387d7ad373fb3becda0
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 7e74b5c9ed49..f17717ac2036 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -791,6 +791,9 @@ enum rtw89_regulation_type {
+ 	RTW89_QATAR	= 13,
+ 	RTW89_UK	= 14,
+ 	RTW89_THAILAND	= 15,
++	RTW89_NZ	= 16,
++	RTW89_BR	= 17,
++	RTW89_AR	= 18,
+ 	RTW89_REGD_NUM,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
+index 942f55633942..f0d47c313bb0 100644
+--- a/drivers/net/wireless/realtek/rtw89/regd.c
++++ b/drivers/net/wireless/realtek/rtw89/regd.c
+@@ -666,6 +666,9 @@ static const char * const rtw89_regd_string[] = {
+ 	RTW89_DEF_REGD_STR(QATAR),
+ 	RTW89_DEF_REGD_STR(UK),
+ 	RTW89_DEF_REGD_STR(THAILAND),
++	RTW89_DEF_REGD_STR(NZ),
++	RTW89_DEF_REGD_STR(BR),
++	RTW89_DEF_REGD_STR(AR),
+ };
+ 
+ static_assert(ARRAY_SIZE(rtw89_regd_string) == RTW89_REGD_NUM);
 -- 
 2.25.1
 
