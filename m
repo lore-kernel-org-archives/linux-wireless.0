@@ -1,157 +1,189 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mta1.migadu.com (out-154.mta1.migadu.com [95.215.58.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC75D48383C
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 09:13:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA489493639
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 09:13:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791364435; cv=none; b=BHpECTiDKhnyOCo6yT6pLU2FIZhFzLZTRoiJlKzdusJ/0Ptc4Jf5oE/99Oml316Lg6OiU01RIjFqj2qLhO9+hOI6wpuobv2Mcxz5zp3Zci/nS7zHA0Lk5ahjwxUkyIn8ay9CrRVd4kwpzoVSJGMCNXQXSyAy1wmcg3qpDEASIOY=
+	t=1791364447; cv=none; b=BK3MJ7qFsdNpFjBIVMJx4+S1k9g3btzxQ0nWThnKCIPD58fDOB8WS/MqJn74p+sLPyUWuWx5O69mKTjIfk1P++hRLOK2kktIbnXFocJk3n8DxZ1cib47szIddIR+i0RRfD0a6SGKQJ8uEtP+m9ybl3DN+66ApbyLpRcMLTigSrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791364435; c=relaxed/simple;
-	bh=vP6HTc3BgErud3vpYJ5dvc1vGO3/WzphWp/Aia7nZmE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P9z+JQBtRRiuW4ToO0rxdvQR/FP1UYd51ZHZOquXtdzrEcaox/4OTw3PZ+xTXuSslNp0TbJGI+xKwg5L92P1aAalnnqhQskoWA5yKSDwmfXsILkpya84ULZinWL/pjYtvkCx3t7GiCSymOlyZrgKVE3d89jp5N9eiB6RWFStyow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z4DE3wv4; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791364447; c=relaxed/simple;
+	bh=J/y1H3eemnVhW06Ctyt4QVgncGhn8rhFQ+PbyfP1y1s=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=nhE1zOZ4psylsCF925gYgVF54ISCRpzAAMaLYsB0CumiECVtCmT2LbXpO63qG06to/NiOZSRXfrt78olipcGfFke43OqSte6iI0slRGUGFlgA7htk0eUQFYaKTaF1zt24mSDQNn6K4vRt6piHedI64aqRhju8RY7HByM/gcbZ98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool; spf=pass smtp.mailfrom=packett.cool; dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b=eJkgOcS4; arc=none smtp.client-ip=95.215.58.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=packett.cool
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z4DE3wv4"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49ff680331aso39375355e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 02:13:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791364389; x=1791969189; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=EKIJVEsx+Oi+88fJ8TTlph+GBhT516Y05xMo/gmGzZk=;
-        b=Z4DE3wv4myqBv/bbO5KPxjzubErxD0BEPDERpPa0rgCUoPGh/N0DvBI1hp8pphb9Hl
-         J9NnaeAZTev/wnBQTVbl0vPq322a0U0yleVKK40PbV6tv4y6iZ6t7VbscMl6bKg5APwq
-         dHoRm5YyXGWGdTHUV0gHUeTo1HsRj1tCJrpsAGJyyGG6Hlg+Um1+r9vsXrJYO6f/8RPM
-         3SqEv8+CmD5YcvGx4A5FAxo65nvzFjbCBIzWhwLgf89vb1G2QDJe+uVPvnnhPMC/m9DV
-         kfzUORWIrj2g88VFjlbjoqzVvBo7C2yKJTSpNvoVsmxrqM2ggLhGEZ5vr0NxYF3KGUog
-         i05Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791364389; x=1791969189;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EKIJVEsx+Oi+88fJ8TTlph+GBhT516Y05xMo/gmGzZk=;
-        b=C2H01kF+imE3i3/zRgZ5yatW6UJQf3gHslQQN5OXoYq+V/9Bb3zCNKXX/6h76GskUF
-         RPC3aHuNHK2EQ+IV038Z3XEBTIuXAUoVEWmew9DRnFPzTjjGCobVlwq/vBxPQJZU9Qep
-         3OgBif38tH4E8b4oV7LpZ+TeOyGLP322Hjh9M+PBz2dIhKEmS4RApZe8AhJl7GbQAu1M
-         ajTOixqlBHCdCD237iE7zcbL9iQeVSIwnIJuuc3hqFJkLeYQ5QnIhMaKcYejoiez4d3X
-         2kQgytaH7KHA9XRrztnSArkdvshq48IyeuJ2OPZJHr3S0Be4oyJLn5foE0+9EP03Yk8f
-         +3Lg==
-X-Gm-Message-State: AFuF++klrvsH8zEAV7KSX6qUWPGqgIE5kUnjmTczJsXtyiSS+haQuXPZ
-	nfFYUjYlJyioH25MvFhTbpSYJUlSXVkggOrUdd26nKfcpBM+CEJyNPV5
-X-Gm-Gg: AYBFou3e/ubuUw+SXbA9FfYwKZN6sMGPe3i/Wxy4mL5H8qfIxUhKcrnpMtecJNPE3DK
-	ePQelZdYcSOauDBe/RV2Lso21wea6sw3MMy4j5yloU/aP5n4kfLT9s2dx0N0KsRobh2RUMlItxw
-	uY7HtwUYhrXruTJHAcliTxcV+h9bgnAVjeSG71eaDrcaPfejOloc+2zx5p9I9OsoRPuE1SCe2lD
-	kO3LOijcdflzlvAGTOetOk1EVtQAsgtv+3a0DK61WMZV7AT0Z3WYod5ljEVTZfkltmkKCOEFdd8
-	FusGpZHsP77/IE0N7kO+0ReBPu9aydzdE6HYpsXeDPoLjOa0E2sDNgGZxCAJLqh3LSfgyKlHYXg
-	2GT5YpTtudUxarPlQADuJSg+GorNVwdicTz3xt9VJqtb0PnN5PxGwBv7gYhgdlswImm20/MYY5w
-	x1hIOfQeLfNRkh+dwral2ENT+hCHFfoTkIbwI/C5D/b+CIVOJcY2pizTkXwgvvGkjTmDoO2YOtH
-	dQ=
-X-Received: by 2002:a05:600d:2:b0:4a1:825a:5726 with SMTP id 5b1f17b1804b1-4a1825a595bmr6969805e9.31.1791364388267;
-        Wed, 07 Oct 2026 02:13:08 -0700 (PDT)
-Received: from PC ([176.229.9.157])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1822af9d5sm17617555e9.15.2026.10.07.02.13.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 02:13:06 -0700 (PDT)
-From: Jeremy Fareau <jeremy.fareau@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kalle Valo <kvalo@kernel.org>,
-	Brian Norris <briannorris@chromium.org>,
-	Jeremy Fareau <jeremy.fareau@gmail.com>
-Subject: [PATCH wireless 2/2] wifi: rtw88: restore the control frame filter when the device is started
-Date: Wed,  7 Oct 2026 12:12:25 +0300
-Message-ID: <20261007091225.413-3-jeremy.fareau@gmail.com>
-X-Mailer: git-send-email 2.53.0.windows.2
-In-Reply-To: <20261007091225.413-1-jeremy.fareau@gmail.com>
-References: <20261007091225.413-1-jeremy.fareau@gmail.com>
+	dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b="eJkgOcS4"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=J/y1H3eemnVhW06Ctyt4QVgncGhn8rhFQ+PbyfP1y1s=;
+ c=simple/simple; d=packett.cool;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791364318; v=1; x=1791969118;
+ b=eJkgOcS4z7rXaLJ08GMlL5UPMnRJRkpmrZpI02UZSB0ovIVvUmT8E3iQLHSYlf8emgDF60r1
+ wQd3Fd2+Ef6aOzyZixmWHgm52XDi1Tr8H2wn/THFAREPo/9QZlJs1fGmFPu9G2IPBeOSTruo+zL
+ oVuwo+FOcG5bmzk1Myd+iIf4SRFgUnqciZMkQa9OxzdOgJl8RUG0AarO43sNAURHs9stkGQfxD1
+ o8qIOZjkQHo3W5YAqeXoP+KdBZ0Q9z+So2eecafMZLBidSS5Z/9jopn2ax/NAyjKfWZDjzFGkBu
+ QNboamxyEBarOMDCkmee+Jvtp2iflV9bq+6nR0sLNXcmQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7d4030431edfb94a;
+	Wed, 07 Oct 2026 09:11:57 +0000
+X-Mizu-Trace-ID: 7d4030431edfb94a
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <f189cfc2-c36a-4bf5-bac7-36ddb15cc7a4@packett.cool>
+Date: Wed, 7 Oct 2026 06:11:46 -0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+From: Val Packett <val@packett.cool>
+Subject: Re: [PATCH v5 1/6] PCI/bwctrl: Set host bridge OPP and optionally
+ disable ASPM around link retraining
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ qiang.yu@oss.qualcomm.com
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Commit ed51a86b787f ("wifi: rtw88: Enable receiving control frames in
-monitor mode") writes REG_RXFLTMAP1 from configure_filter(), but that
-register is reset to the chip default by the chip's mac_init() during
-power_on().  mac80211 only calls ieee80211_ops::configure_filter() when
-its own filter flags change, so after a stop/start cycle the flags are
-unchanged and the control frame filter silently reverts: monitor mode
-stops delivering control frames again.
 
-Keep track of the value configure_filter() last asked for and restore
-it in rtw_core_start(), next to the RCR restore, which exists for the
-same reason.
+On 8/19/26 10:25 AM, Krishna Chaitanya Chundru wrote:
+> PCIe host bridge controllers may need their operating point raised before
+> retraining to a higher link speed so that hardware resources (e.g., RPMh
+> votes on Qualcomm platforms) are available at the requested data rate.
+> After retraining, the operating point must be updated to reflect the
+> actual negotiated speed.
+>
+> Add pcie_set_opp() to look up an OPP on the host bridge parent device
+> using a key of (per-lane frequency in kHz, LNKCTL2 Target Link Speed
+> level).  Keying by generation rather than total bandwidth lets OPP tables
+> remain width-independent.
+>
+> In pcie_set_target_speed(), call pcie_set_opp() before retraining only
+> when upscaling (speed_req > cur_bus_speed), since only raising the
+> operating point requires pre-staging hardware.  After retraining, call
+> pcie_set_opp() unconditionally with the actual cur_bus_speed to settle
+> the votes.  Both calls are skipped for downstream ports of PCIe switches,
+> as those are outside the host controller's scope.
+>
+> Some controllers also require ASPM to be disabled around link retraining.
+> Add a disable_aspm_for_retrain flag to pci_host_bridge; when set,
+> pcie_set_target_speed() saves the child device's ASPM state, disables all
+> ASPM link states before retraining, and restores them afterward.
+>
+> Signed-off-by: Krishna Chaitanya Chundru<krishna.chundru@oss.qualcomm.com>
+> ---
+> [..]
+> @@ -176,6 +231,12 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>   	    !list_empty(&bus->devices))
+>   		ret = -EAGAIN;
+>   
+> +	if (bus && is_rootbus && host) {
+> +		if (child && host->disable_aspm_for_retrain)
+> +			pci_enable_link_state_locked(child, aspm_state);
+> +		pcie_set_opp(port, host, bus->cur_bus_speed);
+> +	}
+> +
+>   	return ret;
+>   }
 
-Measured on an RTL8814AU and an RTL8812AU in monitor mode on channel 6,
-40 s captures taken after a down/up cycle.  Control frames go from 0 to
-23184 and from 0 to 483 respectively; without this change both are 0.
+ASPM is not actually reenabled here:
 
-Fixes: ed51a86b787f ("wifi: rtw88: Enable receiving control frames in monitor mode")
-Assisted-by: LLM
-Signed-off-by: Jeremy Fareau <jeremy.fareau@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/mac80211.c | 5 +++--
- drivers/net/wireless/realtek/rtw88/main.c     | 8 ++++++++
- drivers/net/wireless/realtek/rtw88/main.h     | 1 +
- 3 files changed, 12 insertions(+), 2 deletions(-)
+LnkCap: Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <8us
+         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM Disabled; RCB 128 bytes, LnkDisable- CommClk+
+         ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
+LnkSta: Speed 2.5GT/s (downgraded), Width x4
+         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 827f38390969..84d869f1efe0 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -300,9 +300,10 @@ static void rtw_ops_configure_filter(struct ieee80211_hw *hw,
- 
- 	if (changed_flags & FIF_CONTROL) {
- 		if (*new_flags & FIF_CONTROL)
--			rtw_write16(rtwdev, REG_RXFLTMAP1, 0xffff);
-+			rtwdev->hal.rxfltmap1_cur = 0xffff;
- 		else
--			rtw_write16(rtwdev, REG_RXFLTMAP1, rtwdev->hal.rxfltmap1);
-+			rtwdev->hal.rxfltmap1_cur = rtwdev->hal.rxfltmap1;
-+		rtw_write16(rtwdev, REG_RXFLTMAP1, rtwdev->hal.rxfltmap1_cur);
- 	}
- 	if (changed_flags & FIF_ALLMULTI) {
- 		if (*new_flags & FIF_ALLMULTI)
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index cd9254370fcc..ea61020a0622 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1528,6 +1528,14 @@ int rtw_core_start(struct rtw_dev *rtwdev)
- 	/* rcr reset after powered on */
- 	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
- 
-+	/* REG_RXFLTMAP1 is reset by the chip's mac_init() during power_on(),
-+	 * and mac80211 only calls ieee80211_ops::configure_filter() when its
-+	 * own filter flags change.  After a stop/start cycle the flags are
-+	 * unchanged, so restore the value configure_filter() last asked for.
-+	 */
-+	if (rtwdev->hal.rxfltmap1_cur)
-+		rtw_write16(rtwdev, REG_RXFLTMAP1, rtwdev->hal.rxfltmap1_cur);
+
+Because as the comment for pci_enable_link_state(_locked) says, "note 
+that this does not enable states disabled by pci_disable_link_state(). 
+Use pci_force_enable_link_state() for that"!
+
+This needs something like:
+
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 4bad311dc7..c54f2658e0 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1709,6 +1709,12 @@
+  }
+  EXPORT_SYMBOL(pci_force_enable_link_state);
+
++int pci_force_enable_link_state_locked(struct pci_dev *pdev, int state)
++{
++    return __pci_enable_link_state(pdev, state, true, true);
++}
++EXPORT_SYMBOL(pci_force_enable_link_state_locked);
 +
- 	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->watch_dog_work,
- 				     RTW_WATCH_DOG_DELAY_TIME);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6e981ba7986..5a9bcc4fdff9 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1964,6 +1964,7 @@ struct rtw_sar {
- struct rtw_hal {
- 	u32 rcr;
- 	u16 rxfltmap1;
-+	u16 rxfltmap1_cur;
- 
- 	u32 chip_version;
- 	u8 cut_version;
--- 
-2.43.0
+  void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap)
+  {
+      if (lnkcap & PCI_EXP_LNKCAP_ASPM_L0S)
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index 623731b96c..530b9047a0 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -211,7 +211,7 @@
+
+      if (bus && is_rootbus && host) {
+          if (child && host->disable_aspm_for_retrain)
+-            pci_enable_link_state_locked(child, aspm_state);
++            pci_force_enable_link_state_locked(child, aspm_state);
+          pcie_set_opp(port, host, bus->cur_bus_speed);
+      }
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9f20bae6d7..59d7b67c9d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1960,6 +1960,7 @@
+  int pci_enable_link_state(struct pci_dev *pdev, int state);
+  int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
+  int pci_force_enable_link_state(struct pci_dev *pdev, int state);
++int pci_force_enable_link_state_locked(struct pci_dev *pdev, int state);
+  void pcie_no_aspm(void);
+  bool pcie_aspm_support_enabled(void);
+  u32 pcie_aspm_enabled(struct pci_dev *pdev);
+@@ -1974,6 +1975,8 @@
+  { return 0; }
+  static inline int pci_force_enable_link_state(struct pci_dev *pdev, 
+int state)
+  { return 0; }
++static inline int pci_force_enable_link_state_locked(struct pci_dev 
+*pdev, int state)
++{ return 0; }
+  static inline void pcie_no_aspm(void) { }
+  static inline bool pcie_aspm_support_enabled(void) { return false; }
+  static inline u32 pcie_aspm_enabled(struct pci_dev *pdev) { return 0; }
+
+(the addition of the new force+locked variant should go as a separate 
+commit, but well)
+
+With that,
+
+Tested-by: Val Packett <val@packett.cool> # x1e80100-dell-latitude-7455
+
+Well, tested without that too, but losing ASPM is not good :)
+
+
+Thanks,
+~val
 
