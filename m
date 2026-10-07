@@ -1,117 +1,116 @@
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5364AA416
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 12:54:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4880B4ACC7F
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 13:28:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791377663; cv=none; b=B35nFSE5LJlX/SqXZd1abpkGMMd9BIFpa4Fkrx2ZUmzstaeaRFWI8MQYX8GKeuZOn1ahR+wA/UvWziwb69lmXnJNBqD2EHjTbf+9B0cW4xxaz/jdUyAQcDY4p0J/y8q8QcSaDCPETJZQ62Hw+RdxEQaH+SJqWCTh7Y40gbqXbkg=
+	t=1791379733; cv=none; b=DVYEOCoPo9Gxy9/pKt5CTQBvG18jxHKZd8LIkZSOvp5BUxeF3ZeGlbeDKCB7TjvYDPhBfQqmDNtAmBDc42+Kz6wZDCAIrDmVLCGOlm7DED1aFv1sjIfHMV+9+h2OVVGkqkfSElBEknexRCPsT9IKNeS6sRz3QntKt0UviNgKD/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791377663; c=relaxed/simple;
-	bh=vQ5ti0IRpJKxnO/ajOgsAv5J3ZdzP6Vf+7alXOHlJ2U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G7K7wk4sRa0FDY3Ou2vjb8BBt1gcLBbcWNm5r+/aUS5NQRLvuEYUVOIvNmXzTPHlYOcD7zJc3obNZe0eABaPBFCdIGKRaXL6GcROyRvWPWlUxLCgM3+C3N3sWckApL0iGNorhmLmZ1ZWOrh5RhnL7KneH0MYl/+lWM1osohAXF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=RRPuu6+l; arc=none smtp.client-ip=209.85.216.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1791379733; c=relaxed/simple;
+	bh=HmrYqLlz/iFOT1qIwq+oFd7wxoG3X9eBwkkqkSQqhgo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GRU5mkb5ES9R+sXpTFmRTU0mgnNQ+nmFfMRjm2PsVSl/aaS21eHhhoRjAi/m1bK0KbK1avXormQU/GaoajmEr+auYHlTc+rtH9P1Rc/caAer/mUJGmZm4R8yi+aNGvf6YiuEK1Iqd06wAGy85y9VwaWsCGi+plnt3+pzjbbjC3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C09d+V4n; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RRPuu6+l"
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-3a865731ee4so1553753a91.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 05:54:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791377654; x=1791982454;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=WRr2bOzV+ACM051eiPZmuzY0jHiw8RpNfmmijxyyZ5s=;
-        b=mz0xFa5/P3dFwff0m/idbAHjXaA/nlVHd84sYhe3YpLNVHfohQTgqXlcmxJFEulf6X
-         3O5NplEFn2ZHN4nfeIX1k5FJxAZmMMAIThT9Cj8FK3o3FuC9rWlKQGKv8oLSkHzR1MXB
-         bYjC56qxdNlALBUWLWzrMe8YGhDdQLdTI604a4ZGuAy/4eMeyWWdC3SE6HRcgS/I2j2W
-         CY2DkJnkqP1cWydeZE9f/xsB7T9SKR1vF5Wy/ArUpE0FIRDyfvjgdIDtxgb2LRnaAixC
-         eFS3OtUWtYMabmnUYoKrfPogbxzR7J1lQlB2a/vweFNyceHCzBLMwxqGmYoce8M23XeJ
-         0+Ag==
-X-Gm-Message-State: AFq9FYLzjBVNrpAoglj5BTZ1eTDVZcdvY1RoXDA2RlqzYDGfNEIynqWF
-	vJrDr3NxGAxIGF4eBxFZZiJvPzzBfWOt3W8Q7oaGLSNiw4kmZjoz9tjkiip4RdJ4kgUJfrW+LhO
-	dD1uiUeqgQo410in4gQ2L2nD91TGWOPz9SrHqarovpg90bb7u+mV5my/r1QmhM+21bhTCFlcCLN
-	nuIRdoO4Y2KihWvbu5aR7erBBBb3F+O/ENVASUpQNqqkO4xGjJI+aMffuEFQhJBt7njxibuJDJj
-	y0WPRVXZ3KVxq+ucxfWd8KSPd9R
-X-Gm-Gg: AYBFou1roEFgig/97dvjXbsL/qgsKYQ+InuowXjqfw7kGNX/wyqoY1IWigcG+cE+On7
-	DdA4Svaa4sSTmIxW/FedKaDLEFjEULnVqqclAc36C5WSOdJT7PyCEJBadeIbSnYi2KhdRhcfFqW
-	g5a9hmHgbksM/px7R3uaV0tL0BlWVfr2yqR1Hb5WVeSeRpSp8q8qwPkH8oeFKIMb09As3XIJDEm
-	5qJWNK0/DCuNRPxrPTYDJ1lb/MQVUjmzZQXtQcuP2iKBmamDLWtWdP+kd8F11adZ6cEMwtly7PX
-	tBBSmcPnFyESBITKsdxg+CqCJHiQnvGk4nQwQmYgnFeW2tV81rkKYoUpKemKsa0tdUGor1uXXNu
-	OdRnCprCRv+WxRyUqFUMhj8/fUvd5zacC/4VxPBbghw560Wj+4+ImNhD4VNW1DzyshZaHVgktvA
-	dwmZ2TwjL0tRFyniYybabt8clq+v4pPDVgryNx+ac9Vg==
-X-Received: by 2002:a17:90a:38e2:b0:3a8:bb56:f1ed with SMTP id 98e67ed59e1d1-3a8bb570c8fmr581262a91.50.1791377653965;
-        Wed, 07 Oct 2026 05:54:13 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-124.dlp.protect.broadcom.com. [144.49.247.124])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3a89dc2d599sm368897a91.1.2026.10.07.05.54.13
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Oct 2026 05:54:13 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-88c4da716f4so5331033b3a.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 05:54:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1791377652; x=1791982452; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WRr2bOzV+ACM051eiPZmuzY0jHiw8RpNfmmijxyyZ5s=;
-        b=RRPuu6+lLm6I2x6sXOOrNvh1BLc+q5EIBLLmmXx+lD/h9iH79fNTnhWy6F1udM7B4Y
-         vLGo6TBGs/902r8fPhs883WYm/II5uXZ3yHbWv+89GDFCMfqkSCGc+TAPvli9EocJPLb
-         VR5PnBWs1eANLE7zz+/0g/lVQzf+8ywkIx8us=
-X-Received: by 2002:a05:6a21:3990:b0:3dd:85aa:452c with SMTP id adf61e73a8af0-3e134044716mr1756571637.30.1791377651959;
-        Wed, 07 Oct 2026 05:54:11 -0700 (PDT)
-X-Received: by 2002:a05:6a21:3990:b0:3dd:85aa:452c with SMTP id adf61e73a8af0-3e134044716mr1756535637.30.1791377651379;
-        Wed, 07 Oct 2026 05:54:11 -0700 (PDT)
-Received: from [10.176.2.78] ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd0a92d5b51sm1411697a12.14.2026.10.07.05.54.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Oct 2026 05:54:10 -0700 (PDT)
-Message-ID: <d28a1cfd-1bcc-4319-bbbf-7189a1ff8dc3@broadcom.com>
-Date: Wed, 7 Oct 2026 14:54:04 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C09d+V4n"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791379715; x=1822915715;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=HmrYqLlz/iFOT1qIwq+oFd7wxoG3X9eBwkkqkSQqhgo=;
+  b=C09d+V4nt1hqCjyccyFpUtLOg4P7Dx0nwqvFuZpHdyJPiZ1DyYKVzUTP
+   uveQfz8nQZSCLy3fhLa4wqOL0qqE7MT2qpuKJXtp1zqQ4Y7DMNsGrQP7S
+   9pxlhswonc/YZ/JUcILGZ5vgeyC/hOcL0Ioew0DCseRsLHnfOXu0m5nK3
+   ebSW/983RKDDEFYCf8whXjJ1SysM3TaBsHTnpu5dDi0m5uTgrEuGMmypr
+   K++SnL02cTmXngXoDUG7B/l6YTsTYfpOQDrEboWb8LTbPY4CMg3GUFr+c
+   OgdGYZAEi0f+IFajDO+Ls/vjHre2bQNGnlatSqqzFV3mq+qPAQGe+nzlG
+   w==;
+X-CSE-ConnectionGUID: 4ot26Ve2TvKS7owRRUs8aA==
+X-CSE-MsgGUID: awM78RaMTS6KFtZQXmgORQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11928"; a="22920"
+X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
+   d="scan'208";a="22920"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 06:28:34 -0700
+X-CSE-ConnectionGUID: PvxnDQ/bQe+MNMIKDrBmYg==
+X-CSE-MsgGUID: s5qIULmlTNGOtPi87J9xkw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
+   d="scan'208";a="281200455"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 07 Oct 2026 06:28:33 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xERh8-0000000031o-0Abr;
+	Wed, 07 Oct 2026 13:28:30 +0000
+Date: Wed, 7 Oct 2026 21:28:19 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nikolai Semendiaev <agent00791@gmail.com>, ath12k@lists.infradead.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
+	jjohnson@kernel.org, wabsie@gmail.com
+Subject: Re: [PATCH 2/2] wifi: ath12k: use private page-frag caches for RXDMA
+ rings
+Message-ID: <202610072103.1v2wWX3z-lkp@intel.com>
+References: <7bb1b30324eea87b53a8c585566842a1a0ec7d06.1791279304.git.agent00791@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/13] wifi: brcmfmac: Add BCM4388 support
-To: michael.reeves077@gmail.com, Pieter-Paul Giesberts
- <pieterpg@broadcom.com>, "Franky Lin (Zhenhui)" <frankyl@broadcom.com>,
- Mathy Vanhoef <vanhoefm@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, asahi@lists.linux.dev,
- Hector Martin <marcan@marcan.st>, Daniel Berlin <dberlin@dberlin.org>,
- Janne Grunau <j@jannau.net>, linux-kernel@vger.kernel.org,
- Hante Meuleman <meuleman@broadcom.com>, linux-hardening@vger.kernel.org
-References: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260925-brcm4388-submit-v1-0-b5cbc2cde2fb@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7bb1b30324eea87b53a8c585566842a1a0ec7d06.1791279304.git.agent00791@gmail.com>
 
-On 25/09/2026 15:43, Michael Reeves via B4 Relay wrote:
-> The Broadcom BCM4388 chipset requires new PCIe initialization and
-> firmware interfaces. Add support for these interfaces to brcmfmac to
-> enable basic station operation.
-> 
-> This series adds:
-> - Signed firmware loading and mailbox transport
-> - Fixes for chip identification and firmware capability matching
-> - Versioned scan and join requests, and extended PMK payloads
-> - Updated event mask handling
+Hi Nikolai,
 
-Thanks for this series. It is taking me longer to review the full 
-series, but wanted to let you know I am looking at it.
+kernel test robot noticed the following build errors:
 
-Regards,
-Arend
+[auto build test ERROR on 388d3c42e8aba1cfc3c6d2c52877a46d8cf740db]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Nikolai-Semendiaev/wifi-ath12k-make-external-IRQ-control-idempotent/20261006-154146
+base:   388d3c42e8aba1cfc3c6d2c52877a46d8cf740db
+patch link:    https://lore.kernel.org/r/7bb1b30324eea87b53a8c585566842a1a0ec7d06.1791279304.git.agent00791%40gmail.com
+patch subject: [PATCH 2/2] wifi: ath12k: use private page-frag caches for RXDMA rings
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20261007/202610072103.1v2wWX3z-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 16.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261007/202610072103.1v2wWX3z-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610072103.1v2wWX3z-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   In file included from drivers/net/wireless/ath/ath12k/dp.c:7:
+   include/linux/page_frag_cache.h: In function 'page_frag_alloc_align':
+>> include/linux/page_frag_cache.h:49:9: error: implicit declaration of function 'WARN_ON_ONCE' [-Wimplicit-function-declaration]
+      49 |         WARN_ON_ONCE(!is_power_of_2(align));
+         |         ^~~~~~~~~~~~
+
+
+vim +/WARN_ON_ONCE +49 include/linux/page_frag_cache.h
+
+3d18dfe69ce46f Yunsheng Lin 2024-10-28  39  
+65941f10caf2c0 Yunsheng Lin 2024-10-28  40  void page_frag_cache_drain(struct page_frag_cache *nc);
+65941f10caf2c0 Yunsheng Lin 2024-10-28  41  void __page_frag_cache_drain(struct page *page, unsigned int count);
+65941f10caf2c0 Yunsheng Lin 2024-10-28  42  void *__page_frag_alloc_align(struct page_frag_cache *nc, unsigned int fragsz,
+65941f10caf2c0 Yunsheng Lin 2024-10-28  43  			      gfp_t gfp_mask, unsigned int align_mask);
+65941f10caf2c0 Yunsheng Lin 2024-10-28  44  
+65941f10caf2c0 Yunsheng Lin 2024-10-28  45  static inline void *page_frag_alloc_align(struct page_frag_cache *nc,
+65941f10caf2c0 Yunsheng Lin 2024-10-28  46  					  unsigned int fragsz, gfp_t gfp_mask,
+65941f10caf2c0 Yunsheng Lin 2024-10-28  47  					  unsigned int align)
+65941f10caf2c0 Yunsheng Lin 2024-10-28  48  {
+65941f10caf2c0 Yunsheng Lin 2024-10-28 @49  	WARN_ON_ONCE(!is_power_of_2(align));
+65941f10caf2c0 Yunsheng Lin 2024-10-28  50  	return __page_frag_alloc_align(nc, fragsz, gfp_mask, -align);
+65941f10caf2c0 Yunsheng Lin 2024-10-28  51  }
+65941f10caf2c0 Yunsheng Lin 2024-10-28  52  
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
