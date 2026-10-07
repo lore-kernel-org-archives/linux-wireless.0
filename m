@@ -1,45 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D52E4A1E1F;
-	Tue,  6 Oct 2026 21:36:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25872319617
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 01:11:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791322564; cv=none; b=s7rcoYv1ideJDDNDiMzjVuazHtespPxOZEdTGmo1CNEVhb3TnM+t72q8yOtmG2QI17cIYqlMsjxdHNjrau4HjxxSmyS1rO0AJWv/JFQqI2T6pQg2Py/FhSNHtzIh55bWTJTuAMgnBChgSUPaY4TrpBz73J2EWwWNOR/WcrPKWCQ=
+	t=1791335515; cv=none; b=dzndpQ1RODM+zv+LoMXYuSCt9aLGgkFRGloumiUYNzSu5fUbGx9y5GQboSkRE1ntADjs5chHeI2PSPLLsxsY+wtmxsWpHG9VpEvWnjRR8a5zpxQmt6IrxspUeRRIKaV1jnRDhwR9HlbnhzSI3MBqN2lD4OpmJjvRubQJhKKuUnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791322564; c=relaxed/simple;
-	bh=b8g8jCDsRe/FGbwkHoOn57AZd8wmGM5ro/jgtLnss5c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y8N4Kz9VkoaZVVF+QRZ9VRqrTWMQImdStfBjIJj5wtuXQ4Su3j2jN6a34BhEe+RIND5rivRyjxww47/0Yuxsutu/VHxVSImLQTUw8aDNHto54gIgNuWcU/uZAHWdY8qx7I8oFm1cxV2i7+AvXhBrseHqmSBpTCgZlXK4IiAq0gc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OoiWMl0B; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791335515; c=relaxed/simple;
+	bh=tfwpSf6cK/7wgZO3SI0caT3dlHz31BCetoXzCNKgNeU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=iX9K6vaFKVLU9SpYeeKSuluGtMAi5LQEuGJWgOttiqI6+/jtjGjQ/dRIfHMxQFmbUwh7xircLWv3Yn3S3IkGg1lz0rGIYeJ8GmbU02dz39yC6eaQb4LoUqwNfdCQcG9ZbmLPAs/IZjtUZB8wpl9gTNHYIXctvXbLKzA/uwqvmt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=hpnKXVPj; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OoiWMl0B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 979B41F0089C;
-	Tue,  6 Oct 2026 21:36:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791322563;
-	bh=aphMl/CQvAn73HZzxiI8C1mOIrEB0F4ZVPD2ZLQKtDk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OoiWMl0BUVtCCCOyeTjnOpBguS29I9cMR97dUpE4TTzDqqFGI/CvtSVPD7bpiKRJ5
-	 9LyuR8fBHUFXhNqDrMGwvd843N4Q62osRPVthBAfPH0NVpxK4/y7hJIP1wihNphBpe
-	 6SvGbpQYHslEPrFNG9lq8c0ns9lFXTTtOiHTYxOIUEIThYNYciXc00Nomg2wYIAoVV
-	 VPOZeFKK+myEwVfP75gsyDWS2BVZZpwhdJE3uNAfJi+ltuDx+wG9QwWoQK+CkbqHXG
-	 TLRWChhLck47TiiqaYp3UZbT2mqRSr1gybQksIG/fHTTjqWeWuhxZfu5S0xaGYn9Vz
-	 gqYq8NxaxtDPw==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org,
-	mehmet.fide@screeningeagle.com,
-	Mehmet Fide <mehmet.fide@gmail.com>
-Subject: Re: Please apply 13221be72034 ("wifi: rtw88: Handle C2H_ADAPTIVITY in rtw_fw_c2h_cmd_handle()") to 6.6.y and 6.12.y
-Date: Tue,  6 Oct 2026 17:35:34 -0400
-Message-ID: <2026-10-06-1-daily-reply-0002-rtw88-c2h-adaptivity@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261005145604.134614-1-mehmet.fide@gmail.com>
-References: <20261005145604.134614-1-mehmet.fide@gmail.com>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="hpnKXVPj"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6971BiJkA3403750, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791335504; bh=4YBOqUiyEuuL2113i28MhGcrE93n6FqthBzVub8O+DI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=hpnKXVPjv9qKwDA1IxzgIPrvLvyZHBeZy9Y4eRrgztdEaomwrX1smSLs0bvVJoBrY
+	 NPN9tocMzALcu1b0cMi91T0DzQOt8HJINxoU2TSbflnkN89S8McWFKotsKqESvak8x
+	 boV+svFfDJ0FGu8RGxDKLVy+T76vUY+fbEaAZvUpxCPvMk5WOx2lzbu952ldUHRBdM
+	 QZ7emgxoguGKKvfbs6fyoq1teVFpxgtBPCuzBrOE0mt4Ws4ArWzdef/WrW6fGcwrcv
+	 6ojpu/G+0AEUy8KC6qm2+7WjUefuBgyAduVH3sf8CZp6Xx0MdwWyaNy2bTvIVWw+ao
+	 u2H4Jw7GLJJQg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6971BiJkA3403750
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Wed, 7 Oct 2026 09:11:44 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 7 Oct 2026 09:11:45 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 7 Oct 2026 09:11:45 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
+ Transport; Wed, 7 Oct 2026 09:11:45 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ku920601@realtek.com>, <kevin_yang@realtek.com>
+Subject: [PATCH v2 rtw-next 0/3] wifi: rtw89: 8922d: increase firmware format to 1
+Date: Wed, 7 Oct 2026 09:10:54 +0800
+Message-ID: <20261007011057.12125-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,23 +56,35 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-> Over USB a register read sleeps. On 6.12.112 with an RTL8822CU, the
-> only rtw88 chip with adaptivity support, this gave "Voluntary context
-> switch within RCU read-side critical section" in rtw_usb_rx_handler()
+The firmware commands/events formats are changed since 0.35.119.0, and
+BT-coxistence has much changes needed implementation in driver side.
+Update the firmware format version to support newer formats and features.
 
-13221be72034 ("wifi: rtw88: Handle C2H_ADAPTIVITY in rtw_fw_c2h_cmd_handle()")
-only prepares for the WQ_BH conversion in 3e3aa566dd18 ("wifi: rtw88: usb:
-Preallocate and reuse the RX skbs"), which is in neither 6.12 nor 6.6. Stock
-6.12.y and 6.6.y run rtw_usb_rx_handler() from a plain
-create_singlethread_workqueue(), where a register read may sleep, so that splat
-cannot come from an unmodified
-6.12.112.
+v2:
+ - add patch 2/3 to support NZ/BR/AR specific regulation.
+ - in patch 3/3, mention the changes of patch 2/3 is one of reason
+   to increase the fw version.
 
-Could you send the full trace, and say whether your kernel carries that
-conversion or other local rtw88 changes? We will take the patch if it
-reproduces on unmodified stable.
+Ching-Te Ku (1):
+  wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to
+    9.24.2
 
+Ping-Ke Shih (1):
+  wifi: rtw89: 8922d: update supported firmware format to 1
+
+Zong-Zhe Yang (1):
+  wifi: rtw89: regd: add NZ/BR/AR for individual TX power settings
+
+ drivers/net/wireless/realtek/rtw89/coex.c     | 2 +-
+ drivers/net/wireless/realtek/rtw89/core.h     | 3 +++
+ drivers/net/wireless/realtek/rtw89/regd.c     | 3 +++
+ drivers/net/wireless/realtek/rtw89/rtw8922d.c | 4 ++--
+ 4 files changed, 9 insertions(+), 3 deletions(-)
+
+
+base-commit: 7cde94dab0e74434ccc0a387d7ad373fb3becda0
 -- 
-Thanks,
-Sasha
+2.25.1
+
