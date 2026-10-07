@@ -1,115 +1,81 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8089D3D813E
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 14:29:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0034B4027;
+	Wed,  7 Oct 2026 14:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791383351; cv=none; b=KXuUjxTrv798/FALFDnibrt9WgawT9FNc8wEc69Z+NOodZBWy8dPMV+wnbqeEuhdRx2PMpDibDUpUiN9XOLn8XlOdKOXXtHThxTd5S0pINWpNpGNRiWQd21ZVHEa0MuzVCMVVA+VPm1190gEZ9Ril4LJtpGIE7pF3SXoev1KUF0=
+	t=1791384918; cv=none; b=obcboxQkLW2phqGM2SgHap/VaCfMuWpNPZvaEr2VHR7CgoTv1xiLUWuehUJRQHumTV3HKQSi0Bun6yFu1R4PF9aDAVyWgMbACKOqZ0EburbprY9U0QF6GaHsMHVWpoWO3FlN4iPpjgs34sCY+i5bzA6XTQptierx7uO6sshoiCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791383351; c=relaxed/simple;
-	bh=iYXR+WO4Xo6Z9SQO8O8Zw30mGsfc7tNwv58vyWm79Lk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Vlfsn4zvsWFnpFmYiZ43FMFzP0SGEBx94auRxUDUtAmRkjOhkwguSe2xheECeItoFo7/uRIMDFPpF1u9QYLHyhnV3FTvkRN5W7zz3o1rJADvk4DM1y8RR3R0AtuUCfuVGLnHX/x/LKxsSriyFTL4w2cuG1fmwrc1qSjtvzGND4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WYU8NwUD; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791384918; c=relaxed/simple;
+	bh=jRuZf2Z9vpenxDb+GYJexrqjYoXsd4bLd8+09fF67OA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=rT3hg3laK9CWeH7dqPPjm04T/unBDiAnG8v246vzTIz88xX73EYPkjlGkCTZTsfT4deQt8IPgsh2wsY2QPhu3FSrsZDVb10pcL0bVZXEYwdXiXmZg18zORP3RcM3tEbyRldc+Yb8L5LUG81lCmqc+HHj16kuk1DXKCH/JckJeUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ei/vZLNJ; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WYU8NwUD"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4980fe6b3beso12886855e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 07:29:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791383340; x=1791988140; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=AoGMhCcKaJd+VLZOOK8qVd8ldhqESPN1LjxvOJM3Kqc=;
-        b=WYU8NwUDfITFt3xvwX1fl3yTEXwrFpZ4I9SiLR1HuGdGD2aBJq1mYDgBSeJsrTn05J
-         sYP6HqkAxnPool025BSH+a/bivm11lXhyaS2sWQo0IOCz0eYX6eTxws64CYdCJeGk8sX
-         5BVb+FTstCWTWtH6s2ZYtexdOxuL3ypgg4R2TfYGHluyi0J9DNaeVQl8yOKA3WCGJAw6
-         qqXHzWtYXsa6g7Abr47iM6m5rjZ487jTWYtqCn/r3mkg4zP5gl0QR23NymuHX/FqWJ+b
-         6IOefKH9NiQcLVVak49qGa2bl2MQWyxlu3uPpX8AJ85/rE0Gf6B9HhCvUhqwz0NI592l
-         U09Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791383340; x=1791988140;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AoGMhCcKaJd+VLZOOK8qVd8ldhqESPN1LjxvOJM3Kqc=;
-        b=P4iStxQkt3WCnIJNd6jiifVCnOxX2ELMBNh8SQPBCT5i4o3XgnVnfb8aDjRTQgdHMN
-         4L3WA0OSJdSx1mvQwQGNYYwlMGx+JAtn3JSDGCsIRjrjaAADt5/REYKu5FvOP6UI1tq5
-         4PUWWgebCHrf0HOsUp56FKtkTsR4Y164Ame1v0jjjzx4/oAOaofeTT3en6LT6YWQEGXa
-         q526EoIppvQ5UtP0X2c0qdK3ocOxjVJ7mJN4Ny35wJARTBMCp9WgCMp+o1+6kV84fC/s
-         lthnzLKLJTK0UrQRc9+G/tnIiWpVv6lDd3xiwCH1faK3JbmHHjP0SCs+0LUWdAbEfTjz
-         zmlQ==
-X-Gm-Message-State: AFuF++nuxvkK443EMW2+ZejljHhu2oIkikl7xzITURh4mHqDNCQyOuvX
-	P2lCiqMgU6DKk+aKJ6LJP5kEfF7kzzt6ryd1RXL4b5Kvr2BhvqwcJgY3
-X-Gm-Gg: AYBFou3BIsuUIPJhPy0isyoHzPAVL6fRe7vA/7PYE8laiiz7lDxcOb5J4vTxZo8oc/F
-	2T1WpAq0pEGSkUhcjrkw1oXaxkRHb24R+flJexDMcHkv0/s8M3X0ImwJ660fc9wNwMFpFD/55zn
-	jNrqTyCdZR3MW9WTPHpvB2ESbAKhtCM89pzCRg8RWzFhtg0wRTmCXwp+LBIne8XGP+8YwiAxYlf
-	HnHNQ9o9rHWE3EjfW0QM0Ke6QNm39OuXGvUAYNAZYeBvnUkE+1lo9NEZl4dNY62lEtAjE1wMwDn
-	yeiWUg1NHocN/5uTDxiDM9qae7c79B6WAfyid7pFdQ8BCyDvDI8poeLKC6LcLwj1pYOXf7t+WHE
-	5kC+7uLqH8BIWS5Afv4nD1qLB41rU3s4ehkLQIA4+hFJTevH9Ad2xNghDIPe1V93dKRlF7h+Hdx
-	PsnGmUXT+dWuhAQCcQWlJp+Wp7OHryz9JpV9xCKtxPQRrKMt2cwc/neNwyCnW4brMBeQ7qqOjAM
-	sGGnpPkc3W1mLs=
-X-Received: by 2002:a05:600c:8707:b0:4a0:1b14:d009 with SMTP id 5b1f17b1804b1-4a1800cb098mr46620595e9.1.1791383340243;
-        Wed, 07 Oct 2026 07:29:00 -0700 (PDT)
-Received: from linux.tail9b532d.ts.net ([84.75.40.48])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c71d1272esm5654491f8f.27.2026.10.07.07.28.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 07:28:59 -0700 (PDT)
-From: Eduard Zateev <hackerowskiy@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Eduard Zateev <hackerowskiy@gmail.com>,
-	syzbot+d0a52209bddfa0948065@syzkaller.appspotmail.com
-Subject: [PATCH] wifi: cfg80211: validate WEXT station BSSID
-Date: Wed,  7 Oct 2026 16:28:55 +0200
-Message-ID: <20261007142855.1472524-1-hackerowskiy@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ei/vZLNJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=7efoYhAx0UinMkFbLmi5X6yxMmqYY3kQVGPcfxylJ5g=;
+	t=1791384914; x=1792594514; b=ei/vZLNJ1qd9NalPYT4ZRmxVmMTz56qqRgmYYgdhpdpycS1
+	pYdhjHXhFrTqi6orFLVcdQ/6g3eHZbYXm5acqkMhGR4UXtEMRSRtjbCk0gJiKPtGJJaK2k7TlxC6X
+	Yt/B0T1mZFadoFrE7LzK4xDtn1BHy5vuKn3ve2a4lz7yU3vhyLvEZuvMQ3bqRnzoMS5AGmkWwQCHN
+	zbNaBZdpeEIqm1zXYcZUCpBoSs7UnNT7dM1Rj0urzwgQBrc+bOtFmUKn4hmoQF8BAeFDwBNHBNxXn
+	f1iHIo1ssoXaFNWqtJtJKuQQC3ROPql3Bun58FTBAGiuVeEWjRkoGrOkjEvAUIWw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xET30-00000008AQM-32Ya;
+	Wed, 07 Oct 2026 16:55:10 +0200
+Message-ID: <16aa99921c4e92e8d4da3c84aacbec2e673666aa.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: nl80211: don't WARN on a missing self-managed
+ regdom
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Fran=E7ois?= Roux <franzelfranzel@gmail.com>
+Cc: Diederik de Haas <diederik@cknow-tech.com>, Emmanuel Grumbach
+	 <emmanuel.grumbach@intel.com>, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Wed, 07 Oct 2026 16:55:09 +0200
+In-Reply-To: <20261006161744.3804-1-franzelfranzel@gmail.com> (sfid-20261006_181759_239008_AC7457D2)
+References: <20261006161744.3804-1-franzelfranzel@gmail.com>
+	 (sfid-20261006_181759_239008_AC7457D2)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-WEXT IBSS and managed mode store the BSSID in the same
-wdev->wext.bssid buffer. cfg80211_ibss_wext_siwap() keeps a pointer to
-that buffer in wext.ibss.bssid. After changing to station mode,
-cfg80211_mgd_wext_siwap() accepts a multicast AP address and copies it
-to the buffer. Switching back to IBSS then follows that pointer and
-uses the multicast address as a fixed BSSID.
+On Tue, 2026-10-06 at 18:17 +0200, Fran=C3=A7ois Roux wrote:
+> nl80211_get_reg_do() has a WARN_ON() for a self-managed wiphy without a
+> private regdomain. Userspace can trigger it with a plain
+> NL80211_CMD_GET_REG request.
+>=20
+> Drivers can register such a wiphy first and set its regdomain later.
+> ath12k, for example, calls ieee80211_register_hw() and only then applies
+> the regdomain with ath12k_regd_update(). iwd queries the regdomain of a
+> new wiphy as soon as it shows up, so it can hit that window at boot:
+>=20
+>   WARNING: net/wireless/nl80211.c:10828 at nl80211_get_reg_do+0x1d0/0x1fc=
+ [cfg80211], CPU#5: iwd/721
 
-mac80211 can create a beacon with that address, but cfg80211_get_bss()
-rejects it, causing WARN_ON(!bss) in cfg80211_ibss_joined() after the
-join has been reported.
+I'm not a fan of this, I think the drivers should have the regdom ready.
 
-Reject invalid station BSSIDs before copying them. A mac80211_hwsim WEXT
-ioctl test reproduces the reported BSSID and warning; the original
-syzbot report has no reproducer.
+> The same trace has been reported with an Intel BE200 (iwlwifi).
 
-Reported-by: syzbot+d0a52209bddfa0948065@syzkaller.appspotmail.com
-Link: https://syzkaller.appspot.com/bug?extid=d0a52209bddfa0948065
-Signed-off-by: Eduard Zateev <hackerowskiy@gmail.com>
----
- net/wireless/wext-sme.c | 3 +++
- 1 file changed, 3 insertions(+)
+I _thought_ we fixed that issue.
 
-diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
-index b5914f3658db..3db73a0765c9 100644
---- a/net/wireless/wext-sme.c
-+++ b/net/wireless/wext-sme.c
-@@ -245,6 +245,9 @@ int cfg80211_mgd_wext_siwap(struct net_device *dev,
- 	if (is_zero_ether_addr(bssid) || is_broadcast_ether_addr(bssid))
- 		bssid = NULL;
- 
-+	if (bssid && !is_valid_ether_addr(bssid))
-+		return -EINVAL;
-+
- 	if (wdev->conn) {
- 		/* both automatic */
- 		if (!bssid && !wdev->wext.connect.bssid)
--- 
-2.55.0
+Anyway I think we need to fix the bugs, not paper over them. If it comes
+to it we can even put a WARN_ON there to reject wiphy registration w/o a
+regdomain. There should be one. As it is, iwd will get empty data or
+something, that makes no sense.
 
+johannes
