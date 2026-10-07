@@ -1,97 +1,255 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D70323F482C
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Oct 2026 06:21:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29EDE3F1078;
+	Wed,  7 Oct 2026 06:39:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791354114; cv=none; b=sqfZ2jqHo4q5moXQGXxlcw0+KMVXcml6PYl/crud41jpHoXgoQzwDVUXzWh1Pa4r9dtChGq7ywTIyfuEWTVF/6BFCUWe4/NfKbCLScq6WNBeU3jzo6fuFcPTwzaRvj6haUOxUtRlpWJQ9A2K8P1ZCxfkg+/yffGA31Vyf5gky2c=
+	t=1791355172; cv=none; b=mgYUMpcgUE7weqQDnuoTM6WXLfHvFfGFUSPWTS46jfY21xUtq6hIWgMmdH3Wjkq1nAwSBiWNyLKPOPQiC/zzSdzr6VRgwz1+vpsW1wzo/qNbXRGjklzLm9N2JpZLvBK7RaaFSbxfsa33XDA80EL5Ob8HHNvk7fL73VY1PQf+yug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791354114; c=relaxed/simple;
-	bh=1IpiDcXZO6cmR758XcfRBABk089RXsqbT8ncmzLrEmk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PR7/8UwclV43mydG5DhghARyqE7MssVcc9QS79n/KWc+xAIlQ1yasqN35vamKWXU0RcTekYUcg/1F5Sc9wnr4/oYxA6DAPpqND3zzzMsIYK8ceXlKFgUeppCZpgJfkE4Tpsx8lV8GlBw2Ly98Pk+jTMKStb5whelH0DJLswWnVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BEu4/1z/; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791355172; c=relaxed/simple;
+	bh=KEYWs/gLCUgSmeDj0vOJnCZhAMhwLRPvWCTFcmqDyQc=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=rQ8GsHVqdA2RQuhruKnS9mLfBxOAO12Og1kNaMNII6420aSeSiM1MISNNn6NU3nPWnFeoSQBY4EkT6r/9QJXF8dk1zpbUM3G8PmyUjMVEuwo/2pQOlspbjwVQCYPZIb9iVxVacT2YiiTIr7L0mJPt8IZfR/CN19PWaOPS/x+ns0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=CZTdJGAa; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BEu4/1z/"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4995b0343c1so23771955e9.3
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2026 23:21:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791354111; x=1791958911; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1IpiDcXZO6cmR758XcfRBABk089RXsqbT8ncmzLrEmk=;
-        b=BEu4/1z/NCGqgGz0z1Zaca0lOyYHOQsGsBeu9SAh4exFmlQGGo0hJ1O+ZdgREqh8Zr
-         6P0Df1Or5DsopF7X7WehU8lhGwvEDgnFA9ZdTrPgPf3zHLvo/+7YcCbI/MX8b6Oc6XAq
-         ax22oG7MrQjwfu1OARv9M4B+6rR3cGNHA+GPwbletEZZPZCTsSLyuJeO0ysR57M1No3g
-         CERiayGJH1Z5U+D6UMJR0fuHNPHyGvzI7of0g/PylYEtTwjduhxP0F90Lvd4Ms9uA6KF
-         rheX0ziOY7vMohEMrTPj1x3OXG1IT2NywPex0701UYEENfo+CL0MG1S3Of959an6+AOp
-         LjGw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791354111; x=1791958911;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1IpiDcXZO6cmR758XcfRBABk089RXsqbT8ncmzLrEmk=;
-        b=chai1YEirikI0I+1esOGvfGpW2gGEwg2i/AjP96RoLR0AVThySQHthRQeyhqPmm7WO
-         Trb2ikPvrqaj2oMB0U+Miedb+zAj8zgMJWT8n+xEp0Xin9YMqwIL1tc58RhoA8N2ZZFF
-         bg8m6V0io8nuAyxZPoxOx4qW6Hk/IeiBEfFjxvkpYESmFwOON54XeleH1xqUYbp2WYNs
-         P2FrxpWz6P5Sa+3Spq4P9DI/kBhtTei41LrLphu1oDoT8ppgoiYMCvsfWOy1YbLOmOxs
-         PCOJLLMd4PdZuBipeBVO/IDB1F15LMUIVUx92VpjZrKWlFe+q3NtsIx8WCGCdN5/hmxX
-         Pbtg==
-X-Forwarded-Encrypted: i=1; AKwUvBzhEU4mtsSyBlXI/FRfDC/qjv73XrZmgrsNquLCiy+MjMvAmbGogCMT7Qpa8GtlD/SAMq3IN+UxU9GctJpgPQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++lLF4ylWKKHFoLEqFYAgKNE5OvWghdTl6XjEzfyjT2hximaCTFb
-	ws8rssWJNcSshLCU3ichrA7G4b9sSRptc8t1JePyEr3evVDHP1HE+JoB
-X-Gm-Gg: AYBFou3pn6yUec9Id1l/7F25Gu1ItMIM1A+wqcZE9BrDqg+MpKZAKA/ntbpSh16uTw9
-	vVd6XZEMw8AS/++3Wy9ayDEIjC+w2hWbogcq2g1WJdvTO9pAyxFad7KQ68+kj9QQ2GzZ7ixhLbo
-	oOBIZzk+tdqkQgXK1L6q2SvwDYDz64MHWyOgGum/xfiP1+/iBRE3EMZg32sU88fUo/6ND5qQf1d
-	gHkZwlzU9YzTDZS2Vu1918R4RQ10M+3BL3V3MiWIA7pF/MwNHISIjEOWOmZ4hK0LKnjG0Bn+RQq
-	ThrrwvMdP6s8yk7FpuYxnNr8+fVgprLrUX46rxYc5GzsSD4mJVbNbtT9K36CaXhHJE64bOQfwwF
-	foSZ8cZNnFG2ugyAyMNImeCA1SF9Z8FRLIolmUQcgVYsOWH7CV4F7lrWkJ9pnYbB8eKSAITg+3z
-	4ef4dfLTTKrhtBwg3U3sCIC7RyEwFAGqaE4DDbYr5NlaUTSCeAJARmrD16d440nL/gyJajb76o2
-	CQR6sUh9xvEe7Q=
-X-Received: by 2002:a05:600c:530e:b0:49f:ffd0:4039 with SMTP id 5b1f17b1804b1-4a1806504fdmr14110665e9.32.1791354110998;
-        Tue, 06 Oct 2026 23:21:50 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a17f795f29sm37438205e9.11.2026.10.06.23.21.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Oct 2026 23:21:50 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Sasha Levin <sashal@kernel.org>
-Cc: stable@vger.kernel.org,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: Re: Please apply 13221be72034 ("wifi: rtw88: Handle C2H_ADAPTIVITY in rtw_fw_c2h_cmd_handle()") to 6.6.y and 6.12.y
-Date: Wed,  7 Oct 2026 08:21:49 +0200
-Message-ID: <20261007062149.2086871-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <2026-10-06-1-daily-reply-0002-rtw88-c2h-adaptivity@kernel.org>
-References: 
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="CZTdJGAa"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6976d9V513630762, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791355149; bh=cYe6Noo0ARQoNBIg4oNXFTkFAPNrpCOWlCA2O65XFuQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=CZTdJGAaEEs2RRU5vozu/cHoftCfA/z6IgPgB4VgOL1Rog8pdXmDy1VRljf4YFHCx
+	 Eix3JahCpjCsRVc5tZO2s7T3KQTvXi5itz9/1JFXOZpD/UF4SArUSXXeUyUtPVUTu1
+	 yB2oZbLMpT/XbL3T3lYAEfesOchRIcUQhAJzsv9yvokcLkfvyNNDE0TnmK54Hy9CAs
+	 fKbnvO1w2g0nzB4cIU2hgUddsJpEf54Bck69hxFMrExm0a7Y7s//erpqY5md0eQKRO
+	 LNrF0va4FyqMI+OKAQc6uDCwRCCln02mAyPlbDTHEBwvWQUGd0Fl2E+6tZG4BXw4f1
+	 KrRGsrTQI3iSQ==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6976d9V513630762
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 7 Oct 2026 14:39:09 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 7 Oct 2026 14:39:09 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Wed, 7 Oct 2026 14:39:09 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+CC: Luka Gejak <luka.gejak@linux.dev>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "mehmet.fide@screeningeagle.com"
+	<mehmet.fide@screeningeagle.com>
+Subject: RE: [PATCH rtw-next v4 2/2] wifi: rtw88: support channel switch in AP
+ mode
+Thread-Topic: [PATCH rtw-next v4 2/2] wifi: rtw88: support channel switch in
+ AP mode
+Thread-Index: AQHdViKsq55Ir0Z0UEaMXTAuIl77ILbxm64g
+Date: Wed, 7 Oct 2026 06:39:09 +0000
+Message-ID: <63ac6992e6614de1a085131964974ff1@realtek.com>
+References: <20261007061113.2083449-1-mehmet.fide@gmail.com>
+ <20261007061113.2083449-3-mehmet.fide@gmail.com>
+In-Reply-To: <20261007061113.2083449-3-mehmet.fide@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Hi Sasha,
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
 
-On 2026-10-06 Sasha Levin wrote:
-> Could you send the full trace, and say whether your kernel carries that
-> conversion or other local rtw88 changes? We will take the patch if it
-> reproduces on unmodified stable.
+[...]
 
-You are right, and sorry for the noise: our 6.12 tree carries a backport
-of 3e3aa566dd18 ("wifi: rtw88: usb: Preallocate and reuse the RX skbs"),
-so the RX work runs on a BH workqueue there. The splat is the missing
-follow-up to our own backport, not a problem of stock 6.12.y or 6.6.y.
-Please drop the request.
+> --- a/drivers/net/wireless/realtek/rtw88/fw.c
+> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
+> @@ -1802,14 +1802,76 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtw=
+dev)
+>         return ret;
+>  }
+>=20
+> +bool rtw_fw_csa_active(struct rtw_dev *rtwdev)
+> +{
 
-Thanks,
-Mehmet
+add lockdep_assert_wiphy(wiphy) to rtw_fw_csa_{active,start,stop}?
+Since they access rtwdev->csa_vif.
+
+> +       return rtwdev->csa_vif && rtwdev->csa_vif->bss_conf.csa_active;
+> +}
+> +
+> +void rtw_fw_csa_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
+> +{
+> +       u32 interval =3D ieee80211_tu_to_usec(vif->bss_conf.beacon_int);
+> +
+> +       rtwdev->csa_vif =3D vif;
+> +       wiphy_delayed_work_queue(rtwdev->hw->wiphy, &rtwdev->csa_beacon_w=
+ork,
+> +                                usecs_to_jiffies(interval));
+> +}
+> +
+> +void rtw_fw_csa_stop(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
+> +{
+> +       if (!vif || rtwdev->csa_vif !=3D vif)
+> +               return;
+> +
+> +       wiphy_delayed_work_cancel(rtwdev->hw->wiphy, &rtwdev->csa_beacon_=
+work);
+> +       rtwdev->csa_vif =3D NULL;
+> +}
+> +
+
+[...]
+
+> diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c
+> b/drivers/net/wireless/realtek/rtw88/mac80211.c
+> index 2a9b09fa76e7..087268909f5f 100644
+> --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
+> +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+> @@ -235,6 +235,8 @@ static void rtw_ops_remove_interface(struct ieee80211=
+_hw *hw,
+>         rtw_dbg(rtwdev, RTW_DBG_STATE, "stop vif %pM mac_id %d on port %d=
+\n",
+>                 vif->addr, rtwvif->mac_id, rtwvif->port);
+>=20
+> +       rtw_fw_csa_stop(rtwdev, vif);
+> +
+>         mutex_lock(&rtwdev->mutex);
+>=20
+>         rtw_leave_lps_deep(rtwdev);
+> @@ -395,8 +397,10 @@ static void rtw_ops_bss_info_changed(struct ieee8021=
+1_hw *hw,
+>                 if (vif->cfg.assoc) {
+>                         rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FI=
+NISH);
+>=20
+> -                       rtw_fw_download_rsvd_page(rtwdev);
+> -                       rtw_send_rsvd_page_h2c(rtwdev);
+> +                       if (!rtw_fw_csa_active(rtwdev)) {
+
+Does it actually happen to AP mode?
+
+If it could happen, check the condition by conf->csa_active (like below)?
+
+> +                               rtw_fw_download_rsvd_page(rtwdev);
+> +                               rtw_send_rsvd_page_h2c(rtwdev);
+> +                       }
+>                         rtw_fw_default_port(rtwdev, rtwvif);
+>                         rtw_coex_media_status_notify(rtwdev, vif->cfg.ass=
+oc);
+>                         if (rtw_bf_support)
+> @@ -438,6 +442,8 @@ static void rtw_ops_bss_info_changed(struct ieee80211=
+_hw *hw,
+>                 rtw_set_dtim_period(rtwdev, conf->dtim_period);
+>                 rtw_fw_download_rsvd_page(rtwdev);
+>                 rtw_send_rsvd_page_h2c(rtwdev);
+> +               if (conf->csa_active)
+> +                       rtw_fw_csa_start(rtwdev, vif);
+>         }
+>=20
+>         if (changed & BSS_CHANGED_BEACON_ENABLED) {
+> @@ -489,6 +495,8 @@ static void rtw_ops_stop_ap(struct ieee80211_hw *hw,
+>  {
+>         struct rtw_dev *rtwdev =3D hw->priv;
+>=20
+> +       rtw_fw_csa_stop(rtwdev, vif);
+> +
+>         mutex_lock(&rtwdev->mutex);
+>         rtw_write32_clr(rtwdev, REG_TCR, BIT_TCR_UPDATE_HGQMD);
+>         rtw_write16(rtwdev, REG_ATIMWND, ATIMWND_DEFAULT);
+> @@ -556,6 +564,15 @@ static int rtw_ops_set_tim(struct ieee80211_hw *hw, =
+struct ieee80211_sta *sta,
+>         return 0;
+>  }
+>=20
+> +static void rtw_ops_channel_switch_beacon(struct ieee80211_hw *hw,
+> +                                         struct ieee80211_vif *vif,
+> +                                         struct cfg80211_chan_def *chand=
+ef)
+> +{
+> +       struct rtw_dev *rtwdev =3D hw->priv;
+> +
+> +       rtw_fw_csa_start(rtwdev, vif);
+> +}
+> +
+>  static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd=
+,
+>                            struct ieee80211_vif *vif, struct ieee80211_st=
+a *sta,
+>                            struct ieee80211_key_conf *key)
+> @@ -626,7 +643,8 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, e=
+num set_key_cmd cmd,
+>         }
+>=20
+>         /* download new cam settings for PG to backup */
+> -       if (rtw_get_lps_deep_mode(rtwdev) =3D=3D LPS_DEEP_MODE_PG)
+> +       if (rtw_get_lps_deep_mode(rtwdev) =3D=3D LPS_DEEP_MODE_PG &&
+> +           !rtw_fw_csa_active(rtwdev))
+
+Think of this deeper.... Is it existing race between set_key and !csa->acti=
+ve?
+
+>                 rtw_fw_download_rsvd_page(rtwdev);
+>=20
+>  out:
+> @@ -846,6 +864,7 @@ static int rtw_ops_suspend(struct ieee80211_hw *hw,
+>         int ret;
+>=20
+>         mutex_lock(&rtwdev->mutex);
+> +       rtw_fw_csa_stop(rtwdev, rtwdev->csa_vif);
+
+Since you access rtwdev->csa_vif, should this take wiphy_lock?
+
+>         ret =3D rtw_wow_suspend(rtwdev, wowlan);
+>         if (ret)
+>                 rtw_err(rtwdev, "failed to suspend for wow %d\n", ret);
+> @@ -893,19 +912,30 @@ static int rtw_ops_hw_scan(struct ieee80211_hw *hw,=
+ struct ieee80211_vif *vif,
+>         struct rtw_dev *rtwdev =3D hw->priv;
+>         int ret;
+>=20
+> -       if (!rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD))
+> -               return 1;
+> +       mutex_lock(&rtwdev->mutex);
+
+guard(mutex)( &rtwdev->mutex); ?
+
+>=20
+> -       if (test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
+> -               return -EBUSY;
+> +       if (rtw_fw_csa_active(rtwdev)) {
+> +               ret =3D -EBUSY;
+> +               goto out;
+> +       }
+> +
+> +       if (!rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD)) =
+{
+> +               ret =3D 1;
+> +               goto out;
+> +       }
+> +
+> +       if (test_bit(RTW_FLAG_SCANNING, rtwdev->flags)) {
+> +               ret =3D -EBUSY;
+> +               goto out;
+> +       }
+>=20
+> -       mutex_lock(&rtwdev->mutex);
+>         rtw_hw_scan_start(rtwdev, vif, req);
+>         ret =3D rtw_hw_scan_offload(rtwdev, vif, true);
+>         if (ret) {
+>                 rtw_hw_scan_abort(rtwdev);
+>                 rtw_err(rtwdev, "HW scan failed with status: %d\n", ret);
+>         }
+> +out:
+>         mutex_unlock(&rtwdev->mutex);
+>=20
+>         return ret;
+
