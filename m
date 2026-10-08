@@ -1,74 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDFA636DA1A;
-	Wed,  7 Oct 2026 23:40:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B814F2264D9;
+	Thu,  8 Oct 2026 00:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791416416; cv=none; b=ac4gf7ly56pZ7lOCdGx7lklIFqd/pK7IZRi4B8uwZ9Diegqs+1ksKjixbgrptNgjqwHpd5UD890LRrLeiyefWGdVC0Ur5TPLM4gt+VXEzR73v2T5gFst5HmWKtUqsg8KmD4rFm98r9gmGnbUfX3gvMfpNOyfXmA7+33PJMPs1yo=
+	t=1791420482; cv=none; b=O/3Ls0yUTBFQcGb5WDHv9Kmhrd2OPhljdzr7ze5pJgAGohpA+9lFPTOYjl713s984Nf+RxUPbO87LhKsZ6YJhhCQpuPuRDgkRoP6v5zHhDSaqVKmN/514GsWPGW2moYlDjPweigDpin778pifxoZZK03HJdQxSU9w67UlAWeNeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791416416; c=relaxed/simple;
-	bh=dWSbO468FuWIiyhKaZwNrHXxsdEcLvqXn5/ITf4qyAc=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=WL1NIVr30Wot4OJAykMXUMPhv96vWA/YpQJ2wHfcjnl4lgPmg9lhbGK3DD6fLUHsE2xovTZbuyXo+L5nqV2HJVnRDdlWFV4iX7BiUhrFTgd5DCLaxLYjiLRC1wK5XNhd41/WoWE5jPjU0VJdwj4ye0Nqja1rF6lJLi0YbAHFvPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h0hU8whL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791420482; c=relaxed/simple;
+	bh=3qecFCTNOtMF/6J6b9IogFOPnuThkUfV0zbWRshIEYM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Ie6RvZJv0AASFT2CVrV+z8jRocohUfAHBIohV4JAUL2gSlIr+e08LWx4T4S6XQV/zUmY9gIpdJ/TNYGWKhkonOW3oQCEEQBIVWB+oJWM9r+mS6T1503nPa3jdEOgCeu9zSyLZ7IirKaOF1k5X3LIr9dRb61fm8wP4TfsMyCfgXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=pTM1AwZN; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h0hU8whL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FF731F00893;
-	Wed,  7 Oct 2026 23:40:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791416414;
-	bh=WCFUunJhajHLbi209lz2m0sglzfhl/boAYIS4QhWoGE=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc;
-	b=h0hU8whLwpnmUiewm85a6xpzrcWEH3bWVSOjrp1Xixo9KldRsXXb19q6ttf1wHIri
-	 8kZl40XbdIxEwxKcKQmouOGFj+tKcXv2DPXbwTykl+CJFeO8ArXQdpoHAk2n9y/tDm
-	 YLG9wB2dBEQ7aJ/iPSPl7nqwKMS8gW+2uRsv0uViZ1NFK5EDOhkAUDRBlH4EQUi3Og
-	 vAoIzIDrNKkZ331M/Mk81tPTeyh2pVA0kwSsN3kYIt9oVAwZBIHh+8pOfsR+ZX/80T
-	 tGapqRw6fMRCcpaMLgcfwZpA8G90YUYI1rtklhOe1yf1UAvWcBkUBhai73vprWxhLB
-	 SdFwTUvnSbRXw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 773FA3809A08;
-	Wed,  7 Oct 2026 23:40:14 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="pTM1AwZN"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6980lfRwB053744, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791420461; bh=iH0ImTPLWRVowfA8e0nCPafktKF6MvkpYnllTerShB4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=pTM1AwZNVvZ7qr7Tc+fP25uiyRFoBILOAngo+BGKbwdrqqzWbX6zX/JvKPaRcz0+B
+	 wmKcxxAIOPc1EP26+yM8Z4FZAOtGZP4lZC138VzsXgOyHTeOSpIKnVgfq0MGcxYKxo
+	 LP78wQ2zr1Lo7MrqNnE8FoS731qonTsNTWXG2RYKtCP970wCtwPFPj8eSVtXaww599
+	 cPWBtlG6MyxrHdddNu+VQ69xjmMoQQ4HPIgHdgbHcToX0DIfp98WHs5EIT8aBvGZN7
+	 CYNGOUb97LkhbFEyaZpKrm2zpUmkOi5DJrOhYpqtk5ymJE2YXa3egedT6QRK78WFNS
+	 T8KhycqGxROLQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6980lfRwB053744
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 8 Oct 2026 08:47:41 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 8 Oct 2026 08:47:42 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 8 Oct 2026 08:47:41 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Thu, 8 Oct 2026 08:47:41 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Tristan Madani <tristmd@gmail.com>
+CC: Kalle Valo <kvalo@kernel.org>, Bernie Huang <phhuang@realtek.com>, Timlee
+	<timlee@realtek.com>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>, Tristan Madani <tristan@talencesecurity.com>
+Subject: RE: [PATCH wireless v2 1/2] wifi: rtw89: fix IE length passed to
+ cfg80211_find_ie() in 6 GHz probe
+Thread-Topic: [PATCH wireless v2 1/2] wifi: rtw89: fix IE length passed to
+ cfg80211_find_ie() in 6 GHz probe
+Thread-Index: AQHdVndZILhA+Kbh2E6eJpKr5vPk4bbyz9rw
+Date: Thu, 8 Oct 2026 00:47:41 +0000
+Message-ID: <f9336ee25ea04f418f63700f2e1a090a@realtek.com>
+References: <20261007161721.261452-1-tristmd@gmail.com>
+ <20261007161721.261452-2-tristmd@gmail.com>
+In-Reply-To: <20261007161721.261452-2-tristmd@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [GIT PULL] wireless-next-2026-10-07
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <179141641303.3735789.18222247089813775078.git-patchwork-notify@kernel.org>
-Date: Wed, 07 Oct 2026 23:40:13 +0000
-References: <20261007205827.467974-3-johannes@sipsolutions.net>
-In-Reply-To: <20261007205827.467974-3-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 
-Hello:
+Tristan Madani <tristmd@gmail.com> wrote:
+> @@ -2582,7 +2583,10 @@ static void rtw89_core_cancel_6ghz_probe_tx(struct=
+ rtw89_dev *rtwdev,
+>                 return;
+>         }
+>=20
+> -       ssid_ie =3D cfg80211_find_ie(WLAN_EID_SSID, ies, skb->len);
+> +       if (skb->len < hdr_len)
+> +               return;
+> +
+> +       ssid_ie =3D cfg80211_find_ie(WLAN_EID_SSID, ies, skb->len - hdr_l=
+en);
+>=20
+>         list_for_each_entry(info, &pkt_list[NL80211_BAND_6GHZ], list) {
+>                 if (ether_addr_equal(info->bssid, mgmt->bssid)) {
 
-This pull request was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
+The use of cfg80211_find_ie() was removed by [1].
+Please use https://github.com/pkshih/rtw.git as codebase.
 
-On Wed,  7 Oct 2026 22:57:00 +0200 you wrote:
-> Hi,
-> 
-> Nothing much going on in wireless-next. However, next time
-> I hope to land my RTNL-redux series which will (almost)
-> completely wean the wireless stack off the RTNL, except in
-> places where we need it for netdev register/unregister/etc.
-> 
-> [...]
-
-Here is the summary with links:
-  - [GIT,PULL] wireless-next-2026-10-07
-    https://git.kernel.org/netdev/net-next/c/991a02c88199
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+[1] https://lore.kernel.org/all/20260909070004.35353-5-pkshih@realtek.com/
 
 
