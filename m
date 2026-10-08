@@ -1,59 +1,70 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41C91373C1A
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 05:25:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9F001AF4E9
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 05:29:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791437110; cv=none; b=BUbj5X15tKhKVecCUvi/CC2M8MJA8fd4uAW4S4ax+JypqsZZI7EHLoiSSyol1v79qf/M8uPLpqyfyUZlRkCrV0vnuTIx8dTcilltPhv9t9bAsU1nLO+ms5iSJ14A+aS1/9u92Rxz1p31S9MfNGwJ2wAM44+QBQANHO0TUhmFFpo=
+	t=1791437383; cv=none; b=UmALqrqCAYY3k1807p1cBc0+BOyjeb2LN5OfGOpODAqqhP9ngTJEuLODXee0QofYoNPYyF2fWlZEw6REe22m3arY4gHG47Uc1+77f3X4WxXx1VmlOclb7jhlnGGps3+wMgcALuCmrWIm/6CrVycGtM5TPbyrmHNh4aV4Ct0cFXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791437110; c=relaxed/simple;
-	bh=7KhcOGrGoWDxS+0zbMVo71nXrQNFAeMV9emjoiKNtS4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZBkM++DoSWxHr0FdeiE2AwpCcIocLKSoDrZBynXbgAnf3PGvyKVG68ShsO7oi2aVMDaFBru6No/qWWPLORpYk0GXs4UsxXxHqIu/wusY9XGNKP/pA6lUXNJoF095qLpETjrb9rfw0ypbB/IDGpnj2Hv1S9SKTcjCqqkPOtk2RK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=TGBx3jY4; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1791437383; c=relaxed/simple;
+	bh=niVvTWNk3QWOalqFTP346D6I7kaju0YJcJoHhRrZRGo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XxA3FSm9Zfn8b6nLK4HQ9+C9MzI1c6oZ33veX7dsU6cLgw7PLNSMD4PERzn5UVftGhFcF88Y53EfCb4YSvI+6GFhqpTVj4ls2HnNb/hzxKDqEWlgqFgWGz3OG6LGE1zrr+HToPYH055IDDTF5bpOydmZ8zidYd06G3Swqu+/4Tk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WGashld6; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TGBx3jY4"
-X-UUID: 9a558fecc2d811f1b1788b6acf885367-20261008
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=cBapcVUEPq2DV9/lbtDCUq2OC1ML+XYqyYlRGjTF2Cw=;
-	b=TGBx3jY4i3NoKFKGp/g/eA5xKJiB48GFZvP+xxuSlJtnD4DErTmc3/cao+KpnhKwUqQbKyQ27Qu14fT2YC8p94ELlN2J2YI6bK5KqbuTo2grk3vmpytaW/aqrw4C6lyNBQCOU17NzNfgvOKGSMoxKYDGsVngrXQo76TZVpUenx4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.20,REQID:6c6246ae-e039-46b4-a44d-36e51f931b16,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:291e20b,CLOUDID:74521820-2f17-48f6-b8a0-2bb5971c52b4,B
-	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
-	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
-	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 9a558fecc2d811f1b1788b6acf885367-20261008
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-	(envelope-from <eason.lai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1133545021; Thu, 08 Oct 2026 13:24:58 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 8 Oct 2026 13:24:57 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Thu, 8 Oct 2026 13:24:57 +0800
-From: Eason Lai <eason.lai@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<kun.wu@mediatek.com>, <deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
-	<quan.zhou@mediatek.com>, <ryder.lee@mediatek.com>, <leon.yen@mediatek.com>,
-	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>, <jeff.hsu@mediatek.com>,
-	<eason.lai@mediatek.com>, Jeff Hsu <Jeff.Hsu@mediatek.com>
-Subject: [PATCH] wifi: mt76: mt7925: Fixes: Fix SER will panic when connect to AP
-Date: Thu, 8 Oct 2026 13:24:53 +0800
-Message-ID: <20261008052453.3977058-1-eason.lai@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WGashld6"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-ccd0887c542so1176776a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 22:29:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791437382; x=1792042182; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Eincc2xR/aQzEUZWBEcbooh1c8vCK29qIoSJ+5aX63E=;
+        b=WGashld6RPycFq2DvZkoaHoTT+6zkPDGfIqrj7dC9DsmxxABDEdejDf/17mHTK0Pth
+         hkbH5bRZ2ca1CTZFg9zh3dCnen3jWSo+qewrI4iqIqtuPC8M0DY+6GL2trCqm7bevyDg
+         HzJiJ0cjThCoRTmFA4tTv8QNcwenK4uj9rgk8xsvOS/XbzkpVus4ZF0i1bRAv5vXEqZn
+         TrTBPbNhct0xKoA79wn4jkxLKor0pp9BhRQTEd7h6X8EluX+Q7eNo7rcXL5BDHHQdvDy
+         BcPjYpiYikkQAkLIn1R57CBQolfectDdJ/cEZvGOfLBIKSBvga4ig4ESRYDItsqwdNft
+         S0Ag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791437382; x=1792042182;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Eincc2xR/aQzEUZWBEcbooh1c8vCK29qIoSJ+5aX63E=;
+        b=2ozJ6kyk6TrLiFd0P4NJYvifMHw1oqe12Cr/ukCfy6tB+qBlqjUK9GP/0zweTD4Db4
+         wiA0ZUVZB8T2DBq7btw3RySmuNC7gMhquuoW9/OG1DMJQy+GVGtKKlPw3KaX7G3z6a3c
+         H74qMI/hT+HpF04Rf/qNIV+Cpv8nMVs+nweMDVYjLY21kMpF7wGo5CtMSZpYI/JzL4pf
+         QymBZOSoI+KNLurKIV76wZsGrE1ZvDKTOsalGqVuoAiUVHxgyGT83wScjYuoUpa7DjNv
+         wcec1aotxHetwOum2qF4dtINp39tr+uB4ivLYNwrqsDrwE6m20IzrSNDZnSH9jorxv6P
+         WbAw==
+X-Gm-Message-State: AFq9FYLIicxssWtZ/ItcuuTWDWDp8sof1F699EtK+UY0rUqZzR6LU2qu
+	FiTKUgVWnJwwnZPwl/SlnFZLpXAyWLzAj6huX5XqFpNP6b141ywnzAWz
+X-Gm-Gg: AYBFou16CQRh9iXUeoMo+rLy1Zl3GvVkdV2kst3vR2KwHohRC0uNXaUOvaAaYCz8nq5
+	6EvdjascUe370J0i8uenSE8ZyKw73SRbV+4wM2uhLDSZrhhbFiNOfg7UDZ4IEqeyDSRGUJsL/Sm
+	cB/oWH7rYD29wn9yztBkBpcCQcj7pIUIhUrD7lFiGUxJKUsFHx6nveTH0SHhtpoAB8QHAgL6iyQ
+	kPHOZabWQ+onSfvwcoSAbR0/EbL0xEwtXNMjRFj79FSP8r52tCz+POcL75R5yf/+MOohrHsmtse
+	xnNH5E2iPUhfGF3wPsojyMYpWJE09d1rC4ffdX07DCM/00brsFO4UoMICJS4vmLstCfAHA6hluc
+	ka3fEHVfT937B8QkCRdnlY6JjfGb95HWdDi9m+RjzE3c2fD/I5QbaGzdlhYtZbTJUelMXSmC8Cy
+	HZqkDySu7GnhZDP1nDWxCJzsA+l2wpaGHGVxF7x6hJ4jactyFsrjL8X7mtN30L7++jlrE=
+X-Received: by 2002:a17:90b:2584:b0:3a7:cffb:8b96 with SMTP id 98e67ed59e1d1-3a8a19926b3mr3521076a91.18.1791437382014;
+        Wed, 07 Oct 2026 22:29:42 -0700 (PDT)
+Received: from dungbv.. ([116.98.134.138])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a9ff7a7445sm2484574a91.5.2026.10.07.22.29.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Oct 2026 22:29:41 -0700 (PDT)
+From: Bui Viet Dung <dungvn2345@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Bui Viet Dung <dungvn2345@gmail.com>
+Subject: [PATCH] wifi: cfg80211: Pin module for debugfs file operations
+Date: Thu,  8 Oct 2026 12:29:36 +0700
+Message-ID: <20261008052936.555554-1-dungvn2345@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,81 +72,79 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 
-From: Jeff Hsu <Jeff.Hsu@mediatek.com>
+An open debugfs file retains its file_operations pointer in the
+debugfs proxy state. However, the file_operations defined by the
+DEBUGFS_READONLY_FILE and DEBUGFS_RADIO_READONLY_FILE macros, as well
+as ht40allow_map_ops in net/wireless/debugfs.c, have no .owner set to
+THIS_MODULE.
 
-MAC reset(mt7925e_mac_reset) not check all the RX Q and stop napi
-it will result racing then happen panic
+As a result, full_proxy_open_regular() calls fops_get() which succeeds
+without taking a reference to the cfg80211 module. When CONFIG_CFG80211=m
+and wireless debugfs is enabled, a userspace process can open any of these
+debugfs files (e.g. /sys/kernel/debug/ieee80211/phy0/rts_threshold or
+ht40allow_map) and keep the file descriptor open while the module is
+unloaded (rmmod cfg80211).
 
-kernel: wlp1s0: associated
-kernel: wlp1s0: Limiting TX power to 30 (30 - 0) dBm as advertised by 02:0c:43:36:60:c8
-kernel: ------------[ cut here ]------------
-kernel: kernel BUG at net/core/dev.c:7436!
-kernel: Oops: invalid opcode: 0000 [#1] SMP NOPTI
-kernel: CPU: 1 UID: 0 PID: 459 Comm: kworker/u48:8 Tainted: G S         OE       6.17.0-061700-generic #202509282239 PREEMPT(voluntary)
-kernel: Tainted: [S]=CPU_OUT_OF_SPEC, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
-kernel: Hardware name: HP HP ProDesk 600 G6 Microtower PC/8712, BIOS S02 Ver. 02.05.01 01/05/2021
-kernel: Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
-kernel: RIP: 0010:napi_enable_locked+0x1cb/0x220
-kernel: Code: 48 c7 c7 10 2c 1e 87 e8 93 c4 2f 00 4c 8b 6d e0 e9 e9 fe ff ff e8 75 31 ff ff 48 8b 45 e0 48 8d 53 10 a8 01 0f 85 02 ff ff ff <0f> 0b 8b bb a0 01 00 00 48 83 c6 18 e8 04 59 20 ff 48 8b b3 e8 01
-kernel: RSP: 0018:ffffd1e8418afd48 EFLAGS: 00010246
-kernel: RAX: 0000000000000110 RBX: ffff8a2921952cf8 RCX: 0000000000000000
-kernel: RDX: ffff8a2921952d08 RSI: 0000000000000000 RDI: 0000000000000000
-kernel: RBP: ffffd1e8418afd68 R08: 0000000000000000 R09: 0000000000000000
-kernel: R10: 0000000000000000 R11: 0000000000000000 R12: ffff8a2921955658
-kernel: R13: 0000000000000110 R14: ffff8a2921952918 R15: ffff8a2921955758
-kernel: FS:  0000000000000000(0000) GS:ffff8a3088300000(0000) knlGS:0000000000000000
-kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: CR2: 0000561733e012d8 CR3: 000000011aa40005 CR4: 00000000003726f0
-kernel: Call Trace:
-kernel:  <TASK>
-kernel:  napi_enable+0x25/0x50
-kernel:  mt7925e_mac_reset+0x1a9/0x480 [mt7925e]
-kernel:  mt7925_mac_reset_work+0x9a/0x1a0 [mt7925_common]
-kernel:  ? __schedule+0x2f6/0x7c0
-kernel:  process_one_work+0x18d/0x370
-kernel:  worker_thread+0x33a/0x480
-kernel:  ? _raw_spin_lock_irqsave+0xe/0x20
-kernel:  ? __pfx_worker_thread+0x10/0x10
-kernel:  kthread+0x108/0x220
-kernel:  ? __pfx_kthread+0x10/0x10
-kernel:  ret_from_fork+0x124/0x140
-kernel:  ? __pfx_kthread+0x10/0x10
-kernel:  ret_from_fork_asm+0x1a/0x30
+When the userspace process subsequently closes the descriptor,
+full_proxy_release() accesses the already unmapped file_operations
+structure, triggering a kernel oops in full_proxy_release():
 
-Fixes: c4edf9e3e0e5 ("wifi: mt76: mt7925: replace shared rx irq masks with per-chip definitions")
-Signed-off-by: Jeff Hsu <Jeff.Hsu@mediatek.com>
+  BUG: unable to handle page fault for address: fffffbfff8056f03
+  #PF: supervisor read access in kernel mode
+  Oops: 0000 [#1] SMP KASAN NOPTI
+  RIP: 0010:full_proxy_release+0x8e/0x140
+  Call Trace:
+   <TASK>
+   __fput+0x39f/0xa60
+   fput_close_sync+0xff/0x200
+   __x64_sys_close+0x8c/0xf0
+   do_syscall_64+0x115/0x6a0
+   entry_SYSCALL_64_after_hwframe+0x77/0x7f
+   </TASK>
+
+The issue was discovered via manual code audit of
+net/wireless/debugfs.c.
+
+Set .owner = THIS_MODULE on all debugfs file_operations tables in
+net/wireless/debugfs.c so that debugfs pins the module until all open
+file descriptors have been closed.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Bui Viet Dung <dungvn2345@gmail.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/pci_mac.c   | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ net/wireless/debugfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
-index 2549d4e9e3a4..c3db814b2788 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
-@@ -90,16 +90,11 @@ int mt7925e_mac_reset(struct mt792x_dev *dev)
- 	mt76_txq_schedule_all(&dev->mphy);
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index f9e7fff1ef25..63503dbd8938 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -24,6 +24,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ }									\
+ 									\
+ static const struct file_operations name## _ops = {			\
++	.owner = THIS_MODULE,						\
+ 	.read = name## _read,						\
+ 	.open = simple_open,						\
+ 	.llseek = generic_file_llseek,					\
+@@ -42,6 +43,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ }									\
+ 									\
+ static const struct file_operations name## _ops = {			\
++	.owner = THIS_MODULE,						\
+ 	.read = name## _read,						\
+ 	.open = simple_open,						\
+ 	.llseek = generic_file_llseek,					\
+@@ -113,6 +115,7 @@ static ssize_t ht40allow_map_read(struct file *file,
+ }
  
- 	mt76_worker_disable(&dev->mt76.tx_worker);
--	if (irq_map->rx.data_complete_mask)
--		napi_disable(&dev->mt76.napi[MT_RXQ_MAIN]);
--	if (irq_map->rx.wm_complete_mask)
--		napi_disable(&dev->mt76.napi[MT_RXQ_MCU]);
--	if (irq_map->rx.wm2_complete_mask)
--		napi_disable(&dev->mt76.napi[MT_RXQ_MCU_WA]);
--	if (is_mt7928(&dev->mt76) && (irq_map->rx.wm4_complete_mask))
--		napi_disable(&dev->mt76.napi[MT_RXQ_ICS]);
--	if (irq_map->tx.all_complete_mask)
--		napi_disable(&dev->mt76.tx_napi);
-+
-+	mt76_for_each_q_rx(&dev->mt76, i)
-+		napi_disable(&dev->mt76.napi[i]);
-+
-+	napi_disable(&dev->mt76.tx_napi);
- 
- 	mt7925_tx_token_put(dev);
- 	idr_init(&dev->mt76.token);
+ static const struct file_operations ht40allow_map_ops = {
++	.owner = THIS_MODULE,
+ 	.read = ht40allow_map_read,
+ 	.open = simple_open,
+ 	.llseek = default_llseek,
 -- 
-2.45.2
+2.43.0
 
