@@ -1,157 +1,268 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98BF5382385
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 16:25:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.177
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791476720; cv=pass; b=u4uHwrZphNu+5TpFjpShxO9+OlfCoDgL6qEau1zbBJ2a5Db9RPaAp5EAYWvdgjz0si2RuDtlLU38c8gSdSn+H3VBSqSZOYlp0/Hzyn5z0UAk7wnd9zMSp76kx6c8GXSCTx3va5QhbWZzYwREdt7wkmDdfJH3Utd96U8MBD+q7zg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791476720; c=relaxed/simple;
-	bh=Py4a1BgSZRLssebWp1apnpYrvJt2ny1B6Tr7oqaHD/A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XcNZ7DW7Xx/Js5KibKNjLJ/Y4bxaYRG4dwXTQwA0jp/pkyxWgQxGcHaHW7lvL1WCzqKekiqzu2pLVE4tOTJlVN/CDiUlrGVeAIOgfWDVczLUshDs8+VQ8VgrLqRml4YIMSE6qehVfhcy0hp+hM8k3pACuclj0KCh9E+9JZJRuoQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HG83a/rA; arc=pass smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16C6354779
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 17:16:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791479820; cv=none; b=G/hv/zNZYbYjp4OMh/x/uAHYCmDAAHTEsRO6RGKZbE7J4jk3OQ5y7BCY8qPGcaPLO2SBWf3ke291+wYSUV9U16HCS1JIRDEtW8tqhhLzF5B5WG8omnkdhdmHgM6WpWUt5tqo6Ko1mJINobni97edVOAlNoswxI986bmQX92LGaI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791479820; c=relaxed/simple;
+	bh=J5b4L3NVScIB6PnKN7Cv/Qkhtff8PDOm/hgVbHonK8A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=u/OMP9XVSaD3aQPlLxHrgupa/jgQdBA7lIiNCphTAvY3rT/0IfiiiSflNGu73NRDsXzcs77A3FoJwXCYmqg2/Dy9eaTPZJMH+rFQG23C+AeGb0z+5IT3CGZSjcYW+829+4cKh98TEXVGimhHPyTbtdyu4Bjy8FY4usyoxJnBF6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bwyoza1N; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=K+/wU0hN; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HG83a/rA"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-885cd98d226so478144b3a.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 09:25:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791476719; cv=none;
-        d=google.com; s=arc-20260327;
-        b=oJ95DPqeFgirE1gBHJenARE0GJfL2ElLHKRg25tSPYCHHuXGtWPso3jvtcdvdp+hSi
-         cl/J5ioE3Gcj10qw/PMfv0IXEF8AwLngMJaywz7vO3byPW/8A4kNYP95kG71Nbt6YObd
-         xkvkhcX6syjzeGEuC77ly9Jk0NsdOX7ecWKMHFXkJP0oQ0Hf1SxE40g9DMQK74o6fgr4
-         wafRrjqjpE92IPNvWk/Bq8pim8cEcKOHSQCuEgS/CYJlYt/F2K5F40FsG65PJWIylJwT
-         9lM2c25/bF+kAziXbqOLh6dp5dZkJD6kqaIpW6162gI6WH9BmUeWYZuNe2m0Xh8ARiu4
-         sy7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
-        fh=qXrb97swvtxVVcD5kmLQSiSfbLAoEacAJp/ZvkPZvco=;
-        b=of5PYNxerh0wxb/bZjQNsEYR1sFENw1XaP6Yj+2wg7ehP5G8EZW5hkBi49ewq9BsRD
-         aOyVN+ZdTGJeMORzrdRS5uaYa4RUaulkOVJRwBWQ1Tn64sfxGlXvsbIadeY4m+EzI+Ap
-         I/i15jEJbk802pf3psAZ2dydlfOnq9xu5W1h27N0pZJOPXQ9V+/5XibmwzEIv1Ka2eUc
-         59sya4U1L+SaoXeFiWLdWAq5xlPb24Ms5kdIV0lltYLgXUgEwOuUQ0+CfloJ2GZd7zXF
-         Iu6lRBfVCk3P7XajhveAHkeemgnAicHeufxzFwb8Itz4f0IZ45jwWSXTgDjLDJhv/3as
-         j7Pg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bwyoza1N";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="K+/wU0hN"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 698EW2HW2535815
+	for <linux-wireless@vger.kernel.org>; Thu, 8 Oct 2026 17:16:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	MYc0K7zn31TjZNQfuMEltaFhrqgcm0b0cHM1bc1hY94=; b=bwyoza1NbOBHxpM6
+	qSvLLRr8Yj+mTPa7WQ+snUF7GxMe3FaohVdletRvlA4M6iPRxtjUjbdkAFsRNI/V
+	YqHG52WG5foijAtbOvbZbLk+yq/iLD/3R/aXRSe14PBuLrpZgYejX+1HH4vEk40A
+	BJAN27yCE8XM06dtngMmZ/EUKG1hXQOd7QlBPcCPc4WPN0KPhFHh9idlEXN6lMmT
+	87XERVecPYUcSmtHUN8brg7W/PQMM7/oQ3c8rqqMTW4xpTZ56Hb1b/0RYCKfmVsJ
+	u1bJ3OJQ0OjD445KHsYN/jYJneTJQnw56PR2/iOrqwZ961WqJYlC+eFkZRC7lG7r
+	CKHevw==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h5xe53yhj-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 17:16:58 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc4ac5feaa4so4389993a12.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 10:16:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791476719; x=1792081519; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
-        b=HG83a/rAzud6+78GDlEx278aKtJY57cbq8Uw6/5V4Ic1Y7pfygADYa6YJ1iPe32t5n
-         YmJ7Ou4sDaQYyGfc634KMloiw7RDMSS30OQBQcS3PNiHDsuCTfLEhLJTWinnECXOwupR
-         JcRx9et5iBr8GxOMmacus3Xkm8A7tC7eciHTtB5OszNsoiMnYTsJxAN5H25jzZ/SZOPf
-         ycTm18+EAi9XSfjba5AgQ/wGZy8HnPbsyee3GY0CZS6K9tvJf2bydM779NBvHbw8bZs6
-         8/ET/0q9GSR8Uqvrxpbdd+MXMZUPgt4okoTzGTAWJMp65IIUe3LIQQ5s5IgMNUrqy5Zv
-         JnAA==
+        d=oss.qualcomm.com; s=google; t=1791479817; x=1792084617; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=MYc0K7zn31TjZNQfuMEltaFhrqgcm0b0cHM1bc1hY94=;
+        b=K+/wU0hNzSGxez2lPJZPzyFu1K8rEWgGB2gZ+6Tm1Q0rvZJ94ettOHGxL/mDiyeVNn
+         qkRkWs2CgQnI2mm5eu8VnG9m8fEXQpSbxgYFGbuHGLrn51GXu2sgEiy0cOgTrTG2o+8t
+         ZeKsQPk5hNdHVDhxQQoSXLFxPFPsBDnKQwQs6OY1demFe6OMNMvM2/O+IBdO8wWFaV+y
+         2nU3zeSfNrZHCjjTn4zPkcHBsv5v96hEq7jor8vnr3IREnfy+cz6acPhJyZzMRT6cYVb
+         ZUi9EoA33EREh8QmALkA+Vv4kHOF8umpXj81c2CjnLjJY6yVqJWjB5MoQOZVUe1eqEj3
+         At1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791476719; x=1792081519;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
-        b=NaX3Ek1MD6eyrM/fC60RGhYKX/hCAAhg6ISSBJ+FAbs1EycYxhh6dU6m5HW9fvY0wK
-         KOGvyYKWSqAHLY6g95fwUvkKQ71GH6B3c6AjeCoBJh3tjCz6J4v862SvXfb2rOV2a9zr
-         kaIkoF6E11e6n2bzQK6KpLtB7Hi1rEAJ7+epIDbPBYb94eYWqRis1hpF+j+eKqBozkW0
-         7j67hDFlFBFH5sL5gAOfozvXA0jkEBAbYZXOqKVRO4imCy/gIpoRZr6J8jDG9VSR6uLK
-         ZsoJDznjaWjJ5k+qlEhJ+s2TDVv+fCybEms4E5s9IaiRZVl9S0Tng4RQi2sL4VMwzkjA
-         XDZA==
-X-Gm-Message-State: AFuF++niVeU6A0MCUl6JRS96ne8iqdc8Us+1q6nHZoYlswCrK9ZsUtxp
-	0uYKK6q/HUX3oBXD3JvAbaR/m9PevLyVfPOLUGlKkwQ7D+y2uQP84inwZdV2FIuOy71bBSQUusa
-	h355ZoRT284mpGwbVGY+aTe3GKyNrmBE=
-X-Gm-Gg: AYBFou0/Bp+hNrYFGjek4cEx0L2y5/CJG3VGdMrdjiv2PogRXlIOXWYMoHufh3rSvO5
-	aVdkY8yd+tUtkCsNYCpinqUMCorfu3tTklq29g+/ECLyheym7z5/DbDZQ/pZxSAHJh3VPIM59Z3
-	hy4uHQNqTvty+2geQi9q50dUyVfquBH0nAWfjvztoTk5XZwgTEHgdNJTufphuTdyoaOKuglATcG
-	o1cVJ+vhl9j3s/fKweae9EK3SvE6Bp7sjQip6ni9oLE6JornMfj34++WcX9g79MBt9Ulii5/uON
-	Utm1ztHUR3efXR2bNA4DjZFHup4AvFPvLKEWG8L+VCduaGGo95Rp2I2e
-X-Received: by 2002:a05:6a00:170d:b0:878:3705:5723 with SMTP id
- d2e1a72fcca58-8930d7eb730mr2071924b3a.47.1791476714157; Thu, 08 Oct 2026
- 09:25:14 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791479817; x=1792084617;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=MYc0K7zn31TjZNQfuMEltaFhrqgcm0b0cHM1bc1hY94=;
+        b=bnMPdbNx1J6CL23FEW4Y+/HKpW+kRxi1+GAo/LtC2u01/60H6TaSgRsey9GHdFYOMk
+         RayJz/7kN0Q/rS3PMUCPlXOFf1lZ+sy0a4fGFUJV7fY00LWfzV2zb5o1cbZaGa6vfCXb
+         RvDRk6w+SDqm8NFxMn1qnjs+gvn5THe7tUZ60Sh/rrhFttEZoHEdB63rWN6njGrS723p
+         RHfgk+MHapqjWdqHa6jK9kepYbGVA0MLwLgaI7F7oF+bMT/KhbrA4ajlgrSKofIFXb8v
+         0FDySMcgh6mBf7D3RaK27vlzS1dKQQUdAl/1F+Eev4GLxkdFmJlscg+qZb5sI+IA7e7I
+         xwyA==
+X-Gm-Message-State: AFuF++ljITi+luAwfbWE1mR75jf951fReSu0kPeEaMIITMd4UA1xrB80
+	VxL5squ2XUzJGEFMTV7Sm1nwbT8fwv3sQdK5o6+1APl/J5kyCfk78okBWBbGnrj2Y9hYqbtSMI0
+	QN3qt+J8wzMNfsOdkduvWPSHk9+GxhuriMNBSzUv3msKgiwPqvDz/UCWquDln3GSv5WDFLw==
+X-Gm-Gg: AYBFou3lK1229aYrl7w25jo87UbgMQWeXvR5eUmjF0TNaKtqErdfBkzKPE2Wv2oMKyf
+	yg8V1NH5xEC8TEsrEzaB0uK0XyRdfFFg2fz415J9aUYxMVhLpN8xi2QASRJmOIpEN1lKpMX8Blr
+	ZhX2vO84IVsxo9no9gpaeaPvlY4oj/pRjlbQtXV63uk53gPXCuW5DUAOy6JQOIuaIPspAzeHvFI
+	EDTpRG8ZBrBrsADa02ADSxoJAyKUtHlDjbaUEh3ueKFdii7jlESudFZBg5MRH0FesHt+oChOk0T
+	9/fyv/xOdGH0DelmGYB0VUJS7oVpn3SY4vJoTrjfmg4pf/wH+x1YaBVf/Uuhsgm9hkmh675pPnB
+	Hu2lK1YJBVxZp5hy/K7nLQZB+2BEEEF0wA1Vq+7P2nvs=
+X-Received: by 2002:a05:6a21:140a:b0:3de:5360:ebc6 with SMTP id adf61e73a8af0-3e164d03ebemr2748637.50.1791479817374;
+        Thu, 08 Oct 2026 10:16:57 -0700 (PDT)
+X-Received: by 2002:a05:6a21:140a:b0:3de:5360:ebc6 with SMTP id adf61e73a8af0-3e164d03ebemr2720637.50.1791479816816;
+        Thu, 08 Oct 2026 10:16:56 -0700 (PDT)
+Received: from [192.168.11.104] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd3a782fd59sm118501a12.12.2026.10.08.10.16.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Oct 2026 10:16:56 -0700 (PDT)
+Message-ID: <ad47c905-7865-4283-99ba-e246ae44d25b@oss.qualcomm.com>
+Date: Thu, 8 Oct 2026 22:46:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAHaeJsT8O8Nhq351hFp3NAL8e0iU85N-LBdYZ9nYHFHVy7t_hQ@mail.gmail.com>
- <CAHaeJsQ3FxvU1dQTSP751-Jq8JVv-tS8oRhNhuVy5-U4kPXwrA@mail.gmail.com>
- <CAHaeJsSM2kg6undbwaMUwcBbrA500CxMShU=VHv7w1B+YefHiA@mail.gmail.com> <20261008053636.81286-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20261008053636.81286-1-lucid_duck@justthetip.ca>
-From: Chris <hoopyfrood42@gmail.com>
-Date: Thu, 8 Oct 2026 12:25:00 -0400
-X-Gm-Features: AclHuK921LrYizTaBBX3SgjlGhlS_3wHXqo7g9rY3iG00HYarZhs2dfHNXOLRL4
-Message-ID: <CAHaeJsQTymsh1kv6Xv79im7ak+nqyMChoA40kRUhSy=O7i06Mg@mail.gmail.com>
-Subject: Re: [BUG] wifi: mt76: mt7925u: survey busy time is 0xADBEEF per
- update, booked to a stale channel (monitor mode)
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>, 
-	Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
-	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
-	Deren Wu <deren.wu@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next v2] wifi: ath12k: Fix NAPI resource leaks in AHB
+ external IRQ paths
+To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
+        ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, jjohnson@kernel.org,
+        baochen.qiang@oss.qualcomm.com,
+        vasanthakumar.thiagarajan@oss.qualcomm.com
+References: <20261001045423.493121-1-aaradhana.sahu@oss.qualcomm.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261001045423.493121-1-aaradhana.sahu@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: glbrr6tL4cStLyK2FXCTQyGa_xDoGA1i
+X-Authority-Analysis: v=2.4 cv=E4dYNqdl c=1 sm=1 tr=0 ts=6ac7d00a cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=EUspDBNiAAAA:8 a=35ZLj8hBI3EEynJP_B0A:9 a=QEXdDO2ut3YA:10
+ a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA4MDA2OCBTYWx0ZWRfXw8o9e3vv40e4
+ lBz99Djzz4u2pjSK/xITCp9bJtXxrSqDlqjiEUSCdj/CVT1FsG8igWZ/gdxXb8sHTcBXqerXtCE
+ 6tB4Ag4+QmPxSLYsm6EHQ+TXhjvobEc=
+X-Proofpoint-GUID: glbrr6tL4cStLyK2FXCTQyGa_xDoGA1i
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA4MDA2OCBTYWx0ZWRfX0z1RVhZEwsV4
+ Zy8X3E9KLlE2SHfweR9WBxAWLe+EY7cYOT3XmCn518darS2q1KhmqmYjJu+MFjtlHG6c2LwHowC
+ G/7CEssM0Q8r5jAol36g09j9hSRoevNk91hIYiow27lPJ6ThQ71veqjDmlvCeTPErRueIrawDGS
+ h8bHRW/A8Wywx61SaK7sMAMoUO1X8qylXfWMhg+Yxj908JzrvOLG476Fk84kazfbzVTOGnfq3hv
+ IuB9Sip1yW6A+qUKC9d2+zzpYU8j6mfQOb98EYCCDxrEAlYgaBElC09UUK6TSR2uXM9jr/bIEZt
+ 2oW/SMNumRS5grsXrPyS7MVl5XW7xCgFb8kBeUGvHLZHyvRIdsXvyj4aXyyWhwuFVeU3wAvgqhJ
+ cVhDSBqmPoq4wn3j2nP0+RDMyVWwl/AEBQILxi6tYiP/AIPt3gzbf87nY06ZUdQlaAgmSWS+e0/
+ fedJiqqdGsa0YIcf5kg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-08_05,2026-10-08_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 phishscore=0 spamscore=0 impostorscore=0
+ clxscore=1015 priorityscore=1501 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610020000 definitions=main-2610080068
 
-On Thu, Oct 8, 2026 at 1:36=E2=80=AFAM Devin Wittmayer <lucid_duck@justthet=
-ip.ca> wrote:
->
-> > You clearly know this driver well, so I wanted to ask whether you
-> > would be willing to look at it:
->
-> Thanks for running v2. I took the busy half to an A9000 here.
->
-> The firmware answers the MIB query at every offset from 0 to 255. Tx
-> airtime is offset 28. Offset 29, which mt7996 reads for rx airtime,
-> moves with receive traffic but at a small fraction of five others that
-> agree with each other.
->
->                  uplink      downlink
->     offs 28   +16082143      +3708623
->     offs 29       +8749        +81107
->     offs 17    +2925971     +12992696
->     offs 20    +2852775     +12903656
->     offs 90    +2931365     +13006210
->     offs 92    +2751610     +12969276
->     offs 95    +2863941     +12908314
->
->     20 s at 836 Mbit/s up, then 20 s at 581 Mbit/s down
->
-> Deren, Sean, Ryder, Shayne, if you have a moment, could you please say
-> which of these carries receive airtime on mt7925? And if an MCU command
-> enables the IPI histogram, I'd appreciate a pointer. Nothing in the 256
-> offsets has that shape, and Chris's write to those registers wedged his
-> chip.
->
-> The same MIB registers work on an mt7921, so any fix has to be
-> conditional on the chip.
->
-> Devin
+On 10/1/2026 10:24 AM, Aaradhana Sahu wrote:
+> Currently, NAPI instances and their associated netdevs allocated for AHB
+> external IRQ groups are not released when external IRQ configuration
+> fails. They are also not freed when arch_init() fails after
+> ath12k_ahb_config_irq() succeeds during probe, or when the driver is
+> unloaded.
+> 
+> Fix this by adding a common cleanup helper to release the NAPI instances
+> and associated netdevs. Call it from the external IRQ configuration error
+> path, probe error path, and driver cleanup path.
+> 
+> Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.6-01275-QCAHKSWPL_SILICONZ-1
+> 
+> Fixes: 6cee30f0da75 ("wifi: ath12k: add AHB driver support for IPQ5332")
+> Fixes: 614c23e24ee8 ("wifi: ath12k: Support arch-specific DP device allocation")
+> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+> ---
+> v2:
+>    -Remove unnecessary irq_grp->napi_ndev NULL check.
+> ---
+>   drivers/net/wireless/ath/ath12k/ahb.c | 41 ++++++++++++++++++++++++---
+>   1 file changed, 37 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+> index 85360365aa4b..9b77632bd1bf 100644
+> --- a/drivers/net/wireless/ath/ath12k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath12k/ahb.c
+> @@ -191,6 +191,26 @@ static void __ath12k_ahb_ext_irq_disable(struct ath12k_base *ab)
+>   	}
+>   }
+>   
+> +static void ath12k_ahb_free_napi_for_group(struct ath12k_ext_irq_grp *irq_grp)
+> +{
+> +	netif_napi_del(&irq_grp->napi);
+> +	free_netdev(irq_grp->napi_ndev);
+> +	irq_grp->napi_ndev = NULL;
+> +}
+> +
+> +static void ath12k_ahb_free_napi(struct ath12k_base *ab, int num_ext_irq_grp)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < num_ext_irq_grp; i++)
+> +		ath12k_ahb_free_napi_for_group(&ab->ext_irq_grp[i]);
+> +}
+> +
+> +static void ath12k_ahb_free_ext_napi(struct ath12k_base *ab)
+> +{
+> +	ath12k_ahb_free_napi(ab, ATH12K_EXT_IRQ_GRP_NUM_MAX);
+> +}
+> +
+>   static void ath12k_ahb_ext_grp_enable(struct ath12k_ext_irq_grp *irq_grp)
+>   {
+>   	int i;
+> @@ -622,8 +642,10 @@ static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
+>   		irq_grp->grp_id = i;
+>   
+>   		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+> -		if (!irq_grp->napi_ndev)
+> -			return -ENOMEM;
+> +		if (!irq_grp->napi_ndev) {
+> +			ret = -ENOMEM;
+> +			goto free_napi_ndev;
+> +		}
+>   
+>   		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
+>   			       ath12k_ahb_ext_grp_napi_poll);
+> @@ -675,12 +697,19 @@ static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
 
 
-On Wed, Oct 8, 2026 at 1:36 AM Devin Wittmayer wrote:
-> The same MIB registers work on an mt7921, so any fix has to be
-> conditional on the chip.
+platform_get_irq_byname() can return a negative error code. Should we 
+handle that explicitly before calling devm_request_irq()?
 
-Thanks for taking this to your A9000.
+Something like:
 
-One data point on how I use the counter, in case it matters for the
-fix: my A9000 runs in monitor mode with no association, hopping 98
-channels across 2.4, 5 and 6 GHz with a 500 ms dwell, and polls the
-survey every few seconds for each channel's active and busy time. So
-what I need is busy time on whichever channel the radio is parked
-on, with no traffic of its own.
+  irq = platform_get_irq_byname(ab->pdev, irq_name[irq_idx]);
+   if (irq < 0) {
+	ath12k_warn(ab, "failed to retrieve irq number for %s\n", 
+irq_name[irq_idx]);
+         ret = irq;
+         ath12k_ahb_free_napi_for_group(irq_grp);
+         goto free_napi_ndev;
+   }
 
-When there's a patch, I'm happy to test it that way here (Ubuntu's
-7.0.0-34 kernel with your v2 survey fix applied) and report, per
-channel, whether busy stays within active time and follows the load.
-On 2.4 and 5 GHz I can also compare it against a Wi-Spy DBx2
-spectrum analyzer as an independent reference.
 
-Chris
+>   					       ath12k_ahb_ext_interrupt_handler,
+>   					       IRQF_TRIGGER_RISING,
+>   					       irq_name[irq_idx], irq_grp);
+> -			if (ret)
+> +			if (ret) {
+>   				ath12k_warn(ab, "failed request_irq for %d\n", irq);
+> +				ath12k_ahb_free_napi_for_group(irq_grp);
+> +				goto free_napi_ndev;
+> +			}
+>   		}
+>   	}
+>   
+>   	return 0;
+> +
+> +free_napi_ndev:
+> +	ath12k_ahb_free_napi(ab, i);
+> +	return ret;
+>   }
+>   
+>   static int ath12k_ahb_config_irq(struct ath12k_base *ab)
+> @@ -1353,7 +1382,7 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+>   	ret = ab_ahb->device_family_ops->arch_init(ab);
+>   	if (ret) {
+>   		ath12k_err(ab, "AHB arch_init failed %d\n", ret);
+> -		goto err_rproc_deconfigure;
+> +		goto err_free_irq;
+>   	}
+>   
+>   	ret = ath12k_core_init(ab);
+> @@ -1367,6 +1396,9 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+>   err_deinit_arch:
+>   	ab_ahb->device_family_ops->arch_deinit(ab);
+>   
+> +err_free_irq:
+> +	ath12k_ahb_free_ext_napi(ab);
+> +
+>   err_rproc_deconfigure:
+>   	mutex_lock(&ath12k_rproc_info_lock);
+>   	ath12k_ahb_deconfigure_rproc(ab);
+> @@ -1409,6 +1441,7 @@ static void ath12k_ahb_free_resources(struct ath12k_base *ab)
+>   	struct platform_device *pdev = ab->pdev;
+>   	struct ath12k_ahb *ab_ahb = ath12k_ab_to_ahb(ab);
+>   
+> +	ath12k_ahb_free_ext_napi(ab);
+>   	ath12k_hal_srng_deinit(ab);
+>   	ath12k_ce_free_pipes(ab);
+>   	ath12k_ahb_resource_deinit(ab);
+> 
+> base-commit: b64812cb6cec118f6c59a4ec2bd4848db17f6bb2
+
+
+-- 
+Ramesh
