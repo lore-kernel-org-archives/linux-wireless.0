@@ -1,120 +1,129 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5956B443C27
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 08:38:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F9E466AED
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 09:39:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791448740; cv=none; b=uBRFftEkXb7tYHkFzbZ1SufF1aYiJ0Y9GPLbzp0NTGXGk4mUYQf8l64IqlVWlLU/r+ABenYPRQpyfB8oUDK82LP3Z6P5JrfcoWybfm5aSTmIB7oK6DNc10LhOVn9d2ODyn25C6yoqXx9LGGh4rDrGe3P6vS1sJiF6vpHYylCkwQ=
+	t=1791452394; cv=none; b=Hj5xCYrvE9ttdb8vtyFqhG/DSFtDvq4IILxRFNRCcQr0zavklMHtiN28EDaHcXuPqQfgyOnrhnjs9H7Jw9lLSa5P9eQwTokPRza932amPB2wPyw2yEdtit+BjTEhTp6Xt4Tgyndk7elqjK/sLWSJNyJEHofxy/L1JqYliLZO4Wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791448740; c=relaxed/simple;
-	bh=GblcdbZKeYp5qNEZNB2RrtJUugRE9E6Zb4MEMze7YVA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=rKdyQ1zkRNXA0G2/iRFNL4Y2C0FAhbtlrvlRYfv9GiZHposYkB+eP7Kmu8Szo7HrX50qPpJy0ETzGvR7t+tHOPzPS0L0KFKV86CJzHjpf00+RiYdeZdsMKzfMEGQjVtuNudrfKd+Y9zxFvuZA8LHb/mQ/vCZFJnNumEKCUmg5j4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WBLCjVDm; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1791452394; c=relaxed/simple;
+	bh=yt1krHFUizCiyHqPICB6u5BfJy6aereXdPVeh3hzHTU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=chKEPeX+iJ8oQK+7Bc1kmVzExVEapyuNjr+evmB65OLtAc9cWB0FkQ1bY3hujtR7QuSvvzpZYL3FAKk2FcVP8gKQUm4SxKJRg6uOY0o771yB02oavjrZ35TTLdmeo5lp4QllHd+PYTW1FUPPZCZqQaZ0GCmfEwViuHA6VOLpMa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ExHxV0Fu; arc=none smtp.client-ip=74.125.82.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WBLCjVDm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791448740; x=1822984740;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=GblcdbZKeYp5qNEZNB2RrtJUugRE9E6Zb4MEMze7YVA=;
-  b=WBLCjVDmocDnT0gFNmK+fD2jvm93dPzXd2trWE+uZzjM4j0JlaYXN35u
-   DrYDkwIbSxnz6uhiTnIUYRwmrGB0Qb+Vd6eADRVLBz6WYXSUnQxX6f7fK
-   kdabj3HQsBCIH867pjmY9CQC5BQKwzTFkDdDd3TiDcV/HWVkt2XThUEPN
-   OOitK+05NGo8XJJta3dZj1NrKg69aH9MRjlkhbhCjT4l56LWjXkIe1XgX
-   UpyNe/o+10O1uFcbv1SNY3hWY6yRaEcWtNVB1KgFX4iA7kD/Bx7t0aOS7
-   FU7fRCl8ewqGCm8gTdvw5M8Hr6J8X21u4g6aR8vjh9vbAXnW9eKcuiv1+
-   Q==;
-X-CSE-ConnectionGUID: 4yCC7B90SKGUEr2WW2683g==
-X-CSE-MsgGUID: JofSBjVuSSGsHCGiu0jEAA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11928"; a="232949"
-X-IronPort-AV: E=Sophos;i="6.27,146,1787036400"; 
-   d="scan'208";a="232949"
-Received: from fmviesa013.fm.intel.com ([10.60.135.153])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2026 01:39:00 -0700
-X-CSE-ConnectionGUID: jhNVz3OxS5ObehKpYRcG/A==
-X-CSE-MsgGUID: OCgbpf71QTmADOfGqOlgPA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,146,1787036400"; 
-   d="scan'208";a="1720738"
-Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2026 01:38:56 -0700
-Date: Thu, 8 Oct 2026 16:38:52 +0800
-From: kernel test robot <yi1.lai@intel.com>
-To: Benjamin Berg <benjamin.berg@intel.com>
-Cc: oe-lkp@lists.linux.dev, lkp@intel.com,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, yi1.lai@intel.com
-Subject: [linux-next:master] [wifi]  6d531b9af1:
- hwsim.ap_pmf_ap_dropping_sa.fail
-Message-ID: <202610081606.2e786210-lkp@intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ExHxV0Fu"
+Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-351775aa1c0so943054eec.0
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 02:39:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791452392; x=1792057192; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=DhD2kC+TgI9jVZahgsNkJ3B3BbFkorvXCqZ87mDIfYA=;
+        b=ExHxV0FuzTx+rnLcPKq83SE3g3CF+BW0bOisGBafGWIGQLXhynJSLZX0VcR0rMvwiX
+         nP5qUsbe05zWJKpJuunhl2RFZ93RSrmW0QocsJqbxwLr2CuRh83PrXuGl3MjBt2irAJx
+         QVganH73EshthWxDMRVoMdVtb4pmT1r4iFSfMNF/+ajXYf+sYDpNB4vTL+DGEaQAWrbG
+         HHQmSaqe5m+FI/NyrzCWJvqPama46FKVL7ywD2XbT98pVkQJO7ye6gi1YP+jt0xBugCt
+         0cyY7m4+yBJy0SpzdSWocMBKlcY39xDV6rlWc/WWmd/gfrho9/PF5oGOi7iIPYSiCCZs
+         PeNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791452392; x=1792057192;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=DhD2kC+TgI9jVZahgsNkJ3B3BbFkorvXCqZ87mDIfYA=;
+        b=O/gJSsnrcbDvIKl9406ilBYmliNqOVlXnZ4G0ibzn8cExu54x8Q1AEmKSKmL008z1G
+         htcTddoEqIXsZJf8Cn9TGtzu6u4JieNJGo/kT9UpKKouLjCFkn0f919VC+2pDklF8XNn
+         OSxkRIJgj0o/V1dOSqRBF26Wcsvzvr1JLQXTjmuGDg6PfpeHW+/blKilshKMDKThV/iJ
+         56CE6eslxZg2x8tY50Ng/DyDVSnvUaG5QV7a2Pmu3Dny3fSMuciAzFtyJ1PMRb/h9ZFN
+         pNlWLyzKCkKeQyReyDRrfpr+rmBQklT9uNkspJQHg5uAlgPPlkkzR4nhNGWaw3M/0R47
+         gbkA==
+X-Forwarded-Encrypted: i=1; AKwUvBzPj3rC2mQ1Ex+aojJ8QEv8g2EETAwKiQWPawP4I/3+oh3bxFozeWSxdE0q42eMPEDXo4cZQKM1lKTDWUMW5g==@vger.kernel.org
+X-Gm-Message-State: AFuF++nofiopJH+L9KHa0rwXvp8cWPNC1X06zCL860g3md9QU8Cg/+wg
+	76BI+78m0jkzi8sdNzlLj/xVhHKjwR2V1jP/34u07xpziXC7WaB3iZd/
+X-Gm-Gg: AYBFou2+ZDOR1oPK9CcxC423lHnQhbwdmxrAHm7zs9t3Ef6ikoy9Q1dYfR3XipeJoaX
+	OTz1TbjrTc9gMvVCwWqLT3tpaNxJJ9dGc0Miazk7MbJGUgonUAIE60zNDGdi6JVCzpRCecSXxXZ
+	GunoZQeAC1ba7u9Keepi1vsKUx0Kut09OyWLm0Kc8/Jok6O8Gv5ReO7c6f8iVZP4WR7IjTdcpOx
+	OHdxOpoVxTYetvaqe+UznSD6An+com7QiqFr8avpYdhhg1NrckpC6/bL2kSczgmHhTbqR2Q4bpz
+	ayWXluCv5J/kYDFK1S4rc5Dx7dC0/VvuhDVUUh4D0kgOmv2EIYEZz+zZEW4/5LI0kb36LsljRWV
+	3U9De4RkjfOHYi7qYPqB1RIKwhOhfW3CfcRauhDdEjSie1PCEE7FV6tkarnjdEow+srQzONgMMq
+	cIdBlO6xhS0fl3Wd1QKum+3ANPPvdPjcY5lqWcKvwIKByzPsVycOgGyEaBTTDjvK3WPf8ocmEr6
+	r3gVqqfUKNpnr1e/RzODcHaxkyzq4c1sT522hOfIa3nKk4UeyuDJtyRSrNyxtY=
+X-Received: by 2002:a05:7300:7314:b0:34d:96cb:d75e with SMTP id 5a478bee46e88-3515de9ff53mr9040330eec.27.1791452392170;
+        Thu, 08 Oct 2026 02:39:52 -0700 (PDT)
+Received: from dtor-ws.sjc.corp.google.com ([2a00:79e0:2ebe:8:3002:e11e:c053:ebcb])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3517810b895sm6873252eec.17.2026.10.08.02.39.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Oct 2026 02:39:51 -0700 (PDT)
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [PATCH v2 0/2] wifi: carl9170: revert broken devres conversions
+ for input and hwrng
+Date: Thu, 08 Oct 2026 02:39:41 -0700
+Message-Id: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAN1kx2oC/32Nyw6CMBBFf4XM2po+eARX/odh0dYRxgAlbW00h
+ H+34N7lSc49d4WAnjDApVjBY6JAbs4gTwXYQc89MrpnBsllzVvFmdV+bEXDWbbRx8CMLY0ytRZ
+ aVpBni8cHvY/krftxeJkn2rh3dmOgEJ3/HJ9J7N6ffBKMs4YrZapG1FaU137SNJ6tm6Dbtu0Le
+ Fk7ecIAAAA=
+X-Change-ID: 20260930-carl9170-reverts-bc4b3b6a1a25
+To: Christian Lamparter <chunkeey@googlemail.com>, 
+ Kalle Valo <kvalo@kernel.org>
+Cc: Christian Lamparter <chunkeey@gmail.com>, 
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+X-Mailer: b4 0.17-dev-e6826
 
+Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
+87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
+the HWRNG and WPS button input device registrations in carl9170 to
+devres attached to the parent struct usb_device (&ar->udev->dev) and
+removed explicit unregistration from carl9170_unregister().
 
+In carl9170_usb_disconnect(), the driver calls carl9170_unregister()
+followed immediately by carl9170_free(), which frees struct ar9170
+inside the interface .disconnect() callback before devres_release_all()
+runs. Furthermore, devres on &ar->udev->dev is not released on
+interface unbind or registration failure in carl9170_register().
+As a result, both the WPS input device (whose input->name and
+input->phys point into freed memory) and the embedded struct hwrng
+remain registered after struct ar9170 has been freed, leading to
+use-after-free bugs.
 
-Hello,
+Revert both commits to restore explicit lifecycle management in
+carl9170_unregister().
 
-kernel test robot noticed "hwsim.ap_pmf_ap_dropping_sa.fail" on:
+Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+---
+Changes in v2:
+- Clarify commit messages to focus on the teardown order in
+  carl9170_usb_disconnect() and the error path in carl9170_register()
+  rather than request_firmware_nowait().
+- Link to v1: https://patch.msgid.link/20260930-carl9170-reverts-v1-0-7033b5716c14@gmail.com
 
-commit: 6d531b9af16ea84aab72db573384fa94bfa0f2f7 ("wifi: mac80211: rework RX packet handling")
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+---
+Dmitry Torokhov (2):
+      wifi: carl9170: Revert "carl9170: devres-ing input_allocate_device"
+      wifi: carl9170: Revert "carl9170: devres-ing hwrng_register usage"
 
-[test failed on linux-next/master 6474fa070f2b8013b4b87350b775b8c3be6e8aac]
+ drivers/net/wireless/ath/carl9170/carl9170.h |  1 +
+ drivers/net/wireless/ath/carl9170/main.c     | 42 ++++++++++++++++++++++++----
+ 2 files changed, 38 insertions(+), 5 deletions(-)
+---
+base-commit: 6474fa070f2b8013b4b87350b775b8c3be6e8aac
+change-id: 20260930-carl9170-reverts-bc4b3b6a1a25
 
-in testcase: hwsim
-version: hwsim-x86_64-542b8fd43-1_20260927
-with following parameters:
-
-	test: group-28
-
-config: x86_64-rhel-9.4-func
-compiler: gcc-14
-test machine: 8 threads 1 sockets Intel(R) Core(TM) i7-4790 v3 @ 3.60GHz (Haswell) with 6G memory
-
-(please refer to attached dmesg/kmsg for entire log/backtrace)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <yi1.lai@intel.com>
-| Closes: https://lore.kernel.org/oe-lkp/202610081606.2e786210-lkp@intel.com
-
-2026-09-29 22:22:47 ./run-tests.py ap_pmf_ap_dropping_sa
-DEV: wlan0: 02:00:00:00:00:00
-DEV: wlan1: 02:00:00:00:01:00
-DEV: wlan2: 02:00:00:00:02:00
-APDEV: wlan3
-APDEV: wlan4
-START ap_pmf_ap_dropping_sa 1/1
-Test: WPA2-PSK PMF AP dropping SA
-Starting AP wlan3
-Connect STA wlan0 to AP
-Exception during test execution: Locally generated disconnection not reported
-Traceback (most recent call last):
-  File "/lkp/benchmarks/hwsim/tests/hwsim/./run-tests.py", line 635, in main
-    t(dev, apdev)
-    ~^^^^^^^^^^^^
-  File "/lkp/benchmarks/hwsim/tests/hwsim/test_ap_pmf.py", line 440, in test_ap_pmf_ap_dropping_sa
-    raise Exception("Locally generated disconnection not reported")
-Exception: Locally generated disconnection not reported
-FAIL ap_pmf_ap_dropping_sa 6.459052 2026-09-29 22:22:54.598333
-passed 0 test case(s)
-skipped 0 test case(s)
-failed tests: ap_pmf_ap_dropping_sa
-
-The kernel config and materials to reproduce are available at:
-https://download.01.org/0day-ci/archive/20261008/202610081606.2e786210-lkp@intel.com
+Thanks.
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dmitry
 
