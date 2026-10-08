@@ -1,93 +1,114 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sendmail.purelymail.com (sendmail.purelymail.com [34.202.193.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B814F2264D9;
-	Thu,  8 Oct 2026 00:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4432C235E
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 01:02:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.193.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791420482; cv=none; b=O/3Ls0yUTBFQcGb5WDHv9Kmhrd2OPhljdzr7ze5pJgAGohpA+9lFPTOYjl713s984Nf+RxUPbO87LhKsZ6YJhhCQpuPuRDgkRoP6v5zHhDSaqVKmN/514GsWPGW2moYlDjPweigDpin778pifxoZZK03HJdQxSU9w67UlAWeNeI=
+	t=1791421378; cv=none; b=ptf2dbbKpXO+6tmjXYDM2se5uRNb/LJ1+E175gGgGYwCGH0z8q84JfQA1/VCUYGQRl36i8iCyqF0D4CqJOBIuC8D9uIcZkNtHYunu/0vIKqWa4x+gNHjUwOqVMlGipyUzpngwo6kzKV4hzoV0iqiOmwx7UrjMtYNXg9KFQzV4ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791420482; c=relaxed/simple;
-	bh=3qecFCTNOtMF/6J6b9IogFOPnuThkUfV0zbWRshIEYM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Ie6RvZJv0AASFT2CVrV+z8jRocohUfAHBIohV4JAUL2gSlIr+e08LWx4T4S6XQV/zUmY9gIpdJ/TNYGWKhkonOW3oQCEEQBIVWB+oJWM9r+mS6T1503nPa3jdEOgCeu9zSyLZ7IirKaOF1k5X3LIr9dRb61fm8wP4TfsMyCfgXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=pTM1AwZN; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791421378; c=relaxed/simple;
+	bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:From:To:
+	 References:In-Reply-To; b=P1cba7NICUuIBxyhevmX5Ue/tbdmqz3KQn0WMdrBq8OK57ohvDOKPreQnwv3HJ5IFq47V/r6CgYCVVMv/+PnZ1sK1aTE4V4B68/BMH3IXb05yJL6xUD/W07ftvmGMMZTOWqnYesCr8qRO0fJFOVyg/bHHpxmPNqSTglrsxAVdTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rcpassos.me; spf=pass smtp.mailfrom=rcpassos.me; dkim=pass (2048-bit key) header.d=rcpassos.me header.i=@rcpassos.me header.b=lZDqTYzU; dkim=pass (2048-bit key) header.d=purelymail.com header.i=@purelymail.com header.b=Guva4A3n; arc=none smtp.client-ip=34.202.193.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rcpassos.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rcpassos.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="pTM1AwZN"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6980lfRwB053744, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791420461; bh=iH0ImTPLWRVowfA8e0nCPafktKF6MvkpYnllTerShB4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=pTM1AwZNVvZ7qr7Tc+fP25uiyRFoBILOAngo+BGKbwdrqqzWbX6zX/JvKPaRcz0+B
-	 wmKcxxAIOPc1EP26+yM8Z4FZAOtGZP4lZC138VzsXgOyHTeOSpIKnVgfq0MGcxYKxo
-	 LP78wQ2zr1Lo7MrqNnE8FoS731qonTsNTWXG2RYKtCP970wCtwPFPj8eSVtXaww599
-	 cPWBtlG6MyxrHdddNu+VQ69xjmMoQQ4HPIgHdgbHcToX0DIfp98WHs5EIT8aBvGZN7
-	 CYNGOUb97LkhbFEyaZpKrm2zpUmkOi5DJrOhYpqtk5ymJE2YXa3egedT6QRK78WFNS
-	 T8KhycqGxROLQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6980lfRwB053744
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 8 Oct 2026 08:47:41 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 08:47:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 08:47:41 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Thu, 8 Oct 2026 08:47:41 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Tristan Madani <tristmd@gmail.com>
-CC: Kalle Valo <kvalo@kernel.org>, Bernie Huang <phhuang@realtek.com>, Timlee
-	<timlee@realtek.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>, Tristan Madani <tristan@talencesecurity.com>
-Subject: RE: [PATCH wireless v2 1/2] wifi: rtw89: fix IE length passed to
- cfg80211_find_ie() in 6 GHz probe
-Thread-Topic: [PATCH wireless v2 1/2] wifi: rtw89: fix IE length passed to
- cfg80211_find_ie() in 6 GHz probe
-Thread-Index: AQHdVndZILhA+Kbh2E6eJpKr5vPk4bbyz9rw
-Date: Thu, 8 Oct 2026 00:47:41 +0000
-Message-ID: <f9336ee25ea04f418f63700f2e1a090a@realtek.com>
-References: <20261007161721.261452-1-tristmd@gmail.com>
- <20261007161721.261452-2-tristmd@gmail.com>
-In-Reply-To: <20261007161721.261452-2-tristmd@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=rcpassos.me header.i=@rcpassos.me header.b="lZDqTYzU";
+	dkim=pass (2048-bit key) header.d=purelymail.com header.i=@purelymail.com header.b="Guva4A3n"
+DKIM-Signature: a=rsa-sha256; b=lZDqTYzUDXcZM+5CvFD/0vDiVLjvVCiyj++h7LxnWRLCrSLY+ci8O0SXPFhqhJZH2pubKL+fT0JL40lcPRYuiw9b5P3q417NPHf6WSXL1geqwoYnC7SwFICOzJcS/KM/I/VVUdziHd0UuWpXwoA3fG+KELyTQ9m71D2lNk2pLbkEiuyeGLfssBrHrDnthaEUjcj0e1fDzxf2UYr/S+m4p4aE/33Fs3HNt4IKy9AJqocGo9FrDTqpuU2PvnfN7KjMtkArVdAML99t8Mfr09EGcG1NcWYSik2nJ0DllM3My4H9yJ2vQg9OS1K4ndyj2o24+N63RQlglUBm2OtJ4NUrfA==; s=purelymail2; d=rcpassos.me; v=1; bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=; h=Received:Date:Subject:From:To;
+DKIM-Signature: a=rsa-sha256; b=Guva4A3nrgkppc37/i9m+24/WqBV7hTEnm+W8dk7qCGw7dGYFZYcz57LBjqN2l7cZWNlp7XNwTHAQvGj+tKtFYlX9WzlzYd5uwOdYmiFxf66s6KCjOX5twmK1A2SYIvBA6jrtlUpM6KP5hjw2V/nqZQf+nBz0iNi+fMYTCHDpVUH6Afg1VvGTnWIRBcenROox9iU44O0I5+EDXLCHVGeSWUxaQ7Xo2qUlJYOJ8i5pG5LjOItz4f3QUOHCLdsNpOx1ZUdb/PP5ZBkGVfAwMLyi4Xoy09eSkTaOK03bwzBmP9hgxILnDHTX3LNN+JM5hzQuXiu0GbNJd+3sQdFmztcjw==; s=purelymail2; d=purelymail.com; v=1; bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=; h=Feedback-ID:Received:Date:Subject:From:To;
+Feedback-ID: 45355:7809:null:purelymail
+X-Pm-Original-To: linux-wireless@vger.kernel.org
+Authentication-Results: purelymail.com; auth=pass
+Received: by smtp.purelymail.com (Purelymail SMTP) with ESMTPSA id 1860935098;
+          (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+          Thu, 08 Oct 2026 01:02:40 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 07 Oct 2026 22:02:59 -0300
+Message-Id: <DLZ1VOR6LJVU.Y08CXZ0T39KM@rcpassos.me>
+Subject: Re: [PATCH wireless v3 0/4] wifi: iwlwifi: recover the BE200 after
+ D3cold removes its power
+Cc: <johannes@sipsolutions.net>, <helgaas@kernel.org>,
+ <ilpo.jarvinen@linux.intel.com>, <emmanuel.grumbach@intel.com>,
+ <nika@nikableh.moe>, <mpearson-lenovo@squebb.ca>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: "Rafael Passos" <rafael@rcpassos.me>
+To: "Navon John Lukose" <navonjohnlukose@gmail.com>,
+ <miriam.rachel.korenblit@intel.com>, <linux-wireless@vger.kernel.org>
+X-Mailer: aerc 0.22.0
+References: <cover.1789333511.git.navonjohnlukose@gmail.com>
+In-Reply-To: <cover.1789333511.git.navonjohnlukose@gmail.com>
 
-Tristan Madani <tristmd@gmail.com> wrote:
-> @@ -2582,7 +2583,10 @@ static void rtw89_core_cancel_6ghz_probe_tx(struct=
- rtw89_dev *rtwdev,
->                 return;
->         }
->=20
-> -       ssid_ie =3D cfg80211_find_ie(WLAN_EID_SSID, ies, skb->len);
-> +       if (skb->len < hdr_len)
-> +               return;
-> +
-> +       ssid_ie =3D cfg80211_find_ie(WLAN_EID_SSID, ies, skb->len - hdr_l=
-en);
->=20
->         list_for_each_entry(info, &pkt_list[NL80211_BAND_6GHZ], list) {
->                 if (ether_addr_equal(info->bssid, mgmt->bssid)) {
+Hi, I've been testing this patchset for almost two days, with good results.
+I applied it on top of mainline (7.3-rc6).
 
-The use of cfg80211_find_ie() was removed by [1].
-Please use https://github.com/pkshih/rtw.git as codebase.
+I was having issues with my new company laptop for a few weeks.
+A Dell Pro 14 Plus PB14250, with BE200 Series Wi-Fi 7 (00:14.3)
 
-[1] https://lore.kernel.org/all/20260909070004.35353-5-pkshih@realtek.com/
+Tested-by: Rafael Passos <rafael@rcpassos.me>
 
 
+More details below:
+
+Before, this would loop for usually long times, or until I reloaded the
+driver:
+```
+[  349.794606] wlp0s20f3: disconnect from AP $AP_MAC for new auth to $MAC
+[  349.899518] wlp0s20f3: authenticate with $MAC (local address=3D$LOCAL_MA=
+C)
+[  349.900258] wlp0s20f3: send auth to $MAC (try 1/3)
+[  351.906522] wlp0s20f3: send auth to $MAC (try 2/3)
+[  353.922497] wlp0s20f3: send auth to $MAC (try 3/3)
+[  354.900727] wlp0s20f3: aborting authentication with $MAC by local choice=
+ (Reason: 3=3DDEAUTH_LEAVING)
+```
+
+With the patches applied, I still got a few disconnects, but they were
+imperceptible. I only know abour them because I was keeping an eye on my
+logs (AKA `dmesg -w | rg 'wlp|iwl|auth|reason' `).
+
+Example disconnection log with the patchset applied:
+```
+[ 341.720214] wlp0s20f3: disconnect from AP $AP_MAC for new auth to $MAC
+[ 341.802793] wlp0s20f3: authenticate with $MAC (local address=3D$LOCAL_MAC=
+)
+[ 341.803277] wlp0s20f3: send auth to $MAC (try 1/3)
+[ 343.820077] wlp0s20f3: send auth to $MAC (try 2/3)
+[ 345.832125] wlp0s20f3: send auth to $MAC (try 3/3)
+[ 346.803865] wlp0s20f3: aborting authentication with $MAC by local choice =
+(Reason: 3=3DDEAUTH_LEAVING)
+[ 350.389895] wlp0s20f3: authenticate with $AP_MAC (local address=3D$LOCAL_=
+MAC)
+[ 350.390412] wlp0s20f3: send auth to $AP_MAC (try 1/3)
+[ 350.396872] wlp0s20f3: authenticated
+[ 350.400017] wlp0s20f3: associate with $AP_MAC (try 1/3)
+[ 350.413168] wlp0s20f3: RX AssocResp from $AP_MAC (capab=3D0x1111 status=
+=3D0 aid=3D5)
+[ 350.414412] wlp0s20f3: associated
+[ 350.441020] wlp0s20f3: Limiting TX power to 36 (36 - 0) dBm as advertised=
+ by $AP_MAC
+```
+
+Before finding this patchset, I also tried a few options from forums:
+Running plain mainline 7.3.0-rc6,
+
+disabling d3cold with udev rules,
+# disabling WiFi 7
+options iwlwifi disable_11be=3D1
+# Disabling Power Saving on BE200 wifi
+options iwlmld power_scheme=3D1
+options iwlwifi power_save=3D0 uapsd_disable=3D1
+
+Also tried connecting to a WiFi 2 only ssid (with "IOT friendly" options).
+
+Thanks,
+Rafael Passos
