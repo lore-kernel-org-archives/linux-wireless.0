@@ -1,215 +1,130 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61EB63C2BAF
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 06:21:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FF52BEFEB
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 06:23:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791440504; cv=none; b=HYx+17SKPiAcDvEnVztyZLzrH2g8rqWZ1fSzbeVvFUgn75IACfwq3wirhQHYYJw4Mn/tFfYdG8lGq8cOO6emnssr4oebPHgI4g92uM1+E8mZr77rRYwj0yGv3iKyHhbSIutuxwmW9M55IadnE/hjRVB4XU2DdAeMKAJT79WUFYQ=
+	t=1791440584; cv=none; b=K9nirRN0Sw4b9QMjlC7sfXGlX/nn5+PI3cS6Xie/kp2VR89LPu7uMIh6jQv2ltE7r4FssaA2rBpHARvr48oe12EZpNJsd2XTPyTxfbWP7zF0v3pF5s1KtSQpk3pn6MVKPMVRm4LANzvy10iKOLQdj9HOsU2O4k9M0HusK4cDoIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791440504; c=relaxed/simple;
-	bh=bsLDRyl0aAGyDLXnNq1ocy9lVC2yGRvfVfbGSNSB7os=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JF4Z2z6aX2DSr5hTiBUAKAyq/xSYaLEMxUJsyvThA+ru0Qq5FHefDHkDCuNhH0Scp5bf6ggXhDMZGQBy4qNI5jSA4VOsGBTXb5wGkpwKL2e1u48B7r/w6llX22C/P/r8+D9ZIZAkaEN2zqBeBfcpBWJNns8Bn4CY6U8YQr0aaFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eyGYNsKP; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791440584; c=relaxed/simple;
+	bh=4oBWKOzYUpjIQGFDDySEnk+C2atzJAi7V7k2gpnDtbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=PR47NjKlWCXweKWU8MgFqX2iJ1RLaqszUWo0LOLcS8uvaXexYe4zGzGlfKxlPp2pS4QJY4g19/RzWy7652+hWfFUBSTsgkJqTr9TBzhmKb99fhdD2CCFt56oclG8KhphxN4COqTOpGIpGXieXF58u/H96Vkkv9W195pWiwudmd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fqS4tyY9; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eyGYNsKP"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49fbb2acc90so23539835e9.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 23:21:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791440492; x=1792045292; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=zSjbzlFloq9QXjkiUjFLP1ZspHUOtztmi3mM6sYoevs=;
-        b=eyGYNsKPyaIpOSLqsCQWPTEA4CgIWZ9N4B/Q0rgkctNHUDzsY08yYTKKhIbR7hccCP
-         jM32QummxetyWVWcKncEQUHGZ5KvgY2W2RSgPHDY1b4di7WV/CdkZSmFC7JjKlvxvbKz
-         m+aNlVj/ns3akxpbJtNS+3kmO3myDF8AqBUDe2cAsrAXTgAK+F8EvqbFdOMWFo6hW0Ge
-         hEyalzyJn8kP5KyvN53GoCgYaxdAZPlBpDdLwX3FXeBkpQ0mzHFwavNjYjH3tDKW+NR7
-         SOV+Uc4rp8sgjFqVE4WKkdQjydXexmuXytCup2u9ZOfzmcXIRRGHiCgIZcZnN+mUHEzy
-         KeEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791440492; x=1792045292;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zSjbzlFloq9QXjkiUjFLP1ZspHUOtztmi3mM6sYoevs=;
-        b=DGuMm2Oa7b2H+pQIhG0ipwkqM69Pk+aIrU3lrbZMFGNquL3WdPIA42SSAYSFTAvCEw
-         3sQugjeYJ5pJd7OtNs2AUmoK/Ico6CBSwIz5+pIVkaWomxZegqJpATDYtffLkMXXyWAo
-         LCGugtl8pVLNaHADOwAkLlJ6Odq6qrqgLvZG/S+oxydypveghbEUc+VXxTJDJRLPPBzJ
-         92HwFsHr1nCdqs7viHkWKJ07Mz9KadEzxUNPdpwRQI/4wpgbYxvXgpolywS4slchNOh3
-         UR2pX5dcgD4Ep2Dzf5AQFOLEO7TsTIcAGaqSPIE2n/jxf0CFh1QXGRpBvINqecpOrvJv
-         0qjg==
-X-Forwarded-Encrypted: i=1; AKwUvBzPnGqdJVly7WKvaSBo5AabqvBdXWQmFOfUE+gypBGHf33mB6D0i56Krv8Pn5V2p35SebPEXNIXhpUCiyzK4A==@vger.kernel.org
-X-Gm-Message-State: AFuF++loMQbmfQG/f+dg+01r9JvA9OnA5TOZApy+NoVb2OWEOlN/rQYv
-	3ugFRd4U32UtELdXOQGCbvP7FSuf7fH+MyKEQStV9stbiYVvjACeG8wW
-X-Gm-Gg: AYBFou0dZEeiQgAFwPasekTyOjtUSxhgKmC4sMyYU1+pUdp6ILeTtbacsCn+vcCK7Zn
-	nB3hIc2jlt5eRVXhFuk3RjnS0hPrLslffsb94Xrc16kaGwsMHsnRRMsi8tZdRxlwvH+AaFeeUeG
-	b0iP/kQuI80wXJ8MYRs51IOA3ZYXvBQIw7p3i8ErHgOkWPhQ8PDAvJHEylY7HEXHKsmPiVucFby
-	SCQXPczn6y014RLLr/oCiLfzOOVmjtwcAeXL4BlgtbhuLzo4TarPZa280sSn4bTdJi5xwSpq5eN
-	DI23oknuIhx68vKJI6+MmPW0wEorCAUsX0vmPaTuissQaVUW5TV1Rd299IBfnqNYTUBvigiiR+h
-	OPV5KpJQ9PiWM0MKHbeYW+D4zHmA6rtTFe2DgNc5FpGyGspT8HeNMxwBtWMjspoOiIE66GGGbi4
-	nDnlkG6EL7BmCCXXANQgUBN75WPnVyr1IS7joaehc+nQD6Y0afFOedU9d1vWvhvJ75Ur2xvfkHx
-	q7b
-X-Received: by 2002:a05:600c:821a:b0:4a0:3a3:33e2 with SMTP id 5b1f17b1804b1-4a1803038cfmr76364385e9.5.1791440492138;
-        Wed, 07 Oct 2026 23:21:32 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1843e3356sm40309455e9.14.2026.10.07.23.21.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 23:21:31 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: [PATCH rtw-next v5 1/3] wifi: rtw88: download the beacon the reserved page was built with
-Date: Thu,  8 Oct 2026 08:21:27 +0200
-Message-ID: <83291fa9c7b78458599a9bfbd8371658b0d3c5e5.1791362281.git.mehmet.fide@screeningeagle.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <cover.1791362281.git.mehmet.fide@screeningeagle.com>
-References: <cover.1791362281.git.mehmet.fide@screeningeagle.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fqS4tyY9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791440582; x=1822976582;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=4oBWKOzYUpjIQGFDDySEnk+C2atzJAi7V7k2gpnDtbQ=;
+  b=fqS4tyY9kHQniEr9a2PfOJK99NXJLo83ICfKYh/F1T7yVwggMpYzEB5K
+   Kz45BOkq55BvNkMqvIbkm8Zz/3+fZGhqlZ6TxO6yKSRVL8T7xagToUxhV
+   IEeomre+PSqzK7B8cNjib7QiDxIBaLx9UTFy3y3ZdecR0VJn+ZhZqCvQY
+   aXk7AZIbRIqJrcT48tuwE/5My4rVjqY9+bqTfHoOiQxAekDEHD/fCT5bh
+   OGhz8JdiepVYOkOD0r6iidlfBd56qdL1JjgCBCkhJ3cueHvi6z6+dWqTY
+   AjubYCDiGUQBTyvNMd4eLtWhOAf/VQWyxRkVABrYPMMSRXd6B9CU0hBJI
+   g==;
+X-CSE-ConnectionGUID: w2YFhIbuQR2dHLnGG9RT5w==
+X-CSE-MsgGUID: WxV0C9E8Q7mWw4DLfMFLWQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11928"; a="211339"
+X-IronPort-AV: E=Sophos;i="6.27,145,1787036400"; 
+   d="scan'208";a="211339"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 23:23:02 -0700
+X-CSE-ConnectionGUID: OwuzOkOfSwmwyuaOl++B/A==
+X-CSE-MsgGUID: S2skxvv9QmOp0mRjvHoZxQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,145,1787036400"; 
+   d="scan'208";a="277276"
+Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 23:23:00 -0700
+Date: Thu, 8 Oct 2026 14:22:56 +0800
+From: kernel test robot <yi1.lai@intel.com>
+To: Benjamin Berg <benjamin.berg@intel.com>
+Cc: oe-lkp@lists.linux.dev, lkp@intel.com,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, yi1.lai@intel.com
+Subject: [linux-next:master] [wifi]  4db13371e2: hwsim.ap_wds_sta_open.fail
+Message-ID: <202610081400.f503743b-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-rtw_fw_download_rsvd_page() downloads the beacon twice: once as part of
-the reserved page and once more on its own, so that the firmware ends up
-with a TX descriptor that describes the beacon rather than the whole
-page. The second download fetched a new beacon from mac80211 instead of
-downloading the one the page already holds.
+Hello,
 
-Besides the extra work, every beacon fetch advances the DTIM count and,
-while a channel switch is announced, the CSA countdown; doing it twice
-per update lets a countdown that starts at 2 reach 0, which mac80211
-warns about. Hand the beacon skb out of the page build and download
-that. The hw scan, which downloads the beacon without a page build,
-keeps fetching its own.
+kernel test robot noticed "hwsim.ap_wds_sta_open.fail" on:
 
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/fw.c | 34 +++++++++++++++----------
- 1 file changed, 21 insertions(+), 13 deletions(-)
+commit: 4db13371e217c360cda76578f9eb5e1bcd10a17a ("wifi: mac80211: refactor RX link_id and station handling")
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 945fedcd375b..3cd17a3bb494 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -1622,7 +1622,8 @@ static int  __rtw_build_rsvd_page_from_vifs(struct rtw_dev *rtwdev)
- 	return 0;
- }
- 
--static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev, u32 *size)
-+static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev, u32 *size,
-+			       struct sk_buff **beacon)
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	struct ieee80211_hw *hw = rtwdev->hw;
-@@ -1702,13 +1703,15 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev, u32 *size)
- 	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		rtw_rsvd_page_list_to_buf(rtwdev, page_size, page_margin,
- 					  page, buf, rsvd_pkt);
--		if (page == 0)
-+		if (page == 0) {
- 			page += rtw_len_to_page(rsvd_pkt->skb->len +
- 						tx_desc_sz, page_size);
--		else
-+			/* the caller downloads it once more on its own */
-+			*beacon = rsvd_pkt->skb;
-+		} else {
- 			page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
--
--		kfree_skb(rsvd_pkt->skb);
-+			kfree_skb(rsvd_pkt->skb);
-+		}
- 		rsvd_pkt->skb = NULL;
- 	}
- 
-@@ -1723,11 +1726,12 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev, u32 *size)
- 	return NULL;
- }
- 
--static int rtw_download_beacon(struct rtw_dev *rtwdev)
-+/* the beacon the page was built with, or a fresh one for the hw scan */
-+static int rtw_download_beacon(struct rtw_dev *rtwdev, struct sk_buff *beacon)
- {
- 	struct ieee80211_hw *hw = rtwdev->hw;
- 	struct rtw_rsvd_page *rsvd_pkt;
--	struct sk_buff *skb;
-+	struct sk_buff *skb = beacon;
- 	int ret = 0;
- 
- 	rsvd_pkt = list_first_entry_or_null(&rtwdev->rsvd_page_list,
-@@ -1744,7 +1748,8 @@ static int rtw_download_beacon(struct rtw_dev *rtwdev)
- 		return -EINVAL;
- 	}
- 
--	skb = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
-+	if (!skb)
-+		skb = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
- 	if (!skb) {
- 		rtw_err(rtwdev, "failed to get beacon skb\n");
- 		return -ENOMEM;
-@@ -1754,18 +1759,20 @@ static int rtw_download_beacon(struct rtw_dev *rtwdev)
- 	if (ret)
- 		rtw_err(rtwdev, "failed to download drv rsvd page\n");
- 
--	dev_kfree_skb(skb);
-+	if (!beacon)
-+		dev_kfree_skb(skb);
- 
- 	return ret;
- }
- 
- int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
- {
--	u8 *buf;
-+	struct sk_buff *beacon = NULL;
- 	u32 size;
-+	u8 *buf;
- 	int ret;
- 
--	buf = rtw_build_rsvd_page(rtwdev, &size);
-+	buf = rtw_build_rsvd_page(rtwdev, &size, &beacon);
- 	if (!buf) {
- 		rtw_err(rtwdev, "failed to build rsvd page pkt\n");
- 		return -ENOMEM;
-@@ -1782,13 +1789,14 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
- 	 * the beacon again to replace the TX desc header, and we will get
- 	 * a correct tx_desc for the beacon in the rsvd page.
- 	 */
--	ret = rtw_download_beacon(rtwdev);
-+	ret = rtw_download_beacon(rtwdev, beacon);
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to download beacon\n");
- 		goto free;
- 	}
- 
- free:
-+	dev_kfree_skb(beacon);
- 	kfree(buf);
- 
- 	return ret;
-@@ -2345,7 +2353,7 @@ int rtw_hw_scan_offload(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 	rtw_fw_set_scan_offload(rtwdev, &cs_option, rtwvif, &chan_list);
- out:
- 	if (rtwdev->ap_active) {
--		ret = rtw_download_beacon(rtwdev);
-+		ret = rtw_download_beacon(rtwdev, NULL);
- 		if (ret)
- 			rtw_err(rtwdev, "HW scan download beacon failed\n");
- 	}
+[test failed on linux-next/master 6474fa070f2b8013b4b87350b775b8c3be6e8aac]
+
+in testcase: hwsim
+version: hwsim-x86_64-542b8fd43-1_20260927
+with following parameters:
+
+	test: group-14
+
+
+
+config: x86_64-rhel-9.4-func
+compiler: gcc-14
+test machine: 8 threads 1 sockets Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz (Haswell) with 8G memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <yi1.lai@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202610081400.f503743b-lkp@intel.com
+
+2026-09-29 15:51:57 ./run-tests.py ap_wds_sta_open
+DEV: wlan0: 02:00:00:00:00:00
+DEV: wlan1: 02:00:00:00:01:00
+DEV: wlan2: 02:00:00:00:02:00
+APDEV: wlan3
+APDEV: wlan4
+START ap_wds_sta_open 1/1
+Test: Open AP with STA using 4addr mode
+Starting AP wlan3
+Connect STA wlan0 to AP
+Exception during test execution: sending data without carrier won't work
+Traceback (most recent call last):
+  File "/lkp/benchmarks/hwsim/tests/hwsim/./run-tests.py", line 635, in main
+    t(dev, apdev)
+    ~^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/test_ap_params.py", line 389, in test_ap_wds_sta_open
+    hwsim_utils.test_connectivity_iface(dev[0], hapd, "wds-br0",
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        max_tries=15)
+                                        ^^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/hwsim_utils.py", line 223, in test_connectivity_iface
+    test_connectivity(dev1, dev2, dscp, tos, ifname2=ifname,
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      max_tries=max_tries, timeout=timeout)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lkp/benchmarks/hwsim/tests/hwsim/hwsim_utils.py", line 217, in test_connectivity
+    raise Exception(last_err)
+Exception: sending data without carrier won't work
+FAIL ap_wds_sta_open 14.718961 2026-09-29 15:52:12.064446
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20261008/202610081400.f503743b-lkp@intel.com
+
+
 -- 
-2.55.0
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
 
