@@ -1,213 +1,140 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE053E765A
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 11:02:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B03746C842
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 11:51:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791457366; cv=none; b=SOEXs+hNnXh/UTEQJa8RmRR8Mo/8eJMmKPYPoZcdK6taFt6SqF2ncsBTyZMSVT+cyb4cBE7+jVV46oDoD0gcShMVNLUbS+uK/G1TWG/zLIA9vy3ApELQsMVlgjFiYjTC1nJ2OUV7Nl6afpv6C4cK64/gCatUuRAtMwfi7XobDCw=
+	t=1791460318; cv=none; b=OhT9I+ALsMBEe6g2unQHhVf6K9JFP7zsaee9PVk0kRHRJgvAbrN6WwtsPOk0ySA3WOZuVB14u8VfSd4GJQTX6P5eihcJmR7SJMhBBcK/xEcer2uOhNY8tr3RlF9Fo6U1ECBSPSjfsyL9OIGBMGDsejHmxMIbr8l1oJuaYh99Xak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791457366; c=relaxed/simple;
-	bh=dO/pgusH/Z26UWYNXK0zqHa1I5a6vsumMkoLMtV6gZk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=abU4rYNjAdH6p0YaVQfh4XGPT7LjEwH3w5TglqDAjR644pYNWUG++i43RdQH7GD2qhjmqcOdnZ2lk0NSvJTQVA/95PbauKfYEfz2uNZiu2EP/1ANutao0QTGQA+8k1z0FbPoJY9ycmCc8kJasWwJYyxKX+2cjac38JHT2mSP4uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=GJd8CGRM; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Z+6yOpG/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1791460318; c=relaxed/simple;
+	bh=25Cy4hLs//7T7QQPA32J2gRwiv8swJf1KlsN0jWfScs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nsz+hdCGtmObWBlpo/AKJvwSIeueh1mbz++6cBzucrtJNOOJ5QeZLkR3S2E70s/4LvAAVkpg7kUosDP44ozD19IeiEWwaUK+4g0u5Oc3TSTT3BSuPhUtvpPmB8T9nLMKhpQsWDnVgcHZ5478Qs+IuTHDcRv8n3Lq6OzNFVUp91c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J7vUz9r+; arc=none smtp.client-ip=209.85.208.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="GJd8CGRM";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Z+6yOpG/"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 698AbMvr3129076
-	for <linux-wireless@vger.kernel.org>; Thu, 8 Oct 2026 11:02:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	6YHQnEULCZieeaLxdgJmpoPCPlP2is0QYfWrbkAwUvY=; b=GJd8CGRMdgEPoDTA
-	LcP5RdfpB7vD55+ZKGi7XWh7XfLoB1+NYKrSHuCRAyjhSULl4WUcjkK17UlXFf2B
-	gibqAYi+wkhvphiQKCRIxPkHSZLveoO24La6gemjemAL6mOIghc90zS/VG7hZ92X
-	Ru0ER0/CjkXNl7x5t7ZG9JIIPX/n2JVu8lalUAvNZqnnGoltR8M7cOrgqaQSnP4Z
-	Gyz1yTNQTKOtz8ubKUsIRv1NEZgCj0rvs9fp5JVbsx8H8mvyibaENEveJo2k7yee
-	xvxmYhG4eybbG6E9IGhEYOv/m9r9k+1xKqdN4CUjulNVkakb9cdLOvTCVtff8Pf+
-	ilZrUw==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h5xe42kqd-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 11:02:44 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2e80ef3e0a3so7759135ad.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 04:02:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J7vUz9r+"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a9a2cfe1d4so16300911fa.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 04:51:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791457363; x=1792062163; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6YHQnEULCZieeaLxdgJmpoPCPlP2is0QYfWrbkAwUvY=;
-        b=Z+6yOpG/VHDLwy6yc4HHvPrYYEBscgc2+vxSa9EnYSzQfWgQr1Ay4cr5B0B1QlBhy6
-         suiqVuFuJl7BVOBPbe+PgbyX60Jwh0YyyTVEvWJju2nIvhKULHtHST+iSkifNmr6bdZI
-         cVKuZ174nUmhegjdAYUCpJIM5IqX8XrFn3TnyYYoKD7AMkodRxydTZFR/T0cFatTKX2F
-         njwZonTxr8k0SEj2dlkPIkaeB3IwaGPckPBVmc6GE8hXKy5NuEJ3Kas0TgR9bc4bubsc
-         Q1xVp5GeuvKwe8fLf0Au+HbJoZeqNaDXTTZrqz38V5L9EoOsFQjG/G81FC3WxIV3Iblj
-         MkWg==
+        d=gmail.com; s=20251104; t=1791460315; x=1792065115; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2YfozA0kOqu0j23n9iWNtMreJdG+KsOuhldDG1WEkjM=;
+        b=J7vUz9r+endiGLrt7US8Etgjx80m6jFGyLi2Scs31762cAfnRPu3C+vRTawwhdN97e
+         3Cb/XTAqb/bS+XYLQwQJJ2ZRyo0pPIQdutu5UOH71XVzviAgFcyN5jXkDTFyafPeIPfN
+         0FA3HfgEkc390cvd8Crl2GYzWt1qdrnkbvJ+vnvV1W4a+4QaTgVTsfMnMB/jvvNhzAh2
+         sMQSt+5QDwCIXv9w8vgBqIz9cqjLqNrnnXmyfiivnuvx/71lti8OYIOjJ01p/ycPfqKj
+         d52K8w57B2+/XuFmlX68cWyN6jTrIzLcSRC1HN9MifEg7rL+/aKTheYlajcWLI0W2UXX
+         UGZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791457363; x=1792062163;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1791460315; x=1792065115;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=6YHQnEULCZieeaLxdgJmpoPCPlP2is0QYfWrbkAwUvY=;
-        b=Bxh0kz/jfPaHG82YacTO6Kkb17Chh9luN+LSbv8dO1t4OSEGVhD+Tplqg+8agE7Eqd
-         s5ugFg/40EdAseFXj2nx5He55r18qNEPUzrctlCSUf0sdONj7AcNimDNr9DAKS3wR03O
-         76FUdMARl1OO1o+Z4vM2F/tguRutJLtHjDTXLCiqJN3TlLtxFF6RZKgeS68xy8XUmlgd
-         1C0RQboYr98vE6IkxJPo6ybQ1JE78cJr0TH3DhJMlZcH4XWZDlZButo+KAnoS14tWVOP
-         he19hLXfe0+DgSaVCqLt63YPWBsDv4znai5vwE5r5bVLNGq+ZGFc9g6FUpAqq7Ugkxag
-         Bc8A==
-X-Forwarded-Encrypted: i=1; AKwUvBxDfcQVy6X26mUznNZJR5hmHx43tIEmwig973nLsMJuGh77RHMKWV2CczJddB/5rBZ/j5n5kIcr3i9SD8YJ0g==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKLYd/l48L5ytV4jkAXTZQ08NY2pcwz7QgyU9+s+hQW3UJAgARP
-	1LYHVRTN+BdaW163sdjWISlP7JKWJ4GKfxud86uVcgE4zUGFbqyOip8idKHshLK8HffPRSyUuKw
-	LPepsh7WvRNH5MVHvv4pXkRh/BG9TVQkyru5twQeauxLzEPQQGX0wZ6WQRD280d0f4grXvyomtd
-	KYS7lX
-X-Gm-Gg: AYBFou29YEGVaNf7QrtIPvoXTkNqYrlKNluEknT5tsGuocBh+Ep4wdMCWLI2I/7vVPn
-	fpu87v8fYHSVk+HlWFZlYrKfWJUW4xCzEXpSD+kvsK6hXVafS4o/czvr5Ko9JOYxJzb7PH0PxZC
-	HAPaGe/Hh6ZqZf9z70y0UOhrK00MMYerHJPItQBiXS5WFT3YsOYDJyYta606Kln5+WkSuZ1VGvb
-	es86KXxgjMb8a/8h1Srv49xzgv4+WJMLIoM00n4wLlnDoQoWrudR4YtR08qZssk9F+JGplXUP+f
-	yofnxrEFXL+i+OmIaNXDpBJ1PUOJdmLG4ODu4CDcNmPrccMVbfQG11rqIyD8dexjnO59rSlUE4e
-	e+uxlom0wziEpb8wXKNBzjIT9HD5oag/vzIS1XU+SA1K35akByfjmhPKMjijGCWujqC4qQlg=
-X-Received: by 2002:a17:903:2c8:b0:2dd:c053:9c70 with SMTP id d9443c01a7336-2e6004f2a86mr45269285ad.38.1791457363092;
-        Thu, 08 Oct 2026 04:02:43 -0700 (PDT)
-X-Received: by 2002:a17:903:2c8:b0:2dd:c053:9c70 with SMTP id d9443c01a7336-2e6004f2a86mr45269055ad.38.1791457362639;
-        Thu, 08 Oct 2026 04:02:42 -0700 (PDT)
-Received: from [10.133.33.26] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e604437bb7sm22753685ad.1.2026.10.08.04.02.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Oct 2026 04:02:42 -0700 (PDT)
-Message-ID: <c3564de9-c228-429e-8e04-3ff65619d1fc@oss.qualcomm.com>
-Date: Thu, 8 Oct 2026 19:02:38 +0800
+        bh=2YfozA0kOqu0j23n9iWNtMreJdG+KsOuhldDG1WEkjM=;
+        b=z86XhN3LkoRztMMN06P2BL2NyOxNHcepUCDjoiYvmOQ+MbZz1Wv/753zl888zn5VYF
+         KnomPZ+X/76AYY9zrQWlpH+VSV7hMn4EnvORiwVwdEuz9rVbocHV/9A+oVSrKdAsDvXw
+         47f5YSheKutHHhYYhTUQzVMHzb9t4+QK/6wCoiAvVeJGPA+lmy5ILezUKTOAFIgHvygs
+         jVsUp+MS3rRDU5oI3PcnzXd0bhGj0Y4mZeqGAzOKQqLd6X4wJ9gd20BZO8IyKWeGzgks
+         Nd/AGh+VpRz7td9YKJK8hF7aeKPAV/UeYa4Pnr9bV4Q5XR/xXfsN1Vxp1bGZJo9AZkvl
+         X5vg==
+X-Forwarded-Encrypted: i=1; AKwUvBw0Bc/6b/ldGz9HMTZsZYfGs8BztBBt8CbMW5QFFhrwwfdHnLHcurkuZQ1Hw7V75ZLKNqRRDxQcre/e+V3eXg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLZq82iuNWUOr4lsyNDH1wcBs41JKP312WiYIainwqIYpHjRKQn
+	a5xvNu1FW9PmOHSHeIFwrXFQniHJzcfNGa3LBfYkl73ZnLjo5kguAbI3
+X-Gm-Gg: AYBFou2SSI3oGvfl6V4uwuwkiHTN97CdumUpZi5hdarQuYy8iAvTuzmos+T0vSuxmW2
+	oU4NLtuWMHr+1sVuVnsL3rflZCpBNCu/LV4BNhp09U+Hg1z0rQnL109rFn82/iqRCxIHQdMi3Qe
+	CQVv8Euz0WW1xSuAHco5tYTGoG9otYjT0k2JlXW3mFai+vLkz/Q+7lGl+Va3btgfcc194XFnp6j
+	1Swc6+SHCTDHIQN2k/HtCkMC1IbrJS1WPSu71EnDiyNGflJh5r4xWgDupufOnGC5iVkKbd7EeYd
+	T/BIdBwpYTmllWQeOWzcL/LdzJu8HIKOHHK3126wvenQw31q6jm8MMqk7/QGi+IWVes0hBCEzw2
+	5pkGTqNUDQzvg246Uq8vKlCyFChz/xy5nQetcuKxCCDszLksq90WxllputczYOZ2qkukv4L67ak
+	nXPit52hMQywPe7VtN1yXv3SlTnL6a7Qn7nlXAQTt69fAHNaUZX5CW+fAyAQXM9DrjOHQU9mYsh
+	8RYWIFGSw==
+X-Received: by 2002:a2e:be91:0:b0:3a9:849c:128a with SMTP id 38308e7fff4ca-3a9a2cfcf26mr12750371fa.19.1791460314922;
+        Thu, 08 Oct 2026 04:51:54 -0700 (PDT)
+Received: from grower.astralinux.ru ([38.74.72.197])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a9a1d3370csm15427281fa.13.2026.10.08.04.51.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Oct 2026 04:51:52 -0700 (PDT)
+From: Alexander Martyniuk <alexevgmart@gmail.com>
+To: stable@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alexander Martyniuk <alexevgmart@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5.10/5.15] wifi: mac80211: mesh: release the channel if start fails
+Date: Thu,  8 Oct 2026 14:51:40 +0300
+Message-ID: <20261008115145.83101-1-alexevgmart@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] wifi: ath11k: release peer accounting on peer delete
- timeout
-To: Michael Pfeifroth <micpf@westermo.com>, Jeff Johnson <jjohnson@kernel.org>
-Cc: Kalle Valo <kvalo@kernel.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <arJzxQcf4intXBqS@mpf-ESPRIMO-P9012>
- <9d8307ee-e9bd-4538-92f8-b33410caecae@oss.qualcomm.com>
- <arTp/9A0iMNpIhl2@mpf-ESPRIMO-P9012>
- <8bc3eaa1-7233-48db-a41b-ce3f08fbdd15@oss.qualcomm.com>
- <ar0LVqHZF8UlRB0o@mpf-ESPRIMO-P9012>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <ar0LVqHZF8UlRB0o@mpf-ESPRIMO-P9012>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: 7MdJcJVN9en6wdPAYZK8M5pcxrXS5pV3
-X-Authority-Analysis: v=2.4 cv=AbwkjHXG c=1 sm=1 tr=0 ts=6ac77854 cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=VwQbUJbxAAAA:8 a=N9GNhs4bAAAA:8 a=URxyR80WDTEKk2XSxLwA:9 a=QEXdDO2ut3YA:10
- a=GvdueXVYPmCkWapjIL-Q:22 a=PZhj9NlD-CKO8hVp7yCs:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA4MDA0MyBTYWx0ZWRfX4OPHM2E3rutL
- BAGjGf5fEu9WgDa6LlX4mO6MRd+59oANq/WTHxES2fdw4rouP+J6PFCHz4ZvmOWIAaAIILQPKKP
- cmQVnJHcs1R2n+whr8LcLJYOSlAYRys=
-X-Proofpoint-ORIG-GUID: 7MdJcJVN9en6wdPAYZK8M5pcxrXS5pV3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA4MDA0MyBTYWx0ZWRfX8CxmCRj1A4Ip
- /ZbS0R5CyY3UaY8J5c3rtRMeL4ETI6fU9QyYMN0Sdd937bgc77JD2DhHaGE1ztouMwmj5Ii44Cu
- /jFyTncHuXNufUiSn/lrEaLdkx8MwXb93lo7HYrQRXWujklkQj2JozkoX+JW/mTYIhFw2nop2w8
- PdSC44GbivIzMU8xCgK7d5DySf3RIuKkNHg+GwV0ayq9iEPjSZGW/eD/vymxRGhnksBTLby+ZNl
- Tr8G1pMLVFJxUD3JxfIcmm1cMNu5TUhOgaWbpHyMyn8xJ3nVfVX/7sXNWr/wOhiZAsJRxpqji3F
- l9bUumYciOLNYPVScyh8uwXmA3sukmTgzdlJvPBurhD5gd/BSxKOnvf1ChYT4vb1xDPUm+uZCxl
- 1Nj9Vv1IpWPasjg5ZCRpeYbGNTKI33eX3CJcfh76hdnTAkg6/ybkiTks0nIdgcEUPQXqse015zY
- cNAgdClpXWCcHynb7Cg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-08_04,2026-10-06_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0
- clxscore=1015 suspectscore=0 priorityscore=1501 adultscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610020000 definitions=main-2610080043
+Content-Transfer-Encoding: 8bit
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+commit ae97fff6495a8764bc0ef281cfe5444f701e527f upstream.
 
-On 9/30/2026 9:15 PM, Michael Pfeifroth wrote:
-> ath11k_peer_delete() only decrements ar->num_peers when
-> __ath11k_peer_delete() returns 0. On a peer-delete-confirmation timeout
-> __ath11k_peer_delete() returns -ETIMEDOUT, so the decrement is skipped
-> and one ar->num_peers slot is leaked. Once enough slots have leaked the
-> ar->num_peers > (ar->max_num_peers - 1) gate in ath11k_peer_create()
-> rejects every new station with "insufficient peer entry resource in
-> firmware", and the AP stops accepting associations until the radio is
-> restarted with a wifi down/up.
-> 
-> This was observed in the field on an AP after hours of uptime with
-> frequent roaming and reconnects: clients could no longer associate even
-> though the firmware peer table was not actually exhausted, only the
-> host-side ar->num_peers accounting had leaked.
-> 
-> The delete-confirmation timeout itself is otherwise harmless. The host
-> first waits for the peer unmap event in ath11k_wait_for_peer_deleted(),
-> so by the time the delete-response completion times out the peer has
-> already been removed from ab->peers and freed by
-> ath11k_peer_unmap_event(). Only the ar->num_peers counter is left
-> inconsistent.
-> 
-> The timeout is reached when the peer unmap event arrives but the peer
-> delete response is missed, e.g. because the response event is dropped in
-> ath11k_peer_delete_resp_event() on an unresolved vdev id (logged as
-> "invalid vdev id in peer delete resp ev"). Do not treat the delete
-> confirmation timeout as fatal so that ath11k_peer_delete() releases the
-> ar->num_peers slot instead of leaking it.
-> 
-> Fixes: 690ace20ff79 ("ath11k: peer delete synchronization with firmware")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Michael Pfeifroth <micpf@westermo.com>
-> ---
-> v3:
->  - Drop the defensive peer list_del()/kfree() branch; it is dead code
->    since the peer is already freed via the unmap event or on recovery
->    (Baochen Qiang), leaving a minimal fix that just ignores the delete
->    timeout.
->  - Reframe the commit message around the field-observed num_peers leak
->    and the resulting station association failures.
-> v2:
->  - Correct the root-cause description and switch to netdev comment style.
->  drivers/net/wireless/ath/ath11k/peer.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath11k/peer.c b/drivers/net/wireless/ath/ath11k/peer.c
-> index b30a906..f573a2c 100644
-> --- a/drivers/net/wireless/ath/ath11k/peer.c
-> +++ b/drivers/net/wireless/ath/ath11k/peer.c
-> @@ -340,9 +340,10 @@ static int __ath11k_peer_delete(struct ath11k *ar, u32 vdev_id, const u8 *addr)
->  		return ret;
->  	}
->  
-> -	ret = ath11k_wait_for_peer_delete_done(ar, vdev_id, addr);
-> -	if (ret)
-> -		return ret;
-> +	/* Ignore the return value: the peer is already freed, only its
-> +	 * ar->num_peers slot would otherwise leak on a delete timeout.
-> +	 */
-> +	ath11k_wait_for_peer_delete_done(ar, vdev_id, addr);
+ieee80211_join_mesh() acquires a channel context and then calls
+ieee80211_start_mesh(), which can fail. In that case, the chanctx
+isn't released then interface removal will attempt to unassign it
+after it's removed from the driver, hitting:
 
-as stated in the commit message, the purpose is to ease the case where firmware peer table
-is not exhausted but host's table is, however the change here is to ignore the return
-value by default, regardless of whether firmware peer table has free slots. So what about
-ath11k_wait_for_peer_delete_done() timeouts due to firmware peer table exhaustion in fact?
+  wlan0: Failed check-sdata-in-driver check, flags: 0x0
+  WARNING: net/mac80211/driver-ops.c:366 at drv_unassign_vif_chanctx
+   ieee80211_assign_link_chanctx
+   __ieee80211_link_release_channel
+   ieee80211_link_release_channel
+   ieee80211_teardown_sdata
+   unregister_netdevice_many_notify
+   _cfg80211_unregister_wdev
+   ieee80211_remove_interfaces
+   ieee80211_unregister_hw
+   mac80211_hwsim_del_radio
+   hwsim_exit_net
 
-More importantly, host rejects new peer association only after the
+Correctly release the channel on start failures.
 
-ar->num_peers > (ar->max_num_peers - 1)
+Assisted-by: LLM
+Reported-by: syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=63a84ea9c0f57d6133fa
+Fixes: 2b5e19677592 ("mac80211: cache mesh beacon")
+Link: https://patch.msgid.link/20260908122838.201719-21-johannes@sipsolutions.net
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Alexander Martyniuk <alexevgmart@gmail.com>
+---
+Backport fix for CVE-2026-98326
+ net/mac80211/cfg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-But if we really hit it, I would suspect something wrong with firmware. So even if we give
-it one more chance I don't think we can survive in the end.
-
->  
->  	return 0;
->  }
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index afb1ad3e6ea1..bae9588ea913 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2276,7 +2276,11 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err)
+ 		return err;
+ 
+-	return ieee80211_start_mesh(sdata);
++	err = ieee80211_start_mesh(sdata);
++	if (err)
++		ieee80211_vif_release_channel(sdata);
++
++	return err;
+ }
+ 
+ static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
+-- 
+2.43.0
