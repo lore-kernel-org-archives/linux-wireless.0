@@ -1,121 +1,135 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128F8306768;
-	Thu,  8 Oct 2026 01:28:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791422895; cv=none; b=G7vTwUjB0MvUkk0nq4NmVbg/BA66Xq+c5QYBe1yHaM+dSMJpe8eLKDuH+WatEEV0mq9Y69rpCI1QWxyw/96+l3g2WMwg8slm8g/GjIQy+uUfAS1YVPRxBIvXhNTvQuIMJQ1L16tzKlNjcXLuUKCrxntqRWgUjd1A5V07Qf84t4E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791422895; c=relaxed/simple;
-	bh=0i/Q45BAHtk1SGbstgQ+fgF4wcI9oEQolU0fiiWOnsc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=tcfaq/BVDKE1Y0q08S8N1shzh+pcfh78cplI/nx3IYyPbc2REMpYTUHkaaZfoQhElUb791WZPnTPpBBEztjWI8W7FSzfFvaDcljhbX4g2T+m1mS8EIOYasGdoNxnV+EtjRvQsMnWLiWy0h16dpKRV+XQUkcz6nCB1iklCE6myZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=L+pRrpfa; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4AD930D3ED
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 02:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791425127; cv=pass; b=UdsxXN0q/yXJpO88XusIJAdR8FM3xg327BgwgZ9No7XuVyeqNDuwnznjhL4XiEyOCSw75L67JO0euakQ/Ru6cxxYAQ/8wVMvGv/kcocdze1IaN1dkUSaRwI1D6sWv4NBXx/Z2AAnfotOi+b9RAt/vqBUfUTMvVdejr+ol6Tg0F8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791425127; c=relaxed/simple;
+	bh=Ni306d2UPLub9wUBwVghGvNx0tRdsbeFxp1OD2fB2cU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qh2ldwSZ65EGPl4R0+AAelF/Y1b+mC+1F0m+58Nunx7jC5Mc4T2BZRBb2TkUd8qXWoLluO5zVyWUSdef8Jueu7MmtvqKUoCtvWjt3UHELxvnIS/yoIuSoSfMOOXAPA8QtYD06qh0UZMS5upVNBioCBCgJdhgkKs5zxFf5IiirnA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Rrnk92/m; arc=pass smtp.client-ip=74.125.82.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="L+pRrpfa"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6981S1jvC074716, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791422882; bh=zNWW0rZpoxZbcO0wO4Y0b53dr78WRP0MWi7x7lKBpFM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=L+pRrpfaD8gLsieA4Z8uuTb2nc5C09BQ7dJRIJHsha0VE9lN8BtJi9iPMK9IZKF+q
-	 CMf+l3uRTGWOq0N9gfVlTbP5nQ58t6FMlb3HRuIFEALXh39uoH1Ot3USeDNt5oVimk
-	 phs6Gc9yNG8agdm/kQ1iVLTKTrb8UtCOJo23SrbN+9rSxSbJR9YVjDFY3f5MZ52e9X
-	 NgVGQccrIpk16tKZRsv0TDTAMMFgC0opNIDpmgHvY2j1GQ+NuiHU29G+AChB/jRkiw
-	 CgzDPgS52ZZL5bacZyYkMfRXEGbfPv3kJsOkiTdoJFtYRW0ISwtUl8pfT2eRgemgVW
-	 nziFDFUBJnNeA==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6981S1jvC074716
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 8 Oct 2026 09:28:02 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 09:28:01 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 09:28:01 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Thu, 8 Oct 2026 09:28:01 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>, Nick Morrow <morrownr@gmail.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v2] wifi: rtw89: usb: shorten the RX aggregation
- hold on RTL8922AU over USB 3
-Thread-Topic: [PATCH rtw-next v2] wifi: rtw89: usb: shorten the RX aggregation
- hold on RTL8922AU over USB 3
-Thread-Index: AQHdVqA7ValSLRsbmUeDytxruIYp87by2c7w
-Date: Thu, 8 Oct 2026 01:28:01 +0000
-Message-ID: <365ec643cfba4fa697bb4558a235d078@realtek.com>
-References: <20261007210958.56528-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20261007210958.56528-1-lucid_duck@justthetip.ca>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Rrnk92/m"
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-15ea896ddc8so3733392c88.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 19:05:26 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791425126; cv=none;
+        d=google.com; s=arc-20260327;
+        b=eQNB4zYL71Cygzfi2ngmarFHC45EPOhhS7LYcjN0Y7hdMHql2TCXQfqdDlwnIJBeZE
+         M+6qzhSEG6TO41S0mjOmgd9XtNoRtoQPJSpzYjfBa+YDpBIMISWB6Nf0EXg1z5lWA4/i
+         g2ffkQMxKxGAggaD+muLk8n1LcSXWrDwEqsVtB87C4sy867ndpQ9RAQE8irYODk61t0i
+         +7h9hfAf9HUDCHNvzgddK6wpxnPPqp65pu7YsYuvJHTQfVYxYXtePtm+DMOG0gZpLoIi
+         I0rI/tUtFdhm3B8dh1eJjGi5XkSqu30UnF1b/7mBHMqwuQ9AsXsk8dy/OFtRu1B9DJ3M
+         rvWA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=L5+sxVMEc2cKh2K5I24giOZHwMBI7dDvEremqs2FRZM=;
+        fh=ST4jkm+PR440HqF2VxTVw7/h6PY8uXwVvLyGhJ/z3As=;
+        b=ZcO+cEeiDksj4HSk9ofhkMCxHFDdXDImwDgqA4alS+uufdmRW4GacFgEuBwhrkrrXj
+         7o3pKT58PHKNqkLaIQUxW5UnrVabtA/yOJq5w1aoxW6bZvAcyuosZWvaw8gtqs8M50Nc
+         Aq2kUti4KzcO2lyTc+YitqsSooBaRG1QiFdOtuNK9E2ZsZVDv+PpmKo9kLRb5ENLiHR5
+         jXLWlczewiuJoqOY1G/pi2u1r9Ha3MWLpUOq80INZkLtCg/CdPvn/LcjBbIOt4KN/BZJ
+         42EZpwBZ67ShlgOsjOj0Xc9jfhOlYXAv/i6+oLDk7h8n4mxptOa6LY4yDwA0Lm1NgzuT
+         R0Ag==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791425126; x=1792029926; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=L5+sxVMEc2cKh2K5I24giOZHwMBI7dDvEremqs2FRZM=;
+        b=Rrnk92/md5QEsJLlRe69xESZbSbS3PNNCYJhYKf6mrsh3LOQ+XNtRwG5Qz8PHm7Vj0
+         3C4SS3xTnqtfhfyKpB3T+fZS3bAF9rxdU9feDo2Tynn3uaeC1qh/qC333fWmZywuTLu0
+         OOH4lflRkYzVwuCp6HvKs/xH/s4R1DQu28DoIZUNks0rTrS89TnJHLR27jHCSuUI8+nW
+         +VEneJOuPQlKWBrpsDmamwLUVZI56x9HaupyIzXmsw0lBS6TqaXQTMFfl2XaW8d3Vufc
+         4TggmoHlZb/F/ACt6bbkBRzteVpDn3q1r6XZKkTeqLsuszela06pfGXAX+cV8+09VNVo
+         yiLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791425126; x=1792029926;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=L5+sxVMEc2cKh2K5I24giOZHwMBI7dDvEremqs2FRZM=;
+        b=hV+QQyzzajbPfPN5v+nBd6UoHTQ3cfo0lo1BBnlo0HxRmcwOwHYD1Hq6SwmjvZOexx
+         ycUon060t7mtYkFp4d8Sg9O3gWIsN3c/6ezCVX9cD4Lx88gPdmdJEYcsM9JWGgP7CMuP
+         E8Zz4CiO+0Ewk80LSHUy6/YrIjIngmiMV2Yjf3KI8BpwDWrEw+8STi3kFmT4S7v3+Qjx
+         I8tua4l3Wsvy1Hnac4NwuYcUZBpUm1iVrjiL8GcRgDJuG82357RKbUdm9ZncSkckLUn8
+         3NHa+yzm1gFE7eU/dkU8TicPxW5brU8v1OqKEI2CYualKlHKWASKuru0v72JINz8gjt4
+         EoFQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwfl7q+a5blGGNy5BcJUom5eGcnup+dx9XaJXIBoGUvIGm0xzwjdnuRMGOcgIV5zPkirPquUp3bmQVjphX3cg==@vger.kernel.org
+X-Gm-Message-State: AFuF++k5/c08tTZWMYu/mBiPmJbpMGZVcyiJK3M5Wslkg2I4PHP6JIhC
+	r03KNtmHOZFh8jT8cylQwAXbp/sq1gZd1n97y8C3I6e2zbGNVYGX4jWA64gZ3mEpb8bLECpOyX2
+	+9WucVICRKlbv9oO8aKfmjp9ro0oy1utJtoO2LRq8dXe1WLn9b96UyNWvjZfc7w==
+X-Gm-Gg: AYBFou36VELiOUcw/QMG/fdmrXKOCsPOsXdMWnO1Ou65D6SarkfNXuOv5yDI7Ha+Ue8
+	RSgI+w7Cu2mghIKt1veCBFidr2MTZNesBW0/woBumJSjYJUk/ckMY8MU7tIFJjx1woj6E9b8/1R
+	LFMDh81KAN1Ls5ydr1jh5pHA7z9K+psOFFEI39gpRz0GpnNIfXsRZPtsOu+mudLZOPhGLQEmcjf
+	w9HI+QtYsKmWML8btZ4EEzkswWp2po/we9zPBsrsBXaS89l5cjyQFWBTQ3D3IjDWN177qoAnxTI
+	JE+Pp/p02EPfFwF6Ztpf/GQ2CmDASDaa7wWiq3wEfnrTERZZhdVVyTZnO71nA9yCDPD23mRF2er
+	iUGYUaATXW9OKos+1J3PvYMipYVnpA6t6XNDZGxIAghsQKwiIsf2scS/a5trVbKvUQHtUS8MX1f
+	7ittAbsB2ppfVxSype2riKxHKs
+X-Received: by 2002:a05:7022:f512:b0:148:4d6c:201e with SMTP id
+ a92af1059eb24-16206660134mr4036329c88.23.1791425124444; Wed, 07 Oct 2026
+ 19:05:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20261007205827.467974-3-johannes@sipsolutions.net> <20261007163616.1088d364@kernel.org>
+In-Reply-To: <20261007163616.1088d364@kernel.org>
+From: Kuniyuki Iwashima <kuniyu@google.com>
+Date: Wed, 7 Oct 2026 19:05:13 -0700
+X-Gm-Features: AclHuK8ZNy7OfoQWPMuSSktixGokC1G6AjDqLfquJpDruLGf4EocVEsfBjNcNRw
+Message-ID: <CAAVpQUATko2Oig53r1+VHe+4Y3fFeX1xOw5RAnXtUAGwvQoB5A@mail.gmail.com>
+Subject: Re: [GIT PULL] wireless-next-2026-10-07
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org, 
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Devin Wittmayer <lucid_duck@justthetip.ca> wrote:
-> The RTL8922AU holds received frames for up to a millisecond before
-> handing them to the host, a value carried over from the RTL8852CU.
-> On USB 3 that adds up to a millisecond of round trip, and under load
-> at 160 MHz the access point drops to lower rates and download suffers.
->=20
-> Shorten the hold on USB 3 only. On USB 2 the bus is the limit, and a
-> slow host needs the long hold to keep up.
->=20
-> RTL8922AU on USB 3 at 160 MHz, power save off for the round trip:
->=20
->                          x86, 6 GHz    x86, 5 GHz    Pi 5, 6 GHz
->                         before after  before after  before after
->   TCP down, 1 flow        613  1002     579   948     587  1010  Mbps
->   TCP down, 8 flows       656  1187     629  1080     605  1122  Mbps
->   round trip             2.33  1.29    2.25  1.18    1.42  0.84  ms
->   busiest core, UDP 200M  8.4  12.8     8.3  12.9     2.1   3.3  %
->=20
-> RTL8922AU on USB 2, Raspberry Pi 1 B+ at 5 GHz, 80 MHz:
->=20
->                         long hold  short hold
->   TCP up, 1 flow            102.3        87.7  Mbps
->   CPU, UDP 20M               50.5        77.4  %
->   loss, UDP 50M               3.8        85.7  %
->=20
-> Fixes: 32cee8a9bb66 ("wifi: rtw89: usb: Enable RX aggregation for RTL8922=
-AU")
-> Reported-by: Nick Morrow <morrownr@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+On Wed, Oct 7, 2026 at 4:36=E2=80=AFPM Jakub Kicinski <kuba@kernel.org> wro=
+te:
+>
+> On Wed,  7 Oct 2026 22:57:00 +0200 Johannes Berg wrote:
+> > Nothing much going on in wireless-next. However, next time
+> > I hope to land my RTNL-redux series which will (almost)
+> > completely wean the wireless stack off the RTNL, except in
+> > places where we need it for netdev register/unregister/etc.
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+That's great !
 
->=20
-> Small-packet mode is at the link below. It sets both the hold and the
-> size to 1, and nothing in that driver selects it.
->=20
-> https://github.com/morrownr/rtl8852cu-20251113/blob/fcb70aac55585a8e63c72=
-da4e6d24c39d7494307/phl/h
-> al_g6/hal_rx.c#L805-L808
+We saw a wifi driver holding RTNL long on Android.  Also,
+I hope we could remove the long comment in __rtnl_unlock().
 
-Thanks for the info. I quickly check the internal commit log that people wa=
-nt
-dynamically select the modes depends on RX conditions. I think the actually
-selection might be only existing in special branches.=20
+> >
+> > I need to see what's going on with the per-netns mutex now,
+> > can we already use that instead?
 
-Let's take this patch in advance. If you or other people can fine tune=20
-the threshold by certain conditions dynamically, we can apply the patch
-in the future.
+Do you mean moving net->rtnl_mutex out of Kconfig ?
 
-Ping-Ke
+Recently, I've been converting the first-class rtnetlink handlers
+with dedicated locks, but others not worth the effort will simply
+replace rtnl_lock() with rtnl_net_lock().
 
+rtnl_net_lock() still acquires rtnl_lock(), but if we always compile
+net->rtnl_mutex, using __rtnl_net_lock() for the latter should be
+okay.
+
+
+>
+> That's a Kuniyuki question (cced). I've been trying to move
+> HW drivers out of rtnl_lock and under netdev->lock.
+> Most of the rtnl_lock contention I've seen in prod at Meta
+> is in init_net
+
+FWIW, I've still seen contention while creating/removing containers.
