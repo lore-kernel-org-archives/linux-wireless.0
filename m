@@ -1,56 +1,58 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50DF547043
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 02:40:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BFC71A682A;
+	Thu,  8 Oct 2026 02:52:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791427206; cv=none; b=CErtPZzWHN6M1nMPW+pqtJOxDTOVXjWudEUuf9I2IXjIBFh45vZWTuRRZlnkdPY0BbR9hH/8dDoM0wgdseN+9xvSL1ElgIQEUUvFfzhp8U4PHgLqrsRiPbamKKC30KSIP3pB86DDikLxOpggXj9+pCTIbiSDXluFv0zOIJlT7Lk=
+	t=1791427959; cv=none; b=Y5ahD99QmL+SmMElbhK3cAVPUBNcU5ovHXe6CmU3xWXtjKXG1xUT5MiDn/Vpbk16NI4cAB+hNN5h1H2qSLSAm1S45AiLeMrf0H9T0UjqgnvwQM0gX+0MsB7QyoQpt4UAL7jRJ+VHxfNiz/Cwn75SH3TDq5oC5IbrEdQp0gtpZbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791427206; c=relaxed/simple;
-	bh=hTaZUofGA0C4zkh/qLBj6OJ2FCgwR2dNV21WspJk28E=;
+	s=arc-20240116; t=1791427959; c=relaxed/simple;
+	bh=8bLtCuWTZTaHbajx38f4l4KtlmbROjlS7K64/gWcLXA=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=pUPM+G+YD+kfc9+L8iOSF0miLVDBoLFAV1fjpOOV1bb6IS9vvvld6eExUpmK8HxYd8YBFYjsaCVGLx1PfnPntmyFLQaTyTCfZylUMucPWdJYma3vkUeZryvhqTVSgx1MAvC7GTX9siq7ZPq8gla21APlipB7Xjiioqm7x7z2WTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ChpH9xT8; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=bRWPBxK8WfoydpKsFE2xuS0f3PtZuqPK1OmINsybNc4MrV2MPytB0zxsfbxc+KB+iRkO25uf2D0Kqa++79Rxr6T4VQDdbrLoECZlFqM7zf9lWvPwyItnFq6OTQS2sCwhhOuMbBFvO5KNXKXZRYJI3POxM73VJ5ZAUkLlDBhKxtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=q1wwg/Ow; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ChpH9xT8"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6982e0k05134011, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="q1wwg/Ow"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6982qPeX5141467, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791427201; bh=7HbhMSYCNryS+kqIHRN88Mx+K/DR/MbSCAixiGL6FAM=;
+	t=1791427946; bh=+J/IwGD9e/L7CExHzmjxaYVD/7hdHFA/h5727T/ss+4=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=ChpH9xT86na9ZAXpz2YWyogBpZhLG/dEOInNVlYx5vGnAslC70JZS5nCpwbH6U70Q
-	 vGAfVIoTbOtJhErLvNL0wrkiswleM5TFazzCfJzXFLw7ed55Z/ZAkoiZRixB1VRyNe
-	 pxLipX/o8I5DPOK3As1lDFSOBEO2w+L+kjEXoOR5hUc7xn76RtHp3RLTrn8qNavEBc
-	 kcqrCvMAgCyy+DbnjviBBQ3pm4RacYorfpZ5lQtvkUAcKmH6yovw6UZ8LfICZHxx98
-	 BMGWGL4rIxulDK6cEL4OVoK7dRrsWtykmCE+TG3kxqXMdKQ5epW7KlHqs7G96s12Sj
-	 11h37NUD9eCIA==
+	b=q1wwg/OwTnV85/67R+ZpkKmff7RQVMMPpYEWX2c40gnRcR4AAnkOGv4hMQRAgG4VA
+	 QCb4N/0grYCEtnpoyR6Ilx39MQGpn8su5loD3fbrYTE0HmLjICLZo18UFF9ZXMCg5n
+	 GsMYgIyQqQfPR4LhZJ8S3jCmYMzg4h80SGmjFyHFlzBePkGOdsRbJ+GqS7ZTtY23OE
+	 xOycItS5zBY+q5kMYufiQDaJBO5nfs0JsZa5HGWdd70wFjKpNA/bljFUxus62B6Dgr
+	 8xIHZiTUVWbq5vaYXJXRLI91kCwfiVp0E51mSeBHpRFkCAbsJN9ozYiUAQpt7OoxGm
+	 vS+7nfuXEncwg==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6982e0k05134011
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 8 Oct 2026 10:40:01 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6982qPeX5141467
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 8 Oct 2026 10:52:25 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 10:40:00 +0800
+ 15.2.2562.49; Thu, 8 Oct 2026 10:52:23 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 10:40:00 +0800
+ 15.2.2562.49; Thu, 8 Oct 2026 10:52:19 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
  (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Thu, 8 Oct 2026 10:39:59 +0800
+ Transport; Thu, 8 Oct 2026 10:52:14 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-CC: <ku920601@realtek.com>, <kevin_yang@realtek.com>
-Subject: Re: [PATCH v2 rtw-next 1/3] wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to 9.24.2
-In-Reply-To: <20261007011057.12125-2-pkshih@realtek.com>
-References: <20261007011057.12125-1-pkshih@realtek.com> <20261007011057.12125-2-pkshih@realtek.com>
-Message-ID: <903547bb-361b-4f6e-9c19-b20781a17b14@RTKEXHMBS05.realtek.com.tw>
-Date: Thu, 8 Oct 2026 10:39:59 +0800
+To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
+CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>, Luka Gejak <luka.gejak@linux.dev>
+Subject: Re: [PATCH rtw-next v8 1/7] wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
+In-Reply-To: <20261006130701.120460-2-luka.gejak@linux.dev>
+References: <20261006130701.120460-1-luka.gejak@linux.dev> <20261006130701.120460-2-luka.gejak@linux.dev>
+Message-ID: <8131d809-157d-4a42-9b30-da6c90752cf8@RTKEXHMBS05.realtek.com.tw>
+Date: Thu, 8 Oct 2026 10:52:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,22 +61,30 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Luka Gejak <luka.gejak@linux.dev> wrote:
 
-> From: Ching-Te Ku <ku920601@realtek.com>
+> The CCK power detect setter in rtw88xxa.c programs values that are not
+> specific to that chip family. The RTL8723B wants the same setter, but
+> pulling in the whole rtw88_88xxa module for one helper is not worth it.
 > 
-> Update 0.35.119.3 Wi-Fi firmware support. Fix dual BT, dual MAC,
-> MLO mechanism binding control not working issue. Fix AX/BE serial
-> chips logic mixing error.
+> Move it to phy.c as rtw_phy_cck_pd_set(), where the rest of the CCK power
+> detect code and the level enum already live. rtw8812a and rtw8821a call
+> the core version, so rtw88xxa.c no longer provides it. No logical
+> changes have been made at all.
 > 
-> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-3 patch(es) applied to rtw-next branch of rtw.git, thanks.
+7 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-19354c4b346a wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to 9.24.2
-52f00f0c99ef wifi: rtw89: regd: add NZ/BR/AR for individual TX power settings
-b706b5f2fd24 wifi: rtw89: 8922d: update supported firmware format to 1
+9f596b63010b wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
+6501c79b341d wifi: rtw88: 8723b: add the RTL8723B register definitions
+a9283c7371a3 wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
+6879a85cf4b2 wifi: rtw88: move the shared 8723x definitions to rtw8723x.h
+d726c70ce082 wifi: rtw88: 8723b: add the RTL8723B chip driver
+269946cba92e wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
+b2d251aa7f16 wifi: rtw88: 8723bs: enable building the RTL8723BS driver
 
 ---
 https://github.com/pkshih/rtw.git
