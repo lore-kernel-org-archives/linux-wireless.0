@@ -1,91 +1,95 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BFC71A682A;
-	Thu,  8 Oct 2026 02:52:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6428634402B
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 03:09:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791427959; cv=none; b=Y5ahD99QmL+SmMElbhK3cAVPUBNcU5ovHXe6CmU3xWXtjKXG1xUT5MiDn/Vpbk16NI4cAB+hNN5h1H2qSLSAm1S45AiLeMrf0H9T0UjqgnvwQM0gX+0MsB7QyoQpt4UAL7jRJ+VHxfNiz/Cwn75SH3TDq5oC5IbrEdQp0gtpZbs=
+	t=1791428994; cv=none; b=izJx5cQB/YtZsmHfbB3BHn/haRwEBoNXVeWPVTfxhVpkIb8TR9ZWgAOan65Nw/gvp2m3DYjOavVIO5oSVfDKYUGZPkycGyaFu/wIg8EuUK5Rqmv+RNRhPvPZXl80sD6cX7mMnKEMsEq/Hjf7mGw5W4cMfpBhBecduIYWY7Wuh44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791427959; c=relaxed/simple;
-	bh=8bLtCuWTZTaHbajx38f4l4KtlmbROjlS7K64/gWcLXA=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=bRWPBxK8WfoydpKsFE2xuS0f3PtZuqPK1OmINsybNc4MrV2MPytB0zxsfbxc+KB+iRkO25uf2D0Kqa++79Rxr6T4VQDdbrLoECZlFqM7zf9lWvPwyItnFq6OTQS2sCwhhOuMbBFvO5KNXKXZRYJI3POxM73VJ5ZAUkLlDBhKxtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=q1wwg/Ow; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791428994; c=relaxed/simple;
+	bh=/G2Rcq0fuM7/EDRa5GatpM5baAHwfyTxhgej7WbhclI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sUzGTRY+cmydka3WUzoueK5phGszmETzORnDKepgqfphGJ54SVb1axGKzXZ+m8b/HQKLYJfjWLMjIqpTuR9iI+n1mCRqZEghEdMbQivYfNXEVrRFB/nZrJoFHGRYcQ3XhFfMZ50x8rZVO1LLK68rq3yoL2a/OBUy2uJAgl/5SdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=qBtzd3uk; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="q1wwg/Ow"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6982qPeX5141467, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791427946; bh=+J/IwGD9e/L7CExHzmjxaYVD/7hdHFA/h5727T/ss+4=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=q1wwg/OwTnV85/67R+ZpkKmff7RQVMMPpYEWX2c40gnRcR4AAnkOGv4hMQRAgG4VA
-	 QCb4N/0grYCEtnpoyR6Ilx39MQGpn8su5loD3fbrYTE0HmLjICLZo18UFF9ZXMCg5n
-	 GsMYgIyQqQfPR4LhZJ8S3jCmYMzg4h80SGmjFyHFlzBePkGOdsRbJ+GqS7ZTtY23OE
-	 xOycItS5zBY+q5kMYufiQDaJBO5nfs0JsZa5HGWdd70wFjKpNA/bljFUxus62B6Dgr
-	 8xIHZiTUVWbq5vaYXJXRLI91kCwfiVp0E51mSeBHpRFkCAbsJN9ozYiUAQpt7OoxGm
-	 vS+7nfuXEncwg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6982qPeX5141467
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 8 Oct 2026 10:52:25 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 10:52:23 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 8 Oct 2026 10:52:19 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
- (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Thu, 8 Oct 2026 10:52:14 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>, Luka Gejak <luka.gejak@linux.dev>
-Subject: Re: [PATCH rtw-next v8 1/7] wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
-In-Reply-To: <20261006130701.120460-2-luka.gejak@linux.dev>
-References: <20261006130701.120460-1-luka.gejak@linux.dev> <20261006130701.120460-2-luka.gejak@linux.dev>
-Message-ID: <8131d809-157d-4a42-9b30-da6c90752cf8@RTKEXHMBS05.realtek.com.tw>
-Date: Thu, 8 Oct 2026 10:52:14 +0800
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="qBtzd3uk"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3a80d1c98f5so2793166a91.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2026 20:09:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1791428988; x=1792033788; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=EAGvBqaiF7dab9RZtibwZwvnkGxCaX+otX4h5L2NXSw=;
+        b=qBtzd3uku3BX+60J0Gx6nFMf9WmZy2WQres7TE/pwTppUBncdo1oT8FvpqixHrMbzE
+         NfVrC+Q5LKb9tl0rc2kINAC1RBROD7Rju2OPTNvkjgXMuTsVku5oYSL74EzmyPLSC59f
+         oq8q6ENw5fYRri6KPy59vUOCq6SBSFzJ/eFW6LwF7qZxXVfLzS7dZrUcF0m9KpE0+kko
+         Bhft8Zm6cTL2l45FD2RmZh4qIXbmYh30LQvoWYIb8ATRdvMWa/L/2CXDoL2JZP0SX26v
+         jhGh+FSV3ZyDq8n4WG1B9XO6HUlYzpYblXcVeWxrBC1aD6Ymj+zRxOIRA+9pbIxheFzn
+         cJNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791428988; x=1792033788;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EAGvBqaiF7dab9RZtibwZwvnkGxCaX+otX4h5L2NXSw=;
+        b=lw1ZUmXOBix54/ogfgUh1KVqvxwmar0NjTslvPPDrEpZMfBzx82X3O8Y+lbXMIX/Dy
+         8wEdw6NR+2+yJJJDwO9IIRBuRGLfWU8TQc9mPqxcDm1v1nF4Zncuoi9moM+U9EOyGTN9
+         7AOQhLWofyCFnbhGB1ZNsVgnZJFF8DFURdyuUigRKVCXL9trlgbZFoRAha0b495FAue6
+         ZVL1wom7ST85EmrzgULFWLuKpaEzNUSbMOuja/VUVTgX9Kw/QSbWwBp2bUzf2vnQ1xWQ
+         /OIlZCtCnP6svQas9dunc2UfbO+y/LeMEDpOp4rZmDfqYwED4ll1LTX30MEU2ufR3IsO
+         EWEg==
+X-Gm-Message-State: AFq9FYJ9kehwl3fFpcIS85If7fS03/NYSKh6cnPHandy09D57jgyh0pg
+	m2ZCjLb60n+oMrH0eM53KbzSnH580sM3S/iGLslQTG8B6bj7+e2Zo166PwnIfK0CBgM=
+X-Gm-Gg: AYBFou3LOiAEKBejlJ5OQ5TZmXO0VAvwfNQu0Dzg/7XQ9DzGoCBPHChYWcHbFdwIs1U
+	qQICis/FRlwkvZT+32Q1YUWl2bM+5EypIpz6eNlAeSXDht2ui1EkO69L54FRofYIAtb86c+fAKa
+	dLMX0GRB7uGLAGTzfkt0H7v5nfvW/xCOv5cUZQvBXo8s62iigdohb5MvKR0mttejqYTixax967G
+	OSO4gBOKMndDKQ27PuT1U4QGaFPYzcQ6U4eZeDfjGp4USD80bMqg9l5BJdhoeMwIq2fjQ0KjEVY
+	vCfu/B4GVW0q1BzkhDJGW/qOYzHX1LyfNEpvy9ACZ791zYLODgxkPPrsoYmTqv4P7EnzG2VF3zN
+	yD+udhZj916vPg1a6gjb8jyqfqtyRTNXHijnxtcOJZ8qh1VNbXKJtJOlU0wu641jKMfhbE5uBih
+	3CEXRdlP84dDa5bF03DctNVLK09di4WRsA16HYwS5FN7De2qam8ds5CJ5bE53xnJpZI+wtGEmK+
+	Cy+H6Q3nn2zxihbQs2Kg1VRBOAuEWiso4fQcF+/BVit9gmcZBshKn+oH5XkihsQHws+UWk3WhMl
+	jZc=
+X-Received: by 2002:a17:90b:2e4f:b0:3a8:599b:23cc with SMTP id 98e67ed59e1d1-3a8a1968d0cmr3680373a91.15.1791428988444;
+        Wed, 07 Oct 2026 20:09:48 -0700 (PDT)
+Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3aa0cbc6e23sm2149514a91.14.2026.10.07.20.09.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Oct 2026 20:09:48 -0700 (PDT)
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	arien.judge@morsemicro.com,
+	Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless-next 0/2] wifi: minor S1G tim/beacon parsing fixes
+Date: Thu,  8 Oct 2026 14:09:37 +1100
+Message-ID: <20261008030939.474493-1-lachlan.hodges@morsemicro.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Luka Gejak <luka.gejak@linux.dev> wrote:
+Hi,
 
-> The CCK power detect setter in rtw88xxa.c programs values that are not
-> specific to that chip family. The RTL8723B wants the same setter, but
-> pulling in the whole rtw88_88xxa module for one helper is not worth it.
-> 
-> Move it to phy.c as rtw_phy_cck_pd_set(), where the rest of the CCK power
-> detect code and the level enum already live. rtw8812a and rtw8821a call
-> the core version, so rtw88xxa.c no longer provides it. No logical
-> changes have been made at all.
-> 
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+minor TIM/beacon parsing fixes for S1G.
 
-7 patch(es) applied to rtw-next branch of rtw.git, thanks.
+lachlan
 
-9f596b63010b wifi: rtw88: move the 88xxa CCK power detect setter to phy.c
-6501c79b341d wifi: rtw88: 8723b: add the RTL8723B register definitions
-a9283c7371a3 wifi: rtw88: 8723b: add the RTL8723B BB, RF and AGC tables
-6879a85cf4b2 wifi: rtw88: move the shared 8723x definitions to rtw8723x.h
-d726c70ce082 wifi: rtw88: 8723b: add the RTL8723B chip driver
-269946cba92e wifi: rtw88: 8723bs: add the RTL8723BS SDIO bind
-b2d251aa7f16 wifi: rtw88: 8723bs: enable building the RTL8723BS driver
+*** BLURB HERE ***
 
----
-https://github.com/pkshih/rtw.git
+Lachlan Hodges (2):
+  wifi: mac80211: handle shorter S1G TIM when parsing elements
+  wifi: mac80211: set conn mode prior to parsing elements in beacon
+
+ net/mac80211/parse.c |  7 +++++--
+ net/mac80211/scan.c  | 18 +++++++++++++-----
+ 2 files changed, 18 insertions(+), 7 deletions(-)
+
+-- 
+2.43.0
 
