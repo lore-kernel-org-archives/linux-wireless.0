@@ -1,79 +1,69 @@
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B03746C842
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 11:51:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44108450410
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 12:28:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791460318; cv=none; b=OhT9I+ALsMBEe6g2unQHhVf6K9JFP7zsaee9PVk0kRHRJgvAbrN6WwtsPOk0ySA3WOZuVB14u8VfSd4GJQTX6P5eihcJmR7SJMhBBcK/xEcer2uOhNY8tr3RlF9Fo6U1ECBSPSjfsyL9OIGBMGDsejHmxMIbr8l1oJuaYh99Xak=
+	t=1791462536; cv=none; b=aDOFgZN2fhZk8ZzVNXvtBFXbNAC7t0n9UCweW16UtAI+HruRc6a494BzzvzGVGcsu2F0OroH+CWNJc4hSBXVOa+t9G3CA5Q3S6NJ9dCfcKkuUKke5qTpTqW1gXj5XRxA/3yPTkdf/HLFJ38En6qqcM/sJx3UszgXf5QurdCsKrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791460318; c=relaxed/simple;
-	bh=25Cy4hLs//7T7QQPA32J2gRwiv8swJf1KlsN0jWfScs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nsz+hdCGtmObWBlpo/AKJvwSIeueh1mbz++6cBzucrtJNOOJ5QeZLkR3S2E70s/4LvAAVkpg7kUosDP44ozD19IeiEWwaUK+4g0u5Oc3TSTT3BSuPhUtvpPmB8T9nLMKhpQsWDnVgcHZ5478Qs+IuTHDcRv8n3Lq6OzNFVUp91c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J7vUz9r+; arc=none smtp.client-ip=209.85.208.172
+	s=arc-20240116; t=1791462536; c=relaxed/simple;
+	bh=IbVo6s7b5sBB9lnd9tmlCLjiyw9VvCQfz+4RT3BW5pM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=No0/yJle9JDm1WA2UrvmDS+5TopXrcOK7+RX9lbmTMj4i+FYpmlLdpctrM/5ePeDHMfNgdD/4xcBXyIvciHUHlcT/2MJw7mkDjPUOpxlgUTqtRBr98Yuaa9B4O7caJ+F+3cKDp3coi1cCzC31cZF/YBjMhECSwc91CZp55gyIVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NfbDHTSx; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J7vUz9r+"
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a9a2cfe1d4so16300911fa.2
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 04:51:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NfbDHTSx"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e608cd460eso11739795ad.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 05:28:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791460315; x=1792065115; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791462534; x=1792067334; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2YfozA0kOqu0j23n9iWNtMreJdG+KsOuhldDG1WEkjM=;
-        b=J7vUz9r+endiGLrt7US8Etgjx80m6jFGyLi2Scs31762cAfnRPu3C+vRTawwhdN97e
-         3Cb/XTAqb/bS+XYLQwQJJ2ZRyo0pPIQdutu5UOH71XVzviAgFcyN5jXkDTFyafPeIPfN
-         0FA3HfgEkc390cvd8Crl2GYzWt1qdrnkbvJ+vnvV1W4a+4QaTgVTsfMnMB/jvvNhzAh2
-         sMQSt+5QDwCIXv9w8vgBqIz9cqjLqNrnnXmyfiivnuvx/71lti8OYIOjJ01p/ycPfqKj
-         d52K8w57B2+/XuFmlX68cWyN6jTrIzLcSRC1HN9MifEg7rL+/aKTheYlajcWLI0W2UXX
-         UGZQ==
+        bh=COAThH0ap4EmFyle9qndKOJa6dHiJ8hI93mqQf8LdaM=;
+        b=NfbDHTSxcSTnBm4E49y/qbTrOaokcCeDllIcPxd04VMni+t9gQoUXdK7fK7/W7D21L
+         yCjPNY0DV0GUepQl1+2YP3xsAJ8jvU2b2j/FyCherRbziOcXx8njM0sUWc9+QARH6tWm
+         oA4IEMMfuOJ9vJypwm9GCHcOwHCbfVwQeki4/jL+dQxsTBUSdE0FPMwofUkJRr43fZZO
+         X2dRc6gqR6QtcYdkYcjq2XG4DgNucIA2LU+vJE3477kZmfanmWPbhCCIuqKHXLKgZj2f
+         AoZ7rGSBIGZzxB6J7XCQZYyvacRYjzQQ3wQyCV6iGR6mMQjdUD5HWkl6oQp6BuRlEhIV
+         iCXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791460315; x=1792065115;
+        d=1e100.net; s=20260707; t=1791462534; x=1792067334;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=2YfozA0kOqu0j23n9iWNtMreJdG+KsOuhldDG1WEkjM=;
-        b=z86XhN3LkoRztMMN06P2BL2NyOxNHcepUCDjoiYvmOQ+MbZz1Wv/753zl888zn5VYF
-         KnomPZ+X/76AYY9zrQWlpH+VSV7hMn4EnvORiwVwdEuz9rVbocHV/9A+oVSrKdAsDvXw
-         47f5YSheKutHHhYYhTUQzVMHzb9t4+QK/6wCoiAvVeJGPA+lmy5ILezUKTOAFIgHvygs
-         jVsUp+MS3rRDU5oI3PcnzXd0bhGj0Y4mZeqGAzOKQqLd6X4wJ9gd20BZO8IyKWeGzgks
-         Nd/AGh+VpRz7td9YKJK8hF7aeKPAV/UeYa4Pnr9bV4Q5XR/xXfsN1Vxp1bGZJo9AZkvl
-         X5vg==
-X-Forwarded-Encrypted: i=1; AKwUvBw0Bc/6b/ldGz9HMTZsZYfGs8BztBBt8CbMW5QFFhrwwfdHnLHcurkuZQ1Hw7V75ZLKNqRRDxQcre/e+V3eXg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLZq82iuNWUOr4lsyNDH1wcBs41JKP312WiYIainwqIYpHjRKQn
-	a5xvNu1FW9PmOHSHeIFwrXFQniHJzcfNGa3LBfYkl73ZnLjo5kguAbI3
-X-Gm-Gg: AYBFou2SSI3oGvfl6V4uwuwkiHTN97CdumUpZi5hdarQuYy8iAvTuzmos+T0vSuxmW2
-	oU4NLtuWMHr+1sVuVnsL3rflZCpBNCu/LV4BNhp09U+Hg1z0rQnL109rFn82/iqRCxIHQdMi3Qe
-	CQVv8Euz0WW1xSuAHco5tYTGoG9otYjT0k2JlXW3mFai+vLkz/Q+7lGl+Va3btgfcc194XFnp6j
-	1Swc6+SHCTDHIQN2k/HtCkMC1IbrJS1WPSu71EnDiyNGflJh5r4xWgDupufOnGC5iVkKbd7EeYd
-	T/BIdBwpYTmllWQeOWzcL/LdzJu8HIKOHHK3126wvenQw31q6jm8MMqk7/QGi+IWVes0hBCEzw2
-	5pkGTqNUDQzvg246Uq8vKlCyFChz/xy5nQetcuKxCCDszLksq90WxllputczYOZ2qkukv4L67ak
-	nXPit52hMQywPe7VtN1yXv3SlTnL6a7Qn7nlXAQTt69fAHNaUZX5CW+fAyAQXM9DrjOHQU9mYsh
-	8RYWIFGSw==
-X-Received: by 2002:a2e:be91:0:b0:3a9:849c:128a with SMTP id 38308e7fff4ca-3a9a2cfcf26mr12750371fa.19.1791460314922;
-        Thu, 08 Oct 2026 04:51:54 -0700 (PDT)
-Received: from grower.astralinux.ru ([38.74.72.197])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a9a1d3370csm15427281fa.13.2026.10.08.04.51.50
+        bh=COAThH0ap4EmFyle9qndKOJa6dHiJ8hI93mqQf8LdaM=;
+        b=OU3byOEmnLq/r2wC5o0db6rPmYi3DXEir/M+SaQHdHeuCBSEXHcm9HecOOkj9rokCO
+         ELkNzD9SNQjsVW/LCq8/p1xVCxCOMKU/CvKzc3Vdklkikv7qtTtJwK60BtGG50a8MQTw
+         XHMSdr6LrIL1NrHE4bmcJ2PMy4oHamhoJeUElBR5xdnSlfxqzJPZ48Cn89uL6uFoiomA
+         5b95Xj5bKNvI6R/9aLD6TSJsYcBY0RzFgQAuAeBIrvFMbt9yuEZJpTMgfxmv3qDM9d9D
+         Htr7QEe4pT+ynp2CCW2gJOzoIRogIXgoveSANhcp4YYQOKTrZecvX8Z0K0goPHEErcWC
+         gmrA==
+X-Gm-Message-State: AFq9FYIDsVdnEL7YKwk25u8CQnyCyF1466K2z6+ZbtUUZ+vyT60pUbCp
+	JSlDJd9RErq1qYsk5HThXqHb4b8bAr3YeHX+aZ/1sqMH1Y05txoPoLjY
+X-Gm-Gg: AYBFou1DAMX0QbxCHruUf6bV8RLb2e7DXYq2vOHBvKq5JXh/4PwZz7X8uR7izLJXgWu
+	sp9woSbLolqYfJwMIY5AFNc27oOWBLe+2vcntiIwuzA6kIMoonCcizSyyQukXIhQIjh2GONHN/R
+	Os1olUZVIFnAJtsdSd94q5gu6o3/+gl2f7Jy271wlWlOcLzbo0NKTllkEqDKy8ZSAE0Ih1FHfEb
+	kl1yY73+J5wfN8SdygtcGA3taGFqhj+bXa4IhHTLCk13UMoMgJx0i+V5sWWC9IZcTWv6PxElTy5
+	11K9crxbLL4ezdheGv19qDs/IyZRRnhb6hZZxLqP1nyMu/vXOyKyP1VhqWdeW4UKOB05dkv/DT2
+	fj0YJcF0wV1xUEWA985SKn5XRJcrmqONDXCFSMH08zya1GVbCJ2qzCsuuyGykc7SvtILkffjr//
+	M7KBZnFVxseuzZYp/z/1ncXTVlyIQfYlYmWo+Q3z6oyVn+X/K/j6XB2JOjTNs0/aAwZw==
+X-Received: by 2002:a17:902:ce07:b0:2e2:de8e:7315 with SMTP id d9443c01a7336-2e6004d2ccemr43775815ad.38.1791462534502;
+        Thu, 08 Oct 2026 05:28:54 -0700 (PDT)
+Received: from dungbv.. ([58.186.69.27])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e60443810asm22985415ad.9.2026.10.08.05.28.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2026 04:51:52 -0700 (PDT)
-From: Alexander Martyniuk <alexevgmart@gmail.com>
-To: stable@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alexander Martyniuk <alexevgmart@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
+        Thu, 08 Oct 2026 05:28:49 -0700 (PDT)
+From: Bui Viet Dung <dungvn2345@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5.10/5.15] wifi: mac80211: mesh: release the channel if start fails
-Date: Thu,  8 Oct 2026 14:51:40 +0300
-Message-ID: <20261008115145.83101-1-alexevgmart@gmail.com>
+	Bui Viet Dung <dungvn2345@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mac80211_hwsim: Pin module for debugfs file operations
+Date: Thu,  8 Oct 2026 19:28:38 +0700
+Message-ID: <20261008122838.224835-1-dungvn2345@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -83,58 +73,64 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+An open debugfs file retains its file_operations pointer in the
+debugfs proxy state. However, hwsim_background_cac_ops and
+hwsim_simulate_incumbent_signal_fops in mac80211_hwsim_main.c have no
+.owner set to THIS_MODULE.
 
-commit ae97fff6495a8764bc0ef281cfe5444f701e527f upstream.
+As a result, full_proxy_open_regular() calls fops_get() which succeeds
+without taking a reference to the mac80211_hwsim module. When a userspace
+process opens either of these debugfs files, a subsequent module unload
+(rmmod mac80211_hwsim) can succeed while the file descriptor remains open.
 
-ieee80211_join_mesh() acquires a channel context and then calls
-ieee80211_start_mesh(), which can fail. In that case, the chanctx
-isn't released then interface removal will attempt to unassign it
-after it's removed from the driver, hitting:
+When the userspace process subsequently closes the descriptor,
+full_proxy_release() accesses the already unmapped file_operations
+structure, triggering a kernel oops in full_proxy_release():
 
-  wlan0: Failed check-sdata-in-driver check, flags: 0x0
-  WARNING: net/mac80211/driver-ops.c:366 at drv_unassign_vif_chanctx
-   ieee80211_assign_link_chanctx
-   __ieee80211_link_release_channel
-   ieee80211_link_release_channel
-   ieee80211_teardown_sdata
-   unregister_netdevice_many_notify
-   _cfg80211_unregister_wdev
-   ieee80211_remove_interfaces
-   ieee80211_unregister_hw
-   mac80211_hwsim_del_radio
-   hwsim_exit_net
+  BUG: unable to handle page fault for address: fffffbfff84f49e7
+  Oops: 0000 [#1] SMP KASAN NOPTI
+  RIP: 0010:full_proxy_release+0x8e/0x140
+  Call Trace:
+   <TASK>
+   __fput+0x39f/0xa60
+   __x64_sys_close+0x80/0xe0
+   do_syscall_64+0xc3/0x590
+   entry_SYSCALL_64_after_hwframe+0x76/0x7e
+   </TASK>
 
-Correctly release the channel on start failures.
+The issue was discovered via manual code audit of mac80211_hwsim_main.c
+and reproduced on a Linux 7.3-rc6 test VM with CONFIG_MAC80211_HWSIM=m.
 
-Assisted-by: LLM
-Reported-by: syzbot+63a84ea9c0f57d6133fa@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=63a84ea9c0f57d6133fa
-Fixes: 2b5e19677592 ("mac80211: cache mesh beacon")
-Link: https://patch.msgid.link/20260908122838.201719-21-johannes@sipsolutions.net
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Alexander Martyniuk <alexevgmart@gmail.com>
+Set .owner = THIS_MODULE on both debugfs file_operations structures in
+mac80211_hwsim_main.c so that debugfs pins the module until close has
+completed.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Bui Viet Dung <dungvn2345@gmail.com>
 ---
-Backport fix for CVE-2026-98326
- net/mac80211/cfg.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index afb1ad3e6ea1..bae9588ea913 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2276,7 +2276,11 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
- 	if (err)
- 		return err;
- 
--	return ieee80211_start_mesh(sdata);
-+	err = ieee80211_start_mesh(sdata);
-+	if (err)
-+		ieee80211_vif_release_channel(sdata);
-+
-+	return err;
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index b9446577ff49..3ae46d78d68a 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -1149,6 +1149,7 @@ static ssize_t hwsim_background_cac_write(struct file *file,
  }
  
- static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
+ static const struct file_operations hwsim_background_cac_ops = {
++	.owner = THIS_MODULE,
+ 	.write = hwsim_background_cac_write,
+ 	.open = simple_open,
+ 	.llseek = default_llseek,
+@@ -1209,6 +1210,7 @@ static ssize_t hwsim_simulate_incumbent_signal_write(struct file *file,
+ }
+ 
+ static const struct file_operations hwsim_simulate_incumbent_signal_fops = {
++	.owner	= THIS_MODULE,
+ 	.open	= simple_open,
+ 	.write	= hwsim_simulate_incumbent_signal_write,
+ };
 -- 
 2.43.0
+
