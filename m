@@ -1,162 +1,157 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B0393955DE
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 16:25:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791476707; cv=none; b=JCAXPFaF4iRLsopVyKW+wcJTBVVPtS/tY1hMit+ZkaF6TtZRcthsT4/3uUjkaAY45jlBQJGMuoxcb0KG0un94HaU5ijtQjHdeAAfjdkRCuiCcCvc7yy6fqyLDDrksV8F1Vt3/z/SOq+XpUZH8iy7C1hNhmpXx+o6Qm0rbYkl8B0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791476707; c=relaxed/simple;
-	bh=Vs+5rGUucy0PFKqrstrZgmPgXHE8v/mFwnQmllp8gq4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a4eHxvplVGsP3mbAqjk0Y0uSxbP6qogrcj/ckioiv+AMhHooHsgP/mmaIMGex4l/pBVrOhPXH1ZzzVLew5zITS0O6QXON2t5v155OdkDU9DTjh0af6ffKNFq7iVxn915Q/vXVnTuUfCX0bw9GMyJTCek6/lg9LtdcFipXZyJNgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hQKewCh+; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Pp/nnd1+; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98BF5382385
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2026 16:25:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791476720; cv=pass; b=u4uHwrZphNu+5TpFjpShxO9+OlfCoDgL6qEau1zbBJ2a5Db9RPaAp5EAYWvdgjz0si2RuDtlLU38c8gSdSn+H3VBSqSZOYlp0/Hzyn5z0UAk7wnd9zMSp76kx6c8GXSCTx3va5QhbWZzYwREdt7wkmDdfJH3Utd96U8MBD+q7zg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791476720; c=relaxed/simple;
+	bh=Py4a1BgSZRLssebWp1apnpYrvJt2ny1B6Tr7oqaHD/A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XcNZ7DW7Xx/Js5KibKNjLJ/Y4bxaYRG4dwXTQwA0jp/pkyxWgQxGcHaHW7lvL1WCzqKekiqzu2pLVE4tOTJlVN/CDiUlrGVeAIOgfWDVczLUshDs8+VQ8VgrLqRml4YIMSE6qehVfhcy0hp+hM8k3pACuclj0KCh9E+9JZJRuoQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HG83a/rA; arc=pass smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hQKewCh+";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Pp/nnd1+"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 698GK4j53881348
-	for <linux-wireless@vger.kernel.org>; Thu, 8 Oct 2026 16:25:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	PrPZf5SWpHn7JseCoewc3m7EX0hPPEz3Jrk1GAafdW4=; b=hQKewCh+rxpwHiyJ
-	rSwqE2PX3cd9T+3U53kvUEh5cblkjVgzW8qkVUenjMsD1hry9OjtWr9He1oF8uMP
-	2XoB0464xFZ4iQ0EnFj8xIhR9A2qiPIMOVUH39jdTLP1fnuc782wZFBaRsQKjBvv
-	0Q466bcdVWZKVCo3xJRtFYiDmBq/OXvAJha0rUttpX9g52Q+npw08+R9b8u2l9Il
-	zsPomHgk6I5bhmdmH2FfoaraSV5cwl9qcfzpELR3yETBmX3hpKJ9awst9sa4RSYc
-	qy8WqtyVIvc4XiT9THJPcMMtRdhM5oW4q/g9Aj5GbDhnSfvbu42D8RIQSnQFerPf
-	7iu4yQ==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h6ekv80qg-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 16:25:05 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3aaf955db5fso1197286a91.0
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 09:25:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HG83a/rA"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-885cd98d226so478144b3a.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 09:25:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791476719; cv=none;
+        d=google.com; s=arc-20260327;
+        b=oJ95DPqeFgirE1gBHJenARE0GJfL2ElLHKRg25tSPYCHHuXGtWPso3jvtcdvdp+hSi
+         cl/J5ioE3Gcj10qw/PMfv0IXEF8AwLngMJaywz7vO3byPW/8A4kNYP95kG71Nbt6YObd
+         xkvkhcX6syjzeGEuC77ly9Jk0NsdOX7ecWKMHFXkJP0oQ0Hf1SxE40g9DMQK74o6fgr4
+         wafRrjqjpE92IPNvWk/Bq8pim8cEcKOHSQCuEgS/CYJlYt/F2K5F40FsG65PJWIylJwT
+         9lM2c25/bF+kAziXbqOLh6dp5dZkJD6kqaIpW6162gI6WH9BmUeWYZuNe2m0Xh8ARiu4
+         sy7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
+        fh=qXrb97swvtxVVcD5kmLQSiSfbLAoEacAJp/ZvkPZvco=;
+        b=of5PYNxerh0wxb/bZjQNsEYR1sFENw1XaP6Yj+2wg7ehP5G8EZW5hkBi49ewq9BsRD
+         aOyVN+ZdTGJeMORzrdRS5uaYa4RUaulkOVJRwBWQ1Tn64sfxGlXvsbIadeY4m+EzI+Ap
+         I/i15jEJbk802pf3psAZ2dydlfOnq9xu5W1h27N0pZJOPXQ9V+/5XibmwzEIv1Ka2eUc
+         59sya4U1L+SaoXeFiWLdWAq5xlPb24Ms5kdIV0lltYLgXUgEwOuUQ0+CfloJ2GZd7zXF
+         Iu6lRBfVCk3P7XajhveAHkeemgnAicHeufxzFwb8Itz4f0IZ45jwWSXTgDjLDJhv/3as
+         j7Pg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791476704; x=1792081504; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=PrPZf5SWpHn7JseCoewc3m7EX0hPPEz3Jrk1GAafdW4=;
-        b=Pp/nnd1+X3z19wF1jNOzcAbHDgSw8z7m9tMkUtxPkgCxGwOK1scgtt3p2AzrwXvXoO
-         Lfl9gVa0lPjdXMKGX2w8Qxa7knj9uddEJKnM7T72EEk9SlETV/Y8UKIzBiBys39tXxRp
-         DfyVfENuEiqryK9CEdnqwSMdDhBhT2Gou5vG3Exqcu3liCGDmYvHorWsmVOBrfl4E1/k
-         EEc//LRhUwGipdosa/zzkTUrnP0Yb4BrIL48JAUkGYAyAP7tHvXTZNDsLBQnKF3TE+fq
-         cPmTZQG54DZpksBhFUz05gjLxDtDHkCYQLvgLUA/ZytanUHV++H7W0h3NJrluyQcZszH
-         LJOA==
+        d=gmail.com; s=20251104; t=1791476719; x=1792081519; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
+        b=HG83a/rAzud6+78GDlEx278aKtJY57cbq8Uw6/5V4Ic1Y7pfygADYa6YJ1iPe32t5n
+         YmJ7Ou4sDaQYyGfc634KMloiw7RDMSS30OQBQcS3PNiHDsuCTfLEhLJTWinnECXOwupR
+         JcRx9et5iBr8GxOMmacus3Xkm8A7tC7eciHTtB5OszNsoiMnYTsJxAN5H25jzZ/SZOPf
+         ycTm18+EAi9XSfjba5AgQ/wGZy8HnPbsyee3GY0CZS6K9tvJf2bydM779NBvHbw8bZs6
+         8/ET/0q9GSR8Uqvrxpbdd+MXMZUPgt4okoTzGTAWJMp65IIUe3LIQQ5s5IgMNUrqy5Zv
+         JnAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791476704; x=1792081504;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=PrPZf5SWpHn7JseCoewc3m7EX0hPPEz3Jrk1GAafdW4=;
-        b=dcRfXZQUMGS+8jmrcmkSI2mJMkYfVYEiF7oODAXoaVcPskuV+z2DPAneXhfJz8lfwc
-         R6hKwyjnLZnfG6Kvd/TrusT6lOp1TY2ByOnoaCyChRKwa/8EJSeMAouvoe2Dx6xkH9UK
-         WFMp8lpWq8sNPNZb6GUjMVIzLtXDGqb/ZuX6gnPnXWU8b0Qb2M/1V1cA5AyVeb7RFN7C
-         b6ICIwwTWwEoU+hoFvjkrt95m5IqF7sS3GScR/twm09J/sPGYh6KYdciPpOeg5X/DqFA
-         kFpODBZE3rJM1oe3NqkFMNiRX7Z+WR8GkNbsZ4KxZge/5aFINRt+Q0k21r640xb3Pd/Q
-         T5OA==
-X-Gm-Message-State: AFq9FYJe8O4wYSH7wDhR/GJMG3mHklypBhWNMjgFxeZ5C74Mr6T9YCdn
-	/DNzpyhO+i8ro+ykrdHqcP4HRmtCT/eL7sf3Z2m2csmnKwi0htrIV9CkIuTR6DAw1Ao3/3Pp7LH
-	aUbSj5p3CGwiwxOLda4bEhppcSuBNZuA95tu947mNcviQq/SB1771MQkdkTpcxuIfuUFdhraCtp
-	Siow==
-X-Gm-Gg: AYBFou2T8URmsmkzJrQRgrnIt8wvySIXKYUw0GanElULYUb6eGiPvImtF2NLwKIJ8L3
-	nvZMVjJItth7ZONRtcICePMmTZlM4qyv/T80TFYsgx7G8nq+zR0Ms0kIQuRN2zQJ8bcVl8IhQ+x
-	Tz/9GjaHSHWq877K+H2l4IIs8iGMPTocdjz7+He7j/0vbvG4EJWelNE2A8ailj1YUQdl2jkenAQ
-	KuqeyHlHjVCRS9lzIT37la2mfKMFXQthrLe5+Ow2+yxmFSjZhQO6G8FaM+oP4sQboOYZJz43Hs5
-	IzeK2LSSVXNOrbF/s59WcDp15T8Wp/kCbCeou0mvMue+Cy/FcPtuUjpC2I+qPIo5JrjTMM8ppKd
-	T2f7xA1zZzBa5rCa3F15Crp+bL+plGxp04PqKh58XpC0=
-X-Received: by 2002:a17:90b:164d:b0:3ab:413:49af with SMTP id 98e67ed59e1d1-3ab04134fcdmr2005760a91.49.1791476699432;
-        Thu, 08 Oct 2026 09:24:59 -0700 (PDT)
-X-Received: by 2002:a17:90b:164d:b0:3ab:413:49af with SMTP id 98e67ed59e1d1-3ab04134fcdmr2005742a91.49.1791476698950;
-        Thu, 08 Oct 2026 09:24:58 -0700 (PDT)
-Received: from [192.168.11.104] ([124.123.80.135])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a9ff8669eesm4665613a91.10.2026.10.08.09.24.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Oct 2026 09:24:58 -0700 (PDT)
-Message-ID: <b792c43c-1b59-40c9-9ddc-0ed263104aa3@oss.qualcomm.com>
-Date: Thu, 8 Oct 2026 21:54:54 +0530
+        d=1e100.net; s=20260707; t=1791476719; x=1792081519;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=v3009lg5pcm5M+YbIWWDWH7usfrEFEQwTVOIUvlwAMU=;
+        b=NaX3Ek1MD6eyrM/fC60RGhYKX/hCAAhg6ISSBJ+FAbs1EycYxhh6dU6m5HW9fvY0wK
+         KOGvyYKWSqAHLY6g95fwUvkKQ71GH6B3c6AjeCoBJh3tjCz6J4v862SvXfb2rOV2a9zr
+         kaIkoF6E11e6n2bzQK6KpLtB7Hi1rEAJ7+epIDbPBYb94eYWqRis1hpF+j+eKqBozkW0
+         7j67hDFlFBFH5sL5gAOfozvXA0jkEBAbYZXOqKVRO4imCy/gIpoRZr6J8jDG9VSR6uLK
+         ZsoJDznjaWjJ5k+qlEhJ+s2TDVv+fCybEms4E5s9IaiRZVl9S0Tng4RQi2sL4VMwzkjA
+         XDZA==
+X-Gm-Message-State: AFuF++niVeU6A0MCUl6JRS96ne8iqdc8Us+1q6nHZoYlswCrK9ZsUtxp
+	0uYKK6q/HUX3oBXD3JvAbaR/m9PevLyVfPOLUGlKkwQ7D+y2uQP84inwZdV2FIuOy71bBSQUusa
+	h355ZoRT284mpGwbVGY+aTe3GKyNrmBE=
+X-Gm-Gg: AYBFou0/Bp+hNrYFGjek4cEx0L2y5/CJG3VGdMrdjiv2PogRXlIOXWYMoHufh3rSvO5
+	aVdkY8yd+tUtkCsNYCpinqUMCorfu3tTklq29g+/ECLyheym7z5/DbDZQ/pZxSAHJh3VPIM59Z3
+	hy4uHQNqTvty+2geQi9q50dUyVfquBH0nAWfjvztoTk5XZwgTEHgdNJTufphuTdyoaOKuglATcG
+	o1cVJ+vhl9j3s/fKweae9EK3SvE6Bp7sjQip6ni9oLE6JornMfj34++WcX9g79MBt9Ulii5/uON
+	Utm1ztHUR3efXR2bNA4DjZFHup4AvFPvLKEWG8L+VCduaGGo95Rp2I2e
+X-Received: by 2002:a05:6a00:170d:b0:878:3705:5723 with SMTP id
+ d2e1a72fcca58-8930d7eb730mr2071924b3a.47.1791476714157; Thu, 08 Oct 2026
+ 09:25:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next 0/2] wifi: ath12k: Configure RXDMA buffer ring
- size per memory profile
-To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Pavankumar Nandeshwar <pavankumar.nandeshwar@oss.qualcomm.com>
-References: <20261007-mpp_ws-v1-0-739b1fb87d24@oss.qualcomm.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20261007-mpp_ws-v1-0-739b1fb87d24@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: N4OES5n8MCCcF38GL3mf2DS-dq-TiCrk
-X-Authority-Analysis: v=2.4 cv=csYOAF4i c=1 sm=1 tr=0 ts=6ac7c3e1 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=EUspDBNiAAAA:8 a=xhaovxbADAV7QXi6LY8A:9 a=QEXdDO2ut3YA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA4MDA2NSBTYWx0ZWRfX7FgKVbCwNKnk
- +prm27cO4/AzyoD/+HlgN0uVHN/1A20AicH5Nj6GBc2JgPAQpugt0WMXHLe9SMpbs0DVq81xRCQ
- J1QFs8luhDzfBJ206cvueh4zAeHic2RUd47FL4Lck+Xs7stLwKa47/ryLI6i1ncFpRjUwpl5w1Q
- 1ePTskGGWr1OupDkrwESKNHPrRMxfkoPWnmyipp+qZptTazTIc2j+X8DKgYuzVnvgBOJsHGXsvS
- ffh5fCdJOMJzagE664Up+TA9zAoPIJerLyaadt5sU+EcK13mJzxTnQ2FI0LC/0Wn8jagr0VYnN3
- uPLQO+sCMyn6k9TFlrmlscpvIxU8/zSx2cK2O4oi1NDuoDXQIkJz4giBQZBndght9bK+n12MF9B
- Kt5rC2p9o1URhc93wvr0brYLC+Er42m8TIU5A3B5M2cFpQp8S8QRp6wIIOXWwQYqAfRS+RysZZu
- yg2kHhSB5ArHVo9bn3w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA4MDA2NSBTYWx0ZWRfX3tdudhz4jFqr
- nIGdIfZxXu/mANJ2oFiiQPuXYi/pyXqn4qCG9QUQiduAnKSlHS60L0N5I5jtMDFQurLJT0rrmRg
- /V6ZxNsTm8zIJARtHhChrZgGz4V+Lkw=
-X-Proofpoint-GUID: N4OES5n8MCCcF38GL3mf2DS-dq-TiCrk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-08_05,2026-10-08_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
- lowpriorityscore=0 adultscore=0 phishscore=0 bulkscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610020000 definitions=main-2610080065
+References: <CAHaeJsT8O8Nhq351hFp3NAL8e0iU85N-LBdYZ9nYHFHVy7t_hQ@mail.gmail.com>
+ <CAHaeJsQ3FxvU1dQTSP751-Jq8JVv-tS8oRhNhuVy5-U4kPXwrA@mail.gmail.com>
+ <CAHaeJsSM2kg6undbwaMUwcBbrA500CxMShU=VHv7w1B+YefHiA@mail.gmail.com> <20261008053636.81286-1-lucid_duck@justthetip.ca>
+In-Reply-To: <20261008053636.81286-1-lucid_duck@justthetip.ca>
+From: Chris <hoopyfrood42@gmail.com>
+Date: Thu, 8 Oct 2026 12:25:00 -0400
+X-Gm-Features: AclHuK921LrYizTaBBX3SgjlGhlS_3wHXqo7g9rY3iG00HYarZhs2dfHNXOLRL4
+Message-ID: <CAHaeJsQTymsh1kv6Xv79im7ak+nqyMChoA40kRUhSy=O7i06Mg@mail.gmail.com>
+Subject: Re: [BUG] wifi: mt76: mt7925u: survey busy time is 0xADBEEF per
+ update, booked to a stale channel (monitor mode)
+To: Devin Wittmayer <lucid_duck@justthetip.ca>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>, 
+	Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Deren Wu <deren.wu@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/7/2026 2:53 PM, Aaradhana Sahu wrote:
-> The RXDMA buffer ring size is currently hardcoded and shared across all
-> memory profiles. This makes it difficult to tune the ring size based on
-> the requirements of individual profiles.
-> 
-> This series first makes the RXDMA buffer ring size configurable through
-> the memory profile configuration and then increases the ring size for
-> the default profile to improve RX traffic handling.
-> 
-> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-> ---
-> Aaradhana Sahu (1):
->        wifi: ath12k: Make RXDMA buffer ring size configurable per memory profile
-> 
-> Pavankumar Nandeshwar (1):
->        wifi: ath12k: Increase RXDMA buffer ring size for default memory profile
->   
->   drivers/net/wireless/ath/ath12k/core.c  | 2 ++
->   drivers/net/wireless/ath/ath12k/dp.h    | 8 +++++++-
->   drivers/net/wireless/ath/ath12k/dp_rx.c | 2 +-
->   3 files changed, 10 insertions(+), 2 deletions(-)
-> ---
-> base-commit: a90ebf2176db07c5d91e0a62e15ded1fd50710a0
-> change-id: 20261007-mpp_ws-a041d5cfac9a
-> 
-
-Other than a commit text nit in 1/2
-
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+On Thu, Oct 8, 2026 at 1:36=E2=80=AFAM Devin Wittmayer <lucid_duck@justthet=
+ip.ca> wrote:
+>
+> > You clearly know this driver well, so I wanted to ask whether you
+> > would be willing to look at it:
+>
+> Thanks for running v2. I took the busy half to an A9000 here.
+>
+> The firmware answers the MIB query at every offset from 0 to 255. Tx
+> airtime is offset 28. Offset 29, which mt7996 reads for rx airtime,
+> moves with receive traffic but at a small fraction of five others that
+> agree with each other.
+>
+>                  uplink      downlink
+>     offs 28   +16082143      +3708623
+>     offs 29       +8749        +81107
+>     offs 17    +2925971     +12992696
+>     offs 20    +2852775     +12903656
+>     offs 90    +2931365     +13006210
+>     offs 92    +2751610     +12969276
+>     offs 95    +2863941     +12908314
+>
+>     20 s at 836 Mbit/s up, then 20 s at 581 Mbit/s down
+>
+> Deren, Sean, Ryder, Shayne, if you have a moment, could you please say
+> which of these carries receive airtime on mt7925? And if an MCU command
+> enables the IPI histogram, I'd appreciate a pointer. Nothing in the 256
+> offsets has that shape, and Chris's write to those registers wedged his
+> chip.
+>
+> The same MIB registers work on an mt7921, so any fix has to be
+> conditional on the chip.
+>
+> Devin
 
 
+On Wed, Oct 8, 2026 at 1:36 AM Devin Wittmayer wrote:
+> The same MIB registers work on an mt7921, so any fix has to be
+> conditional on the chip.
+
+Thanks for taking this to your A9000.
+
+One data point on how I use the counter, in case it matters for the
+fix: my A9000 runs in monitor mode with no association, hopping 98
+channels across 2.4, 5 and 6 GHz with a 500 ms dwell, and polls the
+survey every few seconds for each channel's active and busy time. So
+what I need is busy time on whichever channel the radio is parked
+on, with no traffic of its own.
+
+When there's a patch, I'm happy to test it that way here (Ubuntu's
+7.0.0-34 kernel with your v2 survey fix applied) and report, per
+channel, whether busy stays within active time and follows the load.
+On 2.4 and 5 GHz I can also compare it against a Wi-Spy DBx2
+spectrum analyzer as an independent reference.
+
+Chris
