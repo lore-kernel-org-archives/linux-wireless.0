@@ -1,244 +1,229 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D6D399346
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 22:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5646A37F73A;
+	Fri,  9 Oct 2026 22:39:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791585094; cv=none; b=qLKeLN5KJ3oASsXRdyqUwSLlBIiUWWXVjRpnrUjnQArex040mTkYbwZe5ImQOOSVMa4YB0AhKjbCJtnPDJjNF7xMKTNh0ItX2kR/TeqxdaC95E1GU/cn9TBvc+iFJ6rDxte82CM075iNSxIAU/vvhCFxwRicK/HRXHa+0bQoE3o=
+	t=1791585557; cv=none; b=poOl/7tG8W/K3lT2kqEt1Bnz0Nbw7E7X591NX/Yg/kM9Yr3sDzOuFTcUMpp27aNQBzHTHm4q6kCTVNHT0+lJbp9If5MTlopIZQtK89pYTpfmyepN3doiB/TwKkkupsJ77nfZs/iDna7ezyGGlLpwa14w8o3l1sj5bjjdMzXq7Zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791585094; c=relaxed/simple;
-	bh=A/kcRKmJR7ozCn7Cl71ZSCtr5qDqDq7RiBTaUIROmyM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hOwvKSXSrjg76s5d82ElRvpSK2fZmQps6E0NfUaWuXlAMjyxQ1AmxzUHawsKJroRb/pGD/OQV0wgtvF295om9gfweWpOgbGjcXhLpT+RUFq1eyBRQ/CiOCIexRYNUOKAoZSujcEjvivES6rLnqYaum1PoGXAY3kvb8Spc5Guks8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k2TFtt9b; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791585557; c=relaxed/simple;
+	bh=slUGqAhZ+UGZ5KzVFwqtX5oIz8oN8XpKIDkTYk8BgJw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ZsNifVyglbv/m+/4ufVng1+rVGKJMEz+SWVRDsMESWgsCiyWSe0GwnO+Q0r6ryJsJYKDkmyOCCl0/lkGzCeaEIXEOsGznDpFq5tTqErp/MOSmnnIvBhiVfDNEJ0/C31xzO2DnYvHgAGpADF0Vg+EcMvNfRgVPcCsCP9tQUEzJZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mFZpIFV1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k2TFtt9b"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-49e6b771d06so671895e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 15:31:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791585090; x=1792189890; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aWZkp+NCndvQueQ6E2vgtu4DQoR7geHPX3xAT83ymnk=;
-        b=k2TFtt9bWW0OYERa7vi1cRp44lK5lURMFrK+Q/di8x0Uvbg6SrRDfXXxPv/bujI7D2
-         C5RKJL+yL0gvv3Pj8rGkkr84vZrMAEPB6bSFpSU81xxmTZ3t+vm7LpN5o2Cles0b4mqL
-         MSjtEHWZ8BIA5tkH63XRQvRLJs/ZDnx/EAAvTYG+JQpwKgqx3ZwkvMVNKMu9HUdbyfAt
-         BLSa+skhXF2raIXC916OW9lX0rBG9WKr3IVjC5mPl/Xzx9vyInTnccNSCzIdt5zHFV98
-         P1W+EVcSB6+cxrvROJ+VSfrNfErQHa1pNZ/ZWFza7ojeLrYai154kMux0QMoaZqB2Mc6
-         t1VQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791585090; x=1792189890;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=aWZkp+NCndvQueQ6E2vgtu4DQoR7geHPX3xAT83ymnk=;
-        b=INn2FT1nZm39A6Kjx7Sb/DIK5kbIpv6BwF+yNmrMmTqGhAgCCecc8JWkOpx8fEymZW
-         icqweuTlv27JGPu2g7etUCoUphbgiXdaZykxrPKk86R0imktSJF6GAMTlk0LhgbZeH6M
-         jZgSpQrp4eeHDPZlNolWZm1yTbYGmKeRzxdG8HNmSjUFh5eYpQIGuj/7fVHyVG+XyE1y
-         tK4Fzo+iZgzHkgAdvXLJv7P4FJX5Xzo+a/4c+cAwXFabSGCwF2kUamLtxfbcgmMWbxiD
-         eY0OdFJ3NWCrzQinWqRh7UhVZgTj/XGaSE8xPJZPHzbg1Eejq00KNTBvbN3oJRvUmfgX
-         BzhA==
-X-Gm-Message-State: AFq9FYLPbIr4m90AiuYQEiwZjVF4+t0ozblfnY84bg9OaYscixiHidDl
-	XwxTaW+xRUwrsadF7kGTTLnH+mIURIfgu3d7ZAOiUZ0SYNGrY4JpNUUgS0K8moT0bK+j/A==
-X-Gm-Gg: AYBFou2H9zXRPMeYj6CL5h/Rc+8y4P8iUTMukPVn5H57gN6BuEsgIyldZ7pXuiQYuDL
-	6/4QEm5winSl1X7Yuk5BiozN9z955H7oZZfNQ8OQnBGtw/RSzmub7YoYX6yNmOYQVrGBScFF01t
-	f6UM7NPF6KTzeBAUYhANgKH08Zi1bgpqdExiqmmO9qbjK5FhesIYRVKANy2vIuZkluZ6KjmCPZA
-	96tydQ+EcM84513N+SEZO5wCquuo5wgXvpjC5rYCUVu1zJhHAGWN0fSf9CJq0RFi7MJQvvIE7ht
-	45xaNc1+t/AOyqgparEkbrX019EF+drEE1wYsJbI2GgFPMWEDGGgo1teOyzbS+7N13m1Kn6YJa8
-	CpRMvwJhEVIIgLotgfVxY4Y2wJGVhhvE34d3/a+wf/ecR/5A7CPW7GArnJIKWV9zh0PgqO9WXGi
-	1DOArwlj/yMjbl1+mCLOb7RyakLjGd2wWHh8oEhrkFXD2SHnwcTj3IvX7vTlSVZoAK9ZLV8Ty6Y
-	yvm9CBcLdfqFCUVwBHGZ7Ws2melfQ==
-X-Received: by 2002:a05:600c:1e0f:b0:4a1:8469:e6c8 with SMTP id 5b1f17b1804b1-4a18e46f48fmr62472605e9.1.1791585090364;
-        Fri, 09 Oct 2026 15:31:30 -0700 (PDT)
-Received: from Nuel20.localdomain ([105.118.73.40])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18be97d1esm130254575e9.8.2026.10.09.15.31.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2026 15:31:29 -0700 (PDT)
-From: Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	skhan@linuxfoundation.org,
-	Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
-Subject: [PATCH] wifi: cfg80211: defer self-managed regulatory processing to wiphy_work
-Date: Fri,  9 Oct 2026 23:31:23 +0100
-Message-ID: <20261009223123.10536-1-emmaonana18@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mFZpIFV1"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C2A5DC2BCFB;
+	Fri,  9 Oct 2026 22:39:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791585556;
+	bh=slUGqAhZ+UGZ5KzVFwqtX5oIz8oN8XpKIDkTYk8BgJw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=mFZpIFV1WLFn9nGKwySONbD4Qo/YH1T5ZUUofjd1DTASiGUmHHla88IH6MqFV8DPD
+	 NWGoeAB8DTlcOGfP0Z+xYEE69hNTnlcaVSFg2DfffySbM8Cvig9XLABkhx1TlTtlXk
+	 scUCIAPKJJm5mHMHDbz1+QH/a5QD7QXWubdkWm5TuVcA6LnUvd9QS57ISnuVCJbfjq
+	 kOCaRdlGyFsG5a07uFJ1esDjnXJmClDu7++KI2TaYi18ScA67/kemSiMEVStZTmPwp
+	 ubg4CIgCA8/PyJ0nMy5bYRbI3DqeLTq+zQJt5qeSZPhsw+GGMirYbBjXvN9FcJpNN5
+	 WtGYDE+GbRX+w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF88CA9EBB;
+	Fri,  9 Oct 2026 22:39:16 +0000 (UTC)
+From: Kim Wooseok via B4 Relay <devnull+5mghybrid.khu.ac.kr@kernel.org>
+Date: Sat, 10 Oct 2026 07:39:16 +0900
+Subject: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
+ from CPU state
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr>
+References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
+In-Reply-To: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
+To: linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, 
+ Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ Kim Wooseok <5mghybrid@khu.ac.kr>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791585555; l=6582;
+ i=5mghybrid@khu.ac.kr; s=kernel-20260913; h=from:subject:message-id;
+ bh=Fi20EesCIFYA7ua1Pp4uDWX7+NVtPGKW8peZdq6hLUg=;
+ b=n+8LSkIk2agDhFBlGXKpX59k2qz4XvGl7QMwma21+f0UECjyfyC/fqMQiBBDq81GFIi1VwXHB
+ Ehu3grWBmHiB2MMtGih/c3iVlu2DJoVWPMzLZZ/jZwDdIramfKYuCKJ
+X-Developer-Key: i=5mghybrid@khu.ac.kr; a=ed25519;
+ pk=1az/6lC8Tmd6BcvyarPc8FWoSxsV/WRr5NLs1v+kjlE=
+X-Endpoint-Received: by B4 Relay for 5mghybrid@khu.ac.kr/kernel-20260913
+ with auth_id=1028
+X-Original-From: Kim Wooseok <5mghybrid@khu.ac.kr>
+Reply-To: 5mghybrid@khu.ac.kr
 
-Commit f4e72e375807 ("wifi: cfg80211: reduce RTNL holding in regulatory
-enforcement") decoupled channel enforcement from RTNL by offloading
-interface verification to per-wiphy wiphy_work, executing under
-wiphy->mtx without holding the global RTNL.
+From: Kim Wooseok <5mghybrid@khu.ac.kr>
 
-However, reg_process_self_managed_hints() still synchronously acquires
-wiphy->mtx under RTNL during wiphy registration. Because wiphy_work
-callbacks hold wiphy->mtx and can acquire RTNL in dependent work or
-driver paths, this creates an ABBA lock inversion between rtnl_mutex and
-wiphy->mtx, which can deadlock generic netlink message dispatch.
+An RTL8192EU failed to reconnect on a Raspberry Pi after an AP power
+cycle. RF_MODE contained a corrupted value, and restoring its initialized
+value restored reception.
 
-Extend the wiphy_work architecture to self-managed regulatory processing
-by deferring hint handling to per-wiphy work. Under RTNL, only check for
-pending requests and queue rdev->reg_self_managed_wk, eliminating the
-synchronous wiphy->mtx acquisition. The regulatory domain update and
-channel verification then run asynchronously under wiphy->mtx without
-RTNL, and pending work is cancelled upon wiphy deregistration.
+The register access helpers pass usb_buf directly to usb_control_msg(),
+but the buffer is embedded next to usb_buf_mutex. On the affected Pi,
+it shares a cache line with the mutex's waiter state. A contending task
+updates that state while the USB transfer uses the buffer. This violates
+the cache-line isolation required for non-coherent DMA.
 
-Signed-off-by: Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
+Allocate the buffer once in probe and reuse it, avoiding an allocation
+for every register access. Keep the existing register access helpers and
+mutex protection. Free the buffer on probe failure and after power_off()
+in disconnect, since shutdown still uses the register access helpers.
+
+Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
+Cc: stable@vger.kernel.org
+Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
 ---
- net/wireless/core.c |  1 +
- net/wireless/core.h |  1 +
- net/wireless/reg.c  | 39 ++++++++++++++++++++++++++++++---------
- net/wireless/reg.h  |  7 +++++++
- 4 files changed, 39 insertions(+), 9 deletions(-)
+I tested the separate-buffer approach on an RTL8192EU connected to a
+Raspberry Pi 5, using the existing Linux 6.18.34 kernel. While repeatedly
+requesting scans, wireless ping traffic kept receiving replies and the
+RF_MODE and HSSI register values remained stable.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index cde3ca85494d..3dfbfb0c10f3 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -671,6 +671,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	INIT_WORK(&rdev->sched_scan_res_wk, cfg80211_sched_scan_results_wk);
- 	wiphy_work_init(&rdev->reg_check_chans_wk, reg_leave_invalid_chans_wk);
- 	INIT_WORK(&rdev->reg_leave_nan_wk, reg_leave_invalid_nan_wk);
-+	wiphy_work_init(&rdev->reg_self_managed_wk, reg_process_self_managed_hint_wk);
- 	INIT_WORK(&rdev->propagate_radar_detect_wk,
- 		  cfg80211_propagate_radar_detect_wk);
- 	INIT_WORK(&rdev->propagate_cac_done_wk, cfg80211_propagate_cac_done_wk);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 6138d207caf4..2b3239d0cf1f 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -116,6 +116,7 @@ struct cfg80211_registered_device {
- 	struct work_struct sched_scan_res_wk;
- 	struct wiphy_work reg_check_chans_wk;
- 	struct work_struct reg_leave_nan_wk;
-+	struct wiphy_work reg_self_managed_wk;
+The submission is based on rtw-next. An ARM64 build of the rtl8xxxu
+driver with W=1 completed without warnings, and sparse reported no
+diagnostics in core.c.
+---
+ drivers/net/wireless/realtek/rtl8xxxu/core.c     | 35 ++++++++++++++++--------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
+ 2 files changed, 24 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+index 3d0c22db3..604bb1e5b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+@@ -622,9 +622,9 @@ u8 rtl8xxxu_read8(struct rtl8xxxu_priv *priv, u16 addr)
+ 	mutex_lock(&priv->usb_buf_mutex);
+ 	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
+-			      addr, 0, &priv->usb_buf.val8, sizeof(u8),
++			      addr, 0, &priv->usb_buf->val8, sizeof(u8),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+-	data = priv->usb_buf.val8;
++	data = priv->usb_buf->val8;
+ 	mutex_unlock(&priv->usb_buf_mutex);
  
- 	struct cfg80211_chan_def radar_chandef;
- 	struct work_struct propagate_radar_detect_wk;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 11665e0a7efc..a0965500d81f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3180,7 +3180,7 @@ static void reg_process_pending_beacon_hints(void)
- 	spin_unlock_bh(&reg_pending_beacons_lock);
- }
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
+@@ -645,9 +645,9 @@ u16 rtl8xxxu_read16(struct rtl8xxxu_priv *priv, u16 addr)
+ 	mutex_lock(&priv->usb_buf_mutex);
+ 	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
+-			      addr, 0, &priv->usb_buf.val16, sizeof(u16),
++			      addr, 0, &priv->usb_buf->val16, sizeof(u16),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+-	data = le16_to_cpu(priv->usb_buf.val16);
++	data = le16_to_cpu(priv->usb_buf->val16);
+ 	mutex_unlock(&priv->usb_buf_mutex);
  
--static void reg_process_self_managed_hint(struct wiphy *wiphy)
-+static bool reg_process_self_managed_hint(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	const struct ieee80211_regdomain *tmp;
-@@ -3188,7 +3188,6 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 	enum nl80211_band band;
- 	struct regulatory_request request = {};
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
+@@ -668,9 +668,9 @@ u32 rtl8xxxu_read32(struct rtl8xxxu_priv *priv, u16 addr)
+ 	mutex_lock(&priv->usb_buf_mutex);
+ 	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
+-			      addr, 0, &priv->usb_buf.val32, sizeof(u32),
++			      addr, 0, &priv->usb_buf->val32, sizeof(u32),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+-	data = le32_to_cpu(priv->usb_buf.val32);
++	data = le32_to_cpu(priv->usb_buf->val32);
+ 	mutex_unlock(&priv->usb_buf_mutex);
  
--	ASSERT_RTNL();
- 	lockdep_assert_wiphy(wiphy);
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
+@@ -688,10 +688,10 @@ int rtl8xxxu_write8(struct rtl8xxxu_priv *priv, u16 addr, u8 val)
+ 		addr |= 0x8000;
  
- 	spin_lock(&reg_requests_lock);
-@@ -3197,7 +3196,7 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 	spin_unlock(&reg_requests_lock);
+ 	mutex_lock(&priv->usb_buf_mutex);
+-	priv->usb_buf.val8 = val;
++	priv->usb_buf->val8 = val;
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
+-			      addr, 0, &priv->usb_buf.val8, sizeof(u8),
++			      addr, 0, &priv->usb_buf->val8, sizeof(u8),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
  
- 	if (!regd)
--		return;
-+		return false;
+ 	mutex_unlock(&priv->usb_buf_mutex);
+@@ -711,10 +711,10 @@ int rtl8xxxu_write16(struct rtl8xxxu_priv *priv, u16 addr, u16 val)
+ 		addr |= 0x8000;
  
- 	tmp = get_wiphy_regdom(wiphy);
- 	rcu_assign_pointer(wiphy->regd, regd);
-@@ -3217,6 +3216,15 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 		reg_call_notifier(wiphy, &request);
+ 	mutex_lock(&priv->usb_buf_mutex);
+-	priv->usb_buf.val16 = cpu_to_le16(val);
++	priv->usb_buf->val16 = cpu_to_le16(val);
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
+-			      addr, 0, &priv->usb_buf.val16, sizeof(u16),
++			      addr, 0, &priv->usb_buf->val16, sizeof(u16),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+ 	mutex_unlock(&priv->usb_buf_mutex);
  
- 	nl80211_send_wiphy_reg_change_event(&request);
-+	return true;
-+}
-+
-+void reg_process_self_managed_hint_wk(struct wiphy *wiphy, struct wiphy_work *work)
-+{
-+	lockdep_assert_held(&wiphy->mtx);
-+
-+	if (reg_process_self_managed_hint(wiphy))
-+		reg_check_channels();
- }
+@@ -733,10 +733,10 @@ int rtl8xxxu_write32(struct rtl8xxxu_priv *priv, u16 addr, u32 val)
+ 		addr |= 0x8000;
  
- static void reg_process_self_managed_hints(void)
-@@ -3226,12 +3234,17 @@ static void reg_process_self_managed_hints(void)
- 	ASSERT_RTNL();
+ 	mutex_lock(&priv->usb_buf_mutex);
+-	priv->usb_buf.val32 = cpu_to_le32(val);
++	priv->usb_buf->val32 = cpu_to_le32(val);
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+ 			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
+-			      addr, 0, &priv->usb_buf.val32, sizeof(u32),
++			      addr, 0, &priv->usb_buf->val32, sizeof(u32),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+ 	mutex_unlock(&priv->usb_buf_mutex);
  
- 	for_each_rdev(rdev) {
--		guard(wiphy)(&rdev->wiphy);
-+		bool has_hint;
+@@ -7851,6 +7851,13 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  
--		reg_process_self_managed_hint(&rdev->wiphy);
--	}
-+		spin_lock(&reg_requests_lock);
-+		has_hint = rdev->requested_regd;
-+		spin_unlock(&reg_requests_lock);
+ 	usb_set_intfdata(interface, hw);
  
--	reg_check_channels();
-+		if (!has_hint)
-+			continue;
-+
-+		wiphy_work_queue(&rdev->wiphy, &rdev->reg_self_managed_wk);
++	/* Keep the USB register buffer separate from driver state. */
++	priv->usb_buf = kzalloc_obj(*priv->usb_buf);
++	if (!priv->usb_buf) {
++		ret = -ENOMEM;
++		goto err_set_intfdata;
 +	}
- }
- 
- static void reg_todo(struct work_struct *work)
-@@ -4110,8 +4123,8 @@ int regulatory_set_wiphy_regd_sync(struct wiphy *wiphy,
- 		return ret;
- 
- 	/* process the request immediately */
--	reg_process_self_managed_hint(wiphy);
--	reg_check_channels();
-+	if (reg_process_self_managed_hint(wiphy))
-+		reg_check_channels();
- 	return 0;
- }
- EXPORT_SYMBOL(regulatory_set_wiphy_regd_sync);
-@@ -4144,9 +4157,17 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- 
- void wiphy_regulatory_deregister(struct wiphy *wiphy)
- {
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct wiphy *request_wiphy = NULL;
- 	struct regulatory_request *lr;
- 
-+	spin_lock(&reg_requests_lock);
-+	kfree(rdev->requested_regd);
-+	rdev->requested_regd = NULL;
-+	spin_unlock(&reg_requests_lock);
 +
-+	wiphy_work_cancel(wiphy, &rdev->reg_self_managed_wk);
-+
- 	lr = get_last_request();
+ 	ret = rtl8xxxu_parse_usb(priv, interface);
+ 	if (ret)
+ 		goto err_set_intfdata;
+@@ -7971,7 +7978,9 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ err_set_intfdata:
+ 	usb_set_intfdata(interface, NULL);
  
- 	if (!reg_dev_ignore_cell_hint(wiphy))
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index c587079ead8f..4cfac05c6178 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -194,6 +194,13 @@ void reg_leave_invalid_chans_wk(struct wiphy *wiphy, struct wiphy_work *work);
-  */
- void reg_leave_invalid_nan_wk(struct work_struct *work);
- 
-+/**
-+ * reg_process_self_managed_hint_wk - process self-managed hint for a wiphy
-+ * @wiphy: the wiphy to process
-+ * @work: the work struct
-+ */
-+void reg_process_self_managed_hint_wk(struct wiphy *wiphy, struct wiphy_work *work);
++	kfree(priv->usb_buf);
+ 	kfree(priv->fw_data);
 +
- extern const u8 shipped_regdb_certs[];
- extern unsigned int shipped_regdb_certs_len;
- extern const u8 extra_regdb_certs[];
+ 	mutex_destroy(&priv->usb_buf_mutex);
+ 	mutex_destroy(&priv->syson_indirect_access_mutex);
+ 	mutex_destroy(&priv->h2c_mutex);
+@@ -7999,7 +8008,9 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
+ 
+ 	dev_info(&priv->udev->dev, "disconnecting\n");
+ 
++	kfree(priv->usb_buf);
+ 	kfree(priv->fw_data);
++
+ 	mutex_destroy(&priv->usb_buf_mutex);
+ 	mutex_destroy(&priv->syson_indirect_access_mutex);
+ 	mutex_destroy(&priv->h2c_mutex);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index c6953051d..8cbadcf71 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1891,7 +1891,7 @@ struct rtl8xxxu_priv {
+ 		__le32 val32;
+ 		__le16 val16;
+ 		u8 val8;
+-	} usb_buf;
++	} *usb_buf;
+ 	union {
+ 		u8 raw[EFUSE_MAP_LEN];
+ 		struct rtl8723au_efuse efuse8723;
+
 -- 
-2.43.0
+2.53.0
+
 
