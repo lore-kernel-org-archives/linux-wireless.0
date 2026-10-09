@@ -1,148 +1,141 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B263D3498
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 21:32:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A21370D5E;
+	Fri,  9 Oct 2026 21:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791581522; cv=none; b=YIGumOXm/15A7iDkC2TJXu8XR9O1kdKWrfu928hDdmABvX7lXVZshCQx7USV/+q640WNgOcAVTkOvn7sTMEGNMYFQom9uLtv4mhrDl49QgW9+euAk3/T5/TlDwb3i+FZFzoF28RFhVNgWnEu9ShEdlZ4mjdvcs31ZgeQDDtIWJY=
+	t=1791581999; cv=none; b=fQhh/ttoqS/QbLrD5/z0RW80NSICA1EzbefB6B0xjNynj1KqIMTluCHnC1JWMjaVGEio9nee9GtidCgto0PeOL7BTkOXEvmb5bSwPCf6CKWulZEMAVoidvdfLnWtUouFLadR5RJAQrtFMh4w4sSF8Tv2nIeyzzwfprLQGCZDuyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791581522; c=relaxed/simple;
-	bh=U7CHoprC3QQbDmNB8jOMv1v+21yCj4nz+/4HUgBxpEY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lXE/bJRZ8Z8VFF+kkSe2KuRC1qlhddms/jgEAh8YzQnCR9hZwy6vTU8Izsj/xHE3UuQc3BjW5NgLLsX+M0+gMFmEJj9xFMqDR6KAadJN+YqSgHdGUXsujzkjak7pSG/Dm6OMHcLKsz2+WN6IsAIAOrBe/PXjgxxCek8c4GjXfnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wn3mDYdi; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791581999; c=relaxed/simple;
+	bh=H1oSWJh5fZjQ1XNCXmsBBbTHrJYv8weii6T1h1C2/ZY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=M13aNuvCb+2gvvyCk9mDLJfdXvEsDSGGKfr75kXhLsfwDG6zBFmpu2hRdkn4Hv9baO7Fhl6KqDyZUWDKnYuF+6114E+abR0/cL1hfjJua+GUdwzDxBzLwSlRX3fJz45479yUrewZtgrdmGv7UPvFjJgF0Nv4dD/jeTHrk64J148=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JVDKU9Rv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wn3mDYdi"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-8714288dd3bso61401b3a.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 14:32:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791581520; x=1792186320; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vUayDUdYs1sE6mgk+Qs00q/sRaaDnD8utq+2SxLgtEM=;
-        b=Wn3mDYdilqhLRacIPOx0sdnNxs3Goytu+XEH5kIHayYkx+s2rZnmVZPqsY2SjcQpaU
-         zMyPWfn7xicOOD5Tihe3nnuMVuvrU/exqnbBOHK7f9B8tkier+VuxuSyQf3K0onHDEla
-         fRIAtCucXPT1pUFrB2VKPn3U7rrL5FwWFkDcJ4ujAii+yKdpyu5EYNJG+ti/MX+DIbIj
-         AYvNN92rADyzTthBIgIfZuLFfhR1jcAspZoMZxuzqCIPobO5UmnWSmH+LDAETlFYUoVg
-         qdQlZd/q0XATj+vUhS2y1ldp1DJolJU3bQrm8cq3BVt4Xu+CxaUmwoFdngYm3FfNgeOI
-         uxmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791581520; x=1792186320;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vUayDUdYs1sE6mgk+Qs00q/sRaaDnD8utq+2SxLgtEM=;
-        b=ZAMuK9dngmOEUDGELLMorCKfg2WIzxXHdbsaGn0JA33rtbVKIRBiU8DKerwoSVSGNi
-         laa59XIHE4o13swUo4eXbVZ5qa6oTU+g189FGVMZflj8OFXVyUzFKPQpIO8a4pZf1cb4
-         E7r1QmCD2TsjFaiP3RjFqYWy1/pskT7U+GYDh+oERTCBd9FRfxsTH81k/xZ5ZEkNDLB/
-         4wDRZD+gUVolU1mZnlnKNeYLXgUMZZHhvs1SWyi0wL7NttVSn5R6eOMCSR2sWnPn8I+7
-         NQQe/Ghp3aWYEVVUPRYN6KKtcNYx0ZrvOIJ8vEUhltglSpeulh+gIa86c2gZQVYeAqXn
-         b+jQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwBcygOYq7+MNKgLbokk79e2zca1S3Gp+umtyC2CyrUMAF90i+n22PCac77ZhB0DbV70mbOQaK/uH/gdx+Eew==@vger.kernel.org
-X-Gm-Message-State: AFq9FYL8HBKKdgR9nnsavR6Y9bTqsttg/knM7ac3GmHsGab4n4zuJ2uw
-	xToekQO1Y5rrW3j2LJ29dyI5wPNEa15lqLMX5QcPpYZnNJJ5I8mw7345
-X-Gm-Gg: AYBFou0QnCoRrOY/W0E7PbqyM/2SlwGw3TLe69mvgqZT/bpI8ShOUf2tSe68bfvF9fk
-	U/K1J0arJc/mQESwvpFynhw3K0DgVsmoiC7Qa0a6s3UKoqjVOkTVFWR9sIEtrkzUA3m+PoK3ucF
-	TSOmQQBf7+0VKnlsmGj+0K+VTGjhX5jCOC42Y5WVIoFCfQQQbqSRXmX91wXTRkhQnBv4D+/N+G0
-	/S/wusWbMtmdPGYc/dyRoap9VOBDTNNJgJjV12SBwXAkxn6V/RNRDwkcR9KWjdme5lp0nwmBkW9
-	QN6sHIAQVYhpw1qgAfKekLiEKOIvklrjWYnPsi1hCXHAWPg0W3BnSTWhgTg061mJwulx2mBZ4h1
-	n+cJF3smE+O80bP6LEvIJVzXCaoxXAK3I2M5t7Dtwx0krIIrwfyfWwaMpaFjgsYCPhEkwxi4dw/
-	yj8/KUVHVo2qvT+2IV5DdK9E92JF9cJsuNAf4Ny05wLEnih4Q1W+3F7EcceZIn6dqv4AvgszA4S
-	74C7CPu2zxXSc/EyyfKcbUwDblLwM0287ac0brxABxWMVMadxEYJzrE1wfch1oaWMOdkbPxZzu0
-	RLHq01c7/7y9czUOb58UMKbHc1Wu0PJg26zDyjlhEjtrR6L3ylJLBgFajjI=
-X-Received: by 2002:a05:6a00:228d:b0:892:1396:6a85 with SMTP id d2e1a72fcca58-897c79ddc12mr2742507b3a.47.1791581519858;
-        Fri, 09 Oct 2026 14:31:59 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-896c3eca287sm1612478b3a.37.2026.10.09.14.31.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2026 14:31:58 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	f.fainelli@gmail.com,
-	Christoph Hellwig <hch@lst.de>,
-	Linus Walleij <linusw@kernel.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Paul Burton <paulburton@kernel.org>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER (BCMA))
-Subject: [PATCH] bcma: use the SoC device for DMA on MIPS
-Date: Fri,  9 Oct 2026 14:31:56 -0700
-Message-ID: <20261009213156.109965-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JVDKU9Rv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5273F1F000FF;
+	Fri,  9 Oct 2026 21:39:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791581998;
+	bh=/DIGfdosI8HTT4ZSUkh5GCIGuTYsQcGon1rOmhIuxoY=;
+	h=Date:From:To:Cc:Subject;
+	b=JVDKU9Rvbak1j1Rct1f8kmkQTPknc7TnLbU9EA9IzH0J1/mYVXeulZbc588DR/rlY
+	 kPb95slpoe6tIl/sPlWfwPEqvG0z9FgD8yEuuMZPqerfU2oLT4A+5+2eHjRU+Nqy4G
+	 EKKmz53PfDlHH0RhyeTwXgbdfdvNPpXwjnE8Xd0hxtkj5OY4qkgP4HtzIhvqIE/UzS
+	 KiC7Aggb1MenRx9WwjmyFTuTNajXPcUk9Vt17tgxYzn5acnu88aTcWPTEugeTcGAhm
+	 3lqu2ahELOY9U5y6b3zRz8T3I3wh0ug0vjClz6ZZLCVwkvEZEwZHCip2yZbW+1Ofgm
+	 LpCfV0rlUIMvg==
+Received: by finisterre.sirena.org.uk (Postfix, from userid 1000)
+	id 93BD01AC57D0; Fri, 09 Oct 2026 22:39:46 +0100 (BST)
+Date: Fri, 9 Oct 2026 23:39:46 +0200
+From: Mark Brown <broonie@kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: AmirHossein HajiMohammadi <info@hajimohammadi.net>,
+	David Miller <davem@davemloft.net>,
+	Franco Hector Hugo Montenegro <franco.montenegro.ruke@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>,
+	Hungyu Lin <dennylin0707@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Leonardo Martins Martins <dev.lmmrtns@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>,
+	Luka Gejak <luka.gejak@linux.dev>,
+	Networking <netdev@vger.kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>, Ping-Ke Shih <pkshih@realtek.com>,
+	Rishik Yechuri <epicrishik@gmail.com>,
+	Rishik Yechuri <rishik.yechuri.code@gmail.com>,
+	Rishik Yechuri <rishikyechuri@protonmail.com>,
+	Siho Kim <siho93.kim@gmail.com>,
+	Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
+Subject: linux-next: manual merge of the staging tree with the wireless-next
+ tree
+Message-ID: <aslfIkFxsc9oIqku@sirena.co.uk>
+Mail-Followup-To: Greg KH <greg@kroah.com>,
+	AmirHossein HajiMohammadi <info@hajimohammadi.net>,
+	David Miller <davem@davemloft.net>,
+	Franco Hector Hugo Montenegro <franco.montenegro.ruke@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>,
+	Hungyu Lin <dennylin0707@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Leonardo Martins Martins <dev.lmmrtns@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>,
+	Luka Gejak <luka.gejak@linux.dev>,
+	Networking <netdev@vger.kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>, Ping-Ke Shih <pkshih@realtek.com>,
+	Rishik Yechuri <epicrishik@gmail.com>,
+	Rishik Yechuri <rishik.yechuri.code@gmail.com>,
+	Rishik Yechuri <rishikyechuri@protonmail.com>,
+	Siho Kim <siho93.kim@gmail.com>,
+	Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="hSDyjtiM2P12w3nY"
+Content-Disposition: inline
 
-The MIPS BCM47xx code allocates a struct device for the SoC, sets a
-32-bit DMA mask on it and passes it to bcma in struct bcma_soc. bcma
-never uses it: bus->dev stays NULL for the MIPS SoC host, so cores fall
-back to doing DMA through their own struct device, whose
-coherent_dma_mask is 0. Since
-commit f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
-coherent allocations then fail:
 
-  bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
-  bgmac_bcma bcma0:2: Unable to alloc memory for DMA
-  bgmac_bcma: probe of bcma0:2 failed with error -12
+--hSDyjtiM2P12w3nY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Set bus->dev from the SoC device and do DMA through it, as the ARM SoC
-host already does. Every SoC host now has a bus device, so drop the
-fallback that pointed a core's dma_mask at its coherent_dma_mask.
+Hi all,
 
-This addresses the review of the earlier postings: the cores' DMA masks
-are no longer touched at all.
+Today's linux-next merge of the staging tree got a conflict in:
 
-Tested on an ASUS RT-N16 (BCM4718): bgmac probes and passes traffic.
+  drivers/staging/rtl8723bs/
 
-Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
-Link: https://patchwork.kernel.org/project/linux-wireless/patch/20190121101121.24555-1-zajec5@gmail.com/
-Link: https://lore.kernel.org/linux-mips/20220107041744.2388470-1-f.fainelli@gmail.com/
-Suggested-by: Rafał Miłecki <rafal@milecki.pl>
-Assisted-by: LLM
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/bcma/host_soc.c | 2 ++
- drivers/bcma/main.c     | 7 +------
- 2 files changed, 3 insertions(+), 6 deletions(-)
+between commit:
 
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 411cfbf53f7b..6150e1588af5 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -188,6 +188,8 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
- 
- int __init bcma_host_soc_init(struct bcma_soc *soc)
- {
-+	soc->bus.dev = soc->dev;
-+
- 	return bcma_bus_early_register(&soc->bus);
- }
- 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 72f045e6ed51..3498d5419c19 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -251,12 +251,7 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- 		core->irq = bus->host_pci->irq;
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
--		if (IS_ENABLED(CONFIG_OF) && bus->dev) {
--			core->dma_dev = bus->dev;
--		} else {
--			core->dev.dma_mask = &core->dev.coherent_dma_mask;
--			core->dma_dev = &core->dev;
--		}
-+		core->dma_dev = bus->dev;
- 		break;
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
--- 
-2.56.0
+  c520f3af7df42 ("staging: rtl8723bs: remove the obsolete driver")
 
+=66rom the net-next tree and commits:
+
+  dbc2fa996f446 ("staging: rtl8723bs: Remove manual ifname allocation")
+  eb903412616ff ("staging: rtl8723bs: make rtl8723_dequeue_writeport() retu=
+rn bool")
+  94f8dd8b96b03 ("staging: rtl8723bs: remove unused monitor interface name")
+  0e5058a181451 ("staging: rtl8723bs: rename PHY_ConvertTxPowerLimitToPower=
+Index()")
+  36d9b855cf944 ("staging: rtl8723bs: make xmitframe_swencrypt() return voi=
+d")
+  18a42264074ae ("staging: rtl8723bs: remove unnecessary parentheses around=
+ prframe->u.hdr.list")
+  6b4405c0f6001 ("staging: rtl8723bs: align function parameters in aes_deci=
+pher")
+  2268c1bf1a861 ("Staging: rtl8723bs: fixed camel case coding style issue.")
+  bbcc68a61f3be ("staging: rtl8723bs: fix block comment style")
+
+et al from the staging tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+(deleted the files)
+
+--hSDyjtiM2P12w3nY
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQReagvpf3TrrA7BoYYv73Ows9A4iQUCaslfHQAKCRAv73Ows9A4
+idVTAQCs9er5Tjczolpw7ZuWp0gNJlb3KN8ExwRqXiSYmMGuowD+LdRvPUbAYuLm
+TqyWXQzFnYiRWYw3H3LsHhYap01LtAM=
+=xqIq
+-----END PGP SIGNATURE-----
+
+--hSDyjtiM2P12w3nY--
