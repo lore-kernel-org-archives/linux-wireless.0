@@ -1,126 +1,97 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B45D939B970;
-	Fri,  9 Oct 2026 16:00:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208F045519D
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 16:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791561620; cv=none; b=oUwmPDknAOfTeMRqnJ7ujDaSGW3muui2rV4pwzeu8uHb7EdqbHJrHFI0kZQBw+uKKD4tSEGcutF27TT66orAO1iEgy8Qv1zECLNXrXrZB6etc6tO9ZXDVMGWB5hLvHkapZIEcgXVxsXEne8LF7Q+52L8VHpXm0nFBOEPtaEWAOc=
+	t=1791561932; cv=none; b=NGetl90iDDMTS4O3cu2P0bn42Az4GHpwWQ5xqpWRvtR9cjzfa5q3LCVcPeq67lLtiLLafsn/iI2MXm9LLd2EDY6RMSs2UcBJqgoFgm59gCF2Dwv1xqXSzCs+qqfe5sz5Pc+3VH+/6JP0FCbDAUQjDujKU24Q/GzP00yp5vYruEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791561620; c=relaxed/simple;
-	bh=qaAdILM3CMjzMUnepXGcDG9HL6mZmTo+JdQvryy+9os=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V+U0bG1ZRCZrjGPdRVLkBCYfBS0SiQynRYe937skoZDx8h5SeZ7suc6a+WMY49lPYnOu9cqtTzULe8FXa9lYGYbwva+EmYzt+l6wuPn8p094Gt+vN1zHcZEXpczSAOLmL9gSP5/HyI7ZjeR17ILitQ/KA6MFZ5E/lH9IUfK9MV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=XjTOJBme; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=WIvWdH/c; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1791561932; c=relaxed/simple;
+	bh=hkkDcj2yAbKWAvC8VsW9NNt3qNxSibNeGXbwS2Oen4s=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=YF3u3xL5Yh67ciKDFPM1yYWesb7/tuxQAxNgpX7fuiTz1wi7gCTB+AALZR/+QZglc7RFj7J6gRb8L7to5ny2BKEPR+I0ywcSqsMc0AeZ3pyppRR6qiyuZ2UwCnU8tVU/RlDcvExu4qCXczg1mS5vPib/LRxhfSs5Ql2V6MxxsPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Qd2W/7hW; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="XjTOJBme";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="WIvWdH/c"
-Date: Fri, 9 Oct 2026 18:00:15 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1791561617;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GHEUoBUYZxg9IObMlPuW6xttti1DW7KdgFxwRUKho9g=;
-	b=XjTOJBmelnNySZPZJtHgRBq8T8fd2/wQwKg4e3OmS1xmgCtkXeE8WR1wiBVe1XLaDMs/QZ
-	J5uShhdeIjSITCT60/dNDzXtR8Oba0+fBKml4lyEOrRr579peJxUHB+up0k2fOLg4K91zD
-	C3Yv8EW13lKDyFvIbofSUZBTWbao09KufhOIa9Vn9c9rpYEsUWoPuiTn9YglGuPRq0KDRQ
-	8qUjsLE/VuB2d4zOEUq+IbnfRBEyR9wQiNhX3meAwRWoChKynPo0cN2G8bTWnRAWbz+Hbt
-	mVJsHxQI6JmXqeHfFPN82WHr9yCtYa6PeF/PBm423YU3X2OL53iaXEFxKs5QhA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1791561617;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GHEUoBUYZxg9IObMlPuW6xttti1DW7KdgFxwRUKho9g=;
-	b=WIvWdH/cHjj533zX6iAsJnCqt6eXTdxUSsvbapXKD9i5t4GFJsSRd08GfxkVaAQuSlTtWf
-	kIjciUZdI9dhiOBg==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Karl Mehltretter <kmehltretter@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>, brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: brcmfmac: avoid sleeping tx locks in netpoll
- contextg
-Message-ID: <20261009160015.9YCN8Lt-@linutronix.de>
-References: <20260930185417.61865-1-kmehltretter@gmail.com>
- <20261001075755.3MilPS2C@linutronix.de>
- <ar7vLt5kQ2HJoJY9@gmail.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Qd2W/7hW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=mPEpIuHqoRiTznxBPyi1zvE7X2BKKbfJp0nBL3SxjPM=;
+	t=1791561931; x=1792771531; b=Qd2W/7hWBysIM3ZszYtzHtuAFqbZ64tqT0DaQnA7GSzXhK1
+	klHspOW4+LJPXCl3W85zgj1y2BjVNT2f3wxjTj5V0GEqtCZCntLetIbLzm7sh2/Fcs3+/oATWn5mC
+	9qOFZwsXqz4xSo8hj5VO42rIgsDu4c0E8QQjoy+ghxon/ITBgbAveyTzVB8xcFgicjXuR+VISJ3z0
+	sjsbdF0MrdH2iGPjcICd9qpl8jF1WS9f12v+Ek4wGrZBM6m5XVoUQct40iQy6NHm4+XjmYzadKy7s
+	g291+KmDQBpxu8Dla5oIWkSPtK5cEM2YdudohG1g49Tou9A4j5/AXaKP0RuPrDwQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xFD68-0000000Ao12-0pN4
+	for linux-wireless@vger.kernel.org;
+	Fri, 09 Oct 2026 18:05:28 +0200
+Message-ID: <20c60c055382b8c1cb7e147b7af25d5dd270d59c.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH 03/12] wifi: mac80211: implement lockless beacon
+ updates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 09 Oct 2026 18:05:27 +0200
+In-Reply-To: <20261004234504.dc783ba26923.Icfbcd157ac2bdeccfcc74a9f4c3997d3010ec0a9@changeid>
+References: <20261004214504.1636783-14-johannes@sipsolutions.net>
+	 <20261004234504.dc783ba26923.Icfbcd157ac2bdeccfcc74a9f4c3997d3010ec0a9@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <ar7vLt5kQ2HJoJY9@gmail.com>
+X-malware-bazaar: not-scanned
 
-On 2026-10-02 01:41:51 [+0200], Karl Mehltretter wrote:
-> On Thu, Oct 01, 2026 at 09:57:55AM +0100, Sebastian Andrzej Siewior wrote:
-> > On 2026-09-30 20:54:17 [+0200], Karl Mehltretter wrote:
-> > > This fixes the direct SDIO transmit path used by fcmode=3D0. Modes 1 =
-and 2
-> > > take the FWS lock first and need a separate change.
-> >=20
-> > Is this the only affected driver?
->=20
-> I also reproduced a sleeping-lock warning with 8139cp on PREEMPT_RT
-> using QEMU's RTL8139C+ device. Enabling a dynamic netconsole target caused
-> the printer thread to enter cp_start_xmit() with hard interrupts disabled:
->=20
->   BUG: sleeping function called from invalid context
->   in_atomic(): 0, irqs_disabled(): 1, pid: 107, name: pr/netcon0
->   hardirqs last disabled at netpoll_send_skb+0x1c8/0x3d0
->   rt_spin_lock
->   cp_start_xmit+0x31/0x8b6 [8139cp]
->   netpoll_start_xmit+0x18e/0x260
->   netpoll_send_skb+0x37a/0x3d0
->   netconsole_write+0x56d/0x820
->=20
-> That was one reproduction on the netdev base a7bfaba4823e. I have not
-> established how many drivers are affected.
->=20
-> Source inspection also identified 8139too and macb as candidates: their
-> transmit paths take ordinary spinlock_t locks. I have not reproduced the
-> warning with either driver.
+On Sun, 2026-10-04 at 23:40 +0200, Johannes Berg wrote:
+> The regular beacon update can no longer reliably access
+> the old beacon across the allocation (or we'd have to do
+> all those atomically), so if userspace does both at the
+> same time, we may send a corrupt beacon due to min() in
+> the copy. This won't happen with hostapd even if it were
+> to race, since it always sends both head and tail.
 
-I just replied to the netconsole thread where I did suggest to lift the
-local_irq_save() part. This would obsolete this.
+Heh. Aloka got really lucky, I went to rebase this now and it conflicts
+pretty badly - not just patch wise but semantically - with the MBSSID
+old beacon data fix.
 
-> The earlier netpoll/NBCON discussion concerns NAPI polling and
-> scheduler-lock deadlocks, rather than this driver-lock warning:
->=20
-> https://lore.kernel.org/linux-rt-devel/20260618111554.2n0pP_O9@linutronix=
-=2Ede/
+This should never happen, but if a normal locked update is running while
+an unlocked update replaces the beacon (including head, tail and mbssid
+data), then the locked update cannot use the old beacon head, tail or
+mbssid data at the same time, it might go away concurrently.
 
-There was no fan club behind this change and PeterZ hated it so I
-dropped it.
-But this deadlock should not happen with nbcon or do I mix up things?
+For the head/tail I basically said above that doesn't matter, we'll send
+garbage if hostapd is causing garbage (just use whichever head/tail we
+find, min() on the size); for the MBSSID data that doesn't really work,
+the MBSSID fix said:
 
-> > Do you have maybe a backtrace?
-> >=20
->=20
-> This is the original Pi 400 report on 7.3-rc3 with PREEMPT_RT. That kernel
-> also had unrelated allocation-test patches applied. DEBUG_ATOMIC_SLEEP
-> was disabled, so this report is the BH-disable warning:
-=E2=80=A6
+    Hostapd passes two Beacon templates to kernel for CSA and CCA -
+    (1) beacon_csa/beacon_color_change used during the countdown.
+    (2) beacon_after/beacon_next used after the countdown completes.
+    Hostapd relies on the kernel to include the old MBSSID elements
+    while sending beacon_csa/beacon_color_change templates to the
+    driver.
 
-I don't mind if you have something to optimise the driver. But as far as
-the netconsole part goes, I would try to kill it at the upper level so
-the driver is not affected.
+So ... where does that leave us here.
 
-> Thanks,
-> Karl
+I think the only good solution is to say this race will never happen
+anyway, hostapd clearly won't do update-beacon and set-beacon at the
+same time for the same interface. But we have to protect memory safety
+in the kernel anyway.
 
-Sebastian
+So I think I'll change this to track "is a locked beacon update in
+progress", and then an unlocked beacon update just returns -EAGAIN if it
+finds (under the spinlock) that to be true. Presumably that'll never
+happen, but if it does then it'll be correct. It also means that
+unlocked beacon updates always have to come with their own MBSSID data.
+
+johannes
