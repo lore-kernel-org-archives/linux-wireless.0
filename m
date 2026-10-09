@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAFC4F7CCF
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 18:14:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B54E750EC01
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 18:14:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791569667; cv=none; b=AKwI68ePM83BbfoV3ybCrMlY2gifAg4toPRNkhSC+ynwPMiqnw2ZGss5WFXntmhmpb8OD5hDKdXjqQCrl42h0ZWG3MkX06gh87brvM2DIGbHZn9QX/pzSA6r4Zdu77dUEfpKVlSsKxo8xN4NaTbr4g7LgzcYcXMoMQQkEPPaY9w=
+	t=1791569669; cv=none; b=ZTbrixVz6Yjck7D9GrfEjXfWgjCZOeu2y7h3DUi09LKczqhYvz7p8eYOILTIXECKmyEn79uAzndSC32HuBr6HhVDseueUTrUjjAvXn51lWf5YLidl0AMS6ZQwtXOOlwEfeF179T5GqpNaPfqgbwVv15Xh2pmbOobPZhZ61QyxWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791569667; c=relaxed/simple;
-	bh=v3B+xXQ0ZdI0bXyT+R5UBKrhQpoWXen+jj5ngoGQvsU=;
+	s=arc-20240116; t=1791569669; c=relaxed/simple;
+	bh=0jwpd33eTQ583obiJEMNKqvWKBe8OBpOd3PIFEnSVFY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Z5XMKw/n8ja+GYElSPFh0uB4JETrLQ9yC2CYQdNlUvg7U+bcp8Ycme51LidQ8SREBCA5T7Rz0EXKLGEYs2Qq4kt06nUV58TrA6vmd7zYV4FMShZe6S91zmO5LH2Koqw/2vw77JkAIgXMKpUKfLeuaCixkIkfA5PQC5Idy7KnyzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=D3uUSNKj; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=u/Mdx8nFdq3Wad9ncHP+TDVhXcGIpELih8PBVSTVoIjWZYhhro8Tub6S5L/pMCXgOmubQnLLw8yw1fGNVuevjItcwP8lHIhFCCuTyp6RqGetD0reGXfezzOJVj8jPDm6JngkRK6bo5MbPW/19b0055KMhlVZxf9hVVq8CGFCGIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=EN+ofFkO; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="D3uUSNKj"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="EN+ofFkO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=KSVhEP+YMzrrQ6ybM9jL1lWkfe1XfMnx6AjTIelDeZw=;
-	t=1791569665; x=1792779265; b=D3uUSNKjpDEmdve2fjiAMdfBGgNGKRMyd56LeqopCyM8zi6
-	j6Hjm1f5Ytz29RGfbRf+oo7GQ8RZ920hde9IS+Xj9vNrDSvi5wo2bV41ON93S+C66bT9X806k6mvN
-	x6hrCiLev2yN2nb3C1Ssg3GzvYftGFZFqK/cfzzBid/54lqtp0d4L6mESI3t7Rq4u7Mfn5505MY8u
-	bB2/w3KEfdqC1r8hYWRTza+IIXD/tcSq0humnbq5tAJD42aGSVnOotobbWRrXqI68ySmy7Z4Ddp1S
-	BvJv4JI4R2KkStab/oiulVGubzPxCuj4F47quuNp0V7QqcUmx2jieHlaq48Vwuqg==;
+	Resent-Cc:Resent-Message-ID; bh=RT6gYcysnbHm5EzoLMtZCjMytA+dmDRRrLm55OM6xag=;
+	t=1791569667; x=1792779267; b=EN+ofFkOhwMY0ENgKswUxd4a8svY6cxeDBF0IoIdLeBZ0TM
+	pQnkeOaxGLnGwzMGxa3noPd4TElpNYy8FjxCGNhdQinqi8/xm90F6Q5qCrG6nw2devw8PF94I2VHM
+	W1MukJ1kGuCRzbEb5Ok00QHyWqXwjpo3rixumFPwMw2tEojEop5TtplZQEBKByoedrply6Ic6GHbv
+	QB0ynWFTf4JaxgUH0wYVQl04uxd1a0QrP5kvAaWPezwddHJPtNlwA8r2Te3f0PocsqZ5HjUvtPz/B
+	XaNxUM7j6jVenDCzD+Cfl82Cbv/OB4tEVMHWSF77P1IQwCEJ/chCCgV6f+9BlyQQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFF6s-0000000AtGH-0TZO;
-	Fri, 09 Oct 2026 20:14:22 +0200
+	id 1xFF6u-0000000AtGH-205h;
+	Fri, 09 Oct 2026 20:14:24 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 04/17] wifi: mac80211: implement lockless beacon updates
-Date: Fri,  9 Oct 2026 20:10:03 +0200
-Message-ID: <20261009201417.a9433ea65d8e.Icfbcd157ac2bdeccfcc74a9f4c3997d3010ec0a9@changeid>
+Subject: [PATCH wireless-next 06/17] wifi: nl80211: prepare for unlocked wdev-only ops
+Date: Fri,  9 Oct 2026 20:10:05 +0200
+Message-ID: <20261009201417.0eaf10071df8.If2812b7c82df39cc9ed51746f55789fc4f51d4b1@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261009181416.335754-19-johannes@sipsolutions.net>
 References: <20261009181416.335754-19-johannes@sipsolutions.net>
@@ -50,439 +50,299 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Implement the new update_beacon() method to update beacon
-and related templates without the wiphy mutex. If anything
-else were to change return -EAGAIN, same if there are any
-active countdowns, and during HW restart. Eventually, the
-idea is to replace countdowns by beacon update requests so
-hostapd can handle everything instead.
+The update-beacon operation currently can fairly easily
+work without extra care and without the wiphy mutex as
+it holds the netdev. However, we can't do the same now
+for wdevs, they could be unregistered (and destroyed)
+while the operation is running.
 
-This doesn't enable it for any drivers since it depends on
-the driver behaviour, if it fetches each beacon and doesn't
-use the other templates it can just set the feature flag
-(NL80211_EXT_FEATURE_UPDATE_BEACON), otherwise it must
-implement the new update_beacon() mac80211 method.
+Allow for such operations as well by giving the wdevs a
+refcount as well, and waiting for that refcount to drop
+to zero during wdev unregistration.
 
-The regular beacon update may need to take head, tail and
-MBSSID/RNR elements from the old beacon, so while that's
-going on mark "bss_update_in_progress" and make lockless
-updates return -EAGAIN during that time, so that the old
-data remains valid/identical.
+This requires some special care in nl80211, especially
+for a "re-do the operation locked" implementation, but
+that's contained here so drivers need not worry about
+it (except if they request the operation to be retried
+under lock, that might never happen).
 
-For MBSSID, the lockless path also can't copy old data,
-so that also has to return -EAGAIN.
-
-All those -EAGAIN cases fall back to cfg80211 and do the
-update with the lock held, where it can then be handled.
-Userspace should ideally ensure it doesn't hit that path.
-
-Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2:
- - split
- - handle concurrent locked/unlocked updates differently to
-   avoid mbssid problems
----
- include/net/mac80211.h     |   7 ++
- net/mac80211/cfg.c         | 225 ++++++++++++++++++++++++++++++++++---
- net/mac80211/driver-ops.h  |  16 +++
- net/mac80211/ieee80211_i.h |   2 +
- net/mac80211/trace.h       |  28 +++++
- 5 files changed, 263 insertions(+), 15 deletions(-)
+ include/net/cfg80211.h |  8 +++++
+ net/wireless/core.c    | 11 ++++++
+ net/wireless/core.h    | 21 +++++++++++
+ net/wireless/nl80211.c | 82 +++++++++++++++++++++++++++++++++---------
+ 4 files changed, 106 insertions(+), 16 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a24d849b8f9c..2a61079e3975 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4586,6 +4586,9 @@ struct ieee80211_prep_tx_info {
-  *	just "paused" for scanning/ROC, which is indicated by the beacon being
-  *	disabled/enabled via @bss_info_changed.
-  * @stop_ap: Stop operation on the AP interface.
-+ * @update_beacon: Update the templates indicated by @changed (beacon, probe
-+ *	response, FILS discovery and/or unsolicitated bcast probe response)
-+ *	without the wiphy mutex held. This callback must not sleep.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7de6dbdae930..16f6b96e0d88 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -21,6 +21,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/if_ether.h>
+ #include <linux/ieee80211.h>
++#include <linux/refcount.h>
+ #include <linux/net.h>
+ #include <linux/rfkill.h>
+ #include <net/regulatory.h>
+@@ -7226,6 +7227,9 @@ enum ieee80211_ap_reg_power {
+  * @netdev: (private) Used to reference back to the netdev, may be %NULL
+  * @identifier: (private) Identifier used in nl80211 to identify this
+  *	wireless device if it has no netdev
++ * @refcnt: (private) references held by nl80211 if there's no netdev,
++ *	to ensure cfg80211_unregister_wdev() cannot return while
++ *	unlocked ops are running
+  * @u: union containing data specific to @iftype
+  * @connected: indicates if connected or not (STA mode)
+  * @wext: (private) Used by the internal wireless extensions compat code
+@@ -7291,6 +7295,7 @@ struct wireless_dev {
+ 	struct net_device *netdev;
+ 
+ 	u32 identifier;
++	refcount_t refcnt;
+ 
+ 	struct list_head mgmt_registrations;
+ 	u8 mgmt_registrations_need_update:1;
+@@ -10174,6 +10179,9 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
+  * when the driver wishes to unregister the wdev, e.g. when the hardware device
+  * is unbound from the driver.
   *
-  * @reconfig_complete: Called after a call to ieee80211_restart_hw() and
-  *	during resume, when the reconfiguration has completed.
-@@ -4783,6 +4786,10 @@ struct ieee80211_ops {
- 			struct ieee80211_bss_conf *link_conf);
- 	void (*stop_ap)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			struct ieee80211_bss_conf *link_conf);
-+	void (*update_beacon)(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif,
-+			      struct ieee80211_bss_conf *link_conf,
-+			      u64 changed);
++ * Note that unlocked operations can run concurrently until this returns, so be
++ * careful about ordering.
++ *
+  * Context: Requires the RTNL and wiphy mutex to be held.
+  */
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev);
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 01b077909179..777f48a01101 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1514,6 +1514,16 @@ static void _cfg80211_unregister_wdev(struct wireless_dev *wdev,
  
- 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
- 				 struct netdev_hw_addr_list *mc_list);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0b124b04003e..30fe29f25928 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1561,17 +1561,23 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 	list_del_rcu(&wdev->list);
+ 	synchronize_net();
++
++	/*
++	 * After synchronize_net() any lookups under RCU either have
++	 * references (must wdev_hold() inside the critical section)
++	 * or can't find this wdev anymore. Wait for any wdev_hold()
++	 * users on a pure wdev to get to dev_put().
++	 */
++	if (!wdev->netdev && !refcount_dec_and_test(&wdev->refcnt))
++		wait_var_event(&wdev->refcnt, !refcount_read(&wdev->refcnt));
++
+ 	rdev->devlist_generation++;
+ 	wiphy_work_cancel(wdev->wiphy, &wdev->disconnect_wk);
+ 
+@@ -1700,6 +1710,7 @@ EXPORT_SYMBOL(cfg80211_stop_link);
+ 
+ void cfg80211_init_wdev(struct wireless_dev *wdev)
  {
- 	struct cfg80211_mbssid_elems *mbssid = params->mbssid_ies;
- 	struct cfg80211_rnr_elems *rnr = mbssid ? params->rnr_ies : NULL;
--	struct beacon_data *new, *old;
-+	struct beacon_data *new = NULL, *old;
- 	int new_head_len, new_tail_len;
- 	int err;
- 	u64 _changed = BSS_CHANGED_BEACON;
- 	struct ieee80211_bss_conf *link_conf = link->conf;
++	refcount_set(&wdev->refcnt, 1);
+ 	INIT_LIST_HEAD(&wdev->event_list);
+ 	spin_lock_init(&wdev->event_lock);
+ 	INIT_LIST_HEAD(&wdev->mgmt_registrations);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index dfcb9ed5035b..220544a6bb83 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -14,6 +14,7 @@
+ #include <linux/rfkill.h>
+ #include <linux/workqueue.h>
+ #include <linux/rtnetlink.h>
++#include <linux/wait_bit.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
+ #include "reg.h"
+@@ -259,6 +260,26 @@ void cfg80211_init_wdev(struct wireless_dev *wdev);
+ void cfg80211_register_wdev(struct cfg80211_registered_device *rdev,
+ 			    struct wireless_dev *wdev);
  
--	old = sdata_dereference(link->u.ap.beacon, sdata);
-+	/* grab old and make lockless updates return -EAGAIN */
-+	spin_lock(&link->ap_tmpl_lock);
-+	old = ap_tmpl_dereference(link, link->u.ap.beacon);
-+	link->u.ap.bss_update_in_progress = true;
-+	spin_unlock(&link->ap_tmpl_lock);
- 
- 	/* Need to have a beacon head if we don't have one yet */
--	if (!params->head && !old)
--		return -EINVAL;
-+	if (!params->head && !old) {
-+		err = -EINVAL;
-+		goto error;
-+	}
- 
- 	/* new or old head? */
- 	if (params->head)
-@@ -1593,8 +1599,10 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	new = ieee80211_alloc_beacon(mbssid, rnr, new_head_len, new_tail_len);
--	if (!new)
--		return -ENOMEM;
-+	if (!new) {
-+		err = -ENOMEM;
-+		goto error;
-+	}
- 
- 	if (new->mbssid_ies)
- 		link_conf->bssid_indicator =
-@@ -1625,10 +1633,8 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	err = ieee80211_set_probe_resp(sdata, params->probe_resp,
- 				       params->probe_resp_len, csa, cca, link);
--	if (err < 0) {
--		kfree(new);
--		return err;
--	}
-+	if (err < 0)
-+		goto error;
- 	if (err == 0)
- 		_changed |= BSS_CHANGED_AP_PROBE_RESP;
- 
-@@ -1641,21 +1647,31 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 							 params->civicloc_len,
- 							 link_conf);
- 
--		if (err < 0) {
--			kfree(new);
--			return err;
--		}
-+		if (err < 0)
-+			goto error;
- 
- 		_changed |= BSS_CHANGED_FTM_RESPONDER;
- 	}
- 
--	ap_tmpl_replace(link, link->u.ap.beacon, new);
-+	spin_lock(&link->ap_tmpl_lock);
-+	rcu_assign_pointer(link->u.ap.beacon, new);
-+	link->u.ap.bss_update_in_progress = false;
-+	spin_unlock(&link->ap_tmpl_lock);
- 	sdata->u.ap.active = true;
- 
-+	if (old)
-+		kfree_rcu(old, rcu_head);
-+
- 	ieee80211_update_ap_bandwidth(link, params);
- 
- 	*changed |= _changed;
- 	return 0;
-+error:
-+	spin_lock(&link->ap_tmpl_lock);
-+	link->u.ap.bss_update_in_progress = false;
-+	spin_unlock(&link->ap_tmpl_lock);
-+	kfree(new);
-+	return err;
- }
- 
- static u8 ieee80211_num_beaconing_links(struct ieee80211_sub_if_data *sdata)
-@@ -2050,6 +2066,184 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static int ieee80211_update_beacon(struct wiphy *wiphy, struct net_device *dev,
-+				   struct cfg80211_ap_update *params)
++static inline void wdev_hold(struct wireless_dev *wdev)
 +{
-+	struct cfg80211_unsol_bcast_probe_resp *ubpr =
-+		&params->unsol_bcast_probe_resp;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct cfg80211_fils_discovery *fd = &params->fils_discovery;
-+	struct unsol_bcast_probe_resp_data *new_ubpr = NULL, *old_ubpr = NULL;
-+	struct cfg80211_beacon_data *beacon = &params->beacon;
-+	struct fils_discovery_data *new_fd = NULL, *old_fd = NULL;
-+	struct probe_resp *new_presp = NULL, *old_presp = NULL;
-+	struct ieee80211_local *local = sdata->local;
-+	struct beacon_data *new, *old = NULL;
-+	struct ieee80211_bss_conf *link_conf;
-+	struct ieee80211_link_data *link;
-+	struct ieee80211_channel *chan;
-+	u64 changed = BSS_CHANGED_BEACON;
-+	int err = 0;
-+
-+	if (READ_ONCE(local->in_reconfig) || READ_ONCE(local->quiescing))
-+		return -EAGAIN;
-+
-+	new = ieee80211_alloc_beacon(beacon->mbssid_ies,
-+				     beacon->mbssid_ies ? beacon->rnr_ies : NULL,
-+				     beacon->head_len, beacon->tail_len);
-+	if (!new)
-+		return -ENOMEM;
-+	memcpy(new->head, beacon->head, beacon->head_len);
-+	memcpy(new->tail, beacon->tail, beacon->tail_len);
-+
-+	if (beacon->probe_resp && beacon->probe_resp_len) {
-+		new_presp = kzalloc(sizeof(*new_presp) + beacon->probe_resp_len,
-+				    GFP_KERNEL);
-+		if (!new_presp) {
-+			err = -ENOMEM;
-+			goto free;
-+		}
-+		new_presp->len = beacon->probe_resp_len;
-+		memcpy(new_presp->data, beacon->probe_resp,
-+		       beacon->probe_resp_len);
-+		changed |= BSS_CHANGED_AP_PROBE_RESP;
-+	}
-+
-+	if (fd->update && fd->tmpl && fd->tmpl_len) {
-+		new_fd = kzalloc(sizeof(*new_fd) + fd->tmpl_len, GFP_KERNEL);
-+		if (!new_fd) {
-+			err = -ENOMEM;
-+			goto free;
-+		}
-+		new_fd->len = fd->tmpl_len;
-+		memcpy(new_fd->data, fd->tmpl, fd->tmpl_len);
-+	}
-+
-+	if (ubpr->update && ubpr->tmpl && ubpr->tmpl_len) {
-+		new_ubpr = kzalloc(sizeof(*new_ubpr) + ubpr->tmpl_len,
-+				   GFP_KERNEL);
-+		if (!new_ubpr) {
-+			err = -ENOMEM;
-+			goto free;
-+		}
-+		new_ubpr->len = ubpr->tmpl_len;
-+		memcpy(new_ubpr->data, ubpr->tmpl, ubpr->tmpl_len);
-+	}
-+
-+	rcu_read_lock();
-+
-+	/* do_stop() synchronizes RCU before the interface type can change */
-+	if (!ieee80211_sdata_running(sdata) ||
-+	    (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	     sdata->vif.type != NL80211_IFTYPE_P2P_GO)) {
-+		err = -ENETDOWN;
-+		goto unlock;
-+	}
-+
-+	link = rcu_dereference(sdata->link[beacon->link_id]);
-+	if (!link) {
-+		err = -ENOLINK;
-+		goto unlock;
-+	}
-+	link_conf = link->conf;
-+
-+	/* configuration changes need the wiphy mutex, let cfg80211 retry */
-+	err = -EAGAIN;
-+
-+	if (READ_ONCE(link_conf->csa_active) ||
-+	    READ_ONCE(link_conf->color_change_active))
-+		goto unlock;
-+
-+	if (new->mbssid_ies &&
-+	    ieee80211_beacon_bssid_indicator(new) !=
-+			READ_ONCE(link_conf->bssid_indicator))
-+		goto unlock;
-+
-+	if (fd->update &&
-+	    (fd->min_interval != READ_ONCE(link_conf->fils_discovery.min_interval) ||
-+	     fd->max_interval != READ_ONCE(link_conf->fils_discovery.max_interval)))
-+		goto unlock;
-+
-+	if (ubpr->update &&
-+	    ubpr->interval !=
-+			READ_ONCE(link_conf->unsol_bcast_probe_resp_interval))
-+		goto unlock;
-+
-+	chan = READ_ONCE(link_conf->chanreq.oper.chan);
-+	if (!chan)
-+		goto unlock;
-+
-+	if (chan->band != NL80211_BAND_S1GHZ) {
-+		enum ieee80211_sta_rx_bandwidth he_and_lower;
-+
-+		he_and_lower = ieee80211_calc_ap_he_and_lower(beacon);
-+		if (he_and_lower != READ_ONCE(link->bss_bw.he_and_lower) ||
-+		    ieee80211_calc_ap_eht_bw(beacon, he_and_lower) !=
-+				READ_ONCE(link->bss_bw.eht))
-+			goto unlock;
-+	}
-+
-+	spin_lock(&link->ap_tmpl_lock);
-+	old = ap_tmpl_dereference(link, link->u.ap.beacon);
-+	if (!old) {
-+		err = -ENOENT;
-+	} else if (link->u.ap.bss_update_in_progress) {
-+		/* a locked update is in progress */
-+		old = NULL;
-+	} else if (READ_ONCE(old->cntdwn_current_counter)) {
-+		/* a countdown just started, must keep the offsets */
-+		old = NULL;
-+	} else if (old->mbssid_ies && !new->mbssid_ies) {
-+		/* only locked path copies old MBSSID data */
-+		old = NULL;
-+	} else {
-+		rcu_assign_pointer(link->u.ap.beacon, new);
-+		new = NULL;
-+
-+		if (new_presp)
-+			old_presp = rcu_replace_pointer(link->u.ap.probe_resp,
-+							new_presp,
-+							lockdep_is_held(&link->ap_tmpl_lock));
-+		new_presp = NULL;
-+
-+		if (fd->update) {
-+			old_fd = rcu_replace_pointer(link->u.ap.fils_discovery,
-+						     new_fd,
-+						     lockdep_is_held(&link->ap_tmpl_lock));
-+			changed |= BSS_CHANGED_FILS_DISCOVERY;
-+		}
-+		new_fd = NULL;
-+
-+		if (ubpr->update) {
-+			old_ubpr = rcu_replace_pointer(link->u.ap.unsol_bcast_probe_resp,
-+						       new_ubpr,
-+						       lockdep_is_held(&link->ap_tmpl_lock));
-+			changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
-+		}
-+		new_ubpr = NULL;
-+
-+		drv_update_beacon(local, sdata, link_conf, changed);
-+		err = 0;
-+	}
-+	spin_unlock(&link->ap_tmpl_lock);
-+unlock:
-+	rcu_read_unlock();
-+free:
-+	kfree(new);
-+	kfree(new_presp);
-+	kfree(new_fd);
-+	kfree(new_ubpr);
-+	if (old)
-+		kfree_rcu(old, rcu_head);
-+	if (old_presp)
-+		kfree_rcu(old_presp, rcu_head);
-+	if (old_fd)
-+		kfree_rcu(old_fd, rcu_head);
-+	if (old_ubpr)
-+		kfree_rcu(old_ubpr, rcu_head);
-+	return err;
-+}
-+
- static void ieee80211_free_next_beacon(struct ieee80211_link_data *link)
- {
- 	if (!link->u.ap.next_beacon)
-@@ -6071,6 +6265,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_default_beacon_key = ieee80211_config_default_beacon_key,
- 	.start_ap = ieee80211_start_ap,
- 	.change_beacon = ieee80211_change_beacon,
-+	.update_beacon = ieee80211_update_beacon,
- 	.stop_ap = ieee80211_stop_ap,
- 	.add_station = ieee80211_add_station,
- 	.del_station = ieee80211_del_station,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index f1c0b87fddd5..accd89bbc1fb 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1107,6 +1107,22 @@ static inline void drv_stop_ap(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline void drv_update_beacon(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_bss_conf *link_conf,
-+				     u64 changed)
-+{
-+	/* can race with HW restart, so don't warn */
-+	if (!(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
++	if (wdev->netdev) {
++		dev_hold(wdev->netdev);
 +		return;
++	}
 +
-+	trace_drv_update_beacon(local, sdata, link_conf, changed);
-+	if (local->ops->update_beacon)
-+		local->ops->update_beacon(&local->hw, &sdata->vif, link_conf,
-+					  changed);
-+	trace_drv_return_void(local);
++	/* also not RTNL, but can't check that */
++	lockdep_assert_not_held(&wdev->wiphy->mtx);
++	refcount_inc(&wdev->refcnt);
 +}
 +
- static inline void
- drv_reconfig_complete(struct ieee80211_local *local,
- 		      enum ieee80211_reconfig_type reconfig_type)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b16ff6a4aacf..16c1e0337f3a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1103,6 +1103,8 @@ struct ieee80211_link_data_ap {
- 	struct unsol_bcast_probe_resp_data __rcu *unsol_bcast_probe_resp;
- 	struct s1g_short_beacon_data __rcu *s1g_short_beacon;
- 
-+	bool bss_update_in_progress;
++static inline void wdev_put(struct wireless_dev *wdev)
++{
++	if (wdev->netdev)
++		dev_put(wdev->netdev);
++	else if (refcount_dec_and_test(&wdev->refcnt))
++		wake_up_var(&wdev->refcnt);
++}
 +
- 	/* to be used after channel switch. */
- 	struct cfg80211_beacon_data *next_beacon;
+ static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
+ {
+ 	lockdep_assert_held(&rdev->wiphy.mtx);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6387a312b35e..eb91937a7238 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -266,6 +266,34 @@ nl80211_lock_and_recheck(struct cfg80211_registered_device *rdev,
+ 	return ERR_PTR(-ENODEV);
+ }
+ 
++/*
++ * Must have wdev_hold(), acquire the wiphy mutex. This has to
++ * look up the wdev again (otherwise it could deadlock against
++ * wdev removal), so it can return an error pointer.
++ */
++static struct wireless_dev *
++nl80211_lock_held_wdev(struct cfg80211_registered_device *rdev,
++		       struct genl_info *info, struct wireless_dev *wdev)
++{
++	u32 wdev_id = wdev->identifier;
++
++	/* the wdev reference was keeping the wiphy alive */
++	get_device(&rdev->wiphy.dev);
++	info->user_ptr[1] = NULL;
++	wdev_put(wdev);
++
++	wdev = nl80211_lock_and_recheck(rdev, genl_info_net(info), wdev_id);
++	if (IS_ERR(wdev))
++		return wdev;
++
++	if (!wdev_running(wdev)) {
++		wiphy_unlock(&rdev->wiphy);
++		return ERR_PTR(-ENETDOWN);
++	}
++
++	return wdev;
++}
++
+ static int validate_beacon_head(const struct nlattr *attr,
+ 				struct netlink_ext_ack *extack)
+ {
+@@ -19906,14 +19934,10 @@ nl80211_epcs_cfg(struct sk_buff *skb, struct genl_info *info)
+ 
+ /*
+  * Note: a
+- *	SELECTOR(...,
+- *		 NL80211_FLAG_NO_WIPHY_MTX |
+- *		 NL80211_FLAG_NEED_WDEV)
+- * or
+  *	SELECTOR(..., NL80211_FLAG_NO_WIPHY_MTX)
+  *
+- * isn't valid - nothing would ensure the device stays around,
+- * need at least a netdev, the wiphy mutex, or RTNL.
++ * isn't valid - nothing would ensure the device stays around, need
++ * at least a wdev/netdev reference, the wiphy mutex, or RTNL.
+  */
+ 
+ enum nl80211_internal_flags_selector {
+@@ -19928,6 +19952,13 @@ static u32 nl80211_internal_flags[] = {
+ #undef SELECTOR
  };
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 562a4964afa3..ea46c3cca21a 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1924,6 +1924,34 @@ TRACE_EVENT(drv_stop_ap,
- 	)
- );
  
-+TRACE_EVENT(drv_update_beacon,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_bss_conf *link_conf,
-+		 u64 changed),
++/* without RTNL or wiphy mutex, a wdev reference keeps everything alive */
++static bool nl80211_need_wdev_ref(u32 internal_flags)
++{
++	return !(internal_flags & NL80211_FLAG_NEED_RTNL) &&
++	       internal_flags & NL80211_FLAG_NO_WIPHY_MTX;
++}
 +
-+	TP_ARGS(local, sdata, link_conf, changed),
+ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ 			    struct sk_buff *skb,
+ 			    struct genl_info *info)
+@@ -19936,7 +19967,7 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ 	struct net *netns = genl_info_net(info);
+ 	struct wireless_dev *wdev = NULL;
+ 	struct net_device *dev = NULL;
+-	bool need_rtnl, locked = false;
++	bool need_rtnl, wdev_ref, locked = false;
+ 	u32 internal_flags, wdev_id = 0;
+ 	int err;
+ 
+@@ -19945,6 +19976,7 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ 
+ 	internal_flags = nl80211_internal_flags[ops->internal_flags];
+ 	need_rtnl = internal_flags & NL80211_FLAG_NEED_RTNL;
++	wdev_ref = nl80211_need_wdev_ref(internal_flags);
+ 
+ 	if (need_rtnl)
+ 		rtnl_lock();
+@@ -19966,7 +19998,16 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ 		}
+ 
+ 		dev = wdev->netdev;
+-		dev_hold(dev);
++		/*
++		 * Take the wdev ref only if we need it (wdev_ref is true when
++		 * the op is unlocked), we must not try to acquire this with
++		 * a wdev pointer protected by locking, it'd deadlock against
++		 * unregistration.
++		 */
++		if (wdev_ref)
++			wdev_hold(wdev);
++		else
++			dev_hold(dev);
+ 		rdev = wiphy_to_rdev(wdev->wiphy);
+ 	}
+ 
+@@ -19999,12 +20040,12 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ 		locked = true;
+ 	} else if (rdev && !need_rtnl) {
+ 		/*
+-		 * Without any mutex need a netdev to keep it alive, see
+-		 * also the note about selectors - the WARN can't happen
++		 * Without any mutex need a wdev reference to keep it alive,
++		 * see also the note about selectors - the WARN can't happen
+ 		 * without wrong selectors and those don't exist.
+ 		 */
+ 		put_device(&rdev->wiphy.dev);
+-		if (WARN_ON(!dev)) {
++		if (WARN_ON(!wdev)) {
+ 			err = -EINVAL;
+ 			goto out;
+ 		}
+@@ -20069,7 +20110,10 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
+ out:
+ 	if (locked)
+ 		wiphy_unlock(&rdev->wiphy);
+-	dev_put(dev);
++	if (wdev_ref && wdev)
++		wdev_put(wdev);
++	else
++		dev_put(dev);
+ 	if (need_rtnl)
+ 		rtnl_unlock();
+ 	return err;
+@@ -20086,17 +20130,23 @@ static void nl80211_post_doit(const struct genl_split_ops *ops,
+ 			      struct genl_info *info)
+ {
+ 	u32 internal_flags = nl80211_internal_flags[ops->internal_flags];
++	struct wireless_dev *wdev = NULL;
++	struct net_device *dev = NULL;
+ 
+ 	if (info->user_ptr[1]) {
+ 		if (internal_flags & NL80211_FLAG_NEED_WDEV) {
+-			struct wireless_dev *wdev = info->user_ptr[1];
+-
+-			dev_put(wdev->netdev);
++			wdev = info->user_ptr[1];
++			dev = wdev->netdev;
+ 		} else {
+-			dev_put(info->user_ptr[1]);
++			dev = info->user_ptr[1];
+ 		}
+ 	}
+ 
++	if (wdev && nl80211_need_wdev_ref(internal_flags))
++		wdev_put(wdev);
++	else
++		dev_put(dev);
 +
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(u32, link_id)
-+		__field(u64, changed)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->link_id = link_conf->link_id;
-+		__entry->changed = changed;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT " link id %u changed:%#llx",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->link_id, __entry->changed
-+	)
-+);
-+
- TRACE_EVENT(drv_reconfig_complete,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 enum ieee80211_reconfig_type reconfig_type),
+ 	if (info->user_ptr[0] &&
+ 	    !(internal_flags & NL80211_FLAG_NO_WIPHY_MTX)) {
+ 		struct cfg80211_registered_device *rdev = info->user_ptr[0];
 -- 
 2.56.0
 
