@@ -1,195 +1,244 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED7D50256A
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 22:08:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D6D399346
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 22:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791583684; cv=none; b=X9rHVGGTr3HfXJnIfjNNvWv8nY7ZxS5TdoGB8/6G0NOsPcLTPZ3pYlwV8HQHATSkWQoOuDxJZblSjggpGI3YNyVe5+msIgPsaL8Hg9MMsOMTx4bJjrCYHFOIzvzkqrmsEtb2S3Boe49f+rpnraHPPpRFF1An8NP/eQoC6eOMs+g=
+	t=1791585094; cv=none; b=qLKeLN5KJ3oASsXRdyqUwSLlBIiUWWXVjRpnrUjnQArex040mTkYbwZe5ImQOOSVMa4YB0AhKjbCJtnPDJjNF7xMKTNh0ItX2kR/TeqxdaC95E1GU/cn9TBvc+iFJ6rDxte82CM075iNSxIAU/vvhCFxwRicK/HRXHa+0bQoE3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791583684; c=relaxed/simple;
-	bh=2yDW81GZlx8sHJ+qlyywQjnpRRIPYgvD3dV8GOSohmM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Iaf97tC9COHMrwKOPHqBxWHv8qPs+oA0XXbIwnpypBeV5zdjvGBXCR4OANTbDSFEEzAzePokEMEI9kWeI+0Bzm43C8UM4XEH+aypnl6GfpPD6KDwHd8mXbnfLm71TvihQzz0HthOw+Z2hq0o2z8i6nIZxXx1pwhfCI2BWHzygxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LrikMMDx; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=c2iMvJwG; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1791585094; c=relaxed/simple;
+	bh=A/kcRKmJR7ozCn7Cl71ZSCtr5qDqDq7RiBTaUIROmyM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hOwvKSXSrjg76s5d82ElRvpSK2fZmQps6E0NfUaWuXlAMjyxQ1AmxzUHawsKJroRb/pGD/OQV0wgtvF295om9gfweWpOgbGjcXhLpT+RUFq1eyBRQ/CiOCIexRYNUOKAoZSujcEjvivES6rLnqYaum1PoGXAY3kvb8Spc5Guks8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k2TFtt9b; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LrikMMDx";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="c2iMvJwG"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 699KhYDY2857808
-	for <linux-wireless@vger.kernel.org>; Fri, 9 Oct 2026 22:08:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Jot2RFAnsnkeM5kfPFj75St8/mCcz8u7h4DuLJdUQdI=; b=LrikMMDxqlrAhRtJ
-	QztnB9LLwVHtvrAZlZq34h0mI910nPUKnbop6irhayiAlj6y7FgUpcFJZpIEvi3A
-	oBL9SVqWLyRlgzj3e4HOdajUgTI0Kz1F4Fzgc82S9Vd9Co++SkA6WvAsU8TZTSU5
-	yRqN0nEIJIVGmjV+XLuCpZ8WmTyNqT+lvhaAS3zNG8iKq4mk9AXzNqL5I4u55LRx
-	E88OM+/gNQqmPsR9A4m7vQVsBXXz+/bTqTIe1o84GPfg4l4iCo5wq8G9YuQfVB//
-	K0ujpyfgXiDVXCwRnQovSE1u55vT6/PopMyhZ8XLOpYdWs+K+d4vwMgPGywy4Oui
-	dIwwWg==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h74t88ur4-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 22:08:01 +0000 (GMT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-33c35f5ca6cso309330eec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 15:08:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k2TFtt9b"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-49e6b771d06so671895e9.2
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 15:31:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791583680; x=1792188480; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Jot2RFAnsnkeM5kfPFj75St8/mCcz8u7h4DuLJdUQdI=;
-        b=c2iMvJwGAEQ4Q7RZF0yHRRXIlfC9ZTnOsGT6cLAzj+gMUYClYYtMH7Mbjye+07M6yt
-         tONioYTvzLbRhd3H9tKGQNwukj6Vf/NGFxeqlK54Hy3zB7PSJUOypWdVxD+Ic0Mhp8zQ
-         qWy+PgDx7Ar/owkMAB3Q0nSPmUmV5okWpmlftQwiIZsa9LmfJoyzp2h4+aRoHcgivu4E
-         84KfmgAOe6NMqQOCEaBjjro2HG3i2KgDT1fftt7t6KASnFxnXqrAmpwsOvxrbZtRiV5t
-         4IvMCeC5muImxq/WbLJ4so0POR57gH9CMswcrq2yqAOuT7GC5x3eJWxaaALm7x90srxS
-         pyVQ==
+        d=gmail.com; s=20251104; t=1791585090; x=1792189890; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aWZkp+NCndvQueQ6E2vgtu4DQoR7geHPX3xAT83ymnk=;
+        b=k2TFtt9bWW0OYERa7vi1cRp44lK5lURMFrK+Q/di8x0Uvbg6SrRDfXXxPv/bujI7D2
+         C5RKJL+yL0gvv3Pj8rGkkr84vZrMAEPB6bSFpSU81xxmTZ3t+vm7LpN5o2Cles0b4mqL
+         MSjtEHWZ8BIA5tkH63XRQvRLJs/ZDnx/EAAvTYG+JQpwKgqx3ZwkvMVNKMu9HUdbyfAt
+         BLSa+skhXF2raIXC916OW9lX0rBG9WKr3IVjC5mPl/Xzx9vyInTnccNSCzIdt5zHFV98
+         P1W+EVcSB6+cxrvROJ+VSfrNfErQHa1pNZ/ZWFza7ojeLrYai154kMux0QMoaZqB2Mc6
+         t1VQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791583680; x=1792188480;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1791585090; x=1792189890;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Jot2RFAnsnkeM5kfPFj75St8/mCcz8u7h4DuLJdUQdI=;
-        b=x1l9PhyO9YyZ6Za2bFmCHo/Kor943tlRvI3wCD5wwy7NgXZ/H/a62gdk+lQWMZYXoG
-         DXRE95lvwwV4DTSRbCl1ZwBfzorTN8bA9zYqZyh/shDXL0tvpMY0FO0u8bVx7TcAIhc/
-         wcEnEYRETT3erNgFgiM6z5Ah96+N8RH4nruOOS/N/NcIc36VmnsUTegPZOPRnVWMC3zl
-         kGFOzsx64RogHOEUJ5IdXEm22LRI4yZJ6chEgV/Cjkh13j4nCyddAtdUn8FNKz5+K5j7
-         msW7Jjx7Didb1xu85drzJzVQHUR994T7/zhtUf7UnfAIikcyQMdGPHvLZv0iQraxWvg7
-         FHbQ==
-X-Gm-Message-State: AFq9FYInjXpQD49TlDVJBeFWJzKHDup2ZYgsIUpbFPB0ZsQd3zlnLqwu
-	MECZYy4y22uZZiXYtSRl/g+bbGUMtKRS1IXoitl2gFFnW7T7kjpBKHpqxALRlwNc86J62xAog8F
-	HABHaHK0cRtlheBYzq1YSMsFkw/HRbiFgrq9N1lHx2+OC9f/5TGbBvZfsRxMFclub9NeX4g==
-X-Gm-Gg: AYBFou3JiDqvvCilwgnhFsyKe1kraER5+G7RRzGGGjcun+G1OJrTxAzYxOVD7UdTG2O
-	0IvjMMDxkmWaRAC41cQatBBNIPgPEw8n6Gq5FTAfPpp4y+Q5EJfdqJ3cgiyLJiEfMsLn7HTR4GJ
-	3CSGjY6A5uiN4wTLYM629DaU9cKhJ2aFICqPwabO3NbLxNAyGg7o8vFNUno5ozSlg/ZdVndxeCS
-	xNN+n2MyS+WR/Aq6ToMxOp9HlRxzOzZPlAYEInhKL6oIrQs8gLuWcYiRRE3YdnM7i3pl4gvxBri
-	9WuLJg//pe/fufg7gvZqfvTzsHZrJjX7Fj7B9A9ECy3wB8BZfU6BisB1K7Rtwtm8HirtgsIVQwD
-	9QPKs01LNSYJ85TM4GRHtEZcOktr9canny/HP6aXrLjqHNG8KTcwAxXNeRg==
-X-Received: by 2002:a05:7300:c7cc:b0:351:7dab:58e4 with SMTP id 5a478bee46e88-3537e134b4dmr4228790eec.32.1791583680279;
-        Fri, 09 Oct 2026 15:08:00 -0700 (PDT)
-X-Received: by 2002:a05:7300:c7cc:b0:351:7dab:58e4 with SMTP id 5a478bee46e88-3537e134b4dmr4228760eec.32.1791583679655;
-        Fri, 09 Oct 2026 15:07:59 -0700 (PDT)
-Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537cb1d6e6sm8860018eec.24.2026.10.09.15.07.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Oct 2026 15:07:58 -0700 (PDT)
-Message-ID: <b96945e6-bebe-480b-80ed-d3343e94f2db@oss.qualcomm.com>
-Date: Fri, 9 Oct 2026 15:07:57 -0700
+        bh=aWZkp+NCndvQueQ6E2vgtu4DQoR7geHPX3xAT83ymnk=;
+        b=INn2FT1nZm39A6Kjx7Sb/DIK5kbIpv6BwF+yNmrMmTqGhAgCCecc8JWkOpx8fEymZW
+         icqweuTlv27JGPu2g7etUCoUphbgiXdaZykxrPKk86R0imktSJF6GAMTlk0LhgbZeH6M
+         jZgSpQrp4eeHDPZlNolWZm1yTbYGmKeRzxdG8HNmSjUFh5eYpQIGuj/7fVHyVG+XyE1y
+         tK4Fzo+iZgzHkgAdvXLJv7P4FJX5Xzo+a/4c+cAwXFabSGCwF2kUamLtxfbcgmMWbxiD
+         eY0OdFJ3NWCrzQinWqRh7UhVZgTj/XGaSE8xPJZPHzbg1Eejq00KNTBvbN3oJRvUmfgX
+         BzhA==
+X-Gm-Message-State: AFq9FYLPbIr4m90AiuYQEiwZjVF4+t0ozblfnY84bg9OaYscixiHidDl
+	XwxTaW+xRUwrsadF7kGTTLnH+mIURIfgu3d7ZAOiUZ0SYNGrY4JpNUUgS0K8moT0bK+j/A==
+X-Gm-Gg: AYBFou2H9zXRPMeYj6CL5h/Rc+8y4P8iUTMukPVn5H57gN6BuEsgIyldZ7pXuiQYuDL
+	6/4QEm5winSl1X7Yuk5BiozN9z955H7oZZfNQ8OQnBGtw/RSzmub7YoYX6yNmOYQVrGBScFF01t
+	f6UM7NPF6KTzeBAUYhANgKH08Zi1bgpqdExiqmmO9qbjK5FhesIYRVKANy2vIuZkluZ6KjmCPZA
+	96tydQ+EcM84513N+SEZO5wCquuo5wgXvpjC5rYCUVu1zJhHAGWN0fSf9CJq0RFi7MJQvvIE7ht
+	45xaNc1+t/AOyqgparEkbrX019EF+drEE1wYsJbI2GgFPMWEDGGgo1teOyzbS+7N13m1Kn6YJa8
+	CpRMvwJhEVIIgLotgfVxY4Y2wJGVhhvE34d3/a+wf/ecR/5A7CPW7GArnJIKWV9zh0PgqO9WXGi
+	1DOArwlj/yMjbl1+mCLOb7RyakLjGd2wWHh8oEhrkFXD2SHnwcTj3IvX7vTlSVZoAK9ZLV8Ty6Y
+	yvm9CBcLdfqFCUVwBHGZ7Ws2melfQ==
+X-Received: by 2002:a05:600c:1e0f:b0:4a1:8469:e6c8 with SMTP id 5b1f17b1804b1-4a18e46f48fmr62472605e9.1.1791585090364;
+        Fri, 09 Oct 2026 15:31:30 -0700 (PDT)
+Received: from Nuel20.localdomain ([105.118.73.40])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18be97d1esm130254575e9.8.2026.10.09.15.31.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 15:31:29 -0700 (PDT)
+From: Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	skhan@linuxfoundation.org,
+	Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
+Subject: [PATCH] wifi: cfg80211: defer self-managed regulatory processing to wiphy_work
+Date: Fri,  9 Oct 2026 23:31:23 +0100
+Message-ID: <20261009223123.10536-1-emmaonana18@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath11k: initialize CFR locks before capability
- checks
-To: Runyu Xiao <runyu.xiao@seu.edu.cn>, Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Jianhao Xu <jianhao.xu@seu.edu.cn>
-References: <20261009060326.1162818-1-runyu.xiao@seu.edu.cn>
-Content-Language: en-US
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-In-Reply-To: <20261009060326.1162818-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA5MDA4OCBTYWx0ZWRfXxnYbjkhxSdFu
- 9Xvuy/wgxlFlI4HxkX+soMOeNz1FAzFcTjqyJZJ3spkfRBBdgRM8gadNWbloQlE9KAmA+o/uZTQ
- hWJn22898cw3E+JOCulpU0DACZ+R8zk=
-X-Proofpoint-ORIG-GUID: uQXbgUpJEadFN6F4DX-_7BnJOc_aA0c4
-X-Authority-Analysis: v=2.4 cv=D9jSufRj c=1 sm=1 tr=0 ts=6ac965c1 cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=MAiKVQkammv_BUypPwIA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22
-X-Proofpoint-GUID: uQXbgUpJEadFN6F4DX-_7BnJOc_aA0c4
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA5MDA4OCBTYWx0ZWRfX6KGVTALOGSoW
- mRPtjYPLC/meL4GNzz5chxyG+3+OSw7tqHqJpX//8Hwrdz2ftmPDRW5+yj5EYHIXyuoghv5VPXs
- 585nU7n01X5sywpLgFixoBr8GB4w7ZtXZ8AV75YdVF8ZiJuboBIRqyMHToMGfmCexC7lpT/kMMN
- AAQCn5BcHH9iNUtePfbYnfnSrrPHlH25G7k7JYm8B1g8z365JALAkkyb6Az/jjsZx2ryvIie39A
- j2U4ppP0tjS9jn0O8XV8/zEtWIiRB9BvW8P3RR0BeYckA0Ws/dfsZFAndHZgvCKPKOrOb1nfSKI
- 7XW6DbdF826lXbgf7GH7fhTbXcrf4+CnTD8J0PgWF9Ho1KC9OJeZ1jnZfICYoRZke63+lMvaJt6
- Vh+49KTyirpFGUtad4YFxSByKHu818jKCgJdvmssavCby87K7TEMbqjNczBV5weekR6R8ksq6cZ
- uAGWJl9FPMOw6YdOr6Q==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-09_06,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 malwarescore=0 phishscore=0 impostorscore=0 bulkscore=0
- suspectscore=0 clxscore=1015 priorityscore=1501 adultscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
- definitions=main-2610090088
 
-On 10/8/2026 11:03 PM, Runyu Xiao wrote:
-> ath11k_cfr_init() returns before initializing cfr->lock when CFR
-> capability is absent.  However, station removal still calls
-> ath11k_cfr_decrement_peer_count(), which unconditionally takes this
-> lock.  This leaves a production path using an uninitialized spinlock.
+Commit f4e72e375807 ("wifi: cfg80211: reduce RTNL holding in regulatory
+enforcement") decoupled channel enforcement from RTNL by offloading
+interface verification to per-wiphy wiphy_work, executing under
+wiphy->mtx without holding the global RTNL.
 
-If this is really happening...
+However, reg_process_self_managed_hints() still synchronously acquires
+wiphy->mtx under RTNL during wiphy registration. Because wiphy_work
+callbacks hold wiphy->mtx and can acquire RTNL in dependent work or
+driver paths, this creates an ABBA lock inversion between rtnl_mutex and
+wiphy->mtx, which can deadlock generic netlink message dispatch.
 
-> 
-> Initialize cfr->lock for every radio before the capability check.  Keep
-> the CFR ring and lookup-table lock initialization conditional, since
-> those objects are only used after CFR capability setup.
+Extend the wiphy_work architecture to self-managed regulatory processing
+by deferring hint handling to per-wiphy work. Under RTNL, only check for
+pending requests and queue rdev->reg_self_managed_wk, eliminating the
+synchronous wiphy->mtx acquisition. The regulatory domain update and
+channel verification then run asynchronously under wiphy->mtx without
+RTNL, and pending work is cancelled upon wiphy deregistration.
 
-...then this is a poor solution.
+Signed-off-by: Omokefe Emmanuel Onanaroghene <emmaonana18@gmail.com>
+---
+ net/wireless/core.c |  1 +
+ net/wireless/core.h |  1 +
+ net/wireless/reg.c  | 39 ++++++++++++++++++++++++++++++---------
+ net/wireless/reg.h  |  7 +++++++
+ 4 files changed, 39 insertions(+), 9 deletions(-)
 
-And my review agent agreed:
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index cde3ca85494d..3dfbfb0c10f3 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -671,6 +671,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+ 	INIT_WORK(&rdev->sched_scan_res_wk, cfg80211_sched_scan_results_wk);
+ 	wiphy_work_init(&rdev->reg_check_chans_wk, reg_leave_invalid_chans_wk);
+ 	INIT_WORK(&rdev->reg_leave_nan_wk, reg_leave_invalid_nan_wk);
++	wiphy_work_init(&rdev->reg_self_managed_wk, reg_process_self_managed_hint_wk);
+ 	INIT_WORK(&rdev->propagate_radar_detect_wk,
+ 		  cfg80211_propagate_radar_detect_wk);
+ 	INIT_WORK(&rdev->propagate_cac_done_wk, cfg80211_propagate_cac_done_wk);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 6138d207caf4..2b3239d0cf1f 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -116,6 +116,7 @@ struct cfg80211_registered_device {
+ 	struct work_struct sched_scan_res_wk;
+ 	struct wiphy_work reg_check_chans_wk;
+ 	struct work_struct reg_leave_nan_wk;
++	struct wiphy_work reg_self_managed_wk;
+ 
+ 	struct cfg80211_chan_def radar_chandef;
+ 	struct work_struct propagate_radar_detect_wk;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 11665e0a7efc..a0965500d81f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3180,7 +3180,7 @@ static void reg_process_pending_beacon_hints(void)
+ 	spin_unlock_bh(&reg_pending_beacons_lock);
+ }
+ 
+-static void reg_process_self_managed_hint(struct wiphy *wiphy)
++static bool reg_process_self_managed_hint(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 	const struct ieee80211_regdomain *tmp;
+@@ -3188,7 +3188,6 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
+ 	enum nl80211_band band;
+ 	struct regulatory_request request = {};
+ 
+-	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(wiphy);
+ 
+ 	spin_lock(&reg_requests_lock);
+@@ -3197,7 +3196,7 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	if (!regd)
+-		return;
++		return false;
+ 
+ 	tmp = get_wiphy_regdom(wiphy);
+ 	rcu_assign_pointer(wiphy->regd, regd);
+@@ -3217,6 +3216,15 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
+ 		reg_call_notifier(wiphy, &request);
+ 
+ 	nl80211_send_wiphy_reg_change_event(&request);
++	return true;
++}
++
++void reg_process_self_managed_hint_wk(struct wiphy *wiphy, struct wiphy_work *work)
++{
++	lockdep_assert_held(&wiphy->mtx);
++
++	if (reg_process_self_managed_hint(wiphy))
++		reg_check_channels();
+ }
+ 
+ static void reg_process_self_managed_hints(void)
+@@ -3226,12 +3234,17 @@ static void reg_process_self_managed_hints(void)
+ 	ASSERT_RTNL();
+ 
+ 	for_each_rdev(rdev) {
+-		guard(wiphy)(&rdev->wiphy);
++		bool has_hint;
+ 
+-		reg_process_self_managed_hint(&rdev->wiphy);
+-	}
++		spin_lock(&reg_requests_lock);
++		has_hint = rdev->requested_regd;
++		spin_unlock(&reg_requests_lock);
+ 
+-	reg_check_channels();
++		if (!has_hint)
++			continue;
++
++		wiphy_work_queue(&rdev->wiphy, &rdev->reg_self_managed_wk);
++	}
+ }
+ 
+ static void reg_todo(struct work_struct *work)
+@@ -4110,8 +4123,8 @@ int regulatory_set_wiphy_regd_sync(struct wiphy *wiphy,
+ 		return ret;
+ 
+ 	/* process the request immediately */
+-	reg_process_self_managed_hint(wiphy);
+-	reg_check_channels();
++	if (reg_process_self_managed_hint(wiphy))
++		reg_check_channels();
+ 	return 0;
+ }
+ EXPORT_SYMBOL(regulatory_set_wiphy_regd_sync);
+@@ -4144,9 +4157,17 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
+ 
+ void wiphy_regulatory_deregister(struct wiphy *wiphy)
+ {
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 	struct wiphy *request_wiphy = NULL;
+ 	struct regulatory_request *lr;
+ 
++	spin_lock(&reg_requests_lock);
++	kfree(rdev->requested_regd);
++	rdev->requested_regd = NULL;
++	spin_unlock(&reg_requests_lock);
++
++	wiphy_work_cancel(wiphy, &rdev->reg_self_managed_wk);
++
+ 	lr = get_last_request();
+ 
+ 	if (!reg_dev_ignore_cell_hint(wiphy))
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index c587079ead8f..4cfac05c6178 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -194,6 +194,13 @@ void reg_leave_invalid_chans_wk(struct wiphy *wiphy, struct wiphy_work *work);
+  */
+ void reg_leave_invalid_nan_wk(struct work_struct *work);
+ 
++/**
++ * reg_process_self_managed_hint_wk - process self-managed hint for a wiphy
++ * @wiphy: the wiphy to process
++ * @work: the work struct
++ */
++void reg_process_self_managed_hint_wk(struct wiphy *wiphy, struct wiphy_work *work);
++
+ extern const u8 shipped_regdb_certs[];
+ extern unsigned int shipped_regdb_certs_len;
+ extern const u8 extra_regdb_certs[];
+-- 
+2.43.0
 
-- Initializing the locks unconditionally at the top of ath11k_cfr_init()
-before the early-exit check would work mechanically, but it's wrong
-semantically — callers should not need to reason about which subset of struct
-fields is safe to use at any given time.
-
-It also ruled out:
-- Guarding the call site in mac.c with a capability check would duplicate the
-firmware/hw-support logic outside cfr.c, and there could be other callers in
-the future.
-- Moving the locks to ath11k_ar_init() would be over-engineering; cfr->lock
-only protects CFR state.
-
-And concluded:
-
-The fix: guard ath11k_cfr_decrement_peer_count() with cfr->enabled
-
-In cfr.c, add an early return at the top of ath11k_cfr_decrement_peer_count():
-
-void ath11k_cfr_decrement_peer_count(struct ath11k *ar,
-                                     struct ath11k_sta *arsta)
-{
-      struct ath11k_cfr *cfr = &ar->cfr;
-
-      if (!cfr->enabled)
-              return;
-
-      spin_lock_bh(&cfr->lock);
-
-      if (arsta->cfr_capture.cfr_enable)
-              cfr->cfr_enabled_peer_cnt--;
-
-      spin_unlock_bh(&cfr->lock);
-}
-
-Why this is the right approach:
-
-- cfr->enabled is set to true only after spin_lock_init(&cfr->lock) succeeds
-and the ring allocation succeeds (cfr.c:997). It stays false in all early-exit
-paths: the firmware/hardware capability check at line 959, the
-ath11k_dbring_get_cap() failure continue at line 970, and the ring alloc
-failure at line 991.
-- The check is already used analogously at line 937 in the relay flush path,
-so it's an established pattern in this file.
-- This avoids touching ath11k_cfr_init() or the call site in mac.c, keeping
-the fix minimal and localized to the function that has the precondition.
-
-/jeff
