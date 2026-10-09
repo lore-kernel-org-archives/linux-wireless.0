@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4BCC4F55C6
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 18:14:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C724F55DD
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 18:14:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791569665; cv=none; b=U4BnynEE0ID+ro441fM9UQ19SYhwvzA880rRFRUClRGW+qbpWT3YALDbMEgHmuK+gGWnQxWLe0xZNBS58tKoopdaCXBN3PmxkrSZrVRDnCEY5wgtyHc+7tTYpVKkfJddmvpgRC5fMjeJIf9rOYWBbU5B+PVbSvJyZbGX9I5nivU=
+	t=1791569666; cv=none; b=pw2Gimjhuum8EhjGNUTsQ5BPRjhaqtH534lT0WybqbwYktZc6Av7WxsHrRKszjQ2qnhbjYSdTQl7jlHtkR7DLK0q+ZoCWJDWLUhos4HrsvGJVKoVUNmnbBUSFxmDSIitJ69fZ2Zi9GwzExVv8tM8/dfyu9uWU5WO91kdm5dGD14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791569665; c=relaxed/simple;
-	bh=LP0I1sydY/SqqLim/lVj5UK0hjqFeywyheRTLWwIKI8=;
+	s=arc-20240116; t=1791569666; c=relaxed/simple;
+	bh=2ATuOEv6Hw5N+AzVi+8a6CmQGRQAWctHBYF72lh0A0M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ApnuJ3nBBrypQOil5gklcSc9bMlV3X+K7+CoHNpsDFKytObIVVCWFlrqKUvICWuwLG3GgYIUahRt9wcDvIgCf1bMOhuUa5Vg0msk1pV6Vh1Q0RbOot2ZkSxRoDeaWgBK8QVvmZL25BLqS7MZ2n/R/nlulImmx29gX+weSabmODU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=jVxhG4oV; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=HHnO2ojZV1AginovqcH2R5kta9iEHYPf8YFJpLK4yIcqo7IImKfvBodAoxcXUw9mUrsP2LWCYFTCx4RJMkvJBuVzQQado3HjSU5cJxK0Tz2INARs25BXaUr+rLbxbi5USFR+kH8sODQ5f8PxesfEuT34iXIy2jL+AxgiyiIIj1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=N3+Okwp7; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="jVxhG4oV"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="N3+Okwp7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Hxc/6XeKYkuD0JTT65ENV7qdAq+L9jRNNXuBOqs+09c=;
-	t=1791569663; x=1792779263; b=jVxhG4oVZHrPumTDega8Sswz5xOwuRbW6w+nwDLLJogAJ2x
-	4AWqMx1Wfz5kJnOJq4Q2ShsdW+SmmuiN+ziANPLo7wNlU9K3YemjJaJoLaxbbwsidbFANXcoORlv9
-	mDYsBd6ZkX2tND4mV8F1uUBnI8Xvcw24rAN4FNlgVHa/QnoHyWV69SpYpIagTJwjlIdv/q8FIy+56
-	IZzCGB4RhPPfKz28Q7OjiNvnFWCu4IXjUg4I5tPaURFGAViEpfBlflUDnYdVMBDAPZrgqMWICzhDB
-	Na2Sf7OQ0q4SH5kOv9AjTlY8sO3UjSEZ04RWW9nkOZcwWgbMtl32Q34m9K6fmKYA==;
+	Resent-Cc:Resent-Message-ID; bh=hEvRP2h5yvdrKT+VH7dfct2zj6xzZ8vVAoT/fvlMYl4=;
+	t=1791569664; x=1792779264; b=N3+Okwp7V2FGh5HyYTr4RtPGfwcApnrUp9d2vbgTWr8TnMa
+	q7t7gyoP2yztuF/jiXLRqLpByfrF5qyEghKqjwoMS/AynRDAM29P3gvYni8yg+hgeX7h/SF9peO+R
+	nD3lQyIp21L+uJggub7bVk70s5+7XDgt3EQitNvAXWanoEMLiRFLWnzu2F3ExrhVvXB2XqMAaZzMh
+	VFBXsgAib1cZCvEhlUX5h/2/OLKlJhHZimWUO5wcawCigIyIyXD1oCIovdxlHAtiSaisX5oXDvfxa
+	NpiofpnZy9tPQOj7fGKYr6zUjnP6P2L4A4E6YYZrpvjgTe/eYQKLU/nlLC0t+LaQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFF6q-0000000AtGH-2tVR;
-	Fri, 09 Oct 2026 20:14:20 +0200
+	id 1xFF6r-0000000AtGH-0uUl;
+	Fri, 09 Oct 2026 20:14:21 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 02/17] wifi: mac80211: protect AP template pointers with a spinlock
-Date: Fri,  9 Oct 2026 20:10:01 +0200
-Message-ID: <20261009201417.f9414c150e5d.Iba8a15c4d37e441642b6df68c33ef8c97340e9a9@changeid>
+Subject: [PATCH wireless-next 03/17] wifi: mac80211: refactor beacon allocation
+Date: Fri,  9 Oct 2026 20:10:02 +0200
+Message-ID: <20261009201417.ba48af051dfa.If468a87e4c71f8fe8d0f467525a86e7921496e9a@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261009181416.335754-19-johannes@sipsolutions.net>
 References: <20261009181416.335754-19-johannes@sipsolutions.net>
@@ -50,229 +50,182 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The AP's beacon, presp etc. templates are only updated under
-wiphy mutex right now. Prepare for being able to update them
-without the wiphy mutex by using a (per-link) spinlock for
-them.
+Refactor allocating/filling beacon data to a new function,
+so we can reuse it for lockless beacon updates. Also split
+out the bssid_indicator calculation, lockless updates will
+need to ensure it didn't change.
 
+Assisted-by: LLM
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         | 66 +++++++++++++-------------------------
- net/mac80211/ieee80211_i.h | 18 +++++++++++
- net/mac80211/link.c        |  1 +
- 3 files changed, 42 insertions(+), 43 deletions(-)
+ net/mac80211/cfg.c | 127 +++++++++++++++++++++++++--------------------
+ 1 file changed, 71 insertions(+), 56 deletions(-)
 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d0d14f621588..08088a2656c7 100644
+index 08088a2656c7..0b124b04003e 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1123,13 +1123,11 @@ ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 			 const struct ieee80211_color_change_settings *cca,
- 			 struct ieee80211_link_data *link)
- {
--	struct probe_resp *new, *old;
-+	struct probe_resp *new;
- 
- 	if (!resp || !resp_len)
- 		return 1;
- 
--	old = sdata_dereference(link->u.ap.probe_resp, sdata);
--
- 	new = kzalloc(sizeof(struct probe_resp) + resp_len, GFP_KERNEL);
- 	if (!new)
- 		return -ENOMEM;
-@@ -1144,9 +1142,7 @@ ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	else if (cca)
- 		new->cntdwn_counter_offsets[0] = cca->counter_offset_presp;
- 
--	rcu_assign_pointer(link->u.ap.probe_resp, new);
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.probe_resp, new);
- 
- 	return 0;
+@@ -1483,52 +1483,16 @@ static void ieee80211_update_ap_bandwidth(struct ieee80211_link_data *link,
+ 	ieee80211_recalc_chanctx_min_def(local, chanctx);
  }
-@@ -1157,7 +1153,7 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
- 					struct ieee80211_bss_conf *link_conf,
- 					u64 *changed)
+ 
+-static int
+-ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+-			struct ieee80211_link_data *link,
+-			struct cfg80211_beacon_data *params,
+-			const struct ieee80211_csa_settings *csa,
+-			const struct ieee80211_color_change_settings *cca,
+-			u64 *changed)
++static struct beacon_data *
++ieee80211_alloc_beacon(struct cfg80211_mbssid_elems *mbssid,
++		       struct cfg80211_rnr_elems *rnr,
++		       int head_len, int tail_len)
  {
--	struct fils_discovery_data *new, *old = NULL;
-+	struct fils_discovery_data *new = NULL;
- 	struct ieee80211_fils_discovery *fd;
+-	struct cfg80211_mbssid_elems *mbssid = NULL;
+-	struct cfg80211_rnr_elems *rnr = NULL;
+-	struct beacon_data *new, *old;
+-	int new_head_len, new_tail_len;
+-	int size, err;
++	struct beacon_data *new;
++	int size;
+ 	u8 *pos;
+-	u64 _changed = BSS_CHANGED_BEACON;
+-	struct ieee80211_bss_conf *link_conf = link->conf;
+ 
+-	old = sdata_dereference(link->u.ap.beacon, sdata);
+-
+-	/* Need to have a beacon head if we don't have one yet */
+-	if (!params->head && !old)
+-		return -EINVAL;
+-
+-	/* new or old head? */
+-	if (params->head)
+-		new_head_len = params->head_len;
+-	else
+-		new_head_len = old->head_len;
+-
+-	/* new or old tail? */
+-	if (params->tail || !old)
+-		/* params->tail_len will be zero for !params->tail */
+-		new_tail_len = params->tail_len;
+-	else
+-		new_tail_len = old->tail_len;
+-
+-	size = sizeof(*new) + new_head_len + new_tail_len;
+-
+-	/* new or old multiple BSSID elements? */
+-	if (params->mbssid_ies) {
+-		mbssid = params->mbssid_ies;
+-		rnr = params->rnr_ies;
+-	} else if (old && old->mbssid_ies) {
+-		mbssid = old->mbssid_ies;
+-		rnr = old->rnr_ies;
+-	}
++	size = sizeof(*new) + head_len + tail_len;
+ 
+ 	if (mbssid) {
+ 		size += struct_size(new->mbssid_ies, elem, mbssid->cnt);
+@@ -1540,9 +1504,7 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	new = kzalloc(size, GFP_KERNEL);
+ 	if (!new)
+-		return -ENOMEM;
+-
+-	/* start filling the new info now */
++		return NULL;
  
  	/*
-@@ -1175,20 +1171,15 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
- 	fd->min_interval = params->min_interval;
- 	fd->max_interval = params->max_interval;
- 
--	old = sdata_dereference(link->u.ap.fils_discovery, sdata);
- 	if (params->tmpl && params->tmpl_len) {
- 		new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
- 		if (!new)
- 			return -ENOMEM;
- 		new->len = params->tmpl_len;
- 		memcpy(new->data, params->tmpl, params->tmpl_len);
--		rcu_assign_pointer(link->u.ap.fils_discovery, new);
--	} else {
--		RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
+ 	 * pointers go into the block we allocated, the order in memory is
+@@ -1565,11 +1527,11 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
  	}
  
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.fils_discovery, new);
+ 	new->head = pos;
+-	new->head_len = new_head_len;
+-	pos += new_head_len;
++	new->head_len = head_len;
++	pos += head_len;
+ 	new->tail = pos;
+-	new->tail_len = new_tail_len;
+-	pos += new_tail_len;
++	new->tail_len = tail_len;
++	pos += tail_len;
  
- 	*changed |= BSS_CHANGED_FILS_DISCOVERY;
- 	return 0;
-@@ -1201,7 +1192,7 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_bss_conf *link_conf,
- 				     u64 *changed)
- {
--	struct unsol_bcast_probe_resp_data *new, *old = NULL;
-+	struct unsol_bcast_probe_resp_data *new = NULL;
- 
- 	/*
- 	 * This configuration is only applicable to transmitting BSSes.
-@@ -1216,21 +1207,15 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- 
- 	link_conf->unsol_bcast_probe_resp_interval = params->interval;
- 
--	old = sdata_dereference(link->u.ap.unsol_bcast_probe_resp, sdata);
--
- 	if (params->tmpl && params->tmpl_len) {
- 		new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
- 		if (!new)
- 			return -ENOMEM;
- 		new->len = params->tmpl_len;
- 		memcpy(new->data, params->tmpl, params->tmpl_len);
--		rcu_assign_pointer(link->u.ap.unsol_bcast_probe_resp, new);
--	} else {
--		RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
+ 	/* copy in optional mbssid_ies */
+ 	if (mbssid) {
+@@ -1577,14 +1539,67 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 						    mbssid);
+ 		if (rnr)
+ 			ieee80211_copy_rnr_beacon(pos, new->rnr_ies, rnr);
+-		/* update bssid_indicator */
+-		if (new->mbssid_ies->cnt && new->mbssid_ies->elem[0].len > 2)
+-			link_conf->bssid_indicator =
+-					*(new->mbssid_ies->elem[0].data + 2);
+-		else
+-			link_conf->bssid_indicator = 0;
  	}
  
--	if (old)
--		kfree_rcu(old, rcu_head);
-+	ap_tmpl_replace(link, link->u.ap.unsol_bcast_probe_resp, new);
- 
- 	*changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
- 	return 0;
-@@ -1649,12 +1634,9 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 		_changed |= BSS_CHANGED_FTM_RESPONDER;
- 	}
- 
--	rcu_assign_pointer(link->u.ap.beacon, new);
-+	ap_tmpl_replace(link, link->u.ap.beacon, new);
- 	sdata->u.ap.active = true;
- 
--	if (old)
--		kfree_rcu(old, rcu_head);
--
- 	ieee80211_update_ap_bandwidth(link, params);
- 
- 	*changed |= _changed;
-@@ -1956,11 +1938,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 
- 	err = drv_start_ap(sdata->local, sdata, link_conf);
- 	if (err) {
--		old = sdata_dereference(link->u.ap.beacon, sdata);
--
--		if (old)
--			kfree_rcu(old, rcu_head);
--		RCU_INIT_POINTER(link->u.ap.beacon, NULL);
-+		ap_tmpl_replace(link, link->u.ap.beacon, NULL);
- 
- 		if (ieee80211_num_beaconing_links(sdata) == 0)
- 			sdata->u.ap.active = false;
-@@ -2088,16 +2066,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	old_beacon = sdata_dereference(link->u.ap.beacon, sdata);
--	if (!old_beacon)
-+	if (!sdata_dereference(link->u.ap.beacon, sdata))
- 		return -ENOENT;
--	old_probe_resp = sdata_dereference(link->u.ap.probe_resp,
--					   sdata);
--	old_fils_discovery = sdata_dereference(link->u.ap.fils_discovery,
--					       sdata);
--	old_unsol_bcast_probe_resp =
--		sdata_dereference(link->u.ap.unsol_bcast_probe_resp,
--				  sdata);
- 	old_s1g_short_beacon =
- 		sdata_dereference(link->u.ap.s1g_short_beacon, sdata);
- 
-@@ -2118,10 +2088,20 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	/* remove beacon and probe response */
--	RCU_INIT_POINTER(link->u.ap.beacon, NULL);
--	RCU_INIT_POINTER(link->u.ap.probe_resp, NULL);
--	RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
--	RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
-+	scoped_guard(spinlock, &link->ap_tmpl_lock) {
-+		old_beacon = ap_tmpl_dereference(link, link->u.ap.beacon);
-+		old_probe_resp = ap_tmpl_dereference(link,
-+						     link->u.ap.probe_resp);
-+		old_fils_discovery =
-+			ap_tmpl_dereference(link, link->u.ap.fils_discovery);
-+		old_unsol_bcast_probe_resp =
-+			ap_tmpl_dereference(link,
-+					    link->u.ap.unsol_bcast_probe_resp);
-+		RCU_INIT_POINTER(link->u.ap.beacon, NULL);
-+		RCU_INIT_POINTER(link->u.ap.probe_resp, NULL);
-+		RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
-+		RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
++	return new;
++}
++
++static u8 ieee80211_beacon_bssid_indicator(struct beacon_data *beacon)
++{
++	if (beacon->mbssid_ies->cnt && beacon->mbssid_ies->elem[0].len > 2)
++		return *(beacon->mbssid_ies->elem[0].data + 2);
++	return 0;
++}
++
++static int
++ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
++			struct ieee80211_link_data *link,
++			struct cfg80211_beacon_data *params,
++			const struct ieee80211_csa_settings *csa,
++			const struct ieee80211_color_change_settings *cca,
++			u64 *changed)
++{
++	struct cfg80211_mbssid_elems *mbssid = params->mbssid_ies;
++	struct cfg80211_rnr_elems *rnr = mbssid ? params->rnr_ies : NULL;
++	struct beacon_data *new, *old;
++	int new_head_len, new_tail_len;
++	int err;
++	u64 _changed = BSS_CHANGED_BEACON;
++	struct ieee80211_bss_conf *link_conf = link->conf;
++
++	old = sdata_dereference(link->u.ap.beacon, sdata);
++
++	/* Need to have a beacon head if we don't have one yet */
++	if (!params->head && !old)
++		return -EINVAL;
++
++	/* new or old head? */
++	if (params->head)
++		new_head_len = params->head_len;
++	else
++		new_head_len = old->head_len;
++
++	/* new or old tail? */
++	if (params->tail || !old)
++		/* params->tail_len will be zero for !params->tail */
++		new_tail_len = params->tail_len;
++	else
++		new_tail_len = old->tail_len;
++
++	/* new or old multiple BSSID elements? */
++	if (!mbssid && old && old->mbssid_ies) {
++		mbssid = old->mbssid_ies;
++		rnr = old->rnr_ies;
 +	}
- 	RCU_INIT_POINTER(link->u.ap.s1g_short_beacon, NULL);
- 	kfree_rcu(old_beacon, rcu_head);
- 	if (old_probe_resp)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b571019bd05a..b16ff6a4aacf 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1152,6 +1152,9 @@ struct ieee80211_link_data {
- 		struct ieee80211_link_data_ap ap;
- 	} u;
- 
-+	/* protects replacing the u.ap template pointers, also without wiphy mutex */
-+	spinlock_t ap_tmpl_lock;
 +
- 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
- 
- 	struct ieee80211_bss_conf *conf;
-@@ -1166,6 +1169,21 @@ struct ieee80211_link_data {
- #endif
- };
- 
-+#define ap_tmpl_dereference(link, p)					\
-+	rcu_dereference_protected(p, lockdep_is_held(&(link)->ap_tmpl_lock))
++	new = ieee80211_alloc_beacon(mbssid, rnr, new_head_len, new_tail_len);
++	if (!new)
++		return -ENOMEM;
 +
-+#define ap_tmpl_replace(link, p, new)					\
-+do {									\
-+	typeof(ap_tmpl_dereference(link, p)) __old;			\
-+									\
-+	spin_lock(&(link)->ap_tmpl_lock);				\
-+	__old = rcu_replace_pointer(p, new,				\
-+				    lockdep_is_held(&(link)->ap_tmpl_lock));\
-+	spin_unlock(&(link)->ap_tmpl_lock);				\
-+	if (__old)							\
-+		kfree_rcu(__old, rcu_head);				\
-+} while (0)
++	if (new->mbssid_ies)
++		link_conf->bssid_indicator =
++			ieee80211_beacon_bssid_indicator(new);
 +
- struct ieee80211_sub_if_data {
- 	struct list_head list;
- 
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 931950a10508..ce1c95b40cd9 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -126,6 +126,7 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
- 	link->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 	link->user_power_level = sdata->local->user_power_level;
- 	link_conf->txpower = INT_MIN;
-+	spin_lock_init(&link->ap_tmpl_lock);
- 
- 	wiphy_work_init(&link->csa.finalize_work,
- 			ieee80211_csa_finalize_work);
+ 	if (csa) {
+ 		new->cntdwn_current_counter = csa->count;
+ 		memcpy(new->cntdwn_counter_offsets, csa->counter_offsets_beacon,
 -- 
 2.56.0
 
