@@ -1,97 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5656F3CA499;
-	Fri,  9 Oct 2026 22:39:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE633DAAAF
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 23:13:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791585557; cv=none; b=nBUMaCPn8kloctQhpFXNVrZAxQUSzZbBtmBNLVjkwLB3BSCJvINVNDpYD8slMF6dXz0OlQb2vFPi5NCUFOqC0TxP0Wlcccm/JnzJAAObaQJkc15QMdEtFjVFpNB641ZLgyUjIe2/XEAb6GL07i3P4NEnNQZlXhtdTcTTZDmPBo8=
+	t=1791587591; cv=none; b=ROg0hJ2cv49cWjJad7Qu7iifZF2hkQAP2HGsJ28zeXUrjDYUS3Wwt8cX5veP9UwFaKxKjebKbUKmMJgJNCY3Zfn6kC+HaoZmVxxxB703OmndyAyC7/wvLz2VtW7nAa9pU7ciJh1OZ6ujHKRWfSonDWZg58ahT8JcR78GFqWhZ8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791585557; c=relaxed/simple;
-	bh=KWpQFquq7avx1bUklcWT3BnzeA5u9h49N5vuVBzTD3k=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=tsRzWw47Z01jG6J8qvQaTG72IVq39BGr+VSFED5Nb88YKadumJRLqOEqWrB5HQshkhVhVibyFCFU6jrYw8vg1+OQa3XpL7nmxZVdn0hOG+ayyOu6lQj8bFWj2ZmbDyaz7GFXug+wZLEOi2BMGY7IaBvh9Ln83ZYVuTACDlnBMGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GUeJCHz8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791587591; c=relaxed/simple;
+	bh=s83eBtjs3CTrQfA5p5bneQvSXUthPyRrCQt/cuRlAWw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f3cMZhYsPCVivHfuvTokWl9EGqIN6ciODeV3OfXkvzPo/9jGIZidznkhqjT2KTh+IpXh1YQibDrvMs/zf3TCniXuMfQGQ/DW5w4ciegYfmXYmyoFxqJvRVhvbJAXKhGCnGcUoOM2tWh6Xxvdw1+6LRy1WwwbOYp901c6OLPJktE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PSMdQkWx; arc=none smtp.client-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUeJCHz8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B41E5C2BCF4;
-	Fri,  9 Oct 2026 22:39:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791585556;
-	bh=KWpQFquq7avx1bUklcWT3BnzeA5u9h49N5vuVBzTD3k=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=GUeJCHz8iwxZtfLlgszI6BlYxL/MqgIC/DQ098sJ5RC1afr9zUMkk1uD1OMLuduzp
-	 UJCmdnbgRY7rfo76x3fha8xm4hJzz4T4RQx9+g9ObSTmeq9xkunStQHUUjq7Q7B5+t
-	 swFfi3Cni8TDsaOdpA7nTIvjmsgpVdLGp9CErnPCgLU+9wAoIxSp0pPELUCwzYEESO
-	 EViwsk9ssccI33MhB3+exEx8lM8M2ugCSmFnOeyxrxB3wUcOD3YPtzLX3qaQmNhjMn
-	 7qE3m1kzpjhsj4XPBLP0iGfYGVJhiZ9YrtpF7fChBgOyChmL3eW4McsdxwZjByrBwp
-	 UqmeHld5Pw3Sg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E54ECA601E;
-	Fri,  9 Oct 2026 22:39:16 +0000 (UTC)
-From: Kim Wooseok via B4 Relay <devnull+5mghybrid.khu.ac.kr@kernel.org>
-Subject: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
-Date: Sat, 10 Oct 2026 07:39:15 +0900
-Message-Id: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PSMdQkWx"
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-351767ef18cso561666eec.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 16:13:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791587588; x=1792192388; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0dVfqbuQS0jFBu7gqbbTWIDQC9KN8X3iAuJsotVEqB4=;
+        b=PSMdQkWx7b2coIGL2T13rtqUvxtq6ErCgJ9yg8LzK9+P/FdY3r442He4UmVICfIfdA
+         g5XP6k9KZZptBJMUPuezbZ2CL0GJeLg4egTE6WTvCox9J76l3yshdzINgY3ZxGbfyF0W
+         E+FNYxqA9TgRIC02fAWiGYnOhxVHjfnpCx5ToreerP1IRxFRHnBhOOrbFCVRt2bVq+C2
+         h7+l+8gegRwPKCpOcpZQadN3W5Lvv9Ld9rBi4S/VDeDLek2jQ3KHsX5al/TCx6a2oc7T
+         nTKYiyc0YUV2FApXiqmnF1zgFFs0q26b3PvwC8iWB9BSDmxIlWuiCc89eShw8Vf1Akkw
+         4rEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791587588; x=1792192388;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0dVfqbuQS0jFBu7gqbbTWIDQC9KN8X3iAuJsotVEqB4=;
+        b=wlxusMJ4+7Ky5l4QdGWv6n1qd4vv5270w0To0LeUXO9/6gRe3SChoE7dN3fbht56dn
+         s6kvk51v/n/5nh7a0xy4p8otD+8hmKfUn4WK7A/YNIwgfChJBjs59NU0DEry/1EUoYs5
+         qrVOUqa3vun+s2WR7zgTaA1TmZrcTGpoHw93HNmItDRjxYe70vZB5a3XiOMjxGdv3SO5
+         E3v/QwSJww/63hTpaxKGcflPfxoxEsEe7Apm/HGAobnRykYTbKU0ilYWufkChKl6+4bw
+         S9mo9YXW6K0WUTUrcyevDXSRus14KiVZ3SCTcPe3s4lASTv9fWLBtWp4eQvZnGmcwv2i
+         DKuQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwUxyX4tiyGLMnFX4W0l5FNT1we1VWTkX0/3m9ND8uigTo0Mtkf3H+wS1079znc92d2GWedEIwzFiIaJ0v89A==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLyIIAZZEV+Qej5ibnVYPIaMBSfgCo8dgHP8IsIz1JQO8UnVXdA
+	46OPH9W+nPNz3jB9R55y1nMVxI8bms2PKWC6b0oYxZPO/NGatghZWvS7
+X-Gm-Gg: AYBFou3cok+BfOHb7xvOfBjTOTzcPUCm3GA9WTxl1sM7/59sh08zhGkDdgtQTXSg+6O
+	ynlcf4K+5xYMQ1vPxOB6Fvc1p1Az4JShKbfZNt0lEURi/sG23ETsyMrUZZnqnM9v4YoGvDN7tAQ
+	8nYgDlCYco+jcR6oMqVdRsR+P5YEC/Ja0fV+yUTBBve6/tvVDtULtFae/bKzuASGqWqJDjVP7fW
+	tlXk9PhCjIUes7VfUKzZuFlwD2uL/DXLDI2MrG40FT8MvEk98bSmkc0oMph7jqIEIyPl5UK+sR9
+	vJSaCY+wAKKYrxhsMw+zU9RI0PJbv17QHzG2FubJMuY/JtIAWgn3Oq9mdE1aAEXHRM0dYUEGtzo
+	8Z2zm0O5lQtXN7qepC7gdZ/QBponZ2mu0UHDXPkN6CrtR5jFemQ0GRZKkKIxBwIUWNdX+z7k7Ri
+	0dZyF6kuKg/Y8yF6m0Vw95fWDe71+VJsxe5uY3mLRU+DK62cuNtiaby55Gr770woMMfvvt2z9AI
+	wmYKgw4PcPTDl4tElBVV9E09avtB9OVNkHqoGkCMt4Cfnpjt80=
+X-Received: by 2002:a05:7301:18a3:b0:353:8122:27b4 with SMTP id 5a478bee46e88-35381226e68mr4262353eec.18.1791587588247;
+        Fri, 09 Oct 2026 16:13:08 -0700 (PDT)
+Received: from google.com ([2a00:79e0:2ebe:8:b7ea:19aa:c6f7:8c02])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca6d202sm8687858eec.13.2026.10.09.16.13.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 16:13:07 -0700 (PDT)
+Date: Fri, 9 Oct 2026 16:13:04 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>, 
+	Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] wifi: carl9170: revert broken devres conversions
+ for input and hwrng
+Message-ID: <aslvBb9VbMvnHmHi@google.com>
+References: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
+ <5771235e-fa91-402a-b5d2-ebb153872c26@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/z2MwQ7CIBBEf6XZs5tAQ1r1V4wHoFuLUTS7oCRN/
- 13QxOPMvHkrCHEggWO3AtMrSHjEGvSuA7/YeCEMU83Qq37QSivkdNuXUjJmcTjdLfqDmc04kFZ
- mhHp7Ms2hfJUn4PTGSCXB+bdIdlfyqRkb66wQOrbRL63609v2AbDrgCuZAAAA
-X-Change-ID: 20261010-rtl8xxxu-usb-dma-c94f476e1047
-To: linux-wireless@vger.kernel.org
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, 
- Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
- Kim Wooseok <5mghybrid@khu.ac.kr>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791585555; l=1272;
- i=5mghybrid@khu.ac.kr; s=kernel-20260913; h=from:subject:message-id;
- bh=KWpQFquq7avx1bUklcWT3BnzeA5u9h49N5vuVBzTD3k=;
- b=YCKDuTM5arzlyP5KChB/r3Xqskn7TypP3HRG1TFZaZUbljeb1n2LZ79C27gogbLTxln71VstU
- HvTbYg4enNeDdWP8kN2+SqY1cfmMUtdjCJgpRfVMTA0NcnizT/goeO1
-X-Developer-Key: i=5mghybrid@khu.ac.kr; a=ed25519;
- pk=1az/6lC8Tmd6BcvyarPc8FWoSxsV/WRr5NLs1v+kjlE=
-X-Endpoint-Received: by B4 Relay for 5mghybrid@khu.ac.kr/kernel-20260913
- with auth_id=1028
-X-Original-From: Kim Wooseok <5mghybrid@khu.ac.kr>
-Reply-To: 5mghybrid@khu.ac.kr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5771235e-fa91-402a-b5d2-ebb153872c26@gmail.com>
 
-I encountered reconnect failures on four Raspberry Pis in my project.
-While investigating the failure on a Raspberry Pi 5 after an AP power
-cycle, I found that RF_MODE had been corrupted. Restoring its initialized
-value restored reception without reloading the driver.
+Hi Christian,
 
-The USB register buffer shared a cache line with CPU-written mutex state.
-This patch allocates the buffer separately while keeping the existing
-register access and locking.
+On Fri, Oct 09, 2026 at 09:37:36PM +0200, Christian Lamparter wrote:
+> On 10/8/26 11:39 AM, Dmitry Torokhov wrote:
+> > Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
+> > 87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
+> > the HWRNG and WPS button input device registrations in carl9170 to
+> > devres attached to the parent struct usb_device (&ar->udev->dev) and
+> > removed explicit unregistration from carl9170_unregister().
+> > 
+> > In carl9170_usb_disconnect(), the driver calls carl9170_unregister()
+> > followed immediately by carl9170_free(), which frees struct ar9170
+> > inside the interface .disconnect() callback before devres_release_all()
+> > runs. Furthermore, devres on &ar->udev->dev is not released on
+> > interface unbind or registration failure in carl9170_register().
+> > As a result, both the WPS input device (whose input->name and
+> > input->phys point into freed memory) and the embedded struct hwrng
+> > remain registered after struct ar9170 has been freed, leading to
+> > use-after-free bugs.
+>
+> Ok, so you just reworded your patch? Sight...
 
-I tested the separate-buffer approach on the Pi's Linux 6.18.34 kernel.
-During repeated scan requests, wireless ping traffic kept receiving
-replies and the RF_MODE and HSSI values stayed stable. I also built the
-submission's rtl8xxxu driver for ARM64 with W=1; sparse reported no
-diagnostics in core.c.
+Yes, as I promised I would.
 
-Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
+> looking at the WPS input
+>
+> |        input->name = ar->wps.name;
+> |        input->phys = ar->wps.phys;
+> |        input->id.bustype = BUS_USB;
+> |        input->dev.parent = &ar->hw->wiphy->dev;
+>           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+> the input's dev.parent is set to ar->hw->wiphy->dev and not ar->udev->dev, right?
+> Does this do anything at all? If not, why? The wiphy gets shutdown by
+> ieee80211_unregister() and having the "freeing" stick around after the USB device
+> is gone should not hurt, right?
 
----
-Kim Wooseok (1):
-      wifi: rtl8xxxu: isolate the USB register buffer from CPU state
+devm_input_allocate_device() explicitly states:
 
- drivers/net/wireless/realtek/rtl8xxxu/core.c     | 35 ++++++++++++++++--------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
- 2 files changed, 24 insertions(+), 13 deletions(-)
----
-base-commit: 83de3a16c7b37064a59305040ba9b0f93b832794
-change-id: 20261010-rtl8xxxu-usb-dma-c94f476e1047
+	NOTE: the owner device is set up as parent of input device and
+	users should not override it.
 
-Best regards,
---  
-Kim Wooseok <5mghybrid@khu.ac.kr>
+That is because managed input devices split teardown across two separate
+devres entries: devm_input_allocate_device(dev) registers
+devm_input_device_release() on dev, whereas input_register_device()
+registers devm_input_device_unregister() on input->dev.parent.
 
+Overriding input->dev.parent splits those two actions across different
+devices: if carl9170 is unbound from the USB interface (via sysfs unbind
+or rmmod) without physically unplugging the USB device, or if
+input_register_device() fails, &ar->udev->dev is never unbound and
+devm_input_device_release never runs, leaking struct input_dev and an
+input-core module reference on every unbind/rebind cycle.
 
+I'll look into how to make input core reject such overrides. So far
+there are 4 drivers that do that and I'll fix them up.
+
+Also, using ar->hw->wiphy->dev as the input device's parent has
+its own issues: wiphy devices can be renamed ("iw phy phy0 set name
+...") or moved between network namespaces ("iw phy phy0 set netns ...").
+Because phyX sits under a netns-tagged ieee80211 glue directory whereas
+input_class is not namespace-tagged:
+
+- renaming phyX changes the input device's sysfs path without emitting
+  KOBJ_MOVE uevents for child input/event devices (leaving udev's cached
+  DEVPATH out of date); and
+
+- moving phyX into another netns re-tags the phyX directory to that
+  namespace, turning /sys/class/input/inputN into a dangling symlink
+  in init_net.
+
+> As for the hwrng, wouldn't it make sense to use the wiphy dev there as well?
+> So the whole reverting can be sidestepped by simply going with wiphy dev.
+
+If we do that then unregistering of input device and hwrng will happen
+inside ieee80211_unregister_hw() -> wiphy_unregister() -> device_del(),
+which will hold both global rtnl_lock() and wiphy_lock(). Unregistering
+the HWRNG there stalls global RTNL while hwrng_unregister() waits on
+cleanup_done for any in-flight read to finish, whereas explicit
+carl9170_unregister() tears down both WPS input and HWRNG upfront before
+wiphy_unregister() acquires rtnl_lock() and wiphy_lock().
+
+Until carl9170's own lifecycle (carl9170_alloc()/carl9170_free()) is
+managed via devres on &ar->intf->dev, explicit unregistration in
+carl9170_unregister() is the right way to manage these sub-devices.
+
+Thanks.
+
+-- 
+Dmitry
