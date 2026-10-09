@@ -1,133 +1,88 @@
-Received: from mta0.migadu.com (out-198.mta0.migadu.com [91.218.175.198])
+Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 431DD48820E
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 12:12:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A9C34D598B
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 12:30:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791547952; cv=none; b=LzW9AikJ/ElZIH7rVn1BtzaqEwUh9GOWR6dkf/bTBqK2EDY82k0Yv+HgGAV14h9YxY1jUf+6mLmclqNX5b1tOFjUNMWKuAvMrfw2qMkvYClQAzVZM9lih2fk/xel/XXAGz8eZK2IVkOkh/KzmxUsv8A7gyVLxtwIeetVRD02Wtk=
+	t=1791549050; cv=none; b=LwKYcIIJOGESg3ASf/iDT5bOtZ3lTBigm/C3LwqRceRGEOdTHInSyPjqbJXeWqdASBLuxaQULACqcDASjgglKM1O6uHTKh+KuXBcT6KZ5+BGCzTO9s4RmywIXjWVuoX4rL001hHgQhiXPDM3a2H0saUjcF36xOPgvn7FHmtm2+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791547952; c=relaxed/simple;
-	bh=z2Xci7ePKeBsSgRXq4c9o8tM/YEe7t8RHCiIjm8LIBs=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=E06FruVo6QF2cqHsVSNmKPSmDQR4dWbkXc7J0e/8wAKrUR+qWheS56skRQqf3XKzMTP4kU03Ys8VCX1nucRKROfgfIJgHgR/OGf7EIC/KJfQTZ/Dpmn7v5IKpXYWQ2utodbbgrHJHdxmpvdYO0AXcIs1XuiGjuoxd/CU161sH98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Y2PaYntD; arc=none smtp.client-ip=91.218.175.198
+	s=arc-20240116; t=1791549050; c=relaxed/simple;
+	bh=xVL4GFavCPIhSY+sQODNgo3KmrmxrCIcaev0qZ+6NO4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tY5vEQQwW19NlzJrzumwm/IQvUst0zFwbPgaGftI3ZhYrA5adYzjQNvCtouA8C7rxDge1/u0KArOwZtPZDRpoZq1aLhH/lzCTJ25i+uHVA1QWfPya3ZrD9g9IJn3Xo5kSvqUao8DY32zzxMs8uJEKIouveiQhv1GizoaKCWxpsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=f1d3JJbz; arc=none smtp.client-ip=95.215.58.137
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Y2PaYntD"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="f1d3JJbz"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=z2Xci7ePKeBsSgRXq4c9o8tM/YEe7t8RHCiIjm8LIBs=;
+DKIM-Signature: a=rsa-sha256; bh=xVL4GFavCPIhSY+sQODNgo3KmrmxrCIcaev0qZ+6NO4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791547941; v=1; x=1792152741;
- b=Y2PaYntDO9wdyA2teVqmP9hd4+DR5WsoTQj8spK0PnAA0GvClZd4aKU5dx8SqXY2YEUcPstH
- yxK+Ru3yDB4BFOfEvydAqvfZPwpcTRvN8pXfAYxHsaO4dYQ69Oy82F7tiLxH1ZGjt8hoEUe1jYH
- xCvg0TArUs98NAVQOwJJgNS4=
+ t=1791549044; v=1; x=1792153844;
+ b=f1d3JJbzBM0sVQ9y+pKCZgYlyuQHrcBOdF2IgL3ST2B7704P+tsoqqkSpkdach1Kxlwxfg0X
+ r1eqK7sQ7lypZCqXZjL0ndbziVmQZFsxF7vyXXTZmS9UGhMVixIg4HMjBpXRHckIoVNM7VCYVeX
+ gsnNPwNwFPtVr0Kq4SnWQVi4=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 58b9d102c4600c1e;
-	Fri, 09 Oct 2026 12:12:21 +0000
-X-Mizu-Trace-ID: 58b9d102c4600c1e
+Received: by smtp.migadu.com with ESMTPS id ff963d78d54d91b6;
+	Fri, 09 Oct 2026 12:30:28 +0000
+X-Mizu-Trace-ID: ff963d78d54d91b6
 X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Luka Gejak <luka.gejak@linux.dev>,
+	stable@vger.kernel.org
+Subject: [PATCH rtw-next] wifi: rtw88: sdio: reject oversized RX packets
+Date: Fri,  9 Oct 2026 14:30:22 +0200
+Message-ID: <20261009123022.87787-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 09 Oct 2026 14:12:20 +0200
-Message-Id: <DM0AQQ0P3D7K.1SIDA6SAMC3L2@linux.dev>
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Kalle
- Valo" <kvalo@kernel.org>, "Brian Norris" <briannorris@chromium.org>
-Subject: Re: [PATCH wireless 1/2] wifi: rtw88: program the channel when the
- device is started
-From: "Luka Gejak" <luka.gejak@linux.dev>
-To: "Jeremy Fareau" <jeremy.fareau@gmail.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20261007091225.413-1-jeremy.fareau@gmail.com>
- <20261007091225.413-2-jeremy.fareau@gmail.com>
-In-Reply-To: <20261007091225.413-2-jeremy.fareau@gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed Oct 7, 2026 at 11:12 AM CEST, Jeremy Fareau wrote:
-> The chip is reset by power_off()/power_on(), but mac80211 only calls
-> ieee80211_ops::config() when its own channel state changes.  After a
-> stop/start cycle, such as
->
->     ip link set <dev> down
->     ip link set <dev> up
->
+rtw_sdio_rxfifo_recv() also takes the last-entry path when the descriptor
+claims more data than rx_len. The skb is then passed to rtw_sdio_rx_skb(),
+which calls skb_put() with pkt_len and does not check it against the space
+left, so a bad descriptor can overflow the skb.
 
-I don't think there is need to say what stop/start cycle is in commit
-message.
+Reject the packet when pkt_offset + pkt_len exceeds the bytes left.
 
-> the channel is unchanged from mac80211's point of view, so the radio is
-> never reprogrammed.  The device then listens on whatever channel the
-> hardware came up on while iw reports the configured one, and receives
-> almost nothing.
->
-> Observed with an RTL8814AU (ALFA AWUS1900) in monitor mode on an
-> aarch64 host.  A 25 s capture on channel 6 after a down/up cycle yields
-> 3 frames, and 431 frames as soon as any real channel change is
-> requested.  An RTL8812AU (Linksys WUSB6300) on the same host, the same
-> channel and the same second yields 2438 frames.
->
-> Program the channel in rtw_ops_start(), like rtw_ips_pwr_up() already
-> does when leaving IPS.
->
-> Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-> Assisted-by: LLM
-> Signed-off-by: Jeremy Fareau <jeremy.fareau@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/mac80211.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/=
-wireless/realtek/rtw88/mac80211.c
-> index b01b98d24b0a..827f38390969 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-> +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-> @@ -57,6 +57,17 @@ static int rtw_ops_start(struct ieee80211_hw *hw)
-> =20
->  	mutex_lock(&rtwdev->mutex);
->  	ret =3D rtw_core_start(rtwdev);
-> +
-> +	/* The chip is reset by power_off()/power_on(), but mac80211 only calls
-> +	 * ieee80211_ops::config() when its own channel state changes. After a
-> +	 * stop/start cycle the channel is unchanged from mac80211's point of
-> +	 * view, so the radio would never be reprogrammed and the device would
-> +	 * receive nothing. Program it here, like rtw_ips_pwr_up() already does
-> +	 * when leaving IPS.
-> +	 */
+Fixes: 65371a3f14e7 ("wifi: rtw88: sdio: Add HCI implementation for SDIO based chipsets")
+Cc: stable@vger.kernel.org
+Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+---
+ drivers/net/wireless/realtek/rtw88/sdio.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-We don't use that comment style anymore. Change it to:
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index dc2fd0f8f9ff..3a86fdcde367 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -1389,6 +1389,14 @@ static void rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
+ 		curr_pkt_len = ALIGN(pkt_offset + pkt_stat.pkt_len,
+ 				     RTW_SDIO_DATA_PTR_ALIGN);
+ 
++		if (unlikely(pkt_offset + pkt_stat.pkt_len > rx_len)) {
++			rtw_dbg(rtwdev, RTW_DBG_SDIO,
++				"oversized RX packet: %u, %u bytes left\n",
++				pkt_offset + pkt_stat.pkt_len, rx_len);
++			dev_kfree_skb_any(skb);
++			return;
++		}
++
+ 		if ((curr_pkt_len + pkt_desc_sz) >= rx_len) {
+ 			/* Use the original skb (with it's adjusted offset)
+ 			 * when processing the last (or even the only) entry to
+-- 
+2.55.0
 
-/*
- * text
- * text
- */
-
-Also that comment is rather extensive, maybe shorten it to something
-like:
-
-/*
- * The chip is reset by power_off() and power_on(), but mac80211 won't
- * call config() after stop/start since its channel state is unchanged.
- * Reprogram the channel here, as rtw_ips_pwr_up() does.
- */
-
-> +	if (!ret && hw->conf.chandef.chan)
-> +		rtw_set_channel(rtwdev);
-> +
->  	mutex_unlock(&rtwdev->mutex);
-> =20
->  	return ret;
-
-Besides that I noticed that there are many double spaces after
-punctuation in commit message, so please fix that too. And
-should this cc stable?
-
-Best regards,
-Luka Gejak
