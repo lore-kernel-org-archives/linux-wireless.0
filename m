@@ -1,125 +1,161 @@
-Received: from mail-dy2-f6.google.com (mail-dy2-f6.google.com [74.125.229.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C410125B084
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 01:50:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E35033D512
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 01:53:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791510627; cv=none; b=Al1cbBMjVjlg9F9vWLILDEo+OkRi9t0Vsub80caQZAsH0u/RTPxUbl92aD4FJFyAsZaQlFzAvtf/A4k63qcGF4p6Ha2r9hOCNf6FArkmgqh9p2Yb/EGe1i9BpWdoEWNrVT4wINYyDzrufkHDA05tgycyC8xmlf2rj0KcIsS2YOo=
+	t=1791510824; cv=none; b=O9V7ioSlkGCjQZSNi5e3LLvGeWranxwApEj6yB0x+Dk+Z01aLRF+oJA8yf8GbHSskWEKZa+1UUmLrtzeLuD8nbp87kAcy3579PrOmG7Fxj5KVxGz/l5KK6g1sJFFv/1eL3CfDkkn1uQsIQK5a0HgNTp43l6GfsYl5szBaDNQSKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791510627; c=relaxed/simple;
-	bh=s/mLc2JYZ08lN5x24bMO+b1/EM92HqyIhdkyHZszL9o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qj1bnkfieP42Q+DmBHCXz3NFoQXWofk4rYxuJlbCiQUg1ZKxRduPtCM61f1UzSLjUk8g1pmHPUtQlao0nLJsvbra4C94yzVWTJUCvz3We8HhhIY/86aeGKCHST9hYoOoOTEida3rI4+Qc4G2A8iHBYJretCSaCJuRz3myIaumyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HRoAsuoD; arc=none smtp.client-ip=74.125.229.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791510824; c=relaxed/simple;
+	bh=nVTCf9Sr/vq0ORJbBuTYbOI5ril/AeAbJy/T92yigrA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n2WVMOMHiP9N0KJau+9QHay0swwY9hVYcoJEJtpgwD0DSu8uEuHUHbpR6Fah5ULEpb+AkMOodp6PIZHSjSsxvj4uv8j4ChdAchDOoaVeoQHTYK5SOKX8MFVvD9AdfsiSenxkzDZ5kcnnPEJ47c8VBH59GrGl87Ttg4lgpom5sEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hYoriRDp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=J6hUA6hx; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HRoAsuoD"
-Received: by mail-dy2-f6.google.com with SMTP id 5a478bee46e88-33e48934fa8so2265515eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 18:50:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hYoriRDp";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="J6hUA6hx"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6990PaQn089102
+	for <linux-wireless@vger.kernel.org>; Fri, 9 Oct 2026 01:53:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	RVmBYDxULmgBexd3mljS1XdVWxhKoPuBecD0X+dypus=; b=hYoriRDpkv7cDPRY
+	qji4J6LUI724hUWhFWHG0bwl4XXTLcuQVl9OQkpiyy/xbsAowdPhvpdxf2GIxiq0
+	V0x8bQpGTufaZEZtXmgjqtvqNxA3o3tq0PcI8VpK1mLZbl0GqasppaAdyLeYNn5X
+	UcBc7XK8QXABAyl11m84hJSOiTZg91cFYqLZ1vBW57FiqS/9ojSJGLOubEqBxWtZ
+	8c/FTyxdy768AXUS3PenFTFtsW86wYJL55SNoVhV1WXfdmX0KGrYq5D7D8VemXRb
+	gOOWg2odUzAKMxecBo5YifCdnhx1pGOeq5CDUxZMrsnujI8+3MMQcBF357auJVsj
+	JhZxvw==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h6b9kjk8p-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 01:53:40 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cc4216aee8fso6251652a12.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2026 18:53:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791510625; x=1792115425; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WhHTyXZW81QBiMLsBQIivjraSKuuYTMoCEnOnmIA0xY=;
-        b=HRoAsuoDIH1uAorXcBeVa2O+PFRZVohxp5hCw8J6DNUp6pRtj50aUTm2qtkvnMymkY
-         gO/qYGDtdIcKvdKQ9sZoYU7hKlmDHmdLJYs9xD5uakN7NxQ+LmBxSLhEsqmz4r12ADSN
-         9OeCDz4zo5XwTDRu0fW4FEPiXe2XTwWPG7DtUVthNPSI5/fP3xdkAK0GJVMbjeaDjjCI
-         d8hPLGeRjfgt7RPLb1ZzzHBDoxHpHRuHlVIq1NgWV7T2B5Nxqi4Tbg3I8WMQ08g/uYet
-         varP65/ATwRvbPRFYWX3gKWMv74+UM5Lh0R/xbCAgKTpNQ5GMwruXoqfvAJ+VHRPlSbZ
-         MjMw==
+        d=oss.qualcomm.com; s=google; t=1791510820; x=1792115620; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=RVmBYDxULmgBexd3mljS1XdVWxhKoPuBecD0X+dypus=;
+        b=J6hUA6hxGPD8iLuRLZS9/zQHQyesH5lpQdsJmMzrireKv87fygG+KmyhqldTevnc5E
+         E+oHuQqU7IWCIE6MbPCRU80KeNmenSTJLP2n4NeINkIKYSF6BqB0LK/KYRzTXNRiIrbl
+         xuQzq5+QMuZUH/q8ncwQ+zZaAxCpzDlo15VjPoki6ByyDqkD3CKtr1SL7FHOgfFTbvtY
+         2L1k0efjjviRrginIXoIeGis9F/NDLgZcX4UZmxv0xPsnnJp4ofv2849QXHB9d/xgSIe
+         MWEdtZAewHpe8t+OT5pFj77nISmmkS7pv33/tXZiBaqroFus/duVL/714m/o9y4TaGXB
+         a/sg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791510625; x=1792115425;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1791510820; x=1792115620;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WhHTyXZW81QBiMLsBQIivjraSKuuYTMoCEnOnmIA0xY=;
-        b=NEBZpbRl1EAccvWms3PD4JRfxm9MoERJsPAGVDRLT0++Vh5SqqstJUsG+d4uONax6v
-         IPKYgdVwGryhLYZA2/Asibdq8GjFdx7vvhsdugjk6CTjHtBQVtnjelCuds8P82CeW60q
-         UGSKQ4Jm+cczkE5Cu9LGcVccLKV4OrRJNZFzjCCimUYkk1xHHw1LK797X7uBrySB0FqR
-         veNYn3rcJrkrWrc5IHYOdOVM7gIMqWEnitkKNOIUpadrux7Q6Gj3Xug7FA7Uv4x5v8Ka
-         z2lWNXoeHn2Ty+od2Zzf5+idlLMeoMl77v2XIutR874jBsK0y8iYH/7BqEm35GtDN6P3
-         ENPg==
-X-Gm-Message-State: AFuF++mrpAY8Lj3TtMdQR3FR7ZqgrFhAoxQgPHs51yTyIHiKwU/ihBJH
-	WxtyPMojfeIH5A48XSfTOvjT38Z5bpQbzbXnUcDGu1KfXXz4Fuu9COg2
-X-Gm-Gg: AYBFou2E+z28h9nyWxPBxEzPJGyDWQDGLMO7zkZ8q7lBrfLcbWH4VzM72J75jmT7jns
-	zbjAY7jqzAvCvsiY8QoXU2eSAbNa9WVJFNO/5hwsEwn6Ywp6+iXXYdJgHzRIfuK9d71u3msoc2U
-	nluM4n1fczhJ1GwUIdCTw2cW5X77QqqPzcIdV/6ctNpDiuVqGjY4gz0XppcPvo+65Qy6X83e1bo
-	V+D9QAb7VDzfIU+qXC+x8fG9Zjbd3BFhWdDNkqfJKprqt882lbwRWokOEPsRzi8tYNbMkdtOYi6
-	1iNSlaA6nX8RiOnvqvdRdRrOouADQTYfW8DxYjNRWPX06SWBGz0fcKOurEQNsk2h4uog+WKBi9w
-	8AaZeBCuZ1LMvH78HVpAldHna3PppsOmYN0XTdJBtlRlxcK5OD7dzE+/1n2hmCfNb/krnlBTyp6
-	xAOq8u71WZ9PYP0iYZfbceJ5hlmrAqiKZqoPNoJLIr5th+yXfVJojWUJ1j4YDGO2yRDOHOtlPU1
-	LcHesq70r887O1fk0edGfy5D0akcehK+AkmJA==
-X-Received: by 2002:a05:701b:4212:20b0:168:e942:4e62 with SMTP id a92af1059eb24-16a61789c56mr512934c88.40.1791510624763;
-        Thu, 08 Oct 2026 18:50:24 -0700 (PDT)
-Received: from localhost.localdomain ([98.148.34.5])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-16996eac537sm1903698c88.1.2026.10.08.18.50.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2026 18:50:24 -0700 (PDT)
-From: Hungyu Lin <dennylin0707@gmail.com>
-To: pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	phhuang@realtek.com,
-	luka.gejak@linux.dev,
-	rtl8821cerfe2@gmail.com,
-	johannes.berg@intel.com,
-	u.kleine-koenig@baylibre.com
-Subject: [PATCH] wifi: rtw88: sdio: copy RX status after updating the frequency
-Date: Fri,  9 Oct 2026 01:49:41 +0000
-Message-ID: <20261009014941.29137-1-dennylin0707@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        bh=RVmBYDxULmgBexd3mljS1XdVWxhKoPuBecD0X+dypus=;
+        b=scNa3P99fkvxdDj7Jm/y+mXpS39tDN3lNlFZ9Wo9ZlCrEJ+VeOIXQVXmbiN4vl5NKN
+         UG/hdHCCWq3g0NQD1xjLSl6mZ6WcxUKHQ/oZywM1qFtzXIfLP6lXCTvOhzkSzhl2K6x/
+         jtqU143MOYA5dRJQNRH3JE4Vy9eRCZklfqJuz4h+HnjjRHmDUIA8ovOff68YgBctn414
+         +PfEGgmBt/3fRgPG+ZdJj0JNUl29f/ClWvtlGEhH/iCvBIFs3rtBH3Xr7A/3AKvZQ3ry
+         W87PPbKuYB2BMB0JvWHL8FBbO9j28aU8DR1XVThbDa0EQ5upkukq0VCjl3VmzrOGtRgH
+         41TA==
+X-Gm-Message-State: AFq9FYIqvZBx0gIv9aAAomaSnHP6tdRYRqvAoMY0TxDIVm+DzTmMqVw1
+	a/9x1kF27YGCOg1mDSD8Xzn1lB7uCVipaZktE0qUwaYXBmaPdLTJ3A3InjB8mnhvBcicSn9fqrW
+	v8EtJkOCGYkQgmEdmJDsXD/n/pxHXh6XJSAIIV+hooIdb26uVw1T4NEsRsU9Wk8vU9cAHBw==
+X-Gm-Gg: AYBFou18FjKyKku9T6BRY6t4BHpxT35NZ/WbUOo7RpCHdAEhTGLsdVcBClmSDi4AC4q
+	Gepnj+CaQojtyNd7oCVrYZoHWubJSGXw/ayeFcY3zpef2Eb+m3EcHQzWYxaLpMZzqcR4URYlVaq
+	AiX/U0WEvNBvaJyRoOEWtWwiPucssuLuJzWuK5/XD/Xg8L/9+uXtshS1Jm/OlyyfvINccmIsQMq
+	1aRKOgTg36cYyTs/zO4NWXHrvCl2N+YyVJFPl+k1qn2Ina9iTJBD1Ql3z6Vnfejwox2NryCCrEm
+	hdP0zDDqrbaediEkchayiuRN10Sbg+pVsjf78n2wxqPfP6VTedrO0p2FQYYlHg4ckE39R2ye3GJ
+	DDUJRB+/NWQjAizesQ6jlngccGqm1h89I4EkQV7C4tdUj8KHKNPWhpv8nvIyHy4ymPnmwQTVH
+X-Received: by 2002:a17:90b:3b48:b0:3a0:2817:1fcf with SMTP id 98e67ed59e1d1-3ab3a90e82cmr527133a91.11.1791510819945;
+        Thu, 08 Oct 2026 18:53:39 -0700 (PDT)
+X-Received: by 2002:a17:90b:3b48:b0:3a0:2817:1fcf with SMTP id 98e67ed59e1d1-3ab3a90e82cmr527118a91.11.1791510819521;
+        Thu, 08 Oct 2026 18:53:39 -0700 (PDT)
+Received: from [10.133.33.26] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab3386ba90sm848786a91.1.2026.10.08.18.53.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Oct 2026 18:53:39 -0700 (PDT)
+Message-ID: <b106f056-3384-4576-be23-590e57eaa829@oss.qualcomm.com>
+Date: Fri, 9 Oct 2026 09:53:36 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 0/2] wifi: ath12k: Configure RXDMA buffer ring
+ size per memory profile
+To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Pavankumar Nandeshwar <pavankumar.nandeshwar@oss.qualcomm.com>
+References: <20261007-mpp_ws-v1-0-739b1fb87d24@oss.qualcomm.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261007-mpp_ws-v1-0-739b1fb87d24@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: l4ELMRfLK8xU6GcK4Q3_q_s4lKIGRrMd
+X-Authority-Analysis: v=2.4 cv=U98Hnuru c=1 sm=1 tr=0 ts=6ac84924 cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=EUspDBNiAAAA:8 a=PJ0sSsB0_FnI-LRpuPcA:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA5MDAwNyBTYWx0ZWRfX5XoB+gHC9ozW
+ CPKRIBntQne6An3dm+aMWej8EyEOXAzvSPCn1M1U/0YkopU/9uHZCNh+xaWCi8g6BdiO06gSN7R
+ RUEqaZ5oRAIRXpNEZyoCJ5FmmEXE9uE=
+X-Proofpoint-GUID: l4ELMRfLK8xU6GcK4Q3_q_s4lKIGRrMd
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA5MDAwNyBTYWx0ZWRfX8of6I8DHgREB
+ 3xH6WN77nvVsxIoJ32urnRx4U1pC7mLD7gN8yPTQraLsHRwnbJjH+UZZrHfB2WCe+oqx6rxB9ke
+ 1ZHUsFoNcN70/tl9WLJnpOddx68r9+j3LHkXdcIQwJpr8b1TxdM0ddKP6pZxh19Ho7J+3RZE3i7
+ jH04M7sydU5IP/9eUnHuH6M8kN2k/9f1k2c1mlMJUC0A4lSlKN7W0TGQSPDHhDOtEDA5hai9Eq3
+ fVXP9k0JeHNYzIIKuSochnvYLNcGU28cNAd+Fzypu3DAOSKgKx1C2tvXlm/ITxJVDITzkw8PgYX
+ 5KfP0Hyn2otMaflCBWEA0bqHm8U2JFeYWI17ZsufOAV20PYGXVDIhOwf3xA07y0VshXxiGJMD4r
+ IZ0OVgT5c4250J3NXlcuPKwVu1fkJ4ZkjgSRnlpip4QelYgh/xK7qpAuabKPao73oUY0EZxvb70
+ WuA0bYX+1491WO0dekA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-09_01,2026-10-08_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 adultscore=0 clxscore=1015 malwarescore=0
+ spamscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610020000 definitions=main-2610090007
 
-rtw_sdio_rx_skb() copies rx_status to the skb before calling
-rtw_update_rx_freq_for_invalid(). If the frequency is corrected, the skb
-still carries the old value when it is passed to mac80211.
 
-Move the copy after the frequency update, as the PCI and USB RX paths
-already do.
 
-Fixes: 53ed4b25a79a ("wifi: rtw88: 8822c: Parse channel from IE to correct invalid hardware reports")
-Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
----
-Built the rtw88 directory on arm64 with GCC 13.3.0 and W=1, with
-RTW88_8723BS, RTW88_SDIO, RTW88_PCI and RTW88_USB enabled.
+On 10/7/2026 5:23 PM, Aaradhana Sahu wrote:
+> The RXDMA buffer ring size is currently hardcoded and shared across all
+> memory profiles. This makes it difficult to tune the ring size based on
+> the requirements of individual profiles.
+> 
+> This series first makes the RXDMA buffer ring size configurable through
+> the memory profile configuration and then increases the ring size for
+> the default profile to improve RX traffic handling.
+> 
+> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+> ---
+> Aaradhana Sahu (1):
+>       wifi: ath12k: Make RXDMA buffer ring size configurable per memory profile
+> 
+> Pavankumar Nandeshwar (1):
+>       wifi: ath12k: Increase RXDMA buffer ring size for default memory profile
+>  
+>  drivers/net/wireless/ath/ath12k/core.c  | 2 ++
+>  drivers/net/wireless/ath/ath12k/dp.h    | 8 +++++++-
+>  drivers/net/wireless/ath/ath12k/dp_rx.c | 2 +-
+>  3 files changed, 10 insertions(+), 2 deletions(-)
+> ---
+> base-commit: a90ebf2176db07c5d91e0a62e15ded1fd50710a0
+> change-id: 20261007-mpp_ws-a041d5cfac9a
+> 
+> 
 
-A userspace test of the old and new receive function, with helper calls
-stubbed, confirmed that the corrected frequency reaches skb->cb.
-No hardware testing.
-
- drivers/net/wireless/realtek/rtw88/sdio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index dc2fd0f8f9ff..7c22f0ba5329 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1332,8 +1332,6 @@ static void rtw_sdio_rx_skb(struct rtw_dev *rtwdev, struct sk_buff *skb,
- 			    u32 pkt_offset, struct rtw_rx_pkt_stat *pkt_stat,
- 			    struct ieee80211_rx_status *rx_status)
- {
--	*IEEE80211_SKB_RXCB(skb) = *rx_status;
--
- 	if (pkt_stat->is_c2h) {
- 		skb_put(skb, pkt_stat->pkt_len + pkt_offset);
- 		rtw_fw_c2h_cmd_rx_irqsafe(rtwdev, pkt_offset, skb);
-@@ -1346,6 +1344,7 @@ static void rtw_sdio_rx_skb(struct rtw_dev *rtwdev, struct sk_buff *skb,
- 	rtw_update_rx_freq_for_invalid(rtwdev, skb, rx_status, pkt_stat);
- 	rtw_rx_stats(rtwdev, pkt_stat->vif, skb);
- 
-+	*IEEE80211_SKB_RXCB(skb) = *rx_status;
- 	ieee80211_rx_irqsafe(rtwdev->hw, skb);
- }
- 
-
-base-commit: 83de3a16c7b37064a59305040ba9b0f93b832794
--- 
-2.43.0
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
