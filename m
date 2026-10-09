@@ -1,127 +1,148 @@
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CDE3E49F9
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 21:24:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791581057; cv=pass; b=I4YJCoMRBEDSAHxm+vnVpu67ZoYg8SDkQA/SJD2EXJBEqBORs6gZUjxosWFD/kLO18WWzFZRgNy8avQziX1u4hgyZ4I5jw8LEU4LgTlWNtTlFTcQQhmYPsWAWbB6U6OempbuIaPiT2qPMfPN/AlPsRSPqc7t9GuzauAhQ38LsKs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791581057; c=relaxed/simple;
-	bh=mozIcxnttMuBerZr7muY1MA9s+09XZ0iafUEVW2FWdQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=doM3pc8Yap7ern4U0AQH9Q/NKONoKRNOYGV7zlZ3ZuMNBqBqtT2ISOJp6XPrZk99NqZwHL2EwOoKRscO7Am1RgIPTvCEeneB79CEje2hV76FuEmnTrebH1v2AoOB0/5N27IrSf2De07riP8un3zSn6s0OUANOxZXlx+xgMfmqw8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=guo741cU; arc=pass smtp.client-ip=74.125.82.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B263D3498
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 21:32:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791581522; cv=none; b=YIGumOXm/15A7iDkC2TJXu8XR9O1kdKWrfu928hDdmABvX7lXVZshCQx7USV/+q640WNgOcAVTkOvn7sTMEGNMYFQom9uLtv4mhrDl49QgW9+euAk3/T5/TlDwb3i+FZFzoF28RFhVNgWnEu9ShEdlZ4mjdvcs31ZgeQDDtIWJY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791581522; c=relaxed/simple;
+	bh=U7CHoprC3QQbDmNB8jOMv1v+21yCj4nz+/4HUgBxpEY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lXE/bJRZ8Z8VFF+kkSe2KuRC1qlhddms/jgEAh8YzQnCR9hZwy6vTU8Izsj/xHE3UuQc3BjW5NgLLsX+M0+gMFmEJj9xFMqDR6KAadJN+YqSgHdGUXsujzkjak7pSG/Dm6OMHcLKsz2+WN6IsAIAOrBe/PXjgxxCek8c4GjXfnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wn3mDYdi; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="guo741cU"
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-15354aa70e8so548433c88.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 14:24:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791581055; cv=none;
-        d=google.com; s=arc-20260327;
-        b=S3oM0X1+PqvsF3+aKlme9XHNmFfXmYSLaubpOhbduy7lW51wxQxHcyikmmZwDTvrXG
-         af+6GSbm9DPQp468i0AEiuw43R4fLSBEPIDH24rI+vOWdQyED8cH3ofdZnAsLDYIKUbE
-         /u2Mq/5b9KihtDlaUKER8Cesoj0RBdRGje4RToH304aFYrPcuP1KP27r+8wsOMt8XTDk
-         uRK0ErQz9bWCNtztwh8HVFQLvREpnsLzaVQ+LQOm28vZhSHlLX0g98q+1EFecanqJ9LG
-         UnBdBhwgWfHTMw6nH1j62qrmTgIPhsxqyXatl91oVCnbk+VX3apckDalwlYyurdg7mpT
-         qHsA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=zqL268J7XZEssG22JT3sRv0E3q65DzbxPLXlXrFzGX4=;
-        fh=89z+jhSL2Q2Ko+vzwKhykaOdUwS1qgnaC+zk0+4njio=;
-        b=d7GIhQ9vFY0Dr4h37jYLxG0aRp2P9eYfmOxF6Sq9KOYD7A/mIudtrMCf2F5hQ2XYTl
-         0T0Rzl6nasolWrikunzibgU6SkIk+EjxF+/+LnGInimo+arYbEXvZHLpqcmFlDoSaoQr
-         CjfUFtVB0LVkzJPf7adxBMMS8Nl1ReXy42YSVp86UgqPTcRVjAgbJyhjdrz9biP2y48n
-         K5RDfsjD0GQQ8nuRpzrLlArePmrCil2boBgCvOuffeu5eIk40fjxcpbFNofW59S29zpI
-         pUkxrd7zJ4vIH3qY7mqf5Np5zWYKDokRLIUHjWDRleYPd8UO446AOIxqjiYT/CalZmwm
-         hbIA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wn3mDYdi"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-8714288dd3bso61401b3a.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 14:32:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791581055; x=1792185855; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=zqL268J7XZEssG22JT3sRv0E3q65DzbxPLXlXrFzGX4=;
-        b=guo741cUqQvzbVgpUaAGa6y61P1FT8B38AwlcjJww9ihAeTRfPZ8AuaK4Xn7smcFB2
-         dge4548X3h2yTmB4+l4Pm/WR3x7cI+qk2K7He7bOJ4IalNHGcXHZQV9xPqhJdIBonMTe
-         Wz6bZJ3DIXIaIGP5dUgWKrdvyF8B4BcqAzDTCHGg9A5l4fJpF8I+qbL6Uii3c+t/4prh
-         +pM3eDc/QvFJ7s/J22dm7eVpZ+8bAxgIcVv3Z89FEfsPrJ6EVLls2/s5A3PIfdopzbTh
-         wax0Jctz0EoA6UrMObLCoMTsqu+7fAVTCOT4nOHkpgKoGrrZsoSmljihkjo29acC21q6
-         dAAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791581055; x=1792185855;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1791581520; x=1792186320; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=zqL268J7XZEssG22JT3sRv0E3q65DzbxPLXlXrFzGX4=;
-        b=mucGwg0BdMcREpcyBC0HCo7+E1KyvY7a+mFdS6A8nPSjOyo1KRHj0cJcsSKNjCeips
-         m+FhGJy59D1XqKuOmclLxDmyTlj/VRD8ATlLSrDwXybloul0jYKj9M7Z6+RVikmdt1KY
-         tGpBPBsiFlQwL9yjazZ5obGJJ1YNhTbZBWqReeZVJC58Kd+xA8XKZ2tjEU/r3Czm3fXf
-         8JrZZk1ydbBrM9HPe/Ytvfev/R8qxfy7iyDXJuI2hqfPvIAn84G5WwVBxfP0gasOt/cR
-         +Y5Zk7zTzYRkrtNBgBtX8koakjCnI9ad0I315Fcn83mWfDGktY1kTtE4wgdNnY15EkVu
-         Tumg==
-X-Forwarded-Encrypted: i=1; AKwUvBziiXDuBqFQvFNWxdlcBZ6x8/w1F83UGUKGYusI+Rwc++Me9hAZEHDZoMpTSctfPYMhOsuFfcDbW6WieRaWHQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJbBJGK29esctigAcwX1kIFZOFR414FlqIBefPoE9aRvIeGLXYN
-	uIAhxRrSMkLlJLZ3lXCrXb4YUvkkm+LLVh30HiIonWfNSggOa1EXTYqQQZBK0lJUOEC5/KgzhVu
-	oui3E1dYCzxpnsY4OXndYNWueVOv0jZ5BcPng2Qdu
-X-Gm-Gg: AYBFou0lNq+p1kfhBobIFRsFk7+/BolZkJWBSBvL+b1FLlEy6kzs9sCw8gB2NWC2Z7C
-	Ygf530R4BNa8kkCIRUCdVUmXnvbCQIKGPvJCJ9KYSu4CYTu1Bsi7mEN4O/ZU5YbRMzt1OmiXcLy
-	L19tkxpuQtXyV77q7LcDfOGHcDqEUhM76aiJS9vwxg7BuZfPcp2/h4i292zv+XyXKLGAJAMnWVz
-	38yVGRFOfmmp60vGiEQ7bG/hnY9lJDL5c2SLC4xIYEDwdpFEujXI2Z2mNF5NVoZNFNDrfqJp5Zn
-	Efu4KQ27gw6J59LIADSquzOTjvDuKo8N5VGoK4v0btRs8RMCM7JdP1o/q1/MzDk4rHOIh+gW2ZS
-	lQy6mNEZ6ghdBMGJx2qnGMoSbkLdsMJEAaRoyaqvlqxrZQIacTmFcKnlsn7rJjyVlJR4zWdB5+v
-	dpkcvi/rtcKiKnPtYhQaV9PIDFRQ==
-X-Received: by 2002:a05:7022:b054:20b0:144:f47b:58b0 with SMTP id
- a92af1059eb24-16a62228bc3mr4188069c88.47.1791581054829; Fri, 09 Oct 2026
- 14:24:14 -0700 (PDT)
+        bh=vUayDUdYs1sE6mgk+Qs00q/sRaaDnD8utq+2SxLgtEM=;
+        b=Wn3mDYdilqhLRacIPOx0sdnNxs3Goytu+XEH5kIHayYkx+s2rZnmVZPqsY2SjcQpaU
+         zMyPWfn7xicOOD5Tihe3nnuMVuvrU/exqnbBOHK7f9B8tkier+VuxuSyQf3K0onHDEla
+         fRIAtCucXPT1pUFrB2VKPn3U7rrL5FwWFkDcJ4ujAii+yKdpyu5EYNJG+ti/MX+DIbIj
+         AYvNN92rADyzTthBIgIfZuLFfhR1jcAspZoMZxuzqCIPobO5UmnWSmH+LDAETlFYUoVg
+         qdQlZd/q0XATj+vUhS2y1ldp1DJolJU3bQrm8cq3BVt4Xu+CxaUmwoFdngYm3FfNgeOI
+         uxmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791581520; x=1792186320;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vUayDUdYs1sE6mgk+Qs00q/sRaaDnD8utq+2SxLgtEM=;
+        b=ZAMuK9dngmOEUDGELLMorCKfg2WIzxXHdbsaGn0JA33rtbVKIRBiU8DKerwoSVSGNi
+         laa59XIHE4o13swUo4eXbVZ5qa6oTU+g189FGVMZflj8OFXVyUzFKPQpIO8a4pZf1cb4
+         E7r1QmCD2TsjFaiP3RjFqYWy1/pskT7U+GYDh+oERTCBd9FRfxsTH81k/xZ5ZEkNDLB/
+         4wDRZD+gUVolU1mZnlnKNeYLXgUMZZHhvs1SWyi0wL7NttVSn5R6eOMCSR2sWnPn8I+7
+         NQQe/Ghp3aWYEVVUPRYN6KKtcNYx0ZrvOIJ8vEUhltglSpeulh+gIa86c2gZQVYeAqXn
+         b+jQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwBcygOYq7+MNKgLbokk79e2zca1S3Gp+umtyC2CyrUMAF90i+n22PCac77ZhB0DbV70mbOQaK/uH/gdx+Eew==@vger.kernel.org
+X-Gm-Message-State: AFq9FYL8HBKKdgR9nnsavR6Y9bTqsttg/knM7ac3GmHsGab4n4zuJ2uw
+	xToekQO1Y5rrW3j2LJ29dyI5wPNEa15lqLMX5QcPpYZnNJJ5I8mw7345
+X-Gm-Gg: AYBFou0QnCoRrOY/W0E7PbqyM/2SlwGw3TLe69mvgqZT/bpI8ShOUf2tSe68bfvF9fk
+	U/K1J0arJc/mQESwvpFynhw3K0DgVsmoiC7Qa0a6s3UKoqjVOkTVFWR9sIEtrkzUA3m+PoK3ucF
+	TSOmQQBf7+0VKnlsmGj+0K+VTGjhX5jCOC42Y5WVIoFCfQQQbqSRXmX91wXTRkhQnBv4D+/N+G0
+	/S/wusWbMtmdPGYc/dyRoap9VOBDTNNJgJjV12SBwXAkxn6V/RNRDwkcR9KWjdme5lp0nwmBkW9
+	QN6sHIAQVYhpw1qgAfKekLiEKOIvklrjWYnPsi1hCXHAWPg0W3BnSTWhgTg061mJwulx2mBZ4h1
+	n+cJF3smE+O80bP6LEvIJVzXCaoxXAK3I2M5t7Dtwx0krIIrwfyfWwaMpaFjgsYCPhEkwxi4dw/
+	yj8/KUVHVo2qvT+2IV5DdK9E92JF9cJsuNAf4Ny05wLEnih4Q1W+3F7EcceZIn6dqv4AvgszA4S
+	74C7CPu2zxXSc/EyyfKcbUwDblLwM0287ac0brxABxWMVMadxEYJzrE1wfch1oaWMOdkbPxZzu0
+	RLHq01c7/7y9czUOb58UMKbHc1Wu0PJg26zDyjlhEjtrR6L3ylJLBgFajjI=
+X-Received: by 2002:a05:6a00:228d:b0:892:1396:6a85 with SMTP id d2e1a72fcca58-897c79ddc12mr2742507b3a.47.1791581519858;
+        Fri, 09 Oct 2026 14:31:59 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e34])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-896c3eca287sm1612478b3a.37.2026.10.09.14.31.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 14:31:58 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	f.fainelli@gmail.com,
+	Christoph Hellwig <hch@lst.de>,
+	Linus Walleij <linusw@kernel.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Paul Burton <paulburton@kernel.org>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER (BCMA))
+Subject: [PATCH] bcma: use the SoC device for DMA on MIPS
+Date: Fri,  9 Oct 2026 14:31:56 -0700
+Message-ID: <20261009213156.109965-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261007205827.467974-3-johannes@sipsolutions.net>
- <20261007163616.1088d364@kernel.org> <CAAVpQUATko2Oig53r1+VHe+4Y3fFeX1xOw5RAnXtUAGwvQoB5A@mail.gmail.com>
- <2688563455012eb80063ae014f78230b10a14710.camel@sipsolutions.net> <8575c0d3cf58e56300313482dd1d4d74cbdbf4f0.camel@sipsolutions.net>
-In-Reply-To: <8575c0d3cf58e56300313482dd1d4d74cbdbf4f0.camel@sipsolutions.net>
-From: Kuniyuki Iwashima <kuniyu@google.com>
-Date: Fri, 9 Oct 2026 14:24:02 -0700
-X-Gm-Features: AclHuK9minOGg6iZRYnVefHf6o9f3hjqkBhKGphgC1AFdNnbrzna3x5tbjMc5wI
-Message-ID: <CAAVpQUCUGdJUK0ucjwJpRkjMQ6DGgZyswBSadOXvg7_gYDSLwA@mail.gmail.com>
-Subject: Re: [GIT PULL] wireless-next-2026-10-07
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 8, 2026 at 8:01=E2=80=AFAM Johannes Berg <johannes@sipsolutions=
-.net> wrote:
->
-> On Thu, 2026-10-08 at 09:44 +0200, Johannes Berg wrote:
-> > > Also, I hope we could remove the long comment in __rtnl_unlock().
-> >
-> > Couldn't we remove that today, by just __rtnl_unlock() in that place in
-> > cfg80211? But it's not exported, for good reason, presumably.
-> >
-> > But that's also irrelevant, because indeed after my patchset cfg80211
-> > doesn't do that any more:
-> > https://lore.kernel.org/linux-wireless/20261006100655.2687533-21-johann=
-es@sipsolutions.net/
-> >
->
-> FWIW, I double-checked and didn't find any other code in wifi that would
-> do the rtnl_lock(); lock(); rtnl_unlock() ... unlock(); thing, so that
-> really is gone once I merge that series (which I'm planning to do after
-> all the net-next pulls net etc. settling this week).
+The MIPS BCM47xx code allocates a struct device for the SoC, sets a
+32-bit DMA mask on it and passes it to bcma in struct bcma_soc. bcma
+never uses it: bus->dev stays NULL for the MIPS SoC host, so cores fall
+back to doing DMA through their own struct device, whose
+coherent_dma_mask is 0. Since
+commit f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
+coherent allocations then fail:
 
-Thank you !  Great to hear that :)
+  bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
+  bgmac_bcma bcma0:2: Unable to alloc memory for DMA
+  bgmac_bcma: probe of bcma0:2 failed with error -12
 
+Set bus->dev from the SoC device and do DMA through it, as the ARM SoC
+host already does. Every SoC host now has a bus device, so drop the
+fallback that pointed a core's dma_mask at its coherent_dma_mask.
 
-> > OK so I (likely naively) thought the idea was that most things like
-> > netdev registration/unregistration eventually move to rtnl_net_lock()?
+This addresses the review of the earlier postings: the cores' DMA masks
+are no longer touched at all.
 
-Yes, and hopefully readers (lookup, etc.) will be converted to RCU.
+Tested on an ASUS RT-N16 (BCM4718): bgmac probes and passes traffic.
+
+Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
+Link: https://patchwork.kernel.org/project/linux-wireless/patch/20190121101121.24555-1-zajec5@gmail.com/
+Link: https://lore.kernel.org/linux-mips/20220107041744.2388470-1-f.fainelli@gmail.com/
+Suggested-by: Rafał Miłecki <rafal@milecki.pl>
+Assisted-by: LLM
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/bcma/host_soc.c | 2 ++
+ drivers/bcma/main.c     | 7 +------
+ 2 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 411cfbf53f7b..6150e1588af5 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -188,6 +188,8 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
+ 
+ int __init bcma_host_soc_init(struct bcma_soc *soc)
+ {
++	soc->bus.dev = soc->dev;
++
+ 	return bcma_bus_early_register(&soc->bus);
+ }
+ 
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 72f045e6ed51..3498d5419c19 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -251,12 +251,7 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		core->irq = bus->host_pci->irq;
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+-		if (IS_ENABLED(CONFIG_OF) && bus->dev) {
+-			core->dma_dev = bus->dev;
+-		} else {
+-			core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-			core->dma_dev = &core->dev;
+-		}
++		core->dma_dev = bus->dev;
+ 		break;
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
+-- 
+2.56.0
+
