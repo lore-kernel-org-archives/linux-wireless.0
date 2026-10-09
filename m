@@ -1,586 +1,134 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58CD55013AB
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 18:14:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39D094F5DF2
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Oct 2026 19:37:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791569681; cv=none; b=IeR2If/vuCsohPG5lFXoXaTtZ1YR7Vtndsd3f+T7lp8g0g9ZwkVDN0CWB3neOtu3o3Qq3sgRvtEl4BUxDKkzpZ1TjNM0cRDVIOnDxtpeW9+hb3h+f8xm2NMSzXNOQealNV3XhFS8qG8he8q6AOhnyrNflAKOdhmQgcmLP8EUyUY=
+	t=1791574669; cv=none; b=tc/AIhwNd8rrOFp53Svi12wggx56v4s9CzjTO9w26+qs6p3qWO5xJGcLaHCxFnBaFpTNTpFskJytFZ4Q+AgTNb/OUtTD/3pguCpbMrNxum9mHPE89t1q/xJQcGMCI5a8gteqR61fQcKDEYGE6Pg/EdaNcIeGriBA2fZrZ+9c7+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791569681; c=relaxed/simple;
-	bh=eKrsVCas+R5QFBIQKD2nXlp19PvhwFd6MKtaWL8r23Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OyXSMTDAjkia6CBc/0VVKsjqPszfkUa8z2mji1h7AtmEDx1vCQaUFPJmmhdxsuqTPNYFWUNZM2g3z75jFvtRG2Oo9fgrxIPrmUiiIJ6QU3kX7pqnNpe9gFoZcK995RfooPVtZm20GRKxmEySbcTt0MeLjq3o7r9NhyAbQQCAS80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OpI9oul1; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791574669; c=relaxed/simple;
+	bh=2vzC5G85WBo1venNMaQZoCZ2FhcSm38JjrxzMjDDMWQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UAOvTl1WWf9PdnS3GnJ6fWJttalsKjNwGYNrpYZSGrkkIuL/Wu4tMMbzUgxr4Yc6HoZ6J5Ih+8r//I+1fR7fpDNsCwxegRHdqZmkVblsVyXJJnpOyrI7UnvKt6zbBE7gJUGOjv69FecFcDQ/+JghOWnxy3W80c3s9yh8BfXg0pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bf9kUCL4; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OpI9oul1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=cKf4pr6hgqesil4xsNfW7LK8w7tsiKtElT3cHPkXX4Q=;
-	t=1791569679; x=1792779279; b=OpI9oul1xosVW7H4Z8ftWEqri8lx1yi3CcpIyyRBcPQpob1
-	gbmCcoIIz3Ahkt3qxsMpfgS63JC0i+cQ47dhFXTo+N9dXWNYYwSUetqgxd5gTp0dePD15HXs3omE4
-	7GA/qc0Sv4b83+bu6XXN3dSHCM55YrlKn2LIXuF8fOfxUv8w/2iPoUhO0yCIr/7wyuc72A1gqDYvP
-	Xm6o7ChF+Fs17flZDDLRZyyO0Sd0qvHekM0f6Ttv0O2qWpct5ElLMwFjTPWzqBzuVXfGSZyFoW7V9
-	rD3Pf/imnwhysxqBnnwNkDZfXaKZ5fNnvqekuILNs/DmybFEe+W2/dQ8slFoSgrQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFF76-0000000AtGH-3k9W;
-	Fri, 09 Oct 2026 20:14:37 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 17/17] wifi: mac80211: implement unlocked STA statistics
-Date: Fri,  9 Oct 2026 20:10:16 +0200
-Message-ID: <20261009201417.706683ff9d81.Ieb92e4c6599a198a116fa6a4f7944219c6d32932@changeid>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261009181416.335754-19-johannes@sipsolutions.net>
-References: <20261009181416.335754-19-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bf9kUCL4"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-49d0da752ffso1938415e9.3
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 12:37:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791574659; x=1792179459; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=aFY2YO2cb3qpWj8CQZTY+PYX53TlszA01EImDQNtvOc=;
+        b=Bf9kUCL4IHWHdjs/Nv3jSybcEFpqUR7IaJhxTKEPHbDKKMFwSjs0AppPNLoG7uU5d9
+         ARnJuECAPp9Ob96HqZXWgQSIzpelMK+crsscu+T87kJQv15bWc/j8tPvuY6WH2MJBS2T
+         ChVNrLVrsyyw9DJYvv1ZXA8ioDU3fJy5TRxOMPvkiwdhPVJLiPqnl3iPyAD2zlVklijW
+         260z+9or9q4vTkYUUvvbyQqlpB203klCwq1F5fZLYIAetS1OYcTNOSZQDTeiLgUYOTTH
+         R0kQU5TaXhBnvZIJxNlXwp5FAsCnYjCTwivLqXV/6q1lHdgcCXx8h4WU3ymMaNzb+pwL
+         BuuQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791574659; x=1792179459;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aFY2YO2cb3qpWj8CQZTY+PYX53TlszA01EImDQNtvOc=;
+        b=OCcEoenHHTs+KQuagJR3+FV8VITp329hb5yd9LzFeeMVvOFJI4P4XPFGUY1brNbsgZ
+         27yWbMYWblfSvgVbcaIadbQXlFGV5dC2TVk1rMqrgvEMbeLUaxNNdhnHCShXb0Hkpiyi
+         CFSoP8SXM5O1U4N3bvyO2sj0o+YcvmUZKUrKuTsn2eUUuikgjvLL7fcTIt1Lq/sgQ0dQ
+         o1+5+rYsmUplztStORuRyRGjbQUP/p06NbXUi5K0M/YE7FUrQLfsLsXP9OwEGMIA9HJP
+         vBo0bNqgE7Sttu/+BTa9fc5nYU0YqnUskMx8MSi/xHo4KtUwmwh02Tm0yxFwzWZTmLGW
+         3agw==
+X-Gm-Message-State: AFuF++lsKy/0P6wP0BLc+SaJnTMoEHb6sz0KCbumbTLMtFsldqgnNSen
+	gNflhmWcVmKOMRRhIFajLB+ERGmv9UTpIOc/2PQ7rUaJH0WFyJc9pJGX
+X-Gm-Gg: AYBFou13I9Aq7Ki3hds0ipSTIVcPisxB1Wkb1VNHSNeRhw8g8Zt8Vu4ZurfEwOnJr+F
+	/Xt7l+eAjzyArSCChC7BRlUnoVrdcxmO0SUmT7ixvpiC2EX8bmzTiLAH3KQMLnJops7fLdBDFTf
+	fguUwrH9oW5A96DvCLv8m3UyboYExqWEZ7/5EjsFpThr65svmdY7GOO84zX2ckMmHVzDHmZY/LX
+	5JfvKu0Vbxi7y3jAPqNBcqnLcBz0MfhqZyExYE2E0J+ccEX/t0/fsZvOPniZx3mLE3eLUNHKJBd
+	hCQkra7VAv6WJSSHHKaBFW9aemxGVC7O9UU9PVWGQT7tlJ7baI9Cc9Dt/XqPkvUJfdoaQuRb/U0
+	EzNq0LbZweZGXfTEEdOe2icjHFX0EpLGi9PTan/DvBdZSl9SIy9r9YgvWT4MUv5GSuBhe+d4Kw3
+	ayYM+pHjjutjkmdlLiTZBoWm9vhEk+s8O0Qh1v+AEZT2tBnkIzxx72sN7m29F4fOLNUc50tA+hh
+	4yhqtJ0WH5Xru6GVJGasnXUnQtI0wJJMXmNrwLj1VTtkaxNPGFAsThL/Uk1tJ2qMHJIXu8mVYcx
+	Hw==
+X-Received: by 2002:a05:600c:8209:b0:4a0:2375:dc1a with SMTP id 5b1f17b1804b1-4a18e4cb771mr58738485e9.21.1791574658789;
+        Fri, 09 Oct 2026 12:37:38 -0700 (PDT)
+Received: from shift.daheim (p200300d5ff07190050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff07:1900:50f4:96ff:fe46:beef])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18ee9bd19sm52018135e9.1.2026.10.09.12.37.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 12:37:37 -0700 (PDT)
+Received: from localhost ([127.0.0.1])
+	by shift.daheim with esmtp (Exim 4.100.1)
+	(envelope-from <chunkeey@gmail.com>)
+	id 1xFGNH-00000001q0Z-2qwe;
+	Fri, 09 Oct 2026 21:37:37 +0200
+Message-ID: <5771235e-fa91-402a-b5d2-ebb153872c26@gmail.com>
+Date: Fri, 9 Oct 2026 21:37:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] wifi: carl9170: revert broken devres conversions
+ for input and hwrng
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Christian Lamparter <chunkeey@googlemail.com>, Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
+Content-Language: de-DE
+From: Christian Lamparter <chunkeey@gmail.com>
+In-Reply-To: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/8/26 11:39 AM, Dmitry Torokhov wrote:
+> Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
+> 87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
+> the HWRNG and WPS button input device registrations in carl9170 to
+> devres attached to the parent struct usb_device (&ar->udev->dev) and
+> removed explicit unregistration from carl9170_unregister().
+> 
+> In carl9170_usb_disconnect(), the driver calls carl9170_unregister()
+> followed immediately by carl9170_free(), which frees struct ar9170
+> inside the interface .disconnect() callback before devres_release_all()
+> runs. Furthermore, devres on &ar->udev->dev is not released on
+> interface unbind or registration failure in carl9170_register().
+> As a result, both the WPS input device (whose input->name and
+> input->phys point into freed memory) and the embedded struct hwrng
+> remain registered after struct ar9170 has been freed, leading to
+> use-after-free bugs.
 
-Implement the new cfg80211 unlocked STA statistics. If
-the driver has an operation, then we need to always do
-the locked again, so return -EAGAIN unconditionally if
-it has a locked but not atomic operation, but drivers
-can implement the new atomic methods to provide needed
-data atomically (and can also return -EAGAIN).
+Ok, so you just reworded your patch? Sight...
 
-This should, given a driver without any ops or adding
-the atomic ops, reduce wiphy mutex contention.
+looking at the WPS input
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h    |  18 ++++++
- net/mac80211/cfg.c        | 120 ++++++++++++++++++++++++++++----------
- net/mac80211/driver-ops.c |  76 ++++++++++++++++++++++++
- net/mac80211/driver-ops.h |  46 ++++-----------
- net/mac80211/sta_info.c   |  54 ++++++++++-------
- net/mac80211/sta_info.h   |  10 +++-
- 6 files changed, 233 insertions(+), 91 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2a61079e3975..a1a6409b44c1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4369,6 +4369,13 @@ struct ieee80211_prep_tx_info {
-  *	Statistics that the driver doesn't fill will be filled by mac80211.
-  *	The callback can sleep.
-  *
-+ * @sta_statistics_atomic: Like @sta_statistics, but called under RCU, so it
-+ *	must be atomic. This is called instead of @sta_statistics if available,
-+ *	but may return -EAGAIN to fall back to @sta_statistics with the wiphy
-+ *	mutex held.
-+ *	Note that it's not guaranteed this will always be called first, some
-+ *	(internal) calls may call @sta_statistics directly.
-+ *
-  * @link_sta_statistics: Get link statistics for this station. For example with
-  *	beacon filtering, the statistics kept by mac80211 might not be
-  *	accurate, so let the driver pre-fill the statistics. The driver can
-@@ -4378,6 +4385,9 @@ struct ieee80211_prep_tx_info {
-  *	Statistics that the driver doesn't fill will be filled by mac80211.
-  *	The callback can sleep.
-  *
-+ * @link_sta_statistics_atomic: Like @link_sta_statistics, with the same
-+ *	locking/retry semantics as @sta_statistics_atomic. Must be atomic.
-+ *
-  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
-  *	bursting) for a hardware TX queue.
-  *	Returns a negative error code on failure.
-@@ -4883,6 +4893,10 @@ struct ieee80211_ops {
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_sta *sta,
- 			       struct station_info *sinfo);
-+	int (*sta_statistics_atomic)(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif,
-+				     struct ieee80211_sta *sta,
-+				     struct station_info *sinfo);
- 	int (*conf_tx)(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
- 		       unsigned int link_id, u16 ac,
-@@ -4898,6 +4912,10 @@ struct ieee80211_ops {
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_link_sta *link_sta,
- 				    struct link_station_info *link_sinfo);
-+	int (*link_sta_statistics_atomic)(struct ieee80211_hw *hw,
-+					  struct ieee80211_vif *vif,
-+					  struct ieee80211_link_sta *link_sta,
-+					  struct link_station_info *link_sinfo);
- 
- 	/**
- 	 * @ampdu_action:
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0acbb2415a02..9608c07bcea7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1018,31 +1018,63 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
- }
- 
-+static int __ieee80211_dump_station(struct ieee80211_sub_if_data *sdata,
-+				    int idx, u8 *mac,
-+				    struct station_info *sinfo, bool locked)
-+{
-+	struct sta_info *sta;
-+	int ret;
-+
-+	sta = sta_info_get_by_idx(sdata, idx);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	memcpy(mac, sta->sta.addr, ETH_ALEN);
-+	ret = __sta_set_sinfo(sta, sinfo, true, locked);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Add accumulated removed link data to sinfo data for
-+	 * consistency for MLO
-+	 */
-+	if (sinfo->valid_links)
-+		sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+
-+	return 0;
-+}
-+
- static int ieee80211_dump_station(struct wiphy *wiphy, struct wireless_dev *wdev,
- 				  int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	int ret = -ENOENT;
- 
--	lockdep_assert_wiphy(local->hw.wiphy);
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
--	sta = sta_info_get_by_idx(sdata, idx);
--	if (sta) {
--		ret = 0;
--		memcpy(mac, sta->sta.addr, ETH_ALEN);
--		sta_set_sinfo(sta, sinfo, true);
-+	return __ieee80211_dump_station(sdata, idx, mac, sinfo, true);
-+}
- 
--		/* Add accumulated removed link data to sinfo data for
--		 * consistency for MLO
--		 */
--		if (sinfo->valid_links)
--			sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+/* driver must have atomic ops (or none), otherwise we need the mutex */
-+static bool ieee80211_sta_stats_need_mtx(struct ieee80211_local *local)
-+{
-+	const struct ieee80211_ops *ops = local->ops;
- 
--	}
-+	return (ops->sta_statistics && !ops->sta_statistics_atomic) ||
-+	       (ops->link_sta_statistics && !ops->link_sta_statistics_atomic);
-+}
- 
--	return ret;
-+static int ieee80211_dump_station_unlocked(struct wiphy *wiphy,
-+					   struct wireless_dev *wdev,
-+					   int idx, u8 *mac,
-+					   struct station_info *sinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+
-+	if (ieee80211_sta_stats_need_mtx(sdata->local))
-+		return -EAGAIN;
-+
-+	guard(rcu)();
-+	return __ieee80211_dump_station(sdata, idx, mac, sinfo, false);
- }
- 
- static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
-@@ -1053,30 +1085,54 @@ static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	return drv_get_survey(local, idx, survey);
- }
- 
-+static int __ieee80211_get_station(struct ieee80211_sub_if_data *sdata,
-+				   const u8 *mac, struct station_info *sinfo,
-+				   bool locked)
-+{
-+	struct sta_info *sta;
-+	int ret;
-+
-+	sta = sta_info_get_bss(sdata, mac);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	ret = __sta_set_sinfo(sta, sinfo, true, locked);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Add accumulated removed link data to sinfo data for
-+	 * consistency for MLO
-+	 */
-+	if (sinfo->valid_links)
-+		sta_set_accumulated_removed_links_sinfo(sta, sinfo);
-+
-+	return 0;
-+}
-+
- static int ieee80211_get_station(struct wiphy *wiphy,
- 				 struct wireless_dev *wdev,
- 				 const u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	int ret = -ENOENT;
- 
--	lockdep_assert_wiphy(local->hw.wiphy);
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
--	sta = sta_info_get_bss(sdata, mac);
--	if (sta) {
--		ret = 0;
--		sta_set_sinfo(sta, sinfo, true);
-+	return __ieee80211_get_station(sdata, mac, sinfo, true);
-+}
- 
--		/* Add accumulated removed link data to sinfo data for
--		 * consistency for MLO
--		 */
--		if (sinfo->valid_links)
--			sta_set_accumulated_removed_links_sinfo(sta, sinfo);
--	}
-+static int ieee80211_get_station_unlocked(struct wiphy *wiphy,
-+					  struct wireless_dev *wdev,
-+					  const u8 *mac,
-+					  struct station_info *sinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 
--	return ret;
-+	if (ieee80211_sta_stats_need_mtx(sdata->local))
-+		return -EAGAIN;
-+
-+	guard(rcu)();
-+	return __ieee80211_get_station(sdata, mac, sinfo, false);
- }
- 
- static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
-@@ -6273,7 +6329,9 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.del_station = ieee80211_del_station,
- 	.change_station = ieee80211_change_station,
- 	.get_station = ieee80211_get_station,
-+	.get_station_unlocked = ieee80211_get_station_unlocked,
- 	.dump_station = ieee80211_dump_station,
-+	.dump_station_unlocked = ieee80211_dump_station_unlocked,
- 	.dump_survey = ieee80211_dump_survey,
- #ifdef CONFIG_MAC80211_MESH
- 	.add_mpath = ieee80211_add_mpath,
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 49753b73aba2..1f3e0765a8ab 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -633,3 +633,79 @@ int drv_change_sta_links(struct ieee80211_local *local,
- 
- 	return 0;
- }
-+
-+int drv_sta_statistics(struct ieee80211_local *local,
-+		       struct ieee80211_sub_if_data *sdata,
-+		       struct ieee80211_sta *sta,
-+		       struct station_info *sinfo,
-+		       bool locked)
-+{
-+	int ret;
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return 0;
-+
-+	trace_drv_sta_statistics(local, sdata, sta);
-+
-+	if (locked) {
-+		might_sleep();
-+		lockdep_assert_wiphy(local->hw.wiphy);
-+
-+		ret = 0;
-+
-+		if (local->ops->sta_statistics)
-+			local->ops->sta_statistics(&local->hw,
-+						   &sdata->vif,
-+						   sta, sinfo);
-+	} else {
-+		ret = -EAGAIN;
-+
-+		if (local->ops->sta_statistics_atomic)
-+			ret = local->ops->sta_statistics_atomic(&local->hw,
-+								&sdata->vif,
-+								sta, sinfo);
-+	}
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
-+int drv_link_sta_statistics(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    struct ieee80211_link_sta *link_sta,
-+			    struct link_station_info *link_sinfo,
-+			    bool locked)
-+{
-+	int ret;
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return 0;
-+
-+	if (locked) {
-+		might_sleep();
-+		lockdep_assert_wiphy(local->hw.wiphy);
-+
-+		ret = 0;
-+
-+		if (local->ops->link_sta_statistics)
-+			local->ops->link_sta_statistics(&local->hw,
-+							&sdata->vif,
-+							link_sta,
-+							link_sinfo);
-+	} else {
-+		ret = -EAGAIN;
-+
-+		if (local->ops->sta_statistics_atomic)
-+			ret = local->ops->link_sta_statistics_atomic(&local->hw,
-+								     &sdata->vif,
-+								     link_sta,
-+								     link_sinfo);
-+	}
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return 0;
-+}
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index accd89bbc1fb..83dd15f2daf6 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -617,42 +617,16 @@ static inline void drv_sta_rate_tbl_update(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
--static inline void drv_sta_statistics(struct ieee80211_local *local,
--				      struct ieee80211_sub_if_data *sdata,
--				      struct ieee80211_sta *sta,
--				      struct station_info *sinfo)
--{
--	might_sleep();
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
--		return;
--
--	trace_drv_sta_statistics(local, sdata, sta);
--	if (local->ops->sta_statistics)
--		local->ops->sta_statistics(&local->hw, &sdata->vif, sta, sinfo);
--	trace_drv_return_void(local);
--}
--
--static inline void drv_link_sta_statistics(struct ieee80211_local *local,
--					   struct ieee80211_sub_if_data *sdata,
--					   struct ieee80211_link_sta *link_sta,
--					   struct link_station_info *link_sinfo)
--{
--	might_sleep();
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
--		return;
--
--	trace_drv_link_sta_statistics(local, sdata, link_sta);
--	if (local->ops->link_sta_statistics)
--		local->ops->link_sta_statistics(&local->hw, &sdata->vif,
--						link_sta, link_sinfo);
--	trace_drv_return_void(local);
--}
-+int drv_sta_statistics(struct ieee80211_local *local,
-+		       struct ieee80211_sub_if_data *sdata,
-+		       struct ieee80211_sta *sta,
-+		       struct station_info *sinfo,
-+		       bool locked);
-+int drv_link_sta_statistics(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    struct ieee80211_link_sta *link_sta,
-+			    struct link_station_info *link_sinfo,
-+			    bool locked);
- 
- int drv_conf_tx(struct ieee80211_local *local,
- 		struct ieee80211_link_data *link, u16 ac,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index d761847b70b3..5c95ffee257d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2822,7 +2822,7 @@ static u32 sta_estimate_expected_throughput(struct sta_info *sta,
- 	u32 duration;
- 	u8 band;
- 
--	conf = sdata_dereference(bss_conf->chanctx_conf, sta->sdata);
-+	conf = rcu_dereference_wiphy(hw->wiphy, bss_conf->chanctx_conf);
- 	if (!conf)
- 		return 0;
- 	band = conf->def.chan->band;
-@@ -2835,15 +2835,15 @@ static u32 sta_estimate_expected_throughput(struct sta_info *sta,
- 	return ((1024 * USEC_PER_SEC) / duration) * 8;
- }
- 
--static void sta_set_link_sinfo(struct sta_info *sta,
--			       struct link_sta_info *link_sta_info,
--			       struct link_station_info *link_sinfo,
--			       struct ieee80211_link_data *link,
--			       bool tidstats)
-+static int sta_set_link_sinfo(struct sta_info *sta,
-+			      struct link_sta_info *link_sta_info,
-+			      struct link_station_info *link_sinfo,
-+			      struct ieee80211_link_data *link,
-+			      bool tidstats, bool locked)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_sta_rx_stats *last_rxstats;
--	int i, ac, cpu;
-+	int i, ac, cpu, ret;
- 	u32 thr = 0;
- 
- 	last_rxstats = sta_get_last_rx_stats(link_sta_info);
-@@ -2857,9 +2857,10 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 
- 	ether_addr_copy(link_sinfo->addr, link_sta_info->addr);
- 
--	drv_link_sta_statistics(sta->local, sdata,
--				link_sta_info->pub,
--				link_sinfo);
-+	ret = drv_link_sta_statistics(sta->local, sdata, link_sta_info->pub,
-+				      link_sinfo, locked);
-+	if (ret)
-+		return ret;
- 
- 	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
- 			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
-@@ -3027,7 +3028,7 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 	}
- 
- 	if (tidstats && !cfg80211_link_sinfo_alloc_tid_stats(link_sinfo,
--							     GFP_KERNEL)) {
-+							     GFP_ATOMIC)) {
- 		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++)
- 			sta_set_tidstats(sta, link_sta_info,
- 					 &link_sinfo->pertid[i], i, false);
-@@ -3075,15 +3076,17 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 		link_sinfo->filled |=
- 			BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
- 	}
-+
-+	return 0;
- }
- 
--void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
--		   bool tidstats)
-+int __sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
-+		    bool tidstats, bool locked)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	u32 thr = 0;
--	int i, ac, cpu;
-+	int i, ac, cpu, ret;
- 	struct ieee80211_sta_rx_stats *last_rxstats;
- 
- 	last_rxstats = sta_get_last_rx_stats(&sta->deflink);
-@@ -3097,7 +3100,10 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		sinfo->rx_beacon = sdata->deflink.u.mgd.count_beacon_signal;
- 
--	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
-+	ret = drv_sta_statistics(local, sdata, &sta->sta, sinfo, locked);
-+	if (ret)
-+		return ret;
-+
- 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
- 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
- 			 BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME) |
-@@ -3258,7 +3264,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 	}
- 
--	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_KERNEL)) {
-+	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_ATOMIC)) {
- 		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++)
- 			sta_set_tidstats(sta, &sta->deflink,
- 					 &sinfo->pertid[i], i, true);
-@@ -3355,17 +3361,19 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		for_each_valid_link(sinfo, link_id) {
- 			struct link_station_info *link_sinfo = sinfo->links[link_id];
- 
--			link_sta = wiphy_dereference(sta->local->hw.wiphy,
--						     sta->link[link_id]);
--			link = wiphy_dereference(sdata->local->hw.wiphy,
--						 sdata->link[link_id]);
-+			link_sta = rcu_dereference_wiphy(sta->local->hw.wiphy,
-+							 sta->link[link_id]);
-+			link = rcu_dereference_wiphy(sdata->local->hw.wiphy,
-+						     sdata->link[link_id]);
- 
- 			if (!link_sta || !link_sinfo || !link) {
- 				sinfo->valid_links &= ~BIT(link_id);
- 				continue;
- 			}
--			sta_set_link_sinfo(sta, link_sta, link_sinfo, link,
--					   tidstats);
-+			ret = sta_set_link_sinfo(sta, link_sta, link_sinfo, link,
-+						 tidstats, locked);
-+			if (ret)
-+				return ret;
- 			if (!thr &&
- 			    (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
- 				est_thr += link_sinfo->expected_throughput;
-@@ -3375,6 +3383,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 			sinfo->expected_throughput = est_thr;
- 		}
- 	}
-+
-+	return 0;
- }
- 
- u32 sta_get_expected_throughput(struct sta_info *sta)
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index f409f6a3afa1..8942541375b2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -989,8 +989,14 @@ static inline int sta_info_flush(struct ieee80211_sub_if_data *sdata,
- void sta_set_rate_info_tx(struct sta_info *sta,
- 			  const struct ieee80211_tx_rate *rate,
- 			  struct rate_info *rinfo);
--void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
--		   bool tidstats);
-+int __sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
-+		    bool tidstats, bool locked);
-+
-+static inline void sta_set_sinfo(struct sta_info *sta,
-+				 struct station_info *sinfo, bool tidstats)
-+{
-+	__sta_set_sinfo(sta, sinfo, tidstats, true);
-+}
- 
- void sta_set_accumulated_removed_links_sinfo(struct sta_info *sta,
- 					     struct station_info *sinfo);
--- 
-2.56.0
+|        snprintf(ar->wps.name, sizeof(ar->wps.name), "%s WPS Button",
+|                 wiphy_name(ar->hw->wiphy));
+|
+|        snprintf(ar->wps.phys, sizeof(ar->wps.phys),
+|                 "ieee80211/%s/input0", wiphy_name(ar->hw->wiphy));
+|
+|        input->name = ar->wps.name;
+|        input->phys = ar->wps.phys;
+|        input->id.bustype = BUS_USB;
+|        input->dev.parent = &ar->hw->wiphy->dev;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+the input's dev.parent is set to ar->hw->wiphy->dev and not ar->udev->dev, right?
+Does this do anything at all? If not, why? The wiphy gets shutdown by
+ieee80211_unregister() and having the "freeing" stick around after the USB device
+is gone should not hurt, right?
+
+As for the hwrng, wouldn't it make sense to use the wiphy dev there as well?
+So the whole reverting can be sidestepped by simply going with wiphy dev.
+
+Cheers,
+Christian
