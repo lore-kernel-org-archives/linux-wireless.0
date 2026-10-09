@@ -1,71 +1,98 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE36A32E68D;
-	Fri,  9 Oct 2026 07:08:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2173C5523;
+	Fri,  9 Oct 2026 07:23:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791529733; cv=none; b=lT14+VZYpO9m3f4x93Cp087by2NBmz/p3Q1MDCgr9rNp64FacxZaaJ6rs4oFfdYxVIIXnKonHV06yLw0hh75K/NoNL9Ph3s7x5/40p0u6I26NXubxSJkpMn4rOPI9IdbbUArVJhuxN2chBL54lPVE95wbDBWOQUuo77kfX+INd8=
+	t=1791530608; cv=none; b=iuEgzNhrtkZ0XTpHS6ZklIupqKeP0R3inEgM+9R2H1v5oRnv8lbpEHtHhb+oQS9Rw4pPcD5+3LO+49WXPGNeN/OiN5fSqKJxwNEfzI1D79N5WucXw6++g/8glurZfaRinEux78AbRgGZnkHuI9qO6N+e2/8JUu5n2m03351UaTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791529733; c=relaxed/simple;
-	bh=8NxBLb8ZNmBXpmw3rwNeLFbP1yNxwK8PHctFf2OXNEU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QT+BUUy2KCHdCZAoUc/sX8uQbkiR1LwDFMamszeskEhFTAMnv/0R3Sy6SyTPG1Taz0ted264UeOsdtdkt0f2yZbadvMqSxstUFKL/uEVh9JhPRW67vEXaxJauY2xZjlfxXU1AosedI7uT9SXI/ve2Q1gpTCB/TdOxsLjka6npZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=UatnvD/o; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791530608; c=relaxed/simple;
+	bh=AMFp/Ebr159vLz/n0Yb3+LfWedR4hlt4rlDlqUnbufk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JpL3GVFpoa87vKJ4eD3YT/6yU1C7dS176332P/C7fxOQxgy6ZY065RIz7/UFQbZijxUAXEoOwcYBvrYAvFKbTDBk7afs/UVX8LlVssyzgEVCNHdFYmRa1mX5NO6HZfRpl8DW/txjIArJ5w+hMYDmU1ZcAts0WtTvpFBxB7yv/Bk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VrkQVqDx; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="UatnvD/o"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=8NxBLb8ZNmBXpmw3rwNeLFbP1yNxwK8PHctFf2OXNEU=;
-	t=1791529730; x=1792739330; b=UatnvD/oj4qeQezeh/XjLdGmZKbnfaOmxMAaR5cX99L9OWb
-	BAOPW2R0b/2J+LkxaGnn4kGuN4NdMZQcpFdzM4rot3aOicQ1LyxINqogXZlJMnz+3FXVvb7sn/j5C
-	nFyvhWVUNCTabNN+pcaQAJvXu14kTM1NO9426GsFedN4OEYjVXV/InHjKih6mlxqtjwPJ2VyREZTD
-	XZQQVUgBzvgvymn9RCnQ00EX+WdhPOwblTejHZgh3fpvYlcphd1473WAYB/N37CNXNKnPuTEDLwXz
-	xQ1myt6zWmUxWRQ9uU4F80D1hjczeJgByGDh6mh9Bp9JYF0nW/0cpYhrrGY54R2A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xF4if-0000000ASam-3nJ7;
-	Fri, 09 Oct 2026 09:08:42 +0200
-Message-ID: <8b9ee18061d7519ca41034c1b25317e43b35d746.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/5] wifi: add opt-in FIPS exception for iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: davem@davemloft.net, emmanuel.grumbach@intel.com, 
-	herbert@gondor.apana.org.au, ilan.peer@intel.com,
- linux-crypto@vger.kernel.org, 	linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, 	miriam.rachel.korenblit@intel.com
-Date: Fri, 09 Oct 2026 09:08:40 +0200
-In-Reply-To: <20261009064326.43891-1-jtornosm@redhat.com>
-References: 
-	<289161e6ddaf18fa63a55623c75d700850fd57b6.camel@sipsolutions.net>
-	 <20261009064326.43891-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VrkQVqDx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=zM
+	/zoDgiq86hQBEum2co31KfW0tzv70MXIWrE2UrOKk=; b=VrkQVqDx4ImuP4ba+s
+	Gws1qQJx9h+laURQV4W1sWgjNCv5urOS7qRYMkjqvYsesK9BKLCs+ppUToKpn5Ys
+	fKW85o3AJbjAnvG5SDpQMOSKJTKbhbfnY2XADCH2MIhFE+33TBmx0Hb4n/hOJK8s
+	h/QUZv9RXkMN15uNGsLGIPqRw=
+Received: from WIN-TOG0NDEIICD.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDX_zk4lshqdCt9DQ--.25180S2;
+	Fri, 09 Oct 2026 15:22:33 +0800 (CST)
+From: Shirong Zhao <shxzhaosr@163.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] wifi: brcmfmac: drop glom superframe on header parse failure
+Date: Fri,  9 Oct 2026 15:22:32 +0800
+Message-ID: <20261009072232.18-1-shxzhaosr@163.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261008103312.20-1-shxzhaosr@163.com>
+References: <20261008103312.20-1-shxzhaosr@163.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDX_zk4lshqdCt9DQ--.25180S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tF43ur4ftw17uryUurWfXwb_yoW8Zr47pr
+	WIgFyj9r4DJrZYkrZ7AF1xAF1Fqa1Uta4UKay8u3WfuF4rAr1ftr4v9Fyjgr1YyrsYk3sF
+	qFWFvrsxJr9FgFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j4c_-UUUUU=
+X-CM-SenderInfo: hvk06xhdrv2qqrwthudrp/xtbCxRmAvmrIljmKUwAA32
 
-Hi,
+brcmf_sdio_rxglom() uses rd_new.len_nxtfrm and rd_new.dat_offset
+right after the superframe brcmf_sdio_hdparse() without checking
+errcode.  On parse failure those fields are either uninitialized
+(the early -ENODATA/-EIO/-EPROTO returns) or hold a rejected value
+(the -ENXIO bad-offset return), so bus->cur_read.len gets garbage
+and skb_pull() runs with a garbage length.
 
-> Is there a way to allow TX aggregation from mac80211
-> in this scenario, similar to how the RX path can be
-> managed from the host? Or any other mechanism to let
-> TLC know that a BA session has been established for a
-> TID so it can aggregate? I could not find a TX
-> equivalent of STA_MODIFY_ADD_BA_TID in the firmware
-> API, but maybe there is another way I am missing.
+Check errcode first and drop the superframe with the same cleanup
+used for a bad subframe below.
 
-No. We did this in old devices, but there are relations between the SN
-and the queue index and other things, so there's no such API now.
+Verified against wireless.git main (fd4e7f1137291), the current
+wireless fixes tree.
 
-johannes
+Signed-off-by: Shirong Zhao <shxzhaosr@163.com>
+---
+Changes in v2: check errcode before sdio_release_host() so the
+cleanup runs under the already-claimed host, avoiding the extra
+release/claim cycle (suggested by Arend van Spriel).
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 381801af3..abe8d44ec 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1648,6 +1648,17 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 		sdio_claim_host(bus->sdiodev->func1);
+ 		errcode = brcmf_sdio_hdparse(bus, pfirst->data, &rd_new,
+ 					     BRCMF_SDIO_FT_SUPER);
++		if (errcode) {
++			/* Superframe header is bad; rd_new fields are not
++			 * valid here. Drop it like a bad subframe below.
++			 */
++			brcmf_sdio_rxfail(bus, true, false);
++			bus->sdcnt.rxglomfail++;
++			brcmf_sdio_free_glom(bus);
++			sdio_release_host(bus->sdiodev->func1);
++			bus->cur_read.len = 0;
++			return 0;
++		}
+ 		sdio_release_host(bus->sdiodev->func1);
+ 		bus->cur_read.len = rd_new.len_nxtfrm << 4;
+ 
+ 		/* Remove superframe header, remember offset */
+
