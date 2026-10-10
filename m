@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE123BAD93
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 16:05:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B113F8246
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 16:05:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791648312; cv=none; b=UZY+SyKRUtENCI4xq3kd5SR8PeYwSEV/DCdl2/ZBEZBzOVEM3GKutCcd3jwiDNHVe3tImmc6X4Q909S8sdSLX2FBLo/wY+1xziyQXBlzWquuWh/S7QHJeYFr7C74P6xqWPdwZUOH+XckgNcEQbHuXuXail1RPy9azZ0DiW6aJ+c=
+	t=1791648312; cv=none; b=NIGu6/FwklivcEaxo0s+gqYVjzf/TyDjS0Y1zcL2neuvByDRwATA/9wd3Ot8vMUMkRdFYbXt9WikcEQQtQ4xVfWQf3sMNQAczA5bw3uEM3LhNjiCmZuFhG6EFpcnXkTEpwCZejTmwNSkwx3XUjaNBiUxCWa5h+qIR8nOysQMNMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791648312; c=relaxed/simple;
-	bh=obK3VRA0VO1n7q5Pg6vt2hXvhGJ+1HNEB1kpXxA67G8=;
+	bh=S1JNzYKho0MkMYf4g58KgcyJWy5ifrCOy+Gz5m9J8Ew=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N0AJ29zxDTlerdnU2d3FHeEnUDHfCEbOqNrUWnLLf5ouc3nckMdbRDlJQ5bW81Stl5E5TEJnELSOMOFgSNQakrhVrPc5m1QL5ta75g2YRJhTIOVClO1T7hL4YvF+eDtu9je02cRpFIGZHIu3/TXJAP+JqwUraThLVytzRUzENTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=RpEtJyCD; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=e9/p0TiAe3vVCZDcIdhu+CJy3nTovRVkOLlqoFTVFnCDZ1mYYqycbYEHCJPwMn69QU6EzjLn/OjKl4B9KBfIGo/L6XDau5esNbqycPK1yENRVTDGuZzWPcss+Cf4SqNmoPkQAzvnVu5NxfOaSS0x7xh5dVOE1/SjgXrH0egu0I4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=eDsjdVAu; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="RpEtJyCD"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="eDsjdVAu"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=KL4TeVT2QhMDNaG7P0ZlPC42G64CQsGHEXoxVKIO20s=;
-	t=1791648310; x=1792857910; b=RpEtJyCD2ZNogRn2bwD3qF45KU1esCErOT8nZw0wz7osn4J
-	tRUNr5ANQQYylw7BVlyMpoT/paNR37weEbVFY96ia0K47ZO9rwm6lJcbY2qiyN0UzE4/XNCOZqeL4
-	FgleC3Qq9o33gUZrz2nm1ksfLATpsNB3KUKI91MOi1EcnREPUHsW0nG3K/zGrLxz5aFziLV4rKVCz
-	Nf0K0anm9eVb3fslMRK3Z13kfVz4aUi3e3nwMtR8RwYhazDaDI4CWTTb6w0b7qU/KkHxEnQNf9FWZ
-	zmiZHBNpOueBRzWTCcN2OH907x8buKRm4bhNEHeFNYsFByQzSUSIAE1lRXR/c5XA==;
+	Resent-Cc:Resent-Message-ID; bh=phM5zf/E/SH3DZzeGWufkdGzNsIxz/2RHK9wwEhFkGk=;
+	t=1791648311; x=1792857911; b=eDsjdVAupBPMIId3q4BUB4LOXKJIZA5/gvkIjDgYLhq6VCf
+	t/S0OIjOybuk1K8jVFE2zmWDkn/cUSJ361mZixkDHHuuDE1ZnBi/M35oYHWijps1VO5bmk4CvbgBY
+	YxsZ2adwOeXMk3urS1vunK6P6XmTwE+GWddOxG7HCthCO+RatfStYL6yRHbdKxgS0auaMP3r+BLcf
+	S+JXX7+GQAiv6SbCI4LvXCJdP7fS5sZG3blQtyHnzefVmRL87rWGLCkNr6O8K1JTzo+Nn62HNeVRd
+	wqOBHWeJ0Kgq77zjUa79T0oM1SPdMD/D7zLFfDec6jvvLmUaGAi9ByrYmkDEoDGg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFZZG-0000000CP1z-0Nuj;
-	Sat, 10 Oct 2026 18:05:02 +0200
+	id 1xFZZH-0000000CP1z-12Dg;
+	Sat, 10 Oct 2026 18:05:03 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH RESEND wireless-next 1/9] wifi: nl80211: avoid RTNL in nl80211_get_reg_do()
-Date: Sat, 10 Oct 2026 18:04:13 +0200
-Message-ID: <20261010180459.ef489f51e801.Iabc6383753a9e49ade17801c76fd5a91f7397475@changeid>
+Subject: [PATCH RESEND wireless-next 3/9] wifi: nl80211: don't hold RTNL for SET_SAR_SPECS
+Date: Sat, 10 Oct 2026 18:04:15 +0200
+Message-ID: <20261010180459.5a374e7bc350.I638c842c1639a8aa5d8207f784110b4a583aa7db@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261010160459.229064-11-johannes@sipsolutions.net>
 References: <20261010160459.229064-11-johannes@sipsolutions.net>
@@ -50,77 +50,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We don't need the RTNL here now, all the work can happen
-under RCU. Drop the RTNL and do it all under RCU instead.
+There's no need for the RTNL for setting SAR specs, it
+seems to have just been added while I was removing the
+RTNL from most places. Just drop it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ net/wireless/nl80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a48bd4e4f4c7..b5b9d8830af5 100644
+index b5b9d8830af5..46b72f3b5ea4 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -10841,7 +10841,7 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
- 	if (!hdr)
- 		goto put_failure;
- 
--	rtnl_lock();
-+	rcu_read_lock();
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
- 		bool self_managed;
-@@ -10856,44 +10856,37 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
- 		self_managed = wiphy->regulatory_flags &
- 			       REGULATORY_WIPHY_SELF_MANAGED;
- 
--		rcu_read_lock();
--
- 		regdom = get_wiphy_regdom(wiphy);
- 
- 		/* a self-managed-reg device must have a private regdom */
- 		if (WARN_ON(!regdom && self_managed)) {
- 			err = -EINVAL;
--			goto nla_put_failure_rcu;
-+			goto nla_put_failure;
- 		}
- 
- 		if (regdom &&
- 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy)))
--			goto nla_put_failure_rcu;
--	} else {
--		rcu_read_lock();
-+			goto nla_put_failure;
- 	}
- 
- 	if (!wiphy && reg_last_request_cell_base() &&
- 	    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
- 			NL80211_USER_REG_HINT_CELL_BASE))
--		goto nla_put_failure_rcu;
-+		goto nla_put_failure;
- 
- 	if (!regdom)
- 		regdom = rcu_dereference(cfg80211_regdomain);
- 
- 	if (nl80211_put_regdom(regdom, msg))
--		goto nla_put_failure_rcu;
-+		goto nla_put_failure;
- 
- 	rcu_read_unlock();
- 
- 	genlmsg_end(msg, hdr);
--	rtnl_unlock();
- 	return genlmsg_reply(msg, info);
- 
--nla_put_failure_rcu:
--	rcu_read_unlock();
- nla_put_failure:
--	rtnl_unlock();
-+	rcu_read_unlock();
- put_failure:
- 	nlmsg_free(msg);
- 	return err;
+@@ -20826,8 +20826,7 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+ 		.doit = nl80211_set_sar_specs,
+ 		.flags = GENL_UNS_ADMIN_PERM,
+-		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WIPHY |
+-					 NL80211_FLAG_NEED_RTNL),
++		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WIPHY),
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_COLOR_CHANGE_REQUEST,
 -- 
 2.56.0
 
