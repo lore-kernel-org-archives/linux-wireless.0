@@ -1,104 +1,122 @@
-Received: from mail-dy2-f9.google.com (mail-dy2-f9.google.com [74.125.229.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward.mxwww.masterlogin.de (mxwww.masterlogin.de [95.129.51.220])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA883C1F
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 01:33:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C0E3C1F
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 02:25:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.129.51.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791596000; cv=none; b=NzmgMvYdrcC7x/RDK6YBMpTJ69dgNmYFtzO9Akf/tDxk8MiLtaJRXUXE85xwysPmyIWPi5BgsQ0wcvs1W70AJRsgavOKoX5UCI2BSEMtSX+4Zas8co7p0Z7hTBTOqQOpEJP19gXLlf7U3gSJDJCJFC3wlODc4i1fAuwo024iFtE=
+	t=1791599138; cv=none; b=f82rFnmdJTbvWZguxrUx4djv0iPY60YKPTH4663tpf1DOtOD2LzDk/8DyK9ltEYIRtd+yZmV0ze5vNyt1k8/YmUkSOkFe2xpFetFS1xsMdKW7jKPmUBtOY8/kLtC+n6c2vnL9Uovcu1GtIFLcuqBu/D3xPIMadp22LEk9Cft0/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791596000; c=relaxed/simple;
-	bh=W8LFsO+2HedS9IfAqqR7pCD+65AjPcztGCfVSkM3S44=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o2fSs7/mMQk0LOjsSlaomDAjHQ8hAMBxIkWb3c2bYzvAEHgcqa+epC8X3+wgi/+/0vjPq3MwF4PQPoTxYiulx7MS82cKBVF9/Q0ROcRZIlddFIIlmqvnRbrqLn8qG9/HFpHIM1VRlavCNfvV0Gc/pak0NNFxWzCTNDByqOXbPZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A0Q2k4JE; arc=none smtp.client-ip=74.125.229.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791599138; c=relaxed/simple;
+	bh=km3jZchuziAQlJjH02bGkzu2uqL5cRrKV4HdcP+Pfz4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=XVnpY8ioksohuBzd7/MHt2kXkf/UahdDwE+l+Sw5BN5tUANVIJ7GykDk6jHTvNUwJwM/lpZEZF1vgVEsDPE2T0ivdlc6t50YuE5dsPlOnUr0zSW2/vjz4mCvIcpLs+a7juOoz052AFRagafZRY7rXLP9di5nMIhaYCVxWv16Iac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0pe.de; spf=pass smtp.mailfrom=0pe.de; dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b=w3waspj/; arc=none smtp.client-ip=95.129.51.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0pe.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0pe.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A0Q2k4JE"
-Received: by mail-dy2-f9.google.com with SMTP id 5a478bee46e88-3514b7a0a23so250917eec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 18:33:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791595998; x=1792200798; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TYNJORrDxBHQtMPkA1zUuM38UvfAYRpfyykn+oo1wjI=;
-        b=A0Q2k4JEPJHf0jfeJ1uVpQauY5Gx3u2pi6WAJne08Rb1CzRGmSCqvU+O4A8lAzoTFS
-         GIK/yLdh80FcVtdY1mZUOL6rm7PSj929LmJFIJbQEm9ja8jqD2TzxjzWnoCfeptiTDc1
-         Sj6blMlb1ns96VZrQT/W/C3feOHBOvRO44j3XAcu/E9OI0ch219MjZT+4ZfVQdP8Q6kT
-         HvR19cvLqW6iGeFHi/B59tc4LJFWVd8oUnkHA6nCgXU/UzmyLuEXE7RuoAcT8WJRCojr
-         mH+pBxS0YbFEPVa4r6ZnyjDI9fB7Tjqqlkh59SqE5MR02oIIzrkEe7Zgk/EeZtUKknDH
-         Xr8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791595998; x=1792200798;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TYNJORrDxBHQtMPkA1zUuM38UvfAYRpfyykn+oo1wjI=;
-        b=AiiN0TAL6+l+Z8ceVksGkgB6+q9yH1b03afFA7wuv5nw57PbH3FLYyVp6lqR9hByA/
-         D1zvXDZ82ilhsdGWf4ihP7EGk+jmEL8wptsSehMEJxdGQ+NARnYHNlSr4AD+TIhw2+61
-         StYTYrAYnYCplv4GDbypstey6md7yCXJ3r00D/mfSOCawZ7TDalT+o1JFlygmoH7hmJa
-         DsfxJQkQuAcxIl2Yt7/qvWMGQAWG4ZrVZtxoeJoIP9HGM6m1xSaSUoCYRlRm3i8sMYCG
-         ohgFW3r1jzvyyYBbR0+7127KMHsbikav6f02YOyB1VnMal88mD+qUJrJuG0eW0Z7TRSY
-         tzAg==
-X-Gm-Message-State: AFq9FYKpy3tU27UhR4SLjYzGTOiTK8OOYIqcrZX1FBsScU3hPbP+RZ73
-	HaB+gOfH84s64IJpVMlwLqPbjLKoEzPFvDCUJenh+WN1fGzs/5xKOzwe
-X-Gm-Gg: AYBFou1IFNKXgSOGTiLlJMSMz0Uh3KsQ1qU/fuvvTSaKpNS+tyek0qk229VmW5yhnwL
-	301FWz5FXnT6R9PVaeyq6H4BozgMzFxVMvLGTw+SYTXk+zhZuN8s/Qtle2yyX5iUEZtGYSBhn5X
-	c64wH5U9hR/+yldNOe4csOtYcj2q21J7OjjJf3+XdHcpcCWXgFfAYEEjwi4xI0Hv8hzP499Wiuh
-	MRFpMTd/lE22zlKzKV6IvdjMlxAi16EwMSF2IlwFZbHkTDwVo0tl8guaRAF3q89g0W6bQgfjb3c
-	tqBsmdaYP4QRc4tidI/7z/g8Lh/L6j3Vwf6eoK2MIPc1fwm3/xrOg10zIXprLii+gZirw7UnNNu
-	DQPIAprp3FUwqPX+a3oK8nVOBxkHQWVkB9P9ovmTcooc+vKWJrv/J8Uiv+lE9wxBs/a0Nnv4rt7
-	7w3L/kisk5cDJ2Kj64PFVB/hyg3Q1Y8gagf54ijITRdVmN/dey1/4hBkgbNscsMsB1ZK/EVIHp/
-	YMwrxpBblBeUzzMI49YLOv2y9WkSzyogLsQ/Q==
-X-Received: by 2002:a05:693c:2504:b0:343:f1fc:9006 with SMTP id 5a478bee46e88-3537e039619mr4628702eec.30.1791595998211;
-        Fri, 09 Oct 2026 18:33:18 -0700 (PDT)
-Received: from localhost.localdomain ([98.148.34.5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537cb1d6e6sm9820634eec.24.2026.10.09.18.33.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2026 18:33:17 -0700 (PDT)
-From: Hungyu Lin <dennylin0707@gmail.com>
-To: pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	luka.gejak@linux.dev,
-	rtl8821cerfe2@gmail.com,
-	straube.linux@gmail.com,
-	Hungyu Lin <dennylin0707@gmail.com>
-Subject: [PATCH] wifi: rtw88: 8723b: avoid converting RX SNR twice
-Date: Sat, 10 Oct 2026 01:32:48 +0000
-Message-ID: <20261010013249.35584-1-dennylin0707@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b="w3waspj/"
+Received: from mxout3.routing.net (unknown [192.168.10.111])
+	by forward.mxwww.masterlogin.de (Postfix) with ESMTPS id 73FD082C3F;
+	Sat, 10 Oct 2026 02:25:34 +0000 (UTC)
+Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
+	by mxout3.routing.net (Postfix) with ESMTP id 4002F605BA;
+	Sat, 10 Oct 2026 02:25:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
+	s=routing; t=1791599134;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i+h7lDJU8m54d4aU9LHWn640ahYL6/I5nFJ1o7A36vU=;
+	b=w3waspj/n2JMn9fz8+DWBwasEcMehncPlnk7G/jitrb0Ar+F6nU9flmSC6Lt9/YjEGmyy8
+	dXoIFNRwmplKKMDkeBosAr4jyukY8j1VlpZwZ6Mv3Ak+bkZFLUgfL85t/pV4msJ2PetbnL
+	j/UGk3YZaQr4Rnmzf2EXtknzAAhYRxo=
+Received: from [IPV6:2003:dd:f29:d200:aa1:36ff:fe8c:79db] (p200300dd0f29d2000aa136fffe8c79db.dip0.t-ipconnect.de [IPv6:2003:dd:f29:d200:aa1:36ff:fe8c:79db])
+	by mxbox1.masterlogin.de (Postfix) with ESMTPSA id DBA384006C;
+	Sat, 10 Oct 2026 02:25:33 +0000 (UTC)
+Message-ID: <0bd012e7-4115-4401-b067-1ab616918729@0pe.de>
+Date: Sat, 10 Oct 2026 04:25:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: ath12k: spurious beacon-loss disconnects on WCN7850 (regression
+ in 7.2.6)
+Content-Language: en-US
+From: Izzet Beltir <ath12k-bug-list-09192026@0pe.de>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, regressions@lists.linux.dev
+References: <3e2b5994-cd7d-4d44-a821-f34cbd06e7e0@0pe.de>
+In-Reply-To: <3e2b5994-cd7d-4d44-a821-f34cbd06e7e0@0pe.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Mail-ID: e61ef95d-8f20-459e-9cc4-73a74f90328e
 
-rtw8723b_query_phy_status_ofdm() already divides the PHY SNR report by
-two when filling pkt_stat->rx_snr. Shifting it again when copying it to
-dm_info->rx_snr halves the value shown in diagnostics and used for the
-average SNR.
+#regzbot invalid: not a kernel regression - the beacons really are 
+missing, and a second client with a different vendor's chipset and 
+driver misses them at the same instants
 
-Copy the converted value directly.
+Hi,
 
-Fixes: d726c70ce082 ("wifi: rtw88: 8723b: add the RTL8723B chip driver")
-Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have to retract my report. I am sorry for the noise - my bisection was 
+confounded and my conclusion was wrong. Please disregard the regression 
+claim; there is no evidence that anything in ath12k changed for the worse.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-index 8bb9c03d769c..197add7cc110 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-@@ -1291,7 +1291,7 @@ static void rtw8723b_query_phy_status_ofdm(struct rtw_dev *rtwdev, void *phy_raw
- 
- 	dm_info->curr_rx_rate = pkt_stat->rate;
- 	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
--	dm_info->rx_snr[RF_PATH_A] = pkt_stat->rx_snr[RF_PATH_A] >> 1;
-+	dm_info->rx_snr[RF_PATH_A] = pkt_stat->rx_snr[RF_PATH_A];
- 	dm_info->cfo_tail[RF_PATH_A] = (pkt_stat->cfo_tail[RF_PATH_A] * 5) >> 1;
- 
- 	val_s8 = (s8)pkt_stat->rx_evm[RF_PATH_A];
+What I got wrong
+
+I reported that ath12k stops accounting received beacons while the link 
+is alive, and that this started with kernel 7.2.6 because 7.2.4 had run 
+for 11 days without a single event. I missed that the machine was 
+powered off from 2026-09-22 to 2026-10-05. Kernel 7.2.4 therefore never 
+ran while the actual trigger was present. The per-day counts I sent are 
+real, but the kernel is not what distinguishes them.
+
+What it actually is
+
+A second client on the same AP misses beacons at the same instants: an 
+older laptop with an Intel chipset running iwlwifi on an older kernel. 
+Cluster boundaries from both machines' journals:
+
+                    old client (iwlwifi)    current client (ath12k)
+   cluster 1        16:08:15 - 16:14:42     16:08:27 - 16:13:04
+   cluster 2        20:25:46 - 20:36:37     20:26:30 - 20:31:53
+   cluster 3        00:41:41 - 00:48:20     00:42:02 - 00:47:14
+
+Two vendors, two drivers, two kernels, same seconds. The iwlwifi side 
+logs exactly the condition I measured on the ath12k side:
+
+   iwlwifi 0000:04:00.0: missed beacons exceeds threshold, but receiving 
+data.
+                         Stay connected, Expect bugs.
+   iwlwifi 0000:04:00.0: missed_beacons:19, missed_beacons_since_rx:1
+
+So the beacons genuinely are not arriving, for both clients, and my 
+measurement that unicast data keeps flowing at normal latency throughout 
+still stands - it just means the AP (or something in the environment) 
+stops delivering beacons while continuing to serve data. The clusters 
+recur on a free-running ~4h17m period whose phase survives reboots and 
+power-off, which also points away from anything on the client. I am now 
+investigating the AP, an AVM FRITZ!Box 5690 Pro.
+
+The one thing that may still be of interest
+
+iwlwifi has explicit tolerance for this situation and stays associated 
+when beacons are missing but data is being received. ath12k has no such 
+tolerance and tears the connection down after the mac80211 timeout, 
+costing about 10 s of connectivity each time - in my case 20-28 times a 
+day while the environment misbehaves.
+
+I am not reporting that as a bug, and I am not asking for it on the 
+strength of one site. But if a similar relaxation is considered 
+reasonable for ath12k, it would have turned a visible outage into a 
+logged warning here. Happy to test anything in that direction.
+
+Again, sorry for the misdirected report. The measurements in it are 
+sound; the conclusion was not.
+
+Regards,
+Izzet Beltir
