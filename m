@@ -1,151 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy2-f5.google.com (mail-dy2-f5.google.com [74.125.229.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A8435DA68;
-	Sat, 10 Oct 2026 10:18:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BC33BA22E
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 10:48:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791627525; cv=none; b=L414VNBo3wIHU8ibxVg2JPyVWVQDT5AoJtPK0CpKpfM27Am0qIgqCP46Ahw1itgRLffhnEkUu0y+yle5TlY+qG20/Qvw3i/vRulWdsjxR8fegMeKiFK3vNDs5Yhfdl6EE6ba1r2n5fmdfuY/9l1dLqn7PyPFfeybbsp23Hqij+I=
+	t=1791629291; cv=none; b=mnBJMaMhPF7u74NRqCCi8JrxtmsQfLcOD5e6DyAtoDD83ED1TIFClIKjOQs4/AhytrqmN5yR0T5+18JAWV+5lwnykxTIdYMNihb+YdxWg1RFCOHlMBbrrUh1b26igai8fuyzVt0YZWKaIE1hzz5r3e09Edis2oynRk0a2Qhv6rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791627525; c=relaxed/simple;
-	bh=u4fS4+Gr0Z4oZ+rx5uuJu4na497BmTWbICDLerp3ZyY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AK054JhBjfizG7uGTquX/R+Xd7RFmMAuESCNzQlExLHBSo2OxZaJFaP0tPVTcQ8qzP5oHqq1CoFK4WTzSXc6br6ZI+1htGqHV0cZ2Xd8Shpudqk9VuPgH6IakSa0j8TnRbiNeD7lH4P8RpZ9Xm/mHQAu1b+jZX0OvQunZ/9LA8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=jFl4J+hM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791629291; c=relaxed/simple;
+	bh=7NWvbpIQWi3qzTqFd0LyYidZnr4cu+18lgerSulajfQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lVWf3eE4tJoTQrp7C5zZCFsEfIBfxP0LCLrtExv3he/8uPjSjxl4AzATOES+cvBwj3gfe8zCvNqdy0L0kR/JA45c5w/JAAKCpzOv0Rmi4khU5HaBSisJtEyCMyib6SYnpXEUhhxXnI01Hf1aospk3Be8DQZ0KSDn15+FBfiAKb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Gkq0qAVG; arc=none smtp.client-ip=74.125.229.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="jFl4J+hM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86F101F000FF;
-	Sat, 10 Oct 2026 10:18:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1791627524;
-	bh=PFJuhzoVrpQZuTpaRI2h9RuwqxLaHz09kowFKeLYSng=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jFl4J+hMe2IvDZ3io2Qbjiww6D7DiwTQYpjNcXTFdC0GZEoSH7QtRk4fMaUQJhbti
-	 QKFDc4T+S14utk5nhBj3mWaztrPgF/ZyyrLbwCr+U4RW9FLBmM/HKja+Uh0p7tXCR4
-	 XBSg+m4UTnRAZwdDniyNKB+VFdJ22XumUXWWqBa4=
-Date: Sat, 10 Oct 2026 12:18:39 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Luka Gejak <luka.gejak@linux.dev>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gkq0qAVG"
+Received: by mail-dy2-f5.google.com with SMTP id 5a478bee46e88-3535a54c09bso252160eec.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 03:48:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791629289; x=1792234089; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QaSdzpcAMrjh6Y9ok04vrYGf1sEpZ5LikVoH84PMQAo=;
+        b=Gkq0qAVG9jdFlPp7TqjDCp8trMnfWlUqemew9XTRovf7Mpvu43fTf0de6k3Bd+kYYU
+         bxaaKq9h6LbydZIW35WrwcQJx1Bl9nXAgjvIQh1n0LxLfSRpK53GpHMM+CtMMtkLFgYZ
+         rIrIrGg1L/KhoYlMoQH486tK9pyBCxc904A6G82m8md1XueAzgBLB/M1j3tV7TM3DYpT
+         Y4ErGm0lsbYKdQFqu5y4QooIAAY2ZO9B9W771JxPhPYyz7xkM5rxYrF+C7u8SJPOhyTS
+         59M4BCVCwsv7S6X9Sz7mZUrt4inYkbFG0Xlidl2ei3/471UQa7uYGlS4n1C/IqCaNgsr
+         qojw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791629289; x=1792234089;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QaSdzpcAMrjh6Y9ok04vrYGf1sEpZ5LikVoH84PMQAo=;
+        b=pvu/45En1WkdD/DwdfNLnP95ymELhfvVZuTJGmL4mbKGpKBijyBck8XhTnlIhVW6Tn
+         FKYqzZl6f0jilOZX2wsD+SmG0KTu4E4T/DP7E3PMHYNoxImt7vjszQvUkXJQS31BB7cq
+         fAfKfacCIJf+uQCaGElfjZgdckzlkU7KPWMqqMer/3/7vecy+kQZuv2qvhLAOUpV+/90
+         e/80nMCr+WW+nY4acXK//qoWoH/t0URddOYciiwIXm/8YwP11XAc2I7PWzH5sEMsoEpT
+         8xeudg3B10nw9d9PgiJbrP7hPUJjeJRXzdnW91FlBripvPlonlrNFPzZPExiZo+s3Uzs
+         pIcg==
+X-Gm-Message-State: AFq9FYLp6Dth1kczezjQvRP4zbAZ8k8LSr3PqC5mKIQD12Vl4EdSRtL8
+	TvQZ1mimVuCbpFANH5rqe9FgSCrQtwouMAHiLMpG9V5QiA/9NoeqHw7XpB87WRiT
+X-Gm-Gg: AYBFou0mUQ/mVymId9Bdzk9eDcMl4Rqlz8lT+EvF01s/kdParWPz/ZSEcokw0sn4z5w
+	2yyZvp5DKmCO0qEMOaPmQGIjiMrDFZP2R1/o6Zd8VSyE6Ed4ml+3Xv2N3Jnsi+hOnRtBOfi33g1
+	25fjdxG8ELtvP9y9qzVQHFftPCpms9ai/OAMm0z0uNgrYLGWooZUmNdSKg/3QJXCtPfmnyRiV7T
+	rSOpzusAfj/2aKhRNZMwcdBgBUpNW1IFxFj7Ehhq8dx/txZM7ELDwqJvc+eaYynqLkCKLNBZBxQ
+	+yEMdJJTd/+FzXrTaDPw9MeZ7QgOExDTrWceBSepUMR/cZNqq91YlYDtP6GHPXZGhLA3ndycSHb
+	QJlAlTB3Qv0hO6kxKPv5EJNmDSpAEx8xK4f/PVfuicpJ4aGxLDCsi5nhbhWsj8aeADolsx2lVYr
+	nJINFwJV0D317WN7QQC1KsFLTP1YrTRLbnbVv5FZ91hg0Xiw3Ja/faL6yN0RtOcPaU2bTfX3Qx/
+	8Dk0z2zC6G7MHV/s2G8bntx8hk=
+X-Received: by 2002:a05:701b:4586:20b0:169:b1b1:1445 with SMTP id a92af1059eb24-16a5dbfe73dmr5319479c88.31.1791629289039;
+        Sat, 10 Oct 2026 03:48:09 -0700 (PDT)
+Received: from localhost.localdomain ([98.148.34.5])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a567bd18sm13046184c88.21.2026.10.10.03.48.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 10 Oct 2026 03:48:08 -0700 (PDT)
+From: Hungyu Lin <dennylin0707@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Michael Straube <straube.linux@gmail.com>,
-	Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH rtw-next v8 5/7] wifi: rtw88: 8723b: add the RTL8723B
- chip driver
-Message-ID: <2026101046-transport-unnerving-96de@gregkh>
-References: <20261006130701.120460-1-luka.gejak@linux.dev>
- <20261006130701.120460-6-luka.gejak@linux.dev>
- <3db085e6c3c14545ac9fd4221e0715ed@realtek.com>
- <df4a73de51784e35c15a39e85e4dae9629ba1132@linux.dev>
- <e983dedfeb9341ad9d8cf159656395c6@realtek.com>
- <df8313a72bdef1dc8859a4ac018370b24b606766@linux.dev>
- <d403e88ca53841fba87190764e2a45cc@realtek.com>
- <2026100746-delicate-carless-a04c@gregkh>
- <3028b229a6fbe02d2bcfa30c497b6a768ba8c928@linux.dev>
+	luka.gejak@linux.dev,
+	rtl8821cerfe2@gmail.com,
+	straube.linux@gmail.com,
+	Hungyu Lin <dennylin0707@gmail.com>
+Subject: [PATCH v2] wifi: rtw88: 8723b: avoid converting RX SNR twice
+Date: Sat, 10 Oct 2026 10:47:53 +0000
+Message-ID: <3c89d2ac770c659eacd532134c89b4725be9ab97.1791627615.git.dennylin0707@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3028b229a6fbe02d2bcfa30c497b6a768ba8c928@linux.dev>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 07, 2026 at 10:35:25AM +0000, Luka Gejak wrote:
-> October 7, 2026 at 12:06, "Greg KH" <gregkh@linuxfoundation.org mailto:gregkh@linuxfoundation.org?to=%22Greg%20KH%22%20%3Cgregkh%40linuxfoundation.org%3E > wrote:
-> 
-> 
-> > 
-> > On Wed, Oct 07, 2026 at 08:54:03AM +0000, Ping-Ke Shih wrote:
-> > 
-> > > 
-> > > + Greg to staging rtl8723bs driver question
-> > >  
-> > >  Hi Greg,
-> > >  
-> > >  Luka Gejak <luka.gejak@linux.dev> wrote:
-> > >  October 7, 2026 at 10:32, "Ping-Ke Shih" <pkshih@realtek.com
-> > >  mailto:pkshih@realtek.com?to=%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wrote:
-> > >  
-> > >  
-> > >  >
-> > >  > Luka Gejak <luka.gejak@linux.dev> wrote:
-> > >  >
-> > >  > >
-> > >  > > October 7, 2026 at 04:57, "Ping-Ke Shih" <pkshih@realtek.com
-> > >  > > mailto:pkshih@realtek.com?to=%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wrote:
-> > >  > >
-> > >  > >
-> > >  > >
-> > >  > > Luka Gejak <luka.gejak@linux.dev> wrote:
-> > >  > >
-> > >  > > >
-> > >  > > > Add the Realtek RTL8723B 802.11n chip driver: the chip operations, the
-> > >  > > > power sequences, the efuse layout, the RF and IQ calibration, and the
-> > >  > > > chip specific coexistence handling.
-> > >  > > >
-> > >  > > > The RTL8723B chip support is based on the initial work by
-> > >  > > > Michael Straube <straube.linux@gmail.com>.
-> > >  > > > Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
-> > >  > > >
-> > >  > > > Co-developed-by: Michael Straube <straube.linux@gmail.com>
-> > >  > > > Signed-off-by: Michael Straube <straube.linux@gmail.com>
-> > >  > > > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> > >  > > > Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-> > >  > > >
-> > >  > > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-> > >  > >
-> > >  > >
-> > >  > > Hi Ping-Ke,
-> > >  > >
-> > >  > > Thanks for helping and reviewing the series throughout this
-> > >  > > upstreaming process. Just one question, when is the series planned to
-> > >  > > be applied to rtw-next? I am planning to send a patch to staging to
-> > >  > > remove staging rtl8723bs and I need to have information when is it
-> > >  > > landing.
-> > >  > >
-> > >  > I'll merge this patchset and send pull-request tomorrow, but I think you
-> > >  > should remove staging rtl8723bs until this patchset drains to upstream.
-> > >  >
-> > >  > Ping-Ke
-> > >  >
-> > >  
-> > >  Ok. Thanks for information. However, by the time this series reaches
-> > >  upstream, won't the merge window be closed? Therefore 2 drivers for
-> > >  the same chip will exist for one kernel version, and Greg previously
-> > >  said that when a driver is merged we should remove staging so there
-> > >  are no two drivers for the same chip.
-> > >  
-> > >  Luka did rewrite RTL8723BS vendor driver (i.e. staging rtl8723bs) into
-> > >  upstream rtw88 driver, and I plan to merge this patchset and send
-> > >  pull-request to wireless maintainer tomorrow. However, the two drivers
-> > >  are existing at this moment. 
-> > >  
-> > >  My question is that can Luka send a patch to remove staging rtl8723bs,
-> > >  and goes via my tree? Then you don't need to wait for my pull-request
-> > >  being upstream. Can it work to you?
-> > > 
-> > That's fine with me, delete away!
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> >
-> 
-> Hi Greg,
-> 
-> I have sent the patch, and I think you are going to like this
-> number: 66186 deletions
+rtw8723b_query_phy_status_ofdm() divides the SNR report by two when
+filling pkt_stat->rx_snr, then shifts it again when updating
+dm_info->rx_snr. This halves the SNR used for diagnostics and average
+statistics.
 
-Very happy :)
+Store the raw report in pkt_stat->rx_snr and convert it only when
+updating dm_info->rx_snr, as the other chip drivers do.
 
-> Not sure what people are going to use to learn though. It seems to
-> me everyone is repeating the same patches.
+Fixes: d726c70ce082 ("wifi: rtw88: 8723b: add the RTL8723B chip driver")
+Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
+---
+Changes in v2:
+- Store the raw SNR report in pkt_stat->rx_snr and keep the shift when
+  updating dm_info->rx_snr.
 
-Yeah, we need to dig up some more out-of-tree kernel code to add it for
-them to churn on.  But really, this is a good thing, it's nice to see
-real support for this hardware finally.
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+index 8bb9c03d769c..18bd2b108ccb 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+@@ -1280,7 +1280,7 @@ static void rtw8723b_query_phy_status_ofdm(struct rtw_dev *rtwdev, void *phy_raw
+ 	pkt_stat->rx_power[RF_PATH_A] = (val_s8 * 2) - 110;
+ 
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
+-	pkt_stat->rx_snr[RF_PATH_A] = (s8)(phy_status->path_rxsnr[RF_PATH_A] / 2);
++	pkt_stat->rx_snr[RF_PATH_A] = phy_status->path_rxsnr[RF_PATH_A];
+ 
+ 	/* signal power reported by HW */
+ 	val_s8 = phy_status->cck_sig_qual_ofdm_pwdb_all >> 1;
