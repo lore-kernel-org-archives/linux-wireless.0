@@ -1,191 +1,104 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-dl2-f9.google.com (mail-dl2-f9.google.com [74.125.229.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C8935200C
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 18:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D1039795E
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 18:36:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791655589; cv=none; b=gHnfqBWFs8wC4jEo6VC9Z1xSTuH9HbE+J833rQoHv5OWp91ldpz2tcq1X51ryTP39jSI9eAyYNL4cs0MqkYeh7xgwhCWqY2U92D2yNv9GPd1d6xU8RmOu59D5fOSIRLAq/SDSXomEoHzR9weM2aF+Q9fTZa24BoAaSFdEK3DzMA=
+	t=1791657416; cv=none; b=lyiW+8rLhiky6Om/Twni5eufTaGxOV/t/s3HB6/JPiT5VMjnAo2hMmUscgjxF+zdD4r5fzhnR16n+ENKIQoQxsy5ijA4T1VzO8UFG9JZ7DVvyHh3s3GChhrTJZ+GM9lUHGxfaDejL/t0nlIXscheYPxLl+5U+UpTuH2uk9/9/vI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791655589; c=relaxed/simple;
-	bh=wMNhQ+eYspo2MxJfF9CeHWaZbuypHhZaD8KnLapNkL0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IxCISnKkTpQ11nv/a150+SiH2rWUX3cMgYVzOvyke63uWXA4h40EXWNeZU8eB8PDDxn6TzMXxEkCQpvInj7XsciwvcZQyAWkt4sF4O4DjU9o5BesSLksUSjRX95ZSKQ6M3sG8PMk87xO98wnxHE32d5n7d/rA923914g9YkBcqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VjNT5YaQ; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1791657416; c=relaxed/simple;
+	bh=zMHZJK+Lil5rgpQc8tSNIk8/tNDjLLOyL9TYlu0EuFA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RckRf7lbpo3QPz477dBH/i0dPAfjocxIofPuNtJMTiMR5yh/hCBMpdUBYEQOhG5MFuHhLBi2xm5ZC5OiZzFyiKw9F1aBFnkZY1YCRrFBR0Z34r18RhCUkzu7NMz4RmFC1DWjin6w0mJW705BnBHDNEDTbUw59Djo4Nh3OpZFxck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FS2mTucy; arc=none smtp.client-ip=74.125.229.137
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VjNT5YaQ"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-49ff680331aso5924765e9.3
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 11:06:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FS2mTucy"
+Received: by mail-dl2-f9.google.com with SMTP id a92af1059eb24-1397ad3d891so228384c88.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 11:36:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791655586; x=1792260386; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=T2jVrgH55k3k3p8kJOIrXqSnnuHRHhh/LASrNcRGybI=;
-        b=VjNT5YaQiLXg2bbaIBTT9SgvV9leUI6f6KqvbPTvO5UTr4eKNSsRph8HuCReK07Yxz
-         XCOoG89ceG6Px2we4RTdXu/wOP85kA9GC+cRM2idDmxXP6iafz3R9OVse4lEqqNdraly
-         ZLNFl81fzfiaVDtfd4MAk+7qOEBCDW4v056ngHhoF+1pTbalOkwgXz9QDfvPdfaB9X0f
-         FkyBvzdQssB6YzHadRJtqDv/pcWSUwLCvZFLo9qq2SgUBZcbvJeERO2MVupQaWDt5ztL
-         IryR3Y1m9r5E9q04L3ho5KqfsPhps+ySxfEv6WDgMDilFFa758VHpiAcW8J2R751mxXE
-         m/fQ==
+        d=gmail.com; s=20251104; t=1791657409; x=1792262209; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hW1Or0lp9arcI5QuX436/2y3ET8mHo78jKw5Up39hXs=;
+        b=FS2mTucyt+7hDVduTy5Y1l4QeP1clnIx/+zeRV+vETS2JU9NqbzNBFMrk0xCuNYLpZ
+         gYZtyJveLv9X5W+TPPtOeYX1tLLWcZ/JmT+ye0KkbbNTzPmlOHSjHf7qPGhqU+NSzeWk
+         p2jqcjPveUNo4yAW5gA+D0EKuntQt6dh2ry3747Cbshmb3c7tgy6+sj8yCFwfJpBHeYY
+         wQBVAxZ7jzTy1Vdzg8RmnaowPpMd3wCPfM2dYBgPl2kfot/w5TXjJHZWSyDdY182ynwF
+         T9M8JHC0zh2+idHdyz9HIW3S6IeNdYAjC1I7t1RmYG8T4kmjosYzlM3DUlWbVlSO7uC1
+         0S+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791655586; x=1792260386;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1791657409; x=1792262209;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=T2jVrgH55k3k3p8kJOIrXqSnnuHRHhh/LASrNcRGybI=;
-        b=v2LyuUF65f+qouEmVXcPp6hxiwo/QO6LXb+5xt3190xYgN9Tf4lfOV+cFgNNgx8ylm
-         /zYvX1KMKXk7ayB9FzvWIykeMyJyuMtrRxrhzYPFVCqTU3S61OklvadFZo9OKQPeJYUS
-         Wfr4y6xJ8879SF7S9wtNJNQA8k6aYI1IPw/yrP9GYcMD8cxtWZ+LKFjHVRSIWOszQlt7
-         foBYwlGaE6hBQ/ErU3yV4MwCsoZav6ZCL8+DHUESoOsTXJ+ojJ2uvtwIaF1mmg/eVrYm
-         S4Jf7+R7/iqVuXV2CoUFVfoy6rnWi/Pwke8hCL6kUE67orL/E8G35tyzAWMqPELLCIP0
-         +K4g==
-X-Forwarded-Encrypted: i=1; AKwUvBzi6qxiYzaVDUbyYOKw/tPJEBnhhBamsqKXIYBdWrwV6IpJSEOzNBbmsQjTfhjdUatelNHf2wM2c8CkpJ04CQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIVrF/5t+jEIrah7dK4D0X2mblYrvqLQKzsMoQvmBl/v+vPKNs5
-	Bs7lONFx59MCvenLK++gvRR68GC7QlUNmpM2HiI9TWvwl/6dCBM+q/b1
-X-Gm-Gg: AYBFou26usKKGQzwXi1meahbxOLrPQI9cbSo8RWsSKs1qCOIXZhDyrC4uWaLMjF7cUc
-	vZiieK5YHpmazDajj5vef1LG93jqXal9Fpl+eNDK4AtqAYy8QLHGqN6Qu820hS9xq18WfkpwXN8
-	77jUG3tKzxNdfjArsBfI7IXm0h9G4YHQefR6vZzlvC2xRNHoyGhbSXHoH6Jn+Vc4Fi0Trc0/sew
-	8X+xLvJAjGd963vXoGeFyd+rL8v65DKnq8gvzLEGgPoiHswXaQP7b0FGEHlcvgqrrfLFhsLaJz7
-	SiqAeICNNipeI2oVJy3y8hm1+KqlLFx2GKYfyP40f1lLIB6reQ2bSfMtcALnzDHspZMTvxQOZ/Z
-	zUDRfcb3jskh8RAFymE/VQnZvxknYA2AMJ0wpw9cSbV4K8eB87vpHuCizRZhg40a4+FNYrYJjwT
-	RFBqRQICBIWH+aLikekton/2gugB3EGkkTV+wKwv1j6ejedE197+vh99i7SixVzoBCkB4gTov+g
-	HgyCVCszO50PE48lc6DuKOGjDeEiacfNPkilD7BeBEG5UgvrOW8Jdg9YQVdBBUzybv8upIj/PuD
-	Kw==
-X-Received: by 2002:a05:600c:6215:b0:49f:ff32:8044 with SMTP id 5b1f17b1804b1-4a18e47a88fmr86024185e9.7.1791655585959;
-        Sat, 10 Oct 2026 11:06:25 -0700 (PDT)
-Received: from shift.daheim (p200300d5ff07190050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff07:1900:50f4:96ff:fe46:beef])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a190c49d5csm187867575e9.3.2026.10.10.11.06.25
+        bh=hW1Or0lp9arcI5QuX436/2y3ET8mHo78jKw5Up39hXs=;
+        b=M0VFn5ZGroqNJmbIjt1py/YoITXN95d52Qf++2PEqs2a0OeV/b/HbdGuqCbrokv6pZ
+         eeRxR7bLLhxHnG247KVbmsDhOMhma8WDs7wwaN2XulQcYX2xRzDzGazp7M4tPGl7yVkK
+         fMZvInvDiNaWAcc2r22JrKihDsJW669LL3VYY/kUGRcfz9pUkdtO9TEtAsf9jYC/2tVx
+         SXr+nFv8QxTI12D2ZxVYUd8bKBVKr9xVRJM+fcjBHT1l9em+K+kWxUM7UVMSTwHpDKO1
+         07jci4SQL211212x8XnNeTaWYwHCsRKH+7PoWVhOXysnEwRl40ZH3WSro0gScggtZ6MF
+         pbaA==
+X-Gm-Message-State: AFq9FYK3l/dy3b59AQTig+kfoGv9O4NjjFXKGwLL2vVfG0g8IIjOqGYq
+	KEDQSw9Phs+IKEvr9VLIqQUYHQNPsD3zcTTxnZqo/Ch+wPbCfYU6sMVo
+X-Gm-Gg: AYBFou2axFEWTpJ+jbmlQ+vzZWG867ait9pMVz3cwchgzEGQOiJJBIB6fZNaIjtYDgi
+	nUZBRTFXxpsW+gTfpJWZp4vUT3O4UFTQO68oW+8xSoAZHR15/vtWA7d4bh2dynG/d8Wv3IU014i
+	iqm3OrtDJrgHjWv/vwFrDmgvDIAcPrhSwniGmVFb58jNXXU07PUUd+/FB5GhYlbFuerb6u0jQdr
+	suk1MBQeqo3ChiHo9kiEF+T/gWP7X/iwXSpiDJ+sfwwoseQTwUJu+KjpRvK/1cbc68loA1XSw9h
+	CTd0Q/9YJfN6Km8ncnZ3lRJTb2hYSk7HZ5HCRyq1iz8jZJy8Q63Qy2+VleAl2+sN4L/J+PoRkTa
+	zikZURPZNtvTnRvUA3vpk7hSQcNhVU3wO1h25tGaEUWVylonVw0E2NRXLqpLlMFECjxnRooVbqZ
+	m2Zjs/3s3BIDmjEb5PqDlZJYObNp+YbAb4HaI6WUaozDI9C+PuyUTX+ygoEkD9r2uWgaq3M9xdK
+	NUfcIE8aZbMz8p3WCDLtFDs5k4=
+X-Received: by 2002:a05:7022:1584:b0:143:4d12:396d with SMTP id a92af1059eb24-16a61a6def5mr10483700c88.26.1791657408704;
+        Sat, 10 Oct 2026 11:36:48 -0700 (PDT)
+Received: from localhost.localdomain ([98.148.34.5])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a42407e7sm16217110c88.15.2026.10.10.11.36.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Oct 2026 11:06:25 -0700 (PDT)
-Received: from localhost.daheim ([127.0.0.1])
-	by shift.daheim with esmtp (Exim 4.100.1)
-	(envelope-from <chunkeey@gmail.com>)
-	id 1xFbSi-00000000WC6-0NL4;
-	Sat, 10 Oct 2026 20:06:24 +0200
-Message-ID: <f130759a-1987-4d12-a4dd-4bc652c66670@gmail.com>
-Date: Sat, 10 Oct 2026 20:06:24 +0200
+        Sat, 10 Oct 2026 11:36:47 -0700 (PDT)
+From: Hungyu Lin <dennylin0707@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	luka.gejak@linux.dev,
+	fiona.klute@gmx.de,
+	kvalo@kernel.org,
+	Hungyu Lin <dennylin0707@gmail.com>
+Subject: [PATCH] wifi: rtw88: 8703b: avoid converting RX SNR twice
+Date: Sat, 10 Oct 2026 18:36:29 +0000
+Message-ID: <20261010183629.39748-1-dennylin0707@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] p54: validate firmware record lengths
-To: Heyang Tan <thy15333007817@163.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-References: <20261010033724.1924-1-thy15333007817@163.com>
-Content-Language: de-DE
-From: Christian Lamparter <chunkeey@gmail.com>
-In-Reply-To: <20261010033724.1924-1-thy15333007817@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi!
+query_phy_status_ofdm() divides the SNR report by two when filling
+pkt_stat->rx_snr, then shifts it again when updating dm_info->rx_snr.
+This halves the SNR used for diagnostics and average statistics.
 
-On 10/10/26 5:37 AM, Heyang Tan wrote:
-> The p54 firmware parser accesses component ID and component version
-> records without checking that their lengths cover the fields being read.
-> A malformed record can therefore make the parser read past the record.
-> 
-> Validate the component ID and component version record lengths before
-> accessing their data. The descriptor record is also checked against the
-> shortest descriptor length found in the supported firmware images.
-> 
-> Reject descriptor values that underflow the RX offset or produce an empty
-> RX range before updating the driver state.
-> 
-> Assisted-by: LLM Codex
-> Tested-by: Christian Lamparter <chunkeey@gmail.com>
-> Signed-off-by: Heyang Tan <thy15333007817@163.com>
-Acked-by: Christian Lamparter <chunkeey@gmail.com>
-Cc: stable@vger.kernel.org
+Store the raw report in pkt_stat->rx_snr and convert it only when
+updating dm_info->rx_snr, as the other chip drivers do.
 
-Yes, I think this looks good.
+Fixes: 61a486bcd782 ("wifi: rtw88: Add rtw8703b.c")
+Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8703b.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you and Cheers,
-Christian
-
-> ---
-> Changes in v3:
-> - Simplify the component ID length check to its one-word format.
-> - Use a local bootrec_comp_ver pointer for version record access.
-> - Express the 24-byte version minimum as six 32-bit words.
-> 
->   drivers/net/wireless/intersil/p54/fwio.c | 45 ++++++++++++++++++++----
->   1 file changed, 39 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
-> index a3d9053f043c..b19d054441b8 100644
-> --- a/drivers/net/wireless/intersil/p54/fwio.c
-> +++ b/drivers/net/wireless/intersil/p54/fwio.c
-> @@ -52,6 +52,12 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
->   		u32 code = le32_to_cpu(bootrec->code);
->   		switch (code) {
->   		case BR_CODE_COMPONENT_ID:
-> +			if (len != 1) {
-> +				wiphy_err(priv->hw->wiphy,
-> +					  "firmware component ID has invalid length\n");
-> +				return -EINVAL;
-> +			}
-> +
->   			priv->fw_interface = be32_to_cpup((__be32 *)
->   					     bootrec->data);
->   			switch (priv->fw_interface) {
-> @@ -71,17 +77,44 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
->   				return -ENODEV;
->   			}
->   			break;
-> -		case BR_CODE_COMPONENT_VERSION:
-> +		case BR_CODE_COMPONENT_VERSION: {
-> +			struct bootrec_comp_ver *desc =
-> +				(struct bootrec_comp_ver *)bootrec->data;
-> +
-> +			if (len < 6) {
-> +				wiphy_err(priv->hw->wiphy,
-> +					  "firmware component version is too short\n");
-> +				return -EINVAL;
-> +			}
-> +
->   			/* 24 bytes should be enough for all firmwares */
-> -			if (strnlen((unsigned char *) bootrec->data, 24) < 24)
-> -				fw_version = (unsigned char *) bootrec->data;
-> +			if (strnlen(desc->fw_version, sizeof(desc->fw_version)) <
-> +			    sizeof(desc->fw_version))
-> +				fw_version = (unsigned char *)desc->fw_version;
->   			break;
-> +		}
->   		case BR_CODE_DESCR: {
->   			struct bootrec_desc *desc =
->   				(struct bootrec_desc *)bootrec->data;
-> -			priv->rx_start = le32_to_cpu(desc->rx_start);
-> -			/* FIXME add sanity checking */
-> -			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
-> +			u32 rx_start, rx_end;
-> +
-> +			/* 0xa is the shortest descriptor in supported firmware. */
-> +			if (len < 0xa) {
-> +				wiphy_err(priv->hw->wiphy,
-> +					  "firmware descriptor is too short\n");
-> +				return -EINVAL;
-> +			}
-> +
-> +			rx_start = le32_to_cpu(desc->rx_start);
-> +			rx_end = le32_to_cpu(desc->rx_end);
-> +			if (rx_end < 0x3500 || rx_end - 0x3500 <= rx_start) {
-> +				wiphy_err(priv->hw->wiphy,
-> +					  "firmware descriptor has invalid RX range\n");
-> +				return -EINVAL;
-> +			}
-> +
-> +			priv->rx_start = rx_start;
-> +			priv->rx_end = rx_end - 0x3500;
->   			priv->headroom = desc->headroom;
->   			priv->tailroom = desc->tailroom;
->   			priv->privacy_caps = desc->privacy_caps;
-
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8703b.c b/drivers/net/wireless/realtek/rtw88/rtw8703b.c
+index 25456f0367b2..1920277d626f 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8703b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8703b.c
+@@ -959,7 +959,7 @@ static void query_phy_status_ofdm(struct rtw_dev *rtwdev, u8 *phy_raw,
+ 	val_s8 = phy_status->path_agc[RF_PATH_A].gain & 0x3F;
+ 	pkt_stat->rx_power[RF_PATH_A] = (val_s8 * 2) - 110;
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
+-	pkt_stat->rx_snr[RF_PATH_A] = (s8)(phy_status->path_rxsnr[RF_PATH_A] / 2);
++	pkt_stat->rx_snr[RF_PATH_A] = phy_status->path_rxsnr[RF_PATH_A];
+ 
+ 	/* signal power reported by HW */
+ 	val_s8 = phy_status->cck_sig_qual_ofdm_pwdb_all >> 1;
