@@ -1,82 +1,107 @@
-Received: from mail-07.mail-europe.com (mail-07.mail-europe.com [37.187.220.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4E745DF47
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 12:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.187.220.204
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791637169; cv=none; b=C8aTdC35XguaQLPFXy5tlYG+84QqxB0ZmY3wM5qW950myMXTszsPGmlBb1ieyGIp+M+HgSqP2W5NwSs5dSGFhHC5BwAC3BPoV6xkad1zre4RM14SMkTDSjqAjQCK73SVpo/iZJ8c8tH5IaJwmX6zF9D/Gu279DK9EwqFiQJbNTk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791637169; c=relaxed/simple;
-	bh=MI+8PN2/zIOWn2mTez33GFToppwo0vdsMpNsvGptsys=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u8QqfkGooXiqXR1vBTMw4M+D4lDOTFvgOlWGzl4+7BJ0j/L90ODBm4/Raxmicos5h5GhZuYSXTPBZvO1w2hlkWYPG4gkx7DW7rBywW5blBcuFYfZdzfMfP3KmKrKf2h/lacXPH/soeXvcAYdk6NKJLyMslpBtqDghwiZ0Uixano=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=GLVDOCoM; arc=none smtp.client-ip=37.187.220.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D909349E13F
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 13:08:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791637688; cv=pass; b=JA2dGve+rPKyE0Hb+tDuuKQV0kQfYE0Yp5D7GJUz+mJaPBvjfZ+cPZYTHlX9kDI4LJ5hNMyosQB9t2Jj3ndITB5BmuReWvRrf2Z9eNW3+Wx4jV64z+xU7P9ox4+m5+At8Kc0YNmyMPzsSA1Tvg9r6053wrkNq0WrkfDaTke1v7w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791637688; c=relaxed/simple;
+	bh=Peoepvw/CV4v2nNzhaOWVLf6PtcCki7ZSzzGuOeWGYs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iFucjT0YC1si/EFZ7bDhjG/Zhz3iti/vNZEBFE2NFkmgKR3sIy7zUqlv75wMPJYCN4qQwdKeoFtmLSdeJ/jNg/JNUitYOaLN6CcWQTko8b2vhAiRZUV8a7pJ7eWuAnYw8oS1/7nAmGgef/Es7EoYTg7fktU/6NQFqbOUOZAVldI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GFtnxtnM; arc=pass smtp.client-ip=209.85.208.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="GLVDOCoM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail2; t=1791637154; x=1791896354;
-	bh=y2ZOtATjEA4SLTsh8hkSk1w2NEcMCjXPPs+g9p1ucio=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=GLVDOCoMT3RNAz9sATx4xed3R0akaV+Xdf8T4O3uf7ORAnKncpmgpX2QQMlmu8WOp
-	 mUB+lqxPKIhYgPoQrGLxBCME+/BI2sHAjPRjc3a8EHRHi8OFoqCk9s3H/wIFSyZNxL
-	 DcsTBMmjIoEeXCVeLHIu5mR+w6g6p6KL5Q0rRb1IMXXpMYzeQvIw6jb5RjCaLBrAte
-	 kb8InggmoQz3uX0ZpcNHs9Pfw9NsnHnwCuQPITtem8XjVYaNSSHrRIKkZTb2gQoTN8
-	 uQOl/o11Vsxm3E653dVSEwpBiQSnrc+ADYDozFp8BHUy3xH+TiNZ+QrptX/xWcvoYi
-	 mDXEW5dr0h7CA==
-Date: Sat, 10 Oct 2026 12:59:10 +0000
-To: Alessio Ferri <alessio.ferri@mythread.it>
-From: "andreas.wendleder" <andreas.wendleder@proton.me>
-Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: AW: b43: ac rev1 captured packets with ampdu
-Message-ID: <1NF3n26c1UQ1YcYwXT-JD8OKl7dIr_22x7bgdLLwLHkWHnKlZAtcYw7504hufNHGIBEo3qr8atDAoKtK6qxtLUfVWhVSazjaIH5QPYGAgs0=@proton.me>
-In-Reply-To: <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
-References: <20261009173133.0e534ec2@fedora> <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
-Feedback-ID: 189422222:user:proton
-X-Pm-Message-ID: 302d02b3899688e5c14eaf1f9d895c696695837a
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GFtnxtnM"
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-3a7754c2471so5522111fa.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 06:08:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791637685; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ecWfzdjvVa98ARQSwxx6AyUI5orYbv73Td4Q9VPHIjUcYu1NygswDQvOkC7ybZaUEr
+         OD1AJdQsbkcJWdu47tH8hW/tacQcacTxiBKQ2KusuFd5VBJheUXp4uB7Af8M+t/wssEA
+         aAwtLlPEV41cX6G2UEzEDsRgDWN2+RhryIatwRpmDyF9Xj7mpn46ltlNDNtYT0HM8d01
+         VYkr3QuHka7J9NlViQsLrwzpGf87Yb7zbYuTQ7JaVhH8y28yXqX97gYMSR9LPDNNIbrG
+         sL2mPhjCKlgmbal1r/sTeqTtzdZc4NrfWtQ1vGPLhTMqTKkLicw+003eLk4j2o6QlfKY
+         EeiQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=Peoepvw/CV4v2nNzhaOWVLf6PtcCki7ZSzzGuOeWGYs=;
+        fh=twYKiOilCdxcXlhujQcwGA+13aXflgOoebNeY3HzR/U=;
+        b=mNe/Zwpqtm1G+rit09SP7b+5/YZWz0RGoEeumt5ZILphKoTiXqOeSej5nyMxfCsYqx
+         aALYHt1WhdwDdS/Docipx0Ckw0zAsg8Vsgwi5Dx0y2i5XkzbORiGD65y2vJFQjP/BN7l
+         tRb5AJzmoGJ0uadkHN0RPAsClQpakzI618+ArYi+8epddDTXpMlKvldp1hoN4m8JgH/e
+         bQn5YwA3+jaUROsD6JRUpT5Dm+SZELUmVdqJgKSWvVIBDNMYNX77V05lrjN6QZb/4CzU
+         M4SH9TYrbOwh0v36hVM74nsjiW+4Yw4BgfpPh+SXPvz4fZwpBY4CHh8ZPJOH1mjvdFcV
+         Hnpw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791637685; x=1792242485; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Peoepvw/CV4v2nNzhaOWVLf6PtcCki7ZSzzGuOeWGYs=;
+        b=GFtnxtnMvNaq4SJ1WOB/2/nknKlK/HIOBMPtnwnullEMOFW50Ww9QBWYCmB7X+EGIm
+         pSLQif0Qbv3ZdpFrntpTwOaGWMdG2C2o0JkHvV8sXZbSN4R8XnWffx3vOLx9Dwokeqbo
+         RDvwQ5hWGi4WdxmfelLKMloPxsce1/vqYNjqYxy507UttrM7ivmtQ86x9kDDa1k/sZoz
+         tAZO3IZWS6q7oTC041c3vaFT/UaYF0XMJmFX4Ni9CfgYrAWUdyoE+/YprAdKvfUG9Sy3
+         t3Cu2WHAEEx/gI2LXBurteS1cJLERNUo02TzfcKj6ZsXzVAnsbbIT/u8w9dCMfKb64iT
+         dd2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791637685; x=1792242485;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=Peoepvw/CV4v2nNzhaOWVLf6PtcCki7ZSzzGuOeWGYs=;
+        b=v5Tf8jExmD4cRofmx+Nl5wv2DLMxiBHGgFYNoYRIaDgs1VNG8e1vTH6ypVX7I6RH+Z
+         Rvz9enwETe+o49D7F9izF9rw+9qXbnlFdqQCvZy+NQwrBKOuM+zkVppwinL5pH5Otfqd
+         trVxFwBfffwg43CNTs5p17uAjrvQw5t7F91TZMNAD4NFw8AmUSr46pBuUeIEWU8rMVYf
+         GyB2+jgnHQZeaI+FUgmsx9avlPwYu0S8o/nbBIqqcXkl0uBb4tMjNzehTsNt+s7TlhNp
+         0Tp9I3KM++eZCAfrgd73krA4QypOHCyVXJpO5fMRXjNyqzJOVj8ot7P0xJyOYsU9FT5c
+         +LdQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwT8iskQatYASo2/Gsjq0782QIjcyq8jP6gJCkfiAsLfjnnnBbQ8MRjzCJcEkrldQ6zbhiNQy2cobXzqIcXsg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJHeXGXs9lp8z5bnwdGCSisTh+y0xuBGOks22KmNMPs50FzzI3e
+	ZSkTUQiWJ2ryPIL/Nir+KbDSQi+rZRVz231mi9m+mc+JZHRUmkKxR9Zr29OHNc04cCI1p7ZbsUL
+	vjeS+QI917rz4sBmzx3VVjwFikj4cUuQ=
+X-Gm-Gg: AYBFou312WUf/zVGvwvTCsAcFIXW/TuYnZXcxib93lU6g98/NTLfnoxVqffL6MVObZa
+	9EM33BTfIfpBwBFurWBkF5A8wFDQ3osi56MWlrrvabn37OBEbKmf/5kF/a/ApkFUSzWyGHzwfsy
+	x/kZ/XZGyPLHBnQ2n4JHF6UnSFJ+6r0lbPY9WIQezBADrBogDC763lLvxvuFeOtCzn1Jqdgcqpi
+	g+7aTAuhAjn8dpmbSScBqPtUw0zIbdIF4wRVtODdvVsO4HHXQQyc+ZZzWuQSonS5xfu6Kerk8YF
+	9XcmYBNFSYwhVEFi55YOQYTsNBygt2rySSXJXaMNt4CjwfMZEXvEKyBd0GmwOND9uF3d8PiMXr2
+	dpk30N4654HXPoR9HrO+7fupZK5fbrz/AuSv2woOfMiDd
+X-Received: by 2002:a05:651c:54d:b0:3a4:8913:a259 with SMTP id
+ 38308e7fff4ca-3a9c56def06mr10678081fa.29.1791637684541; Sat, 10 Oct 2026
+ 06:08:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+References: <20261007115821.11332-2-sigefriedhyy@gmail.com> <179154712848.434549.1887332518398499959@kernel.org>
+In-Reply-To: <179154712848.434549.1887332518398499959@kernel.org>
+From: Yuyang Huang <sigefriedhyy@gmail.com>
+Date: Sat, 10 Oct 2026 22:07:54 +0900
+X-Gm-Features: AclHuK-XNxBmVqaX_AVuTKFXpvUqvVpdQ0iJJw8t3L0zVc4v9El00m3OF_1B3Gs
+Message-ID: <CA+7S2v+hTzSacfnSJi4V2A-oj5woKA+0ffOA2cY1-7iC_LDX8w@mail.gmail.com>
+Subject: Re: [PATCH net-next v10 1/6] netlink: specs: rt-addr: fix the type of target-netnsid
+To: netdev-bot+sashiko@kernel.org
+Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com, 
+	andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net, 
+	dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com, 
+	idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org, 
+	johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com, 
+	kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com, 
+	pabeni@redhat.com, sd@queasysnail.net, shuah@kernel.org, horms@kernel.org, 
+	sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Alessio,
+> Should this have a Fixes: tag?
 
-Three findings on the MacBookAir6,1 (2.4 GHz, ucode 832.127), all thanks to=
- your code and captures:
-
-1. RX level. Your rxgainctrl write 0x1726 =3D 0x000c is worth 26 dB here. W=
-ith it my remaining PHY table replay is gone.
-2. Second TX chain. The chipcontrol |=3D 0x8 at the end of your fem2_sub1_s=
-etup is what turns on TX on core=C2=A01. I had ported the two PHY writes bu=
-t not that one: core 1 did not radiate and MCS 8=E2=80=9315 failed complete=
-ly. The bit survives a module reload, so it only shows after a cold boot.
-3. A-MPDU TX works, with the microcode building the aggregates as in your n=
-otes. What it needed beyond 0x45c0 and the cache info:
-   - the frame's seq_ctrl in the header's sequence field;
-   - cache info bytes 0=E2=80=931 zero when encrypting in software. The sto=
-ck 50 04 makes the microcode encrypt again: the AP acks the frame and drops=
- it;
-   - session frames reported to mac80211 with IEEE80211_TX_STAT_AMPDU, or m=
-instrel_ht ignores them;
-   - the attempt count of a status (word 2, bits 7:0) divided by its MPDU c=
-ount;
-   - a requeue in the driver for MPDUs the microcode reports unacked. It gi=
-ves up after a few attempts, and without the requeue TCP collapses.
-
-   Result: about 30 Mbit/s up at HT20 over 15 minutes, against 20 at legacy=
- rates.
-
-One question: my TX gain sits at index 64 of acphy_txgain_epa_2g_2069rev4 (=
-the reset value), and going to index 96 collapses the link at 1 m from the =
-AP. Have you seen what a healthy board transmits with on 2.4 GHz, or is the=
-re more to the PA/FEM setup than fem2_sub1_setup?
-
-Thanks, Andreas
+It is working as intended, already discussed in the previous patch review.
