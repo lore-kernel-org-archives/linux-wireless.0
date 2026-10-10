@@ -1,102 +1,100 @@
-Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
+Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C00439FCE;
-	Sat, 10 Oct 2026 04:31:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31BAD3612EE;
+	Sat, 10 Oct 2026 04:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791606668; cv=none; b=p/y8B+4b+lItYjCiixbhsfr9MLXAWUEhDuz8mVFy87G3ub9BXqeRznTkvlaU29ZYYV96La4eEtMF3/ZX4BjPi4ThRpyIONtfsa4oOrjqkciw654/5JvPMrD28oK9//ubn+lmX47hGnJMdRDOTFXNVVuktZ0rBfZ9mGgfca3hXxI=
+	t=1791606906; cv=none; b=kFEV3EpsVRlH6n3eNh0iHyIrTyAd/ouIF3uEtZvaq0/WkAVWtdeohs03JsfkroBf38Aox37R3zQTNIPHWL9kK3R1Eaph4CM5hYlKdqpLaVDiMR9HkVjDueXslcpO+Hvam004F1b79y5DKEAjHE8feBg6scntBhvcV1/bc18Zuoo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791606668; c=relaxed/simple;
-	bh=/xD0aF+oIn+JzrhZxLfyr83YXVZs2BQ8+zqCQphUSP0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mk9uPggE3ud4eWkbmEJ91MHCb9+zdzKRdxeYl2iP19SoJywZvFVxIsnOwdiCTu1qmmVewqmJW4e65mNckBl+AuNlQSZ6ziUjtP/YqmHgM18UbRN9emW+Wfjppxhv5sQywbHOwVnWJYf43ohsWZsawmbRnJY8XDYPdRtXVYSmZ0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=NSYamK5p; arc=none smtp.client-ip=54.204.34.130
+	s=arc-20240116; t=1791606906; c=relaxed/simple;
+	bh=80rjkX/a1IzJ7fnM47AVZQsjw6x54D+aSaJzkJW9vig=;
+	h=From:To:Cc:Subject:Mime-Version:Content-Type:Date:Message-ID:
+	 References:In-Reply-To; b=mdcQe8Amh82rfC/LTFiohGuqyd9oaV1BgZCnSgeNkh/zK7Ciqddwn47M5N6ojB3PWzXA+76FzXDk0Ujjx2efoVLw78HxBDZZkFCP42NdTuQeYsOERvbwdIhEOyZzxcs7JUfyLg2VjBaWVjhU6pX5WqN17kGbC4ynrkkRArJP//M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=KKzBh8iB; arc=none smtp.client-ip=54.92.39.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="NSYamK5p"
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="KKzBh8iB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1791606625;
-	bh=/Ncv9zDfZXRbn/+vJNMtlW+RkojuExy2lD60H9iiNRg=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=NSYamK5pVGLWQNtUyG3o+/Yotwt/6C1n+/lk3Imc632wTiLWM8Ge7+RFMsI0A5gGI
-	 gLVnhi4sO8Kz00OJ2by4q0RU3Bjor3nl8hbhV277QbwPFp1qmPeJd5FeQ6RVSVkwXS
-	 TFLn6LTMCHLZAF6AYriqnEJJUohNmID3YG2rBK9o=
-X-QQ-mid: esmtpgz13t1791606607tee7297f6
-X-QQ-Originating-IP: yBpt3uylGUdnyNtdTZCx4ggd3TXHVUJz6pNpVaOKm2U=
-Received: from localhost.localdomain ( [113.57.152.160])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Sat, 10 Oct 2026 12:30:05 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
+	s=onoh2408; t=1791606866;
+	bh=80rjkX/a1IzJ7fnM47AVZQsjw6x54D+aSaJzkJW9vig=;
+	h=From:To:Subject:Mime-Version:Date:Message-ID;
+	b=KKzBh8iBMf+JdzEG/XyK6iCJOEIc7gadGiF16LdhC8IUkLgpAza6VRka2GmvdUl14
+	 2MXlwQqFJVGZri/0F+/d9QYUYbKZ1+dzdvYjcfUZ7XVl6hyQdvqPbSsG9tl49uPLhB
+	 TO99xUpJBecHh8CnTJ+MFAij2rN8WYUeF119QW2s=
+EX-QQ-RecipientCnt: 7
 X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 16494117288888038311
-EX-QQ-RecipientCnt: 6
-From: Wentao Guan <guanwentao@uniontech.com>
-To: sashal@kernel.org,
-	kartikey406@gmail.com
-Cc: johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Wentao Guan <guanwentao@uniontech.com>
-Subject: [PATCH 6.6.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
-Date: Sat, 10 Oct 2026 12:30:02 +0800
-Message-Id: <20261010043002.2919860-1-guanwentao@uniontech.com>
-X-Mailer: git-send-email 2.39.5
+X-QQ-SSF: 00400000000000F0
+X-QQ-FEAT: D4aqtcRDiqQnft7kyUuJbd/1GndRJklzmB5VJlBX//o=
+X-QQ-BUSINESS-ORIGIN: 2
+X-QQ-Originating-IP: HeilzH7BoGic1gszdDYTeuISgSGfIaB1/TNSPZD9Zwc=
+X-QQ-STYLE: 
+X-QQ-mid: lv3gz7b-6t1791606850teb1258f8
+From: "=?utf-8?B?V2VudGFvIEd1YW4=?=" <guanwentao@uniontech.com>
+To: "=?utf-8?B?5YWz5paH5rab?=" <guanwentao@uniontech.com>, "=?utf-8?B?U2FzaGEgTGV2aW4=?=" <sashal@kernel.org>, "=?utf-8?B?a2FydGlrZXk0MDY=?=" <kartikey406@gmail.com>
+Cc: "=?utf-8?B?am9oYW5uZXM=?=" <johannes@sipsolutions.net>, "=?utf-8?B?bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn?=" <linux-wireless@vger.kernel.org>, "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>, "=?utf-8?B?c3RhYmxl?=" <stable@vger.kernel.org>
+Subject: Re:[PATCH 6.6.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Date: Sat, 10 Oct 2026 12:34:10 +0800
+X-Priority: 3
+Message-ID: <tencent_54DE3A7910D4598F5676AE58@qq.com>
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
+References: <20261010043002.2919860-1-guanwentao@uniontech.com>
+In-Reply-To: <20261010043002.2919860-1-guanwentao@uniontech.com>
+X-QQ-ReplyHash: 2432166471
+X-BIZMAIL-ID: 12405904260231876868
+X-Address-Ticket:version=;type=;ticket_id=;id_list=;display_name=;session_id=;
 X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz3a-0
-X-QQ-XMAILINFO: OBpqy79whgIZPjCztq0EkJBZZ51+9TVIWSDJ+sINL750nl8uHLm1S09f
-	2OdrTb93c5RvhFfN/BgZWYwBoFASTzYWkfuF9DE7p7jfuwi2UwdDd5/oxa64tZZYb9Km4aH
-	pkbIo3xklL9S8IjEHYCH7HSxq3zjYSF25v/9/AI9IKFraD9qufpFRxJgkwNQIvVuO63FLt+
-	euztI/lvk0kt3RZKdgIJA7e/xYui/nmATrAaI9vgO+g1A+5LY1Fe2F2tgR8kx1NM2HIDoo5
-	kIKcA8/GW57at8aMOaAMO11XhY2e6VKLE6cEbQf3pZcRBxoc31Eco8CoVVB2fx5KbTBE3bB
-	/Nolkd/CIPLY/l9zB5innURk4D+WU/2jSG64x+Kb2A/BgPEe4/KrVrqbYAVBrqnpW8xBfmx
-	1IEF+wJ0ecOgI7/zoulmPsRDCWGPJ7NrhfsmoPWUlWRdjjN8oPi6o/zba9zE0JjgWBLj1cm
-	iltSLHtRJbpQyMBEbJ3v3zZgEzwKrCETXWIqvtfMaI7P2n/OGWHvJ/TXg2XXHGXvoY5jBtV
-	pbpy1U9VNffLvjCkZKqznbgP53xaqSKx23Ev2Lj+YMRt+onQA2xhhMD2dAFHgLBg1cMeDaB
-	0c3NLGDYx0mWB044z6j2xAWOUsh1x/VzY37j92Oyoutcat4Pjl64LMceIk0/ya70xEvrY5D
-	sctuUmT0qUXR1zGkGJ6ZAogEIr3vgrBrdnnMas20KA7A/l3mITxM+hNB7ajx6WC08yyY9MP
-	mxoNuyiYGPb7LVpqF98P7h8Myr4CqHbm8kScR89Qt6tZ4HboknFI4ZpoeHbZjBvE+WnOSZ/
-	floL9bLLLRnBKKEE5B2E2PMGr/wmWgVuBQnXR5xQVM/SIpIAq/Zpkh2E/tLWp7SwkePeLFC
-	2FSTMXsD07V6131ka1BHbV+ffZ39Ez2UlTo1eQDIlXRv3EuyUSEVMXxlQhFbCAh3zDAxwze
-	CdFAxi427EDv8fvgji4aJa1V0s7I5QKkNx1EqZIGnoAd72iGzqomgKgygjChEinvTYW6X6R
-	Uxo5nrFsgIcu7amWuO2vaa0GzrAafKJ//QUu1y576OvgBp3PxZUHyvyvcN2Ek=
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+Received: from qq.com (unknown [127.0.0.1])
+	by smtp.qq.com (ESMTP) with SMTP
+	id ; Sat, 10 Oct 2026 12:34:11 +0800 (CST)
+Feedback-ID: lv:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
+X-QQ-XMAILINFO: MpJmQ90V4eWUtzDiqQCTDN8l9mUVqmtQnxaiTtPId3jvUkv0wi7KVp9n
+	YPJBXlH5Yd15F6IcqychEcNgEyL7rIM3K0gCByxz3MapaljWJ/fR04DFg0ghxfhwOMUd696
+	riMuUujvxivN2vdosrujDeCWOnv9gLLgewZD3m1xGU6WXo6FLK249ITkh0CEf9ln4mh0xYd
+	l9QkMwwfrxz2uog/XGvsHzS6u634roz3SQ0mmR9p/JgXc4VVWTLhj9RAONXymAlAgHoipk4
+	JDnTQJGxJ0IDde7y4FlzDQDCGdm4DzH/54QSqOKVwrxqgRqfPFr1e8ToGa64rE4Q2iPN3vB
+	QYf9EULi5IaClLe6bZmfbotKTBBInEjG5VnQEok6sm17/7VaY5FNC0j7zJ8GqMfjG9+n3IU
+	+tOSX5jBY2oB8E9qncZHCVBTYnca/zTJSKKBx+QpAZz9CpXBZnqjnm45VUrsaU4TZH9Y45M
+	0nGBGRFTIPhsZ7xZORWxlrU5D1gWwrCRcUqREWPasNTCsAE+DnEuVObiCd42Z5nZEV39n0g
+	9nOksOcV1Ml3GO+fmHOJggUsD8V5uqtHzcsiDJ+AK9nbdUhx0AXKG8lNoxdqzqhIfQy2uYw
+	QTgBjD3I2PEHjv3fBY8+4CIYY7N1WcL4lv6igz5HFaN2/ueck3hGhMgiGrtIU2tsxjQ3+/e
+	bgOjrjDo68ISzQ95cEVW9m1jQNAn75MabtXe65IpRrQilS70y8q+GsHlAM7fpa7ZTkeToKV
+	75eY+57l6hZatZ3iKW8Fe7tdri9833AXD1133O8WF6I8UZQNEAdxGeJhwj4m63v3A/enWEd
+	LXl67zvNub2b45yZifblLGlULOoJ3kgRsORsCIBTvc86WEarB1FrB4W/E7U/BwtowMmIUtF
+	Hs2PJlHCpQQvOgOT1iWw86kJ0Dq9xx0Dlhp1x7kanMbRdnsPG2k6tMBv5FMk/cU0e7rxwMN
+	Zq3Y9Fygw+fcMSXJAZNioaIRJgUafjFafFUtr7nnrI2gpr/fIAp3roBPdXOdQo3AIKeLU5l
+	oPCqK8Y+R2t4VSQx4jCR1iGMsml9HpuPtkZ1kX0DE/r//+INQwDHmf9xqrjDD3N47SZsG0/
+	w==
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
 X-QQ-RECHKSPAM: 0
 
-This error path returns while both wiphy_lock() and wdev_lock() are still
-held, so one malformed IE request can permanently block later operations
-on this wiphy. Route the error through out to release both locks.
-
-Fixes: d01f1600e8b0 ("wifi: cfg80211: validate IEs in cfg80211_wext_siwgenie()")
-Signed-off-by: Wentao Guan <guanwentao@uniontech.com>
----
- net/wireless/wext-sme.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
-index cfa903eb0e82f..0e7c314bdeef0 100644
---- a/net/wireless/wext-sme.c
-+++ b/net/wireless/wext-sme.c
-@@ -354,8 +354,10 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
- 			/* nothing */
- 		}
- 
--		if (!for_each_element_completed(elem, extra, ie_len))
--			return -EINVAL;
-+		if (!for_each_element_completed(elem, extra, ie_len)) {
-+			err = -EINVAL;
-+			goto out;
-+		}
- 
- 		ie = kmemdup(extra, ie_len, GFP_KERNEL);
- 		if (!ie) {
--- 
-2.39.5
+U29ycnksIGl0IGlzIGZvciB2Ni42LjE1OC4gY2MgdGhlIHN0YWJsZSBsaXN0Lg0KDQpCUnMN
+CldlbnRhbyBHdWFuDQoNCj4gLS0tDQo+IG5ldC93aXJlbGVzcy93ZXh0LXNtZS5jIHwgNiAr
+KysrLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMo
+LSkNCj4gDQo+IGRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mvd2V4dC1zbWUuYyBiL25ldC93
+aXJlbGVzcy93ZXh0LXNtZS5jDQo+IGluZGV4IGNmYTkwM2ViMGU4MmYuLjBlN2MzMTRiZGVl
+ZjAgMTAwNjQ0DQo+IC0tLSBhL25ldC93aXJlbGVzcy93ZXh0LXNtZS5jDQo+ICsrKyBiL25l
+dC93aXJlbGVzcy93ZXh0LXNtZS5jDQo+IEBAIC0zNTQsOCArMzU0LDEwIEBAIGludCBjZmc4
+MDIxMV93ZXh0X3Npd2dlbmllKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsDQo+ICAgICAgICAg
+ICAgICAgICAgICAgICAgIC8qIG5vdGhpbmcgKi8NCj4gICAgICAgICAgICAgICAgIH0NCj4g
+IA0KPiAtICAgICAgICAgICAgICAgaWYgKCFmb3JfZWFjaF9lbGVtZW50X2NvbXBsZXRlZChl
+bGVtLCBleHRyYSwgaWVfbGVuKSkNCj4gLSAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJu
+IC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICBpZiAoIWZvcl9lYWNoX2VsZW1lbnRfY29t
+cGxldGVkKGVsZW0sIGV4dHJhLCBpZV9sZW4pKSB7DQo+ICsgICAgICAgICAgICAgICAgICAg
+ICAgIGVyciA9IC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGdvdG8gb3V0
+Ow0KPiArICAgICAgICAgICAgICAgfQ0KPiANCj4gICAgICAgICAgICAgICAgaWUgPSBrbWVt
+ZHVwKGV4dHJhLCBpZV9sZW4sIEdGUF9LRVJORUwpOw0KPiAgICAgICAgICAgICAgICAgaWYg
+KCFpZSkgew==
 
