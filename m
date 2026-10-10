@@ -1,146 +1,188 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523D5389DE8
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:48:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791643727; cv=none; b=e6270k85Ii2+CwaCbSXpkGNTAl7fqm//1cRmHYv4Uzu7ONbj15RqQS6uS41CZCKH5uE8GAhKxQZ3R0EO8I1PQCBzNdJDPVHSPGYN7TOhsBk9EON3IutWgBEQQ1JIgBm/nFrmKRsqkMidMvnopXWjsbZnrH3MxxlwEGo62LlIWSE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791643727; c=relaxed/simple;
-	bh=UzuOT92CybzvWYw8i1jRlWTzrFVkI5nKTpxuBg2bFSs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=M4NpFLXuncun2K+3y3s6ePB/VTYryV/mZ0BIubtgnooApE7Guq2lDTnMwC9ue5+hbGHDkKoHGyMUMW61SqXZsr+x/AChtxBHDRNQo9d3QQwfX4nlbU4zsqPBqu/o0ewx+f8mI7MyL/rgGyCCV1G1vD7XGyG3NLlngC1XETFTgjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=G3EcykJe; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gWmwl5w8; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C93537F738
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 15:05:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791644716; cv=pass; b=luVATFKWVEazO1XbVvbB7MzRCEE/EK68YOKKnkBXNlwKGI21VpoxCeDOD03YoVqJdOQkk+U4XxpUjX7uj7Q7AHqf9eeBCbUgDuyRnqnhZ98uatzmIUFK9xSxyP8SBSob3BCF8mkILSiKb0bDDzyeiAraqhOnWamRk180JLoFtfg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791644716; c=relaxed/simple;
+	bh=11jlVCLHFqnNR6Dp/bNjVQNcIjrLj+Y6/rpoOHLB/ns=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=NxemsbeKDLBi/96iy+z9mTNMBVoxiI5EO597DZgNcCJxrpCjhpgzt5Rmc+647/1RzA61KzfDyxCW3oXox3rABrZTyCwGNQDnjmfp6ZlgcBnGzYz6SpglHenPgUt5DVr9NOb6Fvp7hhLQ3mqu5jLg98Yp1+7rbsk0pr7Blw2lMZ8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YWGBZiCg; arc=pass smtp.client-ip=209.85.208.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="G3EcykJe";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gWmwl5w8"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69ACUsUg444744
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:48:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	9EDoraaW4HZfDPss32Nc2ug8E5EIpFGQ5ypvQ5P+Zx4=; b=G3EcykJepng9Rm/4
-	IcFivB5I7KHTyU3KxjXTUjPlLY1b8sDkKM5mlTXR+m08mQ/so2fbHdhWOWFp3S9w
-	5/2kXjPYsKV9ULweaqMiLTVJBcK4Z13LxGLmwL4vDXAfY8MKc6mJcm7FeoA5YIl4
-	bDVG8RZMRYuNZLBfp+E724+JfHKdFLe6d+ElskSaSXNeGO1DOOwFD1l3XeV0qhE6
-	+k6c1Y3kIaEYG1TR6+4eKvRPvKt6Brk/1TptuKdJHKjVrB0AgBY1M4OH525FZ6IX
-	41VFxWfFrwRMJnuyqP9M+xBwhPLxk4ziS4/J1VcIaFQthmQwJwC5SPXHziKnLcfk
-	vGM7Vg==
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h7aqmsm6a-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:48:45 +0000 (GMT)
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-30c0d568830so1307940eec.1
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 07:48:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YWGBZiCg"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-3a772ec8389so5509821fa.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 08:05:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791644713; cv=none;
+        d=google.com; s=arc-20260327;
+        b=cDu5vEoJuglna9lU73hqAZzp++roiI0SfByQLTNqTMKA3ntBcT/Pk+rDcYFdrwnjNk
+         fT6ag7P+/2THK8cKslbVByKuPuOSxqHhTZoHMgNfbSWpAHW/zatAI/2Qb8xx4ZNZ2Oda
+         xFqyU5R/ScZ6GWzWxG+GDtAMgzAX/QMcNVB803PQ1hT+qUoUOPvAS/gb76ilD1Ao68g4
+         Db0uNANA4t8AWPpd2nc/P2UDU+9FZII8lmyDh+DMM4KZHn8Udwd/tssekvwRCQ8389BK
+         MxgEL7ZapbuNEX4VMPwgkkzdI/dZ/RwSp25zdv6eKEFrZ+XSw8epVXqOrI34dYtUnGvb
+         HeGA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=KfH9tsGK37spKp5ytoeFcdf/Xc7jhbYKmz2ALtASldI=;
+        fh=mRlY/7aqHeH3yRGYvkuG3bnzztR5XOOJ3JXWh9DmbDI=;
+        b=ne5Guk3Z39W45KsR7pJ6k8a45El37fWsn1XPpMMi8xl7Dx1M4lbh5VMXzpEkHBh8pA
+         WsPMq0wDrPLOwZtbeuNA5OG9nXbyeF2LniPn7BoXcEkuXx4xG8nuCQi0rtgK9ZXLlgsw
+         83tjK6uRf2eSTAA/xEpuc4uJh8tXAvLk+Ss4mYC1pmNCPz+4UM5GNi8IK9fC3jjHTMqs
+         f46zHV86gMueiTHuEOQyLDm9c9U2RxijYAsePl3Z6g1zxzILbAtN6+zd9FSdW3WMILbW
+         dXSyDn9YCF/p1eObB/nKVfx0ZkqaAZlDjODhOTlo+43CnoUJPJ+CCgTuxvx05iAhMoDR
+         17wg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791643724; x=1792248524; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9EDoraaW4HZfDPss32Nc2ug8E5EIpFGQ5ypvQ5P+Zx4=;
-        b=gWmwl5w8kbchdLpsHukPs0C1hC46pfsGiWIqB0SdTrcg7eG/3k4NB0KSkQEGubAPXr
-         VXPm1QgSGrzCKOA/IeZFeUjmXUOoLcLGIb+MNXw3+8v8djV9dthCYO9HB8PQehPPPVsv
-         zBx/R/tqMTMAJYq/TMqbSpldBTHAMfAH/KdWEtXG2VAQ05J5ILLjYMEgNlJDBwnxUaa8
-         eQpS4+lXjAPMr95F7Ro+bXdFRJi+ShOvaJwO9eDIERh4Hs2FULmIZsAkuya1RuxEdc36
-         B3zgalftjRLwWCLA3s8kEqfWPSMMnqnTrcajr5vmSinH+ONAVK4ML6Zd4s5v+BrdP3eF
-         7ZVg==
+        d=gmail.com; s=20251104; t=1791644713; x=1792249513; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KfH9tsGK37spKp5ytoeFcdf/Xc7jhbYKmz2ALtASldI=;
+        b=YWGBZiCg1bSu73nVFHn9aPs2RkOsSAhgm3LPH+RS91NeLWS8VQ/xSwTYT1Lo9TK9z3
+         UYCrtELpzvMrUAGhbnkQ7Ba+H7tPijTlilAmwIQ2YxE6SSslXejgjIz2RvMjU17vpzTJ
+         kpZMLjf2bI69tJjb/Omw5SlB1tQOiYXDiw87FFnO0tcYOCQTeR8qjI92h3bLhXD2B0t1
+         P8SRHY6HS5/Zciln2xY06bJFvRQV/X7mKgJU8YlywDWi6K0q+eN6NfLhSF/bqxegl30W
+         dNZKPGtJchdiBwLJ2ZKOkw8KNQKp3cR5Ed4qmAStpWaZAgKfC1a2aK0/hdvei3Fdn62I
+         0S4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791643724; x=1792248524;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9EDoraaW4HZfDPss32Nc2ug8E5EIpFGQ5ypvQ5P+Zx4=;
-        b=Z0ywa1jTbf0JkeFd3RcI1dq9venLa81WrutjtedlG71PV3OOphiCPf4hmt4vA2HAnz
-         /KAMjze60vhKLsgvETQlULqa2hAfFGB0a9m4lycSiYeAIsAaLS34jBCUQKQZf84eYxz0
-         cK/jeREUZ5B3uUUzL1F278aEO7pvU+a8uhVWRzLLdprmFSozrAOgsp7wIg2MBLSYvazf
-         2EG6GxVMJ6nwa0DVHYa7yaLPgjX7j8kWwjMiIIZqN9Zor7tdv0igGFkcjkBnfaCZKd0d
-         SfRaj6sW1Be/tIMTe4R4hfrOKDjtOG4WlDq3KltqbJ3T5C/ixv33LyG/4KySL7kfQN0Q
-         gx9Q==
-X-Gm-Message-State: AFq9FYJtZ13WmJcpP/v+J4KH73zxc/NC9lcCjnjZRYmUucG505AzpmMP
-	sqZJ1PdUX3DNyhlkqw0Ho3VRxvhOp1CwnIxAcJOJvWVcTDhHvsV6ZlvbVyKFriWvap24qjvrtV5
-	FAnxjhyt1VLsj8Mk/xK8UQctmW71nMweZKLEwSUSroExblEQVj61YPxeDkN9hty00KDaH97Hzad
-	wwsw==
-X-Gm-Gg: AYBFou28tOtwtKsReATlXeyWdG09LcK7WJBEZRukbUPdj5HP9FkYkc4mSCy9cRM2nHq
-	HD+mCDSe18Z1IInlT8FCzg6cJgV+rb2MAppJoiyJWBTFvbVFa3C83x5Q5RDHqb60LTTvmLvE4KO
-	b23XsrfKAAJNWOATpIT2hA666AFmBZ1/TYLnBfC4ucM5DDIRnF32Mo0qihNUrNyYqJqWWOKCyI1
-	2pC/h5WL9imuUth7ANybWjciOT7kiTwrwKmzlsMGGu9SSgR81+7p+IZrpDMDpQ834n/7LQ/Bl9X
-	C/ONVXMujPV9pxCfVowts+U51tretF1K/CZ4fwABhOELSfrdLlrhbcaa6iWHPiZocGG9BDt8Hne
-	rTa2jchIgudpI0BfZVJd/FTITnVBai8meU3WVBieukMcmE0G65VOMRg==
-X-Received: by 2002:a05:7022:b047:10b0:144:ddf7:2570 with SMTP id a92af1059eb24-16a5e8728dbmr6573643c88.39.1791643723983;
-        Sat, 10 Oct 2026 07:48:43 -0700 (PDT)
-X-Received: by 2002:a05:7022:b047:10b0:144:ddf7:2570 with SMTP id a92af1059eb24-16a5e8728dbmr6573602c88.39.1791643723354;
-        Sat, 10 Oct 2026 07:48:43 -0700 (PDT)
-Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca7133asm19713287eec.14.2026.10.10.07.48.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Oct 2026 07:48:42 -0700 (PDT)
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-In-Reply-To: <20260413-hal_rx_reo_queue_info2_msdu_count-v1-1-c4c92ccf77b9@oss.qualcomm.com>
-References: <20260413-hal_rx_reo_queue_info2_msdu_count-v1-1-c4c92ccf77b9@oss.qualcomm.com>
-Subject: Re: [PATCH ath-next] wifi: ath12k: Remove unused
- HAL_RX_REO_QUEUE_INFO macros
-Message-Id: <179164372257.2359474.11655670441431181998.b4-ty@oss.qualcomm.com>
-Date: Sat, 10 Oct 2026 07:48:42 -0700
+        d=1e100.net; s=20260707; t=1791644713; x=1792249513;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=KfH9tsGK37spKp5ytoeFcdf/Xc7jhbYKmz2ALtASldI=;
+        b=RO8o2l1b8BLGuHAomqEvzh0QCOt+8PscD9lwE2B1TD3qXqr9QlZKq0bgIOtN62X7wh
+         xJ3I4c7q9Dl1NINY5j6ys/V6f9Kf3z7wAcM5KEbORUfeirLG96pZtzNDC8FjihPOwAji
+         JPxJ1YVswFIVNrfimriudXwDyFW1eq+3hpFRB7VexLpGHXfT+tREsJT/Ou48b4Nc+OZx
+         Llix06HjD/rRrCkxsMAdi0rCOahvYYpHeO5gcxYw4j4BOQ6VTKbGmjJoxHNhcQoXVCoz
+         RL42YrABYmqS21SnBCkRVwsRgday7g+wjgCFvhOc5n0MUkHgJinx4TdHOBSFd8Tmu0eY
+         GeOA==
+X-Gm-Message-State: AFq9FYIh+fbrmxWNknyn/MN924RGP/0VkzyqnJi3D1cfhNZ9F2om/hf/
+	wR7cTwufGS7dWIk83AIMvaIKHrBkqvp06NWxk71iqdiFrKpKNASFKyzwzRpnhiQ6ZaTWcXrOVmO
+	I06WOh82jRTCzeo6eKdcg/pq5ogHIuXVMjowX
+X-Gm-Gg: AYBFou0lTDReksnv3s09CPLPv2fRCz4azADUPnEmaVegvmJ2WtQ7olHbwNA1/FUfBsn
+	1P4X7Y907tRZfpelkQzF2CMbeF+iZM9nLgAGEPPIKoFRUicCyiDzqWRqf8b1rYvBFGJSJ0rR9uK
+	R6YrDcLvKulUXg77TEO7FUHDhEBvejQaUeL8rdBwfM5OJnOg8B8gKp7ybzlg4JnQVxJwqJVCleh
+	gBkQn6wZ8itqIVjbH3G3HiS0d2ivsiKsCy10oyty5JnQENwFwzAELWOZM/Bf1mipqeNqRc2M0J8
+	R/kaW31u+YO+vl4LiF4ux4vcTkVIYUQtUatlZ+VD7KUzlQClQkQiYsbcpJz8EK+j2vjCvReHi7r
+	pz7/taxOq3rJw70tkA7rskzLM8s27yivavU0vQzvV6h7ZJ/xSH88ddDpbImpIwngUTiNFz5pXiv
+	ucT7IgWCE=
+X-Received: by 2002:a2e:bc23:0:b0:3a3:3170:5420 with SMTP id
+ 38308e7fff4ca-3a9c4eb683cmr11429611fa.3.1791644712815; Sat, 10 Oct 2026
+ 08:05:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEwMDA1OCBTYWx0ZWRfX3B50h9JRhVzl
- Xb4Qz7v3hsW+NnjhUSoQw/ePqsTX2EgNOcgjl+L5QQ1V1yuTxjwsXI//H2S1XtgkglNWby6aeYY
- EpHJpoM/eF9gPlMVm50XcaZn0JuziJM=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEwMDA1OCBTYWx0ZWRfX7i3VmvdcS5Qs
- dE+RYsamRSdq7wYyGVt1H4IzWAZw/rAUnvZJYiaWgEsYdPMsqBH0/vkGzP3cKUWlyzpCHUXwDpy
- vJ8hyH2kZcdiZcvmrE4U0bzl58H6L37II6oWx+HRnkfUWRmfmb8cY7Ga28VRHW6VIHcxBNPArWw
- ufAnpE9b0JYZbwaCCVYUvdL8wt8VS9WH5mChWFsc9HPxHsf2clOtFUAFITGLh9ASXVy8e/TZbAx
- NvuiUTMnpsNtpPysL+03xZp0g2UPAiETsYkDeL6G+X1t9Dhh8PiXySgAGlmaK295+Hfh4UNOFpt
- MqkrtMt1w9Rv1HFpxx+aJAtRfTumuUGUmZbvsVbaprU4OZdQ64XGBeFM2tYf/YGuUyISg4erTmj
- h2/aNS8+VKPUXdtM3KYBkSM7giPig7mLeyUP90tdwQK/tq22zNc1ger0V++S3DiQBBTqOSrTskM
- 4uhP9kzMTDs4cYs+oWw==
-X-Authority-Analysis: v=2.4 cv=Uq32pOwB c=1 sm=1 tr=0 ts=6aca504d cx=c_pps
- a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=EUspDBNiAAAA:8 a=2ChmhLmt-ZLakbd1MbYA:9 a=QEXdDO2ut3YA:10
- a=6Ab_bkdmUrQuMsNx7PHu:22
-X-Proofpoint-ORIG-GUID: bOEe1YbLkLjONFnwT6hU9iBtAXTTxJvr
-X-Proofpoint-GUID: bOEe1YbLkLjONFnwT6hU9iBtAXTTxJvr
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-10_02,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 priorityscore=1501 malwarescore=0 spamscore=0
- bulkscore=0 adultscore=0 impostorscore=0 suspectscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610100058
+From: Desert Rat <desertratua@gmail.com>
+Date: Sat, 10 Oct 2026 17:05:00 +0200
+X-Gm-Features: AclHuK-IJuyztRdXxql2cHRRhhnJuUttkjp4JuBBFRLPFcowCa021dw9HfmTotw
+Message-ID: <CAOCtixsdv8D8kJr7qdFzd_SOn4U82BsdPZ+uxGCPh7yPYxt9_Q@mail.gmail.com>
+Subject: iwlwifi: AX210 fw 89 asserts (0x14FD, PHY_CONTEXT_CMD) on 5 GHz AP
+ advertising non-aligned VHT80 block
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, 
+	"miriam.rachel.korenblit@intel.com" <miriam.rachel.korenblit@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 
+Hi,
 
-On Mon, 13 Apr 2026 16:58:46 -0700, Jeff Johnson wrote:
-> Many of the HAL_RX_REO_QUEUE_INFO macros are unused, so remove them.
-> 
-> No functional change. Compile Tested only.
-> 
-> 
+An Intel AX210 cannot authenticate to a MikroTik AP whose VHT Operation
+element describes a 5 GHz 80 MHz block that does not follow the 802.11ac
+channelization. Each attempt crashes the firmware in PHY_CONTEXT_CMD and
+the device is re-probed. The same laptop running Windows connects to this
+AP without problems. Once the AP was set to a standard 80 MHz block, Linux
+connected immediately at VHT80.
 
-Applied, thanks!
+Setup
+- Intel Wi-Fi 6E AX210 160MHz [8086:2725, subsys 8086:0024], iwlmvm
+- firmware 89.123cf747.0 (iwlwifi-ty-a0-gf-a0-89.ucode, linux-firmware
+  20260319, the newest available for this device)
+- Ubuntu kernel 7.0.0-34-generic (the taint flags in the trace come from
+  the out-of-tree NVIDIA module)
+- wpa_supplicant 2.11, NetworkManager 1.54.3
+- self-managed regdomain, country ES
 
-[1/1] wifi: ath12k: Remove unused HAL_RX_REO_QUEUE_INFO macros
-      commit: d26b64fbb844fa00d9c95b7e1ae7fa8f546952db
+AP (MikroTik hAP ac^2, RBD52G, RouterOS legacy wireless), as seen by
+"iw scan":
+  freq: 5640.0
+  HT operation: primary channel: 128, secondary channel offset: below
+  VHT operation: channel width: 1 (80 MHz)
+                 center freq segment 1: 130
+                 center freq segment 2: 0
+  VHT capabilities: Supported Channel Width: neither 160 nor 80+80
 
-Best regards,
--- 
-Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+The VHT80 center is therefore channel 130, i.e. 5610-5690 MHz (channels
+124-136), and not one of the valid 80 MHz centers (42/58/106/122/138/155).
+RouterOS allows this through extension settings such as
+"20/40/80mhz-eCee".
 
+What happens
+cfg80211_valid_center_freq() only checks alignment strictly on 6 GHz:
+  /* We only do strict verification on 6 GHz */
+  if (center < 5955 || center > 7115)
+          return true;
+and cfg80211_chandef_valid() accepts center_freq1 = control +/- 10 for
+NL80211_CHAN_WIDTH_80 (fall-through to the 40 MHz case). The chandef
+5640/80/center 5650 is accepted, and the firmware asserts when the channel
+context is changed to it during authentication:
+
+ iwlwifi 0000:04:00.0: Microcode SW error detected. Restarting 0x0.
+ iwlwifi 0000:04:00.0: Loaded firmware version: 89.123cf747.0
+ty-a0-gf-a0-89.ucode
+ iwlwifi 0000:04:00.0: 0x00000071 | NMI_INTERRUPT_UMAC_FATAL
+ iwlwifi 0000:04:00.0: 0x00016AD2 | data1
+ iwlwifi 0000:04:00.0: 0x00000010 | data2
+ iwlwifi 0000:04:00.0: 0x807DFF00 | hcmd
+ iwlwifi 0000:04:00.0: 0x00C40103 | last cmd Id
+ iwlwifi 0000:04:00.0: 0x200014FD | ADVANCED_SYSASSERT
+ iwlwifi 0000:04:00.0: 0x80483AE2 | umac branchlink2
+ iwlwifi 0000:04:00.0: 0xC00814E0 | umac interruptlink1
+ iwlwifi 0000:04:00.0: 0x00000082 | umac data1
+ iwlwifi 0000:04:00.0: 0x00CC0108 | last host cmd
+ iwlwifi 0000:04:00.0: UMAC CURRENT PC: 0x804a5ab0
+ iwlwifi 0000:04:00.0: LMAC1 CURRENT PC: 0xd0
+ iwlwifi 0000:04:00.0: FW error in SYNC CMD PHY_CONTEXT_CMD
+  iwl_trans_pcie_send_hcmd_sync+0x38c/0x3a0 [iwlwifi]
+  iwl_mvm_send_cmd_pdu+0x53/0xa0 [iwlmvm]
+  iwl_mvm_phy_ctxt_apply+0x3a2/0x420 [iwlmvm]
+  iwl_mvm_phy_ctxt_changed+0xa2/0x150 [iwlmvm]
+  iwl_mvm_change_chanctx+0x124/0x1b0 [iwlmvm]
+  drv_change_chanctx+0x59/0x150 [mac80211]
+  _ieee80211_recalc_chanctx_min_def+0x40/0x70 [mac80211]
+  ieee80211_assign_link_chanctx+0x92/0x3a0 [mac80211]
+  _ieee80211_link_use_channel+0x2f0/0x360 [mac80211]
+  ieee80211_prep_channel+0x393/0x4b0 [mac80211]
+  ieee80211_prep_connection+0x38d/0x5f0 [mac80211]
+  ieee80211_mgd_auth+0x2da/0x6e0 [mac80211]
+  cfg80211_mlme_auth+0xbd/0x240 [cfg80211]
+  nl80211_authenticate+0x3c2/0x420 [cfg80211]
+ iwlwifi 0000:04:00.0: PHY ctxt cmd error. ret=-5
+ iwlwifi 0000:04:00.0: Failed to send LINK_CONFIG_CMD (action:2): -5
+ iwlwifi 0000:04:00.0: Device error - reprobe!
+
+wpa_supplicant only sees "SME: Authentication request to the driver
+failed". It happened on 2 out of 2 attempts. With the AP moved to a
+standard block (5180 MHz, 20/40/80mhz-Ceee, center 5210) the same client
+associates at VHT80 2x2 with no firmware errors. Other 5 GHz APs on
+standard blocks also work. Because the crash happens at auth time,
+per-network wpa_supplicant options like disable_vht don't help (they only
+affect the association request). The only client-side workaround I found
+is iwlwifi disable_11ac=1, which applies to all networks.
+
+Suggestion
+The firmware should not assert on this. Still, it seems reasonable for
+mac80211 (or cfg80211) to treat a 5 GHz VHT/HE operation whose 80/160 MHz
+center doesn't match the standard channelization as invalid, and fall back
+to HT40 (here 124+128, which is a valid pair) instead of passing a
+non-standard chandef to drivers. Windows apparently already does something
+like this.
+
+I have put the AP back on a standard configuration for now, but I can
+switch it back to the broken layout to test patches or collect more data
+(e.g. a firmware dump) if that would help.
