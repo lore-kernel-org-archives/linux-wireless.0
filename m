@@ -1,104 +1,82 @@
-Received: from mta1.migadu.com (out-251.mta1.migadu.com [95.215.58.251])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-07.mail-europe.com (mail-07.mail-europe.com [37.187.220.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB35D469829
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 11:14:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.251
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4E745DF47
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 12:59:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.187.220.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791630879; cv=none; b=O07MA08yAO8PhrLqcOJK6Sjtf49UbdcOZRKCJanuIKeWq9KK90XLMa6kTZfBF0YuD/r4OznjFf1FLgQlzLxxBY/3RW+cFTACGacuchDH/dE7OTyBLHnbnlvDyPq985S1rFkougw7i6BJs0hG6B3D7ArJsenzIqK/RpbBo0sMPxc=
+	t=1791637169; cv=none; b=C8aTdC35XguaQLPFXy5tlYG+84QqxB0ZmY3wM5qW950myMXTszsPGmlBb1ieyGIp+M+HgSqP2W5NwSs5dSGFhHC5BwAC3BPoV6xkad1zre4RM14SMkTDSjqAjQCK73SVpo/iZJ8c8tH5IaJwmX6zF9D/Gu279DK9EwqFiQJbNTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791630879; c=relaxed/simple;
-	bh=yn4p2s9JivjvBTqbIsK6tSDnIq73X7zd5BQ9ePHoMnI=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=ualUPG/9/COYaEiNsbwtEc9qCBLGaHimsrE5R0j+H6k5bL1bxhTlRqhll/NLiyTDAJqyG/Kwd1DbhRRD2Tb8cA0pF4YNU0olEJF96UE5GcjOkEv4JJyBlB7WRPbxl0izJ2AXB+/ANN9cxsmY4nAVEdHcocADeB1xlpEqAwZVOaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XkvEz/FM; arc=none smtp.client-ip=95.215.58.251
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791637169; c=relaxed/simple;
+	bh=MI+8PN2/zIOWn2mTez33GFToppwo0vdsMpNsvGptsys=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u8QqfkGooXiqXR1vBTMw4M+D4lDOTFvgOlWGzl4+7BJ0j/L90ODBm4/Raxmicos5h5GhZuYSXTPBZvO1w2hlkWYPG4gkx7DW7rBywW5blBcuFYfZdzfMfP3KmKrKf2h/lacXPH/soeXvcAYdk6NKJLyMslpBtqDghwiZ0Uixano=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=GLVDOCoM; arc=none smtp.client-ip=37.187.220.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XkvEz/FM"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yn4p2s9JivjvBTqbIsK6tSDnIq73X7zd5BQ9ePHoMnI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791630872; v=1; x=1792235672;
- b=XkvEz/FM5/D9yAV3zvtso4HqPuiP4eXF/G6dx2bR1zg4buWnzPeJxMTxSU16wl79sSqguJBI
- kECoJmQdPlbQWbf6NY5nrIUY5vhV8zcvLs9lkudJk6UQbXSqYBkG37GFO/DpRyOlp2VxraD1NXJ
- lpY/cRu0B34MBwfk6Vt823tU=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1c509de7a57eaea1;
-	Sat, 10 Oct 2026 11:14:32 +0000
-X-Mizu-Trace-ID: 1c509de7a57eaea1
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="GLVDOCoM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=protonmail2; t=1791637154; x=1791896354;
+	bh=y2ZOtATjEA4SLTsh8hkSk1w2NEcMCjXPPs+g9p1ucio=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=GLVDOCoMT3RNAz9sATx4xed3R0akaV+Xdf8T4O3uf7ORAnKncpmgpX2QQMlmu8WOp
+	 mUB+lqxPKIhYgPoQrGLxBCME+/BI2sHAjPRjc3a8EHRHi8OFoqCk9s3H/wIFSyZNxL
+	 DcsTBMmjIoEeXCVeLHIu5mR+w6g6p6KL5Q0rRb1IMXXpMYzeQvIw6jb5RjCaLBrAte
+	 kb8InggmoQz3uX0ZpcNHs9Pfw9NsnHnwCuQPITtem8XjVYaNSSHrRIKkZTb2gQoTN8
+	 uQOl/o11Vsxm3E653dVSEwpBiQSnrc+ADYDozFp8BHUy3xH+TiNZ+QrptX/xWcvoYi
+	 mDXEW5dr0h7CA==
+Date: Sat, 10 Oct 2026 12:59:10 +0000
+To: Alessio Ferri <alessio.ferri@mythread.it>
+From: "andreas.wendleder" <andreas.wendleder@proton.me>
+Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: AW: b43: ac rev1 captured packets with ampdu
+Message-ID: <1NF3n26c1UQ1YcYwXT-JD8OKl7dIr_22x7bgdLLwLHkWHnKlZAtcYw7504hufNHGIBEo3qr8atDAoKtK6qxtLUfVWhVSazjaIH5QPYGAgs0=@proton.me>
+In-Reply-To: <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+References: <20261009173133.0e534ec2@fedora> <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+Feedback-ID: 189422222:user:proton
+X-Pm-Message-ID: 302d02b3899688e5c14eaf1f9d895c696695837a
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Sat, 10 Oct 2026 11:14:32 +0000
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <ce5a3b408acc48642aa31866df39630aec7792f6@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v2] wifi: rtw88: 8723b: avoid converting RX SNR twice
-To: "Hungyu Lin" <dennylin0707@gmail.com>, pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- rtl8821cerfe2@gmail.com, straube.linux@gmail.com, "Hungyu Lin"
- <dennylin0707@gmail.com>
-In-Reply-To: <3c89d2ac770c659eacd532134c89b4725be9ab97.1791627615.git.dennylin0707@gmail.com>
-References: <3c89d2ac770c659eacd532134c89b4725be9ab97.1791627615.git.dennylin0707@gmail.com>
 
-October 10, 2026 at 12:47 PM, "Hungyu Lin" <dennylin0707@gmail.com mailto=
-:dennylin0707@gmail.com?to=3D%22Hungyu%20Lin%22%20%3Cdennylin0707%40gmail=
-.com%3E > wrote:
+Hi Alessio,
 
+Three findings on the MacBookAir6,1 (2.4 GHz, ucode 832.127), all thanks to=
+ your code and captures:
 
->=20
->=20rtw8723b_query_phy_status_ofdm() divides the SNR report by two when
-> filling pkt_stat->rx_snr, then shifts it again when updating
-> dm_info->rx_snr. This halves the SNR used for diagnostics and average
-> statistics.
->=20
->=20Store the raw report in pkt_stat->rx_snr and convert it only when
-> updating dm_info->rx_snr, as the other chip drivers do.
->=20
->=20Fixes: d726c70ce082 ("wifi: rtw88: 8723b: add the RTL8723B chip drive=
-r")
-> Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
+1. RX level. Your rxgainctrl write 0x1726 =3D 0x000c is worth 26 dB here. W=
+ith it my remaining PHY table replay is gone.
+2. Second TX chain. The chipcontrol |=3D 0x8 at the end of your fem2_sub1_s=
+etup is what turns on TX on core=C2=A01. I had ported the two PHY writes bu=
+t not that one: core 1 did not radiate and MCS 8=E2=80=9315 failed complete=
+ly. The bit survives a module reload, so it only shows after a cold boot.
+3. A-MPDU TX works, with the microcode building the aggregates as in your n=
+otes. What it needed beyond 0x45c0 and the cache info:
+   - the frame's seq_ctrl in the header's sequence field;
+   - cache info bytes 0=E2=80=931 zero when encrypting in software. The sto=
+ck 50 04 makes the microcode encrypt again: the AP acks the frame and drops=
+ it;
+   - session frames reported to mac80211 with IEEE80211_TX_STAT_AMPDU, or m=
+instrel_ht ignores them;
+   - the attempt count of a status (word 2, bits 7:0) divided by its MPDU c=
+ount;
+   - a requeue in the driver for MPDUs the microcode reports unacked. It gi=
+ves up after a few attempts, and without the requeue TCP collapses.
 
-Ping-Ke should fixes tag be present here if this commit isn't in
-mainline yet?
+   Result: about 30 Mbit/s up at HT20 over 15 minutes, against 20 at legacy=
+ rates.
 
-> ---
-> Changes in v2:
-> - Store the raw SNR report in pkt_stat->rx_snr and keep the shift when
->  updating dm_info->rx_snr.
->=20
->=20 drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
->=20diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/=
-net/wireless/realtek/rtw88/rtw8723b.c
-> index 8bb9c03d769c..18bd2b108ccb 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-> @@ -1280,7 +1280,7 @@ static void rtw8723b_query_phy_status_ofdm(struct=
- rtw_dev *rtwdev, void *phy_raw
->  pkt_stat->rx_power[RF_PATH_A] =3D (val_s8 * 2) - 110;
->=20=20
->=20 pkt_stat->rssi =3D rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-> - pkt_stat->rx_snr[RF_PATH_A] =3D (s8)(phy_status->path_rxsnr[RF_PATH_A=
-] / 2);
-> + pkt_stat->rx_snr[RF_PATH_A] =3D phy_status->path_rxsnr[RF_PATH_A];
->=20=20
->=20 /* signal power reported by HW */
->  val_s8 =3D phy_status->cck_sig_qual_ofdm_pwdb_all >> 1;
->
+One question: my TX gain sits at index 64 of acphy_txgain_epa_2g_2069rev4 (=
+the reset value), and going to index 96 collapses the link at 1 m from the =
+AP. Have you seen what a healthy board transmits with on 2.4 GHz, or is the=
+re more to the PA/FEM setup than fem2_sub1_setup?
 
-Either way change looks good to me.
-
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
-
-Best regards,
-Luka Gejak
+Thanks, Andreas
