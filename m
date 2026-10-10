@@ -1,121 +1,86 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CABFB3C456B
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 13:40:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791639612; cv=pass; b=H5H+biIUu5sOmSzXcPkDHxOJXNnIDNc+VPDs9IaoF1BxT8HR55rGEfUytFlnNb+w+yCev+EJ5CPuXDp41LdCjRcc3fioEjSoPIg4OjRd+VEKgNs+4dDTFrpJPfoazvf1BQrNn0LwbAXOrlWehfgx9cMD8SNM4QoZYEWr9qH4qwY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791639612; c=relaxed/simple;
-	bh=iYqhoVZ+Jyml4P0MGYzZBl9up/LYhbapQ8gAv8jGngA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Uv1Kqzxuoa4ZoQo5/PP9YzpmpQNFMTtzLOWFUUdeXn2/Vwvl/9N3V3oV5DtlVgJMDRtRVCpvII3T6Jk8032DvfQI4DDjlfS/YR9NMYkIxN/JYsG8ueecQXAib/jr8x0bt55XX7AhqQYKT6Xkdww0tfM8JwPLENBXK3I1NptUrz0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZXAZ9GWq; arc=pass smtp.client-ip=209.85.208.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 751A13655E9
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:04:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.149
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791641076; cv=none; b=FYtSfDPnbj94SuzZlvB/clAyUuq/I9A5QAyyZX8xl9pjvht0l70vcYm8QEwTUQbK2SuH6Lhl1r6bDqXAlhrBWkcQZSwJJkACFBpWfqariCYQGGe85kBxZZJgAUiVLtaZWcdo41fyy9xmu3vif1AR6/FzqKpfin32CIwKczLCKsg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791641076; c=relaxed/simple;
+	bh=Wd9f9GwwmM9GIDyVHxMqhFsw5KZ2xNUAJUlfYLKuxyA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QAA893/ui5Dv7XC92Yjvr0qOspLZxyfMqQjcxOTd+55f8SZq2e8ujxeGg3gk9tgKV/4IvjMrDNakVgXoOPedoV+OZjqfrXE5bE3AzrLhUSbLs0llD9cJTJ8XYIEWU5up7Ri+jYrknxmHLJagZPADhZsBIkmtjc40U2qmVFMadEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=HGsdgo/1; arc=none smtp.client-ip=62.149.155.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZXAZ9GWq"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-3a75f960be3so5928211fa.2
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 06:40:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791639609; cv=none;
-        d=google.com; s=arc-20260327;
-        b=axv2qfty/kfpQrh8TZjuI3noOKpFU0Pj9pW2NFQl/c5H7u+m43xgEHQTytd3AmDUny
-         C7YaKEU875EmgcmdVC00rHv4vs7Xg5iKNjv26i/aOxAjPi/XfI74FSJACUjQ1XzLHbaV
-         w/bu3jPdlIP+rZ2RPIfXDF+ivbKq7oJlg4zAhVFAlXHcrH1Tkoj+ZB1LpjLISkvwbkac
-         YO0ap8yVte9i466IlSxIDBVYm3Yq21OYJKDE1BbU3v3V6Xd0a8Q1h+qL3qdRnh70BNuy
-         dNF92/uhAzzpAALRL1nMnwLqRu5nmX23P4kk/UxBoLq5KRSPT1nUL80VElu+nnzPoDVQ
-         E1uw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=1OMPvqt3i2+F+trWLfv914nMC+RGH+n0BOpujrLH77w=;
-        fh=rddV5u2g36U7qfJ5usM6xYDaD5WmttoU20thQylLahE=;
-        b=EKP6udaEjQqHZhNSUUAZITh17sgH2+zHbEQtYHgsCjzes6ySkkcTLfnuVmaX9cVuse
-         bk8w98u6NVjomM7EXKI3le3XbYiJkeKiqXU5wiPtqUJDMuaMoNUjKFSqT5BxONu3m4qy
-         XiBCkeoV+jRYYnU+Ku2f/Hh6ZRr3rdhMUBkvqjfIBgNyuQCDWX8b2T+tmi8i5W0PRxsd
-         IY57tUXRCrGMCxAGG41BFIHOeApG+/y2bVYlH3aCcGVZ2ev9ROKUfLUyNeFSA2VGJDmS
-         rE4iPGbmwFPvNW5U8eSLoPGGKqKYGVX8vo/KJlgZdJm7EP+G9hbXnWqNvLC5uameJfn2
-         o55A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791639609; x=1792244409; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=1OMPvqt3i2+F+trWLfv914nMC+RGH+n0BOpujrLH77w=;
-        b=ZXAZ9GWq2w2N/D2wWSTnlOkfEAe51ltRLDrYbuiULJDm7BKDbfNcqJWB0jDk7LsJjM
-         zpSXQMq21iq+Uq4i8loxLMWjHSNKMJN5vv3+jzIc+STsBnF0cIELEho0GZTiYEOR4jsi
-         3J9Rs9gsSPM63oCfE135zN/SgdVq9hbvy2yta4oTJ1JHo1HNhDajWflXmGiG8XLuDl69
-         HGSLHWTR9gUOvDtkqc6O58y8bw44wmUW5ejuuNyf0AV4OrrVqWK48M92yJDeGDYzsTGe
-         UECbrTh73toJRj+3j/J+SuN3rtW6enoSZ7iIctMYVc6JKYEbsu6meBwLNhxeWVVF97ec
-         brkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791639609; x=1792244409;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=1OMPvqt3i2+F+trWLfv914nMC+RGH+n0BOpujrLH77w=;
-        b=d9mRIt5bs+4nk1YGmHwz4iPAlwfSu7C3zCVyMtOrata3ULGWg/tPBwe8Qj9pm4gJ5I
-         ovKqofjdtYqOcyiKG+a+ZAoKwdkTj33l712kTkRk16Hu0PESU4ESxueZiGa/92N5Hwc5
-         ZkKmXp2oaZM28VsqTebcwyHldIFmCJOXccxXiAD/gcKnx5B6AVcMSvi7N4s6ZgmSMsTD
-         Vwg8JeV11FxBRK2Q3rmH88B3047tsGHAHo1dNy3wAWSe2dplPSK+UK+csrCEa/P/8yQz
-         Jm4Tj40UIFLDxh2QcvkxM2NHZwQR9anMNrYLBvUayrQ4xSymM1JMsUUFuvqzByiTDqqW
-         f/Lg==
-X-Forwarded-Encrypted: i=1; AKwUvBwUCehj6H+JlMBicVSIiSJFcsFN9OxXh5Y58lsqH9LJG9RqHHQQUaPUu/vYrifaDT5gv62xb3ThOCE2nOtUaQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIYgY3ou3DJHSLpxVqUVIwAlwKAPdX6moO5SEZgGCTWEdN0niEH
-	gkJfcRTIplYqZJND/3ieDWvnmkGOvCkYo3PT9LAEu/H/xvMkPl696xVRm/tVGKQFwXa8oaeOkhu
-	dfPVb4wJgT94cdrgL21ssc6c2VvrjGHA=
-X-Gm-Gg: AYBFou0DVN6HMRNMcyyIr7AB2gChYgFPrXq7tpgleA5al6oz10DiJJ9G7FM7GapYLpR
-	MNVit6/CmheTG5VbEovneUG5Yvt5KF4MtOlV0wv1a6zkumR/jDEGISrYhEEqYW4FzsMSRzfTZNR
-	0aVUZkaoDjm+qWanKi2ZBZj5OZ0BjvYJ8t3s2aBqrh5jPv1LWLVXj46bKrFdEUZl30dgBdKtOVq
-	azlmCHvpvkjr6ogl66BB8RmjNdKurDlJn5mgxFaRH1CZYbrrJMRqaOHT0pqaqQ+Rd7mPMnlDwlP
-	yOVAu3gC6IMcqEtg+fZ2n/qgPDBL+Q/te57gUrAeT+pZPOpaK9ej61nk3l0UTX/3/3JYWo6nxf1
-	+iXcO1vgMMzYCS3nI3oEpJKRNy5H0XtPR9hGkVsAAF58E
-X-Received: by 2002:a05:651c:54d:b0:3a9:7f37:9bbc with SMTP id
- 38308e7fff4ca-3a9c535761amr10525921fa.11.1791639608635; Sat, 10 Oct 2026
- 06:40:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="HGsdgo/1"
+Received: from fedora ([94.34.125.0])
+	by Aruba SMTP with ESMTPSA
+	id FXdaxkuIQQG1DFXdaxp172; Sat, 10 Oct 2026 16:01:23 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1791640883; bh=Wd9f9GwwmM9GIDyVHxMqhFsw5KZ2xNUAJUlfYLKuxyA=;
+	h=Date:From:To:Subject:MIME-Version:Content-Type;
+	b=HGsdgo/1y4gwiMSY/bfwd3/0OeuMKOosdj7ww/zqL2SMABdZ6ucoBeOWIQm1wjLh9
+	 wAVjFOqIERDSz4pqKmTCCeU8lpK6SQz/prkdIkZJ+KgHaOXx9W1zPqs11A2Wn2/KdL
+	 F4P+/rmT37wyAiv6SQBr4yxW9HlY9pctSFf+f0+ZzGesTJyLZXUA6H0hAhl0L6Lu1t
+	 VjuY0J5Focc9JFoI+U4Le44rpiQ1e2oL+q+5YNWzzfnrI4qJ0VQq1jfqzFWa9qCa7/
+	 52BtZuLQl8sWUqlpE6GOqzmNTWeVLj1SHJF9yWwOamTfZ3oVv7cuBm/jqoEjeTw+dl
+	 Drr+iS/+fjDfg==
+Date: Sat, 10 Oct 2026 16:01:22 +0200
+From: Alessio Ferri <alessio.ferri@mythread.it>
+To: "andreas.wendleder" <andreas.wendleder@proton.me>
+Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: b43: ac rev1 captured packets with ampdu
+Message-ID: <20261010160122.5e82eaec@fedora>
+In-Reply-To: <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+References: <20261009173133.0e534ec2@fedora>
+	<j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261007115821.11332-5-sigefriedhyy@gmail.com> <179154713266.434549.3119718667275543634@kernel.org>
-In-Reply-To: <179154713266.434549.3119718667275543634@kernel.org>
-From: Yuyang Huang <sigefriedhyy@gmail.com>
-Date: Sat, 10 Oct 2026 22:39:57 +0900
-X-Gm-Features: AclHuK-8lTLLnkYqyGO4ub-KfSnA41bLKl_MgKWzh-nerGwP6xbhIB0UlOeiU2Q
-Message-ID: <CA+7S2vJEYr7sbRqf=QdURN+gLp=5aaRGXG3iprA5Rz4-sEqj3w@mail.gmail.com>
-Subject: Re: [PATCH net-next v10 4/6] net: add AF_PACKET multicast dumps
-To: netdev-bot+sashiko@kernel.org
-Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com, 
-	andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net, 
-	dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com, 
-	idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org, 
-	johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com, 
-	kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com, 
-	pabeni@redhat.com, sd@queasysnail.net, shuah@kernel.org, horms@kernel.org, 
-	sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
+X-CMAE-Envelope: MS4xfFEX7C8JUQJC5xBP4e/JrDgVZDCNdSgqvC4vIle9CPEafPaSmqNpYrMBTc+geQMZ/Bx8S6SSfRaUuusK9tguisa1A9kIUIfb3o4G5B/Exm4+gyiX6U+5
+ NxcXByg4fm3Zmm5Eg1Rb6ve8otM/fH9lgXYhFaHBZa/yHUwQeuAXYlKuKqZZ9ZT9PBWEqnOhVG52zDVt13R38yQl0yUwlwzzwvFpSrHgKvDzJQZ1xdWTlxtg
+ Zg/eUiD4c2GCgD1sse+Q3nncR7YAUYOmLiDMtWGop3U=
 
-> - [Medium] dev_mc_dump() (net/core/dev_addr_lists.c) calls
->   nl_dump_check_consistent(cb, nlmsg_hdr(skb)) once at the end of every=
-=E2=80=A6
+Il giorno Fri, 09 Oct 2026 23:16:40 +0000
+"andreas.wendleder" <andreas.wendleder@proton.me> ha scritto:
 
-> - [Medium] dev_mc_dump() reads the generation (cb->seq =3D
->   dev_mc_base_seq()) only after the walk, once dev_mc_dump_dev() has=E2=
-=80=A6
+> Hi Alessio,
+>=20
+> Thanks for the captures. I=E2=80=99ll look at them when I get to 5 GHz, w=
+here
+> my RX is still broken.
+>=20
+> Your driver no longer hangs my machine. The hang was my own logging,
+> a 30 ms delay on each of about 80000 table calls. Without it, your
+> head (ce2127a) runs the whole init in about 5 s. The radio doesn=E2=80=99t
+> come up on my chip, though: after the first channel I get radio 2069:
+> power-on timeout (0x040b=3D0x0001), so the RCAL done bit never sets.
+>=20
 
-Both are real and are the same problem as reported on patch 3, will fix in =
-v11.
+Maybe you have still too many delays around power on?
 
-> - [Low] At this commit, Documentation/netlink/specs/rt-addr.yaml is not
->   updated for the new AF_PACKET RTM_GETMULTICAST dump.
+> Your blocks (mode_init, set_reg_on_reset, coeff_bank_init, init_regs)
+> let me replace my 290-write PHY replay with a 72-write init. 2.4 GHz
+> now runs at about 20 Mbit/s up and 17 down. Do you know where PHY
+> words 0x1739, 0x016b, 0x0175, 0x03c4 and 0x0197/0x0198 come from? I
+> couldn=E2=80=99t find them in your code.
+>=20
+> Thanks, Andreas
 
-This is done in the same patch series.
+Do you mean that in version 6.30.x, the driver write 0x1739, 0x016b, 0x0175=
+,=20
+0x03c4 and 0x0197/0x0198? Maybe they are related to bluetooth? Don't
+know, will investigate it.
+
+Thank you for your reporting!
+Alessio
