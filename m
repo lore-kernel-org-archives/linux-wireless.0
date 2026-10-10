@@ -1,43 +1,44 @@
-Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
+Received: from smtpdh19-1.aruba.it (smtpdh19-1.aruba.it [62.149.155.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 751A13655E9
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:04:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21EC8377575
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 14:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791641076; cv=none; b=FYtSfDPnbj94SuzZlvB/clAyUuq/I9A5QAyyZX8xl9pjvht0l70vcYm8QEwTUQbK2SuH6Lhl1r6bDqXAlhrBWkcQZSwJJkACFBpWfqariCYQGGe85kBxZZJgAUiVLtaZWcdo41fyy9xmu3vif1AR6/FzqKpfin32CIwKczLCKsg=
+	t=1791641635; cv=none; b=pIoFs9UMB2+LSK8D4zlqvC4DoEnh07KKg/WRRN9eTBXNJ7RRcioPZJtDXcOorMzkP1eH9LJrG3x3mfzy7dK2b5BZ8dwdAhX72nVT4RV96ZDlmfyVLZPQ42n+3qBtv5wkxgh2FPphsHjF1REljNLt5bkwCgHXbUP2QdLkPjZowLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791641076; c=relaxed/simple;
-	bh=Wd9f9GwwmM9GIDyVHxMqhFsw5KZ2xNUAJUlfYLKuxyA=;
+	s=arc-20240116; t=1791641635; c=relaxed/simple;
+	bh=Iyl6TGaVibC42zbsZ2aQAgRKXV8UOHZwL3f1fJOabgQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QAA893/ui5Dv7XC92Yjvr0qOspLZxyfMqQjcxOTd+55f8SZq2e8ujxeGg3gk9tgKV/4IvjMrDNakVgXoOPedoV+OZjqfrXE5bE3AzrLhUSbLs0llD9cJTJ8XYIEWU5up7Ri+jYrknxmHLJagZPADhZsBIkmtjc40U2qmVFMadEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=HGsdgo/1; arc=none smtp.client-ip=62.149.155.149
+	 MIME-Version:Content-Type; b=kdXRpqroy2iSMIdB9887+l2DVtrbfadgLROkbRnAbcaOSuplCAdq8nyIgZOz4IDArzoUyWhmWU26RSkKJ2UfOiDzWp6MvfnARMOXgxHQGe+mDqp3KuGWY9ASr+FbhjtiuL+sFVWUyS9PvwygQKfkC2FekiF5Uj7GKCxqJ7Lw5Cs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=MkP1R+JG; arc=none smtp.client-ip=62.149.155.148
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="HGsdgo/1"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="MkP1R+JG"
 Received: from fedora ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id FXdaxkuIQQG1DFXdaxp172; Sat, 10 Oct 2026 16:01:23 +0200
+	id FXmdxl0jOQG1DFXmdxp4Wy; Sat, 10 Oct 2026 16:10:44 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1791640883; bh=Wd9f9GwwmM9GIDyVHxMqhFsw5KZ2xNUAJUlfYLKuxyA=;
+	t=1791641444; bh=Iyl6TGaVibC42zbsZ2aQAgRKXV8UOHZwL3f1fJOabgQ=;
 	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=HGsdgo/1y4gwiMSY/bfwd3/0OeuMKOosdj7ww/zqL2SMABdZ6ucoBeOWIQm1wjLh9
-	 wAVjFOqIERDSz4pqKmTCCeU8lpK6SQz/prkdIkZJ+KgHaOXx9W1zPqs11A2Wn2/KdL
-	 F4P+/rmT37wyAiv6SQBr4yxW9HlY9pctSFf+f0+ZzGesTJyLZXUA6H0hAhl0L6Lu1t
-	 VjuY0J5Focc9JFoI+U4Le44rpiQ1e2oL+q+5YNWzzfnrI4qJ0VQq1jfqzFWa9qCa7/
-	 52BtZuLQl8sWUqlpE6GOqzmNTWeVLj1SHJF9yWwOamTfZ3oVv7cuBm/jqoEjeTw+dl
-	 Drr+iS/+fjDfg==
-Date: Sat, 10 Oct 2026 16:01:22 +0200
+	b=MkP1R+JGcSin1spya7qnNInITaMM+Gjm3FqYldhRnlyZGJ9Rm5kUxgQyIz+fqEGkG
+	 nMHfFdJ+wEWF8tV2IR3TbEiqiPILR2u5BmqGwTZDhFpAMr+k+oB5N0sA+Xc2DxS/p0
+	 jExeY31BNL8Z8mPOsjlqdttD32Z4lEQ7EbRR7dcznYqV5qBys0rdQWqF0ft7IPMo2K
+	 1bJxdUcjvXefgB32yBQ78tkj1hR7x+bzzXQcVDfnVncW8qQGe+upUnOCNqEhD3PTsj
+	 SbUYTC3TxlbcsOXpSYW4LaQ7JkjfguhE5SLf3cRxV8pkXcd2+ckkxJ+FaOhCOBcyA3
+	 ihYjkNtyaqvOg==
+Date: Sat, 10 Oct 2026 16:10:43 +0200
 From: Alessio Ferri <alessio.ferri@mythread.it>
 To: "andreas.wendleder" <andreas.wendleder@proton.me>
 Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
  "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Subject: Re: b43: ac rev1 captured packets with ampdu
-Message-ID: <20261010160122.5e82eaec@fedora>
-In-Reply-To: <j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+Message-ID: <20261010161043.5dd21203@fedora>
+In-Reply-To: <1NF3n26c1UQ1YcYwXT-JD8OKl7dIr_22x7bgdLLwLHkWHnKlZAtcYw7504hufNHGIBEo3qr8atDAoKtK6qxtLUfVWhVSazjaIH5QPYGAgs0=@proton.me>
 References: <20261009173133.0e534ec2@fedora>
 	<j7yDoG5_QzsvHn2hPYg-t1IRCKILne4bSf-E0ix15-48INcyh3HHnBydtcLdyWJCXh61NfsV1HawpRIBKpsGYzVzAfMCJIo3Z4Q-c20M15E=@proton.me>
+	<1NF3n26c1UQ1YcYwXT-JD8OKl7dIr_22x7bgdLLwLHkWHnKlZAtcYw7504hufNHGIBEo3qr8atDAoKtK6qxtLUfVWhVSazjaIH5QPYGAgs0=@proton.me>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -47,40 +48,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-X-CMAE-Envelope: MS4xfFEX7C8JUQJC5xBP4e/JrDgVZDCNdSgqvC4vIle9CPEafPaSmqNpYrMBTc+geQMZ/Bx8S6SSfRaUuusK9tguisa1A9kIUIfb3o4G5B/Exm4+gyiX6U+5
- NxcXByg4fm3Zmm5Eg1Rb6ve8otM/fH9lgXYhFaHBZa/yHUwQeuAXYlKuKqZZ9ZT9PBWEqnOhVG52zDVt13R38yQl0yUwlwzzwvFpSrHgKvDzJQZ1xdWTlxtg
- Zg/eUiD4c2GCgD1sse+Q3nncR7YAUYOmLiDMtWGop3U=
+X-CMAE-Envelope: MS4xfKbL/v6FFsbOLu3r63I+xWYyxvPT1UQtO8fj7kKcOjWJEe5keWRHjLoHGftXSX2gAKii3hqjHxBiJ/EOHjOATYF4OHvpMwD4bn6jNe36aLV0JUc2L4Fx
+ PjYChlsP+jUN0SICTZmjPg82QOA7niBCJ6I3ejXWXBLlWL8XOJPyQVKQlG/w8w09tIWdqcRS3E1/8QPEKG+Y12yt4oQ0Wl++oA+oE00g6MEX17gYQW3RQAMQ
+ ppadGR9GcTYBokUNR00zRag6RCvbHUcZ5LTLc7v5Qf0=
 
-Il giorno Fri, 09 Oct 2026 23:16:40 +0000
+Il giorno Sat, 10 Oct 2026 12:59:10 +0000
 "andreas.wendleder" <andreas.wendleder@proton.me> ha scritto:
 
 > Hi Alessio,
 >=20
-> Thanks for the captures. I=E2=80=99ll look at them when I get to 5 GHz, w=
-here
-> my RX is still broken.
+> Three findings on the MacBookAir6,1 (2.4 GHz, ucode 832.127), all
+> thanks to your code and captures:
 >=20
-> Your driver no longer hangs my machine. The hang was my own logging,
-> a 30 ms delay on each of about 80000 table calls. Without it, your
-> head (ce2127a) runs the whole init in about 5 s. The radio doesn=E2=80=99t
-> come up on my chip, though: after the first channel I get radio 2069:
-> power-on timeout (0x040b=3D0x0001), so the RCAL done bit never sets.
+> 1. RX level. Your rxgainctrl write 0x1726 =3D 0x000c is worth 26 dB
+> here. With it my remaining PHY table replay is gone. 2. Second TX
+> chain. The chipcontrol |=3D 0x8 at the end of your fem2_sub1_setup is
+> what turns on TX on core=C2=A01. I had ported the two PHY writes but not
+> that one: core 1 did not radiate and MCS 8=E2=80=9315 failed completely. =
+The
+> bit survives a module reload, so it only shows after a cold boot. 3.
+> A-MPDU TX works, with the microcode building the aggregates as in
+> your notes. What it needed beyond 0x45c0 and the cache info:
+>    - the frame's seq_ctrl in the header's sequence field;
+>    - cache info bytes 0=E2=80=931 zero when encrypting in software. The s=
+tock
+> 50 04 makes the microcode encrypt again: the AP acks the frame and
+> drops it;
+>    - session frames reported to mac80211 with
+> IEEE80211_TX_STAT_AMPDU, or minstrel_ht ignores them;
+>    - the attempt count of a status (word 2, bits 7:0) divided by its
+> MPDU count;
+>    - a requeue in the driver for MPDUs the microcode reports unacked.
+> It gives up after a few attempts, and without the requeue TCP
+> collapses.
 >=20
-
-Maybe you have still too many delays around power on?
-
-> Your blocks (mode_init, set_reg_on_reset, coeff_bank_init, init_regs)
-> let me replace my 290-write PHY replay with a 72-write init. 2.4 GHz
-> now runs at about 20 Mbit/s up and 17 down. Do you know where PHY
-> words 0x1739, 0x016b, 0x0175, 0x03c4 and 0x0197/0x0198 come from? I
-> couldn=E2=80=99t find them in your code.
+>    Result: about 30 Mbit/s up at HT20 over 15 minutes, against 20 at
+> legacy rates.
+>=20
+> One question: my TX gain sits at index 64 of
+> acphy_txgain_epa_2g_2069rev4 (the reset value), and going to index 96
+> collapses the link at 1 m from the AP. Have you seen what a healthy
+> board transmits with on 2.4 GHz, or is there more to the PA/FEM setup
+> than fem2_sub1_setup?
 >=20
 > Thanks, Andreas
 
-Do you mean that in version 6.30.x, the driver write 0x1739, 0x016b, 0x0175=
-,=20
-0x03c4 and 0x0197/0x0198? Maybe they are related to bluetooth? Don't
-know, will investigate it.
-
-Thank you for your reporting!
-Alessio
+Increasing bits density per air time cause transmission power to drop,
+as the modulation is more sensitive to distortion. By raising the index
+you reduce power, so it works better near the device and much worse
+from afar.
