@@ -1,194 +1,100 @@
-Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
+Received: from mta1.migadu.com (out-246.mta1.migadu.com [95.215.58.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA0328B7EA
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 05:11:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5923DDB02
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 06:17:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.246
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791609098; cv=none; b=TtK5cv+NixksiI64EESqmTmvpf8CKAs7zc5sxDmXAOcuDK18vgnvQunp1IIJg9a9cBOcMzpCnki855jKpOvN400Da/ekVKV4ctl3YEc318XUplroPJqjvAepecShQwj6+UjgRjRzMnMqbTMq7olYvaZr58Wvwovti3w76pnLOrc=
+	t=1791613035; cv=none; b=cAMnozuCtKTbFZYDx0F+vmQaoT90crd11SC3lQpJvCNCgCdk6AqrnqPMtgi43RZlqEJkHHGqUZZ2xEljr1b4Jmje3V7VYbjc5EH81CnQLogZXGKkf6iu2CdpVaXUEUOY2DjeOO3l5/4ygA7MKy5EX8vzpgczwW6OrOEPSthaNL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791609098; c=relaxed/simple;
-	bh=MPMOwI0vvc3InXLYmyscm1qhTxNxhoj3Og1mIRJVW3w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y8n+1JllhnTT0BNirK/cE+OQpvckWlChf344/Z4Nvwq0YJ4c2j3aWI2IMd1NvlUZzo1Deyp5ppV0SKAVFVfYG51l6Zd/3shn3fjYSYHgKP+UFzH4J2l7Yw+CrhaWw4HlkODARBAJAxvooSLAHznU3C7if8XOa5hGO/LnNhKYrH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=MIrQUGQm; arc=none smtp.client-ip=74.125.82.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	s=arc-20240116; t=1791613035; c=relaxed/simple;
+	bh=2iFrwRhGd22kGBX3plIzfM8HTJAXORhzt8v2vENuhao=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
+	 In-Reply-To:References; b=pMP1eckpsWSNQyzOpc3YrZGgmAUPCBtW0SkLueY4b3CGTbs0XlzWNKW0rU63DPAmlmFOMZsJ6oQDnMDFZzrSwRZXPn7LYJZJ3sPgGwiETt5AnRi03v92BcGmc2z8T2F/0JzV1iqJwwM5WOJKf13N+5fjrVNNHZsmWbhgf74eg0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=noBlkf/b; arc=none smtp.client-ip=95.215.58.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="MIrQUGQm"
-Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-141395927feso577753c88.0
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 22:11:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1791609095; x=1792213895; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EPzUTBNIsG1vnWSfHU0KClPEm42wHLDDcUKF5FSqaVc=;
-        b=MIrQUGQmn1voPhPxsYHh+FVhHCvL6u0DNJWUTSgGPauArowvGdvRDvnc8ZLjFMccUb
-         amFixag0+zpNQQraVOq0msl0A34p8yTvF0lgNk60eO8d8rrsFQO9lNDyBOuIRFtgxQ5p
-         VDh07T4dNosr4ajAGtU86HjCiPdzlrGhwKZFlN0mpa5sjqos6kG05YgZmk1pqpTWwNSH
-         L6HEEIOOfNVQczTkpPjOOwMcbj+4amxlULNAcBGMD560wLKECi1RAWD6gZgnLtiVFY2D
-         iS+qRoNf39Uzi7yQWRqaquVN2+JOlwCiKDGGJTTYKkI0lWvYN/9Fg0rgAwSQxb3m1/Vh
-         gkFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791609095; x=1792213895;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=EPzUTBNIsG1vnWSfHU0KClPEm42wHLDDcUKF5FSqaVc=;
-        b=UtoiaovdHwuM62uG9DS+sbn4xOmqHhGkRUYte+LsJmuge28N0/DiFimLpEJ9ORLSab
-         eVgSCUAnWF2SrQ1x5ZvWdpTRdkB0L5+/yh2G7ZoPB/WEj6WvTuC1TqbDp6XUXzDZYOvG
-         41exgLPZ7ihMXiwL96foSnC7H5sFdOIGSmKysr4i7oIcaTXN17KEyVjDSKKDDOPbkffj
-         2xbyQ3uWk1gV6LAz6NibUb12is3xZi/UKxJCFywMj3uB007bcuCUXOEpzJ9AhsLaytGD
-         y/vRR+Nsa8GvPyH0gAvvuR8YWARBg1E1MbZygmGWenZ4XKdPEdZq4vf9Q7yy7KFsEKoD
-         2uQw==
-X-Forwarded-Encrypted: i=1; AKwUvBxF23pYD56Zx2BeJP2DvI5a+IYnOnBKRLGZ25++JoX6gLLnGxSfEmC5o/n5/1FKuU4JnqA1za4bHclyX66oTg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKboYVbx1eXqKCWY8vA+ygKVsmVOWSBpdLyHD+7tRYdsQnBsNzu
-	FvMIZrVRea+pzjprZys9c4c03hhOctQIX9rFwlApRnHWRiA+RWJKxdwZ9H9y7bjsS6L2Q+9N+5E
-	z3Ujxn1oJeA==
-X-Gm-Gg: AYBFou0Idmeg61iUUdPVMzbmb1nGyNKEQOvFbuQe6wUx5PD4C8blDn8uU3dBVWe6kbw
-	ZL1KVVpzBG832a8/HKlcWBGE5Gd5sgDaBXeGFVVR4hNIc7WDAl2RT7eEJIkj/ucBwJ+ZhJ0/GmR
-	HdvkqgMMSLJI+KgYR2Mzjf+FrsJdmr0MYgL4UJopCfwYB2xoacGeTn2PeYiFr8p9h4oGucfjAkV
-	bfH1mxVMhLJdHIDvqE5jBH6EfhHSCl5ifUogb8NpeNIsZmStltX5K4DWbjzdt9Z53jiGWjrX/Kg
-	2yxi2pRZRclOK8zhkHnHf7LTR4FNOs/lRUgq9FfZPHjWTuZamgG+gD/7RU/210w/BnyGSy8p0m/
-	acWiYb+LKaVseF0zot6ZomEiFdKI+X283kvGFdR/J+YyhgtFHrXBWTec0geyqzG3tVVZtgS8xT4
-	eyg/8eg2SXGVoRcrzfANoYfVwxyviqINczTNmZdi/AfGpsLCM1b993SbJ7dCOXvHFlng3o8ymC/
-	HMwGVs7Kc/17GWkS5zi1wvb4RevnyfUSjB8Keo1eff4yS+5eaO5a4YTXWVCkPMkbp/PI/Q=
-X-Received: by 2002:a05:7022:7f0b:b0:14f:4b01:40a1 with SMTP id a92af1059eb24-16a4f627a7cmr5226042c88.0.1791609094685;
-        Fri, 09 Oct 2026 22:11:34 -0700 (PDT)
-Received: from localhost.localdomain ([2603:8001:5f01:8bab:fc0d:3183:3e45:a830])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a1becf08sm11181963c88.5.2026.10.09.22.11.33
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 09 Oct 2026 22:11:34 -0700 (PDT)
-From: Artem Dinaburg <artem@trailofbits.com>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sasha Levin <sashal@kernel.org>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 6.12.y] wifi: ath12k: fix reusing m3 memory
-Date: Sat, 10 Oct 2026 01:11:29 -0400
-Message-ID: <20261010051129.14918-1-artem@trailofbits.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="noBlkf/b"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=2iFrwRhGd22kGBX3plIzfM8HTJAXORhzt8v2vENuhao=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791613028; v=1; x=1792217828;
+ b=noBlkf/bgdA8EVe47Yl1XNzH4vPkyOmvprRkcCIOkiZWP7+uFu80jaJ2pdJd1LUO7uggchRR
+ CnIMjTXcjD9kCVwuGgxlVCmGfkoxTqsKOsHMzK6BJLSGC5/hsboIP4k511a5/BoQXgtwah73kCM
+ 4i2YtUysXh48XWM0XLOVlxMY=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id e87895b60daedb89;
+	Sat, 10 Oct 2026 06:17:06 +0000
+X-Mizu-Trace-ID: e87895b60daedb89
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Date: Sat, 10 Oct 2026 06:17:06 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <0b059e24d8c9b870b3db90d2f001a293896753d8@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH] wifi: rtw88: 8723b: avoid converting RX SNR twice
+To: "Hungyu Lin" <dennylin0707@gmail.com>, pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ rtl8821cerfe2@gmail.com, straube.linux@gmail.com, "Hungyu Lin"
+ <dennylin0707@gmail.com>
+In-Reply-To: <20261010013249.35584-1-dennylin0707@gmail.com>
+References: <20261010013249.35584-1-dennylin0707@gmail.com>
 
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+October 10, 2026 at 3:32 AM, "Hungyu Lin" <dennylin0707@gmail.com> wrote:
 
-[ Upstream commit 00575bb44b2c2aa53d0a768de2b80c9c1af0174d ]
 
-During firmware recovery or suspend/resume, m3 memory could be reused if
-the size of the new m3 binary is equal to or less than that of the
-existing memory. There will be issues for the latter case, since
-m3_mem->size will be updated with a smaller value and this value is
-eventually used in the free path, where the original total size should be
-used instead.
+>=20
+>=20rtw8723b_query_phy_status_ofdm() already divides the PHY SNR report b=
+y
+> two when filling pkt_stat->rx_snr. Shifting it again when copying it to
+> dm_info->rx_snr halves the value shown in diagnostics and used for the
+> average SNR.
+>=20
+>=20Copy the converted value directly.
+>=20
+>=20Fixes: d726c70ce082 ("wifi: rtw88: 8723b: add the RTL8723B chip drive=
+r")
+> Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/rtw8723b.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+>=20diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/=
+net/wireless/realtek/rtw88/rtw8723b.c
+> index 8bb9c03d769c..197add7cc110 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+> @@ -1291,7 +1291,7 @@ static void rtw8723b_query_phy_status_ofdm(struct=
+ rtw_dev *rtwdev, void *phy_raw
+>=20=20
+>=20 dm_info->curr_rx_rate =3D pkt_stat->rate;
+>  dm_info->rssi[RF_PATH_A] =3D pkt_stat->rssi;
+> - dm_info->rx_snr[RF_PATH_A] =3D pkt_stat->rx_snr[RF_PATH_A] >> 1;
+> + dm_info->rx_snr[RF_PATH_A] =3D pkt_stat->rx_snr[RF_PATH_A];
+>  dm_info->cfo_tail[RF_PATH_A] =3D (pkt_stat->cfo_tail[RF_PATH_A] * 5) >=
+> 1;
+>=20=20
+>=20 val_s8 =3D (s8)pkt_stat->rx_evm[RF_PATH_A];
+>
 
-To fix it, add a new member in m3_mem_region structure to track the original
-memory size and use it in free path.
+For consistency, please do it the other way round: drop the /2 when
+filling pkt_stat->rx_snr and keep the shift on the dm_info line.
+rtw8723d.c, rtw8822b.c, rtw8822c.c and rtw8814a.c all store the raw repor=
+t
+and shift it once.
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
+Also, rtw8703b.c has the same double conversion in query_phy_status_ofdm(=
+).
+That one is upstream, so a patch for it would be welcome.
 
-[ Backport to 6.12.y: drop the copyright-line hunks, which do not apply
-  to 6.12.y. The code changes are the same as upstream. ]
-
-Fixes: 05090ae82f44 ("wifi: ath12k: check M3 buffer size as well whey trying to reuse it")
-Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Link: https://patch.msgid.link/20251029-ath12k-fix-m3-reuse-v1-1-69225bacfc5d@oss.qualcomm.com
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Assisted-by: LLM
-Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
----
-Hi Greg, Sasha, and ath12k maintainers,
-
-Please queue this for 6.12.y.
-
-6.12.y has the bug this fixes. When a smaller M3 image is loaded into a
-reused buffer, m3_mem->size shrinks to the new image length, and that
-length is later passed to dma_free_coherent() instead of the size that
-was allocated. The patch also fixes the allocation-failure message, which
-reads fw->size even though fw is NULL when the M3 image comes from
-firmware-N.bin.
-
-The fix is already in 6.18.y and 7.2.y.
-
-Testing: applies to v6.12.112 and on top of the current 6.12 stable
-queue. An x86_64 allmodconfig build with CONFIG_WERROR=y is clean, and
-ath12k also builds cleanly with W=1. I tested the M3 load and free
-functions in userspace with firmware and DMA stubs under ASan/UBSan. I
-did not test on ath12k hardware.
-
-An LLM helped prepare, build, and test this backport. I reviewed the
-results.
-
-Thanks,
-Artem Dinaburg
-
- drivers/net/wireless/ath/ath12k/qmi.c | 9 ++++++---
- drivers/net/wireless/ath/ath12k/qmi.h | 3 +++
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index b93ce9f87f61..5b02d1d76a36 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -2724,9 +2724,10 @@ static void ath12k_qmi_m3_free(struct ath12k_base *ab)
- 	if (!m3_mem->vaddr)
- 		return;
- 
--	dma_free_coherent(ab->dev, m3_mem->size,
-+	dma_free_coherent(ab->dev, m3_mem->total_size,
- 			  m3_mem->vaddr, m3_mem->paddr);
- 	m3_mem->vaddr = NULL;
-+	m3_mem->total_size = 0;
- 	m3_mem->size = 0;
- }
- 
-@@ -2762,7 +2763,7 @@ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
- 
- 	/* In recovery/resume cases, M3 buffer is not freed, try to reuse that */
- 	if (m3_mem->vaddr) {
--		if (m3_mem->size >= m3_len)
-+		if (m3_mem->total_size >= m3_len)
- 			goto skip_m3_alloc;
- 
- 		/* Old buffer is too small, free and reallocate */
-@@ -2774,11 +2775,13 @@ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
- 					   GFP_KERNEL);
- 	if (!m3_mem->vaddr) {
- 		ath12k_err(ab, "failed to allocate memory for M3 with size %zu\n",
--			   fw->size);
-+			   m3_len);
- 		ret = -ENOMEM;
- 		goto out;
- 	}
- 
-+	m3_mem->total_size = m3_len;
-+
- skip_m3_alloc:
- 	memcpy(m3_mem->vaddr, m3_data, m3_len);
- 	m3_mem->size = m3_len;
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
-index 0dfcbd8cb59b..e9eb186441cc 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.h
-+++ b/drivers/net/wireless/ath/ath12k/qmi.h
-@@ -118,6 +118,9 @@ struct target_info {
- };
- 
- struct m3_mem_region {
-+	/* total memory allocated */
-+	u32 total_size;
-+	/* actual memory being used */
- 	u32 size;
- 	dma_addr_t paddr;
- 	void *vaddr;
+Best regards,
+Luka Gejak
