@@ -1,100 +1,194 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31BAD3612EE;
-	Sat, 10 Oct 2026 04:35:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA0328B7EA
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 05:11:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791606906; cv=none; b=kFEV3EpsVRlH6n3eNh0iHyIrTyAd/ouIF3uEtZvaq0/WkAVWtdeohs03JsfkroBf38Aox37R3zQTNIPHWL9kK3R1Eaph4CM5hYlKdqpLaVDiMR9HkVjDueXslcpO+Hvam004F1b79y5DKEAjHE8feBg6scntBhvcV1/bc18Zuoo=
+	t=1791609098; cv=none; b=TtK5cv+NixksiI64EESqmTmvpf8CKAs7zc5sxDmXAOcuDK18vgnvQunp1IIJg9a9cBOcMzpCnki855jKpOvN400Da/ekVKV4ctl3YEc318XUplroPJqjvAepecShQwj6+UjgRjRzMnMqbTMq7olYvaZr58Wvwovti3w76pnLOrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791606906; c=relaxed/simple;
-	bh=80rjkX/a1IzJ7fnM47AVZQsjw6x54D+aSaJzkJW9vig=;
-	h=From:To:Cc:Subject:Mime-Version:Content-Type:Date:Message-ID:
-	 References:In-Reply-To; b=mdcQe8Amh82rfC/LTFiohGuqyd9oaV1BgZCnSgeNkh/zK7Ciqddwn47M5N6ojB3PWzXA+76FzXDk0Ujjx2efoVLw78HxBDZZkFCP42NdTuQeYsOERvbwdIhEOyZzxcs7JUfyLg2VjBaWVjhU6pX5WqN17kGbC4ynrkkRArJP//M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=KKzBh8iB; arc=none smtp.client-ip=54.92.39.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1791609098; c=relaxed/simple;
+	bh=MPMOwI0vvc3InXLYmyscm1qhTxNxhoj3Og1mIRJVW3w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y8n+1JllhnTT0BNirK/cE+OQpvckWlChf344/Z4Nvwq0YJ4c2j3aWI2IMd1NvlUZzo1Deyp5ppV0SKAVFVfYG51l6Zd/3shn3fjYSYHgKP+UFzH4J2l7Yw+CrhaWw4HlkODARBAJAxvooSLAHznU3C7if8XOa5hGO/LnNhKYrH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=MIrQUGQm; arc=none smtp.client-ip=74.125.82.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="KKzBh8iB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1791606866;
-	bh=80rjkX/a1IzJ7fnM47AVZQsjw6x54D+aSaJzkJW9vig=;
-	h=From:To:Subject:Mime-Version:Date:Message-ID;
-	b=KKzBh8iBMf+JdzEG/XyK6iCJOEIc7gadGiF16LdhC8IUkLgpAza6VRka2GmvdUl14
-	 2MXlwQqFJVGZri/0F+/d9QYUYbKZ1+dzdvYjcfUZ7XVl6hyQdvqPbSsG9tl49uPLhB
-	 TO99xUpJBecHh8CnTJ+MFAij2rN8WYUeF119QW2s=
-EX-QQ-RecipientCnt: 7
-X-QQ-GoodBg: 1
-X-QQ-SSF: 00400000000000F0
-X-QQ-FEAT: D4aqtcRDiqQnft7kyUuJbd/1GndRJklzmB5VJlBX//o=
-X-QQ-BUSINESS-ORIGIN: 2
-X-QQ-Originating-IP: HeilzH7BoGic1gszdDYTeuISgSGfIaB1/TNSPZD9Zwc=
-X-QQ-STYLE: 
-X-QQ-mid: lv3gz7b-6t1791606850teb1258f8
-From: "=?utf-8?B?V2VudGFvIEd1YW4=?=" <guanwentao@uniontech.com>
-To: "=?utf-8?B?5YWz5paH5rab?=" <guanwentao@uniontech.com>, "=?utf-8?B?U2FzaGEgTGV2aW4=?=" <sashal@kernel.org>, "=?utf-8?B?a2FydGlrZXk0MDY=?=" <kartikey406@gmail.com>
-Cc: "=?utf-8?B?am9oYW5uZXM=?=" <johannes@sipsolutions.net>, "=?utf-8?B?bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn?=" <linux-wireless@vger.kernel.org>, "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>, "=?utf-8?B?c3RhYmxl?=" <stable@vger.kernel.org>
-Subject: Re:[PATCH 6.6.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="MIrQUGQm"
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-141395927feso577753c88.0
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2026 22:11:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=trailofbits.com; s=google; t=1791609095; x=1792213895; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=EPzUTBNIsG1vnWSfHU0KClPEm42wHLDDcUKF5FSqaVc=;
+        b=MIrQUGQmn1voPhPxsYHh+FVhHCvL6u0DNJWUTSgGPauArowvGdvRDvnc8ZLjFMccUb
+         amFixag0+zpNQQraVOq0msl0A34p8yTvF0lgNk60eO8d8rrsFQO9lNDyBOuIRFtgxQ5p
+         VDh07T4dNosr4ajAGtU86HjCiPdzlrGhwKZFlN0mpa5sjqos6kG05YgZmk1pqpTWwNSH
+         L6HEEIOOfNVQczTkpPjOOwMcbj+4amxlULNAcBGMD560wLKECi1RAWD6gZgnLtiVFY2D
+         iS+qRoNf39Uzi7yQWRqaquVN2+JOlwCiKDGGJTTYKkI0lWvYN/9Fg0rgAwSQxb3m1/Vh
+         gkFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791609095; x=1792213895;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EPzUTBNIsG1vnWSfHU0KClPEm42wHLDDcUKF5FSqaVc=;
+        b=UtoiaovdHwuM62uG9DS+sbn4xOmqHhGkRUYte+LsJmuge28N0/DiFimLpEJ9ORLSab
+         eVgSCUAnWF2SrQ1x5ZvWdpTRdkB0L5+/yh2G7ZoPB/WEj6WvTuC1TqbDp6XUXzDZYOvG
+         41exgLPZ7ihMXiwL96foSnC7H5sFdOIGSmKysr4i7oIcaTXN17KEyVjDSKKDDOPbkffj
+         2xbyQ3uWk1gV6LAz6NibUb12is3xZi/UKxJCFywMj3uB007bcuCUXOEpzJ9AhsLaytGD
+         y/vRR+Nsa8GvPyH0gAvvuR8YWARBg1E1MbZygmGWenZ4XKdPEdZq4vf9Q7yy7KFsEKoD
+         2uQw==
+X-Forwarded-Encrypted: i=1; AKwUvBxF23pYD56Zx2BeJP2DvI5a+IYnOnBKRLGZ25++JoX6gLLnGxSfEmC5o/n5/1FKuU4JnqA1za4bHclyX66oTg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKboYVbx1eXqKCWY8vA+ygKVsmVOWSBpdLyHD+7tRYdsQnBsNzu
+	FvMIZrVRea+pzjprZys9c4c03hhOctQIX9rFwlApRnHWRiA+RWJKxdwZ9H9y7bjsS6L2Q+9N+5E
+	z3Ujxn1oJeA==
+X-Gm-Gg: AYBFou0Idmeg61iUUdPVMzbmb1nGyNKEQOvFbuQe6wUx5PD4C8blDn8uU3dBVWe6kbw
+	ZL1KVVpzBG832a8/HKlcWBGE5Gd5sgDaBXeGFVVR4hNIc7WDAl2RT7eEJIkj/ucBwJ+ZhJ0/GmR
+	HdvkqgMMSLJI+KgYR2Mzjf+FrsJdmr0MYgL4UJopCfwYB2xoacGeTn2PeYiFr8p9h4oGucfjAkV
+	bfH1mxVMhLJdHIDvqE5jBH6EfhHSCl5ifUogb8NpeNIsZmStltX5K4DWbjzdt9Z53jiGWjrX/Kg
+	2yxi2pRZRclOK8zhkHnHf7LTR4FNOs/lRUgq9FfZPHjWTuZamgG+gD/7RU/210w/BnyGSy8p0m/
+	acWiYb+LKaVseF0zot6ZomEiFdKI+X283kvGFdR/J+YyhgtFHrXBWTec0geyqzG3tVVZtgS8xT4
+	eyg/8eg2SXGVoRcrzfANoYfVwxyviqINczTNmZdi/AfGpsLCM1b993SbJ7dCOXvHFlng3o8ymC/
+	HMwGVs7Kc/17GWkS5zi1wvb4RevnyfUSjB8Keo1eff4yS+5eaO5a4YTXWVCkPMkbp/PI/Q=
+X-Received: by 2002:a05:7022:7f0b:b0:14f:4b01:40a1 with SMTP id a92af1059eb24-16a4f627a7cmr5226042c88.0.1791609094685;
+        Fri, 09 Oct 2026 22:11:34 -0700 (PDT)
+Received: from localhost.localdomain ([2603:8001:5f01:8bab:fc0d:3183:3e45:a830])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a1becf08sm11181963c88.5.2026.10.09.22.11.33
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 09 Oct 2026 22:11:34 -0700 (PDT)
+From: Artem Dinaburg <artem@trailofbits.com>
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Sasha Levin <sashal@kernel.org>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	ath12k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 6.12.y] wifi: ath12k: fix reusing m3 memory
+Date: Sat, 10 Oct 2026 01:11:29 -0400
+Message-ID: <20261010051129.14918-1-artem@trailofbits.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Date: Sat, 10 Oct 2026 12:34:10 +0800
-X-Priority: 3
-Message-ID: <tencent_54DE3A7910D4598F5676AE58@qq.com>
-X-QQ-MIME: TCMime 1.0 by Tencent
-X-Mailer: QQMail 2.x
-X-QQ-Mailer: QQMail 2.x
-References: <20261010043002.2919860-1-guanwentao@uniontech.com>
-In-Reply-To: <20261010043002.2919860-1-guanwentao@uniontech.com>
-X-QQ-ReplyHash: 2432166471
-X-BIZMAIL-ID: 12405904260231876868
-X-Address-Ticket:version=;type=;ticket_id=;id_list=;display_name=;session_id=;
-X-QQ-SENDSIZE: 520
-Received: from qq.com (unknown [127.0.0.1])
-	by smtp.qq.com (ESMTP) with SMTP
-	id ; Sat, 10 Oct 2026 12:34:11 +0800 (CST)
-Feedback-ID: lv:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: MpJmQ90V4eWUtzDiqQCTDN8l9mUVqmtQnxaiTtPId3jvUkv0wi7KVp9n
-	YPJBXlH5Yd15F6IcqychEcNgEyL7rIM3K0gCByxz3MapaljWJ/fR04DFg0ghxfhwOMUd696
-	riMuUujvxivN2vdosrujDeCWOnv9gLLgewZD3m1xGU6WXo6FLK249ITkh0CEf9ln4mh0xYd
-	l9QkMwwfrxz2uog/XGvsHzS6u634roz3SQ0mmR9p/JgXc4VVWTLhj9RAONXymAlAgHoipk4
-	JDnTQJGxJ0IDde7y4FlzDQDCGdm4DzH/54QSqOKVwrxqgRqfPFr1e8ToGa64rE4Q2iPN3vB
-	QYf9EULi5IaClLe6bZmfbotKTBBInEjG5VnQEok6sm17/7VaY5FNC0j7zJ8GqMfjG9+n3IU
-	+tOSX5jBY2oB8E9qncZHCVBTYnca/zTJSKKBx+QpAZz9CpXBZnqjnm45VUrsaU4TZH9Y45M
-	0nGBGRFTIPhsZ7xZORWxlrU5D1gWwrCRcUqREWPasNTCsAE+DnEuVObiCd42Z5nZEV39n0g
-	9nOksOcV1Ml3GO+fmHOJggUsD8V5uqtHzcsiDJ+AK9nbdUhx0AXKG8lNoxdqzqhIfQy2uYw
-	QTgBjD3I2PEHjv3fBY8+4CIYY7N1WcL4lv6igz5HFaN2/ueck3hGhMgiGrtIU2tsxjQ3+/e
-	bgOjrjDo68ISzQ95cEVW9m1jQNAn75MabtXe65IpRrQilS70y8q+GsHlAM7fpa7ZTkeToKV
-	75eY+57l6hZatZ3iKW8Fe7tdri9833AXD1133O8WF6I8UZQNEAdxGeJhwj4m63v3A/enWEd
-	LXl67zvNub2b45yZifblLGlULOoJ3kgRsORsCIBTvc86WEarB1FrB4W/E7U/BwtowMmIUtF
-	Hs2PJlHCpQQvOgOT1iWw86kJ0Dq9xx0Dlhp1x7kanMbRdnsPG2k6tMBv5FMk/cU0e7rxwMN
-	Zq3Y9Fygw+fcMSXJAZNioaIRJgUafjFafFUtr7nnrI2gpr/fIAp3roBPdXOdQo3AIKeLU5l
-	oPCqK8Y+R2t4VSQx4jCR1iGMsml9HpuPtkZ1kX0DE/r//+INQwDHmf9xqrjDD3N47SZsG0/
-	w==
-X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
-X-QQ-RECHKSPAM: 0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-U29ycnksIGl0IGlzIGZvciB2Ni42LjE1OC4gY2MgdGhlIHN0YWJsZSBsaXN0Lg0KDQpCUnMN
-CldlbnRhbyBHdWFuDQoNCj4gLS0tDQo+IG5ldC93aXJlbGVzcy93ZXh0LXNtZS5jIHwgNiAr
-KysrLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMo
-LSkNCj4gDQo+IGRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mvd2V4dC1zbWUuYyBiL25ldC93
-aXJlbGVzcy93ZXh0LXNtZS5jDQo+IGluZGV4IGNmYTkwM2ViMGU4MmYuLjBlN2MzMTRiZGVl
-ZjAgMTAwNjQ0DQo+IC0tLSBhL25ldC93aXJlbGVzcy93ZXh0LXNtZS5jDQo+ICsrKyBiL25l
-dC93aXJlbGVzcy93ZXh0LXNtZS5jDQo+IEBAIC0zNTQsOCArMzU0LDEwIEBAIGludCBjZmc4
-MDIxMV93ZXh0X3Npd2dlbmllKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsDQo+ICAgICAgICAg
-ICAgICAgICAgICAgICAgIC8qIG5vdGhpbmcgKi8NCj4gICAgICAgICAgICAgICAgIH0NCj4g
-IA0KPiAtICAgICAgICAgICAgICAgaWYgKCFmb3JfZWFjaF9lbGVtZW50X2NvbXBsZXRlZChl
-bGVtLCBleHRyYSwgaWVfbGVuKSkNCj4gLSAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJu
-IC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICBpZiAoIWZvcl9lYWNoX2VsZW1lbnRfY29t
-cGxldGVkKGVsZW0sIGV4dHJhLCBpZV9sZW4pKSB7DQo+ICsgICAgICAgICAgICAgICAgICAg
-ICAgIGVyciA9IC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGdvdG8gb3V0
-Ow0KPiArICAgICAgICAgICAgICAgfQ0KPiANCj4gICAgICAgICAgICAgICAgaWUgPSBrbWVt
-ZHVwKGV4dHJhLCBpZV9sZW4sIEdGUF9LRVJORUwpOw0KPiAgICAgICAgICAgICAgICAgaWYg
-KCFpZSkgew==
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
+[ Upstream commit 00575bb44b2c2aa53d0a768de2b80c9c1af0174d ]
+
+During firmware recovery or suspend/resume, m3 memory could be reused if
+the size of the new m3 binary is equal to or less than that of the
+existing memory. There will be issues for the latter case, since
+m3_mem->size will be updated with a smaller value and this value is
+eventually used in the free path, where the original total size should be
+used instead.
+
+To fix it, add a new member in m3_mem_region structure to track the original
+memory size and use it in free path.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
+
+[ Backport to 6.12.y: drop the copyright-line hunks, which do not apply
+  to 6.12.y. The code changes are the same as upstream. ]
+
+Fixes: 05090ae82f44 ("wifi: ath12k: check M3 buffer size as well whey trying to reuse it")
+Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Link: https://patch.msgid.link/20251029-ath12k-fix-m3-reuse-v1-1-69225bacfc5d@oss.qualcomm.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Assisted-by: LLM
+Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
+---
+Hi Greg, Sasha, and ath12k maintainers,
+
+Please queue this for 6.12.y.
+
+6.12.y has the bug this fixes. When a smaller M3 image is loaded into a
+reused buffer, m3_mem->size shrinks to the new image length, and that
+length is later passed to dma_free_coherent() instead of the size that
+was allocated. The patch also fixes the allocation-failure message, which
+reads fw->size even though fw is NULL when the M3 image comes from
+firmware-N.bin.
+
+The fix is already in 6.18.y and 7.2.y.
+
+Testing: applies to v6.12.112 and on top of the current 6.12 stable
+queue. An x86_64 allmodconfig build with CONFIG_WERROR=y is clean, and
+ath12k also builds cleanly with W=1. I tested the M3 load and free
+functions in userspace with firmware and DMA stubs under ASan/UBSan. I
+did not test on ath12k hardware.
+
+An LLM helped prepare, build, and test this backport. I reviewed the
+results.
+
+Thanks,
+Artem Dinaburg
+
+ drivers/net/wireless/ath/ath12k/qmi.c | 9 ++++++---
+ drivers/net/wireless/ath/ath12k/qmi.h | 3 +++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index b93ce9f87f61..5b02d1d76a36 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -2724,9 +2724,10 @@ static void ath12k_qmi_m3_free(struct ath12k_base *ab)
+ 	if (!m3_mem->vaddr)
+ 		return;
+ 
+-	dma_free_coherent(ab->dev, m3_mem->size,
++	dma_free_coherent(ab->dev, m3_mem->total_size,
+ 			  m3_mem->vaddr, m3_mem->paddr);
+ 	m3_mem->vaddr = NULL;
++	m3_mem->total_size = 0;
+ 	m3_mem->size = 0;
+ }
+ 
+@@ -2762,7 +2763,7 @@ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
+ 
+ 	/* In recovery/resume cases, M3 buffer is not freed, try to reuse that */
+ 	if (m3_mem->vaddr) {
+-		if (m3_mem->size >= m3_len)
++		if (m3_mem->total_size >= m3_len)
+ 			goto skip_m3_alloc;
+ 
+ 		/* Old buffer is too small, free and reallocate */
+@@ -2774,11 +2775,13 @@ static int ath12k_qmi_m3_load(struct ath12k_base *ab)
+ 					   GFP_KERNEL);
+ 	if (!m3_mem->vaddr) {
+ 		ath12k_err(ab, "failed to allocate memory for M3 with size %zu\n",
+-			   fw->size);
++			   m3_len);
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+ 
++	m3_mem->total_size = m3_len;
++
+ skip_m3_alloc:
+ 	memcpy(m3_mem->vaddr, m3_data, m3_len);
+ 	m3_mem->size = m3_len;
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
+index 0dfcbd8cb59b..e9eb186441cc 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.h
++++ b/drivers/net/wireless/ath/ath12k/qmi.h
+@@ -118,6 +118,9 @@ struct target_info {
+ };
+ 
+ struct m3_mem_region {
++	/* total memory allocated */
++	u32 total_size;
++	/* actual memory being used */
+ 	u32 size;
+ 	dma_addr_t paddr;
+ 	void *vaddr;
