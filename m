@@ -1,113 +1,48 @@
-Received: from flow-a6-smtp.messagingengine.com (flow-a6-smtp.messagingengine.com [103.168.172.141])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64AEE3B8D78
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 09:56:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A8435DA68;
+	Sat, 10 Oct 2026 10:18:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791626212; cv=none; b=jMWtyGXiO1EhIIWrD2crMqllaVFet/TjVfmq/uJz2zdHcWKuS2te6cACd3ZPqbcqER3nhOyJN0I+RoaIsU1/wlI/WDudwuAQikdn8OsLl5UrX4gaCgvd576U2cs+M73VEDu38xLqqcePYVF1N1XgSP/ixOJE8Cv37Tmn9Rc76rU=
+	t=1791627525; cv=none; b=L414VNBo3wIHU8ibxVg2JPyVWVQDT5AoJtPK0CpKpfM27Am0qIgqCP46Ahw1itgRLffhnEkUu0y+yle5TlY+qG20/Qvw3i/vRulWdsjxR8fegMeKiFK3vNDs5Yhfdl6EE6ba1r2n5fmdfuY/9l1dLqn7PyPFfeybbsp23Hqij+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791626212; c=relaxed/simple;
-	bh=EQwaIVpYCg5E5ydBQbytU/MGSRUfC1bWM8MHkwd4dos=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PfEoam4HZZL9n61/NyfWnz+PT3IVngzlVJLb7qPXGZOAiYrynko+6aPnScxzyGmS2XpwfWZdPEwEYUb7gurlWhdj5fB1vzgZZGhRExAbK1ya6Xvei/CBmG3XTgAg8PAEdGFDIgoa9O1150aT+U3glENvWdM42+IyaOrtljdrzOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=Y1+Hn8nr; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jrVT+kSw; arc=none smtp.client-ip=103.168.172.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
+	s=arc-20240116; t=1791627525; c=relaxed/simple;
+	bh=u4fS4+Gr0Z4oZ+rx5uuJu4na497BmTWbICDLerp3ZyY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AK054JhBjfizG7uGTquX/R+Xd7RFmMAuESCNzQlExLHBSo2OxZaJFaP0tPVTcQ8qzP5oHqq1CoFK4WTzSXc6br6ZI+1htGqHV0cZ2Xd8Shpudqk9VuPgH6IakSa0j8TnRbiNeD7lH4P8RpZ9Xm/mHQAu1b+jZX0OvQunZ/9LA8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=jFl4J+hM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="Y1+Hn8nr";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jrVT+kSw"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailflow.phl.internal (Postfix) with ESMTP id 79DFA13800B9
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 05:56:50 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Sat, 10 Oct 2026 05:56:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
-	:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1791626210; x=1791633410; bh=nJReIR9tSV
-	8zwZOy58+KzaQBNhO7VbvAAXc7HpRGYro=; b=Y1+Hn8nrpp064xV6sAge7A9fhD
-	W6cPOm7upOkqGcSpfSC4tjBfkLZbcSsQ/PbBdUS+tMD/p7KobLcSmNmwckVWbvqO
-	FQgPGZHyRSi9LSU5nb4/JyJK3R6pHdUHYstO5fan21HH+izFiZoiaIaAJ+GlQw2R
-	Z4HCT9f2fmMFn+CisWC0FimYj+paxB+hm49CU7Pej4vIMvKtUGQZTdANGlRdt+qR
-	oBm+WpJL8K832xAp8DH/cfkrVW1A7ym+805RHxohQ1/znN3oB6BzAXk5SeU41ZcQ
-	4o4iUirKE3shoFgWMIsbMh2ms0Vzx5eaLv8BP1tgFi1sxi4fDiuSKt4kVSLw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1791626210; x=1791633410; bh=nJReIR9tSV8zwZOy58+KzaQBNhO7VbvAAXc
-	7HpRGYro=; b=jrVT+kSwdWYpLuwFHG9QHLj3s/VpEgHbvn66esiWcvMt1MQTwB/
-	dKnT4hJ3xhwCSBGvKwVP6K5tW2xuv0I95UD3qJwGUzRxpAGnzhXPAezWNvyFpksl
-	6SPTWHc1uz2SOOqHz9lDZA1TvLeGAOoM71KDqD+wwhtyKKpGdJ/MynGqS3v5gOPg
-	Mx6YAvngqot5If3nWo7PAD0Pvx5bdG/6Z668zHBHqG2ypR669cmAEAtvRC7oW+qE
-	cAsSgQGGN+jelmQN1iVU2C5JuGBT3wAFd52kwuCWX1Aw++YwCiS1DGQhWFpfQxuH
-	239a7RpBRN5tU+CGkbi5BPi2hMaUkkMXXcg==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
-	action=sign d=kroah.com a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1791626210; d=kroah.com;
-	mf=PGdyZWdAa3JvYWguY29tPg==;
-	rt=PGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4=;
-	s=fm2:rsa-sha256:ZxBhh4+ujPlwgYk0EOMOi2WF9ukeeHIWGrrM5g5muB7XmNx
-	UH7it+DPMOVuyibVfGNENPwbp1xSzSBP8W+BxP33UQkyVfkhO7Cg4YlStVyJO6Iz
-	bzNZtjv/sfOVYi5cMAAEh/Jd5mKoaCB04Dfq1x9tHGhqLl/08F4xBBH25O28ppyB
-	L56ZRDXKrgmDfaU7trg3zcRbHg64Hbhy5NpqYHAeGPFv1g8dO+BVuCgd18LOfBMk
-	eB6SyB5IPbuVMmy+2DZWErvhwUbt1LqKmk9pKc8vaSx8T3YfFF0wA++3IM98xOGT
-	7TOsbaNPwE7WkgXZ7blmQjGystfM5JGYcCSPaIA==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
-	action=mi-m=1; hc=11;
-	hn=content-disposition,content-type,date,feedback-id,from,
-	in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:dx36ySUIPjOF8JZnX0c0xgk6+9g6Jwnh6Uao7zqga6w=:EQwaIVpYCg5E5ydBQbytU/MGSRUfC1bWM8MHkwd4dos=;
-X-ME-Sender: <xms:4QvKauiHLPn4eVXalp1mor1b_mEOJ5zbdN6Ab_DSdZIr-lfG-WHzIg>
-    <xme:4QvKaiWSyejddYyH-GIHxYoWg7LWs0joWqSiAGr30pBwacaRVuRbEW6IbmgqUHPNf
-    gJKc7uoi1s9IORCdmLQtZfGlw0IVdd-30WqdByUKxrmzcZUYfk>
-X-ME-Received: <xmr:4QvKah5mzv1qds_FTzF48aw5fJT0YeaMpMPRZvsMvxsD9jgCtPT-ldRuGTPmq6QmpMvBOjDz-WhDkT5V6EuUT7nlpuj88NdoZVQyRHQ2xyk>
-X-ME-Proxy-Cause: dmFkZTGNwFotM+MERPG7jwl/03lTN6Lvym52gvNwntgQ9yPA1rs2/HESVaUYydqavpJNTa
-    4jDJPfayYKNrO+uNFu5P8MxBVZOPlUifNdd1B8EShhlMxxqQ6tdo1HvlwpN4RvOJ97eYPW
-    ubQCD5XOADVJBw6yNerhcYSXhABUthZo8s6xILymRleoxS2ZJHI56Rt/T0XIKMmNXtRAKU
-    FVffDP0WJY5BsT2RB0J31Qiv8yL4tyAgjfn3ZKh2e+qRBTthb0V6PynXEw3c/FcA+nUlhf
-    xBH64Y7gU9X/hYHRb8S3CmFyDXJi7LNf9XC/g6sPKEoRlaMIOGgyT0qQuNJJKDxv9LT3NC
-    F9cZnnsljeWuGbfitECMa5nMFXCE7wX0dhdNdRP5VZanKwncmCN7l5AqxAdtoxlGKkadYi
-    ihNifPcTEl+1d8C490YOTlIdZ3QiIpMNiKUCzQAP/x5w372El/bFS3UxCMza2RQlZJVJ5y
-    b2G6Twzzp3l9gCVsJa5Zx7kebQkQp2ooFw+/+wC18igLHrpAUIvvMFzy8deWhqw5tthKBP
-    u7OWHLexdIMcPExY6qnBCyglBl1/h+g1qFa5qpWI0N/uX4xZeBnFhKapVeN0VaVsQs9Mb7
-    S0+2ypT1/PHPXqQx5L1fXd90vbJ45XAmCUbJmX6zc1nZ1w8a4xLwa/vc0ucA
-X-ME-Proxy: <xmx:4QvKaqcYgLZBkQZY8RBBR5_45rbklwyLopweAya9ChSFZdP4MVtiOw>
-    <xmx:4QvKavvSc4vYAhiLnzn_o5KejXU6q692Z3pZWTQC2bWH7OwaJEkmsw>
-    <xmx:4QvKaiiaFuk8NF4Q-oF0m_m9pY00H3ItsjfXllgVZR_tPJHVKy8sZg>
-    <xmx:4QvKag6Z1NLzALCDHQ1hSqPHkUDoKYAxKml3qQgXnIWBewr00p4s6Q>
-    <xmx:4gvKasNjp-JnMOY4xx_f0z8PRk-6YxljNDwCl1YFFOWeeTWEZAj5gjDp>
-Feedback-ID: i787e41f1:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 10 Oct 2026 05:56:48 -0400 (EDT)
-Date: Sat, 10 Oct 2026 11:56:45 +0200
-From: Greg KH <greg@kroah.com>
-To: AmirHossein HajiMohammadi <info@hajimohammadi.net>,
-	David Miller <davem@davemloft.net>,
-	Franco Hector Hugo Montenegro <franco.montenegro.ruke@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Wireless <linux-wireless@vger.kernel.org>,
-	Hungyu Lin <dennylin0707@gmail.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Leonardo Martins Martins <dev.lmmrtns@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>,
-	Luka Gejak <luka.gejak@linux.dev>,
-	Networking <netdev@vger.kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>, Ping-Ke Shih <pkshih@realtek.com>,
-	Rishik Yechuri <epicrishik@gmail.com>,
-	Rishik Yechuri <rishik.yechuri.code@gmail.com>,
-	Rishik Yechuri <rishikyechuri@protonmail.com>,
-	Siho Kim <siho93.kim@gmail.com>,
-	Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
-Subject: Re: linux-next: manual merge of the staging tree with the
- wireless-next tree
-Message-ID: <2026101032-negotiate-overbid-c704@gregkh>
-References: <aslfIkFxsc9oIqku@sirena.co.uk>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="jFl4J+hM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86F101F000FF;
+	Sat, 10 Oct 2026 10:18:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1791627524;
+	bh=PFJuhzoVrpQZuTpaRI2h9RuwqxLaHz09kowFKeLYSng=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jFl4J+hMe2IvDZ3io2Qbjiww6D7DiwTQYpjNcXTFdC0GZEoSH7QtRk4fMaUQJhbti
+	 QKFDc4T+S14utk5nhBj3mWaztrPgF/ZyyrLbwCr+U4RW9FLBmM/HKja+Uh0p7tXCR4
+	 XBSg+m4UTnRAZwdDniyNKB+VFdJ22XumUXWWqBa4=
+Date: Sat, 10 Oct 2026 12:18:39 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Luka Gejak <luka.gejak@linux.dev>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH rtw-next v8 5/7] wifi: rtw88: 8723b: add the RTL8723B
+ chip driver
+Message-ID: <2026101046-transport-unnerving-96de@gregkh>
+References: <20261006130701.120460-1-luka.gejak@linux.dev>
+ <20261006130701.120460-6-luka.gejak@linux.dev>
+ <3db085e6c3c14545ac9fd4221e0715ed@realtek.com>
+ <df4a73de51784e35c15a39e85e4dae9629ba1132@linux.dev>
+ <e983dedfeb9341ad9d8cf159656395c6@realtek.com>
+ <df8313a72bdef1dc8859a4ac018370b24b606766@linux.dev>
+ <d403e88ca53841fba87190764e2a45cc@realtek.com>
+ <2026100746-delicate-carless-a04c@gregkh>
+ <3028b229a6fbe02d2bcfa30c497b6a768ba8c928@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -116,42 +51,101 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aslfIkFxsc9oIqku@sirena.co.uk>
+In-Reply-To: <3028b229a6fbe02d2bcfa30c497b6a768ba8c928@linux.dev>
 
-On Fri, Oct 09, 2026 at 11:39:46PM +0200, Mark Brown wrote:
-> Hi all,
+On Wed, Oct 07, 2026 at 10:35:25AM +0000, Luka Gejak wrote:
+> October 7, 2026 at 12:06, "Greg KH" <gregkh@linuxfoundation.org mailto:gregkh@linuxfoundation.org?to=%22Greg%20KH%22%20%3Cgregkh%40linuxfoundation.org%3E > wrote:
 > 
-> Today's linux-next merge of the staging tree got a conflict in:
 > 
->   drivers/staging/rtl8723bs/
+> > 
+> > On Wed, Oct 07, 2026 at 08:54:03AM +0000, Ping-Ke Shih wrote:
+> > 
+> > > 
+> > > + Greg to staging rtl8723bs driver question
+> > >  
+> > >  Hi Greg,
+> > >  
+> > >  Luka Gejak <luka.gejak@linux.dev> wrote:
+> > >  October 7, 2026 at 10:32, "Ping-Ke Shih" <pkshih@realtek.com
+> > >  mailto:pkshih@realtek.com?to=%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wrote:
+> > >  
+> > >  
+> > >  >
+> > >  > Luka Gejak <luka.gejak@linux.dev> wrote:
+> > >  >
+> > >  > >
+> > >  > > October 7, 2026 at 04:57, "Ping-Ke Shih" <pkshih@realtek.com
+> > >  > > mailto:pkshih@realtek.com?to=%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wrote:
+> > >  > >
+> > >  > >
+> > >  > >
+> > >  > > Luka Gejak <luka.gejak@linux.dev> wrote:
+> > >  > >
+> > >  > > >
+> > >  > > > Add the Realtek RTL8723B 802.11n chip driver: the chip operations, the
+> > >  > > > power sequences, the efuse layout, the RF and IQ calibration, and the
+> > >  > > > chip specific coexistence handling.
+> > >  > > >
+> > >  > > > The RTL8723B chip support is based on the initial work by
+> > >  > > > Michael Straube <straube.linux@gmail.com>.
+> > >  > > > Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
+> > >  > > >
+> > >  > > > Co-developed-by: Michael Straube <straube.linux@gmail.com>
+> > >  > > > Signed-off-by: Michael Straube <straube.linux@gmail.com>
+> > >  > > > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> > >  > > > Reviewed-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+> > >  > > >
+> > >  > > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> > >  > >
+> > >  > >
+> > >  > > Hi Ping-Ke,
+> > >  > >
+> > >  > > Thanks for helping and reviewing the series throughout this
+> > >  > > upstreaming process. Just one question, when is the series planned to
+> > >  > > be applied to rtw-next? I am planning to send a patch to staging to
+> > >  > > remove staging rtl8723bs and I need to have information when is it
+> > >  > > landing.
+> > >  > >
+> > >  > I'll merge this patchset and send pull-request tomorrow, but I think you
+> > >  > should remove staging rtl8723bs until this patchset drains to upstream.
+> > >  >
+> > >  > Ping-Ke
+> > >  >
+> > >  
+> > >  Ok. Thanks for information. However, by the time this series reaches
+> > >  upstream, won't the merge window be closed? Therefore 2 drivers for
+> > >  the same chip will exist for one kernel version, and Greg previously
+> > >  said that when a driver is merged we should remove staging so there
+> > >  are no two drivers for the same chip.
+> > >  
+> > >  Luka did rewrite RTL8723BS vendor driver (i.e. staging rtl8723bs) into
+> > >  upstream rtw88 driver, and I plan to merge this patchset and send
+> > >  pull-request to wireless maintainer tomorrow. However, the two drivers
+> > >  are existing at this moment. 
+> > >  
+> > >  My question is that can Luka send a patch to remove staging rtl8723bs,
+> > >  and goes via my tree? Then you don't need to wait for my pull-request
+> > >  being upstream. Can it work to you?
+> > > 
+> > That's fine with me, delete away!
+> > 
+> > thanks,
+> > 
+> > greg k-h
+> >
 > 
-> between commit:
+> Hi Greg,
 > 
->   c520f3af7df42 ("staging: rtl8723bs: remove the obsolete driver")
-> 
-> from the net-next tree and commits:
-> 
->   dbc2fa996f446 ("staging: rtl8723bs: Remove manual ifname allocation")
->   eb903412616ff ("staging: rtl8723bs: make rtl8723_dequeue_writeport() return bool")
->   94f8dd8b96b03 ("staging: rtl8723bs: remove unused monitor interface name")
->   0e5058a181451 ("staging: rtl8723bs: rename PHY_ConvertTxPowerLimitToPowerIndex()")
->   36d9b855cf944 ("staging: rtl8723bs: make xmitframe_swencrypt() return void")
->   18a42264074ae ("staging: rtl8723bs: remove unnecessary parentheses around prframe->u.hdr.list")
->   6b4405c0f6001 ("staging: rtl8723bs: align function parameters in aes_decipher")
->   2268c1bf1a861 ("Staging: rtl8723bs: fixed camel case coding style issue.")
->   bbcc68a61f3be ("staging: rtl8723bs: fix block comment style")
-> 
-> et al from the staging tree.
-> 
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
-> 
-> (deleted the files)
+> I have sent the patch, and I think you are going to like this
+> number: 66186 deletions
 
-Yes, deleting all of this is fine, thanks!
+Very happy :)
+
+> Not sure what people are going to use to learn though. It seems to
+> me everyone is repeating the same patches.
+
+Yeah, we need to dig up some more out-of-tree kernel code to add it for
+them to churn on.  But really, this is a good thing, it's nice to see
+real support for this hardware finally.
 
 greg k-h
