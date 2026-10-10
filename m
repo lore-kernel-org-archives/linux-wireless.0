@@ -1,111 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA6E23C4F3;
-	Sat, 10 Oct 2026 02:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C90935C188;
+	Sat, 10 Oct 2026 03:37:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791600144; cv=none; b=oFFwehcyhwYdCLPSuXW0njraepkQCKa348AIXSuHRJjCHK1J8fjXaPaUZrfqIk82wA8vIyCVsmoHPpEAZFE8W3nDPPDvDk/C6kFeqGWS6cmLof5sarIbSOi1ohvwSeADfJT4dc/PcTB3/eW5cFuNtyXi5k9nUrP+WW5891/D+Bc=
+	t=1791603461; cv=none; b=cunMKApEV8xDU6fUMDOViNQVZhgAmleLHpZ0bCeDh94mC7xyjkzyjPoTv63b2eq5URkgWBUDMbBsBF/ZtFDRpmFrVeiVa0k/HBG7KkHOsal2bcubbkWFACDLJalO92UpsRzn4jilL2gb45j6QtovHzDuem8S5hvRxLGRBPvLu0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791600144; c=relaxed/simple;
-	bh=kkBexPvLRbpUan8ZY42wvNuO+G66DYo8qrAwPdK8f1w=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qaWIbHBG2X6lXp47k2QduItviCfNPYxBFHu80xJt6hs5KPG8Qllr1xiaj5nOMdFto8Pu6FldWnm7topyP0Vl+jma7Tue4rcOo4Zr5Uy9eE/TXKTTvXnOc1/tBNQtW6hg3OllWar9dJr/GGvoj7X3OCQQFbJohWobAl8BsPbQMCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r2G2967V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791603461; c=relaxed/simple;
+	bh=qLuq52sVyaXL0hZV+8p1iXM+i+inClZIOaaolKSt/uM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GI7tGdkz6QSRFpXD2k6nrkeQHVzxwLRH5C0FbSjReAFy1Ea8x2Orsk80duxGip2OApvPYbq9EdrQh64C9Rh3Lj3OvHrj101K7QBQKHXKn1AQufplw7RQZTE9qCznaWQtjzS5KTTi+rMacykVi1I1MSAe40UjcaIMZZLW7koWAX8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mXCrTGPY; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r2G2967V"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CA513C2BCFB;
-	Sat, 10 Oct 2026 02:42:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791600143;
-	bh=kkBexPvLRbpUan8ZY42wvNuO+G66DYo8qrAwPdK8f1w=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=r2G2967VXwNdTVhzL/VMKeec9o6f7t2NjQ3M8i0KRyqPBAXoxMCv5pAR0n+CuGADs
-	 mI4is7sAn4GvGNdh1yh4jNeHV1nh1tlzLG+4uTZsAjSZ2i377I6p2bJtGSW4zkVWtu
-	 iT+YvD6bz2xH9rufaePEMK6xbdwMbND+7ZkpEoQr9NwFpG/6QbhlKxnOCXtKyL+yLA
-	 ALZI1e2KBOhaaQgGXK7NQh4mWcsMNDXtyeRaAGz2LSy8A/NTwYKUMOKwahV+aiwxF9
-	 mAVJD3zPNu4GXoBUvcawvYqzYESg4p7vTaUrd/DI8+V5QhwFCIJ/gKXDxr0tmqRoBB
-	 QULAlYAWoWB0A==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE6A1CA9EBD;
-	Sat, 10 Oct 2026 02:42:23 +0000 (UTC)
-From: benthecarman via B4 Relay <devnull+benthecarman1.gmail.com@kernel.org>
-Date: Fri, 09 Oct 2026 21:42:22 -0500
-Subject: [PATCH 1/2] wifi: iwlwifi: mvm: Fix injected 5 GHz legacy rate
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mXCrTGPY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=lO
+	/QH7ZRnkZvoesH5huRieOf4VJUe/ytN8DPICc2Gx8=; b=mXCrTGPYUgZSTJMdM+
+	jhw4bky8qDanUQ2EJ19eMI1CWD1bh9eaKf5pY2NPWqB//nNk0SE1dBYTW+1hseFM
+	DycN2lPq00zIi2KBaWBonsO2qJPkeoLUgJcIs7R3VP1SLqGQnYIij9lUd/A/gEQS
+	7VxWuUm7h+9QKi7jySYbJ7foY=
+Received: from LAPTOP-BJS5C4G0 (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgAHxLj5sslqgLLEDQ--.65101S2;
+	Sat, 10 Oct 2026 11:37:30 +0800 (CST)
+From: Heyang Tan <thy15333007817@163.com>
+To: linux-wireless@vger.kernel.org
+Cc: chunkeey@googlemail.com,
+	linux-kernel@vger.kernel.org,
+	Christian Lamparter <chunkeey@gmail.com>
+Subject: [PATCH v3] p54: validate firmware record lengths
+Date: Sat, 10 Oct 2026 11:37:24 +0800
+Message-ID: <20261010033724.1924-1-thy15333007817@163.com>
+X-Mailer: git-send-email 2.51.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261009-next-v1-1-b370f5302d27@gmail.com>
-References: <20261009-next-v1-0-b370f5302d27@gmail.com>
-In-Reply-To: <20261009-next-v1-0-b370f5302d27@gmail.com>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, 
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- benthecarman <benthecarman@live.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791600143; l=1797;
- i=benthecarman1@gmail.com; s=20261009; h=from:subject:message-id;
- bh=P1RM3YW4KpS+4q5w9KhQAa5Z7jbnUcHDOW45kcK15og=;
- b=OMaeSjn4aSgDqNa+kQSdmrGQL83w9Yy8oyxQiGaO6Pb72e9IuHSQgJ1llIVzIUz4TYBQCAXJO
- b9aDE2vEwgpAGUGkwqfL9vYYjaxT28Z3pWpXHRYkMlINlEW4Zkb7SNg
-X-Developer-Key: i=benthecarman1@gmail.com; a=ed25519;
- pk=8RDA9X90+5wKUu3kkgPYpamlxYvX93l7iXqMWrkhvOY=
-X-Endpoint-Received: by B4 Relay for benthecarman1@gmail.com/20261009 with
- auth_id=1149
-X-Original-From: benthecarman <benthecarman1@gmail.com>
-Reply-To: benthecarman1@gmail.com
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgAHxLj5sslqgLLEDQ--.65101S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr13WFy7tw4Duw4DJFWfAFb_yoW5urW5pF
+	Wj9ay3JFWDC3W3X3s5Jrs7AFW5Ja1fJFW7XFy0q3ZxWF13Ar1Fq34YyFWkZwn0krySy3ya
+	krWUta17CF4DAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UiNV9UUUUU=
+X-CM-SenderInfo: 5wk1ikatttiiixyrlqqrwthudrp/xtbC4Rr3oWrJsvridwAA3T
 
-From: benthecarman <benthecarman@live.com>
+The p54 firmware parser accesses component ID and component version
+records without checking that their lengths cover the fields being read.
+A malformed record can therefore make the parser read past the record.
 
-iwl_mvm_get_inject_tx_rate() passes the legacy rate index from
-mac80211 straight to iwl_mvm_convert_rate_idx(). That index points
-into the band's own bitrate table, which outside 2.4 GHz starts at
-6 Mbps (iwl_cfg80211_rates[RATES_52_OFFS]), while the driver's indices
-start with the four CCK rates. A frame injected at 12 Mbps on 5 or
-6 GHz, index 2, therefore goes out as 5.5 Mbps CCK, which no receiver
-on those bands can decode.
+Validate the component ID and component version record lengths before
+accessing their data. The descriptor record is also checked against the
+shortest descriptor length found in the supported firmware images.
 
-The non-injected path, iwl_mvm_get_tx_rate(), already adds
-IWL_FIRST_OFDM_RATE outside 2.4 GHz. Do the same for injection.
+Reject descriptor values that underflow the RX offset or produce an empty
+RX range before updating the driver state.
 
-Seen on an AX211 injecting data frames at 12 Mbps on channel 44: the
-TX response showed rate_n_flags 0x8002 (CCK) and the peer never ACKed.
-With this change it shows 0x8102 (12 Mbps OFDM) and every unicast
-frame is ACKed on the first attempt.
-
-Fixes: b99c4607973a ("wifi: iwlwifi: mvm: refactor TX rate handling")
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: benthecarman <benthecarman@live.com>
+Assisted-by: LLM Codex
+Tested-by: Christian Lamparter <chunkeey@gmail.com>
+Signed-off-by: Heyang Tan <thy15333007817@163.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Changes in v3:
+- Simplify the component ID length check to its one-word format.
+- Use a local bootrec_comp_ver pointer for version record access.
+- Express the 24-byte version minimum as six 32-bit words.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index d3c2fe830..fb7e48aa3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -331,6 +331,14 @@ static u32 iwl_mvm_get_inject_tx_rate(struct iwl_mvm *mvm,
- 	} else {
- 		int rate_idx = info->control.rates[0].idx;
- 
-+		/*
-+		 * mac80211 indexes the band's bitrates, which start at
-+		 * 6 Mbps outside 2.4 GHz; remap to our rate indices as
-+		 * iwl_mvm_get_tx_rate() does.
-+		 */
-+		if (info->band != NL80211_BAND_2GHZ)
-+			rate_idx += IWL_FIRST_OFDM_RATE;
+ drivers/net/wireless/intersil/p54/fwio.c | 45 ++++++++++++++++++++----
+ 1 file changed, 39 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+index a3d9053f043c..b19d054441b8 100644
+--- a/drivers/net/wireless/intersil/p54/fwio.c
++++ b/drivers/net/wireless/intersil/p54/fwio.c
+@@ -52,6 +52,12 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ 		u32 code = le32_to_cpu(bootrec->code);
+ 		switch (code) {
+ 		case BR_CODE_COMPONENT_ID:
++			if (len != 1) {
++				wiphy_err(priv->hw->wiphy,
++					  "firmware component ID has invalid length\n");
++				return -EINVAL;
++			}
 +
- 		result = iwl_mvm_convert_rate_idx(mvm, info, rate_idx);
- 	}
- 
-
+ 			priv->fw_interface = be32_to_cpup((__be32 *)
+ 					     bootrec->data);
+ 			switch (priv->fw_interface) {
+@@ -71,17 +77,44 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ 				return -ENODEV;
+ 			}
+ 			break;
+-		case BR_CODE_COMPONENT_VERSION:
++		case BR_CODE_COMPONENT_VERSION: {
++			struct bootrec_comp_ver *desc =
++				(struct bootrec_comp_ver *)bootrec->data;
++
++			if (len < 6) {
++				wiphy_err(priv->hw->wiphy,
++					  "firmware component version is too short\n");
++				return -EINVAL;
++			}
++
+ 			/* 24 bytes should be enough for all firmwares */
+-			if (strnlen((unsigned char *) bootrec->data, 24) < 24)
+-				fw_version = (unsigned char *) bootrec->data;
++			if (strnlen(desc->fw_version, sizeof(desc->fw_version)) <
++			    sizeof(desc->fw_version))
++				fw_version = (unsigned char *)desc->fw_version;
+ 			break;
++		}
+ 		case BR_CODE_DESCR: {
+ 			struct bootrec_desc *desc =
+ 				(struct bootrec_desc *)bootrec->data;
+-			priv->rx_start = le32_to_cpu(desc->rx_start);
+-			/* FIXME add sanity checking */
+-			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
++			u32 rx_start, rx_end;
++
++			/* 0xa is the shortest descriptor in supported firmware. */
++			if (len < 0xa) {
++				wiphy_err(priv->hw->wiphy,
++					  "firmware descriptor is too short\n");
++				return -EINVAL;
++			}
++
++			rx_start = le32_to_cpu(desc->rx_start);
++			rx_end = le32_to_cpu(desc->rx_end);
++			if (rx_end < 0x3500 || rx_end - 0x3500 <= rx_start) {
++				wiphy_err(priv->hw->wiphy,
++					  "firmware descriptor has invalid RX range\n");
++				return -EINVAL;
++			}
++
++			priv->rx_start = rx_start;
++			priv->rx_end = rx_end - 0x3500;
+ 			priv->headroom = desc->headroom;
+ 			priv->tailroom = desc->tailroom;
+ 			priv->privacy_caps = desc->privacy_caps;
 -- 
-2.55.0
-
+2.34.1
 
