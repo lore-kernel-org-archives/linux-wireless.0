@@ -1,71 +1,74 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87FDD360EF5
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 19:32:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7BC4B405E
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 19:32:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791660725; cv=none; b=nAP++7I+60Gv7xW5CvCsCI6iAa+m0z6w9/s8CARt/BfOBNtYmsVcGk8QmfoPWSe2oPonNEZogba0PWQUxEaxdrYIRD0WogyPi6954/KI6sQ4hrlgFTJvXviKpbTwsPD8uCe+czhWyr6xfiYLtVO9qdzN+j9uuk6aUuSpWv/qjIM=
+	t=1791660755; cv=none; b=uhevSzmC+F/sbVULQl6mhMs9E9E3Kv4YWM0rwC1x0eGr6t0x7Y9iQj81eEou4z6U8bNjISHb66HoD/tAiL9IA1vj6BpICPHDe/otmYgXHPe2M9h4ZLvV+XcgX1gaEtppzaOnkm7ESrP5capU7EMGB0yAVNV9DWB+PhnhpTfPsDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791660725; c=relaxed/simple;
-	bh=F1D4iukY4nyVTtimKuBfEcunfvHRFpiZ1VWWXmphPtI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HrRpVkQ7CepeCxnViOjhPiW5/P4dbVjfOz4+WnyInbVeqHYGN0PqWSDb2QPm8czggZWQxRgxuioVINHN2ifv8ZNgukN7u+ti0Mln5PP0hz2we0YVPUG4LS7BHXA8n8D0tRLHlnIByPlcMxLos2r7BGpUqONKE8E1QxW/s+/E098=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rBizblaz; arc=none smtp.client-ip=209.85.128.53
+	s=arc-20240116; t=1791660755; c=relaxed/simple;
+	bh=Dk08cb/g9NJdhjFfwsSG71cQUKStumvt+jd5Tovufj0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=n2FWzSUayRoZ7WMvgaU6Y9KcmFsftevyeQhe5j05sAbSpo74LinE1hONSpsOoqTSum+q1t8AEaN52Rl7YLX4wBcH6RHcxqQt6ZU1HseLfX09Z/Xs9DeMYYaqD+kh3BM7ze62t30kYXmZCxb4nYcg/HnmDC2enqKm0/igkTKJKgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f8VQ9757; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rBizblaz"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a16aaf2067so9509895e9.0
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 12:32:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f8VQ9757"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a1688d7769so6192635e9.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2026 12:32:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791660722; x=1792265522; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HpFsl06GKj3/HmCfxz07Pc541DBxtIMKfhoqnvBoI6I=;
-        b=rBizblazRS4sAo7J/4dBuvgGncpW/xwWmXvlaTHKYyMAzAku5JdRDe+CupFAE2QAM9
-         +PICZkCfiot6wbQeEpMd5TYN+16J6OEhobKd/a7qdiO6XCcUG5QsDRA4NAEuihjM3M6W
-         f5VkQN2p5ZAZYbm/cv+EU7NW0yBeGZp2LyrYsCsjLb0R49HXLCmGKs4HnyFC++SJPePs
-         TsxS9W13NHmhCoo6xbjNuru2dz6v2OWqI2LK4n0Jh1wdObnSlSNoU3s7Tkpd0Titac/+
-         mQ2dDGweIm0MeLxenpDAnP5hTE1foY3BG3hovLxvd9AzyvQs0RI9/V37QCdBMT/B39Xg
-         vsQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791660722; x=1792265522;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1791660752; x=1792265552; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HpFsl06GKj3/HmCfxz07Pc541DBxtIMKfhoqnvBoI6I=;
-        b=aWP2VZ+R4ywjrkMXf5qMYM4nBvE9VZWGLRjbmRFT5aeWEPCLRNhdRaUFLILS4GbdQx
-         pyfJjUxPScsC/7REDCX4OeXkPhIidOlp3QcpXrk9+lK2RRYYuF4K1oS1BYCHiEXTOkBp
-         NL8tOcRXYVLagHoO8TX9GSlQOUa1CIA/U24QcDxa146Pn5DSfHIZCIOnSearPv7UZkEE
-         cHtEIiAeCAYJANkF8MUV7Jct9BOvZUB/Jc17J6fZ+3Tx7gpb6D0gHBDmnxfg0hfRS9FJ
-         OHg15YSUHjhcGPmjMrkrRs17ewAUhxFYP69LA8GdIeQKClO1MMy4ynyIJEnazoXGgiKU
-         TOyQ==
-X-Gm-Message-State: AFq9FYJ6JBAFa9i6GZ0QFczN2LC0lrBZ3i3GVqmuFcp+2cSO8xi5CcRy
-	k8osDjlOLvhV6uX0Edmn1GJVFqkkzS/QElK95kdzo3vR0FNPfMkkaJh43aEbOgCw
-X-Gm-Gg: AYBFou1gM2282esefRkfIHR3kUGTqYKpN5P203B8StBZN0qnT3Chv9P8rhiiBAReQ15
-	e/yjar9r3v22sh1ehplSHQXrTXE3Rr9p6Cff94UMBss5jCD9YLHCimSli4IaUB1LLuXFZ8kEFw2
-	d4wY4ZZd+3vhEW7vxmfkDgq2kaGo1jzPt9R7KyhSsITcyLDO+47k5OIlguLiQf/G3iXbSre2GKu
-	AZCWPYsHm7HPsEU28sdnTBzLUZSSaESm5b7edMqXKOuGFAdYhIyOu2Vma7ynvgarDPuTOh2hBmb
-	+l2fwzJnu2QwGiokVGksI2A8sCVCMzmVGjvG3MICc4e+w5KqlJ2La9qtmcH+0OWwX590aECxbBX
-	mD4o3QFpq76v//a5E/Fxq0zTfCAVgQyutxJ0RasHc/DE8a4RThj4bQhxPz/DNZKGH6THSddTgs7
-	+q2qP1hZfb4CbOiBXF2YSfW0JEzOZHd2e71IKqMR4immpt9vigE9dB7bLLGW97vsi+cDdNEkQve
-	P1z55O87ADCBpZ1+fDnE0pzi1hnXMmDrVgkKWCCFTVJPiNIHN8iPsMDRRm/3XA6b7NivI0Ox7/S
-	o11wqpmJ3qMdXixxFeX6Aw==
-X-Received: by 2002:a05:600c:4f92:b0:4a1:6dc3:f5e2 with SMTP id 5b1f17b1804b1-4a18e4f6668mr94394465e9.33.1791660721428;
-        Sat, 10 Oct 2026 12:32:01 -0700 (PDT)
+        bh=im2Z7dJoZ26/tWLQjbeVBurC/b9QUS5n6Zv90LAY54I=;
+        b=f8VQ9757t2252IbXbe0kLYY/qeo0zfrf4x13A9ERcQP11Pp+4OXC18qphgwTXplvhl
+         eRMBGKT6/9T3wkiL8xUFcl5jVolTsCOA/CVTqqSF72NmwFtIGOvW9O5QxkpYAm3Q+SUV
+         7/roSsz4bc8tKJeunPNXi/Nm7bHzhOfl9oZbKyiVrHQlKNg1L3LOJVc/JIjaEPOAZkgW
+         OkkiMjrV+47I27mG69u769t1BX6t+sKaLbW2RA0s+LDlkgpeV5pFnGdtlLyzg2CJfHXS
+         xIdlKINdDMZNaiEejf5ZIbB/stQ77vuINu/nXKhAfaB7Lc+JroVUNvB3EV1W1l3VsG4I
+         pG9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791660752; x=1792265552;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=im2Z7dJoZ26/tWLQjbeVBurC/b9QUS5n6Zv90LAY54I=;
+        b=dg32j2Zk97yiNBbBd2cSch0zNWEk0imftT79UUL48HHRgJKbLjEEYDWPlEtcJMRjZB
+         fhM3YZnVnH2PgFMeLADF4KSCtQ8zw+Tf5Jk76e1d1X7AOblTs2wTU0enVFOVvz6qroT+
+         Hfy7AZVbqmixfENKgJBPDR2yoeRh8gaBCbR2Hhm4G5zugp6hjry53txAHwNpMc5HIzsp
+         znyfxHOBkITeoal6eSjeJ5HzYea4ZGZmIPlcDQrm+2sScXnEjcFLuiY5PAkaKRxACFkQ
+         lVWhR2rPaFwTOdeAf+fLMxVYJFXlJ0rwJtH8EJnzSZ1k+UnH/jhyS8FF5q5YPPZE1S77
+         VwSg==
+X-Gm-Message-State: AFq9FYLL/oTJoz6b0f5SvUZG/hvMbXJhyKncUODkwZ80nZJNYoPanyxL
+	X08+RVZvG4vyHMGkhXqJJ0642gKXdN7U8yz5UrrQzTA8dCMXybxf2cVxdIEBdA6J
+X-Gm-Gg: AYBFou03iIzVMLQdpbiBDzeWXJ/QKshviMpkSs5LIsjmkoHgZ3yChkvt3enKtj3u1J7
+	XOitu7oaAjoEhFDvCli3iWboA9PcL6aDfOclTwjFDMpdQa3t6WJE5APh8B84t6cVEWThqax0wSR
+	orpa08B7MQ5BLUtlzYYNpucCYOiGZEOUvgv/TGx+h9ReazIM20JbHAJjH1ZOf4KP5vJVf/ytWHS
+	mKyEanAIIC655tzYydYkDgeGrcR2hoyq+a002Xu0yUyZUJLFSIRtzo4SE8+kP+KLk5ssyCwlSSa
+	MXmbfXSlsqWKX+T7p7AH7/RnumqtQhnscJjUsXt3q3PfaVR2nG7n5cf039iCGU4NNl4ktyxxf38
+	kdMfgiMlBwwLPhxCiC9q9Qo4vrH916wkHH00rU+rHkmAo1Eroc7aEodQ3OSNYgHbraFjls2BGW7
+	+8gL3QrQAXsZf0a3MDgIgZ6HGd2b/slRKn4waEOqfuwYUNLeoW+UO9seKBGTRQpfZ3k+3tBWr77
+	MYMeA5G94GDVhqe+QQBSdFka5JdEr1/cH378n9ClvKrpte3igPGMJIG8rq8/3dmPsV6wq0R/b1c
+	sWdDpbugv297irJ0A5+xSA==
+X-Received: by 2002:a05:600c:8b09:b0:4a1:6f78:842f with SMTP id 5b1f17b1804b1-4a18e4987b8mr109600815e9.11.1791660752401;
+        Sat, 10 Oct 2026 12:32:32 -0700 (PDT)
 Received: from omarchy ([2a02:ff0:1e10:93f:ce47:40ff:fef1:ce77])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18e4a3b4asm279544955e9.5.2026.10.10.12.32.00
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18bb68abfsm165231315e9.0.2026.10.10.12.32.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Oct 2026 12:32:01 -0700 (PDT)
+        Sat, 10 Oct 2026 12:32:32 -0700 (PDT)
 From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: pkshih@realtek.com,
-	linux-kernel@vger.kernel.org,
 	rtl8821cerfe2@gmail.com
-Subject: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the rings are reset
-Date: Sat, 10 Oct 2026 22:31:36 +0300
-Message-ID: <20261010193136.294816-1-abdurrahmankaradag19@gmail.com>
+Subject: Re: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot) with station power save
+Date: Sat, 10 Oct 2026 22:32:08 +0300
+Message-ID: <20261010193208.295640-1-abdurrahmankaradag19@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <91866c4b0baa40f4a8af787d7a5ae690@realtek.com>
+References: <91866c4b0baa40f4a8af787d7a5ae690@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,88 +77,104 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
-records that in ring->queue_stopped, which is cleared only by the
-completion loop in rtw_pci_tx_isr(). Resetting the rings rewinds the
-indices, so nothing that was in flight can complete and run that loop,
-and the queue stays stopped over a ring that is now empty.
-ieee80211_restart_hw() does not release that stop either, because
-ieee80211_reconfig() wakes only IEEE80211_QUEUE_STOP_REASON_SUSPEND.
+> could you please give summarize the causes you found and the solutions
+> you adopted?
 
-Release those queues where the reset happens. The stop side is the one
-that matters: rtw_fw_recovery() reaches rtw_pci_dma_release() through
-rtw_enter_ips() before it calls ieee80211_restart_hw(), so that is
-where a queue stopped before the crash is still stopped. By the time
-rtw_pci_setup() runs the flag is already clear.
+Two things, and I only have a fix for the second.
 
-Wake all the queues, but only if at least one ring had filled. This
-cannot tell one DRIVER stop from another: rtw_pci_io_err_detected() and
-the hardware scan paths in fw.c stop every queue with the same
-IEEE80211_QUEUE_STOP_REASON_DRIVER, which mac80211 keeps as a single
-non-refcounted slot per queue. Gating on ring->queue_stopped at least
-keeps the resets that stopped nothing out of it.
+  (a) The BE TX ring's hardware read index stops advancing. The driver
+      keeps submitting until avail_desc() drops below 2, and from then on
+      the ring-full path holds the queue stopped. Why it freezes is still
+      unknown.
 
-On an RTL8821CE, a BE ring held until rtw_pci_tx_write() stopped its
-queue did not come back from the restart. The ring itself was reset -
-0x3a8 read 0x00000000 and REG_TXPAUSE was clear again - but BE's
-mac80211 stop reason still read 0x1 three minutes later and TX never
-resumed. With this patch it reads 0x0 and TX resumes within 2 s. The
-ring was filled by writing REG_TXPAUSE 0x0f from debugfs under load,
-and rtw_fw_recovery() was called from a debug build.
+  (b) ring->queue_stopped is cleared only by the completion loop in
+      rtw_pci_tx_isr(). That loop does not run while the read index is
+      frozen, and a ring reset rewinds the indices, so nothing is left
+      that could complete and run it. The queue then stays stopped for
+      good.
 
-Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
----
-v2:
- - wake with ieee80211_wake_queues() instead of recording and replaying
-   per-ring queue mappings (Ping-Ke Shih)
- - drop the Fixes tag: the bug only bites once a recovery path exists,
-   which the blamed commit predates (Ping-Ke Shih)
- - cut the commit message down to why and how (Ping-Ke Shih)
- - say which of the two reset call sites fires during recovery, and
-   that the measured stall was induced from debugfs
- - patch 2 of the v1 series is dropped rather than resent, while the
-   cause of the stall is still open
+v2 of patch 1 fixes (b), with ieee80211_wake_queues() as you suggested. I
+have nothing to offer for (a). Patch 2 is dropped rather than resent.
 
-v1: https://lore.kernel.org/linux-wireless/20261002231013.11792-1-abdurrahmankaradag19@gmail.com/
+The five events from my 3 October mail stand unchanged: the same five,
+power save off, REG_TXPAUSE 0x00 in every sample.
 
- drivers/net/wireless/realtek/rtw88/pci.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+> Before rtw_fw_recovery() isn't a solution, queues will not be
+> relevant, right? It looks like the recovery missed to consider doing
+> wake up all queues if any queue stopped.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 66d2e5f..4d3524e 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -475,7 +475,29 @@ static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
- 
- static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
- {
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	enum rtw_tx_queue_type queue;
-+	bool wake = false;
-+
- 	rtw_pci_reset_buf_desc(rtwdev);
-+
-+	/*
-+	 * The indices are back at zero, so nothing that was in flight can
-+	 * complete and reach the wake in rtw_pci_tx_isr(); a queue stopped
-+	 * when its ring filled would stay stopped for good. Only wake when
-+	 * that happened: the stop reason is shared with the AER and scan
-+	 * paths, which wake the queues again themselves.
-+	 */
-+	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++) {
-+		if (!rtwpci->tx_rings[queue].queue_stopped)
-+			continue;
-+
-+		rtwpci->tx_rings[queue].queue_stopped = false;
-+		wake = true;
-+	}
-+
-+	if (wake)
-+		ieee80211_wake_queues(rtwdev->hw);
- }
- 
- static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
--- 
-2.55.0
+Yes, and that is a better description than mine. Three captures have the
+driver's stop bit set on BE, all three with the read index two ahead of
+the write index, so avail_desc() is 1 and rtw_pci_tx_write() stopped the
+queue exactly as you describe:
 
-base-commit: 83de3a16c7b37064a59305040ba9b0f93b832794
+  08-28 22:05   0x3a8 = 0x003c003a   the dump you quoted
+  08-30 09:12   0x3a8 = 0x001c001a   read index frozen, down/up timed out
+  10-09 07:41   0x3a8 = 0x005e005c   read index still advancing
+
+08-30 09:12 is the one patch 1 is about. A down/up reaches
+rtw_pci_reset_trx_ring() through rtw_core_stop() -> rtw_power_off() ->
+rtw_hci_stop() -> rtw_pci_dma_release(), so patch 1 would have released
+that queue. I cannot prove from the capture that the stopped queue is why
+it stayed down, so I am not claiming it. Patch 1 fixes the recovery, not
+the stall.
+
+> Can you dig why REG_TXPAUSE becomes 0xff?
+> I wonder this is the cause PCI TX gets stuck?
+
+It is station power save, and it is not the cause.
+
+Nothing in the driver writes it on this chip. rtw8821c_mac_init() writes
+0; rtw_core_enable_beacon() returns early unless ap_active and only
+touches BIT_HIGH_QUEUE; ps.c never references the register; the 0xff in
+rtw_wow_bb_stop() is unreachable because 8821c declares no wowlan_stub;
+and 8821c has no act_to_lps power sequence. The other writers are in chip
+files an 8821ce does not load. That leaves the firmware, which enters LPS
+over H2C rather than by writing 0x522, so there is no host write to
+catch.
+
+The correlation is clean. Of 48 register dumps, the 6 taken while "iw dev
+wlan0 get power_save" reported on all read 0xff; the 42 taken with it off
+never did. REG_CR agrees: 9 of the 11 0xff samples read 0x043f instead of
+0x06ff, and the difference 0x02c0 is BIT_MACTXEN, BIT_MACRXEN and
+BIT_MAC_SEC_EN cleared.
+
+But it is neither necessary nor sufficient for the stall. All five events
+read 0x00 with power save off. And 08-29 04:35 reads 0xff with the BE
+ring filling and draining normally - read index equal to write index in
+every sample - and the link was still 100% lost. So I am dropping this
+line.
+
+> I'm confused. REG_TXPAUSE is 0x00 for below cases? Or it becomes
+> 0xff?
+
+Of the 24 captures that sampled it, 21 read 0x00 in every sample and 3
+read 0xff in at least one. The three are the power-save-on ones, and in
+two of them both values appear seconds apart, so it is a transient rather
+than a state the device sits in.
+
+> The debufs fw_crash only can take effect on RTL8822C.
+
+Understood - that matches what I traced on 3 October, and it is why I
+called rtw_fw_recovery() from a debug build instead.
+
+> It is enough to make sure you have disable_aspm=y and
+> disable_lps_deep=y, and do cold reboot before testing.
+
+Both have been in /etc/modprobe.d since 24 August. The capture records
+them now rather than leaving me to assert it - this morning's reads
+disable_lps_deep=Y and disable_aspm=Y. The cold boot is still owed:
+that capture has 39 h of uptime.
+
+One correction: I said HISR0/HISR1 were sampled "twice two seconds apart
+next to the TXBD indices". They are read once per capture, in a later
+section, and have been there since 27 September. They also say less than
+I hoped - HISR0 reads 0xe1100000 in all seven captures that carry it,
+none of those bits is in rtwpci->irq_mask[0] so nothing clears them, and
+every TX-done bit reads 0 because rtw_pci_irq_recognized() write-1-clears
+each masked bit on every interrupt. To tell whether one stays asserted
+during a stall I need irq_status[] logged from inside
+rtw_pci_interrupt_threadfn(), which I am adding.
+
+The monitor capture I still owe you. I will stop promising it against the
+next event and send it when I have it.
