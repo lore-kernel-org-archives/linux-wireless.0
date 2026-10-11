@@ -1,154 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D2A54705C;
-	Sun, 11 Oct 2026 07:10:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA18370D79
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 07:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791702630; cv=none; b=drJakggKo1rtdHDCDGtG9x9A/ytDCOnXO1RpMH6nP3btmCdiAf/ORRI4rjdDntSnCLxgu9sTMxABJr+ctENpOE492I7ieEk/sdCUuz+/ehB/5tRApkPJ/TPmqRx2GDyc4t8K8Ol3wbnOorR/D73kPZ5uh6zwyO9mpWObe7VyVP0=
+	t=1791703629; cv=none; b=pb7K0cOypAXJR4YhjX2uIeV5QejSPzuF0jAdXIrzn8x3T/M1KR1XSJturgC7r6eG/X+A65sBAhn8wtwDk2Y1f4kFhMTmOaMgkSCoMUcm/chB7XYzEcPFoSHlemS+/bKLAwMdodoOvyoXuSr0CFZZs/aTInVCq/aZmBMLhjMbKnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791702630; c=relaxed/simple;
-	bh=yJzyCXImaua9bP/WfED/VttSQroVOGPZKTgD8S/8vCk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=nrQNAEn7+y3t2NhNxsdop242Xr9fDztS2j4xjYVkedMSDQh1f4dXXpk/UaioQ6kAsRLVbR3gBa6rZuPcWzbNa/5O7oWFsvmxX3C+IjVr+Opk6ye4Sz0Wt7nLLqyREWYn6Sg4dF5CCIOH5kjzIMmRG3TftGLUFrG9+A7WMfCL5Y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K7MIoyxm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791703629; c=relaxed/simple;
+	bh=UOfbUFof7bQELrXKlpIQigvZddXrnhkVeOF5d0Q2m5M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Bw5gAKUx30B73pt8HXvmQFJQmauZEHisRS8WcTmPBAZBX3QI5TGoZU7wf2+JRBqQUtsgcyS5ykvdZ4vXM7Ga9g+3yAyZBaHZqDtmH2D158uYbcFUX6vee/cY3iWGYDXKOqWAGoyazH9mHhaHzTJNVlOfccQpfScW8ERLwgJwRZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IvCSefCS; arc=none smtp.client-ip=74.125.82.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K7MIoyxm"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 119A9C2BCF5;
-	Sun, 11 Oct 2026 07:10:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791702630;
-	bh=yJzyCXImaua9bP/WfED/VttSQroVOGPZKTgD8S/8vCk=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=K7MIoyxmrE2No0mjb56BkWDN1skbVKiICPl6oVo5MT7uV1kbRjDtNs4P5QGx6LDaq
-	 YeWVOawmVkohGXio+2O0hsCapcYsxWcbIQg4o8X1/cVxfpfCoFGlHKFGRVL/wuQU/q
-	 3r6u6C9HeLgtN8/OAyuYLjSLFMSpqA6/tj9M9thpxwX0BJfYukbcEc5xT7tMMQGLpX
-	 jQ2WVMaOKNa/tq2IXD+DIpuomEnQP6iptHsJsTb07l906xgxl8Z5YMLZMxKNE87Ydp
-	 C+8GFRZICjDGZRoJ2S75/gQoUJLqPR24A9yrUOYLJ8T7JRpofqxnPgzVymP3P5Ru5T
-	 hsXCIR4sYUz/Q==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FC0CA9EC7;
-	Sun, 11 Oct 2026 07:10:29 +0000 (UTC)
-From: Momo Chiyoda via B4 Relay <devnull+risingnusun.gmail.com@kernel.org>
-Date: Sun, 11 Oct 2026 16:10:28 +0900
-Subject: [PATCH RFC wireless-next] wifi: mac80211: wait longer for the
- assoc response after TX ACK
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IvCSefCS"
+Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-35829219da8so882785eec.0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 00:27:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791703627; x=1792308427; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=zZL4B0ufB7ImjZOyPaceFQVkCDsgKxc3VmJ2EdFwwkA=;
+        b=IvCSefCSMqd4Co5pmdFnGDIpRVkl5uV3bzJ2+vsLb13i+7bltUANnjvdrc5AmGMyBL
+         J6pwTH/oTGklrzpPW4TfduoyyaOo86sOH5I+NfalhPj46OzR6Mh4xnm95600N9Fp1KSu
+         96JA1ykPVbeRkxuthYFzgwZO9KycJ0OLcQhxNy7TGnY4OW95WKu4E6x0+c6Zppgc0206
+         Wa8GiPedjUsuvY0Cy9hZm1Gm7kuOJTUkPshTB36xgXevpIM9ut0FunTNlF2wZOZCDJj3
+         zitqfzuT9dwaxczPZtcuy5I39VOYrNlfG/6DbqkJhAFUsEs4a9VnOMJb2tvBvL+GDBtN
+         8fTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791703627; x=1792308427;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zZL4B0ufB7ImjZOyPaceFQVkCDsgKxc3VmJ2EdFwwkA=;
+        b=aQyNENaOpEwmIZHQ60H0a5XhJ6TR3icicTTzl6MqvMJENNfv+JJJkcXRuOvJ/cqEj9
+         8ieKscS0sNvXKj/gbDK8bXN1peugbxr9yt8o+A7XBredsqTKz/er3CDVprF9fHDoDRIK
+         N43v9rXxaX54EwLgtOiA+Z33flVrqfy6NvXSkbF1hBhcbZ37Zx0UNjJPVPpN46GKTLj6
+         qscurJNQevnW1NWO2mpAU6tKSADRAXopGS3ZEbBPTqYXBtzzuQuZgdUcCtqr/Bg6cvqE
+         iBBYmbVXrahefk4jYzG6uEGy4Bn7fMyv2pH+QtzRQ2Lt1me0IKF9kd4cn6Ub4Yq7Ujzn
+         M50A==
+X-Gm-Message-State: AFq9FYKILdFw6kWGKwcMx/qfkmHGhfuoklgEpzxyRx4J2gCqru3lgBUJ
+	oLRKEqnaPZk5x3ArJvYTAJfCZPgU+xALyD1Pjzj2u2+I/8/NDEiiZu4WYcIr0Kab
+X-Gm-Gg: AYBFou22aqB8CJznOXS7dgWALbNdS4I/xaBEaSIuHDWcfs7VKe3XmorAr3qCsJ4guus
+	oNIMp45vXR17wejgiCeAIfJhiWO67MOb29ICh8G6+d7wkAPZDJSwAkfUxUwjOqxCLb5iFmHpnuV
+	zM4yflbcJhDDSDthqt0C9sAAOISTOIqgJtmtRqajCAuoOlO9yrufLKVlw3siDN3gJfmACDDo3U0
+	IGNK0KUa9mqjGdPaeKXUY2dI69T8R0DGFDpYRFNy6ZO8Y3s2BiXh+DsqE+7oIsfKa2pRlaCifWc
+	zFRKh9ZFztM8kJgIqLnqBDdMnegrzPUmeQ2qQvHqJClmhNUl4OtwT0OwFNrehLkd7NJieUMVvGy
+	syujwnbkomtu3BM8CH2XA8PAgH5QV5PQGTlLKka3/Dpk1qXPRqEL6cYKIQHqm2B+45ZbGR/4Tm0
+	eqnkCWrzFfE8pEgg5zNWCxHRliNcG1rQaiDtoqfJgtGGQq69VZkWtK8UdPu0YRCk3X7SOGa1K01
+	b0WiUxD8Ngig1JrvSJRkhTIKEQW67XQf0jxmUSueA==
+X-Received: by 2002:a05:701b:454f:10b0:14e:5e6b:e6e2 with SMTP id a92af1059eb24-16a13a7b96emr8442345c88.18.1791703627110;
+        Sun, 11 Oct 2026 00:27:07 -0700 (PDT)
+Received: from DESKTOP-1E7V4GR.lan ([190.177.187.3])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a32eb7ebsm22855431c88.12.2026.10.11.00.27.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Oct 2026 00:27:06 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: mt76x02: sync the group key PN before a restart
+Date: Sun, 11 Oct 2026 04:27:02 -0300
+Message-ID: <20261011072702.2535-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261011-assoc-timeout-rfc-v1-1-c6cd52166968@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MQQrCMBAAv1L23IUkQqBeBR/gtfSQpltd0ER2U
- 1so/bvR4wzM7KAkTArnZgehDyvnVMG2DcRHSHdCniqDM85bYy0G1Ryx8IvyUlDmiJ0/jW7yrjM
- mQO3eQjNv/2cPt+vl51YWepIqJtoKDMfxBRkYrs95AAAA
-X-Change-ID: 20261011-assoc-timeout-rfc-963b2d62900a
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Emmanuel Grumbach <emmanuel.grumbach@intel.com>, 
- Momo Chiyoda <risingnusun@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791702629; l=3760;
- i=risingnusun@gmail.com; s=20261011; h=from:subject:message-id;
- bh=LOdM8a/v+emxV+3GmbWc+lYJdyPdcTUSe9gIToWDKyA=;
- b=G6UVCe/v5uILeWL4BKWHHduBF9xXMArOQtDkI5qXFtigNsrkT3DhWMfs1TV3mUVyuC4boOns1
- JoIj13gGPG/CMsqQY6B5ncsQMi+hguxSBa2bbiQCMUi0cvfOn5XpTgQ
-X-Developer-Key: i=risingnusun@gmail.com; a=ed25519;
- pk=ExWtmy9phzUICIOOPUfUaW25aiqDA86U5ztzz8t7T4I=
-X-Endpoint-Received: by B4 Relay for risingnusun@gmail.com/20261011 with
- auth_id=1153
-X-Original-From: Momo Chiyoda <risingnusun@gmail.com>
-Reply-To: risingnusun@gmail.com
+Content-Transfer-Encoding: 8bit
 
-From: Momo Chiyoda <risingnusun@gmail.com>
+mt76x02_key_sync() skips keys without a station, including the GTK of
+an AP. The hardware advances its TX packet number without updating
+key->tx_pn. When mac80211 reinstalls the key after a watchdog restart,
+mt76x02_mac_wcid_set_key() writes that stale software value back to the
+hardware IV table. Peers retaining the GTK can then reject group frames
+as replays.
 
-After the (Re)Association Request is ACKed, mac80211 waits only
-IEEE80211_ASSOC_TIMEOUT_SHORT (100 ms) for the response before sending
-the request again. That value comes from commit 1672c0e31917 ("mac80211:
-start auth/assoc timeout on frame status"), which assumed a typical
-response time of 30 ms.
+On an MT7612E AP, saved snapshots show the hardware PN of the same active
+CCMP GTK falling from 6412 to 0 across two watchdog restarts, while its
+software PN remained zero. The PMF pairwise keys continued to advance
+their software counters.
 
-An NEC Aterm 7200D8BE AP with MLO enabled needs about 180-250 ms to send
-the Association Response. With an Intel BE201 (iwlmld) every association
-therefore sends a second request about 105 ms after the first one:
+Use the interface's group WCID for keys without a station. Keep the
+key-index check so that, when two GTKs are installed, only the key
+programmed into that WCID is synchronized. Also retain the sw_iv check
+to avoid overwriting software-generated packet numbers, including those
+used by PMF pairwise keys.
 
-  associate with ... (try 1/3)
-  associate with ... (try 2/3)
-  RX AssocResp from ... (capab=0x1931 status=0 aid=1024)
-
-The AP answers the first request, the STA completes the 4-way handshake
-and installs the keys, and about 330 ms later the AP also answers the
-second request with status 0. From then on all individually addressed
-protected frames from the AP fail to decrypt on the STA, although the
-STA keys were not changed, so the AP has apparently set the association
-up again. About 5 s later the AP sends an unprotected Deauthentication
-frame. With PMF this ends in an SA Query timeout in wpa_supplicant and
-a locally generated deauth with reason 2. The connection never survives
-more than 7-10 s, and since every new attempt hits the same race it
-loops forever.
-
-The AP is at fault for resetting an established association on a
-duplicate request, but retrying while the response is still on its way
-makes this easy to hit. Use IEEE80211_ASSOC_TIMEOUT_LONG (500 ms) once
-the request has been ACKed. A request that was not ACKed is still
-retried immediately, so only an AP that ACKs the request and then does
-not respond takes longer to fail (3 * 500 ms instead of 3 * 100 ms).
-
-IEEE80211_ASSOC_TIMEOUT_SHORT is kept since it is also used for the ML
-reconfiguration timeout.
-
-Tested with the same change on the iwlwifi backport tree on top of
-Ubuntu 7.0.0-38: before, 33 MLO associations had 66 retried requests
-and 31 reason 2 deauths. After, 12 associations in 8 days had no
-retried request, and the current connection has been up for more than
-5 days. On wireless-next this is only compile-tested.
-
-The trace analysis and this patch were done with an AI coding
-assistant.
-
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221868
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Momo Chiyoda <risingnusun@gmail.com>
----
-RFC because this changes association timing for everyone:
-- Is 500 ms acceptable, or should the longer wait be limited to MLO?
-- I left out a Fixes: tag on purpose, since this works around AP behaviour.
-  Please tell me if you want one (and stable).
-
-Emmanuel Grumbach suggested sending this as an RFC in
-https://bugzilla.kernel.org/show_bug.cgi?id=221868
----
- net/mac80211/mlme.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6ec45a9f7..b3704b6e8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -9207,8 +9207,13 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 * the response to be received and processed first.
- 			 */
- 			if (status_acked) {
-+				/*
-+				 * Some APs need ~200 ms to respond (seen with
-+				 * MLO) and treat a retried request as a new
-+				 * association, so don't retry too early.
-+				 */
- 				ifmgd->assoc_data->timeout =
--					jiffies + IEEE80211_ASSOC_TIMEOUT_SHORT;
-+					jiffies + IEEE80211_ASSOC_TIMEOUT_LONG;
- 				run_again(sdata, ifmgd->assoc_data->timeout);
- 			} else {
- 				ifmgd->assoc_data->timeout = jiffies - 1;
+Fixes: 004960423fe1 ("mt76: mt76x2: implement full device restart on watchdog reset")
+Assisted-by: LLM
+Signed-off-by: Cristian Papa <pcristian292@gmail.com>
 
 ---
-base-commit: fbfa27d9b06f025c5f2cfa79d0e01e6400eeff2a
-change-id: 20261011-assoc-timeout-rfc-963b2d62900a
+Reproduction: MT7612E in AP mode on an XR500v, using a locally patched
+OpenWrt kernel 6.18.44 and mac80211 backports 7.2. The key-sync callback
+has the same omission in the upstream base used here.
 
-Best regards,
+Validation:
+- MIPS build against that kernel/backports: W=1 and the mt76 Makefile's
+  -Werror, 11 modules built, no warnings or errors.
+- Host tests compile the actual key-sync, key-install and PN helpers
+  with emulated registers under ASan/UBSan. The baseline fails the
+  captured 6412-PN regression; the candidate passes it and 12 test
+  groups with 363 assertions, including two GTKs, PMF, two interfaces,
+  repeated resets and rekey.
+- On the router, with this change on top of the board's local patches,
+  three watchdog restarts kept the hardware PN of the active GTK
+  increasing (404 before, then 418, 421, 443 and 544 afterwards), and
+  after the first restart the client still answered a ping to ff02::1
+  without reconnecting. Without the change, the same PN went from 6412
+  to 0, and no associated client answered ff02::1 until it reconnected,
+  while unicast pings went through.
+- After the third restart the client did stop receiving, for another
+  reason: mac80211 kept it marked as asleep (WLAN_STA_PS_STA) and
+  buffered its frames while it kept transmitting. That is a separate
+  problem in the restart path and is not addressed here.
+
+This change only includes the group key in the existing PN snapshot.
+It does not change the watchdog's snapshot-before-MAC-stop ordering;
+whether hardware can still advance PN in that interval is a separate
+follow-up. It also does not change group-key selection or power save.
+
+AI assistance was used to review the captures and source, draft the
+change and message, and develop the host regression tests. No key
+material or raw packet payload is included.
+
+ drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+index dc7c03d2..ce4e0086 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+@@ -377,12 +377,13 @@ static void mt76x02_key_sync(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			     struct ieee80211_key_conf *key, void *data)
+ {
+ 	struct mt76x02_dev *dev = hw->priv;
++	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
+ 	struct mt76_wcid *wcid;
+ 
+-	if (!sta)
+-		return;
+-
+-	wcid = (struct mt76_wcid *)sta->drv_priv;
++	if (sta)
++		wcid = (struct mt76_wcid *)sta->drv_priv;
++	else
++		wcid = &mvif->group_wcid;
+ 
+ 	if (wcid->hw_key_idx != key->keyidx || wcid->sw_iv)
+ 		return;
+
+base-commit: 2e6968e9286f3573016b9f804d4945373a21c489
 -- 
-Momo Chiyoda <risingnusun@gmail.com>
-
+2.47.3
 
