@@ -1,113 +1,146 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DDD44C4FA
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 13:26:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A551639937C
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 14:41:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791725162; cv=none; b=ik44QhLR2Q/scVhpOV6G4sCqqlKTgGhDrU5rRQ7a+5qmYmJJhBXc/9ZcDy+2qCkqGBQAhZnPXHkSqGubEu4LKgPthDXJOXQLolXuUS3vYePZKgK7v5EbL6GGzvjxKoslZFz1ZQ6vM+k8/2zt56HD12H6helaZwRPh96WX4D3j9I=
+	t=1791729670; cv=none; b=B3hH0dv4cztJAoDO9rvjX1lxXVhfnSTM0ZSyk/vVtTz+lNFaJ6yWUPM0mQYap7fJcZbB2vfTaMxiUwVyMzUUG2ui22OzZ0Z6vHGU2q0K1dz/LGPchx0Uq44Fj71junWiNfUUNPTx6nVnzFzDLVfBh59CIOosaIEL/OXb6UZkmnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791725162; c=relaxed/simple;
-	bh=6dWlJcRUVWB/btg8a37rt2O6Z0fre4eW+YeyFdlAyHg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GPlQq7E56Y1VKFphoZ8iaL6tMsYcjR1iDslQ1k31B28pdJBnX1EE3yAlSqrsAzYFwfC+Cw6BnwN1026QM6/JNZvG+5AvLTqY/xjBT2+QkSi62dDdgl4b61aFscW1uscUqZWc/OE1c1nKX59REJ4pRLTb4fKkXHF/KWBPnnGQwW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=BdV1us/K; arc=none smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1791729670; c=relaxed/simple;
+	bh=ZRCTAvNWJ7cmE9XDvXQ/sW7gPe2H7lQcxGLvXMC/gks=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AYXjpzdoZA0XauqIkul4F2EfsIWgHR05R8/fLKp0EiJULIFxjyCj+6R5im67rxPcZDEYcOKE0etMliYItlDsZMJFzVHsHpqa/n1C1cP/WT+8Sxre9xSeIjrupyt2iLTYC0S9jptDI24QHhQY62lTr0Z2aOT2dESMBztaKD+wgFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qCgfyKi8; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="BdV1us/K"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-53440816851so13072731cf.0
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 06:26:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qCgfyKi8"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a19cba5c14so3346985e9.3
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 07:41:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1791725160; x=1792329960; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PVcr7aWiZ8GvYwkyY6ZnXaDcRM8rUn6uQRQ7DpHdIyE=;
-        b=BdV1us/K4yGbQYecpLYWTOhtwex1AEvi0q7ntKiCc30ShQbZK8hgkZnbGHGUT7nukm
-         hYaNkSigDgjqfJlb4NOtg4jLvdNeu+Q2lboyEMB0K7e3oD6Oqs+gKDC2+VyrKOygrt5L
-         4C85wSvleT2gF2qlYy9BVihFebhssA6HcYlztg06Alj7WNHfsa5PTHJLzYckm/+Fy3Zp
-         dbAKei+ZuNK+1vj95tdu4ItfUwOxbdVCpliHsbXmfPR3gdURie6FUls0GBcztdw0M8fC
-         TJk70w3ZOwN0kSS2z5A+3Z2LNYiQDoT6aim77KLekZgDvqJOdrjw2xBTYgD8Zhoe37il
-         PP6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791725160; x=1792329960;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1791729667; x=1792334467; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=PVcr7aWiZ8GvYwkyY6ZnXaDcRM8rUn6uQRQ7DpHdIyE=;
-        b=T+mFu7w3xvdWoGmzLZ4VbiLnjp7cC6acMX+HxdlpS7W5nmQ2qhGwhebnGbRyQSWnzM
-         DC6pxNw2FG4YKCmM1dEGj2STAu6jMUGuM5s7i4IMXHtT72Rw4NZS/CY0Sjh5FgO0fv7B
-         47JyAnS9UMQYp7AbCITjXVXlh+egWbyy0+FJIbbVzXIMJ5hhoP/NqN6muoC9R+EhJ7k8
-         uMwz8uGhwZzD1vfsMYz9vfmIKhlphWp6MC8cVf1zOE9EmkwLYzIrpjlovZwXlLCrWXgk
-         XL3QYAiHFn8GbzD7dfd1BoBcWmsf2TevQSw1gnTNq7L45qhpKDdjcah0RmE7XVcqMm8E
-         Bo3g==
-X-Forwarded-Encrypted: i=1; AKwUvByLnUkX83IJQbq4fUJNEGFYBBU2OWDTE+s3erLMBvjzqzDHSqbLYpzrWh4t+PX+0Hg7Ry7VW492w0mkmCKLuA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLIwFVxeufquxxicAyEhqvnnWvvUgqDfYxNinoiwDvoPJJrUpAc
-	Wn/k0cqxVcHzw0iKIER7QfAHVves2O/IhRGImzBFGjsKE6Z/HPafIZcFiWX0H2lU4G0=
-X-Gm-Gg: AYBFou1JSqGALGUpnfqE728/Y6qCB8O2GRsG3SxT1VIFteIo8AhFHY182X0+jgikGmc
-	7cioX/4L+GtST6OfzhCHy6KUGP/S8J/S59OVt8FyMwaOxI4mZqKH1F+1+3ixoy4zR4CkSl8W6gM
-	Ij++FOh3G3InYFl3xsnQ3mnGGbDfDQN3cKGsRxounzhol9Bo35o7QvbapvMjIpf+shRRS1AIa5K
-	gcgqbqz7olFHSlKQNwFtChBbNEkpNnpjO9VIcbKjF+MisRMbRU9BDuxEX4f4U6aiW0s9iIvzfod
-	0P0ltWnPXFTqUCi4uUNrLPNBDRxjbT7hH98YqjI2vS5pHuCEV3ChumL/bNB6od62adIZRxplqaE
-	PC4RwASSwAsJgnom9yd8/7do6DWIWiGD2bRuOQ1lgZgQBXHAqn3z2bDfHIykNgEq46PtwzTyPkI
-	lYraYM7mAWkcere10r7veQp5cS6s/AJOkJQEvS0RuOxSR67T3zxTBAHwcCdHrILmcU8+D7DqygF
-	zdutLFRD/nalD7hrxANc3BDsIVe53GwYCJINWAMmj0zL4W8Yt59RVtqwKXg4ade1Ttf
-X-Received: by 2002:a05:622a:e111:10b0:535:a5f9:752e with SMTP id d75a77b69052e-535a5f9789bmr75892511cf.77.1791725159958;
-        Sun, 11 Oct 2026 06:25:59 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91b54e80353sm71122656d6.1.2026.10.11.06.25.58
+        bh=aL9QLQ7HRpWVc/IeBUw4hL8GCZtNDCLqj4qI5u0oC7I=;
+        b=qCgfyKi8U9G2bZ1YMQ2THoGaAj4038cjyRj2S6xHUeY7nKn/HnSYa9fOZAz+S4vIfD
+         s7q96hdgryHuhAJF6QTLvxzIFkMvz9R27Ib4MuKpRWqv5sCGe5u7f/pkqV33ZwGcyJ1M
+         Uhgw9S99naEpY9IEySecdesM0RIcAkwK5UIoLr4YZwc/4C493Fry3RrZAl0rH4M2CY/a
+         Mx1wGYI0Fj2lczxHuIEaP1fXzjtflKCuj9KMsQYEg53mwjZQGHBSLjXm/NgO9UwHFx8Q
+         y+19Ja9o50CCkfGam/fL69jC/2/m6bXD8QQ+IK0blu0mUkB9OPZQN2L6nIfpoD7uAX+O
+         dcQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791729667; x=1792334467;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aL9QLQ7HRpWVc/IeBUw4hL8GCZtNDCLqj4qI5u0oC7I=;
+        b=2C/pec7LFxpfQi421jMveU8d/6auEO9qwA+GY01weuEMiUdgKArHO8gcXhsz7TuOA+
+         2DI/i+SNmG4shPp3YbWHSHU43ucIVqTkg0IVZi0UGv7gB9wAJ0lEnvc7tSVxGvobBEEw
+         ItxK+R77ASHuqcOs4Tx1QnjhoMUzZngMLR2ZNFcY59YsabhBYXbHcC850S2MtnlqftsR
+         KTkUcD/PkKKlJUACDaRPOz3d+YRjsyXV/TmJTqlSO8UVsyl+LBhde3Mtl/IXnwqa4saa
+         KkaM3LBC5albVzBPhUD5ykajiSHRJKP6NtRsZZo9/VV1W6H9FOkJ0gD8jxGkked5vSjE
+         T1uA==
+X-Forwarded-Encrypted: i=1; AKwUvByXi4QBldEFL3vd/79k86ZjkN+Hr0H6aUmEiT7sXQ6OPBk+YUqJ9IkIiDtS7bIP2qbIQdvtXNGNKyv2WDvyMg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLHQhVLJMJNX4B4bLYPfcodsKFR5dFsrnEP5SrAJ6QvTvrBdzA1
+	vNcj2bHMgpVhShPqCjxCP8Ad9Qi8+JWLa0oF06OrisP3UVvz4YGPIH08
+X-Gm-Gg: AYBFou20oqPnhjG8W/UEhe/093Z+A9/9EtnLWleqKROzmW1fjSUpHBP9xRjCzeFxfLJ
+	hpNuA2fXqVPknG7gJKDf67ODgP2tbPCUcvgEvB5oz2sFAZJK/cNwm3erqYL4bRLEtMm6DjWKgUn
+	BP5EA/gnQ44uv1ylTOp8w+JeRhkuMafR7nf4wMCKEPRDwlwUICIsfnSILzulZP744jPHj3rQ1oH
+	hpZEljOS6eVV/b8l/kod+3oRb7gUEW+eocQzVl0nVXjmkgq93W64ucP1Vtg3waS4MoHBIhxqNWF
+	JVA7fhN0k4+bfdt43ZTCME6Nkqmjps6QoAo3ws0Ab/Qs0OfgrT3BzrXTnhu6v5o5R38mEM3bGGH
+	iERu/ZuEg8eOBOPs/Dk3DQVSb8kPgVo2Zy92C02O5e8dEDYzJUbaWOcKJU6aeA/2QbJ23cUdQdt
+	iAISiqWJT2Ut8wCjcHCBxyINZSGLFjqAxc9TkZTDrrUpQ992Yeki1w0j+nDibqf6HiFCrs6GqZr
+	LQdhUJPsb4DN7iOcK8nhMoXc8gdI6Xo10qZzZyrVOCsvrUzf9uHqXYRP2mqOWhbIPPYSyRRoM/h
+	XeQ=
+X-Received: by 2002:a05:600c:3510:b0:4a1:7033:5b55 with SMTP id 5b1f17b1804b1-4a18e4cc437mr147175805e9.21.1791729666495;
+        Sun, 11 Oct 2026 07:41:06 -0700 (PDT)
+Received: from shift.daheim (p200300d5ff07190050f496fffe46beef.dip0.t-ipconnect.de. [2003:d5:ff07:1900:50f4:96ff:fe46:beef])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48db9ae1c4fsm14233476f8f.58.2026.10.11.07.41.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Oct 2026 06:25:58 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xFtYs-00000003FEK-1U1k;
-	Sun, 11 Oct 2026 10:25:58 -0300
-Date: Sun, 11 Oct 2026 10:25:58 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: alex@shazbot.org, bhelgaas@google.com, jjohnson@kernel.org,
-	johannes@sipsolutions.net, mani@kernel.org, yishaih@nvidia.com,
-	skolothumtho@nvidia.com, kevin.tian@intel.com,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
-Message-ID: <20261011132558.GD14213@ziepe.ca>
-References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20261011075425.516927-1-jtornosm@redhat.com>
+        Sun, 11 Oct 2026 07:41:04 -0700 (PDT)
+Received: from localhost ([127.0.0.1])
+	by shift with esmtp (Exim 4.100.1)
+	(envelope-from <chunkeey@gmail.com>)
+	id 1xFuhI-00000000Qgy-3khZ;
+	Sun, 11 Oct 2026 16:41:02 +0200
+Message-ID: <76210777-9f09-48ce-af97-90fec06a6f84@gmail.com>
+Date: Sun, 11 Oct 2026 16:41:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261011075425.516927-1-jtornosm@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] wifi: carl9170: revert broken devres conversions
+ for input and hwrng
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+ Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
+ <5771235e-fa91-402a-b5d2-ebb153872c26@gmail.com>
+ <aslvBb9VbMvnHmHi@google.com>
+Content-Language: de-DE
+From: Christian Lamparter <chunkeey@gmail.com>
+In-Reply-To: <aslvBb9VbMvnHmHi@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sun, Oct 11, 2026 at 09:54:25AM +0200, Jose Ignacio Tornos Martinez wrote:
-> Hi,
+On 10/10/26 1:13 AM, Dmitry Torokhov wrote:
+> Hi Christian,
 > 
-> Since no further feedback was received after the last discussion,
-> I proceeded with v2 addressing review findings (Sashiko):
-> https://lore.kernel.org/all/20261011074514.515894-1-jtornosm@redhat.com/
+> On Fri, Oct 09, 2026 at 09:37:36PM +0200, Christian Lamparter wrote:
+>> On 10/8/26 11:39 AM, Dmitry Torokhov wrote:
+>>> Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
+>>> 87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
+>>> the HWRNG and WPS button input device registrations in carl9170 to
+>>> devres attached to the parent struct usb_device (&ar->udev->dev) and
+>>> removed explicit unregistration from carl9170_unregister().
+>>>
+>>> In carl9170_usb_disconnect(), the driver calls carl9170_unregister()
+>>> followed immediately by carl9170_free(), which frees struct ar9170
+>>> inside the interface .disconnect() callback before devres_release_all()
+>>> runs. Furthermore, devres on &ar->udev->dev is not released on
+>>> interface unbind or registration failure in carl9170_register().
+>>> As a result, both the WPS input device (whose input->name and
+>>> input->phys point into freed memory) and the embedded struct hwrng
+>>> remain registered after struct ar9170 has been freed, leading to
+>>> use-after-free bugs.
+>>
+>> Ok, so you just reworded your patch? Sight...
 > 
-> I remain open to suggestions and happy to iterate further if needed
-> to get this acceptable.
+> Yes, as I promised I would.
+> 
+>> looking at the WPS input
+>>
+>> |        input->name = ar->wps.name;
+>> |        input->phys = ar->wps.phys;
+>> |        input->id.bustype = BUS_USB;
+>> |        input->dev.parent = &ar->hw->wiphy->dev;
+>>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>
+>> the input's dev.parent is set to ar->hw->wiphy->dev and not ar->udev->dev, right?
+>> Does this do anything at all? If not, why? The wiphy gets shutdown by
+>> ieee80211_unregister() and having the "freeing" stick around after the USB device
+>> is gone should not hurt, right?
+> 
+> devm_input_allocate_device() explicitly states:
+> 
+> 	NOTE: the owner device is set up as parent of input device and
+> 	users should not override it.
 
-IMHO this is not OK, building a new crazy hypervisor interface that
-only works with the broken driver design we have today is not OK. This
-is not some "quirk", it is a permanent new ABI between VMM and kernel
-that has real compatibility implications.
+Yeah, and this is something you added in 2012... The carl9170 code driver
+is back from 2010.
 
-Go tell an AI to convert it to
-platform_device_msi_init_and_alloc_irqs() and then solve for that so
-at least we are not getting trapped into a completely broken ABI by
-all the hacks here.
+So, was this changed to "break it", rather than the driver?
 
-The whole "MSI Caching" concept is fully wrong to be an ABI to a VM.
+ From my POV: What's the point of devres then? And why are you so "eager"
+to revert the changes.
 
-Jason
+Cheers,
+Christian
