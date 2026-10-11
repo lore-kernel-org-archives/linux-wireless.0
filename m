@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281DC42C4FA
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:05:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A76A432313
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:05:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791716732; cv=none; b=WKtZMVcU70eJN/z5NG2n8yeQD1SJxK2fY+WZkrXNinJ9WOGTb7fDU5mavtXwtjyAykUl4jeGp35vvxlRbe5DU3X0Q+fA2yv/a4rGaCjgYDhro2PzJjx4s0q01b8CubpQMOLIWWUB7qJYpbkTwuwbLPku2Nq7EQMxg4QnkFfUZDE=
+	t=1791716733; cv=none; b=OleRAMXvc7FDv++BjDOJouqsJ4p4S7x7NjkfpA3mkP5z0cXmAgTQ/IlsgBGky9IlnEBQHNRKZokW8TnHPk4Jrdg6pRZC5xTEImnjXRi7Ca8PLf81Mqw1NlbxIckEdNSv0zYVJPmA3IusZ5Jkib+xiZC9UiXdt1iHYhgkctVKWqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791716732; c=relaxed/simple;
-	bh=B/P7Zz5qy89vnavqDGzW4Zyqk8e52XSgezXrgwOCLuA=;
+	s=arc-20240116; t=1791716733; c=relaxed/simple;
+	bh=t28dlYdElkiutnN2epYvgKh/hrTVcfDuf+Q2Y9+hnIw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Z8JEdPe/saRpnhd902Ol9pJlx2RqMy3eUAgzkN2dgF9XmlBAaEv9aqRDXpknmE2tfrT9y2mgZ0J8I3u068pPLpgWhlww8DtCqUJVsa9uvUdbYMuGL+Ho/K01IFKaUdcXhxYvNEvJJgVo3KXXFME1SUU/T0xUwdg+8JI4L/peSzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KRYPd3sN; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=j5vY1RV3nupR/sSSx4p/0IDMvkeOrpXJLetfLlk38KD/WFo1P9SUNyDBw73tcDgGTmX5LZDLuTBOXsz8oXI/0WyfGxa5JiHDTfTqKc3Er9W2RLD/lS3e5iLfRJHZEHiNTh1Q7dE6fGN0gc7XgFWl0CyOlcTtFbLju0aH6gFCd7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QPrRVNzs; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KRYPd3sN"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QPrRVNzs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791716732; x=1823252732;
+  t=1791716733; x=1823252733;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=B/P7Zz5qy89vnavqDGzW4Zyqk8e52XSgezXrgwOCLuA=;
-  b=KRYPd3sNirOXKSfOjtLY74b3dZlIUnAjrw9k53CWBm/g3jDHegaJgP3B
-   n2VpplN5I6xbZyEtFO/Uzz+oexId/v2iWO8KaS69qs99rNIYFGTrMNGlf
-   ePCkxB1O2s9TS2RYRBrmkKY1tKf6PF1Yxbd4up/uyyYjs5aw+NVCP4Isn
-   Egr07fRZ6pmw39z5geDkqN5MfH1EC6SU52BZ5WeV/exCxKAKHVGPc3eEa
-   yKBHOjWogYS4bNTLpjKNy9Q8uOF7mbBWTndLCrEt367zNHVCyG2Pmjwr6
-   lempngk1uVAJ4MgYHZ6nWAiqtdGDF4Gj1fR4NUm/AeDyUVP+0c0Rhvivo
-   w==;
-X-CSE-ConnectionGUID: on+pyQxgQd6F9wSJiH94QA==
-X-CSE-MsgGUID: K4D0KftIQwa8Vy3u0zYwlw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11931"; a="454181"
+  bh=t28dlYdElkiutnN2epYvgKh/hrTVcfDuf+Q2Y9+hnIw=;
+  b=QPrRVNzsu66Pk+W+rlRVQ3oWHruNrRn4pf7dRPFyZL8XC7QE6QxfdL3D
+   kw/jKyb52yvZc4Pj8Kf2FYJCezboeVc3+5pyDkm/dOCITr/7Q6Hb+cYca
+   soU1+ooqUEo1QtA10tN/ly3pPuaoaHpmizDEJ4uOiQhM9VvKv+lEz3p6H
+   5TUeZG51BdrCdq1yajpQsUTJnDH05iA4euEzBA6LKIBH5l8CUrSmOGCXk
+   MsxcEHJFVW171kBwL/LmR80uFp7TVDIkRFD5lDyWfgK3HnPS2PChrKHpX
+   9W5KmSmS+c0i4Ul4thiVjypNXTO9fkbLlah7jJIL0euOBZmaRLYjB+e+A
+   g==;
+X-CSE-ConnectionGUID: WIUBeipdSkKKt6R2LBZnvg==
+X-CSE-MsgGUID: /8IE6U50TKGtIy6ENGUZng==
+X-IronPort-AV: E=McAfee;i="6800,10657,11931"; a="454183"
 X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
-   d="scan'208";a="454181"
+   d="scan'208";a="454183"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:31 -0700
-X-CSE-ConnectionGUID: 4bft7+tXQZm8YHu8KlR4Mg==
-X-CSE-MsgGUID: 13bzatAVSu6JxxcNeDUnKw==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:33 -0700
+X-CSE-ConnectionGUID: 5Z/p3nPuTdyuR7lqlRaSpQ==
+X-CSE-MsgGUID: DHWMPnQYQ8yB+ir03qNNRg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
-   d="scan'208";a="651008"
+   d="scan'208";a="651014"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:29 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:31 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 08/13] wifi: iwlwifi: mld: avoid const in iwl_mld_chan_load_update_iter()
-Date: Sun, 11 Oct 2026 14:07:09 +0300
-Message-Id: <20261011140453.ccd4dbfffb5f.Id15631e4372d9495282634f89bd73e7f526ce2ce@changeid>
+Subject: [PATCH iwlwifi-next 09/13] wifi: iwlwifi: mld: fix const in iwl_mld_mu_mimo_iface_iterator
+Date: Sun, 11 Oct 2026 14:07:10 +0300
+Message-Id: <20261011140453.6acceb79b0ef.Ia22765206364220b115dd84eb1a16b5a979d9340@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261011110714.716840-1-miriam.rachel.korenblit@intel.com>
 References: <20261011110714.716840-1-miriam.rachel.korenblit@intel.com>
@@ -64,32 +64,31 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The phy pointer here isn't really const, and if it were we'd
-need container_of_const() (which can do both), but as it's
-just non-const anyway drop the const.
+ieee80211_update_mu_groups() takes const u8 * pointers, and we
+have const values, but remove the const which can lead to some
+warnings with clang. Leave it const throughout.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/mlo.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mld/notif.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mlo.c b/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-index a2f8a6957535..34273d4731ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-@@ -1076,9 +1076,9 @@ static void iwl_mld_chan_load_update_iter(void *_data, u8 *mac,
- 					  struct ieee80211_vif *vif)
- {
- 	struct iwl_mld_chan_load_data *data = _data;
--	const struct iwl_mld_phy *phy = data->phy;
-+	struct iwl_mld_phy *phy = data->phy;
- 	struct ieee80211_chanctx_conf *chanctx =
--		container_of((const void *)phy, struct ieee80211_chanctx_conf,
-+		container_of((void *)phy, struct ieee80211_chanctx_conf,
- 			     drv_priv);
- 	struct iwl_mld *mld = iwl_mld_vif_from_mac80211(vif)->mld;
- 	u32 new_chan_load = phy->avg_channel_load_not_by_us;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/notif.c b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+index 570b0011fd9e..7d9416ecbf92 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/notif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+@@ -159,8 +159,8 @@ static void iwl_mld_mu_mimo_iface_iterator(void *_data, u8 *mac,
+ 		 * action frame, so no conversion is needed.
+ 		 */
+ 		ieee80211_update_mu_groups(vif, link_id,
+-					   (u8 *)&notif->membership_status,
+-					   (u8 *)&notif->user_position);
++					   (const u8 *)&notif->membership_status,
++					   (const u8 *)&notif->user_position);
+ 	}
+ }
+ 
 -- 
 2.34.1
 
