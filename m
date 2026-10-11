@@ -1,149 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3536F4570C3;
-	Sun, 11 Oct 2026 22:02:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0812EEE60;
+	Sun, 11 Oct 2026 22:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791756131; cv=none; b=fC/IY+yzjOA40ctG7UUrqCGS/F/EB3k8CWWLS6K87d+9tpsPU+wGdla9BM66tl7/OVtWrMqxU7IGPmkzKI3jFN3ho3PdRyfLx6GZurdzdEfoqCvWo/84YJxU5/rq95QsuTfqE1K+w/fGCvkkiVKCXnIuu0dUXgtMgE9A+g8yqhY=
+	t=1791756493; cv=none; b=ajmt2Mk05a9JX2WGzbNle5/EOT1p6F3IXldGzAURqAM32ONCBhhH48w8pIi3ycDrG0tA13iqvBt9RJgwzpY0sM47bgejvtXqFN6x0roO6FJNTDqH1I7ekSxffNwc3fSYQcIFulvcHOXcxfburS/zHKi36PnOQsPB04IhYtiYrss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791756131; c=relaxed/simple;
-	bh=fWDUgWfLDcvrAGGHQ5c29HYOyOQhG8FxqnSanGkMpBU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OHy8Z66BDoxvfFBp31OOK4AfVQutbJI3aPHfjuA4CwLmw9RX955tZJoRdpfbBifnxl7YyO5KCXgmCtu3EH8UJ7VAAEB0fAr/5rp/vkqBYZq3ll62/35H5GpM30NjaUUVtT1aMxrW2OxcT4UfeeH1eViBaapmbtxIB33z56BrXBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mOM1A5TG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791756493; c=relaxed/simple;
+	bh=X+TiGBBvgg4lTnx6akfoGMRuOIo3RkbUaewzmx+uWVo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SzfGFtMofkSffDdiFbJpBjbB0SVaNl9NVPCHmtWbnw4BJjwf9XMpOliV7bZBQxdThrgxcyk00AwdR/aFc2IRh2iiZ8u0TJVsmXpzKcvSyJBGwyKiQsYcCnumQjly608sjMnsgs1znd3kDOCLchqx31uF8o9aLDhYHS+bE08g1ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=JviUl0ol; arc=none smtp.client-ip=119.15.109.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mOM1A5TG"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C3519C2BCFA;
-	Sun, 11 Oct 2026 22:02:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791756130;
-	bh=fWDUgWfLDcvrAGGHQ5c29HYOyOQhG8FxqnSanGkMpBU=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=mOM1A5TG3vHrM3Z+8KFpJv/nTzLsNdtMhuRmEJiIY0i9YfzArAGqunudi649mp4Cl
-	 cgkhEd3A9YyqTKcJ/EmJs2oyXTm3GXzePBR4BQHx2qmE768gm5/3y0aiRI7w27s1gY
-	 XjLWFIDpaLJI/UQXK4/lF/455R9MW/b3M8FDX+Lugv5hn7Oo8+9JUzbteLJUXpico9
-	 0WRRowcD/5JDEd0iPNS2ytS8EuAJZ53yM0IDkDNP4ANuVWg9TM0mLEN0oAmo2vRCpr
-	 /QecPDHmKkHUagQv2eH0y9+4tWvz4yGbcZL0KyohQw2WJq/TikB9F0TEFnp+wbs3L0
-	 GCgUKCO8T542A==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF69ECA9EC7;
-	Sun, 11 Oct 2026 22:02:10 +0000 (UTC)
-From: Fabricio Akio via B4 Relay <devnull+fabricioakio.gmail.com@kernel.org>
-Date: Sun, 11 Oct 2026 19:02:10 -0300
-Subject: [PATCH] wifi: ath10k: fill in WCN3990's channel counter frequency
- and wraparound
+	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="JviUl0ol"
+Received: from Hawking.lan (hawking.lan [10.0.1.4])
+	by www.nmnhosting.com (Postfix) with ESMTP id EBE7C4021A;
+	Mon, 12 Oct 2026 09:07:55 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
+	t=1791756476;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=SRYZN9X570ZTPADly2F5lg+GqHeDvOGVG3Nz0gUA2GI=;
+	b=JviUl0ol/54L1x1wzd8t1SHt7D7GHGej/ynJmfQnuErglHNEjhH7Dvc2sSWlbOKPYK2vr/
+	TuyX+9mu5vGZrDFccxg4YFXeRQTFuA09Zrl4jrgUrWDO75Tf4DDORU5rUAOOHV/qsEJtxm
+	GHpiX85SxYYBuHbz2FFyUPZ5457POApmvFaUEKOPRD/3XxCIywE4OEK/TYoGTYchUf8nW7
+	NTeAt25GF17wztWN5NGy5qCpwh1jWqUmrqqENJu5TnWj2/KPNu4Feo8+cnb2UhRUJt3gtk
+	6dXZO4u6qEYGnFh3Pf1n3vlVOJQS2PzlXBuiTKkQQEVc5UVnCq9NtjLK+n2PCw==
+X-GPT-Reason: legitimate_transactional_technical_communication;
+	the email is a technical Linux kernel patch submission which aligns
+	perfectly with the recipient's persona (alastair@d-silva.org);
+	the From domain (d-silva.org) matches the recipient's domain; the
+	content is highly specific technical documentation regarding WiFi
+	drivers (rtw88) and hardware validation (Allwinner H618 board),
+	which is consistent with professional software development; there
+	are no phishing indicators, urgency tactics, or suspicious links.
+From: Alastair D'Silva <alastair@d-silva.org>
+To: linux-wireless@vger.kernel.org,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>
+Cc: Luka Gejak <luka.gejak@linux.dev>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Alastair D'Silva <alastair@d-silva.org>
+Subject: [PATCH rtw-next v5 0/4] wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+Date: Mon, 12 Oct 2026 09:07:51 +1100
+Message-ID: <20261011220755.1673367-1-alastair@d-silva.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261011-ath10k-wcn3990-survey-v1-1-c3d51f198a0f@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMMQ7CMAxA0atUnrEUBxJUroI6pMZQgxRQ3BZQ1
- bsTYHzD/wuYFBWDQ7NAkVlN77mCNg3wkPJFUE/V4J2P5IgwjQO5Gz45b9vWoU1lljfGHYeYfNg
- H7qG2jyJnff2+x+5vm/qr8Pidwbp+AFsFeat5AAAA
-X-Change-ID: 20261011-ath10k-wcn3990-survey-64c56a2575cb
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
- linux-kernel@vger.kernel.org, Fabricio Akio <fabricioakio@gmail.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791756129; l=3254;
- i=fabricioakio@gmail.com; s=20260928; h=from:subject:message-id;
- bh=cMknKb3KJmpnu47125b2ZiM5JusGIo3IhX2PufK6Iv4=;
- b=2vi1fujkVV2kHJwYSs7GNEkatX33Gjc+IO3yvFzE1J0ekYEgwuJwuXZPIXGg2viH1g4BeWVUN
- jpdJGNXGPAODuA84tRBzl/LUul00gDuupAVfkK2Yt2OkVnpJ3M0caTn
-X-Developer-Key: i=fabricioakio@gmail.com; a=ed25519;
- pk=TlMUT8bPI/ZQzp2q24BIQTb2qSx/jdUTBlGEXIRCm54=
-X-Endpoint-Received: by B4 Relay for fabricioakio@gmail.com/20260928 with
- auth_id=1076
-X-Original-From: Fabricio Akio <fabricioakio@gmail.com>
-Reply-To: fabricioakio@gmail.com
+Content-Transfer-Encoding: 8bit
 
-From: Fabricio Akio <fabricioakio@gmail.com>
+On 3081-based SDIO chips (e.g. RTL8821CS, RTL8822CS), hardware does not
+automatically clear the REG_SDIO_HISR_RX_REQUEST status bit when the RX
+FIFO is empty. Masking this bit out in software before writing back to
+HISR prevented it from ever being acknowledged in hardware, trapping the
+CPU core in an infinite interrupt storm that locked up the system upon
+receiving network traffic.
 
-On WCN3990 firmware that reports channel info in pairs, such as
-WLAN.HL.1.0.1, the survey's channel active and busy times are always 0:
-its hw_params entry sets no channel_counters_freq_hz, so CCNT_TO_MSEC()
-divides by zero, which arm64 evaluates to 0, and no cc_wraparound_type.
+This series fixes the interrupt storm on 3081 chips and addresses
+related SDIO lifecycle, locking, and error handling issues:
 
-This firmware leaves mac_clk_mhz at 0, so the survey needs the counter
-frequency from hw_params. Measured against the host clock, the counters
-run at 120 MHz. On overflow the cycle counter drops by 2^31, as the
-shifted wraparound types assume, while the rx clear counter wraps
-around to 0, a pair no existing type describes, so add one that
-corrects the cycle counter only.
+- Patch 1 returns error codes from rtw_sdio_rxfifo_recv() on allocation
+  or read failures so the caller stops immediately instead of burning
+  through the loop budget.
+- Patch 2 tracks operational state via rtwsdio->running protected by an
+  irq_lock mutex (using a mutex as SDIO bus operations sleep), serializes
+  start/stop state transitions under sdio_claim_host() and irq_lock, and
+  cancels the TX worker synchronously on stop.
+- Patch 3 fixes the interrupt storm by splitting
+  rtw_sdio_handle_interrupt() into 8051 and 3081 paths. On 3081,
+  interrupts are masked via HIMR, acknowledged via W1C writeback,
+  serviced, and re-enabled under irq_lock if still running.
+- Patch 4 refactors rtw_sdio_rx_isr() into separate 8051 and 3081 variants
+  to clarify the differences in register width and HISR handling without
+  any logic changes.
 
-Fixes: 03a72288c546 ("ath10k: wmi: add hw params entry for wcn3990")
-Signed-off-by: Fabricio Akio <fabricioakio@gmail.com>
----
-Tested on a Motorola Moto X4 (SDM630, WCN3990) with
-reads between 13 and 150 ms, where it read 0. Without
-the new wraparound type, a channel visit spanning a cycle counter
-overflow reads about 17.9 s. Firmware that sends a single chan info
-event per channel takes another path and is unaffected.
+Hardware Validation:
+Validated on an Allwinner H618 board (Mellow Fly-C5) with RTL8821CS SDIO
+running Linux 7.2.10, with the Ethernet interface administratively brought
+down to ensure all traffic traversed the WiFi link exclusively:
+- TX test (iperf3 client upload): 45.7 MB in 10s at 38.3 Mbits/sec
+  (0 errors).
+- RX test (iperf3 reverse mode flood): 65.1 MB in 15s at 36.4 Mbits/sec
+  with zero stalls, zero lockups, and no interrupt storm.
+- Bidirectional test (iperf3 --bidir simultaneous TX and RX):
+  20.9 MB TX (11.7 Mbits/sec) + 43.6 MB RX (24.4 Mbits/sec),
+  aggregate ~36.1 Mbits/sec.
+- dmesg verified clean with zero warnings, traces, or hangs.
 
-WLAN.HL.1.0.1.c2-00498: over 50 scans every channel's active time
----
- drivers/net/wireless/ath/ath10k/core.c | 2 ++
- drivers/net/wireless/ath/ath10k/hw.c   | 4 ++++
- drivers/net/wireless/ath/ath10k/hw.h   | 6 ++++++
- 3 files changed, 12 insertions(+)
+Differences in v5:
+- Patch 1: Added Acked-by from Ping-Ke Shih.
+- Patch 2: Updated Fixes: tag to commit 28eaf7971a20 ("wifi: rtw88: sdio:
+  add TX back-pressure and retry on page starvation") per discussion
+  between Ping-Ke Shih and Luka Gejak.
+- Patch 2: Replaced lockless running checks with an irq_lock mutex in
+  struct rtw_sdio. Since SDIO I/O sleeps, a mutex is used instead of a
+  spinlock. Enforced lock ordering (sdio_claim_host() -> irq_lock) in
+  start and stop paths to avoid lock inversion with the MMC IRQ handler.
+- Patch 2: Retained running checks in rtw_sdio_tx_handler() and
+  rtw_sdio_handle_interrupt() to avoid races during stop.
+- Patch 3: Protected the 3081 interrupt re-enable check under irq_lock
+  (scoped_guard) per feedback from Ping-Ke Shih.
+- Patch 4: Fixed comment formatting style in rtw_sdio_rx_isr_8051() per
+  coding style rules.
+- Patch 4: Added Acked-by from Ping-Ke Shih.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7c2939cbde5f..e1172be4bd1e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -716,7 +716,9 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.bus = ATH10K_BUS_SNOC,
- 		.name = "wcn3990 hw1.0",
- 		.led_pin = 0,
-+		.cc_wraparound_type = ATH10K_HW_CC_WRAP_SHIFTED_CC,
- 		.continuous_frag_desc = true,
-+		.channel_counters_freq_hz = 120000,
- 		.tx_chain_mask = 0x7,
- 		.rx_chain_mask = 0x7,
- 		.max_spatial_stream = 4,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 6f5019bf0b7d..7d7b36ef2986 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -574,6 +574,10 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
- 			if (rcc < rcc_prev)
- 				rcc_fix = 0x7fffffff;
- 			break;
-+		case ATH10K_HW_CC_WRAP_SHIFTED_CC:
-+			if (cc < cc_prev)
-+				cc_fix = 0x7fffffff;
-+			break;
- 		case ATH10K_HW_CC_WRAP_DISABLED:
- 			break;
- 		}
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index cd468b24bd33..53bfc3c6957a 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -481,6 +481,12 @@ enum ath10k_hw_cc_wraparound_type {
- 	 * first type.
- 	 */
- 	ATH10K_HW_CC_WRAP_SHIFTED_EACH = 2,
-+
-+	/* The Cycle Counter wraps around to 0x7fffffff when it
-+	 * overflows, and the Rx Clear Count wraps around to 0
-+	 * independently of it.
-+	 */
-+	ATH10K_HW_CC_WRAP_SHIFTED_CC = 3,
- };
- 
- enum ath10k_hw_refclk_speed {
+Differences in v4:
+- Split pre-existing lifecycle and error handling issues into separate
+  patches (Patches 1 and 2) prior to the storm fix (per Luka Gejak).
+- Guard HIMR re-enabling with rtwsdio->running in the 3081 handler.
+- Significantly reduced and streamlined commit messages across the series
+  (per Ping-Ke Shih).
+- Clarified in Patch 4 that it is a refactoring without logic changes,
+  highlighting register width and HISR behavior (per Ping-Ke Shih).
+- Tagged with rtw-next in subject prefix for NIPA testing.
 
----
-base-commit: becb95e45ef0dda9ffb35156d909d3da7a2789c3
-change-id: 20261011-ath10k-wcn3990-survey-64c56a2575cb
+Alastair D'Silva (4):
+  wifi: rtw88: sdio: Handle allocation and read errors in
+    rtw_sdio_rxfifo_recv
+  wifi: rtw88: sdio: Track running state and cancel TX worker on stop
+  wifi: rtw88: sdio: Fix unhandled RX request interrupt storm
+  wifi: rtw88: sdio: Split rtw_sdio_rx_isr into 8051 and 3081 variants
 
-Best regards,
---  
-Fabricio Akio <fabricioakio@gmail.com>
+ drivers/net/wireless/realtek/rtw88/sdio.c | 165 ++++++++++++++++------
+ drivers/net/wireless/realtek/rtw88/sdio.h |   3 +
+ 2 files changed, 126 insertions(+), 42 deletions(-)
 
-
+-- 
+2.53.0
