@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988991B87C9
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 09:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5B23368BF
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 09:33:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791711198; cv=none; b=HJ4TprDW4kZQbZM7aCp5fIAP89/obdiSmVuD1DreCvlN0c8cPFyBiazdUMuO9m6Sy29/fGU9CddUPYZLvJpHVfA18iuJZuLQW5O+AnrCkNFxCOmHSPSguBIbbmzD3XYdhWdzbTzz0ogIEWP+hj/6OE85V9XCJ05r4Z2e4dsLEc0=
+	t=1791711198; cv=none; b=oWK96PiIrnhXW1D6Bw7cIqZBum0jO5vG3GBv/V54Z9FkjBTnHKlujVtTUJ9UjhNwtbxVFSznLg0e124ijkiUzS/tzmmSplS5Xc2EdU0ze2PzBtAA93RuEqfEpKoWD2am87IprE9mLKhX+PDBISgQjV1trFEGjHbVCk7vSw/atrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791711198; c=relaxed/simple;
-	bh=09h7wCtZjV5CgblEdAdIUPTNlXkgLFWlELlSw7QD02w=;
+	bh=S1JNzYKho0MkMYf4g58KgcyJWy5ifrCOy+Gz5m9J8Ew=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gZHtkgwZD+gzWS43/W89O258VgVca8xXKAN7hPSAw0/ff7at/YWsODTTi1MMeeSkyDkVAf5XksnNxhZ/1fQa7fl5ZWzBm1MTM4iDcPYuhIs1fY+30eRLCpAYyhrCwmX24uUvTN7AWbiOAKaqbwmKg/1MAaTAv/RbIJ/EbQmhuPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ToeIiDDR; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=pv5AaXVcKC6JXKp7g2XVO7B6NZtoYg+0JU54qNkPGf+v4D/7QuKba6gVHimIMLWsgvLGUdj01EITh91m6XePmLERean24Foalq2T1wOACz7FLTU+AHbKpuo7jsGcQdNQYBOQLyBuIlGAxnGbHJD8Hmu1uEyLxU/ipRdLn6xpHUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Wp5sJ4yj; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ToeIiDDR"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Wp5sJ4yj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=VXppRbzwEIVI4YRIbASVXtNQqjDk2aWJWvQIUKZIwDk=;
-	t=1791711196; x=1792920796; b=ToeIiDDRyItqJmIcK3UQn09aHgQaerkwts7a06b/MNuxfyh
-	yuL5HD8S4xkWgXOezF8HVYR3UgdecEDlBXfF79WivZbMzF15klomaczmCKb+wG4711fyxb/zmds9i
-	jXy9iE+nspiwOrrYpj2uOEbFW+jQ1lUq+wkXeOG/b3jh/tEY/wxT16zLMZFT2Ru2wFsiIKSlQdHEK
-	gCb9YC9/BpulcjGPwdW8HmPDrjzalei1kzynOBsRjJPF3hTQpRZk5W3nJEJR2MJv0PZHbxRTy/0TZ
-	aq1yvxxRSXnytDvgAmYe3SxjcMqKgUl3DkJO7iQewupTEY7B4RjTDD6B9BIZPneQ==;
+	Resent-Cc:Resent-Message-ID; bh=phM5zf/E/SH3DZzeGWufkdGzNsIxz/2RHK9wwEhFkGk=;
+	t=1791711197; x=1792920797; b=Wp5sJ4yjkFUIrudM/CqAll9l88XfRCJT56QOt9XTRi1y2sm
+	kj+AfdvR/RaCWvwl5UBiBQKOVaZ//sInxbBGEomepz9o4JM9NXpoDukF1glu9zaCwMzamC/UWF4mJ
+	JFqHYwRh5znG6aUCL3UI2noEOSLxFjyn3sz++Uj5dnppkrgTc7TZz6FyjkPm4VjiGjMyRrm2McaKw
+	iSI00VQb604ZD4wEnUxyWiZcfZnTQyFcDbQ3i7qgQB0cqKFosZevyAOp8NZ1N0V1tFAFumG0xHj5f
+	OkDn2ektJ+onwPC5rHjzEGFkkEJeUPZkmxoaFA42QSS8NYvbNWJEU4JhvrjPcgxQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFpvd-0000000Dk5j-3GtG;
-	Sun, 11 Oct 2026 11:33:13 +0200
+	id 1xFpve-0000000Dk5j-1QSu;
+	Sun, 11 Oct 2026 11:33:14 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next v2 02/10] wifi: cfg80211: drop RTNL from disconnect_work
-Date: Sun, 11 Oct 2026 11:31:25 +0200
-Message-ID: <20261011113308.3c7e002d1893.I31f6d1b43bb252b23b42c9b0375f557d90110dc6@changeid>
+Subject: [PATCH wireless-next v2 03/10] wifi: nl80211: don't hold RTNL for SET_SAR_SPECS
+Date: Sun, 11 Oct 2026 11:31:26 +0200
+Message-ID: <20261011113308.5a374e7bc350.I638c842c1639a8aa5d8207f784110b4a583aa7db@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261011093308.49945-12-johannes@sipsolutions.net>
 References: <20261011093308.49945-12-johannes@sipsolutions.net>
@@ -50,61 +50,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The RTNL here is only needed for walking the wiphy list,
-which can be done under cfg80211_mutex instead, we just
-need to not take it in regulatory_hint_disconnect(), of
-which this is the only caller.
+There's no need for the RTNL for setting SAR specs, it
+seems to have just been added while I was removing the
+RTNL from most places. Just drop it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 2 +-
- net/wireless/reg.h | 2 +-
- net/wireless/sme.c | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/nl80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4efb35baeb3e..50f50e768f01 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3671,7 +3671,7 @@ static bool is_wiphy_all_set_reg_flag(enum ieee80211_regulatory_flags flag)
- 
- void regulatory_hint_disconnect(void)
- {
--	guard(mutex)(&cfg80211_mutex);
-+	lockdep_assert_held(&cfg80211_mutex);
- 
- 	/* Restore of regulatory settings is not required when wiphy(s)
- 	 * ignore IE from connected access point but clearance of beacon hints
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index c587079ead8f..76e7f9e8d684 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -115,7 +115,7 @@ void regulatory_hint_country_ie(struct wiphy *wiphy,
-  * be respected but if a user had set the regulatory domain that will take
-  * precedence.
-  *
-- * Must be called from process context.
-+ * Must be called with cfg80211_mutex held.
-  */
- void regulatory_hint_disconnect(void);
- 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 85076f3b3355..fde86c900f4f 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -704,10 +704,10 @@ static bool cfg80211_is_all_idle(void)
- 
- static void disconnect_work(struct work_struct *work)
- {
--	rtnl_lock();
-+	guard(mutex)(&cfg80211_mutex);
-+
- 	if (cfg80211_is_all_idle())
- 		regulatory_hint_disconnect();
--	rtnl_unlock();
- }
- 
- DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b5b9d8830af5..46b72f3b5ea4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -20826,8 +20826,7 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+ 		.doit = nl80211_set_sar_specs,
+ 		.flags = GENL_UNS_ADMIN_PERM,
+-		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WIPHY |
+-					 NL80211_FLAG_NEED_RTNL),
++		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WIPHY),
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_COLOR_CHANGE_REQUEST,
 -- 
 2.56.0
 
