@@ -1,127 +1,142 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FCD3340416
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 19:42:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4908E3A1D0C
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 20:45:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791747735; cv=none; b=LUKCM/cNOfF/R1XrUFm9pL4TnNCACfKzmEzOYZnC1i0G9TrevMgcoLbbPtE2E170a65g8cv2ebzNZqXDDe/b5hIhR7n27YsOiGQuwUqjKhzFgBzm28cjT486BKHvsqpHLZwJaC2dLnOQVrUZ12iNOUU5VRRYfBVYxd+t7pGdy94=
+	t=1791751516; cv=none; b=LlPmsbPQI/gL0pCqkPFOo9mU9KzBTrAUb5T9KxBmsU9ZUkSnSLj8XLsOeAJOGZsD1PTqw4VR7Viu/N6r9v6vdVFys2HOo9099Q4cJGO9PH7xC0eZ61chE92gxA8b646duiBhdtE5zeMIS6Q56g3a52H/DEVqGzSTmW6QPJBFkdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791747735; c=relaxed/simple;
-	bh=4AMJ4/YUrPp8c+UnnNwqZYiFxBTm23GrzrPTxaOoYuU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZjfApUC8HENvHcieANMjAOtBUoCUYmqG/HeCwwoyRRsf9toJr7w9r275QHFJY6Up090PT6JrqxQHFNOgNMrVhVhtkjSngpa9VBzIQD/63tO4v/NATaXnrwXEGN9HOzq0bauZVEHo6TJ7Or3eSWVweL5vNb+BRZNNrczHVfWve30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XazWImHb; arc=none smtp.client-ip=209.85.128.54
+	s=arc-20240116; t=1791751516; c=relaxed/simple;
+	bh=tWqAn/OUpkb2HG3yB67Tqx2X4I8nzTHsSrSc53lI5NU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tHoTd0lGriVR4TOE5mr/opuHXDVIjTDwNnN7HdDVCzXg+rmm/qbSWv2aaK2ldtFuY9wFidmnUGtUaiTuBaJfuxQk/3EZGMKYDj/h4oTaIp2M4g7QW0ErLR8RmIjAuFRVRUtXLrVGlATAZHb1bh/r9zSrfqZ9CxwNbCJ8r1f4xFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EV6hgzbt; arc=none smtp.client-ip=209.85.221.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XazWImHb"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a1880e1bf1so11643245e9.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 12:42:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EV6hgzbt"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-48870973bddso721015f8f.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 13:45:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791747732; x=1792352532; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Z1QFtV7KI5OFWzwbAboD0j9bhs+VlQKq149o9ZSjG8g=;
-        b=XazWImHbNz702kBVNRWtoiti7WE0n0wXrlG1mEZBm9Ke+hFrxjg7TxPr8S3lAZ6jt1
-         RBt9QDtIVI5xEtRFirEzLGViDX6SIvEiJlZFxQoa2m+Bfr+pX6sXixqRdc3/+DNZgkjo
-         WvF+w9ybTCHojz3iB6xKt6+LSuA4xv2mslFfJ8MEZgnvXoOwPC7DMag1JP0ot0OF1eOT
-         NEN1A8QnaMYX4UlUqWGiNo2pm3QgPDR4+2uBug4qzqFwt+NNjAyk7I5BT8sEobZbI7Gd
-         ZomsW7zkwc7KZFLbA714kg1Fut4AbH3icjiu7sIHJVJhwWBQFVDJe46S1oQe3b12T7+d
-         1Pfw==
+        d=gmail.com; s=20251104; t=1791751512; x=1792356312; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vKik4orISgwbKLaMdm/aK2JrSIR2rz6tc/MAnoXx/B8=;
+        b=EV6hgzbtHudD4HFWSjEX3V8qFTZD4Oip37uLl3iaGQQUiXA0dWAzRrRiC2s8SpTKui
+         0dh7qdS/DodrjmVkK9l40sN8Gj59Zj9W8AFTTpYNxessqZXyQd3Au1+wiVw9FxMiceAQ
+         3+9Z4J/4Zbpd2EfwVHZ/Mx/jrsUtqLHNY3ZMGybkvCCb0hQs1YGigUnl3aYxVyx6LdCQ
+         +chYXdZJ1t0IkgE91ag5NS6scuFMkiRtBLjrnsYUpZiDOXKDw0JSkpgeDN8Y8tKxSmfv
+         Hk2L1lcJU4DXMrbTrysEuT1LszghTAtnnvs7cD41zK9IhQhBqrAn9vzQUjeN/jaSYb2l
+         jniQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791747732; x=1792352532;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Z1QFtV7KI5OFWzwbAboD0j9bhs+VlQKq149o9ZSjG8g=;
-        b=Gb/biAFkV9oyFfNflfNvVf5N69WSu7UpSF0y0Kdm9aZPC08wOArqtvlJK4B5YFJSr1
-         8sNWeT7ODlP9Y6DPjKZgDlhqVGbnoQL/BYqxc1Por6YMIEpE+F7x7OAUQ9tNf3LK+dFS
-         ozrXeoTvG1PHHAEOrqf+UlHUsNR9FrnG3D7WDuVu+UtlxVx7T3afi6O3RUOiKeQsfwiV
-         3mqK9I87vFaVv9/d4n4OENeZxyJMIHsnv+jFegCtyDQcWZ6gMH4dFRInbhkBO/EVKslj
-         ie7Y9pua0/soLwruyGsz4uMT6kdz6V8Wu3yqCWg/iOBo5nY5sLFPtiD1btPcwA3+ezuA
-         CIzA==
-X-Gm-Message-State: AFq9FYL6j0gFgREHfgEbQj2F6lDgab5musL72+1TcbPEFVcAvyfuNKth
-	t+5gnsFRUHsWfIH2Am9O7vn2nrneZxkAxWep9kwwh6ylrmFwM6hPxT/q
-X-Gm-Gg: AYBFou15GBkYFx0d2Aihkg562NtMqfRZAFZFtqRHl4CIbyX7xtpeq9vZH0aSCKfkh3I
-	JTseYpBbx45MKw4bYz2oVb2PBdOqPEKuSAb8ji992BzDqpF1r9MOHO+Q2+BMrOzxcHEtvOI2QzG
-	BATmUsiJxG5t0tut7uWpe2H4uAvSOQNmYw35R34vy0D9Ms9LddMBByehpPFqy4Zckq+nwtObdWQ
-	I19+l6K9M5VHc2/E34WUhV7hcmnpdMnUwAfUs2kKXWXQzOWbAi91PXHVOYZ31lAGwLvtIk4//Q9
-	WG1wUoMaFpo613z2JgQ5+UyIgBhQQhm4zPTPAxv0hQsJ3y62ZrFG+nOHm++ql1K7m6atJlcPeQF
-	9Sc0mnBeZMS4m8jjVkrgRYB7Y+kLagqserpFAFJHkyi/ZyC/W9TKZRjp5KgrydSvBCiFFxosxCB
-	hIscVWSCnxrIg/MDtlZjm/+2VI5YZQeha8ec9bwAhoc7yAzX5UGYveAX0UTW2m+4G+pg0KNzimH
-	uG0YMGb6wQ65iW6vZmBslBVnN8L53bOvePFRDHL1ptjJineGPddUnq8X97zSmeT3ObLKM6EjVwz
-	zEQb0XIwJeDcj+1fUa+2yVz255riP5ongiG1xu4eR68hSspszC1I6U38g6hOEhfRsJiieLvdfo1
-	Ua2ng
-X-Received: by 2002:a05:600c:34cf:b0:4a0:159b:d2a9 with SMTP id 5b1f17b1804b1-4a18e4d68aamr114369585e9.24.1791747732221;
-        Sun, 11 Oct 2026 12:42:12 -0700 (PDT)
-Received: from unknown748F3CBA5068 (dynamic-2a02-3100-a124-4001-d491-d32f-6b9f-21c5.310.pool.telefonica.de. [2a02:3100:a124:4001:d491:d32f:6b9f:21c5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a197c465b4sm89015105e9.3.2026.10.11.12.42.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Oct 2026 12:42:11 -0700 (PDT)
-Date: Sun, 11 Oct 2026 21:42:10 +0200
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-wireless@vger.kernel.org, 
-	Arend van Spriel <arend.vanspriel@broadcom.com>, Clark Williams <clrkwllms@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
-	linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: brcmfmac: avoid sleeping tx locks in netpoll
- contextg
-Message-ID: <asvjWF8q1injcEIh@gmail.com>
-References: <20260930185417.61865-1-kmehltretter@gmail.com>
- <20261001075755.3MilPS2C@linutronix.de>
- <ar7vLt5kQ2HJoJY9@gmail.com>
- <20261009160015.9YCN8Lt-@linutronix.de>
+        d=1e100.net; s=20260707; t=1791751512; x=1792356312;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vKik4orISgwbKLaMdm/aK2JrSIR2rz6tc/MAnoXx/B8=;
+        b=CAzYE2vSTk6NQ1gjQfFZtIHfrmNjL8MrdTJtpgKE3wc0N4H7m3afm1cjDl7kjlbR1K
+         WmAqEyt8rN+PRUM+8vU8szerGWKg8PVF76MyIysFLtbvnlPHe7And75x99vw3/oBNDw7
+         kpzFFra5/s3aPDG+AGe++d7ZD2OXedG9AzP3thKm1zOuKhduEs2Hj15VNsynYKR5h8hj
+         fqGBaB4EocE38rvTyiOenwI4Gz2f41+680fz8qpuOizMKJYSvwgaOjSAPwD2lrmTokcO
+         GDFQDFGvjwcgG01/fmZgCHN9MYC1ouSvJv5fz6Rcq7i8yKMYvSQOOuWSp+bfAF/1zn+2
+         H2+A==
+X-Gm-Message-State: AFq9FYJfjCvQw3rmN3b7dEgaJp4utj80pv0uU1uCzsgcXA66g3420942
+	sLflNLKf6ox0AtV0S8l9ijRFN0lLd0mxcgw2VZoifXQHgf/XJvSciOP9IvPrKaLV
+X-Gm-Gg: AYBFou2xB9Qt17KV27e5TGkvgmNxInJ5pElR98WHhCFMcNPxEx71OUIFlS5otARc+KN
+	Hm2YH6yx96hXoH7SsoHIkTEl4Ps13uWYisU7wB9U07wTxC5rTUf/s+BxLEPR7EvUoiZpSxCBz+C
+	jFNTXLh7ZH6MQrNiUjdh94bo4JI9MBHvAjeUmAdwdPCDg64xEgMwidm/MDvEVg3vbyfG+SORc2B
+	sYjMaWcJBvp0/x/ssbkoyxfEaw80/IwK5YfI6fR0J/mC3ZStwuACCSbcZgu8Up0RTOr3rmnaGJ7
+	xxCByp+k0Bv4eiP3EXcSe3kxtS2EnaqpH3dYBDsN/6Z9alX6Jrnk4wnz8xiTZYu41LKiOeBJbRA
+	Z3IRT4b00Ve7/eFhgqUptFrly0gd0vgebIrDqypy4q8IU5CDvMBbLOghsnji5cRziE2EfeUNcxa
+	d2zdtDcr8Iri1vJjoXWCtQiN8F9RugsBH5WSF0No04T/cp3TfkGcpWgb4QpzbFHzueoQwcsWp+l
+	0JNpDPd1oip4DizHu1ygnf339tL7xIWtHjTyOtkUFEW+w8ldp6iciUsmoOZQNDKHdxQjv0cEcIe
+	ahSdw1AZkaOAyEP+VO2foav3LB+pWN+1PaW/Lz7lbSPNOMhax08cCbteIefXgnRb9tTW2/uJX49
+	G2tFLp8zsVx0GWEmyJcydmg==
+X-Received: by 2002:adf:e005:0:20b0:48b:437:8fbb with SMTP id ffacd0b85a97d-48db948204amr10389955f8f.19.1791751512041;
+        Sun, 11 Oct 2026 13:45:12 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-2a00-1028-c000-0ddf-8d69-e528-bbfd-9e4d.ipv6.o2.cz. [2a00:1028:c000:ddf:8d69:e528:bbfd:9e4d])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48db9aac6a4sm15893409f8f.28.2026.10.11.13.45.10
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 11 Oct 2026 13:45:10 -0700 (PDT)
+From: Josef Schlehofer <pepe.schlehofer@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH rtw-next] wifi: rtw88: 8822b: Relax ETSI EDCCA threshold on 2.4 GHz
+Date: Sun, 11 Oct 2026 22:45:09 +0200
+Message-ID: <20261011204509.46062-1-pepe.schlehofer@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261009160015.9YCN8Lt-@linutronix.de>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 09, 2026 at 06:00:15PM +0100, Sebastian Andrzej Siewior wrote:
-> > 
-> > Source inspection also identified 8139too and macb as candidates: their
-> > transmit paths take ordinary spinlock_t locks. I have not reproduced the
-> > warning with either driver.
-> 
-> I just replied to the netconsole thread where I did suggest to lift the
-> local_irq_save() part. This would obsolete this.
+The RTL8822B has no firmware-managed adaptivity, so rtw88 sets
+the EDCCA thresholds in the driver. Under ETSI, the current rule
+uses L2H = min(IGI, 36), at most about -74 dBm.
 
-I've replied in the netpoll thread [1]. The netpoll candidate's RT
-locking tests look good so far on Pi 400 with unmodified brcmfmac.
+On a TP-Link Archer T4U v3 (RTL8812BU) operating as a 2.4 GHz AP,
+in-band energy, mostly from the adapter's own USB 3 link, kept IGI
+at 0x2a and L2H at 36. The AP was not seen in any of 5 scans, and
+the driver reported "failed to get tx report from firmware".
 
-> 
-> > The earlier netpoll/NBCON discussion concerns NAPI polling and
-> > scheduler-lock deadlocks, rather than this driver-lock warning:
-> > 
-> > https://lore.kernel.org/linux-rt-devel/20260618111554.2n0pP_O9@linutronix.de/
-> 
-> There was no fan club behind this change and PeterZ hated it so I
-> dropped it.
-> But this deadlock should not happen with nbcon or do I mix up things?
+With min(max(IGI + 8, 48), 50), the AP was seen in 4/5 scans on the
+same port and boot (16/19 across repeated runs), with no TX report
+failures and no change in the false alarm rate.
 
-No, you're not mixing things up.
+EN 300 328 V2.2.2 tests detection at -70 dBm/MHz for a 20 dBm EIRP
+transmitter, about -57 dBm over 20 MHz.
 
-> I don't mind if you have something to optimise the driver. But as far as
-> the netconsole part goes, I would try to kill it at the upper level so
-> the driver is not affected.
+Use the normal threshold, max(IGI + 8, 48), on 2.4 GHz under ETSI,
+capped at 50 (nominally -60 dBm). Keep the existing rule on 5 GHz
+and in JP.
 
-Agreed. I'll hold the driver revision while we discuss the generic fix.
+Signed-off-by: Josef Schlehofer <pepe.schlehofer@gmail.com>
+---
+How other drivers handle ETSI energy detect: rtw89 has no regional
+EDCCA mode (it does not block without a station and never goes below
+-62 dBm once linked); mt76x02 and mt7603 keep their ETSI ED/CCA
+blocking off by default since 2019 ("stability issues"); ath9k caps
+its CCA noise floor at -60 dBm for non-FCC boards; Realtek's 88x2bu
+vendor driver ships adaptivity disabled and its 802.11ax driver uses
+-60 dBm for CE.
 
-The generic fix still doesn't address calls to brcmfmac with
-interrupts disabled from non-RT netconsole or atomic writes.
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 6 ++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h | 2 ++
+ 2 files changed, 8 insertions(+)
 
-I still need to compare the unmodified kernel and the netpoll candidate
-on hardware with firmware flow control enabled (brcmfmac.fcmode=1 or 2).
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index a56c8befa..cd39888ae 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -1565,6 +1565,12 @@ static void rtw8822b_adaptivity(struct rtw_dev *rtwdev)
+ 	if (dm_info->edcca_mode == RTW_EDCCA_NORMAL) {
+ 		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
+ 		h2l = l2h - EDCCA_L2H_H2L_DIFF_NORMAL;
++	} else if (rtwdev->regd.dfs_region == NL80211_DFS_ETSI &&
++		   rtwdev->hal.current_band_type == RTW_BAND_2G) {
++		/* follow the normal threshold, capped for EN 300 328 */
++		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
++		l2h = min_t(s8, l2h, RTW8822B_EDCCA_ETSI_2G);
++		h2l = l2h - EDCCA_L2H_H2L_DIFF;
+ 	} else {
+ 		l2h = min_t(s8, igi, dm_info->l2h_th_ini);
+ 		h2l = l2h - EDCCA_L2H_H2L_DIFF;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+index 9fca9ba67..1083953e0 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+@@ -151,6 +151,8 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ 
+ #define RTW8822B_EDCCA_MAX	0x7f
+ #define RTW8822B_EDCCA_SRC_DEF	1
++/* nominally -60 dBm: 3 dB below the EN 300 328 level at 20 dBm e.i.r.p. */
++#define RTW8822B_EDCCA_ETSI_2G	50
+ #define REG_HTSTFWT	0x800
+ #define REG_RXCCAMSK	0x814
+ #define REG_L1WT	0x83c
+-- 
+2.54.0 (Apple Git-157)
 
-[1] https://lore.kernel.org/r/asveuLDEf6a44bkD@gmail.com/
-
-Karl
