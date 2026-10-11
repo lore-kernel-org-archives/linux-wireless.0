@@ -1,142 +1,133 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4908E3A1D0C
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 20:45:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C923031B80E;
+	Sun, 11 Oct 2026 21:59:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791751516; cv=none; b=LlPmsbPQI/gL0pCqkPFOo9mU9KzBTrAUb5T9KxBmsU9ZUkSnSLj8XLsOeAJOGZsD1PTqw4VR7Viu/N6r9v6vdVFys2HOo9099Q4cJGO9PH7xC0eZ61chE92gxA8b646duiBhdtE5zeMIS6Q56g3a52H/DEVqGzSTmW6QPJBFkdA=
+	t=1791755946; cv=none; b=WlL3nSKIJh/k4EKgHuM7r6pRdf95H8i+5wJZCkuN//ixHf8FPh85msIvcUqNex2JNn6ASG0DtOoOurmM0+xGzsQfoqEd9Y3PXpZiekmWa8W7ZTwlNWteV7m16UkA0g3D8GOiTmnDo+zbHiNyMgVIPZNClokhVg8JlIGJH60uZoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791751516; c=relaxed/simple;
-	bh=tWqAn/OUpkb2HG3yB67Tqx2X4I8nzTHsSrSc53lI5NU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tHoTd0lGriVR4TOE5mr/opuHXDVIjTDwNnN7HdDVCzXg+rmm/qbSWv2aaK2ldtFuY9wFidmnUGtUaiTuBaJfuxQk/3EZGMKYDj/h4oTaIp2M4g7QW0ErLR8RmIjAuFRVRUtXLrVGlATAZHb1bh/r9zSrfqZ9CxwNbCJ8r1f4xFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EV6hgzbt; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791755946; c=relaxed/simple;
+	bh=d+NTUVyVDetiwnvYSuPSA1B5KAFM0r7HORvNQ4h26Es=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OQ7JMpk3hJitFuYnnALCx7yeYehaBpECk3aOkOgKytO8YC2QdNcnWL2Bg02kT/1ajmXMFYGKs9FiLsRNpMkHjvghfbD18kp6ouHtUKkjqCWvRChIT7NR15eHQmywiCS++/1wsDvM3vekeBfDxxJL3277oFfRC/Gx9m+aDXOg9KI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RCr3zy9U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EV6hgzbt"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-48870973bddso721015f8f.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 13:45:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791751512; x=1792356312; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vKik4orISgwbKLaMdm/aK2JrSIR2rz6tc/MAnoXx/B8=;
-        b=EV6hgzbtHudD4HFWSjEX3V8qFTZD4Oip37uLl3iaGQQUiXA0dWAzRrRiC2s8SpTKui
-         0dh7qdS/DodrjmVkK9l40sN8Gj59Zj9W8AFTTpYNxessqZXyQd3Au1+wiVw9FxMiceAQ
-         3+9Z4J/4Zbpd2EfwVHZ/Mx/jrsUtqLHNY3ZMGybkvCCb0hQs1YGigUnl3aYxVyx6LdCQ
-         +chYXdZJ1t0IkgE91ag5NS6scuFMkiRtBLjrnsYUpZiDOXKDw0JSkpgeDN8Y8tKxSmfv
-         Hk2L1lcJU4DXMrbTrysEuT1LszghTAtnnvs7cD41zK9IhQhBqrAn9vzQUjeN/jaSYb2l
-         jniQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791751512; x=1792356312;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=vKik4orISgwbKLaMdm/aK2JrSIR2rz6tc/MAnoXx/B8=;
-        b=CAzYE2vSTk6NQ1gjQfFZtIHfrmNjL8MrdTJtpgKE3wc0N4H7m3afm1cjDl7kjlbR1K
-         WmAqEyt8rN+PRUM+8vU8szerGWKg8PVF76MyIysFLtbvnlPHe7And75x99vw3/oBNDw7
-         kpzFFra5/s3aPDG+AGe++d7ZD2OXedG9AzP3thKm1zOuKhduEs2Hj15VNsynYKR5h8hj
-         fqGBaB4EocE38rvTyiOenwI4Gz2f41+680fz8qpuOizMKJYSvwgaOjSAPwD2lrmTokcO
-         GDFQDFGvjwcgG01/fmZgCHN9MYC1ouSvJv5fz6Rcq7i8yKMYvSQOOuWSp+bfAF/1zn+2
-         H2+A==
-X-Gm-Message-State: AFq9FYJfjCvQw3rmN3b7dEgaJp4utj80pv0uU1uCzsgcXA66g3420942
-	sLflNLKf6ox0AtV0S8l9ijRFN0lLd0mxcgw2VZoifXQHgf/XJvSciOP9IvPrKaLV
-X-Gm-Gg: AYBFou2xB9Qt17KV27e5TGkvgmNxInJ5pElR98WHhCFMcNPxEx71OUIFlS5otARc+KN
-	Hm2YH6yx96hXoH7SsoHIkTEl4Ps13uWYisU7wB9U07wTxC5rTUf/s+BxLEPR7EvUoiZpSxCBz+C
-	jFNTXLh7ZH6MQrNiUjdh94bo4JI9MBHvAjeUmAdwdPCDg64xEgMwidm/MDvEVg3vbyfG+SORc2B
-	sYjMaWcJBvp0/x/ssbkoyxfEaw80/IwK5YfI6fR0J/mC3ZStwuACCSbcZgu8Up0RTOr3rmnaGJ7
-	xxCByp+k0Bv4eiP3EXcSe3kxtS2EnaqpH3dYBDsN/6Z9alX6Jrnk4wnz8xiTZYu41LKiOeBJbRA
-	Z3IRT4b00Ve7/eFhgqUptFrly0gd0vgebIrDqypy4q8IU5CDvMBbLOghsnji5cRziE2EfeUNcxa
-	d2zdtDcr8Iri1vJjoXWCtQiN8F9RugsBH5WSF0No04T/cp3TfkGcpWgb4QpzbFHzueoQwcsWp+l
-	0JNpDPd1oip4DizHu1ygnf339tL7xIWtHjTyOtkUFEW+w8ldp6iciUsmoOZQNDKHdxQjv0cEcIe
-	ahSdw1AZkaOAyEP+VO2foav3LB+pWN+1PaW/Lz7lbSPNOMhax08cCbteIefXgnRb9tTW2/uJX49
-	G2tFLp8zsVx0GWEmyJcydmg==
-X-Received: by 2002:adf:e005:0:20b0:48b:437:8fbb with SMTP id ffacd0b85a97d-48db948204amr10389955f8f.19.1791751512041;
-        Sun, 11 Oct 2026 13:45:12 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a00-1028-c000-0ddf-8d69-e528-bbfd-9e4d.ipv6.o2.cz. [2a00:1028:c000:ddf:8d69:e528:bbfd:9e4d])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48db9aac6a4sm15893409f8f.28.2026.10.11.13.45.10
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 11 Oct 2026 13:45:10 -0700 (PDT)
-From: Josef Schlehofer <pepe.schlehofer@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH rtw-next] wifi: rtw88: 8822b: Relax ETSI EDCCA threshold on 2.4 GHz
-Date: Sun, 11 Oct 2026 22:45:09 +0200
-Message-ID: <20261011204509.46062-1-pepe.schlehofer@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RCr3zy9U"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EB5F4C2BCF5;
+	Sun, 11 Oct 2026 21:59:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791755946;
+	bh=d+NTUVyVDetiwnvYSuPSA1B5KAFM0r7HORvNQ4h26Es=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=RCr3zy9UBcCldAX9BW1nz+Kkrlfsn67VZEoWoJnva6ObMlB3PwK/3Dcn4aqXWfYLx
+	 6J/5gAaqeVHWBl5/p8SOenBkMD/d8TYfL1v/mlB5d5uqWgXfADpj+b3V2sAqhcfBLS
+	 8AlmSZypoXpNXSiqeFIci+Goi1WXYTeN/TYUJYEAgM4GdaGjp9uy91DSsRDOUwcK32
+	 8kUqtt4lAHKtptzI1IFTqW9qe2edZPsWEEj3TrbqDPufkwCuxwE47hYANkumLyxHoD
+	 lByH0yJq/CIsaQkwtG3T1ss9dtsOujv7rQA0AGecpCs1tnMBpKToOwBARXob6i1+Io
+	 J6x+EIVt3Q4JA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C80FDCA9ECF;
+	Sun, 11 Oct 2026 21:59:05 +0000 (UTC)
+From: Fabricio Akio via B4 Relay <devnull+fabricioakio.gmail.com@kernel.org>
+Date: Sun, 11 Oct 2026 18:59:05 -0300
+Subject: [PATCH] wifi: ath10k: don't reset TxBF on disassociation
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261011-ath10k-disassoc-txbf-v1-1-51e09115042e@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQqDMBBA0avIrB3IhJpAr1JcJHHUsaAlE4sg3
+ r1pu3yL/09QzsIK9+aEzG9R2dYKahtIc1gnRhmqwRrryBBhKDOZJw6iQXVLWI44InfRe9u55G4
+ eavrKPMrx2z76v3WPC6fyfcF1fQDsHsQgeAAAAA==
+X-Change-ID: 20261011-ath10k-disassoc-txbf-e5b77256c647
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Fabricio Akio <fabricioakio@gmail.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791755944; l=2607;
+ i=fabricioakio@gmail.com; s=20260928; h=from:subject:message-id;
+ bh=yedrsdruZNEyyDyVSIF/isrw8Zan8nErgmxmiHmgDL8=;
+ b=cew1YosN8FjDoaHqvWa0ZdfMoW2v03LTeceP8lH9yuKAlwlUfTzNqfbbnqqyUzaR4TwKbmhvF
+ lfVTE8q2MeUDZRdW5MYxkJijLBIoCrrPwMrydWzTsth7IZQrewfUbLR
+X-Developer-Key: i=fabricioakio@gmail.com; a=ed25519;
+ pk=TlMUT8bPI/ZQzp2q24BIQTb2qSx/jdUTBlGEXIRCm54=
+X-Endpoint-Received: by B4 Relay for fabricioakio@gmail.com/20260928 with
+ auth_id=1076
+X-Original-From: Fabricio Akio <fabricioakio@gmail.com>
+Reply-To: fabricioakio@gmail.com
 
-The RTL8822B has no firmware-managed adaptivity, so rtw88 sets
-the EDCCA thresholds in the driver. Under ETSI, the current rule
-uses L2H = min(IGI, 36), at most about -74 dBm.
+From: Fabricio Akio <fabricioakio@gmail.com>
 
-On a TP-Link Archer T4U v3 (RTL8812BU) operating as a 2.4 GHz AP,
-in-band energy, mostly from the adapter's own USB 3 link, kept IGI
-at 0x2a and L2H at 36. The AP was not seen in any of 5 scans, and
-the driver reported "failed to get tx report from firmware".
+WCN3990 firmware WLAN.HL.1.0.1.c2-00498 crashes whenever the vdev's
+TxBF parameter is set while the vdev has no peer for its AP, whatever
+the value. ath10k_bss_disassoc() sets it to 0 once the AP's peer is
+gone. The firmware therefore crashes on every disconnect, including
+the one cfg80211 makes before a suspend without WoWLAN, and whenever
+mac80211 replays the state of an interface that is not associated, as
+on resume from such a suspend and after a firmware restart. Each
+restart replays it again, so the firmware never comes back:
 
-With min(max(IGI + 8, 48), 50), the AP was seen in 4/5 scans on the
-same port and boot (16/19 across repeated runs), with no TX report
-failures and no change in the false alarm rate.
+  qcom-q6v5-mss 4080000.remoteproc: fatal error received:
+    err_qdi.c:459:EX:wlan_process:1:WLAN RT:107b:PC=b00c8334
 
-EN 300 328 V2.2.2 tests detection at -70 dBm/MHz for a 20 dBm EIRP
-transmitter, about -57 dBm over 20 MHz.
+The reset is not needed: ath10k_bss_assoc() sets TxBF again from the
+next AP's capabilities before bringing the vdev up. Drop it.
 
-Use the normal threshold, max(IGI + 8, 48), on 2.4 GHz under ETSI,
-capped at 50 (nominally -60 dBm). Keep the existing rule on 5 GHz
-and in JP.
-
-Signed-off-by: Josef Schlehofer <pepe.schlehofer@gmail.com>
+Fixes: 139e170da98a ("ath10k: add TxBF support")
+Signed-off-by: Fabricio Akio <fabricioakio@gmail.com>
 ---
-How other drivers handle ETSI energy detect: rtw89 has no regional
-EDCCA mode (it does not block without a station and never goes below
--62 dBm once linked); mt76x02 and mt7603 keep their ETSI ED/CCA
-blocking off by default since 2019 ("stability issues"); ath9k caps
-its CCA noise floor at -60 dBm for non-FCC boards; Realtek's 88x2bu
-vendor driver ships adaptivity disabled and its 802.11ax driver uses
--60 dBm for CE.
+Tested on a Motorola Moto X4 (SDM630, WCN3990): without this patch a
+disconnect, s2idle without an association and a forced modem restart
+crashed the firmware every time; with it, none of those did, nor
+s2idle while associated.
 
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 6 ++++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.h | 2 ++
- 2 files changed, 8 insertions(+)
+QCA6174 and QCA9377 also send this command and are untested here.
+Qualcomm's qcacld-3.0, ath11k and ath12k do not send TxBF on
+disassociation. A WCN3990-only hw_params flag was considered, but
+association rewrites the parameter on every chip, so the patch drops
+the reset for all of them.
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index a56c8befa..cd39888ae 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -1565,6 +1565,12 @@ static void rtw8822b_adaptivity(struct rtw_dev *rtwdev)
- 	if (dm_info->edcca_mode == RTW_EDCCA_NORMAL) {
- 		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
- 		h2l = l2h - EDCCA_L2H_H2L_DIFF_NORMAL;
-+	} else if (rtwdev->regd.dfs_region == NL80211_DFS_ETSI &&
-+		   rtwdev->hal.current_band_type == RTW_BAND_2G) {
-+		/* follow the normal threshold, capped for EN 300 328 */
-+		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
-+		l2h = min_t(s8, l2h, RTW8822B_EDCCA_ETSI_2G);
-+		h2l = l2h - EDCCA_L2H_H2L_DIFF;
- 	} else {
- 		l2h = min_t(s8, igi, dm_info->l2h_th_ini);
- 		h2l = l2h - EDCCA_L2H_H2L_DIFF;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-index 9fca9ba67..1083953e0 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-@@ -151,6 +151,8 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8e604697d6c2..30355c598f97 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3190,7 +3190,6 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+-	struct ieee80211_sta_vht_cap vht_cap = {};
+ 	int ret;
  
- #define RTW8822B_EDCCA_MAX	0x7f
- #define RTW8822B_EDCCA_SRC_DEF	1
-+/* nominally -60 dBm: 3 dB below the EN 300 328 level at 20 dBm e.i.r.p. */
-+#define RTW8822B_EDCCA_ETSI_2G	50
- #define REG_HTSTFWT	0x800
- #define REG_RXCCAMSK	0x814
- #define REG_L1WT	0x83c
--- 
-2.54.0 (Apple Git-157)
+ 	lockdep_assert_held(&ar->conf_mutex);
+@@ -3204,14 +3203,6 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 			    arvif->vdev_id, ret);
+ 
+ 	arvif->def_wep_key_idx = -1;
+-
+-	ret = ath10k_mac_vif_recalc_txbf(ar, vif, vht_cap);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to recalc txbf for vdev %i: %d\n",
+-			    arvif->vdev_id, ret);
+-		return;
+-	}
+-
+ 	arvif->is_up = false;
+ 
+ 	ath10k_mac_txpower_recalc(ar);
+
+---
+base-commit: becb95e45ef0dda9ffb35156d909d3da7a2789c3
+change-id: 20261011-ath10k-disassoc-txbf-e5b77256c647
+
+Best regards,
+--  
+Fabricio Akio <fabricioakio@gmail.com>
+
 
