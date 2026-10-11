@@ -1,89 +1,114 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8B8424D46
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 09:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF9A42C4FA
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:05:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791711203; cv=none; b=Dcl2oYREYclyqf7hCGALEa+CpljJIuMoFtnqTAjDFKuq+KSdOJJOexllJTstYnhPXhivpH/7RlX72l0zLqB849z58BrcFr8yFz9zi5OmZ4zjvIqO9tBroGwyMVAkb/0FGtrtG8++nEfhYDBSd9GR+FAXd1k7C/J58RkJP6X02ds=
+	t=1791716722; cv=none; b=s1am9L2kyj2tLM948mCD11/ssj2PnGONkXNGKyugFyvz/m9zhnLBMBmFD9ToKY/Ur/QBjY9Q/+C0NpaZbBbtsoMVG9pmhSWhCIWBx/SoQe6l6jCIKPDN4Co49g/9wVIx122rkbIka5XeCYB+sy1ICMFwn21wiS7AI3SVZH+w+7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791711203; c=relaxed/simple;
-	bh=xRbxoe1DEDeKb3I2wK7Rgdpj1hajMwfEHIJ387c/PJk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X30qGkno54xlwrfg8AHdcdaxPFGeg5HQ0pbwCH7TyjTz1WpqiXxDb2nh1x+YDPRIs4elwDy4saR51r/2uGamMBDUyXk2RM1bqXW/aswwycnQ8lWd9ENYsfA3Q6TkmGMMIHd6zmwkrMq7S2AQY4ObB/Z0xQCAYuagBsOzKZVw3kU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=w+O7ufSn; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791716722; c=relaxed/simple;
+	bh=/xEOS8RHeQ02Wi+oQM5wB0RwbdrtQmWB4H8s0PPMFZE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=LoKJXaihMyn64cL3N8nnaSONb4qk2mBRuifjbsB6XSBkEzNpvNXbHD9cOLu5eW4+NsH9d/Et7HAPx7pWz3/5Gh4a3dWGB9zP/XT2kNIv5OUg2ryDzC8Jzn8pZZMJyWb5WyYBYMm2LsUXsk6zWwtmyCLyX/+8HipJRDbETg2+VQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RWwH7Crr; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="w+O7ufSn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=qeSgPGcw63lwFWBf4TdhSGru71csjqpSUvdagyPeFg0=;
-	t=1791711202; x=1792920802; b=w+O7ufSn0DtkhJ9I90vMHYioXPTX6L6XBWNAyoR4iYhrufb
-	wwqEJHE/4wN/QvVG2Q1odwYjGIXRRtXHYc/x8Yuxlxon/ahE1hYpiABO7U7+h7N7Ic/bDU40f0AK2
-	fxhnrwuFvhEmHfV+KxK/+Kr2uRvS+hUOyWomGb6OBWWiw2u77pJv6seqmKhheMgRyH5LOQvwu+6SM
-	wAv/xLlaAHj6cBPW4RyMpPp08At7EC4tdE/lTBTxrJvyViUHW1cF+35tvWVGdnKFwfFUpyF3aOqYj
-	BxHScFVB+ivB2pAuYLhoCz39LW9V9nx14XESWjeP36Ixj0UiUbgXEnPMEMtn5/vQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xFpvj-0000000Dk5j-1Unr;
-	Sun, 11 Oct 2026 11:33:19 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next v2 10/10] wifi: mac80211: fix interface registration error path order
-Date: Sun, 11 Oct 2026 11:31:33 +0200
-Message-ID: <20261011113308.c2cb32bf3160.Ib46993671ae3030950360ea378a507cef2bd4117@changeid>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261011093308.49945-12-johannes@sipsolutions.net>
-References: <20261011093308.49945-12-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RWwH7Crr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791716720; x=1823252720;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/xEOS8RHeQ02Wi+oQM5wB0RwbdrtQmWB4H8s0PPMFZE=;
+  b=RWwH7Crr5iIA051lnlyEvxMeCw2HXXkDflkLpxbutIdgCkMIQS+LNPeg
+   Jp2M7m8B/t3JMvi8bvx50BqFCd0oeBJ4yBb3/+k0h8RO4dqGbBLhC+4dI
+   XD+do/PwmYbcKTCaab/bQj09GpPQazT0+ssnJDiKapfeLw24DgDZNuZfy
+   OmUTHx6efFMQPqG7bJySlGgexC80MedGXtj9sYC59AsvvxHX/iYLhQk5T
+   b11uR2YCYju5Y8a6Mw2RNN+havyIvWCZReoxIwjPo0+E+DbBoO70jjklG
+   vO/yd8tjcHjowgmVTmZiBf12HO3WBu3eC/gt3XkgOhMcZfacE6xnyPeVc
+   w==;
+X-CSE-ConnectionGUID: MZtn2AnJTtinnEEmHcJfIQ==
+X-CSE-MsgGUID: wB50gdN2T4W4N+UiRFpflQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11931"; a="454166"
+X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
+   d="scan'208";a="454166"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:19 -0700
+X-CSE-ConnectionGUID: GfU0QzueT7mvUE+nniQaSQ==
+X-CSE-MsgGUID: FQkKr4J6TeCddrZ6m1Evdw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
+   d="scan'208";a="650909"
+Received: from weis0040.iil.intel.com ([10.12.217.108])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:17 -0700
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: miriam.rachel.korenblit@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH iwlwifi-next 00/13] wifi: iwlwifi: updates - 2026-10-11
+Date: Sun, 11 Oct 2026 14:07:01 +0300
+Message-Id: <20261011110714.716840-1-miriam.rachel.korenblit@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-If we fail to register the inet/inet6 address notifiers,
-wiphy_unregister() is called before removing interface,
-but the default interface already exists at this point.
-This could also lead to a deadlock as wiphy_unregister()
-then waits for the interface to go away.
+Features, cleanups, and bugfixes from our internal tree.
 
-Change the order to remove the interfaces first.
-
-Assisted-by: LLM
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Thanks,
+Miri
 ---
- net/mac80211/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 28480f983932..76e85754deff 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1683,12 +1683,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-  fail_ifa:
- #endif
--	wiphy_unregister(local->hw.wiphy);
-- fail_wiphy_register:
-- fail_band:
- 	rtnl_lock();
- 	ieee80211_remove_interfaces(local);
- 	rtnl_unlock();
-+	wiphy_unregister(local->hw.wiphy);
-+ fail_wiphy_register:
-+ fail_band:
- 	rate_control_deinitialize(local);
-  fail_rate:
- 	ieee80211_txq_teardown_flows(local);
+Emmanuel Grumbach (2):
+  wifi: iwlwifi: mvm: fix the VHT MCS sent to a v1 firmware
+  wifi: iwlwifi: mvm: remove dead sta check in rx_monitor_no_data
+
+Johannes Berg (7):
+  wifi: iwlwifi: fw: api: fix D3 sequence counter docs
+  wifi: iwlwifi: pcie: correctly read WFPM_OTP_CFG1_ADDR
+  wifi: iwlwifi: mld: avoid const in iwl_mld_chan_load_update_iter()
+  wifi: iwlwifi: mld: fix const in iwl_mld_mu_mimo_iface_iterator
+  wifi: iwlwifi: mvm: fix beacon flags compiler warning
+  wifi: iwlwifi: mvm: uninline iwl_mvm_ftm_start versions
+  wifi: iwlwifi: support SCD_QUEUE_CONFIG_CMD version 4
+
+Miri Korenblit (4):
+  wifi: iwlwifi: bump maximum core version for BZ/SC/DR to 109
+  wifi: iwlwifi: move context info APIs to a separate file
+  wifi: iwlwifi: mld: don't enable RSS if there is one queue.
+  wifi: iwlwifi: trans: remove the unused write8 operation
+
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/dr.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c   |   2 +-
+ .../intel/iwlwifi/fw/api/ctxt-info-v2.h       | 328 ++++++++++++++++++
+ .../wireless/intel/iwlwifi/fw/api/ctxt-info.h | 185 ++++++++++
+ .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  22 +-
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  |  20 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |   2 -
+ drivers/net/wireless/intel/iwlwifi/mld/fw.c   |   3 +
+ drivers/net/wireless/intel/iwlwifi/mld/mlo.c  |   4 +-
+ .../net/wireless/intel/iwlwifi/mld/notif.c    |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/tx.c   |   4 +
+ .../intel/iwlwifi/mvm/ftm-initiator.c         |  49 +--
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |   5 +-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |   4 +-
+ .../intel/iwlwifi/pcie/iwl-context-info-v2.h  | 320 +----------------
+ .../intel/iwlwifi/pcie/iwl-context-info.h     | 177 +---------
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  20 +-
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |   3 +-
+ 20 files changed, 607 insertions(+), 557 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/api/ctxt-info-v2.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/api/ctxt-info.h
+
 -- 
-2.56.0
+2.34.1
 
