@@ -1,128 +1,227 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEE5337699
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 18:12:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791742381; cv=pass; b=JH8ZCm4TZA44mFJeEbgw94LqVzP56eiM69exZXMrfyJMJ5Ox6+E/+4RaOC+1NfuhFyHF2FrEansTa3MWfdl+Sj+5yp1Ub/yovzF4+NvVpYZmo9/qUz28IKpfNbnU4MazFZlcfJ6CH+S89pGoPK1S9SEI44KYh3emj6q8UWWJUSg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791742381; c=relaxed/simple;
-	bh=gwRi8tJ5LauvJF15FnsWPOaMsiBcZj8ycmgZAY2TY4w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bGoDLT+HoPQjssL6G+xGQ9vcHl5CRS5v+177iyKyd3oDz+kghDaxUbGkLLWqveIdx3bnz9DgPEBqB0sLY+IKySnjUu4avpsqItNkbD9CATBDzX+jrIiDSoL9U0Y6QKmJ2M/I4lj7ITd0Xun/B5oMJiOtpeog0Pcvl2g3F/jFPUw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cg5b/B48; arc=pass smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 356E740855
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 18:24:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791743099; cv=none; b=B8c3W37KSYNkLZagTonqj/Ly/aOo4NwPottoM+u4hAlA2VvUwNapJR4RaMalGqedY3TLUEcPt7qLxet2wDFs4q7yxd8e0KwBEl96952aU/AdpLeFTsRP9k8LtTVSg6TcEIeyAg/oZvUHZuyOrNFy4mKIk2bD7eeaQE/eVwwwsoI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791743099; c=relaxed/simple;
+	bh=Sx/YLYtHnsGcMNWokhm0pgpzH9N8876oemZHYtrdgtA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I3b+8olQCy5Ti6lPB1PE8Wp2/wtcHVp9nhjId3o+4eLJ0dwu00M9FHMc/Z3DUSNqz6cF4WZmvTiCoz4f3pNPDXAOD28O3a7aZnK7l9Di1RXdyX7KEQtqfNtT85LwNoqp9o58axuKyNF8uKkuWBfDcs39kDc2GZn5wUCusqY+b0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jc6qT34I; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=j6R3QYNx; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cg5b/B48"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-33c2520ad38so2756476eec.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:12:59 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791742379; cv=none;
-        d=google.com; s=arc-20260327;
-        b=EkC8HLHEl8eNvVHFp5f318mliiPGnL+ifYHnP6xBuW6auxcmAi9hX0XP7WGE/6VFw6
-         mw3EGJD5s2av6aJkk553K/6IOjrm9m00upO4+mwdDOYKiK6L4QghrzIFzXVgEU26lwQN
-         ScMoSR+JpKwV0K3D/TwWr7oHUX0aH9vR47vfuKqiDjgdvEkH73FQdz4nzeNNFprev7aY
-         EzU9Ggc2UP0HBTk498hu3PJJKqxlx3UJ1eS3d8HrrprD0owtU/Iws8TgfZbLyAdKGy6S
-         26VDQJfrIdnUvNkIHuZbG9xpm72Klnao0h3ysDd9O4mFyrOXafT7bFl2tKpxV2xWuPVd
-         E9rA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=gwRi8tJ5LauvJF15FnsWPOaMsiBcZj8ycmgZAY2TY4w=;
-        fh=scchgjic1mIZSMr2/JluakSsXdvBKLxLewywx0wjsAE=;
-        b=DUbUXWSXogpT0XGFRWSPTsGCHaGnGkfF2/0CzFNdPT1f9d4/+H71yfmLZTOufT/wXD
-         yyc4Dnat2EUPmnOmNGwANx4i9VL6Efa7s5dOAnM1VF8QmOBEOobbWSZMY9nXwhjkwBsI
-         oBgG42tn6G6YRKlFEqrxpQ+HzWc/QOHVRnvVROaEfbGkvAUp4hF/YOjQTdk3ZLyHOHt4
-         JUJgZU+mW3P+ogb8RQ0Orgo2I2qV59ycuitTDhQ10iWCjbrRgIPn7ceB/tQG0fQnq/2Y
-         5yWwe2Pu6h4pmCw6Yof3XlAGLmu/+eDrcDepRErzaacQ6QT1H9h63y8QoyCPS+wRSypl
-         YHRQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jc6qT34I";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="j6R3QYNx"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69BIKfae1026901
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 18:24:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	J4GnUzarc/n9kpP41afLq33uqFjjFV9bhvTE/hjv9dU=; b=jc6qT34I/IsNsxmu
+	+vEiY6Z/HcWeE1+pk0LJ5BfW5j38Uw7kYf2kf8xz/zZf8CbnN7p7HIDxtN9pHNHk
+	6VWK47tzwUZQjDiHe8YlXU/qRHF24u+oSc7C9MPeVv2EHabHUlovBM80itaJhuqt
+	Xy147D9pWJ4yrpr+II3Udip+s4FMv6bni4AHs86VnJHoh8CKm8SH6Lzf3ARVC++4
+	fhPWk5qu22WogjceN7O3Wpy/YVFmiRQi1DK64JhDMYlhKej1kOl5g/0yn4YCgy68
+	g/FXE0KmVs+4nNYzrj50jQcQSf7DyJAtGUM1od4ovz2S2ljo2vX/PegGr7kQAdpT
+	b+Mu2Q==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h7casbprx-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 18:23:33 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-3510d0baf63so3051872eec.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:23:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791742379; x=1792347179; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=gwRi8tJ5LauvJF15FnsWPOaMsiBcZj8ycmgZAY2TY4w=;
-        b=cg5b/B482OUEHIyUOiMGEfhIDYnFdmVLCPuk//Gb3hEnVfAtI5lW2XuvLOm3Vwhv5m
-         d/MDzRmudHFTDKKYN9/yOE8XXbezepP8Qjh2IafESYzqBggmxnwe8frz+7904OG4/JiV
-         p67s9nc+7t0kvH/hr+mPodwvuVpMuZcs8vYNmrVx/6XM1ASMjrvL0KgJsf5Hc3E8+adB
-         r97eUPqeTOZWJ4V0sT7zMpLtS+iOozgMrjebqajOpmkUQN3xxgbmR0JxnMclTXpVTCo2
-         HYYgSxjmrqyf0fMRpwhZL+0h+bIwdg9lzSZ2zwPArwo4D5nccqO5nXSm0Buzg8ZpsjVZ
-         tRQw==
+        d=oss.qualcomm.com; s=google; t=1791742950; x=1792347750; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=J4GnUzarc/n9kpP41afLq33uqFjjFV9bhvTE/hjv9dU=;
+        b=j6R3QYNxfxAMNEVQl7vLPLFYrFjUtegk+Yf7nYJOwRl05aFO8L+5ECzkplmMka/Kz4
+         cz9SSaNFXUb4MgTtGoC+6vAF0Pyqg1q1KE2HRg4fgyS3uXv1KETSlE6OGukIF3CUFLwd
+         epkopxs8Xj5etOI23yr0inOda4xP0PbbQ/IiWjBqfkV2ltbxVTFNPlUktCYeSthO04jP
+         of/4hEDR6KeuWaTfRXhclVy3yIU6gBb8xucZrCP749UshpzAxcRVoIj+kyHkPGzm7p37
+         wefskmbXWsheHaI8/JrK3jvRPYG6o09HDy7mAGrF9WyhW57aoVXb6Rbwl6e4XiS5eH7Z
+         Za+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791742379; x=1792347179;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gwRi8tJ5LauvJF15FnsWPOaMsiBcZj8ycmgZAY2TY4w=;
-        b=nMsppdNReg381DGn725VtskJwtB9jsSpXuhJk7eOTeZ93x1EzRgwzUiC8QO0q6iTEL
-         DgCAwBQ7ReignEIwHpJJmPNnduwGmxe4v7lM6a3KIEFTVJkNhY8vr/KMQYyzHMp1OVBb
-         vq9ri9+MfGl4Qhec1Ry58miZQMhkWd+y6GWK1o+CNjr2DY6NkytvdPdfjlOJLDWxnZ36
-         8uuwkowTJ130FvQS7JPUZGO3wR6GD02Ju2PWxQ5adPkOTosh1SMC2HU69RyYk7iKzh31
-         qahCK6Rw8ClcOZIwXnYjm1lA8ALGVt9BawTGEoVoZU8p/fyYhWdyod52EDjXHX1Vyt04
-         nsyA==
-X-Forwarded-Encrypted: i=1; AKwUvBwbtBvV6F6tqZFc3HKIGwHXQOQ6liyxzoVbIs1ouXX7v0cCkmXm9N0sPiqZ+gvTCcbIc6FQZ8VWXxyJZI8INg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJlx48tnruoeN8luBbtmaWHIPHLwlBZ2J8/K/9NFfDnGokK/6jZ
-	7xTUWWZmGh2Eatyj9AU9o2u4LQZpCbIeISFvxbZfBNleM0MWhKFEFvZDU+QuXQ925K16u4Z8vJJ
-	rG9zPdF6rc70vtJycwxcFR+j6mMUxbac=
-X-Gm-Gg: AYBFou19jgd7w4iqBfxO8yDlZycUNXCOmpnX/DPR4dlG0GKZFftgmxUa/EmirTO9iXX
-	nY5Y7midip8r03TZKWzC2VmPstruQu8qk2uqTDjSOb/CiyeSa/uNav5Fe2hsdO6Oq+CTBIqGinE
-	e5XNKxDc6M1uUJQZX/t+ICOhwYeDN/O/E8RsyPVG3i0nlLUFgtigx8Ss7gU4zAN/jg5VaTxt1bi
-	YLfRl4W29w+M+2kfnUzx/x6Y0M3/UXLfiHtwPPSNo6RN0Wca5m+f6FTTw3HMjZFNkSLAE7shg3W
-	iWTz9quRXitRJwVHuKIXkKUgdi6c+bL+0cGaS/DaV76XGUNakC7p/ItrFcNENb4hW4xlDSEPtfF
-	9YCs2LDUsHgKs1Q==
-X-Received: by 2002:a05:693c:62c5:b0:353:7d40:6636 with SMTP id
- 5a478bee46e88-3537dedaae9mr9900985eec.1.1791742378990; Sun, 11 Oct 2026
- 11:12:58 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791742950; x=1792347750;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=J4GnUzarc/n9kpP41afLq33uqFjjFV9bhvTE/hjv9dU=;
+        b=OEZqZXlqCUZZUNYYYI3vj3PskbQgONV2Y9dpcHToUWH0eAjN03ayY3QnYYMNTlJmpV
+         kDfITVbGyHhQDnmbxjMeNVuX046/nZUGUw5c3I8jeTx1DlkqizHE6i3yvA0xcDeEUk6U
+         qpUYRp39Ak4JjAlOvdCPntPJ/+BNfK5/NS6O9aPsuuogC6N8XY9ny4qejM0H/UqEPWbN
+         OvrwNEW1p8t4NGVwWoLdgPLr/JzCwgTlcaKiS18R5VrgQF2BGbe0OndsY8IRyhtngs8r
+         bTgLr+U4Yaqba1Swi1/ENSwWUsW3XD+/38YYNxwdRIM1p+qKuu6oDKlXqwy1xWeZO7kI
+         TpqA==
+X-Forwarded-Encrypted: i=1; AKwUvBwkBJJhBYcx1ECkxuhWb7WpUoGsBywz590Yxcz15GqFjgNZ1OzO7O3zEA7UyQJrHERnchbwpE7hbxSw2kc5Tg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLob41+1v2m3kPaIS5rCvNcalZtuB7zUnoSrV52V8ia3KjdHBAR
+	1xjU93ZFrbzd2Q4/gj4vZaDfklBZuULhy9jPwx5ExgXNpwNOtuNBwAcxBrWB2xbpsnkI/3Cj5K1
+	w+dBnHlAn64p/7CySoge2tF186KjKvLgrXWyNDABrpz5aYeDosS9ibMx1lTFnhyQuZ+A7IQ==
+X-Gm-Gg: AYBFou1YcWO8fFKwgTQ9ckobtz32KXt0DoSlbx/49e8Q3Hxt2nZF/4WTvZTpP/7O4Yr
+	6kzC/YwRnCHy8DxSJj6mHpWEy/TICyqJlE5ibQVrGAH0On8Huawg/sa8doc2gmg5BESUbFUKbCA
+	LBEEZ5JBQ5c6B9aUTum4V9qOMT5SPjmtUiqHbn202ZyvZecyuVQnaXNVezzaGHgD92rbu9Jdlcx
+	5tNPTZNA7OjRJLT38y6tw8ZfaynuUYGRkJdlb8BC9KqVMecLyALlvMcMasDviJyGR9n72XEh94n
+	ntSalJhm3VUi3w0sFSfmRePAZFI3IXQwNutDimKvR8C+dbjEIFvVqP94oGTr/I2YP03omHScYNe
+	TWMxyRdjisySEIbZXqY5ZQ/3aldqnmOJFR1ZYX6gzFBF5KtLgzXlSryxCPA==
+X-Received: by 2002:a05:7300:8a1d:b0:351:35b3:c5b6 with SMTP id 5a478bee46e88-3537e0fbed7mr11835706eec.27.1791742949796;
+        Sun, 11 Oct 2026 11:22:29 -0700 (PDT)
+X-Received: by 2002:a05:7300:8a1d:b0:351:35b3:c5b6 with SMTP id 5a478bee46e88-3537e0fbed7mr11835670eec.27.1791742949107;
+        Sun, 11 Oct 2026 11:22:29 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3581f594a41sm17453666eec.23.2026.10.11.11.22.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 11 Oct 2026 11:22:28 -0700 (PDT)
+Message-ID: <b1a3f755-19e3-407e-b8f8-b494de83f59a@oss.qualcomm.com>
+Date: Sun, 11 Oct 2026 11:22:26 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <asmCc1VxVPLIMgY6@google.com>
-In-Reply-To: <asmCc1VxVPLIMgY6@google.com>
-From: Christian Lamparter <chunkeey@gmail.com>
-Date: Sun, 11 Oct 2026 20:12:47 +0200
-X-Gm-Features: AclHuK8acOi8aVEUTuLTHFRamALp4FOSGaLarP7QqSjuV8P0SghSz45EXW4MkW0
-Message-ID: <CAAd0S9A6zNJU=BkUgpGtdHBgkcnQ0NyOWb46aDnBuGCf0TKvmA@mail.gmail.com>
-Subject: Re: [PATCH] Input: reject parent overrides on managed input devices
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Benjamin Tissoires <bentiss@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
-	linux-wireless <linux-wireless@vger.kernel.org>, Johannes Berg <johannes@sipsolutions.net>, 
-	Jeff Johnson <jjohnson@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, jgg@ziepe.ca,
+        alex@shazbot.org, bhelgaas@google.com, jjohnson@kernel.org
+Cc: johannes@sipsolutions.net, mani@kernel.org, yishaih@nvidia.com,
+        skolothumtho@nvidia.com, kevin.tian@intel.com,
+        linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+        Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+References: <20261011074514.515894-1-jtornosm@redhat.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261011074514.515894-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDExMDA3MyBTYWx0ZWRfX6cKJ9uHCGEr+
+ 0Fng684mvTje1XKs5Nt4zVykzJCXisxGD4In9lMtxshXVQw6OjvbenDk52Jx6BbSFQn3BkbA8O3
+ pFbEpKWAf8/NMaI3KcdN1O0cnXMLfSw=
+X-Proofpoint-ORIG-GUID: ByC4RYU4l1ZiqTRR8UewgD7CSf6zex1L
+X-Proofpoint-GUID: ByC4RYU4l1ZiqTRR8UewgD7CSf6zex1L
+X-Authority-Analysis: v=2.4 cv=eMWGH3p1 c=1 sm=1 tr=0 ts=6acbd425 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=COk6AnOGAAAA:8 a=vTVf00-0V6mThgBseXsA:9
+ a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDExMDA3MyBTYWx0ZWRfX5+OChrEMkitx
+ vv6PfZh6YIDtJzBCLBpnm2D4kxJmT4/azMW8KCGs3s+r0y49O9Vozguz+/Q3AcT4ie4muVqWiZT
+ fYDAYzuROpxKWR9OhdRqCulzF/bxhBc7J4k7A4898CpgNkPjFIUm/prC6i+A43ETjoHPZeZ5Mbr
+ mIo/IOZwz3mxld/78zkx1/thFtkQzITu2vol+ppuV4g/ZfkhdcafmUymFr023Uuev9zAq17evia
+ hXn+U0EQZOJN6155AGS/glLFtj6s65tzpYd6+MUo+sxkCVVaVHBJ5g/W9onkd+6BbbDk134c9uy
+ 01J3QdFaXQONn2of7nb1uQxyAZQS1XwacLJLYQY9DS/QiZZPyi3o8z2bdcRbErvv4VdzN4N5bDD
+ XwwDmtxl4rAR9nKw2v5HNrd8AdoEcMLABRvnuaeRd2pfSigRxxpSq8/7r6fvmxK2A8v2kedzGHA
+ cZHyi7N+I64heR+qmDA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-11_04,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 spamscore=0 phishscore=0 clxscore=1015 impostorscore=0
+ suspectscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610110073
 
-On Sat, Oct 10, 2026 at 5:54=E2=80=AFAM Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
->
-> When an input device is allocated with devm_input_allocate_device(), the
-> owner struct device is set as dev->dev.parent and holds the
-> devm_input_device_release resource. Later, input_register_device()
-> attaches the devm_input_device_unregister resource to dev->dev.parent.
+On 10/11/2026 12:45 AM, Jose Ignacio Tornos Martinez wrote:
+> This series enables Qualcomm ath11k/ath12k WiFi devices to work in VM
+> passthrough scenarios, addressing a long-standing issue where these
+> devices fail to initialize when passed through to VMs via VFIO.
+> 
+> Qualcomm ath11k/ath12k WiFi devices have been broken in VM passthrough
+> since they were introduced. The Qualcomm firmware has its own interrupt
+> controller with private registers that need to be programmed with MSI
+> addr/data. The driver extracts the addr/data from the MSI descriptor
+> and programs the firmware's private registers. In a VM, the driver
+> only sees virtual (IOVA) addr/data, but the firmware's private writes
+> bypass the IOMMU, so they need the physical host values. This causes
+> firmware initialization to fail with errors like "BHI offset:
+> 0xffffffff is out of range".
+> 
+> Multiple attempts have been made to solve this over the past 2 years:
+> 
+> March 2024: Workaround using module parameters [1]
+>   - Required manually copying MSI values from host to VM
+>   - Rejected by Johannes Berg as too manual, suggested VMM solution
+> 
+> August 2024: QEMU + kernel solution by Alex Williamson [2]
+>   - Kernel disables MSI virtualization, QEMU intercepts config writes
+>   - Uses brute force pattern matching to infer MSI data writes
+>   - Stuck as RFC - no progress in 8+ months
+> 
+> No action from Qualcomm: Despite multiple reports, no vendor solution
+> 
+> The solution in this series provides a clean, kernel-only approach that
+> addresses the previous concerns. The PCI reset support for these devices
+> has already landed in linux-next (commit f8522a518e59 "PCI: Add device-
+> specific reset for Qualcomm WCN6855/WCN7850 WLAN") [3], solving the device
+> reset path for VFIO passthrough. This MSI series is the remaining
+> piece, with both in place, these Qualcomm WiFi devices would be fully
+> operational in VMs for the first time.
+> 
+> In practice, this specific behavior (firmware requiring physical host
+> MSI addresses in private registers, bypassing the IOMMU) has only
+> been observed in Qualcomm ath11k/ath12k devices. A device-specific
+> approach seems appropriate, and the VFIO variant driver pattern fits
+> well for this, following the same established pattern as mlx5-vfio-pci
+> and nvgrace-gpu for their own device-specific needs.
+> 
+> Architecture:
+> 1. qcom-vfio-pci variant driver caches physical host MSI values and
+>    exposes them via extended config space with magic signature "QMSI".
+>    Device-specific hardware quirks belong only in kernel drivers, not
+>    userspace, independent of the tools used.
+> 2. VM drivers (ath11k/ath12k) automatically discover and use cached values
+> 3. PCIe link recovery handles VM timing variations
+> 
+> Thoroughly tested: 3 VMs across 2 WiFi generations, all devices
+> successfully initialized and are ready for use.
+> - VM1: ath11k (WCN6855)
+> - VM2: ath11k (WCN6855)
+> - VM3: ath12k (WCN7850)
+> 
+> Series structure:
+>   Patch 1/7: PCI helper to find free space in extended config space
+>     for device-specific data exchange between host and VM drivers
+>   Patch 2/7: Shared header defining the MSI cache protocol between
+>     the host variant driver and VM drivers
+>   Patch 3/7: qcom-vfio-pci variant driver that caches host physical
+>     MSI address/data and exposes them to VMs through extended config
+>     space
+>   Patch 4/7: ath11k PCIe link recovery retry to handle initialization
+>     timing variations in VM environments
+>   Patch 5/7: ath11k support to read cached host MSI values and
+>     configure firmware with correct physical addresses, making the
+>     device operational in VMs
+>   Patch 6/7: ath12k PCIe link recovery retry to handle initialization
+>     timing variations in VM environments
+>   Patch 7/7: ath12k support to read cached host MSI values and
+>     configure firmware with correct physical addresses, making the
+>     device operational in VMs
+> 
+> [1] https://lore.kernel.org/all/20240322104912.94811-1-jtornosm@redhat.com/
+> [2] https://lore.kernel.org/kvm/20240812170014.1583783-1-alex.williamson@redhat.com/
+> [3] https://lore.kernel.org/all/20261005105436.83962-1-jtornosm@redhat.com/
+> [4] Original problem report:
+>     https://lore.kernel.org/all/fc6bd06f-d52b-4dee-ab1b-4bb845cc0b95@quicinc.com/
+> 
+> ---
+> v2: Complete cover letter with more information
 
-Ok, why would this be a problem? If something other than the devres
-garbage collection
-callback access the data after it was unregistered... what else is
-supposed to happen
-other than a crash.
+Thank you for providing this level of detail in your cover letter. I've raised
+this issue with the engineering team in the past, but I've once again raised
+the issue with your in-depth analysis.
 
-for what's worth: this patch seems to be a "spite" response to this:
-https://lore.kernel.org/linux-wireless/20261008-carl9170-reverts-v2-0-3ecb1=
-2089797@gmail.com/
+/jeff
 
-I think someone else is working on a separate fix:
-https://lwn.net/Articles/1038523/: "Revocable references for transient devi=
-ces"
-With todays Patch-Series V14 on: https://lkml.org/lkml/2026/10/11/475
-
-From what I can tell, this should have been what devres was trying to solve=
-.
-
-Cheers,
-Christian
