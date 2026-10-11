@@ -1,179 +1,108 @@
-Received: from www.nmnhosting.com (watt.d-silva.org [119.15.109.137])
+Received: from smtpdh17-2.aruba.it (smtpdh17-2.aruba.it [62.149.155.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EE5C44A730;
-	Sun, 11 Oct 2026 22:08:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.15.109.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27AF1468C38
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 22:48:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791756516; cv=none; b=D9lTACULkBcVKUjbFssBB4wORFzTJrMaFoobia3SIzI589SNZBzNE42wG5+hKpDFDTEGPTL1754ZY6s14ghQVfet+NQjXF97Xa8k935QwQI3gCgqwsQcfK1idi3JbDGCMV8Q5OiJpPvdSRgJIqAz4zyyS1OafmpL9NGWhAaqf1o=
+	t=1791758918; cv=none; b=X2DQTfPbaDE90Gw/sJbpyfqWnSY1OxSHkQdp+0C4BqcK9ABypcG/rRiTI90Gxa9tUWKGiPYY6iSFLOcXXlBzObc2osTBZvDJyCx1VxQBL2zlB4/mvheBwehvpul1EteVsFVtuNRsy7j76EjLqlc3dXguM0QpUuaAccZWiCDh2iQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791756516; c=relaxed/simple;
-	bh=x6qG7hpwEQcpd0zUIpGu4OMPJxt7xQZPvLAuAbVEKFU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=a6Z4bfPgUmRy/Imr87PXbeCa72E2san66HySYNC7FvLVH6jBJ8xgIR+xQIB9Hi0uF5HTWYeP3ExzaZtIQn+1ZMrpiwAm92wedzFVbo3WgwdG8DrcxuJ7erlBJDiHx3CKJX8vRklIC0BhdQSP4L5iE4AVYfmTlDkkXTMwMRZlvuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org; spf=pass smtp.mailfrom=d-silva.org; dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b=cxlORspD; arc=none smtp.client-ip=119.15.109.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=d-silva.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=d-silva.org
+	s=arc-20240116; t=1791758918; c=relaxed/simple;
+	bh=IKeJyZOjiuymxr65r7tntGqpXYBLk1QNFkGjPfO+gzo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=iPViDKYQr0HxCGuH74VJThZIBXB9g183IxFKfQUG7So64eFMMk3B+abDoPjkL2GRg68+aNC/t1Ba5r1djxAn4avkPKmRp7BqdQCEzAfSj4IlnTXnJJhjBypUD+jsVMbL1iPwvQZeq6LwwXFa6NneXJrVIasOJmU+ifR+RrvFFVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=f3Xi/AP5; arc=none smtp.client-ip=62.149.155.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="cxlORspD"
-Received: from Hawking.lan (hawking.lan [10.0.1.4])
-	by www.nmnhosting.com (Postfix) with ESMTP id 608DB4341F;
-	Mon, 12 Oct 2026 09:08:26 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=d-silva.org; s=2025a;
-	t=1791756506;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QhpHHaSSaHYwPOL8Q03+A+jFMK/sgqQ8AaTiTUfQ1xU=;
-	b=cxlORspD+CcdtdS98SIopvAfzIpTqRZjrt924URstAfs9cgEco3jJeT/jfcJaK27PRediY
-	h0pTY7RL1RfdWvDYInr26mmyPcnSzCM1bG68T+l300nb2+v7IXj6Ab4oHIiJycDEtZOinZ
-	+xJiJEfP4l+qCmiB2Me1J7uk+RNNzAv29gkrFs3ZsaHJtvqENsl8N1OYSNlGcprGCWniAa
-	B5Xh3gsTtc80bOuFZd/30yxljN9SC3RMG2Qx7I1ijWU1UEP2JKHFKGCw+LVTKK6j2NHAIg
-	FD8JNylBfHtei1Yhwu5LY2MXgE9T6Y/862u24Ig7266zbB7FSzw4vdc5mMGzyA==
-X-GPT-Reason: legitimate; the email is a technical software patch
-	submission containing a code diff for a Linux kernel driver (rtw88),
-	which is a standard workflow for open-source development; the sender
-	(alastair@d-silva.org) is consistent with the "Signed-off-by" field
-	and the technical content aligns perfectly with the mailbox's
-	likely role in receiving technical/developer communications; no
-	phishing markers, urgency, or suspicious URLs were identified.
-From: Alastair D'Silva <alastair@d-silva.org>
-To: linux-wireless@vger.kernel.org,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>
-Cc: Luka Gejak <luka.gejak@linux.dev>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Ulf Hansson <ulfh@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Alastair D'Silva <alastair@d-silva.org>
-Subject: [PATCH rtw-next v5 4/4] wifi: rtw88: sdio: Split rtw_sdio_rx_isr into 8051 and 3081 variants
-Date: Mon, 12 Oct 2026 09:07:55 +1100
-Message-ID: <20261011220755.1673367-5-alastair@d-silva.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261011220755.1673367-1-alastair@d-silva.org>
-References: <20261011220755.1673367-1-alastair@d-silva.org>
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="f3Xi/AP5"
+Received: from [192.168.1.237] ([94.34.125.0])
+	by Aruba SMTP with ESMTPSA
+	id G2INxu7ww76R9G2IOxOszf; Mon, 12 Oct 2026 00:45:33 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1791758733; bh=IKeJyZOjiuymxr65r7tntGqpXYBLk1QNFkGjPfO+gzo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=f3Xi/AP5n2XuAR5C+DT6YxQSExW0nZKwRZRSF+li1/jYGy8tHi8sas2vHk3/jsdBf
+	 ZIk7hzrOoKTUaXAx6itP2iISQ3xcoduIlhpvjs+a3m+MoC4R0I+vFFRXPZKHzSOXu9
+	 T+vn8tFvUydNQlIbIA+S+qe3XHv08nG91y7N5nupesyqaMWAc0YIPrhIvAYaqt2rSB
+	 H5YRENiTz5VFimJ9ulSH125A4BuOZscqopzUiqgrhBVCu07LsMnpmWnb53TIAocB4n
+	 XocrBBWYgiURF0ZnpCaZWs1JMvf23td7dFiV+QGdDe3pGkxmbiwfyY8ziInz8VofWR
+	 S2hoMa0RUb1Ng==
+From: Alessio Ferri <alessio.ferri@mythread.it>
+Date: Mon, 12 Oct 2026 00:45:29 +0200
+Subject: [PATCH v2 5/5] MIPS: dts: bcm6362: add the integrated WLAN
+ backplane
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261012-bcm6362-wlan-v2-5-4752da7e0982@mythread.it>
+References: <20261012-bcm6362-wlan-v2-0-4752da7e0982@mythread.it>
+In-Reply-To: <20261012-bcm6362-wlan-v2-0-4752da7e0982@mythread.it>
+To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, 
+ Florian Fainelli <florian.fainelli@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org, 
+ Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: b4 0.14.3
+X-CMAE-Envelope: MS4xfP/1Jx3Il+CvHY4LSerOJ/80LHXXGV/Lypmh3G2ykaIUQdN/11Ail4rWDjVDIQBqtsX1XGXhaBUzX62VQsXaak3cwxeCoCn7va8m3uwpEk18mFbdBz7Y
+ b5JmiOq4RFfBm0D1g78TBQP6MceT+Py+Ps3qDmhcxIghRxF6ZmM7bs1PGFvLwKoLIUy0jtUiTVLbLd4c4ez+snqnz3ZmwY5BaL/xLOGe3ZuZoHWJlE5o2vLQ
+ 9bAJOQX0xo8bGvTDJOwvw6I5ZjNBOUaQDUuKuAu9q+II6kWFUKwq1n8de/BoFRvmNXzwp3h0VHqn/bfJTGtJflBFnF3Pa3cD8Ke2J5t0ECloyAzqld27Pqhb
+ z7Sx4+EcfyRAI9pfXqnE8WrKJVPQQU7AMh31vSTdqcvzhdTp0COrO/+FJIpY8QQzh4TxQrfHwb04P/RE0Y5YJx2OOGzTFfHat+JlEUV237cWENsIa2khbX8X
+ NWczwCnsvxc59vUL4LEFKUQgyKG4PWlLoHpCHvHA8EuD8Q7cECsPqwQ9W7ybQhazQu34YHpaSANl2cYoYkaD4v06Q70lSXAL2N1Gg5e558hS9ViV/m/eEK89
+ TUa/Mb0CluLNDKVoc9AVMBW4gHbtF44wrT4AgaTqMXzQGrK1gkykkb4wrTCwThSK/Jo=
 
-Split rtw_sdio_rx_isr() into separate 8051 and 3081 variants to be
-clear. The two differences between the architectures are:
-- Register size: REG_SDIO_RX0_REQ_LEN is 16-bit on 8051, 32-bit on 3081.
-- HISR behavior: 8051 re-reads REG_SDIO_HISR on each iteration, while
-  3081 drains based on rx_len without re-reading HISR.
-
-This is a refactoring without any logic changes.
+Describe the bcma backplane of the integrated WLAN macro,
+with its clock, resets, power domain and the interrupt of the 802.11
+core. It is default disabled, boards having the WLAN need to
+enable it.
 
 Assisted-by: LLM
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/realtek/rtw88/sdio.c | 58 +++++++++++++----------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ arch/mips/boot/dts/brcm/bcm6362.dtsi | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 9fbd7654ada4..a9312d0d7299 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1446,17 +1446,13 @@ static int rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
- 	return 0;
- }
+diff --git a/arch/mips/boot/dts/brcm/bcm6362.dtsi b/arch/mips/boot/dts/brcm/bcm6362.dtsi
+index d74021925c53..c6de39588840 100644
+--- a/arch/mips/boot/dts/brcm/bcm6362.dtsi
++++ b/arch/mips/boot/dts/brcm/bcm6362.dtsi
+@@ -261,5 +261,25 @@ usbh: usb-phy@10002700 {
  
--static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
-+static void rtw_sdio_rx_isr_8051(struct rtw_dev *rtwdev)
- {
- 	u32 rx_len, hisr, total_rx_bytes = 0;
- 	int ret;
- 
- 	do {
--		if (rtw_chip_wcpu_8051(rtwdev))
--			rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
--		else
--			rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
--
-+		rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
- 		if (!rx_len)
- 			break;
- 
-@@ -1466,33 +1462,45 @@ static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
- 
- 		total_rx_bytes += rx_len;
- 
--		if (rtw_chip_wcpu_8051(rtwdev)) {
--			/* Stop if no more RX requests are pending, even if
--			 * rx_len could be greater than zero in the next
--			 * iteration. This is needed because the RX buffer may
--			 * already contain data while either HW or FW are not
--			 * done filling that buffer yet. Still reading the
--			 * buffer can result in packets where
--			 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
--			 * end of the buffer.
--			 */
--			hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
--		} else {
--			/* RTW_WCPU_3081 chips have improved hardware or
--			 * firmware and can use rx_len unconditionally.
--			 */
--			hisr = REG_SDIO_HISR_RX_REQUEST;
--		}
-+		/*
-+		 * Stop if no more RX requests are pending, even if
-+		 * rx_len could be greater than zero in the next
-+		 * iteration. This is needed because the RX buffer may
-+		 * already contain data while either HW or FW are not
-+		 * done filling that buffer yet. Still reading the
-+		 * buffer can result in packets where
-+		 * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
-+		 * end of the buffer.
-+		 */
-+		hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
- 	} while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUEST);
- }
- 
-+static void rtw_sdio_rx_isr_3081(struct rtw_dev *rtwdev)
-+{
-+	u32 rx_len, total_rx_bytes = 0;
-+	int ret;
+ 			status = "disabled";
+ 		};
 +
-+	do {
-+		rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
-+		if (!rx_len)
-+			break;
++		wlan: bus@10004000 {
++			compatible = "brcm,bcm6362-wlan-bus-axi";
++			reg = <0x10004000 0x1000>,
++			      <0x10007000 0x100>;
++			reg-names = "chipcommon", "wlan-ctrl";
 +
-+		ret = rtw_sdio_rxfifo_recv(rtwdev, rx_len);
-+		if (ret)
-+			break;
++			#address-cells = <1>;
++			clocks = <&periph_clk BCM6362_CLK_WLAN_OCP>;
++			#interrupt-cells = <1>;
++			interrupt-map = <0x00005000 0 &periph_intc 7>;
++			interrupt-map-mask = <0x000fffff 0xffff>;
++			power-domains =
++				<&periph_pwr BCM6362_POWER_DOMAIN_WLAN_PADS>;
++			resets = <&periph_rst BCM6362_RST_WLAN_SHIM>,
++				 <&periph_rst BCM6362_RST_WLAN_UBUS>;
++			reset-names = "wlan", "wlan-ubus";
 +
-+		total_rx_bytes += rx_len;
-+	} while (total_rx_bytes < SZ_64K);
-+}
-+
- static void rtw_sdio_handle_interrupt_8051(struct rtw_dev *rtwdev, u32 hisr)
- {
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
- 		hisr &= ~REG_SDIO_HISR_RX_REQUEST;
--		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_8051(rtwdev);
- 	}
- 
- 	/*
-@@ -1516,7 +1524,7 @@ static void rtw_sdio_handle_interrupt_3081(struct rtw_dev *rtwdev, u32 hisr)
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST)
--		rtw_sdio_rx_isr(rtwdev);
-+		rtw_sdio_rx_isr_3081(rtwdev);
- 
- 	/* Unmasking HIMR re-asserts the IRQ line if new packets arrived */
- 	scoped_guard(mutex, &rtwsdio->irq_lock) {
++			status = "disabled";
++		};
+ 	};
+ };
+
 -- 
-2.53.0
+2.56.0
 
