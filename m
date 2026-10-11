@@ -1,55 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37374433046
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:05:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A623C432313
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 11:05:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791716738; cv=none; b=QH5M3VJyVQxfwOHwy4lxq7aDEl84skOoU2TVQXlnzfVBIw4bHIRk3P4+FfkiOBkmTMCzMC2zRjrI9CuN6iwNtFhNxVTjVq9Krh9C7H3kvLMx01P0mbxL4i+AmHENDRRAJR6DNAFbeDDGdyv6HyX9E61ZUKVaShPFYcBsfJfGrME=
+	t=1791716740; cv=none; b=nv/5UqFXH/n+9lZ023684aPaKsSNrYbyXwDnMnZQ4IoIqszQtOEyr6rVcaSUM8+o2BhLduJoKZjkcgESc6j5ehJSVhYzO4eOvY3VawlOT+7Q2/YwrUoegfP2YNvvHkkHyV46indDj2U4i+gsBPN+JdsoEkVT3tvlGbqWrLqYl0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791716738; c=relaxed/simple;
-	bh=AOBtbGH9VKXKu4lmBLuDlRDrrq6PKBNBBXflt/fD5aA=;
+	s=arc-20240116; t=1791716740; c=relaxed/simple;
+	bh=6G4HYK46mC72OSWawl0Jhft3UyRSvepwthRsbOCdrlE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=srC5IEcT6bQdZ9K28Et6FfBI76SgJ1emnK/vyzi6ftBQWcxhtSIhOvftphfBQrZZvOXzPjarbv1hyQi+xIrDNw28+QeeNR8VgQVBg+ERacFACvYKoZOgy9gOyS+ADyOdQXpvG8XQgg6nv2Bjtxr5EnwdZA4z0Yb2Vzqybl3tAyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=diVHsSA7; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=On/48w9F3d3dUIwM26Ixb/ZpcZsdPMjuaMuljuy+t39zs+XyVWP2SDBzUK+WS/+KE8y94ZOH0afdNHAy9SDTYLYiaGWMlWdiDYgjLCWmrQ2jPDodOikSUIAfGmmNzuGTqO++wvGKwM7elXWwWwz89+tfBkNxDEYJziZ7IxeDj64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PvYfKyz5; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="diVHsSA7"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PvYfKyz5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791716738; x=1823252738;
+  t=1791716739; x=1823252739;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=AOBtbGH9VKXKu4lmBLuDlRDrrq6PKBNBBXflt/fD5aA=;
-  b=diVHsSA7nAANVDKPYQfeeHAqR/HIV3G4Z8r0XApHU7MwYLMK1LzwbLXf
-   4SW8TLt0HcahTwsWpWGQGHtm16aurpBFvpEDhfRgGDYcibzxT3rut1r3d
-   xYCqa6WJcaf9jJf+1BQdP5PvgsbB7/Rhz4Og+/Uti6FLjg8XsKGop3abW
-   iTmbIlZzAq/24XNfpJGtw6GuywmlMFlyrMuHo5ZgXPQ3VjHfGsZEBAWgu
-   SSd8skyFE9teHxr2BY2IICXJ3agRXX3KWj3zClvH2kEwkV+l3FuVH41do
-   THuqV/wr/bqWrA7TWnRmAI3W63LrySO8DJh+7SN3a4kNmd2bczu1l4Wuv
-   w==;
-X-CSE-ConnectionGUID: PWvd040kQRG+hPT6HJAd4Q==
-X-CSE-MsgGUID: j5TPzeRnTRmEhKRhjTSgIA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11931"; a="454186"
+  bh=6G4HYK46mC72OSWawl0Jhft3UyRSvepwthRsbOCdrlE=;
+  b=PvYfKyz5VERmouU6Z+ZUc7kgPVYDCFDRwk9zUFnX8L6B8S0poGVeyBpX
+   z00zIbrpWS9yoQBLvzbJjUP6BNipY+pb8FSWJTf1/9k2LKIHymgYu7hJ1
+   JukU4zPK9HIZB/yhZJHaDaPIw9/KKsVaWqkFMRr3fybmDqNI493SuEHtq
+   rJC4U4ClJHkb5EhZFzST5zi1iExjvQYbXWZVf/co2dxQvKVPfZfGAcjIJ
+   OmFT8c0wO68wulpkC1tDwdWVhsnNpDbs1sJeKzhDF8REHwqF1VlK9ur68
+   drM/n0xs0RNiClqg+LFzatEYPAACFcfSASO2OfHle4VK3QIyudJD5EcDU
+   A==;
+X-CSE-ConnectionGUID: hN1uYutRQc2LifhKNbgkXg==
+X-CSE-MsgGUID: jiM1W0yDSqeQH6yXECkSrw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11931"; a="454187"
 X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
-   d="scan'208";a="454186"
+   d="scan'208";a="454187"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:37 -0700
-X-CSE-ConnectionGUID: TeWMiF7mTu6NG7XTTj7qYA==
-X-CSE-MsgGUID: duXVTk4ZRE6WWFmosMjUKg==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:39 -0700
+X-CSE-ConnectionGUID: 7Rhu4D/7TT6fBabjci+3kA==
+X-CSE-MsgGUID: JZ0KTPGMQgWuRneC7vtc1Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,151,1787036400"; 
-   d="scan'208";a="651034"
+   d="scan'208";a="651039"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:35 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2026 04:05:37 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 12/13] wifi: iwlwifi: support SCD_QUEUE_CONFIG_CMD version 4
-Date: Sun, 11 Oct 2026 14:07:13 +0300
-Message-Id: <20261011140453.534cc32f2ac6.I394c38c58ad6619e3e52b52c3bc686acbbd2e4f1@changeid>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH iwlwifi-next 13/13] wifi: iwlwifi: trans: remove the unused write8 operation
+Date: Sun, 11 Oct 2026 14:07:14 +0300
+Message-Id: <20261011140453.fecac6ba37d1.Icf8e741c8ccc6eff1abd046223b575c07f69aff5@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261011110714.716840-1-miriam.rachel.korenblit@intel.com>
 References: <20261011110714.716840-1-miriam.rachel.korenblit@intel.com>
@@ -62,97 +61,49 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+Unlike the other bus operations, write8 has no generic wrapper and is
+never dispatched through trans->ops: all the callers are in the pcie
+code and call iwl_trans_pcie_write8() directly. Remove it.
 
-This version has a new flags field that must be set to
-indicate which other fields are valid, in preparation
-for moving queue pointers during SMD transition.
-
-Only set the IWL_SCD_QUEUE_MODIFY_FLAG_STA_MSK flag on
-the existing users of the command for now.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Assisted-by: LLM
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/datapath.h  | 20 ++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/mld/tx.c   |  4 ++++
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  3 ++-
- 3 files changed, 23 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 2 --
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 1 -
+ 2 files changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-index 3fbcb2e4bfe0..eddf13325df9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-@@ -608,6 +608,16 @@ enum iwl_scd_queue_cfg_operation {
- 	IWL_SCD_QUEUE_MODIFY = 2,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 5db07f1eab56..7a358daab584 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1237,7 +1237,6 @@ void iwl_trans_fw_reset_handshake(struct iwl_trans *trans);
+  * @send_cmd: send a host command to the firmware
+  * @alloc_tx_cmd: allocate a device TX command
+  * @free_tx_cmd: free a device TX command
+- * @write8: write a byte to a device register
+  * @write32: write a dword to a device register
+  * @read32: read a dword from a device register
+  * @read_prph: read a peripheral register
+@@ -1291,7 +1290,6 @@ struct iwl_trans_ops {
+ 	void (*free_tx_cmd)(struct iwl_trans *trans,
+ 			    struct iwl_device_tx_cmd *dev_cmd);
  
-+/**
-+ * enum iwl_scd_queue_modify_flags - scheduler queue modify flags
-+ * @IWL_SCD_QUEUE_MODIFY_FLAG_RD_PTR: update the read pointer
-+ * @IWL_SCD_QUEUE_MODIFY_FLAG_STA_MSK: update the station mask
-+ */
-+enum iwl_scd_queue_modify_flags {
-+	IWL_SCD_QUEUE_MODIFY_FLAG_RD_PTR	= BIT(0),
-+	IWL_SCD_QUEUE_MODIFY_FLAG_STA_MSK	= BIT(1),
-+};
-+
- /**
-  * struct iwl_scd_queue_cfg_cmd - scheduler queue allocation command
-  * @operation: the operation, see &enum iwl_scd_queue_cfg_operation
-@@ -625,6 +635,8 @@ enum iwl_scd_queue_cfg_operation {
-  * @u.modify.old_sta_mask: old station mask for modify
-  * @u.modify.tid: TID of queue to modify
-  * @u.modify.new_sta_mask: new station mask for modify
-+ * @u.modify.rd_ptr: new read pointer to set for the queue (version 4)
-+ * @u.modify.flags: &enum iwl_scd_queue_modify_flags (version 4)
-  */
- struct iwl_scd_queue_cfg_cmd {
- 	__le32 operation;
-@@ -646,9 +658,11 @@ struct iwl_scd_queue_cfg_cmd {
- 			__le32 old_sta_mask;
- 			__le32 tid;
- 			__le32 new_sta_mask;
--		} __packed modify; /* TX_QUEUE_CFG_CMD_MODIFY_API_S_VER_1 */
--	} __packed u; /* TX_QUEUE_CFG_CMD_OPERATION_API_U_VER_1 */
--} __packed; /* TX_QUEUE_CFG_CMD_API_S_VER_3 */
-+			__le16 rd_ptr;
-+			__le16 flags;
-+		} __packed modify; /* TX_QUEUE_CFG_CMD_MODIFY_API_S_VER_1, _VER_2 */
-+	} __packed u; /* TX_QUEUE_CFG_CMD_OPERATION_API_U_VER_1, _VER_2 */
-+} __packed; /* TX_QUEUE_CFG_CMD_API_S_VER_3, _VER_4 */
+-	void (*write8)(struct iwl_trans *trans, u32 ofs, u8 val);
+ 	void (*write32)(struct iwl_trans *trans, u32 ofs, u32 val);
+ 	u32 (*read32)(struct iwl_trans *trans, u32 ofs);
+ 	u32 (*read_prph)(struct iwl_trans *trans, u32 ofs);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bd6e38d5f631..0f4e309fe32b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3704,7 +3704,6 @@ const struct iwl_trans_ops iwl_trans_pcie_ops = {
+ 	.alloc_tx_cmd = iwl_pcie_alloc_tx_cmd,
+ 	.free_tx_cmd = iwl_pcie_free_tx_cmd,
  
- /**
-  * enum iwl_sec_key_flags - security key command key flags
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.c b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-index fc501ac0c1f2..44aa317b8e7d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-@@ -1484,6 +1484,10 @@ int iwl_mld_update_sta_txqs(struct iwl_mld *mld,
- 
- 	lockdep_assert_wiphy(mld->wiphy);
- 
-+	if (mld->trans->conf.queue_alloc_cmd_ver >= 4)
-+		cmd.u.modify.flags =
-+			cpu_to_le16(IWL_SCD_QUEUE_MODIFY_FLAG_STA_MSK);
-+
- 	for (int tid = 0; tid <= IWL_MAX_TID_COUNT; tid++) {
- 		struct ieee80211_txq *txq =
- 			sta->txq[tid != IWL_MAX_TID_COUNT ?
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index e6bebd37417f..b235a4539d7c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1075,7 +1075,8 @@ int iwl_txq_dyn_alloc(struct iwl_trans *trans, u32 flags, u32 sta_mask,
- 		hcmd.id = SCD_QUEUE_CFG;
- 		hcmd.len[0] = sizeof(cmd.old);
- 		hcmd.data[0] = &cmd.old;
--	} else if (trans->conf.queue_alloc_cmd_ver == 3) {
-+	} else if (trans->conf.queue_alloc_cmd_ver == 3 ||
-+		   trans->conf.queue_alloc_cmd_ver == 4) {
- 		memset(&cmd.new, 0, sizeof(cmd.new));
- 		cmd.new.operation = cpu_to_le32(IWL_SCD_QUEUE_ADD);
- 		cmd.new.u.add.tfdq_dram_addr = cpu_to_le64(txq->dma_addr);
+-	.write8 = iwl_trans_pcie_write8,
+ 	.write32 = iwl_trans_pcie_write32,
+ 	.read32 = iwl_trans_pcie_read32,
+ 	.read_prph = iwl_trans_pcie_read_prph,
 -- 
 2.34.1
 
