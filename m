@@ -1,136 +1,113 @@
-Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69694A4993
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 15:48:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59B6C4ABBB8
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 15:52:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.244.194.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791820089; cv=none; b=Dz2wV0p/7/V1eg+xrpMDLhfFK2qinRZwXC1SYhH+o9PNzQp8sCNVhygE6SpgcUKXjOlZnw+Nw1SW+S2qqRVUFrjV8hDx6d0q+Y40rGbmeFk5hU6z/QvFg/9LOODPOz1FhHLnWfDPSTYCpN0TJIhm4LJ1CuJtlstmamcxdPstvFo=
+	t=1791820367; cv=none; b=db6+0GO/3qzRGDmSQ5g+geBypBpGJqV6sLdl3dmSSzIAbwzO8xOYRKNmw7eQc1KNeIr3qG741fpyhfzKTAvSS1A4Vl0UOtkPmPQpue3Rrkwkb6hqEa9FNZGfrqyblxa0XGc0UirgJoM0WYCeNGewLCZD7A4hfUru2NSVZCJg0vU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791820089; c=relaxed/simple;
-	bh=joa6RM6ktxOVQDu2XvVi6s+0Yg0dPrzFg1gFR3Nr0a8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e5AovjfwkeJWwYy82IOmDHO8eqIiMzhEX68YH2mxcGXvrPMcamgqb4xtprBvyXJWOmliT5FpIE7cyTAZkb+rz5C/3RNegLkxlKo8zP9+Hm+Eyvql62W+wj9DUXgYM6drT60RODLlxGDNxaI2lFcS/Xcbyr5kqP1/1U5YVprj4M0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L1RtzEAW; arc=none smtp.client-ip=74.125.82.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791820367; c=relaxed/simple;
+	bh=hygyd5zmMGXvFm7+2BspxyK/OLvbvLr1S1Fr2zHUSPU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=psl1Hwr7xSeZMLnjz8VoYit4VCGfaHLASdMLMeHDxRMI94uh8dulb5VJ4pAcEAJSWrgJHzcNLHNdntiuI3fRtzmyqSU6e9Puff4myQN5nG8IMumCQWgZDl42AEYERk8ipZabMC3n1uOI1AJnnAymxQ7hDxUEtJGy4dl2J1BQwDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=WnUu+Lla; arc=none smtp.client-ip=185.244.194.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L1RtzEAW"
-Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-3514e7cbbbaso5137892eec.1
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 08:48:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791820087; x=1792424887; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9/p9hlIUpy4pciplLAexWshVdUELSi1RJnPYvzK8GQA=;
-        b=L1RtzEAWzk3npGSueZLjJQHQH3Vd7WTFRXAJZsfY6UNUw7c1swjkmw3LiUW/6yIjhQ
-         E38j5l4Ta0+1HN+ZJYP9et9/J0UERugkwFuFtUld6w7Kjggc9sEismudnWsZ6/RYXF6B
-         6Ny2tFopPC+n3dHGErF496udH6Npan/WEJWAZVNnXfwdQ16S8QYaWPJOxXLtlUF6dF5k
-         78Rj3JwgsfhOYa51pOQ1Sfk6F4t6yV9r/1EwHWi3d8Wi+AJzRu557KWVYAmulX2kW/ia
-         tIhkNZzhg7tSrz6VrqZWEQLZ3WmZLbZEn1MDRjr7xvrQVhxhhQDYMnsbWrQzYgPSTPpt
-         XFMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791820087; x=1792424887;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9/p9hlIUpy4pciplLAexWshVdUELSi1RJnPYvzK8GQA=;
-        b=2aYbTMGrqGY4Ov8FzA9E93olVPDQZrQ+LEbfLlatz9BEencm7XB1EkldwzU7QsQO/X
-         0A6t0nX5SIG13oQtB9Nr4UfpscZcd45OEhlLwhESsvRoxFZIC0R91P5OUFNcFkt4b3Al
-         SbGJDay5WNAZi7/sAH02apEL/zxJsDiFuW1axPI1sgn7ptc+8ytajB1GHK4rTjfatFSJ
-         WwwJhPMJih739L9Ddcl30O/7ft4N2z13THciIX71btTzJkqS9YCt8HYPjtjt2bHKM+/m
-         MGuateGzZQzjQy40dSj2uJDExvYlMjVFCsH886JzWTGlhfUjIKZRr55BQJlJ8QXUJb5+
-         0mCA==
-X-Forwarded-Encrypted: i=1; AKwUvByMGkhFscWligBD5XKIcPUrGrRK+6Y9hwN9dW0cgRYCbHrwFbqCdphqd4YbBG59+yOq0TEY10Ux5JikmIlefQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJJmXkgoTDqpsoO5mIhxvgigEBZFzLGl20tbAafNqERzcYAtpiY
-	5nYeBCErEgMy9afDjCj37h5V9I+43tf9X170oasGNAi752EzHGNjRUesdpnCl+zZxeU=
-X-Gm-Gg: AYBFou2NOU+7FfGkcr+lcg41yRjJ9ej+oOdfiuatvlATpP86G4YM9BRqRo3KvLPoESL
-	Lw6u/QnB7tzQqIEAedoi57GpzL0pU8wPGgwbTGnps6a8CbeeqfsoqXfhqJWyegLGslAYHF2zRQ4
-	sGp3LhNGTxNBeXyeiqg6bUQjNXZu1gcuw4yVSaZuwi5KQPT3583hPpc2YKJQ14kYNqsk96U0uf6
-	A0oqnIIi4yB0OAdXK/j32q53Lz8xd9CT47fXrgdyYRnXA1e/8gFUzui/XiH0HYy6CAvZOcsNtyV
-	SuiVi0J7qT3tuIGzQgmRCtImoX6xIBOdQ28pnw8lB068sfSeZSSYVZpMr6hx9MNI6/ox0QcJ4kW
-	caCmP5cRvwXs0maSsJF+gq1C5BC33lTXExjAa7S78GVBhHkBk6hduukSkcHdCrz3VyD7DN/GxHO
-	R5kWOQlrkJ4TGlwEPFMCgwX0B/HGqTuh5zGVbifJnY9vPEOKGYP/CJI5CSnisOVUlRLgUyOO4Zm
-	AWqQbYRLJ+/+upYc5vTILPg1H40ua8gsdFl98JRdBjPAEUTH8PX2n1kYFZo005Xr+SqT6Fw/A==
-X-Received: by 2002:a05:7301:619c:20b0:35a:ca1e:511b with SMTP id 5a478bee46e88-35aca1e547emr3700116eec.36.1791820086698;
-        Mon, 12 Oct 2026 08:48:06 -0700 (PDT)
-Received: from localhost.localdomain ([2405:201:301c:f8cd:c1bb:8d21:6c07:8107])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b690af3easm6256328eec.1.2026.10.12.08.48.04
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 12 Oct 2026 08:48:06 -0700 (PDT)
-From: Aryan Sinha <sinha.aryan03@gmail.com>
-To: Jeff Chen <jeff.chen_1@nxp.com>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aryan Sinha <sinha.aryan03@gmail.com>
-Subject: [PATCH wireless-next] wifi: nxpwifi: Use str_on_off() helper
-Date: Mon, 12 Oct 2026 21:17:54 +0530
-Message-ID: <20261012154759.42423-1-sinha.aryan03@gmail.com>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="WnUu+Lla"
+Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
+	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4j3MRv3gLcz9Ly1;
+	Mon, 12 Oct 2026 17:52:43 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1791820363;
+	bh=hygyd5zmMGXvFm7+2BspxyK/OLvbvLr1S1Fr2zHUSPU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=WnUu+LlaEqfFte+mag0SfeGGibZt+e2gjIn83vS1VlrKCxF/k337Un/jr4+HesNjN
+	 QeWLH6AAn5iPQ6BRAnb3X7L3M791TCKUNrv3SgxVhHOhZC+vozGMKVTZ0den+SS0rx
+	 Nc+iC1LIiW+e54b6gw6UZ9OP7/cDwCKZ1M89v70jt+/3jkVZ57U6+sC1eOIzN+Vojx
+	 doRWy7vme4tup2Ou3NtKvYKu7aAzO2U1SGftqfbpGiGNPjMJ5O1v8EPDH8Jq9zZpPp
+	 BRZsJqQUoat8uwzGcIdqFiVGbPXYy+HGYDMdf+n4lVmxQeSExrHGPSMz6y/BQVbYt6
+	 r6rK+gQbeC68A==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4j3MRv2zTXz7wZy;
+	Mon, 12 Oct 2026 17:52:43 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4j3MRt5hk4z8svT;
+	Mon, 12 Oct 2026 17:52:42 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 3330D5FA0A;
+	Mon, 12 Oct 2026 17:52:42 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <e320fab5-d4d4-40fd-b032-d64554e5c0b0@leemhuis.info>
+Date: Mon, 12 Oct 2026 17:52:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] iwlwifi IO_PAGE_FAULT and Master Disable Timed Out
+To: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>,
+ Chris Bainbridge <chris.bainbridge@gmail.com>,
+ "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Berg, Johannes" <johannes.berg@intel.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+References: <amzVtgQb2p-_nShU@debian.local>
+ <DS0PR11MB78800B96A0FE637DC5390E4AA3D62@DS0PR11MB7880.namprd11.prod.outlook.com>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: 
+ <DS0PR11MB78800B96A0FE637DC5390E4AA3D62@DS0PR11MB7880.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <179182036254.916946.193245867647113137@mxe9fb.netcup.net>
+X-NC-CID: O65oeUgYbdELQmmjMuZizHrhAiH0KDrimmTzhhciNC9tT/bRvUE=
 
-Both carrier prints open code the on/off ternary. Use the helper from
-string_choices.h instead. No change in output.
+On 8/2/26 09:24, Korenblit, Miriam Rachel wrote:
+>> -----Original Message-----
+>> From: Chris Bainbridge <chris.bainbridge@gmail.com>
+>> Sent: Friday, July 31, 2026 8:05 PM
+>> To: Grumbach, Emmanuel <emmanuel.grumbach@intel.com>
+>> Cc: Berg, Johannes <johannes.berg@intel.com>; Korenblit, Miriam Rachel
+>> <miriam.rachel.korenblit@intel.com>; linux-wireless@vger.kernel.org;
+>> regressions@lists.linux.dev
+>> Subject: [REGRESSION] iwlwifi IO_PAGE_FAULT and Master Disable Timed Out
+>>
+>> 0eaa1f245ac0 ("wifi: iwlwifi: mvm: don't support the reset handshake for old
+>> firmwares") introduced an intermittent boot regression on my laptop:
+>> [...]
+> 
+> Yes, seems like you are right.
+> Thanks for the report!
+> 
+> I am attaching a fix candidate, I'd appreciate if you could test it.
+Miri, Chris, what happened to this regression fix? From the outside it
+looks like it fell through the cracks, but well, it's easy to miss
+something from there, that's why I'm asking.
 
-Signed-off-by: Aryan Sinha <sinha.aryan03@gmail.com>
----
- drivers/net/wireless/nxp/nxpwifi/debugfs.c | 5 +++--
- drivers/net/wireless/nxp/nxpwifi/main.c    | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+Ciao, Thorsten
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/debugfs.c b/drivers/net/wireless/nxp/nxpwifi/debugfs.c
-index ccaf0eae3..fc2f188fc 100644
---- a/drivers/net/wireless/nxp/nxpwifi/debugfs.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/debugfs.c
-@@ -6,6 +6,7 @@
-  */
- 
- #include <linux/debugfs.h>
-+#include <linux/string_choices.h>
- 
- #include "main.h"
- #include "cmdevt.h"
-@@ -98,8 +99,8 @@ nxpwifi_info_read(struct file *file, char __user *ubuf,
- 	p += sprintf(p, "num_rx_pkts_dropped = %lu\n", priv->stats.rx_dropped);
- 	p += sprintf(p, "num_tx_pkts_err = %lu\n", priv->stats.tx_errors);
- 	p += sprintf(p, "num_rx_pkts_err = %lu\n", priv->stats.rx_errors);
--	p += sprintf(p, "carrier %s\n", ((netif_carrier_ok(priv->netdev))
--					 ? "on" : "off"));
-+	p += sprintf(p, "carrier %s\n",
-+		     str_on_off(netif_carrier_ok(priv->netdev)));
- 	p += sprintf(p, "tx queue");
- 	for (i = 0; i < netdev->num_tx_queues; i++) {
- 		txq = netdev_get_tx_queue(netdev, i);
-diff --git a/drivers/net/wireless/nxp/nxpwifi/main.c b/drivers/net/wireless/nxp/nxpwifi/main.c
-index 9e1334810..4d77b9ecf 100644
---- a/drivers/net/wireless/nxp/nxpwifi/main.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/main.c
-@@ -5,6 +5,7 @@
-  * Copyright 2011-2024 NXP
-  */
- 
-+#include <linux/string_choices.h>
- #include <linux/suspend.h>
- 
- #include "main.h"
-@@ -1088,8 +1089,8 @@ void nxpwifi_drv_info_dump(struct nxpwifi_adapter *adapter)
- 			     atomic_read(&priv->wmm_tx_pending[3]));
- 		p += sprintf(p, "media_state=\"%s\"\n", !priv->media_connected ?
- 			     "Disconnected" : "Connected");
--		p += sprintf(p, "carrier %s\n", (netif_carrier_ok(priv->netdev)
--			     ? "on" : "off"));
-+		p += sprintf(p, "carrier %s\n",
-+			     str_on_off(netif_carrier_ok(priv->netdev)));
- 		for (idx = 0; idx < priv->netdev->num_tx_queues; idx++) {
- 			txq = netdev_get_tx_queue(priv->netdev, idx);
- 			p += sprintf(p, "tx queue %d:%s  ", idx,
--- 
-2.46.0
+> From 825098f2de2bc63e5ce180213d9fad040f644fb2 Mon Sep 17 00:00:00 2001
+> From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+> Date: Sun, 2 Aug 2026 10:16:13 +0300
+> Subject: [PATCH] wifi: iwlwifi: mvm: properly check the FW version
+> Organization: Intel Israel (74) Limited
+> 
+> The mentioned commit aimed to disable fw reset handshake for FWs which
+> their API version is less than 77.
+> But the check is incorrect: in the old format, we should use
+> IWL_UCODE_API, and for the new TLV format - fw.ucode_ver.
+> Since iwlmvm handles only FWs with the new format, we can always use
+> here fw.ucode_ver.
+> 
+> Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+> [...]
 
