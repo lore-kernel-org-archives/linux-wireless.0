@@ -1,170 +1,181 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2B525228D
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 06:43:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2EAE3AA4F9;
+	Mon, 12 Oct 2026 06:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791787400; cv=none; b=gH0ZitzxvMINDdRLZ6FPS8lSIu/VwpgCG9oim1eAc05WH9lP+/ArJ55mPFfrZTyi9Ic6o+/G2W+1m76lZEdGrQ8tOm+yybc0xeMlKYvikfAW9O0Na7uAmgcHbupwPZ9eF36OM0KMRl2sD3FjA1An5oaCkq/kWt7dJqmViN1nYnA=
+	t=1791788264; cv=none; b=t/OnH5rH8cIWsdFEx5ldRNwbDaXwNEf7KqXweuiHP1nX1HmwlV+eSU8brjsdJ0Uyk+eEUNB1D/OqdykretkePShIb0R09QMqXIfKzvv8YXh3Wv58lh710SCTNdGNfGZh98xwBomPmXeSXNwmNILgIaHHvHVFHRac5KCYxBmVFrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791787400; c=relaxed/simple;
-	bh=iT8Zllnsx06aEqmJ78b90QgkejKZANkL5dtvVz5wjGI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ov73gMw7IHlguFbVLjeDWAP+JlpQUreQvWJO5sVSWrK1vklYpb4Sje7u3oTlqN7Fmn4DfIH++e6nJotIRXtGtr9o69gzs8UrySfmBSQZBvcfIXcu9IedXB387y5cGkAbDVXEEkN/XbBxza7bWNfNMqB04DTKNdYW+g5xsNq1ggk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ZZEsZ+4R; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NV32MvoI; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1791788264; c=relaxed/simple;
+	bh=2//hsG2ASG+SOjFfmqUmO0IJZscTecI7U34WvEQD3tA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=bjl5uCaIXCEbpvdHakmvGc1p8BfiRIxoiuXhrfo6iL+Z1tH258yfs5xSBf9ozdFSqXnSZyeJlicjr8+Dg6q8cdVflyDZNm5g62KHBnKITvgqk14AjlzZ9CCUfuXf59PUu6cvjYdi8EFnbzKak772wJnuffZMZb9HX22EYbxs3Q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=c9g5WtiP; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ZZEsZ+4R";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NV32MvoI"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69C55hNo474955
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 06:43:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	+UcS8DdSjOk8FBpL85zZqOzwaOXP+zI2mFu8qLHfSew=; b=ZZEsZ+4RcASTU7zJ
-	JR5BjNX/RaPONI/1+vWFAdzS1CZXbuC4b4A7F64kk9wigiQ595s0+Md/U73FPeuu
-	aYCOxQWFU1C47Mh+s34BawqciZlcf9jB1HETVYYNgtn4kjzHn6qq2L7OCksW9TgL
-	ZbywMfk+8UP6S2guG25NArOiEkwxCFF8E8QEQV+pOIswXcghVMKMYTl0wFdeIL8g
-	mGZ4S1QpnvihwVT/Bee5S18EfZacEi0mRLyuzMdTrsMnvwUksBAyfeM6qLv7FPtn
-	f1qnMaDHTmna/9P4Bqi1qSB+yAvJIw9hYoTpGuDXE8YF0KBhfmzLiO+17z6UPyJf
-	xZNtGw==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h7en9w0jy-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 06:43:18 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e827b3a6b4so24542525ad.2
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 23:43:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791787398; x=1792392198; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=+UcS8DdSjOk8FBpL85zZqOzwaOXP+zI2mFu8qLHfSew=;
-        b=NV32MvoIWY1Z2+Ak60TU2+bUh4Nkf/zkuIdQorh2BreKjOxTk0ucMrxTxSiC0JNCTv
-         nsmI/eLsbLFewnwC6Rgvo0j6fkkfjhQPKvm+GBzSZOoa4IxU5sMuY0A92t6oZ9K2eBvj
-         VozwMt6ColgQkll+OezvOvwh+lQtX54+XeeNiF9Auf3l7MQOTTXgvYOeScIOwq7CGaFJ
-         5AYfwP1sTsGsHQCoNInzg+s89fa/sJYioKJrFscxyEQTIdpp3LLkkoOgNpU7z2C/FKjG
-         9auQqayOJjQ12Z/Zg2uKAqKM6dS9ydEEDF91VoGGvh9ODD+9Ga9+GKdZ9RSzdewjwbyJ
-         zqJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791787398; x=1792392198;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=+UcS8DdSjOk8FBpL85zZqOzwaOXP+zI2mFu8qLHfSew=;
-        b=Z/VQgi5K7rG8O+CZ76Q5G0W8abar++V8u4u+Qw6Pmp9WCamo5r5DSG9MLvIqbvO18S
-         EEsPKJZrmaFxfCKTPHylbkDCXlhfUP67+qBiDjiriSRK3klufrzvkpWZ+NvCA+soLBSs
-         3vL4i/EI8db4cnzyyTG+bvqc6R9uXkIjovGCMVzGrk8jOnk6BcChS5nQiywZ+hcfBhzs
-         D+q0M28zBafwRYzzychKwrNsUiFHt7xcGdhsjHeVga3ecHy0bWNg9vNcTETIhRdXhsyn
-         qGzla832x13asPv5waK7m477lt6Hmlg8mZ0ZRHh5GndlPiCzc3kAoIKusHSU4cnPOeML
-         g0rw==
-X-Forwarded-Encrypted: i=1; AKwUvBxQvFDFAm4Knd82U/SwWwYGcOUWi5doC0D0GCleR1CkqQ5Wx0KyMoW6lx9JXoBF+jEq614yffqNqCU84x6Plg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLysSxT3TzBDw3hVy3ChteFxNd0E8tEL/xAB3h4QRb7+FmM7l02
-	MeDlgHlC4JrAbxVS+aCxo2ayu4L6PknMfxiY4Hli0/6IDPEU+JLGpVL5mJ7T5Q0hwVzLLl5UPgc
-	ka28/Zw9wtAAZRAoZ3/fiV4jkKJZk+f6ANIN/uAuk0P+p+9LJh1ihuI/X8uft7jk4jYHJGg==
-X-Gm-Gg: AYBFou12YYFlrN/ij3SezNl6IDsqfUHlc9//o7DXlmnLQLOxtOi27CJHxiEzKhTzUl8
-	Yezfuer+53VvZyTFe3ajXwk01h7xXY+q+JdOU7nlWsmsgguEdAGkHaKAOEWS+UMypKS95on1cZ2
-	75QShCwNkfWAAqyJUvSwcCrzXYh/IMHXWtbguuOaGplt0Aconu2KYaq+Xt7aMPhGQCmevAy+LlE
-	W5R0T1YrYxTTybcAdj9ZK8k/beDAttMs4g5joGpYj19JVtuAk07luF0Wk0vdf7ffMeMhfIFIi9B
-	2DsHnDOufmQZsrbTcGjeiWQft2klAjkQkok3QZjYU+8mldP6nUquqmmkV/ryxDQTsVqKvYLaOAK
-	m8+xLNhhqdUvYm5Gbv2BAUITCzZBOOJlk7Q==
-X-Received: by 2002:a17:902:ccc2:b0:2d9:2149:57c0 with SMTP id d9443c01a7336-2e842aaeb61mr76706825ad.22.1791787398016;
-        Sun, 11 Oct 2026 23:43:18 -0700 (PDT)
-X-Received: by 2002:a17:902:ccc2:b0:2d9:2149:57c0 with SMTP id d9443c01a7336-2e842aaeb61mr76706715ad.22.1791787397479;
-        Sun, 11 Oct 2026 23:43:17 -0700 (PDT)
-Received: from [10.152.193.243] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8421b0aa4sm38539625ad.35.2026.10.11.23.43.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 11 Oct 2026 23:43:16 -0700 (PDT)
-Message-ID: <3fc7d852-b36b-4d89-9e9e-fd690d258587@oss.qualcomm.com>
-Date: Mon, 12 Oct 2026 12:13:12 +0530
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="c9g5WtiP"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69C6vaurF3601906, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1791788256; bh=ITAwO6bSVBBorf+/fgp6dadtAlpocmVzUtr68bnFlPs=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=c9g5WtiPlxkPlCgSenzTRJQhH3XA5ntQe6YzpFaIoOmpjpXEjEFOGZL5fjOaoj27C
+	 Z/zQmEmvn9lSfAklCsHuaSotEmRV2MKvAqPIVNRQ+HyiqKUIuyn0JI/pSaWSxg02bQ
+	 xp31rAmIqA/vA0GBELgC2cPjhUxz50Df56+o/Klf2/JiP4kRzPXxY7PjOgH/Ud/fnH
+	 XnwDuYjAnYNIA1s1twzFOgI/siJWNqoBkcGdHg1eGHDYDSee3MNmc+9Px9RkogRHOn
+	 hShl6OlGdxRRe+sRxZ8Y1Wiwu0yuJo9LzKOANl4l1FREm9BTgy7yVqH15LQaDs+2Gy
+	 W11bL+0fIUVuA==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69C6vaurF3601906
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 12 Oct 2026 14:57:36 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 12 Oct 2026 14:57:44 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 12 Oct 2026 14:57:44 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 12 Oct 2026 14:57:44 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the
+ rings are reset
+Thread-Topic: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when
+ the rings are reset
+Thread-Index: AQHdWO4MPV0dG/pKrEyzZWvhd4YBNrb5eb7A
+Date: Mon, 12 Oct 2026 06:57:44 +0000
+Message-ID: <02b86ed0d0814f009cb5ca83bae343c7@realtek.com>
+References: <20261010193136.294816-1-abdurrahmankaradag19@gmail.com>
+In-Reply-To: <20261010193136.294816-1-abdurrahmankaradag19@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next 01/17] dt-bindings: net: wireless: Add QCN6432
- device tree binding documentation
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath12k@lists.infradead.org
-References: <20261008-mpp_bringup-v1-0-2c5797b5e4ac@oss.qualcomm.com>
- <20261008-mpp_bringup-v1-1-2c5797b5e4ac@oss.qualcomm.com>
- <20261009-brainy-alpaca-of-focus-31fbbd@quoll>
- <fb81a042-82b5-4565-9a5c-1a3c038a0d14@oss.qualcomm.com>
- <8befec82-035d-40b6-a3b0-f1ff2ec9e53e@kernel.org>
-Content-Language: en-US
-From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-In-Reply-To: <8befec82-035d-40b6-a3b0-f1ff2ec9e53e@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=Woe+otfv c=1 sm=1 tr=0 ts=6acc8186 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=iJS4XZidABw9b6rZcNIA:9 a=QEXdDO2ut3YA:10 a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: 95V42xAITHNWHotJ16T5cvVIxqV3fBz5
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDAyNiBTYWx0ZWRfX5QFb76hjAKVn
- exBPgT4Koo47rIyLWmm8F5leBohx+3zZb4FvSuMCMSEX4uH3yuK4t6eXr5++iqaAsoZ4fffjjXA
- 7kwUFCU26cdL5TFSllorEzwJoF+Z3aE3Nr8BC9gietHiRNtnuyMmOx/+l1Riujdm44vwvkfWves
- tDc3fEu5DXvFkKqrd62hCDMeUx0F2w6QxKJnwhg4OrWKFMWMDK6xlInRNcdR+P4EGYfpw/AsNHp
- 2Fc5/mzO/J6zltrpxktpERC0QCWm6o6pItayipTScgnfyp/hYV7SM0+DZucO/KuKtzJgL2rTg5b
- L0mK+1y9gZ3xtcRm2u58NskR3LkaT4YKI35VxUBXGmeELufY6RHSsVvN+kWOYpHFOsI638B17+E
- +rMtWtTvia8ECeOXL2mOZ6LI5HNX0OyMLxy0u7b9tbrcgxwnJ0W7LFHSUAKHTG3YjMbdvzVLu6f
- OCrO8m/FOEWtYvtOqYg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDAyNiBTYWx0ZWRfX9VeUu8WLxyVI
- jjhqZn/fe1Kn0KGW7Eb3PPLTslkQ/KMgHmTdC+I7nIdwqqC4r2fSMdbS6SBucuzLIKp0IHqRxWy
- Ywy1ClPurs/xUXsZe1hre0E6iHVOLBY=
-X-Proofpoint-ORIG-GUID: 95V42xAITHNWHotJ16T5cvVIxqV3fBz5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-12_02,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 impostorscore=0 priorityscore=1501 phishscore=0 spamscore=0
- suspectscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610120026
 
+Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
+> When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
+> records that in ring->queue_stopped, which is cleared only by the
+> completion loop in rtw_pci_tx_isr(). Resetting the rings rewinds the
+> indices, so nothing that was in flight can complete and run that loop,
+> and the queue stays stopped over a ring that is now empty.
+> ieee80211_restart_hw() does not release that stop either, because
+> ieee80211_reconfig() wakes only IEEE80211_QUEUE_STOP_REASON_SUSPEND.
 
+The main reason why we need this patch is ieee80211_restart_hw(), so
+please point out this in subject.=20
 
-On 10/12/2026 11:26 AM, Krzysztof Kozlowski wrote:
-> On 12/10/2026 07:29, Aaradhana Sahu wrote:
->>>> +  Qualcomm Technologies QCN6432 is an IEEE 802.11be Wi-Fi device
->>>> +  associated with the WCSS Q6 subsystem. The device is represented
->>>> +  as a platform device and uses MSI interrupts for its Copy Engine
->>>> +  (CE) and Data Path (DP) rings.
->>>> +
->>>> +properties:
->>>> +  compatible:
->>>> +    enum:
->>>> +      - qcom,qcn6432-wifi
->>>
->>> Is there qcn6432-something-else as well? Neither commit msg nor
->>> description explain that.
->>>
->>> Best regards,
->>> Krzysztof
->>>
->>
->> QCN6432 is a Wi-Fi device supported by the ath12k driver, and there are no
->> other variants requiring a separate compatible string.
->> Hence, qcom,qcn6432-wifi is used to identify this device.
-> 
-> Then it is qcom,qcn6432.
-> 
-> 
-> Best regards,
-> Krzysztof
+>=20
+> Release those queues where the reset happens. The stop side is the one
+> that matters: rtw_fw_recovery() reaches rtw_pci_dma_release() through
+> rtw_enter_ips() before it calls ieee80211_restart_hw(), so that is
+> where a queue stopped before the crash is still stopped. By the time
+> rtw_pci_setup() runs the flag is already clear.
+>=20
+> Wake all the queues, but only if at least one ring had filled. This
+> cannot tell one DRIVER stop from another: rtw_pci_io_err_detected() and
+> the hardware scan paths in fw.c stop every queue with the same
+> IEEE80211_QUEUE_STOP_REASON_DRIVER, which mac80211 keeps as a single
+> non-refcounted slot per queue. Gating on ring->queue_stopped at least
+> keeps the resets that stopped nothing out of it.
+>=20
+> On an RTL8821CE, a BE ring held until rtw_pci_tx_write() stopped its
+> queue did not come back from the restart. The ring itself was reset -
+> 0x3a8 read 0x00000000 and REG_TXPAUSE was clear again - but BE's
+> mac80211 stop reason still read 0x1 three minutes later and TX never
+> resumed. With this patch it reads 0x0 and TX resumes within 2 s. The
+> ring was filled by writing REG_TXPAUSE 0x0f from debugfs under load,
+> and rtw_fw_recovery() was called from a debug build.
 
-Thanks for the clarification. I'll update it to qcom,qcn6432 in the next version.
+This isn't related to this patch, but it is still digging, so no need.
+
+As I see, the commit message can be very simple -- wake up queues for
+ieee80211_restart_hw() case.
+
+(For the analysis in another mail, I'll read it later.)
+
+>=20
+> Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+> ---
+> v2:
+>  - wake with ieee80211_wake_queues() instead of recording and replaying
+>    per-ring queue mappings (Ping-Ke Shih)
+>  - drop the Fixes tag: the bug only bites once a recovery path exists,
+>    which the blamed commit predates (Ping-Ke Shih)
+>  - cut the commit message down to why and how (Ping-Ke Shih)
+>  - say which of the two reset call sites fires during recovery, and
+>    that the measured stall was induced from debugfs
+>  - patch 2 of the v1 series is dropped rather than resent, while the
+>    cause of the stall is still open
+>=20
+> v1: https://lore.kernel.org/linux-wireless/20261002231013.11792-1-abdurra=
+hmankaradag19@gmail.com/
+>=20
+>  drivers/net/wireless/realtek/rtw88/pci.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wirel=
+ess/realtek/rtw88/pci.c
+> index 66d2e5f..4d3524e 100644
+> --- a/drivers/net/wireless/realtek/rtw88/pci.c
+> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
+> @@ -475,7 +475,29 @@ static void rtw_pci_reset_buf_desc(struct rtw_dev *r=
+twdev)
+>=20
+>  static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
+
+I'm thinking if here is too early to wake up queues. Should we do this in
+rtw_reconfig_complete()?
+
+Or we check flag RTW_FLAG_RESTARTING of rtwdev->flags to wake up queues.
+This will be clear why we need to wake up. The comment isn't necessary
+by the way.
+
+>  {
+> +       struct rtw_pci *rtwpci =3D (struct rtw_pci *)rtwdev->priv;
+> +       enum rtw_tx_queue_type queue;
+> +       bool wake =3D false;
+> +
+>         rtw_pci_reset_buf_desc(rtwdev);
+> +
+> +       /*
+> +        * The indices are back at zero, so nothing that was in flight ca=
+n
+> +        * complete and reach the wake in rtw_pci_tx_isr(); a queue stopp=
+ed
+> +        * when its ring filled would stay stopped for good. Only wake wh=
+en
+> +        * that happened: the stop reason is shared with the AER and scan
+> +        * paths, which wake the queues again themselves.
+> +        */
+> +       for (queue =3D 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++) {
+> +               if (!rtwpci->tx_rings[queue].queue_stopped)
+> +                       continue;
+> +
+> +               rtwpci->tx_rings[queue].queue_stopped =3D false;
+> +               wake =3D true;
+> +       }
+> +
+> +       if (wake)
+> +               ieee80211_wake_queues(rtwdev->hw);
+>  }
+>=20
+>  static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
+> --
+> 2.55.0
+>=20
+> base-commit: 83de3a16c7b37064a59305040ba9b0f93b832794
