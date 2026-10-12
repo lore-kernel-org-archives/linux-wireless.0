@@ -1,62 +1,64 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33FA4391838
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 05:05:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC6993AFB0E
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 05:05:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791781526; cv=none; b=JCed9O25EYhVhdFuYjv0TreBG9+wC4o7hsxRHlbtz+objWSDxb6FRSesH1VyTo+8/ALU9ewaYQNNiJYN+521LqTTPG7zgMQ5qS1BPE8DgIBQ5DhLf9R1BXb8Ge2eOecyKpXC6Fgoh18f+j8wPX2e7L89NF/DtsXi29HaDJGXuk0=
+	t=1791781530; cv=none; b=m/Y1yOYwzpGdoJvsW1voQdfWVcIUOGPK4mL7xQ+a1NcptwVb5LiwanfLT/lVWsrye8miq8E2fasuW2IAj2+mjXV8UL3zzoTBQufNSurnz80D+Vax5AwZgdwbsWoHaMRpvjo0J6uKZNsCEmAnQRkHDaj6mtj+MHIIRx5AxDduiO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791781526; c=relaxed/simple;
-	bh=T7WVX2ncYr90B++RzGQp+UrRcsqXEtcv3aeFok6+kxo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=id9I9kGqxoAMcDQ7yiuD28563G96pKLE+lHufkhDIeVAQDIISogOfSg5lARHWsa4CgL10elhWnQTmmpmVlNw1yUNXS72EQ0waNKVgpBeMyPPnHWATpa9+ZRHKC4KMtBbuRxyPQOcH7bHNUIRisLtsHl4oUF51Ny7oRJPIhN0jEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i8QXaREJ; arc=none smtp.client-ip=209.85.210.171
+	s=arc-20240116; t=1791781530; c=relaxed/simple;
+	bh=RhHdnm8RnMJtsb4Mn4w1XLaLle0vODhrgTirmFoDMtU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=XRft2fo/qQ3XaSUa7eGox7MPqp6bnTwjY8aZiOnJHSznrC1+5I3hDvIqgA0GIn5FUc+pnPVgM49c47Az60xqCc86kmbWogYI5U3MM5YWakCiEk6I659BgpmdbbvppkroRtz/RH2NOvsaqo19td72gHERxuBmFsmTCY7Us7LdhTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZqYNfbuJ; arc=none smtp.client-ip=209.85.210.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i8QXaREJ"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-8520161fdb9so1036508b3a.3
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 22:05:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZqYNfbuJ"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-8819033dbadso926752b3a.0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 22:05:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791781524; x=1792386324; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=x1/TFFMXMatlGVfhZWQ915qwF0fBea+Z9nVUmArfnys=;
-        b=i8QXaREJWGDSGmgXfeyKeVIaJPR7GEATvSbgGoUB7KmJSPwqrFVJb81cTL/BQGu0FW
-         u1LoKAmyORCJeat5LmD/pu1rEmLxMQvrHIuD6Qr24nfpSQqYG4I5cyRSpJXrTBd3XOdJ
-         4OnMx8AU7S253OBLzbdZ4o+vILYZme40KOef4Si3jWic1+KqPCw1sKJzwGbCSkNPXV60
-         OnJTtWaDn1SHYwJkLlZ7VqhuWD/pX75in+BueQBG9prOs8mXM81aIjzXpB5O+SpYx0BT
-         ad3KyQL35HLH72CVq84lCAUbXZFN3Cmov3E0DxsxQku79wOabW8pGPABsKr+mU83+4h2
-         NbMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791781524; x=1792386324;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1791781528; x=1792386328; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=x1/TFFMXMatlGVfhZWQ915qwF0fBea+Z9nVUmArfnys=;
-        b=1bsLuFS3cGSijItTmu9RSiCWhytM83xWY8gFlEnWYV+s0HxND8WCbBP5wIEE7dtQDk
-         5/VHUqgehPB92wAThjic7xZHmCi2t8UC+qIEkhY33W4S4X0ZoMe0S7imaxAcLy4+W4pk
-         iCJMWrzoV2RIgtzwO8CW95wCYwyl2KmSiuNHeSwKc7P1G/bP7+BfzLG0ZJcSK5ZFXRDA
-         LqMa80b7r4QZ+ZEomFqvSlsLqg5CsSNQo/QaJOM2s0N7zV9GzCjp9Tbe+tDuw4ydrCf4
-         4XUGF9ioHu1GeejGfvYqfIX9loxgzgjFNKeajx78JPbdiWyBx3Fv5PYE05TyhVNtRwOh
-         ZBtA==
-X-Forwarded-Encrypted: i=1; AKwUvBzGYzYBgk2duKcgACgphcuAegz86u80/6RSmsjCaQ0MTwGHLrkDHm27LChc7yQ8X5ro6YcDnKhpUm4CJsI0yg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ/XPCQRvuphGaHIa6pMfdeDlXqlMM2ePuo5LJFXzFjDXhrPkLt
-	9Gh5okcTWEJ7nA3u0+jSmR/vXnK9Vzp49RqLim6V81r1KGp0dv01Vqcr66Amgw==
-X-Gm-Gg: AYBFou15vo2Ne5FTkke+OH6+lJoJwTLLDY7m4kGhwNrH2LPsLASJWcz/CvzXwQatRh6
-	Qz3uQoUMFoy0RoPY2NTte/bmydaYZGBI57qf4KMROCd0GcsPD69rRmlAOn/JpK6wlVrqMdJNRlk
-	F3cbUcqCBpevUI/by4tsLiM2lTbc3cAgzVI68ViEaTa1DWnh/YWMXpb0JU9UAE1KGfCamkUDb6t
-	xxB3mF8DUnokhUx9WKFSQ9M/JwQt1uLPh0O+pUMV3FepEEXH5QroVV2Zp/UkLONfxraNFrQZ1oD
-	2ewCCm2SAAlrkquqW35YRzJ69RJU6FFZuM5Sw8nYvEBUJMDPlzL9NFNyX8rHda1qAXl3awGwoWY
-	cNJkjv18Hx8fmqB6telIzks55Jw2BhyHHlyXHh2CR0L/1QMkj60WgRURojqloZSJvnoP6HECLGt
-	9nNz4S/HXgtdTphxXEpNTLmA/DAl3R8nkueoK+AjZUbNp6evP8CiVKWBqiNXDmUIHEbXWXt/Yga
-	H6GwAKF0jA=
-X-Received: by 2002:a05:6a00:3d14:b0:881:e626:74ae with SMTP id d2e1a72fcca58-897c7cd6d35mr6843765b3a.41.1791781524452;
-        Sun, 11 Oct 2026 22:05:24 -0700 (PDT)
+        bh=b/5BGt+KW1rM09CksWyEMtJ7DGtKQm254W8uGFhGj2U=;
+        b=ZqYNfbuJdq2bB/D72dzGmulPI4kvuE0boWqzDQnR/pDZCXFvW77jX3tPidE+GllJJA
+         GPHS+D3L179s55Zc6MOaQiRxGQDlPWbnQ+ZfuQ5gwj31d787PggBy5K5uEmDG4zU68H5
+         efkULSokMKbSX8dM1xLdEzqOoYg+9WA4eqtbPNLfALcuhfmbw5GzjnY4SeuT7oz94mUQ
+         D0AGS74EUvAjZ2jln+qZTfwoG1fIDaNm+FJzQHhnss/ik7mSRvlpjITvilsTjJmCmIpX
+         2ganYnBucuqAx9HFgSSSZ2BGwGG9tSDDB8EKKfq4yetOtsZ39A+LA5Kwun540v5eU714
+         lbgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791781528; x=1792386328;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=b/5BGt+KW1rM09CksWyEMtJ7DGtKQm254W8uGFhGj2U=;
+        b=EUyOylgTRXzisRg/JyNuTa+NZn3aJC+J7mXNC58VNAYRgbayoijOaFTsN29H8MMGWW
+         rRlsNmbot7b11E8FfBd7SlVoFAKFZomWPD3KLFWHuK5SkMnbxpXo4Qd05OdpPLFuvGSy
+         6rRmdFz2TDS5qgdK03uMAqtBG8HXaS9YnRi85ElAmuo6wbUeB5ZjcQTBWuIBEzpma/nD
+         PFnK82K0TtOjLRyhTYSg4JKaRnCLfTNzLfg7xOnzWcH50Ud5e3POoSRezKhztwKJ4Umu
+         qEf8pkoatuGtyvtHzhD5frwVuF6Yz57YuNjSn9bxOFwxzHGT4eI265T5Qs/vahhzKy0h
+         /PpQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzwOZlVesbDvs/mvwbYg8TfdHxkkmRr2cGlyChewpuFsBchkHNh8AOp0EXQl4cXZx5PUuf6MpljvwiP0b0Pbw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLMeNOaSgfC+vsB1tk08l9yuOA/aOGtyoXGVsAaPB/iCK974ISf
+	46PUHu0Mc9VG9xkHTe6RBwh/2dvE4mfVymJV/vVxSw2AafywXr9Jrb0v
+X-Gm-Gg: AYBFou1ceDSgQ1gGJ8aziQumthv3opkdKEXe/b/bvIgJUvZAS3L8dRS0ImsSoznctkB
+	H9gkUWsX9Hynqj2uDJtLoZREIIzNTACJ0M27GfvxlM9mEJ/h3wIdHuflBHlP+p+fe5NIDGqyFPP
+	lwG030FZzPD3MNPbC08cmZ7wkTZFviS3dw0ljbznlh52ybCnoLMaYX6klAFN+nXeXjnBHZWFkS1
+	o1NJfYHzeoNOiD/zNEzOSxydj6Vv737Y8nYamrMPj6yOzpKubdL8yYsGO5S2QdeXLRi7BN5hVM+
+	H+pZqBBwWIFFLA19ND9xq0+SQwhM88bB9RJ7XBVBXkvf7X4lK2XgUqA6dr61tR9bJQ5XmWJdSK3
+	qeOLE+0hpLabO+B060jA5sIdMW6xS8ynv+iK1RTvKJ8FXiqYlmSlUiAuPU8axmaRWDflxiyzN7d
+	CB2LxEF8z1JZMVzCM8QPAQtg0fQ0hMbIcU2t1L457LGGiON93SIr3Zw+NWzKeOrrRczQw5ioP+p
+	aWsdTtJf1o=
+X-Received: by 2002:a05:6a20:549d:b0:3df:f4a5:dca7 with SMTP id adf61e73a8af0-3e16bd88afdmr8608414637.16.1791781528067;
+        Sun, 11 Oct 2026 22:05:28 -0700 (PDT)
 Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-896c3106de6sm3593668b3a.14.2026.10.11.22.05.21
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-896c3106de6sm3593668b3a.14.2026.10.11.22.05.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Oct 2026 22:05:24 -0700 (PDT)
+        Sun, 11 Oct 2026 22:05:27 -0700 (PDT)
 From: Zhan Xusheng <zhanxusheng1024@gmail.com>
 X-Google-Original-From: Zhan Xusheng <zhanxusheng@xiaomi.com>
 To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
@@ -67,10 +69,12 @@ Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Zhan Xusheng <zhanxusheng@xiaomi.com>
-Subject: [PATCH v3 0/2] wifi: iwlwifi: Fix GP2 to nanoseconds overflow on 32-bit
-Date: Mon, 12 Oct 2026 13:05:14 +0800
-Message-ID: <20261012050516.3803074-1-zhanxusheng@xiaomi.com>
+Subject: [PATCH v3 1/2] wifi: iwlwifi: mvm: Fix GP2 to nanoseconds overflow on 32-bit
+Date: Mon, 12 Oct 2026 13:05:15 +0800
+Message-ID: <20261012050516.3803074-2-zhanxusheng@xiaomi.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261012050516.3803074-1-zhanxusheng@xiaomi.com>
+References: <20261012050516.3803074-1-zhanxusheng@xiaomi.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -81,52 +85,72 @@ Content-Transfer-Encoding: 8bit
 
 From: Zhan Xusheng <zhanxusheng@xiaomi.com>
 
-Both drivers multiply a u32 GP2 microsecond timestamp by NSEC_PER_USEC
-without widening first.  On 32-bit the product truncates for any GP2
-value above 4.295 s, and the truncated value is fed back into the
-wraparound detector, which records a false GP2 wraparound and adds
-about 71.6 minutes to every later PHC timestamp, cumulatively.
+A GP2 timestamp is a u32 in microseconds and NSEC_PER_USEC is 1000L, so
+three multiplications are evaluated in 32 bits and truncate for any GP2
+value above 4.295 s:
 
-Six sites, three per driver:
+	u64 last_gp2_ns = mvm->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
+	iwl_mvm_ptp_get_adj_time(mvm, gp2 * NSEC_PER_USEC);
+	iwl_mvm_ptp_get_adj_time(mvm, phy_data->gp2_on_air_rise * NSEC_PER_USEC);
 
-  mvm/ptp.c   scale_update_gp2 in iwl_mvm_ptp_get_adj_time()
-  mvm/ptp.c   gp2 in iwl_mvm_ptp_adjfine()
-  mvm/rxmq.c  gp2_on_air_rise in iwl_mvm_rx_he()
-  mld/ptp.c   scale_update_gp2 in iwl_mld_ptp_get_adj_time()
-  mld/ptp.c   gp2 in iwl_mld_ptp_adjfine()
-  mld/rx.c    gp2_on_air_rise in iwl_mld_rx_fill_status()
+iwl_mvm_ptp_get_adj_time() passes its argument back to
+iwl_mvm_ptp_update_new_read() in microseconds, which treats a backwards
+step of at least IWL_PTP_WRAP_THRESHOLD_USEC as a GP2 wraparound and
+bumps wrap_counter.  A gp2 of 10 s truncates to a 32-bit product of
+1410065408 ns, i.e. 1410065 us, an 8589935 us step back, so the 5000 us
+threshold is passed and a wraparound is recorded.  Each spurious
+wraparound adds IWL_PTP_GP2_WRAP microseconds, about 71.6 minutes, to
+every later timestamp, and the error accumulates.
 
-iwl_mvm_ptp_gettime() holds its GP2 read in a u64 and
-iwl_mld_phc_get_crosstimestamp() casts, so those two are already right.
+iwl_mvm_ptp_gettime() already holds its GP2 read in a u64.  Cast the
+three u32 sources before multiplying.
 
-Changes since v2:
-
- - mvm: added scale_update_gp2 and the adjfine() site.  v2 only
-   covered mvm/rxmq.c.
- - mld: added the iwl_mld_rx_fill_status() site.  v2 only covered
-   mld/ptp.c while claiming parity with the mvm fix.  Reported by the
-   netdev Sashiko review bot.
- - mld: iwl_mld_ptp_get_crosstimestamp() in the v2 changelog does not
-   exist; the function is iwl_mld_phc_get_crosstimestamp().
- - both: state the wraparound consequence with the numbers.
-
-No Cc: stable.  The affected intersection is 32-bit plus iwlwifi plus
-PTP, so that call belongs to the maintainers.
-
-v2: https://patch.msgid.link/20261001050103.860584-1-zhanxusheng@xiaomi.com
-
-Zhan Xusheng (2):
-  wifi: iwlwifi: mvm: Fix GP2 to nanoseconds overflow on 32-bit
-  wifi: iwlwifi: mld: Fix GP2 to nanoseconds overflow on 32-bit
-
- drivers/net/wireless/intel/iwlwifi/mld/ptp.c  | 5 +++--
- drivers/net/wireless/intel/iwlwifi/mld/rx.c   | 2 +-
+Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
+Fixes: a2f49f7d52a9 ("wifi: iwlwifi: mvm: implement PHC clock adjustments")
+Fixes: 0e49e940d1bc ("wifi: iwlwifi: mvm: add an option to use ptp clock for rx timestamp")
+---
  drivers/net/wireless/intel/iwlwifi/mvm/ptp.c  | 5 +++--
  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
- 4 files changed, 10 insertions(+), 6 deletions(-)
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-
-base-commit: d6d3455d8751854e0d1820f14184682e23ac4475
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
+index 49dcb1388007b..c64d6327e76f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
+@@ -47,7 +47,8 @@ static void iwl_mvm_ptp_update_new_read(struct iwl_mvm *mvm, u32 gp2)
+ u64 iwl_mvm_ptp_get_adj_time(struct iwl_mvm *mvm, u64 base_time_ns)
+ {
+ 	struct ptp_data *data = &mvm->ptp_data;
+-	u64 last_gp2_ns = mvm->ptp_data.scale_update_gp2 * NSEC_PER_USEC;
++	u64 last_gp2_ns = (u64)mvm->ptp_data.scale_update_gp2 *
++			  NSEC_PER_USEC;
+ 	u64 res;
+ 	u64 diff;
+ 
+@@ -259,7 +260,7 @@ static int iwl_mvm_ptp_adjfine(struct ptp_clock_info *ptp, long scaled_ppm)
+ 	 */
+ 	gp2 = iwl_mvm_get_systime(mvm);
+ 	data->scale_update_adj_time_ns =
+-		iwl_mvm_ptp_get_adj_time(mvm, gp2 * NSEC_PER_USEC);
++		iwl_mvm_ptp_get_adj_time(mvm, (u64)gp2 * NSEC_PER_USEC);
+ 	data->scale_update_gp2 = gp2;
+ 	data->wrap_counter = 0;
+ 	data->delta = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 7f0b4f5daa214..7a9a63a76f382 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -2017,7 +2017,9 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
+ 
+ 	if (mvm->rx_ts_ptp && mvm->monitor_on) {
+ 		u64 adj_time =
+-			iwl_mvm_ptp_get_adj_time(mvm, phy_data->gp2_on_air_rise * NSEC_PER_USEC);
++			iwl_mvm_ptp_get_adj_time(mvm,
++						 (u64)phy_data->gp2_on_air_rise *
++						 NSEC_PER_USEC);
+ 
+ 		rx_status->mactime = div64_u64(adj_time, NSEC_PER_USEC);
+ 		rx_status->flag |= RX_FLAG_MACTIME_IS_RTAP_TS64;
 -- 
 2.43.0
 
