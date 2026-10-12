@@ -1,145 +1,163 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72CE41B6D1A;
-	Mon, 12 Oct 2026 02:07:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F3D48472
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 02:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791770857; cv=none; b=GYKXqPbbfGZTmvlpbkqA+lLlUGJS/0wneNkiHG/8xDBmgbod+LN/S7K3vkUM9G+JakOwNeeX4L1m7HIkaMCi2f38xN5C0V4TXrQe+OWdh7/VccXWbXPg6itRMGzSCxEsXaS3/AKsnhw7da79Je7PtmbhkrL0JoTfh5PhJJvt9R4=
+	t=1791771636; cv=none; b=h3+g7EHp8nibiFlYK/WekWZZe8Lu2d7C5bLahrKqhs9Mmob2XO5eJp5tOb2y58ZnMAYlkIAzUD4mLCJmEqWqnJcPxz1Qt3sfDJUbYLNpt26OcfzEgLe9FuJoGXGcocR8Z5Z2dz2TQFQaHJUKTRyhVoAykiciv0ShDRrVjRCL7ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791770857; c=relaxed/simple;
-	bh=2Q2BIV5lp9ImlKJdn0QZWEu2BGye0/1dmfiJ9NgpBTA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Xx+OmWm+FfPCzttwB169mZkBB01sMXu33ZHFE47cEOcvYUL9UZbRnb7FAXahpuU53iTOej1NHehMK4aEGRJaYwrAQ9YuBSDfm8APxOaAb4fp3PN01gSq6LcopY+y1nePneDowM5vCytf2e3Sjt09Qc4LT34jh4eUoDAgacf2pYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HF6lEFAv; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1791771636; c=relaxed/simple;
+	bh=YAHaAVBVek5LAWqku7s1t6d03lqarFcdrAPVyk0QG2U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=k7JqvctNidhK1/dHs6YE+iF4SC36LtmSfQOdhK5hsd5itAJp56DpVDfgTni7P/5dE4zuDEw40t8CU2pGS9NWC5u40j96O2zsA1nvNItE/xRbP8ds7TUNDjMqw6QZPDedD8wR9Qihkjh4KwRh31217RSNRz/j3exC+OFUhZ2fVaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=oFLgV7oT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=RQ+NlnKi; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HF6lEFAv"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69C27NPC03443873, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791770843; bh=QeXmRr3AiKq8hUNmBmRhA+tlOKyC9490H0cQFFtlgoA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=HF6lEFAvjVDnLkI1kMhPZtIe/G771qOxndtj/9xhPEgeU3eQKBg2M2tuQtc0xE1BW
-	 hTiB/7JSS2oI6acj9RfMF3EbeioFXRPPQhsKXSqng7CaabxaT3fs9ELbzf7wj+iKkM
-	 CbxrQuHfHaadaQNSRVhg+n5AtGcnk3e+htldbMZSdR6floyWoStll5kv9g1TYyDCL/
-	 /Ms/l20bfcd8VsdCvtafyViHsjKdGP3PgCsJUXAj267XZrtZLv5PRVchWoC0G6dK8A
-	 hNQJuZSekShpyHYgLHLCuqTtxrifOMYUWCeyiBOsI3pEMRWDRpYmFXR5vDMypGLPMz
-	 Czr3upx95ILQg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69C27NPC03443873
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 12 Oct 2026 10:07:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 12 Oct 2026 10:07:29 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Mon, 12 Oct 2026 10:07:29 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Jeremy Fareau <jeremy.fareau@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kalle Valo
-	<kvalo@kernel.org>, Brian Norris <briannorris@chromium.org>
-Subject: RE: [PATCH wireless 1/2] wifi: rtw88: program the channel when the
- device is started
-Thread-Topic: [PATCH wireless 1/2] wifi: rtw88: program the channel when the
- device is started
-Thread-Index: AQHdVjwahGgi/otdOEaUNh5a7YEQ/7b5Lmpg
-Date: Mon, 12 Oct 2026 02:07:28 +0000
-Message-ID: <1db01a5856b54d17a8f3d07728ad3e87@realtek.com>
-References: <20261007091225.413-1-jeremy.fareau@gmail.com>
- <20261007091225.413-2-jeremy.fareau@gmail.com>
-In-Reply-To: <20261007091225.413-2-jeremy.fareau@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="oFLgV7oT";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="RQ+NlnKi"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69C1lPIK4078384
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 02:20:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	nqFzJZ+6aY9XoFhD2Cu6xQfyOtfvQBfCUx/gOqgZ9JA=; b=oFLgV7oTqcorUTKv
+	+ht+1gwSBY3ZIDV158M1ey9S0EozLKChPRGShirZ7zvnEBlLe/8/qdRrBLp8UfYA
+	wFmhWRP4m+Okpe4KKkWGk7IzIbs/U5EuOvZT+gdTcgqy3yRcI4wsYO82X9Lz+cO6
+	qaF5JBY72MRsq0SOFR1BHFY4PZyJa72bzgW1/Zz3ec7e2u6NPpVobkBsFtoFt8kE
+	nhyYskRQagEXFIYQZQgV36grZ5Bsi08SP5eCNeQitYAHvwUWayx5K9lMj4uw445M
+	FqWIYgxGQwv0kgqhsziSvFQS+ybzI739IwJLOetrPHyi1oyRpjYyZ56WXO8GhWNY
+	NRtgAw==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h8j6dgj3k-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 02:20:34 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2d02df2bf09so12716985ad.0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 19:20:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1791771633; x=1792376433; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=nqFzJZ+6aY9XoFhD2Cu6xQfyOtfvQBfCUx/gOqgZ9JA=;
+        b=RQ+NlnKijuEauWzktaBv6u28A3hk50JDOfktBK72uOTwiM1HLi1wKhFZp7o7KjP17Z
+         YEnURnHdVftVnU3+tZu9z9vYxMXADPOLzXZpKbbiPHTHg9Q6K1sQ7gDm7BaO54+S5bKe
+         qpTOdMTTIbF6mUC3xdNIwA/+gLyUu77di80A1Yg8OM8BLcFL4FZyDwngiGp5o9KJlZ/1
+         vmM17AqAm9JV9r+hra8lP+dMBqzjgHSxx1omJbzsB1c0uq4rFH9+a0aJwfbQXdtJw44d
+         B283KXlxHwhZcOpJg7YMpKjH3Ah3eaQpO3/ybOVOJp34TOuY5CaSxqeilvoafxIPBsiR
+         +oIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791771633; x=1792376433;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nqFzJZ+6aY9XoFhD2Cu6xQfyOtfvQBfCUx/gOqgZ9JA=;
+        b=LQwhRG0fvquSgadfxJ+y88aVNkWAaWVzAxQ1xTd6qCeYiSd9v/9sJUshzQy7Ki5xGJ
+         6C3K4zeybQ3cM6lqCPrOdH0DVp/vH/OsZwHsgjTSqpEpoUNlN0uCRzF0+vcv+bDt9Z4F
+         4UMlCIsZ3x9Wi5Eu6EYn9ZmgTL6ldRvzGTWmENpCCl2LVj9NK02P0L+yuzU+aVoDpO3e
+         mIUBYV+B+7rZ2wG4ioxy2zWt43c1AGDoPZBYW5xxvfaoFVFWPhPuyJY6lkS+8cCYJCqN
+         2Fn4LQ8CG26leC/8+Ph7pfM8O0SM4BccvysrePW3pRPFRz76o7+QRhqChwEFi25BYE7U
+         84uQ==
+X-Forwarded-Encrypted: i=1; AKwUvByzTRS1cyprwhWps66ngDEi9Yjr4qZ06+JzPzPpDYrXvaCpot8nFIgXSqWuqYCvpZ6NPy8BnBbAHCtKVKygmw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIFNjwlnCCdq4um9YIMzNDWT9zv4CAqRsJPsiakrrNswAb+7muR
+	FeY7mX759Ln5fUk4Cx/3UVYLKqWR+bGrDdNIMG5pKGPLi3cLFqROuVGL6oKh1VpKMtmX8ArHY5y
+	W8Xhow3+1OIlQc3HTPP9WGdch0B7itD/XRNnuwGdmdobK8auJm4rWouYiXwsRpj6Ag4UKKA==
+X-Gm-Gg: AYBFou1qbib9GdM1K7bSfHX3L4eEnRMtizTRXXQxMK1b30PaDHfKbV9yJ6MfTmcOc91
+	HTPl7ZFP2sV2BB32l0FDQg+0WeVm/Ez7pwH7YHWVPjg+oa5R4fgqoMfmyxdme5Fw3D5rZZrSeMh
+	hXi2OsBS1MTVUzTQO2Hk5EXTbkX3eUZ1W1+8FaWaSx8cEHP7fzGhPlRIU8dUp86kkdw4mB6B1Ah
+	FV37hrmTjt+gTwQTsYbC7IIpZCmAot4l8RgJaAS2P8QlMqzlr15ToOqGtE5WCXPbQczTy8e+d9Y
+	+tY1eL7zydaFa1nfSMpoBtp2ECjcdYU3hhCMclqtm2UwBKEOPGkFbhmEd/pxQpeNqTs6T/Z67Pv
+	s2Ug2wvxP6C0JOPs+E3LXL/xQiBXAtLY=
+X-Received: by 2002:a17:902:c946:b0:2e2:c90f:968c with SMTP id d9443c01a7336-2e842ce4136mr67715585ad.44.1791771633060;
+        Sun, 11 Oct 2026 19:20:33 -0700 (PDT)
+X-Received: by 2002:a17:902:c946:b0:2e2:c90f:968c with SMTP id d9443c01a7336-2e842ce4136mr67715185ad.44.1791771631670;
+        Sun, 11 Oct 2026 19:20:31 -0700 (PDT)
+Received: from [10.231.194.200] ([114.94.8.21])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8422e2570sm38639175ad.79.2026.10.11.19.20.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 11 Oct 2026 19:20:31 -0700 (PDT)
+Message-ID: <d845c3af-bc5d-4aa1-b04b-1030ea66d734@oss.qualcomm.com>
+Date: Mon, 12 Oct 2026 10:20:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 ath-next] wifi: ath12k: Add EHT capabilities to scan
+ probe frame
+To: Gaole Zhang <gaole.zhang@oss.qualcomm.com>, ath12k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, jeff.johnson@oss.qualcomm.com,
+        rameshkumar.sundaram@oss.qualcomm.com
+Cc: gaolez@qti.qualcomm.com, miaoqing.pan@oss.qualcomm.com,
+        hangtian.zhu@oss.qualcomm.com
+References: <20261009095538.2718979-1-gaole.zhang@oss.qualcomm.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261009095538.2718979-1-gaole.zhang@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDAwOSBTYWx0ZWRfX+4SNsdMFKknk
+ NNucC/I6U0dfTYScsp7FS1wBb3Idn6pLYoDtbWy+AI53QguHkHiNxnqIjk7ESHfaCrhTlbwv5cU
+ Lr1xbxyikuby7AzQ0BBJLx17L4eFivRrF0lviK3f378W1p4s7OQpHRhWb3b6kUQ5YzuB4Rpqjkg
+ wI0FxvgDIX8wOm218LbbyGOBloJ15cXV13f1vfmEnXbHzTTIUZHvmGYmdyMN0MDs/UHCtfWkv/t
+ zyopq5JvpqVUCDFcLrwL7W4kNdAYlRWLuf6Yp+GdSu6EUXEAwibo+qFKU0R0vrGiI4XV4rzUkDG
+ ou/P73mtjW0mFUCpYYbU1tJZyqEa/3bkTTdrPEA2VFIEdIaUaPP1HERY9/iewL9Y0AmRxv0jQ82
+ SSh9kIkiLhmutq9lvOi2uahwG6JEp3eCDMNNAKEBd8lB7jLGnahpkBtD1RUqZJsS8GnpzGmTorW
+ yph5XywD3ZANeW5BPdQ==
+X-Authority-Analysis: v=2.4 cv=aK5lOr9m c=1 sm=1 tr=0 ts=6acc43f2 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=Uz3yg00KUFJ2y2WijEJ4bw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=QV8Wo-qd4fzodxduY_UA:9 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-GUID: F74TXVzr6sPXwKsZL_F4kimoX-sGSH6F
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDAwOSBTYWx0ZWRfX2E00zs+mAt4y
+ s8nItXB4Hd/cErLJcAI3Fa9cEmUzL8zvG1m1v/IHLfj97A131QzAn0kzI6QchRJRwWui45C285M
+ F4XGkId9eF757zvmsZC9WjogwONjD3E=
+X-Proofpoint-ORIG-GUID: F74TXVzr6sPXwKsZL_F4kimoX-sGSH6F
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-12_01,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 bulkscore=0 impostorscore=0 spamscore=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1015 adultscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610120009
 
-Jeremy Fareau <jeremy.fareau@gmail.com> wrote:
-> The chip is reset by power_off()/power_on(), but mac80211 only calls
-> ieee80211_ops::config() when its own channel state changes.  After a
-> stop/start cycle, such as
->=20
->     ip link set <dev> down
->     ip link set <dev> up
->=20
-> the channel is unchanged from mac80211's point of view, so the radio is
-> never reprogrammed.
 
-Not sure why you use 'program' I have never seen the term using to set chan=
-nel.
 
->  The device then listens on whatever channel the
-> hardware came up on while iw reports the configured one, and receives
-> almost nothing.
->=20
-> Observed with an RTL8814AU (ALFA AWUS1900) in monitor mode on an
-> aarch64 host.
-
-Only monitor mode doesn't work as your expectation, right?
-
->  A 25 s capture on channel 6 after a down/up cycle yields
-> 3 frames, and 431 frames as soon as any real channel change is
-> requested.  An RTL8812AU (Linksys WUSB6300) on the same host, the same
-> channel and the same second yields 2438 frames.
->=20
-> Program the channel in rtw_ops_start(), like rtw_ips_pwr_up() already
-> does when leaving IPS.
->=20
-> Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-> Assisted-by: LLM
-> Signed-off-by: Jeremy Fareau <jeremy.fareau@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/mac80211.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c
-> b/drivers/net/wireless/realtek/rtw88/mac80211.c
-> index b01b98d24b0a..827f38390969 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-> +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-> @@ -57,6 +57,17 @@ static int rtw_ops_start(struct ieee80211_hw *hw)
->=20
->         mutex_lock(&rtwdev->mutex);
->         ret =3D rtw_core_start(rtwdev);
-> +
-> +       /* The chip is reset by power_off()/power_on(), but mac80211 only=
- calls
-> +        * ieee80211_ops::config() when its own channel state changes. Af=
-ter a
-> +        * stop/start cycle the channel is unchanged from mac80211's poin=
-t of
-> +        * view, so the radio would never be reprogrammed and the device =
-would
-> +        * receive nothing. Program it here, like rtw_ips_pwr_up() alread=
-y does
-> +        * when leaving IPS.
-> +        */
-> +       if (!ret && hw->conf.chandef.chan)
-
-I think we can flag that it is working on monitor mode in
-rtw_ops_{add,remove,change}_interface and do set_channel() only if monitor =
-mode.
-
-I suppose we can have a name containing 'monitor_mode', so the comment is n=
-ot
-necessary.=20
-
-An existing flag is "rtwdev->hw->conf.flags & IEEE80211_CONF_MONITOR".
-I'm not sure if it is enough here.=20
-
-> +               rtw_set_channel(rtwdev);
-> +
->         mutex_unlock(&rtwdev->mutex);
->=20
->         return ret;
-> --
-> 2.43.0
-
+On 10/9/2026 5:55 PM, Gaole Zhang wrote:
+> ath12k hardware scan Probe Request frames do not include the EHT
+> Capabilities element. Without this element, an AP cannot identify the
+> STA as EHT-capable during active scanning and may omit EHT-related
+> information from its Probe Response. This can result in incomplete scan
+> information and prevent userspace from correctly determining the AP's
+> EHT capabilities.
+> 
+> For firmware to include the EHT Capabilities element in scan Probe
+> Request frames, two conditions are required:
+> 
+>   - The scan channel must have WMI_CHAN_INFO_ALLOW_EHT set, which allows
+>     firmware to add the EHT Capabilities element to Probe Request frames.
+>   - The EHT Capabilities element must be configured on the vdev through
+>     WMI_VDEV_SET_IE_CMDID, so firmware can use it when building Probe
+>     Request frames.
+> 
+> Set WMI_CHAN_INFO_ALLOW_EHT for channels when 11be is supported by
+> firmware and not disabled by ACPI. Also configure the EHT Capabilities
+> element before each hardware scan when the element is present in the
+> mac80211 scan IE buffer.
+> 
+> Firmware retains the configured element in the vdev context until it is
+> replaced or the vdev is deleted. However, ath12k scans may either reuse
+> an already started vdev or create a temporary scan vdev that is cleaned
+> up after scan completion. Sending WMI_VDEV_SET_IE_CMDID for each scan
+> request ensures correct behavior in both cases.
+> 
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+> 
+> Signed-off-by: Gaole Zhang <gaole.zhang@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
