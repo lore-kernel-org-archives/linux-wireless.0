@@ -1,149 +1,190 @@
-Received: from out203-205-221-202.mail.qq.com (out203-205-221-202.mail.qq.com [203.205.221.202])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1862C48EC6A;
-	Mon, 12 Oct 2026 13:00:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D21D3793B3
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 13:30:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791810007; cv=none; b=i49pnPRMYy+ih2NuDYp9IlufIQvdpbIrD7+D47CS2LPkCRhGePa3YQnAgDy/xw4iKHrJgvitZlRN8KU3FzeeJU0s78t1UfWwOH/p3Z6zxBi2VsoaIlzZbRb0P4YimQbxs0DM7wp8ULZtqAPOwzMedH3yjrZu1FrUjIvuUxap7kQ=
+	t=1791811849; cv=none; b=amHc0q0a4wjrl8yqeU4Grv1VjIrJDhi3uO8l19jpZLiE9UYaJDhynCFb4ZqlkNGUbeECwp0dM6MlRN1DrZ/0qTe7ZfubDZVBXR5yHouRLac/oKoxJLxBb1PAyXiU85X/DEqCq7MvNIeGjsZ9cmsAPPxbm9VbFCoiQYB7FVVcjWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791810007; c=relaxed/simple;
-	bh=bIiGhEg42cXEjfOIwoIajqWbNokAPbabOfNrcPH0mGY=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=EpGbyRLVwEUMoO3cwx3icW54pNdOYwpYsfRnRInPlIYqbCpXfIV504lFTEMgtHNfb1S6mjrvBCsZdY+3YFiM8e0luLKLJyIcuJh49aAs7mpgxoXu+iLIBXtXDLZy0YtP/1xtjgE4mX1f9sh+zjoeQtGQlCsi3InMn7Nl1mCAxYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=Rbw+yMuB; arc=none smtp.client-ip=203.205.221.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1791811849; c=relaxed/simple;
+	bh=EQFWqasI/60Po2Z8ivIv/SBmzO/3fqqWFwoXaYSFiLs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=nQ6q4rCntq3wSOyZN3kHVvcVu5SPMHVt7V8p0/YAEs6KNhS6MgM2JO+6rKe2e7zFGeyzOV20BkLgUqaF0wR/Jk1V7qD1DBNBYlWWsUA7vACcXyXCrqM3603aBGtKe+pFlwaDv5nWhq8bokt97LlHM0LiZYyPdbluz5Y0aOc4hW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=VR2ouf4c; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=fKjDnnSV; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="Rbw+yMuB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1791809997; bh=bp30NSjuFsaCAe+qWs1g5X7hc0pMA8zxyXHMbxScZQg=;
-	h=From:To:Cc:Subject:Date;
-	b=Rbw+yMuBN9TyrWMcUc5QMTLzYZj45fxbOwJD8kTAQUiUdL/drPzRWAaY7N+DwWfK+
-	 6So6p71dSobKo9V7aswucZcFMnLJHXz7oR6dTjPWiVRhSCgxHnJwPDWUKsthyjDQ+R
-	 8JoUF+0wcd5R6+C3v64gcs/SQ/laSaU3tPkjA3Uc=
-Received: from chichu-arch.ibis-mark.ts.net ([27.38.246.181])
-	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
-	id EF738AF6; Mon, 12 Oct 2026 20:59:55 +0800
-X-QQ-mid: xmsmtpt1791809995t7pwrbc8m
-Message-ID: <tencent_2B956CE56BB4DE6A4748896922E04666FD0A@qq.com>
-X-QQ-XMAILINFO: MhK4DKsBP06iyHC12lnLqyp0SqpeOUDBzHlhC8iQW46z+eFUV9HOwMTYBV38vz
-	 /4QS1Jvkpf1YfONuM41dK6qBmf8lxz9UytpTH58dOETwRh1OxFOaGTdaHGNrPFm/vRRB31dCF6OR
-	 fCjve1f60ExNe5z4A9WWNsTTONldD8I0BaG8UHuqd+PmvUJW8BWmHbKF3cs7X1G2jovB4mFIxstQ
-	 H2NFRS90WVqL7jyMOscEt4P1lUpYwu77yLuh3wONIKWJ1Gm/eEfgbiF7/8n2EPln2W3YBCFiO0B+
-	 NFKrGuxDwEPTkBt9jrZkDKlVtH7h4avpBtzyCHvp2p1GJKPHO1YoiWDtaJ1lBitjuCHoGgtabqCv
-	 ShVOy2j1j2lTyaeeef/hbzW1m1dFA8mpjO1fJKwXOj6HyDtZ6Hz0ceu15YQ3oTLUvmDlt6yQR59M
-	 QqgmxllDIR+stDniC1g/xy5+d/FCOeE6xVyY9MM3Gv02JLuSK0uH/fVSNu9FISDMoiETlK91tkyh
-	 AiL9C+iQEy622kUX4UhqGoo8+ju+/EeyChrlVirj0eRNEz1za+oHFT+Ivf8tzt2j03fncMM41xFa
-	 E9MMY51W4htpBnmcexk7CmepYa4uzkAYRTf5fLOKS/+yVZAI+vUVk+eMly9L/uonv3Bg0yz6EfBd
-	 L83YTeCZFt5S7I2Y58cyzYISO03MbX2sggTGP2jofjoVrXEleSkjlkSsS5T85a9n4aUleMeI7txC
-	 mQTp2yqqLsijjgFoHjvRb2zHYAWrVKb5dfE4uo6alppOJ+c+0EGoHF/GVBhRDqsKfvIVP86JGTro
-	 j84iEsVMUI+X1yptPZBbT2+dQHQ+NhUDgbU8YCXWuLYgfdet/eyz/CaIJxCNFSoS2CagpEhT5l0T
-	 +PsH6uZLuki5IpQnfhzU3FatJPMEYKS9HxqMwADdjYw9v7jq/scTEFiC50i7Lv+EnborcdjHr1xI
-	 xxNQUDQnYl1GhMIX7EcGOZxrTRf0HTtyy35upG/CwDIzfPLSnljLCCYLVyKEtmecpzZTrKDQeOWK
-	 NoMuzUQuKjBSk1BTJdWSXwdAsHqlWkObW8WNnPWa9FtOOT3NpXf5pWTVdNfZT/d1cBE5S6e9Gs/Y
-	 cEcGG9tUpkJ+pb3AC8nnzjiV9f5g==
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
-From: TangYi <1914018426@qq.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org,
-	johannes@sipsolutions.net,
-	1914018426@qq.com
-Subject: [PATCH] wifi: cfg80211: allow IR on a channel the wiphy already operates on
-Date: Mon, 12 Oct 2026 20:59:55 +0800
-X-OQ-MSGID: <20261012125955.1519379-1-1914018426@qq.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="VR2ouf4c";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="fKjDnnSV"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CC0WtO2252722
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 13:30:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	vOV14bDhvBuotOkbBoK+dGZoQ3QXXV9MIM12bAdQJsc=; b=VR2ouf4cUZVIQt51
+	rQ0Gk3U7np8d4hWDD9HCz81ABtp9bj6+iNzJY9G719oy62dxzwFuvWaPKuzktJbh
+	8i36bQ2v2uwvFp3ydMT43bSnS3yA13MrvYlvV8VWjUp4clORHe6w2+bHFQ6KzDVJ
+	1m3G904t0QMMd+5OLM3pexrr/xAndtKCxyoDMimRpRPktYgadljnVsCFT7l7iAEe
+	ZNVk5GQxEOnfjpOGdqjo577p2vKhhg0Fnk+2sSDAxx26RYdYVX+xKRneN8FvoCV4
+	XHEsHgKeyxsWnpVpBeMlZM/Al108UV77sLS3vo4fUn4KtNNZQ3wTtLCX5q/p+ZZC
+	1a1ndg==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h8j7136gj-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 13:30:46 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-35a0c25def6so2275786eec.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 06:30:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1791811845; x=1792416645; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vOV14bDhvBuotOkbBoK+dGZoQ3QXXV9MIM12bAdQJsc=;
+        b=fKjDnnSVPa23LuHp/wTSv+fKKf4R2ULi6yG/0M9pMxkZDYbS51qAlxt9S+Dqf54qug
+         rm6kPdU9srRQJokBqOrsY4qTgkG6skJ/vwhYXeYX2GFfv7Brcg9qy/gHPosYxuwJbXxd
+         qEm94NIpJXJslNUwzqwweGK+MgUKUFuaLagB6RJC/lTyjYN/mjbTIQlgypIK7msoABjm
+         t5rnozBdgvYI6HFvpTge8AsjS8wx8dX60NXxFT9mLnVPjWpcqeVjYhPOE/9H9WeelU/f
+         QixA3DJPkbXKWPq1mrZCVD3CcN8Jbw3uUr7sMLHhBn+X/wSR8XrauqA3QhUP3D/NXAl0
+         XTTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791811845; x=1792416645;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=vOV14bDhvBuotOkbBoK+dGZoQ3QXXV9MIM12bAdQJsc=;
+        b=T+A7WJ/KF79rV7s9oEV7TNsztBp58EV0HLBC2JeNUvcbup2tOYPaZ53W7j6FYnPHUC
+         SrcPwTdvf6yIUU3FdzN0IiNwRsohyPPKRLo08Xh63Cijj+tnD40uB3ayn41ZCiOp81Fo
+         +d367UucRHIu7X2PrMGP3EF/HIEuAQ358x5XAwZ9n6MnMKkv9+EX57vsgiIP/i6aBuZd
+         hcxCjwJP5s7W4imBdAjBcxEEvs3+PohHEOZaR6ylAN53mdtVx3cPjccpyn1XMQBl9jNb
+         ANPjxQAcYH8x5/EXVE7JUcR0cJpxBpeJuXGx8xnXKHEPZ7GDEf85764+VyKmingjYp2Q
+         QphQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzAsuvZ/I1a0RdFb9RJFHKLraH9N41wenSv+EhBBS1P+ErkOeX2IsLxe3LhPOgLLiGQ1GnR+rew9ele3Jj5ZQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLBsnH9v8Q1ZjrXq1u2lQux8FdVJa104ZsKxFII/juOSzTafeEi
+	vzZJqfEARFmsHhMj9oIbzPTSCNwOw5RsNWhI9SS710JN1BtjWqOG37xdDKTeQ2t6WZowKXXf90L
+	HKPkMGgwQHWJKq5243vrZ/YjdHvkfx35LyY/GhknGyszWK2WM9CvLlaPZjHGdzWLqLdGM1A==
+X-Gm-Gg: AYBFou2l+RMh+/2YIw49Rrl0Q/UHizIBK/43r8mvOPJ9ohK4RZnhYpMh42i+3fRM+Yl
+	BVzl5qQ+/e0oZDuRn9s0YSez12URWQm1FprcCnkLgADbR0SoZ3OhHmnXeBjrXp89TKDca1FttHK
+	dVni/K4NPAjOP5PfAYA1EzPevp44IY6s276iTXCYdLWZQ7SpDwpu8trb9ulRypjN3iPjAEZF17h
+	+NDxNEmxa+n3uKZ6VnfibxxhXoBeF6lCHz+bY9W/P1pJ7AWwHbiVzvtCBDFCbjKliE5F7+Udhg4
+	goAV9pVV/vqZy9vBmFWNTuR3O1Zi+SWqF04j7XTPe7QNo4t7CP2GqGkpwvVmJzrvFzAQ0BSCtfu
+	aVgqVPPmBk1jrOswhONOJ479T9PHF70wOqq9wKbzgDkPYgBbqn4/qJeHJjCcY
+X-Received: by 2002:a05:693c:80db:b0:353:5d25:1de7 with SMTP id 5a478bee46e88-3537e0abb18mr15590127eec.33.1791811844964;
+        Mon, 12 Oct 2026 06:30:44 -0700 (PDT)
+X-Received: by 2002:a05:693c:80db:b0:353:5d25:1de7 with SMTP id 5a478bee46e88-3537e0abb18mr15590058eec.33.1791811844129;
+        Mon, 12 Oct 2026 06:30:44 -0700 (PDT)
+Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1b556sm44711556eec.9.2026.10.12.06.30.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Oct 2026 06:30:43 -0700 (PDT)
+Message-ID: <92649385-8437-4391-a233-bdb59cc600c6@oss.qualcomm.com>
+Date: Mon, 12 Oct 2026 06:30:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/5] wifi: ath: avoid IDR mutation while iterating
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+        Jiale Yao <yaojiale02@163.com>, Jeff Johnson <jjohnson@kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Michal Kazior
+ <michal.kazior@tieto.com>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+        Govindaraj Saminathan <quic_gsamin@quicinc.com>,
+        Sriram R <quic_srirrama@quicinc.com>,
+        Carl Huang <quic_cjhuang@quicinc.com>,
+        Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>,
+        Wen Gong <quic_wgong@quicinc.com>,
+        Ramya Gnanasekar <quic_rgnanase@quicinc.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org
+References: <20261003092104.520135-1-yaojiale02@163.com>
+ <3c6a641e-9695-4e48-a5f2-4911d0ba8048@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <3c6a641e-9695-4e48-a5f2-4911d0ba8048@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDA1MyBTYWx0ZWRfX1N0fmdlIfnv4
+ Le0KOywdzWWxsqGERX04uDhf5lxD/cTeGUhnQxiiI7W/kfOIdt/ahUbhgzs7irstOKy+EppFFHw
+ d0XRry09qUDMmpEvQglns5iZdmkJDgs=
+X-Proofpoint-GUID: pKq0IuMecJK7Ou4C0t4lCXY6pVYsidIR
+X-Proofpoint-ORIG-GUID: pKq0IuMecJK7Ou4C0t4lCXY6pVYsidIR
+X-Authority-Analysis: v=2.4 cv=ePGGH3p1 c=1 sm=1 tr=0 ts=6acce106 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=EUspDBNiAAAA:8 a=b8Ip5u2rk5lctkbpsk0A:9 a=QEXdDO2ut3YA:10
+ a=bBxd6f-gb0O0v-kibOvt:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDA1MyBTYWx0ZWRfX7dt+oH2pBjb1
+ 1+15qoz6Q1bCbP7QKq01YYTZLZ+zDaL2xXXFgSt23lgFJHwdB7ixZbwncAI58XrNeUKrqMvt8R5
+ c/6JIAuW8yPLViuFsy/neArdyugqslViraDwesBZaaZkhhbh3fckJHne8zcybinbIVu5M+bTI91
+ qUx/sX950mRVsfetQfj/sI17Eig1p1V5ic2Kp44UFN3FZxsahBZk3+EV2kFIiN/+FcIQxx+036s
+ AQJ6mv6hlVNf0VvXRDGh2TmL0+KgQINSQAzLWOVYkvNbmzQ7zwVEfD//qPwn5H3uuffiuMy1cLR
+ +r2twOiiXSIO3I8ADSMmlM6VbwD2DZI9o2ZkpcPdBdTpmDUFXYez3rMAfmfAh1Qkxw+Ghwie4y3
+ RK83MMxsIble5leeogScAEL0AljPKwurUTFdx1crufm9K+xlkAB7fTAUswUdVSbJe3OenJIM7g0
+ CJ3lPq01KZdlJXGRyXA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-12_04,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 impostorscore=0 malwarescore=0 adultscore=0
+ bulkscore=0 phishscore=0 priorityscore=1501 suspectscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610120053
 
-Self-managed LAR devices (e.g. iwlwifi) that have not yet learned a
-regulatory domain flag their channels as NO-IR, typically without
-setting IEEE80211_CHAN_IR_CONCURRENT, even while the device is
-associated and communicating on that very channel. cfg80211's existing
-IR relaxation cannot kick in for such channels:
+On 10/11/2026 10:52 PM, Baochen Qiang wrote:
+> 
+> 
+> On 10/3/2026 5:20 PM, Jiale Yao wrote:
+>> The ath10k, ath11k, and ath12k cleanup paths walk an IDR while removing
+>> the current entry. idr_for_each() retains radix-tree iterator state across
+>> the callback, so that removal can invalidate the walk.
+>>
+>> Use idr_for_each_entry() in each cleanup path. It performs a fresh
+>> idr_get_next() lookup for every iteration, allowing the current entry to
+>> be removed safely before its skb is released. Keeping the existing locked
+>> removal helpers also ensures that a concurrent TX completion cannot find
+>> an IDR entry which points to an already freed skb.
+>>
+>> Changes in v2:
+>> - Rework the ath11k and ath12k pending management TX cleanup patches to
+>>   remove each IDR entry before freeing its skb, as pointed out by
+>>   Rameshkumar and Jeff.
+>> - Use idr_for_each_entry() for the pending cleanup callers instead of
+>>   leaving freed skb pointers in the IDR until idr_destroy().
+>>
+>> Jiale Yao (5):
+>>   wifi: ath10k: avoid IDR mutation during TX cleanup
+>>   wifi: ath11k: avoid IDR mutation during pending mgmt TX cleanup
+>>   wifi: ath11k: avoid IDR mutation during vif mgmt TX cleanup
+>>   wifi: ath12k: avoid IDR mutation during pending mgmt TX cleanup
+>>   wifi: ath12k: avoid IDR mutation during vif mgmt TX cleanup
+>>
+>>  drivers/net/wireless/ath/ath10k/htt_tx.c |  7 ++++-
+>>  drivers/net/wireless/ath/ath11k/core.c   |  3 +--
+>>  drivers/net/wireless/ath/ath11k/mac.c    | 33 ++++++++++++------------
+>>  drivers/net/wireless/ath/ath11k/mac.h    |  2 +-
+>>  drivers/net/wireless/ath/ath12k/core.c   |  3 +--
+>>  drivers/net/wireless/ath/ath12k/mac.c    | 33 ++++++++++++------------
+>>  drivers/net/wireless/ath/ath12k/mac.h    |  2 +-
+>>  7 files changed, 44 insertions(+), 39 deletions(-)
+>>
+> 
+> if you want to go with current state, leaving the UAF risk in patches 2/5 and 3/5 in a
+> separate future fix:
+> 
+> Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 
-  - cfg80211_ir_permissive_chan() gates on the driver opting in via
-    REGULATORY_ENABLE_RELAX_NO_IR (iwlwifi does not), and its iftype
-    whitelist covers P2P-GO/STATION/P2P-CLIENT but not AP;
-  - even when it runs, it requires the channel to carry
-    IEEE80211_CHAN_IR_CONCURRENT, which the LAR did not set.
+Since the UAF potential is pre-existing, let's fix that separately.
+So this series fixes the IDR mutation and another fixes the possible skb UAF.
 
-Meanwhile starting an AP on the exact channel the wiphy is already
-operating a station connection on adds nothing new from a regulatory
-point of view: the device is already initiating radiation there.
-
-Add a same-channel exemption ahead of the opt-in gate in
-cfg80211_ir_permissive_chan(): if any wdev on this wiphy is currently
-operating (station connected, or AP beaconing) on the requested
-channel, allow IR for the new use regardless of interface type and
-without requiring the driver opt-in. Also add NL80211_IFTYPE_AP to the
-relaxation whitelist for the general IR_CONCURRENT case, since a plain
-AP in the same spot is no more dangerous than a P2P GO, which is
-already permitted.
-
-This makes the common "share my Wi-Fi uplink over a hotspot on the
-same card" scenario work on single-radio hardware that advertises
-managed+AP concurrency in its interface combinations
-(`#{ managed } <= 1, #{ AP, ... } <= 1, #channels <= 1`), including the
-5 GHz bands that LAR-hobbled devices would otherwise refuse entirely.
-
-Verified on iwlwifi (Meteor Lake PCH CNVi): with the patch, hostapd
-brings up an AP on the station's channel (both 2.4 GHz and 5 GHz
-UNII-3) while the station connection stays up; a client associates and
-reaches the internet through the station uplink. Without the patch,
-both wpa_supplicant's embedded channel check and the kernel's
-SET_CHANNEL/start_ap path reject the channel with -EINVAL.
-
-Signed-off-by: TangYi <1914018426@qq.com>
----
- net/wireless/chan.c | 27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletions(-)
-
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -1701,6 +1701,30 @@
- 
- 	lockdep_assert_held(&rdev->wiphy.mtx);
- 
-+	/*
-+	 * A channel the wiphy is already operating on (e.g. a station
-+	 * connection) is already being radiated on by this device; starting
-+	 * an AP on the very same channel adds nothing new from a regulatory
-+	 * point of view. Allow it regardless of the driver's relax opt-in.
-+	 */
-+	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-+		struct ieee80211_channel *other_chan = NULL;
-+		unsigned int link_id;
-+
-+		for_each_valid_link(wdev, link_id) {
-+			if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+			    wdev->links[link_id].client.current_bss)
-+				other_chan = wdev->links[link_id].client.current_bss->pub.channel;
-+			else if (wdev->iftype == NL80211_IFTYPE_AP &&
-+				 wdev->links[link_id].ap.beacon_interval)
-+				other_chan = wdev->links[link_id].ap.chandef.chan;
-+
-+			if (other_chan == chan)
-+				return true;
-+			other_chan = NULL;
-+		}
-+	}
-+
- 	if (!IS_ENABLED(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
- 	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
- 		return false;
-@@ -1708,7 +1732,8 @@
- 	/* only valid for GO and TDLS off-channel (station/p2p-CL) */
- 	if (iftype != NL80211_IFTYPE_P2P_GO &&
- 	    iftype != NL80211_IFTYPE_STATION &&
--	    iftype != NL80211_IFTYPE_P2P_CLIENT)
-+	    iftype != NL80211_IFTYPE_P2P_CLIENT &&
-+	    iftype != NL80211_IFTYPE_AP)
- 		return false;
- 
- 	if (regulatory_indoor_allowed() &&
-
+/jeff
