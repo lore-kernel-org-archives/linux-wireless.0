@@ -1,99 +1,104 @@
-Received: from out203-205-221-205.mail.qq.com (out203-205-221-205.mail.qq.com [203.205.221.205])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E2C14949F1;
-	Mon, 12 Oct 2026 14:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF64492504
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 14:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791816147; cv=none; b=nwyeefXopqbd6G9Nr9N4u4QtbcxEqqjDpCHoaGcqnpuPdPGnfO+Jn3PcXc5hXV+9i4mGILRVveYY2r0mBGaLsE+bdV12P5Kxd9ADVRI0NXa9S1wR89lDDBDV9r6JkVZzf+1iGc6xHr7We55jOXoWfJ2nF8+jVDMctGArDKcRbQI=
+	t=1791816519; cv=none; b=hMQNr8v+fGOWRNxGess9F898EbDPQWPuJx6tTBBhu/XTmCtj0UI47rrEUrIjyvi9q/Y7HN/lhC5wDegqjjtlXiO5JzqjkO1p9l357qS2DQZD0kWRDwbxXANafQNMKTerZ3MQZZ4Oiz5sstS3d+EY2yBmGivQyE58Pk0V9YyuHbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791816147; c=relaxed/simple;
-	bh=PVEwYHklGLWAZuFoyY81aDvq5AOiMo4HhqyvJLq9tuM=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=k4Zj2yd1drYp/x9xFhAjC4CpiEdXNOJ7qfRCNQEbD7L5G3sYT5yZE/z40Boukbb2Ui6UzCO8v0XGnnTzLywHlNq4szdtQdZqRU4Mmsn6srBd8zkHyVMFtWHt8G2p2zlhfqUDMje82x99paq8jGOxHRCgK/OODGYQ+p43Fg5mvlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=EGApePle; arc=none smtp.client-ip=203.205.221.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1791816519; c=relaxed/simple;
+	bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s1pQ1hYhpV69Lq58kSuoEgoQyeIhq7sxUZeI8yIuK29mStKgN2iJHc3a8rbR8fZyCxMUm3t/E7Y2Q7zHtHGtvsEDgDFLAnJHNpU+BACPkqjie8zUdQAfEOaEyFGbCqRHcmmXrivTPmTZREK1jKSCdwjegeq+9URQI4t4hOzQ0qI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=a18EyQSR; arc=none smtp.client-ip=209.85.160.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="EGApePle"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1791816141; bh=2VEm7q/HIkYpzW+SEVecgzfCZuKc+GEETju1hsbGD/E=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=EGApePle6AyqmyUiLLqjhLwJqVCYtEWYIgf6kZJ/3J7FH5d45Ojeu0L9NNAFb9uY+
-	 T9VJRT6eMbOchquJ20aaZXCX4GnQVkWROTULTHfhXRavwFtW4JYxb6ZXydJs5rTwTt
-	 iESlTbcbYikeKMPCoD7EORnf7aPVd0Zz2zdZA50s=
-Received: from chichu-arch.localdomain ([27.38.246.181])
-	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
-	id A940E078; Mon, 12 Oct 2026 22:42:20 +0800
-X-QQ-mid: xmsmtpt1791816140t9znfmw8p
-Message-ID: <tencent_BDAFB5F66ABB48BD69F6E3DA67A99678E50A@qq.com>
-X-QQ-XMAILINFO: NnYhxYSyuBnLke0xbi5hjiZejB50zyzEvmbVAoVlJD/lOrGpUxNXa8XwRYjFrE
-	 DjecvH61Xx8HObzJxVWVW4t0guYgIp+UESZLUqBKGt/9V4ie+4Rd9EbFp+ScSGdNkaVGDY9vU1YX
-	 J8frPl/rCxmSePE2REL1lYGZ2d5Mwwz3iKYcCeCyQHCLlvTzfYaSj9C5sOYN7yHZNwSpTcNqes+Z
-	 pM4fQPWcA+P3IcJ/D6wW32qEnAPqPIO1Z+g8anv9inaYgG6lTRj4iBmJKe8t0cgnTkb5mEbA6t1S
-	 MIEPzj4ZGYusTAUOLiqotzuIyL7/qjxKL2ZktXH7XOzBDPMxT67R5mJnGimzezqf04jUa39dLf9r
-	 btRl1Md3ftvQ7nqZtrQKQBTeQaURlh2nDwK4Dw1nzD7CjEsg8Qw5QTJQdbITzu68yGVRzkXw2TP/
-	 kKIOVceiGds3JcN3nXN1rigO48dD8sIKKQnxjlX7yVQ006tJ+KeJ09rEOHzCYgzBUooQQole0X/9
-	 0yxRsWGDOwzD6rssCgmYG5KvWLfOQk4EbjSVFfZCj9Yd615m1+OJlNaAQ9dUXUU7oWf7zY771bCn
-	 UanwfAHCPlTUOnUR7W3YzT3OnAopQ+UC4fhE7V/197xXnKsNkgxwr2s/7acZgTxeOzsyoNPLQU7r
-	 nkwze3yIRaGOfky/sqHKB2ORKmojofQ9xdW+oFY1PckC/KVP97J6VOMsGYO9oyjAZ6rPWRKHSvJG
-	 9ibju5WxaJW7XN3rOwfN1RXVZ2qTMhPWgaC96g/PAnImCiOE/ZX6hexibBWx9gaHfouIcFb1qqNE
-	 4EHPTlxO1B2+Z13+MXMdI+iixRbS8i2c8lOBQ2ImOINSasqQUoQJsPm320D30fnx/91sVBuUin6U
-	 BmoZFQpGclPKqfI+x8Tb+jWR2RUXwD3o3R2JmCGycvGpvUjxEo7OGIuanJX2Sg9o84oyT8w8eHwO
-	 uYYFnxxb2onXRO3g3s7a+4rrfCdwDfDj7aczN0KndWSGSba56pP5cYHCc9mq1y8DLRWTx13m4eZx
-	 TY2agcUukZoJeAqJgOWZF74ker2MpHLagmiUF3D+LFoDxt/UCy20SwXgb28Hw=
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
-From: TangYi <1914018426@qq.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, johannes@sipsolutions.net, 1914018426@qq.com
-Subject: Re: [PATCH] wifi: cfg80211: allow IR on a channel the wiphy already
- operates on
-Date: Mon, 12 Oct 2026 22:42:20 +0800
-X-OQ-MSGID: <179181614019.1582433.13387085985919889800@qq.com>
-In-Reply-To: <0361e4f89508eaf9fea291d949e4eb21f8d6e839.camel@sipsolutions.net>
-References: <tencent_2B956CE56BB4DE6A4748896922E04666FD0A@qq.com>
- <0361e4f89508eaf9fea291d949e4eb21f8d6e839.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="a18EyQSR"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-53391022dc0so23034721cf.2
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 07:48:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1791816517; x=1792421317; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
+        b=a18EyQSRv8P0iZVz2cFyE4nGgHoZsQEXyx8UJuHZjpdM+7Qf5SQhhP2xNWAH0VYzQf
+         /hoTlApssge3VsQ/ughGQGY0EAl62gOiNulQUtPZtIib5tqYAnuOwBaIFP2jom9NqxZs
+         Js7D3KhLF4ajJ3qghgQYaFLUYxdFUOYcU8NGDBSHwvQLHuHt9cmGCYRlNuetRRfZ8cBx
+         q41L4B7/xbYzABJqwB1ksDueQgP+fEt/7CCxbNCqmetPUJk8paMF210jlmlyzh2TH+i0
+         IYmXPXhqQploSSM8bOgX4etNpNXQAiPb3ki2WHim7bolH4+nLgdpLKyQW/5qIdwwO02t
+         h5Wg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791816517; x=1792421317;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
+        b=gehUvwwmfdWJ+Vb5aIkFFOlj8CdM/C31t7DjafShAK0GciNxc+FX+HNzdmy5vUIOtB
+         LFYEmmcAr3a8pZIHo8AR1oVZRaTuLtsStvQTV4deILg1wKbPlaTjAC4PfnZ76HWWl1FZ
+         GEjG3Vva0BQ0zTgsSjWDFSnnc5F3LxUQsDhjuAf3nSXoDQjm6XkiaB5rJQoZ+k7xExx+
+         wpPQWikzafuNW09hVc/wSCx3ZaCaHgeKyVGQNDTVF+eANmgBdx09bkUYsXmR8EIVulNb
+         5gt4qS7Cap5yXDYVWTLDa7Z6SRiSEbqEGDA6+NcpxijvxgraB0xwCZV7mGlRWbLJ2U6h
+         Nzkg==
+X-Forwarded-Encrypted: i=1; AKwUvBylJ0ygpsQuOJo3fV1V7Je0GhZHNut8TEoPFXgQjCc606lJYhB+JEJ/GaYzms+cIi5vl6VhpEEjvrJTqLaj0w==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJQc1pzdt2QznSbwiVrGxUVvRXG9Si9jNvnilj7PzHNgu61T8AI
+	bTrOEsJG8upWLRXCRkFDB7ARDvIoLPtMZ1EgAmuv3YX8LgubxppyWZScBRfMAzPAuBo=
+X-Gm-Gg: AYBFou1PWJx3T5CJV3JNE3c5htjzJrNZo05U1cyVx/n9tvJtYFmDXiD93Ym0dXBX/+q
+	i9jOVQZPT4jvO0xAZ+eSxKnSOIHJNQM7prVdUjb0C0dxIN5IYoeP9WS3HnPVUK8BIkxG31sMbLL
+	Jzk7dm9KOEyvD6ENGhUbSNrtm8hYaMltJ629jhnkmZnNwQqK+pxKyr9yEdvs8zpP+RAeD15BV/i
+	OzctK4RAUXIw97Kdh3cE0qLyjNmmC//0e7ajNalnTM4fBZB2LtnWpLy3Kbh9J+907cbSxoCXmoI
+	tZRMA0rRcoP03xTJsDVKLKTJb9JjLG9cQ/xUIUuuPFX0P24p5Br+q4lmhzEfheeHkj4vDhXSSQX
+	HadF5qsj/7zu9HI9x2Ry/Lj5FSSxmgNzbJQBZlCSGDzrNqmTmiwQ2WRT1o2WAW+4GomR0bm5H80
+	OC9bpItqNnsV2ccgfhh+r9Q2YQ98TIaXiIUAoCXZit3qoiV9uo2pfO8lY4ec5QeEZwOOiztUCua
+	RaaD6XmygNN2TY97HAqWrwb3LfN5js+N3OrUzC+Sg==
+X-Received: by 2002:a05:622a:4d93:b0:534:b7d1:cd1c with SMTP id d75a77b69052e-5359f498f75mr175097251cf.8.1791816516771;
+        Mon, 12 Oct 2026 07:48:36 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5359b6fa173sm80625631cf.7.2026.10.12.07.48.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 07:48:36 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xGHKN-00000006Snm-0vE4;
+	Mon, 12 Oct 2026 11:48:35 -0300
+Date: Mon, 12 Oct 2026 11:48:35 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, alex@shazbot.org,
+	bhelgaas@google.com, jjohnson@kernel.org, johannes@sipsolutions.net,
+	mani@kernel.org, yishaih@nvidia.com, skolothumtho@nvidia.com,
+	kevin.tian@intel.com, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Subject: Re: [PATCH v2 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
+Message-ID: <20261012144835.GG14213@ziepe.ca>
+References: <20261011074514.515894-1-jtornosm@redhat.com>
+ <b1a3f755-19e3-407e-b8f8-b494de83f59a@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b1a3f755-19e3-407e-b8f8-b494de83f59a@oss.qualcomm.com>
 
-Hello,
+On Sun, Oct 11, 2026 at 11:22:26AM -0700, Jeff Johnson wrote:
 
-First of all, apologies for the broken threading in my previous reply,
-and thank you for the patient guidance. The cause is now found: the
-SMTP relay (QQ mail) rewrites Message-Ids in transit, and git
-send-email generated its own threading headers on top, so my references
-pointed at ids that never existed on the list. This reply is threaded
-against the ids as recorded on lore/patchwork.
+> Thank you for providing this level of detail in your cover letter. I've raised
+> this issue with the engineering team in the past, but I've once again raised
+> the issue with your in-depth analysis.
 
-On the substance, I'd like to make sure I understand correctly, and I
-truly appreciate the correction. The concrete observation that led to
-the patch:
+The main issue here is the driver can't use a normal MSI-X in the
+normal MSI-X table.
 
- - after the station associates on ch149, the learned domain (iw reg
-   get, phy section) marks 5735-5775 MHz as IR-CONCURRENT;
+"private" MSI registers don't work for virtualization.
 
- - the channel itself (iw phy) shows plain "no IR" without the
-   IR_CONCURRENT flag;
-
- - and the iwlwifi source contains no IR_CONCURRENT handling at all.
-
-So the domain rules and the per-channel flags disagree, and the
-reg_can_beacon relaxation cannot trigger (it requires the channel
-flag). If this is worth addressing at all, I would be glad to learn
-where the right place is - e.g. the driver propagating the domain's
-IR_CONCURRENT rule onto the channel flags - or whether AP operation on
-such channels is simply not intended until the device properly learns
-a regulatory domain. Any pointer would be greatly appreciated, and I
-am happy to do the work on the driver side if that's where it belongs.
-
-Thank you again for your time.
-
-Best regards,
-TangYi
-
+Jason
