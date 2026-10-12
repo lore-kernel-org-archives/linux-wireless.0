@@ -1,79 +1,57 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out203-205-221-202.mail.qq.com (out203-205-221-202.mail.qq.com [203.205.221.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682343DA7D0
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 12:53:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1862C48EC6A;
+	Mon, 12 Oct 2026 13:00:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791809595; cv=none; b=H2lSd6kbqzvC5hVpPfnNuzeCfY2AaAhCt+pDOp42d/HpGurmfplt7e120WpAgLNdImXa/KX9RbMkdzmIG+gMbtEh+1apWWGzs7G4kUThsWTRIb8OyHCxQ3yoBhFMrQnHdr/ARA/L4xeIqiFM7tKj8Olvgh9ZwuZd59h7LDeOSGs=
+	t=1791810007; cv=none; b=i49pnPRMYy+ih2NuDYp9IlufIQvdpbIrD7+D47CS2LPkCRhGePa3YQnAgDy/xw4iKHrJgvitZlRN8KU3FzeeJU0s78t1UfWwOH/p3Z6zxBi2VsoaIlzZbRb0P4YimQbxs0DM7wp8ULZtqAPOwzMedH3yjrZu1FrUjIvuUxap7kQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791809595; c=relaxed/simple;
-	bh=Ky24fkOlvpW/axx+hbhH/j7Am9aQbqxDDkSMG2lAlKU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R8icAOLJgWie55HjRbQwBml2F14jzTGfxqxCCu8cPJvOgZV91aB+ZQRwlMSQOOX55NlhApdRgxapl7Y8cj0jNaAGrPPSwApQx3bv5ciNKlmylK0KzP2eN+3rrlwGQEmRnnT9uS3C4+a/8j9RkM8CytXHbvw9+GYLUqSdCU9LusY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Kn6MRJRn; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791810007; c=relaxed/simple;
+	bh=bIiGhEg42cXEjfOIwoIajqWbNokAPbabOfNrcPH0mGY=;
+	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=EpGbyRLVwEUMoO3cwx3icW54pNdOYwpYsfRnRInPlIYqbCpXfIV504lFTEMgtHNfb1S6mjrvBCsZdY+3YFiM8e0luLKLJyIcuJh49aAs7mpgxoXu+iLIBXtXDLZy0YtP/1xtjgE4mX1f9sh+zjoeQtGQlCsi3InMn7Nl1mCAxYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=Rbw+yMuB; arc=none smtp.client-ip=203.205.221.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kn6MRJRn"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4a018792ab3so15793455e9.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 05:53:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791809592; x=1792414392; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=//6PZzEPE4dWFH43EiRfnDXZN2OFddxQZ9MFM56YAAU=;
-        b=Kn6MRJRnYcoe3cOsLAHWBaU7YokfIKgn1L36Uwyq/vkzKaTNc3SbSG9Cd0x7nV9FPe
-         8ZXeBK24GqlpbJcYqhfSSdfk51LYHuzxoPiwNgzKFV9Z/K1gtsm2R06BbYGfvsMmxJxb
-         WbPUifHOK9l6UIml8QI2nELyv0kl+34W5ZIa1zb1yw492E02IlxN/+X4WVZMyXx2T4cs
-         NiDASvhJdFRH3R/aAuNtEjkyrU8pJGp5f7eSkJJE7O4Od6l8mR8kaEZWalTCTNb0Ql0+
-         BEbbFrnQ+T7L6vZrqlAkwQHELGeu05ceqdM9807tpHQqZ/PyydN0PZikSErnnfGEdsdD
-         e8WA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791809592; x=1792414392;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=//6PZzEPE4dWFH43EiRfnDXZN2OFddxQZ9MFM56YAAU=;
-        b=LDG+LA1kbNjbN+EMheIyyDzx5f7HpxzXRcPAkMw1NxH4bmxES3sJxYI7s4nNG8RF3D
-         6daYc13Vrjlt1fg9qtGJa/AG/NL0w78hBp13zNKVI1z5p17XTzXQ6e+BniTAUdKiaUEh
-         fC92VfaMn5r16/0NZcMMFgwf6VvINeXcDz02bAqR2w+3zIlTn0oYZzSSQGLyKzzSkVdH
-         1rx/w5DUCrnsIRmTiiY3dOI3Yn68jlwQShNPecfjfsIj3zQPZVruFr2Ls2V+PwfKb/T4
-         wrepUkn2gNCFX2PcaAVs7XVAra/gbHulRq5/JMl5J8nAyp/y63X4/6guSDKghpN+97Ut
-         AvjA==
-X-Forwarded-Encrypted: i=1; AKwUvBxI9eENO9X5SvW4kKSbigYB9+g1BcEWPbRSWB63XtipCwuheX09MqrccxhTHkwP32GvsPd2XIJ+5UTIN4+TWA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIXrGSBjO04xineDeuUOJOHHyhnM0nQ11m9pQh3xKaQ2tdnhSYa
-	dS2We/duEK1yqOpsbvHZE9NurXMcwUXQS78a6Jz6XWu43ozeScCa73O1
-X-Gm-Gg: AYBFou1mlVBtVjstW5ORKdSgpznaH+ucepopbI2dv2XuM3YIsqAqm9itr5XqZmoiLHH
-	a5O1537VYr7ssFa7DpPAV6gDQi3T7prLcvYLHoyUNYlnuymL+W0e2wD6/0AkfX9MpjeVvU2Er46
-	T2mhrJJ9e8lgVN77SoaNzf+oOirFjyTopa8VIgWkTBoYxlQO6xhD1TzCGZNe+VZYDdnma3K9Ztp
-	R4yERdE94zrfgMN3pgIqq2moPEL3Hkew6I/3XAfSTpUjGMv7cqPkwjrruLuDHWFvej+sKKerBtK
-	QJUPNxXQoIYcKN9kU22ru6dOAvY62DzI4TO2wYGsygneC8bC05jWl2nZM/hY3QgrGuUa4b0UOqR
-	N+49bsEtqGlTD5OWsRmqTlbv+8d89SugVSDN2NnYFsqjb3yuweFs7x4vquf4XZFeZYmblTJv+1f
-	AotObLxuH860N6Xd6w6dxwuWgqEyoqTd/VPMCAyWWkSOrvQaxIZ7eSnxPsFdtZJmb/FhPWERnvm
-	We79krytrLXGQTcXDZldUauc34WvemQFgampCfnseDfD76N2yNriFDPRPf2Ra5oy6mUS+cw+w40
-	IOIXucl+p7dNBGA2PYyRlxtSPGy+sv1g8G4lntx6cKnaSmlvHd2PVwcPYoscYzghAKAJOOPLpWC
-	gBUEc07shUEreMXNXZ8zKPsXnqMOBCQ==
-X-Received: by 2002:a05:600c:1d0b:b0:4a0:13ea:2ec3 with SMTP id 5b1f17b1804b1-4a18e4ddca6mr180915645e9.35.1791809591922;
-        Mon, 12 Oct 2026 05:53:11 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a00-1028-c000-0ddf-7da7-06ec-e37a-072d.ipv6.o2.cz. [2a00:1028:c000:ddf:7da7:6ec:e37a:72d])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18e49792bsm460701895e9.4.2026.10.12.05.53.10
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 12 Oct 2026 05:53:11 -0700 (PDT)
-From: Josef Schlehofer <pepe.schlehofer@gmail.com>
-To: Sean Wang <sean.wang@mediatek.com>,
-	JB Tsai <jb.tsai@mediatek.com>,
-	Allan Wang <allan.wang@mediatek.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Quan Zhou <quan.zhou@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: mt7925: status LED of USB adapters and linux-firmware
-Date: Mon, 12 Oct 2026 14:53:10 +0200
-Message-ID: <20261012125310.13917-1-pepe.schlehofer@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="Rbw+yMuB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1791809997; bh=bp30NSjuFsaCAe+qWs1g5X7hc0pMA8zxyXHMbxScZQg=;
+	h=From:To:Cc:Subject:Date;
+	b=Rbw+yMuBN9TyrWMcUc5QMTLzYZj45fxbOwJD8kTAQUiUdL/drPzRWAaY7N+DwWfK+
+	 6So6p71dSobKo9V7aswucZcFMnLJHXz7oR6dTjPWiVRhSCgxHnJwPDWUKsthyjDQ+R
+	 8JoUF+0wcd5R6+C3v64gcs/SQ/laSaU3tPkjA3Uc=
+Received: from chichu-arch.ibis-mark.ts.net ([27.38.246.181])
+	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
+	id EF738AF6; Mon, 12 Oct 2026 20:59:55 +0800
+X-QQ-mid: xmsmtpt1791809995t7pwrbc8m
+Message-ID: <tencent_2B956CE56BB4DE6A4748896922E04666FD0A@qq.com>
+X-QQ-XMAILINFO: MhK4DKsBP06iyHC12lnLqyp0SqpeOUDBzHlhC8iQW46z+eFUV9HOwMTYBV38vz
+	 /4QS1Jvkpf1YfONuM41dK6qBmf8lxz9UytpTH58dOETwRh1OxFOaGTdaHGNrPFm/vRRB31dCF6OR
+	 fCjve1f60ExNe5z4A9WWNsTTONldD8I0BaG8UHuqd+PmvUJW8BWmHbKF3cs7X1G2jovB4mFIxstQ
+	 H2NFRS90WVqL7jyMOscEt4P1lUpYwu77yLuh3wONIKWJ1Gm/eEfgbiF7/8n2EPln2W3YBCFiO0B+
+	 NFKrGuxDwEPTkBt9jrZkDKlVtH7h4avpBtzyCHvp2p1GJKPHO1YoiWDtaJ1lBitjuCHoGgtabqCv
+	 ShVOy2j1j2lTyaeeef/hbzW1m1dFA8mpjO1fJKwXOj6HyDtZ6Hz0ceu15YQ3oTLUvmDlt6yQR59M
+	 QqgmxllDIR+stDniC1g/xy5+d/FCOeE6xVyY9MM3Gv02JLuSK0uH/fVSNu9FISDMoiETlK91tkyh
+	 AiL9C+iQEy622kUX4UhqGoo8+ju+/EeyChrlVirj0eRNEz1za+oHFT+Ivf8tzt2j03fncMM41xFa
+	 E9MMY51W4htpBnmcexk7CmepYa4uzkAYRTf5fLOKS/+yVZAI+vUVk+eMly9L/uonv3Bg0yz6EfBd
+	 L83YTeCZFt5S7I2Y58cyzYISO03MbX2sggTGP2jofjoVrXEleSkjlkSsS5T85a9n4aUleMeI7txC
+	 mQTp2yqqLsijjgFoHjvRb2zHYAWrVKb5dfE4uo6alppOJ+c+0EGoHF/GVBhRDqsKfvIVP86JGTro
+	 j84iEsVMUI+X1yptPZBbT2+dQHQ+NhUDgbU8YCXWuLYgfdet/eyz/CaIJxCNFSoS2CagpEhT5l0T
+	 +PsH6uZLuki5IpQnfhzU3FatJPMEYKS9HxqMwADdjYw9v7jq/scTEFiC50i7Lv+EnborcdjHr1xI
+	 xxNQUDQnYl1GhMIX7EcGOZxrTRf0HTtyy35upG/CwDIzfPLSnljLCCYLVyKEtmecpzZTrKDQeOWK
+	 NoMuzUQuKjBSk1BTJdWSXwdAsHqlWkObW8WNnPWa9FtOOT3NpXf5pWTVdNfZT/d1cBE5S6e9Gs/Y
+	 cEcGG9tUpkJ+pb3AC8nnzjiV9f5g==
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+From: TangYi <1914018426@qq.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org,
+	johannes@sipsolutions.net,
+	1914018426@qq.com
+Subject: [PATCH] wifi: cfg80211: allow IR on a channel the wiphy already operates on
+Date: Mon, 12 Oct 2026 20:59:55 +0800
+X-OQ-MSGID: <20261012125955.1519379-1-1914018426@qq.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -82,36 +60,90 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+Self-managed LAR devices (e.g. iwlwifi) that have not yet learned a
+regulatory domain flag their channels as NO-IR, typically without
+setting IEEE80211_CHAN_IR_CONCURRENT, even while the device is
+associated and communicating on that very channel. cfg80211's existing
+IR relaxation cannot kick in for such channels:
 
-The status LED of MT7925 USB adapters stays off on Linux. I
-investigated this with a NETGEAR A9000 (0846:9072), see [1].
+  - cfg80211_ir_permissive_chan() gates on the driver opting in via
+    REGULATORY_ENABLE_RELAX_NO_IR (iwlwifi does not), and its iftype
+    whitelist covers P2P-GO/STATION/P2P-CLIENT but not AP;
+  - even when it runs, it requires the channel to carry
+    IEEE80211_CHAN_IR_CONCURRENT, which the LAR did not set.
 
-MediaTek's Windows driver for the A9000 (mtkwecxu.sys 5.3.0.3230)
-controls the LED using UNI command 0x2a, with GPIO 8 and a TLV (tag 1)
-specifying the LED state (on/off). Sending the same command from mt76
-works with the firmware from the Windows driver package
-(MT7925_E1_ASIC_ROM_RAM_CE_2249_CCN10_USB, 20250424), but not with
-linux-firmware builds (CE_2249_CCN16, tested with 20231227 and
-20260813). The latter return status 0 but do not change the LED state.
-All 16 MT7925 firmware releases currently in linux-firmware are CCN16
-builds.
+Meanwhile starting an AP on the exact channel the wiphy is already
+operating a station connection on adds nothing new from a regulatory
+point of view: the device is already initiating radiation there.
 
-Could you clarify:
+Add a same-channel exemption ahead of the opt-in gate in
+cfg80211_ir_permissive_chan(): if any wdev on this wiphy is currently
+operating (station connected, or AP beaconing) on the requested
+channel, allow IR for the new use regardless of interface type and
+without requiring the driver opt-in. Also add NL80211_IFTYPE_AP to the
+relaxation whitelist for the general IR_CONCURRENT case, since a plain
+AP in the same spot is no more dangerous than a P2P GO, which is
+already permitted.
 
-1. Can GPIO-based LED control be enabled in the linux-firmware build
-   for MT7925 USB adapters?
+This makes the common "share my Wi-Fi uplink over a hotspot on the
+same card" scenario work on single-radio hardware that advertises
+managed+AP concurrency in its interface combinations
+(`#{ managed } <= 1, #{ AP, ... } <= 1, #channels <= 1`), including the
+5 GHz bands that LAR-hobbled devices would otherwise refuse entirely.
 
-2. If not, what is the intended way to control these LEDs on Linux?
+Verified on iwlwifi (Meteor Lake PCH CNVi): with the patch, hostapd
+brings up an AP on the station's channel (both 2.4 GHz and 5 GHz
+UNII-3) while the station connection stays up; a client associates and
+reaches the internet through the station uplink. Without the patch,
+both wpa_supplicant's embedded channel check and the kernel's
+SET_CHANNEL/start_ap path reject the channel with -EINVAL.
 
-3. Is GPIO 8 common to all MT7925 USB adapters, or is it
-   board-specific?
+Signed-off-by: TangYi <1914018426@qq.com>
+---
+ net/wireless/chan.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletions(-)
 
-I have a small mt76 patch that registers the LED for MT7925 USB devices
-and sends this command. I will submit it once firmware support and GPIO
-selection are clarified.
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -1701,6 +1701,30 @@
+ 
+ 	lockdep_assert_held(&rdev->wiphy.mtx);
+ 
++	/*
++	 * A channel the wiphy is already operating on (e.g. a station
++	 * connection) is already being radiated on by this device; starting
++	 * an AP on the very same channel adds nothing new from a regulatory
++	 * point of view. Allow it regardless of the driver's relax opt-in.
++	 */
++	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
++		struct ieee80211_channel *other_chan = NULL;
++		unsigned int link_id;
++
++		for_each_valid_link(wdev, link_id) {
++			if (wdev->iftype == NL80211_IFTYPE_STATION &&
++			    wdev->links[link_id].client.current_bss)
++				other_chan = wdev->links[link_id].client.current_bss->pub.channel;
++			else if (wdev->iftype == NL80211_IFTYPE_AP &&
++				 wdev->links[link_id].ap.beacon_interval)
++				other_chan = wdev->links[link_id].ap.chandef.chan;
++
++			if (other_chan == chan)
++				return true;
++			other_chan = NULL;
++		}
++	}
++
+ 	if (!IS_ENABLED(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
+ 	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
+ 		return false;
+@@ -1708,7 +1732,8 @@
+ 	/* only valid for GO and TDLS off-channel (station/p2p-CL) */
+ 	if (iftype != NL80211_IFTYPE_P2P_GO &&
+ 	    iftype != NL80211_IFTYPE_STATION &&
+-	    iftype != NL80211_IFTYPE_P2P_CLIENT)
++	    iftype != NL80211_IFTYPE_P2P_CLIENT &&
++	    iftype != NL80211_IFTYPE_AP)
+ 		return false;
+ 
+ 	if (regulatory_indoor_allowed() &&
 
-[1] https://github.com/morrownr/USB-WiFi/issues/731
-
-Thanks,
-Josef
