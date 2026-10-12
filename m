@@ -1,181 +1,116 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2EAE3AA4F9;
-	Mon, 12 Oct 2026 06:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A88E439F99
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 06:57:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791788264; cv=none; b=t/OnH5rH8cIWsdFEx5ldRNwbDaXwNEf7KqXweuiHP1nX1HmwlV+eSU8brjsdJ0Uyk+eEUNB1D/OqdykretkePShIb0R09QMqXIfKzvv8YXh3Wv58lh710SCTNdGNfGZh98xwBomPmXeSXNwmNILgIaHHvHVFHRac5KCYxBmVFrg=
+	t=1791788267; cv=none; b=fob6cSaikq3nYHFqX/XnTaEviAOOnSHJIq0mDYtT2amhZICimEwS2cBAjHj9SSUjz6iMN+iZYsUUdD+ttTgaZB0LPchUTQFcr4sgc9vX6szPznH3ljnxKG0r64BsGssaGFlLXmSwJolNXFpZB/1aNBL0qnv8xOpoEZdvZUdlDWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791788264; c=relaxed/simple;
-	bh=2//hsG2ASG+SOjFfmqUmO0IJZscTecI7U34WvEQD3tA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=bjl5uCaIXCEbpvdHakmvGc1p8BfiRIxoiuXhrfo6iL+Z1tH258yfs5xSBf9ozdFSqXnSZyeJlicjr8+Dg6q8cdVflyDZNm5g62KHBnKITvgqk14AjlzZ9CCUfuXf59PUu6cvjYdi8EFnbzKak772wJnuffZMZb9HX22EYbxs3Q4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=c9g5WtiP; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791788267; c=relaxed/simple;
+	bh=bvgUSkY/ZkHuBwSfrmAs0SVNeagbkaaEQadDhf6Ehx8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=jSp72uNAXgRQ5psvsPF2SATPMBrJxXjAOe6Tsd8598fTTiz9GGlZVTQlvCv9WR0RUYLCQQptFAaYMqrmlgeWbzbcb7HNTzIz0LEBUMK3YWxN3lkHUIDEwZwDEWxKWDbVfJf2L48AGe4WOyozX5P47m7hnycA8TkPcu++CfzDmvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lzsqWwd+; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="c9g5WtiP"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69C6vaurF3601906, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791788256; bh=ITAwO6bSVBBorf+/fgp6dadtAlpocmVzUtr68bnFlPs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=c9g5WtiPlxkPlCgSenzTRJQhH3XA5ntQe6YzpFaIoOmpjpXEjEFOGZL5fjOaoj27C
-	 Z/zQmEmvn9lSfAklCsHuaSotEmRV2MKvAqPIVNRQ+HyiqKUIuyn0JI/pSaWSxg02bQ
-	 xp31rAmIqA/vA0GBELgC2cPjhUxz50Df56+o/Klf2/JiP4kRzPXxY7PjOgH/Ud/fnH
-	 XnwDuYjAnYNIA1s1twzFOgI/siJWNqoBkcGdHg1eGHDYDSee3MNmc+9Px9RkogRHOn
-	 hShl6OlGdxRRe+sRxZ8Y1Wiwu0yuJo9LzKOANl4l1FREm9BTgy7yVqH15LQaDs+2Gy
-	 W11bL+0fIUVuA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69C6vaurF3601906
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 12 Oct 2026 14:57:36 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 12 Oct 2026 14:57:44 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 12 Oct 2026 14:57:44 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Mon, 12 Oct 2026 14:57:44 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the
- rings are reset
-Thread-Topic: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when
- the rings are reset
-Thread-Index: AQHdWO4MPV0dG/pKrEyzZWvhd4YBNrb5eb7A
-Date: Mon, 12 Oct 2026 06:57:44 +0000
-Message-ID: <02b86ed0d0814f009cb5ca83bae343c7@realtek.com>
-References: <20261010193136.294816-1-abdurrahmankaradag19@gmail.com>
-In-Reply-To: <20261010193136.294816-1-abdurrahmankaradag19@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lzsqWwd+"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-48b0584ad71so738293f8f.0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 23:57:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791788263; x=1792393063; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=bvgUSkY/ZkHuBwSfrmAs0SVNeagbkaaEQadDhf6Ehx8=;
+        b=lzsqWwd+KFRCvZeH7z1xLX4+9qhGLTGdrfzIqua4n4C1PmpgyX9DQfM+OPAy1BLyVf
+         zdwT5pCv4ZiMiA2z4DkCwuz2um7N5ZRtcOtBofCvZvEyYVmalYmBqsQ4qGAwup5TOs27
+         3+sO7zSGomtaIIqXH7E0pKaNuHVSQ9J5MN5k78k7xG2R0vVZazkc/+SgUHW/Az5S/b2I
+         eZ22cTxrpzH3UQNze19tpJNz+weEo33f6HfJsykcB88JEMeh3157JMbVHJGy7gJ9J1gs
+         j07ZmAEmZOX8Wvnly8u28GUdwWI52bmvv9rMpXTMoAqsg9WGCeJRolKQdPDGgfMPjPfM
+         VhGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791788263; x=1792393063;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=bvgUSkY/ZkHuBwSfrmAs0SVNeagbkaaEQadDhf6Ehx8=;
+        b=jZw8fnACDjHw0lArof83gH+UfMBVLFxuGD9Eg6PjU4cJ13x2zbDK/ZLyYnKBqAdsqA
+         I+TWNm5uxaS6IiR5/RDXwmomWUb2N9IR2mWtiYPYaffADb93uNiQzzDufM1dQVXLm+Uh
+         ekv9aP0LNOI/NzGWJ2Ypa7R9LXuA9pUkWVQyff8bxUNcbllmYi8wmEOypAyORehX9sMa
+         upQA8hL/roxiG5+qflyORtDRHE0N7ebls1GXtPpLC1MohfC9WowxqDY/dcf2wg1qHXCX
+         6EM10h3xg05iUla78HdwW5XYiK+CJcYY7FlnYWL9Nc+gY51ZGqQsFLMkypK4yoUVdZyI
+         z3jg==
+X-Forwarded-Encrypted: i=1; AKwUvBz2QX/nDvWkKJh4brWs2e+UqXrr8CCdRDkhCOLI5g6n9S4nuCDXEy+8UnDkHRoQy6pK/gvrg7myRZ2YNj2pbg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJoNwoRBFMUS0yKOPL9jk6RWqef1oUNXq3sLtREfULtB0sJAnQZ
+	p2NaHd6jHt13J0A7nu/Qnu/zw8xtJzPPxyGAJAcJ2VKF4YURehAKbQsD
+X-Gm-Gg: AYBFou0EAroe9qKOKU2sAcyrKqQKDaGchtIfzfySBSG2cVskGR1YFHuZfGs6B+l1RRy
+	6qiHk232eGBYBVp5syjtvD9HAJDAL8+Dfhb7e8KQFE2/uac/R6bv3G4smZYeDVDEe96cQhAolzj
+	Xw2N6qufnOv8Djq1v18F5cM1OcMXXx9P6Q2Gg3rQkmAyP/5c4kIs3rm+WX4gsXdOp0ZI0s4Z8Jw
+	B3CuJrKEhQzy+6+byDLZ8zJt89Dc+k0cMuY6IfH4FyjKzx2RmoYIQrfCYGwYGyNjvbc1ZEMqQTo
+	FYWME/YZmvWriXWbty6GMnqe0wHtLkPsKuYzn3NXmma6RYN/MC3dPMIOKHL9VVvo/gQU+IPUOrf
+	C4ioA6JREhGiZivUA8p327FbCkSBGDsDfIf6xWSFpqmk06LNclWFfhVJ5jgCVOWDTgDMGoNzciX
+	0iCpvXk3ahWks2JJ4oL1PJydxB9+XSv7ZefnbiVrSIdWiqMx4kE4iLL9H2wSXYdmhieF59w9Kic
+	zeT
+X-Received: by 2002:a05:600d:8644:20b0:4a1:9eb2:b2a8 with SMTP id 5b1f17b1804b1-4a19eb2b2dfmr25139195e9.29.1791788263224;
+        Sun, 11 Oct 2026 23:57:43 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48db9ae1c4fsm17553553f8f.58.2026.10.11.23.57.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Oct 2026 23:57:42 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Luka Gejak <luka.gejak@linux.dev>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mehmet Fide <mehmet.fide@screeningeagle.com>
+Subject: Re: [PATCH rtw-next v5 2/3] wifi: rtw88: update the beacon from a wiphy work
+Date: Mon, 12 Oct 2026 08:57:41 +0200
+Message-ID: <20261012065741.17636-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <97931e8606134d8390762041a638e556@realtek.com>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
-> When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
-> records that in ring->queue_stopped, which is cleared only by the
-> completion loop in rtw_pci_tx_isr(). Resetting the rings rewinds the
-> indices, so nothing that was in flight can complete and run that loop,
-> and the queue stays stopped over a ring that is now empty.
-> ieee80211_restart_hw() does not release that stop either, because
-> ieee80211_reconfig() wakes only IEEE80211_QUEUE_STOP_REASON_SUSPEND.
+Hi Ping-Ke,
 
-The main reason why we need this patch is ieee80211_restart_hw(), so
-please point out this in subject.=20
+On 2026-10-12 Ping-Ke Shih wrote:
+> What "mac80211 state" did you mean? Without wiphy_work, it can't state
+> it?
 
->=20
-> Release those queues where the reset happens. The stop side is the one
-> that matters: rtw_fw_recovery() reaches rtw_pci_dma_release() through
-> rtw_enter_ips() before it calls ieee80211_restart_hw(), so that is
-> where a queue stopped before the crash is still stopped. By the time
-> rtw_pci_setup() runs the flag is already clear.
->=20
-> Wake all the queues, but only if at least one ring had filled. This
-> cannot tell one DRIVER stop from another: rtw_pci_io_err_detected() and
-> the hardware scan paths in fw.c stop every queue with the same
-> IEEE80211_QUEUE_STOP_REASON_DRIVER, which mac80211 keeps as a single
-> non-refcounted slot per queue. Gating on ring->queue_stopped at least
-> keeps the resets that stopped nothing out of it.
->=20
-> On an RTL8821CE, a BE ring held until rtw_pci_tx_write() stopped its
-> queue did not come back from the restart. The ring itself was reset -
-> 0x3a8 read 0x00000000 and REG_TXPAUSE was clear again - but BE's
-> mac80211 stop reason still read 0x1 three minutes later and TX never
-> resumed. With this patch it reads 0x0 and TX resumes within 2 s. The
-> ring was filled by writing REG_TXPAUSE 0x0f from debugfs under load,
-> and rtw_fw_recovery() was called from a debug build.
+bss_conf.csa_active: patch 3 gates the TIM download of this work on it,
+and mac80211 writes it under the wiphy lock. That was the only reason
+for the wiphy work; the work needs nothing else from mac80211.
 
-This isn't related to this patch, but it is still digging, so no need.
+> rtw88 doesn't use wiphy work/lock yet. and you are the first one to use
+> wiphy_work. Mixing to use wiphy work/lock and ieee80211_work with driver
+> lock looks not good. Should we just use ieee80211_work to avoid confusing?
+>
+> Or we should migrate to wiphy work/lock?
+>
+> For me, I prefer you use ieee80211_work with driver lock for now, because
+> I guess I don't have time to verify the migration...
 
-As I see, the commit message can be very simple -- wake up queues for
-ieee80211_restart_hw() case.
+Agreed, v6 does that and this patch goes away: update_beacon_work stays
+as it is, cancelled in rtw_core_stop(). The countdown work of patch 3
+becomes an ieee80211 delayed work under the driver mutex as well, and
+the gate in the TIM download reads the driver's own csa_vif under the
+mutex instead of mac80211's csa_active, so no wiphy lock is needed
+anywhere in rtw88. The countdown work still reads csa_active once per
+beacon interval as its exit condition, a plain read like mt76 does in
+its beacon path.
 
-(For the analysis in another mail, I'll read it later.)
+> Or you should add wiphy lock on IPS path, and cancel the work.
 
->=20
-> Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
-> ---
-> v2:
->  - wake with ieee80211_wake_queues() instead of recording and replaying
->    per-ring queue mappings (Ping-Ke Shih)
->  - drop the Fixes tag: the bug only bites once a recovery path exists,
->    which the blamed commit predates (Ping-Ke Shih)
->  - cut the commit message down to why and how (Ping-Ke Shih)
->  - say which of the two reset call sites fires during recovery, and
->    that the measured stall was induced from debugfs
->  - patch 2 of the v1 series is dropped rather than resent, while the
->    cause of the stall is still open
->=20
-> v1: https://lore.kernel.org/linux-wireless/20261002231013.11792-1-abdurra=
-hmankaradag19@gmail.com/
->=20
->  drivers/net/wireless/realtek/rtw88/pci.c | 22 ++++++++++++++++++++++
->  1 file changed, 22 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wirel=
-ess/realtek/rtw88/pci.c
-> index 66d2e5f..4d3524e 100644
-> --- a/drivers/net/wireless/realtek/rtw88/pci.c
-> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> @@ -475,7 +475,29 @@ static void rtw_pci_reset_buf_desc(struct rtw_dev *r=
-twdev)
->=20
->  static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
+Not needed once both works are regular ones: rtw_core_stop() cancels
+them, and the IPS path and the firmware recovery both go through it.
 
-I'm thinking if here is too early to wake up queues. Should we do this in
-rtw_reconfig_complete()?
-
-Or we check flag RTW_FLAG_RESTARTING of rtwdev->flags to wake up queues.
-This will be clear why we need to wake up. The comment isn't necessary
-by the way.
-
->  {
-> +       struct rtw_pci *rtwpci =3D (struct rtw_pci *)rtwdev->priv;
-> +       enum rtw_tx_queue_type queue;
-> +       bool wake =3D false;
-> +
->         rtw_pci_reset_buf_desc(rtwdev);
-> +
-> +       /*
-> +        * The indices are back at zero, so nothing that was in flight ca=
-n
-> +        * complete and reach the wake in rtw_pci_tx_isr(); a queue stopp=
-ed
-> +        * when its ring filled would stay stopped for good. Only wake wh=
-en
-> +        * that happened: the stop reason is shared with the AER and scan
-> +        * paths, which wake the queues again themselves.
-> +        */
-> +       for (queue =3D 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++) {
-> +               if (!rtwpci->tx_rings[queue].queue_stopped)
-> +                       continue;
-> +
-> +               rtwpci->tx_rings[queue].queue_stopped =3D false;
-> +               wake =3D true;
-> +       }
-> +
-> +       if (wake)
-> +               ieee80211_wake_queues(rtwdev->hw);
->  }
->=20
->  static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
-> --
-> 2.55.0
->=20
-> base-commit: 83de3a16c7b37064a59305040ba9b0f93b832794
+Mehmet
