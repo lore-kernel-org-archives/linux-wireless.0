@@ -1,163 +1,134 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5C638F92D
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 23:57:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65DD1CA6B
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 00:07:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791763053; cv=none; b=fIBP3g/Mkp8JHkQorFlTt4qkLhoazhMwGX2VaZlOm2REIwGZdrWHk+cYDeS9No5vPPhfo02yYjApXsjcE2JjVEQTRoyYLf728OvBnWcKXbg6ufQPLsNnIzniaklsLdRfgqG8pCGmw2cxJR9izTq7r0HurKkhU/Db2WrCTSpxrLI=
+	t=1791763643; cv=none; b=k3woKpDTWZiBf7pf6g9r2rraywwBDHljy+NSS4+ZNgO9ZKABnroYj2EgToTFejW5HAdzczdBXUz/gfM0pq0zBTeDmHUR4GrSt6nC4pQ8NSpF0smH8O8SXreyP76XlO/o4x7L+LqVzvk9Ifg/ga1b61OK4nuVlmHLHg9g5O/S1jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791763053; c=relaxed/simple;
-	bh=VKnH2yGmZMcFZt2mH89aB22XW2Y4GUfsPSnGPGdpbXA=;
+	s=arc-20240116; t=1791763643; c=relaxed/simple;
+	bh=NvU8lTGY5wOw1EfVIjl8TWYGKj/afTUacaEvubBQpBU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MecxMrm1sySCVEHkGxi23q+Bj/5jjLMWZDAGXqIve8lYn/85eXF/4v0rFZC93glmxa5+V9cdi7RYzpogftQFXkFj8QpHY111HdXQllQO4eS1SzQdm3yWv0a+YTtRX2dKgdZBMkb2DTfPu64EPRX/CTVvZ6jBltQ5KqhR15/7sR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fEP+gmzr; arc=none smtp.client-ip=74.125.82.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=nPBYowstiQmOV2jAYbq85QBIn82b10uPDyCYf8KuQYGI4KKdBHoGbu6S6z2mRPI7EC4ABFs5d9nXm8+010SSSlFj05H/Mf7obX6hthNDxKXMq657eEiymSs99sZ+JtGuv+eexSzJyHyU5jV1qfMdaXLW85F3lu+K2jYB4xLr/BI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JHLGCi3w; arc=none smtp.client-ip=74.125.82.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fEP+gmzr"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-3514e7cbbbaso3461517eec.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 16:57:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JHLGCi3w"
+Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-3514b90bb89so2585070eec.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2026 17:07:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791763052; x=1792367852; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=cRPcpD4bGybI0n7FRTBMhW8q9yb51oDjvzb7f7KdtWo=;
-        b=fEP+gmzrGAAWoYazsw1jrvz8dHBmNVw4Bj50Xzr84Ev+ScPp3+JoL0cfhHx7Fs6ay9
-         Bv7aZ7MybA2kocEijKfjyyQQhlr+QFwyXzz9jnDxL0RPBs8yTjMNZzQQmjtuFassHZdz
-         vva+L2tbA6moSYZ2AK4A41hiWDJKWNF+84488r2Ci1/BML9JHZ55VPj8im7MstjuKF/R
-         4uNYNsYdX1R/vAL4yzB5xmM5xTxOpW4+MMpy5SPZxA/T2xXRH8MwkZpxwAMqI2kjTXo7
-         kppQVVHrlIQghpYp5p1ahNpEZrHhCJsQrXV9QaV3r2XCN6Hhkr7XJ3m7DsJPNoF+INjp
-         K1jA==
+        d=gmail.com; s=20251104; t=1791763641; x=1792368441; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wGay7rJNBB/90A9EPg71UJBrKb3VyPWYiVs9WPdHtBM=;
+        b=JHLGCi3wE1HpryGt4QEax5h2SGR1BDCYrZEcI+S2PWcwcwY9u6HuSxxa+9rFaHRe6w
+         WGVTdgkZ33jqUs2tnVuxerv9T41/+dOFjs77uAttvz+FtPWswPvxi4eD/AfTAJFesARx
+         zuhWC1/Bn515NdKydtZHkE5BOYLb0RzL7KLCkfoIc0njg2WQbPfkQRmoGXWsL9KJ3fHQ
+         mxqZP6DPXP2Ep3zw86F2mS9EWq4Cw5LCkjoSPmb2Rf10pacDBXyTDThuZbPwot1l+JoY
+         Q4fjQ38y9pCEaMWFwx8Rel7iU+KFyX7UvjoyCn1A1tVYI66ahUlHjArfX+DQtmpbrjxm
+         af2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791763052; x=1792367852;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cRPcpD4bGybI0n7FRTBMhW8q9yb51oDjvzb7f7KdtWo=;
-        b=rYFxYx1txQahHCky6+3N1MRlsiFX/9v07xF1052x2uTj1Rpqtp2NbWYQrxqushPmci
-         4D6O/N51zXy0I5WmySDharPtKFZcTe15juMvwzgSorxblHBmIErp+AYbaz6ZmwGiSam9
-         1/GynU89RjQAqXyMbMfL8I9H6roz0cZgVHKzDJYIQiq+ZsB8uwoEy2j20V6Lq14+8GYC
-         uu2c+rwtcZQ2V1f2GT7B+khVqNIC/Ht9V+UjLpZF+jNbR3pSzi7JtcTqzUQXf+e+pS75
-         qPRNqR/r2Db/98K+0YW5/+r4FQ5/ttZGwBuhPhFuPr1xL/gecGIhkJ2cFXrAPOLVJ9TZ
-         g36A==
-X-Forwarded-Encrypted: i=1; AKwUvBwBPqGXWgZSF9jCzogkxi4vIGx5TUoUyBAVaJIYJ8ndPuuNqK/egqTtNP8qZfsecd+Yl/mRm28gXuxQpNoYvw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKo9RheUIlpHEeWpO0c2erdMtb0J1SoHmrrQJY8bKiPv/vye8Oj
-	Ocb2QppG2DBpbOTG6d4NMU0S7ud6IDGMs+zKZLF87Dw40vUY5c45wpzt
-X-Gm-Gg: AYBFou0dTxXbH/+86U5kmOoGMJUOhv61T2RITMITs30xpmQnzY6q6guiqDrLbdW06rS
-	w5rVKZ4ygwGnzFBB5beGu+VEUW+ffFO02vQt+V7eyREWwviVZgrRYFsYaE5XAIpykwcO63CZY/e
-	lgSUw5f3GaXAelmlyC+PE6g0IksKvLSBT7iAkyInjO2Tj18w9Ayeg/hY8GcENEyYngtz34tnNIt
-	hZMK5TBsEQ4bI29f4tjiwkpc0TIKhBaFMCnHLREaOjBkR9Et6IFUKY2UjJsai2F7sIIkO74cIZS
-	nmoGcKTfyc5nVxoHqqbz/plFgcw9CfwJvEBYe0BsQcMlFijmz29Q6IHqF8wscpdnWORsddUOolP
-	2h7qIG7bbQB0r+W0Azm5TiKqyvu3dx4XaeYIfOQY6otEHtf+cb3VkW6TmMonWX/vJ1fI/Lzk41k
-	c5ctYpIZ5wGgzqDyrek0Zy2nyQKbSnnPvCSn1pBDTOFqPrbixEDA5f+JMLQoyEcVmaBHePhMd4E
-	Xsht/QNZ5fG1avi8QxbADyvUCypgpbGl72eekdq
-X-Received: by 2002:a05:7300:ac81:b0:34b:f456:25ce with SMTP id 5a478bee46e88-3537ddd6fb4mr16618625eec.3.1791763051589;
-        Sun, 11 Oct 2026 16:57:31 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791763641; x=1792368441;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=wGay7rJNBB/90A9EPg71UJBrKb3VyPWYiVs9WPdHtBM=;
+        b=azbfvJhRAL+y2/ZJCjeTiICsBMcaeupfnrZx6Z1jocSs0/ZLqzdQ/q9RgNhXP1NMec
+         OcW3360d92LKJEi4l7ZpjE4pbS3B7u8f4RBffFgoB3PjeGH8Dk2uswOitfSmGqUxYAWj
+         vhxEfpE85EVbxUoc511cK1yvQM8z1TZEG7zq3lAgcTD/dZDWSOX+bvj0CF0Yy5lBe3QI
+         x60veERuj+i3FKr9GyEmFz6d2BWUiGFSYrbefO3XbiMWtEeNCiHlLMbOR6qhjDiGOAAx
+         LQoNCmyFnAJ/0HfgHYiBo5PiUZ/E2QpG8h4umBUDu4Ca0SvFlKT5ijpBF9v7nEK0FeRi
+         L+Kw==
+X-Forwarded-Encrypted: i=1; AKwUvBxzBwRP2Y81Dh/NOO051/Knv1C1/UbOjDyqi49VNKggI4y+R4pWnM2edCbq34HXmE4Sdjz6UA587Ybq87VFGw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLnhBjc7k/v6r/dtqJX24oeEmUGOjeD/Gtf280uq8otu7U3O+GW
+	i0lMB7ijXvAZfHq3GwOOQjYYjJVYDgaEo1j5iI6/EpV/PIbh3KSMuLpo
+X-Gm-Gg: AYBFou1Q2knz4a5aPmhJj2axs11Aj3YyuWvc4I2RYba75akP7souKGMpPkzZBhqZ6ik
+	erxgPWJfH5I1W0U1xxduTmURpc1rT5e8DnqzHDd7QXgs3p9tERZ2qc9u5YOFp332Ixn5Plt2Zva
+	9ioEfRhaYAKu1fbH27QMNO3djGvrvu3rNdfVW9CWTJ7k/1ST7js6WdayfHIzB9Ugo7qkcBlsfDo
+	TH0JoOQ7nJFfvIGHhiH80wxIYE3krpowlDT9oaFviIYzPeeaL2bSYhBHdCLsG6COFPzAtAoF+E6
+	2LYOy4sHBGyQSl8J2tOvIl82uk5+Yee9PhONe2Ev/C6mxPGXSlMC6/deZunF0cSqfrdp4FAYfTM
+	soz/9z5DORc59LbvrHn16fm0udQB/kFneFCick4WV3AMsohgGV5Tv0j10IKB90c7a4zRs8Kz2nX
+	KXLWbiCL+Pm8/jhyuf/JRLUepBm7P/rX8KdY+znX5kfBHLTxQuP7dqHHcz74CtALzT5BADLX7gq
+	5wVywBPpgHi61P+/S1iw2bBq+HTMd1sRgxAh9TxOIAHfu+Urdg=
+X-Received: by 2002:a05:693c:6218:b0:34d:3ad2:680e with SMTP id 5a478bee46e88-3537df9e261mr12921018eec.14.1791763641210;
+        Sun, 11 Oct 2026 17:07:21 -0700 (PDT)
 Received: from google.com ([2a00:79e0:2ebe:8:8999:e631:ed58:366a])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537c843079sm26847414eec.1.2026.10.11.16.57.30
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1ba7esm26650789eec.7.2026.10.11.17.07.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Oct 2026 16:57:30 -0700 (PDT)
-Date: Sun, 11 Oct 2026 16:57:27 -0700
+        Sun, 11 Oct 2026 17:07:20 -0700 (PDT)
+Date: Sun, 11 Oct 2026 17:07:17 -0700
 From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 To: Christian Lamparter <chunkeey@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>, 
-	Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] wifi: carl9170: revert broken devres conversions
- for input and hwrng
-Message-ID: <aswgwre0SeBnYZwo@google.com>
-References: <20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com>
- <5771235e-fa91-402a-b5d2-ebb153872c26@gmail.com>
- <aslvBb9VbMvnHmHi@google.com>
- <76210777-9f09-48ce-af97-90fec06a6f84@gmail.com>
+Cc: linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Benjamin Tissoires <bentiss@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
+	linux-wireless <linux-wireless@vger.kernel.org>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jeff Johnson <jjohnson@kernel.org>
+Subject: Re: [PATCH] Input: reject parent overrides on managed input devices
+Message-ID: <aswinjw7Ov6auPrn@google.com>
+References: <asmCc1VxVPLIMgY6@google.com>
+ <CAAd0S9A6zNJU=BkUgpGtdHBgkcnQ0NyOWb46aDnBuGCf0TKvmA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <76210777-9f09-48ce-af97-90fec06a6f84@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAAd0S9A6zNJU=BkUgpGtdHBgkcnQ0NyOWb46aDnBuGCf0TKvmA@mail.gmail.com>
 
-On Sun, Oct 11, 2026 at 04:41:02PM +0200, Christian Lamparter wrote:
-> On 10/10/26 1:13 AM, Dmitry Torokhov wrote:
-> > Hi Christian,
-> > 
-> > On Fri, Oct 09, 2026 at 09:37:36PM +0200, Christian Lamparter wrote:
-> > > On 10/8/26 11:39 AM, Dmitry Torokhov wrote:
-> > > > Commits 23de0fa0d2a0 ("carl9170: devres-ing hwrng_register usage") and
-> > > > 87ddb2fc29f1 ("carl9170: devres-ing input_allocate_device") converted
-> > > > the HWRNG and WPS button input device registrations in carl9170 to
-> > > > devres attached to the parent struct usb_device (&ar->udev->dev) and
-> > > > removed explicit unregistration from carl9170_unregister().
-> > > > 
-> > > > In carl9170_usb_disconnect(), the driver calls carl9170_unregister()
-> > > > followed immediately by carl9170_free(), which frees struct ar9170
-> > > > inside the interface .disconnect() callback before devres_release_all()
-> > > > runs. Furthermore, devres on &ar->udev->dev is not released on
-> > > > interface unbind or registration failure in carl9170_register().
-> > > > As a result, both the WPS input device (whose input->name and
-> > > > input->phys point into freed memory) and the embedded struct hwrng
-> > > > remain registered after struct ar9170 has been freed, leading to
-> > > > use-after-free bugs.
-> > > 
-> > > Ok, so you just reworded your patch? Sight...
-> > 
-> > Yes, as I promised I would.
-> > 
-> > > looking at the WPS input
-> > > 
-> > > |        input->name = ar->wps.name;
-> > > |        input->phys = ar->wps.phys;
-> > > |        input->id.bustype = BUS_USB;
-> > > |        input->dev.parent = &ar->hw->wiphy->dev;
-> > >            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > > 
-> > > the input's dev.parent is set to ar->hw->wiphy->dev and not ar->udev->dev, right?
-> > > Does this do anything at all? If not, why? The wiphy gets shutdown by
-> > > ieee80211_unregister() and having the "freeing" stick around after the USB device
-> > > is gone should not hurt, right?
-> > 
-> > devm_input_allocate_device() explicitly states:
-> > 
-> > 	NOTE: the owner device is set up as parent of input device and
-> > 	users should not override it.
+On Sun, Oct 11, 2026 at 08:12:47PM +0200, Christian Lamparter wrote:
+> On Sat, Oct 10, 2026 at 5:54 AM Dmitry Torokhov
+> <dmitry.torokhov@gmail.com> wrote:
+> >
+> > When an input device is allocated with devm_input_allocate_device(), the
+> > owner struct device is set as dev->dev.parent and holds the
+> > devm_input_device_release resource. Later, input_register_device()
+> > attaches the devm_input_device_unregister resource to dev->dev.parent.
 > 
-> Yeah, and this is something you added in 2012... 
+> Ok, why would this be a problem? If something other than the devres
+> garbage collection
+> callback access the data after it was unregistered... what else is
+> supposed to happen
+> other than a crash.
 
-Yes, in the same patch where devm_input_allocate_device() was
-introduced. This requirement was there from the very beginning.
-
-> The carl9170 code driver is back from 2010.
-
-No, the devm conversion was done in 2022, 10 years later.
+If the owner is overridden one possibility is that input device stays
+registered while the rest of resources have already been released. Quite
+often it is "name" and "phys" pointers. Since the input device stays
+registered, userspace can access it, which results in UAF scenarios.
+They are reported by syzbot and may serve as an attack vector on a
+device.
 
 > 
-> So, was this changed to "break it", rather than the driver?
+> for what's worth: this patch seems to be a "spite" response to this:
+> https://lore.kernel.org/linux-wireless/20261008-carl9170-reverts-v2-0-3ecb12089797@gmail.com/
 
-The conversion to devm in the driver was broken on arrival.
+Heh, no. I was simply tracking a syzbot report and I have identified 5
+drivers that do the wrong thing. 4 of them are input subsystem and I
+posted patches and will pick them up through my tree, and one is that
+wireless driver that I posed patches (reverts) fixing as well.
+
+I want to make sure we do not introduce any more such cases, so I am
+adding a runtime check that will fire if someone will try to add another
+such case.
+
+Frankly I do not really care how you will fix your driver. I posted the
+patches that should resolve the issue, you are free to take them or come
+up with your own. This patch will take care of the issue from my end. 
 
 > 
-> From my POV: What's the point of devres then?
+> I think someone else is working on a separate fix:
+> https://lwn.net/Articles/1038523/: "Revocable references for transient devices"
+> With todays Patch-Series V14 on: https://lkml.org/lkml/2026/10/11/475
+> 
+> From what I can tell, this should have been what devres was trying to solve.
 
-In certain situation it allows to reduce amount of boilerplate code in
-the driver. But it has be to be used properly. One of the most important
-thinks it attaching resources to the right device and not mixing managed
-and noon managed resources in the same driver, as that very often causes
-incorrect order on unwinding.
-
-> And why are you so "eager" to revert the changes.
-
-Because I have to deal with syzhot reports routed to me and I would
-rather not.
-
-Humor me: why are you so against reverting the change? I have shown that
-it is problematic. You can go back and re-introduce devm for input once
-the rest of the driver is ready.
+No, not really. It solves different use case altogether.
 
 Thanks.
 
