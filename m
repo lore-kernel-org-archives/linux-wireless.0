@@ -1,53 +1,52 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta1.migadu.com (out-195.mta1.migadu.com [95.215.58.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133023876A7
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 02:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E003947253A
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 02:38:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791858753; cv=none; b=Xct5z0LTdpZ0hTTkC7eX1AkBd76fQ9LgHzWkG4xgendKYz0QaivmhHSKr84FZ9K8OyaotyU3v7egV42m2Z9mBBtO1flnAE36Yqq9ZpCsrpDoWfH89Jx024/ztbjLyUFIxQz8YQPMgg2/8mkJkZcoDy6rHmbj0idjTJn5JcoujtQ=
+	t=1791859098; cv=none; b=WLkZ8YjVYUJiYQnj8yk478gPoiY41DtjEJk7oAVCsGOH6/Q/GW+iSPYi8OF6n3UU2Q2k+t/7E+CQx0JLmsy0b0LIs8lZvfG2YVafmIDgrVM+zAhrt4+GJxvVUC4Yd6ILbdPjYW0jsZqeXf3wj2S93KsAdMmsXjMW0e9gH1Qo3hM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791858753; c=relaxed/simple;
-	bh=CFeIizV/ohM4nsKGTtqP+1pX9vJul0jNM2f7REEk6GM=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BKfIEiC9BtNYcNXZeLodTcMA5OWudWLxPEc6MKVhLyFjqyCs2LqqIexH1XpwazD0piuHbYBgpF7JTfdv+1NlwKAic6IlwmdB+jigbmYzjuFqtMU8vN4TNzoQ+ekBJQxfdvFaZrwrN5Jv/ae3zJTOEb3K+ggBl0w+83f7p7IxUOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=bMO4krmx; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791859098; c=relaxed/simple;
+	bh=z+3b0R+SkRHpJ162dmXuf+uQGk2RcaK6++Nem8g9eKM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k65PcewqqwWNBQKAgWNRSa9tFAbLl3mT2GKeO5gLZEuewZ3xunRs1nB6ezwZ0ps0ad6KjJXterfETObQVU34fD3DT7MUbkok8I6pfWuZNiJDfBpArhYsETmhw4U5OFaokQQvPzdjotGgGwJTF7GKdga0X3VCpPTLIwfxul7lIqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=sEvIwfTv; arc=none smtp.client-ip=95.215.58.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="bMO4krmx"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69D2WR3J0139358, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791858748; bh=Ov8iAOb/Zf+I3ltPJguf0KvyDJ+Wp6wSCcSYk8GMTlE=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=bMO4krmxwPheyKtr/6HsAhgIMCBO3e5LPCRVU4fbH5SbuU2iEeabU94/HoqVLrX7r
-	 UI2/yK/DXOmCUOpHHG2YwNymYkHCHZfrn1lPFp2Ec9a3izK0zhDvClpCNVxWaa+8gF
-	 i0RAk6X/Wib0w1d+E22x7X5D1BaRcplE5KLtqF8UlWpBBDkJtUlCBB5wXtHTyyWOAc
-	 xW95b1kYJzbKam9JfBPHjEbG09LXX+tkOHcqMz4yh0CL6n8qk92xC9bq93R+UvqbHJ
-	 Kf6FScUI2R06b3moNXSCoY4Cbtao4oi4ohCOjKKKMJd4+vBwVjQDTT3X0aE8kYl/TB
-	 pRvlRSIahqnoQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69D2WR3J0139358
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 10:32:28 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 13 Oct 2026 10:32:27 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 13 Oct 2026 10:32:27 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Tue, 13 Oct 2026 10:32:27 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH rtw-next] wifi: rtlwifi: correct unit of center_freq as KHZ passing to freq_reg_info()
-Date: Tue, 13 Oct 2026 10:32:21 +0800
-Message-ID: <20261013023221.12024-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="sEvIwfTv"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=z+3b0R+SkRHpJ162dmXuf+uQGk2RcaK6++Nem8g9eKM=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791859093; v=1; x=1792463893;
+ b=sEvIwfTvs6CpAPe6UWtbIQ5snuJATafkqU6WtlypCnhjAb0MxpUJbh2opeYYputE98+23n0T
+ T7HTCCTSueMEM4cSqcS961Nr5o8EfQUs0cMNfesPzhFSK5xUWW0shEZRB0gpsBEsUfPB1I4UqFe
+ 0xNkDdWyJ98xmnBtt++BMezxjZXC4JR6q9LeYbmpPe+dE/3yWZh1McGALCPZpaHW+mh7AxH5sAi
+ 0uZwzD/ThxLPQ7QTqhRl6Hq7/tw+ldp7iLN7bYZC7aX/K+X2/F31TrRohAXAxadkPPnl7eBQ8tw
+ WkcWHJ/ptF1vFJb8cUstqm/Wb1vHx9/JU+sGjgmJrP9hA==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a363cb81b51ea92b;
+	Tue, 13 Oct 2026 02:38:13 +0000
+X-Mizu-Trace-ID: a363cb81b51ea92b
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Sean Wang <sean.wang@mediatek.com>,
+	Javier Tia <floss@jetm.me>,
+	Marcin FM <marcin@lgic.pl>,
+	=?UTF-8?q?=E5=BC=A0=E6=97=AD=E6=B6=B5?= <Loong.0x00@gmail.com>,
+	Deren Wu <deren.wu@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: [PATCH wireless] wifi: mt76: mt7925: fix MT7927 receive loss after a channel switch
+Date: Mon, 12 Oct 2026 19:38:10 -0700
+Message-ID: <20261013023810.256061-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,50 +54,104 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 
-The unit of argument center_freq of freq_reg_info() should be KHz, but it
-wrongly passes ch->center_freq in unit of MHz to freq_reg_info(). Correct
-the unit.
+When the access point announces a channel switch, an MT7927 stays
+connected but stops receiving until it reconnects.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+To set the band, the driver deletes the MT7927's firmware interface and
+adds it back whenever a single-link interface is put on a channel. A
+channel switch does this mid-connection, and the connection is not
+restored.
+
+Skip it on a channel switch unless the band changes. Monitor mode still
+needs it to retune.
+
+Fixes: 05fd14885303 ("wifi: mt76: mt7925: sync MT7927 BSS band assignment")
+Link: https://lore.kernel.org/linux-wireless/20260306-mt7927-wifi-support-v1-17-c77e7445511d@jetm.me/
+Cc: stable@vger.kernel.org
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
 ---
- drivers/net/wireless/realtek/rtlwifi/regd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
-index 503625b50fc3..2e4c60886c1e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/regd.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
-@@ -153,7 +153,7 @@ static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
- 				guard(rcu)();
+Notes:
+    Tested on a Framework 13 with its built-in MT7927 and an MT7925, both
+    downloading while a WiFi 7 access point switched. Switches after which
+    the MT7927 needed a reconnect:
+    
+                             7.2.10      + fix       7.3-rc7     + fix
+      channel moved          10 of 10    0 of 10     10 of 10    0 of 10
+      width changed          26 of 26    0 of 26     26 of 26    0 of 26
+      puncturing removed     10 of 10    0 of 10     10 of 10    0 of 10
+    
+    With the fix both cards can pause for up to three seconds at a switch,
+    as the MT7925 also does without it. Monitor mode, AP mode, joins and
+    moves between 2.4 and 5 GHz work as before, and the card still recovers
+    from a firmware reset and from suspend. Two other MediaTek cards on a
+    second machine came through every switch, stock and patched.
+    
+    The series as first posted only resent the interface when the band
+    changed:
+    https://lore.kernel.org/linux-wireless/20260306-mt7927-wifi-support-v1-17-c77e7445511d@jetm.me/
+
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 25 +++++++++++++------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index b46408f4aed2..bdd44b52f886 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -2401,10 +2401,11 @@ mt7927_reconfig_band(struct mt792x_dev *dev, struct ieee80211_vif *vif,
+ 					   true);
+ }
  
- 				reg_rule = freq_reg_info(wiphy,
--							 ch->center_freq);
-+							 MHZ_TO_KHZ(ch->center_freq));
- 				if (IS_ERR(reg_rule))
- 					continue;
- 				/*
-@@ -217,7 +217,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
- 	guard(rcu)();
+-static int mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
+-				     struct ieee80211_vif *vif,
+-				     struct ieee80211_bss_conf *link_conf,
+-				     struct ieee80211_chanctx_conf *ctx)
++static int __mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_bss_conf *link_conf,
++				       struct ieee80211_chanctx_conf *ctx,
++				       bool switching)
+ {
+ 	struct mt792x_chanctx *mctx = (struct mt792x_chanctx *)ctx->drv_priv;
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+@@ -2429,7 +2430,9 @@ static int mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 		if (is_mt7927(&dev->mt76)) {
+ 			band_idx = mt7927_band_idx(ctx->def.chan->band);
  
- 	ch = &sband->channels[11];	/* CH 12 */
--	reg_rule = freq_reg_info(wiphy, ch->center_freq);
-+	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
- 	if (!IS_ERR(reg_rule)) {
- 		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
- 			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-@@ -225,7 +225,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+-			mt7927_reconfig_band(dev, vif, link_conf, mconf, band_idx);
++			if (!switching || mconf->mt76.band_idx != band_idx)
++				mt7927_reconfig_band(dev, vif, link_conf, mconf,
++						     band_idx);
+ 		}
  	}
  
- 	ch = &sband->channels[12];	/* CH 13 */
--	reg_rule = freq_reg_info(wiphy, ch->center_freq);
-+	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
- 	if (!IS_ERR(reg_rule)) {
- 		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
- 			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-
-base-commit: fbfa27d9b06f025c5f2cfa79d0e01e6400eeff2a
+@@ -2441,6 +2444,14 @@ static int mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static int mt7925_assign_vif_chanctx(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_bss_conf *link_conf,
++				     struct ieee80211_chanctx_conf *ctx)
++{
++	return __mt7925_assign_vif_chanctx(hw, vif, link_conf, ctx, false);
++}
++
+ static void mt7925_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 					struct ieee80211_vif *vif,
+ 					struct ieee80211_bss_conf *link_conf,
+@@ -2491,8 +2502,8 @@ static int mt7925_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 				     int n_vifs,
+ 				     enum ieee80211_chanctx_switch_mode mode)
+ {
+-	return mt7925_assign_vif_chanctx(hw, vifs->vif, vifs->link_conf,
+-					 vifs->new_ctx);
++	return __mt7925_assign_vif_chanctx(hw, vifs->vif, vifs->link_conf,
++					   vifs->new_ctx, true);
+ }
+ 
+ void mt7925_csa_work(struct work_struct *work)
 -- 
-2.25.1
+2.56.0
 
