@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F37F4FECC0
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 13:06:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C2C5013A8
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 13:06:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791896774; cv=none; b=qlRmsANoRC2XXAtItMhvEcr4kIvwRjjf3q/BqP19CpzCicbUhVJZcQ8SJQra6cbgtt2ONYRNT3pDV2d4dKGvYssifaNU5XvpygUGfDyldhZRaKCVTJJY18T3/Lu1z+768/I1XTahFuO5xf82DgA4Jjf6p8bw/nNNQ48OL/ymbmY=
+	t=1791896774; cv=none; b=uRmNXv3P8GpFxUQMXFD48avZK17jq5+T+39pBAcKv6xJVaR1whEQ68hEaO3UnHVFN2i/F3OYTJyNCpBWkSahhfyG+gswBITq6B6hDUKb4+yNRi6t/EL03/ln3fsEZHKue5Grk8vYPTqpj4kDEnqjOZB+aQtmq+WTMOrhpkf/zd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791896774; c=relaxed/simple;
-	bh=iwZ/tVUvyRQKEE6YhXksTN2qdXRhifkmNRvVF5FrdR8=;
+	bh=8s9Ehd4UNnH8NTFDe/FkwLfTkvjq8cxQC6TA8Q+zK5k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jlqKl/7oNvKVh5XzkT3iSvDwCD79ujlGFRAMT6AupOB1G73mN2DACH7atvSLPesUlitCowhW7og0r8cDKqf9vrzaBqPH+RKR3SY8c+7xaSFzLhXglXVNCE0ULs1OIU9JOMxawnPMqVfZiQWu52m8Qo8EyTt9e4tTizUgh/RBvBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LN78gVAE; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=qyiG6rmCBag4lSU7e/F7rdXHqTOyzh44tSLRCQyLZQsnYR62dk32gwvTocVL7TZuJyF4GtHJD6pr2KiT/aahCWPdq+vhvvCNUzVG/SYWJrx/fPxDqXdN8yD1Pm60cFWgo+/D7jwqfTEeWH9gp2OY8wBi40MDs5Ch7Gcv39RIzAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KovjqjAx; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LN78gVAE"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KovjqjAx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=X8AqUL7RYU3uO7JT3ufiqIOdouPtI2iBW7R/sy6NhhM=;
-	t=1791896772; x=1793106372; b=LN78gVAEu3ph8J1rRS871vlHdNo0V/oV0y21GgyGlPhG58s
-	7Is3DdoRgZpCpsPr2n/9xGi0lsWq/ZMmtXEle8mNNndutx1Lt9+Fre8hR2nIBhCh7rvuFWTEI4pUK
-	YoiTDttaJmgjck9urciFliSN1NiZQMymOX6qXfYZFv1ANdufIqS0i0w0/jYZiRveOwse8cHYRIczC
-	1kUMf0XJGqDAPISxrHnvWVTQ/WC9VV4CKPQU4MsTyifWirRTmByiMQZ2hjzSMmqQYduupVuI3U91c
-	Sm/bmyK+wIDZ2dd6U8BTQkcTMD5nN8XpX+//ynMikRfMdt0QMrkSs0+BrlvtjPfw==;
+	Resent-Cc:Resent-Message-ID; bh=s0d1WJzTR7naERal4ndwauwZB7sKFC8Ky7K8CS871IQ=;
+	t=1791896773; x=1793106373; b=KovjqjAx7uapvrjh1Wmob9QDJncePRbTsL13fmIbShdqzsm
+	s/MDcGYIh4XlPcSznVBQml2IeMPjyM5bhm0HSX8B2nZ1zqF2yfn9elFYg5fJ3kKvw/3QN1Kxd/GyL
+	5AeFi+FDqIMGVVJoZDFPD/vag1+lQuoZfDypmYWSX2mm1sOzjXnH/24EBgzgDCiR+AB3Y798OLqqO
+	DyKSPNsyWoDqLjFHpFHaa6poo6q+SVH58wCRQPYcANVmJC3lC5YRKhldYTnBDZxYz5F9DqK7MpUJY
+	epj7Mk2loZC5+Gt5CYDO95Htn5gELO0m8u9sAwETxhewJmuRpz55pPfCEkbgFgcQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xGcCo-0000000HPRi-0QCe;
+	id 1xGcCo-0000000HPRi-2j2b;
 	Tue, 13 Oct 2026 15:06:10 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/11] wifi: mac80211: replace ieee80211_iter_keys_rcu()
-Date: Tue, 13 Oct 2026 14:59:04 +0200
-Message-ID: <20261013150604.e2fda97f779c.Ic15199f800d8a2bbcf4164ccc0e6f4d5aa0eac06@changeid>
+Subject: [PATCH 03/11] wifi: cfg80211: support C/B/I/GTK per AP in client modes
+Date: Tue, 13 Oct 2026 14:59:05 +0200
+Message-ID: <20261013150604.a5da07b416e7.I344497e57aa89d9430ccdd9d386466d17064d018@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261013130604.254393-13-johannes@sipsolutions.net>
 References: <20261013130604.254393-13-johannes@sipsolutions.net>
@@ -50,293 +50,258 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This function is unsafe since we reuse the key->list for
-deletions after RCU removal. Use a spinlock instead to
-protect that, since otherwise we'd have to add a new list
-head for a very uncommon case.
+Add WIPHY_FLAG_CLIENT_AP_STA_GTK indicating that the driver
+does per-AP C/B/I/GTK in client/P2P-client modes. If this is
+set, then cfg80211 will allow userspace to pass the AP's
+(or AP MLD's) MAC address with key commands, and will also
+pass the current AP's MAC address if not given by userspace
+for drivers requiring it, for backward compatibility.
 
-Fixes: ef044763a3ca ("mac80211: add atomic uploaded keys iterator")
+Per-AP C/B/I/GTK for RX will be required by mac80211 to clean
+up the code as well as for SMD Transition, where group keys
+for the target AP may be installed while the switch isn't
+complete yet.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/d3.c   |  6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  4 +-
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  4 +-
- drivers/net/wireless/realtek/rtw88/main.c     |  4 +-
- drivers/net/wireless/realtek/rtw88/util.h     |  4 +-
- include/net/mac80211.h                        | 22 +++----
- net/mac80211/ieee80211_i.h                    |  3 +
- net/mac80211/key.c                            | 62 +++++++++++--------
- net/mac80211/key.h                            |  2 +-
- net/mac80211/main.c                           |  1 +
- 10 files changed, 60 insertions(+), 52 deletions(-)
+ include/net/cfg80211.h     |  7 +++++-
+ net/wireless/core.h        |  2 ++
+ net/wireless/nl80211.c     | 12 +++++++++-
+ net/wireless/rdev-ops.h    |  6 +++++
+ net/wireless/sme.c         |  2 ++
+ net/wireless/util.c        | 47 ++++++++++++++++++++++++++++++++++++--
+ net/wireless/wext-compat.c |  5 ++++
+ 7 files changed, 77 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index 6d8ede336d59..74165bf5c42a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -1120,9 +1120,9 @@ iwl_mld_process_rsc_notification(struct iwl_mld *mld,
- 	};
- 
- 	/* Iterate through all active keys and update RSC */
--	ieee80211_iter_keys_rcu(mld->hw, vif,
--				iwl_mld_rsc_update_key_iter,
--				&iter_data);
-+	ieee80211_iter_keys_atomic(mld->hw, vif,
-+				   iwl_mld_rsc_update_key_iter,
-+				   &iter_data);
- }
- 
- static void
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 1dd27292af9b..fb64b95a632e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -987,9 +987,7 @@ static void iwl_mvm_frob_txf(void *ctx, void *buf, size_t buflen)
- 	if (iwl_mvm_has_new_tx_api(mvm))
- 		return;
- 
--	rcu_read_lock();
--	ieee80211_iter_keys_rcu(mvm->hw, NULL, iwl_mvm_frob_txf_key_iter, &txf);
--	rcu_read_unlock();
-+	ieee80211_iter_keys_atomic(mvm->hw, NULL, iwl_mvm_frob_txf_key_iter, &txf);
- }
- 
- static void iwl_mvm_frob_hcmd(void *ctx, void *hcmd, size_t len)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index dc7c03d23123..2caba7f5f97f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -398,9 +398,7 @@ static void mt76x02_reset_state(struct mt76x02_dev *dev)
- 
- 	clear_bit(MT76_STATE_RUNNING, &dev->mphy.state);
- 
--	rcu_read_lock();
--	ieee80211_iter_keys_rcu(dev->mt76.hw, NULL, mt76x02_key_sync, NULL);
--	rcu_read_unlock();
-+	ieee80211_iter_keys_atomic(dev->mt76.hw, NULL, mt76x02_key_sync, NULL);
- 
- 	for (i = 0; i < MT76x02_N_WCIDS; i++) {
- 		struct ieee80211_sta *sta;
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 0f23498b5c96..f7708ad17b6f 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -662,9 +662,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
- 
- 	WARN(1, "firmware crash, start reset and recover\n");
- 
--	rcu_read_lock();
--	rtw_iterate_keys_rcu(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
--	rcu_read_unlock();
-+	rtw_iterate_keys_atomic(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
- 	rtw_iterate_stas_atomic(rtwdev, rtw_reset_sta_iter, rtwdev);
- 	rtw_iterate_vifs_atomic(rtwdev, rtw_reset_vif_iter, rtwdev);
- 	bitmap_zero(rtwdev->hw_port, RTW_PORT_NUM);
-diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
-index f8399128a9a3..dff02057bd34 100644
---- a/drivers/net/wireless/realtek/rtw88/util.h
-+++ b/drivers/net/wireless/realtek/rtw88/util.h
-@@ -14,8 +14,8 @@ struct rtw_dev;
- 	ieee80211_iterate_stations_atomic(rtwdev->hw, iterator, data)
- #define rtw_iterate_keys(rtwdev, vif, iterator, data)			       \
- 	ieee80211_iter_keys(rtwdev->hw, vif, iterator, data)
--#define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
--	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
-+#define rtw_iterate_keys_atomic(rtwdev, vif, iterator, data)		       \
-+	ieee80211_iter_keys_atomic((rtwdev)->hw, vif, iterator, data)
- 
- void rtw_iterate_vifs(struct rtw_dev *rtwdev,
- 		      void (*iterator)(void *data, struct ieee80211_vif *vif),
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a1a6409b44c1..2272d7c85dd4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6962,7 +6962,7 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
- 			 void *iter_data);
- 
- /**
-- * ieee80211_iter_keys_rcu - iterate keys programmed into the device
-+ * ieee80211_iter_keys_atomic - iterate keys programmed into the device
-  * @hw: pointer obtained from ieee80211_alloc_hw()
-  * @vif: virtual interface to iterate, may be %NULL for all
-  * @iter: iterator function that will be called for each key
-@@ -6973,17 +6973,17 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
-  * the device. Note that due to locking reasons, keys of station
-  * in removal process will be skipped.
-  *
-- * This function requires being called in an RCU critical section,
-- * and thus iter must be atomic.
-+ * This function is atomic, so the iter must be as well. Cannot
-+ * be used from hardirq context.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f773856c1818..08e340724142 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5789,6 +5789,10 @@ struct cfg80211_ops {
+  *	set this flag to update channels on beacon hints.
+  * @WIPHY_FLAG_SUPPORTS_NSTR_NONPRIMARY: support connection to non-primary link
+  *	of an NSTR mobile AP MLD.
++ * @WIPHY_FLAG_CLIENT_AP_STA_GTK: Handle C/B/I/GTK installation on a STA (AP
++ *	STA) basis for station and P2P client interfaces.
++ *	(Note that if userspace doesn't give the MAC address, the AP's address
++ *	is substituted to allow for older userspace versions.)
   */
--void ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     void (*iter)(struct ieee80211_hw *hw,
--					  struct ieee80211_vif *vif,
--					  struct ieee80211_sta *sta,
--					  struct ieee80211_key_conf *key,
--					  void *data),
--			     void *iter_data);
-+void ieee80211_iter_keys_atomic(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				void (*iter)(struct ieee80211_hw *hw,
-+					     struct ieee80211_vif *vif,
-+					     struct ieee80211_sta *sta,
-+					     struct ieee80211_key_conf *key,
-+					     void *data),
-+				void *iter_data);
+ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
+@@ -5800,7 +5804,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
+ 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+ 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+-	/* reuse bit 9 */
++	WIPHY_FLAG_CLIENT_AP_STA_GTK		= BIT(9),
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ 	WIPHY_FLAG_SUPPORTS_EXT_KCK_32          = BIT(11),
+ 	WIPHY_FLAG_SUPPORTS_NSTR_NONPRIMARY	= BIT(12),
+@@ -7385,6 +7389,7 @@ struct wireless_dev {
+ 			u8 connected_addr[ETH_ALEN] __aligned(2);
+ 			u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 			u8 ssid_len;
++			bool wep_used;
+ 		} client;
+ 		struct {
+ 			int beacon_interval;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index e70a4f679bf5..7318cec3a956 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -483,6 +483,8 @@ bool cfg80211_cigtk_supported(struct wireless_dev *wdev,
+ bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
+ 			    int key_idx, enum nl80211_key_type type,
+ 			    const u8 *mac_addr);
++const u8 *cfg80211_get_key_mac_addr(struct wireless_dev *wdev, u32 cipher,
++				    bool pairwise, const u8 *mac_addr);
+ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 				   struct wireless_dev *wdev,
+ 				   struct key_params *params, int key_idx,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d790e204aee3..2e296057b036 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5565,6 +5565,8 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->get_key)
+ 		return -EOPNOTSUPP;
  
- /**
-  * ieee80211_iter_chan_contexts_atomic - iterate channel contexts
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1a6cbbb5a17d..52e413a20f71 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1533,6 +1533,9 @@ struct ieee80211_local {
- 	/* protects the aggregated multicast list and filter calls */
- 	spinlock_t filter_lock;
- 
-+	/* protects atomic iteration of each sdata key_list */
-+	spinlock_t key_lock;
++	mac_addr = cfg80211_get_key_mac_addr(wdev, 0, pairwise, mac_addr);
 +
- 	/* used for uploading changed mc list */
- 	struct wiphy_work reconfig_filter;
+ 	if (!cfg80211_valid_key_idx(wdev, key_idx, type, mac_addr))
+ 		return -ENOENT;
  
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 4c9788ec0b74..b55de973a929 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -532,8 +532,11 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 	if (ret)
- 		return ret;
+@@ -5766,6 +5768,10 @@ static int nl80211_new_key(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->add_key)
+ 		return -EOPNOTSUPP;
  
--	if (new)
--		list_add_tail_rcu(&new->list, &sdata->key_list);
-+	if (new) {
-+		spin_lock_bh(&sdata->local->key_lock);
-+		list_add_tail(&new->list, &sdata->key_list);
-+		spin_unlock_bh(&sdata->local->key_lock);
-+	}
++	mac_addr = cfg80211_get_key_mac_addr(wdev, key.p.cipher,
++					     key.type == NL80211_KEYTYPE_PAIRWISE,
++					     mac_addr);
++
+ 	if (cfg80211_validate_key_settings(rdev, wdev, &key.p, key.idx,
+ 					   key.type, mac_addr)) {
+ 		GENL_SET_ERR_MSG(info, "key setting validation failed");
+@@ -5795,7 +5801,7 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	int err;
+ 	struct wireless_dev *wdev = info->user_ptr[1];
+-	u8 *mac_addr = NULL;
++	const u8 *mac_addr = NULL;
+ 	struct key_parse key;
+ 	int link_id = nl80211_link_id_or_invalid(info->attrs);
  
- 	if (sta) {
- 		if (pairwise) {
-@@ -596,8 +599,11 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 							   new->conf.keyidx);
+@@ -5821,6 +5827,10 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
  	}
  
--	if (old)
--		list_del_rcu(&old->list);
-+	if (old) {
-+		spin_lock_bh(&sdata->local->key_lock);
-+		list_del(&old->list);
-+		spin_unlock_bh(&sdata->local->key_lock);
-+	}
++	mac_addr = cfg80211_get_key_mac_addr(wdev, 0,
++					     key.type == NL80211_KEYTYPE_PAIRWISE,
++					     mac_addr);
++
+ 	if (!cfg80211_valid_key_idx(wdev, key.idx, key.type, mac_addr))
+ 		return -EINVAL;
  
- 	return 0;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index ae15cec9bf8b..7b8440c1f697 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -86,6 +86,12 @@ static inline int rdev_add_key(struct cfg80211_registered_device *rdev,
+ 			   mac_addr, params->mode);
+ 	ret = rdev->ops->add_key(&rdev->wiphy, wdev, link_id, key_index,
+ 				  type, mac_addr, params);
++	if (!ret &&
++	    (wdev->iftype == NL80211_IFTYPE_STATION ||
++	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
++	    (params->cipher == WLAN_CIPHER_SUITE_WEP40 ||
++	     params->cipher == WLAN_CIPHER_SUITE_WEP104))
++		wdev->u.client.wep_used = true;
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
  }
-@@ -803,8 +809,8 @@ static void ieee80211_key_destroy(struct ieee80211_key *key,
- 		return;
- 
- 	/*
--	 * Synchronize so the TX path and rcu key iterators
--	 * can no longer be using this key before we free/remove it.
-+	 * Synchronize so the TX path can no longer be using this
-+	 * key before we free/remove it.
- 	 */
- 	synchronize_net();
- 
-@@ -1078,42 +1084,46 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
- EXPORT_SYMBOL(ieee80211_iter_keys);
- 
- static void
--_ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
--			 struct ieee80211_sub_if_data *sdata,
--			 void (*iter)(struct ieee80211_hw *hw,
--				      struct ieee80211_vif *vif,
--				      struct ieee80211_sta *sta,
--				      struct ieee80211_key_conf *key,
--				      void *data),
--			 void *iter_data)
-+_ieee80211_iter_keys_atomic(struct ieee80211_hw *hw,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    void (*iter)(struct ieee80211_hw *hw,
-+					 struct ieee80211_vif *vif,
-+					 struct ieee80211_sta *sta,
-+					 struct ieee80211_key_conf *key,
-+					 void *data),
-+			    void *iter_data)
- {
- 	struct ieee80211_key *key;
- 
--	list_for_each_entry_rcu(key, &sdata->key_list, list)
-+	list_for_each_entry(key, &sdata->key_list, list)
- 		ieee80211_key_iter(hw, &sdata->vif, key, iter, iter_data);
- }
- 
--void ieee80211_iter_keys_rcu(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     void (*iter)(struct ieee80211_hw *hw,
--					  struct ieee80211_vif *vif,
--					  struct ieee80211_sta *sta,
--					  struct ieee80211_key_conf *key,
--					  void *data),
--			     void *iter_data)
-+void ieee80211_iter_keys_atomic(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				void (*iter)(struct ieee80211_hw *hw,
-+					     struct ieee80211_vif *vif,
-+					     struct ieee80211_sta *sta,
-+					     struct ieee80211_key_conf *key,
-+					     void *data),
-+				void *iter_data)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	spin_lock_bh(&local->key_lock);
- 	if (vif) {
- 		sdata = vif_to_sdata(vif);
--		_ieee80211_iter_keys_rcu(hw, sdata, iter, iter_data);
-+		_ieee80211_iter_keys_atomic(hw, sdata, iter, iter_data);
- 	} else {
-+		rcu_read_lock();
- 		list_for_each_entry_rcu(sdata, &local->interfaces, list)
--			_ieee80211_iter_keys_rcu(hw, sdata, iter, iter_data);
-+			_ieee80211_iter_keys_atomic(hw, sdata, iter, iter_data);
-+		rcu_read_unlock();
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index fde86c900f4f..861b38eb08f2 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -565,6 +565,7 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
+ 	if (wdev->connected) {
+ 		cfg80211_sme_free(wdev);
+ 		wdev->connected = false;
++		wdev->u.client.wep_used = false;
  	}
-+	spin_unlock_bh(&local->key_lock);
+ 
+ 	if (wdev->conn)
+@@ -1360,6 +1361,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 	wdev->valid_links = 0;
+ 	wdev->connected = false;
+ 	wdev->u.client.ssid_len = 0;
++	wdev->u.client.wep_used = false;
+ 	wdev->conn_owner_nlportid = 0;
+ 	kfree_sensitive(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 59912f4a93c8..ad0e7b279111 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -274,6 +274,39 @@ bool cfg80211_cigtk_supported(struct wireless_dev *wdev,
+ 	return false;
  }
--EXPORT_SYMBOL(ieee80211_iter_keys_rcu);
-+EXPORT_SYMBOL(ieee80211_iter_keys_atomic);
  
- static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
- 				      struct list_head *keys)
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index c85992493afd..c8531b516c1c 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -62,7 +62,7 @@ struct ieee80211_key {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
++const u8 *cfg80211_get_key_mac_addr(struct wireless_dev *wdev, u32 cipher,
++				    bool pairwise, const u8 *mac_addr)
++{
++	if (pairwise || mac_addr)
++		return mac_addr;
++
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
++		return NULL;
++
++	/*
++	 * For client side, historically the RX B/I/GTKs were set for
++	 * the AP without a MAC address parameter, just for the current
++	 * AP. With WIPHY_FLAG_CLIENT_AP_STA_GTK this has changed, and
++	 * B/I/GTK is set for RX just like other types of interfaces,
++	 * with the AP (MLD) address (for MLO the link ID was already
++	 * required.)
++	 *
++	 * For WEP, however, the address is still (required to be) NULL
++	 * since WEP keys are used for both TX and RX.
++	 */
++
++	if (!(wdev->wiphy->flags & WIPHY_FLAG_CLIENT_AP_STA_GTK))
++		return NULL;
++	if (!wdev->connected)
++		return NULL;
++	if (cipher == WLAN_CIPHER_SUITE_WEP40 ||
++	    cipher == WLAN_CIPHER_SUITE_WEP104 ||
++	    wdev->u.client.wep_used)
++		return NULL;
++	return wdev->u.client.connected_addr;
++}
++
+ bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
+ 			    int key_idx, enum nl80211_key_type type,
+ 			    const u8 *mac_addr)
+@@ -310,7 +343,9 @@ bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
+ 	 * For group keys, mac_addr==NULL means setting a group key
+ 	 * for TX, which is only supported on some interface types,
+ 	 * except for STATION/P2P_CLIENT, where it's setting the RX
+-	 * key with the current AP (for legacy reasons.)
++	 * key with the current AP (for legacy reasons). If the
++	 * WIPHY_FLAG_CLIENT_AP_STA_GTK flag is set, userspace may
++	 * set the group key with address (except for WEP.)
+ 	 *
+ 	 * Apart from that exception, a non-NULL mac_addr means RX
+ 	 * key being set.
+@@ -339,8 +374,12 @@ bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		/* see note about exception above */
+-		if (mac_addr)
++		if (mac_addr &&
++		    !(wdev->wiphy->flags & WIPHY_FLAG_CLIENT_AP_STA_GTK))
+ 			return false;
++		/* MAC address is OK, continue checks without */
++		if (wdev->wiphy->flags & WIPHY_FLAG_CLIENT_AP_STA_GTK)
++			mac_addr = NULL;
+ 		/* BIGTK support implies IGTK support */
+ 		if (wiphy_ext_feature_isset(wdev->wiphy,
+ 					    NL80211_EXT_FEATURE_BEACON_PROTECTION_CLIENT))
+@@ -419,6 +458,10 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
++		if (mac_addr && !pairwise &&
++		    (wdev->iftype == NL80211_IFTYPE_STATION ||
++		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT))
++			return -EINVAL;
+ 		if (key_idx > 3)
+ 			return -EINVAL;
+ 		break;
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index ec2389f6b8b1..5300c692355a 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -456,6 +456,9 @@ static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 				rejoin = true;
+ 			}
  
--	/* for sdata list */
-+	/* for sdata list - note reuse and local->key_lock locking */
- 	struct list_head list;
++			addr = cfg80211_get_key_mac_addr(wdev, 0, pairwise,
++							 addr);
++
+ 			if (!cfg80211_valid_key_idx(wdev, idx, key_type, addr))
+ 				err = -ENOENT;
+ 			else
+@@ -491,6 +494,8 @@ static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 	if (addr)
+ 		tx_key = false;
  
- 	/* protected by key mutex */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 76e85754deff..2d60fe5b3f91 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -990,6 +990,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	spin_lock_init(&local->filter_lock);
- 	spin_lock_init(&local->rx_path_lock);
- 	spin_lock_init(&local->queue_stop_reason_lock);
-+	spin_lock_init(&local->key_lock);
- 
- 	local->aql_txq_limit_mc = IEEE80211_DEFAULT_AQL_TXQ_LIMIT_MC;
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++	addr = cfg80211_get_key_mac_addr(wdev, params->cipher, pairwise, addr);
++
+ 	if (cfg80211_validate_key_settings(rdev, wdev, params, idx,
+ 					   pairwise, addr))
+ 		return -EINVAL;
 -- 
 2.56.0
 
