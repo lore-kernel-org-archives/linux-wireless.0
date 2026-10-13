@@ -1,154 +1,241 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 621C047F3B1;
-	Tue, 13 Oct 2026 16:31:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD1C94EDCBD;
+	Tue, 13 Oct 2026 16:42:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791909070; cv=none; b=a4Ek9UQ2Go2Hz9HZCqlsypyBAWfZtm4E8mlj3GJHwTuSYobzdKN8qGlMfr/sh/DVKXhlq4apBZJAw80ZedKozJN54zhaUAYZeYttSp1OoUDvBcFgDxIMGbvykp+fq1A4GYlGBBX9b8sP/XLvWLyRw4XXpZhmxMzlFqrKryZcfSQ=
+	t=1791909771; cv=none; b=HWOVd9CmPgmYa6gSQuL9ddhE+pjftUq1LhBDV3SlbfYWFxD5xecG354Vr/tzhtpoaG/k9IiRYj3lnrgeCTtGOiNdGi8x0ZWrWFnDKUnrozDuOq3BdmqED3TWymBhjsGnmj78nh704ObUzthvutnwIfDQkl9+cSfYfn8p37GJphY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791909070; c=relaxed/simple;
-	bh=3PWdcDHBhbPWpZh4tpl2UNxQ8ZhM6kxojcRsoH1f5fI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=I58HqvLBJcUHpgNUVIDr+MSJT2cFyelyBgXMg9+uAL5OpqgvMNL0qt5vLqNHXbUkpM6CBw/DR2ObC7J104DAzkNZUMWYho96Uy4NtJn7z506liTtGIrr2A5ivtvSR08xCGyKpVzYEJj8EW2oP1XW7OFt3LJKSirQcDLoHdGyhs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ngPdDnNj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791909771; c=relaxed/simple;
+	bh=yjsRjYynPnFDISiOzScFhDTaM1YRF3xPKgNMic4QDOA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FVSM370PrNA9YcSy5BtW+njtmiwKNT37L3qkdzMXeeECIQNLtdEsfsDfuDbS7RPPXdlMrUxyQpvHBJtvcs83n/Eyh+I2/s4j7dTbqAxIj2lNQAamoEMSCzHbreTbGWyh7k12ZNHPGIp+K4o9sycBHOjDNjZyg3k20eJ5hzmJaJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJlRlzAd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ngPdDnNj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9B351F00893;
-	Tue, 13 Oct 2026 16:31:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJlRlzAd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C77291F000FF;
+	Tue, 13 Oct 2026 16:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791909068;
-	bh=OKaeHoDMxbcRdhaEWBqicGHaLuwHpHXnx6ahTNQjleE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ngPdDnNjKhLyQT2N6RhyXzNbBJDw86DCky0DDkFZybGOWOVKgXN/ad/0sBCVkayei
-	 HNYj9hrjWpWtBFX/UYrVuXDu9Nm7T92X1bPsmBFtk4Y//+tnDFq0hvpgYtRGyFnd2P
-	 c30Gm7kdg0sOrDiIM+eseypQum5fGKkqjPdbpcWGVdosSz8LpVBEl5UHRwM88GzhMF
-	 LxJV4rIAovtRgv9XNXWPgotqgnhY5XjoeljLa9b9heAjpcpggcX2vRtxecvBr3LGzE
-	 e4URZupBZVLhzqUcLPkBuj4YCM0EBklpXxFGlAABFL+uXuGY4FJty1HMPPxJ406n+g
-	 bQsk8Di+vLpcw==
-Date: Tue, 13 Oct 2026 11:31:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-	ath11k@lists.infradead.org, ath10k@lists.infradead.org,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v3 2/8] PCI/ASPM: Add pci_force_enable_link_state() API
-Message-ID: <20261013163107.GA1522779@bhelgaas>
+	s=k20260515; t=1791909770;
+	bh=oXcxplKp8nODQoVIQK5805yL5cpkpBPjjjU/uIcCsQ8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TJlRlzAd6eVsNQpVbef8p8IYK7HoQP61uFmstd1psTRYVf6x20nU3Omn6UwqVcXpD
+	 Iwoo+qKyyJd4yFNjkD7TmaO/zlBc7PVJlONUNL7urq7P3j7GK4H/f/kYj/DKLh92K9
+	 ZgxP1uRWH826qZ+/uk3ofCEjIWmDtEo5whRUkZzM5N9CTEAQf2LeoJHpXRJVD/zcl3
+	 +ocGUwY/q+3VQSbN2fnUMONeXe8i4+fJrhjmXbqH093Q2L6cYARbiBougdYqgLAZfc
+	 Of1hWcoNbex/3ooWM36QILPyk8eNcNy43FLmE4luzX+2Kc/rIgT8FR7NGuUf1EaZs4
+	 5yJ00yus6WB/Q==
+Date: Tue, 13 Oct 2026 17:42:45 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Alessio Ferri <alessio.ferri@mythread.it>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] dt-bindings: bus: add Broadcom BCM6362 WLAN AXI
+ backplane
+Message-ID: <20261013-universe-emptier-0bd405092733@spud>
+References: <20261012-bcm6362-wlan-v2-0-4752da7e0982@mythread.it>
+ <20261012-bcm6362-wlan-v2-1-4752da7e0982@mythread.it>
+ <20261012-shaping-runway-7e6065b8d730@spud>
+ <20261013180925.2c93e460@DELL-MOBILE03.ad.smart.it>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="54c+r0fD5eXH54Vn"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f1390db8-2369-9ab7-49a9-b7f09ef7b1ea@linux.intel.com>
+In-Reply-To: <20261013180925.2c93e460@DELL-MOBILE03.ad.smart.it>
 
-On Tue, Oct 13, 2026 at 02:41:32PM +0300, Ilpo Järvinen wrote:
-> On Mon, 12 Oct 2026, Bjorn Helgaas wrote:
-> > On Wed, Jul 08, 2026 at 04:30:16PM +0200, Manivannan Sadhasivam wrote:
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > 
-> > > pci_enable_link_state() and pci_enable_link_state_locked() APIs only enable
-> > > the ASPM states that were not previously disabled via
-> > > pci_disable_link_state*() API or blacklisted during init (e.g. the pre-1.1
-> > > device blacklist, which is only meant to be overridden with
-> > > 'pcie_aspm=force'). This is an intentional behavior as these APIs must not
-> > > silently re-enable states that were deliberately disabled, since doing so
-> > > could enable ASPM on a link where it is known to be unsafe.
-> > 
-> > I think this is saying that many uses of pci_disable_link_state() are
-> > to avoid hardware errata, i.e., these are basically quirks, and we
-> > should *never* enable those ASPM states.
-> > 
-> > > However, some drivers (e.g. the atheros WLAN drivers) save the currently
-> > > enabled ASPM states, disable all ASPM states before firmware download, and
-> > > then try to restore exactly the states that were enabled before. Restoring
-> > > those states requires re-enabling states that were just disabled via
-> > > pci_disable_link_state() API. But, this cannot be achieved using the
-> > > existing APIs.
-> > 
-> > This sounds like it's also for hardware errata: if ASPM works
-> > correctly, there's no need to disable it during firmware download.  I
-> > think this is *only* the atheros drivers, isn't it?  I didn't see any
-> > others.
-> 
-> There are more that should use disable/enable API. In addition ath*, I had 
-> also these in my unfinished series:
-> 
->   brcmfmac
->   ib-hfi1
->   rtlwifi
->   rtsx
->   r8169
+--54c+r0fD5eXH54Vn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for those pointers!
+On Tue, Oct 13, 2026 at 06:09:25PM +0200, Alessio Ferri wrote:
+> On Mon, 12 Oct 2026 20:13:46 +0100
+> Conor Dooley <conor@kernel.org> wrote:
+>=20
+> > On Mon, Oct 12, 2026 at 12:45:25AM +0200, Alessio Ferri wrote:
+> > > The BCM6362 integrates a WLAN macro on its own AXI backplane.
+> > > Unlike the backplanes covered by brcm,bus-axi, its cores have no
+> > > wrappers: clock gating and reset are driven through a separate
+> > > WLAN control register block, and the macro needs a clock, two
+> > > resets and the WLAN pads power domain before the backplane can be
+> > > accessed. The backplane registers are big-endian.
+> > >=20
+> > > Add a binding describing the ChipCommon and WLAN control register
+> > > blocks, the clock, resets and power domain, and the interrupt-map
+> > > used to route core interrupts, following the brcm,bus-axi
+> > > convention.
+> > >=20
+> > > Assisted-by: LLM
+> > > Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+> > > ---
+> > >  .../bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml    | 100
+> > > +++++++++++++++++++++ 1 file changed, 100 insertions(+)
+> > >=20
+> > > diff --git
+> > > a/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml
+> > > b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml
+> > > new file mode 100644 index 000000000000..183de28fd032 --- /dev/null
+> > > +++
+> > > b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan-bus-axi.yaml
+> > > @@ -0,0 +1,100 @@ +# SPDX-License-Identifier: (GPL-2.0-only OR
+> > > BSD-2-Clause) +%YAML 1.2
+> > > +---
+> > > +$id:
+> > > http://devicetree.org/schemas/bus/brcm,bcm6362-wlan-bus-axi.yaml#
+> > > +$schema: http://devicetree.org/meta-schemas/core.yaml# +
+> > > +title: Broadcom BCM6362 integrated WLAN AXI backplane
+> > > +
+> > > +maintainers:
+> > > +  - Alessio Ferri <alessio.ferri@mythread.it>
+> > > +
+> > > +description: |
+> > > +  The BCM6362 integrates a WLAN macro on a dedicated AXI backplane
+> > > +  (bcma), whose cores are discovered at runtime from the backplane
+> > > +  EROM.
+> > > +
+> > > +  The cores have no DMP wrappers: clock gating and reset of the
+> > > +  ChipCommon and 802.11 cores are controlled through a separate
+> > > WLAN
+> > > +  control register block. The backplane registers are big-endian.
+> > > +
+> > > +  Interrupts of the cores are described with an interrupt-map,
+> > > keyed
+> > > +  by the core base address and the core interrupt index, as for
+> > > +  brcm,bus-axi.
+> > > +
+> > > +properties:
+> > > +  compatible:
+> > > +    const: brcm,bcm6362-wlan-bus-axi
+> > > +
+> > > +  reg:
+> > > +    items:
+> > > +      - description: ChipCommon core registers
+> > > +      - description: WLAN control registers
+> > > +
+> > > +  reg-names:
+> > > +    items:
+> > > +      - const: chipcommon
+> > > +      - const: wlan-ctrl
+> > > +
+> > > +  clocks:
+> > > +    maxItems: 1
+> > > +
+> > > +  resets:
+> > > +    items:
+> > > +      - description: WLAN macro reset
+> > > +      - description: WLAN UBUS interface reset
+> > > +
+> > > +  reset-names:
+> > > +    items:
+> > > +      - const: wlan
+> > > +      - const: wlan-ubus
+> > > +
+> > > +  power-domains:
+> > > +    maxItems: 1
+> > > +
+> > > +  "#address-cells":
+> > > +    const: 1
+> > > +
+> > > +  "#interrupt-cells":
+> > > +    const: 1
+> > > +
+> > > +  interrupt-map-mask: true
+> > > +
+> > > +  interrupt-map: true =20
+> >=20
+> > I'd like to see some constraints on these, particularly since there's
+> > a very high chance the mask is fixed and the map has a fixed number of
+> > elements.
+>=20
+> Yes, you're right, i'll add them in the next batch.=20
+>=20
+> >=20
+> > I'd also like to see what the child nodes on this bus look like. Do
+> > you have some dts examples?
+> >=20
+>=20
+> the children are enumerated dynamically by bcma itself, so i don't
+> expect any. I know that a childless bus is suspect, but bcma seems to
+> work this way.
 
-> > > Hence, add pci_force_enable_link_state() API for such callers. Unlike
-> > > pci_enable_link_state(), it re-enables the requested states even if they
-> > > were previously disabled via pci_disable_link_state() or disabled during
-> > > init. The caller is therefore responsible for only enabling states the
-> > > device actually supports, typically the ones previously reported by
-> > > pcie_aspm_enabled().
-> > 
-> > The problem is that pci_enable_link_state() cannot enable things that
-> > were disabled by pci_disable_link_state().  They're not symmetric,
-> > which violates the caller's expectation.
-> 
-> Yes.
-> 
-> This patch seems to come with my Suggested-by but what I suggested (and 
-> had a patch for) was to make disable/enable proper symmetric pairs because 
-> it is very trappy otherwise. If something else is needed in addition, that 
-> should be named differently like Bjorn also seems to suggest (however see 
-> my alternative suggestion below).
-> 
-> I renamed the current pci_enable_link_state() to 
-> pci_set_default_link_state() in my own attempt to get room for adding the 
-> symmetric pair.
+How does the interrupt map work if nothing references the bus node as an
+interrupt parent?
+I assume there's some code in the driver for the bus that detects what
+bus-indexed interrupt the device wants, and the map is used to convert
+that into an interrupt number of the interrupt parent of the bus?
 
-We might need new names for pci_enable_link_state(),
-pci_disable_link_state(), and the quirk thing.  If we keep the same
-names, I think it will be pretty complicated to manage the changing
-semantics when backporting driver changes that use them.
+>=20
+> > Thanks,
+> > Conor.
+> >=20
+> > > +
+> > > +required:
+> > > +  - compatible
+> > > +  - reg
+> > > +  - reg-names
+> > > +  - clocks
+> > > +  - resets
+> > > +  - reset-names
+> > > +  - power-domains
+> > > +  - "#address-cells"
+> > > +  - "#interrupt-cells"
+> > > +  - interrupt-map-mask
+> > > +  - interrupt-map
+> > > +
+> > > +additionalProperties: false
+> > > +
+> > > +examples:
+> > > +  - |
+> > > +    #include <dt-bindings/clock/bcm6362-clock.h>
+> > > +    #include <dt-bindings/reset/bcm6362-reset.h>
+> > > +    #include <dt-bindings/soc/bcm6362-pm.h>
+> > > +
+> > > +    bus@10004000 {
+> > > +        compatible =3D "brcm,bcm6362-wlan-bus-axi";
+> > > +        reg =3D <0x10004000 0x1000>, <0x10007000 0x100>;
+> > > +        reg-names =3D "chipcommon", "wlan-ctrl";
+> > > +
+> > > +        #address-cells =3D <1>;
+> > > +        clocks =3D <&periph_clk BCM6362_CLK_WLAN_OCP>;
+> > > +        #interrupt-cells =3D <1>;
+> > > +        interrupt-map =3D <0x00005000 0 &periph_intc 7>;
+> > > +        interrupt-map-mask =3D <0x000fffff 0xffff>;
+> > > +        power-domains =3D <&periph_pwr
+> > > BCM6362_POWER_DOMAIN_WLAN_PADS>;
+> > > +        resets =3D <&periph_rst BCM6362_RST_WLAN_SHIM>,
+> > > +                 <&periph_rst BCM6362_RST_WLAN_UBUS>;
+> > > +        reset-names =3D "wlan", "wlan-ubus";
+> > > +    };
+> > >=20
+> > > --=20
+> > > 2.56.0
+> > >  =20
+>=20
+> Thanks for the inputs,
+> Alessio
 
-> > Instead of adding pci_force_enable_link_state(), I think we should add
-> > a new interface for the *quirk* behavior that permanently disables
-> > states.  Then pci_enable_link_state() and pci_disable_link_state()
-> > could be made symmetric.
-> 
-> My suggestion is to make the disables/enables counted per state which 
-> would allow parallel sources of disables to function without clashing.
+--54c+r0fD5eXH54Vn
+Content-Type: application/pgp-signature; name=signature.asc
 
-By parallel sources, are you thinking of sysfs and driver calls?  If
-locking would be sufficient I think that would end up being simpler.
+-----BEGIN PGP SIGNATURE-----
 
-But maybe the issue is these devices where we think ASPM breakage only
-happens in certain circumstances, e.g., firmware download, so we want
-to keep states disabled for that period.  Then I guess locking inside
-the enable/disable doesn't prevent sysfs from enabling those states
-during that period.
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCas5fhQAKCRB4tDGHoIJi
+0ua8AQCywhz8WCHIIcc7UkC/PTMcIdYQqzGXSL2zX5zSRL8dGAEAiqgyaY6Eqzvz
+DbeP4wweRK7bGR1z/6qxdiwwmD+kdgg=
+=OpI4
+-----END PGP SIGNATURE-----
 
-> Disable quirks could simply not have the pairing enable, no special 
-> interface needed.
-
-I'm not sure what this looks like to the caller.  A parameter that
-says whether to count the disable?
-
-I think having a different function name would be helpfully
-descriptive because permanently removing an advertised capability is
-different from temporarily disabling a feature.
-
-Bjorn
+--54c+r0fD5eXH54Vn--
