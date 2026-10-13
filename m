@@ -1,89 +1,147 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B7613815C3;
-	Tue, 13 Oct 2026 00:44:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791852257; cv=none; b=P+wRPMFLf14Ky9C3djuBMSo9v3YXOzqINHdmBXiKcKo8rF8Rd+56K3Lm5s5PpvjIOy2F4nmkSKTXixRyPBQfTYIDAnBlIzHsk8M42thgMMTL30qrKljNtJ5dqSmG6lx9GO8DamBY/AkbLMm+4uam6PccrZVeEfZRAeP5tjhvZHI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791852257; c=relaxed/simple;
-	bh=F2/6gOJsn3Zg5kiWTHMbF0lvSyAIqPOYRaJ2mHOCpQc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=MT8NptnI3B/s+ZlyxQWOMrifEe8C71ggWMboAQqW1aMVoTQpRUCVrnhcDuxujuHk6psZs1s7hcDMR3J+M2o0wAZQvsTBcwduv8dK5y61g5HDZxnIrO2vVynlfTNcE/3BpFG1qci+0dJLYTvhteiUNAip1K876/ENiN8qvo51050=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=feVsXiQV; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9172328635
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 00:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791853128; cv=pass; b=E7TSD05D3+poBHg0oXPW8fducjeaRIIoQk73PYWBwd87NDRKEaiQPDJR8ZXuYbfFI7exW8lAlNiRM77Pd619mXxqpcYW5JjU7jJ3wmiMfmMFV2SPYWF2qEEQ4ozBh4B3XIkG4yQ7F4VqztmbhbIRDnGWX4ZXjpaLTu5mF8JW45I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791853128; c=relaxed/simple;
+	bh=k4uBOr3fUC9C9V/2LEU8KbJ93ho9bjIXmyZyw7xe/xQ=;
+	h=MIME-Version:From:In-Reply-To:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nw92op9Ke8hn2lpNOuJQP9I7CYpNfat43Rm1j+EBXgnJeBlzLmRZgV7CPJd537F0mWVDNXLrhag4Xy1gARsOn6MhNmNkngArwFlpb6oDwZ3FZEnWtHAxbesFHS/Zt+3X3z+/KdY+hr50K4Bq+dh2IABT/wAi1W7kQnM4gYnbQKk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=BMtkzgR9; arc=pass smtp.client-ip=209.85.167.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="feVsXiQV"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69D0i2zR5055986, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791852242; bh=F2/6gOJsn3Zg5kiWTHMbF0lvSyAIqPOYRaJ2mHOCpQc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=feVsXiQVvb3QQeKJnhvHcnaoYZYf8y2Cg5NGM8Py2WUKYtsuzxNwqBcSMwhbMj4Kj
-	 fW8VOZKlC6AZC/nEj+CwGj1MI/oDpcZmQriCeGVCJskFAbFuc/KxuCGpsmIzLuQq1w
-	 BTYNT8MpQTo95r9lnteZorlwjcUgKZWaibF0IrlFswQj5HncvTKDEtwtk389IyaE8N
-	 3gOen1QPRgTQMvqim8U+F1Bjb4M/dEcwnZbDbrfEOwx7PrSm/OPlPoomT/BQ6U0Viz
-	 NHdF+J3jLwmg/t8rDw43cnWzm+EZBJmi2yTjKPsqwrlrZUrHpxPiEh4B8wwqS5yhFf
-	 Q0MjS7hV5m4PQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69D0i2zR5055986
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 13 Oct 2026 08:44:02 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 13 Oct 2026 08:44:03 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 13 Oct 2026 08:44:03 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: =?utf-8?B?4oCN6rmA7Jqw7ISdW+2VmeyDnV0o7KCE7J6Q7KCV67O064yA7ZWZIOyghA==?=
- =?utf-8?B?7J6Q6rO17ZWZ6rO8KQ==?= <5mghybrid@khu.ac.kr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
- from CPU state
-Thread-Topic: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
- from CPU state
-Thread-Index: AQHdWD8IbE0sWRKeB0i8lqEjk1P2g7b5aFkwgACxEYCAAIwWUA==
-Date: Tue, 13 Oct 2026 00:44:03 +0000
-Message-ID: <04d26f79d5984920a9584d3f31ec3b58@realtek.com>
-References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
- <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr>
- <1fc8c339df1944afa6186197337edda3@realtek.com>
- <CAH1Bc_yOhZ9oqreJOLKb5RDFEW=0Zid=h4xu9oTR51RDwj_bww@mail.gmail.com>
-In-Reply-To: <CAH1Bc_yOhZ9oqreJOLKb5RDFEW=0Zid=h4xu9oTR51RDwj_bww@mail.gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="BMtkzgR9"
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5ba7ed32ccdso2819071e87.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 17:58:45 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791853123; cv=none;
+        d=google.com; s=arc-20260327;
+        b=D8tJAe6du61MKWbs8AF+9C+XSPG7VxnSyq/ng+cHN29RpgVEbN6y8H23iAV3peNvFq
+         9wa7j5SyZxzYZq6puJkge93o76KXxp2h63BIsa3s7y/zDBkN8svtawomStvJNYfGD1Bu
+         lpI00vgFXsrIHg0FyVjEMPjNLas4SbGeS/A4iETL9kepFwj5BMb5qGD7nv85WBsF928A
+         xAkZoxmQiVrvuhrMOvmT6xHX0KpNkZgqZ1t0GqXewRdUiWyKTdBeykQDfysrV0hSPOLD
+         G6DCB8AxedNlcKuebBzqTXKv8XtkZHfvEfpxvoC/YFMY52AcU1Pdy/RfqoriXVfN6mEL
+         ONNg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:references:in-reply-to:from
+         :mime-version:dkim-signature;
+        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
+        fh=OpHnJR1Rz6bLlpQ5IGiauuARtZ3rnK4eQzjxu0UPuq8=;
+        b=nViKxzTW0Mt6keCYFOREwBxMAoLmsgLlFhEqU+5sSVXf4Wm9TjzpVKnLli/aIEVkla
+         7SvSdqceoUkVsOGRS+8XLXFBznJ6flKauUSOvHsn8SJofEA5V4f/2+53g/YOAqJ5pNsi
+         Dp6TBwQ5bMTjGIWjEgZbzhiTsS2IBgX6YX1Ed1VozRKF+wQ/+zFdP9I1q5JCwIGWA2te
+         r1n7V9pBAxjLhK8leSddWpmaT3lkswSGfdUudjFBE8MU9Qy0Oncjb7VWwC4c1ILwisJA
+         SWsYzzz0E4F20I1ZRT8OILoRMDZmThxtJwRTFyqpYBg3y819zYn8Jit/YCQ9yz3z/jGk
+         8/hg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=khu.ac.kr; s=google; t=1791853123; x=1792457923; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
+        b=BMtkzgR9AyZ2IkE6qpDGPnMWdFbq/no756w7o58F1IxN0ulDLrxzXRlpH+bgKG1kXn
+         ZkoFrAhqXXnKT9U/iFKiN5nbvcl1MZT5XUXnt/pNuaMantJfrlaUAyISTCm8ejPyh78G
+         gRa/YfGRIn6GmIwKJz7tJcSswfp+Tis5FQBcU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791853123; x=1792457923;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
+        b=FigDq1tWRCIYAEDm7Mblbc2qT7+XR/WYePdfQJUw8bXa34Cum2GqEJFboePu4NlJ/H
+         hZquL8q9fY1fw5bT6Gcyn8v5DUjywhIMlxrZsUWE91T50774OEhJiHQEiP4pvAjXhxO5
+         WIek5NCVrXU/EnhYukbWQexLsN7J0iAq5SZmX7r15MqX8RpNOqGBU8VJCANLRUy4eUhZ
+         coKcDj55J6826eeEoLkpTwd65nbWcXkKBzaURlxGoVws0yJqZsP3qqka9ryX85SGZBtd
+         vLtiqJUWkjXixDXisaIdQIzGba5QjoJDRTUQc6j8jpIsJ275G3KOE9pzQFznNtZl+d8r
+         jpOQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxBUrU3tgmaF6ufZdKgFpokE2AZjZtpRzg5jwdHorf4Ht20Fv5hBpSGiyfq85qCaYTCJz+5RBE8jdKf8k+1iA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJQdCmZKCbAbwm+XaQxis8tRpIPrW24GEfDgkUwUYx67/n8fTs7
+	D8GDWsX5wm8okNb5trX92FsjFb02ol3+cjAA4J+LEg7GeGsQHN+gEmIB5ttMU22hxbWED4+uTH8
+	VJUUqvupWq3WlnaQ9bB75Tybf7dozl7Xjnj8qpxgHAA==
+X-Gm-Gg: AYBFou2HYT9NSYHuZbR0beiGMqqTx5pEsS+bnZ6tx0lEAVoUr566k8QaDyKX7vsrw32
+	nS2ASy9Tudr8cIbtxSmd8QM9qgbpAs7IKFAKkmiGJcd17Pe9ukWdqRkSH0oW5MW/pbhPhdJuQTz
+	8tQh1XQLU4WNPrDKISw4CAfU3sYst56L60SVqxqUOvMXqHm+mHcyMQvU/fslTTOQu6kxzaJBCKI
+	41zl+zjEfm0DcfnVdgiQ/7NmYPPoGwE1D4JhldShMJt4B9kNXKdj1gxbGqsu+L61vMO2ibxJqco
+	TqQ28MW/FDyP0aOQOxnzJ8NqXJwKeSMn7mLg1MNfybxSaxKGDcFeXnhLJsoh1CzDx0TCCtdx1bt
+	sK/fmA3rccoReIsxZCfSI92g1ZC3lSpPHjLs=
+X-Received: by 2002:a05:6512:696:b0:5ba:3339:6f6b with SMTP id
+ 2adb3069b0e04-5bcde6bcb06mr3984876e87.20.1791853123500; Mon, 12 Oct 2026
+ 17:58:43 -0700 (PDT)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Mon, 12 Oct 2026 17:58:43 -0700
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Mon, 12 Oct 2026 17:58:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Received: from 77377267392	named unknown	by gmailapi.google.com	with HTTPREST;
+ Tue, 13 Oct 2026 02:58:08 +0200
+From: Kim Wooseok <5mghybrid@khu.ac.kr>
+In-Reply-To: <04d26f79d5984920a9584d3f31ec3b58@realtek.com>
+References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
+ <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr> <1fc8c339df1944afa6186197337edda3@realtek.com>
+ <CAH1Bc_yOhZ9oqreJOLKb5RDFEW=0Zid=h4xu9oTR51RDwj_bww@mail.gmail.com> <04d26f79d5984920a9584d3f31ec3b58@realtek.com>
+Date: Mon, 12 Oct 2026 17:58:42 -0700
+X-Gm-Features: AclHuK_Ifxw9QoHyehe9vofNrat2BMmKWVVJ1nmld41C-se66_6KTgRsHhz1IK0
+Message-ID: <CAH1Bc_wUq2Nmhvd9q85JP+KyCYHB_xqStfmo6ZirOxOkXzAg9A@mail.gmail.com>
+Subject: Re: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
+ from CPU state
+To: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-4oCN6rmA7Jqw7ISdW+2VmeyDnV0o7KCE7J6Q7KCV67O064yA7ZWZIOyghOyekOqzte2VmeqzvCkg
-PDVtZ2h5YnJpZEBraHUuYWMua3I+IHdyb3RlOg0KPiBIaSBQaW5nLUtlLA0KPiANCj4gPiBDb29s
-LiBIb3cgZGlkIHlvdSBkaWcgdGhhdD8NCj4gDQo+IEkgd2FzIHJlcGVhdGVkbHkgcG93ZXItY3lj
-bGluZyB0aGUgQVAgdG8gdGVzdCByZWNvdmVyeSBvZiBhIHBlcnNpc3RlbnQNCj4gcXVldWUgaW4g
-bXkgcHJvamVjdC4gQWZ0ZXIgZml4aW5nIGEgc2VwYXJhdGUgTmV0d29ya01hbmFnZXIgaXNzdWUs
-DQo+IHNvbWUgcmVjb25uZWN0IGZhaWx1cmVzIHJlbWFpbmVkLCBzbyBJIHN0YXJ0ZWQgbG9va2lu
-ZyBhdCB0aGUgZHJpdmVyLg0KPiANCj4gSSB3YXMgdGVzdGluZyB3aXRoIGZvdXIgUmFzcGJlcnJ5
-IFBpcywgYW5kIGRpZmZlcmVudCB1bml0cyB3b3VsZCBoaXQNCj4gdGhlIHNhbWUgZmFpbHVyZSBh
-Y3Jvc3MgcnVucy4gT24gYSBmYWlsaW5nIHVuaXQsIFJGX01PREUgd2FzIGNvcnJ1cHRlZCwNCj4g
-YW5kIHJlc3RvcmluZyBpdHMgaW5pdGlhbGl6ZWQgdmFsdWUgYnJvdWdodCByZWNlcHRpb24gYmFj
-ay4NCj4gDQo+IEkgbmFycm93ZWQgaXQgZG93biB0byByZWdpc3RlciBjb3JydXB0aW9uIGR1cmlu
-ZyBzY2FubmluZywgdGhlbiB0cmFjZWQNCj4gdGhlIHJlZ2lzdGVyIGFjY2VzcyBwYXRoLiBUaGF0
-IGxlZCBtZSB0byB1c2JfYnVmIHNoYXJpbmcgYSBjYWNoZSBsaW5lDQo+IHdpdGggdGhlIG11dGV4
-J3Mgd2FpdGVyIHN0YXRlLCB3aGljaCBjYW4gY2hhbmdlIHdoaWxlIGEgVVNCIHRyYW5zZmVyDQo+
-IGlzIGluIHByb2dyZXNzLg0KDQpEb2VzIGl0IG1lYW4gdGhhdCBkYXRhIGluIGEgY2FjaGUgbGlu
-ZSBjYW4ndCBiZSBtb2RpZmllZCB3aGlsZSBhIFVTQg0KdHJhbnNmZXI/IEV2ZW4gdGhlIGRhdGEg
-aXNuJ3QgYSBwYXJ0IG9mIHRyYW5zZmVycmluZyBkYXRhLg0KSG93IGNhbiBpdCBhZmZlY3QgdGhl
-IHRyYW5zZmVyPyANCg0KKEknbSBub3QgYSBjYWNoZS1saW5lIGV4cGVydC4gSnVzdCB0cnkgdG8g
-dW5kZXJzdGFuZCB0aGUgY2F1c2UpLg0KDQpQaW5nLUtlDQoNCg==
+Hi Ping-Ke,
+
+> Does it mean that data in a cache line can't be modified while a USB
+> transfer? Even the data isn't a part of transferring data.
+> How can it affect the transfer?
+
+Yes, in this non-coherent DMA case, even modifying bytes outside the
+transfer buffer can cause corruption if they share its cache line.
+
+On the affected Pi, the 4-byte usb_buf shares a 64-byte cache line with
+the mutex's waiter state.
+
+The important detail is that a task waiting for the mutex still updates
+its wait list before acquiring the lock. So the mutex serializes access
+to usb_buf, but its own waiter state can change during the transfer.
+
+For example, suppose the buffer initially contains 10:
+
+1. Task A holds usb_buf_mutex and starts a USB register read.
+2. Task B tries to acquire the same mutex and joins its wait list.
+   This can bring the shared cache line into the CPU cache, including
+   the old buffer value 10. Updating the list makes that line dirty.
+3. The USB controller writes the new value 20 to RAM via DMA. Since
+   this DMA is not cache-coherent, the cached copy still contains 10.
+4. If the dirty cache line is then written back, the old buffer value
+   10 can be written back along with the updated wait list, overwriting
+   the value 20 from DMA.
+
+Task B never directly touched usb_buf, but the writeback operates on
+the shared cache line. A subsequent register read-modify-write can
+then propagate that incorrect value into the hardware configuration.
+
+I think one possible overlap during a rescan is between the
+channel-change path in rtl8xxxu_config() and the periodic
+rtl8xxxu_watchdog_callback(). The watchdog runs every two seconds
+and may update frequency correction settings through
+rtl8xxxu_track_cfo(). Both paths use the same register buffer and
+usb_buf_mutex, so the watchdog could join the wait list while the
+channel-change path is waiting for a USB read to finish.
+
+Allocating usb_buf separately removes that sharing. The mutex still
+serializes register accesses, while updates to its wait list no longer
+affect the cache line containing the DMA buffer.
+
+Wooseok
