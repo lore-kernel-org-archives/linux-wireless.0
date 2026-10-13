@@ -1,85 +1,114 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mail.bues.ch (bues.ch [116.203.120.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB4551CF65
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 16:46:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77968525A97;
+	Tue, 13 Oct 2026 17:23:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.120.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791910012; cv=none; b=V6HSeCnljavXFp6FsjCxZ0V0W8/K4wf7Iae8xoT8W/T7id6HJcxBmaRi2yuDwB3IUiIlH9GiSnUOkcvabYfkwWfvFPX80VgL1urTsdzOfM+V5IJMolspjVtHzixtMh57IhIkmcoqEE0jik0h2t4hAnkpDZmcs3QmCRjhVa8f52U=
+	t=1791912220; cv=none; b=Aw0q7u2eSejLo4yOiqB08XTZOPsMkhwwehiEAHpI6mv+SFzS1msAMLoYxJgol4ilLzpT9gH5AxzlGMDD+Sje4xmVEQFECLDi12tJIzUqzkfgIKIlFKClaEfHaa1yPqenXdeVfZHfc6FkVr/+mdwhbHToTWaHx4FkGAEkrTVsEp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791910012; c=relaxed/simple;
-	bh=cpuFSJHGfxMv/DIFz6fwhLfh8AMSAm5kBky9M0SJgZo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RNyx2B1KthrjTg1SI9ce49neXymh8KjnHFneKiHLGOSeAKinQGzyT0vnDSpilzwZfafP0KEY6icnWjmdlVkUZfpe0mFRY6UuOEjm06HsgDy1n86+FpJFOLFKqvaHQq4catLVscJctai+Yu23oK1PZqgAaveH+jHFNuZBsruhpiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=adOZ40/b; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1791912220; c=relaxed/simple;
+	bh=A/YI76f2RyrA7/hLcB14W6hV19Hnp2ZlmyAwRTM3yzM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bv9EktGlzZ+DyOC4scY6jXeas0m+WM9mFYA5UwGSO7tjC5REI2C/POK4lrxIITf/o2icSvzPuB4WSk2gQiIf8lV0xGz+bIbztiu5CRYIYvway2/IS7RPGTGprf334L3Ub/A6sdk3xAKxiCqYPBUgiQa23h9pFJhE0cN+RT+Zrsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b=jfARWGMy; arc=none smtp.client-ip=116.203.120.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="adOZ40/b"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791910010;
+	dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b="jfARWGMy"
+Date: Tue, 13 Oct 2026 19:16:31 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
+	t=1791911850;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=AeUXwYP8/FNRFS/9a5waWcvU8Fc4oxwHviZo5ZlClWA=;
-	b=adOZ40/bCs43ssjnFZRCJw+YifBWZhw6yeKfTyeqZwIwFwnRb+szj6TdagVjjn22QSp13k
-	D+4ln+dJ4huk3AjzcYhqTYw2leCJjI3f+iNkWE0+SL00eZcTzjxcGAhTpp5l/rr4Wft/V1
-	lhIAIa8b3sneQzpHKioPbl57YaCntyo=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-187-IGwXJBi8NjC_dVumhGwqZQ-1; Tue,
- 13 Oct 2026 16:46:44 +0000
-X-MC-Unique: IGwXJBi8NjC_dVumhGwqZQ-1
-X-Mimecast-MFC-AGG-ID: IGwXJBi8NjC_dVumhGwqZQ_1791910002
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1BCA2180076D;
-	Tue, 13 Oct 2026 16:46:42 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7A66B1956095;
-	Tue, 13 Oct 2026 16:46:40 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jtornosm@redhat.com
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	jjohnson@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 0/4] ath11k/ath12k: implement TX flow control
-Date: Tue, 13 Oct 2026 18:46:38 +0200
-Message-ID: <20261013164639.237064-1-jtornosm@redhat.com>
-In-Reply-To: <20260917064825.12747-1-jtornosm@redhat.com>
-References: <20260917064825.12747-1-jtornosm@redhat.com>
+	bh=d9g6jP4qEhtT1uBeR2i4sCcfvskcoKc3UCgUipUHDac=;
+	b=jfARWGMyO3/9I1xZ3a3fKDwhPFIhvfdWSgUu/pKPzYVXxl51dNTSqJgM88jUtcWtPjp5dV
+	VeEwjvlC1KJMJMLbVrPzDJfrDvTR7kP/xOAvugimAtLLSgloV5R9reI7zrik/fsC9rkcHb
+	VS6s6g75gp+MnoeF/GYqX8JYCoyzTm9W4ChOFCTtCwSZZEBo5KVy4niPX1x8eBtdH/IePn
+	YH4aCMTe485sfjHhuwh09q+Oy86NzCJi8xQ9FIiqtZLl53NjTbBQVsQ/tqe53kiupg/aS9
+	dr8UZiOBfZpdlAXRHwpMCEfFLdGRs3Y8DxdbHm9CLobDrLo4F0ZAc39xd/ai5g==
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Andreas Wendleder <gonsolo@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+ linux-kernel@vger.kernel.org, johannes@sipsolutions.net,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: b43: fix use-after-free in b43_bcma_remove()
+Message-ID: <20261013191631.3bd9e1e9@barney>
+In-Reply-To: <20261013000124.48605-1-gonsolo@gmail.com>
+References: <20261013000124.48605-1-gonsolo@gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/NXc4D1nqH6VOP7oBQwhClrB";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
+
+--Sig_/NXc4D1nqH6VOP7oBQwhClrB
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jeff,
- 
-Friendly follow-up on this series. v7 addressed your spin_lock_bh
-comment, and I replied to the rcu_dereference_bh question explaining
-why ath12k differs from the ath9k case (happy to do it as a follow-up
-if you'd like). My results with VMs are much better with the TX control,
-and I think it can help baremetal too.
+On Tue, 13 Oct 2026 02:01:24 +0200
+Andreas Wendleder <gonsolo@gmail.com> wrote:
 
-Any feedback on v7, anything else I can do?
-At least, would it be acceptable for ath11k?
-For ath12k, if the concern is the locking, the rcu_dereference_bh
-refactoring would require changes to existing mac_op_tx code. Is that
-the direction you want?
- 
-Thanks
- 
-Best regards
-José Ignacio
+> --- a/drivers/net/wireless/broadcom/b43/main.c
+> +++ b/drivers/net/wireless/broadcom/b43/main.c
+> @@ -5677,6 +5677,7 @@ static void b43_bcma_remove(struct bcma_device *cor=
+e)
+>  {
+>  	struct b43_wldev *wldev =3D bcma_get_drvdata(core);
+>  	struct b43_wl *wl =3D wldev->wl;
+> +	struct b43_bus_dev *dev =3D wldev->dev;
+> =20
+>  	/* We must cancel any work here before unregistering from ieee80211,
+>  	 * as the ieee80211 unreg will destroy the workqueue. */
+> @@ -5691,14 +5692,14 @@ static void b43_bcma_remove(struct bcma_device *c=
+ore)
+>  		ieee80211_unregister_hw(wl->hw);
+>  	}
+> =20
+> -	b43_one_core_detach(wldev->dev);
+> +	b43_one_core_detach(dev);
+> =20
+>  	/* Unregister HW RNG driver */
+>  	b43_rng_exit(wl);
+> =20
+>  	b43_leds_unregister(wl);
+>  	ieee80211_free_hw(wl->hw);
+> -	kfree(wldev->dev);
+> +	kfree(dev);
+>  }
+> =20
+>  static struct bcma_driver b43_bcma_driver =3D {
 
+Reviewed-by: Michael B=C3=BCsch <m@bues.ch>
+
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
+
+--Sig_/NXc4D1nqH6VOP7oBQwhClrB
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmrOZ28ACgkQ9TK+HZCN
+iw6IdBAAqyTllSEWsIjkZbp2nGNOSl5JkyQWh2Id2BFGB9EKVAEJHvumWsraKdiA
+HdMD4jp+smiu5mzva0jjwctzVfI2NnS3xExX/eeaPUVY9liWtU6wzV/nn5OG7uJ+
+WWe8VjRs8+K65JF39rYpTSnnFuGLeqEX5psIpNL31w6PxalJlrdhCk1VKrOx3fzI
+XTeC14I//1yxkDJRSTl8FLJS/2i76xmGtWCaKSTaSY+ZM4540AYR++TGJza4zEIr
+IMr+fdXZLn+edr9SiRQeOqgTzIPE5iXeBIGOQ8UVT1wKSilO0vcsxRtrD36Rf5k1
+rogSpx5brVtaugQZ7tZ2lKzx5gVm+5wyWpf9lGRKtkEhkOb+DfogAp7xlVV/h8Mc
+z3J+h6U8/cYVw7H1imXd8Qa25SAAaNJE2JGbnpOoz2RFWBJWHGzhxSKs2sq4KFEH
+OX6LcUzoD23cORbYiInLM9zIRXAaEP11i5eAI4hZiT9Q16TdeYiS1LzCkjilaM7n
+YyOn6CYOAbdJCki/U5DpFsFFuDFZbFljA4Ab/dwfz13+2qFsIFPZ+wnJd1L6+971
+oOKldm702D8KaDW6XYRY64U2nTSaNFgSY8lq+90yjGHTgE812vPkhcylPfNwUoGS
+NfzlmON3PB1cBhf4j+Z48hxHYy2FH3+ehom16r/MYpZCO4PsoK8=
+=elc1
+-----END PGP SIGNATURE-----
+
+--Sig_/NXc4D1nqH6VOP7oBQwhClrB--
