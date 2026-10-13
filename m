@@ -1,131 +1,111 @@
-Received: from smtpbgau1.qq.com (smtpbgau1.qq.com [54.206.16.166])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-166.mta0.migadu.com [91.218.175.166])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF1523392D;
-	Tue, 13 Oct 2026 07:00:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.16.166
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECBA9415F27
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 07:02:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791874853; cv=none; b=bCddOz+3w6NvDppdR398pERY4dttW5GppZIpb6joVFewAVwUWJvQd6CqtMq2l3GLLW9+eL8Q9eqHfq21gsOGvLQVtwtowxuUUaMNwH17CoypWIvvh9TE3OyuUt+tmhTZtmzlv5fOOdFetpCI7jjRRDvUBvQG/P2TT4FPG5aD2sw=
+	t=1791874959; cv=none; b=T3joRvKFgHyPiKJBXNQHwsJfsOdVGE53BLwUHiQahimV+JWXC6+uI293lPmcaKy0K7HdBRSoxZkW7kK5xb//KvSh+sw0aJkp4wcT85TjX3Udjl2rAIXFATHJSI+xWxIlqYxM9H9LnOIH5+PMn6mfUN5ghSd78OmoHDG3tLyJZVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791874853; c=relaxed/simple;
-	bh=MCvURXVDNqtwrsTYwhupxgidDS6LkB99D2/ekPu5keM=;
-	h=From:To:Cc:Subject:Mime-Version:Content-Type:Date:Message-ID:
-	 References:In-Reply-To; b=CYV/EVC7QlUfs95tTPxhCL653/Cec8y5foYP5wcuBfoX392Kzrvb/bzGg29j4UG6EXHtJglZD9u2jfEwXm/qV4HU3wYzJ5fx57mMXltYXDeVL4J0rjoFTtoMU55MIhImTcFo/J2oENsJZcXNKDrrTVa+c1upUyG35hY1/ml1W5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=dkivvlnl; arc=none smtp.client-ip=54.206.16.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1791874959; c=relaxed/simple;
+	bh=yUiq5iq51oseANDtP3Z+8R3RmzVahs3k+89exp+vZp0=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=RG4g1PwFl2su4ej2z6b25ET7TffkaWNZmmlwGpP4G4cT1kvUVaogQFMeA/hfbVgQqrSZsxxKsKqPMk5MNjXo09p4s7y8Xq76xGrUswYWBQ+HWeg6hrD/uxova/bJNdY9pdQt7LzxOarU1MqKzw8ctiGRn3xtROlTZRroIy5NTzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Wnjmv1yX; arc=none smtp.client-ip=91.218.175.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="dkivvlnl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1791874808;
-	bh=MCvURXVDNqtwrsTYwhupxgidDS6LkB99D2/ekPu5keM=;
-	h=From:To:Subject:Mime-Version:Date:Message-ID;
-	b=dkivvlnlWBz5wtOKGqC9iTJ0XdBjrzX2CFuzQalJ9MNSyvROMnyh/MtShodW9H0sE
-	 TuFihVbGhPHNcpHvaBjE134Jrqt5F4YZqX9lVwI7nQ1R4KCkS5c09yZDq48Az+bhTy
-	 yBktLPm7z86lKVgx7w+Bt8kLNaI34qpxN5Rdgcbk=
-EX-QQ-RecipientCnt: 8
-X-QQ-GoodBg: 1
-X-QQ-SSF: 00400000000000F0
-X-QQ-FEAT: D4aqtcRDiqQnft7kyUuJbd/1GndRJklzmB5VJlBX//o=
-X-QQ-BUSINESS-ORIGIN: 2
-X-QQ-Originating-IP: /6Uw1c5u993PWpcukGUx6luJKSi6w5nYoyyQSaAiISo=
-X-QQ-STYLE: 
-X-QQ-mid: lv3gz7b-6t1791874801tcf0ad032
-From: "=?utf-8?B?V2VudGFvIEd1YW4=?=" <guanwentao@uniontech.com>
-To: "=?utf-8?B?R3JlZyBLSA==?=" <gregkh@linuxfoundation.org>
-Cc: "=?utf-8?B?U2FzaGEgTGV2aW4=?=" <sashal@kernel.org>, "=?utf-8?B?a2FydGlrZXk0MDY=?=" <kartikey406@gmail.com>, "=?utf-8?B?SGFyc2hpdCBNb2dhbGFwYWxsaQ==?=" <harshit.m.mogalapalli@oracle.com>, "=?utf-8?B?am9oYW5uZXM=?=" <johannes@sipsolutions.net>, "=?utf-8?B?bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn?=" <linux-wireless@vger.kernel.org>, "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>, "=?utf-8?B?c3RhYmxl?=" <stable@vger.kernel.org>
-Subject: Re: [PATCH 6.1.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Wnjmv1yX"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=yUiq5iq51oseANDtP3Z+8R3RmzVahs3k+89exp+vZp0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791874954; v=1; x=1792479754;
+ b=Wnjmv1yXhdJwGV0Fgr/5KeJ223678u0B9D1VIZ/X4OpIr3HtV0LGK/46sZr6xmxWjkmLyGyq
+ imy837Sgtp3ygURqPGSIr4cqsTJeLpGEDR5u+GId8R2DjYhkvry0NFvmuaTmmIi+t/b1tnJ/cqS
+ HGdYr0Yvcxu7GlLcJ72bBlmc=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 90f89cb3ca4609ea;
+	Tue, 13 Oct 2026 07:02:34 +0000
+X-Mizu-Trace-ID: 90f89cb3ca4609ea
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Date: Tue, 13 Oct 2026 15:00:01 +0800
-X-Priority: 3
-Message-ID: <tencent_7D240953233FF6C810CA7875@qq.com>
-X-QQ-MIME: TCMime 1.0 by Tencent
-X-Mailer: QQMail 2.x
-X-QQ-Mailer: QQMail 2.x
-References: <20261012154246.1233496-1-guanwentao@uniontech.com>
-	<2026101331-bullpen-carnation-3533@gregkh>
-In-Reply-To: <2026101331-bullpen-carnation-3533@gregkh>
-X-QQ-ReplyHash: 2242530464
-X-BIZMAIL-ID: 1574893119301239894
-X-Address-Ticket:version=;type=;ticket_id=;id_list=;display_name=;session_id=;
-X-QQ-SENDSIZE: 520
-Received: from qq.com (unknown [127.0.0.1])
-	by smtp.qq.com (ESMTP) with SMTP
-	id ; Tue, 13 Oct 2026 15:00:02 +0800 (CST)
-Feedback-ID: lv:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: NLH1RjbartcJ7FFFPwdS1gdNOXMWgZv/66sn8d0royjcP8CQd4L3n5pv
-	ZGUIj0uEjk8slvWOLb9pzXARwXwvqG+vp/YsZLOixgUhKiMuO2648juneXht8P7MJr0R/0W
-	6H4+vEzjOv0654etyuyz/WTNH4gu3eyPQuwO2bYk1QgdLaaP2Xx3YyDP2Mykf/6M9c+tV+b
-	cPvXbXOlFKvpkTP/i6XzjrgYBl8WJla2lsIibadyVclumoNqxTIuvSnGMiCttJSseDpJbee
-	psx0s617k087MMVCRPOxDk6coB21F9+Sh0YPUmScQTBe/H74LfEjxHm3eYoFxmIvkgeURwn
-	z5e4eqCjkrDkXGSg4ajMA6IwyMvVqY6K1GQXKJUtZ0wYYAiyH1aaW+N1tlmFwPu6XMR9Nkg
-	+wak/ZIPAt/0aWmbcvn8PdxeocSeMIFSArvMnoOfLuhhFt+tclZSTsZpOVJ5m8z87S0Cc/d
-	ZAvbwTA3zqldAQbP+Me5kptx+io0A+OTiwLwt7Tp6I59/HuVB29qgOlGco0UYN0BzObjQj4
-	vTg8vG8CAaNbviyXIr6OMRL013elM7BM/XEgKwzaWX7rNZsbgEoPdjAUWFpzN4/7U2hjh9R
-	F9qlH3I6tGBc2zF15KWWp7WRJugvWI+TidVUoMpw4mNx8P4MYHeOQBijkSiMYCa4UahKX6O
-	ZS6Jq03f1yL8znHXFR70ueVZBmov7E1cE4MjRZmC/mPEsEKkYUg5w3x56UtOi+kCNQnoLlV
-	5m3nOaMijxyBLp6GdzMtiToY6jPt6gW4RrmPt42dCISvlXWRGPjmQCgw8FUlxZlvj02WZuN
-	AIjYWt/gQT3pYARNdwotarIlrywnNx6Kr5BqhJUzMhgaHCN/blQthW1cDPmk1j82njNdeDg
-	zn6d1b8htW3DnkqvIOgDiIA0p9z7J8oQF2olU2SNiAPJYm8lhcVgIbC0viQu1scQGZPaXVk
-	WquIBGiu6CS/cdpLKviA7uCUhXEh1L3lM05CFzbstFNhL4izXvGv1YKCO7QgUVO+VdLvz8B
-	Dpak/VYjHc2t8jbpixjDoSmKZTSiF9HTzgEA21QWNJH42McZyKeqguvfXbPm/cyBbaP0zwG
-	hVPdQ0TXviSLqIorkDUO/VbnUYg/ru7vQ==
-X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
-X-QQ-RECHKSPAM: 0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 13 Oct 2026 07:02:33 +0000
+Message-Id: <DM3INPS04NBT.17RGVMX2K5ZQD@linux.dev>
+Cc: "Luka Gejak" <luka.gejak@linux.dev>, "Martin Blumenstingl"
+ <martin.blumenstingl@googlemail.com>, "Jernej Skrabec"
+ <jernej.skrabec@gmail.com>, "Ulf Hansson" <ulfh@kernel.org>,
+ <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH rtw-next v5 2/4] wifi: rtw88: sdio: Track running state
+ and cancel TX worker on stop
+From: "Luka Gejak" <luka.gejak@linux.dev>
+To: "Alastair D'Silva" <alastair@d-silva.org>,
+ <linux-wireless@vger.kernel.org>, "Ping-Ke Shih" <pkshih@realtek.com>,
+ "Kalle Valo" <kvalo@kernel.org>
+X-Mailer: aerc 0.22.0
+References: <20261011220755.1673367-1-alastair@d-silva.org>
+ <20261011220755.1673367-3-alastair@d-silva.org>
+In-Reply-To: <20261011220755.1673367-3-alastair@d-silva.org>
 
-SGksDQoNCj4gT24gTW9uLCBPY3QgMTIsIDIwMjYgYXQgMTE6NDI6NDZQTSArMDgwMCwgV2Vu
-dGFvIEd1YW4gd3JvdGU6DQo+ID4gVGhpcyBlcnJvciBwYXRoIHJldHVybnMgd2hpbGUgd2Rl
-dl9sb2NrKCkgaXMgc3RpbGwgaGVsZCwgc28gb25lDQo+ID4gbWFsZm9ybWVkIElFIHJlcXVl
-c3QgY2FuIHBlcm1hbmVudGx5IGJsb2NrIGxhdGVyIG9wZXJhdGlvbnMgb24gdGhpcw0KPiA+
-IHdpcGh5LiBSb3V0ZSB0aGUgZXJyb3IgdGhyb3VnaCBvdXQgdG8gcmVsZWFzZSB0aGUgbG9j
-ay4NCj4gPg0KPiA+IFJlcG9ydGVkLWJ5OiBIYXJzaGl0IE1vZ2FsYXBhbGxpIDxoYXJzaGl0
-Lm0ubW9nYWxhcGFsbGlAb3JhY2xlLmNvbT4NCj4gPiBDbG9zZXM6IGh0dHBzOi8vbG9yZS5r
-ZXJuZWwub3JnL2FsbC85M2RiMGVhZS1mNDc5LTQzNDMtYTEyNi01OTk4N2FlMGRjMjJAb3Jh
-Y2xlLmNvbS8NCj4gPiBGaXhlczogOGI5MjFhODk5MzQ2ICgid2lmaTogY2ZnODAyMTE6IHZh
-bGlkYXRlIElFcyBpbiBjZmc4MDIxMV93ZXh0X3Npd2dlbmllKCkiKQ0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IFdlbnRhbyBHdWFuIDxndWFud2VudGFvQHVuaW9udGVjaC5jb20+DQo+ID4gLS0t
-DQo+ID4gIG5ldC93aXJlbGVzcy93ZXh0LXNtZS5jIHwgNiArKysrLS0NCj4gPiAgMSBmaWxl
-IGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mvd2V4dC1zbWUuYyBiL25ldC93aXJlbGVzcy93ZXh0
-LXNtZS5jDQo+ID4gaW5kZXggYmUxMjFmYTM2YzUxNC4uYmE2ZDg4MjdmNjRiMyAxMDA2NDQN
-Cj4gPiAtLS0gYS9uZXQvd2lyZWxlc3Mvd2V4dC1zbWUuYw0KPiA+ICsrKyBiL25ldC93aXJl
-bGVzcy93ZXh0LXNtZS5jDQo+ID4gQEAgLTM1Miw4ICszNTIsMTAgQEAgaW50IGNmZzgwMjEx
-X3dleHRfc2l3Z2VuaWUoc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4gPiAgLyogbm90aGlu
-ZyAqLw0KPiA+ICB9DQo+ID4gDQo+ID4gLSBpZiAoIWZvcl9lYWNoX2VsZW1lbnRfY29tcGxl
-dGVkKGVsZW0sIGV4dHJhLCBpZV9sZW4pKQ0KPiA+IC0gcmV0dXJuIC1FSU5WQUw7DQo+ID4g
-KyBpZiAoIWZvcl9lYWNoX2VsZW1lbnRfY29tcGxldGVkKGVsZW0sIGV4dHJhLCBpZV9sZW4p
-KSB7DQo+ID4gKyBlcnIgPSAtRUlOVkFMOw0KPiA+ICsgZ290byBvdXQ7DQo+ID4gKyB9DQo+
-ID4gDQo+ID4gIGllID0ga21lbWR1cChleHRyYSwgaWVfbGVuLCBHRlBfS0VSTkVMKTsNCj4g
-PiAgaWYgKCFpZSkgew0KPiA+IC0tDQo+ID4gMi4zOS41DQo+ID4NCj4gPg0KPiANCj4gPGZv
-cm1sZXR0ZXI+DQo+IA0KPiBUaGlzIGlzIG5vdCB0aGUgY29ycmVjdCB3YXkgdG8gc3VibWl0
-IHBhdGNoZXMgZm9yIGluY2x1c2lvbiBpbiB0aGUNCj4gc3RhYmxlIGtlcm5lbCB0cmVlLiAg
-UGxlYXNlIHJlYWQ6DQo+ICAgIGh0dHBzOi8vd3d3Lmtlcm5lbC5vcmcvZG9jL2h0bWwvbGF0
-ZXN0L3Byb2Nlc3Mvc3RhYmxlLWtlcm5lbC1ydWxlcy5odG1sDQo+IGZvciBob3cgdG8gZG8g
-dGhpcyBwcm9wZXJseS4NCj4gDQo+IDwvZm9ybWxldHRlcj4NCg0KPiBJdCBvciBhbiBlcXVp
-dmFsZW50IGZpeCBtdXN0IGFscmVhZHkgZXhpc3QgaW4gTGludXggbWFpbmxpbmUgKHVwc3Ry
-ZWFtKS4NClRoaXMgaXMgYSB0cml2YWwgZml4IGZvciB0aGVzZSBzdGFibGUgdHJlZXMsIHRo
-ZSBwcm9ibGVtIGlzIG5vdCBleGlzdGVkIGluIG1haW5saW5lIA0KDQo+IEl0IG11c3QgYmUg
-b2J2aW91c2x5IGNvcnJlY3QgYW5kIHRlc3RlZC4NCkl0IGlzIGNsZWFybHkgcmlnaHQuDQoN
-Cj4gSXQgY2Fubm90IGJlIGJpZ2dlciB0aGFuIDEwMCBsaW5lcywgd2l0aCBjb250ZXh0Lg0K
-SXQgaXMgc21hbGwuLyArNCBsaW5lcyAtMiBsaW5lcw0KDQo+IEl0IG11c3QgZm9sbG93IHRo
-ZSBEb2N1bWVudGF0aW9uL3Byb2Nlc3Mvc3VibWl0dGluZy1wYXRjaGVzLnJzdCBydWxlcy4N
-Ckl0cyBmaXhlcyB0YWdzIHBvaW50IHRvIHRoZSBzdGFibGUgYmFja3BvcnQgY29tbWl0IGlk
-cy4NCg0KPkl0IG11c3QgZWl0aGVyIGZpeCBhIHJlYWwgYnVnIHRoYXQgYm90aGVycyBwZW9w
-bGUgb3IganVzdCBhZGQgYSBkZXZpY2UgSUQuIFRvIGVsYWJvcmF0ZSBvbiB0aGUgZm9ybWVy
-Og0KPiBJdCBmaXhlcyBhIHByb2JsZW0gbGlrZSBhbiBvb3BzLCBhIGhhbmcsIGRhdGEgY29y
-cnVwdGlvbiwgYSByZWFsIHNlY3VyaXR5IGlzc3VlLCBhIGhhcmR3YXJlIHF1aXJrLCBhIGJ1
-aWxkIGVycm9yIChidXQgbm90IGZvciB0aGluZ3MgbWFya2VkIENPTkZJR19CUk9LRU4pLCBv
-ciBzb21lIOKAnG9oLCB0aGF04oCZcyBub3QgZ29vZOKAnSBpc3N1ZS4NCkl0cyBmaXhlcyBh
-IGxvY2sgd2l0aCBvdXQgdW5sb2NrLCBhbmQgd2Ugbm8gbmVlZCB0byBiYWNrcG9ydCBmNDJk
-MjJkM2Y3OTYzOSANCigid2lmaTogY2ZnODAyMTE6IGRlZmluZSBhbmQgdXNlIHdpcGh5IGd1
-YXJkIikNCmFuZCBndWFyZCBmb3Igb2xkZXIga2VybmVsIHRyZWUuDQoNCkJScw0KV2VudGFv
-IEd1YW4=
+On Sun Oct 11, 2026 at 10:07 PM UTC, Alastair D'Silva wrote:
+> When rtw_sdio_stop() disables interrupts, in-flight interrupt handlers or
+> delayed TX work may still run against a powered-down device.
+>
+> Track the operational state in rtwsdio->running with an irq_lock mutex
+> (similar to PCI), check it at the entry of rtw_sdio_handle_interrupt()
+> and rtw_sdio_tx_handler(), serialize state transitions in rtw_sdio_start(=
+)
+> and rtw_sdio_stop() under sdio_claim_host() and irq_lock, and cancel the
+> TX worker synchronously in rtw_sdio_stop().
+>
+> Fixes: 28eaf7971a20 ("wifi: rtw88: sdio: add TX back-pressure and retry o=
+n page starvation")
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+> ---
+>  drivers/net/wireless/realtek/rtw88/sdio.c | 46 +++++++++++++++++++++--
+>  drivers/net/wireless/realtek/rtw88/sdio.h |  3 ++
+>  2 files changed, 45 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wire=
+less/realtek/rtw88/sdio.c
+> index e39284b71837..7d4f17e96648 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+[...]
+> +static void rtw_sdio_deinit(struct rtw_dev *rtwdev)
+> +{
+> +	struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
+> +
+> +	mutex_destroy(&rtwsdio->irq_lock);
+> +}
+> +
+[...]
+> @@ -1843,7 +1879,8 @@ int rtw_sdio_probe(struct sdio_func *sdio_func,
+>  	rtw_sdio_free_irq(rtwdev, sdio_func);
+>  err_destroy_txwq:
+>  	rtw_sdio_deinit_tx(rtwdev);
+> -err_sdio_declaim:
+> +err_deinit:
+> +	rtw_sdio_deinit(rtwdev);
+>  	rtw_sdio_declaim(rtwdev, sdio_func);
 
+One nit: The rename takes every failure that lands on err_destroy_txwq
+(rtw_chip_info_setup(), rtw_sdio_request_irq(), and rtw_register_hw() throu=
+gh
+err_free_irq) past the new err_deinit, so rtw_sdio_deinit() runs only when
+rtw_sdio_init_tx() itself failed. Nothing to fix while the helper is a
+mutex_destroy() alone. If it ever grows, that path would miss it, so I woul=
+d
+either let those failures fall through to err_deinit or drop the helper.
+
+Best regards,
+Luka Gejak
