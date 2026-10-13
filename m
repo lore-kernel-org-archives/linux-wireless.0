@@ -1,244 +1,108 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mail.systemli.org (mail1.systemli.org [93.190.126.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 169A651CF56;
-	Tue, 13 Oct 2026 17:42:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F15051B17F;
+	Tue, 13 Oct 2026 18:04:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.190.126.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791913382; cv=none; b=UuIcf96UocKAY+lx3YGjn7ge+TzDDFTNiGY8nbtNMYXmizhMRjv9e1pei1bgSqa0DK2MiMZlO4TYessuyMpfNB1ykhX+0be6KV1/MoUuc1c2C3NdEs7TJB3XhPBNlyI2WvFUTDNRaLgF4OThIWm94LzpBG3/GYzI5hMUq3S4Nj4=
+	t=1791914702; cv=none; b=YxvhzQc8xUN27FOhYFuPkE9vu6p9gspeILfKK2Tom7ebLVm70RqEVRWI94RdODtQs7Ibpo4Y1qvGEJSpqziYOretdU0/6C1gyOizN2Tzw3+XjY2O8qmih6nqTc0bbrV6T8JymDl0xhS/RL2DuT09YH37skkvaBtpKovzKnfy8PM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791913382; c=relaxed/simple;
-	bh=OFAfkLArIISQMtIBXs88GvQjJ68ib8glSTZMngiiQEQ=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=FEtKSeCYeZQFr2UnJ9KAwWoDEwg3akinq/G9QYNUd1Vz4TgtDKIhrV0RZu6lAstExRl1Lv2q5wLWyCSLhKx7uwPncxAAacK3XVvXrfs9WvyelqFbNKEntQZs3W1bQjWNkFhGZWGfp4Y1Rf/nZ6cSA79t2vXAORRY85yizcBfrs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dcRHtIlk; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1791914702; c=relaxed/simple;
+	bh=iounqlr0ghmzA6o+rB5NrROrpFTPWmYgWQS/iCRWrgg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WIH2JpZe+/Az2Lz/Q4ZmFk3IWmDGV8TNcsUgDutrGD+uC/CZYprz7ws9giCh6GRUzTueow/W+uHnEuP1m0/jrB/tomkIpVOTBDR7kdsNU/dWC4d7Fe42ZD7MQbMgsSuYTp038Lf2navjG0U1bnqYQFYRLPbZeqGumIQirZjcr1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org; spf=pass smtp.mailfrom=systemli.org; dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b=lO2HLpfW; arc=none smtp.client-ip=93.190.126.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=systemli.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dcRHtIlk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791913380; x=1823449380;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=OFAfkLArIISQMtIBXs88GvQjJ68ib8glSTZMngiiQEQ=;
-  b=dcRHtIlkyLFTYXUpFOTuI+9QUKm6UkI9CWe3DHEsg1456Z8zaaryiqZu
-   fRupBKafJzCff+z+8/J1VxU4NWfice/ko4s2G1fraujEQNe9IDiKfPPWb
-   QGiruk/YMX2auRbStvPaTPKdUw7tpn4anHLPxho0OnZoDcNwa5MmpagK9
-   z3DdnBXYSovzgxgSO6KIfHTJIzShsdwJJScjldLRjtAe11D0vFWlOLK69
-   c52dTsGHrC2oI5K9QrN1zH/Ilh/rjDf/wXY5Q6SP1X6XZnr52uUPJAoDf
-   jWqZ/HtjzFHiSJWtIfF9G5cUWlVcANAcqRKCH3xaLqB+MNVRjS9QB7gn+
-   A==;
-X-CSE-ConnectionGUID: PZgINpXmTRqYooepVux1YQ==
-X-CSE-MsgGUID: qhoh2UouRJCWwW5rZoLf5g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="743342"
-X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
-   d="scan'208";a="743342"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:42:59 -0700
-X-CSE-ConnectionGUID: mJakSm3RTfqxHKqqjVFQSA==
-X-CSE-MsgGUID: yytLjkP+Ssuq5WYE6NXFSw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
-   d="scan'208";a="1581795"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:42:54 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 13 Oct 2026 20:42:51 +0300 (EEST)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Manivannan Sadhasivam <mani@kernel.org>, 
-    Bjorn Helgaas <bhelgaas@google.com>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-    Jonathan Derrick <jonathan.derrick@linux.dev>, 
-    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
-    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-    Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v3 2/8] PCI/ASPM: Add pci_force_enable_link_state() API
-In-Reply-To: <20261013163107.GA1522779@bhelgaas>
-Message-ID: <2517d322-9e5d-5b81-aa67-56705879be74@linux.intel.com>
-References: <20261013163107.GA1522779@bhelgaas>
+	dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b="lO2HLpfW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=systemli.org;
+	s=default; t=1791914182;
+	bh=0f8w1KPBYOz2blbtbFQ6Hgoz6pLh4QfF+bptlzDZmiE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=lO2HLpfWy9nscnFDSZHRiqHmz0BL+D2s+PBmQNEga5smwGHRjbQSPuJrGQK9KutSY
+	 I+2mehjg1VUcPjP73AgluH9rb8CbKLTnA1WDWB6mBi6qidHuc2MrD+zFvcf9jlaElw
+	 cwGHU+pF4HPMstwpJrU/+Vv4miY2pk0zw68DfMxPyn942Rux5TRisPddbV8KQCjfBc
+	 /D+m8fNDUubGxKXUgkGe8ne5+1yRgNz2HPn59dcPQtlfcfWJVbKhy6Vdsf4PYZSIkZ
+	 M8LPm1iuvRngxd3QXdiTVJEz1ZbK5kYPpBeaiAhIMv0ceIay+gsNnO43IrcOtKZBk5
+	 /3vFaKSM7RQVQ==
+Message-ID: <bc41916b-f88e-4700-b399-418cd28b7126@systemli.org>
+Date: Tue, 13 Oct 2026 19:56:20 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-2133506109-1791910896=:21507"
-Content-ID: <26a95089-31f0-9c7c-e696-b88359198360@linux.intel.com>
+Subject: Re: [PATCH] wifi: ath9k: restore background spectral scan after reset
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+ linux-kernel@vger.kernel.org
+References: <20260915194327.30397-1-vincent@systemli.org>
+Content-Language: en-US
+From: nick <vincent@systemli.org>
+In-Reply-To: <20260915194327.30397-1-vincent@systemli.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Report: 
+	*  0.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
+	*  0.0 DKIM_VALID_AU Message has a valid DKIM or DK signature from author's
+	*       domain
+	*  0.0 DKIM_VALID_EF Message has a valid DKIM or DK signature from
+	*      envelope-from domain
+	*  0.0 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*      valid
+	*  0.0 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -1.9 BAYES_00 BODY: Bayes spam probability is 0 to 1%
+	*      [score: 0.0002]
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi, I did not get any feedback so far, so a friendly reminder. :)
 
---8323328-2133506109-1791910896=:21507
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <c9ae739a-d76a-a4da-d400-ab79af0b37d5@linux.intel.com>
+Bests
+Nick
 
-On Tue, 13 Oct 2026, Bjorn Helgaas wrote:
-> On Tue, Oct 13, 2026 at 02:41:32PM +0300, Ilpo J=E4rvinen wrote:
-> > On Mon, 12 Oct 2026, Bjorn Helgaas wrote:
-> > > On Wed, Jul 08, 2026 at 04:30:16PM +0200, Manivannan Sadhasivam wrote=
-:
-> > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com=
+On 9/15/26 9:43 PM, Nick Hainke wrote:
+> A reset leaves spectral_mode set to SPECTRAL_BACKGROUND, but resets the
+> spectral registers and receive filter. The driver therefore still reports
+> a background scan even though the hardware no longer produces FFT samples.
 >
-> > > >=20
-> > > > pci_enable_link_state() and pci_enable_link_state_locked() APIs onl=
-y enable
-> > > > the ASPM states that were not previously disabled via
-> > > > pci_disable_link_state*() API or blacklisted during init (e.g. the =
-pre-1.1
-> > > > device blacklist, which is only meant to be overridden with
-> > > > 'pcie_aspm=3Dforce'). This is an intentional behavior as these APIs=
- must not
-> > > > silently re-enable states that were deliberately disabled, since do=
-ing so
-> > > > could enable ASPM on a link where it is known to be unsafe.
-> > >=20
-> > > I think this is saying that many uses of pci_disable_link_state() are
-> > > to avoid hardware errata, i.e., these are basically quirks, and we
-> > > should *never* enable those ASPM states.
-> > >=20
-> > > > However, some drivers (e.g. the atheros WLAN drivers) save the curr=
-ently
-> > > > enabled ASPM states, disable all ASPM states before firmware downlo=
-ad, and
-> > > > then try to restore exactly the states that were enabled before. Re=
-storing
-> > > > those states requires re-enabling states that were just disabled vi=
-a
-> > > > pci_disable_link_state() API. But, this cannot be achieved using th=
-e
-> > > > existing APIs.
-> > >=20
-> > > This sounds like it's also for hardware errata: if ASPM works
-> > > correctly, there's no need to disable it during firmware download.  I
-> > > think this is *only* the atheros drivers, isn't it?  I didn't see any
-> > > others.
-> >=20
-> > There are more that should use disable/enable API. In addition ath*, I =
-had=20
-> > also these in my unfinished series:
-> >=20
-> >   brcmfmac
-> >   ib-hfi1
-> >   rtlwifi
-> >   rtsx
-> >   r8169
->=20
-> Thanks for those pointers!
->=20
-> > > > Hence, add pci_force_enable_link_state() API for such callers. Unli=
-ke
-> > > > pci_enable_link_state(), it re-enables the requested states even if=
- they
-> > > > were previously disabled via pci_disable_link_state() or disabled d=
-uring
-> > > > init. The caller is therefore responsible for only enabling states =
-the
-> > > > device actually supports, typically the ones previously reported by
-> > > > pcie_aspm_enabled().
-> > >=20
-> > > The problem is that pci_enable_link_state() cannot enable things that
-> > > were disabled by pci_disable_link_state().  They're not symmetric,
-> > > which violates the caller's expectation.
-> >=20
-> > Yes.
-> >=20
-> > This patch seems to come with my Suggested-by but what I suggested (and=
-=20
-> > had a patch for) was to make disable/enable proper symmetric pairs beca=
-use=20
-> > it is very trappy otherwise. If something else is needed in addition, t=
-hat=20
-> > should be named differently like Bjorn also seems to suggest (however s=
-ee=20
-> > my alternative suggestion below).
-> >=20
-> > I renamed the current pci_enable_link_state() to=20
-> > pci_set_default_link_state() in my own attempt to get room for adding t=
-he=20
-> > symmetric pair.
->=20
-> We might need new names for pci_enable_link_state(),
-> pci_disable_link_state(), and the quirk thing.  If we keep the same
-> names, I think it will be pretty complicated to manage the changing
-> semantics when backporting driver changes that use them.
-
-I'm not good at picking names, but yes, reusing a name in the same=20
-kernel cycle using the same signature is asking for trouble.
-
-> > > Instead of adding pci_force_enable_link_state(), I think we should ad=
-d
-> > > a new interface for the *quirk* behavior that permanently disables
-> > > states.  Then pci_enable_link_state() and pci_disable_link_state()
-> > > could be made symmetric.
-> >=20
-> > My suggestion is to make the disables/enables counted per state which=
-=20
-> > would allow parallel sources of disables to function without clashing.
->=20
-> By parallel sources, are you thinking of sysfs and driver calls?  If
-> locking would be sufficient I think that would end up being simpler.
+> Re-trigger background spectral scanning after reset recovery so the
+> software and hardware state match again. Do not re-trigger spectral
+> scanning in disabled, manual, channel-scan, radar, or off-channel modes.
 >
-> But maybe the issue is these devices where we think ASPM breakage only
-> happens in certain circumstances, e.g., firmware download, so we want
-> to keep states disabled for that period.  Then I guess locking inside
-> the enable/disable doesn't prevent sysfs from enabling those states
-> during that period.
-
-There are (at least) these sources:
-
-- quirks (disable only)
-- hw has ASPM related problem at certain phase of operation
-- sysfs
-- lane margining (the proposed patch)
-
-I don't think locks can really solve this well as the sources seem largely=
-=20
-independent from each other and are not necessarily short-lived periods=20
-(one could perhaps say some cases occur early enough the other sources don'=
-t=20
-matter but there are still enough sources even with that considered so=20
-that disable/enable pair could overlap, potentially leading to unwanted=20
-enable of a state).
-
-IIRC, L0p was also incompatible with ASPM states. But it could be HW is=20
-fine with both being configure at the same point of time (I've not checked=
-=20
-the spec with that in mind).
-
-> > Disable quirks could simply not have the pairing enable, no special=20
-> > interface needed.
->=20
-> I'm not sure what this looks like to the caller.  A parameter that
-> says whether to count the disable?
-
-A quirk would just makes pci_disable_link_state(pdev, PCIE_LINK_STATE_L1)=
-=20
-call (or whatever that ends up being called if a new name is selected),=20
-which increases disabled counter for L1 state. As there's no pairing=20
-enable, L1 cannot be enabled anymore by anything.
-
-Only if the particular state disable counter is 0, the ASPM driver allows=
-=20
-enabling that state or the other states depending on that state.
-
-
-Sysfs accessors need to keep an additional bit per state to not request=20
-multiple disables/enables for a single state. The rest of the sources have=
-=20
-it naturally from their operation and pairing disable/enable calls.
-
-> I think having a different function name would be helpfully
-> descriptive because permanently removing an advertised capability is
-> different from temporarily disabling a feature.
-
---=20
- i.
---8323328-2133506109-1791910896=:21507--
+> Assisted-by: Claude:opus-5
+> Signed-off-by: Nick Hainke <vincent@systemli.org>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c | 12 ++++++++++++
+>   1 file changed, 12 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 740a6fc7b067..00e587fe6ee3 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -231,6 +231,17 @@ static bool ath_prepare_reset(struct ath_softc *sc)
+>   	return ret;
+>   }
+>   
+> +static void ath_restore_spectral_scan(struct ath_softc *sc, bool start)
+> +{
+> +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> +
+> +	if (!start || sc->cur_chan->offchannel || sc->hw->conf.radar_enabled ||
+> +	    sc->spec_priv.spectral_mode != SPECTRAL_BACKGROUND)
+> +		return;
+> +
+> +	ath9k_cmn_spectral_scan_trigger(common, &sc->spec_priv);
+> +}
+> +
+>   static bool ath_complete_reset(struct ath_softc *sc, bool start)
+>   {
+>   	struct ath_hw *ah = sc->sc_ah;
+> @@ -269,6 +280,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+>   		ath_restart_work(sc);
+>   		ath_txq_schedule_all(sc);
+>   	}
+> +	ath_restore_spectral_scan(sc, start);
+>   
+>   	sc->gtt_cnt = 0;
+>   
