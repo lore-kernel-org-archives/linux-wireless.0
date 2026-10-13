@@ -1,43 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638F4509F01
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62039509EE9
 	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 13:36:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791898615; cv=none; b=PMRF56UIGKKHsNLx1D7NOXBCEaIBXvnaPF4zN8HP9fXMU0AYBypCNSo6ObL/6dyyfm4tTeEdAm5m6zQ5N4ZqvM0nUPI49xE6OHqSUMbchxUbY6KKgIT9fijCvNNXrPsDcdA6+W9614Nmp3823upB3wqbRZ0C3quv/bHHxNe7FKs=
+	t=1791898615; cv=none; b=T4uo7EUlv1VceW5pueYdMMAPHRH5x6bIWrGupvn1JwBzvC0sfKyzXt8ayKwyf/CG+pVIacDrujewsIIbqC2FDA6zoHJWURb+oZssNaRVS0hpySRaf7vbDva6ICcT7U76GGFWqEPjdkvLDXL3X3TBbkCw5GRp6If6EnB9l0suris=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791898615; c=relaxed/simple;
-	bh=ofmwdUp17tgc4saQ1W0vRi7xU/7PMebtkYk7U8fD39g=;
+	bh=KFDgnJfu7h972WU+4VJFzCKmFPhr1pgE3IN/bx9PloM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mFhghZxnyPjWf1k66vI1W3s0+w8F9jns0sPNytCUWFl83kHZh/LCicwg4moB2XIL8jqZS0Wd991jJ1SZckJxzcFyQmwMr9jRvDGecD5LSXxG9syn/ORzAKhXn+UJe48FHzLDRSbXlXZeEnZTFcMhwr34ZVnWUJXhup4VALYSNjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=CZS1Jt2j; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=VVoMutRDkdPgHpK4nheiSUVTGuZHuSfsNUvJQTTx/JinJr0fLJ+X8xywccS1yPbcGUERLqdex3ZGxp7PwECSyzEFgZbUikxQZK8p3ru/2vSD/M9Gz3MwGvcRNn0OAnpKwds6NXJPszOL5GC00gRnuPJMXoYJkHhCMmSijkwPX3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=q545FSst; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="CZS1Jt2j"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="q545FSst"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=3Gy6dnq3ylfl+IArxfuKfKxq4u3m8TgNqjPx6jpBv1k=;
-	t=1791898613; x=1793108213; b=CZS1Jt2jKwaUBrtJephPUdfYg6v4SI9A/pYUSGWhWNIInn3
-	vtA4nRUi0nDyeDQqIV5pUjNdIyhL4VdwtAv3jPk4cWLX1p8JvuDxRlPwYTTAAJbPu5PvRMVakNsFx
-	grU9NlbomtQr20MGE4dtz/ezhhcJWdnYbDV7x8hTmD4NeF/ASh9EIde2U+cH3T7IzadQ/KiYueHNU
-	VotR7SgwZ7ZeGaOUeNQ664upSVsBT7ZJ9hiuOblXPO+ycuvaoxBGy3hu1PExecnIu4fPjQI8xCoxt
-	/nwrWrzuM4wUEWbsIwuU+Iv9uYRmHfBU6GHL5wGCQB0t+9Sk6VeOOVdo8ryMhJjQ==;
+	Resent-Cc:Resent-Message-ID; bh=gtt7cI/lMqqh+CJG0kllsQRF8xKJ4NcOSOZ+s55Py4s=;
+	t=1791898613; x=1793108213; b=q545FSstNOw42OeI0FJqdjFLFqie+GYUbBDyLWZBz6UaySh
+	XAIJudMoQmC1fWFsdlbjHiFo5uEqQyt/NsU6itK1T/HYgPCJw8T0rqzBa5zl1LbFs6GYFvpp3v6fO
+	zGdiH59TYs+nqw3Py2xx3BnNxG8dCo2qR5bC6tWfwEp6ShMTEEq8WFb63rZ6cywcOY6E49/KoQjtc
+	QOTERVTDFFZCPVoGZxM00l5CBP50zGeytdfAh/Rku/WJV2npr0rTRk9agVIV3PGozNkxaKdWnL/ay
+	l/C/qOL6MYfYrn3Ok2H/EQvYm29AeOoAJbWwoSoj42RBVWEA6ZIqQRSDluCSe1nw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xGcgP-0000000HRBK-0Y89;
-	Tue, 13 Oct 2026 15:36:45 +0200
+	id 1xGcgO-0000000HRBK-0PqH;
+	Tue, 13 Oct 2026 15:36:44 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next 02/10] wifi: mac80211: refactor UHR code from AP channel determination
-Date: Tue, 13 Oct 2026 15:25:14 +0200
-Message-ID: <20261013153640.2c019565b808.Ia668cdf25c3bce621fd178e47790b3285393c647@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless-next 01/10] wifi: mac80211: parse and validate UHR parameters update
+Date: Tue, 13 Oct 2026 15:25:13 +0200
+Message-ID: <20261013153640.7216b9c6edd1.Ied9308726862ef36c71473d8871345f9adc6204d@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261013133640.270974-12-johannes@sipsolutions.net>
 References: <20261013133640.270974-12-johannes@sipsolutions.net>
@@ -51,310 +50,327 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This code is only going to grow with more UHR complexity
-(e.g. I'm going to add checks for UHR parameter updates)
-and it's already long, move it to a separate function.
+Find the UHR parameters update element, defragment it and
+validate that all the tuples are valid. This implements
+the parsing per D2.0.
 
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 276 ++++++++++++++++++++++++--------------------
- 1 file changed, 148 insertions(+), 128 deletions(-)
+ include/linux/ieee80211-uhr.h | 178 +++++++++++++++++++++++++++++++---
+ net/mac80211/ieee80211_i.h    |  14 ++-
+ net/mac80211/parse.c          |  20 ++++
+ 3 files changed, 191 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6ec45a9f7221..5a02bf98e14f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -185,6 +185,152 @@ struct ieee80211_determine_ap_chan_output {
- 	enum nl80211_chan_width non_dbe_width;
- };
+diff --git a/include/linux/ieee80211-uhr.h b/include/linux/ieee80211-uhr.h
+index 19e9260d0db8..aef487b984e5 100644
+--- a/include/linux/ieee80211-uhr.h
++++ b/include/linux/ieee80211-uhr.h
+@@ -84,6 +84,15 @@ struct ieee80211_uhr_npca_info {
+ 	__le16 dis_subch_bmap[];
+ } __packed;
  
-+static bool
-+ieee80211_determine_ap_chan_uhr(struct ieee80211_sub_if_data *sdata,
-+				struct ieee80211_supported_band *sband,
-+				const struct ieee80211_determine_ap_chan_data *data,
-+				struct ieee80211_determine_ap_chan_output *out)
++static inline int
++ieee80211_uhr_npca_info_size(const struct ieee80211_uhr_npca_info *npca)
 +{
-+	const struct ieee802_11_elems *elems = data->elems;
-+	const struct ieee80211_uhr_operation *uhr_oper = elems->uhr_operation;
-+	struct cfg80211_chan_def *chandef = data->chandef;
-+	struct cfg80211_chan_def npca_chandef = *chandef;
-+	const struct ieee80211_sta_uhr_cap *uhr_cap;
-+	const struct ieee80211_uhr_npca_info *npca;
-+	const struct ieee80211_uhr_dbe_info *dbe;
-+	struct cfg80211_chan_def dbe_chandef;
++	if (npca->params & cpu_to_le32(IEEE80211_UHR_NPCA_PARAMS_DIS_SUBCH_BMAP_PRES))
++		return sizeof(*npca) + sizeof(npca->dis_subch_bmap[0]);
 +
-+	if (elems->frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
-+		int dbe_bw_mhz;
-+		u8 dbe_bw;
-+
-+		if (!data->cur_chandef || !data->cur_dbe_used ||
-+		    !cfg80211_chandef_compatible(chandef, data->cur_chandef))
-+			return true;
-+
-+		dbe_bw = le16_get_bits(uhr_oper->params,
-+				       IEEE80211_UHR_OPER_PARAMS_DBE_BW);
-+		dbe_bw_mhz = ieee80211_uhr_dbe_bw_mhz(dbe_bw);
-+		if (dbe_bw_mhz < 0) {
-+			sdata_info(sdata, "AP UHR DBE bandwidth invalid, drop UHR\n");
-+			return false;
-+		}
-+
-+		if (cfg80211_chandef_get_width(data->cur_chandef) == dbe_bw_mhz) {
-+			*chandef = *data->cur_chandef;
-+			out->dbe_used = true;
-+		}
-+
-+		return true;
-+	}
-+
-+	/* frames other than beacons carry UHR capability too */
-+	if (!elems->uhr_cap)
-+		return false;
-+
-+	npca = ieee80211_uhr_npca_info(uhr_oper);
-+
-+	if (npca && !(elems->uhr_cap->mac.mac_cap[0] &
-+			IEEE80211_UHR_MAC_CAP0_NPCA_SUPP)) {
-+		sdata_info(sdata,
-+			   "AP without UHR NPCA capability uses it, disabling UHR\n");
-+		return false;
-+	}
-+
-+	/* DBE is not considered yet, so this works */
-+	if (!cfg80211_chandef_npca_valid(sdata->local->hw.wiphy,
-+					 &npca_chandef, npca) ||
-+	    cfg80211_chandef_add_npca(sdata->local->hw.wiphy,
-+				      &npca_chandef, npca)) {
-+		sdata_info(sdata,
-+			   "AP UHR NPCA settings invalid, disabling UHR\n");
-+		return false;
-+	}
-+
-+	uhr_cap = ieee80211_get_uhr_iftype_cap_vif(sband, &sdata->vif);
-+	/* can't happen since we must have UHR to parse the elems */
-+	if (WARN_ON(!uhr_cap))
-+		return false;
-+
-+	if (uhr_cap->mac.mac_cap[0] & IEEE80211_UHR_MAC_CAP0_NPCA_SUPP)
-+		*chandef = npca_chandef;
-+
-+	dbe = ieee80211_uhr_oper_dbe_info(uhr_oper);
-+	if (dbe) {
-+		const struct ieee80211_uhr_cap_dbe *dbe_cap;
-+		u8 dbe_bw_oper;
-+		u8 dbe_bw_cap;
-+
-+		dbe_cap = ieee80211_uhr_dbe_cap(elems->uhr_cap);
-+
-+		if (!dbe_cap) {
-+			sdata_info(sdata,
-+				   "AP without UHR DBE capability uses it, disabling UHR\n");
-+			return false;
-+		}
-+
-+		dbe_bw_oper = u8_get_bits(dbe->params,
-+					  IEEE80211_UHR_DBE_OPER_BANDWIDTH);
-+
-+		if (le16_get_bits(uhr_oper->params,
-+				  IEEE80211_UHR_OPER_PARAMS_DBE_BW) != dbe_bw_oper) {
-+			sdata_info(sdata,
-+				   "AP UHR DBE settings mismatch, disabling UHR\n");
-+			return false;
-+		}
-+
-+		if (ieee80211_uhr_dbe_bw_mhz(dbe_bw_oper) < 0) {
-+			sdata_info(sdata,
-+				   "AP UHR DBE bandwidth invalid, disabling UHR\n");
-+			return false;
-+		}
-+
-+		dbe_bw_cap = u8_get_bits(dbe_cap->cap,
-+					 IEEE80211_UHR_MAC_CAP_DBE_MAX_BW);
-+
-+		switch (dbe_bw_cap) {
-+		case IEEE80211_UHR_DBE_MAX_BW_40:
-+		case IEEE80211_UHR_DBE_MAX_BW_80:
-+		case IEEE80211_UHR_DBE_MAX_BW_160:
-+		case IEEE80211_UHR_DBE_MAX_BW_320:
-+			break;
-+		default:
-+			sdata_info(sdata,
-+				   "AP UHR DBE capability invalid, disabling UHR\n");
-+			return false;
-+		}
-+
-+		/* 1-4 are same in DBE capabilities, map 320-2 to 320 */
-+		if (dbe_bw_oper == IEEE80211_UHR_DBE_OPER_BW_320_2)
-+			dbe_bw_oper = IEEE80211_UHR_DBE_MAX_BW_320;
-+		if (dbe_bw_oper > dbe_bw_cap) {
-+			sdata_info(sdata,
-+				   "AP UHR DBE wider than capability, disabling UHR\n");
-+			return false;
-+		}
-+	}
-+
-+	dbe_chandef = *chandef;
-+
-+	if (cfg80211_chandef_add_dbe(&dbe_chandef, dbe)) {
-+		sdata_info(sdata,
-+			   "AP UHR DBE settings invalid, disabling UHR\n");
-+		return false;
-+	}
-+
-+	if (dbe &&
-+	    /* maybe driver would like to never use DBE */
-+	    uhr_cap->mac.mac_cap[1] & IEEE80211_UHR_MAC_CAP1_DBE_SUPP &&
-+	    ieee80211_chandef_usable(sdata, &dbe_chandef,
-+				     IEEE80211_CHAN_DISABLED)) {
-+		out->non_dbe_width = chandef->width;
-+		*chandef = dbe_chandef;
-+		out->dbe_used = true;
-+	}
-+
-+	return true;
++	return sizeof(*npca);
 +}
 +
- static enum ieee80211_conn_mode
- ieee80211_determine_ap_chan(struct ieee80211_sub_if_data *sdata,
- 			    const struct ieee80211_determine_ap_chan_data *data,
-@@ -404,134 +550,8 @@ ieee80211_determine_ap_chan(struct ieee80211_sub_if_data *sdata,
- 	if (conn->mode < IEEE80211_CONN_MODE_UHR || !uhr_oper || !elems->ml_basic)
- 		return IEEE80211_CONN_MODE_EHT;
+ #define IEEE80211_UHR_DPS_PADDING_DELAY			0x0000003F
+ #define IEEE80211_UHR_DPS_TRANSITION_DELAY		0x00003F00
+ #define IEEE80211_UHR_DPS_ICF_REQUIRED			0x00010000
+@@ -161,6 +170,18 @@ struct ieee80211_uhr_dps_info {
+ 	__le32 params;
+ } __packed;
  
--	if (elems->frame_type != (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
--		struct cfg80211_chan_def npca_chandef = *chandef;
--		const struct ieee80211_sta_uhr_cap *uhr_cap;
--		const struct ieee80211_uhr_npca_info *npca;
--		const struct ieee80211_uhr_dbe_info *dbe;
--		struct cfg80211_chan_def dbe_chandef;
--
--		/* frames other than beacons carry UHR capability too */
--		if (!elems->uhr_cap)
--			return IEEE80211_CONN_MODE_EHT;
--
--		npca = ieee80211_uhr_npca_info(uhr_oper);
--
--		if (npca && !(elems->uhr_cap->mac.mac_cap[0] &
--				IEEE80211_UHR_MAC_CAP0_NPCA_SUPP)) {
--			sdata_info(sdata,
--				   "AP without UHR NPCA capability uses it, disabling UHR\n");
--			return IEEE80211_CONN_MODE_EHT;
--		}
--
--		/* DBE is not considered yet, so this works */
--		if (!cfg80211_chandef_npca_valid(sdata->local->hw.wiphy,
--						 &npca_chandef, npca) ||
--		    cfg80211_chandef_add_npca(sdata->local->hw.wiphy,
--					      &npca_chandef, npca)) {
--			sdata_info(sdata,
--				   "AP UHR NPCA settings invalid, disabling UHR\n");
--			return IEEE80211_CONN_MODE_EHT;
--		}
--
--		uhr_cap = ieee80211_get_uhr_iftype_cap_vif(sband, &sdata->vif);
--		/* can't happen since we must have UHR to parse the elems */
--		if (WARN_ON(!uhr_cap))
--			return IEEE80211_CONN_MODE_EHT;
--
--		if (uhr_cap->mac.mac_cap[0] & IEEE80211_UHR_MAC_CAP0_NPCA_SUPP)
--			*chandef = npca_chandef;
--
--		dbe = ieee80211_uhr_oper_dbe_info(uhr_oper);
--		if (dbe) {
--			const struct ieee80211_uhr_cap_dbe *dbe_cap;
--			u8 dbe_bw_oper;
--			u8 dbe_bw_cap;
--
--			dbe_cap = ieee80211_uhr_dbe_cap(elems->uhr_cap);
--
--			if (!dbe_cap) {
--				sdata_info(sdata,
--					   "AP without UHR DBE capability uses it, disabling UHR\n");
--				return IEEE80211_CONN_MODE_EHT;
--			}
--
--			dbe_bw_oper = u8_get_bits(dbe->params,
--						  IEEE80211_UHR_DBE_OPER_BANDWIDTH);
--
--			if (le16_get_bits(uhr_oper->params,
--					  IEEE80211_UHR_OPER_PARAMS_DBE_BW) != dbe_bw_oper) {
--				sdata_info(sdata,
--					   "AP UHR DBE settings mismatch, disabling UHR\n");
--				return IEEE80211_CONN_MODE_EHT;
--			}
--
--			if (ieee80211_uhr_dbe_bw_mhz(dbe_bw_oper) < 0) {
--				sdata_info(sdata,
--					   "AP UHR DBE bandwidth invalid, disabling UHR\n");
--				return IEEE80211_CONN_MODE_EHT;
--			}
--
--			dbe_bw_cap = u8_get_bits(dbe_cap->cap,
--						 IEEE80211_UHR_MAC_CAP_DBE_MAX_BW);
--
--			switch (dbe_bw_cap) {
--			case IEEE80211_UHR_DBE_MAX_BW_40:
--			case IEEE80211_UHR_DBE_MAX_BW_80:
--			case IEEE80211_UHR_DBE_MAX_BW_160:
--			case IEEE80211_UHR_DBE_MAX_BW_320:
--				break;
--			default:
--				sdata_info(sdata,
--					   "AP UHR DBE capability invalid, disabling UHR\n");
--				return IEEE80211_CONN_MODE_EHT;
--			}
--
--			/* 1-4 are same in DBE capabilities, map 320-2 to 320 */
--			if (dbe_bw_oper == IEEE80211_UHR_DBE_OPER_BW_320_2)
--				dbe_bw_oper = IEEE80211_UHR_DBE_MAX_BW_320;
--			if (dbe_bw_oper > dbe_bw_cap) {
--				sdata_info(sdata,
--					   "AP UHR DBE wider than capability, disabling UHR\n");
--				return IEEE80211_CONN_MODE_EHT;
--			}
--		}
--
--		dbe_chandef = *chandef;
--
--		if (cfg80211_chandef_add_dbe(&dbe_chandef, dbe)) {
--			sdata_info(sdata,
--				   "AP UHR DBE settings invalid, disabling UHR\n");
--			return IEEE80211_CONN_MODE_EHT;
--		}
--
--		if (dbe &&
--		    /* maybe driver would like to never use DBE */
--		    uhr_cap->mac.mac_cap[1] & IEEE80211_UHR_MAC_CAP1_DBE_SUPP &&
--		    ieee80211_chandef_usable(sdata, &dbe_chandef,
--					     IEEE80211_CHAN_DISABLED)) {
--			out->non_dbe_width = chandef->width;
--			*chandef = dbe_chandef;
--			out->dbe_used = true;
--		}
--	} else if (data->cur_chandef && data->cur_dbe_used &&
--		   cfg80211_chandef_compatible(chandef, data->cur_chandef)) {
--		u8 dbe_bw = le16_get_bits(uhr_oper->params,
--					  IEEE80211_UHR_OPER_PARAMS_DBE_BW);
--		int dbe_bw_mhz;
--
--		dbe_bw_mhz = ieee80211_uhr_dbe_bw_mhz(dbe_bw);
--		if (dbe_bw_mhz < 0) {
--			sdata_info(sdata,
--				   "AP UHR DBE bandwidth invalid, drop UHR\n");
--			return IEEE80211_CONN_MODE_EHT;
--		}
--
--		if (cfg80211_chandef_get_width(data->cur_chandef) == dbe_bw_mhz) {
--			*chandef = *data->cur_chandef;
--			out->dbe_used = true;
--		}
--	}
-+	if (!ieee80211_determine_ap_chan_uhr(sdata, sband, data, out))
-+		return IEEE80211_CONN_MODE_EHT;
++enum ieee80211_uhr_duo_params {
++	IEEE80211_UHR_DUO_PARAMS_MAX_STANDALONE_DUO_BSPR	= 0x1f,
++};
++
++/**
++ * struct ieee80211_uhr_duo_info - DUO information
++ * @params: the parameters, see &enum ieee80211_uhr_duo_params
++ */
++struct ieee80211_uhr_duo_info {
++	u8 params;
++} __packed;
++
+ #define IEEE80211_UHR_DBE_OPER_BANDWIDTH			0x07
+ #define IEEE80211_UHR_DBE_OPER_DIS_SUBCHANNEL_BITMAP_PRES	0x08
  
- 	return IEEE80211_CONN_MODE_UHR;
- }
+@@ -234,6 +255,15 @@ struct ieee80211_uhr_dbe_info {
+ 	__le16 dis_subch_bmap[];
+ } __packed;
+ 
++static inline int
++ieee80211_uhr_dbe_info_size(const struct ieee80211_uhr_dbe_info *dbe)
++{
++	if (dbe->params & IEEE80211_UHR_DBE_OPER_DIS_SUBCHANNEL_BITMAP_PRES)
++		return sizeof(*dbe) + sizeof(dbe->dis_subch_bmap[0]);
++
++	return sizeof(*dbe);
++}
++
+ #define IEEE80211_UHR_P_EDCA_ECWMIN		0x0007
+ #define IEEE80211_UHR_P_EDCA_ECWMAX		0x0038
+ #define IEEE80211_UHR_P_EDCA_AIFSN		0x01C0
+@@ -287,16 +317,12 @@ static inline bool ieee80211_uhr_oper_size_ok(const u8 *data, u8 len)
+ 		const struct ieee80211_uhr_npca_info *npca =
+ 			(const void *)(data + needed);
+ 
+-		needed += sizeof(*npca);
+-		if (len < needed)
++		if (len < needed + sizeof(*npca))
+ 			return false;
+ 
+-		if (npca->params &
+-		    cpu_to_le32(IEEE80211_UHR_NPCA_PARAMS_DIS_SUBCH_BMAP_PRES)) {
+-			needed += sizeof(npca->dis_subch_bmap[0]);
+-			if (len < needed)
+-				return false;
+-		}
++		needed += ieee80211_uhr_npca_info_size(npca);
++		if (len < needed)
++			return false;
+ 	}
+ 
+ 	/* P-EDCA Operation Parameters */
+@@ -311,16 +337,12 @@ static inline bool ieee80211_uhr_oper_size_ok(const u8 *data, u8 len)
+ 		const struct ieee80211_uhr_dbe_info *dbe =
+ 			(const void *)(data + needed);
+ 
+-		needed += sizeof(*dbe);
+-		if (len < needed)
++		if (len < needed + sizeof(*dbe))
+ 			return false;
+ 
+-		if (dbe->params &
+-		    IEEE80211_UHR_DBE_OPER_DIS_SUBCHANNEL_BITMAP_PRES) {
+-			needed += sizeof(dbe->dis_subch_bmap[0]);
+-			if (len < needed)
+-				return false;
+-		}
++		needed += ieee80211_uhr_dbe_info_size(dbe);
++		if (len < needed)
++			return false;
+ 	}
+ 
+ 	return len >= needed;
+@@ -661,4 +683,128 @@ ieee80211_uhr_mode_change_tuple_size(const struct ieee80211_uhr_mode_change_tupl
+ 	     tuple = (const void *)((const u8 *)tuple +			\
+ 				    ieee80211_uhr_mode_change_tuple_size(tuple)))
+ 
++struct ieee80211_uhr_parameters_update {
++	u8 countdown;
++	u8 tuples[];
++} __packed;
++
++enum ieee80211_uhr_param_update_tuple_control {
++	IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ID		= 0x3f,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ENABLE	= 0x40,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_UPDATE	= 0x80,
++};
++
++enum ieee80211_uhr_param_update_mode_id {
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DPS			= 0,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_NPCA			= 1,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DUO			= 2,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_P_EDCA		= 3,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DBE			= 4,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_AP_PUO		= 5,
++	IEEE80211_UHR_PARAM_UPDATE_MODE_ID_ELR_RX		= 6,
++};
++
++struct ieee80211_uhr_param_update_tuple {
++	u8 control;
++	/* mode length followed by mode specific */
++	u8 variable[];
++} __packed;
++
++static inline int
++ieee80211_uhr_param_update_tuple_size(const struct ieee80211_uhr_param_update_tuple *tuple)
++{
++	if (!(tuple->control & IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ENABLE))
++		return sizeof(*tuple);
++
++	/* fixed size (control) + length field + value of length field */
++	return sizeof(*tuple) + 1 + tuple->variable[0];
++}
++
++/* this also serves as a type-check for the macro */
++static inline size_t
++ieee80211_uhr_param_upd_tuples_rem(const struct ieee80211_uhr_parameters_update *upd,
++				   size_t len,
++				   const struct ieee80211_uhr_param_update_tuple *tuple)
++{
++	return len - ((const u8 *)tuple - (const u8 *)upd);
++}
++
++#define for_each_uhr_param_update_tuple(elem, len, tuple)		\
++	for (tuple = (const void *)((elem) ? (elem)->tuples : NULL);	\
++	     (elem) &&							\
++	     ieee80211_uhr_param_upd_tuples_rem(elem, len, tuple) >=	\
++		sizeof(*tuple) &&					\
++	     ieee80211_uhr_param_upd_tuples_rem(elem, len, tuple) >=	\
++		sizeof(*tuple) +					\
++		!!(tuple->control &					\
++		   IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ENABLE) &&	\
++	     ieee80211_uhr_param_upd_tuples_rem(elem, len, tuple) >=	\
++		ieee80211_uhr_param_update_tuple_size(tuple);		\
++	     tuple = (const void *)((const u8 *)tuple +			\
++				    ieee80211_uhr_param_update_tuple_size(tuple)))
++
++static inline bool
++ieee80211_uhr_param_update_ok(const void *elem, size_t len)
++{
++	const struct ieee80211_uhr_parameters_update *upd = elem;
++	const struct ieee80211_uhr_param_update_tuple *tuple;
++
++	/* the loop checks, but also check here for our after-the-loop check */
++	if (len < sizeof(*upd) + sizeof(*tuple))
++		return false;
++
++	for_each_uhr_param_update_tuple(upd, len, tuple) {
++		u8 params_len;
++
++		/* no further checks for disabled modes */
++		if (!(tuple->control & IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ENABLE))
++			continue;
++
++		params_len = tuple->variable[0];
++
++		switch (u8_get_bits(tuple->control,
++				    IEEE80211_UHR_PARAM_UPDATE_MODE_CTRL_MODE_ID)) {
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DPS:
++			if (params_len < sizeof(struct ieee80211_uhr_dps_info))
++				return false;
++			break;
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_NPCA:
++			if (params_len < sizeof(struct ieee80211_uhr_npca_info))
++				return false;
++			if (params_len <
++			    ieee80211_uhr_npca_info_size((const void *)(tuple->variable + 1)))
++				return false;
++			break;
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DUO:
++			/*
++			 * This one is defined very strangely in the spec,
++			 * having a reserved (!) enable bit and always
++			 * including the parameters. Let's hope it'll get
++			 * unified with the others and implement that.
++			 */
++			if (params_len < sizeof(struct ieee80211_uhr_duo_info))
++				return false;
++			break;
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_P_EDCA:
++			if (params_len < sizeof(struct ieee80211_uhr_p_edca_info))
++				return false;
++			break;
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_DBE:
++			if (params_len < sizeof(struct ieee80211_uhr_dbe_info))
++				return false;
++			if (params_len <
++			    ieee80211_uhr_dbe_info_size((const void *)(tuple->variable + 1)))
++				return false;
++			break;
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_AP_PUO:
++		case IEEE80211_UHR_PARAM_UPDATE_MODE_ID_ELR_RX:
++			/* no further length checks */
++			break;
++		}
++	}
++
++	/* valid only if the whole data was consumed by tuples */
++	return (const u8 *)tuple == (const u8 *)elem + len;
++}
++
+ #endif /* LINUX_IEEE80211_UHR_H */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1a6cbbb5a17d..e321a50e5a6c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1823,11 +1823,12 @@ struct ieee80211_csa_ie {
+ };
+ 
+ enum ieee80211_elems_parse_error {
+-	IEEE80211_PARSE_ERR_INVALID_END		= BIT(0),
+-	IEEE80211_PARSE_ERR_DUP_ELEM		= BIT(1),
+-	IEEE80211_PARSE_ERR_BAD_ELEM_SIZE	= BIT(2),
+-	IEEE80211_PARSE_ERR_UNEXPECTED_ELEM	= BIT(3),
+-	IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC	= BIT(4),
++	IEEE80211_PARSE_ERR_INVALID_END			= BIT(0),
++	IEEE80211_PARSE_ERR_DUP_ELEM			= BIT(1),
++	IEEE80211_PARSE_ERR_BAD_ELEM_SIZE		= BIT(2),
++	IEEE80211_PARSE_ERR_UNEXPECTED_ELEM		= BIT(3),
++	IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC		= BIT(4),
++	IEEE80211_PARSE_ERR_INVALID_UHR_PARAM_UPD	= BIT(5),
+ };
+ 
+ /* Parsed Information Elements */
+@@ -1902,6 +1903,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_uhr_cap *uhr_cap;
+ 	const struct ieee80211_uhr_operation *uhr_operation;
+ 	const struct ieee80211_cip_cap *cip_cap;
++	const struct ieee80211_uhr_parameters_update *uhr_param_upd;
+ 
+ 	/* not the order in the psd values is per element, not per chandef */
+ 	struct ieee80211_parsed_tpe tpe;
+@@ -1933,6 +1935,8 @@ struct ieee802_11_elems {
+ 	size_t ml_basic_len;
+ 	size_t ml_reconf_len;
+ 	size_t ml_epcs_len;
++	/* same for UHR parameters update */
++	size_t uhr_param_upd_len;
+ 
+ 	u8 ttlm_num;
+ 
+diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
+index f3c5a9f6ec7c..22bba5adef26 100644
+--- a/net/mac80211/parse.c
++++ b/net/mac80211/parse.c
+@@ -55,6 +55,7 @@ struct ieee80211_elems_parse {
+ 	struct ieee802_11_elems elems;
+ 
+ 	struct ieee80211_elem_defrag ml_reconf, ml_epcs, ml_basic;
++	struct ieee80211_elem_defrag uhr_param_upd;
+ 
+ 	bool inside_multilink;
+ 	bool skip_vendor;
+@@ -227,6 +228,14 @@ ieee80211_parse_extension_element(u32 *crc,
+ 			elems->uhr_cap_len = len;
+ 		}
+ 		break;
++	case WLAN_EID_EXT_UHR_PARAM_UPD:
++		if (params->mode < IEEE80211_CONN_MODE_UHR)
++			break;
++		calc_crc = true;
++		elems_parse->uhr_param_upd.elem = elem;
++		elems_parse->uhr_param_upd.start = params->start;
++		elems_parse->uhr_param_upd.len = params->len;
++		break;
+ 	}
+ 
+ 	if (crc && calc_crc)
+@@ -1167,6 +1176,17 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
+ 						       &elems_parse->ml_basic,
+ 						       &elems->ml_basic_len);
+ 
++	elems->uhr_param_upd = ieee80211_mle_defrag(elems_parse,
++						    &elems_parse->uhr_param_upd,
++						    &elems->uhr_param_upd_len);
++	if (elems_parse->uhr_param_upd.elem &&
++	    !ieee80211_uhr_param_update_ok(elems->uhr_param_upd,
++					   elems->uhr_param_upd_len)) {
++		elems->uhr_param_upd = NULL;
++		elems->uhr_param_upd_len = 0;
++		elems->parse_error |= IEEE80211_PARSE_ERR_INVALID_UHR_PARAM_UPD;
++	}
++
+ 	if (elems->tim && !elems->parse_error) {
+ 		const struct ieee80211_tim_ie *tim_ie = elems->tim;
+ 
 -- 
 2.56.0
 
