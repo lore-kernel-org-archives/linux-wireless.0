@@ -1,147 +1,153 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9172328635
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 00:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791853128; cv=pass; b=E7TSD05D3+poBHg0oXPW8fducjeaRIIoQk73PYWBwd87NDRKEaiQPDJR8ZXuYbfFI7exW8lAlNiRM77Pd619mXxqpcYW5JjU7jJ3wmiMfmMFV2SPYWF2qEEQ4ozBh4B3XIkG4yQ7F4VqztmbhbIRDnGWX4ZXjpaLTu5mF8JW45I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791853128; c=relaxed/simple;
-	bh=k4uBOr3fUC9C9V/2LEU8KbJ93ho9bjIXmyZyw7xe/xQ=;
-	h=MIME-Version:From:In-Reply-To:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nw92op9Ke8hn2lpNOuJQP9I7CYpNfat43Rm1j+EBXgnJeBlzLmRZgV7CPJd537F0mWVDNXLrhag4Xy1gARsOn6MhNmNkngArwFlpb6oDwZ3FZEnWtHAxbesFHS/Zt+3X3z+/KdY+hr50K4Bq+dh2IABT/wAi1W7kQnM4gYnbQKk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=BMtkzgR9; arc=pass smtp.client-ip=209.85.167.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3A931E84B
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 01:06:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791853561; cv=none; b=Vjxb4eCF2q2hlnpOPLgrgNrX3qs2LK/w5URTuaaYrWIFqELJB3Pd0dxFXiHKkVCT5vpxUDu5QyN/eQdBFuQ1QeeAnTe29ggfwSrWgwcnHhdY+KOiUfOXGTWkTycK7y9D3LndKnrQhm5biT535+sy0oTtoF5PR8a95nPf7ugTWr8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791853561; c=relaxed/simple;
+	bh=hliFxLg/08K/lCxWxcspsNjouNv81fUc8zuqb9TzXng=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=LpMxTp2b6X/umvKJh1zTR/y6BhuI9S91CCnuxcI3gWldkpgimIFz/ofR+59LUbpvbcgYDf1mA+lNJI5Ei02OPQ6UgF5kNn1X+OJH6bgzkUk6sY2ZslcuF1tqZKrtPvJLQaGTb0Va/qVXrVdy4q66QrmoevwOJCaCoPcDMlePGcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YLw2yf5Q; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SneJpvDC; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="BMtkzgR9"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5ba7ed32ccdso2819071e87.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 17:58:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791853123; cv=none;
-        d=google.com; s=arc-20260327;
-        b=D8tJAe6du61MKWbs8AF+9C+XSPG7VxnSyq/ng+cHN29RpgVEbN6y8H23iAV3peNvFq
-         9wa7j5SyZxzYZq6puJkge93o76KXxp2h63BIsa3s7y/zDBkN8svtawomStvJNYfGD1Bu
-         lpI00vgFXsrIHg0FyVjEMPjNLas4SbGeS/A4iETL9kepFwj5BMb5qGD7nv85WBsF928A
-         xAkZoxmQiVrvuhrMOvmT6xHX0KpNkZgqZ1t0GqXewRdUiWyKTdBeykQDfysrV0hSPOLD
-         G6DCB8AxedNlcKuebBzqTXKv8XtkZHfvEfpxvoC/YFMY52AcU1Pdy/RfqoriXVfN6mEL
-         ONNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:references:in-reply-to:from
-         :mime-version:dkim-signature;
-        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
-        fh=OpHnJR1Rz6bLlpQ5IGiauuARtZ3rnK4eQzjxu0UPuq8=;
-        b=nViKxzTW0Mt6keCYFOREwBxMAoLmsgLlFhEqU+5sSVXf4Wm9TjzpVKnLli/aIEVkla
-         7SvSdqceoUkVsOGRS+8XLXFBznJ6flKauUSOvHsn8SJofEA5V4f/2+53g/YOAqJ5pNsi
-         Dp6TBwQ5bMTjGIWjEgZbzhiTsS2IBgX6YX1Ed1VozRKF+wQ/+zFdP9I1q5JCwIGWA2te
-         r1n7V9pBAxjLhK8leSddWpmaT3lkswSGfdUudjFBE8MU9Qy0Oncjb7VWwC4c1ILwisJA
-         SWsYzzz0E4F20I1ZRT8OILoRMDZmThxtJwRTFyqpYBg3y819zYn8Jit/YCQ9yz3z/jGk
-         8/hg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YLw2yf5Q";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SneJpvDC"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CJNBjh2911974
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 01:05:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	E9BOepFcQTT/lrMuwWyqaQqUcTrHIMHwmO24mO04/js=; b=YLw2yf5Qedb5Zy2v
+	5gUsUxPCOa63JrgXqKSYCq79+I24OFu9mMvF9c3KhFsnjQrATtwcI3viSxS0QOZh
+	XlkxFBv/R5wIeuViiH1jKs8roezMOVKtSSJ8Mj0bWGCO9CdKTRf0LNwIBmF1NqVZ
+	2er7pTe076o8Bzv8VffbVsbfdM9L76zhbanICv0uN8kjAllDCuQAbo9KH7/RU5i5
+	9IkTjndMYaSVV9Q+MOBvZSbF3sgoUa5ZyZYeYtO7jrHYPVdcXdYW72RJqb1MDAKZ
+	spw8p1dD6yDGiy9vlQfoI00aqbX95epWuFxcLyjajaras+Xpk3G3YT78t3lhdg6k
+	Ufk1Xg==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h940w1gqs-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 01:05:58 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-35c5aef2a74so988859eec.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2026 18:05:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=khu.ac.kr; s=google; t=1791853123; x=1792457923; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
-         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
-        b=BMtkzgR9AyZ2IkE6qpDGPnMWdFbq/no756w7o58F1IxN0ulDLrxzXRlpH+bgKG1kXn
-         ZkoFrAhqXXnKT9U/iFKiN5nbvcl1MZT5XUXnt/pNuaMantJfrlaUAyISTCm8ejPyh78G
-         gRa/YfGRIn6GmIwKJz7tJcSswfp+Tis5FQBcU=
+        d=oss.qualcomm.com; s=google; t=1791853558; x=1792458358; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=E9BOepFcQTT/lrMuwWyqaQqUcTrHIMHwmO24mO04/js=;
+        b=SneJpvDCqijGA2rzs4I2T1AZIMSy408HfM4uxLrdU+WFcX1hOFyI1JIUlk/A/EZe/6
+         ZPqnpdp6o9v9BcRWDInZnxsQ/qKjeY0dy15bzx12BVqVYyTjMOD77Fn+oNZL57K5W96k
+         4jlOpc4lplyr7CYEjbY1Mm8Nh2dtt5QNgrHgmLnrh1dlKvkCqpj1OQDJibXKJt3NhKkH
+         gWSa1mQnkhkeB/zKuoSMXi91U8wQurVlzfaxD0tFVFUaj84Jn1vOYMoyHXyPWnV6ULBk
+         KrO/nBSlz69NGbBO51isz+WfHuc3tAmvtMz2HcxkOGo9GhBOVp4TECrm+Oghfnt487CX
+         X3/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791853123; x=1792457923;
-        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
-         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0wOhigAERgw/ecq9Zfp4x327PQ7aRIqMRodPt/se31w=;
-        b=FigDq1tWRCIYAEDm7Mblbc2qT7+XR/WYePdfQJUw8bXa34Cum2GqEJFboePu4NlJ/H
-         hZquL8q9fY1fw5bT6Gcyn8v5DUjywhIMlxrZsUWE91T50774OEhJiHQEiP4pvAjXhxO5
-         WIek5NCVrXU/EnhYukbWQexLsN7J0iAq5SZmX7r15MqX8RpNOqGBU8VJCANLRUy4eUhZ
-         coKcDj55J6826eeEoLkpTwd65nbWcXkKBzaURlxGoVws0yJqZsP3qqka9ryX85SGZBtd
-         vLtiqJUWkjXixDXisaIdQIzGba5QjoJDRTUQc6j8jpIsJ275G3KOE9pzQFznNtZl+d8r
-         jpOQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxBUrU3tgmaF6ufZdKgFpokE2AZjZtpRzg5jwdHorf4Ht20Fv5hBpSGiyfq85qCaYTCJz+5RBE8jdKf8k+1iA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJQdCmZKCbAbwm+XaQxis8tRpIPrW24GEfDgkUwUYx67/n8fTs7
-	D8GDWsX5wm8okNb5trX92FsjFb02ol3+cjAA4J+LEg7GeGsQHN+gEmIB5ttMU22hxbWED4+uTH8
-	VJUUqvupWq3WlnaQ9bB75Tybf7dozl7Xjnj8qpxgHAA==
-X-Gm-Gg: AYBFou2HYT9NSYHuZbR0beiGMqqTx5pEsS+bnZ6tx0lEAVoUr566k8QaDyKX7vsrw32
-	nS2ASy9Tudr8cIbtxSmd8QM9qgbpAs7IKFAKkmiGJcd17Pe9ukWdqRkSH0oW5MW/pbhPhdJuQTz
-	8tQh1XQLU4WNPrDKISw4CAfU3sYst56L60SVqxqUOvMXqHm+mHcyMQvU/fslTTOQu6kxzaJBCKI
-	41zl+zjEfm0DcfnVdgiQ/7NmYPPoGwE1D4JhldShMJt4B9kNXKdj1gxbGqsu+L61vMO2ibxJqco
-	TqQ28MW/FDyP0aOQOxnzJ8NqXJwKeSMn7mLg1MNfybxSaxKGDcFeXnhLJsoh1CzDx0TCCtdx1bt
-	sK/fmA3rccoReIsxZCfSI92g1ZC3lSpPHjLs=
-X-Received: by 2002:a05:6512:696:b0:5ba:3339:6f6b with SMTP id
- 2adb3069b0e04-5bcde6bcb06mr3984876e87.20.1791853123500; Mon, 12 Oct 2026
- 17:58:43 -0700 (PDT)
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Mon, 12 Oct 2026 17:58:43 -0700
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Mon, 12 Oct 2026 17:58:20 -0700
+        d=1e100.net; s=20260707; t=1791853558; x=1792458358;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=E9BOepFcQTT/lrMuwWyqaQqUcTrHIMHwmO24mO04/js=;
+        b=bplb5TKEYrsUdH7s91e0rg1TiU7x3zKlC4caUBDYQ/vC9aqf/4GmK5llaSSD/EwjSR
+         /vnIV9EL8VTSldvP78s1QHBtOtzn491A4HINhWEE1n9IVuCPGswbC5h1Dg6yebQaXbNu
+         lCztOncbZ/9CJF0Rb42JHaKWwxCLCZojPn/ozpdmmL3skMj8qmmSxUGM0T+qvz/rudO5
+         bNf7BIKjVzZaXOWxx28ugAf2gpDeJpoUFBtRp43lJDfEq5NG5Ghw4j02OqSUPZXUg1h7
+         yoQx6N+WuSP/i7ke0zsl3PQZkWxno6d+qKI1zlnJvRow/zdqmqnQLkkRg3TsUV/Ieg5l
+         pAqQ==
+X-Gm-Message-State: AFq9FYLFTowfNRsvqRaTEMThzNQmCqacTeng/YeCdp8AG+eb1eNUZJck
+	yrKAMzzGDer9fhcXR1Xkhwy+08gYYQ9ybYY305dGuKKKp2Cd0S+EE8P0UX6SxJ+qc6Pj5EIrl5K
+	J/znLUiyhb2RikyIaYYbRHGWCtllRiyEeHj98xL1zfeudLgspGpSuI5ITjIXle+pBF0BCrYUjCM
+	KB9w==
+X-Gm-Gg: AYBFou2Qxe8vFpAfcj4CdTrIt4IdJpYSJZ3A0XLC/6X70qAdVtA1prhUY+51CYfysQD
+	aeq2PlFalQkKNXWNuHrhqYk1klvWIcF75Lv7CbrTC3pY/IEQ1V1uneTIanVH2yqMPzQ8IZqZLCk
+	TS8IA0VE2qmxocYoG8aAbShEg2p1S96zqvMzGoDouQ2/JGFy/IlvBDa9PXKmkd2jbQEx1KEM1xr
+	kgA7A+5Biui0LuUMbKjYeoz1gpHpYJZs4mYAfMSZnTAtRgyqzcnlFM/tyEwTcpAbgU59HxYaAue
+	FITpo62BmZOJtzLyYL5gWG+ZvSfGiA04k/6mceV0DaQAo79ILQcwwMQCJXoDGZfBcBROPXs2/5m
+	lQNcY9++weVaeJ7uiNPbYXfWbbHAIOden0kakXuWdLNMeF5cZh5UCHdU=
+X-Received: by 2002:a05:7022:1703:b0:166:b307:5855 with SMTP id a92af1059eb24-16a4ee7e657mr14800899c88.0.1791853557603;
+        Mon, 12 Oct 2026 18:05:57 -0700 (PDT)
+X-Received: by 2002:a05:7022:1703:b0:166:b307:5855 with SMTP id a92af1059eb24-16a4ee7e657mr14800866c88.0.1791853556900;
+        Mon, 12 Oct 2026 18:05:56 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-169a567bd18sm32904080c88.21.2026.10.12.18.05.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 18:05:54 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: ath12k@lists.infradead.org,
+        Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jjohnson@kernel.org,
+        baochen.qiang@oss.qualcomm.com,
+        vasanthakumar.thiagarajan@oss.qualcomm.com
+In-Reply-To: <20261001045423.493121-1-aaradhana.sahu@oss.qualcomm.com>
+References: <20261001045423.493121-1-aaradhana.sahu@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next v2] wifi: ath12k: Fix NAPI resource leaks in
+ AHB external IRQ paths
+Message-Id: <179185355440.3481009.3900302588078400009.b4-ty@b4>
+Date: Mon, 12 Oct 2026 18:05:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Received: from 77377267392	named unknown	by gmailapi.google.com	with HTTPREST;
- Tue, 13 Oct 2026 02:58:08 +0200
-From: Kim Wooseok <5mghybrid@khu.ac.kr>
-In-Reply-To: <04d26f79d5984920a9584d3f31ec3b58@realtek.com>
-References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
- <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr> <1fc8c339df1944afa6186197337edda3@realtek.com>
- <CAH1Bc_yOhZ9oqreJOLKb5RDFEW=0Zid=h4xu9oTR51RDwj_bww@mail.gmail.com> <04d26f79d5984920a9584d3f31ec3b58@realtek.com>
-Date: Mon, 12 Oct 2026 17:58:42 -0700
-X-Gm-Features: AclHuK_Ifxw9QoHyehe9vofNrat2BMmKWVVJ1nmld41C-se66_6KTgRsHhz1IK0
-Message-ID: <CAH1Bc_wUq2Nmhvd9q85JP+KyCYHB_xqStfmo6ZirOxOkXzAg9A@mail.gmail.com>
-Subject: Re: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
- from CPU state
-To: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16.0
+X-Proofpoint-GUID: MCseKI83AiKC4dMXu9PjyE7zmfb2fc1F
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDAwNCBTYWx0ZWRfX676va2aY1ggq
+ bAenWASLFHPUAcPDgmdf7hKVlYsM6qkPtbqoMo+6ygCI0x6NxGqiHq5f7+svoNyUFTGuALX20kd
+ H3sY74EHhxqnwcWqNlW2/30fiGyHEyz+vCambKmln8VN2JrGmXy8RktuQb7QWBYL4jkxlClnL3u
+ EvsjYqBYMtfaOykeplMYvgSdcaundoonxk0K4wGoh3L44pD5Pm+bC7ZWrfUVy7p1FkcE7jFhaeP
+ TRdU4jFe+Cuhute34DIWwd1q5xS7FkbDpt3uwSCr/TXWEA32LHW0Fag7RSApLZQiicMUmwvgK6F
+ w72MMPRVTgOktudFfjxg3ACI8iyDWbJDhYqGkukcmD2eGOLr9a56zagWMbgzeqraNeGbwusGvM9
+ nUmX2mk79Bg9VqcIHxUkTaWFxUI7RAcv50Pf7dtlsiBenM1zlmm3WLu/XpIwWgRKbh22IrOghKF
+ jD0aUXFcj8jFiM/JOcA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDAwNCBTYWx0ZWRfX5kGnp4nY5cOs
+ 1Js0VLohTGT8513GQjEBzVjLfCh7FGwCBuZeV+VMzK0q30Oc6D+DbPa32VzykH3ob2MwcaI5vXF
+ Jc/Fm8MF2E27dI4w3VE01iYR2XSfDtk=
+X-Authority-Analysis: v=2.4 cv=ftZJ914f c=1 sm=1 tr=0 ts=6acd83f6 cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=EUspDBNiAAAA:8 a=5S3J2RfQicqsIEM8LIEA:9 a=QEXdDO2ut3YA:10
+ a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-ORIG-GUID: MCseKI83AiKC4dMXu9PjyE7zmfb2fc1F
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-12_06,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 malwarescore=0 bulkscore=0 lowpriorityscore=0 priorityscore=1501
+ impostorscore=0 suspectscore=0 spamscore=0 clxscore=1015 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610130004
 
-Hi Ping-Ke,
 
-> Does it mean that data in a cache line can't be modified while a USB
-> transfer? Even the data isn't a part of transferring data.
-> How can it affect the transfer?
+On Thu, 01 Oct 2026 10:24:23 +0530, Aaradhana Sahu wrote:
+> Currently, NAPI instances and their associated netdevs allocated for AHB
+> external IRQ groups are not released when external IRQ configuration
+> fails. They are also not freed when arch_init() fails after
+> ath12k_ahb_config_irq() succeeds during probe, or when the driver is
+> unloaded.
+> 
+> Fix this by adding a common cleanup helper to release the NAPI instances
+> and associated netdevs. Call it from the external IRQ configuration error
+> path, probe error path, and driver cleanup path.
+> 
+> [...]
 
-Yes, in this non-coherent DMA case, even modifying bytes outside the
-transfer buffer can cause corruption if they share its cache line.
+Applied, thanks!
 
-On the affected Pi, the 4-byte usb_buf shares a 64-byte cache line with
-the mutex's waiter state.
+[1/1] wifi: ath12k: Fix NAPI resource leaks in AHB external IRQ paths
+      commit: ebc938ba1d5ff33652013b99c7b9a74f05690336
 
-The important detail is that a task waiting for the mutex still updates
-its wait list before acquiring the lock. So the mutex serializes access
-to usb_buf, but its own waiter state can change during the transfer.
+Best regards,
+-- 
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
-For example, suppose the buffer initially contains 10:
-
-1. Task A holds usb_buf_mutex and starts a USB register read.
-2. Task B tries to acquire the same mutex and joins its wait list.
-   This can bring the shared cache line into the CPU cache, including
-   the old buffer value 10. Updating the list makes that line dirty.
-3. The USB controller writes the new value 20 to RAM via DMA. Since
-   this DMA is not cache-coherent, the cached copy still contains 10.
-4. If the dirty cache line is then written back, the old buffer value
-   10 can be written back along with the updated wait list, overwriting
-   the value 20 from DMA.
-
-Task B never directly touched usb_buf, but the writeback operates on
-the shared cache line. A subsequent register read-modify-write can
-then propagate that incorrect value into the hardware configuration.
-
-I think one possible overlap during a rescan is between the
-channel-change path in rtl8xxxu_config() and the periodic
-rtl8xxxu_watchdog_callback(). The watchdog runs every two seconds
-and may update frequency correction settings through
-rtl8xxxu_track_cfo(). Both paths use the same register buffer and
-usb_buf_mutex, so the watchdog could join the wait list while the
-channel-change path is waiting for a USB read to finish.
-
-Allocating usb_buf separately removes that sharing. The mutex still
-serializes register accesses, while updates to its wait list no longer
-affect the cache line containing the DMA buffer.
-
-Wooseok
