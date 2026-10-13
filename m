@@ -1,35 +1,36 @@
 Received: from SEVP216CU002.outbound.protection.outlook.com (mail-koreacentralazolkn19012062.outbound.protection.outlook.com [52.103.74.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C29713EB11C;
-	Tue, 13 Oct 2026 09:18:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F0F13D6CD4;
+	Tue, 13 Oct 2026 09:18:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.74.62
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791883115; cv=fail; b=mV0pRkfZ2+md9MlteaI4+2GqV8nfZYWWaxufeQ+V2BqIhaC8Z2lOt1aoHxoNFNf5m/yvHWdA2QysQt4Dy94AsB2/tZZAyVbcWMl+asNAvI4PkzYOYKie61H0XozHwxdkGh5AWo2a1zp4ZxgD605V99bOZT8fiMYYs+3CBkVCWxo=
+	t=1791883121; cv=fail; b=q20InhsrKSECNphGfhOdmz5HwI224+5UIGfIALWGmtYNZzOgrIh+O6o7eggb6nNdKSJI5ObONFZtVD/3qgFQKbKbqzuxflj0TGXJiBLuPaHCr5xF1+z+zjhYcXFYEhbl6ff7XHMtu7ZEakqnPalmhdimDVVG/SFh2pcyt1E4SLE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791883115; c=relaxed/simple;
-	bh=aLMNZo3SXbCUldio1tIYlzOH7bYzwXtHtbT5ETM1YQM=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=SVQcu9y1WlWPB+5lbz/KN6cF7TSOXRRk2lMlJfsaDcQ+QGkVJ+GQZI1ljjQEHaPVSW1Ul2SF1P8y94ObIv2AxBAqSDT0//4aNfC6HqBll698OwbIECMvXzXKAEiM6hTb/7ISzBkvnPgI3VDG9B+SRqD0GSsjU5/BOObaqBBkFQo=
+	s=arc-20240116; t=1791883121; c=relaxed/simple;
+	bh=z6KAlpQa7UPMbMI1WN+EIwOB5waRwzlUQBHY0JGl148=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=D+A0kfS1Jz+FjyTEGiRepiUV4sj5sH5nK4EGBbM32r3A7d6kJYCJIbsYiPlRqK96uWM8MQv4dR2Crvv6cIV8xnuP3oi/CBcxcpLr78E2FovM/SUscVPo8pkpvyKY5n8KNrHYZ9XP5oWX/hOmIH7hwEVdZRePXBYC4hYCfLtYqOU=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alexvernel.com; spf=pass smtp.mailfrom=alexvernel.com; arc=fail smtp.client-ip=52.103.74.62
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alexvernel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alexvernel.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RdcUDW8sSQlRbsETfg1o/4NXZqgCmUVm2GueQIV1rmxqiXI1KYciypEEl+xxRZOjhFRX7I754OBIeJe/DwcVliRZi71iiFhbbe7J0/Iltnux3zFK2MEmtWcwJ4Vrl9sf5RvjH/fNNslwtd8GkHPrUr7RsI/FFcicHowRrdEYB05yCVFzAysXgQdSHrwwBCcNrN6xcILc/zb+i0rNTZ3j+LSbaB/fLUCjMRwDMX2vIHGFgS0rxjnGxsYvYnIIB6RuRZ6H2uZqDMKu6eP1KC54Kj363BVlgpM775c0g+1S5b1AX7O12VSEwQ/8BMM0NxXFv7nKIlmLznbGMl9/PNocTw==
+ b=MFQbmaX3zV9vAVcFp/3VM3WGZ8yNaMmIrioTcZGiRnD2tKa3wZ4gVYOC4Kya+nDozlnfl8xQWwHIi4d2gb4ZpNTQBwAHy4jyxhvQblhYp8QR/z2Oc+tlRtBef/Lw9KxPqlq5SpfjhQGYmtwqtwkw6qnplE3yPo3LFbiFWLNRHbhOUGuHmU9CJlop5Hej1QaN8ml/LqAwU4FW//vmmGDbbKgbP33fRiICeI/4H9OHyncfOouAZoFKLQ3OH5BsaS7Hnva690U0buJdtk4Ff8YOIJhJiV66tn3pRmhTe51Sz+OmiyBZhf+NZEQ/Y6pFKco+icPvlqPKvybwmXJ8dHVLAw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zudCnU/np8rvVbLaDB5FDwBNS2Unmc6zx8KK8mzsmUA=;
- b=NNnlQl7onDB5PgkIqjA/Zi+66jeI/hCA0HuvBjeAsFJEsWltO3BJs1FCPPpO87otrEeJZy3wpBQFC/eLp/D1vZfmRy9FTpMNeb64jyYtjgL+uiyvy+RnfjT9T3LIBqRGOHDVZqQjxwYD81NCSOxs1GXmhw988nMmsbqz5twxh3GI3ABnc9OEGIILaa4MJmzpRtOYTStUqpogztPiXv8OpiffEe/D8Dieljb7dokcqwDOjcPKGu/3wpR8bPZXBXmPmEwINo4sYiHO6LBlK5cabujvliOj7mx6Jo8DXbQR7loNq2+pB/CLHRDztmvyXX8uTS7y/hceuZshk1g0T+FBoA==
+ bh=MxMZLEtZr/mgTVrpUfN8tvSjvxSv1qCefb6shhoXCG0=;
+ b=j/B9kXgqgWGvkhJyJ0f4BAclANcPYMr+aZYf4fvN6gxD5brC6yEPgF5p1AnBTcEbI0BiGspFUjXCYxcTIR7W6TUR4a4zAClindbCDuFx6OItldssFoJ4rZom+xfiV0ugHywKX7m2cIhO1pMigr0rws8BU2tOfGjjLY2z+OgYZv6et4QfTCHY4FfXgSel3xpU3f4u0w2FPX7A1U/gU64hJGwE4FZgQyfzlpu0emvqckEAaF4jZtNh/Cj9/TYGFrfj59C46TnK0bQot4EsYHW/vWnfKdZI5ZjxVjZy7m1zG85wOQtRojV3DzOKbKmkqwcqT9b2rOGq1oXqlNJRVXOHfw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 Received: from SLXP216MB1067.KORP216.PROD.OUTLOOK.COM (2603:1096:101:9::6) by
  SE2P216MB2952.KORP216.PROD.OUTLOOK.COM (2603:1096:101:28b::14) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.496.23; Tue, 13 Oct 2026 09:18:25 +0000
+ 15.21.496.23; Tue, 13 Oct 2026 09:18:29 +0000
 Received: from SLXP216MB1067.KORP216.PROD.OUTLOOK.COM
  ([fe80::3dce:2b67:b21b:6152]) by SLXP216MB1067.KORP216.PROD.OUTLOOK.COM
  ([fe80::3dce:2b67:b21b:6152%7]) with mapi id 15.21.0496.021; Tue, 13 Oct 2026
- 09:18:25 +0000
+ 09:18:29 +0000
 From: Alexander Vernel <alex@alexvernel.com>
 To: linux-wireless@vger.kernel.org
 Cc: loic.poulain@oss.qualcomm.com,
@@ -37,18 +38,20 @@ Cc: loic.poulain@oss.qualcomm.com,
 	stephan@gerhold.net,
 	kvalo@kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless 0/1] wifi: wcn36xx: fix scan RX panic on WCN3620
-Date: Tue, 13 Oct 2026 22:18:01 +1300
+Subject: [PATCH wireless 1/1] wifi: wcn36xx: validate scan bands against radio capabilities
+Date: Tue, 13 Oct 2026 22:18:02 +1300
 Message-ID:
- <SLXP216MB10675081A1D858B6421D5AF3B39E2@SLXP216MB1067.KORP216.PROD.OUTLOOK.COM>
+ <SLXP216MB1067E773936FD95646687C08B39E2@SLXP216MB1067.KORP216.PROD.OUTLOOK.COM>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <SLXP216MB10675081A1D858B6421D5AF3B39E2@SLXP216MB1067.KORP216.PROD.OUTLOOK.COM>
+References: <SLXP216MB10675081A1D858B6421D5AF3B39E2@SLXP216MB1067.KORP216.PROD.OUTLOOK.COM>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: AK1P299CA0023.NZLP299.PROD.OUTLOOK.COM
  (2603:10c6:108:17::7) To SLXP216MB1067.KORP216.PROD.OUTLOOK.COM
  (2603:1096:101:9::6)
 X-Microsoft-Original-Message-ID:
- <20261013091802.1064081-1-alex@alexvernel.com>
+ <20261013091802.1064081-2-alex@alexvernel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,58 +61,58 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SLXP216MB1067:EE_|SE2P216MB2952:EE_
-X-MS-Office365-Filtering-Correlation-Id: b93650a8-ed9d-4de0-1382-08df290aeeda
+X-MS-Office365-Filtering-Correlation-Id: 919139f0-10c6-4c75-f8aa-08df290af145
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|24021099003|5072599009|23021999003|15080799012|260925184616899003|39105399006|25010399006|20031999006|8060799015|19110799012|4140399003|440099028|3412199025|40105399003|2607281247196008|30101999006|10035399007;
+	BCL:0;ARA:14566002|24021099003|5072599009|23021999003|15080799012|260925184616899003|51005399006|25010399006|12121999013|8060799015|19110799012|440099028|3412199025|40105399003|2607281247196008|30101999006|10035399007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?yEJO4IARhrPXYzOdmP5ny4ZzDTK43Cp1NCwK8XGiBP8snBY32YoazF0MhsEv?=
- =?us-ascii?Q?56qRW/cnSR3LP+GhZ+dW+DmzSBJsbM8kfTkDuHVm3cYtjpTVArPv5557/iYq?=
- =?us-ascii?Q?MFqz0rqOwMMWlQK441V84Z/o8VV25nJ/7wgf6x0jMJpECY3BGkTceF8pAt3v?=
- =?us-ascii?Q?Qb+mDZfOjHq4B1CggTug8ERKyhYhpCtYpbbAL5PYsd/TXbkizJH/yCt/XWHb?=
- =?us-ascii?Q?8fQ0AbtnTfBaV/9wwFDwk8Gh7eN/bELS8VWVswYxG9OSF/0lJlN4JHHbU0nb?=
- =?us-ascii?Q?mYQdLrbnilFrwB1ZPQJOTeh0G4rA32/kwBLmt219qRUG3vWIx1Iv6FI+aHti?=
- =?us-ascii?Q?0U3hX+Ac6L2PT2rz6ZRiiNLxDwdCAJP8edHhtLgNW/2SJ3h9HvoEKO5L7Nbq?=
- =?us-ascii?Q?p3zHglmK+SeYwcQ4aGJXVsOhNreVseLWD5n4tj7leLngf2h5d42OYASLYfkR?=
- =?us-ascii?Q?uf1oSjVmH26doPpN+cXvVUmcv+Vhr2ASixrv+LrMzFbYh5tD3wVrdmIqI7mt?=
- =?us-ascii?Q?f4JLgv+VsM/mKXiQPyEklipUIZPmHgwa8Q9cV958TtG9ACJWEmXFjpozJX0+?=
- =?us-ascii?Q?VaAhtu3bI2u4BIbnQSzr4edRnWmhg68Ho9MFVMyKZqBGtVeRPx/sy9k1uVVM?=
- =?us-ascii?Q?Gv4hPhpMUvFN1d0otKvxd5nrvV5nZsj5xydMgNo4MhCqH03q9TUbRWEZJJRH?=
- =?us-ascii?Q?le6FnPLxg0OfLo5iQg1qreQrso8wo7/DTdtfPz5BddS3RTPD8uM7T2/EuSdg?=
- =?us-ascii?Q?z+I4J6GyU8WBG09nPPlVCOTMX0Dnl3sBX0YS1ns7Bp77NhW5mfPSGUmgpNmA?=
- =?us-ascii?Q?OaQpb92/jJciGSxXlkEpAkDvnzd+r7SgMjQlrOoqlPdTzP2rnTDH7QnYos3b?=
- =?us-ascii?Q?YJiuoPOs7K2XFj/M95+3vEzoGPiyOrUwtXLvnAeUVF1exkKBtXv2AJAVmDhz?=
- =?us-ascii?Q?x1kWVw0kj2GWer1+rYU2dkfSFmQR5MNnbcUrHowTmAM=3D?=
+	=?us-ascii?Q?Z0upYMjQYlNc+vbKrLii8tIPuZRys2OX2uR5Tve1dJW69wkuGgXxu/W35ODZ?=
+ =?us-ascii?Q?JlEXGnsA5iYAotlX5Vo2LWq4Eg/OE7Pv8IsMpYs/fOOXpCLpQqy559Iggc3X?=
+ =?us-ascii?Q?MUu/CQi6nbj9+UkOpD4XgetXm4OThxVNbqo9w9RnVICj3xqYWmzEtG/Yyk9G?=
+ =?us-ascii?Q?bM7u3aVWsHcI/IUpWpjjDnpKJQ1gx6oe7wkTUu5Vci/wR/eknUDtI77zZxAt?=
+ =?us-ascii?Q?lhKf6Xejw/SmIgctTtAFhrcP1pmPAVVQnSYFQ4Jjx6Bb8ZBWHbgoH+8Ee740?=
+ =?us-ascii?Q?BaDo5h6essGqD9XnXf7yL+QWaCJclLjLMEry5B0dkZgxsjIlv8bye/dY8CU7?=
+ =?us-ascii?Q?GGff9a6cbYj8x9Mwg4Pu4NKgy/0sV/jIsSOYtIJIumIY9OmUYMxBTKUG3REN?=
+ =?us-ascii?Q?oc+Y12pVXrH+oPlBlapIu1IaJDOwKc2sJGZW9v7mblpJTljwSNXwS90jPez9?=
+ =?us-ascii?Q?bUBAlwLPMJDvlY7N8OlRMRZ4FNiLgSmzR9ifhzNQkx/YbSayvxlxGvirp+WU?=
+ =?us-ascii?Q?s1bAkxQIYVWQw2U10uj9uRemVZEWE+mgaalDdcK/k2LHWy9E5THm+OTo4eYC?=
+ =?us-ascii?Q?PFTqs4g+frHPUYWu5HvVUA+sLV9bIE1BLLnaKpgVmWPwTuSnBTdIhhHZ3lWq?=
+ =?us-ascii?Q?HRmx/DlDHrFeqV8ypLERNCNJM3uM+sgRbdFBmQp1CARJmhAJQNNQnWFN9jdX?=
+ =?us-ascii?Q?dWDbrpZfPGIlvwc6Xd/AMHIWbeM3Hgejewu27CyHk3qqHqvemJ+l44ALBEhg?=
+ =?us-ascii?Q?sMfN6atIEx1bmjnCBQ41lGrB2stW2PJ+rT7GtmSm1pETCtox/tsct5DE/V+J?=
+ =?us-ascii?Q?MhdbifbN5uxFirCN4rR3Mi2AwZfIPvZNi5sUuciLN3MARa57Fx1fo3Xyu2rt?=
+ =?us-ascii?Q?1OVf8Y/MzaVRr7WXC9c5puxE9Ig7mwBkFayvwKFCJs0MoMx2bIIcM6FJq6Wo?=
+ =?us-ascii?Q?hV2a+T4km7phFLyNHZIS/PEtiOQY3ey+1HBu5LsgdII=3D?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?v+C3Gng7isfk3yLMQ8gWynD0xpVp7YrEga7+VkB65kV7+jF3U3rfgN0ZXJgL?=
- =?us-ascii?Q?PDCQzJy57ColKcue5rwDAGwfoHpMp+7cqY1gxeTN4GWxWNadhZGVQ86o3OVd?=
- =?us-ascii?Q?D2ny/z+MgjlN9UU22MNyClPoc3hNzcplLET63NykCulR9Nj8wHIC1VQnykeN?=
- =?us-ascii?Q?B5Evk5cuBbcFlEgHhC78KZpUsrR8U0kHaQ8AwWR/E8BUOoV+QHRPFjPvYYE1?=
- =?us-ascii?Q?XFhI3n81mRjrzLZsOTDA5LHRNpVllL/h+5sFXadanXgSAs7RoDKI3i820ByJ?=
- =?us-ascii?Q?gVxJRWeXOPSorxCv0bRU0RH7gvQWZjHazM4Ocbrbl1FgzaEJpTXiZRTyaWWL?=
- =?us-ascii?Q?Vj6HEFmi6i+L5V8ANlOekgzalb1ILge/hqcIg1Mn5SPhwdA7uD8eFlQwwaRA?=
- =?us-ascii?Q?s/xalAAgqBfGAmx6RdyXtHM4o9MmZ1KrGINAY9O93kAS+wXWjOXv4gSPyrjI?=
- =?us-ascii?Q?F1OIW3qawWt8yhkMi4yojPfWUlJPDBg+wpo92mtKxJcJ5VMwLF/O86r2CEJI?=
- =?us-ascii?Q?47Imd0dU5/GeX4xK2M/JaHyaJoW+XAmEFPgVT8Da7hkavsPdfdNY+eyZ1c1M?=
- =?us-ascii?Q?19QzVQLks7Gxby7V5Kt8UNUjbKgryjaymfsnyg18+H0MG591uvbNVGJJ5s6m?=
- =?us-ascii?Q?xZ8Vo9veaeELA6TSY6Jy6QNKT6BgRczGvzlHcjpn49XaJVxPfstxsAxsoSST?=
- =?us-ascii?Q?6Le/NdnyIVp55NuZ1uPIB34CJYAC+mjFvD/90bhgGsfVt+qHX3F0qyJLYPGZ?=
- =?us-ascii?Q?hSe6azwaBsGgjDUSoJVW1L4CY1OlUqcw5dZQFWsnC6Q3lWm0BPPGtqJjOqjx?=
- =?us-ascii?Q?SSO3E1IFmsGcbe2lEjE8fgmvA8/3/Iwl8FCckLHqgduOkUDgS6Ex/19lG8Da?=
- =?us-ascii?Q?X1pyjn7MAW8AiqsFQ0LYeQaoT6YO/em0ZvvTOcet4bDKM2qbNcmedbjCWpl1?=
- =?us-ascii?Q?DRs6M2fCIGJ73w4sEdpU1ucTpFfBsWOih9a3QRXgIfhWoal0MNw6tFY1ChpN?=
- =?us-ascii?Q?zRlL76kxahefEQUrmq5s3RZi0Gi2D+Ir+XNXPnN6QoYU5ylrovqwuuop0vXe?=
- =?us-ascii?Q?lBPMy0gf0kLPK6vI2Y1xfINMHq9slRgdS8b+43sfBHjHCFlI6igy7UuXpdhX?=
- =?us-ascii?Q?PoQTia+oZQWimnsBkTsWzf2BYJhzP4N5soZlGBwJzPYLZe3SqIpU9n/oGrZe?=
- =?us-ascii?Q?lfguNQJU5yv7a6xh9GGtX94kLITCpalrbjJDbyGRUJ9xY+5VKyNeVOrdiYZB?=
- =?us-ascii?Q?eRXhw/FDTYhJurO+YmHUfohl8gQaNM0Z6n3SCzCB4GYJ6/ACjG2I4KK9+Toj?=
- =?us-ascii?Q?MrxyH9fPlwgg4RZKYWPzyzeTOvOj07NkZJnlqFCrC0DcxBtfuF+d/KhMC3g2?=
- =?us-ascii?Q?ZzS4iyepeiDoZjwZGpT6mIssXicUdx25r6fVX7MDduIGGFR/bw=3D=3D?=
+	=?us-ascii?Q?uKWSbyMHiCIa2i5J+t4hQ0Xu8k6oBipe5z6nbbhV3WjMtz0Ocwu8JWzsBiRH?=
+ =?us-ascii?Q?ZajbrZucQxHGzG0rDgKwfzB1f5JqnFINglSYY8+NGWCiBzsYUOKSlMgLkRXW?=
+ =?us-ascii?Q?gkwhbkfcIKx6m7VeJK6d0da4fwFTZYKt0rl8gbTAs3Gq5bVh56rxNSNeGbIg?=
+ =?us-ascii?Q?b4NWjDI/QY95k6f90LXWqYEH4JBTHLMCg3WhbaJtwxn6n8qRHI6XtuzuTfAH?=
+ =?us-ascii?Q?TLJUmUHlmYmdSuxvHw+t9U8FCxN3VjzeZd9pt7sOzafjtpgYjnstAGq3fL3z?=
+ =?us-ascii?Q?o9o+Ei4neZXzn1N+nDpmxcIpoAd78IYN2y56+7/C+edeFHQCZvSDupwmceQc?=
+ =?us-ascii?Q?yCBU/ZnuUM/h605lztQfwGGnhmb7zUe7NokYhN+ilMunklxaUfm71lEgZVa3?=
+ =?us-ascii?Q?QdLAD2it72qcb676kFoSeXzi1iTOk4JdY802wIuMYB0EqM0DK+hvQ2GScGXE?=
+ =?us-ascii?Q?x7+asb37IMxsWR89dk63kpQ2wN0dpwjC5pw5Aehy600nOMJN+3av2yTV3hCM?=
+ =?us-ascii?Q?Kq+sK9k+y3PKPV9PJHcM31oCx8fvZUc52VaBUrvihLDxeYm8iw89dQzpH2dd?=
+ =?us-ascii?Q?YH+YvWifDBQNeDBs642g5CcvXkV7EkfOOuQlbWC2Rp6xjGqIPjBdz32/KfUK?=
+ =?us-ascii?Q?pRYasZBYB8HdDjal+o5DWHt0ZdVUjFaM7lAhXhP+GPv1VX9aaK+MZidKuH6c?=
+ =?us-ascii?Q?0N39CAW2KFICbiKrDjtEqgimSEglDmH9IhbBzXE/k/RdeZDg+3zvbmMZy5k8?=
+ =?us-ascii?Q?Hjxk3Yezo5XjMh6OOH/OV9o3qZXK13ogcTSUMJEn1WRSyq3gpaxlzS9+DTsl?=
+ =?us-ascii?Q?u74O7metg9nsVPNVgGj2yhYekMu91s9C/pehFuk9zWdnYKWCNzvTUbxmtuZg?=
+ =?us-ascii?Q?M0cjDRU4wkNyjaXsCEexxg4xxVnFuBZ4SJ/iriOcuPtzCKZ78jn+YVGQlqQC?=
+ =?us-ascii?Q?YKLvsDoUH6Ii6AnqOPXAh6lac7+Iheo5ESKkpnh39MLprqHzHgnKh9WBIfJO?=
+ =?us-ascii?Q?lEaXIAcMaO+QQ/7kEzRaf9uR3PwDhzU60GH9rUTqn8abgPPphTAxNuk71Byr?=
+ =?us-ascii?Q?x0wCes4Ml0jc5N9vpLDJA5eTRWr92H6fg2fNpsgbG9du6Ma12FIUSZwOKGnB?=
+ =?us-ascii?Q?sCXyNuLuLDD1FC7wezWCwS4kGzfQy1qW50sCbxGy+17K4lXwjdCYkYz10UGF?=
+ =?us-ascii?Q?4RXVmbt0lSdMMOYN3Yl5EVpsKEltRtpIfuNyy7zipAjcf+JXMxQfkAsMpYw5?=
+ =?us-ascii?Q?cBH6c2iVnZAZFlZv0jOUtgNql/R+ppGPr18DKSlBRsfBbzjr6NiWLgfik3Sx?=
+ =?us-ascii?Q?4ey8J9jSz4ew3khyD/GDZlfE1+IPN/fPjRTVVKetRabuXKsoHTYyix4y0Zjx?=
+ =?us-ascii?Q?oLr6M9hL/8TPea7IZryM7bfjYAq7Fx3GLvws8DyhswA3TXKBtQ=3D=3D?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-94596.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: b93650a8-ed9d-4de0-1382-08df290aeeda
+X-MS-Exchange-CrossTenant-Network-Message-Id: 919139f0-10c6-4c75-f8aa-08df290af145
 X-MS-Exchange-CrossTenant-AuthSource: SLXP216MB1067.KORP216.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 09:18:25.7696
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 09:18:29.3343
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -117,40 +120,96 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE2P216MB2952
 
-Hi,
+WCN3620 only registers a 2.4 GHz band, but its firmware can report scan
+results with rf_band values that select the 5 GHz channel mapping.
+The resulting receive status references an unsupported band. On a
+WCN3620 tablet, this caused a NULL dereference in the survey update
+called by wcn36xx_rx_skb(), with a reported frequency of 5280 MHz.
 
-I hit a kernel panic while working on display support for my Lenovo
-TB-X103F and tracked it down to the wcn36xx receive path.
+Only use the 5 GHz mapping when that band is registered. Otherwise
+interpret the descriptor's channel as a 2.4 GHz channel. Reject scan
+frequencies absent from the registered channel tables before updating
+survey data or delivering the frame to mac80211. Ordinary receive and
+valid dual-band scan mappings are unchanged.
 
-The tablet uses a WCN3620, which only supports 2.4 GHz. A firmware scan
-result was being interpreted as 5 GHz, and the driver dereferenced the
-missing band in wcn36xx_update_survey(). The frequency in the crash was
-5280 MHz.
-
-Stephan Gerhold already had a workaround for this in the msm8916 tree [1].
-This patch follows the same approach, but checks the registered bands
-rather than the radio ID. It also drops scan results if the resulting
-frequency isn't in the channel tables.
-
-With the fix, the tablet completed a 20-minute run with Wi-Fi scan requests
-and file transfers without another panic. I haven't confirmed whether the
-bad firmware report occurred again during that run. A host test reproduces
-the NULL-band failure with the original code and passes with the fix.
-Hardware testing so far is WCN3620 only.
+This follows Stephan Gerhold's WCN3620 workaround in the msm8916
+integration tree, using registered band support instead of a radio-ID
+check.
 
 AI tools assisted with crash analysis, adaptation of the workaround,
 testing and preparation and review of this submission.
 
-Thanks,
-Alex
+Link: https://github.com/msm8916-mainline/linux/commit/0be2d63a476e83c757d9caafc22eae00bcfd1df8
+Fixes: 8a27ca394782 ("wcn36xx: Correct band/freq reporting on RX")
+Assisted-by: LLM
+Signed-off-by: Alexander Vernel <alex@alexvernel.com>
+---
+The original crash was on 7.3.0-rc6-tb-x103f-mdp3-r28, based on
+6c377d19d4a51 with board/display bring-up patches. The affected txrx.c
+matches that mainline base. Firmware reported API 1.5.1.2 and CRM 67946-1.
+Selected UART lines (other lines omitted):
 
-[1] https://github.com/msm8916-mainline/linux/commit/0be2d63a476e83c757d9caafc22eae00bcfd1df8
+  PC is at wcn36xx_rx_skb+0x160/0x74c [wcn36xx]
+  LR is at wcn36xx_rx_skb+0x378/0x74c [wcn36xx]
+  r3 : 00000000  r2 : c1cec260  r1 : 000014a0  r0 : ffffffc4
+  wcn36xx_rx_skb [wcn36xx] from wcn36xx_rx_handle_packets+0x140/0x218 [wcn36xx]
+  wcn36xx_rx_handle_packets [wcn36xx] from wcn36xx_dxe_rx_frame+0x70/0xd0 [wcn36xx]
+  Kernel panic - not syncing: Fatal exception in interrupt
 
-Alexander Vernel (1):
-  wifi: wcn36xx: validate scan bands against radio capabilities
+Decoding the exact module locates the fault in wcn36xx_update_survey(),
+inlined into wcn36xx_rx_skb(). The frequency is 0x14a0 = 5280 MHz and
+the supported-band pointer is NULL. The raw descriptor was not captured;
+neither its exact rf_band value nor the actual receive channel is known.
+The fallback follows the earlier workaround. Channel-table membership
+checks that the decoded frequency is supported, not that it is the
+frequency on which this particular frame was received.
+
+Tested on a Lenovo TB-X103F with WCN3620 using a mainline-based board
+bring-up kernel, 7.3.0-rc6-tb-x103f-mdp3-r29.
+
+The 20-minute UART capture showed no kernel alerts. Twelve normal scan
+requests were accepted; 4 MiB was uploaded and 48 MiB downloaded with
+SHA256 verification. This does not establish that the malformed descriptor
+occurred again. No dual-band hardware testing was performed.
+
+An extracted-function host harness passes 261 RX cases covering band and
+channel decoding, missing channels, ordinary RX and queue purge. The
+original code traps at the unsupported-band survey access. With only the
+band guard removed, the synthetic WCN3620 channel-6 case is dropped
+instead of delivered as 2437 MHz. With only the channel guard removed,
+invalid-frequency cases are not dropped. These are separate expectations;
+the mutation tests do not show that both guards are individually needed
+to prevent the reported panic.
+
+These tests use shims and do not simulate firmware, concurrency or full
+A-MSDU handling. An ARMv7 W=1 kernel/modules/DTB build completed without
+warnings.
 
  drivers/net/wireless/ath/wcn36xx/txrx.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
-
-base-commit: 6c377d19d4a5116d9bec5203aa3c6c11523e7898
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 882699879..c12d4a503 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -367,7 +367,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+ 		 */
+ 		u8 hwch = (bd->reserved0 << 4) + bd->rx_ch;
+ 
+-		if (bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1) {
++		/* WCN3620 can report a 5 GHz band for 2.4 GHz scan results. */
++		if (wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] &&
++		    bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1) {
+ 			status.band = NL80211_BAND_5GHZ;
+ 			status.freq = ieee80211_channel_to_frequency(ab_rx_ch_map[hwch - 1],
+ 								     status.band);
+@@ -375,6 +377,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+ 			status.band = NL80211_BAND_2GHZ;
+ 			status.freq = ieee80211_channel_to_frequency(hwch, status.band);
+ 		}
++
++		if (!ieee80211_get_channel(wcn->hw->wiphy, status.freq))
++			goto drop;
+ 	} else {
+ 		status.band = WCN36XX_BAND(wcn);
+ 		status.freq = WCN36XX_CENTER_FREQ(wcn);
