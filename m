@@ -1,61 +1,52 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CBA41F5ED
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 01:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3653E3179;
+	Tue, 13 Oct 2026 02:04:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791856322; cv=none; b=HXZu1xGgySSgLlZ492UwoIA7n36GTceOl9VAzko9BXkzbNalzmH7bKNcfFr+uDea8J9xdr7npnS2E2MSCzFr2MEZSH7MMXKVNKZjFVtPSF79h480/AUs6i55zbCJkHn2lKTeMxlbgbo/HU4QNkh8PgGtu/7OsT5unvUi8KR3V5c=
+	t=1791857100; cv=none; b=my8qHU6/NOxSCevLIdj9OF5DoYq429fPsISr9VlHyyo96b3XL3Q4WR18vGeSjsHKIF+Z2XlfEhTmOH0Jr8folcv0apg5BfsHwJvofOBssybGlnHJqT3iRwtC0hIWyAH2CK5+AJwPxWz/6TxLodvm1BoGPOHBV3q0d03UuYTP1Xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791856322; c=relaxed/simple;
-	bh=XdIj5q/gh9ujV3fqTejJK5mTL6bH9NFbzZakUWuGO5I=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=T602XRfA37GCzt5XTBVNB+WBxqizlU7cf4BkrfvVm/galnWqJFYgPE3S97rci4Gp9YvVfEwrqsUUFfPVVPrL9QxORv1NG7LIUWWzIQ9InNJQ4Xrv/X0C1beRAuVMH53L7aum0aTLx1tTyBCpUwcftcDRbiPLjdFb6MebVpXtVog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=tay4EAQG; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1791857100; c=relaxed/simple;
+	bh=Ni9xdFQRsu7xhU2pHZcPfawAA3TKlxPNiaw/TvoTEz0=;
+	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=OSBbcWRbusdh7k/rgD7mkyQPf1BnB9pfLhgsdHNLSlirQ5gFLrfA282d13IIqUuiak2N/t1KgsBRQWrfraOHxQvTcMdAHhnZYQErRkZ6Okz7U4V1Iy8ewBMpXgAxy6jGq34IEb6/R4SQ/CXt8gcJ31ZzxghCUgzwMFUNxdLsJUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oG45VgRO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="tay4EAQG"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69D1pt783114798, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1791856315; bh=HXys3ckxzpbA8u1r7NR3Vyrhet5wQF+0ZxNTieclHVU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=tay4EAQGoUBm4zMgCtdKCEMJB1S7qeeNMgIagaASkwdnldeOi7U409HroRKKklTbj
-	 /7/ekoHx5vqMALL+vKl5CdbPuu68s/IeYqgVNAw03akO9M8MddSeLJx0TX27tZxYMs
-	 mebifMZEh9IrzlZidVKZPY4/6hp5JSh1GsiweGn+RAjjqht7yaruwyAdlwO0L/ZpNm
-	 Pl+RhfFSxbf8AA+3x30J072IUggGkr780PWtin9BqUw58H36ywq5UdlpL0P2wfdOCd
-	 gsf18c8sK/aRqneTagcw8j+y+I8y+8Hn08fn/zKY7AfkozufTfTNbjRyeyVNiI/bwo
-	 /Oj7ck7OPoeHg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69D1pt783114798
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 13 Oct 2026 09:51:55 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 13 Oct 2026 09:51:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 13 Oct 2026 09:51:54 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Josef Schlehofer <pepe.schlehofer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Mohammed Afifi <i.mafifi17@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH rtw-next v4] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Topic: [PATCH rtw-next v4] wifi: rtw88: usb: Download the reserved page
- synchronously
-Thread-Index: AQHdWlcHgY6d5QOmfUa83yDsmKNJabb6syKw
-Date: Tue, 13 Oct 2026 01:51:54 +0000
-Message-ID: <96a7bcd903484fe29c310166fa311813@realtek.com>
-References: <20261012143557.82117-1-pepe.schlehofer@gmail.com>
-In-Reply-To: <20261012143557.82117-1-pepe.schlehofer@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oG45VgRO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E64A1F00893;
+	Tue, 13 Oct 2026 02:04:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791857099;
+	bh=v1rjribMsJ9Sp01nQ2z04+fvF4TfD4+dw4GlsPuNIAw=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=oG45VgRO3L9zJ+JGVTKuU5NYr+E/cMK7JpMs3egdzEtuvicj1bhbZmOY8+0MCJ3Pf
+	 V22oopBNlj+i295+XXsigWc2JCd1Bfa4Qsso1u+73oNCp4TJizeQAOeXrODHZgSq1V
+	 BD+rfbk/u9OWl7cNJBLPKglusa4QelucZNCzrQ6/LZzbIjZ9eHIetItRnt8G/JP/bA
+	 mWB0O+PIU4vke9xnAMCuvgoM71J+MkwXD6nxWd+Yo1lCZWehkzBWNgdnolhRgePrpl
+	 cWYM5oVzyDhyD22cj+4e2OGRcHRUohyS8ep8lsKe9a7V0KdMG7VBeODZXqqdEJcEb1
+	 HAtHvafyfWJkQ==
+Subject: Re: [PATCH net-next v11 1/6] netlink: specs: rt-addr: fix the type of
+ target-netnsid
+From: netdev-bot+sashiko@kernel.org
+To: sigefriedhyy@gmail.com
+Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com,
+ andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net,
+ dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com,
+ idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org,
+ johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com,
+ kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com,
+ pabeni@redhat.com, sd@queasysnail.net, shuah@kernel.org, horms@kernel.org,
+ sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 13 Oct 2026 02:04:57 +0000
+Message-ID: <179185709784.434549.17899680533305071231@kernel.org>
+In-Reply-To: <20261012011707.3378-2-sigefriedhyy@gmail.com>
+References: <20261012011707.3378-2-sigefriedhyy@gmail.com>
+X-sashiko-severity: Low
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -63,116 +54,120 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Josef Schlehofer <pepe.schlehofer@gmail.com> wrote:
+Thank you for your contribution! Sashiko AI review found more severe
+issue(s) in other patches of this series. This mail is only an FYI, in case
+you want to address the nit picks below when you respin.
 
-[...]
+Low priority / nit picks for your consideration:
 
-Some minor comments below.
+- [Low] The commit fixes a real type mismatch in
+  Documentation/netlink/specs/rt-addr.yaml.
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wirel=
-ess/realtek/rtw88/usb.c
-> index 715a2ce342d9..f747400fca12 100644
-> --- a/drivers/net/wireless/realtek/rtw88/usb.c
-> +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-> @@ -396,6 +396,51 @@ static int rtw_usb_write_port(struct rtw_dev *rtwdev=
-, u8 qsel, struct sk_buff *s
->         return ret;
->  }
->=20
-> +static void rtw_usb_write_port_sync_complete(struct urb *urb)
-> +{
-> +       complete(urb->context);
-> +}
-> +
-> +static int rtw_usb_write_port_sync(struct rtw_dev *rtwdev, u8 qsel,
-> +                                  struct sk_buff *skb)
-> +{
-> +       struct rtw_usb *rtwusb =3D rtw_get_usb_priv(rtwdev);
-> +       struct usb_device *usbd =3D rtwusb->udev;
-> +       DECLARE_COMPLETION_ONSTACK(done);
-> +       struct urb *urb;
-> +       unsigned int pipe;
-> +       int ret;
-> +       int ep =3D qsel_to_ep(rtwusb, qsel);
+Pre-existing issues:
+- [Low] This problem wasn't introduced by this patch, but the getaddr
+  operation in Documentation/netlink/specs/rt-addr.yaml still doesn't…
+- [Low] This problem wasn't introduced by this patch, but
+  Documentation/netlink/specs/ovs_vport.yaml has the same kind of…
 
-In reverse X'mas tree order for three non-struct declarations.=20
+--
 
-> +
-> +       if (ep < 0)
-> +               return ep;
-> +
-> +       pipe =3D usb_sndbulkpipe(usbd, rtwusb->out_ep[ep]);
-> +       urb =3D usb_alloc_urb(0, GFP_KERNEL);
-> +       if (!urb)
-> +               return -ENOMEM;
-> +
-> +       usb_fill_bulk_urb(urb, usbd, pipe, skb->data, skb->len,
-> +                         rtw_usb_write_port_sync_complete, &done);
-> +       urb->transfer_flags |=3D URB_ZERO_PACKET;
-> +       ret =3D usb_submit_urb(urb, GFP_KERNEL);
-> +       if (ret)
-> +               goto out;
-> +
-> +       if (wait_for_completion_timeout(&done, secs_to_jiffies(5))) {
-> +               ret =3D urb->status;
-> +       } else {
-> +               /* returns after the completion handler has finished with=
- &done */
+netlink: specs: rt-addr: fix the type of target-netnsid
 
-This branch is timeout case, no? This comment is confusing me.
+This patch changes the type of target-netnsid in the rt-addr YNL spec from
+binary to s32. That matches the NLA_S32 policy the kernel uses for
+IFA_TARGET_NETNSID and the s32 type rt-link.yaml already uses.
 
-> +               usb_kill_urb(urb);
-> +               ret =3D urb->status =3D=3D -ENOENT ? -ETIMEDOUT : urb->st=
-atus;
-> +       }
-> +
-> +out:
-> +       usb_free_urb(urb);
-> +
-> +       return ret;
-> +}
-> +
->  static bool rtw_usb_tx_agg_skb(struct rtw_usb *rtwusb, struct sk_buff_he=
-ad *list)
->  {
->         struct rtw_dev *rtwdev =3D rtwusb->rtwdev;
-> @@ -508,7 +553,7 @@ static void rtw_usb_write_port_complete(struct urb *u=
-rb)
->=20
->  static int rtw_usb_write_data(struct rtw_dev *rtwdev,
->                               struct rtw_tx_pkt_info *pkt_info,
-> -                             u8 *buf)
-> +                             u8 *buf, bool sync)
->  {
->         const struct rtw_chip_info *chip =3D rtwdev->chip;
->         struct sk_buff *skb;
+> The kernel parses IFA_TARGET_NETNSID as NLA_S32 and rt-link.yaml
+> declares its target-netnsid as s32, but rt-addr.yaml has it as binary.
+>
+> Signed-off-by: Yuyang Huang <sigefriedhyy@gmail.com>
+> Reviewed-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+> Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
 
-I found the initializer of 'int ret =3D 0;' can be removed.
-Please keep reverse X'mas order as well.
+[Severity: Low]
+Should this have a Fixes: tag? The type: binary line comes from the
+commit that first added the spec. The later rename commit only changed the
+attribute name:
 
-> @@ -530,12 +575,16 @@ static int rtw_usb_write_data(struct rtw_dev *rtwde=
-v,
->         rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
->         rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, skb->data);
->=20
-> -       ret =3D rtw_usb_write_port(rtwdev, qsel, skb,
-> -                                rtw_usb_write_port_complete, skb);
-> -       if (unlikely(ret)) {
-> +       if (sync)
-> +               ret =3D rtw_usb_write_port_sync(rtwdev, qsel, skb);
-> +       else
-> +               ret =3D rtw_usb_write_port(rtwdev, qsel, skb,
-> +                                        rtw_usb_write_port_complete, skb=
-);
-> +       if (unlikely(ret))
->                 rtw_err(rtwdev, "failed to do USB write, ret=3D%d\n", ret=
-);
-> +
-> +       if (ret || sync)
->                 dev_kfree_skb_any(skb);
-> -       }
->=20
->         return ret;
->  }
+Fixes: dfb0f7d9d979 ("doc/netlink: Add spec for rt addr messages")
 
+> diff --git a/Documentation/netlink/specs/rt-addr.yaml b/Documentation/netlink/specs/rt-addr.yaml
+> index 0ecbd24c890c6..17ead22034515 100644
+> --- a/Documentation/netlink/specs/rt-addr.yaml
+> +++ b/Documentation/netlink/specs/rt-addr.yaml
+> @@ -119,7 +119,7 @@ attribute-sets:
+>          type: u32
+>        -
+>          name: target-netnsid
+> -        type: binary
+> +        type: s32
 
+[Severity: Low]
+This is a pre-existing issue and was not introduced by this patch. The
+getaddr operation in this spec still doesn't list target-netnsid anywhere:
+
+      name: getaddr
+      doc: Dump address information.
+      attribute-set: addr-attrs
+      dump:
+        request:
+          value: 22
+          attributes: []
+        reply:
+          value: 20
+          attributes: *ifaddr-all
+
+Here *ifaddr-all contains only address, label, local and cacheinfo.
+
+The kernel accepts the attribute in RTM_GETADDR dump requests. This is
+from net/ipv4/devinet.c:inet_valid_dump_ifaddr_req():
+
+	if (i == IFA_TARGET_NETNSID) {
+		struct net *net;
+
+		fillargs->netnsid = nla_get_s32(tb[i]);
+
+The IPv6 dump request handling in net/ipv6/addrconf.c does the same. The
+kernel also puts the attribute in replies, from inet_fill_ifaddr() and
+inet6_fill_ifaddr():
+
+	if (args->netnsid >= 0 &&
+	    nla_put_s32(skb, IFA_TARGET_NETNSID, args->netnsid))
+
+The spec also has no do block for getaddr. IPv6 registers RTM_GETADDR
+with .doit = inet6_rtm_getaddr, and inet6_rtm_valid_getaddr_req() accepts
+IFA_TARGET_NETNSID, IFA_ADDRESS and IFA_LOCAL.
+
+Could target-netnsid be added to the getaddr request and reply lists,
+along with a do block? Right now, generated per-op C code can't set or
+parse the attribute whose type this patch fixes. The Python YNL tools
+still work because they encode and decode against the whole attribute set.
+
+A later patch in this series fixes the getmulticast case: "netlink: specs:
+rt-addr: document AF_PACKET multicast dumps" adds target-netnsid to the
+getmulticast dump request and to &mcaddr-attrs. getaddr is still
+unchanged at the end of the series.
+
+>        -
+>          name: proto
+>          type: u8
+
+[Severity: Low]
+This isn't a bug introduced by this patch, but
+Documentation/netlink/specs/ovs_vport.yaml seems to have the same kind of
+netnsid type mismatch. Should it be s32 as well? That spec declares the
+attribute as unsigned:
+
+        name: netnsid
+        type: u32
+
+But vport_policy in net/openvswitch/datapath.c uses a signed type:
+
+	[OVS_VPORT_ATTR_NETNSID] = { .type = NLA_S32 },
+
+ovs_vport_cmd_fill_info() sends the value with nla_put_s32(). The value
+comes from peernet2id_alloc(), which can return NETNSA_NSID_NOT_ASSIGNED
+(-1). A YNL client using the ovs_vport spec would decode -1 as 4294967295.
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261012011707.3378-1-sigefriedhyy%40gmail.com
