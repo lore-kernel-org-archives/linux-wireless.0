@@ -1,108 +1,92 @@
-Received: from mail.systemli.org (mail1.systemli.org [93.190.126.36])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F15051B17F;
-	Tue, 13 Oct 2026 18:04:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.190.126.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C14552E07A
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 18:22:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791914702; cv=none; b=YxvhzQc8xUN27FOhYFuPkE9vu6p9gspeILfKK2Tom7ebLVm70RqEVRWI94RdODtQs7Ibpo4Y1qvGEJSpqziYOretdU0/6C1gyOizN2Tzw3+XjY2O8qmih6nqTc0bbrV6T8JymDl0xhS/RL2DuT09YH37skkvaBtpKovzKnfy8PM=
+	t=1791915727; cv=none; b=QDGE5Y7p6UmBAS1f2B5M7RHwo/lVWXuGsWrI9iELnUNGMNBRYI92+k7uXY1ElvYQ1ieS6lABHVos4LBLBYJB6V2TlapK0VIS2ZTzNj//KWX5aQKp8YkgbnuQIvzGRMqUpZLIr/sVb6w4BYXtFKCSyqkoeUkIOIt4su4UO25Hm0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791914702; c=relaxed/simple;
-	bh=iounqlr0ghmzA6o+rB5NrROrpFTPWmYgWQS/iCRWrgg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WIH2JpZe+/Az2Lz/Q4ZmFk3IWmDGV8TNcsUgDutrGD+uC/CZYprz7ws9giCh6GRUzTueow/W+uHnEuP1m0/jrB/tomkIpVOTBDR7kdsNU/dWC4d7Fe42ZD7MQbMgsSuYTp038Lf2navjG0U1bnqYQFYRLPbZeqGumIQirZjcr1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org; spf=pass smtp.mailfrom=systemli.org; dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b=lO2HLpfW; arc=none smtp.client-ip=93.190.126.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=systemli.org
+	s=arc-20240116; t=1791915727; c=relaxed/simple;
+	bh=1qSgBtvZcLztfzj2xS5hRI9jQXVX7deyMrzfui0US6g=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=CobmdM3b8kTUurs8lWUfMyrrD3f/wjd223lpkfWupL2hrH8E0PtcmBwcCgiEerKQp5JaUecF6hLZTpmSK0QS/4rWkY/P6X3co0JaqcSu7GHWTPIfAaX10FSdHGt8W9JGRI83iBIhYm9XBLawAN+XwO05j62uZKov95pMawj3NfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=sioMloMF; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b="lO2HLpfW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=systemli.org;
-	s=default; t=1791914182;
-	bh=0f8w1KPBYOz2blbtbFQ6Hgoz6pLh4QfF+bptlzDZmiE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lO2HLpfWy9nscnFDSZHRiqHmz0BL+D2s+PBmQNEga5smwGHRjbQSPuJrGQK9KutSY
-	 I+2mehjg1VUcPjP73AgluH9rb8CbKLTnA1WDWB6mBi6qidHuc2MrD+zFvcf9jlaElw
-	 cwGHU+pF4HPMstwpJrU/+Vv4miY2pk0zw68DfMxPyn942Rux5TRisPddbV8KQCjfBc
-	 /D+m8fNDUubGxKXUgkGe8ne5+1yRgNz2HPn59dcPQtlfcfWJVbKhy6Vdsf4PYZSIkZ
-	 M8LPm1iuvRngxd3QXdiTVJEz1ZbK5kYPpBeaiAhIMv0ceIay+gsNnO43IrcOtKZBk5
-	 /3vFaKSM7RQVQ==
-Message-ID: <bc41916b-f88e-4700-b399-418cd28b7126@systemli.org>
-Date: Tue, 13 Oct 2026 19:56:20 +0200
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="sioMloMF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=1qSgBtvZcLztfzj2xS5hRI9jQXVX7deyMrzfui0US6g=;
+	t=1791915725; x=1793125325; b=sioMloMFnkqKJlxjOrxO/4fy7tnqhpkImu+Un7W1nvSaSzR
+	IVFh+2rg2uVSKXDtTBWA/E0NqHSjxapbSJ4gAvKCfBzcU+oCsTKIV1Njs37wyzQ/nyvsHOoE+7/JH
+	kKCd2GxbLstzjGIUEJB20FZ9S+5EEtLNzbeRrWyp3Rvfllap6xWBS593jSXteSc9mrXf6Ha7wEvuU
+	tovmRzMrHNAeqT+HiCQuZJwCCKfnOJwb8Lee7Hjpdvp0qqJF/Ny2LZDW+XWn09JLuYqnmnIu1PbCG
+	e4p4fPME65RStitw2JCTCQ5YwXWz5XEq1Smpk74Ayw4JsAfTVJ0gO+AqQ0azm7Fg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1xGh8U-000000005Xe-3kT7
+	for linux-wireless@vger.kernel.org;
+	Tue, 13 Oct 2026 20:22:03 +0200
+Message-ID: <feaf62f6762bac17bc6e1edce2fc1d4d50adc3b4.camel@sipsolutions.net>
+Subject: Re: [PATCH 10/11] wifi: mac80211: avoid tailroom accounting on new
+ key installation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 13 Oct 2026 20:22:02 +0200
+In-Reply-To: <20261013150605.65fbe249d82e.Ie6b44dfeb421691898e1e181f38a6adfc780290d@changeid>
+References: <20261013130604.254393-13-johannes@sipsolutions.net>
+	 <20261013150605.65fbe249d82e.Ie6b44dfeb421691898e1e181f38a6adfc780290d@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] wifi: ath9k: restore background spectral scan after reset
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
- linux-kernel@vger.kernel.org
-References: <20260915194327.30397-1-vincent@systemli.org>
-Content-Language: en-US
-From: nick <vincent@systemli.org>
-In-Reply-To: <20260915194327.30397-1-vincent@systemli.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Spam-Report: 
-	*  0.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
-	*  0.0 DKIM_VALID_AU Message has a valid DKIM or DK signature from author's
-	*       domain
-	*  0.0 DKIM_VALID_EF Message has a valid DKIM or DK signature from
-	*      envelope-from domain
-	*  0.0 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
-	*      valid
-	*  0.0 DKIM_VALID Message has at least one valid DKIM or DK signature
-	* -1.9 BAYES_00 BODY: Bayes spam probability is 0 to 1%
-	*      [score: 0.0002]
+X-malware-bazaar: not-scanned
 
-Hi, I did not get any feedback so far, so a friendly reminder. :)
+On Tue, 2026-10-13 at 14:59 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>=20
+> On a new key installation, going from not having a key to
+> now having one, we currently synchronize_net() because the
+> key is first assumed to be handled in software (requiring
+> tailroom allocation, and that requires not transmitting a
+> packet without enough tailroom, hence synchronization). It
+> is then offloaded, usually not requiring tailroom anymore.
+>=20
+> During a new key installation, however, it's actually not
+> the case that this is needed, since the key only becomes
+> reachable to the TX path _after_ being installed into the
+> hardware.
+>=20
+> Restructure the code so that the increment/decrement of
+> the tailroom counter is skipped for newly installed keys.
+>=20
+> In the case of rekeying, this doesn't work since the old
+> key is removed from hardware and may still be reachable
+> by software, so the tailroom counter still increments to
+> one until the old key is destroyed. This could be avoided
+> with more effort, requiring tracking more precisely if a
+> key is even used for TX at any given time.
 
-Bests
-Nick
+This is well and all, but I'm starting to think we should just not do
+this. Given that SW crypto really should be the slow-path, I think we
+can instead simply remove the RCU sync *completely*, and accept that in
+the race case, the (SW) crypto path may have to expand tailroom (and
+might drop a frame if allocation fails).
 
-On 9/15/26 9:43 PM, Nick Hainke wrote:
-> A reset leaves spectral_mode set to SPECTRAL_BACKGROUND, but resets the
-> spectral registers and receive filter. The driver therefore still reports
-> a background scan even though the hardware no longer produces FFT samples.
->
-> Re-trigger background spectral scanning after reset recovery so the
-> software and hardware state match again. Do not re-trigger spectral
-> scanning in disabled, manual, channel-scan, radar, or off-channel modes.
->
-> Assisted-by: Claude:opus-5
-> Signed-off-by: Nick Hainke <vincent@systemli.org>
-> ---
->   drivers/net/wireless/ath/ath9k/main.c | 12 ++++++++++++
->   1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 740a6fc7b067..00e587fe6ee3 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -231,6 +231,17 @@ static bool ath_prepare_reset(struct ath_softc *sc)
->   	return ret;
->   }
->   
-> +static void ath_restore_spectral_scan(struct ath_softc *sc, bool start)
-> +{
-> +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-> +
-> +	if (!start || sc->cur_chan->offchannel || sc->hw->conf.radar_enabled ||
-> +	    sc->spec_priv.spectral_mode != SPECTRAL_BACKGROUND)
-> +		return;
-> +
-> +	ath9k_cmn_spectral_scan_trigger(common, &sc->spec_priv);
-> +}
-> +
->   static bool ath_complete_reset(struct ath_softc *sc, bool start)
->   {
->   	struct ath_hw *ah = sc->sc_ah;
-> @@ -269,6 +280,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
->   		ath_restart_work(sc);
->   		ath_txq_schedule_all(sc);
->   	}
-> +	ath_restore_spectral_scan(sc, start);
->   
->   	sc->gtt_cnt = 0;
->   
+That's far simpler, no need to add the RX_ONLY flag I did in patch 11
+etc., ultimately instead of adding code it ends up removing some, since
+we can also get rid of the dec_tailroom_needed_wk and all that.
+
+Thoughts?
+
+johannes
