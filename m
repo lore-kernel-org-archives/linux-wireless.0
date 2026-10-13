@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3653E3179;
-	Tue, 13 Oct 2026 02:04:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E5C41DE02;
+	Tue, 13 Oct 2026 02:05:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791857100; cv=none; b=my8qHU6/NOxSCevLIdj9OF5DoYq429fPsISr9VlHyyo96b3XL3Q4WR18vGeSjsHKIF+Z2XlfEhTmOH0Jr8folcv0apg5BfsHwJvofOBssybGlnHJqT3iRwtC0hIWyAH2CK5+AJwPxWz/6TxLodvm1BoGPOHBV3q0d03UuYTP1Xw=
+	t=1791857103; cv=none; b=mhPwNKVTFHOMZpViLvl/b/pV2ij24KWs2WbqOVCg+oBC+M27jkEvDCRcxROlQAJnSInSZiGVtQDqGb1/Q9fewK9htTMn0gHiIRmv+0YfNRohA6nDzeGezIhAObJp4pFR/8yznjgaCtAiMQ2R6S6LHo5tHRO5XlhF4gR54MtxVp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791857100; c=relaxed/simple;
-	bh=Ni9xdFQRsu7xhU2pHZcPfawAA3TKlxPNiaw/TvoTEz0=;
+	s=arc-20240116; t=1791857103; c=relaxed/simple;
+	bh=52DzKKtQSMUW/kfNaNzeB201m9Ru1aODVf0x6ktaDYA=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OSBbcWRbusdh7k/rgD7mkyQPf1BnB9pfLhgsdHNLSlirQ5gFLrfA282d13IIqUuiak2N/t1KgsBRQWrfraOHxQvTcMdAHhnZYQErRkZ6Okz7U4V1Iy8ewBMpXgAxy6jGq34IEb6/R4SQ/CXt8gcJ31ZzxghCUgzwMFUNxdLsJUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oG45VgRO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=JgcXVHvzYQyXsiBWwFGd4I8FeqeKRgZwW34XKMDGtEt3MjGyJPx2JnQEL/UrD819AzCe3cvEBaboap78rApAMgmq6FQI1t1/+H/u6Hq2BE2MEyqh/Gxlv+zBlBzedwTs7b1k+ky4Iw/SqicAtlPv5jW6Ng/xPt2HhalDEr1YtQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DaHvIGMt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oG45VgRO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E64A1F00893;
-	Tue, 13 Oct 2026 02:04:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DaHvIGMt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 767F81F00898;
+	Tue, 13 Oct 2026 02:05:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791857099;
-	bh=v1rjribMsJ9Sp01nQ2z04+fvF4TfD4+dw4GlsPuNIAw=;
+	s=k20260515; t=1791857102;
+	bh=pXk2JIKRCvMAxTrsqzZaEh3EGvfZBCqCTFxXl1fXQzg=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=oG45VgRO3L9zJ+JGVTKuU5NYr+E/cMK7JpMs3egdzEtuvicj1bhbZmOY8+0MCJ3Pf
-	 V22oopBNlj+i295+XXsigWc2JCd1Bfa4Qsso1u+73oNCp4TJizeQAOeXrODHZgSq1V
-	 BD+rfbk/u9OWl7cNJBLPKglusa4QelucZNCzrQ6/LZzbIjZ9eHIetItRnt8G/JP/bA
-	 mWB0O+PIU4vke9xnAMCuvgoM71J+MkwXD6nxWd+Yo1lCZWehkzBWNgdnolhRgePrpl
-	 cWYM5oVzyDhyD22cj+4e2OGRcHRUohyS8ep8lsKe9a7V0KdMG7VBeODZXqqdEJcEb1
-	 HAtHvafyfWJkQ==
-Subject: Re: [PATCH net-next v11 1/6] netlink: specs: rt-addr: fix the type of
- target-netnsid
+	b=DaHvIGMtOnN1+19j0rzD+QWuBF+oMbtVx9RImbMx9mk95KWEStZe0WKIK6JsscqF4
+	 jTULyAQzTXYZiDK+9HpqVX/A0HEmyiC7FZZ9SxGkznY2dBdMsKyTg1di7s8zmDo70a
+	 w17cKCgOY9/DT4KWinunNBDes8RiHu9JABg5Vkf1+NtJVdp3HKemeuZQru8+XjA1iS
+	 OcysHa3A6ZEkoXEMm9A8M3Eq5ToRYXKj+o5pUNBy465lOGkf9ul7J+9y+Ucw63vKPb
+	 TvS+UMct4mZ+Rle7qu8XN7KxboRBu/Z5ksc17rvkIuEuHwP6Pebo0WH5Xz6u3WyhjQ
+	 pxDWMS+OR/0zA==
+Subject: Re: [PATCH net-next v11 3/6] net: add a generation counter for
+ dev->mc changes
 From: netdev-bot+sashiko@kernel.org
 To: sigefriedhyy@gmail.com
 Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com,
@@ -40,10 +40,10 @@ Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com,
  sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com,
  linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
  linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 13 Oct 2026 02:04:57 +0000
-Message-ID: <179185709784.434549.17899680533305071231@kernel.org>
-In-Reply-To: <20261012011707.3378-2-sigefriedhyy@gmail.com>
-References: <20261012011707.3378-2-sigefriedhyy@gmail.com>
+Date: Tue, 13 Oct 2026 02:04:59 +0000
+Message-ID: <179185709988.434549.15422498299449004512@kernel.org>
+In-Reply-To: <20261012011707.3378-4-sigefriedhyy@gmail.com>
+References: <20261012011707.3378-4-sigefriedhyy@gmail.com>
 X-sashiko-severity: Low
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -60,114 +60,158 @@ you want to address the nit picks below when you respin.
 
 Low priority / nit picks for your consideration:
 
-- [Low] The commit fixes a real type mismatch in
-  Documentation/netlink/specs/rt-addr.yaml.
-
-Pre-existing issues:
-- [Low] This problem wasn't introduced by this patch, but the getaddr
-  operation in Documentation/netlink/specs/rt-addr.yaml still doesn't…
-- [Low] This problem wasn't introduced by this patch, but
-  Documentation/netlink/specs/ovs_vport.yaml has the same kind of…
+- [Low] The commit message misdescribes the precedent it copies.
+- [Low] The patch adds an 8-byte 'struct net_device *mc_dev' to every
+  struct netdev_hw_addr_list (include/linux/netdevice.h:253), but only…
+- [Low] __hw_addr_changed() (net/core/dev_addr_lists.c:22-26) reads the
+  device netns with plain dev_net(list->mc_dev).
 
 --
 
-netlink: specs: rt-addr: fix the type of target-netnsid
+net: add a generation counter for dev->mc changes
 
-This patch changes the type of target-netnsid in the rt-addr YNL spec from
-binary to s32. That matches the NLA_S32 policy the kernel uses for
-IFA_TARGET_NETNSID and the s32 type rt-link.yaml already uses.
+This adds a per netns atomic counter, dev_mc_genid. It is bumped whenever
+an entry is added to or removed from any dev->mc list. To find the netns
+from the list helpers, a new mc_dev back pointer is added to struct
+netdev_hw_addr_list and set only for dev->mc. The counter is meant for the
+AF_PACKET multicast dump in the following patch.
 
-> The kernel parses IFA_TARGET_NETNSID as NLA_S32 and rt-link.yaml
-> declares its target-netnsid as s32, but rt-addr.yaml has it as binary.
->
-> Signed-off-by: Yuyang Huang <sigefriedhyy@gmail.com>
-> Reviewed-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-> Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
-
-[Severity: Low]
-Should this have a Fixes: tag? The type: binary line comes from the
-commit that first added the spec. The later rename commit only changed the
-attribute name:
-
-Fixes: dfb0f7d9d979 ("doc/netlink: Add spec for rt addr messages")
-
-> diff --git a/Documentation/netlink/specs/rt-addr.yaml b/Documentation/netlink/specs/rt-addr.yaml
-> index 0ecbd24c890c6..17ead22034515 100644
-> --- a/Documentation/netlink/specs/rt-addr.yaml
-> +++ b/Documentation/netlink/specs/rt-addr.yaml
-> @@ -119,7 +119,7 @@ attribute-sets:
->          type: u32
->        -
->          name: target-netnsid
-> -        type: binary
-> +        type: s32
+> The IPv4 and IPv6 dumps report that with NLM_F_DUMP_INTR by
+> stamping cb->seq from a per netns generation counter combined with
+> dev_base_seq, see inet_base_seq().
 
 [Severity: Low]
-This is a pre-existing issue and was not introduced by this patch. The
-getaddr operation in this spec still doesn't list target-netnsid anywhere:
+Is this accurate for the multicast dumps?
 
-      name: getaddr
-      doc: Dump address information.
-      attribute-set: addr-attrs
-      dump:
-        request:
-          value: 22
-          attributes: []
-        reply:
-          value: 20
-          attributes: *ifaddr-all
+inet_base_seq() reads net->ipv4.dev_addr_genid, and inet6_base_seq() reads
+net->ipv6.dev_addr_genid. inet_dump_addr() and inet6_dump_addr() also use
+these for RTM_GETMULTICAST and MULTICAST_ADDR.
 
-Here *ifaddr-all contains only address, label, local and cacheinfo.
+The only writers of dev_addr_genid are the unicast ifaddr and netdev event
+paths: fib_inetaddr_event() and fib_netdev_event() for IPv4, and
+__ipv6_ifa_notify() for IPv6. Neither net/ipv4/igmp.c nor net/ipv6/mcast.c
+touches it.
 
-The kernel accepts the attribute in RTM_GETADDR dump requests. This is
-from net/ipv4/devinet.c:inet_valid_dump_ifaddr_req():
+Doesn't that mean the IPv4 and IPv6 multicast dumps also miss group joins
+and leaves between dump rounds? If so, they share the gap this patch closes
+for dev->mc rather than being a working precedent. Could the commit message
+be reworded to say that?
 
-	if (i == IFA_TARGET_NETNSID) {
-		struct net *net;
-
-		fillargs->netnsid = nla_get_s32(tb[i]);
-
-The IPv6 dump request handling in net/ipv6/addrconf.c does the same. The
-kernel also puts the attribute in replies, from inet_fill_ifaddr() and
-inet6_fill_ifaddr():
-
-	if (args->netnsid >= 0 &&
-	    nla_put_s32(skb, IFA_TARGET_NETNSID, args->netnsid))
-
-The spec also has no do block for getaddr. IPv6 registers RTM_GETADDR
-with .doit = inet6_rtm_getaddr, and inet6_rtm_valid_getaddr_req() accepts
-IFA_TARGET_NETNSID, IFA_ADDRESS and IFA_LOCAL.
-
-Could target-netnsid be added to the getaddr request and reply lists,
-along with a do block? Right now, generated per-op C code can't set or
-parse the attribute whose type this patch fixes. The Python YNL tools
-still work because they encode and decode against the whole attribute set.
-
-A later patch in this series fixes the getmulticast case: "netlink: specs:
-rt-addr: document AF_PACKET multicast dumps" adds target-netnsid to the
-getmulticast dump request and to &mcaddr-attrs. getaddr is still
-unchanged at the end of the series.
-
->        -
->          name: proto
->          type: u8
+> diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+> index ad17c5b8a6036..e3cae73a4255e 100644
+> --- a/include/linux/netdevice.h
+> +++ b/include/linux/netdevice.h
+> @@ -259,6 +259,9 @@ struct netdev_hw_addr_list {
+>  
+>  	/* Auxiliary tree for faster lookup on addition and deletion */
+>  	struct rb_root		tree;
+> +
+> +	/* Set for dev->mc only, the device the list belongs to */
+> +	struct net_device	*mc_dev;
+>  };
 
 [Severity: Low]
-This isn't a bug introduced by this patch, but
-Documentation/netlink/specs/ovs_vport.yaml seems to have the same kind of
-netnsid type mismatch. Should it be s32 as well? That spec declares the
-attribute as unsigned:
+This isn't a functional bug, but the pointer makes every
+netdev_hw_addr_list bigger, and only dev_mc_init() ever sets it. On 64-bit
+the struct goes from 32 to 40 bytes.
 
-        name: netnsid
-        type: u32
+Some examples of the cost:
 
-But vport_policy in net/openvswitch/datapath.c uses a signed type:
+- struct net_device embeds four of these lists (uc, mc, dev_addrs,
+  rx_mode_addr_cache), so it grows by 32 bytes.
+- vlan_mcast_list[MAX_VLAN_ID] in drivers/net/ethernet/ti/icssg/icssg_prueth.h
+  grows by about 2 KiB per emac.
+- netif_rx_mode_run() has four on-stack snapshot lists, so its frame grows
+  by 32 bytes.
+- Other users, such as the mac80211 mc_list, carry a pointer that is
+  always NULL.
 
-	[OVS_VPORT_ATTR_NETNSID] = { .type = NLA_S32 },
+There is a 4-byte hole after _count. Would a bool or 1-bit flag there,
+combined with container_of(list, struct net_device, mc), work instead? It
+would give the same information without growing the struct.
 
-ovs_vport_cmd_fill_info() sends the value with nla_put_s32(). The value
-comes from peernet2id_alloc(), which can return NETNSA_NSID_NOT_ASSIGNED
-(-1). A YNL client using the ovs_vport spec would decode -1 as 4294967295.
+[ ... ]
+
+> diff --git a/net/core/dev_addr_lists.c b/net/core/dev_addr_lists.c
+> index d615192d1c3b1..3ab053cbf8b99 100644
+> --- a/net/core/dev_addr_lists.c
+> +++ b/net/core/dev_addr_lists.c
+> @@ -16,9 +16,19 @@
+>  
+>  #include "dev.h"
+>  
+> +/* RTM_GETMULTICAST dumps use the netns generation counter to detect
+> + * changes of dev->mc between dump rounds.
+> + */
+> +static void __hw_addr_changed(struct netdev_hw_addr_list *list)
+> +{
+> +	if (list->mc_dev)
+> +		atomic_inc(&dev_net(list->mc_dev)->dev_mc_genid);
+
+[Severity: Low]
+Can this dev_net() read race with a netns move of mc_dev?
+
+dev_net() becomes read_pnet(), which is rcu_dereference_protected(pnet->net,
+true), a plain load. Some callers here hold only addr_list_lock. They don't
+hold RTNL or the device instance lock. Meanwhile __dev_change_net_namespace()
+writes nd_net under RTNL and netdev_lock(dev):
+
+net/core/dev.c:__dev_change_net_namespace() {
+    ...
+	netdev_lock(dev);
+	dev_net_set(dev, net);
+	netdev_unlock(dev);
+    ...
+}
+
+One path that isn't serialized against this goes through net_failover. That
+driver is not ops-locked and has no ndo_change_rx_flags, so it uses the
+legacy synchronous rx mode path. An IPv6 multicast join on the failover
+master runs with only idev->mc_lock held:
+
+__ipv6_dev_mc_inc()
+  igmp6_group_added()
+    dev_mc_add(failover)
+      __dev_set_rx_mode(failover)
+        net_failover_set_rx_mode()
+          dev_mc_sync_multiple(primary_dev, dev)
+            __hw_addr_add_ex(&primary_dev->mc, ...)
+              __hw_addr_count_inc()
+                __hw_addr_changed()
+                  dev_net(primary_dev)
+
+When the primary slave moves to another netns,
+net_failover_slave_unregister() clears the pointer without waiting for a
+grace period:
+
+	RCU_INIT_POINTER(nfo_info->primary_dev, NULL);
+
+An rx mode call already in flight can then still be reading
+dev_net(primary_dev) when dev_net_set() runs. KCSAN would likely report
+this.
+
+The BH-disabled addr_list_lock already provides an RCU read side here.
+Would dev_net_rcu() be the better accessor? The worst outcome is one
+increment landing on the old netns counter, and the move also bumps
+dev_base_seq in the new netns.
+
+> +}
+> +
+>  static void __hw_addr_count_add(struct netdev_hw_addr_list *list, int value)
+>  {
+>  	list->_count += value;
+> +	__hw_addr_changed(list);
+>  }
+
+[ ... ]
+
+> @@ -1197,6 +1211,7 @@ EXPORT_SYMBOL(dev_mc_flush);
+>  void dev_mc_init(struct net_device *dev)
+>  {
+>  	__hw_addr_init(&dev->mc);
+> +	dev->mc.mc_dev = dev;
+>  }
+>  EXPORT_SYMBOL(dev_mc_init);
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261012011707.3378-1-sigefriedhyy%40gmail.com
