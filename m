@@ -1,337 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5F835FF58;
-	Tue, 13 Oct 2026 13:55:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C9C3EFFC5
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 14:03:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791899738; cv=none; b=GlMWRtzjdl31Rhw8BHX0vrt2V1l2sX2Up6FIYKADTnXkG8J0Gpa8uGr2EhJKUR5os+NliOQPC65+j9Cu4rarF1/cnt7qezTybXEw0qMHsQdmmNVwubDrBdq6U3WEDp4XU+B4JadNKYd5Ue7GKcKktPDuyP4o4bsHo/G12vn+/6A=
+	t=1791900231; cv=none; b=iTPChZx2Cwzcg2yFu98CEchh5VsjxEa/JxiBogmNAGlkZKPkQLk8deTl+gmOpvZu14YdwTPTBETTIR88TLB6I0Zs+cADSEPliC5BcXe9YxDX59Zj+e/Sme29bjTfi8+0U7y6DxZDbxT4w9DU2JzhHtBVgccTajKQru0/4Nd4M8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791899738; c=relaxed/simple;
-	bh=tSNHSqvQs1HNuMGiTEwyVR3bH3c2RazL9IaBxJzzD4s=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oJ85NC72mn77u54cc1EXH/JtasqbyhYeb5dt7HSunU376/prCWDtpo2wazO0sYLWLxnfyD+2suK/AP05ZQS9PwMrSn+J+7nOc3jtKicjaYTFEDl/YlpCegMfKK7u0eiPVu5R1zYVuE2pz4osxsoh4UnurYM11q8p+2nRwV1v66s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bR2pamVL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791900231; c=relaxed/simple;
+	bh=UHry0BPkquJw/CuJwnGhyuxl/slkjmr1qnD/xn81qew=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I5FWVtQVIPnWcESUZ7dwePHHNj0WI8HvFE8CQZIspdYtHg9jJ4ik4aFhY3d0D7mwkgUlV2Ed0pP2deNspvBL7inLcujA1z4n/ifrb/Jfw/xXxUgGXw7ailVSGY+Gec5W2PPfjcX00TzrdIdtNkvWoG+isyGW9widX9m/voijACU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=CBEzo/4j; arc=none smtp.client-ip=209.85.222.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bR2pamVL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 373381F000FF;
-	Tue, 13 Oct 2026 13:55:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791899736;
-	bh=GeHLrZQpxoBTtl0Ik+mGgDnVq9bwLr039r+CkHRFz5Q=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=bR2pamVLYJHgqnskcUhXpcf0nwiIMyqHajZYs7WRLf3rrLI9Rt2S4drahRf6dnIhw
-	 D/kDQX4TQZzf6N+IUddIkv0DQDCRiy1OjcZcg0oIMV6Yq2gv5rNULyPa6tEKlrGQ64
-	 9hzTITlNhtYv2kEHaoaLQfxA7BT2fMAiHhEbHRlvgjNYnhrVb/zzEbAZoHgAgXweks
-	 Twxqrl/ayxKBer3RhXbtJB4ALlo6eIfofpDJXWKbfIwXFknILWx9o8YtPKlnmYCs2Y
-	 QnrCEOzhkl6aMvBPTzpeRYLZaym0m/UxCNJxIFPuOQvD4/atPHd6Ti4yKzVbWHwzd9
-	 WkXGp0VxZNvvQ==
-Subject: Re: [PATCH] wifi: cfg80211: allow IR on a channel the wiphy already
- operates on
-From: netdev-bot+sashiko@kernel.org
-To: 1914018426@qq.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- johannes@sipsolutions.net, kuba@kernel.org
-Date: Tue, 13 Oct 2026 13:55:35 +0000
-Message-ID: <179189973572.434549.4673154130343153035@kernel.org>
-In-Reply-To: <tencent_2B956CE56BB4DE6A4748896922E04666FD0A@qq.com>
-References: <tencent_2B956CE56BB4DE6A4748896922E04666FD0A@qq.com>
-X-sashiko-severity: High
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="CBEzo/4j"
+Received: by mail-ua1-f48.google.com with SMTP id a1e0cc1a2514c-9828fee1b4bso602451241.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 07:03:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1791900229; x=1792505029; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=sxRXmPGGOdI1+4/8LW6E01BCp/MjtS9NyfOV1SrhfSY=;
+        b=CBEzo/4jeiz4WlID7U/njZM7AWjCMFsKhRPE2lZcPfdbjT5/IhMC7CPhAthUzS/zjC
+         7JdpJuzrx/MaN0DflF6oAbENcPd/EKLzlkXO3xhW/4F5syHofVyYESUmZBXMOG8P4d/o
+         U0+8nId/s3j8PBkkGKMw9+6JThitqmt/tGl1U5Nh1xq4Hd0djOAhqJt0lU/i0VlyiGGx
+         3lIrp+VrVqteNUBHh72uss+6qHhfv911OjNj/lBhTo0M3tCp5OKbWWQv6+N+m74fPDOO
+         CCafrXkio5dlBgBy0OeRosZpOR483gn1R9Bmc9hfkBJ3Hjq6TdOR8etcp4eTP7mIJR7u
+         MRrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791900229; x=1792505029;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=sxRXmPGGOdI1+4/8LW6E01BCp/MjtS9NyfOV1SrhfSY=;
+        b=qJ5Z7AAYjGUhLuwQ4SUc2b9JSGUC7eweTQxA9lsvC96BZhBOVQMGgapTYdWfCPAoJk
+         xqKcOIkpOXNfEvAqDNkKrqjzA9NniO3nPMLAVdQVVZepGOYep4SNdmNMSVX2Nn2xoiTu
+         xUx1q2rdf0N8k+jpK6cFbrj4hmRqJ4ILZwRGFCU9xYO5fM0lwCKNRBk0Qumzu73urDGK
+         JMIWeCZbGcm9h05gGLERWehVlGUQCXmyKyqWL9XD/avdc9OttjXJyWTUuD2zL9Vk8LZE
+         jFttcgj5mRj1GhWidJxRkil7KZRiyx31SgxZogcIVkf4Z2gZppYGy4UsESDiCJkhCQXg
+         fnDw==
+X-Forwarded-Encrypted: i=1; AKwUvBzFhWAsRaDt42O4j0LNypUFZOW+U+O/PYb/IyflznwMrh6lHZbM5csTZeDLj6ghBm1Sof9vN6IY9JNSToRwWQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJUAOswgfY0q/zyABknJ3rVH6f4tTq/zRLzPX0deBBB0lD1jO2R
+	IinSxpUTiP0sP3Oo+hZ9A+HaJ8sV5Xy4eBsXyV/+eXj76dbonLa/zWOFEA9wnu0pkts=
+X-Gm-Gg: AYBFou0D/tvydtVriwl112+547p8pReMO+Ll0+p/dAhiGroQOfQNmWmiJYhUBxtxCYs
+	VIF6wIzGfbucPE9DCKYOZPf+f8GGynDPvK00hKIcoLolyPIxhHJ1AkxsuJTE78SWiaOKhLHOqoI
+	0Dt+xjV5GtwcInZDCUfow/TbN6HpWMa6qRdBTv0sYHMsCJr5f/kRnltjxBkdRZo/17XneX8AbkS
+	qlo9X8ULNaFOgmLFDWf5Bnh+Gt7CDWDMpNX8W1Xshvazh0weJdcJVI+fN6pT0bRfxD6AWlI17ml
+	gExZBWcXMcM4c1TYOQp9Am+B62HIB+NY77iMIyXeZwTJw9EfBblNfr33t5IRIN60M8AD/bbhBjN
+	x1DnHEqrFdtS63+LLTaopqXrd+pkcb6Sm06jk4dAVKOATk7mVnYr9Zxi7ekqKW//MeiVw8XrnmX
+	SmR+HuMfioWJDBeVPSX/nfersZ1a7sufHlPk7wqzVZHvNMU3YQ3t2byty5XeK+zyeY5NckYk5lG
+	tk0EwuX79TARdCoB0qI/teGVNORxTtr4kQAOvEhSCS1nTbWyPO9xyxgbw==
+X-Received: by 2002:a05:6102:a48:b0:7c3:875e:593b with SMTP id ada2fe7eead31-7cb373fae29mr3183710137.32.1791900228555;
+        Tue, 13 Oct 2026 07:03:48 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91b97bdfb89sm25903626d6.40.2026.10.13.07.03.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 07:03:47 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xGd6X-00000009i6J-387e;
+	Tue, 13 Oct 2026 11:03:45 -0300
+Date: Tue, 13 Oct 2026 11:03:45 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: alex@shazbot.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, bhelgaas@google.com,
+	jjohnson@kernel.org, johannes@sipsolutions.net,
+	kevin.tian@intel.com, kvm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mani@kernel.org, skolothumtho@nvidia.com, yishaih@nvidia.com
+Subject: Re: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
+Message-ID: <20261013140345.GK14213@ziepe.ca>
+References: <20261011132558.GD14213@ziepe.ca>
+ <20261013134317.174234-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261013134317.174234-1-jtornosm@redhat.com>
 
-Thank you for your contribution! Sashiko AI review found 6 potential
-issue(s) to consider.
+On Tue, Oct 13, 2026 at 03:43:13PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Hi Jason,
+> 
+> I understand the concern about compatibility implications, but to
+> clarify, my intention is not to create an ABI or a "MSI caching
+> concept". 
 
-Critical: 0 · High: 4 · Medium: 1 · Low: 1
+It very much is an ABI, you defined a new ABI in the config space a
+layout between guest and host that we have to maintain forever.
 
-If you believe none of the issues are legitimate, please reply to each
-issue of Medium severity or higher and explain why the AI is wrong.
-If any of them are legitimate and you plan to respin, please let patchwork
-know by including "pw-bot: cr" as a separate line at the end of your reply
-(one such reply per series is enough).
+Just for a hacky solution, it is not so nice.
 
-- [High] The new same-channel exemption in cfg80211_ir_permissive_chan()
-  (net/wireless/chan.c:1709-1725) returns true before two gates that…
-- [High] The new loop in cfg80211_ir_permissive_chan() does not skip the
-  wdev being validated and ignores the requested iftype.
-- [High] The exemption compares only the 20 MHz control channel.
-- [High] The exemption is justified by the station already radiating on
-  the channel, but the dependent AP is never re-checked when that…
-- [Medium] Adding `iftype != NL80211_IFTYPE_AP` to the whitelist in
-  cfg80211_ir_permissive_chan() (chan.c:1735) lets plain AP interfaces…
-- [Low] Several comments in net/wireless/chan.c no longer match what the
-  code does.
+> I can explore converting ath11k/ath12k to
+> platform_device_msi_init_and_alloc_irqs(). However, if I understood
+> correctly, the VM problem remains identical after that change — the
+> firmware still needs physical host addresses, and device MSI domains
+> in the VM would still provide virtual ones.
 
---
+Yes, but it removes the solution of copying data from the existing
+MSI-X table from consideration, which is the primary hacky thing here.
 
-wifi: cfg80211: allow IR on a channel the wiphy already operates on
+> I'm happy to do this refactoring if it opens a path to get these
+> devices working in VMs. What VM mechanism would you accept for
+> exposing physical MSI values through device MSI domains?
 
-This patch adds a same-channel exemption to cfg80211_ir_permissive_chan().
-If any connected station or beaconing AP on the wiphy already operates on
-the requested channel, IR is allowed, and this check runs before the
-CONFIG_CFG80211_REG_RELAX_NO_IR / REGULATORY_ENABLE_RELAX_NO_IR gate. The
-patch also adds NL80211_IFTYPE_AP to the relaxation iftype whitelist, so
-hostapd can start an AP on the station's channel on LAR devices such as
-iwlwifi.
+Once you have a MSI domain you just need a driver wired into it that
+can request and get the physical addresses from the hypervisor. Then
+when that domain is in use the guest will always see true physical.
 
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index 9183cd19dbdc4..a1f86b8735bb5 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -1700,6 +1700,30 @@ static bool cfg80211_ir_permissive_chan(struct wiphy *wiphy,
->  
->  	lockdep_assert_held(&rdev->wiphy.mtx);
->  
-> +	/*
-> +	 * A channel the wiphy is already operating on (e.g. a station
-> +	 * connection) is already being radiated on by this device; starting
-> +	 * an AP on the very same channel adds nothing new from a regulatory
-> +	 * point of view. Allow it regardless of the driver's relax opt-in.
-> +	 */
-> +	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-> +		struct ieee80211_channel *other_chan = NULL;
-> +		unsigned int link_id;
-> +
-> +		for_each_valid_link(wdev, link_id) {
-> +			if (wdev->iftype == NL80211_IFTYPE_STATION &&
-> +			    wdev->links[link_id].client.current_bss)
-> +				other_chan = wdev->links[link_id].client.current_bss->pub.channel;
-> +			else if (wdev->iftype == NL80211_IFTYPE_AP &&
-> +				 wdev->links[link_id].ap.beacon_interval)
-> +				other_chan = wdev->links[link_id].ap.chandef.chan;
+That part is easy enough, it already exists and you don't need any
+driver changes.
 
-[Severity: High]
-The wdev being validated is itself on rdev->wiphy.wdev_list. Won't a
-beaconing AP always match its own ap.chandef.chan here?
+The bit that isn't clear is how you get the domain in the first
+place. I suppose something like a virtio-msi is a good starting point,
+but I don't know enough about ACPI/etc to imagine how to wire it into
+the flow.
 
-If so, every relax = true re-check of a running AP on its own primary
-channel returns true. cfg80211_reg_check_beaconing() then drops
-IEEE80211_CHAN_NO_IR from prohibited_flags.
+IIRC hyperv does this, so maybe there is something to follow there..
 
-One path affected is regulatory re-validation:
+> Jeff is escalating to Qualcomm engineering again (thank you for
+> that), but users with deployed hardware need something working in a
+> reasonable timeframe.
 
-reg_leave_invalid_chans_wk()
-  reg_wdev_chan_valid()  (iftype = AP, chandef = ap.chandef, relax = true)
-    cfg80211_reg_check_beaconing()
-      cfg80211_ir_permissive_chan()  -> matches itself, returns true
+Yes, but it has already been years, and Qualcomm doesn't seem to care
+about these uses cases, so I'm not sure I see the urgency to do a bad
+ABI hack..
 
-Suppose the AP's channel becomes NO_IR after a country IE, a user hint, a
-LAR update, or clearing the indoor setting. Would cfg80211_leave_locked()
-then never be called for this AP?
-
-The same self-approval seems to apply in two more places:
-
-  - __nl80211_set_channel(), for a beaconing AP that keeps its primary
-    channel
-  - the "recheck beaconing is permitted with possibly changed power type"
-    check in nl80211_set_beacon()
-
-For example, a 6 GHz AP started as VLP on a NO_IR channel is only allowed
-there through IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP. Could it then switch its
-beacon to LPI or SP?
-
-None of this needs a station or a second interface. It also runs before
-the opt-in gate, so it affects every driver and every build.
-
-[Severity: High]
-The exemption is justified by the station already radiating on the
-channel. What happens to an AP started this way after that station
-disconnects?
-
-__cfg80211_disconnected() calls cfg80211_schedule_channels_check(), but
-that only schedules a re-check for some drivers:
-
-net/wireless/nl80211.c:cfg80211_schedule_channels_check() {
-    ...
-	if (wdev->iftype == NL80211_IFTYPE_STATION &&
-	    (wiphy_ext_feature_isset(wiphy,
-				     NL80211_EXT_FEATURE_DFS_CONCURRENT) ||
-	    (IS_ENABLED(CONFIG_CFG80211_REG_RELAX_NO_IR) &&
-	     wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR)))
-		reg_check_channels();
-}
-
-For the drivers this exemption newly covers, no re-check runs. When a
-re-check does run, the AP validates against itself, as described above.
-Could the AP then keep beaconing on the NO_IR channel with no authorized
-master?
-
-This branch also makes any beaconing AP an anchor for any requested
-iftype. Could more APs, P2P GOs or TDLS off-channel links then be chained
-onto the channel?
-
-The existing cfg80211_ir_permissive_check_wdev() only allows a GO to
-anchor another GO. It guards that case with !INDOOR_ONLY, and its comment
-says this is because the station relied on may have disconnected:
-
-	if (iftype == NL80211_IFTYPE_P2P_GO &&
-	    wdev->iftype == NL80211_IFTYPE_P2P_GO &&
-	    wdev->links[link_id].ap.beacon_interval &&
-	    !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
-
-Should the new AP anchor have a similar restriction?
-
-Also, this loop ignores P2P_CLIENT and P2P_GO. reg_wdev_chan_valid()
-handles those together with STATION and AP.
-
-> +
-> +			if (other_chan == chan)
-> +				return true;
-
-[Severity: High]
-Only the 20 MHz control channel is compared here. On a match,
-cfg80211_reg_check_beaconing() drops IEEE80211_CHAN_NO_IR for the whole
-chandef:
-
-	return _cfg80211_reg_can_beacon(wiphy, chandef, cfg->iftype,
-					check_no_ir ? IEEE80211_CHAN_NO_IR : 0,
-					permitting_flags);
-
-_cfg80211_chandef_usable() then checks every subchannel against that
-reduced mask.
-
-Take a station associated at 20 MHz on channel 36. Hostapd then starts an
-80 MHz AP on 36-48, where 40, 44 and 48 are NO_IR. Wouldn't all of those
-subchannels pass?
-
-An existing AP could also widen itself through __nl80211_set_channel().
-That function only requires chandef.chan == cur_chan, and the AP then
-matches itself here.
-
-This early return also comes before the IEEE80211_CHAN_IR_CONCURRENT and
-regulatory_indoor_allowed() checks. Does it then apply in these cases too?
-
-  - wiphys with a fully known regdomain
-  - NO_IR plus INDOOR_ONLY channels without an indoor declaration
-  - 6 GHz channels where NO_IR means AP operation is not allowed for this
-    device
-
-The commit message says:
-
-  Meanwhile starting an AP on the exact channel the wiphy is already
-  operating a station connection on adds nothing new from a regulatory
-  point of view: the device is already initiating radiation there.
-
-Does that premise hold? A station transmits under the control of its
-master, but an AP is itself the master. At wider widths it also occupies
-channels the station never used.
-
-> +			other_chan = NULL;
-> +		}
-> +	}
-> +
->  	if (!IS_ENABLED(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
->  	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
->  		return false;
-
-[Severity: High]
-The new loop returns true before this gate and before the iftype
-whitelist. Doesn't that make NO_IR relaxation unconditional for every
-kernel build, every driver and every iftype?
-
-Before this patch, a kernel built without CONFIG_CFG80211_REG_RELAX_NO_IR
-always returned false here. The Kconfig help for that option says:
-
-  - it depends on CFG80211_CERTIFICATION_ONUS and is not enabled by
-    default
-  - relaxations apply only to drivers that declare support
-  - a GO started due to the relaxation should not allow connections from
-    non P2P clients
-
-With the new loop, hostapd can start an AP on a NO_IR channel as soon as
-a station is associated there (passive association is allowed):
-
-nl80211_start_ap()  (relax = true)
-  cfg80211_reg_check_beaconing()
-    cfg80211_ir_permissive_chan()
-      -> new loop matches current_bss->pub.channel, returns true
-    _cfg80211_reg_can_beacon(..., prohibited_flags = 0, ...)
-
-The iftype whitelist is skipped as well. reg_wdev_chan_valid() re-checks
-ADHOC and MESH_POINT with relax = true, so those would also get NO_IR
-waived when they share a channel with a station or AP.
-
-Separately, the commit message says:
-
-  - cfg80211_ir_permissive_chan() gates on the driver opting in via
-    REGULATORY_ENABLE_RELAX_NO_IR (iwlwifi does not), and its iftype
-    whitelist covers P2P-GO/STATION/P2P-CLIENT but not AP;
-
-Is that accurate? Both iwlwifi op-modes appear to set the flag:
-
-drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:iwl_mvm_mac_setup_register() {
-    ...
-	hw->wiphy->regulatory_flags |= REGULATORY_ENABLE_RELAX_NO_IR;
-    ...
-}
-
-drivers/net/wireless/intel/iwlwifi/mld/mld.c:
-	wiphy->regulatory_flags |= REGULATORY_ENABLE_RELAX_NO_IR;
-
-So on the test device, the gate that blocked the AP seems to be the
-Kconfig option. The commit message doesn't say that the patch bypasses
-it.
-
-> @@ -1707,7 +1731,8 @@ static bool cfg80211_ir_permissive_chan(struct wiphy *wiphy,
->  	/* only valid for GO and TDLS off-channel (station/p2p-CL) */
-
-[Severity: Low]
-This isn't a bug, but this comment no longer matches the whitelist
-below, which now includes NL80211_IFTYPE_AP.
-
-A few other comments in net/wireless/chan.c look stale too:
-
-  - The header comment of cfg80211_ir_permissive_chan() only describes
-    the IR_CONCURRENT plus associated station rule and the indoor rule.
-    The new early return needs neither.
-  - The new block's comment talks about starting an AP, but the loop
-    never reads iftype.
-  - The comment in cfg80211_reg_check_beaconing() still says only a
-    GO/STA can IR on NO_IR channels, and only when such relaxations are
-    enabled.
-
->  	if (iftype != NL80211_IFTYPE_P2P_GO &&
->  	    iftype != NL80211_IFTYPE_STATION &&
-> -	    iftype != NL80211_IFTYPE_P2P_CLIENT)
-> +	    iftype != NL80211_IFTYPE_P2P_CLIENT &&
-> +	    iftype != NL80211_IFTYPE_AP)
->  		return false;
-
-[Severity: Medium]
-Does adding NL80211_IFTYPE_AP here conflict with the uAPI documentation
-for NL80211_FREQUENCY_ATTR_IR_CONCURRENT?
-
-include/uapi/linux/nl80211.h:
- *	the guidance of an authorized master, i.e., setting up a GO or TDLS
- *	off-channel while the device is also connected to an AP with DFS and
- *	radar detection on the UNII band (it is up to user-space, i.e.,
- *	wpa_supplicant to perform the required verifications). Using this
- *	attribute for IR is disallowed for master interfaces (IBSS, AP).
-
-IEEE80211_CHAN_IR_CONCURRENT takes its meaning from that attribute. With
-AP in the whitelist, cfg80211_ir_permissive_check_wdev() returns true for
-an AP when a station is connected on the same channel or in the same UNII
-band.
-
-This change also opens the indoor branch to AP:
-
-	if (regulatory_indoor_allowed() &&
-	    (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
-		return true;
-
-Through nl80211_start_ap() (relax = true), that seems to allow a
-standalone AP on NO_IR plus INDOOR_ONLY channels, with no station
-connected at the same time.
-
-The commit message only describes the IR_CONCURRENT case. Was the indoor
-expansion intended?
-
--- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/tencent_2B956CE56BB4DE6A4748896922E04666FD0A%40qq.com
+Jason
