@@ -1,125 +1,59 @@
-Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
+Received: from forward501d.mail.yandex.net (forward501d.mail.yandex.net [31.44.14.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FA0A44C502
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 08:31:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F5A54A2632;
+	Wed, 14 Oct 2026 08:40:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=31.44.14.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791966703; cv=none; b=TyPd3zUkuwtLI8Oa4YIwC+YAqVPrXW+r8mnalB0J++IdLU7goqBSPLmbIEP4V2KMCSSHX66mbvHs5QP0JTWw/JTRgm3JtDJkoZMmrzrFvs7EIwmqBWVs5ZU6AxjAZy0UJYDtsh1oxVx8cQcdsZ+Nbi1/152Yv3C5h5YfVkxZMXI=
+	t=1791967252; cv=none; b=RAGRnBFsaRgbzCbaDrLx9XuqMDNQGYEzinRJ7UoyrP1ERa4wK7CaG17hdTZ+1ivfp8PDDDazxqg2g//rLwAxj4WNj7JKUXMLQfTzWwKlEl/8d3zPyYC5eVPfbBkIaWT5ylnm97dtMsXoy84YNp6Q798HA7op8CzB81KxrMjzXTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791966703; c=relaxed/simple;
-	bh=wI78vTL7TbkCe1RDN0a3FOHBkRgmq9gti4GvU5Iu8oo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kvhpR3mj+Xm1oGOgv77aW0SCPfYxDSCJHd7D5LI8i0ihxbuNnv7nwmJm7igo+6HqYg283HihzIhl6lxFDTgJNMiwtuRHCwlw5ItObBMRGNgLGxB+sYiGf+p4Tt4hUkcvotCbdhZOhiIwigJhokPz3bWvLnsMtDpnDJC0YtGJKD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=E+5hBMBi; arc=none smtp.client-ip=212.77.101.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1791967252; c=relaxed/simple;
+	bh=reISsblVLVBUSDj1ORN2fpRl1kDMtHIMB7XNItMAv1Q=;
+	h=From:To:Cc:In-Reply-To:References:Subject:MIME-Version:Date:
+	 Message-Id:Content-Type; b=EL9FM0t6Sq0C0ROPa6DzpRSDJa9+JgO5YWuh3auxkv30LIYBMzqWbaE+gTI19KXfe3pX1dJfHmnMPu93VTbN0RNnRcw40AuLkBTn+UJOfFGKTmmI1Zh1kj73OTZnqc0PNDcbmByEoMipJyCvldzmrXOz5/Di2YQJ6PkuvZin4ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me; spf=pass smtp.mailfrom=0upti.me; dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b=WI3km828; arc=none smtp.client-ip=31.44.14.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0upti.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="E+5hBMBi"
-Received: (wp-smtpd smtp.wp.pl 49057 invoked from network); 14 Oct 2026 10:31:32 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1791966692; bh=hULOe3o0cD/v3Ud36/uN9gOIN1iLNKRLSoryBNrNPwA=;
-          h=From:To:Cc:Subject;
-          b=E+5hBMBisAXz7RV5MCZtBsaam9o7BV7xbMSKTRRJ4BW+OshiElDENdwWhttBwm+Su
-           r63OV9o0GL6zf2c2JgdlLchUvF9zIAwLE0AneNgF9hIy0uy2/MZDhDLmj17N+5CUcQ
-           2xW6Cm7WzY836ybMS8NG3D+0kErIxpS9+6jARPd7fEeKIOWCJXub+5BMm4ZKkg7Ue1
-           7o18iXYxSEyb2XuwWdZdlaTW/SeQz7VYG9wbJ1S23t2OgQR1VtV7ajukLy5P6Wxp/k
-           FJQuNtE4Uodsg4/k4Z8VoaoMZLxiLdyMW2MzGsVfcV3zhcjNEUJDaTUmkLdHUubE9m
-           z/1iIjPQb9SWA==
-Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <hjf3108@gmail.com>; 14 Oct 2026 10:31:31 +0200
-Date: Wed, 14 Oct 2026 10:31:31 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Jie Feng <hjf3108@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH] wifi: rt2x00: use VCO_IC 0x2 for RF3053 on 2.4 GHz
-Message-ID: <20261014083131.GA62404@wp.pl>
-References: <20261012133728.77780-1-hjf3108@gmail.com>
- <20261013102305.GA58849@wp.pl>
- <CABOQOSU8KHVUrSc+qkCrpGK9zDBc3dNRqaRWKQ7ka=S6uLLbQA@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b="WI3km828"
+Received: from mail-nwsmtp-mxback-production-main-60.iva.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-60.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:6718:0:640:45f5:0])
+	by forward501d.mail.yandex.net (postfix) with ESMTPS id 4E3998B9B7;
+	Wed, 14 Oct 2026 11:35:11 +0300 (MSK)
+Received: from mail.yandex.ru (2a02:6b8:c0c:7888:0:640:d17b:0 [2a02:6b8:c0c:7888:0:640:d17b:0])
+	by mail-nwsmtp-mxback-production-main-60.iva.yp-c.yandex.net (mxback) with HTTPS id 8ZPi9s02JiE0-4a05ILdO;
+	Wed, 14 Oct 2026 11:35:10 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=0upti.me; s=mail;
+	t=1791966910; bh=QFT/+BhkdYdoXf5v5CBA3OcjOICHpHy7/Ndrrgblf7Q=;
+	h=Message-Id:References:Date:Cc:Subject:In-Reply-To:To:From;
+	b=WI3km828KsDttE99nyfjt/pXjPlHNsBw1kFmwaZ0T5FUKY18CDaCwvdQmhFrPqHBC
+	 HPsbQn9i8cAuk46I8BtN1qu6oUYdepIRLnYnBAIA/W4r1iE+e1X3JChqECb46QD0PE
+	 QA5NOcl0+qnHzVFmyurUCMMctg7zgtHBU2g2CNs4=
+Authentication-Results: mail-nwsmtp-mxback-production-main-60.iva.yp-c.yandex.net; dkim=pass header.i=@0upti.me
+Received: by ybzyx5bgt3byggqr.iva.yp-c.yandex.net (sendbernar) with HTTPS id 9583a2851fa81df7e03c6027b58d62c3;
+	Wed, 14 Oct 2026 11:35:10 +0300
+From: Ilya K <me@0upti.me>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+In-Reply-To: <221941791052355@558b3e58-c2b1-4e14-91fe-beb5649d18f6>
+References: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd> <529a79bc-dab7-aa41-00bd-c47ecbefaa00@candelatech.com> <471221788538289@323ca970-5bd2-4c6b-b52d-2b863a718615> <3acf531c-bcc7-412b-b3bb-665069260e46@candelatech.com> <2028561788553569@f088f4ec-f441-47a1-b7e4-75a1052aa4df> <2418461788691106@84aa39c5-f501-4e64-8418-6a8b6eb88e21> <eb405366-6574-4e4c-a89d-363751ed848b@candelatech.com> <4175721788798939@f00554c7-d809-471c-9bcf-78e5d8eceab4> <1556871789207706@7dc9deb3-4292-4932-8568-de9b411208d8> <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136> <211851789913261@df1900ea-d467-4ed7-a7f1-de68a4c3e6dd> <143991791036721@40be7595-980b-4665-ba66-1601e10a0899> <c4286904-2a9a-41fd-93ce-be57964909f6@candelatech.com> <221941791052355@558b3e58-c2b1-4e14-91fe-beb5649d18f6>
+Subject: Re:[bug] Triple whammy of mt7996e bugs on 7.2+
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABOQOSU8KHVUrSc+qkCrpGK9zDBc3dNRqaRWKQ7ka=S6uLLbQA@mail.gmail.com>
-X-WP-MailID: 4215d6effce8200f905927d0651f94ef
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [AZPx]                               
+X-Mailer: Yamail [ http://yandex.ru ] 5.0
+Date: Wed, 14 Oct 2026 11:35:10 +0300
+Message-Id: <5955851791966910@d362902e-9931-4ad0-8e86-72401cc67703>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On Tue, Oct 13, 2026 at 08:49:44PM +0800, Jie Feng wrote:
-> On Tue, 13 Oct 2026 at 18:23, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> >
-> > Hi
-> >
-> > On Mon, Oct 12, 2026 at 09:37:27PM +0800, Ho Jie Feng wrote:
-> > > Using the 0x1, the VCO calibration result is 0x7f on channels 6
-> > > and below. Using 0x2 fixes it.
-> > >
-> > > Hardware: Netgear WNDA4100 (USB 0846:9013, RT3593 rev 0402, RF3053)
-> > >
-> > > Signed-off-by: Ho Jie Feng <hjf3108@gmail.com>
-> > > ---
-> > > RFC for this since I am not sure if it is a generic fix, since the
-> > > vendor driver also doesn't use VCO_IC=0x2.
+OK, so I took some time off of this because of real life, but during that time, my 7.2-stable-with-Ben's-patches frankentree actually crashed! I am not sure if this is the same issue or a different one, but I thought it's at least interesting. 
 
-I looked at vendor driver it does not set VCO_IC=0x2 when switch 
-a channel. However it does it after wake up from suspend:
-https://github.com/ashaffer/rt3573sta/blob/09b80e6290769c53736dc09c5ae9025e15bfbe69/chips/rt3593.c#L194
+Here's the logs from the ~hour when it crashed (exported from Loki, so sorry for the weird format): https://gist.github.com/K900/e2e5b21d6a49f450fe353c7cc3057916
 
-This function: RT3593ReverseRFSleepModeSetup seams to be partially
-the same what NICInitRT3593RFRegisters does. 
-
-Also NICInitRT3593RFRegisters it's different from
-rt2800_init_rfcsr_3593() i.e. it set RF_R02 before GPIO_SWITCH.
-
-Could you check if modifying rt2800_init_rfcsr_3593() 
-to be more the same with both NICInitRT3593RFRegistersr and
-RT3593ReverseRFSleepModeSetup (regarding RF_R06 change)
-solve the problem?
-
-> > > Is this also a known issue?
-I didn't knew about it.
-
-> > Could you elaborate what is the issue and what you mean by
-> > "VCO calibration result is 0x7f" ?'
-> I had accidentally left the description out, sorry about that.
-No problem.
-
-> The adapter doesn't work on the lower channels in 2.4GHz,
-> channels 8 and below. This looked like an issue with
-> the PLL or something after debugging.
-> 
-> By tuning to channels 1-12 and using the debugfs to dump the
-> RFCSR registers, RFCSR4 is always 0x7f on the failing channels
-> consistently. Since there is code to switch RFCSR6 based on
-> channel, I tried the same as the 5GHz code to switch RFCSR6=0x2
-> for lower channels and it worked on all the channels surprisingly.
-> 
-> Due to the behaviour of RFCSR4, I think it is a VCO calibration
-> result since it seems to change after enabling the calibration.
-> 
-> I could not find any mention of this issue elsewhere, and suspect
-> either this hardware has very few Linux users or my hardware
-> is special in some way, so I can't guarantee that setting
-> it to 0x2 will work with another device even if it is the
-> same WNDA4100 model and chipset, so some testing would
-> be appreciated.
-I do not have RT3573/RT3593 device by myself and ordinary users
-do not read linux-wireless mailing list, so we have rather little
-chance to get more test coverage here.
-
-Anyways, if init change that would make rt2800_init_rfcsr_3593()
-more like vendor driver do not fix the problem, it's ok to modify
-rt2800_config_channel_rf3053(). 
-
-If we want to be more safe with the change, we can limit it with
-rt2x00_rt_rev() using 'rev' of your tested device.
-
-Regards
-Stanislaw
+If there's any more info you need, please tell me.
