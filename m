@@ -1,176 +1,60 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BA12472F65;
-	Wed, 14 Oct 2026 21:36:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 799114AB3C0;
+	Wed, 14 Oct 2026 22:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792013807; cv=none; b=eLjLc6QtJ1mv1rMQ6KXEkemTXXWoFtDikkn0M0s3JFx4O/fgBQ9IDgBVQLl4I8KOG8L6nHLszDLMy/3b6MoerDTRIEiGpUMDmTDJqof5fzuDZ0RkqfHKRIjwRJ/tAdLCk5asNZMpFi1XDNmzEykWjZFe7FcMvsPan3NSZFT2RvU=
+	t=1792017213; cv=none; b=ntbFVXQOVG3XIr2zYvOubaQxGMvC0Peg9VHN4utP6M9VJZn0k6BwRzM9HxTswV5P+4FWm/S4MGmm3mWYRbmUqGnLShdWHvu794A51f1287qMz9KJMDzto62l6gjp2PjgPn+cOe4ZaQkKV9AGBE9qcqadQHxvIjZJ1PQZEIROL3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792013807; c=relaxed/simple;
-	bh=iOzrSqJii6m6WQWiiRclHuCmy8MD6YF+Kb1CCSLm/Ms=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=rtXCpQ0LlNwARqpITLNLleEkXpyb/ObbSu/MhC6bUBVhiBuVBMLxcVhlcfc1zwYZbvgk7VWpkuTxvgAF3XToI2Qo9qgOWFNRTgkjZCo0CsmY/+sYzya+lU1IHvsjr11nM8qSzuZcFpkIq6tO1bxW7xPHMHetZdK7jbsFl9ZYfX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ksk9Noda; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1792017213; c=relaxed/simple;
+	bh=flEBA/XREmCt7HtumS3yMrWp46sFqNpzX6s6ENVH0Hk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AwOvp3d2Uuw7kpxEMCsWtKHdmon1awGFILFB4a8Rj1y/0bVWUOtPQLn9I+UxA82kML4AcIyYRJEK7qh+9U6A/kh71BbXQeUMdRoLH6SByYsTLLh0QiSUi6U2vnLaiA4OPS9sf+RpqZ8n1m8RcTV8sBl+hpdUYnU/MrGsfOViKxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InGe4e07; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ksk9Noda"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D7A27C2BCC7;
-	Wed, 14 Oct 2026 21:36:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1792013806;
-	bh=iOzrSqJii6m6WQWiiRclHuCmy8MD6YF+Kb1CCSLm/Ms=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=ksk9NodacoZ/g8vTXr+gOqizUGbASu7FHecb4Pcnq3wr6+H1+cjUyC0KIgZ+f7ybG
-	 xZAOI5TdOyG/NjakH70RgwWT842CLg7q0/sciGCLj7yg8b8lAfL2KfTIJ4TwccBeSn
-	 k8kxoR2pzk4vopuacbT2iVhUkYJ+G2uaId2dmU2/fww5t9YNvdYg+t5wlG/u6vFPWk
-	 C9VjS2z7cdqmeW+pQt/UXE6A1u0TbygNZ2dTQSdRxjpky8A4yVHiHoNZHRaSDfql9A
-	 TPUX86lu4WQIh0Kod8mhNUy30qpQihJuCz+weeYdUIJbq/Riafz2q3y7mBvbDMfA3E
-	 EGwsxyFYGRJTA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFCB2CC6B2C;
-	Wed, 14 Oct 2026 21:36:46 +0000 (UTC)
-From: =?utf-8?q?Burak_G=C3=B6nc=C3=BC_via_B4_Relay?= <devnull+burakgon12.gmail.com@kernel.org>
-Date: Thu, 15 Oct 2026 00:36:18 +0300
-Subject: [PATCH] wifi: mac80211: deauthenticate from the old AP when
- roaming with MFP
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InGe4e07"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 498441F000C6;
+	Wed, 14 Oct 2026 22:33:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792017212;
+	bh=oITed+1J7zs0+HkBZdD4eaEi/kUeu+yJJvY/jlDeIPM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=InGe4e07/U3ivi0DVfcYNk4VDUHQtXaotlygRQoDHh4nHMqfoJqBsVef9FjKlWFC2
+	 NIf2F4fpFXA8DD8GDzqZz6FQkM14hGGzRiLiYIRhN285lsl4oJEXWn0U7vYjQuRxvs
+	 Cvv8XsyvJzSX+2ap2wKfmc8r/cOwIqt+mfkr1x21f61tD/5C0jYA9HH3u5+hwRuwSn
+	 1y5w/AHR0pGFpSY117/Uiu6NIgusuxUCpO5LYfcQ3QQByCf/c2JkMapCm6pqSoXLZ/
+	 jVzVsVxYPgJop608f1Xo+tWm5YWHmWHh8OCtk3YcYPJumJ0wnVArlpaq+iTNJLURii
+	 k6vNdKmfKnUOg==
+From: Sasha Levin <sashal@kernel.org>
+To: gregkh@linuxfoundation.org,
+	kartikey406@gmail.com,
+	harshit.m.mogalapalli@oracle.com,
+	johannes@sipsolutions.net
+Cc: Sasha Levin <sashal@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Wentao Guan <guanwentao@uniontech.com>
+Subject: Re: [PATCH v3 6.6.y] wifi: cfg80211: release locks on error in cfg80211_wext_siwgenie()
+Date: Wed, 14 Oct 2026 18:33:24 -0400
+Message-ID: <20261014213019.rc-reply-0003@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261013102041.2113948-1-guanwentao@uniontech.com>
+References: <20261013102041.2113948-1-guanwentao@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20261015-mac80211-roam-mfp-deauth-v1-1-9ccc69b434fd@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMwQrCMAyA4VcZORtoinXqq8gOMUtdhG6j3UQYe
- 3erHr/D/29QNJsWuDYbZH1ZsWmsoEMDMvD4ULS+GrzzJ3IUMLGcnSfCPHHCFGfslddlwJaPIUT
- 2rVwEaj5njfb+rW/d32W9P1WW7w/2/QO3kckYfAAAAA==
-X-Change-ID: 20261015-mac80211-roam-mfp-deauth-7a455fa27c9c
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- =?utf-8?q?Burak_G=C3=B6nc=C3=BC?= <burakgon12@gmail.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792013780; l=4901;
- i=burakgon12@gmail.com; s=20261006; h=from:subject:message-id;
- bh=Ul1ZvEqnkBoUEz9VVXngoZ5xKwBtEcW5F7kwW3H4QSw=;
- b=jbXBl7rWy9/VgeNn3ICHgskkoOItRMi8jvwXHyf+medVTHEbTR/+hXr5/778Sq77m0y74Awxj
- 6E+DgD4NNYKDWuoj9ZGMuDEgMJLqEEMcs/nXT2UQnWpkyXyWazHTlTG
-X-Developer-Key: i=burakgon12@gmail.com; a=ed25519;
- pk=qcexQajnoYGkNqFOy3eFqTzvqTOR/P++ksapi6qUbvw=
-X-Endpoint-Received: by B4 Relay for burakgon12@gmail.com/20261006 with
- auth_id=1126
-X-Original-From: =?utf-8?q?Burak_G=C3=B6nc=C3=BC?= <burakgon12@gmail.com>
-Reply-To: burakgon12@gmail.com
 
-From: Burak Göncü <burakgon12@gmail.com>
+On Tue, Oct 13, 2026 at 06:20:39PM +0800, Wentao Guan wrote:
+> This is a fix for stable v6.6.158 backport commit, so no upstream commit.
 
-When userspace starts authentication with a new AP while we are still
-associated, mac80211 drops the association locally and does not tell
-the AP. With management frame protection the AP still holds a protected
-association with us. An AP in that state has to treat a (re)association
-from us as possibly forged: it refuses it temporarily and first checks
-the old association with an SA Query, which we no longer answer. The new
-association can then only succeed once the SA Query has timed out (1000
-TU by default), but we give up after three (re)association attempts
-100 ms apart.
+Thanks, v3 has been queued for 6.6 in place of the earlier version.
 
-This hits every roam to an AP that shares the old AP's state, for
-example between the AP MLDs of an AP that runs one single-link AP MLD
-per band and steers clients between them with BSS transition
-management, and every reassociation with the current AP. With a TP-Link
-Deco BE65/BE85 mesh (Qualcomm) and an Intel BE201 (iwlmld), each of ten
-roams between the 5 GHz and the 6 GHz AP MLD of the same unit over nine
-days timed out: the AP acknowledged all three Reassociation Request
-frames and answered none, then deauthenticated us with reason 9 when we
-fell back to the old AP MLD. Reassociating with the current AP got
-reason 9 right away. A Reassociation Request sent 1 s after the first
-one was accepted at once; one sent after 500 ms was still ignored.
-
-Send the Deauthentication frame when MFP is in use. The AP then drops
-the old association at once, and the same roams completed with the
-first Reassociation Request, answered within 75 ms.
-
-Assisted-by: LLM
-Signed-off-by: Burak Göncü <burakgon12@gmail.com>
----
-I ran into this with a TP-Link Deco BE65/BE85 mesh and an Intel BE201
-(iwlmld) on 7.2.9. The Deco has 802.11v enabled and steers clients
-from its 5 GHz to its 6 GHz AP MLD, so after every resume the laptop
-failed that roam and ended up on a distant node for a few minutes.
-
-To narrow it down I used a test build of mac80211 with two runtime
-switches: the wait for the response after an acknowledged
-(Re)Association Request, and transmitting the Deauthentication frame.
-All roams below are between the 5 GHz and the 6 GHz AP MLD of one unit:
-
-- stock: Reassociation Requests at 0, 100 and 200 ms, all ACKed, none
-  answered; the fallback to the old AP MLD then got reason 9
-- 500 ms wait: requests at 0, 500 and 1000 ms, only the third answered
-- 3 s wait: the second request, at 3 s, answered within 64 ms
-- Deauthentication sent, stock timing: answered on the first request
-  within 64-74 ms, in both directions (one of them steered by BTM),
-  and the same for roams between units and for reassociations with
-  the current AP
-
-I limited the change to MFP connections, where the AP has to protect
-the old association; without MFP the AP can simply replace it. If you
-prefer to send the frame unconditionally, I can respin.
----
- net/mac80211/mlme.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6ec45a9f7..b6e38d210 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -10099,13 +10099,19 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	if (ifmgd->associated) {
- 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+		/*
-+		 * With MFP the AP protects our association and may not
-+		 * accept a new (re)association from us until an SA Query
-+		 * on the old one times out, so tell it that we leave.
-+		 */
-+		bool tx = ifmgd->flags & IEEE80211_STA_MFP_ENABLED;
- 
- 		sdata_info(sdata,
- 			   "disconnect from AP %pM for new auth to %pM\n",
- 			   sdata->vif.cfg.ap_addr, auth_data->ap_addr);
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       WLAN_REASON_UNSPECIFIED,
--				       false, frame_buf);
-+				       tx, frame_buf);
- 
- 		ieee80211_report_disconnect(sdata, frame_buf,
- 					    sizeof(frame_buf), true,
-@@ -10452,13 +10458,19 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	if (ifmgd->associated) {
- 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+		/*
-+		 * With MFP the AP protects our association and may not
-+		 * accept a new (re)association from us until an SA Query
-+		 * on the old one times out, so tell it that we leave.
-+		 */
-+		bool tx = ifmgd->flags & IEEE80211_STA_MFP_ENABLED;
- 
- 		sdata_info(sdata,
- 			   "disconnect from AP %pM for new assoc to %pM\n",
- 			   sdata->vif.cfg.ap_addr, assoc_data->ap_addr);
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       WLAN_REASON_UNSPECIFIED,
--				       false, frame_buf);
-+				       tx, frame_buf);
- 
- 		ieee80211_report_disconnect(sdata, frame_buf,
- 					    sizeof(frame_buf), true,
-
----
-base-commit: a4190accbf7e05496754004bb701fb3e7d04e57f
-change-id: 20261015-mac80211-roam-mfp-deauth-7a455fa27c9c
-
-Best regards,
---  
-Burak Göncü <burakgon12@gmail.com>
-
-
+-- 
+Thanks,
+Sasha
