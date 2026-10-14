@@ -1,144 +1,149 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012052.outbound.protection.outlook.com [52.101.66.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09BA93B2FD1
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 06:10:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791958237; cv=fail; b=nzkkIjI0tmmWrErxqejWvo36vwi/PFzTU9iyQ6XWNQwPCiH9w7gZAEw91fx3gWhau9QqqVFYUvQenqqwKNZZs9l4v8YrDpSbQhCnckmuz+syAvCPTB0DSKCcyQjpKv3JinP1gmX6ZthY4IpC+NP3VLXyumg2ff7wySn8p0kqvHM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791958237; c=relaxed/simple;
-	bh=Gse9fEfloNyykDb7TaB+FWWg60FwasYvtH93EKffHV8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=qDAc6HZCt836SEHTMjjKdI3ikTgV8vRopdNha3qVcfU2VecCY60fTvghAYj12bBxfBI1fNjkhJUunK/dRy+liFWofFqv6KQGJKPlj5jcUwmQ7vSUSBCxr4F+ffU8sf2IVxlW4YDvQshfFi/8l24a4TMmubxLcrqETYoHJmsy2Ok=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=LFfyBBkt; arc=fail smtp.client-ip=52.101.66.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214656AD4
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 06:22:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791958965; cv=none; b=AWthMXXeql5+38fw1bGJztWC+QXFiHCg4IA0HZOkUJwn4rdstqoz8TcpW5e9zkjvgW4ptyFXFMo0y2kv6shOTeteGg8qUpASwKIv4szD7ns1VFiGzJHJ1/aDgjQGpRtrnbMkfUM3YBZadHgfyqleium12q8Ob5qIidOtuID6xmk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791958965; c=relaxed/simple;
+	bh=do92hy/gYZbdz5nneCsyDYR1q7QVkrDjd6qDQep//8M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=udWW+BUBDBuQ/GCv6nHRgNenOlU+s0/CWr33ExLxSJUPbUv6vZSXUTxdcF4rX/GsY8Z7wlbUbd23F5nkABsAB/GEzetRPOl782y6AV6+9geshdsAz96a/BuEAdyMyIDTMFhVJhDqk8qYqI+wYuemnE1kyN+I5+Aq7nVp0HWTjgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dUBsaLay; arc=none smtp.client-ip=209.85.221.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="LFfyBBkt"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CAAjdLiiApEZJQ+a3FpFXqokF6FlqUJxa+Ix1ru4S/7Nege4n0TiKYodlczPBqOTIscyofmEHfmETuM1pYa95nFN3djTeXE7G5+dd+TDXAMyM6JiQLRZh5kqUpuVuswbaAsVYAZd9EK0W5IeirVSMXRI7oR3kratGAn4KAIZMabCPIbQdL3mVWz8wAUQkgoAh12NzrsznJLWvOjnWGpkSSvqeawG5is6rzfsj6yHqrkALGq1IE6Q+kHThV6/ZBLzm24paprN+N0wbdSD2yr7dOZtJCfkEUjbVeE3NT2mItFjcCX0oKa2wlYjKThUWy4l7JdcNEH7YP9FbNhhAR7jUw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OoKtpAVMnJDbSggFW3MkEABQZoU00QQe7QUmCln4Y84=;
- b=AGQ2KbBaqpuITdzo4jSEwfmiM12kBxVe9WCKnlWow7GmL5C2z/n9O+XBszSKFWkZLm+gBx/En30R1yUnE70HKvF2L0EB7nCUP/Xd3Shmvic4aZYogcgLUSLUxFw0aUDSxaC1AFXvvl0xqIOh7ziQL9OrXWnnRIuNDKDrhbhI18tJx22VKAdtcTFLdtVQp1WAXA+hgSujziadAFQ0+cQoHo+8qMcpnL5jMMnvkXeNxlpAddGHMD5fNS4BjR/XiHIwHOYuf8SbinwHXB3C3qlDjevXA+k4GuC3xg//ZhaD5gxk0H2bdXL3w3tbeVPJloHYfTbe5Z0PuLI0g0CoFfz6dA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OoKtpAVMnJDbSggFW3MkEABQZoU00QQe7QUmCln4Y84=;
- b=LFfyBBkto0AWKhvMBWsA3+/d+MtUBvO2VRzIZb6B9DG5lthiXBaFOXXjT94Ww/WLZBOEhQ1un81QkObBcJUjAM+qQUHt/Z4lY41Xgr660uHSC1+K8I61WFDDmBCoyoESattdbdZX87s3xrxzhAAah+KqQqdPcbXb5O6xQKPbNCODnmrVS3YPbjgJEoIpC2nmkdW0w6DYvdGolck9Q2CYayAJB6qcOgbNPHIzkHuJFwYHu1TBV0nrM9zKX48K3vaj/JUxUhinAlMlIK9oHmoNAzaIG83cjt4a/JXfD6B6VZNdZ60uH18y3QAkf685UQUFEadJpwBps/UKSte5KOLSBg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
- by VE1PR04MB7293.eurprd04.prod.outlook.com (2603:10a6:800:1a8::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Wed, 14 Oct
- 2026 06:10:32 +0000
-Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
- ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0496.021; Wed, 14 Oct 2026
- 06:10:32 +0000
-From: jeff.chen_1@oss.nxp.com
-To: Karl Mehltretter <kmehltretter@gmail.com>
-Cc: Jeff Chen <jeff.chen_1@oss.nxp.com>,
-	Jeff Chen <jeff.chen_1@nxp.com>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless] wifi: nxpwifi: fail the firmware download on a poll timeout
-Date: Wed, 14 Oct 2026 14:09:43 +0800
-Message-Id: <20261014060943.3492064-1-jeff.chen_1@oss.nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <asw9+ftcdKi10UUU@nxpwireless-Inspiron-14-Plus-7440>
-References: <20261003192256.78255-1-kmehltretter@gmail.com> <asw9+ftcdKi10UUU@nxpwireless-Inspiron-14-Plus-7440>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: FR3P281CA0088.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:1f::16) To VE1PR04MB7280.eurprd04.prod.outlook.com
- (2603:10a6:800:1af::22)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dUBsaLay"
+Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-5e94a057d9eso2447978e0c.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2026 23:22:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791958963; x=1792563763; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=bNeVzBoSGqY6hcBV8+qLl98g4CfL7+apV6kO7AyiGhc=;
+        b=dUBsaLayT3Y1T0b5xzUIlLwPec5GTQv2pnG/hKNlj2MAWb/EOZzfvKPiA0PxjemR+Y
+         aiGDykSl2GImGC6v7Y2hb5UChQMq63Wu9IQ+4eo9HkJoyAEeSn12vBDfhOzwQMynW920
+         1TY3dZ/6gw9huD06Kd4vb9gfvuAgkPYyxFMlwUULmTHmBfDWCVDFCd0mfSc5qCKnRIij
+         5UVX5jFpw3NJ90J6Wx7A9y4I7DgiSHcVJtr5L6hWKZ0MeMPsxZLOJi+DQunsTf6sUXl9
+         2b+lyjKfn/r4Id+kkFrFABStI0sVmHJdZkuzGCtgMYQscP/sK4OuvyUizUbUXgYmUmKM
+         LhLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791958963; x=1792563763;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=bNeVzBoSGqY6hcBV8+qLl98g4CfL7+apV6kO7AyiGhc=;
+        b=LbqaBcT6QUMI28GtekgKzZO1oqlO0FFiaJB88K0NGZrp6sNE9aBel+DAikX1PBphXi
+         0da1/VfAwDcubFys27jPwtxC9mTkjMXWdyEQOkFjhN6biskq7bxGgYn4sIez9TCxAWK9
+         NDFKxg76Pv0YVNmqcB9qyqu6B4WzuOKd3+P1o7+wIQ58kzzsX3uk+4OWZ6VrQRa6mdw7
+         zsizVLYQ01n59V6nCPOnzuSiX4pDanXn5l0tduNdur4wbhhQMgJllYVUj4dNRj1ADr+G
+         DP8j1WtndKvxYt1xZHx/nrsfW4bQUtocu076Vnmyhqv1/5tr9Q541it3HlYG3I2b3P38
+         13yg==
+X-Forwarded-Encrypted: i=1; AKwUvBw3rF+V05ePXeB+UDidhB0GN79FL6at8JQMaEKhFYlrnplnyg4mkK4S20pDYDY5aVCtCPjgALs9IKMxF8sPXg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYL2ZcikBDDZtInZmxiAaysIgM6svAdqCojgVQp6uyzQ9cPnUiuA
+	enDXh9uwWrXHK4+RTFLa/NsKVZJx+mO9T186U+S6IdaAJwxJQzVRlFyO
+X-Gm-Gg: AYBFou1/xLt37o3BD3DzVE7zBPtN2+PRFTWbHAs8tUm0Kqtv9HlHAHMPxDzL+eBddp2
+	tyLHEtJxxVDJUs3icNynaittKu+EBZiw77VDyxzEi43EwjEWL2oSAI3bRC3OCdf1WXJV/K2+OIq
+	qQ3W4tQ5XhR5080UDv+ngAQR8EgaPLFfh/Z77Z95WcMcL+5aryXaocHoY68N1va8zLZUr54sGK1
+	aNHkMTzNmkV7wy7yKtQLvEHYyPQbyJrTqFyIrHT1ONgIzwglG7wfnX5MXY7BKUOtHLIW8xtRHmb
+	uEZ6nFsYgdehRCB2JPOgG0nGCpOYHR9eTwSRA5U00UbVo4dB8X7kTPo61R09mqQohXYnvitf3cx
+	KIFyqtWKR+O2BT+EKbXu7OcvrwZNWUeB7L2MKc4uCAfr120w2SS5EhY2xrLhDO3ZxoVTDJD8d2u
+	m5SiM7Bd/vapkJidLsMu3rJdIa36GKzpDnBYyV8vmn7KxD5E3x0h2uFwHzSI6XqFEmQKYEAa05n
+	BM6V96BkJXSlCcZdapRIjAilFF1zsj/fP+/aYrRIMKR
+X-Received: by 2002:a05:6122:181e:b0:5de:655e:404e with SMTP id 71dfb90a1353d-5e91f4d2596mr5521407e0c.15.1791958962957;
+        Tue, 13 Oct 2026 23:22:42 -0700 (PDT)
+Received: from DESKTOP-1E7V4GR.lan ([190.177.140.173])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5e93683455csm7783845e0c.13.2026.10.13.23.22.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 23:22:42 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: nbd@nbd.name
+Cc: lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Cristian Papa <pcristian292@gmail.com>
+Subject: [PATCH] wifi: mt76: mt7603: discard power-save loopbacks after wakeup
+Date: Wed, 14 Oct 2026 03:22:25 -0300
+Message-ID: <20261014062225.9238-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|VE1PR04MB7293:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3bea013b-0181-4ad9-c812-08df29b9da43
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|23010399003|1800799024|366016|376014|10067099003|22082099003|18002099003|11063799006|4143699003|261009223027099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	WnVLah5NjBDTIBRyzxC+1dIKuBnM22WtLiXKrcIQZimYuq3rq0lJkXXMpZ8uyWyCcrxllsOKuYXeEo8JbvEnIk6BaFOiiLg18tZCjQRmep9RROiXB/0bJT3h+tMmD8AMpZoqpPITlbIGUYe30ntRZAz5IZMJg2njbMeY2aG7BDIIxOLe8XpWutWUweJig2jk1pGzKWdFC0Ar+II2jW+lWS0xCnUzA8IjJeEh3oml6BOGYusA0QlzT3fz5bny96W8sp0McGaFNrO7blslI/EWn8Lntyn1rVQpjtyMEaazruenDNLpACWJj5oHBtDXy46fwC1N0B0pnIFNvfVaZJ/srSFSrAiGeX1g8PHbW7oJ49hpf6+E5qZQ098w5XTEu4t2W+hWXK+ExCIBmkoTLE5AXmNn4mySQkZfk0oBgKkla3kA+KEmXeIUabV9l7Of/sAij3w5YgH+LASweaF5+umXJAo8HuknGO/7HS0alRBsjtVTocoItvE4v/q964XMqLSGERE6oespd/ptTr+2SzvAZLcdu4PQxcm/esut9AbldK5jvr7XFZcatkn+v62NJ2aNgZhrFNdXI0LhJ62cqzgbaxMhv54Ez1B/mGfofBzPCrjkqFPAj0UvSjQ2tSDoid0ene4OYVqggPPqwN2uIdMg1Fw+oDFKGlA6FoD6g7w+qq0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(1800799024)(366016)(376014)(10067099003)(22082099003)(18002099003)(11063799006)(4143699003)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?VY2+GpGtkgXpPj5K5wc6LPpbYhte1sy81fypOPj33s6cdF6UmlH6KsAcM4mV?=
- =?us-ascii?Q?6lyw8+t7tfEKRRqcYyJnrHhJQ7P6zLu23CYxZsKH1aySArUTByPVFyfEiIzx?=
- =?us-ascii?Q?LQMZvTbxO9FzubP5pvrUKPE0UmKUp4KbPfHZca0J2dZcIaJNpPlRL6HabM+5?=
- =?us-ascii?Q?ZOh/VXRwFoNre4BSSZyAvOZSeMQe3AxNFMNgOmINEevZDeP0mI7+Xyrd2mta?=
- =?us-ascii?Q?T4jwvjSg8IXpKcCYM+ilHSdiiYm/QPoYUGguSP8u8g/EmuTPjAlciNzaa1rx?=
- =?us-ascii?Q?tGvRGARsHzQEGK35JoehX/qrmWPFe12N+19eN5iFteAFX2dGDuKE65v8fkew?=
- =?us-ascii?Q?Td4ogL7zADsy+Ql9WZ0M/UgeXHK3aBXGdaQgBWG+f/ANE92TvtPXn31GQluk?=
- =?us-ascii?Q?6vAet1dPB2Xk6XH/Yq59grSvtimwgXhw7/FEUYjaRf/1ydrgYOfawclqshen?=
- =?us-ascii?Q?6hn8khnEJxhqWxItC80S7RClJmsIodAYxm8/D6hG8xcDj7LfZOnkNIqscFqs?=
- =?us-ascii?Q?yKrtOwCbdlYtM0hmwCQNc31QpRLmQtMHjA2YySCXE1V52EYa0w/xCgS/hzGA?=
- =?us-ascii?Q?vTkn3b3e1/aMfZV8nOeqbMYDfflKCym8ndjJtWMP/nMraKetDkS32MztuCMV?=
- =?us-ascii?Q?1glHsL2l/1nsoNoj5WrGogPhjrJorIWOHr2HEseFMO/dAufXcJztAm/wGhn9?=
- =?us-ascii?Q?T9uhwjzrwo4mPha/SK6YcpfT8d9QcCrTWeNJDuVuMbh48Oso35VPtkwUyGDm?=
- =?us-ascii?Q?2LdGKZear9p/g47fA+h+zPcQH42Gs4tAZStTk7k02NzY+6/z7TuxFF+e15ko?=
- =?us-ascii?Q?Ao8v8HSonQZZclXDVnHzyPpsUL4zYiBlGpJC6ijBLlkkDiHSlqZrcdGb4qqz?=
- =?us-ascii?Q?0jTHftFn8osiCV7w2zUtmYN6BhRWQfsEGkBZBmAQWPCozbVTsN4Yh3aANLzE?=
- =?us-ascii?Q?EibUQL2CxitZU6ZOVMVUqXg03kb3BUiWJgne8M9OyqEuQSNtm3gArYcG0HD6?=
- =?us-ascii?Q?b/CDl1qUMOGLPV+10cCmbiInMhmf1BhsHNeNnJEva5uHLMFwNBQfTsqAHW9V?=
- =?us-ascii?Q?NsG93uEUx1huG+0RWLURhVaSEc3yDOdCjK7r9jbtDGn0FzEWawuvsomkgwRb?=
- =?us-ascii?Q?wnW3dnqYgHTY7r0HC21C1d0pq/uhZDvv0s0mx8mOU0bwhKja36JT6LLfelhd?=
- =?us-ascii?Q?DkUSYWt+spi+MC2di2X0xxm5hqpYGOZZI8LP+tCkCh/1o/8iKXe0NT0NkGrz?=
- =?us-ascii?Q?n/mje9d+xcSyZ6+p4q+mfpA5R1q00UqM1YNgQT/zSjYMmeWqO2RLUXlFEexT?=
- =?us-ascii?Q?Jo+exehw01wlVxEfNww/JOb71xhF6PWp9Fc0nqjjFGr+8RgrOAb/G8UDQ395?=
- =?us-ascii?Q?3avYleTvudVM4FRdrpdDMx1wT9cTwySRFF+3TjatYCUuLr782MicPyTt5Y2X?=
- =?us-ascii?Q?6jvekVGlMJQ+t5pUE/APfLu4m8Oqq/N4IBqdId6Ga998PiBOTv9BdJClVNqh?=
- =?us-ascii?Q?/jEpv+7w9yNTbhBle3bXdov9nUeSXM69YXV9c5d91ywvOMHU/blgjdKuw2Tn?=
- =?us-ascii?Q?aV0PXnvwbsUo5MawrWh/4pHzVIiTDICL04EBwh4Gy008oegHleuaOpIunUVU?=
- =?us-ascii?Q?yW4Ct5Gt6lUvlcMSvCNjhlt/X7pEZ1NPtBawqlOtcIyl7/WQuIcwkV7QcIY1?=
- =?us-ascii?Q?RZyZRsO68G9EpPYO5Awt8TIRcbOKx6T7/xiBVt3fmW1UXLklSPFGf7P4LZfK?=
- =?us-ascii?Q?GkrW1FZKtptFwG/EuAa+RWzZ+voo8ISzFk1LAJoCTXLjUo5URIWT?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3bea013b-0181-4ad9-c812-08df29b9da43
-X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2026 06:10:32.3315
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: p/S8vftnrsWMMF0pTKDJl16DfWD9bxAcJM0J6Z+TgL24X2TT4WwMa4v8MI7+ai6gfGNMyrY/yxi1/Yrba3lKmjk3HZbPYMh0YdK0AOZ6kZhPI2ZTUCkCZnl2x2yws8Bg
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1PR04MB7293
+Content-Transfer-Encoding: 8bit
 
-From: Jeff Chen <jeff.chen_1@oss.nxp.com>
+A station wakeup drains its power-save queue once, while frames
+redirected by the PSE can still be waiting on the MCU RX ring. Processing
+those loopbacks after the wakeup queues them for an already awake station
+and sets the driver's buffered indication again. The stale frames remain
+queued until another service period or sleep/wake transition drains them.
 
-On Mon, Oct 12, 2026 at 10:03:11 AM +0800, jeff.chen_1@oss.nxp.com wrote:
-> From: Jeff Chen <jeff.chen_1@oss.nxp.com>
-> 
-> On Sat, Oct 03, 2026 at 09:22:56 PM +0200, Karl Mehltretter wrote:
-> > nxpwifi_sdio_poll_card_status() returns the result of the last register
-> 
-> The patch looks good to me.
-> 
-> Could you shorten the commit message a bit? Please focus on the root cause
-> and the fix. The details about how it was found and tested are probably not
-> needed.
-> 
+Check ps_sleeping under ps_lock before buffering a loopback, and publish
+the buffered indication under the same lock. The wakeup's state change
+and queue drain use that lock too, so late frames cannot repopulate the
+queue or leave a stale buffered indication after the wakeup.
 
-Since we're approaching the next merge window, I'll apply the patch
-with a shortened commit message.
+Discard late frames rather than retransmitting their old sequence and
+packet numbers after newer traffic or a wakeup BAR. This loses the late
+frame; it does not recover delivery. Use the station's sleep state, not
+the temporary hardware PS bypass used during U-APSD service periods.
 
-thanks,
-Jeff
+Fixes: c8846e101502 ("mt76: add driver for MT7603E and MT7628/7688")
+Assisted-by: LLM
+Signed-off-by: Cristian Papa <pcristian292@gmail.com>
+---
+Based on Linux master 4056b3c9d3c92ea45955641dbafeb9b960e146ef.
+The ps_sleeping field comes from mt76 commit 276db249c20a, corresponding
+to Linux commit 636a883e2fee ("wifi: mt76: mt7603: restore hardware PS
+buffering after a service period"). Older trees need that prerequisite.
 
+Testing: extracted C functions from the unmodified base reproduce both a
+late queue insertion and a buffered-notification race in a host harness.
+The candidate passes these cases and controls for sleeping U-APSD clients,
+frame formats, queue limit and malformed frames under ASan/UBSan. MMIO,
+mac80211 services and locks are modeled. The changed source builds as a
+MIPS object with W=1 and -Werror against Linux 6.18.44/backports 7.2.
+
+Tested on MT7603E (TP-Link Archer XR500v, mt76 backported to Linux
+6.18.44): a phone on the 2.4 GHz AP went through three 60 s screen-off/wake
+cycles with a 1 Hz ping from the AP running throughout (about 8 minutes).
+All 474 pings were answered, the phone never reassociated, and there were
+no resets or kernel warnings. This exercises the power-save path under
+traffic but does not demonstrate the late-loopback race itself, since no
+counter records discarded late frames.
+
+AI assistance: Codex reviewed the late-loopback path, proposed the change,
+prepared the patch text, and implemented/ran host regression checks after
+being asked to review pending power-save fixes and their upstream fit.
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -72,7 +72,6 @@
+ 	}
+ 
+ 	skb->priority = tid;
+-	ieee80211_sta_set_buffered(sta, tid, true);
+ 
+ 	val = le32_to_cpu(txd[0]);
+ 	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
+@@ -80,6 +79,13 @@
+ 	txd[0] = cpu_to_le32(val);
+ 
+ 	spin_lock_bh(&dev->ps_lock);
++	/* The wake-up may have drained psq before this loopback arrived. */
++	if (!msta->ps_sleeping) {
++		spin_unlock_bh(&dev->ps_lock);
++		goto free;
++	}
++
++	ieee80211_sta_set_buffered(sta, tid, true);
+ 	__skb_queue_tail(&msta->psq, skb);
+ 	if (skb_queue_len(&msta->psq) >= 64) {
+ 		skb = __skb_dequeue(&msta->psq);
