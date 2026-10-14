@@ -1,157 +1,98 @@
-Received: from mta0.migadu.com (out-21.mta0.migadu.com [91.218.175.21])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABAA8309EEC
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 13:13:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F349C53CA71;
+	Wed, 14 Oct 2026 14:01:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791983599; cv=none; b=IpFtwcAd/XbRf40ct/U0Pba+3GyAcGFinjos9Jv0bljhIZGPRbyQnVb/Y0aQaYXoJoBuZL7wEBCZO1B0K9OFqqmGYXOlgURdw4Gk2oNsHAjWeA6YgLXgUPLomGtrSFaNznX6EO1YZ73zTd+BzSfmWv9qHkwm9VLjAlYlRMnP51A=
+	t=1791986485; cv=none; b=AV4hecIFzXei/btBzmRYb3RwELXcOJS830eROl6manweHcWB3/if3Ajwbtguxnvwb15YaIy03TLBLYBx3PTMOWRMU9JqHyrLhNvZzKho44uwuyeHhXkSM4UEp2+xDPiA8GHkiVPOToIMtK/sGCcq1blA21wNSBDTs2HaS6eJ8eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791983599; c=relaxed/simple;
-	bh=MBQeS7aKBL9jc2BojvONKyZ7ZEKUC3n50pEkcwW+B4o=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=u46LJxgSuS70j7DwQyroU5RtJ+6mwh1QUt1t0GgYSurTZbAuwOblDugAZ9uD2ARWnCfqXt3+HPeo6LxYMG27g+nM6sHzsc+k44meVxeE7m5T2AjOe/NsgvPz9IaanZHhzEvSzJ7JRcaepMPt6wOmZSA8Xg3biIrEeVXsvjcN3ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cL+J4tlp; arc=none smtp.client-ip=91.218.175.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791986485; c=relaxed/simple;
+	bh=VVqUpLIr6hwDyUujSgCjZbQGFEBvkJMBUVsT0nmXs40=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KexQQaqopKGXQphnC5qfMoIe3XTQI+rPBma2KSsE8J/xUHigA8JKmMNEaLVWboxigEYnwGyQeF/W3QExZcDY+3tvuVSXU2/+rUb1KOQto3qNitDxsxrxF5wLd1BAWBmtfOWKfZYS7TO29xoyV89HQ+mVRMPDvVCclS9IMDyLvg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=BgCTta/w; arc=none smtp.client-ip=67.231.154.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cL+J4tlp"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=MBQeS7aKBL9jc2BojvONKyZ7ZEKUC3n50pEkcwW+B4o=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791983594; v=1; x=1792588394;
- b=cL+J4tlpsyq9Z3S9DQgSL7F/Ow1MIn7u0t2j0JF+ijcmx0D8QXWLJKX1PM5KUAhtPoKGhdA+
- dVr/McxbQ2WoXnWuJFB9wU+msPR6IuaDRVfn/vWUQjLlpQ3fHWnd2t0kufvDPHHvQaGa0CQMq2M
- qd9DKJ1SerVSSdQ784Z5iAIo=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 0398f7b3c6b27810;
-	Wed, 14 Oct 2026 13:13:14 +0000
-X-Mizu-Trace-ID: 0398f7b3c6b27810
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="BgCTta/w"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 6B0BB2400A9;
+	Wed, 14 Oct 2026 14:01:11 +0000 (UTC)
+Received: from [192.168.1.23] (unknown [98.97.36.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail3.candelatech.com (Postfix) with ESMTPSA id A592813C2B0;
+	Wed, 14 Oct 2026 07:01:10 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A592813C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1791986470;
+	bh=VVqUpLIr6hwDyUujSgCjZbQGFEBvkJMBUVsT0nmXs40=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=BgCTta/wrclsuYkxXt+DLq9Ue6zjfARjph9k+OyolG+ry4eN5aHR7GeIRy0FgcGX2
+	 y2zDPq0fwUD4nLa+6+pUUfcRzm5jqouGQD8pIySzOwSgkME0df5lXkxHYcc2rZ99Lm
+	 L/Mof5BwaGNXLNnm/8GammwqaR82ApI06W3Vrll0=
+Message-ID: <04b8b928-b671-4236-a792-1141cd81a34b@candelatech.com>
+Date: Wed, 14 Oct 2026 07:01:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Wed, 14 Oct 2026 13:13:13 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <cbf165fa6213c22e88559081ca1c160375c9009c@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v8 5/7] wifi: rtw88: 8723b: add the RTL8723B
- chip driver
-To: "Greg KH" <gregkh@linuxfoundation.org>
-Cc: "Ping-Ke Shih" <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, "Michael Straube"
- <straube.linux@gmail.com>, "Peter Robinson" <pbrobinson@gmail.com>,
- "Bitterblue Smith" <rtl8821cerfe2@gmail.com>
-In-Reply-To: <2026101452-chapter-friday-dada@gregkh>
-References: <20261006130701.120460-6-luka.gejak@linux.dev>
- <3db085e6c3c14545ac9fd4221e0715ed@realtek.com>
- <df4a73de51784e35c15a39e85e4dae9629ba1132@linux.dev>
- <e983dedfeb9341ad9d8cf159656395c6@realtek.com>
- <df8313a72bdef1dc8859a4ac018370b24b606766@linux.dev>
- <d403e88ca53841fba87190764e2a45cc@realtek.com>
- <2026100746-delicate-carless-a04c@gregkh>
- <3028b229a6fbe02d2bcfa30c497b6a768ba8c928@linux.dev>
- <2026101046-transport-unnerving-96de@gregkh>
- <4464409846710dfa13134265f0f99523714cfa92@linux.dev>
- <2026101452-chapter-friday-dada@gregkh>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [bug] Triple whammy of mt7996e bugs on 7.2+
+To: Ilya K <me@0upti.me>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ linux-mediatek@lists.infradead.org
+References: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd>
+ <529a79bc-dab7-aa41-00bd-c47ecbefaa00@candelatech.com>
+ <471221788538289@323ca970-5bd2-4c6b-b52d-2b863a718615>
+ <3acf531c-bcc7-412b-b3bb-665069260e46@candelatech.com>
+ <2028561788553569@f088f4ec-f441-47a1-b7e4-75a1052aa4df>
+ <2418461788691106@84aa39c5-f501-4e64-8418-6a8b6eb88e21>
+ <eb405366-6574-4e4c-a89d-363751ed848b@candelatech.com>
+ <4175721788798939@f00554c7-d809-471c-9bcf-78e5d8eceab4>
+ <1556871789207706@7dc9deb3-4292-4932-8568-de9b411208d8>
+ <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136>
+ <211851789913261@df1900ea-d467-4ed7-a7f1-de68a4c3e6dd>
+ <143991791036721@40be7595-980b-4665-ba66-1601e10a0899>
+ <c4286904-2a9a-41fd-93ce-be57964909f6@candelatech.com>
+ <221941791052355@558b3e58-c2b1-4e14-91fe-beb5649d18f6>
+ <5955851791966910@d362902e-9931-4ad0-8e86-72401cc67703>
+Content-Language: en-MW
+From: Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+In-Reply-To: <5955851791966910@d362902e-9931-4ad0-8e86-72401cc67703>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MDID: 1791986472-9G5xvht-Puv2
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;at1;1791986472;9G5xvht-Puv2;<greearb@candelatech.com>;6f76c88c2c731de9ad886e575864f8cc
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-October 14, 2026 at 3:04 PM, "Greg KH" <gregkh@linuxfoundation.org> wrote=
-:
+On 10/14/26 01:35, Ilya K wrote:
+> OK, so I took some time off of this because of real life, but during that time, my 7.2-stable-with-Ben's-patches frankentree actually crashed! I am not sure if this is the same issue or a different one, but I thought it's at least interesting.
+> 
+> Here's the logs from the ~hour when it crashed (exported from Loki, so sorry for the weird format): https://gist.github.com/K900/e2e5b21d6a49f450fe353c7cc3057916
+> 
+> If there's any more info you need, please tell me.
+> 
 
+Well, not exactly a crash, but the system stopped being able to talk to the radios it seems.  Error is 12, which is ENOMEM,
+so possibly memory leak or something like that is causing trouble.  Or maybe firmware is just wedged and the ENOMEM is a symptom
+of that.
 
->=20
->=20On Mon, Oct 12, 2026 at 11:31:57AM +0000, Luka Gejak wrote:
->=20
->=20>=20
->=20> October 10, 2026 at 12:18 PM, "Greg KH" <gregkh@linuxfoundation.org=
-> wrote:
-> >=20=20
->=20>=20=20
->=20>=20=20
->=20>  On Wed, Oct 07, 2026 at 10:35:25AM +0000, Luka Gejak wrote:
-> >=20=20
->=20>  >=20
->=20>  [...]
-> >  >=20
->=20>  > Hi Greg,
-> >  >=20
->=20>  > I have sent the patch, and I think you are going to like this
-> >  > number: 66186 deletions
-> >  >=20
->=20>  Very happy :)
-> >=20=20
->=20>  >=20
->=20>  > Not sure what people are going to use to learn though. It seems =
-to
-> >  > me everyone is repeating the same patches.
-> >  >=20
->=20>  Yeah, we need to dig up some more out-of-tree kernel code to add i=
-t for
-> >  them to churn on. But really, this is a good thing, it's nice to see
-> >  real support for this hardware finally.
-> >=20=20
->=20>  Hi Greg,
-> >=20=20
->=20>  As both of you and I know there are not many young people in the
-> >  kernel community and the steep learning curve is a big reason for th=
-at.
-> >=20
->=20Really? We average about 200-250 new contributors every kernel releas=
-e
-> until recently when it's shot up to 600-700 if not more. So we don't
-> seem to have a lack of new contributors for some reason...
+You might try the latest mt76 tree from Felix, it recently gained a large number of fixes.
+Maybe that made it into wireless-next tree as well, not sure.
+We're working on pulling Felix's patch series into our tree, but not done with rebase yet.
 
-You misunderstood me, I said young people. I asked multiple young=20
-programmers=20who were interested in linux why aren't they contributing
-to the linux kernel and they said that it was hard for them to learn=20
-because=20many issues they find in staging(which I believe you recently=
-=20
-called=20learning ground) have already been submitted or nacked.
+Thanks,
+Ben
 
->=20
->=20>=20
->=20> I was not sure whether you were joking or not about the comment
-> >  above so I decided to find that appropriate replacement for staging
-> >  rtl8723bs. After searching I found this interesting xradio driver,
-> >  which is a mac80211 based driver for some orange pies and other devi=
-ces.
-> >  It is around 18,000 lines of code and upon check it out I fixed bunc=
-h
-> >  of security issues per se and lockups that caused kernel to hang and=
- it
-> >  is decently stable. I'm not gonna claim some extreme stability but i=
-t
-> >  is at least usable and it has many coding standard issues. It is a g=
-ood
-> >  candidate because newcomers would be learning the modern architectur=
-e
-> >  and on top of it there is a lot of janitor work so people can learn
-> >  the workflow and etc. Link is [1] so you can see for yourself and te=
-ll
-> >  me what you think about it.
-> >=20
->=20If you think it is worth adding, sure, but normally we need someone t=
-o
-> actually care about it getting into the tree (i.e. real users
-> somewhere).
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-As far as I know it is decently used piece of hardware so it should
-have users.
-
->Also look at the bottom of the readme, shouldn't the
-> existing in-kernel driver just be tweaked for this hardware instead?
->=20
-
-Possibility,=20however it would require someone with sufficient knowledge
-to tweek it, which who knows if it is as simple as readme says. And I
-didn't mean it as a upstream ready driver, but rather a place where
-new people can learn as I previously said.
-
-Best regards,
-Luka Gejak
