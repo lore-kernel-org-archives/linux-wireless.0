@@ -1,45 +1,72 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5FF545296
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 19:32:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 181EE48D862
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 20:19:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792006364; cv=none; b=HSfxhOVbdKVYkzOgkwuHEaxLyX7TKlfHSXJY9TWO+IgRrNfsqZW8CrRU5x46txIoz1Wn3FBxVNGA4LsoiWV3tGAkB4ykc932G/VYYnCM2YxJSmHJ75DCYCYy4btzKfMup9oMk4/ukvAn/nJ7E22SnccKLACAUUVV5Y3WMJ+ggBE=
+	t=1792009183; cv=none; b=EXou3XTHfLOPcqn2iLOY5e5jj3WmqdSC2roHW5UTr2+S6+hL0/Hhw3z6+p/PqjxzHAgGsblvacttNP34ZvrT+E0VSDm5mWs3bDNFwjBAHV0AV+PO1H7cIKAJsXc0PBynuY4gvSqKWuHhYLhH0wfa164Go30yCajkZ6G3HMlAYoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792006364; c=relaxed/simple;
-	bh=pbOLO0GFlvuzDNuOhhJ+/0yV5Bxy3WkzlGFm+7ZfBsA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XA5nE7PnSk6emfEZeuSqE/VtHZVTwVM/ip/NaKFYwMqOr1jRzQvTZDKonfxXrM3gzoxXqTo0TahyyXWbFWhZjwc8ig6p0jHZ14xgcTCBRYNA9LJpAex+NN9qw9dhV1FusOZmIhZ4g3vGCc9MNbCcoeyGMDeZ8QrMEC2Wruv3TNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=TgGEuak7; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1792009183; c=relaxed/simple;
+	bh=k1D2Jt/MIMBi18JJ3Pt1Hkf+TwV5cUpgoCJZNM3kUto=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q2F2YKEhhcIU5QykNe/RLSA/qUvcK1co9Qf6JakZsvhGRKgzDjoINThza4NMmYSu0Oeslo4hb83e8NLNYiwtqdxZhPWc7gkXCuzRUoELnbf86IZx4+E4Q79Ge554sI2t9rYxcgA93bSo40CZjDCxkGKjx88kbojQ1461bQsxMl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OBnBTHm/; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="TgGEuak7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=K0ONJzQl02h7fFoY6yFJznvP6Yo66hCceTo0f4wax3o=;
-	t=1792006361; x=1793215961; b=TgGEuak7Z8xQJxHo9LX4dtfAsdgOOzMVpSDO1Q8qtMHUtV9
-	7i4uw2QB3W6GvFkFcUBtuqcISYpNL6ZOBgID+oS4rEX96w4teoKuANMdPOVi7WbFsq2tiCad59ka/
-	dWYQK3zs52ucadKwMsih1cN503KhSIwj5ca/e1Lo9Rd6/sIWLe4vXG1CRE/MH8r14BuHcROm5HqAi
-	0xeUfZEl3K4AQ9WpamoplomxvfhsCNJWchvrcEOMzjr6Xt4xi+HRrmmZk9c0MZIY0WgkxnGuD/mab
-	lFqMKj8osmW4FZZjIkeV8fnRRHdQgyaY+77/smq25Gi0qmDlpvG8AsS9vZV7jT0w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xH4iM-000000020zZ-1Xgx;
-	Wed, 14 Oct 2026 21:32:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 3/4] wifi: mac80211: simplify tailroom accounting
-Date: Wed, 14 Oct 2026 21:30:33 +0200
-Message-ID: <20261014213231.3ea009836326.Iafbf95bf95dc17d7ebf3bdffdba1d147be8b5d69@changeid>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261014193231.886495-6-johannes@sipsolutions.net>
-References: <20261014193231.886495-6-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OBnBTHm/"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-48c4d870d54so2882501f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 13:19:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792009180; x=1792613980; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OWEw1y+7jiUWTAz/9BEGibbvR7uznEdBfDaaovYCeps=;
+        b=OBnBTHm/FkkQTkD2chiu35SvD7upEnXnKmecrVI3S7wDlonoTuzZgzM+hjTX1VmpYy
+         QQHkSHVD58aegvUgrNrFt02hoIBkDzs6jwh9OyGBu7EVPGXI8ilhnKg7p/cj2o3pWftx
+         lL9Drok9uMfNUalZfeHT90XSj6jZutLCXahUQyLNjs4Aqq8LYemSQdxg4VH3AyCqOCQJ
+         rCpBI3lLHftfTdEPgxmcMiWSM/OBEla558rq0yighjgaVQd2CUYIHX3U8ur3UHK9f31b
+         FNBOR8pHqa7KHC6GkkQ7Eq8TJsMvv7n0/vPEVUjrovK+21ofQ+h+Ju1jyCUJIkpmQXLP
+         1CYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792009180; x=1792613980;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OWEw1y+7jiUWTAz/9BEGibbvR7uznEdBfDaaovYCeps=;
+        b=ebqjmn4e2pAlpdxpbtZuFIfFWWjZjf64XoCJmzAsUrtDc7nS+EpSnl4SvJErk1VUBz
+         3OJhx3WjU1DhEBQb8m5IUypgqXpOUVr9zCs2yskLJwKvKVrR5XNgsLo9+UR55pL2axtH
+         /PkgNbakvx6XdRJDIFdOXeJWDcCSVRqZkpK501U/ThskYVRnQ1mU/GqWn7XrWcyvMP59
+         BqEeDhWAr67W2DsQ3+X0uWNrEa/wFaZVXeBqHOeJ1J5raoTCOsvrZLSRSm7Q9XNb/jq5
+         Dx8isYRC3xH4uJZpeUJpMrLztuDlGT/eOx3Ky+uDQjCJbtbDfKHQZh/mkZj+rjnwVXdO
+         2jGg==
+X-Forwarded-Encrypted: i=1; AKwUvBxAVe3JRSJTxrx8JMaSDGo5FItvny0wT6PQsPcaEz306uH5evKyjMXn/SqIRmoA9pw7gOgbsHYt1GioUX1JDw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKEUX3Xx40frzkTOzu8sM6cA5s6k1rHxPosCm/LXMPcLcxq9L/D
+	iU4eXJMw3KIo9NoiRA3aRFBJxzcyjj+QVs/QkoVAHIKT+cC+BGXcIxAbpWczjRGRtR0=
+X-Gm-Gg: AYBFou22XWuFPEZXo7Q9DkBli+QeWZKF/VGaPZcLMRCTiaifuFSaH/Cw0Iv3qH9IsdM
+	EgLHi1pOY4AfCEp81whZadvlEPrH92q0fFWWVJZoutMZJSc8IEGZospANmvOzOqb1A/JXSe4dFv
+	uUUzk+tlAr9gsF9zggUR247+RHoTFvabO2tvamh563vYiFk2Yhaw+aES9feXYfFFGhaEpL1z+U8
+	7PXF8Foi9vLgv23Lpo7vfyeBDvRU4QndRy0mAqbXhaxBCsQfB11hjp1x3Dh75VjTVhMtao5QLHK
+	bO4id0jpAd1hTFGuLOeA+oE0gWRNW7MT0/xuRT98KX+4g0LNfmQLmzJCERVmrhU/7MbgvH9GWHH
+	SeEUBP8hMGXogtjUnwIlbueZBQWGmsFXI8mH6XsgAnXgZFXZqQs+01ckz5YjAYNwCAYNxmJFesV
+	Rjiyc3laU6BQcbi6Da2VCTW5X8nOj3NFW8s6pJXI/grdbFklLtKuWWqvUXaC5UFIIGUynVTXTaT
+	FrTdNGOstwnAnSgDkXvCtlWn60=
+X-Received: by 2002:a05:6000:25ee:b0:48b:e50:715a with SMTP id ffacd0b85a97d-48dbace01abmr36901888f8f.34.1792009180027;
+        Wed, 14 Oct 2026 13:19:40 -0700 (PDT)
+Received: from localhost.localdomain ([188.190.249.216])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48df0f8f624sm2708292f8f.5.2026.10.14.13.19.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Oct 2026 13:19:39 -0700 (PDT)
+From: Vladyslav Tymoshchuk <tvlad744@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: Vladyslav Tymoshchuk <tvlad744@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org
+Subject: ath12k: board specific SAR table and coex settings on a devicetree platform (WCN7880)
+Date: Wed, 14 Oct 2026 23:19:11 +0300
+Message-ID: <20261014201912.4487-1-tvlad744@gmail.com>
+X-Mailer: git-send-email 2.45.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,514 +75,72 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Jeff,
 
-Now that we're no longer synchronizing against the TX path,
-quite a bit of complexity can go: there's no need to try to
-optimise the transitions as carefully anymore to avoid the
-transitions from 0 to 1. We can also simplify hardware key
-offload management and accept a temporary increment. This
-also enables further optimisations depending on key type.
+I am porting mainline to the OnePlus Pad 3 (SM8750, WCN7880 hw2.0 over
+PCIe, firmware WLAN.GNG.1.0-03342). Wi-Fi works on a local branch, and I
+would like to ask how you want two board specific settings to reach the
+firmware before I send anything beyond the WCN7880 support itself. Both
+are handled by the vendor stack today, and both are properties of the
+board, not of the chip.
 
-Also fix an issue that could leave the count wrong during
-HW restart.
+1. SAR table selection
 
-Assisted-by: LLM
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         |   2 +-
- net/mac80211/ieee80211_i.h |   2 -
- net/mac80211/iface.c       |   3 -
- net/mac80211/key.c         | 176 +++++++++++++------------------------
- net/mac80211/key.h         |   5 +-
- net/mac80211/main.c        |   2 -
- net/mac80211/pm.c          |   4 +-
- 7 files changed, 63 insertions(+), 131 deletions(-)
+The board data of this tablet has SAR V2 tables. The stock user space
+always selects one of them per chain (index 6 for both chains): the
+vendor driver sends WMI_SAR_LIMITS_CMDID with SAR enabled as V2 and the
+table index in each row. Without that selection the firmware runs at
+the target and regulatory power of the board data, which is above the
+SAR level the device was certified with.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5ace9ee92c09..1d6dd26bff2a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -773,7 +773,7 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	if (!rcu_access_pointer(*slot.key))
- 		return -ENOENT;
- 
--	ieee80211_key_free(sdata, &slot, sdata->vif.type == NL80211_IFTYPE_STATION);
-+	ieee80211_key_free(sdata, &slot);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 392d037d9302..a810dbbbba6b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1207,8 +1207,6 @@ struct ieee80211_sub_if_data {
- 
- 	/* count for keys needing tailroom space allocation */
- 	int crypto_tx_tailroom_needed_cnt;
--	int crypto_tx_tailroom_pending_dec;
--	struct wiphy_delayed_work dec_tailroom_needed_wk;
- 
- 	struct net_device *dev;
- 	struct ieee80211_local *local;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index d0b0a503b229..581a5d57e560 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -2374,9 +2374,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 	ieee80211_init_frag_cache(&sdata->frags);
- 
--	wiphy_delayed_work_init(&sdata->dec_tailroom_needed_wk,
--				ieee80211_delayed_tailroom_dec);
--
- 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
- 		struct ieee80211_supported_band *sband;
- 		sband = local->hw.wiphy->bands[i];
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 6904b519ef37..8d04fba60e17 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -81,15 +81,14 @@ static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- 	sdata->crypto_tx_tailroom_needed_cnt++;
- }
- 
--static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata,
--					 int delta)
-+static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- {
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
--	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt < delta);
-+	WARN_ON_ONCE(!sdata->crypto_tx_tailroom_needed_cnt);
- 
--	update_vlan_tailroom_need_count(sdata, -delta);
--	sdata->crypto_tx_tailroom_needed_cnt -= delta;
-+	update_vlan_tailroom_need_count(sdata, -1);
-+	sdata->crypto_tx_tailroom_needed_cnt--;
- }
- 
- static bool ieee80211_key_needs_tailroom(struct ieee80211_key *key)
-@@ -102,6 +101,25 @@ static bool ieee80211_key_needs_tailroom(struct ieee80211_key *key)
- 	return !(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE);
- }
- 
-+static void ieee80211_key_set_uploaded(struct ieee80211_key *key,
-+				       bool uploaded)
-+{
-+	bool needed = ieee80211_key_needs_tailroom(key);
-+	bool needs;
-+
-+	if (uploaded)
-+		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-+	else
-+		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+
-+	needs = ieee80211_key_needs_tailroom(key);
-+	if (needs && !needed)
-+		increment_tailroom_need_count(key->sdata);
-+	else if (!needs && needed)
-+		decrease_tailroom_need_count(key->sdata);
-+}
-+
-+/* the key must already be accounted for in the tailroom count */
- static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- {
- 	struct ieee80211_sub_if_data *sdata = key->sdata;
-@@ -112,17 +130,8 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 	lockdep_assert_wiphy(key->local->hw.wiphy);
- 
- 	if (key->flags & KEY_FLAG_TAINTED) {
--		/* If we get here, it's during resume and the key is
--		 * tainted so shouldn't be used/programmed any more.
--		 * However, its flags may still indicate that it was
--		 * programmed into the device (since we're in resume)
--		 * so clear that flag now to avoid trying to remove
--		 * it again later.
--		 */
--		if (!ieee80211_key_needs_tailroom(key))
--			increment_tailroom_need_count(sdata);
--
--		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+		/* only during reconfig, it shouldn't be programmed any more */
-+		ieee80211_key_set_uploaded(key, false);
- 		return -EINVAL;
- 	}
- 
-@@ -183,10 +192,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 			  sta ? &sta->sta : NULL, &key->conf);
- 
- 	if (!ret) {
--		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
--
--		if (!ieee80211_key_needs_tailroom(key))
--			decrease_tailroom_need_count(sdata, 1);
-+		ieee80211_key_set_uploaded(key, true);
- 
- 		WARN_ON((key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
- 			(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV));
-@@ -255,9 +261,6 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 	    !(sdata->vif.active_links & BIT(key->conf.link_id)))
- 		return;
- 
--	if (!ieee80211_key_needs_tailroom(key))
--		increment_tailroom_need_count(sdata);
--
- 	pubsta = sta ? &sta->sta : NULL;
- 	/* unless requested otherwise, NULL out the STA for client group keys */
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-@@ -265,7 +268,8 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 	    !ieee80211_hw_check(&key->local->hw, PER_STA_AP_GTK))
- 		pubsta = NULL;
- 
--	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+	ieee80211_key_set_uploaded(key, false);
-+
- 	ret = drv_set_key(key->local, DISABLE_KEY, sdata, pubsta, &key->conf);
- 
- 	if (ret)
-@@ -576,6 +580,10 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_pairwise_rekey(old, new);
- 	}
- 
-+	/* enabling the new key in hardware may reduce it again */
-+	if (new && ieee80211_key_needs_tailroom(new))
-+		increment_tailroom_need_count(sdata);
-+
- 	if (old) {
- 		if (old->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 			ieee80211_key_disable_hw_accel(old);
-@@ -588,14 +596,15 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			ret = ieee80211_key_enable_hw_accel(new);
- 		} else if (new->conf.link_id < 0 || !sdata->vif.active_links ||
- 			 BIT(new->conf.link_id) & sdata->vif.active_links) {
--			new->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
--			if (!ieee80211_key_needs_tailroom(new))
--				decrease_tailroom_need_count(sdata, 1);
-+			ieee80211_key_set_uploaded(new, true);
- 		}
- 	}
- 
--	if (ret)
-+	if (ret) {
-+		if (new && ieee80211_key_needs_tailroom(new))
-+			decrease_tailroom_need_count(sdata);
- 		return ret;
-+	}
- 
- 	if (new) {
- 		spin_lock_bh(&sdata->local->key_lock);
-@@ -662,6 +671,9 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		spin_lock_bh(&sdata->local->key_lock);
- 		list_del(&old->list);
- 		spin_unlock_bh(&sdata->local->key_lock);
-+
-+		if (ieee80211_key_needs_tailroom(old))
-+			decrease_tailroom_need_count(sdata);
- 	}
- 
- 	return 0;
-@@ -839,36 +851,20 @@ static void ieee80211_key_free_common(struct ieee80211_key *key)
- 	kfree_sensitive(key);
- }
- 
--static void __ieee80211_key_cleanup(struct ieee80211_key *key,
--				    bool delay_tailroom)
-+static void __ieee80211_key_cleanup(struct ieee80211_key *key)
- {
--	if (key->local) {
--		struct ieee80211_sub_if_data *sdata = key->sdata;
--
-+	if (key->local)
- 		ieee80211_debugfs_key_remove(key);
--
--		if (delay_tailroom) {
--			/* see ieee80211_delayed_tailroom_dec */
--			sdata->crypto_tx_tailroom_pending_dec++;
--			wiphy_delayed_work_queue(sdata->local->hw.wiphy,
--						 &sdata->dec_tailroom_needed_wk,
--						 HZ / 2);
--		} else {
--			decrease_tailroom_need_count(sdata, 1);
--		}
--	}
- }
- 
--static void __ieee80211_key_destroy(struct ieee80211_key *key,
--				    bool delay_tailroom)
-+static void __ieee80211_key_destroy(struct ieee80211_key *key)
- {
--	__ieee80211_key_cleanup(key, delay_tailroom);
-+	__ieee80211_key_cleanup(key);
- 
- 	ieee80211_key_free_common(key);
- }
- 
--static void ieee80211_key_destroy(struct ieee80211_key *key,
--				  bool delay_tailroom)
-+static void ieee80211_key_destroy(struct ieee80211_key *key)
- {
- 	if (!key)
- 		return;
-@@ -879,7 +875,7 @@ static void ieee80211_key_destroy(struct ieee80211_key *key,
- 	 */
- 	synchronize_net();
- 
--	__ieee80211_key_destroy(key, delay_tailroom);
-+	__ieee80211_key_destroy(key);
- }
- 
- void ieee80211_key_free_unused(struct ieee80211_key *key)
-@@ -928,12 +924,6 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- 		       struct ieee80211_key_slot *slot,
- 		       struct ieee80211_key *key)
- {
--	/*
--	 * We want to delay tailroom updates only for station - in that
--	 * case it helps roaming speed, but in other cases it hurts and
--	 * can cause warnings to appear.
--	 */
--	bool delay_tailroom = sdata->vif.type == NL80211_IFTYPE_STATION;
- 	bool pairwise = key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE;
- 	static atomic_t key_color = ATOMIC_INIT(0);
- 	struct ieee80211_key *old_key = NULL;
-@@ -1005,18 +995,15 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- 		goto out;
- 	}
- 
--	increment_tailroom_need_count(sdata);
--
- 	ret = ieee80211_key_replace(sdata, slot, old_key, key);
- 	if (ret) {
--		decrease_tailroom_need_count(sdata, 1);
- 		key->local = NULL;
- 		key->sdata = NULL;
- 		goto out;
- 	}
- 
- 	ieee80211_debugfs_key_add(key);
--	ieee80211_key_destroy(old_key, delay_tailroom);
-+	ieee80211_key_destroy(old_key);
- 
- 	return 0;
-  out:
-@@ -1025,8 +1012,7 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- }
- 
- void ieee80211_key_free(struct ieee80211_sub_if_data *sdata,
--			struct ieee80211_key_slot *slot,
--			bool delay_tailroom)
-+			struct ieee80211_key_slot *slot)
- {
- 	struct ieee80211_key *key;
- 
-@@ -1037,7 +1023,7 @@ void ieee80211_key_free(struct ieee80211_sub_if_data *sdata,
- 	/* replace key with nothing if it was ever used */
- 	if (key->sdata)
- 		ieee80211_key_replace(key->sdata, slot, key, NULL);
--	ieee80211_key_destroy(key, delay_tailroom);
-+	ieee80211_key_destroy(key);
- }
- 
- void ieee80211_reenable_keys(struct ieee80211_sub_if_data *sdata)
-@@ -1048,18 +1034,17 @@ void ieee80211_reenable_keys(struct ieee80211_sub_if_data *sdata)
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
- 	sdata->crypto_tx_tailroom_needed_cnt = 0;
--	sdata->crypto_tx_tailroom_pending_dec = 0;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
-+		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
- 			vlan->crypto_tx_tailroom_needed_cnt = 0;
--			vlan->crypto_tx_tailroom_pending_dec = 0;
--		}
- 	}
- 
- 	if (ieee80211_sdata_running(sdata)) {
- 		list_for_each_entry(key, &sdata->key_list, list) {
--			if (!(key->flags & KEY_FLAG_TAINTED))
-+			/* the device was reset, it's no longer uploaded */
-+			key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+			if (ieee80211_key_needs_tailroom(key))
- 				increment_tailroom_need_count(sdata);
- 			ieee80211_key_enable_hw_accel(key);
- 		}
-@@ -1169,10 +1154,6 @@ EXPORT_SYMBOL(ieee80211_iter_keys_atomic);
- static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
- 				      struct list_head *keys)
- {
--	decrease_tailroom_need_count(sdata,
--				     sdata->crypto_tx_tailroom_pending_dec);
--	sdata->crypto_tx_tailroom_pending_dec = 0;
--
- 	ieee80211_debugfs_key_remove_mgmt_default(sdata);
- 	ieee80211_debugfs_key_remove_beacon_default(sdata);
- 
-@@ -1239,7 +1220,7 @@ void ieee80211_free_key_list(struct ieee80211_local *local,
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	list_for_each_entry_safe(key, tmp, keys, list)
--		__ieee80211_key_destroy(key, false);
-+		__ieee80211_key_destroy(key);
- }
- 
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
-@@ -1251,9 +1232,6 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_key *key, *tmp;
- 	LIST_HEAD(keys);
- 
--	wiphy_delayed_work_cancel(local->hw.wiphy,
--				  &sdata->dec_tailroom_needed_wk);
--
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	ieee80211_remove_link_keys(&sdata->deflink, &keys);
-@@ -1271,7 +1249,7 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 	if (!list_empty(&keys) || force_synchronize)
- 		synchronize_net();
- 	list_for_each_entry_safe(key, tmp, &keys, list)
--		__ieee80211_key_destroy(key, false);
-+		__ieee80211_key_destroy(key);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
- 		if (sdata->bss) {
-@@ -1283,14 +1261,12 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 				     master->crypto_tx_tailroom_needed_cnt);
- 		}
- 	} else {
--		WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
--			     sdata->crypto_tx_tailroom_pending_dec);
-+		WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt);
- 	}
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--			WARN_ON_ONCE(vlan->crypto_tx_tailroom_needed_cnt ||
--				     vlan->crypto_tx_tailroom_pending_dec);
-+			WARN_ON_ONCE(vlan->crypto_tx_tailroom_needed_cnt);
- 	}
- }
- 
-@@ -1316,8 +1292,7 @@ void ieee80211_unlink_link_sta_keys(struct ieee80211_local *local,
- 		if (WARN(ret, "failed to remove STA link key (%d)\n", ret))
- 			continue;
- 		list_add(&key->list, &link_sta->key_destroy_list);
--		__ieee80211_key_cleanup(key, key->sdata->vif.type ==
--					     NL80211_IFTYPE_STATION);
-+		__ieee80211_key_cleanup(key);
- 	}
- 
- 	for (int i = 0; i < ARRAY_SIZE(link_sta->rx_cigtk); i++) {
-@@ -1332,8 +1307,7 @@ void ieee80211_unlink_link_sta_keys(struct ieee80211_local *local,
- 		if (WARN(ret, "failed to remove STA link key (%d)\n", ret))
- 			continue;
- 		list_add(&key->list, &link_sta->key_destroy_list);
--		__ieee80211_key_cleanup(key, key->sdata->vif.type ==
--					     NL80211_IFTYPE_STATION);
-+		__ieee80211_key_cleanup(key);
- 	}
- }
- 
-@@ -1364,40 +1338,10 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		if (!key)
- 			continue;
- 		ieee80211_key_replace(key->sdata, &slot, key, NULL);
--		__ieee80211_key_destroy(key, key->sdata->vif.type ==
--					NL80211_IFTYPE_STATION);
-+		__ieee80211_key_destroy(key);
- 	}
- }
- 
--void ieee80211_delayed_tailroom_dec(struct wiphy *wiphy,
--				    struct wiphy_work *wk)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = container_of(wk, struct ieee80211_sub_if_data,
--			     dec_tailroom_needed_wk.work);
--
--	/*
--	 * The reason for the delayed tailroom needed decrementing is to
--	 * make roaming faster: during roaming, all keys are first deleted
--	 * and then new keys are installed. The first new key causes the
--	 * crypto_tx_tailroom_needed_cnt to go from 0 to 1, which invokes
--	 * the cost of synchronize_net() (which can be slow). Avoid this
--	 * by deferring the crypto_tx_tailroom_needed_cnt decrementing on
--	 * key removal for a while, so if we roam the value is larger than
--	 * zero and no 0->1 transition happens.
--	 *
--	 * The cost is that if the AP switching was from an AP with keys
--	 * to one without, we still allocate tailroom while it would no
--	 * longer be needed. However, in the typical (fast) roaming case
--	 * within an ESS this usually won't happen.
--	 */
--
--	decrease_tailroom_need_count(sdata,
--				     sdata->crypto_tx_tailroom_pending_dec);
--	sdata->crypto_tx_tailroom_pending_dec = 0;
--}
--
- void ieee80211_gtk_rekey_notify(struct ieee80211_vif *vif, const u8 *bssid,
- 				const u8 *replay_ctr, gfp_t gfp)
- {
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 2fc985d41e8f..b7caec277fbe 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -191,8 +191,7 @@ int ieee80211_key_link(struct ieee80211_sub_if_data *sdata,
- 		       struct ieee80211_key *key);
- int ieee80211_set_tx_key(struct ieee80211_key *key);
- void ieee80211_key_free(struct ieee80211_sub_if_data *sdata,
--			struct ieee80211_key_slot *slot,
--			bool delay_tailroom);
-+			struct ieee80211_key_slot *slot);
- void ieee80211_key_free_unused(struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_link_data *link, int idx,
- 			       bool uni, bool multi);
-@@ -215,7 +214,5 @@ void ieee80211_reenable_keys(struct ieee80211_sub_if_data *sdata);
- int ieee80211_key_switch_links(struct ieee80211_sub_if_data *sdata,
- 			       unsigned long del_links_mask,
- 			       unsigned long add_links_mask);
--void ieee80211_delayed_tailroom_dec(struct wiphy *wiphy,
--				    struct wiphy_work *wk);
- 
- #endif /* IEEE80211_KEY_H */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2084f7f554ad..fdf34d51620f 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -512,8 +512,6 @@ static void ieee80211_restart_work(struct work_struct *work)
- 							      WLAN_REASON_UNSPECIFIED,
- 							      false);
- 		}
--		wiphy_delayed_work_flush(local->hw.wiphy,
--					 &sdata->dec_tailroom_needed_wk);
- 	}
- 	ieee80211_scan_cancel(local);
- 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index f63676c44853..6a27f8f35c8e 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-  * Portions
-- * Copyright (C) 2020-2021, 2023-2024 Intel Corporation
-+ * Copyright (C) 2020-2021, 2023-2024, 2026 Intel Corporation
-  */
- #include <net/mac80211.h>
- #include <net/rtnetlink.h>
-@@ -160,8 +160,6 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan,
- 			break;
- 		}
- 
--		wiphy_delayed_work_flush(local->hw.wiphy,
--					 &sdata->dec_tailroom_needed_wk);
- 		drv_remove_interface(local, sdata);
- 	}
- 
--- 
-2.56.0
+On ACPI laptops ath12k takes the BIOS SAR table from the DSM and sends
+WMI_PDEV_SET_BIOS_SAR_TABLE_CMDID. A devicetree board has no such source,
+and ath12k has no set_sar_specs, unlike ath11k (enabled for the AHB
+WCN6750 in 2023). The limits the device was certified with live in the
+board data as table indices, not as dBm values that user space could
+hand over through NL80211_CMD_SET_SAR_SPECS.
 
+Which of these would you accept?
+  a) a devicetree property of the wifi node with the default SAR V2
+     table index, in the spirit of qcom,calibration-variant selecting
+     the board data;
+  b) set_sar_specs in ath12k as in ath11k, with user space providing
+     limits per frequency range (the board would then need its limits
+     as dBm values from somewhere else);
+  c) something else you have in mind.
+
+On my branch the WMI parts (the SAR capability in the service ready
+ext event, the SAR V2 limits command, the SAR2 result event) are
+generic; only the index comes from a module parameter for now, which I
+do not intend to send.
+
+2. WLAN/Bluetooth coexistence settings
+
+The vendor driver sends WMI_COEX_CONFIG_CMDID per station vdev with the
+values of the board's WCNSS_qcom_cfg.ini: tx power while BT is active,
+antenna isolation, BT RSSI and interference thresholds, TDD mode. With
+none of them sent, A2DP audio drops out on this board while Wi-Fi is
+busy on 2.4 GHz; with the stock values it does not.
+
+The command itself is generic, but antenna isolation and the power
+limits belong to the board. Would devicetree properties of the wifi node
+be acceptable here (ath10k has qcom,coexist-support and
+qcom,coexist-gpio-pin), with chip defaults in hw_params otherwise, or
+do you prefer another source?
+
+3. A scan observation, in case it is known
+
+With no vdev started, a scan that mixes 2.4 GHz or lower 5 GHz channels
+(up to 5330 MHz) with upper 5 GHz or 6 GHz channels does not report the
+lower 5 GHz BSSes on this firmware, while the same channels scanned on
+their own are found every time. A connection manager at boot then sees
+only the 2.4 GHz BSS of a dual band access point. Splitting the scan in
+the host works around it, but I would rather not send that. Is this a
+known firmware issue, or is there a scan parameter the firmware expects
+for this case?
+
+Thanks,
+Vladyslav
+
+(I used an AI assistant, Claude, for the analysis and to draft this
+mail; the tests ran on my device.)
