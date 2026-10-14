@@ -1,65 +1,64 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4147E548569
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:32:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0985549380
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:32:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791988356; cv=none; b=h7uO9NeMpJ29G0dfEF0+5mKVVjFD3vYgkFVmglbv4ZnIyfjxsVZy1vSY91XEVgFiuuwLy0s0o+GEd9Y/woCuCIcV6Ew3Mq/GVRYiZBHbAMvKEhmkVUIua5wGA6dVU7byvVCekcb3XWAS33UDE/vvoJnL1HofIOnd7XbKeufcL6s=
+	t=1791988359; cv=none; b=NYLsAC3xYZk3U1POi7IT+DMcqEyBFe7Aimz03lRcEh9PrNLusvvct5hOh76zOL1JvPnPOtPr7ktX1M9u7ajBy2juP+Fksv6j7krLkKKRi7HUIhOk9pdU2Kg4a9rmG9O47md3s5xQDDyIxg9eYv/D22AU0muPh8wQo8zLEg0d4eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791988356; c=relaxed/simple;
-	bh=IrBBe6wvpDw+PWFsNwUGn4Qo/WOIBQJLb39g7kajDwI=;
+	s=arc-20240116; t=1791988359; c=relaxed/simple;
+	bh=CtILBnBlbLG5DcPzhNvrdWpOUja71QbExip57R2GpvE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=B56OdMkKbdSYibI0dwr8GGKbzX2W0c0rhQPdedav+UN7SHr4yBA+lW76reozpv09XavErx1Q3X5B9AczbGE/UXSnQFNcLeangYWj7x6lNtc0d51bkqqkYl5+tkpC/wHhTU1YGDtJioNo+nPPKRB9WkUEh7yBg1ms6g2KKo9IIGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=q8/lGz5g; arc=none smtp.client-ip=209.85.128.51
+	 MIME-Version; b=GWkhh1K6X1DzJIdb4S1t0V1+bCFF56an1MMu/RtcxAcOqMw8XUp2CHxhB1yThN915bQZOeSDAZbiDKLvLFoMZGJ6q6wuFESGJhmdl/Jood4IO1T2KsyZpOZ+fyFoOrzA2ryd5a71gV1YFbNaFt+oHnCLasBgZI+ENh0jqja2kL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SW0ntH/A; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q8/lGz5g"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-49d0da752ffso9441385e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 07:32:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SW0ntH/A"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a1635f7c89so10766795e9.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 07:32:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791988353; x=1792593153; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791988356; x=1792593156; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=xqLL0uNLKZj4KMkwSgRoeTHN6JTbSA0psPY/Eu+4Wi4=;
-        b=q8/lGz5gKacVSwIOKdGuY3olis6dAOM4V/V9BYOEzr8dd0Wi00MQS34SPnO4PEQItQ
-         62BHcM68dS8eLNZ+718cYQ7PBMavqnM002dkCym5tLNfsmP/INJTzxMP4xEcacA2ZYGr
-         yR98zZA+NBE4/MEvG78v95nwbVhqKY3mel9in+/BoyFG5zY3RbiwrJdtkzYwKLuHG050
-         VyovbLenh5fRXLxw/5nRS3/Nf0P7rlqLk5K7CLRa4ZvlURnNptodv+cxl2lPKQn0R/cI
-         1ctDqAniePR4gKwHtRE91MF5YjidGPWfdaOzGoC/RcPuGgX7AIvZqr6y3PLanFYLL7JR
-         Foww==
+        bh=adX1t+A8OPd80tdnZU9sRvJpsh4FeFmYoguppUDGFio=;
+        b=SW0ntH/A/1QRctw8Z2I0Z0TyhLE2jdxiiaH6LUxjrAONEGlKWVBtKwqDaO5YLroiiT
+         q/3YMj8Q/U4mcYLRyWWpLdMFzU3OBGQuqdbqWTOTAZn2zd4ArDNigizDFl2MTdsPTz4w
+         c9Q9TYEsDsUPPYZn9+AYizQkd3PxAX//2bBOJIM+5AVZgwPdzVVr7IeEC2f1hq3l6p4W
+         CIM0EigQR6WKdAtZneFtEYfq5QiOKYbDDUFEFdOT3EU1sHf7WLmT7J19JpSCkXvMl4wc
+         G0F6kLERMSQdduiGP6HVfqX0Jc/nmw+nkux0cyBYV/ykXm1Rjfp+SuQ7ErSSaERGlLs/
+         ojbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791988353; x=1792593153;
+        d=1e100.net; s=20260707; t=1791988356; x=1792593156;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xqLL0uNLKZj4KMkwSgRoeTHN6JTbSA0psPY/Eu+4Wi4=;
-        b=adaKS+vcPEceSCdf1Iflw1dWzYtcxHa0V49rtH1IAhk/IbCfTrdZJAVbAnp+fD05E8
-         Vs7QOlkdi0b7kz+6pblJYAyyn5rxv/lR+iG+jdvRoZHn9jsm9OffMmC779mIHFrIKBfk
-         8UrS7grgT28eX8tJoVctU4kCl1t8dILhayVY4HaBWh2y5NYUVw3TeqQTN0xMeR2Y+f0U
-         wk0fViw02T4AsxbDXqkKinl5fNY+p/7OGCgUp9A8p1zgEuykLWs8aWjRr5b5Tgw3yRmO
-         aS7gqhOWs0YhqGgOsnOpJwPSoQ7F1ayAb1wr3GuPX5gkDCay2ljuAIJzJnfRczaOSaA3
-         xQNA==
-X-Gm-Message-State: AFq9FYJwWUvSa+XQLrOeU7crO/8uSDZjJjzblByamwaRgNdL/z5ybPeU
-	iohimNMGERjYLy/L1cIakz3E3FJdXMYlGYA35n8ePZ7UZVqVzOnx4xucdCI2iT3t
-X-Gm-Gg: AYBFou00evUdgb0FOJqY4Bp7pns9r3+NLYRVNHPJJQ5XXqG287H9gqZQXaJiES02IOv
-	snDwO4HXIy04TwHUZZDDlf5qyvgDU6H57ecBMGKsycQCrpnudL4F/8v59v3zl/Y6O457fV84GgP
-	YxroazJtFlGjrdsesjJC/rUqSo2vK4JarfgiXjlI0Ascj6tjTWEPHbF5mhZxMn3m8Tyvco6yR+8
-	oBYFdM5WsFwTXFkPUkQ67B9p44aSZaKdzCD8G4eLr1n17DwGNYx2p60yezRML3nrLHNwu2cDzSI
-	aud6dO4Lxh97YGdQil8Vk60ugvtQj0JzSlCXleKQrrKDVxM1W9qDUDT97Pb2qXEj56wxt6/+rVz
-	HnVHnoEKvEhoPvDDLoX2elqM+x988+p7g9Ku7eJzeZCKiSZJl5vQi8IEaVpo9b7sZiva9ETzoCQ
-	sy4kpV5WIbsEoO0Nplb5uozETFbi9/A7pHMt8ri5yCwulCDGRxpeqVquf4JHI8JcOaTMTI2nwoh
-	3VOHiQu534QVrmzyAms5thpJSZRMMKI9N9+XZ9g2pv8ZbGp4EoutAngsuGlt9P6xkd/jvgWdAcB
-	Era8fro9Ql64q+dnOpZ9F+97qgWwPt8WtT/GaJeTjaniMGc57YB3pqB2UYKPiKWXgdRN33/L8AM
-	=
-X-Received: by 2002:a05:600c:8106:b0:4a0:c02:938c with SMTP id 5b1f17b1804b1-4a18e4d683dmr311693125e9.25.1791988353360;
-        Wed, 14 Oct 2026 07:32:33 -0700 (PDT)
+        bh=adX1t+A8OPd80tdnZU9sRvJpsh4FeFmYoguppUDGFio=;
+        b=iG5UTcr3uE5hDeHhYR1Dd7sBVRejrb/D7Ka+QTKVXEf4G+QUBEpH9EiEcWI5FOARj0
+         CBe1WGVCn/32fQ++XiCA3vsM32qPU0pq1AlrO5cedkQcdPTy4W0eAdVgMQ6EjWWDPA5y
+         ziz57ULLNuK155JIJYmWhmCkGXWvoyis3CixG20rYPMlSGorVkDdxlqJb/Q6PQnAhAF7
+         iCBMhOmleUIosQlseKW6hC/lb/vLrJRfQLEk/VSAje+WVkAPP60QtmLbcIQ0EYQHbfVk
+         /W0pdSNjZznaqGBqjysNrEREEI3em1nvBnXXYvaCvYfq0wiK9xC+YZaGJ3uKbllSdGDM
+         Ct/g==
+X-Gm-Message-State: AFq9FYKXDlrSilk6mlvLxGkGDtcp2tzmIb4SwTS3PTVCRVfa7shEuyn5
+	6tU057rVSEdru9DSZUGM677+Nd6I2FmmnEONxXvItXjwei7gFWkKAZ1NEnVTOXwH
+X-Gm-Gg: AYBFou3YmARLFCqVpUdJHiP+mnYzBmsjSFzBU6/eIpcotywJ3fhWsDhRI1JJ5p3xKlL
+	eaJhzUbmOnDFdtrLjjFNH42v/BRy33uuVrwtvW4R3frrcTX7tqSW9N7rTw1/V1eVkl/pph11fH8
+	iEwzX7Ziipq+h/KpW0qFBRo9FgOHmHbtnFEgz7kB6dfxCW5dsKUYt5NQCPo+1Bzy9YdxpEImPUV
+	bszK4hyG5Ot1G5hQgXLwXNqd8Qg+Jgsoe8fHnLd4W7R156gfKeMfn3M1audHVqF0O5pbautgn1L
+	bTAIOHLCkutG0+VRquvr7+pPln3D2SlvWniy4vSoYk8Xz59obuehkHx4KIEoyPSRe70Ox+LrJjS
+	jkhltuMPOWAc4a1CbQPwxPE//nVtFGbGmX4YhyA04zVlMipwynuYL9oIHRTmFG3AY5vxJ+rwAIY
+	eB4Yl9HCDyH6UuSXCrZXngiPpiJpVkTMSKCQfv2v9xdOUgirH6K1c2akNZWO1vFZNf5+hXXRoXY
+	qnk9Q2MwuKxulyWCAWZ1r+fcjK/9E6XRWujCCy9LIMdDkJ+RfCjvf0O1aljxdxjJGoeWuiSoPvG
+	DQAZCFXTWZmzy9sctRVTxAyj3XdZTnEKHe7eppOsRtUzZhki+Xj5ow0Z3wQWzkLA
+X-Received: by 2002:a05:600c:a01:b0:49f:ce72:e931 with SMTP id 5b1f17b1804b1-4a18e4fe3e1mr336129885e9.35.1791988355730;
+        Wed, 14 Oct 2026 07:32:35 -0700 (PDT)
 Received: from zitrone ([2a02:810d:a1:6000:62d3:e68c:3175:a538])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd068126sm3411345e9.11.2026.10.14.07.32.32
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd068126sm3411345e9.11.2026.10.14.07.32.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 07:32:32 -0700 (PDT)
+        Wed, 14 Oct 2026 07:32:35 -0700 (PDT)
 From: Andreas Wendleder <gonsolo@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
@@ -70,9 +69,9 @@ Cc: Johannes Berg <johannes@sipsolutions.net>,
 	julian.calaby@gmail.com,
 	jpeisach@ubuntu.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 1/2] wifi: b43: reprogram the MAC filter after an interface restart
-Date: Wed, 14 Oct 2026 16:32:24 +0200
-Message-ID: <20261014143225.82149-2-gonsolo@gmail.com>
+Subject: [PATCH wireless-next 2/2] wifi: b43: handle 64-bit DMA engines whose index registers hold bus addresses
+Date: Wed, 14 Oct 2026 16:32:25 +0200
+Message-ID: <20261014143225.82149-3-gonsolo@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261014143225.82149-1-gonsolo@gmail.com>
 References: <20261014143225.82149-1-gonsolo@gmail.com>
@@ -84,35 +83,162 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-b43_op_start() clears wl->filter_flags, but mac80211 computes @changed
-for b43_op_configure_filter() against the flags it cached from the
-previous run. After a down/up it can report no change, so
-b43_adjust_opmode() is not called and MACCTL keeps the cleared filter.
+Newer 64-bit DMA engines (found on the core revisions of the BCM4352 and
+BCM4360) accept ring addresses with low bits set and then use bus
+addresses, not offsets into the ring, in the index and status registers.
+They are detected as brcmsmac does it in _dma_descriptor_align(): write
+0xff0 to TXRINGLO and see whether it sticks.
 
-Compare the requested flags with what the hardware was programmed with
-and add the difference to @changed.
+On such an engine keep the ring address in the new ring->ptr_base, add it
+when writing TXINDEX and RXINDEX and subtract it when reading RXSTATUS.
+The ring address registers have to be written before the control word
+enables the engine, and the hardware defaults of burst length,
+outstanding reads and prefetch control (the *CTL_KEEP masks) have to be
+preserved.
+
+Engines that keep offsets behave as before.
 
 Signed-off-by: Andreas Wendleder <gonsolo@gmail.com>
 ---
- drivers/net/wireless/broadcom/b43/main.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/broadcom/b43/b43.h |  1 +
+ drivers/net/wireless/broadcom/b43/dma.c | 52 +++++++++++++++++++------
+ drivers/net/wireless/broadcom/b43/dma.h |  3 ++
+ 3 files changed, 45 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 8f4aff3..57a5935 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -4318,6 +4318,14 @@ static void b43_op_configure_filter(struct ieee80211_hw *hw,
- 		   FIF_OTHER_BSS |
- 		   FIF_BCN_PRBRESP_PROMISC;
+diff --git a/drivers/net/wireless/broadcom/b43/b43.h b/drivers/net/wireless/broadcom/b43/b43.h
+index c0d8fc0..e1e8083 100644
+--- a/drivers/net/wireless/broadcom/b43/b43.h
++++ b/drivers/net/wireless/broadcom/b43/b43.h
+@@ -668,6 +668,7 @@ struct b43_dma {
+ 	u32 translation; /* Routing bits */
+ 	bool translation_in_low; /* Should translation bit go into low addr? */
+ 	bool parity; /* Check for parity */
++	bool ptr_is_addr;
+ };
  
-+	/*
-+	 * b43_op_start() zeroes wl->filter_flags, but mac80211 computes
-+	 * @changed against its own cached flags, so after an interface
-+	 * restart it reports no change and MACCTL kept the zeroed filter.
-+	 * Compare against what the hardware was actually programmed with.
-+	 */
-+	if (wl->filter_flags != *fflags)
-+		changed |= wl->filter_flags ^ *fflags;
- 	wl->filter_flags = *fflags;
+ struct b43_pio_txqueue;
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index 05da698..20d910a 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -212,7 +212,7 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
  
- 	if (changed && b43_status(dev) >= B43_STAT_INITIALIZED)
+ static void op64_poke_tx(struct b43_dmaring *ring, int slot)
+ {
+-	b43_dma_write(ring, B43_DMA64_TXINDEX,
++	b43_dma_write(ring, B43_DMA64_TXINDEX, ring->ptr_base +
+ 		      (u32) (slot * sizeof(struct b43_dmadesc64)));
+ }
+ 
+@@ -233,14 +233,15 @@ static int op64_get_current_rxslot(struct b43_dmaring *ring)
+ 	u32 val;
+ 
+ 	val = b43_dma_read(ring, B43_DMA64_RXSTATUS);
+-	val &= B43_DMA64_RXSTATDPTR;
++	val = ((val & B43_DMA64_RXSTATDPTR) - ring->ptr_base) &
++	      B43_DMA64_RXSTATDPTR;
+ 
+ 	return (val / sizeof(struct b43_dmadesc64));
+ }
+ 
+ static void op64_set_current_rxslot(struct b43_dmaring *ring, int slot)
+ {
+-	b43_dma_write(ring, B43_DMA64_RXINDEX,
++	b43_dma_write(ring, B43_DMA64_RXINDEX, ring->ptr_base +
+ 		      (u32) (slot * sizeof(struct b43_dmadesc64)));
+ }
+ 
+@@ -690,9 +691,19 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			    & B43_DMA64_TXADDREXT_MASK;
+ 			if (!parity)
+ 				value |= B43_DMA64_TXPARITYDISABLE;
+-			b43_dma_write(ring, B43_DMA64_TXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_TXRINGLO, addrlo);
+-			b43_dma_write(ring, B43_DMA64_TXRINGHI, addrhi);
++			if (ring->dev->dma.ptr_is_addr) {
++				ring->ptr_base = lower_32_bits(ring->dmabase);
++				value |= b43_dma_read(ring, B43_DMA64_TXCTL) &
++					 B43_DMA64_TXCTL_KEEP;
++				b43_dma_write(ring, B43_DMA64_TXRINGLO, addrlo);
++				b43_dma_write(ring, B43_DMA64_TXRINGHI, addrhi);
++				b43_dma_write(ring, B43_DMA64_TXCTL, value);
++			} else {
++				ring->ptr_base = 0;
++				b43_dma_write(ring, B43_DMA64_TXCTL, value);
++				b43_dma_write(ring, B43_DMA64_TXRINGLO, addrlo);
++				b43_dma_write(ring, B43_DMA64_TXRINGHI, addrhi);
++			}
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
+@@ -722,11 +733,21 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			    & B43_DMA64_RXADDREXT_MASK;
+ 			if (!parity)
+ 				value |= B43_DMA64_RXPARITYDISABLE;
+-			b43_dma_write(ring, B43_DMA64_RXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_RXRINGLO, addrlo);
+-			b43_dma_write(ring, B43_DMA64_RXRINGHI, addrhi);
+-			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+-				      sizeof(struct b43_dmadesc64));
++			if (ring->dev->dma.ptr_is_addr) {
++				ring->ptr_base = lower_32_bits(ring->dmabase);
++				value |= b43_dma_read(ring, B43_DMA64_RXCTL) &
++					 B43_DMA64_RXCTL_KEEP;
++				b43_dma_write(ring, B43_DMA64_RXRINGLO, addrlo);
++				b43_dma_write(ring, B43_DMA64_RXRINGHI, addrhi);
++				b43_dma_write(ring, B43_DMA64_RXCTL, value);
++			} else {
++				ring->ptr_base = 0;
++				b43_dma_write(ring, B43_DMA64_RXCTL, value);
++				b43_dma_write(ring, B43_DMA64_RXRINGLO, addrlo);
++				b43_dma_write(ring, B43_DMA64_RXRINGHI, addrhi);
++			}
++			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->ptr_base +
++				      ring->nr_slots * sizeof(struct b43_dmadesc64));
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
+@@ -1080,6 +1101,15 @@ int b43_dma_init(struct b43_wldev *dev)
+ 		dma->parity = false;
+ #endif
+ 
++	dma->ptr_is_addr = false;
++	if (type == B43_DMA_64BIT) {
++		u16 ringlo = b43_dmacontroller_base(type, 0) + B43_DMA64_TXRINGLO;
++
++		b43_write32(dev, ringlo, 0xff0);
++		dma->ptr_is_addr = b43_read32(dev, ringlo) != 0;
++		b43_write32(dev, ringlo, 0);
++	}
++
+ 	err = -ENOMEM;
+ 	/* setup TX DMA channels. */
+ 	dma->tx_ring_AC_BK = b43_setup_dmaring(dev, 0, 1, type);
+diff --git a/drivers/net/wireless/broadcom/b43/dma.h b/drivers/net/wireless/broadcom/b43/dma.h
+index f9f65bb..eddc882 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.h
++++ b/drivers/net/wireless/broadcom/b43/dma.h
+@@ -90,6 +90,7 @@ struct b43_dmadesc32 {
+ #define		B43_DMA64_TXPARITYDISABLE		0x00000800
+ #define		B43_DMA64_TXADDREXT_MASK		0x00030000
+ #define		B43_DMA64_TXADDREXT_SHIFT		16
++#define B43_DMA64_TXCTL_KEEP				0x03FC00C0
+ #define B43_DMA64_TXINDEX				0x04
+ #define B43_DMA64_TXRINGLO				0x08
+ #define B43_DMA64_TXRINGHI				0x0C
+@@ -118,6 +119,7 @@ struct b43_dmadesc32 {
+ #define		B43_DMA64_RXPARITYDISABLE		0x00000800
+ #define		B43_DMA64_RXADDREXT_MASK		0x00030000
+ #define		B43_DMA64_RXADDREXT_SHIFT		16
++#define B43_DMA64_RXCTL_KEEP				0x03FC0000
+ #define B43_DMA64_RXINDEX				0x24
+ #define B43_DMA64_RXRINGLO				0x28
+ #define B43_DMA64_RXRINGHI				0x2C
+@@ -235,6 +237,7 @@ struct b43_dmaring {
+ 	u8 *txhdr_cache;
+ 	/* (Unadjusted) DMA base bus-address of the ring memory. */
+ 	dma_addr_t dmabase;
++	u32 ptr_base;
+ 	/* Number of descriptor slots in the ring. */
+ 	int nr_slots;
+ 	/* Number of used descriptor slots. */
