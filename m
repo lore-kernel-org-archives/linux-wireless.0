@@ -1,267 +1,251 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA39F4DE706
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 10:35:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791974102; cv=none; b=Itmgm6ur/M6HGzPMbCxAfEHsjWVo+IoR1dc5QM4lU1L2idJk7DLGuOCM365JkaXcVbdvKAfCAlqKqx3ktCABRxIjLY5QU9AweaIhRgd2JQOk/KCAJPBJ1kyJjf8qGgr5V3QhxpPIzvbZSBa8hBz6pOcTjlExTsDSwQ30aDXpaGk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791974102; c=relaxed/simple;
-	bh=i65aWG0WNowWimvWjM4DxteAKckH/Gv5zmBG5Zmpf6w=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dUwHCEKkfYMuFwQZRgFjFLQSQ7+31ok5j7oGVrGD3REeixi7StMWIwjVddpzeycbQ+59B31C73gQQK2ONFpwiDGzGTn8826s7diyo4q3e3as/U6BxMBtUvZbOZS/gb0DHykOZtsrzmA8vnQELQ4P0AEv8saBzHfty7c9WX0PdWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=G1fZOdxC; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dWya5t8b; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B9F38239A;
+	Wed, 14 Oct 2026 10:46:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791974784; cv=fail; b=RC+IufVZNO6jmKEAnA5c7cDSn4EMdKlIdc0ZUodXS1drIWuFhpyA8XWX9oPlgADzIEtW+EWRqBr2k5nYyAB/YswvCRPGKLvqTDT82El+6QGZ7/W8lyxCFh145kkLowwBzFxFY+sXO4NPsCoY2od+hBoRpVxYvrL7ex6SlD6TuLc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791974784; c=relaxed/simple;
+	bh=zTndezTWoWyueQcuZ15QQzlbRqs9uhykARVjJLQzdHY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=JnMFAYN65+UlmxV/30Wpbez/wDzXH/NFTjca8nGDWmC38N4YS5eN7oa0/FH1FzVICI5BJC4Gy7OrBy9LgQXfUhmO33u9NqKnHkGK6/RQfXSw+XOmZdjbgftJIn8BH+gz83ub/pxamGCByqUzq1ywE7Dnn2Eijs0PkyU9iUeKy+U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rexp5t6V; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="G1fZOdxC";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dWya5t8b"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69E5x4QW3952148
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 10:34:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=UmV10mrNWAA
-	SkZpsBEU6HnLorG7XbY2YPd6mkO//xuY=; b=G1fZOdxC8qAEf1O2jMmjx6hT85v
-	EMjnwU1sAERvdqKcpTzp5PO1gGZQzAYEKvKZY9MnU53doX/uQKA1C1a/iVgiESuR
-	Xm2gev3FJBvFL3vhcTu7fSyaDrJOMm+B32Oqizf+nvg7mBPgOS885bvuYC7N+Hym
-	ao2IZu5imBSWfiUq1YgOu5eOXYUyTzEXOWYo16yaX0j3Xj338q03FCzK7j8f5kUl
-	k/hu/TYiWPx288UTsrmGUTsGzTuukfWzgCMAUIcRZpGQ47MY2sNkkYyKOg5KINNS
-	1lkpW4aMOqysw9MACJuwpMu+pGg3JwTmFX8WEf2PbC/7BB+O5ncAin96B9g==
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ha42p1599-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 10:34:59 +0000 (GMT)
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-3592749a017so867886eec.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 03:34:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791974099; x=1792578899; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=UmV10mrNWAASkZpsBEU6HnLorG7XbY2YPd6mkO//xuY=;
-        b=dWya5t8byfQOq3nZ1HryzKuZxwB10E50D3MgtDTULUIPjUIR40RLlk1Gj3IUIRBqXm
-         TqKO0LZrTeA3qfxoMxn0OInYCgKBOP/zhrAnPxNrlHZqvL/xFNRSVv1uXL/1UTKyujC4
-         3sxfeC8gV/fpXqgOGOyV1kZBMsOh9P9jo6vqfp3IdHcUvU1nlB5tKpV2ZBdhVQ8K7Hr8
-         tGp8doTZteB2bP5owjAfdhGJeLO6HF84wuYrxXTtrgpUXc7V+V21ttTfQxYgpS8DFdBe
-         qUgnhNcrBgdPrmL6bwJyWnRzKUg6dSmCt4Ar4nTTDoTXW4/RlCJ3eaQJ6l4R2HVH4+xe
-         2PJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791974099; x=1792578899;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UmV10mrNWAASkZpsBEU6HnLorG7XbY2YPd6mkO//xuY=;
-        b=I6Pe54fNu2IMInxvzNGUP7/UDyBfr+Lwpjjhzr4XpUXQQDXdxmhxIzWt4ejrhnwsgh
-         u1VaRT9a4pOheiq8paFUUajQ2Ggp+dwKeZ5C2TLsMtahneU/8yZLJFqOtOLkHiXj89s1
-         DxGPxjgCloekjED/IePtKpsD3txh9NJAq2AHqUz3FM5cqtj+z+gaB/i/dl0RBm686O3L
-         ghq2w5G0nuMF+oL2lOH7voQ3azLwStQqbX+6+ap+F+g6p0Cky3hnzMeyrSd4cWgmT29t
-         YLQ4wEhcZFU7wgDIIZ8VEUMIs644qPt+JTfh0wjztQbcbexKpY+Asrnok1a7cC3Djap1
-         BcIw==
-X-Gm-Message-State: AFq9FYL7mpObxUoTjaE0/CXmcg5tLiIT17etcLhAbK8EWdlYTRhb6FKv
-	EWlE4NZw2Nuyva+OM0xj9ofXH3U9f15MS/N3F9/R6Yh24Rs8wtmn255EDf+kb3escwKExQIgK6r
-	nJWoXmTox4EXzGr+8gRlY8su2T/qrb6iNgRy2hTIlussujUHEWRon+CZfVJYeNO4mq04s16ttd9
-	g98A==
-X-Gm-Gg: AYBFou1pHNFp7UyUnXPfiuIlYFsYYcqNu1Bxl8uCWPWj/g3QnxnSnuNbZv5ROfZVo0Z
-	RXQ/C1F96SMnzN/bFY2x2+KzkAP26aC0NxPiiSTB51Am0m0oYSranovulmSuGNwSPnoP4Ra3Sm/
-	dlqU73OyT89mffXeghqcYacsNnpJY1EWxaQwSIIZIgrm/nYd9QufVQUlYUQcZkIIDIqT8OhvGcc
-	MMrZ/Hwod2Jz5AoAXheKrthsm4kPFthfYHY8l08JJTi3pNJ5ehTjop43q/olGKNKd2LxZjtjObe
-	+1vZcHG4MqpBKRbekgSK7KyHCCEmFbKIDc1bX2kKAkV60AmxWRIModD4SQ7VsXaVdXE8ib4+WvR
-	r9yGY1TLE+wlUnf9/1hPFTU2AOPuGuFXLf9Hk
-X-Received: by 2002:a05:7300:b0d:b0:35e:4c6f:dc28 with SMTP id 5a478bee46e88-35e4c6fdd1cmr909797eec.22.1791974098487;
-        Wed, 14 Oct 2026 03:34:58 -0700 (PDT)
-X-Received: by 2002:a05:7300:b0d:b0:35e:4c6f:dc28 with SMTP id 5a478bee46e88-35e4c6fdd1cmr909780eec.22.1791974097963;
-        Wed, 14 Oct 2026 03:34:57 -0700 (PDT)
-Received: from hu-shivbara-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca6d20dsm55846300eec.12.2026.10.14.03.34.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 03:34:57 -0700 (PDT)
-From: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, kavita.kavita@oss.qualcomm.com,
-        vamsin@qti.qualcomm.com
-Subject: [PATCH wireless-next 15/15] wifi: nl80211/cfg80211: add support for NDP terminated indication
-Date: Wed, 14 Oct 2026 16:03:59 +0530
-Message-Id: <20261014103359.1508345-16-shivani.baranwal@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261014103359.1508345-1-shivani.baranwal@oss.qualcomm.com>
-References: <20261014103359.1508345-1-shivani.baranwal@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rexp5t6V"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791974783; x=1823510783;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=zTndezTWoWyueQcuZ15QQzlbRqs9uhykARVjJLQzdHY=;
+  b=Rexp5t6V9NVsS/GrN+anItuVkr9XeT4aRG+zdZcfELpi4kAYebwqbLPQ
+   12IDAuRrWI9AOFlrflGaXTXV/2vmZHIVL5SbbStAu+rxqVxwtdslsCmgR
+   ZdX/gnPhCaCO3fsGLa7ER795/K7RuubnfZ8phstBiixVC1iuMObUpZO+y
+   59rGtUafmpcKAsk19kMbPOpI95J0QzgXp8YzCtEglwNARKR8LkU6u/C44
+   JUozh8iFyfu7gY9r0grGHSRoWVvmxPMvk1biLY6k9nlu4AhfjJVgGbvNn
+   B7waVFuOr+Y1jYgCDrXLXbL3BmuJIFI9GAnLyt5/i+hqOOGafeCYrH0Ni
+   A==;
+X-CSE-ConnectionGUID: ck4FB0tlTLKrPKCHaQ9RDg==
+X-CSE-MsgGUID: oDhFMHtQQ5ma3e4crKfU2Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="823332"
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="823332"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:46:21 -0700
+X-CSE-ConnectionGUID: TsmYIE0HSPO6qRLdNLAHmw==
+X-CSE-MsgGUID: DfPRRtd0Tr2hpmxfLv/ZhA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="1366267"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by orviesa002.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:46:20 -0700
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 14 Oct 2026 03:46:20 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49 via Frontend Transport; Wed, 14 Oct 2026 03:46:20 -0700
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (52.101.43.58) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 14 Oct 2026 03:46:20 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=BPfjSkCnkmDLsc3O4rEo6kV9vpilgGjmK0cvkYnMISzKfX8ehqTwocC5q7pfRPZxkzRjp1Padd/i/Qg7t3q7OkVq/GHkAoFUUb75TlJFt9IGxr+bJFVSFAJxGRYxqh741SMI13huLLyUDE8Nb7j9WvNcRUPpPxwfl9Sb66+ircGF0rur45ZJbxW7yLXLkeJMH1mEPopC08+gieMD8/Ew8f84Cg/JT3nIrMc7acLzQAb2GHlSNWAbagP49wckNyAVgRporgu2MvPJ0dTnp6fbDfH88ARvD8Tvu61tPPRmqcZYCYNVFlAfMvX8p83jjZIGdAGlQK+q2vh5Ri+imivIZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=N8mmPwRIABnrsKiXD4IPUSwX4Yvq109B8wM72ld8W5A=;
+ b=Srm96dW6xBG1BMNp2/t9UI9DroqBLS8IvmEs8bH6Tc/nnkhLl+qASDIA+7YFa2nypmAQmVI2vySkHe5l00gE9VRy07IBhS2ejMiUd8oAu73i2YVUOAT1Kqbat/bAOqgNf/viYukMgYxyLYLlqfdGvs3IfmaZYpV4kX4e5RpHxr7ymUn2vOyrk55JwOUyco5LUT+/hc6V43vWHni3gcKZ2Vz/CukfV8u29v+OKt/Dc5AB1zKIrf/om9FFNzXRBOJzm/tZwxjVBM9cnxJ6HFntPwXUQQzodkVsEJTvGmP60Xikn88n+nF9mLZ6FOLE7sRLgqPOQgIjulsWwJAJqv9BdA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from DS4PPF7551E6552.namprd11.prod.outlook.com
+ (2603:10b6:f:fc02::31) by SA3PR11MB403611.namprd11.prod.outlook.com
+ (2603:10b6:806:58c::16) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Wed, 14 Oct
+ 2026 10:46:18 +0000
+Received: from DS4PPF7551E6552.namprd11.prod.outlook.com
+ ([fe80::ac6c:1d96:c766:799f]) by DS4PPF7551E6552.namprd11.prod.outlook.com
+ ([fe80::ac6c:1d96:c766:799f%5]) with mapi id 15.21.0522.012; Wed, 14 Oct 2026
+ 10:46:18 +0000
+From: "Loktionov, Aleksandr" <aleksandr.loktionov@intel.com>
+To: Yuyang Huang <sigefriedhyy@gmail.com>
+CC: Ajay Singh <ajay.kathat@microchip.com>, Andrew Lunn
+	<andrew+netdev@lunn.ch>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, "David S.
+ Miller" <davem@davemloft.net>, David Ahern <dsahern@kernel.org>, "Donald
+ Hunter" <donald.hunter@gmail.com>, Eric Dumazet <edumazet@google.com>, "Ido
+ Schimmel" <idosch@nvidia.com>, "Keller, Jacob E" <jacob.e.keller@intel.com>,
+	Jakub Kicinski <kuba@kernel.org>, Johannes Berg <johannes@sipsolutions.net>,
+	Kees Cook <kees@kernel.org>, Kory Maincent <kory.maincent@bootlin.com>,
+	Kuniyuki Iwashima <kuniyu@google.com>, Nicolas Dichtel
+	<nicolas.dichtel@6wind.com>, Nikolaos Gkarlis <nickgarlis@gmail.com>, "Paolo
+ Abeni" <pabeni@redhat.com>, Sabrina Dubroca <sd@queasysnail.net>, Shuah Khan
+	<shuah@kernel.org>, Simon Horman <horms@kernel.org>, Stanislav Fomichev
+	<sdf.kernel@gmail.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>, "Willem
+ de Bruijn" <willemb@google.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org"
+	<linux-kselftest@vger.kernel.org>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>
+Subject: RE: [PATCH net-next v11 6/6] selftests: net: test AF_PACKET multicast
+ dumps
+Thread-Topic: [PATCH net-next v11 6/6] selftests: net: test AF_PACKET
+ multicast dumps
+Thread-Index: AQHdWeeHYYEkHxl7jkmpDKzzU7rKYrb83osQ
+Date: Wed, 14 Oct 2026 10:46:18 +0000
+Message-ID: <DS4PPF7551E655208F2C4C3F677E206BA1DE59D2@DS4PPF7551E6552.namprd11.prod.outlook.com>
+References: <20261012011707.3378-1-sigefriedhyy@gmail.com>
+ <20261012011707.3378-7-sigefriedhyy@gmail.com>
+In-Reply-To: <20261012011707.3378-7-sigefriedhyy@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DS4PPF7551E6552:EE_|SA3PR11MB403611:EE_
+x-ms-office365-filtering-correlation-id: 18724d0a-0e0d-4a94-5c00-08df29e060f1
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|7416014|1800799024|376014|366016|6133799003|22082099003|18002099003|10067099003|38070700021|11063799006|4143699003|261009223027099003|56012099006;
+x-microsoft-antispam-message-info: 9w/6jSd+AjlDiaoXJFb+/eFbpU7nOJfItIOkf4Uciqp53WyxtAkSkY0I4J9GWvF9PNmhBJK5pIVXWyIC5cR9ITmfribxiaMorFp7roKLqA0OhYG+YUtOQ4bPaEzbCZ/WuznX1Thc2nsCzet2g3ke0vfOYRf5XyeYlrkBJAF0tA4p6lcrQfsWQRe2ZSxlOKztCOeVKBiNxhwh31QflY3VWc/uj1iS0HBrnNEUxhN97JqinA0MCCynrAgkyhkrjbrfhfzZQVosQP5aVzvgLDVTJveLURlriI1/1refTFYE9117cOhdgnL1mttpbn2kKYkriCAy+3v2/JOUxVCe4OAI6MMQDSAMmHQTcAkezryDJMma1kWUbkNa1f05f41n1yV261fOw3AynPZAQbxIZqSJfjLMMQeP+eAsUt7A5wUnZY+qUsWPucVBn0E8tmmOifN5IKU0ZxwTdfW1wxs8ALkj0SVUvkZs7N8N86FybOoMdjEdbWC/3SD6LlOWyJQLrss2ecbzbiPM8up9WJQsRLGxTpmJn2I305F78L+1/s9Spw6RGAA+0BRyqcSbGQ02yZsNgYtpQL7DgqCJFAj16Hvo1eTSuENuv3Am4KrzJy08yMiK/pysDAVYMSMvFGRDUsJlIeXTlJfvsiXTtwQDqzGipZDe9UMU9xbIdHQksw97JkIh2A2C0EyCkCPEmaOiy+WZCzX205+jx/xSH9AcZvWIUhe5OaiifW7ffEFvSYTkJVQ=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF7551E6552.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(1800799024)(376014)(366016)(6133799003)(22082099003)(18002099003)(10067099003)(38070700021)(11063799006)(4143699003)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?sSX/8B87gxS6H8D6W+P6KMZNTpf3n3TF6Cjxo/bF4Bk/G272bNkXkB6OCrUq?=
+ =?us-ascii?Q?z93oEFixkq1HGBCus2FaipaI8GJ4Wu7kxCfhDWJZLM+eSdVeCED4fraa0Zgp?=
+ =?us-ascii?Q?eUQ1Y2WMmh3p8X/aFahBldDH9VoRFSyCFnHgw9Fao8fcbVSw1meeY9lN672n?=
+ =?us-ascii?Q?cQx1s8NaxntDn14io7BdnEBkN1hCoCLPG8wVvlxRiWbGixyCw2zgOrC7iwuJ?=
+ =?us-ascii?Q?zWsE76wA9tLqU2TQk5vm7lc2R3FFKa2RIxOmJpp+spCL92ImckB7jjXlxzda?=
+ =?us-ascii?Q?9g+DoBItXzdFRU7DH17P1DS/DmAVb2v1f0QlwIMonUgQI/yrQo+uD+X26OMx?=
+ =?us-ascii?Q?FqdsXlwtJJYcv5bQHVQq/Luikrb58CdumJvMtyAN00FnORAVr1J1/2TEHoEg?=
+ =?us-ascii?Q?5UBuvPzqi3LcX9dxWGcuIcARARNBZ5AhNP6WV8+Qj0xWAg6HPLV5BC7xWP6l?=
+ =?us-ascii?Q?Zx04EISnWzvc7hHdML4f332kBNPMU1sKuVaHts+a6vU6T6mRwp1O21soLTZQ?=
+ =?us-ascii?Q?HFd7zK7lfmHqDl/IlFQI/z+MQKyWhv5C/oluahAp5RKGTm9TNg/2ZdKkyYtU?=
+ =?us-ascii?Q?O/sw3fmEEEBT9kugif8Vl34CldeGRcqN4N4AEILSQXPSBWGlxnXhTc13QYYv?=
+ =?us-ascii?Q?w5fvYFLVDtCQ8ImivLteEW707d7Ju7soKYt4FCUTb3Ouc2wRXFj6eZdI9b9M?=
+ =?us-ascii?Q?7PIIJlQMfb6v3c2LPaZRqicowX7bEt/8+Sv60ccVaB6Xaho0goMuNcx0Rv4L?=
+ =?us-ascii?Q?LvaRPo3NuWAlzZiOKOw7ZUPY9edWidV+Fm+LpbWSnBA9X74AgC7vQc2Vnodj?=
+ =?us-ascii?Q?r//BARJQDjiAdTY3QMZ4E8p1H+yXkxHLORAGaB+f0tk7Lnq9IfBg6togF70U?=
+ =?us-ascii?Q?OJy96dtp0Yg9yb9RTwgZY4JmqmzbmZn/fyfcS3yy/dcUWhURrBhmqmE8ZJAT?=
+ =?us-ascii?Q?xZhM0poCMfoHyevgWC3w3ytuWpl6X9+8YVzvZ7wWpaSdOyOqMod7E7cjf7Fc?=
+ =?us-ascii?Q?U3mERPDH3PxLPvarDExbShYvFn0wQX6Lpoqhxe4OziXX1iiLY8pUEmi7srE6?=
+ =?us-ascii?Q?XfARDlwO736sqrvkTaw50OlA5iqriQGIP0oeF8DHvmssnAsIUjHq5ZZvO1eI?=
+ =?us-ascii?Q?fahKEk9rdpnTS2CO1LWspVplA67pUDwfZIh3m0IPr47sf8eMFVUQF57WNRi1?=
+ =?us-ascii?Q?RKNSWdeIDY6uxu5XOLxrtOrLU8tcRnh6uSdmYlSviYbOZ1p0PvgxNRQoyjvm?=
+ =?us-ascii?Q?3KvvasCsexfeLaGjz8HikK6xJnRNH+e1uQGyc/kV8fYjDVU1MxMuKDXKJwrz?=
+ =?us-ascii?Q?Y0i2amexBtgnGawLQtiHPPSnqhX8CEB2SniQGW1754pTc5RR7aIkCcDJvYTB?=
+ =?us-ascii?Q?f7OVK4x1UGMXu9B/4Io9/slchNjlpVmQrFQwdKtEaRnVk5QfcXDFTtr1ncpp?=
+ =?us-ascii?Q?u/CuIODDIFgFZtjQd2Uekhjf1LQo7SMvFGGuZFmw54KW52cCYloFenC6acO2?=
+ =?us-ascii?Q?CkJLU/w5X7SVjKnIvPiK3L2HsVknXQJE0j79hNL4l1uJadugsMoPBRbC3TVy?=
+ =?us-ascii?Q?anDx0tu7L9/HTUAqoUzdeA8McFO2HMVHDArvsyzb9Gs0uqHeQCW+clMoxMu/?=
+ =?us-ascii?Q?Je5lrUJhGd7AKFM9dg/oLHqwHkDe+5zC1zV7ZfQ0aAkwfnNhjcyFNNecyF85?=
+ =?us-ascii?Q?iGHnAcYf1T2aF/fhzAskTTH6FUba4yvR6IoZ+VVfjmHbvfedryPN3punAV3d?=
+ =?us-ascii?Q?ytofAFJz9/E3BuGtppJ5IhfULhAqcmg=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE0MDA0MiBTYWx0ZWRfX0JoCiO6o+cbG
- 22leKc7Pkd50u0y2F6hNK8tPi2Ci0Wx/a5B5w+S1LSskkCYDa7F/XeiHbcDLhN6MgwUhn9nCx0J
- RzmZY6yCcQTAc0tFKdAf6k0lBpaiX9E=
-X-Proofpoint-ORIG-GUID: M9c1PGp-4SpnOQsOuK-KYBsetHVbj2iF
-X-Authority-Analysis: v=2.4 cv=aeb0Dhot c=1 sm=1 tr=0 ts=6acf5ad3 cx=c_pps
- a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=EUspDBNiAAAA:8
- a=SXNX8jZLs4P-37pDPesA:9 a=6Ab_bkdmUrQuMsNx7PHu:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE0MDA0MiBTYWx0ZWRfX1Un+rrM2bKq1
- LkX0ndsyUpddnUQWVBdxDKgbU9RUlN9mRUnkWzjV1JuuTirbUV48hK2yvqmLFvL0e8yWFgowEFM
- 4yuaGS8pLmR0oJDq+PH12M56lkjL+Ek4rulA2q37tvupNCvU2qeEttym43XT6bN2OM8SW3mOJER
- LnH2bzLUZ4Z0nrVhKc07JV2MnftaK+e1Zt9yhLsXXiqSZnOrBhDdvtmzRHrA4J9N6z80w6k6jDP
- NENo+jPJY8FVpoQRAvQ0EEhXBw8QdxWVbhSQKwL1DT5qY5C2BTWjUmy6psNy/zp79yJNHyfMkFN
- N3xs3gthP6IoPDhpM5kIzfgXdaQxfmom1OfsF70goDWMt3yLC8QI7VYxEU9ksCi4xZnPj9Hnxun
- 3f0bH4c6Bu2rl1SQCmwIkua1InWqSqB6415xToIn2wd8kI6+w/Guu3lrGc7eXNJdRmRohNzvBJa
- nU4t53J1ZGf9W1y/xkg==
-X-Proofpoint-GUID: M9c1PGp-4SpnOQsOuK-KYBsetHVbj2iF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-13_01,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 malwarescore=0 clxscore=1015 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610140042
+X-Exchange-RoutingPolicyChecked: N8qGpwpbLDZ0HMGwf3n69DNoCwLQv6GAqo+v4YjvGlJBae8Jji3IYGExckEw4IaEP47bxQl/wsF68Yv2dEd8nyr226cXN0X6gv+5UlMxcR/eD8zKxdHcxrPeO3dO4yO2+XZDVZl0cKsNUyE6GP9mwDBIWS2iGUinGEId665mb9u3AyEYLxw/6x9MTxRXSkdohfyFe+68sXmF9YscMXytf2wgTF4smRBM0WjDFoKZLz+8K+cKb3RyONaxawx9BdN1aHvGwWc5PU2FAhpCFxvTTT+UAl0/WOfc6WkUnJv5ONuONrpLeS772N/SfCwJaR4CGlSpFK/chEiizGQtjTSOrg==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPF7551E6552.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18724d0a-0e0d-4a94-5c00-08df29e060f1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Oct 2026 10:46:18.5261
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: bvW1Vt4avfdA2BKaqztnS2qlBc2NKQe2fq080+6m5irEE3VqMqgsqiNvhNcou1cPqcorKwMQCCkHFK9kiiPG1pNXbCKkaZmmMljPM8eQ8vo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR11MB403611
+X-OriginatorOrg: intel.com
 
-Add NL80211_CMD_NAN_NDP_TERMINATED event to notify userspace when an
-established NDP is torn down. Add the corresponding parameter structure
-and event function so the driver can report the NDP identity and
-teardown reason to userspace.
 
-Signed-off-by: Shivani Baranwal <shivani.baranwal@oss.qualcomm.com>
----
- include/net/cfg80211.h       | 28 ++++++++++++++++++++
- include/uapi/linux/nl80211.h |  4 +++
- net/wireless/nl80211.c       | 50 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 82 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e3d3dccfa06e..8e0325501bcf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4505,6 +4505,21 @@ struct cfg80211_nan_ndp_confirm_params {
- 	bool ipv6_intf_id_set;
- };
- 
-+/**
-+ * struct cfg80211_nan_ndp_terminated_params - NAN NDP terminated event
-+ *
-+ * @peer_nmi: peer NMI address
-+ * @ndp_id: NDP ID
-+ * @init_ndi: initiator NDI MAC address
-+ * @reason: termination reason code
-+ */
-+struct cfg80211_nan_ndp_terminated_params {
-+	const u8 *peer_nmi;
-+	u8 ndp_id;
-+	const u8 *init_ndi;
-+	u8 reason;
-+};
-+
- /**
-  * enum cfg80211_nan_conf_changes - indicates changed fields in NAN
-  * configuration
-@@ -11410,6 +11425,19 @@ void cfg80211_nan_ndp_confirm(struct wireless_dev *wdev,
- 			      struct cfg80211_nan_ndp_confirm_params *params,
- 			      gfp_t gfp);
- 
-+/**
-+ * cfg80211_nan_ndp_terminated - notify userspace that an NDP was terminated
-+ * @wdev: the wireless device reporting the event
-+ * @params: NDP termination parameters
-+ * @gfp: allocation flags
-+ *
-+ * Notify userspace that a NAN Data Path was torn down. Only valid
-+ * when %WIPHY_NAN_FLAGS_OFFLOAD_NDP is set.
-+ */
-+void cfg80211_nan_ndp_terminated(struct wireless_dev *wdev,
-+				 struct cfg80211_nan_ndp_terminated_params *params,
-+				 gfp_t gfp);
-+
- /**
-  * cfg80211_incumbent_signal_notify - Notify userspace of incumbent signal detection
-  * @wiphy: the wiphy to use
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 58127fbd5738..71ed38992d33 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1494,6 +1494,9 @@
-  *	the NDP confirm parameters including %NL80211_NAN_NDP_ATTR_RESP_NDI.
-  *	Userspace should call %NL80211_CMD_NEW_STATION on the NDI interface
-  *	to add the peer NDI station.
-+ * @NL80211_CMD_NAN_NDP_TERMINATED: Notification sent to userspace
-+ *	when an NDP is terminated. Carries %NL80211_ATTR_MAC (peer NMI)
-+ *	and %NL80211_ATTR_NAN_NDP nested with the termination parameters.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1782,6 +1785,7 @@ enum nl80211_commands {
- 	NL80211_CMD_NAN_NDP_TERMINATE,
- 	NL80211_CMD_NAN_NDP_REQUEST,
- 	NL80211_CMD_NAN_NDP_CONFIRM,
-+	NL80211_CMD_NAN_NDP_TERMINATED,
- 
- 	/* add new commands above here */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ef7071501915..e4b664bdf53d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -18952,6 +18952,56 @@ void cfg80211_nan_ndp_confirm(struct wireless_dev *wdev,
- }
- EXPORT_SYMBOL(cfg80211_nan_ndp_confirm);
- 
-+void cfg80211_nan_ndp_terminated(struct wireless_dev *wdev,
-+				 struct cfg80211_nan_ndp_terminated_params *params,
-+				 gfp_t gfp)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct nlattr *ndp_attr;
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	if (WARN_ON(!(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_OFFLOAD_NDP)))
-+		return;
-+
-+	if (!wdev->owner_nlportid)
-+		return;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NAN_NDP_TERMINATED);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, params->peer_nmi))
-+		goto nla_put_failure;
-+
-+	ndp_attr = nla_nest_start(msg, NL80211_ATTR_NAN_NDP);
-+	if (!ndp_attr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u8(msg, NL80211_NAN_NDP_ATTR_ID, params->ndp_id) ||
-+	    nla_put(msg, NL80211_NAN_NDP_ATTR_INIT_NDI, ETH_ALEN,
-+		    params->init_ndi) ||
-+	    nla_put_u8(msg, NL80211_NAN_NDP_ATTR_REASON, params->reason))
-+		goto nla_put_failure;
-+
-+	nla_nest_end(msg, ndp_attr);
-+	genlmsg_end(msg, hdr);
-+	genlmsg_unicast(wiphy_net(wiphy), msg, wdev->owner_nlportid);
-+	return;
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_nan_ndp_terminated);
-+
- static bool nl80211_nan_is_sched_empty(struct cfg80211_nan_local_sched *sched)
- {
- 	if (!sched->n_channels)
--- 
-2.34.1
+> -----Original Message-----
+> From: Yuyang Huang <uyoko90@gmail.com> On Behalf Of Yuyang Huang
+> Sent: Monday, October 12, 2026 3:17 AM
+> To: Yuyang Huang <sigefriedhyy@gmail.com>
+> Cc: Ajay Singh <ajay.kathat@microchip.com>; Loktionov, Aleksandr
+> <aleksandr.loktionov@intel.com>; Andrew Lunn <andrew+netdev@lunn.ch>;
+> Claudiu Beznea <claudiu.beznea@tuxon.dev>; David S. Miller
+> <davem@davemloft.net>; David Ahern <dsahern@kernel.org>; Donald Hunter
+> <donald.hunter@gmail.com>; Eric Dumazet <edumazet@google.com>; Ido
+> Schimmel <idosch@nvidia.com>; Keller, Jacob E
+> <jacob.e.keller@intel.com>; Jakub Kicinski <kuba@kernel.org>; Johannes
+> Berg <johannes@sipsolutions.net>; Kees Cook <kees@kernel.org>; Kory
+> Maincent <kory.maincent@bootlin.com>; Kuniyuki Iwashima
+> <kuniyu@google.com>; Nicolas Dichtel <nicolas.dichtel@6wind.com>;
+> Nikolaos Gkarlis <nickgarlis@gmail.com>; Paolo Abeni
+> <pabeni@redhat.com>; Sabrina Dubroca <sd@queasysnail.net>; Shuah Khan
+> <shuah@kernel.org>; Simon Horman <horms@kernel.org>; Stanislav Fomichev
+> <sdf.kernel@gmail.com>; Vadim Fedorenko <vadim.fedorenko@linux.dev>;
+> Willem de Bruijn <willemb@google.com>; linux-kernel@vger.kernel.org;
+> linux-kselftest@vger.kernel.org; linux-wireless@vger.kernel.org;
+> netdev@vger.kernel.org
+> Subject: [PATCH net-next v11 6/6] selftests: net: test AF_PACKET
+> multicast dumps
+>=20
+> Dump the link-layer multicast addresses of a dummy device and verify
+> that ifa_index restricts the dump to that device, that the all-hosts
+> address joined on link up is listed without IFA_F_GLOBAL, that an
+> address added with SIOCADDMULTI is listed with IFA_F_GLOBAL and
+> IFA_MC_USERS, and that IFA_TARGET_NETNSID dumps another netns.
+>=20
+> Signed-off-by: Yuyang Huang <sigefriedhyy@gmail.com>
+> Reviewed-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+> ---
+>  tools/testing/selftests/net/rtnetlink.py | 73 +++++++++++++++++++++++-
+>  1 file changed, 71 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/tools/testing/selftests/net/rtnetlink.py
+> b/tools/testing/selftests/net/rtnetlink.py
+> index dc8c77db48974..5534ade056a5c 100755
+> --- a/tools/testing/selftests/net/rtnetlink.py
+> +++ b/tools/testing/selftests/net/rtnetlink.py
+> @@ -5,13 +5,18 @@ import socket
+>  import struct
+>  import time
+>  from lib.py import bkg, ip, ksft_exit, ksft_run, ksft_eq, ksft_ge,
+> ksft_true, KsftSkipEx -from lib.py import ksft_not_in, ksft_not_none
+> +from lib.py import ksft_in, ksft_not_in, ksft_not_none
+>  from lib.py import CmdExitFailure, NetNS, NetNSEnter, RtnlAddrFamily,
+> RtnlRouteFamily  from lib.py import defer
+>=20
+>  IPV4_ALL_HOSTS_MULTICAST =3D b'\xe0\x00\x00\x01'
+>  IPV4_TEST_MULTICAST =3D b'\xef\x01\x01\x01'
+>  IPV6_TEST_MULTICAST =3D bytes.fromhex('ff020000000000000000000000000123'=
+)
+> +ETH_ALL_HOSTS_MULTICAST =3D bytes.fromhex('01005e000001')
+> +ETH_TEST_MULTICAST_STR =3D '01:00:5e:01:01:01'
+> +ETH_TEST_MULTICAST =3D bytes.fromhex(ETH_TEST_MULTICAST_STR.replace(':',
+> +'')) ETH_PEER_MULTICAST_STR =3D '01:00:5e:02:02:02'
+> +ETH_PEER_MULTICAST =3D bytes.fromhex(ETH_PEER_MULTICAST_STR.replace(':',
+> +''))
+>=20
+>=20
+>  def _users_for(rtnl: RtnlAddrFamily, family: int, grp: bytes, ifindex:
+> int):
+> @@ -105,6 +110,69 @@ def dump_mcaddr6_check() -> None:
+>                  s2.close()
+>=20
+>=20
 
+...
+
+>                ipv6_route_del_reason_expired,
+>                ipv6_route_del_reason_ra_withdrawn,
+>                ipv6_route_del_reason_absent,
+> --
+> 2.43.0
+
+Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
