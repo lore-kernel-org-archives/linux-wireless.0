@@ -1,319 +1,186 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E854EBAC6
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:08:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF3AA539776
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:30:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791986888; cv=none; b=M0q1DnOs6p73HR8063ZhGjTClR9sJ8ruTLNavwgIFbr/K2xASflLQfZd2BXVVGUfA2RAT8xqBrtfItmjgySa+ypGKiaeocfc+zIs85NOm7Be0TBh8mxQCOSs3x1LsS30XAAq7IiREvWdBDYZX07nsRefDV4/vyeq4+aFYR1bnys=
+	t=1791988246; cv=none; b=evzyooGrcL2PBZFMgAD6n++BuRNBQIs2i4bG0hTsgTPMUAO67dRtv4gubwgcFkOh072bi8Q9JqrklMpNQMbClyJRltptDrUDj9ZbdtAKAjY0azzTPAen3WFcocR1nlXhN26wWvCjhF7xIDAfOeFmOXQy5ITiC/waWwBVBm6aT8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791986888; c=relaxed/simple;
-	bh=Qgq72kM0ELUoFmQu8NNqARrcrFJHKItiuQUrnbsyIS8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TXb6ESWPD/s/OqlAZKcRtPysSkdCv3c4HeFy/sD8WDoi752Y0xybVXYklBRE4jgP3qUS/0UKP5qIyoU2/NthO8dWx+FXX7Q6n1dMOTUk9GUaDhzJS19tcIaO9qdFFVKmdjJY6T8rMpIVS+WPv8d6ePpbbxf4pbRsNDIkULcUD+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=DweITvfO; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1791988246; c=relaxed/simple;
+	bh=QkAQFJqHnT/S5bkgdDjkDERPTbkiMe8cVnMjGslzzLI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MGrw4cx9Wd8P9J5bXcQyo/oWFF09CAfznvBojbTnN8cT2vk+aq3DYwuBnIHqv5aKwuMDzUBvVvakjLo4MWoRCQxRSIdnQDMR0gA2DMz6JY3tC0ump8sumaYL/uGZW5WXlwTD9o7Nr3nS24t5kUVPI3g0eQbKegt6ih7pxCw28xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HHP8iaiE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bkFi2eCp; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="DweITvfO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=QbprVKZoIhxVI6J+3xDlU5Ey5lTv6iWnyiE6PVE9nl0=; t=1791986885; x=1793196485; 
-	b=DweITvfOq/yVqtYy8xrV8cFVieWEvIk8o5d6YpUC3pG6qQLBaEt8YOrEIa8/q0JkQ7XMWUIHcLz
-	zygM8CsCbJIiuBCaCxc2kleMdsQZzj+3AaGW2wQcGkNPC82enRvz4X01lU7OIPAEhEceVYoYhQBXA
-	l7YVEEkU4t5c+gX3husMwPo8JukQqsLBUeS21JE3Nw/Y8nZVexbla0sZFFe28swvoROEQ8++MP6bd
-	ryvyL6V+ZpJwa0qlU1p90M/aFklhOI70+/jTsLniKowMv2aqrGaFsu7S6JpaBL0hVll9E21x+3vil
-	hJbR4ll6r2ZJOL2utry6tqQ80c/55HuDtxKw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xGze7-00000001dBi-3rYX;
-	Wed, 14 Oct 2026 16:07:56 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: remove .config method requirement
-Date: Wed, 14 Oct 2026 16:07:51 +0200
-Message-ID: <20261014140752.754329-2-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HHP8iaiE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bkFi2eCp"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69EBVQ0m2515931
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:30:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=bKU6SBOy9ApqE53IhaKqksj2
+	pcfRhupWYTN6RzVisPc=; b=HHP8iaiEyNrZIGnMqXJOFhBpOVGYomaOnSj5VZbq
+	GOReeHX/0F6tCn2aFlSgtHaodu4T/hVpjYd6uqub3EmABUEaQNb8+M89Yxth/ZN9
+	cg8pJ6D0ambk7qB1Y0ACdnmY35YEd07aBpvDfrHCBcgn8Cu63/xY+qivHXHLvoKB
+	0ZJSmOPOMYW1gFthBqIX6qikgQOWBTKqa+pCvkA/+GU3rba6C1spyJiWJIksC9EA
+	LlbUes5Tv7GqXmtg9kqZ3pSUv28/ueNVK88Dvc8Ta9ULAfkhek+JYmOpWSBZv5d/
+	7f8Q+gvuntnO4zq5i6G72ZC35G6TvmoBw3ABA31wh5/Fpg==
+Received: from mail-vs1-f71.google.com (mail-vs1-f71.google.com [209.85.217.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ha470a08b-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 14:30:43 +0000 (GMT)
+Received: by mail-vs1-f71.google.com with SMTP id ada2fe7eead31-7bdb408a368so641280137.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 07:30:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1791988243; x=1792593043; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=bKU6SBOy9ApqE53IhaKqksj2pcfRhupWYTN6RzVisPc=;
+        b=bkFi2eCpsqERJ7MNXpLl0lCXayGPMKPQjWa3YnFCjEpdXhsL/tq8ttFlhhUEchzLNl
+         WiS4DFsqKSln6bLGFnmYTdIqiKFtHAmMhTxy4ImhjsN2uMtkNcUf9f6ifX77s0mRP0yl
+         DDW7GM5dFnmfy5WZh2oCQFteSYcBX2NtJkSNwyTrVBBQwGJsKNuwbN82eKrn/VaLYMEI
+         1ULvvM33hWheKQ6IC2aPe4ZqVL9278rRwPWJdHQdBD1bmNKnhJRKW3L1us8/878jVtyN
+         w9up9HZb2cn/MoVUE86mef/RcaVpSFG6EAOJ6EaHMGuvarZ/XGCt2YVu8CxOgX3YW+OG
+         BYtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791988243; x=1792593043;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bKU6SBOy9ApqE53IhaKqksj2pcfRhupWYTN6RzVisPc=;
+        b=C1Qi3H7q6EmAUkNySp3Mu7/HK7yeDbJn/YUICT6pLcU0ZnxJ6ugamkkgZfxK/WdUwI
+         w4qCWVJbU4+ZUlZoEp4hOgkVDeWN+ub6Vg+cWOoTptXLH8z/vbYaYklUJ63BnQb+RyvS
+         BQtRxroi+CKzV5jWuvtondBfgzWamEj/kycnghW4Q1F5eEgunTPKAGOxTLZHCMMENP1K
+         aRR7qJmuS6KcPgnfAjPZiC/9H9SdYAx45LRJWTNLyi1pj6Q+HUz2X99lO+bbY/4AlnFb
+         LqXnpQr2RO+OOOSVTEFF2GJCxdCnBSQNq6e0GajHfL0qNL8cbwMzUuDIwlKsFzs+WXhT
+         1zuA==
+X-Forwarded-Encrypted: i=1; AKwUvBysrxHWdh7UQkPmXTB/EQcr7ACj3Bz1CoMnFibH+DTgUL2YuDUTKbpWLchag1JcF5mSP/4cAxOkOs6qCPyRFw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYINy1bHSa79MQK5KLfl0XRJgwSf0f6XudGptYXMXQiQjsOTYRwy
+	wHZ1EIPEIgIppSQ5bWAiPtGwHKtGkkrhxc1tQZZR6MBkUc8qdz0OTePxbwZmGTxvdT948y69ukz
+	3BKu728Xx5kH30c4AQeubq9II6B0kdtWW9OnI0eJAv3C6xBCsO7qvXOdB/PJWM92LlJwEEw==
+X-Gm-Gg: AYBFou3H12CLR4BlDXuXbA9KxSgmXIJ8cjlFb9Vk+o10wpCE7PImtTeqFuOrF9TKxl+
+	4WV7OKmtnSOEviCuGYwx7DgV6prg1pqEOwL3ENPvWaRKsFQpeeWqu2mpo8puFwrea6pTT5Fv+QS
+	9+tCvwHIg2cKgqfBu0cOprqVK/UPSJFlPZxz65HoUHAcBq6Eq07wWNxII14d1ZFJC5ZFy5Apebg
+	pR05CD6oeX81eijmsokfCEv+a1ER6dTA+XMJqXAfW46TPDD9mTC7gvNB8Q9kgH3cTEQnkObb8Gf
+	BdPkJTO0X5MXpvXh4GkkhOtbzs8/Bu+QGwYO1/6WTXSm86Hze40d3PeFUqeZBVSOCz75ocrba9F
+	EVhUs+u47AOjeag==
+X-Received: by 2002:a05:6102:1609:b0:7c3:7286:b7ea with SMTP id ada2fe7eead31-7cb372de97dmr3761489137.17.1791988242900;
+        Wed, 14 Oct 2026 07:30:42 -0700 (PDT)
+X-Received: by 2002:a05:6102:1609:b0:7c3:7286:b7ea with SMTP id ada2fe7eead31-7cb372de97dmr3761439137.17.1791988240627;
+        Wed, 14 Oct 2026 07:30:40 -0700 (PDT)
+Received: from localhost ([188.216.77.92])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1b6224f52sm39203665e9.4.2026.10.14.07.30.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Oct 2026 07:30:38 -0700 (PDT)
+Date: Wed, 14 Oct 2026 16:30:37 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+To: Jeff Johnson <jjohnson@kernel.org>,
+        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        Ripan Deuri <quic_rdeuri@quicinc.com>,
+        P Praneesh <quic_ppranees@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+Subject: Re: [PATCH 0/3] wifi: ath12k: add page_pool support for rx data path
+Message-ID: <as-SDRZQehtr_J1N@lore-desk>
+References: <20261008-ath12k-pp-v1-0-68f888cd7eec@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="R3en0U7yalSeIZv0"
+Content-Disposition: inline
+In-Reply-To: <20261008-ath12k-pp-v1-0-68f888cd7eec@oss.qualcomm.com>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE0MDA1NyBTYWx0ZWRfXzWSE1MiwWfhe
+ 4L68hirkWvOgevkUjt2auKXD66HdxPj+9/yyhOXIYIuOU6e51yDMCIlOnfakHf0mXFqFMNniA1p
+ 3B37NgZRkxcT5KPIlIZhmDJFfCaoR6ZOWJI6FYOKduGSYUiKhygZjVwIfN46zY5JxXsitEVAK0A
+ e82NzvN19RJWcDlq6pfN+xafCz25ZtArYBnInv7RlizcgFneLdAzB1UBNgVLEhSkqBbFgc5MfaC
+ vk7R/M2fwYBJvlyfudoAEUI2Bmw0GEysgO5GA9EqsfykPeeEv28x56YuYLSUehmkLoGVYnBXXOG
+ IEKgW58OU9FEygs5y18k7SDeEObgp6PpUkbboSo9eQAg+irgVTUhAxALmOSrDgUlprWmcsFa++m
+ 1eCc9s9KiHBK4ZC3GbNxkpUETUDJwkCyDIGKtqt2Qi1XeYCRWJvAMG1q88Ny6Lnwlx8voScvB1n
+ S/3HWr7CvVS0hCmz/8Q==
+X-Proofpoint-GUID: 7nWAJ9QVrHS6f6bm578rmPS5MWhFOfTP
+X-Authority-Analysis: v=2.4 cv=P6avFSAu c=1 sm=1 tr=0 ts=6acf9213 cx=c_pps
+ a=P2rfLEam3zuxRRdjJWA2cw==:117 a=WpTaRW6qxYHRGzLzQsVYzg==:17
+ a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
+ a=LpUeRXHAMchiTH5aEiwA:9 a=CjuIK1q_8ugA:10 a=vD29VgyGE-FLY0UuNjsA:9
+ a=ODZdjJIeia2B_SHc_B0f:22
+X-Proofpoint-ORIG-GUID: 7nWAJ9QVrHS6f6bm578rmPS5MWhFOfTP
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE0MDA1NyBTYWx0ZWRfX61St5W6ryinf
+ 1cH4oZIPcK21FYj5ne8CYPta/n/FanKUVKj2jZVgsWlha4HCvE09ru/JmwJJp+evFuDhxJQ9AKJ
+ sxJrBlEgLgC+MnLrTJjkBs84jDSGruM=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-13_01,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 lowpriorityscore=0 priorityscore=1501 adultscore=0
+ suspectscore=0 clxscore=1015 impostorscore=0 malwarescore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610140057
 
-From: Johannes Berg <johannes.berg@intel.com>
+--R3en0U7yalSeIZv0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Given chanctx support, driver don't really need to
-have a .config, so quite a few drivers now have an
-empty one. Allow it to be not set and remove those
-that are no longer needed.
+> Convert the Rx refill buffers to the page_pool API instead of allocating
+> an skb with dev_alloc_skb() and mapping it with dma_map_single().
+> Fix DMA direction for reinjeced packets.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath12k/mac.c                 | 6 ------
- drivers/net/wireless/ath/ath12k/mac.h                 | 1 -
- drivers/net/wireless/ath/ath12k/wifi7/hw.c            | 1 -
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c     | 8 --------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 1 -
- drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 1 -
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h          | 5 -----
- drivers/net/wireless/mediatek/mt76/mt7996/main.c      | 6 ------
- drivers/net/wireless/purelifi/plfxlc/mac.c            | 6 ------
- drivers/net/wireless/silabs/wfx/main.c                | 1 -
- drivers/net/wireless/silabs/wfx/sta.c                 | 5 -----
- drivers/net/wireless/silabs/wfx/sta.h                 | 1 -
- include/net/mac80211.h                                | 2 +-
- net/mac80211/driver-ops.h                             | 5 +++--
- net/mac80211/main.c                                   | 2 +-
- 15 files changed, 5 insertions(+), 46 deletions(-)
+Hi Jeff,
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 01f8c6572f65..c08216352c2c 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -1584,12 +1584,6 @@ int ath12k_mac_vdev_stop(struct ath12k_link_vif *arvif)
- 	return ret;
- }
- 
--int ath12k_mac_op_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
--{
--	return 0;
--}
--EXPORT_SYMBOL(ath12k_mac_op_config);
--
- static int ath12k_mac_setup_bcn_p2p_ie(struct ath12k_link_vif *arvif,
- 				       struct sk_buff *bcn)
- {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
-index ae44ebfd9bd9..61c2ec8865a3 100644
---- a/drivers/net/wireless/ath/ath12k/mac.h
-+++ b/drivers/net/wireless/ath/ath12k/mac.h
-@@ -218,7 +218,6 @@ void ath12k_mac_op_remove_interface(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif);
- void ath12k_mac_op_update_vif_offload(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif);
--int ath12k_mac_op_config(struct ieee80211_hw *hw, int radio_idx, u32 changed);
- void ath12k_mac_op_link_info_changed(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_bss_conf *info,
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index b1c17cc197df..d3ae9e987fa9 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -1183,7 +1183,6 @@ static const struct ieee80211_ops ath12k_ops_wifi7 = {
- 	.add_interface                  = ath12k_mac_op_add_interface,
- 	.remove_interface		= ath12k_mac_op_remove_interface,
- 	.update_vif_offload		= ath12k_mac_op_update_vif_offload,
--	.config                         = ath12k_mac_op_config,
- 	.link_info_changed              = ath12k_mac_op_link_info_changed,
- 	.vif_cfg_changed		= ath12k_mac_op_vif_cfg_changed,
- 	.change_vif_links               = ath12k_mac_op_change_vif_links,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index e05bdbd3e1a9..99cbd279ce48 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -652,13 +652,6 @@ void iwl_mld_mac80211_stop(struct ieee80211_hw *hw, bool suspend)
- 			mld->scan.uid_status[i] = 0;
- }
- 
--static
--int iwl_mld_mac80211_config(struct ieee80211_hw *hw, int radio_idx,
--			    u32 changed)
--{
--	return 0;
--}
--
- static
- int iwl_mld_mac80211_add_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
-@@ -2921,7 +2914,6 @@ const struct ieee80211_ops iwl_mld_hw_ops = {
- 	.tx = iwl_mld_mac80211_tx,
- 	.start = iwl_mld_mac80211_start,
- 	.stop = iwl_mld_mac80211_stop,
--	.config = iwl_mld_mac80211_config,
- 	.get_antenna = iwl_mld_get_antenna,
- 	.set_antenna = iwl_mld_set_antenna,
- 	.add_interface = iwl_mld_mac80211_add_interface,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index daa05339e3fb..937232882ea2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -6359,7 +6359,6 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.stop = iwl_mvm_mac_stop,
- 	.add_interface = iwl_mvm_mac_add_interface,
- 	.remove_interface = iwl_mvm_mac_remove_interface,
--	.config = iwl_mvm_mac_config,
- 	.prepare_multicast = iwl_mvm_prepare_multicast,
- 	.configure_filter = iwl_mvm_configure_filter,
- 	.config_iface_filter = iwl_mvm_config_iface_filter,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index 6ea9a7c8da0c..5d1815528ac0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -897,7 +897,6 @@ const struct ieee80211_ops iwl_mvm_mld_hw_ops = {
- 	.stop = iwl_mvm_mac_stop,
- 	.add_interface = iwl_mvm_mld_mac_add_interface,
- 	.remove_interface = iwl_mvm_mld_mac_remove_interface,
--	.config = iwl_mvm_mac_config,
- 	.prepare_multicast = iwl_mvm_prepare_multicast,
- 	.configure_filter = iwl_mvm_configure_filter,
- 	.config_iface_filter = iwl_mvm_mld_config_iface_filter,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ae2ee8771f16..cfc0b0debfd8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -2704,11 +2704,6 @@ int iwl_mvm_mac_start(struct ieee80211_hw *hw);
- void iwl_mvm_mac_reconfig_complete(struct ieee80211_hw *hw,
- 				   enum ieee80211_reconfig_type reconfig_type);
- void iwl_mvm_mac_stop(struct ieee80211_hw *hw, bool suspend);
--static inline int iwl_mvm_mac_config(struct ieee80211_hw *hw, int radio_idx,
--				     u32 changed)
--{
--	return 0;
--}
- 
- u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
- 			      struct netdev_hw_addr_list *mc_list);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 9321c8146e2a..873c5aef4935 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -752,11 +752,6 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	return err;
- }
- 
--static int mt7996_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
--{
--	return 0;
--}
--
- static int
- mt7996_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       unsigned int link_id, u16 queue,
-@@ -3052,7 +3047,6 @@ const struct ieee80211_ops mt7996_ops = {
- 	.stop = mt7996_stop,
- 	.add_interface = mt7996_add_interface,
- 	.remove_interface = mt7996_remove_interface,
--	.config = mt7996_config,
- 	.conf_tx = mt7996_conf_tx,
- 	.configure_filter = mt7996_configure_filter,
- 	.vif_cfg_changed = mt7996_vif_cfg_changed,
-diff --git a/drivers/net/wireless/purelifi/plfxlc/mac.c b/drivers/net/wireless/purelifi/plfxlc/mac.c
-index a900421753ac..ad04730c8c0b 100644
---- a/drivers/net/wireless/purelifi/plfxlc/mac.c
-+++ b/drivers/net/wireless/purelifi/plfxlc/mac.c
-@@ -526,11 +526,6 @@ static void plfxlc_op_remove_interface(struct ieee80211_hw *hw,
- 	mac->vif = NULL;
- }
- 
--static int plfxlc_op_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
--{
--	return 0;
--}
--
- #define SUPPORTED_FIF_FLAGS \
- 	(FIF_ALLMULTI | FIF_FCSFAIL | FIF_CONTROL | \
- 	 FIF_OTHER_BSS | FIF_BCN_PRBRESP_PROMISC)
-@@ -690,7 +685,6 @@ static const struct ieee80211_ops plfxlc_ops = {
- 	.add_interface = plfxlc_op_add_interface,
- 	.remove_interface = plfxlc_op_remove_interface,
- 	.set_rts_threshold = plfxlc_set_rts_threshold,
--	.config = plfxlc_op_config,
- 	.configure_filter = plfxlc_op_configure_filter,
- 	.bss_info_changed = plfxlc_op_bss_info_changed,
- 	.get_stats = plfxlc_get_stats,
-diff --git a/drivers/net/wireless/silabs/wfx/main.c b/drivers/net/wireless/silabs/wfx/main.c
-index 16d5b51f6f03..9c40d738e5a1 100644
---- a/drivers/net/wireless/silabs/wfx/main.c
-+++ b/drivers/net/wireless/silabs/wfx/main.c
-@@ -132,7 +132,6 @@ static const struct ieee80211_ops wfx_ops = {
- 	.stop                    = wfx_stop,
- 	.add_interface           = wfx_add_interface,
- 	.remove_interface        = wfx_remove_interface,
--	.config                  = wfx_config,
- 	.tx                      = wfx_tx,
- 	.wake_tx_queue           = ieee80211_handle_wake_tx_queue,
- 	.join_ibss               = wfx_join_ibss,
-diff --git a/drivers/net/wireless/silabs/wfx/sta.c b/drivers/net/wireless/silabs/wfx/sta.c
-index d12fcc755701..210d2c07db87 100644
---- a/drivers/net/wireless/silabs/wfx/sta.c
-+++ b/drivers/net/wireless/silabs/wfx/sta.c
-@@ -706,11 +706,6 @@ void wfx_unassign_vif_chanctx(struct ieee80211_hw *hw, struct ieee80211_vif *vif
- 	wvif->channel = NULL;
- }
- 
--int wfx_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
--{
--	return 0;
--}
--
- int wfx_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	int i;
-diff --git a/drivers/net/wireless/silabs/wfx/sta.h b/drivers/net/wireless/silabs/wfx/sta.h
-index b4812b294f3c..1d301b0f8d33 100644
---- a/drivers/net/wireless/silabs/wfx/sta.h
-+++ b/drivers/net/wireless/silabs/wfx/sta.h
-@@ -21,7 +21,6 @@ struct wfx_sta_priv {
- /* mac80211 interface */
- int wfx_start(struct ieee80211_hw *hw);
- void wfx_stop(struct ieee80211_hw *hw, bool suspend);
--int wfx_config(struct ieee80211_hw *hw, int radio_idx, u32 changed);
- int wfx_set_rts_threshold(struct ieee80211_hw *hw, int radio_idx, u32 value);
- void wfx_set_default_unicast_key(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int idx);
- void wfx_configure_filter(struct ieee80211_hw *hw, unsigned int changed_flags,
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a1a6409b44c1..a9ad89e77858 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4162,7 +4162,7 @@ struct ieee80211_prep_tx_info {
-  * @config: Handler for configuration requests. IEEE 802.11 code calls this
-  *	function to change hardware configuration, e.g., channel.
-  *	This function should never fail but returns a negative error code
-- *	if it does. The callback can sleep.
-+ *	if it does. The callback is optional and can sleep.
-  *
-  * @bss_info_changed: Handler for configuration requests related to BSS
-  *	parameters that may vary during BSS's lifespan, and may affect low
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 83dd15f2daf6..c401d27bb502 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -147,13 +147,14 @@ void drv_remove_interface(struct ieee80211_local *local,
- static inline int drv_config(struct ieee80211_local *local, int radio_idx,
- 			     u32 changed)
- {
--	int ret;
-+	int ret = 0;
- 
- 	might_sleep();
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	trace_drv_config(local, radio_idx, changed);
--	ret = local->ops->config(&local->hw, radio_idx, changed);
-+	if (local->ops->config)
-+		ret = local->ops->config(&local->hw, radio_idx, changed);
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 76e85754deff..7d27e707f8fd 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -804,7 +804,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	struct wiphy *wiphy;
- 	bool emulate_chanctx;
- 
--	if (WARN_ON(!ops->tx || !ops->start || !ops->stop || !ops->config ||
-+	if (WARN_ON(!ops->tx || !ops->start || !ops->stop ||
- 		    !ops->add_interface || !ops->remove_interface ||
- 		    !ops->configure_filter || !ops->wake_tx_queue))
- 		return NULL;
--- 
-2.56.0
+I will post v2 of this series addressing received comments.
 
+Regards,
+Lorenzo
+
+>=20
+> ---
+> Lorenzo Bianconi (3):
+>       wifi: ath12k: fix datapath lookup in ath12k_wifi7_dp_rx_process_err=
+()
+>       wifi: ath12k: fix DMA direction for re-injected Rx buffers
+>       wifi: ath12k: rely on page_pool APIs for buffer allocation
+>=20
+>  drivers/net/wireless/ath/ath12k/Kconfig        |   1 +
+>  drivers/net/wireless/ath/ath12k/core.h         |   1 +
+>  drivers/net/wireless/ath/ath12k/dp.c           |   5 +-
+>  drivers/net/wireless/ath/ath12k/dp.h           |   1 +
+>  drivers/net/wireless/ath/ath12k/dp_rx.c        | 101 +++++++++++++++++--=
+------
+>  drivers/net/wireless/ath/ath12k/dp_rx.h        |  29 +++++++
+>  drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c |   5 +-
+>  drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c  |  67 ++++++++--------
+>  8 files changed, 138 insertions(+), 72 deletions(-)
+> ---
+> base-commit: 17e4b9ea527b6c9491bed60f646bb2eff7d8db7b
+> change-id: 20261007-ath12k-pp-e8c62b54d756
+>=20
+> Best regards,
+> --=20
+> Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+>=20
+>=20
+
+--R3en0U7yalSeIZv0
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCas+SDQAKCRA6cBh0uS2t
+rOYnAP4wUFa6b9CcAmU7YVbVVaZqs+enHxacDM0pPTGpcG2/OgD/btgjhhN1AXM4
+o+WrMIRllKfMVVjgelgtX/CXxctU8wo=
+=AUI5
+-----END PGP SIGNATURE-----
+
+--R3en0U7yalSeIZv0--
