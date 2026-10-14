@@ -1,147 +1,191 @@
-Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C573C3F8EB7
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 16:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.161.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60BD5349B7
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 16:24:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791995046; cv=pass; b=UgpYzyaYVPgVtasX7buZ7RMmU3oZp8MLH9CpzE+hpLgEL+NjX2O+dsGKLultTT0KyishwBatbp1mV+LgIpkTLU0M1SnDYPkZ38j12jjilCefNfLzkzwTsVgLsz8ICej8ov9Yfgi6hbaRpSA8NytEhVjh/2IX5IgHa2DhKMfkOiE=
+	t=1791995049; cv=pass; b=eLAf8gDOnnrtjx6vjdtyJz3geIupwaLFEnu3FaPO7t4fJauhNgSC5WGSLdzjHSIYWe2C0v9DMX6o6zHEt37vzpe2L7FJjikseiUe7sU6KN7d2Z33KkhTGNvNqfFuzlMaXBP/bPB+24LcP0ju2j6GXQ2X8kB1YS2l9Xe9xkO+HTs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791995046; c=relaxed/simple;
-	bh=5+fRqqSG1cq8nqQQKGIiQ2SL34s8o1fvNH8jqcj0ows=;
+	s=arc-20240116; t=1791995049; c=relaxed/simple;
+	bh=TSS6WZYP178ktf/6Uj9ms2VHwcGUTf5mc6UM9j2rugc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nl2AmskN8aiXuue/jfIyJ86hVKUf/rU+Oy7C0B840j+kiisvdbzE2lo5joAxunK7eb/jA8m9YP3b2YpKRKdhQFj3JOTziTlKxu8FNgQ9NTokn+sWulKvobROP7efca0E9YR09QRIennaZY25aGlw9LhL6tRYAPTKedzySuy0pYk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T7QMIca1; arc=pass smtp.client-ip=209.85.161.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=mIOe68mF6XOCbpJvL3j4qlorkTIJMdc6gCF9wQ/+9f0Ay8ZlYlbhlW2fFKUFvo/xALAOUO5njZ8qa6G4ACQ2zbZA+LYQ2O9cesdtypYY2gmCUBghuy02hUZs/NTQR3GB1bZNjowdCIpIxG1NSBmH2Dety9slULaBMBv+K3hdadU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TVt1quCO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kZWb0vjM; arc=pass smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T7QMIca1"
-Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-6dde81a6820so889171eaf.2
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 09:24:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791995044; cv=none;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TVt1quCO";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kZWb0vjM"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69EEbUvY3813225
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 16:24:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ouAxRHwenlnoXS5Tux7sQi9RKyjdy7jbFf5yy8ngrps=; b=TVt1quCOhk2aJt2L
+	WDTmchuxvsXQSrm6aFnTwnuNdAeUccpUmLuieI9w8wGlC5/ettWRGulXh3iRo2uV
+	JH7PDqufGPJdmQ4tNxQoqfa+PADZc1XtieAy+d4s7pZe0AFpiLASqJLr5aWwcil4
+	mSVl9ZoWBOr1cuhtlXX5WwH2ha7SfWcjAI0utaiq1irYwRn2muxuT9dBaYMtrziy
+	cIZ/nliVPnypcI6pvmV2Oh0i9oi1Vwv6VIVcRaiM5u86fKNZY/NLjUSao+b9AKuf
+	SOpafrzLnm07/pxEzoHM3Bvalj2/95ugi9vzZsp+zm9uDrWDYIk8rlUwTVlPkSc3
+	JEFFEA==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ha46u2gqu-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 16:24:07 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-34e650cff93so738244eec.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 09:24:07 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791995047; cv=none;
         d=google.com; s=arc-20260327;
-        b=Mr5oCCXgvJkzNo805J7lC8pbNpxzdA/tRcvtAiLgHWwG8B7aDh9rToxLQS5margha6
-         2NLH9YFmowky6tEF5uLAMu5AJBi67ff9zVr28wQEWg6Bh92lYQWWz4/Nqq0J+advIIHd
-         lzAyuz0UIzcY8MICecEhiSDzhuVEtkceAPcdNf20kMFX06LyHavTr/MwlwuuNkzsd2sz
-         0TdM6d2wCZaaH8rBk2tEIERPC18x+/R4dqv411Xqt2HKEnBzqLb4hBwnECzSHWmfZgX2
-         jhm0XKrTOBzKXKAEhsFEY9ZHvag2JVkRdSY7wrzvJW9zGylh5EsR+lwzyRP3/jna8Upq
-         raOg==
+        b=EJxL2k12vQTACtMlWQSgMWhWywiIH/HgDq0p/vGiPQcrivPxbl46YafUbxudGFKT1z
+         LCnABdy00JlVqUXisu9Fqd9l8bl8teK/QAso8h8fEqTUfqU+Uvg9bg9PyMVeHjZlDqUt
+         y9ru2/UA1Ui4SZUdIho0oXt4CdTCbnbg58AAL6Ai/dPVZ+j0tBH4n7ivepgeYzJSmzs5
+         QTRwxyYc3Qc713+An8h6xw2pWYCIShjtt52sI73GDJFJczYAjfmjjZDr013mhrlyt6St
+         YPVniUi5Bio4dttx8x1DMeL73gm1u87SzhmCGypEqWqSPzo3E0KxO/RqL+xg+MVMjLtJ
+         ztOg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=5+fRqqSG1cq8nqQQKGIiQ2SL34s8o1fvNH8jqcj0ows=;
-        fh=f9hFQUVjbQq8USMzmbA7B+6DLDxgXYGTKGlXxISsNwQ=;
-        b=O0TJfywTklIRaz9oYVrOzjZ0XOUo13NwLD73sw79bY2dL7cwTQUtjqI2T7o8muWjJl
-         lfqv7c0xZNmeCKKNTF41m7/k+BZiYuxeoCt7v1K1n0WoXWAOUxs4rksU2bOedDb5+wHx
-         f/x6Q9y7no91cQyrQi46U6ZaNISMMeN/xHaIhaDcgObgBAghaDK7l4gAZsxVsnFYGVZP
-         ZfaaUaKZrGxc30b+W9IJIb3whGkNOXw3VeOH+fLUb5RiaEiLlEoBSz8j2S/evv7pncnM
-         sw952TP34YFL/dIDNlgK6D0Vs8/+lBurtim/ZTFqP8PKm7mxConmodf4AGYga59zAx95
-         oG5A==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=ouAxRHwenlnoXS5Tux7sQi9RKyjdy7jbFf5yy8ngrps=;
+        fh=Y8ZmabVhu9479PNIg5ZL8ZcfRR6OjsioT5uSWUF7lCA=;
+        b=fid4aKVk3ZhHcLPFr9mRFOIxKQAUcD87MFqofQKZsZeRek34/2WXyGraQ39ZzMQjsH
+         TQegDQ0cGK8G/wZXJqJqNJEA0s9pI2pzQDMTrWXtCZbibRBe6yBYfcOIgDRz4Gr6hHGz
+         AM8ZgqBUjBrzr2yIHUJ9NpImbKd3x226aupp9Ac4dBUZdTFpoN5bDcR1PwhTlJCtKevX
+         83kHzxGF6eL6IMotaSMvM0d/9+LjAbvZ5GOeZf9LZnEC1Dy2JiFwp9YzHNoWshITolwS
+         Pa/6sXBGTFSjFWSM1sL9IZ1o1vVVNoJUzWmrsBlmYsb7Tam8vdUs6EbkOq8gKfhoMyY/
+         nMMw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791995044; x=1792599844; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5+fRqqSG1cq8nqQQKGIiQ2SL34s8o1fvNH8jqcj0ows=;
-        b=T7QMIca1G7PY9cjd5FtkmIte3yqvB0+mW3dWTAoeY7bUaN9I6NQ+d5zQuKbIXwLgut
-         sVNHo4Jqg/2S8lUTUrUwYcrQYVpWOakQTVt1YL6o4drzYDz5PVfNZXGwiCJcO4xy/p1i
-         ZcAv7Qc6cjC1KzuNTMHvUBfnx3DAf+P3Em22YEYlXfgKHfji9yOtgW9zGdn2++Tgd1bI
-         7+w51mSyY0PCS5Yy1p4M4Le8ppoA2XAK6VrADjo6YDOUp0CT8qYYFwQyGWOrgZo8F2cN
-         3Oi1dZl1m3NuAzaLXe4udJvvYyxlMHCMdWbieMiiEX77LtrZq2xR+MrMHKIS34Talm7a
-         NCwA==
+        d=oss.qualcomm.com; s=google; t=1791995047; x=1792599847; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ouAxRHwenlnoXS5Tux7sQi9RKyjdy7jbFf5yy8ngrps=;
+        b=kZWb0vjMFecMNp97o/pu0nAq+iqWCV+zkrpu8sR1DJPj9+N3P8EZ2LS+HOLDJi1ZpF
+         BDIDfoFYnTi1b9NrfZyvy81JjMtEwzafNVASRpZNkZFQrexIzgpnatcKeE/uy5nfWXcx
+         +yuhnSlwGEs//bio7oV7yL/zTTwLdVFO8dnt8wbPXIktKDNwWwn4YnqxODb8DysSrzKn
+         Dgcwq/bcQaC0Ao67jRPGb1uT5kcvXe4uP+aOmhkbyRHRuTm6So9aHQe9c0ElqkrIFisw
+         PoWy/MfJwwRNKrou6Gf0yfkZrcQ2oZWDRBE4CxoL7UwmUISDBVVOds62/vKU9O2+qHQt
+         SXPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791995044; x=1792599844;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=5+fRqqSG1cq8nqQQKGIiQ2SL34s8o1fvNH8jqcj0ows=;
-        b=bwgqUpoaxao8Ki7LKtxHzCMGNhzntMTBuiTAJDMgMeBPrVHqq3XLwabXk9AkuSxEKj
-         6m4ed2cquml20YGfM6Up1UxTaj77RewNPF4fFX9UJGYRpGcFwejHYd9QwUpUvR3SFLJL
-         J1Nm2xHe8i5y+YPwg7D19bFNMnrzEz/XSJmB5xVDTmCXlb1ybctrQcbHIAXWs4ygK4Zb
-         bSlVRMt84Ht8OmXSQysraqc1tYZqCL1vZ9kwffOZurOo4PHrX92csVvtNRwJSfgcTsDz
-         zBB9Fisc10FQ6VIfj0Iys0LZu7/jb5EXoJ5LKCCLpZYw9A+4J3FoBpslUfQYm56xY4OQ
-         80/g==
-X-Gm-Message-State: AFq9FYI0Rj+jIgJduqFjRv1I9b3pqOY80eS9yk1schL+xT4HuXaKHYkU
-	OhAd+vDgsJ5xGWugTzzREupA2KXBeYsdp2uBpl9jex840vJo+nGcQvjKwoFzUiz9D9cFUDhN4PO
-	zCVe0kTjUFdERy6EeOdNHYXRKwo7F+1/qu2wbzn8=
-X-Gm-Gg: AYBFou3T40Q069WBJ9BBRIDBgXnfNZFiRaJuUTVDBxcasT8KwBVgJOJDJsSNPFSD640
-	KFJHHks2dsNxoI/AiwRHoYJVaL4ql9rAZJnlepEyko0ft2hqGv1EmksSJ+aNe2cH9NePSTY0Q7O
-	/J8VBCyp8LiILArddaYl+S5Tuc6H65zRoeSH69RFivlix7IZCKi+Fcs3hN/bVL/a6pHgnlebzPq
-	N4HYYTeiuRSgVE58SwvPrIoxm8e4sIPKYs8Ad+gWEfbN+VUOPSsF82nLAFRYjOQNeECqsKjOkir
-	pmLuMYBtoRU41y9m7WCpT7DFPA7iPOs3oRxjbQRDm+e7+zUunOodql5V0pcrGMQDNn6A9tJt8uu
-	CqoX/Y5OdFDuAXrQueOB/wAzB
-X-Received: by 2002:a05:6820:208d:b0:6ba:3635:7ffd with SMTP id
- 006d021491bc7-6ef1210af6emr12357369eaf.64.1791995043687; Wed, 14 Oct 2026
- 09:24:03 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791995047; x=1792599847;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ouAxRHwenlnoXS5Tux7sQi9RKyjdy7jbFf5yy8ngrps=;
+        b=FIcFEFuZTp9jSFznMUc9IWJ1tcJaW37HZy0aO3KiFKF5qkphtzXgO+jbJkxjMH2fur
+         c+0lEIzzU5ENFrXRCbM3+TRgvUsLKtZcK9PEnhIxtM4uExGUBDIEAM1biKrKV2sM2Qbf
+         eEgAenbINkMTtzYWpx6bpw6R7/F1qdsT5oB7aVEna7EOORO2FaAI0Wq4tcWp8QxCEYox
+         AjxNgjUqHbtvIPrKH+ae7zr+BIT7ipmeAAFE6zYPITvjc2Eqkptkutfwm6NnIJuKwW7m
+         68RwZfcryrJSSYC/g6Ou2mRmJWYKvFIDluCnrRCn5AIS+7yV+QpzjTZDFcvbfB2wt5jv
+         +jJw==
+X-Forwarded-Encrypted: i=1; AKwUvBzOZaUg3/VwysFWC2eVcwvKt8SBbm6PGDQfq4RupOdotVun20W4vmLLy4zNtpQ2HUQT6BZyEkdk4NqWDe0xhw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKHH7URx0/3+AcU0sasm0FSvpPHx91CINsH7+R9LVhpiJhLw5i8
+	xnQtsflLoXTpvvsF95JSI6MPyt5OvuZdqFzkilbZTWi2bYoV58FMev3rC7PphS38DJu0ppYW169
+	ndEgHG/eYTrEPipscGnJDmoFO2jzQ7bwLNPECpixMLk4F+45tBCUKwCjIvsnBOrD9v0VVLzZCq6
+	WTEDKcoUbPJfEGOBXDRdSmCJfNXJf5V3gjFAAlM0l6aCax
+X-Gm-Gg: AYBFou0C2RVoQn5dQHpzzxliJ/uwhvh8itgW1gWsjnYOJxWsQOy20A2fKcGOqwZQTyz
+	mrFsjPDqTTJVc2SIzNgCTVprJcsyYF1oAW6xJV1GUxaeKHhJdJrJKTMUrVN8cL7rRNyUd/ZCNu+
+	4BDI3BqCsIt+qkxU7tWYYSIIysxp8MJfoqlZltP4Z70+ziL7RLXvoNLnnTp9Hwp5Ar+XJ35goiX
+	OP0Zox6TV7gtQwAxw==
+X-Received: by 2002:a05:7300:c01b:20b0:351:e21d:357d with SMTP id 5a478bee46e88-3537dfdd089mr41541490eec.1.1791995041946;
+        Wed, 14 Oct 2026 09:24:01 -0700 (PDT)
+X-Received: by 2002:a05:7300:c01b:20b0:351:e21d:357d with SMTP id
+ 5a478bee46e88-3537dfdd089mr41541456eec.1.1791995041308; Wed, 14 Oct 2026
+ 09:24:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261012133728.77780-1-hjf3108@gmail.com> <20261013102305.GA58849@wp.pl>
- <CABOQOSU8KHVUrSc+qkCrpGK9zDBc3dNRqaRWKQ7ka=S6uLLbQA@mail.gmail.com> <20261014083131.GA62404@wp.pl>
-In-Reply-To: <20261014083131.GA62404@wp.pl>
-From: Jie Feng <hjf3108@gmail.com>
-Date: Thu, 15 Oct 2026 00:23:27 +0800
-X-Gm-Features: AclHuK_XrchuzxF7lK_lujwgtTADAD9DglE-B4mjPzQOJpXnCJaeA3LspBR630A
-Message-ID: <CABOQOSWNQCxEFo20FJefmk97z_zND4CDogh9xmLPTrU=-xaB0A@mail.gmail.com>
-Subject: Re: [RFC PATCH] wifi: rt2x00: use VCO_IC 0x2 for RF3053 on 2.4 GHz
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260917064825.12747-1-jtornosm@redhat.com>
+In-Reply-To: <20260917064825.12747-1-jtornosm@redhat.com>
+From: Tamizh Raja <tamizh.raja@oss.qualcomm.com>
+Date: Wed, 14 Oct 2026 21:53:49 +0530
+X-Gm-Features: AclHuK-uImdXK88rnU2XiKtyAUjSR6pC3yRcEp_C4bR0864jreBK1-o8m4IfHpo
+Message-ID: <CABkEBKbHhxNsx5ZpYCSDEKtC2UpR+PD4hSF1CeUOwUBkTq2XKw@mail.gmail.com>
+Subject: Re: [PATCH v7 0/4] ath11k/ath12k: implement TX flow control
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: jjohnson@kernel.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE0MDA2NSBTYWx0ZWRfX95e88OXKdD6W
+ x8yfbFhYOtZfRZRmvYp+uQ1bMRmZiIDPyXVWC/Cbq/i2jiP1DcNsaxBIi20v3fAqYJ3JHoByXpE
+ DLliwJfhoXjr1uuZolSYKPAJ/Yx45f8=
+X-Proofpoint-GUID: 3OZeq0rv9dGdKss16EkSAVhL_U0e737r
+X-Authority-Analysis: v=2.4 cv=Y6ttIReN c=1 sm=1 tr=0 ts=6acfaca7 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=YMgV9FUhrdKAYTUUvYB2:22 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+ a=lWMnthoht6l5_8CjfcsA:9 a=QEXdDO2ut3YA:10 a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE0MDA2NSBTYWx0ZWRfX99q9pElIYWV4
+ T5wKUHRZ5RWn1Kv4iAc+NpR/2ESMIVtZKHOEIsPBDOqRx3PNsIzhzATGPdJQIhZQiwCczn6oUXS
+ 1mwhnwDM7/LUvxGetQHsJ823up9KT+1vedQ+fXpurMMvoqf9FX+kUZdy6mN1OiMVY4pOpCPhaFI
+ Z2XHwi3PBHL6A97AI65pokN3ZzxCQ4gegT5FZMjkMs4FtLgMOed+rWC1EUItxNmdDq/U1ry6PA6
+ r1T+3kSg+5drRNuOT19XKmAE2aFYTMIxLgsvENlDoeXdUrJ9Qtk2yzNjcuN8tpP6wkqA9bBBdE3
+ UiOeltFH6VebcApE4DDq5fJEY86DVeVgnIGnN6sHam4LtDVy8uuekRZTp/cC2ftVGGj2wMGc9Rv
+ D6gpWa+m2eRLuGzmt8ZV375Z9SMOwJcAzQvd1I1AJYydDuEUbg1jRorPFMIazMZ9AP2YRH7uVgU
+ q2ZQ+0Aj4M8Ym7FMs5A==
+X-Proofpoint-ORIG-GUID: 3OZeq0rv9dGdKss16EkSAVhL_U0e737r
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-13_01,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 malwarescore=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 suspectscore=0 bulkscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610140065
 
-On Wed, 14 Oct 2026 at 16:31, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> > > > RFC for this since I am not sure if it is a generic fix, since the
-> > > > vendor driver also doesn't use VCO_IC=0x2.
+On Thu, Sep 17, 2026 at 12:18=E2=80=AFPM Jose Ignacio Tornos Martinez
+<jtornosm@redhat.com> wrote:
 >
-> I looked at vendor driver it does not set VCO_IC=0x2 when switch
-> a channel. However it does it after wake up from suspend:
-> https://github.com/ashaffer/rt3573sta/blob/09b80e6290769c53736dc09c5ae9025e15bfbe69/chips/rt3593.c#L194
+> This series implements custom wake_tx_queue operations for ath11k and
+> ath12k drivers to prevent hardware ring overflow issues under heavy
+> traffic.
 >
-> This function: RT3593ReverseRFSleepModeSetup seams to be partially
-> the same what NICInitRT3593RFRegisters does.
+> Without proper flow control, both drivers experience -ENOMEM errors
+> ("failed to transmit frame -12") when the hardware TCL ring fills up.
+> Additionally, ath12k can hang under sustained high throughput. These
+> issues are more commonly observed in VMs with PCIe passthrough but
+> also occur on bare metal systems.
 >
-> Also NICInitRT3593RFRegisters it's different from
-> rt2800_init_rfcsr_3593() i.e. it set RF_R02 before GPIO_SWITCH.
+> The implementation follows the pattern used in the iwlwifi driver,
+> adapted for ath11k/ath12k hardware ring architecture, checking
+> hardware ring space before dequeuing packets from mac80211.
 >
-> Could you check if modifying rt2800_init_rfcsr_3593()
-> to be more the same with both NICInitRT3593RFRegistersr and
-> RT3593ReverseRFSleepModeSetup (regarding RF_R06 change)
-> solve the problem?
-It didn't solve the problem.
+> Testing shows stable operation with eliminated -ENOMEM errors, no hangs,
+> and improved throughput under heavy traffic conditions.
+>
+> Jose Ignacio Tornos Martinez (4):
+>   wifi: ath11k: use queue mapping for WCN6750 ring selection
+>   wifi: ath11k/ath12k: remove skb parameter from get_ring_selector
+>   wifi: ath11k: implement custom wake_tx_queue with flow control
+>   wifi: ath12k: implement custom wake_tx_queue with flow control
+>
+> v7: No modification in patches 1 and 2
+>     Address comments from Jeff Johnson:
+>       Patch 3: Add the defensive pattern _bh in both spinlocks (ath11k)
+>       Patch 4: Add the defensive pattern _bh in both spinlocks (ath12k)
+> v6: https://lore.kernel.org/all/20260811172435.616200-1-jtornosm@redhat.c=
+om/
+> --
+> 2.49.0
+>
 
-> > The adapter doesn't work on the lower channels in 2.4GHz,
-> > channels 8 and below. This looked like an issue with
-> > the PLL or something after debugging.
-> >
-> > By tuning to channels 1-12 and using the debugfs to dump the
-> > RFCSR registers, RFCSR4 is always 0x7f on the failing channels
-> > consistently. Since there is code to switch RFCSR6 based on
-> > channel, I tried the same as the 5GHz code to switch RFCSR6=0x2
-> > for lower channels and it worked on all the channels surprisingly.
-> >
-> > Due to the behaviour of RFCSR4, I think it is a VCO calibration
-> > result since it seems to change after enabling the calibration.
-> >
-> > I could not find any mention of this issue elsewhere, and suspect
-> > either this hardware has very few Linux users or my hardware
-> > is special in some way, so I can't guarantee that setting
-> > it to 0x2 will work with another device even if it is the
-> > same WNDA4100 model and chipset, so some testing would
-> > be appreciated.
-> I do not have RT3573/RT3593 device by myself and ordinary users
-> do not read linux-wireless mailing list, so we have rather little
-> chance to get more test coverage here.
+There is another series touching the same area: "[PATCH ath-next v4
+0/9] wifi: ath11k: airtime queue limits, fairness and a driver TXQ
+scheduler".
+It looks like there are some conflicts between the two. Could you
+please take a look?
 >
-> Anyways, if init change that would make rt2800_init_rfcsr_3593()
-> more like vendor driver do not fix the problem, it's ok to modify
-> rt2800_config_channel_rf3053().
->
-> If we want to be more safe with the change, we can limit it with
-> rt2x00_rt_rev() using 'rev' of your tested device.
-My concern is that it is just my specific device being at fault here.
-It also seems to have an issue where the TX looks to be much weaker
-than normal.
+
+
+--=20
+- Tamizh.
