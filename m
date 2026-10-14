@@ -1,36 +1,36 @@
 Received: from smtpdh16-2.aruba.it (smtpdh16-2.aruba.it [62.149.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FDB049EC61
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 20:44:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5ED4AA59D
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 20:44:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792010659; cv=none; b=hplB7LjEoJcMVN5jupHDtX52qsIg1NAIFXPBkm4i2VVQL5CdmrMniojlbLk0yKfUntFiI1fLX+LRP/v1/X8dmTETueSIDVHiuhy7Ax/GYkFpXN7BD2kMBNMIfwmdDAUutcXIreZmFiUQsSc4AvDUz5CpuxX2NS3YcyCy8nv1Vrw=
+	t=1792010661; cv=none; b=XHwFzH7wQx3QfvAnup9wIOkT5LV+RRn27bl3com3ab/gjdLn7jJIAsy/77hG9pq5fyPRD/rz6HvlKzsfgzl4FPBgidygfOBnk1CvAT2xNqY9lRi9mnbadWMLMDNqJV9tmpxRCsIbzoadL5+hVmAPTlzibalW+YKXDRokfxhXjJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792010659; c=relaxed/simple;
-	bh=5iUEvhleMNRhgFjox1R6x5dcIaCScRIRYb5QDa3E5AM=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=cONiOQiD6ZZeFGhS7zNBGavRsCzMV4cgjm3FqteyxgRvHQdiqhKJd4MIndFXQv+X6mZBYyhwKpeUtp+NpDyAfKRAxYbvxoHG+LzOB1FvmG6jNxTWFak5Ofj+a9TRuo+cbFsUS5xiXpNFGc+iBmLajfeSDtXISDmYmy2GVMnvR00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=RrN6OAtQ; arc=none smtp.client-ip=62.149.155.101
+	s=arc-20240116; t=1792010661; c=relaxed/simple;
+	bh=auwQN0umgDzOfivk0BFsvEz4unOSTBWb0S9bDoprS+0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=bYk88KHU0ceqsjRGjydhXOb4M7jMi9NeVlTI3y4h0TGaf7dtWmDji3V2K/WeD3viIaGi3yXnHIbqRSDhD+qlQAsXYczUE5K7WrdJENQDoCUY79SZhhN+ZbsyoLgQWXDErr1uAc+m4paMvscFYPQgejQV1is61Bm5nLXiGAbpbzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=mpjHS9ia; arc=none smtp.client-ip=62.149.155.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="RrN6OAtQ"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="mpjHS9ia"
 Received: from [127.0.0.1] ([79.43.52.162])
 	by Aruba SMTP with ESMTPSA
-	id H5mdx2rTsgYw4H5mkxSpDv; Wed, 14 Oct 2026 22:41:15 +0200
+	id H5mdx2rTsgYw4H5mjxSpCA; Wed, 14 Oct 2026 22:41:13 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1792010475; bh=5iUEvhleMNRhgFjox1R6x5dcIaCScRIRYb5QDa3E5AM=;
-	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=RrN6OAtQWLhDbTrOtOfAy8x2lm5L4MPP0gpg1zJzBpDF1+oImFGoL5kJin2nAnDOa
-	 Gb0r/wozsAix0gtNK5xwgu3wZRSijmAs7vAfZoG3Rd+2KmYy2vi4fnR3A5vtODwWos
-	 5IlPi7HvZfHx+NZcqT1VJV1c5WAorDkUMNbxjCtCsQoudj9CNSk6/gu6WMqm+scVKS
-	 PVxAaMN5BPaQO4fb/vSJOSe1JEWVKiK5ITfhx8w04ojS7rVJ1dlB1KOh4oXLdK6qeo
-	 JHCRF+VmpQOor5j5OTeXmgLXCQsZVu8nbM9jxaZOJQipeeUV7zdsRJcEXUTLOGYq2T
-	 /YgFI8/Gnvf5A==
+	t=1792010473; bh=auwQN0umgDzOfivk0BFsvEz4unOSTBWb0S9bDoprS+0=;
+	h=From:Subject:Date:MIME-Version:Content-Type:To;
+	b=mpjHS9iaXubnnuWyMxxefHxMMs+2YYmbbVVroBOZW3lsv3WSHTUSum5KvOUX2vioN
+	 6FRNY6AcErz8TrRzhQuWHSgOycQIQBmw8v40Foyc1tdlwvfAOQ8BrP5A8WHJdFScKt
+	 CFpxTuA74HOdna+KzxzH71KzxxEMtAkQCh/cNDSWp3/odEx56xdiTz5pLb6xivWm65
+	 lTVZmJbRZVoia3Jp9sbpZNS1KHwbJXbQIh14L6WB2JBeknLhrNkdChCq4vMhJmqOuh
+	 WisMSQg7U4LXemSukNg4kgJnjwIOkZTf5rqx+IdzrUkoI1Tp8IFD2JUTIgNnISGLCC
+	 MvYCiZu3er0Eg==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Wed, 14 Oct 2026 22:41:09 +0200
-Subject: [PATCH 8/8] bcma: add the BCM4352 PCI ID
+Subject: [PATCH 0/8] bcma-ac-rev1: support 4352/4360 rev3 chips
+Date: Wed, 14 Oct 2026 22:41:01 +0200
+Message-Id: <20261014-bcma-ac-rev1-v1-0-b608e99d3f56@mythread.it>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,39 +39,58 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261014-bcma-ac-rev1-v1-8-b608e99d3f56@mythread.it>
-References: <20261014-bcma-ac-rev1-v1-0-b608e99d3f56@mythread.it>
-In-Reply-To: <20261014-bcma-ac-rev1-v1-0-b608e99d3f56@mythread.it>
+X-B4-Tracking: v=1; b=H4sIAN3oz2oC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzNDA0MT3aTk3ETdxGRdoGJD3ZREC0sTQxMjc0uDNCWgloKi1LTMCrBx0bE
+ QfnFpUlZqcgnIDKXaWgCZApXRcAAAAA==
+X-Change-ID: 20261014-bcma-ac-rev1-da894142790f
 To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
  Michael Buesch <m@bues.ch>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-mips@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
 X-Mailer: b4 0.15.2
-X-CMAE-Envelope: MS4xfOcpYM9Gj/xVt69K5AFL5hB04TEoDMiDhPirzThf4TIQdQtQtMaQbIaZ2X7aS15X7w+yih8YrXvxfRxV3GksTRU5LpcijTbGPG60FSa02FCfKQogx0KR
- J+M5E0qKVeMsHaACVdroYXK6LcmK6Hzozbcl2UdPFNyMdnsKep5XiAWciYITBP2uCzEJjTknEqJwkIIo4PxH40NShuX1mCyFoAPdirBGralvf/V5IL4uOa/+
- xkxv/GxEkSZjHcuIDvty0C6HcH9QVytvTdUI7Qzevg1zSi5K6ag6x2T/euBpOdxPUoIzk1pVbf/SxpG+1Cq/j5QA/al5nfUh0nlqNjdCtRWCxX+SgON8y/dl
- 5eFlVGym6OMYUYhluNgigNAavicFHg==
+X-CMAE-Envelope: MS4xfJN6aUMWVTjyiHFlqSbsKeZSW6xP+jdx1SjIjpoGY4uWNTV0gKvUVw3FYL84pLgtYmg2ix5Zm0gW9AVNUJLIbPfPl1QskPJ3vyGbj4Ybljjw2cn/sy1r
+ kAwGpZvGggFAILdBvKhGK3Rjnvlt4AsnfqlNxePDQJTlIBQrr9UuMJbAou4bmLe23JIQ9HedYNo5tCZj+wFlsKG+bbDvn97Itywim6szkQOzgS9m2pul/tyy
+ j3fG3Zs2Yzqv+ubZI5ejLxhKLMw3yIZfJGQkTLWsN+zyt67CzpiKJr0f033vTS5RNZuB48UQ2XMOnb+WcnKQq+yU7WrGwcPA7t+nXwAvVkv7WIyUP1YDj3Ji
+ d7G0fMYXqhutk5HN9A41YgVlgc+Asw==
 
-Bind bcma-pci-bridge to the BCM4352, 0x43b3.
+Preparatory work in the bring up of AC family rev1 chips, in particular,
+the bcm4352 rev3 and bcm4360 rev3. I don't own nor I can find any mmio 
+captures for other revs, so everything is gated on rev3 of the two chips..
+
+Initialize the PMU, the PCIe2 core and chipcommon of the BCM4352/BCM4360
+family on chip rev 3, parse SPROM revision 11, read the NVRAM variables
+the family's boards set on top of the SPROM, and bind bcma-pci-bridge to
+the BCM4352.
 
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/bcma/host_pci.c | 1 +
- 1 file changed, 1 insertion(+)
+Alessio Ferri (8):
+      bcma: core: clear only FORCEHT for BCMA_CLKMODE_DYNAMIC
+      bcma: pmu: init PLL and resources on BCM4352/BCM4360
+      bcma: pcie2: request HT on BCM4352/BCM4360
+      bcma: chipcommon: set corecontrol bits 5:2 on BCM4352/BCM4360
+      bcma: extract SPROM revision 11
+      firmware: bcm47xx_sprom: read ledbh4..ledbh15 from NVRAM
+      firmware: bcm47xx_sprom: read boardflags3 and AvVmid_c0..2 from NVRAM
+      bcma: add the BCM4352 PCI ID
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 3dc298506..f6cf722a3 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -298,6 +298,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
+ drivers/bcma/core.c                         |   2 +-
+ drivers/bcma/driver_chipcommon.c            |   5 +
+ drivers/bcma/driver_chipcommon_pmu.c        |  41 ++++++
+ drivers/bcma/driver_pcie2.c                 |   3 +
+ drivers/bcma/host_pci.c                     |   1 +
+ drivers/bcma/sprom.c                        | 204 +++++++++++++++++++++++++++-
+ drivers/firmware/broadcom/bcm47xx_sprom.c   | 118 +++++++++++++---
+ include/linux/bcm47xx_sprom.h               |  15 ++
+ include/linux/bcma/bcma_driver_chipcommon.h |   4 +
+ include/linux/ssb/ssb.h                     |  62 +++++++++
+ include/linux/ssb/ssb_regs.h                |  94 +++++++++++++
+ 11 files changed, 525 insertions(+), 24 deletions(-)
+---
+base-commit: 0fcb05b72344f40806cbe810de8872f1698bf053
+change-id: 20261014-bcma-ac-rev1-da894142790f
 
--- 
-2.34.1
+Best regards,
+--  
+Alessio Ferri <alessio.ferri@mythread.it>
 
