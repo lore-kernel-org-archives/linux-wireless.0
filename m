@@ -1,175 +1,272 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtpdh16-2.aruba.it (smtpdh16-2.aruba.it [62.149.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECDE24908A6
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 20:23:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DAAD480DED
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 20:44:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792009414; cv=none; b=clROBHnfZ6xoikpvCejC64h6SxoSjO6MqrLtPGUaOzH+YiRzBZhoUknZcVHxV3g0MNXryCUL+UvZmp5YO1QCyNVkV/M0FmZoHO5Uy+tYofZQ2b2BaiZT7p00lL6t+jx7utvoxm8crLwxd+qpR+yFG4gtw+RJ94uT70+90wVRPh0=
+	t=1792010658; cv=none; b=FYn42KhpvISZVnASunbAfUb8Brltp2xU8gUVlRtMd93VV7MS/p9d4yld//+S0V3yVOmkSVkqgeyz2Na49dbzHlDFI+Fr4Z5llKem8fVUkO8tuUGO2bSv7dvGsvmJPkPzYLyg4bMujiJALk6v7efeFsQ4/nVTluX9Hiv3GWFLe0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792009414; c=relaxed/simple;
-	bh=OG2Z9fl5mj9EnMwTwetlb3+yc9wVfd8RP9l+D/zN2Rc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DzsWf4VLLTDa5Yx6sYtCLdDGf4nPvlZS1KnCGt7OlKdh3cbZDUBTNIHJyoWh484kSNWhiDNs2sE3G6KaRGRV3r99z3FmBXGb113uBWXdHsZ02C4xwaF5ZReY1SZy04Xq+TfrMDZ1oCaQv+1pbZDnzexRKorkbaPdlcCk8nutpYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=XELsxThx; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1792010658; c=relaxed/simple;
+	bh=0j05rvcGU77iKVS4MWt3ZAdBh+zvDWdwhsqiZaT/GaU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=PK+2G51anbxTH4/jB86KGv6VcZIQAeYeRlJrZgApSNdj1dWKA6ph+/WmyzYxvcmWpaB2X4FXInVSq4RQMySJUx13IZ2FHDcGYJyQ1uZ23HhE5UzgUy4Xh5cJZ9YR7ACJo2yHUZStz/ZifWPD9j0Am9CnH5UOIkdJrdCLuXC1ngA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=lYqnG0SG; arc=none smtp.client-ip=62.149.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="XELsxThx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SW496R3vOw2pQsWRgHdfOkCB7UTsgCc4J7+4G4BBSbg=;
-	t=1792009413; x=1793219013; b=XELsxThxBcJfw08seLr42Y4ZHuZGcn1OpKSLf7wog5euXkG
-	d4vq7plXUM0KUZIMtJ9UvbDC1n+YTN9x3UOH2uhnwbRl97ouFJwBRQnJAtOxQLJ5j1SATqG//nDLv
-	ih4rLABJMta2AFlDc/GYbUuBIsxKiPV4AdrSUyE4Z7jVASQl7W47EE/0qd8kCemVWXZy2BFJF9Y3w
-	V2CJWDSpw9ljGyGwFNawMMfKlIReAOKQUc88W1SuTItwS3CfuWXJBQ9S6ubXyrhGMS97ZjK2B4MmC
-	eAq4Xv6RQvfJfoFaxgPPo2+3e4vDr7j0HGX/8weNQ0FWrmCyeyTfkgFs3TZF23+Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1xH5VZ-0000000254S-1jjx;
-	Wed, 14 Oct 2026 22:23:29 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 2/2] wifi: mac80211: remove force_synchronize from ieee80211_free_keys()
-Date: Wed, 14 Oct 2026 22:23:25 +0200
-Message-ID: <20261014222324.9bae146bfedd.I8d6d1ca4d1c7c1d1b937422c3ad596d2e8545c0a@changeid>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261014222324.2c196424ccd3.Ieaf95b8e1336f07866f54d174f699c6aa079d9b8@changeid>
-References: <20261014222324.2c196424ccd3.Ieaf95b8e1336f07866f54d174f699c6aa079d9b8@changeid>
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="lYqnG0SG"
+Received: from [127.0.0.1] ([79.43.52.162])
+	by Aruba SMTP with ESMTPSA
+	id H5mdx2rTsgYw4H5mkxSpDU; Wed, 14 Oct 2026 22:41:14 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1792010474; bh=0j05rvcGU77iKVS4MWt3ZAdBh+zvDWdwhsqiZaT/GaU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=lYqnG0SGsodhiHkhNGZMra3i0bReFo4DA7IiSfQ7UIt1HIVuBP+tU4aeIbwOshCZy
+	 /rrCap+AfpzzUX6lCJAWJsDdtEY1sSqWkeGpxrg11tV2EPXK2lOHaspy086q+cKwWq
+	 2AhdlNVb96T0hYrajQV0gjHz9jr6xxuMjPoTK/Wd1Nev8CQxdoEt7C5o4wdWmOto81
+	 akEB/v6H/TNo/Ch0QPs/uTfrBpLzSsYWWw3MeO6YL2csrCEFNQqoJiH01LDwSj7jvh
+	 bqPE+vQHMNJ8Z7blbcLpfcnQ5Dc+KG4XNxF1hivJJIhQsmTVRu0dNBWPfzte8LqZk0
+	 djhyL0Ks61/XA==
+From: Alessio Ferri <alessio.ferri@mythread.it>
+Date: Wed, 14 Oct 2026 22:41:07 +0200
+Subject: [PATCH 6/8] firmware: bcm47xx_sprom: read ledbh4..ledbh15 from
+ NVRAM
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261014-bcma-ac-rev1-v1-6-b608e99d3f56@mythread.it>
+References: <20261014-bcma-ac-rev1-v1-0-b608e99d3f56@mythread.it>
+In-Reply-To: <20261014-bcma-ac-rev1-v1-0-b608e99d3f56@mythread.it>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
+ Michael Buesch <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mips@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: b4 0.15.2
+X-CMAE-Envelope: MS4xfN6bvGWMrM3C7O32slcQTgHJbTXhr2UxDy/TzXIa2DcooUo5kdVgvXe81fVvf6wzmSgSnOaKHiSGsKl2IllWFyWYWr/hijrNkzps/zICNVKcY3nYBTr/
+ qohWDO37teboALBM+PLNp4cyhwEYJCVBkZX+nlnxek2EYYk/UIzYQdW1aVIuQJshedE/JUNXq1wuPENeRXXERG26Gv9OEmrDXjpAmN8vkoGnRu3RauHZg1au
+ mKegveVIEqU6Z9ZhYUCDrKIlFKqPkPus3gTD2KCcHzV44gbRmNXv/6A6JezWhN1EeQmgRQQA1xeFymDzEBLiExMyliHnRB89fiyCxQW1qSlJK6s1s6syT9/C
+ kyZf+2ow2FchGDligTtg4DZwV/2Keg==
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add gpio_ext[] for the LED behaviours of GPIO 4-15 and fill it from
+NVRAM ledbh4..ledbh15, both for a SPROM built from NVRAM and, through
+the new bcm47xx_sprom_fill_bcma_nvram(), on top of a SPROM read from a
+bcma device. The bcma prefix lookup moves into a helper shared by both
+paths.
 
-The only reason for the force_synchronize here was for some
-callers to amortize their own synchronize_rcu() with the one
-required for keys, but keys no longer require one. Clean up
-the argument.
-
-It seems like this should require some callers to call it
-themselves, but the original user was do_stop(), which now
-has its own (again) anyway to ensure no frames go to the SKB
-queue before purging it. See commit 7907c7d33c37 ("mac80211:
-free all AP/VLAN keys at once") for the move into key code.
-
-The other callers (AP_VLAN, NAN, mesh) didn't really care
-at all, so we can just drop the argument.
-
-Assisted-by: LLM
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- net/mac80211/iface.c | 14 ++++----------
- net/mac80211/key.c   |  5 +----
- net/mac80211/key.h   |  3 +--
- net/mac80211/mesh.c  |  2 +-
- 4 files changed, 7 insertions(+), 17 deletions(-)
+ drivers/bcma/sprom.c                      |  3 ++
+ drivers/firmware/broadcom/bcm47xx_sprom.c | 86 +++++++++++++++++++++++--------
+ include/linux/bcm47xx_sprom.h             | 15 ++++++
+ include/linux/ssb/ssb.h                   |  1 +
+ 4 files changed, 83 insertions(+), 22 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 581a5d57e560..8bfd6bc9c9fe 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -614,8 +614,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 	case NL80211_IFTYPE_AP_VLAN:
- 		list_del(&sdata->u.vlan.list);
- 		RCU_INIT_POINTER(sdata->vif.bss_conf.chanctx_conf, NULL);
--		/* see comment in the default case below */
--		ieee80211_free_keys(sdata, true);
-+		ieee80211_free_keys(sdata);
- 		/* increased by AP value on ifup, so reset on ifdown */
- 		sdata->crypto_tx_tailroom_needed_cnt = 0;
- 		/* no need to tell driver */
-@@ -662,7 +661,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 		 * Free the remaining keys that might be associated with the
- 		 * NAN interface, e.g., IGTK and BIGTK used for Tx.
- 		 */
--		ieee80211_free_keys(sdata, true);
-+		ieee80211_free_keys(sdata);
- 		break;
- 	case NL80211_IFTYPE_NAN_DATA:
- 		RCU_INIT_POINTER(sdata->u.nan_data.nmi, NULL);
-@@ -674,13 +673,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 		 * Free the remaining keys, if there are any
- 		 * (which can happen in AP mode if userspace sets
- 		 * keys before the interface is operating)
--		 *
--		 * Force the key freeing to always synchronize_net()
--		 * to wait for the RX path in case it is using this
--		 * interface enqueuing frames at this very time on
--		 * another CPU.
- 		 */
--		ieee80211_free_keys(sdata, true);
-+		ieee80211_free_keys(sdata);
- 		skb_queue_purge(&sdata->skb_queue);
- 		skb_queue_purge(&sdata->status_queue);
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index c98b6fb66..ac7622512 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/bcma/bcma.h>
+ #include <linux/bcma/bcma_regs.h>
++#include <linux/bcm47xx_sprom.h>
+ #include <linux/pci.h>
+ #include <linux/io.h>
+ #include <linux/dma-mapping.h>
+@@ -841,6 +842,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 		else
+ 			bcma_sprom_extract_r8(bus, sprom);
+ 		kfree(sprom);
++		/* Most hosts have no NVRAM: ignore the result. */
++		bcm47xx_sprom_fill_bcma_nvram(bus, &bus->sprom);
  	}
-@@ -906,7 +900,7 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 		wiphy_work_cancel(sdata->local->hw.wiphy, &sdata->work);
  
- 	/* free extra data */
--	ieee80211_free_keys(sdata, false);
-+	ieee80211_free_keys(sdata);
- 
- 	ieee80211_debugfs_remove_netdev(sdata);
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index b66168edab25..d1e3fe37d2e3 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -1229,8 +1229,7 @@ void ieee80211_free_key_list(struct ieee80211_local *local,
- 		ieee80211_key_destroy(key);
+ 	return err;
+diff --git a/drivers/firmware/broadcom/bcm47xx_sprom.c b/drivers/firmware/broadcom/bcm47xx_sprom.c
+index bca03fd85..75604cd70 100644
+--- a/drivers/firmware/broadcom/bcm47xx_sprom.c
++++ b/drivers/firmware/broadcom/bcm47xx_sprom.c
+@@ -29,6 +29,7 @@
+ #include <linux/bcm47xx_nvram.h>
+ #include <linux/bcm47xx_sprom.h>
+ #include <linux/bcma/bcma.h>
++#include <linux/err.h>
+ #include <linux/etherdevice.h>
+ #include <linux/hex.h>
+ #include <linux/if_ether.h>
+@@ -172,6 +173,20 @@ static void nvram_read_alpha2(const char *prefix, const char *name,
+ 	memcpy(val, buf, 2);
  }
  
--void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
--			 bool force_synchronize)
-+void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
++/* Variables read from NVRAM whether or not the SPROM itself comes from it. */
++static void bcm47xx_sprom_fill_nvram_only(struct ssb_sprom *sprom,
++					  const char *prefix, bool fallback)
++{
++	char name[sizeof("ledbh15")];
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(sprom->gpio_ext); i++) {
++		snprintf(name, sizeof(name), "ledbh%d", i + 4);
++		nvram_read_u8(prefix, NULL, name, &sprom->gpio_ext[i], 0xff,
++			      fallback);
++	}
++}
++
+ /* This is one-function-only macro, it uses local "sprom" variable! */
+ #define ENTRY(_revmask, _type, _prefix, _name, _val, _allset, _fallback) \
+ 	if (_revmask & BIT(sprom->revision)) \
+@@ -209,6 +224,8 @@ static void bcm47xx_sprom_fill_auto(struct ssb_sprom *sprom,
+ 	ENTRY(0xfffffffe, u8, pre, "ledbh1", gpio1, 0xff, fb);
+ 	ENTRY(0xfffffffe, u8, pre, "ledbh2", gpio2, 0xff, fb);
+ 	ENTRY(0xfffffffe, u8, pre, "ledbh3", gpio3, 0xff, fb);
++	if (sprom->revision)
++		bcm47xx_sprom_fill_nvram_only(sprom, pre, fb);
+ 
+ 	ENTRY(0x0000070e, u16, pre, "pa0b0", pa0b0, 0, fb);
+ 	ENTRY(0x0000070e, u16, pre, "pa0b1", pa0b1, 0, fb);
+@@ -647,45 +664,70 @@ static void bcm47xx_sprom_apply_prefix_alias(char *prefix, size_t prefix_size)
+ 	}
+ }
+ 
+-static int bcm47xx_get_sprom_bcma(struct bcma_bus *bus, struct ssb_sprom *out)
++/*
++ * The NVRAM prefix of a bcma bus's variables: pci/<bus>/<slot>/ or its
++ * devpathN alias for a PCI device, sb/<core>/ for the SoC's own core.
++ * Returns the prefix, NULL for a SoC bus without an 802.11 core, or an
++ * error pointer for a host type NVRAM knows nothing about. *fallback is
++ * set when the caller may fall back to unprefixed variables.
++ */
++static char *bcm47xx_sprom_bcma_prefix(struct bcma_bus *bus, char *buf,
++				       size_t size, bool *fallback)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_sub_if_data *vlan;
-@@ -1252,8 +1251,6 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
+-	struct bcma_boardinfo *binfo = &bus->boardinfo;
+ 	struct bcma_device *core;
+-	char buf[10];
+-	char *prefix;
+-	bool fallback = false;
  
- 	WARN_ON(!list_empty(&sdata->key_list));
++	*fallback = false;
+ 	switch (bus->hosttype) {
+ 	case BCMA_HOSTTYPE_PCI:
+-		memset(out, 0, sizeof(struct ssb_sprom));
+ 		/* On BCM47XX all PCI buses share the same domain */
+ 		if (IS_ENABLED(CONFIG_BCM47XX))
+-			snprintf(buf, sizeof(buf), "pci/%u/%u/",
++			snprintf(buf, size, "pci/%u/%u/",
+ 				 bus->host_pci->bus->number + 1,
+ 				 PCI_SLOT(bus->host_pci->devfn));
+ 		else
+-			snprintf(buf, sizeof(buf), "pci/%u/%u/",
++			snprintf(buf, size, "pci/%u/%u/",
+ 				 pci_domain_nr(bus->host_pci->bus) + 1,
+ 				 bus->host_pci->bus->number);
+-		bcm47xx_sprom_apply_prefix_alias(buf, sizeof(buf));
+-		prefix = buf;
+-		break;
++		bcm47xx_sprom_apply_prefix_alias(buf, size);
++		return buf;
+ 	case BCMA_HOSTTYPE_SOC:
+-		memset(out, 0, sizeof(struct ssb_sprom));
+ 		core = bcma_find_core(bus, BCMA_CORE_80211);
+-		if (core) {
+-			snprintf(buf, sizeof(buf), "sb/%u/",
+-				 core->core_index);
+-			prefix = buf;
+-			fallback = true;
+-		} else {
+-			prefix = NULL;
+-		}
+-		break;
++		if (!core)
++			return NULL;
++		snprintf(buf, size, "sb/%u/", core->core_index);
++		*fallback = true;
++		return buf;
+ 	default:
++		return ERR_PTR(-EINVAL);
++	}
++}
++
++int bcm47xx_sprom_fill_bcma_nvram(struct bcma_bus *bus, struct ssb_sprom *out)
++{
++	char buf[10];
++	char *prefix;
++	bool fallback;
++
++	prefix = bcm47xx_sprom_bcma_prefix(bus, buf, sizeof(buf), &fallback);
++	if (IS_ERR(prefix))
++		return PTR_ERR(prefix);
++	bcm47xx_sprom_fill_nvram_only(out, prefix, fallback);
++	return 0;
++}
++
++static int bcm47xx_get_sprom_bcma(struct bcma_bus *bus, struct ssb_sprom *out)
++{
++	struct bcma_boardinfo *binfo = &bus->boardinfo;
++	char buf[10];
++	char *prefix;
++	bool fallback;
++
++	prefix = bcm47xx_sprom_bcma_prefix(bus, buf, sizeof(buf), &fallback);
++	if (IS_ERR(prefix)) {
+ 		pr_warn("Unable to fill SPROM for given bustype.\n");
+-		return -EINVAL;
++		return PTR_ERR(prefix);
+ 	}
++	memset(out, 0, sizeof(struct ssb_sprom));
  
--	if (force_synchronize)
--		synchronize_net();
- 	list_for_each_entry_safe(key, tmp, &keys, list)
- 		ieee80211_key_destroy(key);
+ 	nvram_read_u16(prefix, NULL, "boardvendor", &binfo->vendor, 0, true);
+ 	if (!binfo->vendor)
+diff --git a/include/linux/bcm47xx_sprom.h b/include/linux/bcm47xx_sprom.h
+index 40a7da3ef..47e9922ec 100644
+--- a/include/linux/bcm47xx_sprom.h
++++ b/include/linux/bcm47xx_sprom.h
+@@ -9,6 +9,7 @@
+ #include <linux/types.h>
+ #include <linux/vmalloc.h>
  
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index b7afd6c90eb0..9f13d175623a 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -205,8 +205,7 @@ void ieee80211_remove_link_keys(struct ieee80211_link_data *link,
- 				struct list_head *keys);
- void ieee80211_free_key_list(struct ieee80211_local *local,
- 			     struct list_head *keys);
--void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
--			 bool force_synchronize);
-+void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
- void ieee80211_unlink_link_sta_keys(struct ieee80211_local *local,
- 				    struct link_sta_info *link_sta);
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 8f8814125375..5f523e14cf84 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1226,7 +1226,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
++struct bcma_bus;
+ struct ssb_sprom;
  
- 	/* flush STAs and mpaths on this iface */
- 	sta_info_flush(sdata, -1);
--	ieee80211_free_keys(sdata, true);
-+	ieee80211_free_keys(sdata);
- 	mesh_path_flush_by_iface(sdata);
+ #ifdef CONFIG_BCM47XX_SPROM
+@@ -28,4 +29,18 @@ static inline int bcm47xx_sprom_register_fallbacks(void)
+ };
+ #endif
  
- 	/* stop the beacon */
++/*
++ * Fill the NVRAM-only variables of a bcma bus whose SPROM was read from the
++ * device. Like the SPROM fallback, only with bcma built in.
++ */
++#if defined(CONFIG_BCM47XX_SPROM) && IS_BUILTIN(CONFIG_BCMA)
++int bcm47xx_sprom_fill_bcma_nvram(struct bcma_bus *bus, struct ssb_sprom *out);
++#else
++static inline int bcm47xx_sprom_fill_bcma_nvram(struct bcma_bus *bus,
++						struct ssb_sprom *out)
++{
++	return -EOPNOTSUPP;
++}
++#endif
++
+ #endif /* __BCM47XX_SPROM_H */
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 0548af664..02e6c9054 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -76,6 +76,7 @@ struct ssb_sprom {
+ 	u8 gpio1;		/* GPIO pin 1 */
+ 	u8 gpio2;		/* GPIO pin 2 */
+ 	u8 gpio3;		/* GPIO pin 3 */
++	u8 gpio_ext[12];	/* GPIO pins 4-15, NVRAM ledbh4-15 only */
+ 	u8 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
+ 	u8 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
+ 	u8 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
+
 -- 
-2.56.0
+2.34.1
 
