@@ -1,44 +1,44 @@
 Received: from mx.chud.cyou (chud.cyou [194.238.28.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8BAF4EDCB4
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 11:21:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96054F797D
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 11:25:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.238.28.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791976899; cv=none; b=BYIgkFWfQT3r+RgB6QR5Year4tQast/9kyjphB3pHgpAT6wHlzpS7WsNCK/S7J6EJuVv9VmdY0E/9QbkmPkWGeaZgIBZL7tWiyuVJkIcMK8jP2KNKLJF8w7GCUM5TRakaC15oM8DMmRa1UAzG+1NVHIPrJc8Y+BBlgpikZt4xr4=
+	t=1791977126; cv=none; b=dxuXK0HW+gUDfI/JY00/S0ECJIJAuBtacqf+ZrEujXtbjvJKT6JdU6bA3L/ByNxJBRq5kuO8eaDkZiH+g6bdWBhzp0UxeZjrxL4d8o5tegTGq1smE4rnJAAklxBH8SNzwRaNB9H6RB8sfkcprUyekW1XCbtrGogpcMJMRyHzkW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791976899; c=relaxed/simple;
+	s=arc-20240116; t=1791977126; c=relaxed/simple;
 	bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
-	h=Date:Message-Id:From:To:CC:Subject:Content-Type; b=Z2TDcRqVoKuhKuQuCxAlOrvEb+x4Ixq5PmAZ943bksTKqPGOwFJ0RqwHcIqQFsO+8h6KlA6IiCRwno2mqkk0ZOBDNH/4Q2CKKnIcXUqGOevZIbtxdADNE2a9x6GSqfZxPG7Hi9c99zRz/gPH0CNw2RftLI4Q1grqtmbok5V5GfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chud.cyou; spf=none smtp.mailfrom=chud.cyou; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=GELW5LIR; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=ZjYoeQBq; arc=none smtp.client-ip=194.238.28.34
+	h=Date:Message-Id:From:To:CC:Subject:Content-Type; b=TbdpmBvyqWZJQaX9faH/9wuNVWklIDPlpY39t9UZa4JZjRVKhz8o/g+DXSxmozDGM2O40GrFvZUGHnuygJ51z4VSPmdo945/6HjAqkYKt+ELmgA+l0jOMTv58jL+fm8nwXrYHvQ7rcTB4ph865TPHiGkIsuvxF5ZN/orI7JgFUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chud.cyou; spf=none smtp.mailfrom=chud.cyou; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=oBeWSMO0; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=O+WaSXO4; arc=none smtp.client-ip=194.238.28.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chud.cyou
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=chud.cyou
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="GELW5LIR";
-	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="ZjYoeQBq"
+	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="oBeWSMO0";
+	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="O+WaSXO4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=chud.cyou; s=mail;
-	t=1791976320; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
+	t=1791977122; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
 	h=Date:From:To:CC:Subject:From;
-	b=GELW5LIRQRxlCj8Lamw+VO6NfiwdheajsvC4m7G4FaQ74e9/jqodyD7/WUyFHgpnn
-	 YgsOc8PlltbIs0BHjzQKp34QB0x1motlEiuVWSCdB51V2JsG2mAEjzyIc37iFMJkRL
-	 NQT3iAnqH4LTbX40WNrXhctVnqXy+piZBTBXFAYCSpByAa2lUI8yCqgh3fPvbWUJuZ
-	 GRoiCl4niilvJsD49RVYC9EYr//0g48OZao/N7ytNQxppuXffdq9gdUG02MPAC70P6
-	 Rp8gyHG96poGJDt53GzwrTx/kLvLkRNrHeiADxEH7RemIrrvsMUS5UonMcZJmtKOOU
-	 wuR4gGcCHYCug==
+	b=oBeWSMO0O5JtxGplCepXx01CZBb0h8XVDxauwmHneJB4+oLmEigVumqa8kH6QS782
+	 kNzxljxdVQvUB8zl7YNUjnQHAGpUQtPxLRG2ziv4wnVn6vfmXgzHTSpX2KvdZpoKic
+	 m+ge2k/9+fsw/fTXFWk4Rt6HePf2/wsZBodIGkLiZXVXRx1uaLd6b4YHIh8qi0QRGD
+	 ojtv/fXM9T28x8ZtyVlr1H8VBV2Eps9477gdBHxh0md//UTUz5DAemtOPe2CG9PEY2
+	 BZdgSp/tgC0tvlfC93wlvDX2QibKxHiiM6DSp76f1uiCHOTgcd6R9lvAxN7NYjkKit
+	 AjNdCqq0eEH3Q==
 Recieved: hidden
 X-Spam-Level: **
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=chud.cyou; s=mail;
-	t=1791976314; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
+	t=1791977118; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
 	h=Date:From:To:CC:Subject:From;
-	b=ZjYoeQBqIkM1Ty9A/ClqQ59GT/v6F4Fdu4DusHvIixjAWnVCbwAHiGjdJHiILYU0+
-	 D8Ap++KH3unc5muEVCDLWoMQJgc5/GvVCHDWj3errKEk+GzrkPqHw8rsG4X2y/u2EL
-	 /nAAV8o6mRL6668ZQSJjKfUk/y7fgwYeHzluRqWbUFmjv8C0y7dlTR31/dh3k+X2cy
-	 CPKbEtPQQTErv5lrYmMeVte1rzpHfRN/HDtl4jYo2snGWIloKLbYX8JsqLvm80WLVl
-	 vDDNcMDM7jNxumAwLTWc/CMB0LHTAt4cn5eqCtxsT0Jo/jmv7uAUtgM4Ty7MJz2Fha
-	 W0BP/NF93yS5w==
+	b=O+WaSXO4DXkIvE5MDjKhJRnSMg92RG1zsStrXzmVe0qFGwhAqX+u5DTiU6paczOkI
+	 scvI8U2u5oAi3iU9bdAs4pveLbSs1NNPi5uRqNjTdKNayUylcV8AZm8WWRoF3CGXeJ
+	 X86W4f7cq9YQKSrLPqfyQbaXdpl2Wl0+oeJdxzR5lp7hyT9LsCdNQQG544RroJe+EX
+	 wUZQ34yQnzwd2lMog1OMHVOMFFGnOhxtvmAfsLR7+SLE9iqUWjmk/dys2P6DjZ2XS5
+	 RXMNUBhG+hg/NdFRI6CGEadhEdMQyQE5Y4GvphUp3XqmA6stwpZnFrOZOrFpm4pG5W
+	 IYygFrA+fzbaw==
 Recieved: hidden
-Date: Wed, 14 Oct 2026 11:11:53 +0000
-Message-Id: <87ik3435ae.fsf@chud.cyou>
+Date: Wed, 14 Oct 2026 11:25:17 +0000
+Message-Id: <871p9s34o2.fsf@chud.cyou>
 From: Emil Williams <emil@chud.cyou>
 To: linux-wireless@vger.kernel.org
 CC: Miri Korenblit <miriam.rachel.korenblit@intel.com>
