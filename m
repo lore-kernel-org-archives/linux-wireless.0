@@ -1,188 +1,100 @@
-Received: from mx.chud.cyou (chud.cyou [194.238.28.34])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96054F797D
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 11:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.238.28.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF0543304D;
+	Wed, 14 Oct 2026 12:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791977126; cv=none; b=dxuXK0HW+gUDfI/JY00/S0ECJIJAuBtacqf+ZrEujXtbjvJKT6JdU6bA3L/ByNxJBRq5kuO8eaDkZiH+g6bdWBhzp0UxeZjrxL4d8o5tegTGq1smE4rnJAAklxBH8SNzwRaNB9H6RB8sfkcprUyekW1XCbtrGogpcMJMRyHzkW8=
+	t=1791981845; cv=none; b=nksVPUamGar7NhLE0VYHOMRKgUZ4XR2fyh2JdTEjBEqVmKL13P0T4iPD0IusgEq8zwisiKXFXf5rp29Z6bVtgcJbPqQLbH7XQ6tu+48mNTvIFd/O+4QweVrA6Fqd2OUByUxNYLW6QjEPuM1inE8CjL7tTMopYYaEXFR3wkhGQvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791977126; c=relaxed/simple;
-	bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
-	h=Date:Message-Id:From:To:CC:Subject:Content-Type; b=TbdpmBvyqWZJQaX9faH/9wuNVWklIDPlpY39t9UZa4JZjRVKhz8o/g+DXSxmozDGM2O40GrFvZUGHnuygJ51z4VSPmdo945/6HjAqkYKt+ELmgA+l0jOMTv58jL+fm8nwXrYHvQ7rcTB4ph865TPHiGkIsuvxF5ZN/orI7JgFUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chud.cyou; spf=none smtp.mailfrom=chud.cyou; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=oBeWSMO0; dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b=O+WaSXO4; arc=none smtp.client-ip=194.238.28.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chud.cyou
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=chud.cyou
+	s=arc-20240116; t=1791981845; c=relaxed/simple;
+	bh=C+4m1lh9z426f2AOlWGrtkGhBX1dSUecUAxUP0YO7Qw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iVlvMzupbuerMBQrMURn1nnGisOlrTm1Yz+4yfNi8toLiIeX71eUUDZd0pZhyu6uma2wpJPJ2/5I8VbbdHUilJz5o0GF+wzWG2oQdkJFYba10WW+ZbCWOw2GyCpxJO5Mdv71PqXtC+j4qMPJGDZT2/nlH/AQ1PMGohtMFIMRqB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SNrcHXk+; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="oBeWSMO0";
-	dkim=pass (2048-bit key) header.d=chud.cyou header.i=@chud.cyou header.b="O+WaSXO4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=chud.cyou; s=mail;
-	t=1791977122; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
-	h=Date:From:To:CC:Subject:From;
-	b=oBeWSMO0O5JtxGplCepXx01CZBb0h8XVDxauwmHneJB4+oLmEigVumqa8kH6QS782
-	 kNzxljxdVQvUB8zl7YNUjnQHAGpUQtPxLRG2ziv4wnVn6vfmXgzHTSpX2KvdZpoKic
-	 m+ge2k/9+fsw/fTXFWk4Rt6HePf2/wsZBodIGkLiZXVXRx1uaLd6b4YHIh8qi0QRGD
-	 ojtv/fXM9T28x8ZtyVlr1H8VBV2Eps9477gdBHxh0md//UTUz5DAemtOPe2CG9PEY2
-	 BZdgSp/tgC0tvlfC93wlvDX2QibKxHiiM6DSp76f1uiCHOTgcd6R9lvAxN7NYjkKit
-	 AjNdCqq0eEH3Q==
-Recieved: hidden
-X-Spam-Level: **
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=chud.cyou; s=mail;
-	t=1791977118; bh=TznufuVC6c0lmybTUTx3BUEhA5N7lC6fjxsQ9RZmeWo=;
-	h=Date:From:To:CC:Subject:From;
-	b=O+WaSXO4DXkIvE5MDjKhJRnSMg92RG1zsStrXzmVe0qFGwhAqX+u5DTiU6paczOkI
-	 scvI8U2u5oAi3iU9bdAs4pveLbSs1NNPi5uRqNjTdKNayUylcV8AZm8WWRoF3CGXeJ
-	 X86W4f7cq9YQKSrLPqfyQbaXdpl2Wl0+oeJdxzR5lp7hyT9LsCdNQQG544RroJe+EX
-	 wUZQ34yQnzwd2lMog1OMHVOMFFGnOhxtvmAfsLR7+SLE9iqUWjmk/dys2P6DjZ2XS5
-	 RXMNUBhG+hg/NdFRI6CGEadhEdMQyQE5Y4GvphUp3XqmA6stwpZnFrOZOrFpm4pG5W
-	 IYygFrA+fzbaw==
-Recieved: hidden
-Date: Wed, 14 Oct 2026 11:25:17 +0000
-Message-Id: <871p9s34o2.fsf@chud.cyou>
-From: Emil Williams <emil@chud.cyou>
-To: linux-wireless@vger.kernel.org
-CC: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: iwlwifi: AX211 (CNVi 8086:7a70) probe fails with -110 after kexec; PCI remove/rescan recovers
-Content-Type: multipart/mixed; boundary="=-=-="
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SNrcHXk+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791981843; x=1823517843;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=C+4m1lh9z426f2AOlWGrtkGhBX1dSUecUAxUP0YO7Qw=;
+  b=SNrcHXk+pkurUpfeCs2wnYWk/CXNzfduDQoHv74MIQT4SG5djpZKVh8r
+   7jd9wffje3cjk1WJp4i0KY0gGVl3a0Bmjkg53IldOLvYYTpXhU93tUQsj
+   yFYRvKTkRxpBBq7kXNEJflJ/xlFm6OI7xp/947qpAwqLuZijLtU/ISGJo
+   Iv11DdcZmgeUtQfCYJ2JMxoqmTlAxRSgfPSAmDo5oBlOC3xht4ThkQCEM
+   c/hLbKF97C4QG4I3//GiMZoC26wVrIgd9Iq5fWBK/BM7qxcJXSytLAfLo
+   s5zNVII3qtdfwovp36fyZICaYNi2dy/nIfS1ZHAzWdD1VO3LMsBIx40VL
+   w==;
+X-CSE-ConnectionGUID: jXOTGH1WQ0SwpDAPbqFcPA==
+X-CSE-MsgGUID: m0l2yOM9S12ym1cc8O71zA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="736360"
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="736360"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 05:44:02 -0700
+X-CSE-ConnectionGUID: Dx4RydmJTwiKSfhFgLSIUg==
+X-CSE-MsgGUID: VO/xskiQS+uWPUxxKb8dOg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="1394465"
+Received: from ygaur-x299-aorus-gaming-3-pro.iind.intel.com ([10.223.75.72])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 05:44:00 -0700
+From: Yogesh Gaur <yogesh.gaur@intel.com>
+To: miriam.rachel.korenblit@intel.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: johannes.berg@intel.com,
+	emmanuel.grumbach@intel.com,
+	luciano.coelho@intel.com,
+	yogesh.gaur@intel.com
+Subject: [PATCH iwlwifi-next] wifi: iwlwifi: pcie: return a real errno from read_config32()
+Date: Wed, 14 Oct 2026 18:13:57 +0530
+Message-Id: <20261014124357.2569535-1-yogesh.gaur@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
---=-=-=
-Content-Type: text/plain
+pci_read_config_dword() can also return a positive PCIBIOS_* error code
+(e.g. PCIBIOS_DEVICE_NOT_FOUND for a disconnected device), but
+iwl_trans_pcie_read_config32() passes it through unchanged and
+iwl_dump_ini_config_iter() only checks for ret < 0. The error is missed,
+so the loop keeps reading and stores 0xffffffff in the dump.
 
-Summary: after kexec, iwlwifi probe on 0000:00:14.3 fails with -110.
-A clean boot works. Echoing 1 to the device's remove then to
-/sys/bus/pci/rescan recovers it without reboot. A PCI reset does not.
+Convert the return value with pcibios_err_to_errno().
 
-I have not tested this on a newer BIOS, it may very well fix this issue,
-however that is a hard ask for most and the issue is fixable past boot.
+Fixes: f696a7ee254f ("iwlwifi: yoyo: add PCI config space region type")
+Signed-off-by: Yogesh Gaur <yogesh.gaur@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-I use the Gentoo kexec OpenRC service for setting up kexec,
-which just boots the last kernel used by default.
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+index 28b276c65952..cfaadddfe06a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+@@ -2562,8 +2562,12 @@ int iwl_trans_pcie_read_mem_no_grab(struct iwl_trans *trans, u32 addr,
+ int iwl_trans_pcie_read_config32(struct iwl_trans *trans, u32 ofs,
+ 				 u32 *val)
+ {
+-	return pci_read_config_dword(IWL_TRANS_GET_PCIE_TRANS(trans)->pci_dev,
+-				     ofs, val);
++	int ret;
++
++	ret = pci_read_config_dword(IWL_TRANS_GET_PCIE_TRANS(trans)->pci_dev,
++				    ofs, val);
++
++	return pcibios_err_to_errno(ret);
+ }
+ 
+ #define IWL_FLUSH_WAIT_MS	2000
+-- 
+2.34.1
 
-Bluetooth seems to be available, however I don't use Bluetooth to any extent.
-
-
-Effective Repeatable Solution:
-
-echo 1 > /sys/bus/pci/devices/0000:00:14.3/remove
-echo 1 > /sys/bus/pci/rescan
-
-Note that I ran a reset too (to no apparent change) before the
-remove/rescan in the below log.
-
-
-Kernel (standard and untouched USE flag wise):
-
-6.18.54-gentoo-dist-hardened
-sys-kernel/linux-firmware-20260916
-(note: older kernel versions in the 6.1x group had the same results)
-
-
-Hardware:
-
-Board Vendor	: MSI
-Board Name	: PRO B760-P WIFI (MS-7D98)
-Board Version	: 2.0
-BIOS Vendor	: American Megatrends International, LLC.
-Bios Version	: A.Q3
-BIOS date	: 08/29/2023
-
-
-Truncated Logs (see dmesg.log attachment):
-
-00:14.3 Network controller [0280]: Intel Corporation 700 Series Chipset CNVi WiFi [8086:7a70] (rev 11)
-
-[    6.560889] iwlwifi 0000:00:14.3: CSR_RESET = 0x10
-[    6.560892] iwlwifi 0000:00:14.3: Host monitor block 0x0 vector 0x0
-[    6.560915] iwlwifi 0000:00:14.3:     value [iter 0]: 0x3f1d0430
-...
-[    6.610796] iwlwifi 0000:00:14.3: probe with driver iwlwifi failed with error -110
-[  732.520454] iwlwifi 0000:00:14.3: Detected crf-id 0x400410, cnv-id 0x80401 wfpm id 0x80000020
-[  732.520490] iwlwifi 0000:00:14.3: PCI dev 7a70/0094, rev=0x430, rfid=0x2010d000
-[  732.520499] iwlwifi 0000:00:14.3: Detected Intel(R) Wi-Fi 6E AX211 160MHz
-[  732.520992] Loading firmware: iwlwifi-so-a0-gf-a0-89.ucode
-[  732.533758] iwlwifi 0000:00:14.3: loaded firmware version 89.d2579d43.0 so-a0-gf-a0-89.ucode op_mode iwlmvm
-
-
---=-=-=
-Content-Type: text/plain
-Content-Disposition: attachment; filename=dmesg.log
-Content-Description: dmesg iwlwifi log after kexec
-
-[    6.560889] iwlwifi 0000:00:14.3: CSR_RESET = 0x10
-[    6.560892] iwlwifi 0000:00:14.3: Host monitor block 0x0 vector 0x0
-[    6.560915] iwlwifi 0000:00:14.3:     value [iter 0]: 0x3f1d0430
-[    6.560918] iwlwifi 0000:00:14.3:     value [iter 1]: 0x3f1d0430
-[    6.560920] iwlwifi 0000:00:14.3:     value [iter 2]: 0x3f1d0030
-[    6.560922] iwlwifi 0000:00:14.3:     value [iter 3]: 0x3f1d0030
-[    6.560925] iwlwifi 0000:00:14.3:     value [iter 4]: 0x3f1d0030
-[    6.560927] iwlwifi 0000:00:14.3:     value [iter 5]: 0x3f1d0030
-[    6.560929] iwlwifi 0000:00:14.3:     value [iter 6]: 0x3f1d0030
-[    6.560931] iwlwifi 0000:00:14.3:     value [iter 7]: 0x3f1d0030
-[    6.560934] iwlwifi 0000:00:14.3:     value [iter 8]: 0x3f1d0030
-[    6.560936] iwlwifi 0000:00:14.3:     value [iter 9]: 0x3f1d0430
-[    6.560938] iwlwifi 0000:00:14.3:     value [iter 10]: 0x3f1d0430
-[    6.560941] iwlwifi 0000:00:14.3:     value [iter 11]: 0x3f1d0430
-[    6.560943] iwlwifi 0000:00:14.3:     value [iter 12]: 0x3f1d0430
-[    6.560945] iwlwifi 0000:00:14.3:     value [iter 13]: 0x3f1d0430
-[    6.560948] iwlwifi 0000:00:14.3:     value [iter 14]: 0x3f1d0430
-[    6.560953] iwlwifi 0000:00:14.3: Host monitor block 0x0 vector 0x1
-[    6.560971] iwlwifi 0000:00:14.3:     value [iter 0]: 0x040066c2
-[    6.560974] iwlwifi 0000:00:14.3:     value [iter 1]: 0x040066c2
-[    6.560976] iwlwifi 0000:00:14.3:     value [iter 2]: 0x040066c2
-[    6.560978] iwlwifi 0000:00:14.3:     value [iter 3]: 0x040066c2
-[    6.560981] iwlwifi 0000:00:14.3:     value [iter 4]: 0x040066c2
-[    6.560983] iwlwifi 0000:00:14.3:     value [iter 5]: 0x040066c2
-[    6.560985] iwlwifi 0000:00:14.3:     value [iter 6]: 0x040066c2
-[    6.560988] iwlwifi 0000:00:14.3:     value [iter 7]: 0x040066c2
-[    6.560990] iwlwifi 0000:00:14.3:     value [iter 8]: 0x040066c2
-[    6.560992] iwlwifi 0000:00:14.3:     value [iter 9]: 0x040066c2
-[    6.560994] iwlwifi 0000:00:14.3:     value [iter 10]: 0x040066c2
-[    6.560997] iwlwifi 0000:00:14.3:     value [iter 11]: 0x040066c2
-[    6.560999] iwlwifi 0000:00:14.3:     value [iter 12]: 0x040066c2
-[    6.561001] iwlwifi 0000:00:14.3:     value [iter 13]: 0x040066c2
-[    6.561004] iwlwifi 0000:00:14.3:     value [iter 14]: 0x040066c2
-[    6.561005] iwlwifi 0000:00:14.3: Host monitor block 0x0 vector 0x6
-[    6.561027] iwlwifi 0000:00:14.3:     value [iter 0]: 0xb00c7c75
-[    6.561029] iwlwifi 0000:00:14.3:     value [iter 1]: 0xb00c7c75
-[    6.561032] iwlwifi 0000:00:14.3:     value [iter 2]: 0xb00c7c75
-[    6.561034] iwlwifi 0000:00:14.3:     value [iter 3]: 0xb00c7c75
-[    6.561036] iwlwifi 0000:00:14.3:     value [iter 4]: 0xb00c7c75
-[    6.561039] iwlwifi 0000:00:14.3:     value [iter 5]: 0xb00c7c75
-[    6.561041] iwlwifi 0000:00:14.3:     value [iter 6]: 0xa00c7c75
-[    6.561043] iwlwifi 0000:00:14.3:     value [iter 7]: 0xa00c7c75
-[    6.561046] iwlwifi 0000:00:14.3:     value [iter 8]: 0xa00c7c75
-[    6.561048] iwlwifi 0000:00:14.3:     value [iter 9]: 0xe00c7c75
-[    6.561050] iwlwifi 0000:00:14.3:     value [iter 10]: 0xe00c7c75
-[    6.561053] iwlwifi 0000:00:14.3:     value [iter 11]: 0xe00c7c75
-[    6.561055] iwlwifi 0000:00:14.3:     value [iter 12]: 0xe00c7c75
-[    6.561057] iwlwifi 0000:00:14.3:     value [iter 13]: 0xf00c7c75
-[    6.561059] iwlwifi 0000:00:14.3:     value [iter 14]: 0xf00c7c75
-[    6.561061] iwlwifi 0000:00:14.3: Host monitor block 0x22 vector 0x0
-[    6.561083] iwlwifi 0000:00:14.3:     value [iter 0]: 0xf9cec019
-[    6.610796] iwlwifi 0000:00:14.3: probe with driver iwlwifi failed with error -110
-[  732.520454] iwlwifi 0000:00:14.3: Detected crf-id 0x400410, cnv-id 0x80401 wfpm id 0x80000020
-[  732.520490] iwlwifi 0000:00:14.3: PCI dev 7a70/0094, rev=0x430, rfid=0x2010d000
-[  732.520499] iwlwifi 0000:00:14.3: Detected Intel(R) Wi-Fi 6E AX211 160MHz
-[  732.520992] Loading firmware: iwlwifi-so-a0-gf-a0-89.ucode
-[  732.533758] iwlwifi 0000:00:14.3: loaded firmware version 89.d2579d43.0 so-a0-gf-a0-89.ucode op_mode iwlmvm
-[  732.805125] iwlwifi 0000:00:14.3: WFPM_UMAC_PD_NOTIFICATION: 0x20
-[  732.805157] iwlwifi 0000:00:14.3: WFPM_LMAC2_PD_NOTIFICATION: 0x1f
-[  732.805171] iwlwifi 0000:00:14.3: WFPM_AUTH_KEY_0: 0x90
-[  732.805202] iwlwifi 0000:00:14.3: CNVI_SCU_SEQ_DATA_DW9: 0x0
-[  732.805368] iwlwifi 0000:00:14.3: Detected RF GF, rfid=0x2010d000
-[  732.805381] Loading firmware: iwlwifi-so-a0-gf-a0.pnvm
-[  732.806218] iwlwifi 0000:00:14.3: RFIm is deactivated, reason = 5
-[  732.892495] iwlwifi 0000:00:14.3: base HW address: xx:xx:xx:xx:xx:xx
-[  732.924669] iwlwifi 0000:00:14.3 wlo1: renamed from wlan0
-[  733.137818] iwlwifi 0000:00:14.3: WFPM_UMAC_PD_NOTIFICATION: 0x20
-[  733.137860] iwlwifi 0000:00:14.3: WFPM_LMAC2_PD_NOTIFICATION: 0x1f
-[  733.137892] iwlwifi 0000:00:14.3: WFPM_AUTH_KEY_0: 0x90
-[  733.137904] iwlwifi 0000:00:14.3: CNVI_SCU_SEQ_DATA_DW9: 0x0
-[  733.138918] iwlwifi 0000:00:14.3: RFIm is deactivated, reason = 5
-
---=-=-=--
