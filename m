@@ -1,193 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7644D34EF07;
-	Wed, 14 Oct 2026 20:51:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BA12472F65;
+	Wed, 14 Oct 2026 21:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792011080; cv=none; b=PF9GqG7Pa7SK1CNCMSBHmX2XweX5gA0LO7ZWN+HL66dxPsrWPUHdfUfD4qdhJat608Kx+SXnCIZ7erAC8Qq4P/Dsjk3Tdgo1GDt27u96O+1On2QluOI31rfY2GuyJK8q2W3t9D13+xhMhBJg08vTkSN5G7boZbm88D1Q4LgiavY=
+	t=1792013807; cv=none; b=eLjLc6QtJ1mv1rMQ6KXEkemTXXWoFtDikkn0M0s3JFx4O/fgBQ9IDgBVQLl4I8KOG8L6nHLszDLMy/3b6MoerDTRIEiGpUMDmTDJqof5fzuDZ0RkqfHKRIjwRJ/tAdLCk5asNZMpFi1XDNmzEykWjZFe7FcMvsPan3NSZFT2RvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792011080; c=relaxed/simple;
-	bh=CbndMu/FeXvs5o/Ndh0uZtOLP46RN4SDasVFqTkljqk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=YSJ45CaGCqDq85PO30owT2r/+qp/gN/2/F8sqt2AhBxbsDHh4Uy4O1xfDrLZU0xAsRWu2OeG/iylur9LYeFEwReirXdhAo2BNwdlcn54tCaUrHoanhX43xn4lifJq1QXn5l3BoQWpZDw/coj03Tovbut2dMZH5jC0GMvwAeijMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k8K+1tFP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792013807; c=relaxed/simple;
+	bh=iOzrSqJii6m6WQWiiRclHuCmy8MD6YF+Kb1CCSLm/Ms=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=rtXCpQ0LlNwARqpITLNLleEkXpyb/ObbSu/MhC6bUBVhiBuVBMLxcVhlcfc1zwYZbvgk7VWpkuTxvgAF3XToI2Qo9qgOWFNRTgkjZCo0CsmY/+sYzya+lU1IHvsjr11nM8qSzuZcFpkIq6tO1bxW7xPHMHetZdK7jbsFl9ZYfX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ksk9Noda; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k8K+1tFP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 954581F000C4;
-	Wed, 14 Oct 2026 20:51:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792011078;
-	bh=sr+m1LBFmL3abttFSdfmitCgd/MxEt7eWX87V5LweSg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=k8K+1tFPZoXGs5NKvloT7Y4Xiwz1g4WNa6qoMQXu6T1aefH+iXTkGiHZesJLjtYXs
-	 PrasAkZ9p/smMGEE+/Y1//znxm1U9cLU+eNMsjF0TOxPjg5OST/Ce+U7Xlws6Hd05s
-	 on+n74IZGprxa1FXPlgbc+u9II6o0d7kTkgarvWE3g1ZcVvz3tgFH+ddZiQx1UFO1e
-	 qhXmMgAfsD01e5pZcHEHZcnJXDakpS9Rd+u+DGYA+0hNueiNBb/FgZXWVDoS9BrYkk
-	 Yc6JPsQ5g3sGtB2nQ/BPDxVCaNA1lx4uGJqXrtE364fXrRady0YOtrCCQq3zl+CFOE
-	 TkLPy7IWt4KFQ==
-Date: Wed, 14 Oct 2026 15:51:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-	ath11k@lists.infradead.org, ath10k@lists.infradead.org,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
- and convert Atheros drivers
-Message-ID: <20261014205117.GA1665327@bhelgaas>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ksk9Noda"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D7A27C2BCC7;
+	Wed, 14 Oct 2026 21:36:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1792013806;
+	bh=iOzrSqJii6m6WQWiiRclHuCmy8MD6YF+Kb1CCSLm/Ms=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=ksk9NodacoZ/g8vTXr+gOqizUGbASu7FHecb4Pcnq3wr6+H1+cjUyC0KIgZ+f7ybG
+	 xZAOI5TdOyG/NjakH70RgwWT842CLg7q0/sciGCLj7yg8b8lAfL2KfTIJ4TwccBeSn
+	 k8kxoR2pzk4vopuacbT2iVhUkYJ+G2uaId2dmU2/fww5t9YNvdYg+t5wlG/u6vFPWk
+	 C9VjS2z7cdqmeW+pQt/UXE6A1u0TbygNZ2dTQSdRxjpky8A4yVHiHoNZHRaSDfql9A
+	 TPUX86lu4WQIh0Kod8mhNUy30qpQihJuCz+weeYdUIJbq/Riafz2q3y7mBvbDMfA3E
+	 EGwsxyFYGRJTA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFCB2CC6B2C;
+	Wed, 14 Oct 2026 21:36:46 +0000 (UTC)
+From: =?utf-8?q?Burak_G=C3=B6nc=C3=BC_via_B4_Relay?= <devnull+burakgon12.gmail.com@kernel.org>
+Date: Thu, 15 Oct 2026 00:36:18 +0300
+Subject: [PATCH] wifi: mac80211: deauthenticate from the old AP when
+ roaming with MFP
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
+Message-Id: <20261015-mac80211-roam-mfp-deauth-v1-1-9ccc69b434fd@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMwQrCMAyA4VcZORtoinXqq8gOMUtdhG6j3UQYe
+ 3erHr/D/29QNJsWuDYbZH1ZsWmsoEMDMvD4ULS+GrzzJ3IUMLGcnSfCPHHCFGfslddlwJaPIUT
+ 2rVwEaj5njfb+rW/d32W9P1WW7w/2/QO3kckYfAAAAA==
+X-Change-ID: 20261015-mac80211-roam-mfp-deauth-7a455fa27c9c
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ =?utf-8?q?Burak_G=C3=B6nc=C3=BC?= <burakgon12@gmail.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792013780; l=4901;
+ i=burakgon12@gmail.com; s=20261006; h=from:subject:message-id;
+ bh=Ul1ZvEqnkBoUEz9VVXngoZ5xKwBtEcW5F7kwW3H4QSw=;
+ b=jbXBl7rWy9/VgeNn3ICHgskkoOItRMi8jvwXHyf+medVTHEbTR/+hXr5/778Sq77m0y74Awxj
+ 6E+DgD4NNYKDWuoj9ZGMuDEgMJLqEEMcs/nXT2UQnWpkyXyWazHTlTG
+X-Developer-Key: i=burakgon12@gmail.com; a=ed25519;
+ pk=qcexQajnoYGkNqFOy3eFqTzvqTOR/P++ksapi6qUbvw=
+X-Endpoint-Received: by B4 Relay for burakgon12@gmail.com/20261006 with
+ auth_id=1126
+X-Original-From: =?utf-8?q?Burak_G=C3=B6nc=C3=BC?= <burakgon12@gmail.com>
+Reply-To: burakgon12@gmail.com
 
-[+cc Emmanuel, Matthew]
+From: Burak Göncü <burakgon12@gmail.com>
 
-On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
-> Hi,
-> 
-> This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) to
-> use the PCI core ASPM APIs for enabling/disabling ASPM instead of writing
-> to the LNKCTL register directly. Touching LNKCTL behind the PCI core's
-> back leaves the ASPM service driver's view of the link state out of sync
-> with the hardware, which is not nice.
-> 
-> The catch is that these drivers save the currently enabled ASPM states,
-> disable ASPM before firmware download, and restore the saved states
-> afterwards. pci_enable_link_state() cannot restore states that were
-> disabled via pci_disable_link_state() or blacklisted during init (like
-> the pre-1.1 device blacklist, which is only meant to be overridden with
-> pcie_aspm=force), and that is intentional. So the save/restore sequence
-> cannot be expressed with the existing APIs.
-> 
-> In v2 I tried to fix this by making pci_enable_link_state*() symmetric
-> with the disable APIs, but as pointed out during review, that also ends
-> up overriding the init-time blacklist for every caller (including VMD),
-> which is not something we want. So instead, this version adds a separate
-> pci_force_enable_link_state() API (patch 2) that re-enables the requested
-> states unconditionally. The caller is responsible for only asking for
-> states the device actually supports, and the ath drivers do this by
-> restoring exactly what pcie_aspm_enabled() reported earlier.
-> 
-> The first five patches touch the PCI core: patch 1 (from Ilpo) makes
-> pci_disable_link_state() disable ASPM unconditionally, patch 2 adds the
-> new API, patch 3 moves the D0 transition needed before enabling PCI-PM
-> L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and drops
-> it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-doc,
-> and patch 5 makes pcie_aspm_enabled() return the enabled state mask so it
-> can be used for save/restore. The last three patches convert the ath
-> drivers.
-> 
-> Testing
-> =======
-> 
-> I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so that's
-> just the ath12k driver). Rest of the drivers are compile tested only.
-> 
-> Merging Strategy
-> ================
-> 
-> Even though there is no build dependency between the PCI core and atheros
-> patches, there is a functional dependency. So I'd recommend creating an
-> immutable branch with the PCI patches and merging that branch into both
-> the PCI and linux-wireless trees, and finally merging the atheros patches
-> into the linux-wireless tree.
-> 
-> If the immutable branch seems like a hassle, then the PCI core patches
-> could get merged first and the atheros patches can wait for the next
-> cycle.
-> 
-> - Mani
-> 
-> Changes in v3:
-> * Dropped the change that made pci_enable_link_state*() symmetric with the
->   disable APIs. Instead added a new pci_force_enable_link_state() API used
->   only by the ath drivers, so the init-time blacklist stays overridable
->   only via pcie_aspm=force and existing callers like VMD are left
->   untouched.
-> * Fixed the locked path to use pci_set_power_state_locked() for the D0
->   transition. The previous version called the non-locked variant, which
->   re-acquires pci_bus_sem.
-> * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
->   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
->   (pcie_aspm_enabled() doesn't report CLKPM).
-> * Reworked the kernel-doc patch to cover both the enable and disable APIs
->   and reference the new API.
-> * Rebased on top of v7.2-rc1.
-> 
-> Changes in v2:
-> * Reworked the pcie_aspm_enabled() API to return the enabled states
->   instead of bool and used it to save/restore the ASPM states in ath
->   drivers.
-> * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
->   permission.
-> * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
-> * Rebased on top of v6.17-rc1.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
-> Ilpo Järvinen (1):
->       PCI/ASPM: Always disable ASPM when driver requests it
+When userspace starts authentication with a new AP while we are still
+associated, mac80211 drops the association locally and does not tell
+the AP. With management frame protection the AP still holds a protected
+association with us. An AP in that state has to treat a (re)association
+from us as possibly forged: it refuses it temporarily and first checks
+the old association with an SA Query, which we no longer answer. The new
+association can then only succeed once the SA Query has timed out (1000
+TU by default), but we give up after three (re)association attempts
+100 ms apart.
 
-I put this first patch on pci/aspm for v7.4 because there seems to be
-a consensus that it's better to have the ASPM core disable things even
-if it doesn't technically have control of ASPM, because the
-alternative is that drivers just do it themselves, also ignoring ASPM
-ownership concerns.  Having the drivers do it just means the PCI core
-ASPM support doesn't know what's happening.
+This hits every roam to an AP that shares the old AP's state, for
+example between the AP MLDs of an AP that runs one single-link AP MLD
+per band and steers clients between them with BSS transition
+management, and every reassociation with the current AP. With a TP-Link
+Deco BE65/BE85 mesh (Qualcomm) and an Intel BE201 (iwlmld), each of ten
+roams between the 5 GHz and the 6 GHz AP MLD of the same unit over nine
+days timed out: the AP acknowledged all three Reassociation Request
+frames and answered none, then deauthenticated us with reason 9 when we
+fell back to the old AP MLD. Reassociating with the current AP got
+reason 9 right away. A Reassociation Request sent 1 s after the first
+one was accepted at once; one sent after 500 ms was still ignored.
 
-I think we should defer the rest of these because I think there's a
-little room to make the enable/disable/force-enable dance more
-intuitive for the drivers.  As far as I know, the rest of the series
-is definite cleanups but doesn't fix any actual functional issues.
+Send the Deauthentication frame when MFP is in use. The AP then drops
+the old association at once, and the same roams completed with the
+first Reassociation Request, answered within 75 ms.
 
-> Manivannan Sadhasivam (7):
->       PCI/ASPM: Add pci_force_enable_link_state() API
->       PCI/ASPM: Transition the device to D0 (if required) when enabling ASPM link states
->       PCI/ASPM: Improve the kernel-doc for pci_{enable,disable}_link_state*() APIs
->       PCI/ASPM: Return enabled ASPM states from pcie_aspm_enabled() API
->       wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
->       wifi: ath11k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
->       wifi: ath10k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
-> 
->  drivers/net/wireless/ath/ath10k/Kconfig |   2 +-
->  drivers/net/wireless/ath/ath10k/pci.c   |  11 +--
->  drivers/net/wireless/ath/ath10k/pci.h   |   5 +-
->  drivers/net/wireless/ath/ath11k/Kconfig |   2 +-
->  drivers/net/wireless/ath/ath11k/pci.c   |  19 +----
->  drivers/net/wireless/ath/ath11k/pci.h   |   3 +-
->  drivers/net/wireless/ath/ath12k/Kconfig |   2 +-
->  drivers/net/wireless/ath/ath12k/pci.c   |  19 +----
->  drivers/net/wireless/ath/ath12k/pci.h   |   4 +-
->  drivers/pci/controller/dwc/pcie-qcom.c  |   5 --
->  drivers/pci/controller/vmd.c            |   5 --
->  drivers/pci/pcie/aspm.c                 | 140 ++++++++++++++++++++++++--------
->  include/linux/pci.h                     |   7 +-
->  13 files changed, 129 insertions(+), 95 deletions(-)
-> ---
-> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-> change-id: 20260708-pci-aspm-fix-331826a2cb5d
-> 
-> Best regards,
-> --  
-> மணிவண்ணன் சதாசிவம்
-> 
-> 
+Assisted-by: LLM
+Signed-off-by: Burak Göncü <burakgon12@gmail.com>
+---
+I ran into this with a TP-Link Deco BE65/BE85 mesh and an Intel BE201
+(iwlmld) on 7.2.9. The Deco has 802.11v enabled and steers clients
+from its 5 GHz to its 6 GHz AP MLD, so after every resume the laptop
+failed that roam and ended up on a distant node for a few minutes.
+
+To narrow it down I used a test build of mac80211 with two runtime
+switches: the wait for the response after an acknowledged
+(Re)Association Request, and transmitting the Deauthentication frame.
+All roams below are between the 5 GHz and the 6 GHz AP MLD of one unit:
+
+- stock: Reassociation Requests at 0, 100 and 200 ms, all ACKed, none
+  answered; the fallback to the old AP MLD then got reason 9
+- 500 ms wait: requests at 0, 500 and 1000 ms, only the third answered
+- 3 s wait: the second request, at 3 s, answered within 64 ms
+- Deauthentication sent, stock timing: answered on the first request
+  within 64-74 ms, in both directions (one of them steered by BTM),
+  and the same for roams between units and for reassociations with
+  the current AP
+
+I limited the change to MFP connections, where the AP has to protect
+the old association; without MFP the AP can simply replace it. If you
+prefer to send the frame unconditionally, I can respin.
+---
+ net/mac80211/mlme.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6ec45a9f7..b6e38d210 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -10099,13 +10099,19 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (ifmgd->associated) {
+ 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++		/*
++		 * With MFP the AP protects our association and may not
++		 * accept a new (re)association from us until an SA Query
++		 * on the old one times out, so tell it that we leave.
++		 */
++		bool tx = ifmgd->flags & IEEE80211_STA_MFP_ENABLED;
+ 
+ 		sdata_info(sdata,
+ 			   "disconnect from AP %pM for new auth to %pM\n",
+ 			   sdata->vif.cfg.ap_addr, auth_data->ap_addr);
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_UNSPECIFIED,
+-				       false, frame_buf);
++				       tx, frame_buf);
+ 
+ 		ieee80211_report_disconnect(sdata, frame_buf,
+ 					    sizeof(frame_buf), true,
+@@ -10452,13 +10458,19 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (ifmgd->associated) {
+ 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++		/*
++		 * With MFP the AP protects our association and may not
++		 * accept a new (re)association from us until an SA Query
++		 * on the old one times out, so tell it that we leave.
++		 */
++		bool tx = ifmgd->flags & IEEE80211_STA_MFP_ENABLED;
+ 
+ 		sdata_info(sdata,
+ 			   "disconnect from AP %pM for new assoc to %pM\n",
+ 			   sdata->vif.cfg.ap_addr, assoc_data->ap_addr);
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_UNSPECIFIED,
+-				       false, frame_buf);
++				       tx, frame_buf);
+ 
+ 		ieee80211_report_disconnect(sdata, frame_buf,
+ 					    sizeof(frame_buf), true,
+
+---
+base-commit: a4190accbf7e05496754004bb701fb3e7d04e57f
+change-id: 20261015-mac80211-roam-mfp-deauth-7a455fa27c9c
+
+Best regards,
+--  
+Burak Göncü <burakgon12@gmail.com>
+
+
