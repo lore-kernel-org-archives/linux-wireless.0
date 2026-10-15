@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F8D4A43EC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 911044CE699;
 	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792097736; cv=none; b=Z9ViZbJm5Q5X1vXkOyXaFdCclxPEFLZnNzLtku692HvLPWl9rhOi20hNp2lAdNq2NaIB6z8ZkSJ/laj0UlYLedk4sSHpRT4qhlfH1umlAHGtzQHrg9iQs5N3nHu4Swzez63zJq6lpqpfkbtSxxvmzq1RaEdjQvrgrDU++JPwW3E=
+	t=1792097736; cv=none; b=t8dMGvb2uO1MIeF5IJVtWhqKY+MRrQco2qVepasXYNozQWCH5lCHJxbM21R1aiKnkNhlRiMDtoi7ozx9cwwfj1wN10aAEVa021IlACpCMmto/IWKI3jLJA5v2YjhsBHyRgLjVf5jFsRss3P4n/jvDScj8c7VnVZu7qc1XBUq+6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1792097736; c=relaxed/simple;
-	bh=8TFgXrqm00gTUkYWKQDkyq2nEt87hZ1bR+nt+jFn4KY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=c55/H+KMjTVkWYlKB01GSDRWuSuWiHkHfK3odnBY0p8gmN4vNlc94+xtG8EM96Yrr/Ie/LQKBXRSrMnBC7nkphTiLbz/mkVeWIKoP7AXXzvRk+GcMH8XOgrRwcLvuNkrsAW8mcDryEW6Hq7rVMF8mfKtmtrnNZg7KP/WzSVeC8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XCuEMW7y; arc=none smtp.client-ip=10.30.226.201
+	bh=ReHuuM+HjdzYLwEJhUbU5VO8Ceo+V/a93dpA2WxkIYk=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=HNYEcHOf3+rJzisZ8zSUxYtNxYg4Hrj3jGPWfDX619gxDRp2N33xuNAEoXKy5mhwREFS2QmSlZThlB0peW8y9wAUEqwe+BbG7MES0FXQAWYuCpw0aN5L3vHZ9sgJQHuBvPlStvmtVtCj0XdIfTL2r1ISDUWm7hZ5vOZJJPXBIXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aKFNWcvU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XCuEMW7y"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 51017C2BCFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aKFNWcvU"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 30B21C2BCF4;
 	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1792097736;
-	bh=8TFgXrqm00gTUkYWKQDkyq2nEt87hZ1bR+nt+jFn4KY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=XCuEMW7yHvNa50Pc6fIRq4R8fcDklDEWseu5tr0BYxA0IbOwzi6ITi6byt/65aEZY
-	 0ZLGI3dMg/qPwXPn4C8/vU19Wo1FMJeLNk0RcrGWhGMTDLLpfZvt101yv361ucNbpI
-	 zRPwxthqgmCDRv/FO+pBLamGCP9y+0EAk75J5lMOClITzjwy66uwtOGgGykY7L1gSY
-	 VmgZcTbSDCX+KclTo0XSyR5YWN1PndmspkIylE0+ABa50gIBJXFM4fPtPdruv/9ifg
-	 s+1oKs02FbeBweIV4REWCqOXZAS8mV/+Sai1Qb18HcDfaJzYiPJeHKGbsObrjqHITd
-	 wG3XocqFBC3sg==
+	bh=ReHuuM+HjdzYLwEJhUbU5VO8Ceo+V/a93dpA2WxkIYk=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=aKFNWcvUaIbXq+pUX+qEceSb/hpvsleNUZIiSmKDP0Te5mlNc73LAE071uFuLhC/n
+	 ocawNDkpOFMMmo5L9o9WcdZW3Uj8eBGeNungeC25edBEUof1M4e+//2ODvz4ItR4GW
+	 O0BIinddUg+k9R2jBoh6pl/KAx9yyGKS5aRtSbuKLHfJlYH/V1bYQ96tYWAtWZHEBD
+	 0iolVIPID+Wa08vWMizwfSLo/dNuYplrots9Dz6T6yLky3VpjQvbC0KvZ1HA8l+X/h
+	 t2gumeN0J1xD//2N0wjHfVgJlVuOrf5sJ2EH1Kf8P6YbGUGD8MrBRc5SCTHOqoGEUt
+	 s/YIdjfp4NrqQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F05CCA464;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF84CCA465;
 	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
 From: John Macias via B4 Relay <devnull+dencity7.gmail.com@kernel.org>
-Date: Thu, 15 Oct 2026 13:55:25 -0700
-Subject: [PATCH RFC ath-next 2/2] wifi: ath12k: bound READY MAC address
- array reads
+Subject: [PATCH RFC ath-next 0/2] wifi: ath11k/ath12k: bound READY MAC
+ address array reads
+Date: Thu, 15 Oct 2026 13:55:23 -0700
+Message-Id: <20261015-rdy-mac-array-bounds-v1-0-5de276b752a3@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,19 +41,20 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-rdy-mac-array-bounds-v1-2-5de276b752a3@gmail.com>
-References: <20261015-rdy-mac-array-bounds-v1-0-5de276b752a3@gmail.com>
-In-Reply-To: <20261015-rdy-mac-array-bounds-v1-0-5de276b752a3@gmail.com>
+X-B4-Tracking: v=1; b=H4sIALs90WoC/yWMQQrCMBBFr1Jm7UASqAG3ggdwK11Mk9FGMJWZV
+ FpK726qy/f5762gLIkVTs0Kwp+kacwV7KGBMFB+MKZYGZxxR2tsixIXfFFAEqEF+3HKUTGyN8H
+ 71jjroapv4Xuaf9kbXC/nfaMyYOa5QPc/6NQ/OZQ9Dtv2BdKfhwGJAAAA
+X-Change-ID: 20261015-rdy-mac-array-bounds-de70c7750217
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
  linux-kernel@vger.kernel.org, ath12k@lists.infradead.org, 
  John Macias <dencity7@gmail.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792097735; l=1848;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792097735; l=1380;
  i=dencity7@gmail.com; s=20261015; h=from:subject:message-id;
- bh=Q7bR+qmBnYByCGbR1Dt5w8wYWTuypEv1iCd0orMgbPU=;
- b=ep45ZWSDL6ranuUgrWsBGU9OMaYKx7UAoVEQdVgNNlPaBcT+MtrLTsK4H+er3Zk+QobJQE5tK
- eD+x4sEMsHBCGHkLiKnE5Bhwd282SAFQnUWslyydsc4jEQWSLCDKlfz
+ bh=ReHuuM+HjdzYLwEJhUbU5VO8Ceo+V/a93dpA2WxkIYk=;
+ b=qk3rH7i82oGLnWB/24kgq4kwfhaT5xl9p5uCpzh6HOY2aLvfidVKg+nmL1kF468n9NZkjKcaJ
+ 61byeB9jHX9C2be+01FH/DZMPfXf3byB1D3ZQvanz3y2pBmiD+WZvhM
 X-Developer-Key: i=dencity7@gmail.com; a=ed25519;
  pk=z7cMHA0B6NULvJzsST/bbOOegMB6xCo9+/ytQure7B8=
 X-Endpoint-Received: by B4 Relay for dencity7@gmail.com/20261015 with
@@ -61,52 +62,38 @@ X-Endpoint-Received: by B4 Relay for dencity7@gmail.com/20261015 with
 X-Original-From: John Macias <dencity7@gmail.com>
 Reply-To: dencity7@gmail.com
 
-From: John Macias <dencity7@gmail.com>
+ath11k_wmi_tlv_rdy_parse() and ath12k_wmi_rdy_parse() copy one MAC
+address per radio from the READY event's fixed-struct array after
+checking only the count advertised in the fixed record, not the array
+TLV length. A firmware READY event with a short array makes the copy
+read past the end of the TLV value.
 
-ath12k_wmi_rdy_parse() has the same pattern as ath11k: after checking
-that the READY fixed record advertises at least num_radios extra MAC
-addresses, it copies one address per radio from the
-WMI_TAG_ARRAY_FIXED_STRUCT TLV without checking that the TLV actually
-holds num_radios entries.
+These patches check the array length first and fall back to the
+driver's default per-radio addresses when it is too short.
 
-With two radios and an array shorter than two 8-byte entries, the second
-ether_addr_copy() reads past the end of the TLV value.
+Found while bringing up an IPQ8074 v1 device with older firmware; the
+issue is not specific to that hardware. Verified with a userspace harness
+around the unmodified parsers under AddressSanitizer. Compile tested
+only (ath-next, W=1); not tested on hardware with a malformed event.
 
-Check the array length against num_radios before copying. When it is too
-short, warn and leave pdevs_macaddr_valid unset, so the driver keeps its
-default per-radio addresses instead of failing READY processing.
+Jeff, following your pointers on my earlier ath12k RX-ring RFC, these
+carry a full-name sign-off, an Assisted-by tag, and state the testing
+explicitly. This work was developed with AI assistance.
 
-A userspace harness that includes the unmodified parser reports a 6-byte
-heap-buffer-overflow read under AddressSanitizer for 8- and 12-byte
-arrays with two radios, and the fixed parser passes. Compile tested only
-(ath-next, W=1).
-
-Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
-Assisted-by: LLM
-Signed-off-by: John Macias <dencity7@gmail.com>
 ---
+John Macias (2):
+      wifi: ath11k: bound READY MAC address array reads
+      wifi: ath12k: bound READY MAC address array reads
+
+ drivers/net/wireless/ath/ath11k/wmi.c | 6 ++++++
  drivers/net/wireless/ath/ath12k/wmi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ 2 files changed, 12 insertions(+)
+---
+base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+change-id: 20261015-rdy-mac-array-bounds-de70c7750217
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 75b259990c..ef070ace08 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -7099,6 +7099,12 @@ static int ath12k_wmi_rdy_parse(struct ath12k_base *ab, u16 tag, u16 len,
- 		if (!(ab->num_radios > 1 && num_mac_addr >= ab->num_radios))
- 			break;
- 
-+		if (len < ab->num_radios * sizeof(*addr_list)) {
-+			ath12k_warn(ab, "ready event mac address array too short: %u bytes for %d radios\n",
-+				    len, ab->num_radios);
-+			break;
-+		}
-+
- 		for (i = 0; i < ab->num_radios; i++) {
- 			pdev = &ab->pdevs[i];
- 			ether_addr_copy(pdev->mac_addr, addr_list[i].addr);
-
--- 
-2.47.3
+Best regards,
+--  
+John Macias <dencity7@gmail.com>
 
 
