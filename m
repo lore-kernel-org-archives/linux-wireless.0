@@ -1,125 +1,175 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9343A47CA81
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 21:54:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9008D12CDA5;
+	Thu, 15 Oct 2026 23:07:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792101268; cv=none; b=SbQQTv6MLxZc8nYHcoJ5m1YjgbhIjEOut1cUiygnMSrqaAyZU/mq/uoAiXE7vI9zSlcoNbqsimllF/Fk3aE9TD3t7pca9JUlIim5BE/4YZetgH5gWmSkADNh01baeCZF8SEeQL1uFwfEd7ZnUbDk2+hOorItcZJ3K2ayWZwoCNw=
+	t=1792105637; cv=none; b=tHbQjJ6XTGwlGJxAmdQmEnAffd/4tIdSM/iQYWgCusiOs9gZnHW+SM4VxnNMIiqsTpWKj+KcXn9UIO6U4J4ky5HjXcO+ygnej6DEjw8mZ3dZ0Z2i5lp/vCXbPtDkuCih5+eqn/6cbBcyGHltyCKPJGk7oGS19uYjGsQpso/U4Oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792101268; c=relaxed/simple;
-	bh=gaNWCzeBlx+8iBLCXy8xVncbBWfAae6JANYjymkPTLg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=F96qUXitupedN/4DW872jU84niWesMg2u7LvUOgp9xVSm/zDzM0jyVQ4bSVZzH39b+64aoVo3v6GtWocF27txJGXMxqxHX72iBptF03zbEc7Ap9wzSWoIm5hWkDRlChUegOcAHUmxjlLrycWsPlAOL3RmPgfGZT1n77yUwkHM2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PQYrJWYb; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792105637; c=relaxed/simple;
+	bh=YRLOmm/3wM3wOaHgPhI6S2+fPcDhjA7YIDf0ljbL6yo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=HOnwBJxhl2sAeccmQ9ItMYGY+CdxoKsZT6wjsbIuuh0xorgxuX9YuLR1wl9j79t8pR1kupNhm3Gs4qXmr04zr8DXnjls0vPPPD60Y2le3PiQdaEfHDUKvlamPIOP3jPi9QJLQnmCWn5wzDV0afu5ojZHd59/0znwgIKKTURYtCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SkHPTNBF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PQYrJWYb"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-398b3c37877so2964535a91.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:54:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792101266; x=1792706066; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=p3k1c/Q3C6vUcXTQA5+QfiwE0HRRy16g2NLX4mv2FEY=;
-        b=PQYrJWYbLVuZ1MXqZN0pzWGdK3oFkAQAU6xOm8S/G7zr6eSVKbh0cipvzI3WTXUH4d
-         QsfkyZSfwMplRhlOMIwZsbwdUg7/Ao8HzZjyr2IoF6wda0O8KyFgP5jQeyxnvpDveOW4
-         PwEaQvs42Lzk9Myfs56jjmX1Kdma9W46b3Jl9tpELqAz4rXc1IpVSohY5Zfjm0Ju/Cbm
-         wqeOEXlfxC372FY2xHyjepv2Ho1obfSJoeFpEid50P4aHer6rLsRlNyWsiJqzS9knkxo
-         1r65j5ZdgWbySLUVIHV0bFtvZB9XiaNEHzj326iQMA3PHiiBLFBQGVl86ImuEMYPlXc5
-         +13g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792101266; x=1792706066;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=p3k1c/Q3C6vUcXTQA5+QfiwE0HRRy16g2NLX4mv2FEY=;
-        b=2P3eBPAacBfpbQWhKH0CIAL9Hs1HUlTsYm2kGE7DO5xGTbhwpBrcsgsx9oDwRkfA38
-         3RBDfZ23prmkFXK34lr4Kx1ZWwqpt7NoSGI2kpCZRUKJWRHUw3cH4xn9aFDVkStL+DiW
-         QwjbQM7oiSozMkILvf6Nzp1fl/m5RPPUNMMkX90awCbvBVplZD95QdpelW36afxmtiSt
-         NJ/to8yseEhJ8WgPQbCZe19/HnMp4aO+Ds+rFh1sdiiIFWoUKquvDLF0liQFBqwdSTkR
-         mxgUbo7vEc1vJWhXoN4QbqgM5Ul/4Ft2GdMpAoxsLAjgqL/gHIuXBJKOfFbhPxZ+bomv
-         pZxw==
-X-Gm-Message-State: AFq9FYLyCAF6xQD3TpDDK9CQdEJsSwAvb/ciDEhtXltq9awTbLp5eWz/
-	ljvpIckJZxJSVc4X0Dxvk1IdlnDA+RsHYA7iTRrzl/H2n3JQUcfelgoOX7Ws41lE
-X-Gm-Gg: AYBFou3iD+GuoKzhBvKXZSV7HpQey/Wq3P6MBKy3+zKRskXtAldk+O5RYBUfnwNJmUf
-	SWYO7bD09kfSNMgpd2yNtfw9Xl9r6RBIyKwmZYATEoCh+ECWHcbaydBdI0HGcQ0d4IqLDLx8+uD
-	qBQfKYIhVZE11F2zFGO2BYIHrdTkEvoy6jFaQi1EeubNm6I3zpbb0fYQkMQivyubPpBcIiVN7M/
-	ER2puRBCuw83k16CQWxiNwwR/A5mt7y+j0c3F7fFZShhYi/fZOVbbSBnxfBPSOv+MHp5+s4ke+u
-	nZHTQFKfPGREy0LRSkgDayZeZ2Q0Pm27rumIwM4CC4mO8stvy7aATTILYXkfAkvwWTPh4g4cJRE
-	kNBf1d7/Ma5fUEYlDsVQevIO1dWmCzZjzj3yHGUymjvpLJiL3b8kM1dSm9Ag1v+tNOPgI1J1q3n
-	Hnd2ftNQkmzZJTi4NnIAEdRaLJjZSdbpR8ZYBPjFqdDpg8dmY9KEwq6uFjVAnb+5pGrlhMCnzjn
-	ouaZhvwqdzGtB9L53J6G0zTLUb3fVr3MguiKhTGi1JTkH5E5amm+OGS7C7srQeUy3lqn1AODtmy
-	l47Kf22t0wuE1nRqMGPPb1sXQqfRvDCZCMy8ZpjHb9CZlbDf
-X-Received: by 2002:a17:90b:384a:b0:3ac:b3c7:de14 with SMTP id 98e67ed59e1d1-3acb3c7e4a0mr1809389a91.61.1792101266438;
-        Thu, 15 Oct 2026 14:54:26 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e36])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc487e509sm925307a91.9.2026.10.15.14.54.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 14:54:25 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH wireless] wifi: b43: load the N-PHY SPROM power limits for the current band
-Date: Thu, 15 Oct 2026 14:54:23 -0700
-Message-ID: <20261015215423.195788-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SkHPTNBF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEB4F1F000C4;
+	Thu, 15 Oct 2026 23:07:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792105636;
+	bh=D4l1NUHjgo8T25PXCBA6/6ltQgVMkPc3iCqrBBCvMEw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=SkHPTNBFFOJOqXqRrLFIaOuVEVY8YOImW0QU/aQ5y6Hu3XIMXg/gGMgjlu9YM+hOF
+	 YoCKjHCg2MHVxKa8cVQjZyPGT8785f8iiM0VKkzvNfSoKKQp6Q8yrXb2AjJW+5s4O8
+	 VjGATE4TPXWMOPQtPQ7ePL6eJ3y4JE7v0XyfpjEhUP7GrVixa2MwQQ2iDwhrHbc76Z
+	 lRD8+ySt+rDHHcnYi4gQhLr2tMJgNmKSGz2cL9/GYoW2XOmHoNN+4BHii8e6r+j0+j
+	 GWw9i6VrH21D7MneqrE5G9YG4T8QwID1UoA965Mo62Cklofypks2m+IBKNugQTy5Go
+	 4Ka6hYHLL2veA==
+Date: Thu, 15 Oct 2026 18:07:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+	ath11k@lists.infradead.org, ath10k@lists.infradead.org,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v3 1/8] PCI/ASPM: Always disable ASPM when driver
+ requests it
+Message-ID: <20261015230714.GA1802070@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260708-pci-aspm-fix-v3-1-6bd72451746e@kernel.org>
 
-b43_nphy_op_recalc_txpower() always builds the per-rate power limits
-from the 2.4 GHz SPROM entries (maxpwr_2g, ofdm2gpo, mcs2gpo), even on
-5 GHz channels. The resulting maximum then overrides the per-band
-target b43_nphy_tx_power_ctl_setup() reads from the SPROM, so 5 GHz
-transmits aim at the 2.4 GHz limit.
+On Wed, Jul 08, 2026 at 04:30:15PM +0200, Manivannan Sadhasivam wrote:
+> From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> 
+> PCI core/ASPM service driver allows controlling ASPM state through
+> pci_disable_link_state() API. It was decided earlier (see the Link
+> below), to not allow ASPM changes when OS does not have control over it
+> but only log a warning about the problem 'commit 2add0ec14c25 ("PCI/ASPM:
+> Warn when driver asks to disable ASPM, but we can't do it")'.
+> 
+> A number of drivers have added workarounds to force ASPM off with own
+> writes into the Link Control Register (some even with comments
+> explaining why PCI core does not disable it under some circumstances).
+> According to the comments, some drivers require ASPM to be off for
+> reliable operation.
+> 
+> Having custom ASPM handling in drivers is problematic because the state
+> kept in the ASPM service driver is not updated by the changes made
+> outside the link state management API.
+> 
+> As the first step to address this issue, make pci_disable_link_state()
+> to unconditionally disable ASPM so the motivation for drivers to come
+> up with custom ASPM handling code is eliminated.
+> 
+> To fully take advantage of the ASPM handling core provides, the drivers
+> that need to quirk ASPM have to be altered depend on PCIEASPM and the
+> custom ASPM code is removed. This is to be done separately. As PCIEASPM
+> is already behind EXPERT, it should be no problem to limit disabling it
+> for configurations that do not require touching ASPM.
+> 
+> Make pci_disable_link_state() function comment to comply kerneldoc
+> formatting while changing the description.
+> 
+> Link: https://lore.kernel.org/all/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com/
+> Link: https://lore.kernel.org/all/20230511131441.45704-1-ilpo.jarvinen@linux.intel.com/
+> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> [mani: commit message fixup]
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Pick the SPROM band from the current channel, splitting 5 GHz the same
-way b43_nphy_tx_power_ctl_setup() does.
+I was a little confused about the provenance of this patch.  It
+*looks* like it should have been posted somewhere by Ilpo and
+something tweaked by Mani when applying, but none of the links above
+are a posting of this patch.  I dug around and found
+https://lore.kernel.org/linux-pci/20230918131103.24119-4-ilpo.jarvinen@linux.intel.com/,
+and this patch looks like basically the aspm.c part of it, so I assume
+that should probably be the https://patch.msgid.link/?
 
-Fixes: 8615eb2870f1 ("b43: N-PHY: support setting custom TX power")
-Assisted-by: LLM
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/broadcom/b43/phy_n.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+To fix the provenance and the "Drivers can controlling" typo mentioned
+by Ilpo, I replaced this with just the aspm.c changes from
+https://lore.kernel.org/linux-pci/20230918131103.24119-4-ilpo.jarvinen@linux.intel.com/
+and added the CONFIG_PCIEASPM dependency to the commit log.  The code
+change is the same.
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-index 22359bd9db47..a8dc7c12a5a9 100644
---- a/drivers/net/wireless/broadcom/b43/phy_n.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-@@ -5833,6 +5833,7 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
- 	struct b43_phy_n *nphy = dev->phy.n;
- 	struct ieee80211_channel *channel = dev->wl->hw->conf.chandef.chan;
- 	struct b43_ppr *ppr = &nphy->tx_pwr_max_ppr;
-+	enum b43_band band;
- 	u8 max; /* qdBm */
- 
- 	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
-@@ -5843,7 +5844,15 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
- 	b43_ppr_clear(dev, ppr);
- 
- 	/* HW limitations */
--	b43_ppr_load_max_from_sprom(dev, ppr, B43_BAND_2G);
-+	if (b43_current_band(dev->wl) == NL80211_BAND_2GHZ)
-+		band = B43_BAND_2G;
-+	else if (channel->center_freq < 5100)
-+		band = B43_BAND_5G_LO;
-+	else if (channel->center_freq < 5500)
-+		band = B43_BAND_5G_MI;
-+	else
-+		band = B43_BAND_5G_HI;
-+	b43_ppr_load_max_from_sprom(dev, ppr, band);
- 
- 	/* Regulatory & user settings */
- 	max = INT_TO_Q52(phy->chandef->chan->max_power);
--- 
-2.56.0
-
+> ---
+>  drivers/pci/pcie/aspm.c | 33 ++++++++++++++++++++-------------
+>  1 file changed, 20 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 172783e7f519..1c15a14718e8 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -1449,16 +1449,23 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked
+>  		return -EINVAL;
+>  	/*
+>  	 * A driver requested that ASPM be disabled on this device, but
+> -	 * if we don't have permission to manage ASPM (e.g., on ACPI
+> +	 * if we might not have permission to manage ASPM (e.g., on ACPI
+>  	 * systems we have to observe the FADT ACPI_FADT_NO_ASPM bit and
+> -	 * the _OSC method), we can't honor that request.  Windows has
+> -	 * a similar mechanism using "PciASPMOptOut", which is also
+> -	 * ignored in this situation.
+> +	 * the _OSC method), previously we chose to not honor disable
+> +	 * request in that case. Windows has a similar mechanism using
+> +	 * "PciASPMOptOut", which is also ignored in this situation.
+> +	 *
+> +	 * Not honoring the requests to disable ASPM, however, led to
+> +	 * drivers forcing ASPM off on their own. As such changes of ASPM
+> +	 * state are not tracked by this service driver, the state kept here
+> +	 * became out of sync.
+> +	 *
+> +	 * Therefore, honor ASPM disable requests even when OS does not have
+> +	 * ASPM control. Plain disable for ASPM is assumed to be slightly
+> +	 * safer than fully managing it.
+>  	 */
+> -	if (aspm_disabled) {
+> -		pci_warn(pdev, "can't disable ASPM; OS doesn't have ASPM control\n");
+> -		return -EPERM;
+> -	}
+> +	if (aspm_disabled)
+> +		pci_warn(pdev, "OS doesn't have ASPM control, disabling ASPM anyway\n");
+>  
+>  	if (!locked)
+>  		down_read(&pci_bus_sem);
+> @@ -1485,13 +1492,13 @@ int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+>  EXPORT_SYMBOL(pci_disable_link_state_locked);
+>  
+>  /**
+> - * pci_disable_link_state - Disable device's link state, so the link will
+> - * never enter specific states.  Note that if the BIOS didn't grant ASPM
+> - * control to the OS, this does nothing because we can't touch the LNKCTL
+> - * register. Returns 0 or a negative errno.
+> - *
+> + * pci_disable_link_state - Disable device's link state
+>   * @pdev: PCI device
+>   * @state: ASPM link state to disable
+> + *
+> + * Disable device's link state so the link will never enter specific states.
+> + *
+> + * Return: 0 or a negative errno
+>   */
+>  int pci_disable_link_state(struct pci_dev *pdev, int state)
+>  {
+> 
+> -- 
+> 2.43.0
+> 
+> 
