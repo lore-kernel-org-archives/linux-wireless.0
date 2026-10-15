@@ -1,70 +1,52 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 453B5427F9C
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 07:09:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81579447805;
+	Thu, 15 Oct 2026 07:21:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.56.165
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792048180; cv=none; b=da9D1Xrv86gvHhh7Oyq7hKB0Q/W0i2I0kMsmArXHaaOywcYUcEbmpFRuPL1TZEhpy3wtspEHDDRzbvGij91s6/TTdQROqbKMPEID1W4X4w43NaZW3uvicHBmWZAx2sGfOnYHFCWqweWyJecNbwRWRjOboTRcQZbMRk/4pkxX2FQ=
+	t=1792048895; cv=none; b=EoBYHhGb7WdbcsC07CK5NQFM9bZf+gJ2lLdWZNqfs7qSa5l6oDYQhDIlzrCvJAusZdWtRZkiVc19SVEfMiFwZWEHjL7VeV5s6+9BQdU1hBnffy4uEAsW/bLYQgYhh9eHdIo/FPTCQHqKFoEkL4g4EXecjfFnA9o8sWy2QTPeL6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792048180; c=relaxed/simple;
-	bh=vSE6SF/O7vjB6gvtVPX8GgYZcDaIDXMtT2/2oI7pXAI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LdmrSeEm5iXEoPvB/s8uob+Jt7Oh3tEBKHOEP3czj823jWxWsgmA6RzuBhl+EjDyc195yLUtbM2dR0rj5kpfKNW6+CNsf8qCkHuPk8zc4h621p6z3yQdUP1PpjylsL/0Rhzt6TZp6u+knwzyXGK7W1QSrJhLT/82R2+kuhP80ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LZ781QyM; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1792048895; c=relaxed/simple;
+	bh=aXOYd/IpTZ/z/TqYVjtUrb+ki2He1+Dm1qXywwrwG3o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gfp8F10PS/cA42zhXlt0hGafz/F4kum0Jj3pOGxeD3OmBJLb/qoZZWgLBM2Ss5ZEF/5vQ0SPFIN+Z0/w47gIHCg3ANDVC+ClEEEg2OaphRCq5xM+1SxEo70rlyy+8dciN3930gxmbUrFBL7hzdArCM/8kbUWAvzzTR6PiHZWu6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=CBcBmO4Q; arc=none smtp.client-ip=51.250.56.165
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LZ781QyM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792048172;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vSE6SF/O7vjB6gvtVPX8GgYZcDaIDXMtT2/2oI7pXAI=;
-	b=LZ781QyMYaG31kqXmcnoLhvBJkdHsnSE9UlydqGfwfYT84R+RMmFBmbFks2ziCSsMXuR3D
-	E/ub9B1YWyvNK/P+AMdcWZikdbJqqppiPGA9x+Aj/1vahXTV6dLqqX1Z5G/RnRFRyNrao9
-	UyPP/BnZN4aUcx9C6GyK3zkwgvELZg8=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-317-SirXxdeDPEuJ2pN2inpTCA-1; Thu,
- 15 Oct 2026 07:09:28 +0000
-X-MC-Unique: SirXxdeDPEuJ2pN2inpTCA-1
-X-Mimecast-MFC-AGG-ID: SirXxdeDPEuJ2pN2inpTCA_1792048166
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="CBcBmO4Q"
+Received: from [169.254.254.254] (localhost [127.0.0.1])
+	by smtp.ideco.ru (Postfix) with ESMTP id 9B86B203855E;
+	Thu, 15 Oct 2026 12:21:22 +0500 (+05)
+Received: from fedora (5cfcac1b.dynamic.mv.ru [92.252.172.27])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1BCE31956067;
-	Thu, 15 Oct 2026 07:09:26 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 485A8300072E;
-	Thu, 15 Oct 2026 07:09:20 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jgg@ziepe.ca
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
+	by smtp.ideco.ru (Postfix) with ESMTPSA id 482082032116;
+	Thu, 15 Oct 2026 12:21:06 +0500 (+05)
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru 482082032116
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
+	t=1792048881; bh=sp68sfo4wdTeRg5lJcmjZaz65CMQSCLC8h6Pl0FCQq8=;
+	h=From:To:Cc:Subject:Date;
+	b=CBcBmO4Q7aq6UHN/4INXKbXA3tWYOIn7ijpBz7HjC49qrxRXTquCDo7itadggFug6
+	 I3CSv16wORbmmVSzR1c/kl8RBGqYyn+1/A95A0T30zbF2fWdaBhNbZboSuozDChhjA
+	 HOBvpH9COzZvYw+Cj0A7kdEYs/ipopD4T3N8qscNMGJYelxX7wR1m8ggFRCjXF5arM
+	 6zjLJVgz3KYc+Jfh5moDyv5TXtTlBkeKAq401OPGZwqn8DPNQlIsNWvsxWSEpGpcmI
+	 2MWpZSw3rulYdfhBnWc4d697d3QnhuJxIGUioyJX5i2Nu64auZh3nB//kALRhi1Mvg
+	 LhmRdPlH5GJyg==
+From: Alex Kazinsky <a.kazinsky@ideco.ru>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Alex Kazinsky <a.kazinsky@ideco.ru>,
+	Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+	Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
 	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	skolothumtho@nvidia.com,
-	yishaih@nvidia.com
-Subject: Re: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
-Date: Thu, 15 Oct 2026 09:09:19 +0200
-Message-ID: <20261015070919.466876-1-jtornosm@redhat.com>
-In-Reply-To: <20261014150047.GO14213@ziepe.ca>
-References: <20261014150047.GO14213@ziepe.ca>
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: rsi: Skip TX aggregation setup for non-QoS frames
+Date: Thu, 15 Oct 2026 11:20:05 +0400
+Message-ID: <20261015072010.742369-1-a.kazinsky@ideco.ru>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -72,14 +54,39 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi Jason
+When transmitting a non-QoS unicast frame to a station in AP mode,
+rsi_core_xmit() assigns IEEE80211_NONQOS_TID (16) to tid. The station
+lookup succeeds, allowing tid to index start_tx_aggr[], which has only
+IEEE80211_NUM_TIDS (16) elements. This causes an out-of-bounds read and,
+if the value read is zero, an out-of-bounds write.
 
-Thank you very much for this. This is a very good and complete analysis.
-I need some time to study this carefully and understand all the
-implications. After this I will try to do an initial proposal to work on.
+Only access the aggregation state for tids below IEEE80211_NUM_TIDS,
+excluding the non-QoS sentinel from TX aggregation setup.
 
-Best regards
-Jose Ignacio
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Fixes: 19844c0a9a19 ("rsi: data and managemet path changes for AP mode")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alex Kazinsky <a.kazinsky@ideco.ru>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index ead4d4e04328..3281fc94e107 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -458,7 +458,7 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 			tx_params->sta_id = 0;
+ 		}
+ 
+-		if (rsta) {
++		if (rsta && tid < IEEE80211_NUM_TIDS) {
+ 			/* Start aggregation if not done for this tid */
+ 			if (!rsta->start_tx_aggr[tid]) {
+ 				rsta->start_tx_aggr[tid] = true;
+-- 
+2.56.0
+
 
