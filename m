@@ -1,101 +1,166 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C96D54B1BF
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 16:02:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792080138; cv=pass; b=KgwOx9lVlCZ34mLyKB5uFhUyrPVr8TBh8m0qBLWCT5SJjkx+wkn0mA8UImZPM/KtH+0USs82bJm/sSeZxpxagghhnocSpSgYMLJasOzWhHjw7l7XJdD8l/vvPMOazo8eEL2TI2g8RQrOl0ntjwFaLa/kph0WGk71F5BsNr1X008=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792080138; c=relaxed/simple;
-	bh=EVb3fHhqwqqeu00xfzg/DJoG7nkrhX4cn5MUR8Ocoj0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kSMdKPwEZ8bIGFeh5Bx6msCPRzl2HLKdKmIy1twZams4VrLWN4mAXuO90RcexZsO3yHse1b2LUnPDzVBysVJyybxFVo9qtxqtnkReIojZ0RzqueYn9iH4TT211IzoOy6auUlW4Dq2U88xwMVnicVp5wEwDMqHvc0ADIyWjBs4bc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j/lYuoql; arc=pass smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13CA542EFB
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 16:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792081695; cv=none; b=h33giwpgFHsa8KUn0db2unZ6Fts0zXvgwGtbVYvxyBb5wh7svILIh3dvr5BNux3kgMy62RkB+X0Z9XggDPiQVK1eOj9QzV9zItNLDnQFEN/HqWJsn0MS/Ly1odZZh7ZVtV/AoECHPFUqOekkIrXtLqjLmwm4ZZ/RIUYfxXj0Psg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792081695; c=relaxed/simple;
+	bh=VZN2fb2ga+rAimb+At5lfyPZ8DXcR0GMUzzVA+d4nj0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Eb1ZjteZ6znFTeXgy0Tgtn4lJuYkcurL5tK2h32Kn+ghCu0F0ww1/0nI+7pEBET8uk2DEwz8ivUhrt7Ihf8EtvJng0rhzLFlem1/DCOLGsqmzrChzYLe6cEjRXxWppL39tQkGP84BXDqNaagLGaigZc2uCzmReAcuxJz9eRaGJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=jiCSaMqW; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j/lYuoql"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b1f4d8e09aso985388a12.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 09:02:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792080125; cv=none;
-        d=google.com; s=arc-20260327;
-        b=LRBHSMxDN+FwZHq7esq/1LWhBLPxZV8b5b+FiV4DnVsnT25Rqvb2SgN50x3QXDW0oM
-         /aB7dRvdctqBPPxdLfnb37ZAeJtPF1/77X+oLq7d2dtbQYvQPwsEIDlJsj8x9xOiMqzs
-         PyUwZ9ca9KIviNHeoptp3rqktkB+HvHOVsWJNMpwyf1M0K32Tv6rtTWGyjpFUNssWqke
-         dSlWOBpP7QBciZtDx/yuPnS74T31QE1CgMmoRNRULAc7gHvwdC/gNVi1GKc6opQOhfrn
-         GwtZjG8CY73LFJjPqYuW326dRN05cFc8RGf6ME/ixRQR14wuVsve+UPgkPH7yMp4LuJf
-         4Gag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=EVb3fHhqwqqeu00xfzg/DJoG7nkrhX4cn5MUR8Ocoj0=;
-        fh=JF2GxIl7SiD0CQWLIG0nD20+cSgW+Q0grO/hXIWsgAM=;
-        b=aTFwQU9Jhorn3olENAstXUpBG3gnyTxWlN0j4yaI8nUAGzFXzoC2rTHDN58wv+pEia
-         86LKt2L2M167PFBSpV74jgRKNhRBA25Ic1BV5hKbFaU/FIPE5odkYOsmoqBnflA+iiks
-         FX4btRJWfzqBDuv8RMElb0LT8kc0wwj81EiF89RhoMszOWLL/gy5tvU89aMB47fE3dJT
-         XAuHODkV7v5CQfnAzGvnjYHr+s/W3oVZkeMg4qUrbxANKb2B0QOVepB4W6FjwTS4F7Tx
-         /XZsPeuU11baHwFhSaHpG/35OpEoqCJOBRyEQp/3sVcpwbw4KvK9tkZgOXl5UysKSeCo
-         56iA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="jiCSaMqW"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-486e70f2457so870643f8f.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 09:28:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792080125; x=1792684925; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=EVb3fHhqwqqeu00xfzg/DJoG7nkrhX4cn5MUR8Ocoj0=;
-        b=j/lYuoqlP7GdMXuIA+bkgEWEjelGTkFfUXSUTwOzMiIv4Rx3U2fZ5uspOV8pBJ8YTQ
-         1NBCnVkDeO+8AxTDdBCWKSN4hlwwluNrW0MXPho8XxgLESmGPiC84HnV8q8EtnPitD0g
-         o4eqlLYIAe8CKTBrDOyxNZhLhNi1hSzdLCzgV3JGKsmlRaRXUVgkSS5I/mlb3wMxHNKv
-         yObtZ/+vYLoyIUkB31qtyGwTTzLuwMg4V/UbN6ziRdoZOBuWeV4AD6W3/5V1IqKcD6QJ
-         /kfwWE+Jl05EySFY/Qt0VXVACaJq4+2i5P/ivR8IKwoi/J6iBxAaGKFCopxJL+bUt3ML
-         fE7Q==
+        d=linaro.org; s=google; t=1792081679; x=1792686479; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=KR4i4KxOGzdvwjOBg3czI4/01caQ5A7Fc1JHBGRwQTE=;
+        b=jiCSaMqWSm1g8TUDWxYHPti+M55ELsQiQrxtKGP52uFYZYTYxdWuJvy81ogtK4/FYH
+         eYojlAa9dNruOToL9q262x9QBLNiVycTqn3TTSI3JFsAeAb4ODZu+wXQHE3j7ViOo7W6
+         fxtmkQ9pmF9KFAxg/uO2SfrLvQ5tuNw0SciiITkvWBL5V12hqTvAx5EraDBAkCFzvS0N
+         HXtx4kiTdAVQcBTy3QUt9vPheKm0E1hMBujlQiYuDjVvNrYGeXsCYUX4er3OV0xafbPu
+         JazdYEL4mLksOGzfczVxBEMnd/hEQ169hWVoLk9jNZ9OvWW5Knir9hn+dMFIdbnCHG8a
+         T9wg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792080125; x=1792684925;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=EVb3fHhqwqqeu00xfzg/DJoG7nkrhX4cn5MUR8Ocoj0=;
-        b=fgxJMcLZ63MW7PAMJnOLJxLYpw7vpjyT26pLGtoEi6fnh0jk/Qw9XAJpsRqh6U75ln
-         5Kqp6foe7VeG2EWpU9C4my/jHfzAhtAxbDGPAp82W68zfXe/EoxF59q3cE4HfyS6CWdR
-         F/O9d8S7s5nlbo3GTH9ZUsRcM+BZ9xYcy83iU1ZMWU4U+oHEw4kpQbiwPzHhxj4p1sXn
-         VBc6KNQ/lAE3TBZ9wAJ1TClMFf2Oe9nWWHcwt61Dfob28u2VuSFBhDAIK3gnb6qYibX+
-         UeFv4Wt6nRrGV7C6EypGpnjGZVmNl8EXP7n9tV5TlWmfGpnn6kXrkZhsksLEr0JTAsB3
-         VSeg==
-X-Gm-Message-State: AFq9FYL18VdJpU5J/aqr5vnJB8TE6U2JieinEh0UIT8dCsKzI7JzmXw4
-	+aIHQ2U4fmBc5oR89EbBv/BTn/tex8uzvsjTwzTmFKZw6TexWxgNdS3Ow0eweTlvgIofONZC9qI
-	N1FxiRu3IfSxh9HldTwWk5GCznFGwfaI=
-X-Gm-Gg: AYBFou2qQjR5fGN2eAYTL3gktxMxxqRJo9FzY4h7+BXHFhPHshP991DmEDKvtGBgUDM
-	700X0aZ+HCFeNP3/rNfUQBFeMApWYv2xCQ/VfUFVk3fsqJlK1dxatJh7yZGHAnH2hg85pqJcvF8
-	JHQkltwweQNIajOOa1FoDqiBC2GUJKdyJpChm9P0UBUqADXoszcsf49Goxoflmox/lAt/nm6vDO
-	f3MPvoC2pU+3/KzRM+9A9OlLlrkP/pfEjKZDyQMIwXMkGTD1+Z1DSSEnf9apn8liv2z/+/M4yJ7
-	ITxf2nZwYKd0x3Wpr99V85FA5pHuty/3BOOU++xxZGPVag3nnlEmN0AvOPBQrQiXu6n5Rls554i
-	DzFSjUQ2kC4G2LK+ddI+XlidaYJyezDQzScs6gW8fsPhABB8P
-X-Received: by 2002:a17:906:dc8c:b0:c2d:ba08:9092 with SMTP id
- a640c23a62f3a-c31a9fe730dmr1747152466b.16.1792080124947; Thu, 15 Oct 2026
- 09:02:04 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792081679; x=1792686479;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=KR4i4KxOGzdvwjOBg3czI4/01caQ5A7Fc1JHBGRwQTE=;
+        b=0Z0LOzC10jCH8kg7xWG/mL58rXgLNHS2QUeRapy1PRFEH24pMj8aaa6u6RaoNhjW/k
+         xVS++pW0ogl6Xzx3snW5kA7M2JLOnPyDuXF8/D5xPO8457p4HE7TaJLObkfl6rPE4HUg
+         4nsvs/SPZtM31pgR2oGJosCl8CzoQI/8gmMJttZfqT7apWiEIu5UmaE7LXZKtEY+w/I7
+         xMi1LgJVw9c24K2CXhP/y3Bzb5XetQjTQHRLwHbBSH0mi7qgBmtkb5lxGI0w0OxNSnTa
+         C5HdSNH6YLhZklHIYjhoiUpg5tw8OYzuNg7vd61YonMOGW7iqvYGNUpPbZRw13scw4q1
+         h0CA==
+X-Forwarded-Encrypted: i=1; AKwUvBw0hm9tdvWVSZG2ODlAUXXZCIp8sCh+rWukmLKq5Cb4gBoCdzrSkF58pOMicB7JEln7N4P0c2VFmJBdn/WAgQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKYYhvpMQkgAcWtMB991r9s06SPKL7nUr2gaH6lEF9aT00vScdO
+	+MZlHOtz7gJupix7bXZ3pZ5wHuX0UQRmJNny5B808S2el/uBe/QNG9sWCR0o9o0vceI=
+X-Gm-Gg: AYBFou2KIixoDQkfWz0mCFGQps+R1HVrCOMNyvyaiwZ4V3z0IYdXwvj9Q3ovAnuMYUc
+	nvq/AriDxnimIuWFTgqnjWkJy6GmZhxCK8INF4E3odNVHVBJ7lb1jlGS2LBqD8B57fw6aoZr0t6
+	wl9+9gersfT6ArfvFopNxTCBlxDqPZMU3BcnzYFfZTNa6h+H4PsUjYXyGI70iI0HB6JWvVuJftU
+	o8Hd+yHeXz93PD2lbpcDSi+ieET1Is6P9+BQOWnhMNdf2FtX8KLnLNOmlgygGaFaiUdSuuvpQeK
+	vmGIVcSzPZ1b60R2X13rkRn7ionQx9uUSrvqxPAfcCzoqxN/WHPpG6F9TOFW3k8UYj0+U0qBSge
+	puTo6X35kgp+aQmL9W1lyMPKP6VS0Z+SAICtD5wFiCpabgJ3whRXN8lcNQaIBw3jqogXCEc58z3
+	U0FtgQkV6QzeT3s6zi3QEzPFK2dJo9fsbvTcXCX1hHRxVXS74snC5e/Ysbb4fzraLUIVaQqHA4q
+	+au86SNHENs4je9Fdl2Wg==
+X-Received: by 2002:adf:f341:0:b0:487:197a:5c1f with SMTP id ffacd0b85a97d-48dbaae84e0mr31568707f8f.49.1792081678765;
+        Thu, 15 Oct 2026 09:27:58 -0700 (PDT)
+Received: from linaro.org ([2a02:2454:ff25:4f41:7bdc:6c2a:a8d2:6ad3])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48de0aaaa34sm19545964f8f.20.2026.10.15.09.27.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 09:27:58 -0700 (PDT)
+Date: Thu, 15 Oct 2026 18:27:46 +0200
+From: Stephan Gerhold <stephan.gerhold@linaro.org>
+To: Abel Vesa <abel.vesa@oss.qualcomm.com>
+Cc: Srinivas Kandagatla <srini@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+Subject: Re: [PATCH RFC 0/5] nvmem: Add a UEFI variable backed NVMEM provider
+Message-ID: <atD_AjZKaF5UtSUB@linaro.org>
+References: <20261014-b4-nvmem-efivar-v1-0-187c85f65018@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGHkXsZX7Tnze+rqJY=D5Zz2Vo=t2Hee28pDxFpoE+Lno+EcxA@mail.gmail.com>
- <048365a7-0ce0-4f98-98d2-eb040ff87b39@oss.qualcomm.com>
-In-Reply-To: <048365a7-0ce0-4f98-98d2-eb040ff87b39@oss.qualcomm.com>
-From: Enrico <vovkap97@gmail.com>
-Date: Thu, 15 Oct 2026 18:01:50 +0200
-X-Gm-Features: AclHuK_WegNOp3BqMOJ-WuU1MlOnrtz9IabRYV30HLJ-TtKNk_4nHVlThqvNgcU
-Message-ID: <CAGHkXsbsJV+tCWupwKvdysddFqXmZnsv5PtD99vcAxQkp+VrTw@mail.gmail.com>
-Subject: Re: [BUG] ath12k: WCN7850 firmware stops uplink TX on EHT (CMD_REMOVE_AGED_FRAMES)
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Jeff Johnson <jjohnson@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261014-b4-nvmem-efivar-v1-0-187c85f65018@oss.qualcomm.com>
 
-> Please open a ticket per:
-> https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath12k/bugreport.html
+On Wed, Oct 14, 2026 at 04:02:38PM +0300, Abel Vesa wrote:
+> This is an RFC: I do not expect it to be merged as-is, it is sent to get
+> feedback on the approach.
+> 
+> Some values a platform needs (for example the WLAN and Bluetooth MAC
+> addresses on the Qualcomm laptops) are not always available to the kernel
+> in a convenient form. They may live in firmware-owned SPI-NOR storage
+> (e.g. a DPP partition) for which there is no straightforward, universally
+> working way to read them from the non-secure world.
+> 
+> As an alternative, this series allows such values to be provisioned once
+> into a UEFI variable and consumed in the kernel. It adds a generic NVMEM
+> provider that exposes the contents of a UEFI variable as an NVMEM device,
+> so the data can be consumed through the standard nvmem-cells bindings.
+> MAC addresses are just the motivating use case; the provider itself is
+> generic.
+> 
+> The first two patches are the actual proposal:
+> 
+>   - dt-bindings: nvmem: Add UEFI variable NVMEM provider
+>   - nvmem: Add UEFI variable NVMEM provider
+> 
+> The remaining three patches are included only to illustrate how a
+> consumer would use the provider; they are not meant for merging as part
+> of this series:
+> 
+>   - Bluetooth: hci_qca: consume a "bd-address" nvmem cell
+>   - wifi: ath12k: consume a "mac-address" cell
+>   - arm64: dts: qcom: glymur-crd: wire both to a "MacAddresses" variable
+> 
+> glymur-crd is used here only as a convenient example for the consumer
+> patches.
+> 
+> Feedback on the provider, and on whether sourcing such values from a UEFI
+> variable is a reasonable approach when they cannot be read from the
+> SPI-NOR directly, is very welcome.
+> 
+> Assisted-by: LLM
+> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
 
-Filed as https://bugzilla.kernel.org/show_bug.cgi?id=222136
+In general, I think the idea to take NVMEM information from a UEFI
+variable is reasonable. However, at the end the usability of this
+approach depends on vendors actually provisioning the UEFI variable.
 
-Thank you!
+Is that the case for your "MacAddresses" example on Glymur laptops?
+Is any of these laptops shipping with this UEFI variable provisioned?
+
+I can't really imagine end users manually provisioning this variable.
+We have too much manual setup required already to be able to use these
+laptops with Linux. Ideally, we should take the information from
+wherever Windows is taking it and make it work out of the box.
+
+For existing Qualcomm laptops with the DPP partition on SPI-NOR, there
+is prior work that could be extended. I would expect you only need:
+
+ 1. SCM SPI-NOR storage support from
+    https://lore.kernel.org/linux-arm-msm/20260126-scm-storage-v2-v2-0-fa045c7e7699@radxa.com/
+ 2. GPT partition parser (not sure if that exists for MTD but the format
+    is certainly well documented and supported already in Linux for
+    normal block devices)
+ 3. DPP parser from
+    https://github.com/TravMurav/dtbloader/blob/main/src/qcom.c
+ 4. Some way to hook it up in the device tree
+
+See discussion in
+https://lore.kernel.org/linux-arm-msm/de081bdc-4b10-4cbe-9b09-4652b63bc4b9@packett.cool/
+
+The universal approach implemented here would obviously be cleaner, but
+in my opinion it depends on vendors provisioning this variable before
+shipping devices to customers.
+
+Thanks,
+Stephan
