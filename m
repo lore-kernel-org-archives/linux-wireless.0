@@ -1,89 +1,89 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B145349B8
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59287535FC4
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792074389; cv=none; b=oUv07fSLsftVP0KvqyA9DBFxDXN7DIKSmFIC46lKsXwKZF5WX5qXRZSGrd0rYMyG3Ru14NX+VANe2EOxtJTx6xM6B+dnKu16hsyr5qoqzf5eIPxjguBhAH/v2diCAxHwzJ0qll0tNK5WTuxwgax+Da8RgXmNbq5kH/4O161yzuA=
+	t=1792074394; cv=none; b=rhynlYw4jX4me4s46yuVEN3qost3/H2PiSsveV34y7o5ywnoLhJWSV/YMjo6UKVJT0+ICcjHMB/Yc6jPuKFSahsvWClhrMZBuO12mB14wuU37Yqjr+v4Wwlbdxk05B74XMWGnZDMc7MCRrHWXi3OqTZHSIwVsW0idIKFbac3exM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792074389; c=relaxed/simple;
-	bh=3be6ZRrkuwe5O6MvoCJ3NJTdkt/zK0OZYHzR1WryNh4=;
+	s=arc-20240116; t=1792074394; c=relaxed/simple;
+	bh=QGnBRrtVZ3FFfHcMd7JXeA3J2ysoWmJkVEJ8fD9hdOg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=I+ggo1Z7gYvl0a5nvqHEwRM8Yp7b3WOb55vjjeB+nAbfIcWCxEHHm/hExyUqMHjtFst/7zc5vLgTykqhMS2uAFUANuDf1UOysraVeDT1Lu5Cmkb0YVnH4Vjsg34rFzUJbukuoDguTY6dvB0kqjj1gmei4DCD0sDRNFZFXTPH3RY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FwjSPjvD; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=b6QGq1BE; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:Cc; b=Y+2scYSlnwaEXE8simKUamW5Syj2/0NAJEvajgcjKIn+L0tsVuLN08VrNEiBqbCQXyjtI0rjtRhkqBnWyCWOZJnIuWrtGThdktdlOqdFBEPdC3mW1SFOvyCMxAsFCsnZt+o2aJeBtq/fZ2KT2j0LMLXDiUkywhkbBmwo7E7mtI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XZsjJyP8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dA4L7YLU; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FwjSPjvD";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="b6QGq1BE"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69F9jOgs2114143
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:21 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XZsjJyP8";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dA4L7YLU"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69F9jggR1955846
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	IE79JMn0wPrEDgdovegTuQ5M+CHvyEMAVwZJre8pogM=; b=FwjSPjvD7W2PMEe5
-	Jhgvf42cxtSO7T1hqxcoWM9lmq71G57eUJzUPFYtXqaPlv3X+VOyFEFikHXdcacd
-	Zxl++rFEoG+Qwv1Hi1KpUhXcPVkRjbT3alg7JqHIFnbsXFx6ZxYbyLpoED70rH9E
-	qD7Q+kQp2NO5EKdmTCWHV4GL06v9Y7iWs3rvKmwusLx3YvK5ESchEPbC+NRAUEeX
-	ZruNCfvaac/F4rmPfUfXDKtXd7QJpnbTjyukC+Qnb+b1KQhS8jLWOCf9/gQzY3k0
-	SmFX0UF/jP8Hb/wdU3t+dvAdZRfGFgoYvHoOSAujVJE72GMFbTUVP6fx5DCq/0Fx
-	c8Ixng==
-Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com [209.85.217.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hajmybgp0-1
+	Rre9nYhysjyh/PSjFpSqFeP/GcQd3x85phPUQeiwexs=; b=XZsjJyP86E4GTGB6
+	a4bPbCinpsmnCbaCdpI1h2R8SU6W/Sfbvu7l54rl4LfpvRY/w+wfr6tub8JoMKYM
+	595hOFcRN0jFMk+GMScBT3neLO/EIxCKsyYVKPZCG+UjDwmQblRhBHquHl97Ha4h
+	qRkmZZM95FIKDgXzLK5RLeOaIgw23GYO4em7HhOhkBb1fA0ZcFQROn8mnYvB6M7C
+	DDWpbguBpGHbH9svCtj/wchrcRjviOPlWf7MfiCX28BrCY5ctz96qd0JElzNiN93
+	yIEwyrdQsGNCwMrQwAeTPD45Ytl0ekMmqwUeA4e3fn9vfpwWqvsUZYWMFGLzz+zC
+	Rq2gFg==
+Received: from mail-ua1-f71.google.com (mail-ua1-f71.google.com [209.85.222.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hakdeubhd-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:21 +0000 (GMT)
-Received: by mail-vs1-f69.google.com with SMTP id ada2fe7eead31-7cc0418036bso147700137.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 07:26:21 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 14:26:23 +0000 (GMT)
+Received: by mail-ua1-f71.google.com with SMTP id a1e0cc1a2514c-988be118d98so214620241.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 07:26:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792074380; x=1792679180; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1792074383; x=1792679183; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=IE79JMn0wPrEDgdovegTuQ5M+CHvyEMAVwZJre8pogM=;
-        b=b6QGq1BE+4qLOl2AeQdlcAdxNLLlWd9g1P+i5nHlDQ2zMzt1r0ohbn3TdnpAks+Kpx
-         Av2SLNvihIXhp/d+cUBLcl4yaGkhBmCgzynbPs7QRHljtJrhAkUetLYJ0nLNVOKaEqB1
-         T/pSColhPJqvZsd57qEAKXNNHFnufrE6P3gdv8u7O5mvkJr1i0MIdJcgprjmKV98fVEr
-         zYj09I2/Ov8yIO5eWFLdWhRtew3c2Kmu0XPaztl1NJ6072PTWSEoNDXB935xa1GuyOax
-         KzK5UKjkQdHtYMDux2P2Szk1Spcbth5gQ2cpxL2hyUzKPjH/KObnGG3JX2yf/0zPV7Ra
-         uIbQ==
+        bh=Rre9nYhysjyh/PSjFpSqFeP/GcQd3x85phPUQeiwexs=;
+        b=dA4L7YLUn3UyCLA476TKYiQy2N9u67VeU/AYPNVceg9P6lp3700U7USeqbUGQ50RCs
+         PPB4jYt/n3HDVTj6b276Vyn03OCOvhIh/hWZsiidsqwd4NLxOzdQYId0LUhBtME6zuZS
+         Bf5rTc/kGyGnoTqOUQtMdkIOQS/KS97yLerySvXm3wMpWDSHnL4O7Xsj7yGcq/7Gip7d
+         bSTRw48yRsU19rXoMiHke4vORXRsuTJ87PPXg/08251t2nh+AsxrKfB06fQvQuil75Hq
+         DviDEkCqHxn5cGPfNC1vysum322CHTxMpXLYAuC4SNicVQ6jHon/nKF6Wq3vxRpWP4Pr
+         s0wg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792074380; x=1792679180;
+        d=1e100.net; s=20260707; t=1792074383; x=1792679183;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=IE79JMn0wPrEDgdovegTuQ5M+CHvyEMAVwZJre8pogM=;
-        b=NLaGqhMtIiyWpndX1J+iy2lTjzp1B0e+hDmyULwvFlfsv0Kuyl3wwnB3xxRZ2BHRIX
-         H4bbdmoh6G7gHAxOEHM9MVZoICWUZt7ptQBg2Spby4t4ZzXqUX9ZM8UsNh9GowgHFdEg
-         MBl5RLk1bB99lAIHl+/1JsVn4yo0KafbbTUxo2VRiUgvou/DPUYUMZqxcxrD9UW4Regf
-         uN1y+kLD0vKYa31ArJyR2lT7CamhHzn2eUNTCMg1FWIrra8E6scJhI9iUjxsCs+5k6GN
-         hW7Cj8/PK4rAEyR7p1SO3+fslTXPOkwrdGgcFE8nX2XrTJsDO592Q6ZdYKBukzf+tNRg
-         77Ew==
-X-Forwarded-Encrypted: i=1; AKwUvBzXfsVXI/F57WHP4IWjpXvqockuch2a7P+nLSQh7d42DaIIxsHCx1XH0C+JgcCyiAiLFuunKr2KlCcdpeYsWg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKDuqxBR71VUtG04aC+INFUO5lizcuJ6gEjxJCFjIZUihEvbzbq
-	6JvNTnXLIhsQ5p1G0dWp57fg8YQSNyS4jIT+nv1KJ6pOpPdIWu+dYjp/LXOfOuzDvr5cbfSlfJ1
-	+e6SIdr3Znl02pk1fv5jQ6uMnylONNKWr3fYuNHmu9iY+O8vfr6q4lnhrPj6L9Tinn7BKGg==
-X-Gm-Gg: AYBFou0E2wsBin/66c+jkKrwgQuda4fLaV5hgK+jXjZlYy8PRiwCsQ8R1CmLeZZAnXL
-	RT/TOgeY5JvwR29tgOjZON/Jgf5ZYhpb7sOnXk2V5sr9Gko5n9d99piXMFTLrjFlYiskerzNcc/
-	ACzyKyljfOiInVMoa3cytHCWmBubUqmwDiJm9tPjX4GGsee/wTHT5w3Fj0DRhY1EeuIyVDPW3Df
-	zRDVXbAxrX2/sYtA3fMIjpfKhwlir84WxpAnVh6mPyj7NOC55elHjDWj+hxg7EDk3JZh1hHrmJ6
-	IXj4Q6ZdYrQPAqn3U6JHUrl0bALWr6+lr9oGaMJUB7oq+/ajrQlEptDeybTbd4UuNtfV22LYbIK
-	UdE2XkboipJkX+sDI7DF1+NZSOmAfSQPdiGdYwkdSsStuzfAl8x4IuBz430NPN8LMh1lecsUaiZ
-	WwN1/NyOfrpTmMgH3/vLqzR/SVqoENGrfg0/0PIeYacEsz3e7lPR4=
-X-Received: by 2002:a05:6102:5cca:b0:7c4:a0e4:1a79 with SMTP id ada2fe7eead31-7cb37317ab0mr3850170137.19.1792074380079;
-        Thu, 15 Oct 2026 07:26:20 -0700 (PDT)
-X-Received: by 2002:a05:6102:5cca:b0:7c4:a0e4:1a79 with SMTP id ada2fe7eead31-7cb37317ab0mr3850159137.19.1792074379260;
-        Thu, 15 Oct 2026 07:26:19 -0700 (PDT)
+        bh=Rre9nYhysjyh/PSjFpSqFeP/GcQd3x85phPUQeiwexs=;
+        b=2OXcSXE5nfbzao5N8scpcEqZP+zTeEmwt8f9b1A+ozoYt5YMXFpSRPHJhcbHUEx12A
+         H2re2LgPbT1+ZpgK6MbiEOQoCCmN1VeI940/O34ggfDJIfG7Hs4ANbBPY16/y2l7Cdpj
+         UlUV65hzQMtcyjacVXRe9ta1RtiRhze3bhdF4SmrdC2yEziuq9DBvrfeVDvvIOyzvQSw
+         gsVWlIoGlW9x+SLArLe0KSGJNw7jkWmAO0N7QbyFIxa9ZTgILb6HlE2F0XGiqbGhPovv
+         GCZv6uJqsYPljjT+iRGKqvIRrNOobrrHDik/kNjJcCAUmuyJySe8g1VDkraNocZMW0LQ
+         EbxA==
+X-Forwarded-Encrypted: i=1; AKwUvBybdtzuqyg4ITq5N6EM8CeWZGQ7c62vrgBADIpPl54n8AWv3c0yjLS12H8/zBjhbyMtKgCsdIlu0LQCHL+Csg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLJcXSQrTdL3cFndmnymRSsrVPKoZz6Ajlwl04NzphaVVogah+k
+	PaVBNmVD/VfRuXEsaDvU4I9Km7FM8qfIyb1qinS4kzInY6CSaotcKa2P+Cu9PlseylmJgor4bOV
+	NLyAkXekB02LJ21HeDBiog6FsCpR1zT5qDZmumiiX0WL56NcQOAT4tdMw/FfsnHw+PkoHW4h6sn
+	OfddeI
+X-Gm-Gg: AYBFou0HSeipfLVo99NarDVN14usn9/LL5lY7/ImqaaBUTGVe8x4bwBqZh1t+6KkzDD
+	mToIAE43Yts5GLLVnQBz9DcKpax/2/q5AsnZaIZN07pD9REiGgc4YBcOs8jFR8RANrVLNg3uAoy
+	K4EGBgF4uA1BnHYQLQB3Z/EBYypLkQxTrlpPefvr95PIqsA09ZXV8CAX8vekd520XNcY2eV5EKr
+	mHRneCnzq893qNGlm8ywFWg00d8u1XH5zzmb3n9pAbgLat+W0jhFF0KM/r050I9ErEBVHYe3u4h
+	tbYrcFxbfBM8PAKv5LgIV0gFmHMPsQ3WPRMQkXL7DwcEWXwfkPKpblftPW+wDYZ+EYTvYtt6cms
+	a4loHTKWbQQxRwu/v6gVO7lePLWLeWe4f3CvE2gZoM/eYCb5uaSkw9lO7Eo800N2sG+AqR5NnDq
+	0D/msjloJTOX4oTU1Alhc3X1NBKucSOKxHISPAfnYbTD4LAHQ13Xs=
+X-Received: by 2002:a05:6102:149d:b0:7c3:8ae6:d7ae with SMTP id ada2fe7eead31-7cb3678b940mr4845576137.1.1792074382850;
+        Thu, 15 Oct 2026 07:26:22 -0700 (PDT)
+X-Received: by 2002:a05:6102:149d:b0:7c3:8ae6:d7ae with SMTP id ada2fe7eead31-7cb3678b940mr4845555137.1.1792074382082;
+        Thu, 15 Oct 2026 07:26:22 -0700 (PDT)
 Received: from QCOM-eG0v1AUPpu.na.qualcomm.com ([2a01:e0a:830:450:5402:5e0b:9ef0:9b5b])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd6428b3sm69083145e9.1.2026.10.15.07.26.16
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd6428b3sm69083145e9.1.2026.10.15.07.26.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 07:26:17 -0700 (PDT)
+        Thu, 15 Oct 2026 07:26:21 -0700 (PDT)
 From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Thu, 15 Oct 2026 16:26:01 +0200
-Subject: [PATCH v11 2/7] block: partitions: of: Attach partition fwnode to
- the block device
+Date: Thu, 15 Oct 2026 16:26:02 +0200
+Subject: [PATCH v11 3/7] block: implement NVMEM provider
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,7 +92,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-block-as-nvmem-v11-2-f890ac74f87d@oss.qualcomm.com>
+Message-Id: <20261015-block-as-nvmem-v11-3-f890ac74f87d@oss.qualcomm.com>
 References: <20261015-block-as-nvmem-v11-0-f890ac74f87d@oss.qualcomm.com>
 In-Reply-To: <20261015-block-as-nvmem-v11-0-f890ac74f87d@oss.qualcomm.com>
 To: Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -123,175 +123,296 @@ Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
         ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org,
         netdev@vger.kernel.org, daniel@makrotopia.org,
         Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        Christoph Hellwig <hch@lst.de>
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Proofpoint-GUID: 6MuYfcDqJKR36h2ID_3UlC7myE-UWy5i
-X-Proofpoint-ORIG-GUID: 6MuYfcDqJKR36h2ID_3UlC7myE-UWy5i
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDA1NyBTYWx0ZWRfX9yR/1LHNKCIH
- vm7tQRBWi/yNMcNUjhsaxSYX2uZuvzDSD7PciFC9in2pbI0qjY7t5QyJNmrEUkckQVdFv3DyAO0
- 1ahOckLHgAaJas8nCSUIr2YaPNoeg04=
-X-Authority-Analysis: v=2.4 cv=TbQDJhQh c=1 sm=1 tr=0 ts=6ad0e28d cx=c_pps
- a=5HAIKLe1ejAbszaTRHs9Ug==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+X-Authority-Analysis: v=2.4 cv=OdENnRTY c=1 sm=1 tr=0 ts=6ad0e28f cx=c_pps
+ a=KB4UBwrhAZV1kjiGHFQexw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
  a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=EUspDBNiAAAA:8
- a=2ffTNAQyBkxXHBiWhEgA:9 a=QEXdDO2ut3YA:10 a=gYDTvv6II1OnSo0itH1n:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDA1NyBTYWx0ZWRfX5zmX/7sYFM3S
- HRs07FCvXlyntTT2zUlDtmM2rpv0J7sQ33DZ7k2y7Q/0pQHBYCMH+QaJxJy89jRWx6F4L8cUHYb
- JM9p9DE8jZigpUr7gwmu7rcLzAeXgTnhXUAfY+Pq/4ED2uxJVvv9coJCs3nXeJnoyH3XCL/E+dr
- KCANSJByAvS5EZ9Ub9QTOg5frCkqEgFIS/pUnUXwHY/zyafkTqE6oYFQ7XPqNtkVRdoLQFO3fcc
- wxcEXAv/+snG1splCn9wIsuYlIu9gUdOf3igK5xgamuhIiCwiQ8P4Dgjyb1ks/ucGREL8jzHpwR
- MZyxNHJh0gLpv0vdKb8GAR4RThI/A4H+wEwIL8P1xYdA9a6ZIL4YQNpoYqCrcTx5bNl4GO0y9OF
- wv9Xlct12GAwt2ampHubo73UHHjBgLyISrOUhAaHyNOwja/GbR744+flIixlggHQD5E/uwC08ka
- o+56a3zgnnC//iIxs/A==
+ a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
+ a=VT4XjZGOAAAA:8 a=71DuYGxFrHUPmPLwgxgA:9 a=QEXdDO2ut3YA:10
+ a=o1xkdb1NAhiiM49bd1HK:22 a=6CpsfURP9XNmmWg3j1mJ:22
+X-Proofpoint-ORIG-GUID: wvQeaOaGTJfhUM-IL1DMa15Yu4ZwC6Bl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDA1NyBTYWx0ZWRfX51pEX7Srad/y
+ NpyrPqcuk/3i8EZ/oKZyCAGPn2DPvNTgOftdYYbVLY41b84vDpUZh4Cal2dSrsL59oWbAAwfc7C
+ 0JmckmK6kYZkFNC7JpcspCxMnjCnaJU2skAX3arNK1MgDjGp7x2mi+rn3VMLh1JrdPfCpuBY+oZ
+ o3igyc+GzMwYAbzfduwKDTIUA9UrAcPhWB0T7w+eRs1PTQXIRIGudshVFVfKonjIC6raRnr5Nvv
+ wtiqJa3a3ni0LfuOVFpVuol2xhHEVnBo/6uuXCLLHAZu3tL1zLLUnSE77be+Sh94v290hETG1LH
+ JEuAyPvQSHGhEhzWOJ1QcRCqaKwiLwUMZ7Q3rTjC70QLj8RQLp72pXgTaWdY/X6CQcVXkEoG/q1
+ HAoUK+vPCtJrUs0p5NAh6kBCaFGzC4s/qfLVOGDCV3U1nNMVvUcw7SCW0eUmdiuT6C/rBaNOaGg
+ 9x7nclCS5XNwSrhRpgw==
+X-Proofpoint-GUID: wvQeaOaGTJfhUM-IL1DMa15Yu4ZwC6Bl
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDA1NyBTYWx0ZWRfXzP8QCceoZNnU
+ AqrEuR0wFbrLLfgyAc+s62EhjYxU5tk2Uy2XoH5EzvoAH1/lmZz84yITTkFkrjLEq1E1kMCglyH
+ iku23B3cVJcc09ZUhJpSzacFdQRo2Mc=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 lowpriorityscore=0 bulkscore=0 priorityscore=1501 spamscore=0
- clxscore=1015 impostorscore=0 phishscore=0 malwarescore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150057
+ bulkscore=0 spamscore=0 impostorscore=0 phishscore=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 adultscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610150057
 
-The OF partition parser reads offset, size and label from each
-"fixed-partitions" child node but does not associate that node with the
-resulting partition block device. As a result a partition has no
-of_node, unlike the whole-disk device which gets its firmware node via
-add_disk_fwnode().
+On embedded devices using an eMMC it is common that one or more partitions
+on the eMMC are used to store MAC addresses and Wi-Fi calibration EEPROM
+data. Allow referencing the partition in device tree for the kernel and
+Wi-Fi drivers accessing it via the NVMEM layer.
 
-Carry the partition's device tree node through the parser and attach it
-to the partition's block device with device_set_node(), mirroring the
-whole-disk case. This lets consumers describe per-partition properties
-in the device tree (for example an NVMEM layout on a partition node) and
-look them up through the partition device.
+NVMEM is registered for a block device whose OF node describes an NVMEM
+layout, either via an "nvmem-layout" child or by being a "fixed-layout"
+node itself (e.g. an eMMC boot partition associated through its mmc-card
+node).
 
-No functional change for existing users, partitions without a matching
-device tree node simply get a NULL fwnode.
+The NVMEM device is a read-only side channel onto a block device.
+Each read opens the block device with BLK_OPEN_EXCL to keep other
+exclusive openers away for the duration of the access.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 ---
- block/partitions/check.h |  1 +
- block/partitions/core.c  | 20 +++++++++++++++++---
- block/partitions/of.c    |  3 +++
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ block/Kconfig             |  11 +++++
+ block/Makefile            |   1 +
+ block/blk-nvmem.c         | 112 ++++++++++++++++++++++++++++++++++++++++++++++
+ block/blk.h               |   8 ++++
+ block/genhd.c             |   4 ++
+ block/partitions/core.c   |   5 +++
+ include/linux/blk_types.h |   4 ++
+ 7 files changed, 145 insertions(+)
 
-diff --git a/block/partitions/check.h b/block/partitions/check.h
-index b0997467b61a54a8a621b9c155c8329289649460..326081499d9a6be730dbd659c110449cfa06921f 100644
---- a/block/partitions/check.h
-+++ b/block/partitions/check.h
-@@ -17,6 +17,7 @@ struct parsed_partitions {
- 		int flags;
- 		bool has_info;
- 		struct partition_meta_info info;
-+		struct fwnode_handle *fwnode;
- 	} *parts;
- 	int next;
- 	int limit;
-diff --git a/block/partitions/core.c b/block/partitions/core.c
-index b5c59b79ca7cbb28d4d93478ee1c80908f76ee9f..eee954df1ac6ef7dd4f02ad5c9d49aed778bf015 100644
---- a/block/partitions/core.c
-+++ b/block/partitions/core.c
-@@ -11,6 +11,7 @@
- #include <linux/sysfs.h>
- #include <linux/ctype.h>
- #include <linux/vmalloc.h>
+diff --git a/block/Kconfig b/block/Kconfig
+index 70e4a66d941ff66ecb0ec34f4f7eff7fd1e4be40..4899ad572c71ffdbb62460d57623216254893ddc 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -209,6 +209,17 @@ config BLK_INLINE_ENCRYPTION_FALLBACK
+ 	  by falling back to the kernel crypto API when inline
+ 	  encryption hardware is not present.
+ 
++config BLK_NVMEM
++	bool "Block device NVMEM provider"
++	depends on OF
++	depends on NVMEM
++	help
++	  Allow block devices (or partitions) to act as NVMEM providers,
++	  exposing factory-provisioned data such as MAC addresses or Wi-Fi
++	  calibration blobs to the drivers that consume them. This is
++	  typically used on embedded devices where such data is stored in a
++	  dedicated area of an eMMC, instead of a separate EEPROM or OTP.
++
+ source "block/partitions/Kconfig"
+ 
+ config BLK_PM
+diff --git a/block/Makefile b/block/Makefile
+index e7bd320e3d6971a8abf584f5de42776bb54e8216..8200297fbcbab304beb4239d0c33da07011c3ed9 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -39,3 +39,4 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+ 					   blk-crypto-sysfs.o
+ obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
+ obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
++obj-$(CONFIG_BLK_NVMEM)                += blk-nvmem.o
+diff --git a/block/blk-nvmem.c b/block/blk-nvmem.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..69b69184e16303444c9cb2dc816d5679daeb13c4
+--- /dev/null
++++ b/block/blk-nvmem.c
+@@ -0,0 +1,112 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * block device NVMEM provider
++ *
++ * Copyright (c) 2024 Daniel Golle <daniel@makrotopia.org>
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ *
++ * Useful on devices using a whole disk or a partition (e.g. an eMMC boot
++ * partition) to store MAC addresses, Bluetooth addresses or Wi-Fi
++ * calibration EEPROM data.
++ *
++ * The NVMEM device is a side channel onto a block device that stays fully
++ * usable. This is somewhat mitigated by opening the device exclusively.
++ */
++
++#include <linux/device.h>
++#include <linux/file.h>
++#include <linux/fs.h>
++#include <linux/nvmem-provider.h>
++#include <linux/nvmem-consumer.h>
++#include <linux/of.h>
 +#include <linux/property.h>
- #include <linux/raid/detect.h>
- #include "check.h"
- 
-@@ -110,8 +111,17 @@ static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
- 	return state;
- }
- 
-+static void drop_partitions_fwnodes(struct parsed_partitions *state)
++
++#include "blk.h"
++
++static int blk_nvmem_reg_read(void *priv, unsigned int from,
++			      void *val, size_t bytes)
 +{
-+	for (int i = 0; i < state->limit; i++) {
-+		fwnode_handle_put(state->parts[i].fwnode);
-+		state->parts[i].fwnode = NULL;
++	struct block_device *bdev = priv;
++	struct file *bdev_file;
++	loff_t pos = from;
++	ssize_t ret;
++
++	/* open and prevent other exclusive openers */
++	bdev_file = bdev_file_open_by_dev(bdev->bd_dev,
++					  BLK_OPEN_READ | BLK_OPEN_EXCL,
++					  blk_nvmem_reg_read, NULL);
++	if (IS_ERR(bdev_file))
++		return PTR_ERR(bdev_file);
++
++	if (file_bdev(bdev_file) != bdev) {
++		fput(bdev_file);
++		return -ENODEV;
 +	}
++
++	ret = kernel_read(bdev_file, val, bytes, &pos);
++	fput(bdev_file);
++
++	if (ret < 0)
++		return ret;
++	if (ret != bytes)
++		return -EIO;
++	return 0;
 +}
 +
- static void free_partitions(struct parsed_partitions *state)
- {
-+	drop_partitions_fwnodes(state);
- 	vfree(state->parts);
- 	kfree(state);
- }
-@@ -139,6 +149,7 @@ static struct parsed_partitions *check_partition(struct gendisk *hd)
- 
- 	i = res = err = 0;
- 	while (!res && check_part[i]) {
-+		drop_partitions_fwnodes(state);
- 		memset(state->parts, 0, state->limit * sizeof(state->parts[0]));
- 		res = check_part[i++](state);
- 		if (res < 0) {
-@@ -247,6 +258,7 @@ static const struct attribute_group *part_attr_groups[] = {
- 
- static void part_release(struct device *dev)
- {
-+	fwnode_handle_put(dev_fwnode(dev));
- 	put_disk(dev_to_bdev(dev)->bd_disk);
- 	bdev_drop(dev_to_bdev(dev));
- }
-@@ -294,7 +306,8 @@ static const DEVICE_ATTR(whole_disk, 0444, whole_disk_show, NULL);
-  */
- static struct block_device *add_partition(struct gendisk *disk, int partno,
- 				sector_t start, sector_t len, int flags,
--				struct partition_meta_info *info)
-+				struct partition_meta_info *info,
-+				struct fwnode_handle *fwnode)
- {
- 	dev_t devt = MKDEV(0, 0);
- 	struct device *ddev = disk_to_dev(disk);
-@@ -343,6 +356,7 @@ static struct block_device *add_partition(struct gendisk *disk, int partno,
- 	pdev->class = &block_class;
- 	pdev->type = &part_type;
- 	pdev->parent = ddev;
-+	device_set_node(pdev, fwnode_handle_get(fwnode));
- 
- 	/* in consecutive minor range? */
- 	if (bdev_partno(bdev) < disk->minors) {
-@@ -449,7 +463,7 @@ int bdev_add_partition(struct gendisk *disk, int partno, sector_t start,
- 	}
- 
- 	part = add_partition(disk, partno, start, length,
--			ADDPART_FLAG_NONE, NULL);
-+			ADDPART_FLAG_NONE, NULL, NULL);
- 	ret = PTR_ERR_OR_ZERO(part);
- out:
- 	mutex_unlock(&disk->open_mutex);
-@@ -564,7 +578,7 @@ static bool blk_add_partition(struct gendisk *disk,
- 	}
- 
- 	part = add_partition(disk, p, from, size, state->parts[p].flags,
--			     &state->parts[p].info);
-+			     &state->parts[p].info, state->parts[p].fwnode);
- 	if (IS_ERR(part)) {
- 		if (PTR_ERR(part) != -ENXIO) {
- 			printk(KERN_ERR " %s: p%d could not be added: %pe\n",
-diff --git a/block/partitions/of.c b/block/partitions/of.c
-index 53664ea06b6540e3d1155141adaafac7286f2d21..4fc7c80c407de42b2b31be2c82e0e6bc2a30c9e3 100644
---- a/block/partitions/of.c
-+++ b/block/partitions/of.c
-@@ -3,6 +3,7 @@
- #include <linux/blkdev.h>
- #include <linux/major.h>
- #include <linux/of.h>
-+#include <linux/property.h>
- #include <linux/string.h>
- #include "check.h"
- 
-@@ -62,6 +63,8 @@ static void add_of_partition(struct parsed_partitions *state, int slot,
- 		partname = of_get_property(np, "name", &len);
- 	strscpy(info->volname, partname, sizeof(info->volname));
- 
-+	state->parts[slot].fwnode = fwnode_handle_get(of_fwnode_handle(np));
++int blk_nvmem_add(struct block_device *bdev)
++{
++	struct device *dev = &bdev->bd_device;
++	struct device_node *np = dev_of_node(dev);
++	struct nvmem_config config = {
++		.id		= NVMEM_DEVID_NONE,
++		.owner		= THIS_MODULE,
++		.word_size	= 1,
++		.stride		= 1,
++		.read_only	= true,
++		.root_only	= true,
++		.ignore_wp	= true,
++	};
++	struct nvmem_device *nvmem;
++	struct device_node *child;
 +
- 	seq_buf_printf(&state->pp_buf, "(%s)", info->volname);
++	/* skip devices which do not have a device tree node */
++	if (!np)
++		return 0;
++
++	/*
++	 * The layout is described either by an "nvmem-layout" child node or
++	 * by the device node itself being a "fixed-layout" container.
++	 */
++	child = of_get_child_by_name(np, "nvmem-layout");
++	if (child)
++		of_node_put(child);
++	else if (!of_device_is_compatible(np, "fixed-layout"))
++		return 0;
++
++	if (bdev_nr_bytes(bdev) > INT_MAX) {
++		dev_warn(dev, "block device too large to be an NVMEM\n");
++		return 0;
++	}
++
++	config.dev = dev;
++	config.name = dev_name(dev);
++	config.priv = bdev;
++	config.reg_read = blk_nvmem_reg_read;
++	config.size = bdev_nr_bytes(bdev);
++	config.of_node = np;
++
++	nvmem = nvmem_register(&config);
++	if (IS_ERR(nvmem))
++		return dev_err_probe(dev, PTR_ERR(nvmem),
++				     "Failed to register NVMEM device\n");
++
++	bdev->bd_nvmem = nvmem;
++
++	return 0;
++}
++
++void blk_nvmem_del(struct block_device *bdev)
++{
++	nvmem_unregister(bdev->bd_nvmem);
++	bdev->bd_nvmem = NULL;
++}
+diff --git a/block/blk.h b/block/blk.h
+index 2cc03aa54c5327d0c596d67f5846740850550260..c5eed8f2777bea92281f5fef5287cb15b33e5dbe 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -823,4 +823,12 @@ static inline void blk_debugfs_unlock(struct request_queue *q,
+ 	memalloc_noio_restore(memflags);
  }
  
++#ifdef CONFIG_BLK_NVMEM
++int blk_nvmem_add(struct block_device *bdev);
++void blk_nvmem_del(struct block_device *bdev);
++#else
++static inline int blk_nvmem_add(struct block_device *bdev) { return 0; }
++static inline void blk_nvmem_del(struct block_device *bdev) {}
++#endif
++
+ #endif /* BLK_INTERNAL_H */
+diff --git a/block/genhd.c b/block/genhd.c
+index 10ca8b4d6eea7ed3910271ca3af74479e2081d6d..6c45b8eb8dfad14fa2fbfa98177154f24af49a07 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -417,6 +417,8 @@ static void add_disk_final(struct gendisk *disk)
+ 		 */
+ 		dev_set_uevent_suppress(ddev, 0);
+ 		disk_uevent(disk, KOBJ_ADD);
++
++		blk_nvmem_add(disk->part0);
+ 	}
+ 
+ 	blk_apply_bdi_limits(disk->bdi, &disk->queue->limits);
+@@ -708,6 +710,8 @@ static void __del_gendisk(struct gendisk *disk)
+ 
+ 	disk_del_events(disk);
+ 
++	blk_nvmem_del(disk->part0);
++
+ 	/*
+ 	 * Prevent new openers by unlinked the bdev inode.
+ 	 */
+diff --git a/block/partitions/core.c b/block/partitions/core.c
+index eee954df1ac6ef7dd4f02ad5c9d49aed778bf015..c83227710584a6feb25c8abae3b319cfae9cce5b 100644
+--- a/block/partitions/core.c
++++ b/block/partitions/core.c
+@@ -289,6 +289,8 @@ void drop_partition(struct block_device *part)
+ 	xa_erase(&part->bd_disk->part_tbl, bdev_partno(part));
+ 	kobject_put(part->bd_holder_dir);
+ 
++	blk_nvmem_del(part);
++
+ 	device_del(&part->bd_device);
+ 	put_device(&part->bd_device);
+ }
+@@ -406,6 +408,9 @@ static struct block_device *add_partition(struct gendisk *disk, int partno,
+ 	/* suppress uevent if the disk suppresses it */
+ 	if (!dev_get_uevent_suppress(ddev))
+ 		kobject_uevent(&pdev->kobj, KOBJ_ADD);
++
++	blk_nvmem_add(bdev);
++
+ 	return bdev;
+ 
+ out_del:
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 0cc09b975d8ffbd45ca3dc47533a71f8e8164de6..8026bd763a0710b60b9553a49783efbaf81aeb9f 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -15,6 +15,7 @@
+ struct bio_set;
+ struct bio;
+ struct bio_integrity_payload;
++struct nvmem_device;
+ struct page;
+ struct io_context;
+ struct cgroup_subsys_state;
+@@ -73,6 +74,9 @@ struct block_device {
+ 	int			bd_writers;
+ #ifdef CONFIG_SECURITY
+ 	void			*bd_security;
++#endif
++#ifdef CONFIG_BLK_NVMEM
++	struct nvmem_device	*bd_nvmem;
+ #endif
+ 	/*
+ 	 * keep this out-of-line as it's both big and not needed in the fast
 
 -- 
 2.34.1
