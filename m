@@ -1,166 +1,157 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13CA542EFB
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 16:28:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C9E51616C
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792081695; cv=none; b=h33giwpgFHsa8KUn0db2unZ6Fts0zXvgwGtbVYvxyBb5wh7svILIh3dvr5BNux3kgMy62RkB+X0Z9XggDPiQVK1eOj9QzV9zItNLDnQFEN/HqWJsn0MS/Ly1odZZh7ZVtV/AoECHPFUqOekkIrXtLqjLmwm4ZZ/RIUYfxXj0Psg=
+	t=1792085753; cv=none; b=CcrXbzY0+fvXsoiN0nPSLxieI+oakYkuQaLF/YmoySJVm8RAlFr3a4ymrWRKa7ZnsvboscMetiFvZfKV9uWPvDawXWIIUqY3dJuZTP3A/DC/VGsL1rv5K004QnVBLqa3bpzDYC9ospergckyJ3Wl5meMhmRmJft6NYhdxJgLTHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792081695; c=relaxed/simple;
-	bh=VZN2fb2ga+rAimb+At5lfyPZ8DXcR0GMUzzVA+d4nj0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Eb1ZjteZ6znFTeXgy0Tgtn4lJuYkcurL5tK2h32Kn+ghCu0F0ww1/0nI+7pEBET8uk2DEwz8ivUhrt7Ihf8EtvJng0rhzLFlem1/DCOLGsqmzrChzYLe6cEjRXxWppL39tQkGP84BXDqNaagLGaigZc2uCzmReAcuxJz9eRaGJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=jiCSaMqW; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1792085753; c=relaxed/simple;
+	bh=H/etT2HlYpIE0hVXJjfbsEK/thEkSTMryAvWwOvIJfk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=raZ6t4+JhpYv3NDpO3/N/zX18pYyfZS+Q/awl5Y5e8nBA8rh1j6wnoQVLdjU9sQFFqbVK+2VY5wVNoNDXTD4PEqFMwh0X5jppSAGCTkW0fiwlIWk2D9US+S7kBV1LD9mB2giHdTxntmP2BI7mlz8EPX/8eF+tdRoWI3YkuMBJ0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YS+z7bgF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=fJ5ZwDFr; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="jiCSaMqW"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-486e70f2457so870643f8f.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 09:28:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YS+z7bgF";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="fJ5ZwDFr"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69FFmED72416893
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=; b=YS+z7bgFMjTyG9nQ
+	sMB8HkKmUeszHnO0RSCITsF+yizNww+MxTaNmsNG4I7VCFwgjm3Eo+tLZM9LBDT4
+	0bTxx78hW36RrVel2tb4yNQhIA/B0753ohJLUGWlicaFRCVa7P6RE17MORzzFbdX
+	IrFjg5Hw2fzWMQWBYwFDYZ8OlQPnJOwE1BXRF58SW8ce2TCRAszlX0pdc8ma0IdU
+	TRWf6O3ZUjjbpVhz9ckSixYf9DUK2w/nmus4wrlb8z4zcU7r+gfbC3GFFw1GFYYj
+	R+df2NJRkDUJYzJXe/GLPAWaEsKsEu/lu0pa1WqIfb+83Q4lU0tmaAWgURrM95OM
+	g+Jpsw==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4haqdhkbud-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30bcb065bfdso9754418eec.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 10:35:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1792081679; x=1792686479; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=KR4i4KxOGzdvwjOBg3czI4/01caQ5A7Fc1JHBGRwQTE=;
-        b=jiCSaMqWSm1g8TUDWxYHPti+M55ELsQiQrxtKGP52uFYZYTYxdWuJvy81ogtK4/FYH
-         eYojlAa9dNruOToL9q262x9QBLNiVycTqn3TTSI3JFsAeAb4ODZu+wXQHE3j7ViOo7W6
-         fxtmkQ9pmF9KFAxg/uO2SfrLvQ5tuNw0SciiITkvWBL5V12hqTvAx5EraDBAkCFzvS0N
-         HXtx4kiTdAVQcBTy3QUt9vPheKm0E1hMBujlQiYuDjVvNrYGeXsCYUX4er3OV0xafbPu
-         JazdYEL4mLksOGzfczVxBEMnd/hEQ169hWVoLk9jNZ9OvWW5Knir9hn+dMFIdbnCHG8a
-         T9wg==
+        d=oss.qualcomm.com; s=google; t=1792085740; x=1792690540; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=;
+        b=fJ5ZwDFrv7WXC8ShmFQ5fGA3hOkUev9/OxQhOZdUz1eB6VRS3scDMzPJ4s3HTiETbW
+         SfIgYLb+ROw5mO1ThA8cjIzfI3x+/x4zB4j1vk85u/USm/jAHQ48HfZh0SlGSBjN9Cgg
+         BB01d58y0usfFUg7e9tMuBpoxwMtcxrpcc2rV6Ouq7N1bxYJ37SCQEkfhEHLaTmvAj2m
+         u/M1TmxEw3ELfsfLOK1/RQtlqj38nAN8i7oKVCfo78HGyaVJYb+BJ0+xe68Xi18AHI0R
+         joeBHDxKEAno9xWo6ANKKymOGyF8KGP4WVeD/JVE0edxCGYBCMDtWQ1pi5B1LBZ17Iwo
+         o6bA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792081679; x=1792686479;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KR4i4KxOGzdvwjOBg3czI4/01caQ5A7Fc1JHBGRwQTE=;
-        b=0Z0LOzC10jCH8kg7xWG/mL58rXgLNHS2QUeRapy1PRFEH24pMj8aaa6u6RaoNhjW/k
-         xVS++pW0ogl6Xzx3snW5kA7M2JLOnPyDuXF8/D5xPO8457p4HE7TaJLObkfl6rPE4HUg
-         4nsvs/SPZtM31pgR2oGJosCl8CzoQI/8gmMJttZfqT7apWiEIu5UmaE7LXZKtEY+w/I7
-         xMi1LgJVw9c24K2CXhP/y3Bzb5XetQjTQHRLwHbBSH0mi7qgBmtkb5lxGI0w0OxNSnTa
-         C5HdSNH6YLhZklHIYjhoiUpg5tw8OYzuNg7vd61YonMOGW7iqvYGNUpPbZRw13scw4q1
-         h0CA==
-X-Forwarded-Encrypted: i=1; AKwUvBw0hm9tdvWVSZG2ODlAUXXZCIp8sCh+rWukmLKq5Cb4gBoCdzrSkF58pOMicB7JEln7N4P0c2VFmJBdn/WAgQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKYYhvpMQkgAcWtMB991r9s06SPKL7nUr2gaH6lEF9aT00vScdO
-	+MZlHOtz7gJupix7bXZ3pZ5wHuX0UQRmJNny5B808S2el/uBe/QNG9sWCR0o9o0vceI=
-X-Gm-Gg: AYBFou2KIixoDQkfWz0mCFGQps+R1HVrCOMNyvyaiwZ4V3z0IYdXwvj9Q3ovAnuMYUc
-	nvq/AriDxnimIuWFTgqnjWkJy6GmZhxCK8INF4E3odNVHVBJ7lb1jlGS2LBqD8B57fw6aoZr0t6
-	wl9+9gersfT6ArfvFopNxTCBlxDqPZMU3BcnzYFfZTNa6h+H4PsUjYXyGI70iI0HB6JWvVuJftU
-	o8Hd+yHeXz93PD2lbpcDSi+ieET1Is6P9+BQOWnhMNdf2FtX8KLnLNOmlgygGaFaiUdSuuvpQeK
-	vmGIVcSzPZ1b60R2X13rkRn7ionQx9uUSrvqxPAfcCzoqxN/WHPpG6F9TOFW3k8UYj0+U0qBSge
-	puTo6X35kgp+aQmL9W1lyMPKP6VS0Z+SAICtD5wFiCpabgJ3whRXN8lcNQaIBw3jqogXCEc58z3
-	U0FtgQkV6QzeT3s6zi3QEzPFK2dJo9fsbvTcXCX1hHRxVXS74snC5e/Ysbb4fzraLUIVaQqHA4q
-	+au86SNHENs4je9Fdl2Wg==
-X-Received: by 2002:adf:f341:0:b0:487:197a:5c1f with SMTP id ffacd0b85a97d-48dbaae84e0mr31568707f8f.49.1792081678765;
-        Thu, 15 Oct 2026 09:27:58 -0700 (PDT)
-Received: from linaro.org ([2a02:2454:ff25:4f41:7bdc:6c2a:a8d2:6ad3])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48de0aaaa34sm19545964f8f.20.2026.10.15.09.27.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 09:27:58 -0700 (PDT)
-Date: Thu, 15 Oct 2026 18:27:46 +0200
-From: Stephan Gerhold <stephan.gerhold@linaro.org>
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: Srinivas Kandagatla <srini@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Abel Vesa <abelvesa@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
-Subject: Re: [PATCH RFC 0/5] nvmem: Add a UEFI variable backed NVMEM provider
-Message-ID: <atD_AjZKaF5UtSUB@linaro.org>
-References: <20261014-b4-nvmem-efivar-v1-0-187c85f65018@oss.qualcomm.com>
+        d=1e100.net; s=20260707; t=1792085740; x=1792690540;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=;
+        b=x/SYkYZSrnGUvVt5834jZGraJF5QJ6166vg2YRD3vLrGU2Nlx6HqbzZUsslkFFcvVL
+         OKUfyynnZIY1eGJ4xCn5YRdDcqW/+ZEzYwqTIdFC45PfnbF5vzYq1SJGVGvwEvh9lxij
+         QVHAYK5tKBgwomOO+LJhJRvm7hDBUmBJyub2fAyUr61eshD8fq7LeZd0xc+qp+utcPNs
+         uokgVd2MiACqhJhr6ynPMaLb4Zq681oYRZ6/8fn9KkBlnwchj4KvJmjsC+7DhtmrUQwG
+         YoeUxse16aiTFbXzd3VyfOvX7ktAVK7wC3J53MwELhxWOFuHtIQkuOzHgwUrqE4FB4Cr
+         RwiA==
+X-Forwarded-Encrypted: i=1; AKwUvBzmes93Y6hynRgI+ul3Mfxf3ZxaAu0osQy4EBdRCzM5mzF4OY7E4hQgt6bdBxqeGLJgqOTyGRTyAiaoJWuIGQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIIpOikRdYzK3kRXlToo9KZVIV3FgK6vaJ3yZZ3Nw4kSd9JTAI0
+	f/GvFycBFhM/y8K6IIXh/cSeF+TgL++SlpM51HjroTlH1DNCzhNVReWQ6DwKt34K615UOEvy2mX
+	DgfwFPHb6Bx/86PcAAZKhwAW7U7edKAdd67YVcV8WLQptBUeFpq3yf16e51OIywbOy+0LCA==
+X-Gm-Gg: AYBFou22jwEWFER+Oo4BhmQMthB2IJHkdkZ91p3UWM4YQYjm0t4FOysilybtJOJ/VNY
+	nrPYKiYtHLX673eNgO3waZlKov2ncOCIzO7rRE8xMEQT/L8rMC3jOqmadoIkSeMk7ZXkL5bEVA2
+	fgvGsK1oobYJurK73/iVGRsbzKtCa5gCdeQZ3rS6qOzAY4O3Te7tXxJ177kt1TGPks5DUEO/8fT
+	wXw2SKNBvW/XeQ8MyzxWY6E1YzDVPiCj5biv4tGNOpIykYtHURycHprL6YpWgejZaRdyW1WPF52
+	4MhmfvMK6nMNS181oKlR5o2/7IBRkC9TBg1qsh+S65DlyihuGRoN7M9sM2GuF2ePG/zUdnJRWmE
+	iu24XrwYygftuBnnHirkg47DLqPIM6nX2xDoVsCq1D5s=
+X-Received: by 2002:a05:693c:41d1:10b0:35d:74f7:3b9 with SMTP id 5a478bee46e88-35d74f71451mr9525046eec.33.1792085740305;
+        Thu, 15 Oct 2026 10:35:40 -0700 (PDT)
+X-Received: by 2002:a05:693c:41d1:10b0:35d:74f7:3b9 with SMTP id 5a478bee46e88-35d74f71451mr9525002eec.33.1792085739523;
+        Thu, 15 Oct 2026 10:35:39 -0700 (PDT)
+Received: from [192.168.11.104] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36058a8de1fsm381704eec.25.2026.10.15.10.35.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Oct 2026 10:35:39 -0700 (PDT)
+Message-ID: <f4c53076-eb99-4306-b595-7349aeba95f0@oss.qualcomm.com>
+Date: Thu, 15 Oct 2026 23:05:35 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261014-b4-nvmem-efivar-v1-0-187c85f65018@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-current] wifi: ath12k: Fix failure to create
+ ath12k_dp_peer on MLO reconnect
+To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
+Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDA3MCBTYWx0ZWRfXxkjOwle+lR3E
+ jwTqjq6adgqtUlVw1VDIhIWelx4wU8PAOnQOVggjvO9NQ1Hr3GHyk/bvjy5K9jFV72G3zz4203V
+ Mi6vC2ao9fPDMtKkpb3+RrBeJCBJdw44/dquZBLc/2V24huprugSi0zBYWdF02+1l0qVUyXK3bV
+ iTwSDoEbJf5R7Q99zn9n58KYgwIZOkzOMM+lVeQ+OUjhaBPbzlpOWgTJKukP/wCtfV+nO3qyIIi
+ 34KwcVaNBOsap7+CuUgVo6wQkoSydoyUCafxdScfnQukn4yfSavBhUC+Xc4IxTdjXK3zEZu5klj
+ 2IKbk3py+rlHk8g0mn3XHdFZ/y45kAhALKd+iehbWK1JyJbtS0VkWcjYOWsStbo+qj20uhrMOAy
+ GAiEsjqaVnItrZhAIrbozCaiNHzksbnjUHIIg8Cz+IRl9JBZOBVM34L1honQpzBC5+wR30RSgCi
+ Ziu65wU9Wynoun0BqBw==
+X-Proofpoint-GUID: ktRrTFnbJo_NhquBFmuQsDmyormXZwZv
+X-Authority-Analysis: v=2.4 cv=DeeCOftW c=1 sm=1 tr=0 ts=6ad10eed cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=EUspDBNiAAAA:8 a=FeBjiSnNOcrKIJN5QMIA:9 a=QEXdDO2ut3YA:10
+ a=bBxd6f-gb0O0v-kibOvt:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDA3MCBTYWx0ZWRfX3EsttSXYhiMQ
+ 1bHs/t+3tVyeVzwWu3hHxBg8BzCWnECk7AEjQq744esXdedAod/zD22ZxGYSLwxan2kEhyEvcLM
+ +8V8o5NjfivWKvbW8WBVIT3tX6/YtSY=
+X-Proofpoint-ORIG-GUID: ktRrTFnbJo_NhquBFmuQsDmyormXZwZv
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ spamscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150070
 
-On Wed, Oct 14, 2026 at 04:02:38PM +0300, Abel Vesa wrote:
-> This is an RFC: I do not expect it to be merged as-is, it is sent to get
-> feedback on the approach.
+On 9/15/2026 1:30 PM, Miaoqing Pan wrote:
+> In ath12k_mac_op_sta_state(), when transitioning an MLO station from
+> IEEE80211_STA_NOTEXIST to IEEE80211_STA_NONE, after ath12k_dp_peer_create()
+> succeeds, on is_sta_assoc_link verification failure, it takes the
+> 'goto exit' path instead of 'goto peer_delete', leaving a stale dp_peer on
+> the dp_peers_list.
 > 
-> Some values a platform needs (for example the WLAN and Bluetooth MAC
-> addresses on the Qualcomm laptops) are not always available to the kernel
-> in a convenient form. They may live in firmware-owned SPI-NOR storage
-> (e.g. a DPP partition) for which there is no straightforward, universally
-> working way to read them from the non-secure world.
+> On the next connection attempt, ath12k_dp_peer_create() finds the stale
+> entry and returns -EEXIST (-17):
 > 
-> As an alternative, this series allows such values to be provisioned once
-> into a UEFI variable and consumed in the kernel. It adds a generic NVMEM
-> provider that exposes the contents of a UEFI variable as an NVMEM device,
-> so the data can be consumed through the standard nvmem-cells bindings.
-> MAC addresses are just the motivating use case; the provider itself is
-> generic.
+>      wlP4p1s0: failed to insert STA entry for the AP (error -17)
 > 
-> The first two patches are the actual proposal:
+> Fix it by changing 'goto exit' to 'goto free_unassign_link'.
 > 
->   - dt-bindings: nvmem: Add UEFI variable NVMEM provider
->   - nvmem: Add UEFI variable NVMEM provider
+> Also, there is another error path in ath12k_mac_op_sta_state() that
+> jumps to peer_delete after ath12k_mac_assign_link_sta() succeeds, without
+> undoing the assignment through ath12k_mac_free_unassign_link_sta().
+> As a result, the link RCU pointer remains assigned and a stale bit is
+> left in ahsta->links_map, which can trigger the same -EEXIST failure
+> on subsequent reconnect attempts. Fix this by redirecting that error
+> path to free_unassign_link instead.
 > 
-> The remaining three patches are included only to illustrate how a
-> consumer would use the provider; they are not meant for merging as part
-> of this series:
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
 > 
->   - Bluetooth: hci_qca: consume a "bd-address" nvmem cell
->   - wifi: ath12k: consume a "mac-address" cell
->   - arm64: dts: qcom: glymur-crd: wire both to a "MacAddresses" variable
-> 
-> glymur-crd is used here only as a convenient example for the consumer
-> patches.
-> 
-> Feedback on the provider, and on whether sourcing such values from a UEFI
-> variable is a reasonable approach when they cannot be read from the
-> SPI-NOR directly, is very welcome.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
-
-In general, I think the idea to take NVMEM information from a UEFI
-variable is reasonable. However, at the end the usability of this
-approach depends on vendors actually provisioning the UEFI variable.
-
-Is that the case for your "MacAddresses" example on Glymur laptops?
-Is any of these laptops shipping with this UEFI variable provisioned?
-
-I can't really imagine end users manually provisioning this variable.
-We have too much manual setup required already to be able to use these
-laptops with Linux. Ideally, we should take the information from
-wherever Windows is taking it and make it work out of the box.
-
-For existing Qualcomm laptops with the DPP partition on SPI-NOR, there
-is prior work that could be extended. I would expect you only need:
-
- 1. SCM SPI-NOR storage support from
-    https://lore.kernel.org/linux-arm-msm/20260126-scm-storage-v2-v2-0-fa045c7e7699@radxa.com/
- 2. GPT partition parser (not sure if that exists for MTD but the format
-    is certainly well documented and supported already in Linux for
-    normal block devices)
- 3. DPP parser from
-    https://github.com/TravMurav/dtbloader/blob/main/src/qcom.c
- 4. Some way to hook it up in the device tree
-
-See discussion in
-https://lore.kernel.org/linux-arm-msm/de081bdc-4b10-4cbe-9b09-4652b63bc4b9@packett.cool/
-
-The universal approach implemented here would obviously be cleaner, but
-in my opinion it depends on vendors provisioning this variable before
-shipping devices to customers.
-
-Thanks,
-Stephan
+> Fixes: 0cd46d1f36ce ("wifi: ath12k: identify assoc link vif in station mode")
+> Fixes: ee16dcf573d5 ("wifi: ath12k: Define ath12k_dp_peer structure & APIs for create & delete")
+> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
