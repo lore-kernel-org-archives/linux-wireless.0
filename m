@@ -1,90 +1,89 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 168EB3E9C0E
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62733E9C0E
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792043707; cv=none; b=YZO/w0YvpB3fFu3239uPGqri7hqJgFP3vcf/gC0ibut8o6B+OGYaQ35Ay3qYxAAclUZdD2FtR46RNNEu28764iEF6PymXYwdfK/xDxUeTpO7oETGVZVIaxfDM/W83K9qSNdRyzS30sBakhfA2X49cU3C53JqFdbN25LmTcg420k=
+	t=1792043711; cv=none; b=naHmCUb2ldjVHoKhF9+nPBDw99OVMrH6BzZoeFa/ci9RKV7hK3kcE2qGX/DQHydxXBlyfaJWqx8djteT274UR9jtTOW/4xFNGGJrWGOqSziJEXC4r9hlRlz7MMAzLLp54w4CpYCbla+qndlJN67mz1If0KpkBg2YxoXcg0Yo0Ao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792043707; c=relaxed/simple;
-	bh=O+vmDEA9SrtszxaXtYYJdU0mWKZ8IBwdvgKnZX0qXSw=;
+	s=arc-20240116; t=1792043711; c=relaxed/simple;
+	bh=I8Ld7Vyqgamh4lmI7ipqPAom282aTNrWwYsrYuUQB98=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Lwh5dbsURWzDkPdVaTNd3kmciKZp0NiaJMUUQroiT8WaFIeJXm5DWF3+Hd323zE3ZpTmIoQfGL7Yvn2Iu6FZazHmYm+NrcE1zyT5DDAXQGhxk2T2O8T1aXYgth26MkhBm72GccxflJjtMFNRke/vbwkCJBxXIPE3yKKlGNxrUKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dX6G9SlG; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=g1MMGJ2/; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=ZwFY5Mcw3KjBUxqnye1mJvsYFhB1ZBCyzv2Z/JV13uEX742wxp7RFiTvBmJoGgSghwliqE6wg+ZOssVBGTRrjvE8qdxhTxCt9WYIEN9/unqrPdOlZaruINUMGJQ/aog2nz4tMBmK6FclvToZYy+iHXXVKrrEpIfOUqIPOaMMwmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nhXATKdF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XFTsDT3u; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dX6G9SlG";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="g1MMGJ2/"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69F3xUV11641221
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:05 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nhXATKdF";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XFTsDT3u"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69F1Alrh3468841
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=DbeCza8hA1q
-	lMcN+Uvbg8tIR05Pv/Xitan3no9pyUjI=; b=dX6G9SlGApvAR/YlFYi7RZp73m+
-	4Ut8sTXFpRCpOik3vIyJhK0OQeYZJtnj+4NP9IyyDt53Q5+Kl7annPyb0jEHSs4Y
-	QxgZhJSfV0RFvvc8gCqfcc9hklB0hsOfVhFPkqGQQyyUWbv3kIsLGZHLoDm0mSfX
-	Y41yZ6zMLgQ7Uvau8bREsd/ur3FOjVMBOnx0u7SjAy8pufKUOykRvuwLgMMm+lv+
-	dI3t7Fl7D3sKyGEqUzf9U/si1WX/i7d/e2ipXvJolMxxdYj7jquvcJE7BqQ9YMoF
-	ict04+kGZyiJl9n81xds4Bv0ei0yVqv4sYLk57AN0jU6o1BKybVoGGt05dA==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4haqdhgcbc-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=AThD4YDvNlB
+	8ycW1hV8nkngdrHMa5usDRa+Wt1AVu8U=; b=nhXATKdFK4Jr7sQY/w3UdWIInrz
+	fGOHmlSsmhXYiNbGJEIZOj/zOaRD9i5N6kqvyKvFhtKnQNtGUaQNrJwTSTgmUfcP
+	iiVqXJQv/CuLe1YYj7nnlphynT9tGW/eCHJbMaA3lLlK5JpDMmKy1t1dYXZp0E1v
+	biazwqdxQ7g/GH41XMIcCagJOKGln/cSkfRWZFwKHOMaCw1QgpEtqXq3KuWYqEqm
+	uHbbToYx5JuiStg1pQxWazLl15KM5CxKnriPZIUSpAyOWJc5lyIHimjx+o3yZ1rW
+	iT6J1+QLjtH1Mh5J1Vj/nO80wzDs71A0Uqwo76O3oUEKfblyswU1iZ5S/tg==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hadd7am0d-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:05 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e941532594so14036545ad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 22:55:05 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:08 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3ac6795617aso1139580a91.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 22:55:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792043705; x=1792648505; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1792043708; x=1792648508; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=DbeCza8hA1qlMcN+Uvbg8tIR05Pv/Xitan3no9pyUjI=;
-        b=g1MMGJ2/3sV1dtK2hNgYzUS27BP4eW9FDRYZzab2PLowtPcwThpgBUotn4zxf5LQVu
-         QpeJtfv1GKQEu+eLLQ5onGWvxc9ePeaph2xFX+LK96T6wL4fOG9QRDLNbnbEY87081fE
-         niRDowhDP9mLkqunnzbSmm70eMv8PcSlwWReu+W0O+KYnNWbfTK3MPQo9/Et+XdnKjj2
-         ZevMEgrKrOf6xV1tlTdvEtV7NJUl0pxA0wSvPMYCuPpXsgEx9r5dHku/BU8b8F79joQk
-         Idl+hD2kVSWJzZw80tnDGRktl0xGXBURIPVAVst9KUmDJnhCYlpPrXpp9d+8A9HanDeq
-         +4TQ==
+        bh=AThD4YDvNlB8ycW1hV8nkngdrHMa5usDRa+Wt1AVu8U=;
+        b=XFTsDT3uepHfcx+Rh7ejGyBIX5sON1dPisOWtjlRAJSZdOFA1kNR/YCSOJUa+XCeCW
+         PhYkX5Nej9QNKNWIpuJeN5Z1vnoCao7ScrQXOiUKjp3kxlmJtT8Bq3y7rFnAtMQ9Rk5n
+         /0e0Dhg4NxKsmJ5nBLAHQuYnQorN0zijTkdCLAuaOBlU6gt1K5psYDm3V5080OQsBEZ5
+         KuDpohJqpAfMyEpHanXLGUM4iAeumDVbBZ9R1K91HxAzJJIYxkdIoHc2V6DPOJY7q4Ab
+         xllDQEJ/XylTrmlFuw8niBuXxC/z1kCKAdS+iYL1vUufrTAOm53a5YreCvFap71Nwdgr
+         vW8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792043705; x=1792648505;
+        d=1e100.net; s=20260707; t=1792043708; x=1792648508;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DbeCza8hA1qlMcN+Uvbg8tIR05Pv/Xitan3no9pyUjI=;
-        b=ZoQT7q/6YKxpW+O/6RxzOsbPwVKYdvUZgFqi1OyZOt99iHkEa8ZrvEQ5YPrPwy9ahA
-         EHaGIK3XeBttK7oUkN3Ok5nitXdI4Zb6zKl3XguUB5+1W5NQRzjT6qM4NuSitE/t7dWq
-         JJtBq+h2gZl/2b3+objSqmxcPolq298yJNBgt3MuMqE68m8yKYagWaYD1DwnAT3Ddh/e
-         VMK2isDgiPOEYnjVleXKqDNoOFizkUNc2xd1VquPFT54GFuaPPKC//Fcug7Qxaf+w/Y9
-         80MrCClU2D3sX94/v20ojlOV4bsQ+dMSJLL8+w2vJUvLMyM8robMCCIP0MB6MLGSh4+r
-         +yCA==
-X-Gm-Message-State: AFq9FYLCfkX+Sc0UV1szSLIH3atQq6CCIC970fPLptlZbmdBJB2eZptF
-	WrqnzMhmhYyRsz0iQ+2KE2zXdFS5eRo1bje9ydMWgPoIFeqWPOOARTKYcsUP3nNjFGy1D6T1AdW
-	+GdHZ0TNEluf6Kb45OkiQNyuRyQ8W0LoMhQaT4IWiLIQB2nGGc5s8UICZinRCrh4i3BK7Rg==
-X-Gm-Gg: AYBFou0XVrporFwDLb5ZD1K0u2W4yAQuCkFUc+A8bxpgwD5R0qWj4yaB0j+h0IQzGWb
-	XTzz/6lXqOriGKAiYNyUf5D+Wtfq/87Z1SJFWwtU3UC44qa9w8vzSZzh9RlkhbpALPOy6Uw+u4v
-	JxlCDazksuu+PtWjDHAwyrY+P3VQ4YbQ4LbOESlAoS8PMz7tkb3FX0hyqG606D4c1Ukn6ZAUFIY
-	Bp9NqP+gtVtye4Qmjrlylo7LcdDWAIF4A8D38ZXrjIpI0cSeupwWbYxJbV4X0E4//IqBQeNIak1
-	2OdVrFKSGP4wh+XGgknCAmlLmkK72VW48TWGxH827tDymUUsT5ED2nbX/OndX5gT11GeoJAU4xL
-	Zueggqgo09x43ArHpxjbDV6/PuNgxrU4LqorTEvCGiZ8cX4eo/nNoxQlvE7Yh2YpxC36LXsanBk
-	c/CNe6frKRZuSJ
-X-Received: by 2002:a17:90b:498c:b0:3ac:9176:e81c with SMTP id 98e67ed59e1d1-3ac9176f12dmr1951402a91.46.1792043704392;
-        Wed, 14 Oct 2026 22:55:04 -0700 (PDT)
-X-Received: by 2002:a17:90b:498c:b0:3ac:9176:e81c with SMTP id 98e67ed59e1d1-3ac9176f12dmr1951389a91.46.1792043703926;
-        Wed, 14 Oct 2026 22:55:03 -0700 (PDT)
+        bh=AThD4YDvNlB8ycW1hV8nkngdrHMa5usDRa+Wt1AVu8U=;
+        b=ypftPzsKr1XPxekce2uVhWpWHymTio/lgAXOWXzkgm/34iDJmswWliB/y9KmOo/8k8
+         +BfPmuEUrH6cl+bGrqohHOwJTJBUokJUxdUQxqJg1lQ1WNOXr3iu1HoeY0KBdJoO2dBt
+         +KEETkiJB0Nu5KtsniewU8/GJyzEHyt2wfTxvyDdxaucgCSczvBTpNG7Wk0eltb+oZkp
+         ovRnPGcr2pYg1gx1w9M0GqfFR4nCttPndrgn1sq9RJXq2sHnaPnRIoWWFabSqjsdV4e6
+         rVEXBEFbtkN9LxGadiNS0WfC5M28UG0YpemAAJqfRDmaNH7E13AOTxE/Qxv6VTvwrC7f
+         U0aA==
+X-Gm-Message-State: AFq9FYIIW8q9nr/Zorkj+jDFIuAg1fTNhR4LoC7ZEWwqj5ZyPyu7n2Ei
+	ewQJf8WG3o14UARJ6bj3Y7FcWFYZjlztA0QwJSf73j6/NOfdsBEpZ1lxreJN7ccY6AxpjLnEFYj
+	LYgthTsJvFSFhWfLFJSQ0po9lgFGX6eu7ZJkGdVgPCW7eCsks3nt+k9TOmWz6FcLBd9154w==
+X-Gm-Gg: AYBFou227Yl/9IQNYBoR2kiQz31Xal75hbLattJwllWGwOQPr/osV6OSR1alf2F+f/P
+	IX6tQnV41f4rgythFYEO87Vw0RY9xRHH+gZ/IPXpsR0/ysNHGdJriC6X8nVMGPBtqKnRkxa9Zk6
+	YFSZBLEBYqYs4brhsW0i4PL5X7+/QS1VEl8Atl4E+dpNTA9Ijm3pBWpxfSNV7ATFLVBNy9BLMjY
+	6J1QRkvkmMpb3p5DUJdZbwnvryq/OEbj7Jm2TIkE9LUHZ7CfdFLaBKATC28NIQoJj2F8hV1PyuF
+	vrM3CtXvlWLdENcuVbLn5jBJPe/JxV14G3vuwHaxr/b2Nn56U4f8/NCwRq6W2yxHPs+zmWm9LIQ
+	b8PiDngF3QGOntVUp4zbAfzyxC3fjRTGmjfB8t6c74NgJpEIXH7Xk5l3DbLQWy2bAiZ1R4aLHMl
+	elqQYO3RZQmvnq
+X-Received: by 2002:a17:90b:1d4f:b0:3a8:7242:e8d3 with SMTP id 98e67ed59e1d1-3ab3a2910f6mr15133490a91.7.1792043707930;
+        Wed, 14 Oct 2026 22:55:07 -0700 (PDT)
+X-Received: by 2002:a17:90b:1d4f:b0:3a8:7242:e8d3 with SMTP id 98e67ed59e1d1-3ab3a2910f6mr15133471a91.7.1792043707347;
+        Wed, 14 Oct 2026 22:55:07 -0700 (PDT)
 Received: from hu-aisr-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac944af2f1sm2629054a91.15.2026.10.14.22.55.01
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac944af2f1sm2629054a91.15.2026.10.14.22.55.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 22:55:03 -0700 (PDT)
+        Wed, 14 Oct 2026 22:55:06 -0700 (PDT)
 From: Aishwarya R <aishwarya.r@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        Aishwarya R <aishwarya.r@oss.qualcomm.com>,
-        Arun Vikas T <arun.t@oss.qualcomm.com>
-Subject: [PATCH RFC wireless-next 4/7] wifi: mac80211: forward QoS Management configuration to drivers
-Date: Thu, 15 Oct 2026 11:24:38 +0530
-Message-Id: <20261015055441.680588-5-aishwarya.r@oss.qualcomm.com>
+        Aishwarya R <aishwarya.r@oss.qualcomm.com>
+Subject: [PATCH RFC wireless-next 5/7] wifi: mac80211: track QoS Management station state
+Date: Thu, 15 Oct 2026 11:24:39 +0530
+Message-Id: <20261015055441.680588-6-aishwarya.r@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261015055441.680588-1-aishwarya.r@oss.qualcomm.com>
 References: <20261015055441.680588-1-aishwarya.r@oss.qualcomm.com>
@@ -95,222 +94,295 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX/G8EMQQJwURX
- nZ9LeyUJtz9pgEJyGSBsFwcGFv/ilX3+/FxQySzOTWw4hq5+XA1r4LtFvdoegGcIbgxAwTSHYvE
- olNDqlagGGGOBifOnbvOeFKq2gMIyO5QxAIbBETeEIuSwFIuWwBWVCt3dFy0XH3F0oQOqPdI/uR
- 1wO1F2sOHNEoRyHFmJSKj+TlyBLiPPHOkfZRxaBBZKmmwWFTW7phYHK7T15wwCkfoGSVT4ZZ71X
- vgeW6KX3PM4tQDMLlgfz9FK8XDwGWuFpoJmIV1cN5YRDqv1bebO3E+zEDaY59eNm8jKmlVRd+Gp
- r8r3FHujVe44ysZM1/tY0SlmvD4J117l26nyZoC6mJhJKNnQCqjqJlEKvi5AT3LZ8IMFUOGSAEK
- 0CUjp6JaBgZPCrp6YD+fVa0ryG/zIbmN0JEwUkTC4EiszUqFwWzLvje4+p/QdXj+bcSI4yCWtOD
- Fld92tufo76YhTQecBA==
-X-Proofpoint-GUID: 4i2xm6QLwWgIZq868-NPPXQ5EIAJWGl3
-X-Authority-Analysis: v=2.4 cv=DeeCOftW c=1 sm=1 tr=0 ts=6ad06ab9 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Authority-Analysis: v=2.4 cv=BaVNQbt2 c=1 sm=1 tr=0 ts=6ad06abc cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22 a=EUspDBNiAAAA:8
- a=ZuwutKCGwYuCb3peWq0A:9 a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX8as93DHelxwN
- HO0qHUlGI4SOSNSrkF6RWxPOYbGJqS28dvdFVo0K/qIJspQUI9sm5TvKFqzu91Ii+2m1bbSACCJ
- JbgLWXkuOC2oSuoSogkB+9JUJ4SLuDA=
-X-Proofpoint-ORIG-GUID: 4i2xm6QLwWgIZq868-NPPXQ5EIAJWGl3
+ a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=EUspDBNiAAAA:8
+ a=JzGhbOYYILsv2X2EDKgA:9 a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-GUID: by5fNxt_eaLk5DwdAWrImJuJcMemov0b
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX7xgJLkBXN+kw
+ RHwHanrAW1M0nCSgoiLgNun4FeJcjX+yTQ7dzMB/qMH4eJ2REd3268Q8MHhr8FaXGuU6f+FDq6v
+ qALhkGo6UqzPmqQVIoXpfrjI1NoAsH1RqiISz9Voa8LQJqCppCjVOMIXeX37bLjVeLg4YnEYq8R
+ CPt9WjJO99xvDH7kXbHILdN3DG7jwLlHGObMkkzlxVVdcESN0CQsQWD/rJjkGmsGF1BG+qJFw1M
+ 7DwWMvnOIkKRXn+/i/3pXT3H+1KJVf0xbL7/CLpvFdCWmJop+tZKBWv8lJ2ijW3dUrK/fGeWzOo
+ dva40as7+GVnp5+LZYCSLEM0lNu2z6Tem5L09sliEKB5Xd0n7AA38eSvZkvhDf3vEB+DZG7Iqo+
+ L2taNEKSeJcndFmoIMa2XfEkIgVsx22hUIRzNEMqI5o/pmHzuw+i3IzrKYycnoyN2mtc77pCCDO
+ YHim+FNQNfLzbokbqVw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfXzPzD9OEadeef
+ J92bmkRlYjHJWLCINpaV3bO0XJmNIYX7OjPuBfBx1V4akzuZMOoDmZzJFOjzxlk2VihK5AktW2X
+ fWGk/D0c2cF2/Y+joBn4APUJKpu3uZg=
+X-Proofpoint-ORIG-GUID: by5fNxt_eaLk5DwdAWrImJuJcMemov0b
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-13_01,2026-10-14_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 suspectscore=0 malwarescore=0 phishscore=0
- spamscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150023
+ suspectscore=0 clxscore=1015 phishscore=0 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 malwarescore=0 adultscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610150023
 
-Add a mac80211 QoS Management driver operation and connect it to the
-cfg80211 set_qos_mgmt_cfg() callback.
+Store accepted SCS and MSCS configuration in an RCU-published
+per-station object. TX and RX paths read this state without taking the
+wiphy lock, so replacing the object and freeing the old version is
+deferred until after an RCU grace period.
 
-Pass the parsed SCS/MSCS request, including any QoS Characteristics, to
-the driver together with the response descriptor array. The driver is
-expected to apply the protocol-specific configuration and update each
-response descriptor with the status for its corresponding request.
+The state is updated after successful driver processing.
+The QoS Characteristics element is specified in 9.4.2.326,
+IEEE Std 802.11be-2024.
 
-The accepted configuration is then retained by mac80211 for use by
-subsequent data-path handling.
+Retire replaced state through RCU and release remaining state
+when the station is removed.
 
-Co-developed-by: Arun Vikas T <arun.t@oss.qualcomm.com>
-Signed-off-by: Arun Vikas T <arun.t@oss.qualcomm.com>
 Signed-off-by: Aishwarya R <aishwarya.r@oss.qualcomm.com>
 ---
- include/net/mac80211.h     |  7 +++++++
- net/mac80211/cfg.c         | 13 +++++++++++++
- net/mac80211/driver-ops.h  | 28 ++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/mlme.c        | 17 +++++++++++++++++
- net/mac80211/trace.h       | 24 ++++++++++++++++++++++++
- 6 files changed, 93 insertions(+)
+ net/mac80211/mlme.c     | 150 +++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.c |   7 ++
+ net/mac80211/sta_info.h |  21 ++++++
+ 3 files changed, 177 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a1a6409b44c1..a610d6eb92b4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4760,6 +4760,9 @@ struct ieee80211_prep_tx_info {
-  * @set_eml_op_mode: Configure eMLSR/eMLMR operation mode in the underlay
-  *	driver according to the parameter received in the EML Operating mode
-  *	notification frame.
-+ * @qos_mgmt_cfg: Configure QoS Management (QM) for a station. The request
-+ *	contains SCS or MSCS parameters, and the driver populates the
-+ *	per-descriptor response status.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -5173,6 +5176,10 @@ struct ieee80211_ops {
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_sta *sta,
- 			       struct ieee80211_eml_params *eml_params);
-+	int (*qos_mgmt_cfg)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    struct ieee80211_sta *sta,
-+			    struct cfg80211_qm_req_data *qm_req,
-+			    struct cfg80211_qm_resp_data *qm_resp);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9608c07bcea7..f66f736adb92 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -6309,6 +6309,18 @@ ieee80211_set_nan_non_evac_channels(struct wiphy *wiphy,
- 	return ieee80211_nan_set_non_evac_channels(sdata, channels);
- }
- 
-+static int
-+ieee80211_set_qos_mgmt_cfg(struct wiphy *wiphy, struct net_device *dev,
-+			   struct cfg80211_qm_req_data *qm_req,
-+			   struct cfg80211_qm_resp_data *qm_resp)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	lockdep_assert_wiphy(wiphy);
-+
-+	return ieee80211_qos_mgmt_cfg(sdata, qm_req, qm_resp);
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -6432,4 +6444,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.nan_set_local_sched = ieee80211_set_local_nan_sched,
- 	.nan_set_peer_sched = ieee80211_set_peer_nan_sched,
- 	.nan_set_non_evac_channels = ieee80211_set_nan_non_evac_channels,
-+	.set_qos_mgmt_cfg = ieee80211_set_qos_mgmt_cfg,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 83dd15f2daf6..f1dc9ca9f8f7 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1804,4 +1804,32 @@ drv_nan_peer_sched_changed(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+static inline int
-+drv_qos_mgmt_cfg(struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_local *local, struct ieee80211_sta *sta,
-+		 struct cfg80211_qm_req_data *qm_req,
-+		 struct cfg80211_qm_resp_data *qm_resp)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	might_sleep();
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return ret;
-+
-+	/*
-+	 * Called only for SCS descriptors carrying a QoS Characteristics
-+	 * element (9.4.2.326, IEEE Std 802.11be-2024).  Legacy SCS and MSCS
-+	 * are handled in mac80211.
-+	 */
-+	trace_drv_qos_mgmt_cfg(local, sdata, sta, qm_req);
-+	if (local->ops->qos_mgmt_cfg)
-+		ret = local->ops->qos_mgmt_cfg(&local->hw, &sdata->vif,
-+						sta, qm_req, qm_resp);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1a6cbbb5a17d..63391a1fd9c6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -3020,6 +3020,10 @@ ieee80211_uhr_cap_ie_to_sta_uhr_cap(struct ieee80211_sub_if_data *sdata,
- 				    u8 uhr_cap_len,
- 				    struct link_sta_info *link_sta);
- 
-+int ieee80211_qos_mgmt_cfg(struct ieee80211_sub_if_data *sdata,
-+			   struct cfg80211_qm_req_data *qm_req,
-+			   struct cfg80211_qm_resp_data *qm_resp);
-+
- #if IS_ENABLED(CONFIG_MAC80211_KUNIT_TEST)
- #define EXPORT_SYMBOL_IF_MAC80211_KUNIT(sym) EXPORT_SYMBOL_IF_KUNIT(sym)
- #define VISIBLE_IF_MAC80211_KUNIT
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6ec45a9f7221..e476c6b9cb14 100644
+index e476c6b9cb14..2d853cd1c18a 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -12036,3 +12036,20 @@ void ieee80211_sta_rx_queued_frame(struct ieee80211_sub_if_data *sdata,
- 		break;
+@@ -12037,12 +12037,119 @@ void ieee80211_sta_rx_queued_frame(struct ieee80211_sub_if_data *sdata,
  	}
  }
-+
-+int ieee80211_qos_mgmt_cfg(struct ieee80211_sub_if_data *sdata,
-+			   struct cfg80211_qm_req_data *qm_req,
-+			   struct cfg80211_qm_resp_data *qm_resp)
+ 
++static void
++ieee80211_qos_mgmt_update_scs(struct ieee80211_sta_qos *qos,
++			      struct cfg80211_qm_req_data *qm_req,
++			      struct cfg80211_qm_resp_data *qm_resp)
 +{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
++	u8 tid;
++	int i;
 +
-+	if (sdata->vif.type != NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
++	if (qm_req->qm_type != NL80211_QM_TYPE_SCS)
++		return;
 +
-+	sta = sta_info_get_bss(sdata, qm_req->peer_mac);
-+	if (!sta)
-+		return -ENOENT;
++	for (i = 0; i < qm_req->num_qm_desc; i++) {
++		struct cfg80211_qm_req_desc_data *qm_req_desc =
++			&qm_req->qm_req_desc[i];
++		struct cfg80211_qm_resp_desc_data *qm_resp_desc =
++			&qm_resp->qm_resp_desc[i];
 +
-+	return drv_qos_mgmt_cfg(sdata, local, &sta->sta, qm_req, qm_resp);
++		if (qm_resp_desc->qm_id != qm_req_desc->qm_id ||
++		    qm_resp_desc->status != NL80211_QM_STATUS_SUCCESS)
++			continue;
++
++		switch (qm_req_desc->request_type) {
++		case NL80211_QM_REMOVE_REQ:
++			clear_bit(qm_req_desc->qm_id, qos->active_scs_id);
++			break;
++		case NL80211_QM_ADD_REQ:
++		case NL80211_QM_CHANGE_REQ:
++			/*
++			 * For legacy SCS the TID is derived from the UP
++			 * field of the first TCLAS element (11.25.2, IEEE
++			 * Std 802.11-2024). For 802.11be SCS the TID is
++			 * taken from the QoS
++			 * Characteristics element (9.4.2.326, IEEE Std
++			 * 802.11be-2024).
++			 */
++			if (qm_req_desc->is_qos_present)
++				tid = qm_req_desc->qos_attr.tid;
++			else if (qm_req_desc->num_tclas_elements > 0)
++				tid = qm_req_desc->tclas[0].up;
++			else
++				continue;
++
++			if (tid >= IEEE80211_QOS_MGMT_MAX_TID)
++				continue;
++
++			qos->scs_id_tid_mapping[qm_req_desc->qm_id] = tid;
++			set_bit(qm_req_desc->qm_id, qos->active_scs_id);
++			break;
++		default:
++			break;
++		}
++	}
++
++	qos->scs_enabled =
++		!bitmap_empty(qos->active_scs_id,
++			      IEEE80211_QOS_MGMT_MAX_SCS_ID + 1);
 +}
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index ea46c3cca21a..ce69e5edd03f 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -3431,6 +3431,30 @@ TRACE_EVENT(drv_nan_peer_sched_changed,
- 	)
- );
- 
-+TRACE_EVENT(drv_qos_mgmt_cfg,
-+	    TP_PROTO(struct ieee80211_local *local,
-+		     struct ieee80211_sub_if_data *sdata,
-+		     struct ieee80211_sta *sta,
-+		     struct cfg80211_qm_req_data *qm_req),
-+	    TP_ARGS(local, sdata, sta, qm_req),
-+	    TP_STRUCT__entry(LOCAL_ENTRY
-+			     VIF_ENTRY
-+			     STA_ENTRY
-+			     __field(u8, qm_type)
-+			     __field(unsigned int, num_qm_desc)
-+	),
-+	    TP_fast_assign(LOCAL_ASSIGN;
-+			   VIF_ASSIGN;
-+			   STA_NAMED_ASSIGN(sta);
-+			   __entry->qm_type = qm_req->qm_type;
-+			   __entry->num_qm_desc = qm_req->num_qm_desc;
-+	),
-+	    TP_printk(LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT
-+		      " qm_type:%u num_qm_desc:%u",
-+		      LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG,
-+		      __entry->qm_type, __entry->num_qm_desc)
-+);
 +
- #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
++static void
++ieee80211_qos_mgmt_update_mscs(struct ieee80211_sta_qos *qos,
++			       struct cfg80211_qm_req_data *qm_req,
++			       struct cfg80211_qm_resp_data *qm_resp)
++{
++	struct cfg80211_qm_req_desc_data *qm_req_desc;
++	struct cfg80211_qm_resp_desc_data *qm_resp_desc;
++
++	qm_req_desc = &qm_req->qm_req_desc[0];
++	qm_resp_desc = &qm_resp->qm_resp_desc[0];
++
++	if (qm_resp_desc->qm_id != qm_req_desc->qm_id ||
++	    qm_resp_desc->status != NL80211_QM_STATUS_SUCCESS)
++		return;
++
++	switch (qm_req_desc->request_type) {
++	case NL80211_QM_ADD_REQ:
++	case NL80211_QM_CHANGE_REQ:
++		qos->mscs_user_priority_bitmap =
++			qm_req_desc->user_priority_bitmap;
++		qos->mscs_user_priority_limit =
++			qm_req_desc->user_priority_limit;
++		qos->mscs_enabled = true;
++		break;
++	case NL80211_QM_REMOVE_REQ:
++		qos->mscs_user_priority_bitmap = 0;
++		qos->mscs_user_priority_limit = 0;
++		qos->mscs_enabled = false;
++		break;
++	default:
++		break;
++	}
++}
++
++static bool
++ieee80211_qos_mgmt_has_qos_char(struct cfg80211_qm_req_data *qm_req)
++{
++	unsigned int i;
++
++	for (i = 0; i < qm_req->num_qm_desc; i++) {
++		if (qm_req->qm_req_desc[i].is_qos_present)
++			return true;
++	}
++	return false;
++}
++
+ int ieee80211_qos_mgmt_cfg(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_qm_req_data *qm_req,
+ 			   struct cfg80211_qm_resp_data *qm_resp)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sta_qos_rcu *new_qos = NULL;
++	struct ieee80211_sta_qos_rcu *old_qos;
+ 	struct sta_info *sta;
++	int ret;
  
- #undef TRACE_INCLUDE_PATH
+ 	if (sdata->vif.type != NL80211_IFTYPE_AP)
+ 		return -EOPNOTSUPP;
+@@ -12051,5 +12158,46 @@ int ieee80211_qos_mgmt_cfg(struct ieee80211_sub_if_data *sdata,
+ 	if (!sta)
+ 		return -ENOENT;
+ 
+-	return drv_qos_mgmt_cfg(sdata, local, &sta->sta, qm_req, qm_resp);
++	if (qm_req->qm_type == NL80211_QM_TYPE_SCS ||
++	    qm_req->qm_type == NL80211_QM_TYPE_MSCS) {
++		new_qos = kzalloc_obj(*new_qos);
++		if (!new_qos)
++			return -ENOMEM;
++
++		old_qos = rcu_dereference_protected(sta->qos,
++						    lockdep_is_held(&local->hw.wiphy->mtx));
++		if (old_qos)
++			new_qos->data = old_qos->data;
++	}
++
++	/*
++	 * SCS descriptors carrying a QoS Characteristics element
++	 * (9.4.2.326, IEEE Std 802.11be-2024) require hardware-specific
++	 * scheduling support; forward the request to the driver.  Legacy
++	 * SCS and MSCS are handled in mac80211.
++	 */
++	if (ieee80211_qos_mgmt_has_qos_char(qm_req)) {
++		ret = drv_qos_mgmt_cfg(sdata, local, &sta->sta,
++				       qm_req, qm_resp);
++		if (ret) {
++			kfree(new_qos);
++			return ret;
++		}
++	}
++
++	if (!new_qos)
++		return 0;
++
++	if (qm_req->qm_type == NL80211_QM_TYPE_SCS)
++		ieee80211_qos_mgmt_update_scs(&new_qos->data, qm_req,
++					      qm_resp);
++	else
++		ieee80211_qos_mgmt_update_mscs(&new_qos->data, qm_req,
++					       qm_resp);
++	old_qos = rcu_replace_pointer(sta->qos, new_qos,
++				      lockdep_is_held(&local->hw.wiphy->mtx));
++	if (old_qos)
++		kfree_rcu(old_qos, rcu_head);
++
++	return 0;
+ }
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 5c95ffee257d..e714b719e2f1 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -467,8 +467,15 @@ static void sta_remove_link(struct sta_info *sta, unsigned int link_id,
+  */
+ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ {
++	struct ieee80211_sta_qos_rcu *qos;
+ 	int i;
+ 
++	lockdep_assert_wiphy(local->hw.wiphy);
++	qos = rcu_replace_pointer(sta->qos, NULL,
++				  lockdep_is_held(&local->hw.wiphy->mtx));
++	if (qos)
++		kfree_rcu(qos, rcu_head);
++
+ 	for (i = 0; i < ARRAY_SIZE(sta->link); i++) {
+ 		struct link_sta_info *link_sta;
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 8942541375b2..68acd8fdc671 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -16,10 +16,29 @@
+ #include <linux/average.h>
+ #include <linux/bitfield.h>
+ #include <linux/etherdevice.h>
++#include <linux/rcupdate.h>
+ #include <linux/rhashtable.h>
+ #include <linux/u64_stats_sync.h>
+ #include "key.h"
+ 
++/* SCS IDs are in the range 1-255; zero is reserved. */
++#define IEEE80211_QOS_MGMT_MAX_SCS_ID	255
++#define IEEE80211_QOS_MGMT_MAX_TID	8
++
++struct ieee80211_sta_qos {
++	bool scs_enabled;
++	bool mscs_enabled;
++	DECLARE_BITMAP(active_scs_id, IEEE80211_QOS_MGMT_MAX_SCS_ID + 1);
++	u8 scs_id_tid_mapping[IEEE80211_QOS_MGMT_MAX_SCS_ID + 1];
++	u8 mscs_user_priority_bitmap;
++	u8 mscs_user_priority_limit;
++};
++
++struct ieee80211_sta_qos_rcu {
++	struct rcu_head rcu_head;
++	struct ieee80211_sta_qos data;
++};
++
+ /**
+  * enum ieee80211_sta_info_flags - Stations flags
+  *
+@@ -657,6 +676,7 @@ struct ieee80211_sta_removed_link_stats {
+  * @rate_ctrl_priv: rate control private per-STA pointer
+  * @lock: used for locking all fields that require locking, see comments
+  *	in the header file.
++ * @qos: RCU-published QoS Management state
+  * @drv_deliver_wk: used for delivering frames after driver PS unblocking
+  * @listen_interval: listen interval of this station, when we're acting as AP
+  * @_flags: STA flags, see &enum ieee80211_sta_info_flags, do not use directly
+@@ -728,6 +748,7 @@ struct sta_info {
+ 	void *rate_ctrl_priv;
+ 	spinlock_t rate_ctrl_lock;
+ 	spinlock_t lock;
++	struct ieee80211_sta_qos_rcu __rcu *qos;
+ 
+ 	struct ieee80211_fast_tx __rcu *fast_tx;
+ 	struct ieee80211_fast_rx __rcu *fast_rx;
 -- 
 2.34.1
 
