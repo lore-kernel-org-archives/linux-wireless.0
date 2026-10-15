@@ -1,88 +1,94 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610F41FF7C5
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A0E122A4EE
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792043691; cv=none; b=hTebGh3lEd0YG/Hnv54yDWFUqZzQOCZZrV4ycsu+kyse9LSKUZOfR3GcqqcuxepLIkq32uXb4Wmp2Mxc2D3aSfWTl36qZlsB7759ZF9Vwda+RdorXQdJhlddmkzSAUBDVCd2NWRmae3feBkPKJ3f64MAZuqinuYL6V1HY0d7FSY=
+	t=1792043696; cv=none; b=esz0cE6V4mioCPlkTdvZse6XkTv8xjIOGVEf9jzpni092lXXNGogqM+BL2YGM6VvY0XlylS0UitJEtw0/FTgRgg1pMnpopMmUG2eXmR/4bgNS557kOpMG6wCSu1PJx7v7RSGkOUajEN1XfAVk9ub7CGMij9BI3UFvDoA0rrLwQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792043691; c=relaxed/simple;
-	bh=MlwFplp9kn9YQOQPZwVuj6VzXUifja1SAGQemq4b+Co=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nRBKNDtLv2CBLmpdu1/IigYpd3yzcnARlHovzJiUjpBogOXMA8jd9U5BQtY0FRO7K+JUcL0Q7+VNzwxqVtFVw96mhdi3FjpjrM7jm3uDgVPUrYz9Pn9ttCwnnXP+LmRjIOBaBNnqnCKf2p9Fcv32uXQcv5VAYK5OqGpAuCmmX5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ng3WBJg5; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=hTZAgYYB; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1792043696; c=relaxed/simple;
+	bh=JdbVAHjt0wfriUKnX/9hghr+ij5t04gGBIU4SgDnS18=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=M0u6xfF3lixv5pGN3XF59vtcSc6kAYWapxu9gLh+bZIpqkfOUR+JtX5K4b8iz0ozOC8SnDiwbHf+TuR5Rqu7vPeM6t9bYAq5gub3MuusMZcpDfPbh7HbJb5JP5xuosDB2aFPBvdrYCbEwKtfFOIwI6PJ6CfVpYVpqsQhe2NjpCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AlQF5JNv; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ic8T5xHy; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ng3WBJg5";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="hTZAgYYB"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69F1R9jE3469372
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:49 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AlQF5JNv";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ic8T5xHy"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69ENxEqN1682677
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=A75f2xxYnB8eKx443wh48OrbfwXotpjXVBQ
-	hOZKxNf4=; b=ng3WBJg5hkRFKFMzsqBJ2dqpcCFDTbH8ihrbwUtD/5Le3+3N7Va
-	ALJLUSb8XMsdx4huP0Zi+ATkI5n7OgE/kcZHspz6EPnLGMXO7yXgQ+uiKR+9siEx
-	US7P/0ZSJmcT8Tfn9Ln+h7IUkGMqR12CxSCQ/9ZW7FhfLDtml/uLDK8ozgBYbL5a
-	QuD+cwbeNAj96UaEclT29RuLBGEVSaIOl0sNitDU9bZA92hfkZJy0g0H1YSmZdEv
-	jLihkPppBeCwTxEZICgVLfIG9rcjJqa+8WLK5GM4bgabspDFPY7T83S3CQj6zhVx
-	9Cf2G7VkzqDG/vkFOe1bkhIyc+q6RZO95ZA==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hadd7akx9-1
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=2IHdaB5tukL
+	+SGpjAgWM2U8+XAfoU2eBIdaq4WWMhv0=; b=AlQF5JNv5OAc4zclxeN6rlGSB1L
+	PnV2zFV7xzWaNwrR+RoWajsju0q2HmCGRdcbRav6gMDgARBuBrbECJqAssh2JsAl
+	JznV6oDrQ2IywtPbsHLBkbPs5tGYJ8YaUln9tFVCP/FxD4d1lQP7joFsTIowTTAl
+	HRvLQ9XJj8N6LWeUzcTVZqOQS4MBZxnhi6JbfNMBmjqJgdPkMszFpeergUrzUvUa
+	LUckvNM4+ihnVUqGMUojm3cdUZXBqReOOPaelnX+w1reEX63RU0gSJ8xoR1m3hDg
+	ldK9c3oze49cKs7HLa3fRikjdAY2Kp8ywpHAWuUZeymiIMpaVDRBMx36uwA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hacb02vy6-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:49 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3a8af172664so1138901a91.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 22:54:49 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:54:53 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3a470ead068so5772705a91.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 22:54:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792043689; x=1792648489; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=A75f2xxYnB8eKx443wh48OrbfwXotpjXVBQhOZKxNf4=;
-        b=hTZAgYYBK++5KPczwDo1W6yQ3x3OPR3zF2K7UUu405oc3XpIPCx6rs8Kd7jNq6No5K
-         1XA94LlD89PTS4Xi72gijdWLzvqWPjU0WNG52ns9pWMA9+NhDDz3JnpXhGSBo47sEE2Q
-         f0ExU9hKSN1UkbR0RPY7tIUg7BfNNboAmhW3p6c1VSrp3dAJOBPljgyPtTNiocPtBYc/
-         a9J4lUeLfZQKQiNA9tc4jP3n9MljLaWb2NXBq9gv0+54bOZWGxztaevjURh4L6RiZ7mP
-         YFq68qXb++4RDIdru/GKQdlLMaCg6WuHL9sbP3lbxWWzUFC4GEuGfkp1HmqEt8nd7xdq
-         T+ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792043689; x=1792648489;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=oss.qualcomm.com; s=google; t=1792043693; x=1792648493; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=A75f2xxYnB8eKx443wh48OrbfwXotpjXVBQhOZKxNf4=;
-        b=m/cFt8eGXQjvIdF0JFJaAQFiGg03i7CWdjxZphS68pyUY4FmODKdPeRbKSkNqicIW0
-         NAc9eD1fxwGlSX4dJYJalgedoDl6rcoXO6ckxl5fOf0NxdxFkMHIdoksA/vwUAf4sV9H
-         gcQLAlxnJ5/nEnifZTY9mKgr1I3fI25x29ZJnRhNkqfMy0vslut3pWqdrSKm8WWNxtDJ
-         pDIOZKJnhsuyUiMpIkRguuGiJflNRGCihr+yIZ8uzu6kL75+BojDx/Img11UA4p9Z/M7
-         X7TgW5i5JaR/x9GNwydNzmvocb7BrT65y+xFAE7Xj0+E551/0rQg3GfX7T7+1zSAppSp
-         ZaJQ==
-X-Gm-Message-State: AFq9FYLo+ezusd0FEnqckEPY8rXKGX7DXKQHgqKoNsbnAUuWW95ILWcK
-	5fAW04VJyG8Xcx/49roa0mHMUcNR5HEi+26AlEijPuSC3GC0ZNtHT2utTRF06YyNvn2zLRvlNpi
-	ZgEiqsr8g1TmwhNlE15GMC29i55KqqwLlcic78l1eQVcrDh95NX9Ki9Sj+cHjoD2QHXrvfA==
-X-Gm-Gg: AYBFou3sCR8WIBSQFMnatwaXhfZirAzI1fPozApDDEFUd0Jz5v8FkN8pc9OAixLm5fZ
-	XIPdQnoyeFphnlbpwvjWCf7DNka3wJtLW4wr0ht4U3hC2xuWAtMM1uLS77huiLEa/a3fXRSgVxd
-	UGyuEmakwQgiY5O4jsORSrDcXCzt1M10BFNgLVKImFbyK2sfJU59ZvJtFxb4rVPX4Z6PMtr43Y8
-	ferN2rcC72ax6pujLGC6tb1LZ/m5OLHpWjXTzvfw0ILJfzDggt02hjVHkJAepKsUR++dSvy1HoY
-	1UWrA+HOe65WKE0bX6SVteet5121Rs+0oXXXBH2MvpQQXN3ySJl0HH0ffptFBkFxYWG4bgLq5Tv
-	yQrTo1lUvPLHi8A/js7ULpyTBgYbG5VAzPj2Lbq73LNOiHoWtRE1Ofi3PrfQa2LsZweuSH6QTgg
-	5B7yENCXvccnIm
-X-Received: by 2002:a17:90a:d006:b0:3aa:fc22:8aac with SMTP id 98e67ed59e1d1-3ab3a9325f8mr16227800a91.51.1792043688571;
-        Wed, 14 Oct 2026 22:54:48 -0700 (PDT)
-X-Received: by 2002:a17:90a:d006:b0:3aa:fc22:8aac with SMTP id 98e67ed59e1d1-3ab3a9325f8mr16227773a91.51.1792043687992;
-        Wed, 14 Oct 2026 22:54:47 -0700 (PDT)
+        bh=2IHdaB5tukL+SGpjAgWM2U8+XAfoU2eBIdaq4WWMhv0=;
+        b=ic8T5xHygRqQSbPeKrVIjj3aapZ7wGvMAGJ6Qk+jJUn4DkoauK5ljrqnzmK8jquZ4r
+         xP+jI3+4OGLiRlaESjucDDp1kxfV9ddKCcR+ZcvpUONC0p1wA799AxZuBYkNTR5DSuDe
+         cxUPK+jt+69He2hvFI00uSsx5qgX9sqHyN3GM+Qwx3dd/QL5a1f7o4xuT+sH4Ybhk0kA
+         PuyqDqlNJiAVjYrSavFBsi1UfAAnnZJ2CLUG1VvZg1skgxkJLD/OKKk9A706dxMCTVzE
+         Ps6yYq9aWTpIQetUaO8b0IO9NWtqv2LqBYxvI5Y3STPzB0yhTWz3NwhyfujSDv5t/4xP
+         N7yw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792043693; x=1792648493;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2IHdaB5tukL+SGpjAgWM2U8+XAfoU2eBIdaq4WWMhv0=;
+        b=0XqJQggWcsEnKqwERwSRsFOARWagnb5S/Yp/z4aqOiI8JxOVwI71Rq+/AasCiNT7PC
+         urNKIf2zzVDXvBiKopc+R5/DLpwQ/VkG64PLtCXz8qCDjFQXWnopi4y2cDmOjmSdVb5w
+         Bhj6kxFHIxD1pt2PMCRdW/Iw4360FYyfa9VhWA93TDsvoQ+QehgQDztupDmAcGjzt/q1
+         zV3+q7W8V3YaOvgMLzohT1OJzxULmZYA5u0YMiDw9SCMkK/ydchytX4iy/J3a7IfT/He
+         S/iyt/bUjS/HIWvQR7y8WeUgL+41t1pcA2fDV0x/7FyYKqJcnICWhAx7O1ZNjiLUEoXg
+         5YBw==
+X-Gm-Message-State: AFq9FYJY3yg5H4/FJCRuNyLrjld7XwwOuWSHZDvjv6HKdcQhqEaKWeBg
+	TqF006kZFhV98H7EY2ado7+zQhDlxM45bbhJfvNQrFynH96k8ic4eMjdRr1Di+sQnlaG6pkabHK
+	07/PVqCOIxDUlyl5UERi2H73t3x04hb8Ulok+Ur+UaASa++RsKj8i/4PqQSFoR2I1eiAj9KayFT
+	ng7Q==
+X-Gm-Gg: AYBFou1MOEJoDC07uJgFR3+yODrSthsnSYjTSxDl4widteZE5W1jB2Owq92oO9YEAK4
+	+bNnno2tv/3k9U9jBkuOa1+ylW3BA1H8diYoM3BEJFIye/PqJTU3ZKdRMfyH+S2SNP1Scm8+09a
+	zv6fQcNqYBT1qoYnYdV7Jv2vD/TleMlB2hTDCcRKRA8kVBs00yRtKgresRMxxfWyUYvW/bDBxi5
+	sgWHnvcQE9Flo01pkF4J0XHbfN14NNPjBwHxPL1z2NF3XHhyf/V33MtTaVAf5wna6B6Vaw3Bfvc
+	SjBMOv0mrXRV/6f33eBRW4mHmLQYG2frni31t93WO5/kdiCSlLp1AhclLz0FLLV0z4Z7k6Xf2Bv
+	mzoSRqhSNEAUZLvvZWWqzbHA076MeQoRtlbf6SKAepqdtILNOipEWeaoX5DQnQcGguca7fsK3y9
+	V6wwZiM8B+RQhS
+X-Received: by 2002:a17:90a:1016:b0:3a7:ee74:e8cb with SMTP id 98e67ed59e1d1-3ab3a94fff3mr9551173a91.11.1792043692771;
+        Wed, 14 Oct 2026 22:54:52 -0700 (PDT)
+X-Received: by 2002:a17:90a:1016:b0:3a7:ee74:e8cb with SMTP id 98e67ed59e1d1-3ab3a94fff3mr9551161a91.11.1792043692070;
+        Wed, 14 Oct 2026 22:54:52 -0700 (PDT)
 Received: from hu-aisr-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac944af2f1sm2629054a91.15.2026.10.14.22.54.45
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac944af2f1sm2629054a91.15.2026.10.14.22.54.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 22:54:47 -0700 (PDT)
+        Wed, 14 Oct 2026 22:54:51 -0700 (PDT)
 From: Aishwarya R <aishwarya.r@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        Aishwarya R <aishwarya.r@oss.qualcomm.com>
-Subject: [PATCH RFC wireless-next 0/7] wifi: introduce generic QoS Management framework
-Date: Thu, 15 Oct 2026 11:24:34 +0530
-Message-Id: <20261015055441.680588-1-aishwarya.r@oss.qualcomm.com>
+        Aishwarya R <aishwarya.r@oss.qualcomm.com>,
+        Arun Vikas T <arun.t@oss.qualcomm.com>
+Subject: [PATCH RFC wireless-next 1/7] wifi: nl80211: add QoS Management UAPI
+Date: Thu, 15 Oct 2026 11:24:35 +0530
+Message-Id: <20261015055441.680588-2-aishwarya.r@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261015055441.680588-1-aishwarya.r@oss.qualcomm.com>
+References: <20261015055441.680588-1-aishwarya.r@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -90,159 +96,548 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=BaVNQbt2 c=1 sm=1 tr=0 ts=6ad06aa9 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Authority-Analysis: v=2.4 cv=VKpIDNPX c=1 sm=1 tr=0 ts=6ad06aad cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=VwQbUJbxAAAA:8
- a=COk6AnOGAAAA:8 a=qC_FGOx9AAAA:8 a=EUspDBNiAAAA:8 a=4TnTTFher7RBZE7yRwUA:9
- a=uKXjsCUrEbL0IQVhDsJ9:22 a=TjNXssC_j7lpFel5tvFf:22 a=fsdK_YakeE02zTmptMdW:22
-X-Proofpoint-GUID: fZi4Eioj2AFewfuHPWEatPlZlUq1V6Vo
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX/Rix9vtrSmwE
- c7z7aYQZxbs9Ih8EljkAfmgfAToCdE8FkI8qfKg3SrwSa+ZUmoyS564Llm80kDvP7zBFzRATRqm
- +A41nm4IH9RmKuk+WZgiHdUZC1naXByOYnPChBkWtxk4Dq/d4B3uRPc3RNZByA7xxm2L9sByZqW
- 3Hs3jTpDpIkDdRv/3uLRTWXv2lNXv9P8RtUfA93+tPGxuUY215LX9I93Cnj1DLYZWDH0oIccfR1
- j2wUdEWhjFH372BKIfqGkL89pc6K6L9CctBmvLQoQy8gK5QTXuOFNNu9w/BgwJg0Y55i4ykcL5L
- 9kYs5Qx4K32w+3sO6qvMvkqCcltgDRndlpxrT4FR9ILtq+BuoHih/JoL2IHpgMjZvbxdznefhq9
- LVIKEBh5sOCpTPSSOlYS4CmYzJP7HyS2QWEjEtrQ2MKu5CmJwJHdQU1XXJsDvYrYwaPFNdSU8mi
- NtBKUx9f5PEVKEiff/w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX3C4gclaiVUz0
- T3fDL6rSj/rZRZ1uwEwAI0PkVkAIEIrFuqtna8rJnfBeFazgfIV392W5/EwzpP/bIFTBLHWDjaE
- 0oX8C8uYObS+50GUFgbAJrtnz2ek5sw=
-X-Proofpoint-ORIG-GUID: fZi4Eioj2AFewfuHPWEatPlZlUq1V6Vo
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
+ a=BHmDPy62uHH8tM3u7LoA:9 a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX8Wmyq68KdNZ4
+ pDOC3APDE5sRRJo/ix0/r3Gi81m0fU5dpzon/FqttOo17OrU0D+RwOOVkJwKaZdVpiyKNRKo9HX
+ 5u0Iw56lLgFUJMqF71wfuRcYhFNsezI=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX7ShKJw7GHGmc
+ ZrLs2uAcerVoumEFwnfP+q2VSpXa4Qq3L1KrtquosCsIa/SNeU6uZS5R6Qg6iUTSXqqJlb7gLNO
+ of3nxc52HtvFiYnDx505dvsC9wS/dpTAzxHsaW5bD2Xt7ueP7CqAgzMW2m5nIFKtGd6cc3M8A6S
+ 0E78Ii04Y3nPKyTtVTdhPxdtqf1duFOlSCeU6eYCeNpg73XzAS9lWy0GfMcaf5FZgSNauSivb4U
+ oszM7uWhnuGbSIvlIF2zIXWn2CyjV+U5z9e6hjv1LNSK6k9z140W5MryoIa4jitaeCE8M7IGFnm
+ vP0l6QVAjpIBwElAAiiR3sNwH2zEU9/pnUp/Rpknena/F/OqNqsyosb2nx6LthBU6fEK2EyzwYi
+ XQitUQhZRzKziZ3CgfYiSlxqKHfHGXAAuV3NHFpMb+SmORWtK6oO78AwZhRtVK3dWZdQAzliMNZ
+ LtaD5OpejcRutpPH1PQ==
+X-Proofpoint-ORIG-GUID: BW06yZn5mk2IldAbNEUZHXH70ktbLnf6
+X-Proofpoint-GUID: BW06yZn5mk2IldAbNEUZHXH70ktbLnf6
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-13_01,2026-10-14_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 clxscore=1015 phishscore=0 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 impostorscore=0 malwarescore=0 adultscore=0
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
- definitions=main-2610150023
+ adultscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ malwarescore=0 phishscore=0 spamscore=0 clxscore=1015 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150023
 
-This series implements the generic QoS Management (QM) control-path
-framework proposed in:
+Add the UAPI definitions and nested netlink policies used by the generic
+QoS Management (QM) framework.
 
-[DESIGN RFC] wifi: Robust AV streaming Design Proposal for AP [1]
+Introduce protocol identifiers for Stream Classification Service (SCS)
+and Mirrored Stream Classification Service (MSCS), request operation
+types, QoS characteristics direction encoding, response status codes,
+and the NL80211_CMD_QOS_MGMT command.
 
-The RFC discusses support for IEEE 802.11 Robust AV Streaming protocols,
-specifically Stream Classification Service (SCS) and Mirrored Stream
-Classification Service (MSCS), and proposes a generic userspace-to-driver
-interface for exchanging QoS Management requests and responses.
+The NL80211_ATTR_QOS_MGMT payload contains the protocol selector and
+nested descriptor, SCS TCLAS and QoS attributes, and MSCS-specific
+attributes. The corresponding nl80211 policies validate the attribute types
+and ranges before parsing.
 
-The protocol procedures used by this series are specified in 11.25.2 and
-11.25.3, IEEE Std 802.11-2024. The SCS Descriptor and MSCS Descriptor
-elements are specified in 9.4.2.120 and 9.4.2.242, IEEE Std 802.11-2024,
-respectively. The TCLAS element and TCLAS Processing element are specified
-in 9.4.2.29 and 9.4.2.31, IEEE Std 802.11-2024. The QoS Characteristics
-element is specified in 9.4.2.326, IEEE Std 802.11be-2024.
+The SCS and MSCS procedures are specified in 11.25.2 and 11.25.3,
+IEEE Std 802.11-2024. The SCS Descriptor and MSCS Descriptor elements are
+specified in 9.4.2.120 and 9.4.2.242, IEEE Std 802.11-2024, respectively.
+The TCLAS element and TCLAS Processing element are specified in 9.4.2.29
+and 9.4.2.31, IEEE Std 802.11-2024. The QoS Characteristics element is
+specified in 9.4.2.326, IEEE Std 802.11be-2024.
 
-SCS and MSCS both follow a common request/response model where a non-AP STA
-negotiates traffic classification and QoS treatment with the AP using QoS
-Management action frames. While the descriptors used by the protocols
-differ, both share request operations and per-descriptor status reporting.
-SCS uses TCLAS elements and QoS characteristics, while MSCS uses a TCLAS
-mask together with its user-priority fields.
+Co-developed-by: Arun Vikas T <arun.t@oss.qualcomm.com>
+Signed-off-by: Arun Vikas T <arun.t@oss.qualcomm.com>
+Signed-off-by: Aishwarya R <aishwarya.r@oss.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h | 344 +++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       |  88 +++++++++
+ 2 files changed, 432 insertions(+)
 
-Rather than introducing protocol-specific nl80211 commands and driver
-interfaces, this series adds a generic QoS Management framework that can be
-reused by current and future Robust AV Streaming protocols.
-
-The framework provides:
-
-  * IEEE 802.11 definitions for QoS Management protocols, request types and
-    status codes.
-
-  * A new NL80211_CMD_QOS_MGMT command and generic nested attributes
-    capable of representing SCS and MSCS descriptors.
-
-  * cfg80211 request and response structures together with a driver
-    callback for QoS Management transactions.
-
-  * Parsing, validation and response handling in nl80211. Responses are
-    initialized with the request descriptor IDs and a declined status
-    before the driver callback, so an unhandled descriptor cannot be
-    reported as successful.
-
-  * mac80211 forwarding support and RCU-protected per-station state
-    tracking for successful QoS Management transactions.
-
-  * map SCS-marked packets to negotiated TIDs and apply MSCS priority
-    limiting during TX queue selection.
-
-The MSCS packet mark retains the original uplink priority and applies the
-priority limit only during transmit queue selection. This avoids
-rechecking a previously limited priority against the original bitmap.
-
-SCS descriptors carry either TCLAS elements alone (legacy SCS) or a QoS
-Characteristics element (IEEE 802.11be SCS).  mac80211 handles legacy SCS
-by mapping packets to the negotiated TID during transmit queue selection.
-When a QoS Characteristics element is present, mac80211 forwards the full
-descriptor to the driver via the qos_mgmt callback, allowing the driver to
-apply hardware-specific scheduling or offload.
-
-This series is complementary to Felix's proposal [2]. It deliberately keeps
-protocol-specific flow classification out of mac80211.
-
-For SCS, userspace and netfilter can classify flows and carry the resulting
-metadata through conntrack and skb marks. For MSCS, mac80211 uses the
-received user priority and the negotiated MSCS bitmap.
-
-The corresponding packet-marking model is implemented by the QSDK hostapd
-nftables integration [3][4]. It exposes a rule-management interface and
-installs per-interface netdev egress chains that can match MAC, IP and
-transport-layer fields and write packet marks. This is an implementation
-reference for the userspace/netfilter integration; it is not currently
-part of upstream hostapd. The netdev RFC describes the corresponding
-packet-path support for using this metadata before transmit queue
-selection [5].
-
-This model avoids duplicating SCS TCLAS and flow-classification logic in
-mac80211 while allowing userspace and netfilter to evolve
-classification policies independently. It also keeps the mac80211
-data path small and allows drivers to implement hardware-specific
-handling or offload where appropriate.
-
-For intra-BSS forwarding, the QoS Management mark may not be preserved
-if the AP nftables configuration restores skb->mark from conntrack
-unconditionally and the intra-BSS flow is not tracked.  Per-station peer
-isolation routes STA-to-STA traffic through the full bridge path, ensuring
-conntrack sees the flow and the QoS mark is intact at transmit queue
-selection.
-
-[1] https://lore.kernel.org/r/20250624205716.1052329-1-quic_rchoodam@quicinc.com/
-[2] https://lore.kernel.org/linux-wireless/cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name/
-[3] https://git.codelinaro.org/clo/qsdk/oss/src/network/services/hostapd/-/blob/win.wlan_host_opensource.4.0.r39/src/ap/nft.h
-[4] https://git.codelinaro.org/clo/qsdk/oss/src/network/services/hostapd/-/blob/win.wlan_host_opensource.4.0.r39/src/ap/nft.c
-[5] https://lore.kernel.org/netfilter-devel/20261006085844.2694120-1-hari.chandrakanthan@oss.qualcomm.com/
-
-Aishwarya R (7):
-  wifi: nl80211: add QoS Management UAPI
-  wifi: cfg80211: add QoS Management data structures
-  wifi: nl80211: implement QoS Management request parsing and response
-  wifi: mac80211: forward QoS Management configuration to drivers
-  wifi: mac80211: track QoS Management station state
-  wifi: mac80211: map SCS packets to configured TIDs
-  wifi: mac80211: add MSCS packet classification
-
- include/linux/ieee80211.h    |   1 +
- include/net/cfg80211.h       | 220 +++++++++++
- include/net/mac80211.h       |   7 +
- include/uapi/linux/nl80211.h | 344 +++++++++++++++++
- net/mac80211/cfg.c           |  13 +
- net/mac80211/driver-ops.h    |  28 ++
- net/mac80211/ieee80211_i.h   |  18 +
- net/mac80211/mlme.c          | 165 ++++++++
- net/mac80211/rx.c            |  29 ++
- net/mac80211/sta_info.c      |   7 +
- net/mac80211/sta_info.h      |  21 +
- net/mac80211/trace.h         |  24 ++
- net/mac80211/wme.c           |  47 +++
- net/wireless/nl80211.c       | 730 +++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |  17 +
- net/wireless/trace.h         |  20 +
- 16 files changed, 1691 insertions(+)
-
-base-commit: a4190accbf7e05496754004bb701fb3e7d04e57f
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b56a96f57bec..4106fe662945 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1468,6 +1468,10 @@
+  *	and multiple can be nested in %NL80211_ATTR_MLO_LINKS but then the
+  *	update isn't atomic if any failures happen.
+  *	Only supported with %NL80211_EXT_FEATURE_UPDATE_BEACON.
++ * @NL80211_CMD_QOS_MGMT: QoS Management configuration for a station. Used
++ *	by userspace to send QoS Management (QM) requests and to receive the
++ *	corresponding status response via %NL80211_ATTR_QOS_MGMT.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1750,6 +1754,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_UPDATE_BEACON,
+ 
++	NL80211_CMD_QOS_MGMT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -3243,6 +3249,13 @@ enum nl80211_commands {
+  * @NL80211_ATTR_ASSOC_PROTECTED_TWT: Enable protected TWT for the association,
+  *	requires protected TWT support (flag attribute)
+  *
++ * @NL80211_ATTR_QOS_MGMT: Used with %NL80211_CMD_QOS_MGMT to configure
++ *	QoS Management (QM) features for a station. The nested payload is
++ *	described by &enum nl80211_qm_attrs. It contains a nested array of
++ *	&enum nl80211_qm_desc_attrs entries; SCS TCLAS and QoS attributes use
++ *	&enum nl80211_qm_tclas_attrs and &enum nl80211_qm_qos_attrs,
++ *	respectively.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3850,6 +3863,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_ASSOC_PROTECTED_TWT,
+ 
++	NL80211_ATTR_QOS_MGMT,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -9200,4 +9215,333 @@ enum nl80211_nan_peer_map_attrs {
+ 
+ #define NL80211_NAN_SCHED_NOT_AVAIL_SLOT 0xff
+ 
++#define NL80211_IPADDR_MAX_LEN			16
++#define NL80211_QM_TCLAS_TYPE10_MAX_FILTER_LEN	12
++#define NL80211_QM_TCLAS_TYPE4_FLOW_LABEL_LEN	3
++
++/*
++ * The TCLAS element (reference 9.4.2.29, IEEE Std 802.11-2024) is used by
++ * SCS for traffic classification.
++ */
++/**
++ * enum nl80211_qm_tclas_type4_attrs - TCLAS classifier type 4 attributes
++ *
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_INVALID: Invalid
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_CLASSIFIER_MASK: Classifier mask (u8), see
++ *	&enum nl80211_qm_tclas_type4_mask
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_IP_VERSION: IP version, 4 or 6 (u8)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_SRC_IP: Source IP address
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_DST_IP: Destination IP address
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_SRC_PORT: Source port (u16)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_DST_PORT: Destination port (u16)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_DSCP: DSCP value, 0-63 (u8)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_PROTOCOL: IP protocol number, IPv4 only (u8)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_NEXT_HEADER: Next header, IPv6 only (u8)
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_FLOW_LABEL: Flow label, IPv6 only
++ * @__NL80211_QM_TCLAS_TYPE4_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_TCLAS_TYPE4_ATTR_MAX: highest type 4 attribute number currently
++ *	defined
++ */
++enum nl80211_qm_tclas_type4_attrs {
++	NL80211_QM_TCLAS_TYPE4_ATTR_INVALID,
++	NL80211_QM_TCLAS_TYPE4_ATTR_CLASSIFIER_MASK,
++	NL80211_QM_TCLAS_TYPE4_ATTR_IP_VERSION,
++	NL80211_QM_TCLAS_TYPE4_ATTR_SRC_IP,
++	NL80211_QM_TCLAS_TYPE4_ATTR_DST_IP,
++	NL80211_QM_TCLAS_TYPE4_ATTR_SRC_PORT,
++	NL80211_QM_TCLAS_TYPE4_ATTR_DST_PORT,
++	NL80211_QM_TCLAS_TYPE4_ATTR_DSCP,
++	NL80211_QM_TCLAS_TYPE4_ATTR_PROTOCOL,
++	NL80211_QM_TCLAS_TYPE4_ATTR_NEXT_HEADER,
++	NL80211_QM_TCLAS_TYPE4_ATTR_FLOW_LABEL,
++
++	/* keep last */
++	__NL80211_QM_TCLAS_TYPE4_ATTR_AFTER_LAST,
++	NL80211_QM_TCLAS_TYPE4_ATTR_MAX =
++		__NL80211_QM_TCLAS_TYPE4_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_tclas_type10_attrs - TCLAS classifier type 10 attributes
++ *
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_INVALID: Invalid
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_PROT_INSTANCE: Protocol instance (u8)
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_PROT_NUMBER: Protocol number (u8)
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_VALUE: Filter value bytes
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_MASK: Filter mask bytes
++ * @__NL80211_QM_TCLAS_TYPE10_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_TCLAS_TYPE10_ATTR_MAX: highest type 10 attribute number currently
++ *	defined
++ */
++enum nl80211_qm_tclas_type10_attrs {
++	NL80211_QM_TCLAS_TYPE10_ATTR_INVALID,
++	NL80211_QM_TCLAS_TYPE10_ATTR_PROT_INSTANCE,
++	NL80211_QM_TCLAS_TYPE10_ATTR_PROT_NUMBER,
++	NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_VALUE,
++	NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_MASK,
++
++	/* keep last */
++	__NL80211_QM_TCLAS_TYPE10_ATTR_AFTER_LAST,
++	NL80211_QM_TCLAS_TYPE10_ATTR_MAX =
++		__NL80211_QM_TCLAS_TYPE10_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_tclas_attrs - TCLAS element attributes
++ *
++ * @NL80211_QM_TCLAS_ATTR_INVALID: Invalid
++ * @NL80211_QM_TCLAS_ATTR_USER_PRIORITY: User priority, 0-7 (u8)
++ * @NL80211_QM_TCLAS_ATTR_CLASSIFIER_TYPE: Classifier type, 4 or 10 (u8)
++ * @NL80211_QM_TCLAS_ATTR_TYPE4_PARAMS: Nested type 4 classifier params, see
++ *	&enum nl80211_qm_tclas_type4_attrs
++ * @NL80211_QM_TCLAS_ATTR_TYPE10_PARAMS: Nested type 10 classifier params, see
++ *	&enum nl80211_qm_tclas_type10_attrs
++ * @__NL80211_QM_TCLAS_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_TCLAS_ATTR_MAX: highest TCLAS attribute number currently defined
++ */
++enum nl80211_qm_tclas_attrs {
++	NL80211_QM_TCLAS_ATTR_INVALID,
++	NL80211_QM_TCLAS_ATTR_USER_PRIORITY,
++	NL80211_QM_TCLAS_ATTR_CLASSIFIER_TYPE,
++	NL80211_QM_TCLAS_ATTR_TYPE4_PARAMS,
++	NL80211_QM_TCLAS_ATTR_TYPE10_PARAMS,
++
++	/* keep last */
++	__NL80211_QM_TCLAS_ATTR_AFTER_LAST,
++	NL80211_QM_TCLAS_ATTR_MAX = __NL80211_QM_TCLAS_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_tclas_classifier_type - TCLAS classifier type values sent
++ *	in %NL80211_QM_TCLAS_ATTR_CLASSIFIER_TYPE
++ * @NL80211_QM_TCLAS_CLASSIFIER_TYPE4: Classifier type 4, 5-tuple based;
++ *	reference 9.4.2.29, IEEE Std 802.11-2024.
++ * @NL80211_QM_TCLAS_CLASSIFIER_TYPE10: Classifier type 10, filter based;
++ *	reference 9.4.2.29, IEEE Std 802.11-2024.
++ *
++ * The SCS interface currently supports only classifier types 4 and 10.
++ */
++enum nl80211_qm_tclas_classifier_type {
++	NL80211_QM_TCLAS_CLASSIFIER_TYPE4 = 4,
++	NL80211_QM_TCLAS_CLASSIFIER_TYPE10 = 10,
++};
++
++/**
++ * enum nl80211_qm_tclas_type4_mask - classifier mask bits for TCLAS type 4
++ * @NL80211_QM_TCLAS_TYPE4_MASK_VERSION: IP version field
++ * @NL80211_QM_TCLAS_TYPE4_MASK_SRC_IP: source IP address
++ * @NL80211_QM_TCLAS_TYPE4_MASK_DST_IP: destination IP address
++ * @NL80211_QM_TCLAS_TYPE4_MASK_SRC_PORT: source port
++ * @NL80211_QM_TCLAS_TYPE4_MASK_DST_PORT: destination port
++ * @NL80211_QM_TCLAS_TYPE4_MASK_DSCP: DSCP field
++ * @NL80211_QM_TCLAS_TYPE4_MASK_PROTOCOL: protocol / next-header field
++ * @NL80211_QM_TCLAS_TYPE4_MASK_FLOW_LABEL: IPv6 flow label
++ */
++enum nl80211_qm_tclas_type4_mask {
++	NL80211_QM_TCLAS_TYPE4_MASK_VERSION    = 1 << 0,
++	NL80211_QM_TCLAS_TYPE4_MASK_SRC_IP     = 1 << 1,
++	NL80211_QM_TCLAS_TYPE4_MASK_DST_IP     = 1 << 2,
++	NL80211_QM_TCLAS_TYPE4_MASK_SRC_PORT   = 1 << 3,
++	NL80211_QM_TCLAS_TYPE4_MASK_DST_PORT   = 1 << 4,
++	NL80211_QM_TCLAS_TYPE4_MASK_DSCP       = 1 << 5,
++	NL80211_QM_TCLAS_TYPE4_MASK_PROTOCOL   = 1 << 6,
++	NL80211_QM_TCLAS_TYPE4_MASK_FLOW_LABEL = 1 << 7,
++};
++
++/**
++ * enum nl80211_qm_tclas_processing - TCLAS processing rules
++ *
++ * Processing field values are defined in 9.4.2.31, IEEE Std 802.11-2024.
++ *
++ * @NL80211_QM_TCLAS_PROCESSING_MATCH_ALL: all TCLAS elements must match
++ * @NL80211_QM_TCLAS_PROCESSING_MATCH_ANY: any TCLAS element may match
++ * @NL80211_QM_TCLAS_PROCESSING_MATCH_ALL_EXCEPT_FIRST: all except the first
++ *	must match
++ */
++enum nl80211_qm_tclas_processing {
++	NL80211_QM_TCLAS_PROCESSING_MATCH_ALL = 0,
++	NL80211_QM_TCLAS_PROCESSING_MATCH_ANY = 1,
++	NL80211_QM_TCLAS_PROCESSING_MATCH_ALL_EXCEPT_FIRST = 2,
++};
++
++/**
++ * enum nl80211_qm_qos_attrs - QoS Management QoS attributes
++ *
++ * The QoS Characteristics element is specified in 9.4.2.326,
++ * IEEE Std 802.11be-2024.
++ *
++ * @NL80211_QM_QOS_ATTR_INVALID: Invalid
++ * @NL80211_QM_QOS_ATTR_CONTROL_INFO: QoS characteristics control info (u32)
++ * @NL80211_QM_QOS_ATTR_MIN_SVC_INTERVAL: Minimum service interval, us (u32)
++ * @NL80211_QM_QOS_ATTR_MAX_SVC_INTERVAL: Maximum service interval, us (u32)
++ * @NL80211_QM_QOS_ATTR_MIN_DATA_RATE: Minimum data rate, kbps (u32)
++ * @NL80211_QM_QOS_ATTR_DELAY_BOUND: Delay bound, us (u32)
++ * @NL80211_QM_QOS_ATTR_MAX_MSDU_SIZE: Maximum MSDU size, bytes (u16)
++ * @NL80211_QM_QOS_ATTR_SVC_START_TIME: Service start time, us (u32)
++ * @NL80211_QM_QOS_ATTR_SVC_START_TIME_LINK_ID: Link ID for service start
++ *	time (u8)
++ * @NL80211_QM_QOS_ATTR_MEAN_DATA_RATE: Mean data rate, kbps (u32)
++ * @NL80211_QM_QOS_ATTR_BURST_SIZE: Burst size, bytes (u32)
++ * @NL80211_QM_QOS_ATTR_MSDU_LIFETIME: MSDU lifetime, ms (u16)
++ * @NL80211_QM_QOS_ATTR_MSDU_DELIVERY_INFO: MSDU delivery ratio and count
++ *	exponent (u8)
++ * @NL80211_QM_QOS_ATTR_MEDIUM_TIME: Medium time, 32 us units (u16)
++ * @__NL80211_QM_QOS_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_QOS_ATTR_MAX: highest QoS attribute number currently defined
++ */
++enum nl80211_qm_qos_attrs {
++	NL80211_QM_QOS_ATTR_INVALID,
++	NL80211_QM_QOS_ATTR_CONTROL_INFO,
++	NL80211_QM_QOS_ATTR_MIN_SVC_INTERVAL,
++	NL80211_QM_QOS_ATTR_MAX_SVC_INTERVAL,
++	NL80211_QM_QOS_ATTR_MIN_DATA_RATE,
++	NL80211_QM_QOS_ATTR_DELAY_BOUND,
++	NL80211_QM_QOS_ATTR_MAX_MSDU_SIZE,
++	NL80211_QM_QOS_ATTR_SVC_START_TIME,
++	NL80211_QM_QOS_ATTR_SVC_START_TIME_LINK_ID,
++	NL80211_QM_QOS_ATTR_MEAN_DATA_RATE,
++	NL80211_QM_QOS_ATTR_BURST_SIZE,
++	NL80211_QM_QOS_ATTR_MSDU_LIFETIME,
++	NL80211_QM_QOS_ATTR_MSDU_DELIVERY_INFO,
++	NL80211_QM_QOS_ATTR_MEDIUM_TIME,
++
++	/* keep last */
++	__NL80211_QM_QOS_ATTR_AFTER_LAST,
++	NL80211_QM_QOS_ATTR_MAX = __NL80211_QM_QOS_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_desc_attrs - QoS Management descriptor attributes
++ *
++ * @NL80211_QM_DESC_ATTR_INVALID: Invalid
++ * @NL80211_QM_DESC_ATTR_QM_ID: Userspace-assigned identifier (u8) used
++ *	to correlate a request descriptor with its response descriptor
++ * @NL80211_QM_DESC_ATTR_REQUEST_TYPE: Request type, see
++ *	&enum nl80211_qm_req_type (u8)
++ * @NL80211_QM_DESC_ATTR_PRIORITY: SCS descriptor priority (u8)
++ * @NL80211_QM_DESC_ATTR_TCLAS_ELEMENTS: Nested array of SCS TCLAS elements,
++ *	see &enum nl80211_qm_tclas_attrs
++ * @NL80211_QM_DESC_ATTR_TCLAS_PROCESSING: SCS TCLAS processing rule (u8),
++ *	see &enum nl80211_qm_tclas_processing
++ * @NL80211_QM_DESC_ATTR_QOS_ATTRIBUTES: Nested SCS QoS attributes, see
++ *	&enum nl80211_qm_qos_attrs
++ * @NL80211_QM_DESC_ATTR_STATUS: Response status for this descriptor (u8),
++ *	see &enum nl80211_qm_status
++ * @NL80211_QM_DESC_ATTR_USER_PRIORITY_BITMAP: MSCS user priority bitmap of
++ *	TID values sent by the non-AP STA (u8)
++ * @NL80211_QM_DESC_ATTR_USER_PRIORITY_LIMIT: MSCS user priority limit sent
++ *	by the non-AP STA (u8)
++ * @NL80211_QM_DESC_ATTR_TCLAS_MASK: MSCS traffic classifier mask with a
++ *	bitmap of parameters to match in an uplink flow for downlink
++ *	prioritization (u8)
++ * @__NL80211_QM_DESC_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_DESC_ATTR_MAX: highest QoS Management descriptor attribute
++ *	number currently defined
++ */
++enum nl80211_qm_desc_attrs {
++	NL80211_QM_DESC_ATTR_INVALID,
++	NL80211_QM_DESC_ATTR_QM_ID,
++	NL80211_QM_DESC_ATTR_REQUEST_TYPE,
++	NL80211_QM_DESC_ATTR_PRIORITY,
++	NL80211_QM_DESC_ATTR_TCLAS_ELEMENTS,
++	NL80211_QM_DESC_ATTR_TCLAS_PROCESSING,
++	NL80211_QM_DESC_ATTR_QOS_ATTRIBUTES,
++	NL80211_QM_DESC_ATTR_STATUS,
++	NL80211_QM_DESC_ATTR_USER_PRIORITY_BITMAP,
++	NL80211_QM_DESC_ATTR_USER_PRIORITY_LIMIT,
++	NL80211_QM_DESC_ATTR_TCLAS_MASK,
++
++	/* keep last */
++	__NL80211_QM_DESC_ATTR_AFTER_LAST,
++	NL80211_QM_DESC_ATTR_MAX = __NL80211_QM_DESC_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_attrs - QoS Management attributes
++ *
++ * @NL80211_QM_ATTR_INVALID: Invalid
++ * @NL80211_QM_ATTR_MAC_ADDR: Target station MAC address (6 bytes)
++ * @NL80211_QM_ATTR_QM_TYPE: QoS Management protocol type, see
++ *	&enum nl80211_qm_type (u8)
++ * @NL80211_QM_ATTR_DESCRIPTOR_PARAMS: Nested array of QM descriptors, see
++ *	&enum nl80211_qm_desc_attrs
++ * @__NL80211_QM_ATTR_AFTER_LAST: internal use
++ * @NL80211_QM_ATTR_MAX: highest QoS Management attribute number currently
++ *	defined
++ */
++enum nl80211_qm_attrs {
++	NL80211_QM_ATTR_INVALID,
++	NL80211_QM_ATTR_MAC_ADDR,
++	NL80211_QM_ATTR_QM_TYPE,
++	NL80211_QM_ATTR_DESCRIPTOR_PARAMS,
++
++	/* keep last */
++	__NL80211_QM_ATTR_AFTER_LAST,
++	NL80211_QM_ATTR_MAX = __NL80211_QM_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_qm_type - QoS Management protocol types
++ * @NL80211_QM_TYPE_SCS: Stream Classification Service (SCS) protocol,
++ *	reference 11.25.2, IEEE Std 802.11-2024.
++ * @NL80211_QM_TYPE_MSCS: Mirrored Stream Classification Service (MSCS)
++ *	protocol, reference 11.25.3, IEEE Std 802.11-2024.
++ * @NL80211_QM_TYPE_MAX: Maximum value for QoS Management protocol types
++ *
++ * Enumerates the QoS Management protocols supported through the generic
++ * QoS Management (QM) request/response framework.
++ *
++ */
++enum nl80211_qm_type {
++	NL80211_QM_TYPE_SCS,
++	NL80211_QM_TYPE_MSCS,
++	/* Future QM protocols to be added here */
++	NL80211_QM_TYPE_MAX,
++};
++
++/**
++ * enum nl80211_qm_direction - QoS Management descriptor
++ *	traffic direction
++ * @NL80211_QM_DIRECTION_UPLINK: Traffic direction is uplink, from the
++ *	non-AP STA to the AP.
++ * @NL80211_QM_DIRECTION_DOWNLINK: Traffic direction is downlink, from
++ *	the AP to the non-AP STA.
++ * @NL80211_QM_DIRECTION_DIRECT: Direct link traffic between STAs (P2P).
++ *
++ * Encodes the QoS characteristics element direction subfield, denoting
++ * which traffic direction a set of QoS attributes applies to. The QoS
++ * Characteristics element is specified in 9.4.2.326, IEEE Std 802.11be-2024.
++ */
++enum nl80211_qm_direction {
++	NL80211_QM_DIRECTION_UPLINK = 0,
++	NL80211_QM_DIRECTION_DOWNLINK = 1,
++	NL80211_QM_DIRECTION_DIRECT = 2,
++};
++
++/**
++ * enum nl80211_qm_req_type - QoS Management request types
++ * @NL80211_QM_ADD_REQ: Add a new QoS Management configuration
++ * @NL80211_QM_REMOVE_REQ: Remove an existing QoS Management configuration
++ * @NL80211_QM_CHANGE_REQ: Modify an existing QoS Management configuration
++ *
++ * Identifies the operation requested in a QoS Management transaction.
++ * Reference 11.25.2 and 11.25.3, IEEE Std 802.11-2024, for the operation
++ * values.
++ */
++enum nl80211_qm_req_type {
++	NL80211_QM_ADD_REQ,
++	NL80211_QM_REMOVE_REQ,
++	NL80211_QM_CHANGE_REQ,
++};
++
++/**
++ * enum nl80211_qm_status - QoS Management response status codes
++ * @NL80211_QM_STATUS_SUCCESS: request accepted
++ * @NL80211_QM_STATUS_DECLINED: request declined
++ */
++enum nl80211_qm_status {
++	NL80211_QM_STATUS_SUCCESS = 0,
++	NL80211_QM_STATUS_DECLINED = 1,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d790e204aee3..3bf7aa5c9386 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -798,6 +798,93 @@ static const struct netlink_range_validation q_range = {
+ 	.max = INT_MAX,
+ };
+ 
++static const struct nla_policy
++nl80211_qm_tclas_type4_policy[NL80211_QM_TCLAS_TYPE4_ATTR_MAX + 1] = {
++	[NL80211_QM_TCLAS_TYPE4_ATTR_CLASSIFIER_MASK] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_IP_VERSION] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_SRC_IP] = { .type = NLA_BINARY,
++					      .len = NL80211_IPADDR_MAX_LEN },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_DST_IP] = { .type = NLA_BINARY,
++					      .len = NL80211_IPADDR_MAX_LEN },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_SRC_PORT] = { .type = NLA_U16 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_DST_PORT] = { .type = NLA_U16 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_DSCP] = NLA_POLICY_MAX(NLA_U8, 63),
++	[NL80211_QM_TCLAS_TYPE4_ATTR_PROTOCOL] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_NEXT_HEADER] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE4_ATTR_FLOW_LABEL] =
++		NLA_POLICY_EXACT_LEN(NL80211_QM_TCLAS_TYPE4_FLOW_LABEL_LEN),
++};
++
++static const struct nla_policy
++nl80211_qm_tclas_type10_policy[NL80211_QM_TCLAS_TYPE10_ATTR_MAX + 1] = {
++	[NL80211_QM_TCLAS_TYPE10_ATTR_PROT_INSTANCE] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE10_ATTR_PROT_NUMBER] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_VALUE] = {
++			.type = NLA_BINARY,
++			.len = NL80211_QM_TCLAS_TYPE10_MAX_FILTER_LEN },
++	[NL80211_QM_TCLAS_TYPE10_ATTR_FILTER_MASK] = {
++			.type = NLA_BINARY,
++			.len = NL80211_QM_TCLAS_TYPE10_MAX_FILTER_LEN },
++};
++
++static const struct nla_policy
++nl80211_qm_tclas_policy[NL80211_QM_TCLAS_ATTR_MAX + 1] = {
++	[NL80211_QM_TCLAS_ATTR_USER_PRIORITY] =
++			NLA_POLICY_MAX(NLA_U8, IEEE80211_NUM_UPS - 1),
++	[NL80211_QM_TCLAS_ATTR_CLASSIFIER_TYPE] = { .type = NLA_U8 },
++	[NL80211_QM_TCLAS_ATTR_TYPE4_PARAMS] =
++			NLA_POLICY_NESTED(nl80211_qm_tclas_type4_policy),
++	[NL80211_QM_TCLAS_ATTR_TYPE10_PARAMS] =
++			NLA_POLICY_NESTED(nl80211_qm_tclas_type10_policy),
++};
++
++static const struct nla_policy
++nl80211_qm_qos_policy[NL80211_QM_QOS_ATTR_MAX + 1] = {
++	[NL80211_QM_QOS_ATTR_CONTROL_INFO] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_MIN_SVC_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_MAX_SVC_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_MIN_DATA_RATE] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_DELAY_BOUND] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_MAX_MSDU_SIZE] = { .type = NLA_U16 },
++	[NL80211_QM_QOS_ATTR_SVC_START_TIME] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_SVC_START_TIME_LINK_ID] =
++			NLA_POLICY_MAX(NLA_U8, IEEE80211_MLD_MAX_NUM_LINKS - 1),
++	[NL80211_QM_QOS_ATTR_MEAN_DATA_RATE] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_BURST_SIZE] = { .type = NLA_U32 },
++	[NL80211_QM_QOS_ATTR_MSDU_LIFETIME] = { .type = NLA_U16 },
++	[NL80211_QM_QOS_ATTR_MSDU_DELIVERY_INFO] = { .type = NLA_U8 },
++	[NL80211_QM_QOS_ATTR_MEDIUM_TIME] = { .type = NLA_U16 },
++};
++
++static const struct nla_policy
++nl80211_qm_desc_params_policy[NL80211_QM_DESC_ATTR_MAX + 1] = {
++	[NL80211_QM_DESC_ATTR_QM_ID] = { .type = NLA_U8 },
++	[NL80211_QM_DESC_ATTR_REQUEST_TYPE] =
++		NLA_POLICY_MAX(NLA_U8, NL80211_QM_CHANGE_REQ),
++	[NL80211_QM_DESC_ATTR_PRIORITY] = { .type = NLA_U8 },
++	[NL80211_QM_DESC_ATTR_TCLAS_ELEMENTS] =
++			NLA_POLICY_NESTED_ARRAY(nl80211_qm_tclas_policy),
++	[NL80211_QM_DESC_ATTR_TCLAS_PROCESSING] =
++		NLA_POLICY_MAX(NLA_U8,
++			       NL80211_QM_TCLAS_PROCESSING_MATCH_ALL_EXCEPT_FIRST),
++	[NL80211_QM_DESC_ATTR_QOS_ATTRIBUTES] =
++			NLA_POLICY_NESTED(nl80211_qm_qos_policy),
++	[NL80211_QM_DESC_ATTR_STATUS] = { .type = NLA_REJECT },
++	[NL80211_QM_DESC_ATTR_USER_PRIORITY_BITMAP] = { .type = NLA_U8 },
++	[NL80211_QM_DESC_ATTR_USER_PRIORITY_LIMIT] =
++		NLA_POLICY_MAX(NLA_U8, IEEE80211_NUM_UPS - 1),
++	[NL80211_QM_DESC_ATTR_TCLAS_MASK] = { .type = NLA_U8 },
++};
++
++static const struct nla_policy
++nl80211_qm_policy[NL80211_QM_ATTR_MAX + 1] = {
++	[NL80211_QM_ATTR_MAC_ADDR] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
++	[NL80211_QM_ATTR_QM_TYPE] = NLA_POLICY_MAX(NLA_U8,
++						   NL80211_QM_TYPE_MAX - 1),
++	[NL80211_QM_ATTR_DESCRIPTOR_PARAMS] =
++			NLA_POLICY_NESTED_ARRAY(nl80211_qm_desc_params_policy),
++};
++
+ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[0] = { .strict_start_type = NL80211_ATTR_HE_OBSS_PD },
+ 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
+@@ -1201,6 +1288,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_ASSOC_CIP] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CIP_CAPABILITIES] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_ASSOC_PROTECTED_TWT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_QOS_MGMT] = NLA_POLICY_NESTED(nl80211_qm_policy),
+ };
+ 
+ /* policy for the key attributes */
 -- 
 2.34.1
 
