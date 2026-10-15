@@ -1,104 +1,145 @@
-Received: from mail-yx1-f46.google.com (mail-yx1-f46.google.com [74.125.224.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36CDF54146F
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 15:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F3C754DAFB
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 15:38:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792077794; cv=none; b=AQdDn8nnW1BlFLzWSrcWFaVfDbv6dnFlt2n9cZZ46nhnPFyibNFH+BWsag3/iRkIQjJwWM96CgAT06VMU/GXjNQgz8+cC/Y68AuwnXM1ySdP88r1tvoehkrvqEoqwAXOki1q3MBm+7zLLoHD5kqmclAEiYj3WYAMT0DY2WyNsDk=
+	t=1792078711; cv=none; b=AqudFd/aAk44Nm2xU3tD4TZYrEiBzorosg+j4/dhhuSs6AcUec4BAh6br6hT1pjJtsAvOCpZOzpPzzFEQk1eJJNjtZp0eJozT27tJ2VZeNLF5l/FklOxZwOgLpJLSwqfSXY5BrWxUqoEV97r17nKeX1MZkIlMjvS++mgDUlSazE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792077794; c=relaxed/simple;
-	bh=4dauBJvADEExgMQfHXq+IRvV55pQwyhrlwye1iITDI8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gbkZa+yx35tL99Y1Taj+2kXxmyrJf3wVdQafH81TI3RcI5Dkw8JTD07CoR+QsJlQsnnSBYvDk84BKn5MUmkUQmJrVeD0nMy/iK1PYsaL2ZPXdDPqvNqiv8SvYuPRf1MP514Nt9tlJzUw9/87/mHm3Z/gmy7O3tCYNfN+QQ3pe0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P2kl8slx; arc=none smtp.client-ip=74.125.224.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792078711; c=relaxed/simple;
+	bh=QVo+YHVxl8jT12ZA0eNu8ZIZ/OEoEampA8Vm7oeXkVA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Xiyhfgu9J7KP/Vn/7mG/9qnXje94Ak0Ye5nqgJRjPa3yD/5mzzNv3DRKU+npjYMK3gD0pxkjHiYd+IKhsc1Z61bTnbOy7sCYEPOiIWjKTexvomzFooSL0mRXeuI4KwHmfn+H4biTmlu8ceiS2a1HioCXyQfu3ZC/6KDYbyEHb4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=lYFFnjWR; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cUtMPjRq; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P2kl8slx"
-Received: by mail-yx1-f46.google.com with SMTP id 956f58d0204a3-677dbe051d4so1789194d50.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 08:23:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="lYFFnjWR";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cUtMPjRq"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69FDYNUh3462710
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 15:38:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	3HVvCN3iv+As078Gmff0ARZxT6mIW44MrC4GBBlAmpQ=; b=lYFFnjWRmbFmaK2N
+	kmsXfgVyZjgBwQpZ/RGuXDeGxxBhKi4tPvT0Kzml+RkRZeHjmayOcSVGUMHUnZYq
+	/+FneWtnTYRAN4ina9gZpBfzdMYhP90Lz9C/FGBsrEM+dlXs7AcyKUYyvf7yei0l
+	p0uLs45vpEzeNKDfF77ptvaudR70Y6F0Bwle/gDpBV0U/kqX7kSfzriDh3bPzXnd
+	fHs0vNPeMPdCEj8pQ7peCn+Wm8P7l9lEI2tjURqFpyCgT8R4zicdTdpNmmaleJpt
+	OnLuigWwHlZmhEYUfCLRhgvdN9LTHg3in150XOSRxLRIBbnWb+4hDBw3zeyA9Fiv
+	iaE+JA==
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hayu68hpa-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 15:38:19 +0000 (GMT)
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-898f641684aso6475937b3a.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 08:38:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792077786; x=1792682586; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ffUdm1w2bLO+0OCh3PoxdUD/MaQBekn/KGeOVmB9bPs=;
-        b=P2kl8slxMqYdvWUGAqupDV/AGCjUpYuzZKb1JeqdzsWkk4ePfKV5x9CUYQOyLSRd3A
-         EfkFRtm8MAks+l4MpMYjENvTFXdRwnV5s/y+P4cRfsrYY+olT1Ra0idXwC75wKQNz9So
-         FHnSS0um69oQPgm1VqSr5A5/Dgc9INpIHAQ4JWtP7Gi27Xl1MHFl9KZt2L1e+p4L0LK2
-         uaeQi06xoO9ouyJUWqkCvrHsxGYSTNLGMXZg+EjvwRG2HPb4h+lq9GB8zFiNvGteduLi
-         iMF/Z84dP6++DeVbDpC3fdk0Q+j6Ncqj9uaVZWL0mqBmKWk4lotx9wvb5l3b8k/0+tPW
-         2XRQ==
+        d=oss.qualcomm.com; s=google; t=1792078698; x=1792683498; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3HVvCN3iv+As078Gmff0ARZxT6mIW44MrC4GBBlAmpQ=;
+        b=cUtMPjRqQ4+XJvCB/hKyOYr6LsK5O4zmQFGSS/36jsyW4i8bcdvksT4L9VUErMbeY4
+         XiMOw9oS61SmSzkJkWAJaLJyNuJpk2JUnOevls5Mp7oUqyaCK8S8uV4Xu9JsgvBSYQ1w
+         4eqY1oWPs6sqqBSM4/tSosInnD9LDLoDSVh58puduv595LRcxg5ohLnFWI019G1ik+U1
+         pY9vIcvcVHSe1fjel2v6I3BlVAdvtXlw+v4KDQLy5J5oOFpJjeF2jCm8lAEVIeMzfgpw
+         zh5ZcccsfiboohunvcnFpfEpPtkXqbHnoWN9Vz8LyRRopIKD6HQD3zaAttPWXO8dFm0d
+         ssHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792077786; x=1792682586;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792078698; x=1792683498;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ffUdm1w2bLO+0OCh3PoxdUD/MaQBekn/KGeOVmB9bPs=;
-        b=BZO9kMipXI+zl0FYY+sj/yv8JVFaCRLWU/1/Sh7vO93wYk9mQGoP0W+/s+ER16Cx9L
-         xw9qm/PMzOecdwsKrpRbj2+KbGBZpnZIaz6Z7HBwMsFQh4KaQL0NwO5tMTpq5aHP1zc4
-         ilkXMpmKsiQqEjbO/JGdd0lCMfQrnV6d99pfltiwU3lct1yTHxiZD/7hakLG3swbssDl
-         bckQyNHMj2kQGJMbgH4RF9ARSdE/a33O4aTLgB7OCk62MSVDQVNhqstW21iYJXm9bG0W
-         wLX7eBbpbHfr3YIKHqV0KrbTuEbW1rPDIaFNLhF+cyfOI7v20YECW5kc/SptDK3WPSbw
-         D/Ng==
-X-Gm-Message-State: AFq9FYLMTIm2eDOtcEyVRytCF616dktAqj8ir6KnqhsDrSu2B/vIEwAk
-	px46hP7zZFXVF6kTbXMgQhzLpK7cqLQGm3BqAv4eqNvrVdAXAMrSy9A0
-X-Gm-Gg: AYBFou2Y5k/PRiv2j+W8wUA4EzKHQaHdn7YoKZBBPaMIEwYkwD0NwSNHOHLlhita5wt
-	Ea60N8/rxeUy/vSSrlKRi+LAx12CGmUc1LUCCmosZ+gFaK89wV+g9KkqM5ZLFNgG7o/Q2Pk3njC
-	uTQc+pNXP4MEXCuijIGvFHBRg+eF9Vy2FFGLMq5O4S+7C7VnRQcDgMroOzcPobh2AUv5fnWCQMP
-	4pHGYNliiQwi72BHaUU1zfFnnqots6HnO2DizHDk4I0ATqq6kq6h22rxeKJYMe+5uqX6fJyffiQ
-	UI6Iu9aSRVx3kDdY/wYAsY8tOZOgtGAut/aDn/NjHwfwZWKnJgip3GfTwNQEN/vBm/yTHDJXd29
-	vJaeZx73OQMQJ/QLRn8+sH8mJ4heo6EJoOPNXKPvDI0/2yihNFPTuGPwNH0s9MhJdP8ys09u9Ut
-	yAxdhkWUQpXb8LZC9xOyWmMozrrfg9b7efoRCV7zF6JXHpxacxcy1u2kSO7ffagXYS0nBc8CCkh
-	oNytkoWlj4FySkQoAcoXg6Rm2x6kFNuvSP1kclZEXiIMWTlJeNICxFW/TuroFVPcocrUOY=
-X-Received: by 2002:a05:690c:c4e9:b0:8b0:9eb3:dbd1 with SMTP id 00721157ae682-8b09eb3dc7dmr36797807b3.37.1792077786332;
-        Thu, 15 Oct 2026 08:23:06 -0700 (PDT)
-Received: from tux ([2601:7c0:c37c:135::8803])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b07f2320a6sm67686617b3.35.2026.10.15.08.22.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 08:22:38 -0700 (PDT)
-From: Ethan Tidmore <ethantidmore06@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ethan Tidmore <ethantidmore06@gmail.com>
-Subject: [PATCH] wifi: cfg80211: Fix error pointer dereference in nl80211_pre_doit()
-Date: Thu, 15 Oct 2026 10:22:08 -0500
-Message-ID: <20261015152208.351083-1-ethantidmore06@gmail.com>
-X-Mailer: git-send-email 2.56.0
+        bh=3HVvCN3iv+As078Gmff0ARZxT6mIW44MrC4GBBlAmpQ=;
+        b=pq4kOnMDEQVkuPbeON7iU0fIgXoH/yNGT6MUrM24Gjht6DMJc+HT4ObzmCUSqHpYAv
+         ZBif0W4xS51mM1gso7DDlaVHjPynp18ps5Bf0m5ilt7A3b68ZDqOSYC+FjwTtMRss7Bv
+         5a5crGQv36SQ7Yu74EPhfagF2AcGpzZ/R0d6pkz8cRZ8jZJEhQgEbB38BcmpIXeQVXs3
+         swCvq4XHl+ZDvqS9XmLFZVnH+Qf7qTfmGFjxMMxYvxnns8KCnaE6+nSYVXFyAnhA8aAy
+         bCUr39lBpqLpN4pAOsKmkfu7vb2C0BoMqofghbuwEUMkllIqUXwMir3TRm6npesU/bid
+         LhRA==
+X-Gm-Message-State: AFq9FYIbPlX4yxCt/pFoNmJQ3k0fX/CQJ2QoA/EtnVLvNIfa2+WIsFg5
+	7eEVY+O+8j2X5ag3IrW8/5sgDdhrf/BbeMKdEqCdpoZS3oWMLXrXrZpa/FA0SmQ2GL5a/njKhiJ
+	uwkODAoRn7gDU82RjILFPZUj8IaPPBQqFVnz7eKMHGiZi4pGz9zDevfRL2DQmwiin4i0tGQ==
+X-Gm-Gg: AYBFou3yU1OmcGqm1MEpXgxsS080jRzXy3AO8SNtrMixV4soBhjqwyzBd9MW60pC2ya
+	LlYYaaICFhhCC+QApmsGCA3a3NW4Q9Uv2scqm/nhwOOForBsUjgRR7RyazyvSLvlst64C7yAHUR
+	8zAX+tTb29zL0ybDSPi1IQCY99jAVE3Yj9q3cyqqJTg4LW57twLE/285LZTKPHXKq69C4qvOhPF
+	apUsaA7Pmgr5C+7l3BuZHVit+Pp60mEMDApozqM0o6KbjD1SibxmQDqAri3Guy/ThatgnMo+9++
+	54jL3hBJiE2yV1PJJLbsYZyQ+urGamqH9z3awlHM52QmTbW/NgBrZvjL+1Je4EpM50AzTh9MJuk
+	ogulcidT1wsP4lQhpQVQyU1dgMDj0oCyY+aI17nGAoXQamDxAvbSxAPCZYg==
+X-Received: by 2002:a05:6a20:430d:b0:3de:51e1:e7c1 with SMTP id adf61e73a8af0-3e16baa4b77mr18585611637.3.1792078698083;
+        Thu, 15 Oct 2026 08:38:18 -0700 (PDT)
+X-Received: by 2002:a05:6a20:430d:b0:3de:51e1:e7c1 with SMTP id adf61e73a8af0-3e16baa4b77mr18585589637.3.1792078697463;
+        Thu, 15 Oct 2026 08:38:17 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89d803cf66fsm2577196b3a.32.2026.10.15.08.38.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Oct 2026 08:38:15 -0700 (PDT)
+Message-ID: <048365a7-0ce0-4f98-98d2-eb040ff87b39@oss.qualcomm.com>
+Date: Thu, 15 Oct 2026 08:38:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [BUG] ath12k: WCN7850 firmware stops uplink TX on EHT
+ (CMD_REMOVE_AGED_FRAMES)
+To: Enrico <vovkap97@gmail.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Jeff Johnson <jjohnson@kernel.org>
+References: <CAGHkXsZX7Tnze+rqJY=D5Zz2Vo=t2Hee28pDxFpoE+Lno+EcxA@mail.gmail.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <CAGHkXsZX7Tnze+rqJY=D5Zz2Vo=t2Hee28pDxFpoE+Lno+EcxA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: q_rtd526aXdvDzYSdj-K6Z1pfQEGtMd-
+X-Authority-Analysis: v=2.4 cv=ff04WEQF c=1 sm=1 tr=0 ts=6ad0f36b cx=c_pps
+ a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=VwQbUJbxAAAA:8 a=4omKq1ZWnG6OjGzzdTAA:9 a=QEXdDO2ut3YA:10
+ a=2VI0MkxyNR6bbpdq8BZq:22
+X-Proofpoint-GUID: q_rtd526aXdvDzYSdj-K6Z1pfQEGtMd-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDA2MiBTYWx0ZWRfX6Y0uauxpUg3o
+ 9cmROoM4wy/Bz4U2qao0hbZB8Wwh/c1SRxvm7NpzaKWyMAxsqBn36sq5IGm4B/H+Y9+Xl3U+OET
+ CDNmm3zavdcR2LHt5SQqZQBDweQa9qNyzgX8ysqAS7PgF1wiQwmewKkzz7AByJ4SHlT3uVzWBI8
+ 2gEggtpuu3e9mowsXRWGdJ8qDDunP7mrpRY+uV516Zx5HtKv5n03kQrkb0yYunkjGxu1WsTYyqV
+ htWWOck7Otg4Ra8mqpzP7umr4RLYQToqgRtWj8bkZfp5g7zR9PTsce2w27m+AVsJUBgulJcy9mQ
+ xjEzoc55Slruur+y4mh3vjC4kAFs8Mmh010tP7b30U5MFbOGqSmoRpp0F4/qk26hJ+mDhZZfqF4
+ MH6ojTUaghdkrtX/+mN0gmtnSImaDds15ulwV7zZAbDOSQpCJo2+mMyn+7AuoOziN+Ds3nglW6o
+ rSXCfr8PqiMSXWl2zcA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDA2MiBTYWx0ZWRfX20ZCsH07I3ZB
+ WAdINFve5hpgiLON8S6Rrb+tf//5FOviGF22a7Uvolg1GC5VCnhAitAfbNxDK3yXotM+OKwMugf
+ 5XOpPI3A46A52jmPe4VyjEo+RMpSFZM=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0 spamscore=0
+ phishscore=0 bulkscore=0 suspectscore=0 priorityscore=1501 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150062
 
-nl80211_lock_and_recheck() can return an ERR_PTR on failure. If this
-happens, 'wdev' holds an error pointer that bypasses the non-NULL
-check at 'out' and gets passed into wdev_put(), resulting in a
-dereference. Clear 'wdev' to NULL before jumping to 'out' to prevent
-this.
+On 10/15/2026 4:59 AM, Enrico wrote:
+> Hi,
+> 
+> On EHT, the WCN7850 firmware stops transmitting uplink data for 1-4
+> minutes while the association stays up. The driver keeps handing it
+> frames, the firmware releases them as CMD_REMOVE_AGED_FRAMES, and the
+> AP receives only the few frames the firmware reports as acked.
+> Downlink keeps working and the kernel logs nothing. I saw 11 stalls
+> in 57 hours on EHT and 0 in 24 hours after switching the AP's 5 GHz
+> radio to 802.11ax.
 
-Fixes: 8e3d9039d280 ("wifi: nl80211: avoid rtnl for commands that don't want it")
-Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+Please open a ticket per:
+https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath12k/bugreport.html
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d790e204aee3..7a5f7000fbaa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -20192,6 +20192,7 @@ static int nl80211_pre_doit(const struct genl_split_ops *ops,
- 			wdev = nl80211_lock_and_recheck(rdev, netns, wdev_id);
- 			if (IS_ERR(wdev)) {
- 				err = PTR_ERR(wdev);
-+				wdev = NULL;
- 				goto out;
- 			}
- 		}
--- 
-Thanks,
-ET
-https://github.com/sponsors/ethantidmore
+Then it can be assigned and tracked.
 
+Thanks!
+/jeff
