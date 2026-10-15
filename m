@@ -1,127 +1,112 @@
-Received: from smtpcmd10101.aruba.it (smtpcmd10101.aruba.it [62.149.156.101])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B82541A561
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 20:14:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F8D4A43EC;
+	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792095266; cv=none; b=Qh8Py4Gj8UzuyKpFgmexOC45O6FULxtu0PT86rJzbw+pwwafXQSipCY1qy0ASzc1CYAIHmm8M3hvKn78qSmPH/Qzai7JaFl8Wf9TcgkKY9r3DQSGObNp0h8ExKkBS2LCM3mN3AHH8Lep2K8AU4pmyZJe0azhecrJIdsiKBVn4Qw=
+	t=1792097736; cv=none; b=Z9ViZbJm5Q5X1vXkOyXaFdCclxPEFLZnNzLtku692HvLPWl9rhOi20hNp2lAdNq2NaIB6z8ZkSJ/laj0UlYLedk4sSHpRT4qhlfH1umlAHGtzQHrg9iQs5N3nHu4Swzez63zJq6lpqpfkbtSxxvmzq1RaEdjQvrgrDU++JPwW3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792095266; c=relaxed/simple;
-	bh=HojjwIF6mPv2+Mx1dmhXz+yurqqBob/ezcwRgtSOF3s=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JXhl983pBNIcnWzRHpC25K0urOK6GmsHTKKhNQ/Rl1aEIwwEWTc0ISBvHBdZWNvpQ3oza5tCpspYs6u41WjRRGR2dxeQn1SormNsIOtcVF5uCO8gJc4xTfiSTGOvISRp/vhBQW6bjTIdirNIscwwN8kc0DfyaSvVNnjQLcqKXe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=eQW6vmU7; arc=none smtp.client-ip=62.149.156.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	s=arc-20240116; t=1792097736; c=relaxed/simple;
+	bh=8TFgXrqm00gTUkYWKQDkyq2nEt87hZ1bR+nt+jFn4KY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=c55/H+KMjTVkWYlKB01GSDRWuSuWiHkHfK3odnBY0p8gmN4vNlc94+xtG8EM96Yrr/Ie/LQKBXRSrMnBC7nkphTiLbz/mkVeWIKoP7AXXzvRk+GcMH8XOgrRwcLvuNkrsAW8mcDryEW6Hq7rVMF8mfKtmtrnNZg7KP/WzSVeC8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XCuEMW7y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="eQW6vmU7"
-Received: from localhost ([79.43.52.162])
-	by Aruba SMTP with ESMTPSA
-	id HRnExVnAcN2P6HRnExyeTN; Thu, 15 Oct 2026 22:11:12 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1792095072; bh=HojjwIF6mPv2+Mx1dmhXz+yurqqBob/ezcwRgtSOF3s=;
-	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=eQW6vmU7dvF8CF9X1mGCNeUuf2SoUD9JjczeX97n+Z0ILVk/AyxBiTuVPBpRRXgRG
-	 RfQV0B9iHf0Af0l5ls3cC22nQVkqf6xT7uuxBAKIhkm4DoldgE0ihsFl2kwhYmeKCr
-	 3ODJytgWfOmXm0klejkOzQnzJrT2r+pc79ClKhnDu9vTKAr1rFDgqHAQBs05HRrI1/
-	 sdvtwpx0WUWOF45/NAtP7eg7ZUChs14//8sldIVGSGhbOdbmzo2Llv7QbmtAgJ62h8
-	 Sp+JXV5CgTVhKyc+JZPSoEty98LoT0e990hntUY4VJ4vzLnfUvOaHLcvXIBWuOaiGE
-	 brv3OVVJChOhQ==
-Date: Thu, 15 Oct 2026 22:11:10 +0200
-From: Alessio Ferri <alessio.ferri@mythread.it>
-To: Rosen Penev <rosenp@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "open list:B43 WIRELESS DRIVER"
- <linux-wireless@vger.kernel.org>, "John W. Linville"
- <linville@tuxdriver.com>, "open list:B43 WIRELESS DRIVER"
- <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH wireless] wifi: b43: back off the N-PHY TX power per
- rate
-Message-ID: <20261015221110.000078b3@mythread.it>
-In-Reply-To: <20261015175928.3558057-1-rosenp@gmail.com>
-References: <20261015175928.3558057-1-rosenp@gmail.com>
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XCuEMW7y"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 51017C2BCFF;
+	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1792097736;
+	bh=8TFgXrqm00gTUkYWKQDkyq2nEt87hZ1bR+nt+jFn4KY=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=XCuEMW7yHvNa50Pc6fIRq4R8fcDklDEWseu5tr0BYxA0IbOwzi6ITi6byt/65aEZY
+	 0ZLGI3dMg/qPwXPn4C8/vU19Wo1FMJeLNk0RcrGWhGMTDLLpfZvt101yv361ucNbpI
+	 zRPwxthqgmCDRv/FO+pBLamGCP9y+0EAk75J5lMOClITzjwy66uwtOGgGykY7L1gSY
+	 VmgZcTbSDCX+KclTo0XSyR5YWN1PndmspkIylE0+ABa50gIBJXFM4fPtPdruv/9ifg
+	 s+1oKs02FbeBweIV4REWCqOXZAS8mV/+Sai1Qb18HcDfaJzYiPJeHKGbsObrjqHITd
+	 wG3XocqFBC3sg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F05CCA464;
+	Thu, 15 Oct 2026 20:55:36 +0000 (UTC)
+From: John Macias via B4 Relay <devnull+dencity7.gmail.com@kernel.org>
+Date: Thu, 15 Oct 2026 13:55:25 -0700
+Subject: [PATCH RFC ath-next 2/2] wifi: ath12k: bound READY MAC address
+ array reads
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfHhZJYd9femzhxibRcD3AOuOak6Owxp+zp/0xkbtqhzp/M+GSksE4KDsypAlycTFiuP9M4sIAd16eUlihXrmVzDkwfNIqEevZptTiwsHozUFkj4cBDLs
- p6eKsZ65o+QdyKZ8RIWD1gIpgBpTBW2Li5Qx9pH1nI0I04YHIXt7Jart7TpnAhxedRaxdAy8R6yW0dZMAsZUJHl0p/Nixq6GQxrGYN4wWF2nBJdN7LyyrG3N
- bKWw/SRT+y1sCC0hXpHnQUrPtpbdqB0Fd32ohnEeh3Z8bKsjx8Z7hB0ioyzmnzTGhSrGVT/sNBYwAnid61ZUDAdLHwoFRs+UECnqadp2EvZnUpWhBJD4pltU
- ejyGCyob
+Message-Id: <20261015-rdy-mac-array-bounds-v1-2-5de276b752a3@gmail.com>
+References: <20261015-rdy-mac-array-bounds-v1-0-5de276b752a3@gmail.com>
+In-Reply-To: <20261015-rdy-mac-array-bounds-v1-0-5de276b752a3@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, ath12k@lists.infradead.org, 
+ John Macias <dencity7@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792097735; l=1848;
+ i=dencity7@gmail.com; s=20261015; h=from:subject:message-id;
+ bh=Q7bR+qmBnYByCGbR1Dt5w8wYWTuypEv1iCd0orMgbPU=;
+ b=ep45ZWSDL6ranuUgrWsBGU9OMaYKx7UAoVEQdVgNNlPaBcT+MtrLTsK4H+er3Zk+QobJQE5tK
+ eD+x4sEMsHBCGHkLiKnE5Bhwd282SAFQnUWslyydsc4jEQWSLCDKlfz
+X-Developer-Key: i=dencity7@gmail.com; a=ed25519;
+ pk=z7cMHA0B6NULvJzsST/bbOOegMB6xCo9+/ytQure7B8=
+X-Endpoint-Received: by B4 Relay for dencity7@gmail.com/20261015 with
+ auth_id=1198
+X-Original-From: John Macias <dencity7@gmail.com>
+Reply-To: dencity7@gmail.com
 
-Il giorno Thu, 15 Oct 2026 10:59:28 -0700
-Rosen Penev <rosenp@gmail.com> ha scritto:
+From: John Macias <dencity7@gmail.com>
 
-> On N-PHY rev 3+ the hardware TX power control aims at the highest
-> per-rate target, and an adjusted power table backs each rate group off
-> from it. b43 fills that table from nphy->tx_power_offset[], but never
-> sets the offsets, so they stay zero and every rate is sent at the
-> power allowed for CCK.
-> 
-> The SPROM power offsets exist to avoid this: on boards with external
-> PAs, OFDM and MCS rates have to be sent a few dB lower than CCK to
-> keep the PA linear. Sent at full power, 16-QAM and 64-QAM frames are
-> too distorted to decode. On an ASUS RT-N16 (BCM4718, N-PHY rev 5,
-> radio 2056, ofdm2gpo 0x66666666) the router could only send at 6-18
-> Mbit/s and MCS 0-2, even at -50 dBm, and 24 Mbit/s and up or MCS 3 and
-> up delivered nothing.
-> 
-> Set the offsets from the per-rate targets b43 already computes from
-> the SPROM, as brcmsmac does, before the table is built.
-> 
-> With this, the RT-N16 sends at 54 Mbit/s, and at MCS 7 with HT
-> enabled, and TCP from the router to a client goes from 9 to 17-18
-> Mbit/s.
-> 
-> Fixes: 8615eb2870f1 ("b43: N-PHY: support setting custom TX power")
-> Assisted-by: LLM
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/b43/phy_n.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c
-> b/drivers/net/wireless/broadcom/b43/phy_n.c index
-> 22359bd9db47..c9b2b7496983 100644 ---
-> a/drivers/net/wireless/broadcom/b43/phy_n.c +++
-> b/drivers/net/wireless/broadcom/b43/phy_n.c @@ -5834,6 +5834,7 @@
-> static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct
-> b43_wldev *dev, struct ieee80211_channel *channel =
-> dev->wl->hw->conf.chandef.chan; struct b43_ppr *ppr =
-> &nphy->tx_pwr_max_ppr; u8 max; /* qdBm */
-> +	int i;
->  
->  	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
->  	    nphy->tx_pwr_last_recalc_limit == phy->desired_txpower)
-> @@ -5868,6 +5869,16 @@ static enum b43_txpwr_result
-> b43_nphy_op_recalc_txpower(struct b43_wldev *dev, /* Make sure we
-> didn't go too low */ b43_ppr_apply_min(dev, ppr, INT_TO_Q52(8));
->  
-> +	/*
-> +	 * The hardware power control aims at the highest per-rate
-> target.
-> +	 * The adjusted power table backs other rates off from it,
-> so that
-> +	 * e.g. 64-QAM isn't sent at the power allowed for CCK.
-> +	 */
-> +	max = b43_ppr_get_max(dev, ppr);
-> +	memset(nphy->tx_power_offset, 0,
-> sizeof(nphy->tx_power_offset));
-> +	for (i = 0; i < B43_PPR_RATES_NUM; i++)
-> +		nphy->tx_power_offset[i] = max - ppr->__all_rates[i];
-> +
->  	/* Apply */
->  	b43_mac_suspend(dev);
->  	b43_nphy_tx_power_ctl_setup(dev);
+ath12k_wmi_rdy_parse() has the same pattern as ath11k: after checking
+that the READY fixed record advertises at least num_radios extra MAC
+addresses, it copies one address per radio from the
+WMI_TAG_ARRAY_FIXED_STRUCT TLV without checking that the TLV actually
+holds num_radios entries.
 
-I'm not the maintainer, and i also have the same exact patch in my repo 
-https://github.com/aleferri/b43-6362-wip/tree/main/patches/mainline, so 
-i'm all for it, but isn't the ppr currently populated with 2Ghz sprom
-params for all bands?
+With two radios and an array shorter than two 8-byte entries, the second
+ether_addr_copy() reads past the end of the TLV value.
 
-Alessio
+Check the array length against num_radios before copying. When it is too
+short, warn and leave pdevs_macaddr_valid unset, so the driver keeps its
+default per-radio addresses instead of failing READY processing.
+
+A userspace harness that includes the unmodified parser reports a 6-byte
+heap-buffer-overflow read under AddressSanitizer for 8- and 12-byte
+arrays with two radios, and the fixed parser passes. Compile tested only
+(ath-next, W=1).
+
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+Assisted-by: LLM
+Signed-off-by: John Macias <dencity7@gmail.com>
+---
+ drivers/net/wireless/ath/ath12k/wmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 75b259990c..ef070ace08 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -7099,6 +7099,12 @@ static int ath12k_wmi_rdy_parse(struct ath12k_base *ab, u16 tag, u16 len,
+ 		if (!(ab->num_radios > 1 && num_mac_addr >= ab->num_radios))
+ 			break;
+ 
++		if (len < ab->num_radios * sizeof(*addr_list)) {
++			ath12k_warn(ab, "ready event mac address array too short: %u bytes for %d radios\n",
++				    len, ab->num_radios);
++			break;
++		}
++
+ 		for (i = 0; i < ab->num_radios; i++) {
+ 			pdev = &ab->pdevs[i];
+ 			ether_addr_copy(pdev->mac_addr, addr_list[i].addr);
+
+-- 
+2.47.3
+
+
