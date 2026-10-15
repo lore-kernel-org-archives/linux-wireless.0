@@ -1,157 +1,138 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C9E51616C
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1537453CA9A
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:59:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792085753; cv=none; b=CcrXbzY0+fvXsoiN0nPSLxieI+oakYkuQaLF/YmoySJVm8RAlFr3a4ymrWRKa7ZnsvboscMetiFvZfKV9uWPvDawXWIIUqY3dJuZTP3A/DC/VGsL1rv5K004QnVBLqa3bpzDYC9ospergckyJ3Wl5meMhmRmJft6NYhdxJgLTHM=
+	t=1792087177; cv=none; b=XyESGLPBmfMklC/ZnJxS3FY7UKHyeTgYp7g+MvXn+WuVQkjpka/r9O9a6SWsBPlx++0+3f7600jAGepZ3Rf06yLdH2BsAzn5GVV9Ym3OM6564uzSQQwQTtTgly3ymctI+qlDtu8Xw8kx6A/scnH7H64YxNNPBg/FuGKAC61NLQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792085753; c=relaxed/simple;
-	bh=H/etT2HlYpIE0hVXJjfbsEK/thEkSTMryAvWwOvIJfk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=raZ6t4+JhpYv3NDpO3/N/zX18pYyfZS+Q/awl5Y5e8nBA8rh1j6wnoQVLdjU9sQFFqbVK+2VY5wVNoNDXTD4PEqFMwh0X5jppSAGCTkW0fiwlIWk2D9US+S7kBV1LD9mB2giHdTxntmP2BI7mlz8EPX/8eF+tdRoWI3YkuMBJ0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YS+z7bgF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=fJ5ZwDFr; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1792087177; c=relaxed/simple;
+	bh=CGAkxIf5rvcgYx1NepWWxjZaDr+izSAUpecBFVIruvU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lk3gFRQEQadb1aXk4GDDuNzpGpKGv8H0j7zfnb8byxkUtKxCLpEVG86cMSW61IokfGP1N6FQJba1UArbsXpwyjpm7KRq+PatqTEEvkp6WoxIMge8RWBH+OmEPlxI0wxL7z8chsRe20bec9wYT2Wmp4PXvHMB69We4VeJjwM1/4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EbbTDhZH; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YS+z7bgF";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="fJ5ZwDFr"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69FFmED72416893
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=; b=YS+z7bgFMjTyG9nQ
-	sMB8HkKmUeszHnO0RSCITsF+yizNww+MxTaNmsNG4I7VCFwgjm3Eo+tLZM9LBDT4
-	0bTxx78hW36RrVel2tb4yNQhIA/B0753ohJLUGWlicaFRCVa7P6RE17MORzzFbdX
-	IrFjg5Hw2fzWMQWBYwFDYZ8OlQPnJOwE1BXRF58SW8ce2TCRAszlX0pdc8ma0IdU
-	TRWf6O3ZUjjbpVhz9ckSixYf9DUK2w/nmus4wrlb8z4zcU7r+gfbC3GFFw1GFYYj
-	R+df2NJRkDUJYzJXe/GLPAWaEsKsEu/lu0pa1WqIfb+83Q4lU0tmaAWgURrM95OM
-	g+Jpsw==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4haqdhkbud-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 17:35:41 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30bcb065bfdso9754418eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 10:35:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EbbTDhZH"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3a4b9732d5aso4435267a91.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 10:59:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792085740; x=1792690540; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=;
-        b=fJ5ZwDFrv7WXC8ShmFQ5fGA3hOkUev9/OxQhOZdUz1eB6VRS3scDMzPJ4s3HTiETbW
-         SfIgYLb+ROw5mO1ThA8cjIzfI3x+/x4zB4j1vk85u/USm/jAHQ48HfZh0SlGSBjN9Cgg
-         BB01d58y0usfFUg7e9tMuBpoxwMtcxrpcc2rV6Ouq7N1bxYJ37SCQEkfhEHLaTmvAj2m
-         u/M1TmxEw3ELfsfLOK1/RQtlqj38nAN8i7oKVCfo78HGyaVJYb+BJ0+xe68Xi18AHI0R
-         joeBHDxKEAno9xWo6ANKKymOGyF8KGP4WVeD/JVE0edxCGYBCMDtWQ1pi5B1LBZ17Iwo
-         o6bA==
+        d=gmail.com; s=20251104; t=1792087170; x=1792691970; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=8tNWr37CC42Ka+uvECNVbGDgTVEoQtysQmgz0bCFrXs=;
+        b=EbbTDhZH1lDai6A07DcAjcsjcao7CxlizyqLp1+7drUd3La6yz6zb1I1cwfyknp6ID
+         Yi/grkjb1tYw5xihLM0pOdcTj/kiew2Ucv1/Y0NQHWdUpzxEJLrsSpFH6sJ55Z36RjjZ
+         JPVKO8QZd/h4jWL/OUFx/4tfr9FbMSOoyDf0rPV9FiQCd/F6BEM3c0jicPheV5P8iys3
+         Qe/L64CjRCLcyD94Wbe9n9WhPP16KCXswDKZKlCz4mNZRW5MO+c3ivYpqCsMQDUgrmxe
+         OiEw4ykAYl8hjdfCZY46udIJGbmFHwwtPpZbxlVfSOdxPnPCXW88WPSEglbO1BTpqxgF
+         zV/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792085740; x=1792690540;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792087170; x=1792691970;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=lRcyzxmgidMhHq2yYqji6ESeNhh9z44YPDLaLG/n0tk=;
-        b=x/SYkYZSrnGUvVt5834jZGraJF5QJ6166vg2YRD3vLrGU2Nlx6HqbzZUsslkFFcvVL
-         OKUfyynnZIY1eGJ4xCn5YRdDcqW/+ZEzYwqTIdFC45PfnbF5vzYq1SJGVGvwEvh9lxij
-         QVHAYK5tKBgwomOO+LJhJRvm7hDBUmBJyub2fAyUr61eshD8fq7LeZd0xc+qp+utcPNs
-         uokgVd2MiACqhJhr6ynPMaLb4Zq681oYRZ6/8fn9KkBlnwchj4KvJmjsC+7DhtmrUQwG
-         YoeUxse16aiTFbXzd3VyfOvX7ktAVK7wC3J53MwELhxWOFuHtIQkuOzHgwUrqE4FB4Cr
-         RwiA==
-X-Forwarded-Encrypted: i=1; AKwUvBzmes93Y6hynRgI+ul3Mfxf3ZxaAu0osQy4EBdRCzM5mzF4OY7E4hQgt6bdBxqeGLJgqOTyGRTyAiaoJWuIGQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIIpOikRdYzK3kRXlToo9KZVIV3FgK6vaJ3yZZ3Nw4kSd9JTAI0
-	f/GvFycBFhM/y8K6IIXh/cSeF+TgL++SlpM51HjroTlH1DNCzhNVReWQ6DwKt34K615UOEvy2mX
-	DgfwFPHb6Bx/86PcAAZKhwAW7U7edKAdd67YVcV8WLQptBUeFpq3yf16e51OIywbOy+0LCA==
-X-Gm-Gg: AYBFou22jwEWFER+Oo4BhmQMthB2IJHkdkZ91p3UWM4YQYjm0t4FOysilybtJOJ/VNY
-	nrPYKiYtHLX673eNgO3waZlKov2ncOCIzO7rRE8xMEQT/L8rMC3jOqmadoIkSeMk7ZXkL5bEVA2
-	fgvGsK1oobYJurK73/iVGRsbzKtCa5gCdeQZ3rS6qOzAY4O3Te7tXxJ177kt1TGPks5DUEO/8fT
-	wXw2SKNBvW/XeQ8MyzxWY6E1YzDVPiCj5biv4tGNOpIykYtHURycHprL6YpWgejZaRdyW1WPF52
-	4MhmfvMK6nMNS181oKlR5o2/7IBRkC9TBg1qsh+S65DlyihuGRoN7M9sM2GuF2ePG/zUdnJRWmE
-	iu24XrwYygftuBnnHirkg47DLqPIM6nX2xDoVsCq1D5s=
-X-Received: by 2002:a05:693c:41d1:10b0:35d:74f7:3b9 with SMTP id 5a478bee46e88-35d74f71451mr9525046eec.33.1792085740305;
-        Thu, 15 Oct 2026 10:35:40 -0700 (PDT)
-X-Received: by 2002:a05:693c:41d1:10b0:35d:74f7:3b9 with SMTP id 5a478bee46e88-35d74f71451mr9525002eec.33.1792085739523;
-        Thu, 15 Oct 2026 10:35:39 -0700 (PDT)
-Received: from [192.168.11.104] ([124.123.80.135])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36058a8de1fsm381704eec.25.2026.10.15.10.35.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Oct 2026 10:35:39 -0700 (PDT)
-Message-ID: <f4c53076-eb99-4306-b595-7349aeba95f0@oss.qualcomm.com>
-Date: Thu, 15 Oct 2026 23:05:35 +0530
+        bh=8tNWr37CC42Ka+uvECNVbGDgTVEoQtysQmgz0bCFrXs=;
+        b=xJwFCbC25+QSWq/zwAxC60P4YFZbs28cQvQ0Kkst7FOD+HSIpLVLzMhcQqg2BcRYpC
+         4xTRxVC4jo9PSpK2IK5bgDX5TMHIH6SJ0TmCNw7HPx6oaA+7alqBm0wpK9Lxq/NA1SrS
+         VvUSmeAQtW9xf8hTH4KF0HFFMp2RfdLZe2Pm4q+ct9jxQnQh5jT7ETXFKbOA6knQeRIm
+         Pwd8fpC4u+Dehm7IBdxK4YJFVk71FtJ2v17OdFPs3c0tEh6+gnvKn1yTofzsRoUXohwD
+         ltPDZgzX59tnZreHVVEUhamQKsSQaoeAujAjlTtZ5TXVBHzJC8FyuDtPBtnPH33I5z6B
+         aY4w==
+X-Forwarded-Encrypted: i=1; AKwUvBzZ4tbU0Tpr2RwLJWg0ADBaSZ3N1Tmc94zWPPjbGCVjB0LQ87QbXl277iIb/El4rx9X5cyIzFFTS7KGZ+eGOg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIdUDnrfCyqTJgek9DvKJZRjEGpB4sqBCClLQvveqXj6r5wFITx
+	ON2ARD7VA5ewma3okfIvqNYBw8KKjq8ZNHrf/NqDNLgq7Yx0OWpHbbD5
+X-Gm-Gg: AYBFou0chP3Y0fw3oxB/qaiocxYBFniLv9D4lz9Ja64Jvk1JBsg+edMA7Z3rvswDhMK
+	xENjgKYOdG58cqhgQk+9I8MnAdnDQPe1QQPlljXSp0PRJx5dhPWrwfX4+1nrwMGIq9PByre6lsv
+	qcU2wbrKRy66KX+iHezYIIjsjLnmJFQj04q88wnROD+V6gx5BOqFShrEKTqfpaDlcu/JKA4fV8B
+	355690NbljbLc6OOd00Ws+nQBISJL98S2/PrXT5u+jxH/00HHoEal7Bt5GmiWPK93Y9gX57qBTo
+	eyCYfNth05UCDOlUh/0iPjnWwYDwgljuHxHcuEX0ICkJrvcpBS1F5o1RWSpcLFNvcm55HrgM3aJ
+	51D3sdf5sz/JUw9vPiuzCg18Y/eamC41pXY2HMO9An3KwmeKrUi2XmT6TR/bGjGZjlp1zOLpHE/
+	lQtvxV+PJqA/19X3YsF1/m4ANgvJwxotReD5QN9mbzCJqT6p7Z/UM3te87IvR2DP8LBAK+TDtOK
+	kDZRHfRJLMigWw44MNJkHL7Tatl0TcGH3t08m+QdGgmEedh4/7o/eUAD/kh9ciT4Y/mXnqkmmXf
+	x7OP9pFN1IGGfPzwqeLE35bGGYY43IaYSpdXk1uWmtI5Z1tT
+X-Received: by 2002:a17:90b:1a87:b0:3ac:a6a5:5743 with SMTP id 98e67ed59e1d1-3aca6a55a10mr2003749a91.32.1792087170220;
+        Thu, 15 Oct 2026 10:59:30 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e36])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac947928b4sm5075835a91.11.2026.10.15.10.59.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 10:59:29 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org (open list:B43 WIRELESS DRIVER),
+	b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER)
+Subject: [PATCH wireless] wifi: b43: back off the N-PHY TX power per rate
+Date: Thu, 15 Oct 2026 10:59:28 -0700
+Message-ID: <20261015175928.3558057-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current] wifi: ath12k: Fix failure to create
- ath12k_dp_peer on MLO reconnect
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDA3MCBTYWx0ZWRfXxkjOwle+lR3E
- jwTqjq6adgqtUlVw1VDIhIWelx4wU8PAOnQOVggjvO9NQ1Hr3GHyk/bvjy5K9jFV72G3zz4203V
- Mi6vC2ao9fPDMtKkpb3+RrBeJCBJdw44/dquZBLc/2V24huprugSi0zBYWdF02+1l0qVUyXK3bV
- iTwSDoEbJf5R7Q99zn9n58KYgwIZOkzOMM+lVeQ+OUjhaBPbzlpOWgTJKukP/wCtfV+nO3qyIIi
- 34KwcVaNBOsap7+CuUgVo6wQkoSydoyUCafxdScfnQukn4yfSavBhUC+Xc4IxTdjXK3zEZu5klj
- 2IKbk3py+rlHk8g0mn3XHdFZ/y45kAhALKd+iehbWK1JyJbtS0VkWcjYOWsStbo+qj20uhrMOAy
- GAiEsjqaVnItrZhAIrbozCaiNHzksbnjUHIIg8Cz+IRl9JBZOBVM34L1honQpzBC5+wR30RSgCi
- Ziu65wU9Wynoun0BqBw==
-X-Proofpoint-GUID: ktRrTFnbJo_NhquBFmuQsDmyormXZwZv
-X-Authority-Analysis: v=2.4 cv=DeeCOftW c=1 sm=1 tr=0 ts=6ad10eed cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=FeBjiSnNOcrKIJN5QMIA:9 a=QEXdDO2ut3YA:10
- a=bBxd6f-gb0O0v-kibOvt:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDA3MCBTYWx0ZWRfX3EsttSXYhiMQ
- 1bHs/t+3tVyeVzwWu3hHxBg8BzCWnECk7AEjQq744esXdedAod/zD22ZxGYSLwxan2kEhyEvcLM
- +8V8o5NjfivWKvbW8WBVIT3tX6/YtSY=
-X-Proofpoint-ORIG-GUID: ktRrTFnbJo_NhquBFmuQsDmyormXZwZv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 suspectscore=0 malwarescore=0 phishscore=0
- spamscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150070
+Content-Transfer-Encoding: 8bit
 
-On 9/15/2026 1:30 PM, Miaoqing Pan wrote:
-> In ath12k_mac_op_sta_state(), when transitioning an MLO station from
-> IEEE80211_STA_NOTEXIST to IEEE80211_STA_NONE, after ath12k_dp_peer_create()
-> succeeds, on is_sta_assoc_link verification failure, it takes the
-> 'goto exit' path instead of 'goto peer_delete', leaving a stale dp_peer on
-> the dp_peers_list.
-> 
-> On the next connection attempt, ath12k_dp_peer_create() finds the stale
-> entry and returns -EEXIST (-17):
-> 
->      wlP4p1s0: failed to insert STA entry for the AP (error -17)
-> 
-> Fix it by changing 'goto exit' to 'goto free_unassign_link'.
-> 
-> Also, there is another error path in ath12k_mac_op_sta_state() that
-> jumps to peer_delete after ath12k_mac_assign_link_sta() succeeds, without
-> undoing the assignment through ath12k_mac_free_unassign_link_sta().
-> As a result, the link RCU pointer remains assigned and a stale bit is
-> left in ahsta->links_map, which can trigger the same -EEXIST failure
-> on subsequent reconnect attempts. Fix this by redirecting that error
-> path to free_unassign_link instead.
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> 
-> Fixes: 0cd46d1f36ce ("wifi: ath12k: identify assoc link vif in station mode")
-> Fixes: ee16dcf573d5 ("wifi: ath12k: Define ath12k_dp_peer structure & APIs for create & delete")
-> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+On N-PHY rev 3+ the hardware TX power control aims at the highest
+per-rate target, and an adjusted power table backs each rate group off
+from it. b43 fills that table from nphy->tx_power_offset[], but never
+sets the offsets, so they stay zero and every rate is sent at the power
+allowed for CCK.
+
+The SPROM power offsets exist to avoid this: on boards with external
+PAs, OFDM and MCS rates have to be sent a few dB lower than CCK to
+keep the PA linear. Sent at full power, 16-QAM and 64-QAM frames are
+too distorted to decode. On an ASUS RT-N16 (BCM4718, N-PHY rev 5,
+radio 2056, ofdm2gpo 0x66666666) the router could only send at 6-18
+Mbit/s and MCS 0-2, even at -50 dBm, and 24 Mbit/s and up or MCS 3 and
+up delivered nothing.
+
+Set the offsets from the per-rate targets b43 already computes from
+the SPROM, as brcmsmac does, before the table is built.
+
+With this, the RT-N16 sends at 54 Mbit/s, and at MCS 7 with HT
+enabled, and TCP from the router to a client goes from 9 to 17-18
+Mbit/s.
+
+Fixes: 8615eb2870f1 ("b43: N-PHY: support setting custom TX power")
+Assisted-by: LLM
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43/phy_n.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index 22359bd9db47..c9b2b7496983 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -5834,6 +5834,7 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ 	struct ieee80211_channel *channel = dev->wl->hw->conf.chandef.chan;
+ 	struct b43_ppr *ppr = &nphy->tx_pwr_max_ppr;
+ 	u8 max; /* qdBm */
++	int i;
+ 
+ 	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
+ 	    nphy->tx_pwr_last_recalc_limit == phy->desired_txpower)
+@@ -5868,6 +5869,16 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ 	/* Make sure we didn't go too low */
+ 	b43_ppr_apply_min(dev, ppr, INT_TO_Q52(8));
+ 
++	/*
++	 * The hardware power control aims at the highest per-rate target.
++	 * The adjusted power table backs other rates off from it, so that
++	 * e.g. 64-QAM isn't sent at the power allowed for CCK.
++	 */
++	max = b43_ppr_get_max(dev, ppr);
++	memset(nphy->tx_power_offset, 0, sizeof(nphy->tx_power_offset));
++	for (i = 0; i < B43_PPR_RATES_NUM; i++)
++		nphy->tx_power_offset[i] = max - ppr->__all_rates[i];
++
+ 	/* Apply */
+ 	b43_mac_suspend(dev);
+ 	b43_nphy_tx_power_ctl_setup(dev);
+-- 
+2.56.0
+
