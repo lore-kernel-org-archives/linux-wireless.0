@@ -1,86 +1,30 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9294255F2D
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D262148122F;
+	Thu, 15 Oct 2026 06:19:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792043756; cv=none; b=jSIZ0veStELx3SV+bDN5tmpCcMItS6ZeqKY9pMSP0BIXLxcrFsQ4rkiSUoP3D95Vc7HEz1qgDNwbuYhDSFvidvNtAEppUQFtBOoHzv6bLl0Dlsjda1RRJ+FPRvE5NtDDqOF/7/W4vsSz33ouo2LyPP+tMrNJDEGvDwEQRFrN8Fg=
+	t=1792045197; cv=none; b=TilvxmRrBKJdML4Y66hiTFwymF4txsnU+8ETwGBxcYLbPOcrBTltQ+3b5bR1FVq6AsgZxx4VBBnTOj5TowSF0ewr9XhwoPNyXrYD9W6wamxAUGBcjOArr+moNhLbYd9mXQeqXjlXGR85pNWogMXt+h/HSthYV+P3fjQwrgGcvyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792043756; c=relaxed/simple;
-	bh=POSD5JRvRWaHv19KVClcisvRnC+h0J9UC8wZvw7DbJo=;
+	s=arc-20240116; t=1792045197; c=relaxed/simple;
+	bh=uAzzCY3ndU+qqC/YhMsfqq4WI/d1uNiWBP52Yel97eg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y3GRD4hrEJp2QeMgHp2jU9zkNRa9y5yKIRcIf5rrlZNKWu9fJIWNl0vLc/NLu+rzYYZWyuyVYBBv0WFdR/uy0C817Pq0VjyzNyxCAeL88Q+g7tA/r80x6iM+vt5ZUH5oPf/i8M+ly9apExjxf7NgFvKlPNLYfQkmm+XPuynWeyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DYHFVvy/; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=iWxkqeNN; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=sAQj/v1gtdxvoTX7GKh4/hoN2vcqGEIWdSmHgev32X8nZE7G4RqnjYGlAOGMawefsBuQ99oLBxFYeKwCMu7trOzf5/p4trFUS7KqAtrlQs4Wux9DVev0VloHU2viQ0usbYTzTuzIv/jgdBAuOpfGImfmnCh6Awimm0V8/kuDbwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; dkim=pass (2048-bit key) header.d=molgen.mpg.de header.i=@molgen.mpg.de header.b=gV4uD0HD; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DYHFVvy/";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="iWxkqeNN"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69EMXbM7644597
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	D4LFn1C1tOpT6EXzpx/sVjw2jA7YZdECpN5nnDi6rmU=; b=DYHFVvy/G3u1EcBk
-	P7BLTsjnjKFyK9oBKSqns1bwaN01FjrJb0ao9ZwRQZA18Qf7WXgtcQqkfDiue4LM
-	j8uW1U6K8OrGvpMaO0xCXvExR7OQreGc5F/5/ydCaIHYTEWv80RH+80yZt+JHd9Y
-	5z0d33HFvkHRxtwIIyWAb7vEkAbgPt7D8le/dZOQ4iYQvEvjNCo01dOpLyFV9HEL
-	BNi5j/RGYyUbVZekLYknqNFhYE98hF+ivXN85E8YEE/WjG1/BIJ9Ku+8TEQsYppM
-	ZBSjPjvkgQu4fp8C4wFMOurLXf0shpHuJ7dxtBTU7/fJOXCk7y5saCcpGBEHL9Nj
-	fx3Dzg==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hajmy9bcd-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 05:55:54 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3a4a0017549so7952173a91.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2026 22:55:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792043754; x=1792648554; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=D4LFn1C1tOpT6EXzpx/sVjw2jA7YZdECpN5nnDi6rmU=;
-        b=iWxkqeNN+Mz4Hre2F/NAEzago5bRh4pZ3uTjghtJ7uHvn+nXsecZY4e5kgCIif/ir5
-         sJfLEqpERJ7Nb/jycAl8J+0qu8qLKu0nPF3CCbX0UosDWEDyL8mHkPWoTAhk2tGZF/O0
-         0oj+jtP+27C7ascx3BiEggDpZLJfl2u35ezSU8xTEpxWAev6UEvZlVHoKEp8dTbx0aX2
-         pMqz7E/CHL3FV6XGzSuUHnRoIKPe58A3Xz1n1eJlExBeRRFwdhkYnZC5+niAMkjlnNXh
-         5pgVJw601xBBF9WGeTqJc+lRXq5iUFh5YmX3LTinUFU1hytNf5TQdVxBu03mbD5nFUk7
-         ufTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792043754; x=1792648554;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=D4LFn1C1tOpT6EXzpx/sVjw2jA7YZdECpN5nnDi6rmU=;
-        b=l4Q4fvGAFBuX1lCpXx1WmSLsRCow93yf3l/UBxreXeUFbq9TRuM7fq93XQwF+ja0tr
-         ZVZEo7DfAZmbwK66sTLaYwaYFQsrjdKenng+4yHHkZDlgsxwoWTOzlMCM9OMYZ8wdlMZ
-         He2D3smTz0QV7WArECNvc98QzjEbpZ0oP2pPLCK6NLhI0uQSr7W3gTzXaoatf3KeP8UK
-         MohKoFEOB6RJ/XJb0AUXh389RwQQ8Wyy1NGvbII93/XNTQCFSqe85ev6xbJW/hY+agKr
-         jCtFn31bIoxlQ4/k9Os5xOMnQ908pKpXW6+G3c6QEu/d3YsxTDlWOUx8W3B+3fcx9wNu
-         g+2g==
-X-Forwarded-Encrypted: i=1; AKwUvBwk+kaYtS3dCHG+vIUgzV9FbrbNcXQ2UsOPhbSJXwlU6GiM8LOieD7rcOQ3N8nmVj07QT8z9H398m1RGgY6SQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYIhImd2iBB9ykR5KwMcs0ezZ38hl4Cm0V+OhuT7sXkLTlAp9pQY
-	3GnXFL5pkg8p6LXL6IAHD9J3PfqLRUmgIFCQZ1gUgZLE6tZ5RMHjuO+1bF+YwJ/wAPFE6j43rUF
-	/b0oOhArKW5xxQVIJ3ttsnZXILZshHZnfZ0zYtn6skzUKRJmqOwbqD3M/skAMZo9uNDUqyQ==
-X-Gm-Gg: AYBFou1mFt+APl6xtcF3Qzqk+ViEhbq3EiWwsFpVheqnYB1NGEQRW8u/5Sk65Kj7dV5
-	3PsDBurRF1xAuywD/tszMe8jR2lQte4P5RjukQmxuJHafv8rn+rNp6zD+eoSzfbCLfYiLLyWN8w
-	3uTjk3pRp5ihkn5WUDigijjrkTvWFRcLJVCzl8ata429p1cT4dfDS2aBXL9kXHH3WA27Qs07tpH
-	lSDhaGix1lzD95MuqKbgWfDnICcq/NpFdPT4XB2rhEBv7c+jUDruRqrzPRy6C2xhOujKBbPBtjW
-	p0xw9OE8afl07TOvxz5/O7R9Fp6GXvEWYfGCOMl7aKFQPpQNLJnRg8dT5xBPeABDfZpDzQKTgro
-	dIuKaEizl4oU/fpIVdFeL4Lm8TkXnWZacPz+0a8iRw0Smlik5w6DC2woLZBhf2yh51pqAV4Bn
-X-Received: by 2002:a17:90b:2743:b0:3a0:bbd8:5ba7 with SMTP id 98e67ed59e1d1-3ab3acf0275mr16543058a91.62.1792043754039;
-        Wed, 14 Oct 2026 22:55:54 -0700 (PDT)
-X-Received: by 2002:a17:90b:2743:b0:3a0:bbd8:5ba7 with SMTP id 98e67ed59e1d1-3ab3acf0275mr16543049a91.62.1792043753534;
-        Wed, 14 Oct 2026 22:55:53 -0700 (PDT)
-Received: from [10.133.33.32] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac9437b95esm2634070a91.2.2026.10.14.22.55.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Oct 2026 22:55:53 -0700 (PDT)
-Message-ID: <d265ac9b-a162-4b88-8b41-0dd354179e2d@oss.qualcomm.com>
-Date: Thu, 15 Oct 2026 13:55:50 +0800
+	dkim=pass (2048-bit key) header.d=molgen.mpg.de header.i=@molgen.mpg.de header.b="gV4uD0HD"
+Received: from [192.168.2.230] (p57bd9217.dip0.t-ipconnect.de [87.189.146.23])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9CADF4C442F96C;
+	Thu, 15 Oct 2026 08:18:56 +0200 (CEST)
+Message-ID: <f63f8f6d-54b8-4f0d-bc4a-fdb9cdefaba2@molgen.mpg.de>
+Date: Thu, 15 Oct 2026 08:18:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -88,97 +32,109 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current] wifi: ath12k: Fix failure to create
- ath12k_dp_peer on MLO reconnect
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
- <d44a7d63-2540-4886-a709-9fd75cbd4c0b@oss.qualcomm.com>
- <0e12ba1e-82cd-44ca-84e7-f63aff4b5934@oss.qualcomm.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Subject: Re: [PATCH RFC 4/5] wifi: ath12k: Support MAC address from the
+ firmware node
+To: Abel Vesa <abel.vesa@oss.qualcomm.com>
+Cc: Srinivas Kandagatla <srini@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Jeff Johnson <jjohnson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>,
+ Abel Vesa <abelvesa@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ath12k@lists.infradead.org
+References: <20261014-b4-nvmem-efivar-v1-0-187c85f65018@oss.qualcomm.com>
+ <20261014-b4-nvmem-efivar-v1-4-187c85f65018@oss.qualcomm.com>
 Content-Language: en-US
-In-Reply-To: <0e12ba1e-82cd-44ca-84e7-f63aff4b5934@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: LQX6PJBTqfP6IeVT-xdq-fEXV9eh3wBi
-X-Proofpoint-ORIG-GUID: LQX6PJBTqfP6IeVT-xdq-fEXV9eh3wBi
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfX43wWsXoIK0+F
- hjHjkATOsJTPrLBB3Xx/c2I7qQ/okWGfm2QAa978tlCqNfrbNnk3cpoMKhlol/a80/xAJV+qXT5
- 5mvwDDpyLzmG0lw9w+zEE8owAF09axk=
-X-Authority-Analysis: v=2.4 cv=TbQDJhQh c=1 sm=1 tr=0 ts=6ad06aea cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=MPl261hcqzs-rJHzN6cA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE1MDAyMyBTYWx0ZWRfXwClh/y+OQ8yE
- 2JroJ6Uw4ZTNxPPBGKCP/BVtQt8eOX9ALe2S0kPQLaLHFaOD5krngZWN2xwPwxBiA8KvUhazklZ
- EQFXtl3iGDw+bJBOYMT6Qss+a0YWVssUOb1yHQWVWLYPdFeHmeD4kIK+wFdhh69/zGNQupFNKny
- tKrr8KslQhUEEcV6eYtdmgTVBhpFUxY4x/mfFvUJJ1exBsPW+fGGEWJdoqdDvkMLiaDXSQNqMen
- VkeJnWholio3YmY3R1BEhA1G4jYIWWmeUwL66CWsz4l/7JriBV9ilKowFcshjZFWEZHtuSwsnvI
- 1eg0vFdSgNLmf4+K0MUovtyqBjcqDO5BEW+iOSKqES8aE2UWkyKzU+SDvJcqMmkXMu89CAy26J3
- E9hBxxA/aVHl8/pWAsDgTvOZ1MzYYpz+Zi0oNFufva/2En4D9FMI8JVMmLLffmFbGUf6PUFczSi
- kW5QKXpA122y5L32Xig==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-13_01,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 lowpriorityscore=0 bulkscore=0 priorityscore=1501 spamscore=0
- clxscore=1015 impostorscore=0 phishscore=0 malwarescore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610150023
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20261014-b4-nvmem-efivar-v1-4-187c85f65018@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=molgen.mpg.de; s=20260906; 
+	t=1792045139; 
+	h=from:from:subject:date:message-id:mime-version:content-type:content-transfer-encoding; 
+	bh=PV4vgUC8vzMQkMRZKRfTyHLU0bvgUrJ1JuVDgdBfKCM=; 
+	b=gV4uD0HDXWf64WAe9SD47afIh0zwoLH3zySpaE8EGBTXxO5r67cW0t5HXEJB7K2/o6ySSrJmwu5U
+	Xn9QJtnZ37RLPBJ4WrgVEkb//xYuhv3wilZCdKVWrFrmGFxDPzefPy1Z3jIbE6OSDdqRmFmQtgdQo9
+	aA4eExXakMVrzNevSpL4dYNQjEZxiMtNs0PTH4TybvpSKIN/2zGVZt5gE4G9/4qJVFFPKDqFjltTo5
+	QRwm8n2NteQ7liwaSp3btR30biUUWA9xQC3i5YqpIsg3gEZzURvphqki9eo9Zc5YD11LA0/40n8aIp
+	+ywb8j5TTxo9cw3ZDlT7eND7g9fVuoGA==
+
+Dear Abel,
 
 
+Thank you for your patch.
 
-On 10/15/2026 12:09 PM, Miaoqing Pan wrote:
+Am 14.10.26 um 15:02 schrieb Abel Vesa:
+> Read a MAC address from the device's firmware node (a DT "mac-address"/
+> "local-mac-address" property, or an nvmem cell named "mac-address" via
+> device_get_mac_address()), and use it in preference to the address from
+> the firmware board data. This mirrors what ath10k and ath11k already do
+> and lets the WLAN MAC be sourced from firmware-provisioned storage such
+> as a UEFI variable exposed through nvmem.
 > 
+> A device tree / nvmem address takes precedence over the board-data MAC,
+> so an explicitly provisioned address wins even when the firmware reports
+> a valid per-pdev address. An all-zero (absent) address is ignored.
 > 
-> On 9/29/2026 9:42 PM, Jeff Johnson wrote:
->> On 9/15/2026 1:00 AM, Miaoqing Pan wrote:
->>> In ath12k_mac_op_sta_state(), when transitioning an MLO station from
->>> IEEE80211_STA_NOTEXIST to IEEE80211_STA_NONE, after ath12k_dp_peer_create()
->>> succeeds, on is_sta_assoc_link verification failure, it takes the
->>> 'goto exit' path instead of 'goto peer_delete', leaving a stale dp_peer on
->>> the dp_peers_list.
->>>
->>> On the next connection attempt, ath12k_dp_peer_create() finds the stale
->>> entry and returns -EEXIST (-17):
->>>
->>>      wlP4p1s0: failed to insert STA entry for the AP (error -17)
->>>
->>> Fix it by changing 'goto exit' to 'goto free_unassign_link'.
->>>
->>> Also, there is another error path in ath12k_mac_op_sta_state() that
->>> jumps to peer_delete after ath12k_mac_assign_link_sta() succeeds, without
->>> undoing the assignment through ath12k_mac_free_unassign_link_sta().
->>> As a result, the link RCU pointer remains assigned and a stale bit is
->>> left in ahsta->links_map, which can trigger the same -EEXIST failure
->>> on subsequent reconnect attempts. Fix this by redirecting that error
->>> path to free_unassign_link instead.
->>>
->>> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-
->>> QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
->>>
->>> Fixes: 0cd46d1f36ce ("wifi: ath12k: identify assoc link vif in station mode")
->>> Fixes: ee16dcf573d5 ("wifi: ath12k: Define ath12k_dp_peer structure & APIs for create &
->>> delete")
->>> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
->>> ---
->>
->> Baochen has a more holistic approach to this problem in the works, so dropping
->> this patch.
->>
->> /jeff
->>
+> Note: the provisioned address must be a valid unicast MAC; a multicast
+> address (odd first octet) is rejected by nvmem_get_mac_address().
+
+Please add a paragraph how you tested this.
+
+> Assisted-by: LLM
+> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath12k/mac.c | 14 +++++++++++++-
+>   1 file changed, 13 insertions(+), 1 deletion(-)
 > 
-> I believe the patch that needs to be dropped is this one: https://lore.kernel.org/linux-
-> wireless/20260815014329.3748059-1-miaoqing.pan@oss.qualcomm.com/.
+> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+> index 01f8c6572f65..f4d2d0377c8e 100644
+> --- a/drivers/net/wireless/ath/ath12k/mac.c
+> +++ b/drivers/net/wireless/ath/ath12k/mac.c
+> @@ -14878,15 +14878,27 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+>   	u32 ht_cap = U32_MAX, antennas_rx = 0, antennas_tx = 0;
+>   	bool is_6ghz = false, is_raw_mode = false, is_monitor_disable = false;
+>   	u8 *mac_addr = NULL;
+> +	u8 mac_from_dt[ETH_ALEN] = {};
+>   	u8 mbssid_max_interfaces = 0;
+>   
+>   	wiphy->max_ap_assoc_sta = 0;
+>   
+> +	/*
+> +	 * Allow a MAC address provided through the device tree (directly or
+> +	 * via an nvmem cell named "mac-address") to override the one from the
+> +	 * firmware board data.
+> +	 */
+> +	device_get_mac_address(ab->dev, mac_from_dt);
+> +
+>   	for_each_ar(ah, ar, i) {
+>   		u32 ht_cap_info = 0;
+>   
+>   		pdev = ar->pdev;
+> -		if (ar->ab->pdevs_macaddr_valid) {
+> +		if (!is_zero_ether_addr(mac_from_dt)) {
+> +			/* A device tree / nvmem address takes precedence. */
+
+The comment is redundant as the code ordering shows exactly this.
+
+> +			ether_addr_copy(ar->mac_addr, mac_from_dt);
+> +			ar->mac_addr[4] += ar->pdev_idx;
+> +		} else if (ar->ab->pdevs_macaddr_valid) {
+>   			ether_addr_copy(ar->mac_addr, pdev->mac_addr);
+>   		} else {
+>   			ether_addr_copy(ar->mac_addr, ar->ab->mac_addr);
 > 
-> However, the patch itself is still required. @Baochen, could you please help confirm?
 
-Yeah, exactly.
+With the commit message extended, and the comment removed:
 
-Jeff, I was wrong in the internal teams communication. Miaoqing is right on this topic.
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
 
+
+Kind regards,
+
+Paul
