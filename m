@@ -1,188 +1,172 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5212BEFF6
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 05:49:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12F4D30CD89;
+	Fri, 16 Oct 2026 05:58:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792129776; cv=none; b=UzaobzoJnd8T19CzguKwJ81XqAEkVyGbgdsr7TjIYIW2W0bX6R34x8H+/kbMzjOk3exRSzAaQNgVYd9dJ9ghvKm8BgPnauFk4gHOfr0IWJlzHL6X/BzMkDZcBjwF+N3cClwXymMwxagEsbD4z0XfFDSl3l3nhYso8l8FPwNc3ww=
+	t=1792130298; cv=none; b=BrxYCjEabTb7r5NdvbB63E+81p5d3kCwg76ZB2XUVOFi0AKAGZo/zmFf2gzd3d8rHi2NiS5cSWODHpY5BNUDTY1CVscS4m030jgHp0DhJ+W02JwnRN8UFmQoX3j1jZlu+VOAV9wDxIL8nsSqdpmgsJfIz/dUpvPFU0gzRWLev+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792129776; c=relaxed/simple;
-	bh=I9d8xWEo5OHZJlpC7CvboIe1aUH6zlpyma8avvawm+M=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=P1glZBpxLm2yC6drc/gsvVjlMALySTXsUxwuLRTyMvu0TOpCJgtUE6W8jbnxQetATwW+G6Cn/oJCHETdg5bdD5iDYYVlgxFmVaINMEzUZm1/bCrNA8Pj7iLgfq5LrN4gfmW1LaXCRSbyjsDYnLZ73Np8nVwkSpqekVbr6VpAgA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=M+eMjzYY; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KMZQeG6r; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1792130298; c=relaxed/simple;
+	bh=YDyeUhrKiQc1VEvMMWXGM1UV84XwKH+qVJZNnbq3XA4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=vA6uNX6uquidqhG+kkOCf9PCkXuj7h8Pz2Q5fJL0QknU5Ifxs0keUEQxIgEAziGK+/Y8cjVpx4GyX3m0Jku0+wN2v80Nd9Z6P8hXxCYUrQXPLK5zDnDiHtdFEuFMkmzgmbqLaOQVC0D43Et74JNXWxslJ5fzySZ4uJXeZIYAKCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PG9WM6mD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="M+eMjzYY";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KMZQeG6r"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69G4JdVQ3800047
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 05:49:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=nTODudGNTz3m10Dxqs1k0c
-	fH0C+ngep5olRntbkeung=; b=M+eMjzYY27prAdwHEegNeC/Xky13K+CVK4ietW
-	D7IGMLZTd7u4Mxjj01tIlci1zFwFeryEqL2EMkFn7YfnZ8X/9BIleCWviLYMVGMr
-	lPxrN3tPT4RErY1hL5sqIUzL7DLXmfBaipy/zwKU47d0Ax/SHvHJaVYKZroEaafp
-	LInrruy4zpMHFNh42dRwx1Y9BxTALaqalI6J4V91XBh7c2jWxJY5VDXU50kVvafy
-	kMilwKe9UjxZ72Fm8eszO9YBeNIfQOIOvX2QJoSZIL5GCmFeGPvgrKSINsuijXLV
-	oCsN+tAaKof9Pvgt2RtRpDlUOaoC1YLJ7UVuo/8R9lz9osaQ==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hb5se9qx5-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 05:49:34 +0000 (GMT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-35fb6be0f9fso2851762eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 22:49:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792129773; x=1792734573; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=nTODudGNTz3m10Dxqs1k0cfH0C+ngep5olRntbkeung=;
-        b=KMZQeG6raQVCgcKkgOUMHuaQlIiXvAM7TOpXzXOyvMlcRfA5W78+v1yX0yhZYLiKBo
-         W8QUFTBi4nffw6y43b8zO0GD+OGVmf2yBjgEC/GEdKhGP8sEaU1tyi398mINBdyGAqUB
-         ek84RMRNR8gZzH2ZRM72cqGuMrbIRRkkIrUDDktccvN7pNrEs9izo/LQWvVJrLcZZu5C
-         oaUiIF0oNOdvh/tikfGT8GsRO7mD85yYgTH7yo9gk/5LFRgHF69HWu0GDceWU4XspvPF
-         c0e6mjyesg1QkUb282pMLXwHTl551I0gEWuWKkjsiiXMDob/KEUlW6SBpBL9b3F89y9s
-         /w+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792129773; x=1792734573;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=nTODudGNTz3m10Dxqs1k0cfH0C+ngep5olRntbkeung=;
-        b=zuaioRPuiDoahi22wLcKALA4XHWyyW3sVea3rjSN29RuwFEAFIktIEf8/yM2PQ0ghK
-         P6I2ajIbuRByjX+oZr0SeZ8rB9z+hyph+krroRhxDuyDD4CbawJoBh7bFQN6oOgWspIu
-         MLVSuDKIWLlLI+vPIFq5KFytjJkKeyD1KE/P4ktEBCNxjck4iSkyKdY05xMllHlAj8Fp
-         B8hm6K46kZVYeoYV8hgGh+Mr6fV6OAmsOM6z9tyJfSzWQZJ5o0GYNGQK/Oiss+CDyrBI
-         RG8Qni8JKp41g3KZ0fGtbN1P820lZBE3QDb/Tp9uQBl4KaKoxzQ0DcAGcjQGCbz8DAsw
-         T27g==
-X-Gm-Message-State: AFq9FYKDWrNSGal0BB82xLqo6PmjfH+n+4aY/q6x5f00TK11PN/1qWzQ
-	TjHT49h0IO68JN4EfNSt2kfo8Vi/j/OsF561Y8TlrHYZ2mmZOjXOlCJK2OeIykZzcnjGWIeXHZa
-	1x+hEiV/dWQ/674IT7m5IDQCMmVzq6DVKPPQjVsxdykbofimYQAMn6va+Q+qRSWPcbLyUbKt/qJ
-	WOMg/r
-X-Gm-Gg: AYBFou15FTO7S6UBifmsYtfK6i/GrEnJwupxXtot5N6wGCLpR43tI3wyNrUwQYzkq+I
-	fUUlFmuVhErtyM/YojnEL6g93PB45lODG6ojPF3EloXWNmOfaEy5dbEIMS5Gh/HoFjy3lJQGg+b
-	OMH1bL8SoMU6MfgdX/RSfKpcgYxPZZRn3vU2SLTrmIvwSutm0AP6lcpXypBR6g5jx737BOE7flX
-	BJAkv44Bw855ANSAoUuqkE3bjEFYiovW6K869F9t8Bz38pMeD0m0I3mai9V1jay7uvl0a/8tw3f
-	fIXonHv+wV9LcILD3b1B/M9HFD/CG40J2GNGKIw/M2Fj3QB4r8lphMzLWHZDcmmvdpwpu3qQVUs
-	31saQG0u1CABpIM7BgpOFAA2yKyin+fL6A86X9mfifwqN1af6/w==
-X-Received: by 2002:a05:7301:4546:b0:343:ff9f:26f3 with SMTP id 5a478bee46e88-3537e033fd4mr25913208eec.9.1792129773345;
-        Thu, 15 Oct 2026 22:49:33 -0700 (PDT)
-X-Received: by 2002:a05:7301:4546:b0:343:ff9f:26f3 with SMTP id 5a478bee46e88-3537e033fd4mr25913181eec.9.1792129772764;
-        Thu, 15 Oct 2026 22:49:32 -0700 (PDT)
-Received: from hu-kangyang-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36081ab80f9sm5154534eec.12.2026.10.15.22.49.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 22:49:32 -0700 (PDT)
-From: Kang Yang <kang.yang@oss.qualcomm.com>
-Date: Thu, 15 Oct 2026 22:49:11 -0700
-Subject: [PATCH ath-next] wifi: ath12k: use hal_rx_mon_status for PPDU
- parse result
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PG9WM6mD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4B151F000C4;
+	Fri, 16 Oct 2026 05:58:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792130296;
+	bh=tVbSNI4vH0q4W6ilT5tPWpXP7+YaXbgkLCULideNzNQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=PG9WM6mDDiYMBp730f28wrS1Ar/R8wT31iRXH2/9TKEjpXs21rFLZmtBE0aXtuoCE
+	 KdsH4eBCb3pzsQ44ybJPsGV+KxolHJq6KaOFJ+u+iPaEMzRHDp95dHx+9P7Pes0kns
+	 xzrNaBQ+yYebEEUM92grALuCdhxF4Yq8hhZP5Gvv+yXVjFucEEkBZ6FVe5DeM0p6oE
+	 Js9kWW/zwxNcB+7nGnEVXi0eqSwGC2nAXi+Ckn3GAudjI56rf7110z9pEudJTHglht
+	 TWIhmbbQJc0lmb5Nh7PeKBC19KxfcFdSaO73SaxL/rE44Ql/a1IiTVklmhcp+g0TW/
+	 83e/OIDQR/kvg==
+Date: Fri, 16 Oct 2026 11:28:03 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+	Jonathan Derrick <jonathan.derrick@linux.dev>, Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	ath12k@lists.infradead.org, ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Emmanuel Grumbach <egrumbach@gmail.com>, 
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
+ and convert Atheros drivers
+Message-ID: <atG61oicHbsLKiib@debian>
+References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
+ <20261014205117.GA1665327@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-hal_rx_mon_status-v1-1-b32d5a7383fd@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIANa60WoC/yWM0QrCMAwAf2Xk2cJacGP7FZESZ7pmaCdNJoWxf
- 7fq43Hc7SCUmQTGZodMbxZeUwV7amCKmGYyfK8MrnWdbe3ZRHz4XPxzTV4UdRPTk+1cCD0O6KB
- 2r0yBy+95AdRoEhWF69/Idlto0u8SjuMDur0lBH8AAAA=
-X-Change-ID: 20261015-hal_rx_mon_status-7e162ff7a9a2
-To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Kang Yang <kang.yang@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792129771; l=2102;
- i=kang.yang@oss.qualcomm.com; s=20260921; h=from:subject:message-id;
- bh=I9d8xWEo5OHZJlpC7CvboIe1aUH6zlpyma8avvawm+M=;
- b=yeFdn6b26ATm8jKXV4WetkuB1U8Qf2yEDn8iGo/SCAWA4+pvJIFFG1xVHYEUuDQtQG2Atsxav
- 51TdFA5P1FyBIFbMWzWNGueWMO2+KkR8WlUjxYYAWMvdXsYecy7vtET
-X-Developer-Key: i=kang.yang@oss.qualcomm.com; a=ed25519;
- pk=qz684ZqyU2kfjPKl3UVYeUcHg1oCLfFIhi0n3vK+MFk=
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDAyMiBTYWx0ZWRfX3+idmt0iS9O9
- /8TDLClApxhyRHyDNj5dYPCnAHWAPsGPg1PnarmpX6bvychdwG/EyE+X7ZFHWYuhxZv7B/PDJRU
- W++4OZzy7Poth2uhaObBcggWoWEEP2Y=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDAyMiBTYWx0ZWRfX6XI/GIKcOaCb
- WAPIRA2CNJRiqpzV7EkcPNy7OYgJ9uKJb9/zDibJYgNMpWNzj6JhWUbO32jTojX/TzxJtYuy7pX
- ZonYE4FLSaj/sB/TqGbSEBSZr+jw//WqzRswRtYJxo1QFlNN0XMzc14rLTEuDnefgYC2Q/RBGF7
- FAUkwBM+r8kUCxrnoLKRx4xl9Xd/SUm9dFY7pJJeAEZZri+jAOQcAwmJ4C9s4XDs6ekjjPA+lxt
- n+Vbosemledl626PxOORIXpeQkmurZ1jFm0eS3YedXlJJHBTte66ZR6px2D9+L4jTdL02z4VuCG
- rB28yPSPi46zvIK4+HNKNftNNh1cspsw+q8tk+bSaMg0CBKH0T1+PrDMPAxM9vH6jKUdDDRQ3yl
- PMcKty7SUREX6exkxpILM/baAEp9TR3D36aWJ30iEJzjlJUG07WFdMGJ1PZMx9mC6qrdRaLX9Qn
- V49C+sqjbY6aWxx1QWg==
-X-Authority-Analysis: v=2.4 cv=P4yvFSAu c=1 sm=1 tr=0 ts=6ad1baee cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=oYw4PtFvaC85l-aFUhcA:9 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22
-X-Proofpoint-ORIG-GUID: BTRNY1I9di1OBJiW2j3RvV31w6TynNUq
-X-Proofpoint-GUID: BTRNY1I9di1OBJiW2j3RvV31w6TynNUq
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 spamscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1015
- malwarescore=0 impostorscore=0 bulkscore=0 priorityscore=1501 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610160022
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261014205117.GA1665327@bhelgaas>
 
-ath12k_wifi7_dp_mon_parse_rx_dest() returns enum
-hal_rx_mon_status, but one caller still checks the result against
-HAL_TLV_STATUS_PPDU_DONE.
+On Wed, Oct 14, 2026 at 03:51:17PM -0500, Bjorn Helgaas wrote:
+> [+cc Emmanuel, Matthew]
+> 
+> On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
+> > Hi,
+> > 
+> > This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) to
+> > use the PCI core ASPM APIs for enabling/disabling ASPM instead of writing
+> > to the LNKCTL register directly. Touching LNKCTL behind the PCI core's
+> > back leaves the ASPM service driver's view of the link state out of sync
+> > with the hardware, which is not nice.
+> > 
+> > The catch is that these drivers save the currently enabled ASPM states,
+> > disable ASPM before firmware download, and restore the saved states
+> > afterwards. pci_enable_link_state() cannot restore states that were
+> > disabled via pci_disable_link_state() or blacklisted during init (like
+> > the pre-1.1 device blacklist, which is only meant to be overridden with
+> > pcie_aspm=force), and that is intentional. So the save/restore sequence
+> > cannot be expressed with the existing APIs.
+> > 
+> > In v2 I tried to fix this by making pci_enable_link_state*() symmetric
+> > with the disable APIs, but as pointed out during review, that also ends
+> > up overriding the init-time blacklist for every caller (including VMD),
+> > which is not something we want. So instead, this version adds a separate
+> > pci_force_enable_link_state() API (patch 2) that re-enables the requested
+> > states unconditionally. The caller is responsible for only asking for
+> > states the device actually supports, and the ath drivers do this by
+> > restoring exactly what pcie_aspm_enabled() reported earlier.
+> > 
+> > The first five patches touch the PCI core: patch 1 (from Ilpo) makes
+> > pci_disable_link_state() disable ASPM unconditionally, patch 2 adds the
+> > new API, patch 3 moves the D0 transition needed before enabling PCI-PM
+> > L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and drops
+> > it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-doc,
+> > and patch 5 makes pcie_aspm_enabled() return the enabled state mask so it
+> > can be used for save/restore. The last three patches convert the ath
+> > drivers.
+> > 
+> > Testing
+> > =======
+> > 
+> > I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so that's
+> > just the ath12k driver). Rest of the drivers are compile tested only.
+> > 
+> > Merging Strategy
+> > ================
+> > 
+> > Even though there is no build dependency between the PCI core and atheros
+> > patches, there is a functional dependency. So I'd recommend creating an
+> > immutable branch with the PCI patches and merging that branch into both
+> > the PCI and linux-wireless trees, and finally merging the atheros patches
+> > into the linux-wireless tree.
+> > 
+> > If the immutable branch seems like a hassle, then the PCI core patches
+> > could get merged first and the atheros patches can wait for the next
+> > cycle.
+> > 
+> > - Mani
+> > 
+> > Changes in v3:
+> > * Dropped the change that made pci_enable_link_state*() symmetric with the
+> >   disable APIs. Instead added a new pci_force_enable_link_state() API used
+> >   only by the ath drivers, so the init-time blacklist stays overridable
+> >   only via pcie_aspm=force and existing callers like VMD are left
+> >   untouched.
+> > * Fixed the locked path to use pci_set_power_state_locked() for the D0
+> >   transition. The previous version called the non-locked variant, which
+> >   re-acquires pci_bus_sem.
+> > * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
+> >   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
+> >   (pcie_aspm_enabled() doesn't report CLKPM).
+> > * Reworked the kernel-doc patch to cover both the enable and disable APIs
+> >   and reference the new API.
+> > * Rebased on top of v7.2-rc1.
+> > 
+> > Changes in v2:
+> > * Reworked the pcie_aspm_enabled() API to return the enabled states
+> >   instead of bool and used it to save/restore the ASPM states in ath
+> >   drivers.
+> > * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
+> >   permission.
+> > * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
+> > * Rebased on top of v6.17-rc1.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> > Ilpo Järvinen (1):
+> >       PCI/ASPM: Always disable ASPM when driver requests it
+> 
+> I put this first patch on pci/aspm for v7.4 because there seems to be
+> a consensus that it's better to have the ASPM core disable things even
+> if it doesn't technically have control of ASPM, because the
+> alternative is that drivers just do it themselves, also ignoring ASPM
+> ownership concerns.  Having the drivers do it just means the PCI core
+> ASPM support doesn't know what's happening.
+> 
+> I think we should defer the rest of these because I think there's a
+> little room to make the enable/disable/force-enable dance more
+> intuitive for the drivers.  As far as I know, the rest of the series
+> is definite cleanups but doesn't fix any actual functional issues.
+> 
 
-Use HAL_RX_MON_STATUS_PPDU_DONE instead. This is a cleanup only
-since both values are identical.
+I wouldn't just categorize the rest of the patches as mere cleanups. They are
+indeed fixing an obvious race between PCI core and the driver doing ASPM dance
+at the same time. But for sure, even after these patches, one can trigger the
+same race between sysfs 'config' and the driver/PCI core, but that's more of an
+user trying to perform an action to trigger a race vs race happening within the
+kernel without user intervention (which is too bad).
 
-Remove the now unused HAL_TLV_STATUS_* defines.
+I'd really like to see a way forward for these patches, even with a new API and
+not let them fall through the cracks.
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+- Mani
 
-Signed-off-by: Kang Yang <kang.yang@oss.qualcomm.com>
----
- drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c | 2 +-
- drivers/net/wireless/ath/ath12k/wifi7/hal_rx.h | 5 -----
- 2 files changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-index 1e29c13ad66d..7d29b49e8a54 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
-@@ -3214,7 +3214,7 @@ __ath12k_wifi7_dp_mon_process_ring(struct ath12k *ar, int mac_id,
- 
- 		hal_status = ath12k_wifi7_dp_mon_parse_rx_dest(&ar->dp, pmon, skb);
- 
--		if (hal_status == HAL_TLV_STATUS_PPDU_DONE) {
-+		if (hal_status == HAL_RX_MON_STATUS_PPDU_DONE) {
- 			ppdu_info->ppdu_continuation = false;
- 			if (ar->monitor_started &&
- 			    pmon->mon_ppdu_status == DP_PPDU_STATUS_START) {
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.h b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.h
-index dd60626b3240..3d7694c22774 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.h
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.h
-@@ -41,11 +41,6 @@ struct hal_rx_mon_status_tlv_hdr {
- 	u8 value[];
- };
- 
--#define HAL_TLV_STATUS_PPDU_NOT_DONE            0
--#define HAL_TLV_STATUS_PPDU_DONE                1
--#define HAL_TLV_STATUS_BUF_DONE                 2
--#define HAL_TLV_STATUS_PPDU_NON_STD_DONE        3
--
- enum hal_rx_mon_status {
- 	HAL_RX_MON_STATUS_PPDU_NOT_DONE,
- 	HAL_RX_MON_STATUS_PPDU_DONE,
-
----
-base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
-change-id: 20261015-hal_rx_mon_status-7e162ff7a9a2
-
-Best regards,
---  
-Kang Yang <kang.yang@oss.qualcomm.com>
-
+-- 
+மணிவண்ணன் சதாசிவம்
