@@ -1,123 +1,186 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47AC03BB12D
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 21:43:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB413002C8;
+	Fri, 16 Oct 2026 22:09:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792187028; cv=none; b=cTzeEPn4v+cPLYvy0Pi+0UutXZNAokWvz36ZqLJmvZVNS1TbA9lO8C1d11zTi+WckgzHL2b3zB9vO7QY4DikJPdCs3+q2CbcqKlMvv6eJXW5vuiZorFlkaxDBK6vQXmswI+S/UqiHh5LPeKumUwmxno2HFPyOpRsru2qW+tygO4=
+	t=1792188544; cv=none; b=EagbB9QIaHkJCQ4AXf2Y4/+kCsUcx2QcOxfCy9tassSMiUVN4XjlRDXAF4lM2GSN+z7cXShym9ZkTh0M879iV+YcnrAlkH6clVht2uYc01vnPlEcMpARqx8kB7biKojebm/p0Vnh7ScepJ1PKfOCGGH+hswM716qL6BGuCeMH+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792187028; c=relaxed/simple;
-	bh=0RGKq1R9eRsSUEYrNith3NyIKZmCEyZV5+m6BlofS1I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SneyPX7XtV3X9Xvo1m19vXso02daSXbTx91WYeILDjCyCyHm/Q3478wllANSYdjQsgoJy/nXblidR5Z+pn4D9c3/Wt8oSscfvXG62/uwxzVuha/miU57hFYc47mVgYK+ZhexSWTFxyAov+jxfmv3KQXSsJDmtJQOlnHdmOXw05c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GsiMYCZI; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792188544; c=relaxed/simple;
+	bh=qhvyOQ6SrOloWF/DiJ0gD5TqhPaHiae6yEIJDwqQ2Ew=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=W68Su+fYCdtHA9RpKyCnvAka8umw+SN9uykF7hy/edK8yyP+9sZa96WBcBGsTSBVuPAZdDf36x51hFxChjD8Bvqvj8NO53qj3E/aJ8yDYuGqeMqYmNZlFa64SFC/ZDiVdctPg0pNxaAGGKb8NqChssfl6bCF7/NwdBw3v8Vm798=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EojSRKfd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GsiMYCZI"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4956869750eso2283895e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 14:43:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792187025; x=1792791825; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=27gs7dlyGrdmSFMZuaPiLusWTuM6jffQi1p6X2KKuH8=;
-        b=GsiMYCZIMyEgpaP6JUnu22B1ilHTX4wsFPiPAaR1Pn3AU9p52cE/fsW0fRFRSOer7j
-         mvQerKRQCrUmvwCH8G2LVu43DEjLepSkLl5XANBZ5y8XANollJsUKWFSMU231Qfkl00t
-         LgXNJSK4tLjWUO60FVmXZmnHSae/cUoH+n+gM5c3pqhqCbjM4fA29lozQ51A3hypQEoG
-         /XHRAl2pHvZf2H1xuNnRoKBzQHttYxornyZKKQLqEXFrznfoLAm033ZoWM+HQfR/Q53Q
-         VUYtGrl5U02rhcQjaPe6x+ayOwlUL8OjjL8HfyTv4wCk9ZcKASuX61Y+u+mJEuDNLGED
-         qHmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792187025; x=1792791825;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=27gs7dlyGrdmSFMZuaPiLusWTuM6jffQi1p6X2KKuH8=;
-        b=McTKbI+OMfZLdQ7bq5AaCMx0AaBl+uwGb48ToKGO+KazY1XLBaiGf/F+c9OIpLOuQM
-         kNwcfCym2AypmBFIixqYJ9jGu+7Qcg1YUib5KVmS9Lr2C8Q5sR5WTiDENp3dIiwjNTHc
-         VqSWzd35LwGnBI1RzFOSRfAsMHsf9imooMc+92yvRB6YkU6cyAOWuBmp7Kz272V69aBT
-         ew08EpRbkpBX3nvx6FkLoERBQUZ2q17jJQTmKQrtkLlq11fSyER5JqZ4re6IY0tlQhQg
-         7L7EargtEWYWno1qTi2Ddqk0/l9ncsrmetzpoR051y4y90hF6GWnuyAfMPI6OsJeO/Rx
-         jTsg==
-X-Gm-Message-State: AFq9FYJiIhZtiojKGHnC57ib6DtEpgQrXwWZHlK69lbL42pRPV+FL3H4
-	EBU3RpbWQE1Rc7L/VWFPb1M3O3ZfEHfCnhr3jAtb5hOc5bNJEhe0Ru/C5DzYA0MPJIV2aQ==
-X-Gm-Gg: AYBFou0nSgm8gIw9GnNfYuN40A1EVm2o7MDcBJnrZ7yVLpu6zd6w4KpYnkTf+i6/t/H
-	NH8ymwoP7sue501WBCxR+Vo7pdU84K9TcNb50meI0Cc+T78dY2RwrEn/v3O+88NL9Et6c9pA6XN
-	QVO5zd/gXEN3dHHL5OexNwARieNSjAq/GGWuSN8H3U8CMwCjK4//QYfr4HvNHOzi6VTUavM5mg4
-	fYKXEhxFrunXv+zE49G8WSZXZIJuuk+LN1NQWGDgznKo17gS70sEjuychgErLmLiBToTV29FPrr
-	F27ZeC3QwtqG2vW70bOKfTM/GeZYCXZa3s/zVTXim6ngTcjCaXxVNCU/7Fikm8UE/tsXOMuElE4
-	XORM2VACP2z3sBX/n+Cj07hUDkYnJQZ2jjTJTlFmasVPkpgnRNCAMNkOljp3OV0V9eC2tbYVPn9
-	XMCvrOLP7I4cM3ETUnODW6vRTl/B5UbZtuNs+9f3DeWZhPSOVfeBILWoG+TCIy25OQfl+2JkrO0
-	wV0f9UWjfVA67H1gL0PqA==
-X-Received: by 2002:a05:600c:8709:b0:49f:ff73:9971 with SMTP id 5b1f17b1804b1-4a1d75f8f28mr21917295e9.18.1792187025297;
-        Fri, 16 Oct 2026 14:43:45 -0700 (PDT)
-Received: from omarchy.tailf282f0.ts.net ([102.208.20.198])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1d30d778bsm55151525e9.9.2026.10.16.14.43.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 14:43:44 -0700 (PDT)
-From: Carl Quist <equalizerjr@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	Carl Quist <equalizerjr@gmail.com>
-Subject: [PATCH rtw-next] wifi: rtw88: 8723d: add iface combination
-Date: Fri, 16 Oct 2026 21:41:05 +0000
-Message-ID: <20261016214105.255517-1-equalizerjr@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EojSRKfd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DCA71F000C4;
+	Fri, 16 Oct 2026 22:09:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792188542;
+	bh=N+IfVEDNy7weUr9N7uxvL6jLCprKtx2WdtJneeQTuEA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=EojSRKfdAM9oDuZ9jF49SMiBF3zj2wdWEu49eIsy3J6zDbtd5vPg2v/7x6ZxGZLnr
+	 M19eONTst4yrehj4leYPBDh/0lSll7/t5ZLf4sN5sCARPjoFdCe22YtDn3o0ux2ImM
+	 6wRzpjWENrr5zssGC8fwJ/t3RTxGutllXA7KxfBobVmcxIPmDtuA48p0xITxIMuV/q
+	 q5WBy1j/xLSy/sDeH16G5ErFv8zmjbftYoLSj0V9IZF2Zr9vx2clPHCDnK/qru0FQN
+	 2YdalWq3HyVVbzfalQuO1mSwrNVrhywb0ANPS53LvRbNfQUztrTkzcrnuesvkYiXa7
+	 /CAlgq5HndODw==
+Date: Fri, 16 Oct 2026 17:09:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+	ath11k@lists.infradead.org, ath10k@lists.infradead.org,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
+ and convert Atheros drivers
+Message-ID: <20261016220900.GA2020355@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <atG61oicHbsLKiib@debian>
 
-Allow 8723d to operate a station and an AP interface concurrently, using
-the combination already enabled for 8822c: one station plus one AP on the
-same channel.
+On Fri, Oct 16, 2026 at 11:28:03AM +0530, Manivannan Sadhasivam wrote:
+> On Wed, Oct 14, 2026 at 03:51:17PM -0500, Bjorn Helgaas wrote:
+> > [+cc Emmanuel, Matthew]
+> > 
+> > On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
+> > > Hi,
+> > > 
+> > > This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) to
+> > > use the PCI core ASPM APIs for enabling/disabling ASPM instead of writing
+> > > to the LNKCTL register directly. Touching LNKCTL behind the PCI core's
+> > > back leaves the ASPM service driver's view of the link state out of sync
+> > > with the hardware, which is not nice.
+> > > 
+> > > The catch is that these drivers save the currently enabled ASPM states,
+> > > disable ASPM before firmware download, and restore the saved states
+> > > afterwards. pci_enable_link_state() cannot restore states that were
+> > > disabled via pci_disable_link_state() or blacklisted during init (like
+> > > the pre-1.1 device blacklist, which is only meant to be overridden with
+> > > pcie_aspm=force), and that is intentional. So the save/restore sequence
+> > > cannot be expressed with the existing APIs.
+> > > 
+> > > In v2 I tried to fix this by making pci_enable_link_state*() symmetric
+> > > with the disable APIs, but as pointed out during review, that also ends
+> > > up overriding the init-time blacklist for every caller (including VMD),
+> > > which is not something we want. So instead, this version adds a separate
+> > > pci_force_enable_link_state() API (patch 2) that re-enables the requested
+> > > states unconditionally. The caller is responsible for only asking for
+> > > states the device actually supports, and the ath drivers do this by
+> > > restoring exactly what pcie_aspm_enabled() reported earlier.
+> > > 
+> > > The first five patches touch the PCI core: patch 1 (from Ilpo) makes
+> > > pci_disable_link_state() disable ASPM unconditionally, patch 2 adds the
+> > > new API, patch 3 moves the D0 transition needed before enabling PCI-PM
+> > > L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and drops
+> > > it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-doc,
+> > > and patch 5 makes pcie_aspm_enabled() return the enabled state mask so it
+> > > can be used for save/restore. The last three patches convert the ath
+> > > drivers.
+> > > 
+> > > Testing
+> > > =======
+> > > 
+> > > I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so that's
+> > > just the ath12k driver). Rest of the drivers are compile tested only.
+> > > 
+> > > Merging Strategy
+> > > ================
+> > > 
+> > > Even though there is no build dependency between the PCI core and atheros
+> > > patches, there is a functional dependency. So I'd recommend creating an
+> > > immutable branch with the PCI patches and merging that branch into both
+> > > the PCI and linux-wireless trees, and finally merging the atheros patches
+> > > into the linux-wireless tree.
+> > > 
+> > > If the immutable branch seems like a hassle, then the PCI core patches
+> > > could get merged first and the atheros patches can wait for the next
+> > > cycle.
+> > > 
+> > > - Mani
+> > > 
+> > > Changes in v3:
+> > > * Dropped the change that made pci_enable_link_state*() symmetric with the
+> > >   disable APIs. Instead added a new pci_force_enable_link_state() API used
+> > >   only by the ath drivers, so the init-time blacklist stays overridable
+> > >   only via pcie_aspm=force and existing callers like VMD are left
+> > >   untouched.
+> > > * Fixed the locked path to use pci_set_power_state_locked() for the D0
+> > >   transition. The previous version called the non-locked variant, which
+> > >   re-acquires pci_bus_sem.
+> > > * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
+> > >   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
+> > >   (pcie_aspm_enabled() doesn't report CLKPM).
+> > > * Reworked the kernel-doc patch to cover both the enable and disable APIs
+> > >   and reference the new API.
+> > > * Rebased on top of v7.2-rc1.
+> > > 
+> > > Changes in v2:
+> > > * Reworked the pcie_aspm_enabled() API to return the enabled states
+> > >   instead of bool and used it to save/restore the ASPM states in ath
+> > >   drivers.
+> > > * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
+> > >   permission.
+> > > * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
+> > > * Rebased on top of v6.17-rc1.
+> > > 
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > ---
+> > > Ilpo Järvinen (1):
+> > >       PCI/ASPM: Always disable ASPM when driver requests it
+> > 
+> > I put this first patch on pci/aspm for v7.4 because there seems to
+> > be a consensus that it's better to have the ASPM core disable
+> > things even if it doesn't technically have control of ASPM,
+> > because the alternative is that drivers just do it themselves,
+> > also ignoring ASPM ownership concerns.  Having the drivers do it
+> > just means the PCI core ASPM support doesn't know what's
+> > happening.
+> > 
+> > I think we should defer the rest of these because I think there's
+> > a little room to make the enable/disable/force-enable dance more
+> > intuitive for the drivers.  As far as I know, the rest of the
+> > series is definite cleanups but doesn't fix any actual functional
+> > issues.
+> 
+> I wouldn't just categorize the rest of the patches as mere cleanups.
+> They are indeed fixing an obvious race between PCI core and the
+> driver doing ASPM dance at the same time. But for sure, even after
+> these patches, one can trigger the same race between sysfs 'config'
+> and the driver/PCI core, but that's more of an user trying to
+> perform an action to trigger a race vs race happening within the
+> kernel without user intervention (which is too bad).
 
-Without it, the AP interface cannot be brought up while the station is
-active (hostapd: "Could not set interface ap0 flags (UP): Device or
-resource busy"), so an RTL8723DE laptop cannot share its Wi-Fi
-connection.
+You're right, using "cleanup" glosses over important fixes.  It's a
+significant consistency problem for PCI core ASPM code as well as
+racing.
 
-Tested on RTL8723DE [10ec:d723], firmware 48.0.0, kernel 7.2.5, with
-hostapd 2.12 on a second (AP) interface with its own MAC address:
+Although I'm not sure there is actually a race between the driver and
+the PCI core *except* for sysfs.  In what non-sysfs case might the
+core ASPM code touch the device at the same time as the driver?  I
+guess maybe lane margining and bwctrl?  Can those happen autonomously,
+without being kicked via sysfs?
 
-- the AP ran beside the associated station on 2.4 GHz channel 1 (HT20)
-  for about four hours and served a smartphone client;
-- the AP was started and stopped repeatedly without affecting the
-  station;
-- with the AP running, the station was disconnected and reconnected
-  four times; it re-associated within one second each time and the AP
-  stayed up.
+> I'd really like to see a way forward for these patches, even with a
+> new API and not let them fall through the cracks.
 
-Assisted-by: LLM
-Signed-off-by: Carl Quist <equalizerjr@gmail.com>
----
-
-Notes:
-    An AI coding assistant (Claude Opus 5.5) helped investigate this, write the
-    change and run the tests above; I reviewed the change and tested it on my
-    own RTL8723DE laptop.
-
- drivers/net/wireless/realtek/rtw88/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 0f23498..c64a3ba 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2299,7 +2299,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 	hw->wiphy->max_scan_ssids = RTW_SCAN_MAX_SSIDS;
- 	hw->wiphy->max_scan_ie_len = rtw_get_max_scan_ie_len(rtwdev);
- 
--	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) {
-+	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C ||
-+	    rtwdev->chip->id == RTW_CHIP_TYPE_8723D) {
- 		hw->wiphy->iface_combinations = rtw_iface_combs;
- 		hw->wiphy->n_iface_combinations = ARRAY_SIZE(rtw_iface_combs);
- 	}
--- 
-2.55.0
-
+Absolutely!
