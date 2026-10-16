@@ -1,40 +1,40 @@
 Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C76941836E
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 07:41:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE513D9048
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 07:41:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792136511; cv=none; b=H8PP3XbZ3uLVk+KnwIh/ndSpYlmkQt5GuwqLyixuUtPE6g6dMTKi9C3djvh1Khrmszi2bSEyYg+CVC+vOD+ILo9CoUeb7ia/Hnt2mt7diE+QyUHs8NqaPL61j8x061aV9gJEJoKIa8SQB+10H37MiACU+6M0wjGIYcz2CtS0cw0=
+	t=1792136512; cv=none; b=YyDKACZ7tiTcVkhR+ABqa3xd89vuFY9uR/1QBLZpJSlLsVJV6BgK2+0YfEdgkH5pz6oDGJmaGQbOcDzrpne42yLjsrEMugXWTertRwQ35s9OeJ0xivIuEm+y/9WARPwj8AhDLiZFOPsQjE9sGnUzJY28WLzdLhDZVR8ia44R3Gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792136511; c=relaxed/simple;
-	bh=xqkDl0/sxn9NEAntmQ8aFj3KlvInGC7bq4hsNG3C9go=;
+	s=arc-20240116; t=1792136512; c=relaxed/simple;
+	bh=dQesIHP4WsBNK7aGhgMxr1fZ2OzS2kZzyn+Qoz89Bok=;
 	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=qw27B4MVd/iVkTTyAJfMmEq5bAjQZR/eWrwOVru8eTqiTL9t+U1PbPHusuVSUP8nGPUehQqQmLefyR/6LVmv6R67XYEiSPxnUBIyXk8IRkWdbXZjXLrwhcm5u5977wCuFdxNTM6D1d8N1DN/sqfXbiCnyQ0kYMFtq6+6e8cFe54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=FbhBaSXw; arc=none smtp.client-ip=212.77.101.11
+	 MIME-Version; b=j1CD4A/NBKQ2K7FE0vbgNxHBbqdMtRX9EoIBFF4PE1wfIGIWwbtz11uE0928yyseWywmoOq4PKnLv/6bN9FnaoIYHcJG0sw+uF3Z/q51GniaFGU354FBxMCsKWud7ymL65/WTl1ck0Xp39EgkUANDSRZSh4qG5qd2VyvCl9NaKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=ADijznzD; arc=none smtp.client-ip=212.77.101.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="FbhBaSXw"
-Received: (wp-smtpd smtp.wp.pl 6981 invoked from network); 16 Oct 2026 09:41:45 +0200
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="ADijznzD"
+Received: (wp-smtpd smtp.wp.pl 23785 invoked from network); 16 Oct 2026 09:41:47 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
-          t=1792136505; bh=j8X1qAweY7sc5Sjl9IW3C+fu1Sz0g450Li99k0AfoSw=;
+          t=1792136507; bh=CNGMUi83xdQuT4fyaIfSRiMATe/iY3LGX7DDu0EJo2s=;
           h=From:To:Subject;
-          b=FbhBaSXwBvgAZPEKiHLr7VkKJkCn13HDVNFgrDSh6R+R2Q8NFd5aGufTSiG4arz0a
-           0HR6lKv/vyNo/sZITKNNSSrCzItW6gud77uiW6TX1i8pFkoS7iwEXWSqcCNfQ73feh
-           2NPskZW6IZlDnXqELu8yo3ENtd8UPJdWT5D7/IGy5HdVitdKGWErKIGDRaRdF4h4Cp
-           vDrUwD5NKi56HejLvE2CQysEKeRnGMa0oSF1edpQeEZWFhB+9FZavc6N9dDwFCF3op
-           nUXad35PJpD9gOcF43sBUmH/LqnGm01gmMkhFFzhHB746PsOsRCwiWZGshRQzqW9U0
-           oJdVxbod4/x+A==
+          b=ADijznzDrlxMq2DTCN8inSJ0368WF+Fh097vka23TyH/v9ZnhRNT1avc6kjIH7dH6
+           YzKWSQiYlRVvDm7cStsfrIJXQSlgfWTsIsu6wpKflV0GoXHLY4Emfzp7Wmw79jXZFL
+           DMxIFp7rdStAjuD6ekGCSdsXbiAI3TBMw19N1o+iYw21ZGnpqytin0//32z54ifWvX
+           3+y43lmateeUvfkRGeUHmHRXSiRfVpKoBZoIeC0I5OZg5HlpsdT5iOBvczd2Z0QLCk
+           GX0XHBOuFG2UiXrWKZhwP+nYpbD1+6SX8DpQ8StE9sbdFn/O2tIAWaz8yMsXUIZCub
+           tcupBWh4Js2Bw==
 Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 16 Oct 2026 09:41:45 +0200
+          for <linux-wireless@vger.kernel.org>; 16 Oct 2026 09:41:47 +0200
 From: stf_xl@wp.pl
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next 1/3] iwlegacy: remove configurable watchdog timeout
-Date: Fri, 16 Oct 2026 09:41:41 +0200
-Message-Id: <20261016074143.71057-2-stf_xl@wp.pl>
+Subject: [PATCH wireless-next 3/3] iwlegacy: remove disable_ht40 debugfs file
+Date: Fri, 16 Oct 2026 09:41:43 +0200
+Message-Id: <20261016074143.71057-4-stf_xl@wp.pl>
 X-Mailer: git-send-email 2.25.4
 In-Reply-To: <20261016074143.71057-1-stf_xl@wp.pl>
 References: <20261016074143.71057-1-stf_xl@wp.pl>
@@ -45,240 +45,117 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-WP-MailID: c836bd51fd589b204fc84f1d382f3b6f
+X-WP-MailID: 2c12363877bd72ab1b450d0c1f6bbaed
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000004 [EffN]                               
+X-WP-SPAM: NO 0000002 [YeF9]                               
 
 From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Remove the debugfs file used to configure the TX queue watchdog timeout.
-It was used to experiment with different timeout values to determine a
-suitable default, which is no longer necessary.
+The disable_ht40 debugfs option was used for narrowing issues when
+developing the driver, it's no longer needed.
 
 Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- .../net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
- drivers/net/wireless/intel/iwlegacy/3945.c    |  2 --
- .../net/wireless/intel/iwlegacy/4965-mac.c    |  2 +-
- drivers/net/wireless/intel/iwlegacy/4965.c    |  1 -
- drivers/net/wireless/intel/iwlegacy/common.c  | 31 ++-----------------
- drivers/net/wireless/intel/iwlegacy/common.h  |  9 +++---
- drivers/net/wireless/intel/iwlegacy/debug.c   | 26 ----------------
- 7 files changed, 8 insertions(+), 65 deletions(-)
+ drivers/net/wireless/intel/iwlegacy/common.c |  5 ---
+ drivers/net/wireless/intel/iwlegacy/common.h |  1 -
+ drivers/net/wireless/intel/iwlegacy/debug.c  | 42 --------------------
+ 3 files changed, 48 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index cbaf250626c5..a3b81badabfc 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -2132,7 +2132,7 @@ il3945_alive_start(struct il_priv *il)
- 	set_bit(S_ALIVE, &il->status);
- 
- 	/* Enable watchdog to monitor the driver tx queues */
--	il_setup_watchdog(il);
-+	mod_timer(&il->watchdog, jiffies + msecs_to_jiffies(IL_WD_TICK));
- 
- 	if (il_is_rfkill(il))
- 		return;
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945.c b/drivers/net/wireless/intel/iwlegacy/3945.c
-index b0656b143f77..60506f7914a2 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945.c
-@@ -2670,7 +2670,6 @@ static const struct il_cfg il3945_bg_cfg = {
- 	.set_l0s = false,
- 	.use_bsm = true,
- 	.led_compensation = 64,
--	.wd_timeout = IL_DEF_WD_TIMEOUT,
- 
- 	.regulatory_bands = {
- 		EEPROM_REGULATORY_BAND_1_CHANNELS,
-@@ -2699,7 +2698,6 @@ static const struct il_cfg il3945_abg_cfg = {
- 	.set_l0s = false,
- 	.use_bsm = true,
- 	.led_compensation = 64,
--	.wd_timeout = IL_DEF_WD_TIMEOUT,
- 
- 	.regulatory_bands = {
- 		EEPROM_REGULATORY_BAND_1_CHANNELS,
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 18bb55682643..1a553ef0c04f 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -5291,7 +5291,7 @@ il4965_alive_start(struct il_priv *il)
- 	set_bit(S_ALIVE, &il->status);
- 
- 	/* Enable watchdog to monitor the driver tx queues */
--	il_setup_watchdog(il);
-+	mod_timer(&il->watchdog, jiffies + msecs_to_jiffies(IL_WD_TICK));
- 
- 	if (il_is_rfkill(il))
- 		return;
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965.c b/drivers/net/wireless/intel/iwlegacy/4965.c
-index b63e29590b04..3418fbb0e003 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965.c
-@@ -1913,7 +1913,6 @@ struct il_cfg il4965_cfg = {
- 	.use_bsm = true,
- 	.led_compensation = 61,
- 	.chain_noise_num_beacons = IL4965_CAL_NUM_BEACONS,
--	.wd_timeout = IL_DEF_WD_TIMEOUT,
- 	.temperature_kelvin = true,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
 diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 0bb807ff8edf..c6a593e9cea0 100644
+index c6a593e9cea0..ab9dbc53e01c 100644
 --- a/drivers/net/wireless/intel/iwlegacy/common.c
 +++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4772,9 +4772,7 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
- 		return 0;
- 	}
+@@ -3583,11 +3583,6 @@ il_is_ht40_tx_allowed(struct il_priv *il, struct ieee80211_sta_ht_cap *ht_cap)
+ 	if (ht_cap && !ht_cap->ht_supported)
+ 		return false;
  
--	timeout =
--	    txq->time_stamp +
--	    msecs_to_jiffies(il->cfg->wd_timeout);
-+	timeout = txq->time_stamp + msecs_to_jiffies(IL_WD_TIMEOUT);
- 
- 	if (time_after(now, timeout)) {
- 		IL_ERR("Queue %d stuck for %u ms.\n", q->id,
-@@ -4786,12 +4784,6 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
- 	return 0;
- }
- 
--/*
-- * Making watchdog tick be a quarter of timeout assure we will
-- * discover the queue hung between timeout and 1.25*timeout
-- */
--#define IL_WD_TICK(timeout) ((timeout) / 4)
+-#ifdef CONFIG_IWLEGACY_DEBUGFS
+-	if (il->disable_ht40)
+-		return false;
+-#endif
 -
- /*
-  * Watchdog timer callback, we check each tx queue for stuck, if hung
-  * we reset the firmware. If everything is fine just rearm the timer.
-@@ -4801,15 +4793,10 @@ il_bg_watchdog(struct timer_list *t)
- {
- 	struct il_priv *il = timer_container_of(il, t, watchdog);
- 	int cnt;
--	unsigned long timeout;
- 
- 	if (test_bit(S_EXIT_PENDING, &il->status))
- 		return;
- 
--	timeout = il->cfg->wd_timeout;
--	if (timeout == 0)
--		return;
--
- 	/* monitor and check for stuck cmd queue */
- 	if (il_check_stuck_queue(il, il->cmd_queue))
- 		return;
-@@ -4823,24 +4810,10 @@ il_bg_watchdog(struct timer_list *t)
- 			return;
- 	}
- 
--	mod_timer(&il->watchdog,
--		  jiffies + msecs_to_jiffies(IL_WD_TICK(timeout)));
-+	mod_timer(&il->watchdog, jiffies + msecs_to_jiffies(IL_WD_TICK));
- }
- EXPORT_SYMBOL(il_bg_watchdog);
- 
--void
--il_setup_watchdog(struct il_priv *il)
--{
--	unsigned int timeout = il->cfg->wd_timeout;
--
--	if (timeout)
--		mod_timer(&il->watchdog,
--			  jiffies + msecs_to_jiffies(IL_WD_TICK(timeout)));
--	else
--		timer_delete(&il->watchdog);
--}
--EXPORT_SYMBOL(il_setup_watchdog);
--
- /*
-  * extended beacon time format
-  * time in usec will be changed into a 32-bit value in extended:internal format
+ 	return il_is_channel_extension(il, il->band,
+ 				       le16_to_cpu(il->staging.channel),
+ 				       il->ht.extension_chan_offset);
 diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 21f1c7702add..260e6b971d00 100644
+index 260e6b971d00..542519bce242 100644
 --- a/drivers/net/wireless/intel/iwlegacy/common.h
 +++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -1085,9 +1085,9 @@ struct traffic_stats {
- #define IL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
+@@ -1418,7 +1418,6 @@ struct il_priv {
+ 	u8 *rx_traffic;
+ 	struct dentry *debugfs_dir;
+ 	u32 dbgfs_sram_offset, dbgfs_sram_len;
+-	bool disable_ht40;
+ #endif				/* CONFIG_IWLEGACY_DEBUGFS */
  
- /* TX queue watchdog timeouts in mSecs */
--#define IL_DEF_WD_TIMEOUT	(2000)
--#define IL_LONG_WD_TIMEOUT	(10000)
--#define IL_MAX_WD_TIMEOUT	(120000)
-+#define IL_WD_TIMEOUT 2000
-+/* Discover the queue hung between timeout and 1.25*timeout */
-+#define IL_WD_TICK (IL_WD_TIMEOUT / 4)
- 
- struct il_force_reset {
- 	int reset_request_count;
-@@ -1683,7 +1683,6 @@ struct il_cfg {
- 
- 	u16 led_compensation;
- 	int chain_noise_num_beacons;
--	unsigned int wd_timeout;
- 	bool temperature_kelvin;
- 	const bool ucode_tracing;
- 	const bool sensitivity_calib_by_driver;
-@@ -1764,7 +1763,7 @@ int il_tx_queue_init(struct il_priv *il, u32 txq_id);
- void il_tx_queue_reset(struct il_priv *il, u32 txq_id);
- void il_tx_queue_unmap(struct il_priv *il, int txq_id);
- void il_tx_queue_free(struct il_priv *il, int txq_id);
--void il_setup_watchdog(struct il_priv *il);
-+
- /*****************************************************
-  * TX power
-  ****************************************************/
+ 	struct work_struct txpower_work;
 diff --git a/drivers/net/wireless/intel/iwlegacy/debug.c b/drivers/net/wireless/intel/iwlegacy/debug.c
-index 8a9f79ff1c6e..a7db62f75d7a 100644
+index a8cc01ce293b..5c8378740cee 100644
 --- a/drivers/net/wireless/intel/iwlegacy/debug.c
 +++ b/drivers/net/wireless/intel/iwlegacy/debug.c
-@@ -1265,30 +1265,6 @@ il_dbgfs_force_reset_write(struct file *file, const char __user *user_buf,
- 	return ret ? ret : count;
+@@ -679,46 +679,6 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
  }
  
 -static ssize_t
--il_dbgfs_wd_timeout_write(struct file *file, const char __user *user_buf,
--			  size_t count, loff_t *ppos)
+-il_dbgfs_disable_ht40_write(struct file *file, const char __user *user_buf,
+-			    size_t count, loff_t *ppos)
 -{
--
 -	struct il_priv *il = file->private_data;
 -	char buf[8];
 -	int buf_size;
--	int timeout;
+-	int ht40;
 -
 -	memset(buf, 0, sizeof(buf));
 -	buf_size = min(count, sizeof(buf) - 1);
 -	if (copy_from_user(buf, user_buf, buf_size))
 -		return -EFAULT;
--	if (sscanf(buf, "%d", &timeout) != 1)
+-	if (sscanf(buf, "%d", &ht40) != 1)
+-		return -EFAULT;
+-	if (!il_is_any_associated(il))
+-		il->disable_ht40 = ht40 ? true : false;
+-	else {
+-		IL_ERR("Sta associated with AP - "
+-		       "Change to 40MHz channel support is not allowed\n");
 -		return -EINVAL;
--	if (timeout < 0 || timeout > IL_MAX_WD_TIMEOUT)
--		timeout = IL_DEF_WD_TIMEOUT;
+-	}
 -
--	il->cfg->wd_timeout = timeout;
--	il_setup_watchdog(il);
 -	return count;
 -}
 -
- DEBUGFS_READ_FILE_OPS(rx_stats);
- DEBUGFS_READ_FILE_OPS(tx_stats);
- DEBUGFS_READ_FILE_OPS(rx_queue);
-@@ -1306,7 +1282,6 @@ DEBUGFS_READ_WRITE_FILE_OPS(missed_beacon);
- DEBUGFS_READ_WRITE_FILE_OPS(force_reset);
- DEBUGFS_READ_FILE_OPS(rxon_flags);
- DEBUGFS_READ_FILE_OPS(rxon_filter_flags);
--DEBUGFS_WRITE_FILE_OPS(wd_timeout);
+-static ssize_t
+-il_dbgfs_disable_ht40_read(struct file *file, char __user *user_buf,
+-			   size_t count, loff_t *ppos)
+-{
+-	struct il_priv *il = file->private_data;
+-	char buf[100];
+-	int pos = 0;
+-	const size_t bufsz = sizeof(buf);
+-
+-	pos +=
+-	    scnprintf(buf + pos, bufsz - pos, "11n 40MHz Mode: %s\n",
+-		      il->disable_ht40 ? "Disabled" : "Enabled");
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-}
  
- /*
-  * Create the debugfs files and directories
-@@ -1353,7 +1328,6 @@ il_dbgfs_register(struct il_priv *il, const char *name)
- 		DEBUGFS_ADD_FILE(chain_noise, dir_debug, 0400);
- 	DEBUGFS_ADD_FILE(rxon_flags, dir_debug, 0200);
- 	DEBUGFS_ADD_FILE(rxon_filter_flags, dir_debug, 0200);
--	DEBUGFS_ADD_FILE(wd_timeout, dir_debug, 0200);
- 	if (il->cfg->sensitivity_calib_by_driver)
- 		DEBUGFS_ADD_BOOL(disable_sensitivity, dir_rf,
- 				 &il->disable_sens_cal);
+ DEBUGFS_READ_WRITE_FILE_OPS(sram);
+ DEBUGFS_READ_FILE_OPS(nvm);
+@@ -726,7 +686,6 @@ DEBUGFS_READ_FILE_OPS(stations);
+ DEBUGFS_READ_FILE_OPS(status);
+ DEBUGFS_READ_WRITE_FILE_OPS(interrupt);
+ DEBUGFS_READ_FILE_OPS(qos);
+-DEBUGFS_READ_WRITE_FILE_OPS(disable_ht40);
+ 
+ static ssize_t
+ il_dbgfs_tx_queue_read(struct file *file, char __user *user_buf, size_t count,
+@@ -1226,7 +1185,6 @@ il_dbgfs_register(struct il_priv *il, const char *name)
+ 	DEBUGFS_ADD_FILE(status, dir_data, 0400);
+ 	DEBUGFS_ADD_FILE(interrupt, dir_data, 0600);
+ 	DEBUGFS_ADD_FILE(qos, dir_data, 0400);
+-	DEBUGFS_ADD_FILE(disable_ht40, dir_data, 0600);
+ 	DEBUGFS_ADD_FILE(rx_stats, dir_debug, 0400);
+ 	DEBUGFS_ADD_FILE(tx_stats, dir_debug, 0400);
+ 	DEBUGFS_ADD_FILE(rx_queue, dir_debug, 0400);
 -- 
 2.50.1
 
