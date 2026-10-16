@@ -1,62 +1,62 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013061.outbound.protection.outlook.com [40.107.159.61])
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013026.outbound.protection.outlook.com [40.107.159.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7CE41A4FB
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 07:18:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0551630E0EE
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 07:19:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.26
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792135137; cv=fail; b=iAAeUxrboObnfMexBCJDGjqjoasbHXPkkIchGRU97Me6upbE2C5vmRz2oTx0by2yXfiGWUZxe170VhDCfqrT5CC4YDsKtbBknzboUoGrGxVTpuEvB1fK6mZaNa+pUQNlyrSz4LIgCJU8XNNDC5WQkt5asdJtZR7UPKH4wRGji9I=
+	t=1792135149; cv=fail; b=Tg2O713Sx9JbhDiZzqiPExo3Bqdy4//SfcWH2tReUJK/QlyknRoCt0zqP/UwlICbEo9OVALWgidvTfKWezeFAu7Fn1oYC0vY4wG4hIwtXGNsLJuKRu2hFsJrx4BhaHtCS9oRgU8fLfRe50YaR71I/LtSAwg78v1PdZqZtCcYon0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792135137; c=relaxed/simple;
-	bh=AylTnPGL+AzQ7Un7NvxA6wF5X+2629jHoxKU2TBUhsM=;
+	s=arc-20240116; t=1792135149; c=relaxed/simple;
+	bh=hOjr6vskv4PSFd/pjKPYlL4q/oPFJTXCyWp1xfetaKw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lqo0W1jpQbPAQKAO0biC/29X28AeCZLKj+T3VkFaDWiU1/w/8tdKR0xYsJklFnwz6N6gNwEl7tik4fPqYngEUKVJzqjNP2wqLkHlbAOMhm7vOEUQf178vJ4VBqinsMnNC8mc+8l50+UpytnjbqtC4XzOZS0CxEgEioOtbL4iHwo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=MRpxdn0+; arc=fail smtp.client-ip=40.107.159.61
+	 Content-Type:MIME-Version; b=WQhalxEqdH2wq7OJsFi8KG92R1SSUCEclSeF9HyZ9OT2kSTRtaEeLRJbscm2tBECQpQ4vOKnrbq5wwdg7OatvCfXMwaiuDtkmT8R/kpOWZagO2fWlwh7u92y3X9OL2Ajz5V2O+x+nGJm9V7FeHYhLtyhg+ECjAvJjHwylxnMuPs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=mzrpx5uZ; arc=fail smtp.client-ip=40.107.159.26
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="MRpxdn0+"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="mzrpx5uZ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GWfpdd13IEIBVJR3Mv0So0xxYSgryWh+cZraLUSne2JE5S8yJm1YZAWqx/ryYVaurGwWhaN1dy0PdfYEGsGWvjB8NrIe57pPXtpSsGwA9agUaW2azPuhuO/2K9VhLTTeuZkwcCGWBaHtX0/BW16hwZwM6AlMPJMJpyZhCLgMD4wHWfNqilqjT9+2Z3vA4TLfaGqlvqebtEA7M/iyaKUkHwvr7NJpJzXQ6e9XvZa+V7Kywd9ed5fTHJj5XYCDRvYxcgRiy8JPA/lThp4xX0eeam0rXDlyc+A73MWOCDlEWiOtZ3SA9Ji8A1rQ8FgswoPjlKaGIE4sa6r2lyxc31UW5Q==
+ b=VzeG04pDttnIQWqhwHk7xLIwyqjxvAdBYSKj4DP2/JsYGLWrd4dK381vWerjqav9OFwsu/fxnTxuuLO1z6bf6xO3bE2zsiHr6AW9SZboPE+1ebEuybE708QnmzwzuYo3Kmm4MFmYZR/pYKYIsksQBcWI3ptrWJhyvKJlh7wHiksqWO4L/ZbU4Ib0hHGDw6uttgFqVATd+hTE9Jw1JMmznKVgH6A6BOhCzfvY9/cDgVFRRT1LH/JcwCxBSGGSr/HFIaY+fjC0Bs8XlX/m5Wrd61ZkTyLwR39eUitcJbQPH0ofdrCLmXUWv/1rLjVg+C4BKPwzzbpkR9SffEpWq0CXlg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=g85lmUg+lTTza8R2xpV1c47PdmZcVhcpvrPwxCt7UXE=;
- b=E0sDvxJzXOUzVm+qzV/OpgEBCG7hWSpGYUmFL3g0H0cr+3Z3M0jVSLGKlnBJ8PeKYzvfjtybv9KyJt39w6rIvHcWRFuaaGLK2A29flbKOYL1CNP9Hk2K0gLUv3l3x9arljXkzLA+V9vvsfUrxk7dgNvOEZhXfs5GsXeV9JSOai5sI40EvlNdgpLkB4sNmZoYHEVof2LkmC89L3oD2XhKxKCotZx7+Qb8PfwTb5w7UHw7fh4C+DxhCOZvuCH9hSlaMp3w2E2iNdRlm3SZDVvv8oaUOiD+Eqb0n5IDDAdqep35UlnuZqwDkph25NRCjEonjC9HGzU340q8bX9FpyX31g==
+ bh=BOnFNYoZWegBWMzdVdmrpnARw3xrRWg3qkN0DZakNeU=;
+ b=q2/KCFHZsa20FLVHFvX6hvV9yZF1AF6mAekqA7WDNR7V6Waskyg33YvOH8PWlxumaERnJ1DdQAUSp27FEORPEB21oiV7i8BpoPfvmuEZzkLpus7pPBrTdXoaeF/Ycbzhk7olaRjjn2PJz9sPJkOOhP6taAh6pk3vCZLOpPbRzyx1nLrUcVyBNienhFzwmOj2+5e6Yt2xOM7dDHlap5Yk+96KaZmr16MuLZHUI0vA2hcP7a26mBdup06407hzfj7R517KcVcIztg3bY8Tq9z5qHkqkDMVxZ2kvSqoIdSogTwS0q2/tZYEmKkV1eXK1/bCFA+3Qpj56d/99YrKEIxNhA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g85lmUg+lTTza8R2xpV1c47PdmZcVhcpvrPwxCt7UXE=;
- b=MRpxdn0+o3vPLmt/LEYXboKUSjAP+ByvFF6jiFiO16WWaI1lm8gG8cYW/NS6f/DwcZ2Vh2l6fELrCoRMJgRHjIoZkjayTku1RlgPRNqXz90InPepxGPQg3r9AucNCLk6oXFHSsUdZaHERFc1GQodJ9uaZYVrCDVIzTPXk3wmTXefi3QMCqYi1OcFPu2SWR00D8Cq6XlCKQFquQN5C5IXa+aYkXdLD6AWLgQWF3c9wQVEbWswhk4hGUMJLgaY40O+LLlP/O5AHqMyYKfaDv+IIinii3VgdS2sedwGvu0V3psnqMw5BF6axS9HaR7EwszXgvuSR4aP8wbFLywcpWVeIA==
+ bh=BOnFNYoZWegBWMzdVdmrpnARw3xrRWg3qkN0DZakNeU=;
+ b=mzrpx5uZMmOL7ij1WYYKITJVgMFli7VJ/Bc/66Aqld2QzHTTIJ4y9EGzyiuaZ474JgFMDxnMf1s/8LOTnEkGo7SWNHqrLVZacc/LB62vPCXXbewNwOicnNM7/f67U42VZb7jaoWCDVd93g4DCWimA8hNI2Notp9rFqA7zrCO7Dxa6ka3mmmC7fcRKxPm5G2Wqa4Gx+dEgrXASuiYF7fde9X8oh76whBhrv6CKX3RxHG/me9YJ1PaX/RABzZUNOBaFObd7GAVVYF0E8jdA4or2BoMsNQ+S7wOtieFZneXbHQwvFGJgsOf3Z90O78xeaX0HnvzMx8+SjjNUV4f/vVXaA==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from VE1PR04MB7280.eurprd04.prod.outlook.com (2603:10a6:800:1af::22)
- by DB9PR04MB9257.eurprd04.prod.outlook.com (2603:10a6:10:373::6) with
+ by DBBPR04MB7787.eurprd04.prod.outlook.com (2603:10a6:10:1e3::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.15; Fri, 16 Oct
- 2026 07:18:53 +0000
+ 2026 07:19:04 +0000
 Received: from VE1PR04MB7280.eurprd04.prod.outlook.com
  ([fe80::92fd:f75a:a302:f859]) by VE1PR04MB7280.eurprd04.prod.outlook.com
  ([fe80::92fd:f75a:a302:f859%4]) with mapi id 15.21.0522.013; Fri, 16 Oct 2026
- 07:18:52 +0000
+ 07:19:03 +0000
 From: jeff.chen_1@oss.nxp.com
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	francesco@dolcini.it,
 	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: [PATCH nxpwifi-next 2/3] wifi: nxpwifi: add P2P interface combinations and frame handling
-Date: Fri, 16 Oct 2026 15:17:41 +0800
-Message-Id: <20261016071742.3541420-3-jeff.chen_1@oss.nxp.com>
+Subject: [PATCH nxpwifi-next 3/3] wifi: nxpwifi: enable P2P interface creation and role switching
+Date: Fri, 16 Oct 2026 15:17:42 +0800
+Message-Id: <20261016071742.3541420-4-jeff.chen_1@oss.nxp.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261016071742.3541420-1-jeff.chen_1@oss.nxp.com>
 References: <20261016071742.3541420-1-jeff.chen_1@oss.nxp.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI2PR02CA0051.apcprd02.prod.outlook.com
- (2603:1096:4:196::10) To VE1PR04MB7280.eurprd04.prod.outlook.com
+X-ClientProxiedBy: JH0PR01CA0115.apcprd01.prod.exchangelabs.com
+ (2603:1096:990:59::6) To VE1PR04MB7280.eurprd04.prod.outlook.com
  (2603:10a6:800:1af::22)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -65,199 +65,438 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|DB9PR04MB9257:EE_
-X-MS-Office365-Filtering-Correlation-Id: 342f53e0-cbf6-4782-b116-08df2b55bb3b
+X-MS-TrafficTypeDiagnostic: VE1PR04MB7280:EE_|DBBPR04MB7787:EE_
+X-MS-Office365-Filtering-Correlation-Id: 023b3792-2bc7-4079-a81d-08df2b55c19a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|376014|1800799024|23010399003|10067099003|18002099003|22082099003|11063799006|261009223027099003|56012099006;
+	BCL:0;ARA:13230040|366016|19092799006|23010399003|376014|1800799024|22082099003|18002099003|10067099003|261009223027099003|11063799006|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	MXAr7RtPkymf8TkF1iviyjT5QMuqmVV2kubUijqFSykj9wLUJQnwxQrdmwVUyGIrnqIF9caucOHXEcyaYl7e/xknMlt751Y+D2QY4W0TQQendhOKOtPtQKRgnBWDymmbr7+ZZxAjhndJ40nTDthOn6rsUJ6UYiqMGydcQ7msEq1deRyLRhbyo/7ifl9yLZlLEmTc7MFQBnCJB+eOIWrfJHcUkpkRjPoQVntx+GCqRlBQHKkm825w50RDSuEMB4bSJIzHGSHHkCN4+g8GVkH8BIRz7GhuRh5UXGO11uvhY54UA24BTMN7KIjFiY9ZK81sSDS8sEVZCD62odPP2NYrkuo8EKlmRv63Il1Qp2yxjJRWZD/owDf+ulp3OhmMng///LpBjjtM5tcgNbRZXR4BuBqIJPpPUzYqUV6FX7n9Ka8NavrBiOMo0ja6zPZX7mbN0t600Xy/ScUdjmfTD0Mkj9pARaYEESO9Tgtu7E3C3fJJCWW1yAfJVvO/RN6hUlY11K4EptdWvCWsM/csg3YT0IOU5yEMB3w3nwriqGkjk3wJtL0R8z9uNYU18SPEJKGCfihDon/+7p2Tu/mxf4LYt6SqNx9m8upSrt7k21EnZEGJRGW2X62u9D1kyBJor/Kthl3ksUwLNZ5ek7r3mnkzMqmBTWNWkunKemsZN+BDe1I=
+	MwSiVHdwD7dE9xr3lUlTXu1Xe+sR0A7empzNlal3nBNQLQONsvQW1nEwF8jMMV5gxtrcaPizsOhLxfDa5qsmlYcNthJICB4+7Z/fWLiPILSp+YwdCvOhYtWdVwiBUSDVhFFCQlwF14O29fYBQ0C9dWu8dLKtXWwIo5EkTTaSchm/d8ckKEB3Q+9pOViXqDdnwD5LjjCR0DF+brPi90DueoWI76uwGVmXSyXcem01Ru3TJAkPZHSBiZHN4RX/30KRlOlE64XLsowdDq/61DTDcRCSfnby4dRF8Ek6YAUSerUdwDl0gYUqIprhDoh51LT6+K7lXDo8iJsZ9cnvdmp/IMN6XPYgv/FXEighpBmd/91mhqUqA6rZxJ8gWX14z4c2Cf0kMxLjEhTXsujdG4mm3B4NcQAriwVO9B05laF35wDpSAL5p/l2BzHLbenqJ45CjIRhYv0dFjhitwp4ZMV6xw0c19e7Ra+gEpMj1S9ReOG9/4WcvT73fjAF2y94M1fuoKI42vtJ6Q/ybxwgJURGfka3CK0EbIM6hs9XJQPE/8LY6W6sWIRABopnga6/EJNY+aZvRz8n3jtKSJaJI2FzQiOOfUM9ob2CIIoaDEUMOANtqgaMOjcjcz94sHc2T0kcY5KHnbpNNJtP5VTuJwN59T8av0EsyCLYTPwE3l47nJA=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(376014)(1800799024)(23010399003)(10067099003)(18002099003)(22082099003)(11063799006)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR04MB7280.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(23010399003)(376014)(1800799024)(22082099003)(18002099003)(10067099003)(261009223027099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?2Lun+k+vWiMFkKWYF9aWDfIQRhtiHWVFvzdUh/Tbap3BgTTlLGcLopKcvLA6?=
- =?us-ascii?Q?U3MAd7wdRnmT5n0lbqqs8GxiYMSIIJsTX/+7cQpQpHdYIfRw9/JZAWQ/ouIK?=
- =?us-ascii?Q?O4w3Lc4IS8wuxKFouewh6aWvi3tcJNQPN6Jofu2h5mnrWS0ew+jiHXbixS1g?=
- =?us-ascii?Q?aK2+A59NrL1gTqMqcl3Cv6sfiW5eycn23c9cvsSFyY4O4AS1j7sL+Svc6xPv?=
- =?us-ascii?Q?bx/9Pbi/2R8gqeYuhf5wOa9GpOdBIXUB8myxpd2NBAPstYc1c8frjeSSpeZQ?=
- =?us-ascii?Q?iputbv9QoGjjCDkFgKq+RKB3g6nKh5xuU8wWHLPNQH83p3nxlw4dAmmJyTzP?=
- =?us-ascii?Q?rczfEm/tbnwF8TSSDeLNfEVu87dcWzRbsgj2Lg87sd/Y4iR72IX9ektTVMg+?=
- =?us-ascii?Q?6eFSUhqmDyi/LamJ9VzVzV7z4sytliJgif3S/vog++hs+FRMSbzdS+SDUG3k?=
- =?us-ascii?Q?JtvgvZKYqh34QF62ReJnBJfTpg1eFRCgKSvC4liVU6GQs4ikC+l1+i45ju5j?=
- =?us-ascii?Q?LTD4JXCfyC+nGXYCDbyU8NY8EiV0rdQCbiIQQ5IBeuSwgi+CW0NKkHp+O2t8?=
- =?us-ascii?Q?qdfXENrPBoQF4CVT8ua3SPG8HzkJNcskqA5ReG6IObWIldriPdlfuqxogJ2n?=
- =?us-ascii?Q?u4+6wqzUeF2QlA95zuoQLDSPOg2koKBtD67kS/q6PtRRqsqhsGTzyizFgZ8e?=
- =?us-ascii?Q?88Vtb2mhO+fjVInP0FGl7gzrGtdI9O+Yx2l5dHOK4aE/ket4Gbd352XclN9/?=
- =?us-ascii?Q?9cXW5VPI4DE9JGPNlV1uN/x/H+LH6b9FskZaDC7PoKppMdRQhxE97b3lSrxA?=
- =?us-ascii?Q?z7ucUSb58Buh96CCi154MBIeCuXSzzYfI2qQ/lTKa5989uGz09mxKYfFWT8c?=
- =?us-ascii?Q?1uMubyVGk4E4Fc2j+xcbgEDL+ZoYF0sle483m851eiV1ewvq6ffoqi1t3YrE?=
- =?us-ascii?Q?NMfckoVOKs6V1m5fkedj+64ofO1S/zYOYijiotPgwz0Exir0F+8/waPnjAJk?=
- =?us-ascii?Q?IdUZC8reOOrU+nDkd/+h1k8kHo+RclNTfmFVjKYn10djrt8nL6HaK346QHKA?=
- =?us-ascii?Q?gX9uh1tDRsWIloPS+JyZr5Um6vJWWdotWSc0T6RzdbGG6MVT+iDP6rKDgDbq?=
- =?us-ascii?Q?9CoeI3c7M8v/3CKin7dBdAePnf80sktERXuBRh6uRTxwqXXHt40vj49UFfy4?=
- =?us-ascii?Q?5PzhfaBglWGBCNmlUG8pHtWfTR+ntXJV+jCHFAnIMOCAKSixsP64sm38O1xT?=
- =?us-ascii?Q?eMGlBzSNx5LDZ+EinaMltLmiaUGu3/A4JhWqbVt1RCY//jEemAE3P0/apJpc?=
- =?us-ascii?Q?S8engTklyYNrRvjvqFHOpZhcH1aRz53B4ybugR/qCn1Ea9FjZ0+CQbgFk7ew?=
- =?us-ascii?Q?g7HkzKNIa4fZLtb64wi/6eKs0OgMlQyDpIVrAqWzXPf85t7KtzyhoS5XDSUy?=
- =?us-ascii?Q?fJ7Z2/vKKZd5ZilpEhdlUw/oHPMKlKGb1eRptoBkY+0dVq9dzrFiNP5r/oQT?=
- =?us-ascii?Q?jqXUrUAN7SHyTdHtt+Ddh5cQ23wy6Rbf20gJNSiS5nc78/Zs1NDisHxbo7sd?=
- =?us-ascii?Q?rgt5Bcxrcfo6BUv/VLssvJrTPYSYWa88kFqrMC+7UsIMyGcfNDcOO7Y+2AMQ?=
- =?us-ascii?Q?AwUGSMyh2gljmyZl9DBR6vR7n+GTAu1pG3qNecVucNLSGqOrmbJD8oSw/f9R?=
- =?us-ascii?Q?LJ2EVTc1OFPN7ArJ9VT1ydabmogFwHOdAqAO7QuSqGYL0rCtYWPGGtRAPRgs?=
- =?us-ascii?Q?chUPMGqDUnafxvxNJEvNciH4JWPWseZD6ZSlVabZmmdvwHnnq2x5?=
+	=?us-ascii?Q?NqrCWHL5p85e2kDqJD4cgcrvARdkSQvnpdV27cPQDYN0r2BejSQNwB+bAFAX?=
+ =?us-ascii?Q?zX0Www2emVSK86P2VjdSmx1Eyu1ZeR5AvuawUtAFt0eBIgJUEWlWxiyf0CBZ?=
+ =?us-ascii?Q?o19C1IEgNuHxN12xUPc81/6bS4VxAmsdnVL7XU6BVrf4fFUV/axUwYWDASyx?=
+ =?us-ascii?Q?ApZqsM9yK4Bz4m13sm2B0bBGnu5SlvSIEsE8E0+ZsNG5cQeOiHmIL71oCX5k?=
+ =?us-ascii?Q?0Qdcn6Wd9qCO0kINXO4VNQlSAujT0GrVmzCjyulAEVZy+lBePo6LuY8z2SdU?=
+ =?us-ascii?Q?sYOWx21O+k37nccbCbKVdEQTFHsPooab8y0LKZe/AOBI8xx3P4k+9BvwmyTs?=
+ =?us-ascii?Q?f09Bi/4blVf5POyJgDlFACuhi7LURRUbbGBZIcGGcGa0GieVVFFKd8r6yXDF?=
+ =?us-ascii?Q?tiyW6GkA4IxRNHmKYY682+E/Au87stDEViYo55nBf6mQo18sc2sHpQvUq/Ol?=
+ =?us-ascii?Q?uhY5nZyQ1BZDSMAGz/bN3uev0BEKlO24BdYjZ1QIv9jR9HbVSc1xLGYbnsPx?=
+ =?us-ascii?Q?YRuXP2zMU38qEj/26jWxi0x5ZwIE6rxk5x5O3YtXIbXtJuNZiGmtjVa9ChHs?=
+ =?us-ascii?Q?s4txPrxCBYDWl1ubuRdZY8GX3TB7fFxW0DICrOh54OINLhi4CP3i1ebv/KNR?=
+ =?us-ascii?Q?TY4j9hxp4r0dyPcr5QbN12274GGLTfqwEn9UBx8YPRxhn9NgJOgzhm+apdhy?=
+ =?us-ascii?Q?SzpHMXCRvXO6cBREYmFzzKkrp1Hsw2StnxvgQlApqREzQoFWmS28RFpblNN8?=
+ =?us-ascii?Q?Yd80QsuJp4Zeaq98ZrVINrybXQxjHndJO87i0ZQXpPpiC5QaUfL2wwK7m/gv?=
+ =?us-ascii?Q?BqFdfy61ctKOXrje3Wi4Hfk/F7kSjTQRHqObNF6iXWn2SQidNFwG8+Q5lOzN?=
+ =?us-ascii?Q?Mq+obLYAUVgzT03mnOlvxPy8OqMSr0hrzDM2z8sFXgvboS/VQVrwlLu/a57r?=
+ =?us-ascii?Q?ASKAJC8wuQR3o5YrUu/JwbK4JDfY2M95L65Fo/tSfOgvt2wHFaQzQUddv+dh?=
+ =?us-ascii?Q?i23M01yGwcQLobzVEu3xKXgsKBeSg6qk1/i5OJ9rM/CUQIxSeY0rqjBEo6j/?=
+ =?us-ascii?Q?lLlNP7PF8A6JfdiYcYbb996PgkCnyPCwSnSt6paK+rSyk+dsaL8K643+4cmc?=
+ =?us-ascii?Q?uEp8Y+ErRMqOuVvczG0j+pE6MZxAUwt7g5eqs5LwacgJmAN9d3ZFKnf8A7x2?=
+ =?us-ascii?Q?Jl9gMDYimLVlcmT2Up6mx9sxKY9HnNs6ztRoxs049cEAsQ+2tzSlpk5vq1Zq?=
+ =?us-ascii?Q?GNf4zdgDUIF5OOSBwj6E3nUy1vDNJOXmHOdSws2A2Ki/IcUKBvsc9YP75y0B?=
+ =?us-ascii?Q?jDIwvmT822BnswxYePJXW/rKpbtmiefVKKHR4LFFMCZv0aXviiTyPuIEVSio?=
+ =?us-ascii?Q?fzqalQmAJhINYGtMjqS+C3FSDfkweRh4hWGTtL7YS1Habepl21HAmWp9Ok3w?=
+ =?us-ascii?Q?uIBbLD2jgDBldZz2MlA3NmZDBQ55ljmMENyq9NlY0HkED6zASq+okQABeyzp?=
+ =?us-ascii?Q?IsvpnMg7F67JSspmNG1P7Z/w1YSEIwRBxssEj0DpM2AYpYgCtN7KGaHYggIC?=
+ =?us-ascii?Q?VIMaXpQ0wfkfl5RD88RGwWYgimXxpIpiFGqM1rfFYF0NsxZ6HLtJyZK8T6UD?=
+ =?us-ascii?Q?jZwLnq/u3bsCXeSRALvKDLVP0RhawX+lUpZ90Qy+3RGmuLh3DjpHst04PK/m?=
+ =?us-ascii?Q?z/QzlksnatK6OF3H37O21KcO/HFZHK4QEEHnfB/67lJSxPrSYeDpTgKAh1Xb?=
+ =?us-ascii?Q?Vkoqaj7bZtvvCDucfJmUJWjuhvnGTdJt+krQKqsIn7JiNuQDPU1r?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 342f53e0-cbf6-4782-b116-08df2b55bb3b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 023b3792-2bc7-4079-a81d-08df2b55c19a
 X-MS-Exchange-CrossTenant-AuthSource: VE1PR04MB7280.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 07:18:52.4591
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 07:19:03.1970
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vdjNu0V6T+RVQTWom2VVNQ7XNWSBB3UQZij5AR1sAPAmEJDsSaPRvoMH12w9E1eVfxhygalU/8M3GD/LJ/yMJw8fQbAt1guA4RlgD1uEzPMun77K3tK+woQlphbdRqBA
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB9257
+X-MS-Exchange-CrossTenant-UserPrincipalName: mzv3YDVkANCrr5eTs+qBS7Xfz3teCYnZirOyfLG8ILEx2FB5My8rcfQcJY8qb5nKbshdkzZtNkkyQwFZhetsqmfi8rF6kvH2g00MJXCyiXXqdv1X1ka53S1RSIqclONx
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7787
 
 From: Jeff Chen <jeff.chen_1@nxp.com>
 
-Advertise P2P client and GO support through cfg80211 and register
-the management frame subtypes supported by each role.
+Add cfg80211 support for creating P2P client and GO interfaces and
+switching existing interfaces between P2P roles.
 
-Also handle P2P client interfaces in station-specific paths.
+Configure the firmware P2P mode to match the selected interface
+type when entering or leaving P2P operation.
 
 Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/11n.c        |  3 ++-
- .../net/wireless/nxp/nxpwifi/11n_rxreorder.c  |  6 ++++--
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c   | 20 +++++++++++++++++++
- drivers/net/wireless/nxp/nxpwifi/cfp.c        |  3 ++-
- drivers/net/wireless/nxp/nxpwifi/join.c       |  1 +
- drivers/net/wireless/nxp/nxpwifi/sta_event.c  |  3 ++-
- 6 files changed, 31 insertions(+), 5 deletions(-)
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 274 +++++++++++++++++++-
+ drivers/net/wireless/nxp/nxpwifi/main.c     |   5 +-
+ 2 files changed, 277 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/11n.c b/drivers/net/wireless/nxp/nxpwifi/11n.c
-index 9eae93c3b800..3efd315eddd9 100644
---- a/drivers/net/wireless/nxp/nxpwifi/11n.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/11n.c
-@@ -816,7 +816,8 @@ void nxpwifi_update_ampdu_txwinsize(struct nxpwifi_adapter *adapter)
- 		priv = adapter->priv[i];
- 		tx_win_size = priv->add_ba_param.tx_win_size;
- 
--		if (priv->bss_type == NXPWIFI_BSS_TYPE_STA)
-+		if (priv->bss_type == NXPWIFI_BSS_TYPE_STA ||
-+		    priv->bss_type == NXPWIFI_BSS_TYPE_P2P)
- 			priv->add_ba_param.tx_win_size =
- 				NXPWIFI_STA_AMPDU_DEF_TXWINSIZE;
- 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
-index 87cf2ec85991..ca9ca8cdcb16 100644
---- a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
-@@ -677,14 +677,16 @@ static void nxpwifi_update_ampdu_rxwinsize(struct nxpwifi_adapter *adapter,
- 		priv = adapter->priv[i];
- 		rx_win_size = priv->add_ba_param.rx_win_size;
- 		if (coex_flag) {
--			if (priv->bss_type == NXPWIFI_BSS_TYPE_STA)
-+			if (priv->bss_type == NXPWIFI_BSS_TYPE_STA ||
-+			    priv->bss_type == NXPWIFI_BSS_TYPE_P2P)
- 				priv->add_ba_param.rx_win_size =
- 					NXPWIFI_STA_COEX_AMPDU_DEF_RXWINSIZE;
- 			if (priv->bss_type == NXPWIFI_BSS_TYPE_UAP)
- 				priv->add_ba_param.rx_win_size =
- 					NXPWIFI_UAP_COEX_AMPDU_DEF_RXWINSIZE;
- 		} else {
--			if (priv->bss_type == NXPWIFI_BSS_TYPE_STA)
-+			if (priv->bss_type == NXPWIFI_BSS_TYPE_STA ||
-+			    priv->bss_type == NXPWIFI_BSS_TYPE_P2P)
- 				priv->add_ba_param.rx_win_size =
- 					NXPWIFI_STA_AMPDU_DEF_RXWINSIZE;
- 			if (priv->bss_type == NXPWIFI_BSS_TYPE_UAP)
 diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-index ade57f128d10..8f590d76c6af 100644
+index 8f590d76c6af..f74b6ffbb8e9 100644
 --- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
 +++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-@@ -15,6 +15,8 @@ static const struct ieee80211_iface_limit nxpwifi_ap_sta_limits[] = {
- 	{
- 		.max = NXPWIFI_MAX_BSS_NUM,
- 		.types = BIT(NL80211_IFTYPE_STATION) |
-+			 BIT(NL80211_IFTYPE_P2P_GO) |
-+			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			 BIT(NL80211_IFTYPE_AP) |
- 			 BIT(NL80211_IFTYPE_MONITOR),
- 	},
-@@ -1392,6 +1394,22 @@ nxpwifi_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
- 		      BIT(IEEE80211_STYPE_ACTION >> 4),
- 	},
-+	[NL80211_IFTYPE_P2P_CLIENT] = {
-+		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+	[NL80211_IFTYPE_P2P_GO] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_AUTH >> 4) |
-+		      BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
-+		      BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
- };
+@@ -685,6 +685,44 @@ nxpwifi_cfg80211_set_wiphy_params(struct wiphy *wiphy, int radio_idx, u32 change
+ 	return ret;
+ }
  
- /*
-@@ -3788,6 +3806,8 @@ int nxpwifi_register_cfg80211(struct nxpwifi_adapter *adapter)
- 	wiphy->mgmt_stypes = nxpwifi_mgmt_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) |
- 				 BIT(NL80211_IFTYPE_AP) |
- 				 BIT(NL80211_IFTYPE_MONITOR);
- 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/cfp.c b/drivers/net/wireless/nxp/nxpwifi/cfp.c
-index aec1d5014810..9d18bde01f9f 100644
---- a/drivers/net/wireless/nxp/nxpwifi/cfp.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/cfp.c
-@@ -398,7 +398,8 @@ u32 nxpwifi_get_supported_rates(struct nxpwifi_private *priv, u8 *rates)
- 
- 	bands = nxpwifi_convert_config_bands(adapter->fw_bands);
- 
--	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
-+	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
-+	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
- 		if (bands == BAND_B) {
- 			/* B only */
- 			nxpwifi_dbg(adapter, INFO, "info: infra band=%d\t"
-diff --git a/drivers/net/wireless/nxp/nxpwifi/join.c b/drivers/net/wireless/nxp/nxpwifi/join.c
-index 359006e2c391..bebb66c2fd76 100644
---- a/drivers/net/wireless/nxp/nxpwifi/join.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/join.c
-@@ -747,6 +747,7 @@ int nxpwifi_deauthenticate(struct nxpwifi_private *priv, u8 *mac)
- 
- 	switch (priv->bss_mode) {
- 	case NL80211_IFTYPE_STATION:
++/* Initialize P2P client mode. */
++static int
++nxpwifi_cfg80211_init_p2p_client(struct nxpwifi_private *priv)
++{
++	int ret;
++
++	ret = nxpwifi_cfg80211_deinit_p2p(priv);
++
++	if (ret)
++		return ret;
++
++	ret = nxpwifi_set_p2p_mode(priv, NXPWIFI_P2P_MODE_DEVICE, true);
++
++	if (ret)
++		return ret;
++
++	return nxpwifi_set_p2p_mode(priv, NXPWIFI_P2P_MODE_CLIENT, true);
++}
++
++/* Initialize P2P GO mode. */
++static int
++nxpwifi_cfg80211_init_p2p_go(struct nxpwifi_private *priv)
++{
++	int ret;
++
++	ret = nxpwifi_cfg80211_deinit_p2p(priv);
++
++	if (ret)
++		return ret;
++
++	ret = nxpwifi_set_p2p_mode(priv, NXPWIFI_P2P_MODE_DEVICE, true);
++
++	if (ret)
++		return ret;
++
++	return nxpwifi_set_p2p_mode(priv, NXPWIFI_P2P_MODE_GO, true);
++}
++
+ static int nxpwifi_deinit_priv_params(struct nxpwifi_private *priv)
+ {
+ 	struct nxpwifi_adapter *adapter = priv->adapter;
+@@ -739,6 +777,12 @@ nxpwifi_init_new_priv_params(struct nxpwifi_private *priv,
+ 	case NL80211_IFTYPE_AP:
+ 		priv->bss_role = NXPWIFI_BSS_ROLE_UAP;
+ 		break;
 +	case NL80211_IFTYPE_P2P_CLIENT:
- 		ret = nxpwifi_deauthenticate_infra(priv, mac);
- 		if (ret)
- 			cfg80211_disconnected(priv->netdev, 0, NULL, 0,
-diff --git a/drivers/net/wireless/nxp/nxpwifi/sta_event.c b/drivers/net/wireless/nxp/nxpwifi/sta_event.c
-index 355064b1d8f7..d70792efadca 100644
---- a/drivers/net/wireless/nxp/nxpwifi/sta_event.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/sta_event.c
-@@ -638,7 +638,8 @@ void nxpwifi_reset_connect_state(struct nxpwifi_private *priv, u16 reason_code,
- 		    "info: successfully disconnected from %pM: reason code %d\n",
- 		    priv->cfg_bssid, reason_code);
++		priv->bss_role = NXPWIFI_BSS_ROLE_STA;
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		priv->bss_role = NXPWIFI_BSS_ROLE_UAP;
++		break;
+ 	default:
+ 		nxpwifi_dbg(adapter, ERROR,
+ 			    "%s: changing to %d not supported\n",
+@@ -772,6 +816,10 @@ is_vif_type_change_allowed(struct nxpwifi_adapter *adapter,
+ 	switch (old_iftype) {
+ 	case NL80211_IFTYPE_STATION:
+ 		switch (new_iftype) {
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_P2P_GO:
++			return adapter->curr_iface_comb.p2p_intf !=
++			       adapter->iface_limit.p2p_intf;
+ 		case NL80211_IFTYPE_AP:
+ 			return adapter->curr_iface_comb.uap_intf !=
+ 			       adapter->iface_limit.uap_intf;
+@@ -784,6 +832,36 @@ is_vif_type_change_allowed(struct nxpwifi_adapter *adapter,
+ 		case NL80211_IFTYPE_STATION:
+ 			return adapter->curr_iface_comb.sta_intf !=
+ 			       adapter->iface_limit.sta_intf;
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_P2P_GO:
++			return adapter->curr_iface_comb.p2p_intf !=
++			       adapter->iface_limit.p2p_intf;
++		default:
++			return false;
++		}
++
++	case NL80211_IFTYPE_P2P_CLIENT:
++		switch (new_iftype) {
++		case NL80211_IFTYPE_STATION:
++			return true;
++		case NL80211_IFTYPE_P2P_GO:
++			return true;
++		case NL80211_IFTYPE_AP:
++			return adapter->curr_iface_comb.uap_intf !=
++			       adapter->iface_limit.uap_intf;
++		default:
++			return false;
++		}
++
++	case NL80211_IFTYPE_P2P_GO:
++		switch (new_iftype) {
++		case NL80211_IFTYPE_STATION:
++			return true;
++		case NL80211_IFTYPE_P2P_CLIENT:
++			return true;
++		case NL80211_IFTYPE_AP:
++			return adapter->curr_iface_comb.uap_intf !=
++			       adapter->iface_limit.uap_intf;
+ 		default:
+ 			return false;
+ 		}
+@@ -808,6 +886,10 @@ update_vif_type_counter(struct nxpwifi_adapter *adapter,
+ 	case NL80211_IFTYPE_AP:
+ 		adapter->curr_iface_comb.uap_intf += change;
+ 		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_P2P_GO:
++		adapter->curr_iface_comb.p2p_intf += change;
++		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		break;
+ 	default:
+@@ -903,6 +985,69 @@ nxpwifi_change_vif_to_ap(struct net_device *dev,
+ 	return ret;
+ }
  
--	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
-+	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
-+	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
- 		if (adapter->host_mlme_link_lost)
- 			nxpwifi_host_mlme_disconnect(adapter->priv_link_lost,
- 						     reason_code, NULL);
++static int
++nxpwifi_change_vif_to_p2p(struct net_device *dev,
++			  enum nl80211_iftype curr_iftype,
++			  enum nl80211_iftype type,
++			  struct vif_params *params)
++{
++	struct nxpwifi_private *priv;
++	struct nxpwifi_adapter *adapter;
++	int ret;
++
++	priv = nxpwifi_netdev_get_priv(dev);
++
++	if (!priv)
++		return -EINVAL;
++
++	adapter = priv->adapter;
++
++	nxpwifi_dbg(adapter, INFO,
++		    "%s: changing role to p2p\n", dev->name);
++
++	ret = nxpwifi_deinit_priv_params(priv);
++	if (ret)
++		goto done;
++
++	ret = nxpwifi_init_new_priv_params(priv, dev, type);
++	if (ret)
++		goto done;
++
++	switch (type) {
++	case NL80211_IFTYPE_P2P_CLIENT:
++		ret = nxpwifi_cfg80211_init_p2p_client(priv);
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		ret = nxpwifi_cfg80211_init_p2p_go(priv);
++		break;
++	default:
++		nxpwifi_dbg(adapter, ERROR,
++			    "%s: changing to %d not supported\n",
++			    dev->name, type);
++		ret = -EOPNOTSUPP;
++		break;
++	}
++	if (ret)
++		goto done;
++
++	ret = nxpwifi_set_bss_mode(priv);
++	if (ret)
++		goto done;
++
++	/* Commit the interface type change only once the firmware has
++	 * accepted the new P2P role, so a failure above leaves the
++	 * interface counters and iftype unchanged.
++	 */
++	update_vif_type_counter(adapter, curr_iftype, -1);
++	update_vif_type_counter(adapter, type, 1);
++	dev->ieee80211_ptr->iftype = type;
++
++	ret = nxpwifi_sta_init_cmd(priv, false, false);
++
++done:
++	return ret;
++}
++
+ /* cfg80211 operation handler to change interface type. */
+ static int
+ nxpwifi_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+@@ -946,6 +1091,10 @@ nxpwifi_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_AP:
+ 			return nxpwifi_change_vif_to_ap(dev, curr_iftype, type,
+ 							params);
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_P2P_GO:
++			return nxpwifi_change_vif_to_p2p(dev, curr_iftype,
++							 type, params);
+ 		default:
+ 			goto errnotsupp;
+ 		}
+@@ -955,6 +1104,46 @@ nxpwifi_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_STATION:
+ 			return nxpwifi_change_vif_to_sta(dev, curr_iftype,
+ 							 type, params);
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_P2P_GO:
++			return nxpwifi_change_vif_to_p2p(dev, curr_iftype,
++							 type, params);
++		default:
++			goto errnotsupp;
++		}
++
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (nxpwifi_cfg80211_deinit_p2p(priv))
++			return -EFAULT;
++
++		switch (type) {
++		case NL80211_IFTYPE_STATION:
++			return nxpwifi_change_vif_to_sta(dev, curr_iftype,
++							 type, params);
++		case NL80211_IFTYPE_P2P_GO:
++			return nxpwifi_change_vif_to_p2p(dev, curr_iftype,
++							 type, params);
++		case NL80211_IFTYPE_AP:
++			return nxpwifi_change_vif_to_ap(dev, curr_iftype, type,
++							params);
++		default:
++			goto errnotsupp;
++		}
++
++	case NL80211_IFTYPE_P2P_GO:
++		if (nxpwifi_cfg80211_deinit_p2p(priv))
++			return -EFAULT;
++
++		switch (type) {
++		case NL80211_IFTYPE_STATION:
++			return nxpwifi_change_vif_to_sta(dev, curr_iftype,
++							 type, params);
++		case NL80211_IFTYPE_P2P_CLIENT:
++			return nxpwifi_change_vif_to_p2p(dev, curr_iftype,
++							 type, params);
++		case NL80211_IFTYPE_AP:
++			return nxpwifi_change_vif_to_ap(dev, curr_iftype, type,
++							params);
+ 		default:
+ 			goto errnotsupp;
+ 		}
+@@ -2445,6 +2634,88 @@ struct wireless_dev *nxpwifi_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_started = 0;
+ 		priv->bss_mode = type;
+ 
++		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (adapter->curr_iface_comb.p2p_intf ==
++		    adapter->iface_limit.p2p_intf) {
++			nxpwifi_dbg(adapter, ERROR,
++				    "cannot create multiple P2P ifaces\n");
++			return ERR_PTR(-EINVAL);
++		}
++
++		priv = nxpwifi_get_unused_priv_by_bss_type
++		       (adapter, NXPWIFI_BSS_TYPE_P2P);
++		if (!priv) {
++			nxpwifi_dbg(adapter, ERROR,
++				    "could not get free private struct\n");
++			return ERR_PTR(-EFAULT);
++		}
++
++		priv->wdev.wiphy = wiphy;
++		/* At start-up, wpa_supplicant tries to change the interface
++		 * to NL80211_IFTYPE_STATION if it is not managed mode.
++		 */
++		priv->wdev.iftype = NL80211_IFTYPE_P2P_CLIENT;
++		priv->bss_mode = NL80211_IFTYPE_P2P_CLIENT;
++
++		/* Setting bss_type to P2P tells firmware that this interface
++		 * is receiving P2P peers found during find phase and doing
++		 * action frame handshake.
++		 */
++		priv->bss_type = NXPWIFI_BSS_TYPE_P2P;
++
++		priv->frame_type = NXPWIFI_DATA_FRAME_TYPE_ETH_II;
++		priv->bss_priority = 0;
++		priv->bss_role = NXPWIFI_BSS_ROLE_STA;
++		priv->bss_started = 0;
++
++		if (nxpwifi_cfg80211_init_p2p_client(priv)) {
++			memset(&priv->wdev, 0, sizeof(priv->wdev));
++			priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
++			return ERR_PTR(-EFAULT);
++		}
++
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		if (adapter->curr_iface_comb.p2p_intf ==
++		    adapter->iface_limit.p2p_intf) {
++			nxpwifi_dbg(adapter, ERROR,
++				    "cannot create multiple P2P ifaces\n");
++			return ERR_PTR(-EINVAL);
++		}
++
++		priv = nxpwifi_get_unused_priv_by_bss_type
++		       (adapter, NXPWIFI_BSS_TYPE_P2P);
++		if (!priv) {
++			nxpwifi_dbg(adapter, ERROR,
++				    "could not get free private struct\n");
++			return ERR_PTR(-EFAULT);
++		}
++
++		priv->wdev.wiphy = wiphy;
++		/* At start-up, wpa_supplicant tries to change the interface
++		 * to NL80211_IFTYPE_STATION if it is not managed mode.
++		 */
++		priv->wdev.iftype = NL80211_IFTYPE_P2P_GO;
++		priv->bss_mode = NL80211_IFTYPE_P2P_GO;
++
++		/* Setting bss_type to P2P tells firmware that this interface
++		 * is receiving P2P peers found during find phase and doing
++		 * action frame handshake.
++		 */
++		priv->bss_type = NXPWIFI_BSS_TYPE_P2P;
++
++		priv->frame_type = NXPWIFI_DATA_FRAME_TYPE_ETH_II;
++		priv->bss_priority = 0;
++		priv->bss_role = NXPWIFI_BSS_ROLE_UAP;
++		priv->bss_started = 0;
++
++		if (nxpwifi_cfg80211_init_p2p_go(priv)) {
++			memset(&priv->wdev, 0, sizeof(priv->wdev));
++			priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
++			return ERR_PTR(-EFAULT);
++		}
++
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		priv = nxpwifi_get_unused_priv_by_bss_type
+@@ -3356,7 +3627,8 @@ nxpwifi_cfg80211_authenticate(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (priv->wdev.iftype != NL80211_IFTYPE_STATION) {
++	if (priv->wdev.iftype != NL80211_IFTYPE_STATION &&
++	    priv->wdev.iftype != NL80211_IFTYPE_P2P_CLIENT) {
+ 		nxpwifi_dbg(adapter, ERROR,
+ 			    "Interface type is not correct (type %d)\n",
+ 			    priv->wdev.iftype);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/main.c b/drivers/net/wireless/nxp/nxpwifi/main.c
+index 3f30a1f47253..73fa00a9bc0d 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/main.c
++++ b/drivers/net/wireless/nxp/nxpwifi/main.c
+@@ -945,7 +945,10 @@ int nxpwifi_set_mac_address(struct nxpwifi_private *priv,
+ 
+ 		mac_addr = old_mac_addr;
+ 
+-		if (priv->adapter->priv[0] != priv) {
++		if (priv->bss_type == NXPWIFI_BSS_TYPE_P2P) {
++			mac_addr |= BIT_ULL(NXPWIFI_MAC_LOCAL_ADMIN_BIT);
++			mac_addr += priv->bss_num;
++		} else if (priv->adapter->priv[0] != priv) {
+ 			/* Set mac address based on bss_type/bss_num */
+ 			mac_addr ^= BIT_ULL(priv->bss_type + 8);
+ 			mac_addr += priv->bss_num;
 -- 
 2.34.1
 
