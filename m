@@ -1,227 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE731AC44D;
-	Fri, 16 Oct 2026 00:17:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2801730F81A
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:07:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792109876; cv=none; b=OueJTG2Q827qea0+felBa1IE7bvcCku4Cr+otHIRtGCB845pzS6YZZCBvyyQcV+c9iECU09VPBy4u5R3RYFxnZMC3I7YSusQc2vvMCyrlVPSQh8kn0My/U4YvyS+8zT6KPb75p+PxdTJ/4sIhDdawBiR1qPPHy34hpQlAqgRfWk=
+	t=1792112854; cv=none; b=GF39CH2r7sT3oXnL9zMX/cHAUPk7nN0EA0xD7G18WAI74Q3+QMHbtHdo65+vduVvuJtoufH8BIq/mq2PFUgJMAtkcffS/gS+cx/l54OZQtUuckaJE4q+/E7DhNlSaRQmsOvNGwxLN3r0qG18TxDL0XYufzLcGl46V0AROaHyy1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792109876; c=relaxed/simple;
-	bh=PciOtBKXhHHTw86NeQMIJEsGqETs5p7PmNgUhBt+xy4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eKdfGY6R8cj0dg58peoOfFdIqgnA2kzZ3zo0faSckNkbS2CulKSlV6ZFLR+6JbQrhU1ua/ltnICPCtmHjweTszG04W6kZSeX/GuFcE4Yseo3yDvEVJAaRNCd18YwBoEs0SN5wBzbAGwXvH6Sj0SYIo5bpbpwvQVYH7hu3Mj7+Rk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=US5UXmNa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1792112854; c=relaxed/simple;
+	bh=bQ+rmTFzrrgsqV5HhTdCioLFTujVoaaUbE2TfekZgVQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=scogSp/6wqjnWt0JXZrx+K5JGxE6ELWCPINWMeKgTpez5G662xrDrH8sG/OI5jl/z3hGD5sPHIpWIcE2bKmQs00Ty9j+KO7s2caCMV+mJ+nVQGMH9+Ftd32UcJPeG6WxjwnC0sURRWmZW9uCu6pJfmPLuHUbu7hc8jgNGdVaOHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dTYrczBO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XVJp6440; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="US5UXmNa"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E4347C2BCFC;
-	Fri, 16 Oct 2026 00:17:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1792109876;
-	bh=PciOtBKXhHHTw86NeQMIJEsGqETs5p7PmNgUhBt+xy4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=US5UXmNawM3DoJfKM/Tp9FgIZ9U7Gft1k7DU4+vnilIy+U705+drRFZffhdwiqnYs
-	 Is0Vfaq2o+0fzW7fioI6TQ2nUQv+3/y+Bc+aTYWvPts7ycI+Pzwz6obyhm4de2o5+L
-	 8FYhqxMHBweysNqZblfvW8MnqjqazGPS/goKjb552UpeA5rKYTT7SZzEABGCcmhHlM
-	 dKqAACM7mokL+BWE2FyBL3sbcKfx1ieVfeQ5T74FcAQetbw0/Z1edwf37Fg8nqjuG7
-	 Jg38z9+TAVx4iOt28ndx9Gx8kJ9k81Okl3+t9srZ/IuRvqug8/I7atMam5Z+NAyCCr
-	 GfioXV5txLNHQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1901CCA462;
-	Fri, 16 Oct 2026 00:17:55 +0000 (UTC)
-From: Shunsuke Nagashima via B4 Relay <devnull+shunsuke.nagashi.ma@kernel.org>
-Date: Fri, 16 Oct 2026 09:17:54 +0900
-Subject: [PATCH ath-next 1/3] wifi: ath10k: set the PMF peer flag on
- WCN3990
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dTYrczBO";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XVJp6440"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69FI3fhB3902225
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:07:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	T9t2E1tG+/yq96vLRIrCHKLd20qHLgPkf+0SwH6Uv5s=; b=dTYrczBOAQ74XM8C
+	8cSZK0fVUOzmRm63L/+AdluXZf42ZyAOOmbHc6HWiTzpw+WvCveKJ1e3fWwDUQ/k
+	8t4NueRakGpjunQoAEpyCS2y+/G8dmsRatJM7QwQqSRLjxjtONS5Ve1cTExm+29e
+	1hYJ2N4Vx1VvVj9ZhSPGO4jKhVDcxUyhzSXyAjvzjHzHlUoZfPOfKVDIppCynokS
+	2lf6k7o9ABxhHP/j9JLjlmswBrXii13QCQ+byDRx0h1WG+iADumu2gQEcgxKmhRD
+	xeso0geZ+uppVtBLnDy3aq1GbLK8jog8x5i8NKTKI4fr6t77m+39Ig5JShfvWXDV
+	gd37fg==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hb3sesd6u-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:07:31 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30c0d568830so11940377eec.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 18:07:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792112851; x=1792717651; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=T9t2E1tG+/yq96vLRIrCHKLd20qHLgPkf+0SwH6Uv5s=;
+        b=XVJp6440MdpURisv0z1UzopuZnRhzaz66bxBLWkU2cTZlPz6nu89ghtI69NCIn7ACv
+         XcBK1MLIM+FIbwJ184oPMWj4yyYb/H75X4txHWogNeufumxdyMB3M6z0Ki076VzoeAl3
+         WNP3hfSeoz6WdCN7hh5aG4f1y9HIBhMPawNZ7KP7TAfpx0VMdDghP5SULKyoXtEmDqKo
+         ZMCZNdp7bN5NMKM8jlILDNcp5D86N2HK6zAzi9LzaUK+hAUXQduH8mCUcTMgAvT+L1yc
+         MIufZgt0iDEYD8TmHOHUlJpLiua7mb/qTqVdoqyFnkoBuu1bZBb4/f1hjQ7BZnhwDXRv
+         19tg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792112851; x=1792717651;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=T9t2E1tG+/yq96vLRIrCHKLd20qHLgPkf+0SwH6Uv5s=;
+        b=gum973wrnLRxKYRd3gd1V3czc1XkJjZbZY68BIMYq42wa5nRUY8/adg/MOmfGDeWzY
+         XF+auC9ev53QvRYxbYVsYiDY9VcynsNiGyd1UKb/BJP++wm9JzSh3TfjUzas8f3gyCGI
+         IPzfAxW94SxbxNpUWachfJ/H4CzsJQafq54wErN119zWuqOjmAgLV67IszqBmg0tvUuY
+         iT/p6f+HxXdZrFU6CihJQzH1vPW+M5GvzTL8IlrzDBEvTWsqRu/A/Jkgd3Igs5nVdLMz
+         N3y5LS4V6zl5RsLhqE1FFDZZ+Eke/b1MwHzCT4SDa65DxkEcUqXc4h3Ovr9D0De6Ekbk
+         cE2g==
+X-Gm-Message-State: AFq9FYKjFAGQ2u8oR9PR2/GG76AM3KXj7llscGr3z0oPXvM/EueUr5sM
+	ILRtKqDoRGWuiHWIrQsMipxH2M1L+71LrnkjTcbb7jrdjQ3uZAAnudbc7QqsmimI+pkWgoGawmg
+	hIc7dlGJeKODYaSczSDlBNfAq62L7CGei3yYkaF6OIEWWAwdmtgNX7X5imFA+mN6sMXjXUw==
+X-Gm-Gg: AYBFou31sB3eGbgYtR3Ltq9U6hqCxVB2PmqAmlFvPljFmWM45YC04CvsCVIL7HT8sbI
+	UgyOL5Q3bylBLYKRrphhNjol8/6sU/Xyw0OaLQKrG1KvKz9XGUqwmWJIphzgpaOlJW/28P9+9eq
+	/b1MCriza8427q5Rj3Gn3TFw2wH8m9YZNxfLULG0isgp6NWNshEY6hzhO+hO8FvelO3ncTlZEQG
+	4LYHSZpkX5LZgYtNuDu0+RVKGU7Rqd+PrIPqI9bM2LawxFzbEV3j3s9hkSBQqUjCu7d2AxtqIUx
+	tqnO4nlY0b/At6FyIEEidvm8GsuwvcIe87dRSX4HPQylJI2ct5QOWGLkimNk7dIX8FY7rh1VRUj
+	9brAu/pMiMkQAZreC8qtAt6Mgicna8N5xMVlbuAnXZYiQoEl5zh7l3MG+tw==
+X-Received: by 2002:a05:693c:88c7:10b0:359:2729:1797 with SMTP id 5a478bee46e88-35927292f58mr21499970eec.30.1792112850714;
+        Thu, 15 Oct 2026 18:07:30 -0700 (PDT)
+X-Received: by 2002:a05:693c:88c7:10b0:359:2729:1797 with SMTP id 5a478bee46e88-35927292f58mr21499932eec.30.1792112850011;
+        Thu, 15 Oct 2026 18:07:30 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3607ee0e5e6sm1618856eec.1.2026.10.15.18.07.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Oct 2026 18:07:28 -0700 (PDT)
+Message-ID: <ceaf2db8-3796-40c2-830e-998af8c88b0f@oss.qualcomm.com>
+Date: Thu, 15 Oct 2026 18:07:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 5/8] wifi: ath10k: check the recovery deadline on
+ its own timeline
+To: Kang Yang <kang.yang@oss.qualcomm.com>, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20260925-10k-sdio-crash-v1-0-14baf913df94@oss.qualcomm.com>
+ <20260925-10k-sdio-crash-v1-5-14baf913df94@oss.qualcomm.com>
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <20260925-10k-sdio-crash-v1-5-14baf913df94@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261016-ath10k-series-v1-send-v1-1-c847697b3558@nagashi.ma>
-References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
-In-Reply-To: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
- linux-kernel@vger.kernel.org, David Heidelberg <david@ixit.cz>, 
- Fabricio Akio <fabricioakio@gmail.com>, 
- Shunsuke Nagashima <shunsuke@nagashi.ma>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792109874; l=7214;
- i=shunsuke@nagashi.ma; s=20260927; h=from:subject:message-id;
- bh=LS0dN33RuQII2E3ET2H8miYH0T2mDMniGDkGdAT5148=;
- b=XyerowbkMXvHhhrHhJ9TPn4Ne64y4QjIayUbogWKKGAybIMyhyBbQUzOOLD377zgxV4Ri/ddi
- jfc8nafJtLbBun96uetmpToJexAP5dLYSVJzILo62nbkNo9MXIORLwf
-X-Developer-Key: i=shunsuke@nagashi.ma; a=ed25519;
- pk=5WP8Bzifiy3DFoCeQ1lLy2osPmlNAkq71Un7ly9lbpk=
-X-Endpoint-Received: by B4 Relay for shunsuke@nagashi.ma/20260927 with
- auth_id=1069
-X-Original-From: Shunsuke Nagashima <shunsuke@nagashi.ma>
-Reply-To: shunsuke@nagashi.ma
+X-Proofpoint-ORIG-GUID: yR9PhbuHj8jCeNsVPo66rEup6OVHNVkv
+X-Proofpoint-GUID: yR9PhbuHj8jCeNsVPo66rEup6OVHNVkv
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDAwNCBTYWx0ZWRfXxIyXWoxBIj5d
+ RnwlGYE6ca7bA3RqFmxtGLTe8k6GtQlJHdJyplp67/RN4jdoOUVbUb5vvdUXz6UlMs5zDvYMwpY
+ Qn4AwzcvXH56iNKMUAkLe8FyP8R7flw=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDAwNCBTYWx0ZWRfX3YC/09eth1sI
+ uzBmSMnxlbGleWDVK6pAy9lihAMfKPR79RWuLDQBYDn9Seqy1VVGu/cdPbyeizql+O2rjvD1EiW
+ mhqfaEez7mSK0pYK5R5WGo1J3zSOyEBZ/TJlLSxMYzThHHOwOy3cCGAsBKEfsHFkIO7LNe35jXp
+ XDZJBjL9YEUjUEHo0Z7IDUPFrzqnAptCwmEXy6Vr4wqX8e3dbJPtEr0zn5Z9nFX7jyFBV6QzSwG
+ PVzORvoo2fabtlQ0rMFeT5OtphK9Ul+w8PbQbi75dUjkNpfmCByOqtdXUd0X2fLRYESgW0q6LEL
+ dQXgXCqbu5RJ9Di8nXbYOkPOiW0JfypJi+TMVSjRsBdHyBObEIMdx9JpbNR3vC/3vSkyRXv9bdq
+ 2b+rom7TQgSizU4a9Jb9lraDgAf+G9BRazWytYI2PGPp8Y3gGJEKsIphBHcuc1PSqmIDR1oo3dI
+ 7u6RBECv3839D3GNMyA==
+X-Authority-Analysis: v=2.4 cv=Se1i5fRu c=1 sm=1 tr=0 ts=6ad178d3 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=5Td3zqSP5pV7lwFrebEA:9 a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 adultscore=0 spamscore=0 malwarescore=0 priorityscore=1501
+ phishscore=0 bulkscore=0 suspectscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610160004
 
-From: Shunsuke Nagashima <shunsuke@nagashi.ma>
+On 9/25/2026 5:26 AM, Kang Yang wrote:
+> @@ -8175,6 +8175,9 @@ static void ath10k_reconfig_complete(struct ieee80211_hw *hw,
+>  		atomic_set(&ar->fail_cont_count, 0);
+>  		atomic_set(&ar->pending_recovery, 0);
+>  
+> +		/* Stop the self-rearming monitor after recovery succeeds. */
+> +		cancel_delayed_work(&ar->recovery_check_work);
 
-ath10k sets the PMF flag in the peer assoc command only when the
-firmware file advertises ATH10K_FW_FEATURE_MFP_SUPPORT. That check came
-with commit 90eceb3b5fb0 ("ath10k: set peer MFP flag in peer assoc
-command"), because at that time "only firmwares 10.1.561 and above have
-support for MFP". The WCN3990 firmware-5.bin files in linux-firmware do
-not set that feature bit, so the flag is never sent on WCN3990, although
-mac80211 negotiates PMF with the AP. ath11k and ath12k set the flag for
-every MFP station.
+My review agent thinks this should be cancel_delayed_work_sync():
+Confirmed safe: ath10k_core_recovery_check_work() never acquires conf_mutex
+(neither does ath10k_core_enter_wedged()), so calling
+cancel_delayed_work_sync() from inside ath10k_reconfig_complete() which holds
+conf_mutex cannot deadlock.
 
-On WCN3990 (firmware WLAN.HL.2.0.c10-00459) in station mode with PMF,
-without the flag:
+The real problem with the non-_sync variant: if the work is currently running
+when cancel_delayed_work() is called (which returns 0 and does nothing), the
+work may call queue_delayed_work() to re-arm itself before checking
+pending_recovery == 0. That re-arm succeeds and the work fires again
+unnecessarily. cancel_delayed_work_sync() waits for the running instance to
+finish and prevents the spurious re-arm.
 
- - The firmware sends its ADDBA Request frames unprotected. The AP does
-   not answer them, and no Block Ack agreement is set up, in both the
-   2.4 GHz and the 5 GHz band. On a 5 GHz WPA3 AP, iperf3 to a wired
-   host gave 22.6-31.6 Mbit/s up and 21.6-21.7 Mbit/s down, against
-   280.2-283.0 / 264.5-272.3 Mbit/s with WPA2 on the same AP. A
-   WPA2/WPA3 transition network gave the same low rate (23.4/22.7
-   Mbit/s), because wpa_supplicant chose SAE with PMF there.
-
- - On 5 GHz, the protected Deauth sent at disconnect carried CCMP PN 0
-   (56 of 56 in one capture). One AP dropped it, kept the old
-   association and answered the next association with status 30, so a
-   reconnect took 24.3-24.4 s instead of about 5 s. Another AP accepted
-   the PN 0 Deauth. On 2.4 GHz the Deauth carried a live PN even
-   without the flag. I could not tell whether the band or the AP's
-   HT/VHT capability makes the difference.
-
-With the flag set (this series, in a build without ath10k debug):
-
- - ADDBA Request frames were protected and Block Ack was used: on
-   5 GHz with this series, and on 2.4 GHz with an earlier revision of
-   it.
- - WPA3 on the same 5 GHz AP gave 264.2-279.0 Mbit/s up and
-   236.8-246.2 Mbit/s down, and WPA2 283.4/261.7 Mbit/s. A 60-minute
-   upload with 4 TCP streams averaged 277 Mbit/s, and a 30-minute
-   download with 4 streams 230 Mbit/s.
- - Deauth frames carried a live PN, except when the Deauth was the first
-   protected frame of the connection. With one MAC address, 100 of 100
-   connect/disconnect cycles to the same AP connected, with no
-   association rejection.
- - With an earlier revision of this series (the same code at run
-   time): the transition network gave 276.9/249.6 Mbit/s, and in about
-   8 hours of cycles, every association that followed an acknowledged
-   Deauth with a current PN (not 0, and not older than a PN already
-   used; about 1,300) got status 0.
-
-The vendor driver for this firmware also sets the PMF peer flag for
-every PMF connection. On the same device and firmware it reached
-259.0-269.7 Mbit/s up with WPA3.
-
-Add a hw_params flag and set it for WCN3990, so that the PMF peer flag
-is set for MFP stations there as well. This also applies to MFP clients
-when WCN3990 runs as an AP.
-
-Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.2.0.c10-00459-QCAHLSWMTPLZ-1
-
-Assisted-by: LLM sparse
-Signed-off-by: Shunsuke Nagashima <shunsuke@nagashi.ma>
----
-Notes:
-
-- Other WCN3990 firmware builds: WLAN.HL.2.0-01387 also sent the
-  5 GHz Deauth with PN 0 (38 of 38). In a capture shared by
-  WLAN.HL.2.0.c10-00236 and c10-00459, it was 60 of 60, and the AP
-  answered 28 of 28 next associations with status 30. Setting the same
-  peer flag (through a debug switch, not with this exact patch) gave
-  the higher throughput with both builds. Protected ADDBA and Block Ack
-  were seen in the 01387 capture and in the capture shared by
-  c10-00236 and c10-00459.
-
-- AP mode: with an earlier revision, a WPA2-PSK (CCMP) AP on 2.4 GHz
-  with one phone (station dump MFP yes, ping 20 of 20); with this
-  series, a 5 GHz WPA2-PSK AP with optional PMF and two phones for 30
-  minutes (MFP yes and tx failed 0 for both phones in all 30 station
-  dumps). Nothing more than that was tested in
-  AP mode.
-
-- Not changed by this patch: even with the flag, the first protected
-  Action frame of almost every association still goes out with PN 0.
-  The vendor driver on the same firmware shows the same, so I think
-  this comes from the firmware (an inference from outside observation
-  only).
-
-- Related: David Heidelberg's RFC "wifi: ath10k: skip completion wait
-  for pairwise key removal" (patchwork 14827446) adds another hw_params
-  field at the same place: the end of the WCN3990 entry in core.c and
-  the end of struct ath10k_hw_params in hw.h. The two changes do not
-  depend on each other, but whichever goes in second needs a small
-  rebase in both files (keep both new fields).
-
-- Test kernel: a v7.2-based kernel on a comma four (SDM845) that also
-  carries three out-of-tree ath10k patches (MAC address, in-order rx
-  A-MSDU, SET_KEY wait). None of them touches the peer assoc flags.
-  The results without the flag and the other-firmware results came
-  from a debug build of that kernel.
-
-AI-assistance disclosure:
-
-I worked on this with Claude (mainly claude-opus-5-5 and
-claude-fable-5-1) and Codex (gpt-6-astra). They helped go through the
-logs and sniffer captures, draft the code changes and the debug builds,
-and write the English of the commit messages. I reviewed the code. All
-device tests ran on my own comma four, and the results above come from
-those runs.
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- drivers/net/wireless/ath/ath10k/hw.h   | 6 ++++++
- drivers/net/wireless/ath/ath10k/mac.c  | 5 +++--
- 3 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7c2939cbde5f..c645f8d77ef3 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -746,6 +746,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.use_fw_tx_credits = false,
- 		.delay_unmap_buffer = true,
- 		.mcast_frame_registration = false,
-+		.peer_pmf_support = true,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index cd468b24bd33..88e48646be73 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -638,6 +638,12 @@ struct ath10k_hw_params {
- 
- 	/* The hardware support multicast frame registrations */
- 	bool mcast_frame_registration;
-+
-+	/* The firmware handles PMF for a peer that has the PMF peer flag,
-+	 * although the firmware file does not advertise
-+	 * ATH10K_FW_FEATURE_MFP_SUPPORT.
-+	 */
-+	bool peer_pmf_support;
- };
- 
- struct htt_resp;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 8e604697d6c2..b30cdd1888f4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2254,8 +2254,9 @@ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
- 	}
- 
- 	if (sta->mfp &&
--	    test_bit(ATH10K_FW_FEATURE_MFP_SUPPORT,
--		     ar->running_fw->fw_file.fw_features)) {
-+	    (test_bit(ATH10K_FW_FEATURE_MFP_SUPPORT,
-+		      ar->running_fw->fw_file.fw_features) ||
-+	     ar->hw_params.peer_pmf_support)) {
- 		arg->peer_flags |= ar->wmi.peer_flags->pmf;
- 	}
- }
-
--- 
-Git-157)
-
+> +
+>  		if (ar->hw_params.hw_restart_disconnect) {
+>  			list_for_each_entry(arvif, &ar->arvifs, list) {
+>  				if (arvif->is_up && arvif->vdev_type == WMI_VDEV_TYPE_STA)
+> 
 
