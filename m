@@ -1,259 +1,127 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AC8A54A7E7
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 17:10:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792170611; cv=none; b=RcXI9nOtoMcpQFS/0ed9YF+Nk28bGUr66MgB788ay+qSa3yrq14mBnSy1fgEVPO3fBUuVDpNVqnlwBFMhvolQLCQCkZ4eNzfFWC+Ai4dVtDKFVOlTnT7T/GvOaTO1gcpGT2VBhf64jqLZJhKS3iH7xNM5hFTGyoLy/o7qFE8kiY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792170611; c=relaxed/simple;
-	bh=4VUCa9kmi2R+Fcy1SzE699NuziKVzAT3EwTLjXQ+c3U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UPhvu2QR0FwBWjrpOrP2F6CwNSnxUioDQJR+zlQCihyZy6OP7u/pr/8p1VcVRB28UjeFmC8c5jmoKINvGFKz7K9CfRYwzB/nskhVnlcSiNSY6MTX+Ry+NyCrOFUUAL/R1/gDusPJlB8tJmwSaEvJ8Kcd5T9U4Yfb+RcIXpcPKP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YIivBGY0; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED517487CCC
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 18:05:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792173956; cv=pass; b=r02/bJ3IJdeRtBUjKYQfNUkJVM2Tpkh652XtYIt0tgel/vwWWNmLhZ0bx7HYqAG8+QX2xg8qaQYERYtGQaqxZvQwxBlzcbcRlsN9fS1v9GC5X+ekf+DsvSXpvrpHj/2ZD7CxcafWAC20fXrX1Oo34TXGLCSCrcBp401o4cY6cBc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792173956; c=relaxed/simple;
+	bh=W9zaZCC2PUL05KATE9nrs0p2Ph152nxKDF1hPAKaLv4=;
+	h=MIME-Version:From:In-Reply-To:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fLpltAkgBp30J6PHzhEkN/7dp+HdR3uz9wmTJxbhPJ2ksOCBiBjciW0SIJ6lzL//2Gi0KAwn5qKOKVwjr9HmptY2ZFv/allRrtkjIpLOgyRwB9L+57phtp9SW9U2ENUC3ucsM8oWWuKPQskjQRfpY2VqZ3y6mU3/XtPiXS2bk9E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr; spf=pass smtp.mailfrom=khu.ac.kr; dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b=fzLhOxyi; arc=pass smtp.client-ip=209.85.167.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=khu.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=khu.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIivBGY0"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49fbb2acc90so1823875e9.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 10:10:09 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=khu.ac.kr header.i=@khu.ac.kr header.b="fzLhOxyi"
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5ba36cc21cdso216115e87.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 11:05:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792173950; cv=none;
+        d=google.com; s=arc-20260327;
+        b=mdQ1jnQEHd0/6uJP16eYcRAWyd1VN0zPw7ZEDO3MeroNZU2VjaOvNNAIEYZpk5l/Ur
+         ob7qSHyalKuonQLm8W1p4tysdTOVAZ3KLj8CKZUWF6r3unfCXOTWQyvvqWEx7eukounS
+         zcv66at6G9Y3Ul0yTWmXVb57SLappPhv8+54VxIA86AJI19LcisMffGXRiXoKONOBvHs
+         efEDs1nRjDxCVUhOGi9L6db9OqiY62Qe5p8haURrLFUVPMz9wMBfg9tA39ICOBpsVPfo
+         cvvzD8BHnyXqaT16h2IQSrIM5IYK33uxGyVbpVgnrFFFG7XASBZ98/rSuPFdyeB0LajE
+         hP9A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:references:in-reply-to:from
+         :mime-version:dkim-signature;
+        bh=W9zaZCC2PUL05KATE9nrs0p2Ph152nxKDF1hPAKaLv4=;
+        fh=E5Ei/I1C1+b7ermdx9TItWv6jNZ+aVRPHaWGekLJOr0=;
+        b=Lnwe81NFwp+qr7nbv08ccndrzYyCyd5lY+Iv5RMCLHPRU+v3luoinGBprW4AEA/FYI
+         Nprv8h1vfUFH59yLRUiC+VmBqztb8PbiJFDUa4/5OJvPQxEcAPgiYioFyS7FhmB0ryTP
+         xmFYq91gsxvO1IoGzVZM+T2YMXmrRS/cv5++JtmBE7vAxz5uwdaBS86NNYkcZVKqF0uu
+         G4Zw0EkEnalrKr1MWnxOHmfvp1Emp2tZO9Zw4EHf9yeS0FFmGdGhOpE3ZvKe5lQqYsz6
+         Bef8y9iYINB/j4ZL5EdSLPkBToYKC7j+VkMRwanxpDcZG8VhAzELAZmk50kEnt4f5kLs
+         Bv9Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792170608; x=1792775408; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+        d=khu.ac.kr; s=google; t=1792173950; x=1792778750; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=S974kxO+/JENpjy1sKN+r1kDpociiyhv3BX11j5VJ3k=;
-        b=YIivBGY0sCMmdBsT2WZVJcwMUB/i3vgb0jK1wWmMacSWegFE9Lx5g6N9FJP+38rXPl
-         s1OpRf+eIihYEboerSZYH3X+ErN80zNPboyf61KWCwqNSyDQ+uMl4Ib58POXKY68al59
-         H91yFdj6MSHX22DMK81KuXaDD8Zy81LXsvMqMdTYSNUtU3m0fa35uEX6s9y4f8URFquu
-         AVLbSoVtwBUUN6RrIaQW1VI6UVWWEbaJIU9NtwrdLnzQvuGXMuEjeKkrkTi8TBZWTpi8
-         apYTJqkqaCruUUZWkkSz01TRyRwo/FcYu+ORIjP4C6htoZFtfzv5eCw+GJQufj7xEsJT
-         pRWg==
+        bh=W9zaZCC2PUL05KATE9nrs0p2Ph152nxKDF1hPAKaLv4=;
+        b=fzLhOxyiORVjmgoUa4qUBIKtwUGXAagoa/AqN42OkkSIBFACP9lg0PC3ev1/WJteQ0
+         NeZmJsP6Y8OGMtweyzoIeOib+fi+6d7hpCcRTDuxDvzjeHVjVqx7eTvJLmsB5fSNR3MH
+         eFEJf0SXeVkcaC8XUrPzgMCjd7zxK0YSvdtic=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792170608; x=1792775408;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=S974kxO+/JENpjy1sKN+r1kDpociiyhv3BX11j5VJ3k=;
-        b=0RlxCgrGr+Ijmojat+HZQY3LRcXKDm+U2rjzi2h6KFKIenlHqE9IQ4j70eYFJ07qGT
-         2kt7KOzmL4/tDzZQW7K6pNuN4zEZ6Rb1Wy1MKR/4544S52ITM1o+we72vyGPrkjo2I3e
-         67cpQ4Sz0wxkm1szFVYzP3lzaK/bbGZm7CDd5LALvp9Y0xYnReBzxjLd/os2Zvkh2RbM
-         SZTGDk5aTt0vOM+/Hwt8V922W1hHWfBwTLnt1bsw0/qUFeTP1zjiKj6hP0/Ji46yzx44
-         bikftaYFPq8QN4lye20WRvaNXT87IUiEiMRcd0dOPQKWWnsyodE4kUxmHelJdlAlMJCq
-         Cq7g==
-X-Forwarded-Encrypted: i=1; AKwUvByHaTE/U3DEA/RXameYAH8XAf8S8IXDEh08ATGjjXT2WX6jCLLEMDtzvwcwfp49FUYdNj3SZeMpO3+qNfIfUA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJScpzXebjxf7dvtrRqhM2Mf96pakPZ/mSxQu50MEGfAO8lH91i
-	lDRR1GvOrBSmd1n7APNcYimo+CKi9u88TMfgFLbPE5Da1f0wvY5sJ1iCoXrc3A==
-X-Gm-Gg: AYBFou0mr0oKvhr9pdb8aVeitKlMEtX8QX5I3wpanfLeZRwmSbQGzr6sSfTo3o0qTeR
-	FSpQJ0mb5mbxAVQNNhhI8neh5Wgrfo2eOD6EnTIPS2f325qRJLbvHfp7JAzE8LTasmeHPOMPa0T
-	IjEUPZr4mNZvWbm182qR4+USpEAzUI7zshn8arP6DmH5a7qjSGVYCzr8fZ+tqreo8+bRLY6uuQ5
-	EuA44qKOCvlk2cmlbVPBIDjle5hIwcPRhdkh7Mx25WOX+pICh5EDR05qvUDRhihLz0u6B2+2L2M
-	Tg5W0pv7CLwVNXD39Hd/M+jWR6MLnB/EFSYv9Zj3zKovJiWyr2Gfm9fCUZIFUbzVRyMoz/qnt5Y
-	/oJxyjXJKWetxr/5YgdveMBOX4MkMwS73CgGDtOWZncQHzPty4Qq7/MeFosQyYKOWQBq8ksR2IQ
-	uTJpD+VJL2CENip7ng5yzNqKul6GZltifIPiuQOs9NSlVkkfs2pSaoUtzIYDMOZMcPw1JdwRt98
-	mKcDQ==
-X-Received: by 2002:a05:600c:19cd:b0:4a1:96cd:2f67 with SMTP id 5b1f17b1804b1-4a1d75ce2damr10283045e9.4.1792170607605;
-        Fri, 16 Oct 2026 10:10:07 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1d0e2bb8dsm46811515e9.2.2026.10.16.10.10.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Oct 2026 10:10:07 -0700 (PDT)
-Message-ID: <fd91ff33-d8a1-4ab0-83da-c15816c148cd@gmail.com>
-Date: Fri, 16 Oct 2026 20:10:05 +0300
+        d=1e100.net; s=20260707; t=1792173950; x=1792778750;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=W9zaZCC2PUL05KATE9nrs0p2Ph152nxKDF1hPAKaLv4=;
+        b=bkODhDZrljjEQTccI5SbdkA4at/XRJgsnyoRDmQa7KSOS2SsxV1UxLZhO2xmFrh4Lh
+         cV4I+Z3UWA2y4ISo/zKZXxonIjkYgJzv4QL/4LQm6Yao5rqMBawlj6W9V93UfIN32FPK
+         PgQ4jztZsrKfo4bEARZ2pei41Sz/4hFKBmAFOBxMseuoEfMAhug+dS4pVIXS2cU9TtK9
+         04ZoCEO4tJpyTV0kmkI6iLZSjKsI6YdiPEwktUxFqVeBXd/Eb0re4SkrZjJ3ZYN5lvgK
+         9ogDUb2Tp7rzLwx4vzsu6Z6s6BKMbT30Z0TZ8YhaPe7ndl468OBHCvw/aF4kw21/yi3K
+         gbwQ==
+X-Forwarded-Encrypted: i=1; AKwUvBznOAC307TdDEiVXqc/gRY3di8i55v9F4fBiXnw68CZZV93NJNU7YGrfacuv/zHRsnQLzqsZyqqUnPdBnAUEA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJUME5QKRKxNolxWwHFDoxUv5fLAvcHBkHCFyIYMMc8C/sqUOl9
+	xXGGgYlaCZn0joviYw4jR93vMj5Gp5skKnQnxbhtwiCmNBvgMfVnMr5aE9E359GN+xYooNx00oD
+	/649lTaJo+2lICCXbweQwhaeuDEvhjv1fWzGV6ExOCA==
+X-Gm-Gg: AYBFou1BV1MR5nNqFqeVxDtjl1+PG3PiOy+e1o6AnRq7FUd6pndRhsKEGpN8TEfyC+O
+	3MMFJo0sEeBdV45iAAk11Zp7qDyceD7ZKylWq8pmfMkzCtEkaEbZgO0+KOrh1NCDi2L461L6TIP
+	yR6AaEr1GArJtzTl6c+SXDjJZLwJEurW3RwUiiDVr8AYQoiYz0B2OQu+q54c04Yh6QVJyZbpGVp
+	F8qo/H5y8fwFPJ2iHcfhNXjM1QW0bTjy6rg3+UYwZRtlAEibPdhrTqm5GOujxjR/DN+1MgNvxx4
+	VzpzuKkCY+JOBnFTGs9F2if5nLlBPT+WgdIkkYhfR6knMMCMljdSeJMB0QRSDudakX2H+KlkXgd
+	MdPu6BDtuGhhe45y2X/i3VwMeyPX+YlHteTvp5jahXv1Y
+X-Received: by 2002:a05:6512:124a:b0:5bc:e472:12fb with SMTP id
+ 2adb3069b0e04-5be50a74cb0mr92020e87.63.1792173950529; Fri, 16 Oct 2026
+ 11:05:50 -0700 (PDT)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Fri, 16 Oct 2026 11:05:49 -0700
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Fri, 16 Oct 2026 11:03:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+Received: from 77377267392	named unknown	by gmailapi.google.com	with HTTPREST;
+ Fri, 16 Oct 2026 11:03:19 -0700
+From: Kim Wooseok <5mghybrid@khu.ac.kr>
+In-Reply-To: <fd91ff33-d8a1-4ab0-83da-c15816c148cd@gmail.com>
+References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
+ <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr> <fd91ff33-d8a1-4ab0-83da-c15816c148cd@gmail.com>
+Date: Fri, 16 Oct 2026 11:05:49 -0700
+X-Gm-Features: AclHuK9ZwgypZrng-PnEqwREU_wxzMOVesmRvYGZ8m4Qdc2U_H8EMyixUe0zrSQ
+Message-ID: <CAH1Bc_w89ymu+E1Gx13M9JD7ZNmdQ3=y_zFwVvMkQMKk4m6NAA@mail.gmail.com>
 Subject: Re: [PATCH rtw-next] wifi: rtl8xxxu: isolate the USB register buffer
  from CPU state
-To: 5mghybrid@khu.ac.kr, linux-wireless@vger.kernel.org
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Ping-Ke Shih <pkshih@realtek.com>,
- Kalle Valo <kvalo@kernel.org>, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20261010-rtl8xxxu-usb-dma-v1-0-e670d9c08fdf@khu.ac.kr>
- <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20261010-rtl8xxxu-usb-dma-v1-1-e670d9c08fdf@khu.ac.kr>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>, linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Ping-Ke Shih <pkshih@realtek.com>, 
+	Kalle Valo <kvalo@kernel.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 10/10/2026 01:39, Kim Wooseok via B4 Relay wrote:
-> From: Kim Wooseok <5mghybrid@khu.ac.kr>
-> 
-> An RTL8192EU failed to reconnect on a Raspberry Pi after an AP power
-> cycle. RF_MODE contained a corrupted value, and restoring its initialized
-> value restored reception.
-> 
-> The register access helpers pass usb_buf directly to usb_control_msg(),
-> but the buffer is embedded next to usb_buf_mutex. On the affected Pi,
-> it shares a cache line with the mutex's waiter state. A contending task
-> updates that state while the USB transfer uses the buffer. This violates
-> the cache-line isolation required for non-coherent DMA.
-> 
+Hi Bitterblue,
 
-Perhaps it's a silly question, but doesn't this just move the problem
-elsewhere? Or does kmalloc_obj() guarantee that nothing else will access
-the memory near usb_buf?
+> Perhaps it's a silly question, but doesn't this just move the problem
+> elsewhere? Or does kmalloc_obj() guarantee that nothing else will access
+> the memory near usb_buf?
 
-> Allocate the buffer once in probe and reuse it, avoiding an allocation
-> for every register access.
+With a separately allocated kmalloc buffer, the kernel ensures that
+CPU accesses to other objects do not corrupt the DMA data through
+cache-line sharing. It provides the required alignment or bounce
+buffering, and usb_control_msg() uses this DMA mapping path.
 
-An allocation for every register access was not happening even before
-this patch. I guess your LLM wrote this...
+The patch turns usb_buf from an embedded member into a standalone
+kmalloc buffer so that this guarantee applies to the buffer itself.
 
-> Keep the existing register access helpers and
-> mutex protection. Free the buffer on probe failure and after power_off()
-> in disconnect, since shutdown still uses the register access helpers.
-> 
-> Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Kim Wooseok <5mghybrid@khu.ac.kr>
-> ---
-> I tested the separate-buffer approach on an RTL8192EU connected to a
-> Raspberry Pi 5, using the existing Linux 6.18.34 kernel. While repeatedly
-> requesting scans, wireless ping traffic kept receiving replies and the
-> RF_MODE and HSSI register values remained stable.
-> 
-> The submission is based on rtw-next. An ARM64 build of the rtl8xxxu
-> driver with W=1 completed without warnings, and sparse reported no
-> diagnostics in core.c.
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/core.c     | 35 ++++++++++++++++--------
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
->  2 files changed, 24 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-> index 3d0c22db3..604bb1e5b 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
-> @@ -622,9 +622,9 @@ u8 rtl8xxxu_read8(struct rtl8xxxu_priv *priv, u16 addr)
->  	mutex_lock(&priv->usb_buf_mutex);
->  	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
-> -			      addr, 0, &priv->usb_buf.val8, sizeof(u8),
-> +			      addr, 0, &priv->usb_buf->val8, sizeof(u8),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
-> -	data = priv->usb_buf.val8;
-> +	data = priv->usb_buf->val8;
->  	mutex_unlock(&priv->usb_buf_mutex);
->  
->  	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
-> @@ -645,9 +645,9 @@ u16 rtl8xxxu_read16(struct rtl8xxxu_priv *priv, u16 addr)
->  	mutex_lock(&priv->usb_buf_mutex);
->  	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
-> -			      addr, 0, &priv->usb_buf.val16, sizeof(u16),
-> +			      addr, 0, &priv->usb_buf->val16, sizeof(u16),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
-> -	data = le16_to_cpu(priv->usb_buf.val16);
-> +	data = le16_to_cpu(priv->usb_buf->val16);
->  	mutex_unlock(&priv->usb_buf_mutex);
->  
->  	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
-> @@ -668,9 +668,9 @@ u32 rtl8xxxu_read32(struct rtl8xxxu_priv *priv, u16 addr)
->  	mutex_lock(&priv->usb_buf_mutex);
->  	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_READ,
-> -			      addr, 0, &priv->usb_buf.val32, sizeof(u32),
-> +			      addr, 0, &priv->usb_buf->val32, sizeof(u32),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
-> -	data = le32_to_cpu(priv->usb_buf.val32);
-> +	data = le32_to_cpu(priv->usb_buf->val32);
->  	mutex_unlock(&priv->usb_buf_mutex);
->  
->  	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
-> @@ -688,10 +688,10 @@ int rtl8xxxu_write8(struct rtl8xxxu_priv *priv, u16 addr, u8 val)
->  		addr |= 0x8000;
->  
->  	mutex_lock(&priv->usb_buf_mutex);
-> -	priv->usb_buf.val8 = val;
-> +	priv->usb_buf->val8 = val;
->  	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
-> -			      addr, 0, &priv->usb_buf.val8, sizeof(u8),
-> +			      addr, 0, &priv->usb_buf->val8, sizeof(u8),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
->  
->  	mutex_unlock(&priv->usb_buf_mutex);
-> @@ -711,10 +711,10 @@ int rtl8xxxu_write16(struct rtl8xxxu_priv *priv, u16 addr, u16 val)
->  		addr |= 0x8000;
->  
->  	mutex_lock(&priv->usb_buf_mutex);
-> -	priv->usb_buf.val16 = cpu_to_le16(val);
-> +	priv->usb_buf->val16 = cpu_to_le16(val);
->  	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
-> -			      addr, 0, &priv->usb_buf.val16, sizeof(u16),
-> +			      addr, 0, &priv->usb_buf->val16, sizeof(u16),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
->  	mutex_unlock(&priv->usb_buf_mutex);
->  
-> @@ -733,10 +733,10 @@ int rtl8xxxu_write32(struct rtl8xxxu_priv *priv, u16 addr, u32 val)
->  		addr |= 0x8000;
->  
->  	mutex_lock(&priv->usb_buf_mutex);
-> -	priv->usb_buf.val32 = cpu_to_le32(val);
-> +	priv->usb_buf->val32 = cpu_to_le32(val);
->  	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
->  			      REALTEK_USB_CMD_REQ, REALTEK_USB_WRITE,
-> -			      addr, 0, &priv->usb_buf.val32, sizeof(u32),
-> +			      addr, 0, &priv->usb_buf->val32, sizeof(u32),
->  			      RTW_USB_CONTROL_MSG_TIMEOUT);
->  	mutex_unlock(&priv->usb_buf_mutex);
->  
-> @@ -7851,6 +7851,13 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
->  
->  	usb_set_intfdata(interface, hw);
->  
-> +	/* Keep the USB register buffer separate from driver state. */
-> +	priv->usb_buf = kzalloc_obj(*priv->usb_buf);
-> +	if (!priv->usb_buf) {
-> +		ret = -ENOMEM;
-> +		goto err_set_intfdata;
-> +	}
-> +
->  	ret = rtl8xxxu_parse_usb(priv, interface);
->  	if (ret)
->  		goto err_set_intfdata;
-> @@ -7971,7 +7978,9 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
->  err_set_intfdata:
->  	usb_set_intfdata(interface, NULL);
->  
-> +	kfree(priv->usb_buf);
->  	kfree(priv->fw_data);
-> +
->  	mutex_destroy(&priv->usb_buf_mutex);
->  	mutex_destroy(&priv->syson_indirect_access_mutex);
->  	mutex_destroy(&priv->h2c_mutex);
-> @@ -7999,7 +8008,9 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
->  
->  	dev_info(&priv->udev->dev, "disconnecting\n");
->  
-> +	kfree(priv->usb_buf);
->  	kfree(priv->fw_data);
-> +
->  	mutex_destroy(&priv->usb_buf_mutex);
->  	mutex_destroy(&priv->syson_indirect_access_mutex);
->  	mutex_destroy(&priv->h2c_mutex);
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> index c6953051d..8cbadcf71 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> @@ -1891,7 +1891,7 @@ struct rtl8xxxu_priv {
->  		__le32 val32;
->  		__le16 val16;
->  		u8 val8;
-> -	} usb_buf;
-> +	} *usb_buf;
->  	union {
->  		u8 raw[EFUSE_MAP_LEN];
->  		struct rtl8723au_efuse efuse8723;
-> 
+> An allocation for every register access was not happening even before
+> this patch. I guess your LLM wrote this...
 
+I did not state that the previous code allocated a buffer on every
+register access. That sentence describes the allocation strategy for
+the newly separate buffer: allocate it once in probe and reuse it.
+
+If any part of the explanation is unclear, please point it out and I
+will clarify it. I don't think speculation about how the text was
+written is necessary.
+
+Wooseok
