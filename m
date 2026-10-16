@@ -1,41 +1,69 @@
-Received: from mail.systemli.org (mail1.systemli.org [93.190.126.36])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4028E3431E3;
-	Fri, 16 Oct 2026 19:43:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.190.126.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47AC03BB12D
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 21:43:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792179810; cv=none; b=sZWio5Nqk0oZOiKGf4K9pv9mfk7InwdZreUPk0TnhlYr4TFTUkiLXwPHE75svMJCt3jNfbDrL8oYiqb/LdKaInBq3dBkcv1HWqoYdqWL6NA3lA6gihfz5hpsGCW7eBXkSpvVzg1Kjl6SpZ6vvBexhLHplKXmuo1kk+IsGc89aLw=
+	t=1792187028; cv=none; b=cTzeEPn4v+cPLYvy0Pi+0UutXZNAokWvz36ZqLJmvZVNS1TbA9lO8C1d11zTi+WckgzHL2b3zB9vO7QY4DikJPdCs3+q2CbcqKlMvv6eJXW5vuiZorFlkaxDBK6vQXmswI+S/UqiHh5LPeKumUwmxno2HFPyOpRsru2qW+tygO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792179810; c=relaxed/simple;
-	bh=PSY8/6Ht3695dETAQ+IJZfbjd4ZsJrNu+wFt2aorenY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M15YKuKm/6G2zm2p9Bw4oJoBbTkB/KTQWXwmcy4tOZa3pIxVq9960z8HQ7OgoB2XmRKVstCIj/eMbfXJbYlrbE5S2NAhOWPuvhWI/8qUOMuEwlY8lFO1ZiPNKC5uAB4/Hd0WmQoMXrblhQZXftxPwMWpZH3bRU+HcmGES/DeX9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org; spf=pass smtp.mailfrom=systemli.org; dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b=Yu90jTZL; arc=none smtp.client-ip=93.190.126.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=systemli.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=systemli.org
+	s=arc-20240116; t=1792187028; c=relaxed/simple;
+	bh=0RGKq1R9eRsSUEYrNith3NyIKZmCEyZV5+m6BlofS1I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SneyPX7XtV3X9Xvo1m19vXso02daSXbTx91WYeILDjCyCyHm/Q3478wllANSYdjQsgoJy/nXblidR5Z+pn4D9c3/Wt8oSscfvXG62/uwxzVuha/miU57hFYc47mVgYK+ZhexSWTFxyAov+jxfmv3KQXSsJDmtJQOlnHdmOXw05c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GsiMYCZI; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=systemli.org header.i=@systemli.org header.b="Yu90jTZL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=systemli.org;
-	s=default; t=1792179794;
-	bh=/q+EF9ABPKDwT5qrXuQd3pJ9+FUswKX0Hp6vlgaMKOQ=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Yu90jTZL1z7/LwXNZipSwv8Nz+Up3V8rwWbNDr+pi50LxT8BjUiaAHFTU5gPsPiGp
-	 URyR/bPN3FlKIg7iXI7eAJ9rCf2J6Iw9KqMiAMSvw0hlGO6gjZbXc5rW+VCJBJB0/y
-	 deiBi0I60ve6oyaCeIpORJt67n83tGjcpDu1m4o98GU6xtBnI/v+wnWbVt3ZwNVGS8
-	 Eu4jznfvdtPfCoa4QTjFAS3wknUF9zuI3DVwN4TgLNatNS8MGoF9AQ7aWX0t+yZuDw
-	 gh5UXd9eRUrTnph4gOG8V1HG9wvH3VxNfEt8Hs0Des1f2xnXQBXfHVatBjHZr9ZNIB
-	 Mg1aow0YXuptw==
-From: Nick Hainke <vincent@systemli.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>
-Cc: Nick Hainke <vincent@systemli.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next] wifi: cfg80211: map LE DSCP to UP 1
-Date: Fri, 16 Oct 2026 21:42:48 +0200
-Message-ID: <20261016194248.3508952-1-vincent@systemli.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GsiMYCZI"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4956869750eso2283895e9.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 14:43:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792187025; x=1792791825; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=27gs7dlyGrdmSFMZuaPiLusWTuM6jffQi1p6X2KKuH8=;
+        b=GsiMYCZIMyEgpaP6JUnu22B1ilHTX4wsFPiPAaR1Pn3AU9p52cE/fsW0fRFRSOer7j
+         mvQerKRQCrUmvwCH8G2LVu43DEjLepSkLl5XANBZ5y8XANollJsUKWFSMU231Qfkl00t
+         LgXNJSK4tLjWUO60FVmXZmnHSae/cUoH+n+gM5c3pqhqCbjM4fA29lozQ51A3hypQEoG
+         /XHRAl2pHvZf2H1xuNnRoKBzQHttYxornyZKKQLqEXFrznfoLAm033ZoWM+HQfR/Q53Q
+         VUYtGrl5U02rhcQjaPe6x+ayOwlUL8OjjL8HfyTv4wCk9ZcKASuX61Y+u+mJEuDNLGED
+         qHmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792187025; x=1792791825;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=27gs7dlyGrdmSFMZuaPiLusWTuM6jffQi1p6X2KKuH8=;
+        b=McTKbI+OMfZLdQ7bq5AaCMx0AaBl+uwGb48ToKGO+KazY1XLBaiGf/F+c9OIpLOuQM
+         kNwcfCym2AypmBFIixqYJ9jGu+7Qcg1YUib5KVmS9Lr2C8Q5sR5WTiDENp3dIiwjNTHc
+         VqSWzd35LwGnBI1RzFOSRfAsMHsf9imooMc+92yvRB6YkU6cyAOWuBmp7Kz272V69aBT
+         ew08EpRbkpBX3nvx6FkLoERBQUZ2q17jJQTmKQrtkLlq11fSyER5JqZ4re6IY0tlQhQg
+         7L7EargtEWYWno1qTi2Ddqk0/l9ncsrmetzpoR051y4y90hF6GWnuyAfMPI6OsJeO/Rx
+         jTsg==
+X-Gm-Message-State: AFq9FYJiIhZtiojKGHnC57ib6DtEpgQrXwWZHlK69lbL42pRPV+FL3H4
+	EBU3RpbWQE1Rc7L/VWFPb1M3O3ZfEHfCnhr3jAtb5hOc5bNJEhe0Ru/C5DzYA0MPJIV2aQ==
+X-Gm-Gg: AYBFou0nSgm8gIw9GnNfYuN40A1EVm2o7MDcBJnrZ7yVLpu6zd6w4KpYnkTf+i6/t/H
+	NH8ymwoP7sue501WBCxR+Vo7pdU84K9TcNb50meI0Cc+T78dY2RwrEn/v3O+88NL9Et6c9pA6XN
+	QVO5zd/gXEN3dHHL5OexNwARieNSjAq/GGWuSN8H3U8CMwCjK4//QYfr4HvNHOzi6VTUavM5mg4
+	fYKXEhxFrunXv+zE49G8WSZXZIJuuk+LN1NQWGDgznKo17gS70sEjuychgErLmLiBToTV29FPrr
+	F27ZeC3QwtqG2vW70bOKfTM/GeZYCXZa3s/zVTXim6ngTcjCaXxVNCU/7Fikm8UE/tsXOMuElE4
+	XORM2VACP2z3sBX/n+Cj07hUDkYnJQZ2jjTJTlFmasVPkpgnRNCAMNkOljp3OV0V9eC2tbYVPn9
+	XMCvrOLP7I4cM3ETUnODW6vRTl/B5UbZtuNs+9f3DeWZhPSOVfeBILWoG+TCIy25OQfl+2JkrO0
+	wV0f9UWjfVA67H1gL0PqA==
+X-Received: by 2002:a05:600c:8709:b0:49f:ff73:9971 with SMTP id 5b1f17b1804b1-4a1d75f8f28mr21917295e9.18.1792187025297;
+        Fri, 16 Oct 2026 14:43:45 -0700 (PDT)
+Received: from omarchy.tailf282f0.ts.net ([102.208.20.198])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1d30d778bsm55151525e9.9.2026.10.16.14.43.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 14:43:44 -0700 (PDT)
+From: Carl Quist <equalizerjr@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	Carl Quist <equalizerjr@gmail.com>
+Subject: [PATCH rtw-next] wifi: rtw88: 8723d: add iface combination
+Date: Fri, 16 Oct 2026 21:41:05 +0000
+Message-ID: <20261016214105.255517-1-equalizerjr@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -43,71 +71,53 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spam-Report: 
-	*  0.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
-	*  0.0 DKIM_VALID Message has at least one valid DKIM or DK signature
-	*  0.0 DKIM_VALID_EF Message has a valid DKIM or DK signature from
-	*      envelope-from domain
-	*  0.0 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
-	*      valid
-	*  0.0 DKIM_VALID_AU Message has a valid DKIM or DK signature from author's
-	*       domain
-	* -1.9 BAYES_00 BODY: Bayes spam probability is 0 to 1%
-	*      [score: 0.0000]
 
-RFC 8622 [1] updates RFC 8325 [2] and recommends to map Low-Priority
-Data marked with the Lower Effort DSCP (LE, 000001, 1) to User
-Priority 1 and AC_BK (Background), the same as the legacy CS1 marking.
+Allow 8723d to operate a station and an AP interface concurrently, using
+the combination already enabled for 8822c: one station plus one AP on the
+same channel.
 
-cfg80211_classify8021d() takes the three most significant bits of the
-DSCP as User Priority and corrects some DSCP values in a switch
-statement afterwards. LE is not handled there. For LE the DS field
-without the ECN bits is 0x04, so:
+Without it, the AP interface cannot be brought up while the station is
+active (hostapd: "Could not set interface ap0 flags (UP): Device or
+resource busy"), so an RTL8723DE laptop cannot share its Wi-Fi
+connection.
 
-  ret = dscp >> 5;     /* 0x04 >> 5 = 0 */
-  switch (dscp >> 2)   /* 0x04 >> 2 = 1, no case for 1 */
+Tested on RTL8723DE [10ec:d723], firmware 48.0.0, kernel 7.2.5, with
+hostapd 2.12 on a second (AP) interface with its own MAC address:
 
-As a result, LE ends up in User Priority 0 and AC_BE (Best Effort)
-instead of User Priority 1 and AC_BK. Add a case for LE to the switch
-statement.
+- the AP ran beside the associated station on 2.4 GHz channel 1 (HT20)
+  for about four hours and served a smartphone client;
+- the AP was started and stopped repeatedly without affecting the
+  station;
+- with the AP running, the station was disconnected and reconnected
+  four times; it re-associated within one second each time and the AP
+  stayed up.
 
-OpenWrt already sets a QoS Map by default that maps LE to User
-Priority 1 [3].
-
-[1] https://www.rfc-editor.org/rfc/rfc8622#section-11
-[2] https://www.rfc-editor.org/rfc/rfc8325#section-4.2.10
-[3] https://github.com/openwrt/openwrt/commit/a5e3def18224
-
-Fixes: 6fdb8b8781d5 ("wifi: cfg80211: Update the default DSCP-to-UP mapping")
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Nick Hainke <vincent@systemli.org>
+Assisted-by: LLM
+Signed-off-by: Carl Quist <equalizerjr@gmail.com>
 ---
- net/wireless/util.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 59912f4a93c8..3f8648b94179 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1154,13 +1154,17 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
- 	 * value. See section 4 in RFC8325. Specifically, for the following
- 	 * Diffserv Service Classes no update is needed:
- 	 * - Standard: DF
--	 * - Low Priority Data: CS1
-+	 * - Low Priority Data: CS1 (legacy)
- 	 * - Multimedia Conferencing: AF41, AF42, AF43
- 	 * - Network Control Traffic: CS7
- 	 * - Real-Time Interactive: CS4
- 	 * - Signaling: CS5
- 	 */
- 	switch (dscp >> 2) {
-+	case 1:
-+		/* Low Priority Data: LE, see section 11 in RFC8622 */
-+		ret = 1;
-+		break;
- 	case 10:
- 	case 12:
- 	case 14:
+Notes:
+    An AI coding assistant (Claude Opus 5.5) helped investigate this, write the
+    change and run the tests above; I reviewed the change and tested it on my
+    own RTL8723DE laptop.
+
+ drivers/net/wireless/realtek/rtw88/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 0f23498..c64a3ba 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2299,7 +2299,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+ 	hw->wiphy->max_scan_ssids = RTW_SCAN_MAX_SSIDS;
+ 	hw->wiphy->max_scan_ie_len = rtw_get_max_scan_ie_len(rtwdev);
+ 
+-	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) {
++	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C ||
++	    rtwdev->chip->id == RTW_CHIP_TYPE_8723D) {
+ 		hw->wiphy->iface_combinations = rtw_iface_combs;
+ 		hw->wiphy->n_iface_combinations = ARRAY_SIZE(rtw_iface_combs);
+ 	}
 -- 
-2.56.0
+2.55.0
 
