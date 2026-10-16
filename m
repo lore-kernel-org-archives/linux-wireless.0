@@ -1,95 +1,182 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3211EB1AA
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 11:47:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6531419A4
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 12:23:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792151280; cv=none; b=tDy0JUfYFj9RDMm+TkyUggFaYpIZrn2eIU+7guiHE5clIfVNZhcv4LN4gKKc+g2VKJqEpey7JHB2+nTC7go+j/XRI9EuYx/zJCWVyI07+t2RNi/LMWs7Tx5UKbroT9L7kq/giiUOVtX2pWXL+C3D/ShaewSk9MisU1tuyYuurvk=
+	t=1792153397; cv=none; b=fxsto17EeruUlgJ2Yyo4voh1ljlM9Oy4p7EOCyk/AL9erNQQopjpXFpMSaCLRIsozmTzFsrA8eyWdwDeTgRjz8HULXPlWdCWa9WI9G2owk9iRBghXUa6CpbEMU/yJJTJKColhsnKU/VkJQh7myXB/C9VLCMra5okjcCzFtngrkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792151280; c=relaxed/simple;
-	bh=JUDXYjE+085vb/qXA5RYsfGWqhq2Vv8zIRaknoSRtqk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=s86NBcnEbMeDX2wsLoctPm//naFnAANQkCErwYJi1wESiw7tXgG2K5+puV4Lp+bGO7rtxwBmxHBz4r6WqGZb/qt28gnHO2wd/aPUOOAZsq9m2T+d3Txh5Prs3PrXiGRGZTy8jwiRLm4uGtCR3/Wa5JkHZzHDAtE6qIOienizbuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=TUcTAwrp; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1792153397; c=relaxed/simple;
+	bh=ltBDINOqkCYKfRNOKYp32QAr/6wBJHOQJSo9PQDklg4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=knAk569uCM57vSKr7adDotfeZtGB8HagWSPbnrW9f1RNAelSA/ObJaGX74ouzl99cG8GAAQeRBn1wkU7YfgZQ4oa/bxAV+GqEFNxW9D1y/PI32uHOAU9HLeDdQDKQ+eQBnMIIMrY4LBSXiF3kTr7txZWHjKWIPj95Y0sYecS0/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=nnfNJX/s; arc=none smtp.client-ip=212.77.101.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="TUcTAwrp"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6b1aa377c61so7749032a12.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 04:47:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1792151276; x=1792756076; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=sN9AXA6EqMmnIUQ8CwnmZZw/CdisNxm/jULatVAixaA=;
-        b=TUcTAwrp8CosftUxh8RirJuBq3RYlLWem5/17h60yxHsyLw5bSwYIvXv/J+Rt4+BPX
-         y5ot6EoupSPvmyDPy/kO1MqTVSRCnGA0mLZ6+BjOGgT0OFJ/3ADcQOKdcVrmWfUZxR5u
-         Od1lPhSHuM+BT0DSVd9TLOLKa9ZnJezFkPKVI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792151276; x=1792756076;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sN9AXA6EqMmnIUQ8CwnmZZw/CdisNxm/jULatVAixaA=;
-        b=lZJdbOk8QA6fLA/69a+B+O8KmzIwWdhgpqFTWT5SIjdenjQ/p9AaXGz2qCysyNM9AP
-         mcOPKleLiI7E26FxrYMbZPeEihjXAkxIh7PsT8b8TusaVbe5DrlpcF5F3Fsp96kFt97x
-         xkew2puAeHvEfpz23djgAwGoNSxQPHPnMR+luQrE4z/sK/hauBzM5wsxiQy7jf1bIC36
-         W2WbrubF8omN/3aTSChkK7UN6iNIf8JYnkm152j+O1qC0niJ+33CLkW9g0mRs1FwLcgn
-         E+k29+ehCXo/aGXGYho/2YLb/5afcWtJ+aWTUsKT7PPgzRLnZwEZ4Gkeo+TM6oomy4qp
-         bgwg==
-X-Gm-Message-State: AFq9FYKTG8kN2Szl0U8NUAsSJEVixSnIsCLDW7PJwnSF75TF893zjWAj
-	4fA6b6FHorCTgdhjy6UMpgl4KfOsYOoNPv4Pi0EfS+MGhIMN+aIKnaJqDvLok1VNEHRMRwssHC2
-	PLXXQOSY=
-X-Gm-Gg: AYBFou2LyUEHr0roKb/XpsyFoxtMJWQaE6fe1HYKgFCdR1huLXhc0sJe0qyD6+tvviT
-	/q5QBsLNfPSeyQ6MIUQQ8U4RVJeEOMWXXtBlS8CJv7wA+EczA1K6Bevyd5KjD6oXIQN6fVfjj98
-	M2p3GuZf0lRDqEC2onJlBvO01S5YzMfszTlTU4zNrAkXMpbHUMIqDzyup2eKritgsKQpEEDBglM
-	mnTftwcp3b301T/QP1H7iFBiMYH1H2ykcsDlh+8+LogJBkp2YSV14501ALX92AkgRwA/9h+S51u
-	YFhYpw74CJH3r827wC4mQtUucnpYQg3TCuqyunblCN3222LtxObk1mGKv2paNLKSY7MqRs5L+h9
-	X0TOkwK3iZwhTUjUi62MBkXnUUD9aMEsW6WajAra7Yvn6FFfKTGmJT92L7Ad17a4ay/GWFnieD1
-	ixLBJtd1WRyWdpEExqJQfj08dtP3lZt1t9uMU2Hxer8W0PdY6c+jG6fabVQKDYNxXlwvUwg8Z+O
-	RMgjJ4CD/wwcxNt7rLbncEj89mlZyqVD8IH1fc73kYOdY6x
-X-Received: by 2002:a05:6402:a515:20b0:6b3:9b66:2bbc with SMTP id 4fb4d7f45d1cf-6b39b663f4dmr389640a12.32.1792151276361;
-        Fri, 16 Oct 2026 04:47:56 -0700 (PDT)
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com. [209.85.218.49])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b38a1b19f8sm767733a12.7.2026.10.16.04.47.55
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Oct 2026 04:47:55 -0700 (PDT)
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c4086e892a4so86927466b.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 04:47:55 -0700 (PDT)
-X-Received: by 2002:a17:907:6d16:b0:c26:1649:47ab with SMTP id
- a640c23a62f3a-c31a9f8d2c1mr1950016066b.33.1792151275531; Fri, 16 Oct 2026
- 04:47:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="nnfNJX/s"
+Received: (wp-smtpd smtp.wp.pl 25324 invoked from network); 16 Oct 2026 14:23:06 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=s20261001;
+          t=1792153386; bh=4bTkFT+F2hA2/znsJfPcE/M31DKOZlPTYzijVZ/YGCU=;
+          h=From:To:Cc:Subject;
+          b=nnfNJX/s03ZUdYA8IXtb8ij8HDNRK+1vVn/Aeeb0GaPi6APxoYbc/alR9XIraG1MK
+           H+P5CzatMv5QyV3nPuRUYVT6NI8ZFYeGAJFlrFSpJyXmdaPq/hlSlY0liuGki//wNq
+           dgXLYyx7YzScXL9pkVlG80YBb2VzlZttt4gKCWyDUYzFFvD9Ze2YyPJTW7uLqSL3J8
+           Zo/9I2SAr+xsVNSzatt9UIqVyKhMoBMQXmlrY1mC9nikUWzYSZ9MGVEFIKvAcEn1E5
+           JANp5+QnT7NPaVmZUr3QvnNGUgfnrb+IPWI4DfpYgeVd/RNxam819G+OlAD8n33CKM
+           eKXRRarwjX3Kg==
+Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <edumazet@kernel.org>; 16 Oct 2026 14:23:06 +0200
+Date: Fri, 16 Oct 2026 14:23:06 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Eric Dumazet <edumazet@kernel.org>
+Cc: Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -next] wifi: rt2x00: use skb_put_padto() for beacon
+ padding
+Message-ID: <20261016122306.GA71823@wp.pl>
+References: <20261016101602.2770015-1-edumazet@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261016085013.136825-1-toke@toke.dk>
-In-Reply-To: <20261016085013.136825-1-toke@toke.dk>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 16 Oct 2026 04:47:39 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whqmfF3SL=r51KZ72TZJVzEgbMkp5Vhxf_c1fGCyeTS9g@mail.gmail.com>
-X-Gm-Features: AclHuK-pNrkTLT4US-FhTlvtT0CJPZm2Y6CTKe4y46HYYxBap8FQNPYdpsrF2Zk
-Message-ID: <CAHk-=whqmfF3SL=r51KZ72TZJVzEgbMkp5Vhxf_c1fGCyeTS9g@mail.gmail.com>
-Subject: Re: [PATCH] wifi: atk9k: Revert "wifi: ath9k: reject short WMI
- command responses"
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org, 
-	Mehmet Fide <mehmet.fide@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261016101602.2770015-1-edumazet@kernel.org>
+X-WP-MailID: 1145b0cbfd87b40f0092c40874a853ec
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [8YPB]                               
 
-On Fri, 16 Oct 2026 at 01:50, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.d=
-k> wrote:
->
-> Linus, this regression was introduced in the 7.3 cycle, could you please
-> pick up the revert directly? Thanks!
+On Fri, Oct 16, 2026 at 12:16:02PM +0200, Eric Dumazet wrote:
+> rt2800_write_beacon(), rt61pci_write_beacon() and rt73usb_write_beacon()
+> pad the beacon with skb_pad(), which does not change skb->len, and
+> then have to add the padding length again when writing the beacon
+> to the hardware.
+> 
+> Use skb_put_padto() instead, and remove the padding_len variables.
+> 
+> No functional change: the beacon skb is freed right after
+> being written to the hardware.
+> 
+> Signed-off-by: Eric Dumazet <edumazet@kernel.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Done. Thanks,
-
-                Linus
+> ---
+> Part of a medium term plan to get rid of skb_pad(), source of many mistakes.
+> 
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 8 +++-----
+>  drivers/net/wireless/ralink/rt2x00/rt61pci.c   | 9 +++------
+>  drivers/net/wireless/ralink/rt2x00/rt73usb.c   | 8 +++-----
+>  3 files changed, 9 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> index 2e2e382b624757ffcd826f37faebc36f38d04f11..4f7beca668bb032ef469e19e8919afd6316fe3eb 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> @@ -1414,7 +1414,6 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>  	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+>  	unsigned int beacon_base;
+> -	unsigned int padding_len;
+>  	u32 orig_reg, reg;
+>  	const int txwi_desc_size = entry->queue->winfo_size;
+>  
+> @@ -1452,10 +1451,9 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>  	/*
+>  	 * Write entire beacon with TXWI and padding to register.
+>  	 */
+> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+> -	if (padding_len && skb_pad(entry->skb, padding_len)) {
+> +	if (skb_put_padto(entry->skb, roundup(entry->skb->len, 4))) {
+>  		rt2x00_err(rt2x00dev, "Failure padding beacon, aborting\n");
+> -		/* skb freed by skb_pad() on failure */
+> +		/* skb freed by skb_put_padto() on failure */
+>  		entry->skb = NULL;
+>  		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+>  		return;
+> @@ -1464,7 +1462,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>  	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
+>  
+>  	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+> -				   entry->skb->len + padding_len);
+> +				   entry->skb->len);
+>  	__set_bit(ENTRY_BCN_ENABLED, &entry->flags);
+>  
+>  	/*
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> index d4783658b2c5dbb69ab6c715a23ac8814ef3afb0..974a6d85b37b600f9cac22055c7a0fe0e17e2d5f 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> @@ -1875,7 +1875,6 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+>  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>  	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
+>  	unsigned int beacon_base;
+> -	unsigned int padding_len;
+>  	u32 orig_reg, reg;
+>  
+>  	/*
+> @@ -1900,10 +1899,9 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+>  	/*
+>  	 * Write entire beacon with descriptor and padding to register.
+>  	 */
+> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+> -	if (padding_len && skb_pad(entry->skb, padding_len)) {
+> +	if (skb_put_padto(entry->skb, roundup(entry->skb->len, 4))) {
+>  		rt2x00_err(rt2x00dev, "Failure padding beacon, aborting\n");
+> -		/* skb freed by skb_pad() on failure */
+> +		/* skb freed by skb_put_padto() on failure */
+>  		entry->skb = NULL;
+>  		rt2x00mmio_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
+>  		return;
+> @@ -1913,8 +1911,7 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+>  	rt2x00mmio_register_multiwrite(rt2x00dev, beacon_base,
+>  				       entry_priv->desc, TXINFO_SIZE);
+>  	rt2x00mmio_register_multiwrite(rt2x00dev, beacon_base + TXINFO_SIZE,
+> -				       entry->skb->data,
+> -				       entry->skb->len + padding_len);
+> +				       entry->skb->data, entry->skb->len);
+>  
+>  	/*
+>  	 * Enable beaconing again.
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> index d6b7174d087a26c7a403b8b743d59f9fb5f9fb62..ee308bcf0bed00edea24278deb1770f035012998 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> @@ -1523,7 +1523,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+>  {
+>  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>  	unsigned int beacon_base;
+> -	unsigned int padding_len;
+>  	u32 orig_reg, reg;
+>  
+>  	/*
+> @@ -1554,10 +1553,9 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+>  	/*
+>  	 * Write entire beacon with descriptor and padding to register.
+>  	 */
+> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+> -	if (padding_len && skb_pad(entry->skb, padding_len)) {
+> +	if (skb_put_padto(entry->skb, roundup(entry->skb->len, 4))) {
+>  		rt2x00_err(rt2x00dev, "Failure padding beacon, aborting\n");
+> -		/* skb freed by skb_pad() on failure */
+> +		/* skb freed by skb_put_padto() on failure */
+>  		entry->skb = NULL;
+>  		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
+>  		return;
+> @@ -1565,7 +1563,7 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+>  
+>  	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+>  	rt2x00usb_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+> -				      entry->skb->len + padding_len);
+> +				      entry->skb->len);
+>  
+>  	/*
+>  	 * Enable beaconing again.
+> -- 
+> 2.53.0
+> 
