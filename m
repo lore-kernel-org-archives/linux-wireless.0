@@ -1,159 +1,176 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1035F282F14
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:43:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2002B1E9B37
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:49:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792115036; cv=none; b=YZ+KpGzeZIJsuxOvziB5nyPTCWcdA8Kzasx+oew9xnhMm9CGukvOAhusSGThs2/haAt53cTBAgH9vhVfeNmhmpKMhHx3zApClmjRoFM4KeO/ayqRt+5KFuyQiLdf+LNMfQoBlaLsXejk4UYdfNdGKVpRh2vug0mVV8Qkx1+/lp8=
+	t=1792115392; cv=none; b=qWrscnsC2dP4ZPiUuSyB1P44OQvlTqorSIat28NnDgGU0riZ2OPprT7YjfG0eyaCeCDwIqb8DvxExHpYrdx+t51jTAIVy01SwvAt5dmJtvLN/Y+WnAik0nJu9Z/hYc8Cxj2Y2c3azaiIGKTwVM2W/aUkERW7Zkrn5kEKE6w9tQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792115036; c=relaxed/simple;
-	bh=kQkjlsIrQcHp2Nsx17GlvS9gPFBsPnNLRmimpEElKy0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kR5nrSs3J7pFdagAvmreWC+vaFph0e1shpRSpR25R1LGSRh4sYH+CXqZMf9M8XM+k2/3R5hll4RXHCl86asA4OzrDom+bd1uqgRWhth+ZaTuRCP5Ckg9wrvSZrr8LS79o85QIrz8vT5usRMLv6JM/n4TW27z0H3+Wdl3HpBvTMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QL6IvYB9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bO9pe9MR; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1792115392; c=relaxed/simple;
+	bh=vHQMynQAsQVRQK8pdrAkY10aqxVPqAzaOxtEB6Poo0k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XHgt0Rk+ZU93zKI8IxMHFjzDCle1pL2lWtLTwkI3rvkd2wvj8RpQsbghEhpmU4FqYEp1KZfCQgazkZVqErasbmOx8tAZ6FUVYTbUEKmV0uB0My+iDw2bU1kHWU3+EfdAiFmXbluF4+auF3433wlbKaeaybne22tvror4w0Q1mHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=TfF16FCD; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QL6IvYB9";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bO9pe9MR"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69FKRhql3462800
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:43:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	d2AdVVW/1VpGBm6jZek+loZ/L/qPi3e0KDm+GCFxSGY=; b=QL6IvYB9Pb1vVLzF
-	IXjkvxRV9jcqbQQ/dczG8OCsZqgZTtLmqPFKo7MEEsmtIYUS5mxCwuAZM6UbOUD6
-	JlPCHhp0piwaz07IGMiohubcoMP8VkWm1sDmT+lEchO1PzoR0L+J2lzKgKYa1wtw
-	zFUbRUPuJfoKFVtbd7brLJnWKDx6RiGrwl597g11T+YwCUqHu9DKuCKVo33bg1wb
-	Nx5ymk383xgIYrsCTX84a+IledBVnWqd+GApJ6MtDVcTurcd+lK7Mxe9EEIqWWVI
-	y6WezmyliYkzcpF0fyum8d70JNnAoE1LcevN5/LUNqLQr8w02x/yChdaIRp6BZK2
-	NsJCRQ==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hayu6amv5-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 01:43:53 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-89f2846ab57so656723b3a.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 18:43:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="TfF16FCD"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3ab60ff4273so4861740a91.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 18:49:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792115033; x=1792719833; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=d2AdVVW/1VpGBm6jZek+loZ/L/qPi3e0KDm+GCFxSGY=;
-        b=bO9pe9MRUhbqpltc0Th8nBQBavQam+KsdfIpBY8Tb+jiJCvYodDFLUgoqfAmW4WZNW
-         JO+7Q0jMRpIZKcsUzQuwwS4uofsSZYkdv3PXbT1eWURdmK6Ed4SvuykDcBjvu0EjXIbK
-         7tG+gb4J9KnEpcsRv3gw67WNOUwqd1bVURkFECH5kqEB05hjrCCSlXCKmJYC46Kigg/n
-         3vTs/vaMcm6ZBpIHTQBtt9AA8qLVUij244ED2caMdT27XXOUr+KAW8oAGoM4BKt4gR3O
-         9Taefjd04kxAgZlqFuVy+karRHLn8fFFzCp/XVIvAAgD7duN2QTINVq7/yNzRskpdQF6
-         3IYA==
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792115388; x=1792720188; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dPwVl4c1uwtawzWgRvw8g4lYEeVJN5sxbD4YoVW5ucs=;
+        b=TfF16FCDYJt9EvJmkrUpsF+Ru4kEsgZTuuD0a6bck5pebxS4Duli95eF1OPFoM/3lL
+         MB8Fn2WEZ0CRngrVdzmnSlJ6QiDBjAZPwMJJbOETgsbtF/7nrBxncADYTDR9f+iOAoFT
+         6NJDROllO/AgTqw86i8yZu5YqTLiR+W2acYhtDOaFrAXPf3oh4sr5EJ94ntzm+0UnlaK
+         pjfVx5FOZTMIedsUMfImpipXjXxORI9djmSXkCD408rkaGSkzajF37AhPfLZgUO8uSdM
+         a0JJ7waNzSfV3QXmJLhG81w7Z+a/MEaUXCx1r6KxAc69eQMmh1ccbYDNJBujtqg4CE3Q
+         lOaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792115033; x=1792719833;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792115388; x=1792720188;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=d2AdVVW/1VpGBm6jZek+loZ/L/qPi3e0KDm+GCFxSGY=;
-        b=Hgv7PtBnuwcPTSg+xQ7ivEit2tHIlHSvNWUWyB2CgN9tDT6+oUG+4ismPz7rt4+tUs
-         jTEY3A5YnxjhW5mqmrC8YzVRCrGBIUvOsdT3iKrVFvfCHBlNYya5APDhGzzMbZTUtJET
-         oAbxmVJMPoytBzDDnyMOiOw/HZpztEdgu1I44hg7y44vuhoq//Ty/m1Cd5Z7rnzNnjmG
-         CHFuA4NP9hFy9J75nmF0vX1TiANXw/xz+V0aeKwp9FZCUwJTfeP9kRWvnimEOjfDxIDo
-         +1O2I7wDt73K9dBO5a9ZoN3+rpzqqowB0iQV7abOMlUVN/S7OT4GwB2JkrAyLxfDlRXS
-         8h1w==
-X-Forwarded-Encrypted: i=1; AKwUvBzcT+N8zAeOegmYowhGx8h/EmAwuAkCfM1mxlhM4WoSuuPgDBeXZNNpwLr2zL3x9rTintcU327rWimFHr0eLg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJpZPxk6+3jo+orarcUCsOhNLYtRcEUN6/rK/syA6RLhbWvhx0D
-	ueS1uXzaxX1RkzdYRQAg5WN64BzME+IeiCAdIkD/mR7OFdUVP/ZeNeR4lzlAiKB95qUiwTnjjKN
-	Ik5Rmz+zhgmTHDqmCpQbVXw2joSHLqLTuocCoscpPM4aOSLeYH5Xk7EF59CsKyzKD5KOLYA==
-X-Gm-Gg: AYBFou21F/EwGaNIqSc1LUKPdYr61f2BW9f9pUCBqm4v/xlZ5CgF439G4oO+T9gYXOA
-	iofH5ECELL7TIU37Dj1yue6pLyNFno89ophosZoT9qF2MmEX5FRdWNTIf/TC5BlmhQ61eb5OQY2
-	cGhwKtqRyUmo6XITVszK7OIznKHxyCqBWa53nnep94IwyNHJiySuxinaRICAJBCoLyfAqA2iqUS
-	EHpEHTp11SRJ9rf9gqZWtGDFoGZT3TiVawd6oPV/ma/CyzRXDY89qBuo1wuHZ0zj+10qzHwTs68
-	dtf7nYMtGbQbrmKGnEIXfduzTrfBKye7cxAK5qx53Uob4OEkKktHvdAni2nt3vIWJMmprzx9296
-	DMm/VSHf1UdOrdW3wtWIPv0eOupAamGBsSddVGoAZ6+YFNCZXvKNIJ/oft6bS01eGTV9yeVg=
-X-Received: by 2002:a05:6a00:2c85:b0:887:17f3:94f7 with SMTP id d2e1a72fcca58-897c3ef90dcmr17799428b3a.1.1792115032734;
-        Thu, 15 Oct 2026 18:43:52 -0700 (PDT)
-X-Received: by 2002:a05:6a00:2c85:b0:887:17f3:94f7 with SMTP id d2e1a72fcca58-897c3ef90dcmr17799413b3a.1.1792115032341;
-        Thu, 15 Oct 2026 18:43:52 -0700 (PDT)
-Received: from [10.133.33.32] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89f579456a1sm326500b3a.35.2026.10.15.18.43.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Oct 2026 18:43:52 -0700 (PDT)
-Message-ID: <55cd74fd-cab2-497d-83c2-82e485b1dae5@oss.qualcomm.com>
-Date: Fri, 16 Oct 2026 09:43:48 +0800
+        bh=dPwVl4c1uwtawzWgRvw8g4lYEeVJN5sxbD4YoVW5ucs=;
+        b=rLJA9NW2bAtPYD+KxM59fch7EJ3h6Q0y2jSci2pXbQvpNlV94JR607V154xkAkaGU6
+         4SxMdJas2t6xgVrmdN65F51CMuumIrepessP6oDgjxNBCGQrmpoOmAmzTBKDdspnwF6G
+         TPDPlO+djw1Uvq9NxDhEMKSAPPO8GpMaX6+m14UzVdp34YS9lezWtGEyBKHXkCQ32TWK
+         SYqWwSxXGgujsJxgo5mIGV7cTCX1z/lpFxY5o1gTyFktuPzLcsJdavj+KCil77eWGyv8
+         cN7nfwFstOw7UetX6pGH6XlYXX+DvW8FcJOGjrSCwgX6maTBv/xkB5CvxbW7GOQbM8Go
+         OVVA==
+X-Gm-Message-State: AFq9FYJ0C0F33YxauC+zTMiGn+p97aVE7AoHY6PoRJYbnZm+WRG2M9+L
+	EOQwBgw4uDpWz7O12UryZ2oo59swGUMtpv/+ntesbXYABlDo8agT0UzJ1uzZLj1ccEI=
+X-Gm-Gg: AYBFou13RDAiKVLoO3w5KhLvxzeNuGlRiLsxYoRsS/KICPefOQjACA2Z9cfZoW6LtNY
+	kg5R/P+x/PtmM7o8SreF/go/5tRGfETCzUxG+lu382ZrSXXR+KXrSKD58813DV6tZgA/+0uDQYU
+	+j41OaqCEGc8jZp5yHbBDthybKWoO/CjH+bWZK9z0Wbc6Z9G5emQqNv889SYADsmq1zJcevWcxi
+	Ya7lbyiPjgTs7bLUar1v83Sy5uC8u4FAAwN4vgqcNe4qjSsrU8ZVQe+7ttYY+Tv3nN1r/2q2Mnv
+	Pj/bz9XeSfeeamhzneBCtjch/YYJ5yDyLcH418kWRJwk8Cez02fjqN7CxoOe7sQbUQ6Hw+QUsNc
+	k2VVaqID+0vm35QYF5uMMQK8UTcWCG6Jha+29gWicRifvRzS3U2GpKszjyekc/vzhPJnpc+H+sb
+	+/ujkmM5hRLP2uwwArMrzMrVkSmzVdSWO1O4N/WcId0utjenXx2tDcjzK6PpRSCHmcCXC3vpBuz
+	oVA9g==
+X-Received: by 2002:a17:90b:57cd:b0:3ac:9d14:fe9f with SMTP id 98e67ed59e1d1-3ac9d1501d1mr3636662a91.31.1792115387985;
+        Thu, 15 Oct 2026 18:49:47 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acd3b798d3sm236472a91.3.2026.10.15.18.49.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 18:49:47 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Jeff Chen <jeff.chen_1@nxp.com>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH] wifi: nxpwifi: bound the TLV lengths in the 11AX_CFG response
+Date: Fri, 16 Oct 2026 10:49:27 +0900
+Message-ID: <20261016014927.434473-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current] wifi: ath12k: Fix failure to create
- ath12k_dp_peer on MLO reconnect
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260915080053.918500-1-miaoqing.pan@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: mv8XQr3X51IHM_abRaZz4F4VSZv1F847
-X-Authority-Analysis: v=2.4 cv=ff04WEQF c=1 sm=1 tr=0 ts=6ad18159 cx=c_pps
- a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=EUspDBNiAAAA:8 a=FeBjiSnNOcrKIJN5QMIA:9 a=QEXdDO2ut3YA:10
- a=IoOABgeZipijB_acs4fv:22
-X-Proofpoint-GUID: mv8XQr3X51IHM_abRaZz4F4VSZv1F847
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDAwNiBTYWx0ZWRfXz3UywPguOoFX
- RVwubsZLbyNlHgqi12Nhkm1OSPFBKp7B1rfpWv9gUskSuFuRv02/YtNibsLvp6uUwS279C/JXwf
- qEr9nkKvG38YZg/3pobrlLO4WeZ8B1/e4ewgovZ7x7EDUrUPKIZkHnCDWsXk575RPcHHUTfigUU
- Ba5sox0RiiKcquLmd3PzsULAtDEwJi6sObhF20JyV2wYBO3Oz0cSWqpqhXAEiIPe/TZmTXRzJFU
- HjmjKYHR5/PSpUSckIsfKNPyko4NKkrjgNC+sl2Hjl/e5KqOhv07by9YdkZ4EPRLWECvvIJkhBd
- UuM32diL2I2+Es2NqkyCrImU7AF8PFDwLkNsH0Ci9ZlIwVobi0Ry2dfuuwXdUUGQL583MQ9gzf2
- Eb1Kk16PCWjnqbkxLIIDnI40W+l7mQn6UVBY+21uGch9BB/r4NcogPcUIJfX1Knkc1rDv7u5FI8
- xHjX/i/XmnG7ShZMm5w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDAwNiBTYWx0ZWRfX1otLddDp3rNy
- zWglilruABISxrAiVPZFKBEfdTfLKDxMKk6Nwu5vLhZ0h0eHLHqKC9BDdMx3gPr56lKIhPATPhB
- yB0Tf/l81Xe6gqL/IBF9SYbIzH/+7mQ=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-14_01,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0 spamscore=0
- phishscore=0 bulkscore=0 suspectscore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610160006
+Content-Transfer-Encoding: 8bit
 
+nxpwifi_ret_11ax_cfg() walks the TLVs the firmware returns for
+HOST_CMD_11AX_CFG and copies one of them into two fixed-size
+destinations. Nothing bounds any of the three lengths involved.
 
+The walk length comes straight out of the response:
 
-On 9/15/2026 4:00 PM, Miaoqing Pan wrote:
-> In ath12k_mac_op_sta_state(), when transitioning an MLO station from
-> IEEE80211_STA_NOTEXIST to IEEE80211_STA_NONE, after ath12k_dp_peer_create()
-> succeeds, on is_sta_assoc_link verification failure, it takes the
-> 'goto exit' path instead of 'goto peer_delete', leaving a stale dp_peer on
-> the dp_peers_list.
-> 
-> On the next connection attempt, ath12k_dp_peer_create() finds the stale
-> entry and returns -EEXIST (-17):
-> 
->     wlP4p1s0: failed to insert STA entry for the AP (error -17)
-> 
-> Fix it by changing 'goto exit' to 'goto free_unassign_link'.
-> 
-> Also, there is another error path in ath12k_mac_op_sta_state() that
-> jumps to peer_delete after ath12k_mac_assign_link_sta() succeeds, without
-> undoing the assignment through ath12k_mac_free_unassign_link_sta().
-> As a result, the link RCU pointer remains assigned and a stale bit is
-> left in ahsta->links_map, which can trigger the same -EEXIST failure
-> on subsequent reconnect attempts. Fix this by redirecting that error
-> path to free_unassign_link instead.
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> 
-> Fixes: 0cd46d1f36ce ("wifi: ath12k: identify assoc link vif in station mode")
-> Fixes: ee16dcf573d5 ("wifi: ath12k: Define ath12k_dp_peer structure & APIs for create & delete")
-> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+	left_len = le16_to_cpu(resp->size) - sizeof(*he_cfg) - S_DS_GEN;
+
+left_len is a u16 and the two sizes add up to 11, so a response claiming
+fewer than 11 bytes makes the subtraction wrap instead of ending the
+walk, and the loop condition is only "left_len > sizeof(*header)".
+
+Inside the loop, header->len is used as a memcpy length twice without
+being compared to what is left or to what the destinations hold:
+
+	memcpy((u8 *)&he_cap->ext_id,
+	       (u8 *)header + sizeof(*header) + 1,
+	       tlv_len);
+	memcpy(priv->user_he_cap, (u8 *)header, sizeof(*header) + tlv_len);
+
+The first destination runs from ext_id to the end of struct
+nxpwifi_11ax_he_cap_cfg, which is 50 bytes; the second is
+priv->user_he_cap[HE_CAP_MAX_SIZE], which is 54. header->len is 16 bits.
+nxpwifi_set_11ax_status() declares the struct nxpwifi_11ax_he_cfg this
+writes into on the stack and issues the command synchronously, so the
+frame is still live when the response is parsed.
+
+Do what the driver already does elsewhere. nxpwifi_ret_get_hw_spec()
+checks that the response is longer than its fixed part before
+subtracting, and nxpwifi_update_vs_ie() rejects a token longer than the
+bytes remaining. Add the matching three checks here: refuse a response
+that cannot hold the fixed part, refuse a TLV that claims more than the
+remaining length, and refuse an HE-capability TLV that does not fit
+either destination. A TLV whose length is within those bounds is copied
+exactly as before, including one that fills both destinations completely.
+
+This is not a claim of a reachable out-of-bounds write. The lengths come
+from the device firmware, and whether it can emit these values is not
+something the tree answers. The arithmetic reaches past both
+destinations, the idiom is already in the driver, and the checks are
+cheap.
+
+The driver has not appeared in a released kernel, so there is nothing to
+backport to and no stable tag.
+
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/net/wireless/nxp/nxpwifi/11ax.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11ax.c b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+index 96540914f3cf6..7e05dd5ccaa81 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11ax.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+@@ -204,20 +204,36 @@ int nxpwifi_ret_11ax_cfg(struct nxpwifi_private *priv,
+ {
+ 	struct host_cmd_11ax_cfg *he_cfg = &resp->params.ax_cfg;
+ 	struct nxpwifi_ie_types_header *header;
+-	u16 left_len, tlv_type, tlv_len;
++	u16 resp_size, left_len, tlv_type, tlv_len;
+ 	u8 ext_id;
+ 	struct nxpwifi_11ax_he_cap_cfg *he_cap = &ax_cfg->he_cap_cfg;
+ 
+-	left_len = le16_to_cpu(resp->size) - sizeof(*he_cfg) - S_DS_GEN;
++	resp_size = le16_to_cpu(resp->size);
++	if (resp_size < S_DS_GEN + sizeof(*he_cfg))
++		return -EINVAL;
++
++	left_len = resp_size - S_DS_GEN - sizeof(*he_cfg);
+ 	header = (struct nxpwifi_ie_types_header *)he_cfg->tlv;
+ 
+ 	while (left_len > sizeof(*header)) {
+ 		tlv_type = le16_to_cpu(header->type);
+ 		tlv_len = le16_to_cpu(header->len);
+ 
++		if (sizeof(*header) + tlv_len > left_len)
++			return -EINVAL;
++
+ 		if (tlv_type == TLV_TYPE_EXTENSION_ID) {
+ 			ext_id = *((u8 *)header + sizeof(*header) + 1);
+ 			if (ext_id == WLAN_EID_EXT_HE_CAPABILITY) {
++				if (tlv_len > sizeof(*he_cap) -
++				    offsetof(struct nxpwifi_11ax_he_cap_cfg,
++					     ext_id) ||
++				    sizeof(*header) + tlv_len >
++				    sizeof(priv->user_he_cap) ||
++				    sizeof(*header) + tlv_len >
++				    sizeof(priv->user_2g_he_cap))
++					return -EINVAL;
++
+ 				he_cap->id = tlv_type;
+ 				he_cap->len = tlv_len;
+ 				memcpy((u8 *)&he_cap->ext_id,
+
+base-commit: 4056b3c9d3c92ea45955641dbafeb9b960e146ef
+-- 
+2.43.0
+
