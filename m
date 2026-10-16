@@ -1,183 +1,119 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC8B3AFAF0
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 04:25:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5889D395AD1;
+	Fri, 16 Oct 2026 05:38:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792124760; cv=none; b=dW75gTj4UQRJX7IVAhIGHkZlSijXI0+xXvsWvcn2IQrDnX4HnO9CIr+7qpG2ie7ovVMuXmpeurJOXy0xVobDBBApQ+LAuFd3E6dz6kk6+HhlUG/WfYuh7h8wmyBh2QjBlnH/AqMwaRZHob3FxNd1ErO7geVdS9YmVmiaXyHlZPs=
+	t=1792129124; cv=none; b=Uv3G7rUfzfuWH1woy0GdFS8ucYoC35ltE7yii9B/mgCa/eiIDN1gc6pJAYfKcgZu51UtfsVo+nBIOrOv6eynZgJHWB/wZOReVVmqeCqB5VetPl4w5cI+B/21IiQK9lci1nbDOIIW87dM+qSXMXFWZNtUyxsw1FceTRs9sK2XVLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792124760; c=relaxed/simple;
-	bh=AvFSkkBXaTLQaYXlLs8U7Ru/H9/uYPTAtG20hLgeY3U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QZ1m7wHNs0WlJoYl608FsIs6jEpWm2li913nUIMfRxh6zX6uOBFsD+59T2XBUzoYUvQuWJwPhAJFAQSqPo4sFoLoBbqvG7KUYLEdrUBUC92aPrxeYz5Uf+pQv9g83GoAkOi6brN0x9voUyXiyDgnedrZOS6RCXhSXAcsOh6nIWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=YkCBsgh2; arc=none smtp.client-ip=209.85.215.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792129124; c=relaxed/simple;
+	bh=yRN3IHAhSLlcnOHRWDVjO0jp4mGUUNVEuWi+SGMy2w4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iOk2wM8d92q9NM6lHIYsVD4n9K0vcMmsFooUvS4fwLdbUt7PqaFDXURET/jrb9kcjIii7hHv8fi23ZWIJ1HVI2LRyqaB9TgF0/Dq4BlCmkqKteNDLYpORp798fwbU23ZUKj4GYEl2eGtNYcnhE1cFeD+VazAxvz4egKkl2c+hFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TGISrgXL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="YkCBsgh2"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cc7e79c1eaaso2808561a12.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2026 21:25:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792124758; x=1792729558; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=sDa7AgSRCyble15tiDzF+aYI4tsftz7KyCtWm1HB4U8=;
-        b=YkCBsgh2/oknGO0RWY7tBSOMVqLjIfyHKPnnBV7Tna8M7wb5I6rfRsMMGGEe/hnFaD
-         WQG5Kw6OxMByk0/GAe+UKBzLu4Lw+gE5Ag3Pvqq0z4cE4XirzbCOKqUgRvdhiLRsvZoU
-         2S/VQ5WGoF4srogKCweSLkWp145SOyhwfIuf6AAafsKz4AuirK+q4d8+JEUALVYlb+am
-         U2AG/7uyW8OfbI3nxyS4fxBr1tfJAO3r4P36btm1Gx5CTVTPA3ilOPXfbVulImxP8lo+
-         GpgFiGZp87HQCECvMY2PMtastWr0BK+xB+4De/BfgzswIIMQv636UI+a21xJEtwxu+YJ
-         yNfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792124758; x=1792729558;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sDa7AgSRCyble15tiDzF+aYI4tsftz7KyCtWm1HB4U8=;
-        b=TnayZ0tTxiblvnczrfyAoatnp1Q0PmDzvt/5/OwciXz12Ebmfk9UrfrDYAVYVbJV0C
-         62gXCv8NMZ5YaoxYBxxqlhr2s4YTkV8/M+l0W+x93YEp+a5+nu/TMQ1pUufApPmWllC0
-         OQR0GrbRXFxUSZOH8FI/HuCOaCbzES6ETlgeZyz+kUKNj/Nq2ltk5EdoeErm6v64JhCc
-         sL60NR8rEZnNYceUBdNz26WpAgcmPtEMFWZcx+EVUjF5aU3iKavnxuRSVh39X1DLxnY3
-         z8xrAcQb0MkNl+uV8RMYtkV6I+uC/ihO64ys8floshGMGWMw8dpvUEsvUAH2qrlIW81V
-         sP8A==
-X-Gm-Message-State: AFq9FYJ7I1PfLrdLxJ1uYO/4hWRKoKbfAa0zBmr3MPYni/J1bq0cjfFU
-	0u9S4gxli50CpR51Uj2C/oFvDeK3ccfPNImgThtvsPcrE7K2HcAy9kKJ2A8eMlCispw=
-X-Gm-Gg: AYBFou23hOaUCqrzsSvIBxe1LYmA4jN0KYXJyuSPYwZMXy4fPXmjAj9jNdd6NDqost+
-	F4k0YZ1QHSaBA4dsyflPPdq0BPzSPA5qN2bJu/ab77FFojT4rbCf+xL46Ywql9lXu3ntW1MUmol
-	jGiNmDegJWha/1AzRWnHePU1ZwS8YOIFU2hXaMXD9wkd0Oh2+RG2KGchAn8j8+giE7jq7Vqssu8
-	gk4WRFgg6U5vd3xCM5MyFnRvw2VRrkkRsrRxKHd75Y/GQ1fnPe++4pF4pS39SqeWIYsVlmQQaTf
-	Bmsq7i7xyhUrg+P3lcSbNFOOb8DxWUNpCxZiMxhc8N0OHZ61jKIdXkzF9T3/LFhyCh3OtbzF/EF
-	Qxb1i3sYdm+Wvandtg8UxEE3uSQz49ZYw+bdfxCzVCG+NgVhl9QgzXQDDa0/5JeMkHtQ+S6bxNK
-	8EmCxB5AxlVmwbUWXfN8m3HJYyA+zVPMEnDmMKjZOvjH1FIwa3BIuDd3y+pd7Jk3qddmIuTg6aO
-	3zUZA==
-X-Received: by 2002:a17:90b:2d06:b0:3ab:c80:9365 with SMTP id 98e67ed59e1d1-3ab3acdf2e1mr15724116a91.42.1792124758492;
-        Thu, 15 Oct 2026 21:25:58 -0700 (PDT)
-Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd6549b761bsm424443a12.15.2026.10.15.21.25.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 21:25:58 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Jeff Chen <jeff.chen_1@nxp.com>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v3 3/3] wifi: nxpwifi: bound the TLV lengths in the 11AX_CFG response
-Date: Fri, 16 Oct 2026 13:25:42 +0900
-Message-ID: <20261016042542.773945-4-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261016042542.773945-1-yhlee@isslab.korea.ac.kr>
-References: <20261016042542.773945-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TGISrgXL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B45551F000C4;
+	Fri, 16 Oct 2026 05:38:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792129122;
+	bh=ktqFSsAx52niNcMbY6VRLuj3WY+yJAl8EZhfxOg24+s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TGISrgXLsZT/CTjeLsAIaY1W0qIJ+pKBQSG0YeThNt4I/0JCvBaoFTZAPXWGmHCad
+	 FsWo1l2SSLWIKzSvLrhQpv5RbEyMiS+3pLkdKeUqdI9Uk4YLk/L/vJ2HvpJaGqnDDO
+	 +xukVVIwCLfi9Vf2MFtSwhWzIhF20wpuJ+19jo3+tYu6fOGJZ1jb3P3d7137vUmDcE
+	 VXwdaCVqJW2wbuIlM5oNG8z7Xoa2OlFQ1P8YDaXGTBofxnC5/nd93f02C2zlRsXGwa
+	 Es0sLy0Tre9LPf3lT0Es5b2CEG0RwsvGfI7IcwB7oqKiYzEIxG7NnvW+SDXs2+7s7s
+	 tytdwblQwdoDA==
+Date: Fri, 16 Oct 2026 11:08:29 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+	Jonathan Derrick <jonathan.derrick@linux.dev>, Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	ath12k@lists.infradead.org, ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Subject: Re: [PATCH v3 1/8] PCI/ASPM: Always disable ASPM when driver
+ requests it
+Message-ID: <atG4Gaq7GLiq2H7t@debian>
+References: <20260708-pci-aspm-fix-v3-1-6bd72451746e@kernel.org>
+ <20261015230714.GA1802070@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261015230714.GA1802070@bhelgaas>
 
-nxpwifi_ret_11ax_cfg() walks the TLVs the firmware returns for
-HOST_CMD_11AX_CFG and copies one of them into two fixed-size
-destinations. Nothing bounds any of the three lengths involved.
+On Thu, Oct 15, 2026 at 06:07:14PM -0500, Bjorn Helgaas wrote:
+> On Wed, Jul 08, 2026 at 04:30:15PM +0200, Manivannan Sadhasivam wrote:
+> > From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> > 
+> > PCI core/ASPM service driver allows controlling ASPM state through
+> > pci_disable_link_state() API. It was decided earlier (see the Link
+> > below), to not allow ASPM changes when OS does not have control over it
+> > but only log a warning about the problem 'commit 2add0ec14c25 ("PCI/ASPM:
+> > Warn when driver asks to disable ASPM, but we can't do it")'.
+> > 
+> > A number of drivers have added workarounds to force ASPM off with own
+> > writes into the Link Control Register (some even with comments
+> > explaining why PCI core does not disable it under some circumstances).
+> > According to the comments, some drivers require ASPM to be off for
+> > reliable operation.
+> > 
+> > Having custom ASPM handling in drivers is problematic because the state
+> > kept in the ASPM service driver is not updated by the changes made
+> > outside the link state management API.
+> > 
+> > As the first step to address this issue, make pci_disable_link_state()
+> > to unconditionally disable ASPM so the motivation for drivers to come
+> > up with custom ASPM handling code is eliminated.
+> > 
+> > To fully take advantage of the ASPM handling core provides, the drivers
+> > that need to quirk ASPM have to be altered depend on PCIEASPM and the
+> > custom ASPM code is removed. This is to be done separately. As PCIEASPM
+> > is already behind EXPERT, it should be no problem to limit disabling it
+> > for configurations that do not require touching ASPM.
+> > 
+> > Make pci_disable_link_state() function comment to comply kerneldoc
+> > formatting while changing the description.
+> > 
+> > Link: https://lore.kernel.org/all/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com/
+> > Link: https://lore.kernel.org/all/20230511131441.45704-1-ilpo.jarvinen@linux.intel.com/
+> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> > [mani: commit message fixup]
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> I was a little confused about the provenance of this patch.  It
+> *looks* like it should have been posted somewhere by Ilpo and
+> something tweaked by Mani when applying, but none of the links above
+> are a posting of this patch.  I dug around and found
+> https://lore.kernel.org/linux-pci/20230918131103.24119-4-ilpo.jarvinen@linux.intel.com/,
+> and this patch looks like basically the aspm.c part of it, so I assume
+> that should probably be the https://patch.msgid.link/?
+> 
 
-The walk length comes straight out of the response:
+Ilpo shared this patch during the review of v1 of this series:
+https://lore.kernel.org/linux-pci/52baf40b-41ed-2588-7817-4d8cd859e0d1@linux.intel.com/
 
-	left_len = le16_to_cpu(resp->size) - sizeof(*he_cfg) - S_DS_GEN;
+> To fix the provenance and the "Drivers can controlling" typo mentioned
+> by Ilpo, I replaced this with just the aspm.c changes from
+> https://lore.kernel.org/linux-pci/20230918131103.24119-4-ilpo.jarvinen@linux.intel.com/
+> and added the CONFIG_PCIEASPM dependency to the commit log.  The code
+> change is the same.
+> 
 
-left_len is a u16 and the two sizes add up to 11, so a response claiming
-fewer than 11 bytes makes the subtraction wrap instead of ending the
-walk, and the loop condition is only "left_len > sizeof(*header)".
+This looks good to me.
 
-Inside the loop, header->len is used as a memcpy length twice without
-being compared to what is left or to what the destinations hold:
+- Mani
 
-	memcpy((u8 *)&he_cap->ext_id,
-	       (u8 *)header + sizeof(*header),
-	       tlv_len);
-	memcpy(priv->user_he_cap, (u8 *)header, sizeof(*header) + tlv_len);
-
-The first destination runs from ext_id to the end of struct
-nxpwifi_11ax_he_cap_cfg, which is 50 bytes; the second is
-priv->user_he_cap[HE_CAP_MAX_SIZE], which is 54. header->len is 16 bits.
-nxpwifi_set_11ax_status() declares the struct nxpwifi_11ax_he_cfg this
-writes into on the stack and issues the command synchronously, so the
-frame is still live when the response is parsed.
-
-Do what the driver already does elsewhere. nxpwifi_ret_sta_get_hw_spec()
-checks that the response is longer than its fixed part before
-subtracting, and nxpwifi_uap_parse_tail_ies() rejects an element longer
-than the bytes remaining. Add the matching three checks here: refuse a
-response that cannot hold the fixed part, refuse a TLV that claims more
-than the remaining length, and refuse an HE-capability TLV that does not
-fit either destination. A TLV whose length is within those bounds is
-copied exactly as before, including one that fills both destinations
-completely.
-
-This is not a claim of a reachable out-of-bounds write. The lengths come
-from the device firmware, and whether it can emit these values is not
-something the tree answers. The arithmetic reaches past both
-destinations, the idiom is already in the driver, and the checks are
-cheap.
-
-The driver has not appeared in a released kernel, so there is nothing to
-backport to and no stable tag.
-
-Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/net/wireless/nxp/nxpwifi/11ax.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/nxp/nxpwifi/11ax.c b/drivers/net/wireless/nxp/nxpwifi/11ax.c
-index a5278375329a4..d59bd213f3e45 100644
---- a/drivers/net/wireless/nxp/nxpwifi/11ax.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/11ax.c
-@@ -204,7 +204,7 @@ int nxpwifi_ret_11ax_cfg(struct nxpwifi_private *priv,
- {
- 	struct host_cmd_11ax_cfg *he_cfg = &resp->params.ax_cfg;
- 	struct nxpwifi_ie_types_header *header;
--	u16 left_len, tlv_type, tlv_len;
-+	u16 resp_size, left_len, tlv_type, tlv_len;
- 	struct nxpwifi_11ax_he_cap_cfg *he_cap;
- 	u8 ext_id;
- 
-@@ -212,16 +212,32 @@ int nxpwifi_ret_11ax_cfg(struct nxpwifi_private *priv,
- 		return 0;
- 
- 	he_cap = &ax_cfg->he_cap_cfg;
--	left_len = le16_to_cpu(resp->size) - sizeof(*he_cfg) - S_DS_GEN;
-+	resp_size = le16_to_cpu(resp->size);
-+	if (resp_size < S_DS_GEN + sizeof(*he_cfg))
-+		return -EINVAL;
-+
-+	left_len = resp_size - S_DS_GEN - sizeof(*he_cfg);
- 	header = (struct nxpwifi_ie_types_header *)he_cfg->tlv;
- 
- 	while (left_len > sizeof(*header)) {
- 		tlv_type = le16_to_cpu(header->type);
- 		tlv_len = le16_to_cpu(header->len);
- 
-+		if (sizeof(*header) + tlv_len > left_len)
-+			return -EINVAL;
-+
- 		if (tlv_type == TLV_TYPE_EXTENSION_ID && tlv_len >= 1) {
- 			ext_id = *((u8 *)header + sizeof(*header));
- 			if (ext_id == WLAN_EID_EXT_HE_CAPABILITY) {
-+				if (tlv_len > sizeof(*he_cap) -
-+				    offsetof(struct nxpwifi_11ax_he_cap_cfg,
-+					     ext_id) ||
-+				    sizeof(*header) + tlv_len >
-+				    sizeof(priv->user_he_cap) ||
-+				    sizeof(*header) + tlv_len >
-+				    sizeof(priv->user_2g_he_cap))
-+					return -EINVAL;
-+
- 				he_cap->id = tlv_type;
- 				he_cap->len = tlv_len;
- 				memcpy((u8 *)&he_cap->ext_id,
 -- 
-2.43.0
-
+மணிவண்ணன் சதாசிவம்
