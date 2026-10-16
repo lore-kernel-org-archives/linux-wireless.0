@@ -1,247 +1,194 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17EF3F9F5B;
-	Fri, 16 Oct 2026 10:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF96475356
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 11:24:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792145864; cv=none; b=NDQWex3FYmy3eVXflPo8fNK6knvoOtSjkgdPlVdQD2gzp5wKLGpjYj/UBp0YctUM5D++vJkr1BerY7TCKaSLmvhAhN1KMtN+CkAkOifzetAwDVS8oaCYucxxn2TgZkCVxsSELk+OcEaxkrFv2i6w38bkZ2KuXV5UD7eCFwvxFSU=
+	t=1792149847; cv=none; b=qWaK9kwD7/98NBSKil7+bwwBnVm1z0J6uxJZdM6ABoAlnKNQjpHgc5As5tiHEj1Rdz2GoqQXZ2ShQ/vTLH3oqieNkNgBU3BHH/ccXuffMloYTSR36epT/IVvIKigtjf4Nr5H0QMKX604jR139d3Nm53OCzQBiNiEy3kii910g5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792145864; c=relaxed/simple;
-	bh=ps4odQHHb7l/wiRUo9dzB8hrI0RD41hOHQAtb2vg9yU=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=CyF6oGBi80lDtRlYlPB60zVozfKtNW9tEbpntC1KJMPAaer1SZtbH5BWuBB1CU9N98C7zXjsHM+FjWH9vd510aQgp5BhtDxTjVU/TGx8XkclRoGJtLVDnzfwfipazTGNAMrmpafonIMHbyBkA/y42F3xdDL0wpIUTzGxXc+4MNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S85C1yLc; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1792149847; c=relaxed/simple;
+	bh=93ufhYOiLuyUD74QPZ2sf8q18rw1bsl/SNae+3jX9rw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=baH7zJBthks6I2ULdjd0bupUt3bnT53UCk8dUE2ttMmtoLDrk7rlZHo6PwleuDkAdWmU+BnKlZYfFIAlPgH0snGE0mzZkWy1K5ZWVMod6ypyN2ylXUqNYoolwjlOB9AXycoyCnnz0T5DnAhsQdGIc7V7WwgvtJYcAVGSw2qs+A8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gBXGqNbz; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=aU+ypoIe; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S85C1yLc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792145863; x=1823681863;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=ps4odQHHb7l/wiRUo9dzB8hrI0RD41hOHQAtb2vg9yU=;
-  b=S85C1yLcceF9b2gthZGV3q5EGN55+JfjOLm7gLHVdJ1V0/g8YzHIpz/d
-   oEAkySNppkaYxNDZF/YMyDTSCLeCmt5GNfR7QeJ7nxuM4DcLNvdX9JLM0
-   pUuiKh9702e+t4bDdwD1tmA91EK4D91KvkW7BnyhnSwllhuA4iPw0nZiA
-   Mtzyl6vPKY5IFs60RxD9GF43euC3lXBnALXjmGx/m2gUE+4lVN0gsQ3BN
-   2FwrW4j/P+Ijc5tf4auSK3njUn/8Mr6qL8P5DKNJOg+lIljFq/4yk6gvG
-   BHfolLnGxrhJ9oylcmvDif4yyQAnOJsfP0U03PIYktPM35v2vOaNDdrEq
-   w==;
-X-CSE-ConnectionGUID: s2RMltnvQ7OjOrUBwdCFig==
-X-CSE-MsgGUID: Yd7wZkfETBiL6kF5J6XyBA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11936"; a="947796"
-X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
-   d="scan'208";a="947796"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2026 03:17:42 -0700
-X-CSE-ConnectionGUID: HJbJ4n/iS9mI5RPiq2hT8g==
-X-CSE-MsgGUID: L52WigXOQAKc7nd3wTm9HQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
-   d="scan'208";a="1892016"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.34])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2026 03:17:35 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 16 Oct 2026 13:17:29 +0300 (EEST)
-To: Manivannan Sadhasivam <mani@kernel.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-    Jonathan Derrick <jonathan.derrick@linux.dev>, 
-    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
-    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-    Emmanuel Grumbach <egrumbach@gmail.com>, 
-    Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
- and convert Atheros drivers
-In-Reply-To: <atG61oicHbsLKiib@debian>
-Message-ID: <8ceaf259-ae07-efa1-911f-4cc86a2710c2@linux.intel.com>
-References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org> <20261014205117.GA1665327@bhelgaas> <atG61oicHbsLKiib@debian>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gBXGqNbz";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="aU+ypoIe"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69GAACCv1946429
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 11:24:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=Sue0K1r/0IfYxGQ4qyY1WgHNHZN4Dy5KY+3
+	1i3C02Gg=; b=gBXGqNbz6FgTYmO33eYcO4uwEUf3iDWcuvgw5j8vb2n5pJX39n5
+	BXgz59pOw/EXoopI2TeVGfWKDr14b9W1cVI8t4mI3SYmQjd+ahMoJY8fCOp2PRPV
+	MOfJbCj2icfA2nW2CVCuav7AyUbCj0lR7kIQivBP+gZWClAHFB1ipMKgpsFbzeTf
+	dwARh/ec2NImfrMdjuPBaS4N7od/dNr8ql3wIT61hlsemcgK78Xv4NQbMJvVqHnm
+	lUzPMbX1EzlV6/nm2iwZUwrClkIQH8U9Bmke9yvUOlrEFEpK7KMM/r+29QpEyILJ
+	eK9Tdmt5KfxbUyum/mNELP24mQzycTHe8sA==
+Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hbg5yrq5h-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 11:24:01 +0000 (GMT)
+Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-155a75f91e1so949752c88.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2026 04:24:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792149840; x=1792754640; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Sue0K1r/0IfYxGQ4qyY1WgHNHZN4Dy5KY+31i3C02Gg=;
+        b=aU+ypoIeg6l7szg4WYQIANdSemPOWF/Atl6VEI9AbxDGypdWuuaqeQ4N1zFIK0mYkw
+         A2pOTMrZn08hKrPqySM8/hERg5+QAcGrB4O47Ayeu8uJXcFuMZTlgYBX/+W3z7pYlt9O
+         +zsea2rzANpdf62IDuo9uWSxBW/B+ajKu5yF2PAPS7Be5e9b9F8QGmSCLQh6hqCVofVS
+         yu2oUP3YY4xNM93o7MO92IgB0QmCLjNBLBk1ltVOecoQqLlQ7kKRTpv68iw5pNNAY1nk
+         bffAOwl+OLhUDeNmsLeT/qc1+CTXsBrnMrAUPD/nB0BReFmH+MTyJETqCgENFVIEDAc2
+         KXCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792149840; x=1792754640;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Sue0K1r/0IfYxGQ4qyY1WgHNHZN4Dy5KY+31i3C02Gg=;
+        b=BPokCDczoykhykFo3FpRw5LzPlSMQmuQsDlWiPj88oPAp6ebhoXk8bx62PwBI21wvN
+         wEdypmAtvblDzWA5an6KEM4I3fw+A+og1t2A0pJOOS9sPm9XvxvPKe0r3EM8cZ+S6q8U
+         Ip7NFwjQBMBMJ4Hl3Jxs2KD+iqeM1+kC+NghH6hhCb/K2MJzVS6yfVfRVRN0jVO7J4wh
+         m2S2t+R4ty/TwZUpFDT49BZmhP8H4yJKpuLQpPhwzOo7f7pJK0csQQN82MY+sLZ7E3kP
+         DjZM5QHIIvMCuhdOmLUpF1OHWonIgy6m+75NEbB5pJIj7A8IKQB2P5NQJ9mWK8Ickkee
+         +fKw==
+X-Gm-Message-State: AFq9FYK8RUMJdSO1FqYyiU48TAmmQhH/d/+ar4jEiMASYd68Sw53OWqv
+	OK5GKedyBBpcES+IMzxW+JuxQmIaz6XnPk795pPxL9PXeiYNmKg0kmiao/E1h+LGpccr0PIyXuN
+	FxDr/MAMdfolOcDSe3+EOhkjx94jgt6pTAOvI6q9AYsun1jZ/8tzggQJF85sEKyC4m5rScw==
+X-Gm-Gg: AYBFou2X1M5JTtcnERyPh18N8IFUMOOU5yn4g+JPUGu/zNhs91/2w93ZaaL7w8SX0aI
+	TJ0oBeYYdijro/UG0oCMFK7oD0nYV54zfwEJDs4tA6MHJkrBUy8NN/ie20Z3d20fZdHSdmDeBgU
+	bUsM9FHFsUkOQ/roAhLZXSUVLmUCBmrFPatqGf7WVYSGlqUz2gQDBdeLIFqwK4Vt+Bfpq5spy3M
+	6hSJ5SrhXs/A11gp7gSoBV/OMReF3HZRafKBQKbe/sedpgQ742JY5WRxcYMD2gnychTfpzHv3Kd
+	cQG+h6uZI7icYAGJZbEQWxVLvBFWiDsK/RAHjKOAvg9EA6mjAZz17FrxQGqa21rAMGAX0NR0g5/
+	k5oyDhLaQeYw+3b0QYgLUohEO2c0GPdYl
+X-Received: by 2002:a05:701b:4504:10b0:182:c472:b123 with SMTP id a92af1059eb24-182c472d135mr2637381c88.1.1792149840286;
+        Fri, 16 Oct 2026 04:24:00 -0700 (PDT)
+X-Received: by 2002:a05:701b:4504:10b0:182:c472:b123 with SMTP id a92af1059eb24-182c472d135mr2637343c88.1.1792149839634;
+        Fri, 16 Oct 2026 04:23:59 -0700 (PDT)
+Received: from hu-daizhuan-sha.qualcomm.com ([114.94.8.21])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1831b859142sm5190104c88.18.2026.10.16.04.23.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 04:23:59 -0700 (PDT)
+From: Daizhuang Bai <daizhuang.bai@oss.qualcomm.com>
+To: jjohnson@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ath12k: pci: encode qmi_instance using QRTR NID bit layout
+Date: Fri, 16 Oct 2026 16:53:55 +0530
+Message-ID: <20261016112355.1108488-1-daizhuang.bai@oss.qualcomm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-1775956960-1792142584=:1180"
-Content-ID: <0d2502b4-10fe-3dd3-f6d5-e547a5ecd889@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: UADR1Pisc8FpcPFIQaXe-3I9VrbyhX0s
+X-Authority-Analysis: v=2.4 cv=M+HYuCws c=1 sm=1 tr=0 ts=6ad20951 cx=c_pps
+ a=kVLUcbK0zfr7ocalXnG1qA==:117 a=Uz3yg00KUFJ2y2WijEJ4bw==:17
+ a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8
+ a=1poW-r593qKSufNXtKQA:9 a=vr4QvYf-bLy2KjpDp97w:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDA0NSBTYWx0ZWRfX0F/kInpKccVp
+ iYyUgxbXGCUSFcvWGuGHzmVq23bjHNQ+91xlwj+powEGFfPJ/5fHJ2HT61IFU5NLHTdBViXVv5O
+ HfT6Zr0bX2YQA4IZ6+dUuLDnm4YhFYw=
+X-Proofpoint-GUID: UADR1Pisc8FpcPFIQaXe-3I9VrbyhX0s
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDA0NSBTYWx0ZWRfX+tUsmO6+/BcP
+ d2PFYTBCJm1aUfB/8tfM2pgS7QVAE4zchYfNliLioRxd6bjlUvE3P5BOIwbbu6xiX4LgceqD5rr
+ dcIo8+q682dgDHty3ellt8YZ6/ewsE8cf4gaWYsscYGWZCv7L6g9NVEtXcTerIQCziwJ27lZABd
+ TQVzdKQ4MemtJ7w+2c3r7GLZigk7qmRQ+gDlb9gvG0qFYh4isNLE1/POfgBLF+SVyhyHj4ZAaMR
+ 9fnyAKzsMnSX9Z461vGUMHvXiX42VFAUXmZFfa/tHZI93O9AuugdGzZwqpl9l/0KgTKAPBDE82l
+ +WF29kE06nTLEZBp7raTZKsRMZGLuqBrrAlXqctoLiniMPD9GO8/P4M7N9UEcW+bNMoKoXzE8B2
+ SGb1CM/82x1TFQP4sOvD1jG4uiZeo0vtFXXfqaEOaEEz9vzigSwbfcoNEs5O1p8edZ+bbf7RE3N
+ iqDQMzMD+bi3pF85pSA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-16_01,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0 clxscore=1015
+ priorityscore=1501 adultscore=0 impostorscore=0 bulkscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610160045
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+With ATH12K_FW_FEATURE_MULTI_QRTR_ID enabled, firmware derives the WLAN
+QRTR node ID as:
+  NID = IPC_ROUTER_DEFAULT_PROCESSOR_ID + PCIE_LOCAL_RSV0[15:0]
 
---8323328-1775956960-1792142584=:1180
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <391745ff-eb7c-bf57-36a4-00b885c75592@linux.intel.com>
+The host programs qmi_instance into PCIE_LOCAL_RSV0. Using an
+incompatible bit placement can overlap node IDs used by other
+processors and cause QRTR node registration conflicts.
 
-On Fri, 16 Oct 2026, Manivannan Sadhasivam wrote:
+Encode qmi_instance using the WLAN QRTR NID bit layout:
+  bits [9:6]   PCI bus number
+  bits [12:10] PCI domain number
 
-> On Wed, Oct 14, 2026 at 03:51:17PM -0500, Bjorn Helgaas wrote:
-> > [+cc Emmanuel, Matthew]
-> >=20
-> > On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
-> > > Hi,
-> > >=20
-> > > This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) =
-to
-> > > use the PCI core ASPM APIs for enabling/disabling ASPM instead of wri=
-ting
-> > > to the LNKCTL register directly. Touching LNKCTL behind the PCI core'=
-s
-> > > back leaves the ASPM service driver's view of the link state out of s=
-ync
-> > > with the hardware, which is not nice.
-> > >=20
-> > > The catch is that these drivers save the currently enabled ASPM state=
-s,
-> > > disable ASPM before firmware download, and restore the saved states
-> > > afterwards. pci_enable_link_state() cannot restore states that were
-> > > disabled via pci_disable_link_state() or blacklisted during init (lik=
-e
-> > > the pre-1.1 device blacklist, which is only meant to be overridden wi=
-th
-> > > pcie_aspm=3Dforce), and that is intentional. So the save/restore sequ=
-ence
-> > > cannot be expressed with the existing APIs.
-> > >=20
-> > > In v2 I tried to fix this by making pci_enable_link_state*() symmetri=
-c
-> > > with the disable APIs, but as pointed out during review, that also en=
-ds
-> > > up overriding the init-time blacklist for every caller (including VMD=
-),
-> > > which is not something we want. So instead, this version adds a separ=
-ate
-> > > pci_force_enable_link_state() API (patch 2) that re-enables the reque=
-sted
-> > > states unconditionally. The caller is responsible for only asking for
-> > > states the device actually supports, and the ath drivers do this by
-> > > restoring exactly what pcie_aspm_enabled() reported earlier.
-> > >=20
-> > > The first five patches touch the PCI core: patch 1 (from Ilpo) makes
-> > > pci_disable_link_state() disable ASPM unconditionally, patch 2 adds t=
-he
-> > > new API, patch 3 moves the D0 transition needed before enabling PCI-P=
-M
-> > > L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and dro=
-ps
-> > > it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-d=
-oc,
-> > > and patch 5 makes pcie_aspm_enabled() return the enabled state mask s=
-o it
-> > > can be used for save/restore. The last three patches convert the ath
-> > > drivers.
-> > >=20
-> > > Testing
-> > > =3D=3D=3D=3D=3D=3D=3D
-> > >=20
-> > > I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so th=
-at's
-> > > just the ath12k driver). Rest of the drivers are compile tested only.
-> > >=20
-> > > Merging Strategy
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > >=20
-> > > Even though there is no build dependency between the PCI core and ath=
-eros
-> > > patches, there is a functional dependency. So I'd recommend creating =
-an
-> > > immutable branch with the PCI patches and merging that branch into bo=
-th
-> > > the PCI and linux-wireless trees, and finally merging the atheros pat=
-ches
-> > > into the linux-wireless tree.
-> > >=20
-> > > If the immutable branch seems like a hassle, then the PCI core patche=
-s
-> > > could get merged first and the atheros patches can wait for the next
-> > > cycle.
-> > >=20
-> > > - Mani
-> > >=20
-> > > Changes in v3:
-> > > * Dropped the change that made pci_enable_link_state*() symmetric wit=
-h the
-> > >   disable APIs. Instead added a new pci_force_enable_link_state() API=
- used
-> > >   only by the ath drivers, so the init-time blacklist stays overridab=
-le
-> > >   only via pcie_aspm=3Dforce and existing callers like VMD are left
-> > >   untouched.
-> > > * Fixed the locked path to use pci_set_power_state_locked() for the D=
-0
-> > >   transition. The previous version called the non-locked variant, whi=
-ch
-> > >   re-acquires pci_bus_sem.
-> > > * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
-> > >   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
-> > >   (pcie_aspm_enabled() doesn't report CLKPM).
-> > > * Reworked the kernel-doc patch to cover both the enable and disable =
-APIs
-> > >   and reference the new API.
-> > > * Rebased on top of v7.2-rc1.
-> > >=20
-> > > Changes in v2:
-> > > * Reworked the pcie_aspm_enabled() API to return the enabled states
-> > >   instead of bool and used it to save/restore the ASPM states in ath
-> > >   drivers.
-> > > * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
-> > >   permission.
-> > > * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
-> > > * Rebased on top of v6.17-rc1.
-> > >=20
-> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualc=
-omm.com>
-> > > ---
-> > > Ilpo J=E4rvinen (1):
-> > >       PCI/ASPM: Always disable ASPM when driver requests it
-> >=20
-> > I put this first patch on pci/aspm for v7.4 because there seems to be
-> > a consensus that it's better to have the ASPM core disable things even
-> > if it doesn't technically have control of ASPM, because the
-> > alternative is that drivers just do it themselves, also ignoring ASPM
-> > ownership concerns.  Having the drivers do it just means the PCI core
-> > ASPM support doesn't know what's happening.
-> >=20
-> > I think we should defer the rest of these because I think there's a
-> > little room to make the enable/disable/force-enable dance more
-> > intuitive for the drivers.  As far as I know, the rest of the series
-> > is definite cleanups but doesn't fix any actual functional issues.
-> >=20
->=20
-> I wouldn't just categorize the rest of the patches as mere cleanups. They=
- are
-> indeed fixing an obvious race between PCI core and the driver doing ASPM =
-dance
-> at the same time.
+The proc_id bits [5:0] are fixed to WLAN (7) in firmware and are not
+encoded by the host.
 
-Agreed.
+Update QRTR_PCI_* masks to match these bit ranges and remove duplicate
+mask definitions.
 
-> But for sure, even after these patches, one can trigger the
-> same race between sysfs 'config' and the driver/PCI core, but that's more=
- of an
-> user trying to perform an action to trigger a race vs race happening with=
-in the
-> kernel without user intervention (which is too bad).
+Tested-on: QCC2072 hw1.0 PCI CI_WLAN.COL.1.0.c2-00229.1-QCACOLSWPL_V1_TO_SILICON-1
 
-Which is why I suggested moving to a counter based approach so we could=20
-arbitrarily overlap any number of disable/enable pairs for a state in=20
-arbitrary order, no matter what's the source.
+Signed-off-by: Daizhuang Bai <daizhuang.bai@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath12k/pci.c | 9 +++++++--
+ drivers/net/wireless/ath/ath12k/pci.h | 6 ++----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-> I'd really like to see a way forward for these patches, even with a new A=
-PI and
-> not let them fall through the cracks.
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 12bbb75570f1..ac4bfd5b247d 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -711,9 +711,14 @@ static void ath12k_pci_init_qmi_ce_config(struct ath12k_base *ab)
+ 	ab->qmi.service_ins_id = ab->hw_params->qmi_service_ins_id;
+ 
+ 	if (ath12k_fw_feature_supported(ab, ATH12K_FW_FEATURE_MULTI_QRTR_ID)) {
++		/*
++		 * QRTR NID layout: [12:10] domain, [9:6] bus, [5:0] proc_id.
++		 * proc_id is fixed for WLAN and is not encoded into qmi_instance.
++		 */
+ 		ab_pci->qmi_instance =
+-			u32_encode_bits(pci_domain_nr(bus), DOMAIN_NUMBER_MASK) |
+-			u32_encode_bits(bus->number, BUS_NUMBER_MASK);
++			u32_encode_bits(bus->number, QRTR_PCI_BUS_NUMBER_MASK) |
++			u32_encode_bits(pci_domain_nr(bus),
++					QRTR_PCI_DOMAIN_NR_MASK);
+ 		ab->qmi.service_ins_id += ab_pci->qmi_instance;
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath12k/pci.h b/drivers/net/wireless/ath/ath12k/pci.h
+index 0e0e2020c6ae..35e8e0fe15cd 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.h
++++ b/drivers/net/wireless/ath/ath12k/pci.h
+@@ -61,8 +61,6 @@
+ 
+ #define PCIE_LOCAL_REG_QRTR_NODE_ID(ab) \
+ 	((ab)->hal.regs->qrtr_node_id)
+-#define DOMAIN_NUMBER_MASK			GENMASK(7, 4)
+-#define BUS_NUMBER_MASK				GENMASK(3, 0)
+ 
+ #define PCI_BAR_WINDOW0_BASE	0x1E00000
+ #define PCI_BAR_WINDOW0_END	0x1E7FFFC
+@@ -73,8 +71,8 @@
+ #define PCI_PARF_END		0x1E0BFFC
+ #define PCI_MHIREGLEN_REG	0x1E0E100
+ #define PCI_MHI_REGION_END	0x1E0EFFC
+-#define QRTR_PCI_DOMAIN_NR_MASK		GENMASK(7, 4)
+-#define QRTR_PCI_BUS_NUMBER_MASK	GENMASK(3, 0)
++#define QRTR_PCI_BUS_NUMBER_MASK	GENMASK(9, 6)
++#define QRTR_PCI_DOMAIN_NR_MASK		GENMASK(12, 10)
+ 
+ struct ath12k_msi_user {
+ 	const char *name;
 
-Me too. The needs have simply outgrown the old API (which was never good=20
-anyway due to its asymmetry caveat).
+base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
+-- 
+2.43.0
 
---=20
- i.
---8323328-1775956960-1792142584=:1180--
