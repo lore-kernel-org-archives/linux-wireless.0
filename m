@@ -1,107 +1,161 @@
-Received: from mta0.migadu.com (out-190.mta0.migadu.com [91.218.175.190])
+Received: from mail-yx1-f50.google.com (mail-yx1-f50.google.com [74.125.224.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC8CA47F3C7
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 09:47:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.190
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792230451; cv=none; b=Liomg9j7Rd/t9Cdfjpfj3CTiw+vXuOJ+giyfT17QWDcvv64IjxBV8sXA7nMvNk3lEL9jZiBidjUhrPBkHVV7ZkwQmZjDiK9AzpikKk0uKJb+0wXhRMi2RruKWqJ0J4BJ4BMTTuDt4ZFW2zLFzXXfGUL85CdNTFbELoVRnZPZqJA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792230451; c=relaxed/simple;
-	bh=qX7rmF6h1+DZNL++qx2GfJQv14aUtMydKWiaDVtlerY=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:Cc:Subject:From:
-	 References:In-Reply-To; b=IoZ+jHc19yeADb3IrMsweyyvZzWXtv2uUeDaPPaCXG1PU9gdn7xfV+p5nk3n65UryDXvhKv0Hq3qn4l7CiVdbcNRVpks4IJiE1zEcZZqOi85wqGqOVFK1kuDYp1Fw13iSdguQwxnM3Ifcg8E9waQ2H/8oHcciGULrKLBBrJtlVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=c66ldpvY; arc=none smtp.client-ip=91.218.175.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C03A346FBC
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 10:38:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792233502; cv=pass; b=GDmDzT6uc9qdXVfluzglQZdWROIrBwchmiQMMgGy80STRmAAkNUZmlAfede9N3N31JYzcb6WJwfJKBCrddw2Tr9b4aF6Baz3q+BOzBoNAesDYD4IgayzVV1qXFlDTbOssaYG9tNGAewX4he7Q5fwUMK3ECK2tsNNknOFf4BkNU0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792233502; c=relaxed/simple;
+	bh=rUjDD6U/Vk2sVzndgzGKR20/1geXd0fQlZah3gocmXY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fMvaUqvqmE/yFJZRTCEDfSvnDT2nr0AQ8AGRos+W8SCjgoVasLo9TbhPBfZDbo+Wjc1gXnwe2PjbzgNdX1SdBDW7WadTDH5tixr77AJJc3WE4ErQ1/zjTI6dLyR1QexU0YHE08M27FsoL5iBXtss6Y2pxL5+/NFzFLxEXc05iJQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=j5FIfqGu; arc=pass smtp.client-ip=74.125.224.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="c66ldpvY"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=qX7rmF6h1+DZNL++qx2GfJQv14aUtMydKWiaDVtlerY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792230445; v=1; x=1792835245;
- b=c66ldpvYnT+E89ydv5wTqv+bBiJe0/ngQyRw+5vC0dFyYjXI0ajiZn5kbLGaVzkYpLBoTX0f
- kGzISi8wxfCQnRBNlGsWseuGnMI+Ty/P7oPJ8CcUFWKT33eZpdHAArMJ40eoHY6BhvFKW/1POvs
- EaNupO8RjjGma0GqBt78eEd4=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a42a045764720f77;
-	Sat, 17 Oct 2026 09:47:25 +0000
-X-Mizu-Trace-ID: a42a045764720f77
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="j5FIfqGu"
+Received: by mail-yx1-f50.google.com with SMTP id 956f58d0204a3-6711f05fb14so558935d50.2
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 03:38:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792233498; cv=none;
+        d=google.com; s=arc-20260327;
+        b=f/1/pHqjvbEiaQgWb90uJYhjl+AmZcbNvsmsiAOCiT6KurugBGxu6mZJujo8CzziFv
+         LhuBExUJiFBd02QuRbInXS4wKOcyftab8/apMAVUoIZ61qLD/JrmGCK99p9q8CVuvtf2
+         j3vkh0fF4BBrra+EMCpU2QDNFP/RMzW1gGew7l955/AqDPWbmai6fGrL3JRYVhjQueGr
+         QqIejdpVH4Q7Xt+TKempECR7XB2gjx9xaOixiWuWE1uLux5O3VDALnFtJYYwWV47+UlG
+         YKS41YRAJEMNMUh68sbgver7b00/GI9mp7CHSsRUAxFCt4rWoW7I7+rKUVL2wLSllMmo
+         ev4A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
+        fh=JQUcbOIocNpOSJdYrtmOhrQz9dXHoGLpc3FxPsv84uo=;
+        b=cWiDWrPYWhxSlth8Asil1Pfj036qa3qzdhEbmrvK8pnrmp9yZ5Pd+2cV4VpCvO9NxO
+         3yM0Im/6CZ5lTBBDzW6rtTG6awrjZevEZpaVHn5xIftwqu5Fm2TdBcs8OWHTzKUCHQ62
+         TSzBqqz+pHt5PFH3cX8gz/6jEMi8YV9HaKmuFgmooCaVQvvMp2RYllqPiT/UiIDVJk1v
+         DM9+L4AY90pifxr8WQy2t5DotAQXOef8oQEkASLxqo0z5Q/ub8aNeCfO9NJyqeYiLJUK
+         lp2H8tZTND/uxoITvvzT8c0p4x0QUebdDViuA5v/jbkyIjVeRHfHr3qnaBC+MTI43FdO
+         1slg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bairaktaris.de; s=google; t=1792233498; x=1792838298; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
+        b=j5FIfqGux3fWPogqh9AjX7mbsEajb8T3Hc9zBPl1s2yym7aHtAUq1iQb9AHiWggeCU
+         F2QNt/qbXONFaIC+kFNWeGATOeYftLvZJn4VKyIKS1B9pKMnnFU3roPVajtluDBLSeKf
+         /purfHugOIFBmK+Ii2pHRfCTZJNpKg60OB+QGnRv4PyuK7573FBLEEhPHmDdQYV277FV
+         VrQE0xbsvgJkdGCBvl4NWNO5J/GeCzuZkfFqU55QiQQEFhrVtd1r/TJTCOsKBmO0E7y4
+         62axBcQWHkTljhPY7MptIXDcEOEttFCRUbKBt2fU/rqtFfyR5kTSc1zaRLdPjG5ksN9x
+         yhDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792233498; x=1792838298;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
+        b=AS3BdzdxrpNyEULesXkKvqkJoVjiCiEypLkVr+9nHjzgtVv1DDoAYC0Yvr5VdDov50
+         mDtGcUl3JdUvClielm2X+Fcezvb3Qo+AjwDr7+YNIPSfPYPqdLmXV6546g45qSLG9osr
+         fq30BaXZBHpvMEY7r5VRFmmQLnRyJDJnFGZ5mAJi2YF7ZlHxXnptFWJje/ZAaMTh43KA
+         v4RvoRPqj8+TRXCXRPwBul2v+0dlctXrbVqUVi2rYZAPe4SaVGrIcr9Ongkox9SyMjuO
+         if3QdGQEtmethyikYRSSQx/wvfcHRmZ58M72/94kx3oBiDiNTxV7msXictCnvrWAWPIt
+         hcZw==
+X-Gm-Message-State: AFq9FYKyK35eMgYQcZZH6FU4wYp8jmfnOGNOexHhMTHwEUlqNGNW5c5u
+	kZ28FAGNlZeKH1Qf6+N8/ubcLED2WewpblhkvxgHKE4HKaOQO9Z8/+te+5/YflUmIetOE8/Ea+3
+	MEJ+P2vliv440jZ154jjQBd7puTwOUHz9Q9wntbtA
+X-Gm-Gg: AYBFou3h+y27QXXTWlNZfMfm+h8uQcPoE6i002w3HdZuIqaOsxoB5u2URE9oCpQVgxw
+	sy9sioHcNEz+tii4CuLsZL+axB1tsFV8nnX7jLYtp2hvEBLwgzX87NV1ldQgCJY8Wy+4Uft25x9
+	tabOBuoQpIJ95hVt1igztxedHAn4J0c/AJt+IG4kXtf0xQ6wK63HM5a3RlL5wKV4ZhxcTcLBFrG
+	0XpiYbrBV5X11oh+YQxbCb2ySpzFtRgpTTWsGXj8jhcpV2NzJMuG3BhHOrMSyOIpO+vp0DXHN7Y
+	n9f0ju9bpnK0F/Bm8JlPs0Z6teBLHc+t3hzydxvZlk+NFBvMZaZPYkiSHxbARjJzTYWP2oJosRq
+	+EYjL21zPAKEGmRM+jBoTW2WCkRvUJhs8X21zHjcV9AhLuTaRy6GLhd6XXuue3mudBDkeXCti/Y
+	1leWL84O7A8FXXxDwgtaXSAFbdyYmTn8iMe+DiHiM3GjU+9qH5QOw88onhnZ3VFU7k9pyB60XDG
+	FPQta9zwSFdC2mGsD4PO/qLHKdu+rUNttv+gnOscnKtMazJxSIg+D/Q6H85vfMli/5c+H1xWyiH
+	JTvdqgLvd1WgcQ==
+X-Received: by 2002:a53:b547:0:b0:679:aa23:4150 with SMTP id
+ 956f58d0204a3-679ca906735mr433421d50.107.1792233498275; Sat, 17 Oct 2026
+ 03:38:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 17 Oct 2026 11:47:24 +0200
-Message-Id: <DM70O3RX648Y.JHOHHH89JM3F@linux.dev>
-To: "YuanZhe Liu" <25031212351@stu.xidian.edu.cn>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <stable@vger.kernel.org>, "Sascha Hauer" <s.hauer@pengutronix.de>, "Bin Yu"
- <byu@xidian.edu.cn>, "Cheng Wen" <wencheng@xidian.edu.cn>
-Subject: Re: [PATCH] wifi: rtw88: usb: drop RX frames received before the
- device is started
-From: "Luka Gejak" <luka.gejak@linux.dev>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20261016161931.18495-1-25031212351@stu.xidian.edu.cn>
-In-Reply-To: <20261016161931.18495-1-25031212351@stu.xidian.edu.cn>
+MIME-Version: 1.0
+References: <20260910071838.1983652-1-julius@bairaktaris.de> <CAC1t37+f7+CJ+kBSe25g31fMWE65hme1m1gvB7ZZ_Ydvmce4vQ@mail.gmail.com>
+In-Reply-To: <CAC1t37+f7+CJ+kBSe25g31fMWE65hme1m1gvB7ZZ_Ydvmce4vQ@mail.gmail.com>
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Date: Sat, 17 Oct 2026 10:37:42 +0000
+X-Gm-Features: AclHuK9YPhV95_cGbl4XOUUVArJb9QpR6dXPUyjfRBwMk0R7v_0JU9GGfaOaYu8
+Message-ID: <CAC1t37KfVf18kbwDqHkVgSFMfAykqbh8th33362Sw07vTt9sMg@mail.gmail.com>
+Subject: Re: [PATCH] wifi: ath11k: request firmware-2.bin directly
+To: jjohnson@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri Oct 16, 2026 at 6:19 PM CEST, YuanZhe Liu wrote:
-> rtw_usb_probe() submits the bulk-in RX URBs at the end of probe, right
-> after rtw_register_hw(). A device can already have data queued on that
-> endpoint, so rtw_usb_read_port_complete() runs and queues the frame on
-> rtwusb->rx_queue before any interface has been brought up. Submitting
-> the URBs late does not close that window: the frame can arrive as soon
-> as they are submitted, which is still before the device is started.
->
-> rtw_usb_rx_handler() hands every non-C2H frame to mac80211 without
-> checking whether the device is running, so ieee80211_rx_irqsafe() runs
-> while local->started is still false. mac80211 treats that as a driver
-> bug and warns in ieee80211_rx_list():
->
->   WARNING: net/mac80211/rx.c:5601 at ieee80211_rx_list
->    Call Trace:
->     <IRQ>
->     ieee80211_rx_napi
->     ieee80211_rx
->     ieee80211_handle_queued_frames
->     <TASK>
->     rtw_usb_rx_resubmit
->     rtw_usb_setup_rx
->     rtw_usb_probe
->
-> The frame is dropped by mac80211 anyway, and because the URB is
-> resubmitted from its completion handler, every further frame repeats the
-> warning, which floods the log until an interface is actually started.
->
-> rtw_ops_tx() already drops frames outside of start/stop by checking
-> RTW_FLAG_RUNNING, which mirrors local->started: it is set at the end of
-> rtw_core_start() and cleared at the beginning of rtw_core_stop(). Use
-> the same check in the RX path and free the frame while the device is not
-> running. This also covers the opposite ordering, where a frame that is
-> still queued in rtwusb->rx_queue is handed over after the device has
-> been stopped again.
->
-> C2H packets are left untouched: they go to the firmware event queue
-> handled by rtw_fw_c2h_cmd_rx_irqsafe() and are never passed to mac80211.
->
-> Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-> Cc: stable@vger.kernel.org
-> Co-developed-by: Bin Yu <byu@xidian.edu.cn>
-> Signed-off-by: Bin Yu <byu@xidian.edu.cn>
-> Co-developed-by: Cheng Wen <wencheng@xidian.edu.cn>
-> Signed-off-by: Cheng Wen <wencheng@xidian.edu.cn>
-> Signed-off-by: YuanZhe Liu <25031212351@stu.xidian.edu.cn>
-> ---
+Hi Jeff,
 
-Looks good to me.
+gentle ping on this one. Would you also like the same change for
+ath12k? I can send it as a separate patch.
 
-Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+Thanks,
+Julius
 
-Best regards,
-Luka Gejak
+
+Am Do., 10. Sept. 2026 um 07:25 Uhr schrieb Julius Bairaktaris
+<julius@bairaktaris.de>:
+>
+> Hi,
+>
+> This doesn't change functionality, but log lines like
+>
+>     Could not find firmware /lib/firmware/ath11k/IPQ8074/hw2.0/firmware-2.bin
+>
+> confuse the average user.
+>
+> linux-firmware does not ship firmware-2.bin for IPQ5424. I don't have the
+> hardware, so the fix would be unverified there. Would you like the same
+> change for ath12k?
+>
+> Julius
+>
+> Am Do., 10. Sept. 2026 um 07:18 Uhr schrieb Julius Bairaktaris
+> <julius@bairaktaris.de>:
+> >
+> > ath11k treats firmware-2.bin as optional and falls back to API 1 when
+> > the file is not present. Request it with request_firmware_direct(),
+> > which does not fall back to the userspace firmware helper.
+> >
+> > Closes: https://github.com/openwrt/openwrt/issues/24743
+> > Assisted-by: Claude:claude-opus-5
+> > Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+> > ---
+> >  drivers/net/wireless/ath/ath11k/fw.c | 8 +++++---
+> >  1 file changed, 5 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath11k/fw.c b/drivers/net/wireless/ath/ath11k/fw.c
+> > index ef1b4c81843a..88ec2ffd9f00 100644
+> > --- a/drivers/net/wireless/ath/ath11k/fw.c
+> > +++ b/drivers/net/wireless/ath/ath11k/fw.c
+> > @@ -16,10 +16,12 @@ static int ath11k_fw_request_firmware_api_n(struct ath11k_base *ab,
+> >         struct ath11k_fw_ie *hdr;
+> >         const u8 *data;
+> >         __le32 *timestamp;
+> > +       char path[100];
+> >
+> > -       ab->fw.fw = ath11k_core_firmware_request(ab, name);
+> > -       if (IS_ERR(ab->fw.fw)) {
+> > -               ret = PTR_ERR(ab->fw.fw);
+> > +       ath11k_core_create_firmware_path(ab, name, path, sizeof(path));
+> > +
+> > +       ret = request_firmware_direct(&ab->fw.fw, path, ab->dev);
+> > +       if (ret) {
+> >                 ath11k_dbg(ab, ATH11K_DBG_BOOT, "failed to load %s: %d\n", name, ret);
+> >                 ab->fw.fw = NULL;
+> >                 return ret;
+> > --
+> > 2.53.0
+> >
