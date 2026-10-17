@@ -1,16 +1,16 @@
 Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C113E3546EA;
-	Sat, 17 Oct 2026 08:56:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3AF3B8D79;
+	Sat, 17 Oct 2026 08:56:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792227407; cv=none; b=e2qmzogL2N9w4XBEU5PRwZlzBotvNMGZClSGs2YKP3bPDtgGRabTYXf8gDJYydZTNA4oxomFTLLqUMiSLfn/w4lxs7g7rKreqmONtn/bKrhH/Bl6j0Z+4qVkhaW+BzR2gxX2o9RXbqe7Sqbi27ebutGQG71ToCCJJLeDqeB4Bos=
+	t=1792227418; cv=none; b=ZVV3X1joaDc7c2XKvnMCvL9Hfn9epKZUlhfDA1evkVpeHdj8BnzSj36pxrP+Xb7LF3RIoryDWZOek38cYoDH23klxSZ54PO5ycN6CCur9mizLUZ1+BgIkjxr7TjnJORdDPhRS8ckUypKPnE8KODWOkU+DWEUT0Po/38KWtesHw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792227407; c=relaxed/simple;
-	bh=H6NeQQYMoADmgPF0SUwSFUEc3vfc1ufsYvNhMJSMT/8=;
+	s=arc-20240116; t=1792227418; c=relaxed/simple;
+	bh=A4IfISFm3h7bHEEkoBPwxnVxiMuU7gHxsAV8yzFOq+Q=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VmKuGaKGA5w7Yz7oHRHMBuYI6XHpP6GNCKPXNgTIT5VHevdegkDQsQXlZD+mEau3GpD4WoaoHS8BTRicWDxmZOlkM+11x2W20VzBBlFshKui+kALQU9JGYHXL99fjbe4lrfmGbetkOo33FQDoEKLIPXFCL01Byc8yawntlEK5lk=
+	 Content-Type:Content-Disposition:In-Reply-To; b=KDLxZ4c727gT+52JVHnf74ZtV4aZ40upNhuY8Eaevw/S8qQXeiENl2HYHbxTH8WvdRF9KPlM8pC+J3nvIoYWQztgSPw4euQ4KItXAAdM29Aw1bt8xwd8gLnEJv088RjtwDmUkphcRhk+52iJ7aRRUmzvcZXIELXu3P9MnuV/Akg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
@@ -18,9 +18,9 @@ Received: from local
 	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256:X25519MLKEM768)
 	 (Exim 4.100.1)
 	(envelope-from <daniel@makrotopia.org>)
-	id 1xI0Db-000000004Gj-2AfR;
-	Sat, 17 Oct 2026 08:56:43 +0000
-Date: Sat, 17 Oct 2026 09:56:40 +0100
+	id 1xI0Dm-000000004H4-2lHH;
+	Sat, 17 Oct 2026 08:56:54 +0000
+Date: Sat, 17 Oct 2026 09:56:51 +0100
 From: Daniel Golle <daniel@makrotopia.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -32,8 +32,8 @@ To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Hans de Goede <hansg@kernel.org>, driver-core@lists.linux.dev,
 	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 2/4] wifi: iwlwifi: use device_schedule_reprobe()
-Message-ID: <b577a14960d05c7a43b1190ec8a392f5378833ae.1792203271.git.daniel@makrotopia.org>
+Subject: [PATCH v4 3/4] Bluetooth: hci_h5: use device_schedule_reprobe()
+Message-ID: <4527ba8c1bcdd073a92e7b64e2d68b2a2224d610.1792203271.git.daniel@makrotopia.org>
 References: <cover.1792203271.git.daniel@makrotopia.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -45,82 +45,94 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1792203271.git.daniel@makrotopia.org>
 
-iwl_trans_schedule_reprobe() runs device_reprobe() from a work item in
-module text that ends with module_put(THIS_MODULE), so a concurrent
-rmmod can free the module while the work still runs, and a stale
-re-probe can undo an unbind. With the work held just past module_put()
-by a test-only delay, rmmod ends in a lockdep oops on the work's lock
-class, freed with the module. Use device_schedule_reprobe(); both
-callers run in iwl_trans_restart_wk(), which ->remove() cancels
-synchronously.
+h5_btrtl_resume() runs device_reprobe() from a work item in module text
+that ends with module_put(THIS_MODULE), so a concurrent rmmod can free
+the module while the work still runs, and a stale re-probe can undo an
+unbind. Use device_schedule_reprobe(), which may be called from the
+resume callback with the device lock held.
 
-A pending re-probe no longer pins the module: rmmod succeeds and
-cancels it.
+The re-probe now runs once tasks are thawed, after the resume has
+unblocked probing.
 
-Fixes: ac1ed4163b5a ("iwlwifi: mvm: reprobe device on firmware error during restart")
+Fixes: 8589086f4efd ("Bluetooth: hci_h5: Turn off RTL8723BS on suspend, reprobe on resume")
 Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com>
+Reviewed-by: Hans de Goede <johannes.goede@oss.qualcomm.com>
 ---
-v4: commit message updated for the reworked helper; add Fixes:
-v3: no changes
-v2: no changes
+v4: commit message updated for the reworked helper; add Fixes:; code
+    unchanged, so Hans de Goede's tags, given with the v3 helper, stay
+v3: picked up Hans de Goede's Tested-by/Reviewed-by
+v2: also correct the stale device_reprobe() reference in the
+    h5_btrtl_open() comment
 v1: initial RFC
 
- .../net/wireless/intel/iwlwifi/iwl-trans.c    | 40 +------------------
- 1 file changed, 2 insertions(+), 38 deletions(-)
+ drivers/bluetooth/hci_h5.c | 43 ++++++--------------------------------
+ 1 file changed, 6 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index 73aae11250421..5ae734cb90272 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -78,47 +78,11 @@ void iwl_trans_free_restart_list(void)
- 	}
+diff --git a/drivers/bluetooth/hci_h5.c b/drivers/bluetooth/hci_h5.c
+index 37f4d9327e724..fb819d769dd52 100644
+--- a/drivers/bluetooth/hci_h5.c
++++ b/drivers/bluetooth/hci_h5.c
+@@ -989,7 +989,7 @@ static int h5_btrtl_setup(struct h5 *h5)
+ static void h5_btrtl_open(struct h5 *h5)
+ {
+ 	/*
+-	 * Since h5_btrtl_resume() does a device_reprobe() the suspend handling
++	 * Since h5_btrtl_resume() schedules a device re-probe the suspend handling
+ 	 * done by the hci_suspend_notifier is not necessary; it actually causes
+ 	 * delays and a bunch of errors to get logged, so disable it.
+ 	 */
+@@ -1048,46 +1048,15 @@ static int h5_btrtl_suspend(struct h5 *h5)
+ 	return 0;
  }
  
--struct iwl_trans_reprobe {
+-struct h5_btrtl_reprobe {
 -	struct device *dev;
--	struct delayed_work work;
+-	struct work_struct work;
 -};
 -
--static void iwl_trans_reprobe_wk(struct work_struct *wk)
+-static void h5_btrtl_reprobe_worker(struct work_struct *work)
 -{
--	struct iwl_trans_reprobe *reprobe;
+-	struct h5_btrtl_reprobe *reprobe =
+-		container_of(work, struct h5_btrtl_reprobe, work);
+-	int ret;
 -
--	reprobe = container_of(wk, typeof(*reprobe), work.work);
+-	ret = device_reprobe(reprobe->dev);
+-	if (ret && ret != -EPROBE_DEFER)
+-		dev_err(reprobe->dev, "Reprobe error %d\n", ret);
 -
--	if (device_reprobe(reprobe->dev))
--		dev_err(reprobe->dev, "reprobe failed!\n");
 -	put_device(reprobe->dev);
 -	kfree(reprobe);
 -	module_put(THIS_MODULE);
 -}
 -
- static void iwl_trans_schedule_reprobe(struct iwl_trans *trans,
- 				       unsigned int delay_ms)
+ static int h5_btrtl_resume(struct h5 *h5)
  {
--	struct iwl_trans_reprobe *reprobe;
+-	if (test_bit(H5_WAKEUP_DISABLE, &h5->flags)) {
+-		struct h5_btrtl_reprobe *reprobe;
 -
--	/*
--	 * get a module reference to avoid doing this while unloading
--	 * anyway and to avoid scheduling a work with code that's
--	 * being removed.
--	 */
--	if (!try_module_get(THIS_MODULE)) {
--		IWL_ERR(trans, "Module is being unloaded - abort\n");
--		return;
--	}
+-		reprobe = kzalloc_obj(*reprobe);
+-		if (!reprobe)
+-			return -ENOMEM;
 -
--	reprobe = kzalloc_obj(*reprobe);
--	if (!reprobe) {
--		module_put(THIS_MODULE);
--		return;
--	}
--	reprobe->dev = get_device(trans->dev);
--	INIT_DELAYED_WORK(&reprobe->work, iwl_trans_reprobe_wk);
--	schedule_delayed_work(&reprobe->work, msecs_to_jiffies(delay_ms));
-+	if (device_schedule_reprobe(trans->dev, delay_ms))
-+		IWL_ERR(trans, "Could not schedule reprobe\n");
- }
+-		__module_get(THIS_MODULE);
++	if (test_bit(H5_WAKEUP_DISABLE, &h5->flags))
++		return device_schedule_reprobe(&h5->hu->serdev->dev, 0);
  
- #define IWL_TRANS_RESET_OK_TIME	7 /* seconds */
+-		INIT_WORK(&reprobe->work, h5_btrtl_reprobe_worker);
+-		reprobe->dev = get_device(&h5->hu->serdev->dev);
+-		queue_work(system_long_wq, &reprobe->work);
+-	} else {
+-		gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
++	gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
+ 
+-		if (test_bit(H5_HW_FLOW_CONTROL, &h5->flags))
+-			serdev_device_set_flow_control(h5->hu->serdev, true);
+-	}
++	if (test_bit(H5_HW_FLOW_CONTROL, &h5->flags))
++		serdev_device_set_flow_control(h5->hu->serdev, true);
+ 
+ 	return 0;
+ }
 -- 
 2.56.0
