@@ -1,161 +1,140 @@
-Received: from mail-yx1-f50.google.com (mail-yx1-f50.google.com [74.125.224.50])
+Received: from mta1.migadu.com (out-235.mta1.migadu.com [95.215.58.235])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C03A346FBC
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 10:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792233502; cv=pass; b=GDmDzT6uc9qdXVfluzglQZdWROIrBwchmiQMMgGy80STRmAAkNUZmlAfede9N3N31JYzcb6WJwfJKBCrddw2Tr9b4aF6Baz3q+BOzBoNAesDYD4IgayzVV1qXFlDTbOssaYG9tNGAewX4he7Q5fwUMK3ECK2tsNNknOFf4BkNU0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792233502; c=relaxed/simple;
-	bh=rUjDD6U/Vk2sVzndgzGKR20/1geXd0fQlZah3gocmXY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fMvaUqvqmE/yFJZRTCEDfSvnDT2nr0AQ8AGRos+W8SCjgoVasLo9TbhPBfZDbo+Wjc1gXnwe2PjbzgNdX1SdBDW7WadTDH5tixr77AJJc3WE4ErQ1/zjTI6dLyR1QexU0YHE08M27FsoL5iBXtss6Y2pxL5+/NFzFLxEXc05iJQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=j5FIfqGu; arc=pass smtp.client-ip=74.125.224.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BBAD48097B
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 10:41:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.235
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792233682; cv=none; b=QPxoGDt5KEcryzyswmFkNr/YVB2Xbt5E0V8Rp5rWFneRQoUchk9ycpqX/wEEgVNiYJ6UikPVkeBslXi5JltQOYCYBqe9KeuYern0hO2pMxDUTEbI2kVeLvhCzhdtZJMLiST/OpXwVYwuNqzZxw5mH/P12ojKnH4KpbbZEz+n9IY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792233682; c=relaxed/simple;
+	bh=hW7ilkepWpkuj0rIHYQhV3XIofFcnCk//ZuxPfk0BmI=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=M+3ZnBSV5AdtXOx7f0Ii4j7OaGBIwzdyxADhYh3JBVTE1qqXRHD9nTZ6ceGFPWeESstMpqYKuue+Q3go04PVBGA/YG3SfJhdDCbHhm4hs0kN5iE9qo4j1bRTjjWT2oJ6yPGrSaoDnG4+/E7jI0s7gyPeFxMAEMWxge+kWvcqmbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ohxBPIfY; arc=none smtp.client-ip=95.215.58.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="j5FIfqGu"
-Received: by mail-yx1-f50.google.com with SMTP id 956f58d0204a3-6711f05fb14so558935d50.2
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 03:38:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792233498; cv=none;
-        d=google.com; s=arc-20260327;
-        b=f/1/pHqjvbEiaQgWb90uJYhjl+AmZcbNvsmsiAOCiT6KurugBGxu6mZJujo8CzziFv
-         LhuBExUJiFBd02QuRbInXS4wKOcyftab8/apMAVUoIZ61qLD/JrmGCK99p9q8CVuvtf2
-         j3vkh0fF4BBrra+EMCpU2QDNFP/RMzW1gGew7l955/AqDPWbmai6fGrL3JRYVhjQueGr
-         QqIejdpVH4Q7Xt+TKempECR7XB2gjx9xaOixiWuWE1uLux5O3VDALnFtJYYwWV47+UlG
-         YKS41YRAJEMNMUh68sbgver7b00/GI9mp7CHSsRUAxFCt4rWoW7I7+rKUVL2wLSllMmo
-         ev4A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
-        fh=JQUcbOIocNpOSJdYrtmOhrQz9dXHoGLpc3FxPsv84uo=;
-        b=cWiDWrPYWhxSlth8Asil1Pfj036qa3qzdhEbmrvK8pnrmp9yZ5Pd+2cV4VpCvO9NxO
-         3yM0Im/6CZ5lTBBDzW6rtTG6awrjZevEZpaVHn5xIftwqu5Fm2TdBcs8OWHTzKUCHQ62
-         TSzBqqz+pHt5PFH3cX8gz/6jEMi8YV9HaKmuFgmooCaVQvvMp2RYllqPiT/UiIDVJk1v
-         DM9+L4AY90pifxr8WQy2t5DotAQXOef8oQEkASLxqo0z5Q/ub8aNeCfO9NJyqeYiLJUK
-         lp2H8tZTND/uxoITvvzT8c0p4x0QUebdDViuA5v/jbkyIjVeRHfHr3qnaBC+MTI43FdO
-         1slg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1792233498; x=1792838298; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
-        b=j5FIfqGux3fWPogqh9AjX7mbsEajb8T3Hc9zBPl1s2yym7aHtAUq1iQb9AHiWggeCU
-         F2QNt/qbXONFaIC+kFNWeGATOeYftLvZJn4VKyIKS1B9pKMnnFU3roPVajtluDBLSeKf
-         /purfHugOIFBmK+Ii2pHRfCTZJNpKg60OB+QGnRv4PyuK7573FBLEEhPHmDdQYV277FV
-         VrQE0xbsvgJkdGCBvl4NWNO5J/GeCzuZkfFqU55QiQQEFhrVtd1r/TJTCOsKBmO0E7y4
-         62axBcQWHkTljhPY7MptIXDcEOEttFCRUbKBt2fU/rqtFfyR5kTSc1zaRLdPjG5ksN9x
-         yhDg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792233498; x=1792838298;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=F5snhMS2ueW2Cl14d0N6Rs5a/KC8OfBoDlKdn0Y41pQ=;
-        b=AS3BdzdxrpNyEULesXkKvqkJoVjiCiEypLkVr+9nHjzgtVv1DDoAYC0Yvr5VdDov50
-         mDtGcUl3JdUvClielm2X+Fcezvb3Qo+AjwDr7+YNIPSfPYPqdLmXV6546g45qSLG9osr
-         fq30BaXZBHpvMEY7r5VRFmmQLnRyJDJnFGZ5mAJi2YF7ZlHxXnptFWJje/ZAaMTh43KA
-         v4RvoRPqj8+TRXCXRPwBul2v+0dlctXrbVqUVi2rYZAPe4SaVGrIcr9Ongkox9SyMjuO
-         if3QdGQEtmethyikYRSSQx/wvfcHRmZ58M72/94kx3oBiDiNTxV7msXictCnvrWAWPIt
-         hcZw==
-X-Gm-Message-State: AFq9FYKyK35eMgYQcZZH6FU4wYp8jmfnOGNOexHhMTHwEUlqNGNW5c5u
-	kZ28FAGNlZeKH1Qf6+N8/ubcLED2WewpblhkvxgHKE4HKaOQO9Z8/+te+5/YflUmIetOE8/Ea+3
-	MEJ+P2vliv440jZ154jjQBd7puTwOUHz9Q9wntbtA
-X-Gm-Gg: AYBFou3h+y27QXXTWlNZfMfm+h8uQcPoE6i002w3HdZuIqaOsxoB5u2URE9oCpQVgxw
-	sy9sioHcNEz+tii4CuLsZL+axB1tsFV8nnX7jLYtp2hvEBLwgzX87NV1ldQgCJY8Wy+4Uft25x9
-	tabOBuoQpIJ95hVt1igztxedHAn4J0c/AJt+IG4kXtf0xQ6wK63HM5a3RlL5wKV4ZhxcTcLBFrG
-	0XpiYbrBV5X11oh+YQxbCb2ySpzFtRgpTTWsGXj8jhcpV2NzJMuG3BhHOrMSyOIpO+vp0DXHN7Y
-	n9f0ju9bpnK0F/Bm8JlPs0Z6teBLHc+t3hzydxvZlk+NFBvMZaZPYkiSHxbARjJzTYWP2oJosRq
-	+EYjL21zPAKEGmRM+jBoTW2WCkRvUJhs8X21zHjcV9AhLuTaRy6GLhd6XXuue3mudBDkeXCti/Y
-	1leWL84O7A8FXXxDwgtaXSAFbdyYmTn8iMe+DiHiM3GjU+9qH5QOw88onhnZ3VFU7k9pyB60XDG
-	FPQta9zwSFdC2mGsD4PO/qLHKdu+rUNttv+gnOscnKtMazJxSIg+D/Q6H85vfMli/5c+H1xWyiH
-	JTvdqgLvd1WgcQ==
-X-Received: by 2002:a53:b547:0:b0:679:aa23:4150 with SMTP id
- 956f58d0204a3-679ca906735mr433421d50.107.1792233498275; Sat, 17 Oct 2026
- 03:38:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ohxBPIfY"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=hW7ilkepWpkuj0rIHYQhV3XIofFcnCk//ZuxPfk0BmI=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792233677; v=1; x=1792838477;
+ b=ohxBPIfYl/wrqAJ9F2+OytEK6bbeNKpVw24c+k4clLpRYJE5KQXLR7V/D14/ezyiiJCuaEWI
+ 6VFqpPSbPn0B/Alxo7gi12CMcDBXU7KHzM/EbofGioobMEpPPUjWz9XwKOfaIWlQ8774aVdWEmr
+ 66iz5ggS/51H+pCtb4FPrRew=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 3011c513a0b9dcab;
+	Sat, 17 Oct 2026 10:41:17 +0000
+X-Mizu-Trace-ID: 3011c513a0b9dcab
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260910071838.1983652-1-julius@bairaktaris.de> <CAC1t37+f7+CJ+kBSe25g31fMWE65hme1m1gvB7ZZ_Ydvmce4vQ@mail.gmail.com>
-In-Reply-To: <CAC1t37+f7+CJ+kBSe25g31fMWE65hme1m1gvB7ZZ_Ydvmce4vQ@mail.gmail.com>
-From: Julius Bairaktaris <julius@bairaktaris.de>
-Date: Sat, 17 Oct 2026 10:37:42 +0000
-X-Gm-Features: AclHuK9YPhV95_cGbl4XOUUVArJb9QpR6dXPUyjfRBwMk0R7v_0JU9GGfaOaYu8
-Message-ID: <CAC1t37KfVf18kbwDqHkVgSFMfAykqbh8th33362Sw07vTt9sMg@mail.gmail.com>
-Subject: Re: [PATCH] wifi: ath11k: request firmware-2.bin directly
-To: jjohnson@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sat, 17 Oct 2026 12:41:16 +0200
+Message-Id: <DM71TCO0TBZI.1W7JBUVH0CMG7@linux.dev>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH rtw-next] wifi: rtw88: 8723d: add iface combination
+From: "Luka Gejak" <luka.gejak@linux.dev>
+To: "Carl Quist" <equalizerjr@gmail.com>, "Ping-Ke Shih"
+ <pkshih@realtek.com>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20261016214105.255517-1-equalizerjr@gmail.com>
+In-Reply-To: <20261016214105.255517-1-equalizerjr@gmail.com>
 
-Hi Jeff,
+Hi Carl,
 
-gentle ping on this one. Would you also like the same change for
-ath12k? I can send it as a separate patch.
+On Fri Oct 16, 2026 at 11:41 PM CEST, Carl Quist wrote:
+> Allow 8723d to operate a station and an AP interface concurrently, using
+> the combination already enabled for 8822c: one station plus one AP on the
+> same channel.
+>
+> Without it, the AP interface cannot be brought up while the station is
+> active (hostapd: "Could not set interface ap0 flags (UP): Device or
+> resource busy"), so an RTL8723DE laptop cannot share its Wi-Fi
+> connection.
+>
+> Tested on RTL8723DE [10ec:d723], firmware 48.0.0, kernel 7.2.5, with
+> hostapd 2.12 on a second (AP) interface with its own MAC address:
+>
+> - the AP ran beside the associated station on 2.4 GHz channel 1 (HT20)
+>   for about four hours and served a smartphone client;
+> - the AP was started and stopped repeatedly without affecting the
+>   station;
+> - with the AP running, the station was disconnected and reconnected
+>   four times; it re-associated within one second each time and the AP
+>   stayed up.
+>
+> Assisted-by: LLM
+> Signed-off-by: Carl Quist <equalizerjr@gmail.com>
+> ---
+>
+> Notes:
+>     An AI coding assistant (Claude Opus 5.5) helped investigate this, wri=
+te the
+>     change and run the tests above; I reviewed the change and tested it o=
+n my
+>     own RTL8723DE laptop.
+>
+>  drivers/net/wireless/realtek/rtw88/main.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wire=
+less/realtek/rtw88/main.c
+> index 0f23498..c64a3ba 100644
+> --- a/drivers/net/wireless/realtek/rtw88/main.c
+> +++ b/drivers/net/wireless/realtek/rtw88/main.c
+> @@ -2299,7 +2299,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct =
+ieee80211_hw *hw)
+>  	hw->wiphy->max_scan_ssids =3D RTW_SCAN_MAX_SSIDS;
+>  	hw->wiphy->max_scan_ie_len =3D rtw_get_max_scan_ie_len(rtwdev);
+> =20
+> -	if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8822C) {
+> +	if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8822C ||
+> +	    rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D) {
+>  		hw->wiphy->iface_combinations =3D rtw_iface_combs;
+>  		hw->wiphy->n_iface_combinations =3D ARRAY_SIZE(rtw_iface_combs);
+>  	}
 
-Thanks,
-Julius
+Where does the AP beacon fit in the reserved pages?
 
+This chip has 8 pages of 128 bytes, while rtl8822c has 16, so the 8822c
+never had to squeeze a beacon in next to the station pages.
 
-Am Do., 10. Sept. 2026 um 07:25 Uhr schrieb Julius Bairaktaris
-<julius@bairaktaris.de>:
->
-> Hi,
->
-> This doesn't change functionality, but log lines like
->
->     Could not find firmware /lib/firmware/ath11k/IPQ8074/hw2.0/firmware-2.bin
->
-> confuse the average user.
->
-> linux-firmware does not ship firmware-2.bin for IPQ5424. I don't have the
-> hardware, so the fix would be unverified there. Would you like the same
-> change for ath12k?
->
-> Julius
->
-> Am Do., 10. Sept. 2026 um 07:18 Uhr schrieb Julius Bairaktaris
-> <julius@bairaktaris.de>:
-> >
-> > ath11k treats firmware-2.bin as optional and falls back to API 1 when
-> > the file is not present. Request it with request_firmware_direct(),
-> > which does not fall back to the userspace firmware helper.
-> >
-> > Closes: https://github.com/openwrt/openwrt/issues/24743
-> > Assisted-by: Claude:claude-opus-5
-> > Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
-> > ---
-> >  drivers/net/wireless/ath/ath11k/fw.c | 8 +++++---
-> >  1 file changed, 5 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath11k/fw.c b/drivers/net/wireless/ath/ath11k/fw.c
-> > index ef1b4c81843a..88ec2ffd9f00 100644
-> > --- a/drivers/net/wireless/ath/ath11k/fw.c
-> > +++ b/drivers/net/wireless/ath/ath11k/fw.c
-> > @@ -16,10 +16,12 @@ static int ath11k_fw_request_firmware_api_n(struct ath11k_base *ab,
-> >         struct ath11k_fw_ie *hdr;
-> >         const u8 *data;
-> >         __le32 *timestamp;
-> > +       char path[100];
-> >
-> > -       ab->fw.fw = ath11k_core_firmware_request(ab, name);
-> > -       if (IS_ERR(ab->fw.fw)) {
-> > -               ret = PTR_ERR(ab->fw.fw);
-> > +       ath11k_core_create_firmware_path(ab, name, path, sizeof(path));
-> > +
-> > +       ret = request_firmware_direct(&ab->fw.fw, path, ab->dev);
-> > +       if (ret) {
-> >                 ath11k_dbg(ab, ATH11K_DBG_BOOT, "failed to load %s: %d\n", name, ret);
-> >                 ab->fw.fw = NULL;
-> >                 return ret;
-> > --
-> > 2.53.0
-> >
+A station vif always adds five reserved packets in
+rtw_add_rsvd_page_sta() and each one is counted after
+rtw_fill_rsvd_page_desc() adds the 40 byte tx descriptor. Four of them
+take one page, rtw_lps_pg_dpk_hdr is 169 bytes and takes two, so 6 of
+the 8 pages are gone before the beacon is even considered. The beacon is
+first in the list and its descriptor counts too:
+
+		total_page +=3D rtw_len_to_page(iter->len + tx_desc_sz,
+		                              page_size);
+
+That leaves 2 pages, so the beacon has to stay <=3D 216 bytes. Past that
+rtw_build_rsvd_page() fails with "rsvd page over size" and
+rtw_fw_download_rsvd_page() returns before rtw_download_beacon() runs.
+rtw_ops_bss_info_changed() ignores the error, so hostapd thinks the AP is
+up but no beacon ever reaches the firmware.
+
+I ran this on an RTL8723DU with your patch applied. A stock hostapd WPA2
+beacon came to 188 bytes and 28 bytes of extra IE still fit. At 29 bytes
+the driver logged "rsvd page over size: 9" and "failed to build rsvd page
+pkt" while hostapd still reported the AP as enabled. Scans still list the
+SSID because probe responses go out over the normal path, so the failure
+is easy to miss.
+
+A longer SSID, WPS or a vendor IE all add bytes to the beacon, so this is
+easy to reach in everyday usage.
+
+Can the station pages be trimmed while an AP is present, or maybe this
+combination should only be used on the chips with the bigger page budget?
+
+Best regards,
+Luka Gejak
