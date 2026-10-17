@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E7453B19B9;
-	Sat, 17 Oct 2026 17:00:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A9B3AA4E8;
+	Sat, 17 Oct 2026 17:01:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792256435; cv=none; b=mvmmB6S6Z6ox45XggjiUTv/m3Vhm2ZFjpb2I0c2yqZ4Tu0HEEIlYEQbbid+EVYzfzjnJrno1wwD8PUeY4mX9MH0yL41wsgokYLyS7aiVoSNG/UcnWNcbAj0SPNlYROOhcSKKpdMMc7UJhFxOJeudgtITceXcgU8OQooixANM9nI=
+	t=1792256470; cv=none; b=kFTg3I0uj9wagVdXtD1KEtbyQfGn977Fh4kheOGKZq2kMVqojSqUOURC33/8dPJJnvE3gcFVkR6HYpkV7IcP+s9IG7KjTiTl5Np0ukh57iogLLfpdzUDBZYkZwD7pkz2Wzi8HIT/O4LKTAg7PE26RZ9BVm2aUOReVKdqGZK/KqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792256435; c=relaxed/simple;
-	bh=2bTA97ILnQsJSGqUwFDR99XvccfbV1wSQj1zK+ZNPHA=;
+	s=arc-20240116; t=1792256470; c=relaxed/simple;
+	bh=7IyPBT2vPE9m2BPsdcRe+zvNvKk24JPt3ELwaOMmJoc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OAqD38zbssolLhTnlvqPZRDQAfvQjFvaqwgbiKT8dB5eyI16FytTdFOuAbapqo+7FGoCiXbI8BJRzGCzXO1OEL6+o5KRzAoJyE7Cq5JfWOt/5X9Q5Sl499l4Q9xkmSD5O7OhweUuJ8OqNT7uGPHcYbI2p9xtj0iOaEqmlH2gaFQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fHl8fu12; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=G2ixEi9sSL2B2/MIEQ+fHC4AIqtXF9sMWVcxxA4h99futD5ySAB77LQ4DDnVkMQemZhFnKR9FmjiKqeSvy9FtOfQn/eLbkTP9pQRR8pqTz8lfwCc4zWFs6yIVD4TPZ0rA3T0EQ3PvGdifPJwfChZwpXTf3ifTIp0Ig4TTmV8Tzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gl5h4+21; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fHl8fu12"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C9FB1F000C4;
-	Sat, 17 Oct 2026 17:00:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gl5h4+21"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77B221F000C5;
+	Sat, 17 Oct 2026 17:01:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792256434;
-	bh=YbnWqV/aiXz31EkDcm+H/Bo/C7Kw7PfSJHeX/JxezG4=;
+	s=k20260515; t=1792256468;
+	bh=0DmjvHLfi4rX4oDVLRHrraRfixBiGRCaeJVcON71fCc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fHl8fu12MEq0ZiRcm8ewBLNR6wUle1ev1Br/rpaZ9WxMTl2UdqdTcPtYsdailFWcf
-	 xGepDOTzbHztmstTDezxwyWHKCejEr6haUE+1gDAc/NzpralHcSyIwl4MIGV7jmlQB
-	 r1RAdSLjHCHB0cPuxuoHq0nHFn9AQ1zYpTKdk0tk/l5MqUrTJ1qvAerQ1VAyiyvFje
-	 Qp63tZQIZsUR7lUmBXCe+FZNVmaJ2CeQR97fCkrdtThPryDxxFNP0BbY5+FYQ4H2Zi
-	 u3LenPURx78+aG+UnDvMdbYXOa/unq9L2QkL035ecQfCb4XgaiotoE7EWqNsqlA4ct
-	 5x1ITTNkbWR4Q==
-Date: Sat, 17 Oct 2026 19:00:31 +0200
+	b=Gl5h4+21xkTA9HLQn4DCTs3dAc+/A/QPpnLU1SnPGP/SZuZwzQCZD5wRkLZ4x+0Fn
+	 ZsBaGWHLcbySiBu4SZ9zF53I31dkjHvaWTBp3QpuFWsoYrB9BHHE9W+ebxm/ty2NVe
+	 0jIxPi2ImaHKinHaFjyFC/DONvjUn6MPiid98ZGRVf8qnrS2XMEKKEocbZ83bAqPC4
+	 zHhZ5u0AukVJbeIWN2H+a0rOoYwY/Ta8jN9R13lJOPzzZt3VoRy63G5OK4qKBmetZ6
+	 hnhXxWpl9yuKL1IdMUm0B44RlTcKbwXlMIbcddd7uJrTp6x7CD1So2qvWmEHTwY27C
+	 bGSiGeyptPOEA==
+Date: Sat, 17 Oct 2026 19:01:05 +0200
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>, 
@@ -36,7 +36,7 @@ Cc: Johannes Berg <johannes@sipsolutions.net>,
 	ath12k@lists.infradead.org
 Subject: Re: [PATCH ath-next v2 01/17] dt-bindings: net: wireless: Add
  QCN6432 device tree binding documentation
-Message-ID: <20261017-little-fanatic-bulldog-e84f9d@quoll>
+Message-ID: <20261017-exuberant-benevolent-gibbon-86a45b@quoll>
 References: <20261016-mpp-bringup-v2-0-f510c33bfcf5@oss.qualcomm.com>
  <20261016-mpp-bringup-v2-1-f510c33bfcf5@oss.qualcomm.com>
 Precedence: bulk
@@ -59,19 +59,12 @@ On Fri, Oct 16, 2026 at 08:51:38AM +0530, Aaradhana Sahu wrote:
 > processor phandle, MSI interrupts, SMEM states and memory regions.
 > 
 > Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+> ---
+>  .../bindings/net/wireless/qcom,qcn6432-wifi.yaml   | 149 +++++++++++++++++++++
 
-I missed during previous review - you almost hit combo. If you added
-YAML or schema it would be the most redundant information ever. Well,
-pity, no combo.
+Heh, unfortunately need to retract my review.
 
-A nit, subject: drop second/last, redundant "device tree binding documentation". The
-"dt-bindings" prefix is already stating these.
-See also:
-https://elixir.bootlin.com/linux/v7.1-rc7/source/Documentation/devicetree/bindings/submitting-patches.rst#L23
-
-With subject fixed:
-
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Filename must match compatible.
 
 Best regards,
 Krzysztof
