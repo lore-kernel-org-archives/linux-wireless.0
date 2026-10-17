@@ -1,16 +1,16 @@
 Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3AF3B8D79;
-	Sat, 17 Oct 2026 08:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06FA3AFAEA;
+	Sat, 17 Oct 2026 08:57:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792227418; cv=none; b=ZVV3X1joaDc7c2XKvnMCvL9Hfn9epKZUlhfDA1evkVpeHdj8BnzSj36pxrP+Xb7LF3RIoryDWZOek38cYoDH23klxSZ54PO5ycN6CCur9mizLUZ1+BgIkjxr7TjnJORdDPhRS8ckUypKPnE8KODWOkU+DWEUT0Po/38KWtesHw4=
+	t=1792227445; cv=none; b=hiVFVSx4r2sKg+RB2p5T2cwJaxuzgzXS6PAguIad4a9tG66fSY4gknBT2qcGKAnoBH/rJZ0NgVLk6XcJLOOlhfsMAKlHlFjp2EB+lHfDQ+QPuc82eIuwpZ39kyRT0ZTPNr9dipJ7ZA74ExalVoKgCTdE4q5XayYTpEeP6ypv9NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792227418; c=relaxed/simple;
-	bh=A4IfISFm3h7bHEEkoBPwxnVxiMuU7gHxsAV8yzFOq+Q=;
+	s=arc-20240116; t=1792227445; c=relaxed/simple;
+	bh=pJ6eE0bFpMf4TDfDWs3yMeobveFrhNmmkJGNDG5Wveg=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KDLxZ4c727gT+52JVHnf74ZtV4aZ40upNhuY8Eaevw/S8qQXeiENl2HYHbxTH8WvdRF9KPlM8pC+J3nvIoYWQztgSPw4euQ4KItXAAdM29Aw1bt8xwd8gLnEJv088RjtwDmUkphcRhk+52iJ7aRRUmzvcZXIELXu3P9MnuV/Akg=
+	 Content-Type:Content-Disposition:In-Reply-To; b=nXH4Yt2W/NVOwC6OW/OFMmTdp/Ph3aLvr27zd7mQcKmDd0rBOCF5PLj9M1O431PTlQz4LkWNAQMYmSdQnL2Qb+mffIFyxyyh0SUvqTt60VRruhIXNhvfqlork4KjNQpyX7HVSoy2YpEJeiPEWjGmW8TuSSOOB6y2ATC90YC05h8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
@@ -18,9 +18,9 @@ Received: from local
 	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256:X25519MLKEM768)
 	 (Exim 4.100.1)
 	(envelope-from <daniel@makrotopia.org>)
-	id 1xI0Dm-000000004H4-2lHH;
-	Sat, 17 Oct 2026 08:56:54 +0000
-Date: Sat, 17 Oct 2026 09:56:51 +0100
+	id 1xI0EC-000000004Ho-19Bj;
+	Sat, 17 Oct 2026 08:57:20 +0000
+Date: Sat, 17 Oct 2026 09:57:17 +0100
 From: Daniel Golle <daniel@makrotopia.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -32,8 +32,9 @@ To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Hans de Goede <hansg@kernel.org>, driver-core@lists.linux.dev,
 	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 3/4] Bluetooth: hci_h5: use device_schedule_reprobe()
-Message-ID: <4527ba8c1bcdd073a92e7b64e2d68b2a2224d610.1792203271.git.daniel@makrotopia.org>
+Subject: [PATCH v4 4/4] Bluetooth: btintel_pcie: use
+ device_schedule_reprobe() after reset
+Message-ID: <9b078a64d003e63c617e8df41118f4ebde89aa2e.1792203271.git.daniel@makrotopia.org>
 References: <cover.1792203271.git.daniel@makrotopia.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -45,94 +46,124 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1792203271.git.daniel@makrotopia.org>
 
-h5_btrtl_resume() runs device_reprobe() from a work item in module text
-that ends with module_put(THIS_MODULE), so a concurrent rmmod can free
-the module while the work still runs, and a stale re-probe can undo an
-unbind. Use device_schedule_reprobe(), which may be called from the
-resume callback with the device lock held.
+The reset work re-probes its own device with device_reprobe() after an
+FLR or a PLDR, so .remove() runs inside it. That needs the
+current_work() check in .remove(), and 'data' must not be touched
+after the call.
 
-The re-probe now runs once tasks are thawed, after the resume has
-unblocked probing.
+Schedule the re-probe with device_schedule_reprobe(). .remove() then
+runs from the driver core's work, the current_work() check goes, and
+disable_work_sync(&data->reset_work) waits for the reset work before
+'data' is freed. Until the deferred detach 'data' stays alive but idle:
+RECOVERY_IN_PROGRESS fails send_frame and coalesces further resets,
+interrupts are masked, and the dump and rfkill workers stay disabled.
+If scheduling fails in the FLR path, the reset work re-enables them as
+on any FLR failure. The PLDR re-probe of the Wi-Fi sibling, a
+different device, is unchanged.
 
-Fixes: 8589086f4efd ("Bluetooth: hci_h5: Turn off RTL8723BS on suspend, reprobe on resume")
 Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com>
-Reviewed-by: Hans de Goede <johannes.goede@oss.qualcomm.com>
 ---
-v4: commit message updated for the reworked helper; add Fixes:; code
-    unchanged, so Hans de Goede's tags, given with the v3 helper, stay
-v3: picked up Hans de Goede's Tested-by/Reviewed-by
-v2: also correct the stale device_reprobe() reference in the
-    h5_btrtl_open() comment
+v4: rebased onto bluetooth-next for its hardware rfkill work; commit
+    message updated for the reworked helper
+v3: rebased onto bluetooth-next, whose btintel_pcie has four dump
+    workers (coredump/hwexp/fwtrigger/mbox) rather than the single one
+    the mainline snapshot v2 targeted
+v2: reconciled to the current tree and adapted the commit message
 v1: initial RFC
 
- drivers/bluetooth/hci_h5.c | 43 ++++++--------------------------------
- 1 file changed, 6 insertions(+), 37 deletions(-)
+ drivers/bluetooth/btintel_pcie.c | 47 ++++++++++++++++----------------
+ 1 file changed, 23 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/bluetooth/hci_h5.c b/drivers/bluetooth/hci_h5.c
-index 37f4d9327e724..fb819d769dd52 100644
---- a/drivers/bluetooth/hci_h5.c
-+++ b/drivers/bluetooth/hci_h5.c
-@@ -989,7 +989,7 @@ static int h5_btrtl_setup(struct h5 *h5)
- static void h5_btrtl_open(struct h5 *h5)
- {
- 	/*
--	 * Since h5_btrtl_resume() does a device_reprobe() the suspend handling
-+	 * Since h5_btrtl_resume() schedules a device re-probe the suspend handling
- 	 * done by the hci_suspend_notifier is not necessary; it actually causes
- 	 * delays and a bunch of errors to get logged, so disable it.
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index df95d16a163c8..9f65eb0ceb0b2 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -4093,7 +4093,7 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
+ 	 * BT needs pci_save_state()/pci_restore_state() because the BT driver
+ 	 * is still partially attached when the _PRR runs (it hasn't been unbound yet).
+ 	 * The PCI device needs to remain minimally functional so that
+-	 * device_reprobe(&pdev->dev) can work afterward
++	 * the deferred re-probe of the BT device can work afterward
  	 */
-@@ -1048,46 +1048,15 @@ static int h5_btrtl_suspend(struct h5 *h5)
- 	return 0;
+ 	ret = btintel_pcie_acpi_reset_method(data);
+ 
+@@ -4104,14 +4104,16 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
+ 	}
+ 
+ 	if (!ret) {
+-		if (device_reprobe(&pdev->dev))
+-			BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
++		if (device_schedule_reprobe(&pdev->dev, 0))
++			BT_ERR("BT reprobe scheduling failed for BDF:%s",
++			       pci_name(pdev));
+ 	}
  }
  
--struct h5_btrtl_reprobe {
--	struct device *dev;
--	struct work_struct work;
--};
--
--static void h5_btrtl_reprobe_worker(struct work_struct *work)
--{
--	struct h5_btrtl_reprobe *reprobe =
--		container_of(work, struct h5_btrtl_reprobe, work);
--	int ret;
--
--	ret = device_reprobe(reprobe->dev);
--	if (ret && ret != -EPROBE_DEFER)
--		dev_err(reprobe->dev, "Reprobe error %d\n", ret);
--
--	put_device(reprobe->dev);
--	kfree(reprobe);
--	module_put(THIS_MODULE);
--}
--
- static int h5_btrtl_resume(struct h5 *h5)
- {
--	if (test_bit(H5_WAKEUP_DISABLE, &h5->flags)) {
--		struct h5_btrtl_reprobe *reprobe;
--
--		reprobe = kzalloc_obj(*reprobe);
--		if (!reprobe)
--			return -ENOMEM;
--
--		__module_get(THIS_MODULE);
-+	if (test_bit(H5_WAKEUP_DISABLE, &h5->flags))
-+		return device_schedule_reprobe(&h5->hu->serdev->dev, 0);
+ /*
+- * Issue a Function Level Reset and hand teardown/re-init off to the PCI
+- * core via device_reprobe(), mirroring the PLDR path's contract.
++ * Issue a Function Level Reset and hand teardown/re-init off to the
++ * driver core via device_schedule_reprobe(), mirroring the PLDR path's
++ * contract.
+  *
+  * Caller must hold pci_lock_rescan_remove() and must have already
+  * disabled interrupts and drained both rx_work and coredump_work.
+@@ -4133,14 +4135,12 @@ static int btintel_pcie_perform_flr(struct btintel_pcie_data *data)
+ 		return err;
+ 	}
  
--		INIT_WORK(&reprobe->work, h5_btrtl_reprobe_worker);
--		reprobe->dev = get_device(&h5->hu->serdev->dev);
--		queue_work(system_long_wq, &reprobe->work);
--	} else {
--		gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
-+	gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
+-	/* device_reprobe() always detaches the driver first (running
+-	 * .remove(), which frees 'data'); any re-probe failure leaves the
+-	 * device unbound but 'data' is already gone, so just log it.
+-	 */
+-	if (device_reprobe(&pdev->dev))
+-		BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
++	err = device_schedule_reprobe(&pdev->dev, 0);
++	if (err)
++		BT_ERR("BT reprobe scheduling failed for BDF:%s",
++		       pci_name(pdev));
  
--		if (test_bit(H5_HW_FLOW_CONTROL, &h5->flags))
--			serdev_device_set_flow_control(h5->hu->serdev, true);
--	}
-+	if (test_bit(H5_HW_FLOW_CONTROL, &h5->flags))
-+		serdev_device_set_flow_control(h5->hu->serdev, true);
- 
- 	return 0;
+-	return 0;
++	return err;
  }
+ 
+ static void btintel_pcie_reset_work(struct work_struct *wk)
+@@ -4173,11 +4173,15 @@ static void btintel_pcie_reset_work(struct work_struct *wk)
+ 	disable_work_sync(&data->mbox_work);
+ 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
+ 
+-	/* Both reset paths follow the same contract: on success they
+-	 * destroy 'data' via device_reprobe() (a fresh probe re-INIT_WORKs
+-	 * the dump workers with disable count 0), so enable_work() must
+-	 * NOT be called on the success path. Only the FLR path can fail
+-	 * with 'data' still alive, in which case we balance the
++	/* Both reset paths follow the same contract: on success the
++	 * deferred re-probe scheduled with device_schedule_reprobe()
++	 * destroys 'data' by re-running .probe() (which re-INIT_WORKs the
++	 * dump workers with disable count 0), so enable_work() must NOT be
++	 * called on the success path. 'data' stays alive until the deferred
++	 * detach runs; in this window new activity is fenced by
++	 * BTINTEL_PCIE_RECOVERY_IN_PROGRESS, the masked interrupts and the
++	 * disabled dump workers. Only the FLR path can fail with no
++	 * re-probe scheduled, in which case we balance the
+ 	 * disable_work_sync() calls above so a later successful reset is
+ 	 * not permanently blocked.
+ 	 *
+@@ -4598,13 +4602,8 @@ static void btintel_pcie_remove(struct pci_dev *pdev)
+ 	disable_work_sync(&data->fwtrigger_work);
+ 	disable_work_sync(&data->mbox_work);
+ 
+-	/* Cancel pending reset work. Skip only when remove() is called from
+-	 * within the reset work itself (PLDR device_reprobe path) to avoid
+-	 * deadlock. current_work() returns the work_struct of the caller if
+-	 * we are in a workqueue context.
+-	 */
+-	if (current_work() != &data->reset_work)
+-		disable_work_sync(&data->reset_work);
++	/* reset_work may still be running after scheduling the re-probe. */
++	disable_work_sync(&data->reset_work);
+ 
+ 	btintel_pcie_mask_hw_rfkill(data);
+ 	btintel_pcie_synchronize_irqs(data);
 -- 
 2.56.0
