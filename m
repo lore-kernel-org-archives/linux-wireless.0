@@ -1,128 +1,179 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7D5377004
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 21:30:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792272655; cv=none; b=V3a+l0ZFfEg4b5UaWfXN0TVWbJyYmAe4cKpbJGmkR64bHqE2aqjRqJm5IkSePnGcPvc1qydOmIWnLPXw0fjYO5JtURrfQWfDKwBKu5eNzlZu3RJNOOo7JADxMs8xzdO+3dGqk1J6NmgsFOX+6duaoJ7xlS+PyMuemE+E2rBj9ak=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792272655; c=relaxed/simple;
-	bh=5qhJN09YPyNt7EZtN1s5WGSWuaIkBGhCn6fyXrrantY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Cda7QLoU/Ds1yTHqZh1KRklYIBby8UwCGf5cR0DAbCego3jT0sNMVkcFxfto/6HAHRLp3PYlk3EaprVvcZSAMcihOUD02z2fYF658NvN0tDN8/rD9ayg0Z+8R8BPV0EO8zFZ97jfEIlE6sHAyFGa8R9DyOO/qpGoPVs9fxYNFzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SEuvMRao; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD70A49A3B6
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 23:12:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792278773; cv=pass; b=ddDJ/rbfzx0EKRDkoqJfiSaB8+Xu+aKobH2Z9NNOOJ4doagra4BfDYMEgnhjq+ETeJXJpKkrILoQBYoh6yyBpXEuFpn4pCvxgYvi5JzHKTfKilyv7GmdDdiu2DVysgaf/74Q6rxh7Ohu6KQKsFnOB2rpgbWQmKcqkbQz5WWBb0A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792278773; c=relaxed/simple;
+	bh=Lcn+Qs0uiwtnlOCcugPxjXr2GSZhyyUpSDrObLaCOjo=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=V4jSJKyOElTbhOn3DkgIcHN44kq5JvPuKs9Tx2CEQdNwHSh/YrdM5Wu2rEXesMgGcW7mEBPvu1AvJnhtXUrNLgPWaLCBF/PPQ+EVJj78AKsh23ajGB8ZPSJvT4a7oIdjAc6zuhJ27ZwDONxDvecLhC7j/OhlJD0k/Mg6f8Xy2KQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jqv38der; arc=pass smtp.client-ip=209.85.167.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SEuvMRao"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2e95bd1c14cso7623365ad.2
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 14:30:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jqv38der"
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5be469d4f9fso849293e87.2
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 16:12:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792278770; cv=none;
+        d=google.com; s=arc-20260327;
+        b=eXXn5Yqd4Rwcp01kh40fI4yMaEcHRXavXNu+yUB+KqIPaXaeqnKYzkLxdKJKIBE+Af
+         7Is9BWwBv0aYTNYKC42OTF8xJ7xCVO5CMQv9aXFwNduH573N0SB5D+wR+ReDDCXL/91F
+         S7TQ8a+Mm7Yn6x6jADg1U9nauIn75agvYuOXUCEBZVwOkt51kw994wRhqkVEWS/lFbmb
+         QdvTJbkT5W+8fVgO8TaGJqLHF7PZDekKB8RmTJhmXtCNvKGIdBd3K5Nhhrh7Vn+GtqZy
+         df54PxzEKp/jA4ZpOMn9J3nmAa39RblTjDIxM/JlaGYeKBRAdv7zeGidH7aBWf953r/D
+         h5AA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=cLA4jswBq21u3uDgRDpKl04UzBdoBSJ1Zn64aYp/wdo=;
+        fh=3jedLMbe8S87f+9ipamBXFqbX+vHjN20ADb/zc9JI+U=;
+        b=p4B1oayOe6oh+7gKXYEBmMwM3IlAOI1R3cQtM9RBRdPhdVBSPR/y2KYQ7hJdf5sdck
+         UCMd2Tyl45SCj0WjbTAzbERJfPGiKSVIiTRlYya7fpG6yHf+MB+IOaSTxs/C8CNxyf4o
+         uRXVqf45KoljHqpbLZNswKQ64vYqMjTUdKY1ROXAx3Sp/R5HElxmdYZKwuu8k1+eG11C
+         vRGCFGuh3+lPG9XPYE0cRNm9XX+kxXOqF2mTrrUKD2YHlyD4G4msK0/gdl14KE+UISZh
+         /0Nc/kGe5HHaRVPTpj3szV5o9BmFjup57t7S5VmYsM5cY5Gv34xh0/WN6QGN1K8740cm
+         Sl3A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792272652; x=1792877452; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FiD6sMCpVV/13PjivmVbngyELUrVKdk1SGBNZwIKdms=;
-        b=SEuvMRaoDnR70YxfH2R0kxKYCNctK3PbgeWEbr2METrXbf8L46/HGQ8KzMM9lOZlDq
-         8/rTsz6ruJ56bVGshg8wAXbe1crTU26AOVym9d/Jk03HMue+MLEfqaWm81Ui6y4tJ+Pa
-         0/MZSp7ZEk7f/TpxMTDg9qizaTPSkh1auObPVzoA6Ek+IoOj+GjZfdXrmHjgIKDIKNX8
-         FJ+wmuPmg4JefDQ2IdLuZHBfzqLzwNr8w3ROBVkidUTbakDmKvh5twTy2x88TPcBmH6i
-         Dhz+IQ3iyIvkLNHhOqOo8rHK/9im9zE55thOIljs6NolBzf2Gj0M+IeobH2N0MqJeOPa
-         DtxA==
+        d=gmail.com; s=20251104; t=1792278770; x=1792883570; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cLA4jswBq21u3uDgRDpKl04UzBdoBSJ1Zn64aYp/wdo=;
+        b=Jqv38dermv21WlGlK9zYV37RxAkBqRhuNWTuAjktFcOk3aeNoqpjx22N8LxV3+PVtf
+         G2GtNkbtvu5f5g6HeulZHr17aGm6C08ghMkdsWvcDi+E9dppURqpuc5l5kew4Qf1sojG
+         6nlfspcGZqORjIjzbrBBp77Oz0DLYd0vQPEEmtRpvO1xd8VLIqvmGSAlOuPMTJHna/0r
+         IugUM6e/gbQljZC+tSw+AjKwZayyeIC6Iqd43v90uHrZRU39Y541N70j9TMcOMSk+kf6
+         ppkBvaLJ1XtD6ahiDMIT/L2j1M1ZIcf/5SPS93ikmJ3IWoaI86eU32el98EcbzCcSi1Y
+         WUXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792272652; x=1792877452;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FiD6sMCpVV/13PjivmVbngyELUrVKdk1SGBNZwIKdms=;
-        b=MYWJmCqs/FlQ3SRvAmA6U2H32dfE+j9rWbeLb7x1o5WtJZweKt29rHhNiyxNnTxQyr
-         DDUC0sakmmRnUNehihZ1Nr170jTb9oOg+AiN7a2CBcjSlXNbSGwzqYyvlctRb7neuqtA
-         HxKcRbriETPXFKaAX8vcj35eSzDquSjexuBbTqEjukuJs7oOfWolbPC+H5fERqq5WVea
-         f5TLMLCaQRrfRilhhKa1RYtDq9BN0pHngz1s5SO0z1UIWYuMNu2K7Q0lxH/k8rErOGQn
-         OSg0cABclxYleur2hIl2nQNC50T8TwplZaB/ulRs+nxmToMINRE1aZ6xgbdp43/pKMCM
-         rvKQ==
-X-Gm-Message-State: AFq9FYJGSiGFLiQDckgfctRxAY67rs+maUqDftZjHIWHWh6o9A+AHNj+
-	DaW9+qpENbZw2Q09VffGDPHNw/4ifrJfnAqIv/nO446uGwO44GrkfplcFjjv4rv/
-X-Gm-Gg: AYBFou0WMehF8Okzoaj+wKc29BqeVStwnBie7QLLxngXkYeMB/b3BYcNzLYwVUkdwFE
-	z+d0qme0zp3XcY/8ulPIuWKSsutUWjP0ZH0sPMdYNpy8X1ZY1iy44uSoVMnUtx8/8Xyh2EGiS7x
-	jnZNGlxT21KhSfbsqh+QlfX4Pnyc9KhQ1IemuuOTty2L39xZWkKvX9RbpUAdtw8ZA8wavgKdvcs
-	T2L3gvBjFrxQjrjECnTYOjXH/6XMGyUU4I57Q6b/mIsdtXLX7KwFSi0zN8/C0S+W9RAL4vzJNxX
-	kiAb3aeS5Xg3amBZbt6ON6Z6p2KZkOsDFjXeKuxccKeblsqxNhc1ycFOAJy4K7tk54gKqXXxEQp
-	FM0ub9rcSYaPuhaoznm6KKbescSBVFRdh0XOuwuUsB3S9KU7NLlCb/655fwrGapp5qLiOcQ4urq
-	ISXDClViAagT8dDvoKfDSRftamrtrFYpX4RP9oH9JOvQ29GUBt2JuzudJJDFBLeksJ578W/jmab
-	cqe7miZVvLFHBdRplaBhwGuOVGhvFe7aGGfj8f1R4NL5APeVVejixaBhUFpk4R9S99N8ilOpDB6
-	TjWKCrdX1BQFJjBcYSvJm8f3lSVpRJ1MSkJq7X/3l0Fg8It4
-X-Received: by 2002:a17:902:d2ca:b0:2dd:c100:3133 with SMTP id d9443c01a7336-2e9a6c208f0mr34763315ad.47.1792272651972;
-        Sat, 17 Oct 2026 14:30:51 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e37])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e97e8758efsm22848825ad.55.2026.10.17.14.30.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Oct 2026 14:30:50 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@kernel.org>,
-	b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH wireless] wifi: b43: encrypt robust management frames in software
-Date: Sat, 17 Oct 2026 14:30:47 -0700
-Message-ID: <20261017213047.1160219-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+        d=1e100.net; s=20260707; t=1792278770; x=1792883570;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=cLA4jswBq21u3uDgRDpKl04UzBdoBSJ1Zn64aYp/wdo=;
+        b=s7jcYuYQMf1yNwmxroWYL7V0rDWY8Dg55scl0Io9sJ6MSyDti5ERzJotZOex/HFxzc
+         LxhZ4iW53rPyx2USYY0Yi6dwcWHaTx/wNAWoyW7qDCVqKVPPC3TuzjkskSrplK0B4rcx
+         o7PqadyKOFclWN5vsiOasTsUPASQBbTC6AyjAMwPxUeL+jwViyvl2nV6ficNCf6Q/jdc
+         c2olIN91DYQAqy2PcJwXfsXDSNliQ9osjR5QLwZ/zEtfFzu9nfTylqFpqu37zXZ8da5L
+         8HAXU6uFBIYYqtLKGpqjDgqUzPDQhS2+PscPeoHn3QccB4WGPT3B4+Z8Nz4MXDOny4he
+         y5ZQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwO6uqpDomYhF3SJs1ce1juhRGzefhhGKjax3an9POAoEmD0+w7jEKI5o6o5EH4epXJ5Y0bf/Cf0CJ1LEl5Qg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKZ2AE4MrU4l/67/tnkQJFwAsT1rff0TMZvdqaOuC1lP4iQ2VhJ
+	ugtYvisTS+IAlsfJI2kLvlYS8aQA3oO1PoPkoH9V5ERlqgRjaUYSZqvz0QWAPjhj5ZRbf2DG/D8
+	kF3fLx8EqU2BkGHIM70BamhNYUmtyWRBUggvc
+X-Gm-Gg: AYBFou2gc3BShIYhhKqxAxayywA78miGIpBjJ9ftaifnTf4zPPMEa60CQThu36nwJTz
+	4tZ7C6njErcT2j603E6+0NlWnKeOyTGfowVUdlGroJDfrhVZqGbKSyr319+sHVfstUOweTVLTTg
+	U0JCx4gSkJrwvgqnh+PnA1kvpfzW+u6jfyZsK4b+oerl8FBtIAlRcFTNGNeHJCQ7k7BKnwC1nbh
+	6O2/HEGSdAb81uWikm8onGcsDRrnnBbeWCreCppaj7O6fzeInW/+pbvf0Db9iaaOffvI93fPqBa
+	z0DhX67PuEYLkueACRxPbCtMT2LTDCfwXOaG3c9g4M3iIEo4wpkLATV3TQufRoBQU7JslLljKkv
+	vwo9IYhsQtZxlZg==
+X-Received: by 2002:a05:6512:b8c:b0:5bc:dd4f:c3b with SMTP id
+ 2adb3069b0e04-5be50a72c99mr992481e87.33.1792278769657; Sat, 17 Oct 2026
+ 16:12:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: =?UTF-8?B?TG/Dr2MgS0FTU0VM?= <loic.kassel@gmail.com>
+Date: Sun, 18 Oct 2026 01:12:38 +0200
+X-Gm-Features: AclHuK9-AjNmYzX1iG8JbGL6r55wNosQzwWegrmilVkKGZR91-wQYqsz3EtKGG4
+Message-ID: <CAAzpgGdksHZjx4jc20zqnAG_PQ2e1ggANQjt2eiycUiWc+vPHg@mail.gmail.com>
+Subject: [REGRESSION] mac80211_hwsim: beacons stop after host suspend
+ (beacon_timer is CLOCK_MONOTONIC, expiry computed in boottime)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Benjamin Berg <benjamin.berg@intel.com>, linux-wireless@vger.kernel.org, 
+	regressions@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-b43 sets MFP_CAPABLE, and uploads CCMP keys to the hardware with only
-IEEE80211_KEY_FLAG_GENERATE_IV. mac80211 then leaves the encryption of
-robust management frames to the hardware as well. The hardware
-encrypts every frame as a data frame, but the CCMP nonce and AAD of a
-management frame are built differently, so the peer discards these
-frames.
+Hi,
 
-Under MFP, this hits the block ack action frames. On a BCM4331 with HT
-enabled, associated to an access point that uses PMF, the access point
-never gets the ADDBA response of the BCM4331. It waits about 100 ms
-for it, sends its frames without aggregation, and asks again with the
-next frames it has queued, so pings take 103 ms every few frames. The
-TX block ack sessions of the BCM4331 never start either. A capture on
-a second card shows the protected ADDBA exchange before every delayed
-reply, and a new dialog each time.
+Since 7.2, mac80211_hwsim radios in AP mode stop sending beacons
+after the host has been suspended once. A single beacon goes out
+roughly every <time spent in suspend> instead of every beacon
+interval, so stations see massive beacon loss, scans come back empty
+and APs without associated stations become invisible.
 
-Set IEEE80211_KEY_FLAG_SW_MGMT_TX on CCMP keys, so that mac80211
-encrypts robust management frames in software. Data frames are still
-encrypted in hardware.
+Environment: Fedora 44, kernel 7.2.11-200.fc44.x86_64, hostapd 2.10
+(Alpine), radios created with "modprobe mac80211_hwsim radios=3DN",
+wmediumd in use. I have not tested a vanilla build, but the code
+below is identical in current mainline and wireless.git.
 
-With this, the block ack sessions start in both directions, ping times
-go from 146 ms average and 918 ms maximum to 2.6 ms and 3.2 ms, and
-iperf3 from 11 to 43 Mbit/s down and from 11 to 41 Mbit/s up on a
-BCM94311CD.
+Symptoms (station side, after one ~5 min suspend of the host):
 
-Fixes: 75d057bda1fb ("b43: Fix connection problem with WPA3")
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/broadcom/b43/main.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+  $ iw dev wlan0 station dump
+          beacon loss:    480
+          beacon rx:      1
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 3825b6ad9f4f..6d7c81c98e43 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -4266,6 +4266,12 @@ static int b43_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
- 		if (algorithm == B43_SEC_ALGO_TKIP)
- 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+		/*
-+		 * The hardware encrypts every frame as a data frame, which
-+		 * is wrong for robust management frames under MFP.
-+		 */
-+		if (algorithm == B43_SEC_ALGO_AES)
-+			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
- 		break;
- 	case DISABLE_KEY: {
- 		err = b43_key_clear(dev, key->hw_key_idx);
--- 
-2.56.0
+The station stays associated (unicast data still flows, the timer is
+only used for beacons), but a second AP on another channel is never
+found by scans, so roaming cannot happen. Nothing is logged in dmesg.
 
+At that point CLOCK_BOOTTIME - CLOCK_MONOTONIC was ~302 s on the host.
+After a reboot (gap =3D 0) everything works again, including roaming,
+until the next suspend.
+
+Analysis:
+
+The beacon hrtimer is still set up on CLOCK_MONOTONIC:
+
+  hrtimer_setup(&data->link_data[i].beacon_timer, mac80211_hwsim_beacon,
+                CLOCK_MONOTONIC, HRTIMER_MODE_ABS_SOFT);
+
+but since commit 933f5bec98a1 ("wifi: mac80211_hwsim: register beacon
+timer by calculating TBTT") the callback re-arms it with an absolute
+expiry derived from the TSF:
+
+  hrtimer_set_expires(&link_data->beacon_timer,
+                      mac80211_hwsim_tsf_to_boottime(data, tbtt));
+
+and the simulated TSF is based on boottime since 1926f4e06dce ("wifi:
+mac80211_hwsim: rename and switch simulation time to boottime"). So an
+absolute boottime value is used as a CLOCK_MONOTONIC expiry. Once the
+system has been suspended, boottime is ahead of monotonic by the total
+suspend time, and every re-armed beacon lands that far in the future.
+The first beacon after enabling still works because it is started
+with HRTIMER_MODE_REL_SOFT.
+
+Before 933f5bec98a1 the callback used hrtimer_forward_now(), which is
+clock-agnostic, so 6.12 and 6.18 are not affected.
+
+Possible fix (untested): set the timer up on CLOCK_BOOTTIME, like the
+NAN timers in the same driver already are:
+
+  -      CLOCK_MONOTONIC, HRTIMER_MODE_ABS_SOFT);
+  +      CLOCK_BOOTTIME, HRTIMER_MODE_ABS_SOFT);
+
+(in mac80211_hwsim_new_radio(), for link_data[i].beacon_timer)
+
+Reproducer (wmediumd not required as far as I can tell, the timer
+path does not depend on it):
+
+  1. modprobe mac80211_hwsim radios=3D2
+  2. start hostapd (any open or WPA2 config) on the first radio,
+     scan from the second one: the AP is found
+  3. suspend the host for a while, e.g. "rtcwake -m mem -s 60"
+  4. scan again from the second radio: the AP is no longer found;
+     "iw dev <sta> station dump" on an associated station shows
+     beacon loss increasing
+
+#regzbot introduced: 933f5bec98a1
+
+I found this while building a containerlab-based Wi-Fi lab (hwsim
+radios moved into container netns, wmediumd on the host).
+
+Full disclosure: I am not a kernel developer and not very technical.
+The symptoms above are real and were observed on my machine, but the
+debugging, the code analysis and this email were done with the help of
+an AI assistant (Claude). The analysis may therefore contain mistakes.
+I am happy to test a patch or run any commands you send me.
+
+Thanks,
+Lo=C3=AFc Kassel
