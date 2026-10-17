@@ -1,172 +1,93 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E7335F619
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 15:42:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 228FE38330E
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 15:55:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792251760; cv=none; b=XZuQBvvv0lZnuiQpwkSQSE2hvePDzBhm8yfyn3Hf1KhlsPoaGSk8k/oR5yJnXLfutlIvC9GEOeHlPbmUMh3w5XAdVcMetJpmYt8uNCdq2YjWHds6wYUc3ej4w2FbqgV+YId9E/LXucD67f2jLREFNHrliPsnxpqE6aMqu1smivo=
+	t=1792252525; cv=none; b=SoJ6PiQ2OR8quu5nAD0x5n6jmP2zN+PAyt50t6u11OLQRsUSxgYFbXiVFD3DFrtAA3+ZsDAsp2IFz9rBcqx2wmn2GBfoSrdycRLGotD+HKCo0w2FtxapnPSGtqXhbCSbsCMC7fueRPrBt0RvZbIrOFivvV7Ya+zuqTHDX6HoB/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792251760; c=relaxed/simple;
-	bh=dTpKNY4MZH7g+Ivjj6pWY78uOur/Jt+K2MLhhvrrD9Q=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=U5shAKBrZgFZqx8Z/aRa5xS6WgZ0+DAIeCeqh4uFodyhPYIv/SwgOvDJRcl9Qaw7T2BnJ8b/wxnokO2CBeJSTs9xAYZz4JrZ0WEG3SrYIKEH0WUHkG1u3ZT6iLTHuhP6Xf7bY2ceRfqiiiZigbHygWxaWBwXllIWqX1kszWGStY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BMI2Qb+A; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1792252525; c=relaxed/simple;
+	bh=dSNCESu5+dm5e6z1LWQbgytixk/aVHVZlXJ92PA6rW4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ryYc1wlid8Px/kP43G0W1bpr0EKjz84QsrAKKadMisAEGys+fhHO/hxY3GuXvX4dpfrRZ4Du54QFYW6WxygaSyThvyAyiz2VqunT+s9V561t2TaMNWQnf1He5OUfw1kSaURKUSrc35JONVNvay7oYSwE4IS5oAKSttPEwvId0dQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PamsQ6Hs; arc=none smtp.client-ip=209.85.128.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BMI2Qb+A"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a1d484b4a9so11281655e9.0
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 08:42:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PamsQ6Hs"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4956869750eso5234125e9.2
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2026 08:55:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792251757; x=1792856557; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=m+YHW2+OfscAb/uB+qvUpTN/vYCgHgURqLPkFHvasWg=;
-        b=BMI2Qb+A6zfTTR7tPdwpOW7m/KBITkGXr7zAPFZVZBqT4+9ccD8c+alqzlUzDYOQll
-         62sL9QWkr9qVEAtPC6Pw+lW3uH/syKT4G2Gdj8lg/8C/pqeJbkj86XgjbM6d8/J0MbqO
-         s5wr9HcSzTT+8X9APrPP3U3c6zTPQPps8ZSzvyX3jy/LonTl2uUmkF8LKtdnUYM7GrTM
-         VNKfduWfAha4jiuQ1lC7qrVrbNp6dmzUtn0CDKKYByfJUMTaRPvs65KVDq3o0D2arH8Q
-         ZReFltfexofow823b0CYWkHygAUvchMRgM9fk8Pd5ZPaNT0Li+rP2RCblEs+UvtX5Wf4
-         7L8A==
+        d=gmail.com; s=20251104; t=1792252518; x=1792857318; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vG9pmLwap9/s2Xp+YiqlcSlpjYirU8JCd4qCN2FEQus=;
+        b=PamsQ6HsGOgvLfeAREdyzChu1qNibLUxldMbamORo8ju2Q5f/YanqbsGjGSnPAGfkb
+         jIrKML3VwW4qvhYcLF7bAOuZHag4YdE7RLRbsfXGplIYzdj1qGsRzvNtVBGFzhGxoFlN
+         e21CQl5j80LaBVQGjT2cbcqDJ0W2Xblpfm7ZABaEQtE3IDlGAt4k5e1nNkz00WS0VMF7
+         5QzFZdNb5EQjrToBjId7y/2K8gnYjc5TsL1vUQUS6HD/CqvaPug09XuOBLAI7GpC52kO
+         30Xbqsk6+YACKeCqKDnULbaSzAbiP8mmKFXj5oJMdgEjT1NJtSeqIGBN/eNUaXjUJ2VQ
+         BscQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792251757; x=1792856557;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=m+YHW2+OfscAb/uB+qvUpTN/vYCgHgURqLPkFHvasWg=;
-        b=cL8tcEWU5cKRGLdiCrHqoRVp6+eSe4qfzFdEakkSVXspy3uwgrZLkn9IuI9Hef7VJr
-         dtG1WwMXxdgd364gPamB6peoP/iDShlVKXQKgNWhrSmzlPLDRjZwua9LTJ2XZH7ezHHR
-         Tf6QQJObdqC8fOCGzLaG8cI7Qyko1zarvohaTtrM78hLeOTN/1X/QZ72qtX5muqxeSAi
-         3Fu6p+ugUagezDtvlanjI9rv+YPBf95vPFMi8z/Il/TAiiUwRY0lqX6atkm5hoL6mS3A
-         4d43DuXZJaMwnHzWMf1IqZX3p87Brv0QpRFcpvVXWdEYTP7AJS/3CZxcff1fyLlBBgJL
-         n8rg==
-X-Gm-Message-State: AFq9FYJ/2eo7F4EOGfOvthCGClWlrj12+KXUPfw+xrzDcPna3jwfARK7
-	vkP7agDLECgpH0FIIVrtam+F+UFMoJ128MhjLXgMY/eIskHi3zFEbu4nh8OsnQ==
-X-Gm-Gg: AYBFou1kaKVLC30toHz1aEru5YDdmVH2QGVVcXKD/vkgYtcjvp6KejYNFO2bXZxsFAz
-	Wjk85G7zi9uJfEnpL1EgdNt/qOq3naIbgI7hMPv5dtVR1y9pdI6nGoNbT9AyQmzfcaIha23uS1A
-	w/EDMg2fyXscYMf+cpnlTntVu8cqN81daO3qB/zqqWwvLZnpnYC55uwFibffs4HPLFuKGoarOaH
-	yBA0HoqgOsP/ft5cUdxywgk7RRB2aEsclC4trputpdIvRlcVnCYfH+dwL4S87vRJrSqS/btFPu7
-	U+JbCxI60YEgn01hIcmIfg1Xxymy10a5ij7JmBK0pOKnYvymBdTRonCLhQkVYGagYMpk9dTfHei
-	hl/VV6bWGu5nYzcLRaOryZOUNkjVfg6V7/XNmhue09T2gJye85vrACl7E8lsdtbNRJSTQjykXgH
-	M+br921Ulb63ig7umSi/xSMxMq2viHPho/ZsxRsEuJbjIb/pV0eJoCbK5B4GYwwa54FPfcSBk4z
-	XWTFokKgQK8WJ7U
-X-Received: by 2002:a05:600c:1c04:b0:4a1:e0b7:ff0c with SMTP id 5b1f17b1804b1-4a1e0b800a0mr7576295e9.8.1792251756323;
-        Sat, 17 Oct 2026 08:42:36 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1c8ce32absm96098775e9.1.2026.10.17.08.42.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 17 Oct 2026 08:42:35 -0700 (PDT)
-Message-ID: <d22c9202-d019-4ca1-8534-c23244d612d4@gmail.com>
-Date: Sat, 17 Oct 2026 18:42:34 +0300
+        d=1e100.net; s=20260707; t=1792252518; x=1792857318;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vG9pmLwap9/s2Xp+YiqlcSlpjYirU8JCd4qCN2FEQus=;
+        b=r0Gsj7K4tqg3vOV2KChrsdUb56BtLMSbnpSUmF6F30axGdV3a8FE3MqLQvGHTxXd55
+         pXxiGevARQnZ1eV7em0JFYvTs0ZL+ntKZZgI+JILZYhbEkr3jAcZE76csvGdQQk9spiM
+         J5ScAgP+S+/YtfaIZTBwk0KjybsVru/TAHwsM7Vu8+gSERwHjhmybLi2tGyb5R55dD/k
+         /uoHrf2MeiqKleZONnxBoD6MDuhg1VuxIQWwn3Sa7CUTw1MKxUfVjIt3B1IHIm3ZA+zX
+         jCllO1cIjWrwHppbB1fNRZqYU24zSQsDZ3jMz5oTYdllAsy2l+0uedYDuzR2uui6nxp0
+         jhcw==
+X-Gm-Message-State: AFq9FYJ9JeP/4OKAvn3PMbznohCYRgQpGnwWkNmR8Kwrprq7iTKQCbUU
+	r10p4rodfGt3xsGEqfUv80jpC7StEsNtY8oisPss2TnUHzK5yU2YTTHo
+X-Gm-Gg: AYBFou0eo7fB8Ky1Tfyq/79Ugo7otdyaTE8Eup7pwQ0UcdI2f3HiXF9MVv3eTpDVlha
+	4/V34559h+p4pu4IULoq/zbzsP23PBhaCw29SdLLgW7HqQFyLkt9pUS05ng1wqJ2F8Sui1xg6MA
+	PNd7fSGpQR+304sPUtGq5EeeigTGUEdZT2X+79rOJsqXlEsXHR+VXgcU8HwX+1MUyXT+I1T3iYB
+	4VHwkMfCVyWaMotZ6k2tNR5KYdh9pywWoVCQtB8QFwhqZ+njTVB4seybxaNqA6u3kgWbpyQ29nC
+	Qm/RXdjLJg9Sc4cnmKQY7F/PPx/FpcvjyQyUgImqCCX8svNL//uUy1m05LkzZu3w7JQzhXf1faO
+	+OV0tikQAlrMgYW2aGfWXMTWFATYtauXGisJFWg7CN65r5G7ky18rbU+d2/RhxLn3LtM8p2zw0C
+	651Oe00Pq6yPznzCeX4nlKHjXH3qE3G2zBpkc5OKpouAPuSBHvEEF+3a4zckouSpTF+8RWs5e2x
+	/V7zOVCjLCQgKcDEno=
+X-Received: by 2002:a05:600c:4f94:b0:4a1:a2c0:7b73 with SMTP id 5b1f17b1804b1-4a1d76086damr55314085e9.30.1792252518028;
+        Sat, 17 Oct 2026 08:55:18 -0700 (PDT)
+Received: from potato ([31.176.162.244])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1dea678cdsm42335505e9.1.2026.10.17.08.55.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 17 Oct 2026 08:55:17 -0700 (PDT)
+From: Omer El Idrissi <omer.e.idrissi@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Omer El Idrissi <omer.e.idrissi@gmail.com>
+Subject: [PATCH 0/2] mac80211: hide tracepoint definition
+Date: Sat, 17 Oct 2026 17:55:07 +0200
+Message-ID: <20261017155509.128114-1-omer.e.idrissi@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: [PATCH rtw-next] wifi: rtw88: 8723b: Read the package type from efuse
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Some chip package types need different parts of the RF initialisation
-table, so read the package type from efuse.
+This patch series does the following:
+- Move static function that uses tracepoint from header file
+  net/mac80211/driver-ops.h to net/mac80211/debugfs.c where it's called
+- hides tracepoint definition flagged by UT=1 behind
+  CONFIG_MAC80211_DEBUGFS
 
-Also disable support for 40 MHz channel width based on some other bits
-of the same efuse byte. This is not exactly the package type, but the
-vendor driver puts it in the same function.
+Omer El Idrissi (2):
+  mac80211: move static function from header to referenced file
+  mac80211: hide drv_get_stats tracepoint with ifdef guard
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/rtw8723b.c | 35 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723b.h |  8 +++++
- 2 files changed, 43 insertions(+)
+ net/mac80211/debugfs.c    | 15 +++++++++++++++
+ net/mac80211/driver-ops.h | 15 ---------------
+ net/mac80211/trace.h      |  4 ++++
+ 3 files changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-index 8bb9c03d769c..fa57900b22fa 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-@@ -6,6 +6,7 @@
- 
- #include "main.h"
- #include "coex.h"
-+#include "efuse.h"
- #include "fw.h"
- #include "mac.h"
- #include "phy.h"
-@@ -2349,6 +2350,38 @@ static void rtw8723b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 	fill_txdesc_checksum_common(txdesc, 16);
- }
- 
-+static void rtw8723b_read_package_type(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u8 val_1fb;
-+
-+	rtw8723b_efuse_grant(rtwdev, true);
-+	rtw_read8_physical_efuse(rtwdev, 0x1fb, &val_1fb);
-+	rtw8723b_efuse_grant(rtwdev, false);
-+
-+	switch (u8_get_bits(val_1fb, GENMASK(2, 0))) {
-+	case 0x4:
-+		hal->pkg_type = RTW8723B_PACKAGE_TFBGA79;
-+		break;
-+	case 0x5:
-+		hal->pkg_type = RTW8723B_PACKAGE_TFBGA90;
-+		break;
-+	case 0x6:
-+		hal->pkg_type = RTW8723B_PACKAGE_QFN68;
-+		break;
-+	case 0x7:
-+		hal->pkg_type = RTW8723B_PACKAGE_TFBGA80;
-+		break;
-+	default:
-+		hal->pkg_type = RTW8723B_PACKAGE_DEFAULT;
-+		break;
-+	}
-+
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO &&
-+	    u8_get_bits(val_1fb, GENMASK(5, 4)) == 0x2)
-+		rtwdev->efuse.hw_cap.bw &= ~BIT(RTW_CHANNEL_WIDTH_40);
-+}
-+
- static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-@@ -2374,6 +2407,8 @@ static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- 	efuse->hw_cap.bw = BIT(RTW_CHANNEL_WIDTH_20) |
- 			   BIT(RTW_CHANNEL_WIDTH_40);
- 
-+	rtw8723b_read_package_type(rtwdev);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.h b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-index cf93b93ede81..8201109c18f2 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-@@ -9,6 +9,14 @@
- 
- #include "rtw8723x.h"
- 
-+enum rtw8723b_package_type {
-+	RTW8723B_PACKAGE_DEFAULT,
-+	RTW8723B_PACKAGE_QFN68,
-+	RTW8723B_PACKAGE_TFBGA90,
-+	RTW8723B_PACKAGE_TFBGA80,
-+	RTW8723B_PACKAGE_TFBGA79,
-+};
-+
- extern const struct rtw_chip_info rtw8723b_hw_spec;
- 
- #endif
 -- 
-2.55.0
+2.53.0
 
