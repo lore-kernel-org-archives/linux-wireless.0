@@ -1,105 +1,96 @@
-Received: from ms.puri.sm (ms.puri.sm [135.181.196.210])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D393B6364;
-	Sun, 18 Oct 2026 06:58:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=135.181.196.210
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF5D1CAA6C;
+	Sun, 18 Oct 2026 07:04:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792306718; cv=none; b=l4LDTediUqV8mPOWQuergyIth/T7nDFduvvXPpHJSob5aqSilnCjar5GO/lB9hZ3XmC9cyLhzPWOICzLthiMMg/GY/QqgV9Gh0ahqEqsPd9QJQP03i5WzHwuLnZfrAfhiT2QAxZ/AeZnJ1wIqpH216pe2BNk1eFAtXJCEz+6Mjo=
+	t=1792307066; cv=none; b=d0l8P4WTJIxfQSwWWYEM01W2+5UTQs4ew40Y9AwOH/G8XCPEAUrTYlk6wkwrX1Sft8nSLd07Fqz6rVsf9eAF6iXyQ+Dh9m2b7DlZ38uCGqqZDQo3OL7f4gMQ6iazPcLQPaJHZTpv5cHrWA5vjfb2T7fp3iH/KlNjCcrTuj2bZwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792306718; c=relaxed/simple;
-	bh=qvSAkfPXBK85nIKvwlaMA+P/P+Ie/Tb7w5MX7+TjJnc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=gg31J15/3Ov3PGRm045eh1Yh4lNA3azXMnQAbmwF2Zfr3UVa6pWFpXrdmNON0A9hSmDPJu1FEzTrtKw7/6uOxx+gxWHajKzX3a8B0gW7mInIwNrLKjbD6wAJdmjfwiQVhceJ61FD5VOIfDfd3jMrlf9hevO/K3ApvgVm9Q4okbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=puri.sm; spf=pass smtp.mailfrom=puri.sm; dkim=pass (2048-bit key) header.d=puri.sm header.i=@puri.sm header.b=I/5Iwk0m; arc=none smtp.client-ip=135.181.196.210
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=puri.sm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=puri.sm
+	s=arc-20240116; t=1792307066; c=relaxed/simple;
+	bh=aMaS2RzqBspWDoLnSOlIzZikUYyiN7HpCUnFYTqtx/0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qGfDWNyOxFyX8JAH3AQWLv4AcXcn+Lv9cL5F4RjY7Smt+nwNQleMPWRiOY6yJ0v37bHp4cGOVSlWSl++ZlgnS3Xqa/T82J8/Dk81FMm5yGyEnWA4Ai0hYfjobjBQOY3D/ShhSqHvV1PmQTGadh+oesgIf5vtXvR8ACetEPfryNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PVUM9F2R; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=puri.sm header.i=@puri.sm header.b="I/5Iwk0m"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=puri.sm; s=smtp2;
-	t=1792306386; bh=qvSAkfPXBK85nIKvwlaMA+P/P+Ie/Tb7w5MX7+TjJnc=;
-	h=From:Date:Subject:To:Cc;
-	b=I/5Iwk0mCGzuK1LgV8pHZe3TdxIJDUqXuwL09Ck+HuGsz3x1lR0e+g6/rcArr7A32
-	 9DSaHKuUGE8QOwHiOICZuNEOl7fKs2QJLwB2hsAOgnFPpJr39hXjyf/YXLgdUliTcu
-	 bVTURQVN4cXzA1VhUm/TIxL1z69lYPRlCxtt4GVBgvPXdXcuqxmTzOwFyJ+AWWMIjE
-	 AF/NPX6CKOxxFnF3ix/RKCdCwjJJGWS8efiAS01UsxEM7FNoJ60CBQuE6E9uOmoW5D
-	 iQTf+qqs3+tQ0ZJK1RL48CttfBwfo/0C400KrN/bghIaROkTauEJgEnWmC6Fnlfu2y
-	 urw79LIx1l6bQ==
-Received: from pliszka.localdomain (83.24.27.201.ipv4.supernova.orange.pl [83.24.27.201])
-	by ms.puri.sm (Postfix) with ESMTPSA id DA1F51F5E8;
-	Sat, 17 Oct 2026 23:53:05 -0700 (PDT)
-From: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
-Date: Sun, 18 Oct 2026 08:52:43 +0200
-Subject: [PATCH] wifi: brcmfmac: use ISO3166 country code fallback on 43752
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PVUM9F2R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792307065; x=1823843065;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=aMaS2RzqBspWDoLnSOlIzZikUYyiN7HpCUnFYTqtx/0=;
+  b=PVUM9F2RP4SVAEreiqGnKp8tvvi16u0WGMZuKzScipl3c9lF/FockH8P
+   QjOLR8SSi8DhDxyIAx1vr5zBDNtydjIgSswlXBbhPvmrq+SZ/Om3oA77T
+   md7u4CyctSw/erUb9ZvLXmB5oBV2BdPDCCZ72m0EeRT2Bnlne60ljble5
+   o7v/tsMwuisxL0R36ZFJLLfKBXU3vrwcfB8TD57XaAsFPwqGV0xyTV3K3
+   qS0lE43+DiVhVQXkWGaGhslGapk+rgeZpT3dQVEY5YD7QCvYdc+DK6EtK
+   8Z5eKuu4NK0I8Cwsx/2uB21XNIbLJJbv6fLCAR/WbBSj5lh4k+/1PUVZd
+   w==;
+X-CSE-ConnectionGUID: Irabib5WQJG782KHG/LC6A==
+X-CSE-MsgGUID: SNT/wfVJSdeYKl2fsID6nA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11938"; a="1057734"
+X-IronPort-AV: E=Sophos;i="6.27,165,1787036400"; 
+   d="scan'208";a="1057734"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2026 00:04:25 -0700
+X-CSE-ConnectionGUID: yv+wtpsrRBaO/3RzXFSFnw==
+X-CSE-MsgGUID: faXAPn5gQfGkQ0LwieHvzw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,165,1787036400"; 
+   d="scan'208";a="2266683"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa004.jf.intel.com with ESMTP; 18 Oct 2026 00:04:23 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xIKwO-00000000KDW-2Dsd;
+	Sun, 18 Oct 2026 07:04:20 +0000
+Date: Sun, 18 Oct 2026 15:04:04 +0800
+From: kernel test robot <lkp@intel.com>
+To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless] wifi: b43: keep the N-PHY TX power control from
+ drifting while idle
+Message-ID: <202610181522.20QDqray-lkp@intel.com>
+References: <20261017005156.1260496-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261018-brcmfmac-country-code-v1-1-54d7cbcce035@puri.sm>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWMwQ7CIBBEf6XZs0QgaNRfMT0A3do1lppdMJqm/
- y7oafImM28FQSYUuHQrML5IaEkVzK6DOPl0Q0VDZbDaHo02JxU4zuPso4pLSZk/NQdUeHY2OG0
- cHhDq98k40vvnvfZ/lhLuGHOTtUXwglXmU5xa9aBUZD97yciwbV//tg6OmAAAAA==
-X-Change-ID: 20261018-brcmfmac-country-code-e942b4014e5e
-To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
- Angus Ainslie <angus@akkea.ca>, Kalle Valo <kvalo@kernel.org>
-Cc: kernel@puri.sm, linux-wireless@vger.kernel.org, 
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1336;
- i=sebastian.krzyszkowiak@puri.sm; h=from:subject:message-id;
- bh=qvSAkfPXBK85nIKvwlaMA+P/P+Ie/Tb7w5MX7+TjJnc=;
- b=owEBbQKS/ZANAwAKAejyNc8728P/AcsmYgBq1GzRuycjVCSe47CjuTqsApGrZUTaMen871JOE
- 9y4Zgq8yhqJAjMEAAEKAB0WIQQi3Z+uAGoRQ1g2YXzo8jXPO9vD/wUCatRs0QAKCRDo8jXPO9vD
- /9G3EACe3jCcyote0++9/dYWztHQzxQjX1s1HCII9VN7e9h1nCAm96QC0kGSTZAWt2brTz4DJwX
- T/qpnmKJG3Ch3pqnG8k5jD+QBhDlnbEY7q5JKC0IPLt+/eisFmFk5R7h63DbkdG3cqSpxjeVoxH
- 8G8xLm4Put35d89Dg1Ndetu13c3XyJDJul039X7NTBn7fi1f8F+H333KakAr3LZ7QPSxVwyIUdb
- 8zX8GvW+Cb58wZPXZroaiTXnKXLOIgVhiZLw+3LHpJi/LakPbFZ8eEQj91xamgjWZtQpu0FaZjp
- GOXxn2Vv0SZGSRLrSw93dyzMIlKzzk7Mw43fcc2rrPMmJRFMG45MhlI9cz4OtXaP1Pr1dqbulhn
- 335F46D2KfnbOyI/Wsu1FXbrHY1A+ncHnXDBRgCHnSHH1xeRkS7wbngmCmdXDs1e4yebR04UOxK
- G/QckwnRIbxUvby46Dk7yi1XtZkgJ4kUXvkRr4lTqttnnxx9GdpeS4ljp4cmCa6DJcKY1J0Kbvy
- Yxx7StYXQ9QFn39j7uwgafShzsZ0xrp/L2NdYq6O31GiiTUK1hl7WqUntYbuJuUN6NP1XiSBFiY
- M2U6t07K46fYObf3lHBpGoRreyxz8SCclEADK5/U0RDc9SVqjt7IbHcIFM6+b7KAghUbR50QBkC
- MO/iPh3QtH697bw==
-X-Developer-Key: i=sebastian.krzyszkowiak@puri.sm; a=openpgp;
- fpr=22DD9FAE006A11435836617CE8F235CF3BDBC3FF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261017005156.1260496-1-rosenp@gmail.com>
 
-Without this, the interface stays confined to the country set by
-ccode iovar default value, which is usually 0 (global).
+Hi Rosen,
 
-Tested by verifying that enabling the fallback makes channel 13 APs
-visible in scans while in Poland without having to manually change
-the ccode variable.
+kernel test robot noticed the following build errors:
 
-Fixes: d2587c57ffd8 ("brcmfmac: add 43752 SDIO ids and initialization")
-Cc: stable@vger.kernel.org
-Signed-off-by: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
- 1 file changed, 1 insertion(+)
+[auto build test ERROR on wireless/main]
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 872c48806d09..bd6ac29a0471 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -7973,6 +7973,7 @@ static bool brmcf_use_iso3166_ccode_fallback(struct brcmf_pub *drvr)
- 	case BRCM_CC_4345_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
- 	case BRCM_CC_43602_CHIP_ID:
-+	case BRCM_CC_43752_CHIP_ID:
- 		return true;
- 	default:
- 		return false;
+url:    https://github.com/intel-lab-lkp/linux/commits/Rosen-Penev/wifi-b43-keep-the-N-PHY-TX-power-control-from-drifting-while-idle/20261016-175156
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git main
+patch link:    https://lore.kernel.org/r/20261017005156.1260496-1-rosenp%40gmail.com
+patch subject: [PATCH wireless] wifi: b43: keep the N-PHY TX power control from drifting while idle
+config: x86_64-randconfig-1010-20261018 (https://download.01.org/0day-ci/archive/20261018/202610181522.20QDqray-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261018/202610181522.20QDqray-lkp@intel.com/reproduce)
 
----
-base-commit: 32c52ec87d6245ee2d12ed5dd509e40062939b50
-change-id: 20261018-brcmfmac-country-code-e942b4014e5e
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610181522.20QDqray-lkp@intel.com/
 
-Best regards,
---  
-Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
+All errors (new ones prefixed by >>, old ones prefixed by <<):
 
+>> ERROR: modpost: drivers/net/wireless/broadcom/b43/b43.ko: symbol 'b43_nphy_txpctl_ofdm_tx' undefined!
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
