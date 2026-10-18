@@ -1,142 +1,155 @@
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+Received: from mail-yx1-f53.google.com (mail-yx1-f53.google.com [74.125.224.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD4C2AD0C
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 10:54:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D406392C20
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 10:57:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792320892; cv=pass; b=FGpQVtnwCHnI8io71yEtntgwibnL1/0HWmMz522tstzirr9LbUYMWSDTFbMpbe890aqa9y++5coXABkwl6Y6si7qWy0vzM0jTkA0kR70KoNoFOJkcAi3BZyXqhimXhBwBp78KlyDnvObAq6Ye0UuXYk4HA02eaKtL8vuiTcz/LQ=
+	t=1792321042; cv=pass; b=RlWW/tFQ3VX6INs8T3erfvRSJfsmZt0WYSxFgzCFfK9AhQTfCJDJc584n9NmeKSVH9uuupdAoDH02ptRpdaDxZPZedMphpC1AMd5+imN1mfcltyZ1iSQvOc9Qrkx74eXXunAfPkiwHHPpM3bynnEOUrR4S09mYIXCvyXicm88U4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792320892; c=relaxed/simple;
-	bh=m0vNKj37Dx1kSLJxWQpTeonH55Ff+hPdWeIOVcPDffk=;
+	s=arc-20240116; t=1792321042; c=relaxed/simple;
+	bh=NoYKk+zfA2Vg0NFqER3/7jFPnk0Q80RgMfB5SuCFhbc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EcOtrulxA3qcUuW4qOczee0mprNy6zcMR7cPXXs/eBtKSY4yFSWigGzMoyXLtdLRgCY9XhyY4garBUyrbEVm2/52l5rT9hnVSa87YeljLZHh8HECqof0Kj/GeuG/HgDUIgTRmX/yrZuiqbYIEJpg958gD1Aosoeat59Ebb+jpJI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N1ngH2nY; arc=pass smtp.client-ip=209.85.128.170
+	 To:Cc:Content-Type; b=hWXXjyPAJn2wt+5AlzpxOdbYY5psJjs6tTsdVEADR++zTSbhO9BCk+bd2qsC6E57QEtKfwi3Yg99ZGVQWGZ7UpKj3pb1JvboPKTMTB4z/qL6re8+aCxhWdjixkqh+8TReGOAjTD0R9oHrj27uuMAM3LhZke8q1pxibDlSzI+Amw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZqBEQ6by; arc=pass smtp.client-ip=74.125.224.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N1ngH2nY"
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-8ac9d666d4eso8263097b3.3
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 03:54:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792320890; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZqBEQ6by"
+Received: by mail-yx1-f53.google.com with SMTP id 956f58d0204a3-6711f05fb14so842444d50.2
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 03:57:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792321040; cv=none;
         d=google.com; s=arc-20260327;
-        b=iIJuU7eovlB76vlfx8fJ06jDomXDZ4v5M3VXcz6tRVqJLWxscdlvHiwfWFIJ3VBgYe
-         gBUOIgx73qPdhJvsDayQJLGxSOMWFEpZf94xA8lxHQqmZCfdc7tG7K9+nWBjJHz4PLkT
-         D0nfK0Zd39w/z4+GbwuocqOzpBKNdD+mg9p/ypkdntV8mo0Fe0GR9XDF1TRyet7fT/zL
-         m6uElXUo0OCqEl3l/QlRIZ3qcne9DsR9nWQ3VvdZC/GJOizQftaeBh49+PuFWxApr8vQ
-         MohEC7DG1uvSC3mJlg6OeHOeonAJ0covQiHMTMO8tuXFM/UvtTR0lbFOPYzlTbJQSs5b
-         rqXQ==
+        b=OHL7F9JHK+CWtE9Ja+pRiQqbktA+jBxjEtYYf2ueSzgFyIHpPwL+Vo4UtLNZEZv7FL
+         eAeghpka1GV7VP5iJTh7Tit0XaN95EkV9AjKgHsdm1ZkHUg47dP1JNyhcrCreKc3dyT2
+         52+Rh/gPNIc4oVEeqY9wpqPFtpI19LSauTkSNc4d+XnwHtV4Tq8HlrVrdsZ7VFJQXlfB
+         fOWePOS2r3EG3A9BzKWlBEZIE74MTF+lEzjhLeYuBhYHD8uvj0NVnPeyxO8kqm9gJPQa
+         jBE1yLFHZPF0xJzpBe7l+xwvrhS1SvL4OuLACdxHtHCFIArsWW4GHduE3QamM9zCriBW
+         bS8A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=XauT15gH6AMZryvE1s+Yc9Wz8N1vaO3g3sQyuxDOI+E=;
-        fh=gM7U4zh8cHfaC9HwkEfsLrE/YFSAo7GZyH3GmXfcl8c=;
-        b=BoDxdZsB+LHTQH0+su6AvPZ/1Roxw435FIoqZXPcTLrcaK/CtvFQ/2NvpPs3qE37m+
-         rc56zexhLh/ddh7rDiftWXUSW1yiRcaWoVFVzLbIdRSiQpwlSYOWJxMPwYt0JQ0WHvQ4
-         21F2W+sfSl+NNhxa2il/fRBBFwqnvEo56KkT0/MRdfRzfcXzs7vqw1/nECmJmrtyCbZb
-         6ZbdnFipVzDKc8xUkxQrsODZoprRS6RSzc5qjzNZEyq/z6gFfPeN9ueZTvM6g84GTYNT
-         lOsmkwV45YkiLobZc39Y7XQKsln8P4A489MzEA1Zh0w1hKleLQ8EANueCuBXz3fDKrsy
-         NrqQ==;
+        bh=Q42INxzKbcLL2mib11Z2FAWyf7Td8LLy4kQfAr2Vl58=;
+        fh=qFSKJRt/Nod1jzo00eIa16b6/eAMFWOo+bns9yIRBXg=;
+        b=MvLg8NdEoa0a97vX75BbWWsICzUhmCNWuA1L4bUT/qCPhwFWEcktEtVmy/0lNW5f/t
+         xxwrcWclWjfN+cLwjj8cmROwAXzWoL9CA+V1O0AN+5+OPS5fM1BP1PxsZcugALAI4f2d
+         2qxw3AdR4v/R7ChzaZ1rxmVgRZ/fSJ7bzXBQO9aHpyrNtsK6FuSrasJPg/fz9J91z5vI
+         7wXZ+Syb1B+jQX4VgQfa6x1DZpqbwV7gqVSwtlaphkAOani8P+Vpjw7SI/bUPVYsa9sW
+         xdK2XROk58VsEKBCGuL/a6tW5E+n/FrbBDIRvdSaFFYbEw7hi29d+dfripTtQvjhk+O+
+         MnvA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792320890; x=1792925690; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792321040; x=1792925840; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=XauT15gH6AMZryvE1s+Yc9Wz8N1vaO3g3sQyuxDOI+E=;
-        b=N1ngH2nY8+6qxGw3dkqvXUc2d44irw/49pZa3Ml/bIzPJzsMpRPJiPsfpHa1TGjy9s
-         fu0h5PuyiL6GMouChKGG9PKy/KAUQE2JEHqNKEYoxAiV8gfb9v4I6eftI2UPSuSpUv/P
-         x9hrjCpNT5J2jEdeAnH83EXhTjla4v85gnwlQSC0Unv6xdMECZ1YF1OYT7UWQiS2pUjx
-         hkSTw/YFsNFuxAogVQi2XCUjy3+V/Bv+DUw8EH4n91jngam23JSNKhNdShM8lN7rCAc0
-         XWerw0qE/q757fqwO4Bed27BtuNsxVX44zfkKv37rs6q4y38vUPLCD3dFoLk7gvKa25F
-         7XtA==
+        bh=Q42INxzKbcLL2mib11Z2FAWyf7Td8LLy4kQfAr2Vl58=;
+        b=ZqBEQ6by7ey3282eNR7dSX7yA2wjlaII9XMSKfs4HSSf/Nb56G4vSjEMy4nWZmOmz3
+         pwwb7HKMC38Nj6Aoph8Oc7IYj2ayIl32vQl2zUbsTLklF7y+V4kYpY2xOuYkjb9HBj7S
+         gU5M0Z6HZstSHTdLOvmTCLB2+Zeqqx9qTHTIsneYsmp30yD7Jf7w6umgpRjgBkntw1iT
+         YBgsVqnA/pxKNZ6ugP8Vow7dXzEZBTSZDrJEtf4YhrQiEk0ZvkoPSGUYJJ6/UhvVLC+q
+         9hWqGF3uJbThI0eXgh9t8Y7c4MhTGf20oakWOSASuQefPlG4dO96fdwsY+t0Gxw83hQf
+         cOKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792320890; x=1792925690;
+        d=1e100.net; s=20260707; t=1792321040; x=1792925840;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XauT15gH6AMZryvE1s+Yc9Wz8N1vaO3g3sQyuxDOI+E=;
-        b=jhSPAUZa3GEDzb0AQlUU1x5d/mSfQkFUGqfvs8Oi0Ei7WAVf5EVFEFDhIwMxqPLKEc
-         0hCxbMXlAxeVPfWDYFLR5CdcHRhJ5evIpsyi2v2JuzFn6f0t9iLikvC1O3bVVE2ereny
-         ph3roKSXGRylbD+jZ/j9Pur23tGbjNJD9hvzwjB7bNIUAgsCtkL43kECBbeC3pZ3PmoU
-         pKJQcQWqVkuvtUxvLjCkALLhnJ3huMXENrwPyPrzU5mG9Pfk3n2SIfU3/YB6P92OIhyi
-         9kuh9y5+dY0fU7pm4tIuG3rX3jMCKOZmk8iJenBuZnMuOhbzNlHU2eNKbHP2I/ulD5Ue
-         niRA==
-X-Gm-Message-State: AFq9FYJf+5H/qrNtPn0SyhFtTk5Jgcris1//3JDcCTNJuRgzaYmfebgI
-	zKK5VgKSuzZP48pYourSJNCIvmAO1dl5pX0jGOLD4QLBqPteVysYOfdl20kOjz6tVmKw+Tn+8Xi
-	MdBchWJU/cnImZbG2i89TUDVxNC2bnvHwkw==
-X-Gm-Gg: AYBFou1AT2cBVTWsrFqVWhDRhLo4/8F3SoxSkL54TQgHtrVZO0K8NQXsLYqscfyOQJU
-	XVwyDOtr5oSKbpstiiKMZgtbmyxh8ZFDNHkiThpRhWDZcLe492o6171+anNvTsaTwX5z029+v9E
-	ZKkPc/WoXE05TP69Eayywjf6rtbe54vAuZv0/bL+OWhokdXGvMb1haxXAsSa5gWVW4FO+9+cr0H
-	fMjd2TIEAADgL4E6ytGKqS3BVyrTqz6yEb41Y8cWVA+uJS6kayCvbpb2mAk/WfcHoCKtfyTDASk
-	wizPg1P2KC09Sdfvtrl6d0NbzFE5XoRkkalBAXff+RrBzeFjNyuTW2lUudh0SEt+xEhvNbw6WCp
-	1Opzd9hPh6IuW2GT16uXgncBJZEsKccG8aZpdwkKwy1Kh
-X-Received: by 2002:a05:690c:a0ce:b0:854:819:64c9 with SMTP id
- 00721157ae682-8b0f2164ca1mr10225167b3.30.1792320890455; Sun, 18 Oct 2026
- 03:54:50 -0700 (PDT)
+        bh=Q42INxzKbcLL2mib11Z2FAWyf7Td8LLy4kQfAr2Vl58=;
+        b=w+Lq+K6n82ee3bX8LjambTx2i1eX53D4/knvpLgaoX54jtHz9B7SaauoLG4TQnfQik
+         YZDnbWwlkhsAMA/Oe97OS15aps9+KW1+/XU+2N6HH+6QXblBLWAv+EXQeo0iWz28aC8B
+         lks8+7zRC820MUV8T4e/VaQFMeQVwpuUY2dMeJmLRmlKzePJtIK7GZyBySmFP9gkx+Ot
+         LIRiYF43kaZ2jRvIwszZVoh4EEY4IUHbaZ9B7s/0i+Wl2Kwsjlk7bOCHR7RoXHsUMQD7
+         YU2KkuIX+6cnCq3IwXYiaL8H9mJIKUWmfLUHC2oSdDD/BchLmnipiYi3N1Ny18+Rz+mb
+         BSEw==
+X-Gm-Message-State: AFq9FYKo4EZtC7KtRX/0qiW4UwrKHabxv2+LME67mQXt46iFwXzL/6Xm
+	pe91FAcsp74bwyoirb+/gR0+8EzdsvpkrmvvGyJatDJ/tr6FL9dVBC/zVYP5livJDkJmW+TKJOB
+	u3wkqE8XJ3mxw6Qr3GdIF+WU353ttpIU=
+X-Gm-Gg: AYBFou1JUbjh3CX+9Nb6WL7v6ooYtIuMVJ/6eOTxunHj6sTvBYHsCsZqb5HMbo2MSjd
+	WRjjy9T5/0B90acBXDwB0sYHnR5uXTJo3yonRxUraW06cKQb6B8VmdC7WUhF2dyOzzuLi5Ofqs6
+	WNqaPimu+Kahhm8rOiQy2Ek9MtKTpxr00gnxA5bQTNMX21G/kzyXYGY9LVLCD9fRiK3rfl+JsGI
+	+G7KGpd5Agby+bNhyxz2E79o6TWz6bxBEkMW7BOHDL1opu6D5iDIRR3r5aV3o6Oa1ZkLk+bI3KC
+	TolZ5kFR2ZFa+/B7l/GHRalcB7tQqVqXJklHYhIQSHeBH2M5DCCaEJ/OnKbif0nB3Ldw3FE+6v1
+	DS5zRyHPzNNG89X0gCkgcP9642cJfYU/kG4fvFNdYXyNQ
+X-Received: by 2002:a05:690e:138f:b0:679:cc49:55dc with SMTP id
+ 956f58d0204a3-679cc496392mr1276885d50.92.1792321040069; Sun, 18 Oct 2026
+ 03:57:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260910041047.24437-1-kartikey406@gmail.com>
-In-Reply-To: <20260910041047.24437-1-kartikey406@gmail.com>
+References: <20260825135717.36369-1-kartikey406@gmail.com>
+In-Reply-To: <20260825135717.36369-1-kartikey406@gmail.com>
 From: Deepanshu Kartikey <kartikey406@gmail.com>
-Date: Sun, 18 Oct 2026 16:24:38 +0530
-X-Gm-Features: AclHuK-6yjg7RbNkD8czAob004XPvB8KF6MNiLIEn6GLCPpozQPhRH7qKM94mu0
-Message-ID: <CADhLXY7-EMwbczPhKjUFPN0Q0ie5NSNw8FERrx5sC5o6aG7KLg@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix using smp_processor_id() in preemptible
- code in ieee80211_tx_control_port()
-To: johannes@sipsolutions.net
+Date: Sun, 18 Oct 2026 16:27:08 +0530
+X-Gm-Features: AclHuK8VgSJacpo0L0UN9QxBNGzCJb6Inw5_tPuhgVzMlP_LjGu1MvoOIZ-h0FQ
+Message-ID: <CADhLXY7-NaijsaX-+5M555xf+inRXXF_DfDr9kh45B4tWTdtsg@mail.gmail.com>
+Subject: Re: [PATCH v2] wifi: mac80211: mesh: free pending CSA settings on
+ interface stop
+To: johannes@sipsolutions.net, nico.escande@gmail.com
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+d979bd35c8a76fd1b6f5@syzkaller.appspotmail.com
+	syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 10, 2026 at 9:40=E2=80=AFAM Deepanshu Kartikey
+On Tue, Aug 25, 2026 at 7:27=E2=80=AFPM Deepanshu Kartikey
 <kartikey406@gmail.com> wrote:
 >
-> ieee80211_tx_control_port() can be called from nl80211_tx_control_port()
-> in normal process context via netlink sendmsg(), where BH/preemption
-> is not disabled. dev_sw_netstats_tx_add() uses this_cpu_ptr() internally,
-> which requires preemption to be disabled, triggering a
-> "BUG: using smp_processor_id() in preemptible code" warning.
+> ifmsh->csa is allocated in ieee80211_mesh_csa_beacon() and normally
+> freed in ieee80211_mesh_finish_csa() once the channel switch
+> completes. If the mesh interface is stopped while a channel switch
+> is still in progress, ifmsh->csa is never freed, leaking the
+> mesh_csa_settings object.
 >
-> Fix this by moving the local_bh_disable()/local_bh_enable() section to
-> also cover dev_sw_netstats_tx_add() and ieee80211_tpt_led_trig_tx().
+> Free it in ieee80211_stop_mesh(), the same way ifmsh->beacon is
+> already handled there.
 >
-> Fixes: d5a014204a3b ("wifi: mac80211: tx: simplify control port frame tra=
-nsmission")
-> Reported-by: syzbot+d979bd35c8a76fd1b6f5@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3Dd979bd35c8a76fd1b6f5
+> Reported-by: syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3Df5752cd6b94fe38be666
+> Link: https://lore.kernel.org/all/20260824054611.29728-1-kartikey406@gmai=
+l.com/T/ [v1]
 > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 > ---
->  net/mac80211/tx.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+> v2: drop unnecessary NULL check around csa, kfree_rcu() already
+>     handles a NULL pointer (Nicolas Escande)
+> ---
+>  net/mac80211/mesh.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 >
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 74ab27534076..7b1a3c63e5dc 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -6687,10 +6687,9 @@ int ieee80211_tx_control_port(struct wiphy *wiphy,=
- struct net_device *dev,
->                 return -EINVAL;
->         }
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index d4507e4e6ec1..48015dcb7add 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -1201,6 +1201,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_da=
+ta *sdata)
+>         struct ieee80211_local *local =3D sdata->local;
+>         struct ieee80211_if_mesh *ifmsh =3D &sdata->u.mesh;
+>         struct beacon_data *bcn;
+> +       struct mesh_csa_settings *csa;
 >
-> +       local_bh_disable();
->         dev_sw_netstats_tx_add(dev, 1, skb->len);
->         ieee80211_tpt_led_trig_tx(local, skb->len);
-> -
-> -       local_bh_disable();
->         ieee80211_xmit(sdata, sta, skb);
->         local_bh_enable();
->         rcu_read_unlock();
+>         netif_carrier_off(sdata->dev);
+>
+> @@ -1222,6 +1223,11 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_d=
+ata *sdata)
+>         RCU_INIT_POINTER(ifmsh->beacon, NULL);
+>         kfree_rcu(bcn, rcu_head);
+>
+> +       /* free any pending, unfinished channel switch */
+> +       csa =3D sdata_dereference(ifmsh->csa, sdata);
+> +       RCU_INIT_POINTER(ifmsh->csa, NULL);
+> +       kfree_rcu(csa, rcu_head);
+> +
+>         /* free all potentially still buffered group-addressed frames */
+>         local->total_ps_buffered -=3D skb_queue_len(&ifmsh->ps.bc_buf);
+>         skb_queue_purge(&ifmsh->ps.bc_buf);
 > --
 > 2.34.1
 >
+
 Gentle Reminder. Please let me know the status of this patch.
 
 Thanks
