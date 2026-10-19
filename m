@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA784D09F5;
-	Mon, 19 Oct 2026 10:15:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523AA4D599A;
+	Mon, 19 Oct 2026 10:16:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792404958; cv=none; b=dxn2U0TkXTEmjm8DYrcAZbg/KMuE8LnBJcpz15dOj2pKXkyqAuhXIRsgVpyzhhOK1hvOIdZffiwYIuD95qP3JvP2TKNWgqyQzYh4pw3UmavPCn0ONzJugPp/BDqEad///Ock7/udyDyK93ZQe8kuhelV9sCyvvfD0z/WyWVHU5A=
+	t=1792404963; cv=none; b=m2e2vxlIip1cXHJZ7JjrhspNAMSSD5aSUV6L6Ut9r6eF/SMsjfbHJqeha7/vF/40EVm0csncDyrN30sxGx81sd6KCYtOA00cz+6pL/H+AvGuSsqXfIiiIeL1HTqsQ81EVsBrojPZL8rdWc3uElrraf2hecNtpAunnRPwqXtj44k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792404958; c=relaxed/simple;
-	bh=t4PllrrYRyk59/eCVQ5fkdN3KIu88QJjRwFFhvS3tVU=;
+	s=arc-20240116; t=1792404963; c=relaxed/simple;
+	bh=juL+/6QopFo0lMtDSEd6YUYjqWNo+eh+aqmt7qJK1U8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KLtOr/mFv89TqEyFzqbcy/TiRskP5qIkyCZ1y49dG/qywZCVa9JV6OCpjL8qaQtynW9QbOi5F/+vAtrCRKDTOsw64QXlx2t6s86yz41+KB9zkdWHhSE60LNsIlLruPMmjmrn6JMOjygL6OznAG6kBl64P7cd96wNTuimLAxqSsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=BIY9THpN; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=DxnHdyxp8UqcOfdcfo2reMCEEOJBw6NlMfCl14i3PHYskviV96rHnWaXz+PO1Cor3dhq93er8CuiJvSeuXkZwMXv4XBC/NDxsTzTmbf/17EP7zCgs3z4JEOswAcO2SfqX/RVZVjV4x9XSOCoElUTdtDeMd8w+cHrQPt/hgr9KBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZuXFd512; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="BIY9THpN"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZuXFd512"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=JM
-	dvjLbmygaAxKZ4470P9jf9J5rCOTHbqfSHY5SXp9A=; b=BIY9THpN9z3EpLKmw6
-	4URT/x8Kal0nnp8LhuXSCxTBtnN/5V3sL4UiJBDx+a5+ZCA83gqPH5NJOWLa5Suy
-	8FqvlrgAH4H2QHR3+1e6wxEnHqpXWncVSXbY4XoMyFpKcOuVlg1BCHws04oUVd/c
-	RCQUxVyiHd6O+gtpnrrn5Q5Sc=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=39
+	+rHsUPFz0jl7q8duyowDHk9CeWNhUTVpMmdClsFH4=; b=ZuXFd512IHtJ/b4N2p
+	wotEEk2Zr2eACFmk57qGCownmvG4BxCzr8lS9U1j9M5dffpLLjBxiTlM1sLVsB30
+	RHbs6PP7YL0NQRP+BrxpS5z+juLT/I9Usj4KEyCA9eAqHq5pwtaiVnDI5jeBiBHo
+	Pazr9cyVppiGrnx9zsavVPFWY=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3Hxax7dVq4twABQ--.41578S9;
-	Mon, 19 Oct 2026 18:15:27 +0800 (CST)
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3Hxax7dVq4twABQ--.41578S11;
+	Mon, 19 Oct 2026 18:15:30 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -33,14 +33,15 @@ To: Felix Fietkau <nbd@nbd.name>,
 	Sean Wang <sean.wang@mediatek.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Peter Chiu <chui-hao.chiu@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
 Cc: Jiale Yao <yaojiale02@163.com>
-Subject: [PATCH 07/10] wifi: mt76: mt7915: validate channel MIB response length
-Date: Mon, 19 Oct 2026 18:15:02 +0800
-Message-Id: <20261019101506.1926943-8-yaojiale02@163.com>
+Subject: [PATCH 09/10] wifi: mt76: mt7915: validate WED TX statistics response
+Date: Mon, 19 Oct 2026 18:15:04 +0800
+Message-Id: <20261019101506.1926943-10-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261019101506.1926943-1-yaojiale02@163.com>
 References: <20261019101506.1926943-1-yaojiale02@163.com>
@@ -51,39 +52,54 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3Hxax7dVq4twABQ--.41578S9
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtFW8tr4UXFy8ur47Gr18uFg_yoWkArX_ur
-	nY9rnxKr18Gw1qkr12k3y293yqy395X3WkZrZ3trW3XwsrAFWfCr9rZwnrGrZF9rn2vF45
-	Gr98CayUAa4agjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRiuWl7UUUUU==
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzR+69GrV7b+MHgAA3j
+X-CM-TRANSID:_____wD3Hxax7dVq4twABQ--.41578S11
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WFWfZFyDXrWkAw18CFWkCrg_yoW8XF48pF
+	W8Ka4Yvr4UGF4vq3y8Aa1kZayrtanYgryxCrW8Ww1rGryvyF1rCFWq9Fy5KryFya1vkF17
+	Xr4YvFnxWrZxZ3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRl_MxUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8AK79WrV7cK0PAAA3k
 
-The channel survey query reads several MIB entries at a chip-specific
-offset without checking that the firmware response reaches those
-entries. A truncated response can cause out-of-bounds reads.
+The WED statistics query optionally skips a response prefix and then
+reads a fixed statistics structure without validating either range. A
+truncated firmware response can cause out-of-bounds reads.
 
-Validate the offset and complete MIB array before processing it.
+Calculate the chip-specific prefix and require the complete response
+before pulling the prefix.
 
-Fixes: 654300281196 ("mt76: mt7915: use mt7915_mcu_get_mib_info() to get survey data")
+Fixes: 161a7528e407 ("wifi: mt76: mt7915: rework tx packets counting when WED is active")
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 05614b99165b..955c0e6c7cb6 100644
+index 00a528694255..4a11a4a0dbde 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3239,6 +3239,10 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- 					req, len * sizeof(req[0]), true, &skb);
+@@ -4183,7 +4183,7 @@ int mt7915_mcu_wed_wa_tx_stats(struct mt7915_dev *dev, u16 wlan_idx)
+ 	} __packed *res;
+ 	struct mt76_wcid *wcid;
+ 	struct sk_buff *skb;
+-	int ret, len;
++	int ret, len, offset;
+ 	u16 ret_wcid;
+ 
+ 	if (is_mt7915(&dev->mt76)) {
+@@ -4200,8 +4200,13 @@ int mt7915_mcu_wed_wa_tx_stats(struct mt7915_dev *dev, u16 wlan_idx)
  	if (ret)
  		return ret;
-+	if (skb->len < offs_cc + len * sizeof(*res)) {
+ 
+-	if (!is_mt7915(&dev->mt76))
+-		skb_pull(skb, 4);
++	offset = is_mt7915(&dev->mt76) ? 0 : 4;
++	if (skb->len < offset + sizeof(*res)) {
 +		dev_kfree_skb(skb);
 +		return -EINVAL;
 +	}
++
++	skb_pull(skb, offset);
  
- 	res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
+ 	res = (struct mt7915_mcu_wa_tx_stat *)skb->data;
  
 -- 
 2.34.1
