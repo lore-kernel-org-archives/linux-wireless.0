@@ -1,228 +1,95 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B37D928373
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 02:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A521E348C7F
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 02:39:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792376662; cv=none; b=MtwWrL/CZIu4jR/UPWv9AmISAz/IhXRkO59gEZIwqxCVfNz0J6SyM19r7OtGr8BHgGQd01XuLUj7fK15LIsSkEpq4NHFuwGRpKClQGO5AGsBdRS1wAxtHkF0jcHyO+IS+O6FXNWv7zwHc+kDWtlD8T3eAvKztr7QtNujAT1hDSE=
+	t=1792377562; cv=none; b=B8Bby3/xiX1ialSIwvJnoiUpud3qdAb/g2lx6gdb2mUYxVRkqrc7jSqqG7ojXYsSp8FpR9ZUQGBCuaIzZffFEgZXHDYSde054NadfPEJ1xEmOfvXC926bkrdYWN+bSCwC5LkR4itlv76ALk15r/OvG9c67FtnL2hYHCL78+Z5EM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792376662; c=relaxed/simple;
-	bh=1V5t8LbiXAw8AROgOh5u2/xrbfArdg5eGIMOS+nX6CQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g/ZsMt6oDZ4x1LKBLZBTxq6csfOL5RZYwaywiHdJ7c96Ix0Q+5C79K8pkRUcHfnl1YLg+m6APzOYGGKaJzjSMnoueFCcs/m3kjOVHA0Bat91/UTxjRnyJ/Lub46C47HXmJ0gn9NbddqkclkR8MgarCz45o/eB/TYH1h763wy+60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AFWm8XQz; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792377562; c=relaxed/simple;
+	bh=9uT9XNVhx0W2OqO4j6rjKYnwE5k4DrNuzWLpMWpREpk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=OFarQUpTiH/8zIW/deQoYl5Cy3pWAg5uMOb36w2zKGRewaH9ACF/x8XUwWf4GmLB0NEbZIM0NKORQVsXsuACEizIr+7/3kT6smcGNPap+bxtfXr5SrUh7dsBDPoWFeHenlRSMt72z2CSPaHALVis5kgRJu3TxZJ5Kh+Na6PcU6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=oetj5OCV; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AFWm8XQz"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3ac9f49b984so1055719a91.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 19:24:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792376660; x=1792981460; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2Gk59ct/zaCRueU3AFoIL4iyqvmR/bVU0l3fys1RicI=;
-        b=AFWm8XQz8in3tkX6gfzRNvpGPIFupSwizIpLt5MG9Z/7jRmgntXZWhQPmS1SN/AJsi
-         Nm5SxQojXhNeXhAnE5k6o7w5rkK/PwhEFpz2FBfD/Jk1gyTqMXznfL9YPbY7gOkbOEzS
-         f+PoPIu72COAdruXZ6v1f3i2xk/AzeEhWzLAaZIMlGYxdmnvDAFGJk/rCt5ZgBOxghLP
-         5fuZvOxuUEE30Wx/qgYEmyrByFX7KnP4QSxRbUX9f0XHGXU7WsI0aIFiAzqcRnDpanu8
-         LaWMvt4jmayl6Fx90CaFrp1k0HLP/su04jE+WJ6R6W9FIudu6yjv1Gmll3yvoksaPksU
-         FKgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792376660; x=1792981460;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2Gk59ct/zaCRueU3AFoIL4iyqvmR/bVU0l3fys1RicI=;
-        b=g5tcXI8RwqN4KvmYNiyTN0Y0WnmrOu37Slu9NFbyk2sd7hVJ0wH+PBka4krS8ZhEsv
-         A+HIo730kMmyzvpSJ2K8MvZAtJy0CzPQaZzTpsOV/EN+oAHidGOYJOjzGYSDvESbPoi1
-         4qhyLibYv8iSx8SFuD3Bd8snq0XZlF3PMJfGA/2r2+x5JkR30TtxoDC0ZK8HIjPVUrTo
-         P2rQq6R5e75ZhD03GWNiS24ZTRmS1TZIxj9Mq3CQUd3/fvYcgBMuDsMED0ZM+qG3VeUS
-         FKc0cppHbwyC4yaajnjvNtHHMec85ypGVvLTnxCkdCV5qTBlWNUHmcXnzLOQuFeFMa1h
-         XrBg==
-X-Gm-Message-State: AFq9FYJJBvLZ3iurrsm1BBQ+R2yFxwGva4o4VZkjYm+ZX6d9htLGtMTI
-	NUaTe7zSszUsQKM0dg80GQn7WFLSUzOCSzRbibITowDw+2xqVlZ7aKEWG3wdmA==
-X-Gm-Gg: AYBFou0ZE9H0YnoE8dNRr3xRxQNGC/geUo/D45TT1b3ZBSFewuYebS43+TRaY4l1UnY
-	iff5OPMUvyDysjykLikLo3cJuCR5hBfaohsySMowTZXdvJVTYqTvXSe2R2xF/SD05UGO6MIU4lD
-	6LklWbCckh3RmGeAnzhshPRVbHLPef5djm3Qu/oSm8PHF7dB1P2IGrQUgO6Cf1pBdhVL82hdO5g
-	CxfrKT04erS1makOwOiiaRZWHBlRjocmaMVrGgj8MqDN1NJ9u1MHYrNXubJ0Uo14bD3NKjpruas
-	rdoeVthbNbRNLLtR1cNU5/bcDSOAFmisTaQ8BIFLBo3Kz4rctcDhQSoVA2AHa/IqXgz5iao9JW/
-	gb6F1iANzK0/S+M/ZO3soMKnGxrfR8eYrdawoWJDpXhtK9mbGE//maBZ97O5VSeUPW8u2FTrWX3
-	q5zgR3JN5BKIowgoYKtIe+1+Emw3YG7Y9GtKQxTwRlIf9ChsURmmzpEMXX6K2hDCvT7WpadTeXO
-	sEqvt7vFTIvWSS6Pa8nKns0Mk1JFRWjcTYZIm6yKZ3Mmj3QN/aC7ili2L+tS7I3+jjBI6W2xIt8
-	B6ISqiOleir6JPkRfXQaYcbX6v5ZHuXuSRTuc6/xk69LXKzGGeF63/460mpc
-X-Received: by 2002:a17:90b:5108:b0:3ac:8741:e2ec with SMTP id 98e67ed59e1d1-3acbb3d5753mr7030690a91.1.1792376659959;
-        Sun, 18 Oct 2026 19:24:19 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac9474b52fsm21169534a91.9.2026.10.18.19.24.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 19:24:19 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH wireless] wifi: b43: fix 2.4 GHz reception on HT-PHY
-Date: Sun, 18 Oct 2026 19:24:18 -0700
-Message-ID: <20261019022418.236356-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="oetj5OCV"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69J2d8KO11508392, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1792377548; bh=9uT9XNVhx0W2OqO4j6rjKYnwE5k4DrNuzWLpMWpREpk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=oetj5OCVoYSu2jb478QKYOsTt9VL5FV1VfLdo6F75TUbZ+PaGKq/6gyEuxorHjPBT
+	 KkoBocdml//J7vM2KIEwCp3f9KFpMlEQCJct74/BiR8vvQ7LWreVNIXrFO+pK7jIww
+	 WFhZtfhXa5CdSymAcPrbpTQ+g/6JSxkeBtB8U809TryonIo6DVlcWN8uOqabfts3wJ
+	 /UCcv91o0H8aeiNnV5Gti1khm3SyLgggpCVfth7DnHWjnEzHxtIdwMsQbPaC/5EZVg
+	 nD1DIQb23Mz2qGToNOHNMOI+s/solcK/MBW3mccOgHLy8npGo1Pets6yW2UgND3Go0
+	 a862H8608Lxdw==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69J2d8KO11508392
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 19 Oct 2026 10:39:08 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 19 Oct 2026 10:39:08 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 19 Oct 2026 10:39:08 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Luka Gejak <luka.gejak@linux.dev>
+Subject: RE: [PATCH rtw-next] wifi: rtw88: 8723b: Read the package type from
+ efuse
+Thread-Topic: [PATCH rtw-next] wifi: rtw88: 8723b: Read the package type from
+ efuse
+Thread-Index: AQHdXk4lzo00xlPiA0KUCKW0Zm5qUbcEJbOg
+Date: Mon, 19 Oct 2026 02:39:08 +0000
+Message-ID: <425c1552139b4f09a5db42459fa74a08@realtek.com>
+References: <d22c9202-d019-4ca1-8534-c23244d612d4@gmail.com>
+In-Reply-To: <d22c9202-d019-4ca1-8534-c23244d612d4@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On a BCM4331 (HT-PHY rev 1, radio 2059 rev 0) b43 barely receives in
-the 2.4 GHz band, with or without HT: against an access point half a
-metre away, 15-45% of the pings are lost and iperf3 runs at 0-3
-Mbit/s each way. The 5 GHz band works.
-
-An mmiotrace of wl 6.30.223.271 on the same card shows two things b43
-does not do:
-
-- wl writes PHY table 9, 48 entries, on every PHY init in both bands.
-  b43 never writes it.
-- wl writes the RX gain tables 0, 1 and 40 (one per core) and the gain
-  code tables 2, 3 and 41 on every band change, with different values
-  for 2.4 and 5 GHz. b43 only writes entries 8-11 of tables 0, 1 and
-  40, once at init, with values that are neither.
-
-Write table 9 at PHY init and the gain tables on every channel setup,
-with wl's values for the band. Replaying wl's state on the card showed
-that table 9 is needed for any reception at all, and the gain tables
-for full throughput. This also answers the old question of whether wl
-meant table 2 instead of 40: table 40 is the gain table of core 3.
-
-With an RT-N16 access point on channel 6 without HT, iperf3 now runs
-at 15 Mbit/s each way, and 2 of 40 pings sent right after association
-are lost.
-
-Fixes: 98f8dc72ac50 ("b43: HT-PHY: init: add missing small-tables writes")
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/broadcom/b43/phy_ht.c    | 62 ++++++++++++++++---
- .../net/wireless/broadcom/b43/tables_phy_ht.c | 11 ++++
- 2 files changed, 65 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/b43/phy_ht.c b/drivers/net/wireless/broadcom/b43/phy_ht.c
-index fab8399c64f7..b6c200cba715 100644
---- a/drivers/net/wireless/broadcom/b43/phy_ht.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_ht.c
-@@ -760,6 +760,58 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
- 	b43_phy_ht_reset_cca(dev);
- }
- 
-+/*
-+ * The RX gain tables depend on the band. Tables 0, 1 and 40 hold the gains
-+ * of cores 1, 2 and 3, tables 2, 3 and 41 the matching gain codes. Values
-+ * from wl, which writes them on every band change.
-+ */
-+static void b43_phy_ht_gain_tables(struct b43_wldev *dev,
-+				   enum nl80211_band band)
-+{
-+	static const u8 gain_tbl[] = { 0, 1, 40 };
-+	static const u8 code_tbl[] = { 2, 3, 41 };
-+	static const u16 gain[2][4][4] = {
-+		{ { 0x10, 0x10 }, { 0x0b, 0x11, 0x15, 0x1a },
-+		  { 0xfd, 0x07, 0x07, 0x07 } },
-+		{ { 0x0d, 0x0d }, { 0x0e, 0x14, 0x18, 0x1c },
-+		  { 0xff, 0x07, 0x0b, 0x0b } },
-+	};
-+	static const u16 code[2][4] = {
-+		{ 0, 1, 1, 1 }, { 0, 1, 2, 2 },
-+	};
-+	bool ghz5 = band == NL80211_BAND_5GHZ;
-+	int core, i;
-+
-+	for (core = 0; core < ARRAY_SIZE(gain_tbl); core++) {
-+		u8 g = gain_tbl[core], c = code_tbl[core];
-+
-+		for (i = 0; i < 2; i++)
-+			b43_httab_write(dev, B43_HTTAB16(g, i),
-+					gain[ghz5][0][i]);
-+		for (i = 0; i < 4; i++) {
-+			b43_httab_write(dev, B43_HTTAB16(g, 0x08 + i),
-+					gain[ghz5][1][i]);
-+			b43_httab_write(dev, B43_HTTAB16(g, 0x10 + i),
-+					gain[ghz5][2][i]);
-+			b43_httab_write(dev, B43_HTTAB16(c, 0x10 + i),
-+					code[ghz5][i]);
-+		}
-+		for (i = 0; i <= 0xa; i++) {
-+			if (ghz5) {
-+				b43_httab_write(dev, B43_HTTAB16(g, 0x20 + i),
-+						i < 2 ? 0xfa : 0xfd);
-+				b43_httab_write(dev, B43_HTTAB16(c, 0x20 + i),
-+						i < 2 ? 1 : 2);
-+			} else {
-+				b43_httab_write(dev, B43_HTTAB16(g, 0x20 + i),
-+						i < 0xa ? 0x00 : 0xfd);
-+				b43_httab_write(dev, B43_HTTAB16(c, 0x20 + i),
-+						i < 0xa ? 1 : 2);
-+			}
-+		}
-+	}
-+}
-+
- static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 				const struct b43_phy_ht_channeltab_e_phy *e,
- 				struct ieee80211_channel *new_channel)
-@@ -801,6 +853,8 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 
- 	b43_phy_ht_spur_avoid(dev, new_channel);
- 
-+	b43_phy_ht_gain_tables(dev, new_channel->band);
-+
- 	b43_phy_write(dev, 0x017e, 0x3830);
- }
- 
-@@ -946,14 +1000,6 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x0141), 0xff00, 0x46);
- 	b43_phy_maskset(dev, 0x0283, 0xff00, 0x40);
- 
--	b43_httab_write_few(dev, B43_HTTAB16(00, 0x8), 4,
--			    0x09, 0x0e, 0x13, 0x18);
--	b43_httab_write_few(dev, B43_HTTAB16(01, 0x8), 4,
--			    0x09, 0x0e, 0x13, 0x18);
--	/* TODO: Did wl mean 2 instead of 40? */
--	b43_httab_write_few(dev, B43_HTTAB16(40, 0x8), 4,
--			    0x09, 0x0e, 0x13, 0x18);
--
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x24), 0x3f, 0xd);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x64), 0x3f, 0xd);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0xa4), 0x3f, 0xd);
-diff --git a/drivers/net/wireless/broadcom/b43/tables_phy_ht.c b/drivers/net/wireless/broadcom/b43/tables_phy_ht.c
-index 1acf2df66e5e..7952584c0170 100644
---- a/drivers/net/wireless/broadcom/b43/tables_phy_ht.c
-+++ b/drivers/net/wireless/broadcom/b43/tables_phy_ht.c
-@@ -14,6 +14,16 @@
- #include "phy_common.h"
- #include "phy_ht.h"
- 
-+/* Written by wl on every PHY init; without it 2.4 GHz reception fails */
-+static const u16 b43_httab_0x09[] = {
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+	0x0000, 0x0000, 0x0002, 0x0000, 0x0001, 0x0001, 0x0003, 0x0001,
-+};
-+
- static const u16 b43_httab_0x12[] = {
- 	0x0000, 0x0008, 0x000a, 0x0010, 0x0012, 0x0019,
- 	0x001a, 0x001c, 0x0080, 0x0088, 0x008a, 0x0090,
-@@ -796,6 +806,7 @@ void b43_phy_ht_tables_init(struct b43_wldev *dev)
- 	BUILD_BUG_ON(ARRAY_SIZE(b43_httab_0x1a_0xc0_late) !=
- 			B43_HTTAB_1A_C0_LATE_SIZE);
- 
-+	httab_upload(dev, B43_HTTAB16(0x09, 0), b43_httab_0x09);
- 	httab_upload(dev, B43_HTTAB16(0x12, 0), b43_httab_0x12);
- 	httab_upload(dev, B43_HTTAB16(0x27, 0), b43_httab_0x27);
- 	httab_upload(dev, B43_HTTAB16(0x26, 0), b43_httab_0x26);
--- 
-2.56.0
-
+Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KDQpbLi4u
+XQ0KDQo+ICtzdGF0aWMgdm9pZCBydHc4NzIzYl9yZWFkX3BhY2thZ2VfdHlwZShzdHJ1Y3QgcnR3
+X2RldiAqcnR3ZGV2KQ0KPiArew0KPiArICAgICAgIHN0cnVjdCBydHdfaGFsICpoYWwgPSAmcnR3
+ZGV2LT5oYWw7DQo+ICsgICAgICAgdTggdmFsXzFmYjsNCj4gKw0KPiArICAgICAgIHJ0dzg3MjNi
+X2VmdXNlX2dyYW50KHJ0d2RldiwgdHJ1ZSk7DQo+ICsgICAgICAgcnR3X3JlYWQ4X3BoeXNpY2Fs
+X2VmdXNlKHJ0d2RldiwgMHgxZmIsICZ2YWxfMWZiKTsNCj4gKyAgICAgICBydHc4NzIzYl9lZnVz
+ZV9ncmFudChydHdkZXYsIGZhbHNlKTsNCg0KSW4gcnR3X3BhcnNlX2VmdXNlX21hcCgpLCB3ZSBj
+YW4gcGFzcyAncGh5X21hcCcgdG8gcmVhZF9lZnVzZSgpPw0KLWNoaXAtPm9wcy0+cmVhZF9lZnVz
+ZShydHdkZXYsIGxvZ19tYXApOw0KK2NoaXAtPm9wcy0+cmVhZF9lZnVzZShydHdkZXYsIGxvZ19t
+YXAsIHBoeV9tYXApOw0KDQpBcyAucGh5X2VmdXNlX3NpemUgPSA1MTIgZm9yIFJUTDc4MjNCLCBJ
+IHRoaW5rIGl0IHdpbGwgd29yay4gDQoNCj4gKw0KPiArICAgICAgIHN3aXRjaCAodThfZ2V0X2Jp
+dHModmFsXzFmYiwgR0VOTUFTSygyLCAwKSkpIHsNCg0KQml0IDJ+MCBzZWVtcyBsaWtlIFBLR19U
+WVBFLiBEZWZpbmUgYW4gZW51bT8NCg0KPiArICAgICAgIGNhc2UgMHg0Og0KPiArICAgICAgICAg
+ICAgICAgaGFsLT5wa2dfdHlwZSA9IFJUVzg3MjNCX1BBQ0tBR0VfVEZCR0E3OTsNCj4gKyAgICAg
+ICAgICAgICAgIGJyZWFrOw0KPiArICAgICAgIGNhc2UgMHg1Og0KPiArICAgICAgICAgICAgICAg
+aGFsLT5wa2dfdHlwZSA9IFJUVzg3MjNCX1BBQ0tBR0VfVEZCR0E5MDsNCj4gKyAgICAgICAgICAg
+ICAgIGJyZWFrOw0KPiArICAgICAgIGNhc2UgMHg2Og0KPiArICAgICAgICAgICAgICAgaGFsLT5w
+a2dfdHlwZSA9IFJUVzg3MjNCX1BBQ0tBR0VfUUZONjg7DQo+ICsgICAgICAgICAgICAgICBicmVh
+azsNCj4gKyAgICAgICBjYXNlIDB4NzoNCj4gKyAgICAgICAgICAgICAgIGhhbC0+cGtnX3R5cGUg
+PSBSVFc4NzIzQl9QQUNLQUdFX1RGQkdBODA7DQo+ICsgICAgICAgICAgICAgICBicmVhazsNCj4g
+KyAgICAgICBkZWZhdWx0Og0KPiArICAgICAgICAgICAgICAgaGFsLT5wa2dfdHlwZSA9IFJUVzg3
+MjNCX1BBQ0tBR0VfREVGQVVMVDsNCj4gKyAgICAgICAgICAgICAgIGJyZWFrOw0KPiArICAgICAg
+IH0NCj4gKw0KPiArICAgICAgIGlmIChydHdfaGNpX3R5cGUocnR3ZGV2KSA9PSBSVFdfSENJX1RZ
+UEVfU0RJTyAmJg0KPiArICAgICAgICAgICB1OF9nZXRfYml0cyh2YWxfMWZiLCBHRU5NQVNLKDUs
+IDQpKSA9PSAweDIpDQoNCkNhbiB5b3UgZGVmaW5lIGVudW1zIGZvciBiaXQgNS00IGFuZCB2YWx1
+ZSAweDI/DQpJJ20gbm90IHN1cmUgaWYgdmVuZG9yIGRyaXZlciBoYXMgc29tZSBjb21tZW50cyBw
+b2ludGluZyBvdXQgdGhpcyBvciBub3QuDQoNCj4gKyAgICAgICAgICAgICAgIHJ0d2Rldi0+ZWZ1
+c2UuaHdfY2FwLmJ3ICY9IH5CSVQoUlRXX0NIQU5ORUxfV0lEVEhfNDApOw0KPiArfQ0KPiArDQo+
+ICBzdGF0aWMgaW50IHJ0dzg3MjNiX3JlYWRfZWZ1c2Uoc3RydWN0IHJ0d19kZXYgKnJ0d2Rldiwg
+dTggKmxvZ19tYXApDQo+ICB7DQo+ICAgICAgICAgc3RydWN0IHJ0d19lZnVzZSAqZWZ1c2UgPSAm
+cnR3ZGV2LT5lZnVzZTsNCg0KDQo=
