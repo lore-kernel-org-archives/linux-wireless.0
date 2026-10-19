@@ -1,47 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CD2054FE86;
-	Mon, 19 Oct 2026 13:56:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2AD8513BD8;
+	Mon, 19 Oct 2026 13:57:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418215; cv=none; b=T2OjsboUeRb5s9arEnoF0lgzz3xKzDAJUDh9NhFva5g8bKDWKNnABIfWgLKsiX/Slv7NKdbrXLUzISOxSzNX9UwwSVv/2aqfRuSkZpXwmr4TgUe0gzq6zIuRjZwyGoW5K4w+6BhK+o5nOZdkqNku5ZGcxgl4ktLODoD+qUC7KwU=
+	t=1792418223; cv=none; b=MztxnoOqKzvFazLlYQt2q3m3lHan9xzJfpnw8DCVrxXz/mTsZ9pBxwbrQLr6WNmWxTkCv+Tu5KkbvJxRtvH8h8m5ku+OJ2T4FhteMCoowAxykCZYPr/5bP9fRoBwEYCm9BPygo6v1kFJQZ4gRH9ugkAOcPZhyVpFcYDbnMK1OVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418215; c=relaxed/simple;
-	bh=IQhLecDtcqdEaGgJc2/Op1sbmyXwy2oT2ijSxdk601E=;
+	s=arc-20240116; t=1792418223; c=relaxed/simple;
+	bh=3es7n51+Q0LGQP9Wl8jErystEOS50uO+n0RsPoVOa/A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qrED0uc+sWuQR3nx9kONo+IUy/S+wKf/pWLmtep7Jclp3Suf++HcxNBZTA8iIPUTEiaDnYxFI5Ypl4yv9x7xJ4w7PsoTxU9tkWiFIpK7Q378eBywSpFL9yOYDmoJgkfoyS89r41T7/wW9eISIJr2txeSBh9kbO28uxBn9e6/RQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VsqA7Qo3; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=A+q8KW/5H9eFkIYZNKLEpe8Kamk92HDtEynOvLKomDACbhBX+wtx9yK6DB96qZwNCR59trLhY3VGK1gVjfNb0liQpxVkVs3SyKOd1o45iqg5FUp7OHvlRws3dj/SowFIorYqHQayxo8crZwy/5oy5Yg9n/iV3tBIQYeWVXuMNZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqhhAzln; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VsqA7Qo3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C80E01F000C8;
-	Mon, 19 Oct 2026 13:56:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqhhAzln"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB28E1F000C8;
+	Mon, 19 Oct 2026 13:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418213;
-	bh=N45kJ+5sX/X+h0o4k5A4rBO8ZMU+fiVLgW1Kl2dteRs=;
+	s=k20260515; t=1792418220;
+	bh=M70VlpRT59EjCQshNMw662ftj9w+gKoHqn8i5U7vYRg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VsqA7Qo3wClGpB2Pth3ldHvddvZ/eU4RHYg5lyWT8ug6iuPPz/7KLUr9GmaKOfwkV
-	 VNPQliu4SNt0B4Sq62KQ4xoBpQP7bS1A0pHHGDRAY522em0Sg02D15t/bLlyNKhZia
-	 L09Ta/HJdd3WnTszAW+/Wo7YGmjBzGALGarEVJNvILQskIdWQxO7qPgC9ECLi0/V8F
-	 xctMQ/1xiff3U9EBhoyALW/mCs57ZTdSjosd4AK/xhqC45WTGww4Ak+T7f2oQYfpT6
-	 WtLk2uc93EY6z3JS5Yx47Z6sXt9r8ZbspRPGgo08D5FEIyhFhhWtt/GlqYukhS+p0K
-	 /UjxI4CjbUEuQ==
+	b=SqhhAzlnEgEbmwNvIynxDhckMQ00g+PFO9Mj2MmKKX71v9ETKlZvpdFx6yKYlTTrv
+	 cdFnRSyYnkwD/HTnqvBjXJiv0YTBEOsO5ZzPzwdjy58gjpBuvwgIzkW25HWOBehJba
+	 Rku6kSZoqNDJwq3ZjckIv4eq+/AmkCgzRSny9KqcZsK+KuCdVXcor83nNhaubdch+M
+	 ndD9t66CRnfdznT/vz+G3fi35BBNXiDLCgYx5t/LOuGMsQwa7cgqonk1ER+8mTcLuC
+	 z7WGovfvaz1NMOhTiroh1rGCX4mBGqetiPh5CmaY8FMsoN7Va0iZPocklV9QOhPdqc
+	 taHn9mFFdyBxQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
+Cc: William Hansen-Baird <william.hansen.baird@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-5.15] wifi: mt76: set the EOSP bit in the QoS header of the last released frame
-Date: Mon, 19 Oct 2026 09:46:23 -0400
-Message-ID: <20261019135441.1420968-92-sashal@kernel.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: rtlwifi: rtl8723be: Remove unnecessary irq save/restore in hw_init()
+Date: Mon, 19 Oct 2026 09:46:29 -0400
+Message-ID: <20261019135441.1420968-98-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -57,407 +52,513 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Felix Fietkau <nbd@nbd.name>
+From: William Hansen-Baird <william.hansen.baird@gmail.com>
 
-[ Upstream commit 0b8d2524716099ea4743fa65bc364f94b3106a31 ]
+[ Upstream commit 1b4cd55626b6ffa93d18848412afb912a4add585 ]
 
-When the driver implements .release_buffered_frames, mac80211 leaves the
-U-APSD signalling entirely to the driver: "In this case it is also
-responsible for setting the EOSP flag in the QoS header of the frames"
-(include/net/mac80211.h). Only IEEE80211_TX_STATUS_EOSP was being set,
-which merely ends the service period inside mac80211, so on air the
-service period was never terminated. Clients that wait for EOSP before
-going back to doze keep the SP open and stop triggering, which stalls all
-downlink traffic for that station.
+rtl8723be hw_init() calls local_save_flags(flags) followed by
+local_irq_enable(). Later, local_irq_restore(flags) is called.
 
-Set the wire EOSP bit on the last frame of a U-APSD service period.
-EOSP has no meaning for a PS-Poll response, so pass the release reason
-down and leave those frames alone.
+This causes warnings from Lockdep on boot and modprobe,
+as local_irq_restore(flags) should only be called while irqs are disabled.
+The warning was introduced to detect this class of bug in [1].
 
-Link: https://patch.msgid.link/20260801145334.1166751-4-nbd@nbd.name
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+With testing I found that all paths which call hw_init() have irqs
+already enabled for rtl8723be.
+
+Furthermore, the calls were originally added for the rtl8192ce
+in commit f78bccd79ba3 ("rtlwifi: rtl8192ce: Fix too long disable of IRQs")
+before later being added to most other rtlwifi drivers.
+
+Commit d3feae41a347 ("rtlwifi: Update power-save routines for 062814 driver")
+then replaces the call to spin_lock_irqsave() before hw_init(),
+and thus the codepath which caused irqs to be disabled in hw_init and
+prompted the original commit has been removed.
+
+The same irq save/restore pattern is also present in the hw_init() of
+rtl8192ce, rtl8723ae, rtl8188ee, rtl8192se and rtl8192cu,
+however I don't have the hardware to test them,
+so I did not include them in my changes.
+
+Tested on a Razer Blade 14 2017.
+
+Example of output from Lockdep prior to fix:
+
+raw_local_irq_restore() called with IRQs enabled
+
+...
+
+Call Trace:
+<TASK>
+rtl8723be_hw_init+0x5992/0x7220 [rtl8723be]
+? static_obj+0x61/0xa0
+rtl_pci_start+0x222/0x5c0 [rtl_pci]
+rtl_op_start+0x128/0x1a0 [rtlwifi]
+? __kasan_check_read+0x11/0x20
+drv_start+0x16c/0x550 [mac80211]
+
+...
+
+irq event stamp: 887679
+hardirqs last  enabled at (887689): [<ffffffff96511170>] __up_console_sem+0x90/0xa0
+hardirqs last disabled at (887698): [<ffffffff96511155>] __up_console_sem+0x75/0xa0
+softirqs last  enabled at (887670): [<ffffffff962f4675>] __irq_exit_rcu+0x175/0x2f0
+softirqs last disabled at (887649): [<ffffffff962f4675>] __irq_exit_rcu+0x175/0x2f0
+---[ end trace 0000000000000000 ]---
+
+[1] https://lore.kernel.org/all/20210111153707.10071-1-mark.rutland@arm.com/
+
+Signed-off-by: William Hansen-Baird <william.hansen.baird@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20260609095359.2964193-1-william.hansen.baird@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This is a real U-APSD protocol bug in mt76 that already exists in this
-5.15.221 tree. The fix is small, applies here, and is independent of the
-rest of the series.
-
-## Phase 1: Commit message forensics
-
-**Step 1.1 — subject**
-Record: `[wifi: mt76:]` `[set]` set the EOSP bit in the QoS header of
-the last released frame. “Set” here is a protocol-correctness fix, not a
-feature add.
-
-**Step 1.2 — tags**
-Record:
-- `Link: https://patch.msgid.link/20260801145334.1166751-4-nbd@nbd.name`
-  (linux-wireless, series 04/10)
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` (mt76 maintainer; Sasha
-  Levin SOB ignored per instructions)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Cc:
-  stable` (absence is expected)
-
-Mainline SHA (from `origin/master`, path-limited log):
-`0b8d2524716099ea4743fa65bc364f94b3106a31`. First containing tag:
-`v7.3-rc1`. Not an ancestor of this HEAD.
-
-**Step 1.3 — body**
-Record:
-- **Bug:** `.release_buffered_frames` means mac80211 does not set the
-  on-air EOSP bit; the driver must. mt76 only set
-  `IEEE80211_TX_STATUS_EOSP` (ends the SP inside mac80211).
-- **Symptom:** U-APSD clients that wait for EOSP never see it, keep the
-  service period open, stop triggering, **all downlink for that STA
-  stalls**.
-- **Root cause:** missing `IEEE80211_QOS_CTL_EOSP` on the last QoS frame
-  of a U-APSD SP. PS-Poll must not get EOSP.
-- **Version info:** none in the message. Buggy code dates to 2017.
-
-**Step 1.4 — hidden fix?**
-Record: Not hidden. Explicit protocol/connectivity fix.
-
-## Phase 2: Diff analysis
-
-**Step 2.1 — inventory**
-Record:
-- File: `drivers/net/wireless/mediatek/mt76/tx.c` (`+12 / -4`)
-- Functions: `mt76_queue_ps_skb`, `mt76_release_buffered_frames`
-- Scope: single-file surgical change. `mt76_queue_ps_skb` is static;
-  exported `mt76_release_buffered_frames` signature already has
-  `reason`.
-
-**Step 2.2 — flow**
-Record:
-- Before: last PS-release frame gets `IEEE80211_TX_STATUS_EOSP |
-  IEEE80211_TX_CTL_REQ_TX_STATUS` and More Data cleared. QoS Control on
-  the wire is untouched.
-- After: same flags, plus if `reason == IEEE80211_FRAME_RELEASE_UAPSD`
-  and the frame is QoS data, OR `IEEE80211_QOS_CTL_EOSP` into the QoS
-  control field. `reason` is passed through both call sites.
-- Path: U-APSD/PS-Poll release via `.release_buffered_frames`, not the
-  normal TX burst path.
-
-**Step 2.3 — bug mechanism**
-Record: **Logic / protocol correctness.** mac80211’s own release path
-(`net/mac80211/sta_info.c`) does `*qoshdr |= IEEE80211_QOS_CTL_EOSP` for
-U-APSD. Drivers that implement `.release_buffered_frames` must do the
-same (`include/net/mac80211.h`). mt76 did not.
-
-**Step 2.4 — quality**
-Record: Obviously correct and aligned with mac80211. Guards match the
-docs (U-APSD only; QoS data only). skb is exclusively owned after
-`ieee80211_tx_dequeue`. Header at `skb->data` matches existing
-`mt76_skb_set_moredata()`. Regression risk is low: PS-Poll unchanged;
-non-QoS last frames still lack wire EOSP (mac80211 already assumes
-drivers mostly buffer QoS-data, or add a QoS-Null themselves). Pre-
-existing unused `more_data` parameter is not changed.
-
-## Phase 3: Git history
-
-**Step 3.1 — blame**
-Record: `mt76_queue_ps_skb` / `mt76_release_buffered_frames` introduced
-in `17f1de56df0512` (“mt76: add common code…”, 2017-12-07,
-**v4.16-rc1**). `IEEE80211_TX_STATUS_EOSP` added in `7267a7965dd7b`
-(2018). Present for the entire 5.15 lifetime.
-
-**Step 3.2 — Fixes: tag**
-Record: None. Introducer is `17f1de56df0512`, which **is** in this tree.
-
-**Step 3.3 — related file history**
-Record: Recent 5.15 `tx.c` work is unrelated (locking, UAF, queue id).
-This tree already has U-APSD AP support: `b807b368c4f9b` (mt76 AP
-U-APSD), `4bf04d33f5b7e` (mt7915). No earlier EOSP-on-wire fix.
-
-**Step 3.4 — author**
-Record: Felix Fietkau is listed in `MAINTAINERS` as mt76 maintainer.
-Sibling series patch 05 (`697badc27a9b3`, mt7603 U-APSD termination) is
-a separate chip-specific fix, not a prerequisite.
-
-**Step 3.5 — prerequisites**
-Record: Series is **01–10**, but 04 does **not** depend on 01–03. Patch
-01 (`a547b414bf7ea`) changes `mt76_txq_send_burst` / HW TIM buffering
-and does not touch `mt76_queue_ps_skb`. 02/03/09/10 are
-mt7915/mt7996/MLO (mt7996 is not in 5.15). 05–08 are mt7603-only. 04 is
-standalone. All helpers used (`ieee80211_is_data_qos`,
-`ieee80211_get_qos_ctl`, `IEEE80211_QOS_CTL_EOSP`,
-`IEEE80211_FRAME_RELEASE_UAPSD`) exist in this tree via `mt76.h` →
-`<net/mac80211.h>` / `ieee80211.h`.
-
-## Phase 4: Mailing list / external
-
-**Step 4.1 — original discussion**
-Record: `b4 dig -c 0b8d252471609` →
-https://patch.msgid.link/20260801145334.1166751-4-nbd@nbd.name
-`b4 dig -a`: single **v1** series, 2026-08-01. Applied version is that
-v1. Thread has the 10 patches plus a kernel-test-robot build error on
-**10/10** (`ieee80211_txq_aql_pending` / patch 01), **not** on 04. No
-NAK, no reviewer concern about EOSP. Merged via `wireless-
-next-2026-08-06` into `v7.3-rc1`.
-
-**Step 4.2 — recipients (`b4 dig -w`)**
-Record: Felix Fietkau, `linux-wireless@vger.kernel.org`. Maintainer-
-authored self-merge; no extra Reviewed-by. Normal for mt76.
-
-**Step 4.3 — bug report**
-Record: No syzbot/bugzilla. The series commit messages describe a
-concrete on-air failure (clients waiting for EOSP). Unverified: no
-public user stack trace beyond the author’s analysis.
-
-**Step 4.4 — series context**
-Record: 04 is the common-path EOSP fix. 05 is the mt7603 driver-PS-queue
-analogue. Taking 04 without 05 still fixes mac80211-buffered frames on
-**all** chips that use `mt76_release_buffered_frames` (mt76x0/x2,
-mt7615, mt7915, mt7921, and mt7603’s fallback).
-
-**Step 4.5 — stable list**
-Record: `lore.kernel.org/stable/?q=mt76+EOSP+QoS` → **No results
-found**. No recorded reason to skip it.
-
-## Phase 5: Semantic / call graph
-
-**Step 5.1 — functions**
-Record: `mt76_queue_ps_skb`, `mt76_release_buffered_frames`.
-
-**Step 5.2 — callers**
-Record: `mt76_queue_ps_skb` only from `mt76_release_buffered_frames`.
-That is `.release_buffered_frames` for mt76x0, mt76x2, mt7615, mt7915,
-mt7921; mt7603 wraps it after draining `msta->psq`. mac80211 calls it
-from `ieee80211_sta_ps_deliver_response()` →
-`drv_release_buffered_frames()`.
-
-**Step 5.3 — callees**
-Record: `IEEE80211_SKB_CB`, `ieee80211_is_data_qos`,
-`ieee80211_get_qos_ctl`, `mt76_skb_set_moredata`, `__mt76_tx_queue_skb`.
-No new locks/allocs.
-
-**Step 5.4 — reachability**
-Record: Yes, from the air. AP RX of a U-APSD trigger
-(`ieee80211_sta_uapsd_trigger` in `mac80211.c` / `rx.c`) →
-`ieee80211_sta_ps_deliver_uapsd` → driver release. This tree sets
-`WIPHY_FLAG_AP_UAPSD`. Typical trigger: a phone associated to an mt76
-AP.
-
-**Step 5.5 — similar patterns**
-Record: mac80211 `sta_info.c` uses the same `*qoshdr |=
-IEEE80211_QOS_CTL_EOSP`. Sibling mt7603 patch 05 does the same for TXD-
-prefixed PS-queue frames (`skb->data[MT_TXD_SIZE]`). Common-path frames
-from `ieee80211_tx_dequeue` have the 802.11 header at `skb->data` (same
-as `mt76_skb_set_moredata`).
-
-## Phase 6: This tree (5.15.221)
-
-**Step 6.1 — buggy code present?**
-Record: **Yes.** `drivers/net/wireless/mediatek/mt76/tx.c`
-`mt76_queue_ps_skb()` (lines 344–358) sets only
-`IEEE80211_TX_STATUS_EOSP`, not the QoS EOSP bit. Introduced v4.16;
-U-APSD AP enabled here since 2020.
-
-`git describe HEAD`: `p-5.15-2-g6703e5d2f3a29`. `make kernelversion`:
-**5.15.221**. `git merge-base --is-ancestor 0b8d252471609 HEAD` → **not
-present**.
-
-**Step 6.2 — backport difficulty**
-Record: **Clean apply.** `git apply --check` succeeded; hunks applied at
-offset −69 only because `mt76_txq_dequeue` still uses
-`MT_TX_HW_QUEUE_EXT_PHY` here vs `FIELD_PREP(MT_TX_HW_QUEUE_PHY, …)`
-upstream. That function is context, not part of the change.
-
-**Step 6.3 — related fixes already here?**
-Record: No. Only `7267a7965dd7b` (TX status for the software EOSP flag),
-which is exactly the incomplete behavior this commit finishes.
-
-## Phase 7: Subsystem
-
-**Step 7.1**
-Record: `drivers/net/wireless/mediatek/mt76` — Wi-Fi driver.
-**IMPORTANT** (not core kernel, but widely used: OpenWrt/home routers,
-mt76x0/x2/7603/7615/7915/7921).
-
-**Step 7.2**
-Record: Mature driver; this PS-release path has been stable since 2017.
-Not a bug in brand-new code.
-
-## Phase 8: Impact and risk
-
-**Step 8.1 — who**
-Record: Driver/config-specific: `CONFIG_MT76*` AP mode with U-APSD
-clients. Large real-world set (MediaTek AP SoCs).
-
-**Step 8.2 — trigger**
-Record: Associated STA in power-save using U-APSD (typical phones) sends
-a trigger; AP releases buffered QoS data. Not a rare error path.
-Unprivileged on the air (associated client). PS-Poll-only clients are
-unaffected by the new bit.
-
-**Step 8.3 — failure mode**
-Record: **Station downlink stall** until the client gives up the SP. Not
-a kernel oops. Severity: **HIGH** (loss of connectivity for that STA),
-not CRITICAL (no panic/corruption).
-
-**Step 8.4 — risk/benefit**
-Record: Benefit high for mt76 AP + U-APSD clients. Risk very low: ~12
-lines, QoS bit only on last U-APSD QoS-data frame, same pattern as
-mac80211, clean apply, no API/struct change. Patch 01’s
-`ieee80211_txq_aql_pending` is **not** required.
-
-## Phase 9: Synthesis
-
-**Step 9.1 — evidence**
-
-For:
-- Real, documented 802.11 bug: missing on-air EOSP → downlink stall
-- Code and AP U-APSD flag exist in 5.15.221
-- Bug since v4.16
-- Maintainer-authored, merged to mainline (`v7.3-rc1`), no revert, no
-  later rewrite of this function
-- 12 insertions / 4 deletions, clean apply
-- Matches mac80211
-- Standalone despite 04/10 numbering
-
-Against:
-- Not crash/security/corruption
-- No `Reported-by` / syzbot
-- No extra reviewer
-- mt7603 hardware PS-queue still wrong without patch 05 (does not make
-  04 incorrect or unusable)
-
-Unresolved: no independent end-user report found beyond the maintainer’s
-analysis.
-
-**Step 9.2 — stable rules**
-1. Obviously correct and tested? **PASS** — same as mac80211; in
-   mainline since v7.3-rc1
-2. Real bug affecting users? **PASS** — U-APSD clients on mt76 APs
-3. Important? **PASS** — full downlink stall for the STA (HIGH)
-4. Small/contained? **PASS** — one file, ~12 lines
-5. No new features/APIs? **PASS** — sets a standard 802.11 bit the
-   driver was already required to set
-6. Applies to this tree? **PASS** — `git apply --check` clean
-
-**Step 9.3 — exceptions**
-Record: None (not an ID/quirk/DT/build/doc exception). Qualifies as a
-normal bugfix.
-
-**Step 9.4 — decision**
-This 5.15.221 tree has the buggy path, U-APSD AP support, and every API
-the patch needs. The change is a small, self-contained protocol fix for
-a serious AP-mode connectivity failure. It should be backported here.
+The local tree is **v7.3-rc4** (mainline 7.3). The candidate is a six-
+line IRQ API fix in `rtl8723be_hw_init()` that stops a real `WARN_ONCE`
+on boot. Full phase walkthrough follows.
 
 ---
 
-### What it solves for 5.15 users
-On MediaTek mt76 APs, U-APSD service periods never get the EOSP bit on
-the last released QoS frame. mac80211 thinks the SP ended
-(`IEEE80211_TX_STATUS_EOSP`), but the client never sees EOSP on the air,
-stops triggering, and **downlink to that station stalls**. Setting
-`IEEE80211_QOS_CTL_EOSP` on the last U-APSD QoS-data frame is what
-mac80211 already documents and implements when the driver does not take
-`.release_buffered_frames`.
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Stable rules / risk
-Meets all six criteria. Benefit is restoring buffered downlink for
-U-APSD clients; risk is a one-bit header update on a path that already
-rewrites More Data. No series dependencies for this hunk. mt7603’s
-separate PS-queue EOSP bug is a sibling, not a blocker.
+**Step 1.1: PARSE THE SUBJECT LINE**
 
-### Verification
-- [Phase 1] Parsed tags: Link to 04/10, author SOB only; no
-  Fixes/Reported-by/Cc:stable
-- [Phase 1] `git log origin/master --grep='set the EOSP bit' --
-  drivers/net/wireless/mediatek/mt76/`: `0b8d252471609`
-- [Phase 1] `git describe --contains --match 'v*' 0b8d252471609`:
-  `v7.3-rc1~133^2~99^2~15^2~8`
-- [Phase 2] Diff: `mt76_queue_ps_skb` + `reason`; EOSP OR on last U-APSD
-  QoS-data frame; two call sites
-- [Phase 2] Compared to `net/mac80211/sta_info.c:1708` (`*qoshdr |=
-  IEEE80211_QOS_CTL_EOSP`) — same mechanism
-- [Phase 2] Confirmed `include/net/mac80211.h` requires the driver to
-  set EOSP when `.release_buffered_frames` is implemented
-- [Phase 3] `git blame` on `tx.c` 345–403: introduced `17f1de56df0512`
-  (v4.16-rc1)
-- [Phase 3] `git log --grep='EOSP' --
-  drivers/net/wireless/mediatek/mt76/`: only TX-status EOSP
-  (`7267a7965dd7b`) in this tree
-- [Phase 3] Patch 01 `a547b414bf7ea` does not touch `mt76_queue_ps_skb`
-  (not a prerequisite)
-- [Phase 4] `b4 dig -c 0b8d252471609`: lore URL above; `b4 dig -a`: v1
-  only; `b4 dig -w`: linux-wireless + author
-- [Phase 4] 11-message mbox: no NAK on 04; kbuild error is on 10/10 /
-  patch 01
-- [Phase 4] `curl` stable lore for `mt76 EOSP QoS`: no results
-- [Phase 5] Callers: mt76x0/x2, mt7615, mt7915, mt7921 ops; mt7603
-  wrapper; mac80211 `drv_release_buffered_frames`
-- [Phase 5] This tree: `WIPHY_FLAG_AP_UAPSD` and
-  `ieee80211_sta_uapsd_trigger` in `mt76/mac80211.c`
-- [Phase 6] `git describe HEAD`: `p-5.15-2-g6703e5d2f3a29`; `make
-  kernelversion`: 5.15.221
-- [Phase 6] `git merge-base --is-ancestor 0b8d252471609 HEAD`: not in
-  tree
-- [Phase 6] `git apply --check` of 04/10: success, offset −69
-- [Phase 6] APIs present: `IEEE80211_QOS_CTL_EOSP` `0x0010`,
-  `ieee80211_get_qos_ctl`, `ieee80211_is_data_qos`,
-  `IEEE80211_FRAME_RELEASE_UAPSD`
-- [Phase 8] Failure mode: STA downlink stall (HIGH), not oops
-- UNVERIFIED: no independent user bugzilla/syzbot report; impact
-  inferred from protocol + maintainer description
+Record: **[wifi: rtlwifi: rtl8723be]** **[Remove]** unnecessary irq
+save/restore in `hw_init()`. Intent: drop a leftover `local_save_flags`
+/ `local_irq_enable` / `local_irq_restore` sequence that is no longer
+valid.
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
+
+Record:
+- **Acked-by:** Ping-Ke Shih `<pkshih@realtek.com>` (rtlwifi maintainer)
+- **Signed-off-by:** William Hansen-Baird (author); Ping-Ke Shih
+  (maintainer)
+- **Link:** https://patch.msgid.link/20260609095359.2964193-1-
+  william.hansen.baird@gmail.com
+- No Fixes:, Reported-by:, Tested-by:, Cc: stable (absence expected)
+- Ignore pipeline SOBs
+
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
+
+Record:
+- **Bug:** `rtl8723be_hw_init()` does `local_save_flags(flags);
+  local_irq_enable();` … `local_irq_restore(flags)` while IRQs are
+  already enabled.
+- **Symptom:** `WARN_ONCE` from `warn_bogus_irq_restore()`:
+  `raw_local_irq_restore() called with IRQs enabled`, on boot and
+  `modprobe`. Stack: `rtl8723be_hw_init` → `rtl_pci_start` →
+  `rtl_op_start` → `drv_start`.
+- **Root cause:** The save/enable/restore was copied from rtl8192ce
+  (`f78bccd79ba3`, 2014) to keep IRQs enabled during a long `hw_init()`
+  that used to run under `spin_lock_irqsave()`. `d3feae41a347` (2014)
+  removed that irqsave around the power-save/`hw_init` path, so callers
+  now enter with IRQs enabled. Restore of already-enabled flags is
+  forbidden.
+- **Version info:** Pattern present since the rtl8723be driver was added
+  (`a619d1abe20cc`, 2014-02-28). Warning added in `997acaf6b4b59`
+  (2021).
+- **Author explanation:** All current rtl8723be `hw_init()` callers have
+  IRQs enabled (tested on a Razer Blade 14 2017). Sibling chips still
+  have the pattern but were left alone for lack of hardware.
+
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+
+Record: Not hidden. Explicit lockdep/IRQ-restore warning fix. “Remove
+unnecessary” is accurate: the sequence became a no-op plus a warning
+after the 2014 caller change.
+
+---
+
+## PHASE 2: DIFF ANALYSIS
+
+**Step 2.1: INVENTORY THE CHANGES**
+
+Record:
+- File: `drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c` — **6
+  deletions, 0 additions**
+- Function: `rtl8723be_hw_init()`
+- Scope: single-file surgical fix
+
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+
+Record:
+- **Before:** Save flags, force IRQs on for the whole init, restore
+  flags at the `exit:` label (success and error).
+- **After:** Init runs in the caller’s IRQ state; `exit:` only clears
+  `being_init_adapter`.
+- **Path:** Normal and error `hw_init()` (boot, `modprobe`, interface
+  start, IPS nic-on).
+
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+
+Record: **Logic / IRQ-flag API misuse** (WARN_ON class).
+`local_irq_restore()` must be called with IRQs disabled
+(`raw_check_bogus_irq_restore()` in `include/linux/irqflags.h`). Callers
+already have IRQs enabled, so restore trips `WARN_ONCE`. Same class as
+`8b144dedb928e` (“rtlwifi: rtl8192cu: Fix WARNING when calling
+local_irq_restore() with interrupts enabled”), which used
+`local_irq_disable()` before restore and was **Cc: stable**. Here the
+save/enable/restore is removed because it is no longer needed.
+
+**Step 2.4: ASSESS THE FIX QUALITY**
+
+Record:
+- Obviously correct if all callers have IRQs enabled (author tested;
+  maintainer agreed; `rtl_pci_start` / `rtl_op_start` /
+  `rtl_ps_enable_nic` are process-context, mutex/work, not
+  `spin_lock_irqsave`).
+- Minimal: six lines deleted, no unrelated edits.
+- Regression risk: if some caller still had IRQs off, `hw_init()` could
+  run ~hundreds of ms with IRQs disabled (the 2014 audio-underrun/clock-
+  freeze bug). Verified not the case in this tree. Maintainer: “current
+  `hw_init()` is not in scope of `spin_lock_irqsave()`, so irqs is not
+  disabled.”
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
+
+**Step 3.1: BLAME THE CHANGED LINES**
+
+Record: IRQ save/restore was in rtl8723be from **`a619d1abe20cc`
+(“rtlwifi: rtl8723be: Add new driver”, 2014-02-28)**. Pattern copied
+from rtl8192ce `f78bccd79ba3` (2014-02-01). Present for ~12 years.
+
+**Step 3.2: FOLLOW THE FIXES: TAG**
+
+Record: No Fixes: tag. Related history:
+- `f78bccd79ba3` — **in this tree** — added save/enable/restore because
+  `hw_init` ran too long with IRQs off.
+- `d3feae41a347` — **in this tree** — replaced `spin_lock_irqsave`
+  before `hw_init` with `spin_lock` / mutex; IRQ-disabled caller gone.
+- `997acaf6b4b59` — **in this tree** — added the `WARN_ONCE`.
+- `8b144dedb928e` (2021) — **in this tree** — same warning on rtl8192cu;
+  **Cc: stable**.
+
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+
+Record: Recent `rtl8723be/hw.c` commits are unrelated (stack size, const
+arrays, LED, `kfree_skb`). Standalone; not patch X/Y in the committed
+form (v2 was a single patch).
+
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+
+Record: William Hansen-Baird is a contributor, not the maintainer.
+Nearby work is separate ASPM quirks for the same chip (June 30), not
+prerequisites. Maintainer Ping-Ke Shih acked and applied it.
+
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+
+Record: None. Deletes three API calls that have existed since 2014.
+Applies standalone.
+
+---
+
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+
+Record:
+- Lore/msgid: https://patch.msgid.link/20260609095359.2964193-1-
+  william.hansen.baird@gmail.com
+- v1: https://patch.msgid.link/20260608135345.2526325-3-
+  williamhb+k@fastmail.com
+- v1 → v2: drop dmesg timestamps, `[1]` footnote, `rtw-next` subject
+  prefix. **Code unchanged.**
+- Maintainer: “I think removal is okay.” No NAK. No Cc: stable in
+  review. Applied to rtw-next as `1b4cd55626b6`.
+
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+
+Record: To/Cc: `pkshih@realtek.com`, linux-wireless, linux-kernel.
+Subsystem maintainer reviewed and Acked.
+
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+
+Record: No syzbot/bugzilla for this exact chip. Author reproduced on a
+Razer Blade 14 2017 with a full lockdep-style trace. Same warning class
+was syzbot+stable for rtl8192cu in 2021.
+
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+
+Record: v1 msgid `-3` looks like a series slot; v2 was sent standalone.
+Other June 2026 Hansen-Baird rtlwifi patches are ASPM, independent.
+Sibling drivers (rtl8192ce, rtl8723ae, rtl8188ee, rtl8192se, rtl8192cu)
+still have the pattern; not required for this chip’s fix.
+
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+
+Record: No stable-thread discussion found for this subject. Precedent:
+`8b144dedb928e` was explicitly Cc: stable for the same warning.
+
+---
+
+## PHASE 5: CODE SEMANTIC ANALYSIS
+
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
+
+Record: `rtl8723be_hw_init()` only.
+
+**Step 5.2: TRACE CALLERS**
+
+Record:
+- `rtl_pci_start()` (`pci.c:1737`) ← `rtl_op_start()` (`core.c:129`,
+  `conf_mutex`) ← mac80211 `drv_start`. Matches the reported stack.
+  Process context, IRQs on.
+- `rtl_ps_enable_nic()` (`ps.c:26`) ←
+  `_rtl8723be_phy_set_rf_power_state()` IPS ERFON path (`phy.c:2534`) ←
+  `rtl_ps_set_rf_state()` (plain `spin_lock`, not irqsave) ←
+  `rtl_ips_nic_on()` (`ips_mutex`). Process/work context, IRQs on.
+- USB `rtl_usb_start()` also calls `hw_init`; **RTL8723BE is PCIe-only**
+  (`CONFIG_RTL8723BE`).
+
+**Step 5.3: TRACE CALLEES**
+
+Record: MAC/FW/PHY init, register I/O, `rtl8723be_dm_init`. Long-
+running, sleepable. Must not run with IRQs off for hundreds of ms —
+which is why 2014 added enable, and why it is safe to drop now that
+callers already have IRQs on.
+
+**Step 5.4: FOLLOW THE CALL CHAIN**
+
+Record: Userspace-reachable: interface up / module load / IPS wake.
+Unprivileged users who can bring the interface up can hit it. Debug
+kernels dump a warning on every start.
+
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+
+Record: Same save/enable/restore still in rtl8723ae, rtl8192ce,
+rtl8188ee, rtl8192se, rtl8192cu. rtl8192cu already does
+`local_irq_disable()` before restore (`8b144dedb928e`). Systematic
+leftover; this patch only fixes the tested chip.
+
+---
+
+## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+
+Record:
+- Local tree: **`v7.3-rc4-27-gf0100363d8c37`**, `VERSION=7 PATCHLEVEL=3`
+  (7.3.0-rc4).
+- Driver and `rtl8723be_hw_init()` exist. Buggy sequence was here from
+  2014 until **`1b4cd55626b6f`**, which is already in **v7.3-rc1** (not
+  in v7.2).
+- Current `hw.c` has no `local_save_flags` (grep empty). Evaluation is
+  of the fix’s merit for this lineage, where the bug lived for years and
+  the code still matches.
+
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+
+Record: Expected apply: **clean**. Six-line deletion of a pattern
+unchanged since 2014. No structural dependency on later rtlwifi
+refactors.
+
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+
+Record: This exact fix is in 7.3-rc1. No alternate fix for rtl8723be.
+rtl8192cu’s 2021 workaround is a sibling, not a substitute.
+
+---
+
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+
+Record: **wifi / rtlwifi / rtl8723be** (Realtek RTL8723BE PCIe 802.11n).
+**IMPORTANT** (common 2014–2018 laptop WiFi: ThinkPads, Razers, etc.),
+not core mm/net.
+
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+
+Record: Mature, low-churn vendor driver. Bug is old leftover, not a new-
+feature regression.
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
+
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+
+Record: **Driver-specific**, `CONFIG_RTL8723BE`. Warning only with
+**`CONFIG_DEBUG_IRQFLAGS`** (selected by `DEBUG_LOCKDEP`). Debug/lockdep
+kernels, syzbot-style configs, `panic_on_warn`. Production distro
+kernels usually omit lockdep, so they would not print it — the API
+misuse is still present.
+
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+
+Record: Every `hw_init()`: boot, `modprobe`, iface start. Not a race.
+Unprivileged users can trigger via network start if the module is
+loaded.
+
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+
+Record: `WARN_ONCE` in `warn_bogus_irq_restore()`. Not a panic/oops by
+default. Can panic if `panic_on_warn`. Mark Rutland’s 2021 commit notes
+restore-with-IRQs-enabled can desync IRQ-state tracing and break archs
+whose `arch_local_irq_restore()` assumes IRQs are off. **Severity:
+MEDIUM** (WARN_ON), with a documented arch/lockdep correctness angle.
+Prompt lists WARN_ON triggers as a strong backport signal.
+
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+
+Record:
+- **Benefit:** Stops a boot-time warning on a common laptop chip;
+  restores correct IRQ API use. Same class already taken into stable for
+  rtl8192cu.
+- **Risk:** Very low (6-line delete). Residual risk is long IRQ-off
+  `hw_init` if some caller still had IRQs disabled — **not true in this
+  tree**.
+- **Ratio:** Favorable.
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+**FOR:**
+- Real, reproduced `WARN_ONCE` on boot/`modprobe` (Razer Blade 14 2017).
+- Incorrect `local_irq_restore()` usage; can confuse lockdep and some
+  arch restore paths.
+- Six-line deletion, obviously correct once callers have IRQs enabled
+  (verified in `rtl_pci_start` / `rtl_op_start` / IPS).
+- Tested on hardware; Acked and applied by Ping-Ke Shih.
+- Same warning on rtl8192cu was **Cc: stable** in 2021.
+- Driver present since 2014; no missing prerequisites.
+- WARN_ON is listed as a strong stable signal.
+
+**AGAINST:**
+- Warning is gated on `CONFIG_DEBUG_IRQFLAGS`; typical production
+  kernels never print it.
+- Not a crash, deadlock, corruption, or security hole in the default
+  config.
+- Sibling chips left unfixed (incomplete family-wide cleanup, not a
+  dependency).
+- Removing enable-IRQs-during-init would be harmful if an IRQ-disabled
+  caller still existed (none found here).
+
+**UNRESOLVED:** Could not fetch lore HTML (403); used `b4 dig -m` mbox
+instead. No stable@ thread found for this specific subject.
+
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+
+1. Obviously correct and tested? **PASS** — hardware test + maintainer
+   ack; callers have IRQs on.
+2. Fixes a real bug that affects users? **PASS** — lockdep/debug warning
+   on every start of this NIC.
+3. Important issue? **PASS** (MEDIUM) — WARN_ONCE; same class previously
+   shipped to stable; not a production panic.
+4. Small and contained? **PASS** — 6 lines, one function.
+5. No new features or APIs? **PASS**.
+6. Can apply to the local tree? **PASS** — code exists; deletion applies
+   cleanly to the pre-fix file.
+
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+
+Record: None (not a device ID, quirk table, DT, build, or docs-only
+change). Qualifies as a normal small bugfix.
+
+**Step 9.4: MAKE YOUR DECISION**
+
+This is a small, verified fix for a real IRQ-flag warning that fires on
+a common PCIe WiFi chip whenever `hw_init()` runs under debug
+IRQ/lockdep configs. Callers in this tree already have IRQs enabled, so
+deleting the leftover save/enable/restore is the right fix and does not
+reintroduce long IRQ-off init. Benefit clearly beats risk.
+
+---
+
+### What the commit solves for stable users
+
+`rtl8723be_hw_init()` restored IRQ flags while IRQs were already
+enabled, which `CONFIG_DEBUG_IRQFLAGS` treats as broken and warns on
+every boot/`modprobe`. The enable/restore dance was only needed when
+`hw_init()` ran under `spin_lock_irqsave()`; that path has been gone
+since 2014. Users of RTL8723BE (many 2014–2018 laptops) on debug kernels
+get a stack dump at start; `panic_on_warn` would panic.
+
+### Stable rules / risk vs benefit
+
+Meets all six rules: tiny, tested, no new API, applies cleanly. Risk is
+a 6-line delete. Benefit is removing a boot-time WARN and illegal
+restore. Same bug class was already backported for rtl8192cu.
+
+### Concerns
+
+None that block a backport here: no extra commits required; sibling
+chips are independent; production kernels without `DEBUG_IRQFLAGS`
+simply never print the warning, but the misuse is still worth fixing.
+
+---
+
+Verification:
+- [Phase 1] Parsed tags: Acked-by Ping-Ke Shih; Link msgid
+  20260609095359; no Fixes/Cc:stable/syzbot
+- [Phase 1] Body: lockdep `raw_local_irq_restore() called with IRQs
+  enabled`; stack `rtl8723be_hw_init` → `rtl_pci_start` → `rtl_op_start`
+- [Phase 2] Diff: 6 deletions in `rtl8723be_hw_init()` only (`git show
+  1b4cd55626b6f`)
+- [Phase 3] `git merge-base --is-ancestor`: `f78bccd79ba3`,
+  `d3feae41a347`, `997acaf6b4b59`, `8b144dedb928e` all in HEAD
+- [Phase 3] `git log -S local_save_flags -- rtl8723be/hw.c`: introduced
+  in `a619d1abe20cc` (2014), removed in `1b4cd55626b6f`
+- [Phase 3] `8b144dedb928e`: same warning on rtl8192cu, Cc: stable,
+  added `local_irq_disable()` before restore
+- [Phase 4] `b4 dig -c 1b4cd55626b6f`: lore match; v1→v2 message-only;
+  maintainer ack, no NAK
+- [Phase 4] `b4 dig -m`: saved /tmp/rtl8723be-thread.mbox (721 lines);
+  WebFetch lore HTML 403
+- [Phase 5] Callers: `rtl_pci_start` under `conf_mutex`;
+  `rtl_ps_enable_nic` from IPS via `spin_lock` not irqsave
+- [Phase 5] Grep: sibling drivers still have `local_save_flags`;
+  rtl8723be file has none after the fix
+- [Phase 6] `git describe HEAD`: v7.3-rc4-27-gf0100363d8c37; `make
+  kernelversion` 7.3.0-rc4
+- [Phase 6] Commit in v7.3-rc1, not v7.2; current hw.c already patched
+- [Phase 7] `CONFIG_RTL8723BE` PCIe 802.11n; driver added 2014
+- [Phase 8] `warn_bogus_irq_restore()` is `WARN_ONCE`; `DEBUG_LOCKDEP`
+  selects `DEBUG_IRQFLAGS`
+- UNVERIFIED: no stable@ mailing-list thread for this exact subject
+  (search not exhaustive beyond b4/git)
+
+The fix is small, surgical, and meets the stable criteria for this tree.
 
 **YES**
 
- drivers/net/wireless/mediatek/mt76/tx.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 731caeda72b52..93275bb692fa5 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -415,16 +415,23 @@ mt76_txq_dequeue(struct mt76_phy *phy, struct mt76_txq *mtxq)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index e1f8112188949..bf7b5a32adaaf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -1333,11 +1333,6 @@ int rtl8723be_hw_init(struct ieee80211_hw *hw)
+ 	bool rtstatus = true;
+ 	int err;
+ 	u8 tmp_u1b;
+-	unsigned long flags;
+-
+-	/* reenable interrupts to not interfere with other devices */
+-	local_save_flags(flags);
+-	local_irq_enable();
  
- static void
- mt76_queue_ps_skb(struct mt76_phy *phy, struct ieee80211_sta *sta,
--		  struct sk_buff *skb, bool last)
-+		  struct sk_buff *skb, bool last,
-+		  enum ieee80211_frame_release_type reason)
- {
- 	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	rtlhal->fw_ready = false;
+ 	rtlpriv->rtlhal.being_init_adapter = true;
+@@ -1443,7 +1438,6 @@ int rtl8723be_hw_init(struct ieee80211_hw *hw)
  
- 	info->control.flags |= IEEE80211_TX_CTRL_PS_RESPONSE;
--	if (last)
-+	if (last) {
- 		info->flags |= IEEE80211_TX_STATUS_EOSP |
- 			       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
-+		if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
-+		    ieee80211_is_data_qos(hdr->frame_control))
-+			*ieee80211_get_qos_ctl(hdr) |= IEEE80211_QOS_CTL_EOSP;
-+	}
-+
- 	mt76_skb_set_moredata(skb, !last);
- 	__mt76_tx_queue_skb(phy, MT_TXQ_PSD, skb, wcid, sta, NULL);
+ 	rtl8723be_dm_init(hw);
+ exit:
+-	local_irq_restore(flags);
+ 	rtlpriv->rtlhal.being_init_adapter = false;
+ 	return err;
  }
-@@ -457,14 +464,15 @@ mt76_release_buffered_frames(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
- 
- 			nframes--;
- 			if (last_skb)
--				mt76_queue_ps_skb(phy, sta, last_skb, false);
-+				mt76_queue_ps_skb(phy, sta, last_skb, false,
-+						  reason);
- 
- 			last_skb = skb;
- 		} while (nframes);
- 	}
- 
- 	if (last_skb) {
--		mt76_queue_ps_skb(phy, sta, last_skb, true);
-+		mt76_queue_ps_skb(phy, sta, last_skb, true, reason);
- 		dev->queue_ops->kick(dev, hwq);
- 	} else {
- 		ieee80211_sta_eosp(sta);
 -- 
 2.53.0
 
