@@ -1,42 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF0F952F9A2;
-	Mon, 19 Oct 2026 14:03:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C23D61258F;
+	Mon, 19 Oct 2026 14:03:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418628; cv=none; b=NNAFGHBsISr1zBpsO0uBplHHu8vFNeN85x99DwfLaOiURZyJz/W8xdmTyxi7WaYTnfAIAkZDKGBDxCFrUX4keaIIQETD1KJf0F+74FMMZcPZXpKvRqZGnXMvdVsq9xLlFVWQ3A8/qGjL5PyoqoDwDNuwikaJQnOpK1s3Q7+9mgE=
+	t=1792418635; cv=none; b=Dvu/rdS/EQbkO5KmSCwHFo9pS+RJ3djyeDXE2aivhi1rkb17qM+9z7StN9seftONAxs1QeJkcm0a+D1SwQDorLl+rzNuCFlcz8sUOxukYlVlP5myMMnXC8MtifsoXMdviZg6KqOzqKfc1mpy9PZgrOitK9/6JV9y5nmZnClxHUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418628; c=relaxed/simple;
-	bh=lEe040fMAo+CPU8jdV6O5Z2V4KBYzQ6++iuPEVT39zQ=;
+	s=arc-20240116; t=1792418635; c=relaxed/simple;
+	bh=0/9695QWSJqXIagvEzmbBsJCdE5Lkg6pHDvm2j0EBu8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bQzzmwz1ucF9iYCs9WPjH4eDh47RbUoN+6e3GMSXp56MjajFMmMgw6X2p163iBdp7qTY9F/XtUfnO/FTmtzxp2ESYwoqf9t8rBb2Uc7fQPf8o4Pxp+qkot76LMKqBSkSdAwd5KeiQ3cUvgxxL1TZe9yN4LotgrlR0x6ivjAsL1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZVRkXTD9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=BD9/ssY9n5Nxzh+5kY1H/Qv8gICU6RocmwSnL4xfZgMvvQNI5TdJP+QbpGCFbZRwZ8opUgASbQSlbM3lu8E4XWiatPLS82yKo4iL1pO2aEbqNYBSABJUtGpossRKyNuEmlHnd5XSCVl08EKBSqZyTiWtkyDkB/neFch5CRSB7RM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sy9eVxO9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVRkXTD9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA57E1F000C8;
-	Mon, 19 Oct 2026 14:03:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sy9eVxO9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A3661F000C9;
+	Mon, 19 Oct 2026 14:03:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418625;
-	bh=7BDK+crvFAJNRkrf+kIBvqU5VWEEIrHWQysBFcfsRbA=;
+	s=k20260515; t=1792418632;
+	bh=sv6rVlir+RBR5HytJBd1kxyg8GjuUSzazSxRgHWQXJ0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ZVRkXTD9LSHNTi8xhIrw5YWaS183AG/rZ0vWfEO4A4yeh5UD5dcXKWBYAjW5OVqgc
-	 29ws4s9+WGjjlQYE31KQGu1/uEQ/y6MxUHQvsocTCciXuvT5bSmdeQyJRnRTWj0c4f
-	 nogw6N8D9L2ePtuib2asgrqL0i24DcY0U4JqEa1qxA/XUoZlzR6uAeKStkBAHqfOQC
-	 4vOUBRsiEARZIYLvVPwcivC0sDxA0bI0apxFzJ4KVnFg8wcVZ4PvApa9ZSVbYznRrx
-	 ZRmNaXOUXSPSSvKvgZfK5+gA8Y/FzHyiqk4utMSOndHpyj2BMNB97L4TEzH7PRjxFU
-	 vunGNAj2zKWkQ==
+	b=Sy9eVxO9FHnAsiqFgAgXpgE0EwvnrsF0PJpA7VSNtfd2K7T62sa28615clRyVNi3o
+	 PIWSaau5ob1MLGp6BPhUCD13+q5CXtSSZzq2z4+p0jOqLIv63N8rWnlXBN5buFWmPU
+	 /HFPX4EobkxsXTr09K14UrmHtHnLCSG7u1yly+zqEbUmZNOloSAJ7L5An59BQyAHpg
+	 rGfL8KwESeQH89wBj+LkBYfMU2n9ALSDyY2UwkEHtDhuW86ARpQu5Vx1M12efksrbN
+	 rMlWynmFS2Fp6/SCImuirwMkJFJkwX7XBk8kTYpHoGooGmv/tk3KHxdqV4p/QIvT8+
+	 u7aUJxTelWYxQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Devin Wittmayer <lucid_duck@justthetip.ca>,
+	0072a70 <90307219+0072a70@users.noreply.github.com>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: support aborting an ongoing ftm request
-Date: Mon, 19 Oct 2026 09:51:13 -0400
-Message-ID: <20261019135441.1420968-382-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mt76: mt76x02: report rx FCS errors to mac80211
+Date: Mon, 19 Oct 2026 09:51:18 -0400
+Message-ID: <20261019135441.1420968-387-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,15 +59,26 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
 
-[ Upstream commit ef704fc32ae1a519801ac4a06aa290fece5f403c ]
+[ Upstream commit ddae0bcb01e71c1184bb3f526f9622e31dc38f3b ]
 
-Add support for aborting an ongoing FTM request.
+When the fcsfail filter is enabled the hardware passes frames with a bad
+FCS up to the driver, but mt76x02_mac_process_rx() never checks
+MT_RXINFO_CRCERR and hands them to mac80211 without
+RX_FLAG_FAILED_FCS_CRC. In monitor mode the radiotap flags byte then
+never gets IEEE80211_RADIOTAP_F_BADFCS set and corrupted frames cannot be
+told apart from clean ones.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20260715220243.340040bdc6a3.Ifbbf70021e42bf1d59db6ec45a73f1806a1c2289@changeid
+Set RX_FLAG_FAILED_FCS_CRC from the descriptor CRC error bit, matching
+mt7603, mt7615, mt7915, mt7921, mt7925 and mt7996.
+
+Reported-by: 0072a70 <90307219+0072a70@users.noreply.github.com>
+Closes: https://github.com/morrownr/mt76/issues/38
+Tested-by: 0072a70 <90307219+0072a70@users.noreply.github.com>
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Link: https://patch.msgid.link/20260613002544.27750-3-lucid_duck@justthetip.ca
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
@@ -68,394 +86,381 @@ LLM Generated explanations, may be completely bogus:
 
 ## Phase 1: Commit message forensics
 
-**Step 1.1: Subject line**
-Record: **[iwlwifi/mld]** **[support]** add abort for an in-flight FTM
-(Fine Timing Measurement / peer measurement) request.
+**Step 1.1 — Subject**
+- Record: `[wifi: mt76: mt76x02]` `[report]` `[report rx FCS errors to
+  mac80211]`
+- Subsystem is MediaTek mt76, mt76x02 family (mt76x0 / mt76x2 PCI and
+  USB). “Report” here is a correctness fix: the driver already receives
+  CRC-failed frames and must mark them.
 
-**Step 1.2: Tags**
-Record:
-- Signed-off-by: Avraham Stern <avraham.stern@intel.com> (author)
-- Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-  (iwlwifi maintainer)
-- Link: https://patch.msgid.link/20260715220243.340040bdc6a3.Ifbbf70021e
-  42bf1d59db6ec45a73f1806a1c2289@changeid
-- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
-  stable (absence of the last two is expected for this review)
+**Step 1.2 — Tags**
+- Record:
+  - `Reported-by: 0072a70 <90307219+0072a70@users.noreply.github.com>` —
+    real user hit
+  - `Closes: https://github.com/morrownr/mt76/issues/38`
+  - `Tested-by:` same reporter, on real hardware
+  - `Signed-off-by: Devin Wittmayer` (author)
+  - `Link: https://patch.msgid.link/20260613002544.27750-3-
+    lucid_duck@justthetip.ca`
+  - `Signed-off-by: Felix Fietkau` (mt76 maintainer)
+  - No `Fixes:` tag (expected for this review)
+  - No `Cc: stable` (expected; not a negative)
+  - Ignore any pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit
+    ...]`
 
-**Step 1.3: Body**
-Record:
-- Bug description from message: none. One sentence: “Add support for
-  aborting an ongoing FTM request.”
-- Symptom/failure mode: not stated
-- Version information: none
-- Root-cause explanation: none
+**Step 1.3 — Body**
+- Record:
+  - **Bug:** With the `fcsfail` filter enabled, hardware delivers frames
+    with `MT_RXINFO_CRCERR` set. `mt76x02_mac_process_rx()` never reads
+    that bit, so mac80211 never gets `RX_FLAG_FAILED_FCS_CRC`.
+  - **Symptom:** In monitor mode, radiotap never sets
+    `IEEE80211_RADIOTAP_F_BADFCS`; corrupted frames look identical to
+    clean ones.
+  - **Root cause:** Missing descriptor-bit → `rx_status` translation.
+    Other mt76 chips already do this.
+  - **Version info in the message:** none. Reporter used kernel 7.0.x;
+    the code path is much older (see Phase 3).
 
-**Step 1.4: Hidden bug fix?**
-Record: **Yes.** The wording is feature-like, but the MLD path already
-stores `mld->ftm_initiator.req` and later dereferences it. cfg80211
-frees that object on abort whether or not the driver implements
-`abort_pmsr`. Missing abort is a use-after-free / stuck-FTM hole, not a
-new userspace API.
+**Step 1.4 — Hidden bug fix?**
+- Record: Not disguised. It is an explicit missing-flag fix that
+  implements the documented mac80211 contract for `FIF_FCSFAIL`.
 
 ## Phase 2: Diff analysis
 
-**Step 2.1: Inventory**
-Record:
-- `drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c`: +21 (new
-  `iwl_mld_ftm_abort`)
-- `drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h`: +1
-  (prototype)
-- `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`: +10
-  (`iwl_mld_abort_pmsr` + `.abort_pmsr` ops)
-- Total: **+32 / −0**, single-driver surgical change
+**Step 2.1 — Inventory**
+- Record: one file, `drivers/net/wireless/mediatek/mt76/mt76x02_mac.c`.
+  Three lines added, none removed. Function: `mt76x02_mac_process_rx()`.
+  Surgical single-file change.
 
-**Step 2.2: Code flow**
-Record:
-- Before: `.start_pmsr` was wired; `.abort_pmsr` was NULL. On netlink
-  close or wdev teardown, cfg80211 still `kfree()`s the request while
-  the driver keeps the pointer and firmware keeps ranging.
-- After: abort sends `TOF_RANGE_ABORT_CMD`, cancels queued FTM RX
-  notifications, then `iwl_mld_ftm_reset()` NULLs `req`/`req_wdev`.
-- Path: abort/teardown only, not the normal completion path.
+**Step 2.2 — Flow**
+- Record: After the existing `MT_RXINFO_L2PAD` check, if `rxinfo &
+  MT_RXINFO_CRCERR`, set `status->flag |= RX_FLAG_FAILED_FCS_CRC`.
+  Normal RX is unchanged for clean frames. Error/monitor path for CRC-
+  failed frames is now marked.
 
-**Step 2.3: Bug mechanism**
-Record: **Use-after-free + leftover firmware ranging**, fixed by
-implementing the existing mac80211 `abort_pmsr` op (same pattern as
-MVM). Also prevents the next `iwl_mld_ftm_start()` from returning
-`-EBUSY` forever because `ftm_initiator.req` stayed non-NULL after the
-object was freed.
+**Step 2.3 — Bug mechanism**
+- Record: **Logic / correctness** (driver contract). Hardware already
+  passes CRC-failed frames when `FIF_FCSFAIL` is on
+  (`MT76_FILTER(FCSFAIL, MT_RX_FILTR_CFG_CRC_ERR)` in
+  `mt76x02_configure_filter()`). The driver failed to set the flag
+  mac80211 requires (`include/net/mac80211.h`: *“pass frames with failed
+  FCS (but you need to set RX_FLAG_FAILED_FCS_CRC for them)”*).
 
-**Step 2.4: Fix quality**
-Record: Obviously correct relative to `iwl_mvm_ftm_abort()`. Minimal.
-Regression risk is low: new code runs only on abort; on firmware abort
-failure it still resets local state (the UAF-critical part). Helpers it
-calls already exist in this tree.
+Verified mac80211 consequences in this tree:
+- `ieee80211_add_rx_radiotap_header()` sets
+  `IEEE80211_RADIOTAP_F_BADFCS` only if that flag is present
+  (`net/mac80211/rx.c`).
+- `should_drop_frame()` treats `RX_FLAG_FAILED_FCS_CRC` as drop-from-
+  cooked-path. Without it, `ieee80211_rx_monitor()` copies the frame to
+  monitor and **returns the original skb** to
+  `__ieee80211_rx_handle_packet()`. FCS-failed frames can therefore
+  enter the cooked RX path whenever `fcsfail` is enabled (including
+  concurrent monitor + STA/AP).
+
+**Step 2.4 — Fix quality**
+- Record: Obviously correct; same pattern as
+  `mt7603`/`mt7615`/`mt7915`/`mt7921`/`mt7996` in this tree. Minimal.
+  Regression risk is low: only CRCERR frames get a flag they should
+  already have. Clean frames are untouched. Does not add APIs or change
+  locking.
 
 ## Phase 3: Git history
 
-**Step 3.1: Blame / introduction**
-Record: Buggy pattern came in with **`d1e879ec600f9`** (“wifi: iwlwifi:
-add iwlmld sub-driver”, 2025-02-16). FTM start stored `req` and
-registered `RX_HANDLER_OF_FTM_REQ` / `IWL_MLD_OBJECT_TYPE_FTM_REQ` from
-day one, but never called cancel/abort. MVM has had abort since
-**`fc36ffda32670`** (2019, “support FTM initiator”).
+**Step 3.1 — Blame**
+- Record: Insertion point is the 2018 `mt76x02_mac_process_rx()` body
+  from `d9f8934ed147b3` (“mt76: move mt76x02_mac_process_rx in
+  mt76x02-lib module”), 2018-10-04, first contained in **v4.20-rc1**.
+  `MT_RXINFO_CRCERR` is defined in `mt76x02_mac.h:54` since
+  `5327b5ea13910d` (2018-09-04). The bit has been defined for years and
+  never consumed in RX processing.
 
-**Step 3.2: Fixes: tag**
-Record: None. Not applicable.
+**Step 3.2 — Fixes: tag**
+- Record: None. The omission dates to the original mt76x02 RX path, not
+  a later regression.
 
-**Step 3.3: File history**
-Record: Recent FTM-initiator commits are unrelated (location BW
-encoding, switch indentation). Neighbor **`71ac392d8b5c2`** (FW recovery
-reset) is a different path. No prerequisite refactor for this hunk.
+**Step 3.3 — File history**
+- Record: Same-function sibling from the same series is already in this
+  tree: `b6e7958602bd1` (“do not WARN on invalid rx descriptor length”).
+  That is patch 1/2 of `[PATCH 0/2] wifi: mt76: mt76x02: rx fixes for
+  fcsfail monitor mode`. This candidate is patch 2/2. They touch
+  different lines; this one does not depend on patch 1. `git apply
+  --check` of this hunk on HEAD is **clean**. No other FCS reporting
+  commit exists on this file.
 
-**Step 3.4: Author**
-Record: Avraham Stern is a regular iwlwifi FTM contributor. Maintainer
-Miri Korenblit signed off. Related later Stern commits in this tree are
-MEI length checks, not FTM abort follow-ups. **No follow-up fix** to
-`iwl_mld_ftm_abort` after this commit.
+**Step 3.4 — Author**
+- Record: Devin Wittmayer; not the subsystem maintainer. Maintainer
+  Felix Fietkau signed off. Author also submitted the sibling WARN fix.
+  Related author commits in this tree: `b6e7958602bd1`, plus unrelated
+  mt7615/mt7921 TXRX_NOTIFY drops.
 
-**Step 3.5: Dependencies**
-Record: Standalone. Uses existing `iwl_mld_send_cmd_pdu`,
-`iwl_mld_cancel_notifications_of_object`, `IWL_MLD_OBJECT_TYPE_FTM_REQ`,
-`iwl_mld_ftm_reset`, `TOF_RANGE_ABORT_CMD`. Series membership is **01/15
-of an iwlwifi-next “updates” dump**; other patches (MEI, WoWLAN, LARI,
-etc.) are unrelated. Can apply alone.
+**Step 3.5 — Prerequisites**
+- Record: None beyond symbols already in 6.6: `MT_RXINFO_CRCERR`,
+  `RX_FLAG_FAILED_FCS_CRC`, `status->flag`. Commit text mentions mt7925;
+  that chip need not exist here — it is comparison only. Standalone
+  apply: yes.
 
-## Phase 4: Mailing list / external
+## Phase 4: Mailing list / external research
 
-**Step 4.1: Original discussion**
-Record:
-- `b4 dig -c ef704fc32ae1a`: https://patch.msgid.link/20260715220243.340
-  040bdc6a3.Ifbbf70021e42bf1d59db6ec45a73f1806a1c2289@changeid
-- Cover: `[PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates -
-  07-15-2026` — “Cleanups, features, and fixes from our internal tree.”
-- `b4 dig -a`: **v1 only**, this is the applied version
-- No reviewer comments, NAKs, or Cc: stable on this patch in the saved
-  thread
-- lore.kernel.org WebFetch returned 403; thread recovered via `b4 dig
-  -m`
+**Step 4.1 — Original discussion**
+- Record: `b4 dig -c <sha>` cannot match because this commit is not in
+  the local history. Fallback: `b4 mbox
+  20260613002544.27750-3-lucid_duck@justthetip.ca`.
+  - Cover: https://patch.msgid.link/20260613002544.27750-1-
+    lucid_duck@justthetip.ca
+  - Series: v1 only (`b4 am --check-newer-revisions`: no later
+    revision).
+  - Two patches; this is 2/2.
+  - Cover: tested on MT7612U and MT7610U; fcsfail monitor captures get
+    BADFCS on corrupted frames, clean frames unchanged.
+  - No NAKs in the retrieved thread (cover + 2 patches, no review
+    replies). Applied by Felix Fietkau.
+  - Lore HTTP fetch returned 403; b4 was used instead.
 
-**Step 4.2: Recipients**
-Record: To Johannes Berg; Cc linux-wireless, Avraham Stern. Subsystem
-maintainer (Miri) submitted the series.
+**Step 4.2 — Recipients**
+- Record: To Felix Fietkau, Lorenzo Bianconi; Cc Ryder Lee, Shayne Chen,
+  Sean Wang, linux-wireless, linux-kernel. Right maintainers/lists.
 
-**Step 4.3: Bug report**
-Record: None. No syzbot/bugzilla.
+**Step 4.3 — Bug report**
+- Record: GitHub issue #38 (closed). Hardware: Alfa AWUS036ACM, mt7612u,
+  driver mt76x2u. With `iw set monitor fcsfail`, radiotap flags were
+  always `0x00`; `radiotap.flags.badfcs == 1` matched 0 of 2978 frames.
+  After this exact three-line change: 956/7353 frames had BADFCS `0x40`,
+  clean frames stayed `0x00`. Confirmed on-list/issue by the reporter
+  (`Tested-by`).
 
-**Step 4.4: Series**
-Record: Mixed iwlwifi-next batch. This patch does not depend on 02–15.
+**Step 4.4 — Series context**
+- Record: Patch 1 (WARN on bogus MPDU length under fcsfail) is already
+  in this 6.6 tree. Patch 2 is the functional reporting fix.
+  Independent; both target the same user-visible fcsfail path.
 
-**Step 4.5: Stable list**
-Record: No stable-list discussion found (search did not surface this
-subject).
+**Step 4.5 — stable@ discussion**
+- Record: lore.kernel.org/stable HTTP 403. No separate stable-thread
+  evidence retrieved. Absence is not a negative for this review.
 
-## Phase 5: Semantic / call-chain
+## Phase 5: Semantic / call-chain analysis
 
-**Step 5.1: Functions**
-Record: `iwl_mld_ftm_abort` (new), `iwl_mld_abort_pmsr` (new),
-`iwl_mld_hw_ops.abort_pmsr` assignment.
+**Step 5.1 — Functions**
+- Record: `mt76x02_mac_process_rx()`.
 
-**Step 5.2: Callers**
-Record:
-- `cfg80211_release_pmsr()` from `nl80211.c` on netlink port release
-- `cfg80211_pmsr_wdev_down()` from `net/wireless/core.c` on wdev
-  teardown
-- both → `cfg80211_pmsr_process_abort()` → `rdev_abort_pmsr()` →
-  `ieee80211_abort_pmsr()` → `drv_abort_pmsr()` → `iwl_mld_abort_pmsr()`
-- `drv_abort_pmsr` only calls the driver if `local->ops->abort_pmsr` is
-  set; cfg80211 **always kfree()s** afterward (`pmsr.c` around the abort
-  loop)
+**Step 5.2 — Callers**
+- Record: Only `mt76x02_queue_rx_skb()` in `mt76x02_txrx.c` (data RX,
+  not MCU queue). That is the USB/PCI RX completion path for mt76x0 and
+  mt76x2.
 
-**Step 5.3: Callees**
-Record: firmware abort PDU; `iwl_mld_cancel_notifications_of_object()`;
-`iwl_mld_ftm_reset()`.
+**Step 5.3 — Callees (relevant)**
+- Record: Sets `struct mt76_rx_status` in `skb->cb`, then `mt76_rx()` →
+  mac80211. `mt76_rx()` already counts `RX_FLAG_FAILED_FCS_CRC` for
+  testmode FCS stats (`mac80211.c`).
 
-**Step 5.4: Reachability**
-Record: Yes, from userspace: start peer measurement
-(`NL80211_CMD_PEER_MEASUREMENT_START`), then close the netlink socket or
-take the interface down while ranging is in progress. Typically
-privileged (`nl80211`), but a crashing location/RTT helper is a
-realistic trigger (Android Wi-Fi RTT uses this API).
+**Step 5.4 — Reachability**
+- Record: Userspace-reachable: `iw set type monitor` + `iw set monitor
+  fcsfail` (nl80211 `NL80211_MNTR_FLAG_FCSFAIL` →
+  `ieee80211_adjust_monitor_flags()` → `fif_fcsfail` → `FIF_FCSFAIL` →
+  hardware CRC filter cleared). Common on USB adapters used for capture
+  (Alfa AWUS036ACM and similar).
 
-**Step 5.5: Similar patterns**
-Record: Only iwlwifi MVM/MLD and mac80211_hwsim implement `.abort_pmsr`.
-MVM has had it since FTM was added; MLD start without abort was the
-incomplete copy.
+**Step 5.5 — Similar patterns**
+- Record: Same `status->flag |= RX_FLAG_FAILED_FCS_CRC` already present
+  in this tree for mt7603, mt7615, mt7915, mt7921, mt7996. mt76x02 is
+  the gap. `MT_RXINFO_ICVERR` / `MT_RXINFO_MICERR` are also unused here;
+  out of scope for this patch.
 
-Verified UAF path in this tree:
+## Phase 6: This tree (6.6.157 / pending-6.6)
 
-```246:247:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-        if (mld->ftm_initiator.req)
-                return -EBUSY;
-```
+**Step 6.1 — Does the buggy code exist?**
+- Record: Yes. `mt76x02_mac_process_rx()` at `mt76x02_mac.c:794–797` has
+  L2PAD then DECRYPT; no CRCERR check. `MT_RXINFO_CRCERR` is defined.
+  `git merge-base --is-ancestor d9f8934ed147b3 HEAD` succeeded. Bug
+  present since ~v4.20, so it is in 6.6.y.
 
-```267:270:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-        if (!ret) {
-                mld->ftm_initiator.req = req;
-                mld->ftm_initiator.req_wdev =
-ieee80211_vif_to_wdev(vif);
-        }
-```
+Local tree identity:
+- `git describe HEAD` → `p-6.6-3-g04810563abb71`
+- `make kernelversion` → **6.6.157**
+- Branch: `pending-6.6`
 
-```340:342:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-        if (IWL_FW_CHECK(mld, !mld->ftm_initiator.req,
-                         "FTM response without a pending request\n"))
-                return;
-```
+**Step 6.2 — Backport difficulty**
+- Record: **Clean apply.** Context matches; `git apply --check`
+  succeeded. Surrounding code is the same as the patch’s index.
 
-That NULL check does not save a dangling pointer.
-`cfg80211_pmsr_process_abort()` kfree’s the request after the (optional)
-abort op.
-
-## Phase 6: This checkout
-
-**Step 6.1: Local tree and buggy code**
-Record:
-- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**
-- `make kernelversion`: **7.3.0-rc4**
-- MLD FTM initiator **is present**. Bug introduced with MLD
-  (`d1e879ec600f9`), long before 7.3 branched.
-- Candidate SHA **`ef704fc32ae1a`**; `git merge-base --is-ancestor
-  ef704fc32ae1a HEAD` → already in this mainline snapshot (landed in
-  **7.3-rc1**, not in 7.2). Evaluation is still on technical merit, not
-  “already selected.”
-
-**Step 6.2: Backport difficulty**
-Record: Clean apply on this tree. Structures and helpers match the hunk.
-
-**Step 6.3: Related fixes already here**
-Record: `iwl_mld_ftm_restart_cleanup()` covers FW restart only, not
-userspace abort. No earlier abort implementation.
+**Step 6.3 — Related fixes already here**
+- Record: No existing CRCERR → `RX_FLAG_FAILED_FCS_CRC` translation.
+  Sibling WARN fix `b6e7958602bd1` is present (different hunk).
+  `63fe66f102837` (mt7996 FCS bit in wrong RXD word) is a different
+  chip.
 
 ## Phase 7: Subsystem context
 
 **Step 7.1**
-Record: **iwlwifi MLD** (Intel Wi-Fi 7 opmode). Criticality:
-**IMPORTANT** (common client Wi-Fi driver), not core mm/VFS. FTM itself
-is a subset of users (RTT / indoor location).
+- Record: `drivers/net/wireless/mediatek/mt76` — **IMPORTANT** (widely
+  used WiFi, not core mm/vfs). Covers MT76x0U/E and MT76x2U/E (`Kconfig`
+  MT7610/MT7612 USB and PCIe). Peripheral relative to core kernel, but
+  these USB NICs are common in the field.
 
 **Step 7.2**
-Record: Actively developed; MLD is the current Intel path. This is a
-missing piece from the original MLD port, not a brand-new subsystem.
+- Record: mt76 is active; mt76x02 RX processing itself has been stable
+  for years. This is a long-standing omission, not churn from a new
+  subsystem.
 
 ## Phase 8: Impact and risk
 
-**Step 8.1: Who is affected**
-Record: Intel MLD devices using nl80211 peer measurement (FTM
-initiator). Not universal.
+**Step 8.1 — Who is affected**
+- Record: Users of mt76x0/mt76x2 (USB and PCIe) who enable monitor
+  `fcsfail`. Normal STA/AP-only operation keeps the hardware CRC filter
+  on, so those users are not on this path. Mixed monitor+managed on the
+  same phy is affected for cooked RX.
 
-**Step 8.2: Trigger**
-Record: Start FTM, then abort via socket close or iface down before
-firmware completes. Not every boot; realistic for location stacks and
-interface teardown. Unprivileged trigger: unverified (nl80211 PMSR is
-typically admin-capable).
+**Step 8.2 — Trigger**
+- Record: Explicit monitor `fcsfail` (and typically a busy channel). Not
+  every boot. Unprivileged users cannot enable monitor without
+  privileges, so this is not a generic local-priv-esc path; it is a
+  privileged capture/correctness bug.
 
-**Step 8.3: Failure mode**
-Record:
-- Firmware response after abort: **UAF** of `cfg80211_pmsr_request`
-  (crash / KASAN / potential memory corruption)
-- Without a later notification: FTM stays “busy” (`-EBUSY`) until driver
-  reset
-- Firmware keeps ranging until timeout
-Severity: **HIGH** (UAF), not a panic on every probe.
+**Step 8.3 — Failure mode**
+- Record:
+  - Monitor: corrupted frames indistinguishable from good ones (broken
+    advertised filter). **MEDIUM** for dedicated capture.
+  - Cooked path: FCS-failed frames can be processed as valid 802.11 when
+    `fcsfail` is on. That is frame-integrity / stack-correctness, not a
+    panic. **MEDIUM–HIGH** in mixed-iface setups; not a guaranteed oops.
+  - Overall severity: **MEDIUM**, with a real user-visible functional
+    break and a documented driver-API violation.
 
-**Step 8.4: Risk/benefit**
-Record: Benefit medium-high for MLD FTM users (UAF + stuck session).
-Risk **low** (32 lines, abort path only, same design as MVM). Ratio
-favors taking it.
+**Step 8.4 — Risk vs benefit**
+- Record: **Benefit: medium** (correct FCS reporting; stop garbage
+  frames leaking into cooked RX). **Risk: very low** (3 lines, same
+  pattern as sibling chips, no lock/API change). Ratio favors backport.
 
 ## Phase 9: Synthesis
 
-**Step 9.1: Evidence**
+**Step 9.1 — Evidence**
 
-FOR:
-- Verified UAF: driver borrows cfg80211’s request; abort path frees it
-  without clearing the driver pointer
-- Also stuck `-EBUSY` on later FTM starts
-- Small, self-contained, copies a long-standing MVM abort
-- Cancel infrastructure (`IWL_MLD_OBJECT_TYPE_FTM_REQ`) was already
-  registered; abort was the missing caller
-- Maintainer-signed; applies cleanly here
-- Same class of “missing stop/abort op” that stable routinely takes
+For:
+- Real, reproduced bug (GitHub #38; Tested-by on MT7612U; author also
+  tested MT7610U).
+- Violates mac80211 `FIF_FCSFAIL` contract; radiotap BADFCS never set.
+- FCS-failed frames can continue into `__ieee80211_rx_handle_packet()`
+  without the flag.
+- Three-line, obviously correct, matches every other mt76 MAC in this
+  tree.
+- Applies cleanly to 6.6.157; symbols and call path exist.
+- Maintainer SOB (Felix Fietkau).
+- Popular USB hardware (e.g. Alfa AWUS036ACM).
 
-AGAINST:
-- Message sells it as “add support,” no crash report, no Fixes/syzbot
-- Sent to **iwlwifi-next** in a mixed updates series
-- FTM is not a hot path for most desktops
-- Adds a new ops pointer (looks like a feature if you only read the
-  subject)
+Against:
+- Not a crash/UAF/deadlock; mainly monitor-mode correctness plus cooked-
+  path leakage only when `fcsfail` is enabled.
+- No `Fixes:` (omission from original driver, not a later regression).
+- Affects a subset of mt76x02 users, not all machines.
 
-UNRESOLVED:
-- Could not fetch lore HTML (403); used `b4` mbox instead
-- No evidence of a real-world crash report
-- Unverified whether unprivileged users can start PMSR on typical
-  distros
+Unresolved:
+- Direct lore.kernel.org HTTP was 403; discussion recovered via b4.
+- No independent stable@ thread found.
 
-**Step 9.2: Stable rules**
-1. Obviously correct and tested? **PASS** (MVM analogue; Intel-authored)
-2. Real user-visible bug? **PASS** (UAF / stuck FTM after abort)
-3. Important (crash/security/corruption)? **PASS** (UAF is crash/memory-
-   safety; FTM-specific but real)
-4. Small and contained? **PASS** (32 lines, one driver)
-5. No new features/APIs? **PASS** — implements an existing mac80211 op;
-   not a new syscall/uAPI
-6. Can apply to this tree? **PASS** (MLD FTM code is here; helpers
-   exist)
+**Step 9.2 — Stable rules**
+1. Obviously correct and tested? **PASS** — 3 lines, hardware-tested,
+   maintainer-acked.
+2. Real bug affecting users? **PASS** — reporter could not tell bad-FCS
+   frames apart; contract violation is in-tree.
+3. Important issue? **PASS** (medium) — broken advertised monitor filter
+   plus cooked-path delivery of CRC-failed frames. Not a panic, but it
+   is a real correctness/integrity bug, not a feature.
+4. Small and contained? **PASS** — +3 lines, one function.
+5. No new features/APIs? **PASS** — sets an existing `rx_status` flag
+   other mt76 chips already set.
+6. Can apply to this tree? **PASS** — clean apply on 6.6.157.
 
-**Step 9.3: Exception category**
-Record: Not ID/quirk/DT/build/docs. Ordinary driver correctness fix.
+**Step 9.3 — Exception category**
+- Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary small
+  driver correctness fix.
 
-**Step 9.4: Decision**
-This is a missing abort handler on a driver that caches a cfg80211-owned
-object. That is a UAF fix, even though the subject says “support.” It is
-small, applies here, and does not need the rest of the 15-patch series.
+**Step 9.4 — Decision**
+This tree is **6.6.157**. The buggy RX path, `MT_RXINFO_CRCERR`, and
+mac80211 flag handling are all present. The patch is a tiny, tested,
+maintainer-accepted fix for a user-visible bug on hardware this driver
+supports. Benefit clearly outweighs risk.
 
-### What it solves for this tree
-On 7.3-rc4, iwlwifi MLD FTM start stores `req` and handles firmware
-range responses. Without abort, closing the measurement netlink socket
-or taking the wdev down frees `req` while the driver and firmware still
-use it. That is a use-after-free and can pin FTM at `-EBUSY`. The patch
-aborts firmware, drops queued FTM notifs, and clears driver state.
+---
+
+### What the commit solves for 6.6 users
+
+mt76x02 already programs the hardware to deliver CRC-failed frames when
+monitor `fcsfail` is set, but never tells mac80211. Users of
+MT7610/MT7612 USB and PCIe adapters then see every frame as clean in
+radiotap, and those frames can also continue into the normal RX
+handlers. The fix sets `RX_FLAG_FAILED_FCS_CRC` from `MT_RXINFO_CRCERR`,
+which is what this tree already does for later mt76 chips.
+
+### Stable-rule fit
+
+Small, obviously correct, no new API, applies cleanly, real user-visible
+bug. Importance is monitor/FCS integrity rather than a panic; that is
+still within what stable takes for driver contract bugs of this size.
 
 ### Risk vs benefit
-Low risk, high severity if the abort path is hit. Benefit is limited to
-Intel MLD + FTM users, which is enough given UAF.
+
+Very low risk (three lines, clean frames unchanged). Medium benefit for
+mt76x02 monitor users and mixed-iface setups.
+
+### Concerns
+
+No functional dependencies. Series mate (WARN drop) is already in this
+tree but is not required for this hunk. mt7925 in the commit message is
+comparison only.
+
+---
 
 Verification:
-- [Phase 1] Parsed tags: SOB Stern + Korenblit; Link msgid; no
-  Fixes/Reported-by/Cc stable
-- [Phase 2] Diff: +32 lines, `iwl_mld_ftm_abort` + `.abort_pmsr`
-- [Phase 3] `git show ef704fc32ae1a`; ancestor of HEAD; introduced with
-  `d1e879ec600f9`; MVM abort `fc36ffda32670`
-- [Phase 3] `git merge-base --is-ancestor ef704fc32ae1a 8d3ae59288f1e` →
-  not in 7.2; in 7.3-rc1
-- [Phase 3] No follow-ups on `ftm-initiator.c` after this commit
-- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 iwlwifi-next 01/15, To Johannes, no
-  review replies in mbox
-- [Phase 4] WebFetch lore/msgid.link → 403; used local mbox
-- [Phase 5] Call chain: `cfg80211_release_pmsr` /
-  `cfg80211_pmsr_wdev_down` → kfree after optional abort;
-  `iwl_mld_handle_ftm_resp_notif` derefs `ftm_initiator.req`
-- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
-  kernelversion 7.3.0-rc4; MLD FTM present
-- [Phase 8] Failure mode: UAF on FTM abort + `-EBUSY` stuck state,
-  severity HIGH
-- UNVERIFIED: unprivileged PMSR start; no user crash report
+- [Phase 1] Parsed tags: Reported-by/Tested-by 0072a70, Closes
+  github.com/morrownr/mt76/issues/38, Link msgid `...27750-3...`, SOB
+  Felix Fietkau; no Fixes/Cc:stable
+- [Phase 2] Diff: +3 lines in `mt76x02_mac_process_rx()` after L2PAD;
+  sets `RX_FLAG_FAILED_FCS_CRC` from `MT_RXINFO_CRCERR`
+- [Phase 2] Confirmed `mt76x02_configure_filter()` maps `FIF_FCSFAIL` →
+  clear `MT_RX_FILTR_CFG_CRC_ERR`
+- [Phase 2] Confirmed mac80211 `should_drop_frame()` / radiotap BADFCS /
+  `ieee80211_rx_monitor()` cooked-path return behavior in this tree
+- [Phase 3] `git blame`: insertion region from `d9f8934ed147b3` (2018);
+  `git merge-base --is-ancestor` true; `git describe --contains` →
+  v4.20-rc1
+- [Phase 3] `MT_RXINFO_CRCERR` defined at `mt76x02_mac.h:54`; `git grep`
+  shows it is unused in `.c` files in this tree
+- [Phase 3] Sibling `b6e7958602bd1` already in HEAD; this hunk
+  independent; `git apply --check` CLEAN
+- [Phase 4] `b4 mbox` saved 3-message series; cover tested
+  MT7612U/MT7610U; `b4 am --check-newer-revisions` = v1 only, no NAKs
+- [Phase 4] WebFetch of GitHub issue #38: reproduced 0 BADFCS; after
+  patch 956/7353 frames flagged
+- [Phase 4] lore.kernel.org WebFetch: 403 — UNVERIFIED via HTTP;
+  recovered via b4
+- [Phase 5] Only caller: `mt76x02_queue_rx_skb()`; chips: MT76x0U/E,
+  MT76x2U/E
+- [Phase 5] Same flag already set in mt7603/mt7615/mt7915/mt7921/mt7996
+  in this checkout
+- [Phase 6] `git describe HEAD` p-6.6-3-g04810563abb71; `make
+  kernelversion` 6.6.157; buggy code present; fix not applied
+- [Phase 8] Failure mode: wrong radiotap + possible cooked-path delivery
+  of CRC-failed frames; not a panic
+- UNVERIFIED: stable@ mailing-list thread content (HTTP 403)
 
 **YES**
 
- .../intel/iwlwifi/mld/ftm-initiator.c         | 21 +++++++++++++++++++
- .../intel/iwlwifi/mld/ftm-initiator.h         |  1 +
- .../net/wireless/intel/iwlwifi/mld/mac80211.c | 10 +++++++++
- 3 files changed, 32 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-index 3464b32687124..6e174c4d8b75e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
-@@ -449,3 +449,24 @@ void iwl_mld_ftm_restart_cleanup(struct iwl_mld *mld)
- 			       mld->ftm_initiator.req, GFP_KERNEL);
- 	iwl_mld_ftm_reset(mld);
- }
-+
-+void iwl_mld_ftm_abort(struct iwl_mld *mld, struct cfg80211_pmsr_request *req)
-+{
-+	struct iwl_tof_range_abort_cmd cmd = {
-+		.request_id = req->cookie,
-+	};
-+
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	if (req != mld->ftm_initiator.req)
-+		return;
-+
-+	if (iwl_mld_send_cmd_pdu(mld, WIDE_ID(LOCATION_GROUP,
-+					      TOF_RANGE_ABORT_CMD),
-+				 &cmd))
-+		IWL_ERR(mld, "failed to abort FTM process\n");
-+
-+	iwl_mld_cancel_notifications_of_object(mld, IWL_MLD_OBJECT_TYPE_FTM_REQ,
-+					       mld->ftm_initiator.req->cookie);
-+	iwl_mld_ftm_reset(mld);
-+}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
-index 3fab25a52508a..e82237b314673 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
-@@ -25,5 +25,6 @@ int iwl_mld_ftm_start(struct iwl_mld *mld, struct ieee80211_vif *vif,
- void iwl_mld_handle_ftm_resp_notif(struct iwl_mld *mld,
- 				   struct iwl_rx_packet *pkt);
- void iwl_mld_ftm_restart_cleanup(struct iwl_mld *mld);
-+void iwl_mld_ftm_abort(struct iwl_mld *mld, struct cfg80211_pmsr_request *req);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+index 06f17da2c0106..17c9782915315 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+@@ -792,6 +792,9 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
+ 	if (rxinfo & MT_RXINFO_L2PAD)
+ 		pad_len += 2;
  
- #endif /* __iwl_mld_ftm_initiator_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 69a066904a808..5234229a070a7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -2609,6 +2609,15 @@ static int iwl_mld_start_pmsr(struct ieee80211_hw *hw,
- 	return iwl_mld_ftm_start(mld, vif, request);
- }
- 
-+static void iwl_mld_abort_pmsr(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct cfg80211_pmsr_request *request)
-+{
-+	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
++	if (rxinfo & MT_RXINFO_CRCERR)
++		status->flag |= RX_FLAG_FAILED_FCS_CRC;
 +
-+	iwl_mld_ftm_abort(mld, request);
-+}
-+
- static enum ieee80211_neg_ttlm_res
- iwl_mld_can_neg_ttlm(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		     struct ieee80211_neg_ttlm *neg_ttlm)
-@@ -2696,5 +2705,6 @@ const struct ieee80211_ops iwl_mld_hw_ops = {
- 	.prep_add_interface = iwl_mld_prep_add_interface,
- 	.set_hw_timestamp = iwl_mld_set_hw_timestamp,
- 	.start_pmsr = iwl_mld_start_pmsr,
-+	.abort_pmsr = iwl_mld_abort_pmsr,
- 	.can_neg_ttlm = iwl_mld_can_neg_ttlm,
- };
+ 	if (rxinfo & MT_RXINFO_DECRYPT) {
+ 		status->flag |= RX_FLAG_DECRYPTED;
+ 		status->flag |= RX_FLAG_MMIC_STRIPPED;
 -- 
 2.53.0
 
