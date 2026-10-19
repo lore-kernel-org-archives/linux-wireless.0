@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DCF59C972;
-	Mon, 19 Oct 2026 14:00:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F00C5AE425;
+	Mon, 19 Oct 2026 14:00:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418412; cv=none; b=m1HuITmjih+sE7/YvKFDPlpnh8DN81KCd/RJZyeDUZd02Tnf+k2cgOoY1CKHIC41eLhHD8BcobVqjvJ6RiJAYrxQA5WEi7N9VTY0gFU8j9iyh6XYR26Ob0NRDS+CYA8sRrRTN9OxP0TdNxczDvOfAUEC0QSVsTuiRiI+YuYPtNg=
+	t=1792418420; cv=none; b=C1fP4L2aEqmvQAVOoAlX++U5ohezsbD/wHg30WnY4+11OKSIBIgM2dPj5EqXQnz0KqVRssISINHr7dZvVvfqzxj6Oxz45ikAPTm36f6jKh8geWow93LDfxZWzppu1U50h1xXeD+L//4u98qIiz87DaBay0MUc8y+GGjgcnntT/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418412; c=relaxed/simple;
-	bh=gwhDFfaANps3UNfzDYozKCH+2w55PoBIK+sjCeHj9/M=;
+	s=arc-20240116; t=1792418420; c=relaxed/simple;
+	bh=S7lFVMJ7BuzOzRErbq+8DCMi8gciIwlNEf4wOXl4KwQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k6jKjk7YP8VMlJ/RqnhLANDc6JMX8429Ptiu24sCl6Sfl6YoCuGZCZGNzHb627efu5R+Bc4H6xVA62yS/S/32uU6ctfRyC5pzw2KwxRCixn2dir6EYeaDNbCwyBp8TQkmxsyx6F9GvutbanZQ4kpR/d/OX5B1fmc0ln7+Bbn0bc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CzoOb6xp; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=FdjqWTqRytOZqRbcZR9x+AqtONkC35EQEkiOLYlXeX1NEkDo7G62roDkX37hqiEokepMJTSneN+wON+jEDY4Nv+zkFsLWNAJz68TX44e9rW3tlCqmTTizFFdAOoMPeBbQcUMWuSWUUGrFsrosYNB+DbUEn3j3bXfZQ6JyRdWeYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ViTNwOlB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CzoOb6xp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92C711F000C6;
-	Mon, 19 Oct 2026 14:00:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ViTNwOlB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7A3C1F000C7;
+	Mon, 19 Oct 2026 14:00:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418409;
-	bh=JgiHzBkzyS7FDTEmPwxdWyzH5N6tMzeSOTJia8FLgVw=;
+	s=k20260515; t=1792418417;
+	bh=9qDIuP05gODfi9cm0VZadgzeBQpP5mTAh4M1Ws5ntiE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=CzoOb6xpW5RNnHTk4aMypOfuaer/+x//lw+hVHoDGCgLbvuSzRE+6dp2n1Qq7fVW8
-	 TrP3dNmZzRhZ3b5GuVjtJcupTTFUPEvxSbUnECB55S5mvCQx2bkLqtxwBa53/+pjjn
-	 JE6ISc9hMr8AEWu2UQ7c90C0uCyKotmSmcNSYP1YJ1mNSuCxCjf5zNPsi6EAWP0QiI
-	 TdQLZxMw1hX3GOrV51tKi6YMd4GnaqFdlL5TlWq9k0UOifqsYgAl2yT0PCvmIyDIWR
-	 gl1B+qZ77BQlJw90oP71r7Fi5hprBh9gGi6Z8NFU66gRf2t0ivbsde9zPUKCqBQEls
-	 cCMcQwIs0qR+Q==
+	b=ViTNwOlBabYK9xvI7uMKgTgEf/POqPhwMwTucEDi8aMiLc7nbo1dh00dNlS4Z8HbI
+	 aY+2SQGqa1IZ15vBe3Hn2uvwn5OXJJk72nlQmiSzD+CKungge6PgNKgfuhnxJZvZBP
+	 PQhrGOW3cjL5G1nwy2nC4oJn3nLGeLiyMr8udMOt1SsrK6qDzPLAk6lOSx6pfSZWwL
+	 19LoSxU5yTCPHKX0BxAryW1d2iWsdDsNv6izEhUT0zghmPT0FMGfovbR1bFduzDBqK
+	 VoA8c+AtTs+9d7UE0U8YDoPMI/0act2C132IzeupMwDxddTDgbA5gJyR9tfQ31AQGj
+	 4k/VEd0ogYprA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
+Cc: Alexander Wilhelm <alexander.wilhelm@westermo.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
+	jjohnson@kernel.org,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mt76: mt7603: fix U-APSD service period termination
-Date: Mon, 19 Oct 2026 09:48:40 -0400
-Message-ID: <20261019135441.1420968-229-sashal@kernel.org>
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.6] wifi: ath12k: fix scan command endianness on big endian
+Date: Mon, 19 Oct 2026 09:48:45 -0400
+Message-ID: <20261019135441.1420968-234-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -57,301 +56,294 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Alexander Wilhelm <alexander.wilhelm@westermo.com>
 
-[ Upstream commit 697badc27a9b3b2a8d86092abeed767714f735a2 ]
+[ Upstream commit 6c90f68f97de591e0413f7d2de59449a0388bbab ]
 
-Frames released from the driver PS queue were all tagged with MORE_DATA
-and none of them ever carried the EOSP bit, so from the client's point of
-view a U-APSD service period was started but never finished. Clients that
-keep their receiver on until EOSP arrives stop sending trigger frames,
-and all downlink traffic for that station stalls until they give up.
-ieee80211_sta_eosp() only cleared the service period state inside
-mac80211, which is why the mismatch went unnoticed.
+ath12k_wmi_scan_req_arg stores scan parameters in CPU-native byte order,
+while ath12k_wmi_send_scan_start_cmd() writes them into a WMI command
+buffer whose contents must be in little-endian format. The existing code
+copies the channel list and writes s_ssid and hint_bssid related values to
+the command buffer without endian conversion. As a result, scan requests
+contain invalid parameters on big-endian systems and fail.
 
-Assign MORE_DATA per frame and set the wire EOSP bit on the last one. If
-the last released frame is a bufferable MMPDU it has no QoS control field
-to carry EOSP, so let mac80211 append a QoS-Null frame instead.
+Convert the channel list as well as the s_ssid and hint_bssid related
+values to little-endian before writing them to the WMI command buffer. This
+preserves the existing behaviour on little-endian systems while fixing scan
+requests on big-endian architectures.
 
-Also stop handing the remaining frame budget to
-mt76_release_buffered_frames() once frames have been released from the PS
-queue: both would signal the end of the same service period. Releasing
-fewer frames than requested is allowed, and MORE_DATA tells the client to
-trigger again.
-
-Link: https://patch.msgid.link/20260801145334.1166751-5-nbd@nbd.name
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Alexander Wilhelm <alexander.wilhelm@westermo.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260703-fix-channel-list-copy-v2-1-372c39306d79@westermo.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **5.15.221** (`pending-5.15`). The buggy mt7603 U-APSD
-path is present here and matches mainline before `697badc27a9b3`. This
-is a real protocol fix for a stall, and it should be backported.
+The local tree is **v7.3-rc4** (mainline). The buggy ath12k scan path is
+present here, and this is a small, real endianness fix for scan commands
+on big-endian hosts.
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[wifi/mt76/mt7603] [fix] [U-APSD service period never ends on
-the wire]**
+- Record: **[ath12k / wifi] [fix] [scan WMI command missing little-
+  endian conversion on big-endian]**
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- `Link: https://patch.msgid.link/20260801145334.1166751-5-nbd@nbd.name`
-  — patch **05/10** of Felix Fietkau’s series
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` (mt76 maintainer)
-- No `Fixes:`, no `Reported-by:`, no `Tested-by:`, no `Reviewed-by:`, no
-  `Cc: stable` (absence of the last two is expected in this pipeline)
-- Ignore any `Signed-off-by: Sasha Levin` / `[Upstream commit ...]` if
-  present; they are candidate-prep markers
+- Record:
+  - No `Fixes:` tag (expected for this review)
+  - No `Reported-by:` / `Tested-by:` / `Cc: stable`
+  - `Reviewed-by: Rameshkumar Sundaram
+    <rameshkumar.sundaram@oss.qualcomm.com>` (Qualcomm ath12k)
+  - `Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>`
+    (Qualcomm ath12k)
+  - `Link: https://patch.msgid.link/20260703-fix-channel-list-
+    copy-v2-1-372c39306d79@westermo.com`
+  - `Signed-off-by: Alexander Wilhelm <alexander.wilhelm@westermo.com>`
+    (author; Westermo)
+  - `Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>`
+    (ath12k maintainer; applied)
+  - Ignore pipeline-added Sasha Levin SOB if present (not on this
+    commit)
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-Record:
-- **Bug:** Frames pulled from the driver PS queue all get `MORE_DATA`
-  and never `EOSP`. A U-APSD SP starts and never ends on the air.
-- **Symptom:** Clients that stay awake until EOSP stop sending trigger
-  frames; **all downlink traffic for that STA stalls** until they give
-  up.
-- **Root cause:** `ieee80211_sta_eosp()` only clears mac80211’s
-  `WLAN_STA_SP`. mac80211 documents that a driver implementing
-  `.release_buffered_frames` must set the **wire** EOSP bit itself.
-- **Second bug in the same function:** leftover `nframes` is handed to
-  `mt76_release_buffered_frames()`, which ends the **same** SP a second
-  time.
-- **Fix:** assign `MORE_DATA`/`EOSP` per frame; QoS-Null via
-  `ieee80211_send_eosp_nullfunc()` if the last frame is a bufferable
-  MMPDU; do not forward leftover budget once PS-queue frames were
-  released.
+- Record:
+  - **Bug:** `ath12k_wmi_scan_req_arg` is CPU-endian; the WMI start-scan
+    buffer must be little-endian. Channel list is `memcpy`'d; `s_ssid` /
+    `hint_bssid` integers are assigned without `cpu_to_le32`.
+  - **Symptom:** scan start commands carry invalid channel/hint values
+    on big-endian; scans fail.
+  - **Root cause:** missing endian conversion on those TLV payloads
+    (other scalar fields in the same function already use
+    `cpu_to_le32`).
+  - **Version info:** none in the message. Buggy code dates to the
+    original ath12k driver.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: **Not hidden.** Subject and body describe a concrete protocol
-failure with a user-visible stall.
+- Record: **Not a hidden fix.** Subject and body state an endianness
+  correctness bug. Not cleanup/refactor.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: INVENTORY THE CHANGES**
-Record:
-- File: `drivers/net/wireless/mediatek/mt76/mt7603/main.c` (**+63 /
-  −11**)
-- Functions: `mt7603_ps_skb_hdr()` (new), `mt7603_ps_set_more_data` →
-  `mt7603_ps_set_flags`, `mt7603_release_buffered_frames`
-- Scope: **single-file surgical fix**
+- Record:
+  - `drivers/net/wireless/ath/ath12k/wmi.c`: 20 insertions / 8 deletions
+  - `drivers/net/wireless/ath/ath12k/wmi.h`: 10 insertions
+  - **Net:** +22 / −8, two files
+  - **Function:** `ath12k_wmi_send_scan_start_cmd()`
+  - **Scope:** single-function surgical fix plus two local wire-format
+    structs
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-- **Before:** every released PS-queue frame unconditionally ORs
-  `IEEE80211_FCTL_MOREDATA`; never sets/clears EOSP;
-  `ieee80211_sta_eosp()` is called if the list is non-empty, then
-  leftover `nframes` still go to `mt76_release_buffered_frames()`.
-- **After:**
-  1. Walk remaining PS queue under `ps_lock` and build a pending-TID
-     bitmap.
-  2. If nothing was dequeued, fall through to
-     `mt76_release_buffered_frames()` (unchanged).
-  3. If anything was dequeued, **do not** also release from mac80211
-     TXQs.
-  4. `MORE_DATA` = not-last **or** more frames remain (mac80211
-     `more_data` or pending matching TIDs).
-  5. Wire `EOSP` only on the last frame and only for
-     `IEEE80211_FRAME_RELEASE_UAPSD`.
-  6. Last frame not QoS data → `ieee80211_send_eosp_nullfunc()`; else
-     `ieee80211_sta_eosp()`.
+- Record:
+  - **Channel list:** `memcpy` of host `u32` channel frequencies → per-
+    element `cpu_to_le32` into `__le32 *`.
+  - **Hint short SSID:** raw `u32` assigns → `cpu_to_le32` into
+    `ath12k_wmi_hint_short_ssid_params` (`__le32` fields).
+  - **Hint BSSID:** `freq_flags` raw assign → `cpu_to_le32` into
+    `ath12k_wmi_hint_bssid_params`.
+  - **Normal path** (every scan start), not an error-only path. LE
+    behavior unchanged (`cpu_to_le32` is identity on LE).
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record:
-- **Category:** protocol / correctness (U-APSD SP termination), not
-  UAF/leak/race.
-- **Mechanism:** driver never put EOSP on the air; clients that wait for
-  EOSP stop triggering; downlink stalls.
-- Also: `MORE_DATA` was only set, never cleared. Recycled frames from
-  `mt7603_filter_tx()` can keep a stale bit; the new helper assigns both
-  bits.
+- Record: **[Type / endianness]** Host-endian `u32`s were placed in a LE
+  WMI buffer. Firmware then sees swapped channel numbers (e.g. 2412 /
+  `0x0000096c` becomes `0x6c090000`) and rejects or mis-handles the
+  scan.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Matches mac80211’s `.release_buffered_frames` contract
-  (`include/net/mac80211.h`: driver must set EOSP in the QoS header;
-  sending fewer frames than requested is allowed).
-- `IEEE80211_QOS_CTL_EOSP` (0x0010) on the first QoS-control byte is the
-  correct on-wire bit.
-- `ieee80211_send_eosp_nullfunc()` uses `IEEE80211_TX_STATUS_EOSP` on
-  the NDP; TX status then clears `WLAN_STA_SP`. iwlwifi already calls
-  this from BH/TX context; `.release_buffered_frames` must be atomic,
-  and `ieee80211_send_null_response()` uses `dev_alloc_skb` (GFP_ATOMIC)
-  + `ieee80211_xmit`.
-- Regression risk: **low–medium**. Logic is contained; PS-Poll does not
-  set wire EOSP (`uapsd` is false). Companion series patches 06–08 make
-  TIM / HW buffering / TID filing more complete but are not required for
-  this EOSP fix to compile or to be correct on its own.
+- Record: **Obviously correct.** Same function already converts
+  `num_chan`, dwell times, SSID length, etc. with `cpu_to_le32`. New
+  `*_params` structs match existing `ath12k_wmi_ssid_params` (`__le32
+  ssid_len`). **Regression risk: very low** on LE; no
+  API/locking/refcount change. Review found a pre-existing swapped
+  `ether_addr_copy` on hint BSSID; that was **not** mixed into this
+  patch (separate commit `7b0bd40e97a00`).
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- `mt7603_release_buffered_frames`: `c8846e101502` (2018-11, **mt76: add
-  driver for MT7603E and MT7628/7688**)
-- Unconditional MORE_DATA: `b126c8897435` (2019-03)
-- `ieee80211_sta_eosp()` without wire EOSP: `b7001f46085e` (2019-03)
-- All three are ancestors of this 5.15 tree.
+- Record: Buggy `memcpy(tmp_ptr, arg->chan_list, ...)` and hint field
+  copies come from **`d889913205cf7` (“wifi: ath12k: driver for Qualcomm
+  Wi-Fi 7 devices”)**, Kalle Valo, 2022-11-28. First appeared in
+  **v6.3-rc1**. Long-lived, not recent churn.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: **No `Fixes:` tag.** Buggy behavior dates to driver introduction
-/ 2019 PS-queue helpers, all in this tree.
+- Record: **No `Fixes:` tag.** Introduction commit is `d889913205cf7`,
+  ancestor of this HEAD (`git merge-base --is-ancestor` of the fix
+  itself is true). This tree contains both the original driver and the
+  fix.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Mainline follow-ups on the same function (not in this tree):
-- `d5001f493fef` — tell mac80211 when the PS queue is empty
-  (`ieee80211_sta_set_buffered(..., false)`)
-- `636a883e2feef` — restore hardware PS buffering after an SP
-These are related U-APSD bugs, not prerequisites for this diff.
+- Record:
+  - Immediate predecessor on this function: `7b0bd40e97a00` “Correctly
+    copy the hint BSSID in WMI scan request” (same day in the ath tree).
+    Independent bug (copy direction).
+  - Later `wmi.c` commits (`c42b27336eeff`, TLV/overread fixes) do
+    **not** revert or rework this endian conversion.
+  - Same author earlier: `9eb6f553026e1` “enforce CPU endian format for
+    all QMI data” — same BE enablement effort.
+  - **Standalone** for the endian bug; not patch N/M of a series (v2 of
+    a single patch).
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Felix Fietkau is the mt76 maintainer and original author of this
-driver. This is a maintainer fix.
+- Record: Alexander Wilhelm (Westermo) has ath12k BE work; not the
+  subsystem maintainer. Applied by **Jeff Johnson** (Qualcomm ath12k
+  maintainer) after Qualcomm reviews.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: Patch **05/10**. Patches 01–03/09–10 target mt7915/mt7996 / MLO
-/ new HW TIM — **not needed**. Patch 04 sets wire EOSP in generic
-`mt76_release_buffered_frames()` (`tx.c`); mt7603 has its **own**
-`.release_buffered_frames` and only calls the generic helper when the
-driver PS queue is empty. This patch does not use new APIs or struct
-fields. **Can apply standalone.**
+- Record: No new helpers. Uses existing `cpu_to_le32`. Hint `*_params`
+  structs are added in this patch. `7b0bd40e97a00` is **not** a semantic
+  prerequisite for channel-list conversion; it only changes
+  `ether_addr_copy` argument order. **Can apply standalone** (possible
+  one-hunk context mismatch on trees that still have the swapped copy).
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record:
-- `b4 dig -c 697badc27a9b3` →
-  https://patch.msgid.link/20260801145334.1166751-5-nbd@nbd.name
-- **v1 only** (no v2/v3)
-- Thread is the 10-patch series plus a kernel-test-robot mail
-- Robot error is on **patch 10 / patch 1** (`ieee80211_txq_aql_pending`
-  missing) — **unrelated** to this patch
-- No NAKs, no reviewer risk flags, no `Cc: stable` suggestion in the
-  thread
+- Record:
+  - Lore/msgid: `https://patch.msgid.link/20260703-fix-channel-list-
+    copy-v2-1-372c39306d79@westermo.com`
+  - **v1:** 2026-03-17? (msgid dated 2026-06-29) “fix channel list copy
+    on big endian”
+  - **v2:** 2026-07-03 “fix scan command endianness on big endian” —
+    rebase; also convert `s_ssid` / `hint_bssid`; reworded message
+  - Applied version is **v2** (latest).
+  - **No NAK.** Baochen asked whether to also fix swapped
+    `ether_addr_copy`; Jeff: **separate patch**. Rameshkumar and Baochen
+    `Reviewed-by`. Jeff: “Applied, thanks!”
+  - **No reviewer `Cc: stable`.**
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: `b4 dig -w`: To/Cc were **Felix Fietkau** and **linux-
-wireless@**. No extra reviewer SOB. Maintainer self-applied into
-wireless-next (listed in the 2026-08-06 wireless-next pull).
+- Record: Recipients: Jeff Johnson, Baochen Qiang, `linux-wireless`,
+  `ath12k@lists.infradead.org`, `linux-kernel`. Right maintainers/lists.
+  Two Qualcomm `Reviewed-by`s; maintainer applied it.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: OpenWrt mt76 users reported U-APSD stalls / **iPhone freezes**
-on MT7603 APs (openwrt/mt76#1080 / PR #1084). Testers said an EOSP-
-related change made iPhone freezes go away; remaining TX-retry/loss is
-the separate HW-buffering bug (series patch 07).
+- Record: No syzbot/bugzilla. Author is a vendor using BE + ath12k
+  (consistent with their prior QMI endian patch). Failure mode described
+  as scan failure, not a crash dump.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Series 01–10 as above. This commit is self-contained. Patch 06
-should be considered as a follow-up candidate (TIM never cleared); it is
-not required for this hunk.
+- Record: Single-patch series. Related: `7b0bd40e97a00` (hint BSSID copy
+  direction), prompted by Baochen on this thread. Not required for the
+  channel-list endian fix.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: No evidence this fix was discussed on stable@ or previously
-rejected. UNVERIFIED that every stable archive was searchable
-(lore.kernel.org returned 403 for some URLs); `b4`/openwall/syzbot CI
-were used instead.
+- Record: No stable-list discussion found for this subject. WebSearch on
+  `lore.kernel.org/stable` did not return this patch. **UNVERIFIED**
+  beyond that search (lore.kernel.org HTTP 403 from this environment).
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 **Step 5.1: IDENTIFY KEY FUNCTIONS**
-Record: `mt7603_release_buffered_frames`, `mt7603_ps_set_flags`,
-`mt7603_ps_skb_hdr`
+- Record: `ath12k_wmi_send_scan_start_cmd()` only. New structs:
+  `ath12k_wmi_hint_short_ssid_params`, `ath12k_wmi_hint_bssid_params`.
 
 **Step 5.2: TRACE CALLERS**
-Record: Assigned as `ieee80211_ops.release_buffered_frames` in this
-file. mac80211 calls it for **PS-Poll and U-APSD** from the RX/PS path
-(atomic). Reachable whenever an AP-mode STA uses power save.
+- Record:
+  - `ath12k_wmi_send_scan_start_cmd` ← `ath12k_start_scan`
+    (`mac.c:5407`)
+  - `ath12k_start_scan` ← hw scan (`mac.c:5727`, fills `chan_list[i] =
+    chan_list[i]->center_freq`)
+  - `ath12k_start_scan` ← remain-on-channel (`mac.c:14062`,
+    `chan_list[0] = chan->center_freq`)
+  - **Userspace-reachable** via nl80211 scan / ROC. Not IRQ.
 
 **Step 5.3: TRACE CALLEES**
-Record: `mt7603_wtbl_set_ps`, `mt7603_ps_tx_list` /
-`mt76_tx_queue_skb_raw`, `mt76_release_buffered_frames` (empty-PS-queue
-only), `ieee80211_sta_eosp`, `ieee80211_send_eosp_nullfunc` — all exist
-in this tree.
+- Record: Builds a WMI skb (`ath12k_wmi_alloc_skb`), fills TLVs,
+  `ath12k_wmi_cmd_send(..., WMI_START_SCAN_CMDID)`. Firmware then runs
+  the scan.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Client trigger (QoS-Null/PS-Poll) → mac80211 →
-`mt7603_release_buffered_frames`. **Yes, userspace/STA traffic triggers
-it.** Typical clients: phones with U-APSD.
+- Record: cfg80211/mac80211 scan or ROC → `ath12k_mac` → WMI start-scan.
+  **Yes, userspace-triggerable.** Channel list is always filled on those
+  paths. `num_hint_s_ssid` / `num_hint_bssid` are **never assigned** in
+  this tree (stay 0 from `kzalloc`); hint conversions are still correct
+  but not the live bug. **The live bug is the channel list on every
+  scan/ROC.**
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Generic `mt76_queue_ps_skb()` in this tree still only sets
-`IEEE80211_TX_STATUS_EOSP` + MORE_DATA, not wire EOSP (mainline patch
-04). `mt7603_rx_loopback_skb()` sets `ieee80211_sta_set_buffered(...,
-true)` and never clears it (mainline patch 06). Same U-APSD family,
-different bugs.
+- Record: Other fields in the same command already use `cpu_to_le32`.
+  `ath12k_wmi_ssid_params` already has `__le32 ssid_len`. Sibling ath11k
+  `ath11k_wmi_send_scan_start_cmd` still copies `chan_list` as host
+  `u32` without `cpu_to_le32` (ath11k WMI structs are less consistently
+  `__le32`). Other ath12k endian fixes exist (`2adcddd8a316e` vdev
+  create, `8f1a078842d4a` WMI service bits, `1cfa6d4e5bd9b` HAL TLV).
 
 ---
 
 ## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** `mt7603_ps_set_more_data` and
-`mt7603_release_buffered_frames` in
-`drivers/net/wireless/mediatek/mt76/mt7603/main.c` are **byte-for-byte
-identical** to the parent of `697badc27a9b3`. Bug since ~2018/2019.
-
-Local tree: `p-5.15-2-g6703e5d2f3a29`, **5.15.221**. `git merge-base
---is-ancestor 697badc27a9b3 HEAD` → **not in this tree**.
+- Record: **Yes.** Tree is **v7.3-rc4** (`7.3.0-rc4`, HEAD
+  `f0100363d8c37`). ath12k and `ath12k_wmi_send_scan_start_cmd` exist.
+  Bug introduced **v6.3**; not after this branch. The fix commit
+  `6c90f68f97de5` is already an ancestor of HEAD; current `wmi.c`
+  already has the `cpu_to_le32` channel loop. Evaluating technical merit
+  for this codebase, not “already queued.”
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply.** Same function bodies; needed APIs
-(`ieee80211_send_eosp_nullfunc`, `ieee80211_get_qos_ctl`,
-`IEEE80211_QOS_CTL_EOSP`, `IEEE80211_FRAME_RELEASE_UAPSD`) are in 5.15.
+- Record: **Clean apply here** (already present). New structs are
+  additive. On older stables without `7b0bd40e97a00`, one
+  `ether_addr_copy` context hunk may need a trivial refresh; channel-
+  list hunk is independent.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No related U-APSD EOSP/TIM/HW-rearm fixes on this file in this
-tree.
+- Record: This exact fix is in the tree. No alternate/earlier endian fix
+  for this memcpy. No revert.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
 **Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: **wifi / mt76 / mt7603** (`CONFIG_MT7603E`). Criticality:
-**IMPORTANT** for users of that hardware (MT7603E / MT7628/MT7688 APs —
-very common home routers), not core mm/net.
+- Record: **wifi / ath12k (Qualcomm Wi-Fi 7)** — **IMPORTANT** (not
+  mm/core; real devices and scan/ROC depend on it).
 
 **Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Mature driver (since 5.0-era). This is a long-standing bug, not
-a regression in new code.
+- Record: **Active** (frequent `wmi.c` fixes). This particular memcpy
+  has been wrong since the driver landed in v6.3.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
 **Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: **Driver-specific:** AP (or GO) mode on MT7603/MT7628 with
-U-APSD (or PS-Poll) clients.
+- Record: **Driver-specific + endian-specific:** `CONFIG_ATH12K` on big-
+  endian CPUs. LE ath12k (typical x86/ARM) unchanged. Author affiliation
+  indicates real BE industrial use.
 
 **Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: STA enters power save; hardware redirects frames into
-`msta->psq`; STA sends a U-APSD trigger. Common for phones. Unprivileged
-wireless clients can trigger it.
+- Record: **Any scan or remain-on-channel.** Common for Wi-Fi (network
+  manager, `iw scan`, P2P/ROC). Unprivileged users can trigger scans
+  depending on policy; not a UAF/crash primitive. Not a race.
 
 **Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: **Downlink stall / client freeze** until the STA gives up
-(disconnect/retry). Not a kernel oops. Severity: **HIGH** for affected
-APs (connectivity loss), not CRITICAL kernel crash.
+- Record: **Scan/ROC commands invalid on BE → scan fails / association
+  cannot find APs.** Not oops/deadlock/corruption. **Severity: HIGH**
+  for BE ath12k (driver largely unusable for STA), **LOW** for LE
+  majority.
 
 **Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record:
-- **Benefit:** high for MT7603 AP users — restores U-APSD SP completion
-  so phones keep triggering.
-- **Risk:** low–medium (contained ~50-line logic in one ops callback; no
-  API/lock/core changes).
-- **Ratio:** benefit outweighs risk.
+- Record:
+  - **Benefit:** Restores scanning on BE ath12k; no-op on LE.
+  - **Risk:** Very low (~22 lines, `cpu_to_le32` only, internal
+    structs).
+  - **Ratio:** Favorable. Classic endianness driver fix.
 
 ---
 
@@ -359,226 +351,189 @@ Record:
 
 **Step 9.1: COMPILE THE EVIDENCE**
 
-**FOR:**
-- Real, user-visible stall (U-APSD SP never ends on the air)
-- Matches mac80211 driver contract
-- Present in this 5.15 tree since driver introduction
-- Functions identical to mainline parent → clean apply
-- Small, one file, no new APIs
-- Maintainer-authored, merged to mainline as `697badc27a9b3`
-- Corroborated by OpenWrt MT7603/iPhone freeze reports
+**FOR backporting:**
+- Real, user-visible bug: WMI scan channel list (and hint integers) not
+  converted to LE.
+- Hits every hw scan and ROC on BE; firmware gets garbage channel
+  numbers.
+- Small, matches existing conversions in the same function.
+- Present since v6.3; this tree has the driver.
+- Reviewed and applied by Qualcomm ath12k maintainers; v2 addressed
+  review (hints + rebase).
+- `cpu_to_le32` is identity on LE → negligible regression risk.
+- Endianness/type bugs are a documented stable category.
 
 **AGAINST:**
-- Not crash/UAF/security
-- Series 05/10 (other patches are separate bugs/chips)
-- Follow-ups 06–08 still missing here (incomplete *overall* U-APSD, but
-  this patch is a complete EOSP fix)
-- No extra reviewer tags
+- Not crash/UAF/security/deadlock.
+- BE + ath12k is a smaller population than x86/ARM LE.
+- No `Fixes:` / `Cc: stable` / syzbot (absence expected; not a
+  negative).
+- Hint paths appear unused in this tree (still correct to convert).
 
 **UNRESOLVED:**
-- Direct lore.kernel.org HTTP often 403; thread recovered via `b4`
-- No explicit stable@ discussion found
+- Full lore.kernel.org HTML was 403; thread recovered via `b4 dig -m`.
+- No stable-list thread found.
+- No in-tree test proving a specific BE board besides the author’s
+  description.
 
 **Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — protocol-correct; maintainer
-   merged; consistent with mac80211 docs and iwlwifi’s
-   `ieee80211_send_eosp_nullfunc` usage
-2. Fixes a real bug that affects users? **PASS** — stall / client freeze
-   on common AP chipsets
-3. Important issue? **PASS** — serious connectivity failure for U-APSD
-   STAs (not a panic, but production-breaking for those devices)
-4. Small and contained? **PASS** — one file, +63/−11
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — clean; APIs present
+1. Obviously correct and tested? **PASS** — same conversion pattern as
+   the rest of the command; Qualcomm review + maintainer apply. Author
+   exercised BE.
+2. Fixes a real bug that affects users? **PASS** — scans fail on BE.
+3. Important issue? **PASS** — Wi-Fi scan/ROC broken on affected systems
+   (endianness correctness), not a style tweak.
+4. Small and contained? **PASS** — two files, +22/−8, one function.
+5. No new features or APIs? **PASS** — internal `__le32` wire structs
+   only.
+6. Can apply to the local tree? **PASS** — ath12k WMI scan path exists
+   here; hunks match.
 
 **Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: Not a device-ID/quirk/DT/build/docs exception. It is a **driver
-protocol bugfix**.
+- Record: Not a device-ID/quirk/DT/build/docs exception. Standard
+  correctness fix.
 
-**Step 9.4: DECISION**
-Backport to this 5.15 tree. The bug exists here; the fix is self-
-contained and applies cleanly. Companion commits `d5001f493fef` and
-`636a883e2feef` are worth later evaluation but are not required for this
-one.
-
----
-
-### What the commit solves, and why it matters here
-
-mt7603 implements its own `.release_buffered_frames` because hardware
-redirects frames into a driver PS queue. That path tagged every frame
-with `MORE_DATA` and never set EOSP on the air. mac80211 only saw
-`ieee80211_sta_eosp()`, so the stack thought the SP ended while phones
-waiting for EOSP stopped triggering. On 5.15 APs using `CONFIG_MT7603E`,
-that is a real stall, not a cleanup.
-
-### Stable rules / risk vs benefit
-
-Surgical, obviously correct vs the documented U-APSD contract, no new
-APIs, clean apply. Risk is limited to this driver’s PS release path.
-Benefit is restoring downlink for power-save clients on a widely
-deployed chipset.
-
-### Concerns
-
-Patches 06–08 (TIM clear, HW PS re-arm, TID filing) address **other**
-remaining PS bugs. They are not compile or semantic prerequisites for
-this hunk. Patch 04 is the analogous EOSP fix for chips that use generic
-`mt76_release_buffered_frames`; mt7603 only hits that when its PS queue
-is empty.
+**Step 9.4: MAKE YOUR DECISION**
+This tree has the ath12k scan WMI path introduced in v6.3. Missing
+`cpu_to_le32` on the channel list makes scanning fail on big-endian; the
+patch is small, matches existing WMI encoding, and is a no-op on little-
+endian. It meets stable rules for this checkout.
 
 ---
 
-Verification:
-- [Phase 1] Parsed subject/body/tags: Link is 05/10; author Felix
-  Fietkau; no Fixes/Reported-by/Cc stable
-- [Phase 2] Diff: +63/−11 in `mt7603_release_buffered_frames`;
-  MORE_DATA+EOSP assignment; stop double SP end; QoS-Null for MMPDU
-- [Phase 2] Confirmed `IEEE80211_QOS_CTL_EOSP` is 0x0010 and
-  `ieee80211_get_qos_ctl()` returns `u8 *` to the first QoS byte
-- [Phase 2] Confirmed `ieee80211_send_eosp_nullfunc()` in 5.15 sets
-  `IEEE80211_TX_STATUS_EOSP` on the NDP; TX status clears `WLAN_STA_SP`
-- [Phase 3] blame: `c8846e101502` / `b126c8897435` / `b7001f46085e`; all
-  ancestors of HEAD
-- [Phase 3] `git merge-base --is-ancestor 697badc27a9b3 HEAD` → not
-  present
-- [Phase 3] Follow-ups on origin/master: `d5001f493fef`, `636a883e2feef`
-  only; no revert
-- [Phase 4] `b4 dig -c 697badc27a9b3`: v1 series, msgid
-  `20260801145334.1166751-5-nbd@nbd.name`
-- [Phase 4] `b4 dig -w`: linux-wireless@ + author only
-- [Phase 4] `b4 mbox`: 11 messages; robot fail is patch
-  10/`ieee80211_txq_aql_pending`, unrelated
-- [Phase 4] OpenWrt mt76#1084: EOSP-related change reported to stop
-  iPhone freezes
-- [Phase 5] ops hook `.release_buffered_frames =
-  mt7603_release_buffered_frames`; callers are mac80211 PS-Poll/U-APSD
-- [Phase 5] `ieee80211_send_eosp_nullfunc` exists and is exported in
-  this tree; iwlwifi calls it from TX/BH
-- [Phase 6] `make kernelversion` → 5.15.221; `git describe HEAD` →
-  p-5.15-2-g6703e5d2f3a29
-- [Phase 6] Byte-for-byte match of both functions vs `697badc27a9b3^`
-- [Phase 7] `CONFIG_MT7603E` present for MT7603E/MT7628
-- [Phase 8] Failure mode: downlink stall / client freeze, severity HIGH
-  for that hardware
-- UNVERIFIED: exhaustive stable@ archive search (lore HTTP 403); no
-  evidence of a prior stable rejection
+## What the commit solves and why it matters
+
+`ath12k_wmi_send_scan_start_cmd()` already converted scalar WMI fields
+with `cpu_to_le32`, but copied `chan_list` with `memcpy` and assigned
+hint integers in CPU order. On big-endian, firmware sees swapped
+frequencies, so scan/ROC fail. Stable users of ath12k on BE cannot scan
+or remain-on-channel without this. LE users see no behavior change.
+
+## Risk vs benefit
+
+Benefit is restoring a core Wi-Fi operation on BE. Risk is very low:
+surgical conversions, no locking/API change, identity transform on LE.
+
+## Concerns
+
+No functional dependency on other patches for the channel-list fix. Hint
+BSSID `ether_addr_copy` direction is a separate commit already in this
+tree. Backport to older stables may need a one-line context tweak if
+that copy-direction fix is absent.
+
+---
+
+## Verification
+- [Phase 1] Parsed tags: two Qualcomm `Reviewed-by`; maintainer SOB;
+  msgid.link; no Fixes/stable/syzbot
+- [Phase 2] Diff: `wmi.c` + `wmi.h`, +22/−8; `memcpy` → `cpu_to_le32`
+  loop; hint fields converted; two `__le32` structs added
+- [Phase 3] `git describe HEAD`: `v7.3-rc4-27-gf0100363d8c37`; `make
+  kernelversion`: `7.3.0-rc4`
+- [Phase 3] `git merge-base --is-ancestor 6c90f68f97de5 HEAD`: yes (exit
+  0)
+- [Phase 3] `git blame` on parent: buggy memcpy/assigns from
+  `d889913205cf7` (v6.3-rc1)
+- [Phase 3] Related: `7b0bd40e97a00` hint BSSID copy; `9eb6f553026e1`
+  QMI endian; no revert after this fix
+- [Phase 4] `b4 dig -c 6c90f68f97de5`: v2 msgid `20260703-fix-channel-
+  list-copy-v2-1-372c39306d79@westermo.com`
+- [Phase 4] `b4 dig -a`: v1 channel-list-only → v2 also converts hints
+- [Phase 4] `b4 dig -w`: Jeff Johnson, Baochen Qiang, linux-wireless,
+  ath12k list
+- [Phase 4] mbox: Baochen/Rameshkumar R-b; Jeff applied; swapped
+  `ether_addr_copy` deferred to separate patch (no NAK of endian fix)
+- [Phase 4] lore.kernel.org fetch: 403; used b4 mbox + mirrors
+- [Phase 4] stable list search: no discussion found
+- [Phase 5] Callers: `ath12k_start_scan` ← hw scan (`mac.c:5727`) and
+  ROC (`mac.c:14062`); both write `chan_list` as `center_freq`
+- [Phase 5] `num_hint_*` never assigned in ath12k (remain 0)
+- [Phase 6] Current tree already contains the converted loop at
+  `wmi.c:2739-2740`
+- [Phase 8] Failure: invalid WMI scan params on BE → scan failure; not
+  oops
+- UNVERIFIED: specific BE board log beyond commit text; full lore HTML
 
 **YES**
 
- .../net/wireless/mediatek/mt76/mt7603/main.c  | 74 ++++++++++++++++---
- 1 file changed, 63 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath12k/wmi.c | 20 ++++++++++++--------
+ drivers/net/wireless/ath/ath12k/wmi.h | 10 ++++++++++
+ 2 files changed, 22 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index 0d7c84941cd0a..f8a43d9f72f95 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -423,13 +423,33 @@ mt7603_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
- 	mt7603_ps_tx_list(dev, &list);
- }
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 39d5110eca901..91f293ab70137 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -2666,9 +2666,10 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 	struct wmi_tlv *tlv;
+ 	void *ptr;
+ 	int i, ret, len;
+-	u32 *tmp_ptr, extraie_len_with_pad = 0;
+-	struct ath12k_wmi_hint_short_ssid_arg *s_ssid = NULL;
+-	struct ath12k_wmi_hint_bssid_arg *hint_bssid = NULL;
++	__le32 *tmp_ptr;
++	u32 extraie_len_with_pad = 0;
++	struct ath12k_wmi_hint_short_ssid_params *s_ssid = NULL;
++	struct ath12k_wmi_hint_bssid_params *hint_bssid = NULL;
  
-+static struct ieee80211_hdr *
-+mt7603_ps_skb_hdr(struct sk_buff *skb)
-+{
-+	return (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
-+}
+ 	len = sizeof(*cmd);
+ 
+@@ -2751,9 +2752,10 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 	tlv = ptr;
+ 	tlv->header = ath12k_wmi_tlv_hdr(WMI_TAG_ARRAY_UINT32, len);
+ 	ptr += TLV_HDR_SIZE;
+-	tmp_ptr = (u32 *)ptr;
++	tmp_ptr = (__le32 *)ptr;
+ 
+-	memcpy(tmp_ptr, arg->chan_list, arg->num_chan * 4);
++	for (i = 0; i < arg->num_chan; i++)
++		tmp_ptr[i] = cpu_to_le32(arg->chan_list[i]);
+ 
+ 	ptr += len;
+ 
+@@ -2809,8 +2811,10 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 		ptr += TLV_HDR_SIZE;
+ 		s_ssid = ptr;
+ 		for (i = 0; i < arg->num_hint_s_ssid; ++i) {
+-			s_ssid->freq_flags = arg->hint_s_ssid[i].freq_flags;
+-			s_ssid->short_ssid = arg->hint_s_ssid[i].short_ssid;
++			s_ssid->freq_flags =
++				cpu_to_le32(arg->hint_s_ssid[i].freq_flags);
++			s_ssid->short_ssid =
++				cpu_to_le32(arg->hint_s_ssid[i].short_ssid);
+ 			s_ssid++;
+ 		}
+ 		ptr += len;
+@@ -2824,7 +2828,7 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 		hint_bssid = ptr;
+ 		for (i = 0; i < arg->num_hint_bssid; ++i) {
+ 			hint_bssid->freq_flags =
+-				arg->hint_bssid[i].freq_flags;
++				cpu_to_le32(arg->hint_bssid[i].freq_flags);
+ 			ether_addr_copy(&hint_bssid->bssid.addr[0],
+ 					&arg->hint_bssid[i].bssid.addr[0]);
+ 			hint_bssid++;
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 6d9c645e3d5d0..6468d9738639e 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -3504,6 +3504,16 @@ struct ath12k_wmi_hint_bssid_arg {
+ 	struct ath12k_wmi_mac_addr_params bssid;
+ };
+ 
++struct ath12k_wmi_hint_short_ssid_params {
++	__le32 freq_flags;
++	__le32 short_ssid;
++};
 +
-+/*
-+ * Buffered frames can be recycled into the PS queue by mt7603_filter_tx(), so
-+ * both bits have to be assigned, not just set.
-+ */
- static void
--mt7603_ps_set_more_data(struct sk_buff *skb)
-+mt7603_ps_set_flags(struct sk_buff *skb, bool more_data, bool eosp)
- {
--	struct ieee80211_hdr *hdr;
-+	struct ieee80211_hdr *hdr = mt7603_ps_skb_hdr(skb);
++struct ath12k_wmi_hint_bssid_params {
++	__le32 freq_flags;
++	struct ath12k_wmi_mac_addr_params bssid;
++};
 +
-+	if (more_data)
-+		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
-+	else
-+		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
-+
-+	if (!ieee80211_is_data_qos(hdr->frame_control))
-+		return;
- 
--	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
--	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
-+	if (eosp)
-+		*ieee80211_get_qos_ctl(hdr) |= IEEE80211_QOS_CTL_EOSP;
-+	else
-+		*ieee80211_get_qos_ctl(hdr) &= ~IEEE80211_QOS_CTL_EOSP;
- }
- 
- static void
-@@ -442,7 +462,10 @@ mt7603_release_buffered_frames(struct ieee80211_hw *hw,
- 	struct mt7603_dev *dev = hw->priv;
- 	struct mt7603_sta *msta = (struct mt7603_sta *)sta->drv_priv;
- 	struct sk_buff_head list;
--	struct sk_buff *skb, *tmp;
-+	struct sk_buff *skb, *tmp, *last;
-+	bool eosp_null, uapsd;
-+	u16 pending = 0;
-+	u8 last_tid;
- 
- 	__skb_queue_head_init(&list);
- 
-@@ -458,20 +481,49 @@ mt7603_release_buffered_frames(struct ieee80211_hw *hw,
- 
- 		skb_set_queue_mapping(skb, MT_TXQ_PSD);
- 		__skb_unlink(skb, &msta->psq);
--		mt7603_ps_set_more_data(skb);
- 		__skb_queue_tail(&list, skb);
- 		nframes--;
- 	}
-+
-+	skb_queue_walk(&msta->psq, skb)
-+		pending |= BIT(skb->priority);
- 	spin_unlock_bh(&dev->ps_lock);
- 
--	if (!skb_queue_empty(&list))
--		ieee80211_sta_eosp(sta);
-+	last = skb_peek_tail(&list);
-+	if (!last) {
-+		mt76_release_buffered_frames(hw, sta, tids, nframes, reason,
-+					     more_data);
-+		return;
-+	}
-+
-+	/*
-+	 * End the service period here instead of passing the remaining frame
-+	 * budget on to mt76_release_buffered_frames(), which would signal the
-+	 * end of the same service period a second time.
-+	 */
-+	uapsd = reason == IEEE80211_FRAME_RELEASE_UAPSD;
-+	more_data |= !!(pending & tids);
-+
-+	skb_queue_walk(&list, skb)
-+		mt7603_ps_set_flags(skb, skb != last || more_data,
-+				    skb == last && uapsd);
-+
-+	/*
-+	 * EOSP lives in the QoS control field, so a bufferable MMPDU cannot
-+	 * terminate a U-APSD service period on its own. In that case mac80211
-+	 * has to append a QoS-Null frame, which ends the SP through its tx
-+	 * status.
-+	 */
-+	eosp_null = uapsd &&
-+		    !ieee80211_is_data_qos(mt7603_ps_skb_hdr(last)->frame_control);
-+	last_tid = __fls(tids);
- 
- 	mt7603_ps_tx_list(dev, &list);
- 
--	if (nframes)
--		mt76_release_buffered_frames(hw, sta, tids, nframes, reason,
--					     more_data);
-+	if (eosp_null)
-+		ieee80211_send_eosp_nullfunc(sta, last_tid);
-+	else
-+		ieee80211_sta_eosp(sta);
- }
- 
- static int
+ struct ath12k_wmi_scan_req_arg {
+ 	u32 scan_id;
+ 	u32 scan_req_id;
 -- 
 2.53.0
 
