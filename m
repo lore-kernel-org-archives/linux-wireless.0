@@ -1,44 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792435578;
-	b=jBg2wFoy25SZGZRHlB+cxyuBuYy38gfWcvzqKKSITChI2dpVU2H52AP2nPhiv3RCyWjW
-	 Bx+eurlfVdXK2J0jAh8Cyhsu2gW6DUYydlyuuVTeR3lIHN++EZDB+8O9Cow+5yMylSMnF
-	 U+nC0SRKtEVlSJvo0sniWGABjoLxTa5U0gA6/gEge4cs7WRC7KoHWdMTKK7vYk9xLO8pS
-	 mjvIQji3xw7QZ9fYOPUioT06SE/Qk+OyG6woOLQWUK2hjP7t/ORuCIsmrhTmDbemudo7m
-	 hTuZwry3I9kZP9dNQawDPZ0PEN9h996H50R0WjLqO06FbyvsAHgZ94QAfaSaWI/u3BA==
+	t=1792436483;
+	b=YOyWQlzfj5i6AhNbFwL/0AQ2X7P/Tiao9qrfhRDnt1QEq/1lBAZKQBU38fPAJbWwJM77
+	 gUlKE52ZeSFsGrmAuTRcyKMlfd/QezsQ263imixBINcr4Sys+aHjv9MvVwHytj1Tj5yfj
+	 a3LvFCjTnZU3SvorPez2piQnwNY14xUQq3nq8jRPVwB3oyA42gQrJ4BluZIP79qzrggIF
+	 mYwYdMv2prXRFll9TW+nuXGCkceu10haL9ZLMp1Ae/MHKlPuchn9IXA6q+1qwHPev63xE
+	 IseqQDiFvEXf99NTpul5rq1qFLdl3YqJfcohEses7WLNlSoB7+gVZOfh2Du6dbobu1w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792435578;
-	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
-	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type;
-	bh=+hRafnmGtnX0Gmpp+5qnp4hQWU6BZlwPRu0BRGDJHOk=;
-	b=IUHBOJ5/j05khJLONdjmE/+p8MaAaBsq3Q1OJsma/ZsPP58hvbNO2ij4C45NU04r7nQf
-	 3wlZ2iB/2PMVbvLcdMUKMSKmOnJeeqmNj3dYbS+254Rg2w9Cw8NhtHlP4CMbyFilKcodV
-	 mVYEAww18uET85ka+3gJ3xrIT3xjLJj0TYf0grtnrJ/U2TmCeHugofVgeyiXqkETemJLJ
-	 n0ozrBIS6aqTDbHdlzbQ7wlxKdMHt6ty9JsWeKMkWLJ11pVXa1dPV+8D0g+vV8KINhHAb
-	 CC/zP+Ef76z8OCEzDcp1XKoAqLXEJ9UEikYSXOxlzDGNDHO8itpSggaXf4REea+zVHA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792436483;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=09iLhdKoA+WjgjSiEhQrFgF/+LcrRb1ryygNNtnygEA=;
+	b=3DquGN43h/21MbDI20HamDCdPCD2PLRujBxxZ69ZtpC5WwLbUv27ZwwQEJ7i8R6EkUoX
+	 ddQ8sEw8JSRB74S3oj1ef+SkcUq84fSEj9KwU3x6mkuwvKlngkHE/YUJTxKfbO48n0FKL
+	 jg0LLsyZsqbkVNd60xSfXTOkyJcrtuUkhuL5TD1dozipJ1O8LIccO6yEvfLCFrvxZxSHd
+	 UbEvquh1VZX76gyf1QjYhlsQSMYuDPrFyhDvDoPzzRiARsNv4DC8+bohjXFWHrL1Kx4RC
+	 O61oRtJxXUEqB4IgM/78mAtBnPq7YB0WqHOWW9VFb4F1/bTg29IXuxzTDOiE0qSOHAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=toke.dk;
-	spf=pass smtp.mailfrom=toke.dk;
-	arc=none smtp.remote-ip=45.145.95.4
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=rgjBWiNm;
+	arc=none smtp.remote-ip=95.215.58.69
+Received: from mta1.migadu.com (out-69.mta1.migadu.com [95.215.58.69])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9F1F606A31D;
-	Mon, 19 Oct 2026 18:46:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9F1F606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: mail.toke.dk; dkim=none
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Nick Hainke <vincent@systemli.org>, linux-wireless@vger.kernel.org
-Cc: Nick Hainke <vincent@systemli.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath9k: restore background spectral scan after reset
-In-Reply-To: <20260915194327.30397-1-vincent@systemli.org>
-References: <20260915194327.30397-1-vincent@systemli.org>
-Date: Mon, 19 Oct 2026 20:46:14 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87fqy1wmtl.fsf@toke.dk>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368CD606A31D
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 19:01:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 368CD606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=rgjBWiNm
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=09iLhdKoA+WjgjSiEhQrFgF/+LcrRb1ryygNNtnygEA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792436477; v=1; x=1793041277;
+ b=rgjBWiNm7ij4VVOmDH6xN6QfCVE9RSCvwfDSiGdgvkdbaAc93sbHB9qYMf/97/P5wITWQIWd
+ iKRpVi6p8UrK30ulueNymZxOXCUUuWN1sK2625k+ha7kGQTnVC6vwbIRwYULQzLytQ7eZcsw8JE
+ P/7Xzq0Nkarf7qUiIMnr+mDM=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d7dc869a0a89dcb8;
+	Mon, 19 Oct 2026 19:01:17 +0000
+X-Mizu-Trace-ID: d7dc869a0a89dcb8
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -48,19 +56,39 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 19 Oct 2026 19:01:17 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <5ae48a49833ada4e600ba4a72dc82d240bb3b354@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is
+ full
+To: "Hungyu Lin" <dennylin0707@gmail.com>, pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ reza1234khan1234@gmail.com, "Hungyu Lin" <dennylin0707@gmail.com>
+In-Reply-To: <20261019165103.5990-1-dennylin0707@gmail.com>
+References: <20261019165103.5990-1-dennylin0707@gmail.com>
 
-Nick Hainke <vincent@systemli.org> writes:
+October 19, 2026 at 6:51 PM, "Hungyu Lin" <dennylin0707@gmail.com> wrote:
 
-> A reset leaves spectral_mode set to SPECTRAL_BACKGROUND, but resets the
-> spectral registers and receive filter. The driver therefore still reports
-> a background scan even though the hardware no longer produces FFT samples.
->
-> Re-trigger background spectral scanning after reset recovery so the
-> software and hardware state match again. Do not re-trigger spectral
-> scanning in disabled, manual, channel-scan, radar, or off-channel
-> modes.
 
-What bug is this fixing, and how did you test the change?
+>=20
+>=20rtw_ops_set_key() looks for a free CAM entry before checking the
+> command. When all pairwise entries are in use, DISABLE_KEY returns
+> -ENOSPC without clearing the existing entry.
+>=20
+>=20Move the allocation and bounds check into SET_KEY. DISABLE_KEY uses
+> the existing key->hw_key_idx.
+>=20
+>=20Fixes: 10d58823cb44 ("wifi: rtw88: fix out-of-bounds CAM write when k=
+ey table is full")
+> Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
+> ---
 
--Toke
+Looking good to me.
+
+Reviewed-by: Luka Gejak <luka.gejak@linux.dev>
+
+Best regards,
+Luka Gejak
