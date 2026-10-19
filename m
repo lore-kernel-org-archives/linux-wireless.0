@@ -1,155 +1,126 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C823033E1
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 12:44:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792413845; cv=pass; b=WtgGOaGzv/5zJTGnfJSpAEqO1+KUU/jHswjBAD7KHGVrF2oz2GFtdS3vKokHG2Y8yQW7JgIHWAhBh4WlMQITHXagGasUsiOGslw3a1Bmm7VTA+Wicjflc9NM6JcqHTlYEJ4Bg7s9lCEt/acfmqRipzxCctwoZkr7KZfLmRgzZ94=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792413845; c=relaxed/simple;
-	bh=PzYyYBu++GbxtLOvUa7jFIhv2/GhJZdHYK9iQRhrFBA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=tAFjt+c+ESlejK0YrPMlW0o6erAoamfcANVwDSDa1q6YavZ8UqIfERAfg/j8eNvNpWrgDjH2cntpCK14RBJB+Epy2bMnxXyVxjUaoqlDuO/py6zEerMUABPuefZNDJhlYFpjqchZ/ri5j02R4fxkndDSFFKHTJC1qMg9JsYHdB0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=matthew.leach@collabora.com header.b=QI1BeTRl; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7CD3FBB46
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 13:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792415537; cv=none; b=iN/qHDMBYZ+UFfetslrtIMJSiEolUN5nuV2O3VZGRIZSedeA+G0GEo7mpBq8hZtSxIF/N9oVh11mlX1MSuJ8sTKAjeZxqPR4HOZ2me+dDWPwFzQk7ZcwKhx8O5BwsIaNp3nOERihYSft5aHB2KbwDGCx55r/3NIYfJaNAkJEY9M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792415537; c=relaxed/simple;
+	bh=AylRuBno5Pn8TsJf9Ogcc7yJ2eqTf3rwdkgyP0EaziM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rOl4wwWSAm09NSSx1PM7MfQYCQTvWfBA4aUBO7bEXwE4gEe4nZefgqQmaYf95pgPPsLTyUagkQwUPuxWp0tOqHMePuGXK/pYrwRgTot9FckTyk7HH5AXvkOVbQC4/16Wg/087vgqJ1h8lpSvQPMjyjNqKN70gZ818JtxogKX8iI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EbyhOs0t; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=matthew.leach@collabora.com header.b="QI1BeTRl"
-ARC-Seal: i=1; a=rsa-sha256; t=1792413828; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=U6eU0aJoHk38UWdGoHfoiHBiArz/xYx5zNJdpGOxmbe+udiJgwXOqpFXRiPONb9xuVV4PeiCLBPbMBKXTkRuY6sVGE0N6IB1DlNuD5XOI7KR2GxljBuUTC74Z4cbItVo/j98GhB2N3NrMpwbtQS4qCmLB//3/CXVkC/q3OXRohY=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1792413828; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=RhEcvchSukxXA2zC00AL2afNWLNgZgcDlycHPL/Nw4Y=; 
-	b=c6m14u4NZtzsSyZzmXuwKfqBiLATvL81Ql9CJDaFzWsdk1hOG5r5O6M7/xWbgC0Vb/6zsRG1Cdj/FYWdpB0A+25Xbh0mug9fszSXU9dy9wC9iAgRKznGD7zDzArluSy5tKUOaa2Ai5KFSsmlfECirsX0JUQ7MymhVRANAag4NGQ=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=matthew.leach@collabora.com;
-	dmarc=pass header.from=<matthew.leach@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792413828;
-	s=zohomail; d=collabora.com; i=matthew.leach@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:In-Reply-To:Date:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=RhEcvchSukxXA2zC00AL2afNWLNgZgcDlycHPL/Nw4Y=;
-	b=QI1BeTRlr+KJ9c3CUsGDiObvm/wne8VPLSAn4pQKpuDqiu+7u3SWz9HT0wSba0t2
-	p5g7EXw0Qv5kz6ZCj0iQa8On24eXeO8e22D9q5ySy+GUvuO+Ah6v/e9a+q5f2ek7KXV
-	99CrSJyKkLvwD3v5uluSygJmz7Etu24pxHrN82M8=
-Received: by smtp.zohomail.com with SMTPS id 1792413825421562.9698600060245;
-	Mon, 19 Oct 2026 05:43:45 -0700 (PDT)
-From: Matthew Leach <matthew.leach@collabora.com>
-To: "Luka Gejak" <luka.gejak@linux.dev>
-Cc: "Bob Beckett" <bob.beckett@collabora.com>,  "Ping-Ke Shih"
- <pkshih@realtek.com>,  linux-wireless@vger.kernel.org,
-  kernel@collabora.com
-Subject: Re: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted,
- poisoning CCMP replay counter
-In-Reply-To: <3839685695b77706f39cfdef192e1d137e9d46bc@linux.dev>
-References: <20261016191100.1781056-1-bob.beckett@collabora.com>
-	<3839685695b77706f39cfdef192e1d137e9d46bc@linux.dev>
-User-Agent: mu4e 1.14.3; emacs 31.1
-Date: Mon, 19 Oct 2026 13:43:33 +0100
-Message-ID: <87wlrdc13e.fsf@collabora.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EbyhOs0t"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e5fb79ce82so10545155ad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 06:12:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792415535; x=1793020335; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=gT7565n3cY+YDTERB3uQ8khKJFfspA8uXPmSUyaFk3g=;
+        b=EbyhOs0tFneOfR9xE/+BSI3DP45VZFZje1WhNWGgycmEF1wEOUqUQSyZLzSpVZkx2L
+         qZZCXHei2N7+ZmdiivPDUThwJtK28eHmjXAhEN7JSPScUu47dR+snYIN8ctRyT9miEf9
+         4K3B9YLN3F7/Qns7iug3EFqfgfVhpb5QYdaTYQ6VhY4XlSQbtDX0f23P+BlWqEfd9XR3
+         fdYKY1sWeqfmfLkmLn/zRUp4ieXl1NhbF+7hunG25u8vATtj0uSdRAIRftPxX+tBZA29
+         SmAYo/lfeXIdMtV+LaybytDBLSogqQ7ABVEnu7YWu+W/4InGc3ojwdguobJRbigGGPgq
+         mwnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792415535; x=1793020335;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=gT7565n3cY+YDTERB3uQ8khKJFfspA8uXPmSUyaFk3g=;
+        b=g874rcgN7pqAS18Qgf5Fg1KEs620XudJ0juD0Ssa/DnBp5LCB0JTKBP81CKPlhL3Ip
+         C84HQMmMiMxbqjUbeU+r4+HRUqUXNiOXDbY2xOkslrqgJtHXYfse0+5Ykr3nXtfFffWG
+         qq7OdG/UfYiKfSONr/VL6+rWJ6D+qoZCMQ4XTp9gdYaJi1g5zDBN/xspaJgkHRFCPYYA
+         QgW0KNQXatXWjx46Bf95ZHbxwwBaZhWbFU/ybR7KYPBHFbmucBh6KXm8cP6xn8BbDN5+
+         XtU2ujfCK8QIz7y1HdTVxR9KoHq7ggd9uc3e1Ne39yP62ZZS4y0JGfUr4FGzn+DM0viK
+         NUKg==
+X-Gm-Message-State: AFq9FYLEhKtIhNoOO4i+6vPRS2kOmlaaY2oezE60AlCWws15XSgcODv+
+	Xj57xxk9YLcYKOJpaCEFk4CnQw7N7qWVO6ibrK0XaLY9Ujuk1ijdFNYX
+X-Gm-Gg: AYBFou2fYEW9zxn50BEg+Rlb3vDZw5BRDmuX5qMXSqUlkzXLGLyxO3smhIl7vjvokwa
+	RkA+UF8M0v8yb6hIlj6pb5pjus8AKz2m6VrsBX9Cmg5ibbERQLCdJk0hTKZ0Bfp28QjeKqpSYcP
+	YHFAxX51CbVN8XzYIRmagRtyRYdmtZxuJa2/JKc7zJAd0Ssk3G6D/mwOQAtXYIFOJBDK7peSTvG
+	Pe4enCAHnuoS9bvyS5kPwYomM7M+ccThoJQdoV37kIw3596RZzAnbTvBhKqv9WZTfqorTqRoHH4
+	FBF6rLLnel0JTelPspaHkFvvw+ikzNG5Way4zOX8OjPy2RiALeor9rd+fhFcs0co2LZcX10Xdzp
+	St3UVwjgOVsDXTqj7E2hNSKWyk1PJnI0fWvPd/LncGyS7s0Y8TrPMxBg2FjRdQ3DBgpkb7zLsSG
+	OaeJY66PzPpvrAUyICFJgTzuQX241gessuQJBdg57wahITJvG7VaV8Nq2400PMz+ZAGmyPnYWfn
+	nSkrDuWWCmobrH4WJZ+2fSCIa4bDYr7pzzy96vabv4rerYbk178Pvy6sYSCaNE+8A9Iy5Mu9w2e
+	T90ET2LN
+X-Received: by 2002:a17:902:e84c:b0:2e9:6b5b:3db6 with SMTP id d9443c01a7336-2e9a69e93d4mr70486035ad.30.1792415535050;
+        Mon, 19 Oct 2026 06:12:15 -0700 (PDT)
+Received: from [192.168.1.164] (h69-130-12-20.bendor.broadband.dynamic.tds.net. [69.130.12.20])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ea1517e895sm430215ad.57.2026.10.19.06.12.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Oct 2026 06:12:12 -0700 (PDT)
+Message-ID: <61207966-c403-441d-9019-583702833a7f@gmail.com>
+Date: Mon, 19 Oct 2026 06:12:11 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-ZohoMailClient: External
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 3/3] wifi: ath10k: bring down a station vdev that
+ never came up
+To: shunsuke@nagashi.ma, Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+ linux-kernel@vger.kernel.org, David Heidelberg <david@ixit.cz>,
+ Fabricio Akio <fabricioakio@gmail.com>
+References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
+ <20261016-ath10k-series-v1-send-v1-3-c847697b3558@nagashi.ma>
+Content-Language: en-US
+From: James Prestwood <prestwoj@gmail.com>
+In-Reply-To: <20261016-ath10k-series-v1-send-v1-3-c847697b3558@nagashi.ma>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-"Luka Gejak" <luka.gejak@linux.dev> writes:
+Hi Shunsuke,
 
-> Hi Bob,
-
-Hi Luka,
-
-> Thanks for the write up. I have a different read on this one. I don't
-> think those frames were decrypted at all, and I think the descriptor
-> is telling us less than it looks. Notes below.
-
-Thanks for taking the time to look at this.
-
->> the bytes from the CCMP header onwards are garbage.
+On 10/15/26 5:17 PM, Shunsuke Nagashima via B4 Relay wrote:
+> From: Shunsuke Nagashima <shunsuke@nagashi.ma>
 >
-> That data is not from this frame. Your jump 2 dump shows where it
-> comes from. The drv_info area is the 32 bytes at offset 24, and the
-> hardware leaves it alone when PHYST is 0, so whatever is siting there
-> is old. At offset 32 there is a whole RX descriptor, same w0, w1, w3
-> and w4 as the live one, w2 sequence number 0xc5d and TSF 0x0042a3fa.
-> The live frame is sequence 0xc66 with TSF 0x0042a4f3. So that memory
-> is from ~9 frames and ~250us earlier.
+> When a connection attempt fails before the station vdev is brought up
+> (authentication timeout, SAE failure, association rejected, or an Auth
+> burst the AP never acknowledged), mac80211 removes the AP station and
+> unassigns the channel context. ath10k deletes the peer and sends
+> WMI_VDEV_STOP, but no WMI_VDEV_DOWN: for a station vdev that never came
+> up, the down would only come from ath10k_bss_disassoc(), which a failed
+> connection attempt never reaches.
 >
-> The ring has 512 buffers and one frame per buffer, so the same buffer
-> only comes around again after about 512 frames. Data from approx. 9
-> frames ago can't be leftover from the last time that buffer was used,
-> so I think the hardware wrote it for some other frame. So for the
-> frame we got, the hardware wrote the descriptor and the 802.11 header
-> and then stopped, and the rest of the buffer still had that other
-> frame in it.
->
-> Same for the feame 3. Its first four CCMP bytes are 44(PN0) 50(PN1)
-> 00(the zero reserved byte) 20 (ExtIV), so that write got four bytes in
-> the CCMP header and then stopped.
+> On WCN3990 firmware WLAN.HL.2.0.c10-00459 and c10-00236, the Auth frames
+> of the next attempt on the same vdev are then not transmitted
+> (management tx completion status "discard") until about 20 s after the
+> first Auth frame of the failed attempt. In sniffer captures, 241 such
+> holds ended 19.94-20.03 s after that frame. Some lasted longer (in one
+> overnight run, 29 of 226 had not ended when the cycle ended), for
+> example when user space gave up on the attempt during the hold. Probe
+> requests still go out. The state belongs to the vdev: an attempt to
+> another network (another BSS on the same AP) on the same vdev was held
+> too (2 of 2), and re-creating the vdev cleared it (2 of 2). This happens
+> on WPA2 networks as well as WPA3. An older firmware build,
+> WLAN.HL.2.0-01387, did not hold the frames (0 of 7 reconnects after
+> status 30).
 
-The fresh header followed by unexpected contents is consistent with an
-incomplete write, although I don't think we can distinguish that from
-consuming the buffer before all payload writes are visible. Could we
-compare the RX buffer contents when completion is first observed and
-again before returning the buffer to the hardware? If the contents
-change while the buffer is still host-owned, that would support
-premature completion signalling.
+This seems similar to an issue we see on the QCA6174's. I don't see a 20 
+second delay, but sometimes after an auth/assoc timeout we get a spam of 
+failed connections with NL80211_TIMEOUT_UNSPECIFIED. I've mentioned this 
+quite some time ago [1]. Do you think it has any relation to whats being 
+fixed here?
 
->> our reading is that for these frames the payload/decrypt path produced
->> wrong data while the descriptor still reported CRC OK, ICV OK and
->> hardware decrypted.
->
-> I read it the other way. Nothing was decrypted into that area. The CRC, I=
-CV
-> and decrypt bits are the results of checks the hardware does before it ha=
-nds
-> the frame over,
+Thanks,
 
-My understanding is that BIT_AICV in RCR controls acceptance of
-integrity-error frames, and it is unset in our register snapshots.
-Hardware should therefore already be filtering those frames.
+James
 
-That doesn't rule out the scenario you describe, where the frame passes
-the integrity check internally but the bytes delivered to host memory
-are wrong. However, all four captured bad frames have ICV_ERR clear, so
-checking that bit alone would not catch these examples.
+[1] 
+https://lore.kernel.org/linux-wireless/441e9883-1efc-498b-ba33-6a4f12443f3b@gmail.com/
 
-> and the payload write is a separate step after those checks which just
-> did not happen here. So a good descriptor doesn't mean the frame in
-> the buffer is real.
->
-> My guess for what takes the link down is that rtw_rx_query_rx_desc sets
-> decrypted from swdec and the enc type alone, without looking at icv_err, =
-and
-> then rtw_rx_fill_rx_status sets RX_FLAG_DECRYPTED, with which mac80211
-> reads the PN out of the frame itself and saves it as the last PN for the
-> key, and it only rejects a PN that is lower. So one frame like this pins =
-the
-> key to a random PN, and everything after it is dropped as a replay until =
-new
-> keys go in.
-
-Yes, this is our take. Somehow the bogus PN gets passed to mac80211.
-That then poisons the kernel's own PN value, which causes all subsequent
-packets, which have a good PN, to be dropped as replay attacks.
-
-> I will send a patch that fixes this part  so you can test it. It should
-> turn a dead link into a dropped frame, but either way the test will
-> tell.
-
-Thanks for that patch; I've taken a look. The CCMP-header validation
-should catch jumps 1, 2 and 4. However, jump 3 has valid reserved/ExtIV
-bytes (44 50 00 20) and corruption in the remaining PN bytes, so this
-patch would retain RX_FLAG_DECRYPTED and still poison the replay
-counter. This looks useful as a partial mitigation, but doesn=E2=80=99t yet
-resolve the reported failure.
-
-Regards,
---=20
-Matt
