@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609126441EF;
-	Mon, 19 Oct 2026 14:06:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202C2642370;
+	Mon, 19 Oct 2026 14:06:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418784; cv=none; b=BEB9aOrvgnHZ48Ri8IsJTmUN5H1JbrivboEKN21dkgffTHsBsX3aePAdOyFyhZ+OHJnwXh5GfLfBgZ4s+9/p0pHwE40SW3pQL2ibXddCgyaf6LPyF2sjsm82zFl3XVB4PPUMzWU0lGrSi15DwebxsvbpJDi3fubUCShNpCpwPDw=
+	t=1792418788; cv=none; b=cjNdaK4bVExQTV0hTKlGOd32/7fTP9Gh/vGG0HaKgBFwCEpRUdrm9Bq+OKy+5WGa4cLqgYpJ8js+oqlUl3oFSZ3HKJNu40w7xN7lHeEcKKZBHn6AmdJFzMjAumlmexS3RysjWDiLYdrQ4pxzoGMx9RohMcsHostlRjeyn3/aywk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418784; c=relaxed/simple;
-	bh=ec4ghU6yfXjblR6fUDXDHkutpdBOFVRXJKmDCHcyQDQ=;
+	s=arc-20240116; t=1792418788; c=relaxed/simple;
+	bh=ULzBuNsp5/KA8f2xhXz2slDWPCzWt/1H3q+Yw2VtfRw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=APp/J+8XksfD0Y5g2J8vQy4fSgL3olq5msNUJrrMeN09FiHm7HEwPEwfVIyuP6AsraWa0p+DdV/aD0An4cKo2l8dABfYRHg/gRFv1mHONA7QNmMQvyiKndBTOir+ms/R7L5X42U2QqCOJsKFyo+gPGAzV444i4jtWWXfPgo2MQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPBKHXGs; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=gD/DYsI8ssxwwpgJ7+9xVepU7u+PuDgCLl4WIw5l+Oln5j98/Jsv6r6m+ZOIRIymep9jbnUrwTyq+lcsZrDG7qHmK9FzKJrJXHunIjWeZ3R3Cc6kGPcsGgSPliA72kt+lwXZOM50IwwRKARSDvM4yHoYy1I46PhBQNpGqqMR6io=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n8SbzL3X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPBKHXGs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F66E1F000C9;
-	Mon, 19 Oct 2026 14:06:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n8SbzL3X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 197801F000C6;
+	Mon, 19 Oct 2026 14:06:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418782;
-	bh=nkFJWPU1MK03QOAusoiniFX+wO1yecpInBwT2lN1yp0=;
+	s=k20260515; t=1792418786;
+	bh=y/vPFOG9Gr5B2/yachfszVsHJr0+zaqYK/PdeN07960=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iPBKHXGsSHFT3UK+FJkkLhMPIhpgVqPP64LVAxhenAWaiIofAwJkCQnalqujNSE5V
-	 NUJ5OBo9XTfPwPvoIwadBrEkbg+wWr5YHNIToP4HhV1VOiLNUp9aa0s3DrzM5vCSIf
-	 cEWKSPwLwtraCtr/y3eCcn/OkiJe5gL9W2Dc8Cj3j24Hcs7IEM+0gA6kx1FHUfOFwF
-	 BPjPzPIGAcL4+AhNRUvLXIDlO5H6ZksEP0Ch1Od5Wa3IV7ZYNLWX+abpNow30ekVNd
-	 A95isPXeFOXfPwSgVN4D/lej/f3gZ3+YkfLfGSUuJr8lsxK4XgyyCxHc6OzSuKGLqi
-	 GvvkiX5Irna6A==
+	b=n8SbzL3XxBv2TjzBq0hLhXLoXPkpGQUncPcGvJGA8yYkY3n7TmhMrubOhvoqk9a6e
+	 NtLOMen2dT49iFtcRNCzIXXbsXtlkwpCLXlOmLuvOiZEyt1AUJebb7CNABI0QoWjTI
+	 wYgmvvDaMD5lclDQhHMd5twmZ+CF7A0WIsNarJDXx4JoUfeAjwb0qTEtgyy//8Ands
+	 w7vbhnufviQJc0z9xiiRqm1ZAzl1M67M/9LlU5lKtkyqGOSXI0XNuEtDWr90+HVwUd
+	 9BRMzZR1LYf+khz6f0VR0TBCdbFmrOT9yUUEK99BhNfc8F1aqHmscbafvtoJtH9TWH
+	 YNHw1MhZS4U0g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc: Shahar Tzarfati <shahar.tzarfati@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.15] wifi: iwlwifi: mvm: reset the smart fifo state upon FW stop
-Date: Mon, 19 Oct 2026 09:53:03 -0400
-Message-ID: <20261019135441.1420968-492-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mac80211: ibss: read deauth reason_code after frame length check
+Date: Mon, 19 Oct 2026 09:53:06 -0400
+Message-ID: <20261019135441.1420968-495-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,25 +54,20 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shahar Tzarfati <shahar.tzarfati@intel.com>
 
-[ Upstream commit a51cc8131214870af92abbceab64877b27e690c2 ]
+[ Upstream commit aa4c0a649903567762edf2bbc7fff608953b3ca4 ]
 
-The smart fifo is a feature in the firmware configured by the driver.
-The driver keeps a state to remember what was the last configuration
-sent to the firmware. Obviously, if the firmware stops, we need to
-reconfigure the smart fifo. Since we didn't reset that state upon
-firmware stop, we thought the firmware is already properly
-configured and we didn't send the smart fifo configuration command
-as part of the init sequence.
+The function was reading reason_code from the frame before validating
+that the frame is at least IEEE80211_DEAUTH_FRAME_LEN bytes long.
 
-Reset the smart fifo state in iwl_mvm_stop_device() so that we
-will properly send the command during the init that will come
-later.
+Move the reason_code read to after the length check so the field is
+guaranteed to be present before it is accessed.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714165826.7d3c5efe2d1a.I16b23c328a677257257f695fa6f439e41fbcd081@changeid
+Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715212706.db26604650bd.I2caa73c396b8c9d357224b9334d5df3cafac498e@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
@@ -79,123 +76,106 @@ LLM Generated explanations, may be completely bogus:
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[iwlwifi/mvm] [reset] [clear cached smart-fifo state when
-firmware is stopped]**
+Record: `[mac80211/ibss] [read / reorder] Move IBSS deauth `reason_code`
+access to after the existing frame-length check.`
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- **Fixes:** none (expected for this review)
-- **Reported-by / Tested-by / Reviewed-by / Acked-by:** none
-- **Link:** `https://patch.msgid.link/20260714165826.7d3c5efe2d1a.I16b23
-  c328a677257257f695fa6f439e41fbcd081@changeid`
-- **Cc: stable:** none (expected)
-- **Signed-off-by:** Emmanuel Grumbach (author; Intel iwlwifi), Miri
-  Korenblit (iwlwifi maintainer, committer)
-- No syzbot, no CVE, no stack trace
+- `Fixes:` — none (expected)
+- `Reported-by:` — none
+- `Tested-by:` — none
+- `Reviewed-by:` — none on the commit
+- `Acked-by:` — none
+- `Link:` `https://patch.msgid.link/20260715212706.db26604650bd.I2caa73c
+  396b8c9d357224b9334d5df3cafac498e@changeid`
+- `Cc: stable@vger.kernel.org` — none (expected)
+- `Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>` (author)
+- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
+  (Intel wireless)
+- `Signed-off-by: Johannes Berg <johannes.berg@intel.com>` (mac80211
+  maintainer)
+
+No syzbot, no CVE, no multi-user reports. Maintainer SOB is the main
+trust signal.
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- **Bug:** Driver caches last smart-fifo config in `mvm->sf_state`.
-  Firmware stop does not clear that cache.
-- **Symptom:** After firmware is stopped and started again, init skips
-  `REPLY_SF_CFG_CMD` because the driver thinks firmware is already
-  configured.
-- **Version info:** none
-- **Root cause:** Stale driver-side firmware-config cache after the
-  firmware image is gone.
+- **Bug:** `ieee80211_rx_mgmt_deauth_ibss()` read
+  `mgmt->u.deauth.reason_code` before checking `len >=
+  IEEE80211_DEAUTH_FRAME_LEN`.
+- **Symptom/failure mode:** 2-byte read past the validated frame on a
+  truncated deauth. Value is then discarded if the length check fails.
+- **Version info:** none in the message.
+- **Root cause (author):** field access before the length check; move
+  the read after the check.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not a disguised cleanup. It is an explicit correctness fix for
-stale cached firmware state.
+Record: Not a disguised cleanup. It is an explicit bounds-check-before-
+access fix. The length check already existed; only the premature read
+was wrong.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## PHASE 2: DIFF ANALYSIS - LINE BY LINE
 
 **Step 2.1: INVENTORY THE CHANGES**
 Record:
-- File: `drivers/net/wireless/intel/iwlwifi/mvm/ops.c` (+1 / −0)
-- Function: `iwl_mvm_stop_device()`
-- Scope: single-file, one-line surgical fix
+- File: `net/mac80211/ibss.c` (+3 / −1)
+- Function: `ieee80211_rx_mgmt_deauth_ibss()`
+- Scope: single-file surgical fix
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-- **Before:** `iwl_mvm_stop_device()` cleared
-  `IWL_MVM_STATUS_FIRMWARE_RUNNING`, paused TCM, stopped the transport,
-  and freed paging. `sf_state` was left as-is.
-- **After:** Immediately after clearing FIRMWARE_RUNNING, set
-  `mvm->sf_state = SF_UNINIT`.
-- Path: every firmware stop (mac stop, restart cleanup, D3 switch, init-
-  ucode teardown, load error paths). Not an error-only path.
+Record: Before: initialize `reason` from `mgmt->u.deauth.reason_code`,
+then return if `len < 26`. After: declare `reason`, length-check first,
+then read the field. `ibss_dbg()` and `sta_info_destroy_addr()` are
+unchanged and remain after the check.
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Logic / correctness — stale cached firmware configuration**
-
-Verified skip in `iwl_mvm_sf_config()`:
-
-```183:188:drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-        /*
-  - If an associated AP sta changed its antenna configuration, the state
-  - will remain FULL_ON but SF parameters need to be reconsidered.
-         */
-        if (new_state != SF_FULL_ON && mvm->sf_state == new_state)
-                return 0;
-```
-
-Init always tries to configure SF:
-
-```1761:1763:drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-        ret = iwl_mvm_sf_update(mvm, NULL, false);
-        if (ret)
-                IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
-```
-
-With `changed_vif == NULL` and no active MACs, that becomes
-`SF_INIT_OFF`. If `sf_state` is still `SF_INIT_OFF` from the previous
-firmware life, the command is skipped and new firmware keeps reset
-defaults.
+Record: **Memory safety / out-of-bounds read.**
+`IEEE80211_DEAUTH_FRAME_LEN` is `(24 /* hdr */ + 2 /* reason */)`.
+`reason_code` sits at offset 24 in `struct ieee80211_mgmt`. RX already
+drops mgmt frames shorter than the 802.11 header (`skb->len <
+ieee80211_hdrlen(fc)` in `ieee80211_rx()`), so 24- and 25-byte deauths
+can still reach this handler. Those frames do not contain the reason
+field; the old code always read it anyway. On the short-frame path the
+value is unused (immediate `return`).
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Obviously correct: firmware is gone, cached config must be invalid.
-- Minimal: one assignment under `mvm->mutex` (`lockdep_assert_held`).
-- Regression risk: very low. On firmware with
-  `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD` (commit `ff04f78ce38d7`, 2024),
-  `iwl_mvm_sf_update()` already returns 0 and never sends the command;
-  resetting the cache is a no-op there.
+Record: Obviously correct: same pattern as
+`ieee80211_rx_mgmt_auth_ibss()` in the same file and as
+`ieee80211_rx_mgmt_deauth()` in `mlme.c` (`4a360c6e18dfa`). Minimal, no
+API/locking/structure changes. Regression risk is negligible (debug
+print still sees a valid reason on well-formed frames).
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- Surrounding `iwl_mvm_stop_device()` body: `cf5b462768474` (2020, moved
-  out of line).
-- Smart FIFO and `sf_state` skip logic: `1f3b0ff8eccef` (“iwlwifi: mvm:
-  Add Smart FIFO support”, 2013-12-17, contained in v3.14-rc1).
-- Bug has been present for a long time; not recent code.
+Record: Function introduced in `2cc59e784b54` (Antonio Quartulli,
+2012-09-07, “mac80211: reply to AUTH with DEAUTH if sta allocation fails
+in IBSS”). The premature `reason_code` read was in the original
+function. Present for ~14 years, including this 7.3 tree’s lineage.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Buggy pattern is the original 2013 SF cache
-plus the skip-if-same-state optimization, not a recent regression.
+Record: No `Fixes:` tag. Buggy commit is `2cc59e784b54`, which `git
+merge-base --is-ancestor` confirms is in this tree.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record:
-- Nearby same-author series (same Change-Id date 20260714165826):
-  - `0a00c3ec2db76` device_powered_off → `iwl_mvm_restart_cleanup()`
-    (independent)
-  - `71ac392d8b5c2` MLD analogue (different driver)
-- This patch does not depend on those.
+Record: Recent `ibss.c` work is unrelated (TX-on-disconnect, rx_nss).
+Same-day series patch 2/2 was mlme deauth length checking; that path was
+already fixed by `4a360c6e18dfa` (“wifi: mac80211: validate deauth frame
+length before reason access”, Zhao Li, 2026-06-13). This IBSS patch is
+standalone.
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Emmanuel Grumbach is a long-time Intel iwlwifi core author. Miri
-Korenblit is the listed iwlwifi maintainer. High confidence in the
-diagnosis.
+Record: Shahar Tzarfati is an Intel wireless contributor (iwlwifi
+bounds-check fixes plus this IBSS change). Not the mac80211 maintainer;
+Johannes Berg applied it.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: Standalone. Needs only `mvm->sf_state` and `SF_UNINIT`, both
-present here. No new helpers or struct fields.
+Record: None. Uses existing `IEEE80211_DEAUTH_FRAME_LEN` (defined 2012
+in `net/mac80211/ieee80211_i.h`). Applies standalone.
 
 ---
 
@@ -203,139 +183,131 @@ present here. No new helpers or struct fields.
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- `b4 dig -c a51cc81312148`: matched `[PATCH iwlwifi-next 13/15]`
-- URL: `https://patch.msgid.link/20260714143119.7d3c5efe2d1a.I16b23c328a
-  677257257f695fa6f439e41fbcd081@changeid`
-- `b4 dig -a`: v1 (`20260714143119`) and v2 (`20260714165826`, the
-  applied Link:). This hunk is identical in v1/v2.
-- Series title: “wifi: iwlwifi: updates - 07-14-2026” (15 patches mixing
-  features and fixes). This one is self-contained.
-- Saved mbox had the series posts, no replies/NAKs on this patch. No
-  `Cc: stable` in review.
+- `b4 dig -c aa4c0a649903`: https://patch.msgid.link/20260715212706.db26
+  604650bd.I2caa73c396b8c9d357224b9334d5df3cafac498e@changeid
+- `b4 dig -a`: single revision, `[PATCH wireless-next 1/2]`
+- Thread (mbox): no replies, no NAK, no `Cc: stable` request. Johannes
+  applied v1.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w`): To Johannes Berg; Cc linux-
-wireless@vger.kernel.org and Emmanuel Grumbach. Committed by maintainer
-Miri Korenblit. No extra Reviewed-by on this patch.
+Record (`b4 dig -w`): To Johannes Berg; Cc `linux-wireless@`, Shahar
+Tzarfati, sent by Miri Korenblit. No extra reviewer tags; maintainer
+merge is the review signal.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No Reported-by, bugzilla, or syzbot. Failure mode is inferred
-from code + commit text, not a user crash report.
+Record: No Reported-by, syzbot, or bugzilla. Sibling `4a360c6e18dfa` on
+the STA deauth path is the same class of bug (LLM-assisted). No user
+crash report found.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Patch 13/15. Follow-ups 14/15 and 15/15 are related
-stop/recovery cleanup but not prerequisites. This line is independently
-correct.
+Record: 2/2 was `wifi: mac80211: mlme: read deauth reason_code after
+frame length check`. It was not committed (mlme already had
+`4a360c6e18dfa`). 1/2 does not depend on 2/2.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org/stable search blocked by anti-bot (403).
-UNVERIFIED whether it was previously requested or rejected for stable.
+Record: lore.kernel.org search was blocked (Anubis 403). UNVERIFIED
+whether linux-stable discussed this. No local `ibss.c` history indicates
+a prior stable rejection.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.1: KEY FUNCTIONS**
-Record: `iwl_mvm_stop_device()` (modified). Related:
-`iwl_mvm_sf_config()`, `iwl_mvm_sf_update()`, `iwl_mvm_up()`.
+**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
+Record: `ieee80211_rx_mgmt_deauth_ibss()`
 
 **Step 5.2: TRACE CALLERS**
-Record: `iwl_mvm_stop_device()` is called from:
-- `ops.c` NVM/init-ucode teardown
-- `mac80211.c` `iwl_mvm_restart_cleanup()`, `__iwl_mvm_mac_start()`
-  fast-resume fail, `__iwl_mvm_mac_stop()`
-- `fw.c` `iwl_mvm_up()` / `iwl_mvm_load_d3_fw()` error paths
-- `d3.c` `iwl_mvm_switch_to_d3()`
+Record:
+- `ieee80211_ibss_rx_queued_mgmt()` → `IEEE80211_STYPE_DEAUTH` case,
+  `mgmt = skb->data`, `len = skb->len`
+- `ieee80211_iface_work()` in `iface.c` for `NL80211_IFTYPE_ADHOC`
+- Frames queued from `ieee80211_rx_h_mgmt()` in `rx.c` (IBSS deauth
+  allowed)
 
-Reachable from interface down, rfkill/stop, suspend (non-fast), firmware
-restart, and probe/init teardown. Common laptop WiFi paths.
+Workqueue / wiphy context, not hardirq. Reachable from over-the-air RX.
 
 **Step 5.3: TRACE CALLEES**
-Record: Stop path tears down firmware/transport. The new line only
-writes a field; no new I/O.
+Record: `le16_to_cpu()`, `ibss_dbg()` (`MAC80211_IBSS_DEBUG` only),
+`sta_info_destroy_addr()`. Functional work was already after the length
+check.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Userspace `ip link set wlan0 down/up`, rfkill, suspend/resume,
-and mac80211 restart all hit this. Bug is reachable without special
-debug options.
-
-Nuance (verified): `SF_FULL_ON` is never skipped, so association still
-sends SF config. The missed command is the init/unassociated
-`SF_INIT_OFF` after a stop that left `sf_state == SF_INIT_OFF` (typical
-after disconnect then ifdown, or never-associated then wifi toggle).
-During `IWL_MVM_STATUS_IN_HW_RESTART`, `iwl_mvm_sf_update()` returns
-early anyway; this reset still makes post-restart updates send when
-restart completes.
+Record: Wireless NIC RX → `ieee80211_rx()` (drops `skb->len < hdrlen`) →
+`ieee80211_rx_h_mgmt()` → iface work → `ieee80211_ibss_rx_queued_mgmt()`
+→ deauth handler. A peer on the IBSS can send a 24-byte deauth.
+Unprivileged local userspace cannot inject this without packet
+injection; a radio neighbor can. `ibss_dbg` does not gate the old read:
+`reason` was initialized before the debug macro.
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Same series resets other driver state after firmware death
-(`device_powered_off`, MLD recovery). `sf_state` was the one cache not
-cleared on stop. No duplicate fix already present besides this commit.
+Record: Same bug on STA deauth (`mlme.c`, fixed in `4a360c6e18dfa`).
+IBSS auth already checks `len < 24 + 6` before reading auth fields.
+Probe-req path checks `len < 24 + 2`. This was the remaining IBSS deauth
+hole.
 
 ---
 
 ## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record:
-- Local tree: `git describe HEAD` → **v7.3-rc4-27-gf0100363d8c37**;
-  `make kernelversion` → **7.3.0-rc4**
-- `sf_state`, skip-if-same-state, and `iwl_mvm_up()` SF init all exist
-- Bug introduced with Smart FIFO in 2013 (`1f3b0ff8eccef`); ancestor of
-  this HEAD
+Record: Local tree is **v7.3-rc4-27-gf0100363d8c37** (`VERSION=7
+PATCHLEVEL=3 SUBLEVEL=0 EXTRAVERSION=-rc4`).
+`ieee80211_rx_mgmt_deauth_ibss()` exists in `net/mac80211/ibss.c`. Bug
+introduced 2012 (`2cc59e784b54`), long before this branch. Current file
+already has the fixed order (commit is an ancestor of HEAD). Evaluation
+is of the pre-fix bug in this lineage, not “already selected.”
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: Clean apply. Pre-fix `iwl_mvm_stop_device()` already has the
-insertion point next to `clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING,
-...)`. Expected difficulty: clean apply.
+Record: Clean apply. Surrounding function matches the pre-image; no
+conflicting refactor of this handler.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No earlier equivalent reset of `sf_state` on stop. Only the
-start-time `mvm->sf_state = SF_UNINIT` in `iwl_op_mode_mvm_start()`
-(probe), which does not cover later stop/start cycles.
+Record: No earlier IBSS-specific version of this fix. `4a360c6e18dfa`
+only covers `mlme.c`. No duplicate IBSS patch.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 7.1: SUBSYSTEM AND CRITICALITY**
-Record: **wifi / iwlwifi mvm**. **IMPORTANT** — Intel WiFi is one of the
-most common laptop NICs. Not core mm/VFS, but far from
-peripheral/staging.
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: `net/mac80211` IBSS/ad-hoc RX. **IMPORTANT** for IBSS users,
+**PERIPHERAL** vs core mm/VFS. IBSS is built with mac80211 (only
+`MAC80211_IBSS_DEBUG` is extra). Less common than infrastructure STA,
+but real (ad-hoc, some embedded/industrial).
 
-**Step 7.2: SUBSYSTEM ACTIVITY**
-Record: Very active. This patch came in an iwlwifi-next 15-patch update
-dump, then was taken by the maintainer.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: mac80211 is actively developed; this IBSS handler has been
+stable since 2012. Long-lived bug, not churn from new code.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-**Step 8.1: WHO IS AFFECTED**
-Record: Intel iwlwifi **mvm** users whose firmware does **not**
-advertise `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD`. Driver-specific /
-firmware-version-specific. Still a large installed base of 22000-and-
-older-class chips plus any newer FW without that TLV.
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Driver-specific / config-specific: mac80211 IBSS
+(`NL80211_IFTYPE_ADHOC`). Not all wifi users; IBSS is a minority of
+deployments.
 
-**Step 8.2: TRIGGER CONDITIONS**
-Record: Firmware stop then start while cached state is `SF_INIT_OFF` or
-`SF_UNINIT`. Common: wifi radio toggle, interface down/up, some suspend
-paths. Not a race. Unprivileged users can toggle wifi and hit it.
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Truncated deauth (len 24 or 25) on an IBSS interface. Not every
+boot; needs IBSS up plus a short frame (malformed or hostile). Remote
+on-air trigger. Local unprivileged trigger only with injection.
 
-**Step 8.3: FAILURE MODE SEVERITY**
-Record: Firmware left without host `REPLY_SF_CFG_CMD` after reload
-(wrong RX FIFO watermarks/timers in unassociated/init). Not an oops,
-deadlock, or filesystem corruption.
-**Severity: MEDIUM** (wrong firmware config / power and RX-FIFO
-behavior; associated `SF_FULL_ON` still sent).
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: 2-byte read past `skb->len` into a local that is discarded on
+the short-frame path. No leak through `ibss_dbg` (return happens first).
+Crash only if the skb has no tailroom past 24 bytes (often it does).
+KASAN may or may not fire depending on allocator vs `skb->len`.
+Severity: **MEDIUM** (CWE-125 / packet-parser OOB), not a demonstrated
+oops or UAF.
 
-**Step 8.4: RISK-BENEFIT RATIO**
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
 Record:
-- **Benefit:** Restores a required init-time firmware command after
-  every firmware stop on a very common driver. Low-to-medium user-
-  visible benefit (no crash report), but the broken path is not rare.
-- **Risk:** Very low (one store under existing mutex).
-- **Ratio:** Favorable for a 1-line obviously-correct fix.
+- **Benefit:** Closes a real, remotely reachable OOB in frame parsing.
+  Modest user-visible impact (IBSS, discarded 2 bytes).
+- **Risk:** Very low (3 lines, no locking/API, same pattern as mlme).
+- **Ratio:** Favorable. Cheap to take; cost of skipping is leaving a
+  parser OOB in long-lived code.
 
 ---
 
@@ -344,124 +316,123 @@ Record:
 **Step 9.1: COMPILE THE EVIDENCE**
 
 FOR:
-- Real, verified stale-cache bug; init explicitly tries to send SF
-  config and can skip it
-- One line, obviously correct, mutex-protected
-- Bug present since 2013; code exists in this tree
-- No prerequisites; applies cleanly
-- Intel iwlwifi mvm is widely deployed
-- Author/maintainer-originated; no NAKs found
+- Real OOB: `reason_code` at offset 24 read when `len` can be 24–25
+- Read is not debug-gated; it always ran
+- Over-the-air reachable on IBSS
+- 4-line, obviously correct, tested by landing in wireless-next via
+  Johannes Berg
+- Same class already fixed in STA mlme (`4a360c6e18dfa`)
+- No new features/APIs; no prerequisites
+- Applies cleanly; bug present since 2012 in this tree’s code
+- Buffer OOB is a documented stable category
 
 AGAINST:
-- Not a crash, UAF, deadlock, corruption, or security issue
-- No user/syzbot report; impact is firmware defaults vs host SF_INIT_OFF
-- `SF_FULL_ON` still always sent, so associated operation is less
-  affected
-- Newer firmware with SMART_FIFO_OFFLOAD never needed the command
-- Submitted as iwlwifi-next “updates” 13/15, not a -fixes/stable
-  nomination
+- No crash/syzbot/CVE/user report
+- `reason` unused on the short path; `sta_info_destroy_addr()` was
+  already guarded
+- IBSS is uncommon vs infrastructure
+- Practical crash likely rare (skb tailroom)
+- No explicit stable nomination
 
 UNRESOLVED:
-- lore.kernel.org WebFetch/stable search blocked (403 / anti-bot)
-- Exact user-visible symptom (power vs missed RX vs none) not documented
+- lore.kernel.org HTML search blocked; no independent stable-list
+  confirmation
+- Exact KASAN behavior on `skb->len` vs kmalloc size not demonstrated
 
-**Step 9.2: STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — one assignment; merged by
-   iwlwifi maintainer
-2. Fixes a real bug that affects users? **PASS** — stale cache skips a
-   real firmware command on wifi stop/start
-3. Important issue (crash/security/corruption/deadlock)? **PASS** with
-   MEDIUM severity — wrong device firmware configuration after stop is a
-   functional bug on a common driver, not a panic. Conservative reading
-   could FAIL this bar; the 1-line nature and common trigger keep it a
-   PASS.
-4. Small and contained? **PASS** — +1 line, one function
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — reorder after an existing
+   check; maintainer merged v1
+2. Fixes a real bug that affects users? **PASS** — OOB on truncated IBSS
+   deauth
+3. Important issue (crash, security, corruption, deadlock)? **PASS**
+   (low–medium) — remote 2-byte overread in a parser; not a known oops,
+   but memory-safety
+4. Small and contained? **PASS** — +3/−1, one function
 5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — `iwl_mvm_stop_device()`,
-   `sf_state`, and `SF_UNINIT` are all here
+6. Can apply to the local tree? **PASS** — matching pre-image in
+   `ibss.c`
 
-**Step 9.3: EXCEPTION CATEGORIES**
-Record: None (not a device ID, quirk table, DT, build, or docs fix).
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: None (not a device ID, quirk, DT, build, or docs patch).
+Qualifies as a normal small bugfix.
 
-**Step 9.4: DECISION**
-This is a real, long-standing iwlwifi correctness bug: after firmware
-stop the driver keeps believing smart-fifo is already programmed, so
-`iwl_mvm_up()` skips `REPLY_SF_CFG_CMD`. The local 7.3-rc4 tree has the
-buggy cache and skip logic. The fix is a single `sf_state = SF_UNINIT`
-in the existing stop path, with no API change and negligible regression
-risk. That meets stable rules for a small, obviously correct driver
-bugfix even without a crash report.
+**Step 9.4: MAKE YOUR DECISION**
+This is a surgical bounds-check fix for a long-standing, remotely
+reachable out-of-bounds read in mac80211 IBSS deauth parsing. The
+functional destroy path was already safe; the bug is the unconditional
+2-byte overread. That is still a real memory-safety defect, the same one
+already corrected on the STA deauth path. Risk of the change is
+essentially zero. For this 7.3 tree, the code exists and the patch
+applies cleanly, so it should be taken.
 
----
+**What it solves for stable users:** A truncated IBSS deauth no longer
+reads past the frame before the length check. That avoids undefined/OOB
+behavior on a path a radio neighbor can hit.
 
-### What the commit solves for this tree
-On this checkout, `iwl_mvm_sf_config()` refuses to send smart-fifo
-config when `new_state` matches `mvm->sf_state` (except `SF_FULL_ON`).
-`sf_state` was only initialized at op-mode start, not when firmware
-actually stopped. After a normal mac stop / restart / D3 firmware swap,
-the next `iwl_mvm_up()` therefore omits `REPLY_SF_CFG_CMD`. Stable users
-hitting wifi toggle, rfkill, or non-fast suspend on Intel mvm hardware
-then run reloaded firmware without the host SF init the driver intends.
-
-### Risk vs benefit
-Benefit is restoring firmware RX-FIFO configuration after a common
-stop/start cycle. Risk is essentially nil: one field write under
-`mvm->mutex`, harmless on offload firmware. Backport needs no extra
-commits.
+**Risk vs benefit:** Benefit is modest but real; risk is negligible.
+Take it.
 
 ---
 
-Verification:
-- [Phase 1] Parsed tags: SOB Emmanuel Grumbach + Miri Korenblit; Link to
-  msgid; no Fixes/Reported-by/stable Cc
-- [Phase 2] Diff: +1 line `mvm->sf_state = SF_UNINIT` in
-  `iwl_mvm_stop_device()`
-- [Phase 2] Confirmed skip in `iwl_mvm_sf_config()` and init call in
-  `iwl_mvm_up()`
-- [Phase 3] `git show a51cc81312148`: 1 file, +1; parent `974cbad4c86d6`
-- [Phase 3] Original SF: `1f3b0ff8eccef` (2013-12-17), ancestor of HEAD;
-  `git merge-base --is-ancestor` succeeded
-- [Phase 3] Blame: new line is this commit; rest of stop_device from
-  `cf5b462768474` (2020)
-- [Phase 3] Follow-up `0a00c3ec2db76` is independent, not required
-- [Phase 4] `b4 dig -c a51cc81312148`: lore match; patch 13/15 of
-  iwlwifi-next updates
-- [Phase 4] `b4 dig -a`: v1 and v2; committed Link is v2; hunk unchanged
-- [Phase 4] `b4 dig -w`: Johannes Berg + linux-wireless; no NAK in saved
-  mbox
-- [Phase 4] UNVERIFIED: stable list discussion (lore 403/anti-bot);
-  WebFetch of lore URLs also 403
-- [Phase 5] Callers of `iwl_mvm_stop_device()`: mac80211 stop/restart,
-  d3, fw error, NVM init
-- [Phase 5] `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD` added in
-  `ff04f78ce38d7` (2024); offload path ignores SF commands
-- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
-  kernelversion 7.3.0-rc4
-- [Phase 6] Pre-fix `iwl_mvm_stop_device()` at parent matches insertion
-  context; clean apply
-- [Phase 7] MAINTAINERS: INTEL WIRELESS WIFI LINK, Miri Korenblit
-- [Phase 8] Failure mode: skipped firmware SF init after stop; severity
-  MEDIUM, not oops/deadlock
-- UNVERIFIED: concrete user-visible packet-loss vs power-only impact
-  (not stated in commit or mail)
+### Verification
+- [Phase 1] Parsed commit `aa4c0a649903`; tags: Link + three SOBs
+  (Tzarfati, Korenblit, Berg); no Fixes/Reported-by/Cc:stable
+- [Phase 2] Diff: `ieee80211_rx_mgmt_deauth_ibss()` +3/−1; read moved
+  after `IEEE80211_DEAUTH_FRAME_LEN` (26 = 24+2)
+- [Phase 2] Confirmed `reason` only used in `ibss_dbg`;
+  `sta_info_destroy_addr()` already after the check
+- [Phase 3] `git blame`: function from `2cc59e784b54` (2012); `git
+  merge-base --is-ancestor 2cc59e784b54 HEAD` succeeded
+- [Phase 3] Pre-image shown via `git show
+  aa4c0a649903^:net/mac80211/ibss.c`
+- [Phase 3] Author log: Intel wifi bounds-check work; series 2/2 did not
+  land
+- [Phase 4] `b4 dig -c/-a/-w/-m`: wireless-next 1/2, v1 only, no review
+  replies; 2/2 was mlme duplicate of `4a360c6e18dfa`
+- [Phase 4] `git show 4a360c6e18dfa`: same bug on STA deauth, already in
+  this tree
+- [Phase 4] lore HTML/WebFetch: 403/Anubis — UNVERIFIED for linux-stable
+  archive
+- [Phase 5] Callers: `ieee80211_ibss_rx_queued_mgmt` ← `iface.c` ADHOC ←
+  `ieee80211_rx_h_mgmt`
+- [Phase 5] `ieee80211_rx()` drops mgmt if `skb->len <
+  ieee80211_hdrlen(fc)` (~24), so 24–25 byte frames still reach the
+  handler
+- [Phase 6] `git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`; `make
+  kernelversion` = 7.3.0-rc4; buggy function present; apply would be
+  clean
+- [Phase 8] Failure mode: discarded 2-byte overread; severity MEDIUM;
+  IBSS-specific
+- UNVERIFIED: whether KASAN fires on this skb overread; whether linux-
+  stable already discussed it
+
+The patch is small, correct, and fixes a real parser OOB in code this
+tree has had since 2012.
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/ibss.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index d6a13174b5617..3e7c620821069 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1535,6 +1535,7 @@ void iwl_mvm_stop_device(struct iwl_mvm *mvm)
- 	iwl_fw_cancel_timestamp(&mvm->fwrt);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 6ca2ff354e768..4dc748a667a72 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -910,11 +910,13 @@ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+ 					  struct ieee80211_mgmt *mgmt,
+ 					  size_t len)
+ {
+-	u16 reason = le16_to_cpu(mgmt->u.deauth.reason_code);
++	u16 reason;
  
- 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
-+	mvm->sf_state = SF_UNINIT;
+ 	if (len < IEEE80211_DEAUTH_FRAME_LEN)
+ 		return;
  
- 	iwl_mvm_pause_tcm(mvm, false);
- 
++	reason = le16_to_cpu(mgmt->u.deauth.reason_code);
++
+ 	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM\n", mgmt->sa, mgmt->da);
+ 	ibss_dbg(sdata, "\tBSSID=%pM (reason: %d)\n", mgmt->bssid, reason);
+ 	sta_info_destroy_addr(sdata, mgmt->sa);
 -- 
 2.53.0
 
