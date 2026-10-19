@@ -1,47 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.219
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792443908;
-	b=egDF1u5qqCtT6VQTNlE5tvTc6OhITfLpIRomZyE1fwat6bf0KcCB2/V6ER3nVHunyd7f
-	 CMJR0EFc3ZBkTBv3ZyUNYRIhywRP0axFNhcXMT9XcILy+Bhdp7p2FYg6OEte0oyymCWY+
-	 ET10tcO2FaCIFXGcs2/qV8Fv95eZ4mnOoKZd79UXE3VHhshkgaQFhx94/1iPTd9g5JJz7
-	 5GDHAAxDSN4zxe2p/+a6GoKxTXQcjdqdP9oF6YJTxzueS7YT+OI0wpBrA6XHxN6cUzGEE
-	 lBImWdnLdmzTroShCyil9RiOUFGyc6eHZTbSq0cXYOn4X6eYHFBUD3m6CXeWu/GD/iA==
+	t=1792443937;
+	b=KWJmd8oh415Ov0UbaW7RnsjlSHyWnnTXLwzJflrpMOhQHXSEmfMc31FiVZo0wDkZnHvE
+	 RIMYFY/eeHNHxUrYgWQXklzjHBssM/UEclczvJdg0fGhKr3hanaQhP3PcDey1vP/n627e
+	 Pb0xkBjk+Vgpc712fvsZ3n84hAaNpDv4Jh7In2cVXegkJCwTbm5yX0rpF69Kpv8AWt0no
+	 yWxG050jRitPOCT6CLhUT9aGWb0Peb0k7KWSod1dood77Z6S7GWzKQ6LiT5yRaAy3W7qd
+	 gsJcktaU4I58JNkBA2DtbVsqRhACs4360cINwfMSLfC3vhumkwpDarIx9UgwEl9j9eA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792443908;
-	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
-	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type;
-	bh=MAMTZ+go6zLwdnQjqi8PpY4WA7VuyI13uOFhcQaRL5I=;
-	b=y1RhHkyKvc4fKRxwPfFgpzHQ+PVW8XW+XTqfuGWsNiH/kiJ3dP5MHBswHDWI/m+cDfSi
-	 JvYJPwb50ogDxx9pKJtvlNC+MfLEGckrrIHam7Yf/MB3QpBa21znnC47LyE3SQinbZ5Za
-	 XioFmvtUIwbWYqyPHa3S/igw1b7UdYaF3riLUXpWsiGe0IdvBDnwt15/8CYfJ9kkXsCIR
-	 xPyV299DUfIfKqqrKG7F9fLuUYhlrTLNvvHCqsND2wBZhIdNooyYaUxODcOJIj/uaKOoX
-	 OSS4okc1fxrWaRntRt073Mzpvdp5T5LYSmL7YQdaSLJ5B/vPYeEIcJyMce8Nsu3jKTQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792443937;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:
+	 In-Reply-To:References;
+	bh=Qdrj+8KDmXaKDWRZWRLUm1DHcz9Z8tRX9DZt/1oNYQg=;
+	b=mzm78OMZ4w+aIWmQMhh1VQMV44gTfB7ArtfSUFzO/DaQ1oCZs9rbuBYt3CL+h3+lbCu+
+	 cSMwmxMAWSJz4UWJvYba2u9NeQM/wr7INqhGHT989DxJoPMP1PT2pSiSEg3aw079ZWBk6
+	 1kSPGaGK1WB6uyKHxcFE6IUgsnDkf1jFiulQcQg39FsULBugVA5zUlyBrspcmBLEuZZRH
+	 BtyGcJCcUTIVN7TCiP0BFfVQHcIkRRYBXfHUuBCemUnlx4MMwCEXquClHE6Ysm3Cxy12l
+	 axvjzPfkiKERUf8ce4i/jN5ftaChHpn53STkiuPmLRsz1TAZyjpdPXqNi/2ivR3/tLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=toke.dk;
-	spf=pass smtp.mailfrom=toke.dk;
-	arc=none smtp.remote-ip=45.145.95.4
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xm4k3OwD;
+	arc=none smtp.remote-ip=95.215.58.219
+Received: from mta1.migadu.com (out-219.mta1.migadu.com [95.215.58.219])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A3E606A31B;
-	Mon, 19 Oct 2026 21:05:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41A3E606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: mail.toke.dk; dkim=none
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Evan Severson <eseverson@gmail.com>, Johannes Berg
- <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath9k: track PS-Poll responses in the BlockAck
- window
-In-Reply-To: <20261014025734.2288693-1-eseverson@gmail.com>
-References: <20261014025734.2288693-1-eseverson@gmail.com>
-Date: Mon, 19 Oct 2026 23:05:04 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87ecdlv1tr.fsf@toke.dk>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01261606A31A
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 21:05:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01261606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xm4k3OwD
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=AxdsP9PcP9L5x4QJdkJLqlCY5nzDb8qTupTvsF18jMU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792443933; v=1; x=1793048733;
+ b=xm4k3OwD2YxQHG1py4llS5A2TQOAQ73PcObytIzkcGnXYh+crXUV92URtp8evHsoFOivPbT/
+ Eq70lMvU54J7MVVoS4wuJvU1kuFz2VuQyt5+fXCJ5Jtq8hrV6/9PkyT6SRFsg/Uc5UMlSuqKTfT
+ nEHZ2SB/PaLh8gIbpzq0ez2k=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 52c2f0f4d942003a;
+	Mon, 19 Oct 2026 21:05:22 +0000
+X-Mizu-Trace-ID: 52c2f0f4d942003a
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -51,56 +56,123 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 19 Oct 2026 21:05:20 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <a7791242312c71dfaa96c25aff7be7fb147dea8a@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next] wifi: rtw88: 8723b: Read the package type from
+ efuse
+To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Ping-Ke Shih"
+ <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <f82ea5e6-d9ef-4978-9658-7e8ce760c7ae@gmail.com>
+References: <d22c9202-d019-4ca1-8534-c23244d612d4@gmail.com>
+ <425c1552139b4f09a5db42459fa74a08@realtek.com>
+ <f82ea5e6-d9ef-4978-9658-7e8ce760c7ae@gmail.com>
 
-Evan Severson <eseverson@gmail.com> writes:
+Hi Bitterblue,
 
-> ath_tx_setup_buffer() takes a sequence number from the TID for every
-> QoS data frame, but a frame only enters the BlockAck window when it
-> carries IEEE80211_TX_CTL_AMPDU. Since commit 592234e941f1 ("wifi:
-> mac80211: Fix iTXQ AMPDU fragmentation handling"), mac80211 sets that
-> flag only when dequeuing from a TXQ. Frames that reach ath_tx_start()
-> directly while a session is running, such as PS-Poll responses for a
-> dozing station, now use up session sequence numbers without being
-> tracked.
->
-> Once seq_next is more than baw_size ahead of seq_start, every frame
-> the TXQ hands out is outside the window. ath_tx_get_tid_subframe()
-> puts it back on the retry queue and returns -EINPROGRESS on every
-> attempt, nothing ever moves the window, and the AP stops sending
-> unicast data to the station until the session is torn down or the
-> station reassociates.
->
-> Seen on a QCA9563 AP (OpenWrt) with a station that stayed in power
-> save for several seconds under downlink load: the window was empty
-> and seq_next was about 2170 ahead of seq_start. With this change, a
-> 90 minute run saw a run of more than 3800 such frames and no stall.
->
-> Flag unfragmented QoS data frames of an active session as A-MPDU where
-> the sequence number is assigned, so they are tracked like any other
-> session frame. Fragments stay unflagged, as mac80211 intends. A frame
-> from ath_tx_start() cannot wait for the window, so if it is already
-> outside it, send it untracked as before rather than set a bit beyond
-> the window.
->
-> A PS-Poll response is sent on the UAPSD queue, and ath_tx_start() held
-> that queue's lock while it took the TID's sequence number. The sequence
-> counter and the window belong to the lock of the TID's own queue, which
-> the TXQ path holds when it adds to or advances the window, so take that
-> lock for the TID work and the UAPSD queue's lock only to hand the frame
-> to the hardware, as ath9k_release_buffered_frames() already does.
->
-> Fixes: 592234e941f1 ("wifi: mac80211: Fix iTXQ AMPDU fragmentation handling")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Evan Severson <eseverson@gmail.com>
-> ---
->
-> Notes:
->     An alternative would be to restore IEEE80211_TX_CTL_AMPDU on
->     non-fragmented PS-Poll responses in mac80211, which would also cover
->     other drivers that track the BA window in software. Happy to rework it
->     that way if that's preferred.
+October 19, 2026 at 10:37 PM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com=
+> wrote:
 
-Johannes, WDYT?
+>=20
+>=20On 19/10/2026 05:39, Ping-Ke Shih wrote:
+>=20
+>=20>=20
+>=20> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+> >=20=20
+>=20>  [...]
+> >=20=20
+>=20>=20
+>=20> >=20
+>=20> > +static void rtw8723b_read_package_type(struct rtw_dev *rtwdev)
+> > >  +{
+> > >  + struct rtw_hal *hal =3D &rtwdev->hal;
+> > >  + u8 val_1fb;
+> > >  +
+> > >  + rtw8723b_efuse_grant(rtwdev, true);
+> > >  + rtw_read8_physical_efuse(rtwdev, 0x1fb, &val_1fb);
+> > >  + rtw8723b_efuse_grant(rtwdev, false);
+> > >=20
+>=20>=20=20
+>=20>  In rtw_parse_efuse_map(), we can pass 'phy_map' to read_efuse()?
+> >  -chip->ops->read_efuse(rtwdev, log_map);
+> >  +chip->ops->read_efuse(rtwdev, log_map, phy_map);
+> >=20=20
+>=20>  As .phy_efuse_size =3D 512 for RTL7823B, I think it will work.
+> >=20
+>=20Yes, that should work.
+>=20
+>=20>=20
+>=20> >=20
+>=20> > +
+> > >  + switch (u8_get_bits(val_1fb, GENMASK(2, 0))) {
+> > >=20
+>=20>=20=20
+>=20>  Bit 2~0 seems like PKG_TYPE. Define an enum?
+> >=20=20
+>=20>=20
+>=20> >=20
+>=20> > + case 0x4:
+> > >  + hal->pkg_type =3D RTW8723B_PACKAGE_TFBGA79;
+> > >  + break;
+> > >  + case 0x5:
+> > >  + hal->pkg_type =3D RTW8723B_PACKAGE_TFBGA90;
+> > >  + break;
+> > >  + case 0x6:
+> > >  + hal->pkg_type =3D RTW8723B_PACKAGE_QFN68;
+> > >  + break;
+> > >  + case 0x7:
+> > >  + hal->pkg_type =3D RTW8723B_PACKAGE_TFBGA80;
+> > >  + break;
+> > >  + default:
+> > >  + hal->pkg_type =3D RTW8723B_PACKAGE_DEFAULT;
+> > >  + break;
+> > >  + }
+> > >  +
+> > >  + if (rtw_hci_type(rtwdev) =3D=3D RTW_HCI_TYPE_SDIO &&
+> > >  + u8_get_bits(val_1fb, GENMASK(5, 4)) =3D=3D 0x2)
+> > >=20
+>=20>=20=20
+>=20>  Can you define enums for bit 5-4 and value 0x2?
+> >  I'm not sure if vendor driver has some comments pointing out this or=
+ not.
+> >=20
+>=20I guess bits 5-4 identify the chip variant:
+>=20
+>=20 /* RTL8703AS: 0x1FB[5:4] 2b'10 */
+>  /* RTL8723BS: 0x1FB[5:4] 2b'11 */
+>  if ((efuseContent & 0x30) =3D=3D 0x20) {
+>  pAdapter->registrypriv.bw_mode &=3D 0xF0;
+>  RTW_INFO("This is the case of 8703AS\n");
+>  }
+>=20
+>=20RTL8703AS appears to be a (cheaper?) version of RTL8723BS. Ten years =
+ago
+> Hans de Goede was saying:
+>=20
+>=20 The rtl8703as in reality is a rtl8723bs in a different package.
+>  (it has the same sdio-id).
+>=20
+>=20 In android the rtl8703as uses the rtl8723bs-vq0 driver instead of th=
+e
+>  regular rtl8732bs driver. Looking at a diff between the 2 the only
+>  difference is that the vq0 driver forces the antenna-path to
+>  ODM_RF_PATH_B.
+>=20
+>=20 It seems that we can identify the rtl8703as by its package, as it co=
+mes
+>  in a QNF68 package, where as the rtl8723bs comes in a TFBGA79 package,
+>  so we can simply support both in the same driver.
+>=20
+>=20https://github.com/hadess/rtl8723bs/pull/93/changes/ebec0ae8ccedc05a9=
+45478926d52c99277f500ee
 
--Toke
+So 8703AS should work just fine with rtw8723b. The one thing I'm not
+sure about is antenna path. The vq0 driver hardcodes path B, but the
+normal driver reads it from efuse, same as rtw88. If some 8703AS boards
+have it wrong in efuse we might need a quirk. Have you come across such?
+
+Best regards,
+Luka Gejak
