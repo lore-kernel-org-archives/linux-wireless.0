@@ -1,223 +1,124 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145874DE717
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 21:02:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C679726FDBF;
+	Mon, 19 Oct 2026 01:25:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792357340; cv=none; b=BcMH2bPDEZiMdWwSvIXVQnk1hHJTH85j3VD7LxLAkM8APU0tT+DPnGokxwt0ttg6H9F0IHeLEXtm12CsQLjNiy3JErQL66wB4kRxDXT8p1Lmlwk0hPxkJIXrCAyb26bb9MUGgdtjfRTtWgTzhB6mFFm+dedQk6lkTwmFnaGKFaM=
+	t=1792373160; cv=none; b=Vh4eNZ9zB7RvgbBJFusK3aze6lPGVh6Bt/VsAMnnN2n8WVcWkcEygQLDqDZTReii4lWYMIEl3B4w3Tp3GqOIoq0FBeaFfvLlVj+QaLpAjRtwDyPB5MWvK4b0UMEL1uUEH/hyV9kGmgz89NxoPYK2/gpVWnRREF64dgmdqtZuaZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792357340; c=relaxed/simple;
-	bh=MbM68oLnHfgMNHhrjsVH1A+OpQzDA+M/S9wUQXSTyxc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hbZujdn7HcUUOcmMU3UmlYYqRNjrMo+kEfzR2wpW5fisGStULi4mdfVXkKkHH8jsfN648xvZMZvoNWv3ijDR9tOIdhXxzb73+NB+S0hjBuSTr3bUvFW20cFIFvPk/IciR+6dTP9R4hGv9lA8PD4PUriDLUPwSHZwOOdJezEmdAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=RdqdOMYB; arc=none smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	s=arc-20240116; t=1792373160; c=relaxed/simple;
+	bh=bROhtMvICKL3hfiSKkrSAw855A7WDYmtaX8yDyr3/B0=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=NZaej/xWy1vngdz6xJVCGWyARFYq9RRa9ylKjTYdtlfLyB0EebGTaAwRfxnGuBLZakFSOE1M+NiOU3ejtir5U05OaCPQbQ0z+WyZuz7LTTwcIzkWlIpfjx3gOr2KP9MMtJqDx/w+YT5s0Lp8IKAWey1mfP90VZ5CU+ub/nTuqyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HhLS85gj; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="RdqdOMYB"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c169ae1cb26so426265566b.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2026 14:02:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1792357336; x=1792962136; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IjCL8rWWQCqnPM2ezT/ruQu8lgpi8/XSKN8Gv6f2o+4=;
-        b=RdqdOMYBxUvoznXYcXvFs8ItyZ1ApbLKROv7LRkcPKQrzP5jNWn84PkZE5Bp/p4knj
-         buz9uRLkOfAVO0BAptntmJFvjrFP0cGbCxen2+pRpQOaG60HD8eilEYgF5b2di548YUg
-         WCfc/SlbtwVeOCWXDSmtyH6cJcrSAbnxzCG6Z0naxKYrc9FvpCskyHYf54QzRzBHkMFM
-         2reAOIcFpgNCYmcnLUXeKIh19M4ZSOHCbLakHiYEeWWuvUH794Jq7S3GNyXccy2zyVox
-         UJBMdGjBoCH5dSmdVmFm8zFcuHJ4h1NjQ1e9ubEJHpKTCUMdXrM90X2Fo3npdXl6mQa7
-         MYYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792357336; x=1792962136;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=IjCL8rWWQCqnPM2ezT/ruQu8lgpi8/XSKN8Gv6f2o+4=;
-        b=YEU1oXr6DjKRJm39naBA3uM0rhomR+0/zYSO4aBTKPR+prZBPYbwGyK0N/dH+1phFL
-         6RbjFFuS+mdK3+eoOyfTOtFH8H+ChkqrNwmF1FvwQxTzpH6erFp0DElBJF8R8QvYaQKP
-         F40bBwAuNu0n8JsWi/+VVW2omSvObanxOtXQjcYSv/+Vv845yxSnx2embW7vN9hpuG0l
-         Gewl+Zk9NuqnK+fuwu4zbA74Y8XIw6KYx7NYz+T6BK9zV2zbz90bvSD2e/OqBypPkR25
-         fA80jxmV4FK69144YEkE9FEKp/n3zVaPFU5BqsdMjQ8+mkXefHfPR4fHQkWpESxY0sAj
-         4Wsw==
-X-Forwarded-Encrypted: i=1; AKwUvBxH5LMz/bZ19ZzNNqhycaovUeIoOTk1KKG4WtwG5FS05Nk3His6AhexQEaL3LtEZYX2JGVdM07zZCc1iHkhfQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLVj5aFiraxcx4Uu9TsBVFqGd8DcjrM23w9JJtR+4mHsrxRhCJ7
-	vSuFSb42UQzlcBlPbk71IHIQkArltFgs6CAk65w3q4mQQhQ8jKYU5fICcmm1vaqF2A==
-X-Gm-Gg: AYBFou2l/Vgelnafzi8h05jlM9MZyZCHuY6ojLpWSO+WpkpEj+GK2KX1GFU5x9/Q0IG
-	SHAUQ9y1zhCvem0AhOslnToYnYZu34evTVMQBH5hvHRAaiwYoesFIcdCctJGNQrzxnwsaPKWDJr
-	rMgP4TzPbvux139t4g4Agae56oKNqLgN+YVMuYMCZoEUn2ox2rzpjtf00YSMkrXpf0izk81ulB3
-	WYu1wSFiCCAwEvWsI7yvBVaZac9Ee/EW5gs/dolB+8l78vdC+JDta+N062XqXBp450rR+Zbau5L
-	g7llUwTYJRmrtAagWJrIGy2mGxtBRicVsNzHhrn0LtsnwzCmjthAT1rBskk0hexDN0mVySSmz65
-	sxCwTr+E8CPKZStLJ04hCPfY8IW4WipcOLbDEIzxW/gmRHH9/GDEHO7RN2tHJNnQne8jkKCD1oK
-	PjYI3rnPItNqZuiAdkcL4F7RlklIBtoy9CMZBL/tbjlR2xB/AsY2jyezFGvqWZkHLnjmKUr+6Uo
-	ynNLBUhoycLOX8//cIl9jryCchdxcYuFtTa1ld+175QSUw4SAv++dP2spuu5qL3+Rf/b1oyQImU
-	F7VtD4UMpd9rsoV0xuiqFhHXlooeb4S+PV1ZrTsl5xMJJp9taAmIOvQZ8HN3SKVr+qGmrwCkdmT
-	5kZ+/LKYUMUjhNPqlOtRbzsYeCi+EpQNdctyzQ+fv8CHgm23okrCHxzrc0wPQfThpdQw3MQlG/R
-	SYUirpqYP6yw==
-X-Received: by 2002:a17:907:2d0a:b0:c31:5918:86d1 with SMTP id a640c23a62f3a-c419e03a4c8mr432252966b.10.1792357336034;
-        Sun, 18 Oct 2026 14:02:16 -0700 (PDT)
-Received: from Desktop.fritz.box ([185.181.130.213])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4465eb0c67sm21953166b.12.2026.10.18.14.02.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 14:02:13 -0700 (PDT)
-From: Julius Bairaktaris <julius@bairaktaris.de>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: ath11k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Kalle Valo <kvalo@kernel.org>
-Subject: [PATCH RFC ath-next] wifi: ath11k: advance the TX PN of keys reinstalled after a firmware restart
-Date: Sun, 18 Oct 2026 23:02:12 +0200
-Message-ID: <20261018210212.1926073-1-julius@bairaktaris.de>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HhLS85gj"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69J1Psc761428680, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1792373154; bh=RI+S/nok2XyXDnpGx6fYLdQRSStzfNLeAEil/Ots+kE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=HhLS85gjIok0uTzVpLYcXWDWdfTi05jxkt+JUNekr57IXt+KjD/pj99EFBdPKO6yc
+	 FWQasPdPqYAMKLHpdu6UTef8OouNBnkrJhgMKzFJYrPqwvCh9nVHMTkNYYBfOK+Vx6
+	 YKAnP5B/AQG0MOQ8UGheFvkfGo5sqLJQ+4od4Cd+84WAKY7/ql0PF3v76vum2ZWnc6
+	 lEGnrhKRd190sjGbPfW4SlR38xWZjBaMWw5IYvQkBKY/LN9m5Otzzqa8Tl9fbJvmnA
+	 +JM5kyqd4PO/JZ+3yOVX5T4nPoY5kSQDEEqM4t75RjLUbFSsL3n9SmpH6WluBmBX0V
+	 51MVfx045bdqg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69J1Psc761428680
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 19 Oct 2026 09:25:54 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 19 Oct 2026 09:25:54 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Mon, 19 Oct 2026 09:25:54 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the
+ rings are reset
+Thread-Topic: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when
+ the rings are reset
+Thread-Index: AQHdWO4MPV0dG/pKrEyzZWvhd4YBNrb5eb7AgAINFoCAAMEoQIAEANAAgAPLA9A=
+Date: Mon, 19 Oct 2026 01:25:54 +0000
+Message-ID: <3c588aeae8f74a8caa39aa2852bce437@realtek.com>
+References: <c15cbcb38aed477ab8d4c06ce30b174d@realtek.com>
+ <20261016224756.20687-1-abdurrahmankaradag19@gmail.com>
+In-Reply-To: <20261016224756.20687-1-abdurrahmankaradag19@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-After a firmware crash mac80211 installs the same pairwise and group
-keys again. ath11k_install_key() leaves key_tsc_counter at zero, so the
-restarted firmware sends with PNs the key has already used: stations
-drop the frames as replays until the PN passes the last one they
-received, and CCMP and GCMP reuse the nonce under the same key.
+Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
+> > I re-think ring->queue_stopped and restart work. I feel the flow
+> > should be [...]
+> > I'll discuss above flow internally, and give back to you.
 
-A station that had received 11, 2012 and 3512 frames before the crash
-accepted downlink again only after 11-13, 1817-2119 and 3324-3627
-frames after the restart. Broadcast ARP requests are dropped as well,
-so a station whose neighbour entry expires stays unreachable.
+I discussed internally, and we suggest to add ieee80211_wake_queues() and
+clear queue_stopped flags in rtw_pci_start().
 
-Start a reinstalled key past any PN it may have used. An HE PPDU
-carries at most 256 MPDUs and lasts at least 40 us, so add 8 PNs per
-microsecond since mac80211 last started the radio to the key's tx_pn.
+This can resolve two cases -- restart_hw and interface down/up while
+queue_stopped is flagging. Just like initialize or reset to variables.=20
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+No need 3 steps I mentioned. (So I'd not reply your trace.)
 
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Assisted-by: Claude:claude-opus-5-5
-Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
----
-RFC because WLAN.HK.2.9.0.1-02146 ignores the field: with key_tsc_counter
-set to 83834696 on every reinstalled key, the station that had received
-3511 frames still needed 3324-3627 frames before it accepted downlink
-(1 run).
+> Your other two questions were in the bug thread; bringing them here as
+> you asked.
+>=20
+> > could you describe how you resolve the stuck (by the method of your
+> > previous patch, maybe v1)?
+>=20
+> Nothing the driver did on its own. Over the five events, power save off:
+>=20
+>   rewrite the TXBD host index   0/3   read index never moved
+>   ip neigh flush                0/4
+>   iwd reconnect, new PTK        2/4   cleared 08-28 20:32, 09-06 03:17
+>   ip link set wlan0 down/up     1/2   cleared 09-14 17:48
+>   reboot                              always
 
-Which command or field sets the TX PN of an installed key on this
-firmware? Without one the stations need new keys after a restart.
+So there is no solution for now. Since 3th and 4th events will stop/start
+pci, if the cause to fail to recovery is flagged queue_stopped, our above
+idea will be helpful.=20
 
- drivers/net/wireless/ath/ath11k/core.h |  5 +++++
- drivers/net/wireless/ath/ath11k/mac.c  | 12 ++++++++++++
- drivers/net/wireless/ath/ath11k/mac.h  |  3 +++
- drivers/net/wireless/ath/ath11k/wmi.c  |  4 ++++
- drivers/net/wireless/ath/ath11k/wmi.h  |  1 +
- 5 files changed, 25 insertions(+)
+Another test is to remove/insert driver ko. It will reset queue states.
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index a0d725923ef24..683d6b750439c 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -668,6 +668,11 @@ struct ath11k {
- 	u8 mac_addr[ETH_ALEN];
- 	struct ath11k_he ar_he;
- 	enum ath11k_state state;
-+	/* last mac80211 start, and the TX PN advance for keys reinstalled
-+	 * after a firmware restart
-+	 */
-+	ktime_t start_time;
-+	u64 restart_pn_advance;
- 	bool supports_6ghz;
- 	struct {
- 		struct completion started;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1a237adaa37d1..0f9bf1d00546f 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -4421,6 +4421,13 @@ static int ath11k_install_key(struct ath11k_vif *arvif,
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV |
- 			      IEEE80211_KEY_FLAG_RESERVE_TAILROOM;
- 
-+	/* The restarted firmware has lost the TX PN of a key that mac80211
-+	 * installs again, so start it past any PN the key may have used.
-+	 */
-+	if (ar->state == ATH11K_STATE_RESTARTED)
-+		arg.key_tsc_counter = atomic64_add_return(ar->restart_pn_advance,
-+							  &key->tx_pn);
-+
- install:
- 	ret = ath11k_wmi_vdev_install_key(arvif->ar, &arg);
- 
-@@ -6645,6 +6652,9 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
- 		break;
- 	case ATH11K_STATE_RESTARTING:
- 		ar->state = ATH11K_STATE_RESTARTED;
-+		/* Every key in use was installed after the last start */
-+		ar->restart_pn_advance = ATH11K_MAX_MPDU_PER_US *
-+			ktime_us_delta(ktime_get_boottime(), ar->start_time);
- 		ath11k_mac_wait_reconfigure(ab);
- 		break;
- 	case ATH11K_STATE_RESTARTED:
-@@ -6656,6 +6666,8 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
- 		goto err;
- 	}
- 
-+	ar->start_time = ktime_get_boottime();
-+
- 	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_PMF_QOS,
- 					1, pdev->pdev_id);
- 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
-index 127cb476b44b7..cde8f1c08eb0e 100644
---- a/drivers/net/wireless/ath/ath11k/mac.h
-+++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -20,6 +20,9 @@ struct ath11k_generic_iter {
- };
- 
- /* number of failed packets (20 packets with 16 sw reties each) */
-+/* An HE PPDU carries at most 256 MPDUs and lasts at least 40 us */
-+#define ATH11K_MAX_MPDU_PER_US			8
-+
- #define ATH11K_KICKOUT_THRESHOLD		(20 * 16)
- 
- /* Use insanely high numbers to make sure that the firmware implementation
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 5c27e7057e6ad..0deab00939af7 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1876,6 +1876,10 @@ int ath11k_wmi_vdev_install_key(struct ath11k *ar,
- 		memcpy(&cmd->key_rsc_counter, &arg->key_rsc_counter,
- 		       sizeof(struct wmi_key_seq_counter));
- 
-+	if (arg->key_tsc_counter)
-+		memcpy(&cmd->key_tsc_counter, &arg->key_tsc_counter,
-+		       sizeof(struct wmi_key_seq_counter));
-+
- 	tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
- 	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
- 		      FIELD_PREP(WMI_TLV_LEN, key_len_aligned);
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index b2dade0516ac7..049c90fa80c4d 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -3690,6 +3690,7 @@ struct wmi_vdev_install_key_arg {
- 	u32 key_txmic_len;
- 	u32 key_rxmic_len;
- 	u64 key_rsc_counter;
-+	u64 key_tsc_counter;
- 	const void *key_data;
- };
- 
+(I suppose you did these tests without changing any behavior as was).
 
-base-commit: cd026e68fdbf88b9cc522b76c7a9d92c9a41f709
-prerequisite-patch-id: cd9f2849ade92e165f15fe3f887edabd1d06b6e8
-prerequisite-patch-id: 3c9ba2aec0d93942448aba1dc5d26b632d519e5a
-prerequisite-patch-id: 9a833c602db147b490fba6df590eeea3847f4877
-prerequisite-patch-id: 6fd3e11242fb3ead65751e3cd9972c4d7c63f989
-prerequisite-patch-id: 01e149ed860e5e40e79725580548ce4034f344b2
--- 
-2.53.0
+[...]
+
+> One thing I should flag before you read the dumps. My ladder pokes
+> debugfs fw_crash anyway, so nine of the captures print
+> "rtw_fw_recovery() tetikleniyor" - Turkish for "being triggered" - six
+> on 27 September, two on 14 October, and one where the knob was not
+> writable. Eight of them follow it with "fw_crash ->
+> ieee80211_restart_hw: 100% packet loss". Both strings are labels my
+> script prints for that rung, not anything the driver reported.
+> rtw_debugfs_set_fw_crash() never calls rtw_fw_recovery(): it leaves deep
+> LPS, sets RTW_FLAG_RESTART_TRIGGERING and writes REG_HRCV_MSG, and
+> recovery is entered only through the C2H path I described on 3 October,
+> which matches your point that the knob only takes effect on 8822C. So
+> nothing was triggered and nothing was tested at that rung. Section 4 of
+> the six September dumps also reads fw_crash as 1 before that dump's own
+> write, because the file prints RTW_FLAG_RESTART_TRIGGERING and only
+> __fw_recovery_work() clears it; all six are the same boot. The two
+> October ones are later boots and read 0.
+
+I need your help to summarize the dumps. I don't have much time to analyze=
+=20
+them. Sorry.=20
+
 
