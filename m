@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68CB8583DCE;
-	Mon, 19 Oct 2026 13:58:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B779F4FDA60;
+	Mon, 19 Oct 2026 13:59:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418333; cv=none; b=OjGLdLB3snUOUro9bvXE25yE1aq+VQQpQzUHUgUPTnT4qQOSeYxxgJVmU+aVcvQImQK3CJ1JEXYmXxsjdQ8nnAb+wIubXRGHG8jxU8MYjD5BFfgBHYOG3/sdO20rEgA403MfhNbp5Rpgv4k3SDy9ivnSO8LgLBPGnXVlLQxsTvs=
+	t=1792418357; cv=none; b=L1uPRlTrbbSQIxwAmFNcd5JgKDvggj4ETh+PiHWgNTfBewCIx40VIf/KhcvM4B8gzh5Ua7aTF6S9EDNcnAIuI++tGkVWLiwt4cqyVuBOl2MS/e7FeJagsa86ouO9MLevUXakneKTQ28XKjINYTfEWAlUj1hDuGNzU6Wc2qlZfGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418333; c=relaxed/simple;
-	bh=ePPOgdJw/fJOkIAqMsREQHhCJe4ZPpMTFGn3ebgCOpQ=;
+	s=arc-20240116; t=1792418357; c=relaxed/simple;
+	bh=XL+i2kXPboZpyJglz5lKPnUnV1uUdkteTksLLLT07SY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Sh7gI9+Qoi+LN1AKg9IDedR5XGwVYzonBm9c5RrpWiNvAVjptUT7j1gLH/DTAuiX1AoHO9cRPQ3wBWfSHPFZI5uoE9M88DNIXoEWZut2YQ/FwFvq0X9ZO8+Dm7avcAVjj7n9InIzthMlxwmOtzp+nWddHvHbcyboo+G+yRaRRv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iSGd+4Pz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=qfrZsbwOK77cNpIXpUVxvrWG2Q1WlEQXDl+7XfVVRBF9G0vsO823m4Mi62wFYsjBkFdqpnQDQL1873ofTgX8gaN2eN6YAvybnNebZfoG5pk7+qbGJJr3+wdRORb2gulAm1lv+IWkiqBM05S+mW2Qxh7CAkljDYipv8WqfAyoX+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g/Vjolir; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iSGd+4Pz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CA861F000C8;
-	Mon, 19 Oct 2026 13:58:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g/Vjolir"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 562321F000CA;
+	Mon, 19 Oct 2026 13:59:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418330;
-	bh=YGltY4czcESIxrXuSo7cdUD861jpHKvBgA1Yd+aKDIY=;
+	s=k20260515; t=1792418354;
+	bh=i2Q7aAjTJ/e0eAWK93juXRdlPT8LvAMuRr0Mso6+cQ0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iSGd+4PzEEeitJE6AnQ0YlBx6Mufa8bhQbUAT8UGVMt+jIVrNI59uIPtsZf3M/G+L
-	 XyJ+xB4Ba91eQHU6r9hWrVM7fu4bpECd/acg1ecJutzgGUUO4Bl5a53cuYdTYgOGLY
-	 ud7QZX7eBmvu0uOXhvyxV/dn9lHViIlozvzEmjlOW5hBDPI8TWMsy7Aq1dh4X+7gNL
-	 S4Ozzr4PR2/oWdqu4WHhUhxRM6/wSyvPnedXL7QaMHzDoMNNQLB6Y8YjVWjDtpja5K
-	 PcFgAsUzdRrnMuXm8Jd/iCm2aBXB3viBbYqV4RrrOQnvc7i9MNWnr5Kqfm6DwSkO7T
-	 Zt1Qzop8jbcmA==
+	b=g/VjolirWdupi0rrC1teXUWGKnr7gs/hhyxbLvNmbCPI9Unw/g/I2qrmmwM94vKE6
+	 TblB6qIcjRYjUgnH+DeI1SJHHJlV3coEMtpghG3qlUaO2DQHG9AXz+ZizQX0/jnKRl
+	 h4TalmmfnfvcyBpWDpWAzJ0tNQGQQIcNc/gI93/ZZn9SZyQzsF6jdTFamUOwhoWL2j
+	 aMpoeB0dXC9wXmF5giLD8PesFbzwqWdPExPZuU6vdvuzkdgTBx5tfSPIlL3Nq95N0v
+	 YOk+YXKIIo/5vyHTDZxVOkJ1krJ/5PDA+cryV123SlRgLxcrUeWQAPEy68XmSymujE
+	 6tLCfpW6gk80g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -40,9 +40,9 @@ Cc: David Bauer <mail@david-bauer.net>,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-5.15] wifi: mt76: mt7603: free beacon SKB on error
-Date: Mon, 19 Oct 2026 09:47:42 -0400
-Message-ID: <20261019135441.1420968-171-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.1] wifi: mt76: mt7915: configure noise floor reporting on reset
+Date: Mon, 19 Oct 2026 09:47:59 -0400
+Message-ID: <20261019135441.1420968-188-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -60,301 +60,295 @@ Content-Transfer-Encoding: 8bit
 
 From: David Bauer <mail@david-bauer.net>
 
-[ Upstream commit 965cbdbdfbd37a659a05ff88e49c216975bd9d2e ]
+[ Upstream commit a92cd5dd792a63a5d8a72142835382d4edbe9933 ]
 
-The SKB containing the generated beacon is not freed when the beacon
-queue is deected stuck and scheduled for recovery.
+When performing a full system recovery of the MCU on a dual-phy
+platform, band 0 (usually 2.4GHz) stops reading correct noise floor
+data.
 
-Fixes potential memory leaks in case the beacon queue is detected stuck.
+This is due to noise floor reporting only being configured correctly
+for the second device PHY.
+
+Configure the respective registers correctly after restarting the MCU
+firmware to fix reported noise-floor values.
 
 Signed-off-by: David Bauer <mail@david-bauer.net>
-Link: https://patch.msgid.link/20260611215658.259324-1-mail@david-bauer.net
+Link: https://patch.msgid.link/20260516144944.2574053-1-mail@david-bauer.net
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **6.6.157** (`pending-6.6`). The two-line SKB leak is
-present here, was introduced by a commit already in this tree, and
-applies cleanly.
+The local tree is **6.6.157** (`pending-6.6`). The buggy dual-PHY
+restart path is present here, and this commit should be backported.
 
 ===============================================================
 PHASE 1: COMMIT MESSAGE FORENSICS
 ===============================================================
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-
-Record: **[wifi: mt76: mt7603]** **[free]** **[free the generated beacon
-SKB when queue-stuck recovery bails out]**
+Record: **[wifi: mt76: mt7915]** **[configure]** configure noise floor
+reporting after MCU reset on dual-PHY platforms. “Configure” here is
+restoring register state that recovery currently skips, not a new
+feature.
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-
 Record:
-- **Fixes:** none (expected for this pipeline)
-- **Reported-by:** none
-- **Tested-by:** none
-- **Reviewed-by:** none
-- **Acked-by:** none
-- **Link:**
-  `https://patch.msgid.link/20260611215658.259324-1-mail@david-
-  bauer.net`
-- **Cc: stable:** none (expected)
-- **Signed-off-by:** David Bauer (author); Felix Fietkau (mt76
-  maintainer). Ignore any Sasha Levin SOB if present in candidate
-  wrapping.
-
-Mainline SHA (from `origin/master`):
-`965cbdbdfbd37a659a05ff88e49c216975bd9d2e`
-AuthorDate: 2026-06-11; applied by Felix Fietkau 2026-07-31.
+- Signed-off-by: David Bauer &lt;mail@david-bauer.net&gt; (author)
+- Link: https://patch.msgid.link/20260516144944.2574053-1-mail@david-
+  bauer.net
+- Signed-off-by: Felix Fietkau &lt;nbd@nbd.name&gt; (mt76 maintainer)
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
+  stable (absence is expected)
+- Ignored: any pipeline “Upstream commit” / Sasha Levin SOB markers
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-
 Record:
-- **Bug:** After `ieee80211_beacon_get()`, if `mt76_poll()` times out on
-  `MT_DMA_FQCR0` (beacon/BMC queue flush stuck), the function `goto out`
-  without freeing the SKB.
-- **Symptom:** SKB leak whenever the beacon queue is detected stuck and
-  recovery is scheduled. Commit message typo: “deected”.
-- **Version info:** none in the message.
-- **Root cause (author):** beacon SKB not freed on the stuck-queue error
-  path.
+- **Bug:** After full MCU recovery on a dual-PHY (DBDC) device, band 0
+  (usually 2.4 GHz) stops reporting correct noise floor.
+- **Symptom:** Wrong NF / survey noise on the primary PHY; the second
+  PHY is configured correctly.
+- **Root cause (author):** NF enable is only applied for the second PHY
+  after firmware restart.
+- **Version info:** none in the message. The restart path has been in
+  this tree since before v6.6.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-
-Record: Not a disguised cleanup. Explicit leak fix: two
-`dev_kfree_skb(skb)` calls on error paths.
+Record: Not disguised cleanup. It is an explicit hardware-init fix. The
+mechanism (clear `MT76_STATE_RUNNING` before `mt7915_run()`) also re-
+runs the primary PHY’s PM/MAC init that the same `if (!running)` guard
+skips, not only NF.
 
 ===============================================================
 PHASE 2: DIFF ANALYSIS - LINE BY LINE
 ===============================================================
 
 **Step 2.1: INVENTORY THE CHANGES**
-
 Record:
-- File: `drivers/net/wireless/mediatek/mt76/mt7603/beacon.c` (**+2 /
-  -0**)
-- Function: `mt7603_update_beacon_iter()`
-- Scope: **single-file surgical fix**
+- File: `drivers/net/wireless/mediatek/mt76/mt7915/mac.c` only
+- Scope: ~+6/−2 in `mt7915_mac_restart()` (surgical, single function)
+- Adds `bool run_main, run_ext`
+- Replaces `test_bit(MT76_STATE_RUNNING)` with `test_and_clear_bit`,
+  then uses those saved flags to decide whether to call `mt7915_run()`
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Record:
+- **Before:** After firmware reload, `mt7915_run()` is called while both
+  PHYs still have `MT76_STATE_RUNNING`. `mt7915_dev_running()` is
+  therefore true.
+- In this tree, `mt7915_run()` only programs primary-PHY PM/MAC/NF when
+  `!running`:
 
-Record (both hunks, same pattern):
+```32:58:drivers/net/wireless/mediatek/mt76/mt7915/main.c
+        if (!running) {
+                ret = mt76_connac_mcu_set_pm(&dev->mt76,
+                                             dev->phy.mt76->band_idx,
+0);
+                ...
+                mt7915_mac_enable_nf(dev, dev->phy.mt76->band_idx);
+        }
 
-Before: `ieee80211_beacon_get()` allocates `skb`. Flush BCN or BMC via
-`MT_DMA_FQCR0`. If poll times out: set `dev->beacon_check =
-MT7603_WATCHDOG_TIMEOUT` and `goto out`. Unlock. **SKB never queued and
-never freed.**
+        if (phy != &dev->phy) {
+                ...
+                mt7915_mac_enable_nf(dev, phy->mt76->band_idx);
+        }
+```
 
-After: same, but `dev_kfree_skb(skb)` before `goto out`.
-
-Success path unchanged: `mt76_tx_queue_skb()` still takes ownership.
+- Primary `mt7915_run()` therefore skips band-0 NF. Ext `mt7915_run()`
+  still hits `phy != &dev->phy` and enables band-1 NF. That matches the
+  commit message.
+- `ieee80211_restart_hw()` after full reset does not repair this:
+  starting the main PHY while the ext PHY still has `MT76_STATE_RUNNING`
+  keeps `running == true`, so band 0 is skipped again; starting the ext
+  PHY then enables only the ext PHY’s NF.
+- **After:** bits are cleared first, so the first `mt7915_run()` sees
+  `running == false` and programs band 0. Saved flags still prevent
+  starting a PHY that was never up.
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-
-Record:
-- **Category:** error-path resource leak (SKB)
-- **Mechanism:** mac80211 docs: *“The driver is responsible for freeing
-  the returned skb.”* Error `goto` skipped both queueing and free. Fix
-  adds the missing free.
+Record: **Logic / hardware-init.** After MCU reload, IPI/NF registers
+(`mt7915_mac_enable_nf`: `MT_WF_PHY_RXTD12_*` and
+`MT_WF_PHY_RX_CTRL1_IPI_EN`) are not programmed for band 0.
+`mt7915_mac_init_band()` does not enable NF; only `mt7915_run()` does.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-
-Record:
-- Obviously correct; only the two error returns; no API/lock/structure
-  change.
-- **Regression risk:** very low. Success path still hands the SKB to
-  DMA. `dev_kfree_skb` is `consume_skb` (stats slightly less precise
-  than `kfree_skb` on a drop); maintainer accepted it. No double-free:
-  frees only happen before queueing.
+Record: Obviously correct. Same approach the mt76 maintainer asked for
+on-list. Minimal. Mutex is already held in `mt7915_mac_full_reset()`;
+`MT76_RESET` is already set. Risk is low: if `mt7915_run()` fails, the
+RUNNING bits stay clear, but full reset retries and then calls
+`ieee80211_restart_hw()`, which stop/start and restores them.
 
 ===============================================================
 PHASE 3: GIT HISTORY INVESTIGATION
 ===============================================================
 
 **Step 3.1: BLAME THE CHANGED LINES**
-
-Record:
-- Leak `goto out` introduced by **`8caa9dd3d1a7c9`** “wifi: mt76:
-  mt7603: improve stuck beacon handling” (Greg KH, 2023-11-20), stable
-  rewrite of upstream **`3176205933494`** (Felix Fietkau, 2023-07-28).
-- `ieee80211_beacon_get(..., 0)` from `6e8912a503759` (MLO 3-arg API);
-  already in this tree.
-- Driver added in `c8846e1015022` (2018). Pre-2023 code queued the SKB
-  even if poll failed; the 2023 change moved queueing after the polls
-  and added the leaky `goto`.
+Record: The `test_bit` + `mt7915_run()` sequence was introduced in
+`8a55712d124fd8` (“wifi: mt76: mt7915: enable full system reset
+support”, Bo Jiao / Ryder Lee, 2022). `git describe --contains` →
+`v6.2-rc1~...`. Present in this 6.6 tree (`git merge-base --is-ancestor
+8a55712d124fd8 HEAD` succeeded).
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-
-Record: No Fixes: tag. Buggy commit in **this** tree is `8caa9dd3d1a7c9`
-(`git merge-base --is-ancestor` = yes). Upstream `3176205933494` is not
-an ancestor (stable SHA rewrite). No later origin/master commits touch
-this file after `965cbdbdfbd37`.
+Record: No Fixes: tag. Not applicable. The introducing commit is in this
+tree.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-
-Record (this tree, path-limited): last functional change on this file is
-the stuck-beacon commit itself. Standalone; not patch X/Y.
+Record: Related reset work already in this tree:
+- `c71d2db21f153` improve hardware restart reliability
+- `1e474cbe5db60` fix omac index assignment after hardware reset
+- `72eabd4c1986b` firmware restart on devices with a second PCIe link
+This patch is standalone; it does not depend on those.
+`test_and_clear_bit(MT76_STATE_RUNNING)` is **not** in this tree (`git
+grep` found no matches).
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-
-Record: David Bauer already has mt76 commits in this tree (including
-mt7603 EEPROM ID). Felix Fietkau is listed maintainer and applied the
-patch.
+Record: David Bauer is an OpenWrt/wireless contributor; in this tree he
+already has `b6c39aaa85c4e` (mt7915 MCU re-init). Felix Fietkau (mt76
+maintainer) signed off and designed the committed approach.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-
-Record: None. Same function, same `ieee80211_beacon_get(hw, vif, 0)`,
-same poll/`goto out`. `git apply --check` of `965cbdbdfbd37` succeeded.
-Standalone.
+Record: No functional prerequisites. Surrounding `mt7915_init_txpower()`
+signature and `napi_enable` placement differ from later mainline; those
+are context only. The `run_main`/`run_ext` change applies with a small
+context tweak.
 
 ===============================================================
 PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 ===============================================================
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-
-Record:
-- `b4 dig -c 965cbdbdfbd37` →
-  https://patch.msgid.link/20260611215658.259324-1-mail@david-bauer.net
-- `b4 dig -a`: **v1 only**
-- Thread mbox: patch only, **no replies**, no NAK, no reviewer Cc:
-  stable
-- lore.kernel.org WebFetch: **403** (used b4 + openwall/patchew mirrors)
+Record: `b4 dig -c` was not usable (commit SHA not in this checkout’s
+master). `b4 mbox` on msgid `20260516144944.2574053-1-mail@david-
+bauer.net` saved a 4-message thread.
+- v1 (16 May 2026): 4-line change in `mt7915_run()`: `if (!running ||
+  (reset && phy == &dev->phy))`
+- Felix (27 May): asked to clear `MT76_STATE_RUNNING` in
+  `mt7915_mac_restart` instead
+- David: explained the per-PHY RUNNING guard (don’t start a PHY that was
+  never up)
+- Felix (1 Jun): proposed exactly the committed `test_and_clear_bit`
+  pattern
+No NAK. No reviewer `Cc: stable`. Committed diff is the maintainer
+rewrite, still linked to the v1 msgid.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-
-Record (`b4 dig -w`): To/Cc included Felix Fietkau, Lorenzo Bianconi,
-MediaTek mt76 reviewers, linux-wireless. Applied by Felix with his SOB.
-No Reviewed-by.
+Record: Recipients included Felix Fietkau, Lorenzo Bianconi, Ryder Lee,
+Shayne Chen, Sean Wang, linux-wireless, linux-mediatek. Felix both
+reviewed and applied.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-
-Record: No Reported-by, syzbot, or bugzilla. Author-found leak on code
-inspection. Openwall/Ratatoskr confirm the same v1 text, no discussion.
+Record: No syzbot/bugzilla. Author describes a real dual-PHY MCU
+recovery failure. That is a field observation, not a theoretical report.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-
-Record: Standalone `[PATCH mt76]`. No series. No follow-up on
-`origin/master` for this file.
+Record: Single patch, not N/M. v1 vs committed is a maintainer rewrite
+of the same fix, not a multi-patch series.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-
-Record: lore.kernel.org/stable WebFetch **403**. No stable discussion in
-the saved thread. UNVERIFIED whether anyone already asked stable@;
-absence is not a negative signal.
+Record: No useful stable-list hit for this subject. No recorded reason
+to keep it out of stable.
 
 ===============================================================
 PHASE 5: CODE SEMANTIC ANALYSIS
 ===============================================================
 
-semcode MCP: **not available**. Used grep/read.
-
 **Step 5.1: IDENTIFY KEY FUNCTIONS**
-
-Record: `mt7603_update_beacon_iter()` only.
+Record: Modified: `mt7915_mac_restart()`. Behavior depends on
+`mt7915_run()`, `mt7915_dev_running()`, `mt7915_mac_enable_nf()`.
 
 **Step 5.2: TRACE CALLERS**
-
 Record:
-- Called from `mt7603_pre_tbtt_tasklet()` via
-  `ieee80211_iterate_active_interfaces_atomic()`.
-- Tasklet scheduled from `mt7603_irq_handler()` on
-  `MT_HW_INT3_PRE_TBTT0`.
-- Reachable whenever the device is an AP with beacons enabled
-  (`beacon_mask`).
+- `mt7915_mac_restart()` ← `mt7915_mac_full_reset()` (only caller in
+  this tree)
+- `mt7915_mac_full_reset()` ← `mt7915_mac_reset_work()` when
+  `dev->recovery.restart`
+- `recovery.restart` set in `mt7915_reset()` on WA/WM watchdog
+  (`MT_MCU_CMD_WDT_MASK`), which logs “firmware crash, attempting
+  recovery”
+- `mt7915_run()` also from `mt7915_start()` (normal iface start); this
+  patch does not change that path
 
 **Step 5.3: TRACE CALLEES**
-
-Record: `ieee80211_beacon_get` (driver owns SKB), `mt76_poll`/`mt76_wr`,
-`mt76_tx_queue_skb` → `mt76_dma_tx_queue_skb` (takes SKB; error path
-uses `ieee80211_tx_status_ext`).
+Record: After firmware load: `mt7915_mcu_init_firmware`,
+`mt7915_mcu_set_eeprom`, `mt7915_mac_init`, txpower/txbf, then
+`mt7915_run()` (PM, `mt7915_mcu_set_mac`, `mt7915_mac_enable_nf`,
+thermal, RTS, SKU, RX path).
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-
-Record: userspace/AP stack enables beaconing → hardware pre-TBTT IRQ →
-tasklet → iterator. Unprivileged clients do not trigger it directly;
-**any AP/router using this chip in AP mode can**. Stuck DMA/FQCR0 is the
-error trigger. `mac_work` runs every `MT7603_WATCHDOG_TIME` (100 ms) and
-treats `beacon_check >= 10` as `RESET_CAUSE_BEACON_STUCK`.
+Record: Triggered by firmware watchdog recovery on `CONFIG_MT7915E`
+dual-PHY (mt7915/mt7916/mt798x DBDC), common on APs/routers. Not a
+generic syscall crash path. Userspace sees bad survey noise
+(`mt76_get_survey` → `SURVEY_INFO_NOISE_DBM`) and ACS can use it.
+Debugfs can also force full reset (`b662b71`).
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-
-Record: Other mt76 chips use `ieee80211_beacon_get_template` /
-`mt76x02_mac_set_beacon` and do not share this FQCR0 poll/`goto out`
-pattern. mt76x02 has no equivalent leak.
+Record: No `test_and_clear_bit(MT76_STATE_RUNNING)` in this tree’s mt76.
+Sibling chips (mt7615/mt7996) have similar NF helpers; this fix is
+mt7915-restart-specific.
 
 ===============================================================
 PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 ===============================================================
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-
-Record: **Yes.** `drivers/net/wireless/mediatek/mt76/mt7603/beacon.c`
-lines 57–66: poll timeout → set watchdog → `goto out` with no free.
-Local: `git describe` → `p-6.6-3-g04810563abb71`, `make kernelversion` →
-**6.6.157**. Bug since 8caa9dd3d1a7c9 (stuck-beacon handling). Candidate
-`965cbdbdfbd37` is **not** an ancestor of HEAD.
+Record: Yes. `mt7915_mac_restart()` at
+`drivers/net/wireless/mediatek/mt76/mt7915/mac.c:1397-1407` still uses
+`test_bit` without clearing. Introduced v6.2-era (`8a55712d124fd8`),
+present since this 6.6 branch.
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-
-Record: **Clean apply** (`git show 965cbdbdfbd37 | git apply --check`).
-Surrounding function matches mainline hunks.
+Record: **Minor context.** Mainline hunk context uses
+`mt7915_init_txpower(&dev->phy)` / `mt7915_init_txpower(phy2)`; this
+tree still has `mt7915_init_txpower(dev, &dev->mphy.sband_* )`.
+`napi_enable` vs `local_bh_disable` order in the `out:` path also
+differs. The RUNNING-bit change itself matches this tree. Easy manual
+backport; not a rewrite.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-
-Record: No other “free beacon SKB” commit. Other mt76 leak fixes
-(`ec4a608bca405` probe leak, etc.) are unrelated.
+Record: Reset reliability/omac-after-reset fixes are here. This NF re-
+init after MCU recovery is not.
 
 ===============================================================
 PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 ===============================================================
 
 **Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-
-Record: **wifi / mt76 / mt7603** (`CONFIG_MT7603E`: MT7603E PCIe and
-MT7628/MT7688 SoC WLAN). **IMPORTANT** for those devices (common OpenWrt
-APs), not CORE for every 6.6 user.
+Record: **wifi / mt76 mt7915**
+(`drivers/net/wireless/mediatek/mt76/mt7915/`). **IMPORTANT** for users
+of these radios (filogic/mt7915 DBDC APs), not core mm/net. Not staging.
 
 **Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-
-Record: Mature driver (2018); this file is quiet. Bug is old (2023
-stuck-beacon change), not a new-feature side effect.
+Record: Mature driver, still getting reset-path fixes in this 6.6 tree.
+Not a newly added subsystem.
 
 ===============================================================
 PHASE 8: IMPACT AND RISK ASSESSMENT
 ===============================================================
 
 **Step 8.1: DETERMINE WHO IS AFFECTED**
-
-Record: **Driver-specific / config-specific:** `CONFIG_MT7603E`,
-AP/beaconing. MT7628/MT7688 SoCs are widely deployed in consumer
-routers.
+Record: Driver-specific, dual-PHY `CONFIG_MT7915E` after full MCU
+recovery. Widely used on embedded/AP hardware.
 
 **Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-
-Record:
-- Trigger: FQCR0 poll timeout (5 ms) while updating beacons — the same
-  stuck-beacon condition this driver already recovers from.
-- Frequency: pre-TBTT (~beacon interval, typically ~100 ms) per AP vif
-  (up to 4). Watchdog work every 100 ms usually resets after one such
-  event, so **~1 SKB per vif per stuck incident** if recovery works;
-  **recurring** if the MAC stays stuck.
-- Unprivileged trigger: no (AP beacon path).
+Record: Firmware WA/WM watchdog → full recovery. Unprivileged users
+cannot trigger it directly. Timing is the recovery path, not a race.
+Debugfs reset can also hit it.
 
 **Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-
-Record: **SKB leak**, not oops/UAF/corruption. **MEDIUM** (HIGH only if
-stuck-beacon storms on a low-RAM AP). Still a real leak on a path
-already considered serious enough to backport.
+Record: Wrong band-0 noise floor / survey after recovery; ACS can pick a
+worse channel. Not an oops, deadlock, or corruption. Connectivity was
+not reported broken; `mac_init` still runs, so MAC datapath likely
+survives. **Severity: MEDIUM.**
 
 **Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-
 Record:
-- **Benefit:** stops leaking beacon frames on a known hardware-stuck
-  path.
-- **Risk:** very low (2 lines, error path only, clean apply).
-- **Ratio:** favor backport.
+- **Benefit:** Medium. Restores intended PHY register state on a
+  recovery path this tree already treats as backport-worthy.
+- **Risk:** Low. ~8 lines, one function, maintainer-specified, under
+  existing reset mutex.
+- **Ratio:** Favorable.
 
 ===============================================================
 PHASE 9: FINAL SYNTHESIS
@@ -363,125 +357,125 @@ PHASE 9: FINAL SYNTHESIS
 **Step 9.1: COMPILE THE EVIDENCE**
 
 FOR:
-- Confirmed leak vs mac80211 SKB ownership.
-- Buggy code is in this 6.6.157 tree (`8caa9dd3d1a7c9`).
-- +2 lines, obviously correct, clean apply, no deps.
-- Maintainer-applied.
-- Same recovery path that already justified a stable backport.
-- MT7603/MT76x8 used on production APs.
+- Real dual-PHY bug after MCU full recovery; primary PHY NF registers
+  never reprogrammed
+- Code and introducing commit are in 6.6.157
+- Small, obviously correct, maintainer-directed
+- Same `!running` skip also omits band-0 `set_pm`/`set_mac` on that path
+- This tree already backported other mt7915 reset corrections
+- Dual-PHY mt7915/mt798x is common production AP hardware
 
 AGAINST:
-- Error-path leak; volume per incident is small if watchdog resets.
-- No crash/CVE/syzbot/user report.
-- No Reviewed-by; mailing list silent.
-- Not a core-kernel path.
+- Not a crash, UAF, deadlock, or security issue
+- Trigger is firmware watchdog recovery, not a hot path
+- User-visible effect is mainly survey/ACS noise, not a reported outage
+- Apply needs a trivial context adjustment
 
 UNRESOLVED:
-- lore.kernel.org HTTP 403; stable@ search not fetched (b4/mbox used
-  instead).
-- Exact leak rate if reset fails repeatedly: not measured on hardware.
+- Upstream SHA is not on this checkout’s `master`, so `b4 dig -c <sha>`
+  was not run (thread retrieved via msgid instead)
+- No independent confirmation that band-0 MAC/PM skip causes traffic
+  loss (author only reported NF)
 
 **Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-
-1. Obviously correct and tested? **PASS** — ownership is documented;
-   maintainer applied. No extra Tested-by.
-2. Fixes a real bug that affects users? **PASS** — SKB leak on stuck-
-   beacon recovery.
-3. Important issue? **PASS** — resource leak on a periodic AP path (not
-   a one-shot init leak). Severity medium, not a panic.
-4. Small and contained? **PASS** — 2 lines, one function.
-5. No new features or APIs? **PASS**.
-6. Can apply to the local tree? **PASS** — verified with `git apply
-   --check`.
+1. Obviously correct and tested? **PASS** — logic matches
+   `mt7915_run()`; maintainer specified this form
+2. Fixes a real bug that affects users? **PASS** — wrong NF after
+   recovery on dual-PHY
+3. Important issue? **PASS** (medium) — recovery leaves hardware
+   misconfigured; not a panic, but it is a real functional failure of
+   SER
+4. Small and contained? **PASS** — one function, few lines
+5. No new features or APIs? **PASS**
+6. Can apply to the local tree? **PASS** — buggy code present; minor
+   context only
 
 **Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-
-Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary small
-leak fix.
+Record: Not a new device ID/API. Closest class is hardware re-init after
+reset (quirk-like). Qualifies on technical merit, not only via an
+exception.
 
 **Step 9.4: MAKE YOUR DECISION**
+Backport. The 6.6 tree has the bug, the fix is surgical, and leaving MCU
+recovery with band 0 NF unprogrammed is a real driver bug on hardware
+this series already ships.
 
-This is a two-line error-path `kfree` for a leak that exists in 6.6.157,
-introduced by a stuck-beacon change already on this branch. Risk is
-negligible; benefit is stopping SKB leaks on MT7603/MT76x8 APs when the
-beacon DMA path wedges. That meets stable rules for this tree.
+Verification:
+- [Phase 1] Parsed tags: author David Bauer, Link to msgid, SOB Felix
+  Fietkau; no Fixes/Cc stable/Reported-by
+- [Phase 1] Body: dual-PHY MCU recovery → band 0 NF wrong because only
+  PHY1 is configured
+- [Phase 2] Diff: `mt7915_mac_restart()` saves/clears RUNNING then calls
+  `mt7915_run()`
+- [Phase 2] Local `mt7915_run()`: primary NF only if
+  `!mt7915_dev_running()`; ext NF if `phy != &dev->phy`
+- [Phase 2] `mt7915_mac_init_band()` does not set IPI/NF; only
+  `mt7915_mac_enable_nf()` does
+- [Phase 3] `git blame` `mac.c:1397-1407` → `8a55712d124fd8` (v6.2-rc1);
+  ancestor of HEAD
+- [Phase 3] `git grep test_and_clear_bit(MT76_STATE_RUNNING)` → no hits
+  in this tree
+- [Phase 3] Related reset fixes already here (`c71d2db21f153`,
+  `1e474cbe5db60`); this NF fix is not
+- [Phase 4] `b4 mbox` msgid → 4-message thread; Felix requested the
+  committed approach; no NAK
+- [Phase 4] lore.kernel.org WebFetch returned 403; used b4 mbox +
+  openwall/ratatoskr instead
+- [Phase 4] No meaningful stable-list discussion found
+- [Phase 5] Call chain: WDT → `mt7915_reset()` → dump_work →
+  `mt7915_mac_reset_work()` → `mt7915_mac_full_reset()` →
+  `mt7915_mac_restart()`
+- [Phase 5] Survey path: `mt7915_update_channel()` → `state->noise` →
+  `mt76_get_survey()`
+- [Phase 6] `git describe HEAD` / `make kernelversion` → p-6.6-3 /
+  **6.6.157**
+- [Phase 6] Local `mt7915_init_txpower()` signature differs from patch
+  context; RUNNING change still maps 1:1
+- [Phase 8] Failure mode: incorrect band-0 noise after firmware crash
+  recovery; severity MEDIUM
+- UNVERIFIED: exact upstream SHA (not on this `master`); whether band-0
+  `set_mac` skip also breaks traffic (not claimed by author)
 
-------------------------------------------------
-What the commit solves for this tree
-------------------------------------------------
-
-In `mt7603_update_beacon_iter()`, `ieee80211_beacon_get()` returns an
-SKB the driver must free. On FQCR0 poll timeout the function sets the
-beacon watchdog and returns without queueing or freeing. That path is
-the stuck-beacon recovery added in `8caa9dd3d1a7c9`, which is already
-here. Each timeout leaks one beacon SKB per AP interface. The patch only
-adds `dev_kfree_skb(skb)` on those two returns.
-
-Risk vs benefit: almost no regression surface; the leak is real whenever
-that recovery runs.
-
-------------------------------------------------
-Verification
-------------------------------------------------
-
-- [Phase 1] Tags: Link msgid `20260611215658.259324-1-mail@david-
-  bauer.net`; SOBs David Bauer + Felix Fietkau; no Fixes/Reported-
-  by/Cc:stable.
-- [Phase 1] Mainline commit `965cbdbdfbd37` on `origin/master`.
-- [Phase 2] Diff: +2 `dev_kfree_skb(skb)` in `mt7603_update_beacon_iter`
-  poll-fail paths; success path still `mt76_tx_queue_skb`.
-- [Phase 2] `include/net/mac80211.h`: “The driver is responsible for
-  freeing the returned skb.”
-- [Phase 2] `dev_kfree_skb` → `consume_skb` in `include/linux/skbuff.h`.
-- [Phase 3] `git blame`: leaky `goto out` from `8caa9dd3d1a7c9` (stable
-  form of `3176205933494`).
-- [Phase 3] `git merge-base --is-ancestor 8caa9dd3d1a7c9 HEAD` → yes;
-  `965cbdbdfbd37` → no; `3176205933494` → no (rewritten).
-- [Phase 3] `git show 8caa9dd3d1a7c9`: moved `mt76_tx_queue_skb` after
-  polls and added `goto out` without free.
-- [Phase 4] `b4 dig -c 965cbdbdfbd37`: v1 only; no replies in mbox.
-- [Phase 4] `b4 dig -w`: mt76 maintainers + linux-wireless on To/Cc.
-- [Phase 4] lore WebFetch 403; openwall/patchew/ratatoskr match v1, no
-  review replies.
-- [Phase 5] Caller: `mt7603_pre_tbtt_tasklet` ← `mt7603_irq_handler`
-  PRE_TBTT0.
-- [Phase 5] Watchdog: `MT7603_WATCHDOG_TIME` 100 ms, timeout 10;
-  `mt7603_mac_work` uses `beacon_check` with `check == NULL`.
-- [Phase 6] `git describe HEAD` → `p-6.6-3-g04810563abb71`; `make
-  kernelversion` → 6.6.157.
-- [Phase 6] Local `beacon.c` still missing the kfrees (lines 57–66).
-- [Phase 6] `git apply --check` of `965cbdbdfbd37` succeeded.
-- [Phase 7] `CONFIG_MT7603E`; MAINTAINERS: Felix Fietkau.
-- [Phase 8] Failure mode: SKB leak on stuck-beacon recovery; severity
-  MEDIUM.
-- UNVERIFIED: stable@ mailing-list archive (HTTP 403); hardware leak
-  rate if reset keeps failing.
+The patch is a small, maintainer-reviewed correction of MCU recovery on
+dual-PHY mt7915, and the buggy code is in this 6.6 tree.
 
 **YES**
 
- drivers/net/wireless/mediatek/mt76/mt7603/beacon.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-index 6457ee06bb5a1..62e8de6949d1a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-@@ -56,6 +56,7 @@ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 		FIELD_PREP(MT_DMA_FQCR0_TARGET_QID, MT_TX_HW_QUEUE_BCN));
- 	if (!mt76_poll(dev, MT_DMA_FQCR0, MT_DMA_FQCR0_BUSY, 0, 5000)) {
- 		dev->beacon_check = MT7603_WATCHDOG_TIMEOUT;
-+		dev_kfree_skb(skb);
- 		goto out;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index dda4e7d179536..55d2553addb13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1292,6 +1292,7 @@ mt7915_mac_restart(struct mt7915_dev *dev)
+ 	struct mt7915_phy *phy2;
+ 	struct mt76_phy *ext_phy;
+ 	struct mt76_dev *mdev = &dev->mt76;
++	bool run_main, run_ext;
+ 	int i, ret;
+ 
+ 	ext_phy = dev->mt76.phys[MT_BAND1];
+@@ -1387,13 +1388,17 @@ mt7915_mac_restart(struct mt7915_dev *dev)
+ 	mt7915_init_txpower(phy2);
+ 	ret = mt7915_txbf_init(dev);
+ 
+-	if (test_bit(MT76_STATE_RUNNING, &dev->mphy.state)) {
++	run_main = test_and_clear_bit(MT76_STATE_RUNNING, &dev->mphy.state);
++	run_ext = ext_phy &&
++		  test_and_clear_bit(MT76_STATE_RUNNING, &ext_phy->state);
++
++	if (run_main) {
+ 		ret = mt7915_run(dev->mphy.hw);
+ 		if (ret)
+ 			goto out;
  	}
  
-@@ -63,6 +64,7 @@ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 		FIELD_PREP(MT_DMA_FQCR0_TARGET_QID, MT_TX_HW_QUEUE_BMC));
- 	if (!mt76_poll(dev, MT_DMA_FQCR0, MT_DMA_FQCR0_BUSY, 0, 5000)) {
- 		dev->beacon_check = MT7603_WATCHDOG_TIMEOUT;
-+		dev_kfree_skb(skb);
- 		goto out;
- 	}
- 
+-	if (ext_phy && test_bit(MT76_STATE_RUNNING, &ext_phy->state)) {
++	if (run_ext) {
+ 		ret = mt7915_run(ext_phy->hw);
+ 		if (ret)
+ 			goto out;
 -- 
 2.53.0
 
