@@ -1,48 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4285D6C69;
-	Mon, 19 Oct 2026 14:01:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6482B5E0E2A;
+	Mon, 19 Oct 2026 14:02:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418510; cv=none; b=NelI/tZdD+5CqxjYLvnfpgeMgBiN8uvAVkRaOGUnXXtrrrFnR+fvuT6JT6zNGh0LOLPwtgIdisfQ1mOHHWiLbjS2H4/r7CIMv83lNumChp7CJDhOa/a48TFm7HXeF1DsFrlcdv3EeQBimETPBUQbmdjCRPfPFDR/kvZwvsqSaqU=
+	t=1792418546; cv=none; b=K84wleMIFxNVSQWpxoJRcvRZhKh9Y6PLBbhCBJx/qKHRUE97PU8ywfW8hkOyUWbFrJfOLUYOhsaO3/GJbH/9k/sMBYoD9tp3r/N2zczwEEO3O2bhR/niwPL8o+TDNubscFnhXmg9diGCsWkpWjZ7v1eJRqUn5LjDG7Z1AlK/nWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418510; c=relaxed/simple;
-	bh=vpK4lJlgcXqXdKD2RUDe50UeK6XzNxV47izOTbYUD5g=;
+	s=arc-20240116; t=1792418546; c=relaxed/simple;
+	bh=rvJWQyr0WEfy6/AzCKYHXnWOaMUK+fe8bFgowxnOjPE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n2vRRkCfiV2zT8dTYUY8Xjt1P91FrlqtaFIJFF0L8zN/H9dOGyJSqn/GySEVuhUYLr/6/k91T3g5btcqsH+FxXlLuoI5sV593BIsEU8tPXg/eAgG11MR079rLOnM5w8o+b4MMwyA3zWpP997EWvHQ8BUYYN/wuf8IYW8FMdKexM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OHUPQiOI; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=KDBPJkPKXz9n3VsXHTXRzf1eGY7rBtgCHPdjQF9W5MYzQQxVVb0B7Je2h1IExlEVthPpuoSGfpnsAzm10VFfBqUQNovn5po/gW0hj/Bf1xoa4nU44Nlx6WJIfapOXGAFhh6VKURUIWeXGjSzJ2gwrLb4KpTJnbTIJ3qQeqlkgis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGX8RH+F; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OHUPQiOI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3B551F000C9;
-	Mon, 19 Oct 2026 14:01:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGX8RH+F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D75511F000C4;
+	Mon, 19 Oct 2026 14:02:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418508;
-	bh=stDIY3cut1La0RIQyUHVoHa5of1PPIvTxAd31vWKrJA=;
+	s=k20260515; t=1792418542;
+	bh=/+myPmVbI9znAEmr8DN9yfg2ABmzWBxhiHOVL+nrSUw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OHUPQiOImUOmKZXmKhJrqwHGcIC6mw8ayygxuj25hw9R0sNeiHncPOCc082PnD31H
-	 kXhsYZKEIB7BfdJhtW2gnSYyVXm0/Wqi90nX4ylhkhuZSRVW+X6v/7TyOTgYCGxyD+
-	 zBZ1H3x9e5RFeHFPu6RPp37dn5T2I+MIW0XqfUS04h6uTWauPLjh1jrA3ZU1aAQ0YR
-	 vws7O/CHrSSx9evCGSKYaX80nZm7rTnIut+RRZqVmQGvLTYtEVHANPb0I+EgFAoEKq
-	 bGM9TXDm9i3vzwkyHX1s7CV9MtaVDJQ4uiToMpYMkZ0YN2LzBfxsioOpunkeZQ3c2W
-	 ncWL/WGDAjFvA==
+	b=HGX8RH+FeTCN2UZjI/Z5ESIL7pESDs+/pui29FyQp77K6D57pF8EfZPLvMe7ewqt0
+	 W5X5QFIiRoF2M5NiGQJdxvJQA6/FkauuMd9l/ttaY5QSS0I7Iii0i6XuI0kqvjE1DQ
+	 JzQoL6HVDLaggBKHt80zh2NDSlyNeUZB+HBCluB/vQW1+3bjtxMe2gRinrNLbUeXuJ
+	 5qeEozYqwalDztYZM6dbAay97INrcuZvNQGL9PJyL1FKXArThshpdoWzFi55r3XRd7
+	 0NM00w1eTekQFlkvRMoiJxEOcku31H5gJlvYnfjKuxMYnQV9JTUyCTU5mLNWbpnLl1
+	 bJf2mN1wyCC9Q==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Chad Monroe <chad@monroe.io>,
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
+	jjohnson@kernel.org,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-6.1] wifi: mt76: mt7615: fix NULL deref in mt7615_mac_set_rates
-Date: Mon, 19 Oct 2026 09:49:49 -0400
-Message-ID: <20261019135441.1420968-298-sashal@kernel.org>
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: ath11k: validate regulatory capability phy_id
+Date: Mon, 19 Oct 2026 09:50:13 -0400
+Message-ID: <20261019135441.1420968-322-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -58,382 +56,416 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-[ Upstream commit 98aff74779da9f417386c589c36848e9c568f0f9 ]
+[ Upstream commit f8729a40ebcc94d164be8f154483a21669f3ab52 ]
 
-mt7615_tx() falls back to the vif BSS wcid when mac80211 hands a frame
-over without a station, e.g. while a station is being torn down, and to
-the global wcid when there is no vif either. Both tx_prepare_skb
-implementations derive a mt7615_sta from that wcid unconditionally and,
-if the rate control probe flag is set, pass it to mt7615_mac_set_rates(),
-which dereferences the NULL vif backpointer of the per-vif embedded sta:
+ath11k_wmi_tlv_ext_hal_reg_caps() copies firmware regulatory
+capability records into soc->hal_reg_cap[] using reg_cap.phy_id as
+the destination index.  The loop count is bounded by num_phy, but the
+phy_id embedded in each record is not checked against the fixed
+MAX_RADIOS-sized destination array.
 
-  Unable to handle kernel read from unreadable memory at virtual
-  address 0000000000000002
-  ...
-  pc : mt7615_mac_set_rates
-  lr : mt7615_tx_prepare_skb
+Reject firmware records whose phy_id does not fit soc->hal_reg_cap[]
+before copying the parsed capability.
 
-Neither entry is rate controlled by mac80211: the embedded sta has an
-empty rate set, and for the global wcid the container_of does not yield a
-valid mt7615_sta at all. Only resolve the sta for wcids that belong to a
-station.
-
-Reported-by: Chad Monroe <chad@monroe.io>
-Link: https://patch.msgid.link/20260724124813.3961474-23-nbd@nbd.name
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit message forensics
+This tree is **7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`). The candidate
+is a 6-line firmware `phy_id` bounds check in ath11k WMI parsing. The
+buggy `memcpy` has been in this driver since v5.6; the check is
+obviously correct and belongs here.
 
-**Step 1.1 — Subject**
-Record: `[wifi: mt76: mt7615]` `[fix]` `[NULL deref in
-mt7615_mac_set_rates when TX uses a non-station wcid]`
+---
 
-**Step 1.2 — Tags**
+## PHASE 1: COMMIT MESSAGE FORENSICS
+
+**Step 1.1: PARSE THE SUBJECT LINE**
+Record: **[wifi: ath11k] [validate] [reject firmware `phy_id` that is
+out of range for `soc->hal_reg_cap[]`]**
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- `Reported-by: Chad Monroe <chad@monroe.io>` — real user hit this
-- `Link:
-  https://patch.msgid.link/20260724124813.3961474-23-nbd@nbd.name` —
-  patch 23/29 of an mt76-next series
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` — mt76 maintainer
-- No `Fixes:`, no `Cc: stable` (expected for this review)
-- No `Reviewed-by` / `Tested-by` / `Acked-by` on the commit itself
-- Ignore `Signed-off-by: Sasha Levin` / `[Upstream commit ...]` if
-  present (pipeline)
+- **Fixes:** none (expected for this review pipeline)
+- **Reported-by:** none
+- **Tested-by:** none
+- **Reviewed-by:** Rameshkumar Sundaram
+  `<rameshkumar.sundaram@oss.qualcomm.com>`; Baochen Qiang
+  `<baochen.qiang@oss.qualcomm.com>` (Qualcomm ath11k reviewers)
+- **Acked-by:** none
+- **Link:**
+  `https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn`
+- **Cc: stable:** none (expected; not a negative signal)
+- **Signed-off-by:** Pengpeng Hou (author); Jeff Johnson (ath11k
+  maintainer)
 
-**Step 1.3 — Body**
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- Bug: `mt7615_tx()` falls back to the vif BSS wcid when mac80211 TX has
-  no station (e.g. station teardown), and to `global_wcid` if there is
-  no vif. Both `tx_prepare_skb` paths `container_of` that wcid into
-  `mt7615_sta` and, if `IEEE80211_TX_CTL_RATE_CTRL_PROBE` is set, call
-  `mt7615_mac_set_rates()`.
-- Symptom: kernel NULL deref / oops:
-  `Unable to handle kernel read from unreadable memory at virtual
-  address 0000000000000002`, `pc: mt7615_mac_set_rates`, `lr:
-  mt7615_tx_prepare_skb`
-- Root cause: BSS-embedded sta has a NULL `vif` backpointer;
-  `global_wcid` is not a `mt7615_sta` at all. Neither is rate-
-  controlled.
-- Fix: only resolve `msta` when `wcid->sta` is set.
+- **Bug:** `ath11k_wmi_tlv_ext_hal_reg_caps()` copies firmware HAL
+  regulatory-capability records into `soc->hal_reg_cap[]` using
+  **`reg_cap.phy_id` as the destination index**. The loop is bounded by
+  `num_phy`, but **`phy_id` inside each record is not checked** against
+  `MAX_RADIOS`.
+- **Symptom/failure mode:** out-of-bounds write into `struct
+  ath11k_base` (memory corruption).
+- **Version information:** none in the message.
+- **Root cause:** firmware-controlled `u32 phy_id` used as an array
+  index without a bounds check.
 
-**Step 1.4 — Hidden bug fix?**
-Record: Not hidden. Explicit crash fix with a stack trace and a
-reporter.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: **Not disguised.** This is an explicit firmware-index validation
+/ OOB-write fix. Verb “validate” is a bounds check, not cleanup.
 
-## Phase 2: Diff analysis
+---
 
-**Step 2.1 — Inventory**
+## PHASE 2: DIFF ANALYSIS
+
+**Step 2.1: INVENTORY THE CHANGES**
 Record:
-- `drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c`:
-  `mt7615_tx_prepare_skb` — ~3 lines
-- `drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c`:
-  `mt7663_usb_sdio_tx_prepare_skb` — ~3 lines
-- Scope: single-driver surgical fix, two TX prepare paths (PCIe/MMIO and
-  USB/SDIO)
+- **File:** `drivers/net/wireless/ath/ath11k/wmi.c` — **+6 / -0**
+- **Function:** `ath11k_wmi_tlv_ext_hal_reg_caps()`
+- **Scope:** single-file surgical fix
 
-**Step 2.2 — Code flow**
-Record: Before, any non-NULL `wcid` was treated as `mt7615_sta`. After,
-`msta` is set only if `wcid && wcid->sta`. The existing `if (...
-RATE_CTRL_PROBE && msta)` already skips `mt7615_mac_set_rates()` when
-`msta` is NULL.
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Record (verified in this tree at `wmi.c:4862-4880`):
+- **Before:** `ath11k_pull_reg_cap_svc_rdy_ext()` fills `reg_cap` from
+  firmware TLV `ext_reg_cap[i].phy_id`, then
+  `memcpy(&soc->hal_reg_cap[reg_cap.phy_id], &reg_cap, sizeof(reg_cap))`
+  with no check that `phy_id < MAX_RADIOS`.
+- **After:** if `reg_cap.phy_id >= ARRAY_SIZE(soc->hal_reg_cap)`, log a
+  warning and return `-EINVAL`; otherwise copy as before.
+- **Path:** firmware `WMI_SERVICE_READY_EXT` event during ath11k bring-
+  up (probe/init), not a hot datapath.
 
-**Step 2.3 — Bug mechanism**
-Record: `[NULL pointer dereference]` — `mt7615_mac_set_rates()` does
-`sta->vif->mt76.omac_idx`. For the per-vif embedded sta, `vif` is never
-set. For `global_wcid`, `container_of` is invalid. The fix uses the
-existing `wcid->sta` flag.
-
-**Step 2.4 — Fix quality**
-Record: Obviously correct. Same pattern already used in this tree
-(`wcid_to_sta()`, `mt76_connac_pm_dequeue_skbs()`,
-`mt7615_rx_get_wcid()`). Skipping rate-probe setup for non-station wcids
-is intended: those entries are not rate-controlled. Regression risk is
-very low. No API change.
-
-## Phase 3: Git history
-
-**Step 3.1 — Blame**
-Record: The incomplete NULL check is `8d3cdc1bbb1d3` (“mt76: mt7615: fix
-NULL pointer dereference in tx_prepare_skb()”, Lorenzo Bianconi, 2021).
-That only handled `wcid == NULL` (then `global_wcid`). The BSS-wcid
-fallback in `mt7615_tx()` is from 2019 (`04b8e65922f631` /
-`2b8cdfb28d3402`). The bug has been in this lineage since mt7615 TX was
-added.
-
-**Step 3.2 — Fixes: tag**
-Record: None. The incomplete 2021 fix is already in this tree (`git
-merge-base --is-ancestor 8d3cdc1bbb1d3 HEAD` succeeded). This commit
-closes the remaining hole.
-
-**Step 3.3 — File history**
-Record: Recent mt7615 changes in this tree are unrelated (runtime-pm
-timeout, TSF, DMA reset). No prerequisite refactor for this two-line
-guard. Standalone.
-
-**Step 3.4 — Author**
-Record: Felix Fietkau is the mt76 maintainer. Related earlier NULL-deref
-fix was also signed off by him.
-
-**Step 3.5 — Dependencies**
-Record: Patch 23/29 of an mt76-next batch, but the other patches are
-independent (mt7996/mt7915/scan/WED). This hunk only needs `wcid->sta`
-and the existing `msta` NULL check, both present here. Standalone.
-
-## Phase 4: Mailing list / external
-
-**Step 4.1 — Original discussion**
-Record: `b4 mbox` saved the thread. Subject: `[PATCH mt76-next 23/29]
-wifi: mt76: mt7615: fix NULL deref in mt7615_mac_set_rates`. Sent 24 Jul
-2026 by Felix to linux-wireless. 29-message thread is the series itself,
-not a v2/v3 of this patch. No NAK. No reviewer `Cc: stable`. Lore HTTP
-fetch returned 403; discussion was recovered via `b4`.
-
-**Step 4.2 — Recipients**
-Record: To: linux-wireless@vger.kernel.org. Maintainer is the author.
-
-**Step 4.3 — Bug report**
-Record: Reported-by Chad Monroe with a concrete oops (`pc:
-mt7615_mac_set_rates`, `lr: mt7615_tx_prepare_skb`). Chad also authored
-other patches in the same series, so this is a real device user, not a
-theoretical report.
-
-**Step 4.4 — Series**
-Record: Independent mt76 bug-fix dump. mt7996 patches are irrelevant to
-5.15. This patch does not need 1–22 or 24–29.
-
-**Step 4.5 — Stable list**
-Record: UNVERIFIED — lore.kernel.org/stable HTTP 403. No evidence it was
-rejected for stable.
-
-## Phase 5: Semantic / call-chain
-
-**Step 5.1 — Functions**
-Record: `mt7615_tx_prepare_skb`, `mt7663_usb_sdio_tx_prepare_skb`
-(callers of `mt7615_mac_set_rates`).
-
-**Step 5.2 — Callers**
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
 Record:
-- PCIe/MMIO: `mt7615_tx_prepare_skb` via `mt7615/mmio.c`
-  `.tx_prepare_skb`, from `mt76_dma_tx_queue_skb` (`dma.c:409`)
-- USB: `usb.c:917`; SDIO: `sdio.c:263`
-- Upstream of that: `mt7615_tx()` → `mt76_tx()` /
-  `mt76_connac_pm_queue_skb()`
+- **Category:** **(d) memory safety — buffer overflow / out-of-bounds
+  write**
+- **Mechanism:** `phy_id` is a firmware `u32`
+  (`wmi_hal_reg_capabilities_ext.phy_id`). Destination is
+  `hal_reg_cap[MAX_RADIOS]` with **`MAX_RADIOS == 3`** (`core.h:242`,
+  `core.h:971`). Loop bound `num_phy` is also firmware-supplied and is
+  **not** the same as `phy_id`. A record with `phy_id >= 3` writes
+  `sizeof(struct ath11k_hal_reg_capabilities_ext)` (10 × `u32` = 40
+  bytes) past the array into following `ath11k_base` fields
+  (`free_vdev_map`, `tbl_mtx_lock`, peer rhashtables).
+- The parse helper only checks TLV count vs `num_phy`
+  (`n_ext_hal_reg_caps >= param.num_phy` → `-ENOBUFS`); it does **not**
+  validate `phy_id`.
 
-**Step 5.3 — Callees**
-Record: `mt7615_mac_set_rates()` immediately uses
-`sta->vif->mt76.omac_idx` (mac.c:1063 in this tree).
+**Step 2.4: ASSESS THE FIX QUALITY**
+Record:
+- **Obviously correct:** `ARRAY_SIZE(soc->hal_reg_cap)` is the real
+  destination size; reject-and-return is the right failure mode.
+- **Minimal:** 6 lines, one check, no API/struct changes.
+- **Regression risk:** **very low**. Well-formed firmware with `phy_id`
+  0–2 is unchanged. Invalid `phy_id` now fails WMI parse instead of
+  corrupting memory. That is the intended probe failure, not a behavior
+  change for working hardware.
 
-**Step 5.4 — Reachability**
-Record: Yes, from normal wireless TX. `mt7615_tx()`:
+---
 
-```737:743:drivers/net/wireless/mediatek/mt76/mt7615/main.c
-        if (vif && !control->sta) {
-                struct mt7615_vif *mvif;
-                mvif = (struct mt7615_vif *)vif->drv_priv;
-                msta = &mvif->sta;
-                wcid = &msta->wcid;
-        }
-```
+## PHASE 3: GIT HISTORY INVESTIGATION
 
-mac80211 can pass `control->sta == NULL` while
-`IEEE80211_TX_CTL_RATE_CTRL_PROBE` is still set on a previously rate-
-controlled skb (station teardown). That is a userspace-reachable
-AP/client path.
+**Step 3.1: BLAME THE CHANGED LINES**
+Record:
+- Loop + `memcpy`: **`d5c65159f28953`** — “ath11k: driver for Qualcomm
+  IEEE 802.11ax devices” (Kalle Valo, 2019-11-25).
+- Bounds check: **`f8729a40ebcc9`** (this commit).
+- Introducer is in **v5.6**, not v5.5 (`git merge-base --is-ancestor`).
+  Bug has been in every tree with ath11k since then.
 
-**Step 5.5 — Similar patterns**
-Record: Same `wcid && wcid->sta` guard already exists in
-`mt76x02_mac.c`, `mt76_connac_mac.c`, `wcid_to_sta()`.
-`mt7615_rx_get_wcid()` already refuses non-station wcids. `wcid.sta = 1`
-is set only in `mt7615_mac_sta_add()`, not in `mt7615_add_interface()`.
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: **No Fixes: tag.** Not applicable. Introducer identified by
+blame: `d5c65159f28953` (original driver).
 
-## Phase 6: Local tree (5.15.221 / pending-5.15)
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record:
+- Recent `wmi.c` work is other firmware TLV hardening (overread, stride,
+  leak) — related thematically, **not prerequisites**.
+- Earlier `84eee3c845d37` (“refine the phy_id check in
+  ath11k_reg_chan_list_event”) is a **different** event path.
+- **Standalone**, not patch N/M. Maintainer applied it as `[1/1]`.
 
-**Step 6.1 — Buggy code present?**
-Record: Yes.
-- `pci_mac.c:142`: `msta = wcid ? container_of(wcid, struct mt7615_sta,
-  wcid) : NULL;`
-- `usb_sdio.c:200`: same
-- `mac.c:1063`: `u16 idx = sta->vif->mt76.omac_idx;`
-- `add_interface` sets `mvif->sta.wcid` but never `mvif->sta.vif` or
-  `wcid.sta`
-- `wcid->sta` exists in `struct mt76_wcid` (`mt76.h:251`)
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Record: Pengpeng Hou has this one ath11k commit here. Weight comes from
+**Qualcomm reviewers** and **maintainer Jeff Johnson** (MAINTAINERS:
+ATH11K).
 
-**Step 6.2 — Backport difficulty**
-Record: Minor context mismatch, easy rework. Mainline USB path has extra
-locals (`key`, `pktid`) and an in-function `global_wcid` fallback that
-5.15 keeps in `mt7663_usb_sdio_write_txwi()`. PCIe path uses
-`MT_TX_HW_QUEUE_EXT_PHY` / `mdev->phy2` here vs later `phys[MT_BAND1]`.
-The semantic change is the same two-line `wcid->sta` check.
-`mt76_vif_link` in the provided hunk context is *not* required.
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Record: **None.** Uses existing `ARRAY_SIZE`, `ath11k_warn`, `-EINVAL`,
+`soc->hal_reg_cap`. Can apply standalone on any tree with this 2019
+function.
 
-**Step 6.3 — Related fixes already here?**
-Record: `8d3cdc1bbb1d3` is present and is incomplete. No later
-`mt7615_mac_set_rates` NULL-deref fix in this tree.
+---
 
-## Phase 7: Subsystem context
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-**Step 7.1**
-Record: `[drivers/net/wireless/mediatek/mt76/mt7615]` `[IMPORTANT]` —
-not core kernel, but a widely used 802.11ac chipset (MT7615E/MT7663E
-PCIe, MT7663U USB, MT7663S SDIO, MT7622 SoC WMAC). Common on routers and
-embedded boards, including 5.15 LTS/Android/OpenWrt-class systems.
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+Record:
+- **Lore URL (b4 dig):**
+  `https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn`
+- **Revisions:** **v1 only** (`b4 dig -a`); committed v1.
+- **Thread (saved via `b4 dig -m`):**
+  - Baochen Qiang: `Reviewed-by`
+  - Rameshkumar Sundaram: `Reviewed-by`
+  - Jeff Johnson: “Applied, thanks!” `[1/1]`
+- **No NAKs, no stable nomination, no requested revisions.**
 
-**Step 7.2**
-Record: Mature driver; this bug is old, not a new-subsystem issue.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+Record (`b4 dig -w`): To/Cc were Jeff Johnson, `linux-wireless`,
+`ath11k@lists.infradead.org`, `linux-kernel`. Right lists and
+maintainer.
 
-## Phase 8: Impact and risk
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+Record: **No user/syzbot/bugzilla report.** Found by code review of
+firmware TLV parsing. Severity is from the mechanism (OOB write), not
+from a crash log.
 
-**Step 8.1 — Who is affected**
-Record: Users of MT7615/MT7663/MT7622 (`CONFIG_MT7615E` /
-`CONFIG_MT7663U` / `CONFIG_MT7663S` / `CONFIG_MT7622_WMAC`). Driver-
-specific, not universal.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Record: Standalone `[PATCH]`, not a series. ath12k still has an
+analogous unguarded `soc->hal_reg_cap[reg_cap.phy_id] = reg_cap` in
+`ath12k/wmi.c` — sibling issue, **not a dependency**.
 
-**Step 8.2 — Trigger**
-Record: TX without a station while `IEEE80211_TX_CTL_RATE_CTRL_PROBE` is
-set — typically station teardown / disconnect with a probe rate sample
-in flight. Not every packet, but a normal Wi-Fi event. Unprivileged
-clients disconnecting from an AP can induce it.
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+Record: **UNVERIFIED** for lore.kernel.org/stable (HTTP 403). Local
+history has no stable-specific discussion of this subject.
 
-**Step 8.3 — Failure mode**
-Record: `[Kernel oops / NULL deref in hard TX path]` `[CRITICAL]`
+---
 
-**Step 8.4 — Risk vs benefit**
-Record: Benefit high for that hardware (prevents oops). Risk very low
-(~6 lines, existing flag, same pattern as sibling code). Skipping
-`mac_set_rates` on BSS/global wcid is the correct behavior.
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-## Phase 9: Synthesis
+**Step 5.1: KEY FUNCTIONS**
+Record: `ath11k_wmi_tlv_ext_hal_reg_caps()`; helpers
+`ath11k_pull_reg_cap_svc_rdy_ext()`,
+`ath11k_wmi_tlv_ext_hal_reg_caps_parse()`.
 
-**Step 9.1 — Evidence**
+**Step 5.2: TRACE CALLERS**
+Record (verified with grep/read):
+- `ath11k_wmi_tlv_ext_hal_reg_caps()` ←
+  `ath11k_wmi_tlv_svc_rdy_ext_parse()` (`WMI_TAG_ARRAY_STRUCT` after hw-
+  mode and mac-phy TLVs)
+- ← `ath11k_service_ready_ext_event()`
+- ← WMI event switch `WMI_SERVICE_READY_EXT_EVENTID`
 
-FOR:
-- Real oops with reporter and stack trace
-- Bug and incomplete 2021 fix both exist in this 5.15 tree
-- Small, obviously correct guard
-- Maintainer-authored
-- Matches stable rules (crash, contained, no new API)
-- Hardware is common on 5.15-era devices
+**Step 5.3: TRACE CALLEES**
+Record: `ath11k_wmi_tlv_iter()`, `ath11k_pull_reg_cap_svc_rdy_ext()`
+(copies firmware `phy_id`), `memcpy()`.
 
-AGAINST:
-- Driver-specific, not core
-- Won’t `git am` cleanly (context only)
-- Part of a 29-patch series (other patches are unrelated)
-- No `Fixes:` / `Cc: stable` (not a negative under these rules)
-- No mailing-list review tags on this specific patch
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Record: Reachable on **ath11k device init** when firmware sends service-
+ready-ext. Not a syscall hot path. Trigger needs **CONFIG_ATH11K** +
+Qualcomm 802.11ax hardware + firmware that puts `phy_id >= 3` (or
+otherwise ≥ `ARRAY_SIZE`). Unprivileged users cannot poke this WMI path
+directly; **buggy or malicious firmware** can. That is still a real
+kernel OOB write.
 
-UNRESOLVED:
-- Could not fetch lore/stable over HTTP (403); recovered the thread with
-  `b4`
-- Exact crash address `...0002` matches a newer `vif` layout; in 5.15
-  `omac_idx` is at offset 1. Same NULL `vif` deref either way.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Record: Same driver already bounds other firmware indices (e.g. `phy_idx
+>= reg_caps->num_phy` in the pull helper). This copy site was the hole.
+ath12k has the same hole unfixed.
 
-**Step 9.2 — Stable rules**
-1. Obviously correct and tested? **PASS** — maintainer fix; user-
-   reported oops; logic matches existing `wcid->sta` usage
-2. Real bug affecting users? **PASS** — Chad Monroe crash
-3. Important (crash/security/corruption/deadlock)? **PASS** — kernel
-   oops in TX
-4. Small and contained? **PASS** — two functions, ~6 lines
-5. No new features/APIs? **PASS**
-6. Can apply to this tree? **PASS** — code is here; needs a trivial
-   context tweak, not a rewrite
+---
 
-**Step 9.3 — Exceptions**
-Record: None (not a device-ID/quirk/DT/build/docs exception). It
-qualifies as a normal crash fix.
+## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
-**Step 9.4 — Decision**
-This is a real NULL deref in the mt7615 TX path that 5.15 still has. The
-2021 patch only covered a NULL wcid; the BSS-wcid fallback still
-crashes. Backport it.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+Record: **Yes.** `ath11k_wmi_tlv_ext_hal_reg_caps()` and
+`hal_reg_cap[MAX_RADIOS]` are present. The unguarded `memcpy` was here
+from v5.6 until `f8729a40ebcc9`. **Bug introduced in v5.6, long before
+7.3.** `git merge-base --is-ancestor f8729a40ebcc9 HEAD` is true (fix is
+in 7.3-rc1+); that is mainline merge, not “already selected for stable.”
 
-## What the commit solves for this tree
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Record: **Clean apply.** Surrounding function body is still the 2019
+structure plus this 6-line check. No refactor of this function in
+between.
 
-On 5.15.221, `mt7615_tx()` still substitutes the per-vif embedded sta
-when mac80211 has no station. `tx_prepare_skb` still `container_of`s
-that wcid and can call `mt7615_mac_set_rates()`, which immediately loads
-`sta->vif->mt76.omac_idx` while `vif` is NULL. That oopses. Restricting
-`msta` to `wcid->sta` stops it. Same change belongs in both PCIe and
-USB/SDIO prepare paths.
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+Record: No alternate fix for this memcpy. Other nearby TLV fixes address
+different bugs.
 
-Risk is a skipped rate-probe update on wcids that were never valid for
-rate control. Benefit is avoiding a driver oops during client teardown.
+---
 
-## Verification
-- [Phase 1] Parsed tags: Reported-by Chad Monroe; Link to 23/29
-  mt76-next; SOB Felix Fietkau; no Fixes/Cc stable
-- [Phase 2] Diff: two `msta` assignments; require `wcid->sta` before
-  `container_of`
-- [Phase 3] Blame: 8d3cdc1bbb1d3 (2021) only NULL-wcid; BSS fallback
-  since 2019
-- [Phase 3] `git merge-base --is-ancestor 8d3cdc1bbb1d3 HEAD`: yes,
-  incomplete fix is here
-- [Phase 3] `git log --grep="fix NULL deref in mt7615_mac_set_rates" --
-  mt7615/`: not in this tree
-- [Phase 4] `b4 mbox 20260724124813.3961474-23-nbd@nbd.name`: 29-message
-  independent mt76 series; this patch standalone; no NAK
-- [Phase 4] lore HTTP 403; UNVERIFIED stable@ discussion
-- [Phase 5] Call chain: mac80211 `drv_tx` → `mt7615_tx` → `mt76_tx` /
-  DMA `tx_prepare_skb` → `mt7615_mac_set_rates`
-- [Phase 5] `mt7615_add_interface` does not set `mvif->sta.vif` or
-  `wcid.sta`; only `mt7615_mac_sta_add` sets `wcid.sta = 1`
-- [Phase 6] `make kernelversion` / Makefile: **5.15.221**, branch
-  `pending-5.15`
-- [Phase 6] Buggy lines present in `pci_mac.c:142` and `usb_sdio.c:200`;
-  deref at `mac.c:1063`
-- [Phase 6] Surrounding context differs (phy2 vs phys[MT_BAND1], USB
-  locals); semantic apply is still two lines
-- [Phase 8] Failure: NULL deref oops in TX; severity CRITICAL for
-  MT7615/MT7663/MT7622 users
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+
+**Step 7.1: SUBSYSTEM AND CRITICALITY**
+Record: **ath11k (Qualcomm 802.11ax)** under
+`drivers/net/wireless/ath/ath11k/`. **IMPORTANT** — not core mm/fs, but
+a widely used Wi-Fi driver (laptops, AP SoCs, Chromebooks, phones).
+CONFIG: `ATH11K` / `ATH11K_PCI` / `ATH11K_AHB`.
+
+**Step 7.2: SUBSYSTEM ACTIVITY**
+Record: Actively maintained (Jeff Johnson). Recent WMI work is firmware-
+message validation, consistent with this patch.
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
+
+**Step 8.1: WHO IS AFFECTED**
+Record: **Driver-specific / config-specific:** `CONFIG_ATH11K` users.
+Impact only if firmware sends a `phy_id` that does not fit
+`hal_reg_cap[]`.
+
+**Step 8.2: TRIGGER CONDITIONS**
+Record: Device init / firmware service-ready-ext. **Not** every packet.
+Needs bad `phy_id` in the WMI record (firmware bug or hostile firmware).
+Unprivileged userspace cannot fire it without controlling firmware.
+
+**Step 8.3: FAILURE MODE SEVERITY**
+Record: **Out-of-bounds write** of 40 bytes into `struct ath11k_base`
+after `hal_reg_cap[]` — can corrupt `free_vdev_map`, mutexes, peer
+tables → crash, deadlock, or further memory corruption. **Severity:
+HIGH** (OOB write / memory corruption). Not a panic on every boot with
+good firmware.
+
+**Step 8.4: RISK-BENEFIT RATIO**
+Record:
+- **Benefit:** High for ath11k — stops a real OOB write on a long-
+  standing path (v5.6+).
+- **Risk:** Very low — 6 lines, error-path reject, no lock/API change,
+  good firmware unaffected.
+- **Ratio:** strongly favors backport.
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+**FOR:**
+- Real OOB write: firmware `u32 phy_id` used as index into a 3-element
+  array.
+- Small, obviously correct check (`ARRAY_SIZE` + `-EINVAL`).
+- Present in this tree’s ath11k code; bug dates to original driver
+  (v5.6).
+- Reviewed by Qualcomm ath11k developers; applied by the maintainer.
+- Standalone; no new APIs; no series dependencies.
+- Matches stable pattern: buffer overflow / firmware TLV validation.
+
+**AGAINST:**
+- No `Reported-by` / syzbot / production crash.
+- Trigger is firmware-supplied data at probe, not a generic syscall.
+- No explicit `Cc: stable` (not a negative per pipeline rules).
+
+**UNRESOLVED:**
+- Could not query lore.kernel.org/stable (403).
+- No public report that shipping firmware actually sent `phy_id >= 3`.
+
+**Step 9.2: STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — local review + two Qualcomm
+   Reviewed-by + maintainer apply.
+2. Fixes a real bug that affects users? **PASS** — OOB write on firmware
+   parse; ath11k users are real users.
+3. Important issue? **PASS** — OOB write / memory corruption (**HIGH**),
+   not style.
+4. Small and contained? **PASS** — +6 lines, one function.
+5. No new features or APIs? **PASS**.
+6. Can apply to the local tree? **PASS** — same function/context; no
+   missing prerequisites.
+
+**Step 9.3: EXCEPTION CATEGORIES**
+Record: None (not a device ID / quirk / DT / build / doc exception).
+Qualifies as a normal bugfix.
+
+**Step 9.4: DECISION**
+
+This is a surgical firmware-index bounds check that stops a memcpy past
+`hal_reg_cap[MAX_RADIOS]`. The destination array and unguarded copy
+exist in this 7.3 tree’s ath11k code; the bug is older than this branch.
+Risk is negligible; the failure mode is memory corruption. That meets
+stable criteria for **this** tree.
+
+---
+
+### What the commit solves for this tree
+`ath11k_wmi_tlv_ext_hal_reg_caps()` trusted firmware `phy_id` as an
+index into a 3-slot array. A bad `phy_id` overwrites the rest of `struct
+ath11k_base`. The patch rejects those records before the copy.
+
+### Stable rules
+Small, obviously correct, no new APIs, applies cleanly, fixes a real OOB
+write.
+
+### Risk vs benefit
+Benefit is preventing kernel memory corruption on ath11k bring-up with
+bad firmware. Risk is an early `-EINVAL` only when `phy_id` is already
+invalid.
+
+### Concerns
+No in-the-wild crash report; trigger is firmware, not unprivileged
+syscalls. That does not make an OOB write unsuitable for stable. No
+backport rework needed here.
+
+---
+
+Verification:
+- **[Phase 1]** Parsed tags: two Qualcomm Reviewed-by, maintainer
+  SOB/Link; no Fixes/Reported-by/Cc:stable
+- **[Phase 2]** Diff: +6 in `ath11k_wmi_tlv_ext_hal_reg_caps()`;
+  `ARRAY_SIZE` check before `memcpy(&soc->hal_reg_cap[reg_cap.phy_id],
+  ...)`
+- **[Phase 2]** `MAX_RADIOS` is 3; `hal_reg_cap[MAX_RADIOS]` in
+  `core.h:971`; `phy_id` is firmware `u32`
+- **[Phase 3]** `git blame`: memcpy from `d5c65159f28953` (2019); check
+  from `f8729a40ebcc9`
+- **[Phase 3]** Introducer in v5.6, not v5.5; fix in v7.3-rc1, not v7.2
+- **[Phase 3]** `git merge-base --is-ancestor f8729a40ebcc9 HEAD` → yes
+  (mainline already has the fix; ignored as “already selected”)
+- **[Phase 3]** No series/prereqs; author has only this ath11k commit
+  here
+- **[Phase 4]** `b4 dig -c f8729a40ebcc9`: v1 at
+  patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn
+- **[Phase 4]** `b4 dig -a`: v1 only; `b4 dig -w`: maintainer + linux-
+  wireless + ath11k list
+- **[Phase 4]** mbox: Reviewed-by Baochen Qiang + Rameshkumar Sundaram;
+  Jeff Johnson applied `[1/1]`; no NAK
+- **[Phase 4]** lore HTTP fetch 403; used `b4 dig -m` instead
+- **[Phase 5]** Call chain: WMI `SERVICE_READY_EXT` →
+  `ath11k_service_ready_ext_event` → TLV parse → this function
+- **[Phase 5]** ath12k has the same unguarded pattern (sibling, not a
+  prereq)
+- **[Phase 6]** `git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`;
+  `make kernelversion` = 7.3.0-rc4; buggy function present
+- **[Phase 6]** Surrounding code still matches 2019 introducer → clean
+  apply
+- **[Phase 7]** MAINTAINERS: Jeff Johnson, Supported
+- **[Phase 8]** Failure mode: 40-byte OOB write into `ath11k_base` after
+  `hal_reg_cap[]` → HIGH
+- **UNVERIFIED:** stable@ lore search (HTTP 403); whether any shipping
+  firmware actually sent `phy_id >= 3`
 
 **YES**
 
- drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c  | 5 +++--
- drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-index b795d11d943d0..61efdf59133f5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-@@ -68,10 +68,11 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	int pid, id;
- 	u8 *txwi = (u8 *)txwi_ptr;
- 	struct mt76_txwi_cache *t;
--	struct mt7615_sta *msta;
-+	struct mt7615_sta *msta = NULL;
- 	void *txp;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 3305ec66ddbf2..c6b9e84b169c9 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -4816,6 +4816,12 @@ static int ath11k_wmi_tlv_ext_hal_reg_caps(struct ath11k_base *soc,
+ 			return ret;
+ 		}
  
--	msta = wcid ? container_of(wcid, struct mt7615_sta, wcid) : NULL;
-+	if (wcid && wcid->sta)
-+		msta = container_of(wcid, struct mt7615_sta, wcid);
- 	if (!wcid)
- 		wcid = &dev->mt76.global_wcid;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-index 820b395900275..01e79f37649c1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-@@ -187,10 +187,11 @@ int mt7663_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	struct sk_buff *skb = tx_info->skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_key_conf *key = info->control.hw_key;
--	struct mt7615_sta *msta;
-+	struct mt7615_sta *msta = NULL;
- 	int pad, err, pktid;
- 
--	msta = wcid ? container_of(wcid, struct mt7615_sta, wcid) : NULL;
-+	if (wcid && wcid->sta)
-+		msta = container_of(wcid, struct mt7615_sta, wcid);
- 	if (!wcid)
- 		wcid = &dev->mt76.global_wcid;
- 
++		if (reg_cap.phy_id >= ARRAY_SIZE(soc->hal_reg_cap)) {
++			ath11k_warn(soc, "invalid reg cap phy_id %u\n",
++				    reg_cap.phy_id);
++			return -EINVAL;
++		}
++
+ 		memcpy(&soc->hal_reg_cap[reg_cap.phy_id],
+ 		       &reg_cap, sizeof(reg_cap));
+ 	}
 -- 
 2.53.0
 
