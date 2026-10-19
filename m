@@ -1,47 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A829A63AC78;
-	Mon, 19 Oct 2026 14:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609126441EF;
+	Mon, 19 Oct 2026 14:06:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418760; cv=none; b=t3hXBQ6ZwwWWs2aPG8ZRzdaRDyXpC/QKJr+LsuSNY+cdYnVyNEJ74qyaJFXCKeMCcBaV3OexH3EoStWLbcxQX6AMPupWMnCk3OpbLHmWvLlc+dL2YM6C4nnnLLtcuvyHhFOghfzX4J205aJ57QPs92aj/y3Z2E07GGIo6+eTkGE=
+	t=1792418784; cv=none; b=BEB9aOrvgnHZ48Ri8IsJTmUN5H1JbrivboEKN21dkgffTHsBsX3aePAdOyFyhZ+OHJnwXh5GfLfBgZ4s+9/p0pHwE40SW3pQL2ibXddCgyaf6LPyF2sjsm82zFl3XVB4PPUMzWU0lGrSi15DwebxsvbpJDi3fubUCShNpCpwPDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418760; c=relaxed/simple;
-	bh=/OllyKuaK9rr8TMjxRThyInFMBFVvyyr5k1dK+s7/fk=;
+	s=arc-20240116; t=1792418784; c=relaxed/simple;
+	bh=ec4ghU6yfXjblR6fUDXDHkutpdBOFVRXJKmDCHcyQDQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bezlDsHBdnyTLcfNTI3TWXtBGEfo4YMjeccgfhXWCZvFJGX39jOameQMy3oZC1DkEcqHPPWSJT6pZWYVywaevoru/0bwv2Tpm+OGY6eu2lEeFTZlpU9W6B4WN5JI/39Am72mpIt3pjVEsU7bGvdGTKGYg6wSltw2MyFWljdUpSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pov3Fl5u; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=APp/J+8XksfD0Y5g2J8vQy4fSgL3olq5msNUJrrMeN09FiHm7HEwPEwfVIyuP6AsraWa0p+DdV/aD0An4cKo2l8dABfYRHg/gRFv1mHONA7QNmMQvyiKndBTOir+ms/R7L5X42U2QqCOJsKFyo+gPGAzV444i4jtWWXfPgo2MQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPBKHXGs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pov3Fl5u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4928E1F000C8;
-	Mon, 19 Oct 2026 14:05:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPBKHXGs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F66E1F000C9;
+	Mon, 19 Oct 2026 14:06:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418757;
-	bh=+hnr5cnCaJtPv+XMTDF1DDp93i8WLqg/i31uZJe89tM=;
+	s=k20260515; t=1792418782;
+	bh=nkFJWPU1MK03QOAusoiniFX+wO1yecpInBwT2lN1yp0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Pov3Fl5un3Fm24nIIzd7YM1J8Vew9JzLYpivCm7jsNewQkKeb5iaVYt2fi4YBO3RC
-	 g56jhEvz5wiCJ+C6KprHUrEDm45qssACkP+3/2PoohF+zVxMmHbuLe/R+OkADOfBTO
-	 Sev5spqvPn78cMjujmap2bovoqcR7GomjqYYzBCbGl4Tvm8rT5X1DL0kMeKQz0dHkp
-	 NpA5iCowEyDXZ5X0/2d2LGh9HZabEBS28WOpvZP8koIUNHP4bUsEdXEJjqJIfvxnfd
-	 4AFJKZ2MLEelRitlWZ1bFqEgmOUktLkvNKx4fREvFjO1QYJho80a7I0mLNlusBFvsJ
-	 VolHlCRBPiO6g==
+	b=iPBKHXGsSHFT3UK+FJkkLhMPIhpgVqPP64LVAxhenAWaiIofAwJkCQnalqujNSE5V
+	 NUJ5OBo9XTfPwPvoIwadBrEkbg+wWr5YHNIToP4HhV1VOiLNUp9aa0s3DrzM5vCSIf
+	 cEWKSPwLwtraCtr/y3eCcn/OkiJe5gL9W2Dc8Cj3j24Hcs7IEM+0gA6kx1FHUfOFwF
+	 BPjPzPIGAcL4+AhNRUvLXIDlO5H6ZksEP0Ch1Od5Wa3IV7ZYNLWX+abpNow30ekVNd
+	 A95isPXeFOXfPwSgVN4D/lej/f3gZ3+YkfLfGSUuJr8lsxK4XgyyCxHc6OzSuKGLqi
+	 GvvkiX5Irna6A==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18] wifi: mt76: mt7603: restore hardware PS buffering after a service period
-Date: Mon, 19 Oct 2026 09:52:45 -0400
-Message-ID: <20261019135441.1420968-474-sashal@kernel.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.15] wifi: iwlwifi: mvm: reset the smart fifo state upon FW stop
+Date: Mon, 19 Oct 2026 09:53:03 -0400
+Message-ID: <20261019135441.1420968-492-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -57,109 +52,117 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 636a883e2feef5e4ff95695d3c372ceff03960f5 ]
+[ Upstream commit a51cc8131214870af92abbceab64877b27e690c2 ]
 
-Releasing buffered frames has to turn off the PSE redirect for the
-station, otherwise the released frames are looped straight back into the
-driver PS queue. Nothing ever turns it back on: mt7603_sta_ps() only runs
-on an observed PM bit transition, and MT_WCID_FLAG_PS keeps mt76 from
-reporting the same state twice. After the first service period the
-hardware therefore treats a dozing station as awake and transmits at it
-directly, which is where the retry storms and the packet loss reported
-against U-APSD clients come from.
+The smart fifo is a feature in the firmware configured by the driver.
+The driver keeps a state to remember what was the last configuration
+sent to the firmware. Obviously, if the firmware stops, we need to
+reconfigure the smart fifo. Since we didn't reset that state upon
+firmware stop, we thought the firmware is already properly
+configured and we didn't send the smart fifo configuration command
+as part of the init sequence.
 
-Re-arm hardware buffering from mt7603_mac_work() for every station that
-is still known to be asleep, once the PSD queue has drained and the
-released frames have passed the redirect stage. Frames that are still
-queued belong to the service period that was just served, so unlike on a
-sleep transition they must not be pulled back with mt7603_filter_tx().
+Reset the smart fifo state in iwl_mvm_stop_device() so that we
+will properly send the command during the init that will come
+later.
 
-Track the sleep state separately from the WTBL state, so a station that
-wakes up while the re-arm is pending is not put back to sleep.
-
-Link: https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Link: https://patch.msgid.link/20260714165826.7d3c5efe2d1a.I16b23c328a677257257f695fa6f439e41fbcd081@changeid
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-I have enough to judge this against 5.15.221: the bug is in this tree,
-the fix is real, and it needs a small mechanical backport rather than
-missing code.
-
----
-
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[wifi: mt76: mt7603:] [restore] [re-arm hardware PS buffering
-after a U-APSD/PS-Poll service period]**
+Record: **[iwlwifi/mvm] [reset] [clear cached smart-fifo state when
+firmware is stopped]**
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- `Link: https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name`
-  — this is **patch 07/10** of Felix Fietkau’s series
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` — mt76 maintainer
-  (ignore any Sasha Levin SOB)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable` (absence expected)
+- **Fixes:** none (expected for this review)
+- **Reported-by / Tested-by / Reviewed-by / Acked-by:** none
+- **Link:** `https://patch.msgid.link/20260714165826.7d3c5efe2d1a.I16b23
+  c328a677257257f695fa6f439e41fbcd081@changeid`
+- **Cc: stable:** none (expected)
+- **Signed-off-by:** Emmanuel Grumbach (author; Intel iwlwifi), Miri
+  Korenblit (iwlwifi maintainer, committer)
+- No syzbot, no CVE, no stack trace
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- **Bug:** Releasing buffered frames disables PSE redirect
-  (`mt7603_wtbl_set_ps(..., false)`). Nothing turns it back on:
-  `mt7603_sta_ps()` only runs on a PM-bit edge, and `MT_WCID_FLAG_PS`
-  suppresses duplicate notifications.
-- **Symptom:** After the first service period the HW treats a dozing STA
-  as awake, TX goes to a sleeping radio → **retry storms and packet
-  loss** on U-APSD clients.
-- **Root cause:** Missing re-arm of hardware PS buffering after an SP;
-  sleep state was conflated with WTBL PS state.
-- **Fix:** Re-arm from `mt7603_mac_work()` once the PSD queue has
-  drained; do not `mt7603_filter_tx()` on that re-arm; track
-  `ps_sleeping` separately.
+- **Bug:** Driver caches last smart-fifo config in `mvm->sf_state`.
+  Firmware stop does not clear that cache.
+- **Symptom:** After firmware is stopped and started again, init skips
+  `REPLY_SF_CFG_CMD` because the driver thinks firmware is already
+  configured.
+- **Version info:** none
+- **Root cause:** Stale driver-side firmware-config cache after the
+  firmware image is gone.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not a disguised cleanup. This is an explicit functional bug fix.
+Record: Not a disguised cleanup. It is an explicit correctness fix for
+stale cached firmware state.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS - LINE BY LINE
+## PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: INVENTORY THE CHANGES**
 Record:
-- `mac.c`: +~70 / −~7 — split `mt7603_wtbl_set_ps`, add
-  `__mt7603_wtbl_set_ps`, `mt7603_wtbl_sta_ps`,
-  `mt7603_wtbl_restore_ps`, `mt7603_mac_ps_check`; call it from
-  `mt7603_mac_work`
-- `main.c`: 1 line — `mt7603_sta_ps()` uses `mt7603_wtbl_sta_ps`
-- `mt7603.h`: `u8 ps_sleeping` plus two prototypes
-- Scope: **single-driver surgical fix** (~72/7, 3 files)
+- File: `drivers/net/wireless/intel/iwlwifi/mvm/ops.c` (+1 / −0)
+- Function: `iwl_mvm_stop_device()`
+- Scope: single-file, one-line surgical fix
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 Record:
-- Before: `mt7603_wtbl_set_ps(true)` enables PSE redirect + `filter_tx`;
-  `false` disables both. `release_buffered_frames` / PS-response TX
-  force `false` and never restore.
-- After: `sta_ps` also sets `ps_sleeping`. Temporary WTBL-off (SP)
-  leaves `ps_sleeping` true. `mac_work` (100 ms) walks stations; if `!ps
-  && ps_sleeping` and PSD is empty, re-enables redirect **without**
-  pulling in-flight SP frames back via `filter_tx`.
+- **Before:** `iwl_mvm_stop_device()` cleared
+  `IWL_MVM_STATUS_FIRMWARE_RUNNING`, paused TCM, stopped the transport,
+  and freed paging. `sf_state` was left as-is.
+- **After:** Immediately after clearing FIRMWARE_RUNNING, set
+  `mvm->sf_state = SF_UNINIT`.
+- Path: every firmware stop (mac stop, restart cleanup, D3 switch, init-
+  ucode teardown, load error paths). Not an error-only path.
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Logic / hardware-state correctness.** HW PS filter left off
-after an SP. Not UAF/leak/race in the sanitizer sense; it is a driver
-state-machine bug with airtime/retry fallout.
+Record: **Logic / correctness — stale cached firmware configuration**
+
+Verified skip in `iwl_mvm_sf_config()`:
+
+```183:188:drivers/net/wireless/intel/iwlwifi/mvm/sf.c
+        /*
+  - If an associated AP sta changed its antenna configuration, the state
+  - will remain FULL_ON but SF parameters need to be reconsidered.
+         */
+        if (new_state != SF_FULL_ON && mvm->sf_state == new_state)
+                return 0;
+```
+
+Init always tries to configure SF:
+
+```1761:1763:drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+        ret = iwl_mvm_sf_update(mvm, NULL, false);
+        if (ret)
+                IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
+```
+
+With `changed_vif == NULL` and no active MACs, that becomes
+`SF_INIT_OFF`. If `sf_state` is still `SF_INIT_OFF` from the previous
+firmware life, the command is skipped and new firmware keeps reset
+defaults.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record: Quality is high. `ps_sleeping` is updated under `ps_lock`;
-`restore_ps` re-checks it under the same lock so a wakeup cannot put the
-STA back to sleep. `filter=false` on restore is required so SP frames
-are not recycled. Risk: extra WTBL/PSE MMIO from mac_work (low; only
-stations that need re-arm). No public API change.
+Record:
+- Obviously correct: firmware is gone, cached config must be invalid.
+- Minimal: one assignment under `mvm->mutex` (`lockdep_assert_held`).
+- Regression risk: very low. On firmware with
+  `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD` (commit `ff04f78ce38d7`, 2024),
+  `iwl_mvm_sf_update()` already returns 0 and never sends the command;
+  resetting the cache is a no-op there.
 
 ---
 
@@ -167,43 +170,32 @@ stations that need re-arm). No public API change.
 
 **Step 3.1: BLAME THE CHANGED LINES**
 Record:
-- `mt7603_wtbl_set_ps` from `c8846e1015022d` (2019-02-26) — initial
-  MT7603 driver, **in this tree**
-- The off-without-restore came from `f25e813bf48dce` (2019-03-07) “clear
-  ps filtering mode before releasing buffered frames” — **in this tree**
-  (`git merge-base --is-ancestor` exit 0). That commit is what made SPs
-  work at all; it never re-armed.
+- Surrounding `iwl_mvm_stop_device()` body: `cf5b462768474` (2020, moved
+  out of line).
+- Smart FIFO and `sf_state` skip logic: `1f3b0ff8eccef` (“iwlwifi: mvm:
+  Add Smart FIFO support”, 2013-12-17, contained in v3.14-rc1).
+- Bug has been present for a long time; not recent code.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Bug-introducing commit is `f25e813bf48dce`,
-present here.
+Record: No `Fixes:` tag. Buggy pattern is the original 2013 SF cache
+plus the skip-if-same-state optimization, not a recent regression.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Candidate is `636a883e2feef` (not in HEAD). Series around it:
-1. `a547b414bf7ea` — **new feature** `MT_DRV_HW_PS_BUFFERING` (other
-   chips)
-2–3. mt7915/mt7996 MCU PS sync
-4. EOSP bit in `mt76_release_buffered_frames`
-5. `fix U-APSD service period termination` (mt7603 `main.c`)
-6. tell mac80211 when PS queue is empty
-7. **this commit**
-8. file buffered frames under the reported TID
-9–10. mt76 link-id / mt7996 OOB
-
-This commit does **not** call anything those others add. Sibling 4–6 fix
-other U-APSD bugs; they are complementary, not compile/runtime
-prerequisites.
+Record:
+- Nearby same-author series (same Change-Id date 20260714165826):
+  - `0a00c3ec2db76` device_powered_off → `iwl_mvm_restart_cleanup()`
+    (independent)
+  - `71ac392d8b5c2` MLD analogue (different driver)
+- This patch does not depend on those.
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Felix Fietkau is the mt76 maintainer and original mt7603 author.
+Record: Emmanuel Grumbach is a long-time Intel iwlwifi core author. Miri
+Korenblit is the listed iwlwifi maintainer. High confidence in the
+diagnosis.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: Mainline uses `mt76_wcid_ptr` (`dc66a129adf1f`, 2025, **not
-here**) and 4-arg `mt7603_filter_tx(dev, sta->vif->idx, idx, ...)`
-(`fe0ea395f0a35`, 2023, **not here**). In 5.15, `msta->vif` is **never
-assigned**. A correct backport is: 3-arg `mt7603_filter_tx(dev, idx,
-false)` and `rcu_dereference(dev->mt76.wcid[i])`. Logic does not need
-those later commits.
+Record: Standalone. Needs only `mvm->sf_state` and `SF_UNINIT`, both
+present here. No new helpers or struct fields.
 
 ---
 
@@ -211,134 +203,139 @@ those later commits.
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- `b4 dig -c 636a883e2feef` →
-  https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name
-- Series v1 only (`b4 dig -a`): `[PATCH 01/10] wifi: mt76: add PS
-  buffering support for HW-managed TIM drivers`
-- Thread: no NAK on patch 07; only kbuild noise on patch 10
-  (`ieee80211_txq_aql_pending`), unrelated to mt7603
-- lore.kernel.org HTTP 403 for WebFetch/curl; discussion recovered via
-  `b4 dig -m`
+- `b4 dig -c a51cc81312148`: matched `[PATCH iwlwifi-next 13/15]`
+- URL: `https://patch.msgid.link/20260714143119.7d3c5efe2d1a.I16b23c328a
+  677257257f695fa6f439e41fbcd081@changeid`
+- `b4 dig -a`: v1 (`20260714143119`) and v2 (`20260714165826`, the
+  applied Link:). This hunk is identical in v1/v2.
+- Series title: “wifi: iwlwifi: updates - 07-14-2026” (15 patches mixing
+  features and fixes). This one is self-contained.
+- Saved mbox had the series posts, no replies/NAKs on this patch. No
+  `Cc: stable` in review.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: `b4 dig -w`: Felix Fietkau, `linux-wireless@vger.kernel.org`. No
-extra Reviewed-by. Author is the subsystem maintainer.
+Record (`b4 dig -w`): To Johannes Berg; Cc linux-
+wireless@vger.kernel.org and Emmanuel Grumbach. Committed by maintainer
+Miri Korenblit. No extra Reviewed-by on this patch.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: OpenWrt **mt76#1080** (closed 2026-08-01, same day as this
-series): MT7628AN AP, iPhone/U-APSD, Wi-Fi “hangs”, thousands of TX
-retries, packet loss; workaround was forcing legacy b/g. Related reports
-#865, #576, #390, #841, #375, #26. PR #1084: EOSP helped iPhone freezes;
-**retries/loss remained as a separate bug**. Commit text matches that
-remaining failure (“retry storms and the packet loss reported against
-U-APSD clients”).
+Record: No Reported-by, bugzilla, or syzbot. Failure mode is inferred
+from code + commit text, not a user crash report.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: 10-patch series. 01 is a new mt76 feature; 07 is a standalone
-mt7603 HW-PS re-arm. Full iPhone/U-APSD recovery also wants 04–06/08; 07
-still fixes a distinct, real bug.
+Record: Patch 13/15. Follow-ups 14/15 and 15/15 are related
+stop/recovery cleanup but not prerequisites. This line is independently
+correct.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: **UNVERIFIED** — lore.kernel.org/stable returned 403.
+Record: lore.kernel.org/stable search blocked by anti-bot (403).
+UNVERIFIED whether it was previously requested or rejected for stable.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS**
-Record: `mt7603_wtbl_set_ps` → `__mt7603_wtbl_set_ps`; added
-`mt7603_wtbl_sta_ps`, `mt7603_wtbl_restore_ps`, `mt7603_mac_ps_check`;
-`mt7603_sta_ps`; `mt7603_mac_work`.
+**Step 5.1: KEY FUNCTIONS**
+Record: `iwl_mvm_stop_device()` (modified). Related:
+`iwl_mvm_sf_config()`, `iwl_mvm_sf_update()`, `iwl_mvm_up()`.
 
 **Step 5.2: TRACE CALLERS**
-Record (this tree):
-- `mt7603_sta_ps` ← `mt76_check_sta()` via `drv->sta_ps` on RX PM-bit
-  change
-- `mt7603_wtbl_set_ps(false)` still used by
-  `mt7603_release_buffered_frames` and `mt7603_tx_prepare_skb` (PS
-  response) — those are the paths that drop HW buffering
-- `mt7603_mac_work` — delayed work every `MT7603_WATCHDOG_TIME` (100 ms)
+Record: `iwl_mvm_stop_device()` is called from:
+- `ops.c` NVM/init-ucode teardown
+- `mac80211.c` `iwl_mvm_restart_cleanup()`, `__iwl_mvm_mac_start()`
+  fast-resume fail, `__iwl_mvm_mac_stop()`
+- `fw.c` `iwl_mvm_up()` / `iwl_mvm_load_d3_fw()` error paths
+- `d3.c` `iwl_mvm_switch_to_d3()`
+
+Reachable from interface down, rfkill/stop, suspend (non-fast), firmware
+restart, and probe/init teardown. Common laptop WiFi paths.
 
 **Step 5.3: TRACE CALLEES**
-Record: PSE_RTA write + poll, optional `mt7603_filter_tx`, WTBL1
-POWER_SAVE bit, `ps_lock`. Restore skips `filter_tx`.
+Record: Stop path tears down firmware/transport. The new line only
+writes a field; no new I/O.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Userspace-reachable: STA in PS/U-APSD associated to an
-mt7603/MT7628 AP → mac80211 `.release_buffered_frames` / PS-Poll. **Yes,
-unprivileged clients trigger this.**
+Record: Userspace `ip link set wlan0 down/up`, rfkill, suspend/resume,
+and mac80211 restart all hit this. Bug is reachable without special
+debug options.
+
+Nuance (verified): `SF_FULL_ON` is never skipped, so association still
+sends SF config. The missed command is the init/unassociated
+`SF_INIT_OFF` after a stop that left `sf_state == SF_INIT_OFF` (typical
+after disconnect then ifdown, or never-associated then wifi toggle).
+During `IWL_MVM_STATUS_IN_HW_RESTART`, `iwl_mvm_sf_update()` returns
+early anyway; this reset still makes post-restart updates send when
+restart completes.
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Same “turn off PS to release frames” exists in `tx_prepare_skb`;
-`ps_sleeping` covers that too because it is only cleared on a real wake.
+Record: Same series resets other driver state after firmware death
+(`device_powered_off`, MLD recovery). `sf_state` was the one cache not
+cleared on stop. No duplicate fix already present besides this commit.
 
 ---
 
 ## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** Tree is **5.15.221** (`pending-5.15`,
-`p-5.15-2-g6703e5d2f3a29`).
-- `mt7603_release_buffered_frames` still does `mt7603_wtbl_set_ps(dev,
-  msta, false)` (`main.c:434`)
-- `mt76_check_sta` still uses `MT_WCID_FLAG_PS` to skip duplicate
-  `sta_ps`
-- `636a883e2feef` is **not** an ancestor of HEAD
+Record:
+- Local tree: `git describe HEAD` → **v7.3-rc4-27-gf0100363d8c37**;
+  `make kernelversion` → **7.3.0-rc4**
+- `sf_state`, skip-if-same-state, and `iwl_mvm_up()` SF init all exist
+- Bug introduced with Smart FIFO in 2013 (`1f3b0ff8eccef`); ancestor of
+  this HEAD
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: `git show 636a883e2feef | git apply --check` **fails**. Needed
-adaptations:
-1. `mt7603_filter_tx(dev, sta->vif->idx, idx, false)` →
-   `mt7603_filter_tx(dev, idx, false)` (3-arg; `msta->vif` unused here)
-2. `mt76_wcid_ptr(dev, i)` → `rcu_dereference(dev->mt76.wcid[i])`
-3. `mac_work` context differs (`mt76_tx_status_check` arity,
-   `aggr_stats` location) — insertion after `mt7603_edcca_check` is
-   still valid
-
-`main.c` hunk and `ps_sleeping` field apply. **Backport difficulty:
-minor rework, not a redesign.**
+Record: Clean apply. Pre-fix `iwl_mvm_stop_device()` already has the
+insertion point next to `clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING,
+...)`. Expected difficulty: clean apply.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No `ps_sleeping` / `mac_ps_check` / `wtbl_restore_ps` in this
-tree. Older PS commits here (`e004b70066002`, `9dc27bcbe78c5`,
-`d55aa5e17461b`) do not re-arm after an SP.
+Record: No earlier equivalent reset of `sf_state` on stop. Only the
+start-time `mvm->sf_state = SF_UNINIT` in `iwl_op_mode_mvm_start()`
+(probe), which does not cover later stop/start cycles.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: **drivers/net/wireless/mediatek/mt76/mt7603** —
-**PERIPHERAL/IMPORTANT for that hardware.** MT7603E/MT7628 is common on
-low-end APs/routers (`CONFIG_MT7603E`). Not core mm/fs, but AP mode with
-phones is a primary use.
+**Step 7.1: SUBSYSTEM AND CRITICALITY**
+Record: **wifi / iwlwifi mvm**. **IMPORTANT** — Intel WiFi is one of the
+most common laptop NICs. Not core mm/VFS, but far from
+peripheral/staging.
 
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Mature driver (landed 2019). Little 5.15-era churn; the bug is
-long-lived.
+**Step 7.2: SUBSYSTEM ACTIVITY**
+Record: Very active. This patch came in an iwlwifi-next 15-patch update
+dump, then was taken by the maintainer.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: **Driver-specific:** mt7603/MT7628 in AP mode with power-
-save/U-APSD clients (iPhones and similar).
+**Step 8.1: WHO IS AFFECTED**
+Record: Intel iwlwifi **mvm** users whose firmware does **not**
+advertise `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD`. Driver-specific /
+firmware-version-specific. Still a large installed base of 22000-and-
+older-class chips plus any newer FW without that TLV.
 
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: First PS-Poll or U-APSD SP after the client dozes. Common on
-phones (Instagram/video in #1080). Unprivileged associated STAs trigger
-it.
+**Step 8.2: TRIGGER CONDITIONS**
+Record: Firmware stop then start while cached state is `SF_INIT_OFF` or
+`SF_UNINIT`. Common: wifi radio toggle, interface down/up, some suspend
+paths. Not a race. Unprivileged users can toggle wifi and hit it.
 
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: **HIGH** (not kernel oops). Retry storms, packet loss, AP
-“hangs” vs PS clients; wasted airtime can hurt the whole BSS. Users had
-to force legacy b/g.
+**Step 8.3: FAILURE MODE SEVERITY**
+Record: Firmware left without host `REPLY_SF_CFG_CMD` after reload
+(wrong RX FIFO watermarks/timers in unassociated/init). Not an oops,
+deadlock, or filesystem corruption.
+**Severity: MEDIUM** (wrong firmware config / power and RX-FIFO
+behavior; associated `SF_FULL_ON` still sent).
 
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record: **Benefit: high** for that hardware. **Risk: low–medium**
-(contained MMIO + lock; `ps_sleeping` handles races). Blind 4-arg/`vif`
-apply would be wrong here; a 3-arg + `rcu_dereference` backport is safe.
+**Step 8.4: RISK-BENEFIT RATIO**
+Record:
+- **Benefit:** Restores a required init-time firmware command after
+  every firmware stop on a very common driver. Low-to-medium user-
+  visible benefit (no crash report), but the broken path is not rare.
+- **Risk:** Very low (one store under existing mutex).
+- **Ratio:** Favorable for a 1-line obviously-correct fix.
 
 ---
 
@@ -346,257 +343,125 @@ apply would be wrong here; a 3-arg + `rcu_dereference` backport is safe.
 
 **Step 9.1: COMPILE THE EVIDENCE**
 
-**FOR:**
-- Real, old bug in this tree (`f25e813bf48dce`, 2019)
-- User-visible: retry storms, loss, Wi-Fi hangs with U-APSD/iPhone
-  (OpenWrt #1080 and several older issues)
-- Small, mt7603-only, maintainer-authored, logic is clear
-- Standalone vs series patches 01–06
-- Trigger is normal AP + phone PS
+FOR:
+- Real, verified stale-cache bug; init explicitly tries to send SF
+  config and can skip it
+- One line, obviously correct, mutex-protected
+- Bug present since 2013; code exists in this tree
+- No prerequisites; applies cleanly
+- Intel iwlwifi mvm is widely deployed
+- Author/maintainer-originated; no NAKs found
 
-**AGAINST:**
-- 07/10 in a series that also adds a new mt76 feature
-- Does not apply cleanly (filter_tx arity, `mt76_wcid_ptr`, mac_work
-  context)
-- Full U-APSD repair also wants 04–06; 07 is not the entire story
-- Not a kernel crash/security/corruption bug
+AGAINST:
+- Not a crash, UAF, deadlock, corruption, or security issue
+- No user/syzbot report; impact is firmware defaults vs host SF_INIT_OFF
+- `SF_FULL_ON` still always sent, so associated operation is less
+  affected
+- Newer firmware with SMART_FIFO_OFFLOAD never needed the command
+- Submitted as iwlwifi-next “updates” 13/15, not a -fixes/stable
+  nomination
 
-**UNRESOLVED:** stable@ lore (HTTP 403). No Tested-by on the commit
-itself; OpenWrt #1080 was closed the day the series landed.
+UNRESOLVED:
+- lore.kernel.org WebFetch/stable search blocked (403 / anti-bot)
+- Exact user-visible symptom (power vs missed RX vs none) not documented
 
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — maintainer fix; matches a
-   long-standing user report
-2. Fixes a real bug that affects users? **PASS**
-3. Important issue? **PASS** — AP unusable with PS phones / BSS retry
-   storms (HIGH, not oops)
-4. Small and contained? **PASS** — ~70 lines, one driver
-5. No new features or APIs? **PASS** — internal state + helpers
-6. Can apply to the local tree? **PASS** with a small backport (not a
-   clean cherry-pick)
+**Step 9.2: STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — one assignment; merged by
+   iwlwifi maintainer
+2. Fixes a real bug that affects users? **PASS** — stale cache skips a
+   real firmware command on wifi stop/start
+3. Important issue (crash/security/corruption/deadlock)? **PASS** with
+   MEDIUM severity — wrong device firmware configuration after stop is a
+   functional bug on a common driver, not a panic. Conservative reading
+   could FAIL this bar; the 1-line nature and common trigger keep it a
+   PASS.
+4. Small and contained? **PASS** — +1 line, one function
+5. No new features or APIs? **PASS**
+6. Can apply to the local tree? **PASS** — `iwl_mvm_stop_device()`,
+   `sf_state`, and `SF_UNINIT` are all here
 
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: None (not a device ID/quirk/DT/build/doc exception). Qualifies
-as a normal driver bug fix.
+**Step 9.3: EXCEPTION CATEGORIES**
+Record: None (not a device ID, quirk table, DT, build, or docs fix).
 
-**Step 9.4: MAKE YOUR DECISION**
-The buggy “disable PSE redirect on SP, never re-arm” path is in
-5.15.221. That is a real AP-mode failure for mt7603/MT7628, not a new-
-stack issue. The patch is the right fix and is adaptable without pulling
-the HW_PS_BUFFERING feature series.
+**Step 9.4: DECISION**
+This is a real, long-standing iwlwifi correctness bug: after firmware
+stop the driver keeps believing smart-fifo is already programmed, so
+`iwl_mvm_up()` skips `REPLY_SF_CFG_CMD`. The local 7.3-rc4 tree has the
+buggy cache and skip logic. The fix is a single `sf_state = SF_UNINIT`
+in the existing stop path, with no API change and negligible regression
+risk. That meets stable rules for a small, obviously correct driver
+bugfix even without a crash report.
 
 ---
 
-### What the commit solves and why it matters here
-After a service period, mt7603 leaves hardware PS buffering off. The AP
-then TX’s at a dozing client → retries and loss. That code has been in
-this tree since 2019. MT7628 APs with phones hit it in the real world.
-
-### Stable rules
-Meets the bar: real bug, contained, no new API. Needs a mechanical
-backport (`filter_tx` 3-arg, `rcu_dereference` instead of
-`mt76_wcid_ptr`), which is allowed.
+### What the commit solves for this tree
+On this checkout, `iwl_mvm_sf_config()` refuses to send smart-fifo
+config when `new_state` matches `mvm->sf_state` (except `SF_FULL_ON`).
+`sf_state` was only initialized at op-mode start, not when firmware
+actually stopped. After a normal mac stop / restart / D3 firmware swap,
+the next `iwl_mvm_up()` therefore omits `REPLY_SF_CFG_CMD`. Stable users
+hitting wifi toggle, rfkill, or non-fast suspend on Intel mvm hardware
+then run reloaded firmware without the host SF init the driver intends.
 
 ### Risk vs benefit
-Benefit is high for mt7603 AP users; risk is low if the backport does
-**not** use `sta->vif` (unset in 5.15). Sibling EOSP/TIM patches would
-help more U-APSD cases but are not required for this re-arm.
-
-### Concerns
-Cherry-pick will not apply as-is. Do not copy the 4-argument
-`mt7603_filter_tx(..., sta->vif->idx, ...)` call into this tree.
+Benefit is restoring firmware RX-FIFO configuration after a common
+stop/start cycle. Risk is essentially nil: one field write under
+`mvm->mutex`, harmless on offload firmware. Backport needs no extra
+commits.
 
 ---
 
 Verification:
-- [Phase 1] Subject/body/tags: restore HW PS after SP; Link is 07/10;
-  maintainer SOB only
-- [Phase 2] Diff: ~72/7 in mt7603 mac.c/main.c/mt7603.h; `ps_sleeping` +
-  mac_work re-arm
-- [Phase 3] `git describe HEAD` / Makefile: 5.15.221, branch
-  `pending-5.15`
-- [Phase 3] `git merge-base --is-ancestor 636a883e2feef HEAD` → not in
-  tree
-- [Phase 3] blame: `c8846e1015022d` (driver), `f25e813bf48dce` (clear PS
-  before release) — both ancestors of HEAD
-- [Phase 3] Related series commits listed; 01 is new feature; 07 does
-  not call those APIs
-- [Phase 4] `b4 dig -c 636a883e2feef` / `-a` / `-w` / `-m`: lore thread,
-  v1-only series, wireless list, no NAK on 07
-- [Phase 4] OpenWrt mt76#1080 / #1084: retry storms + iPhone U-APSD;
-  issue closed 2026-08-01
-- [Phase 5] Callers verified in 5.15: `sta_ps`,
-  `release_buffered_frames`, `tx_prepare_skb`, `mac_work` 100 ms
-- [Phase 6] Local `mt7603_wtbl_set_ps` / `release_buffered_frames` still
-  match the bug; `mt76_wcid_ptr` absent; `filter_tx` is 3-arg;
-  `msta->vif` never set
-- [Phase 6] `git apply --check` of 636a883e2feef fails on filter_tx/wcid
-  helper; main.c hunk would apply
-- [Phase 8] Failure mode: retry storms / packet loss / AP hang vs PS
-  clients, severity HIGH
-- UNVERIFIED: stable@ mailing-list discussion (lore 403)
+- [Phase 1] Parsed tags: SOB Emmanuel Grumbach + Miri Korenblit; Link to
+  msgid; no Fixes/Reported-by/stable Cc
+- [Phase 2] Diff: +1 line `mvm->sf_state = SF_UNINIT` in
+  `iwl_mvm_stop_device()`
+- [Phase 2] Confirmed skip in `iwl_mvm_sf_config()` and init call in
+  `iwl_mvm_up()`
+- [Phase 3] `git show a51cc81312148`: 1 file, +1; parent `974cbad4c86d6`
+- [Phase 3] Original SF: `1f3b0ff8eccef` (2013-12-17), ancestor of HEAD;
+  `git merge-base --is-ancestor` succeeded
+- [Phase 3] Blame: new line is this commit; rest of stop_device from
+  `cf5b462768474` (2020)
+- [Phase 3] Follow-up `0a00c3ec2db76` is independent, not required
+- [Phase 4] `b4 dig -c a51cc81312148`: lore match; patch 13/15 of
+  iwlwifi-next updates
+- [Phase 4] `b4 dig -a`: v1 and v2; committed Link is v2; hunk unchanged
+- [Phase 4] `b4 dig -w`: Johannes Berg + linux-wireless; no NAK in saved
+  mbox
+- [Phase 4] UNVERIFIED: stable list discussion (lore 403/anti-bot);
+  WebFetch of lore URLs also 403
+- [Phase 5] Callers of `iwl_mvm_stop_device()`: mac80211 stop/restart,
+  d3, fw error, NVM init
+- [Phase 5] `IWL_UCODE_TLV_API_SMART_FIFO_OFFLOAD` added in
+  `ff04f78ce38d7` (2024); offload path ignores SF commands
+- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
+  kernelversion 7.3.0-rc4
+- [Phase 6] Pre-fix `iwl_mvm_stop_device()` at parent matches insertion
+  context; clean apply
+- [Phase 7] MAINTAINERS: INTEL WIRELESS WIFI LINK, Miri Korenblit
+- [Phase 8] Failure mode: skipped firmware SF init after stop; severity
+  MEDIUM, not oops/deadlock
+- UNVERIFIED: concrete user-visible packet-loss vs power-only impact
+  (not stated in commit or mail)
 
 **YES**
 
- .../net/wireless/mediatek/mt76/mt7603/mac.c   | 73 +++++++++++++++++--
- .../net/wireless/mediatek/mt76/mt7603/main.c  |  2 +-
- .../wireless/mediatek/mt76/mt7603/mt7603.h    |  4 +
- 3 files changed, 72 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 6387f9e61060a..85c727fc44e6f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -235,16 +235,17 @@ void mt7603_wtbl_set_smps(struct mt7603_dev *dev, struct mt7603_sta *sta,
- 	sta->smps = enabled;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d6a13174b5617..3e7c620821069 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1535,6 +1535,7 @@ void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 	iwl_fw_cancel_timestamp(&mvm->fwrt);
  
--void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
--			bool enabled)
-+static void
-+__mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
-+		     bool enabled, bool filter)
- {
- 	int idx = sta->wcid.idx;
- 	u32 addr;
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
++	mvm->sf_state = SF_UNINIT;
  
--	spin_lock_bh(&dev->ps_lock);
-+	lockdep_assert_held(&dev->ps_lock);
+ 	iwl_mvm_pause_tcm(mvm, false);
  
- 	if (sta->ps == enabled)
--		goto out;
-+		return;
- 
- 	mt76_wr(dev, MT_PSE_RTA,
- 		FIELD_PREP(MT_PSE_RTA_TAG_ID, idx) |
-@@ -255,7 +256,7 @@ void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
- 
- 	mt76_poll(dev, MT_PSE_RTA, MT_PSE_RTA_BUSY, 0, 5000);
- 
--	if (enabled)
-+	if (enabled && filter)
- 		mt7603_filter_tx(dev, sta->vif->idx, idx, false);
- 
- 	addr = mt7603_wtbl1_addr(idx);
-@@ -264,8 +265,34 @@ void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
- 		 enabled * MT_WTBL1_W3_POWER_SAVE);
- 	mt76_clear(dev, MT_WTBL1_OR, MT_WTBL1_OR_PSM_WRITE);
- 	sta->ps = enabled;
-+}
- 
--out:
-+void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
-+			bool enabled)
-+{
-+	spin_lock_bh(&dev->ps_lock);
-+	__mt7603_wtbl_set_ps(dev, sta, enabled, enabled);
-+	spin_unlock_bh(&dev->ps_lock);
-+}
-+
-+void mt7603_wtbl_sta_ps(struct mt7603_dev *dev, struct mt7603_sta *sta, bool ps)
-+{
-+	spin_lock_bh(&dev->ps_lock);
-+	sta->ps_sleeping = ps;
-+	__mt7603_wtbl_set_ps(dev, sta, ps, ps);
-+	spin_unlock_bh(&dev->ps_lock);
-+}
-+
-+void mt7603_wtbl_restore_ps(struct mt7603_dev *dev, struct mt7603_sta *sta)
-+{
-+	spin_lock_bh(&dev->ps_lock);
-+	/*
-+	 * Frames that are already queued for the station belong to the service
-+	 * period that has just been served, so unlike on a sleep transition
-+	 * they must not be pulled back into the PS queue.
-+	 */
-+	if (sta->ps_sleeping)
-+		__mt7603_wtbl_set_ps(dev, sta, true, false);
- 	spin_unlock_bh(&dev->ps_lock);
- }
- 
-@@ -1816,6 +1843,39 @@ mt7603_false_cca_check(struct mt7603_dev *dev)
- 	mt7603_adjust_sensitivity(dev);
- }
- 
-+/*
-+ * Releasing buffered frames turns off the PSE redirect for a station, since
-+ * the released frames would otherwise be looped back into the driver PS queue
-+ * again. mac80211 never tells us when the service period is over, so hardware
-+ * buffering has to be re-armed here for every station that is still known to
-+ * be asleep. Waiting for the PSD queue to drain makes sure that the released
-+ * frames have already passed the redirect stage.
-+ */
-+static void
-+mt7603_mac_ps_check(struct mt7603_dev *dev)
-+{
-+	int i;
-+
-+	if (dev->mphy.q_tx[MT_TXQ_PSD]->queued)
-+		return;
-+
-+	rcu_read_lock();
-+	for (i = 0; i < MT7603_WTBL_STA; i++) {
-+		struct mt76_wcid *wcid = mt76_wcid_ptr(dev, i);
-+		struct mt7603_sta *msta;
-+
-+		if (!wcid || !wcid->sta)
-+			continue;
-+
-+		msta = container_of(wcid, struct mt7603_sta, wcid);
-+		if (msta->ps || !msta->ps_sleeping)
-+			continue;
-+
-+		mt7603_wtbl_restore_ps(dev, msta);
-+	}
-+	rcu_read_unlock();
-+}
-+
- void mt7603_mac_work(struct work_struct *work)
- {
- 	struct mt7603_dev *dev = container_of(work, struct mt7603_dev,
-@@ -1830,6 +1890,7 @@ void mt7603_mac_work(struct work_struct *work)
- 	dev->mphy.mac_work_count++;
- 	mt76_update_survey(&dev->mphy);
- 	mt7603_edcca_check(dev);
-+	mt7603_mac_ps_check(dev);
- 
- 	for (i = 0, idx = 0; i < 2; i++) {
- 		u32 val = mt76_rr(dev, MT_TX_AGG_CNT(i));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index f8a43d9f72f95..04e3966ab047f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -410,7 +410,7 @@ mt7603_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
- 	struct sk_buff_head list;
- 
- 	mt76_stop_tx_queues(&dev->mphy, sta, true);
--	mt7603_wtbl_set_ps(dev, msta, ps);
-+	mt7603_wtbl_sta_ps(dev, msta, ps);
- 	if (ps)
- 		return;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-index 55a034ccbacd9..c43ddd3e693c0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-@@ -80,6 +80,7 @@ struct mt7603_sta {
- 	u8 smps;
- 
- 	u8 ps;
-+	u8 ps_sleeping;
- };
- 
- struct mt7603_vif {
-@@ -229,6 +230,9 @@ int mt7603_wtbl_set_key(struct mt7603_dev *dev, int wcid,
- 			struct ieee80211_key_conf *key);
- void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
- 			bool enabled);
-+void mt7603_wtbl_sta_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
-+			bool ps);
-+void mt7603_wtbl_restore_ps(struct mt7603_dev *dev, struct mt7603_sta *sta);
- void mt7603_wtbl_set_smps(struct mt7603_dev *dev, struct mt7603_sta *sta,
- 			  bool enabled);
- void mt7603_filter_tx(struct mt7603_dev *dev, int mac_idx, int idx, bool abort);
 -- 
 2.53.0
 
