@@ -1,42 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EB9E638AEE;
-	Mon, 19 Oct 2026 14:05:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A829A63AC78;
+	Mon, 19 Oct 2026 14:05:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418754; cv=none; b=stATRH+jArRZwb3+rEjFmUk5gSKRYJ8J/kQLGz8gudqp6T9mdi+1pv+REQtS4ohXliwz/npdsEz0Eaeq51SU19wj8XB48rjX1AxkwAG2+CGTMOUrehWS1ZDyXi/e1anJEz44DggTcrR0dP2M/Nc2EIS8Y1LAjFFNbmSMglldpo4=
+	t=1792418760; cv=none; b=t3hXBQ6ZwwWWs2aPG8ZRzdaRDyXpC/QKJr+LsuSNY+cdYnVyNEJ74qyaJFXCKeMCcBaV3OexH3EoStWLbcxQX6AMPupWMnCk3OpbLHmWvLlc+dL2YM6C4nnnLLtcuvyHhFOghfzX4J205aJ57QPs92aj/y3Z2E07GGIo6+eTkGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418754; c=relaxed/simple;
-	bh=CsUbPH3jTacXCVO8MlogOfaQDmir9kkrSVKFVFzIRPw=;
+	s=arc-20240116; t=1792418760; c=relaxed/simple;
+	bh=/OllyKuaK9rr8TMjxRThyInFMBFVvyyr5k1dK+s7/fk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=il6wu4hTDIeNIy2RrkuszsM2pe+gMNDJwbN77kBOUTyJBb7m7GFGcNlMFDB0YKnMprrg/tV957VyBlELgj7qxx0a1awkFCK1q7rnzNUA0th5aQYy48R2h1QxEYPiWxfeQwIQ+WEi1gU42vuzSUe8gD8nBLD9RObhB2Dd35gaNXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oDvnWbov; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=bezlDsHBdnyTLcfNTI3TWXtBGEfo4YMjeccgfhXWCZvFJGX39jOameQMy3oZC1DkEcqHPPWSJT6pZWYVywaevoru/0bwv2Tpm+OGY6eu2lEeFTZlpU9W6B4WN5JI/39Am72mpIt3pjVEsU7bGvdGTKGYg6wSltw2MyFWljdUpSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pov3Fl5u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oDvnWbov"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A24291F000C9;
-	Mon, 19 Oct 2026 14:05:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pov3Fl5u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4928E1F000C8;
+	Mon, 19 Oct 2026 14:05:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418751;
-	bh=IJ6/zTLwp21/j+Ltkgr4uo8k0Js/leTHH4yBKPlXV08=;
+	s=k20260515; t=1792418757;
+	bh=+hnr5cnCaJtPv+XMTDF1DDp93i8WLqg/i31uZJe89tM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oDvnWbovA1SsJpGApMt1M/fyz1gE7tXtAOXu3Jlt/MURAIdtVkgN/ZF1svdq36MjM
-	 ZKUBgs2eY6dKuj59rkIs/6hUDn098wqHEreRfWzim/BTEhsKFrL9TN90CdTok+CS4d
-	 daq5ySCHeRnpPIuzRuiozVbFQBGByDiT1Q25XQQFmHaRbuHDAMlsw2eRozxMlhUok0
-	 jdRAtu9mNSbEDdaefj1m1gKa2zlsasya8ZtQhh8LbZGz0I2CX7SdFLAZ+HDrZvyP6f
-	 t9FtEOyvKqjWWkqDqs10OJQJrOjvN7lOHy7rGH9ZDyKRymd0CCdH429bgJ3KtBr6jH
-	 zlJEKzFIA2zug==
+	b=Pov3Fl5un3Fm24nIIzd7YM1J8Vew9JzLYpivCm7jsNewQkKeb5iaVYt2fi4YBO3RC
+	 g56jhEvz5wiCJ+C6KprHUrEDm45qssACkP+3/2PoohF+zVxMmHbuLe/R+OkADOfBTO
+	 Sev5spqvPn78cMjujmap2bovoqcR7GomjqYYzBCbGl4Tvm8rT5X1DL0kMeKQz0dHkp
+	 NpA5iCowEyDXZ5X0/2d2LGh9HZabEBS28WOpvZP8koIUNHP4bUsEdXEJjqJIfvxnfd
+	 4AFJKZ2MLEelRitlWZ1bFqEgmOUktLkvNKx4fREvFjO1QYJho80a7I0mLNlusBFvsJ
+	 VolHlCRBPiO6g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Stefan Hansson <newbyte@postmarketos.org>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.6] wifi: rsi: Fix types to appease CFI
-Date: Mon, 19 Oct 2026 09:52:41 -0400
-Message-ID: <20261019135441.1420968-470-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18] wifi: mt76: mt7603: restore hardware PS buffering after a service period
+Date: Mon, 19 Oct 2026 09:52:45 -0400
+Message-ID: <20261019135441.1420968-474-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,506 +57,546 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Stefan Hansson <newbyte@postmarketos.org>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit da308f6e471252ae5e8009dcea16bc5e9c9dc5dd ]
+[ Upstream commit 636a883e2feef5e4ff95695d3c372ceff03960f5 ]
 
-Avoids errors like:
+Releasing buffered frames has to turn off the PSE redirect for the
+station, otherwise the released frames are looped straight back into the
+driver PS queue. Nothing ever turns it back on: mt7603_sta_ps() only runs
+on an observed PM bit transition, and MT_WCID_FLAG_PS keeps mt76 from
+reporting the same state twice. After the first service period the
+hardware therefore treats a dozing station as awake and transmits at it
+directly, which is where the retry storms and the packet loss reported
+against U-APSD clients come from.
 
-    CFI failure at kthread+0x124/0x1cc (target: rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type: 0x89fb613d)
+Re-arm hardware buffering from mt7603_mac_work() for every station that
+is still known to be asleep, once the PSD queue has drained and the
+released frames have passed the redirect stage. Frames that are still
+queued belong to the service period that was just served, so unlike on a
+sleep transition they must not be pulled back with mt7603_filter_tx().
 
-As seen in the aforementioned error this was tested using the downstream
-redpine_91x driver found in the Librem 5's downstream source tree.
-However, it appears that this driver is a modified version of the rsi
-driver found in mainline Linux and as such I decided to port the changes
-here too.
+Track the sleep state separately from the WTBL state, so a station that
+wakes up while the re-arm is pending is not put back to sleep.
 
-Signed-off-by: Stefan Hansson <newbyte@postmarketos.org>
-Link: https://patch.msgid.link/20260804-rsi-cfi-fix-v2-1-59679a520240@postmarketos.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-I have enough to decide: this is a 6.12 tree, the mismatched kthread
-types are present, and a CFI failure here is a default kernel BUG.
+I have enough to judge this against 5.15.221: the bug is in this tree,
+the fix is real, and it needs a small mechanical backport rather than
+missing code.
 
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
+---
 
-Step 1.1: PARSE THE SUBJECT LINE
-Record: [wifi: rsi] [Fix] [Correct kthread callback types so Clang CFI
-accepts them]
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+**Step 1.1: PARSE THE SUBJECT LINE**
+Record: **[wifi: mt76: mt7603:] [restore] [re-arm hardware PS buffering
+after a U-APSD/PS-Poll service period]**
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- Signed-off-by: Stefan Hansson &lt;newbyte@postmarketos.org&gt;
-  (author)
-- Link: https://patch.msgid.link/20260804-rsi-cfi-
-  fix-v2-1-59679a520240@postmarketos.org
-- Signed-off-by: Johannes Berg &lt;johannes.berg@intel.com&gt; (linux-
-  wireless maintainer)
-- No Fixes: tag (expected)
-- No Cc: stable (expected)
-- No Reported-by / Tested-by / Reviewed-by / Acked-by on the committed
-  message
-- Ignore any pipeline “Upstream commit” / “Signed-off-by: Sasha Levin”
-  markers (none present in the provided message)
+- `Link: https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name`
+  — this is **patch 07/10** of Felix Fietkau’s series
+- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` — mt76 maintainer
+  (ignore any Sasha Levin SOB)
+- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
+  by:`, or `Cc: stable` (absence expected)
 
-Notable: maintainer SOB; author is from postmarketOS; testing mentioned
-in the body, not as Tested-by.
-
-Step 1.3: ANALYZE THE COMMIT BODY TEXT
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- Bug: CFI type mismatch when kthread starts
-  `rsi_coex_scheduler_thread`.
-- Symptom: `CFI failure at kthread+0x124/0x1cc (target:
-  rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type:
-  0x89fb613d)`
-- Version info: none. Tested on Librem 5 downstream `redpine_91x`,
-  described as a modified rsi driver; author ported the same type fix to
-  mainline rsi.
-- Root cause (from message + code): thread helpers are not `int (*)(void
-  *)` as `kthread_run()` requires; `rsi_create_kthread()` takes `void
-  *func_ptr`, so the compiler cannot catch it.
+- **Bug:** Releasing buffered frames disables PSE redirect
+  (`mt7603_wtbl_set_ps(..., false)`). Nothing turns it back on:
+  `mt7603_sta_ps()` only runs on a PM-bit edge, and `MT_WCID_FLAG_PS`
+  suppresses duplicate notifications.
+- **Symptom:** After the first service period the HW treats a dozing STA
+  as awake, TX goes to a sleeping radio → **retry storms and packet
+  loss** on U-APSD clients.
+- **Root cause:** Missing re-arm of hardware PS buffering after an SP;
+  sleep state was conflated with WTBL PS state.
+- **Fix:** Re-arm from `mt7603_mac_work()` once the PSD queue has
+  drained; do not `mt7603_filter_tx()` on that re-arm; track
+  `ps_sleeping` separately.
 
-Step 1.4: DETECT HIDDEN BUG FIXES
-Record: Not a disguised cleanup. The subject says “Fix types”; it is a
-real CFI/runtime type-check failure, not style-only.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: Not a disguised cleanup. This is an explicit functional bug fix.
 
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
+---
 
-Step 2.1: INVENTORY THE CHANGES
+## PHASE 2: DIFF ANALYSIS - LINE BY LINE
+
+**Step 2.1: INVENTORY THE CHANGES**
 Record:
-- `drivers/net/wireless/rsi/rsi_91x_coex.c` —
-  `rsi_coex_scheduler_thread`
-- `drivers/net/wireless/rsi/rsi_91x_main.c` — `rsi_tx_scheduler_thread`
-- `drivers/net/wireless/rsi/rsi_91x_sdio_ops.c` — `rsi_sdio_rx_thread`
-- `drivers/net/wireless/rsi/rsi_91x_usb_ops.c` — `rsi_usb_rx_thread`
-- `drivers/net/wireless/rsi/rsi_common.h` — `rsi_create_kthread`
-- `drivers/net/wireless/rsi/rsi_sdio.h` / `rsi_usb.h` — prototypes
-- Scope: 7 files, 15 insertions / 11 deletions. Single-driver surgical
-  type fix.
+- `mac.c`: +~70 / −~7 — split `mt7603_wtbl_set_ps`, add
+  `__mt7603_wtbl_set_ps`, `mt7603_wtbl_sta_ps`,
+  `mt7603_wtbl_restore_ps`, `mt7603_mac_ps_check`; call it from
+  `mt7603_mac_work`
+- `main.c`: 1 line — `mt7603_sta_ps()` uses `mt7603_wtbl_sta_ps`
+- `mt7603.h`: `u8 ps_sleeping` plus two prototypes
+- Scope: **single-driver surgical fix** (~72/7, 3 files)
 
-Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 Record:
-- Before: thread functions are `void foo(struct rsi_common *common)` and
-  are passed through `void *func_ptr` into `kthread_run()`.
-- After: they are `int foo(void *data)` with `struct rsi_common *common
-  = data;`. `rsi_create_kthread()` takes `int (*func_ptr)(void *data)`.
-- Bodies are unchanged. They still end in
-  `kthread_complete_and_exit(...)`, which is `__noreturn`.
-- Path: kthread creation at driver init / coex attach, not an error-only
-  path.
+- Before: `mt7603_wtbl_set_ps(true)` enables PSE redirect + `filter_tx`;
+  `false` disables both. `release_buffered_frames` / PS-response TX
+  force `false` and never restore.
+- After: `sta_ps` also sets `ps_sleeping`. Temporary WTBL-off (SP)
+  leaves `ps_sleeping` true. `mac_work` (100 ms) walks stations; if `!ps
+  && ps_sleeping` and PSD is empty, re-enables redirect **without**
+  pulling in-flight SP frames back via `filter_tx`.
 
-Step 2.3: IDENTIFY THE BUG MECHANISM
-Record: [Type / CFI mismatch]
-- `kthread()` does `ret = threadfn(data)` with type `int (*)(void *)`
-  (`kernel/kthread.c`).
-- Clang CFI hashes that type. `void (*)(struct rsi_common *)` has a
-  different hash → CFI failure.
-- Default `CONFIG_CFI_CLANG` (non-permissive) treats that as
-  `BUG_TRAP_TYPE_BUG` (`kernel/cfi.c`).
-- Fix: match the kthread callback ABI so the type hash matches.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+Record: **Logic / hardware-state correctness.** HW PS filter left off
+after an SP. Not UAF/leak/race in the sanitizer sense; it is a driver
+state-machine bug with airtime/retry fallout.
 
-Step 2.4: ASSESS THE FIX QUALITY
+**Step 2.4: ASSESS THE FIX QUALITY**
+Record: Quality is high. `ps_sleeping` is updated under `ps_lock`;
+`restore_ps` re-checks it under the same lock so a wakeup cannot put the
+STA back to sleep. `filter=false` on restore is required so SP frames
+are not recycled. Risk: extra WTBL/PSE MMIO from mac_work (low; only
+stations that need re-arm). No public API change.
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
+
+**Step 3.1: BLAME THE CHANGED LINES**
 Record:
-- Obviously correct: this is the documented kthread callback type.
-- Minimal: signatures + one local cast; no locking/API/behavior change.
-- Regression risk: very low. `kthread_complete_and_exit` is
-  `__noreturn`, so no missing `return 0`. Johannes initially worried
-  about “control reaches end of non-void function”; that does not apply.
-- Red flags: none.
+- `mt7603_wtbl_set_ps` from `c8846e1015022d` (2019-02-26) — initial
+  MT7603 driver, **in this tree**
+- The off-without-restore came from `f25e813bf48dce` (2019-03-07) “clear
+  ps filtering mode before releasing buffered frames” — **in this tree**
+  (`git merge-base --is-ancestor` exit 0). That commit is what made SPs
+  work at all; it never re-armed.
 
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: No `Fixes:` tag. Bug-introducing commit is `f25e813bf48dce`,
+present here.
 
-Step 3.1: BLAME THE CHANGED LINES
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record: Candidate is `636a883e2feef` (not in HEAD). Series around it:
+1. `a547b414bf7ea` — **new feature** `MT_DRV_HW_PS_BUFFERING` (other
+   chips)
+2–3. mt7915/mt7996 MCU PS sync
+4. EOSP bit in `mt76_release_buffered_frames`
+5. `fix U-APSD service period termination` (mt7603 `main.c`)
+6. tell mac80211 when PS queue is empty
+7. **this commit**
+8. file buffered frames under the reported TID
+9–10. mt76 link-id / mt7996 OOB
+
+This commit does **not** call anything those others add. Sibling 4–6 fix
+other U-APSD bugs; they are complementary, not compile/runtime
+prerequisites.
+
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Record: Felix Fietkau is the mt76 maintainer and original mt7603 author.
+
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Record: Mainline uses `mt76_wcid_ptr` (`dc66a129adf1f`, 2025, **not
+here**) and 4-arg `mt7603_filter_tx(dev, sta->vif->idx, idx, ...)`
+(`fe0ea395f0a35`, 2023, **not here**). In 5.15, `msta->vif` is **never
+assigned**. A correct backport is: 3-arg `mt7603_filter_tx(dev, idx,
+false)` and `rcu_dereference(dev->mt76.wcid[i])`. Logic does not need
+those later commits.
+
+---
+
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- `rsi_tx_scheduler_thread` / `rsi_create_kthread`: `dad0d04fa7ba41`
-  (“rsi: Add RS9113 wireless driver”, 2014-03-17) — present since the
-  driver was added.
-- `rsi_coex_scheduler_thread`: `2108df3c4b1856` (“rsi: add coex
-  support”, 2018-03-13).
-- Long-lived bug, not recent churn.
+- `b4 dig -c 636a883e2feef` →
+  https://patch.msgid.link/20260801145334.1166751-7-nbd@nbd.name
+- Series v1 only (`b4 dig -a`): `[PATCH 01/10] wifi: mt76: add PS
+  buffering support for HW-managed TIM drivers`
+- Thread: no NAK on patch 07; only kbuild noise on patch 10
+  (`ieee80211_txq_aql_pending`), unrelated to mt7603
+- lore.kernel.org HTTP 403 for WebFetch/curl; discussion recovered via
+  `b4 dig -m`
 
-Step 3.2: FOLLOW THE FIXES: TAG
-Record: No Fixes: tag. Buggy pattern is original driver code, not a
-later regression.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+Record: `b4 dig -w`: Felix Fietkau, `linux-wireless@vger.kernel.org`. No
+extra Reviewed-by. Author is the subsystem maintainer.
 
-Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-Record:
-- Related in-tree: `16d9f674c6198` “wifi: rsi: fix kthread lifetime race
-  between self-exit and external-stop” (already in this tree). That
-  changes stop/wait, not signatures. No prerequisite conflict.
-- This CFI fix is not in the tree (`git log --grep` on
-  `drivers/net/wireless/rsi` found nothing).
-- Standalone; v2 only added kernel-doc, not extra code deps.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+Record: OpenWrt **mt76#1080** (closed 2026-08-01, same day as this
+series): MT7628AN AP, iPhone/U-APSD, Wi-Fi “hangs”, thousands of TX
+retries, packet loss; workaround was forcing legacy b/g. Related reports
+#865, #576, #390, #841, #375, #26. PR #1084: EOSP helped iPhone freezes;
+**retries/loss remained as a separate bug**. Commit text matches that
+remaining failure (“retry storms and the packet loss reported against
+U-APSD clients”).
 
-Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-Record: Stefan Hansson is not the rsi maintainer; patch is from
-postmarketOS/Librem 5. Applied by Johannes Berg. No other rsi CFI
-commits by this author in this tree.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Record: 10-patch series. 01 is a new mt76 feature; 07 is a standalone
+mt7603 HW-PS re-arm. Full iPhone/U-APSD recovery also wants 04–06/08; 07
+still fixes a distinct, real bug.
 
-Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-Record: None. Uses existing `kthread_run` / `kthread_complete_and_exit`.
-Can apply standalone.
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+Record: **UNVERIFIED** — lore.kernel.org/stable returned 403.
 
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
+---
 
-Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-Record:
-- `b4 dig -c &lt;sha&gt;` not usable (candidate SHA not in this
-  checkout).
-- `b4 mbox` on msgid `20260804-rsi-cfi-
-  fix-v2-1-59679a520240@postmarketos.org`: v2, 1-message thread.
-- v1: https://patch.msgid.link/20260802-rsi-cfi-
-  fix-v1-1-5821d2cb54ee@postmarketos.org
-- v2 vs v1: kernel-doc only (`@common` → `@data`, `Return: 0`).
-- Reviewers: Jeff Johnson (kernel-doc / From: vs SOB mismatch; said he
-  was going to R-B after fixing many Android CFI type bugs). Johannes
-  Berg first complained about nipa kernel-doc, then confirmed it builds,
-  then applied v2. No NAK. No Cc: stable in review.
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-Step 4.2: CHECK WHO REVIEWED THE PATCH
-Record: Recipients: linux-wireless, linux-kernel, phone-devel,
-postmarketos/upstreaming. Maintainer Johannes Berg applied it. Jeff
-Johnson (Qualcomm/ath) reviewed v1.
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
+Record: `mt7603_wtbl_set_ps` → `__mt7603_wtbl_set_ps`; added
+`mt7603_wtbl_sta_ps`, `mt7603_wtbl_restore_ps`, `mt7603_mac_ps_check`;
+`mt7603_sta_ps`; `mt7603_mac_work`.
 
-Step 4.3: SEARCH FOR THE BUG REPORT
-Record: No syzbot/bugzilla. Concrete CFI log from Librem 5 downstream
-`redpine_91x`. Same mismatch exists in mainline rsi (verified in this
-tree).
+**Step 5.2: TRACE CALLERS**
+Record (this tree):
+- `mt7603_sta_ps` ← `mt76_check_sta()` via `drv->sta_ps` on RX PM-bit
+  change
+- `mt7603_wtbl_set_ps(false)` still used by
+  `mt7603_release_buffered_frames` and `mt7603_tx_prepare_skb` (PS
+  response) — those are the paths that drop HW buffering
+- `mt7603_mac_work` — delayed work every `MT7603_WATCHDOG_TIME` (100 ms)
 
-Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-Record: Single patch, v1→v2 kernel-doc only. Not a multi-patch series.
+**Step 5.3: TRACE CALLEES**
+Record: PSE_RTA write + poll, optional `mt7603_filter_tx`, WTBL1
+POWER_SAVE bit, `ps_lock`. Restore skips `filter_tx`.
 
-Step 4.5: CHECK STABLE MAILING LIST HISTORY
-Record: lore.kernel.org/stable search returned 403. Web search found no
-stable-list discussion of this CFI fix. No evidence it was rejected for
-stable.
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Record: Userspace-reachable: STA in PS/U-APSD associated to an
+mt7603/MT7628 AP → mac80211 `.release_buffered_frames` / PS-Poll. **Yes,
+unprivileged clients trigger this.**
 
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Record: Same “turn off PS to release frames” exists in `tx_prepare_skb`;
+`ps_sleeping` covers that too because it is only cleared on a real wake.
 
-Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-Record: `rsi_coex_scheduler_thread`, `rsi_tx_scheduler_thread`,
-`rsi_sdio_rx_thread`, `rsi_usb_rx_thread`, `rsi_create_kthread`.
+---
 
-Step 5.2: TRACE CALLERS
-Record:
-- `rsi_create_kthread()` → `kthread_run(func_ptr, common, ...)`
-- Callers: `rsi_91x_init` (Tx-Thread), `rsi_coex_attach` (Coex-Tx-
-  Thread), SDIO probe (`rsi_sdio_rx_thread`), USB init
-  (`rsi_usb_rx_thread`).
-- Context: process context at probe/init, not IRQ.
+## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
-Step 5.3: TRACE CALLEES
-Record: `rsi_wait_event` / `rsi_reset_event`, TX/RX processing, then
-`kthread_complete_and_exit`. No alloc/lock changes.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+Record: **Yes.** Tree is **5.15.221** (`pending-5.15`,
+`p-5.15-2-g6703e5d2f3a29`).
+- `mt7603_release_buffered_frames` still does `mt7603_wtbl_set_ps(dev,
+  msta, false)` (`main.c:434`)
+- `mt76_check_sta` still uses `MT_WCID_FLAG_PS` to skip duplicate
+  `sta_ps`
+- `636a883e2feef` is **not** an ancestor of HEAD
 
-Step 5.4: FOLLOW THE CALL CHAIN
-Record: Userspace-reachable via loading the rsi USB/SDIO module and
-bringing the interface up. With CFI, failure is at kthread start
-(`threadfn(data)` in `kthread()`), i.e. as soon as the driver creates
-its threads.
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Record: `git show 636a883e2feef | git apply --check` **fails**. Needed
+adaptations:
+1. `mt7603_filter_tx(dev, sta->vif->idx, idx, false)` →
+   `mt7603_filter_tx(dev, idx, false)` (3-arg; `msta->vif` unused here)
+2. `mt76_wcid_ptr(dev, i)` → `rcu_dereference(dev->mt76.wcid[i])`
+3. `mac_work` context differs (`mt76_tx_status_check` arity,
+   `aggr_stats` location) — insertion after `mt7603_edcca_check` is
+   still valid
 
-Step 5.5: SEARCH FOR SIMILAR PATTERNS
-Record: All four rsi kthread entry points had the same wrong type; this
-patch fixes all of them. Precedent in-tree: `e1ea6db35fc3b` “wifi:
-brcmsmac: avoid function pointer casts” (KCFI / clang-16). Jeff Johnson
-noted many similar Android CFI callback-type fixes.
+`main.c` hunk and `ps_sleeping` field apply. **Backport difficulty:
+minor rework, not a redesign.**
 
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+Record: No `ps_sleeping` / `mac_ps_check` / `wtbl_restore_ps` in this
+tree. Older PS commits here (`e004b70066002`, `9dc27bcbe78c5`,
+`d55aa5e17461b`) do not re-arm after an SP.
 
-Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-Record: Yes. Local tree is **6.12.111** (`git describe`:
-`p-6.12-2-gd38d58a4e0359`). Current signatures are still `void
-foo(struct rsi_common *)` and `void *func_ptr`. Introduced 2014/2018;
-both are ancestors of HEAD. CFI exists here: `CONFIG_CFI_CLANG` in
-`arch/Kconfig`; arm64/x86_64/arm select `ARCH_SUPPORTS_CFI_CLANG`.
+---
 
-Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-Record: Context matches the patch hunks. Expected apply: **clean**.
-Nearby `16d9f674c6198` does not touch these signatures.
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-Record: Kthread lifetime UAF fix is here; this CFI type fix is not. No
-alternate CFI workaround in rsi.
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: **drivers/net/wireless/mediatek/mt76/mt7603** —
+**PERIPHERAL/IMPORTANT for that hardware.** MT7603E/MT7628 is common on
+low-end APs/routers (`CONFIG_MT7603E`). Not core mm/fs, but AP mode with
+phones is a primary use.
 
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Mature driver (landed 2019). Little 5.15-era churn; the bug is
+long-lived.
 
-Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-Record: [wifi rsi / `drivers/net/wireless/rsi`] [PERIPHERAL] —
-Redpine/Silabs RS911x USB/SDIO. Used on some phones/SBCs (Librem 5). Not
-core mm/net. No dedicated MAINTAINERS entry; linux-wireless (Johannes
-Berg) applied it.
+---
 
-Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-Record: Mature, low-churn driver with occasional stable-worthy fixes
-(OOB, kthread UAF). Bug is old, not from recent refactor.
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: **Driver-specific:** mt7603/MT7628 in AP mode with power-
+save/U-APSD clients (iPhones and similar).
 
-Step 8.1: DETERMINE WHO IS AFFECTED
-Record: Driver-specific + config-specific: `CONFIG_RSI_91X` and
-`CONFIG_CFI_CLANG`. Default CFI is not permissive. CFI is common on
-Android GKI and hardened/mobile builds; not in this tree’s arch
-defconfigs.
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: First PS-Poll or U-APSD SP after the client dozes. Common on
+phones (Instagram/video in #1080). Unprivileged associated STAs trigger
+it.
 
-Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-Record: Driver probe / thread create. Common if you have the hardware
-and CFI. Unprivileged users do not set this up; loading the driver
-(boot/hotplug) is enough. Not a race.
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: **HIGH** (not kernel oops). Retry storms, packet loss, AP
+“hangs” vs PS clients; wasted airtime can hurt the whole BSS. Users had
+to force legacy b/g.
 
-Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-Record: Non-permissive CFI → `BUG_TRAP_TYPE_BUG` → kernel oops/panic
-when the thread starts. WiFi (and coex BT) does not come up. Severity:
-**HIGH** for CFI+rsi; **none** without CFI (wrong types happen to work
-on normal ABIs).
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Record: **Benefit: high** for that hardware. **Risk: low–medium**
+(contained MMIO + lock; `ps_sleeping` handles races). Blind 4-arg/`vif`
+apply would be wrong here; a 3-arg + `rcu_dereference` backport is safe.
 
-Step 8.4: CALCULATE RISK-BENEFIT RATIO
-Record:
-- Benefit: prevents CFI panics on rsi probe; restores WiFi on CFI
-  kernels.
-- Risk: very low (~15 lines, type-only, no behavior change without CFI).
-- Ratio: favorable. Small correctness fix, real crash for the configs
-  that hit it.
+---
 
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
+## PHASE 9: FINAL SYNTHESIS
 
-Step 9.1: COMPILE THE EVIDENCE
-FOR:
-- Real CFI failure log; default CFI is a kernel BUG.
-- Buggy signatures are in this 6.12 tree and date to 2014/2018.
-- Tiny, obviously correct ABI match to `kthread_run`.
-- Applies cleanly; no deps.
-- Johannes Berg applied v2; Jeff Johnson reviewed v1.
-- Same class as other KCFI function-type fixes (e.g. brcmsmac).
-- Real hardware path (Librem 5 / postmarketOS).
+**Step 9.1: COMPILE THE EVIDENCE**
 
-AGAINST:
-- Only crashes with `CONFIG_CFI_CLANG`; most generic 6.12 distro configs
-  leave CFI off.
-- Niche driver; tested on downstream `redpine_91x`, not a mainline rsi
-  repro (mainline still has the same types).
-- No Fixes:/Cc: stable (not a negative by itself).
-- No syzbot.
+**FOR:**
+- Real, old bug in this tree (`f25e813bf48dce`, 2019)
+- User-visible: retry storms, loss, Wi-Fi hangs with U-APSD/iPhone
+  (OpenWrt #1080 and several older issues)
+- Small, mt7603-only, maintainer-authored, logic is clear
+- Standalone vs series patches 01–06
+- Trigger is normal AP + phone PS
 
-UNRESOLVED:
-- Could not `b4 dig -c` a mainline SHA (commit not in this checkout).
-- lore.kernel.org fetches returned 403; reviews recovered from
-  openwall/lkml.iu.edu/spinics.
-- No stable-list discussion found.
+**AGAINST:**
+- 07/10 in a series that also adds a new mt76 feature
+- Does not apply cleanly (filter_tx arity, `mt76_wcid_ptr`, mac_work
+  context)
+- Full U-APSD repair also wants 04–06; 07 is not the entire story
+- Not a kernel crash/security/corruption bug
 
-Step 9.2: APPLY THE STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — types match kthread API; CFI
-   failure observed; maintainer applied v2.
-2. Fixes a real bug that affects users? **PASS** — CFI kernels panic at
-   rsi thread start.
-3. Important issue? **PASS** — kernel BUG/panic (HIGH for CFI+rsi).
-4. Small and contained? **PASS** — 7 files, ~26 lines, one driver.
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — 6.12.111 has the buggy code;
-   context matches.
+**UNRESOLVED:** stable@ lore (HTTP 403). No Tested-by on the commit
+itself; OpenWrt #1080 was closed the day the series landed.
 
-Step 9.3: CHECK FOR EXCEPTION CATEGORIES
-Record: Not a device-ID/quirk/DT/docs exception. Closest: type-
-correctness / CFI crash fix (normal stable bugfix).
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — maintainer fix; matches a
+   long-standing user report
+2. Fixes a real bug that affects users? **PASS**
+3. Important issue? **PASS** — AP unusable with PS phones / BSS retry
+   storms (HIGH, not oops)
+4. Small and contained? **PASS** — ~70 lines, one driver
+5. No new features or APIs? **PASS** — internal state + helpers
+6. Can apply to the local tree? **PASS** with a small backport (not a
+   clean cherry-pick)
 
-Step 9.4: MAKE YOUR DECISION
-This is a real, user-visible panic on CFI-enabled 6.12 systems that use
-rsi, not a compiler-warning cleanup. The local tree has CFI and the
-mismatched callbacks. The change is a surgical signature fix with
-negligible regression risk. That meets the stable bar for this tree.
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: None (not a device ID/quirk/DT/build/doc exception). Qualifies
+as a normal driver bug fix.
 
-===============================================================
-What the commit solves (for this tree)
-===============================================================
+**Step 9.4: MAKE YOUR DECISION**
+The buggy “disable PSE redirect on SP, never re-arm” path is in
+5.15.221. That is a real AP-mode failure for mt7603/MT7628, not a new-
+stack issue. The patch is the right fix and is adaptable without pulling
+the HW_PS_BUFFERING feature series.
 
-On 6.12, `kthread()` indirectly calls the thread function as `int
-(*)(void *)`. rsi hid `void (*)(struct rsi_common *)` behind `void
-*func_ptr`. With `CONFIG_CFI_CLANG`, that is a type-hash mismatch and a
-kernel BUG as soon as Tx/Rx/coex threads start. The patch makes the
-callbacks match the kthread ABI. Without CFI the mismatch is latent;
-with CFI it is a crash. Benefit vs risk is strongly in favor of
-backporting.
+---
+
+### What the commit solves and why it matters here
+After a service period, mt7603 leaves hardware PS buffering off. The AP
+then TX’s at a dozing client → retries and loss. That code has been in
+this tree since 2019. MT7628 APs with phones hit it in the real world.
+
+### Stable rules
+Meets the bar: real bug, contained, no new API. Needs a mechanical
+backport (`filter_tx` 3-arg, `rcu_dereference` instead of
+`mt76_wcid_ptr`), which is allowed.
+
+### Risk vs benefit
+Benefit is high for mt7603 AP users; risk is low if the backport does
+**not** use `sta->vif` (unset in 5.15). Sibling EOSP/TIM patches would
+help more U-APSD cases but are not required for this re-arm.
+
+### Concerns
+Cherry-pick will not apply as-is. Do not copy the 4-argument
+`mt7603_filter_tx(..., sta->vif->idx, ...)` call into this tree.
+
+---
 
 Verification:
-- [Phase 1] Parsed subject/tags/body: CFI failure log; SOB Hansson +
-  Johannes Berg; Link to v2 msgid; no Fixes/Cc:stable/Reported-by
-- [Phase 2] Diff: four thread fns `void (struct rsi_common *)` → `int
-  (void *)`; `rsi_create_kthread` `void *` → `int (*)(void *)`; ~15/+11
-  lines
-- [Phase 2] `include/linux/kthread.h`: `kthread_run` /
-  `kthread_create_on_node` take `int (*threadfn)(void *data)`
-- [Phase 2] `kernel/kthread.c:389`: `ret = threadfn(data);` — CFI-
-  checked indirect call
-- [Phase 2] `kernel/cfi.c`: default non-permissive path returns
-  `BUG_TRAP_TYPE_BUG`; `CFI_PERMISSIVE` is warn-only
-- [Phase 2] `kthread_complete_and_exit` is `__noreturn` in
-  `include/linux/kthread.h:101`
-- [Phase 3] blame: `dad0d04fa7ba41` (2014) and `2108df3c4b1856` (2018);
-  both ancestors of HEAD
-- [Phase 3] `git log --grep='wifi: rsi: Fix types to appease CFI' --
-  drivers/net/wireless/rsi`: not in this tree
-- [Phase 3] Related `16d9f674c6198` kthread lifetime fix is already
-  here; no signature overlap
-- [Phase 4] `b4 mbox` msgid: v2 saved; v2 changelog = kernel-doc only;
-  v1 Link in changelog
-- [Phase 4] Jeff Johnson v1 review (openwall): kernel-doc; would R-B;
-  Android CFI type-fix experience
-- [Phase 4] Johannes Berg (lkml.iu.edu): nipa kernel-doc confusion, then
-  confirmed build, applied
-- [Phase 4] lore.kernel.org WebFetch: 403; stable-list discussion
-  UNVERIFIED via lore
-- [Phase 5] Callers: `rsi_91x_init`, `rsi_coex_attach`, SDIO probe, USB
-  init — all `rsi_create_kthread`
-- [Phase 6] `git describe HEAD` = `p-6.12-2-gd38d58a4e0359`; `make
-  kernelversion` = 6.12.111
-- [Phase 6] Current rsi files still have the old signatures; patch
-  context matches
-- [Phase 6] `CONFIG_CFI_CLANG` present; arm64/x86_64/arm support CFI
-- [Phase 7] rsi has no MAINTAINERS stanza; linux-wireless took the patch
-- [Phase 8] Failure mode: CFI BUG at kthread start, HIGH for CFI+rsi
-- UNVERIFIED: mainline SHA (not in this checkout); whether Android GKI
-  6.12 enables rsi; live mainline rsi CFI repro (same types verified
-  here)
+- [Phase 1] Subject/body/tags: restore HW PS after SP; Link is 07/10;
+  maintainer SOB only
+- [Phase 2] Diff: ~72/7 in mt7603 mac.c/main.c/mt7603.h; `ps_sleeping` +
+  mac_work re-arm
+- [Phase 3] `git describe HEAD` / Makefile: 5.15.221, branch
+  `pending-5.15`
+- [Phase 3] `git merge-base --is-ancestor 636a883e2feef HEAD` → not in
+  tree
+- [Phase 3] blame: `c8846e1015022d` (driver), `f25e813bf48dce` (clear PS
+  before release) — both ancestors of HEAD
+- [Phase 3] Related series commits listed; 01 is new feature; 07 does
+  not call those APIs
+- [Phase 4] `b4 dig -c 636a883e2feef` / `-a` / `-w` / `-m`: lore thread,
+  v1-only series, wireless list, no NAK on 07
+- [Phase 4] OpenWrt mt76#1080 / #1084: retry storms + iPhone U-APSD;
+  issue closed 2026-08-01
+- [Phase 5] Callers verified in 5.15: `sta_ps`,
+  `release_buffered_frames`, `tx_prepare_skb`, `mac_work` 100 ms
+- [Phase 6] Local `mt7603_wtbl_set_ps` / `release_buffered_frames` still
+  match the bug; `mt76_wcid_ptr` absent; `filter_tx` is 3-arg;
+  `msta->vif` never set
+- [Phase 6] `git apply --check` of 636a883e2feef fails on filter_tx/wcid
+  helper; main.c hunk would apply
+- [Phase 8] Failure mode: retry storms / packet loss / AP hang vs PS
+  clients, severity HIGH
+- UNVERIFIED: stable@ mailing-list discussion (lore 403)
 
 **YES**
 
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 3 ++-
- drivers/net/wireless/rsi/rsi_91x_main.c     | 7 ++++---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 3 ++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 7 ++++---
- drivers/net/wireless/rsi/rsi_common.h       | 2 +-
- drivers/net/wireless/rsi/rsi_sdio.h         | 2 +-
- drivers/net/wireless/rsi/rsi_usb.h          | 2 +-
- 7 files changed, 15 insertions(+), 11 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7603/mac.c   | 73 +++++++++++++++++--
+ .../net/wireless/mediatek/mt76/mt7603/main.c  |  2 +-
+ .../wireless/mediatek/mt76/mt7603/mt7603.h    |  4 +
+ 3 files changed, 72 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
-index 372eaaa2b9efc..05525d5e2edb1 100644
---- a/drivers/net/wireless/rsi/rsi_91x_coex.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
-@@ -50,8 +50,9 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
- 	} while (coex_q != RSI_COEX_Q_INVALID);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index 6387f9e61060a..85c727fc44e6f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -235,16 +235,17 @@ void mt7603_wtbl_set_smps(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 	sta->smps = enabled;
  }
  
--static void rsi_coex_scheduler_thread(struct rsi_common *common)
-+static int rsi_coex_scheduler_thread(void *data)
+-void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
+-			bool enabled)
++static void
++__mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
++		     bool enabled, bool filter)
  {
-+	struct rsi_common *common = data;
- 	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
- 	u32 timeout = EVENT_WAIT_FOREVER;
+ 	int idx = sta->wcid.idx;
+ 	u32 addr;
  
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 2112d8d277a99..0b4d691580054 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -246,12 +246,13 @@ EXPORT_SYMBOL_GPL(rsi_read_pkt);
- /**
-  * rsi_tx_scheduler_thread() - This function is a kernel thread to send the
-  *			       packets to the device.
-- * @common: Pointer to the driver private structure.
-+ * @data: Pointer to the driver private structure.
-  *
-- * Return: None.
-+ * Return: 0.
-  */
--static void rsi_tx_scheduler_thread(struct rsi_common *common)
-+static int rsi_tx_scheduler_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	u32 timeout = EVENT_WAIT_FOREVER;
+-	spin_lock_bh(&dev->ps_lock);
++	lockdep_assert_held(&dev->ps_lock);
  
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 597b238e22949..18a28aa974460 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -62,8 +62,9 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ 	if (sta->ps == enabled)
+-		goto out;
++		return;
  
- static void rsi_rx_handler(struct rsi_hw *adapter);
+ 	mt76_wr(dev, MT_PSE_RTA,
+ 		FIELD_PREP(MT_PSE_RTA_TAG_ID, idx) |
+@@ -255,7 +256,7 @@ void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
  
--void rsi_sdio_rx_thread(struct rsi_common *common)
-+int rsi_sdio_rx_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
+ 	mt76_poll(dev, MT_PSE_RTA, MT_PSE_RTA_BUSY, 0, 5000);
  
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index 25c2b232394a6..e899631b9aed2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -21,12 +21,13 @@
- /**
-  * rsi_usb_rx_thread() - This is a kernel thread to receive the packets from
-  *			 the USB device.
-- * @common: Pointer to the driver private structure.
-+ * @data: Pointer to the driver private structure.
-  *
-- * Return: None.
-+ * Return: 0.
-  */
--void rsi_usb_rx_thread(struct rsi_common *common)
-+int rsi_usb_rx_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	struct rsi_91x_usbdev *dev = adapter->rsi_dev;
- 	int status;
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index c40f8101febcb..4f6738ba72be2 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -58,7 +58,7 @@ static inline void rsi_reset_event(struct rsi_event *event)
+-	if (enabled)
++	if (enabled && filter)
+ 		mt7603_filter_tx(dev, sta->vif->idx, idx, false);
  
- static inline int rsi_create_kthread(struct rsi_common *common,
- 				     struct rsi_thread *thread,
--				     void *func_ptr,
-+				     int (*func_ptr)(void *data),
- 				     u8 *name)
- {
- 	init_completion(&thread->completion);
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index 7c91b126b350f..eb2b7f36a7e4c 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -134,5 +134,5 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
- void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
- int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
- int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num);
--void rsi_sdio_rx_thread(struct rsi_common *common);
-+int rsi_sdio_rx_thread(void *data);
- #endif
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 961851748bc4c..78067eaffe8b1 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -81,5 +81,5 @@ static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
- 	return EVENT_WAIT_FOREVER;
+ 	addr = mt7603_wtbl1_addr(idx);
+@@ -264,8 +265,34 @@ void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 		 enabled * MT_WTBL1_W3_POWER_SAVE);
+ 	mt76_clear(dev, MT_WTBL1_OR, MT_WTBL1_OR_PSM_WRITE);
+ 	sta->ps = enabled;
++}
+ 
+-out:
++void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
++			bool enabled)
++{
++	spin_lock_bh(&dev->ps_lock);
++	__mt7603_wtbl_set_ps(dev, sta, enabled, enabled);
++	spin_unlock_bh(&dev->ps_lock);
++}
++
++void mt7603_wtbl_sta_ps(struct mt7603_dev *dev, struct mt7603_sta *sta, bool ps)
++{
++	spin_lock_bh(&dev->ps_lock);
++	sta->ps_sleeping = ps;
++	__mt7603_wtbl_set_ps(dev, sta, ps, ps);
++	spin_unlock_bh(&dev->ps_lock);
++}
++
++void mt7603_wtbl_restore_ps(struct mt7603_dev *dev, struct mt7603_sta *sta)
++{
++	spin_lock_bh(&dev->ps_lock);
++	/*
++	 * Frames that are already queued for the station belong to the service
++	 * period that has just been served, so unlike on a sleep transition
++	 * they must not be pulled back into the PS queue.
++	 */
++	if (sta->ps_sleeping)
++		__mt7603_wtbl_set_ps(dev, sta, true, false);
+ 	spin_unlock_bh(&dev->ps_lock);
  }
  
--void rsi_usb_rx_thread(struct rsi_common *common);
-+int rsi_usb_rx_thread(void *data);
- #endif
+@@ -1816,6 +1843,39 @@ mt7603_false_cca_check(struct mt7603_dev *dev)
+ 	mt7603_adjust_sensitivity(dev);
+ }
+ 
++/*
++ * Releasing buffered frames turns off the PSE redirect for a station, since
++ * the released frames would otherwise be looped back into the driver PS queue
++ * again. mac80211 never tells us when the service period is over, so hardware
++ * buffering has to be re-armed here for every station that is still known to
++ * be asleep. Waiting for the PSD queue to drain makes sure that the released
++ * frames have already passed the redirect stage.
++ */
++static void
++mt7603_mac_ps_check(struct mt7603_dev *dev)
++{
++	int i;
++
++	if (dev->mphy.q_tx[MT_TXQ_PSD]->queued)
++		return;
++
++	rcu_read_lock();
++	for (i = 0; i < MT7603_WTBL_STA; i++) {
++		struct mt76_wcid *wcid = mt76_wcid_ptr(dev, i);
++		struct mt7603_sta *msta;
++
++		if (!wcid || !wcid->sta)
++			continue;
++
++		msta = container_of(wcid, struct mt7603_sta, wcid);
++		if (msta->ps || !msta->ps_sleeping)
++			continue;
++
++		mt7603_wtbl_restore_ps(dev, msta);
++	}
++	rcu_read_unlock();
++}
++
+ void mt7603_mac_work(struct work_struct *work)
+ {
+ 	struct mt7603_dev *dev = container_of(work, struct mt7603_dev,
+@@ -1830,6 +1890,7 @@ void mt7603_mac_work(struct work_struct *work)
+ 	dev->mphy.mac_work_count++;
+ 	mt76_update_survey(&dev->mphy);
+ 	mt7603_edcca_check(dev);
++	mt7603_mac_ps_check(dev);
+ 
+ 	for (i = 0, idx = 0; i < 2; i++) {
+ 		u32 val = mt76_rr(dev, MT_TX_AGG_CNT(i));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index f8a43d9f72f95..04e3966ab047f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -410,7 +410,7 @@ mt7603_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
+ 	struct sk_buff_head list;
+ 
+ 	mt76_stop_tx_queues(&dev->mphy, sta, true);
+-	mt7603_wtbl_set_ps(dev, msta, ps);
++	mt7603_wtbl_sta_ps(dev, msta, ps);
+ 	if (ps)
+ 		return;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+index 55a034ccbacd9..c43ddd3e693c0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+@@ -80,6 +80,7 @@ struct mt7603_sta {
+ 	u8 smps;
+ 
+ 	u8 ps;
++	u8 ps_sleeping;
+ };
+ 
+ struct mt7603_vif {
+@@ -229,6 +230,9 @@ int mt7603_wtbl_set_key(struct mt7603_dev *dev, int wcid,
+ 			struct ieee80211_key_conf *key);
+ void mt7603_wtbl_set_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 			bool enabled);
++void mt7603_wtbl_sta_ps(struct mt7603_dev *dev, struct mt7603_sta *sta,
++			bool ps);
++void mt7603_wtbl_restore_ps(struct mt7603_dev *dev, struct mt7603_sta *sta);
+ void mt7603_wtbl_set_smps(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 			  bool enabled);
+ void mt7603_filter_tx(struct mt7603_dev *dev, int mac_idx, int idx, bool abort);
 -- 
 2.53.0
 
