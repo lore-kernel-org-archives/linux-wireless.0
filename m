@@ -1,110 +1,110 @@
-Received: from mail-yx1-f54.google.com (mail-yx1-f54.google.com [74.125.224.54])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E6523FE64A
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 07:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792395750; cv=pass; b=ts99++Dpj910Vw/q4DE0IDQbjUudAlT66PvKNphp2WmfX/ubUiEW0sVtCQGQqw/zHOwLKiLPn7t7L/EE0X8zz6F9MM6cLb98u4u+czwRKvvkEdIS+GFTBXnhEs1PYEm6CY+XQf+uA8rEB0I5dC7KV3Sd4CNPQVJp4rKC4AZ5iHo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792395750; c=relaxed/simple;
-	bh=UgudJ0WI4oNl1UfszSq5K5yCfvW/TgnZ/aoECPr1no0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hAGaHmyAdk2RCp8QwM+5P5zaa52SDaAuOykJnPl+E6VKDyJDKfb3R/qpkyjCRGuOYhjxauWspXO4RJikjBzavOBKL9Mna+aEf3vHu60eMHhME1DEqfJglwvHwGVz4FTksCoaYKi35pzrupCDZNmFGDJR6aLaSBiDjP7GrgUzGzo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=lAvmLtLn; arc=pass smtp.client-ip=74.125.224.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898F84973B5
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 08:31:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792398701; cv=none; b=HBKPb3ZE69tnhJA+h95YlDhatxbzdDTNZTciUoAs3Mm8wrKywfafrEk3ZdgLYmArmL6MfcLDwi+vSV1CouCnkuNH1jf9cXrinNvAiWdPd+5XktOgrmGwv2UdRhxzn3ouqvT08ceaVJkCbqVImhbVjPwYWfqnr0vzS8Kmu2xGdQU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792398701; c=relaxed/simple;
+	bh=F6GGwF0UndXrEOdTW5UOAWuVGc3KPqmnTmyKeAgfJao=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=eLReXLBvqGuD+ZcJvCMnQw9E0cuH8HYhGKl/Y11n2StxsP0RDEvfnO5Wn1H8qXaakgbj1NeYFZvRB4cg19zb3H+8O8AvdAyXHMPn4+fbGqeKgxcI34w0oeO+2FstuhUAEMcKf6kdXc3NlLGDhd+faXc/OJkCyhXc1/2V0jI2cCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Vl6yU5ie; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="lAvmLtLn"
-Received: by mail-yx1-f54.google.com with SMTP id 956f58d0204a3-677d35fd1d2so1745208d50.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 00:42:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792395748; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Pj3wYz7VXhnlpW6z3K8b8VLC3bo6e7AExsYscr/G9DELqutu6qYh4SAZaefs74zn0G
-         oiISzOg44zdiaQfJIBXo08VjM6e/V/TdysUXPc4wutxdSiCCEAlPH+JW+BCDxy7Q4qyk
-         0ulUcA2h4U0eS9N+9LXc6zhPvcmIZB/GaWdnC0/vxBciEfkS1fFBG9Rj9PidqqejB6Dv
-         P/x8D0yexGv3yQbjvgALxzcCs0m3qg3RwLrZfx7xDwdtMBQki++9zkA3RUCVQ8iEbOX5
-         DTwhkd9MnYxU+6bpN97kxU4yu9yeBcO5VoTPxOJCINwD/DmYPKBNGpXqwu0h84AlzXRq
-         2Cnw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=UgudJ0WI4oNl1UfszSq5K5yCfvW/TgnZ/aoECPr1no0=;
-        fh=vFznFVsSibX5BQDS9OUILPZ4ZARltuV29xhf4xMQyfM=;
-        b=cCeMVmEZhtQ+/vR2LQszZgRCwDX+275vHhbef1+2bevgw/lbOhy9GhvVUSuDvu7CIz
-         2wqB7gvHG4F9x8vCPR3M5jeNQA1Cd8FdKmqxjuxloVFM+MyGh3r4MKs+xVtv0N9yW8LU
-         GFLczZjSRIUXEfA+MYFHaJc+ZwDn5J4HyWds/5XkmQMNypkiRK87Lby/FlY2UJxu/4B6
-         N0RHv+TIvo+rTd2IzqXwiCKKPDTMYU4PtCUOtbDIxlrQp6xrt+6zAQwHcn1+7VfIIpCM
-         PimX/3oj60hRUiHuGLBzwBlT15+UjElMktV1XESyovnZRDBjvHk+2jPfhYdA39cqk9ei
-         Unxw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vl6yU5ie"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-48441a2ba1bso983900f8f.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 01:31:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1792395748; x=1793000548; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=UgudJ0WI4oNl1UfszSq5K5yCfvW/TgnZ/aoECPr1no0=;
-        b=lAvmLtLnV5y8ME+8n84oS9JKjOot7NOf5qx7M5W3DqrQGswCIVme1qGIpgtKLmbUQ9
-         BkQBTuuasSRUFbvqfFkwPaQvZBRymuZCeZVWvs9RLSoPLUpr2hzbTvnWirgIMJ0WI8Uq
-         jo7Ww1rwcMVLCxE+oNiuEKrhF34nPq3tpw+vHxh74Q4700HKiLOeCKBGPRdV0Oq51D2t
-         NIdYCuq5Bsf2zXRjlqccrcgxUEu9nIQChmaLrT3dOysAPtK/eeMBQW6vO9JexHMfjIzz
-         64RguSc1NaFVEoPvabgV2T5ZG7+9WDovDTnCrzheJJOnFO8Xc3g7OnrAc4wVhZxxCvXR
-         a5Iw==
+        d=gmail.com; s=20251104; t=1792398698; x=1793003498; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=F6GGwF0UndXrEOdTW5UOAWuVGc3KPqmnTmyKeAgfJao=;
+        b=Vl6yU5ieq4TN+jZPAxwre+U8IwR5yIBxoAl3gnQKPP4VUUP7mIJKGbd3Fuz9NkPg3g
+         J/9uOwoLIUIbav4KYZ4ENhoCuYesk+juuX80n2i8zFn3yhBaznHOZFy3hjqVb/N0euGl
+         jM+nKVgVg8acyRvlU6C8HQkvtRvE5p9OS0IOFsAvRisZ0hr+85nECmIeGtfwOr0JMa5j
+         HvwR9RjE8+C34obWHXw+4s+EpYD6/+9WKQGFSoxm6L7r6wiEAinvTZeu25p5MQ1VXltq
+         agen/UAop90gaC1ciLTq8oDCjyzZnFdTfcVdbl8F4VSbUb1/LYBvgyp6RIUlNwKzeUiE
+         ewWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792395748; x=1793000548;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=UgudJ0WI4oNl1UfszSq5K5yCfvW/TgnZ/aoECPr1no0=;
-        b=PTsLh7/d2az26U3MMmykGK8FD5yN6jqPuZBWgt8hhPw14QAjIojjZEZCcxNL82M0To
-         efxy5pN5VwbzI/DNRBJFmJYUcAeeIRfH0j7xPBPlVDVXI8S/1L8isRoIAfoQwUZXp3Vj
-         r28lmmzKOhEoS4+9otIJhAJCuYGoKYw4JHiGf/eXDtsnZwsgu12o7Xs4GFFQVnOXgDTb
-         Hv2BhEIx2dUBpFucMF+KuZySgc7+DzMOdStjdpIAjMHq4v2nsSK+WBPAuTbWvnPSfBaD
-         WSOaKy8JsPvgVkHbi9VrJtWc/66bakS2Ypvn1okhG7K483WDUWNFQdVqTrPL8rFAYM+p
-         8L7w==
-X-Forwarded-Encrypted: i=1; AKwUvBxZ4scjp/PKInAnh5p4XfUkSLJA07PkHuUCTJbgCf9vVmcODsHob3pkEl/Oi9pidYtnK4GxX/c/N7c8BhvZ3Q==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJX8HIPV/EzZVFbgJmkwBZSvqQBAN6BbheJELKSUzHJW1F0l0E7
-	+J0D9mlD/Uu7JXJEtlObvqsZn8W7gnl1RLCSVBkKNP+/x4YP+5XBKlKTDjYS+EF6C22npnGFZZP
-	OmhP4nzk3zyTNVr/OC/8VndOqHfKPdZKc4SC4lg6TSOA3yZpo1uFnDLtqHYg=
-X-Gm-Gg: AYBFou2m537DzgL1UKql3VGL0l7AJhmTsJjczjJ2pvmuB0b7tk0mbw2zlLTIwZHtns7
-	AM7+fYiLHZhcmqeviLh+sO8P3Ew3kZE6D5DdgfU0Cwu16l452keK9CmUgmwSaa/mH7zXwSsT2j4
-	9tHxAidLGMQxlEcZSbpZyA8gmUIO8/lQVhiJlQpatnk2JJoGWzatTBzBQLc6utASYNvxbOkCme/
-	BjLw+hfmKKYwx9oyYl0kz1oxHAAp2HVuwhXFSBNaigBKR+XjA/tmux8FRUgDY7XEFNEzgXPY5U/
-	ohf/XvA35EXiJjvab/CaKUc78+BUwjYn7CZ5/8HW6ZDszJodgnf/LKJLTLpgb6GWHd0x6RvAbzK
-	fb4vkAjtrinQdoBxTXWjBefhn1QEHnLchLOHBUXdm+ntekMMeGqj1hEFlOUmAZGm0kDHS519RKU
-	aHMdDjaQ+eNX3Rs0Zmi2VIJ58p0SY3ETgK03s7k7xJsvBHEnWHPwLGVNN+ZP6X3YmSRLvjxbfpY
-	86sE51RZtXVuhyjQvgaiEq8hBvEGiLrkujCa+9nAmFMhnLmGCfpPmUSLofyQ1DHMT9I63S0++EK
-	ksm/aa3Gu0qf4Rs=
-X-Received: by 2002:a05:690e:e84:b0:679:8bba:3200 with SMTP id
- 956f58d0204a3-679ca7aa86bmr1822026d50.38.1792395748396; Mon, 19 Oct 2026
- 00:42:28 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792398698; x=1793003498;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=F6GGwF0UndXrEOdTW5UOAWuVGc3KPqmnTmyKeAgfJao=;
+        b=mW0lCsU3pSauKxTi+1hF8KBVMt+m+KKAlVYctiYj0LmpnN6dy/kYOemEernFSULNOw
+         rmtsG5l/R673C/qxdmG57f1b5RovpLHSWDaDm09cRJ3O95cmjKnED+SP93l1ZVaBg/Gt
+         oOwrGJt/zSW8bJt60AxGuiwVpm5uoKI54hWWoXCzqfddtMNTcPTtSXlj7xCnNsCby9wd
+         BSekgXlc4keiOMK/5lR6RKppXZXFombf6n9Y2VOSWYhGnKsV8GTtu5IGwoXtoH5TWW5k
+         ezRrvPMYnwoxnqvLCugeN0sU4afbnpBIdq8rAsXaKbUZQBbjfdXbCRWKtrNAJX82yHqW
+         W25g==
+X-Forwarded-Encrypted: i=1; AKwUvByfVIIV02CqTyVi+YW8Vsa4QUG09AHdzPwLoYdNsyuk4/tHRFPNBQy4yC6E9vWvZlW80w5xUkKV9DSiNdDxiA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJrDUM2yfq76dOHnPj0wQRlVtCmgBmnpjN/yjGC3RTkMvGD1n9o
+	2b+ipQTHJFdMIkVK/N2wDXU/4Slb3u2XaxOtnfEXg5BsIML6n6QEpplH
+X-Gm-Gg: AYBFou2nnyvRPDLsvRfr1eVkZGape1y+thsuSshnGIL4vIIbWLbEApYFYLfHiNa82bN
+	TMGoQ3Q40fjV0lWptaLpHsSyS2ejG+MQ7VvSwHQX6c1eeIj3iPNz7M+SjBN/kx6qsbj/S/O6wXB
+	MVo5Oea/z0OdRccdsY2xqeC0Nx1cEwyWNMFH07BNSNlLlEcltoSBVdFpgSKw1rclRi9+Jd3jPZL
+	LgqUVC7cpR9TsEpyakh4595AhEh2pzrrriqW2MP/KcbazL6HO6kbNOnZGjVT/EFgSt+z/bg2nvb
+	NO42XB0mx0sWCAll6Fyaot3uRhgH0VPUxNtsUxySj3wGiNxSJxJIL73Kwp1nTXXMVDxoLz+5eNY
+	GFux9dFh5ZXDTDqUnZzpx8LOWMWanxXAML+A7uFZaRfKTJbfyecQrJzUkz5P8MugpvuM/ApNLqK
+	IeidGzd9ua8LSETd0AtkyfPHfYCXRYE532yQKqw65StYhayHb+pEgR0tnrHS4f2NzQKBVjP4Y4A
+	XBolmukmOfj8BY/
+X-Received: by 2002:a05:6000:200e:b0:48e:e9e:129 with SMTP id ffacd0b85a97d-48e0e9e0142mr8100420f8f.29.1792398697381;
+        Mon, 19 Oct 2026 01:31:37 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48dfd50d1bcsm22222268f8f.54.2026.10.19.01.31.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 01:31:36 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mehmet.fide@screeningeagle.com
+Subject: Re: [PATCH rtw-next v6 2/2] wifi: rtw88: support channel switch in AP mode
+Date: Mon, 19 Oct 2026 10:31:35 +0200
+Message-ID: <20261019083135.3251458-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <b9bdebf6dac043ce9b3e285e0d12209b@realtek.com>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261018171803.1545946-1-julius@bairaktaris.de> <DM8MPWZ7TFEE.11W2Q780HK4FT@gmail.com>
-In-Reply-To: <DM8MPWZ7TFEE.11W2Q780HK4FT@gmail.com>
-From: Julius Bairaktaris <julius@bairaktaris.de>
-Date: Mon, 19 Oct 2026 07:41:52 +0000
-X-Gm-Features: AclHuK8hH8s9UhWNUS2-04GWjMo-KQMgMTX8POhMSkdKvor1YvD5d8cNyp89uvs
-Message-ID: <CAC1t37Kw86_eb6nYxG-hHwuL7ynKYFzauy1j5Q5n8FU7Bk883Q@mail.gmail.com>
-Subject: Re: [PATCH ath-next] wifi: ath11k: report TX retries in station statistics
-To: Nicolas Escande <nico.escande@gmail.com>
-Cc: jjohnson@kernel.org, linux-wireless@vger.kernel.org, 
-	ath11k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi Nicolas,
+Hi Ping-Ke,
 
-> There seems to be a way to retrieve this info directly per tx completion:
+On 2026-10-19, Ping-Ke Shih wrote:
+> If you download beacon to firmware twice within a period of beacon_int,
+> a countdown in the air will not present, no? Like this
+[...]
+> The 4 is missing.
 
-I checked the links and the way I see it the WBM transmit count is per
-MSDU, so A-MSDUs inflate it.
-The PPDU stats count MPDUs, as nl80211 expects so i will not switch.
+Yes, when a download runs late past the next TBTT. The absolute due
+time keeps the pace, one download per beacon interval on average, so
+the AP switches when its stations expect it; v5 queued relative to
+the previous download and drifted 10 ms per beacon on USB. The price
+of a download that late is one stale beacon and one count never sent.
+A station takes its switch time from the counts it sees; at worst one
+whose first count is the stale one switches one interval late.
 
-Thanks for looking into this!
+Forced on an RTL8821CU with a 90 ms delay on every second download: a
+sniffer saw 9, 8, 8, 6, 4, 4, 2, 2 for count 10, the AP finished on
+time, and a Windows station followed ten such switches (counts 10 and
+50) without a re-association. Without the delay it happened once in
+nine switches.
 
-Julius
+If you would rather not have it: timing the downloads from the TSF,
+10 ms after each TBTT, leaves nearly a whole interval before a beacon
+goes out without the download. I tried that briefly on the 8821CU;
+with a 60 ms delay every count stays on the air. Which do you prefer?
+
+Thanks,
+Mehmet
