@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8597527FAA;
-	Mon, 19 Oct 2026 14:02:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E334604028;
+	Mon, 19 Oct 2026 14:03:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418577; cv=none; b=Mnzy0/lWLNNx11QgnAOJKVVox9CnJcdiLKxuscFbadjN6PYNbgbVqQ17gnEAc4C5dth0rcM3pprO49nRvn/iipM+EUXlZMEWOoOoKe8SiEim77KsDFYQNOvZnqLJYL6dmVJiX25WaqX9mkahvSAA+uWxW/cJNkLvvgt3GnbpPNQ=
+	t=1792418592; cv=none; b=C4jVz1ziPY7U6sE4N0CDU942g9PCPw2mNSgcGFDsgFaky3u4heaORYX/d9o8ZlbUkN3vgSdD9C8kTMhBcDx6CYp1aS//SrguTid2x3NOPMLC2jbSLBJN83HWEwBrPiOxc5PrX7oxGFsqK1821kvquhGU2eAmj7cxdgtPjCAvz0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418577; c=relaxed/simple;
-	bh=H5bx14eHgHrAlHbq5Av0q/wky2hMBG7AsqxKUd1ahVs=;
+	s=arc-20240116; t=1792418592; c=relaxed/simple;
+	bh=L0cGnpkzfgU6MS2+uhl8PINua7jozjnL/npf5SYhkLs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QxQ1fZbmiIcCsvMFDMhv30kGu3PRVhBQtOS4Unoe/Vv1UXnZq3w+edBhXVCMWuaykfsB2Ft+0etknSX4HoZV4CSCSnfHIanZJJPigBJRbtdmdBMLmQVhCYut3BvrOQTu3wXRRjp1sKzfg7Gcs0e6KymTlsxR/eBf41BNHv+dips=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=crbzpjmZ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=eZXy6ukssbRyWel6sE1h4qi49DhRYmOWdahKVxH5Sydcu+MymLBwIlNA84Hf3Lah/4iid8M48QZEPqU7p0tpFJbggFwhA2J5Xe2oFKnrrRKF/FiV/P4SpSNi0Ou8lwDKmclLgvW0Kql2esUgw0NSOId8NzjYaXcxqdBHngmAnzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N+G2BdjQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="crbzpjmZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02F611F000CA;
-	Mon, 19 Oct 2026 14:02:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N+G2BdjQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F3D61F000CA;
+	Mon, 19 Oct 2026 14:03:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418573;
-	bh=bk/DI9RFZeexxtAaHB7BsUX5Ya90d3OBuO88xMA81E4=;
+	s=k20260515; t=1792418589;
+	bh=hX+ZzV2E0bDSJBMzRqTbAutJVLZEfQz4z2BU1s2/mpE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=crbzpjmZVSoNpxAqFY8NxHlBUkXR399233CikFQeuuX5DiJgM70MJAWiY1lfvo1ub
-	 W2+3ilFtnh7PhKPZD06WFFm7CIQiNyzlZTuKx8W6+x2vc/oaKJvGpmxR4xwxJM3kJa
-	 UMd5g+WNVpybVKWhosji+xfdUxD7D5WOYFMT0Mwx9W7qcQFKofodte61XPjXhzBbqy
-	 4DX23o6K3pKB/iiW6CAbtpYt29Zqm+1x6DyXxGZn47SQgVtNQr2WQibMaTT6DO9mx0
-	 wLW2KCmQsiToIhaocfenN7460Zi/hCRE+6LhUbvibYdxVGcetJmb3MyeqmiyheHRVf
-	 2bY332SQMdNKg==
+	b=N+G2BdjQEXXoOL2/KtEfyenEBfNYcNOe4E1Z0mr+Ob0MD6g62ii6pTZUt5XH7UWuu
+	 T2nqx+OnlCkTcBPM2PBJpHPhY5APWXaq3FTLLnU0h6k/C6yLih3e9ovxYNHDqS3AKn
+	 2cb9roLIWpeFl4FDgs48Fx2dj/76X4G2p5yOG+CZOkuPpBLtsDLVljY/WcaevKY4yT
+	 Si+mhBensFd/2sloPS5swF7BtdZ1mMJlT3m4gbYZO32YC0fehk9fSmsrNI+wTnmg7G
+	 Y3WA8V7wMFX4YgRMRsyobaYTGwvSi/HovWvwhcvnyojLHadvnSccR5YlFSYMkLZNuh
+	 0X/E1kNXg085w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Nicolas Escande <nico.escande@gmail.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
+	jjohnson@kernel.org,
 	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: cancel wiphy work before freeing wiphy
-Date: Mon, 19 Oct 2026 09:50:35 -0400
-Message-ID: <20261019135441.1420968-344-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.12] wifi: ath12k: avoid setting 320MHz support on non 6GHz band
+Date: Mon, 19 Oct 2026 09:50:46 -0400
+Message-ID: <20261019135441.1420968-355-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,485 +56,420 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Nicolas Escande <nico.escande@gmail.com>
 
-[ Upstream commit c99bc4d4e0ba6f4661b2b914c96a597d26e7cc05 ]
+[ Upstream commit eaf478b3ea68e1b5df659acd24c4df5850e12325 ]
 
-When we fail to load the fw during op-mode start, we purge the list
-of the async handlers but we don't cancel the work.
-Same when we stop the op-mode.
+On a split phy qcn9274 (2.4GHz + 5GHz low), "iw phy" reports 320MHz
+related features on the 5GHz band while it should not:
 
-Before freeing wiphy, we need to cancel/flush any pending wiphy work,
-otherwise the work will fire with a freed memory.
-cfg80211 will do it anyway, but it will warn.
+    Wiphy phy1
+    [...]
+        Band 2:
+    [...]
+            EHT Iftypes: managed
+    [...]
+                EHT PHY Capabilities: (0xe2ffdbe018778000):
+                    320MHz in 6GHz Supported
+    [...]
+                    Beamformee SS (320MHz): 7
+    [...]
+                    Number Of Sounding Dimensions (320MHz): 3
+    [...]
+                EHT MCS/NSS: (0x22222222222222222200000000):
 
-Cancel the work in those cases.
+This is also reflected in the beacons sent by a mesh interface started on
+that band. They erroneously advertise 320MHz support too.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Link: https://patch.msgid.link/20260714165826.07aa49f755a2.I734a27b1b0eeb5b0e821aee3318fee8dc0a6bc03@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+This should not happen as IEEE Std 802.11-2024, subclause 9.4.2.323.3 says
+we should not set the 320MHz related fields when not operating on a 6GHz
+band. For example it says about Bit 0 "Support For 320 MHz In 6 GHz"
+
+  "Reserved if the EHT Capabilities element is indicating capabilities for
+   the 2.4 GHz or 5 GHz bands."
+
+Fix this by clearing the related bits when converting from WMI eht phy
+capabilities to mac80211 phy capabilities, for bands other than 6GHz.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00218-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260623151613.72113-1-nico.escande@gmail.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-I have enough to decide: this is a small UAF/WARN fix in iwlwifi MLD,
-the buggy path exists in this 7.3-rc4 tree, and the change is self-
-contained.
+This is a 6.18.y tree (`v6.18.53`). The patch is a small ath12k
+firmware-workaround that stops 5 GHz/2.4 GHz from advertising 6 GHz-only
+320 MHz EHT bits, including in mesh beacons.
 
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: `[iwlwifi/mld] [cancel] cancel wiphy work before freeing wiphy`
-- Subsystem: `wifi: iwlwifi: mld`
-- Action verb: **cancel** (prevent leftover work from running after
-  teardown)
-- Intent: stop pending `wiphy_work` before `ieee80211_free_hw()` so it
-  cannot run against freed memory
+- Record: `[ath12k / wifi] [avoid] [do not advertise 320 MHz EHT
+  capabilities on non-6 GHz bands]`
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- `Reviewed-by: Johannes Berg <johannes.berg@intel.com>` —
-  mac80211/cfg80211 and iwlwifi maintainer
-- `Link: https://patch.msgid.link/20260714165826.07aa49f755a2.I734a27b1b
-  0eeb5b0e821aee3318fee8dc0a6bc03@changeid`
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (author; ignore any Sasha Levin SOB)
-- **No** `Fixes:`, **no** `Cc: stable`, **no** `Reported-by`, **no**
-  `Tested-by` — expected for this review pipeline
-- Notable: maintainer Reviewed-by; no syzbot/KASAN report in the message
+- Record:
+  - No `Fixes:` tag (expected for this review; Qualcomm review of v2
+    asked for one because the bug is user-visible, and v3 still omitted
+    it)
+  - No `Reported-by:`, `Tested-by:`, `Cc: stable`
+  - `Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>`
+  - `Reviewed-by: Rameshkumar Sundaram
+    <rameshkumar.sundaram@oss.qualcomm.com>`
+  - `Link: https://patch.msgid.link/20260623151613.72113-1-
+    nico.escande@gmail.com`
+  - `Signed-off-by: Nicolas Escande` (author)
+  - `Signed-off-by: Jeff Johnson` (ath maintainer; applied to ath-next)
+  - `Tested-on: QCN9274 hw2.0 PCI ...` (hardware test, not a tag)
+  - Ignore `[Upstream commit eaf478b3ea68...]` and `Signed-off-by: Sasha
+    Levin` (pipeline)
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-Record:
-- **Bug:** On op-mode start firmware-load failure, async handler *list*
-  is purged (`iwl_mld_stop_fw()` →
-  `iwl_mld_cancel_async_notifications()`), but `async_handlers_wk` is
-  not cancelled. Same gap on op-mode stop.
-- **Symptom:** Pending wiphy work can run after `ieee80211_free_hw()`;
-  cfg80211 still drains/cancels and **WARNs**.
-- **Failure mode:** use-after-free of wiphy/`iwl_mld` if the work runs;
-  otherwise `WARN_ON(!list_empty(&rdev->wiphy_work_list))` in
-  `cfg80211_dev_free()`.
-- **Root cause:** cancel of `async_handlers_wk` was removed from the
-  generic purge helper; start-fail/stop still free the wiphy with work
-  queued.
-- **Version info in message:** none
+- Record: On split-phy QCN9274 (2.4 GHz + 5 GHz low), firmware-reported
+  EHT PHY caps are copied onto the 5 GHz band, so `iw phy` shows “320MHz
+  in 6GHz Supported”, beamformee SS 320 MHz, and 320 MHz sounding
+  dimensions. Mesh beacons on that band advertise the same. IEEE
+  802.11-2024 9.4.2.323.3 marks those fields reserved off 6 GHz.
+- Symptom: wrong userspace capability dump and wrong over-the-air EHT
+  Capabilities IE.
+- Root cause: WMI EHT PHY caps are copied as-is; 320 MHz/6 GHz bits are
+  not cleared for 2.4/5 GHz.
+- Version info: none beyond QCN9274 test hardware.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not disguised. Explicit teardown correctness / UAF-prevention.
-Not style cleanup.
+- Record: Not a disguised cleanup. It is an explicit correctness/spec
+  fix (firmware workaround). “Avoid setting” here means “stop
+  advertising reserved bits.”
 
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
+## PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: INVENTORY THE CHANGES**
-Record:
-- File: `drivers/net/wireless/intel/iwlwifi/mld/mld.c` — **+3 lines**, 0
-  removed (`git show --stat`: 3 insertions)
-- Functions: `iwl_op_mode_mld_start()`, `iwl_op_mode_mld_stop()`
-- Scope: **single-file surgical fix**
+- Record: Single file `drivers/net/wireless/ath/ath12k/wmi.c`, +16/−1.
+  Function: `ath12k_wmi_eht_caps_parse()`. Surgical, one-driver.
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-Hunk 1 (`iwl_op_mode_mld_start`, firmware/NVM failure):
-- **Before:** `wiphy_unlock` → `rtnl_unlock` → `goto err` →
-  `ieee80211_free_hw()` with `async_handlers_wk` possibly still on
-  `wiphy_work_list`.
-- **After:** `wiphy_work_cancel(mld->wiphy, &mld->async_handlers_wk)`
-  while `wiphy_lock` is still held, then unlock/free.
-- Path: **error path** (fw load or NVM read failure during probe/op-mode
-  start).
-
-Hunk 2 (`iwl_op_mode_mld_stop`):
-- **Before:** lock, `iwl_mld_low_latency_stop` /
-  `iwl_mld_deinit_time_sync`, unlock, `ieee80211_unregister_hw` /
-  `ieee80211_free_hw`.
-- **After:** same, but cancel `async_handlers_wk` under the wiphy lock
-  first.
-- Path: **teardown** (module unload / transport op-mode leave).
+- Before: after `le32_to_cpu()` of firmware PHY caps, only the 6 GHz
+  path ORs back a saved 320 MHz bit. 2.4/5 GHz keep whatever firmware
+  sent, including 320 MHz/6 GHz bits.
+- After: 6 GHz path unchanged; non-6 GHz path clears eight reserved 320
+  MHz/6 GHz fields in the byte view of `eht_cap_phy_info[]`.
+- Path: capability parse at firmware ready / MAC-PHY caps-ext, not a hot
+  datapath.
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record:
-- **Category:** memory safety (use-after-free of work item / wiphy) +
-  leftover-work WARN
-- **Mechanism:** `wiphy_work_queue()` during RX after ALIVE;
-  `iwl_mld_stop_fw()` purges `async_handlers_list` but (after
-  59a5876e474ac) no longer cancels the work. `ieee80211_free_hw()` →
-  `wiphy_free()` → `cfg80211_dev_free()` WARNs if the list is non-empty.
-  Worker `cfg80211_wiphy_work()` can also run
-  `iwl_mld_async_handlers_wk()` after unlock and race teardown.
-- **Fix:** `wiphy_work_cancel()` under the wiphy mutex (required by
-  `lockdep_assert_held(&wiphy->mtx)` in `wiphy_work_cancel()`).
+- Record: Category (h) firmware workaround + (g) protocol correctness.
+- Mechanism: firmware reports 6 GHz/320 MHz caps on the 5 GHz WMI blob.
+  Those bits are memcpy’d into mac80211 `ieee80211_sta_eht_cap`
+  (`ath12k_mac_copy_eht_cap()`). `ieee80211_eht_mcs_nss_size()` adds 3
+  MCS/NSS bytes when `IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ` is set, so
+  5 GHz beacons can carry a longer EHT Capabilities IE than a spec-
+  compliant peer expects. cfg80211 still refuses 320 MHz off 6 GHz
+  (`net/wireless/chan.c`), so the kernel will not actually operate at
+  320 MHz on 5 GHz.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Obviously correct: both sites already hold `wiphy_lock`; cancel of a
-  not-queued work is a no-op (`list_empty` check in
-  `wiphy_work_cancel()`).
-- Minimal; no API/data-structure change.
-- Regression risk: **very low**. Cancel vs flush is appropriate here (do
-  not run handlers from a dead/going-away FW). Does not restore the lock
-  requirement on `iwl_mld_cancel_async_notifications()`.
-- Residual (pre-existing, not introduced here): NVM-fail path still does
-  not call `iwl_mld_stop_fw()`; cancel avoids running those handlers
-  during free. That is strictly safer than leaving work queued.
+- Record: Obviously correct. Masks match
+  `include/linux/ieee80211-eht.h`. `WMI_MAX_EHTCAP_PHY_SIZE` is 3 u32s
+  (12 bytes); `phy_cap[7]` is in range. u8 overlay of a host-endian u32
+  array matches existing ath12k memcpy of the same array into
+  `phy_cap_info[]` (little-endian hosts, which is where QCN9274 runs).
+  No API/lock/alloc change. Regression risk is low: only reserved bits
+  on non-6 GHz are cleared. Review expanded v1’s incomplete mask set; v3
+  clears the full set Qualcomm asked for.
 
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
+## PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- Surrounding start-fail/stop skeleton: `d1e879ec600f9` (“wifi: iwlwifi:
-  add iwlmld sub-driver”, 2025-02/03) — first appeared in **v6.15**.
-- The two new cancel lines: `c99bc4d4e0ba6` (this commit, 2026-07-14).
-- Stop-path `wiphy_lock` wrapper: `83128399f3b492` (Benjamin Berg,
-  2025-05).
+- Record: Function added in `1476014fadb662` (“wifi: ath12k: WMI support
+  to process EHT capabilities”), contained in `v6.6-rc1`. 320 MHz
+  preserve/OR logic added in `d4e244c85e45df` (“enable 320 MHz bandwidth
+  for 6 GHz… WCN7850”), in v6.7. Buggy “copy firmware bits onto 5 GHz
+  unchanged” behavior is as old as EHT parse in this driver (~v6.6).
+  Present throughout 6.18.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Historical chain (verified with `git show` /
-`git log -S`):
-1. `4f7a07791944e` (2025-04, Fixes: d1e879ec600f9) — cancel async notifs
-   on start failure specifically because work can run after
-   `ieee80211_free_hw` (**UAF**).
-2. `833026098b2d9` — fold cancel+purge into
-   `iwl_mld_cancel_async_notifications()`.
-3. **`59a5876e474ac` (2026-05-26, in v7.2, not in v7.1)** — **removed**
-   `wiphy_work_cancel()` from that helper so it can run without the
-   wiphy lock. That **reopened** the free-without-cancel hole.
-4. This commit puts cancel back on the two paths that actually free the
-   wiphy.
+- Record: No `Fixes:` tag. Closest introducing commits are
+  `1476014fadb662` and `d4e244c85e45df`; both are ancestors of `v6.18`.
+  No later follow-up on this file after the upstream commit.
 
-`59a5876e474ac` **is** an ancestor of this tree (`git merge-base --is-
-ancestor` → yes via v7.2).
-
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record:
-- Nearby: `a40ad60a47f7c` purge-on-NIC-error; `59a5876e474ac` remove
-  cancel from helper.
-- This is **not** patch-dependent on other hunks in the 15-patch
-  iwlwifi-next dump; parent is unrelated `21b3263b90e80` (“mvm: validate
-  monitor notif link_id”).
-- Standalone: **yes**.
+**Step 3.3: CHECK FILE HISTORY**
+- Record: Nearby `wmi.c` work is unrelated (endianness, TLV length,
+  scan). Standalone; not patch X/Y.
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Miri Korenblit is a primary iwlwifi MLD author (driver
-introduction and most async-handler work). Johannes Berg reviewed. High
-confidence in the diagnosis.
+- Record: Nicolas Escande is a regular ath11k/ath12k contributor
+  (Freebox/Iliad), not the subsystem maintainer. Jeff Johnson applied
+  it. Qualcomm (Baochen Qiang, Rameshkumar Sundaram) reviewed.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record:
-- Needs `wiphy_work_*` and `struct wiphy_work async_handlers_wk` —
-  present since MLD intro in this tree.
-- Needs the start-fail `if (ret)` / stop `wiphy_lock` shape — present.
-- Needs `59a5876e474ac` as the regression that made cancel missing; that
-  commit is in this tree.
-- **Can apply standalone: yes** (already an ancestor of HEAD).
+- Record: None. Uses existing `NL80211_BAND_*` and
+  `IEEE80211_EHT_PHY_CAP*` symbols already in this tree. Applies
+  standalone.
 
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record:
-- `b4 dig -c c99bc4d4e0ba6`: **[PATCH iwlwifi-next 08/15]**
-  https://patch.msgid.link/20260714143119.07aa49f755a2.I734a27b1b0eeb5b0
-  e821aee3318fee8dc0a6bc03@changeid
-- `b4 dig -a`: v1 then **v2** “wifi: iwlwifi: updates - 07-14-2026”
-  https://patch.msgid.link/20260714165826.07aa49f755a2.I734a27b1b0eeb5b0
-  e821aee3318fee8dc0a6bc03@changeid
-  Committed `Link:` is **v2** (latest).
-- Lore WebFetch returned **403**; patchwork bot-blocked. Review body
-  beyond tags is **UNVERIFIED**. No NAK found in b4 metadata.
+- Record: `b4 dig -c eaf478b3ea68` →
+  https://patch.msgid.link/20260623151613.72113-1-nico.escande@gmail.com
+- Series: v1 (2026-01-23) → v2 (2026-06-11) → v3 (2026-06-23, applied).
+  v1 incomplete masks; v2/v3 clear remaining 320 MHz/6 GHz fields after
+  Qualcomm/Pablo feedback. v3 vs v2 is comment/typo/spec-citation
+  cleanup.
+- No NAKs. Jeff Johnson: “Applied, thanks!”
+- No reviewer `Cc: stable` on v3.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w`): Miri Korenblit; Johannes Berg
-(`johannes@sipsolutions.net` / intel.com); `linux-
-wireless@vger.kernel.org`. Maintainer was To/Cc and `Reviewed-by`.
+- Record (`b4 dig -w`): To/Cc `ath12k@lists.infradead.org`, `linux-
+  wireless@vger.kernel.org`. Reviewers: Rameshkumar Sundaram, Baochen
+  Qiang (Qualcomm). Johannes Berg (mac80211) on v1: this is a firmware
+  workaround and belongs in the driver, not mac80211. Pablo MARTIN-GOMEZ
+  (Freebox) pointed out missing CAP7 bits.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No `Reported-by` / bugzilla / syzbot. Author-found from code
-(consistent with 4f7a077’s earlier UAF write-up). User count:
-**UNVERIFIED**, but the start-fail path is firmware-load failure — a
-real probe path.
+- Record: No syzbot/bugzilla. Author reproduced on QCN9274 split-phy;
+  `iw phy` dump and mesh beacons in the message. Real hardware, not
+  theoretical.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: 08/15 of a mixed iwlwifi-next batch, not a dependent 1/N fix
-series. Parent commit unrelated. No other series patch required for this
-hunk.
+- Record: Single-patch series. v1→v3 only refined which reserved bits to
+  clear. No hidden dependency.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: WebSearch of lore.kernel.org/stable for this subject did **not**
-find a stable-specific thread. **UNVERIFIED** that anyone nominated or
-rejected it on stable@ (absence of Cc:stable is expected).
+- Record: No useful stable-list discussion of this subject. WebSearch of
+  lore stable did not turn up this patch. UNVERIFIED beyond that (lore
+  HTTP 403 on direct fetch; thread recovered via `b4`).
 
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: `iwl_op_mode_mld_start`, `iwl_op_mode_mld_stop`. Related
-callees: `wiphy_work_cancel`, `iwl_mld_load_fw`, `iwl_mld_stop_fw`,
-`ieee80211_free_hw`.
+**Step 5.1: KEY FUNCTIONS**
+- Record: `ath12k_wmi_eht_caps_parse()` only.
 
 **Step 5.2: TRACE CALLERS**
-Record:
-- `iwl_mld_ops.start = iwl_op_mode_mld_start` — op-mode start from
-  iwlwifi transport when `iwlmld` is selected
-  (`iwl_opmode_register("iwlmld", ...)`).
-- Stop is the matching `.stop` callback on unbind/unload.
-- Context: process, probe/remove — not IRQ. Reachable whenever
-  CONFIG_IWLMLD hardware probes or the module is removed.
+- Record: Only from `ath12k_wmi_tlv_mac_phy_caps_ext_parse()` for 2.4 /
+  5 / 6 GHz. That is called from `ath12k_wmi_tlv_mac_phy_caps_ext()`,
+  registered as the WMI TLV parser for
+  `WMI_TAG_MAC_PHY_CAPABILITIES_EXT` during service-ready. Device bring-
+  up, not IRQ/hot path.
 
 **Step 5.3: TRACE CALLEES**
-Record:
-- Start-fail: `iwl_mld_load_fw()` on error after ALIVE calls
-  `iwl_mld_stop_fw()` → purges list, does **not** cancel work.
-- Then `ieee80211_free_hw()` → `wiphy_free()` → `put_device()` →
-  `wiphy_dev_release()` → `cfg80211_dev_free()` which
-  `WARN_ON(!list_empty(&rdev->wiphy_work_list))` then
-  `cancel_work_sync(&rdev->wiphy_work)`.
-- Worker: `cfg80211_wiphy_work()` → `wk->func` →
-  `iwl_mld_async_handlers_wk()`.
+- Record: `le32_to_cpu()` and bit clears only. No alloc/lock/IO.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Userspace/admin trigger: load iwlwifi on MLD firmware (Wi-Fi 7
-Intel), failed firmware/NVM, or unload. Not a syscall exploit path;
-**driver probe/remove**. Common enough for production laptops.
+- Record: firmware ready → WMI caps-ext → `ath12k_mac_copy_eht_cap()` →
+  mac80211 sband iftype data → `iw phy`, association, and beacon IEs.
+  Reachable for any ath12k user with 11be firmware (QCN9274, WCN7850,
+  etc.). Unprivileged users cannot trigger a crash; they do
+  see/advertise wrong caps. Mesh/AP beacons go over the air.
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: MVM already cancels/flushes analog work in `iwl_mvm_mac_stop()`
-(`wiphy_work_cancel` on `async_handlers_wiphy_wk`). MLD
-`iwl_mld_mac80211_stop()` already cancels `add_txqs_wk` but **not**
-`async_handlers_wk`. This commit aligns MLD teardown with that rule.
+- Record: rtw89 and mt76 only *set* 320 MHz bits when `band ==
+  NL80211_BAND_6GHZ`. mac80211 strips 320 MHz bits when `bw_limit <
+  320`. ath12k was the outlier that trusted firmware on 5 GHz.
 
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
+## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record:
-- Local tree: **v7.3-rc4** (`git describe HEAD` →
-  `v7.3-rc4-27-gf0100363d8c37`; `VERSION=7 PATCHLEVEL=3 SUBLEVEL=0
-  EXTRAVERSION=-rc4`).
-- MLD driver **present**
-  (`drivers/net/wireless/intel/iwlwifi/mld/mld.c`).
-- Regression `59a5876e474ac` **is** in this history (v7.2+).
-- Current file already contains both `wiphy_work_cancel` calls (this
-  commit is ancestor of HEAD). Pre-fix parent of `c99bc4d4e0ba6` matches
-  the supplied diff exactly.
-- Bug was introduced **before** this 7.3 branch (in v7.2), not after.
+- Record: Yes. Tree is `v6.18.53` (`VERSION=6 PATCHLEVEL=18
+  SUBLEVEL=53`). `git merge-base --is-ancestor eaf478b3ea68 v6.18.53` is
+  false — the fix is not in 6.18.53. Parent of the candidate still has
+  the old if-only-6 GHz OR. `1476014fadb662` and `d4e244c85e45df` *are*
+  in v6.18. Bug exists here.
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply** on this tree (already applied). Surrounding
-`iwl_op_mode_mld_start`/`stop` matches the patch. `wiphy_work_cancel`
-exists in `net/wireless/core.c`.
+- Record: Clean apply. Context in this tree matches (function at ~4937).
+  All masks exist in `include/linux/ieee80211-eht.h`. Expected
+  difficulty: clean apply.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: `4f7a07791944e` / `833026098b2d9` / `59a5876e474ac` are all
-here. No alternate fix of this hole besides `c99bc4d4e0ba6`. `git log
---grep='cancel wiphy work'` only this commit.
+- Record: No other commit in this tree clears these bits in
+  `ath12k_wmi_eht_caps_parse()`. `ath12k_mac_filter_eht_cap_mesh()` only
+  strips some CAP7 bits for mesh iftypes, not CAP0 320 MHz-in-6 GHz, so
+  it does not replace this fix.
 
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: `drivers/net/wireless/intel/iwlwifi/mld` — Intel Wi-Fi MLD
-(CONFIG_IWLMLD). **IMPORTANT** (shipping Wi-Fi 7 NICs), not core mm/VFS,
-not staging.
+**Step 7.1: SUBSYSTEM AND CRITICALITY**
+- Record: `drivers/net/wireless/ath/ath12k` — Qualcomm Wi-Fi 7.
+  Criticality: IMPORTANT (production Wi-Fi 7, not core mm/net).
+  `CONFIG_ATH12K`.
 
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Very active (NAN, RSC, scan, firmware API churn in recent `git
-log` on `mld.c`). Mature enough that this is a teardown correctness fix,
-not new-feature scaffolding.
+**Step 7.2: SUBSYSTEM ACTIVITY**
+- Record: Active (many 2026 ath12k WMI commits). This bug is old (v6.6),
+  not a regression from brand-new code.
 
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: **driver-specific / config-specific** — CONFIG_IWLMLD users
-(Intel MLD firmware devices). Not universal.
+**Step 8.1: WHO IS AFFECTED**
+- Record: ath12k users, especially split-phy QCN9274 5 GHz (author’s
+  case) and any firmware that sets 320 MHz bits in the 2.4/5 GHz WMI
+  blob. Not universal.
 
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record:
-- Start-fail: firmware load/init failure after ALIVE (missing/bad fw,
-  PNVM/init timeout) — **realistic probe path**.
-- Stop: op-mode teardown/unload.
-- Timing: leftover `wiphy_work` after list purge.
-- Unprivileged trigger: only if an unprivileged user can unload the
-  driver or force fw failure — typically **admin/probe**. Not a syzbot-
-  style syscall UAF, but probe-fail is still user-visible.
+**Step 8.2: TRIGGER CONDITIONS**
+- Record: Device probe / cap parse whenever firmware reports those bits.
+  Common on affected SKUs. Unprivileged users do not get a kernel
+  exploit; they get wrong `iw` output and wrong beacon IEs. Not a race.
 
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record:
-- Confirmed: `WARN_ON` in `cfg80211_dev_free()` if work remains queued
-  (taint; panic if `panic_on_warn`).
-- Author/prior commit (`4f7a077`): work running after
-  `ieee80211_free_hw` is **UAF**. cfg80211’s `cancel_work_sync` in
-  `cfg80211_dev_free` reduces but does not make the WARN or the post-
-  unlock race imaginary (`cfg80211_wiphy_work` can run after
-  `wiphy_unlock` and before free).
-- Severity: **HIGH** (WARN + realistic UAF race on probe fail / unload).
+**Step 8.3: FAILURE MODE SEVERITY**
+- Record: Not a panic/UAF/deadlock. Kernel will not run 320 MHz on 5 GHz
+  (`chan.c` requires 6 GHz; MLME 320 MHz limit is `is_6ghz && cap bit`).
+  User impact is (1) wrong `iw phy`, (2) reserved bits in beacons, (3)
+  extra 3-byte 320 MHz MCS/NSS field in the EHT Capabilities IE, which
+  can confuse spec-compliant peers. Severity: MEDIUM (protocol/interop),
+  not CRITICAL.
 
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record:
-- Benefit: **high** for IWLMLD users — stops WARN/UAF on fw init failure
-  and stop.
-- Risk: **very low** — 3 lines, existing API, lock already held.
-- Ratio: strongly in favor of including the fix.
+**Step 8.4: RISK-BENEFIT RATIO**
+- Benefit: medium for QCN9274/mesh/AP users; stops malformed EHT IEs.
+  Risk: very low (~15 lines, reserved-bit clears, reviewed, tested).
+  Ratio: favorable.
 
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
+## PHASE 9: FINAL SYNTHESIS
 
-**Step 9.1: COMPILE THE EVIDENCE**
+**Step 9.1: EVIDENCE**
 
 FOR:
-- Real teardown bug: pending `async_handlers_wk` after wiphy free
-- Regression from `59a5876e474ac` (in this tree); restores cancel only
-  where memory is freed
-- Same UAF class as `4f7a07791944e` (explicit “access freed memory”)
-- 3-line, obviously correct, maintainer Reviewed-by
-- Applies to this tree’s MLD code; prerequisites present
-- cfg80211 documents leftover work with WARN_ON
+- Real hardware bug (QCN9274), user-visible `iw phy` and mesh beacons
+- Malformed EHT Capabilities IE (reserved bit + extra MCS/NSS bytes) —
+  interoperability, not just cosmetics
+- Small, obviously correct, constants and function exist in 6.18
+- Reviewed by Qualcomm; applied by Jeff Johnson; Johannes agrees it is a
+  driver firmware workaround
+- No new API; no prerequisites missing in this tree
+- Analogous to a hardware/firmware quirk
 
 AGAINST:
-- No Fixes:/Cc:stable/Reported-by (not a negative per pipeline rules)
-- Error/teardown path, not hot datapath
-- cfg80211 already `cancel_work_sync`s, so many hits are WARN rather
-  than a guaranteed oops
-- 08/15 series member (but standalone)
+- Not a crash, leak, UAF, deadlock, or CVE
+- Johannes noted most extra 320 MHz bits are unused at runtime; cfg80211
+  already blocks 320 MHz off 6 GHz
+- Author never added `Fixes:` even after Rameshkumar asked
+- Affects one driver / specific firmware behavior
 
 UNRESOLVED:
-- Full lore review text (HTTP 403)
-- Whether stable@ already discussed this subject
-- How often start-fail hits with work still queued (depends on
-  notifications after ALIVE)
+- Direct lore.kernel.org HTTP fetch returned 403; discussion recovered
+  via `b4` mbox
+- No stable-list thread found
 
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — lock already held; Johannes
-   reviewed; cancel is the documented API.
-2. Fixes a real bug that affects users? **PASS** — leftover wiphy work
-   on fw-start failure and op-mode stop.
-3. Important issue? **PASS** — UAF risk + `WARN_ON` in cfg80211 (HIGH).
-4. Small and contained? **PASS** — +3 lines, one file, two call sites.
-5. No new features or APIs? **PASS**.
-6. Can apply to the local tree? **PASS** — MLD + `wiphy_work_cancel` +
-   matching functions exist (commit already in 7.3-rc4).
+**Step 9.2: STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — masks match the spec;
+   Tested-on QCN9274; two Qualcomm Reviewed-by
+2. Fixes a real bug that affects users? **PASS** — observed wrong caps
+   and wrong beacons
+3. Important issue? **PASS** (medium) — OTA IE malformation/interop on
+   Wi-Fi 7 APs/mesh, not a crash. Within “etc.” for driver protocol bugs
+   / firmware quirks
+4. Small and contained? **PASS** — 16 insertions, one function
+5. No new features or APIs? **PASS**
+6. Can apply to the local tree? **PASS** — code and symbols present;
+   clean apply
 
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary small
-bugfix.
+**Step 9.3: EXCEPTION CATEGORIES**
+- Record: Firmware/hardware workaround (quirk-like). Not a new device
+  ID, DT, or build fix.
 
-**Step 9.4: MAKE YOUR DECISION**
-
-This tree is **7.3-rc4** and contains the iwlwifi MLD op-mode. The hole
-is real here: after `59a5876e474ac`, start-fail and stop free the wiphy
-without cancelling `async_handlers_wk`. That is a use-after-free/WARN
-class bug on firmware load failure — a path users hit. The fix is three
-lines, matches cfg80211’s contract, and does not need the rest of the
-15-patch series.
+**Step 9.4: DECISION**
+Backport to this 6.18.y tree. The bug is in 6.18, the fix is surgical,
+and wrong EHT IEs on 5 GHz are a real user-visible protocol defect on
+shipping QCN9274 hardware.
 
 ---
 
-### What the commit solves
-On MLD op-mode start, firmware can ALIVE and queue `async_handlers_wk`.
-Failure then purges the handler list in `iwl_mld_stop_fw()` but leaves
-the wiphy work queued. `ieee80211_free_hw()` then frees that memory.
-cfg80211 still `cancel_work_sync`s and **WARNs**; there is also a window
-after `wiphy_unlock` where the worker can run. The same missing cancel
-exists in `iwl_op_mode_mld_stop`. Cancelling under the wiphy lock closes
-that.
-
-### Stable rules
-Meets all six criteria for **this** tree: small, correct, no new API,
-real WARN/UAF, code present.
-
-### Risk vs benefit
-Benefit high for Intel MLD hardware; risk very low (idempotent cancel,
-lock already held).
-
-### Concerns
-None that block inclusion. Not a dependent series member. NVM-fail still
-does not `iwl_mld_stop_fw()` (pre-existing); this patch still improves
-that path by not leaving work queued.
-
 Verification:
-- [Phase 1] Parsed subject/tags: Reviewed-by Johannes Berg; Link to v2
-  msgid; no Fixes/Cc:stable/Reported-by
-- [Phase 1] Body: purge-without-cancel on start-fail and stop; work vs
-  freed wiphy; cfg80211 WARN
-- [Phase 2] Diff: +3 lines in `mld.c`; `iwl_op_mode_mld_start` error
-  path and `iwl_op_mode_mld_stop`; `wiphy_work_cancel`
-- [Phase 2] `wiphy_work_cancel()` in `net/wireless/core.c` requires
-  wiphy mutex; both sites already `wiphy_lock`
-- [Phase 2] `cfg80211_dev_free()`:
-  `WARN_ON(!list_empty(&rdev->wiphy_work_list))` then `cancel_work_sync`
-- [Phase 3] `git describe HEAD`: v7.3-rc4-27-gf0100363d8c37; `make
-  kernelversion` 7.3.0-rc4
-- [Phase 3] `git merge-base --is-ancestor c99bc4d4e0ba6 HEAD` → yes
-- [Phase 3] `git blame` start-fail/stop: skeleton `d1e879ec600f9` (MLD
-  intro); cancel lines this commit
-- [Phase 3] MLD first in v6.15 (`git merge-base --is-ancestor
-  d1e879ec600f9 v6.15`); not in v6.14
-- [Phase 3] `git show 59a5876e474ac`: removed `wiphy_work_cancel` from
-  `iwl_mld_cancel_async_notifications`; in v7.2, not v7.1
-- [Phase 3] `git show 4f7a07791944e`: original UAF fix on start-fail;
-  Fixes: d1e879ec600f9
-- [Phase 3] `git log -S wiphy_work_cancel -- mld/`: d1e879ec, 4f7a077,
-  833026, 59a5876, c99bc4d4
-- [Phase 3] Parent of candidate is unrelated mvm change; series 08/15 is
-  a mixed iwlwifi-next batch
-- [Phase 4] `b4 dig -c`: lore/patchwork msgid for 08/15; `-a`: v1 then
-  v2 (applied); `-w`: Johannes + linux-wireless
-- [Phase 4] WebFetch lore 403; patchwork bot wall; spinics 500 — review
-  comments UNVERIFIED
-- [Phase 4] No stable@ hit for this subject (search not useful)
-- [Phase 5] `iwl_mld_ops.start` = `iwl_op_mode_mld_start`; RX path
-  `wiphy_work_queue(&mld->async_handlers_wk)` in `notif.c`
-- [Phase 5] `iwl_mld_load_fw` error after init sequence calls
-  `iwl_mld_stop_fw` (purge, no cancel)
-- [Phase 5] MVM `iwl_mvm_mac_stop` already cancels analogous wiphy work
-- [Phase 6] Local `mld.c` already has both cancel sites; pre-image of
-  parent matches the candidate diff
-- [Phase 7] CONFIG_IWLMLD in
-  `drivers/net/wireless/intel/iwlwifi/Kconfig`
-- [Phase 8] Trigger: fw load fail after ALIVE / op-mode stop; severity
-  HIGH (WARN + UAF race)
-- UNVERIFIED: exact lore review discussion text; field frequency of this
-  WARN
+- [Phase 1] Parsed tags: Reviewed-by Baochen Qiang, Rameshkumar
+  Sundaram; Link msgid; Tested-on QCN9274; no Fixes/Reported-
+  by/Cc:stable
+- [Phase 1] Body: split-phy QCN9274 `iw phy` + mesh beacons advertise
+  320 MHz on 5 GHz; IEEE 802.11-2024 9.4.2.323.3 reserved-bit citation
+- [Phase 2] Diff: `ath12k_wmi_eht_caps_parse()` +16/−1; else-branch
+  clears 8 reserved PHY bits
+- [Phase 2] `WMI_MAX_EHTCAP_PHY_SIZE == 3` (12 bytes); `phy_cap[7]` in
+  bounds (`wmi.h:2767`)
+- [Phase 2] Masks verified in `include/linux/ieee80211-eht.h` (CAP0
+  0x02, CAP1 0xe0, CAP2 0xc0, CAP3 0x01, CAP6 MCS15 0x40 / DUP 0x80,
+  CAP7 0x08 / 0x40)
+- [Phase 3] `git blame`: function `1476014fadb662` (v6.6-rc1); 320 MHz
+  OR `d4e244c85e45df` (v6.7)
+- [Phase 3] `git merge-base --is-ancestor 1476014fadb662 v6.18` and
+  `d4e244c85e45df v6.18`: both true
+- [Phase 3] No `Fixes:` tag; no follow-up on `wmi.c` after upstream
+  `eaf478b3ea68`
+- [Phase 4] `b4 dig -c eaf478b3ea68`: lore URL; v1/v2/v3; v3 applied as
+  `eaf478b3ea68`
+- [Phase 4] `b4 dig -w`: ath12k + linux-wireless lists
+- [Phase 4] v1 mbox: Johannes — firmware workaround, belongs in driver;
+  Pablo — missing CAP7; Rameshkumar — also clear CAP3/CAP6 DUP/CAP7
+- [Phase 4] v2 mbox: Rameshkumar asked for `Fixes:` because it is user-
+  visible; author did not add it in v3
+- [Phase 4] v3 mbox: both Qualcomm Reviewed-by; Jeff Johnson applied; no
+  NAK; no Cc:stable
+- [Phase 4] lore WebFetch 403; thread read from `b4 dig -m` / `b4 mbox`
+- [Phase 5] Callers: only `ath12k_wmi_tlv_mac_phy_caps_ext_parse` → WMI
+  service-ready. Impact via `ath12k_mac_copy_eht_cap` /
+  `ath12k_mac_copy_eht_mcs_nss` (320 MHz MCS copy gated on CAP0 bit)
+- [Phase 5] `ieee80211_eht_mcs_nss_size()` adds 3 bytes when CAP0 320
+  MHz bit is set — IE length bug on 5 GHz
+- [Phase 5] `net/wireless/chan.c`: 320 MHz rejected unless band is 6 GHz
+  — no local 320 MHz operation on 5 GHz
+- [Phase 6] `git describe HEAD`: `v6.18.53-5049-g0f0bdc2b0dffb`; `make
+  kernelversion`: 6.18.53
+- [Phase 6] `git merge-base --is-ancestor eaf478b3ea68 v6.18.53`: false
+  — fix not in 6.18.53
+- [Phase 6] Parent of candidate still has old if-only-6 GHz code;
+  constants present
+- [Phase 7] Subsystem ath12k, CONFIG_ATH12K, important Wi-Fi 7 driver
+- [Phase 8] Failure mode: wrong IEs / interop, not oops; severity
+  MEDIUM; backport risk very low
+- UNVERIFIED: no independent user bugzilla beyond the author’s QCN9274
+  report; stable@ lore search did not find this patch
+
+The fix is small, already reviewed, and addresses a real over-the-air
+capability bug that exists in this 6.18 tree.
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/mld.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath12k/wmi.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-index cf003a4a37408..49fcbe6814677 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-@@ -440,6 +440,8 @@ iwl_op_mode_mld_start(struct iwl_trans *trans, const struct iwl_rf_cfg *cfg,
- 	}
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index ade14ba6703f3..39d5110eca901 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -4939,6 +4939,7 @@ static void ath12k_wmi_eht_caps_parse(struct ath12k_pdev *pdev, u32 band,
+ 				       __le32 cap_info_internal)
+ {
+ 	struct ath12k_band_cap *cap_band = &pdev->cap.band[band];
++	u8 *phy_cap = (u8 *)&cap_band->eht_cap_phy_info[0];
+ 	u32 support_320mhz;
+ 	u8 i;
  
- 	if (ret) {
-+		/* wiphy memory is about to be freed, we should cancel any pending work */
-+		wiphy_work_cancel(mld->wiphy, &mld->async_handlers_wk);
- 		wiphy_unlock(mld->wiphy);
- 		rtnl_unlock();
- 		goto err;
-@@ -505,6 +507,7 @@ iwl_op_mode_mld_stop(struct iwl_op_mode *op_mode)
- 	iwl_mld_thermal_exit(mld);
+@@ -4952,8 +4953,22 @@ static void ath12k_wmi_eht_caps_parse(struct ath12k_pdev *pdev, u32 band,
+ 	for (i = 0; i < WMI_MAX_EHTCAP_PHY_SIZE; i++)
+ 		cap_band->eht_cap_phy_info[i] = le32_to_cpu(cap_phy_info[i]);
  
- 	wiphy_lock(mld->wiphy);
-+	wiphy_work_cancel(mld->wiphy, &mld->async_handlers_wk);
- 	iwl_mld_low_latency_stop(mld);
- 	iwl_mld_deinit_time_sync(mld);
- 	wiphy_unlock(mld->wiphy);
+-	if (band == NL80211_BAND_6GHZ)
++	if (band == NL80211_BAND_6GHZ) {
+ 		cap_band->eht_cap_phy_info[0] |= support_320mhz;
++	} else {
++		/*
++		 * Firmware may report 6 GHz/320 MHz specific capabilities for
++		 * non-6 GHz bands, so explicitly clear them.
++		 */
++		phy_cap[0] &= ~IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ;
++		phy_cap[1] &= ~IEEE80211_EHT_PHY_CAP1_BEAMFORMEE_SS_320MHZ_MASK;
++		phy_cap[2] &= ~IEEE80211_EHT_PHY_CAP2_SOUNDING_DIM_320MHZ_MASK;
++		phy_cap[3] &= ~IEEE80211_EHT_PHY_CAP3_SOUNDING_DIM_320MHZ_MASK;
++		phy_cap[6] &= ~IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_320MHZ;
++		phy_cap[6] &= ~IEEE80211_EHT_PHY_CAP6_EHT_DUP_6GHZ_SUPP;
++		phy_cap[7] &= ~IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_320MHZ;
++		phy_cap[7] &= ~IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_320MHZ;
++	}
+ 
+ 	cap_band->eht_mcs_20_only = le32_to_cpu(supp_mcs[0]);
+ 	cap_band->eht_mcs_80 = le32_to_cpu(supp_mcs[1]);
 -- 
 2.53.0
 
