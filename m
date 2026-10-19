@@ -1,61 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.7
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.229.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792429285;
-	b=5gWE08Hks4CuR8JBYihOKNovNp7c2fLYSl8gniBEb8m1EY0Ddt2VTn7ycNMf+7MH8MtK
-	 uSqTFgDjLmMD0m93tU1y4RxcVJ2Q2G8XYLa0Of4H67QL2OJP653ewgrDGkVK03YiuHhod
-	 LjrFnfaaNO/foTI/3IGdU629A7uTvp5JNcOPBRI7cvSN7mMWfLOM8iMe9T+8EuQSczTHl
-	 Zmyd+2HsaIxCQfekha49AZJMCFgRNU7ByBOo1vFcXqZV2QYMnjEFqhmcMA1D1J6l+sal9
-	 ZmfB7Rc9nW3qGDY5VHEkaPVEl/9GT7VAlwz3Dt+3IvpzK1lBAOwamU03iCFWzJNAAEg==
+	t=1792429310;
+	b=Wl3m6bO43pIMcoXfRgDPw7Fn7PsinTcQfrwK2/oDf79r9EI6GJy0X8CLKCo50qpF5DT7
+	 XGTUvjuholzbl58froKss+aypTa48MsctjcmUK2N8nC3iKRyPksnFf8CMq8xHoxozhquV
+	 nPE0uDWCGhnlFU4ub/EtLCZS4dGx9MkqTbHKQb4Hwmjg/R8JiRsvczCYPXrTAYUTb6l+C
+	 JKg+uQygH+BeTpeHXQ6PzrprCiStJy/VZcyXyCnp6ifNvZvJOXeFSaUmV1S6w+X81slbA
+	 2/S108N57foQ0ougs7e44KEzKMTjaoW5LcuvPgIIKlSQ2yv+cNeDvXt8c033dJSK+PA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792429285;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=w8p8m5DjVMBSrwiq6bXrGhA8+EN+mWvM6EpWmDSChR4=;
-	b=PUMkKrcmIYginMfyXJltQGY4JFI2z6CHHJMuQJ/1eRmOZqzZZExnAEUiWk77zOnp2agX
-	 G2WVXkqZjtZdSnDvHKO4kS+6EEKfM2qgAQqzJZPkGR9sA/TjULAd47G8yDJIvK3p/I6oz
-	 U8ciUw6oH4O/n1u0hV/J9MxMIuIQIwnl7dD7G8+HiMkjtxV+JlIXQl0Bjqe3cO8+SfWBZ
-	 w8qWJb2SyrVUbU26VSOPeT9WMS5S33EOl9IL8DjeA2Ro5YGlSLNu7CI0Trc8QkogYnI3H
-	 yR1rXnSDzh8kHCwnguN9dqVazdmt+/MWUV1iUfDFGZTdlSZnVk0R6WA6GHSSmefpeZw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792429310;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=zgt+mU6G66DdJESP7PBT5F43QMVoZCobZpjIWBiHJS0=;
+	b=SXHwnRiXI9t3N01AXteKsi19UAHHh1HF89O3pch+4EZnE5XjxjrHZo43Nw9PGdICuBhb
+	 F6Zc9L5aTDMt1uKndunEhjf+E/7kExhLD1heKcQyBfqZdpQ1QaUMWrhdifaonWhHI1YfZ
+	 KW5pdHTEZ0PIuhXIITaDEEAyvDNUmTJnR8FRDPSnNRxy37zSI7VBFbABy9Mst0wtFFuX9
+	 isY0tnbAnx5pUpMTWIf/ur73XsRXktLHyfLN1Hofheb4/gJ2RAGvMZmjOW7/vK/4R7kH6
+	 JkEtnTWVdYW0dB55nYwT1HvFZSJ12jHLRiWJRFcqKUnzpm8a1IwTLornQSxVqnJZ0aA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=justthetip.ca;
-	spf=pass smtp.mailfrom=justthetip.ca;
-	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=n07WgLWV;
-	arc=none smtp.remote-ip=95.215.58.7
-Received: from mta1.migadu.com (out-7.mta1.migadu.com [95.215.58.7])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=m+cl5aD9;
+	arc=none smtp.remote-ip=74.125.229.2
+Received: from mail-dy2-f2.google.com (mail-dy2-f2.google.com [74.125.229.2])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E5A606A319
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 17:01:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A5E5A606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393E060A2618
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 17:01:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 393E060A2618
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=n07WgLWV
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=0x8x8x+fKY2Y6jyMC+O/5KwxOqoFU+Cw86mPFidozF4=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792429282; v=1; x=1793034082;
- b=n07WgLWVmaMa383egFTHzyZ4+1p01tRim6FVFMxYj0p8y2hRtRn7Nm4NSipO5COZEwnTpl8I
- n5VbYggzEDbZtvBWVWX1zm23Q17791QtHpGVMQvEJMacXmLJFdZTxmYrjN9k8urSbhrHoiXDMhv
- e060vvsUGVi4t5gPYpX3oa8hBw7VGHdyY8OatUT+WD9kNHWSXQ37oTqP6Zqcyp+54Aoyck42TTw
- X99PJehUpXW16ARAAL3hj65EvkwI7N4ql8qvWNGgO4IoDAF2rAVgWaxWkDYKyf1Rtb1rQo9nMMg
- 0d5ZyV8K/V91jpaS8pMVKCjjJ+lxmm3fWjogobXD/Ee3w==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4622ebdc0972b596;
-	Mon, 19 Oct 2026 17:01:22 +0000
-X-Mizu-Trace-ID: 4622ebdc0972b596
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Ping-Ke Shih <pkshih@realtek.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=m+cl5aD9
+Received: by mail-dy2-f2.google.com with SMTP id 5a478bee46e88-327b1d5824fso2363942eec.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 10:01:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792429309; x=1793034109; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=zgt+mU6G66DdJESP7PBT5F43QMVoZCobZpjIWBiHJS0=;
+        b=m+cl5aD92Mijfn2SvERNlR707N94YKxIHz23ACoAkT0gZXTz23HIcdu8HOPuIvAzts
+         Ncivv/QC50oyp+MSO66PpBTLeAy4v2i4oaAWoaScJkUN60ZhmPm8XoolLEZ67Pngrckg
+         RnQV1heFz+CSJIZp5PcSTkzkqxRRz9V4jPK4wiPIYUxynjrEU86TTW3tJqnMH3JFmTkr
+         KhqQECW1P0dzg+BhGDzeTIBbG+PJE8jImNSFIusc7jLnU9PJ9e1ENorjoEil2vDKiLzO
+         nB+/XRjD3Psq2G9KH2uokQDBE+tzAxARCsRcBjsgY5E6RS+1ZD/sc2BSCSsvmczbyugG
+         m5yQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792429309; x=1793034109;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zgt+mU6G66DdJESP7PBT5F43QMVoZCobZpjIWBiHJS0=;
+        b=q++0MJvwDI5/hlHo3POPdqAm6s6N8dkZf6t9jrOmYmWaCdyyHTGIKPDsfqaibf9iZJ
+         6U6bqnCgeUqQ+AS3Mob1Jt2EBxBzjyIiFtlklRJOinsqhiPf/4Pvrn7LSBEpl9ve1j/D
+         Sb/KpXkvt7EuLXZcg1X5bNNAC4MZZzkMZ2tut2VJgCnHU2Tz85zf0tyzRpLk5sdGQHZL
+         4DM6pSiPEUH9tBxC1sNwv5jMC5IQ6/Q+0aPonYdODl0FFjqhL/ytroRZNpGST6vsrYI+
+         c7JkliNlyDMxLM+Zmg/e0lWT9zE++xwIfQqkhaTzhuh5L5Nji8B1K0vF3fKTnll6+x8A
+         wmFg==
+X-Gm-Message-State: AFq9FYI8YN0ICTwz/qNy1SJIOfreq2v/AbXk8spv3P5oQQ18h805WbNa
+	qauZ5QL0sRY0qCqne6Kje8o46l0UkLQJcvS3Uaxo3X3n3MRQQQqJ04P+
+X-Gm-Gg: AYBFou092tkpiGPD8EFOz3dQQLGKchNSmCGPh0fXp7NW13sT/pr3pyokzmaBClqseCi
+	+sT0C7AqEGqowWDw04fGwiPaxfFDhCQWTUMsICcMgLHHe9WUdbKaDb8GLvhVQT+rbto2jDtNWab
+	KA7RiEgKeIl1kbXCKWJ9+MAcycrkDYwCy8SX2ZkjtMfhAjjXSb+rWhsk+FXv1drm8slRDMUBG6o
+	JkuEkgWQ5LQd86gQMNRc2iWK+CdqUbmjjLxNuBC0T1v8LIlcypaZWW3yHVQDHJyYGDYUAkNYige
+	DThH1wij6dUif3aqQPSnm6qv+ivledbpGTbper+A/EhP0DpdQu4P8sJNexYWqQkDQvR3vvtePex
+	TMus+ZGFONgEZScU8yErvisDYilz5pI5IJY99/Y57qfDCxph/fjY3Jwl0hH94DpcCr1wjHkSt0r
+	x4wDC3mcNlUQR592SNsPSsXVMyvWGedhob0i2L/w1xJU/YrixLwj9BuzuI84RyP0Yk0CD4FP08T
+	L2npdXTwn/CGrvhfKKU1WEtB2bYOygPvUQhEscLlqYERx6G1Vlp0bHalpbOyMMw5D9Npius+YIa
+	e0gx4mTC
+X-Received: by 2002:a05:693c:65d5:b0:343:9eb1:9940 with SMTP id 5a478bee46e88-361a1f48482mr12961659eec.26.1792429309185;
+        Mon, 19 Oct 2026 10:01:49 -0700 (PDT)
+Received: from localhost.localdomain ([98.148.34.5])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-360813b6ca5sm31748945eec.9.2026.10.19.10.01.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 10:01:48 -0700 (PDT)
+From: Hungyu Lin <dennylin0707@gmail.com>
+To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH rtw-next v2] wifi: rtw89: debug: return the error when a read handler fails
-Date: Mon, 19 Oct 2026 10:01:20 -0700
-Message-ID: <20261019170120.726156-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.56.0
+	linux-kernel@vger.kernel.org,
+	reza1234khan1234@gmail.com,
+	Hungyu Lin <dennylin0707@gmail.com>
+Subject: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
+Date: Mon, 19 Oct 2026 16:51:03 +0000
+Message-ID: <20261019165103.5990-1-dennylin0707@gmail.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -67,61 +96,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Return the error when a read handler fails, instead of passing it to the
-copy to userspace as a length:
+rtw_ops_set_key() looks for a free CAM entry before checking the
+command. When all pairwise entries are in use, DISABLE_KEY returns
+-ENOSPC without clearing the existing entry.
 
-  rtw89_8852bu 2-1:1.0: invalid read reg len 0
-  usercopy: Kernel memory exposure attempt detected from SLUB object 'kmalloc-8k' (offset 56, size 262144)!
-  kernel BUG at mm/usercopy.c:102!
+Move the allocation and bounds check into SET_KEY. DISABLE_KEY uses
+the existing key->hw_key_idx.
 
-Fixes: 831cceed3baf ("wifi: rtw89: debugfs: implement file_ops::read/write to replace seq_file")
-Cc: stable@vger.kernel.org
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Fixes: 10d58823cb44 ("wifi: rtw88: fix out-of-bounds CAM write when key table is full")
+Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
 ---
-v2: reword commit message
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 24 +++++++++----------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-Reading read_reg in debugfs before choosing a register gives the log
-above every time on an RTL8852BU. I found it while testing an RTL8922AU
-patch, and it does the same there. After the BUG the driver cannot be
-unloaded. Without hardened usercopy the read returns kernel memory
-instead. The error is also kept for reads at a later offset, so reading
-mac_mem_dump at offset 1 after a failed read hits it too.
-
-  RTL8852BU over USB                 before    after
-  read_reg, nothing chosen
-    6.18.52                          BUG       -EINVAL
-    7.2.6                            BUG       -EINVAL
-    6.18.52, hardened usercopy off   256 KB    -EINVAL
-  mac_mem_dump at offset 1,
-  after a failed read
-    6.18.52                          BUG       -ENOENT
-    7.2.6                            BUG       -ENOENT
-    6.18.52, hardened usercopy off   256 KB    -ENOENT
-
-  RTL8922AU over USB                 before    after
-  read_reg, nothing chosen
-    7.2.6                            BUG       -EINVAL
-  mac_mem_dump at offset 1,
-  after a failed read
-    7.2.6                            BUG       -ENOENT
-
- drivers/net/wireless/realtek/rtw89/debug.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index 3a430bd08..3b7f8a809 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.c
-+++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -185,6 +185,9 @@ static ssize_t rtw89_debugfs_file_read(struct file *file, char __user *userbuf,
- 	debugfs_priv->rused = n;
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 2a9b09fa76e7..5e40cf06a9e3 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -598,20 +598,20 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
  
- out:
-+	if (n < 0)
-+		return n;
+ 	rtw_leave_lps_deep(rtwdev);
+ 
+-	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
+-		hw_key_idx = rtw_sec_get_free_cam(sec);
+-	} else {
+-		/* multiple interfaces? */
+-		hw_key_idx = key->keyidx;
+-	}
+-
+-	if (hw_key_idx >= sec->total_cam_num) {
+-		ret = -ENOSPC;
+-		goto out;
+-	}
+-
+ 	switch (cmd) {
+ 	case SET_KEY:
++		if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
++			hw_key_idx = rtw_sec_get_free_cam(sec);
++		} else {
++			/* multiple interfaces? */
++			hw_key_idx = key->keyidx;
++		}
 +
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, n);
- }
- 
--- 
-2.56.0
-
++		if (hw_key_idx >= sec->total_cam_num) {
++			ret = -ENOSPC;
++			goto out;
++		}
++
+ 		/* need sw generated IV */
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 		key->hw_key_idx = hw_key_idx;
