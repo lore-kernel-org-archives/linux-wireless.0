@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E751538417;
-	Mon, 19 Oct 2026 14:04:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236F853874F;
+	Mon, 19 Oct 2026 14:04:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418664; cv=none; b=AdsOr6r45XydT1+DilJPYXtVAC7uNl70J6DtJWbFKAyDyrk1jc+Qa1wdbkTG6/tH9KfD2fDn4DxyPe2aDrv/fby9WzU/e7UqALQp0OYH6fvTWQn0M31o+aPgZYqm4CJOKPIJH0xjm8JxfxASkGwrrZSrK/qGLT7x+wUjqvSv71E=
+	t=1792418690; cv=none; b=sEP2YP/FhXKpANIUVZRne3hDgZkhTTE7xozTLItfJB5JNMrt54aXnemKYk/JQqZlj/TojS2fpP/t6Vygs0LMDPSS4oKrrvk9kP6hiOkOTsmYyzethAUMd6eew5RORADBZ2Qm6SBbDaxuxvHnf4BNrQ/Kc+XmRsqpz3jJoDUa+EE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418664; c=relaxed/simple;
-	bh=LE3JPqDGwGhoRfpPz0vwGuQ6HNGK9eJCkU92GHD2l0Y=;
+	s=arc-20240116; t=1792418690; c=relaxed/simple;
+	bh=kHz4WGzoZ5eeHgEnb7PRsRa62zSAm4hBXMq0r4JeRgw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hPuDMXnCCl1XEzrSmBAz6TrhntYvXTkDXFTwF8z4BSU80i7ikXJBqZ7Acr46HbFWUkveSkVWi6LrbirxHXV3alTRRqYSz+fCMKSWgHcQqg5dd/sAV4FKJGD47YaLa/zlDk72s4PaNupnfdP+/Ik7KkNA1Vg2GUmi+1DmasEtpxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yp6uKwub; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=TT063wjXSspAi4jUWJDFs8VBnEOJ+6TyBeQE2T6FGZr1eELz5ftotgceeHK3E4vj7EUy2Sv5zfbEWUMz1T3mdw69kxY8OmNJBQAt9gpIjrj65O/aNhNGOPgUUyDgDOp8T5l3YlZWYdQgnSB38tGkF3p/0xpWwiDokhbOMsThOfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dTBMGlc2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yp6uKwub"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44B031F000C5;
-	Mon, 19 Oct 2026 14:04:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dTBMGlc2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D915F1F000C4;
+	Mon, 19 Oct 2026 14:04:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418662;
-	bh=UwV13SqKp8xXq1YdgsdEkpN3Vi9YtAHZxUsmJFad4cw=;
+	s=k20260515; t=1792418687;
+	bh=uCfePp48gs+Yo9pDp6Jdc+kFYuJ/dr7XoQcy1HfsQKw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Yp6uKwubcXyYDtYYYASynp5rQO//L/3YYkfXk41YhI845aif/mZgjpIlMeyloaLwo
-	 SkBLqzi4X1wbq7WYKcQ9wuJmxnuOVPWEFrdxeJsEB53WBYq6z+4qEBTEtAlys66OYm
-	 pjvnEg2mURvpckEIS1sBIjKieylGtH1/h+PfmXaozwBj/cCUdKUkChqIojkhPplF3d
-	 BunHA3zqvT+6OZa5UkFtdiWxKVTj9KkTD8gAO24WKBAoOUz9nVCgiOI+R7wY0KRuds
-	 crz1ebPeI1aR7Kc/8xKKEqGJeCO0BFw0qC6TXKLhRML5Je1q4Tz6XtoCQcX2+gcTJ6
-	 DJoLCgM+xQEag==
+	b=dTBMGlc2XN2PRgB4D5RWsLbSoCdZdVZPRwe2DEB3WCjL3cWNJ7wgajIik9boyUISX
+	 Sj+k65zepZxJ7jfi5mGMnr1xXXpg/UR4aTkmvZbLXnhiMiEPB5LtgBNOvhkP/Exs87
+	 CSrCS05MNv8aZaDci0EJbjDb2TxreNVkhHr02i4tBpskGpX7lNExemvm0S/6hZ+oXM
+	 Dq6s7wVzFrJfO73ZIwdWGI0CLyCjhOyW96OHa9JjWixl9KYaCtcL1tsgCrM3Y8aCyR
+	 l+WtDJvLLohve7PfFd+/1IeiDtMUpd7vkXUPDS5U2fROmF5kko3ASVcDF9YObOBG7j
+	 lYULuJbetbr4A==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc: Ilan Peer <ilan.peer@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: validate wake packet crypto overhead
-Date: Mon, 19 Oct 2026 09:51:39 -0400
-Message-ID: <20261019135441.1420968-408-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: Do not cleanup FW state when the device is dead
+Date: Mon, 19 Oct 2026 09:51:56 -0400
+Message-ID: <20261019135441.1420968-425-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,65 +52,63 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit c5cb9dd220ba9fdcf4ba485ce3d1d36ca32ac00b ]
+[ Upstream commit 1c031ac5a39ebcc3269eace8b606043adc398bfa ]
 
-Wake packet parsing only accounted for FCS and missed per-key
-IV/ICV overhead for protected data frames.
+When a channel context is unassigned, there is a path to cleanup the FW
+state in case of NON MLO connection: remove the link and add it again.
+However, when the transport is dead, e.g., during device removal etc.,
+this flow will fail and as a result the mld_vif->link[0] would be set to
+NULL. Later, when the interface is removed, iwl_mld_remove_link() would
+warn as the link is NULL.
 
-Prevent size underflow and bad packet trimming when
-notifications are malformed or truncated.
+Fix this by not doing the cleanup when the device is dead.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260717172958.e06595623533.Ie09494b7e34e5872b750fd90e325648ee469d0da@changeid
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715220243.89a0c44a72a3.I45cca8b84a25943d5771199af6b0155dbac77b58@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local checkout is **Linux 7.3.0-rc4**. The iwlwifi MLD WoWLAN path
-is present here, and this commit is a real memory-safety plus wake-
-packet correctness fix for that path.
+Local tree is **Linux 7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`). The
+candidate is `1c031ac5a39eb` and landed in `v7.3-rc1`. The iwlwifi MLD
+path it fixes is present here (MLD since `v6.15-rc1`).
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[iwlwifi/mld]** **[validate]** — account for per-key IV/ICV
-when parsing WoWLAN wake packets, and reject truncated/malformed sizes.
+Record: `[wifi: iwlwifi: mld:] [Do not / Fix] [skip non-MLO FW link
+remove/re-add when the transport is dead]`
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- `Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
-  (author; long-time iwlwifi developer)
-- `Link: https://patch.msgid.link/20260717172958.e06595623533.Ie09494b7e
-  34e5872b750fd90e325648ee469d0da@changeid`
+- `Signed-off-by: Ilan Peer <ilan.peer@intel.com>` (author)
 - `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (iwlwifi maintainer, committer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable` (absence of Fixes/Cc:stable is expected for this
-  review)
-- No syzbot / KASAN / user crash tags
+  (iwlwifi MLD maintainer)
+- `Link: https://patch.msgid.link/20260715220243.89a0c44a72a3.I45cca8b84
+  a25943d5771199af6b0155dbac77b58@changeid`
+- No `Fixes:`, no `Reported-by:`, no `Tested-by:`, no `Reviewed-by:`, no
+  `Acked-by:`, no `Cc: stable` (absence expected)
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- **Bug:** wake-packet parsing only subtracted FCS (4 bytes). It did not
-  add the PTK/GTK IV and ICV lengths for protected data frames.
-- **Symptom:** size underflow and incorrect trimming when the firmware
-  wake-packet notification is malformed or truncated; userspace can get
-  a bad or missing wakeup packet.
-- **Version info:** none in the message. Code was introduced with iwlmld
-  (`d1e879ec600f9`, v6.15).
-- **Root cause (author):** missing per-key crypto overhead in
-  `iwl_mld_set_wake_packet()`.
+- **Bug:** On non-MLO chanctx unassign, the driver remove/re-adds the
+  link to reset FW state. If the transport is dead (device removal,
+  etc.), that sequence fails and `mld_vif->link[0]` is left NULL.
+- **Symptom:** Later `iwl_mld_remove_link()` during interface teardown
+  hits `WARN_ON(!link)`.
+- **Root cause:** FW cleanup is attempted after the device can no longer
+  accept commands; the software link pointer is cleared on the failed
+  re-add.
+- **Version info:** none in the message. MLD itself dates to v6.15.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not disguised. It is an explicit validation/correctness fix.
-“Validate” plus “prevent size underflow” is a memory-safety fix, not a
-cleanup.
+Record: Not hidden. Explicitly a teardown bug: failed FW cleanup → NULL
+link → `WARN_ON`.
 
 ---
 
@@ -118,88 +116,78 @@ cleanup.
 
 **Step 2.1: INVENTORY THE CHANGES**
 Record:
-- File: `drivers/net/wireless/intel/iwlwifi/mld/d3.c` — **+57 / −6**
-- New: `struct iwl_mld_wake_pkt_iter_data`,
-  `iwl_mld_wake_pkt_key_iter()`
-- Modified: `iwl_mld_set_wake_packet()`
-- Scope: **single-file surgical fix** in the MLD D3/WoWLAN resume path
+- File: `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c` (+4 / −2)
+- Function: `iwl_mld_unassign_vif_chanctx()`
+- Scope: single-file surgical fix
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 Record:
-1. **Header size:** previously cast `wake_packet` to `ieee80211_hdr`
-   with no length check. Now `IWL_FW_CHECK` if `pkt_bufsize <
-   sizeof(*hdr)` and return.
-2. **Protected data frames:** previously `ivlen = 0`, `icvlen = 4` (FCS
-   only). Now, if `ieee80211_has_protected()`, iterate keys and add
-   `key->iv_len` / `key->icv_len`.
-3. **Before `skb_put_data`:** new check `pkt_bufsize <= hdrlen + ivlen +
-   icvlen`; skip copy if the buffer is too small.
-4. **Non-data frames:** new check `pkt_bufsize <= fcslen` before
-   subtracting FCS.
-5. **Types:** `pkt_bufsize` / `expected_pktlen` / `truncated` changed
-   from `int` to `u32` so underflow cannot go negative and then be
-   passed as a huge `unsigned int` length.
+- **Before:** For non-MLO, non-AP, not associated, not in HW restart:
+  always `iwl_mld_remove_link()` then `iwl_mld_add_link()`.
+- **After:** Same, but also skip when `iwl_trans_is_dead(mld->trans)`.
+- Path affected: chanctx unassign during device death / removal, not the
+  normal associated-STA path (`WARN_ON_ONCE(vif->cfg.assoc)` already
+  excludes that).
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Memory safety (OOB / integer underflow) + logic/correctness**
+Record: **Logic / correctness** on a teardown path (NULL pointer →
+`WARN_ON`).
 
-Before, `skb_put_data()` takes `unsigned int len`. A signed
-`pkt_bufsize` that goes negative after `pkt_bufsize -= hdrlen` or `-=
-ivlen + icvlen` becomes a huge copy. `skb_put()` panics if `hdrlen`
-exceeds the skb tailroom (`alloc_skb(pkt_bufsize)` then
-`skb_put_data(..., hdrlen)`). Unchecked `hdr->frame_control` is an OOB
-read if the firmware buffer is shorter than an 802.11 header.
+Verified in `iwl_mld_remove_link()` / `iwl_mld_add_link()` in
+`mld/link.c`:
+1. `iwl_mld_remove_link()` always does
+   `RCU_INIT_POINTER(mld_vif->link[link_id], NULL)` after the FW remove
+   attempt.
+2. `iwl_mld_add_link()` then talks to FW via `iwl_mld_add_link_to_fw()`.
+   On failure it NULLs `mld_vif->link[]` again.
+3. `iwl_mld_mac80211_remove_interface()` later calls
+   `iwl_mld_remove_link(mld, &vif->bss_conf)`.
+4. That function does `if (WARN_ON(!link || link->active)) return;`.
 
-Missing IV/ICV on protected frames (the common WPA2/WPA3 case) also mis-
-trims the packet: `ieee80211_data_to_8023()` can fail, or userspace gets
-a corrupted wake packet.
-
-The fix matches the long-standing MVM path in
-`drivers/net/wireless/intel/iwlwifi/mvm/d3.c` (IV/ICV from PTK vs GTK,
-plus `IWL_FW_CHECK` on size). MLD uses `ieee80211_iter_keys()` because
-it does not cache `gtk_ivlen`/`ptk_ivlen` like MVM.
+`iwl_trans_send_cmd()` also `WARN_ONCE`s if `trans->state !=
+IWL_TRANS_FW_ALIVE`, so the skip can avoid extra warnings while sending
+`LINK_CONFIG_CMD` on a dead device.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record: **Obviously correct, minimal, low regression risk.** It copies
-proven MVM logic. `ieee80211_iter_keys()` requires the wiphy mutex;
-`iwl_mld_wowlan_resume()` already has `lockdep_assert_wiphy()`, and the
-same resume path already calls `ieee80211_iter_keys()` in
-`iwl_mld_update_sec_keys()`. If no matching key is found, `ivlen` stays
-0 and `icvlen` stays 4 — same as the old path. Early return after
-`alloc_skb` still sets `*_pkt`, and the caller `kfree_skb()`s it. No
-public API change.
+Record:
+- Obviously correct: same pattern as the existing
+  `!mld->fw_status.in_hw_restart` skip.
+- Minimal: one extra predicate using `iwl_trans_is_dead()` (present
+  since v6.17).
+- Regression risk is low: if the transport is dead, FW cleanup cannot
+  succeed anyway.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: BLAME THE CHANGED LINES**
-Record: Buggy `iwl_mld_set_wake_packet()` came in **`d1e879ec600f9`**
-(“wifi: iwlwifi: add iwlmld sub-driver”, 2025-02-16). Present since
-**v6.15**. Not recent one-off code.
+Record:
+- Remove/re-add block introduced in `d1e879ec600f9` (“wifi: iwlwifi: add
+  iwlmld sub-driver”, 2025-03-05) → first in **v6.15-rc1**.
+- Dead-device check added by this candidate (`1c031ac5a39eb`,
+  2026-07-16) → first in **v7.3-rc1**.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Introduction commit is `d1e879ec600f9`. `git
-merge-base --is-ancestor d1e879ec600f9 HEAD` succeeds. Related later fix
-in the same file: `c5aeb11489150` (“fix read in wake packet notification
-handler”) is an **ancestor** of this commit and is independent (it only
-reorders a length check in `iwl_mld_handle_wake_pkt_notif()`).
+Record: No `Fixes:` tag. Buggy code is the original MLD unassign path,
+not a later regression.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Nearby D3 validation commits (`validate WoWLAN notif header`,
-`validate D3_END notif size`) are separate. This patch is **1/8** of an
-iwlwifi-next “updates” series; the other seven patches are unrelated
-(scan-abort init, time-sync, BIOS move, MCC v2, etc.). **Standalone.**
+Record: Nearby commits in the same iwlwifi-next pull are unrelated (FTM
+abort, WoWLAN validation, mei overflow, etc.). No follow-up on this
+exact condition after `1c031ac5a39eb`.
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Emmanuel Grumbach is a core iwlwifi author. Same week he also
-fixed MVM D3 FCS truncation (`9119aeeddc210`). Miri Korenblit committed
-the patch. Strong maintainer provenance.
+Record: Ilan Peer is a regular Intel iwlwifi/MLD contributor. The patch
+was committed by Miri Korenblit (MLD maintainer).
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: Needs existing `IWL_FW_CHECK`, `ieee80211_iter_keys()`, and
-`iwl_mld_set_wake_packet()`. All exist in this tree. **Can apply
-standalone.**
+Record:
+- Needs `iwl_trans_is_dead()` from `11c5cc9ec6d9e` (v6.17-rc1).
+  **Present in this 7.3-rc4 tree.**
+- Series membership (`14/15`) is packaging only; this hunk does not
+  depend on the other 14 patches.
+- Standalone: yes.
 
 ---
 
@@ -207,132 +195,125 @@ standalone.**
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- `b4 dig -c c5cb9dd220ba9` → https://patch.msgid.link/20260717172958.e0
-  6595623533.Ie09494b7e34e5872b750fd90e325648ee469d0da@changeid
-- `b4 dig -a`: **v1 only** (`[PATCH iwlwifi-next 1/8]`)
-- Cover: “A couple of fixes, features and cleanups.” This patch is one
-  of the fixes.
-- Saved mbox: **9 messages = cover + 8 patches, no review replies, no
-  NAKs, no Cc: stable**
-- HTTP lore fetch returned 403 (Anubis); discussion taken from the b4
-  mbox instead
+- `b4 dig -c 1c031ac5a39eb`: https://patch.msgid.link/20260715220243.89a
+  0c44a72a3.I45cca8b84a25943d5771199af6b0155dbac77b58@changeid
+- Cover: `[PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates -
+  07-15-2026` — “Cleanups, features, and fixes from our internal tree.”
+- `b4 dig -a`: single v1 series; committed version matches v1. No later
+  revision.
+- Mbox has 16 messages (cover + 15 patches). **No replies, NAKs, or
+  review comments** on this patch.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w`): Miri Korenblit, Johannes Berg
-(`johannes@sipsolutions.net`), `linux-wireless@vger.kernel.org`,
-Emmanuel Grumbach. Right lists/maintainers. Committed by Korenblit.
+Record (`b4 dig -w`): To/Cc were Miri Korenblit, Johannes Berg
+(`johannes@sipsolutions.net`), `linux-wireless@vger.kernel.org`, Ilan
+Peer. Maintainer-acked via Miri’s SOB; no public Reviewed-by.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No `Reported-by:` or bugzilla/syzbot link. Bug is described from
-code inspection, not a user crash.
+Record: No `Reported-by` / bugzilla / syzbot. Looks like an internal
+Intel find. Trigger is still concrete (dead transport during unassign).
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Mixed 8-patch iwlwifi-next series. This hunk does not depend on
-2/8–8/8. Related but independent: `c5aeb11489150` (wake-pkt notif
-length), MVM D3 FCS fix `9119aeeddc210`.
+Record: Mixed 15-patch `iwlwifi-next` dump. This patch is self-contained
+(only the unassign condition). Other series items are unrelated
+mei/mvm/FTM/debug fixes.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org/stable search returned **403**. **UNVERIFIED**
-whether stable@ already discussed this.
+Record: lore.kernel.org `/stable/` search blocked by Anubis (403).
+**UNVERIFIED:** no confirmed prior stable-list discussion. b4/mbox
+showed no `Cc: stable` and no reviewer nomination.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.1: KEY FUNCTIONS**
-Record: `iwl_mld_wake_pkt_key_iter` (new), `iwl_mld_set_wake_packet`
-(modified).
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
+Record: `iwl_mld_unassign_vif_chanctx` (modified). Callees of the
+skipped block: `iwl_mld_remove_link`, `iwl_mld_add_link`. Later WARN
+site: `iwl_mld_remove_link` from `iwl_mld_mac80211_remove_interface`.
 
 **Step 5.2: TRACE CALLERS**
 Record:
-- `iwl_mld_set_wake_packet()` ← `iwl_mld_report_wowlan_wakeup()` ←
-  `iwl_mld_process_wowlan_status()` ← D3/WoWLAN resume
-- Driver resume: `iwl_mld_resume()` → `iwl_mld_wowlan_resume()`
-- mac80211: `ieee80211_reconfig()` → `drv_resume()` under
-  `lockdep_assert_wiphy()`
-- Context: process context on suspend/resume, not hardirq
+- mac80211 op `.unassign_vif_chanctx` (mac80211 core on vif/chanctx
+  unbind — ifdown, disconnect, unbind, restart).
+- `iwl_mld_switch_vif_chanctx_swap` /
+  `iwl_mld_switch_vif_chanctx_reassign` (CSA/channel switch).
 
 **Step 5.3: TRACE CALLEES**
-Record: `ieee80211_iter_keys`, `ieee80211_hdrlen`,
-`ieee80211_has_protected`, `alloc_skb` / `skb_put_data`,
-`ieee80211_data_to_8023`, `IWL_FW_CHECK` (log + boolean).
+Record: deactivate link, optional monitor sta removal, TLC phy update,
+then optional remove/re-add. Remove/re-add issue `LINK_CONFIG_CMD` via
+`iwl_mld_send_cmd` → `iwl_trans_send_cmd`.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Reachable from userspace via WoWLAN (suspend with wowlan
-enabled, then a wake packet). Needs `CONFIG_IWLMLD` and
-`CONFIG_PM_SLEEP` (`iwlmld-$(CONFIG_PM_SLEEP) += d3.o`). Intel WiFi 7 /
-MLD hardware. Not a syscall fuzz path; **laptop suspend/resume**.
+Record: Userspace-reachable: bring down `wlan0`, `rmmod iwlwifi`, PCI
+unbind/reset. `STATUS_TRANS_DEAD` is set in `iwl_trans_pcie_reset()`
+during PCI removal. Config: `CONFIG_IWLMLD` (BE200+ / Wi-Fi 7).
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: MVM `mvm/d3.c` already applied IV/ICV + size check. MLD was a
-port that omitted that logic.
+Record: Same function already skips this cleanup on `in_hw_restart`.
+`iwl_trans_is_dead()` is already used in `mld/mld.c`
+(`iwl_mld_nic_error`). This is the same “don’t talk to a dead transport”
+pattern.
 
 ---
 
 ## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** Tree is `v7.3-rc4-27-gf0100363d8c37` / `7.3.0-rc4`.
-File `drivers/net/wireless/intel/iwlwifi/mld/d3.c` exists. Bug present
-from v6.15 (`d1e879ec600f9`) until this fix. `git merge-base --is-
-ancestor d1e879ec600f9 HEAD` is true. `v7.2` has MLD but **not** this
-fix (`c5cb9dd220ba9` is not an ancestor of `v7.2`).
+Record: **Yes.** `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`
+`iwl_mld_unassign_vif_chanctx()` contains the remove/re-add path. Bug
+present since v6.15; this checkout is 7.3-rc4.
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply** on this tree. Surrounding
-`iwl_mld_set_wake_packet()` matches the parent hunk. `IWL_FW_CHECK`
-already used in this file.
+Record: Clean apply. Surrounding condition matches the parent of
+`1c031ac5a39eb`. Helper `iwl_trans_is_dead()` exists in `iwl-trans.h`.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: `c5aeb11489150` is in HEAD (notif length). No alternate fix for
-IV/ICV in MLD `set_wake_packet`.
+Record: This is the only “cleanup FW state when the device is dead”
+change on this path. `git merge-base --is-ancestor 1c031ac5a39eb HEAD`
+is true because this is post-7.3-rc1 mainline; that is source presence,
+not a reason to reject on merit.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 7.1: SUBSYSTEM AND CRITICALITY**
-Record: **drivers/net/wireless/intel/iwlwifi/mld** — **IMPORTANT** (not
-core mm/fs, but a widely used Intel WiFi opmode for current silicon).
-WoWLAN is a production laptop path.
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: `drivers/net/wireless/intel/iwlwifi/mld/` — Intel Wi-Fi 7
+(BE200+) opmode. **IMPORTANT** (not core mm/net, but a widely shipped
+wireless driver).
 
-**Step 7.2: SUBSYSTEM ACTIVITY**
-Record: **Active.** Many 2026 iwlwifi mld/mvm firmware-validation fixes.
-Mature enough that MVM already had this logic; MLD lagged.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Actively developed (frequent MLD commits through 2026). The
+buggy unassign cleanup has been there since the MLD introduction.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-**Step 8.1: WHO IS AFFECTED**
-Record: **Driver-specific / config-specific:** `CONFIG_IWLMLD=y/m` +
-`CONFIG_PM_SLEEP`, Intel MLD firmware devices, WoWLAN users.
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Users of Intel MLD devices (`CONFIG_IWLMLD`) with a non-MLO
+interface, when the transport dies or the device is removed while a
+chanctx is still assigned.
 
-**Step 8.2: TRIGGER CONDITIONS**
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Device removal / PCI reset / unbind / `rmmod` with an active
+non-MLO vif. Not every packet path; teardown is still a common
+admin/user action. Unprivileged users typically cannot unbind PCI, but
+can trigger iface down; the commit’s example is device removal.
+
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: `WARN_ON(!link)` in `iwl_mld_remove_link()` (stack dump,
+`TAINT_WARN`; panic if `panic_on_warn`). Possible extra `WARN_ONCE` from
+`iwl_trans_send_cmd()` for non-ALIVE state. Not a UAF or data-corruption
+bug. **Severity: MEDIUM–HIGH** (WARN_ON on a real teardown path).
+
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
 Record:
-- Common functional bug: WoWLAN wakeup by a **protected data frame**
-  (typical on WPA2/WPA3). Unprivileged users do not inject firmware
-  notifications; they can suspend with wowlan.
-- Memory-safety path: truncated/malformed `WOWLAN_WAKE_PKT` notification
-  (buggy firmware or short DMA). Intel FW is signed, so this is
-  robustness vs. firmware bugs, not a generic local exploit.
-- How common: every encrypted wake-packet resume hits the IV/ICV miss;
-  overflow needs a short/inconsistent notification.
-
-**Step 8.3: FAILURE MODE SEVERITY**
-Record:
-- Short buffer + `skb_put_data(hdrlen)` → **skb over-panic / OOB** —
-  **HIGH**
-- Signed underflow into `skb_put_data` → **memory corruption** —
-  **HIGH**
-- Unchecked header parse → **OOB read** — **HIGH**
-- Wrong/missing wakeup packet to cfg80211 — **MEDIUM** (userspace WoWLAN
-  diagnostics)
-
-**Step 8.4: RISK-BENEFIT RATIO**
-Record: **Benefit: high** for Intel MLD WoWLAN (crash/corruption
-avoided, correct packet). **Risk: low** (one file, ~60 lines, same
-pattern as MVM, wiphy lock already held). Ratio favors backport.
+- **Benefit:** Stops a reproducible WARN_ON (and likely extra host-
+  command WARNs) on Intel MLD device teardown.
+- **Risk:** Very low — one boolean on an already-gated cleanup.
+- **Ratio:** Favorable.
 
 ---
 
@@ -341,217 +322,134 @@ pattern as MVM, wiphy lock already held). Ratio favors backport.
 **Step 9.1: COMPILE THE EVIDENCE**
 
 **FOR:**
-- Real underflow/OOB in firmware wake-packet parsing (`skb_put` /
-  `memcpy`)
-- Protected-frame IV/ICV omitted since iwlmld was added (v6.15)
-- Same logic already used and proven in MVM `d3.c`
-- Small, one file, no new APIs
-- Maintainer-authored and maintainer-committed
-- Standalone (1/8 of a mixed series, no deps on the rest)
-- Code exists in this 7.3-rc4 tree; `IWL_FW_CHECK` and
-  `ieee80211_iter_keys` already used on this path
+- Real teardown bug with a traced mechanism (failed remove/re-add → NULL
+  `link[0]` → `WARN_ON`).
+- WARN_ON is an explicit strong-yes class of fix.
+- Four-line, obviously correct, same idea as the existing restart skip.
+- MLD + `iwl_trans_is_dead()` exist in this 7.3-rc4 tree; patch applies
+  cleanly.
+- Intel Wi-Fi 7 hardware is in production laptops.
 
 **AGAINST:**
-- No user `Reported-by` / syzbot
-- WoWLAN-only; overflow needs a bad/truncated notification
-- ~57 lines, new helper (still contained)
-- Cover letter mixed fixes with features (this patch itself is a fix)
+- No public reporter/syzbot/`Fixes:` tag.
+- Failure is WARN_ON, not oops/UAF/corruption by default.
+- Sent in a mixed `iwlwifi-next` dump, not a dedicated -fixes mail.
+- No mailing-list review comments (only maintainer SOB).
 
 **UNRESOLVED:**
-- lore.kernel.org HTTP 403; no extra review mail beyond the b4 mbox
-- Whether stable@ already discussed it
+- Stable-list history (lore blocked).
+- No independent user report found.
 
-**Step 9.2: STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — mirrors MVM; maintainer SOB;
-   used `IWL_FW_CHECK` consistently
-2. Fixes a real bug that affects users? **PASS** — wrong crypto
-   stripping on encrypted wake packets; OOB on short buffers
-3. Important issue? **PASS** — skb overflow / underflow is crash or
-   memory corruption; HIGH
-4. Small and contained? **PASS** — one file, +57/−6
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — file and helpers present,
-   hunk matches
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — one predicate; in mainline
+   since 7.3-rc1; maintainer SOB.
+2. Fixes a real bug that affects users? **PASS** — WARN_ON on
+   device/interface teardown for MLD hardware.
+3. Important issue? **PASS** — WARN_ON on a reachable removal path (“oh,
+   that’s not good” / WARN_ON class).
+4. Small and contained? **PASS** — ~4 lines, one function.
+5. No new features or APIs? **PASS** — uses existing
+   `iwl_trans_is_dead()`.
+6. Can apply to the local tree? **PASS** — code and helper are here;
+   context matches.
 
-**Step 9.3: EXCEPTION CATEGORIES**
-Record: None (not a device ID/quirk/DT/build/doc exception). Ordinary
-driver bugfix.
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: None (not a device-ID/quirk/DT/build/doc exception). It is a
+normal small driver bugfix.
 
-**Step 9.4: DECISION**
-This tree has the buggy MLD D3 path. The patch is a small, correct fix
-for integer underflow and bad wake-packet trimming. It should be applied
-here.
-
----
-
-### What the commit solves for users of this tree
-
-On Intel MLD (WiFi 7) WoWLAN resume, `iwl_mld_set_wake_packet()` treated
-every data frame as having only a 4-byte FCS and never skipped 802.11
-IV/ICV. Encrypted wake packets were mis-trimmed. Short or inconsistent
-firmware notifications could make `pkt_bufsize` go negative (`int`) and
-then be passed to `skb_put_data(..., unsigned int)`, or `skb_put` more
-than `alloc_skb` reserved — kernel panic or memory corruption. The patch
-adds per-key IV/ICV (via `ieee80211_iter_keys`) and `IWL_FW_CHECK` size
-guards, matching MVM.
-
-### Risk vs benefit
-
-Low risk: one file, existing primitives, wiphy lock already asserted.
-Benefit: avoid resume-path memory corruption and deliver a correct
-wakeup packet on encrypted networks.
-
-### Concerns
-
-No external reproducer; trigger for the overflow is a truncated FW
-notification. The IV/ICV miss still hits normal encrypted WoWLAN. No
-series dependency. Apply is clean on this tree.
+**Step 9.4: MAKE YOUR DECISION**
+This tree has the MLD unassign path. Skipping FW link recycle when the
+transport is already dead prevents a real `WARN_ON` during removal, with
+negligible regression risk.
 
 ---
 
-### Verification
-- **[Phase 1]** Parsed commit `c5cb9dd220ba9`: SOB Grumbach + Korenblit;
-  Link msgid; no Fixes/Reported-by/Cc:stable
-- **[Phase 2]** Diff: `mld/d3.c` +57/−6; new key iterator; size checks;
-  `int`→`u32`; IV/ICV from `key->iv_len`/`icv_len` (`u8` in
-  `ieee80211_key_conf`)
-- **[Phase 2]** Confirmed `skb_put_data()` uses `unsigned int len` and
-  `skb_put()` (`include/linux/skbuff.h`)
-- **[Phase 2]** Compared to `mvm/d3.c` ~1516–1555: same IV/ICV +
-  `IWL_FW_CHECK` pattern
-- **[Phase 3]** `git blame` on parent: buggy function from
-  `d1e879ec600f9` (2025-02-16)
-- **[Phase 3]** `git merge-base --is-ancestor d1e879ec600f9 HEAD` true;
-  `c5cb9dd220ba9` not in `v7.2`; MLD present from `v6.15`
-- **[Phase 3]** `c5aeb11489150` is ancestor, independent notif-length
-  fix
-- **[Phase 4]** `b4 dig -c/-a/-w/-m`: v1 1/8 iwlwifi-next; recipients
-  Korenblit/Berg/linux-wireless; mbox has no replies/NAKs
-- **[Phase 4]** WebFetch/curl lore: 403 — UNVERIFIED extra
-  review/stable@ mail
-- **[Phase 5]** Call chain: `ieee80211_reconfig` → `drv_resume` →
-  `iwl_mld_wowlan_resume` (`lockdep_assert_wiphy`) →
-  `iwl_mld_set_wake_packet`
-- **[Phase 5]** `ieee80211_iter_keys` docs: wiphy mutex; already used in
-  `iwl_mld_update_sec_keys()`
-- **[Phase 6]** `git describe HEAD` → `v7.3-rc4-27-gf0100363d8c37`;
-  `make kernelversion` → `7.3.0-rc4`; file present; `d3.o` behind
-  `CONFIG_PM_SLEEP`
-- **[Phase 7]** `CONFIG_IWLMLD` “Intel Wireless WiFi MLD Firmware
-  support”
-- **[Phase 8]** Failure mode verified from parent source: no
-  `pkt_bufsize < sizeof(*hdr)` check; signed subtract then
-  `skb_put_data`
+## What the commit solves and why it matters here
+
+On non-MLO Intel MLD interfaces, chanctx unassign recycles the FW link
+(`remove` + `add`). If the transport is dead, `add` fails and
+`mld_vif->link[0]` stays NULL. Interface removal then hits
+`WARN_ON(!link)` in `iwl_mld_remove_link()`. Users see a kernel warning
+(and a panic if `panic_on_warn` is set) when unbinding or resetting the
+Wi-Fi device. This 7.3-rc4 tree includes that MLD code, so the fix
+belongs here.
+
+## Stable rules / risk vs benefit
+
+The change is a one-condition skip, already used for HW restart, with no
+API or behavior change for live devices. Benefit is avoiding teardown
+WARNs on Intel Wi-Fi 7; risk is very low.
+
+## Concerns
+
+No `Fixes:`/`Reported-by`, and it rode in a mixed next-tree series.
+Neither undercuts the code-level bug. Prerequisite `iwl_trans_is_dead()`
+is already in this tree. No backport rework needed.
+
+---
+
+## Verification
+- **[Phase 1]** Parsed tags: author Ilan Peer, SOB Miri Korenblit,
+  msgid.link; no Fixes/Reported-by/Cc-stable.
+- **[Phase 2]** Diff: +4/−2 in `iwl_mld_unassign_vif_chanctx`; adds
+  `!iwl_trans_is_dead(mld->trans)`.
+- **[Phase 2]** `iwl_mld_remove_link` always NULLs `mld_vif->link[]`;
+  `iwl_mld_add_link` NULLs it again if `iwl_mld_add_link_to_fw` fails;
+  `iwl_mld_remove_link` WARNs on NULL.
+- **[Phase 2]** `iwl_trans_send_cmd` WARNs if `trans->state !=
+  IWL_TRANS_FW_ALIVE`.
+- **[Phase 3]** `git blame`: remove/re-add from `d1e879ec600f9`
+  (v6.15-rc1); fix is `1c031ac5a39eb` (v7.3-rc1).
+- **[Phase 3]** `git describe --contains --match 'v*'`: MLD
+  `v6.15-rc1~...`; helper `11c5cc9ec6d9e` in `v6.17-rc1`; this commit
+  `v7.3-rc1~...`.
+- **[Phase 3]** `git merge-base --is-ancestor 1c031ac5a39eb HEAD` →
+  ancestor (expected on 7.3-rc4).
+- **[Phase 4]** `b4 dig -c`: lore/msgid thread; `-a`: v1 only; `-w`:
+  Johannes Berg + linux-wireless; `-m`: 16 msgs, no replies/NAKs.
+- **[Phase 4]** Cover letter: mixed “updates” series 14/15; this patch
+  listed under Ilan Peer.
+- **[Phase 4]** lore `/stable/` search: UNVERIFIED (Anubis 403).
+  WebFetch lore: 403.
+- **[Phase 5]** Callers: mac80211 `.unassign_vif_chanctx`, plus two
+  `switch_vif_chanctx_*` helpers. Teardown via
+  `iwl_mld_mac80211_remove_interface`.
+- **[Phase 5]** `STATUS_TRANS_DEAD` set in `iwl_trans_pcie_reset()`
+  (`pcie/gen1_2/trans.c`).
+- **[Phase 6]** `git describe HEAD` / `make kernelversion`: **v7.3-rc4 /
+  7.3.0-rc4**. Buggy MLD file present. `iwl_trans_is_dead()` present at
+  `iwl-trans.h:1127`.
+- **[Phase 8]** Failure mode: `WARN_ON(!link)` on iface removal after
+  dead-transport unassign; severity MEDIUM–HIGH.
+- **UNVERIFIED:** Prior discussion on the stable mailing list.
+
+The fix is small, surgical, and meets the stable criteria for this tree.
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 63 +++++++++++++++++++--
- 1 file changed, 57 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index 73fd4c69357ca..b75936125b46d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -53,6 +53,30 @@ struct iwl_mld_suspend_key_iter_data {
- 	__le32 bigtk_cipher;
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index 5234229a070a7..4ea2d45d71e4e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -1113,11 +1113,13 @@ void iwl_mld_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 	RCU_INIT_POINTER(mld_link->chan_ctx, NULL);
  
-+struct iwl_mld_wake_pkt_iter_data {
-+	bool multicast;
-+	u32 ivlen;
-+	u32 icvlen;
-+};
-+
-+static void
-+iwl_mld_wake_pkt_key_iter(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta,
-+			  struct ieee80211_key_conf *key, void *_data)
-+{
-+	struct iwl_mld_wake_pkt_iter_data *data = _data;
-+	bool is_group_key = !sta;
-+
-+	/* ignore anything that is not a PTK / GTK */
-+	if (key->keyidx > 3)
-+		return;
-+	if (is_group_key != data->multicast)
-+		return;
-+
-+	data->ivlen = key->iv_len;
-+	data->icvlen = key->icv_len;
-+}
-+
- struct iwl_mld_mcast_key_data {
- 	u8 key[WOWLAN_KEY_MAX_SIZE];
- 	u8 len;
-@@ -707,11 +731,17 @@ iwl_mld_set_wake_packet(struct iwl_mld *mld,
- 			struct cfg80211_wowlan_wakeup *wakeup,
- 			struct sk_buff **_pkt)
- {
--	int pkt_bufsize = wowlan_status->wake_packet_bufsize;
--	int expected_pktlen = wowlan_status->wake_packet_length;
-+	u32 pkt_bufsize = wowlan_status->wake_packet_bufsize;
-+	u32 expected_pktlen = wowlan_status->wake_packet_length;
- 	const u8 *pktdata = wowlan_status->wake_packet;
- 	const struct ieee80211_hdr *hdr = (const void *)pktdata;
--	int truncated = expected_pktlen - pkt_bufsize;
-+	u32 truncated;
-+
-+	if (IWL_FW_CHECK(mld, pkt_bufsize < sizeof(*hdr),
-+			 "pkt_bufsize is too short: %u\n", pkt_bufsize))
-+		return;
-+
-+	truncated = expected_pktlen - pkt_bufsize;
- 
- 	if (ieee80211_is_data(hdr->frame_control)) {
- 		int hdrlen = ieee80211_hdrlen(hdr->frame_control);
-@@ -722,9 +752,18 @@ iwl_mld_set_wake_packet(struct iwl_mld *mld,
- 		if (!pkt)
- 			return;
- 
--		skb_put_data(pkt, pktdata, hdrlen);
--		pktdata += hdrlen;
--		pkt_bufsize -= hdrlen;
-+		if (ieee80211_has_protected(hdr->frame_control)) {
-+			struct iwl_mld_wake_pkt_iter_data iter_data = {
-+				.multicast =
-+					is_multicast_ether_addr(hdr->addr1),
-+			};
-+
-+			ieee80211_iter_keys(mld->hw, vif,
-+					    iwl_mld_wake_pkt_key_iter,
-+					    &iter_data);
-+			ivlen = iter_data.ivlen;
-+			icvlen += iter_data.icvlen;
-+		}
- 
- 		/* if truncated, FCS/ICV is (partially) gone */
- 		if (truncated >= icvlen) {
-@@ -735,6 +774,13 @@ iwl_mld_set_wake_packet(struct iwl_mld *mld,
- 			truncated = 0;
- 		}
- 
-+		if (IWL_FW_CHECK(mld, pkt_bufsize <= hdrlen + ivlen + icvlen,
-+				 "pkt_bufsize is too small %u\n", pkt_bufsize))
-+			return;
-+
-+		skb_put_data(pkt, pktdata, hdrlen);
-+		pktdata += hdrlen;
-+		pkt_bufsize -= hdrlen;
- 		pkt_bufsize -= ivlen + icvlen;
- 		pktdata += ivlen;
- 
-@@ -756,6 +802,11 @@ iwl_mld_set_wake_packet(struct iwl_mld *mld,
- 			fcslen -= truncated;
- 			truncated = 0;
- 		}
-+
-+		if (IWL_FW_CHECK(mld, pkt_bufsize <= fcslen,
-+				 "pkt_bufsize is too small %u\n", pkt_bufsize))
-+			return;
-+
- 		pkt_bufsize -= fcslen;
- 		wakeup->packet = wowlan_status->wake_packet;
- 		wakeup->packet_present_len = pkt_bufsize;
+ 	/* in the non-MLO case, remove/re-add the link to clean up FW state.
+-	 * In MLO, it'll be done in drv_change_vif_link
++	 * In MLO, it'll be done in drv_change_vif_link.
++	 * Do not do so during restart or in case the device is dead.
+ 	 */
+ 	if (!ieee80211_vif_is_mld(vif) && !mld_vif->ap_sta &&
+ 	    !WARN_ON_ONCE(vif->cfg.assoc) &&
+-	    vif->type != NL80211_IFTYPE_AP && !mld->fw_status.in_hw_restart) {
++	    vif->type != NL80211_IFTYPE_AP && !mld->fw_status.in_hw_restart &&
++	    !iwl_trans_is_dead(mld->trans)) {
+ 		iwl_mld_remove_link(mld, link);
+ 		iwl_mld_add_link(mld, link);
+ 	}
 -- 
 2.53.0
 
