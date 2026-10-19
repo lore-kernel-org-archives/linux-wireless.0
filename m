@@ -1,48 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58AC3548383;
-	Mon, 19 Oct 2026 13:56:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C423E549FC4;
+	Mon, 19 Oct 2026 13:56:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418194; cv=none; b=cWPRsycwkMqqYkJzOWg9efVEXyjyKhIxgYAITxW6JVd/EQkamLB32VVCGkLW2hT8pia33Jfti41m71O+73lvFNLOU0ecOjnvXGWKxg2Rn83GlSKyPEn7hFWsFwR3MGqIJjGPON7IOtA3gk4m0PnCxEu/+F00DRKH5caopk1KRpI=
+	t=1792418197; cv=none; b=ftVFtClKF0OjBBL+veGugb8rGXrUyT49w+BxpSTBDluTRJLNe1xhbu7giy73icQlerkFMTObrzTeLWskllHE+58LnxHncQKPxIX10K1DrOuQbAuuJxzrQFVxQ3ewbnvlULV8eymHA21xNotjP6NpgKdc2prrpUja7NWZS52BAuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418194; c=relaxed/simple;
-	bh=ycv05iTVb9HbBERCDJCNS7QLQDCwysj1x2yEF9333bI=;
+	s=arc-20240116; t=1792418197; c=relaxed/simple;
+	bh=XKYtZG9jZ3ReqcBRdyDFRva8ElWckOc+6/P9d5PO27Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tHhUh1shMoHBcYGJlorFyY1x2BL2ps/vHIlmO++zvYqzIQHSml7lB+vF8UmHXXQ9NKs9RYUwQbXbo0UsuSMbOq1wWDzrv8gLBcVuKNq6KhvZSfOZso4hq9/lTsAQD0LKi5z3mX3oPpZl0FHCz1QM2ZgtJa6dpTf+2+913Czp/Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lazK86t4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=nWpN1DTzw+VX4lqgX7ro6HVW7NfPbFPLI1pb4tBptNcOEgDn6grf1/W/SwJwF7DAg2popm5bR+fU8yjYd/kya8PJh+4G2WxkPx+uQ2KTaAy/7CeR65SW7sSAQRdkfGd7pT96NKg2WxeA48e2DQYO8Nn8GplKn847fpVT99YfWPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lfqn1lKo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lazK86t4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 085991F000C8;
-	Mon, 19 Oct 2026 13:56:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lfqn1lKo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5F171F000C4;
+	Mon, 19 Oct 2026 13:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418192;
-	bh=FASpZ5k/JyiXygAwiIimxKfKoMxwFYX/5kYDuwsYLlo=;
+	s=k20260515; t=1792418194;
+	bh=2jrlydWD0ybximvu56ADcj1OMkqBIJuYCWQhhTa9mxo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lazK86t40XxcY2NDAWhd4CJpRHyqnNboR/sDOMjLe8rcn8zw7OOPAEmZ5Bkgb0ooi
-	 s71ErRauZZbFvuhm8xAU+Y8IEwRhamyHRD5W8hksKUYPrfFxpEEaWMlaOlBGRm0B2J
-	 Xu0Ez/0ZCzTUU48f6TJbHRmuRq4YYhfC6xHUFMGzs/Q+sWTaq9kLZibDwBpQ6IoyUD
-	 r5/Yhi8ZZJ+TmvT/czLkFCscdnEDhjIcZQYJo0cs39zueunImfwqqHJVaXriF6s/wS
-	 xDwacxPKkBzZa1c8o7t4E+sQt0/tW6f3ri6qFioet1oVpASDHYRa4zVaBA7M+UunPh
-	 yEr1GRnUfepsA==
+	b=Lfqn1lKo4Al6ArAUORpxLDkU9AYoZF/ZUsl6/iGEEAwpl2ecHBxm7bGco4bXUKScz
+	 waX0ay3zV+rqdcm9pjWm2CZR3LD87alntU2lu7RCOZyOIqd+jsSb9ylKtTbcq5p5ck
+	 oY50PlIa+Pm1L92KRkO09OlSDi09i+1NefDPKIEH7OIr4r9d+1hU5yvGn6rPkFS35D
+	 hlJP40tWWcwsOuo+9Z6DzGctw9MDHPu/B0PBuptLRrMGKhEWXZheAabN4PARqRI/M3
+	 nk9GmDiBy2AVICJb/MjRDJYXyCwH1mttnFQyewwyDCviwIDqTRg2nCAi4vJTfjbP5G
+	 6TL7RaVZr6uFA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Prashant Rahul <prashantrahul23@gmail.com>,
-	Felix Fietkau <nbd@nbd.name>,
+Cc: Zhao Li <enderaoelyther@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-6.1] wifi: mt76: mt7921: fix memory leak when skb_linearize fails in mcu rx event
-Date: Mon, 19 Oct 2026 09:46:08 -0400
-Message-ID: <20261019135441.1420968-77-sashal@kernel.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.6] wifi: mac80211_hwsim: clear PMSR request state on abort
+Date: Mon, 19 Oct 2026 09:46:10 -0400
+Message-ID: <20261019135441.1420968-79-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -58,414 +53,440 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Prashant Rahul <prashantrahul23@gmail.com>
+From: Zhao Li <enderaoelyther@gmail.com>
 
-[ Upstream commit 4361f1660101270611eb5dc39799f620b35f2e4d ]
+[ Upstream commit 37a77bd1395e8261d1760ae39c7f5eb637300550 ]
 
-The ownership of sk_buff skb is passed to mt7921_queue_rx_skb, each
-path inside it under the switch case handles cleaning of skb and it
-is true for mt7921_mcu_rx_event as well.
+mac80211_hwsim saves the in-flight cfg80211 PMSR request and its wdev
+in data->pmsr_request / data->pmsr_request_wdev when a measurement
+starts, and clears them only when it reports completion.
 
-mt7921_mcu_rx_event, on a success path, either queues skb via
-mt76_mcu_rx_event or cleans it immediately inside
-mt7921_mcu_uni_rx_unsolicited_event.
+mac80211_hwsim_abort_pmsr() never cleared that saved state. cfg80211
+owns the request and frees it once the abort callback returns
+(cfg80211_pmsr_process_abort() calls rdev_abort_pmsr() then
+kfree(req)), so after an abort data->pmsr_request dangles. A later
+hwsim PMSR report then dereferences the freed request in
+hwsim_pmsr_report_nl() and completes it; a use-after-free.
 
-However inside mt7921_mcu_rx_event, if skb_linearize fails, the function
-returns immediately and never bothers cleaning skb which leaks skb.
+Clear data->pmsr_request and data->pmsr_request_wdev once the abort
+matches the active request. Move the wmediumd/virtio notification check
+below the clear so the saved state is dropped even when no notification
+is sent.
 
-Since skb is fully owned at this point, it is safe to call
-dev_kfree_skb which fixes the leak.
-
-Granted, the skb_linearize failure is rare as it can only fail under
-heavy memory usage, but at the same time, leaking memory under heavy
-memory usage can worsen the OOM condition.
-
-Signed-off-by: Prashant Rahul <prashantrahul23@gmail.com>
-Link: https://patch.msgid.link/20260716-mt7921-mem-leak-v1-1-6e9c0ea19f63@gmail.com
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Assisted-by: Codex:gpt-5
+Assisted-by: Claude:opus-4.8
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+Link: https://patch.msgid.link/20260708195911.84365-2-enderaoelyther@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable backport analysis: mt7921 MCU RX skb leak
+## Phase 1: Commit message forensics
 
-**Tree decided:** `pending-6.6` (6.6.157), SHA `04810563abb71`.
-At the start of this evaluation `git describe`/`make kernelversion`
-reported **6.6.157**. The working copy later moved to v7.3-rc4; every
-presence/absence claim below was rechecked against **`pending-6.6`**,
-not that later checkout.
+**Step 1.1: Subject line**
+Record: **[wifi: mac80211_hwsim]** **[clear]** in-flight PMSR request
+pointers when abort matches, so cfg80211’s free cannot leave a dangling
+`data->pmsr_request`.
 
-The candidate is mainline `4361f16601012` (`wifi: mt76: mt7921: fix
-memory leak when skb_linearize fails in mcu rx event`).
+**Step 1.2: Tags**
+Committed message (pipeline-stripped):
+- Link: `https://patch.msgid.link/20260708195911.84365-2-
+  enderaoelyther@gmail.com`
+- Assisted-by: Codex:gpt-5, Claude:opus-4.8
+- Signed-off-by: Zhao Li; Johannes Berg
+- No Fixes:/Cc: stable/Reported-by in the committed text (expected for
+  this pipeline)
 
----
+Original mailing-list submission (from the saved mbox, not used as
+circular “already selected” evidence):
+- Fixes: `5530c04c87c5` (“mac80211_hwsim: add PMSR request support via
+  virtio”)
+- Cc: `stable@vger.kernel.org`
+- Cover letter: `[PATCH 0/8] wifi: fix PMSR lifetime and frame
+  validation issues`
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-**Step 1.1 — Subject**
-Record: **[wifi: mt76: mt7921]** **[fix]** memory leak when
-`skb_linearize` fails in MCU RX event.
-
-**Step 1.2 — Tags**
-- `Signed-off-by: Prashant Rahul <prashantrahul23@gmail.com>` (author)
-- `Link: https://patch.msgid.link/20260716-mt7921-mem-
-  leak-v1-1-6e9c0ea19f63@gmail.com`
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` (mt76 maintainer;
-  applied the patch)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable` (absence of Fixes/Cc-stable is expected for this
-  review).
-Record: Maintainer SOB; msgid shows **v1 patch 1/1** (standalone).
-
-**Step 1.3 — Body**
+**Step 1.3: Body**
 Record:
-- **Bug:** `mt7921_queue_rx_skb` transfers skb ownership into
-  `mt7921_mcu_rx_event`. Success paths free or queue the skb. If
-  `skb_linearize()` fails, the function returns without freeing.
-- **Symptom:** skb leak. Author notes failure is rare (ENOMEM) but
-  leaking under memory pressure can worsen OOM.
-- **Root cause:** missing `dev_kfree_skb` on the linearize error path.
-- **Version info in message:** none.
+- **Bug:** `mac80211_hwsim_abort_pmsr()` never NULLs
+  `data->pmsr_request` / `data->pmsr_request_wdev`. cfg80211 owns the
+  request and `kfree(req)` after `rdev_abort_pmsr()`.
+- **Symptom:** later `hwsim_pmsr_report_nl()` uses the freed request →
+  use-after-free. Abort also leaves a non-NULL pointer so a new start
+  can see `-EBUSY` forever.
+- **Root cause:** abort notifies wmediumd/virtio but does not drop saved
+  state; an early `return` when wmediumd/virtio is absent skips even the
+  mutex.
+- **Version:** not stated in the message. Introduction is v6.4-rc1
+  (verified in Phase 3).
 
-**Step 1.4 — Hidden bug fix?**
-Record: **No disguise.** This is an explicit leak fix, not cleanup-as-
+**Step 1.4: Hidden bug fix?**
+Record: **No.** This is an explicit UAF fix, not cleanup disguised as a
 fix.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 2: Diff analysis
 
-**Step 2.1 — Inventory**
+**Step 2.1: Inventory**
 Record:
-- File: `drivers/net/wireless/mediatek/mt76/mt7921/mcu.c` (**+3 / −1**)
-- Function: `mt7921_mcu_rx_event`
-- Scope: **single-file surgical fix**
+- File: `drivers/net/wireless/virtual/mac80211_hwsim_main.c` (+7 / −3)
+- Function: `mac80211_hwsim_abort_pmsr()` only
+- Scope: single-file surgical fix
 
-**Step 2.2 — Flow**
-Before (pending-6.6 `mcu.c:312-313`):
+**Step 2.2: Flow change**
+Record:
+- **Before:** read `data->wmediumd`; if no wmediumd and no virtio,
+  **return unlocked** with saved pointers intact. If notification is
+  sent, still never NULL the pointers.
+- **After:** take the mutex, match `data->pmsr_request == request`, then
+  set both pointers to NULL **before** the notification check. Missing
+  wmediumd/virtio is `goto out` (unlock), not an early return.
 
-```
-if (skb_linearize(skb))
-    return;
-```
+**Step 2.3: Bug mechanism**
+Record: **Use-after-free / dangling pointer** (also a lifetime/refcount-
+style leak of a cfg80211-owned object). cfg80211 frees the request;
+hwsim keeps the pointer; `hwsim_pmsr_report_nl()` later calls
+`cfg80211_pmsr_report()` / `cfg80211_pmsr_complete()` on it.
 
-After:
-
-```
-if (skb_linearize(skb)) {
-    dev_kfree_skb(skb);
-    return;
-}
-```
-
-Record: **error path only.** Success paths unchanged.
-
-**Step 2.3 — Bug mechanism**
-Record: **[resource leak]** On `skb_linearize` failure (`-ENOMEM` for
-nonlinear skbs), the still-owned skb is dropped. Caller
-`mt7921_queue_rx_skb` does not free after `PKT_TYPE_RX_EVENT`. Other
-switch arms in the same caller (`dev_kfree_skb` / `napi_consume_skb`)
-and other arms of `mt7921_mcu_rx_event` (`dev_kfree_skb`,
-`mt76_mcu_rx_event` queue) already consume the skb.
-
-**Step 2.4 — Fix quality**
-Record: **Obviously correct.** Matches established kernel pattern (`if
-(skb_linearize(skb)) { dev_kfree_skb(_any)(skb); return; }`). Same free
-helper already used in this MCU event path. No API/lock/data-structure
-change. Regression risk: **very low** (could only be a double-free if
-linearize already freed; it does not — see Phase 5).
+**Step 2.4: Fix quality**
+Record: Obviously correct: abort that matches the in-flight request must
+drop the saved pointers because cfg80211 will free the object. Mutex
+already covers start/abort/report. Regression risk is low: a late report
+after abort now hits `if (!data->pmsr_request) return -EINVAL`, which is
+the intended post-abort behavior. No API/data-structure change.
 
 ---
 
-## PHASE 3: GIT HISTORY
+## Phase 3: Git history
 
-**Step 3.1 — Blame**
-Record: Leak introduced by **`f0ff5d3aa64812`** (`mt76: mt7921: make all
-event parser reusable between mt7921s and mt7921e`, Sean Wang,
-2021-10-19). That commit added `skb_linearize` + early return and never
-freed on failure. Present since ~5.16-era; **`git merge-base --is-
-ancestor f0ff5d3aa64812 pending-6.6` succeeds.**
+**Step 3.1: Blame**
+Record: Pre-fix abort body is entirely from **`8ba1da95053e0`**
+(“mac80211_hwsim: add PMSR abort support via virtio”, Jaewan Kim,
+2023-03-22). Pointers are stored in **`5530c04c87c59`** (start/request
+support, same day). First appears in **v6.4-rc1**. Present for a long
+time in this lineage.
 
-**Step 3.2 — Fixes: tag**
-Record: **None.** Introducer identified by blame: `f0ff5d3aa64812`,
-which **is** in this 6.6 tree.
+**Step 3.2: Fixes: target**
+Record: Original Fixes: `5530c04c87c5` is an ancestor of HEAD (`git
+merge-base --is-ancestor` exit 0). Closest actual miss is abort itself
+(`8ba1da95053e0`), also an ancestor. Related: `2bef4d1fb8b34` (NULL
+deref in `hwsim_pmsr_report_nl`, 2023) — different bug, already here.
 
-**Step 3.3 — File history (pending-6.6)**
-Recent 6.6 work on this file is CLC firmware validation, not MCU RX. No
-competing leak fix. Record: **standalone**; not part of a multi-patch
-series.
+**Step 3.3: File history**
+Record: Neighbor `aeea930c7a878` (“authenticate PMSR report senders”) is
+series patch 2/8, parent of this commit, **independent** (touches
+`hwsim_pmsr_report_nl()`, not abort). File split `340f2ab83a5c9` / move
+`f79cbc77abde2` already in this tree. No extra prerequisite for the
+abort clear.
 
-**Step 3.4 — Author**
-Prashant Rahul has **no other commits** in this tree’s mt76 history.
-Applied by **Felix Fietkau**, listed maintainer of MEDIATEK MT76 in
-`MAINTAINERS`. Record: one-off contributor; **maintainer-applied**.
+**Step 3.4: Author**
+Record: Zhao Li is not the wireless maintainer. Same-day sibling is the
+report-sender auth patch. Maintainer **Johannes Berg** applied this
+commit.
 
-**Step 3.5 — Dependencies**
-The hunk only needs `mt7921_mcu_rx_event` + `skb_linearize` +
-`dev_kfree_skb`, all present. Mailing-list patch context matches 6.6
-(the extra `MCU_EVENT_RSSI_NOTIFY` in later mainline is **below** the
-change). Record: **applies standalone**.
-
----
-
-## PHASE 4: MAILING LIST / EXTERNAL
-
-**Step 4.1 — Original discussion**
-- `b4 dig -c <msgid>` / `b4 mbox`: no match (404).
-- lore.kernel.org: **403**.
-- Recovered from Openwall and Ratatoskr:
-  https://lists.openwall.net/linux-kernel/2026/07/16/1707
-  msgid `20260716-mt7921-mem-leak-v1-1-6e9c0ea19f63@gmail.com`
-Record: **v1, single patch**, applied as submitted (`4361f16601012`
-matches that diff). No v2/v3.
-
-**Step 4.2 — Recipients (`b4 dig -w` unavailable; headers from
-Openwall)**
-To: Felix Fietkau, Lorenzo Bianconi, Ryder Lee, Shayne Chen, Sean Wang
-(mt76 maintainers/reviewers), plus MediaTek ARM contacts. Cc: linux-
-wireless, linux-kernel, linux-mediatek, linux-arm-kernel. Record:
-**correct maintainer set**.
-
-**Step 4.3 — Bug report**
-Record: **No syzbot/bugzilla.** Static ownership analysis; author states
-the leak is rare.
-
-**Step 4.4 — Series**
-Record: **1/1 standalone.** No sibling mt7925/mt7915 patches required
-for this tree (only mt7921 has this `skb_linearize` in pending-6.6).
-
-**Step 4.5 — Stable list**
-Search for this subject on lore stable returned unrelated hits. Record:
-**no prior stable NAK found** (lore 403 limited this).
+**Step 3.5: Dependencies**
+Record: Standalone. Uses existing `data->pmsr_request`, `data->mutex`,
+`hwsim_virtio_enabled`. Series 1/8; does not need 2/8–8/8. Can apply
+without `aeea930c7a878`.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 4: Mailing list
 
-**Step 5.1 — Functions**
-Record: `mt7921_mcu_rx_event` only.
+**Step 4.1: Original discussion**
+Record:
+- Lore URL: https://patch.msgid.link/20260708195911.84365-2-
+  enderaoelyther@gmail.com
+- Cover: https://patch.msgid.link/20260708195911.84365-1-
+  enderaoelyther@gmail.com
+- Series: **v1 only** as this patch (`b4 dig -a` “v2” is a different
+  nl80211 color-change patch; false match)
+- Johannes on the cover (2026-07-21): will take the two hwsim patches
+  for **wireless-next**; **“I don’t think hwsim is all that relevant in
+  deployed systems.”** Not a NAK of the UAF. He did apply this patch the
+  same day.
+- No reviewer asked for changes to this hunk. Other series patches
+  (probe-resp, S1G TWT) were called out as LLM-pattern issues; **this
+  patch was not**.
 
-**Step 5.2 — Callers**
-`mt7921_queue_rx_skb()` (`mac.c`) `case PKT_TYPE_RX_EVENT:` calls it and
-does **not** free afterwards.
+**Step 4.2: Recipients (`b4 dig -w`)**
+Record: linux-wireless, Johannes Berg, Jaewan Kim (original PMSR
+author), Intel/Qualcomm/Marvell names, **stable@vger.kernel.org**. Right
+lists for a hwsim UAF.
 
-That `rx_skb` hook is registered for **PCIe, USB, and SDIO**:
-- `mt7921/pci.c`, `usb.c`, `sdio.c` → `.rx_skb = mt7921_queue_rx_skb`
-- Invoked from `mt76_dma_rx_process` (NAPI), `mt76u` USB RX,
-  `mt76s_process_rx_queue` (SDIO)
+**Step 4.3: Bug report**
+Record: No syzbot/bugzilla. Found by review. Cover letter: KASAN hwsim
+boot; after the fix, a stale `REPORT_PMSR` got `-EINVAL` with no KASAN
+splat. Author-tested, not an external user report.
 
-Record: **hot RX path** for MT7921E/S/U.
+**Step 4.4: Series**
+Record: 8 patches, mixed subsystems. This one is self-contained. 2/8
+(sender auth) is a separate spoofing fix, not required to stop the abort
+UAF (it only narrows who can fire `hwsim_pmsr_report_nl()`).
 
-**Step 5.3 — Callees**
-`skb_linearize` → `__skb_linearize` → `__pskb_pull_tail`; returns
-`-ENOMEM` on failure and **does not free** the skb
-(`include/linux/skbuff.h`: “If there is no free memory -ENOMEM is
-returned”). Success continues to `mt7921_mcu_uni_rx_unsolicited_event` /
-`mt76_mcu_rx_event` / `mt7921_mcu_rx_unsolicited_event`.
-
-**Step 5.4 — Reachability**
-Nonlinear MCU events are real:
-- SDIO `mt76s_build_rx_skb` uses `skb_add_rx_frag` when payload >
-  `MT_SKB_HEAD_LEN` — this is **why** `f0ff5d3aa64812` added linearize
-  (“paged fragment skb for the SDIO device”).
-- USB `mt76u_build_rx_skb` same pattern.
-- DMA `mt76_add_fragment` builds fraglists for multi-buffer RX.
-
-Record: reachable from normal firmware MCU events; unprivileged users
-can generate MCU traffic by using WiFi. Failure needs **ENOMEM during
-linearize**.
-
-**Step 5.5 — Similar patterns**
-In pending-6.6, `skb_linearize` appears **only here** under mt76. No
-duplicate site left unfixed in this tree.
-
----
-
-## PHASE 6: LOCAL TREE (pending-6.6 / 6.6.157)
-
-**Step 6.1 — Buggy code present?**
-Record: **Yes.**
-`pending-6.6:drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:312-313`:
-
-```
-if (skb_linearize(skb))
-    return;
-```
-
-`git merge-base --is-ancestor 4361f16601012 pending-6.6` → **false**
-(fix not here).
-`git merge-base --is-ancestor f0ff5d3aa64812 pending-6.6` → **true**
-(bug intro is here).
-Bug age: **2021**, well before 6.6.
-
-**Step 6.2 — Backport difficulty**
-Submitted hunk is 4 lines around `skb_linearize` with context that
-matches 6.6 (`struct mt76_connac2_mcu_rxd *rxd` then the if).
-`MCU_EVENT_RSSI_NOTIFY` is later mainline-only context **below** the
-edit. Record: **clean apply / trivial**.
-
-**Step 6.3 — Related fixes already here?**
-`git log --grep=skb_linearize` on mt76 in this tree: **empty**. No
-alternate fix. Record: **none**.
+**Step 4.5: Stable list**
+Record: lore.kernel.org returned HTTP 403 via WebFetch. Original
+submission **did** Cc stable. Johannes’s “not relevant in deployed
+systems” is the only maintainer comment on hwsim priority. **No NAK and
+no “do not backport” found in the mbox.**
 
 ---
 
-## PHASE 7: SUBSYSTEM CONTEXT
+## Phase 5: Semantic / call chain
+
+**Step 5.1: Functions**
+Record: `mac80211_hwsim_abort_pmsr()` only. Consumers of the pointers:
+`mac80211_hwsim_start_pmsr()`, `hwsim_pmsr_report_nl()`.
+
+**Step 5.2: Callers**
+Record:
+- `ieee80211_ops.abort_pmsr` → `drv_abort_pmsr()` →
+  `ieee80211_abort_pmsr()` → `rdev_abort_pmsr()` →
+  `cfg80211_pmsr_process_abort()` which **then `kfree(req)`**.
+- Abort work: `cfg80211_pmsr_free_wk` / `cfg80211_pmsr_wdev_down`.
+- Socket teardown: `nl80211` URELEASE → `cfg80211_release_pmsr()`.
+
+**Step 5.3: Callees**
+Record: mutex, `genlmsg_new`, `mac80211_hwsim_send_pmsr_request`,
+virtio/wmediumd unicast. After the fix, notification is best-effort;
+**state drop is not**.
+
+**Step 5.4: Reachability**
+Record: Yes, from userspace on this tree:
+1. `NL80211_CMD_PEER_MEASUREMENT_START` (`GENL_UNS_ADMIN_PERM`) with
+   PMSR capa on an hwsim radio (wmediumd or virtio).
+2. Close the nl80211 socket or take the wdev down → abort → cfg80211
+   frees `req`.
+3. `HWSIM_CMD_REPORT_PMSR` has **no** `GENL_UNS_ADMIN_PERM` (verified at
+   the genl op). Combined with a leftover pointer, that is the UAF.
+4. Extra path: wmediumd URELEASE sets `data->wmediumd = 0`
+   (`hwsim_register_wmediumd(net, 0)`). Old abort **returned
+   immediately** and never cleared.
+
+**Step 5.5: Similar patterns**
+Record: Same lifetime bug described for iwlwifi MLD in series 3/8
+(`mld->ftm_initiator.req` left dangling). hwsim abort was the incomplete
+half of start-saves/complete-clears.
+
+---
+
+## Phase 6: This checkout
+
+**Step 6.1: Local tree and buggy code**
+Record:
+- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**
+- `make kernelversion`: **7.3.0-rc4**
+- Buggy abort (save on start, clear only in `hwsim_pmsr_report_nl()`)
+  exists here; pre-image at `37a77bd1395e8^` still has the early return
+  and no NULL. Introduced v6.4-rc1; **not after this branch point**.
+
+**Step 6.2: Backport difficulty**
+Record: **Clean apply** on this tree’s `mac80211_hwsim_main.c`. Function
+and fields (`pmsr_request`, `pmsr_request_wdev`, `mutex`) are present.
+
+**Step 6.3: Related fixes already here**
+Record: No earlier abort-clear. `2bef4d1fb8b34` is a different NULL
+check. `aeea930c7a878` is sender auth, not this UAF.
+
+---
+
+## Phase 7: Subsystem
 
 **Step 7.1**
-Record: **wifi / mt76 / mt7921**. Criticality: **IMPORTANT** — MT7921E
-is a common laptop WiFi 6 adapter (PCIe); USB/SDIO variants exist
-(`MT7921E/S/U` in Kconfig). Not core mm/net, not staging.
+Record: **drivers/net/wireless/virtual** (mac80211_hwsim). Kconfig:
+“Simulated radio testing tool… not needed for normal wireless LAN
+usage.” Criticality: **PERIPHERAL** as hardware, but **IMPORTANT** as a
+virtual/test driver shipped as a module and used by
+CI/syzkaller/wmediumd.
 
 **Step 7.2**
-Record: Mature driver (MCU support from `1c099ab44727c8`, 2021). 6.6
-still receives mt76 bugfixes (CLC, etc.).
+Record: File is actively developed (NAN, virtio, many 2026 hwsim fixes).
+PMSR abort itself has been unchanged since 2023 — a long-standing hole,
+not churn from last month.
 
 ---
 
-## PHASE 8: IMPACT AND RISK
+## Phase 8: Impact and risk
 
-**Step 8.1 — Who is affected**
-Record: **driver-specific**, users with MediaTek MT7921 (very common on
-laptops). Config: `CONFIG_MT7921E/S/U`.
+**Step 8.1: Who**
+Record: Users with `CONFIG_MAC80211_HWSIM` who start PMSR
+(wmediumd/virtio) and abort. Not general Wi-Fi laptops. Distros often
+ship the module; Android Cuttlefish / mac80211 selftests use it.
 
-**Step 8.2 — Trigger**
-Record: Firmware MCU RX event whose skb is nonlinear, **and**
-`skb_linearize` fails (GFP/ENOMEM). Unprivileged WiFi use can generate
-events; the failure itself is **uncommon**. SDIO long events are the
-originally cited nonlinear case; USB/DMA can also fragment.
+**Step 8.2: Trigger**
+Record: Start PMSR, then abort (socket close / iface down), then a
+report **or** wmediumd disconnect so abort’s old early-return fires.
+Needs CAP_NET_ADMIN to **start**; report genl op is unrestricted.
+Timing-dependent if wmediumd still reports after abort;
+**deterministic** dangling pointer after abort regardless.
 
-**Step 8.3 — Failure mode**
-Record: **skb leak under memory pressure**, which can deepen OOM. Not a
-panic/UAF. Severity: **MEDIUM–HIGH** (hot-path leak, not a one-time
-probe leak).
+**Step 8.3: Failure mode**
+Record: **Use-after-free** in `cfg80211_pmsr_report` /
+`cfg80211_pmsr_complete` (`req->cookie`, `req->nl_portid`, …). Severity:
+**HIGH** (oops/KASAN; possible memory corruption). Secondary: stuck
+`-EBUSY` on later PMSR.
 
-**Step 8.4 — Risk/benefit**
-- Benefit: **medium** — stops a real leak on a widely shipped chip; most
-  valuable when the system is already under memory pressure.
-- Risk: **very low** — 3 lines, error path, same free as sibling paths.
-- Ratio: **favor backport**.
-
----
-
-## PHASE 9: SYNTHESIS
-
-**Step 9.1 — Evidence**
-
-**For:**
-- Real leak with verified ownership (caller does not free).
-- Code and introducer are in 6.6.157; fix is not.
-- Tiny, obviously correct, maintainer-applied.
-- MT7921 is production hardware, not staging.
-- Leak on an RX path under OOM is a stability issue, not a style
-  cleanup.
-
-**Against:**
-- Trigger is rare (`skb_linearize` ENOMEM).
-- No crash/syzbot/CVE.
-- No explicit `Cc: stable` (not a negative per the review rules).
-
-**Unresolved:** Full lore thread (403/404); no reviewer comments beyond
-maintainer merge. Does not change the technical verdict.
-
-**Step 9.2 — Stable rules**
-1. Obviously correct and tested — **PASS** (3-line ownership fix; in
-   mainline via Felix).
-2. Real bug affecting users — **PASS** (skb leak on MT7921 MCU RX).
-3. Important (crash/security/corruption/deadlock) — **PASS** as an RX-
-   path leak that can worsen OOM; not a panic, but in the leak class
-   stable regularly takes.
-4. Small and contained — **PASS** (4 lines, one function).
-5. No new features/APIs — **PASS**.
-6. Can apply to this tree — **PASS** (hunk matches 6.6).
-
-**Step 9.3 — Exceptions**
-Record: none needed (not an ID/quirk/DT/build/doc exception). Ordinary
-small leak fix.
-
-**Step 9.4 — Decision**
-Backport to **this** 6.6.157 tree. The bug exists here, the fix is
-surgical, and regression risk is negligible.
+**Step 8.4: Risk vs benefit**
+Record: Benefit **high** for anyone hitting hwsim PMSR abort (crash).
+Risk **very low**: ~10-line pointer clear under an existing mutex. Ratio
+favors taking it on this tree.
 
 ---
 
-## What the commit solves for stable users
+## Phase 9: Synthesis
 
-On MT7921, firmware MCU events are handed to `mt7921_mcu_rx_event` with
-full skb ownership. Nonlinear events (especially SDIO, also USB/DMA
-fragments) are linearized first. If that allocation fails, 6.6 returns
-and leaks the skb. Under memory pressure that leak makes OOM worse.
-Adding `dev_kfree_skb(skb)` on that path closes the leak without
-changing success behavior.
+**Step 9.1: Evidence**
+For:
+- Real UAF with a traced cfg80211 `kfree(req)` after `rdev_abort_pmsr()`
+- Small, obviously correct, mutex-protected
+- Bug in this tree since v6.4-rc1
+- Standalone; no new API
+- Author tested abort-then-report under KASAN
+- Wireless maintainer applied it
+- Original submission had Fixes: + Cc: stable
+
+Against:
+- Test/simulator driver; Johannes said hwsim is not very relevant on
+  deployed systems
+- No syzbot/external user report
+- Start path needs admin + wmediumd/virtio
+- LLM-assisted series (maintainer criticized *other* patches, not this
+  one)
+
+Unresolved: stable@ lore search (HTTP 403). Does not change the local-
+tree technical picture.
+
+**Step 9.2: Stable rules**
+1. Obviously correct and tested? **PASS** (clear-on-abort; KASAN boot
+   described)
+2. Real user-visible bug? **PASS** (UAF / oops; also stuck PMSR)
+3. Important (crash/security/corruption/deadlock)? **PASS** (UAF → HIGH)
+4. Small and contained? **PASS** (+7/−3, one function)
+5. No new features/APIs? **PASS**
+6. Applies to this tree? **PASS** (code present; clean)
+
+**Step 9.3: Exceptions**
+Record: None (not a device ID/quirk/DT/build/doc exception). Qualifies
+as a normal memory-safety fix.
+
+**Step 9.4: Decision**
+This checkout is **v7.3-rc4**. The buggy hwsim PMSR abort path is here.
+The patch is a small UAF fix with no prerequisites. Maintainer
+skepticism about hwsim on production APs does not make a use-after-free
+in this tree’s driver “not a bug.” It should be taken.
+
+---
+
+## What the commit solves for this tree
+
+`mac80211_hwsim` stores cfg80211’s PMSR request in `data->pmsr_request`.
+cfg80211 frees that object when abort finishes. This tree’s abort
+callback never dropped the pointer (and skipped all cleanup if wmediumd
+had already exited). A later `HWSIM_CMD_REPORT_PMSR` dereferences freed
+memory. Clearing the two pointers under `data->mutex` when abort matches
+is the whole fix.
 
 ## Risk vs benefit
 
-Benefit is a real leak fix on a common WiFi chip; risk is a three-line
-error-path free that matches existing code in the same function.
+Benefit: prevent a KASAN/UAF oops on PMSR abort and allow a later start.
+Risk: negligible; notification becomes best-effort after the pointer is
+already gone, which is what cfg80211 requires.
 
 ## Concerns
 
-None material: no prerequisites, no API change, no locking, expected
-clean apply. Trigger rarity is the only weak point and is not enough to
-reject a contained leak fix.
+None that block this tree: no missing helpers, no series dependency,
+file is already `mac80211_hwsim_main.c`. Johannes’s “deployed systems”
+comment is priority, not a correctness NAK.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed tags: author SOB, Link msgid, Felix Fietkau SOB;
-  no Fixes/Reported-by/Cc-stable.
-- **[Phase 2]** Diff: +3/−1 in `mt7921_mcu_rx_event`; adds
-  `dev_kfree_skb` on `skb_linearize` failure.
-- **[Phase 3]** `git blame` on pending-6.6: leak from `f0ff5d3aa64812`
-  (2021-10-19); `git merge-base --is-ancestor f0ff5d3aa64812
-  pending-6.6` true.
-- **[Phase 3]** `git show f0ff5d3aa64812`: added `if
-  (skb_linearize(skb)) return;` with no free.
-- **[Phase 3]** `git log --author=Prashant Rahul`: no other mt76 commits
-  in this history.
-- **[Phase 4]** Openwall/Ratatoskr: v1 1/1, same diff as
-  `4361f16601012`; mt76 maintainers on To:.
-- **[Phase 4]** `b4 mbox` msgid: 404; lore.kernel.org: 403.
-  **UNVERIFIED:** full review replies / explicit stable nomination.
-- **[Phase 5]** Callers: `mt7921_queue_rx_skb` (no free on
-  `PKT_TYPE_RX_EVENT`); hooked from pci/usb/sdio `.rx_skb`.
-- **[Phase 5]** `skb_linearize` documented to return `-ENOMEM` and not
-  free; USB/SDIO `skb_add_rx_frag` makes nonlinear skbs.
-- **[Phase 6]** `git describe` at start: `p-6.6-3-g04810563abb71`, `make
-  kernelversion` 6.6.157.
-- **[Phase 6]** `git grep` on `pending-6.6`: leak at `mcu.c:312-313`.
-- **[Phase 6]** `git merge-base --is-ancestor 4361f16601012 pending-6.6`
-  false.
-- **[Phase 8]** Failure mode: skb leak under ENOMEM on MCU RX; severity
-  MEDIUM–HIGH.
-- **UNVERIFIED:** complete lore thread text after 403.
+- **[Phase 1]** Parsed committed tags: Link msgid
+  `20260708195911.84365-2`; SOBs Zhao Li + Johannes Berg; no Fixes in
+  committed text
+- **[Phase 1]** mbox of original mail: Fixes `5530c04c87c5`, Cc: stable
+- **[Phase 2]** `git show 37a77bd1395e8`: +7/−3 in
+  `mac80211_hwsim_abort_pmsr` only
+- **[Phase 2]** Read current abort (lines 3848–3911) and
+  `hwsim_pmsr_report_nl` (4213–4277): report uses `data->pmsr_request`
+  then NULLs it
+- **[Phase 2]** Read `cfg80211_pmsr_process_abort()`:
+  `rdev_abort_pmsr()` then `kfree(req)`
+- **[Phase 3]** `git blame` on pre-image: abort from `8ba1da95053e0`;
+  `git describe --contains` → v6.4-rc1
+- **[Phase 3]** `git merge-base --is-ancestor 5530c04c87c59 HEAD` → 0;
+  same for `8ba1da95053e0`
+- **[Phase 3]** `git log --oneline --grep=pmsr --
+  drivers/net/wireless/virtual/`: series neighbor `aeea930c7a878`
+  independent
+- **[Phase 3]** `git log --oneline -S mac80211_hwsim_abort_pmsr --
+  drivers/net/wireless/virtual/`: only intro + this fix
+- **[Phase 4]** `b4 dig -c 37a77bd1395e8`: patch.msgid.link `…84365-2`
+- **[Phase 4]** `b4 dig -a`: v1 of this patch; “v2” is unrelated nl80211
+  color-change
+- **[Phase 4]** `b4 dig -w`: linux-wireless, Johannes, Jaewan Kim,
+  stable@
+- **[Phase 4]** mbox msg from Johannes: wireless-next; hwsim “not all
+  that relevant in deployed systems”; no NAK of this diff
+- **[Phase 4]** WebFetch lore/stable: HTTP 403 — UNVERIFIED whether it
+  was discussed on stable@ beyond original Cc
+- **[Phase 5]** Grep: abort wired in `ieee80211_ops`; nl80211 URELEASE
+  calls `cfg80211_release_pmsr`
+- **[Phase 5]** `HWSIM_CMD_REPORT_PMSR` op has no `GENL_UNS_ADMIN_PERM`;
+  `NL80211_CMD_PEER_MEASUREMENT_START` has it
+- **[Phase 5]** wmediumd URELEASE zeros portid via
+  `hwsim_register_wmediumd(net, 0)`
+- **[Phase 6]** `git describe HEAD` v7.3-rc4-27-gf0100363d8c37; Makefile
+  7.3.0-rc4
+- **[Phase 6]** `git merge-base --is-ancestor 37a77bd1395e8 HEAD` → 0
+  (present; judged on merit, not as “already selected”)
+- **[Phase 6]** Pre-fix abort still has early return without NULL (shown
+  at `37a77bd1395e8^`)
+- **[Phase 7]** Kconfig: test tool, module `mac80211_hwsim`
+- **[Phase 8]** `cfg80211_pmsr_complete()` derefs `req->cookie` /
+  `req->nl_portid` — UAF if abort already freed `req`
+- **UNVERIFIED:** How many distro .configs enable `MAC80211_HWSIM` — not
+  used to drive the verdict; UAF is in-tree regardless
 
-The fix is small, matches stable leak-fix practice, and the buggy code
-is in this 6.6 tree.
+The fix is small, surgical, and matches stable rules for a real use-
+after-free in code this tree has had since v6.4.
 
 **YES**
 
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 8c8b35cba856c..f63ef02542387 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -354,8 +354,10 @@ void mt7921_mcu_rx_event(struct mt792x_dev *dev, struct sk_buff *skb)
- {
- 	struct mt76_connac2_mcu_rxd *rxd;
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
+index 484198766efda..89794c724858c 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -3654,9 +3654,6 @@ static void mac80211_hwsim_abort_pmsr(struct ieee80211_hw *hw,
+ 	int err = 0;
  
--	if (skb_linearize(skb))
-+	if (skb_linearize(skb)) {
-+		dev_kfree_skb(skb);
- 		return;
-+	}
+ 	data = hw->priv;
+-	_portid = READ_ONCE(data->wmediumd);
+-	if (!_portid && !hwsim_virtio_enabled)
+-		return;
  
- 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
+ 	mutex_lock(&data->mutex);
  
+@@ -3665,6 +3662,13 @@ static void mac80211_hwsim_abort_pmsr(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
++	data->pmsr_request = NULL;
++	data->pmsr_request_wdev = NULL;
++
++	_portid = READ_ONCE(data->wmediumd);
++	if (!_portid && !hwsim_virtio_enabled)
++		goto out;
++
+ 	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!skb) {
+ 		err = -ENOMEM;
 -- 
 2.53.0
 
