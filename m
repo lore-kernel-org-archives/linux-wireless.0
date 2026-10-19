@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 621BC60DC75;
-	Mon, 19 Oct 2026 14:03:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF0F952F9A2;
+	Mon, 19 Oct 2026 14:03:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418619; cv=none; b=K/WSZm0DqqiJxRd1UA82KVOjR95Gpp9dfFDryfc2xBQ7JlkW8AnUzPaORJ0XWGR6xGvusDUWW1gDmTqQjRGNvrT0wdfrz/OutUNck0ENeNMhEUVuoGmkId2T94SRZG42KQu49kiOLDe95yE5CZGWjY2j1ErwP1QPcOVXNUWGpDY=
+	t=1792418628; cv=none; b=NNAFGHBsISr1zBpsO0uBplHHu8vFNeN85x99DwfLaOiURZyJz/W8xdmTyxi7WaYTnfAIAkZDKGBDxCFrUX4keaIIQETD1KJf0F+74FMMZcPZXpKvRqZGnXMvdVsq9xLlFVWQ3A8/qGjL5PyoqoDwDNuwikaJQnOpK1s3Q7+9mgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418619; c=relaxed/simple;
-	bh=vk2hjEXDnur/2vaPN9bfPfxK1ab0eSIhrLVNs+sCEvU=;
+	s=arc-20240116; t=1792418628; c=relaxed/simple;
+	bh=lEe040fMAo+CPU8jdV6O5Z2V4KBYzQ6++iuPEVT39zQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UUgs2YP12HAd+0mHtG/QcoE64Xy78USdsAetAESSWC6+27EszVbp8HrgkMPr7OgkB2TuCN9EpnbaeSlk8LiOaHnK2q5eRIxKbZfvORSIdXzfasJ6fWhluUNE577dFpIjddfBiQyfpsc6XM8cw8C18Shbyf6bLPb6CpfDEOP6sA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RyLLX8d6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=bQzzmwz1ucF9iYCs9WPjH4eDh47RbUoN+6e3GMSXp56MjajFMmMgw6X2p163iBdp7qTY9F/XtUfnO/FTmtzxp2ESYwoqf9t8rBb2Uc7fQPf8o4Pxp+qkot76LMKqBSkSdAwd5KeiQ3cUvgxxL1TZe9yN4LotgrlR0x6ivjAsL1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZVRkXTD9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RyLLX8d6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC081F000C5;
-	Mon, 19 Oct 2026 14:03:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVRkXTD9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA57E1F000C8;
+	Mon, 19 Oct 2026 14:03:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418616;
-	bh=DGz/pA8p8YxKO1h+kYZhjDaXY/1B0WDV1cQFe7P6AGQ=;
+	s=k20260515; t=1792418625;
+	bh=7BDK+crvFAJNRkrf+kIBvqU5VWEEIrHWQysBFcfsRbA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RyLLX8d6OvpxTPELl90Gyk48MMEJh9nQNSuFxFpv/nTy0j900+fJswmFUTmo0WxEz
-	 Xrl8Xe1AkzGXOH6F+zPlK4Mo/HYCQ24ZFW9nSPqgwRe5FfT0Hf1TjPn4j9iwZ5nzRA
-	 RitcIM1EwHZijaybUKeVfhXHZP2gygXCji3uIz5ZEtj56IXtwKWtZuJ2aMEO0Bt7bj
-	 DKoLqnmnju8vu7kUy+MWk8XIGGCDfEbEYb9T4f74YYykXnhoqVmd5JnGMpN4bjM3hN
-	 3msITKIQ3RyjcHb0L6hBMqFmNE7i0vakPG3ot3WMZmikappEKQZq+IML6+VwNxbm2i
-	 Plae9ck/DCz+w==
+	b=ZVRkXTD9LSHNTi8xhIrw5YWaS183AG/rZ0vWfEO4A4yeh5UD5dcXKWBYAjW5OVqgc
+	 29ws4s9+WGjjlQYE31KQGu1/uEQ/y6MxUHQvsocTCciXuvT5bSmdeQyJRnRTWj0c4f
+	 nogw6N8D9L2ePtuib2asgrqL0i24DcY0U4JqEa1qxA/XUoZlzR6uAeKStkBAHqfOQC
+	 4vOUBRsiEARZIYLvVPwcivC0sDxA0bI0apxFzJ4KVnFg8wcVZ4PvApa9ZSVbYznRrx
+	 ZRmNaXOUXSPSSvKvgZfK5+gA8Y/FzHyiqk4utMSOndHpyj2BMNB97L4TEzH7PRjxFU
+	 vunGNAj2zKWkQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc: Avraham Stern <avraham.stern@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: reset the driver state upon firmware recovery
-Date: Mon, 19 Oct 2026 09:51:06 -0400
-Message-ID: <20261019135441.1420968-375-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: support aborting an ongoing ftm request
+Date: Mon, 19 Oct 2026 09:51:13 -0400
+Message-ID: <20261019135441.1420968-382-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,541 +52,410 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-[ Upstream commit 71ac392d8b5c23c45c66f30eff1c319580ada4da ]
+[ Upstream commit ef704fc32ae1a519801ac4a06aa290fece5f403c ]
 
-Just like we did in iwlmvm, we also need to clear the mld state when the
-firmware was killed because of the device being powered off during
-suspend.
+Add support for aborting an ongoing FTM request.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714165826.ff1c9e05e0a9.I8df8d4a0384065fd2a32cf258339be77084c55bd@changeid
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715220243.340040bdc6a3.Ifbbf70021e42bf1d59db6ec45a73f1806a1c2289@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-I have enough of the tree, the sibling mvm fix, and the lore series to
-judge this on merit. Writing the full phase-by-phase analysis next.
+## Phase 1: Commit message forensics
 
----
+**Step 1.1: Subject line**
+Record: **[iwlwifi/mld]** **[support]** add abort for an in-flight FTM
+(Fine Timing Measurement / peer measurement) request.
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-**Step 1.1: PARSE THE SUBJECT LINE**
-
-Record: **[iwlwifi/mld] [reset] [clear MLD driver state when firmware is
-killed because the device was powered off during suspend]**
-
-- Subsystem: `wifi: iwlwifi: mld`
-- Action verb: **reset** (correctness / recovery, not a feature)
-- Intent: after firmware recovery from a power-off-during-suspend, wipe
-  MLD software state the same way `iwlmvm` already does
-
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-
-Record (from `git show 71ac392d8b5c2`):
-- **Fixes:** none (expected for this review pipeline)
-- **Reported-by:** none
-- **Tested-by:** none
-- **Reviewed-by:** none on the commit itself
-- **Acked-by:** none
-- **Link:** `https://patch.msgid.link/20260714165826.ff1c9e05e0a9.I8df8d
-  4a0384065fd2a32cf258339be77084c55bd@changeid`
-- **Cc: stable:** none (not a negative signal)
-- **Signed-off-by:** Emmanuel Grumbach (author); Miri Korenblit (iwlwifi
-  maintainer)
-- Ignore pipeline markers: none present on the original commit
-
-Notable: Intel iwlwifi developers; maintainer SOB; no syzbot/user
-reports.
-
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-
+**Step 1.2: Tags**
 Record:
-- **Bug:** When firmware is killed because the NIC was powered off in
-  suspend, MLD driver state is left as if the firmware were still
-  configured.
-- **Symptom:** After that resume path, software
-  IDs/keys/scan/FTM/internal STAs no longer match a freshly started
-  firmware image. Connection/recovery after suspend can fail; later FW
-  commands can error or WARN.
-- **Version info:** none in the message. Analog is explicit: “Just like
-  we did in iwlmvm”.
-- **Root cause (author):** `device_powered_off` stopped firmware
-  (`iwl_mld_stop_fw`) and cleared `in_d3`, but never ran the existing
-  restart cleanup that zeros restart-sensitive state and walks
-  vifs/stations.
+- Signed-off-by: Avraham Stern <avraham.stern@intel.com> (author)
+- Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+  (iwlwifi maintainer)
+- Link: https://patch.msgid.link/20260715220243.340040bdc6a3.Ifbbf70021e
+  42bf1d59db6ec45a73f1806a1c2289@changeid
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
+  stable (absence of the last two is expected for this review)
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-
-Record: **Not disguised.** It is a real recovery-path correctness fix.
-“Reset the driver state” is the missing counterpart of
-`iwl_mld_restart_cleanup()` already used from `iwl_mld_mac80211_start()`
-when `in_hw_restart` is set. The mvm sibling (`0a00c3ec2db76`) states
-the same problem more clearly: after power-off, firmware must be
-reloaded **and reconfigured**.
-
----
-
-## PHASE 2: DIFF ANALYSIS - LINE BY LINE
-
-**Step 2.1: INVENTORY THE CHANGES**
-
+**Step 1.3: Body**
 Record:
-- `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`:
-  `iwl_mld_restart_cleanup` un-static’d (`static void` → `void`) — **3
-  +/− lines net**
-- `drivers/net/wireless/intel/iwlwifi/mld/mac80211.h`: export prototype;
-  copyright year — **+2**
-- `drivers/net/wireless/intel/iwlwifi/mld/mld.c`: one call
-  `iwl_mld_restart_cleanup(mld);` in `iwl_mld_device_powered_off` —
-  **+1**
-- Totals: **+4 / −2**, three files, one function body unchanged
-- Scope: **single-subsystem, surgical**
+- Bug description from message: none. One sentence: “Add support for
+  aborting an ongoing FTM request.”
+- Symptom/failure mode: not stated
+- Version information: none
+- Root-cause explanation: none
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+**Step 1.4: Hidden bug fix?**
+Record: **Yes.** The wording is feature-like, but the MLD path already
+stores `mld->ftm_initiator.req` and later dereferences it. cfg80211
+frees that object on abort whether or not the driver implements
+`abort_pmsr`. Missing abort is a use-after-free / stuck-FTM hole, not a
+new userspace API.
 
-Hunk 1 (`mac80211.c`): `iwl_mld_restart_cleanup` still does
-`iwl_cleanup_mld` → iterate vifs (`iwl_mld_cleanup_vif`) → iterate
-stations (`iwl_mld_cleanup_sta`) → `iwl_mld_ftm_restart_cleanup`. Only
-linkage changes (now callable from `mld.c`).
+## Phase 2: Diff analysis
 
-Hunk 2 (`mac80211.h`): prototype so `mld.c` can call it. `mld.c` already
-includes `mac80211.h`.
+**Step 2.1: Inventory**
+Record:
+- `drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c`: +21 (new
+  `iwl_mld_ftm_abort`)
+- `drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h`: +1
+  (prototype)
+- `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`: +10
+  (`iwl_mld_abort_pmsr` + `.abort_pmsr` ops)
+- Total: **+32 / −0**, single-driver surgical change
 
-Hunk 3 (`mld.c` `iwl_mld_device_powered_off`, `CONFIG_PM_SLEEP`):
+**Step 2.2: Code flow**
+Record:
+- Before: `.start_pmsr` was wired; `.abort_pmsr` was NULL. On netlink
+  close or wdev teardown, cfg80211 still `kfree()`s the request while
+  the driver keeps the pointer and firmware keeps ranging.
+- After: abort sends `TOF_RANGE_ABORT_CMD`, cancels queued FTM RX
+  notifications, then `iwl_mld_ftm_reset()` NULLs `req`/`req_wdev`.
+- Path: abort/teardown only, not the normal completion path.
 
-**Before:**
+**Step 2.3: Bug mechanism**
+Record: **Use-after-free + leftover firmware ranging**, fixed by
+implementing the existing mac80211 `abort_pmsr` op (same pattern as
+MVM). Also prevents the next `iwl_mld_ftm_start()` from returning
+`-EBUSY` forever because `ftm_initiator.req` stayed non-NULL after the
+object was freed.
+
+**Step 2.4: Fix quality**
+Record: Obviously correct relative to `iwl_mvm_ftm_abort()`. Minimal.
+Regression risk is low: new code runs only on abort; on firmware abort
+failure it still resets local state (the UAF-critical part). Helpers it
+calls already exist in this tree.
+
+## Phase 3: Git history
+
+**Step 3.1: Blame / introduction**
+Record: Buggy pattern came in with **`d1e879ec600f9`** (“wifi: iwlwifi:
+add iwlmld sub-driver”, 2025-02-16). FTM start stored `req` and
+registered `RX_HANDLER_OF_FTM_REQ` / `IWL_MLD_OBJECT_TYPE_FTM_REQ` from
+day one, but never called cancel/abort. MVM has had abort since
+**`fc36ffda32670`** (2019, “support FTM initiator”).
+
+**Step 3.2: Fixes: tag**
+Record: None. Not applicable.
+
+**Step 3.3: File history**
+Record: Recent FTM-initiator commits are unrelated (location BW
+encoding, switch indentation). Neighbor **`71ac392d8b5c2`** (FW recovery
+reset) is a different path. No prerequisite refactor for this hunk.
+
+**Step 3.4: Author**
+Record: Avraham Stern is a regular iwlwifi FTM contributor. Maintainer
+Miri Korenblit signed off. Related later Stern commits in this tree are
+MEI length checks, not FTM abort follow-ups. **No follow-up fix** to
+`iwl_mld_ftm_abort` after this commit.
+
+**Step 3.5: Dependencies**
+Record: Standalone. Uses existing `iwl_mld_send_cmd_pdu`,
+`iwl_mld_cancel_notifications_of_object`, `IWL_MLD_OBJECT_TYPE_FTM_REQ`,
+`iwl_mld_ftm_reset`, `TOF_RANGE_ABORT_CMD`. Series membership is **01/15
+of an iwlwifi-next “updates” dump**; other patches (MEI, WoWLAN, LARI,
+etc.) are unrelated. Can apply alone.
+
+## Phase 4: Mailing list / external
+
+**Step 4.1: Original discussion**
+Record:
+- `b4 dig -c ef704fc32ae1a`: https://patch.msgid.link/20260715220243.340
+  040bdc6a3.Ifbbf70021e42bf1d59db6ec45a73f1806a1c2289@changeid
+- Cover: `[PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates -
+  07-15-2026` — “Cleanups, features, and fixes from our internal tree.”
+- `b4 dig -a`: **v1 only**, this is the applied version
+- No reviewer comments, NAKs, or Cc: stable on this patch in the saved
+  thread
+- lore.kernel.org WebFetch returned 403; thread recovered via `b4 dig
+  -m`
+
+**Step 4.2: Recipients**
+Record: To Johannes Berg; Cc linux-wireless, Avraham Stern. Subsystem
+maintainer (Miri) submitted the series.
+
+**Step 4.3: Bug report**
+Record: None. No syzbot/bugzilla.
+
+**Step 4.4: Series**
+Record: Mixed iwlwifi-next batch. This patch does not depend on 02–15.
+
+**Step 4.5: Stable list**
+Record: No stable-list discussion found (search did not surface this
+subject).
+
+## Phase 5: Semantic / call-chain
+
+**Step 5.1: Functions**
+Record: `iwl_mld_ftm_abort` (new), `iwl_mld_abort_pmsr` (new),
+`iwl_mld_hw_ops.abort_pmsr` assignment.
+
+**Step 5.2: Callers**
+Record:
+- `cfg80211_release_pmsr()` from `nl80211.c` on netlink port release
+- `cfg80211_pmsr_wdev_down()` from `net/wireless/core.c` on wdev
+  teardown
+- both → `cfg80211_pmsr_process_abort()` → `rdev_abort_pmsr()` →
+  `ieee80211_abort_pmsr()` → `drv_abort_pmsr()` → `iwl_mld_abort_pmsr()`
+- `drv_abort_pmsr` only calls the driver if `local->ops->abort_pmsr` is
+  set; cfg80211 **always kfree()s** afterward (`pmsr.c` around the abort
+  loop)
+
+**Step 5.3: Callees**
+Record: firmware abort PDU; `iwl_mld_cancel_notifications_of_object()`;
+`iwl_mld_ftm_reset()`.
+
+**Step 5.4: Reachability**
+Record: Yes, from userspace: start peer measurement
+(`NL80211_CMD_PEER_MEASUREMENT_START`), then close the netlink socket or
+take the interface down while ranging is in progress. Typically
+privileged (`nl80211`), but a crashing location/RTT helper is a
+realistic trigger (Android Wi-Fi RTT uses this API).
+
+**Step 5.5: Similar patterns**
+Record: Only iwlwifi MVM/MLD and mac80211_hwsim implement `.abort_pmsr`.
+MVM has had it since FTM was added; MLD start without abort was the
+incomplete copy.
+
+Verified UAF path in this tree:
+
+```246:247:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
+        if (mld->ftm_initiator.req)
+                return -EBUSY;
 ```
-wiphy_lock
-iwl_mld_stop_fw(mld)   // abort waits, stop device, fw_status.running =
-false
-in_d3 = false
-wiphy_unlock
+
+```267:270:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
+        if (!ret) {
+                mld->ftm_initiator.req = req;
+                mld->ftm_initiator.req_wdev =
+ieee80211_vif_to_wdev(vif);
+        }
 ```
 
-**After:** same, plus `iwl_mld_restart_cleanup(mld)` between stop_fw and
-clearing `in_d3`.
+```340:342:drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
+        if (IWL_FW_CHECK(mld, !mld->ftm_initiator.req,
+                         "FTM response without a pending request\n"))
+                return;
+```
 
-Path: PCI resume when scratch/MAC grab shows the device was powered off
-(`iwl_op_mode_device_powered_off` from `pcie/drv.c`). Not the happy
-wowlan-keep-alive path.
+That NULL check does not save a dangling pointer.
+`cfg80211_pmsr_process_abort()` kfree’s the request after the (optional)
+abort op.
 
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
+## Phase 6: This checkout
 
-Record: **[Logic / correctness — stale driver state after firmware
-death]**
-
-Without cleanup, `iwl_mld_mac80211_start` sees `in_d3 == false`, skips
-D3 resume, and calls `iwl_mld_start_fw()` **without**
-`iwl_mld_restart_cleanup()`. Firmware is empty; driver still holds:
-- `zeroed_on_hw_restart` groups (phy, scan, iface, link, sta, txq)
-- firmware station IDs / internal STAs
-- keys
-- FTM initiator request
-
-`iwl_mld_cleanup_vif` frees internal STAs and keys; skipping it on this
-path is a leak plus ID mismatch. Category is **incomplete error/recovery
-handling**, not a new feature.
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-
+**Step 6.1: Local tree and buggy code**
 Record:
-- **Obviously correct:** reuses the function already used on HW restart;
-  mvm does the same from `iwl_op_mode_mvm_device_powered_off`
-  (`iwl_mvm_restart_cleanup`).
-- **Minimal:** one call + un-static.
-- **Regression risk low:** already runs under `wiphy_lock` from
-  `iwl_mld_mac80211_start`; `device_powered_off` already takes
-  `wiphy_lock`. Cleanup is largely idempotent (`CLEANUP_STRUCT` memset,
-  `sta_id != IWL_INVALID_STA` guards). FTM abort on a dead NIC during
-  resume is appropriate.
-- **Redundant** `in_d3 = false` after `iwl_cleanup_mld` also clears it —
-  harmless.
-- No public API / data-structure change except making an existing helper
-  non-static.
+- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**
+- `make kernelversion`: **7.3.0-rc4**
+- MLD FTM initiator **is present**. Bug introduced with MLD
+  (`d1e879ec600f9`), long before 7.3 branched.
+- Candidate SHA **`ef704fc32ae1a`**; `git merge-base --is-ancestor
+  ef704fc32ae1a HEAD` → already in this mainline snapshot (landed in
+  **7.3-rc1**, not in 7.2). Evaluation is still on technical merit, not
+  “already selected.”
 
----
+**Step 6.2: Backport difficulty**
+Record: Clean apply on this tree. Structures and helpers match the hunk.
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+**Step 6.3: Related fixes already here**
+Record: `iwl_mld_ftm_restart_cleanup()` covers FW restart only, not
+userspace abort. No earlier abort implementation.
 
-**Step 3.1: BLAME THE CHANGED LINES**
+## Phase 7: Subsystem context
 
+**Step 7.1**
+Record: **iwlwifi MLD** (Intel Wi-Fi 7 opmode). Criticality:
+**IMPORTANT** (common client Wi-Fi driver), not core mm/VFS. FTM itself
+is a subset of users (RTT / indoor location).
+
+**Step 7.2**
+Record: Actively developed; MLD is the current Intel path. This is a
+missing piece from the original MLD port, not a brand-new subsystem.
+
+## Phase 8: Impact and risk
+
+**Step 8.1: Who is affected**
+Record: Intel MLD devices using nl80211 peer measurement (FTM
+initiator). Not universal.
+
+**Step 8.2: Trigger**
+Record: Start FTM, then abort via socket close or iface down before
+firmware completes. Not every boot; realistic for location stacks and
+interface teardown. Unprivileged trigger: unverified (nl80211 PMSR is
+typically admin-capable).
+
+**Step 8.3: Failure mode**
 Record:
-- Buggy `iwl_mld_device_powered_off` introduced in **`d1e879ec600f9`**
-  (`wifi: iwlwifi: add iwlmld sub-driver`, 2025-03-05; that commit’s
-  Makefile is **6.14.0-rc4**).
-- Merged to this lineage via `c73ebc0dbb6ed` (`iwlwifi-
-  next-2025-06-25`).
-- Intermediate: `7aeec8c8d63bf` removed `system_pm_mode` assignment;
-  still no cleanup.
-- `iwl_mld_restart_cleanup` existed as **static** since MLD
-  introduction; this commit only exports it.
-
-**Step 3.2: FOLLOW THE FIXES: TAG**
-
-Record: **No Fixes: tag.** Bug is original MLD `device_powered_off`
-(omit cleanup). Target `d1e879ec600f9` **is** an ancestor of this tree
-(`git merge-base --is-ancestor`).
-
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-
-Record:
-- **`71ac392d8b5c2`** — this fix (in tree)
-- **`0a00c3ec2db76`** — mvm analog, same day/author/series (14/15 vs
-  15/15)
-- **`1c031ac5a39eb`** — later “do not cleanup FW state when device is
-  dead”; **different path** (chanctx unassign / NULL link), not a revert
-  of this call
-- **`c99bc4d4e0ba6`** — cancel wiphy work before free (same series,
-  08/15); not a prerequisite for this hunk
-
-Standalone: no other series patch is required for this one-line call.
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-
-Record: Emmanuel Grumbach is a long-time Intel iwlwifi developer. Same-
-day pair: mvm cleanup + this MLD mirror. Maintainer Miri Korenblit SOB’d
-both. Weight: **high**.
-
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-
-Record: Needs `iwl_mld_restart_cleanup`, `iwl_mld_device_powered_off`,
-MLD op_mode — all present since MLD add. `mld.c` already `#include
-"mac80211.h"`. **Applies standalone** on this tree.
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-
-Record:
-- `b4 dig -c 71ac392d8b5c2` → **https://patch.msgid.link/20260714165826.
-  ff1c9e05e0a9.I8df8d4a0384065fd2a32cf258339be77084c55bd@changeid**
-- **v2**, `[PATCH v2 iwlwifi-next 15/15]`; v2 cover: resend so next
-  contains an unrelated compile fix (`too long hcmds`), **not** a
-  redesign of this patch
-- Cover: “Usual fixed, cleanups and features from our internal tree.”
-  This commit listed under Emmanuel’s fixes.
-- Saved mbox: **16 messages, all series posts, zero review replies /
-  NAKs / Cc: stable**
-- lore.kernel.org / patch.msgid.link HTTP fetch: **403** — discussion
-  taken from `b4 dig -m` mbox instead
-
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-
-Record (`b4 dig -w`): To/Cc **Johannes Berg**, **linux-
-wireless@vger.kernel.org**, Miri Korenblit, Emmanuel Grumbach. No
-Reviewed-by on 15/15 (several other series patches have Johannes R-b).
-Applied via iwlwifi-next (`905b418df8af2`, 2026-07-23). Maintainer-tree
-merge is the review signal.
-
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-
-Record: **No user/syzbot/bugzilla report.** Bug is reasoned from the mvm
-gap. Severity from code: stale FW IDs after D3cold/hibernate-style
-power-off — WiFi may not come back cleanly.
-
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-
-Record: 15-patch iwlwifi-next dump. **14/15 is the mvm twin**
-(independent). This patch does **not** depend on 01–13. Mix of features
-and fixes; this hunk is a self-contained fix.
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-
-Record: Web search found **other** iwlwifi MLD restart patches in stable
-(e.g. “stop TX during firmware restart” for 6.18/7.0). **No hit** for
-this subject on stable@. UNVERIFIED: whether anyone already nominated
-this exact commit for older -stable.
-
----
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1: IDENTIFY KEY FUNCTIONS**
-
-Record: `iwl_mld_restart_cleanup` (export), `iwl_mld_device_powered_off`
-(call site). Unchanged callees: `iwl_cleanup_mld`,
-`iwl_mld_cleanup_vif`, `iwl_mld_cleanup_sta`,
-`iwl_mld_ftm_restart_cleanup`.
-
-**Step 5.2: TRACE CALLERS**
-
-Record:
-- `iwl_mld_restart_cleanup`: `iwl_mld_mac80211_start` (if
-  `in_hw_restart`); **now** `iwl_mld_device_powered_off`
-- `iwl_mld_device_powered_off`: op_mode `.device_powered_off` →
-  `iwl_op_mode_device_powered_off` → **`_iwl_pci_resume`** in
-  `pcie/drv.c` when restore or scratch says powered off
-- Context: **PM resume**, process context, already holds `wiphy_lock`
-- Reachable on Intel WiFi 7 / MLD laptops that D3cold the NIC or
-  hibernate
-
-**Step 5.3: TRACE CALLEES**
-
-Record: stop_fw (trans stop, abort waits); cleanup zeros restart groups;
-frees internal STAs/keys; may call
-`ieee80211_remain_on_channel_expired`; FTM reports failure to cfg80211.
-Side effects are the intended reset.
-
-**Step 5.4: FOLLOW THE CALL CHAIN**
-
-Record: **Userspace-reachable** via suspend/resume (and hibernate), not
-a syscall bug. Trigger is common on laptops that cut WiFi power.
-Unprivileged users typically cannot force PCI D3cold, but they **do**
-suspend.
-
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-
-Record: **Exact mvm analog** `0a00c3ec2db76` — same author, same series.
-Pattern is systematic (mvm had the cleanup; mld was missed at
-introduction).
-
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-
-Record:
-- Local tree: **`git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`**,
-  `make kernelversion` = **7.3.0-rc4**
-- MLD files present under `drivers/net/wireless/intel/iwlwifi/mld/`
-- **`git merge-base --is-ancestor 71ac392d8b5c2 HEAD` succeeds** — this
-  fix is **already in this checkout**
-- Pre-fix body (parent of 71ac392d8b5c2) had `device_powered_off`
-  without cleanup; current `mld.c:750` has the call
-- Bug introduced with MLD (`d1e879ec600f9`, ~6.14 development / 2025);
-  **not** after 7.3 branched
-
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-
-Record: **Clean apply** on this tree (already applied). Context around
-`iwl_mld_device_powered_off` matches the candidate diff. No conflicting
-refactor.
-
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-
-Record: This fix **is** here. mvm analog **is** here. No earlier
-different MLD-powered-off cleanup. Follow-up `1c031ac5a39eb` is
-unrelated chanctx/dead-device WARN, not a replacement.
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-
-Record: **iwlwifi MLD** (`CONFIG_IWLMLD`) — Intel Wi-Fi 7 / MLO devices.
-**IMPORTANT** (very common laptop NIC), not core mm/VFS. Affects all
-IWLMLD users on PM sleep.
-
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-
-Record: **Active** (regular iwlwifi-next pulls). Bug is an original
-omission in a still-young op_mode (~1.5 years), not bitrot in abandoned
-code.
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-
-Record: **Driver-specific + config-specific:** `CONFIG_IWLWIFI` +
-`CONFIG_IWLMLD` + `CONFIG_PM_SLEEP`. Intel BE200/BE201-class Wi-Fi 7.
-Population is large for a driver fix.
-
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-
-Record:
-- Trigger: resume after the transport decides the device was powered off
-  (scratch bits, 0xFFFFFFFF, or failed NIC grab) — **hibernate, D3cold,
-  some s2idle**
-- Not every suspend (wowlan-alive path skips this)
-- Not a userspace exploit path
-- Timing: deterministic once the platform cuts power
-
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-
-Record:
-- **Failure:** driver/firmware state desync after resume; commands with
-  stale IDs; possible internal-STA/key leak; FTM requests left hanging;
-  Wi-Fi may not recover without reload
-- Not shown as oops/UAF/CVE in the message (UNVERIFIED as crash)
-- **Severity: HIGH** for affected hardware (broken Wi-Fi after suspend),
-  **not CRITICAL** (no verified panic/corruption)
-
-Stable-rules fit: **“oh, that’s not good”** / hardware resume quirk, not
-theoretical.
-
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-
-Record:
-- **Benefit: high** for IWLMLD + PM — resume actually reconfigures like
-  mvm
-- **Risk: very low** — +1 call to existing helper, same lock as start
-  path
-- **Ratio: strongly favorable**
-
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: COMPILE THE EVIDENCE**
-
-**FOR backporting to this 7.3 tree:**
-- Real resume bug: firmware stopped, MLD software state not reset
-- Same fix already proven in mvm (`0a00c3ec2db76`)
-- Tiny, obviously correct; helper already used on HW restart
-- Intel Wi-Fi 7 is common; suspend/resume is a user-facing path
-- MLD and the buggy function exist in this tree; no extra prereqs
-- Maintainer-tree merge; Johannes on Cc
-- Matches stable rule of a real bug that bothers people (Wi-Fi
-  dead/wrong after power-off suspend)
-
-**AGAINST:**
-- No Reported-by / syzbot / stack trace
-- Brief commit message
-- 15/15 of a mixed “updates” series, not a dedicated stable submission
-- No explicit crash/security
-- Power-off-during-suspend is not every resume (wowlan-alive OK)
-
-**UNRESOLVED:**
-- Exact user-visible rate (no public bugzilla)
-- lore HTTP 403; no on-list NAK found in mbox
-- No stable@ discussion of this exact subject
-
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-
-1. Obviously correct and tested? **PASS** — mirrors mvm; merged to
-   iwlwifi-next/mainline; logic is a single missing call.
-2. Fixes a real bug that affects users? **PASS** — stale MLD state vs
-   empty firmware after D3cold/hibernate resume.
-3. Important issue? **PASS** — user-visible Wi-Fi recovery failure
-   (HIGH, not panic). Fits “oh, that’s not good” / resume hardware path.
-4. Small and contained? **PASS** — ~4 insertions, one subsystem.
-5. No new features or APIs? **PASS** — export existing helper + call it.
-6. Can apply to the local tree? **PASS** — code present; patch already
-   applies (already in v7.3-rc4).
-
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-
-Record: **None** (not a device ID / quirk table / DT / build / docs).
-Qualifies as a normal small bugfix.
-
-**Step 9.4: MAKE YOUR DECISION**
-
-This tree is **7.3.0-rc4**. The MLD `device_powered_off` path exists
-here and omitted restart cleanup until `71ac392d8b5c2`. The commit is a
-4-line, low-risk fix for a real suspend/resume correctness bug on Intel
-MLD hardware. It should be in this tree’s stable stream.
-
-### What the commit solves (for 7.3 users)
-
-On PCI resume, if the NIC was powered off, MLD only stopped firmware and
-cleared `in_d3`. `iwl_mld_mac80211_start` then did a cold
-`iwl_mld_start_fw()` **without** `iwl_mld_restart_cleanup()`, so
-firmware IDs, keys, scan, and internal STAs stayed live in software. Wi-
-Fi 7 devices can fail to recover after that suspend. The fix is the same
-cleanup mvm already does.
-
-Risk is a single call under the lock already used for restart cleanup.
-Benefit is working wireless after D3cold/hibernate on common Intel
-hardware.
-
----
+- Firmware response after abort: **UAF** of `cfg80211_pmsr_request`
+  (crash / KASAN / potential memory corruption)
+- Without a later notification: FTM stays “busy” (`-EBUSY`) until driver
+  reset
+- Firmware keeps ranging until timeout
+Severity: **HIGH** (UAF), not a panic on every probe.
+
+**Step 8.4: Risk/benefit**
+Record: Benefit medium-high for MLD FTM users (UAF + stuck session).
+Risk **low** (32 lines, abort path only, same design as MVM). Ratio
+favors taking it.
+
+## Phase 9: Synthesis
+
+**Step 9.1: Evidence**
+
+FOR:
+- Verified UAF: driver borrows cfg80211’s request; abort path frees it
+  without clearing the driver pointer
+- Also stuck `-EBUSY` on later FTM starts
+- Small, self-contained, copies a long-standing MVM abort
+- Cancel infrastructure (`IWL_MLD_OBJECT_TYPE_FTM_REQ`) was already
+  registered; abort was the missing caller
+- Maintainer-signed; applies cleanly here
+- Same class of “missing stop/abort op” that stable routinely takes
+
+AGAINST:
+- Message sells it as “add support,” no crash report, no Fixes/syzbot
+- Sent to **iwlwifi-next** in a mixed updates series
+- FTM is not a hot path for most desktops
+- Adds a new ops pointer (looks like a feature if you only read the
+  subject)
+
+UNRESOLVED:
+- Could not fetch lore HTML (403); used `b4` mbox instead
+- No evidence of a real-world crash report
+- Unverified whether unprivileged users can start PMSR on typical
+  distros
+
+**Step 9.2: Stable rules**
+1. Obviously correct and tested? **PASS** (MVM analogue; Intel-authored)
+2. Real user-visible bug? **PASS** (UAF / stuck FTM after abort)
+3. Important (crash/security/corruption)? **PASS** (UAF is crash/memory-
+   safety; FTM-specific but real)
+4. Small and contained? **PASS** (32 lines, one driver)
+5. No new features/APIs? **PASS** — implements an existing mac80211 op;
+   not a new syscall/uAPI
+6. Can apply to this tree? **PASS** (MLD FTM code is here; helpers
+   exist)
+
+**Step 9.3: Exception category**
+Record: Not ID/quirk/DT/build/docs. Ordinary driver correctness fix.
+
+**Step 9.4: Decision**
+This is a missing abort handler on a driver that caches a cfg80211-owned
+object. That is a UAF fix, even though the subject says “support.” It is
+small, applies here, and does not need the rest of the 15-patch series.
+
+### What it solves for this tree
+On 7.3-rc4, iwlwifi MLD FTM start stores `req` and handles firmware
+range responses. Without abort, closing the measurement netlink socket
+or taking the wdev down frees `req` while the driver and firmware still
+use it. That is a use-after-free and can pin FTM at `-EBUSY`. The patch
+aborts firmware, drops queued FTM notifs, and clears driver state.
+
+### Risk vs benefit
+Low risk, high severity if the abort path is hit. Benefit is limited to
+Intel MLD + FTM users, which is enough given UAF.
 
 Verification:
-- [Phase 1] `git show 71ac392d8b5c2`: subject/tags/body as above; SOB
-  Grumbach + Korenblit; Link msgid; no Fixes/Reported-by/Cc stable
-- [Phase 2] Diff: un-static `iwl_mld_restart_cleanup`, header prototype,
-  +1 call in `iwl_mld_device_powered_off`; +4/−2
-- [Phase 2] Parent of commit: `device_powered_off` was stop_fw +
-  `in_d3=false` only
-- [Phase 2] Current `mld.c:743-753`: call present under `wiphy_lock`
-- [Phase 2] `iwl_cleanup_mld` / `iwl_mld_cleanup_vif` /
-  `iwl_mld_cleanup_sta` / `iwl_mld_ftm_restart_cleanup` read in tree
-- [Phase 3] `git log -L` on `iwl_mld_device_powered_off`: d1e879ec600f9
-  → 7aeec8c8d63bf → 71ac392d8b5c2
-- [Phase 3] `d1e879ec600f9` Makefile 6.14.0-rc4; ancestor of HEAD
-- [Phase 3] `git show 0a00c3ec2db76`: mvm analog same day
-- [Phase 3] `git log -S iwl_mld_restart_cleanup -- mld/`: only MLD add +
-  this commit
-- [Phase 3] `1c031ac5a39eb` is a different chanctx/dead-device WARN, not
-  a revert
-- [Phase 4] `b4 dig -c/-a/-w/-m`: v2 15/15 iwlwifi-next; recipients
-  Johannes + linux-wireless; mbox 16 series mails, no NAK
-- [Phase 4] WebFetch lore/msgid: 403; used mbox instead
-- [Phase 4] WebSearch stable@: other MLD restart fixes, not this subject
-- [Phase 5] `git grep iwl_op_mode_device_powered_off`: `pcie/drv.c:1281`
-  from `_iwl_pci_resume` when powered off
-- [Phase 5] `mld.c` includes `mac80211.h`
-- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37; `make
-  kernelversion` 7.3.0-rc4
-- [Phase 6] `git merge-base --is-ancestor 71ac392d8b5c2 HEAD`: yes
-- [Phase 8] Failure mode inferred from code + mvm message (reload
-  **and** reconfigure); no crash dump in commit (stated)
-- UNVERIFIED: public user reports; whether older LTS without this commit
-  would be in scope (out of band — this verdict is 7.3-rc4 only)
+- [Phase 1] Parsed tags: SOB Stern + Korenblit; Link msgid; no
+  Fixes/Reported-by/Cc stable
+- [Phase 2] Diff: +32 lines, `iwl_mld_ftm_abort` + `.abort_pmsr`
+- [Phase 3] `git show ef704fc32ae1a`; ancestor of HEAD; introduced with
+  `d1e879ec600f9`; MVM abort `fc36ffda32670`
+- [Phase 3] `git merge-base --is-ancestor ef704fc32ae1a 8d3ae59288f1e` →
+  not in 7.2; in 7.3-rc1
+- [Phase 3] No follow-ups on `ftm-initiator.c` after this commit
+- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 iwlwifi-next 01/15, To Johannes, no
+  review replies in mbox
+- [Phase 4] WebFetch lore/msgid.link → 403; used local mbox
+- [Phase 5] Call chain: `cfg80211_release_pmsr` /
+  `cfg80211_pmsr_wdev_down` → kfree after optional abort;
+  `iwl_mld_handle_ftm_resp_notif` derefs `ftm_initiator.req`
+- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
+  kernelversion 7.3.0-rc4; MLD FTM present
+- [Phase 8] Failure mode: UAF on FTM abort + `-EBUSY` stuck state,
+  severity HIGH
+- UNVERIFIED: unprivileged PMSR start; no user crash report
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 3 +--
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.h | 2 ++
- drivers/net/wireless/intel/iwlwifi/mld/mld.c      | 1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
+ .../intel/iwlwifi/mld/ftm-initiator.c         | 21 +++++++++++++++++++
+ .../intel/iwlwifi/mld/ftm-initiator.h         |  1 +
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c | 10 +++++++++
+ 3 files changed, 32 insertions(+)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
+index 3464b32687124..6e174c4d8b75e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.c
+@@ -449,3 +449,24 @@ void iwl_mld_ftm_restart_cleanup(struct iwl_mld *mld)
+ 			       mld->ftm_initiator.req, GFP_KERNEL);
+ 	iwl_mld_ftm_reset(mld);
+ }
++
++void iwl_mld_ftm_abort(struct iwl_mld *mld, struct cfg80211_pmsr_request *req)
++{
++	struct iwl_tof_range_abort_cmd cmd = {
++		.request_id = req->cookie,
++	};
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	if (req != mld->ftm_initiator.req)
++		return;
++
++	if (iwl_mld_send_cmd_pdu(mld, WIDE_ID(LOCATION_GROUP,
++					      TOF_RANGE_ABORT_CMD),
++				 &cmd))
++		IWL_ERR(mld, "failed to abort FTM process\n");
++
++	iwl_mld_cancel_notifications_of_object(mld, IWL_MLD_OBJECT_TYPE_FTM_REQ,
++					       mld->ftm_initiator.req->cookie);
++	iwl_mld_ftm_reset(mld);
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
+index 3fab25a52508a..e82237b314673 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/ftm-initiator.h
+@@ -25,5 +25,6 @@ int iwl_mld_ftm_start(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ void iwl_mld_handle_ftm_resp_notif(struct iwl_mld *mld,
+ 				   struct iwl_rx_packet *pkt);
+ void iwl_mld_ftm_restart_cleanup(struct iwl_mld *mld);
++void iwl_mld_ftm_abort(struct iwl_mld *mld, struct cfg80211_pmsr_request *req);
+ 
+ #endif /* __iwl_mld_ftm_initiator_h__ */
 diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 27ae06e208402..69a066904a808 100644
+index 69a066904a808..5234229a070a7 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -483,8 +483,7 @@ iwl_mld_mac80211_tx(struct ieee80211_hw *hw,
- 	iwl_mld_tx_skb(mld, skb, NULL);
+@@ -2609,6 +2609,15 @@ static int iwl_mld_start_pmsr(struct ieee80211_hw *hw,
+ 	return iwl_mld_ftm_start(mld, vif, request);
  }
  
--static void
--iwl_mld_restart_cleanup(struct iwl_mld *mld)
-+void iwl_mld_restart_cleanup(struct iwl_mld *mld)
- {
- 	iwl_cleanup_mld(mld);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.h b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.h
-index aad04d7b2617d..f3302997b28f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.h
-@@ -1,6 +1,7 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-  * Copyright (C) 2024 Intel Corporation
-+ * Copyright (C) 2026 Intel Corporation
-  */
- #ifndef __iwl_mld_mac80211_h__
- #define __iwl_mld_mac80211_h__
-@@ -9,5 +10,6 @@
- 
- int iwl_mld_register_hw(struct iwl_mld *mld);
- void iwl_mld_recalc_multicast_filter(struct iwl_mld *mld);
-+void iwl_mld_restart_cleanup(struct iwl_mld *mld);
- 
- #endif /* __iwl_mld_mac80211_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-index 49e46babf8221..cf003a4a37408 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-@@ -739,6 +739,7 @@ static void iwl_mld_device_powered_off(struct iwl_op_mode *op_mode)
- 
- 	wiphy_lock(mld->wiphy);
- 	iwl_mld_stop_fw(mld);
-+	iwl_mld_restart_cleanup(mld);
- 	mld->fw_status.in_d3 = false;
- 	wiphy_unlock(mld->wiphy);
- }
++static void iwl_mld_abort_pmsr(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct cfg80211_pmsr_request *request)
++{
++	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
++
++	iwl_mld_ftm_abort(mld, request);
++}
++
+ static enum ieee80211_neg_ttlm_res
+ iwl_mld_can_neg_ttlm(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     struct ieee80211_neg_ttlm *neg_ttlm)
+@@ -2696,5 +2705,6 @@ const struct ieee80211_ops iwl_mld_hw_ops = {
+ 	.prep_add_interface = iwl_mld_prep_add_interface,
+ 	.set_hw_timestamp = iwl_mld_set_hw_timestamp,
+ 	.start_pmsr = iwl_mld_start_pmsr,
++	.abort_pmsr = iwl_mld_abort_pmsr,
+ 	.can_neg_ttlm = iwl_mld_can_neg_ttlm,
+ };
 -- 
 2.53.0
 
