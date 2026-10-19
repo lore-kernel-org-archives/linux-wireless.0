@@ -1,124 +1,122 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C679726FDBF;
-	Mon, 19 Oct 2026 01:25:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F273C1F;
+	Mon, 19 Oct 2026 01:29:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792373160; cv=none; b=Vh4eNZ9zB7RvgbBJFusK3aze6lPGVh6Bt/VsAMnnN2n8WVcWkcEygQLDqDZTReii4lWYMIEl3B4w3Tp3GqOIoq0FBeaFfvLlVj+QaLpAjRtwDyPB5MWvK4b0UMEL1uUEH/hyV9kGmgz89NxoPYK2/gpVWnRREF64dgmdqtZuaZ8=
+	t=1792373400; cv=none; b=VlxIYI32344GNDhd2RkQWp6p0YZVgFEg1uHcHXyqVteKif+wFek4c+b+6wqrewaFV85WXOMYOY6TGtuuNl4Sbiz+JByqAKfMuzPD6zfIazh5tV4wZdlXnHlZU+0RxC1x8a+EdXNfoHRJd4HFyRc5hQewv2kPjQC6SxmJv+ndRuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792373160; c=relaxed/simple;
-	bh=bROhtMvICKL3hfiSKkrSAw855A7WDYmtaX8yDyr3/B0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=NZaej/xWy1vngdz6xJVCGWyARFYq9RRa9ylKjTYdtlfLyB0EebGTaAwRfxnGuBLZakFSOE1M+NiOU3ejtir5U05OaCPQbQ0z+WyZuz7LTTwcIzkWlIpfjx3gOr2KP9MMtJqDx/w+YT5s0Lp8IKAWey1mfP90VZ5CU+ub/nTuqyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HhLS85gj; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1792373400; c=relaxed/simple;
+	bh=hGRjRg6f/p3fRdYlCiCyQPMahjskxPW83H+HXKfD6/8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ug+Xa6G7BLF/l0cBeHc0qMo87V7PfbgPXKg2XZKGjaODf1DJ5x15fsMwoE8PmLbhME9lGmN1ZhXPLna2uPzSgtKWczAFiYk4dsjj/EyIVQqaE6+MCa1jXAyVeszkbzXxwdQ4iMi2BSK8e0QD6rqLkMKF0++tey7cfK4PwqSEND0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=K6HuEcr2; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HhLS85gj"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69J1Psc761428680, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792373154; bh=RI+S/nok2XyXDnpGx6fYLdQRSStzfNLeAEil/Ots+kE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=HhLS85gjIok0uTzVpLYcXWDWdfTi05jxkt+JUNekr57IXt+KjD/pj99EFBdPKO6yc
-	 FWQasPdPqYAMKLHpdu6UTef8OouNBnkrJhgMKzFJYrPqwvCh9nVHMTkNYYBfOK+Vx6
-	 YKAnP5B/AQG0MOQ8UGheFvkfGo5sqLJQ+4od4Cd+84WAKY7/ql0PF3v76vum2ZWnc6
-	 lEGnrhKRd190sjGbPfW4SlR38xWZjBaMWw5IYvQkBKY/LN9m5Otzzqa8Tl9fbJvmnA
-	 +JM5kyqd4PO/JZ+3yOVX5T4nPoY5kSQDEEqM4t75RjLUbFSsL3n9SmpH6WluBmBX0V
-	 51MVfx045bdqg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69J1Psc761428680
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 19 Oct 2026 09:25:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 19 Oct 2026 09:25:54 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Mon, 19 Oct 2026 09:25:54 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the
- rings are reset
-Thread-Topic: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when
- the rings are reset
-Thread-Index: AQHdWO4MPV0dG/pKrEyzZWvhd4YBNrb5eb7AgAINFoCAAMEoQIAEANAAgAPLA9A=
-Date: Mon, 19 Oct 2026 01:25:54 +0000
-Message-ID: <3c588aeae8f74a8caa39aa2852bce437@realtek.com>
-References: <c15cbcb38aed477ab8d4c06ce30b174d@realtek.com>
- <20261016224756.20687-1-abdurrahmankaradag19@gmail.com>
-In-Reply-To: <20261016224756.20687-1-abdurrahmankaradag19@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="K6HuEcr2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=DG
+	GT3zreU9iHKS1t8R0HuXBRygSbLCU1j5Aida0NaO8=; b=K6HuEcr2nE71sWUDca
+	Em6qhaY0NBVSXZ4rSbkt2xZ6Z8Uwpatg3lIyTxQn0Kz45ny0wVreLvV45EN02B3b
+	7QV//NDhwickVPpc2uKBj0n9X3dGsDuwaLmBqr+dopsp9TqajtxcXH1qYAonfosq
+	rEOf99mfWEhYvF5pcimhv4T4I=
+Received: from pc.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3X+OJctVqNKdTBA--.46590S2;
+	Mon, 19 Oct 2026 09:29:46 +0800 (CST)
+From: Jiale Yao <yaojiale02@163.com>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Jiale Yao <yaojiale02@163.com>
+Subject: [PATCH] wifi: iwlwifi: mvm: clear vif mapping on add failure
+Date: Mon, 19 Oct 2026 09:29:41 +0800
+Message-Id: <20261019012941.1486770-1-yaojiale02@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3X+OJctVqNKdTBA--.46590S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZFykZFW7JFWfur18XFyxKrg_yoW5GF4DpF
+	4UG3yqgrn8ta1kXay8Gan5Cr95Xa12k393CFy5Cw45ZF1vqF1Svw409Fy3A3sYkrWUJFWa
+	yr1qya15WF1rK3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0p_9a9rUUUUU=
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wrOCWrVcoojBwAA3B
 
-Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
-> > I re-think ring->queue_stopped and restart work. I feel the flow
-> > should be [...]
-> > I'll discuss above flow internally, and give back to you.
+Both legacy and MLD add_interface paths publish the vif in vif_id_to_mac
+before operations which can fail. mac80211 does not call
+remove_interface after a failed add, leaving a stale pointer which can
+later be dereferenced.
 
-I discussed internally, and we suggest to add ieee80211_wake_queues() and
-clear queue_stopped flags in rtw_pci_start().
+Clear the mapping on every failure after publication.
 
-This can resolve two cases -- restart_hw and interface down/up while
-queue_stopped is flagging. Just like initialize or reset to variables.=20
+Fixes: 698478c49294 ("iwlwifi: mvm: add an option to dereference vif by id")
+Fixes: cb145863e7ab ("wifi: iwlwifi: mvm: add link to firmware earlier")
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 6 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 4 +++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-No need 3 steps I mentioned. (So I'd not reply your trace.)
-
-> Your other two questions were in the bug thread; bringing them here as
-> you asked.
->=20
-> > could you describe how you resolve the stuck (by the method of your
-> > previous patch, maybe v1)?
->=20
-> Nothing the driver did on its own. Over the five events, power save off:
->=20
->   rewrite the TXBD host index   0/3   read index never moved
->   ip neigh flush                0/4
->   iwd reconnect, new PTK        2/4   cleared 08-28 20:32, 09-06 03:17
->   ip link set wlan0 down/up     1/2   cleared 09-14 17:48
->   reboot                              always
-
-So there is no solution for now. Since 3th and 4th events will stop/start
-pci, if the cause to fail to recovery is flagged queue_stopped, our above
-idea will be helpful.=20
-
-Another test is to remove/insert driver ko. It will reset queue states.
-
-(I suppose you did these tests without changing any behavior as was).
-
-[...]
-
-> One thing I should flag before you read the dumps. My ladder pokes
-> debugfs fw_crash anyway, so nine of the captures print
-> "rtw_fw_recovery() tetikleniyor" - Turkish for "being triggered" - six
-> on 27 September, two on 14 October, and one where the knob was not
-> writable. Eight of them follow it with "fw_crash ->
-> ieee80211_restart_hw: 100% packet loss". Both strings are labels my
-> script prints for that rung, not anything the driver reported.
-> rtw_debugfs_set_fw_crash() never calls rtw_fw_recovery(): it leaves deep
-> LPS, sets RTW_FLAG_RESTART_TRIGGERING and writes REG_HRCV_MSG, and
-> recovery is entered only through the C2H path I described on 3 October,
-> which matches your point that the knob only takes effect on 8822C. So
-> nothing was triggered and nothing was tested at that rung. Section 4 of
-> the six September dumps also reads fw_crash as 1 before that dump's own
-> write, because the file prints RTW_FLAG_RESTART_TRIGGERING and only
-> __fw_recovery_work() clears it; all six are the same boot. The two
-> October ones are later boots and read 0.
-
-I need your help to summarize the dumps. I don't have much time to analyze=
-=20
-them. Sorry.=20
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5bd246e37943..83b1e355ec35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1748,7 +1748,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 
+ 	ret = iwl_mvm_mac_ctxt_add(mvm, vif);
+ 	if (ret)
+-		goto out_unlock;
++		goto out_clear_vif;
+ 
+ 	ret = iwl_mvm_power_update_mac(mvm);
+ 	if (ret)
+@@ -1792,12 +1792,16 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (!ret && (vif->type == NL80211_IFTYPE_AP ||
+ 		     vif->type == NL80211_IFTYPE_ADHOC))
+ 		ret = iwl_mvm_alloc_bcast_mcast_sta(mvm, vif);
++	if (ret)
++		goto out_clear_vif;
+ 
+ 	goto out_unlock;
+ 
+  out_remove_mac:
+ 	mvmvif->deflink.phy_ctxt = NULL;
+ 	iwl_mvm_mac_ctxt_remove(mvm, vif);
++ out_clear_vif:
++	RCU_INIT_POINTER(mvm->vif_id_to_mac[mvmvif->id], NULL);
+  out_unlock:
+ 	mutex_unlock(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 6ea9a7c8da0c..314794b8a26f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -46,7 +46,7 @@ static int iwl_mvm_mld_mac_add_interface(struct ieee80211_hw *hw,
+ 
+ 	ret = iwl_mvm_mld_mac_ctxt_add(mvm, vif);
+ 	if (ret)
+-		return ret;
++		goto out_clear_vif;
+ 
+ 	/* beacon filtering */
+ 	ret = iwl_mvm_disable_beacon_filter(mvm, vif);
+@@ -106,6 +106,8 @@ static int iwl_mvm_mld_mac_add_interface(struct ieee80211_hw *hw,
+  out_remove_mac:
+ 	mvmvif->link[0] = NULL;
+ 	iwl_mvm_mld_mac_ctxt_remove(mvm, vif);
++ out_clear_vif:
++	RCU_INIT_POINTER(mvm->vif_id_to_mac[mvmvif->id], NULL);
+ 	return ret;
+ }
+ 
+-- 
+2.34.1
 
