@@ -1,46 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C0855549E;
-	Mon, 19 Oct 2026 13:57:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1BE4FFA48;
+	Mon, 19 Oct 2026 13:57:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418226; cv=none; b=RlFneO9vSQ/Y/WNtZ71WeJDiKUJELq+q3UHxel9cEJco7AjQfD15o8m9qeNn28p8S5zElKjhzCf4xoc/qlbCptMxAUg4u5TbKmRZa3cjjtjxkYozWs+AKvlqkG+0JTQ2U3IDaugl9CpIjq7HX2EGnG/g+AV0od2QCuvpk3wk4V8=
+	t=1792418252; cv=none; b=ZiRm43vvCOjpG87tuNjeQKCKKwEBjR9RweU9Q14zZDc2z+aE7sJBe9bdsHR1IDSWUDSkOZP3gV8MaIulDMoiLFLEhO+vbFivJXRGj+pjQX5yFIf6ta6EV9cRV9yRP6fxOdN9YeoT6mECsXwcZL/78HkuUA0L4jn3JkBdnb5T7YA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418226; c=relaxed/simple;
-	bh=O2QtGfa2GeyAFBg0995Q8tsqoiLqdE9ObXYSpyt8mvA=;
+	s=arc-20240116; t=1792418252; c=relaxed/simple;
+	bh=Wh9qhL8mCgT5QJA6GF6krnahySZ6C+OVWUpRqBcJP6Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m1DYmtTqVPrtkJn5Df8bNYhQBuJfvrPIUREjpYd0bEwANrWJz0FCOW894p2zJ33dYVOaoEV9MWV0pCHTL0fc79KDCQQRyRMD367q99VpG4vYJy2+WIkU7dRuk3TUWyOw38oeBqgMls4EWM5aIH9EODBG7D9X3Syjo+L6oe103NQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFcUA9YB; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=lbdkTslnH2Lq8ba6Ada9KRfOsNp3mb7vjVF7qNpgiW2o2z+mb6AraSb73Hgx4iNDTI45nttsjXNMgnEpYxyllYYrnWXEDr/DsiyQ6j1rS32rsYbJaiDPQXkqE3PXYzhVLlPOr+0DvgKBzNOoA4/B2BVmVug8FQu28h4Obq+Ob0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M725uWws; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFcUA9YB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF8CD1F000C6;
-	Mon, 19 Oct 2026 13:57:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M725uWws"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36D231F000C6;
+	Mon, 19 Oct 2026 13:57:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418224;
-	bh=bs6aoZXnd5UwjNLgDzr9Pe3S4ulbOQWFZpgOL2xcaMk=;
+	s=k20260515; t=1792418249;
+	bh=wE1RMnUDMMnvpx7rc/PtXVu9rOvIEpslybb3iEFRjXM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jFcUA9YBU/F4AFQSJuygeGZ2enrNHPBNUXgJ5tNDpMwiUyMjTkgmONQi0rek2+PdL
-	 F5xRMTNIdOLSUjpa/+OEnqoyvXU8AyJlOzDDLJPV66iJ/dSBK8lwmSUE6zAdHviRJW
-	 Mpszar0wP/TmODBd7sKXoaXv/lz94zESOWqbWFPnU6b5oxAIQkET6rQwcjf2n9pshw
-	 V2DcEgnTUsCROMFBYO9DjgSDjXnlBlGF9kZDTQumuzrO47HgTRqjN8oLxShjC1PLrV
-	 VvBYqN0frRFKttfxi+i1E0H/NOe2T3uzqE4mn39PHxzSBuIEvGfzsHjxk87Tea/bl/
-	 X1BIoHoNU8H5g==
+	b=M725uWwsj1cRTG9dlepKZGKCbKlT+pQxQ1bmvu6kd6At8mUHoS0CKsYa7lCGndK6A
+	 LrCOeQMqmQWi7mP0nuQFIVsY7+AvrUGsrW3LYKPgGN0gStxehGWs43Oimh84msw6Pc
+	 Rjzp7XQl9sfvSZLBzwbq3x27tNbBDLLpklfcWEex/OW8KugWC+kwaCKeqjcDU2zuio
+	 ctNgle8cbWordTQ0VtpUPQUvw7m+gcYCufEnYZ3ft4c8exiGx/QUuetdXSAHThB9c2
+	 d5bAoPDI460llKrGeicKi2CX3e1b6QzSjLabypBqHBUsamh7iFSwUekkDZgWMYuoHO
+	 fA9n5qKdqM14A==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Manikanta Pubbisetty <manikanta.pubbisetty@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+Cc: Zhi-Jun You <hujy652@gmail.com>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
-	jjohnson@kernel.org,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: ath10k: trigger hardware recovery upon rx failures
-Date: Mon, 19 Oct 2026 09:46:31 -0400
-Message-ID: <20261019135441.1420968-100-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18] wifi: mt76: wed: fix kernel panic on non-DBDC MT7986
+Date: Mon, 19 Oct 2026 09:46:49 -0400
+Message-ID: <20261019135441.1420968-118-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -56,430 +58,489 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Manikanta Pubbisetty <manikanta.pubbisetty@oss.qualcomm.com>
+From: Zhi-Jun You <hujy652@gmail.com>
 
-[ Upstream commit f78210dd4bea09090b828adc2733cad4b9916306 ]
+[ Upstream commit 8a177dabeeead47dda4d4f91331282790eed0097 ]
 
-When an error occurs during RX packet processing (e.g., MSDU done
-failure), the driver sets rx_confused and drops all subsequent RX
-packets until a Wi-Fi ON/OFF cycle clears the flag. This can leave
-the device in a bad state where it cannot process RX data traffic.
+In mt76_wed_init_rx_buf, it's hardcoded to use MT_RXQ_MAIN.
+But for non-DBDC MT7986 MT_RXQ_BAND1 is used for RX data queue which
+leads to kernel panic when attaching WED.
 
-Instead of leaving the device in such a state, trigger hardware
-recovery so that such an error state can be reset and the device
-can function again normally.
+Use the correct RX queue by checking WED version and band_idx.
 
-Tested-on: WCN3990 hw1.0 WLAN.HL.3.2.2.c10-00754-QCAHLSWMTPL-1
-Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00288-QCARMSWPZ-1
-Tested-on: QCA6174 hw3.2 SDIO WLAN.RMH.4.4.1-00189
+v2 and band 1 -> MT_RXQ_BAND1
+Others -> MT_RXQ_MAIN
 
-Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@oss.qualcomm.com>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Link: https://patch.msgid.link/20260710060406.3323260-1-manikanta.pubbisetty@oss.qualcomm.com
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Kernel panic:
+
+Unable to handle kernel access to user memory outside uaccess routines at virtual address 0000000000000000
+Mem abort info:
+  ESR = 0x0000000096000005
+  EC = 0x25: DABT (current EL), IL = 32 bits
+  SET = 0, FnV = 0
+  EA = 0, S1PTW = 0
+  FSC = 0x05: level 1 translation fault
+Data abort info:
+  ISV = 0, ISS = 0x00000005, ISS2 = 0x00000000
+  CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+  GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+Internal error: Oops: 0000000096000005 [#1]  SMP
+CPU: 1 UID: 0 PID: 925 Comm: kmodloader Tainted: G           O        6.18.26 #0 NONE
+Tainted: [O]=OOT_MODULE
+Hardware name: Acer Connect Vero W6m (DT)
+pstate: 40400005 (nZcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : page_pool_alloc_frag_netmem+0x1c/0x1bc
+lr : page_pool_alloc_frag+0xc/0x34
+sp : ffffffc081dab660
+x29: ffffffc081dab660 x28: ffffffc081dabc60 x27: ffffff80091af040
+x26: 0000008000000000 x25: ffffff80091a8898 x24: ffffff80091a5440
+x23: 0000000000001000 x22: 0000000140000000 x21: ffffff80091a2040
+x20: ffffff8003f1d780 x19: 0000000000000000 x18: 0000000000000020
+x17: ffffffbfbf0ac000 x16: ffffffc080ee0000 x15: ffffff80049d47ca
+x14: 000000000000037b x13: 000000000000037b x12: 0000000000000001
+x11: 0000000000000000 x10: 0000000000000000 x9 : 0000000000000000
+x8 : ffffff8003f1d7c0 x7 : 0000000000000000 x6 : ffffff8003f1d780
+x5 : 0000000000000680 x4 : 0000000000000000 x3 : 0000000000002824
+x2 : 0000000000000000 x1 : ffffffc081dab71c x0 : 0000000000000000
+Call trace:
+ page_pool_alloc_frag_netmem+0x1c/0x1bc (P)
+ page_pool_alloc_frag+0xc/0x34
+ mt76_wed_init_rx_buf+0xf8/0x2ac [mt76]
+ mtk_wed_start+0x79c/0x12ac
+ mt7915_dma_start+0x274/0x63c [mt7915e]
+ mt7915_dma_start+0x5b4/0x63c [mt7915e]
+ mt7915_dma_init+0x49c/0x81c [mt7915e]
+ mt7915_register_device+0x24c/0x530 [mt7915e]
+ mt7915_mmio_probe+0x91c/0x1980 [mt7915e]
+ platform_probe+0x58/0xa0
+ really_probe+0xb8/0x2a8
+ __driver_probe_device+0x74/0x118
+ driver_probe_device+0x3c/0xe0
+ __driver_attach+0x88/0x154
+ bus_for_each_dev+0x60/0xb0
+ driver_attach+0x20/0x28
+ bus_add_driver+0xdc/0x200
+ driver_register+0x64/0x118
+ __platform_driver_register+0x20/0x30
+ init_module+0x74/0x1000 [mt7915e]
+ do_one_initcall+0x4c/0x1f8
+ do_init_module+0x50/0x210
+ load_module+0x15f8/0x1b10
+ __do_sys_init_module+0x1a8/0x260
+ __arm64_sys_init_module+0x18/0x20
+ invoke_syscall.constprop.0+0x4c/0xd0
+ do_el0_svc+0x3c/0xd0
+ el0_svc+0x18/0x60
+ el0t_64_sync_handler+0x98/0xdc
+ el0t_64_sync+0x158/0x15c
+Code: aa0003f3 a9025bf5 a90363f7 d2820017 (b9400000)
+
+Signed-off-by: Zhi-Jun You <hujy652@gmail.com>
+Link: https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **Linux 7.3-rc4** (`v7.3-rc4-27-gf0100363d8c37`). The
-surrounding ath10k RX and recovery code is present, and this is a small,
-real device-hang fix.
+This tree is **6.6.157** (`pending-6.6`). The panic is real here, but
+the mainline patch has to be rewritten onto `mt7915/mmio.c` because
+`wed.c` does not exist yet.
 
----
-
-## PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[wifi/ath10k] [trigger] [start hardware recovery when RX
-processing fails instead of leaving the device stuck]**
+Record: `[wifi: mt76: wed:] [fix] [kernel panic on non-DBDC MT7986 when
+attaching WED because RX buf init used the wrong queue]`
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- **Fixes:** none (expected)
-- **Reported-by:** none
-- **Tested-on:** WCN3990 hw1.0; QCA6174 hw3.2 PCI; QCA6174 hw3.2 SDIO
-  (three hardware/firmware combinations)
-- **Reviewed-by:** Rameshkumar Sundaram, Baochen Qiang (Qualcomm ath
-  reviewers)
-- **Acked-by:** none
-- **Link:** https://patch.msgid.link/20260710060406.3323260-1-
-  manikanta.pubbisetty@oss.qualcomm.com
-- **Cc: stable:** none (expected)
-- **Signed-off-by:** Manikanta Pubbisetty (author); Jeff Johnson (ath
-  maintainer). Ignoring Sasha Levin SOB if present in pipeline copies;
-  the tree copy has none.
+- `Signed-off-by: Zhi-Jun You <hujy652@gmail.com>` (author)
+- `Link:
+  https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com` (v2
+  1/2 of a 2-patch series)
+- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` (mt76 maintainer)
+- No `Fixes:` tag (expected for this review)
+- No `Cc: stable@vger.kernel.org` (expected)
+- No `Reported-by:` / `Tested-by:` / `Reviewed-by:` / `Acked-by:`
+- Sibling patch 2/2 has the same msgid stem `20260715152113.553-2` and
+  **is already in this 6.6 tree** as `8eae5e5aa09da` (`wifi: mt76:
+  mt7915: fix net_fill_forward_path for non-DBDC mt7986`)
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- **Bug:** On RX processing errors (e.g. MSDU_DONE not set), the driver
-  sets `htt->rx_confused` and then drops all further RX until a Wi-Fi
-  ON/OFF cycle.
-- **Symptom:** Device stays in a bad state and cannot process RX data
-  traffic; connectivity is dead until the user toggles the interface.
-- **Version info:** none in the message. The FIXME this removes dates to
-  2014 (`e0bd7513bbc85`, v3.19-rc1).
-- **Root cause:** Error paths mark the ring confused but never reset
-  hardware, so the device stays inoperable.
+- **Bug:** `mt76_wed_init_rx_buf` always uses `MT_RXQ_MAIN`. Non-DBDC
+  MT7986 uses `MT_RXQ_BAND1` for the RX data queue.
+- **Symptom:** NULL deref oops while attaching WED, in
+  `page_pool_alloc_frag_netmem`. Full oops from **Acer Connect Vero
+  W6m**, kernel 6.18.26, PID `kmodloader` during `mt7915e` probe.
+- **Root cause:** wrong RX queue → uninitialized `page_pool` (NULL) →
+  fault at `page_pool_alloc_frag*`.
+- **Fix:** `wed->version == 2 && dev->phy.band_idx` → `MT_RXQ_BAND1`,
+  else `MT_RXQ_MAIN`.
+- Crash taint includes `O` (OOT module), but the call trace is in-tree
+  `mt76` / `mt7915e` / `mtk_wed_start`.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not a disguised cleanup. It is an explicit functional fix:
-replace “leave device inoperable” with the existing recovery path. The
-removed FIXME said the same thing since 2014.
+Record: Not hidden. Explicit panic fix with a stack trace. Not
+cleanup/refactor.
 
----
-
-## PHASE 2: DIFF ANALYSIS
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
 
 **Step 2.1: INVENTORY THE CHANGES**
 Record:
-- File: `drivers/net/wireless/ath/ath10k/htt_rx.c` — **3 insertions, 3
-  deletions** (`git show --stat`: 6 lines changed).
-- Functions: `ath10k_htt_rx_handle_amsdu()`,
-  `ath10k_htt_rx_in_ord_ind()` (two sites).
-- Scope: single-file surgical error-path change.
+- File: `drivers/net/wireless/mediatek/mt76/wed.c` (+6 / −1)
+- Function: `mt76_wed_init_rx_buf`
+- Scope: single-file, surgical (~5 lines of logic)
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 Record:
-1. `ath10k_htt_rx_handle_amsdu()` when `ath10k_htt_rx_amsdu_pop()`
-   returns `< 0`: previously purged skbs, set `rx_confused`, returned.
-   Now also calls `ath10k_core_start_recovery(ar)`. FIXME removed.
-2. `ath10k_htt_rx_in_ord_ind()` when pop-paddr-list fails: same recovery
-   call after `rx_confused = true`.
-3. Same function when `ath10k_htt_rx_extract_amsdu()` fails: same
-   recovery call after purge + `rx_confused`.
-
-All three are **error paths only**. Normal RX is unchanged.
+- **Before:** `q = &dev->q_rx[MT_RXQ_MAIN]` always, then
+  `mt76_get_page_pool_buf(q, ...)`.
+- **After:** pick `MT_RXQ_BAND1` for WED v2 + band 1; otherwise
+  `MT_RXQ_MAIN`.
+- Path: WED RX buffer init during `mtk_wed_start` from
+  `mt7915_dma_start` (probe / DMA start), not a rare error path.
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Logic / hardware-stuck recovery.** After RX ring corruption
-the driver permanently refuses RX (`if (htt->rx_confused) return -EIO`).
-Recovery queues `restart_work` → `ath10k_halt()` →
-`ieee80211_restart_hw()` → `ath10k_start()` → `ath10k_core_start()` →
-`ath10k_htt_rx_alloc()`, which sets `htt->rx_confused = false`. That is
-the same recovery used on firmware crash and WMI timeout.
+Record:
+- Category: **NULL pointer dereference** (memory safety) from **wrong-
+  queue logic**.
+- Mechanism: for non-DBDC MT7986, `mt7915_band_config` sets `band_idx =
+  1` and DMA only allocates `q_rx[MT_RXQ_BAND1]`. `MT_RXQ_MAIN` is left
+  with `page_pool == NULL`. `mt76_get_page_pool_buf` →
+  `page_pool_dev_alloc_frag(NULL)` → oops.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record: Obviously correct and minimal. `ath10k_core_start_recovery()`
-only queues work (`queue_work(ar->workqueue_aux,
-&ar->recovery_check_work)` in this tree), so it is safe from NAPI.
-Existing consecutive-failure logic can WEDGE the device, so this does
-not create an infinite restart loop. Risk is a brief firmware restart on
-a path that was already dead. No API or data-structure changes.
+Record:
+- Obviously correct given DMA queue allocation in `mt7915/dma.c`.
+- Minimal; no API/locking/refcount changes.
+- Regression risk low: DBDC and band-0 devices still use `MT_RXQ_MAIN`.
+- Backport caveat: in 6.6 the same logic lives in
+  `mt7915_mmio_wed_init_rx_buf` (`dev` is `struct mt7915_dev *`), so the
+  condition must use `dev->mt76.phy.band_idx` (or
+  `dev->phy.mt76->band_idx`), not `dev->phy.band_idx`.
 
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
 **Step 3.1: BLAME THE CHANGED LINES**
 Record:
-- Confused-without-reboot behavior introduced in **`e0bd7513bbc85`**
-  (“ath10k: refactor htt->rx_confused”, 2014-11-20), first in
-  **v3.19-rc1**.
-- `handle_amsdu` error path from **`18235664e7f9a`** (Rajkumar
-  Manoharan, 2016).
-- In-order pop/extract error paths from **`c545070e404bf`** (“ath10k:
-  implement rx reorder support”, 2015), v4.1 era.
-- Recovery calls added by this commit **`f78210dd4bea0`**.
+- Hardcoded `MT_RXQ_MAIN` in 6.6: `mt7915/mmio.c:635`, from
+  `2f5c3c77fc9b6` (`wifi: mt76: switch to page_pool allocator`,
+  2023-02-03). Present in this tree.
+- WED RX itself: `4f831d18d12da` (`wifi: mt76: mt7915: enable WED RX
+  support`, 2022-12-01). Present.
+- MT7986 one-A-die `band_idx = 1`: `mt7915_band_config` in `init.c`.
+  Present.
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Historical introducer is `e0bd7513bbc85`
-(ancestor of HEAD). `git merge-base --is-ancestor e0bd7513bbc85 HEAD` is
-true.
+Record: No `Fixes:` tag. Bug is the hardcoded MAIN queue vs MT7986
+band-1 mapping, present since WED RX + page_pool.
 
-**Step 3.3: CHECK FILE HISTORY**
-Record: Related but independent: `7393878255e49` (skb leak on incomplete
-MSDU pop) is a different patch/date/msgid. This commit is standalone
-`1/1`. No prerequisite refactor in htt_rx.c.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record:
+- `wed.c` added later by `8a7386e787ef4` (`wifi: mt76: move wed common
+  utilities in wed.c`, 2024-02-22). **Not in pending-6.6** (`git merge-
+  base --is-ancestor` → not ancestor).
+- Related 6.6 history: WED enable for MT7986, WED RX, page_pool switch,
+  several WED robustness fixes.
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Manikanta Pubbisetty is a Qualcomm ath10k contributor (leak fix
-on the same file shortly before). Not the listed maintainer; maintainer
-Jeff Johnson applied it.
+Record:
+- Author is not the mt76 maintainer; maintainer Felix Fietkau signed
+  off.
+- Same author, same series date: `8eae5e5aa09da` already on pending-6.6
+  (patch 2/2).
+- Felix has many mt7915/WED fixes on this branch.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
 Record:
-- `ath10k_core_start_recovery()` exists since **`5dadbe4e3718`**
-  (v5.11-rc1) — ancestor of HEAD.
-- Current implementation from **`f35a07a4842a8`** (Oct 2025) — ancestor
-  of HEAD; queues work, does not block in the caller.
-- Can apply standalone on this tree: the function, `rx_confused`, and
-  both RX handlers exist.
+- Standalone logic; does **not** need the `wed.c` move.
+- Needed in 6.6: `wed->version` (exists, `u8 version` in
+  `mtk_wed_device`), `phy.band_idx`, `MT_RXQ_BAND1`, page_pool RX — all
+  present.
+- Series 1/2; 2/2 is independent (forward-path queue) and already
+  applied.
 
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- Lore/msgid: https://patch.msgid.link/20260710060406.3323260-1-
-  manikanta.pubbisetty@oss.qualcomm.com
-- `b4 dig -a`: **v1 only**, single patch, no v2/v3.
-- Reviews: Baochen Qiang Reviewed-by; Rameshkumar Sundaram “Actual
-  change looks fine” + Reviewed-by. No NAKs, no stable nomination, no
-  risk flags.
-- Jeff Johnson: “Applied, thanks!” (`da5d73e12af2` in ath.git; mainline
-  sha `f78210dd4bea0`).
+- `b4 dig` on sibling `8eae5e5aa09da` matched msgid
+  `20260715152113.553-*`.
+- RFC (2026-06-13): “single band MT7986”
+- v1 (2026-06-30):
+  https://patch.msgid.link/20260630150649.1629-1-hujy652@gmail.com (and
+  1629-2)
+- v2 (2026-07-15, applied):
+  https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com
+- v2 1/2 is the committed version. Change vs RFC: “single band” → “non-
+  DBDC”.
+- lore.kernel.org fetches returned 403; thread text confirmed via
+  ratatoskr mirrors.
+- No NAK found. Merged by Felix Fietkau (2026-07-31) as `8a177dabeeead`.
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: `b4 dig -w` original To/Cc: author,
-`ath10k@lists.infradead.org`, `linux-wireless@vger.kernel.org`. Applied
-by **Jeff Johnson**, listed ATH10K maintainer.
+Record (`b4 dig -w` on sibling): Zhi-Jun You; Felix Fietkau
+(`nbd@nbd.name`); Lorenzo Bianconi; Ryder Lee / Shayne Chen / Sean Wang
+(MediaTek); `linux-wireless`; `linux-mediatek`; Benjamin Larsson
+(Suggested-by on 2/2). Maintainer merged it.
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No syzbot/bugzilla. Qualcomm Tested-on on three chipsets implies
-they hit RX-stuck in product testing, not a theoretical FIXME-only
-cleanup.
+Record: No syzbot/bugzilla. Concrete oops from Acer Connect Vero W6m
+(MT7986). Real hardware, probe-time crash with WED.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Standalone `[ath-next] 1/1`. The earlier skb-leak patch is not
-required for this change.
+Record: 2-patch v2 series. 1/2 = this panic. 2/2 =
+`net_fill_forward_path` wrong WDMA queue; already in 6.6. Independent;
+1/2 is the crash fix.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org HTTP fetch returned 403. `b4 dig` thread has no
-stable discussion. **UNVERIFIED** whether linux-stable ever discussed
-this specific patch; no evidence it was rejected.
+Record: lore.kernel.org/stable returned 403. **UNVERIFIED** whether
+anyone mailed stable@. 2/2 of the same series is already in this 6.6
+tree, so the series is treated as 6.6-relevant.
 
----
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1: KEY FUNCTIONS**
-Record: `ath10k_htt_rx_handle_amsdu`, `ath10k_htt_rx_in_ord_ind`; callee
-`ath10k_core_start_recovery`.
+**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
+Record: Mainline `mt76_wed_init_rx_buf`. In this tree:
+`mt7915_mmio_wed_init_rx_buf`.
 
 **Step 5.2: TRACE CALLERS**
-Record: Both called from `ath10k_htt_txrx_compl_task()` (NAPI poll): in-
-order queue then `num_mpdus_ready` loop. On `-EIO` it stops processing.
-That is the normal data RX completion path, not init-only.
+Record:
+- Assigned as `wed->wlan.init_rx_buf` in `mt7915_mmio_wed_init`.
+- Called from `mtk_wed_rx_buffer_alloc` → `dev->wlan.init_rx_buf(dev,
+  dev->wlan.rx_npkt)` (`mtk_wed.c`).
+- That runs from `mtk_wed_start` ← `mt7915_dma_start` ←
+  `mt7915_dma_init` ← `mt7915_register_device` ← probe.
+- Reachable on device probe when WED is attached (`wed_enable` module
+  param).
 
 **Step 5.3: TRACE CALLEES**
-Record: `ath10k_core_start_recovery()` → `queue_work(workqueue_aux,
-recovery_check_work)` → may `queue_work(workqueue, restart_work)` → halt
-+ `ieee80211_restart_hw()`. No lock taken in `start_recovery`.
-`in_ord_ind` holds `rx_ring.lock` while queuing work; that is safe.
+Record: `mt76_get_rxwi`, `mt76_get_page_pool_buf` →
+`page_pool_dev_alloc_frag(q->page_pool)`, `mt76_rx_token_consume`. First
+page_pool alloc is the crash site.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Userspace/network RX → mac80211 → NAPI → htt_rx. Reachable on
-any associated ath10k interface when firmware/DMA delivers a bad MSDU or
-corrupted ring. Unprivileged traffic can contribute; the actual trigger
-is firmware/hardware RX error, not a crafted syscall.
+Record:
+```
+module load mt7915e
+  → mt7915_mmio_probe / register_device
+  → mt7915_dma_init → mt7915_dma_start
+  → mtk_wed_device_start → mtk_wed_rx_buffer_alloc
+  → mt7915_mmio_wed_init_rx_buf
+  → mt76_get_page_pool_buf(uninitialized MT_RXQ_MAIN)
+  → oops
+```
+Userspace-reachable via loading the driver (typically root). Not a
+syscall fuzz path; it is a boot/probe crash on affected hardware.
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Same `ath10k_core_start_recovery()` already used in `pci.c`
-(firmware crash), `wmi.c` (command timeout), `sdio.c`/`snoc.c`,
-`debug.c`. This patch extends that pattern to RX ring failure. All
-`rx_confused = true` sites in htt_rx.c are covered.
+Record: `mt7915/testmode.c` already uses `q = phy->mt76->band_idx ?
+MT_RXQ_BAND1 : MT_RXQ_MAIN`. DMA init uses the same band_idx split. Same
+author’s 2/2 fixes the matching forward-path mistake.
 
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record:
-- `git describe HEAD` / `make kernelversion`: **7.3.0-rc4**.
-- File and functions exist. `rx_confused` still used. Recovery API
-  present.
-- Bug introduced v3.19; long present in this lineage.
-- Working tree already contains `f78210dd4bea0` (`git merge-base --is-
-  ancestor` exit 0). That is the mainline commit under review, not a
-  reason to treat the bug as absent from this series’ code.
+Record: **Yes.** Tree is 6.6.157 (`pending-6.6`). `wed.c` is absent.
+Equivalent bug:
+
+```
+mt7915_mmio_wed_init_rx_buf:
+    q = &dev->mt76.q_rx[MT_RXQ_MAIN];   /* mmio.c:635 */
+```
+
+`mt7915_dma.c`: allocate `MT_RXQ_MAIN` only if
+`!dev->phy.mt76->band_idx`; allocate `MT_RXQ_BAND1` if `dbdc_support ||
+band_idx`. `mt7915_band_config` sets `band_idx = 1` for MT7986 one-A-die
+(non-DBDC). Introduced with WED RX + page_pool (2022–2023), well before
+6.6.
+
+`git merge-base --is-ancestor 8a177dabeeead pending-6.6` → **not
+present**.
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: Hunks match this tree’s htt_rx.c. Recovery is the non-blocking
-workqueue form. Expected apply: **clean** on a 7.3-era tree that still
-has the pre-image; current HEAD is already post-image.
+Record: **Needs a small backport**, not a clean apply. Same if/else in
+`mt7915/mmio.c`, with `dev->mt76.phy.band_idx` /
+`dev->phy.mt76->band_idx`. `wed->version` exists and is set to 2 for
+non-netsys-v1 (MT7986) in `mtk_wed.c`. Minor conflict, not a rewrite.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No earlier alternative fix for “reboot on rx_confused”.
-`51fc7d74ce4a1` only clears the flag on load. This is the fix that
-actually starts recovery.
+Record: No equivalent RX-buf queue selection. 2/2 (`8eae5e5aa09da`) is
+here and addresses the same hardware mapping, not this NULL deref.
 
----
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: `drivers/net/wireless/mediatek/mt76` + MediaTek WED.
+**IMPORTANT** (common Filogic/MT7986 WiFi, OpenWrt/embedded), not core
+mm/VFS.
 
-**Step 7.1: SUBSYSTEM AND CRITICALITY**
-Record: **drivers/net/wireless/ath/ath10k** — **IMPORTANT** (not core
-mm/fs, but QCA6174/WCN3990 are common laptop/phone Wi-Fi). Status in
-MAINTAINERS: Supported; maintainer Jeff Johnson.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Mature and actively fixed on 6.6 (WED null-ptr, register
+mapping, MT7981, chainmask for non-DBDC band 1).
 
-**Step 7.2: SUBSYSTEM ACTIVITY**
-Record: Actively maintained (Qualcomm patches through 2026). The stuck-
-RX behavior itself is old; the recovery helper is mature.
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
 
----
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Driver-specific: MT7986 (and similar mt798x) **non-DBDC**
+(single A-die) with `CONFIG_NET_MEDIATEK_SOC_WED` and `wed_enable`. Real
+product: Acer Connect Vero W6m. Default `wed_enable` is false, but WED
+is used on these SoCs.
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Every probe with WED attached on that SKU. Not a race. Needs
+privilege to load the module; typical as a platform driver at boot.
 
-**Step 8.1: WHO IS AFFECTED**
-Record: **Driver-specific**, `CONFIG_ATH10K*`. QCA6174 is widely used in
-PCs; WCN3990 on Qualcomm platforms.
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: Kernel oops/panic on WiFi/WED attach. **CRITICAL** for those
+devices (WiFi unusable; can panic the box).
 
-**Step 8.2: TRIGGER CONDITIONS**
-Record: RX ring pop/extract failure (incomplete MSDU, corrupted ring).
-Not every packet; when it hits, RX stays dead until iface toggle. Not a
-userspace exploit path.
-
-**Step 8.3: FAILURE MODE SEVERITY**
-Record: **Wi-Fi RX permanently stopped** until ON/OFF. Not a panic/UAF,
-but the device is inoperable — the 2014 FIXME called it that. Severity
-**HIGH** (driver hang / loss of connectivity). Consecutive recovery
-failures can WEDGE, which is existing policy, not new.
-
-**Step 8.4: RISK-BENEFIT RATIO**
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
 Record:
-- **Benefit:** Restores Wi-Fi after RX ring confusion without a manual
-  toggle; uses the same recovery as firmware crash.
-- **Risk:** Very low (3 calls to an existing queue_work helper; error
-  paths only). Worst case is a restart of an already-dead radio.
-- **Ratio:** Strongly favors taking the fix.
+- **Benefit:** high for MT7986 non-DBDC + WED (prevents probe oops).
+- **Risk:** low (5-line queue index; other SKUs unchanged).
+- **Ratio:** benefit ≫ risk. Backport must retarget `mmio.c`.
 
----
-
-## PHASE 9: FINAL SYNTHESIS
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
 
 **Step 9.1: COMPILE THE EVIDENCE**
 
 FOR:
-- Real user-visible bug: all RX dropped until Wi-Fi toggle.
-- Acknowledged since 2014 in-tree FIXME.
-- Small (3 calls, one file), obviously correct.
-- Uses existing, NAPI-safe recovery.
-- Tested on three chip/bus combinations.
-- Reviewed and applied by ath maintainers; no NAKs.
-- All `rx_confused = true` sites updated.
-- Code and `ath10k_core_start_recovery()` exist in this 7.3-rc4 tree.
+- Documented oops: NULL `page_pool` in WED RX init.
+- Same bug in this tree (`mt7915_mmio_wed_init_rx_buf` + DMA not
+  allocating MAIN when `band_idx == 1`).
+- Small, obviously correct queue selection.
+- mt76 maintainer signed off; RFC → v1 → v2.
+- Sibling 2/2 already on 6.6.
+- MT7986 + WED RX + page_pool all exist here.
+- `wed->version` and `band_idx` exist.
 
 AGAINST:
-- Not a crash, UAF, or security bug; workaround exists (iface bounce).
-- Trigger is firmware/hardware RX error, not every boot.
-- No `Fixes:`/`Cc: stable` (not a negative per the rules).
+- Patch file `wed.c` is not in 6.6 (moved in 6.8-era `8a7386e787ef4`).
+- Needs a few-line context backport.
+- WED off by default; subset of MT7986 boards.
+- Crash log tainted OOT; still in-tree frames.
 
 UNRESOLVED:
-- lore.kernel.org WebFetch 403; thread recovered via `b4 dig -m`.
-- No independent end-user bugzilla; product Tested-on only.
+- Stable ML discussion (lore/stable 403).
+- Whether every reviewer asked for Cc: stable (not seen on v2 1/2).
 
-**Step 9.2: STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — three Tested-on lines, two
-   Reviewed-by, maintainer applied.
-2. Fixes a real bug that affects users? **PASS** — RX stays dead until
-   ON/OFF.
-3. Important issue? **PASS** — device inoperable / connectivity hang,
-   HIGH.
-4. Small and contained? **PASS** — 3/3 lines, one file.
-5. No new features or APIs? **PASS** — only calls existing recovery.
-6. Can apply to the local tree? **PASS** — htt_rx.c and
-   `ath10k_core_start_recovery()` match; this tree is 7.3-rc4.
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — matches DMA allocation;
+   maintainer merged; oops on real HW.
+2. Fixes a real bug that affects users? **PASS** — probe oops on non-
+   DBDC MT7986 + WED.
+3. Important issue? **PASS** — kernel oops, severity CRITICAL for that
+   hardware.
+4. Small and contained? **PASS** — ~5 lines, one function.
+5. No new features or APIs? **PASS**.
+6. Can apply to the local tree? **PASS** with a backport to
+   `mt7915/mmio.c` (stable rule: apply cleanly **or come with a
+   backport**). Not a missing-feature case.
 
-**Step 9.3: EXCEPTION CATEGORIES**
-Record: None (not a device ID/quirk/DT/build/doc). Qualifies as a normal
-bugfix.
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: None (not a device ID/quirk/DT/build/doc). Ordinary crash fix.
 
-**Step 9.4: DECISION**
-This tree has the ath10k RX confused paths and the recovery helper.
-Leaving `rx_confused` set without restart makes the radio unusable;
-kicking `ath10k_core_start_recovery()` is the same response already used
-for firmware crash and is safe from NAPI. That is a contained, tested
-hang fix appropriate for this tree.
+**Step 9.4: MAKE YOUR DECISION**
+The 6.6 tree has the same panic path under a pre-`wed.c` name. Selecting
+this for 6.6 is justified; apply the same `version == 2 && band_idx`
+check in `mt7915_mmio_wed_init_rx_buf`.
 
 ---
 
-## What the commit solves for this tree
+**What the commit solves for this tree:** On non-DBDC MT7986, the main
+phy is band 1, so only `MT_RXQ_BAND1` is allocated. WED RX init still
+pulls from `MT_RXQ_MAIN`, whose `page_pool` is NULL, and the kernel
+oopses in `page_pool_alloc_frag` during `mt7915e` probe. That mapping is
+already in 6.6 `init.c`/`dma.c`; only the RX-buf picker is wrong.
 
-When htt RX pop/extract fails, ath10k previously set `rx_confused` and
-discarded all later RX until a full Wi-Fi cycle. Users see a dead
-receive path. The patch queues the existing hardware restart so
-`ath10k_htt_rx_alloc()` clears the flag and the device can RX again.
+**Stable rules:** Real, important crash; tiny logic fix; no new API.
+File path changed after 6.6, so it needs a short backport, not a NAK.
 
-It meets stable rules: obviously correct, real hang, ~3 lines, no new
-API. Benefit is restoring Wi-Fi after ring confusion; risk is a restart
-of an already-stuck device.
+**Risk vs benefit:** Low risk, high benefit on Filogic devices that
+enable WED (including the reported Acer Vero W6m class).
 
----
+**Concerns:** Must edit
+`drivers/net/wireless/mediatek/mt76/mt7915/mmio.c` and use
+`dev->mt76.phy.band_idx` (or `dev->phy.mt76->band_idx`) because `dev` is
+`struct mt7915_dev *` here. Do not require `8a7386e787ef4`.
 
-## Verification
-
-- **[Phase 1]** Tags: Tested-on ×3, Reviewed-by ×2, Link msgid; no
-  Fixes/Reported-by/Cc:stable.
-- **[Phase 2]** `git show --stat f78210dd4bea0`: htt_rx.c +3/-3; three
-  `ath10k_core_start_recovery()` calls on error paths; FIXME removed.
-- **[Phase 2]** Read `ath10k_core_start_recovery()` at core.c:2534 —
-  `queue_work` only.
-- **[Phase 2]** Read restart path: `ath10k_core_restart` →
-  `ieee80211_restart_hw` → `ath10k_start` → `ath10k_core_start` →
-  `ath10k_htt_rx_alloc()` sets `rx_confused = false` (htt_rx.c:796).
-- **[Phase 3]** `git log -S` / `git describe --contains e0bd7513bbc85`:
-  FIXME from v3.19-rc1.
-- **[Phase 3]** `ath10k_core_start_recovery` added in `5dadbe4e3718`
-  (v5.11-rc1); ancestor of HEAD.
-- **[Phase 3]** `git merge-base --is-ancestor` for f35a07a4842a8,
-  5dadbe4e3718, c545070e404bf, e0bd7513bbc85: all 0.
-- **[Phase 3]** Related leak commit `7393878255e49` is a separate patch,
-  not a prerequisite.
-- **[Phase 4]** `b4 dig -c f78210dd4bea0`: msgid
-  20260710060406.3323260-1.
-- **[Phase 4]** `b4 dig -a`: v1 only.
-- **[Phase 4]** `b4 dig -w`: linux-wireless + ath10k lists.
-- **[Phase 4]** `b4 dig -m`: Baochen/Rameshkumar Reviewed-by; Jeff
-  Johnson applied; no NAK; no Cc:stable in thread.
-- **[Phase 4]** WebFetch lore.kernel.org: 403. UNVERIFIED via HTTP;
-  thread obtained via b4.
-- **[Phase 5]** Callers: `ath10k_htt_txrx_compl_task`
-  (htt_rx.c:4382–4395).
-- **[Phase 5]** Grep: all three `rx_confused = true` sites got recovery;
-  other start_recovery users are pci/wmi/sdio/snoc/debug.
-- **[Phase 6]** `git describe HEAD`: v7.3-rc4-27-gf0100363d8c37; `make
-  kernelversion`: 7.3.0-rc4.
-- **[Phase 6]** `git merge-base --is-ancestor f78210dd4bea0 HEAD`: 0
-  (commit is in this tree’s history).
-- **[Phase 7]** MAINTAINERS: ATH10K Supported, Jeff Johnson.
-- **[Phase 8]** Failure mode: RX hung until iface toggle; recovery
-  already rate-limited to WEDGED.
-- **UNVERIFIED:** linux-stable mailing list (HTTP 403); no public non-
-  Qualcomm reproducer.
-
-The fix is small, surgical, and meets the stable criteria for this
-7.3-rc4 tree.
+Verification:
+- [Phase 1] Subject/tags: fix panic; SOB Zhi-Jun You + Felix Fietkau;
+  Link `20260715152113.553-1`; no Fixes/Cc-stable
+- [Phase 1] Series: v2 1/2; 2/2 already `8eae5e5aa09da` on pending-6.6
+- [Phase 2] Diff: 6 insertions in `mt76_wed_init_rx_buf`; queue MAIN vs
+  BAND1
+- [Phase 3] Blame on 6.6: `q = &dev->mt76.q_rx[MT_RXQ_MAIN]` from
+  `2f5c3c77fc9b6` (page_pool); present
+- [Phase 3] `8a7386e787ef4` (wed.c split) **not** ancestor of
+  pending-6.6
+- [Phase 3] Fix `8a177dabeeead` **not** ancestor of pending-6.6
+- [Phase 4] b4 dig: RFC → v1 → v2; applied v2; Felix merged 2026-07-31
+- [Phase 4] Recipients: mt76 maintainers + linux-wireless/mediatek
+- [Phase 4] UNVERIFIED: lore.kernel.org and lore.kernel.org/stable HTTP
+  403; used ratatoskr mirrors
+- [Phase 5] Caller: `mtk_wed_rx_buffer_alloc` → `wlan.init_rx_buf` from
+  `mtk_wed_start` / probe
+- [Phase 6] `git show pending-6.6:Makefile`: VERSION 6 / PATCHLEVEL 6 /
+  SUBLEVEL 157
+- [Phase 6] `git cat-file` pending-6.6 `wed.c`: path does not exist
+- [Phase 6] pending-6.6 `mmio.c:635`: hardcoded `MT_RXQ_MAIN`; `init.c`
+  sets `band_idx = 1` for one-A-die MT7986
+- [Phase 6] DMA: MAIN allocated only if `!band_idx`; BAND1 if
+  `dbdc_support || band_idx`
+- [Phase 6] `wed->version` exists; set to 2 for MT7986-class WED
+- [Phase 8] Failure: NULL page_pool deref → oops; CRITICAL for that
+  SKU+WED
+- UNVERIFIED: whether an out-of-tree module contributed besides in-tree
+  frames (taint `O`)
 
 **YES**
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/wed.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index d7e429041065a..e4162d2faae66 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2345,10 +2345,8 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 	if (ret < 0) {
- 		ath10k_warn(ar, "rx ring became corrupted: %d\n", ret);
- 		__skb_queue_purge(&amsdu);
--		/* FIXME: It's probably a good idea to reboot the
--		 * device instead of leaving it inoperable.
--		 */
- 		htt->rx_confused = true;
-+		ath10k_core_start_recovery(ar);
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/wed.c b/drivers/net/wireless/mediatek/mt76/wed.c
+index fbd7e59c73aaf..2ebf4edc689e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/wed.c
++++ b/drivers/net/wireless/mediatek/mt76/wed.c
+@@ -33,10 +33,15 @@ u32 mt76_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+ {
+ 	struct mtk_wed_bm_desc *desc = wed->rx_buf_ring.desc;
+ 	struct mt76_dev *dev = mt76_wed_to_dev(wed);
+-	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
+ 	struct mt76_txwi_cache *t = NULL;
++	struct mt76_queue *q;
+ 	int i;
  
-@@ -3313,6 +3311,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 	if (ret < 0) {
- 		ath10k_warn(ar, "failed to pop paddr list: %d\n", ret);
- 		htt->rx_confused = true;
-+		ath10k_core_start_recovery(ar);
- 		return -EIO;
- 	}
- 
-@@ -3346,6 +3345,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			ath10k_warn(ar, "failed to extract amsdu: %d\n", ret);
- 			htt->rx_confused = true;
- 			__skb_queue_purge(&list);
-+			ath10k_core_start_recovery(ar);
- 			return -EIO;
- 		}
- 	}
++	if (wed->version == 2 && dev->phy.band_idx)
++		q = &dev->q_rx[MT_RXQ_BAND1];
++	else
++		q = &dev->q_rx[MT_RXQ_MAIN];
++
+ 	for (i = 0; i < size; i++) {
+ 		dma_addr_t addr;
+ 		u32 offset;
 -- 
 2.53.0
 
