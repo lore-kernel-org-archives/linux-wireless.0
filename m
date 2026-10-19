@@ -1,128 +1,146 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 636464D37DC
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 10:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED3C4E0B6C
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 11:19:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792407410; cv=none; b=oxA/eI//EeGDemSlN4yvjeSS1H0Biny9nS6d+gXB/ztEuc5m+etILNiF7cqGaAEr+GKtDIWp3GXq1Psbjvc/eTNEMySeWMHclq+lyLBG/Zi+eKvl+DJc/OQ9jLsnjxI/0Co9LyHcA8xi8nqzLnDfLqhiLDmyuUw0TzG0pP8GhTs=
+	t=1792408762; cv=none; b=L9yOUr1rT1oxN84uu0Br4880mCReXot+5Cb1hX5AbVEjxWESL3PcxEeq5PY2M3dEcKELxlZIkVhPv6s0pKGLV5wnVEi3dl7KYRDcw+uuFqvt9C2s7QuVZ4fxNv4n4jPzaSnNHsm7V2ooRt8mJq5L+hE8d10UPV6oMg7LRwA+PpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792407410; c=relaxed/simple;
-	bh=2cDHITn9/rHN9K0ogaC3csc9nAYPxFcQwICaO2xLmKA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rg6dDLamR6B63d+2D22zWNwkltsMEMttdGCl8mZrdcBthhOyfQkNWrSK/gg6O03fcYMPTUtb1uGXlSaWJKG/lRGOL9FEDCx0Zu8Rx71JiK5r9t6hTxLZUvCf0nfG0zzqIUQnCG++D2Z75ymQAfuQn0m/k3cCL4gyHbLTnVAMkA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U2DK9xCd; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792408762; c=relaxed/simple;
+	bh=0wYYm4Y2+8dNXMXPj10AzLPIs6v8UEuEBCpe4Zsa6Yw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=uY9U2ctMf+SOSxn2Q8Oep6dtH0sFhBNa6vpAkQbeQSBeraFRtZw/ZfQqXff1btT91Vndcjqh75+0ZOsLuIPNXSuZGzefPr+ILlKmsrjQoz2FMeDUIIXSGHRF+jrY9Ap8X3zRYuT3Ub9muQutj0g2ErgpMeFLwFo0UAAOEKI5XOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dMHMdGgB; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=GLnjiXIg; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U2DK9xCd"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48c45111bebso1181124f8f.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 03:56:47 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dMHMdGgB";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="GLnjiXIg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792408759;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0xSlFMVnKmDw/ldSbYNn+iTNtpWivGYYCAIoTzRKpx0=;
+	b=dMHMdGgBBxbGlMAeX6m3G1fDVQOrXz0RZQ+CHzuJXKQF0OEYI/JBXN9c1UT12pyhCjIjWt
+	pkKo2f7pSujB+UFGHTo57ZyA7kbrusrXKGPT7eK0K7VoBabz2wSTlputmHzL3dXTU9GqJt
+	ZXo9IrWfD065VkAMANZabDp5iLrH1tU=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-240-IozCD231NsCgePZuwzlnhw-1; Mon, 19 Oct 2026 11:19:18 +0000
+X-MC-Unique: IozCD231NsCgePZuwzlnhw-1
+X-Mimecast-MFC-AGG-ID: IozCD231NsCgePZuwzlnhw_1792408757
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-48e17d30a79so481570f8f.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 04:19:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792407405; x=1793012205; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NeauCzO5ecKjHDuQguGvUZNFFmU3DC+5tCqSrByEIF0=;
-        b=U2DK9xCd/PRX0rUCRuMM64RCP2NHv3hsaPeg9m2epUnTyVVbvM3dwmM5OiDb/O69YL
-         76tYUtzvf/j5eq6s3tttZoe3V8D1VMZXm7IGEFCTTh+r0Fp6urlqcd3wz24kdtxp7b8i
-         iyaIMn6OAjXt3sG/ACi6LtaDLW8jZgxwdJIlSIT8O2Q9mxvENwGUuzuKHIqgj8iilW1i
-         2SLq1uV6Tn1HL7nOinHMCaiptRS6up5VrSbVBD6C/60zOdMa9I75FWjrCcTaeER570Wp
-         M5cZFFrBVR4ts6+pQrK1yQpvsndKxhi444gkiqQJWs4mSYrkCc6LFaSTVUQs4b3Ue/VZ
-         Yb7Q==
+        d=redhat.com; s=google; t=1792408757; x=1793013557; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0xSlFMVnKmDw/ldSbYNn+iTNtpWivGYYCAIoTzRKpx0=;
+        b=GLnjiXIgq9isTjwdqOZLsKhcpYeTMioOMxiB/4zjwopOq10x3RYgaYUG+cogE8DHl5
+         0rHS5OuTo+2AGP0PP79aq7/EP6S0K3N4wkCrowT88822szlDgoFcvcW2E1YCgc9DqzG2
+         NZ1N51yDL7wGaTn+jktKMs5wbY54aXEv1ZpRD4HlHcJV0Yg/r0AT1hKf2A5uDSsQ/tqg
+         ODG0UuCbK/bZ8m5lcdc6lPSuHScZUZS1PQaOz16+nwVDEheu8zDm6qA6DNrwA2XSmU5v
+         DsfL0mJY5tdNsPG2yL37I5moIDIWjrbwq+sJl90sWeaCHphFZo/AfxJ1mGkXOtSTpA47
+         OPWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792407405; x=1793012205;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NeauCzO5ecKjHDuQguGvUZNFFmU3DC+5tCqSrByEIF0=;
-        b=Lf7L/3kYqcTAlEOk+zi/g1upHUbjLU7yfJnrBFmnh2mNCGFFZ8RIir9LAMoJ4f63nn
-         BCtB2AZX9RVBRG+5TnrlJXbK+GDhvx2DBZ5p2orAs7LSP0xgptcucdUpqguOa8HbMNk3
-         HssKcJ6vIZiu1OpKwjFyxSlDxyNarDU57S0X2IQQtpp6EHs1jb+j+c6HnuPwzz5JulxJ
-         LjKD+Rg3m/NW3iErp+CP1R4zTAbBadvbhKvmCQlIIg914f4OsR87CfPbS4TsYIvLJy73
-         KCnGiv3HClPhmnWEcR6mE9Voht8DvIl0wrvrA0VX4Q69py77lhnr3iKZOkOP083+gLrc
-         2OOg==
-X-Forwarded-Encrypted: i=1; AKwUvByYARD6NAyu+4kRTpgyb2rg3n6gbrSgsg/uTOZSUtOoDLnysE2Uown6jMNsxtmOX15oDao3PHXYrg4U8V1TCQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYI9aqLNc3pqTr9QVYryXgC7HFNAypVwuEPfSAUHclf0Luo2yyOy
-	Jj61bh6fag80hKusxTEH4CLBN//ekFiZU94t2nZNXkGIwTGsOotNk4Ui
-X-Gm-Gg: AYBFou2kWFPI74KsIOTiJfkoIEjms9yHbzbrRShXmGYrhU8dxbergrx//Y2coHGe9vb
-	xIfj+hJPdxwz/wkGH8jxQq/gDVkcyonljehunmkQpWTet4DJC3V5y7HZ20CG/qUqrxUp3KAfh4k
-	eUX3pKvkqyZ49hBHP0tghFXozcW+xL/nGoJLwlA49hf1Fnv8nA7sIBuYs0LBQD3ceqPBazrlU++
-	rHOC5up3Cn6C5zJK2CFw4ZlLm62LHjT8Vacbor2APmQSmiw0KsECw7beZHJKYsNuWka+y1ulUdd
-	t8FDMQY0xpP3U7gea/S/FHlElLqPfVCFM9/7xk6748rnlVtScnMYhvO4+RN1ohRqJ3raHH+yO1n
-	sT/kLihaA1udMV2pUA/dFcDOCMcLdwgOFsAIlQSPJcVWsL2MtZLI2z3LrR6b2Eu9jnFIdhU0uVW
-	6GplzSD3PIBoNYzETolQahU/rUF/Dm68M9zrocu7dZt+iEAqh2qnuo1s77ZWT5hgh/vLb+SHDq2
-	+l3
-X-Received: by 2002:a05:6000:4915:b0:48e:d7c:4bc8 with SMTP id ffacd0b85a97d-48e0d7c4df8mr11376386f8f.7.1792407405195;
-        Mon, 19 Oct 2026 03:56:45 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48dfd5128f1sm22740936f8f.59.2026.10.19.03.56.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2026 03:56:44 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: Re: [PATCH rtw-next v6 2/2] wifi: rtw88: support channel switch in AP mode
-Date: Mon, 19 Oct 2026 12:56:43 +0200
-Message-ID: <20261019105643.3282423-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <f4aea8175e4f4082afd50fa94787137d@realtek.com>
-References: 
+        d=1e100.net; s=20260707; t=1792408757; x=1793013557;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0xSlFMVnKmDw/ldSbYNn+iTNtpWivGYYCAIoTzRKpx0=;
+        b=yY1eVtzzZZsjBOvcdVoT94f8j9JtPy8oqF3XBT7/GZes34mHaqYgquFFo31THfENT1
+         PCCihdl4J0K83ltlH4h7pszy2/yEPy72T2gYjaiYnkn0clv/195WbqZDYofykzeib0nV
+         7ScOCe8vXWrPWsnEIMu7aiL+g3mJ2Bk3to8al92GcgMBJ6caVjXeJ+f+1TMCInMf0V6r
+         bnm8cukiYgiWyU/aovTd1F8XGNi/YG67WT3dejvqylcvaDOxyKXxR9NL4ItQ1NXVzkzd
+         1tsFt7V+bqzgzfdGzwQQYi3c4R7i8rN+FV1OiwrpvcOfUkCaWEsy+9O40FYWftM5svoF
+         9uvg==
+X-Forwarded-Encrypted: i=1; AKwUvBxUYALBje3rxI2UI9m38sqUBAuwajlFrsN4r7fgmSV26/cLe1APUcp5PxBcIBIrhg2fhOZaneBk/jq9ru6SCg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYK6h0CL9jCkSmSgOAqNuuEaRSPGhpWQKPiLWi2yC+8hALZfrfAK
+	Dom6ZmYLkqAmPFn2mOezNfJe2k/Y0EhZrS6/hWRL2XhNTY0nWoHVpQokh97uqD59MC6l3DiQhVR
+	7Pqgjx0dSL6MZoLFlimBWoi6u3DdAN+4/5gMYvtL1Dq9tJBKicVEkOhLPOyohoSz+KsYS
+X-Gm-Gg: AYBFou3qj1DPdSjncy8XAsd9GyTk1rbSrSXIhwX8YgT9VgkMXbkBdaAnCof07NuaYym
+	hKgkDU+vw36sxKFDiPfOkrqm56d7XCrJu3UIm9buTlc5qUTSS8tEDPha9qxX0tBm1RLJzZZHfPb
+	ivTnzPpSq7zANJZzphzlEMYOeeayAHT+zre4VeqjhtbsM8W1E8+QeHsC0XvB5Z1i8sLGO/q9C38
+	ytd6v6k4WfVF42j9Keb7t5Bqg8OI/ytdLqA4/tDxSU/Hlvazbjb1VRLRqlV00By1lU9kG3Djzhx
+	D58djQQtzdnzcV2yzcObaZNKjjNEDC4heHofQMFGQ6f0cBfU4EkeUbuJZ/AAruQkXlsD7qhxgAn
+	qXk8J+cGfnKRS18QnnE6wBQUlEfT+MKkkllAYumk4Hsl494uhVZ2+sp1QAmjiFpmD22Wmc/1rzw
+	==
+X-Received: by 2002:a05:600c:8a97:b0:4a1:d061:1d3b with SMTP id 5b1f17b1804b1-4a1d75fe17cmr117125455e9.8.1792408756702;
+        Mon, 19 Oct 2026 04:19:16 -0700 (PDT)
+X-Received: by 2002:a05:600c:8a97:b0:4a1:d061:1d3b with SMTP id 5b1f17b1804b1-4a1d75fe17cmr117124855e9.8.1792408756224;
+        Mon, 19 Oct 2026 04:19:16 -0700 (PDT)
+Received: from [192.168.188.234] (ip232-47-231-195.pool-bba.aruba.it. [195.231.47.232])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1e3ebb3aasm193231875e9.0.2026.10.19.04.19.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Oct 2026 04:19:15 -0700 (PDT)
+Message-ID: <8dcd9564-e9a3-4b00-93b8-3cb023d68047@redhat.com>
+Date: Mon, 19 Oct 2026 13:19:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH net-next v11 3/6] net: add a generation counter for
+ dev->mc changes
+To: Yuyang Huang <sigefriedhyy@gmail.com>, netdev-bot+sashiko@kernel.org
+Cc: ajay.kathat@microchip.com, aleksandr.loktionov@intel.com,
+ andrew+netdev@lunn.ch, claudiu.beznea@tuxon.dev, davem@davemloft.net,
+ dsahern@kernel.org, donald.hunter@gmail.com, edumazet@google.com,
+ idosch@nvidia.com, jacob.e.keller@intel.com, kuba@kernel.org,
+ johannes@sipsolutions.net, kees@kernel.org, kory.maincent@bootlin.com,
+ kuniyu@google.com, nicolas.dichtel@6wind.com, nickgarlis@gmail.com,
+ sd@queasysnail.net, shuah@kernel.org, horms@kernel.org,
+ sdf.kernel@gmail.com, vadim.fedorenko@linux.dev, willemb@google.com,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20261012011707.3378-4-sigefriedhyy@gmail.com>
+ <179185709988.434549.15422498299449004512@kernel.org>
+ <CA+7S2v+LHUWXQMD-cYPEzT5-f3Qhw_vz+LEssQH_A_oqDKtnnA@mail.gmail.com>
+Content-Language: en-US
+From: Paolo Abeni <pabeni@redhat.com>
+In-Reply-To: <CA+7S2v+LHUWXQMD-cYPEzT5-f3Qhw_vz+LEssQH_A_oqDKtnnA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Hi Ping-Ke,
+On 10/13/26 12:25, Yuyang Huang wrote:
+>> - [Low] The commit message misdescribes the precedent it copies.
+> 
+> Looks like a nit, will adjust it if need new revision.
+> 
+>> - [Low] The patch adds an 8-byte 'struct net_device *mc_dev' to every
+>>    struct netdev_hw_addr_list (include/linux/netdevice.h:253), but only…
+> 
+> It seems to me this issue by itself doesn't deserve a revision. Will
+> fix it if new revision is required.
 
-On 2026-10-19, Ping-Ke Shih wrote:
-> It'd be better to see every count stays on the air. Will you implement
-> to handle TBTT events? Can you share a draft first or a separate patch
-> (e.g. patch 3/3 to improve missing count)?
+I agree this is not a blocker, but I think it would be nice if you could
+follow-up on this one.
 
-The USB chips raise no TBTT interrupt, so the countdown work reads the
-TSF and queues itself for 10 ms after the next TBTT. That gives a
-download about 80 ms to run late before a beacon goes out without it;
-one later than that is still followed by its successor at once, as in
-v6. A TSF that moved by more than a beacon interval, an IBSS merge or
-a reset, restarts the schedule from the TBTT ahead.
+The solution proposed by the LLM LGTM.
 
-On the 8821CU the downloads land 13 to 22 ms after the TBTT; with a
-60 ms delay on every second download the sniffer saw 9, 8, 7, 6, 5,
-4, 3, 2, 1 for count 10, with 95 ms it saw 9, 8, 8, 6, 6, 4, 4, 2, 2,
-and the AP switched at the same time in all cases.
+> 
+>> - [Low] __hw_addr_changed() (net/core/dev_addr_lists.c:22-26) reads the
+>>    device netns with plain dev_net(list->mc_dev).
+> 
+> This was raised on earlier versions. Every dev->mc writer already
+> reads dev_net() under only the address lock, so this adds no new race.
 
-The idea, on top of 2/2:
+Same here.
 
-	/* csa_start: the first download goes with the TBTT ahead */
-	tsf = read_tsf(rtwvif->port);     /* 64 bit, 0x560 for port 0 */
-	csa_tbtt = tsf - tsf % beacon_int;
-	csa_queue();
-
-	/* csa_queue, after every download */
-	csa_tbtt += beacon_int;           /* the TBTT this download is for */
-	delay = csa_tbtt + 10ms - read_tsf();
-	if (delay > beacon_int + 10ms || delay < -beacon_int)
-		/* the TSF moved (IBSS merge, reset): start over */
-		csa_tbtt = next TBTT after now, delay = csa_tbtt + 10ms - now;
-	queue_delayed_work(csa_beacon_work, max(delay, 0));
-
-So a download on time runs 10 ms after its TBTT; one late by less
-than ~80 ms still makes the next beacon; one later than that gets a
-delay of zero for its successor, the catch-up of v6. Nothing else
-changes, the download and ieee80211_csa_finish() stay as they are.
-
-One thing I do not have: the TSF registers of the ports other than 0,
-for an AP that comes up next to a station interface. rtw88 only names
-REG_USTIME_TSF; is it 0x568 for port 1, and where are ports 2 to 4?
-If this is the way you want it, it becomes patch 3/3 of v7 with 1/2
-and 2/2 unchanged.
+Also, still speaking of possible follow-up,  I think it would be nice if
+you could change the addr list lifecycle to RCU (no idea of how much
+complex would be that).
 
 Thanks,
-Mehmet
+
+Paolo
+
