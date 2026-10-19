@@ -1,65 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.194.8.81
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792422695;
-	b=rtEAEdZbvCfpbYrLLncxi/2/HZTE1ZEaKvsp3BT9QRV6HP3qjffw2rNRa5KaYhaUJx6i
-	 sTOaDDfJtA4mC9WZWHdSm4wNipRt+EyNLbGJZGqWdsg68EgH4bXBfwzNbRmIxHxV5ya2C
-	 KTNovyskmI/yJLqMWsdCArKsjTNSLCn4bHcXY0kN5eRfvcp82v08p2vsx8KnyWWgDspsv
-	 BnKAnFn6gaWfuLJxqZQJ69SLEyVhgtPQhjbRK0QbN5uB76VhtUTXe0NhZzxA6uyypd4qs
-	 XqAEFJOX1E8GhuELwhYzFwRfZWAsBMapeu/NP6f23hkmvhL7jXpRjA16VAyZqdj0dow==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792422695;
-	h=DMARC-Filter:Received:DKIM-Signature:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=qmln5cEV25ZAWEHD7qA3oI9nNi3QjOqCyJ5NW9VZbvs=;
-	b=npXVx1WT7VuZjV8DegKsqRQIIqO5+L6uRq/ClJP3EBG8Y7q06L5d/5hlxW42XN31Wi+H
-	 WKntWQOQswP0+IhbdliF1sH9h4yji9DFi4nyoseLHgwoa+j/Wnx5fasqYFLy9y8aLnRpj
-	 JRZr+IRuw+hOuNDt5Pr4hNBXYy7sDDKWl1/KGYL2BZoy7KK5z7qpf/x69vcaqjZQH/hHG
-	 adj+ejMf7pu5wOk6VOR//eTF/Q/O2FQK51GlRiC2lxga1ZybLMOyE7qqcfSxzHXb0Dx5D
-	 YBHC4TY0Q8Usjp4UGmnDtRNoCQRDjSuRasYV2PE/enrq12dF19efWYLhzTRH8uss4/g==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=dolcini.it;
-	spf=pass smtp.mailfrom=dolcini.it;
-	dkim=pass header.d=dolcini.it header.i=@dolcini.it header.a=rsa-sha256 header.s=default header.b=cxmNA4lW;
-	arc=none smtp.remote-ip=217.194.8.81
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4221560892FD
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 15:11:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4221560892FD
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=10.30.226.211
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792421961;
+	b=opqtDEbha7kPDhYZ4kVv7w2SWL9xg6EGUyPtKPn5d+E9YOl5q4GIelb/IqLxuTb4Uz9l
+	 Y0zgtpwleQkQv3oVEjqMw0ytSVHS4LhyLwZr2I1wSzKVhzUEujXi4Y4szhyMG8PPf2rqD
+	 wkwzBD33vTcymD/9s6YCwV1RUN2VF0bU0y4rifuqB9uodBS1n1LcziAVg/R9pheh8FEwI
+	 1jmIy7PkBbG107louB5DhqwzOUs2BMZAmDXa76mmPkIKbwSV2ZBU0u+5cBaq5WH8UdQQh
+	 YTiJk1B6KZTuFQqM0ZNHo3FDZcZDomRDpJz8txXOVAtDfXmT7DqwbaEeHC7PV5gUHyA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792421961;
+	h=Received:Received:DKIM-Signature:Received:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key:X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=aTLcmve12A0xWHTBVlp1TWGmYbd2AnRfbgViLySS8r0=;
+	b=pM8jyhugcvtvy3ji9B7HpMZ8XRZuN/M6fMgGYOy6eZ0j9mHSNrznRjjTPyB2vaEsJuxA
+	 GzSDC2l0ca6psUxjMRg/7GSyb0oCVXo5vjcEnWcuWpIcM1OBqXHmW1qQWXljX+DDXtl/x
+	 Bk4c3NbgKK8nyp/BS4ut6RnBXTmfePPrrGTM5yeccxQuqUixZaPChTZgQgp1/bGp/MsIG
+	 +u1ILbChlc+s8DdvvV7uFxrj0mAmNlII3HXAPUSRxqM3k+GEEj66ML6XBRfq1tjvTrf1D
+	 G2sL5pW0sMzzg17b8X6c8NFdji8YDC4PdzLU+1ISjaLTiILDRMwZ2F/mTUYlzrWZYpQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20201202 header.b=IQzrSwTc;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=10.30.226.211
+Received: from aws-us-west-2-korg-listserv-1.web.codeaurora.org (ip-10-30-226-211.us-west-2.compute.internal [10.30.226.211])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E2D0260774F1;
+	Mon, 19 Oct 2026 14:59:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=dolcini.it header.i=@dolcini.it header.a=rsa-sha256 header.s=default header.b=cxmNA4lW
-Received: from francesco-nb (93-33-82-233.ip43.fastwebnet.it [93.33.82.233])
-	by mail11.truemail.it (Postfix) with ESMTPA id C4C4A1FC0F;
-	Mon, 19 Oct 2026 17:11:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1792422685;
-	bh=qmln5cEV25ZAWEHD7qA3oI9nNi3QjOqCyJ5NW9VZbvs=; h=From:To:Subject;
-	b=cxmNA4lW+9WtdcCN6CxJgLQd0zvT2ybwHeTDue+abdVLIKLTKHWuCHgb+y4caOwjV
-	 gHJ4drYCjPRATcppaH/NuP2/sQlZQIWA+H2uiW+9y7r03oJG9+fASw6TUh+o+5kIbI
-	 19nIn3w5Z/YgRASWVNHsIg21oZohx2GmOBZQlfzRQK/Gsbi6MoXu9VngyyE+FoXJW6
-	 JoVWij3lLbr3gjH9JiZssFIFLnU/0wE5PjaLRHHgAEZUgNKx0kOub+pVKos29zxYTO
-	 hspcfu7YIVdAMtfBVJWAn3TNNosW/QhFVhj9txPgjrgPohgYSO1Iw/2pkt9WbxllHx
-	 MfEx/Yx5jQvnQ==
-Date: Mon, 19 Oct 2026 17:11:20 +0200
-From: Francesco Dolcini <francesco@dolcini.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Francesco Dolcini <francesco@dolcini.it>, jeff.chen_1@oss.nxp.com,
-	linux-wireless@vger.kernel.org, briannorris@chromium.org,
-	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: Re: [PATCH wireless-next v2 1/2] wifi: mwifiex: append hotfix number
- to firmware version string
-Message-ID: <20261019151120.GA3162@francesco-nb>
-References: <20261012123624.3147417-1-jeff.chen_1@oss.nxp.com>
- <20261012123624.3147417-2-jeff.chen_1@oss.nxp.com>
- <20261019141347.GA118352@francesco-nb>
- <6b94b803c6424227f6ebc044e0ff2e6b90c180c9.camel@sipsolutions.net>
- <20261019142809.GC118352@francesco-nb>
- <c90d2612d4ea4a49e41c93b45133329440a4c727.camel@sipsolutions.net>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20201202 header.b=IQzrSwTc
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C19FA6513C1;
+	Mon, 19 Oct 2026 14:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792421960; cv=none; b=g6kGJb7OxSYfKYO4JN0qrIr0yB1rsv2GrUh480rRWLpvMQf/yqvvMS1fu0buNigT4pc5k8LVdS0DrnEdevLLClO9Zsejp8GbjVKdwJ8IrPdyT1H8rnqo0cuuqVFBSXTmO6+hv19KXMwwlZgRkSmYrBlJxBkGE/KhIAJnP3Ix1s4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792421960; c=relaxed/simple;
+	bh=Mjj1V8YaPv0BA+ANQpQhqJlAhXDMyEE/QQwGJZP0Hg8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=m3QS5VIIAi/+9QFpgrp0m9s+h6OIBLq9XAXP84c45ZUhzTciSSRUNqlDNthEDzGNWhAm+Zpr/c7wpxb5AglqtSNEfCkQg+S7H5c34pdrmKb9GcbQoH8CVozH8sufuI552EtzNzoqK/Y1RACpsURPTgbp/vnjAKba5oLnWStEANQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQzrSwTc; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 646B0C2BCF4;
+	Mon, 19 Oct 2026 14:59:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1792421960;
+	bh=Mjj1V8YaPv0BA+ANQpQhqJlAhXDMyEE/QQwGJZP0Hg8=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=IQzrSwTcZJCnKoQLCJr/7j5ncE1FDx0arynzyy8wRTbLZOEudIlPyLGcQq2TakLrn
+	 fUpTBqzQVz3+2LrmRoA5XlY+KH5PwFhv8yT15mYh87kJCTUimUqDVyCzKlNwscdmva
+	 TTHfNcmoEkqh+ETxpkp+ggGUvQaFqH96YX5a/LV/s8woLWVT4nUcKNeUmHh037YItI
+	 pE6GQ+3K379/qMwYBEqWpU2agVQAS9pbX1Jpbc+tlsnykiMuyAL+BJT4vQrAPf0L4J
+	 ocgLiBLfPlLRYm129xFlUQTnuhy6HKQW5MWBkYZAv5EMbeVCzwX8NzBOcP0b1qKi9z
+	 QP44By9exoxXA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F80DCCF2DE;
+	Mon, 19 Oct 2026 14:59:20 +0000 (UTC)
+From: Zhaoyang Li via B4 Relay <devnull+heliolee0118.gmail.com@kernel.org>
+Date: Mon, 19 Oct 2026 22:59:19 +0800
+Subject: [PATCH wireless] wifi: wcn36xx: validate band and frequency in
+ survey updates
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -69,19 +67,109 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c90d2612d4ea4a49e41c93b45133329440a4c727.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261019-codex-wcn36xx-survey-upstream-v1-1-7c7babc007c1@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAEYw1moC/yWMSw6CQBAFr0J6bccZUKJehbgYhgbayEC6+Ywh3
+ F3QZb1XqRWUhEnhkawgNLNyH3awpwR860JDyNXOkJo0t8be0PcVRVx8yPIYUSeZ6YPToKOQ69B
+ l19xcTFr7u4W9MQjVHH/9AhYWepMqPP+PTuWL/HjkD7d0SliKC749pl644XDuHAfYti/SYmkdq
+ QAAAA==
+X-Change-ID: 20261018-codex-wcn36xx-survey-upstream-a3560402fc91
+To: linux-wireless@vger.kernel.org
+Cc: loic.poulain@oss.qualcomm.com, kvalo@kernel.org, 
+ bryan.odonoghue@linaro.org, wcn36xx@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, heliolee0118@gmail.com
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792421960; l=3270;
+ i=heliolee0118@gmail.com; s=20261019; h=from:subject:message-id;
+ bh=fjp9lLKvfDuTUpNB3hs+MBg5G86RlOJ8i6sh6ABw66g=;
+ b=GxdIcTIQ+TqsO27OKrNCGs1UZcm9sYZkUXE73dACi14oz+4yxNUNXLQ92nQsJFcKUDgI3Rag6
+ TUbr0tjbwmMAO4WGvPYbRsF/ubuf2cGgbTUbq1i0mVjOWNg4WBM/tSM
+X-Developer-Key: i=heliolee0118@gmail.com; a=ed25519;
+ pk=syMlenivwkqT00HeAmT4htw8EZeZVwsvh6UhTZcqANE=
+X-Endpoint-Received: by B4 Relay for heliolee0118@gmail.com/20261019 with
+ auth_id=1241
+X-Original-From: Zhaoyang Li <heliolee0118@gmail.com>
+Reply-To: heliolee0118@gmail.com
 
-On Mon, Oct 19, 2026 at 04:49:57PM +0200, Johannes Berg wrote:
-> On Mon, 2026-10-19 at 16:28 +0200, Francesco Dolcini wrote:
-> > 
-> > Jeff, up to you, we can take the patch as it is.
-> 
-> Wait, we're discussing mwifiex, not nxpwifi, didn't I already apply
-> this?!
+From: Zhaoyang Li <heliolee0118@gmail.com>
 
-Yes, already merged. Sorry, I missed it, all good.
+WCN3620 only registers the 2.4 GHz band. When scan RX metadata selects
+the 5 GHz band, wcn36xx_update_survey() dereferences a NULL supported
+band pointer while accessing its channels. This can crash the device
+during scanning.
 
-Francesco
+Skip survey updates when the selected band is not registered. Also
+return when the frequency does not match any channel in the band,
+otherwise the update overwrites the first survey entry for that band.
+
+A retained MSM8916/WCN3620 diagnostic log reports a NULL read at
+wcn36xx_rx_skb+0x178/0x720, consistent with accessing sband->channels.
+The log lacks a runtime module hash and the raw RX descriptor, so the
+exact crash path cannot be independently verified.
+
+Fixes: 29696e0aa413 ("wcn36xx: Track SNR and RSSI for each RX frame")
+Cc: stable@vger.kernel.org
+Assisted-by: LLM
+Signed-off-by: Zhaoyang Li <heliolee0118@gmail.com>
+---
+Testing:
+- Built the baseline, this fix, and the two-patch RFC series on
+  wireless/main af32da41b032 with ARM64 GCC 14.2.0 and W=1.
+  The baseline full build had 1067 whole-tree warnings; incremental
+  builds reported none (these counts are not directly comparable).
+- Rebuilt complete WCN36xx driver objects from clean for all three
+  configurations: no warnings or errors; linking and modpost passed.
+- Extracted-source ASan/UBSan tests reproduced the unfixed NULL access
+  and unmatched-frequency overwrite. The fix passed 90 survey cases,
+  256 synthetic scans, and two ordinary RX selections. Kernel APIs
+  were stubbed; full RX and skb lifetimes were not exercised.
+- Downstream 7.2.9-ufi-stable: 99/100 scans succeeded, one timed out,
+  no survey NULL Oops was observed, and 16 pre-existing mac80211
+  invalid-band WARNs remained.
+- No native upstream kernel boot or dual-band hardware test was done.
+
+Historical crash evidence:
+An MSM8916/WCN3620 6.12.111-ufi-diag log reports a NULL read at
+wcn36xx_rx_skb+0x178/0x720 with x0=0. In the retained diagnostic
+module this is ldr x2, [x0], accessing sband->channels. Symbol spans
+and caller return offsets match. The log lacks a runtime module hash
+and the raw RX descriptor, so those cannot be independently verified.
+---
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 8826998797d6..fc371963510f 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -286,6 +286,9 @@ static void wcn36xx_update_survey(struct wcn36xx *wcn, int rssi, int snr,
+ 		idx = wcn->hw->wiphy->bands[NL80211_BAND_2GHZ]->n_channels;
+ 
+ 	sband = wcn->hw->wiphy->bands[band];
++	if (!sband)
++		return;
++
+ 	channel = sband->channels;
+ 
+ 	for (i = 0; i < sband->n_channels; i++, channel++) {
+@@ -295,6 +298,9 @@ static void wcn36xx_update_survey(struct wcn36xx *wcn, int rssi, int snr,
+ 		}
+ 	}
+ 
++	if (i == sband->n_channels)
++		return;
++
+ 	spin_lock(&wcn->survey_lock);
+ 	wcn->chan_survey[idx].rssi = rssi;
+ 	wcn->chan_survey[idx].snr = snr;
+
+---
+base-commit: af32da41b0327b9c6a37856ba82b6760d6c8d10e
+change-id: 20261018-codex-wcn36xx-survey-upstream-a3560402fc91
+
+Best regards,
+--  
+Zhaoyang Li <heliolee0118@gmail.com>
+
 
