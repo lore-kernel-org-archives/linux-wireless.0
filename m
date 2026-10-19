@@ -1,48 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1BE4FFA48;
-	Mon, 19 Oct 2026 13:57:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79E856F596;
+	Mon, 19 Oct 2026 13:58:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418252; cv=none; b=ZiRm43vvCOjpG87tuNjeQKCKKwEBjR9RweU9Q14zZDc2z+aE7sJBe9bdsHR1IDSWUDSkOZP3gV8MaIulDMoiLFLEhO+vbFivJXRGj+pjQX5yFIf6ta6EV9cRV9yRP6fxOdN9YeoT6mECsXwcZL/78HkuUA0L4jn3JkBdnb5T7YA=
+	t=1792418292; cv=none; b=RpOllWfsCC6VsdWr4LZ3lAJQ6JniksUBLDOqqvNbhpfNtCvuprk66BwzQq302eGV8IfrhrPURKJrL4fnxl5DXszzqJck5nGUy19YAh/nmh9jd0ALrH43WQbDgx6guKzWHOn1AbWOAqw3BrrRLY07Ngrzs/rRuWhEuEkT2Hr5FhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418252; c=relaxed/simple;
-	bh=Wh9qhL8mCgT5QJA6GF6krnahySZ6C+OVWUpRqBcJP6Y=;
+	s=arc-20240116; t=1792418292; c=relaxed/simple;
+	bh=YpOkIw5PdAs/6BqswdxjKokAVxgcEM9k62TOVOhU4YQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lbdkTslnH2Lq8ba6Ada9KRfOsNp3mb7vjVF7qNpgiW2o2z+mb6AraSb73Hgx4iNDTI45nttsjXNMgnEpYxyllYYrnWXEDr/DsiyQ6j1rS32rsYbJaiDPQXkqE3PXYzhVLlPOr+0DvgKBzNOoA4/B2BVmVug8FQu28h4Obq+Ob0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M725uWws; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=nRhgq0bLmamgrWxJvJPDljJpBYwKxJvg2y5dNTwKzIzlf9A842kcnW0UG0lEtzdjQgtKSbWg5TN5YKiIHmSbMmVGmIkhmhadcyrplDQwtlWNs5g3mvCLXUODOkI7H2qB+U/ILw2aUS2RXiAo0Ag5J85ek8pMgPmJy91dQg6kb4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IdsDWIpE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M725uWws"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36D231F000C6;
-	Mon, 19 Oct 2026 13:57:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IdsDWIpE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4C9F1F000C4;
+	Mon, 19 Oct 2026 13:58:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418249;
-	bh=wE1RMnUDMMnvpx7rc/PtXVu9rOvIEpslybb3iEFRjXM=;
+	s=k20260515; t=1792418289;
+	bh=g4t47SO9W2O0FAJkfkLRuHHaB72xfpzSs9Rvl8v0L8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=M725uWwsj1cRTG9dlepKZGKCbKlT+pQxQ1bmvu6kd6At8mUHoS0CKsYa7lCGndK6A
-	 LrCOeQMqmQWi7mP0nuQFIVsY7+AvrUGsrW3LYKPgGN0gStxehGWs43Oimh84msw6Pc
-	 Rjzp7XQl9sfvSZLBzwbq3x27tNbBDLLpklfcWEex/OW8KugWC+kwaCKeqjcDU2zuio
-	 ctNgle8cbWordTQ0VtpUPQUvw7m+gcYCufEnYZ3ft4c8exiGx/QUuetdXSAHThB9c2
-	 d5bAoPDI460llKrGeicKi2CX3e1b6QzSjLabypBqHBUsamh7iFSwUekkDZgWMYuoHO
-	 fA9n5qKdqM14A==
+	b=IdsDWIpE6/zvamRRqNIIjmMNHSyHcm3+rlDTpchawC+QqejzjlTc/QkWs1OC6g/eX
+	 dPhndyD6HAzfJ1wJXSbJcjwJmh/eW8bYen+HvCYDZi6iugYT4wm6Bd5hsYplXkfD/5
+	 z2apziAt8r9JgXT0kyqU0u14Ml+VNGwoAIuQr3i69ovRTQGGkq+9yEzu5wx3aNVlEG
+	 /lEF6AzquW5aYpk0FdWrhxTh4CFjkRWm58GZnLKzZG3KMgTzDvwczWcDWBL/kAP0/q
+	 Mjso0AMC9Ri0m1CF+LBLq356Dy3WXsp3FEVSCuxtpDW7LuxDa+m2CEEm3qdb4Dayv2
+	 caj1r9jSUPHqQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Zhi-Jun You <hujy652@gmail.com>,
-	Felix Fietkau <nbd@nbd.name>,
+Cc: Chin-Yen Lee <timlee@realtek.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18] wifi: mt76: wed: fix kernel panic on non-DBDC MT7986
-Date: Mon, 19 Oct 2026 09:46:49 -0400
-Message-ID: <20261019135441.1420968-118-sashal@kernel.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.12] wifi: rtw89: wow: add QoS control field to WoWLAN ARP response for MLO
+Date: Mon, 19 Oct 2026 09:47:13 -0400
+Message-ID: <20261019135441.1420968-142-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -58,489 +52,464 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Zhi-Jun You <hujy652@gmail.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-[ Upstream commit 8a177dabeeead47dda4d4f91331282790eed0097 ]
+[ Upstream commit 03a963f4aeda538acad50806e94ef25d95b78743 ]
 
-In mt76_wed_init_rx_buf, it's hardcoded to use MT_RXQ_MAIN.
-But for non-DBDC MT7986 MT_RXQ_BAND1 is used for RX data queue which
-leads to kernel panic when attaching WED.
+Some MLO APs expect WoWLAN ARP response frames to be transmitted as
+QoS data frames and may discard frames that do not contain a QoS
+Control field.
 
-Use the correct RX queue by checking WED version and band_idx.
+Add a QoS Control field and use the QoS Data subtype when generating
+WoWLAN ARP responses for MLD vifs. Keep the existing frame format
+unchanged for non-MLO connections.
 
-v2 and band 1 -> MT_RXQ_BAND1
-Others -> MT_RXQ_MAIN
+This allows WoWLAN ARP responses to be accepted by MLO APs while
+preserving compatibility with legacy APs.
 
-Kernel panic:
-
-Unable to handle kernel access to user memory outside uaccess routines at virtual address 0000000000000000
-Mem abort info:
-  ESR = 0x0000000096000005
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x05: level 1 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000005, ISS2 = 0x00000000
-  CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-  GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-Internal error: Oops: 0000000096000005 [#1]  SMP
-CPU: 1 UID: 0 PID: 925 Comm: kmodloader Tainted: G           O        6.18.26 #0 NONE
-Tainted: [O]=OOT_MODULE
-Hardware name: Acer Connect Vero W6m (DT)
-pstate: 40400005 (nZcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : page_pool_alloc_frag_netmem+0x1c/0x1bc
-lr : page_pool_alloc_frag+0xc/0x34
-sp : ffffffc081dab660
-x29: ffffffc081dab660 x28: ffffffc081dabc60 x27: ffffff80091af040
-x26: 0000008000000000 x25: ffffff80091a8898 x24: ffffff80091a5440
-x23: 0000000000001000 x22: 0000000140000000 x21: ffffff80091a2040
-x20: ffffff8003f1d780 x19: 0000000000000000 x18: 0000000000000020
-x17: ffffffbfbf0ac000 x16: ffffffc080ee0000 x15: ffffff80049d47ca
-x14: 000000000000037b x13: 000000000000037b x12: 0000000000000001
-x11: 0000000000000000 x10: 0000000000000000 x9 : 0000000000000000
-x8 : ffffff8003f1d7c0 x7 : 0000000000000000 x6 : ffffff8003f1d780
-x5 : 0000000000000680 x4 : 0000000000000000 x3 : 0000000000002824
-x2 : 0000000000000000 x1 : ffffffc081dab71c x0 : 0000000000000000
-Call trace:
- page_pool_alloc_frag_netmem+0x1c/0x1bc (P)
- page_pool_alloc_frag+0xc/0x34
- mt76_wed_init_rx_buf+0xf8/0x2ac [mt76]
- mtk_wed_start+0x79c/0x12ac
- mt7915_dma_start+0x274/0x63c [mt7915e]
- mt7915_dma_start+0x5b4/0x63c [mt7915e]
- mt7915_dma_init+0x49c/0x81c [mt7915e]
- mt7915_register_device+0x24c/0x530 [mt7915e]
- mt7915_mmio_probe+0x91c/0x1980 [mt7915e]
- platform_probe+0x58/0xa0
- really_probe+0xb8/0x2a8
- __driver_probe_device+0x74/0x118
- driver_probe_device+0x3c/0xe0
- __driver_attach+0x88/0x154
- bus_for_each_dev+0x60/0xb0
- driver_attach+0x20/0x28
- bus_add_driver+0xdc/0x200
- driver_register+0x64/0x118
- __platform_driver_register+0x20/0x30
- init_module+0x74/0x1000 [mt7915e]
- do_one_initcall+0x4c/0x1f8
- do_init_module+0x50/0x210
- load_module+0x15f8/0x1b10
- __do_sys_init_module+0x1a8/0x260
- __arm64_sys_init_module+0x18/0x20
- invoke_syscall.constprop.0+0x4c/0xd0
- do_el0_svc+0x3c/0xd0
- el0_svc+0x18/0x60
- el0t_64_sync_handler+0x98/0xdc
- el0t_64_sync+0x158/0x15c
-Code: aa0003f3 a9025bf5 a90363f7 d2820017 (b9400000)
-
-Signed-off-by: Zhi-Jun You <hujy652@gmail.com>
-Link: https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20260625061545.44808-10-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This tree is **6.6.157** (`pending-6.6`). The panic is real here, but
-the mainline patch has to be rewritten onto `mt7915/mmio.c` because
-`wed.c` does not exist yet.
+## Phase 1: Commit message forensics
 
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
+**Step 1.1: Subject line**
+Record: **[wifi: rtw89: wow:] [add] [QoS Control field on WoWLAN ARP
+responses for MLO]**
+Subsystem is Realtek rtw89 WoWLAN. The verb is “add”, but the body is
+interoperability: MLO APs drop ARP frames that are not QoS Data.
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-Record: `[wifi: mt76: wed:] [fix] [kernel panic on non-DBDC MT7986 when
-attaching WED because RX buf init used the wrong queue]`
-
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
+**Step 1.2: Tags**
 Record:
-- `Signed-off-by: Zhi-Jun You <hujy652@gmail.com>` (author)
-- `Link:
-  https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com` (v2
-  1/2 of a 2-patch series)
-- `Signed-off-by: Felix Fietkau <nbd@nbd.name>` (mt76 maintainer)
-- No `Fixes:` tag (expected for this review)
-- No `Cc: stable@vger.kernel.org` (expected)
-- No `Reported-by:` / `Tested-by:` / `Reviewed-by:` / `Acked-by:`
-- Sibling patch 2/2 has the same msgid stem `20260715152113.553-2` and
-  **is already in this 6.6 tree** as `8eae5e5aa09da` (`wifi: mt76:
-  mt7915: fix net_fill_forward_path for non-DBDC mt7986`)
+- Signed-off-by: Chin-Yen Lee \<timlee@realtek.com\> (author)
+- Signed-off-by: Ping-Ke Shih \<pkshih@realtek.com\> (rtw89 maintainer)
+- Link:
+  https://patch.msgid.link/20260625061545.44808-10-pkshih@realtek.com
+  (msgid `…44808-10…` → patch 09/10 of a 10-patch `rtw-next` series;
+  1-based msgid index)
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
+  stable (absence is expected here)
+- Ignore pipeline SOBs such as Sasha Levin (none on the real commit)
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
+**Step 1.3: Body**
 Record:
-- **Bug:** `mt76_wed_init_rx_buf` always uses `MT_RXQ_MAIN`. Non-DBDC
-  MT7986 uses `MT_RXQ_BAND1` for the RX data queue.
-- **Symptom:** NULL deref oops while attaching WED, in
-  `page_pool_alloc_frag_netmem`. Full oops from **Acer Connect Vero
-  W6m**, kernel 6.18.26, PID `kmodloader` during `mt7915e` probe.
-- **Root cause:** wrong RX queue → uninitialized `page_pool` (NULL) →
-  fault at `page_pool_alloc_frag*`.
-- **Fix:** `wed->version == 2 && dev->phy.band_idx` → `MT_RXQ_BAND1`,
-  else `MT_RXQ_MAIN`.
-- Crash taint includes `O` (OOT module), but the call trace is in-tree
-  `mt76` / `mt7915e` / `mtk_wed_start`.
+- **Bug:** Some MLO APs require WoWLAN ARP responses as QoS Data and
+  discard frames without a QoS Control field.
+- **Symptom:** ARP keep-alive / ARP offload during WoWLAN is ignored →
+  AP can drop the STA while suspend/WoWLAN is active.
+- **Root cause:** `rtw89_arp_response_get()` always built a non-QoS Data
+  3-address frame.
+- **Fix:** For MLD vifs, set `IEEE80211_STYPE_QOS_DATA` and insert a
+  2-byte QoS Control field; leave non-MLO frames unchanged.
+- **Versions:** none named in the message.
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not hidden. Explicit panic fix with a stack trace. Not
-cleanup/refactor.
-
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
-
-**Step 2.1: INVENTORY THE CHANGES**
-Record:
-- File: `drivers/net/wireless/mediatek/mt76/wed.c` (+6 / −1)
-- Function: `mt76_wed_init_rx_buf`
-- Scope: single-file, surgical (~5 lines of logic)
-
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-- **Before:** `q = &dev->q_rx[MT_RXQ_MAIN]` always, then
-  `mt76_get_page_pool_buf(q, ...)`.
-- **After:** pick `MT_RXQ_BAND1` for WED v2 + band 1; otherwise
-  `MT_RXQ_MAIN`.
-- Path: WED RX buffer init during `mtk_wed_start` from
-  `mt7915_dma_start` (probe / DMA start), not a rare error path.
-
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record:
-- Category: **NULL pointer dereference** (memory safety) from **wrong-
-  queue logic**.
-- Mechanism: for non-DBDC MT7986, `mt7915_band_config` sets `band_idx =
-  1` and DMA only allocates `q_rx[MT_RXQ_BAND1]`. `MT_RXQ_MAIN` is left
-  with `page_pool == NULL`. `mt76_get_page_pool_buf` →
-  `page_pool_dev_alloc_frag(NULL)` → oops.
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Obviously correct given DMA queue allocation in `mt7915/dma.c`.
-- Minimal; no API/locking/refcount changes.
-- Regression risk low: DBDC and band-0 devices still use `MT_RXQ_MAIN`.
-- Backport caveat: in 6.6 the same logic lives in
-  `mt7915_mmio_wed_init_rx_buf` (`dev` is `struct mt7915_dev *`), so the
-  condition must use `dev->mt76.phy.band_idx` (or
-  `dev->phy.mt76->band_idx`), not `dev->phy.band_idx`.
-
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
-
-**Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- Hardcoded `MT_RXQ_MAIN` in 6.6: `mt7915/mmio.c:635`, from
-  `2f5c3c77fc9b6` (`wifi: mt76: switch to page_pool allocator`,
-  2023-02-03). Present in this tree.
-- WED RX itself: `4f831d18d12da` (`wifi: mt76: mt7915: enable WED RX
-  support`, 2022-12-01). Present.
-- MT7986 one-A-die `band_idx = 1`: `mt7915_band_config` in `init.c`.
-  Present.
-
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Bug is the hardcoded MAIN queue vs MT7986
-band-1 mapping, present since WED RX + page_pool.
-
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record:
-- `wed.c` added later by `8a7386e787ef4` (`wifi: mt76: move wed common
-  utilities in wed.c`, 2024-02-22). **Not in pending-6.6** (`git merge-
-  base --is-ancestor` → not ancestor).
-- Related 6.6 history: WED enable for MT7986, WED RX, page_pool switch,
-  several WED robustness fixes.
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record:
-- Author is not the mt76 maintainer; maintainer Felix Fietkau signed
-  off.
-- Same author, same series date: `8eae5e5aa09da` already on pending-6.6
-  (patch 2/2).
-- Felix has many mt7915/WED fixes on this branch.
-
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record:
-- Standalone logic; does **not** need the `wed.c` move.
-- Needed in 6.6: `wed->version` (exists, `u8 version` in
-  `mtk_wed_device`), `phy.band_idx`, `MT_RXQ_BAND1`, page_pool RX — all
-  present.
-- Series 1/2; 2/2 is independent (forward-path queue) and already
-  applied.
-
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
-
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record:
-- `b4 dig` on sibling `8eae5e5aa09da` matched msgid
-  `20260715152113.553-*`.
-- RFC (2026-06-13): “single band MT7986”
-- v1 (2026-06-30):
-  https://patch.msgid.link/20260630150649.1629-1-hujy652@gmail.com (and
-  1629-2)
-- v2 (2026-07-15, applied):
-  https://patch.msgid.link/20260715152113.553-1-hujy652@gmail.com
-- v2 1/2 is the committed version. Change vs RFC: “single band” → “non-
-  DBDC”.
-- lore.kernel.org fetches returned 403; thread text confirmed via
-  ratatoskr mirrors.
-- No NAK found. Merged by Felix Fietkau (2026-07-31) as `8a177dabeeead`.
-
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w` on sibling): Zhi-Jun You; Felix Fietkau
-(`nbd@nbd.name`); Lorenzo Bianconi; Ryder Lee / Shayne Chen / Sean Wang
-(MediaTek); `linux-wireless`; `linux-mediatek`; Benjamin Larsson
-(Suggested-by on 2/2). Maintainer merged it.
-
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No syzbot/bugzilla. Concrete oops from Acer Connect Vero W6m
-(MT7986). Real hardware, probe-time crash with WED.
-
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: 2-patch v2 series. 1/2 = this panic. 2/2 =
-`net_fill_forward_path` wrong WDMA queue; already in 6.6. Independent;
-1/2 is the crash fix.
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org/stable returned 403. **UNVERIFIED** whether
-anyone mailed stable@. 2/2 of the same series is already in this 6.6
-tree, so the series is treated as 6.6-relevant.
-
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
-
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: Mainline `mt76_wed_init_rx_buf`. In this tree:
-`mt7915_mmio_wed_init_rx_buf`.
-
-**Step 5.2: TRACE CALLERS**
-Record:
-- Assigned as `wed->wlan.init_rx_buf` in `mt7915_mmio_wed_init`.
-- Called from `mtk_wed_rx_buffer_alloc` → `dev->wlan.init_rx_buf(dev,
-  dev->wlan.rx_npkt)` (`mtk_wed.c`).
-- That runs from `mtk_wed_start` ← `mt7915_dma_start` ←
-  `mt7915_dma_init` ← `mt7915_register_device` ← probe.
-- Reachable on device probe when WED is attached (`wed_enable` module
-  param).
-
-**Step 5.3: TRACE CALLEES**
-Record: `mt76_get_rxwi`, `mt76_get_page_pool_buf` →
-`page_pool_dev_alloc_frag(q->page_pool)`, `mt76_rx_token_consume`. First
-page_pool alloc is the crash site.
-
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Record:
-```
-module load mt7915e
-  → mt7915_mmio_probe / register_device
-  → mt7915_dma_init → mt7915_dma_start
-  → mtk_wed_device_start → mtk_wed_rx_buffer_alloc
-  → mt7915_mmio_wed_init_rx_buf
-  → mt76_get_page_pool_buf(uninitialized MT_RXQ_MAIN)
-  → oops
-```
-Userspace-reachable via loading the driver (typically root). Not a
-syscall fuzz path; it is a boot/probe crash on affected hardware.
-
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: `mt7915/testmode.c` already uses `q = phy->mt76->band_idx ?
-MT_RXQ_BAND1 : MT_RXQ_MAIN`. DMA init uses the same band_idx split. Same
-author’s 2/2 fixes the matching forward-path mistake.
-
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** Tree is 6.6.157 (`pending-6.6`). `wed.c` is absent.
-Equivalent bug:
-
-```
-mt7915_mmio_wed_init_rx_buf:
-    q = &dev->mt76.q_rx[MT_RXQ_MAIN];   /* mmio.c:635 */
-```
-
-`mt7915_dma.c`: allocate `MT_RXQ_MAIN` only if
-`!dev->phy.mt76->band_idx`; allocate `MT_RXQ_BAND1` if `dbdc_support ||
-band_idx`. `mt7915_band_config` sets `band_idx = 1` for MT7986 one-A-die
-(non-DBDC). Introduced with WED RX + page_pool (2022–2023), well before
-6.6.
-
-`git merge-base --is-ancestor 8a177dabeeead pending-6.6` → **not
-present**.
-
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Needs a small backport**, not a clean apply. Same if/else in
-`mt7915/mmio.c`, with `dev->mt76.phy.band_idx` /
-`dev->phy.mt76->band_idx`. `wed->version` exists and is set to 2 for
-non-netsys-v1 (MT7986) in `mtk_wed.c`. Minor conflict, not a rewrite.
-
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No equivalent RX-buf queue selection. 2/2 (`8eae5e5aa09da`) is
-here and addresses the same hardware mapping, not this NULL deref.
-
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
-
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: `drivers/net/wireless/mediatek/mt76` + MediaTek WED.
-**IMPORTANT** (common Filogic/MT7986 WiFi, OpenWrt/embedded), not core
-mm/VFS.
-
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Mature and actively fixed on 6.6 (WED null-ptr, register
-mapping, MT7981, chainmask for non-DBDC band 1).
-
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
-
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: Driver-specific: MT7986 (and similar mt798x) **non-DBDC**
-(single A-die) with `CONFIG_NET_MEDIATEK_SOC_WED` and `wed_enable`. Real
-product: Acer Connect Vero W6m. Default `wed_enable` is false, but WED
-is used on these SoCs.
-
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: Every probe with WED attached on that SKU. Not a race. Needs
-privilege to load the module; typical as a platform driver at boot.
-
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: Kernel oops/panic on WiFi/WED attach. **CRITICAL** for those
-devices (WiFi unusable; can panic the box).
-
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record:
-- **Benefit:** high for MT7986 non-DBDC + WED (prevents probe oops).
-- **Risk:** low (5-line queue index; other SKUs unchanged).
-- **Ratio:** benefit ≫ risk. Backport must retarget `mmio.c`.
-
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
-
-**Step 9.1: COMPILE THE EVIDENCE**
-
-FOR:
-- Documented oops: NULL `page_pool` in WED RX init.
-- Same bug in this tree (`mt7915_mmio_wed_init_rx_buf` + DMA not
-  allocating MAIN when `band_idx == 1`).
-- Small, obviously correct queue selection.
-- mt76 maintainer signed off; RFC → v1 → v2.
-- Sibling 2/2 already on 6.6.
-- MT7986 + WED RX + page_pool all exist here.
-- `wed->version` and `band_idx` exist.
-
-AGAINST:
-- Patch file `wed.c` is not in 6.6 (moved in 6.8-era `8a7386e787ef4`).
-- Needs a few-line context backport.
-- WED off by default; subset of MT7986 boards.
-- Crash log tainted OOT; still in-tree frames.
-
-UNRESOLVED:
-- Stable ML discussion (lore/stable 403).
-- Whether every reviewer asked for Cc: stable (not seen on v2 1/2).
-
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — matches DMA allocation;
-   maintainer merged; oops on real HW.
-2. Fixes a real bug that affects users? **PASS** — probe oops on non-
-   DBDC MT7986 + WED.
-3. Important issue? **PASS** — kernel oops, severity CRITICAL for that
-   hardware.
-4. Small and contained? **PASS** — ~5 lines, one function.
-5. No new features or APIs? **PASS**.
-6. Can apply to the local tree? **PASS** with a backport to
-   `mt7915/mmio.c` (stable rule: apply cleanly **or come with a
-   backport**). Not a missing-feature case.
-
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: None (not a device ID/quirk/DT/build/doc). Ordinary crash fix.
-
-**Step 9.4: MAKE YOUR DECISION**
-The 6.6 tree has the same panic path under a pre-`wed.c` name. Selecting
-this for 6.6 is justified; apply the same `version == 2 && band_idx`
-check in `mt7915_mmio_wed_init_rx_buf`.
+**Step 1.4: Hidden bug fix?**
+Record: Yes. “Add QoS control field” is a protocol-format fix for an
+existing WoWLAN ARP template, not a new userspace API. Cover letter
+language (“support WoWLAN with MLO AP”) is feature-ish, but the driver
+already had MLO WoWLAN and ARP offload/keep-alive; this corrects the
+template those paths upload.
 
 ---
 
-**What the commit solves for this tree:** On non-DBDC MT7986, the main
-phy is band 1, so only `MT_RXQ_BAND1` is allocated. WED RX init still
-pulls from `MT_RXQ_MAIN`, whose `page_pool` is NULL, and the kernel
-oopses in `page_pool_alloc_frag` during `mt7915e` probe. That mapping is
-already in 6.6 `init.c`/`dma.c`; only the RX-buf picker is wrong.
+## Phase 2: Diff analysis
 
-**Stable rules:** Real, important crash; tiny logic fix; no new API.
-File path changed after 6.6, so it needs a short backport, not a NAK.
+**Step 2.1: Inventory**
+Record:
+- File: `drivers/net/wireless/realtek/rtw89/fw.c` (+24 / −7; `git show
+  --stat` matches)
+- Function: `rtw89_arp_response_get()` only
+- Scope: single-file, single-function, surgical
 
-**Risk vs benefit:** Low risk, high benefit on Filogic devices that
-enable WED (including the reported Acer Vero W6m class).
+**Step 2.2: Control flow**
+Record (before → after):
+- Allocate skb sized for 3-addr header + security header + ARP body →
+  also reserve 2 bytes when `ieee80211_vif_is_mld(vif)`.
+- Frame control: Data+ToDS (+Protected if PTK) → same, plus QoS Data
+  subtype for MLO, Data subtype for legacy.
+- Always `skb_put_zero(sec_hdr_len)` → insert QoS Control (zeros) before
+  IV if MLO; skip security bytes when `sec_hdr_len == 0` (equivalent to
+  `skb_put_zero(0)`).
+- Debug print via `str_yes_no(with_qos)`.
 
-**Concerns:** Must edit
-`drivers/net/wireless/mediatek/mt76/mt7915/mmio.c` and use
-`dev->mt76.phy.band_idx` (or `dev->phy.mt76->band_idx`) because `dev` is
-`struct mt7915_dev *` here. Do not require `8a7386e787ef4`.
+802.11 order is correct: 3-addr MAC header, QoS Control, IV, LLC+ARP.
+QoS Control of 0 is TID 0 / normal ACK, which is appropriate for ARP.
+
+**Step 2.3: Bug mechanism**
+Record: **Logic / protocol correctness + hardware interoperability.**
+MLO (802.11be) APs expect QoS Data; non-QoS keep-alive/offload templates
+are discarded. Not UAF, leak, race, or NULL deref.
+
+**Step 2.4: Fix quality**
+Record: Obviously correct and minimal. Non-MLO path is unchanged in
+substance (`IEEE80211_STYPE_DATA` is 0). Regression risk is low and
+confined to MLO WoWLAN ARP: a wrong QoS field could still be dropped,
+but zeroed QoS Control is the standard default. No public API or struct
+layout change.
+
+---
+
+## Phase 3: Git history
+
+**Step 3.1: Blame**
+Record:
+- Function introduced in `58ed86e1666b3` (“wifi: rtw89: wow: add ARP
+  offload feature”, 2024-05-02) — contained in `v6.11-rc1` era (`git
+  describe --contains` → `x86_boot_for_v6.11_rc1~…`).
+- Link-aware `rtwvif_link` args: `2f7dae17c48cd1` (2024-09).
+- Security header: `0065199f4303bc` (2024-06).
+- Keep-alive uses this template: `dcf5c7262bffa` (2026-05-25, in
+  **v7.2-rc1**).
+- MLD MAC in ARP: parent `76edcedda6437` (same series 08/10).
+- This commit: `03a963f4aeda5`, **contained in v7.3-rc1**.
+
+**Step 3.2: Fixes: tag**
+Record: None. Buggy behavior is the original ARP template never emitting
+QoS Data for MLD vifs after MLO WoWLAN existed.
+
+**Step 3.3: Related file history**
+Record: Same-day series (msgid `20260625061545.44808-*`):
+1. MAC finish active TX
+2. pass chip version to FW
+3. lower UDM1 debug level
+4. drop pkt offload on H2C failure
+5. disable sniffer RX filter (Wi-Fi 7)
+6. PCI phy error / refclk
+7. LPS MLO link ID fix
+8. **MLD address in WoWLAN ARP** (parent)
+9. **this patch**
+10. RF init only on Wi-Fi 6 in WoW
+
+This patch does not call or require patches 1–8/10. 08/10 only changes
+ARP hw addresses; 09/10 only changes frame control + QoS bytes.
+Standalone at the code level.
+
+**Step 3.4: Author**
+Record: Chin-Yen Lee (Realtek); maintainer Ping-Ke Shih signed off and
+applied the whole series to `rtw-next`. Nearby author work is other
+rtw89 WoWLAN/MLO fixes.
+
+**Step 3.5: Prerequisites in this tree**
+Record: Present here:
+- `rtwvif_to_vif()` in `core.h`
+- `ieee80211_vif_is_mld()` in `include/net/mac80211.h`
+- `str_yes_no()` in `include/linux/string_choices.h`
+- ARP offload + keep-alive both call `rtw89_fw_h2c_add_general_pkt(…,
+  RTW89_PKT_OFLD_TYPE_ARP_RSP, …)`
+Can apply standalone on this tree.
+
+---
+
+## Phase 4: Mailing list / external
+
+**Step 4.1: b4 dig**
+Record:
+- Lore/msgid:
+  https://patch.msgid.link/20260625061545.44808-10-pkshih@realtek.com
+- Subject: `[PATCH rtw-next 09/10] wifi: rtw89: wow: add QoS control
+  field to WoWLAN ARP response for MLO`
+- Series: v1 only (`b4 dig -a`); no v2/v3.
+- Cover letter (`00/10`): “update some MAC, FW and WoWLAN settings”;
+  “The last three patches are related to WoWLAN, and the first two are
+  to support WoWLAN with MLO AP that uses MLD address.”
+- Only reply in the saved mbox: Ping-Ke applying all 10 to `rtw-next`
+  (no NAK, no reviewer comments on 09/10).
+- No Cc: stable in the thread.
+
+**Step 4.2: Recipients (`b4 dig -w`)**
+Record: Ping-Ke Shih, linux-wireless, gary.chang@realtek.com,
+timlee@realtek.com, dian_syuan0116@realtek.com, kevin_yang@realtek.com.
+Maintainer was To/Cc and applied it. No external review tags.
+
+**Step 4.3: Bug report**
+Record: No Reported-by, bugzilla, or syzbot. Vendor-described AP
+behavior only. Specific AP models for *this* QoS issue are not named
+(keep-alive predecessor named TP-Link Archer BE800).
+
+**Step 4.4: Series**
+Record: Mixed MAC/FW/WoW settings. 09/10 is self-contained; 08/10 is a
+related but independent MLO ARP address fix.
+
+**Step 4.5: stable@**
+Record: **UNVERIFIED** (lore.kernel.org/stable blocked by Anubis).
+Thread mbox has no stable discussion.
+
+WebFetch of lore/msgid also returned 403; discussion was recovered via
+`b4 dig -m`.
+
+---
+
+## Phase 5: Semantic / call graph
+
+**Step 5.1: Functions**
+Record: `rtw89_arp_response_get()` only.
+
+**Step 5.2: Callers**
+Record:
+- `rtw89_fw_h2c_add_general_pkt()` → `RTW89_PKT_OFLD_TYPE_ARP_RSP`
+- `rtw89_fw_h2c_keep_alive()` (WoW keep-alive enable)
+- `rtw89_fw_h2c_arp_offload()` (WoW ARP offload enable)
+- `rtw89_wow_fw_start()` in `wow.c` enables both when the interface is
+  linked
+
+Path is WoWLAN firmware start on suspend (`CONFIG_PM`), not a syscall
+hot path.
+
+**Step 5.3: Callees**
+Record: `rtwvif_to_vif`, `ieee80211_vif_is_mld`,
+`rtw89_wow_get_sec_hdr_len`, `dev_alloc_skb`, `skb_put_zero`,
+`cpu_to_le16`, `ether_addr_copy`, `str_yes_no` (debug only).
+
+**Step 5.4: Reachability**
+Record: Userspace-reachable via suspend with WoWLAN on an rtw89 STA
+associated as an MLD. Not unprivileged kernel-memory corruption; it is a
+normal power-management / offload path.
+
+**Step 5.5: Similar patterns**
+Record: `rtw89_sa_query_get()` still builds a non-QoS mgmt action frame
+(correct for SA Query). No sibling ARP builders. Keep-alive commit
+`dcf5c7262bffa` is the same interoperability class (APs ignoring Null
+keep-alives).
+
+---
+
+## Phase 6: This checkout
+
+**Step 6.1: Local tree and whether the bug exists**
+Record:
+- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**
+- `make kernelversion`: **7.3.0-rc4**
+- `rtw89_arp_response_get()` exists; MLO (`ieee80211_vif_is_mld`), WoW
+  keep-alive, and ARP offload all exist.
+- Without this change, MLO ARP templates are non-QoS Data. That is the
+  bug this tree’s rtw89 WoW+MLO users hit.
+- Commit `03a963f4aeda5` is an ancestor of HEAD (`git merge-base --is-
+  ancestor` → yes) because it landed in **v7.3-rc1**. That is not used
+  as “already selected for stable”; it only confirms the code and
+  helpers are in this series.
+
+**Step 6.2: Backport difficulty**
+Record: Clean apply on this tree (hunk matches current `fw.c`). No
+refactor blocking it.
+
+**Step 6.3: Other fixes here**
+Record: No later follow-up rewriting this QoS logic (`git log` after the
+commit on this function is unrelated fw/coex/scan work). Parent MLD-
+address fix is already here and independent.
+
+---
+
+## Phase 7: Subsystem context
+
+**Step 7.1**
+Record: **drivers/net/wireless/realtek/rtw89** — important (common Wi-Fi
+6/7 laptops), not core mm/fs. WoWLAN is `CONFIG_PM`.
+
+**Step 7.2**
+Record: Very active (frequent coex/MLO/WoW commits). This is a late
+correction to existing MLO WoW, not a brand-new subsystem.
+
+---
+
+## Phase 8: Impact and risk
+
+**Step 8.1: Who**
+Record: Driver-specific + config-specific: rtw89, MLO association,
+WoWLAN/suspend. Not universal.
+
+**Step 8.2: Trigger**
+Record: Suspend with WoWLAN while associated to an MLO AP that rejects
+non-QoS Data. Common for Wi-Fi 7 + lid-close. Unprivileged in the sense
+of normal laptop suspend, not an exploit primitive.
+
+**Step 8.3: Failure mode**
+Record: AP discards keep-alive and/or ARP offload → association can drop
+in suspend. **Severity: MEDIUM** (connectivity / suspend Wi-Fi, not
+oops/corruption). Matches stable-rules “hardware quirk” / “oh, that’s
+not good”, not crash/UAF.
+
+**Step 8.4: Risk–benefit**
+Record:
+- Benefit: MLO WoWLAN keep-alive and ARP offload actually accepted;
+  avoids silent disconnect on suspend for Wi-Fi 7 rtw89.
+- Risk: ~24 lines, MLO-only, no locking/API. Low.
+- Ratio: favorable for this tree, which already has MLO WoW + ARP
+  templates.
+
+---
+
+## Phase 9: Synthesis
+
+**Step 9.1: Evidence**
+
+For:
+- Real interoperability bug on an existing path (WoW ARP template), not
+  a new driver or API.
+- This 7.3 tree has MLO, `rtw89_arp_response_get()`, keep-alive, and ARP
+  offload.
+- Small, obviously correct, non-MLO behavior preserved.
+- Maintainer SOB + applied to rtw.git.
+- Official stable rules allow hardware quirks and “oh, that’s not good”
+  issues; this is AP-side discard of malformed/non-QoS MLO data.
+- Suspend/WoWLAN disconnect is user-visible on shipping Realtek Wi-Fi 7
+  hardware.
+
+Against:
+- Not oops/deadlock/corruption/security.
+- `rtw-next` series titled “update some MAC, FW and WoWLAN settings”;
+  cover letter says “support WoWLAN with MLO AP”.
+- No external reporters, Tested-by, or Fixes: tag.
+- Affects only MLO + WoWLAN.
+
+Unresolved:
+- Stable-list history (lore bot wall).
+- Which exact APs need QoS (commit says “some MLO APs”).
+
+**Step 9.2: Stable rules checklist** (`Documentation/process/stable-
+kernel-rules.rst`)
+1. Obviously correct and tested? **PASS** — vendor + maintainer, tiny,
+   protocol order verified in tree.
+2. Real bug that bothers users? **PASS** — WoWLAN ARP ignored, possible
+   disconnect in suspend on MLO.
+3. Important (crash/security/corruption/deadlock **or** quirk / “oh
+   that’s not good”)? **PASS** — quirk / connectivity, not CRITICAL
+   crash.
+4. Small and contained? **PASS** — one function, well under 100 lines.
+5. No new features/APIs? **PASS** — frame format fix for existing
+   offload, no new uAPI.
+6. Applies to this tree? **PASS** — helpers and callers exist; hunk
+   matches `fw.c`.
+
+**Step 9.3: Exception category**
+Record: Hardware/protocol quirk (MLO APs dropping non-QoS WoW ARP),
+analogous to other driver workarounds. Not a device-ID one-liner, but
+the same class.
+
+**Step 9.4: Decision**
+This tree is **7.3.0-rc4**. rtw89 already implements MLO WoWLAN and
+uploads ARP templates for keep-alive and ARP offload. Sending those as
+non-QoS Data is wrong for MLO APs and can drop the link in suspend. The
+patch is a small, MLO-only frame-format fix with low regression risk and
+no extra series dependencies. That is appropriate to have in this tree’s
+stable line.
+
+### What it solves for users of this tree
+WoWLAN keep-alive and ARP offload on rtw89 MLD vifs were built as
+ordinary Data frames. Some MLO APs drop those, so the AP may age out the
+STA during suspend. Adding QoS Control + QoS Data subtype makes those
+firmware-transmitted frames acceptable while leaving legacy associations
+unchanged.
+
+### Risk vs benefit
+Benefit is restoring Wi-Fi 7 WoWLAN connectivity on Realtek rtw89. Risk
+is a 2-byte header on the MLO path only. Non-MLO frame control stays
+Data+ToDS.
+
+### Concerns
+Cover letter frames this as MLO WoW “support” in a mixed `rtw-next`
+series, and there is no public reproducer. On this 7.3 tree those
+features already exist, so this is a contained correctness fix, not a
+new subsystem.
+
+---
 
 Verification:
-- [Phase 1] Subject/tags: fix panic; SOB Zhi-Jun You + Felix Fietkau;
-  Link `20260715152113.553-1`; no Fixes/Cc-stable
-- [Phase 1] Series: v2 1/2; 2/2 already `8eae5e5aa09da` on pending-6.6
-- [Phase 2] Diff: 6 insertions in `mt76_wed_init_rx_buf`; queue MAIN vs
-  BAND1
-- [Phase 3] Blame on 6.6: `q = &dev->mt76.q_rx[MT_RXQ_MAIN]` from
-  `2f5c3c77fc9b6` (page_pool); present
-- [Phase 3] `8a7386e787ef4` (wed.c split) **not** ancestor of
-  pending-6.6
-- [Phase 3] Fix `8a177dabeeead` **not** ancestor of pending-6.6
-- [Phase 4] b4 dig: RFC → v1 → v2; applied v2; Felix merged 2026-07-31
-- [Phase 4] Recipients: mt76 maintainers + linux-wireless/mediatek
-- [Phase 4] UNVERIFIED: lore.kernel.org and lore.kernel.org/stable HTTP
-  403; used ratatoskr mirrors
-- [Phase 5] Caller: `mtk_wed_rx_buffer_alloc` → `wlan.init_rx_buf` from
-  `mtk_wed_start` / probe
-- [Phase 6] `git show pending-6.6:Makefile`: VERSION 6 / PATCHLEVEL 6 /
-  SUBLEVEL 157
-- [Phase 6] `git cat-file` pending-6.6 `wed.c`: path does not exist
-- [Phase 6] pending-6.6 `mmio.c:635`: hardcoded `MT_RXQ_MAIN`; `init.c`
-  sets `band_idx = 1` for one-A-die MT7986
-- [Phase 6] DMA: MAIN allocated only if `!band_idx`; BAND1 if
-  `dbdc_support || band_idx`
-- [Phase 6] `wed->version` exists; set to 2 for MT7986-class WED
-- [Phase 8] Failure: NULL page_pool deref → oops; CRITICAL for that
-  SKU+WED
-- UNVERIFIED: whether an out-of-tree module contributed besides in-tree
-  frames (taint `O`)
+- [Phase 1] Parsed subject/tags/body from `git log -1 --format=fuller
+  03a963f4aeda5`; msgid is 09/10 of `20260625061545.44808`.
+- [Phase 2] Diff vs current `fw.c` `rtw89_arp_response_get()`; +24/−7 in
+  one function; QoS inserted after 3-addr header, before IV.
+- [Phase 3] `git merge-base --is-ancestor 03a963f4aeda5 HEAD` → yes;
+  `git describe --contains` → `v7.3-rc1~…`; blame shows intro
+  `58ed86e1666b3`; parent `76edcedda6437` is address-only.
+- [Phase 3] `git log --oneline --grep=20260625061545.44808 --
+  drivers/net/wireless/realtek/rtw89/` listed all 10 series commits.
+- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 `rtw-next` 10-patch series; applied
+  by Ping-Ke; no NAK; no stable Cc. WebFetch lore 403; curl stable list
+  Anubis-blocked.
+- [Phase 5] Grep: ARP_RSP used from keep-alive and ARP offload;
+  `rtw89_wow_fw_start()` enables both.
+- [Phase 6] `git describe HEAD` = v7.3-rc4-27-g…; `VERSION/PATCHLEVEL`
+  7.3.0-rc4; MLO/WoW/ARP code present.
+- [Phase 7] rtw89 Wi-Fi 6/7 driver, active history on `fw.c`.
+- [Phase 8] Failure mode: AP drops WoW ARP → disconnect in suspend; not
+  a kernel oops.
+- [Phase 9] Checked `Documentation/process/stable-kernel-rules.rst`
+  (quirk / “oh that’s not good”, ≤100 lines).
+- UNVERIFIED: lore.kernel.org/stable archives (bot challenge).
+- UNVERIFIED: exact AP models for the QoS requirement (not named in
+  commit or mbox).
 
 **YES**
 
- drivers/net/wireless/mediatek/mt76/wed.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/fw.c | 31 +++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/wed.c b/drivers/net/wireless/mediatek/mt76/wed.c
-index fbd7e59c73aaf..2ebf4edc689e9 100644
---- a/drivers/net/wireless/mediatek/mt76/wed.c
-+++ b/drivers/net/wireless/mediatek/mt76/wed.c
-@@ -33,10 +33,15 @@ u32 mt76_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index c6533a085c7fe..299526220380f 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2701,6 +2701,7 @@ static struct sk_buff *rtw89_sa_query_get(struct rtw89_dev *rtwdev,
+ static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
+ 					      struct rtw89_vif_link *rtwvif_link)
  {
- 	struct mtk_wed_bm_desc *desc = wed->rx_buf_ring.desc;
- 	struct mt76_dev *dev = mt76_wed_to_dev(wed);
--	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
- 	struct mt76_txwi_cache *t = NULL;
-+	struct mt76_queue *q;
- 	int i;
++	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif_link->rtwvif);
+ 	struct rtw89_vif *rtwvif = rtwvif_link->rtwvif;
+ 	u8 sec_hdr_len = rtw89_wow_get_sec_hdr_len(rtwdev);
+ 	struct rtw89_wow_param *rtw_wow = &rtwdev->wow;
+@@ -2708,26 +2709,42 @@ static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
+ 	struct rtw89_arp_rsp *arp_skb;
+ 	struct arphdr *arp_hdr;
+ 	struct sk_buff *skb;
+-	__le16 fc;
++	bool with_qos;
++	u16 fc;
  
-+	if (wed->version == 2 && dev->phy.band_idx)
-+		q = &dev->q_rx[MT_RXQ_BAND1];
-+	else
-+		q = &dev->q_rx[MT_RXQ_MAIN];
+-	skb = dev_alloc_skb(sizeof(*hdr) + sec_hdr_len + sizeof(*arp_skb));
++	with_qos = ieee80211_vif_is_mld(vif);
 +
- 	for (i = 0; i < size; i++) {
- 		dma_addr_t addr;
- 		u32 offset;
++	rtw89_debug(rtwdev, RTW89_DBG_WOW, "[arp_reply] with qos field: %s\n",
++		    str_yes_no(with_qos));
++
++	skb = dev_alloc_skb(sizeof(*hdr) + sec_hdr_len + sizeof(*arp_skb) +
++			    (with_qos ? 2 : 0));
+ 	if (!skb)
+ 		return NULL;
+ 
+ 	hdr = skb_put_zero(skb, sizeof(*hdr));
+ 
++	fc = IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS;
++
+ 	if (rtw_wow->ptk_alg)
+-		fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS |
+-				 IEEE80211_FCTL_PROTECTED);
++		fc |= IEEE80211_FCTL_PROTECTED;
++
++	if (with_qos)
++		fc |= IEEE80211_STYPE_QOS_DATA;
+ 	else
+-		fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS);
++		fc |= IEEE80211_STYPE_DATA;
++
++	hdr->frame_control = cpu_to_le16(fc);
+ 
+-	hdr->frame_control = fc;
+ 	ether_addr_copy(hdr->addr1, rtwvif_link->bssid);
+ 	ether_addr_copy(hdr->addr2, rtwvif_link->mac_addr);
+ 	ether_addr_copy(hdr->addr3, rtwvif_link->bssid);
+ 
+-	skb_put_zero(skb, sec_hdr_len);
++	if (with_qos)
++		skb_put_zero(skb, sizeof(__le16));
++
++	if (sec_hdr_len)
++		skb_put_zero(skb, sec_hdr_len);
+ 
+ 	arp_skb = skb_put_zero(skb, sizeof(*arp_skb));
+ 	memcpy(arp_skb->llc_hdr, rfc1042_header, sizeof(rfc1042_header));
 -- 
 2.53.0
 
