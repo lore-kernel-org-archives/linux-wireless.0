@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202C2642370;
-	Mon, 19 Oct 2026 14:06:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69AC864C41C;
+	Mon, 19 Oct 2026 14:06:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418788; cv=none; b=cjNdaK4bVExQTV0hTKlGOd32/7fTP9Gh/vGG0HaKgBFwCEpRUdrm9Bq+OKy+5WGa4cLqgYpJ8js+oqlUl3oFSZ3HKJNu40w7xN7lHeEcKKZBHn6AmdJFzMjAumlmexS3RysjWDiLYdrQ4pxzoGMx9RohMcsHostlRjeyn3/aywk=
+	t=1792418822; cv=none; b=UadLGS6/tth2nxUGCKdClShhMQYqPA4PosRooSricBRmtQM0KsgPoi3BrzamkB1sQH6th0HKA1ifhsSeY5P1ydWx1y5iKQzZDeb9KYes1OIu3yymFKK/ozf8uCMUVPQMB0cjnBNkcZtIobG1x1/VoHChq83dbwccg08Y1RM0QB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418788; c=relaxed/simple;
-	bh=ULzBuNsp5/KA8f2xhXz2slDWPCzWt/1H3q+Yw2VtfRw=;
+	s=arc-20240116; t=1792418822; c=relaxed/simple;
+	bh=JePvHHriR9Uz5hahUwNPgpcuWpfGjqwZBG6fLHqZiHc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gD/DYsI8ssxwwpgJ7+9xVepU7u+PuDgCLl4WIw5l+Oln5j98/Jsv6r6m+ZOIRIymep9jbnUrwTyq+lcsZrDG7qHmK9FzKJrJXHunIjWeZ3R3Cc6kGPcsGgSPliA72kt+lwXZOM50IwwRKARSDvM4yHoYy1I46PhBQNpGqqMR6io=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n8SbzL3X; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=oLeTmDhr1KUBZGaVbMEZko3PZ8fdrmcox+Wv7Neyo1v7nUNqHg6YjgcuoudiCe4YqGiF2/bImKZo2XS2ZTdlXjMMicXljuckOWOMGujcE33qWfLuQdTpls/oVj+3bkcLHqT7bezDXA6EZbTHk5/sA/RFtBg2o4WZFR55CfyJJcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VcXRMFJJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n8SbzL3X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 197801F000C6;
-	Mon, 19 Oct 2026 14:06:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VcXRMFJJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AA011F000C6;
+	Mon, 19 Oct 2026 14:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418786;
-	bh=y/vPFOG9Gr5B2/yachfszVsHJr0+zaqYK/PdeN07960=;
+	s=k20260515; t=1792418816;
+	bh=B5YYPIxfAI73hAgTN9wvGfVFwk19HyvqgMAuoF0zEaI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=n8SbzL3XxBv2TjzBq0hLhXLoXPkpGQUncPcGvJGA8yYkY3n7TmhMrubOhvoqk9a6e
-	 NtLOMen2dT49iFtcRNCzIXXbsXtlkwpCLXlOmLuvOiZEyt1AUJebb7CNABI0QoWjTI
-	 wYgmvvDaMD5lclDQhHMd5twmZ+CF7A0WIsNarJDXx4JoUfeAjwb0qTEtgyy//8Ands
-	 w7vbhnufviQJc0z9xiiRqm1ZAzl1M67M/9LlU5lKtkyqGOSXI0XNuEtDWr90+HVwUd
-	 9BRMzZR1LYf+khz6f0VR0TBCdbFmrOT9yUUEK99BhNfc8F1aqHmscbafvtoJtH9TWH
-	 YNHw1MhZS4U0g==
+	b=VcXRMFJJYAi+pAkOQzRnssxP31bKxp+nMUW5e/8U9vG1BPRPaPqZExoEgP6tbB1qQ
+	 gIg1fSNfW7wtls9qVxkVcDInOIFsy9qezEFw79EArnO7JjprdxlsjD6NW2+NwyC3IS
+	 IkgwI6DS91QMvKiysgYC03HadY54S61KSTFERvbeiV7wViv8iU5nFkz9F/qdCx9FGl
+	 beDxUGk9KAd25cZ7nubfS2scUfJI8lBSxJAhYo4vwJAmLeOAQI4gJ3KJ2f+pbtYdj+
+	 nMEqLLNCQ/LIkCefemydoVAwsrx7d6O4oTpC0KzBYIZQJGuxUAkukiN1Bdp9tJkWKd
+	 fuEio8e/go5nA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Shahar Tzarfati <shahar.tzarfati@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Can Peng <pengcan@kylinos.cn>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
 	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mac80211: ibss: read deauth reason_code after frame length check
-Date: Mon, 19 Oct 2026 09:53:06 -0400
-Message-ID: <20261019135441.1420968-495-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: brcmfmac: validate msgbuf flowring IDs before use
+Date: Mon, 19 Oct 2026 09:53:28 -0400
+Message-ID: <20261019135441.1420968-517-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -54,385 +55,514 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Shahar Tzarfati <shahar.tzarfati@intel.com>
+From: Can Peng <pengcan@kylinos.cn>
 
-[ Upstream commit aa4c0a649903567762edf2bbc7fff608953b3ca4 ]
+[ Upstream commit 32856f39fefdc75bd253cab999f996750628648e ]
 
-The function was reading reason_code from the frame before validating
-that the frame is at least IEEE80211_DEAUTH_FRAME_LEN bytes long.
+Firmware messages carry flow_ring_id values which brcmfmac converts
+to an internal flowid by subtracting
+BRCMF_H2D_MSGRING_FLOWRING_IDSTART. The resulting value is used as
+a bit index in txstatus_done_map and as an array index into
+msgbuf->flowrings and the flowring state.
 
-Move the reason_code read to after the length check so the field is
-guaranteed to be present before it is accessed.
+Validate the firmware supplied flow_ring_id before using it. This
+prevents flow_ring_id values below BRCMF_H2D_MSGRING_FLOWRING_IDSTART
+from underflowing and rejects values outside msgbuf->max_flowrings.
 
-Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20260715212706.db26604650bd.I2caa73c396b8c9d357224b9334d5df3cafac498e@changeid
+In the tx status path, complete the packet with an error after
+removing a valid packet id so the skb is not leaked when the flow
+ring id is invalid.
+
+Signed-off-by: Can Peng <pengcan@kylinos.cn>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Link: https://patch.msgid.link/20260723055618.550834-1-pengcan@kylinos.cn
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+This is a 5.15.221 tree (`pending-5.15`). The buggy firmware-ID indexing
+is present here, and the patch is a small bounds check that prevents
+out-of-bounds writes/crashes and an skb leak.
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-Record: `[mac80211/ibss] [read / reorder] Move IBSS deauth `reason_code`
-access to after the existing frame-length check.`
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- `Fixes:` — none (expected)
-- `Reported-by:` — none
-- `Tested-by:` — none
-- `Reviewed-by:` — none on the commit
-- `Acked-by:` — none
-- `Link:` `https://patch.msgid.link/20260715212706.db26604650bd.I2caa73c
-  396b8c9d357224b9334d5df3cafac498e@changeid`
-- `Cc: stable@vger.kernel.org` — none (expected)
-- `Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>` (author)
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (Intel wireless)
-- `Signed-off-by: Johannes Berg <johannes.berg@intel.com>` (mac80211
+Step 1.1: PARSE THE SUBJECT LINE
+Record: [subsystem: wifi: brcmfmac] [action verb: validate] [intent:
+reject firmware-supplied msgbuf flowring IDs before they are used as
+bitmap/array indexes]
+
+Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+Record: Tags in the candidate message:
+- Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com> (brcmfmac
   maintainer)
+- Link:
+  https://patch.msgid.link/20260723055618.550834-1-pengcan@kylinos.cn
+- Signed-off-by: Can Peng <pengcan@kylinos.cn> (author)
+- Signed-off-by: Johannes Berg <johannes.berg@intel.com> (wireless
+  maintainer who applied it)
 
-No syzbot, no CVE, no multi-user reports. Maintainer SOB is the main
-trust signal.
+No Reported-by, Tested-by, Fixes, or Cc: stable in the candidate text
+(absence expected). The original mailing-list submission (v1, same
+msgid) did include `Fixes: 9a1bb60250d2 ("brcmfmac: Adding msgbuf
+protocol.")` and `Cc: stable@vger.kernel.org`; those are author-
+submitted tags, not pipeline markers.
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
+Step 1.3: ANALYZE THE COMMIT BODY TEXT
 Record:
-- **Bug:** `ieee80211_rx_mgmt_deauth_ibss()` read
-  `mgmt->u.deauth.reason_code` before checking `len >=
-  IEEE80211_DEAUTH_FRAME_LEN`.
-- **Symptom/failure mode:** 2-byte read past the validated frame on a
-  truncated deauth. Value is then discarded if the length check fails.
-- **Version info:** none in the message.
-- **Root cause (author):** field access before the length check; move
-  the read after the check.
+- Bug: firmware `flow_ring_id` is converted with `id -
+  BRCMF_H2D_MSGRING_FLOWRING_IDSTART` and then used as a bit index in
+  `txstatus_done_map` and an array index into `msgbuf->flowrings` /
+  flowring state, with no range check.
+- Failure mode: IDs below `BRCMF_H2D_MSGRING_FLOWRING_IDSTART` (2)
+  underflow a `u16`; IDs above `max_flowrings` index past allocated
+  arrays. On the TX-status path, a valid pktid can already have been
+  taken, so an early return would leak the skb.
+- Version info in the body: none. Original Fixes target is from 2014.
+- Root cause (author): missing validation of firmware-supplied ring IDs.
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not a disguised cleanup. It is an explicit bounds-check-before-
-access fix. The length check already existed; only the premature read
-was wrong.
+Step 1.4: DETECT HIDDEN BUG FIXES
+Record: Not a hidden fix. The subject/body describe a bounds check and
+an skb-leak close on the invalid-ID TX-status path.
 
----
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
 
-## PHASE 2: DIFF ANALYSIS - LINE BY LINE
-
-**Step 2.1: INVENTORY THE CHANGES**
+Step 2.1: INVENTORY THE CHANGES
 Record:
-- File: `net/mac80211/ibss.c` (+3 / −1)
-- Function: `ieee80211_rx_mgmt_deauth_ibss()`
-- Scope: single-file surgical fix
+- File: `drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c`
+  (single file)
+- Scope: ~40 insertions / 6 deletions (mailing-list v1: 46 lines net in
+  that file)
+- Functions: adds `brcmf_msgbuf_get_flowid()`; changes
+  `brcmf_msgbuf_process_txstatus()`,
+  `brcmf_msgbuf_process_flow_ring_create_response()`,
+  `brcmf_msgbuf_process_flow_ring_delete_response()`
+- Classification: single-file surgical fix
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record: Before: initialize `reason` from `mgmt->u.deauth.reason_code`,
-then return if `len < 26`. After: declare `reason`, length-check first,
-then read the field. `ibss_dbg()` and `sta_info_destroy_addr()` are
-unchanged and remain after the check.
-
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Memory safety / out-of-bounds read.**
-`IEEE80211_DEAUTH_FRAME_LEN` is `(24 /* hdr */ + 2 /* reason */)`.
-`reason_code` sits at offset 24 in `struct ieee80211_mgmt`. RX already
-drops mgmt frames shorter than the 802.11 header (`skb->len <
-ieee80211_hdrlen(fc)` in `ieee80211_rx()`), so 24- and 25-byte deauths
-can still reach this handler. Those frames do not contain the reason
-field; the old code always read it anyway. On the short-frame path the
-value is unused (immediate `return`).
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-Record: Obviously correct: same pattern as
-`ieee80211_rx_mgmt_auth_ibss()` in the same file and as
-`ieee80211_rx_mgmt_deauth()` in `mlme.c` (`4a360c6e18dfa`). Minimal, no
-API/locking/structure changes. Regression risk is negligible (debug
-print still sees a valid reason on well-formed frames).
-
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
-
-**Step 3.1: BLAME THE CHANGED LINES**
-Record: Function introduced in `2cc59e784b54` (Antonio Quartulli,
-2012-09-07, “mac80211: reply to AUTH with DEAUTH if sta allocation fails
-in IBSS”). The premature `reason_code` read was in the original
-function. Present for ~14 years, including this 7.3 tree’s lineage.
-
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Buggy commit is `2cc59e784b54`, which `git
-merge-base --is-ancestor` confirms is in this tree.
-
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Recent `ibss.c` work is unrelated (TX-on-disconnect, rx_nss).
-Same-day series patch 2/2 was mlme deauth length checking; that path was
-already fixed by `4a360c6e18dfa` (“wifi: mac80211: validate deauth frame
-length before reason access”, Zhao Li, 2026-06-13). This IBSS patch is
-standalone.
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Shahar Tzarfati is an Intel wireless contributor (iwlwifi
-bounds-check fixes plus this IBSS change). Not the mac80211 maintainer;
-Johannes Berg applied it.
-
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: None. Uses existing `IEEE80211_DEAUTH_FRAME_LEN` (defined 2012
-in `net/mac80211/ieee80211_i.h`). Applies standalone.
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
 Record:
-- `b4 dig -c aa4c0a649903`: https://patch.msgid.link/20260715212706.db26
-  604650bd.I2caa73c396b8c9d357224b9334d5df3cafac498e@changeid
-- `b4 dig -a`: single revision, `[PATCH wireless-next 1/2]`
-- Thread (mbox): no replies, no NAK, no `Cc: stable` request. Johannes
-  applied v1.
+- Helper (new): convert firmware `flow_ring_id` to internal `flowid`
+  only if `id >= BRCMF_H2D_MSGRING_FLOWRING_IDSTART` and `(id - START) <
+  msgbuf->max_flowrings`. Uses `u32` so the subtract cannot wrap.
+- TX status (normal/error path): previously always subtracted then
+  `set_bit(flowid, txstatus_done_map)`, `msgbuf->flowrings[flowid]`,
+  `atomic_dec`, `brcmf_txfinalize(..., true)`. After: if ID invalid,
+  `brcmf_txfinalize(..., false)` and return (skb already taken from
+  pktid table).
+- Create/delete response: previously subtracted and used the index
+  unconditionally (`brcmf_msgbuf_remove_flowring`,
+  `brcmf_flowring_open`, `brcmf_flowring_delete`). After: invalid ID
+  returns without touching rings.
 
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w`): To Johannes Berg; Cc `linux-wireless@`, Shahar
-Tzarfati, sent by Miri Korenblit. No extra reviewer tags; maintainer
-merge is the review signal.
-
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No Reported-by, syzbot, or bugzilla. Sibling `4a360c6e18dfa` on
-the STA deauth path is the same class of bug (LLM-assisted). No user
-crash report found.
-
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: 2/2 was `wifi: mac80211: mlme: read deauth reason_code after
-frame length check`. It was not committed (mlme already had
-`4a360c6e18dfa`). 1/2 does not depend on 2/2.
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org search was blocked (Anubis 403). UNVERIFIED
-whether linux-stable discussed this. No local `ibss.c` history indicates
-a prior stable rejection.
-
----
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: `ieee80211_rx_mgmt_deauth_ibss()`
-
-**Step 5.2: TRACE CALLERS**
+Step 2.3: IDENTIFY THE BUG MECHANISM
 Record:
-- `ieee80211_ibss_rx_queued_mgmt()` → `IEEE80211_STYPE_DEAUTH` case,
-  `mgmt = skb->data`, `len = skb->len`
-- `ieee80211_iface_work()` in `iface.c` for `NL80211_IFTYPE_ADHOC`
-- Frames queued from `ieee80211_rx_h_mgmt()` in `rx.c` (IBSS deauth
-  allowed)
+- Category: memory safety (out-of-bounds index / underflow) plus
+  resource leak on the TX-status error path.
+- Mechanism: firmware DMA completion messages supply
+  `compl_hdr.flow_ring_id`. `BRCMF_H2D_MSGRING_FLOWRING_IDSTART` is 2.
+  For ID 0 or 1, `u16 flowid -= 2` wraps to 65534/65535. `set_bit()`
+  then writes far past `txstatus_done_map` (sized to `max_flowrings`
+  bits). `msgbuf->flowrings[flowid]` is an OOB load and typically a
+  crash. Oversized IDs do the same without wrapping. The helper rejects
+  both. TX-status also finalizes the skb so `brcmf_msgbuf_get_pktid()`’s
+  take is not leaked.
 
-Workqueue / wiphy context, not hardirq. Reachable from over-the-air RX.
-
-**Step 5.3: TRACE CALLEES**
-Record: `le16_to_cpu()`, `ibss_dbg()` (`MAC80211_IBSS_DEBUG` only),
-`sta_info_destroy_addr()`. Functional work was already after the length
-check.
-
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Wireless NIC RX → `ieee80211_rx()` (drops `skb->len < hdrlen`) →
-`ieee80211_rx_h_mgmt()` → iface work → `ieee80211_ibss_rx_queued_mgmt()`
-→ deauth handler. A peer on the IBSS can send a 24-byte deauth.
-Unprivileged local userspace cannot inject this without packet
-injection; a radio neighbor can. `ibss_dbg` does not gate the old read:
-`reason` was initialized before the debug macro.
-
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Same bug on STA deauth (`mlme.c`, fixed in `4a360c6e18dfa`).
-IBSS auth already checks `len < 24 + 6` before reading auth fields.
-Probe-req path checks `len < 24 + 2`. This was the remaining IBSS deauth
-hole.
-
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: Local tree is **v7.3-rc4-27-gf0100363d8c37** (`VERSION=7
-PATCHLEVEL=3 SUBLEVEL=0 EXTRAVERSION=-rc4`).
-`ieee80211_rx_mgmt_deauth_ibss()` exists in `net/mac80211/ibss.c`. Bug
-introduced 2012 (`2cc59e784b54`), long before this branch. Current file
-already has the fixed order (commit is an ancestor of HEAD). Evaluation
-is of the pre-fix bug in this lineage, not “already selected.”
-
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: Clean apply. Surrounding function matches the pre-image; no
-conflicting refactor of this handler.
-
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No earlier IBSS-specific version of this fix. `4a360c6e18dfa`
-only covers `mlme.c`. No duplicate IBSS patch.
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: `net/mac80211` IBSS/ad-hoc RX. **IMPORTANT** for IBSS users,
-**PERIPHERAL** vs core mm/VFS. IBSS is built with mac80211 (only
-`MAC80211_IBSS_DEBUG` is extra). Less common than infrastructure STA,
-but real (ad-hoc, some embedded/industrial).
-
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: mac80211 is actively developed; this IBSS handler has been
-stable since 2012. Long-lived bug, not churn from new code.
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: Driver-specific / config-specific: mac80211 IBSS
-(`NL80211_IFTYPE_ADHOC`). Not all wifi users; IBSS is a minority of
-deployments.
-
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: Truncated deauth (len 24 or 25) on an IBSS interface. Not every
-boot; needs IBSS up plus a short frame (malformed or hostile). Remote
-on-air trigger. Local unprivileged trigger only with injection.
-
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: 2-byte read past `skb->len` into a local that is discarded on
-the short-frame path. No leak through `ibss_dbg` (return happens first).
-Crash only if the skb has no tailroom past 24 bytes (often it does).
-KASAN may or may not fire depending on allocator vs `skb->len`.
-Severity: **MEDIUM** (CWE-125 / packet-parser OOB), not a demonstrated
-oops or UAF.
-
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Step 2.4: ASSESS THE FIX QUALITY
 Record:
-- **Benefit:** Closes a real, remotely reachable OOB in frame parsing.
-  Modest user-visible impact (IBSS, discarded 2 bytes).
-- **Risk:** Very low (3 lines, no locking/API, same pattern as mlme).
-- **Ratio:** Favorable. Cheap to take; cost of skipping is leaving a
-  parser OOB in long-lived code.
+- Obviously correct: range check matches how the host builds IDs
+  (`flowid + BRCMF_H2D_MSGRING_FLOWRING_IDSTART` in create/delete
+  requests). Happy path is unchanged.
+- Minimal: one helper, three call sites, no API change.
+- Regression risk: low. Invalid create/delete IDs now skip ring
+  teardown; that is safer than OOB. A stuck ring on bogus firmware is
+  preferable to memory corruption. `brcmf_txfinalize()` already handles
+  a NULL `ifp` from a bad `ifidx` by freeing the skb.
+- Red flags: none. Double blank line after the helper is style-only (v2
+  tried to clean it; Johannes applied v1).
 
----
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
-## PHASE 9: FINAL SYNTHESIS
+Step 3.1: BLAME THE CHANGED LINES
+Record:
+- Unvalidated `flowid = le16_to_cpu(...flow_ring_id)` dates to
+  9a1bb60250d2 (Hante Meuleman, 2014-07-30), “brcmfmac: Adding msgbuf
+  protocol.”
+- The subtract of `BRCMF_H2D_MSGRING_FLOWRING_IDSTART` was added in
+  be4b092cab84b (Franky Lin, 2016-11-23), “brcmfmac: add pcie host
+  dongle interface rev6 support” (replaced
+  `BRCMF_NROF_H2D_COMMON_MSGRINGS`, also 2).
+- Code has been in-tree for many years, including this 5.15 branch.
 
-**Step 9.1: COMPILE THE EVIDENCE**
+Step 3.2: FOLLOW THE FIXES: TAG
+Record:
+- Original mailing-list Fixes: 9a1bb60250d2. `git merge-base --is-
+  ancestor 9a1bb60250d2 HEAD` succeeds.
+- Slightly imprecise: large-ID OOB is from 2014; underflow of IDs 0/1 is
+  from the 2016 subtract. Both commits are in this tree.
+- No later in-tree fix of the same hole (`brcmf_msgbuf_get_flowid` is
+  absent; `git log --grep="invalid flowring"` / `--grep="flow_ring_id"`
+  on this path found nothing equivalent).
 
+Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
+Record: Recent `msgbuf.c` commits here are unrelated (pktid DMA unmap,
+allocation-mode plumbing, memleak in attach). Not part of a functional
+series that must land first. v2 was whitespace-only prep + the same
+validation; Johannes applied v1 and declined the cleanup.
+
+Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
+Record: `git log --author="Can Peng"` on
+`drivers/net/wireless/broadcom/brcm80211/` in this tree is empty
+(outside contributor). Weight comes from Arend van Spriel’s Acked-by and
+Johannes applying the patch.
+
+Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
+Record: No new helpers, structs, or APIs. Uses existing `bphy_err`,
+`brcmf_txfinalize`, `brcmf_get_ifp`, `msgbuf->max_flowrings`.
+Standalone. v2 patch 1/2 (blank-line cleanup) is not required.
+
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
+
+Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
+Record:
+- `b4 mbox` on msgid `20260723055618.550834-1-pengcan@kylinos.cn`
+  retrieved the thread (lore WebFetch returned 403).
+- v1: standalone `[PATCH wireless]` with Fixes + Cc: stable.
+- Arend: one nit (double blank line), “To be applied to wireless tree,”
+  Acked-by. No NAK.
+- v2: 0/2 cover + whitespace cleanup + same validation rebase. Johannes:
+  too late, he already applied v1; not rebasing for whitespace.
+- Applied version matches the candidate (v1, double blank line kept). No
+  later functional revision.
+
+Step 4.2: CHECK WHO REVIEWED THE PATCH
+Record: To: Arend van Spriel. Cc: linux-wireless, brcm80211 lists,
+linux-kernel, stable@vger.kernel.org. Ack from the brcm80211 maintainer;
+applied by Johannes Berg.
+
+Step 4.3: SEARCH FOR THE BUG REPORT
+Record: No syzbot, bugzilla, or user crash in the message. Justification
+is code analysis of firmware-supplied indexes. Trigger is a bad
+`flow_ring_id` on D2H completion rings (firmware bug, DMA corruption, or
+hostile firmware), not a documented userspace repro.
+
+Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
+Record: v2 series is cleanup + this fix. Functional patch is self-
+contained. No other msgbuf ID-validation patches in the thread.
+
+Step 4.5: CHECK STABLE MAILING LIST HISTORY
+Record: Author Cc’d stable@vger.kernel.org on v1/v2. No separate stable-
+list rejection found. lore.kernel.org HTTP from WebFetch was 403;
+evidence is the b4-retrieved mbox.
+
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
+
+Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
+Record: `brcmf_msgbuf_get_flowid` (new);
+`brcmf_msgbuf_process_txstatus`;
+`brcmf_msgbuf_process_flow_ring_create_response`;
+`brcmf_msgbuf_process_flow_ring_delete_response`.
+
+Step 5.2: TRACE CALLERS
+Record:
+- All three process_* functions are called only from
+  `brcmf_msgbuf_process_msgtype()` (`MSGBUF_TYPE_TX_STATUS`,
+  `MSGBUF_TYPE_FLOW_RING_CREATE_CMPLT`,
+  `MSGBUF_TYPE_FLOW_RING_DELETE_CMPLT`).
+- That is called from `brcmf_msgbuf_process_rx()` while draining D2H
+  rings.
+- `brcmf_proto_msgbuf_rx_trigger()` calls process_rx for RX/TX/control
+  complete rings.
+- Call site: `brcmf_pcie_isr_thread()` in `pcie.c` on
+  `BRCMF_PCIE_MB_INT_D2H_DB` (IRQ thread). Hot path for PCIe FullMAC
+  traffic.
+
+Step 5.3: TRACE CALLEES
+Record: `brcmf_msgbuf_get_pktid` (takes skb out of the TX pktid table;
+already bounds-checks pktid); `set_bit`; `msgbuf->flowrings[flowid]`;
+`atomic_dec(&commonring->outstanding_tx)`; `brcmf_txfinalize`;
+`brcmf_get_ifp`; `brcmf_msgbuf_remove_flowring` /
+`brcmf_flowring_delete` / `brcmf_flowring_open` (those use `flowid` as
+`flow->rings[flowid]` with no extra range check).
+
+Step 5.4: FOLLOW THE CALL CHAIN
+Record: Userspace TX → flowring → firmware; firmware posts TX-status /
+create / delete completions into DMA rings; host IRQ processes them. Any
+PCIe brcmfmac user hits this path. Not a syscall fuzz target by itself;
+firmware-supplied fields in DMA completions are still a real input.
+
+Step 5.5: SEARCH FOR SIMILAR PATTERNS
+Record: Other `flow_ring_id` uses: host-generated create/delete
+requests, and ring-status which only logs the ID. No sibling driver copy
+of this helper. `brcmf_flowring_delete`/`open` do not bounds-check
+`flowid`; they assume the caller already has a valid index.
+
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
+
+Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
+Record: Yes. This checkout is 5.15.221 (`p-5.15-2-g6703e5d2f3a29`).
+Unvalidated subtract is in `msgbuf.c` at process_txstatus (~883–891),
+create_response (~1239–1245), delete_response (~1268–1274). Introduced
+2014/2016; present here. `brcmf_msgbuf_get_flowid` is not present.
+
+Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
+Record: Minor context conflict. 5.15 `brcmf_msgbuf_rxreorder` still has
+a `bool inirq` argument (687006e20c445); the candidate hunk context uses
+the later two-argument form. Insertion point after
+`brcmf_msgbuf_remove_flowring` and the three process_* hunks match.
+Expected: trivial context adjust, not a rework. `bphy_err`,
+`max_flowrings`, `brcmf_txfinalize` all exist.
+
+Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
+Record: No equivalent validation. Unrelated msgbuf fixes (pktid unmap,
+attach memleak) do not close this hole.
+
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
+
+Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
+Record: [brcmfmac msgbuf / PCIe FullMAC Wi-Fi] [IMPORTANT]. Not core
+mm/vfs, but used on Raspberry Pi-class boards and many Broadcom PCIe
+WLAN cards. `CONFIG_BRCMFMAC_PCIE` selects `BRCMFMAC_PROTO_MSGBUF`.
+SDIO/USB FullMAC uses BCDC, not this path.
+
+Step 7.2: ASSESS SUBSYSTEM ACTIVITY
+Record: Mature. msgbuf protocol from 2014; this file is not under heavy
+5.15 churn. Long-standing hole, not a brand-new subsystem.
+
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
+
+Step 8.1: DETERMINE WHO IS AFFECTED
+Record: Driver-specific / config-specific: `CONFIG_BRCMFMAC_PCIE`
+(msgbuf). Does not affect SDIO/USB brcmfmac. Population is still large
+for an LTS kernel.
+
+Step 8.2: DETERMINE THE TRIGGER CONDITIONS
+Record: Trigger is a firmware completion with `flow_ring_id` < 2 or `>=
+max_flowrings + 2`. Normal firmware should echo host IDs, so the common
+path is fine. Realistic triggers: buggy/mismatched firmware, DMA
+corruption, compromised firmware. Unprivileged userspace cannot poke the
+ID directly; it can generate TX completions by sending traffic.
+
+Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
+Record:
+- `set_bit(underflowed_id, txstatus_done_map)`: out-of-bounds write
+  (memory corruption).
+- `msgbuf->flowrings[flowid]` / `flow->rings[flowid]`: OOB / NULL deref
+  → oops.
+- TX-status without finalize: skb leak (the patch closes this).
+- Severity: HIGH (crash / memory corruption on a common Wi-Fi driver).
+  Not a documented privilege-escalation writeup, but OOB write from
+  device DMA is security-relevant.
+
+Step 8.4: CALCULATE RISK-BENEFIT RATIO
+Record:
+- Benefit: high for PCIe brcmfmac — prevents OOB write/crash and a leak.
+- Risk: low — ~40-line helper, no locking/API/data-structure change, no
+  happy-path behavior change.
+- Ratio: strongly favors backport.
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+Step 9.1: COMPILE THE EVIDENCE
 FOR:
-- Real OOB: `reason_code` at offset 24 read when `len` can be 24–25
-- Read is not debug-gated; it always ran
-- Over-the-air reachable on IBSS
-- 4-line, obviously correct, tested by landing in wireless-next via
-  Johannes Berg
-- Same class already fixed in STA mlme (`4a360c6e18dfa`)
-- No new features/APIs; no prerequisites
-- Applies cleanly; bug present since 2012 in this tree’s code
-- Buffer OOB is a documented stable category
+- Real OOB index from firmware-supplied IDs (underflow and upper bound),
+  present in this 5.15 tree since 2014/2016.
+- TX-status path can leak an skb after `brcmf_msgbuf_get_pktid()` if the
+  ring ID is bad.
+- Small, obviously correct helper; happy path unchanged.
+- Maintainer Acked-by; wireless maintainer applied v1.
+- Applies with only a trivial rxreorder-context tweak.
 
 AGAINST:
-- No crash/syzbot/CVE/user report
-- `reason` unused on the short path; `sta_info_destroy_addr()` was
-  already guarded
-- IBSS is uncommon vs infrastructure
-- Practical crash likely rare (skb tailroom)
-- No explicit stable nomination
+- No public crash/syzbot report; trigger depends on bad firmware IDs.
+- Affects only PCIe msgbuf, not all brcmfmac buses.
 
 UNRESOLVED:
-- lore.kernel.org HTML search blocked; no independent stable-list
-  confirmation
-- Exact KASAN behavior on `skb->len` vs kmalloc size not demonstrated
+- Could not HTTP-fetch lore.kernel.org (403); thread was recovered via
+  `b4 mbox`.
+- No mainline SHA in this checkout to `merge-base --is-ancestor` the fix
+  itself (expected: it is not in 5.15 yet).
 
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — reorder after an existing
-   check; maintainer merged v1
-2. Fixes a real bug that affects users? **PASS** — OOB on truncated IBSS
-   deauth
-3. Important issue (crash, security, corruption, deadlock)? **PASS**
-   (low–medium) — remote 2-byte overread in a parser; not a known oops,
-   but memory-safety
-4. Small and contained? **PASS** — +3/−1, one function
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — matching pre-image in
-   `ibss.c`
+Step 9.2: APPLY THE STABLE RULES CHECKLIST
+1. Obviously correct and tested? PASS — range check matches host ID
+   encoding; Acked by subsystem maintainer.
+2. Fixes a real bug that affects users? PASS — unvalidated device-
+   supplied index used as bit/array index; skb leak on that path.
+3. Important issue? PASS — OOB write / crash / leak; HIGH.
+4. Small and contained? PASS — one file, ~40 lines, three call sites.
+5. No new features or APIs? PASS — internal helper only.
+6. Can apply to the local tree? PASS — buggy code is here; minor context
+   conflict only.
 
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: None (not a device ID, quirk, DT, build, or docs patch).
-Qualifies as a normal small bugfix.
+Step 9.3: CHECK FOR EXCEPTION CATEGORIES
+Record: Not a device-ID/quirk/DT/build/docs exception. It is a
+straightforward memory-safety fix.
 
-**Step 9.4: MAKE YOUR DECISION**
-This is a surgical bounds-check fix for a long-standing, remotely
-reachable out-of-bounds read in mac80211 IBSS deauth parsing. The
-functional destroy path was already safe; the bug is the unconditional
-2-byte overread. That is still a real memory-safety defect, the same one
-already corrected on the STA deauth path. Risk of the change is
-essentially zero. For this 7.3 tree, the code exists and the patch
-applies cleanly, so it should be taken.
+Step 9.4: MAKE YOUR DECISION
+This should be backported to this 5.15 tree. The hole exists here, the
+fix is surgical, and the downside of skipping it is memory corruption or
+an oops if firmware supplies a bad flowring ID.
 
-**What it solves for stable users:** A truncated IBSS deauth no longer
-reads past the frame before the length check. That avoids undefined/OOB
-behavior on a path a radio neighbor can hit.
-
-**Risk vs benefit:** Benefit is modest but real; risk is negligible.
-Take it.
-
----
-
-### Verification
-- [Phase 1] Parsed commit `aa4c0a649903`; tags: Link + three SOBs
-  (Tzarfati, Korenblit, Berg); no Fixes/Reported-by/Cc:stable
-- [Phase 2] Diff: `ieee80211_rx_mgmt_deauth_ibss()` +3/−1; read moved
-  after `IEEE80211_DEAUTH_FRAME_LEN` (26 = 24+2)
-- [Phase 2] Confirmed `reason` only used in `ibss_dbg`;
-  `sta_info_destroy_addr()` already after the check
-- [Phase 3] `git blame`: function from `2cc59e784b54` (2012); `git
-  merge-base --is-ancestor 2cc59e784b54 HEAD` succeeded
-- [Phase 3] Pre-image shown via `git show
-  aa4c0a649903^:net/mac80211/ibss.c`
-- [Phase 3] Author log: Intel wifi bounds-check work; series 2/2 did not
-  land
-- [Phase 4] `b4 dig -c/-a/-w/-m`: wireless-next 1/2, v1 only, no review
-  replies; 2/2 was mlme duplicate of `4a360c6e18dfa`
-- [Phase 4] `git show 4a360c6e18dfa`: same bug on STA deauth, already in
-  this tree
-- [Phase 4] lore HTML/WebFetch: 403/Anubis — UNVERIFIED for linux-stable
-  archive
-- [Phase 5] Callers: `ieee80211_ibss_rx_queued_mgmt` ← `iface.c` ADHOC ←
-  `ieee80211_rx_h_mgmt`
-- [Phase 5] `ieee80211_rx()` drops mgmt if `skb->len <
-  ieee80211_hdrlen(fc)` (~24), so 24–25 byte frames still reach the
-  handler
-- [Phase 6] `git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`; `make
-  kernelversion` = 7.3.0-rc4; buggy function present; apply would be
-  clean
-- [Phase 8] Failure mode: discarded 2-byte overread; severity MEDIUM;
-  IBSS-specific
-- UNVERIFIED: whether KASAN fires on this skb overread; whether linux-
-  stable already discussed it
-
-The patch is small, correct, and fixes a real parser OOB in code this
-tree has had since 2012.
+Verification:
+- [Phase 1] Parsed candidate tags: Acked-by Arend van Spriel, Link
+  msgid, SOBs Can Peng / Johannes Berg; no Fixes/Cc in candidate text.
+- [Phase 1] `b4 mbox` v1 body: `Fixes: 9a1bb60250d2` and `Cc:
+  stable@vger.kernel.org`.
+- [Phase 2] Diff: helper `brcmf_msgbuf_get_flowid`; TX-status finalizes
+  skb on invalid ID; create/delete return early.
+- [Phase 2] Confirmed `BRCMF_H2D_MSGRING_FLOWRING_IDSTART` is 2 in
+  `bus.h`; `flowid` is `u16` so subtract underflows.
+- [Phase 2] `txstatus_done_map` allocated as
+  `BITS_TO_LONGS(max_flowrings) * sizeof(unsigned long)` — overflowed
+  bit index is OOB.
+- [Phase 2] `brcmf_txfinalize()` NULL-`ifp` path frees the skb
+  (`core.c`).
+- [Phase 3] `git blame`: unvalidated use 9a1bb60250d2 (2014); subtract
+  be4b092cab84b (2016).
+- [Phase 3] `git merge-base --is-ancestor 9a1bb60250d2 HEAD`: yes.
+- [Phase 3] No `brcmf_msgbuf_get_flowid` in this tree; no prior “invalid
+  flowring” fix on this path.
+- [Phase 4] `b4 mbox -c`: 7 messages; v1 applied; v2 whitespace declined
+  by Johannes; Arend Acked-by, no NAK.
+- [Phase 4] WebFetch lore/msgid.link: 403; used b4 instead.
+- [Phase 5] Call chain: `brcmf_pcie_isr_thread` →
+  `brcmf_proto_msgbuf_rx_trigger` → `brcmf_msgbuf_process_rx` →
+  `process_msgtype` → the three functions.
+- [Phase 5] Host encodes IDs as `flowid +
+  BRCMF_H2D_MSGRING_FLOWRING_IDSTART` at msgbuf.c create/delete request
+  sites.
+- [Phase 6] `git describe HEAD`: p-5.15-2-g6703e5d2f3a29; `make
+  kernelversion`: 5.15.221.
+- [Phase 6] Local `process_txstatus` still does unvalidated `flowid -=
+  BRCMF_H2D_MSGRING_FLOWRING_IDSTART`.
+- [Phase 6] Nearby `brcmf_msgbuf_rxreorder(..., bool inirq)` differs
+  from candidate context → minor apply tweak.
+- [Phase 7] `Kconfig`: `BRCMFMAC_PCIE` selects `BRCMFMAC_PROTO_MSGBUF`.
+- [Phase 8] Failure mode: OOB `set_bit` / OOB `flowrings[]` dereference;
+  severity HIGH.
+- UNVERIFIED: live firmware that currently emits IDs < 2 (no user report
+  in the thread).
 
 **YES**
 
- net/mac80211/ibss.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/msgbuf.c      | 46 ++++++++++++++++---
+ 1 file changed, 40 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 6ca2ff354e768..4dc748a667a72 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -910,11 +910,13 @@ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
- 					  struct ieee80211_mgmt *mgmt,
- 					  size_t len)
- {
--	u16 reason = le16_to_cpu(mgmt->u.deauth.reason_code);
-+	u16 reason;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index de47d6b7e02b2..f850e64108c41 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -561,6 +561,28 @@ brcmf_msgbuf_remove_flowring(struct brcmf_msgbuf *msgbuf, u16 flowid)
+ 	brcmf_flowring_delete(msgbuf->flow, flowid);
+ }
  
- 	if (len < IEEE80211_DEAUTH_FRAME_LEN)
++static bool brcmf_msgbuf_get_flowid(struct brcmf_msgbuf *msgbuf,
++				    u16 flow_ring_id, u16 *flowid)
++{
++	u32 id = flow_ring_id;
++
++	if (id < BRCMF_H2D_MSGRING_FLOWRING_IDSTART) {
++		bphy_err(msgbuf->drvr, "invalid flowring id %u\n",
++			 flow_ring_id);
++		return false;
++	}
++
++	id -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
++	if (id >= msgbuf->max_flowrings) {
++		bphy_err(msgbuf->drvr, "invalid flowring id %u\n",
++			 flow_ring_id);
++		return false;
++	}
++
++	*flowid = id;
++	return true;
++}
++
+ 
+ static struct brcmf_msgbuf_work_item *
+ brcmf_msgbuf_dequeue_work(struct brcmf_msgbuf *msgbuf)
+@@ -881,17 +903,23 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	struct msgbuf_tx_status *tx_status;
+ 	u32 idx;
+ 	struct sk_buff *skb;
++	u16 flow_ring_id;
+ 	u16 flowid;
+ 
+ 	tx_status = (struct msgbuf_tx_status *)buf;
+ 	idx = le32_to_cpu(tx_status->msg.request_id) - 1;
+-	flowid = le16_to_cpu(tx_status->compl_hdr.flow_ring_id);
+-	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
++	flow_ring_id = le16_to_cpu(tx_status->compl_hdr.flow_ring_id);
+ 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+ 				     msgbuf->tx_pktids, idx);
+ 	if (!skb)
  		return;
  
-+	reason = le16_to_cpu(mgmt->u.deauth.reason_code);
++	if (!brcmf_msgbuf_get_flowid(msgbuf, flow_ring_id, &flowid)) {
++		brcmf_txfinalize(brcmf_get_ifp(msgbuf->drvr, tx_status->msg.ifidx),
++				 skb, false);
++		return;
++	}
 +
- 	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM\n", mgmt->sa, mgmt->da);
- 	ibss_dbg(sdata, "\tBSSID=%pM (reason: %d)\n", mgmt->bssid, reason);
- 	sta_info_destroy_addr(sdata, mgmt->sa);
+ 	set_bit(flowid, msgbuf->txstatus_done_map);
+ 	commonring = msgbuf->flowrings[flowid];
+ 	atomic_dec(&commonring->outstanding_tx);
+@@ -1238,13 +1266,16 @@ brcmf_msgbuf_process_flow_ring_create_response(struct brcmf_msgbuf *msgbuf,
+ 	struct msgbuf_flowring_create_resp *flowring_create_resp;
+ 	u16 status;
+ 	u16 flowid;
++	u16 flow_ring_id;
+ 
+ 	flowring_create_resp = (struct msgbuf_flowring_create_resp *)buf;
+ 
+-	flowid = le16_to_cpu(flowring_create_resp->compl_hdr.flow_ring_id);
+-	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
++	flow_ring_id = le16_to_cpu(flowring_create_resp->compl_hdr.flow_ring_id);
+ 	status =  le16_to_cpu(flowring_create_resp->compl_hdr.status);
+ 
++	if (!brcmf_msgbuf_get_flowid(msgbuf, flow_ring_id, &flowid))
++		return;
++
+ 	if (status) {
+ 		bphy_err(drvr, "Flowring creation failed, code %d\n", status);
+ 		brcmf_msgbuf_remove_flowring(msgbuf, flowid);
+@@ -1267,13 +1298,16 @@ brcmf_msgbuf_process_flow_ring_delete_response(struct brcmf_msgbuf *msgbuf,
+ 	struct msgbuf_flowring_delete_resp *flowring_delete_resp;
+ 	u16 status;
+ 	u16 flowid;
++	u16 flow_ring_id;
+ 
+ 	flowring_delete_resp = (struct msgbuf_flowring_delete_resp *)buf;
+ 
+-	flowid = le16_to_cpu(flowring_delete_resp->compl_hdr.flow_ring_id);
+-	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
++	flow_ring_id = le16_to_cpu(flowring_delete_resp->compl_hdr.flow_ring_id);
+ 	status =  le16_to_cpu(flowring_delete_resp->compl_hdr.status);
+ 
++	if (!brcmf_msgbuf_get_flowid(msgbuf, flow_ring_id, &flowid))
++		return;
++
+ 	if (status) {
+ 		bphy_err(drvr, "Flowring deletion failed, code %d\n", status);
+ 		brcmf_flowring_delete(msgbuf->flow, flowid);
 -- 
 2.53.0
 
