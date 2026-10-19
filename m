@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792437570;
-	b=aof2ltXUhQBSysh6fz4CMx/m21Y/mzDJ8f7gam+MFBpmcudDPNU4QIMZsZTqIsDhrIly
-	 +l6Hl/eRNHsOloCgRlzOK+/DiAB5Bzu0vU6D1C3CIwC+K2aDn6+ekKgc9gR3QIX76ovco
-	 Zc3z9R8SQs+iLSNU4MAk6tKuEoDgrTeviQ9tpRTNSzQHSqVyHReHjN0kAHSUKEsko5R46
-	 5TbdCF1mXfJi+gLCR7TlJrMTukZ3hdJvsbcLThy6zyLp/Y1VRnb1+BRGEDJIeZiOPDifo
-	 u+/sgtJK+e0MOOOywSt55ubYmu8ViEZnlxlWL6joCNYxSxHC6NLrqOgxrW6FJImXL0A==
+	t=1792437942;
+	b=VlyNUtdpWKqSN+Xt/Lr6cEPDqoF8vgKQBcHDWJEitvirPT/87OaZuExdHq63CydI2/iD
+	 g1ITeM431xfJwYlQ4P6mQlf951TKfsnRqPR22R1wZEnVq9qi6qje+RWQgmaHQ+MGtdX5A
+	 aOtG5vai3I0As29+GokqaDvmlEA6d8Ert7Dn2VuEA0xLGGFEyWl80UAbM9amjYpEcKp1K
+	 W77XzhAK90MzE6EjsD9dB6tt2FKEG/+Zblkkr2RYF1hsNvDem5x7ONOdaxHMdwG6+iZWj
+	 WYdW9nugMvIqaH+FLIrpod+aPJZKBIy1dSVMjFaoagZLPDPNtXg5+DqjeWj0SJyXPgA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792437570;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792437942;
 	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
 	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=tJbQdYVAiS56TOxEOBzln50FzZ0HF0nlRdW35jrejtU=;
-	b=OZZd+Guy5lKIPgnhyQXt3EdVRyOhBE6CdCRyG39X6/vDxBX7pbPmE4SyHMMkJSd5KzRX
-	 4pWMN73afQvLMklz9VbdcjuUGDR5DxGkSL+RQfuM81EMAmGIfAGfziIV/dUVfdbkvq0xB
-	 hXiaswKGWLTyA6ZOLbvU4e7uVcqToF9wDr5mZ14rAmDKkdgKJAT7PPYuRUiriLe3wliXX
-	 meXgXa/4oMFfBoZ+QK2SPOP0VFyfk0EOMfR14nVSaOTU8gI3Dhbb8OFF78jPpZKKIaAsr
-	 HBsbxEyTYDzROvqHBIwPg4JbN2cvEci21nHegboHnsGEmOL4brgfIlRzdwl15mPHRFg==
+	bh=l+mQb03BfYUQz9sASK6Iqg7KQQN8PUQbGpUb67U98IU=;
+	b=rmh4+X2gzWZNDyt7OWUFnH+iU7J8K/Ccg6p0A9M3eG7QJNvM6KmNYbk9QfuEZZNcCEs4
+	 r9nDgfklbERQxWS6OON6tTRuFgSa2ZRYUhcvaaTEiE0ZyS3B2tgTNBt/GzBJYEV0vS4Br
+	 +I6YVioiqD/nxBmnn610bF9xMYa60l+jFDMNwu1ccOWdOUaemN/8QnCsjgLKdPetTRX+5
+	 BH/1iUZoWIii+zqwPVT7fNpOWQfG3xezqahJx+EK9eV8brkKnLbmcul1O1VqjC0gp9cVi
+	 y40RtCLKE6zYm+/qzon8q3WOwACeOD+CgPHUXl/n2FUVlyGexGAaN+v5rK/aJu3hLtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=toke.dk;
 	spf=pass smtp.mailfrom=toke.dk;
@@ -25,27 +25,24 @@ Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FB4A606A327;
-	Mon, 19 Oct 2026 19:19:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7FB4A606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C22606A321;
+	Mon, 19 Oct 2026 19:25:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7C22606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
 Authentication-Results: mail.toke.dk; dkim=none
 From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Nerijus =?utf-8?B?QmVuZMW+acWrbmFz?= <nerijus.bendziunas@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "John W .
- Linville" <linville@tuxdriver.com>, Simon Wunderlich
- <sw@simonwunderlich.de>, Oleksij Rempel <linux@rempel-privat.de>, Kalle
- Valo <kvalo@kernel.org>, Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
- stable@vger.kernel.org
-Subject: Re: [PATCH ath-next v4 8/8] wifi: ath9k_htc: derive the PHY error
- filter bits from software state
-In-Reply-To: <20260916173429.403889-9-nerijus.bendziunas@gmail.com>
-References: <20260916173429.403889-1-nerijus.bendziunas@gmail.com>
- <20260916173429.403889-9-nerijus.bendziunas@gmail.com>
-Date: Mon, 19 Oct 2026 21:19:27 +0200
+To: Deepanshu Kartikey <kartikey406@gmail.com>, jeff.johnson@oss.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Deepanshu
+ Kartikey <kartikey406@gmail.com>,
+ syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+Subject: Re: [PATCH] wifi: ath9k: stop WMI event tasklet from rescheduling
+ itself on probe failure
+In-Reply-To: <20261003021147.7461-1-kartikey406@gmail.com>
+References: <20261003021147.7461-1-kartikey406@gmail.com>
+Date: Mon, 19 Oct 2026 21:25:38 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87se21v6ps.fsf@toke.dk>
+Message-ID: <87pkx5v6fh.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -58,19 +55,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Nerijus Bend=C5=BEi=C5=ABnas <nerijus.bendziunas@gmail.com> writes:
+Deepanshu Kartikey <kartikey406@gmail.com> writes:
 
-> ath9k_htc_calcrxfilter() reads the RX filter back from the device to
-> preserve the PHY error bits a spectral scan may have set. When that WMI
-> read times out it returns all ones, and the recalculated filter forwards
-> every PHY error to the host with no scan running.
+> Since the init guards were consolidated, ath9k_wmi_event_tasklet()
+> reschedules itself until priv->initialized is set. If
+> ath9k_init_device() fails, initialized is never set, so the tasklet
+> keeps rescheduling itself while the probe error path calls
+> ath9k_destroy_wmi() and frees struct wmi. tasklet_action_common() then
+> touches the freed tasklet, causing a slab-use-after-free.
 >
-> Set the two bits from the spectral mode instead. A mode written to
-> spectral_scan_ctl now sets them at the next filter update, not only at
-> the trigger.
+> Make the tasklet drop its queued events and stop rescheduling once
+> wmi->stopped is set, and call tasklet_kill() before freeing wmi in
+> ath9k_destroy_wmi(). The probe error path already sets stopped and
+> kills the RX URBs first, so the tasklet cannot be re-armed afterwards.
 >
-> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-> Assisted-by: LLM
-> Signed-off-by: Nerijus Bend=C5=BEi=C5=ABnas <nerijus.bendziunas@gmail.com>
+> Fixes: 1af8dc9ca726 ("wifi: ath9k: Clean up device initialisation guards")
+> Reported-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3De91dc13b1b37759b3d9f
+> Tested-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 
 Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
