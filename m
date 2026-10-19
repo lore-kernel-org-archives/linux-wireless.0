@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BD863020F;
-	Mon, 19 Oct 2026 14:05:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88651632F1B;
+	Mon, 19 Oct 2026 14:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418730; cv=none; b=hekT6ndq7dBOI18bGDkbFgwfKSM4Jrwk/OsOB0hZXLOZQsJCezW95tOmygZMmLUs6tTH+qZ8q/iuIxnX+HruzG1drG/s9eE9SJWwbY4lncIft1qaFHdkg6jEwKAPsNXo/9MWunLq81KfZGrWOaRD6UhIy1bnUPZX6B2ykNUY5zU=
+	t=1792418737; cv=none; b=awjcn+nzpoDvmY8pP/a0VEntRTmY6NGJD+TF56KnmrIXZ2NyzaWRiNR8aetNV0N2KFBa9YSaQvDkmVCZnMCzxIF4dsUcvahEVW8ZhbtMvIS8Q8UopO7NF89Tj4hwkj71uy7atQ6NG9rqOnpCg7qSsnUQMSZg/Pz5vy0ZQAXTZBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418730; c=relaxed/simple;
-	bh=qvoG948+wlY6YhQE8UFJDGh3inRWIHWrZ1ygpY4gKuw=;
+	s=arc-20240116; t=1792418737; c=relaxed/simple;
+	bh=401LqcwXCf/+f0cY/n+VTGh7mNcCtlVIYof+x6FrNG0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cjxQ1F7Pq7r2Ngi01k0FWUr1xsuveSkv8qWj6bdsrSBQyupjgL+bWk187GQnaN7pRY6hMeb4zYvxT95NwmdV/d4TP+jT68+XtBhLR31j7v8d0qlHz7HLBWqnkVBEi5LyMU61ZitKqqRB94rRMJpuegyoIpZ6NV7Mzk/Fp24YcAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YWNFuYXy; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NO6AbeiFaPdtnYVnGL3/Xhh9b+k8PzOqbvOn16w2EL45VhPKMll4nEfiwbQBSVGXTkSneNxWL3Ixk7nDbZ1c52dBU8/PoRN4uU+7cmoSDi8PjgZTs2yS7v7pKsdvRYpbC0xOLZqbK+1GEcCtHv26dxDv4OrPwAcs95mELIuQTAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kcpdNswp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YWNFuYXy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 168A21F000CB;
-	Mon, 19 Oct 2026 14:05:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kcpdNswp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E911F000C9;
+	Mon, 19 Oct 2026 14:05:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418726;
-	bh=DJWgP9LAVP+WfTHuThDxm+9DemxUo7ypk1YTH37/tT8=;
+	s=k20260515; t=1792418734;
+	bh=7I6Sb1q+kKDR3InApJmi6kDqrK4mWzyufDDhKPEIcOk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YWNFuYXyMz64LMhuCQ/6Rk3RLS/LQxbO2M+9pHq2dWeBNXRPiHSk8y6Q21st3TBO/
-	 grsRI+EOFrQGPSWpk8tXTMh5n3SNNCbAzTaV245AXhoV+Ik/1Ig+4jk1iq2WfxLjPz
-	 9ln7g08oUhNd0YOgQvEfUjRI1tB692RfOaeHKEw2J3UaueTM5uqS3Df5kR5mMtKiwZ
-	 nJcbfv8lTy33Fz2gXlAvmirxu3XpgDJjHwlDz1fUeUuhHP5ieP8SCdDdUpN+bJ1ooS
-	 eI2xLI5a/w1GJ7+y9Nw8ZhNyfgs0xcdyyFJtVbyriMspUB6gih3uin0A/7S3Xa2QZS
-	 bERiG2EDLd0rw==
+	b=kcpdNswpIi/+Onxxfnj3VfiD0NGDAD7o9fw9i/loN6GEt9lugYCe0RFHxBFy/+KEt
+	 lscGdfVT8rShGgClSUlSSevFtlXYMGerJUbMllqRtouF866Y4hdNd/0OvW+qQIzZ0X
+	 +pAPP+3EyOQQtj+Z6UFyeYB8NsHmD6zynUn9IDAJpg5SKQ4ZHYdIlMyLqR0hAGABLk
+	 aVUfZOdS45jwV5taCrRi4h3Bf/UBNMbnYPECRJJvdq+PuL+suerKHtkkvUcZpDjIt3
+	 Py3YSr3fuqOiWwwhvRt/hrTBG7uECq6wqR+2b2pNBr9lNMqRGFTCPw5i85u4iYR2iN
+	 p+wW/J4uMIrLw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Mariano Baragiola <mbaragiola@linux.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	ajay.kathat@microchip.com,
+	claudiu.beznea@tuxon.dev,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: drop connection on D3 resume failure
-Date: Mon, 19 Oct 2026 09:52:24 -0400
-Message-ID: <20261019135441.1420968-453-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.6] wifi: wilc1000: validate monitor transmit frame headers
+Date: Mon, 19 Oct 2026 09:52:29 -0400
+Message-ID: <20261019135441.1420968-458-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -53,412 +54,481 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Mariano Baragiola <mbaragiola@linux.com>
 
-[ Upstream commit 4f5384b58b483e4aec576ce461dec45b41df18db ]
+[ Upstream commit 9d96e037ff90a2fc81a841b2002d500a5a4a5351 ]
 
-When FW crashes on D3 exit, iwl_mld_nic_error() sets
-STATUS_RESET_PENDING and queues restart wk, but mac80211's resume
-callback synchronously calls iwl_trans_stop_device() which clears
-the flag. As a result restart wk skips sw_reset, and the FW error
-recovery buffer is never read.
+wilc_wfi_mon_xmit() reads the radiotap length before ensuring that the
+fixed header is present. After stripping that header, it reads the frame
+type and all three 802.11 addresses without checking how much frame data
+remains.
 
-The new FW boots with empty BA state and initial sequence numbers,
-while the AP still holds its A-MPDU RX reorder window.
-This causes MPDUs to be dropped as IWL_RX_MPDU_REORDER_BA_OLD_SN until
-ADDBA is renegotiated.
+A truncated monitor injection can therefore cause out-of-bounds reads.
+Validate the radiotap header first, use the common 802.11 helper to check
+the variable header length, and require a complete three-address header
+before using the addresses. This covers QoS and four-address data headers
+while rejecting short control headers that this path cannot classify.
 
-We don't know how long the firmware has been in an error state
-or whether the AP still considers us associated, so keeping the
-connection alive is not worth it.
-Call ieee80211_resume_disconnect() when iwl_mld_wait_d3_notif() fails,
-and let userspace reassociate.
-
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260717172958.3e10c8498f53.Icf5644b42d79e984ecc16abfa873bd37f611e778@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Mariano Baragiola <mbaragiola@linux.com>
+Link: https://patch.msgid.link/20260728192610.2236361-1-mbaragiola@linux.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This is a real WoWLAN resume recovery bug in `iwlwifi` MLD: after a
-firmware crash on D3 exit the driver keeps the association, so traffic
-is dropped. The local tree is **7.3.0-rc4**
-(`v7.3-rc4-27-gf0100363d8c37`); the MLD D3 path exists here, and the
-three-line fix is self-contained.
+This is a **5.15.221** tree (`pending-5.15`). The buggy
+`wilc_wfi_mon_xmit()` path is present, the OOB is real, and the fix is a
+small validation change that belongs here.
 
 ===============================================================
 PHASE 1: COMMIT MESSAGE FORENSICS
 ===============================================================
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-Record: `[wifi: iwlwifi: mld:] [drop] [drop the association when
-D3/WoWLAN resume fails to get firmware notifications]`
+Step 1.1: PARSE THE SUBJECT LINE
+Record: **[wifi: wilc1000:] [validate] [check radiotap and 802.11
+headers before reading them on monitor TX]**
 
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
+Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+From the candidate message:
+- **Link:** `https://patch.msgid.link/20260728192610.2236361-1-
+  mbaragiola@linux.com`
+- **Signed-off-by:** Mariano Baragiola (author)
+- **Signed-off-by:** Johannes Berg (wireless maintainer; accepted the
+  patch)
+- No `Fixes:` / `Cc: stable` / `Reported-by` / `Reviewed-by` in the
+  candidate text (absence is expected here)
+
+Original mailing-list submission (verified via `b4 mbox` / Openwall, not
+the candidate markers) also had:
+- **Fixes:** `c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11
+  driver")`
+- **Cc:** `stable@vger.kernel.org`
+- **To:** Ajay Singh, Claudiu Beznea (WILC maintainers)
+- **Cc:** linux-wireless, linux-kernel
+
+Step 1.3: ANALYZE THE COMMIT BODY TEXT
 Record:
-- `Fixes:` — none (expected; not a negative signal)
-- `Reported-by:` — none
-- `Tested-by:` — none
-- `Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
-  (iwlwifi maintainer)
-- `Acked-by:` — none
-- `Link: https://patch.msgid.link/20260717172958.3e10c8498f53.Icf5644b42
-  d79e984ecc16abfa873bd37f611e778@changeid`
-- `Cc: stable@vger.kernel.org` — none (expected)
-- `Signed-off-by: Ayala Beker <ayala.beker@intel.com>` (author)
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (iwlwifi-next maintainer)
-- No syzbot / kernel test robot tags
+- **Bug:** `wilc_wfi_mon_xmit()` calls
+  `ieee80211_get_radiotap_len(skb->data)` before the skb is known to
+  contain a radiotap header, then after `skb_pull()` reads frame type
+  and three 802.11 addresses with no remaining-length check.
+- **Symptom:** truncated monitor injection causes **out-of-bounds
+  reads**.
+- **Root cause:** missing bounds checks on radiotap length and 802.11
+  header length.
+- **Fix:** validate radiotap version/length, use
+  `ieee80211_get_hdrlen_from_skb()`, require a full 3-address header,
+  drop short frames.
+- **Version info:** none in the body. Original `Fixes:` points at the
+  2015 driver introduction.
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-Record:
-- **Bug:** Firmware crash on D3 exit. `iwl_trans_fw_error()` →
-  `iwl_trans_schedule_reset()` sets `STATUS_RESET_PENDING` and queues
-  restart work. mac80211 resume then calls `iwl_trans_stop_device()`,
-  which clears that flag, so restart work skips SW reset and never reads
-  the FW error recovery buffer.
-- **Symptom:** New firmware boots with empty BA state / initial SNs
-  while the AP still has its A-MPDU RX reorder window. RX MPDUs are
-  dropped as `IWL_RX_MPDU_REORDER_BA_OLD_SN` until ADDBA is
-  renegotiated. Association state with the AP is also unknown.
-- **Version info:** none in the message. MLD D3 code has existed since
-  the MLD driver was added (in this history: `d1e879ec600f9`, present by
-  v6.15).
-- **Root cause (author):** keep-alive after a failed D3 resume is not
-  safe; disconnect and let userspace reassociate.
-
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not a hidden cleanup. Explicit recovery/correctness fix for a
-broken post-resume connection.
+Step 1.4: DETECT HIDDEN BUG FIXES
+Record: **Not hidden.** The message names OOB reads and describes the
+missing checks. The new `drop:` path also stops returning `-1` from
+`ndo_start_xmit` without freeing the skb.
 
 ===============================================================
 PHASE 2: DIFF ANALYSIS - LINE BY LINE
 ===============================================================
 
-**Step 2.1: INVENTORY THE CHANGES**
+Step 2.1: INVENTORY THE CHANGES
 Record:
-- File: `drivers/net/wireless/intel/iwlwifi/mld/d3.c` (+3 / −0)
-- Function: `iwl_mld_wowlan_resume()`
-- Scope: single-file surgical fix (3 lines on the existing error path)
+- **File:** `drivers/net/wireless/microchip/wilc1000/mon.c` only (~+25 /
+  -5)
+- **Function:** `wilc_wfi_mon_xmit()`
+- **Scope:** single-file surgical fix
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record: Before, `iwl_mld_wait_d3_notif()` failure logged `"Couldn't get
-the d3 notifs"` and `goto err`, which sets `in_hw_restart = true` and
-returns `1`. mac80211 treats `1` as “full reconfig on wakeup” and
-**keeps** the STA associated. After, if `bss_vif->cfg.assoc`, it also
-calls `ieee80211_resume_disconnect(bss_vif)` so mac80211 tears the
-connection down during resume reconfig. The same function already did
-that on the success path when `keep_connection` is false.
+Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
+Local code today (verified in this tree):
 
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: `[Logic / correctness]` — failed D3 resume left a zombie
-association. Firmware BA state is reset; AP reorder window is not.
-`ieee80211_resume_disconnect()` sets
-`IEEE80211_SDATA_DISCONNECT_RESUME`, taints keys, and
-`ieee80211_sta_restart()` later calls `ieee80211_sta_connection_lost()`.
-This matches MVM: `__iwl_mvm_resume()` always runs
-`iwl_mvm_d3_disconnect_iter` unless `keep` is true (and `keep` stays
-false on error).
+```156:195:drivers/net/wireless/microchip/wilc1000/mon.c
+        rtap_len = ieee80211_get_radiotap_len(skb->data);
+        if (skb->len < rtap_len)
+                return -1;
 
-**Step 2.4: ASSESS THE FIX QUALITY**
-Record: Obviously correct and minimal. `ieee80211_resume_disconnect()`
-is documented for the resume callback; `iwl_mld_wowlan_resume()` is
-called only from `iwl_mld_resume()`. Must be used here rather than
-`ieee80211_hw_restart_disconnect()`, which WARNs unless
-`local->in_reconfig`. Guarded by `bss_vif->cfg.assoc`. Regression risk
-is low: extra disconnect only when D3 notifs already failed, which is
-already treated as a restart-needed error.
+        skb_pull(skb, rtap_len);
+
+        if (skb->data[0] == 0xc0 &&
+is_broadcast_ether_addr(&skb->data[4])) {
+                // ...
+        }
+        skb->dev = mon_priv->real_ndev;
+
+        ether_addr_copy(srcadd, &skb->data[10]);
+        ether_addr_copy(bssid, &skb->data[16]);
+```
+
+Record:
+- **Radiotap:** before: read `it_len` with no minimum-size or version
+  check, then `return -1` (invalid `netdev_tx_t`, skb not consumed).
+  After: require `sizeof(*rtap_hdr)`, `it_version == 0`, `rtap_len >=
+  sizeof(*rtap_hdr)`, else drop and free.
+- **802.11 header:** before: `skb->data[0]`, `&skb->data[4]`,
+  `&skb->data[10]`, `&skb->data[16]` with no length check. After:
+  `ieee80211_get_hdrlen_from_skb()` and `hdr_len >= sizeof(struct
+  ieee80211_hdr_3addr)` (24 bytes).
+- **Deauth match:** `data[0] == 0xc0` replaced by
+  `ieee80211_is_deauth(hdr->frame_control)`; broadcast dest uses
+  `hdr->addr1`.
+- **Address copy:** hardcoded offsets 10/16 replaced by `hdr->addr2` /
+  `hdr->addr3` (same layout, now only after a 24-byte header is proven
+  present).
+- **Drop path:** `dev_kfree_skb(skb); return NETDEV_TX_OK;` — correct TX
+  contract.
+
+Step 2.3: IDENTIFY THE BUG MECHANISM
+Record: **(d) Memory safety / (g) logic.** Category: **buffer overflow /
+out-of-bounds read**.
+- `ieee80211_get_radiotap_len()` does `get_unaligned_le16(&hdr->it_len)`
+  at offset 2. A 0–1 byte skb is already an OOB read.
+- If `skb->len == rtap_len`, `skb_pull()` leaves an empty skb;
+  `data[0]`, `data[4]`, `data[10]`, `data[16]` are then OOB.
+- Need 22 bytes after radiotap for addr3 (`data[16..21]`); nothing
+  enforced that.
+
+Step 2.4: ASSESS THE FIX QUALITY
+Record: **Obviously correct and minimal.** Uses existing helpers.
+Dropping short control headers is intentional (this path needs
+addr2/addr3). QoS/4-address data still pass because their hdrlen is ≥ 24
+and addr2/addr3 stay at the same offsets.
+- **Regression risk:** low. Valid full 3-address injects unchanged.
+  Short frames that previously hit OOB are now dropped.
+- **Not introduced:** deauth path still does not free the original skb;
+  `skb2` allocation failure still returns `-ENOMEM`. Pre-existing.
 
 ===============================================================
 PHASE 3: GIT HISTORY INVESTIGATION
 ===============================================================
 
-**Step 3.1: BLAME THE CHANGED LINES**
-Record: The `iwl_mld_wait_d3_notif()` error path comes from
-`d1e879ec600f9` (“wifi: iwlwifi: add iwlmld sub-driver”, 2025-03-05).
-Present in this tree; `git merge-base --is-ancestor d1e879ec600f9 v6.15`
-succeeds. The bug is old relative to 7.3, not brand-new code.
+Step 3.1: BLAME THE CHANGED LINES
+Record: The TX path is from **c5c77ba18ea6** (`staging: wilc1000: Add
+SDIO/SPI 802.11 driver`, 2015-05-24). Length check `skb->len < rtap_len`
+is from **60959e53f839** (2016). Address copies from **870709141599**
+(2019). Bug has been in this driver for the whole 5.15 lifetime.
 
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Buggy behavior is the original MLD wowlan-
-resume error path, not a later regression.
+Step 3.2: FOLLOW THE FIXES: TAG
+Record: Original submission tagged **Fixes: c5c77ba18ea6**. `git merge-
+base --is-ancestor c5c77ba18ea6 HEAD` succeeded. Introduced in
+**v4.2-rc1**. Present in this tree.
 
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Recent `mld/d3.c` work is other WoWLAN validation (`validate
-D3_END notif size`, `validate WoWLAN notif header`, wake-packet checks).
-`ieee80211_resume_disconnect` on the *success* path was added in
-`99f201a9a7d59` (keep_connection). No prerequisite refactor is required
-for these three lines. No later commits on this file after
-`4f5384b58b483`.
+Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
+Record: `mon.c` on this branch is only a handful of commits (staging
+move, strlcpy, error-path cleanup, netdev register crash). **No prior
+monitor-header validation.** Other wilc1000 OOB fixes **are** already
+here (`validate assoc response length`, `fix out-of-bounds read in P2P
+public action frames`, `fix RX buffer OOB-write`, etc.). This patch is
+**standalone**, subject `[PATCH]` not `X/Y`.
 
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Ayala Beker is a regular Intel iwlwifi contributor (MVM and
-MLD). Reviewed by Emmanuel Grumbach; applied by Miri Korenblit. Strong
-maintainer signal.
+Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
+Record: No other Mariano Baragiola wilc1000 commits in this tree.
+Johannes Berg’s SOB is the maintainer acceptance. WILC maintainers were
+on To:.
 
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: Submitted as **patch 4/8** of `iwlwifi-next` updates
-(2026-07-17). Cover letter: “A couple of fixes, features and cleanups.”
-Other patches (wake-packet validation, scan-abort init, MVM sync frames,
-SAR define move, MCC v2, debug log, BIOS code move) do not change this
-error path. Standalone: uses existing `ieee80211_resume_disconnect()`
-and `bss_vif->cfg.assoc`.
+Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
+Record: Functional helpers all exist here:
+- `ieee80211_get_radiotap_len()` — `include/net/ieee80211_radiotap.h`
+- `ieee80211_get_hdrlen_from_skb()` — `net/wireless/util.c`
+  (`EXPORT_SYMBOL`)
+- `ieee80211_is_deauth()`, `struct ieee80211_hdr_3addr` —
+  `include/linux/ieee80211.h`
+- `NETDEV_TX_OK` — `include/linux/netdevice.h`
+- Includes already pulled via `cfg80211.h` → `netdev.h`
+
+**One backport tweak:** `struct ieee80211_radiotap_header_fixed` is
+**not** in 5.15 (`git merge-base --is-ancestor 57be3d3562ca HEAD`
+failed). That type was added in 2024 (`wifi: radiotap: Avoid -Wflex-
+array-member-not-at-end warnings`) for a compiler warning. In this tree
+`sizeof(struct ieee80211_radiotap_header)` is **8** (flex array has size
+0) — same as the fixed header. Substitute `struct
+ieee80211_radiotap_header *rtap_hdr`. **Can apply standalone** with that
+one-identifier change.
 
 ===============================================================
 PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 ===============================================================
 
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record: `b4 dig -c 4f5384b58b483` → https://patch.msgid.link/20260717172
-958.3e10c8498f53.Icf5644b42d79e984ecc16abfa873bd37f611e778@changeid
-`b4 dig -a`: single v1 series, no v2/v3.
-Mbox (`b4 dig -m`): 9 messages, cover + 8 patches, **no replies, NAKs,
-or reviewer concerns**. `Reviewed-by: Emmanuel Grumbach` was already on
-the submission. No `Cc: stable` in-thread.
+Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
+Record:
+- **Lore/msgid:** `20260728192610.2236361-1-mbaragiola@linux.com`
+  (2026-07-28)
+- **b4 mbox:** **1 message in the thread** — no review replies, no NAK,
+  no v2
+- **Openwall:** same single-patch post
+- Johannes applied it (SOB on the committed version). Single-revision,
+  no later unapplied vN.
+- Author nominated **Cc: stable** and **Fixes:** on the original post.
 
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: `b4 dig -w` recipients: Johannes Berg
-(`johannes@sipsolutions.net`), `linux-wireless@vger.kernel.org`, Ayala
-Beker, Emmanuel Grumbach, Miri Korenblit. Right maintainers/list.
+Step 4.2: CHECK WHO REVIEWED THE PATCH
+Record: To: Ajay Singh, Claudiu Beznea. Cc: linux-wireless, linux-
+kernel, stable. Applied by **Johannes Berg**. No on-list Reviewed-by
+found.
 
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No `Reported-by` / bugzilla / syzbot. Bug is described from
-driver/firmware analysis, not a public user report.
+Step 4.3: SEARCH FOR THE BUG REPORT
+Record: No syzbot/bugzilla tag. Bug is from code inspection of the TX
+path. Reachable from userspace `ndo_start_xmit` on the monitor netdev
+(creating that iface is `NL80211_IFTYPE_MONITOR` in
+`add_virtual_intf()`).
 
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Mixed iwlwifi-next dump; this hunk does not depend on 1–3 or
-5–8.
+Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
+Record: Standalone. Related wilc1000 OOB work in the same period (P2P
+public action, assoc-response length) is already on this 5.15 branch;
+this commit is a different file/path.
 
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org HTTP 403 from this environment. No stable-list
-discussion verified. `b4` thread does not mention stable.
+Step 4.5: CHECK STABLE MAILING LIST HISTORY
+Record: lore.kernel.org/stable returned HTTP 403. Original patch **was**
+Cc’d to stable@. No evidence of a NAK against backporting. UNVERIFIED:
+later stable-list debate beyond that CC.
 
 ===============================================================
 PHASE 5: CODE SEMANTIC ANALYSIS
 ===============================================================
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: `iwl_mld_wowlan_resume()`; calls
-`ieee80211_resume_disconnect()`.
+Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
+Record: **`wilc_wfi_mon_xmit()`** only.
 
-**Step 5.2: TRACE CALLERS**
-Record:
-- `iwl_mld_wowlan_resume()` ← `iwl_mld_resume()` in `mld/mac80211.c`
-  (mac80211 `.resume`)
-- `iwl_mld_resume()` ← `drv_resume()` in `ieee80211_reconfig()` when
-  `local->wowlan`
-- `iwl_mld_wait_d3_notif()` also used by `iwl_mld_no_wowlan_resume()`;
-  this patch does **not** change that path (no-wowlan resume is handled
-  in `iwl_mld_mac80211_start()`; mac80211 already cleaned state)
+Step 5.2: TRACE CALLERS
+Record: Registered as `.ndo_start_xmit` on the monitor netdev created by
+`wilc_wfi_init_mon_interface()` from `add_virtual_intf()` when type is
+`NL80211_IFTYPE_MONITOR`. Call context: process, packet TX (inject). Not
+IRQ.
 
-**Step 5.3: TRACE CALLEES**
-Record: `ieee80211_resume_disconnect()` →
-`ieee80211_reconfig_disconnect(..., IEEE80211_SDATA_DISCONNECT_RESUME)`
-→ set sdata flag + `KEY_FLAG_TAINTED`. Later `ieee80211_sta_restart()` →
-`ieee80211_sta_connection_lost()`.
+Step 5.3: TRACE CALLEES
+Record: `ieee80211_get_radiotap_len`, `skb_pull`,
+`ieee80211_get_hdrlen_from_skb`, `ieee80211_is_deauth`,
+`is_broadcast_ether_addr`, `ether_addr_copy`, `mon_mgmt_tx`,
+`wilc_mac_xmit` (consumes skb; `dev_kfree_skb` on its error paths),
+`dev_kfree_skb`, `netif_rx`.
 
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Userspace/system suspend with WoWLAN → resume →
-`ieee80211_reconfig()` → `iwl_mld_resume()`. If wait for D3 notifs
-fails, return 1 still triggers full reconfig **and** (with this patch)
-disconnect. Reachable on laptops with Intel MLD (Wi-Fi 7) firmware and
-WoWLAN. Unprivileged users do not trigger it directly; any user who
-suspends the machine can.
+Step 5.4: FOLLOW THE CALL CHAIN
+Record: nl80211 add monitor iface (typically `CAP_NET_ADMIN`) → inject
+on that netdev → `wilc_wfi_mon_xmit()`. **Userspace-reachable** on
+systems with WILC1000 and a monitor interface. Not a theoretical dead
+path.
 
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: MVM already disconnects on D3 resume unless `keep` is true
-(`iwl_mvm_d3_disconnect_iter`). Same `ieee80211_resume_disconnect()`
-already used in this function when wowlan status says not to keep the
-connection. MLD also has `iwl_mld_restart_disconnect_iter` for invalid
-recovery blobs during `iwl_mld_send_recovery_cmd()` — a different path,
-and it does not cover “recovery buffer never read.”
+Step 5.5: SEARCH FOR SIMILAR PATTERNS
+Record: Same driver already received several length-check OOB fixes on
+this branch. `ieee80211_get_hdrlen_from_skb()` is the usual helper (e.g.
+ath9k). This is the same class of bug, not a one-off style cleanup.
 
 ===============================================================
 PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 ===============================================================
 
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: Yes. Tree is **7.3.0-rc4**.
-`drivers/net/wireless/intel/iwlwifi/mld/d3.c` and
-`iwl_mld_wowlan_resume()` exist (`CONFIG_IWLMLD`). Error path introduced
-with MLD (`d1e879ec600f9`, in v6.15+). `ieee80211_vif.cfg.assoc` exists
-in this tree.
+Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
+Record: **Yes.** `drivers/net/wireless/microchip/wilc1000/mon.c` lines
+156–195. Introduced 2015; driver left staging in 2020 (`5625f965d7644`,
+ancestor of HEAD). **5.15.221** has the bug.
 
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: Clean apply on this tree. Context around the wait-d3-notif error
-path matches the hunk. No conflicting local changes.
+Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
+Record: Context around `wilc_wfi_mon_xmit()` matches the hunks.
+**Expected difficulty: minor** — rename
+`ieee80211_radiotap_header_fixed` → `ieee80211_radiotap_header`. No
+other missing APIs.
 
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No other commit greps as an alternate fix for “D3 resume
-failure” disconnect in MLD. MVM already had the equivalent behavior;
-this fills the MLD gap.
+Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
+Record: **This fix is not in the tree** (`git log --grep="validate
+monitor transmit"` on that path is empty). Other wilc1000 OOB fixes do
+not cover this TX path.
 
 ===============================================================
 PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 ===============================================================
 
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: `[drivers/net/wireless/intel/iwlwifi/mld]` `[IMPORTANT]` — not
-core mm/VFS, but Intel Wi-Fi 7 (MLD) on laptops; WoWLAN resume is a
-common path.
+Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
+Record: **wifi / wilc1000**
+(`drivers/net/wireless/microchip/wilc1000/`). **PERIPHERAL/IMPORTANT for
+its users:** IoT/embedded SDIO/SPI WiFi (Kconfig: “usually found in IoT
+devices”). Not core mm/VFS, but a supported in-tree driver on 5.15 LTS,
+which is exactly where those boards stay.
 
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Actively developed (frequent mld/d3.c changes). Bug is in
-original wowlan-resume error handling, not a one-off new feature.
+Step 7.2: ASSESS SUBSYSTEM ACTIVITY
+Record: Actively receiving stable OOB/UAF fixes on this branch. Mature
+driver, old bug.
 
 ===============================================================
 PHASE 8: IMPACT AND RISK ASSESSMENT
 ===============================================================
 
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: Driver/config-specific: `CONFIG_IWLMLD` + `CONFIG_PM_SLEEP`,
-Intel MLD firmware, WoWLAN enabled. Typical: recent Intel Wi-Fi 7
-laptops.
+Step 8.1: DETERMINE WHO IS AFFECTED
+Record: **Driver-specific / config-specific** (`CONFIG_WILC1000_SDIO` or
+`CONFIG_WILC1000_SPI`), monitor interface in use.
 
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: Not every resume. Trigger is D3-exit firmware failure
-(crash/timeout so D3 notifs never arrive). Timing-dependent around
-firmware error vs resume `stop_device`. Not a syscall smash; any
-suspend/resume with WoWLAN can hit it if FW dies on the way out of D3.
+Step 8.2: DETERMINE THE TRIGGER CONDITIONS
+Record: Inject a short radiotap or short 802.11 frame on the monitor
+netdev. Easy to hit once the iface exists. Creating it is privileged;
+injection is still a **kernel** OOB, not a userspace-only issue.
 
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: Not a panic. User-visible **broken Wi-Fi after sleep**:
-interface still associated, MPDUs dropped as old SN, possible stale
-association if the AP already dropped the client. Severity **HIGH**
-(serious connectivity failure on a common laptop path), not CRITICAL (no
-oops/deadlock/corruption).
+Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
+Record: **OOB read** of skb/adjacent kernel memory; KASAN crash or info
+leak into classification/TX. Invalid `ndo_start_xmit` `-1` can also
+confuse the stack and leak the skb. **Severity: HIGH** (memory safety /
+crash). Not a silent FS corruption, but in the sanitizer/OOB class that
+stable regularly takes.
 
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record: Benefit high for affected users (restores a clean reassociate
-instead of a zombie session). Risk very low (3 lines, existing API,
-error path only, same pattern as MVM and the local success path). Ratio
-strongly favors applying it.
+Step 8.4: CALCULATE RISK-BENEFIT RATIO
+Record:
+- **Benefit:** high for WILC1000 + monitor users; closes a long-standing
+  OOB on a reachable TX path.
+- **Risk:** very low (~20 lines, drop path only for invalid frames, one
+  type-name tweak).
+- **Ratio:** favorable.
 
 ===============================================================
 PHASE 9: FINAL SYNTHESIS
 ===============================================================
 
-**Step 9.1: COMPILE THE EVIDENCE**
+Step 9.1: COMPILE THE EVIDENCE
 
-FOR:
-- Real post-resume connectivity bug (dropped MPDUs / unknown
-  association), not style
-- Matches MVM’s long-standing “disconnect unless keep” D3 resume
-  behavior
-- 3-line, obviously correct use of `ieee80211_resume_disconnect()` from
-  the resume callback
-- Reviewed by Emmanuel Grumbach; applied by Miri Korenblit; To: Johannes
-  Berg
-- Buggy path present in this 7.3 tree since MLD introduction
-- Standalone; series-mates are unrelated
-- Tiny error-path change; disconnect is conservative when firmware state
-  is untrustworthy
+**FOR backporting:**
+- Real OOB reads in `ndo_start_xmit` on truncated injects (code-
+  verified).
+- Bug present since 2015; this 5.15 tree has the exact buggy code.
+- Small, obviously correct validation; wireless maintainer SOB.
+- Author Cc’d stable and tagged Fixes: c5c77ba18ea6 (in tree).
+- Same driver already gets OOB backports on this branch.
+- Helpers exist; drop path also fixes a wrong TX return / skb leak.
 
-AGAINST:
-- No crash, UAF, or CVE; not every resume
-- No user `Reported-by` / syzbot
-- Mixed “fixes, features and cleanups” series (this patch itself is a
-  fix)
-- Lore HTTP 403; no independent stable-list confirmation
+**AGAINST:**
+- Niche IoT driver, monitor path, typically privileged setup.
+- `ieee80211_radiotap_header_fixed` missing (one-line substitution).
+- No syzbot/user crash log; no on-list review besides maintainer merge.
 
-UNRESOLVED:
-- Could not read lore/stable HTML (403). Thread contents were recovered
-  via `b4 dig -m`.
+**UNRESOLVED:**
+- lore.kernel.org HTTP 403; no extra review comments beyond the
+  1-message thread.
+- Whether Johannes dropped Fixes/Cc: stable when applying (candidate
+  text lacks them; original mail had them).
 
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — uses the documented resume-
-   disconnect API; maintainer Reviewed-by
-2. Fixes a real bug that affects users? **PASS** — WoWLAN resume leaves
-   a dead/stale association
-3. Important issue? **PASS** — serious connectivity loss after suspend,
-   not a panic but user-visible and persistent until reassoc/ADDBA
-4. Small and contained? **PASS** — 3 lines, one function
+Step 9.2: APPLY THE STABLE RULES CHECKLIST
+1. Obviously correct and tested? **PASS** — bounds checks + existing
+   helpers; maintainer applied it.
+2. Fixes a real bug that affects users? **PASS** — OOB on monitor
+   inject.
+3. Important issue? **PASS** — kernel OOB read / crash; HIGH.
+4. Small and contained? **PASS** — one function, ~20 lines.
 5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — MLD D3 resume code is here;
-   context matches
+6. Can apply to the local tree? **PASS** — with
+   `ieee80211_radiotap_header` instead of `_fixed`.
 
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: None (not a device ID/quirk/DT/build/docs exception). Qualifies
-as a normal bugfix.
+Step 9.3: CHECK FOR EXCEPTION CATEGORIES
+Record: Not a device-ID/quirk/DT/docs exception. It is a **memory-safety
+OOB fix**, which is core stable material.
 
-**Step 9.4: MAKE YOUR DECISION**
-The local 7.3 tree has the MLD wowlan-resume error path. Without this
-change, a firmware crash on D3 exit keeps the mac80211 association
-through reconfig while BA state is reset, so traffic dies until ADDBA.
-Disconnect-on-failure is the same policy MVM already uses and is a
-three-line, low-risk fix.
+Step 9.4: MAKE YOUR DECISION
+The bug exists in this 5.15 tree, the failure is an OOB read on a
+userspace-reachable TX path, and the fix is small. The missing `_fixed`
+type is not a missing prerequisite; it is the same 8-byte header under
+the older name.
 
 Verification:
-- [Phase 1] Parsed tags: Reviewed-by Emmanuel Grumbach; Link msgid; no
-  Fixes/Reported-by/Cc-stable
-- [Phase 1] Body: FW D3-exit crash → reset flag cleared by
-  `iwl_trans_stop_device()` → empty BA vs AP reorder window → OLD_SN
-  drops
-- [Phase 2] Diff: +3 lines in `iwl_mld_wowlan_resume()` after
-  `iwl_mld_wait_d3_notif()` failure
-- [Phase 2] Confirmed `goto err` already sets `in_hw_restart` and
-  returns 1; mac80211 `drv_resume()` res==1 does full reconfig and keeps
-  association
-- [Phase 2] Confirmed success path already calls
-  `ieee80211_resume_disconnect()` when `keep_connection` is false
-  (`99f201a9a7d59`)
-- [Phase 2] Confirmed MVM `__iwl_mvm_resume()` disconnects all STATION
-  vifs unless `keep` (false on error)
-- [Phase 3] `git describe HEAD` / `make kernelversion`: v7.3-rc4 /
-  7.3.0-rc4
-- [Phase 3] `git blame`: error path from `d1e879ec600f9` (MLD intro);
-  `git merge-base --is-ancestor d1e879ec600f9 v6.15` true
-- [Phase 3] `git merge-base --is-ancestor 4f5384b58b483 v7.2` false
-  (landed in 7.3 cycle)
-- [Phase 3] No Fixes tag; no later d3.c commits after this one
-- [Phase 3] Series 4/8 of mixed iwlwifi-next; parent is unrelated MVM
-  patch; standalone
-- [Phase 3] `iwl_trans_fw_error()` → `iwl_trans_schedule_reset()` sets
-  `STATUS_RESET_PENDING`; `iwl_trans_stop_device()` clears it — matches
-  the described mechanism (nic_error itself sets `in_hw_restart`, not
-  the bit)
-- [Phase 4] `b4 dig -c`: lore msgid match; `b4 dig -a`: v1 only; `b4 dig
-  -w`: Johannes + linux-wireless + Intel iwlwifi maintainers
-- [Phase 4] mbox: 9 messages, no replies/NAKs; cover lists this as a fix
-  among mixed patches
-- [Phase 4] lore.kernel.org WebFetch/curl 403 — UNVERIFIED via HTML;
-  thread recovered with b4
-- [Phase 5] Callers: `iwl_mld_resume` ← mac80211 wowlan resume;
-  `ieee80211_sta_restart` honors `IEEE80211_SDATA_DISCONNECT_RESUME`
-- [Phase 5] `agg.c` drops frames when `IWL_RX_MPDU_REORDER_BA_OLD_SN` is
-  set
-- [Phase 6] File and `iwl_mld_wait_d3_notif` error path present;
-  `bss_vif->cfg.assoc` valid in this tree
-- [Phase 7] iwlwifi MLD, important for Intel Wi-Fi 7 laptops
-- [Phase 8] Failure: zombie association / packet drops after suspend,
-  severity HIGH; fix risk very low
-- UNVERIFIED: public stable@ discussion (lore HTTP 403)
+- [Phase 1] Parsed candidate tags: Link msgid, SOB Mariano Baragiola,
+  SOB Johannes Berg; no Fixes in candidate text
+- [Phase 1] b4 mbox + Openwall: original mail had Fixes: c5c77ba18ea6
+  and Cc: stable@vger.kernel.org
+- [Phase 2] Diff: one function `wilc_wfi_mon_xmit`; radiotap/802.11
+  length checks + drop path
+- [Phase 2] Local `mon.c` confirmed: `ieee80211_get_radiotap_len` then
+  `return -1`; then `data[0]/[4]/[10]/[16]` with no length check
+- [Phase 2] `ieee80211_get_radiotap_len` reads `it_len` at offset 2
+  without a size check
+- [Phase 3] blame: path from c5c77ba18ea6 (2015); `git merge-base --is-
+  ancestor c5c77ba18ea6 HEAD` true
+- [Phase 3] `git log --grep="validate monitor transmit" -- wilc1000`
+  empty — fix not present
+- [Phase 3] `57be3d3562ca` (`ieee80211_radiotap_header_fixed`) is
+  **not** an ancestor
+- [Phase 3] compiled `sizeof(struct ieee80211_radiotap_header)` with FAM
+  = 8
+- [Phase 3] `ieee80211_get_hdrlen_from_skb`, `ieee80211_is_deauth`,
+  `ieee80211_hdr_3addr`, `NETDEV_TX_OK` all exist
+- [Phase 4] b4 mbox: 1-message thread, no NAK/v2; To: WILC maintainers
+- [Phase 4] lore.kernel.org 403 — UNVERIFIED further review thread
+- [Phase 5] caller is monitor `.ndo_start_xmit`; iface created from
+  `add_virtual_intf()` MONITOR
+- [Phase 5] `wilc_mac_xmit` frees skb on its error paths
+- [Phase 6] `git describe HEAD` → p-5.15-2-g6703e5d2f3a29; `make
+  kernelversion` → 5.15.221
+- [Phase 6] driver not staging here (`5625f965d7644` is ancestor)
+- [Phase 8] Failure mode: OOB read on truncated monitor TX, severity
+  HIGH
+- UNVERIFIED: later stable@ discussion after the original Cc
 
-The patch is a small, maintainer-reviewed recovery fix for a real WoWLAN
-resume failure on hardware this tree already supports.
+The patch is a real, small OOB fix for code this tree still has.
+Backport with `struct ieee80211_radiotap_header` in place of
+`ieee80211_radiotap_header_fixed`.
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/microchip/wilc1000/mon.c | 30 +++++++++++++++----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index b75936125b46d..69d8afda9fcd9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -2077,6 +2077,9 @@ int iwl_mld_wowlan_resume(struct iwl_mld *mld)
- 	ret = iwl_mld_wait_d3_notif(mld, &resume_data, true);
- 	if (ret) {
- 		IWL_ERR(mld, "Couldn't get the d3 notifs %d\n", ret);
+diff --git a/drivers/net/wireless/microchip/wilc1000/mon.c b/drivers/net/wireless/microchip/wilc1000/mon.c
+index c3d27aaec2974..c0fde3b0d8aab 100644
+--- a/drivers/net/wireless/microchip/wilc1000/mon.c
++++ b/drivers/net/wireless/microchip/wilc1000/mon.c
+@@ -142,6 +142,9 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 				     struct net_device *dev)
+ {
++	struct ieee80211_radiotap_header_fixed *rtap_hdr;
++	struct ieee80211_hdr_3addr *hdr;
++	unsigned int hdr_len;
+ 	u32 rtap_len, ret = 0;
+ 	struct wilc_wfi_mon_priv  *mon_priv;
+ 	struct sk_buff *skb2;
+@@ -153,13 +156,26 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	if (!mon_priv)
+ 		return -EFAULT;
+ 
++	if (skb->len < sizeof(*rtap_hdr))
++		goto drop;
 +
-+		if (bss_vif->cfg.assoc)
-+			ieee80211_resume_disconnect(bss_vif);
- 		goto err;
++	rtap_hdr = (void *)skb->data;
++	if (rtap_hdr->it_version)
++		goto drop;
++
+ 	rtap_len = ieee80211_get_radiotap_len(skb->data);
+-	if (skb->len < rtap_len)
+-		return -1;
++	if (rtap_len < sizeof(*rtap_hdr) || skb->len < rtap_len)
++		goto drop;
+ 
+ 	skb_pull(skb, rtap_len);
++	hdr_len = ieee80211_get_hdrlen_from_skb(skb);
++	if (hdr_len < sizeof(*hdr))
++		goto drop;
+ 
+-	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
++	hdr = (void *)skb->data;
++
++	if (ieee80211_is_deauth(hdr->frame_control) &&
++	    is_broadcast_ether_addr(hdr->addr1)) {
+ 		skb2 = dev_alloc_skb(skb->len + sizeof(*cb_hdr));
+ 		if (!skb2)
+ 			return -ENOMEM;
+@@ -191,8 +207,8 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	}
+ 	skb->dev = mon_priv->real_ndev;
+ 
+-	ether_addr_copy(srcadd, &skb->data[10]);
+-	ether_addr_copy(bssid, &skb->data[16]);
++	ether_addr_copy(srcadd, hdr->addr2);
++	ether_addr_copy(bssid, hdr->addr3);
+ 	/*
+ 	 * Identify if data or mgmt packet, if source address and bssid
+ 	 * fields are equal send it to mgmt frames handler
+@@ -207,6 +223,10 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
  	}
  
+ 	return ret;
++
++drop:
++	dev_kfree_skb(skb);
++	return NETDEV_TX_OK;
+ }
+ 
+ static const struct net_device_ops wilc_wfi_netdev_ops = {
 -- 
 2.53.0
 
