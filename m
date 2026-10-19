@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F8E553F9BB;
-	Mon, 19 Oct 2026 14:05:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BD863020F;
+	Mon, 19 Oct 2026 14:05:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418723; cv=none; b=L2j8WdLE65xvbTu/M+lKW+jjKnPL1IFdgx6S1Plv9H703zGfDhrDwB76OHES3WRSMq0SWOw9FvRI9e+3tT6b66gfANoDhfirDLTYv4LnLDvC/i4GeKWZUjUn1fUMsLUMfkLT37RKd9zoYcx8nwYblTpKFllmf0xr7UGoAPMApfI=
+	t=1792418730; cv=none; b=hekT6ndq7dBOI18bGDkbFgwfKSM4Jrwk/OsOB0hZXLOZQsJCezW95tOmygZMmLUs6tTH+qZ8q/iuIxnX+HruzG1drG/s9eE9SJWwbY4lncIft1qaFHdkg6jEwKAPsNXo/9MWunLq81KfZGrWOaRD6UhIy1bnUPZX6B2ykNUY5zU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418723; c=relaxed/simple;
-	bh=++X0frGjoGy9FF1OPPzbPItCI8j7Z01sMLl2eAaan/s=;
+	s=arc-20240116; t=1792418730; c=relaxed/simple;
+	bh=qvoG948+wlY6YhQE8UFJDGh3inRWIHWrZ1ygpY4gKuw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gU7B7nNMM18HPEhDLimBshjRamlx2Wd0QBjhuNZ16nkSYNe2W4bRaPeA8j/GJeYkQht0eBsoE1cNts2UQhVwEYi8MLtjhyn1eGemRUeja66elvvsoqneKB0GIyJ2L/RFm6ZQRRgiBNHh976o6pivlZsW/xp7sB+vW56w8i0ppSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eK0XhjQg; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=cjxQ1F7Pq7r2Ngi01k0FWUr1xsuveSkv8qWj6bdsrSBQyupjgL+bWk187GQnaN7pRY6hMeb4zYvxT95NwmdV/d4TP+jT68+XtBhLR31j7v8d0qlHz7HLBWqnkVBEi5LyMU61ZitKqqRB94rRMJpuegyoIpZ6NV7Mzk/Fp24YcAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YWNFuYXy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eK0XhjQg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AFB81F000CB;
-	Mon, 19 Oct 2026 14:05:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YWNFuYXy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 168A21F000CB;
+	Mon, 19 Oct 2026 14:05:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418720;
-	bh=ACbfuDX4SmepyLpW4JiPlajQNzRadVRjDpG4gszd+WQ=;
+	s=k20260515; t=1792418726;
+	bh=DJWgP9LAVP+WfTHuThDxm+9DemxUo7ypk1YTH37/tT8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eK0XhjQgWXbkhTSHKW+3LayqUxZjQ80tRl38NkUn06wK0jTvMS21uVTMiFI4zA+Z8
-	 ZDJ49BDLRJopg8zl0DfBZEFF0sFu+pyDSNmKFL24Swl5UyofHC6ElKg+IjrEDteWD5
-	 q4J+ueTWTEYI0yUbNX2+EjXjOsXI9bzO4HEw3DMDWVq2/Jxhqhxmd4r3Gsl0WiTgBF
-	 7KnAxne+7emT/9ZrFBDC4vtRNkhVEQvUucy2o1O+0AeuIUFBO0Z+mmwp3UTNM6UsGC
-	 TRIfqXfiiVUvrnob/fO9mTrSi4PzQdUZd4J59W7VUN9xnmJOE9tEIt99Xgc4quwz2t
-	 0+TRX4Dq7x3sw==
+	b=YWNFuYXyMz64LMhuCQ/6Rk3RLS/LQxbO2M+9pHq2dWeBNXRPiHSk8y6Q21st3TBO/
+	 grsRI+EOFrQGPSWpk8tXTMh5n3SNNCbAzTaV245AXhoV+Ik/1Ig+4jk1iq2WfxLjPz
+	 9ln7g08oUhNd0YOgQvEfUjRI1tB692RfOaeHKEw2J3UaueTM5uqS3Df5kR5mMtKiwZ
+	 nJcbfv8lTy33Fz2gXlAvmirxu3XpgDJjHwlDz1fUeUuhHP5ieP8SCdDdUpN+bJ1ooS
+	 eI2xLI5a/w1GJ7+y9Nw8ZhNyfgs0xcdyyFJtVbyriMspUB6gih3uin0A/7S3Xa2QZS
+	 bERiG2EDLd0rw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Heyang Tan <thy15333007817@163.com>,
-	Christian Lamparter <chunkeey@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Ayala Beker <ayala.beker@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	chunkeey@googlemail.com,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: p54: validate firmware record lengths
-Date: Mon, 19 Oct 2026 09:52:19 -0400
-Message-ID: <20261019135441.1420968-448-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: drop connection on D3 resume failure
+Date: Mon, 19 Oct 2026 09:52:24 -0400
+Message-ID: <20261019135441.1420968-453-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -54,451 +53,412 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Heyang Tan <thy15333007817@163.com>
+From: Ayala Beker <ayala.beker@intel.com>
 
-[ Upstream commit db7b86bd97b380ece8fa39cfdd7502a9fd35e56f ]
+[ Upstream commit 4f5384b58b483e4aec576ce461dec45b41df18db ]
 
-The p54 firmware parser accesses component ID and component version
-records without checking that their lengths cover the fields being read.
-A malformed record can therefore make the parser read past the record.
+When FW crashes on D3 exit, iwl_mld_nic_error() sets
+STATUS_RESET_PENDING and queues restart wk, but mac80211's resume
+callback synchronously calls iwl_trans_stop_device() which clears
+the flag. As a result restart wk skips sw_reset, and the FW error
+recovery buffer is never read.
 
-Validate the component ID and component version record lengths before
-accessing their data. The descriptor record is also checked against the
-shortest descriptor length found in the supported firmware images.
+The new FW boots with empty BA state and initial sequence numbers,
+while the AP still holds its A-MPDU RX reorder window.
+This causes MPDUs to be dropped as IWL_RX_MPDU_REORDER_BA_OLD_SN until
+ADDBA is renegotiated.
 
-Reject descriptor values that underflow the RX offset or produce an empty
-RX range before updating the driver state.
+We don't know how long the firmware has been in an error state
+or whether the AP still considers us associated, so keeping the
+connection alive is not worth it.
+Call ieee80211_resume_disconnect() when iwl_mld_wait_d3_notif() fails,
+and let userspace reassociate.
 
-Assisted-by: LLM Codex
-Signed-off-by: Heyang Tan <thy15333007817@163.com>
-Tested-by: Christian Lamparter <chunkeey@gmail.com>
-Link: https://patch.msgid.link/20260918083349.891-1-thy15333007817@163.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Link: https://patch.msgid.link/20260717172958.3e10c8498f53.Icf5644b42d79e984ecc16abfa873bd37f611e778@changeid
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **6.18.57**. The p54 firmware parser here still lacks
-record-length checks, so this is a real bounds-check fix for this
-series.
+This is a real WoWLAN resume recovery bug in `iwlwifi` MLD: after a
+firmware crash on D3 exit the driver keeps the association, so traffic
+is dropped. The local tree is **7.3.0-rc4**
+(`v7.3-rc4-27-gf0100363d8c37`); the MLD D3 path exists here, and the
+three-line fix is self-contained.
 
 ===============================================================
 PHASE 1: COMMIT MESSAGE FORENSICS
 ===============================================================
 
-Step 1.1: PARSE THE SUBJECT LINE
-Record: `[wifi: p54:] [validate] firmware record lengths` — wireless p54
-firmware parser; “validate” is a correctness/safety fix, not a feature.
+**Step 1.1: PARSE THE SUBJECT LINE**
+Record: `[wifi: iwlwifi: mld:] [drop] [drop the association when
+D3/WoWLAN resume fails to get firmware notifications]`
 
-Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- `Assisted-by: LLM Codex`
-- `Signed-off-by: Heyang Tan <thy15333007817@163.com>` (author)
-- `Tested-by: Christian Lamparter <chunkeey@gmail.com>` (original p54
-  author; hardware test)
-- `Link:
-  https://patch.msgid.link/20260918083349.891-1-thy15333007817@163.com`
-- `Signed-off-by: Johannes Berg <johannes.berg@intel.com>` (wireless
-  maintainer)
-- Pipeline-only (ignored): `[Upstream commit
-  db7b86bd97b380ece8fa39cfdd7502a9fd35e56f]`, `Signed-off-by: Sasha
-  Levin`
-- No `Fixes:`, no `Cc: stable` (expected)
-- No `Reported-by:`, no syzbot tag on the commit itself
+- `Fixes:` — none (expected; not a negative signal)
+- `Reported-by:` — none
+- `Tested-by:` — none
+- `Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
+  (iwlwifi maintainer)
+- `Acked-by:` — none
+- `Link: https://patch.msgid.link/20260717172958.3e10c8498f53.Icf5644b42
+  d79e984ecc16abfa873bd37f611e778@changeid`
+- `Cc: stable@vger.kernel.org` — none (expected)
+- `Signed-off-by: Ayala Beker <ayala.beker@intel.com>` (author)
+- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
+  (iwlwifi-next maintainer)
+- No syzbot / kernel test robot tags
 
-Step 1.3: ANALYZE THE COMMIT BODY TEXT
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- Bug: component ID and component version records are used without
-  checking that `len` covers the fields read. A short record can make
-  the parser read past the record.
-- Extra: descriptor records are checked against the shortest known valid
-  length (`0xa` words). Descriptor RX values that underflow `0x3500` or
-  produce an empty RX window are rejected before driver state is
-  updated.
-- Symptom: out-of-bounds read of the firmware blob; invalid
-  `rx_start`/`rx_end` (the old code even had `/* FIXME add sanity
-  checking */`).
-- Version info: none in the message. The parser dates to 2009 in this
-  tree.
+- **Bug:** Firmware crash on D3 exit. `iwl_trans_fw_error()` →
+  `iwl_trans_schedule_reset()` sets `STATUS_RESET_PENDING` and queues
+  restart work. mac80211 resume then calls `iwl_trans_stop_device()`,
+  which clears that flag, so restart work skips SW reset and never reads
+  the FW error recovery buffer.
+- **Symptom:** New firmware boots with empty BA state / initial SNs
+  while the AP still has its A-MPDU RX reorder window. RX MPDUs are
+  dropped as `IWL_RX_MPDU_REORDER_BA_OLD_SN` until ADDBA is
+  renegotiated. Association state with the AP is also unknown.
+- **Version info:** none in the message. MLD D3 code has existed since
+  the MLD driver was added (in this history: `d1e879ec600f9`, present by
+  v6.15).
+- **Root cause (author):** keep-alive after a failed D3 resume is not
+  safe; disconnect and let userspace reassociate.
 
-Step 1.4: DETECT HIDDEN BUG FIXES
-Record: Not hidden. Explicit bounds and range checks. The descriptor
-work implements the old FIXME.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: Not a hidden cleanup. Explicit recovery/correctness fix for a
+broken post-resume connection.
 
 ===============================================================
 PHASE 2: DIFF ANALYSIS - LINE BY LINE
 ===============================================================
 
-Step 2.1: INVENTORY THE CHANGES
+**Step 2.1: INVENTORY THE CHANGES**
 Record:
-- File: `drivers/net/wireless/intersil/p54/fwio.c` (+37 / −5)
-- Function: `p54_parse_firmware()`
-- Scope: single-file surgical fix
+- File: `drivers/net/wireless/intel/iwlwifi/mld/d3.c` (+3 / −0)
+- Function: `iwl_mld_wowlan_resume()`
+- Scope: single-file surgical fix (3 lines on the existing error path)
 
-Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
-Record:
-- `BR_CODE_COMPONENT_ID`: previously `be32_to_cpup(bootrec->data)` with
-  no length check. After: reject if `len < sizeof(struct
-  bootrec_comp_id)/sizeof(*bootrec->data)` i.e. `len < 1`.
-- `BR_CODE_COMPONENT_VERSION`: previously `strnlen(..., 24)` even for a
-  short record. After: require `len >= DIV_ROUND_UP(24, 4)` (= 6 words),
-  then `strnlen` limited to `sizeof(struct bootrec_comp_ver)` (still 24;
-  no functional change for valid records).
-- `BR_CODE_DESCR`: previously stored `rx_start` and `rx_end - 0x3500`
-  with an explicit FIXME. After: require `len >= 0xa`; compute
-  `rx_start`/`rx_end` locally; reject if `rx_end < 0x3500` or `rx_end -
-  0x3500 <= rx_start`; only then write `priv->rx_start` /
-  `priv->rx_end`.
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Record: Before, `iwl_mld_wait_d3_notif()` failure logged `"Couldn't get
+the d3 notifs"` and `goto err`, which sets `in_hw_restart = true` and
+returns `1`. mac80211 treats `1` as “full reconfig on wakeup” and
+**keeps** the STA associated. After, if `bss_vif->cfg.assoc`, it also
+calls `ieee80211_resume_disconnect(bss_vif)` so mac80211 tears the
+connection down during resume reconfig. The same function already did
+that on the success path when `keep_connection` is false.
 
-`len` is in **u32 words**, matching the existing loop `bootrec->data +
-len <= end_data`.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+Record: `[Logic / correctness]` — failed D3 resume left a zombie
+association. Firmware BA state is reset; AP reorder window is not.
+`ieee80211_resume_disconnect()` sets
+`IEEE80211_SDATA_DISCONNECT_RESUME`, taints keys, and
+`ieee80211_sta_restart()` later calls `ieee80211_sta_connection_lost()`.
+This matches MVM: `__iwl_mvm_resume()` always runs
+`iwl_mvm_d3_disconnect_iter` unless `keep` is true (and `keep` stays
+false on error).
 
-Step 2.3: IDENTIFY THE BUG MECHANISM
-Record:
-- Category: memory safety (OOB read) + integer underflow / invalid RX
-  window.
-- Mechanism: the outer loop only keeps the *declared* record inside the
-  blob. If `len` is 0 and the record is at the end,
-  `be32_to_cpup(bootrec->data)` reads `*end_data` (past the firmware).
-  `strnlen(..., 24)` can read up to 24 bytes past a short version
-  record. `rx_end - 0x3500` wraps if `rx_end < 0x3500`;
-  `p54_assign_address()` then uses that window as firmware memory.
-
-Step 2.4: ASSESS THE FIX QUALITY
-Record:
-- Obviously correct for the OOB: don’t read fields the record does not
-  contain.
-- `len < 0xa` matches the packed descriptor through `padding2` (40 bytes
-  / 10 words); `rx_mtu` remains gated on `len == 11`.
-- Regression risk is low: checks only reject truncated/inconsistent
-  records. Christian Lamparter tested PCI and USB, including firmware
-  down to 2.5.2.0.
-- Reviewer nits on v2 (`len != 1` vs `len < 1`, local `bootrec_comp_ver
-  *`) are style; he called v2 “technically correct.” A later v3 only
-  restyles the same checks and is not in this tree. v2 is what Johannes
-  merged.
+**Step 2.4: ASSESS THE FIX QUALITY**
+Record: Obviously correct and minimal. `ieee80211_resume_disconnect()`
+is documented for the resume callback; `iwl_mld_wowlan_resume()` is
+called only from `iwl_mld_resume()`. Must be used here rather than
+`ieee80211_hw_restart_disconnect()`, which WARNs unless
+`local->in_reconfig`. Guarded by `bss_vif->cfg.assoc`. Regression risk
+is low: extra disconnect only when D3 notifs already failed, which is
+already treated as a restart-needed error.
 
 ===============================================================
 PHASE 3: GIT HISTORY INVESTIGATION
 ===============================================================
 
-Step 3.1: BLAME THE CHANGED LINES
-Record: Unchecked parser body is from `76074e1670b197` (“p54: Move
-firmware code”, 2009-06-23, Christian Lamparter). Present in this tree
-(`git merge-base --is-ancestor` succeeded). The logic is older than that
-(original p54 driver `eff1a59c48e3`, also in this tree).
+**Step 3.1: BLAME THE CHANGED LINES**
+Record: The `iwl_mld_wait_d3_notif()` error path comes from
+`d1e879ec600f9` (“wifi: iwlwifi: add iwlmld sub-driver”, 2025-03-05).
+Present in this tree; `git merge-base --is-ancestor d1e879ec600f9 v6.15`
+succeeds. The bug is old relative to 7.3, not brand-new code.
 
-Step 3.2: FOLLOW THE FIXES: TAG
-Record: No `Fixes:` tag. N/A. Introducer is the 2009 move / original
-2007 driver, both ancestors of HEAD.
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: No `Fixes:` tag. Buggy behavior is the original MLD wowlan-
+resume error path, not a later regression.
 
-Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-Record (same directory, already in this tree):
-- `da1b9a55ff116` / `d38f5d868a0a4`: p54 EEPROM/RX length checks
-  (malicious USB / KASAN)
-- `3bdcc4d61212b` / `d2fb6b588dc5b`: p54 EEPROM/PDA length checks (`Cc:
-  stable`)
-This patch is standalone, not patch X/Y. It does not depend on those
-EEPROM fixes.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record: Recent `mld/d3.c` work is other WoWLAN validation (`validate
+D3_END notif size`, `validate WoWLAN notif header`, wake-packet checks).
+`ieee80211_resume_disconnect` on the *success* path was added in
+`99f201a9a7d59` (keep_connection). No prerequisite refactor is required
+for these three lines. No later commits on this file after
+`4f5384b58b483`.
 
-Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-Record: Heyang Tan has this p54 fix and an unrelated octeontx2 debugfs
-change. Not the subsystem maintainer. Weight comes from Christian’s
-Tested-by and Johannes’s SOB.
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Record: Ayala Beker is a regular Intel iwlwifi contributor (MVM and
+MLD). Reviewed by Emmanuel Grumbach; applied by Miri Korenblit. Strong
+maintainer signal.
 
-Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-Record: No new helpers or structs. Uses existing `bootrec_comp_id`,
-`bootrec_comp_ver`, `bootrec_desc`. Standalone. `git diff v6.18.57
-ac2ff9b564e82^ -- fwio.c` is empty, so it applies cleanly to this
-series.
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Record: Submitted as **patch 4/8** of `iwlwifi-next` updates
+(2026-07-17). Cover letter: “A couple of fixes, features and cleanups.”
+Other patches (wake-packet validation, scan-abort init, MVM sync frames,
+SAR define move, MCC v2, debug log, BIOS code move) do not change this
+error path. Standalone: uses existing `ieee80211_resume_disconnect()`
+and `bss_vif->cfg.assoc`.
 
 ===============================================================
 PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 ===============================================================
 
-Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-Record:
-- `b4 dig -c db7b86bd97b380ece8fa39cfdd7502a9fd35e56f` →
-  https://patch.msgid.link/20260918083349.891-1-thy15333007817@163.com
-- Series: v2 submitted 2026-09-18 (this is the committed version).
-- Christian Lamparter, 2026-09-19: tested USB (`isl3887usb` LM87) and
-  PCI (LM86), plus older 2.5.2.0 firmware; `Tested-by`. Called the
-  `sizeof`/`DIV_ROUND_UP` checks “technically correct”; asked for
-  readability (`len != 1`, local version pointer). No NAK.
-- v3 (2026-10-09) is that style follow-up (`len != 1`, `len < 6`, local
-  pointer). Not the merged commit.
-- Syzbot CI on v2: KASAN build/boot/fuzz passed (no new findings).
-- Direct lore.kernel.org fetch returned 403; thread recovered via `b4
-  dig -m`.
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+Record: `b4 dig -c 4f5384b58b483` → https://patch.msgid.link/20260717172
+958.3e10c8498f53.Icf5644b42d79e984ecc16abfa873bd37f611e778@changeid
+`b4 dig -a`: single v1 series, no v2/v3.
+Mbox (`b4 dig -m`): 9 messages, cover + 8 patches, **no replies, NAKs,
+or reviewer concerns**. `Reviewed-by: Emmanuel Grumbach` was already on
+the submission. No `Cc: stable` in-thread.
 
-Step 4.2: CHECK WHO REVIEWED THE PATCH
-Record (`b4 dig -w`): To `linux-wireless@`, Cc Christian Lamparter.
-Johannes Berg merged it. Christian is the long-time p54 author.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+Record: `b4 dig -w` recipients: Johannes Berg
+(`johannes@sipsolutions.net`), `linux-wireless@vger.kernel.org`, Ayala
+Beker, Emmanuel Grumbach, Miri Korenblit. Right maintainers/list.
 
-Step 4.3: SEARCH FOR THE BUG REPORT
-Record: No syzbot/bugzilla `Reported-by` on this commit. Bug is from
-code inspection. Author later asked whether a CVE is appropriate (OOB
-firmware parser). Christian’s answer to that CVE question was not
-retrieved (UNVERIFIED). Practical trigger is a malformed firmware file,
-not a BadUSB frame.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+Record: No `Reported-by` / bugzilla / syzbot. Bug is described from
+driver/firmware analysis, not a public user report.
 
-Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-Record: Standalone v2. v3 is cosmetic and unmerged here. Related p54
-length-check work is EEPROM/PDA, already in this tree.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Record: Mixed iwlwifi-next dump; this hunk does not depend on 1–3 or
+5–8.
 
-Step 4.5: CHECK STABLE MAILING LIST HISTORY
-Record: No useful `lore.kernel.org/stable` hit for this subject. No
-known “do not backport” discussion.
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+Record: lore.kernel.org HTTP 403 from this environment. No stable-list
+discussion verified. `b4` thread does not mention stable.
 
 ===============================================================
 PHASE 5: CODE SEMANTIC ANALYSIS
 ===============================================================
 
-Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-Record: `p54_parse_firmware()` only.
+**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
+Record: `iwl_mld_wowlan_resume()`; calls
+`ieee80211_resume_disconnect()`.
 
-Step 5.2: TRACE CALLERS
+**Step 5.2: TRACE CALLERS**
 Record:
-- `p54pci.c`: after firmware request, before upload
-- `p54usb.c`: `p54u_start_ops()` after firmware load
-- `p54spi.c`: `p54spi_request_firmware()` (`"3826.arm"`)
-All probe/firmware-load paths, not the datapath.
+- `iwl_mld_wowlan_resume()` ← `iwl_mld_resume()` in `mld/mac80211.c`
+  (mac80211 `.resume`)
+- `iwl_mld_resume()` ← `drv_resume()` in `ieee80211_reconfig()` when
+  `local->wowlan`
+- `iwl_mld_wait_d3_notif()` also used by `iwl_mld_no_wowlan_resume()`;
+  this patch does **not** change that path (no-wowlan resume is handled
+  in `iwl_mld_mac80211_start()`; mac80211 already cleaned state)
 
-Step 5.3: TRACE CALLEES
-Record: `le32_to_cpu` / `be32_to_cpup` / `strnlen` / `wiphy_err`.
-Descriptor fields feed `priv->rx_start`, `priv->rx_end`, `headroom`,
-`tailroom`, `privacy_caps`, `rx_keycache_size`, `rx_mtu`.
+**Step 5.3: TRACE CALLEES**
+Record: `ieee80211_resume_disconnect()` →
+`ieee80211_reconfig_disconnect(..., IEEE80211_SDATA_DISCONNECT_RESUME)`
+→ set sdata flag + `KEY_FLAG_TAINTED`. Later `ieee80211_sta_restart()` →
+`ieee80211_sta_connection_lost()`.
 
-Step 5.4: FOLLOW THE CALL CHAIN
-Record: USB/PCI/SPI probe → `request_firmware[_nowait]` →
-`p54_parse_firmware`. Reachable whenever p54 hardware is present and
-firmware is loaded. Firmware comes from the host (`isl3886pci`,
-`isl3887usb`, `3826.arm`, etc.), not from the USB packet stream.
-Unprivileged users normally cannot plant that file; a bad file still
-oopses/reads OOB in kernel.
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Record: Userspace/system suspend with WoWLAN → resume →
+`ieee80211_reconfig()` → `iwl_mld_resume()`. If wait for D3 notifs
+fails, return 1 still triggers full reconfig **and** (with this patch)
+disconnect. Reachable on laptops with Intel MLD (Wi-Fi 7) firmware and
+WoWLAN. Unprivileged users do not trigger it directly; any user who
+suspends the machine can.
 
-Step 5.5: SEARCH FOR SIMILAR PATTERNS
-Record: Same class as the p54 EEPROM/PDA length checks already in this
-tree. `BR_CODE_EXPOSED_IF` in this same function still walks `exp_if`
-from `len` without a per-record fit check; that is a leftover, not a
-reason to drop this hunk.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Record: MVM already disconnects on D3 resume unless `keep` is true
+(`iwl_mvm_d3_disconnect_iter`). Same `ieee80211_resume_disconnect()`
+already used in this function when wowlan status says not to keep the
+connection. MLD also has `iwl_mld_restart_disconnect_iter` for invalid
+recovery blobs during `iwl_mld_send_recovery_cmd()` — a different path,
+and it does not cover “recovery buffer never read.”
 
 ===============================================================
 PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 ===============================================================
 
-Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-Record: Yes. This checkout is `v6.18.57-155-gcdf239ca885b2`,
-kernelversion `6.18.57`.
-`v6.18.57:drivers/net/wireless/intersil/p54/fwio.c` still does
-unvalidated `be32_to_cpup`, `strnlen(..., 24)`, and `rx_end - 0x3500`
-with the FIXME. Bug introduced ~2009, long before 6.18.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+Record: Yes. Tree is **7.3.0-rc4**.
+`drivers/net/wireless/intel/iwlwifi/mld/d3.c` and
+`iwl_mld_wowlan_resume()` exist (`CONFIG_IWLMLD`). Error path introduced
+with MLD (`d1e879ec600f9`, in v6.15+). `ieee80211_vif.cfg.assoc` exists
+in this tree.
 
-Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-Record: Clean apply. Pre-candidate `fwio.c` matches `v6.18.57`. No
-refactor between mainline context and this series.
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Record: Clean apply on this tree. Context around the wait-d3-notif error
+path matches the hunk. No conflicting local changes.
 
-Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-Record: EEPROM/PDA validation is already here; it does not cover this
-firmware bootrec parser. No earlier version of this exact fix in
-6.18.57.
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+Record: No other commit greps as an alternate fix for “D3 resume
+failure” disconnect in MLD. MVM already had the equivalent behavior;
+this fills the MLD gap.
 
 ===============================================================
 PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 ===============================================================
 
-Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-Record: `drivers/net/wireless/intersil/p54` — old
-Prism54/ISL38xx/STLC45xx (USB/PCI and Nokia N800/N810 SPI). Criticality:
-PERIPHERAL, but real hardware and already-supported in 6.18.
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: `[drivers/net/wireless/intel/iwlwifi/mld]` `[IMPORTANT]` — not
+core mm/VFS, but Intel Wi-Fi 7 (MLD) on laptops; WoWLAN resume is a
+common path.
 
-Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-Record: Mature/low churn. Recent work is mostly bounds checks. A long-
-standing parser hole is more, not less, relevant for stable.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Actively developed (frequent mld/d3.c changes). Bug is in
+original wowlan-resume error handling, not a one-off new feature.
 
 ===============================================================
 PHASE 8: IMPACT AND RISK ASSESSMENT
 ===============================================================
 
-Step 8.1: DETERMINE WHO IS AFFECTED
-Record: Users with p54 USB/PCI/SPI (`CONFIG_P54_*`) and a malformed or
-truncated firmware image.
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Driver/config-specific: `CONFIG_IWLMLD` + `CONFIG_PM_SLEEP`,
+Intel MLD firmware, WoWLAN enabled. Typical: recent Intel Wi-Fi 7
+laptops.
 
-Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-Record: Device probe / firmware load. Common with p54 hardware; the
-*malformed* case is uncommon (bad file, truncated image, attacker-
-controlled firmware path). Not a hot-path race. Unprivileged trigger is
-limited (firmware is host-provided).
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Not every resume. Trigger is D3-exit firmware failure
+(crash/timeout so D3 notifs never arrive). Timing-dependent around
+firmware error vs resume `stop_device`. Not a syscall smash; any
+suspend/resume with WoWLAN can hit it if FW dies on the way out of D3.
 
-Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-Record:
-- Short records near the end of the blob: kernel OOB read (KASAN-class).
-  Severity HIGH for memory safety; practical exploitability is lower
-  than the USB EEPROM bugs.
-- `rx_end` underflow: wrapped firmware memory window used by
-  `p54_assign_address()` / `p54_setup_mac()`. Severity MEDIUM–HIGH for
-  driver malfunction / bad device addresses.
-- Overall: HIGH memory-safety, not a universal panic on valid vendor
-  firmware.
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: Not a panic. User-visible **broken Wi-Fi after sleep**:
+interface still associated, MPDUs dropped as old SN, possible stale
+association if the AP already dropped the client. Severity **HIGH**
+(serious connectivity failure on a common laptop path), not CRITICAL (no
+oops/deadlock/corruption).
 
-Step 8.4: CALCULATE RISK-BENEFIT RATIO
-Record:
-- Benefit: stops OOB reads and bogus RX windows on a parser this tree
-  has had since 2009; same robustness class as p54 fixes already in
-  6.18.y.
-- Risk: ~40-line, error-path-only; hardware-tested; no API change.
-- Ratio: favorable.
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Record: Benefit high for affected users (restores a clean reassociate
+instead of a zombie session). Risk very low (3 lines, existing API,
+error path only, same pattern as MVM and the local success path). Ratio
+strongly favors applying it.
 
 ===============================================================
 PHASE 9: FINAL SYNTHESIS
 ===============================================================
 
-Step 9.1: COMPILE THE EVIDENCE
+**Step 9.1: COMPILE THE EVIDENCE**
 
 FOR:
-- Real OOB read in `p54_parse_firmware()` plus RX-range underflow the
-  original code flagged with FIXME.
-- Small, contained, no new API.
-- Present in this 6.18 tree for ~17 years; applies cleanly.
-- Tested-by original p54 author on PCI and USB, including old firmware.
-- Merged by Johannes Berg.
-- Same validation pattern as other p54 stable fixes already here.
+- Real post-resume connectivity bug (dropped MPDUs / unknown
+  association), not style
+- Matches MVM’s long-standing “disconnect unless keep” D3 resume
+  behavior
+- 3-line, obviously correct use of `ieee80211_resume_disconnect()` from
+  the resume callback
+- Reviewed by Emmanuel Grumbach; applied by Miri Korenblit; To: Johannes
+  Berg
+- Buggy path present in this 7.3 tree since MLD introduction
+- Standalone; series-mates are unrelated
+- Tiny error-path change; disconnect is conservative when firmware state
+  is untrustworthy
 
 AGAINST:
-- Niche driver; trigger is a bad firmware file, not a malicious URB.
-- No syzbot/CVE on this specific patch.
-- v3 is a later style tweak (not a functional hole in v2).
+- No crash, UAF, or CVE; not every resume
+- No user `Reported-by` / syzbot
+- Mixed “fixes, features and cleanups” series (this patch itself is a
+  fix)
+- Lore HTTP 403; no independent stable-list confirmation
 
 UNRESOLVED:
-- Christian’s reply on CVE classification not retrieved.
-- lore.kernel.org HTTP fetch 403; thread obtained via b4 instead.
+- Could not read lore/stable HTML (403). Thread contents were recovered
+  via `b4 dig -m`.
 
-Step 9.2: APPLY THE STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — reviewer called v2
-   technically correct; Tested-by on real devices.
-2. Fixes a real bug that affects users? **PASS** — OOB read and invalid
-   RX window on malformed firmware.
-3. Important issue (crash, security, corruption, deadlock)? **PASS** —
-   kernel OOB read / firmware-parser memory safety (HIGH). Not a
-   universal oops on good firmware, but this class is accepted for
-   stable.
-4. Small and contained? **PASS** — one function, +37/−5.
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — uses the documented resume-
+   disconnect API; maintainer Reviewed-by
+2. Fixes a real bug that affects users? **PASS** — WoWLAN resume leaves
+   a dead/stale association
+3. Important issue? **PASS** — serious connectivity loss after suspend,
+   not a panic but user-visible and persistent until reassoc/ADDBA
+4. Small and contained? **PASS** — 3 lines, one function
 5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — identical pre-image to
-   v6.18.57 `fwio.c`.
+6. Can apply to the local tree? **PASS** — MLD D3 resume code is here;
+   context matches
 
-Step 9.3: CHECK FOR EXCEPTION CATEGORIES
-Record: None (not a device ID, quirk, DT, build, or doc fix). Qualifies
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: None (not a device ID/quirk/DT/build/docs exception). Qualifies
 as a normal bugfix.
 
-Step 9.4: MAKE YOUR DECISION
-Backport. The 6.18 parser still has the hole; the fix is small, tested,
-and addresses a real OOB/underflow without depending on later refactors.
-
-What it solves for this tree: `p54_parse_firmware()` can read past a
-truncated component-ID/version record and can wrap `rx_end`. That hits
-USB/PCI/SPI probe when firmware is loaded. Stable rules are met; risk is
-low because valid images were tested and only invalid records are
-rejected.
+**Step 9.4: MAKE YOUR DECISION**
+The local 7.3 tree has the MLD wowlan-resume error path. Without this
+change, a firmware crash on D3 exit keeps the mac80211 association
+through reconfig while BA state is reset, so traffic dies until ADDBA.
+Disconnect-on-failure is the same policy MVM already uses and is a
+three-line, low-risk fix.
 
 Verification:
-- [Phase 1] Tags: Tested-by Christian Lamparter; SOB Johannes Berg; Link
-  msgid 20260918083349.891-1; no Fixes/Cc:stable/Reported-by (expected).
-- [Phase 2] Diff: +37/−5 in `p54_parse_firmware()`; ID `len < 1`,
-  version `len < 6`, descriptor `len < 0xa` plus RX-range check.
-  `bootrec_desc` packed size 42 bytes; `0xa` words covers fields used
-  when `len != 11`.
-- [Phase 3] `git blame` on parent: `76074e1670b197` (2009). `git merge-
-  base --is-ancestor 76074e1670b197 HEAD` succeeded. No Fixes tag.
-- [Phase 3] Related p54 length checks (`da1b9a55ff116`, `d38f5d868a0a4`,
-  `3bdcc4d61212b`, `d2fb6b588dc5b`) are EEPROM/PDA, not this parser.
-- [Phase 4] `b4 dig -c db7b86bd97b380ece8fa39cfdd7502a9fd35e56f`: v2
-  lore thread; `-a` only v2 as committed series; `-w` linux-wireless +
-  chunkeey. Christian: “technically correct” + Tested-by PCI/USB.
-- [Phase 4] WebSearch: v3 is style-only; syzbot CI passed v2.
-  lore.kernel.org WebFetch 403.
-- [Phase 4] UNVERIFIED: Christian’s CVE-classification reply.
-- [Phase 5] Callers: `p54pci.c:79`, `p54usb.c:872`, `p54spi.c:166` on
-  firmware load. `rx_end` used in `p54_assign_address()` /
-  `p54_setup_mac()`.
-- [Phase 6] `git describe HEAD` → `v6.18.57-155-gcdf239ca885b2`; `make
-  kernelversion` → `6.18.57`. Buggy code in
-  `v6.18.57:drivers/net/wireless/intersil/p54/fwio.c`. `git diff
-  v6.18.57 ac2ff9b564e82^ -- fwio.c` empty.
-- [Phase 8] Failure mode: OOB read of firmware blob; wrapped RX window.
-  Severity HIGH for memory safety, driver-specific trigger.
+- [Phase 1] Parsed tags: Reviewed-by Emmanuel Grumbach; Link msgid; no
+  Fixes/Reported-by/Cc-stable
+- [Phase 1] Body: FW D3-exit crash → reset flag cleared by
+  `iwl_trans_stop_device()` → empty BA vs AP reorder window → OLD_SN
+  drops
+- [Phase 2] Diff: +3 lines in `iwl_mld_wowlan_resume()` after
+  `iwl_mld_wait_d3_notif()` failure
+- [Phase 2] Confirmed `goto err` already sets `in_hw_restart` and
+  returns 1; mac80211 `drv_resume()` res==1 does full reconfig and keeps
+  association
+- [Phase 2] Confirmed success path already calls
+  `ieee80211_resume_disconnect()` when `keep_connection` is false
+  (`99f201a9a7d59`)
+- [Phase 2] Confirmed MVM `__iwl_mvm_resume()` disconnects all STATION
+  vifs unless `keep` (false on error)
+- [Phase 3] `git describe HEAD` / `make kernelversion`: v7.3-rc4 /
+  7.3.0-rc4
+- [Phase 3] `git blame`: error path from `d1e879ec600f9` (MLD intro);
+  `git merge-base --is-ancestor d1e879ec600f9 v6.15` true
+- [Phase 3] `git merge-base --is-ancestor 4f5384b58b483 v7.2` false
+  (landed in 7.3 cycle)
+- [Phase 3] No Fixes tag; no later d3.c commits after this one
+- [Phase 3] Series 4/8 of mixed iwlwifi-next; parent is unrelated MVM
+  patch; standalone
+- [Phase 3] `iwl_trans_fw_error()` → `iwl_trans_schedule_reset()` sets
+  `STATUS_RESET_PENDING`; `iwl_trans_stop_device()` clears it — matches
+  the described mechanism (nic_error itself sets `in_hw_restart`, not
+  the bit)
+- [Phase 4] `b4 dig -c`: lore msgid match; `b4 dig -a`: v1 only; `b4 dig
+  -w`: Johannes + linux-wireless + Intel iwlwifi maintainers
+- [Phase 4] mbox: 9 messages, no replies/NAKs; cover lists this as a fix
+  among mixed patches
+- [Phase 4] lore.kernel.org WebFetch/curl 403 — UNVERIFIED via HTML;
+  thread recovered with b4
+- [Phase 5] Callers: `iwl_mld_resume` ← mac80211 wowlan resume;
+  `ieee80211_sta_restart` honors `IEEE80211_SDATA_DISCONNECT_RESUME`
+- [Phase 5] `agg.c` drops frames when `IWL_RX_MPDU_REORDER_BA_OLD_SN` is
+  set
+- [Phase 6] File and `iwl_mld_wait_d3_notif` error path present;
+  `bss_vif->cfg.assoc` valid in this tree
+- [Phase 7] iwlwifi MLD, important for Intel Wi-Fi 7 laptops
+- [Phase 8] Failure: zombie association / packet drops after suspend,
+  severity HIGH; fix risk very low
+- UNVERIFIED: public stable@ discussion (lore HTTP 403)
+
+The patch is a small, maintainer-reviewed recovery fix for a real WoWLAN
+resume failure on hardware this tree already supports.
 
 **YES**
 
- drivers/net/wireless/intersil/p54/fwio.c | 42 +++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/d3.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
-index 3baf8ab01e22b..4b8e6cf711d8f 100644
---- a/drivers/net/wireless/intersil/p54/fwio.c
-+++ b/drivers/net/wireless/intersil/p54/fwio.c
-@@ -52,6 +52,13 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
- 		u32 code = le32_to_cpu(bootrec->code);
- 		switch (code) {
- 		case BR_CODE_COMPONENT_ID:
-+			if (len < sizeof(struct bootrec_comp_id) /
-+				sizeof(*bootrec->data)) {
-+				wiphy_err(priv->hw->wiphy,
-+					  "firmware component ID is too short\n");
-+				return -EINVAL;
-+			}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+index b75936125b46d..69d8afda9fcd9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+@@ -2077,6 +2077,9 @@ int iwl_mld_wowlan_resume(struct iwl_mld *mld)
+ 	ret = iwl_mld_wait_d3_notif(mld, &resume_data, true);
+ 	if (ret) {
+ 		IWL_ERR(mld, "Couldn't get the d3 notifs %d\n", ret);
 +
- 			priv->fw_interface = be32_to_cpup((__be32 *)
- 					     bootrec->data);
- 			switch (priv->fw_interface) {
-@@ -72,16 +79,41 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
- 			}
- 			break;
- 		case BR_CODE_COMPONENT_VERSION:
-+			if (len < DIV_ROUND_UP(sizeof(struct bootrec_comp_ver),
-+					       sizeof(*bootrec->data))) {
-+				wiphy_err(priv->hw->wiphy,
-+					  "firmware component version is too short\n");
-+				return -EINVAL;
-+			}
-+
- 			/* 24 bytes should be enough for all firmwares */
--			if (strnlen((unsigned char *) bootrec->data, 24) < 24)
--				fw_version = (unsigned char *) bootrec->data;
-+			if (strnlen((unsigned char *)bootrec->data,
-+				    sizeof(struct bootrec_comp_ver)) <
-+				    sizeof(struct bootrec_comp_ver))
-+				fw_version = (unsigned char *)bootrec->data;
- 			break;
- 		case BR_CODE_DESCR: {
- 			struct bootrec_desc *desc =
- 				(struct bootrec_desc *)bootrec->data;
--			priv->rx_start = le32_to_cpu(desc->rx_start);
--			/* FIXME add sanity checking */
--			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
-+			u32 rx_start, rx_end;
-+
-+			/* 0xa is the shortest descriptor in supported firmware. */
-+			if (len < 0xa) {
-+				wiphy_err(priv->hw->wiphy,
-+					  "firmware descriptor is too short\n");
-+				return -EINVAL;
-+			}
-+
-+			rx_start = le32_to_cpu(desc->rx_start);
-+			rx_end = le32_to_cpu(desc->rx_end);
-+			if (rx_end < 0x3500 || rx_end - 0x3500 <= rx_start) {
-+				wiphy_err(priv->hw->wiphy,
-+					  "firmware descriptor has invalid RX range\n");
-+				return -EINVAL;
-+			}
-+
-+			priv->rx_start = rx_start;
-+			priv->rx_end = rx_end - 0x3500;
- 			priv->headroom = desc->headroom;
- 			priv->tailroom = desc->tailroom;
- 			priv->privacy_caps = desc->privacy_caps;
++		if (bss_vif->cfg.assoc)
++			ieee80211_resume_disconnect(bss_vif);
+ 		goto err;
+ 	}
+ 
 -- 
 2.53.0
 
