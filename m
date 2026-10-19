@@ -1,42 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2792583DA7;
-	Mon, 19 Oct 2026 13:58:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68CB8583DCE;
+	Mon, 19 Oct 2026 13:58:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418331; cv=none; b=cKPuHBqin7xRZC05hcOmwBzgM0pe4RtZbd6JxnYOz3bcz/iTO1ZbVf3dISKeaP8DYwzC0oxDhmkFB63D86lAX0f2AY6J+Tcr6Qis6okW7YUs3VkJC0AfFnQ+5uF7fXOqV2QPVpaR8+wjM9ecy3jcBqJPQLu3JJKXMMYnJrc2hNU=
+	t=1792418333; cv=none; b=OjGLdLB3snUOUro9bvXE25yE1aq+VQQpQzUHUgUPTnT4qQOSeYxxgJVmU+aVcvQImQK3CJ1JEXYmXxsjdQ8nnAb+wIubXRGHG8jxU8MYjD5BFfgBHYOG3/sdO20rEgA403MfhNbp5Rpgv4k3SDy9ivnSO8LgLBPGnXVlLQxsTvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418331; c=relaxed/simple;
-	bh=milrIlVUbZashnMkcKN4rMuCglSG3pnEANrftBe7vUo=;
+	s=arc-20240116; t=1792418333; c=relaxed/simple;
+	bh=ePPOgdJw/fJOkIAqMsREQHhCJe4ZPpMTFGn3ebgCOpQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Lw6wnKKeI6RiDCpcx1jpriDzPHoylDekZuw7GNYBXlIc4LA2Sb3/VXaCe3k+jqqz94a02/yRBJYmZerHAzZbOzB03B32PHcZ3xtl++T4/sqv3o01gOha/SmZtrdh+7VaO8QGCHjRfyZqNCbNrQrmNsCdpwpnNVDA+MCGa2oWq0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KADB6xss; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Sh7gI9+Qoi+LN1AKg9IDedR5XGwVYzonBm9c5RrpWiNvAVjptUT7j1gLH/DTAuiX1AoHO9cRPQ3wBWfSHPFZI5uoE9M88DNIXoEWZut2YQ/FwFvq0X9ZO8+Dm7avcAVjj7n9InIzthMlxwmOtzp+nWddHvHbcyboo+G+yRaRRv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iSGd+4Pz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KADB6xss"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D11791F000CB;
-	Mon, 19 Oct 2026 13:58:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iSGd+4Pz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CA861F000C8;
+	Mon, 19 Oct 2026 13:58:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418328;
-	bh=0W9+MtI0CaOH9WUkG/Dmpf/F+iFgVr1uPGP3BHDkQrI=;
+	s=k20260515; t=1792418330;
+	bh=YGltY4czcESIxrXuSo7cdUD861jpHKvBgA1Yd+aKDIY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KADB6xss+UXgyWgobYHYivrGi6MUOJa4WqlGF3UJIyPsOjxaYrchP6oEkhJpQdwwL
-	 Q+ZB8b1Qh+7c0Cd6HPSulPIwA9FQK+tfPiOUjHHJyb9hSeqnsk1HwpkUekT20dzhTx
-	 CWI6/PoC5gXiQBuJwvWtz07vYYXkWk8Pcl3G8Ba34uxnV/GoNwk9XilIkDfplS/sc4
-	 b1vq0tPyvv+9FuwhfIgQMST7uSSYN5JA8bQM8vSEvNQZ1uqyEYcltNl3hKpddZIZBV
-	 HeZfjkI+R0BPHKf61NfT9ySGdMqX9sgPfCNLb9hBDsBIJ6JjjsDGaacn8nB8pCbDbL
-	 uvjbq53V3IhYA==
+	b=iSGd+4PzEEeitJE6AnQ0YlBx6Mufa8bhQbUAT8UGVMt+jIVrNI59uIPtsZf3M/G+L
+	 XyJ+xB4Ba91eQHU6r9hWrVM7fu4bpECd/acg1ecJutzgGUUO4Bl5a53cuYdTYgOGLY
+	 ud7QZX7eBmvu0uOXhvyxV/dn9lHViIlozvzEmjlOW5hBDPI8TWMsy7Aq1dh4X+7gNL
+	 S4Ozzr4PR2/oWdqu4WHhUhxRM6/wSyvPnedXL7QaMHzDoMNNQLB6Y8YjVWjDtpja5K
+	 PcFgAsUzdRrnMuXm8Jd/iCm2aBXB3viBbYqV4RrrOQnvc7i9MNWnr5Kqfm6DwSkO7T
+	 Zt1Qzop8jbcmA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: David Bauer <mail@david-bauer.net>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: validate D3_END notif size
-Date: Mon, 19 Oct 2026 09:47:41 -0400
-Message-ID: <20261019135441.1420968-170-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18-5.15] wifi: mt76: mt7603: free beacon SKB on error
+Date: Mon, 19 Oct 2026 09:47:42 -0400
+Message-ID: <20261019135441.1420968-171-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -52,361 +58,430 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: David Bauer <mail@david-bauer.net>
 
-[ Upstream commit 4e777dcdfe70d9b3ddf38cb49de9e30306889b18 ]
+[ Upstream commit 965cbdbdfbd37a659a05ff88e49c216975bd9d2e ]
 
-Check D3_END_NOTIFICATION payload length before reading notif->flags.
-On short payloads, mark notif handling as failed.
-Avoid out-of-bounds reads from malformed notifications.
+The SKB containing the generated beacon is not freed when the beacon
+queue is deected stuck and scheduled for recovery.
 
-Assisted-by: GitHubCopilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714165826.db2df8b6b6bb.I6163bbdf433379bf1dbf9eb46fb9562892217bd7@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Fixes potential memory leaks in case the beacon queue is detected stuck.
+
+Signed-off-by: David Bauer <mail@david-bauer.net>
+Link: https://patch.msgid.link/20260611215658.259324-1-mail@david-bauer.net
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Local tree is **Linux 7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`). The
-iwlwifi MLD D3 resume path is present here, and this is a small bounds
-check that stops an out-of-bounds read of firmware notification data.
+The local tree is **6.6.157** (`pending-6.6`). The two-line SKB leak is
+present here, was introduced by a commit already in this tree, and
+applies cleanly.
 
-## Phase 1: Commit message forensics
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-**Step 1.1 — Subject**
-Record: **[iwlwifi/mld]** **[validate]** Check `D3_END_NOTIFICATION`
-payload size before reading `notif->flags`.
+**Step 1.1: PARSE THE SUBJECT LINE**
 
-**Step 1.2 — Tags**
+Record: **[wifi: mt76: mt7603]** **[free]** **[free the generated beacon
+SKB when queue-stuck recovery bails out]**
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
+
 Record:
-- `Assisted-by: GitHubCopilot:gpt-5.3-codex`
-- `Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
-  (author)
-- `Link: https://patch.msgid.link/20260714165826.db2df8b6b6bb.I6163bbdf4
-  33379bf1dbf9eb46fb9562892217bd7@changeid`
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (iwlwifi maintainer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Cc:
-  stable` (absence of Fixes/Cc-stable is expected for this review)
-- Sasha Levin SOB ignored per pipeline rules
+- **Fixes:** none (expected for this pipeline)
+- **Reported-by:** none
+- **Tested-by:** none
+- **Reviewed-by:** none
+- **Acked-by:** none
+- **Link:**
+  `https://patch.msgid.link/20260611215658.259324-1-mail@david-
+  bauer.net`
+- **Cc: stable:** none (expected)
+- **Signed-off-by:** David Bauer (author); Felix Fietkau (mt76
+  maintainer). Ignore any Sasha Levin SOB if present in candidate
+  wrapping.
 
-**Step 1.3 — Body**
-Record: Firmware `D3_END_NOTIFICATION` payload length is not checked
-before `le32_to_cpu(notif->flags)`. A short payload is an out-of-bounds
-read. On failure, handling is marked failed (`notif_handling_err`).
-Symptom: OOB read of firmware RX data during D3/WoWLAN resume. No stack
-trace, reproducer, or version range in the message. Root cause: missing
-length check vs `sizeof(struct iwl_d3_end_notif)`.
+Mainline SHA (from `origin/master`):
+`965cbdbdfbd37a659a05ff88e49c216975bd9d2e`
+AuthorDate: 2026-06-11; applied by Felix Fietkau 2026-07-31.
 
-**Step 1.4 — Hidden bug fix?**
-Record: Not hidden. The subject/body state a bounds check to avoid OOB
-reads. Copilot assistance does not change that.
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 
-## Phase 2: Diff analysis
-
-**Step 2.1 — Inventory**
 Record:
-- File: `drivers/net/wireless/intel/iwlwifi/mld/d3.c` (+9 / −1)
-- Function: `iwl_mld_handle_d3_notif()`
-- Scope: single-file, one `switch` case (`WIDE_ID(PROT_OFFLOAD_GROUP,
-  D3_END_NOTIFICATION)`)
+- **Bug:** After `ieee80211_beacon_get()`, if `mt76_poll()` times out on
+  `MT_DMA_FQCR0` (beacon/BMC queue flush stuck), the function `goto out`
+  without freeing the SKB.
+- **Symptom:** SKB leak whenever the beacon queue is detected stuck and
+  recovery is scheduled. Commit message typo: “deected”.
+- **Version info:** none in the message.
+- **Root cause (author):** beacon SKB not freed on the stuck-queue error
+  path.
 
-**Step 2.2 — Control flow**
-Record: Before, the handler always did `resume_data->d3_end_flags =
-le32_to_cpu(notif->flags)` from `pkt->data` with no length check, then
-set `IWL_D3_NOTIF_D3_END_NOTIF`. After, it computes `len =
-iwl_rx_packet_payload_len(pkt)` and uses `IWL_FW_CHECK(mld, len <
-sizeof(*notif), ...)`. Short payload: log, set `notif_handling_err =
-true`, skip the flags read. Valid payload: same flags assignment as
-before. In both cases it still sets `IWL_D3_NOTIF_D3_END_NOTIF` so the
-wait completes. Error path only for truncated firmware notifications.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
 
-**Step 2.3 — Bug mechanism**
-Record: **Memory safety / out-of-bounds read.** `struct
-iwl_d3_end_notif` is a packed `__le32 flags` (4 bytes). Reading
-`notif->flags` when `payload_len < 4` reads past the declared RX
-payload. Same class of check already used in `mvm/d3.c`.
+Record: Not a disguised cleanup. Explicit leak fix: two
+`dev_kfree_skb(skb)` calls on error paths.
 
-**Step 2.4 — Fix quality**
-Record: Obviously correct: compare payload length to `sizeof(*notif)`
-before dereference, using existing `IWL_FW_CHECK` /
-`iwl_rx_packet_payload_len`. Surgical, no API change. Regression risk is
-low: valid 4-byte notifications behave as before. Truncated ones fail
-resume with `-EIO` via `notif_handling_err` instead of using garbage
-`d3_end_flags` (which can spuriously set or miss
-`IWL_D0I3_RESET_REQUIRE`). The API struct always includes `flags`; MVM
-already rejects short D3_END payloads, so empty notifications are not a
-valid firmware contract.
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
 
-## Phase 3: Git history
+**Step 2.1: INVENTORY THE CHANGES**
 
-**Step 3.1 — Blame**
-Record: Unchecked `notif->flags` read was introduced with
-`d1e879ec600f9` (`wifi: iwlwifi: add iwlmld sub-driver`, 2025-02-16).
-`git describe --tags d1e879ec600f9` → `v6.14-rc4-1062-gd1e879ec600f9`
-(iwlmld landed for ~6.15). The bug has been in this driver since it was
-added.
+Record:
+- File: `drivers/net/wireless/mediatek/mt76/mt7603/beacon.c` (**+2 /
+  -0**)
+- Function: `mt7603_update_beacon_iter()`
+- Scope: **single-file surgical fix**
 
-**Step 3.2 — Fixes: tag**
-Record: No `Fixes:` tag. Introducing commit is `d1e879ec600f9`, which
-**is** an ancestor of this tree (`git merge-base --is-ancestor`
-succeeded).
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 
-**Step 3.3 — Related file history**
-Record: Same-day MVM sibling `c1a1dc162870a` (`wifi: iwlwifi: mvm: d3:
-validate D3 resume notification payloads`) documents “buffer underread
-on malformed or truncated notifications.” Later MLD D3 checks (`validate
-WoWLAN notif header`, wake-packet reads) are independent siblings, not
-prerequisites. Follow-up `4f5384b58b483` disconnects on D3 resume
-failure; this patch does not depend on it.
+Record (both hunks, same pattern):
 
-**Step 3.4 — Author**
-Record: Emmanuel Grumbach is a long-time iwlwifi developer. Applied by
-maintainer Miri Korenblit. Same author wrote the MVM D3 payload
-validation.
+Before: `ieee80211_beacon_get()` allocates `skb`. Flush BCN or BMC via
+`MT_DMA_FQCR0`. If poll times out: set `dev->beacon_check =
+MT7603_WATCHDOG_TIMEOUT` and `goto out`. Unlock. **SKB never queued and
+never freed.**
 
-**Step 3.5 — Dependencies**
-Record: Standalone. Uses existing `iwl_rx_packet_payload_len` (`iwl-
-trans.h`), `IWL_FW_CHECK` (`fw/dbg.h`, included by `d3.c`; macro since
-`568db7fd27fad` / ~v6.5), `notif_handling_err`, and `struct
-iwl_d3_end_notif`. No new helpers. It was **09/15** in an iwlwifi-next
-bundle of mixed fixes/features; this hunk has no code dependency on the
-other 14 patches.
+After: same, but `dev_kfree_skb(skb)` before `goto out`.
 
-## Phase 4: Mailing list / external research
+Success path unchanged: `mt76_tx_queue_skb()` still takes ownership.
 
-**Step 4.1 — Original discussion**
-Record: `b4 dig -c 4e777dcdfe70d` → https://patch.msgid.link/20260714165
-826.db2df8b6b6bb.I6163bbdf433379bf1dbf9eb46fb9562892217bd7@changeid
-`b4 dig -a`: v1 and **v2**; applied version is **v2** `[PATCH v2
-iwlwifi-next 09/15]`. Cover letter: “Usual fixed, cleanups and features
-from our internal tree.” v2 only resends after `iwlwifi-next` contained
-an unrelated compile-time hcmd-size check. No NAK, no reviewer concern,
-no `Cc: stable` on this patch. Direct lore.kernel.org fetch returned
-**403**; thread recovered via `b4 dig -m`.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
 
-**Step 4.2 — Recipients (`b4 dig -w`)**
-Record: To Johannes Berg (`johannes@sipsolutions.net`); Cc `linux-
-wireless@vger.kernel.org`, Emmanuel Grumbach. Correct wireless/iwlwifi
-audience. This patch itself has no extra `Reviewed-by` (unlike some
-series mates). Maintainer SOB is present.
+Record:
+- **Category:** error-path resource leak (SKB)
+- **Mechanism:** mac80211 docs: *“The driver is responsible for freeing
+  the returned skb.”* Error `goto` skipped both queueing and free. Fix
+  adds the missing free.
 
-**Step 4.3 — Bug report**
-Record: No `Reported-by`, syzbot, or bugzilla. Firmware-malformed-
-notification hardening, not a user crash report.
+**Step 2.4: ASSESS THE FIX QUALITY**
 
-**Step 4.4 — Series**
-Record: 15-patch iwlwifi-next dump. This patch is an isolated length
-check in one case of `iwl_mld_handle_d3_notif`. Other patches add device
-IDs, LARI v14, TCM removal, etc. Not a multi-step refactor of this
-function.
+Record:
+- Obviously correct; only the two error returns; no API/lock/structure
+  change.
+- **Regression risk:** very low. Success path still hands the SKB to
+  DMA. `dev_kfree_skb` is `consume_skb` (stats slightly less precise
+  than `kfree_skb` on a drop); maintainer accepted it. No double-free:
+  frees only happen before queueing.
 
-**Step 4.5 — Stable list**
-Record: lore.kernel.org/stable WebFetch returned **403**. No stable
-discussion in the saved mbox. **UNVERIFIED:** whether anyone already
-nominated this on stable@.
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
-## Phase 5: Code semantic analysis
+**Step 3.1: BLAME THE CHANGED LINES**
 
-**Step 5.1 — Functions**
-Record: `iwl_mld_handle_d3_notif()` only.
+Record:
+- Leak `goto out` introduced by **`8caa9dd3d1a7c9`** “wifi: mt76:
+  mt7603: improve stuck beacon handling” (Greg KH, 2023-11-20), stable
+  rewrite of upstream **`3176205933494`** (Felix Fietkau, 2023-07-28).
+- `ieee80211_beacon_get(..., 0)` from `6e8912a503759` (MLO 3-arg API);
+  already in this tree.
+- Driver added in `c8846e1015022` (2018). Pre-2023 code queued the SKB
+  even if poll failed; the 2023 change moved queueing after the polls
+  and added the leaky `goto`.
 
-**Step 5.2 — Callers**
-Record: Registered as the notification-wait callback from
-`iwl_mld_wait_d3_notif()`, itself called by:
-- `iwl_mld_no_wowlan_resume()` → `iwl_mld_mac80211_start()` when
-  `fw_status.in_d3` (`mac80211.c`)
-- `iwl_mld_wowlan_resume()` → `iwl_mld_resume()` mac80211 resume op
+**Step 3.2: FOLLOW THE FIXES: TAG**
 
-Context: process context, suspend/resume, `CONFIG_PM_SLEEP`
-(`mld/Makefile`: `iwlmld-$(CONFIG_PM_SLEEP) += d3.o`).
+Record: No Fixes: tag. Buggy commit in **this** tree is `8caa9dd3d1a7c9`
+(`git merge-base --is-ancestor` = yes). Upstream `3176205933494` is not
+an ancestor (stable SHA rewrite). No later origin/master commits touch
+this file after `965cbdbdfbd37`.
 
-**Step 5.3 — Callees**
-Record: `iwl_rx_packet_payload_len()`, `IWL_FW_CHECK` → `IWL_ERR_LIMIT`,
-`le32_to_cpu()`. No allocation, no new locks.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
 
-**Step 5.4 — Reachability**
-Record: Yes, from userspace via suspend/resume (S3/WoWLAN) on Intel Wi-
-Fi 7 / MLD (`CONFIG_IWLMLD`). Unprivileged users typically cannot inject
-firmware RX payloads; trigger is firmware (or a compromised device).
-Still a real kernel OOB if firmware truncates the notif.
+Record (this tree, path-limited): last functional change on this file is
+the stuck-beacon commit itself. Standalone; not patch X/Y.
 
-**Step 5.5 — Similar patterns**
-Record: MVM `iwl_mvm_wait_d3_notif` already checks `len <
-sizeof(*notif)` before `notif->flags`. Other iwlwifi handlers use
-`IWL_FW_CHECK(..., pkt_len < sizeof(...))`. This closes a gap in the
-newer MLD copy of D3 resume.
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
 
-## Phase 6: Local tree (7.3.0-rc4)
+Record: David Bauer already has mt76 commits in this tree (including
+mt7603 EEPROM ID). Felix Fietkau is listed maintainer and applied the
+patch.
 
-**Step 6.1 — Buggy code here?**
-Record: Yes. `drivers/net/wireless/intel/iwlwifi/mld/d3.c` exists;
-`iwl_mld_handle_d3_notif` handles `D3_END_NOTIFICATION`. Pre-patch
-parent shows the unguarded `le32_to_cpu(notif->flags)`. Bug introduced
-with iwlmld (`d1e879ec600f9`), ancestor of HEAD.
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
 
-**Step 6.2 — Backport difficulty**
-Record: Clean apply. Surrounding case statement matches the candidate
-diff. `IWL_FW_CHECK` and `notif_handling_err` are already in this tree.
+Record: None. Same function, same `ieee80211_beacon_get(hw, vif, 0)`,
+same poll/`goto out`. `git apply --check` of `965cbdbdfbd37` succeeded.
+Standalone.
 
-**Step 6.3 — Related fixes already here?**
-Record: No earlier MLD D3_END size check. MVM has its own check
-(`c1a1dc162870a`); that does not cover MLD.
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
 
-## Phase 7: Subsystem / maintainer
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 
-**Step 7.1**
-Record: **iwlwifi MLD** (`drivers/net/wireless/intel/iwlwifi/mld/`).
-**IMPORTANT** (not core mm/fs, but a widely used Intel Wi-Fi driver on
-current hardware). D3.c is only built with `CONFIG_PM_SLEEP`.
+Record:
+- `b4 dig -c 965cbdbdfbd37` →
+  https://patch.msgid.link/20260611215658.259324-1-mail@david-bauer.net
+- `b4 dig -a`: **v1 only**
+- Thread mbox: patch only, **no replies**, no NAK, no reviewer Cc:
+  stable
+- lore.kernel.org WebFetch: **403** (used b4 + openwall/patchew mirrors)
 
-**Step 7.2**
-Record: Active (frequent iwlwifi-next dumps). D3_END handling itself has
-been stable since the sub-driver was added.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
 
-## Phase 8: Impact and risk
+Record (`b4 dig -w`): To/Cc included Felix Fietkau, Lorenzo Bianconi,
+MediaTek mt76 reviewers, linux-wireless. Applied by Felix with his SOB.
+No Reviewed-by.
 
-**Step 8.1 — Who is affected**
-Record: Users of Intel Wi-Fi MLD (`CONFIG_IWLMLD`) who suspend/resume or
-use WoWLAN. Driver- and config-specific, not universal.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
 
-**Step 8.2 — Trigger**
-Record: D3 resume when firmware delivers `D3_END_NOTIFICATION` with
-payload &lt; 4 bytes. Uncommon if firmware is healthy; realistic on
-firmware bugs. Not a normal userspace syscall; firmware-sourced.
+Record: No Reported-by, syzbot, or bugzilla. Author-found leak on code
+inspection. Openwall/Ratatoskr confirm the same v1 text, no discussion.
 
-**Step 8.3 — Failure mode**
-Record: Out-of-bounds read of RX buffer / declared payload. Can be KASAN
-OOB, garbage `d3_end_flags` (wrong reset-on-resume), or a crash if the
-buffer is tightly sized. **Severity: HIGH** (OOB; resume correctness).
-Not a guaranteed panic on every resume.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
 
-**Step 8.4 — Risk vs benefit**
-Record: **Benefit: high** for MLD laptop suspend/resume — prevents OOB
-and acting on garbage reset flags. **Risk: very low** — 9 lines, error
-path only, same pattern as MVM. Ratio favors backport.
+Record: Standalone `[PATCH mt76]`. No series. No follow-up on
+`origin/master` for this file.
 
-## Phase 9: Synthesis
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
 
-**Step 9.1 — Evidence**
+Record: lore.kernel.org/stable WebFetch **403**. No stable discussion in
+the saved thread. UNVERIFIED whether anyone already asked stable@;
+absence is not a negative signal.
 
-For:
-- Real OOB read of firmware notification payload
-- Small, obviously correct check (`len < sizeof(*notif)`)
-- Matches established iwlwifi/`IWL_FW_CHECK` and MVM D3 handler
-- D3/WoWLAN resume is a common path on laptops
-- Garbage flags can mis-handle `IWL_D0I3_RESET_REQUIRE`
-- Maintainer-applied; Johannes/linux-wireless were CCed
-- Applies cleanly; no prerequisites missing in 7.3-rc4
-- iwlmld and the buggy handler exist in this tree
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-Against:
-- No user/syzbot report; Copilot-assisted
-- Trigger needs truncated firmware, not a normal station
-- Mixed 15-patch “updates” series, not explicitly Cc: stable
-- No extra `Reviewed-by` on this patch
+semcode MCP: **not available**. Used grep/read.
 
-Unresolved:
-- lore.kernel.org HTTP 403; stable@ search not confirmed beyond the mbox
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
 
-**Step 9.2 — Stable rules**
-1. Obviously correct and tested? **PASS** — length check before
-   dereference; applied to iwlwifi-next by the maintainer.
-2. Real bug affecting users? **PASS** — OOB on truncated D3_END; MLD D3
-   resume is a real path.
-3. Important (crash/security/corruption/deadlock)? **PASS** — OOB read /
-   possible bad resume flags; HIGH, not theoretical style-only.
-4. Small and contained? **PASS** — +9/−1, one function, one case.
-5. No new features/APIs? **PASS**.
-6. Can apply to this tree? **PASS** — files, macros, and structures
-   exist.
+Record: `mt7603_update_beacon_iter()` only.
 
-**Step 9.3 — Exceptions**
-Record: Not a device-ID/quirk/DT/build/docs exception. It is a
-straightforward memory-safety fix.
+**Step 5.2: TRACE CALLERS**
 
-**Step 9.4 — Decision**
-This tree is 7.3-rc4 and contains iwlmld D3 resume. The patch is a
-9-line firmware notification bounds check that stops an OOB read and
-avoids using garbage `d3_end_flags`. It meets stable criteria for this
-checkout.
+Record:
+- Called from `mt7603_pre_tbtt_tasklet()` via
+  `ieee80211_iterate_active_interfaces_atomic()`.
+- Tasklet scheduled from `mt7603_irq_handler()` on
+  `MT_HW_INT3_PRE_TBTT0`.
+- Reachable whenever the device is an AP with beacons enabled
+  (`beacon_mask`).
 
-### What it solves for this tree
-On Intel MLD Wi-Fi, D3/WoWLAN resume handled `D3_END_NOTIFICATION` by
-reading a 4-byte `flags` field without checking payload length. A short
-firmware notification reads past valid RX data and can drive wrong
-reset-on-resume behavior. The fix logs via `IWL_FW_CHECK`, sets
-`notif_handling_err` (resume returns `-EIO`), and only then skips the
-flags read.
+**Step 5.3: TRACE CALLEES**
 
-### Risk vs benefit
-Benefit is preventing OOB and incorrect D3 resume on `CONFIG_IWLMLD` +
-`CONFIG_PM_SLEEP`. Risk is negligible: valid notifications are
-unchanged.
+Record: `ieee80211_beacon_get` (driver owns SKB), `mt76_poll`/`mt76_wr`,
+`mt76_tx_queue_skb` → `mt76_dma_tx_queue_skb` (takes SKB; error path
+uses `ieee80211_tx_status_ext`).
 
-## Verification
-- [Phase 1] Parsed tags: author Grumbach, maintainer Korenblit SOB,
-  msgid.link; no Fixes/Reported-by/Cc-stable
-- [Phase 2] Diff: +9/−1 in `iwl_mld_handle_d3_notif` D3_END case; length
-  check then optional `le32_to_cpu(notif->flags)`
-- [Phase 2] `struct iwl_d3_end_notif` is `__le32 flags` only
-  (`fw/api/d3.h`)
-- [Phase 2] `IWL_FW_CHECK` defined in `fw/dbg.h`; included from
-  `mld/d3.c`
-- [Phase 2] `notif_handling_err` forces `ret = -EIO` in
-  `iwl_mld_wait_d3_notif`
-- [Phase 2] `d3_end_flags & IWL_D0I3_RESET_REQUIRE` used in no-wowlan
-  and wowlan resume
-- [Phase 3] `git describe HEAD` / `make kernelversion`: **7.3.0-rc4**
-- [Phase 3] Blame: unguarded read from `d1e879ec600f9` (iwlmld add,
-  ~v6.15)
-- [Phase 3] `git merge-base --is-ancestor d1e879ec600f9 HEAD`: yes
-- [Phase 3] Pre-patch: `git show 4e777dcdfe70d^:.../mld/d3.c` shows
-  unguarded flags read
-- [Phase 3] MVM sibling `c1a1dc162870a` same-day D3 payload validation
-- [Phase 3] `IWL_FW_CHECK` from `568db7fd27fad` (~v6.5)
-- [Phase 4] `b4 dig -c/-a/-w/-m`: v2 09/15, linux-wireless + Johannes;
-  no NAK in mbox
-- [Phase 4] Cover letter: mixed iwlwifi-next updates; this patch listed
-  under Grumbach fixes
-- [Phase 4] UNVERIFIED: lore.kernel.org and stable@ HTTP 403
-- [Phase 5] Callers: `iwl_mld_no_wowlan_resume` /
-  `iwl_mld_wowlan_resume` from mac80211 start/resume
-- [Phase 5] `mld/Makefile`: `d3.o` only with `CONFIG_PM_SLEEP`;
-  `CONFIG_IWLMLD`
-- [Phase 6] Buggy handler present; apply would be clean
-- [Phase 8] Failure mode: OOB read of D3_END payload / garbage reset
-  flags, severity HIGH
+**Step 5.4: FOLLOW THE CALL CHAIN**
+
+Record: userspace/AP stack enables beaconing → hardware pre-TBTT IRQ →
+tasklet → iterator. Unprivileged clients do not trigger it directly;
+**any AP/router using this chip in AP mode can**. Stuck DMA/FQCR0 is the
+error trigger. `mac_work` runs every `MT7603_WATCHDOG_TIME` (100 ms) and
+treats `beacon_check >= 10` as `RESET_CAUSE_BEACON_STUCK`.
+
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+
+Record: Other mt76 chips use `ieee80211_beacon_get_template` /
+`mt76x02_mac_set_beacon` and do not share this FQCR0 poll/`goto out`
+pattern. mt76x02 has no equivalent leak.
+
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
+
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+
+Record: **Yes.** `drivers/net/wireless/mediatek/mt76/mt7603/beacon.c`
+lines 57–66: poll timeout → set watchdog → `goto out` with no free.
+Local: `git describe` → `p-6.6-3-g04810563abb71`, `make kernelversion` →
+**6.6.157**. Bug since 8caa9dd3d1a7c9 (stuck-beacon handling). Candidate
+`965cbdbdfbd37` is **not** an ancestor of HEAD.
+
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+
+Record: **Clean apply** (`git show 965cbdbdfbd37 | git apply --check`).
+Surrounding function matches mainline hunks.
+
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+
+Record: No other “free beacon SKB” commit. Other mt76 leak fixes
+(`ec4a608bca405` probe leak, etc.) are unrelated.
+
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
+
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+
+Record: **wifi / mt76 / mt7603** (`CONFIG_MT7603E`: MT7603E PCIe and
+MT7628/MT7688 SoC WLAN). **IMPORTANT** for those devices (common OpenWrt
+APs), not CORE for every 6.6 user.
+
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+
+Record: Mature driver (2018); this file is quiet. Bug is old (2023
+stuck-beacon change), not a new-feature side effect.
+
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
+
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+
+Record: **Driver-specific / config-specific:** `CONFIG_MT7603E`,
+AP/beaconing. MT7628/MT7688 SoCs are widely deployed in consumer
+routers.
+
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+
+Record:
+- Trigger: FQCR0 poll timeout (5 ms) while updating beacons — the same
+  stuck-beacon condition this driver already recovers from.
+- Frequency: pre-TBTT (~beacon interval, typically ~100 ms) per AP vif
+  (up to 4). Watchdog work every 100 ms usually resets after one such
+  event, so **~1 SKB per vif per stuck incident** if recovery works;
+  **recurring** if the MAC stays stuck.
+- Unprivileged trigger: no (AP beacon path).
+
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+
+Record: **SKB leak**, not oops/UAF/corruption. **MEDIUM** (HIGH only if
+stuck-beacon storms on a low-RAM AP). Still a real leak on a path
+already considered serious enough to backport.
+
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+
+Record:
+- **Benefit:** stops leaking beacon frames on a known hardware-stuck
+  path.
+- **Risk:** very low (2 lines, error path only, clean apply).
+- **Ratio:** favor backport.
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+FOR:
+- Confirmed leak vs mac80211 SKB ownership.
+- Buggy code is in this 6.6.157 tree (`8caa9dd3d1a7c9`).
+- +2 lines, obviously correct, clean apply, no deps.
+- Maintainer-applied.
+- Same recovery path that already justified a stable backport.
+- MT7603/MT76x8 used on production APs.
+
+AGAINST:
+- Error-path leak; volume per incident is small if watchdog resets.
+- No crash/CVE/syzbot/user report.
+- No Reviewed-by; mailing list silent.
+- Not a core-kernel path.
+
+UNRESOLVED:
+- lore.kernel.org HTTP 403; stable@ search not fetched (b4/mbox used
+  instead).
+- Exact leak rate if reset fails repeatedly: not measured on hardware.
+
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+
+1. Obviously correct and tested? **PASS** — ownership is documented;
+   maintainer applied. No extra Tested-by.
+2. Fixes a real bug that affects users? **PASS** — SKB leak on stuck-
+   beacon recovery.
+3. Important issue? **PASS** — resource leak on a periodic AP path (not
+   a one-shot init leak). Severity medium, not a panic.
+4. Small and contained? **PASS** — 2 lines, one function.
+5. No new features or APIs? **PASS**.
+6. Can apply to the local tree? **PASS** — verified with `git apply
+   --check`.
+
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+
+Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary small
+leak fix.
+
+**Step 9.4: MAKE YOUR DECISION**
+
+This is a two-line error-path `kfree` for a leak that exists in 6.6.157,
+introduced by a stuck-beacon change already on this branch. Risk is
+negligible; benefit is stopping SKB leaks on MT7603/MT76x8 APs when the
+beacon DMA path wedges. That meets stable rules for this tree.
+
+------------------------------------------------
+What the commit solves for this tree
+------------------------------------------------
+
+In `mt7603_update_beacon_iter()`, `ieee80211_beacon_get()` returns an
+SKB the driver must free. On FQCR0 poll timeout the function sets the
+beacon watchdog and returns without queueing or freeing. That path is
+the stuck-beacon recovery added in `8caa9dd3d1a7c9`, which is already
+here. Each timeout leaks one beacon SKB per AP interface. The patch only
+adds `dev_kfree_skb(skb)` on those two returns.
+
+Risk vs benefit: almost no regression surface; the leak is real whenever
+that recovery runs.
+
+------------------------------------------------
+Verification
+------------------------------------------------
+
+- [Phase 1] Tags: Link msgid `20260611215658.259324-1-mail@david-
+  bauer.net`; SOBs David Bauer + Felix Fietkau; no Fixes/Reported-
+  by/Cc:stable.
+- [Phase 1] Mainline commit `965cbdbdfbd37` on `origin/master`.
+- [Phase 2] Diff: +2 `dev_kfree_skb(skb)` in `mt7603_update_beacon_iter`
+  poll-fail paths; success path still `mt76_tx_queue_skb`.
+- [Phase 2] `include/net/mac80211.h`: “The driver is responsible for
+  freeing the returned skb.”
+- [Phase 2] `dev_kfree_skb` → `consume_skb` in `include/linux/skbuff.h`.
+- [Phase 3] `git blame`: leaky `goto out` from `8caa9dd3d1a7c9` (stable
+  form of `3176205933494`).
+- [Phase 3] `git merge-base --is-ancestor 8caa9dd3d1a7c9 HEAD` → yes;
+  `965cbdbdfbd37` → no; `3176205933494` → no (rewritten).
+- [Phase 3] `git show 8caa9dd3d1a7c9`: moved `mt76_tx_queue_skb` after
+  polls and added `goto out` without free.
+- [Phase 4] `b4 dig -c 965cbdbdfbd37`: v1 only; no replies in mbox.
+- [Phase 4] `b4 dig -w`: mt76 maintainers + linux-wireless on To/Cc.
+- [Phase 4] lore WebFetch 403; openwall/patchew/ratatoskr match v1, no
+  review replies.
+- [Phase 5] Caller: `mt7603_pre_tbtt_tasklet` ← `mt7603_irq_handler`
+  PRE_TBTT0.
+- [Phase 5] Watchdog: `MT7603_WATCHDOG_TIME` 100 ms, timeout 10;
+  `mt7603_mac_work` uses `beacon_check` with `check == NULL`.
+- [Phase 6] `git describe HEAD` → `p-6.6-3-g04810563abb71`; `make
+  kernelversion` → 6.6.157.
+- [Phase 6] Local `beacon.c` still missing the kfrees (lines 57–66).
+- [Phase 6] `git apply --check` of `965cbdbdfbd37` succeeded.
+- [Phase 7] `CONFIG_MT7603E`; MAINTAINERS: Felix Fietkau.
+- [Phase 8] Failure mode: SKB leak on stuck-beacon recovery; severity
+  MEDIUM.
+- UNVERIFIED: stable@ mailing-list archive (HTTP 403); hardware leak
+  rate if reset keeps failing.
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7603/beacon.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index 0cb7bfcd6420e..73fd4c69357ca 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -1326,8 +1326,16 @@ static bool iwl_mld_handle_d3_notif(struct iwl_notif_wait_data *notif_wait,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
+index 6457ee06bb5a1..62e8de6949d1a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
+@@ -56,6 +56,7 @@ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
+ 		FIELD_PREP(MT_DMA_FQCR0_TARGET_QID, MT_TX_HW_QUEUE_BCN));
+ 	if (!mt76_poll(dev, MT_DMA_FQCR0, MT_DMA_FQCR0_BUSY, 0, 5000)) {
+ 		dev->beacon_check = MT7603_WATCHDOG_TIMEOUT;
++		dev_kfree_skb(skb);
+ 		goto out;
  	}
- 	case WIDE_ID(PROT_OFFLOAD_GROUP, D3_END_NOTIFICATION): {
- 		struct iwl_d3_end_notif *notif = (void *)pkt->data;
-+		u32 len = iwl_rx_packet_payload_len(pkt);
-+
-+		if (IWL_FW_CHECK(mld, len < sizeof(*notif),
-+				 "Invalid D3_END notification (expected=%zu got=%u)\n",
-+				 sizeof(*notif), len)) {
-+			resume_data->notif_handling_err = true;
-+		} else {
-+			resume_data->d3_end_flags = le32_to_cpu(notif->flags);
-+		}
  
--		resume_data->d3_end_flags = le32_to_cpu(notif->flags);
- 		resume_data->notifs_received |= IWL_D3_NOTIF_D3_END_NOTIF;
- 		break;
+@@ -63,6 +64,7 @@ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
+ 		FIELD_PREP(MT_DMA_FQCR0_TARGET_QID, MT_TX_HW_QUEUE_BMC));
+ 	if (!mt76_poll(dev, MT_DMA_FQCR0, MT_DMA_FQCR0_BUSY, 0, 5000)) {
+ 		dev->beacon_check = MT7603_WATCHDOG_TIMEOUT;
++		dev_kfree_skb(skb);
+ 		goto out;
  	}
+ 
 -- 
 2.53.0
 
