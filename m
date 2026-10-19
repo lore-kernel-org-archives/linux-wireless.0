@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6482B5E0E2A;
-	Mon, 19 Oct 2026 14:02:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164845E39D5;
+	Mon, 19 Oct 2026 14:02:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418546; cv=none; b=K84wleMIFxNVSQWpxoJRcvRZhKh9Y6PLBbhCBJx/qKHRUE97PU8ywfW8hkOyUWbFrJfOLUYOhsaO3/GJbH/9k/sMBYoD9tp3r/N2zczwEEO3O2bhR/niwPL8o+TDNubscFnhXmg9diGCsWkpWjZ7v1eJRqUn5LjDG7Z1AlK/nWo=
+	t=1792418551; cv=none; b=ROJR2dvZNZL/7W8HifbbqSwag9zzt/U3x6WiRc8tTXdsNPrObY9cM8CWG0KSnIv/AJPVGm2YvFfXWaBhagEp7zSQKTRTO/GpCykbkyWTmsThWbz15geiPawCnB5zbRQ16e2ms9R0Ba+NfN86W6jyb8zPlYuADqGDerkCkP+sGJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418546; c=relaxed/simple;
-	bh=rvJWQyr0WEfy6/AzCKYHXnWOaMUK+fe8bFgowxnOjPE=;
+	s=arc-20240116; t=1792418551; c=relaxed/simple;
+	bh=V2I3htPfIUdQElg+MdDWCd8praOMiiWbbl8dZAXFOL0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KDBPJkPKXz9n3VsXHTXRzf1eGY7rBtgCHPdjQF9W5MYzQQxVVb0B7Je2h1IExlEVthPpuoSGfpnsAzm10VFfBqUQNovn5po/gW0hj/Bf1xoa4nU44Nlx6WJIfapOXGAFhh6VKURUIWeXGjSzJ2gwrLb4KpTJnbTIJ3qQeqlkgis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGX8RH+F; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=huOUOJVihsuGcAlMrBvQSkxrepMlT3AkfFyuigMZWpFDBOQgt1cMAJSziBYd5vRt2n+vniV+f01ZQZ35RG/gE2qzj9evM67UXl8zcmfUp5h1K9ECaBRwAEd4TW6ozw2TtpWzd6Ngsadw822k/6+pCG78sCIaFiqLOEWswWos0K0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i5NZw02G; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGX8RH+F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D75511F000C4;
-	Mon, 19 Oct 2026 14:02:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i5NZw02G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 261231F000C8;
+	Mon, 19 Oct 2026 14:02:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418542;
-	bh=/+myPmVbI9znAEmr8DN9yfg2ABmzWBxhiHOVL+nrSUw=;
+	s=k20260515; t=1792418549;
+	bh=s2KO/xXiICc0z1MsMXV0wNhHuNF/cXkqdi+CLIaYDq0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HGX8RH+FeTCN2UZjI/Z5ESIL7pESDs+/pui29FyQp77K6D57pF8EfZPLvMe7ewqt0
-	 W5X5QFIiRoF2M5NiGQJdxvJQA6/FkauuMd9l/ttaY5QSS0I7Iii0i6XuI0kqvjE1DQ
-	 JzQoL6HVDLaggBKHt80zh2NDSlyNeUZB+HBCluB/vQW1+3bjtxMe2gRinrNLbUeXuJ
-	 5qeEozYqwalDztYZM6dbAay97INrcuZvNQGL9PJyL1FKXArThshpdoWzFi55r3XRd7
-	 0NM00w1eTekQFlkvRMoiJxEOcku31H5gJlvYnfjKuxMYnQV9JTUyCTU5mLNWbpnLl1
-	 bJf2mN1wyCC9Q==
+	b=i5NZw02GejVaAGCyahf4VnVaP5VLsr6w6O+bTkIDxjDXgxMUh1a/kAjcLwIHiYx3b
+	 UfSsgADrwdYn3eIUSYwe12XKw/rM+lyh+Sk6iNmNyyO/4ts7pfJsdah7K366hskSIZ
+	 Z0h8u0LZnfn+lrjX9FliubzjkVwt6d/b7vcDsUjRTKrzs+vOgCpMuQDCZvXQZU/MXM
+	 AFyiLy6rwOio+pX25ng6wY3bdYediUCw1u+slaBZPHMHQiXwQ5LHR42+Nl0kQh0uJj
+	 O6kaJ1asm3sFlLQFK9zWOY8tO+j09v5/J7ymIYG1zxaPKzM/Z5ryBOZ1vAIJKgu1U9
+	 ZVw+A8SXJec0Q==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+Cc: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jjohnson@kernel.org,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: ath11k: validate regulatory capability phy_id
-Date: Mon, 19 Oct 2026 09:50:13 -0400
-Message-ID: <20261019135441.1420968-322-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: cfg80211: include cf1 offset when sending chandef
+Date: Mon, 19 Oct 2026 09:50:18 -0400
+Message-ID: <20261019135441.1420968-327-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -56,416 +53,356 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 
-[ Upstream commit f8729a40ebcc94d164be8f154483a21669f3ab52 ]
+[ Upstream commit 5a69b8dffd2a1b06e4cc4c9003c639eb78bac4cd ]
 
-ath11k_wmi_tlv_ext_hal_reg_caps() copies firmware regulatory
-capability records into soc->hal_reg_cap[] using reg_cap.phy_id as
-the destination index.  The loop count is bounded by num_phy, but the
-phy_id embedded in each record is not checked against the fixed
-MAX_RADIOS-sized destination array.
+The cf1 offset is not included when sending the chandef leading
+to incorrect channel resolution in usermode. Include it.
 
-Reject firmware records whose phy_id does not fit soc->hal_reg_cap[]
-before copying the parsed capability.
-
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Link: https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Link: https://patch.msgid.link/20260721053958.227853-1-lachlan.hodges@morsemicro.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This tree is **7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`). The candidate
-is a 6-line firmware `phy_id` bounds check in ath11k WMI parsing. The
-buggy `memcpy` has been in this driver since v5.6; the check is
-obviously correct and belongs here.
+## Phase 1: Commit message forensics
 
----
+**Step 1.1 — Subject**
+- Record: `[wifi: cfg80211] [include] include cf1 offset when sending
+  chandef`
+- Subsystem: cfg80211 / nl80211 (`net/wireless/nl80211.c`)
+- Verb is “include”, not “fix”, but the body states a concrete userspace
+  correctness bug.
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+**Step 1.2 — Tags**
+- Record:
+  - `Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>`
+    (author)
+  - `Link: https://patch.msgid.link/20260721053958.227853-1-
+    lachlan.hodges@morsemicro.com`
+  - `Signed-off-by: Johannes Berg <johannes.berg@intel.com>` (wireless
+    maintainer apply)
+  - No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
+    by:`, or `Cc: stable` (absence is expected and is not treated as a
+    negative)
+- Pattern: vendor S1G/HaLow developer (Morse Micro), applied same day by
+  the subsystem maintainer. No syzbot/KASAN report.
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[wifi: ath11k] [validate] [reject firmware `phy_id` that is
-out of range for `soc->hal_reg_cap[]`]**
+**Step 1.3 — Body**
+- Record:
+  - Bug: `freq1_offset` is omitted when nl80211 sends a chandef.
+  - Symptom: “incorrect channel resolution in usermode.”
+  - Failure mode: userspace reconstructs the operating-channel center
+    from `NL80211_ATTR_CENTER_FREQ1` (MHz) only, dropping the kHz
+    remainder.
+  - Version info: none in the message.
+  - Root cause as stated: send path does not emit
+    `NL80211_ATTR_CENTER_FREQ1_OFFSET`.
 
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- **Fixes:** none (expected for this review pipeline)
-- **Reported-by:** none
-- **Tested-by:** none
-- **Reviewed-by:** Rameshkumar Sundaram
-  `<rameshkumar.sundaram@oss.qualcomm.com>`; Baochen Qiang
-  `<baochen.qiang@oss.qualcomm.com>` (Qualcomm ath11k reviewers)
-- **Acked-by:** none
-- **Link:**
-  `https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn`
-- **Cc: stable:** none (expected; not a negative signal)
-- **Signed-off-by:** Pengpeng Hou (author); Jeff Johnson (ath11k
-  maintainer)
+**Step 1.4 — Hidden bug fix?**
+- Record: Yes. “Include it” is a dump-path omission fix, not a cleanup.
+  It restores the send side of an attribute the kernel has parsed since
+  2020.
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-Record:
-- **Bug:** `ath11k_wmi_tlv_ext_hal_reg_caps()` copies firmware HAL
-  regulatory-capability records into `soc->hal_reg_cap[]` using
-  **`reg_cap.phy_id` as the destination index**. The loop is bounded by
-  `num_phy`, but **`phy_id` inside each record is not checked** against
-  `MAX_RADIOS`.
-- **Symptom/failure mode:** out-of-bounds write into `struct
-  ath11k_base` (memory corruption).
-- **Version information:** none in the message.
-- **Root cause:** firmware-controlled `u32 phy_id` used as an array
-  index without a bounds check.
+## Phase 2: Diff analysis
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: **Not disguised.** This is an explicit firmware-index validation
-/ OOB-write fix. Verb “validate” is a bounds check, not cleanup.
+**Step 2.1 — Inventory**
+- Record:
+  - File: `net/wireless/nl80211.c` (`+4 / -0`)
+  - Function: `nl80211_send_chandef()`
+  - Scope: single-file surgical fix
 
----
+**Step 2.2 — Code flow**
+- Record: After putting `NL80211_ATTR_CENTER_FREQ1`, the function now
+  also puts `NL80211_ATTR_CENTER_FREQ1_OFFSET` when
+  `chandef->freq1_offset` is non-zero. Same `-ENOBUFS` pattern as
+  `center_freq2` / `punctured`. Normal dump/event path, not an error-
+  only path.
 
-## PHASE 2: DIFF ANALYSIS
+**Step 2.3 — Bug mechanism**
+- Record: **Logic / ABI completeness.** Parse path already does:
+  `chandef->freq1_offset =
+  nla_get_u32_default(attrs[NL80211_ATTR_CENTER_FREQ1_OFFSET], 0)`
+  Send path already emits `NL80211_ATTR_WIPHY_FREQ_OFFSET` for the
+  *control* channel, but never emitted the matching center-segment
+  offset. Kernel identity comparison (`cfg80211_chandef_identical`)
+  includes `freq1_offset`, so the kernel treats that field as part of
+  the channel.
 
-**Step 2.1: INVENTORY THE CHANGES**
-Record:
-- **File:** `drivers/net/wireless/ath/ath11k/wmi.c` — **+6 / -0**
-- **Function:** `ath11k_wmi_tlv_ext_hal_reg_caps()`
-- **Scope:** single-file surgical fix
+**Step 2.4 — Fix quality**
+- Record: Obviously correct; 4 lines; mirrors existing nla_put style.
+  Regression risk is very low: the attribute is already in uapi (since
+  2020), is optional, and is only sent when the offset is non-zero. Old
+  userspace ignores unknown/unused attributes. No API or struct change.
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record (verified in this tree at `wmi.c:4862-4880`):
-- **Before:** `ath11k_pull_reg_cap_svc_rdy_ext()` fills `reg_cap` from
-  firmware TLV `ext_reg_cap[i].phy_id`, then
-  `memcpy(&soc->hal_reg_cap[reg_cap.phy_id], &reg_cap, sizeof(reg_cap))`
-  with no check that `phy_id < MAX_RADIOS`.
-- **After:** if `reg_cap.phy_id >= ARRAY_SIZE(soc->hal_reg_cap)`, log a
-  warning and return `-EINVAL`; otherwise copy as before.
-- **Path:** firmware `WMI_SERVICE_READY_EXT` event during ath11k bring-
-  up (probe/init), not a hot datapath.
+## Phase 3: Git history
 
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record:
-- **Category:** **(d) memory safety — buffer overflow / out-of-bounds
-  write**
-- **Mechanism:** `phy_id` is a firmware `u32`
-  (`wmi_hal_reg_capabilities_ext.phy_id`). Destination is
-  `hal_reg_cap[MAX_RADIOS]` with **`MAX_RADIOS == 3`** (`core.h:242`,
-  `core.h:971`). Loop bound `num_phy` is also firmware-supplied and is
-  **not** the same as `phy_id`. A record with `phy_id >= 3` writes
-  `sizeof(struct ath11k_hal_reg_capabilities_ext)` (10 × `u32` = 40
-  bytes) past the array into following `ath11k_base` fields
-  (`free_vdev_map`, `tbl_mtx_lock`, peer rhashtables).
-- The parse helper only checks TLV count vs `num_phy`
-  (`n_ext_hal_reg_caps >= param.num_phy` → `-ENOBUFS`); it does **not**
-  validate `phy_id`.
+**Step 3.1 — Blame**
+- Record: `nl80211_send_chandef()` dates to 2012 (`683b6d3b31a519`).
+  Control-channel kHz offset send was added in `942ba88ba9c87`
+  (2020-05-27, “nl80211: add KHz frequency offset for most wifi
+  commands”). That commit added parse of
+  `NL80211_ATTR_CENTER_FREQ1_OFFSET` into `chandef->freq1_offset` and
+  send of `WIPHY_FREQ_OFFSET`, but not send of `CENTER_FREQ1_OFFSET`.
+  The struct field itself was added in `934f4c7dd3a54` (2020-04-24,
+  “cfg80211: express channels with a KHz component”). The omission has
+  been present since the KHz ABI was introduced.
 
-**Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- **Obviously correct:** `ARRAY_SIZE(soc->hal_reg_cap)` is the real
-  destination size; reject-and-return is the right failure mode.
-- **Minimal:** 6 lines, one check, no API/struct changes.
-- **Regression risk:** **very low**. Well-formed firmware with `phy_id`
-  0–2 is unchanged. Invalid `phy_id` now fails WMI parse instead of
-  corrupting memory. That is the intended probe failure, not a behavior
-  change for working hardware.
+**Step 3.2 — Fixes: tag**
+- Record: None. Closest introducer is `942ba88ba9c87` (verified present
+  in this tree). No later conflicting rewrite of this hunk besides the
+  candidate itself (`5a69b8dffd2a1`).
 
----
+**Step 3.3 — File history**
+- Record: Related completeness patch by the same author: `3fc830cd8c9d0`
+  (“include s1g_primary_2mhz when sending chandef”). Standalone; not
+  patch X/Y. No prerequisite refactor required for these four lines.
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+**Step 3.4 — Author**
+- Record: Lachlan Hodges is a regular S1G/cfg80211 contributor (Morse
+  Micro). Nearby work is S1G chandef validation and the in-tree `mm81x`
+  HaLow driver (`b1906cea00b02`, 2026-07-08). Johannes Berg applied the
+  patch.
 
-**Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- Loop + `memcpy`: **`d5c65159f28953`** — “ath11k: driver for Qualcomm
-  IEEE 802.11ax devices” (Kalle Valo, 2019-11-25).
-- Bounds check: **`f8729a40ebcc9`** (this commit).
-- Introducer is in **v5.6**, not v5.5 (`git merge-base --is-ancestor`).
-  Bug has been in every tree with ath11k since then.
+**Step 3.5 — Dependencies**
+- Record: Needs `chandef->freq1_offset` and
+  `NL80211_ATTR_CENTER_FREQ1_OFFSET`. Both exist in this tree (2020).
+  Applies standalone.
 
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: **No Fixes: tag.** Not applicable. Introducer identified by
-blame: `d5c65159f28953` (original driver).
+## Phase 4: Mailing list / external
 
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record:
-- Recent `wmi.c` work is other firmware TLV hardening (overread, stride,
-  leak) — related thematically, **not prerequisites**.
-- Earlier `84eee3c845d37` (“refine the phy_id check in
-  ath11k_reg_chan_list_event”) is a **different** event path.
-- **Standalone**, not patch N/M. Maintainer applied it as `[1/1]`.
+**Step 4.1 — Original discussion**
+- Record: `b4 dig -c 5a69b8dffd2a1` → https://patch.msgid.link/202607210
+  53958.227853-1-lachlan.hodges@morsemicro.com
+- Series: v1 only (`b4 dig -a`). Subject: `[PATCH wireless-next]`.
+- Saved mbox (`b4 dig -m`): only the original submission; no replies, no
+  NAK, no reviewer `Cc: stable`.
+- UNVERIFIED: lore.kernel.org HTML/WebFetch returned 403 (Anubis).
+  Discussion content is taken from the b4 mbox, not the HTML thread
+  view.
 
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Pengpeng Hou has this one ath11k commit here. Weight comes from
-**Qualcomm reviewers** and **maintainer Jeff Johnson** (MAINTAINERS:
-ATH11K).
+**Step 4.2 — Recipients (`b4 dig -w`)**
+- Record: Johannes Berg, linux-wireless, Arien Judge (Morse Micro).
+  Maintainer was To: and applied the patch the same day.
 
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: **None.** Uses existing `ARRAY_SIZE`, `ath11k_warn`, `-EINVAL`,
-`soc->hal_reg_cap`. Can apply standalone on any tree with this 2019
-function.
+**Step 4.3 — Bug report**
+- Record: No syzbot/bugzilla link. Evidence of user impact is the Morse
+  Micro author plus in-tree S1G hardware that uses 500 kHz offsets.
 
----
+**Step 4.4 — Series**
+- Record: Standalone v1. Not part of a multi-patch series.
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+**Step 4.5 — Stable list**
+- Record: UNVERIFIED for lore.kernel.org/stable HTML (403). No stable
+  discussion in the b4-matched wireless thread.
 
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record:
-- **Lore URL (b4 dig):**
-  `https://patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn`
-- **Revisions:** **v1 only** (`b4 dig -a`); committed v1.
-- **Thread (saved via `b4 dig -m`):**
-  - Baochen Qiang: `Reviewed-by`
-  - Rameshkumar Sundaram: `Reviewed-by`
-  - Jeff Johnson: “Applied, thanks!” `[1/1]`
-- **No NAKs, no stable nomination, no requested revisions.**
+## Phase 5: Semantic / call-chain
 
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record (`b4 dig -w`): To/Cc were Jeff Johnson, `linux-wireless`,
-`ath11k@lists.infradead.org`, `linux-kernel`. Right lists and
-maintainer.
+**Step 5.1 — Functions**
+- Record: `nl80211_send_chandef()` only.
 
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: **No user/syzbot/bugzilla report.** Found by code review of
-firmware TLV parsing. Severity is from the mechanism (OOB write), not
-from a crash log.
+**Step 5.2 — Callers (verified)**
+- Record:
+  - `nl80211_send_iface()` — GET/NEW interface dump, including MLO links
+    (`iw` / netlink dump)
+  - channel-switch notify (`cfg80211_ch_switch_notify` / started)
+  - `cfg80211_incumbent_signal_notify`
+  - DFS/radar notify
+  - `cfg80211_nan_channel_evac`
+  - `mac80211_hwsim` (exported symbol)
+- Calling context: netlink dump and MLME multicast events. Userspace-
+  reachable.
 
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Standalone `[PATCH]`, not a series. ath12k still has an
-analogous unguarded `soc->hal_reg_cap[reg_cap.phy_id] = reg_cap` in
-`ath12k/wmi.c` — sibling issue, **not a dependency**.
+**Step 5.3 — Callees**
+- Record: `nla_put_u32()` only for this hunk.
 
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: **UNVERIFIED** for lore.kernel.org/stable (HTTP 403). Local
-history has no stable-specific discussion of this subject.
+**Step 5.4 — Reachability**
+- Record: Yes. Unprivileged dumps depend on nl80211 permissions, but any
+  process that can GET_INTERFACE / receive MLME events sees the
+  truncated center. S1G AP/STA userspace that round-trips a dumped
+  chandef into SET_CHANNEL would restore `freq1_offset = 0`.
 
----
+**Step 5.5 — Similar patterns**
+- Record: Same send-path omission pattern as `s1g_primary_2mhz`. S1G
+  frequencies are `902000 + chan * 500` kHz
+  (`ieee80211_channel_to_freq_khz`). Morse `mm81x` channels are all
+  `freq_offset = 500` (902.5, 903.5, …). Non-zero `freq1_offset` is the
+  common case for that hardware, not an edge case.
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 6: This checkout
 
-**Step 5.1: KEY FUNCTIONS**
-Record: `ath11k_wmi_tlv_ext_hal_reg_caps()`; helpers
-`ath11k_pull_reg_cap_svc_rdy_ext()`,
-`ath11k_wmi_tlv_ext_hal_reg_caps_parse()`.
+**Step 6.1 — Buggy code in this tree?**
+- Record: Local tree is **7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`,
+  Makefile `VERSION=7 PATCHLEVEL=3 SUBLEVEL=0 EXTRAVERSION=-rc4`).
+- `nl80211_send_chandef`, `freq1_offset`, and
+  `NL80211_ATTR_CENTER_FREQ1_OFFSET` all exist here.
+- Bug introduced with the 2020 KHz ABI (`942ba88ba9c87` /
+  `934f4c7dd3a54`), long before this branch.
+- Candidate `5a69b8dffd2a1` is an ancestor of HEAD (landed in 7.3-rc1).
+  That is not used as a “already selected for stable” reason; it only
+  confirms the code under review is this tree’s current
+  `nl80211_send_chandef`.
 
-**Step 5.2: TRACE CALLERS**
-Record (verified with grep/read):
-- `ath11k_wmi_tlv_ext_hal_reg_caps()` ←
-  `ath11k_wmi_tlv_svc_rdy_ext_parse()` (`WMI_TAG_ARRAY_STRUCT` after hw-
-  mode and mac-phy TLVs)
-- ← `ath11k_service_ready_ext_event()`
-- ← WMI event switch `WMI_SERVICE_READY_EXT_EVENTID`
+**Step 6.2 — Backport difficulty**
+- Record: Clean on this tree (the four-line hunk matches current code).
+  Surrounding later fields (`npca_*`) are already present here; no
+  rework needed *on this tree*.
 
-**Step 5.3: TRACE CALLEES**
-Record: `ath11k_wmi_tlv_iter()`, `ath11k_pull_reg_cap_svc_rdy_ext()`
-(copies firmware `phy_id`), `memcpy()`.
+**Step 6.3 — Other fixes already here?**
+- Record: No alternate fix. This is the only send of
+  `CENTER_FREQ1_OFFSET` in the tree (`nla_put` grep).
 
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Record: Reachable on **ath11k device init** when firmware sends service-
-ready-ext. Not a syscall hot path. Trigger needs **CONFIG_ATH11K** +
-Qualcomm 802.11ax hardware + firmware that puts `phy_id >= 3` (or
-otherwise ≥ `ARRAY_SIZE`). Unprivileged users cannot poke this WMI path
-directly; **buggy or malicious firmware** can. That is still a real
-kernel OOB write.
+## Phase 7: Subsystem context
 
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: Same driver already bounds other firmware indices (e.g. `phy_idx
->= reg_caps->num_phy` in the pull helper). This copy site was the hole.
-ath12k has the same hole unfixed.
+**Step 7.1**
+- Record: `net/wireless` cfg80211/nl80211. Criticality: **IMPORTANT**
+  (Wi-Fi uAPI; not mm/core, but the dump path is the userspace contract
+  for every wireless interface).
 
----
+**Step 7.2**
+- Record: Actively developed (S1G, NPCA, MLO). The omission itself is
+  old; S1G use of kHz offsets is what made it user-visible.
 
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+## Phase 8: Impact and risk
 
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** `ath11k_wmi_tlv_ext_hal_reg_caps()` and
-`hal_reg_cap[MAX_RADIOS]` are present. The unguarded `memcpy` was here
-from v5.6 until `f8729a40ebcc9`. **Bug introduced in v5.6, long before
-7.3.** `git merge-base --is-ancestor f8729a40ebcc9 HEAD` is true (fix is
-in 7.3-rc1+); that is mainline merge, not “already selected for stable.”
+**Step 8.1 — Who is affected**
+- Record: Config/driver-specific: S1G/HaLow and any chandef with non-
+  zero `freq1_offset`. In this tree that includes `mm81x` and hwsim S1G.
+  2.4/5/6 GHz integer-MHz channels have `freq1_offset == 0`, so the new
+  `nla_put` is skipped.
 
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply.** Surrounding function body is still the 2019
-structure plus this 6-line check. No refactor of this function in
-between.
+**Step 8.2 — Trigger**
+- Record: Common for S1G: interface dump, channel switch, radar, NAN
+  evac. Not a race. Userspace that reads nl80211 can trigger it; no
+  exploit primitive verified.
 
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: No alternate fix for this memcpy. Other nearby TLV fixes address
-different bugs.
+**Step 8.3 — Failure mode**
+- Record: Wrong operating-channel center in userspace (typically **500
+  kHz** on S1G, which is half of a 1 MHz channel). Kernel does not oops.
+  Severity: **MEDIUM** (connectivity / wrong-channel round-trip, not
+  crash/corruption/UAF). Fits stable’s “oh, that’s not good” / real bug
+  that bothers users of that hardware.
 
----
+**Step 8.4 — Risk-benefit**
+- Record: Benefit medium for S1G users (correct channel identity). Risk
+  very low (4 lines, optional existing attribute, offset==0 is a no-op).
+  Ratio favors taking it.
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## Phase 9: Synthesis
 
-**Step 7.1: SUBSYSTEM AND CRITICALITY**
-Record: **ath11k (Qualcomm 802.11ax)** under
-`drivers/net/wireless/ath/ath11k/`. **IMPORTANT** — not core mm/fs, but
-a widely used Wi-Fi driver (laptops, AP SoCs, Chromebooks, phones).
-CONFIG: `ATH11K` / `ATH11K_PCI` / `ATH11K_AHB`.
+**Step 9.1 — Evidence**
 
-**Step 7.2: SUBSYSTEM ACTIVITY**
-Record: Actively maintained (Jeff Johnson). Recent WMI work is firmware-
-message validation, consistent with this patch.
+FOR:
+- Real dump/event omission: parse has accepted `CENTER_FREQ1_OFFSET`
+  since 2020; send never included it.
+- S1G channel grid is 500 kHz; Morse `mm81x` channels all have
+  `freq_offset = 500`.
+- Kernel chandef identity includes `freq1_offset`; userspace cannot
+  reconstruct it from `CENTER_FREQ1` alone.
+- Dump-then-set round-trip zeros the offset.
+- 4-line, obviously correct, no new API.
+- Maintainer (Johannes Berg) applied it; callers are standard nl80211
+  dump/event paths.
 
----
+AGAINST:
+- Not a crash, deadlock, UAF, or security issue.
+- Submitted as `wireless-next`, not `wireless` fixes; no list review
+  replies in the b4 mbox.
+- Affects a narrower band (S1G/HaLow), not all Wi-Fi users.
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+UNRESOLVED:
+- Full lore HTML (403). Stable-list search (403). Exact userspace
+  (iw/hostapd) behavior not inspected in this repo.
 
-**Step 8.1: WHO IS AFFECTED**
-Record: **Driver-specific / config-specific:** `CONFIG_ATH11K` users.
-Impact only if firmware sends a `phy_id` that does not fit
-`hal_reg_cap[]`.
+**Step 9.2 — Stable rules**
+1. Obviously correct and tested? **PASS** — 4 lines, same pattern as
+   adjacent attributes; maintainer applied.
+2. Real bug that affects users? **PASS** — S1G userspace gets the wrong
+   operating center.
+3. Important issue? **PASS** (medium) — wrong RF channel center on
+   dump/events and on chandef round-trip; not a crash, but a user-
+   visible correctness bug on in-tree HaLow hardware.
+4. Small and contained? **PASS** — 4 lines, one function.
+5. No new features/APIs? **PASS** — emits an existing uapi attribute.
+6. Can apply to this tree? **PASS** — fields and function exist here.
 
-**Step 8.2: TRIGGER CONDITIONS**
-Record: Device init / firmware service-ready-ext. **Not** every packet.
-Needs bad `phy_id` in the WMI record (firmware bug or hostile firmware).
-Unprivileged userspace cannot fire it without controlling firmware.
+**Step 9.3 — Exception category**
+- Record: None of device-ID / quirk / DT / build / docs. Ordinary small
+  correctness fix.
 
-**Step 8.3: FAILURE MODE SEVERITY**
-Record: **Out-of-bounds write** of 40 bytes into `struct ath11k_base`
-after `hal_reg_cap[]` — can corrupt `free_vdev_map`, mutexes, peer
-tables → crash, deadlock, or further memory corruption. **Severity:
-HIGH** (OOB write / memory corruption). Not a panic on every boot with
-good firmware.
+**Step 9.4 — Decision**
+This tree is 7.3-rc4. The affected send path and `freq1_offset` exist
+here. The patch is a small, obviously correct fix for a real userspace
+channel-identity bug on S1G, with negligible regression risk. It meets
+the stable rules for this checkout.
 
-**Step 8.4: RISK-BENEFIT RATIO**
-Record:
-- **Benefit:** High for ath11k — stops a real OOB write on a long-
-  standing path (v5.6+).
-- **Risk:** Very low — 6 lines, error-path reject, no lock/API change,
-  good firmware unaffected.
-- **Ratio:** strongly favors backport.
+### What the commit solves
+`nl80211_send_chandef()` already reported the control frequency plus
+`WIPHY_FREQ_OFFSET`, but dropped `chandef->freq1_offset` for the
+operating center. Userspace then resolves center as an integer MHz
+value. On S1G that is systematically wrong by 500 kHz.
 
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: COMPILE THE EVIDENCE**
-
-**FOR:**
-- Real OOB write: firmware `u32 phy_id` used as index into a 3-element
-  array.
-- Small, obviously correct check (`ARRAY_SIZE` + `-EINVAL`).
-- Present in this tree’s ath11k code; bug dates to original driver
-  (v5.6).
-- Reviewed by Qualcomm ath11k developers; applied by the maintainer.
-- Standalone; no new APIs; no series dependencies.
-- Matches stable pattern: buffer overflow / firmware TLV validation.
-
-**AGAINST:**
-- No `Reported-by` / syzbot / production crash.
-- Trigger is firmware-supplied data at probe, not a generic syscall.
-- No explicit `Cc: stable` (not a negative per pipeline rules).
-
-**UNRESOLVED:**
-- Could not query lore.kernel.org/stable (403).
-- No public report that shipping firmware actually sent `phy_id >= 3`.
-
-**Step 9.2: STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — local review + two Qualcomm
-   Reviewed-by + maintainer apply.
-2. Fixes a real bug that affects users? **PASS** — OOB write on firmware
-   parse; ath11k users are real users.
-3. Important issue? **PASS** — OOB write / memory corruption (**HIGH**),
-   not style.
-4. Small and contained? **PASS** — +6 lines, one function.
-5. No new features or APIs? **PASS**.
-6. Can apply to the local tree? **PASS** — same function/context; no
-   missing prerequisites.
-
-**Step 9.3: EXCEPTION CATEGORIES**
-Record: None (not a device ID / quirk / DT / build / doc exception).
-Qualifies as a normal bugfix.
-
-**Step 9.4: DECISION**
-
-This is a surgical firmware-index bounds check that stops a memcpy past
-`hal_reg_cap[MAX_RADIOS]`. The destination array and unguarded copy
-exist in this 7.3 tree’s ath11k code; the bug is older than this branch.
-Risk is negligible; the failure mode is memory corruption. That meets
-stable criteria for **this** tree.
-
----
-
-### What the commit solves for this tree
-`ath11k_wmi_tlv_ext_hal_reg_caps()` trusted firmware `phy_id` as an
-index into a 3-slot array. A bad `phy_id` overwrites the rest of `struct
-ath11k_base`. The patch rejects those records before the copy.
-
-### Stable rules
-Small, obviously correct, no new APIs, applies cleanly, fixes a real OOB
-write.
+### Stable fit
+Small, contained, no new API, real user-visible bug, low risk.
 
 ### Risk vs benefit
-Benefit is preventing kernel memory corruption on ath11k bring-up with
-bad firmware. Risk is an early `-EINVAL` only when `phy_id` is already
-invalid.
+Benefit: correct channel dumps/events for S1G/HaLow. Risk: very low
+optional netlink attribute.
 
 ### Concerns
-No in-the-wild crash report; trigger is firmware, not unprivileged
-syscalls. That does not make an OOB write unsuitable for stable. No
-backport rework needed here.
-
----
+No crash report; vendor-driven; lore HTML unverified. None of those
+outweigh the verified omission and the 500 kHz S1G grid.
 
 Verification:
-- **[Phase 1]** Parsed tags: two Qualcomm Reviewed-by, maintainer
-  SOB/Link; no Fixes/Reported-by/Cc:stable
-- **[Phase 2]** Diff: +6 in `ath11k_wmi_tlv_ext_hal_reg_caps()`;
-  `ARRAY_SIZE` check before `memcpy(&soc->hal_reg_cap[reg_cap.phy_id],
-  ...)`
-- **[Phase 2]** `MAX_RADIOS` is 3; `hal_reg_cap[MAX_RADIOS]` in
-  `core.h:971`; `phy_id` is firmware `u32`
-- **[Phase 3]** `git blame`: memcpy from `d5c65159f28953` (2019); check
-  from `f8729a40ebcc9`
-- **[Phase 3]** Introducer in v5.6, not v5.5; fix in v7.3-rc1, not v7.2
-- **[Phase 3]** `git merge-base --is-ancestor f8729a40ebcc9 HEAD` → yes
-  (mainline already has the fix; ignored as “already selected”)
-- **[Phase 3]** No series/prereqs; author has only this ath11k commit
-  here
-- **[Phase 4]** `b4 dig -c f8729a40ebcc9`: v1 at
-  patch.msgid.link/20260704011040.26233-1-pengpeng@iscas.ac.cn
-- **[Phase 4]** `b4 dig -a`: v1 only; `b4 dig -w`: maintainer + linux-
-  wireless + ath11k list
-- **[Phase 4]** mbox: Reviewed-by Baochen Qiang + Rameshkumar Sundaram;
-  Jeff Johnson applied `[1/1]`; no NAK
-- **[Phase 4]** lore HTTP fetch 403; used `b4 dig -m` instead
-- **[Phase 5]** Call chain: WMI `SERVICE_READY_EXT` →
-  `ath11k_service_ready_ext_event` → TLV parse → this function
-- **[Phase 5]** ath12k has the same unguarded pattern (sibling, not a
-  prereq)
-- **[Phase 6]** `git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`;
-  `make kernelversion` = 7.3.0-rc4; buggy function present
-- **[Phase 6]** Surrounding code still matches 2019 introducer → clean
-  apply
-- **[Phase 7]** MAINTAINERS: Jeff Johnson, Supported
-- **[Phase 8]** Failure mode: 40-byte OOB write into `ath11k_base` after
-  `hal_reg_cap[]` → HIGH
-- **UNVERIFIED:** stable@ lore search (HTTP 403); whether any shipping
-  firmware actually sent `phy_id >= 3`
+- [Phase 1] Parsed tags: author Lachlan Hodges, Link msgid, SOB Johannes
+  Berg; no Fixes/Reported-by/Cc-stable
+- [Phase 2] Diff: +4 lines in `nl80211_send_chandef()` adding
+  `NL80211_ATTR_CENTER_FREQ1_OFFSET`
+- [Phase 3] `git blame`: send of `WIPHY_FREQ_OFFSET` from
+  `942ba88ba9c87` (2020); this hunk from `5a69b8dffd2a1`
+- [Phase 3] `git log -S 'u16 freq1_offset' -- include/net/cfg80211.h`:
+  field added in `934f4c7dd3a54` (2020)
+- [Phase 3] Parse path already reads `CENTER_FREQ1_OFFSET` at
+  nl80211.c:4006–4007
+- [Phase 3] `git merge-base --is-ancestor 5a69b8dffd2a1 HEAD` → yes
+  (inspection only)
+- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 wireless-next, no replies in mbox;
+  To: Johannes
+- [Phase 4] WebFetch/curl lore: 403 Anubis — UNVERIFIED HTML thread
+- [Phase 5] Callers: iface dump, CSA, radar, NAN, hwsim
+- [Phase 5] S1G freq: `902000 + chan * 500`; mm81x channels all offset
+  500
+- [Phase 5] `cfg80211_chandef_identical` compares `freq1_offset`
+- [Phase 6] `git describe HEAD` / `make kernelversion`: 7.3.0-rc4; buggy
+  pattern exists; attr/field present
+- [Phase 8] Failure mode: wrong userspace channel center (typically 500
+  kHz), severity MEDIUM
+- UNVERIFIED: stable@ lore discussion; iw/hostapd source handling of the
+  attribute
 
 **YES**
 
- drivers/net/wireless/ath/ath11k/wmi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/wireless/nl80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 3305ec66ddbf2..c6b9e84b169c9 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -4816,6 +4816,12 @@ static int ath11k_wmi_tlv_ext_hal_reg_caps(struct ath11k_base *soc,
- 			return ret;
- 		}
- 
-+		if (reg_cap.phy_id >= ARRAY_SIZE(soc->hal_reg_cap)) {
-+			ath11k_warn(soc, "invalid reg cap phy_id %u\n",
-+				    reg_cap.phy_id);
-+			return -EINVAL;
-+		}
-+
- 		memcpy(&soc->hal_reg_cap[reg_cap.phy_id],
- 		       &reg_cap, sizeof(reg_cap));
- 	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b851e398b1b36..6ebbb16accfe8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4260,6 +4260,10 @@ int nl80211_send_chandef(struct sk_buff *msg, const struct cfg80211_chan_def *ch
+ 		return -ENOBUFS;
+ 	if (nla_put_u32(msg, NL80211_ATTR_CENTER_FREQ1, chandef->center_freq1))
+ 		return -ENOBUFS;
++	if (chandef->freq1_offset &&
++	    nla_put_u32(msg, NL80211_ATTR_CENTER_FREQ1_OFFSET,
++			chandef->freq1_offset))
++		return -ENOBUFS;
+ 	if (chandef->center_freq2 &&
+ 	    nla_put_u32(msg, NL80211_ATTR_CENTER_FREQ2, chandef->center_freq2))
+ 		return -ENOBUFS;
 -- 
 2.53.0
 
