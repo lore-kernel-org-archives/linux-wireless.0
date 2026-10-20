@@ -1,64 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792464429;
-	b=xLajVS4aK2nO+plm9ufsyyK+wnSncp20br8CaaGqiQh0pDiJ4BDt0T/qkYkwU2au4oD0
-	 0kJ6DEEikIFgsGtNtP6Dtkh4vlLaRrjuKNqSgrzWtctZnBV1To82pzYNIe11oX+aKf78p
-	 IedVfl2KDCHVoH12XHlqA/fOztcl8Kd8yakcDI2YdwTjtwx4DRtQfQfAoxBx6CEdLdEds
-	 efBk1bVW4C5xmSxtm+75L++ywNTp8e8RdCVYMys/jd8r97bovNA6X6Q53tNCpMFpDPCgX
-	 ud+4OGGKp4HtEA0RvChR0YRu5DbDYN0hk10LbTTEb7Ag5g6ocKDIMyqUZuYeH+7IxHQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792464429;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-Id:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=rNTKqv6h3K/O8eqrjNbseAaayL6xDS0BmfNpiSU5B9c=;
-	b=cQuB/s8/8U/DuKiO2NsXbpNBzeLLXwBtdI0zctjMLBxJKHJuybMPJvFqZHNYc9OXbh+K
-	 3s6AU8bXe8upwAgp/NgFPbUFCLPy2CrQhEDKwbE96O7AYzxC9Rxt9VU7+n1qAXWLqodQC
-	 cKu+mJC6u+d8XFe/UlGVraib9RnEYT+LdDvuvri583/UzLd2yCpEih7xRJopanKi8ovYw
-	 tCdiP/2vhgaY6oh3enEQUe4U6JqTb+EIIpbmXztqausAuFw4gFSnEbXiLOvBunNvvWuD1
-	 uVuEKB3Tgn9z6r9EL5jiw5cF/OUBouGqHYvM/imbxs10rqHJNDPrksQGoGimMAFcdPg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="W2T3g/MP";
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.46
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792464479;
+	b=U+RbCVmlF1yzfaugYtYxgKoE8TG2pNyTWP6bGDYJYspeGUvkNIbBo5+KLVwonD6BjzTH
+	 jDSkn3IHn/yEOdv9RAmf9AkjVRrfvOQhRATfsYeAWXBOxwVHVds3MJbwu98OovvPJtvXR
+	 K5Cn556TEYSYhtChpeBueti7PJmCKDFkTdDJwDNzq4hSBzNeM7e6qTyOXFA3kqEQ69FbV
+	 Q9HXWW/fmpoNop+wcLBUlh/6o70LA0COY4Xvl0ICGfJkML8sRSMzSDAnDD9LcULvTQQA+
+	 BfxCudoa2Ijosd2itg3AZQ0AxVqYjESJQzSqzwEindkCF9ja9Z+kExUcfWEjgkdbcDg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792464479;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=262A8gCU3R+nsMKHC0ROKoLNJtacXiiDwGq2rzQbdsg=;
+	b=4LNahVFBAjDv4UiRx8+real8JTiPVSMRzta0TeQgUeUbXEci6HGqxqOd8xboRraImcrM
+	 QPaIKlQd1vYhxNZni5xz+mD+Bz05ZjWfrfcdlYVyNEt9NYUGNwutzejNJFv6hLpAT0nF7
+	 JU1x7lgonNDv6SnHrj3pHijWVcRUHfLcgc3hBO5cQyE2YY9qYZwd+xsLOVJNyGeem9hrI
+	 8UOSuGjiZD+vDMtO4FzJhtts6bM3+AQ4nNRBoOUAjuIxwKh0I7alZABxqZq3AjleObj0w
+	 1wHwMq0zreqFX+D2YT9MOfIseJAnYOVatdcqXp7pXVy1OUlWm7lN04pPqvHUz6SSA5Q==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nagashi.ma;
+	spf=pass smtp.mailfrom=nagashi.ma;
+	dkim=pass header.d=nagashi.ma header.i=@nagashi.ma header.a=rsa-sha256 header.s=ggle-ngsma header.b=fXAkdqJz;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.46
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361AB606A334;
-	Tue, 20 Oct 2026 02:47:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 361AB606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E77F606A31A
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 02:47:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E77F606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nagashi.ma
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nagashi.ma
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=W2T3g/MP
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=rN
-	TKqv6h3K/O8eqrjNbseAaayL6xDS0BmfNpiSU5B9c=; b=W2T3g/MPjsmCTo1wW9
-	uT1Jec/l5kIUPEywG3xThrVOcLdcF4dmXo1jMMuv18FydzSmD6PeYZHk6Rk2oTzL
-	AslAd+mz9Qea6MgO6YE/egVIrp+fyEr0RG+8GUpeTipUKbl496bESkU/IxTDV9wV
-	As6/e5IGP3PRV1aRZpO9H+zEo=
-Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3_9AW1tZqr10qBA--.44565S2;
-	Tue, 20 Oct 2026 10:46:47 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Deren Wu <deren.wu@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH 11/11] wifi: mt76: mt792x: bound firmware release-info parsing
-Date: Tue, 20 Oct 2026 10:46:44 +0800
-Message-Id: <20261020024645.3130280-1-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key, unprotected) header.d=nagashi.ma header.i=@nagashi.ma header.a=rsa-sha256 header.s=ggle-ngsma header.b=fXAkdqJz
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-c45551fa84eso151857166b.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2026 19:47:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792464477; cv=none;
+        d=google.com; s=arc-20260327;
+        b=mBhGevu4wB3d/xKKBl1FU2UUPJi//0zj9/qEjrLronzvGCPp5GV8903UxbIhZQkvAx
+         tqjRp+GbrBJfBj31YeikVxvFSVQYyD2sSlMnd37kDzdk1x6DUqDenQnEvJ+ajeQZy9IA
+         0MoDBxAC/3a8hjLnEpF/1DJe5d9M26wkYYZjDJmNODWs8PNsDHKRQ6fv8teIJ2m9w+iQ
+         9U4Hl9QBcUdxDsl3TRuU9DLm3xymV4uOQEoLRhCrAJ9W9q3nDDDTvTJXFCUneKwbhNxL
+         rosEZ9mCsnMEl54OUBTRloiIy75xiGZ739Pus/jw04RpwcLpAj2IHRLcgvBph8k7UEBg
+         EyCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=262A8gCU3R+nsMKHC0ROKoLNJtacXiiDwGq2rzQbdsg=;
+        fh=rDxBD6tLkJOfeLfqV3Wp9FxzVVLc6zamYuwi7PAZOdA=;
+        b=qdGTxbL4GVOswyvcs7QUosFwD2blVirPi+7ykgg+bfNRfjl6aabPOAM04bXsLQ4Gy+
+         qmYNz/0DSfxbnq+/6H8gyLJgbO8qe3fpk8CAkfz86AtDF/X76mAoFI21NmGJjKi7aH9P
+         k1rPeQiVmKhsPBXwfCka7doI1HsLbe6rqrKBKWzhP46akMUug42l0wopKIWc5NbS4ag7
+         2K86MP0FVID6IWJZNetzcAPfALT4m3CAaxav9ZRtM/9KUu9ao6n0ad5uqbZrSADAqa1M
+         9j+Tm6TzPgxSeBiagpoM8OpWj+WzXhY9o4sP2sKtcLrDIDFLgyxJniHX4DrAR7op4ePx
+         cDQw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=nagashi.ma; s=ggle-ngsma; t=1792464477; x=1793069277; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=262A8gCU3R+nsMKHC0ROKoLNJtacXiiDwGq2rzQbdsg=;
+        b=fXAkdqJzvQuUBW9qPB8S04MDheV0eWxfHGJ+RehyNkav0Tf+BRNBce84cb8uhSVQ/X
+         TOTmJo2HhW5VDdrOWK2R3UWMIQXQLk2ByC7UuSnz2PbpohuA9uR6gHENB76x21stx93I
+         fymFJMg9H74cdUSubolATOvMb1VJj2QfFVIP2Y7FuaWXiAxf+AQKprW/ZUoHRiO6FsAX
+         3LIpNW0eyT7ArWNI4roEHqHZQjId1uS2MG0es/m+XAOr/1hlH+kxt2T172sWl0rc9TgR
+         j1smMOt5mRFvTEorGWhwu3pYXfWqQEiUZhphygzSmSdLaIT5tscRBPC3ZYYufKMYK383
+         HdQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792464477; x=1793069277;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=262A8gCU3R+nsMKHC0ROKoLNJtacXiiDwGq2rzQbdsg=;
+        b=xG58ouTRfrilQ5AhFUwVp+4U+/XeGpPoRjkPVDJImE4lNoIeRR4ISKzICMRvGJtqDj
+         3xB+f9Sm6hsgjaBNjs6ksiHZa1jQcN6raxGug5GPEbd+w4wFpcbyCF8lh/GU772LAs+M
+         A290x5oSiV0blMqHnmAPQh3h7FGsBr8HDxDI0vYjU0H7gsWaqiM+dqdMZ40fadjB092k
+         yGnxlkpuwXv0+Cft+ZQ7XUcaQ8+G9GKWdfcAYfo6Y0O3nG7PML/vnPEesmSIkNt2nnOu
+         lPUfwV9bOwybzedzxI1ERRj2lHW1u6fdA0Jy40XvgV0+OKQU6xXQkl6Cl9YtaqHtN1qB
+         u5sg==
+X-Forwarded-Encrypted: i=1; AKwUvBzept6xMP91sSOzvV8r+WmJcpAkmVHmqmg9mkq7oXyvo+mnR+14QzG4avGNfXKRZGxDovhqHp3DyS7H5gvKaQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLYM4N4vA3QzaHn3Ixw5zJTTAqYdJrwxyhpFd6owtwV2CNYEZb5
+	hjAX5fyLDu9Mh3BSZdvzRr2Bygtas9BPdS+eHqYk9xpTCPoO89xGo8vLSXiNDedz7AFlFWBFQig
+	TMylTvCMQn75xj+Z0PTmTQfVQVDmQNfMPklTYq4Cj
+X-Gm-Gg: AYBFou2ewdYZp7g8vRkuxvkrA7zAI1K2KkntXI8hUNkrg9Xc5baE4krvgod7Mqx3n4T
+	Cqf7qNjsuOk+5J8g2Gycn9HBLYwkg00A2SvtlstWrrfr3tl0fKF0w8esrXA8tRDCgVm0z5/+Rxl
+	4jZoLdXDYg5miIro4T5gTrI8tTKKh0DZyngJTRKcr+H3VgvwzQrtJLyiAED3wsd+1C50G/mDDRJ
+	rHYTLTQVe6Kt1a3kLMWbJt03I8ADSuc52llLkIPYW+p+I5AGUwDlhYinmGvmy+ZB0vw/ui4vK7D
+	6jPNCxCv8nkMCB63IdC046+jBM/N/Kr/y4aS5FSomDwLBaH/VVajltBbrxSfSd01+hSSsX3W94t
+	kDnU/OR8TxQSsjovSCCiRJq3VITjMSaWlz5P+jzPS5sCtfnwh0wICxGk9af8Pkrb9JbsyXeLgcr
+	TybrGNJVU=
+X-Received: by 2002:a17:907:fd8b:b0:c40:dead:7466 with SMTP id
+ a640c23a62f3a-c419e538580mr642966966b.20.1792464477048; Mon, 19 Oct 2026
+ 19:47:57 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -68,123 +105,74 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3_9AW1tZqr10qBA--.44565S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAryUtFy8KFWrur4furW3KFg_yoW5ur48pa
-	y5Kay2yr43Jrn8Ww15Ar48Zan3Awn5Ka15CrZIk34Svrn3trn8uF409a40vrWayw4xtr1Y
-	grsaqF1xZr1DZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U6mh7UUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzRcLRWrW1heIhAAA3l
+References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
+ <20261016-ath10k-series-v1-send-v1-1-c847697b3558@nagashi.ma> <a523eda4-5708-4427-a044-a61c0386e5a9@gmx.de>
+In-Reply-To: <a523eda4-5708-4427-a044-a61c0386e5a9@gmx.de>
+From: "Nagashima, Shunsuke" <shunsuke@nagashi.ma>
+Date: Tue, 20 Oct 2026 11:47:31 +0900
+X-Gm-Features: AclHuK8Iv6DX-6YiVsBJ9gddXv3oItLrT6nCv_vwkm2KhJ4WNt8Fui0S2e66i0g
+Message-ID: <CACB3TCJVoFbMEpbtvuO5c-udCoZgDvMBeH0RXUXp90hab3Dh2g@mail.gmail.com>
+Subject: Re: [PATCH ath-next 1/3] wifi: ath10k: set the PMF peer flag on WCN3990
+To: Aleksei Kharlamov <aleksei.kharlamov@gmx.de>
+Cc: Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org, 
+	ath10k@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	David Heidelberg <david@ixit.cz>, Fabricio Akio <fabricioakio@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-mt792x_get_offload_capability() derives region and release-info pointers
-from firmware-provided counts and lengths without keeping them within
-the firmware image. A malformed image can therefore cause out-of-bounds
-reads while locating or walking the feature records.
+Hi Aleksei,
 
-Validate the region table, accumulated region lengths, release-info
-range, each record, its padding, and the feature payload before reading
-them.
+On 10/20/26 1:04 AM, Aleksei Kharlamov wrote:
+> I independently found the same issue while investigating connectivity
+> issues on fairphone 4 (WCN3988, qcom,wcn3990-wifi, slightly patched
+> kernel v7.2.0-sm6350, firmware WLAN.HL.3.3.1-01704-QCAHLSWMTPLZ-1).
 
-Fixes: e8a264ccd2de ("wifi: mt76: mt7921: move init shared code in mt792x-lib module")
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
----
- .../net/wireless/mediatek/mt76/mt792x_core.c  | 44 ++++++++++++++++---
- 1 file changed, 38 insertions(+), 6 deletions(-)
+Thank you for the report. It is good to hear that the same flag helps
+on WCN3988 and on a different firmware branch. I have only tested on
+WCN3990 with HL.2.0 firmware.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-index 0ad33f74c228..feab3abcc1dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
-@@ -862,9 +862,10 @@ mt792x_get_offload_capability(struct device *dev, const char *fw_wm)
- {
- 	const struct mt76_connac2_fw_trailer *hdr;
- 	struct mt792x_realease_info *rel_info;
-+	const u8 *data, *end, *fw_end;
- 	const struct firmware *fw;
--	int ret, i, offset = 0;
--	const u8 *data, *end;
-+	size_t offset = 0;
-+	int ret, i;
- 	u8 offload_caps = 0;
- 
- 	ret = request_firmware(&fw, fw_wm, dev);
-@@ -872,41 +873,72 @@ mt792x_get_offload_capability(struct device *dev, const char *fw_wm)
- 		return ret;
- 
- 	if (!fw || !fw->data || fw->size < sizeof(*hdr)) {
--		dev_err(dev, "Invalid firmware\n");
--		goto out;
-+		goto invalid;
- 	}
- 
- 	data = fw->data;
- 	hdr = (const void *)(fw->data + fw->size - sizeof(*hdr));
-+	if (hdr->n_region > (fw->size - sizeof(*hdr)) /
-+			    sizeof(struct mt76_connac2_fw_region))
-+		goto invalid;
-+
-+	fw_end = (const u8 *)hdr -
-+		 hdr->n_region * sizeof(struct mt76_connac2_fw_region);
- 
- 	for (i = 0; i < hdr->n_region; i++) {
- 		const struct mt76_connac2_fw_region *region;
-+		u32 region_len;
- 
- 		region = (const void *)((const u8 *)hdr -
- 					(hdr->n_region - i) * sizeof(*region));
--		offset += le32_to_cpu(region->len);
-+		region_len = le32_to_cpu(region->len);
-+		if (region_len > fw_end - fw->data - offset)
-+			goto invalid;
-+
-+		offset += region_len;
- 	}
- 
-+	if (fw_end - fw->data - offset < 16 + sizeof(*rel_info))
-+		goto invalid;
-+
- 	data += offset + 16;
- 	rel_info = (struct mt792x_realease_info *)data;
- 	data += sizeof(*rel_info);
-+	if (le16_to_cpu(rel_info->len) > fw_end - data)
-+		goto invalid;
-+
- 	end = data + le16_to_cpu(rel_info->len);
- 
- 	while (data < end) {
-+		u16 len;
-+
-+		if (end - data < sizeof(*rel_info))
-+			goto invalid;
-+
- 		rel_info = (struct mt792x_realease_info *)data;
- 		data += sizeof(*rel_info);
-+		len = le16_to_cpu(rel_info->len);
-+		if (len > end - data || rel_info->pad_len > end - data - len)
-+			goto invalid;
- 
- 		if (rel_info->tag == MT792x_FW_TAG_FEATURE) {
- 			struct mt792x_fw_features *features;
- 
-+			if (len < sizeof(*features))
-+				goto invalid;
-+
- 			features = (struct mt792x_fw_features *)data;
- 			offload_caps = features->data;
- 			break;
- 		}
- 
--		data += le16_to_cpu(rel_info->len) + rel_info->pad_len;
-+		data += len + rel_info->pad_len;
- 	}
- 
-+	goto out;
-+
-+invalid:
-+	dev_err(dev, "Invalid firmware\n");
- out:
- 	release_firmware(fw);
- 
--- 
-2.34.1
+If you have time, could you try this patch itself (instead of your own
+version) on the Fairphone 4 and reply with a Tested-by if it works?
+WCN3988 uses the same WCN3990 entry in ath10k_hw_params_list, so the
+patch should apply to your device as it is. Station mode only is fine.
 
+I worked through this together with Claude (AI). English is hard for
+me, so the English was written with AI help. My results come from my
+own device tests on my comma four.
+
+Thanks,
+Shunsuke
+
+2026=E5=B9=B410=E6=9C=8820=E6=97=A5(=E7=81=AB) 8:04 Aleksei Kharlamov <alek=
+sei.kharlamov@gmx.de>:
+
+>
+> Hello,
+>
+> On 10/16/26 02:17, Shunsuke Nagashima via B4 Relay wrote:
+>  > ath10k sets the PMF flag in the peer assoc command only when the
+>  > firmware file advertises ATH10K_FW_FEATURE_MFP_SUPPORT. That check cam=
+e
+>  > with commit 90eceb3b5fb0 ("ath10k: set peer MFP flag in peer assoc
+>  > command"), because at that time "only firmwares 10.1.561 and above hav=
+e
+>  > support for MFP". The WCN3990 firmware-5.bin files in linux-firmware d=
+o
+>  > not set that feature bit, so the flag is never sent on WCN3990, althou=
+gh
+>  > mac80211 negotiates PMF with the AP. ath11k and ath12k set the flag fo=
+r
+>  > every MFP station.
+>
+> I independently found the same issue while investigating connectivity
+> issues on fairphone 4 (WCN3988, qcom,wcn3990-wifi, slightly patched
+> kernel v7.2.0-sm6350, firmware WLAN.HL.3.3.1-01704-QCAHLSWMTPLZ-1).
+>
+> Setting PMF peer flag (my patch is crude and very similar to yours)
+> significantly improves the connection performance (please keep in mind
+> that fp4 seems to currently have multiple other issues, such as missing
+> a correct "board" file). I only tested station mode.
+>
+> Thanks,
+> Aleksei
+>
