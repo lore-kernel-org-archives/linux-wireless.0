@@ -1,51 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.239.133.36
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792500304;
-	b=KWw93v2pVL0kZjkqhOzk09mNOBoAzjM2vtHwBSlyTHaz/Aqm5cJUxVFw/92ib2c6dgOT
-	 Gl56hDrtrqqIDWZMDeHx+AC+IHyV5JWbsXkIWiHXznU0aOe0D9tOzUiVWI7WZZXA0PRQU
-	 eQwaLBg2VZWLzhkyi4w6Kv5BjvM3EY2bKKgcdhWueCYqbHBFjpxpgm9Nv9Ge+Lch3A96X
-	 Zdqm9n/dz73q9G7bqOUnGaX/GJ+HzAAa5pbByC6i73Lj+hljXeWU5y2GnVrzWZRV+nPTj
-	 3deg0TcHzJfN2L1wd72zdKDZMr6n/ntA6gmyrFiXFPQVtb+rCIE6+xLnWCVsXcktf1g==
+	t=1792501228;
+	b=0rmJifzRYPK2bT8P1g/irL336FWt8cCryEGuYIj9S3N22PtDeS/iOic6nTMRYXJ+z56W
+	 BrStPRsl5SLAGDyPd+yoVgz1CXjKfKYXXt+/MaChKD3COgCRRpF5RuvGlFU9l3rjZ3HPb
+	 9JFYWcC8k+QzbIINAJrvS2suciMlSf30aB0Gg++ESmrshuSCUeBC4b5zCI0rOTLYVpt4C
+	 I18UZY4UDgI5BqiGZW0kce2WHw1kYbMOkZAqNmdxppNrwsy4ednIHppiUhbKau/XbzSCA
+	 dmF0tAgLeHOcaGtQk98fO3oLmcXfFmk+93TVU4XD9we0s+p4CavZnKChE680PScs+oQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792500304;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-Authenticated-Id;
-	bh=6md1Q1LR1EgAMQx/ZI+PnzYCAXPTV/UMjaNqfQ/l0BQ=;
-	b=GnuKlUj1b0wOYW2XZ1RtsAJfEHbJSTJtCpvzzd+jTUR2YKLvIo4hlqhm3zkkYE+a8jNB
-	 YKF+KOlmG/s4kSCGHU50gM58z7unWzNsfXrck5KMYhSPQNT4Xnz2igWJ7Dou4TbNocwlX
-	 RU+LRg2qC3IU+ds3BVXX/OKqiDJ8XQxmXaw/9qlwmFs85m6ErMjvQi4nZrIE9cQ2IEodc
-	 aGd9w3YRvLTrRphbcRkPla1u03fWANLewwjk7Tt6rQ64YyOW6WpzfTH+/y7qofBptab3b
-	 xv0VONo3S5D5j4Fggp+EJvSQq0x02u4WDKO7ibAini/Gp6CvgkNU7DWF1vt9xqJrziA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792501228;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=kkTLnONnchTntVNrB8RYf/J+dMFVwPgfmw/rJ8aQygk=;
+	b=A7Tw5bzy1BfzBiTNa5/0QGxSAeGmoOBTxaXIsZgS4vGJ4YM/eBX6HBfduhfdDfHf0re2
+	 Bp3SLf3PkIKRrwqaSl9uHX+qwns3fA/xFyCkppO4eP9UPSAYimocBOWbISnNk093x+zdj
+	 U/yDpNgmTsbTpkQcNBeYyGyUAKBX3t8H/nMZGBuTCz+kCmO9FvDtvnWG38RFDXXRi3Hee
+	 iTcw0Wzg2hM2XaaLMhpWqWOnTgjDj6Fncd3IBsEza3dm9zNNQqm2+IWsnUyQM+QHwlr6X
+	 pchqJiF8b1e3CAECjT9Gwz3AA904nJ+o1NgxUHGq65iXyMG1g04oPRLOKz8APmZ3Mpg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=kubik.pl;
-	spf=pass smtp.mailfrom=kubik.pl;
-	arc=none smtp.remote-ip=213.239.133.36
-Received: from mail-e681.seohost-mail.eu (mail-e681.seohost-mail.eu [213.239.133.36])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=acio.nl;
+	spf=none smtp.mailfrom=acio.nl;
+	dkim=pass header.d=acio-nl.20251104.gappssmtp.com header.i=@acio-nl.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=K3fUmtGr;
+	arc=none smtp.remote-ip=209.85.218.46
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A537606A322;
-	Tue, 20 Oct 2026 12:45:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A537606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kubik.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kubik.pl
-Received: from static-46-238-236-132.awacom.net ([46.238.236.132] helo=localhost)
-	by h84.seohost.pl with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <piotr@kubik.pl>)
-	id 1xJ9D3-00000004fYS-1i83;
-	Tue, 20 Oct 2026 14:44:53 +0200
-From: Piotr Kubik <piotr@kubik.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>,
-	Muna Sinada <muna.sinada@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Piotr Kubik <piotr@kubik.pl>
-Subject: [PATCH wireless 0/2] wifi: mac80211: fix link changes of 4-address MLD stations
-Date: Tue, 20 Oct 2026 14:44:44 +0200
-Message-ID: <20261020124446.188739-1-piotr@kubik.pl>
-X-Mailer: git-send-email 2.55.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A77F60A381C
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:00:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A77F60A381C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acio.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=acio.nl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=acio-nl.20251104.gappssmtp.com header.i=@acio-nl.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=K3fUmtGr
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-c413dea9ca6so498161066b.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 06:00:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=acio-nl.20251104.gappssmtp.com; s=20251104; t=1792501225; x=1793106025; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=kkTLnONnchTntVNrB8RYf/J+dMFVwPgfmw/rJ8aQygk=;
+        b=K3fUmtGrQrQSkTDxl2R95elxv2xm20SwV9A1+Gx6vSooVl1WbzihBTTlf5eBW3IWQM
+         9aXdZLb4em6lMg/4IJY5kR9sktr4UUM/0kXw8insJNsNJvd48XJMXrnde3rT1+BDPTV5
+         FzTzmSkju/gwoICROjJ6lJpxx8Qj8+kJZF+fJLcknM7/k6wZ32w2ldlzDiZc+G58eJIC
+         QlDYciMr3nv58wzvQWUiVFR+3PURVMCo9H5qFxMLNJmOmHDiXfK1DGp034AwWHSy76MX
+         SChYcPUYSjUV5dujvl2Q0LNPmfYPWQze3v22XR8+GAo10UmeqDaCxscboQsQGPigHzhC
+         /APw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792501225; x=1793106025;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=kkTLnONnchTntVNrB8RYf/J+dMFVwPgfmw/rJ8aQygk=;
+        b=V62Gr8cMSQJugz01+ABByJOL+8uGtlKZxN8H2Q/3EWBTQAx1haCF81Wnt581Z09fNk
+         cDVPN9XetDNNKcR3gfbZjj+pmYHCmLdUkPIUXjho7oGrYHkRq6nhSvCQNlBuVf9LGSQp
+         PB9vqzzhlGAmin8ldkFS05uKXyAxuHIVjAo3T/nBQa4+tkjzvN4ftabSxEVDrRfI/vCG
+         7etiQujWIqpblvGRw0uL/H8VlfD5bjvyTctABw/00dpLWScxyLnvVCupTyf7smMK2MA/
+         FVdfQZoSPEo+XnwpVSEA7KJcqRrl5FquZdS29haQ+auOd3FZuCHg1L97bXdLQNrzuaBz
+         5DDQ==
+X-Gm-Message-State: AFq9FYLLbBpJbW8hc0Bd7erXJtHNF28ydYN6SaBNIEETIJxmKrrCHXxv
+	/9fkmGy2hJHYBUrsFlUKFer6sycOdxsP4PCf/RoGRVYlLEe57o5RJZ0yzI1SxnJNJw==
+X-Gm-Gg: AYBFou0KBHrzLi88NaspfQnvx4gcKN8qjEeg5f/Od8NaIbV8zYuoSf9/zX22UHg3D1s
+	zcFBRC6Rzg7GamRijuUsfCseTTuG7vsDq0JalToG74a6AUxRmnUO4t5bxNHfsIpKMBaZXgBDfq2
+	WCVR5wgmN0hQ3guZlYEpNKBiBTDmGF8tEKfHZhSG60Sk595PzY58E3hTyD/Nemuj9pHGTDnBH3r
+	/E7AjIfKClyoJe36nEDHUHUcOXEm9cY28llYOeRm5gskJg7Yf/XpuST7eVvx3Y0qgPsA4kEGJ1Y
+	g8qHh0Fp+TiBEMG/8NIzxzpiV5qMHG8+ZzfNzEpoeKTIh1T/nvX73iPyKQH3cgopon1FXY3LHzw
+	5kH8PFfZmZxQkJmqlqUmxIgNjT/D0+d2xmhyp7N/HqfPiW2aiYpc39/Ckur0cVoeypBK7gZOBri
+	4OdFBhV3VTlGcALrxNsEo4T8qndXxAJPNYXOR2qQi3C9YaSsgCLaXs64YUdcutgT15Bd6VKhj1u
+	+IR
+X-Received: by 2002:a17:907:9617:b0:c40:3a99:3f96 with SMTP id a640c23a62f3a-c419d9314d3mr779477466b.10.1792501224250;
+        Tue, 20 Oct 2026 06:00:24 -0700 (PDT)
+Received: from vschurink-Latitude-5550 ([186.247.75.132])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c40918c5f47sm482904466b.51.2026.10.20.06.00.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 06:00:21 -0700 (PDT)
+From: V schurink <spam@acio.nl>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	V schurink <spam@acio.nl>
+Subject: [PATCH rtw-next] wifi: rtw89: do BIP in software when not in station mode
+Date: Tue, 20 Oct 2026 15:00:19 +0200
+Message-ID: <20261020130019.137170-1-spam@acio.nl>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,31 +92,55 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: piotr@kubik.pl
 
-A 4-address (WDS) station of an AP MLD sits on an AP_VLAN interface.
-Two faults appear when the links of such a station change, for
-example when the station reassociates or removes a link with ML
-reconfiguration:
+rtw89_cam_sec_key_add() installs the AES-CMAC key (BIP, 802.11w PMF)
+in hardware. rtw89_core_tx_update_sec_key() has no case for
+WLAN_CIPHER_SUITE_AES_CMAC, and the driver does not set
+IEEE80211_KEY_FLAG_GENERATE_MMIE. Thus, an AP with PMF sends each
+protected group-addressed management frame without an MMIE, for
+example a broadcast deauthentication. For each frame, the driver logs
+"key cipher not supported 1027078". PMF clients discard these frames.
 
-- drv_change_sta_links() checks the AP_VLAN, which is never in the
-  driver, so every link add fails with -EIO and a link removal stays
-  in the driver.
-- ieee80211_set_sta_4addr() adds the AP_VLAN links before it sets
-  their addresses, so a link that the station gains later gets the
-  zero address, and a second such link fails with -EALREADY. The
-  station then stays on the AP interface.
+An AP sends these frames. Thus, return -EOPNOTSUPP for AES-CMAC when
+the interface is not a station, so that mac80211 does BIP in software.
+A station only receives these frames, so it keeps the IGTK in
+hardware. This does not change WoWLAN, which uses the IGTK of a
+station.
 
-Both come with 469d5d5a3b7a ("wifi: mac80211: synchronize valid links
-for WDS AP_VLAN interfaces"). Tested with mt7996e on a 2-link AP MLD
-(5 GHz + 6 GHz) and a 4-address non-AP MLD: after repeated
-reassociation and after a link removal, the station stays on its
-AP_VLAN with all of its links.
+BIP in hardware does not work for an AP on RTL8922A. The test used
+IEEE80211_KEY_FLAG_GENERATE_MMIE and RTW89_SEC_KEY_TYPE_BIP_CCMP128 in
+the TX descriptor. The client did not accept the protected broadcast
+deauthentication.
 
-Piotr Kubik (2):
-  wifi: mac80211: change the links of an AP_VLAN station through its AP
-  wifi: mac80211: set the link addresses of a 4-address AP_VLAN before its links
+Tested on RTL8912AU (RTL8922A, USB) in AP mode with hostapd 2.10,
+WPA2-PSK and SAE, ieee80211w=1. The client accepts the protected
+broadcast deauthentication, and the driver does not log the warning.
 
-  net/mac80211/cfg.c        |   17 ++++++++++-------
-  net/mac80211/driver-ops.c |    1 +
-  2 files changed, 11 insertions(+), 7 deletions(-)
+Fixes: 940cd99625de ("wifi: rtw89: wow: support 802.11w PMF IGTK rekey")
+Signed-off-by: V schurink <spam@acio.nl>
+---
+ drivers/net/wireless/realtek/rtw89/cam.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
+index 22f21a0..58a7e8f 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.c
++++ b/drivers/net/wireless/realtek/rtw89/cam.c
+@@ -514,6 +514,12 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
+ 		ext_key = true;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
++		/* TX does not support BIP. An AP sends group-addressed robust
++		 * management frames, so let mac80211 do BIP in software there.
++		 * A station only receives them; keep its IGTK in hardware.
++		 */
++		if (vif->type != NL80211_IFTYPE_STATION)
++			return -EOPNOTSUPP;
+ 		hw_key_type = RTW89_SEC_KEY_TYPE_BIP_CCMP128;
+ 		break;
+ 	default:
+-- 
+2.53.0
+---
+Also discussed in the out-of-tree repository:
+https://github.com/morrownr/rtw89/pull/135
