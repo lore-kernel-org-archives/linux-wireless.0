@@ -1,82 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792462064;
-	b=eiy/z4Dw8rTx/xF72HWNTY8QiEAV3G/kHHEhD+rB0bClOyhF1JIERD39eZYwE02SnbhH
-	 zuhctvKrwuwsuG9ihQdvv0UVeCyAJ4rhm2/DR+4tnORrAJt0UZmakwKZsQhhRo/R50sda
-	 LkKxEVFhnT7iErfp0Vm1qn+BrtzYRRW56a6WmSK2ymogubcVxij6GhDkcyj6Q2VVXuoIp
-	 eojYAD976l7QOzs99hYPBBpKpmIMPFpobfoSc3N6sLYq+Ztd/ZGdf3vLSMDCNwGPc7eXR
-	 ZqbED9thV/EUW5SHUTHoZg5YApczspr16vAfgVFveSYrMKXZAM6m4KXlZ3a0ArAD4sg==
+	t=1792462845;
+	b=lA4pa4Qcwcs2Nc72yRYi3/5M90QXd8Sg/vayAMsZIRITlKpFwdlMRNz+dVczYuSRgTze
+	 napnYbsKRS88IEPyI2/PkQ3SPTXauE8DkWNHYJGfwQcrLHr83LVKGAXfGeQTqpzhS9JFa
+	 CiZdEc6Pm3jMMpjp1lzSNZZ+TRWLXlOxRRg4e5o/guzgoidUL6o4s7prucfNRTCXnp412
+	 /r6ZoBKAy0lGeTUAnHaDde/NvB5HzP9OYg5zlT1zTkGz5935QjwJFvOqXvbITBHZzFDf5
+	 1ztsLdAoH218jGdp+AAaPx1fl99gVq6rLxc3ovWX4jcl/DYMCN8v6EoeaV1mpKEGy2A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792462064;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
-	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=p5CPfriTroDhT92SBcIMTFhXTUwle/OQzHWFE5QVjxQ=;
-	b=KaULHPGEMeCSksQMX25EajEj1iiGiStDqpKSCS/OZjmNMko01aY7aQ6MUd80dJ856I76
-	 d6N1UokhBsKV3SZ1wj4NHXNLNR9mFpgKaaabBSVo/gHZ7mgbgnSOBrzYAEJot99B+i16l
-	 tpxZumB4BWD4hh7C7isA2mj8bIDb1/zQbE5SufPaqYYqQPb73hvAAekhh8FXS5RAyZHab
-	 KFiu8Q5oxRwBZIzKQGfWpWzYo94WU0dYsimG5Rsc+QlubaNJ4Rlb47Um7wEhgeTvSwlfO
-	 12bhxqji0FSlMl8TB7a6Nlv0/KEVnqxAqAXYgOAQ/SZnsJ3mCFMxBYnD9L07f1A1Uew==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792462845;
+	h=DMARC-Filter:DKIM-Signature:Date:From:To:Cc:Subject:X-Priority:
+	 X-Mailer:In-Reply-To:References:X-NTES-SC:Content-Transfer-Encoding:
+	 Content-Type:MIME-Version:Message-ID:X-Coremail-Locale:X-CM-TRANSID:
+	 X-CM-SenderInfo:X-Coremail-Antispam;
+	bh=gvZ+1wYNb7l4gwD0FmPAMuwgxz7ckvcfGr4ESh+a9ro=;
+	b=47LTlBzwpy/VF//9mXMpnfu2z9MC8IF16D8RdVPD0uOwpagX2A6hqPxfKJF/cufhpnBt
+	 BHME3bRLa+iJZuPPH0bSN+dWj07CWi1KZOs8t+rr69qRA3QdvgCF90VWcaiqXRw3vqCTr
+	 JoalRBfiBRt7M72ljfDBgZFSFx9CwY9G7K3Gy41Xt6dM7/subfQReJcW7UBUndx2VIXsi
+	 1/cZCyZMb6SBda8rkkPqMpvoNfLdBWlESIScAZPF2gLfTj1Ph/M2RRjXyXcX9Gpu8Fv6T
+	 WTaEJcLetl5NcFE2gO0YXeCjxKNvxaCrJwhzO9L32gwtOs6h4tqFKNDyzo6Kjt6lXcg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=ZksLQlJF;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=RAwMTGUK;
+	arc=none smtp.remote-ip=117.135.210.5
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C889E606A322;
-	Tue, 20 Oct 2026 02:07:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C889E606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF631606A31B;
+	Tue, 20 Oct 2026 02:20:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF631606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=ZksLQlJF
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69K27dStA2568172, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792462059; bh=p5CPfriTroDhT92SBcIMTFhXTUwle/OQzHWFE5QVjxQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ZksLQlJFKj8Z7LR36w4+zEHnS6jqQeePobCMIZQxEuZzk53k3449inw+O+2KrgpoT
-	 1B+UoVf7+/Q7ZA8LjdA9wxoGWmqjnEaiS+N1qf1iac53BMfk4RKC3QIDqPvADJn2+h
-	 tMkCH6zpP2jCCMdqFy02s0ZsCsM0RcxihqAlg5xd6VlNbLW/zsLwgnVf2ioGikTSQY
-	 hnAo12B7e70PeEfRe7xc4KInMwjCmyjUD7G1z2V8cJiNbW0zqO4gGe0dfAtz3kIDbF
-	 X7E5/cE6qu1Yrc7M8w1mhKvxstKEDSzpiKNbIwkZfEH/o0g6DsB4vF6YU12LBmfmnZ
-	 Nxu85WS1xzPyg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69K27dStA2568172
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 20 Oct 2026 10:07:39 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 20 Oct 2026 10:07:39 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 20 Oct 2026 10:07:39 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Tue, 20 Oct 2026 10:07:39 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Hungyu Lin <dennylin0707@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"reza1234khan1234@gmail.com" <reza1234khan1234@gmail.com>
-Subject: RE: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
-Thread-Topic: [PATCH] wifi: rtw88: allow key removal when the CAM table is
- full
-Thread-Index: AQHdX+uKpKj5AeqD60mYtFtK4iFuvbcFrrNw
-Date: Tue, 20 Oct 2026 02:07:39 +0000
-Message-ID: <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
-References: <20261019165103.5990-1-dennylin0707@gmail.com>
-In-Reply-To: <20261019165103.5990-1-dennylin0707@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=RAwMTGUK
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=gvZ+1wYNb7l4gwD0FmPAMuwgxz7ckvcfGr4ESh+a9ro=; b=R
+	AwMTGUKXIVhjaos7LYXRZcBu7c5VY2rl6hV9jrSyJ34NtR5bVlhhIU+F0zmYjMxR
+	sulQcNEf08sd6TfsLQQ1OdWmiuE73dDOkaa7jhHPz5t/ihRXoJ3t+93Mrkvu8k6r
+	qc9Sqaq1aU8mTXH7Ui88JkY99XGwCYJ3nGKiMbI0jM=
+Date: Tue, 20 Oct 2026 10:19:59 +0800 (CST)
+From: "jiale yao" <19888972804@163.com>
+To: "Jeff Johnson" <jjohnson@kernel.org>,
+	"Manikanta Pubbisetty" <quic_mpubbise@quicinc.com>,
+	"Sathishkumar Muruganandam" <quic_murugana@quicinc.com>,
+	"Anilkumar Kolli" <quic_akolli@quicinc.com>,
+	"John Crispin" <john@phrozen.org>, "Kalle Valo" <kvalo@kernel.org>,
+	"P Praneesh" <quic_ppranees@quicinc.com>,
+	"Balamurugan Selvarajan" <quic_bselvara@quicinc.com>,
+	"Karthikeyan Periyasamy" <quic_periyasa@quicinc.com>,
+	"Vasanthakumar Thiagarajan" <quic_vthiagar@quicinc.com>,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org, ath12k@lists.infradead.org
+Cc: "Jiale Yao" <jiale.yao@example.com>
+Subject: Re:[PATCH 0/4] wifi: ath11k/ath12k: validate firmware array lengths
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <20261019100029.1908660-1-yaojiale02@163.com>
+References: <20261019100029.1908660-1-yaojiale02@163.com>
+X-NTES-SC: AL_Qu2SAPidvU8i7ymdZukcn08ShO49XMOyvfoi2YFTc98FtwD2/gAgcWZ6I2D88/+uBy+FqSWSfhhg4+5wV5Nyzw8s5Pw1j42aNSXwdx+QjA==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -86,31 +72,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Message-ID: <b573b6f.2196.1a1571bc45e.Coremail.19888972804@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:hygvCgDnt83Qz9ZqVzglAA--.644W
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzRB4smrWz9C5QQAA3M
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-
-Hungyu Lin <dennylin0707@gmail.com> wrote:
-> rtw_ops_set_key() looks for a free CAM entry before checking the
-> command. When all pairwise entries are in use, DISABLE_KEY returns
-> -ENOSPC without clearing the existing entry.
-
-Is this the actual case you met?
-
->=20
-> Move the allocation and bounds check into SET_KEY. DISABLE_KEY uses
-> the existing key->hw_key_idx.
->=20
-> Fixes: 10d58823cb44 ("wifi: rtw88: fix out-of-bounds CAM write when key t=
-able is full")
-
-Should it be ?
-
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-
-> Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
-
-Then,=20
-
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-
-
-
+VGhpcyBwYXRjaCBzZXJpZXMgaXMgc3VwZXJzZWRlZCChqiBwbGVhc2UgaWdub3JlIGl0IGR1ZSB0
+byB0aGUgaW5jb3JyZWN0IHNlbmRlciBuYW1lLgpOZXcgb25lIGlzIGh0dHBzOi8vbG9yZS5rZXJu
+ZWwub3JnL2xrbWwvMjAyNjEwMTkxMDA1MDYuMTkxNTE4MS0xLXlhb2ppYWxlMDJAMTYzLmNvbQpB
+dCAyMDI2LTEwLTE5IDE4OjAwOjI1LCAiSmlhbGUgWWFvIiA8eWFvamlhbGUwMkAxNjMuY29tPiB3
+cm90ZToKPkZyb206IEppYWxlIFlhbyA8amlhbGUueWFvQGV4YW1wbGUuY29tPgo+Cj5hdGgxMWsg
+YW5kIGF0aDEyayBjb25zdW1lIHR3byBmaXJtd2FyZS1wcm92aWRlZCBhcnJheXMgd2l0aG91dCBm
+dWxseQo+dmFsaWRhdGluZyB0aGVpciBsZW5ndGhzLiBUaGUgc2VydmljZS1yZWFkeS1leHQgcGFy
+c2VyIGFjY2VwdHMgZmV3ZXIKPmV4dGVuZGVkIHJlZ3VsYXRvcnkgY2FwYWJpbGl0eSBlbnRyaWVz
+IHRoYW4gdGhlIHNlcGFyYXRlbHkgcmVwb3J0ZWQgUEhZCj5jb3VudCwgd2hpbGUgdGhlIHJlYWR5
+LWV2ZW50IHBhcnNlciB0cnVzdHMgdGhlIHJlcG9ydGVkIGV4dHJhIE1BQyBhZGRyZXNzCj5jb3Vu
+dCB3aXRob3V0IGNoZWNraW5nIHRoZSBmaXhlZC1zdHJ1Y3R1cmUgYXJyYXkgbGVuZ3RoLgo+Cj5N
+YWxmb3JtZWQgZmlybXdhcmUgZGF0YSBjYW4gdGhlcmVmb3JlIG1ha2UgYm90aCBkcml2ZXJzIHJl
+YWQgYmV5b25kIHRoZQo+Y29ycmVzcG9uZGluZyBUTFYgYXJyYXlzLiBBZGQgbWF0Y2hpbmcgdmFs
+aWRhdGlvbiB0byBlYWNoIGRyaXZlciBiZWZvcmUKPnRoZSBhcnJheXMgYXJlIGluZGV4ZWQuCj4K
+PlRoZSBmb3VyIHBhdGNoZXMgYXJlIGluZGVwZW5kZW50IGFuZCBlYWNoIGFkZHJlc3NlcyBvbmUg
+cGFyc2luZyBwYXRoIGluCj5vbmUgZHJpdmVyLgo+Cj5KaWFsZSBZYW8gKDQpOgo+ICB3aWZpOiBh
+dGgxMWs6IHZhbGlkYXRlIGV4dGVuZGVkIHJlZ3VsYXRvcnkgY2FwYWJpbGl0eSBjb3VudAo+ICB3
+aWZpOiBhdGgxMms6IHZhbGlkYXRlIGV4dGVuZGVkIHJlZ3VsYXRvcnkgY2FwYWJpbGl0eSBjb3Vu
+dAo+ICB3aWZpOiBhdGgxMWs6IHZhbGlkYXRlIHJlYWR5IGV2ZW50IE1BQyBhZGRyZXNzIGFycmF5
+IGxlbmd0aAo+ICB3aWZpOiBhdGgxMms6IHZhbGlkYXRlIHJlYWR5IGV2ZW50IE1BQyBhZGRyZXNz
+IGFycmF5IGxlbmd0aAo+Cj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDExay93bWkuYyB8
+IDEwICsrKysrKysrKysKPiBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTJrL3dtaS5jIHwg
+MTAgKysrKysrKysrKwo+IDIgZmlsZXMgY2hhbmdlZCwgMjAgaW5zZXJ0aW9ucygrKQo+Cj4tLSAK
+PjIuMzQuMQo=
