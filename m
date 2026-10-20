@@ -1,102 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792528112;
-	b=km8dDUa0EDN7vEJ6W2dmj8TiG0WhAixYAIopnWkc7G5AVL6dx0LF7gi4dmTY3gFjyfy4
-	 5Z66beBizYCL5d9J/Z+W5tWX9CIBO2xQfrL6Ylg5vq5ZUdjI/P4gBdrH0eayRHICYzd1A
-	 Pq5YAkMefywyIA/iU0U2ZRgJGH6qFVBC6dsNxLXJnhKL2xP5EWIY8g02dq/r/WxoCvDER
-	 q1tEQwa7EcKFXxYut+0XG04yWoYGlwRPhHaDKhVrq6AdTP3HU4SGWU1BoktWao6XF9JDz
-	 wMVjmQkHv9KPZNzHaoIEhJvDTTLoVFFsJ5rWwOUPoDYBmJtxjOULTToTULvqHnUwzYw==
+	t=1792528793;
+	b=p1ZWKVk7rS5A7ss6Kb6gXZqN7Swc9IHOM1ltXZqTTKFTepX3UQcN6/FBqolaaycLUyh+
+	 bBs49NLfKe9Z3ZXUw0boIi8T1U+1HAaYGhFYpV6mcEMRqKpOdIgKFK6E6uYmbCvIc4tAX
+	 FrwAXY+tz9WFhd90hzYWPV63VihWxRAOmwGa5pFW9T1HS3ARDKuEWMSiPChwhN5NtAfMj
+	 G6cDFlQyYbY0D8p/ufmHuFMnNdJ+9J0Zdrn8OsTmbVSD7QbENjbLVY3tcuD0/ZvTjsyp4
+	 Jr7+LWnpNwgIRjSzfAIcumbiDjMNdifyrU7/vHsDowIiN0Rcbh5sEQbt24Xs5dKn7FQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792528112;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792528793;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=WD8/5T9Ciuv9waWrVcsqINmUY5GBTSG2x1F4rJwpQ/U=;
-	b=Hy9SvPP6SWplqt9xyuY9GA5yw5rfugyEjIhGwyfldC8w0ibFAlg4y2JRtTmymcVlG8E9
-	 HZZSrvighYFrLGBqfnsvMUfTAct2ifw3IgxhW5J1MbHlESBS2GQ5aDNCI4/MdhSNaXOom
-	 lWvLFq0JX6cp4jxpUQ3n6x9AcQwN5dmVVy17+Wxu+fioP84STetYnHrwyY1AbWPG1aku9
-	 DU3z1/x183ugovd6JmeG5hLmUoTsEsshtVAxz2NAnCIN95Zjp3l7vegSUg3mz/ixKtPCV
-	 kx5iZoIfcvr7noWLpVqvGo6ka5zWOnMZom2sSIWT7fDT9lFGANk24V0KI0c/F7fan4g==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=69ZsWlJYKqcYYqFI8rMOizWSH2P8Ln8H/nLJiISKOi8=;
+	b=GjKT5g0ZzHtwqMHoS54Q6uVxwDApADwijVKgA7M9azAbdHXG0bkJ9bV3OoNF93VJMZGE
+	 ATIEG7UPI9RvprJmoOpUMafgEjeBsPD9j5pwUE5YfsyKrzQEkDSN8MHW7hq6Zqxjkqwb8
+	 5/ZKVv1eKl/uw2vXb6t9DUY2EmrSwOrnCFYFy2gP5nXlRtlrFYMvGsJTdLQdWnLCWxgBK
+	 6u5JqgS66+7Orlq9RH1MypWzj2B9+yMN/J/wAae0Xa+GUvaTnstfd0HUm9KY9ilwuOXtp
+	 ze2kX9nvQI/XuCMD2R4ASWhxfPvYGF7BjFT37PHGrkbWAoVr5R5TqmpFcUv6/FjgKKQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=AWU0KiMC;
-	arc=none smtp.remote-ip=209.85.208.171
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZuXLBJj4;
+	arc=none smtp.remote-ip=209.85.128.46
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D35606A321
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 20:28:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56D35606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390CF606A31B
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 20:39:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 390CF606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=AWU0KiMC
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-3a49a022221so475241fa.3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:28:31 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZuXLBJj4
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a1d75f2f11so19755e9.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:39:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792528110; x=1793132910; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=WD8/5T9Ciuv9waWrVcsqINmUY5GBTSG2x1F4rJwpQ/U=;
-        b=AWU0KiMCQabspfqJkK9CfxUvhC0CCjGRLp7SAqZU6Rc6n5torA6hasvYpWaTV2N3ji
-         Jw0FYcG2XXVhTr+R8zjSN8ITdr9miql1hKSRtulhsSD5yOJHtwUPEUokoMiJoZEbPaXF
-         9dvaVfjIdr705QrfFXguCgF/8R1xzSnxYnJ3ppeIBDMenoU0rzOASd6YmepZFqbXjfRI
-         fVcyHLXCVnUDW31COcZk3S2+Ek+9jH10GqvZKz5mPCBdMsPVNLMMKelgmxwOCPJbcVgS
-         ZI7zFmtYew2OObafY/IKGvIlvM4FHVXbnQma71ENcRmeYEfC+naiMqtrfsUxdKifnGsc
-         9smQ==
+        d=gmail.com; s=20251104; t=1792528791; x=1793133591; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=69ZsWlJYKqcYYqFI8rMOizWSH2P8Ln8H/nLJiISKOi8=;
+        b=ZuXLBJj46sgMBE9x8Gk6ifw6twa5jmlOsicpDnX4Av6p/OAg1Djc1Cwkqo8rE0t2Qh
+         H++gYz0eyNkuK/ORdEUtey8C/fWfjw2QdZ5uzeLEGVQarM8A/JLh6A4/ORdUj1GfkaQ9
+         bg5XZtpzzXKqA5tQj4qOHE18O0PedfnhhfzPdssVvRioJa8pZ+HBeaYTEPU+IYoUs0je
+         WM2i4WRHjPHv17vmr13Y2KjIrPzLAx1b7BRT8fBns/c9UcyLhUP6Z52VAxQVAYj0QdZ6
+         w7KrTJV+V2b2ShFC6jPAPpoD30u+uj+xo3fKxkYsvDhm/5ofdakfjntqfeBZqo0oKhaX
+         9VlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792528110; x=1793132910;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WD8/5T9Ciuv9waWrVcsqINmUY5GBTSG2x1F4rJwpQ/U=;
-        b=Eq13NSUr2dR8iUgqHN2ghrHa4aO1yrCN5+sghv2WLK0grji6OZtbRWGqkYKBhkJDKl
-         iLD2kfptglExVXXHMEvDpqxP31hOZOANtJ5sXXRIKauVnhVvvKjqL41MjjW25xfk3Ei3
-         41/JT6R9uEGRkZkKS/984JopLxh502oPoaBYrxoTziQaQ82hBiquXazj0T/DDWfDZAf0
-         0NTXm9nwcyknQ3OiAuv0FKik4e1Vc+AcMU0Gx0symNYSn1Fju9b3/Qk5rpNh/DBsDsyO
-         e21qAXhjxaevnoKGJI757CrA6bN1eC2kVd543EMc9PxdhIJl3S6PQ4HfrxUAGM6scCWI
-         sNHw==
-X-Forwarded-Encrypted: i=1; AKwUvBzW9CLZLCMcefU609xNSvxUYIlnWD893oqPuxsp5v505TNFzsKnIYHJKBQD1cMfluw/4xboCZuHFLhDHuGFzA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKM2o4BQpDzDFRtARO76uy7GY5CZGotR20SmC2OGXCGyF8cbvBg
-	JlSDcunNQDEahKSGNlb9B7DNVarOq30NEO7frpp3aeFsd4OSRJxURCjR
-X-Gm-Gg: AYBFou3aQB5HRC5KBZgc8n0H3SpcZLI7wjOOkfkVC7sFo93VIuxyrCl37fWy6OFT07P
-	XOTLpiU2KkgydwP/zs/COL18iH0UUUS7ykwQA+U5S52hP5mc4RUYSH5ckNn+5ZYvUZBijjDp1h6
-	11E7ThDNMqHMUkJbuTd8RACItKBXyqoug5I5VKzd2LqCj3PYhkAqkq9j4cyYWV3+I90tAgW66BY
-	ZffhHEWLR1dHvyXUojXitMR0kiaOfV/TgPsK9X6Aq+Ao3wnzL2pCd8LwUoucPqktDLiiaHPubOn
-	jc/7trDwOuqDCi4nmvDtlm8ljTc0qpZXNgKn3nyhwCkwMk6B4O6A7l82dqzH/r6QqUv2D5NyvEi
-	iyyUfF0dmHUpaUkAh9OLM5QK0NkQqZ//kcf1KVymc/tEnha0hQsi+0rFO/IlSTd55lMzU7W0sZI
-	Cw2LT7jqxEjEy4ShUXue2WpCm5oOL1vJBfNdgFSDvOGcUGboNUCl51oAJyRp7INfg2wM80ssrl7
-	qpgtEK0ATGoWpgosG6CvbawH4w4yzhCaMrY2lpUi1DFS+qTQifxS/vL5LS7A+/xl2PH0bGhlbwt
-	4AzjA65S2dXL3NpSiqrq+a1dtB+xUOyso9fIoA5LugPCl1EhwPPa2US4e43iQJRMRVsGWiit3KH
-	oYA==
-X-Received: by 2002:a05:6512:1589:b0:5be:680d:6e18 with SMTP id 2adb3069b0e04-5bfa1be6184mr25360e87.10.1792528109517;
-        Tue, 20 Oct 2026 13:28:29 -0700 (PDT)
-Received: from kompukter-Systems ([83.142.235.16])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5bfa1230c48sm88136e87.66.2026.10.20.13.28.28
+        d=1e100.net; s=20260707; t=1792528791; x=1793133591;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=69ZsWlJYKqcYYqFI8rMOizWSH2P8Ln8H/nLJiISKOi8=;
+        b=AUri6Msqd8S8CzB6nv1hsfwc8H2d6gcffO402XlM92nnVyrdnQ6TL3m7uT9uvLzwSM
+         KaqK9wGpB1go1pVR9rBXQyxNEgB/61v6jGoAEm2BVF+AOCAxRfm+t++y+JeoIf+RdgVh
+         JrmY5G+0FsQ/HX2RKPFFPoHUUtpkOU710kRcajTZr6Vd8NXPlM5DVg++1CUtUs/+Kkss
+         myeYVeLOwZTdqlmZc02LNpXpiQn6a0zyOlb23BjtMEOXtJI06aK6EKyogWj3xaWO9jy+
+         0iQBwgCSoNLpVnNIe8aFgJKrZcm6rtLu0CF/gf2EUVfVVAp8rLon5IVjZI/Fd7ENZpTV
+         /WVg==
+X-Forwarded-Encrypted: i=1; AKwUvBw9Brytm3sZldeOT0hmPZL7421qT2GX4c4ETGMbr3s+a51QkgrHAqChSjlRMm1ZN3AQnCYt1K5CcTLhEfDaxg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJJ8Okh1gGm2YBWlp9gHL1cSXJprbveFnXoZJGi5pooAbI6KThQ
+	Ag/s4lXCCIi5BcKUpyn8vg6vjD1U69gkH7L5YppPLR8uXLMX3XIz4EVq
+X-Gm-Gg: AYBFou37Pt28aawlrsqCwlu31k/U01d9rgO3tcSVm4j2nAhJrEB3u53h5fS73LHbdVV
+	t+1HvPWI/u2bcG8S8206TICeSVORTxfPxalg4rV+/3HCXNXY+++mpOQCQV8rrr1JIDKLfUA75Vw
+	4fyM8JMBBH+9+5SNb8+XLn4E/B0T3QXs4pGbYncvbIk4wxd5/vaJHeGaohpl0k3/KqQbCBc7ABC
+	N7GCJZ+w26ToEbB8tc5GCutMV5E8z4mWPTcWk3PXdQJtWtnrcR8WC4c1xuxtuC+P3L7BB4b2t77
+	Jhuv7Sgo7oQok4bOQRZcYBBIA2JAyEfJXcwcwwDVqbSJMna+s8H6PYXQY1QVFlv33B99Jck/P1f
+	cHD2G5k1QfOQtnCNJAYbmd+RS6aErIUTqf43W2B+vSCojcecuyKPNKo73PAJVXsJu8/JmkDgaKy
+	c0/s4orFZkQSLEMIW9NxD6RyzOrIhYC3JH6psD+sX9aGB6pQJq4eV/Ob0TEn8OqX8q1Jgq5HSEP
+	A==
+X-Received: by 2002:a05:600c:8b0a:b0:4a1:dbdf:17a8 with SMTP id 5b1f17b1804b1-4a1dbdf1a18mr238063555e9.2.1792528791378;
+        Tue, 20 Oct 2026 13:39:51 -0700 (PDT)
+Received: from vitor-21h1cto1ww ([2001:8a0:c4c6:f00:691:6627:6830:68b9])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1f2d324f8sm90720295e9.6.2026.10.20.13.39.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2026 13:28:29 -0700 (PDT)
-From: Andrey Derkach <gabin278@gmail.com>
-To: David Heidelberg <david@ixit.cz>
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Richard Acayan <mailingradian@gmail.com>,
+        Tue, 20 Oct 2026 13:39:50 -0700 (PDT)
+From: Vitor Soares <ivitro@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Vitor Soares <vitor.soares@toradex.com>,
 	linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
-	phone-devel@vger.kernel.org
-Subject: Re: [PATCH v4] wifi: ath10k: make in-order rx amsdu buffers persistent
-Date: Tue, 20 Oct 2026 23:28:25 +0300
-Message-ID: <20261020202825.1178464-1-gabin278@gmail.com>
+	Fan Wu <fanwu01@zju.edu.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v1] wifi: brcmfmac: skip bus_reset cancel when the work was never initialized
+Date: Tue, 20 Oct 2026 21:39:13 +0100
+Message-ID: <20261020203916.381637-2-ivitro@gmail.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261020195021.1133728-1-gabin278@gmail.com>
-References: <20261020-ath10k-a-msdu-v4-1-670b69d39059@ixit.cz> <20261020195021.1133728-1-gabin278@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -108,15 +100,58 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Tue, 20 Oct 2026 22:50:20 +0300, Andrey Derkach wrote:
-> Throughput is the same as with the old version, about
-> 60 Mbit/s here.
+From: Vitor Soares <vitor.soares@toradex.com>
 
-The 60 Mbit/s was a board data problem on my side, unrelated to this
-patch. With the right board data the link runs at VHT-MCS 9, which
-exercises the patch much more: during a 120 s TCP download at
-172 Mbit/s the firmware split an A-MSDU 211 times in 62,700 in-order
-indications. The patch resumed all 211, with no warning and no
-recovery.
+When the firmware request fails, brcmf_pcie_setup() releases its own
+driver, which runs brcmf_pcie_remove() -> brcmf_bus_cancel_reset_work().
+At that point brcmf_alloc() has set bus_if->drvr, but brcmf_attach() has
+not run, so drvr->bus_reset was never INIT_WORK()ed. cancel_work_sync()
+on the zeroed work then trips WARN_ON(!work->func) in __flush_work():
 
-My Tested-by above stands.
+  brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43752-pcie.bin failed with error -2
+  brcmfmac 0000:01:00.0: brcmf_pcie_setup: Dongle setup failed
+  ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
+  WARNING: kernel/workqueue.c:4409 at __flush_work+0x318/0x338, CPU#0: kworker/0:1/10
+  Workqueue: events request_firmware_work_func
+  Call trace:
+   __flush_work+0x318/0x338 (P)
+   cancel_work_sync+0x6c/0x90
+   brcmf_bus_cancel_reset_work+0x3c/0x54 [brcmfmac]
+   brcmf_pcie_remove+0x5c/0x124 [brcmfmac]
+   pci_device_remove+0x44/0xd8
+   device_remove+0x4c/0x80
+   device_release_driver_internal+0x1d0/0x22c
+   device_release_driver+0x18/0x24
+   brcmf_pcie_setup+0x58/0xc94 [brcmfmac]
+   brcmf_fw_request_done+0x14c/0x198 [brcmfmac]
+   request_firmware_work_func+0x5c/0xe8
+
+brcmf_bus_schedule_reset() already gates on bus_reset.func for this
+reason. Apply the same check on the cancel side.
+
+Reproduced on a BCM43752 PCIe module with the firmware file absent.
+With this change the same failure path completes without the warning.
+
+Fixes: 43b25879f004 ("wifi: brcmfmac: drain bus_reset work on device removal")
+Cc: stable@vger.kernel.org
+Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 92ec269f43b2..a3d662348711 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1186,7 +1186,7 @@ void brcmf_bus_cancel_reset_work(struct brcmf_bus *bus_if)
+ {
+ 	mutex_lock(&bus_if->bus_reset_lock);
+ 	bus_if->removing = true;
+-	if (bus_if->drvr)
++	if (bus_if->drvr && bus_if->drvr->bus_reset.func)
+ 		cancel_work_sync(&bus_if->drvr->bus_reset);
+ 	mutex_unlock(&bus_if->bus_reset_lock);
+ }
+-- 
+2.53.0
+
