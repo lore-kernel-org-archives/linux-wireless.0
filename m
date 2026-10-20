@@ -1,108 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792480313;
-	b=3aNof1iM2ohWcnvwI5v4JBm531EbgMUH6N/fwMNhVSVkGpiCwIMOPTRZ+lxH4/ucwK67
-	 v2hUgMAW62MdERX0ki58Qof2WEUobiM9yWfGFAf8M1oKVHJUjgiW+C3Ta4FEiqM52zqcE
-	 x7UEnUD0u2x2+KyPx6gSOHMAdJT3aLO+qYZUZ/uvJSSoZ0pXWK2BOoHVu6DypE87IugcX
-	 k0v7NcRMb5fmng2xweJQzk9Lr+v0eLMO8pgqHpzqnNzkdnS4UYGnMtGlW7Q4sky95iRJD
-	 4LkPq5hYDCGzN4bsPRKIvtM5Xbcgd9MHZvJXacSA2EXbXnP4lgyPnioQ/y+Z42vNycQ==
+	t=1792481273;
+	b=ImnbybOq469gE4rxloipMG/g4NUcqTz+6deNKVRwfORNANv4r0O4pYaESuMWlO5YYN5W
+	 bZqOFhz+BVW4E+tIkzD6/B+e48VxyXhOKqqEVyfsIk+Nv0TQM41ms0JoBj2HU+suugwaT
+	 pkV/y8ES9iv49papPGv9dqqjwoP2OLkmicxSAaoKep88hsgPoDOVaRRNo6P9w1I8nADx6
+	 9qpE2Zvrwi4nw4i+cm2NTDtSgcgOgkOLeK1TcGTN+ezq/E4taf/7fB1EIg+oSV1/zGXw2
+	 gAV9+GSJpSV4BnSMs/TvDYm6zNHWSg8Q04xiad8A2RO8SwdYg/3vZeZqiNTg9srFLaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792480313;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Date:MIME-Version:User-Agent:Subject:
-	 To:Cc:References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=M2ZWtK3jwBgT6W5EC/9V6YJ1MiOaCmKaMmxzxQcJy6w=;
-	b=wiyEir1Y2C/jd6Zcz8Sa7mmgydysGpZMeWLc+03sJYufBSLXgL/XHDcg+Gr0Tw2/JCLY
-	 7g3FfdozpEBZDJs7ORyHFf6xilR2MyONR6S5gMDkgbtsmpFN7WJudrZtjtmeY+/5rTmpK
-	 JuV9weCv2vMtfZk2jquwkss1YF2TjsgWA1Sx90cSHGcOoroCUzLLwJibiFuKI80S4wGQI
-	 hM8uCM9ciUHcOsKNy5Uv1Z2FAQVjKJO0wj3qo4X/+kzykdySE4f/zY3L8JTjvyusamE0T
-	 MsAPng/CrWRKZcnjNoQkFv/SJRPFyjrjK5VsljsVqnM1nbWnDd9yMdKc85vpr5o09tQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792481273;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
+	b=yZXpd3wF/T/kces92iwSrXm7/6jzC4LEe0uOjVD6lnU2Hdmzdzws4U+OaI745zO83IHI
+	 o8dYdyd1wr7/tCc9/6x0DmQRRevY3csEMZyX1zvNfPAQEsLN3mxYv1nTiyiX9Gz3LQu8v
+	 3i8tn1cBcvN8w7xTabmmZz8yh/VAvzsqMLQs+mGO4YLFEJL+khiMJahdCDUT0jIo0BXu0
+	 JFPZwwuDPKBH8h6Ru14z5yFUOVB5DvEw/bm0JAOxd1ujJ5tere8g1P9Fu3FdTI7YzzTdP
+	 J5Do3riXLYf6H+A8YK2SjvL5ljIet25lx+RFDpf+/J9NIf8ofJyYoMX9oc/cT3xgfkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZMFIILis;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=BHbNTFKs;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=morsemicro.com;
+	spf=pass smtp.mailfrom=morsemicro.com;
+	dkim=pass header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=lbB2HP9w;
+	arc=none smtp.remote-ip=209.85.215.182
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2543F606A31F
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 07:11:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2543F606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3E8606A32E
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 07:27:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE3E8606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZMFIILis;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=BHbNTFKs
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792480312;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M2ZWtK3jwBgT6W5EC/9V6YJ1MiOaCmKaMmxzxQcJy6w=;
-	b=ZMFIILisXxbHfX2gh0Cx0tZnNu+4yWZyoIdR/OWYF9sz/IhKXWmxLIvJpQItwoI/kvwz9E
-	nqqehDinx0+/24g2W0VrNuDq4zWAIPNbSAFzQoZHofzuVXgNU4MnJuTJhSe1pNw27tnoSr
-	IcONupeAb8JRsqpkwhToVn2CHh+ZF04=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-258-DopvdZqsMeSL5E5WKxkCJg-1; Tue, 20 Oct 2026 07:11:50 +0000
-X-MC-Unique: DopvdZqsMeSL5E5WKxkCJg-1
-X-Mimecast-MFC-AGG-ID: DopvdZqsMeSL5E5WKxkCJg_1792480309
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4a1d7663a4dso27333515e9.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 00:11:50 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=lbB2HP9w
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cd5d2dafeccso968692a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 00:27:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792480309; x=1793085109; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=M2ZWtK3jwBgT6W5EC/9V6YJ1MiOaCmKaMmxzxQcJy6w=;
-        b=BHbNTFKsh42I6HOzczviJo9Wq3FzNsVcB1QyFFsfEfuVJM3l0YyLx30ipFFUq0pYcP
-         oViRx5rnMxEax7dNqJFLzpC1XkRmEIvJ0Zbef5ha9gRUHUchI6WlzHyXf8uqUlsIzjGG
-         emQeGqVwfVuhLiD8NJMbrdst0RGwca9Jcd6GFUCEhzZVOGNoPSQR6sd0t/uDM8IVzIOi
-         gBticp6Yc8zrk5ykaKcFSC8aY9YKX91uWE/SsayZiwbuouT+AtD95PUfCj7fBkRXIOeK
-         b606ggHgtnVMAD4IZNmJRRll9gfqGUuZ0sFLvN9vTizxTOlBR7TNcy8yiRqPAH4DRzDr
-         0dUQ==
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1792481272; x=1793086072; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
+        b=lbB2HP9wObIR+/95KwfZWannwlInnVJYWEVTbHx0qdlLg/9wYfqrqUxR0XlQ9gwLht
+         fdGi3U9gkBnxg1S0whK1Xmfro6jXnnDZ+Mrgt3vA9emFl7pmX1l5yZFAFKXu2aK/EFGt
+         nbGjIO5elfugJnM+E9+DcFnh/5b5yLyVSlwkOPOEfoMLaIFB7Vy7FRRb2XdsK95ieFKF
+         vnWw+wffTYvV1z3Xfv+zsRYZ+I/pxenWjP37Cunn86bp8jghWPU577vGxVgLG1YwiBzm
+         zu20R8VAUTGjKqPVgmU1US7JH8Kl+ASGv8DkFH821C18T4rKoUaMEHDqhJraXEbfTzJB
+         qXmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792480309; x=1793085109;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792481272; x=1793086072;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=M2ZWtK3jwBgT6W5EC/9V6YJ1MiOaCmKaMmxzxQcJy6w=;
-        b=WmvrJBRLSo6uLtWcyZKq2Aoe9ct3UBQwPd8eQvT/ftx9o2ZUKHfhCJku7p4B+Gd6tf
-         KjEoCtLHJOZRM8mM/bx1lBVbbvUIEDqsei9IhueMINTSC2lRexUytvqnF/yoPDaI6qpy
-         QJUrSghaDLFaASKcZLTyOTh8mHXDnUJEagrq4CtDhiKfcaWv3Um1A7D+YGQvJ4QCDztl
-         cla0O/iaMoWtIX4AcDGdgTFm6/I6CiqywOIFZqUP3w5DtEQAa8WuF/K1yrsdhWDtecoX
-         DviBYjW0vdw97rdYN99WnbVsFSrgip3P8CXujc2U/fcOu5Ke3EU1xU1bUzIJtd7pTITF
-         o7Og==
-X-Forwarded-Encrypted: i=1; AKwUvBzDdXlZMp1mEUctA8nwgGarbwzXyFkVQqq8ndBsfzWlVAr57KQtrcf5eEKWc3Z8e3EvmM/JyIJjzoT8/Ho5DA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJz3dmU6rF++c7fc31Wr9y6shdHCNPY6UpiXZTK0K0YFE38Y9QX
-	Ae4ELxRMehVo2q9WqM/cDlp6pQTgCjsK2XLTZXfpRyFNwVbqOMgfvtnduJw6NtuXfgTDpaOAt/l
-	M4qFwBAN5fcGuKR5E196+GT/0c2foMSmdEVINgDDdeKOwc/evPwmZmJdNlxcXG5GkRPnh
-X-Gm-Gg: AYBFou1n7qLxCrgyz73uoX7IoiZ6hv79M1JBSmiZW52GyWesPoKn+D0THdifBU0+M9o
-	RUFwXOlj7JbAsY9uVGGvIpXPY+8kB+Jt+hp/JafejuDesGIYzHrsRwed2P18aceK4oYSTB9pls0
-	arEV09CV2R6HUSU69h8pkDl0DEeZElFtOkSBJVSTSqC3WdWlyzUd3ufACt0tF0Ld7tnLrCzln7z
-	XXNLb4gEF1M6zlWM3ZbfzTWCGVv2rl5r8axN39A0Qttl63syRuzRxo9WeY8ViT6c7xKLObtF9i7
-	02NR5IAlOx4bZS1AjYI7evQESvhrJ/roEvY7HDYjOI0FIra+QvYAynJRbmt/STnlN6eNVYr5pfV
-	wRRdqppbWiYbetbDohXLWbgacO/Zko9gxz/ovl/RA8M0alI61it6FWBiT/XuGB+jWkyZFE0N+ig
-	==
-X-Received: by 2002:a05:600c:3e05:b0:4a1:71ab:63ba with SMTP id 5b1f17b1804b1-4a1d763625emr205330615e9.29.1792480307728;
-        Tue, 20 Oct 2026 00:11:47 -0700 (PDT)
-X-Received: by 2002:a05:600c:3e05:b0:4a1:71ab:63ba with SMTP id 5b1f17b1804b1-4a1d763625emr205329845e9.29.1792480307327;
-        Tue, 20 Oct 2026 00:11:47 -0700 (PDT)
-Received: from [192.168.188.234] (ip232-47-231-195.pool-bba.aruba.it. [195.231.47.232])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1dc952d63sm331515125e9.2.2026.10.20.00.11.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Oct 2026 00:11:46 -0700 (PDT)
-Message-ID: <976d815d-a9ec-4fa0-9b16-8e55695706c2@redhat.com>
-Date: Tue, 20 Oct 2026 09:11:45 +0200
+        bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
+        b=DoZ4kQKv1igydann3XX/8HFoOpoB+8BSqWJh9CYpBWQmSAQVJ5gVlAtN5Uv4zpaGUM
+         ULTj+oMmmhBWxMgCNINu1sa5+jQ//XmxmqaTTFGvmSHrKCUE1ryb4sGChffUbbFwLjGz
+         AVvSu0eVrqBAknaiyPj1X0j2huMvmF/cYp+0lwJL5Nl+teiv/ig/YORF07h8koxVfkDF
+         ul80tdYrZ+VJpZQTno5RKZzeoMUMID7F6O3aPzfEcaF030uQmELdgH8BXb0TPkmc3Zus
+         CQgrvHl56KqTt3KHGZMblVDlZUXPTh9OAmYBOTeuPeCDHJQdz8TgOyCze9UbBaDdmEdu
+         21hQ==
+X-Gm-Message-State: AFq9FYKNWAehJLMaHAqRkTtG6UqoTRebQrnaVNXFt2hr14XTtxO63feO
+	4KWOY3QzG8sjsnXxDKsIyJAN5nO0RD1jYS18+sr+ZSxr5G6rZbuLpa3GpGFzLBdCPqd7K06SGXi
+	66uuyGK2Xhw==
+X-Gm-Gg: AYBFou3INausxM+kaqaa7XFiMBYIpPXSbXjaaM3eYJAj07eI3ADdzeIg0KzefEBCZo4
+	XZ+huNMQcARHoTjqr18NBANUzvoAMvuaHREIvUwlX2FLeir2oV0bp6VW77cHbD2/WmmChCi0o/v
+	o7Uvwt7L/fVpR3+72OuJxqs5rVoVvMvjjOwiOl1VgsPYq8chOLVX+e6O1KCfy6dMHcYfkj8mTsW
+	ErUmzTh85kprvBQuCwYWlSGyU57v4hS/Z+CQPVOMrBqClE3Qb8WYpCzMor06WlEK5kfqkhQ0qH6
+	X+/Q7QCZfHvUZidy+mfXr57G//QLw4liFYMSKhKwfiZpDR3a2GaCYmwKlUi0hiQED+Uh3I7cYI3
+	ZqTvDF2GRZfbHE8qDh3Gt6fAkzF7nAwSX0Rm4qWOuTSzjGqtYy5DLuQ8Y2lsd0V1kfOrE0E1hH9
+	YTDq6vS8nTX5T62q0Qk6f24WuDZ4ECxqRgSeCJlj4DJhgVTi4e+290qD/q96LLfEj0eoNtbhUqr
+	BRdS6AFQmmPWnx+L97941NpofLijoakKdnUCrxlbvkPA9WQCZ4cSKJWFT9Zaw0u
+X-Received: by 2002:a17:90b:3d87:b0:3ac:9599:a689 with SMTP id 98e67ed59e1d1-3acef154517mr7624815a91.34.1792481271984;
+        Tue, 20 Oct 2026 00:27:51 -0700 (PDT)
+Received: from mma-spare.sydney.mm.lcl (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ad5d400505sm2718511a91.4.2026.10.20.00.27.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 00:27:51 -0700 (PDT)
+From: Lewis O'Flynn <lewis.oflynn@morsemicro.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Lewis O'Flynn <lewis.oflynn@morsemicro.com>
+Subject: [PATCH wireless-next] wifi: cfg80211: use self-managed regd after user hint
+Date: Tue, 20 Oct 2026 18:27:08 +1100
+Message-Id: <20261020072708.429946-1-lewis.oflynn@morsemicro.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -112,64 +92,47 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH net-next v11 3/6] net: add a generation counter for
- dev->mc changes
-To: Yuyang Huang <sigefriedhyy@gmail.com>
-Cc: netdev-bot+sashiko@kernel.org, ajay.kathat@microchip.com,
- aleksandr.loktionov@intel.com, andrew+netdev@lunn.ch,
- claudiu.beznea@tuxon.dev, davem@davemloft.net, dsahern@kernel.org,
- donald.hunter@gmail.com, edumazet@google.com, idosch@nvidia.com,
- jacob.e.keller@intel.com, kuba@kernel.org, johannes@sipsolutions.net,
- kees@kernel.org, kory.maincent@bootlin.com, kuniyu@google.com,
- nicolas.dichtel@6wind.com, nickgarlis@gmail.com, sd@queasysnail.net,
- shuah@kernel.org, horms@kernel.org, sdf.kernel@gmail.com,
- vadim.fedorenko@linux.dev, willemb@google.com, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20261012011707.3378-4-sigefriedhyy@gmail.com>
- <179185709988.434549.15422498299449004512@kernel.org>
- <CA+7S2v+LHUWXQMD-cYPEzT5-f3Qhw_vz+LEssQH_A_oqDKtnnA@mail.gmail.com>
- <8dcd9564-e9a3-4b00-93b8-3cb023d68047@redhat.com>
- <CA+7S2v+rWYvz9xKPEeM6=3HPz3o7TbX2uRfRKk95f9Y60HnEiA@mail.gmail.com>
-Content-Language: en-US
-From: Paolo Abeni <pabeni@redhat.com>
-In-Reply-To: <CA+7S2v+rWYvz9xKPEeM6=3HPz3o7TbX2uRfRKk95f9Y60HnEiA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 10/19/26 13:35, Yuyang Huang wrote:
-> On Mon, Oct 19, 2026 at 8:19 PM Paolo Abeni <pabeni@redhat.com> wrote:
->>
->> I agree this is not a blocker, but I think it would be nice if you could
->> follow-up on this one.
->>
->> The solution proposed by the LLM LGTM.
->>
->> Same here.
->>
->> Also, still speaking of possible follow-up,  I think it would be nice if
->> you could change the addr list lifecycle to RCU (no idea of how much
->> complex would be that).
->>
-> 
-> Thanks for the review. Since we're already at v12 I'd rather not respin
-> just for these, but I agree both are worth fixing, so I'll handle them as
-> follow ups.
-> 
-> The first one is a simple fix, so if v13 ends up being needed
-> for other reasons I'll fold it in there, otherwise I'll send it as a
-> separate patch.
-> 
-> The RCU conversion needs more thought and will probably
-> cause quite a bit of churn, so I'll try it if there's a v13, and if it
-> gets too messy. I'll post it separately later.
-To clarify: every I mentioned in my previous email was about possible
-follow-ups - not to be included here.
+cfg80211 does not apply user or country element hints to self-managed
+wiphys. However, once such a hint has been made, reg_get_regdomain()
+returns the global regd instead of the self-managed wiphy's regd.
+Callers of freq_reg_info(), such as mac80211's
+ieee80211_regulatory_limit_wmm_params(), will therefore use the wrong
+rule and may apply incorrect restrictions.
 
-My understanding is that there is sort of a pending/implicit question
-from Jakub on v9: why are you doing this? is does it solve some
-specific scaling problem or is 'nl is nicer" thing?
+Always have reg_get_regdomain() return the wiphy's regd when it is
+self-managed. This makes the behaviour after a hint consistent with the
+behaviour before one, where reg_get_regdomain() returns the wiphy's own
+regd.
 
-/P
+Signed-off-by: Lewis O'Flynn <lewis.oflynn@morsemicro.com>
+---
+ net/wireless/reg.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 50f50e768..5460b3117 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1147,11 +1147,13 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+ 
+ 	/*
+ 	 * Follow the driver's regulatory domain, if present, unless a country
+-	 * IE has been processed or a user wants to help compliance further
++	 * IE has been processed or a user wants to help compliance further.
++	 * Self-managed wiphys always use their own regulatory domain.
+ 	 */
+-	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
+-	    wiphy->regd)
++	if (wiphy->regd &&
++	    ((wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) ||
++	     (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	      lr->initiator != NL80211_REGDOM_SET_BY_USER)))
+ 		return get_wiphy_regdom(wiphy);
+ 
+ 	return get_cfg80211_regdom();
+-- 
+2.34.1
 
