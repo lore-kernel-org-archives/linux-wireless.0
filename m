@@ -1,86 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.4.11.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792514146;
-	b=VEPOguiTKJxmIelaAyw5oLZASRSSr3JOjRjllJmZuA0LQIeOAYnNNE972gjXqA9+S13g
-	 dJcLGHxc8J4Qi/GdnMrOQ/kOd26i9TqTJTYQhsL1vZBm7ctVZRsCzpbYryrcbpqL8wGoh
-	 yHNyUpnkB+rDV+cYSPbL8AH5Fz5zf0VFlIFgGEz2Z6ZBhUKPVl9ob/rgvd2bM3cj9E3Qd
-	 SnXYOeoAboiZJ2AS5j1XgtvBq7UpSlfv3KZUwZVyOB1+tJn0tlr7bBs7EDmy/DYbB6Jl3
-	 bTWrJkr2fYZMAKZFr3n4GeMJTpFlXtYTI+CVXMPl9fpOEuSeB4sMcaUfBAYoGl8nVhA==
+	t=1792514662;
+	b=4nPq9UYGJDXl27chBSv5VToxR5wLTioI9mbAmyKL9Zznvgo0x7/TZlkvWAuaZC+Suxra
+	 kZkvydWogbg6o95ijlKgT4Zm3K6e3uV1FTvkH8RAwWGOtOyBKsw8NV/HB/HfLZKBeaZj4
+	 sKf4trg+0KnVt/uqgJMValZl7jThBibNVhOzdVMkTo2WGqe9bex5lU/FtI5MOvOVa9lv8
+	 0THD6GuDYHFXah1cV/F5lMStLS3rD322VenRy9g0RQoZfD6JzrbSPBR1ucjjSooY13ifO
+	 KZh84uU4eHpE6ly9pnaRcUKdhOJwOIHWl4JlBqjCweE4oSbAc5EumqjYEGdjnpOhWcg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792514146;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=1WUy5/o3M0me+0PHeE9GQgXuk3TppngjPaQFtJw/+mE=;
-	b=14gMvT+gURc1WbFBB2TSsvx0Ia21cH/AVQzW2aM8NVdrchSJzeqWGOLFhhH+gRwbe9EX
-	 mcSrJCZjG97uXlawq2zUlUV+3RmMVxtQQqXFMao5MKyxI+DAw9EJem6BR29BGsDz0NScH
-	 NSr9HNzZHJYdT3Kcyr7fdFh6SACePWfEw/PxM1rZwT90sFSquIjNZi9B3k2KO4vTE2Z6g
-	 hMTnJNmFWVIWu/QSY36KtgWne4GbVGw1hyv75yZSQBwWJyGEDUIR5trT07aHvSSubq4zv
-	 idtkTGJK0KUWIIEO6KSEpDOtmlm1YifVfayxAdUcEbXNCWfc+n7rkvqCVbzYK3AIoRQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792514662;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=XLwvzlrUsD5o3ePpbK5ubMcqgWldw7icsY7i1tOGkEk=;
+	b=dKWojtTGGFZOk1ttHHQ9LTvDpcLqJ2Hut5KYvNqqVabVWSqPuOjZFw/nT3ZG6HWSj5jv
+	 mmG2rMylOorvgVQK5BRJIlZAhzZL+se2hzGn+Hz/49IZA0hKAw6HU5UQW7RuJdmsE0ibL
+	 H71RymHRYEaAORXBIZ8HCUS/DqRXoJTV2zxEoqpsYnyyFI7uwFZvWlngTLZiC5pHQtqMi
+	 bWpgrGggZUrnm6KmgFxL7AC+3FALYqbrV3KxrfJ7rwvz9NjjS5Jfl3zuVlkKozES9Uwf8
+	 gFFta6aYpxbU9Zo1shAUJv/5O+3BzFkorgwJjbWfrrCzy4tUzEg39hszRf9M/RaHmKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Yowd+VS9;
-	arc=none smtp.remote-ip=209.85.128.42
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=nbd.name;
+	spf=pass smtp.mailfrom=nbd.name;
+	dkim=pass header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=qr5s2evi;
+	arc=none smtp.remote-ip=46.4.11.11
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6C66606A31D
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:35:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6C66606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB639606A319;
+	Tue, 20 Oct 2026 16:44:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB639606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Yowd+VS9
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a1d75f2f11so24062425e9.3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 09:35:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792514144; x=1793118944; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1WUy5/o3M0me+0PHeE9GQgXuk3TppngjPaQFtJw/+mE=;
-        b=Yowd+VS9UebTGbRMDgGjyduXIKNl4fS7wxLxtUQmLsedmjNzi8V6okAZBdlegqHpTe
-         Plzp1s4Wr+qKUJSvkHRQdTcRJyTS9WRhJzi/H6/5tR7UzJM2zEgflD70iHWl52LBKNF4
-         QJOh0jJEwijAbK3grDWB1XTi1/u0IfvAP11SJyTW8SNL27veDsPLQjhGV6rxINR7ow6o
-         Axu5PuB7fa+nATNYcta7y1AI+V0o//Z8Rxj0+m/7N27F3yr7rYaPaJjM6/6qfU6BxR+5
-         A7eRG4mF54I82PTpC/AG4kb5SKSwLrtYjI8ipyVpRBSkfym4R86NnjTqK4LoWU3Seort
-         jSOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792514144; x=1793118944;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1WUy5/o3M0me+0PHeE9GQgXuk3TppngjPaQFtJw/+mE=;
-        b=DC8x/GYMNufvMhxIhTL8GIgKw0p0yERjDK5GnkpHqFS313eF2XLJMfnfL38Mm8DXIo
-         087tkehXcZ/wCQrr6aWNbrsjiKMEQaHuDJmew49JdAKROSFgM7dAl3CdfQL0AcHjv8f5
-         eYjn3shkcQxiLK3gNoTaoYNHOhxpLkZtGvqBnmTiqk8H+8RpsK8+DaFyHgKejaVUqmOK
-         fNZ6JzpId8iiUMEAbVbc0vRVAHBK3cMZhNId2xir4yaZM9TVxe8ywjVmvji8A99tlfy/
-         zz3rXeoXFskuvN52JdhQMCQ9OkWRZxU//xsCrYOvHZQLBZ1jw+K7S66VncSLp1zuigvf
-         +arg==
-X-Forwarded-Encrypted: i=1; AKwUvBzxq/HjdWC1n7BY6Rw0LuevbKM53rMltBqIk4H9VWPhI8eAYNOCC45UgneNUkZ+8wZu33XXjU9UZnotQQYWVg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYK5N9vwwJyMH3KPYbLWg//leROcMWOD+ViAD67Y30HZzUwa4snC
-	87U1K3d7DbefKLpq+xyJ1G4NDWaGXHYO413EXM7n+vfNht5DOl45e0To
-X-Gm-Gg: AYBFou2UQWmJj/IMtelwC9Hyfo72c+FhOiwpDpJ2+cPPp1TVnxV6F6j3WukD/tYGPJ0
-	K6ZKwAWe/UuDl5SD7S9JTKGHTy/usMct65WCEuvkD3KZZ3uQ6eYCeX7xanksZoPYfTntvE+Rd4g
-	/iAanIaq4i2gLbWhq7jETY7wMDRwYBtDGIwZmupkIjg1OlER9rxo+OAyRCoJYhyQE1X4RG57Ufo
-	qf1UJgTY4cTsuHbdVbFn2165q8kvrqVAigRU29845doffTVWH131k6WlvTyZSHovf1QjEfMCeBT
-	yWP2SqQ0Q99tzJonOERaEVnjxaT555Xo/KeOtpKZuKxiRVfNlEAfziZbvuzsjZlci+8r4MoCheo
-	0b61IIU3yXCGPgXLA2FFP7r1ykOzaXM4hwEDTYVBeQQaOGwQMKcthmobTnbkzmnoBrmUrSyEG7R
-	p9T1wGdiUUcYuPfcsQjPy7ufDrNkCEdB653oQlEQLZVPtfjvzk9VdQF1FBqT0fHcXPIANaGnjhM
-	pjXAA==
-X-Received: by 2002:a05:600c:3f0c:b0:4a1:e383:6811 with SMTP id 5b1f17b1804b1-4a1e3836c4amr166413515e9.29.1792514144048;
-        Tue, 20 Oct 2026 09:35:44 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1fb859326sm8859885e9.10.2026.10.20.09.35.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Oct 2026 09:35:43 -0700 (PDT)
-Message-ID: <8e7ecf8e-5757-4162-bc23-e22d0623ec76@gmail.com>
-Date: Tue, 20 Oct 2026 19:35:41 +0300
+	dkim=pass (1024-bit key, unprotected) header.d=nbd.name header.i=@nbd.name header.a=rsa-sha256 header.s=20160729 header.b=qr5s2evi
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=XLwvzlrUsD5o3ePpbK5ubMcqgWldw7icsY7i1tOGkEk=; b=qr5s2evifiDaOVEQuWLwpmN5r5
+	u6o672ilphM3wtXfhmwoVVfkCkZ9UqCwoEU5Ac6DcgbbbX2bKHDgT+tbblG3aD4ZZXT1CdjrYF15b
+	EYUFKLR5dFN/R3n23qYVvh23KCpIMRzsSn873Z4oxiAudOb6zNcicqCgO3ZOmr1YHK8E=;
+Received: from p54a4360c.dip0.t-ipconnect.de ([84.164.54.12] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1xJCwf-007wTR-2P;
+	Tue, 20 Oct 2026 18:44:13 +0200
+Message-ID: <8e57a7f2-6495-4535-af99-9abf5bcaa1f9@nbd.name>
+Date: Tue, 20 Oct 2026 18:44:13 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -91,121 +60,85 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH rtw-next] wifi: rtw88: 8723b: Read the package type from
- efuse
-To: Luka Gejak <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>,
- linux-wireless@vger.kernel.org
-References: <d22c9202-d019-4ca1-8534-c23244d612d4@gmail.com>
- <425c1552139b4f09a5db42459fa74a08@realtek.com>
- <f82ea5e6-d9ef-4978-9658-7e8ce760c7ae@gmail.com>
- <a7791242312c71dfaa96c25aff7be7fb147dea8a@linux.dev>
+Subject: Re: [PATCH] wifi: mt76: mt7603: discard power-save loopbacks after
+ wakeup
+To: Cristian Papa <pcristian292@gmail.com>
+Cc: lorenzo@kernel.org, ryder.lee@mediatek.com, shayne.chen@mediatek.com,
+ sean.wang@mediatek.com, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <6e7358fe-4070-4a88-b8da-77e2f9e9bdf8@nbd.name>
+ <20261020161545.9330-1-pcristian292@gmail.com>
 Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <a7791242312c71dfaa96c25aff7be7fb147dea8a@linux.dev>
-Content-Type: text/plain; charset=UTF-8
+From: Felix Fietkau <nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+In-Reply-To: <20261020161545.9330-1-pcristian292@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 20/10/2026 00:05, Luka Gejak wrote:
-> Hi Bitterblue,
+On 20.10.26 18:15, Cristian Papa wrote:
+> On 20.10.26 11:48, Felix Fietkau wrote:
+>> On 14.10.26 08:22, Cristian Papa wrote:
+>>> Discard late frames rather than retransmitting their old sequence and
+>>> packet numbers after newer traffic or a wakeup BAR. This loses the late
+>>> frame; it does not recover delivery. Use the station's sleep state, not
+>>> the temporary hardware PS bypass used during U-APSD service periods.
+>> Why did you decide to drop them instead of pushing them to immediate tx?
 > 
-> October 19, 2026 at 10:37 PM, "Bitterblue Smith" <rtl8821cerfe2@gmail.com> wrote:
+> Hi Felix, thanks for looking at it.
 > 
->>
->> On 19/10/2026 05:39, Ping-Ke Shih wrote:
->>
->>>
->>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
->>>  
->>>  [...]
->>>  
->>>
->>>>
->>>> +static void rtw8723b_read_package_type(struct rtw_dev *rtwdev)
->>>>  +{
->>>>  + struct rtw_hal *hal = &rtwdev->hal;
->>>>  + u8 val_1fb;
->>>>  +
->>>>  + rtw8723b_efuse_grant(rtwdev, true);
->>>>  + rtw_read8_physical_efuse(rtwdev, 0x1fb, &val_1fb);
->>>>  + rtw8723b_efuse_grant(rtwdev, false);
->>>>
->>>  
->>>  In rtw_parse_efuse_map(), we can pass 'phy_map' to read_efuse()?
->>>  -chip->ops->read_efuse(rtwdev, log_map);
->>>  +chip->ops->read_efuse(rtwdev, log_map, phy_map);
->>>  
->>>  As .phy_efuse_size = 512 for RTL7823B, I think it will work.
->>>
->> Yes, that should work.
->>
->>>
->>>>
->>>> +
->>>>  + switch (u8_get_bits(val_1fb, GENMASK(2, 0))) {
->>>>
->>>  
->>>  Bit 2~0 seems like PKG_TYPE. Define an enum?
->>>  
->>>
->>>>
->>>> + case 0x4:
->>>>  + hal->pkg_type = RTW8723B_PACKAGE_TFBGA79;
->>>>  + break;
->>>>  + case 0x5:
->>>>  + hal->pkg_type = RTW8723B_PACKAGE_TFBGA90;
->>>>  + break;
->>>>  + case 0x6:
->>>>  + hal->pkg_type = RTW8723B_PACKAGE_QFN68;
->>>>  + break;
->>>>  + case 0x7:
->>>>  + hal->pkg_type = RTW8723B_PACKAGE_TFBGA80;
->>>>  + break;
->>>>  + default:
->>>>  + hal->pkg_type = RTW8723B_PACKAGE_DEFAULT;
->>>>  + break;
->>>>  + }
->>>>  +
->>>>  + if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO &&
->>>>  + u8_get_bits(val_1fb, GENMASK(5, 4)) == 0x2)
->>>>
->>>  
->>>  Can you define enums for bit 5-4 and value 0x2?
->>>  I'm not sure if vendor driver has some comments pointing out this or not.
->>>
->> I guess bits 5-4 identify the chip variant:
->>
->>  /* RTL8703AS: 0x1FB[5:4] 2b'10 */
->>  /* RTL8723BS: 0x1FB[5:4] 2b'11 */
->>  if ((efuseContent & 0x30) == 0x20) {
->>  pAdapter->registrypriv.bw_mode &= 0xF0;
->>  RTW_INFO("This is the case of 8703AS\n");
->>  }
->>
->> RTL8703AS appears to be a (cheaper?) version of RTL8723BS. Ten years ago
->> Hans de Goede was saying:
->>
->>  The rtl8703as in reality is a rtl8723bs in a different package.
->>  (it has the same sdio-id).
->>
->>  In android the rtl8703as uses the rtl8723bs-vq0 driver instead of the
->>  regular rtl8732bs driver. Looking at a diff between the 2 the only
->>  difference is that the vq0 driver forces the antenna-path to
->>  ODM_RF_PATH_B.
->>
->>  It seems that we can identify the rtl8703as by its package, as it comes
->>  in a QNF68 package, where as the rtl8723bs comes in a TFBGA79 package,
->>  so we can simply support both in the same driver.
->>
->> https://github.com/hadess/rtl8723bs/pull/93/changes/ebec0ae8ccedc05a945478926d52c99277f500ee
+> Because the looped-back frame keeps the TXD it was first queued with.
+> mt7603_mac_write_txwi() puts the 802.11 sequence number in the TXD with
+> SN_VALID, and with a hardware key it also takes the PN from key->tx_pn at
+> that point. mt7603_rx_loopback_skb() only rewrites Q_IDX, so a late frame
+> pushed to immediate TX would go out with its original SN and PN.
 > 
-> So 8703AS should work just fine with rtw8723b. The one thing I'm not
-> sure about is antenna path. The vq0 driver hardcodes path B, but the
-> normal driver reads it from efuse, same as rtw88. If some 8703AS boards
-> have it wrong in efuse we might need a quirk. Have you come across such?
+> On wakeup, mt7603_sta_ps() sends the psq ahead of the newer traffic, so
+> the order holds there. A loopback that arrives after that drain is older
+> than frames that may already have gone out with newer SN/PN. With CCMP the
+> peer's replay check would drop it, in an aggregation session it can fall
+> behind the window after the newer frames or the BAR, and on an open link
+> it would arrive out of order. So I expected immediate TX to mostly spend
+> airtime on a frame the peer discards.
 > 
+> I haven't measured how late these loopbacks arrive, though. One that
+> arrives before the newer frames go out would still be delivered in order.
+> If you'd rather push them to immediate TX, I can send a v2 that does that.
+I'm not 100% sure which approach is the right one either way, I just 
+wanted it considered.
 
-No, I only have RTL8723BU.
+Not rewriting SN and PN is intentional. If the frame with its SN was 
+part of an active aggregation session, receiver side reordering should 
+ensure that it arrives in the right order.
 
-> Best regards,
-> Luka Gejak
+It all depends on whether the receiver has moved on and considers the 
+frame lost, or if there is value in sending it to avoid the reorder 
+timeout (which would cause some jitter). Either way, we should likely 
+only allow immediate-tx if aggregation is enabled.
 
+If you have some time, could you test, which variant works better?
+
+Thanks,
+
+- Felix
