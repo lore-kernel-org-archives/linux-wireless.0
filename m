@@ -1,94 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792529245;
-	b=oDNvB0c8A+Vb+OoReyg2ESVzKwWlHG/Ll1gVOPxcCLIWFKprjoWZasdP9n1230hv7dgo
-	 +WN7UeoyGrqsmoN3KKc5cg0OgAPFrcrtY5pz8nH/9/qdhw4wKbvWKP6si41m9kvRD6Bhw
-	 EKBF4f0b61aWIGVkIlGqHqEioS5slkP6wbyVG7eGj9LO+SuRkemDW8TLcV5bQh5zLwb2S
-	 HYlxVKaLXADvZAI9+9UEDA4FSqFiyO4tw0wz/ekj9o2Bx4FnFXmZmVTTTNKdBm6x2F8O2
-	 Mm4gSK+/uDAri233qp9O+OkS2aytB8RnQ6SqQJjB4PnmRE44ycNmKSUitUTxybtVEXg==
+	t=1792529439;
+	b=FOf0/OTlTXEQ2sdVpFaJy4iUKhhZOcokKWjmAO0ZDDWGvG9BLdbSPOm0f9o5F/X/6mhl
+	 DbtpT1bMNkYEPZWrCknZgDIJLOOzn9RhDOIlwQXs9CBe9ix1dhnYz7m5fMO9Jp7XsQvQC
+	 u51l6jI9XSudYjIx9drwYTR8aUfJuD2lhXNwsB6LCKnJQIe0Mq+YDrTiktHL+HyHwdXPw
+	 x7Mv+4t+aeA1bNs69tOpAJZUuo4c4eg0C4kPJA2ELdLgStuDewLAqzHBobTy17lcO19iu
+	 hDAQRDEeO/h0buUNkej96Hnq8MK/ssKlEPxTc6UH2I8yQEl2045p/jUWG2Tnrpb+kuw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792529245;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792529439;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=LY/dmHGx7MmoVX9PEfbiRrzvQfU4BP+AnOVPmeu35f4=;
-	b=wyj5wgWyV6Zsf+Scn+67hbXJL29g73Pc4TnisrV3EjGmBLbXhnfRFXblBPqCbpE/hCD3
-	 qy2Y7rW4D+cRsdw9IAmUj64mF8okk718nvPiH/rM12eZBb0oKaUcEjSk4HCimNQb2iYnH
-	 IQQ/kKZ0xWtD2AGrfa/9xMBKColJX2ADya/sun4xb9gSL57yKnsbDIb4I9xieb4C845rH
-	 fa8pKc0PDfugn31VLtkZeo4acGgCHcw9WgG0e+m59tOkzIH1VVvwKSMPKr3VeJae1ulUc
-	 0t1Zq8MpjLd6F61S6v6H0KqRkvfKV/bjGFK6wH2F0egIflwhsNYX+kR5yF8Pqy0xRoQ==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Content-Language:To:Cc:From:Subject:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=NEQXWzX5Yve8YQKWu4j/zLTc+4cqToZ6mUJV+H8/3mM=;
+	b=4atsjxr5GwP3i39Rqj1eLI3G+MNZfztg0gLiN2NnjXLL1dSG+EpZ7PFB3qducRVO35K4
+	 Ng1X2KZJ6PIDtDDloA6qF23PKHJmiPii5NVMrQhQSOgKZy+xu2TGMFk6FBHpbeQIw/OmR
+	 yVccxTjPB0F9wfhsmDCWbGZ7fqvBHZgFrwDTMlzrKwKkvl+vngRfKSBKnq2H1mhw9MV0q
+	 NQPzt6HZkwPsQEKJgQK2FYUEIk+BjBSosmi4FwodFbtqEaFdOrYssHb+rbzbBO6+eDeci
+	 FfyqeSNHw9E3uZzczKVlj4UuwA90XZ/bTRhRyBLBnk046yLeHjIMfaIOGhAD0WdyjZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=pnse09B+;
-	arc=none smtp.remote-ip=209.85.219.52
-Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=n2cP7RQH;
+	arc=none smtp.remote-ip=209.85.221.48
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4107860A2603
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 20:47:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4107860A2603
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 906A7606A31C
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 20:50:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 906A7606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=pnse09B+
-Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-917a707f37eso1139886d6.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:47:20 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=n2cP7RQH
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48df4e9d2d4so17542f8f.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:50:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792529239; x=1793134039; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LY/dmHGx7MmoVX9PEfbiRrzvQfU4BP+AnOVPmeu35f4=;
-        b=pnse09B+aRrYYM54Ns5mPYQB7YHP4H6DWAEg9wfICNj/oLSEqlVMPr0+0Q+bftGDbR
-         yxoeZBxwCfi03FNrslYW63/8JQY9fQb7PXxiALKFdMawbGYKHR0GLAh/eKusBFv6a6cN
-         oAOGctK3C+Wb0HwvCvF0l+JtOVZ/nFLtAlz6V/yBZeE0cXy8w1RsC71KNwpXL20/r/Bi
-         JknxKD6fvIcv9rly6bKWQAYbXpf5zNFhJZ0+v38m3dJ44Z4xw3hur9S1WMG8Y9Pys5tb
-         JbefXLC4X6rEy1lQGnuSh3RUrY/NMOcsFDDo6025KyPmG8kiAbkTSw+LkrKxHikw/8xk
-         p5Hw==
+        d=gmail.com; s=20251104; t=1792529437; x=1793134237; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=NEQXWzX5Yve8YQKWu4j/zLTc+4cqToZ6mUJV+H8/3mM=;
+        b=n2cP7RQHV2ZDqy2BlJf3w2Bsarz0RwBZJ29zWyF2JPUVsXxsWH41WP3wWN+7teEzGE
+         NH0itVkMgPsCY+iPwcIXu0IrwA0r0nQXhlkNNTQCLmlOgy6fucWwF5OFU/V1cr8SObYF
+         Kvqk/B3CXoRmwH1NRJZ30Drpk1XUXVZ6/SBnQX4cfIvdTvwN/3QPcu+kM5Yaptps7deu
+         x1AMWBWPWiJOf4yGh28bhAqP+u63qbcaaJA/guWeSTmkfnklo8wMm8UUE1qtxgE5Yos8
+         1BeuzxySqYqoFbhEFgt5YluaA+gLrjPGjcg8p/v74sPqFD/i6dLF5SmjM+C74XTuw7PV
+         vFwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792529239; x=1793134039;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LY/dmHGx7MmoVX9PEfbiRrzvQfU4BP+AnOVPmeu35f4=;
-        b=WK9PW/Sq7tyVW2GF7l+UEbagIVPKzDF4nbx/pwGnrkNZPq83fZEPowbM53Lv6DGwjY
-         gK/sPrrhU6aeHE2utTBRjry247NWxkc2imUrzz04cHnmP39/ToRgA85UA0Yy3tZH6udT
-         H3rc8LByh5bDFe6WLpASvfAIkWt5th1lG45sFP51ftrIal0eUaunosJWk/h+ObnPel4J
-         GPc0ca3vYEOb9sEwQxjJz+WSR6WsqaykZi5/Ur0AimCzpun2xrSnJP9P9bBZtai2H1R1
-         wW7MjjTLPUNDPKdycpj5k0vBPj5Q6pXUwCTSI9XtcMWi+V9y4THzkIPrgV3hYbB9y3j3
-         AQ7Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxDuqtGF254rkVxYCHTbb5Vg6SfwM7TAYk5JTQfeIuK6Sac/H46z+LdRo/MMvVugI3dA3QPP+eNieIn2GIXMw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYI+ATjxQ2DydW7DIEonKaNzdVaeI3pDvBijMTIk70mptJ3pcEes
-	jRmpHRNHVr8V2+Gg83jVuoHd6dAd4xWB/1Y6IQBCuZU07ToIgQVWj8y0
-X-Gm-Gg: AYBFou03VaymabdA8S5LZjuUHVhuvJQXbWbo2G10xUypRNKEvdsv/ry4Z7jaSxwa0cB
-	WX30x7IgXou5tBJk/7or45kHnggQxXXdhD7ByLHmy1Zi5KbCJs+aVR+loLFmvUvicPvCKXc+ylc
-	4qrjKWPc7Uv73TWaOW0Sn6cM5EdUr2alNj1ltlc50HtdZgmttLMHZSq9uBfQhaUUbeRvHQ4HQ3I
-	RCuLowVed9VWSz21m99mn61MmMPWn66bA6pEzKUYkb9oyymIEIjKO2knRhT8vuvjKAUWN5zSBP6
-	VPaHw1kZfDUkQlkPGtf7EH654ASeYrd0hv+/3Yto1jUgwQsALxeXZaLRdZGGIYMHTC10QRVEuqH
-	z5KH6tDXWhZ7u6e6QQPVJS62e9I1WKktG4uDsXfXYFXlO4Cvo7N4MrAhiuQCQORyrITvFgn54e3
-	teerBIyFiw31GXqf1fCvQaYc2kBP7ZPieDttD5l/T+DGOeAPRAPC0UyPYjbM0/ZwjiAcXPe1NwV
-	x77
-X-Received: by 2002:a05:620a:6887:b0:93e:9834:3863 with SMTP id af79cd13be357-93f57f6fea4mr75959485a.15.1792529239084;
-        Tue, 20 Oct 2026 13:47:19 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93f56c6f16dsm79336785a.4.2026.10.20.13.47.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2026 13:47:18 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mehmet.fide@screeningeagle.com
-Subject: [PATCH rtw-next v7 2/3] wifi: rtw88: support channel switch in AP mode
-Date: Tue, 20 Oct 2026 22:47:11 +0200
-Message-ID: <20261020204712.3252023-3-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261020204712.3252023-1-mehmet.fide@gmail.com>
-References: <20261020204712.3252023-1-mehmet.fide@gmail.com>
+        d=1e100.net; s=20260707; t=1792529437; x=1793134237;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=NEQXWzX5Yve8YQKWu4j/zLTc+4cqToZ6mUJV+H8/3mM=;
+        b=KlM6IxijuRY16PkOH9f91Nm+0R42lNK12aBORjQmVR7yppEvCVWxhJwe/og1OgaZ49
+         kTFf7ZaiovGd3iY0GP1c4xBRdX8iQpbRpfMyAoXPqr3ZVUR7RRxu1kN3/jGppBs6XFe1
+         ZwfoMWlU7XpYYxBq/cR2UW+D738wzTW1b6RwaZt5RbBVaGK3oTv1G4cvv3Yy2yUKxjSY
+         QUADW8D55ul3lCtKSK2o7E4hcLW5VWykBbGlkEFD4Jdcl9PrB7sQmSo+lrikRx7nzMQS
+         Lol0uwOFAOf4RrdjQjU+Kq8AbmJC0AbboGl7vYhmRRX59ooF2R8WLRujtqUvKnIKE71i
+         GZAg==
+X-Gm-Message-State: AFq9FYK8RySlYzAytiUX4y8ge+t6d7GEccj6DLTIlpiQAyKkHqMSW37q
+	lRQjk7psjmFFPe46sRxfrhtK3PlOYVYQ7TXH9ppUwiNTtzfXOGn2yefFkJ644A==
+X-Gm-Gg: AYBFou1KYkxoP+u2Sn386FAS0HOnlGOx2JItIifza81d3DJtvIP7JK6uh0O49l6DLvt
+	kZe8VoGOBUM41tZimnsTAbvhW+qwNAYOBihkycFNPC4C7lwYz2303Yhduae2FyRVAY3gn+gbOac
+	AdbNbvMLoIEsRBW/2K7SXVzsVQ5YKlWz7fEX+BE0jGQ7RGjXNWCKEQsLIF5x7pQSa4ljfl7zDyF
+	8AV75ANrpeTorhbGDFwENOnBi3c1zTfsYXrScR1l68OtBsri4C1qza+gP45m/vKVIMspgyCJzLO
+	ek0lLdnCbWWeCb4Ecz8ZWTx/HpyHQNI/agHJ0ygYPWchVEcgv7UHcDb96RmVs+wNrZ7rTOVMHcz
+	/pWtFDD6C6TaI7yhPq6xQ92NeQR79N5Z2cxrC0JA+lneikHwyfRmtfy895ktzA4JUkm9ToTUgrV
+	9Gq1huYWJQGh7bhboVoH4wZS5XxsZqcDVPJVPczRNT7/bYpCqPPl3VQlWvdwTb4/lyJDzt9DaoN
+	NUfCg==
+X-Received: by 2002:adf:f842:0:b0:48d:f324:4621 with SMTP id ffacd0b85a97d-48e07fb5f3fmr17405267f8f.52.1792529436778;
+        Tue, 20 Oct 2026 13:50:36 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.70])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2581eed3sm916320f8f.12.2026.10.20.13.50.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2026 13:50:36 -0700 (PDT)
+Message-ID: <8e47daa4-538d-4e0a-84f9-fd4e91613ff8@gmail.com>
+Date: Tue, 20 Oct 2026 23:50:34 +0300
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,354 +88,219 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH rtw-next v2 1/3] wifi: rtw88: Pass the physical map to the
+ read_efuse chip op
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+rtw8723b_read_efuse() will need to read a byte from the physical efuse
+map, so pass the map to the read_efuse chip op.
 
-hostapd's CHAN_SWITCH is refused because the driver does not announce
-channel switch support, so an rtw88 AP can only change its channel by
-being torn down and started again.
-
-Declare WIPHY_FLAG_HAS_CHANNEL_SWITCH and implement
-channel_switch_beacon: the firmware repeats the beacon held in the
-first reserved page, so while a switch is announced the page is
-downloaded again every beacon interval to advance the countdown, and
-ieee80211_csa_finish() is called once it completes. IBSS shares the
-page and the work.
-
-The work is a delayed work of the device and csa_vif names the
-interface, both under the driver mutex. The countdown is cancelled when
-the AP stops, when the interface goes away, on WoWLAN suspend and in
-rtw_core_stop(); the BSS_CHANGED_BEACON replay after a hardware restart
-resumes it. The other page downloads during a countdown, the TIM update,
-the PG backup and the one on association, are skipped until the beacon
-after the switch, since every beacon fetch advances the countdown; the
-next download carries their changes. A scan is refused: it would take
-the AP off the channel its stations count down to.
-
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 ---
+v2:
+ - Patch is new in v2.
+---
+ drivers/net/wireless/realtek/rtw88/efuse.c    | 2 +-
+ drivers/net/wireless/realtek/rtw88/main.h     | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8703b.c | 4 ++--
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 4 ++--
+ drivers/net/wireless/realtek/rtw88/rtw8723x.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8723x.h | 7 ++++---
+ drivers/net/wireless/realtek/rtw88/rtw8814a.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw88xxa.h | 2 +-
+ 12 files changed, 17 insertions(+), 16 deletions(-)
 
-Notes:
-    Changes in v7:
-    - csa_vif is kept until the beacon after the switch: a TIM update
-      before it fetched one beacon past count 1 and hit the WARN in
-      ieee80211_beacon_update_cntdwn()
-    - rebased on rtw-next
-    
-    Changes in v6:
-    - the countdown work is an ieee80211 delayed work under the driver
-      mutex, csa_vif is driver state under the mutex; no wiphy lock in
-      rtw88 (Ping-Ke)
-    - rtw_core_stop() cancels the work and clears csa_vif, which covers the
-      IPS path and the firmware recovery (Ping-Ke)
-    - the downloads are paced from the first one with an absolute due time:
-      queued after each download, the countdown drifted by about 10 ms per
-      beacon interval on the ordered mac80211 workqueue, and a station
-      switched ahead of the AP on a count of 50
-    - the BSS_CHANGED_BEACON path says why it starts the countdown (the
-      replay after a hardware restart) and stops it when the beacon comes
-      back without a switch announced (Ping-Ke)
-    
-    Changes in v5:
-    - rtw_fw_csa_active/start/stop() assert the wiphy lock
-    - hw_scan() takes the mutex with guard()
-    - the ASSOC path says why it skips the download: the STA+AP combination
-    
-    Changes in v4:
-    - the work and csa_vif live in rtw_dev; no lookup through the reserved page
-    - the countdown is stopped before a firmware recovery restarts the hardware
-    - a scan is refused while a switch is announced
-    - one beacon fetch per interval during the countdown
-
- drivers/net/wireless/realtek/rtw88/fw.c       | 80 ++++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/fw.h       |  4 +
- drivers/net/wireless/realtek/rtw88/mac80211.c | 39 +++++++--
- drivers/net/wireless/realtek/rtw88/main.c     |  6 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  3 +
- 5 files changed, 124 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 3cd17a3bb494..2d81aaeed0d7 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -1802,14 +1802,90 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
- 	return ret;
- }
- 
-+bool rtw_fw_csa_active(struct rtw_dev *rtwdev)
-+{
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	return !!rtwdev->csa_vif;
-+}
-+
-+/* paced from the first download: a late one does not delay the next */
-+static void rtw_fw_csa_queue(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+{
-+	u32 interval = ieee80211_tu_to_usec(vif->bss_conf.beacon_int);
-+	s64 delay;
-+
-+	rtwdev->csa_due = ktime_add_us(rtwdev->csa_due, interval);
-+	delay = ktime_us_delta(rtwdev->csa_due, ktime_get());
-+	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->csa_beacon_work,
-+				     usecs_to_jiffies(max(delay, 0)));
-+}
-+
-+void rtw_fw_csa_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+{
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	if (rtwdev->csa_vif == vif)
-+		return;
-+
-+	rtwdev->csa_vif = vif;
-+	rtwdev->csa_due = ktime_get();
-+	rtw_fw_csa_queue(rtwdev, vif);
-+}
-+
-+void rtw_fw_csa_stop(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+{
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	if (!vif || rtwdev->csa_vif != vif)
-+		return;
-+
-+	rtwdev->csa_vif = NULL;
-+	cancel_delayed_work(&rtwdev->csa_beacon_work);
-+}
-+
- void rtw_fw_update_beacon_work(struct work_struct *work)
- {
- 	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
- 					      update_beacon_work);
- 
- 	mutex_lock(&rtwdev->mutex);
--	rtw_fw_download_rsvd_page(rtwdev);
--	rtw_send_rsvd_page_h2c(rtwdev);
-+
-+	/* a fetch advances the countdown, the next download carries the TIM */
-+	if (!rtw_fw_csa_active(rtwdev)) {
-+		rtw_fw_download_rsvd_page(rtwdev);
-+		rtw_send_rsvd_page_h2c(rtwdev);
-+	}
-+
-+	mutex_unlock(&rtwdev->mutex);
-+}
-+
-+void rtw_fw_csa_beacon_work(struct work_struct *work)
-+{
-+	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
-+					      csa_beacon_work.work);
-+	struct ieee80211_vif *vif;
-+
-+	mutex_lock(&rtwdev->mutex);
-+
-+	vif = rtwdev->csa_vif;
-+	if (!vif)
-+		goto out;
-+
-+	if (!vif->bss_conf.csa_active) {
-+		rtwdev->csa_vif = NULL;
-+		goto out;
-+	}
-+
-+	if (!ieee80211_beacon_cntdwn_is_complete(vif, 0)) {
-+		rtw_fw_download_rsvd_page(rtwdev);
-+		rtw_send_rsvd_page_h2c(rtwdev);
-+		rtw_fw_csa_queue(rtwdev, vif);
-+	} else {
-+		ieee80211_csa_finish(vif, 0);
-+	}
-+
-+out:
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 48ad9ceab6ea..d8e58e4ed836 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -863,7 +863,11 @@ void rtw_add_rsvd_page_pno(struct rtw_dev *rtwdev,
- void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev,
- 			   struct rtw_vif *rtwvif);
- int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev);
-+bool rtw_fw_csa_active(struct rtw_dev *rtwdev);
-+void rtw_fw_csa_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif);
-+void rtw_fw_csa_stop(struct rtw_dev *rtwdev, struct ieee80211_vif *vif);
- void rtw_fw_update_beacon_work(struct work_struct *work);
-+void rtw_fw_csa_beacon_work(struct work_struct *work);
- void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev);
- int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
- 			   u32 offset, u32 size, u32 *buf);
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 2a9b09fa76e7..182aecc76820 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -237,6 +237,8 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&rtwdev->mutex);
- 
-+	rtw_fw_csa_stop(rtwdev, vif);
-+
- 	rtw_leave_lps_deep(rtwdev);
- 
- 	rtw_txq_cleanup(rtwdev, vif->txq);
-@@ -395,8 +397,11 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		if (vif->cfg.assoc) {
- 			rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FINISH);
- 
--			rtw_fw_download_rsvd_page(rtwdev);
--			rtw_send_rsvd_page_h2c(rtwdev);
-+			/* a station associating while the AP counts down */
-+			if (!rtw_fw_csa_active(rtwdev)) {
-+				rtw_fw_download_rsvd_page(rtwdev);
-+				rtw_send_rsvd_page_h2c(rtwdev);
-+			}
- 			rtw_fw_default_port(rtwdev, rtwvif);
- 			rtw_coex_media_status_notify(rtwdev, vif->cfg.assoc);
- 			if (rtw_bf_support)
-@@ -438,6 +443,11 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		rtw_set_dtim_period(rtwdev, conf->dtim_period);
- 		rtw_fw_download_rsvd_page(rtwdev);
- 		rtw_send_rsvd_page_h2c(rtwdev);
-+		/* restart replay resumes it, a beacon without CSA ends it */
-+		if (conf->csa_active)
-+			rtw_fw_csa_start(rtwdev, vif);
-+		else
-+			rtw_fw_csa_stop(rtwdev, vif);
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
+index b85075cd68d0..15c57203545b 100644
+--- a/drivers/net/wireless/realtek/rtw88/efuse.c
++++ b/drivers/net/wireless/realtek/rtw88/efuse.c
+@@ -173,7 +173,7 @@ int rtw_parse_efuse_map(struct rtw_dev *rtwdev)
+ 		goto out_free;
  	}
  
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-@@ -490,6 +500,7 @@ static void rtw_ops_stop_ap(struct ieee80211_hw *hw,
- 	struct rtw_dev *rtwdev = hw->priv;
- 
- 	mutex_lock(&rtwdev->mutex);
-+	rtw_fw_csa_stop(rtwdev, vif);
- 	rtw_write32_clr(rtwdev, REG_TCR, BIT_TCR_UPDATE_HGQMD);
- 	rtw_write16(rtwdev, REG_ATIMWND, ATIMWND_DEFAULT);
- 	rtwdev->ap_active = false;
-@@ -556,6 +567,17 @@ static int rtw_ops_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
- 	return 0;
- }
- 
-+static void rtw_ops_channel_switch_beacon(struct ieee80211_hw *hw,
-+					  struct ieee80211_vif *vif,
-+					  struct cfg80211_chan_def *chandef)
-+{
-+	struct rtw_dev *rtwdev = hw->priv;
-+
-+	mutex_lock(&rtwdev->mutex);
-+	rtw_fw_csa_start(rtwdev, vif);
-+	mutex_unlock(&rtwdev->mutex);
-+}
-+
- static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
- 			   struct ieee80211_key_conf *key)
-@@ -626,7 +648,8 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	}
- 
- 	/* download new cam settings for PG to backup */
--	if (rtw_get_lps_deep_mode(rtwdev) == LPS_DEEP_MODE_PG)
-+	if (rtw_get_lps_deep_mode(rtwdev) == LPS_DEEP_MODE_PG &&
-+	    !rtw_fw_csa_active(rtwdev))
- 		rtw_fw_download_rsvd_page(rtwdev);
- 
- out:
-@@ -846,6 +869,7 @@ static int rtw_ops_suspend(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	mutex_lock(&rtwdev->mutex);
-+	rtw_fw_csa_stop(rtwdev, rtwdev->csa_vif);
- 	ret = rtw_wow_suspend(rtwdev, wowlan);
- 	if (ret)
- 		rtw_err(rtwdev, "failed to suspend for wow %d\n", ret);
-@@ -893,20 +917,24 @@ static int rtw_ops_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct rtw_dev *rtwdev = hw->priv;
- 	int ret;
- 
-+	guard(mutex)(&rtwdev->mutex);
-+
-+	/* a scan takes the AP off the channel its stations count down to */
-+	if (rtw_fw_csa_active(rtwdev))
-+		return -EBUSY;
-+
- 	if (!rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD))
- 		return 1;
- 
- 	if (test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
- 		return -EBUSY;
- 
--	mutex_lock(&rtwdev->mutex);
- 	rtw_hw_scan_start(rtwdev, vif, req);
- 	ret = rtw_hw_scan_offload(rtwdev, vif, true);
+-	ret = chip->ops->read_efuse(rtwdev, log_map);
++	ret = chip->ops->read_efuse(rtwdev, log_map, phy_map);
  	if (ret) {
- 		rtw_hw_scan_abort(rtwdev);
- 		rtw_err(rtwdev, "HW scan failed with status: %d\n", ret);
- 	}
--	mutex_unlock(&rtwdev->mutex);
- 
- 	return ret;
- }
-@@ -973,6 +1001,7 @@ const struct ieee80211_ops rtw_ops = {
- 	.sta_add		= rtw_ops_sta_add,
- 	.sta_remove		= rtw_ops_sta_remove,
- 	.set_tim		= rtw_ops_set_tim,
-+	.channel_switch_beacon	= rtw_ops_channel_switch_beacon,
- 	.set_key		= rtw_ops_set_key,
- 	.ampdu_action		= rtw_ops_ampdu_action,
- 	.can_aggregate_in_amsdu	= rtw_ops_can_aggregate_in_amsdu,
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 0f23498b5c96..48e8cad221b9 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1550,11 +1550,13 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
- 
- 	clear_bit(RTW_FLAG_RUNNING, rtwdev->flags);
- 	clear_bit(RTW_FLAG_FW_RUNNING, rtwdev->flags);
-+	rtwdev->csa_vif = NULL;
- 
- 	mutex_unlock(&rtwdev->mutex);
- 
- 	cancel_work_sync(&rtwdev->c2h_work);
- 	cancel_work_sync(&rtwdev->update_beacon_work);
-+	cancel_delayed_work_sync(&rtwdev->csa_beacon_work);
- 	cancel_delayed_work_sync(&rtwdev->watch_dog_work);
- 	cancel_delayed_work_sync(&coex->bt_relink_work);
- 	cancel_delayed_work_sync(&coex->bt_reenable_work);
-@@ -2170,6 +2172,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	INIT_WORK(&rtwdev->ips_work, rtw_ips_work);
- 	INIT_WORK(&rtwdev->fw_recovery_work, rtw_fw_recovery_work);
- 	INIT_WORK(&rtwdev->update_beacon_work, rtw_fw_update_beacon_work);
-+	INIT_DELAYED_WORK(&rtwdev->csa_beacon_work, rtw_fw_csa_beacon_work);
- 	INIT_WORK(&rtwdev->ba_work, rtw_txq_ba_work);
- 	skb_queue_head_init(&rtwdev->c2h_queue);
- 	skb_queue_head_init(&rtwdev->coex.queue);
-@@ -2293,7 +2296,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 	hw->wiphy->available_antennas_rx = hal->antenna_rx;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
--			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
-+			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP |
-+			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
- 	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 	hw->wiphy->max_scan_ssids = RTW_SCAN_MAX_SSIDS;
+ 		rtw_err(rtwdev, "failed to read efuse map\n");
+ 		goto out_free;
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index d59f6e323adf..bc3ebfec11ae 100644
+index d59f6e323adf..6ecbeb4ffe4b 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -2094,6 +2094,9 @@ struct rtw_dev {
- 	struct work_struct ips_work;
- 	struct work_struct fw_recovery_work;
- 	struct work_struct update_beacon_work;
-+	struct delayed_work csa_beacon_work;
-+	struct ieee80211_vif *csa_vif;
-+	ktime_t csa_due;
+@@ -868,7 +868,7 @@ struct rtw_chip_ops {
+ 	int (*mac_postinit)(struct rtw_dev *rtwdev);
+ 	int (*dump_fw_crash)(struct rtw_dev *rtwdev);
+ 	void (*shutdown)(struct rtw_dev *rtwdev);
+-	int (*read_efuse)(struct rtw_dev *rtwdev, u8 *map);
++	int (*read_efuse)(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map);
+ 	void (*phy_set_param)(struct rtw_dev *rtwdev);
+ 	void (*set_channel)(struct rtw_dev *rtwdev, u8 channel,
+ 			    u8 bandwidth, u8 primary_chan_idx);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8703b.c b/drivers/net/wireless/realtek/rtw88/rtw8703b.c
+index 25456f0367b2..8ad30a37096d 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8703b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8703b.c
+@@ -563,12 +563,12 @@ static void try_mac_from_devicetree(struct rtw_dev *rtwdev)
+ 	}
+ }
  
- 	/* used to protect txqs list */
- 	spinlock_t txq_lock;
+-static int rtw8703b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8703b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	int ret;
+ 
+-	ret = rtw8723x_read_efuse(rtwdev, log_map);
++	ret = rtw8723x_read_efuse(rtwdev, log_map, phy_map);
+ 	if (ret != 0)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+index 8bb9c03d769c..0179f09140ef 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+@@ -2349,12 +2349,12 @@ static void rtw8723b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
+ 	fill_txdesc_checksum_common(txdesc, 16);
+ }
+ 
+-static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	int ret;
+ 
+-	ret = rtw8723x_read_efuse(rtwdev, log_map);
++	ret = rtw8723x_read_efuse(rtwdev, log_map, phy_map);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723x.c b/drivers/net/wireless/realtek/rtw88/rtw8723x.c
+index 97e6f6a62c0d..5dd306cb058e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723x.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723x.c
+@@ -250,7 +250,7 @@ static const u8 rtw8723x_txpwr_idx_table[] = {
+ 	0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x02
+ };
+ 
+-static int __rtw8723x_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int __rtw8723x_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	u8 *pwr = (u8 *)efuse->txpwr_idx_table;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723x.h b/drivers/net/wireless/realtek/rtw88/rtw8723x.h
+index e07b6ca99b3d..a8d42ea9a4f1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723x.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723x.h
+@@ -135,7 +135,7 @@ struct rtw8723x_common {
+ 
+ 	/* common functions */
+ 	void (*lck)(struct rtw_dev *rtwdev);
+-	int (*read_efuse)(struct rtw_dev *rtwdev, u8 *log_map);
++	int (*read_efuse)(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map);
+ 	int (*mac_init)(struct rtw_dev *rtwdev);
+ 	int (*mac_postinit)(struct rtw_dev *rtwdev);
+ 	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
+@@ -434,9 +434,10 @@ static inline void rtw8723x_lck(struct rtw_dev *rtwdev)
+ 	rtw8723x_common.lck(rtwdev);
+ }
+ 
+-static inline int rtw8723x_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static inline
++int rtw8723x_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+-	return rtw8723x_common.read_efuse(rtwdev, log_map);
++	return rtw8723x_common.read_efuse(rtwdev, log_map, phy_map);
+ }
+ 
+ static inline int rtw8723x_mac_init(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8814a.c b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
+index fa02aa299b5e..b6916d3dc6d3 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8814a.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
+@@ -126,7 +126,7 @@ static void rtw8814a_init_hwcap(struct rtw_dev *rtwdev)
+ 		efuse->hw_cap.ant_num, efuse->hw_cap.nss);
+ }
+ 
+-static int rtw8814a_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8814a_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw8814a_efuse *map;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index ee689fa3d87f..83ac6b732e80 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -45,7 +45,7 @@ enum rtw8821ce_rf_set {
+ 	SWITCH_TO_BT,
+ };
+ 
+-static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index a56c8befa077..8ecf047a7ee2 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -38,7 +38,7 @@ static void rtw8822bs_efuse_parsing(struct rtw_efuse *efuse,
+ 	ether_addr_copy(efuse->addr, map->s.mac_addr);
+ }
+ 
+-static int rtw8822b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8822b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw8822b_efuse *map;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 32d9709f2c24..09315d23e2c4 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -41,7 +41,7 @@ static void rtw8822cs_efuse_parsing(struct rtw_efuse *efuse,
+ 	ether_addr_copy(efuse->addr, map->s.mac_addr);
+ }
+ 
+-static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw8822c_efuse *map;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
+index c298fa0fb2a6..5ffa29d18168 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.c
+@@ -197,7 +197,7 @@ static void rtw88xxa_read_usb_type(struct rtw_dev *rtwdev)
+ 		efuse->hw_cap.ant_num, efuse->hw_cap.nss);
+ }
+ 
+-int rtw88xxa_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++int rtw88xxa_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
+ {
+ 	const struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
+index d9c8db58909c..6597ca0dfc5d 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw88xxa.h
+@@ -140,7 +140,7 @@ struct rtw_jaguar_phy_status_rpt {
+ #define RF18_BW_MASK		(BIT(11) | BIT(10))
+ 
+ void rtw88xxa_efuse_grant(struct rtw_dev *rtwdev, bool on);
+-int rtw88xxa_read_efuse(struct rtw_dev *rtwdev, u8 *log_map);
++int rtw88xxa_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map);
+ void rtw88xxa_power_off(struct rtw_dev *rtwdev,
+ 			const struct rtw_pwr_seq_cmd *const *enter_lps_flow);
+ int rtw88xxa_power_on(struct rtw_dev *rtwdev);
 -- 
 2.55.0
 
