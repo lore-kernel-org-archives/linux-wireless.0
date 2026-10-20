@@ -1,96 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.170
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792512958;
-	b=MyK0kCmwihITbZehh6xwC2AIy9AMfYBXGWOpkU8CAdwnl3YB7p3RY1iEdm64jOV5Y7SQ
-	 lG3XXNR64yWrK9of2MdoxmS68BLVW02wsWVM2mXOTWVIvqEb6RBJ3OFI7ON2I3//JQ/tm
-	 hW3BJMB4+VIhLJge7tvJkXkdnK4NQWmsy5P7+Iw0CA+V++ochbB5MdRwS/FX/XLteSmdF
-	 5HiGCl6ws0oFXrc2wipYe9AE5XtIet0yDv+AQAs5aMI2pnZW4yOjlRQHU3JxSKJOWj6tt
-	 Tv+9ubXzkpeZxkohTTddpeRZIkhibT87tbMDBhr+8P06L9uyCB4B34OiliwJiTvbXow==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792512958;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.171
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792513329;
+	b=j7l4TVeT0OvH8U7r3Z0u28FsJptiXXxSpWgx6bEWQf7k7gwK7eOq1VfqMUu1W5AF2XUc
+	 /bLDe7ZqhUf0FX2FZOC1MzzIDwLacYqgzS0xROZBjQAR5LKksHD8gShGvbPbi+j7N5kSn
+	 pSUUce2eMeH6h4wzjAhotc5sTthmxqcuaTf6lRnR72bQFtGVfaXIAJMm7i/k3m6Qe4Ue4
+	 chDRbOY1CBJaPUMgZfcoBwAEpXb/vkIsvk8Ce1EdefR18/0ejnZU6hbu6ouUQPyOO2Q5a
+	 9QNMxWiJEVq4y7elOVjtaIBZ5X5icqxNHmDdpW4jg7iP3d1WN0VBgKSCIgVf94i7fog==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792513329;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
-	b=0XBbUcPlU6kIBNpU3KKuwDfbJBKNZpq5014xD/fQC8UTdb1knv6RRtIIgaVrJzVoSq2s
-	 h2oMCHGOusMxsWvqv8dwUOYs83JMoWMcfPZj3pz9zm5mM5qfX6tHqkCLrhCjeEP4paYYI
-	 3JeNQJ++ehhBCla2V8ToUHDmV7F258LLA2aphL1iFSkB7XjawY3mQaVWJUQY8WbQ9jTJb
-	 SvMpThYu975n9CbGu9xsVjzimVxH/4xPqkGqZERSaBDTdWxBqItYMIgkIIPw4AcrjUthK
-	 5KFgTTQYU/V+bv6nwbCpL+ROsPPgvArsTqghCbpjQPr+yrXs3tpJETkWqPJF61/I3sw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WalPdExM;
-	arc=none smtp.remote-ip=209.85.221.170
-Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=DnTw02OnMjOZAuZ9GRe6dL799zVWgxYPWHjHUsZLswA=;
+	b=1m877nVRG08R6+uuuquJMUaKpLLs0rdZAqLnYje7MVddO5L9zrtwihYF3KiaG4BEF0jt
+	 YOdq9pjVnvFb4mJff66oE1mjo4WPl75djETlBulLmr18LzhY61FBZNfGflUoT4JMF7lut
+	 Qhz6YiKdKfVzY2lX61TBi3Hcvb9on8JPz2c/dk3lLF2cnz0qUE9NcjnodqhprraNRM7En
+	 pCxwqPz/R0rKWyoQM6eAH9k8nhfljcf9B8hOEijIVyjz6qQFBbCkivH+9GvEvAPH9tCk/
+	 N+3ClZNR8ejMZrXIxKQ78VFDzidaLzN6peBU+hTFbhw+ANZAJ/KGFOfNk3HB6M4Dyqg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=bairaktaris.de;
+	spf=pass smtp.mailfrom=bairaktaris.de;
+	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=ZFsn1i8X;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.171
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E5D606A33E
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:15:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6E5D606A33E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03746606A32A
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:22:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03746606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WalPdExM
-Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5eabf7d5bbeso3060167e0c.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 09:15:57 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=ZFsn1i8X
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-8ac4806e210so23502887b3.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 09:22:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792513328; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XkgUvsF8yNWYwzIwlLTz5qz0Za7CZAlX9ZAl2n2zwh48axYExuCgPhVv8C2mJnCNtc
+         UthxKPsfLskdMsHmH8B7L295USvIDj/HDFvjTT3KuWzm4yk4wnXzjrZQ+NtdlmtY4gzw
+         90WRqVViMof6PlmEd/SXzfTPGTOSYclDsVIy1copHgGsFQgEqxfqIrgnIFrIPXXv61ng
+         ecu3oeAbQi8Gjd+ZWSf5oJ/y2DFE5KA2PbM07MUBM6PHCA/Blu93KdzvTzIOcKKR7i08
+         dZJvKPHe8bYJu8pKBlMq43Zylcpt5dqR/8BIHTBN0YhbPM0Qum2DnzbDEEE52iyEg+PB
+         ryog==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=DnTw02OnMjOZAuZ9GRe6dL799zVWgxYPWHjHUsZLswA=;
+        fh=NF4kEi9o6vueZbdKAW8HeqgRdW9QkzGFr/G43wv1BFI=;
+        b=TW4/OMwq4bGLcvq0IwZVzzrTRAfJRDJYP21UfmeJZkQ/AW3R/8tvOZUapjDvs1mtO9
+         P3MQr2pj2bUDTpeLIjfAIz/1UArpiQ9vLCNy/EHz1eM6jZh9/ofAEGiZqkq1XTzg5cbf
+         JVvgjRMoOBHhFYGeDC28p583UzqbrwiW8o3BmOgwQlN1CcoJNNcz24VhlqxJ/0Chu4Rh
+         1EOxe/ScN208VO9kdEAdquBpmPDYGZ46uW04QdVlIAFqTNeR+ltPR/1tzkDDBF/KcqNX
+         Nesesn1VrvAXXZO6eDwkGgEC2jqyk+qiARAog2vucQ5rWeR1fQhsX7ZzIZVdZffXcwgy
+         teLQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792512957; x=1793117757; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
-        b=WalPdExM7lHlWsTDznBX0Fyl06synozvZt4SX10rtsmo96i+4x8Zp8kY38DMvDvoAG
-         MWRjRFWn53CppNgFs0ngLw/6OtF3BoAXiUFzYSZPYJOeocKSt0J7fT0g7iAEsz3JpsT+
-         2r4FZWHtl8viYqxcPox4gn8zszaNPUXtg0cae1c/0YoLHGZ4oqBiLqTfpX6o6379QUC2
-         WP+L4eOyj1WuN60IeQSfZEI6hp8231lcqW2QoGSAH8b6A8xrR9MXledPJRkNSasLjick
-         Lv7ltYgNOVEkIbRbhiijTH+RklXVrFsjuv2a1Mb0ImqW2oeKCM3+N7Mmzj4RsUbKdjdT
-         LZiA==
+        d=bairaktaris.de; s=google; t=1792513328; x=1793118128; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DnTw02OnMjOZAuZ9GRe6dL799zVWgxYPWHjHUsZLswA=;
+        b=ZFsn1i8XYS9aM7cbP84XG4HTWdW9gMacvbSziIeDCgFyuEhbhPcO4vVsgdZiMaspFH
+         c7HZ7BMGsRdWgmyqPWLKXjrqLvqRKocgWb21Ism2rkLhzApyfzE8GyjSmt3wDkBDOwr8
+         4Es2H9hPLdAutFqJFWkNEue5v7880yR9x9Gyro8+dfj79jg2wgHQIugQgjaQlRy4Fvja
+         p9setNF454n4e6QhXq4YLJy/fo3uVuIdqs7Tk1AbF+/o1zPEpXJUUsnrzCZ9YbmMpxRK
+         ZOX0D1OJ7E39hsnMDMVXMhIemrDD7WZHSMUGRi0wuZ2oPcFPGRXqqT3I1D0svDxOQelw
+         8C0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792512957; x=1793117757;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
-        b=GvMHoXq/ompXMdmziSPTDSHEPhE4iN3K+FE/Rfz0AslF9Otu7FNUrJ5P71ElqnHtum
-         Po9PhntUt6IQhpJQ07TxS2wRZiXunb+OhA4lTzGD5uHZiYNiKzOqHAqdYGYNUdpqt83w
-         2b7CjCOKcBg1Q9Ug6XNPHfpKVKhOqHkMiy6ADy/IFqkfjM+7cXsAFVKrKeshl+rdw5Vv
-         BLXwTUgp+RyjsH8iTug+H1cbxO6EyuKBjBbYvnf3bRPhLLMluCYRO6PhnYV797ypl3+7
-         AUzYCrXqukBjeBeYbMeY2xtxwkYPTrZxi+5FjPxlznIBu4sLp9ipA+VUKEVJLddp5pKu
-         eXlg==
-X-Forwarded-Encrypted: i=1; AKwUvBxPN81z2iQ5WD59bJ/OgXtTzZE01GdlSYXIo65wR66JhjMDItrf+iSH5gCt6fUY+MVhoxsWDwrl5JRl6Nqhxw==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLiRozzlZovdVh8HvD3B/Rf95mpHD5IeRV7XkpBsuxNYRWZ46Lt
-	PwOaMFJnQw0lTq1bf+ghFjczbp7k527NMYVw6lpXBxx96jOY9MIsvxLa
-X-Gm-Gg: AYBFou3SDKcc0QkAsPsM6MysRXs9uqsZKlAThrnTnx6319F4cyUzzCugdMC6+ABlPF1
-	w6EWeUKv2KOxEv7R/mwDf+6zZlXNA/v828qo0KkGQjtDxK1LoC8zByZrTYcGsnOUiJfMEezA7E4
-	/Wx/rxVPjAhc8pFXOhQd3AhE/WiFnZ8qpThl54SJv4cgRNE1SrAkB8JlTb1yKJx+VfZzXyBS2dt
-	EUyKif5lOsL37QlrB7I4Wl0AmidI6/bwhxS2e8+OWB5ClPMgqrxMeBsx8/sirnI/8/fY7mXCLQY
-	CMqywWTS1Hz1DWMa7fVwo1+qGcNU1GzP3WjVmbxvNs+5gDpLwBHS87ul2u9qw+msu2PW4EoW8KU
-	EY6sfgbAM1mvvtrG883nNA09N2kO53tS29vmK8sqQAMZUHPHjYZgMZyUx3aEtyVAiyeGqh10RH/
-	2ZsrA5hcVX/SOqNvggaPum6iNe2P/TnTQ9fVOeUg4vq4UTtjT0t8MkoxidtU23gMy4EjEGp6Bvy
-	AxVEODEWFbwmOp8vqJQ2kc4L5v8pQ/KyIAeQsbHUmbh7Q==
-X-Received: by 2002:a05:6122:4f97:b0:5ea:e197:93d9 with SMTP id 71dfb90a1353d-5eae19796f9mr498417e0c.19.1792512956788;
-        Tue, 20 Oct 2026 09:15:56 -0700 (PDT)
-Received: from localhost.localdomain ([190.177.181.23])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b518bc8sm12918381e0c.11.2026.10.20.09.15.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2026 09:15:56 -0700 (PDT)
-From: Cristian Papa <pcristian292@gmail.com>
-To: nbd@nbd.name
-Cc: lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	shayne.chen@mediatek.com,
-	sean.wang@mediatek.com,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: mt76: mt7603: discard power-save loopbacks after wakeup
-Date: Tue, 20 Oct 2026 13:15:45 -0300
-Message-ID: <20261020161545.9330-1-pcristian292@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <6e7358fe-4070-4a88-b8da-77e2f9e9bdf8@nbd.name>
-References: <6e7358fe-4070-4a88-b8da-77e2f9e9bdf8@nbd.name>
+        d=1e100.net; s=20260707; t=1792513328; x=1793118128;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=DnTw02OnMjOZAuZ9GRe6dL799zVWgxYPWHjHUsZLswA=;
+        b=x+NwPtVpEjxwi/7BN/21m8AXNC/6f4h5IoqzYzf94fRBddChc8I3AD1WTv6n71Aqe9
+         1BGTwIgQUt93IvzOj53r6A7dk2bZkvIGf6cAyOOpYomxcJkXzG1gZ1wFGSQ/87mbi75A
+         1Si6RVfl7wnadQrdnkVQVUgaYloI55PKUNHhpoREt2F7vGLvw+kP9I70fgus7YS5MAUQ
+         mqDSC8VqnxEBvnNpUw7PEqzJZVLGo+RjNs0qt8UZ/udEqI6+R358XKihvYHHQBCIdqjA
+         tbV6bPqgIgN6UdC8t38a3uTN8TM717Bz5kNMvMG/vbJ8lR99YiALdxK1CWwpitGpOufX
+         zZzQ==
+X-Forwarded-Encrypted: i=1; AKwUvBykwaqCJ32P2SRRUXY0DMzU3/YRenboH4r790d0Abp1mldu9MT/Uq6K8EL88ejieLx92A4jM0Iox9Da3laPjA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJxPZbEAReI8Ju86Fs3mWr4P4wcqb0xV4NU4lukzLFKHjl2nnXP
+	pc/FnHvno5CZXjzTmrhLnCQtViVYjxxXK4XnzKlNWk6L0/DyQ9MXZyMK2djS4Nq3dfjMbo4LGQk
+	naIPRaA26Fe9NCN/DNlk7Ta8yaZwzZ3xKpw0G/u/A
+X-Gm-Gg: AYBFou1ZEmk+ExzdTFmkLLRFJcHR/iMmop5CFf9A/XVmV0PZ5S/5xe9K/OdYnmMbDXD
+	FpR+DBwzptphbu0VDNO1RNMxJOmzhASh/kWqlJvdQkXzxUQIoefFgKntzGqRzjPdmcuGUrLWyXy
+	WqU2lj2hluynxlzJbF9pDlRuH4K3TTvF6yN9CpPq2TAMK+zBA0Wub4mrAW1uD2RHMU1Kkg8m8bS
+	8mwdAoB9AYQX3JXUWAo2tEcxpheHl/vZNodO8lhzAAShloUPtmiK7CI/ckRu88z16Ji4heHjp0c
+	KPtQ0xZr7SRuAlcXAEixBecX73qT6vRNK5S/Juy+09nsY/yPQ0cxIaPVExQATY1nnn6sivMkKN0
+	tc+plcVcsMpwYryZ4CYMPgGz9iRBm/ibzdWDloUH9SpOKma+cYWITW1GrPDRfbz2/Aaeu1wo66p
+	7B8JLd/e+Mh1GjE18BFEr2jEISkuviEPM36uVM7fd0yid6x4kZn8t4XZg48yR39if6X/M1FpKdG
+	7PbIFLlFxRDnrKsaOE1Q4bO/cr6in9P/GNkZLfIZ+dLg97LNXHG0fPRpA==
+X-Received: by 2002:a05:690c:298:b0:8b0:cfe6:29c5 with SMTP id
+ 00721157ae682-8b0f2189609mr42132047b3.37.1792513323232; Tue, 20 Oct 2026
+ 09:22:03 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,34 +105,21 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20261018131930.1116724-1-julius@bairaktaris.de> <20261020160831.2133912-1-jtornosm@redhat.com>
+In-Reply-To: <20261020160831.2133912-1-jtornosm@redhat.com>
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Date: Tue, 20 Oct 2026 16:21:27 +0000
+X-Gm-Features: AclHuK-kc3kyc5GKqkjHU7MJ9W5xa_vMhwo9wWG2suT1Jp0haBr3CNyjEmQ0QHc
+Message-ID: <CAC1t37JurQdWm7+kvBRuAafTY88DudtmG_Y=oLp1zk6FKxSkBQ@mail.gmail.com>
+Subject: Re: [PATCH v7 0/4] ath11k/ath12k: implement TX flow control
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
+	baochen.qiang@oss.qualcomm.com, hujy652@gmail.com, 
+	jeff.johnson@oss.qualcomm.com, jjohnson@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	tamizh.raja@oss.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 20.10.26 11:48, Felix Fietkau wrote:
-> On 14.10.26 08:22, Cristian Papa wrote:
->> Discard late frames rather than retransmitting their old sequence and
->> packet numbers after newer traffic or a wakeup BAR. This loses the late
->> frame; it does not recover delivery. Use the station's sleep state, not
->> the temporary hardware PS bypass used during U-APSD service periods.
-> Why did you decide to drop them instead of pushing them to immediate tx?
+Sounds good. Looking forward to it.
 
-Hi Felix, thanks for looking at it.
-
-Because the looped-back frame keeps the TXD it was first queued with.
-mt7603_mac_write_txwi() puts the 802.11 sequence number in the TXD with
-SN_VALID, and with a hardware key it also takes the PN from key->tx_pn at
-that point. mt7603_rx_loopback_skb() only rewrites Q_IDX, so a late frame
-pushed to immediate TX would go out with its original SN and PN.
-
-On wakeup, mt7603_sta_ps() sends the psq ahead of the newer traffic, so
-the order holds there. A loopback that arrives after that drain is older
-than frames that may already have gone out with newer SN/PN. With CCMP the
-peer's replay check would drop it, in an aggregation session it can fall
-behind the window after the newer frames or the BAR, and on an open link
-it would arrive out of order. So I expected immediate TX to mostly spend
-airtime on a frame the peer discards.
-
-I haven't measured how late these loopbacks arrive, though. One that
-arrives before the newer frames go out would still be delivered in order.
-If you'd rather push them to immediate TX, I can send a v2 that does that.
-
-Cristian
+Julius
