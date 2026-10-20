@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792464606;
-	b=Evoi70ibsx1IA+Kt5CjMEV4272HhBielBdC2KwAseUpsJZJH10LleDYiMtGpld9xd6JH
-	 Kn2RD2kg3aGngzW9UWOMIusopkHvSi2V19xowDYks9mU/sfDtaB+WnGhTOz1LIT4fAFv5
-	 MkL26DC3anQKk4rGBfBRLn9w48V1uYXKOjG1WCVSwgQsmvKhyDdYwo7R4wMsmUxE8cgJV
-	 1gqPX60kVfk29BIHC6XIjmOUksLsve/r1a4LOolm5AWmmbCJk6Vbde4b1X8EI5a1fuRlD
-	 oZPleSAmyMGQkopNj72nkiGF3K4/QDB0lHQDv7ZQ2mpgb/Jjg+gD6UCu9sdPwmX67zQ==
+	t=1792464610;
+	b=J1pbQVbzzIcMBWPmmOhV+r/GIoHW164UiTojgrtqHt9ukM1Vedxqb32l7rEGqy0Sm4ll
+	 ZxrCZX4xOviuPSbTJj1/pt8vmrp7/HiMOkklPsZIwYlrHtccegKKfPccf8XZlYIidCLcs
+	 QYG5eZruDJ657QRRKCIPtjKtuF306Ed0B5asBCdKSfxNsddagbajQDWvS+SFfebA87Y0o
+	 uAJkG6qOWXM5B9W79XckO2hG+fwu2uEVJ9WaSdRpOegxVIlY/FjeWdef4SZt7f1yvvCE0
+	 ZYVbEQm/d79v1zXxG+mziFDq2TUY9mOroQ7ysQtxlGcSac8bWcxv9dcy5DoDandm02A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792464606;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792464610;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=7ASGar675lziP9Lhne+zcfjAyNbEwAZOOXLcfTSeQQE=;
-	b=Rsr9oq9HTTovUK2U1RI8iE5Y/CfOGuPSgSYyaYG5/yJYJRI5MM1IKSyt6Lgmi5vQaHM5
-	 ouKGVYqgN/iLSvZrPdi2+qoNW5b2c+5a3m8PI4MFZ3gacRHYCuCZq05oBkvdm2cD5czTZ
-	 jxbGTXKZplRrKR590wd7ROwSrO0FnZrfynqUe671k6H+nivuF/o8ZuRf34VmSpRiy6Xby
-	 AmBux20d7g+ZK+7UQMSNfbZLiSgUo+8DjvSF6degO83VNcXYGziqY20MCQbVQd59AYrJJ
-	 KkiiSBaE7KEfbZsjDvvG9XXaB0RUNJeb+/uKgQvnNFuJIiQbyXdx5XkuXjHBlKvIDeg==
+	bh=qSqZs6kvQ73jpKV//X6SsqeslDJs9OL8i3dqvINNPv8=;
+	b=CEMyVBPJjtDwDNDIIlpCnXl0mz9jOXuGq5Pb7Vpx4PlWTHJ+a2YSXVZD5eMGh3ojjcLl
+	 u/obrvi4NKQvylU8p5hESWMLtY6iZOTfG7LO/frkmnm0v4iiEmSyjgm/3XAD3QadNQMFR
+	 cyrIqer8XWvXMUaOjSUusPh82NvRVqaoIr8aTlgkr4Z4NCxaY19p04WCy2JjieyKHeURT
+	 3B5g7MT0sPQH/r2RWVnSZtJQHek7uJ7QxilPEJr7D7WU7odnap4aIsNFRTsboxdNc1nFK
+	 cXMsUWUwMcxINiYXrVGoEelC+Pj5erbj5q9aVO6qOuqJX3DpcHXHuflvNYfmipTJVzQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=VX7JUUPE;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="Cr+WWcS/";
+	arc=none smtp.remote-ip=220.197.31.5
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75B3606A31A;
-	Tue, 20 Oct 2026 02:50:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C75B3606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2525C606A334;
+	Tue, 20 Oct 2026 02:50:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2525C606A334
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=VX7JUUPE
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Cr+WWcS/
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7A
-	SGar675lziP9Lhne+zcfjAyNbEwAZOOXLcfTSeQQE=; b=VX7JUUPE9xnLdJKjsX
-	LI090qXDvHxi4ugkSicQnypg6OEDAibZAdFmluCovYljojP5Rop+Kw07mhwKJ66h
-	fmoHy3/Bj6a/mGElxinKTB8Y7/1ALeZFBUivAcSlMzjXhvlQKA9ukRAyKrgmZn+p
-	JhHQrtNQflIr9mMijevkbDFQc=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=qS
+	qZs6kvQ73jpKV//X6SsqeslDJs9OL8i3dqvINNPv8=; b=Cr+WWcS/vDlwgfM9TA
+	zmmFWxnFaSAEYN63MwVeOVcDhXvfSNnGubjHlrqRnHSnNrO1vfOkIRVSERO0ttAo
+	WuK8zUU5xV1iiA3Rqfk9s4fpu3Lb5lyImNu3vk8JMpjAz42X/hnh/ljCme2SJOO3
+	eq+WG1WycGCfdg+MHkLKxM+FY=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnr8C+1tZqMLhIBA--.5123S4;
-	Tue, 20 Oct 2026 10:49:39 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnr8C+1tZqMLhIBA--.5123S8;
+	Tue, 20 Oct 2026 10:49:44 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -52,14 +52,13 @@ To: Felix Fietkau <nbd@nbd.name>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
 	Howard Hsu <howard-yh.hsu@mediatek.com>,
-	MeiChia Chiu <meichia.chiu@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH 2/7] wifi: mt76: mt7996: bound IE countdown event parsing
-Date: Tue, 20 Oct 2026 10:49:28 +0800
-Message-Id: <20261020024933.3205681-3-yaojiale02@163.com>
+Subject: [PATCH 6/7] wifi: mt76: mt7996: validate temperature response length
+Date: Tue, 20 Oct 2026 10:49:32 +0800
+Message-Id: <20261020024933.3205681-7-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261020024933.3205681-1-yaojiale02@163.com>
 References: <20261020024933.3205681-1-yaojiale02@163.com>
@@ -73,99 +72,39 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnr8C+1tZqMLhIBA--.5123S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr15Xw1fZr1DXryUurWUtwb_yoW5CrWrpa
-	4j9a4Fq3ykAr4UWr18ArWvyay5twn5K3Way3yvyws0qFn2kr1kJF48XFyjvr4Yka43uw17
-	Xr1j9wnrCFn5Zr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U_UUbUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wM2cGrW1sOS6gAA37
+X-CM-TRANSID:_____wDnr8C+1tZqMLhIBA--.5123S8
+X-Coremail-Antispam: 1Uf129KBjvdXoW7Xw4rAFW3AF48uryDAr1fJFb_yoWDZFg_uw
+	na9FnxJr18Kw4UKr42kwsrCryakay8u3Z5C3yrt3yfJay7JFW7ur93Zrn3GrZ2k3Z29F1D
+	Grn8Za47Za43ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUbG-e7UUUUU==
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzgg4cmrW1sildwAA38
 
-The IE countdown handler reads its fixed header before checking the skb
-length. Its TLV loop also accepts lengths smaller than the TLV header or
-larger than the remaining data and reads the event payload unchecked.
+The temperature query reads a fixed firmware event without checking the
+response length. A truncated response can cause an out-of-bounds read.
 
-Validate the fixed fields and constrain every TLV and known countdown
-payload to the response buffer.
+Require the complete thermal event before accessing its temperature.
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Fixes: 6879b2e94172 ("wifi: mt76: mt7996: add thermal sensor device support")
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 38 ++++++++++++++-----
- 1 file changed, 28 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index d661ff1e4a20..1f7af6359dd7 100644
+index 5391666553d9..d87851c5fc1d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -489,12 +489,20 @@ mt7996_mcu_ie_countdown(struct mt7996_dev *dev, struct sk_buff *skb)
- 		u8 band;
- 		u8 rsv[3];
- 	};
--	struct mt7996_mcu_rxd *rxd = (struct mt7996_mcu_rxd *)skb->data;
--	const char *data = (char *)&rxd[1], *tail;
--	struct header *hdr = (struct header *)data;
--	struct tlv *tlv = (struct tlv *)(data + 4);
-+	struct mt7996_mcu_rxd *rxd;
-+	const char *data, *tail;
-+	struct header *hdr;
-+	struct tlv *tlv;
- 	struct mt7996_mcu_countdown_notify *event;
- 	struct mt7996_mcu_countdown_data cdata;
-+	u16 tlv_len;
-+
-+	if (skb->len < sizeof(*rxd) + sizeof(*hdr))
-+		return;
-+
-+	rxd = (struct mt7996_mcu_rxd *)skb->data;
-+	data = (char *)&rxd[1];
-+	hdr = (struct header *)data;
+@@ -4702,6 +4702,10 @@ int mt7996_mcu_get_temperature(struct mt7996_phy *phy)
+ 					&req, sizeof(req), true, &skb);
+ 	if (ret)
+ 		return ret;
++	if (skb->len < sizeof(*res)) {
++		dev_kfree_skb(skb);
++		return -EINVAL;
++	}
  
- 	if (hdr->band >= ARRAY_SIZE(dev->mt76.phys))
- 		return;
-@@ -505,18 +513,29 @@ mt7996_mcu_ie_countdown(struct mt7996_dev *dev, struct sk_buff *skb)
- 
- 	tail = skb->data + skb->len;
- 	data += sizeof(*hdr);
--	while (data + sizeof(*tlv) < tail && le16_to_cpu(tlv->len)) {
--		event = (struct mt7996_mcu_countdown_notify *)tlv->data;
--
--		cdata.omac_idx = event->omac_idx;
-+	while (tail - data >= sizeof(*tlv)) {
-+		tlv = (struct tlv *)data;
-+		tlv_len = le16_to_cpu(tlv->len);
-+		if (tlv_len < sizeof(*tlv) || tlv_len > tail - data)
-+			return;
- 
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case UNI_EVENT_IE_COUNTDOWN_CSA:
-+			if (tlv_len < sizeof(*tlv) + sizeof(*event))
-+				return;
-+
-+			event = (struct mt7996_mcu_countdown_notify *)tlv->data;
-+			cdata.omac_idx = event->omac_idx;
- 			ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
- 					IEEE80211_IFACE_ITER_RESUME_ALL,
- 					mt7996_mcu_csa_finish, &cdata);
- 			break;
- 		case UNI_EVENT_IE_COUNTDOWN_BCC:
-+			if (tlv_len < sizeof(*tlv) + sizeof(*event))
-+				return;
-+
-+			event = (struct mt7996_mcu_countdown_notify *)tlv->data;
-+			cdata.omac_idx = event->omac_idx;
- 			ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
- 					IEEE80211_IFACE_ITER_RESUME_ALL,
- 					mt7996_mcu_cca_finish, &cdata);
-@@ -525,8 +544,7 @@ mt7996_mcu_ie_countdown(struct mt7996_dev *dev, struct sk_buff *skb)
- 			break;
- 		}
- 
--		data += le16_to_cpu(tlv->len);
--		tlv = (struct tlv *)data;
-+		data += tlv_len;
- 	}
- }
- 
+ 	res = (void *)skb->data;
+ 	temp = le32_to_cpu(res->temperature);
 -- 
 2.34.1
 
