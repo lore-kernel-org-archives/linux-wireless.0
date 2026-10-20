@@ -1,52 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792471427;
-	b=4E13rR/dl51mUyNaRvM50YFgUXPTx6dgyUP5QJQaPwHU/HIbS5Dc9z1ukyOcqArisylw
-	 hcDFvI9X+LzIpRvojXSL7DPKLGq0ZuWx3RycPCyEp6bL6y5g40kAPJePtdzf2BZWhFA98
-	 XOixWRSIvRHtY49INAIee3Hyj3eFH4N4f/OrRAMObUf1886Q64qFMj9FfgtUlX8A4bwqS
-	 pbzkpmF4M6xcRa6HQAWld+NIcuPeDCPOgivS+CnggwonBnmc591XFTscRz6YtjmZUZU8t
-	 L5GGV236AIs51yqhq+4gnR8ltGDbB72yCcZ81rL9lkpVSwHPH+yy88t0zxbLSTh0cvA==
+	t=1792474159;
+	b=cTQLOfe3/Gb5sz0RwIUEZihjn6x8NpxQK1qlojPZpxg1lA2AHC4bEa/3UlorxJwlY48S
+	 AHiDlzXKy9m4mdhdRroqJwj8Z0szCj8xvMtCPcNJFi9WXC3479HWMhQJAeCLe7iWYWGPR
+	 0/4ovypP5tgH+IbdNBq4W9edLpZY5WiUWaO4eOC+Mkt5wKP+fAtwBLqHOE2cHo6gGbn+R
+	 eS6pHrP+yg/LB5hq+0Ms56piE9bRD3t51AQAskUmnj3S1uTUi2R//tc/lbwRn5Q0Rzs/P
+	 zyawo5SOURZ+cFsOCe1EBCc72GZ1HzJObM4r0atzCgGICsW/G/oZjEaf9ZcEiXNZlkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792471427;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=TftrrPNtsyBwyu6P4BuDulXkrmUzNiS7FTTDkxdm9u4=;
-	b=PR7RkC9inOzAYz67QGUulll7g2XsvFeoxRuyIBkLJJZszxqhJyoCMnqkE2olEE7ADAoi
-	 66PTQpP+tqA50/Aei9fM1H0EBS14by7PbLpVNjPPNhjCCaiX5DAnZ+EO5UNArAMHyEWox
-	 rZZhXmnMrA14iuOPpsYgy9KoDzASCWvmSpWiVfixzIlb890Tyx95HzR1hda0Rzha78eZl
-	 N1Brm6Ju3N5d4rSMc6kNbCM1zpOH4oYX63jSYVqs8W39i/cgDiFZmKGHlTZDHXzealGBb
-	 kn3EguvXHqNIPy+sARAGPhrhZUR+utsNrxNZahGvGldV87GSxwLryJ7vQGNoRKzo1NA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792474159;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=0Ub+UudVZh6+Pop1X2tCnVJRsbTR40D/96nuKlIS9ls=;
+	b=lShF+xIO/qEIqy3VM8XjiTcdesiQwGNkIL6RAEmDFYkt9Qs+Ams67DWGtnQdBNusqHsr
+	 er5MI1qySR6AO1ARWnK57Sgo5psJd2AputMD35i8XEPOfw55DBflqd2Db7USjijWXcGOc
+	 gzR5JCCGEDPXfwyjcYy14pvEn8WykP8HFEbWKUz/4WQJJzoLyfDLYDCcg9m1bXWi9YPn+
+	 N4g1eotP3ziaNb9u2oj/7MwhJ0wW1Q8KN9AMvrdayg115eXn676vq/A8d/+ieRIdjfpJB
+	 PSIgcxvlImEw207Kvenbxo9Twj4zWTTwKnwTyeLxTre7pBkqozenRTbNAOuudWduxfg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CC8iYWGT;
-	arc=none smtp.remote-ip=95.215.58.35
-Received: from mta1.migadu.com (out-35.mta1.migadu.com [95.215.58.35])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=r0D7+zxQ;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B4B606A31A
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 04:43:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41B4B606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C630606A319;
+	Tue, 20 Oct 2026 05:29:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C630606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CC8iYWGT
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=dC7VvThPiocukbh7F9YYC7tvYdPI1VO2U/KFB7y+I0c=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792471422; v=1; x=1793076222;
- b=CC8iYWGTEZHJuaXzGSPaexyEz3uudLE53kxfFS+2LWFS8cY8mDDBnjJSnPKyRND3Kvjny9cV
- HhUOconMknDSG+EmPp2p9y0ZpRKJMEYVy1wJRaKdR2MSwGo3pTX1OuqzQPwdfXw0jdtqm3Ublj3
- rWcPoMwzmVFysyv+KRwm44ag=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 398ce5b28278dd5a;
-	Tue, 20 Oct 2026 04:43:42 +0000
-X-Mizu-Trace-ID: 398ce5b28278dd5a
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=r0D7+zxQ
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69K5T7nmC2667120, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1792474147; bh=0Ub+UudVZh6+Pop1X2tCnVJRsbTR40D/96nuKlIS9ls=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=r0D7+zxQ8iUtOg635DZQr2pwExg333apx1YY9BvvMdR3vJMra8K3IyHpjzmsKW9dj
+	 iLtcsn/Vt/LMGdug1K3JKHS61HRcWxxsqkSns0FpWlyDRZJEE7TT0tmZp2Wdf+q2DJ
+	 TtV7x7E/N6VS3MaJ9k+lwHUSLYEgmtSFVImc1ex/dPHvGeimI1hMqpzU1FOwDKHfn5
+	 F8/TCqaQMfx3Xmgor7fMklwwPNSJ1UOCvXIA9N69VJiINdQBFhPBY7BTqWqKDzV+L9
+	 awWe1ZabVymJN7619b7NDxcmIbLkIEmeaXxQSzSUJFnYDUU87WMvew2aCX9mZmag6F
+	 OY1K19HnjGFnQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69K5T7nmC2667120
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 20 Oct 2026 13:29:07 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 20 Oct 2026 13:29:07 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Tue, 20 Oct 2026 13:29:07 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>, Hungyu Lin <dennylin0707@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"reza1234khan1234@gmail.com" <reza1234khan1234@gmail.com>
+Subject: RE: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
+Thread-Topic: [PATCH] wifi: rtw88: allow key removal when the CAM table is
+ full
+Thread-Index: AQHdX+uKpKj5AeqD60mYtFtK4iFuvbcFrrNw//+mgICAAJDAYA==
+Date: Tue, 20 Oct 2026 05:29:07 +0000
+Message-ID: <4f48c50cab1145fd9dbd6df6d424c877@realtek.com>
+References: <20261019165103.5990-1-dennylin0707@gmail.com>
+ <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
+ <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev>
+In-Reply-To: <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,74 +84,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Tue, 20 Oct 2026 04:43:39 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is
- full
-To: "Ping-Ke Shih" <pkshih@realtek.com>, "Hungyu Lin"
- <dennylin0707@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- reza1234khan1234@gmail.com
-In-Reply-To: <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
-References: <20261019165103.5990-1-dennylin0707@gmail.com>
- <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
 
-Hi Ping-Ke,
-
-October 20, 2026 at 4:07 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrote:
-
->=20
->=20Hungyu Lin <dennylin0707@gmail.com> wrote:
->=20
->=20>=20
->=20> rtw_ops_set_key() looks for a free CAM entry before checking the
-> >  command. When all pairwise entries are in use, DISABLE_KEY returns
-> >  -ENOSPC without clearing the existing entry.
-> >=20
->=20Is this the actual case you met?
->=20
-
-From=20my investigation it seems reachable.
-
-As far as I undersrand, it needs all 28 pairwise entries (4-31) in
-use at once, so AP mode with 28 secured stations (31 mac_ids are
-left after the AP vif), or IBSS/TDLS with as many peers. Not
-reachable as a plain client. Once it is hit its pairwise
-DISABLE_KEY fails, mac80211 frees the key anyway after logging
-"failed to remove key", the cam_map bit is never cleared, and the
-table stays full until the driver is reloaded.
-
-I think it can be tested with two clients by temporarily setting
-sec.total_cam_num =3D 6.
-
-> >=20
->=20> Move the allocation and bounds check into SET_KEY. DISABLE_KEY uses
-> >  the existing key->hw_key_idx.
-> >=20=20
->=20>  Fixes: 10d58823cb44 ("wifi: rtw88: fix out-of-bounds CAM write whe=
-n key table is full")
-> >=20
->=20Should it be ?
->=20
->=20Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
->=20
-
-I=20think 10d58823cb44 is the right tag. In e3037485c68e the check was
-
-      if (hw_key_idx > sec->total_cam_num) {
-
-and rtw_sec_get_free_cam() returns at most RTW_MAX_SEC_CAM_NUM (32),
-which equals total_cam_num, so the check never fired and DISABLE_KEY
-always reached rtw_sec_clear_cam(). The bug there was the
-out-of-bounds SET_KEY, which 10d58823cb44 fixed. DISABLE_KEY only
-started failing once the check became ">=3D". This patch also does not
-apply without 10d58823cb44, since its context has the ">=3D". Since
-10d58823cb44 is tagged for stable, I think this one should carry
-Cc: stable@vger.kernel.org too.
-
-Best regards,
-Luka Gejak
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBIaSBQaW5nLUtlLA0K
+PiANCj4gT2N0b2JlciAyMCwgMjAyNiBhdCA0OjA3IEFNLCAiUGluZy1LZSBTaGloIiA8cGtzaGlo
+QHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gDQo+ID4NCj4gPiBIdW5neXUgTGluIDxkZW5ueWxpbjA3
+MDdAZ21haWwuY29tPiB3cm90ZToNCj4gPg0KPiA+ID4NCj4gPiA+IHJ0d19vcHNfc2V0X2tleSgp
+IGxvb2tzIGZvciBhIGZyZWUgQ0FNIGVudHJ5IGJlZm9yZSBjaGVja2luZyB0aGUNCj4gPiA+ICBj
+b21tYW5kLiBXaGVuIGFsbCBwYWlyd2lzZSBlbnRyaWVzIGFyZSBpbiB1c2UsIERJU0FCTEVfS0VZ
+IHJldHVybnMNCj4gPiA+ICAtRU5PU1BDIHdpdGhvdXQgY2xlYXJpbmcgdGhlIGV4aXN0aW5nIGVu
+dHJ5Lg0KPiA+ID4NCj4gPiBJcyB0aGlzIHRoZSBhY3R1YWwgY2FzZSB5b3UgbWV0Pw0KPiA+DQo+
+IA0KPiBGcm9tIG15IGludmVzdGlnYXRpb24gaXQgc2VlbXMgcmVhY2hhYmxlLg0KDQpJIGtuZXcu
+IEkganVzdCB3YW50IHRvIGtub3cgaWYgcGVvcGxlIGVuY291bnRlcmVkIHRoZSBwcm9ibGVtLCBv
+ciANCmZvdW5kIGFuZCBmaXhlZCB0aGlzIGJ5IHJldmlld2luZy4gDQoNCj4gDQo+IEFzIGZhciBh
+cyBJIHVuZGVyc3JhbmQsIGl0IG5lZWRzIGFsbCAyOCBwYWlyd2lzZSBlbnRyaWVzICg0LTMxKSBp
+bg0KPiB1c2UgYXQgb25jZSwgc28gQVAgbW9kZSB3aXRoIDI4IHNlY3VyZWQgc3RhdGlvbnMgKDMx
+IG1hY19pZHMgYXJlDQo+IGxlZnQgYWZ0ZXIgdGhlIEFQIHZpZiksIG9yIElCU1MvVERMUyB3aXRo
+IGFzIG1hbnkgcGVlcnMuIE5vdA0KPiByZWFjaGFibGUgYXMgYSBwbGFpbiBjbGllbnQuIE9uY2Ug
+aXQgaXMgaGl0IGl0cyBwYWlyd2lzZQ0KPiBESVNBQkxFX0tFWSBmYWlscywgbWFjODAyMTEgZnJl
+ZXMgdGhlIGtleSBhbnl3YXkgYWZ0ZXIgbG9nZ2luZw0KPiAiZmFpbGVkIHRvIHJlbW92ZSBrZXki
+LCB0aGUgY2FtX21hcCBiaXQgaXMgbmV2ZXIgY2xlYXJlZCwgYW5kIHRoZQ0KPiB0YWJsZSBzdGF5
+cyBmdWxsIHVudGlsIHRoZSBkcml2ZXIgaXMgcmVsb2FkZWQuDQo+IA0KPiBJIHRoaW5rIGl0IGNh
+biBiZSB0ZXN0ZWQgd2l0aCB0d28gY2xpZW50cyBieSB0ZW1wb3JhcmlseSBzZXR0aW5nDQo+IHNl
+Yy50b3RhbF9jYW1fbnVtID0gNi4NCj4gDQo+ID4gPg0KPiA+ID4gTW92ZSB0aGUgYWxsb2NhdGlv
+biBhbmQgYm91bmRzIGNoZWNrIGludG8gU0VUX0tFWS4gRElTQUJMRV9LRVkgdXNlcw0KPiA+ID4g
+IHRoZSBleGlzdGluZyBrZXktPmh3X2tleV9pZHguDQo+ID4gPg0KPiA+ID4gIEZpeGVzOiAxMGQ1
+ODgyM2NiNDQgKCJ3aWZpOiBydHc4ODogZml4IG91dC1vZi1ib3VuZHMgQ0FNIHdyaXRlIHdoZW4g
+a2V5IHRhYmxlIGlzIGZ1bGwiKQ0KPiA+ID4NCj4gPiBTaG91bGQgaXQgYmUgPw0KPiA+DQo+ID4g
+Rml4ZXM6IGUzMDM3NDg1YzY4ZSAoInJ0dzg4OiBuZXcgUmVhbHRlayA4MDIuMTFhYyBkcml2ZXIi
+KQ0KPiA+DQo+IA0KPiBJIHRoaW5rIDEwZDU4ODIzY2I0NCBpcyB0aGUgcmlnaHQgdGFnLiBJbiBl
+MzAzNzQ4NWM2OGUgdGhlIGNoZWNrIHdhcw0KPiANCj4gICAgICAgaWYgKGh3X2tleV9pZHggPiBz
+ZWMtPnRvdGFsX2NhbV9udW0pIHsNCj4gDQo+IGFuZCBydHdfc2VjX2dldF9mcmVlX2NhbSgpIHJl
+dHVybnMgYXQgbW9zdCBSVFdfTUFYX1NFQ19DQU1fTlVNICgzMiksDQo+IHdoaWNoIGVxdWFscyB0
+b3RhbF9jYW1fbnVtLCBzbyB0aGUgY2hlY2sgbmV2ZXIgZmlyZWQgYW5kIERJU0FCTEVfS0VZDQo+
+IGFsd2F5cyByZWFjaGVkIHJ0d19zZWNfY2xlYXJfY2FtKCkuIFRoZSBidWcgdGhlcmUgd2FzIHRo
+ZQ0KPiBvdXQtb2YtYm91bmRzIFNFVF9LRVksIHdoaWNoIDEwZDU4ODIzY2I0NCBmaXhlZC4gRElT
+QUJMRV9LRVkgb25seQ0KPiBzdGFydGVkIGZhaWxpbmcgb25jZSB0aGUgY2hlY2sgYmVjYW1lICI+
+PSIuIFRoaXMgcGF0Y2ggYWxzbyBkb2VzIG5vdA0KPiBhcHBseSB3aXRob3V0IDEwZDU4ODIzY2I0
+NCwgc2luY2UgaXRzIGNvbnRleHQgaGFzIHRoZSAiPj0iLg0KDQpJIGZlZWwgdGhlIGluaXRpYWwg
+Y29tbWl0IGUzMDM3NDg1YzY4ZSBjb250YWluaW5nIHR3byBidWdzLiBPbmUgaXMgDQptaXNzaW5n
+IHRvIGNoZWNrIHByb3BlciBib3VuZGFyeSwgYW5kIHRoZSBvdGhlciBpcyB0aGlzIG9uZS4gDQoN
+CldpdGhvdXQgZTMwMzc0ODVjNjhlLCBpdCB3aWxsIG91dC1vZi1ib3VuZHMgU0VUX0tFWSwgYW5k
+IHRoZW4NCml0IGlzIHBvc3NpYmxlIHRvIERJU0FCTEVfS0VZIGZhaWwgKGF0IHdyb25nIGJvdW5k
+YXJ5KSwgbm8/DQoNClBpbmctS2UNCg0KDQo=
