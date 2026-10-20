@@ -1,59 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.225
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=84.42.129.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792523763;
-	b=mvVscuExQ/hTBF/z2ADZcVlwEGJVHPo5Wh8DDd/kvGgaIYrdOwcEcEnbvW/ZeavgETrj
-	 gVJ4juYrQlCy1e7IIp2IO0WDA2H26b7PgFNU6O8mPoWDqqKcSEwdObMcy7Tzo1H6AHaUN
-	 UEbDz62REQOHH1pU1hU7pwxcog9tse8uAYTnecEN2pIpOonHmXH+6klobtlp/dBhugF99
-	 VZP9mYG8KS4zFs44DFrJOTpv43EdVX2FYiBZOJRiD1r7QT4/fw7C5aQD0TkCyA9Q50/1w
-	 /bNrgdjmhjv6DfwPv40zBIHR3vI1Uae5Z5tKnO3J7sD4fe753AlbRFVZDuj3XDJYocQ==
+	t=1792525114;
+	b=CkPCySlKUddLxcE8CYq9Z7owuYcPJF/i/8xpVIl8TbY+XSrTOIHNpc2mqih2LGOOkl1r
+	 OFNUSS/vk5HqY9GEBWOzSnJ2uZ4G0QbkJ6ot/BT4kwDxCGCTfUCcfceL8bdWy8DEHNzgk
+	 DH4SBkyNBPJF6IVwEGVZTCjETq4bQYnzs/tKh8tQoRMQ/OPty2pd7TKhFAgahIiD4JLJi
+	 oSOAwyYsorsg5kw8MEMmyT2rO65CZ+fT9qaA7zRvojC9SsVYk6qdg4YpsHZopuh79t8r4
+	 0+loOtuq+SOLBgybgn30YWGUEzoyWhWni1JOm+0Eo5r2YUIES2T69j0g+1HVn2pRs7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792523763;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=rUBxrQOgUlEswmxtd++Iy4KjUau7aWkHYzp/PeXcZ3g=;
-	b=REjZEdo505gXeuIiACs1ysEw2prjqpl2yIJz3m1upzkGP2kyK40cqARZZyB7HYGiiqWZ
-	 WFPCdRKY7/0BuTCaSM9Vt0Gp/BNUpTVDT6HKHKPygXLBBkp7eqeP49rtUX9dhQSFBWiBa
-	 Zoxvly2ovLDWI1KiMItJX8B1cGHIrBpqGDeY8yEo14A3U8/iMnwsLzQAOyRc03cgOh2vZ
-	 HG3E5ddYmVbMQbHvsTSjAs0khsaiCMAUOwiBZESbfSLAbQ02rsQ55yuy9AMsRvvHEqr3y
-	 Sdx16zaQYPQg2MotX1UouPl8NVyzThHqBXow7P8qu3PEPimAyg1oEaMuQGPgdCFQj4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792525114;
+	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=y3oc0N552fH43ATGj4dRhIJ5VZELJgPpuDPjWuSNw44=;
+	b=RKTp5OH1SGXxV8Hs7FsgJfMBYVTXnd68D6n6AKAaNxplsKHOICixNkowi3UcGuMe8eoj
+	 Ok+/I3+I0VabQ1TBOg/yp29VO7EBSZplNrrWN1FbzLmXP5hPi5Z/Z9oBKaCAci9DyJ+TC
+	 gaGELKtgOG4HzVQ1x6SkaIpdVwTwjv1fyNuoE2wuSvfxNN+qT7jWz0ILCNKMLlebyRdQY
+	 NKR2jD4Vp8CBUqbwA90/MqPPZg6jHNoM5OmwOLdsccpxVo4z4finDcOJPUFjVL3P/1+hR
+	 XtJj1FgAF9LOlktDevbb0mWepPf/nDaPEnT201W0odTPF+joADDQY0RtOld4EOYIO3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="aY3gv/bH";
-	arc=none smtp.remote-ip=95.215.58.225
-Received: from mta1.migadu.com (out-225.mta1.migadu.com [95.215.58.225])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=ixit.cz;
+	spf=pass smtp.mailfrom=ixit.cz;
+	dkim=pass header.d=ixit.cz header.i=@ixit.cz header.a=rsa-sha256 header.s=dkim header.b=F5BWplZD;
+	arc=none smtp.remote-ip=84.42.129.46
+Received: from ixit.cz (ixit.cz [84.42.129.46])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885F4606A319
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 19:16:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 885F4606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEEDC606A319;
+	Tue, 20 Oct 2026 19:38:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CEEDC606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ixit.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=aY3gv/bH
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=lw+t75FwRLjeMhJnNzMlndW0v6yjeCQr5HI2l/gOvaQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792523758; v=1; x=1793128558;
- b=aY3gv/bHVOHntPRPOB2o+HLJbggVPhSRWDtI2wqRDJ6NQtlTqmGsZV80Wet43qPM300SMyTl
- S6OVPI1KTUh2rLsd/V4BIuDiXz5bW/EtuJaCbhSS8dxokV9aKv+cYUXJIAUMaT9AmPAPnda5wbW
- 3q4mu9UfW6T3o7YOF/NDNKck=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id eecc7a7145419b5d;
-	Tue, 20 Oct 2026 19:15:58 +0000
-X-Mizu-Trace-ID: eecc7a7145419b5d
-X-Migadu-Flow: FLOW_OUT
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH rtw-next] wifi: rtw88: sdio: limit the high queue to DTIM delivery
-Date: Tue, 20 Oct 2026 19:15:42 +0000
-Message-ID: <20261020191542.17207-1-luka.gejak@linux.dev>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (1024-bit key, unprotected) header.d=ixit.cz header.i=@ixit.cz header.a=rsa-sha256 header.s=dkim header.b=F5BWplZD
+Received: from [IPV6:2a02:830a:f787:8f00:d622:eaa3:3dd6:8f5e] (unknown [IPv6:2a02:830a:f787:8f00:d622:eaa3:3dd6:8f5e])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by ixit.cz (Postfix) with ESMTPSA id AC0BF534098B;
+	Tue, 20 Oct 2026 21:38:25 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ixit.cz; s=dkim;
+	t=1792525105;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=y3oc0N552fH43ATGj4dRhIJ5VZELJgPpuDPjWuSNw44=;
+	b=F5BWplZDBBPiCPe7Psv3d2lqQ5sQI5mWrNkQu0L6Ai7r1JTfQO1GOKjQIh4Y8Kphi8m05i
+	rplpux6Oe5GDfARJ9xhdS2JkX6PCjhgA1mu5c9hZzqXto9c/exQEgLFXjykT7sEm9pHGSw
+	wsH7Ofazd0uYsaCAv9wJdVucED9icqc=
+Message-ID: <b5a06692-59f9-4b51-bbbf-71af39ad1f14@ixit.cz>
+Date: Tue, 20 Oct 2026 21:38:25 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -63,165 +60,153 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next] wifi: ath10k: fix status of bundled mgmt tx
+ completions
+To: shunsuke@nagashi.ma, Jeff Johnson <jjohnson@kernel.org>
+Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+ ath10k@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20260927-ath10k-bundle-status-v1-1-a1eea048ada9@nagashi.ma>
+Content-Language: en-US, cs-CZ
+From: David Heidelberg <david@ixit.cz>
+Autocrypt: addr=david@ixit.cz; keydata=
+ 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
+In-Reply-To: <20260927-ath10k-bundle-status-v1-1-a1eea048ada9@nagashi.ma>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In AP mode every broadcast and multicast (bmc) frame is sent through the
-high queue, which the hardware only drains after a DTIM beacon. Only a
-few frames leave per DTIM, so steady multicast traffic builds a backlog
-that holds the TX pages the other queues need. Unicast traffic then
-stalls for seconds and clients can no longer renew their DHCP lease.
+On 27/09/2026 14:10, Shunsuke Nagashima via B4 Relay wrote:
+> From: Shunsuke Nagashima <shunsuke@nagashi.ma>
+> 
+> ath10k_wmi_event_mgmt_tx_bundle_compl() takes the completion status of
+> each report from desc_ids[i] instead of status[i]. Any non-zero status
+> is handled as "not acked", so a bundled report is marked as acked if
+> and only if its descriptor id is 0, whatever status the firmware
+> returned.
+> 
+> The bundle handler read status[i] when it was added in
+> commit cc123fac978f ("ath10k: Handle bundled tx completion for
+> management frames"). The commit named in the Fixes tag replaced it
+> with desc_ids[i].
+> 
+> Seen on WCN3990 in station mode with a WPA3-SAE AP. This firmware
+> advertises mgmt-tx-by-reference and completes some management frames
+> in bundles. A debug build printed status[] for each bundled report and
+> could switch between the old and the fixed line. A sniffer watched the
+> AP channel. The firmware status[] matched the capture in all 39
+> bundled reports (15 with the old line, 24 with the fixed one): the 30
+> frames with status[] 1 were never seen on that channel, and the 9
+> frames with status[] 0 were acked.
+> 
+> With the old line, 6 of the 15 reports gave mac80211 the wrong ack
+> result:
+> 
+>   - 4 frames that were never seen on the air were reported as acked.
+>     Each report arrived after mac80211 had already timed out the
+>     authentication, so they had no visible effect in these runs.
+>   - 2 SAE commit frames that were acked on the air were reported as not
+>     acked. They were the second and third of three tries. mac80211 gave
+>     up on the authentication 239 us after the last report, although the
+>     AP's SAE replies came about 5 to 8 ms later, so that connection
+>     attempt failed.
+> 
+> Take the status from status[i].
+> 
+> Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.2.0.c10-00459-QCAHLSWMTPLZ-1
+> 
+> Fixes: 4b816f170b1f ("ath10k: add support for ack rssi value of management tx packets")
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM sparse
+> Signed-off-by: Shunsuke Nagashima <shunsuke@nagashi.ma>
+> ---
+> Tested on a comma four (WCN3990) with a v7.2-based kernel
+> (7.2.0-vamos-7626c37). It also carries three out-of-tree ath10k
+> patches (MAC address, in-order rx A-MSDU, SET_KEY wait); none of
+> them touch wmi.c or wmi-tlv.c.
+> 
+> - Debug build that prints status[] per bundled report and can switch
+>    between the old and the fixed line, with a sniffer on the AP
+>    channel: 6 connect/reconnect runs (5 WPA3-SAE, 1 WPA2-PSK),
+>    39 bundled reports.
+> - Build with only this patch: 6 connect/reconnect runs (5 WPA3-SAE,
+>    1 WPA2-PSK), no debug output. No warnings, no firmware crashes.
+>    One first connect failed and one reconnect was slow, for a
+>    different reason that was also seen with the old line: the AP did
+>    not ack, and the firmware held back some Auth frames.
+> 
+> Not tested: status 2 or 3 inside a bundle (only 0 and 1 were seen),
+> AP mode, other chips and firmware versions.
+> 
+> I worked on this with Claude (claude-opus-5-5) and Codex
+> (gpt-6-astra). They helped go through the logs and sniffer captures,
+> write the debug build, and write the English of this changelog. I ran
+> the tests on the device and reviewed the change myself.
+> ---
+>   drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-USB had the same problem and was fixed by commit c710c7c2e038 ("wifi:
-rtw88: usb: route bmc frames via the high queue only for DTIM delivery")
-and the two commits that followed it. Use the same rule for SDIO. A bmc
-frame goes to the high queue only when mac80211 asks for DTIM delivery
-because a station is dozing, the frame is ARP, EAPOL or DHCP, and the
-budget allows it. All other bmc frames go out on their access category
-queue.
+Reviewed-by: David Heidelberg <david@ixit.cz>
 
-Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
----
-  Tested on rtl8723bs with atk19 client. No regression in station mode.
-  Note: this adds support for AP mode for rtl8723bs, as I states AP
-  mode was left for future work.
-- Broadcast ping round trip was 3.6 ms, it was ~104 ms before the
-    patch.
-  - During a 50 frames/s broadcast flood, the TX page pool didn't
-    move and unicast was unaffected.
-  - A DHCP renewal under that load got a lease on the first DISCOVER.
-  - A dozing client received 18 of 20 broadcast ARP requests.
-
- drivers/net/wireless/realtek/rtw88/sdio.c | 69 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/sdio.h |  5 ++
- 2 files changed, 74 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index dc2fd0f8f9ff..3cdffac5b5b0 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -6,9 +6,11 @@
-  *   Copyright(c) 2018-2019  Realtek Corporation
-  */
- 
-+#include <linux/ip.h>
- #include <linux/module.h>
- #include <linux/mmc/host.h>
- #include <linux/mmc/sdio_func.h>
-+#include <linux/udp.h>
- #include "main.h"
- #include "mac.h"
- #include "debug.h"
-@@ -26,6 +28,8 @@
- #define RTW_SDIO_TX_FIFO_HIWATER			16
- #define RTW_SDIO_TX_FIFO_LOWATER			8
- #define RTW_SDIO_TX_RETRY_DELAY			msecs_to_jiffies(1)
-+#define RTW_SDIO_HIQ_REFILL_INTERVAL			(HZ / 10)
-+#define RTW_SDIO_HIQ_BUDGET_MAX				16
- 
- static bool rtw_sdio_is_bus_addr(u32 addr)
- {
-@@ -1299,6 +1303,64 @@ static void rtw_sdio_8723bs_wake_tx_queue(struct rtw_dev *rtwdev,
- 	ieee80211_wake_queue(rtwdev->hw, q_map);
- }
- 
-+static bool rtw_sdio_bmc_needs_dtim(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct udphdr *udphdr;
-+
-+	if (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)
-+		return true;
-+
-+	if (skb->protocol == htons(ETH_P_ARP))
-+		return true;
-+
-+	if (skb->protocol == htons(ETH_P_IP) &&
-+	    ip_hdr(skb)->protocol == IPPROTO_UDP) {
-+		udphdr = udp_hdr(skb);
-+
-+		return udphdr->dest == htons(67) || udphdr->dest == htons(68);
-+	}
-+
-+	return false;
-+}
-+
-+static bool rtw_sdio_hiq_take_budget(struct rtw_sdio *rtwsdio)
-+{
-+	unsigned long flags, elapsed, add;
-+	bool ok;
-+
-+	spin_lock_irqsave(&rtwsdio->hiq_lock, flags);
-+
-+	elapsed = jiffies - rtwsdio->hiq_refill;
-+	add = elapsed / RTW_SDIO_HIQ_REFILL_INTERVAL;
-+	if (add) {
-+		rtwsdio->hiq_budget = min_t(unsigned long,
-+					    rtwsdio->hiq_budget + add,
-+					    RTW_SDIO_HIQ_BUDGET_MAX);
-+
-+		/* keep the unfinished part of the interval for the next unit */
-+		rtwsdio->hiq_refill = jiffies -
-+				      elapsed % RTW_SDIO_HIQ_REFILL_INTERVAL;
-+	}
-+
-+	ok = rtwsdio->hiq_budget > 0;
-+	if (ok)
-+		rtwsdio->hiq_budget--;
-+
-+	spin_unlock_irqrestore(&rtwsdio->hiq_lock, flags);
-+
-+	return ok;
-+}
-+
-+static bool rtw_sdio_bmc_use_hiq(struct rtw_sdio *rtwsdio, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	return (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) &&
-+	       rtw_sdio_bmc_needs_dtim(skb) &&
-+	       rtw_sdio_hiq_take_budget(rtwsdio);
-+}
-+
- static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 			     struct rtw_tx_pkt_info *pkt_info,
- 			     struct sk_buff *skb)
-@@ -1308,6 +1370,9 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 	u16 q_map = skb_get_queue_mapping(skb);
- 	struct rtw_sdio_tx_data *tx_data;
- 
-+	if (queue == RTW_TX_QUEUE_HI0 && !rtw_sdio_bmc_use_hiq(rtwsdio, skb))
-+		queue = rtw_tx_ac_to_hwq(q_map);
-+
- 	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
- 
- 	tx_data = rtw_sdio_get_tx_data(skb);
-@@ -1730,6 +1795,10 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	int i;
- 
-+	spin_lock_init(&rtwsdio->hiq_lock);
-+	rtwsdio->hiq_budget = RTW_SDIO_HIQ_BUDGET_MAX;
-+	rtwsdio->hiq_refill = jiffies;
-+
- 	rtwsdio->txwq = create_singlethread_workqueue("rtw88_sdio: tx wq");
- 	if (!rtwsdio->txwq) {
- 		rtw_err(rtwdev, "failed to create TX work queue\n");
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-index 6e7e6009744b..2083e6fb3fa9 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.h
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-@@ -174,6 +174,11 @@ struct rtw_sdio {
- 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
- 	bool tx_queue_stopped[RTK_MAX_TX_QUEUE_NUM];
- 
-+	/* protects hiq_budget and hiq_refill */
-+	spinlock_t hiq_lock;
-+	u32 hiq_budget;
-+	unsigned long hiq_refill;
-+
- 	atomic_t free_pg_high;
- 	atomic_t free_pg_normal;
- 	atomic_t free_pg_low;
--- 
-2.53.0
-
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index e57588c19..67be6e817 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -2512,7 +2512,7 @@ int ath10k_wmi_event_mgmt_tx_bundle_compl(struct ath10k *ar, struct sk_buff *skb
+>   	for (i = 0; i < num_reports; i++) {
+>   		memset(&param, 0, sizeof(struct mgmt_tx_compl_params));
+>   		param.desc_id = __le32_to_cpu(arg.desc_ids[i]);
+> -		param.status = __le32_to_cpu(arg.desc_ids[i]);
+> +		param.status = __le32_to_cpu(arg.status[i]);
+>   
+>   		if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
+>   			param.ack_rssi = __le32_to_cpu(arg.ack_rssi[i]);
+> 
+> ---
+> base-commit: 753baa59527f8e606c49eac25692b8b08918a3a9
+> change-id: 20260927-ath10k-bundle-status-24113117b683
+> 
+> Best regards,
+> --
+> Shunsuke Nagashima <shunsuke@nagashi.ma>
