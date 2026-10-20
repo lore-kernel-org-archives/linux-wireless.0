@@ -1,94 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.177
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792496986;
-	b=Xljn7/UlP0Tmeew2OoQMoZSyGEb/Q0qTp/Ywys1IxIRo2WE3263nzyRr7B+H/TKMNDch
-	 8dp8zDZ+rFGkztMMtW+pBP+SEJ/e/aut+9f261K7J1oO2O2vOYoOmzNX4374IvMl/GsZ5
-	 Ygm3Ysh3tLDMnBhXCv/0YCaPBzhVowhdy3yYpW/cy+cfemil4K1QWAbdUExKQChgfRNGR
-	 lkPvDIk6ew1sh9dvIGXMHJGE2qS7TzIxtrkwXnImdLhWDVs1y/HVSFDcTdxYvQroBi1FD
-	 p/rwIMsBm6G+wuDfH+BxednSMkLqPlkjXulujY4XjMESOZYeFoUVZb5N3kOdlRwBSLg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792496986;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type;
-	bh=XLGNYitZ4EdMcotU/GOI9I5PtjbgIsDlPVNeP1wv+jI=;
-	b=SxEAnjU0/DFhcYZslV4Tx1vxAWxr5v2De6iDQ6nMJHVSPDOwy8tytjbVSin6PqRbz7CI
-	 PjN1nURaTH5vuc68rP2iEP157Ml8iZMAPvYDL60dXCRaKt8mJS0pfHmKefI1GAovKjgBk
-	 Uxli3hdb+apvIQVRCe+AtyBHdDpQ1Eldstv8+nZzC/Z8eAogeIpBb2rdP16EEsTv0gr9X
-	 NiYDTryh5GxFPM7QSc+Ufg6sFczWFvbm/U6HDLq98/NrXdzTlJavkylAA6iYHnHbRveGI
-	 ZdK4y7zhBu6MQ2YJ62uvceofsTcuH1syr9iPe9oPObVlson69O5r6Du/RF50jqrhZBA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kiddier.org;
-	spf=pass smtp.mailfrom=kiddier.org;
-	dkim=pass header.d=kiddier.org header.i=@kiddier.org header.a=rsa-sha256 header.s=google header.b=jcEXUuFN;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.177
-Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792497589;
+	b=4v4kN8FwiSi5KkUKGDmaQCifiCLI20aKjuGTagb5SoCY9nw/BSfRtqhpU+7AozmRM5bj
+	 XK5EZeGiaIENPVDStEM7O0mIuZOdt2VbLlkkEmqvGXhuQMsBYtzaZ+W1lUjwjNPYm6UUz
+	 eTdVDwuAYGkVOogKooltdIt8NEzEeccH30Qj5KQ6hfXF9intTiXv7VOx8r4ovl0CRgepk
+	 6kPtWNGjSYq6MlLgAqHKIVdcbLNTzaFuuYB9CARdfwMcMaRRi5lhwlM2/m1gyah6gbRiT
+	 HnnBShM4LZS5/mhQnye2wLxcPc6+ZmjamtUKjMyjOH6I9kNY+8Y8p08DXffzhUYivuA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792497589;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=IIc3DKzun1pG6SrMFT0BAk7s2ijhu7EMG+Da8jqWvQs=;
+	b=oWZohj2aV+OyRd82jco35Basju1CyqovEpI0kSyAjXA3Pixi80lxMR1xeLC45TTRzBCY
+	 xvdRZfPA8bS2Z/zoqtG5Jp5TiqypKaef6JRgjfITCzow7lHThtnfIiNpglwFduegnePeJ
+	 MeR9QJFB4BJ6oV7+P98vF2mD1wuPERTEGOAP2lwrrZIwo4LjEDhmIiDozj72lp66hRLve
+	 F5vsCZdMAw93gzUrPvSwDyoxbIUesMsxtVy8tspkBbJgh5ipw7mb42eJ/occ1dP2criEI
+	 CDzKnxn0oq3UUfW6Kw0gW0LT9PARsrLSHvzDQJRHuGW44nDQ2wd16etHw5p8hX0KyrA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=FeJWogXh;
+	arc=none smtp.remote-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C61606A324
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 11:49:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 14C61606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kiddier.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kiddier.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E6F6606A31C
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 11:59:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7E6F6606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=kiddier.org header.i=@kiddier.org header.a=rsa-sha256 header.s=google header.b=jcEXUuFN
-Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-5eac01ff101so769064e0c.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 04:49:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792496985; cv=none;
-        d=google.com; s=arc-20260327;
-        b=sDNAMvlwtVdWqu9qv87FLlMdfG3Q+xXEFl9bUAfhfawR3U2MnlND7rudyIEG+xLVc8
-         aSNfxJ8jDI6SZcl6yiz13KtVZRJiK8KZTZuiR/d4CskItZh9FEgL731IYq0AaY5PZh/3
-         JOJoG+LBjjfzBBfuNEG8/NT3MSEOJwJcgpNcmLJtc/veo0NYN6usrHerb3D0xyRWh392
-         4pee/NWaJqRYgyllp5ViU9LiZ6jEuC0mpkyyE8JvnBwoxVcs2YLmCCsIfsuxpwqviLNn
-         GvLGK/cCGu/ORZpOAqhf1ZIoj6kppkhiodJjprU6PBCQBTUmqdyuUtMlq5bbWf/QcpsO
-         5mJw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=XLGNYitZ4EdMcotU/GOI9I5PtjbgIsDlPVNeP1wv+jI=;
-        fh=soUFqfkruCpqI1/Y82VNJnHTmeXhq4buh8XwThTmjsY=;
-        b=Zue0B7GwS26ETJHsk0iOaNvyg7LJ3oAS6kcMgH161FYXBhhoeNTNtD62Hc/fQFVfsS
-         Si10g9lJ5HSpK/nZYOVlqRIu8gq0W6oXO239itcb8SrFtMB8VosvlmcO/qzgyEHSefjE
-         /MUAVZJMVkRIoG5uIQRfH5fb0593LvtJDdKClFNU5ocxDzTxBx2EQ0T8EoVtLwaAE3JX
-         ppmr4aEMp4I5Z5SMVQP2o4Hz99lHzpThQtUo8o1UJid3CUXTQpi2rkzO0yWScrpuSw7z
-         xcGXLT3mUF56YGOoYrRcXQOuZuD6w+lu0HJf+/KKPdWxmCSb1KiZEGf0vINsjFvB4RvJ
-         zebA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kiddier.org; s=google; t=1792496985; x=1793101785; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=XLGNYitZ4EdMcotU/GOI9I5PtjbgIsDlPVNeP1wv+jI=;
-        b=jcEXUuFNMltH+U9bsfQhaoEJcw3oYpquLvoEe01+X9wWxXWVoLM1NWoQ5VmxHTpO72
-         CUDxuZC/MlUj6w0dEYWAgd+KNbwbAbUZTaCw/G1YeFJSNCUf8LHNp4Gw8tfsNQHImRfw
-         NcVz6VVZKV1sZw3L5/1LyAKyJEVQP4JJdRmxI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792496985; x=1793101785;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=XLGNYitZ4EdMcotU/GOI9I5PtjbgIsDlPVNeP1wv+jI=;
-        b=Dt7EcVlLODXFmZmgw+oqIMjtE1kqgNrRS1ubLQsci/w9slLjH/r3Ga85W4rGIeAXMc
-         7uUICwgQcLpuI5lbPuZy0UiYjGRLd2yci9cXb6oUe0Yr6CyFYvMPhxwLtHYnljaVud04
-         U7Klb4l4NwBkoMHMLq8nIxNZZbSHR3zbTYIFQzKiX7gFphK6aJJe4Jtmf1hKFBh2OmQg
-         SLeD0O0NKQwFpkxxMM7JrvCpObqusLIILjoiITWsl2l4/eq4Q6UXYviSTmA/UQsO3ptF
-         ZDxxgs2zuJtNs2IjmxlCXSSlG+mPOOJCsZnvmzY3zRjNXjAQDkiQz3l2idR1fjRZDQMT
-         itHw==
-X-Gm-Message-State: AFq9FYIAa1yO9O05oKsWUdSKd5OlovEL1RB8NNzTRdV+aHoPcmYIjZMy
-	AVxeLKMNp6RkUv5prro62+Vmfr6TwuCo9U7Va/qv7lVQfoQm7uJo4Qe0E70ZX0VwMlv1AdFHgZw
-	pzvmAjR1SDTBlW1RzQAwYl2oueveGRIXjV1ZcoE1rb1v9fpVcXnXpwT5xJw==
-X-Gm-Gg: AYBFou0iKLSoPfWNW433RCJnapB+qRo4zCRA1alKAo25zH+3LK4JWtRiOXZH9LQ5nvv
-	802Wl+9gn5UzZHpjWeUoLaglqzD0I4hc4Mm2rU+WpvCLlkKB2UGGT3oS5fCxR8C6BZ06ZqXPEJ7
-	LDQ+dFlXJ8niCxEhZKGVdV742MjzqS5+TUYSNNNe4bRt0t502u2+fmDbFulj/rMsH9cLVeX5H+S
-	vNu4L8f/wUUSCDdpcHA7HFrgsP9zcuJSCZzkq58C5bG7Ofhn8SctVnwlGSx1JQ8oRbHYTINVsNX
-	5DAW/RGOGC864rnCNo5rpgwsw0U7eo9RYuMbDFPE7em/3GPS2m3EbonlkA==
-X-Received: by 2002:a05:6122:8c1:b0:5da:9b81:1aa4 with SMTP id
- 71dfb90a1353d-5eaaa3c174cmr3451932e0c.5.1792496984909; Tue, 20 Oct 2026
- 04:49:44 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=FeJWogXh
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=II
+	c3DKzun1pG6SrMFT0BAk7s2ijhu7EMG+Da8jqWvQs=; b=FeJWogXhhwxW2sp0Uu
+	G+SYGyqngW28wX/JGLUDAw5I3ko2VSsRRpRHEFKedXI7L0S1kGN7rPW1ocnb62iI
+	knLOVN4hiXkNbXljrr9HP4XdqQ0U8mzSZ8Tm94BM4bVouhEKielURE2wdG8QkN5N
+	YJUaNvQxXLgK3+SN3/WMh5NKY=
+Received: from LAPTOP-137NTCJO (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgAXz6WtV9dqUvDzAw--.60866S2;
+	Tue, 20 Oct 2026 19:59:43 +0800 (CST)
+From: Jiaxin Li <18135327133@163.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wifi: rtl8180: reject RX frames longer than MAX_RX_SIZE
+Date: Tue, 20 Oct 2026 19:59:38 +0800
+Message-ID: <20261020115938.1433-1-18135327133@163.com>
+X-Mailer: git-send-email 2.56.0.windows.2
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,118 +57,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CA+3E589O46nj=c1Y+Rwk_nPZZKEUjFvMfWaAFmQ2-7De9iUxFw@mail.gmail.com>
-In-Reply-To: <CA+3E589O46nj=c1Y+Rwk_nPZZKEUjFvMfWaAFmQ2-7De9iUxFw@mail.gmail.com>
-From: Peter Kiddier <peter@kiddier.org>
-Date: Tue, 20 Oct 2026 22:49:33 +1100
-X-Gm-Features: AclHuK_KgzridKLRANvtLJkSHaLWJWHnmxsRRdoNj6COaR_e09DKIcJwjLUSHC0
-Message-ID: <CA+3E58-2N-uVNsmwvOGDKZvtnDQ1DF=GzFbTyRLuN8FpAd4qdg@mail.gmail.com>
-Subject: [REGRESSION] BCM4355 Wi-Fi fails with Intel IOMMU on 7.3.0-2-t2-noble
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211@lists.linux.dev, iommu@lists.linux.dev, 
-	arend.vanspriel@broadcom.com, regressions@lists.linux.dev, jgg@nvidia.com, 
-	kevin.tian@intel.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
-	dwmw2@infradead.org, baolu.lu@linux.intel.com, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:QCgvCgAXz6WtV9dqUvDzAw--.60866S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF4DtF1ruFWxXry8Gr4fAFb_yoW8ArWDpF
+	W5Ga1jyF1ayF4xG3yIqa1IkF1Sga1rJasxCF4rZa43Ca98JF1FgF1kWayavFWrJFWxXa15
+	Xr1kt3y3Ca1aya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR4CJJUUUUU=
+X-CM-SenderInfo: zpryijyvtsliitt6il2tof0z/xtbC6RCSU2rXV7BOhwAA3r
 
-Adding the IOMMU maintainers and linux-kernel.
+rtl8180_handle_rx() passes the 12-bit length field from the RX
+descriptor to skb_put() without clamping it to MAX_RX_SIZE.  The skb was
+allocated with dev_alloc_skb(MAX_RX_SIZE), so a descriptor length above
+MAX_RX_SIZE extends the skb past its allocated tailroom.
 
-The original report and test results are below for context.
+Store the reported length in a local variable and drop the frame before
+allocating the replacement RX skb when it exceeds MAX_RX_SIZE.
 
-I haven't tested a vanilla upstream kernel, and may have limited time
-for further testing, but wanted to share the findings in case they're
-useful.
+Signed-off-by: Jiaxin Li <18135327133@163.com>
+---
+Changes in v2:
+- Store the descriptor length in rx_len and reuse it in skb_put(),
+  as suggested in review.
 
-Thank you.
+ drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+index 4a5989172..24e96b356 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+@@ -255,7 +255,13 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			goto done;
+ 		else {
+ 			struct ieee80211_rx_status rx_status = {0};
+-			struct sk_buff *new_skb = dev_alloc_skb(MAX_RX_SIZE);
++			struct sk_buff *new_skb;
++			u32 rx_len = flags & 0xFFF;
++
++			if (unlikely(rx_len > MAX_RX_SIZE))
++				goto done;
++
++			new_skb = dev_alloc_skb(MAX_RX_SIZE);
+ 
+ 			if (unlikely(!new_skb))
+ 				goto done;
+@@ -274,7 +280,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			dma_unmap_single(&priv->pdev->dev,
+ 					 *((dma_addr_t *)skb->cb),
+ 					 MAX_RX_SIZE, DMA_FROM_DEVICE);
+-			skb_put(skb, flags & 0xFFF);
++			skb_put(skb, rx_len);
+ 
+ 			rx_status.antenna = (flags2 >> 15) & 1;
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
+-- 
+2.34.1
 
-On Tue, 20 Oct 2026 at 22:32, Peter Kiddier <peter@kiddier.org> wrote:
->
-> Hello,
->
-> I am reporting a Wi-Fi regression on a 2018 Apple MacBook Air with a
-> T2 chip, running Linux Mint Zena based on Ubuntu 24.04.
->
-> The Broadcom BCM4355 Wi-Fi device works with kernel 7.2.11-3-t2-noble
-> but fails with 7.3.0-2-t2-noble. Disabling the Intel IOMMU using
-> intel_iommu=off restores Wi-Fi on 7.3.0-2.
->
-> Hardware:
-> - Apple MacBook Air 2018 (MacBookAir8,1)
-> - Wi-Fi: Broadcom BCM4355 802.11ac Wireless LAN SoC
-> - PCI ID: 14e4:43dc (subsystem 106b:0843)
-> - Driver: brcmfmac
-> - Interface: wlp2s0
->
-> Test results:
->
-> - 7.2.11-3-t2-noble, default kernel command line: Wi-Fi works.
-> - 7.3.0-2-t2-noble, default kernel command line: Wi-Fi fails.
-> - 7.3.0-2-t2-noble with intel_iommu=off: Wi-Fi works.
-> - Reloading brcmfmac on the failing configuration does not restore Wi-Fi.
->
-> On the failing 7.3.0-2 boot, the driver detects the device, loads its
-> firmware and creates wlp2s0:
->
-> brcmfmac 0000:02:00.0: enabling device (0000 -> 0002)
-> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4355c1-pcie for
-> chip BCM4355/12
-> brcmfmac: brcmf_c_process_txcap_blob: TxCap blob found, loading
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4355/12 wl0: Jul  8 2023
-> 17:49:51 version 9.30.503.0.32.5.87 FWID 01-e74b9cb0
-> brcmfmac 0000:02:00.0 wlp2s0: renamed from wlan0
->
-> However, Wi-Fi subsequently stops responding. The kernel log reports
-> errors including:
->
-> brcmf_msgbuf_query_dcmd: Timeout on response for query command
-> brcmf_cfg80211_scan: scan error (-5)
-> brcmf_run_escan: error (-5)
-> brcmf_msgbuf_tx_ioctl: Failed to reserve space in commonring
-> brcmf_cfg80211_get_channel: chanspec failed (-5)
->
-> There is also an error creating the P2P interface:
->
-> brcmf_cfg80211_add_iface: add iface p2p-dev-wlp2s0 type 10 failed: err=-52
->
-> I tried reloading the driver using:
->
-> sudo modprobe -r brcmfmac_wcc
-> sudo modprobe -r brcmfmac
-> sudo modprobe brcmfmac
->
-> The driver and firmware loaded again, but Wi-Fi remained unusable.
->
-> The firmware files are present under /lib/firmware/brcm/, and the
-> firmware version reported by the driver is the same on the working and
-> failing kernels.
->
-> The brcmfmac module metadata differs between the kernels:
->
-> Working kernel 7.2.11-3-t2-noble:
-> srcversion: 3B6176FDB720DDE8E7C596B
->
-> Failing kernel 7.3.0-2-t2-noble:
-> srcversion: 3DCA38D52402541701276CF
->
-> I did not find obvious PCIe AER or fatal errors in the failing boot's
-> kernel log.
->
-> It has been suggested testing intel_iommu=off after reloading
-> brcmfmac. The driver reload did not help, but booting with
-> intel_iommu=off restored Wi-Fi.
->
-> This strongly suggests an interaction between Intel IOMMU handling and
-> the BCM4355/brcmfmac driver in the 7.3.0-2-t2-noble kernel.
->
-> I have not tested a vanilla upstream kernel, so I cannot yet confirm
-> whether this reproduces outside the T2 kernel packages. Unfortunately,
-> I have limited time available for further testing, so I may not be
-> able to investigate additional requests promptly. I wanted to report
-> the reproducible behaviour and the intel_iommu=off workaround in case
-> it helps identify the regression.
->
-> Could you advise on further diagnostics, or whether this should be
-> investigated as an IOMMU or brcmfmac regression?
->
-> Thank you.
