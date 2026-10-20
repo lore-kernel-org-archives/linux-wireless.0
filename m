@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1792464398;
-	b=23OE912g4F1PsgjN5h4S1qwFiYOO8IGodwTLaZtfncUFN+nZSAStCOxbTB4YbXb66Xl0
-	 aU6hLFjsZhXNtXpSQhOwasfIhggjsHQBycczoenpTyPx8SWJdCtMAdUTto+9wQF4PHDKm
-	 D1bH6vf8R+V152yi7w7FjlWAb/0Ww42vYV+9fFZgcpHf8wNaD8JHEN1EsumLC1+8+P268
-	 Hmyt98Bjyz8TxzQ1Rs03ZcUklDkA4qiWC8M615Ue86Swi4InXb8LOJ+hZnihJNr3UOx2q
-	 vq3N09fnwWWgbynN//VwSGObZlZo64wbCZSiDUK4ek6bpG3JN4fU6WE0ZgxnWduVOyA==
+	b=Aa2mSAWv72dYBTte3905CcktFBsqJT8g7eFFhaHI9rK27ZrWZKB7Q2XDW0hAUWldfeKG
+	 cvanPuE24Cklp+VQBokyGuSa85JSU6a12a4r6o6ZU/oGkMXOO/YHqydMzuyTPXZGhM4F/
+	 N3+q/GVg5BYKlHeKiGKbAnXwaE1vdjVj7OyqPaFBGJ0zpJNGw5yDcuvR/O8h3n5sJAlHj
+	 fh7gdRFRoyTqm7OH5x7qTvlxu97JQL6EwSFa4aiqmAohLXIINrXhNDi04TGRDoPsKDgZk
+	 0hlb72o1L7c0VD+OHCnLwdByINoNh5rAWEvJ0zMKiP0lXuYo9fAnOQQrLdM9r/FRULg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792464398;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=datRhPKvUt8Wm3BSwDl6dFeqU17AfptMGzHaScRNqKs=;
-	b=dVJwmzHWPvZEcNnO45zAD0mDWGqZIbodEVCT2Mi9IBUd7JTMz6WJD0UlcfFezbyTrtiv
-	 DmTFif5REsFBGTjuHuhXzXQJYj82Ddu4iiVwmtPzPkLZXGznKZ3deLNRQxngYmLZwMNtu
-	 +Ol+bsZJAw+IwNjMSXkAAcVIFYRlJmko2jQE22wZ9373N8LVDB2RVt/pm1D+AEvQMXN1N
-	 zJ0q5cU+nHHtM+DP0wMPS0tl6Gjk1GCrv1g3zujVGGBMyZcMecCwv162Bk2Q7K/3vxeYg
-	 7qfLgcomlQQiaVmUUaDeJF+d/pCwKj7V9eK9wdPJj4OVbEn2WjK9l4GuyPRcUE3QDAw==
+	bh=lONQ58hOPHjFuw/A/dJum6aO3jorcmydyDZYCpMwFoY=;
+	b=uMgEsMZ0RUDqonmp8atPdLwrQI06/N6QBMAynr18FNMExJgIMN5p+S8/grx+Z2MXYtzS
+	 OvAbADRMDVEU/8Jxcv/8627WJxxxghoSnakpDhAoXNcrF/Z+QuiXvyPJoEex/ObpX2MCQ
+	 beRj0iWaSKjmGA7y3OSWKVBYTnoE5CXfmYuPLcS4uhy9/f3XxZxvDJnbPgIobDZpdCGqj
+	 Uwso5Bz0Jp8MsbfJTOP+RdFRQe3MDws3R2oeyTbfKravl3MI4r6en3RZC75i3FM8teNvy
+	 SfiItBFwLS1ezravrYKwwdtjfuRcfMGx3QfbfbPAlm0VoveFVRJjd6A+ogVzkpZo40Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=UVUf0h9l;
-	arc=none smtp.remote-ip=220.197.31.4
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=WpQT42JF;
+	arc=none smtp.remote-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD71606A31D;
-	Tue, 20 Oct 2026 02:46:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AD71606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C9E7606A329;
+	Tue, 20 Oct 2026 02:46:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C9E7606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=UVUf0h9l
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=WpQT42JF
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=da
-	tRhPKvUt8Wm3BSwDl6dFeqU17AfptMGzHaScRNqKs=; b=UVUf0h9l1rqCxWV+ou
-	TQMAA0aj0AtvHKUeLPukGq5Dye1+QxBBUOZ+R+XK7d5ZRA4WkPKmqFWPwasaWQSP
-	x4aZoSFcQqkZKBa0cxd8xl4JAyEgpMFsAjpIQPxpQiH2HDNsYBMqoNflg+wgnD6U
-	/2XZDzhHBTDDwPT/pYHPUZQ9w=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=lO
+	NQ58hOPHjFuw/A/dJum6aO3jorcmydyDZYCpMwFoY=; b=WpQT42JFDdP0Q0WVwu
+	X8rGGex3p875ozA4YialWoWK9MEyBB6WFkuR+/sAQRpVkXoow2RvxRCbCuVNXgXm
+	697qOzAsPhEAcmI2Tn0EM6kQk8MLucZzk4xkXO828kM1WfZBmt6GVJu7R/7FA6cB
+	ixub0cz+2aiCc2ehd7fI6MbXM=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3H9HZ1dZq2OtmBQ--.60682S5;
-	Tue, 20 Oct 2026 10:45:51 +0800 (CST)
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3H9HZ1dZq2OtmBQ--.60682S12;
+	Tue, 20 Oct 2026 10:46:00 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -51,13 +51,14 @@ To: Felix Fietkau <nbd@nbd.name>,
 	Sean Wang <sean.wang@mediatek.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Allan Wang <allan.wang@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH 03/11] wifi: mt76: mt7921: reject malformed TX power responses
-Date: Tue, 20 Oct 2026 10:45:35 +0800
-Message-Id: <20261020024544.3101738-4-yaojiale02@163.com>
+Subject: [PATCH 10/11] wifi: mt76: mt7925: validate radio status response
+Date: Tue, 20 Oct 2026 10:45:42 +0800
+Message-Id: <20261020024544.3101738-11-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261020024544.3101738-1-yaojiale02@163.com>
 References: <20261020024544.3101738-1-yaojiale02@163.com>
@@ -71,49 +72,41 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3H9HZ1dZq2OtmBQ--.60682S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFWfXF1fXr1fJr13WrWrAFb_yoW8Gryfpa
-	y0gayYkr4UGr4vqw1rAF4kAFySyan5KF13GFyruwn5WryfJrn0kF4F9Fyjqr4Yya1vkF1f
-	Jr4YqF9xGr9Yv37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j7J5rUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzR-8N2rW1d+CUgAA3-
+X-CM-TRANSID:_____wD3H9HZ1dZq2OtmBQ--.60682S12
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtr15Jw45uF17KrW8Ar4fZrb_yoWkCFbE9r
+	1v9r97Jr18Gw1DKr42kr47GFWqk3yv9a4rurWrtrWrX3y7JrW7urs7ZrnxWr929392vFs8
+	Crs8JFyxuw13WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU8gJ55UUUUU==
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzggAOmrW1eiMbgAA3f
 
-mt7921_get_txpwr_info() only warns when the firmware length differs from
-the skb length and then copies the response anyway. It also reads the
-length field before ensuring that the response header is present.
+The radio status query removes an outer TLV header and reads the status
+event without checking the response length. A truncated firmware
+response can cause an out-of-bounds read.
 
-Require the complete event and reject a mismatched firmware length
-before copying the TX power data.
+Require both the outer TLV header and complete status event before
+pulling the skb.
 
-Fixes: ea29acc97c55 ("mt76: mt7921: add dumping Tx power table")
+Fixes: e54b870212c0 ("wifi: mt76: mt7925: add rfkill_poll for hardware rfkill")
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index ef6660653723..96e5e13d3c47 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -1167,8 +1167,17 @@ int mt7921_get_txpwr_info(struct mt792x_dev *dev, struct mt7921_txpwr *txpwr)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index f37d2a8eafe6..0baef78148d1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -4140,6 +4140,10 @@ int mt7925_mcu_wf_rf_pin_ctrl(struct mt792x_phy *phy)
+ 					&req, sizeof(req), true, &skb);
  	if (ret)
  		return ret;
- 
-+	if (skb->len < sizeof(*event)) {
++	if (skb->len < sizeof(struct tlv) + sizeof(*status)) {
 +		dev_kfree_skb(skb);
 +		return -EINVAL;
 +	}
-+
- 	event = (struct mt7921_txpwr_event *)skb->data;
--	WARN_ON(skb->len != le16_to_cpu(event->len));
-+	if (skb->len != le16_to_cpu(event->len)) {
-+		dev_kfree_skb(skb);
-+		return -EINVAL;
-+	}
-+
- 	memcpy(txpwr, &event->txpwr, sizeof(event->txpwr));
  
- 	dev_kfree_skb(skb);
+ 	skb_pull(skb, sizeof(struct tlv));
+ 	status = (struct mt7925_radio_status_event *)skb->data;
 -- 
 2.34.1
 
