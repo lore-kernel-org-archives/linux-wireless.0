@@ -1,57 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.239.133.37
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=188.165.235.121
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792492349;
-	b=4hUmFwGGZJps+/A7ztYdqQgO+duaTUmxksv7KV7kpMcsTc4lypGth+blub/KY8dawgSn
-	 g8wnkI4lVBnyo7rJJLoZ5pdat8YAwd4Rc+/l3RaWBcSQZ5jummejRCPy7SnIxVhd+v5RW
-	 n8n6dSXr7pr4/FW0yaq7YTlYFZe/PQZVGkOyWxsuvZLGKxGQq7Tezv8jRESXwBl5+6s04
-	 acpMStQBgqRCe7APNrlsdR0YAsC95XYcxqhrE7yRJyI/47dwizbdzaqybfnc1/lYqL6Zl
-	 wJzQ1C6WZdeS/+w9u5j95J8ROflwb7Y0yHU7z22a9nsFuXHXxhNozt0IR/HG+dZIqGQ==
+	t=1792494926;
+	b=yfR5naZOp/pAFdkyqbniyTC/0WGmQStw1Qww6mL6InZCcdzNpvO81X2lDh+vks5nUbkF
+	 IsRY9nIzbAjK4Zo5Nh1Tt30nTKJJR3uMYkGIg0TM2eQIs/yb/HRY4N/+ddMD+ej9qmLue
+	 VS8cSOT/sSJUypKsyt1ddqAEY+fyeEzp1ymrZ055nPz5N4UhUSwPDhmcLoSisB2E/2iJE
+	 mnvbUN1doQYXSHPRPnAfESp2YfC2J3KyN86p72nDV9gIo9srTqkuY7EnR7dLncaxbciQ6
+	 /V93L073iOZNEMbFCwNQBIhueLPaiTW9Iss19lAmNfce6rkmQMRzW9Z2QKo1OEUbcig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792492349;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-Authenticated-Id;
-	bh=wxre4AtewTJSInxw2JUwhQj2XUPHhCudcMSclvhy3+Q=;
-	b=4lvXPGHNTn+ATBiQwygdbDVVCI3gABtF5h3Hs0uMbtFXn3awoqDFUnFt9De5EBXyXBTr
-	 6ws+aiEm61Df34ICZIn1B10efpShGRxw+3mAeI5VJCulTHmt3APoOI+MKvhnztcRk8IYX
-	 D/bYXEmP8F/rA9NxZTAJNe11AMM45IieindtruV5o7dHCmVqHUtio8r+hZq/VG1fPPeAr
-	 bnxe1ueIwLLDOIh9+A75ea6JktfZoPJUuXOvGqy/FlcFZ5kVuMFYsaT2KOzvB6/ucMz5F
-	 mwyVo1wBb6S5uSEE5Gn0YdJkaQS6nK+rmtPKxP/XF3iTgDe34nQtettyY9SUYWzvLOA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792494926;
+	h=DMARC-Filter:From:DKIM-Signature:To:Cc:Subject:Date:Message-ID:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=yQkQbbajxJs9ic68pd6bUQHnIJkpqAvbMwyFnVe+2yg=;
+	b=ofsDgAbrzVrPsDvGqeo7nHsLclKdelse9rDfxzJGpL+95mcSSl/6NcipgUmN2Tj13dUI
+	 3SmTZ/P7JmXrHXbU/ysBGK87J11SMVOxNe02uKs7H1p7KXNXfVSSDNyZ7oXxq3oFqSLZC
+	 WpWIEh3VqrF49JygSBYX0E0F4IdzP0k3E/HoWBfYBQO69AKwnlfDk7f4H7KsUIbgqychL
+	 gCAOTk3LpU6TuK28lL42eZoUGLXz0vQecldqzJkp1A0iVK6aqV1nsd8dK05yTOB1OI5iZ
+	 xbz+z08APDvxoRhK2A5S+qTEMakif/6DaLuPME7MRWSgu1ORPGmqU9x3UCfmb2cr36g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=kubik.pl;
-	spf=pass smtp.mailfrom=kubik.pl;
-	arc=none smtp.remote-ip=213.239.133.37
-Received: from mail-e842.seohost-mail.eu (mail-e842.seohost-mail.eu [213.239.133.37])
+	dmarc=pass header.from=mutemail.de;
+	spf=pass smtp.mailfrom=mutemail.de;
+	dkim=pass header.d=mutemail.de header.i=@mutemail.de header.a=rsa-sha256 header.s=2024 header.b=OIfkN7U0;
+	arc=none smtp.remote-ip=188.165.235.121
+Received: from mail.mutemail.de (mail.mutemail.de [188.165.235.121])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B35606A319;
-	Tue, 20 Oct 2026 10:32:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4B35606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kubik.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kubik.pl
-Received: from static-46-238-236-132.awacom.net ([46.238.236.132] helo=localhost)
-	by h84.seohost.pl with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <piotr@kubik.pl>)
-	id 1xJ78l-0000000Bk51-0PQF;
-	Tue, 20 Oct 2026 12:32:19 +0200
-From: Piotr Kubik <piotr@kubik.pl>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
-	Peter Chiu <chui-hao.chiu@mediatek.com>,
-	MeiChia Chiu <MeiChia.Chiu@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Piotr Kubik <piotr@kubik.pl>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC86606A319;
+	Tue, 20 Oct 2026 11:15:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DCC86606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mutemail.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mutemail.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=mutemail.de header.i=@mutemail.de header.a=rsa-sha256 header.s=2024 header.b=OIfkN7U0
+From: "Felix K." <fk@mutemail.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mutemail.de; s=2024;
+	t=1792494922;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=yQkQbbajxJs9ic68pd6bUQHnIJkpqAvbMwyFnVe+2yg=;
+	b=OIfkN7U07CLMtNCicMsZj/2k7yAtmyxsQ4fX/IREo3/JjGmOzBH9WVKm0LWeUtn2JpoJrE
+	tHc6hicq11y4bW67Ppgij198YCHPiytKTTbDFmbuOybsakMVoWH8uNNhCPDjvgTh25iklh
+	dQCzDcRsOgf2feG8i2a3c5rhKFPWsV+kZqRSrvzPQSbZL2J7S+K42RzeRLUUusowP8caC1
+	wtbU/QL90yeHybROYILPbF502HMyNJIZb4WXx43zHU829dAvitooXuAdBxajw4m35nAPNs
+	9nLSXHD33ojYVjnjYRiLxQLL3MNcjQmBA+YBmWJsyOm2K/5YP9lSZUFz1qFQeA==
+Authentication-Results: ORIGINATING;
+	auth=pass smtp.auth=fk@mutemail.de smtp.mailfrom=fk@mutemail.de
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+	"Felix K." <fk@mutemail.de>,
 	stable@vger.kernel.org
-Subject: [PATCH wireless] wifi: mt76: mt7996: send no MLD group in a non-MLD link operation
-Date: Tue, 20 Oct 2026 12:31:26 +0200
-Message-ID: <20261020103126.46675-1-piotr@kubik.pl>
-X-Mailer: git-send-email 2.55.0
+Subject: [PATCH] wifi: ath9k: fix beacon slot selection once TSF exceeds 2^39 us
+Date: Tue, 20 Oct 2026 13:14:53 +0200
+Message-ID: <20261020111453.3500566-1-fk@mutemail.de>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -62,44 +63,100 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: piotr@kubik.pl
 
-The driver keeps the link of an AP after the AP stops, and it sends
-the link operation again when the AP starts. The command carries the
-MLD group and the remap index of the vif. Only an MLD vif gets these
-indexes, so a non-MLD AP sends 0 for both. When an MLD on the same
-device holds group 0 and remap 0, for example the station MLD of a
-repeater, the firmware takes the address of the AP for that MLD. The
-station then sends its data with the BSSID of the AP as transmitter
-address, and its AP drops the station for inactivity.
+ath9k_beacon_choose_slot() derives the staggered beacon slot from the
+TSF as
 
-Send 0xff for both indexes for a non-MLD vif, as the BSS MLD TLV of
-mt7996_mcu_add_bss_info() already does.
+	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >> 32, tsf * ATH_BCBUF);
+	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
 
-Fixes: e7ec71d9f8fa ("wifi: mt76: mt7996: Add mcu APIs to enable/disable vif links.")
+TSF_TO_TU() truncates its result to 32 bits, so tsftu is
+(tsf / 128) mod 2^32 and wraps every 2^39 us (~6.36 days). 2^32 is not
+a multiple of intval * ATH_BCBUF (800 for the default beacon interval
+of 100 TU, 2^32 mod 800 = 96), so every wrap shifts the computed
+position within the beacon interval by 96/100 of a slot.
+
+After the first wrap the SWBA handler therefore picks the vif of the
+previous slot: every BSS sends its beacon one slot (12.8 ms) late,
+while its timestamp is still corrected by the tsf_adjust of its own
+slot, so clients see the beacon 12.8 ms after their expected TBTT.
+After n wraps the beacons are n slots late (up to 89.6 ms), until the
+error wraps around after 8 wraps (~51 days). This affects every AP or
+mesh setup, also with a single vif, since 8 slots are always used.
+
+Internal resets (e.g. on stuck beacon) preserve the TSF, so the state
+only recovers when the interface is restarted and ath9k_start() resets
+the TSF.
+
+Compute the offset within the beacon interval from the 64-bit TSF
+instead. For TSF values below 2^39 us the result is identical to the
+old calculation.
+
+Observed on a TP-Link Archer C7 v2 (QCA9558, AHB) running OpenWrt
+25.12.5 (backports 6.18.26) with three AP interfaces on 2.4 GHz. The
+TSF was set via debugfs (regidx/regval 0x804c/0x8050) followed by
+"echo 1 > ath9k/reset", and beacons were captured with a second device
+in monitor mode. Beacon timestamp modulo beacon interval, identical for
+all three BSS:
+
+  TSF                       offset
+  3.40 days  (0 wraps)        384 us
+  6.36 days  (1 wrap)       13184 us
+  25.45 days (4 wraps)      51584 us
+  44.54 days (7 wraps)      89984 us
+  50.90 days (8 wraps)        384 us
+
+With the beacons 89.6 ms late, a power saving IoT client (EV charger
+controller) went from 40 ms to 1.4 s average ping RTT (max 7.2 s) with
+1.9% packet loss within 9 minutes. Most other clients were not visibly
+affected in that time.
+
+Tested with this patch applied on the same device, using the same
+debugfs TSF method: the beacons are no longer delayed. The offset stays
+at 384 us for all three BSS with the TSF set to 0, 1, 4 and 7 wraps,
+and with the TSF set to 7 wraps the EV charger controller stayed at
+40 ms average ping RTT (max 117 ms, no loss) over 5 minutes.
+
+ath9k_htc_choose_bslot() in htc_drv_beacon.c uses a similar 32-bit
+TU conversion (wrapping every 2^42 us, ~50.9 days); it is not changed
+here as I cannot test it.
+
+Fixes: dd347f2fb2dd ("ath9k: fix beacon timer handling issues")
 Cc: stable@vger.kernel.org
-Signed-off-by: Piotr Kubik <piotr@kubik.pl>
+Signed-off-by: Felix K. <fk@mutemail.de>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index cd7587c..c0b467f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -2701,8 +2701,13 @@ int mt7996_mcu_mld_link_oper(struct mt7996_dev *dev,
- 	mld_op->link_operation = add;
- 	mld_op->own_mld_id = link->mld_idx;
- 	mld_op->link_id = link_conf->link_id;
--	mld_op->group_mld_id = add ? mvif->mld_group_idx : 0xff;
--	mld_op->remap_idx = add ? mvif->mld_remap_idx : 0xff;
-+	if (add && ieee80211_vif_is_mld(vif)) {
-+		mld_op->group_mld_id = mvif->mld_group_idx;
-+		mld_op->remap_idx = mvif->mld_remap_idx;
-+	} else {
-+		mld_op->group_mld_id = 0xff;
-+		mld_op->remap_idx = 0xff;
-+	}
- 	memcpy(mld_op->mac_addr, vif->addr, ETH_ALEN);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 4a27e3753..8a9bd23d3 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -308,7 +308,7 @@ static int ath9k_beacon_choose_slot(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_beacon_config *cur_conf = &sc->cur_chan->beacon;
+ 	u16 intval;
+-	u32 tsftu;
++	u32 offset;
+ 	u64 tsf;
+ 	int slot;
  
- 	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
+@@ -322,11 +322,11 @@ static int ath9k_beacon_choose_slot(struct ath_softc *sc)
+ 	intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
+ 	tsf = ath9k_hw_gettsf64(sc->sc_ah);
+ 	tsf += TU_TO_USEC(sc->sc_ah->config.sw_beacon_response_time);
+-	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
+-	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
++	div_u64_rem(tsf, TU_TO_USEC(intval), &offset);
++	slot = offset * ATH_BCBUF / TU_TO_USEC(intval);
+ 
+-	ath_dbg(common, BEACON, "slot: %d tsf: %llu tsftu: %u\n",
+-		slot, tsf, tsftu / ATH_BCBUF);
++	ath_dbg(common, BEACON, "slot: %d tsf: %llu offset: %u\n",
++		slot, tsf, offset);
+ 
+ 	return slot;
+ }
+-- 
+2.53.0
+
