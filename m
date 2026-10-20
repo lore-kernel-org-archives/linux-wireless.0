@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792464620;
-	b=OfAIHBf96y4tX4pq7z2D4wlcywp9ZYWdih0EyEE80NJB5mGb6M6h5y5cGaCuo1z+ERzP
-	 G8+GZ8LvRpXn5AYA/9SYnVYMjpVa//0WguA8pY+MQyKZo/+WUz9bebK82wJ1IbUyYCorP
-	 wukWWg1OXUDJ8HXMm6XjaQN/B7pGHP8QyngVaVULMD+y6JngCCq2Q8D1DQPaHSsvo6FXM
-	 B+BHJ1Gd0SQqLCuxLQf6RHr6q+i6i077D+/6Qz8YwI9dl0HUKD34zMVUvrMCjBDjEhZV7
-	 QTD0zgWRXqGQxLoCaEYOxusWII6G2smYGO+/9SUbq9CNWF9XwWilq/0WNP1PHC/ns4g==
+	t=1792464618;
+	b=oCIv6a0Sh5Gd3mptUczy7YG+EPAc0LqHc5VZFnPN27oVzm1wsPgaf1ILB3V+BIAtRWJW
+	 DoydtzRfPE1wyx16QHrvM34Nqyd8EZIge4MGeWoWYzMwHaG5WpFYx3UR+J+X9rTijGP+q
+	 axuBEPpCT9FDEu3PaR7ZdsiZnogDrXIyJkzS+JAULWS82SYs2RzwBEIqse+sUIfn9Z76y
+	 r7hvt1jqDc4d/NTNDoxLbiAfT5i9VNWCkc6YdbwExtNExGvKawKL6w3G7nxSmq72w72ec
+	 0DUFingmQtOcDDqQPGzcLHf5B6q8QN5TTD9fw0i6t9+8HEa1xrN7mZq+F2HNOORo9GA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792464620;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792464618;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=uD9iLC9u0+i53WqbXenU4Sedkd6VmeyujwIgM/Ul8mg=;
-	b=d4qdYERzVOcdFy/jGB4mEdwJvByU5H5NpcJJlqwzI90R9opXq9V0YsRRxYzcjdaxpiCU
-	 ni3Wo+Ge/3p/+juZXTG5Oh+3un5AVHlX0Lo7zcy9umrYDB8yQfdA93ldvkHLHrsJfVTqJ
-	 PRt34FEfyzNKxebbt4X4tUsRKFRf9qxSjc5Mhk7x1mzLjR6sdKkNogYhBK73TQ4r4dmn1
-	 f9CAcCEyouRSSE6o6fLThpdujAcBQFD02BWb+vHuwpUNBRO1xf/L8OtYsQVIBa042Ei16
-	 vwf6jPhzsKvjsJkRnfqQWUshCveLwP3WXyrwSr0NaE1mOqVJLFEkGHXvU4kbPHWgs/w==
+	bh=tmELMb3Iy2dsfsnzN/3kQI/Gin1VtfTa2L18IbfBUSs=;
+	b=H742CH721uww6dA1pkk93DrwR7rKbNcaYsyIJ2hVBu/Ob1eouJBXbueZBgDfbYVX9u+t
+	 FuWbC129PuGmhEpDdVBYZ1sDoxoDMiO4GH34bgP1EUymyU2HORC/5B+C23Vd5S4Rg764H
+	 qJvWXap4yHmlncD6joYc8LPNNNpBsrrcgZQ6qqFapl/W7ZLfBRRnCrUbSVjzK2gvwUkeb
+	 yLB4FqvIErD7+9pb/JEuZt6gnYm/Bx3WCFfUayT58SpR+4GV1+gI2wdGLGM3zRnso203u
+	 X/Cdx1LTg2EFrIehD89AXltqm25/ewt08GWQvJ8I/7LTv9PVtlmEIAZhJSQntgQWBdA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Ys3yJNEl;
-	arc=none smtp.remote-ip=220.197.31.2
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aYuPUjTx;
+	arc=none smtp.remote-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0013D60A3815;
-	Tue, 20 Oct 2026 02:50:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0013D60A3815
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA80A606A328;
+	Tue, 20 Oct 2026 02:50:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA80A606A328
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Ys3yJNEl
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aYuPUjTx
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=uD
-	9iLC9u0+i53WqbXenU4Sedkd6VmeyujwIgM/Ul8mg=; b=Ys3yJNElDXDx/8YhgS
-	5kz6NqPdGdOB3IDzNisIIiXWme0srucIdVdUoxGdTKwxoj7V5Y14EkWjKQECDwkT
-	WvVHRpgMjBSZ+aZgN2Ck8A/jaWsk6i0P79Bmv+aNl2WwMeWiJQmHFhaXP6NfEBDJ
-	AFn6xfXhZhDKISWStm8xFLpis=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=tm
+	ELMb3Iy2dsfsnzN/3kQI/Gin1VtfTa2L18IbfBUSs=; b=aYuPUjTxOkibfJ0V6A
+	wWXrD62G/n0sMSOCPSktGZY2mXc9pjkrtGkmnUpd+lmos+nzkjh9EiTnKrQ6KMMs
+	NEn/Ee8rc6sczw3FCh4orn7wKFoPhRIRIXXkVlO/dLRywmzpB7zKZ7QZdufwOADI
+	FbLQVz95OMy8mGjz3KGjbWPfY=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnr8C+1tZqMLhIBA--.5123S5;
-	Tue, 20 Oct 2026 10:49:40 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnr8C+1tZqMLhIBA--.5123S6;
+	Tue, 20 Oct 2026 10:49:41 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -51,17 +51,15 @@ To: Felix Fietkau <nbd@nbd.name>,
 	Sean Wang <sean.wang@mediatek.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
-	Evelyn Tsai <evelyn.tsai@mediatek.com>,
-	Bo Jiao <Bo.Jiao@mediatek.com>,
 	Elwin Huang <s09289728096@gmail.com>,
+	StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH 3/7] wifi: mt76: mt7996: validate EEPROM response lengths
-Date: Tue, 20 Oct 2026 10:49:29 +0800
-Message-Id: <20261020024933.3205681-4-yaojiale02@163.com>
+Subject: [PATCH 4/7] wifi: mt76: mt7996: validate free-block response length
+Date: Tue, 20 Oct 2026 10:49:30 +0800
+Message-Id: <20261020024933.3205681-5-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261020024933.3205681-1-yaojiale02@163.com>
 References: <20261020024933.3205681-1-yaojiale02@163.com>
@@ -75,101 +73,40 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnr8C+1tZqMLhIBA--.5123S5
-X-Coremail-Antispam: 1Uf129KBjvJXoWxur1xZr1UZrWrWw4rZrWrXwb_yoW5WFWfpF
-	y3KFyjyr1rJr1kXr4SyFs2ya4Fg3WrWr13Kw43Wwn8W34aywn5AayFvFyvgr1YkrWUA3W8
-	Gw4UtFnrGF90qrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j7a9-UUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzQQ3cWrW1sScIQAA3c
+X-CM-TRANSID:_____wDnr8C+1tZqMLhIBA--.5123S6
+X-Coremail-Antispam: 1Uf129KBjvdXoWrZFWDXr4fKry8tFyUWw1xXwb_yoWkJwb_uw
+	4vvr9xJr10kws0kr47Cw47Cryak3ykZry8urW3tw45XFW7JFW7Grs3Zw15Gr9I93ZrZF98
+	Gr1DXa1UAa4aqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUbG-e7UUUUU==
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzgU3cWrW1sWlMgAA31
 
-The EEPROM query reads fixed event fields and copies EFUSE or external
-EEPROM data without checking the firmware response length. A truncated
-response or an oversized external data length can cause out-of-bounds
-reads.
+The EFUSE free-block query reads a byte after an eight-byte prefix
+without checking the firmware response length. A truncated response can
+cause an out-of-bounds read.
 
-Validate the fixed event, the requested EFUSE bytes, and both the
-external data-length field and its payload before copying data.
+Require the prefix and block-count byte before accessing the response.
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
 Fixes: f456e1f56c4c ("wifi: mt76: add external EEPROM support for mt799x chipsets")
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 30 +++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 1f7af6359dd7..eb868c2d5108 100644
+index eb868c2d5108..c70d7ad3148c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -4399,6 +4399,7 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_l
- 	};
- 	struct mt7996_mcu_eeprom_access_event *event;
- 	struct sk_buff *skb;
-+	size_t data_offset;
- 	int ret, cmd;
- 	u32 addr;
- 
-@@ -4424,9 +4425,14 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_l
+@@ -4516,6 +4516,10 @@ int mt7996_mcu_get_efuse_free_block(struct mt7996_dev *dev, u8 *block_num)
+ 					sizeof(req), true, &skb);
  	if (ret)
  		return ret;
- 
-+	data_offset = offsetof(struct mt7996_mcu_eeprom_access_event, eeprom);
-+	if (skb->len < data_offset) {
-+		ret = -EINVAL;
-+		goto out;
++	if (skb->len < 8 + sizeof(*block_num)) {
++		dev_kfree_skb(skb);
++		return -EINVAL;
 +	}
-+
- 	event = (struct mt7996_mcu_eeprom_access_event *)skb->data;
- 	if (event->valid) {
--		u32 ret_len = le32_to_cpu(event->eeprom.ext_eeprom.data_len);
- 		u32 block = mode == EEPROM_MODE_EXT ? MT7996_EXT_EEPROM_BLOCK_SIZE :
- 						      MT7996_EEPROM_BLOCK_SIZE;
  
-@@ -4444,16 +4450,35 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_l
- 		case EEPROM_MODE_EFUSE:
- 			if (!buf_len || buf_len > MT7996_EEPROM_BLOCK_SIZE)
- 				buf_len = MT7996_EEPROM_BLOCK_SIZE;
-+			if (skb->len - data_offset < buf_len) {
-+				ret = -EINVAL;
-+				break;
-+			}
- 
- 			memcpy(buf, event->eeprom.efuse, buf_len);
- 			break;
--		case EEPROM_MODE_EXT:
-+		case EEPROM_MODE_EXT: {
-+			u32 ret_len;
-+
-+			if (skb->len - data_offset < sizeof(__le32)) {
-+				ret = -EINVAL;
-+				break;
-+			}
-+
-+			ret_len = le32_to_cpu(event->eeprom.ext_eeprom.data_len);
-+			data_offset += sizeof(__le32);
-+			if (ret_len > skb->len - data_offset) {
-+				ret = -EINVAL;
-+				break;
-+			}
-+
- 			if (!buf_len || buf_len > MT7996_EXT_EEPROM_BLOCK_SIZE)
- 				buf_len = MT7996_EXT_EEPROM_BLOCK_SIZE;
- 
- 			memcpy(buf, event->eeprom.ext_eeprom.data,
- 			       ret_len < buf_len ? ret_len : buf_len);
- 			break;
-+		}
- 		default:
- 			ret = -EINVAL;
- 			break;
-@@ -4462,6 +4487,7 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_l
- 		ret = -EINVAL;
- 	}
- 
-+out:
+ 	*block_num = *(u8 *)(skb->data + 8);
  	dev_kfree_skb(skb);
- 
- 	return ret;
 -- 
 2.34.1
 
