@@ -1,98 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792509880;
-	b=nTsk5sylwHFIg6iw0tH5DUwrh/3VB4IJbqaw+FRs6cG3HP9Or6PvR7NZg0INOzY4Gq7H
-	 Ai6vVp5+nf2wEU+Nv+qviy19XpefahVLNNSzAHGAs8OXBCE93n1E2QIqlcnLd2V3XtNcX
-	 zT1tKjfbI0lFNQxyPnnXolSLM4ohAkrqVKZwDAUvEHLvh8Ia98k9uXq48mgvd9VP528Yl
-	 qiLZvYpXgcNS+q2TA9ICEluBplQyAk7qSMYSjqVY1Nah76mmMS/UmO+UwVvzV2VDWmAJD
-	 ZP3pQb6kz6opEzqq11e2Uw/mkSB1xblYmPtRnfkg9e/ERcKn6ekvCLBcsY9mB10o6CA==
+	t=1792511100;
+	b=qX/705VLmlTtpWqj4XNUzddjbt52BJNwZZInkvNzJLVopLSnwpgqtHhQXv4eDvXbsWtU
+	 8YZRtR/MsyuXxwmzrfOymJRpBiKpBnDVGAMBNdXPO6gdAemPAfK6fEL8f0+EqjFzFPPWt
+	 K8oKI0zlI/hxaItqtWMT35NOIoumGvBKO66dgsnOAKymeKj4Dn4UMcnOSSpLqyM8r3BNd
+	 i2hOHuTJFji1ozkqFoCz2Cfuu9+EG/DlmwRuP90hXJClL9zGxafirmnrl2OVtysKVInSC
+	 KgKE/G/MD2u/hqFQEAsVFFS/NfRkI6lWpv3j8IUWal1BW5aQid3o68Wj75KCbN5ctjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792509880;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=FFKFYTGpTq110qX3OBusAjjcUsko+0b14MxACIod3aE=;
-	b=JVm4coS2RHmhkf/25T7a/JQhCDBYDQdrAc3UGDMOTkonNrxteEN09NF29yUoZrTI1/3Z
-	 ENrRWV6SQNtnsR5RP+yn43EsR8fdwb6I5Lg+7N5ObLEsxRGjnoPb/wLJvaAoB37F0VXmD
-	 xZXmx0EsmTV955STuIVy50e9MbB9Koo4zrQ54Ow3VGY2uKeWD0BKkns+pVK7WyRv/oaXJ
-	 jV2uSekUmx7rZpxbD9UsPvwsMZW9y240h8f+1IaJukbUMq3QfUTSZPAKs0IyNe5xP9Zwj
-	 0zreZU5BSBASJebECIIbjCzCZFlcnE+9tSdqtM3vVA6VgvgPyQwR80qHX85ucyQkmsg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792511100;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Scanned-By;
+	bh=i1mO6MuWQfpqagLYjVpfTRaUcgdVFipQ47H+IkmGB/Q=;
+	b=kX1y6ju/7eXnQFhUMHNSB4d3bPEt5U5ezeYVA2S+WT416RgB7RFVp6qo231Spcrmno2J
+	 hoEEeOszDT0okTe6R+D51Xv0YEhHXeltYF79w8Yhyl+Qz1R0vLZRnE+zqLilcL+z7DNYB
+	 PrbbBNbMMEd+4G67fws0fY1PUbjxaEKjqMv75tHsaumTvp2ts29I3s2wb0EQJRen5zvPc
+	 TFoOicVPHqDWJ/tM6hyC9gWJyaTY+k+vEq731u18PgfXGdqA+RoDi8z/C9x0otkavJpRZ
+	 Orbpzs1QVCK3RM1GXtPWLDi3c2mhep9j7rFknC4V6wQ5h2StwpYDcnSFrL1QL8g3KEQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VlqAK4+O;
-	arc=none smtp.remote-ip=209.85.208.50
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ALN4k2ze;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0654606A333
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 15:24:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0654606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3BE8606A32F
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 15:44:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3BE8606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VlqAK4+O
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b1f31c63ebso1310357a12.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 08:24:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792509878; x=1793114678; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FFKFYTGpTq110qX3OBusAjjcUsko+0b14MxACIod3aE=;
-        b=VlqAK4+O4fAoKvoSRcPhhIDlfI6ZETlAY1GhZGMpDgijp3VIjQBeYdZuvyteCw8E4O
-         853q8UMeEao9ukn5oQwcsp3eowxyyzyoErFlCdXzlxweUWWBDJxJgFT9id2as/FHfuPs
-         /dqRQLeo/+nY7v0F1DW8Y2HJA8B81gjWdXN6TNBYQi4kVT8cYSGTddJok78G18DXME3i
-         fMqXM0C9yFsx2O0PbdeNgsvtyqwJjvLLGmjMaDAzeYqJM2KvYWT4e2qEdzW8ZEXFOX7y
-         hU5r5JUNqRH9lQT4pfeEfvZVVCYrDOd7vdrTNwL7bSRcwEVeTNtof7rzFxu/LfOxVLRQ
-         8/1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792509878; x=1793114678;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FFKFYTGpTq110qX3OBusAjjcUsko+0b14MxACIod3aE=;
-        b=sTzcx7kYy6e7FEOgCHP8dpacbdrvYas8KBwanG5hzQj25GEHzhEYr3/V9ROKpGLwzI
-         hsgKwicdKNJLZoYCDfobvQjY5Mh1a0guxCHmUHwrTlctKQYhBCE4REoRCq+Ol2EuoS+9
-         m3aPznpjaZVycIeBKd3rZL/y1nHKAzCj7hWizUCQ/1P7HuNWWJ43chp35AJSfnJNYqy7
-         RN9nKBSGW5HxlEappi1D27DAmJMxdi0XfavYZR3jvSUBveQjrITNQv9Fz7tCA3G6luOq
-         KbbER6hAjwBYqrumIQWEWudrjAVlOyzf0J7SEFNKvFe36HbOhG0PMeemYqUccwRWBstz
-         TV6g==
-X-Forwarded-Encrypted: i=1; AKwUvBxQmNEGxhsxqG2l71Fqmb8XC9wRYbtkMlJ+dElNCe0yR46gCjENbp553CceYKKbFWdI7vIzkpL9i4WM2I/kTg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLcuhFNQ5MCZXB3qe/nRYt3BG2QRr87Npe103n3kNR92tf+Oydt
-	VdP2VyjExtpSHyH12DM6n8feLxu4/UgwYlNO6ihtxKOUmzx3lpkA5Iri
-X-Gm-Gg: AYBFou3+AAxI18x5t6Jo/zM/eVzhLdMtFk49bccgyy1MI7SingrC/3BtgoqwrPJpUjq
-	b11ih3YZ7JmfAgsjaZ6p7MAgvnkFrhr2B8e/KR8dNOYYm3YtXDSlEZaFxIOUFOXBTevajgAD7g2
-	qoArNGyN4d/j8+/2hUUXXsi8o08PgLTmy/uN4bIDb8TBF/C/VJaB3JmJAQH6UX8h/tW/6pCKvYd
-	sZHtmfHZPh1KbBsvRvdbimy5dYRVmebkqA+sqL8II4Wk9D7EXROHpsX4GDoR5hmWe3HTvp+F8Sz
-	kS77QqvLCAGkP1Z2E452pbiJ9R3+EOf5ss5CxVHl//HPLTQiSonGx1FnOphTlC3rIn+br4ivqdh
-	sWlc/0cD09MJ2BVeG3COEf4kt6xrzC8e4lx53cLr4pPIeAZ64O0oL6QqK/VHN9WeyNX7BiiKIrO
-	Vpf6irRfo3+KzXN0Oa/xgnpQuYFb7qis5B74ILPUKdMBzVsIQXfpSvpZA3/loaNl6ZLndw2aZLK
-	kyMtk5oFzgINbsMtHIwPREf9orIW3WWvALo8Acbp1ztfpZyTxgc/M5YportBrOpgDt2QT5VFgqI
-	ZcZswBYAVtOKY3TRcFekTIYXfWYSU5UknQ==
-X-Received: by 2002:a17:907:60d6:b0:c2e:616b:6763 with SMTP id a640c23a62f3a-c4600c87ff6mr231572266b.3.1792509877921;
-        Tue, 20 Oct 2026 08:24:37 -0700 (PDT)
-Received: from Martyna-s-A34.localdomain (ip-80-113-116-3.ip.prioritytelecom.net. [80.113.116.3])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c40919bcfc5sm488110466b.59.2026.10.20.08.24.37
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 20 Oct 2026 08:24:37 -0700 (PDT)
-From: Michail Andreas Michalopoulos <mike.michalo@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Mehmet Fide <mehmet.fide@gmail.com>,
-	linux-wireless@vger.kernel.org,
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ALN4k2ze
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792511098;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i1mO6MuWQfpqagLYjVpfTRaUcgdVFipQ47H+IkmGB/Q=;
+	b=ALN4k2ze81rS98CsHTcuyaiNRTvGyqNLhHaRKMOuh6SQIFqmlwYA8PlCMVQA5G/p1h8Adb
+	WXF3jErKC3T2lPi50vHVRC1p7KtC24V+hfaORV89zAkMLB4sPC7bMn41uQ9kw97Ysg1M0i
+	JUra45fLp2kPSrenPNds1oIntIoDX+w=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-164-wZzDOMMSMDSlMPLuSJEkog-1; Tue,
+ 20 Oct 2026 11:44:53 -0400
+X-MC-Unique: wZzDOMMSMDSlMPLuSJEkog-1
+X-Mimecast-MFC-AGG-ID: wZzDOMMSMDSlMPLuSJEkog_1792511092
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B98B618003FD;
+	Tue, 20 Oct 2026 15:44:51 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0E8315BC;
+	Tue, 20 Oct 2026 15:44:47 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: baochen.qiang@oss.qualcomm.com
+Cc: ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	jjohnson@kernel.org,
+	johannes@sipsolutions.net,
+	jtornosm@redhat.com,
 	linux-kernel@vger.kernel.org,
-	Michail Andreas Michalopoulos <mike.michalo@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 1/2] wifi: ath9k: don't read past short WMI command responses
-Date: Tue, 20 Oct 2026 17:24:11 +0200
-Message-ID: <20261020152412.95560-2-mike.michalo@gmail.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261020152412.95560-1-mike.michalo@gmail.com>
-References: <20261020152412.95560-1-mike.michalo@gmail.com>
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] wifi: ath12k: fix MLO station firmware crash recovery
+Date: Tue, 20 Oct 2026 17:44:45 +0200
+Message-ID: <20261020154446.2131752-1-jtornosm@redhat.com>
+In-Reply-To: <4f2a06f4-601b-4e96-826b-a5453bc03ec9@oss.qualcomm.com>
+References: <4f2a06f4-601b-4e96-826b-a5453bc03ec9@oss.qualcomm.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -102,59 +83,32 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-ath9k_wmi_rsp_callback() copies cmd_rsp_len bytes from the response
-without checking how many bytes the device sent. A short or empty
-response makes it copy stale bytes from the uninitialised USB REG_IN
-buffer into the caller's buffer, e.g. into the value returned by
-ath9k_regread().
+Hi Baochen,
 
-Commit 93ce8ea70451 ("wifi: ath9k: reject short WMI command responses")
-failed such responses with -EMSGSIZE, but AR9271 firmware answers
-commands that return nothing with an empty response, so that broke
-normal operation and was reverted by commit 90201351a862 ("wifi: atk9k:
-Revert "wifi: ath9k: reject short WMI command responses"").
+> Johannes doesn't like option 2, let's forget it now. Instead, are you interested in
+> (working on) option 1?
 
-Copy only the bytes that were received and zero the rest of the
-caller's buffer instead. Empty responses keep completing successfully,
-and callers no longer see bytes the device never sent.
+I can study option 1, but I think Johannes pointed out that taking
+rtnl only around cfg80211_shutdown_all_interfaces() could not work,
+so it would mean holding rtnl for the full recovery (~1.3s). It could
+be a significant rearchitecture of the recovery path to not take a
+lot of time with no response.
 
-Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Michail Andreas Michalopoulos <mike.michalo@gmail.com>
----
- drivers/net/wireless/ath/ath9k/wmi.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+>> sense for you to land this series as an interim fix while that is
+>> worked out as a follow-up?
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 44e91815a1..76c8dfcc53 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -204,10 +204,20 @@ void ath9k_fatal_work(struct work_struct *work)
- 
- static void ath9k_wmi_rsp_callback(struct wmi *wmi, struct sk_buff *skb)
- {
-+	u32 len;
-+
- 	skb_pull(skb, sizeof(struct wmi_cmd_hdr));
- 
--	if (wmi->cmd_rsp_buf != NULL && wmi->cmd_rsp_len != 0)
--		memcpy(wmi->cmd_rsp_buf, skb->data, wmi->cmd_rsp_len);
-+	if (wmi->cmd_rsp_buf != NULL && wmi->cmd_rsp_len != 0) {
-+		/*
-+		 * The firmware may send a shorter (even empty) response than
-+		 * the caller's buffer, e.g. for commands that return nothing.
-+		 * Copy only what was received and zero the rest.
-+		 */
-+		len = min(skb->len, wmi->cmd_rsp_len);
-+		memcpy(wmi->cmd_rsp_buf, skb->data, len);
-+		memset(wmi->cmd_rsp_buf + len, 0, wmi->cmd_rsp_len - len);
-+	}
- 
- 	complete(&wmi->cmd_wait);
- }
--- 
-2.43.0
+> Jeff can make the call.
+
+Jeff and Baochen, in order to get some fix, would you be open to
+landing this series while option 1 is worked out as a follow-up?
+Happy to continue with this.
+
+Thanks
+
+Best regards
+José Ignacio
 
