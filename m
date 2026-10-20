@@ -1,88 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792481273;
-	b=ImnbybOq469gE4rxloipMG/g4NUcqTz+6deNKVRwfORNANv4r0O4pYaESuMWlO5YYN5W
-	 bZqOFhz+BVW4E+tIkzD6/B+e48VxyXhOKqqEVyfsIk+Nv0TQM41ms0JoBj2HU+suugwaT
-	 pkV/y8ES9iv49papPGv9dqqjwoP2OLkmicxSAaoKep88hsgPoDOVaRRNo6P9w1I8nADx6
-	 9qpE2Zvrwi4nw4i+cm2NTDtSgcgOgkOLeK1TcGTN+ezq/E4taf/7fB1EIg+oSV1/zGXw2
-	 gAV9+GSJpSV4BnSMs/TvDYm6zNHWSg8Q04xiad8A2RO8SwdYg/3vZeZqiNTg9srFLaw==
+	t=1792481423;
+	b=rBmskSqDe8kf0TZ2RRVszlOjIhowq1Tb7eRb9LdRl/xIq9oMi+qEAoDh3BasrWnAOrXy
+	 MqjlU4zy/M1D6nrjFmb6pN6zHXwRZ0buVXyRqkOVS6Dp7RBUM+UmtEgxD9Ak8O9W5qnKr
+	 g12LKrx55JmMIPhkGhZXBNyvH6A95ekUV+hdNiHcV3ktzEo8jjMTOY6N15F3cq9kgvPwQ
+	 ESQ7kn6MOdub9REA40mqJiXp0pvIb4/5gHdruLQxdP0cfaPwMpD2g4qBRlLb0B88OxhMG
+	 G8azPzY1ZxDu39CLAwHmi58wWA0StujdVGByh7mQmO7tmwgBy5HX7UmQDnY8pGCXDJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792481273;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792481423;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
-	b=yZXpd3wF/T/kces92iwSrXm7/6jzC4LEe0uOjVD6lnU2Hdmzdzws4U+OaI745zO83IHI
-	 o8dYdyd1wr7/tCc9/6x0DmQRRevY3csEMZyX1zvNfPAQEsLN3mxYv1nTiyiX9Gz3LQu8v
-	 3i8tn1cBcvN8w7xTabmmZz8yh/VAvzsqMLQs+mGO4YLFEJL+khiMJahdCDUT0jIo0BXu0
-	 JFPZwwuDPKBH8h6Ru14z5yFUOVB5DvEw/bm0JAOxd1ujJ5tere8g1P9Fu3FdTI7YzzTdP
-	 J5Do3riXLYf6H+A8YK2SjvL5ljIet25lx+RFDpf+/J9NIf8ofJyYoMX9oc/cT3xgfkA==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=5tXRrlu6pVIT1vr+YhxUcVgo6aTbfODu2mQd8Xde0q8=;
+	b=vkS0xOaMiJDISL4ats0bx005ETs5l9g0ujCocc3udga1A985FP0MaZnYcYHQ2En03A3I
+	 Nde0KXKyoJwQcfCYxisDC7c5yn9U9gT2gg4rkJdWfvfHcyg6+vcQDIzXzunmsevRi96bx
+	 9fobcKb3tCuA8Ct1FmrN5x9yTS9PAPsaEFUcXdrhhhggYMjXRE+VNF5jlyfoFkLs2wcFa
+	 SWKPq0ctr99LaBEKuhWgBopI2FiNNhXOBIrbpvhOJOmza9JYNovjqkXI/0zhI9auJjBGN
+	 44k9VsLQLt1OhdVsFrrj2cWzoPVmtG/+EvSiNY3V/fLA0+bGRdRcX23d7DQzo1uAm9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=morsemicro.com;
-	spf=pass smtp.mailfrom=morsemicro.com;
-	dkim=pass header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=lbB2HP9w;
-	arc=none smtp.remote-ip=209.85.215.182
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Xb5+MZMU;
+	arc=none smtp.remote-ip=209.85.221.54
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3E8606A32E
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 07:27:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE3E8606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B92E606A31E
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 07:30:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B92E606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=lbB2HP9w
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cd5d2dafeccso968692a12.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 00:27:52 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Xb5+MZMU
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48df0fa43c5so330424f8f.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 00:30:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1792481272; x=1793086072; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792481422; x=1793086222; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
-        b=lbB2HP9wObIR+/95KwfZWannwlInnVJYWEVTbHx0qdlLg/9wYfqrqUxR0XlQ9gwLht
-         fdGi3U9gkBnxg1S0whK1Xmfro6jXnnDZ+Mrgt3vA9emFl7pmX1l5yZFAFKXu2aK/EFGt
-         nbGjIO5elfugJnM+E9+DcFnh/5b5yLyVSlwkOPOEfoMLaIFB7Vy7FRRb2XdsK95ieFKF
-         vnWw+wffTYvV1z3Xfv+zsRYZ+I/pxenWjP37Cunn86bp8jghWPU577vGxVgLG1YwiBzm
-         zu20R8VAUTGjKqPVgmU1US7JH8Kl+ASGv8DkFH821C18T4rKoUaMEHDqhJraXEbfTzJB
-         qXmA==
+        bh=5tXRrlu6pVIT1vr+YhxUcVgo6aTbfODu2mQd8Xde0q8=;
+        b=Xb5+MZMUDvQCaCZuh9EZ4ZzyQco/Zspi9lD22QhWEte1S5PDxeukLjC9KIi0HEvQKy
+         6Sm9GOBmq7J51BwM4vWqnGSYKfpnJBEk8XM2ZlKHOUAdfJlOqr+gEI64dDEu9NXM/qWA
+         cADorGr8FaZnClXEgvRzfs5qDEjqaLAURGiBtCZ3lZonwccV8/3soVLsR7QMc1QRf5ON
+         eT/Ws+oxEpzU5ssn31xsAwyTH0Ef0vvi9hjXQogflHJng0XPGcIQmfZR5KiDzq0BKqOW
+         sBsP1BilsC9NDx9OLXlzFmye6gWr23ytGoW/NLK0CoSH+fPdSImtDBNFfB7rVDXe6LFE
+         Q1cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792481272; x=1793086072;
+        d=1e100.net; s=20260707; t=1792481422; x=1793086222;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=5gyxteyqC/XSbkUMoXJxSrRym4eYIwlmz8NIHe1F1rY=;
-        b=DoZ4kQKv1igydann3XX/8HFoOpoB+8BSqWJh9CYpBWQmSAQVJ5gVlAtN5Uv4zpaGUM
-         ULTj+oMmmhBWxMgCNINu1sa5+jQ//XmxmqaTTFGvmSHrKCUE1ryb4sGChffUbbFwLjGz
-         AVvSu0eVrqBAknaiyPj1X0j2huMvmF/cYp+0lwJL5Nl+teiv/ig/YORF07h8koxVfkDF
-         ul80tdYrZ+VJpZQTno5RKZzeoMUMID7F6O3aPzfEcaF030uQmELdgH8BXb0TPkmc3Zus
-         CQgrvHl56KqTt3KHGZMblVDlZUXPTh9OAmYBOTeuPeCDHJQdz8TgOyCze9UbBaDdmEdu
-         21hQ==
-X-Gm-Message-State: AFq9FYKNWAehJLMaHAqRkTtG6UqoTRebQrnaVNXFt2hr14XTtxO63feO
-	4KWOY3QzG8sjsnXxDKsIyJAN5nO0RD1jYS18+sr+ZSxr5G6rZbuLpa3GpGFzLBdCPqd7K06SGXi
-	66uuyGK2Xhw==
-X-Gm-Gg: AYBFou3INausxM+kaqaa7XFiMBYIpPXSbXjaaM3eYJAj07eI3ADdzeIg0KzefEBCZo4
-	XZ+huNMQcARHoTjqr18NBANUzvoAMvuaHREIvUwlX2FLeir2oV0bp6VW77cHbD2/WmmChCi0o/v
-	o7Uvwt7L/fVpR3+72OuJxqs5rVoVvMvjjOwiOl1VgsPYq8chOLVX+e6O1KCfy6dMHcYfkj8mTsW
-	ErUmzTh85kprvBQuCwYWlSGyU57v4hS/Z+CQPVOMrBqClE3Qb8WYpCzMor06WlEK5kfqkhQ0qH6
-	X+/Q7QCZfHvUZidy+mfXr57G//QLw4liFYMSKhKwfiZpDR3a2GaCYmwKlUi0hiQED+Uh3I7cYI3
-	ZqTvDF2GRZfbHE8qDh3Gt6fAkzF7nAwSX0Rm4qWOuTSzjGqtYy5DLuQ8Y2lsd0V1kfOrE0E1hH9
-	YTDq6vS8nTX5T62q0Qk6f24WuDZ4ECxqRgSeCJlj4DJhgVTi4e+290qD/q96LLfEj0eoNtbhUqr
-	BRdS6AFQmmPWnx+L97941NpofLijoakKdnUCrxlbvkPA9WQCZ4cSKJWFT9Zaw0u
-X-Received: by 2002:a17:90b:3d87:b0:3ac:9599:a689 with SMTP id 98e67ed59e1d1-3acef154517mr7624815a91.34.1792481271984;
-        Tue, 20 Oct 2026 00:27:51 -0700 (PDT)
-Received: from mma-spare.sydney.mm.lcl (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ad5d400505sm2718511a91.4.2026.10.20.00.27.50
+        bh=5tXRrlu6pVIT1vr+YhxUcVgo6aTbfODu2mQd8Xde0q8=;
+        b=mSaSd9L6UYqdUDBmHNffEyzsN5q1xMEMlx4XTBA5qZtZe8hxemdAeg0gVkCIQWCGG+
+         j68DLMmgwrLzRgsD9L+7/Sv602QHo/aQkErW1kGDKiUzwi+alNya9pKvxDPtqmCbMob/
+         77Ar0wgwLm7uKwRNzJlAGu/Lib+kBPc6EcQfhOzUg6lNgInOmvkNgbfJoCFSPEz0odtL
+         OKTrqzyXaGigTtr3HQ95gXmMwMz/fbnlKDdtIyWcwE9TuqbeKeBAu5DY4CnFnaYlOkh7
+         3+/9jQDXpXR8nD3WXjDXIsgUtiHpMrUYx+ljqYWD2+Rztrq9L+CRbYTpdLWt0QJD3fG2
+         nhNg==
+X-Forwarded-Encrypted: i=1; AKwUvBwcom+Z0W0Ad81PH3h7+8CA7VBkLEisjQgA6LikoSG96fPgD9p+1Wjdzb/BmMehWJH9WDoVLUl3pfzydJY/Tw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYI0dPLH5FPA9tE5ODffZ4qNzbKnj1W9d54no69DuFu6M0qoms6k
+	GDI3HXtcNFEGZbHw9iovZ9Q6EQgUDxGTtfbinY6qTmh+vHr1KySwmYHa
+X-Gm-Gg: AYBFou3EHBFFKYsqevlYPcYANei+oKXJBxEX+/qDFo6dB3XAtQhTl+1X4TJWXu2i4dm
+	yQHIQaR0ZMYtDEjfCo47SXC+kbAoNmAw+lgCRPeTRvFS69UrMBjIEehM//CghAbu54zU9etyq8/
+	m8Vk2WUnemhBOqYrU3bta54KCDYn+twotzEkkK0Enpxt4jwhTgF0CB1ouu+7p4LfrQzOjw2WOzK
+	DTml/jO1Qhk0COprZlnN9ncpd2QfJ8nWClCWLTbR1Qv2nGTaag88Yk9BPNWmYwD09Dg2DgT4vL9
+	BqexCyPakiypMc0FknUauymStsk5Kz0mVd+GHPZzbF8IwbBm1ismWD/m7Xteh3Ul5jsCfHSD3ZW
+	EcX8OUuVgZMt+vtfOXoLJ9gDBng8nhLe3/8aFCRfSZo28r0CUbtijAyhTPVLsKS3QRSy3okhl1z
+	cn16cfl+hBOWNhuCAUac+CvgiZ/uE161x+7i4ApcBlyS42RC9S6JJHHHbs8WPTdympit6/PVoMi
+	0fZpYGPRyEL1I3iy39KHoQ=
+X-Received: by 2002:a05:6000:617:b0:48d:f160:efad with SMTP id ffacd0b85a97d-48e1e9f12c3mr3046877f8f.30.1792481421580;
+        Tue, 20 Oct 2026 00:30:21 -0700 (PDT)
+Received: from kali ([102.209.31.129])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e1d817d75sm4747712f8f.25.2026.10.20.00.30.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2026 00:27:51 -0700 (PDT)
-From: Lewis O'Flynn <lewis.oflynn@morsemicro.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Lewis O'Flynn <lewis.oflynn@morsemicro.com>
-Subject: [PATCH wireless-next] wifi: cfg80211: use self-managed regd after user hint
-Date: Tue, 20 Oct 2026 18:27:08 +1100
-Message-Id: <20261020072708.429946-1-lewis.oflynn@morsemicro.com>
-X-Mailer: git-send-email 2.34.1
+        Tue, 20 Oct 2026 00:30:21 -0700 (PDT)
+From: Bashirah Lawal <bashirahlawal017@gmail.com>
+To: outreachy@lists.linux.dev
+Cc: Bashirah Lawal <bashirahlawal017@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt7601u: remove unused ee_read tracepoint
+Date: Tue, 20 Oct 2026 03:29:46 -0400
+Message-ID: <20261020072947.124586-1-bashirahlawal017@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -94,45 +101,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-cfg80211 does not apply user or country element hints to self-managed
-wiphys. However, once such a hint has been made, reg_get_regdomain()
-returns the global regd instead of the self-managed wiphy's regd.
-Callers of freq_reg_info(), such as mac80211's
-ieee80211_regulatory_limit_wmm_params(), will therefore use the wrong
-rule and may apply incorrect restrictions.
+The ee_read trace event was added with the driver in commit
+c869f77d6abb ("add mt7601u driver"), but no call to
+trace_ee_read() has ever existed in the tree. Building with
+UT=1 reports the tracepoint as unused.
 
-Always have reg_get_regdomain() return the wiphy's regd when it is
-self-managed. This makes the behaviour after a hint consistent with the
-behaviour before one, where reg_get_regdomain() returns the wiphy's own
-regd.
+Each unused trace event wastes several KB of kernel memory.
+Remove it to avoid that waste.
 
-Signed-off-by: Lewis O'Flynn <lewis.oflynn@morsemicro.com>
+Signed-off-by: Bashirah Lawal <bashirahlawal017@gmail.com>
 ---
- net/wireless/reg.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/trace.h | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 50f50e768..5460b3117 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1147,11 +1147,13 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+diff --git a/drivers/net/wireless/mediatek/mt7601u/trace.h b/drivers/net/wireless/mediatek/mt7601u/trace.h
+index 07696b672161..208ab8b0117a 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/trace.h
++++ b/drivers/net/wireless/mediatek/mt7601u/trace.h
+@@ -123,21 +123,6 @@ TRACE_EVENT(mt_vend_req,
+ 		  !!__entry->buf, __entry->buflen)
+ );
  
- 	/*
- 	 * Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed or a user wants to help compliance further
-+	 * IE has been processed or a user wants to help compliance further.
-+	 * Self-managed wiphys always use their own regulatory domain.
- 	 */
--	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
--	    wiphy->regd)
-+	if (wiphy->regd &&
-+	    ((wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) ||
-+	     (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	      lr->initiator != NL80211_REGDOM_SET_BY_USER)))
- 		return get_wiphy_regdom(wiphy);
- 
- 	return get_cfg80211_regdom();
+-TRACE_EVENT(ee_read,
+-	TP_PROTO(struct mt7601u_dev *dev, int offset, u16 val),
+-	TP_ARGS(dev, offset, val),
+-	TP_STRUCT__entry(
+-		DEV_ENTRY
+-		__field(int, o) __field(u16, v)
+-	),
+-	TP_fast_assign(
+-		DEV_ASSIGN;
+-		__entry->o = offset;
+-		__entry->v = val;
+-	),
+-	TP_printk(DEV_PR_FMT "%04x=%04x", DEV_PR_ARG, __entry->o, __entry->v)
+-);
+-
+ DECLARE_EVENT_CLASS(dev_rf_reg_evt,
+ 	TP_PROTO(struct mt7601u_dev *dev, u8 bank, u8 reg, u8 val),
+ 	TP_ARGS(dev, bank, reg, val),
 -- 
-2.34.1
+2.53.0
 
