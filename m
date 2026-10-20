@@ -1,78 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792522331;
-	b=zD01DRJywxDmV3Ew+Ui6PAD8ybzQ+wVFPRrqgLtV49qc6QecRjKssiS/yyMLBf09zwEw
-	 4ba4p0SgQxg99WWXp4qzwdKmAGEUykrn9miEfoNUGyaPlW320dDys1/TMvYkK0u2dkYRD
-	 YHDfTcMGV8zaIlkzbLFN8WTUVvK0LU2vvo1BK/QRTvWGd3zCndZgqarCDPESE2OtEiCn/
-	 2Iv+MuH5FZnHcXVNvnPtGpVe5Iw8LmNFjxUZdz6klMnFLO+cllE5FO3BPYMdnJjoSQYvu
-	 8qYBZcTvtAvnyXPZuBOztOF2mHMworJPU6ctL5Xl1x+kkv3OjgG5dXfeXtpxA3a3RUg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792522331;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=YuY3cwzrzJ39Xj2ivbjbr7ZIHX1dHSJHypQZUABcYHY=;
-	b=FHfqHvx+g5oZwClKfCpJ/CBon7jQCz8FX7lxPFPg33H7zzIidJYmAmirWLuCxn2vXv+s
-	 JundmEomWpLg4p1WvXG/+LdRkJHJ5CysGJS2gnAjUeScR4SofD9OMPEQk2zcYPK+f/aOj
-	 M0o0QZ4gutbyUei7M15pK3OJJ87Lf11O3mqwj/T6NOGdYhlauzAm+3MGfDnYJtFW2X/qO
-	 kU0ziNPMrHFayAyQHRjE5lWPS8CC+/rZHecsZzLYSlYSbT0MxnKZ3AcsahbxSJueaobN4
-	 UVOx0IGdEhlcm6BktTPaMUbYAKXe8h9tNlEjB7/SIzNH99ahidWWWlQc/2zFqZqgzDA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J6AueGKS;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E883606A31B;
-	Tue, 20 Oct 2026 18:52:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J6AueGKS
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792522329;
-	b=3KQeYFAigmOm/GegDZrq84aRC9SUnHHRi+8EsOmMyy4ywt8ODbb68550lz560apFoMEk
-	 bytKaiAczUtWyP1oPsWr9HaLBGxDCm5jPIvG7opdgrs9HdNG8jR9FtkKUEAsqoPW6bmTA
-	 07mePeCYn5yLo2dh3kXXoRaZIQbohsL5QH6O48+YuGS36wPihZwdUdnY9aeQGWX0t72cI
-	 iZvLw3pAg4d/jzGE8VIs9w0a8kl26fbUAJxqMhXmLzpVqKDhlFfyK9Ydv3HcoHBobKvd3
-	 KCPyv5dgdYl2OF/PBY7I+ESHvE6sqCN9XhJGQn/dn2wutBFMlGfcE37XWIpUssy0Bhg==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792522329;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=YuY3cwzrzJ39Xj2ivbjbr7ZIHX1dHSJHypQZUABcYHY=;
-	b=PjpHHqNZgkMMGGji8vdyCS0C+faz9FQodmCBO6EUi3GVn+9Eccbjhh1CrpzRvv9mlTqy
-	 s+Xd3uWdykI1lLuA6ZIueLtHASrVEthCo4AXepHTIpQMcQedMlLTymGMFP/4oWsl7qyHP
-	 beQ551DPZBePFNxDcfEk8BEPt93bkx+XXGu7+bPWOPo2MjbMpu6bRda9w5nxhZ36ZVqA0
-	 0t5ssvYsyeytV3tWPlowgf6NXGpE3MAVMsXrqze9LqQH6mtK6bDXyjo2fwH6X7Nn5ySdN
-	 vhzU+98/kgKmyE4DuVbQv5C/8xklhUCW9ZLxWIfgiNnUXHsqUaKJa09J91bQNPvLLVA==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.225
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792523763;
+	b=mvVscuExQ/hTBF/z2ADZcVlwEGJVHPo5Wh8DDd/kvGgaIYrdOwcEcEnbvW/ZeavgETrj
+	 gVJ4juYrQlCy1e7IIp2IO0WDA2H26b7PgFNU6O8mPoWDqqKcSEwdObMcy7Tzo1H6AHaUN
+	 UEbDz62REQOHH1pU1hU7pwxcog9tse8uAYTnecEN2pIpOonHmXH+6klobtlp/dBhugF99
+	 VZP9mYG8KS4zFs44DFrJOTpv43EdVX2FYiBZOJRiD1r7QT4/fw7C5aQD0TkCyA9Q50/1w
+	 /bNrgdjmhjv6DfwPv40zBIHR3vI1Uae5Z5tKnO3J7sD4fe753AlbRFVZDuj3XDJYocQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792523763;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=rUBxrQOgUlEswmxtd++Iy4KjUau7aWkHYzp/PeXcZ3g=;
+	b=REjZEdo505gXeuIiACs1ysEw2prjqpl2yIJz3m1upzkGP2kyK40cqARZZyB7HYGiiqWZ
+	 WFPCdRKY7/0BuTCaSM9Vt0Gp/BNUpTVDT6HKHKPygXLBBkp7eqeP49rtUX9dhQSFBWiBa
+	 Zoxvly2ovLDWI1KiMItJX8B1cGHIrBpqGDeY8yEo14A3U8/iMnwsLzQAOyRc03cgOh2vZ
+	 HG3E5ddYmVbMQbHvsTSjAs0khsaiCMAUOwiBZESbfSLAbQ02rsQ55yuy9AMsRvvHEqr3y
+	 Sdx16zaQYPQg2MotX1UouPl8NVyzThHqBXow7P8qu3PEPimAyg1oEaMuQGPgdCFQj4Q==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="aY3gv/bH";
+	arc=none smtp.remote-ip=95.215.58.225
+Received: from mta1.migadu.com (out-225.mta1.migadu.com [95.215.58.225])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 216521F000C9;
-	Tue, 20 Oct 2026 18:52:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792522329;
-	bh=YuY3cwzrzJ39Xj2ivbjbr7ZIHX1dHSJHypQZUABcYHY=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=J6AueGKSBy9QOLntaGPP28GSFQLIvuRfbdiXD5g732kWDjWIV/T7VhMgdgrczm+q7
-	 Dw/gDtHMuQlRAwcLSxo/FxWahwquqq289+fC253poXFnVoDU540LuFC39fumUMPqz+
-	 YjXFz3At7TNCvwDmdyyi4b/vUB1R1Aopz510HG620WQQT5kVWMfsuF+qFWV/v9ceVI
-	 mcKZqd1n1bpih0gGavRChwwNAoQapxHy+CEQAvjyyvLk+lr3+/khMh66A764H1iwqv
-	 4Mcc5H1UKA+H84bCIBH8mzCsmlf0HedwHlkecsY8jT3vyk0YNb31Kl+JVQgwVXjmnl
-	 Gn/vCukyjegjA==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 7645643224;
-	Tue, 20 Oct 2026 18:52:08 +0000 (UTC)
-From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Tue, 20 Oct 2026 20:52:07 +0200
-Subject: [PATCH v4] wifi: ath10k: make in-order rx amsdu buffers persistent
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885F4606A319
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 19:16:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 885F4606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=aY3gv/bH
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=lw+t75FwRLjeMhJnNzMlndW0v6yjeCQr5HI2l/gOvaQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792523758; v=1; x=1793128558;
+ b=aY3gv/bHVOHntPRPOB2o+HLJbggVPhSRWDtI2wqRDJ6NQtlTqmGsZV80Wet43qPM300SMyTl
+ S6OVPI1KTUh2rLsd/V4BIuDiXz5bW/EtuJaCbhSS8dxokV9aKv+cYUXJIAUMaT9AmPAPnda5wbW
+ 3q4mu9UfW6T3o7YOF/NDNKck=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id eecc7a7145419b5d;
+	Tue, 20 Oct 2026 19:15:58 +0000
+X-Mizu-Trace-ID: eecc7a7145419b5d
+X-Migadu-Flow: FLOW_OUT
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: [PATCH rtw-next] wifi: rtw88: sdio: limit the high queue to DTIM delivery
+Date: Tue, 20 Oct 2026 19:15:42 +0000
+Message-ID: <20261020191542.17207-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -82,262 +63,165 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261020-ath10k-a-msdu-v4-1-670b69d39059@ixit.cz>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3WMywrCMBBFf6VkbSQzCda48j/ERZqHHcRWkhqqp
- f9u2k1BEO7mXDhnYslH8omdqolFnylR3xVQu4rZ1nQ3z8kVZijwIGrQ3AwtiDs3/JHci1ulpVS
- +ERocK84z+kDj2rtcC7eUhj6+13zG5f1XysiBB1XrptEOEOozjTTs7YctnSw39yjkryuLawKWg
- cUAenPnef4Cv4YipuQAAAA=
-X-Change-ID: 20260719-ath10k-a-msdu-c49334eb091d
-To: Jeff Johnson <jjohnson@kernel.org>, 
- Johannes Berg <johannes.berg@intel.com>, 
- Kalle Valo <kvalo@qca.qualcomm.com>, 
- Michal Kazior <michal.kazior@tieto.com>
-Cc: Richard Acayan <mailingradian@gmail.com>, 
- linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- phone-devel@vger.kernel.org, David Heidelberg <david@ixit.cz>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8397; i=david@ixit.cz;
- h=from:subject:message-id;
- bh=e4K4YjSYToXwYpmvfTzP+xwda4abWoMi8YvjPXpxLNg=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBq17hXWRrK944FsnppAgJ2SH5pW7Jp1Ut+j7W03
- 646u+8LrnyJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCate4VwAKCRBgAj/E00kg
- cqmIEACQCFP23uK7tlaRO5Ki26cKWFF0BbXEDIr1sreeN5f0OltJ3A86xfrJP5tXf6c0ceCsvlc
- TSeMy+oX99csAWPP9ZfMIrLQMGpgjcIph6uryUM+S659jsm3R7TDEQxIUlA71+69d4ceJPeGt3o
- jCz9taJ5XinmLtmKx9vgG/mCutkOvTACoCfuZ/g/xVBmd5Tqprs/VL0yTSSQkwSUidE4Pdnjk6q
- uKrBu+batXFbKUq1I9kXHu89JkeG6WsTXPXNyt7DLhW//twCOSVf/C6blQlv/iBItgB+BtWKazz
- ZGdpNQV0Oe31eaMsGkcvg269ad7ePvx02YoYPSZKu+ABZbaK+1b2FfRclTHUXBFGCvMKEa7BhpY
- RbpLhSxTVobW3SJnDDxf70vJB160x3VEysxlR4ZmBblRbgj5jEq8Us/zb49ZnixL7nnT2ywyYF+
- uwKGn7V6cFuQBZGyxrH0ottKsPytt19nFwjIel2QomUD7uGgwFkl3IhsF7k8pMf6cEUs0wVfsOM
- D9o0yGayqtUgdpNzudccmID3beasQwNEsEiR/U9QUTPxQLvOBMUje45vU3glmmFRK7KVuS89cOH
- 173MZUzLG4MKumarKaY7lx50XNy3q42ANemEhplsP6sxTNKfZVIGvH34p4XxexNb3KkaWh+8s58
- KJoypJbjEIPsmYw==
-X-Developer-Key: i=david@ixit.cz; a=openpgp;
- fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
-X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
-X-Original-From: David Heidelberg <david@ixit.cz>
-Reply-To: david@ixit.cz
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: David Heidelberg <david@ixit.cz>
+In AP mode every broadcast and multicast (bmc) frame is sent through the
+high queue, which the hardware only drains after a DTIM beacon. Only a
+few frames leave per DTIM, so steady multicast traffic builds a backlog
+that holds the TX pages the other queues need. Unicast traffic then
+stalls for seconds and clients can no longer renew their DHCP lease.
 
-The WCN3990 might split MSDUs among multiple "in-order" indications.
-The driver needs information from previous indications to handle MPDUs
-that are not started by the same indications that complete them. Stash
-the MSDUs of an incomplete MPDU in the driver state, together with the
-peer id, tid and frag flag identifying it, and prepend them to the MSDU
-list of the next indication so the MPDU can be completed instead of
-being dropped and confusing the driver.
+USB had the same problem and was fixed by commit c710c7c2e038 ("wifi:
+rtw88: usb: route bmc frames via the high queue only for DTIM delivery")
+and the two commits that followed it. Use the same rule for SDIO. A bmc
+frame goes to the high queue only when mac80211 asks for DTIM delivery
+because a station is dozing, the frame is ARP, EAPOL or DHCP, and the
+budget allows it. All other bmc frames go out on their access category
+queue.
 
-Keeping the actual buffers around is required, not just metadata: the
-stashed MSDUs are the payload of the incomplete MPDU, which can only be
-processed and delivered once the buffer flagged as the last MSDU
-arrives. If the next indication does not continue the pending MPDU
-(different peer id, tid or frag flag, or an offload indication), bail
-out to recovery as before, since no firmware is known to do this. Cap
-the stash at the rx ring size and bail out the same way if the last MSDU
-never arrives, so a firmware that stops mid MPDU cannot grow it without
-bound.
-
-Based on effort of Richard Acayan.
-
-Signed-off-by: David Heidelberg <david@ixit.cz>
+Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
-The WCN3990 firmware may split an A-MSDU across multiple HTT "in-order"
-indications. Mainline drops these ("failed to extract amsdu: -11",
-rx_confused, recovery), collapsing throughput under load on affected
-devices. Stash the MSDUs of an incomplete MPDU in the driver state so
-it can be completed by the next indication instead of being dropped.
+  Tested on rtl8723bs with atk19 client. No regression in station mode.
+  Note: this adds support for AP mode for rtl8723bs, as I states AP
+  mode was left for future work.
+- Broadcast ping round trip was 3.6 ms, it was ~104 ms before the
+    patch.
+  - During a 50 frames/s broadcast flood, the TX page pool didn't
+    move and unicast was unaffected.
+  - A DHCP renewal under that load got a lease on the first DISCOVER.
+  - A dozing client received 18 of 20 broadcast ARP requests.
 
-Similar patch has been carried out-of-tree (sdm845 mainline, Comma.AI
-vamOS) for a long time.
+ drivers/net/wireless/realtek/rtw88/sdio.c | 69 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/sdio.h |  5 ++
+ 2 files changed, 74 insertions(+)
 
-Changes in v4:
-- Dropped RFC, rebased on top of next-20261016.
-- Link to v3: https://patch.msgid.link/20260803-ath10k-a-msdu-v3-1-af2af21c2f19@ixit.cz
-
-Changes in v3:
-- Rework: keep the per-indication MSDU list on the stack and stash only
-  the MSDUs of an incomplete MPDU between indications; processing and
-  error paths are otherwise unchanged from mainline (Johannes)
-- Track the frag flag of the pending MPDU and bail out to recovery if
-  the continuing indication disagrees (Jeff's review agent)
-- Drop the unused msdu/rxd assignments before the extract loop, a stale
-  pre-v1 leftover (Richard)
-- Return 0 when stashing an incomplete MPDU, waiting for the
-  continuation is not an error
-- Explain in the commit message why the buffers themselves must be
-  kept, not just metadata (Johannes)
-- Link to v2: https://lore.kernel.org/r/20260719-ath10k-a-msdu-v2-1-f479bb9d1217@ixit.cz
-
-Changes in v2:
-- checkpatch & style. (Jeff)
-- Improve comments.
-- Link to v1: https://lore.kernel.org/linux-wireless/20260210021249.12132-2-mailingradian@gmail.com/
----
- drivers/net/wireless/ath/ath10k/htt.h    | 10 +++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c | 48 +++++++++++++++++++++++++++++++-
- 2 files changed, 57 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 25c6b2e2f81c8..0a3998bdc34fd 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1924,16 +1924,26 @@ struct ath10k_htt {
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index dc2fd0f8f9ff..3cdffac5b5b0 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -6,9 +6,11 @@
+  *   Copyright(c) 2018-2019  Realtek Corporation
+  */
  
- 	bool tx_mem_allocated;
- 	const struct ath10k_htt_tx_ops *tx_ops;
- 	const struct ath10k_htt_rx_ops *rx_ops;
- 	bool disable_tx_comp;
- 	bool bundle_tx;
- 	struct sk_buff_head tx_req_head;
- 	struct sk_buff_head tx_complete_head;
++#include <linux/ip.h>
+ #include <linux/module.h>
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/sdio_func.h>
++#include <linux/udp.h>
+ #include "main.h"
+ #include "mac.h"
+ #include "debug.h"
+@@ -26,6 +28,8 @@
+ #define RTW_SDIO_TX_FIFO_HIWATER			16
+ #define RTW_SDIO_TX_FIFO_LOWATER			8
+ #define RTW_SDIO_TX_RETRY_DELAY			msecs_to_jiffies(1)
++#define RTW_SDIO_HIQ_REFILL_INTERVAL			(HZ / 10)
++#define RTW_SDIO_HIQ_BUDGET_MAX				16
+ 
+ static bool rtw_sdio_is_bus_addr(u32 addr)
+ {
+@@ -1299,6 +1303,64 @@ static void rtw_sdio_8723bs_wake_tx_queue(struct rtw_dev *rtwdev,
+ 	ieee80211_wake_queue(rtwdev->hw, q_map);
+ }
+ 
++static bool rtw_sdio_bmc_needs_dtim(struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct udphdr *udphdr;
 +
-+	/* MSDUs of an MPDU left incomplete by an in-order indication, waiting
-+	 * for the next indication to continue it
-+	 */
-+	struct {
-+		u8 tid;
-+		u16 peer_id;
-+		bool frag;
-+		struct sk_buff_head msdus;
-+	} rx_in_ord_split;
- };
- 
- struct ath10k_htt_tx_ops {
- 	int (*htt_send_rx_ring_cfg)(struct ath10k_htt *htt);
- 	int (*htt_send_frag_desc_bank_cfg)(struct ath10k_htt *htt);
- 	int (*htt_alloc_frag_desc)(struct ath10k_htt *htt);
- 	void (*htt_free_frag_desc)(struct ath10k_htt *htt);
- 	int (*htt_tx)(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ab2d373b4750d..40fdde280a6f1 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -291,16 +291,18 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
- 		return;
- 
- 	timer_delete_sync(&htt->rx_ring.refill_retry_timer);
- 
- 	skb_queue_purge(&htt->rx_msdus_q);
- 	skb_queue_purge(&htt->rx_in_ord_compl_q);
- 	skb_queue_purge(&htt->tx_fetch_ind_q);
- 
-+	skb_queue_purge(&htt->rx_in_ord_split.msdus);
++	if (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)
++		return true;
 +
- 	spin_lock_bh(&htt->rx_ring.lock);
- 	ath10k_htt_rx_ring_free(htt);
- 	spin_unlock_bh(&htt->rx_ring.lock);
- 
- 	dma_free_coherent(htt->ar->dev,
- 			  ath10k_htt_get_rx_ring_size(htt),
- 			  ath10k_htt_get_vaddr_ring(htt),
- 			  htt->rx_ring.base_paddr);
-@@ -841,16 +843,18 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- 	htt->rx_ring.sw_rd_idx.msdu_payld = 0;
- 	hash_init(htt->rx_ring.skb_table);
- 
- 	skb_queue_head_init(&htt->rx_msdus_q);
- 	skb_queue_head_init(&htt->rx_in_ord_compl_q);
- 	skb_queue_head_init(&htt->tx_fetch_ind_q);
- 	atomic_set(&htt->num_mpdus_ready, 0);
- 
-+	skb_queue_head_init(&htt->rx_in_ord_split.msdus);
++	if (skb->protocol == htons(ETH_P_ARP))
++		return true;
 +
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt rx ring size %d fill_level %d\n",
- 		   htt->rx_ring.size, htt->rx_ring.fill_level);
- 	return 0;
- 
- err_dma_idx:
- 	dma_free_coherent(htt->ar->dev,
- 			  ath10k_htt_get_rx_ring_size(htt),
- 			  vaddr_ring,
-@@ -3296,16 +3300,38 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_warn(ar, "dropping invalid in order rx indication\n");
- 		return -EINVAL;
- 	}
- 
- 	/* The event can deliver more than 1 A-MSDU. Each A-MSDU is later
- 	 * extracted and processed.
- 	 */
- 	__skb_queue_head_init(&list);
++	if (skb->protocol == htons(ETH_P_IP) &&
++	    ip_hdr(skb)->protocol == IPPROTO_UDP) {
++		udphdr = udp_hdr(skb);
 +
-+	if (!skb_queue_empty(&htt->rx_in_ord_split.msdus)) {
-+		/* An MPDU left incomplete by a previous indication is
-+		 * pending. It might still be possible to handle indications
-+		 * that do not continue it if there is only one peer that
-+		 * splits at each given moment. We are bailing out because we
-+		 * should have a test case for this before trying to fix it.
-+		 */
-+		if (tid != htt->rx_in_ord_split.tid ||
-+		    peer_id != htt->rx_in_ord_split.peer_id ||
-+		    frag != htt->rx_in_ord_split.frag ||
-+		    offload) {
-+			ath10k_warn(ar, "split amsdu did not resume immediately\n");
-+			htt->rx_confused = true;
-+			__skb_queue_purge(&htt->rx_in_ord_split.msdus);
-+			ath10k_core_start_recovery(ar);
-+			return -EIO;
-+		}
-+
-+		skb_queue_splice_init(&htt->rx_in_ord_split.msdus, &list);
++		return udphdr->dest == htons(67) || udphdr->dest == htons(68);
 +	}
 +
- 	if (ar->hw_params.target_64bit)
- 		ret = ath10k_htt_rx_pop_paddr64_list(htt, &resp->rx_in_ord_ind,
- 						     &list);
- 	else
- 		ret = ath10k_htt_rx_pop_paddr32_list(htt, &resp->rx_in_ord_ind,
- 						     &list);
- 
- 	if (ret < 0) {
-@@ -3334,17 +3360,37 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 */
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status, NULL);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false, NULL,
- 					     NULL, peer_id, frag);
- 			ath10k_htt_rx_h_enqueue(ar, &amsdu, status);
- 			break;
- 		case -EAGAIN:
--			fallthrough;
-+			/* The MPDU is incomplete. Stash the remaining MSDUs
-+			 * and wait for the next indication to continue it.
-+			 * A last MSDU that never arrives would otherwise keep
-+			 * growing the stash on every indication, so give up
-+			 * once it cannot plausibly be an A-MSDU any more.
-+			 */
-+			if (skb_queue_len(&list) > HTT_RX_RING_SIZE) {
-+				ath10k_warn(ar, "split amsdu exceeds %d msdus\n",
-+					    HTT_RX_RING_SIZE);
-+				htt->rx_confused = true;
-+				__skb_queue_purge(&list);
-+				ath10k_core_start_recovery(ar);
-+				return -EIO;
-+			}
++	return false;
++}
 +
-+			htt->rx_in_ord_split.tid = tid;
-+			htt->rx_in_ord_split.peer_id = peer_id;
-+			htt->rx_in_ord_split.frag = frag;
-+			skb_queue_splice_init(&list,
-+					      &htt->rx_in_ord_split.msdus);
-+			return 0;
- 		default:
- 			/* Should not happen. */
- 			ath10k_warn(ar, "failed to extract amsdu: %d\n", ret);
- 			htt->rx_confused = true;
- 			__skb_queue_purge(&list);
- 			ath10k_core_start_recovery(ar);
- 			return -EIO;
- 		}
-
----
-base-commit: 2efb7a11f1aa4d2dc285fe2680cca22cb9f72f64
-change-id: 20260719-ath10k-a-msdu-c49334eb091d
-
-Best regards,
---  
-David Heidelberg <david@ixit.cz>
-
++static bool rtw_sdio_hiq_take_budget(struct rtw_sdio *rtwsdio)
++{
++	unsigned long flags, elapsed, add;
++	bool ok;
++
++	spin_lock_irqsave(&rtwsdio->hiq_lock, flags);
++
++	elapsed = jiffies - rtwsdio->hiq_refill;
++	add = elapsed / RTW_SDIO_HIQ_REFILL_INTERVAL;
++	if (add) {
++		rtwsdio->hiq_budget = min_t(unsigned long,
++					    rtwsdio->hiq_budget + add,
++					    RTW_SDIO_HIQ_BUDGET_MAX);
++
++		/* keep the unfinished part of the interval for the next unit */
++		rtwsdio->hiq_refill = jiffies -
++				      elapsed % RTW_SDIO_HIQ_REFILL_INTERVAL;
++	}
++
++	ok = rtwsdio->hiq_budget > 0;
++	if (ok)
++		rtwsdio->hiq_budget--;
++
++	spin_unlock_irqrestore(&rtwsdio->hiq_lock, flags);
++
++	return ok;
++}
++
++static bool rtw_sdio_bmc_use_hiq(struct rtw_sdio *rtwsdio, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	return (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) &&
++	       rtw_sdio_bmc_needs_dtim(skb) &&
++	       rtw_sdio_hiq_take_budget(rtwsdio);
++}
++
+ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
+ 			     struct rtw_tx_pkt_info *pkt_info,
+ 			     struct sk_buff *skb)
+@@ -1308,6 +1370,9 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
+ 	u16 q_map = skb_get_queue_mapping(skb);
+ 	struct rtw_sdio_tx_data *tx_data;
+ 
++	if (queue == RTW_TX_QUEUE_HI0 && !rtw_sdio_bmc_use_hiq(rtwsdio, skb))
++		queue = rtw_tx_ac_to_hwq(q_map);
++
+ 	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+ 
+ 	tx_data = rtw_sdio_get_tx_data(skb);
+@@ -1730,6 +1795,10 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+ 	int i;
+ 
++	spin_lock_init(&rtwsdio->hiq_lock);
++	rtwsdio->hiq_budget = RTW_SDIO_HIQ_BUDGET_MAX;
++	rtwsdio->hiq_refill = jiffies;
++
+ 	rtwsdio->txwq = create_singlethread_workqueue("rtw88_sdio: tx wq");
+ 	if (!rtwsdio->txwq) {
+ 		rtw_err(rtwdev, "failed to create TX work queue\n");
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+index 6e7e6009744b..2083e6fb3fa9 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.h
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+@@ -174,6 +174,11 @@ struct rtw_sdio {
+ 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
+ 	bool tx_queue_stopped[RTK_MAX_TX_QUEUE_NUM];
+ 
++	/* protects hiq_budget and hiq_refill */
++	spinlock_t hiq_lock;
++	u32 hiq_budget;
++	unsigned long hiq_refill;
++
+ 	atomic_t free_pg_high;
+ 	atomic_t free_pg_normal;
+ 	atomic_t free_pg_low;
+-- 
+2.53.0
 
