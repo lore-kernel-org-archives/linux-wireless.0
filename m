@@ -1,60 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.227.17.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.84
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792505611;
-	b=dftecuG/oOMRQzaf75OVOWdZ70PSXdPgaNaeSKFuuHiZMOKyJTvePkHJOD5kf3t4sGVn
-	 YeZkqEbDLWwZRwMDG9uLq7NcE2trNDM3i7CevSbmQ38IWQlpiqg9u3jhISB6S55xgaoas
-	 RoTgdofFE3Do7ePK0S9W1RSXS6CmcKqBLH2RV+dqS4TzRf6JnEuvELTZJQj7ou3vAZJXu
-	 P7NSE+HKxla/MBTbcH6wq3kQRk2bXApWedTJiJpeojsOiM5B4p5VG1sHdOnlsrkFQ00Yd
-	 5S4LcjBq7H8RogfFAS2/54S8FcV7scboKDxaQRoXxuQJBZbgNYL/kwl5jTtTEfnsjSA==
+	t=1792507582;
+	b=tI97tIuAGtyXfMZ/KpAROqsUFOgnEni8MtOycSgjX6T9RoyaNZqZsY2oonsk/JLmAP1H
+	 Ch37pAku+ARqmZX6f2IOiPrWduy9eGdlsmG8DQjZwpuW5YwFgXeyvDC77LWIh8GI5wabq
+	 zVCFjGmz5/yq7Vq75kC4wpKy2LkteFKa4kdjT5vLHD/CJmWXzhpvcoV8+r0tBOdisge7/
+	 GVo2r4ubCVI0FEBLIglOBedzxAsRQWHPYaTwzKz8EyUXfM9A+bYfLD1M3lLFA3FXPMnwV
+	 Ka0geMwNcuBqzn2YD8O9bZdDgXt9mwaFU1vwBK8kQg8knDT7I3sbLDe5cvHnY4nr6Wg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792505611;
-	h=DMARC-Filter:DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Provags-ID:X-Spam-Flag:UI-OutboundReport;
-	bh=2p+OjOHlHh/hYV4+lX5y6IE5sOmeOqo3jOvS9mTomqc=;
-	b=KSwoHiGQvJEHLkgbJ6saUtzS5YsWlhG2CziNbMbrvNNamKanH8UfkiR0F7bSNUPK0/0C
-	 Lcm837fF6NVphTyw5jYNRHg1gKZByLMxPTkRSCMM+yGZ5s+DNtx8/Jqo7TeFcHy/zTDbF
-	 hDk6zMwvkziSLLJOeg8Oo0C0N/X4mC6gFztUwcdU/zfwvYZXhClUg73ZxhEBllZaCnrt6
-	 2EIX3UeQ6s7F2bz2jvXb0M1aga/kZd/niWUhrdP5VK8iQs6ZovBU4n7Aa2lA/EKOJ3tZa
-	 cw3yEJqYB6PGK/utM+2q+wVMnL7nO5Zo7qKLZnssE0NSe7tbgLPCx+11kMNVNXMkgZg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792507582;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:CC:Subject:User-Agent:
+	 In-Reply-To:References:Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=a/YVQ5+8FFxd+OKTrecEbQdO7nAgyOE7j7VKGjXUilE=;
+	b=mEWe+cMuLYFP8flt/KTv6VX1JT2Ck5y3DcYlbdD7GEqTU03mkj/dZNZuM+WOC89sX8GA
+	 O2qjgQLYvLTFYz9K/EmF2rxXMhHCPvlN9k//JMAh/q7LoirG2f8EW64eud1H7WqoG/eof
+	 74UfgH66xfzI45McHp0ScAf85MrSEZYKlXT0Fvg+M/X95qJqIaRg0GyKuoND4H4qXrKMZ
+	 4cFZkc2OlzJEwpcWarRtw580fU//XGxfreYCrrGaDCJHdYN6dxWb1eMo00VrOh71KL4RF
+	 bE9Y39Pf+i8Vc6IHGTOX0EAPYvkhVMpQy6c34HW/iPsRPRoSEjkFFBd0bROoDR+mu4w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmx.de;
-	spf=pass smtp.mailfrom=gmx.de;
-	dkim=pass header.d=gmx.de header.i=aleksei.kharlamov@gmx.de header.a=rsa-sha256 header.s=s31663417 header.b=eIikATpE;
-	arc=none smtp.remote-ip=212.227.17.21
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xWza2d9o;
+	arc=none smtp.remote-ip=91.218.175.84
+Received: from mta0.migadu.com (out-84.mta0.migadu.com [91.218.175.84])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129D9606C21B;
-	Tue, 20 Oct 2026 14:13:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 129D9606C21B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E4B606A33A
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 14:46:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27E4B606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmx.de header.i=aleksei.kharlamov@gmx.de header.a=rsa-sha256 header.s=s31663417 header.b=eIikATpE
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1792505571; x=1793110371;
-	i=aleksei.kharlamov@gmx.de;
-	bh=2p+OjOHlHh/hYV4+lX5y6IE5sOmeOqo3jOvS9mTomqc=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=eIikATpEj4WwRdW0BlN3UzSD6J/dI+gaJLUdi/1LK4HJQGDo+jcmvw2gWYnLneIA
-	 MSRwGvZRAWyjip2HAUA7X7v7OyBs1HHsZGBX9ysRINzTlZhSJcbabEE3RKS6fzddV
-	 0EyyW5bJ2LXXdbm93TVmtvqnaJ7/FsC3XUkQqIN+k7oLYTs2vPIROKjKN+yMAFnm9
-	 tZOVb9xb8HfvijbbPdRqAlZxwoJxg4aq6grxTTWOLNvMkC//Cdxe3fidTULxv/O38
-	 92bJSuQZvKxHMA1lUsaRiDSX8zSXBUJbC8lNuQQcBiziYjohSMkcw17CIupO4rv2A
-	 svm7t7o9+PH1zvp3tA==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx105
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1Mv31c-1wSRP9203M-00tX5h; Tue, 20
- Oct 2026 16:12:51 +0200
-Message-ID: <cf372cf0-f0e9-433c-bcaf-c218da07b1ab@gmx.de>
-Date: Tue, 20 Oct 2026 16:12:47 +0200
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xWza2d9o
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=a/YVQ5+8FFxd+OKTrecEbQdO7nAgyOE7j7VKGjXUilE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792507579; v=1; x=1793112379;
+ b=xWza2d9oFnCd/jCv9ucXVSp6/6inh8afcQ8jHXEwjregesNFevPradRPfAt3JMb2JKhrEbMr
+ ieC5e3tLZ24Spfhkn1drCSjUqTpFUwEFAiNbWO0Cu/14Owq+0AtxDfffzeOad3sq0d3lhD36Qp0
+ ASrMX1EyZXcF/SiTYiTz38Xg=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id f82142b7c0acb158;
+	Tue, 20 Oct 2026 14:46:18 +0000
+X-Mizu-Trace-ID: f82142b7c0acb158
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 20 Oct 2026 20:16:11 +0530
+From: Aditya Garg <aditya.garg@linux.dev>
+To: "Perlow, Jason" <jperlow@gmail.com>, baolu.lu@linux.intel.com,
+ dwmw2@infradead.org
+CC: iommu@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, arend.vanspriel@broadcom.com,
+ linux-wireless@vger.kernel.org
+Subject: =?US-ASCII?Q?Re=3A_intel-iommu=3A_DMAR_PTE_Read_fault?=
+ =?US-ASCII?Q?_crash-loops_a_PCIe_wifi_device=2C_v7=2E?=
+ =?US-ASCII?Q?3-rc7_-=3E_v7=2E3_final_regression=2C_repr?=
+ =?US-ASCII?Q?oduces_on_one_unit_out_of_five_tested?=
+User-Agent: Thunderbird for Android
+In-Reply-To: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+References: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+Message-ID: <53BF6325-C030-4280-B21F-4B6C0FF941B0@linux.dev>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -64,126 +71,140 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next 1/3] wifi: ath10k: set the PMF peer flag on
- WCN3990
-To: "Nagashima, Shunsuke" <shunsuke@nagashi.ma>
-Cc: Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org,
- ath10k@lists.infradead.org, linux-kernel@vger.kernel.org,
- David Heidelberg <david@ixit.cz>, Fabricio Akio <fabricioakio@gmail.com>
-References: <20261016-ath10k-series-v1-send-v1-0-c847697b3558@nagashi.ma>
- <20261016-ath10k-series-v1-send-v1-1-c847697b3558@nagashi.ma>
- <a523eda4-5708-4427-a044-a61c0386e5a9@gmx.de>
- <CACB3TCJVoFbMEpbtvuO5c-udCoZgDvMBeH0RXUXp90hab3Dh2g@mail.gmail.com>
-Content-Language: en-US
-From: Aleksei Kharlamov <aleksei.kharlamov@gmx.de>
-In-Reply-To: <CACB3TCJVoFbMEpbtvuO5c-udCoZgDvMBeH0RXUXp90hab3Dh2g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:JQBzJOPgRcqPGjO3hgnbeyc3Qo2bjtWG+guDOVNXwfXAu9j7Jji
- HpFLD2aSM09GsstKf8w9FBgyTwnoCFfxE0jQdFOPCx/Uxza1qK51PODrPELzsgdR50PJHU1
- axQYJC3VUZlevWYuSXhQ3HKnevktkAj1xR9UuJU94gXWb2z9SRwzE1iGb6eCzoyk84jm6V6
- eDvbF9Sa75d2ln3E/qG6A==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Rpw0kjYosOI=;aalfzVDKHjA5cx+GpS4nG0q9cuc
- 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
- cjkg9Vj10jxyaZaqvZlIJhUBzLEajlYTFS4Ms8=
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
 
-On 10/20/26 04:47, Nagashima, Shunsuke wrote:
-> If you have time, could you try this patch itself (instead of your own
-> version) on the Fairphone 4 and reply with a Tested-by if it works?
-> WCN3988 uses the same WCN3990 entry in ath10k_hw_params_list, so the
-> patch should apply to your device as it is. Station mode only is fine.
 
-I can confirm your patch works too (same setup as my last message).
+On 20 October 2026 8:10:21=E2=80=AFpm IST, "Perlow, Jason" <jperlow@gmail=
+=2Ecom> wrote:
+>Hardware: Intel CoffeeLake-H platforms, various=2E The affected device is=
+ a
+>Broadcom BCM4364 802=2E11ac PCIe wifi adapter (14e4:4464) at 0000:05:00=
+=2E0 on
+>an Apple MacBookPro16,1 (T2 Mac)=2E Aditya, including you directly since =
+this
+>is T2 hardware; copying iommu/pci/wireless because the fault signature an=
+d
+>the fact that it reproduces on only one of five tested machines looks lik=
+e
+>it needs eyes on the core IOMMU/PCI path, not the driver=2E
+
+Nice that's the third bug report of this issue today:
+
+1=2E https://www=2Email-archive=2Ecom/ubuntu-bugs@lists=2Eubuntu=2Ecom/msg=
+6317918=2Ehtml
+
+2=2E https://lore=2Ekernel=2Eorg/lkml/CA+3E58-2N-uVNsmwvOGDKZvtnDQ1DF=3DGz=
+FbTyRLuN8FpAd4qdg@mail=2Egmail=2Ecom/
+
+>
+>SYMPTOM
+>
+>Between a locally-built v7=2E3-rc7 kernel and a v7=2E3 final kernel (same
+>=2Econfig template, same patch series beyond one T2-specific AER quirk th=
+at
+>is upstream in final and therefore held out of our patch set), the BCM436=
+4
+>wifi firmware on ONE affected unit crash-loops continuously:
+>
+>brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for chip
+>BCM4364/4
+>brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: =2E=2E=2E
+>ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
+>
+>repeating every ~6s, indefinitely=2E dmesg shows the actual mechanism -- =
+a
+>real IOMMU DMAR page fault on the wifi device, timed to the same cadence =
+as
+>the firmware crash:
+>
+>DMAR: DRHD: handling fault status reg 3
+>DMAR: [DMA Read NO_PASID] Request device [0000:05:00=2E0] fault addr
+>0xffeff000 [fault reason 0x06] PTE Read access is not set
+>
+>Four such faults logged at uptime 13=2E4s/19=2E4s/25=2E3s/31=2E2s, each i=
+mmediately
+>followed by a brcmf_fw_crashed event=2E intel_iommu=3Doff removes the fau=
+lt and
+>the crash entirely (8+ minutes stable, single clean firmware load, stable
+>AP association)=2E The prior v7=2E3-rc7 kernel on the SAME unit has zero =
+DMAR
+>faults and zero firmware crashes with IOMMU on by default, so this is a
+>regression introduced somewhere in the rc7->final window on this unit, no=
+t
+>a long-standing issue=2E
+>
+>REPRODUCES ON 1 OF 5 MACHINES TESTED
+>
+>We ran the identical kernel build (and, where applicable, the identical
+>firmware blob) across five machines and only one faults:
+>
+>* Affected unit (MacBookPro16,1, T2, BCM4364 wifi): faults as above=2E
+>* Second MacBookPro16,1 (same generation, different configuration within
+>the 16,1 line -- we have not enumerated every hardware delta): same kerne=
+l
+>binary, same firmware blob, IOMMU also active by default (iommu: Default
+>domain type: Translated, identical to the affected unit) -- zero DMAR
+>faults, brcmfmac stable=2E
+>* Three non-Mac x86_64 machines spanning three more wifi vendors (Intel
+>iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8852BE) -- IOMM=
+U
+>active and translating on all three, zero DMAR faults, all three wifi chi=
+ps
+>loaded firmware and ran cleanly=2E
+>
+>So across four different wifi silicon vendors and five physical machines,
+>IOMMU is actively translating DMA on every one of them and only the singl=
+e
+>affected unit faults=2E This looks like a host-specific or
+>hardware-configuration-specific trigger rather than a blanket rc7->final
+>regression that would hit every machine with this kernel=2E We do not yet
+>know what distinguishes the affected unit (ACPI RMRR table contents, exac=
+t
+>PCIe link training time, and IOMMU group/domain-attach ordering are the
+>candidates we have not yet isolated)=2E
+>
+>WHAT WE RULED OUT BEFORE WRITING IN
+>
+>* AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is exa=
+ct
+>(Apple SEP, 106b:1802) and does not touch the wifi device (14e4:4464); re=
+al
+>PCI topology on the affected unit also shows SEP and wifi on separate roo=
+t
+>ports (00:1b=2E0 -> [04] vs 00:1c=2E0 -> [05] off the PCH), so there's no
+>shared-root-port mechanism either=2E
+>* brcmfmac driver source: git diff v7=2E3-rc7=2E=2Ev7=2E3 --
+>drivers/net/wireless/broadcom/brcm80211/ is empty=2E
+>* Our own config template: byte-identical between the rc7 and final build=
+s=2E
+>* The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON
+>(drivers/iommu/intel/Kconfig): byte-identical text between v7=2E3-rc7 and
+>v7=2E3 (default y, no depends on)=2E
+>
+>THE ONE ANOMALY WE CAN'T YET EXPLAIN
+>
+>Despite the last two items above being unchanged, the actual generated
+>=2Econfig has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make olddefconfig
+>against the rc7 source tree, but =3Dy after the same process against the
+>final source tree, even though our template explicitly answers "#
+>CONFIG_INTEL_IOMMU_DEFAULT_ON is not set" in both cases=2E Our working th=
+eory
+>is that some other symbol started selecting/implying INTEL_IOMMU_DEFAULT_=
+ON
+>between rc7 and final -- which would override an explicitly-seeded "not
+>set" answer during olddefconfig resolution -- but we have not identified
+>which one=2E Happy to bisect further, or provide the full =2Econfig /
+>additional dmesg, if that would help narrow it=2E
+>
+>CURRENT STATUS
+>
+>intel_iommu=3Doff on the affected unit's kernel command line is our accep=
+ted
+>fix for this specific machine while the root cause is unresolved; we are
+>not disabling IOMMU fleet-wide, since four of the five test machines show
+>no problem with it on=2E Posting here in case this fault signature is
+>recognized, or in case others on different T2 or non-T2 hardware see the
+>same thing on v7=2E3 final=2E
