@@ -1,84 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.50
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792529608;
-	b=wDL7ptXT9Mdop3/zv1T9WrWziCLZwp2PRctQGcmrdHBo/7wMCtzRcu4HL5V5vOnIjOPU
-	 p0isxBBtIIPcTbebqE5jYRtnuGMwv+Xoi1TKFKiDegED4eZno4CB3u2hLH/Y8yMovnzs+
-	 E7WebUnBsyGNunTSEbgO2y65dt1DX+d+KAsUXYaAwMai8rq9fIaqH0m5YOSK7i1THBFsK
-	 nvS535Tcs6Vrnrjgp4/oDFhyvHH6yLU7i9Lb7zdnO4/avKSxfePR4j7glz4+khCiRi15t
-	 3aWoDLJosN+UAFG0dQ3sBuKjwq7Gdx5ht5qBgiKAtCThZHFLYt8UC4t30ZAYp9F1TBA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792529608;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.231.197
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792530060;
+	b=3R1yKIW1Teigjsw+yL4OWQxxtE2B9XXRDLolLEO6QrnnS8N6OR2TR5qtp2jvr5RNnodB
+	 OZzEZbPQWPMo8pR6bC7KNMSb0QzKDZgFZreMkINngezzaYA4JGJqXX+axSrPG2TDSNcoF
+	 NH1ThKTwxDWEHC0G5g8RU31cM3r1pcbE7yRtyh/a2TOK7abK1aPn9/PGH1P+tmNeQWjjL
+	 SfWzj2L1qMgzKwuo+KyEzcf9U3jyK3oo3VtRvlwMFk/TTNPxM9+F5tBHVVKN9kcoAOqmT
+	 JRVnCXp7/Ohk0XEj+dGhP+UxK7oX1990cCK36Xoe56xsMkLCBO/HvjXSGhShaIPRGvA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792530060;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:From:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=UYu5MQ22t8KLTQoGmhsjqjoWnGoxfcWXN7qGOx+4Diw=;
-	b=IK1cpU3Ui46NdcXgMALuQ81w3BsWtsBoXq0hzKtGXeGnRlxHieFTJfSjjWeOgO1FVxpD
-	 plkgKg87LJEKUUB6niRtGnRz4uEo1f5o1N1qXvvrGGDrZq7pZx0yzkHnESUrjIr1YAtj9
-	 JVRS3bZ3JDjLsfY4g7lXnwVf6klWbaBMmPRePz6AAe8/vPtTwWPgCKH0lyxuFSGhv2NsD
-	 3/ML4eTFmorEA8z0WMKOwB3Yo4PKM3q4YYpPaLUqWBowlmCUwinvaGQs7tS91fy4f0JG1
-	 FCQrNSkJy6PAf7swo9mPbdnC5i6RRaz3GbJZS/D/F/zBP3xSLIVuTj1PC3lYnGprXTA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=E3HO4v2ppYBHCxa7uFucK6ln/LBk9azH/BeZ/nONaC8=;
+	b=0k1IgYIwxVjtr8+o4aYlAnM3A18TULjnQmV7GnzMmCRfKqJ1fdZFsNz0UShuAR303Itj
+	 obiwUb7V033E57JFrxA1oRbEvE6eAkHbNE1zltYWbg8qFEMSby13XgdRX4jPQjMoVi8QH
+	 0JzhQEvGj4KNM+zAluP3sNyu3CaeVvni+v5nw7HT9RAKADFPczwO6uV7Si3UosBHq9rBt
+	 1s23qrRCrMzZuyEnBWzuwmfFALDHP/xNSSV4Hi3QWMKJEPHexuyPrF1u3TeGiWXBCyZJJ
+	 7mc0U1DfyDpsGr6Fn56GfsKNL2KbX+xrQxMjDLpEI2NwCYNA4eaBGVKqtDBgVKLeZMA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=c3VCq8zk;
-	arc=none smtp.remote-ip=209.85.221.50
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Cnu1oGDL;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.231.197
+Received: from mail-oi2-f5.google.com (mail-oi2-f5.google.com [74.125.231.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31243606A31D
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 20:53:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31243606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC660606A321
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 21:00:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC660606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=c3VCq8zk
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-48e0d1da913so45018f8f.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 13:53:27 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Cnu1oGDL
+Received: by mail-oi2-f5.google.com with SMTP id 5614622812f47-5413fa881a9so27800b6e.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 14:00:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792530059; cv=none;
+        d=google.com; s=arc-20260327;
+        b=JMn/Wjiune+FbBiS4frOksYEiDmVcM033DZg9a4fhmyHO3sh7+rbtd8vmBLPtX1GeM
+         EdMUIlgsRnWbjsBQdqqt2JvGmcRdSsjqWcdD+rDqmhi79XftftGCmkI3RclhNZpDJFkE
+         Dzf2QAG4OeY5lcIQdzPUelyMkT8KhWoVg2RwaWrIM1F5ruAXAGYKN0k3IezZT1OMAffu
+         iAEZerD+dS8TkBHbJBV6vUAiakUYHCMW0dxYSnAnaWbUDqwbQfBVnZHsgXwgNNSYT33K
+         DDzhdpVCIx5bXOEAEuBjr1hrYmAWw1nWHZLqmhcPpo67UXyHT4wTld1e4lVpJHiFPho0
+         BboQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=E3HO4v2ppYBHCxa7uFucK6ln/LBk9azH/BeZ/nONaC8=;
+        fh=cC1xgzxzsfKnjB96Gt1vsF8xZQa5bOFjmf4b9VugmVo=;
+        b=PTmvPKox3z7BkGQBxyF5y15+bPLjadc1nmAAz2f/PnDsab835zrdhiFWyndEyI/Bm/
+         CZAL3WUFTCr4S0CurCVUyqMefGVuxtMz3nruqPLjLtGNN4UQhSftpOkYg5maEN9ziaB7
+         hvUjEh2LRbo3e2EuDOkdar+OM9QWbJ1dz5YywpoHo4h959YEYREb6Wd6Vzl2KR5LSu4d
+         9aZ6IZhWholHILynBkptTA4NbV2kg5P0crdSF833gSLEm4ihrcRtRECHPo2rmrAH2F6f
+         ZssYZzk9rrXqC+I0AJ7kb52ByowYPbnyaQeYdvX/siMDz0IjK/Wn9/mka+3J0wW+TQSB
+         HOww==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792529606; x=1793134406; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UYu5MQ22t8KLTQoGmhsjqjoWnGoxfcWXN7qGOx+4Diw=;
-        b=c3VCq8zkLrFphBo33kH1xxq75z7bC7T0/lLOHr3ub4UtdtMjIMDfAmC2PqoYAc3btv
-         v1EvCqMkByZbaz/dGUBXuhARvDfZWdRyhuCDyRoNGBydgbf1UD/hX7ldkV1R5r9r0uka
-         LXZEpP5t8bDPG/rNhz8nMEpFjV1Iep76TIFpaSHDEtqwYHjatRjlOctb8Udm8DfETVRC
-         okbnreQStmEPVlSOEQw4IHlFTsjg51PuKyZTkWEycNEOEzUZYXEzwMh3O6lNdnedd2X1
-         IBJrPabcOVTSMGMsFAdWInvKpC/6xAFFlYToi7QKH8eYGLBQCq1cJfTFVqxK3525HJlf
-         QQAQ==
+        d=gmail.com; s=20251104; t=1792530059; x=1793134859; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=E3HO4v2ppYBHCxa7uFucK6ln/LBk9azH/BeZ/nONaC8=;
+        b=Cnu1oGDLo7LAUHnjnLp+M9CEh6hDRYzv2QGVj3pIytf1lXkACHjzPeoHCw8JKNGI6T
+         P2b8MIv/5o61z2vodC6IhJHZQ8VjJqjP/5C8/H7uY5TLV8CY3INHsWo0Dd6PxcBssU5a
+         NGPnwQNpiesd4lTubKFfxh80+nJj0QK8RuGR8gW7llYlQmXwzhpLcjbkWVUK/W5mxo9G
+         de8Fr0srtEs3Jy2Gn2fb65FDgxi2c4a5zR5Jn8sm4wxTYbNG+yzdeeTm9z/1/uu+eIx7
+         B29eqO1L44ryeh7YFGJ6ygqjC5P/bDYlcU8V9Ctjs03Yk2XRDP6L6FD7fwtntdvmf5dc
+         VXYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792529606; x=1793134406;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=UYu5MQ22t8KLTQoGmhsjqjoWnGoxfcWXN7qGOx+4Diw=;
-        b=NWS9nwPLiRRa260H+Hr/DsPfS+TVz9rNo26O2mUiu/il74hfUSDA/+yeB4pgn2Qrgf
-         f7Aw83GOTe6lUwoIKkrgCzxziULOK2VtxkY4yK3flybrV1j7FqjiyXXw0v+3fzcVqb6d
-         g1ZqGw4c+JzN7QGbBusl5aqhk9dhYeefbfTsZAI9KIKmvsdVIoMoBjytlYZaWr6VwXc5
-         FYmqRcztxnhohGEKwlweac2FUK8MO9UW17nHsYyqiqNUzcz6KMJ6q/y4ucEQ4NcgDRin
-         FmMPlbhH3lWXU3w5o8RrSg9yEIoddJcTAAZk8oqva3Ivo59CQg3/2BqimKjfLK6wbqQL
-         clqw==
-X-Gm-Message-State: AFq9FYIgFLiNhcRvlvL550gtFjvcg3x26XEwTXDsji8iGr1/gAY/pm7+
-	N5IAcjG1hdRlECds1EBCf3IW2oVfCGJGgafmm3gqPJkQFGGjXQJSrWlBaB0ybg==
-X-Gm-Gg: AYBFou0ODMRPdMEUJ863YFb7Ep/LI40IiXw97VPh/nQi+xxWSrvo+IHptFjs+BOGilP
-	Jqz8EYuqtbgqMJ2X9jLclpmKk3DKtLMZpod4516Yqq5ZnaliWSJK5v+vY8E9TJlxsJTLazZtrDJ
-	1uCl4xBK8MOqO1vdxDtWxeryahlZoEfM/2dRXYVtv+xrqADZYF19s9t5DcmNcWdDb1Lk+9rw2Bs
-	ai2x9kfMRetRTKdjmSPVveCRqIQgfYyGIYZ4nCEEhavGaTArLiGIQVuCSeyTs2GIywHCUctN2g/
-	lTzqxeseGV5BXqvabpeev55a4TdKBmT3TYH2vTSpsu7i5FVbXOfmz1JDxxYWN2+tN+yh32j93Jo
-	BiUi1kG5ormSgcPA4kmVqnoZTcO3HQDi2RmO0JuAvsY8ZH9/QhPWbc2sVSLLbLvck1B3UYDWKRr
-	EGAR4lBQjOd5YwBdR2/p9GC355EI6uyJUhBDVtDIRqGQW0gxZYZAG/89nBESwVIDDAHdjb7GkKU
-	3gDaw==
-X-Received: by 2002:a05:6000:41c7:b0:48d:f3ec:e818 with SMTP id ffacd0b85a97d-48e1e7a7aeemr8373693f8f.7.1792529606431;
-        Tue, 20 Oct 2026 13:53:26 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2583ffa8sm766283f8f.51.2026.10.20.13.53.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Oct 2026 13:53:25 -0700 (PDT)
-Message-ID: <a551ce83-278b-4844-98c5-95e0ada3596a@gmail.com>
-Date: Tue, 20 Oct 2026 23:53:23 +0300
+        d=1e100.net; s=20260707; t=1792530059; x=1793134859;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=E3HO4v2ppYBHCxa7uFucK6ln/LBk9azH/BeZ/nONaC8=;
+        b=kcxIeOSSt9jxFJmMgd4XQ3QvUG0c2qWLyf89y6ux+3s0TWD1Nxs/UXeB2A3KopsOH0
+         PppigaR/AovGyeU50JSESnFqUcMm39GdZ5eA+Dp8MABatY5jopYpCYruocUOxcajqwor
+         JonsB0kfbbGkfCTm+t+GiACBEc1kYM1SWgI8772iZExhrTkIAi0VhGVAHJgtLNJJHb+Z
+         KzkCK6BV3I2rVrH4cwyRTE71Gpii0SIRVLtS0s+7GjuZD1qLCsMcwdFQTC1F6cQLMot+
+         ih1TJP2huZLyvLe+R1TKM3j3kkHRXVFfGYkzitfTGH6F4GKfSl3pPU/RReal3LjVctBv
+         xxmw==
+X-Forwarded-Encrypted: i=1; AKwUvByoI8hVveiJSJvMUIY5daI2Q/DPKqtr1ASIwZAXeQqAQapOQYq4QMjr6NDDAnXqnrv620+PWB8+NPyDSIT/uA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLe79IytfdoLmTv5gggLklxexk3z1nU8VW0milSGHUs5cuPSDLH
+	ddtDnYyaDEsKKnIxwdaxKd1O+NSPqSIxxssyv34tCnc0cIvBlRFtAq79tbK/3lysdNJVfcog9HA
+	S0EoKT/PDCisluYM0frcrfL19GWo8hCQ=
+X-Gm-Gg: AYBFou2R25LA6RgVIvKH4Eda/c4aupDhKuBco8HZ6jwZhsLhH75+12r2AEfPyUwiEsF
+	qJ4J7D2i9vFy7XizkMErU6RipNvED6FH0eOl/AWepMhuI8Spi32rLvKkmXoiyzq1J15o5wy3Wkd
+	VtzltPlfOExi693JtgatthGx7L8OJCy8ZrFUk5tFYc/EYd6XZZpW3TPWdi39IvxH2+aO11DRb3u
+	nsMR2ARMZUmDYZD1plBiBel4U3qnsxnt9GXA9nEsRfl7tpZujDNMsRzo7PcM8QxyI6N1mkr5tTP
+	mYbXz6OsGTBgqSY61g0O2TwL001FKhccLmDaGQobCv12vf60nhDZVADbswqKW9tpQBk0qz02WMz
+	Eiju4MjouC55+e7GLtKJKzuSD
+X-Received: by 2002:a05:6808:1b0a:b0:4b2:8ee8:8a38 with SMTP id
+ 5614622812f47-553400a0bb3mr51174b6e.0.1792530058614; Tue, 20 Oct 2026
+ 14:00:58 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -88,79 +103,23 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH rtw-next v2 3/3] wifi: rtw88: 8723b: Read the chip variant
- from efuse
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>
-References: <8e47daa4-538d-4e0a-84f9-fd4e91613ff8@gmail.com>
-Content-Language: en-US
-In-Reply-To: <8e47daa4-538d-4e0a-84f9-fd4e91613ff8@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20261019165103.5990-1-dennylin0707@gmail.com> <9bde49a2e7794e4fb6bc3ae104eef87e@realtek.com>
+ <334c6e785a5d242c6f168d57d042d63b777a242a@linux.dev> <4f48c50cab1145fd9dbd6df6d424c877@realtek.com>
+ <CAGEkeHevidTtTNj-qfy6kE_O0wRvqT=F=sG+Hy83BOkRjCUqeA@mail.gmail.com> <CANQ=N_C3+gpQ3O=SXYpRCGTh_MC1y4TEfnxF90SWgUVF_wYPUA@mail.gmail.com>
+In-Reply-To: <CANQ=N_C3+gpQ3O=SXYpRCGTh_MC1y4TEfnxF90SWgUVF_wYPUA@mail.gmail.com>
+From: Hungyu Lin <dennylin0707@gmail.com>
+Date: Tue, 20 Oct 2026 14:00:47 -0700
+X-Gm-Features: AclHuK9nvE03u4OiDejZFQMMS-WdqhkSgofSrM6bnKNHfObbE9P6OAasARHTMnE
+Message-ID: <CAGEkeHdT1-WwJnF1wTkrrRQRzrEYESOoDeAYE+fiV0gROG+6sw@mail.gmail.com>
+Subject: Re: [PATCH] wifi: rtw88: allow key removal when the CAM table is full
+To: Shagor Khan <reza1234khan1234@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, Luka Gejak <luka.gejak@linux.dev>, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The RTL8703AS appears to be a variant of RTL8723BS which doesn't support
-40 MHz channel width, so read the chip variant from efuse and disable
-support for 40 MHz.
+> I can help in testing if you want. Since i do have rtw88 hardware available with me.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
----
-v2:
- - Split into a separate patch.
- - Get the byte from the efuse physical map stored in RAM instead of
-   reading it again from the chip.
- - Use macros for the address, mask, and chip variants.
----
- drivers/net/wireless/realtek/rtw88/rtw8723b.c | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723b.h |  3 +++
- 2 files changed, 16 insertions(+)
+Thanks, that would help.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-index f550c8708e01..48102baf66fc 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-@@ -2376,6 +2376,18 @@ static void rtw8723b_read_package_type(struct rtw_dev *rtwdev, u8 *phy_map)
- 	}
- }
- 
-+static void rtw8723b_read_chip_variant(struct rtw_dev *rtwdev, u8 *phy_map)
-+{
-+	u8 val_1fb, variant;
-+
-+	val_1fb = phy_map[RTW8723B_EFUSE_PACKAGE_TYPE];
-+	variant = u8_get_bits(val_1fb, RTW8723B_VARIANT_MASK);
-+
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO &&
-+	    variant == RTW8723B_VARIANT_8703AS)
-+		rtwdev->efuse.hw_cap.bw &= ~BIT(RTW_CHANNEL_WIDTH_40);
-+}
-+
- static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-@@ -2402,6 +2414,7 @@ static int rtw8723b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map, u8 *phy_map)
- 			   BIT(RTW_CHANNEL_WIDTH_40);
- 
- 	rtw8723b_read_package_type(rtwdev, phy_map);
-+	rtw8723b_read_chip_variant(rtwdev, phy_map);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.h b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-index f1eaf7ab2a81..39b92ec5153b 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
-@@ -19,6 +19,9 @@ enum rtw8723b_package_type {
- 
- #define RTW8723B_EFUSE_PACKAGE_TYPE	0x1fb
- #define RTW8723B_PACKAGE_TYPE_MASK	GENMASK(2, 0)
-+#define RTW8723B_VARIANT_MASK		GENMASK(5, 4)
-+#define RTW8723B_VARIANT_8723BS		0x3
-+#define RTW8723B_VARIANT_8703AS		0x2
- 
- extern const struct rtw_chip_info rtw8723b_hw_spec;
- 
--- 
-2.55.0
-
+Best regards,
+Hungyu
