@@ -1,82 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792512527;
-	b=JDfTpXQdgcK27zuamTkPjknVhQc/X5xGUz1x7P2OTSYq+YOoGS0YAQAlGcHuuKLoHbu8
-	 260cxEwDimHzNiIcCfgN3jsgpA40WwA2ktGZeapSk2LHZShSULAxWfmXOt3fcj79LZo5b
-	 daOBn1E9R3gWHvLZRs8HgBPQ925W07S3nF5waauWpE+gnbChhMK07PPiVWE/+1LQ1CIWf
-	 viJtciVNCqXL3BwBcy9s/4KryN054q7syu/zqNxmG8BwSInCdqpUMBQIcdS4ZlHmCD99F
-	 lwMC1VDJm6ygO2zkg6pu05IDSHISZddQNikocpRkLxKEb4rdPkTcHvC8IScNCgttSgw==
+	t=1792512958;
+	b=MyK0kCmwihITbZehh6xwC2AIy9AMfYBXGWOpkU8CAdwnl3YB7p3RY1iEdm64jOV5Y7SQ
+	 lG3XXNR64yWrK9of2MdoxmS68BLVW02wsWVM2mXOTWVIvqEb6RBJ3OFI7ON2I3//JQ/tm
+	 hW3BJMB4+VIhLJge7tvJkXkdnK4NQWmsy5P7+Iw0CA+V++ochbB5MdRwS/FX/XLteSmdF
+	 5HiGCl6ws0oFXrc2wipYe9AE5XtIet0yDv+AQAs5aMI2pnZW4yOjlRQHU3JxSKJOWj6tt
+	 Tv+9ubXzkpeZxkohTTddpeRZIkhibT87tbMDBhr+8P06L9uyCB4B34OiliwJiTvbXow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792512527;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=JZGvSJ/T2lFQAZNU+lUoUCnDcDPrtpGrw0LMffwgz3o=;
-	b=V1W2Ot4Xsit5v/I4JdqYbX01zZh+njGNWYK2Fe75OSMprR3xn4JsFd8o++x6aOd6WECE
-	 eu5bQpWkLhnBA6NxGejP5vSgvhQsTXH7ez1ae1+WMgpQrWP750Oq/foXjkxw7nzTC6ol+
-	 TM8Jw2dBy20z/lhSr2P6xrgJaGY1GaHltom/XX/1NIkIIyoJVhH9SCF3QzsWs33KWny+Q
-	 J4hRl9asUVK9Z8MNBTfyf/O7iAqk9DjCwdtPfURLKANd9E2hi6tjGvq5FAm2s6TJtEAsW
-	 pnOJl/G+RvK4d4vb3sE5RH6G1qvOpNVK/gPorADxwPZL/mWCwa8x0966TQP14bH2UXQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792512958;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
+	b=0XBbUcPlU6kIBNpU3KKuwDfbJBKNZpq5014xD/fQC8UTdb1knv6RRtIIgaVrJzVoSq2s
+	 h2oMCHGOusMxsWvqv8dwUOYs83JMoWMcfPZj3pz9zm5mM5qfX6tHqkCLrhCjeEP4paYYI
+	 3JeNQJ++ehhBCla2V8ToUHDmV7F258LLA2aphL1iFSkB7XjawY3mQaVWJUQY8WbQ9jTJb
+	 SvMpThYu975n9CbGu9xsVjzimVxH/4xPqkGqZERSaBDTdWxBqItYMIgkIIPw4AcrjUthK
+	 5KFgTTQYU/V+bv6nwbCpL+ROsPPgvArsTqghCbpjQPr+yrXs3tpJETkWqPJF61/I3sw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="GvCbYA/U";
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WalPdExM;
+	arc=none smtp.remote-ip=209.85.221.170
+Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 776B7606A333
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:08:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 776B7606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E5D606A33E
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:15:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6E5D606A33E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=GvCbYA/U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792512525;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JZGvSJ/T2lFQAZNU+lUoUCnDcDPrtpGrw0LMffwgz3o=;
-	b=GvCbYA/UB0M7Z3M2qQsXQ5hclNIg1GrEtSBrGDL8uEimjyyMPoTE7ywqoOyosx8IZr9his
-	dvGVVPjsnEuQsIxVSGGGunZWTF429deMu1oFJWkO+RBHD1TxfRl2MbOP+y9AjcFHBnJkCm
-	vwzDETVdHWwml8JI1bs28EwksII9NOs=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-686-PrNzLbbOMWmkiqW3IDyx1g-1; Tue,
- 20 Oct 2026 16:08:40 +0000
-X-MC-Unique: PrNzLbbOMWmkiqW3IDyx1g-1
-X-Mimecast-MFC-AGG-ID: PrNzLbbOMWmkiqW3IDyx1g_1792512517
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BB3F7195E915;
-	Tue, 20 Oct 2026 16:08:36 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DF6651800495;
-	Tue, 20 Oct 2026 16:08:32 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: julius@bairaktaris.de
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	baochen.qiang@oss.qualcomm.com,
-	hujy652@gmail.com,
-	jeff.johnson@oss.qualcomm.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WalPdExM
+Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5eabf7d5bbeso3060167e0c.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 09:15:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792512957; x=1793117757; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
+        b=WalPdExM7lHlWsTDznBX0Fyl06synozvZt4SX10rtsmo96i+4x8Zp8kY38DMvDvoAG
+         MWRjRFWn53CppNgFs0ngLw/6OtF3BoAXiUFzYSZPYJOeocKSt0J7fT0g7iAEsz3JpsT+
+         2r4FZWHtl8viYqxcPox4gn8zszaNPUXtg0cae1c/0YoLHGZ4oqBiLqTfpX6o6379QUC2
+         WP+L4eOyj1WuN60IeQSfZEI6hp8231lcqW2QoGSAH8b6A8xrR9MXledPJRkNSasLjick
+         Lv7ltYgNOVEkIbRbhiijTH+RklXVrFsjuv2a1Mb0ImqW2oeKCM3+N7Mmzj4RsUbKdjdT
+         LZiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792512957; x=1793117757;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=UhDQRNkc9FLSlLZbPo9WwVAAHQKsjx+zb2EBe+RwcLY=;
+        b=GvMHoXq/ompXMdmziSPTDSHEPhE4iN3K+FE/Rfz0AslF9Otu7FNUrJ5P71ElqnHtum
+         Po9PhntUt6IQhpJQ07TxS2wRZiXunb+OhA4lTzGD5uHZiYNiKzOqHAqdYGYNUdpqt83w
+         2b7CjCOKcBg1Q9Ug6XNPHfpKVKhOqHkMiy6ADy/IFqkfjM+7cXsAFVKrKeshl+rdw5Vv
+         BLXwTUgp+RyjsH8iTug+H1cbxO6EyuKBjBbYvnf3bRPhLLMluCYRO6PhnYV797ypl3+7
+         AUzYCrXqukBjeBeYbMeY2xtxwkYPTrZxi+5FjPxlznIBu4sLp9ipA+VUKEVJLddp5pKu
+         eXlg==
+X-Forwarded-Encrypted: i=1; AKwUvBxPN81z2iQ5WD59bJ/OgXtTzZE01GdlSYXIo65wR66JhjMDItrf+iSH5gCt6fUY+MVhoxsWDwrl5JRl6Nqhxw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLiRozzlZovdVh8HvD3B/Rf95mpHD5IeRV7XkpBsuxNYRWZ46Lt
+	PwOaMFJnQw0lTq1bf+ghFjczbp7k527NMYVw6lpXBxx96jOY9MIsvxLa
+X-Gm-Gg: AYBFou3SDKcc0QkAsPsM6MysRXs9uqsZKlAThrnTnx6319F4cyUzzCugdMC6+ABlPF1
+	w6EWeUKv2KOxEv7R/mwDf+6zZlXNA/v828qo0KkGQjtDxK1LoC8zByZrTYcGsnOUiJfMEezA7E4
+	/Wx/rxVPjAhc8pFXOhQd3AhE/WiFnZ8qpThl54SJv4cgRNE1SrAkB8JlTb1yKJx+VfZzXyBS2dt
+	EUyKif5lOsL37QlrB7I4Wl0AmidI6/bwhxS2e8+OWB5ClPMgqrxMeBsx8/sirnI/8/fY7mXCLQY
+	CMqywWTS1Hz1DWMa7fVwo1+qGcNU1GzP3WjVmbxvNs+5gDpLwBHS87ul2u9qw+msu2PW4EoW8KU
+	EY6sfgbAM1mvvtrG883nNA09N2kO53tS29vmK8sqQAMZUHPHjYZgMZyUx3aEtyVAiyeGqh10RH/
+	2ZsrA5hcVX/SOqNvggaPum6iNe2P/TnTQ9fVOeUg4vq4UTtjT0t8MkoxidtU23gMy4EjEGp6Bvy
+	AxVEODEWFbwmOp8vqJQ2kc4L5v8pQ/KyIAeQsbHUmbh7Q==
+X-Received: by 2002:a05:6122:4f97:b0:5ea:e197:93d9 with SMTP id 71dfb90a1353d-5eae19796f9mr498417e0c.19.1792512956788;
+        Tue, 20 Oct 2026 09:15:56 -0700 (PDT)
+Received: from localhost.localdomain ([190.177.181.23])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b518bc8sm12918381e0c.11.2026.10.20.09.15.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 09:15:56 -0700 (PDT)
+From: Cristian Papa <pcristian292@gmail.com>
+To: nbd@nbd.name
+Cc: lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
 	linux-wireless@vger.kernel.org,
-	tamizh.raja@oss.qualcomm.com
-Subject: Re: [PATCH v7 0/4] ath11k/ath12k: implement TX flow control
-Date: Tue, 20 Oct 2026 18:08:30 +0200
-Message-ID: <20261020160831.2133912-1-jtornosm@redhat.com>
-In-Reply-To: <20261018131930.1116724-1-julius@bairaktaris.de>
-References: <20261018131930.1116724-1-julius@bairaktaris.de>
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: mt76: mt7603: discard power-save loopbacks after wakeup
+Date: Tue, 20 Oct 2026 13:15:45 -0300
+Message-ID: <20261020161545.9330-1-pcristian292@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <6e7358fe-4070-4a88-b8da-77e2f9e9bdf8@nbd.name>
+References: <6e7358fe-4070-4a88-b8da-77e2f9e9bdf8@nbd.name>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -86,38 +100,34 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi Julius,
+On 20.10.26 11:48, Felix Fietkau wrote:
+> On 14.10.26 08:22, Cristian Papa wrote:
+>> Discard late frames rather than retransmitting their old sequence and
+>> packet numbers after newer traffic or a wakeup BAR. This loses the late
+>> frame; it does not recover delivery. Use the station's sleep state, not
+>> the temporary hardware PS bypass used during U-APSD service periods.
+> Why did you decide to drop them instead of pushing them to immediate tx?
 
-Thanks for the review and the Tested-by.
+Hi Felix, thanks for looking at it.
 
-> One thing on patch 3, from reading the code:
->
->> +             if (num_free == 0) {
->> +                     spin_unlock_bh(&tx_ring->wake_tx_lock);
->> +                     break;
->> +             }
->
-> When this breaks, the frames stay in the txq and nothing restarts it
-> until mac80211 queues the next frame for that txq. A sender waiting for
-> ACKs then stalls until its retransmit timeout. With AQL I measured this
-> in v4: one download in three stalled, max RTT 347 ms. A restart from
-> ath11k_dp_tx_completion_handler() fixes it.
+Because the looped-back frame keeps the TXD it was first queued with.
+mt7603_mac_write_txwi() puts the 802.11 sequence number in the TXD with
+SN_VALID, and with a hardware key it also takes the PN from key->tx_pn at
+that point. mt7603_rx_loopback_skb() only rewrites Q_IDX, so a late frame
+pushed to immediate TX would go out with its original SN and PN.
 
-Good point. The break when the ring is full is intentional, it keeps
-the frames safe in the txq instead of the current -ENOMEM drop. Your
-TX completion restart (patch 6) would make the recovery from that
-stall faster, which is a nice improvement on top. Another reason for
-both series to land.
+On wakeup, mt7603_sta_ps() sends the psq ahead of the newer traffic, so
+the order holds there. A loopback that arrives after that drain is older
+than frames that may already have gone out with newer SN/PN. With CCMP the
+peer's replay check would drop it, in an aggregation session it can fall
+behind the window after the newer frames or the BAR, and on an open link
+it would arrive out of order. So I expected immediate TX to mostly spend
+airtime on a frame the peer discards.
 
-Since we agree, I am going to split ath11k and ath12k into separate
-series to try to unblock both.
+I haven't measured how late these loopbacks arrive, though. One that
+arrives before the newer frames go out would still be delivered in order.
+If you'd rather push them to immediate TX, I can send a v2 that does that.
 
-Thanks
-
-Best regards
-José Ignacio
-
+Cristian
