@@ -1,52 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.175
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.160
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792615819;
-	b=0UErCLmBQQhzOj/1E/+l01Stc3IdQQI4oB61PX7LNIeBRxD93Clem8sNPAeO8xrkoFtF
-	 CzKATUzpTWp/D5Dy2pBM0qg7/gJVp7guT7Y9BChDEaMtR8yZfvFZPOdiRGX0YxjQXPuxa
-	 /pWp3j0gjYxZ0vDcToHxRbXUYxVlF7AlcUfCDXRs6eDN2IAen7z2ObNLwX7nUaIXncGf2
-	 B5Sc4lnyNVNkgcZuy2QS88PXZI8jOBzt0TYh//Xa638Em7Lx4e/Dk4PcZRQFcASQIUYur
-	 3+E8foVdB9gp+CuT1sC3P+Ry+rZfvhbHt94uK4Pvw79gAf8rxoaq/5wfUyAa8KkC72A==
+	t=1792625982;
+	b=Pq9sSA8/Cn9wQ7Vg51ajg06biYnRq3cZquriuDT4OTI7AEWwP/RJKnyO3QnVrBc8JvOo
+	 AvhZtnZ7VQ7g+tgb7MaDquo89vZbPme9yWBYMh/uwB/ofhrLrOVOBwKr3MWzSmWmc16eg
+	 lt3DfT4dpzzDiqmYVecnMY72UvhdznsbhItfBcvTx+PvH0fCk0A/QLk5lPlfFPrOKZ0ZR
+	 WdvUk02vi2ZksZ7PNDsl6r4GWR6SikRRfQm93Oqj19CVzDiK0foO8lHQjk7I7J2FGCz9Y
+	 4RfEF32owLOssw+efxGaRBRJ2j8zLEh2BtDV4GiXrNyfkKln+u6KnBnb9/1PTOljGdQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792615819;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792625982;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=aR8mKB8M4njSQFiQJBcDGNceeb5I7rYt9NxUcssU3YA=;
-	b=jBEnC/dhgqZJW4wGk7bvZNenCLDCOHHWHZbllxjxMTYvzto7W9fM9cdj9pnf6ucdhlbI
-	 1IrOw3IcM7r5es+CAolPI0MvWroSltIXY2psYt7nqg099P6306Dcb+6LLx3hO8JakOLw4
-	 7GJ/oyeOwuntN6gX0Z3f/3fjCNl3tu6qhk/k8BJYt6YtNBzCZPeWB7jdfTmP/Xjwhidyu
-	 NGnBAsw1lfHZr5TWX9IYkgbfLR9RjzDwqoXDrqqHE5YKm07TC53kdmryJIgugBUdANWUh
-	 I+69A4Lw/NpYr1iSNewjF2XkliGHAikZnL+BzBe/takLAwBUnIlwd3mcdvWgJVWJi/Q==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=n3FwEyIo7Vcx9zYzOnFYxTxgem53y0HAqqjNwh7AJmY=;
+	b=JdJX3DTBfikGl/LT0ZX43/xBgqvRRZ9dP19s9gnZf7NNbj29hA0rxj6wutAij0oyWy9v
+	 6yDbPBrmBCznkKcpWp4lG4WgKexD+7JPhfVMUR7zAPlpr4qZhb9Qpk/go3B+7oTJFVkKY
+	 G4/LBUwVA7LAtxciiBUQLm2eO8L1dH/owFpWtopbSTN89nXFzKC22J4UzyCJrlmpFwGga
+	 pMtPYRIRCdrXF2+tadq9qb0YbInWkdr7s3zgWxVdZY54yWF2B/u047x0FwM0GGDdpAWl9
+	 NbMr+8lqExtg72pgg5LhlyVbNCkD513RECTLzFsBlik9ReKvN8oK77q529OpJ/WkJ8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=hLSNiRsH;
-	arc=none smtp.remote-ip=91.218.175.175
-Received: from mta0.migadu.com (out-175.mta0.migadu.com [91.218.175.175])
+	dmarc=pass header.from=justthetip.ca;
+	spf=pass smtp.mailfrom=justthetip.ca;
+	dkim=pass header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=aREz7uPs;
+	arc=none smtp.remote-ip=95.215.58.160
+Received: from mta1.migadu.com (out-160.mta1.migadu.com [95.215.58.160])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A35606A319
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 20:50:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3A35606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDFCD606A319
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 23:39:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DDFCD606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=hLSNiRsH
+	dkim=pass (2048-bit key, unprotected) header.d=justthetip.ca header.i=@justthetip.ca header.a=rsa-sha256 header.s=key1 header.b=aREz7uPs
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=goZeDXML2cVb//QQ7KZZOYitB2T6895CT5ixFt1wh7A=;
- c=simple/simple; d=linux.dev;
+DKIM-Signature: a=rsa-sha256; bh=5zjnmuNAR3yi/aRKcjj0i+hbo2YtZAeBwV7FRZWUe1w=;
+ c=simple/simple; d=justthetip.ca;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792615816; v=1; x=1793220616;
- b=hLSNiRsHrG+iPIxwNK+AeO6lF7hqLY1PHYlgzkOc6hHVmf3ksA/E8NIlOwWCVY6WeH/Z1HYD
- gLiZQ6F4SuH4lt9ZUMqVvlVpILhqn8k+BeAwFO96R3Y64GPNIkdwrk1Awi58IWVyPjEivLs2waK
- +tqCMASWjbLEyZ0O+Ky8ACgY=
+ t=1792625978; v=1; x=1793230778;
+ b=aREz7uPsIag05BPJdaDaphz1Z7/CapPnwqP4GxzIMN07adHxvNUIJTTGfp+v/IcJ78DdzDsx
+ z4d+iGUEGOmaDuWyUeqSRa+5EBzNjqUm+iirlEvxon/uE+psrz//yXnoKB1CFmH/9yW44HEMN6L
+ z2/jXg7wAlMoU4B1Kl11a2Ugah8lYs26bjVBNJyz83wNusR1RrCXqs9LAs9vu5sTnwyN22U41kC
+ H1AvfKT/7N21zeOd2btnvjRcEWIlh+o1+73bVRM0oJvGNXKxdE7az4VUtfgVQqe++b3AthNrAFa
+ DCOlc4LmPS2MyKHsY3O583uJaTqvNxuQDnQghazy/1Yjg==
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id c5839db12eed090f;
-	Wed, 21 Oct 2026 20:50:15 +0000
-X-Mizu-Trace-ID: c5839db12eed090f
+Received: by smtp.migadu.com with ESMTPS id 0b20f29eccbdc5bf;
+	Wed, 21 Oct 2026 23:39:38 +0000
+X-Mizu-Trace-ID: 0b20f29eccbdc5bf
 X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Deren Wu <deren.wu@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Viktor Pashaiev <w.paszajew@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH wireless] wifi: mt76: usb: keep the tx worker parked through a reset or teardown
+Date: Wed, 21 Oct 2026 16:39:35 -0700
+Message-ID: <20261021233935.748017-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,114 +71,112 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Wed, 21 Oct 2026 20:50:15 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <7ad9e0f356353a3c3c0c3ca4ca0d685ba42983a0@linux.dev>
-TLS-Required: No
-Subject: Re: [RFC PATCH rtw-next 5/5] wifi: rtw88: pci: clear CLKREQ/ASPM
- enables when disable_aspm is set
-To: "Bob Beckett" <bob.beckett@collabora.com>, "Ping-Ke Shih"
- <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, "Bitterblue Smith"
- <rtl8821cerfe2@gmail.com>, "Timlee" <timlee@realtek.com>,
- matthew.leach@collabora.com, kernel@collabora.com
-In-Reply-To: <20261021190529.3893821-6-bob.beckett@collabora.com>
-References: <a615f09bb6f54128b792a13ebcbf8970@realtek.com>
- <20261021190529.3893821-1-bob.beckett@collabora.com>
- <20261021190529.3893821-6-bob.beckett@collabora.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Bob,
+The mt792x USB reset and disconnect paths park the tx worker and then
+stop tx. If frames are still queued when the wait runs out, stopping tx
+parks the worker a second time, which warns. It then unparks the worker,
+which runs again during the chip reset or the teardown:
 
-For the SteamOS test build this should do the job. Few notes for upstrami=
-ng
-though:
+  WARNING: kernel/kthread.c:710 at kthread_park+0x8c/0xc0, CPU#2: kworker/u16:1/100
+  Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
+  Call Trace:
+   mt7925u_mac_reset.part.0+0x73/0x1e0 [mt7925u]
+   mt7925u_mac_reset+0x3c/0x50 [mt7925u]
+   mt7925_mac_reset_work+0xb5/0x1f0 [mt7925_common]
 
-On Wed, 21 Oct 2026, Bob Beckett wrote:
-> Clear both bits in rtw_pci_link_cfg() when disable_aspm is set, so the
-> parameter does what it says from the moment the driver probes.
+Remember that a worker is disabled, and leave the worker to the caller
+that parked it.
 
-rtw_pci_link_cfg() runs near the end of probe. By then
-rtw_chip_info_setup() has already powered the MAC on, downloaded the
-firmware and powered it off again with the old bits still set:
+Fixes: 0d2afe09fad5 ("mt76: mt7921: add mt7921u driver")
+Fixes: 7910bd565d8b ("wifi: mt76: mt792x: quiesce USB paths on disconnect")
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+---
+Making the disable call skip an already parked worker is not enough on
+its own: stopping tx would still unpark the worker at its end.
 
-        rtw_pci_probe()
-          rtw_chip_info_setup()
-            rtw_chip_efuse_info_setup()
-              rtw_chip_efuse_enable()
-                rtw_mac_power_on()
-                rtw_download_firmware()
-              rtw_chip_efuse_disable()
-          rtw_pci_phy_cfg()
-            rtw_pci_link_cfg()
+Viktor Pashaiev's mt792x USB hardening patch avoided the same warning on
+disconnect by not parking the worker there:
+https://lore.kernel.org/linux-wireless/20260927180415.1498019-1-w.paszajew@gmail.com/
+This keeps the park and fixes the stop path, which also covers the reset.
 
-If that power on fails, probe bails out before the bits are cleared.
-Should the clear go before rtw_chip_info_setup(), or should the message
-say it takes effect once probe reaches rtw_pci_phy_cfg()?
+ drivers/net/wireless/mediatek/mt76/usb.c  | 10 ++++++++--
+ drivers/net/wireless/mediatek/mt76/util.h |  9 ++++++++-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-> Assisted-by: Claude:claude-opus-5-5
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index be48a88a3ad0..47106ed6bb94 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -1068,6 +1068,7 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 	ret = wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(&dev->phy),
+ 				 HZ / 5);
+ 	if (!ret) {
++		bool parked = mt76_worker_disabled(&dev->tx_worker);
+ 		struct mt76_queue_entry entry;
+ 		struct mt76_queue *q;
+ 		int i, j;
+@@ -1083,7 +1084,11 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 				usb_kill_urb(q->entry[j].urb);
+ 		}
+ 
+-		mt76_worker_disable(&dev->tx_worker);
++		/* The mt792x disconnect and reset paths park the worker
++		 * before they get here. Leave it parked for them.
++		 */
++		if (!parked)
++			mt76_worker_disable(&dev->tx_worker);
+ 
+ 		/* On device removal we maight queue skb's, but mt76u_tx_kick()
+ 		 * will fail to submit urb, cleanup those skb's manually.
+@@ -1100,7 +1105,8 @@ void mt76u_stop_tx(struct mt76_dev *dev)
+ 			}
+ 		}
+ 
+-		mt76_worker_enable(&dev->tx_worker);
++		if (!parked)
++			mt76_worker_enable(&dev->tx_worker);
+ 	}
+ 
+ 	cancel_work_sync(&dev->usb.stat_work);
+diff --git a/drivers/net/wireless/mediatek/mt76/util.h b/drivers/net/wireless/mediatek/mt76/util.h
+index 617966e8de76..71f3aa42bb82 100644
+--- a/drivers/net/wireless/mediatek/mt76/util.h
++++ b/drivers/net/wireless/mediatek/mt76/util.h
+@@ -21,6 +21,7 @@ struct mt76_worker
+ enum {
+ 	MT76_WORKER_SCHEDULED,
+ 	MT76_WORKER_RUNNING,
++	MT76_WORKER_DISABLED,
+ };
+ 
+ #define MT76_INCR(_var, _size) \
+@@ -91,7 +92,7 @@ static inline void mt76_worker_disable(struct mt76_worker *w)
+ 		return;
+ 
+ 	kthread_park(w->task);
+-	WRITE_ONCE(w->state, 0);
++	WRITE_ONCE(w->state, BIT(MT76_WORKER_DISABLED));
+ }
+ 
+ static inline void mt76_worker_enable(struct mt76_worker *w)
+@@ -99,10 +100,16 @@ static inline void mt76_worker_enable(struct mt76_worker *w)
+ 	if (!w->task)
+ 		return;
+ 
++	clear_bit(MT76_WORKER_DISABLED, &w->state);
+ 	kthread_unpark(w->task);
+ 	mt76_worker_schedule(w);
+ }
+ 
++static inline bool mt76_worker_disabled(struct mt76_worker *w)
++{
++	return test_bit(MT76_WORKER_DISABLED, &w->state);
++}
++
+ static inline void mt76_worker_teardown(struct mt76_worker *w)
+ {
+ 	if (!w->task)
+-- 
+2.56.0
 
-816d9992d9ed simplified this tag, it now just says LLM instead of the
-agent and model. Or you could just drop the tag in whole as that tag
-requirement was dropped(will be dropped) in linux 7.4.
-
-[...]
-> +static void rtw_pci_link_hw_disable(struct rtw_dev *rtwdev)
-> +{
-> +     u8 value;
-> +     int ret;
-> +
-> +     ret =3D rtw_dbi_read8(rtwdev, RTK_PCIE_LINK_CFG, &value);
-
-disable_aspm was added in 68aa716b7dd3 for platforms where this very read
-fails and the device then drops off the bus, and the FA506II quirk
-(b0034a2e4156) reports the same thing. With this patch every disable_aspm
-user, and the five rtw_pci_quirks[] machines on every boot, now do the
-read at probe.
-
-The reports I found hit it when leaving power save or around suspend, for
-example https://bugs.launchpad.net/bugs/1872984 where it fails in
-rtw_leave_ips() with the MAC off and BIT_L1_SW_EN set. After a reload
-your read runs in that same state. Is it known to be safe there?
-
-If not, clearing the bits in rtw_pci_remove() on loads that set them
-would keep disable_aspm users off this register. It would also cover a
-reload without disable_aspm, which today starts with L1 still on from
-the last rtw_enter_ips().
-
-> +     if (ret) {
-> +             rtw_err(rtwdev, "failed to read link config, ret=3D%d", r=
-et);
-
-Missing \n, the helpers above have the same problem.
-
-> +             return;
-> +     }
-> +
-> +     value &=3D ~(BIT_CLKREQ_SW_EN | BIT_L1_SW_EN);
-> +     rtw_dbi_write8(rtwdev, RTK_PCIE_LINK_CFG, value);
-> +}
-
-This is the fourth copy of the same read, mask and write of
-RTK_PCIE_LINK_CFG in pci.c, a small helper taking the bits to clear and
-set could serve all of them. rtw_pci_link_hw_disable() also reads as if
-it turned the link off, a name closer to rtw_pci_clkreq_set() and
-rtw_pci_aspm_set() would fit better.
-
-[...]
-> +     /* The CLKREQ/ASPM enable bits live in the device and are not res=
-et
-> +      * by a driver reload, so a previous load may have left them set.
-> +      * Clear them explicitly when ASPM is disabled.
-> +      */
-> +     if (rtw_pci_disable_aspm)
-> +             rtw_pci_link_hw_disable(rtwdev);
-
-Block comments should start with /* on its own line, as netdev dropped
-that comment style. The last sentence only repeats the if below and can
-go, and naming BIT_CLKREQ_SW_EN and BIT_L1_SW_EN says more than "the
-CLKREQ/ASPM enable bits".
-
-Best regards,
-Luka Gejak
