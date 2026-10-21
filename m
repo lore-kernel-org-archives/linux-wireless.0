@@ -1,79 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792567866;
-	b=qA4HxheaMgQ4/ayS+PwqQpJw4Ct7czCvV95t1fEkzARz5bN3uRZBmkeNqO2vOmm8Vd3m
-	 HZe2Rqg0eoC2bGPIpWjupp0UNJKuyYCEP4UXjFtuy3zTugY6fo94KzcZFW7nFueMgbI9G
-	 UYH6EfuLvcx6emS3tFOM89MXX1+IR6N26ZSClTsOE9rGGCN0ax1pX+muFUJDlL5db3MTS
-	 Scgio6i4HjDXov3sk55MQ8c5/GeyPrIh2I/dgWJzF4oUIjN0jyr+NW/oWxsgtZELiQYIf
-	 HzbfDQwxuza6WSjstsJAdSworVRqmNonOWEGgeBdo2I3DbPDD8UZMxkxCaj8Cg1zq0A==
+	t=1792568036;
+	b=JdFni/aupEZM1EPq5Jvt252yh+G84NjesFsHYxstkXtTb/RhrfglYxkecLeZ62yWkRIA
+	 yGfC/yopVobjxu90upD9EvJ/jy79oKNTjarqd1XMHEKyr7ZTCv1Jm4S8/aN4jW7QB8vQ4
+	 cbtWOEN+zTjgeO+3UDMrl0oPaLLzl3x4gf0/zEq9T4ZRntVGSK67RpqYuMO+FLaT5FlLx
+	 jgbSUJbr19bR5d5mdPzoYJSbLef++bwmGXAtoiq2k+95QahvaKK90E5qOPvoESRUhOazN
+	 EF5ughm1KR7R9N2xgBsFyfOYQL4gXt8zRYXTGy91AVgRCOUm6sQlD1ufjgX2V6WiVHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792567866;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=30H8AURFPjCQz1VINULRP+eQGbhpet48vYPTt/+xYcY=;
-	b=I+Zfx14kRAlAD+d6kHpi+ICOIjjOdS0WA4ed9FHXUicdMvnuBhkF5h4VzRCPzMApCUro
-	 VfhQR5V6+cRUvWGbzH2QZ+tQUwEcsuPEYYzsL9GpUl8h/Q/u7g958IQqqBBGNrD/WRM99
-	 vv8YCCY34k71xNzkVoyhhrXuGFQKrulhl4S0cwoqgrJsSbeB6/kmD+UJVYwZWHjfsRp+d
-	 mwXPUTZRR9x6hvbnU9yULLRs5oo+NkiroWCnFDQp4vTWY3ZHTahDYHt19U4u+n98J1n+Q
-	 i9zXRzdVkwNte4eBuLg4fzyJwsmEhiF635tHWIc+vZTWAWt2Cv36EcqrBva4cGeEtdw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792568036;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:CC:Subject:User-Agent:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=S/WUWG78WudYvh8ovm7Px4vUVyJzHUUoo0t8APESyAg=;
+	b=ws+kC5xGJa4QlITkTLjzMZa9OZdJ/lEajc1HSnP7Ix5XGFntVDk/yemAraBIihgwV7kf
+	 gLBK2IPbQEPHcOtKldESVoGdOIl4cOnpzhS3/iWaUnTHyLYmCu8GN3NiawhDpiAeDoeil
+	 uvLa3zJS+dB21xm+RREK7iOLLykFFrdZKL8PiI/EaYexHcGHPvahIHxXdG1Z6d5kmgy5p
+	 ymwyloKe34whiiM9KCwnbsYSfGSlYPx8e+0r+FF+dcXqq/joyjSDG7DnhdwNBWgKGMsmZ
+	 iXZaXYFafCR0ff/BkqyRxz5gVGrvcQoN4lu6fUbkSsYBFbx1oc/74CJaTrIqk2V/XMQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=A1BTjAK1;
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ofIySrqr;
+	arc=none smtp.remote-ip=209.85.128.176
+Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD8A606A319
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 07:31:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4AD8A606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33253606A31C
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 07:33:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33253606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=A1BTjAK1
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69L7Uxw963845437, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792567859; bh=30H8AURFPjCQz1VINULRP+eQGbhpet48vYPTt/+xYcY=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=A1BTjAK1HpWjqb+oRXbcaVQ6tj0heXoH+PYu5m0V9pUl/NqYDZ/TJXsleqDAfau6k
-	 xWqGmSDksZUvlMSd+PR+M+8J4jNRH1os+GBRgXGWO5i91N5npRapK5pldqw08hAO4S
-	 yshoIe0l3LAp/GzDpVOmXk8rbI66jix+rNkh8sbeD2r/CXaYvJhmIO1czKxJf6kmvF
-	 1gjgPjRS9fKUez4SLSqsFFCzIiyRxEseh4ugiQcWie7xSlE/s4FeAgOBLfN4zKkjU0
-	 48Mdbai63eCAuUNBLSjOvCW0qH2SW4au+DudTk7HAMWy2rGbxHZOllYoCLuJv9wGRh
-	 UljVu4uq8r1mg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69L7Uxw963845437
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 21 Oct 2026 15:30:59 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 21 Oct 2026 15:30:58 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 21 Oct 2026 15:30:58 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bob Beckett <bob.beckett@collabora.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel@collabora.com" <kernel@collabora.com>, "matthew.leach@collabora.com"
-	<matthew.leach@collabora.com>, Timlee <timlee@realtek.com>
-Subject: RE: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted, poisoning
- CCMP replay counter
-Thread-Topic: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted,
- poisoning CCMP replay counter
-Thread-Index: AQHdXaL8zmsOj0CE6U6ENy6Km2GOWLcHlFUQ
-Date: Wed, 21 Oct 2026 07:30:58 +0000
-Message-ID: <a615f09bb6f54128b792a13ebcbf8970@realtek.com>
-References: <20261016191100.1781056-1-bob.beckett@collabora.com>
-In-Reply-To: <20261016191100.1781056-1-bob.beckett@collabora.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="big5"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ofIySrqr
+Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-8b06c0794cfso4531537b3.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 00:33:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792568035; x=1793172835; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :references:in-reply-to:user-agent:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=S/WUWG78WudYvh8ovm7Px4vUVyJzHUUoo0t8APESyAg=;
+        b=ofIySrqrCtqqd8aOQOd99xJJ48UPJjT1bck9w1eOJsEE9D4DLiCp/1reEdCW09OZ9J
+         cNeOA7uACcrUNq6zB2EscWL5WNRsz65m1ezX7aEKtr5A+RbSk3ailohV7lxqP165nrQj
+         ohQZQJpbif6C2kvnxt1f1ApAhsJDfVL0u+yF7lwrUpRDno8qBB/GKfqrmVHW1zyeaGHH
+         VJvpj0sWbqLzlxPv1yssMiJqmvbYHoyBJL+mGmFxmRdfP5Ql9Yg1oqu9VcX88bwPI3QV
+         0JYHk0LRZ0jwYkmVGbhvv7ZXduSq0I1G7A6hSHh/crWkKvhaFR2KiPalLx2oILV+UaYu
+         ew/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792568035; x=1793172835;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :references:in-reply-to:user-agent:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=S/WUWG78WudYvh8ovm7Px4vUVyJzHUUoo0t8APESyAg=;
+        b=EadPpomIuXhZWHqSdpI0YnEUmapRghuQvovgoQ3j3AeP3C8Rkb6MPvsfEwcXQ6bYU6
+         TIgT2XU6w949fyJYO0NAa1lTq3mkm0XCl2Nn8TKQzEZRj+JuYRKQqgKjkwIXAbt3w396
+         qyjpP/6OCTwEsTt05HAeh6a2zfIvQZ93c5LprPDT7H0nYcgLGZehZKsN5av6kdBxtTf2
+         tp2dKxoOxdjnjn0zGECTATpl2TMnH8H+4VZPYFk97xftECZqkcn4rwnwMxyupFBfKRJQ
+         p5PMWbTpq/8njWx/mx7y9E7Dk9QkFFpUgUREQoUmY+okkGEBXCjhzdR9XSrBrWofbXlJ
+         ZOFA==
+X-Forwarded-Encrypted: i=1; AKwUvBzH2h+yrELVthD5QWm3N+zZSsTsN6RmmSXuUAfJDEVb5QPRKnQ5gEhL0ZKbWnhkk8wB8Dmt32x1y1F0SNMPQg==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKHIbAhJeB/RU6WRTECSphE0q3bpfWJWTUwDEPfNjRKi5F5sRfF
+	zj2+E67UvGiIHhKcz/E4PIKDA5A4N0I0ggbbMa/JNgmOLFjMKXe2Or+8
+X-Gm-Gg: AYBFou0v/iJmk5RhzvjGJu1AD7C8MWIpmXZWnu4cC/0Jr+uHVHs5oBk+CnmkL3QepfM
+	qt490a6W6LvrJvGIv8hyiZlc7fUg5J+I60NNgjvm0kWEC0Ex8KiM8xUTik3XNW2V48XfmbmpVCj
+	r9q1lbHB3QdVYNbhw2Hx186ObKX+r0WfPotQmyFaJMOZ0hbShCzTaxjIc5j+iBEwn67fnkm/TJU
+	ELo9DCI+K4l5HBmkiRJcM+QmaRk6TA3q/sXmfjWQyFA1k4CZoVBNK0Kaxeu+sBuNPdNJ5ezdxq1
+	sHrBu3ZBpMWAgAB3ayuggNb0DBSWBKh84k2vvhEKLlFDUIU2itpNN2kgnPT2pwNJSfffOwef9VA
+	pYviisqCzz1OPXOI8iQABEKQtLaQ1WJ4cTSmRAXsyUpc/rhsg/j0dHQe+hCNyS9TkdCNdRSXXB6
+	qZEvMrvAVzdLkIOY4LdG0bicq9P6/zym4jJfP4m3DhtP8D6MeLsUZZw2mOUWPvAV8ILonimaEiO
+	nudnvq2SsvSclBt5O/Ve49H0dHuTwltEbCGmxOb//PklM87hFOxwu5gskR7zgmqJwBjwm3HjHPT
+	6Fl2M3ut5MMbmlOAUHH7H7/CEcfMS9Y63UUY51c+Gsrw93eEW+EzEbKlytOfXbA4mclpyKF2TfF
+	IHWvnIjbNVmyX+gkwIZ588VB00yVyDTmVBVC5ks0SG5s6Uo6fSy2CE54nrgUnoXw=
+X-Received: by 2002:a05:690c:698a:b0:8b0:9e27:fcd0 with SMTP id 00721157ae682-8b133caac65mr6808817b3.21.1792568035078;
+        Wed, 21 Oct 2026 00:33:55 -0700 (PDT)
+Received: from ehlo.thunderbird.net (212.153.88.200.l.sta.codetel.net.do. [200.88.153.212])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b1300715cfsm7838277b3.14.2026.10.21.00.33.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Oct 2026 00:33:53 -0700 (PDT)
+Date: Wed, 21 Oct 2026 03:33:28 -0400
+From: Jason Perlow <jperlow@gmail.com>
+To: Baolu Lu <baolu.lu@linux.intel.com>, Aditya Garg <aditya.garg@linux.dev>,
+ dwmw2@infradead.org
+CC: iommu@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, arend.vanspriel@broadcom.com,
+ linux-wireless@vger.kernel.org
+Subject: =?US-ASCII?Q?Re=3A_intel-iommu=3A_DMAR_PTE_Read_fault?=
+ =?US-ASCII?Q?_crash-loops_a_PCIe_wifi_device=2C_v7=2E?=
+ =?US-ASCII?Q?3-rc7_-=3E_v7=2E3_final_regression=2C_repr?=
+ =?US-ASCII?Q?oduces_on_one_unit_out_of_five_tested?=
+User-Agent: Thunderbird for Android
+In-Reply-To: <2c840dcf-4292-4579-a62d-f9766b7cb780@linux.intel.com>
+References: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com> <2c840dcf-4292-4579-a62d-f9766b7cb780@linux.intel.com>
+Message-ID: <74570358-8085-4767-BF76-D865CA95853E@gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,127 +104,148 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Qm9iIEJlY2tldHQgPGJvYi5iZWNrZXR0QGNvbGxhYm9yYS5jb20+IHdyb3RlOg0KPiBIaSBQaW5n
-LUtlLA0KPiANCj4gV2UgYXJlIGludmVzdGlnYXRpbmcgYSBXaS1GaSBmYWlsdXJlIG9uIHRoZSBT
-dGVhbSBEZWNrIExDRCAoUlRMODgyMkNFLA0KPiBydHc4OCkgYW5kIHdvdWxkIGFwcHJlY2lhdGUg
-eW91ciBpbnB1dDsgZGV0YWlscyBiZWxvdy4NCj4gDQo+IFN1bW1hcnkNCj4gPT09PT09PQ0KPiAN
-Cj4gT24gUlRMODgyMkNFIChQQ0llLCBydHc4OCksIGR1cmluZyBoZWF2eSA1IEdIeiBWSFQgZG93
-bmxpbmsgZnJvbSBvbmUgQVANCj4gbW9kZWwsDQoNClNpbmNlIFRoZSBSVEw4ODIyQ0Ugd29ya3Mg
-bG9uZyB0aW1lIGluIGZpZWxkLCBpcyB0aGUgc3ltcHRvbSBvbmx5IG9uDQpzcGVjaWZpYyBBUCB3
-aXRoIGhlYXZ5IGxvYWQ/DQoNCklmIHlvdSBjaGFuZ2UgdG8gYW5vdGhlciBBUCBvciBsb3dlciBs
-b2FkIChlLmcuIDEwME1icHMpLCBkb2VzIHByb2JsZW0NCnN0aWxsIHByZXNlbnQ/DQoNCj4gdGhl
-IGRyaXZlciBvY2Nhc2lvbmFsbHkgaGFuZHMgbWFjODAyMTEgYSBmcmFtZSB3aXRoIHRoZXNlDQo+
-IHByb3BlcnRpZXM6DQo+IC0gdGhlIFJYIGRlc2NyaXB0b3IgbG9va3Mgbm9ybWFsOiBDUkMgT0ss
-IElDViBPSywgQUVTLCBub3QNCj4gICBzb2Z0d2FyZS1kZWNyeXB0ZWQ7DQoNCkx1a2EncyBwYXRj
-aCBjYW4gZml4IHBhcnRpYWwsIHNvIGlzIGl0IHN0aWxsIG5vcm1hbD8NCg0KPiAtIHRoZSA4MDIu
-MTEgaGVhZGVyIGlzIGNvcnJlY3Q7DQo+IC0gdGhlIGJ5dGVzIGZyb20gdGhlIENDTVAgaGVhZGVy
-IG9ud2FyZHMgYXJlIGdhcmJhZ2UuDQoNCkRvIHlvdSBoYXZlIGFuIGFpciBjYXB0dXJlIHRvIGNv
-bXBhcmUgd2l0aD8gSSdkIGxpa2UgdG8gYmlzZWN0IHRoZSBjYXVzZQ0KaWYgQVAgVFggd2VpcmQg
-cGFja2V0cz8gb3IgcmVjZWl2ZSBzaWRlIHByb2Nlc3MgaXQgd3JvbmdseT8NCg0KPiANCj4gVGhl
-IEFQJ3Mgb3duIFBOIHNlcXVlbmNlIGlzIGNvbnNpc3RlbnQgYmVmb3JlIGFuZCBhZnRlciB0aGUg
-YmFkIGZyYW1lLA0KPiBzbyB0aGUgY29ycnVwdGlvbiBoYXBwZW5zIG9uIHRoZSByZWNlaXZlIHNp
-ZGUuIA0KDQpNYXliZSB0aGlzIGlzIGEgaGludCB0byBtYWtlIGEgcGF0Y2ggdG8gZGVmZXIgKGRy
-b3ApIHJlcG9ydGluZyB3ZWlyZCBwYWNrZXQsDQphcyBMdWthIGhhcyBmaXhlZCAzIG9mIDQgcHJv
-YmxlbXMuIA0KDQo+IFB1YmxpYyByZXBvcnRzIG9mIHRoZSBzYW1lIHN5bXB0b20gd2l0aCB0aGlz
-IEFQIChTdGVhbSBEZWNrIExDRCArDQo+IEZyZWVib3ggUmV2b2x1dGlvbiwgNSBHSHosIGRyb3Bz
-IHdoZW4gYSBkb3dubG9hZCBzdGFydHMsIGZpeGVkIGJ5DQo+IGRpc2FibGluZyA4MDIuMTFhYyBv
-biB0aGUgQVAsIHdvcmtzIHVuZGVyIFdpbmRvd3MpIGdvIGJhY2sgdG8gYXQgbGVhc3QNCj4gU2Vw
-dGVtYmVyIDIwMjQuDQoNCldpdGggZGlzYWJsaW5nIDgwMi4xMWFjLCBob3cgYWJvdXQgdGhlIGNo
-YW5nZSBvZiB0cmFmZmljPyBiZWNvbWUgbm90IGEgaGVhdnkNCmxvYWQ/IENhbiB5b3UgdGVzdCB3
-aXRoIDgwMi4xMWFjIGVuYWJsZWQgYnV0IGxvd2VyIGxvYWQgYXMgZGlzYWJsaW5nIDgwMjExLmFj
-Pw0KDQoNCj4gDQo+IEV2aWRlbmNlIDM6IG90aGVyIFJYLXBhdGggYW5vbWFsaWVzIGluIHRoZSBz
-YW1lIHJ1bg0KPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT0NCj4gDQo+IC0gMzMgcyBiZWZvcmUgdGhlIGZpcnN0IGp1bXAsIGR1cmluZyB0aGUgZG93
-bmxvYWQgYW5kIHdpdGggbm8gb3RoZXINCj4gICBhY3Rpdml0eSwgb25lIGRlc2NyaXB0b3IgY2xh
-aW1zIHBrdF9sZW4gMTE2MTkgKGFib3ZlIHRoZSAxMTQ1NA0KPiAgIG1heGltdW0pLCBhbmQgcnR3
-X3J4X3F1ZXJ5X3J4X2Rlc2MoKSByZXR1cm5zIC1FSU5WQUwgdHdpY2UgaW4gdGhlIHNhbWUNCj4g
-ICBzZWNvbmQuIFRoZXNlIGFyZSBnYXJiYWdlIGRlc2NyaXB0b3JzLCB3aGljaCB0aGUgcnR3LW5l
-eHQNCj4gICBSWC1kZXNjcmlwdG9yIHZhbGlkYXRpb24gY29ycmVjdGx5IHJlamVjdGVkLiBUaGlz
-IHdhcyBuZXZlciBzZWVuIGluIGENCj4gICAyMS1taW51dGUgfjU0MCBNYml0L3MgdGVzdCBhZ2Fp
-bnN0IGEgZGlmZmVyZW50IEFQLg0KDQpJZiB3ZSBlbmxhcmdlIFJUS19QQ0lfUlhfQlVGX1NJWkUg
-KGUuZy4gKzEwMDAgYnl0ZXMpLCB3b3VsZCBpdCBoZWxwPw0KQnV0IGl0IGlzIHN0aWxsIHdlaXJk
-IHRvIG1lIHdoeSB0aGUgcGt0X2xlbiAxMTYxOSBjYW4gcHJlc2VudC4gDQoNCkZvciBkaWZmZXJl
-bnQgQVAsIGl0IG1pZ2h0IG5vdCBzZW5kIGEgc3BlY2lmaWMgc2l6ZSBvZiBwYWNrZXRzLCBzbyBp
-dA0KbmV2ZXIgaGFwcGVucy4gTm8gaWRlYS4gDQoNCj4gDQo+IFdoZXJlIHRoZSBjb3JydXB0aW9u
-IGFwcGVhcnMgdG8gY29tZSBmcm9tDQo+ID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09DQo+IA0KPiBIb3N0IERNQSBib29ra2VlcGluZyBpcyBjb25zaXN0ZW50LiBydHc4
-OCdzIHJ0d19wY2lfZG1hX2NoZWNrKCkgY29tcGFyZXMNCj4gdGhlIFJYIHRhZyBpbiBlYWNoIGJ1
-ZmZlciBkZXNjcmlwdG9yIHdpdGggdGhlIGV4cGVjdGVkIHNlcXVlbmNlIGFuZCBsb2dzDQo+ICJw
-Y2kgYnVzIHRpbWVvdXQsIGNoZWNrIGRtYSBzdGF0dXMiIG9uIGEgbWlzbWF0Y2ggKGFuIHVuY29u
-ZGl0aW9uYWwNCj4gZGV2X3dhcm4pLiBUaGF0IHdhcm5pbmcgYXBwZWFycyB6ZXJvIHRpbWVzIGlu
-IGFsbCB0aHJlZSBydW5zLCANCg0KR29vZCB0byBrbm93IHRoaXMuIA0KDQo+IHNvIGV2ZXJ5DQo+
-IGJ1ZmZlciBkZXNjcmlwdG9yIGhhZCBiZWVuIHdyaXR0ZW4gd2hlbiB0aGUgZHJpdmVyIGNvbnN1
-bWVkIGl0LiBUaGUNCj4gc3RhcnQgb2YgZWFjaCBiYWQgYnVmZmVyIGlzIGFsc28gZnJlc2g6IHRo
-ZSBSWCBkZXNjcmlwdG9yJ3Mgc2VxdWVuY2UNCj4gbnVtYmVyICh3MlsxMTowXSkgbWF0Y2hlcyB0
-aGUgODAyLjExIGhlYWRlcidzLg0KPiANCj4gVGhlIGNvcnJ1cHRpb24gYm91bmRhcnkgZG9lcyBu
-b3QgbGluZSB1cCB3aXRoIFBDSWUgd3JpdGVzLiBUaGUgZGV2aWNlDQo+IGhhcyBNYXhQYXlsb2Fk
-IDEyOCBieXRlcywgYW5kIG9uIHRoaXMgaG9zdCBuZWFybHkgZXZlcnkgUlggYnVmZmVyIGdvZXMN
-Cj4gdGhyb3VnaCBTV0lPVExCIGJvdW5jZSBzbG90cywgd2hpY2ggc3RhcnQgMiBLQi1hbGlnbmVk
-IGJlY2F1c2UgcnR3ODgNCj4gc2V0cyBubyBtaW5fYWxpZ25fbWFzayAoc2VlIGJlbG93KS4gU28g
-RE1BIHdyaXRlcyBzcGxpdCBhdCAxMjgtYnl0ZQ0KPiBib3VuZGFyaWVzIG9mIHRoZSBidWZmZXIu
-IFRoZSBnb29kIGRhdGEgZW5kcyA4MiBvciA4NiBieXRlcyBpbnRvIHRoZQ0KPiBidWZmZXIsIHdo
-aWNoIGlzIG5vdCBzdWNoIGEgYm91bmRhcnkuDQoNCldoYXQgaXMgdGhlIHByb2JsZW0/IENhY2hl
-LWxpbmUgc2l6ZT8gb3IgZGV2aWNlIERNQSBjb3JydXB0aW9uIG92ZXIgYm91bmRhcnk/DQoNCkFz
-IEx1a2EncyBzdWdnZXN0aW9uLCBpdCBpcyB3b3J0aCB0byB0cnkgSU9NTVUuIA0KDQo+IFJ1bGVk
-IG91dA0KPiA9PT09PT09PT0NCj4gDQo+IC0gT3ZlcnNpemVkIE1QRFVzIChuZXdfbGVuID4gUlRL
-X1BDSV9SWF9CVUZfU0laRSk6IHRoZSBiYWQgZnJhbWVzIGFyZQ0KPiAgIDMwOTIgYnl0ZXMsIGFu
-ZCBBLU1TRFVzIGZyb20gdGhpcyBBUCB0b3Agb3V0IGF0IGFib3V0IDkuNyBLQi4NCg0KVGhlIGJh
-ZCBmcmFtZXMgYXJlIG5ldmVyIG92ZXIgUlRLX1BDSV9SWF9CVUZfU0laRSwgcmlnaHQ/DQoNCj4g
-LSBBU1BNIC8gZGVlcCBMUFM6IGp1bXBzIDMgYW5kIDQgaGFwcGVuZWQgc2Vjb25kcyBhZnRlciBy
-ZWxvYWRpbmcgd2l0aA0KPiAgIGRpc2FibGVfYXNwbT0xIGRpc2FibGVfbHBzX2RlZXA9MS4NCg0K
-V2l0aCBkaXNhYmxlX2FzcG09MSwgeW91IHNob3VsZCB0dXJuIG9mZi9vbiAoY29sZCByZWJvb3Qp
-IHBsYXRmb3JtIHRvDQp0YWtlIGVmZmVjdC4gDQoNCj4gLSBQb3dlciBzYXZlIChpdyAuLi4gcG93
-ZXJfc2F2ZSBvZmYpIGFuZCBiZWFtZm9ybWVlIChzdXBwb3J0X2JmPTAgKw0KPiAgIHJlY29ubmVj
-dCk6IG5vIGVmZmVjdC4NCj4gLSBEcml2ZXIgY29uc3VtaW5nIGEgcmluZyBlbnRyeSBiZWZvcmUg
-aXRzIGJ1ZmZlciBkZXNjcmlwdG9yIHdhcw0KPiAgIHdyaXR0ZW46IG5vIFJYLXRhZyBtaXNtYXRj
-aCAoInBjaSBidXMgdGltZW91dCIpIGluIGFueSBydW4uDQo+IC0gVGhlIEFQIHNlbmRpbmcgYSBi
-YWQgUE46IHRoZSBQTiBzZXF1ZW5jZXMgb24gYm90aCBzaWRlcyBvZiBlYWNoIGJhZA0KPiAgIGZy
-YW1lIGFyZSBjb25zZWN1dGl2ZS4NCg0KQ2FuIHlvdSBjb25maXJtIHRoaXMgYnkgYW4gYWlyIGNh
-cHR1cmU/DQoNCj4gLSBUaGUgUlgtZGVzY3JpcHRvciB2YWxpZGF0aW9uIGFkZGVkIGluIHJ0dy1u
-ZXh0OiBpdCBkb2VzIG5vdCByZWplY3QNCj4gICB0aGVzZSBmcmFtZXMsIGJlY2F1c2UgdGhlaXIg
-ZGVzY3JpcHRvcnMgYXJlIHdlbGwtZm9ybWVkLg0KPiANCj4gUXVlc3Rpb25zIGZvciBSZWFsdGVr
-DQo+ID09PT09PT09PT09PT09PT09PT09PQ0KPiANCj4gMS4gSXMgdGhlcmUgYSBrbm93biBjb25k
-aXRpb24gb24gODgyMkMgKG9yIDg4MjJCLzg4MjFDKSB3aGVyZSBhDQo+ICAgIGhhcmR3YXJlLWRl
-Y3J5cHRlZCBNUERVIG9yIEEtTVNEVSBpcyBkZWxpdmVyZWQgd2l0aCBhIHZhbGlkIFJYDQo+ICAg
-IGRlc2NyaXB0b3IgKENSQzMyIDAsIElDVl9FUlIgMCwgU1dERUMgMCwgZW5jIEFFUykgYW5kIGEg
-dmFsaWQgODAyLjExDQo+ICAgIGhlYWRlciwgYnV0IGFuIGludmFsaWQgQ0NNUCBoZWFkZXIgYW5k
-IHBheWxvYWQ/IERvZXMgdGhlIFJYDQo+ICAgIGRlc2NyaXB0b3Igb3IgZHJ2X2luZm8gaGF2ZSBh
-bnkgYml0IHRoYXQgZmxhZ3MgaXQ/IEZvciBleGFtcGxlDQo+ICAgICJwYXlsb2FkIGludmFsaWQi
-LCAiZGVjcnlwdCBlbmdpbmUgYnlwYXNzZWQgb3IgYWJvcnRlZCIsIG9yIGENCj4gICAgcGVyLXBh
-Y2tldCBSWCBGSUZPIG92ZXJmbG93Lg0KDQpBcyBJIGtub3csIG5vLiANCg0KPiAyLiBXaGF0IGRv
-ZXMgdGhlIHZlbmRvci9XaW5kb3dzIGRyaXZlciBjaGVjayBiZWZvcmUgdHJ1c3RpbmcgYQ0KPiAg
-ICBoYXJkd2FyZS1kZWNyeXB0ZWQgZnJhbWUsIGFuZCBkb2VzIGl0IGhhbmRsZSBISVNSMSBSWEZP
-VlcgLyBISVNSMA0KPiAgICBSRFU/IHJ0dzg4IG1hc2tzIGFuZCBpZ25vcmVzIGJvdGguDQoNCldo
-eSBkbyB5b3UgdGhpbmsgcnR3ODggbmVlZHMgdG8gaGFuZGxlIHRoZW0/DQoNClJYRk9WVyBhbmQg
-UkRVIGFyZSB0byB0ZWxsIGRyaXZlciB0aGUgaW5mbywgYnV0IGRhdGEgc2hvdWxkIGJlIGhhbmRs
-ZWQNCmJ5IGhhcmR3YXJlIHByb3Blcmx5IC0tIHdpdGggc29tZSBtaXNzaW5nIGRhdGEsIGJ1dCBz
-aG91bGQgbm90IHJlY2VpdmUgDQpjb3JydXB0ZWQgZGF0YSB0byBkcml2ZXIuDQoNCj4gMy4gQXJl
-IHRoZXJlIFJYIEZJRk8sIFJYIERNQSwgc2VjdXJpdHktZW5naW5lIG9yIFJYIGFnZ3JlZ2F0aW9u
-IHNldHRpbmdzDQo+ICAgIGluIHRoZSBXaW5kb3dzIGRyaXZlciBmb3IgODgyMkNFIHRoYXQgZGlm
-ZmVyIGZyb20gcnR3ODgncyBhbmQgbWF0dGVyDQo+ICAgIGZvciBoaWdoLXJhdGUgVkhUIEEtTVNE
-VSByZWNlcHRpb24gKDgwIE1IeiwgMlNTIE1DUyA4LTksIH4zIEtCDQo+ICAgIEEtTVNEVXMgYXQg
-fjIway9zKT8NCg0KSSdtIG5vdCB2ZXJ5IHN1cmUgdGhleSBhcmUgaWRlbnRpY2FsIChidXQgbW9z
-dCBzaW1pbGFyKS4gWW91IGNhbiBjaGVjaw0KYXNzb2NpYXRpb24gZnJhbWVzIGJ5IGFpciBzbmlm
-ZmVyIHRvIHNlZSB0aGVpciBkaWZmZXJlbmNlLg0KDQo+IDQuIEZvciBjb21wbGV0ZW5lc3M6IG9u
-IHRoZXNlIGNoaXBzIGNhbiBSWEJEX0lEWCBvciB0aGUNCj4gICAgYnVmZmVyLWRlc2NyaXB0b3Ig
-UlggdGFnIGV2ZXIgYmUgdXBkYXRlZCBiZWZvcmUgdGhlIHBhY2tldCBkYXRhIERNQQ0KPiAgICBo
-YXMgY29tcGxldGVkLCBhcyBkZXNjcmliZWQgZm9yIFdpRmkgNyBpbiBydHc4OSAwYmM3ZDFkNGU2
-M2M/DQoNClRoZSBSWCB0YWcgaW4gcnR3ODggbG9jYXRlZCBvbiBtZW1vcnkgYWxsb2NhdGVkIGJ5
-IGRtYV9hbGxvY19jb2hlcmVudCgpLCBhbmQNCnRoZSBSWCB0YWcgbXVzdCBiZSBzZXQgYWZ0ZXIg
-cGFja2V0IGRhdGEgTUFDIGNvbXBsZXRlZC4gDQoNCj4gNS4gcnR3X3J4X2ZpbGxfcnhfc3RhdHVz
-KCkgc2V0cyBSWF9GTEFHX0RFQ1JZUFRFRCB3aGVuZXZlciAhc3dkZWMgJiYNCj4gICAgZW5jX3R5
-cGUgIT0gTk9ORSwgaWdub3JpbmcgSUNWX0VSUi4gcnR3ODkgc2V0cyBSWF9GTEFHX0ZBSUxFRF9G
-Q1NfQ1JDDQo+ICAgIGFuZCBub3QgREVDUllQVEVEIG9uIGljdl9lcnI7IG10NzYgbWFya3Mgc3Vj
-aCBmcmFtZXMgbW9uaXRvci1vbmx5Ow0KPiAgICBydGx3aWZpIGRyb3BzIHRoZW0uIHJ0dzg4IGRv
-ZXMgbm90IHNldCBCSVRfQUlDViBpbiBSQ1IsIHNvIHN1Y2gNCj4gICAgZnJhbWVzIGFyZSBwcmVz
-dW1hYmx5IGRyb3BwZWQgaW4gaGFyZHdhcmUsIGFuZCB0aGVzZSBmcmFtZXMgaGFkDQo+ICAgIElD
-Vl9FUlIgY2xlYXIgYW55d2F5LiBXb3VsZCB5b3UgdGFrZSBhIHBhdGNoIGFsaWduaW5nIHJ0dzg4
-IHdpdGgNCj4gICAgcnR3ODkgcmVnYXJkbGVzcz8NCg0KSSBzdXBwb3NlIEx1a2EncyBwYXRjaCBk
-aWQgdGhlbS4NCg0KPiBBcHBlbmRpeDogcmF3IGR1bXBzIChydW4gQywgTUFDcyByZWRhY3RlZCkN
-Cg0KSWYgeW91IGhhdmUgYW4gYWlyIGNhcHR1cmUgYnkgYW5vdGhlciBwbGF0Zm9ybSwgaXQnZCBi
-ZSBoZWxwZnVsLiANCg0KDQpJbiBteSBwZXJzcGVjdGl2ZSwgd2UgbmVlZCBhbiBhaXIgY2FwdHVy
-ZSB0byBiaXNlY3Qgd2hpY2ggcGFydCBjYXVzZXMNCnRoZSBnYXJiYWdlIChvciBub3QgcHJvcGVy
-bHkgZGVjcnlwdGVkKS4gVGhlIHBhY2tldHMgd2l0aCBhYm5vcm1hbCBQTg0Kbm90IGhhbmRsZWQg
-YnkgTHVrYSdzIHBhdGNoIG5lZWQgYWRkaXRpb25hbCB3b3JrYXJvdW5kIHRvIGRyb3AgaXQuDQoN
-ClBpbmctS2UNCg0K
+Yes, done=2E rc7 with intel_iommu=3Don on the same MacBookPro16,1 shows
+the same fault: 95 DMAR faults, each followed by brcmf_fw_crashed, in
+one boot=2E So no rc7 -> final regression in the IOMMU code=2E
+
+It is a v7=2E2 -> v7=2E3-rc1 regression in brcmfmac, from f0ba5fd51ff2
+("wifi: brcmfmac: Set DMA direction for msgbuf packet IDs")=2E RX
+buffers are now mapped DMA_FROM_DEVICE (prot 0x6, no IOMMU_READ) and
+the BCM4364 firmware reads them:
+
+  36=2E512689 map   iova=3D0xffeff2c0 size=3D2048 prot=3D0x6 (brcmf_msgbuf=
+_rxbuf_data_post)
+  41=2E110125 DMAR: [DMA Read NO_PASID] Request device [0000:05:00=2E0] fa=
+ult addr 0xffeff000 [fault reason 0x06] PTE Read access is not set
+  41=2E139317 brcmf_fw_crashed: Firmware has halted or crashed
+
+The fault comes before the crash=2E Before that commit the direction
+stayed 0 (DMA_BIDIRECTIONAL)=2E=20
+
+Thanks for the pointer=2E
+
+On October 21, 2026 2:13:40 AM AST, Baolu Lu <baolu=2Elu@linux=2Eintel=2Ec=
+om> wrote:
+>On 10/20/26 22:40, Perlow, Jason wrote:
+>> Hardware: Intel CoffeeLake-H platforms, various=2E The affected device =
+is a Broadcom BCM4364 802=2E11ac PCIe wifi adapter (14e4:4464) at 0000:05:0=
+0=2E0 on an Apple MacBookPro16,1 (T2 Mac)=2E Aditya, including you directly=
+ since this is T2 hardware; copying iommu/pci/wireless because the fault si=
+gnature and the fact that it reproduces on only one of five tested machines=
+ looks like it needs eyes on the core IOMMU/PCI path, not the driver=2E
+>>=20
+>> SYMPTOM
+>>=20
+>> Between a locally-built v7=2E3-rc7 kernel and a v7=2E3 final kernel (sa=
+me =2Econfig template, same patch series beyond one T2-specific AER quirk t=
+hat is upstream in final and therefore held out of our patch set), the BCM4=
+364 wifi firmware on ONE affected unit crash-loops continuously:
+>>=20
+>> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for ch=
+ip BCM4364/4
+>> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: =2E=2E=2E
+>> ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
+>>=20
+>> repeating every ~6s, indefinitely=2E dmesg shows the actual mechanism -=
+- a real IOMMU DMAR page fault on the wifi device, timed to the same cadenc=
+e as the firmware crash:
+>>=20
+>> DMAR: DRHD: handling fault status reg 3
+>> DMAR: [DMA Read NO_PASID] Request device [0000:05:00=2E0] fault addr 0x=
+ffeff000 [fault reason 0x06] PTE Read access is not set
+>>=20
+>> Four such faults logged at uptime 13=2E4s/19=2E4s/25=2E3s/31=2E2s, each=
+ immediately followed by a brcmf_fw_crashed event=2E intel_iommu=3Doff remo=
+ves the fault and the crash entirely (8+ minutes stable, single clean firmw=
+are load, stable AP association)=2E The prior v7=2E3-rc7 kernel on the SAME=
+ unit has zero DMAR faults and zero firmware crashes with IOMMU on by defau=
+lt, so this is a regression introduced somewhere in the rc7->final window o=
+n this unit, not a long-standing issue=2E
+>
+>Can you confirm that the IOMMU is actually enabled and translating on
+>the rc7 boot? Please check that boot's kernel log for:
+>
+>DMAR: IOMMU enabled
+>iommu: Default domain type: Translated
+>
+>>=20
+>> REPRODUCES ON 1 OF 5 MACHINES TESTED
+>>=20
+>> We ran the identical kernel build (and, where applicable, the identical=
+ firmware blob) across five machines and only one faults:
+>>=20
+>> * Affected unit (MacBookPro16,1, T2, BCM4364 wifi): faults as above=2E
+>> * Second MacBookPro16,1 (same generation, different configuration withi=
+n the 16,1 line -- we have not enumerated every hardware delta): same kerne=
+l binary, same firmware blob, IOMMU also active by default (iommu: Default =
+domain type: Translated, identical to the affected unit) -- zero DMAR fault=
+s, brcmfmac stable=2E
+>> * Three non-Mac x86_64 machines spanning three more wifi vendors (Intel=
+ iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8852BE) -- IOMMU=
+ active and translating on all three, zero DMAR faults, all three wifi chip=
+s loaded firmware and ran cleanly=2E
+>>=20
+>> So across four different wifi silicon vendors and five physical machine=
+s, IOMMU is actively translating DMA on every one of them and only the sing=
+le affected unit faults=2E This looks like a host-specific or hardware-conf=
+iguration-specific trigger rather than a blanket rc7->final regression that=
+ would hit every machine with this kernel=2E We do not yet know what distin=
+guishes the affected unit (ACPI RMRR table contents, exact PCIe link traini=
+ng time, and IOMMU group/domain-attach ordering are the candidates we have =
+not yet isolated)=2E
+>>=20
+>> WHAT WE RULED OUT BEFORE WRITING IN
+>>=20
+>> * AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is e=
+xact (Apple SEP, 106b:1802) and does not touch the wifi device (14e4:4464);=
+ real PCI topology on the affected unit also shows SEP and wifi on separate=
+ root ports (00:1b=2E0 -> [04] vs 00:1c=2E0 -> [05] off the PCH), so there'=
+s no shared-root-port mechanism either=2E
+>> * brcmfmac driver source: git diff v7=2E3-rc7=2E=2Ev7=2E3 -- drivers/ne=
+t/ wireless/broadcom/brcm80211/ is empty=2E
+>> * Our own config template: byte-identical between the rc7 and final bui=
+lds=2E
+>> * The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON (drivers/iommu=
+/ intel/Kconfig): byte-identical text between v7=2E3-rc7 and v7=2E3 (defaul=
+t y, no depends on)=2E
+>>=20
+>> THE ONE ANOMALY WE CAN'T YET EXPLAIN
+>>=20
+>> Despite the last two items above being unchanged, the actual generated =
+=2Econfig has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make olddefconfig a=
+gainst the rc7 source tree, but =3Dy after the same process against the fin=
+al source tree, even though our template explicitly answers "# CONFIG_INTEL=
+_IOMMU_DEFAULT_ON is not set" in both cases=2E Our
+>
+>If CONFIG_INTEL_IOMMU_DEFAULT_ON was not set in your rc7 build, and
+>intel_iommu=3Don was not on the command line, the Intel IOMMU was
+>disabled by default on rc7=2E In that case, rc7 could never report a
+>DMAR fault, and the "regression" is only that v7=2E3 final enabled the
+>IOMMU=2E
+>
+>Could you boot the rc7 kernel on the affected unit with intel_iommu=3Don
+>and see whether the same fault shows up? If it does, there is no
+>rc7->final regression in the IOMMU code=2E It would be an existing DMA
+>issue with brcmfmac/BCM4364=2E
+>
+>> working theory is that some other symbol started selecting/implying INT=
+EL_IOMMU_DEFAULT_ON between rc7 and final -- which would override an explic=
+itly-seeded "not set" answer during olddefconfig resolution -- but we have =
+not identified which one=2E Happy to bisect further, or provide the full =
+=2Econfig / additional dmesg, if that would help narrow it=2E
+>>=20
+>> CURRENT STATUS
+>>=20
+>> intel_iommu=3Doff on the affected unit's kernel command line is our acc=
+epted fix for this specific machine while the root cause is unresolved; we =
+are not disabling IOMMU fleet-wide, since four of the five test machines sh=
+ow no problem with it on=2E Posting here in case this fault signature is re=
+cognized, or in case others on different T2 or non- T2 hardware see the sam=
+e thing on v7=2E3 final=2E
+>
+>Thanks,
+>baolu
