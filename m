@@ -1,92 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792594695;
-	b=VmQW0P3Wv9at96AxG2l2oflq2FKgILAL5SgP6xhLqK4e6uXPZbfVtuBXxhSgGrGoI34G
-	 U8iK+ODaHxBV/bScHVlTZ1burfkjvChrFKpgcwu4pFTkHs0IQxmrTJsONUT8Hu5HomtJE
-	 dzCJfAV6ON2UuxYMB/awSmF3i0dn3JSRhIHNUfyiyYvx/1IlLEcJMWlf/qIWA3zMsccFQ
-	 3sFJejKEpSBc8lVGrL4HKJ6KMdZ9OjHO/Txh4YqaTBt0QFAYi5z+xIQnNbTtaAkuoi4Xi
-	 tbkm/bKGd6KfMPQMk40tJ0ZLGQsSxbhMNItjslKN2SX0FDDazQcFCw47eNjk4ZB6U6g==
+	t=1792594760;
+	b=WTYzIJWf4nFlwdtniVwPnzV4VqrqKXd5yXXyFYFYcjjtb/i/Osj+wgOmy0foGtYXYXXZ
+	 zjj9SpIIgOLfITHdnQwlNvIqsDbyIwcjHNnpi4ictPRS2dp6Yg8jJFa3ecrk3/4YKqIbt
+	 L2FE3Kntp9rX70q46SnHsIVuEe/SIq7RWyFjZRyCUL5gluzge2ZxFut5ioBC715ooAVFY
+	 TuKvSj6ZeDE/zeXMeAC6uwWneYuRKHzd16925YfPp6WK8mMimkPbIUywclO89wY120FOa
+	 5y3wnRBWLXx9chSSLSmUQOScpUxj77T7wzf1iCXqjycMocvrtVMKYvqRWUDYUhq+MSQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792594695;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792594760;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=hkWxYIZuoyGBV/b4mNoBewDUXIu1CyNuAuzdw5QNZA4=;
-	b=tU6+ngsSFSeTxPSX64Voq/R93+G6DvoR5Y6GumwDmNIoAIT42H/Ct/caXBSx/Uk9UJ3K
-	 3CkirpNzKGeZZNrWfQuG62nJ8O49pxxUo3p86XjwUeyGY+xD9spXqcy1m1tHDOflQg4/a
-	 xTo9PTCPNBO1caDMLwFfOs8+TApoWT6LaaDsAGfkW9O0ODXC3iYvAuj4nD71AqKNCA9bm
-	 0L/K/tLLu5F4JQaHCb+3ZN+L3v3IDThjFCm5qOeFKQw150PXW6jgrnVkVjSKc2JgLYsYO
-	 wlqgN7PwdwZN7FsXqdMjTVNGsW/klj5J1061ZtyIN8CNfVNjFRtieprFmqDxxLxZq8A==
+	 From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=hObvmucUS6t1rWR1L9u3AvYVQ+Nq1snLbT3mu1kE8f8=;
+	b=CcJ/Al6U4grStWGmTWrl85Itw08Z3b5k2V9WNpZq/hAP9Zm0S/BuzaBv3YSZVKpwhSSy
+	 uCMNzslnHvbE5YO+Gz9pHY1t4wzowosa9osZt2qOQk/lEiJjs0a7PY0hHVbaXK7jQZRCJ
+	 EnIC3WqxBBPAC297Vm5787gT9ZEejn8PlpUw3O6hWJqUmEuIPyo1w8PCtEqfNHeVejAwy
+	 8aIZXN/o/fxt5oTLFKZbFnR6R46rqW7vdMZDAzHJbzmXwpKZCkpnRK68NZpcAp6EuhWU9
+	 R7T9+QmNonAvTDoZQ2FcowbAaKzaffD/y+IN6XuG+erq1Oot6qFm8Jh0QO/IgNxtlOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Fh8FwM8j;
-	arc=none smtp.remote-ip=74.125.82.48
-Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WO9+EzJK;
+	arc=none smtp.remote-ip=209.85.208.176
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D17606A31A
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 14:58:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56D17606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 253BD606A31D
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 14:59:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 253BD606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Fh8FwM8j
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-14fd9dafb0dso240126c88.0
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 07:58:15 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WO9+EzJK
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-3a9e87ba7f2so7376781fa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 07:59:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792594694; x=1793199494; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=hkWxYIZuoyGBV/b4mNoBewDUXIu1CyNuAuzdw5QNZA4=;
-        b=Fh8FwM8jbElmwgtoQS1HHK0QJx9AmKU+OuV9nTsMFY4UTwasrRUUYdKWbBcPjND7KK
-         BqwR1tw6OwGjTvhoTzI09KqvxOUn1tlq9LcpJZlg2AmR1mMxXOyVOXubc9J8JCuaxyI0
-         U7GBNO+UPuCcFGRP7b5XWj6/A9gH8o8OOftCG6SOWvI53+3XhQiJQXNWyDn/kfC1xkKz
-         KpYGhat+M7nbYms7Mb51UXi/Mjn9PbM1Qvi++1q0c1HhNuXsTHSjJSE73U5uS6pjaDuo
-         dbU44Tnl602EholdY9Zwr9DxtR6Q92ZqYGMili3wMg1CLH9w1h2p0p2SYU9I2bUR51wV
-         f6Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792594694; x=1793199494;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1792594758; x=1793199558; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=hkWxYIZuoyGBV/b4mNoBewDUXIu1CyNuAuzdw5QNZA4=;
-        b=p2qv5t9QLaZYxLVKGutMMkYWqXpnkPaxqZ2pNc3rW7Qbs3j5yEIY6kHycL8tyUAee1
-         0AtPfBQMxbZ0lnz6jC2fbppHpZx/UgBDad6o7dozt+q4PLqMkN0FcBGbXBEUsIbEozWu
-         EBT2dUxb+RPFWpF6SIixnrZtsIcPl/qtuxTs3My0kVbnxP6gTIUNf6c4iV2dYsF23a6i
-         hgodVqnZyUFdV9+k/o3eqW9ZdBOesl8sva/8G/Dr1hzrjGZa1rPNpR2wr6XW/5UomnHg
-         xKu1G5SMmVy7JxgIguv/z2zCtpFHyg8KgHaKyFeJ6/f/7osXWrLGDPjL02mJ+/xWgBO/
-         tguw==
-X-Forwarded-Encrypted: i=1; AKwUvBzakhXY5Sh0zv+cxfmYmGmnq5nHCxGdxSACPqR+Qu4vVrB1rEkW9dawdlrfDmo+/coT7EksKDqqLiuhLgqlQg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ8N2A3f7GdsPDSCAPp1Sh6jd04iVrgkQAxsiZfLgwkYgQBkrA+
-	7LlCZ3h3wYY18wWgIK0GHfC4p5MLArbZUFRTY0o0KTmijXmoBqDdjvP0
-X-Gm-Gg: AYBFou1FgYJNpBOy2v/wDX1Tv9+GjemuIbRpNMqspRoTwiP/sISYvJu39uULCs0xRx6
-	TpRNpE+QsVnctq8CFHeUJNJkXtIyhIPRPWAX6ItblD3nGPvD7m+jp7TiPOtDnFRuR1XMekUJYoT
-	vn8ckU/+/DNkjt6vq4TsMtUqmB2JW29On9mQUOMRQnCJJB3NCg990XjvkhHO9o3cBAIS97C8acB
-	2GLRjbQKe6B5k4qNRh4mRQmSN1QJYo8Gtsj0PobILZdFNH3KHQU1G5PVnihdl5myKS2WC3h3wQd
-	uw5ION/1wqyF/57Wl2vZeE39MtxJeLkmp0MewQGHjnBXXBr6aPz8+YmSUTg160j7pwiJc8Nhe2t
-	l6TY7v/d3Rn/5KuDc5Z15ekkcaQb0aShRHqdZ11x1ErgXkyHX5CulS9GJ1G1DGbILT4remyXIds
-	ZKPR9onEYPjFujGhaEdcN9AuG8HvhfoKQBQyGlb6i7sk+xQNB+oi/s10tUTfOl7DE87SEBmu2lW
-	rjnwg0J/FKPWkoIlLK5FB4PeB3CM29lxkh9AtnmlBPfv07mD70EgVtZ/Ojrw7wsvl4pWRZpCOY9
-	uLZPXPUp+ApeYLXCFKcNDpG8xRcmGxlvXpNZ9dz68CyjoGGmaZdev2kc6ACuoVqv2J9MnvyC14t
-	IxgXnfGEHIRyW/5y9x/A=
-X-Received: by 2002:a05:7023:a89:b0:183:3140:3ac1 with SMTP id a92af1059eb24-190a599a2damr3082389c88.24.1792594694400;
-        Wed, 21 Oct 2026 07:58:14 -0700 (PDT)
-Received: from dell-pro-max-tower-t2.cse.unsw.EDU.AU (pag-t2-pc.cse.unsw.EDU.AU. [129.94.173.199])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-19035926035sm6213108c88.1.2026.10.21.07.58.11
+        bh=hObvmucUS6t1rWR1L9u3AvYVQ+Nq1snLbT3mu1kE8f8=;
+        b=WO9+EzJKvDZCAa4i5HUJlbg7DqPjyFHR5FavlN/kFq2BTKdu4v3gy6HlWq9kDt/vnd
+         z4Zq7rZBRF75tNqrVEnK+W+VsEjahiudmwOkz6xukmkjENYYIF3q5UJkG2TBsIeg4Ppj
+         qHrsk102jqTowe8j/4IwuJraQEFLzymsvR7k5v3xdgkk0wr99EreFczLMgXXFwE2PvX/
+         RtEnsVVhev7EUxg+dOyvq54UZ9qIEJmP+nPM9zr63JQ9oSgxFXDMormbGbSdwHhwHwoc
+         NaebjomKS4GyMem9+GbsBBTGVE5CSDtf/w/M3BSBPxhCPMnhO8s6arY959PR/M8oVxMa
+         YSWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792594758; x=1793199558;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :references:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hObvmucUS6t1rWR1L9u3AvYVQ+Nq1snLbT3mu1kE8f8=;
+        b=03dTz+v9e2XGxyWmnJ4S0FgWDozFo8pf2418vtI4F4jZ5zo+J9G+eIt7nToPMFz6+n
+         /4Ero/hg+mnQBuaUUtVN8xG3UqtW2PoX/Di2jtVP9sbL/XjHWanxUx4EV7ZflLpeRYDm
+         v570WakmSBezbXs+NlOUgkQi7xqU59iQO9MYr11tmgGh1p1l6+OLYBNb3LDFoRmgNpth
+         vKiIuhaA6JLD6F4GGNk7hgTS+JL1ToqxdmhiH62mBUv4nCcm/XjCSS+HZzG8UG7ASJJR
+         TStQpYoOG7+ru7MK4xL1Svka3xMWl2kI1g0BKNagqZ1IaxDcna2fExHdFs8B36hxCtzn
+         bg2Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzzF0le3SKZrogXdT9yndgmTnhbmr3eyoKfYe5smXYaINAftYwP7YPWkhfiQZO1dnfzwuMMQNRh6vqVIm6qhw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYIvh6DrjlBq2pUxLdxgvfaOkY+ir2lpCzAd9tcSCPDSMuXCs+Uq
+	Ewzq4p21VSIVESO9Kts2+/nWYbkheSDeSoUO6y+gjYWb8kuxYhNlmTAJ
+X-Gm-Gg: AYBFou00tJ3STP63DTNI26njeh94WbOCIL6ORWqHHqzoYNcejpuHQLuIJM8oEvos7Zb
+	Gf2Z1spDM8gmXc7y75CQ/ZMDD4U1qwfrdCqTUwZyLaceD6+ma+kHcbwRqDgVxMKm49uLA3lrI/L
+	4zcId+erc1ABSpZUjxutlQ1mnNtQs8Vvm/0J9JIk1w6xrkwbgAKHGa4TvRQ3lksgsbOMdP1rOW9
+	9ghSF0ez+H87ohKtuosnqs3CUc+OkHnyL8XPGqalqKnfLb+wpu4rHw78/OBIQjk0MbTuqMfEIK8
+	VSEvNvquy+nOiatc/cCdoDpjo9yoR1n/HEbLRgGVT0zaRlPNAjEEMQLXsVRdAFwljKVfRcTjb04
+	oNPNHb0Izt3GcwxmGXvp6Cdoe9NlOQIhg3ngKZIsFHLSx8yrRvoqX566aTbsqUzr2Gl4g4hMF9S
+	FJArjrfpA9Vc2aywym/t5uaRZu1h73oYnqHukW/GsI6ksC3QJjkqqqeib8SaezUOXM9RdAXa7Gb
+	x9vUf9+DFDLuoatmqibaAgyQC97/xdzgK7eLiBV17DaBZLZnx/4qCIyBo6g3lzdy3SsviJ1kB8s
+	+t2Sf2OCIV3/Q+vF
+X-Received: by 2002:a05:6512:65c9:10b0:5bf:a34f:b94d with SMTP id 2adb3069b0e04-5bfa34fb967mr478168e87.9.1792594758106;
+        Wed, 21 Oct 2026 07:59:18 -0700 (PDT)
+Received: from [127.0.1.1] ([85.249.168.112])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5bfa4b90999sm128327e87.68.2026.10.21.07.59.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 07:58:13 -0700 (PDT)
-From: Weigang He <geoffreyhe2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless] wifi: mac80211: reload TDLS header pointer after skb_linearize()
-Date: Thu, 22 Oct 2026 01:58:07 +1100
-Message-ID: <20261021145807.3018338-1-geoffreyhe2@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        Wed, 21 Oct 2026 07:59:17 -0700 (PDT)
+From: Fil Dunsky <filipp.dunsky@gmail.com>
+To: nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com
+Cc: shayne.chen@mediatek.com, sean.wang@mediatek.com, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, Fil Dunsky <filipp.dunsky@gmail.com>,
+ netdev@vger.kernel.org
+Subject: Re: [PATCH] wifi: mt76: dma: run threaded NAPI kthreads with
+ SCHED_FIFO low priority
+In-Reply-To: <20261020-b4-mt76-napi-fifo-v1-1-ac8a24e2062a@gmail.com>
+References: <20261020-b4-mt76-napi-fifo-v1-1-ac8a24e2062a@gmail.com>
+Date: Wed, 21 Oct 2026 17:25:53 +0300
+Message-ID: <179259275334.35963.15413466304986880275@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -96,75 +103,34 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ieee80211_process_tdls_channel_switch() sets tf = skb->data before it
-calls skb_linearize(), and reads tf->action_code afterwards.
+Adding netdev to Cc, as suggested on the GitHub mirror of this patch [1],
+since it touches the scheduling policy of threaded NAPI kthreads.
 
-ieee80211_rx_h_data() queues TDLS channel switch requests and
-responses to the interface after pulling only
-offsetof(struct ieee80211_tdls_data, u) bytes, so the skb can still be
-non-linear when the interface work handles it. Drivers that build
-paged RX skbs do this for every frame that does not fit into the skb
-head, e.g. iwlwifi (mvm), which is also the only mac80211 driver
-that sets NL80211_FEATURE_TDLS_CHANNEL_SWITCH. If the remaining data
-does not fit into the tailroom, skb_linearize() moves the data to a
-new head and frees the old one, and the action code is then read from
-freed memory. Depending on what that memory holds by then, the frame
-is handled as before or ends in the WARN_ON_ONCE() of the default
-case.
+For context on why this is done in the driver rather than left to the
+admin (chrt / sysfs): mt76 already does exactly this for its other
+rx/status and tx workers (sched_set_fifo_low() for the usb and sdio
+workers and for the tx worker), so the dma napi kthreads were the only
+mt76 rx path left at SCHED_OTHER. A userspace chrt also has to race
+the creation of the napi threads at boot and module reload.
 
-The frame only has to be a data frame with the TDLS ethertype from an
-authorized peer, e.g. relayed by the AP from another station in the
-BSS; the read happens before the sender is checked to be a TDLS peer.
+Numbers from the setup in the commit message (MT7621 + MT7612E as 5 GHz
+client, 3 runs x 5 min each, ~200-280 Mbit/s rx with userspace load):
 
-Load tf after skb_linearize(), as the request and response handlers
-already do.
+  stock:                  ~500 full-ring events / 5 min, watchdog
+                          resets and MCU timeouts, occasional hard hang
+  this patch:             0 resets in 3 runs, rx 276-288 Mbit/s
+  stock + chrt -f 1:      0 resets in 3 runs, rx 249-273 Mbit/s
+  napi_threaded=0:        0 resets
+  rx ring 1024 (stock):   800-1300 full-ring events / run, more resets
 
-Found by static analysis tool CodeQL.
+A similar restart pattern is reported on single-core MT7620 at much
+lower rates [2], which fits CPU contention rather than throughput as the
+trigger.
 
-Fixes: 8a4d32f30d11 ("mac80211: add TDLS channel-switch Rx flow")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM codeql
-Signed-off-by: Weigang He <geoffreyhe2@gmail.com>
----
+[1] https://github.com/openwrt/mt76/pull/1164
+[2] https://github.com/openwrt/mt76/issues/457
 
-Notes:
-    Compile-tested only (ARCH=x86_64 and ARCH=arm64 allmodconfig, W=1). Not
-    tested on hardware, and there is no reproducer. The frame can come from
-    any station of the BSS via the AP; it needs an iwlwifi (mvm) device, the
-    only mac80211 driver that sets NL80211_FEATURE_TDLS_CHANNEL_SWITCH.
-    
-    The CodeQL query behind this report was written with LLM assistance, and
-    the fix and changelog were drafted with LLM assistance; I have reviewed
-    them.
-
- net/mac80211/tdls.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index f663d28d9209c..71db07aa301b7 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -2021,7 +2021,7 @@ void
- ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
- 				      struct sk_buff *skb)
- {
--	struct ieee80211_tdls_data *tf = (void *)skb->data;
-+	struct ieee80211_tdls_data *tf;
- 	struct wiphy *wiphy = sdata->local->hw.wiphy;
- 
- 	lockdep_assert_wiphy(wiphy);
-@@ -2037,6 +2037,7 @@ ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
- 	 * The packet/size was already validated by mac80211 Rx path, only look
- 	 * at the action type.
- 	 */
-+	tf = (void *)skb->data;
- 	switch (tf->action_code) {
- 	case WLAN_TDLS_CHANNEL_SWITCH_REQUEST:
- 		ieee80211_process_tdls_channel_switch_req(sdata, skb);
-
-base-commit: 71a77ab76e74131a101f4d2d2afb0dcbf81b4e3c
--- 
-2.43.0
+Thanks,
+Fil
 
