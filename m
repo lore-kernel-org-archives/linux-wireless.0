@@ -1,84 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792582375;
-	b=JLMPwNxiO5SD9Q5hudoIKFICMzav8ECLTvifv4JtWjriiAlGH4XbHmfhVbcD2wSP+1qc
-	 3En8lfVYK2iafQTjgh3VO7UZwsRF3LHcgDpvLm0M7BJqzExs5AonWCSCvZQUlnAl94ArY
-	 ihLh3Vbb6yIt14iivayxjqCvhn2G+BNQkRfqQywjvgQi2em4if02gr6cDzqOEwDhjSdCP
-	 sFfqdqqJlb0weKbxlyZWlX4d04DuYrA7VrTnzMC6F5E7vzNWGVHVfwGeXTo3fupKHkUZb
-	 oS/PoKEf6M3AjhGZAOYeOE+lyA4TrnNsLr2sl+mNyF8hKKar0DSp/8T5y6CibGXmdEA==
+	t=1792583147;
+	b=hpGT+k5gibYQNkYNtmqbHScAE6uL2bwHxaNwZ0eWsLaSnXOfbATkvYykLEoHV7H15vU9
+	 EDJa9h6Yu2c4wpZBKDHxhGkLeU2ew3LgTi9RnuLmbY7z+KGOLqqIEdhxjgGn9SQkBYmKN
+	 XV6+OrE4ohPtajlV7KzNMEoClW4rUD5sjOa6gvXzEb3HtUTzshqUl6yQPb0baf6JhYer7
+	 BK3IZ7SGPNYzkNZVfidfRTsa8WpWPJVjWsnodQAXp+2GPaM+B+7101Q2KJaENOjuWn9k8
+	 UX4Qs45pKN33ACnag+yG/+TzVFFqx787m/yYL47kiDUnGzjEAJp5Dt3kAVe1d1Xejpg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792582375;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792583147;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:From:Subject:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=Wo2kF+x1yYO3ZX0aw9PVDHZM/gBTQxjRjCkeAGiacAc=;
-	b=2grzwIt/I5howBWOsF2WfCBjDa6/xxkL7RYGPWf8rnmmnxsm4dsL0Hu91n1l1Mq+lCAp
-	 dx1bN7ZPS1qz3UkRY+wyRntUJv4K4Z3uzW2xQ03VAGi+qO/1KxFOkh2+g4mODTZrcXNKr
-	 SomgcuZy17E7YV0x0dmniZE0FT+pGBC5K61k5VQN+GbIxF5SSLyi1L02UWXmNZEoeghae
-	 33058V83uq+XT+GbotnWHxmBd3NWdwzcF+6lr9zYjT3DlxHfX1Zvd99TkzwOCds3vFDOv
-	 5EzPbT/UXGVM+TjV9JHLTHDJ2Ghyv/hievM6aqBonXRIj4QYovOLY39w6rcdBR/ZC6A==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=FHbThYz167MEuXs9w/+Hau2h5HTGZ7DYbXa22SkueE8=;
+	b=wnLMM30iUKTE7pUFkhoJP+0r3sj5D+VqO3O4T6PJJ1ax6Bw4tFxpLCa8mfpCye9eHoHd
+	 XCx2VF6wpzzmUjOeUaJIoF6qHTpbk5tKD5s//vsmYvOP9fi/yDp2V/BPCtvJwd7VR/v27
+	 DgtrMm3FoYem/6od1iL0UDxRhloa8ZnpcWshhnUVJWlNvBUTl8mdiOJ9k5UFSWoHQC/9b
+	 12gs+Blk69ZEMBJxrCFHJuBQAjh4dVAoe+5EPtyFwjOR6lw+Ea3WxvTQaODbFqXwFb9E/
+	 JGLguHY8DqeU6jxq20Ova1dqlP5OIeloQNipGTvb507WeMO0roSq55pxYsg1FXuz4CA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JfEQN+lL;
-	arc=none smtp.remote-ip=209.85.128.42
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=oSuZqhOH;
+	arc=none smtp.remote-ip=209.85.221.43
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF981606A319
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 11:32:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF981606A319
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B846F606A33D
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 11:45:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B846F606A33D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JfEQN+lL
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a1dec056ddso3721355e9.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 04:32:54 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=oSuZqhOH
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-48e20ed3b9dso637381f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 04:45:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792582373; x=1793187173; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Wo2kF+x1yYO3ZX0aw9PVDHZM/gBTQxjRjCkeAGiacAc=;
-        b=JfEQN+lLlk3YgOZpEA1wEvS2KUM6nnqRDjtVLtsTQyfDhGhkmNFzIETjZV7YberbhZ
-         V+rD0YMkzT8f/AAtVEYY0qyi2c1KxNJgCdUtslLIKgbUZ0So+kVOE3jueOjD6FovCoHA
-         aR4JpHKp8OdoAz32/nHb76mLLcC1uJULdTI6KrrIPt1Teq0UYLSA1XHgTxuL1etiu4ku
-         fCM6/JcxEP88/UpuJbsr3R/I/cB5Iju7qyvMrR35cSbRQHRGPMEHhRB0sY1Se7d4oF+5
-         iiYvkdqF6AaOwLqK9nCb7McAUjE3SnTUYtQeG3htOR7ybhVPbW31sDleGAcuwm9SkcQE
-         hhrQ==
+        d=gmail.com; s=20251104; t=1792583145; x=1793187945; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FHbThYz167MEuXs9w/+Hau2h5HTGZ7DYbXa22SkueE8=;
+        b=oSuZqhOH51CC/JiGAn5+S/PWA8RvzyyWo7+NvEPVpENg5NgughMt+lIDDK9vQEz7Py
+         VlKYmVH2trCc8oeMdC862cXgVcX9dL9MoKx2St78mxsoRHlqhGjrqaBn1uuTW6XeStQx
+         xbxPQAYhWwhPAbNJfvaF6X3cmyStd7XG1HiiDPdoMy66Z2PV/rwDRrWLDbrXAJhqgEk9
+         uzWp5kmNRFyLA5q4mt6MGfdihtoO6aIzFYUzPpdoyZOiCGzGmN70ae+jFYQW30o3ygim
+         KuaXW1hdgc5XQhkE2Qbawq/3iXtG4gGT558+Pfh0+oIdRG/CG1p4VRg8xUt92tsQJ/Vk
+         XOkw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792582373; x=1793187173;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792583145; x=1793187945;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Wo2kF+x1yYO3ZX0aw9PVDHZM/gBTQxjRjCkeAGiacAc=;
-        b=j1WkyRwWeMubHMrXk+gu9ov+3NkQj1PNaaRuXO6fwX8MiDwRq0v7lw6zzpmzVF4fnZ
-         rKXEr/DEr2Z+9H9n88wsNmtnQqJEQKK0Ug8Cc++Fy4vmdxSmduHo0mBGWEajTekrxj9t
-         Z1tdwVQhheSdtE1ks/cnB1MOvBav9J43OZajHR8bAS0ocquIVxbJ+INVSHO8rSjHVz05
-         FqQ/UrMLzkgwCAW0a4NKTJ7vp5G1xp/QnyXWZw0zBfIqwX8mjiWo8yU8JZv53r4Jsrdh
-         CMPwSq2178hjPrH8e+6Uny7bc5wtlaDqPEyGywBq7t5/vvGAhJOxgQ9uyW1HHNf3ge2i
-         GIFg==
-X-Gm-Message-State: AFq9FYJT7bNfHcUnQDPcEIlVclBffFrsN3D4KgaOdDuEef2GILOh5m+C
-	s0qLxyodI138KoIws00I7iSktcrLhp0wifdx3ycJy4NV2O+GK4/uWlKB
-X-Gm-Gg: AYBFou0ScflbnMnKXC1f1gz/6gS+uuYHK3O+qa9LBhDFbp9TubJAtac9VQp3x9bAerR
-	UOQHDN0BjnHHwGFX44pfoMBwYfarZOsEBanaaJiW9hvTuRbH1VgbNPVXRVXtWLrULNwsTHjjrWD
-	ZrdRUXVIi8jdo4Ohc0agnHB+qy+FMCPuvYjcKFESySBZ/U8P1GYUNFkQyTHYDnswtCagwQlPm0i
-	IcWiErCfSl/R758DlIayReHSgdjIBQ1t/4bixJr0fNyvsuRFzcJzwWfq1WffdJllRXkRkeCrIcW
-	oL/Xw2SRMQrXKohIIwkmb6rn7JeXJ1omPfqalC2z/j8NCK1N4XRFQARf0XvnvctWs2FXyOthmjf
-	oHQcy9ERjvsAGN6PEcGcHk/E1O2C7oyTrjq822oz+pvkrRp8X9pHWDmmHJig0JcUvBenHFQGS1L
-	LgUAKfY2pK4iBfID/iL9BSr9IpTbMvp+D4oBqqsn5+NJBZE9K1++26jNEbtkvdXzD8RrWbPklcT
-	QEimXkVViO18sQ7DmG6khLsLRzWqtZLSQv03lmoFDT3XW8CfZxdZvnXsWBy/tM=
-X-Received: by 2002:a05:600c:82c3:b0:4a1:f720:74cd with SMTP id 5b1f17b1804b1-4a1fdb2148amr38273735e9.24.1792582372738;
-        Wed, 21 Oct 2026 04:32:52 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a200f4d16bsm12853125e9.2.2026.10.21.04.32.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Oct 2026 04:32:52 -0700 (PDT)
-Message-ID: <d5daf29e-a7dc-434c-9ad0-c282bde5680f@gmail.com>
-Date: Wed, 21 Oct 2026 14:32:47 +0300
+        bh=FHbThYz167MEuXs9w/+Hau2h5HTGZ7DYbXa22SkueE8=;
+        b=ker/MX7KAWPd6218HyV2mbjfEc7E03MkXsYqDyn5lxouFITR6qqVS7XxxPy2Mh4fzQ
+         rHC4Ha/Q9iK+GNogsYYOlRopYKZNq4bVBTpWICPVg0sT+pxg2HGvBS/69ioCiTD4ha4P
+         NGY6l60nCW1P8CzAUfH6AhL9xJ0msdCv+IhjCKCoOcA54ehgiH/3pcY1NFRpBu/Afv1K
+         bcIx9Y/l+mCoOkFdryVfdyZ3KiP3IA5Rl5aoaPy8YZ7m30pqPglOwgkDa9H2E9MYd5fZ
+         o3XblVC+uRNBLOCI8yTK007C0txYnEko7W1VH3BAw100fh8LkJ66e1quad7QtEQyxqZ3
+         zbfA==
+X-Forwarded-Encrypted: i=1; AKwUvBySYCSLCmkUNWyY/d4UB7DRlGaMnvFG6G0axuq7xvueDG85h2UvHNxyhIFpTy7nlRHLXWKKmtrQ4acI/n51IQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKTbo3qelBO4C857OZkkauaWphoFFwuL51Ku8c0i8fVGff87yCn
+	aJVVgP0Tr53Qigjo0cfXF72vj9le2vfKYXZPuKAkEEM+HvLyO8U2ooWs
+X-Gm-Gg: AYBFou0V3m3QnF7YkRRoPfaw41WNjqC6iPQ7IbhCLC26g+sEwwLzi+tosnsyuw90A7A
+	RatugwwR+7tH8lDDtU1RS1daTlG5Dmt/E+RsTLkJK0js+ZSG/QJeB01yQr04syPMzHqCbP0xy2L
+	3nEDaR/U02jk4OEvBvCJMkbpjjX5oTEimiLwgtqME21jls2v7v2/R6UCJY/YBjjKwgZ9VojIPXi
+	7lqRc0GoZUwIJE8LEq43W6BsivC+seBO0IY6viRIzE7oTKKHYBU8ehRmr4Xtis/rwmuQLhGhF5D
+	n3czL2AHUCbdmNHFJZVcRF5+/FRUDN801b30KCRo0NqagYUrgVlw8bjxpIaTZsBdIi7CK/kaGU4
+	Gd7VLmhmXzqQVxu+0pM5weoDQVm0gDlofgYtbRvP1FW1ZDB89Q32TULbo8oPwDZmKxNEl35RXWd
+	i7vOOqE2sZFSKRO8/W8noFBbxXLTFv85qQzNSlbVtBXUhKYPfaUALHUMdJ05PF7soK4hqqLm4x7
+	DOq8gNdczzNrshPyitHvtUcB3ELtpYOceKfZ+buFij5a9s48NumzQ873LRlQREL1Vz5bTa9eku7
+	/NeDcpp5
+X-Received: by 2002:a05:6000:4283:b0:48e:bf0:35c with SMTP id ffacd0b85a97d-48e264a636amr3684083f8f.13.1792583144832;
+        Wed, 21 Oct 2026 04:45:44 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e25828ca3sm4944112f8f.25.2026.10.21.04.45.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Oct 2026 04:45:44 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mehmet.fide@screeningeagle.com
+Subject: [PATCH rtw-next v8 0/3] wifi: rtw88: channel switch in AP mode
+Date: Wed, 21 Oct 2026 13:45:40 +0200
+Message-ID: <20261021114543.4132776-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.55.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -88,484 +96,138 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: rtw88: 8822CE passes corrupted A-MSDUs as hw-decrypted, poisoning
- CCMP replay counter
-To: Bob Beckett <bob.beckett@collabora.com>, Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, kernel@collabora.com,
- matthew.leach@collabora.com
-References: <20261016191100.1781056-1-bob.beckett@collabora.com>
-Content-Language: en-US
-In-Reply-To: <20261016191100.1781056-1-bob.beckett@collabora.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 16/10/2026 22:11, Bob Beckett wrote:
-> Hi Ping-Ke,
-> 
-> We are investigating a Wi-Fi failure on the Steam Deck LCD (RTL8822CE,
-> rtw88) and would appreciate your input; details below.
-> 
-> Summary
-> =======
-> 
-> On RTL8822CE (PCIe, rtw88), during heavy 5 GHz VHT downlink from one AP
-> model, the driver occasionally hands mac80211 a frame with these
-> properties:
-> - the RX descriptor looks normal: CRC OK, ICV OK, AES, not
->   software-decrypted;
-> - the 802.11 header is correct;
-> - the bytes from the CCMP header onwards are garbage.
-> 
-> Because rtw88 sets RX_FLAG_DECRYPTED for it, mac80211 trusts the frame
-> and takes its PN, a random 48-bit value, as the new last PN for that
-> key/TID. Every later genuine frame has a lower PN and is dropped as
-> RX_DROP_U_REPLAY. The station stays associated with good signal but no
-> data gets through until new keys are installed (reconnect). Userspace
-> sees this as "limited connectivity".
-> 
-> The AP's own PN sequence is consistent before and after the bad frame,
-> so the corruption happens on the receive side. The host-side DMA
-> bookkeeping looks consistent: the RX buffer-descriptor tag never
-> mismatched. The corruption starts exactly where the CCMP header begins,
-> which points at the device's RX decrypt/payload path rather than host
-> DMA. The same hardware works with this AP under Windows, so we would
-> like to know what the vendor driver does differently, and whether the
-> descriptor can tell us when a frame's payload cannot be trusted.
-> 
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-There is an alternative driver which is probably very similar to the
-Windows driver:
+An rtw88 AP cannot change its channel: the driver does not announce
+channel switch support, so hostapd's CHAN_SWITCH is refused and the
+only way is to tear the AP down. The series fixes the beacon download
+the reserved page build makes twice, implements channel_switch_beacon
+on top of the firmware's beacon page, and times the countdown
+downloads from the TBTT so that every count goes out on the air.
 
-https://github.com/juanro49/rtl88x2ce-dkms
+Tested on an RTL8821CU, an RTL8822CU and an RTL8822BU (USB) with
+hostapd 2.10 as AP: switches with counts 1 to 100, scans during a
+countdown, hostapd stopped and started, the USB driver unbound and
+bound and a firmware crash during a countdown, IBSS switches, a
+station interface on the 8822CU associating while its AP counted
+down, and Windows and Linux stations following the switches without a
+re-association. The 8821CU and 8822CU set was run on a PROVE_LOCKING
+kernel without a lockdep report.
 
-If this doesn't have the same problem, you can check what it does
-differently compared to rtw88.
+Patch 3 was tested on the RTL8821CU with a build that delays every
+second countdown download: with a 60 ms delay every count still goes
+out (sniffed from a third machine), with 95 ms the delayed count
+stays out and the next download follows at once; the AP finishes at
+the same time in both cases, and a Windows station followed the
+switches with counts 10 and 50 without a re-association. With the
+start forced to either side of a TBTT, and with iperf3 traffic, the
+counts matched the beacon timing in every run on the RTL8821CU and on
+the RTL8822BU, the first on a PREEMPT_RT kernel, the second on a
+preemptible one without RT, both with HZ=250. The patch 2 fix was
+checked with a build that queues a TIM update right after every
+countdown finish: the WARN came before the fix and not after it.
+Patch 1 is unchanged since v6.
 
-> Setup
-> =====
-> 
-> - Steam Deck LCD: RTL8822CE (AzureWave), PCIe x1 Gen1, rtw88_8822ce
-> - Firmware 9.9.15 (WOW 9.9.4), H2C version 15
-> - Seen on SteamOS kernels 6.18.50 and 7.2.7. Both carry rtw88 backports
->   from rtw-next; the 7.2.7 rtw88 is close to rtw-next as of 2026-09.
-> - AP: Free "Freebox Revolution", 5 GHz channel 36, 80 MHz, VHT, max MPDU
->   11454, max A-MSDU (HT) 3839, CCMP pairwise and group, PSK/SAE
-> - Link at the time: signal -30 to -34 dBm, RX VHT-MCS 8-9 NSS 2 80 MHz,
->   during a bulk TCP download (game download) at ~20k RX descriptors/s
-> - wpa_supplicant + NetworkManager
-> 
-> Public reports of the same symptom with this AP (Steam Deck LCD +
-> Freebox Revolution, 5 GHz, drops when a download starts, fixed by
-> disabling 802.11ac on the AP, works under Windows) go back to at least
-> September 2024.
-> 
-> How it was captured
-> ===================
-> 
-> The capture used bpftrace on the stock kernel, with no driver changes:
-> - a kprobe on ieee80211_crypto_ccmp_decrypt() compares the frame's PN
->   with key->u.ccmp.rx_pn[rx->security_idx] before the check, and on a
->   forward jump above 0x10000 dumps:
->   - the frame;
->   - the rtw88 RX descriptor plus drv_info area, which is still in the
->     skb in front of skb->data (rtw_pci_rx_napi() uses skb_pull());
->   - the previous 16 and next 24 CCMP frames;
-> - a kprobe on rtw_rx_query_rx_desc() classifies every descriptor;
-> - an fexit on rtw_pci_read32() for HISR0/HISR1;
-> - tracepoint:skb:kfree_skb provides drop reasons;
-> - mac80211 debugfs keys/*/rx_spec and replays were sampled every 2 s.
-> 
-> Evidence 1: the replay counter is poisoned by one frame
-> =======================================================
-> 
-> From mac80211 debugfs, for the pairwise key at TID 0:
-> 
->   Run       rx_spec before  At failure    ~1 min later  replays
->   --------  --------------  ------------  ------------  ------------
->   A (6.18)  0000000004b1    38edae88b295  38edae88b295  1508 -> 2759
->   B (7.2)   0000000093d2    cc7106634a65  cc7106634a65  748 -> 1832
-> 
-> - The stored PN never moves again, so no pairwise-protected frame is
->   accepted after the bad one: every one that reaches the CCMP check is
->   dropped as RX_DROP_U_REPLAY (skb:kfree_skb reason 0x10002 in
->   ieee80211_rx_handlers). The only data still accepted is
->   group-addressed traffic, which uses the unaffected group key; its PN
->   keeps advancing normally.
-> - Reconnecting installs new keys and traffic resumes, until the next bad
->   frame.
-> 
-> Evidence 2: the bad frames
-> ==========================
-> 
-> Run C (7.2.7) caught 4 PN jumps in about 6 minutes:
-> 
->   #  seq         last PN         PN in frame     expected PN
->   -  ----------  --------------  --------------  -----------------------
->   1  4025        0xb8fba         0x3dcdcabef924  0xb8fbc (4026: 0xb8fbd)
->   2  3174        0xcc69          0x08e1ad331968  0xcc6a  (3175: 0xcc6b)
->   3  64 (retry)  0x15043         0x4bf378495044  0x15044 (66: 0x15046)
->   4  65 (retry)  0x4bf378495044  0xf0e626ce3844  0x15045
-> 
->   All four: QoS data, TID 0, A-MSDU, 3088 bytes. 3 and 4 came seconds
->   after a reconnect. "Expected PN" is derived from the neighbouring
->   frames (next SN in brackets).
-> 
-> Around jump 1, the AP's PN sequence was:
-> - seq 4009-4023: PN 0xb8fac-0xb8fba, consecutive;
-> - seq 4024: never reached the CCMP check;
-> - seq 4025: the bad frame;
-> - seq 4026, 4027, ...: PN 0xb8fbd, 0xb8fbe, ..., all rejected as
->   replays.
-> 
-> So the AP transmitted a normal PN for 4025.
-> 
-> The four bad frames share these properties:
-> - The RX descriptor is identical to the good frames around them:
->   w0=0x00c40c14, i.e. pkt_len 3092, drv_info_sz 4, PHYST 0, enc AES,
->   CRC32 0, ICV_ERR 0, SWDEC 0. w1=0x2100b004, w3=0x3f (VHT 2SS MCS9).
->   The low 12 bits of w2 equal the 802.11 sequence number of the frame.
-> - The 802.11 header is correct: FC 0x4288/0x4a88 (QoS data, FromDS,
->   Protected, +/-Retry), correct addresses, sequence number matching the
->   descriptor, QoS control 0x0080 (TID 0, A-MSDU present).
-> - The bytes from header offset 26 are garbage. A valid CCMP header has
->   byte 2 = 0x00 and byte 3 = 0x20 (ExtIV, key ID 0), as all the good
->   frames do:
->   - frame 1: 24 f9 1a 04 ...
->   - frame 2: 68 19 8e b7 ...
->   - frame 4: 44 38 f1 14 ...
->   - frame 3: 44 50 00 20 49 78 f3 4b. The first four bytes match the
->     expected PN 0x015044 exactly, then it is garbage from header offset
->     30.
->   - The "decrypted" A-MSDU body that follows is random. It should start
->     with a subframe header containing the station's own address.
-> - mac80211 receives flag=0x20102, i.e. RX_FLAG_DECRYPTED |
->   RX_FLAG_NO_SIGNAL_VAL | RX_FLAG_MACTIME_START (no PHY status, so no
->   signal value).
-> 
-> In other words, the descriptor and roughly the first 26-30 bytes of the
-> frame are right, and the rest of the buffer does not contain this
-> frame's data.
-> 
-> Evidence 3: other RX-path anomalies in the same run
-> ===================================================
-> 
-> - 33 s before the first jump, during the download and with no other
->   activity, one descriptor claims pkt_len 11619 (above the 11454
->   maximum), and rtw_rx_query_rx_desc() returns -EINVAL twice in the same
->   second. These are garbage descriptors, which the rtw-next
->   RX-descriptor validation correctly rejected. This was never seen in a
->   21-minute ~540 Mbit/s test against a different AP.
-> - Not related to the bug (capture artifacts): the HISR1 RXFOVW bit (RX
->   FIFO overflow) and 18 "coex request time out" errors appeared only
->   within 1-2 s of the capture tool's debugfs snapshots. Those snapshots
->   read coex_info and the mac_*/bb_* register dumps, which hold
->   rtwdev->mutex and leave deep PS. None of the PN jumps coincide with a
->   snapshot.
-> - Firmware communication otherwise looked healthy: no H2C send failures;
->   663 "C2H 0x15 isn't handled" (benign); 3 TX-report purge timeouts in
->   ~8 minutes.
-> 
-> Observation: heavy AP retry activity around the event
-> -----------------------------------------------------
-> 
-> Shortly after jump 1, the genuine TID 0 stream shows a single PN gap
-> with consecutive sequence numbers:
-> 
->     seq=4044 pn=0x0000000b8fcf  w0=0x00c40c14  (no PHY status)
->     seq=4045 pn=0x0000000b9053  w0=0x04c40c14
->         (PHY status present: first MPDU of a new PPDU)
-> 
-> - Of 69 consecutive-SN pairs logged in this run, this is the only one
->   where the PN advances by more than 1; here it advances by 0x84.
-> - The PN counter is per key and the SN counter per TID, so the AP
->   encrypted 131 other frames for this station in between without using
->   new TID 0 sequence numbers.
-> - No other TID's PN counter on the pairwise key ever advanced (rx_spec
->   for TIDs 1-15 stays 0), so these were not frames on another TID that
->   we accepted.
-> - The gap falls between two A-MPDUs.
-> 
-> The likeliest explanation is that the AP retransmitted about 131
-> already-numbered MPDUs and re-encrypted each retransmission with a fresh
-> PN. IEEE 802.11 expects retransmissions to keep their PN, but some
-> implementations re-encrypt on software retry. This matches what else
-> happened around the onset:
-> - a BlockAck Request (BAR_RX_EVENT) and a BlockAck frame timeout;
-> - about 3,500 data frames in the second after the jump that never
->   reached the CCMP check and left no kfree_skb drop reason. That is
->   consistent with mac80211's A-MPDU reorder buffer discarding
->   out-of-date retransmissions via dev_kfree_skb(), i.e. consume_skb(),
->   which kfree_skb tracing cannot see.
-> 
-> This is not confirmed yet; a follow-up capture traces skb:consume_skb
-> per caller to account for those frames. A PN gap is legal and is not the
-> cause of the failure. It does suggest that the bad frames arrive while
-> the AP is doing heavy retry/re-aggregation toward the station.
-> 
-> Where the corruption appears to come from
-> =========================================
-> 
-> Host DMA bookkeeping is consistent. rtw88's rtw_pci_dma_check() compares
-> the RX tag in each buffer descriptor with the expected sequence and logs
-> "pci bus timeout, check dma status" on a mismatch (an unconditional
-> dev_warn). That warning appears zero times in all three runs, so every
-> buffer descriptor had been written when the driver consumed it. The
-> start of each bad buffer is also fresh: the RX descriptor's sequence
-> number (w2[11:0]) matches the 802.11 header's.
-> 
-> The corruption boundary does not line up with PCIe writes. The device
-> has MaxPayload 128 bytes, and on this host nearly every RX buffer goes
-> through SWIOTLB bounce slots, which start 2 KB-aligned because rtw88
-> sets no min_align_mask (see below). So DMA writes split at 128-byte
-> boundaries of the buffer. The good data ends 82 or 86 bytes into the
-> buffer, which is not such a boundary.
-> 
-> It lines up with the CCMP header. In frame coordinates, the good data
-> ends exactly at offset 26 (the start of the CCMP header), or 4 bytes
-> into it in one frame. That is where the part of the frame the MAC passes
-> through unchanged (the 802.11 header) ends, and the part handled by the
-> hardware decryption engine begins. Our reading is that for these frames
-> the payload/decrypt path produced wrong data while the descriptor still
-> reported CRC OK, ICV OK and hardware-decrypted. That would be a
-> device-internal condition, possibly related to the RX FIFO: the garbage
-> descriptors at Evidence 3 point the same way.
-> 
-> Remaining host-side possibilities, considered less likely:
-> - Relaxed Ordering: DevCtl: RlxdOrd+ is enabled for the device. If its
->   payload writes carried the RO attribute, they could in principle be
->   overtaken by the descriptor/tag write. It can be tested at runtime by
->   clearing RO with setpci.
-> - Index ahead of DMA: Realtek fixed this class of race in rtw89
->   (0bc7d1d4e63c "validate RX tag for RXQ and RPQ": "DMA and ring index
->   are asynchronous, so suddenly driver gets newer index ahead before
->   DMA"; also 94298477f81a, dda27a47c036). For pre-WiFi 7 chips the
->   commit says they "use different design and don't really meet this
->   situation". Here the buffer descriptor and the head of the buffer were
->   demonstrably complete.
-> 
-> Platform note: the kernel boots with amd_iommu=off ("PCI-DMA: Using
-> software bounce buffering for IO (SWIOTLB)"). rtw88 uses the default
-> 32-bit DMA mask, because its RX buffer descriptor holds a 32-bit
-> address, and the machine has 16 GB, so nearly every RX buffer is
-> bounced. rtw_pci_rx_napi() syncs the full RTK_PCI_RX_BUF_SIZE (11478
-> bytes) per frame regardless of length, about 230 MB/s of memcpy at 20k
-> frames/s. This does not explain a boundary at the CCMP header, but it is
-> unnecessary overhead.
-> 
-> For comparison, rtlwifi's 8192EE ("new TRX flow" rings, commented "in
-> Windows, this == Rx_92EE_Interrupt") polls the RX buffer descriptor
-> before use (rtl92ee_rx_check_dma_ok()), and only passes frames up when
-> !crc && !hwerror (hwerror = crc | icv). rtw88 passes ICV-error frames up
-> as decrypted.
-> 
-> Ruled out
-> =========
-> 
-> - Oversized MPDUs (new_len > RTK_PCI_RX_BUF_SIZE): the bad frames are
->   3092 bytes, and A-MSDUs from this AP top out at about 9.7 KB.
-> - ASPM / deep LPS: jumps 3 and 4 happened seconds after reloading with
->   disable_aspm=1 disable_lps_deep=1.
-> - Power save (iw ... power_save off) and beamformee (support_bf=0 +
->   reconnect): no effect.
-> - Driver consuming a ring entry before its buffer descriptor was
->   written: no RX-tag mismatch ("pci bus timeout") in any run.
-> - The AP sending a bad PN: the PN sequences on both sides of each bad
->   frame are consecutive.
-> - The RX-descriptor validation added in rtw-next: it does not reject
->   these frames, because their descriptors are well-formed.
-> 
-> Questions for Realtek
-> =====================
-> 
-> 1. Is there a known condition on 8822C (or 8822B/8821C) where a
->    hardware-decrypted MPDU or A-MSDU is delivered with a valid RX
->    descriptor (CRC32 0, ICV_ERR 0, SWDEC 0, enc AES) and a valid 802.11
->    header, but an invalid CCMP header and payload? Does the RX
->    descriptor or drv_info have any bit that flags it? For example
->    "payload invalid", "decrypt engine bypassed or aborted", or a
->    per-packet RX FIFO overflow.
-> 2. What does the vendor/Windows driver check before trusting a
->    hardware-decrypted frame, and does it handle HISR1 RXFOVW / HISR0
->    RDU? rtw88 masks and ignores both.
-> 3. Are there RX FIFO, RX DMA, security-engine or RX aggregation settings
->    in the Windows driver for 8822CE that differ from rtw88's and matter
->    for high-rate VHT A-MSDU reception (80 MHz, 2SS MCS 8-9, ~3 KB
->    A-MSDUs at ~20k/s)?
-> 4. For completeness: on these chips can RXBD_IDX or the
->    buffer-descriptor RX tag ever be updated before the packet data DMA
->    has completed, as described for WiFi 7 in rtw89 0bc7d1d4e63c?
-> 5. rtw_rx_fill_rx_status() sets RX_FLAG_DECRYPTED whenever !swdec &&
->    enc_type != NONE, ignoring ICV_ERR. rtw89 sets RX_FLAG_FAILED_FCS_CRC
->    and not DECRYPTED on icv_err; mt76 marks such frames monitor-only;
->    rtlwifi drops them. rtw88 does not set BIT_AICV in RCR, so such
->    frames are presumably dropped in hardware, and these frames had
->    ICV_ERR clear anyway. Would you take a patch aligning rtw88 with
->    rtw89 regardless?
-> 
-> Possible mitigation
-> ===================
-> 
-> Whatever the device-side cause turns out to be, one bad frame should not
-> take the link down. As a defence, rtw88 could refuse to claim decryption
-> for an AES frame whose CCMP header is malformed. The ExtIV bit must be
-> set and the reserved byte must be zero for CCMP/GCMP. That lets mac80211
-> treat the frame as not decrypted: it then fails software decryption and
-> is dropped without updating the PN. This would have caught 3 of the 4
-> frames above; frame 3 had a plausible first half of the IV. Sketch,
-> untested:
-> 
->     /* rx.c, rtw_rx_fill_rx_status() */
->     	if (pkt_stat->crc_err || pkt_stat->icv_err)
->     		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
->     	if (pkt_stat->decrypted && !pkt_stat->icv_err &&
->     	    rtw_rx_ccmp_hdr_valid(pkt_stat, hdr))
->     		rx_status->flag |= RX_FLAG_DECRYPTED;
-> 
->     static bool rtw_rx_ccmp_hdr_valid(struct rtw_rx_pkt_stat *pkt_stat,
->     				  struct ieee80211_hdr *hdr)
->     {
->     	u8 *iv;
-> 
->     	if (!ieee80211_has_protected(hdr->frame_control))
->     		return true;
->     	if (pkt_stat->pkt_len < ieee80211_hdrlen(hdr->frame_control) +
->     				IEEE80211_CCMP_HDR_LEN)
->     		return false;
->     	iv = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
->     	/* CCMP/GCMP header: byte 2 reserved (0), byte 3 ExtIV must be set */
->     	return iv[2] == 0 && (iv[3] & 0x20);
->     }
-> 
-> (This only applies when the hardware's enc_type is AES, and needs
-> pkt_len to be checked against the copied length.)
-> 
-> This does not catch a frame whose corruption begins after the ExtIV
-> byte, like frame 3. The real fix depends on Realtek's answer to
-> questions 1-3: a descriptor bit to honour, or an RX setting that avoids
-> the condition. A more general option would be a mac80211-side sanity
-> limit on the forward PN jump accepted from hardware-decrypted frames,
-> but that is a policy change in mac80211 rather than a driver fix.
-> 
-> Unrelated to the bug: syncing only the descriptor first and then
-> (pkt_len + offset) bytes, instead of the full 11478, would cut the
-> SWIOTLB copy cost per frame by about 4x for typical 3 KB frames on hosts
-> like this one.
-> 
-> Appendix: raw dumps (run C, MACs redacted)
-> ==========================================
-> 
-> MAC addresses are redacted: SS = station (Steam Deck), AA = AP.
-> 
-> Layout of the buffer dump: 24-byte RX descriptor, 32-byte drv_info area
-> (PHYST=0, so this area is not a PHY status and contains stale bytes),
-> then the 802.11 frame.
-> 
-> Jump 1
-> ------
-> 
->     q=0 seq=4025 last=0x0000000b8fba pn=0x3dcdcabef924 len=3088
->       flag=0x20102 hdrlen=26 fc=0x4288 desc_off=56 w0=0x00c40c14 w3=0x0000003f
->     RX desc dwords: w0=00c40c14 w1=2100b004 w2=80890fb9
->                     w3=0000003f w4=3ffe7600 w5=0476df59
-> 
->     buffer (RX desc 24 + drv_info 32, then frame):
->     0000: 14 0c c4 00 04 b0 00 21 b9 0f 89 80 3f 00 00 00
->     0010: 00 76 fe 3f 59 df 76 04 96 3f a1 bd fb 6c 9f 26
->     0020: 5b 31 fa 29 90 c6 2c 92 f9 f4 86 44 70 47 1d 2a
->     0030: a2 47 2c df 83 43 0f ae 88 42 30 00 SS SS SS SS
-> 
->     frame[0:128] as passed to mac80211:
->     0000: 88 42 30 00 SS SS SS SS SS SS AA AA AA AA AA AA
->     0010: AA AA AA AA AA AA 90 fb 80 00 24 f9 1a 04 be ca
->     0020: cd 3d f1 98 26 03 ca 51 c5 d7 72 b4 5c cb d4 a9
->     0030: 20 09 37 ed 83 6c c8 0d 1f 45 03 ac 86 ec d1 30
->     0040: d2 42 b1 ac 33 33 8f b6 95 66 c1 c3 28 ea 84 a7
->     0050: dc a3 6d 4a 86 10 9d f6 ce a8 a3 91 5b 7d be ad
->     0060: d0 40 2a 35 cf b5 69 60 58 a5 6a df fd 62 b4 df
->     0070: 4c c3 c6 c0 17 28 4c 25 ae b2 24 1d 05 44 e9 28
-> 
-> Jump 2
-> ------
-> 
->     q=0 seq=3174 last=0x00000000cc69 pn=0x08e1ad331968 len=3088
->       flag=0x20102 hdrlen=26 fc=0x4288 desc_off=56 w0=0x00c40c14 w3=0x0000003f
->     RX desc dwords: w0=00c40c14 w1=2100b004 w2=e0890c66
->                     w3=0000003f w4=3ffea000 w5=0042a4f3
-> 
->     buffer (RX desc 24 + drv_info 32, then frame):
->     0000: 14 0c c4 00 04 b0 00 21 66 0c 89 e0 3f 00 00 00
->     0010: 00 a0 fe 3f f3 a4 42 00 e7 ee 7c c1 05 59 a8 1f
->     0020: 14 0c c4 00 04 b0 00 21 5d 0c 89 e0 3f 00 00 00
->     0030: 00 a0 fe 3f fa a3 42 00 88 42 30 00 SS SS SS SS
-> 
->     frame[0:128] as passed to mac80211:
->     0000: 88 42 30 00 SS SS SS SS SS SS AA AA AA AA AA AA
->     0010: AA AA AA AA AA AA 60 c6 80 00 68 19 8e b7 33 ad
->     0020: e1 08 62 33 52 ed 0d 6a 45 ae 7d b0 a8 cc 18 03
->     0030: 4a e2 fc 7e cd b3 e8 fc 99 d2 03 86 19 f1 a9 c5
->     0040: 5f ef ba d6 91 24 48 24 a2 e6 de bb dd 42 4f 16
->     0050: cc 0f bd ff d5 c4 a8 8b 8e ca f0 ed 77 ea c5 e8
->     0060: 95 b9 51 1a 8a 88 bb 11 08 2a 54 7c 74 08 b5 df
->     0070: b7 6b e1 5d 5b c6 0e fa a6 f8 7b 05 57 98 69 c8
-> 
-> Jump 3
-> ------
-> 
->     q=0 seq=64 last=0x000000015043 pn=0x4bf378495044 len=3088
->       flag=0x20102 hdrlen=26 fc=0x4a88 desc_off=56 w0=0x00c40c14 w3=0x0000003f
->     RX desc dwords: w0=00c40c14 w1=2100b004 w2=80890040
->                     w3=0000003f w4=3ffee400 w5=00e8b9cd
-> 
->     buffer (RX desc 24 + drv_info 32, then frame):
->     0000: 14 0c c4 00 04 b0 00 21 40 00 89 80 3f 00 00 00
->     0010: 00 e4 fe 3f cd b9 e8 00 c3 55 de b3 f6 ad 3a 63
->     0020: a3 c2 45 b0 5e f6 1c a3 9a 18 cc e1 a8 be 11 9e
->     0030: ec a8 48 3d d1 3f 03 be 88 4a 30 00 SS SS SS SS
-> 
->     frame[0:128] as passed to mac80211:
->     0000: 88 4a 30 00 SS SS SS SS SS SS AA AA AA AA AA AA
->     0010: AA AA AA AA AA AA 00 04 80 00 44 50 00 20 49 78
->     0020: f3 4b 75 3e db 0e a4 3d 81 52 1c 1a ff b2 f2 cd
->     0030: 04 dd ca 84 b9 e8 05 cc 72 7b e6 5a 7e 03 40 a6
->     0040: 95 6f d6 d8 94 89 ef 3f 95 76 cc 37 c2 40 6c 35
->     0050: a4 93 9f 13 8d fb 0f ad 15 45 47 32 86 96 b0 bc
->     0060: 1f 76 b5 af 83 b1 ed 87 d6 c0 79 12 56 89 57 c4
->     0070: de dc dd 44 27 77 a3 65 cd 67 1e 49 a1 ab d8 c1
-> 
-> Jump 4
-> ------
-> 
->     q=0 seq=65 last=0x4bf378495044 pn=0xf0e626ce3844 len=3088
->       flag=0x20102 hdrlen=26 fc=0x4a88 desc_off=56 w0=0x00c40c14 w3=0x0000003f
->     RX desc dwords: w0=00c40c14 w1=2100b004 w2=80890041
->                     w3=0000003f w4=3ffee400 w5=00e8b9e9
-> 
->     buffer (RX desc 24 + drv_info 32, then frame):
->     0000: 14 0c c4 00 04 b0 00 21 41 00 89 80 3f 00 00 00
->     0010: 00 e4 fe 3f e9 b9 e8 00 75 04 60 c1 fa f1 24 13
->     0020: 47 b6 bc 69 fe 61 9d c0 23 83 52 cb 32 12 4d b1
->     0030: e4 8c ec 59 84 ec 40 fa 88 4a 30 00 SS SS SS SS
-> 
->     frame[0:128] as passed to mac80211:
->     0000: 88 4a 30 00 SS SS SS SS SS SS AA AA AA AA AA AA
->     0010: AA AA AA AA AA AA 10 04 80 00 44 38 f1 14 ce 26
->     0020: e6 f0 d3 39 6d 3f 56 26 4b 47 7f 76 8e 53 e4 0b
->     0030: dc 81 57 79 85 94 0b d5 c0 f7 d9 00 84 6f 34 58
->     0040: 6f f7 54 33 48 55 9f c5 82 69 71 6a 1b 6e 99 2c
->     0050: 64 54 62 9e 73 f1 80 4e 8b 3f d4 3e 24 bc c7 a9
->     0060: 81 15 18 82 eb d9 06 57 ae 14 e2 cb c0 61 2a 9f
->     0070: ab d9 4d 92 9f d6 d6 fb ea 28 09 64 b5 6e f5 6d
-> 
-> Notes
-> =====
-> 
-> - The capture reads rtw88's rsvd_page debugfs file. On kernels without
->   rtw-next 81510c3d6f21 ("debugfs: don't vzalloc(0) when rsvd_page is
->   read unconfigured"), that triggers a vmalloc !size WARN. This is
->   unrelated to this issue.
-> 
-> Thanks,
-> Bob
+v8:
+- 2/3: Acked-by from Ping-Ke
+- 3/3: the TSF read retries once instead of looping, rtw_fw_csa_queue()
+  reads the TSF once also on start, the port 0 comment is gone, empty
+  lines where asked (Ping-Ke)
+
+v7:
+- new patch 3: the countdown downloads are timed from the TSF, 10 ms
+  after each TBTT, so a download that runs late by less than a beacon
+  interval still reaches the firmware before the next beacon; one
+  later than that is followed by its successor at once. Ping-Ke's
+  question on v6: with the absolute due time a late download and its
+  successor could land in one beacon period and leave a count out of
+  the air
+- patch 3 takes a TBTT within the margin before the start as the one
+  that sent the countdown template: a TBTT between the template
+  download and the first TSF read made the stations see one count
+  twice
+- patch 2 keeps csa_vif until the beacon after the switch: a TIM
+  update before it fetched one beacon past count 1 and hit the WARN
+  in ieee80211_beacon_update_cntdwn()
+- rebased on rtw-next
+
+v6:
+- the wiphy work patch of v5 is gone: the countdown work is an
+  ieee80211 delayed work and csa_vif is driver state, both under the
+  driver mutex, so rtw88 takes no wiphy lock anywhere (Ping-Ke)
+- rtw_core_stop() cancels the countdown work and clears csa_vif, which
+  covers the IPS path and the firmware recovery; the wiphy_lock() in
+  the recovery work is gone (Ping-Ke)
+- the BSS_CHANGED_BEACON path says why it starts the countdown, the
+  replay after a hardware restart, and stops it when the beacon comes
+  back without a switch announced (Ping-Ke)
+- the downloads are paced from the first one with an absolute due
+  time. Queued after each download, they drifted by about 10 ms per
+  beacon interval on the ordered mac80211 workqueue; on a count of 50
+  the AP switched half a second after its station had, and the
+  station re-associated
+
+v5:
+- 2/3 is new: update_beacon_work becomes a wiphy work, so that it can
+  look at the channel switch state under the wiphy lock; it checks
+  RTW_FLAG_RUNNING instead of being cancelled in rtw_core_stop(), which
+  runs without the wiphy lock on the IPS path (Ping-Ke); reverted in v6
+- 3/3: rtw_fw_csa_active/start/stop() assert the wiphy lock (Ping-Ke);
+  reverted in v6, they assert the driver mutex
+- 3/3: hw_scan() takes the mutex with guard() (Ping-Ke)
+- 3/3: a comment on the association download names the STA+AP
+  combination it skips the download for (Ping-Ke)
+- the whole set ran on a PROVE_LOCKING kernel without a lockdep report:
+  switches with counts 1 to 100, hostapd stopped and restarted during
+  a countdown, scans during a countdown, a firmware crash during a
+  countdown, three stop/idle/start cycles, IBSS, 50 switches with a
+  station attached, and on the RTL8822CU a station interface
+  associating while the AP interface counted down
+
+v4:
+- 1/2: Reviewed-by from Luka
+- 2/2: the countdown work is back in the device, initialised once,
+  with csa_vif naming the interface; no interface iteration and no
+  lookup through the reserved page any more (Ping-Ke)
+- 2/2: the countdown is cancelled before a firmware recovery restarts
+  the hardware, instead of guarding the work with flags (Ping-Ke)
+- 2/2: the page download on association skips a running countdown,
+  like the TIM update and the PG backup (Luka)
+- 2/2: the scan refusal comes before the scan offload test, so that
+  firmware without scan offload does not fall back to a software scan
+  during a countdown (Luka)
+
+v3:
+- 1/2: the beacon out-pointer is initialised in the caller (Luka)
+- 2/2: the countdown work lives in the interface, remove_interface
+  cancels it unconditionally, the queue wrapper and the comments are
+  gone (Ping-Ke)
+- 2/2: the TIM update and the PG backup on set_key skip the page
+  download while a switch is announced; every beacon fetch advances
+  the countdown (Luka)
+- 2/2: the commit message names the refused hardware scan (Ping-Ke)
+
+v2:
+- 2/2: a hardware scan is refused while a switch is announced
+- the rtw89 mention is gone from the cover
+
+Mehmet Fide (3):
+  wifi: rtw88: download the beacon the reserved page was built with
+  wifi: rtw88: support channel switch in AP mode
+  wifi: rtw88: time the countdown downloads from the TBTT
+
+ drivers/net/wireless/realtek/rtw88/fw.c       | 151 ++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/fw.h       |   4 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  39 ++++-
+ drivers/net/wireless/realtek/rtw88/main.c     |   6 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |   3 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
+ 6 files changed, 183 insertions(+), 21 deletions(-)
+
+
+base-commit: 9b0be45d4d52fd223994e151f169743a97abd290
+-- 
+2.55.0
 
