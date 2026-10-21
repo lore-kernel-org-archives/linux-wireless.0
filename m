@@ -1,73 +1,77 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792546623;
-	b=M+305eb86XdjH5XrIFGnTYMXwqBwOtE+fWloumx4SFVq5Qx3DcHjd7dDqGsfAHIs090k
-	 zDZ9Xe1hZtL1BYZih488Hoyw9Sh21pE5W8gnIiBLuZVh0etDdYf6t1ZVtEQDBox4N2RKk
-	 3lnREew0Cex64h5GkkR11ilYdFuLpkPelk4HMknhuXzhvnxDgPYgMwjz49y5Ic2m5i+VS
-	 tjot1chAFWzjXdbHzzbG+E6NVP9KB68tmvJ/ti3lMULhrkQnlGheG05AGRsrPid1Fib7b
-	 He8dPbuEHjbBZ5ZN6pcvNzYmYmQHoBSpJ0RrYdlbAftPtjWqDNWykSBwbXphjzem8sQ==
+	t=1792549853;
+	b=vKyDOLIGHcWHyPyBWYYS6+8lKyfuaAXxZe1FX64XRGrcW9GZpOCKb809f97hAubGUg8q
+	 pg+FotFN6RJ1Z2AocpRB3zaZsZTr8ndcfdB8rcK2QLi0tVLUnLMNbd8m1LoqphO9gSG1e
+	 me1N7O7bH8ZBmbWfEE6HA+MGLfsBxCWa919EhEUjVSgmTIOqsUKvGvQ/eV5dEY74rbzgy
+	 6VIUvRF+oUvobtZow1T1eXuN4634Ij54A2qR+J5i1yqXzlcS0TrrU4CzioN4r8guSuvNe
+	 jUyHs+5329FPsjnmgjxWlXHEfLg0vdkSb9B7GPmbPW5McF1wXaGKdNvWVVCRS9lPiNQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792546623;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792549853;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
 	 References:In-Reply-To:Accept-Language:Content-Language:
 	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=/lDiNcUiC5q+0PknEKsvmaM9R/wVHzZz7vuKtAZ0xCU=;
-	b=uvtpW7raXqhSrKiUhg3vI7AZstLddH7ELcjNeBToM+NDp8tCMQ0wysIRVJoWbmqrSYo7
-	 qR/OgO1TC21pqmY2Etwifml0FKP0w+b7LX3b6plyRii3xWl+z975HbAOnQVAcjy31DO2I
-	 7cOGAj3KuwivBRxDB27fMlpWSvGtS+TzFu9xo+ftbztNcHvUDXuIY8VU/LDh0wt8gDDWz
-	 bIGTEwvrso2UueicFDXtaXfzHaPkTvd1Nd5n6CHcsoFPb6tpWo3/c0360PKdeqAXEpuvV
-	 GtqNVSMZ61tBQthdPSoFfyisOLoTlzy+9cIQy0BiFBuQK3wmPYODIrPQcVtdsPIS0vg==
+	bh=3zCYkVoQjSWVN4y687gqJz4zruPTLeni297ihw/20S8=;
+	b=n7XuONLNVm+UXOXDLFryMs7sWTXaKu8JO6VKUCouk+EGsJF87KjfVW93xNyy1qsS3pG9
+	 3zZjo5NJZAeOqu0FaLUrpsboriYT0gb2gV7yMiDx/J2AqQIygGWPJLqeWU7taHy6VBCdR
+	 l9XWz1kKulcxsuCIFLoXXfUwhE3kWSu/ii8/B6t6cyuWFIlPlrWV7SmMvj6Hba122tp9M
+	 p6KAcmQ8iueTKUrnS9/3ifIc247kJPCly9QBnZJBSTQgYP2l28Ck+U5C/uKAXN4qGpmdX
+	 u3rsn8dixDJG3aW4N8lGJtPogkMdQSm/siK7mqJ5fiVudq6JqbddzY7P8Bm16/unFJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fcSCaUss;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhFGAwDm;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4454B606A319
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 01:37:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4454B606A319
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AED7B606A319;
+	Wed, 21 Oct 2026 02:30:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AED7B606A319
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fcSCaUss
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69L1arbJ73564321, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhFGAwDm
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69L2UiLK23631491, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792546613; bh=/lDiNcUiC5q+0PknEKsvmaM9R/wVHzZz7vuKtAZ0xCU=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	t=1792549844; bh=3zCYkVoQjSWVN4y687gqJz4zruPTLeni297ihw/20S8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=fcSCaUssYlf15vLUSUyH6j0dEBi/yQFMxLYFw6yv0DDcvBtNOBrCC1D7MSFqPpuFj
-	 P4D6Oa+I40dZ1r7hzlLdIyX0HWE/Cs9sBanNphEwM4WbdF8Sa7D3yYnYwY0AT6GEjv
-	 gMQXvljvJLSa0unfyzzvGXP1BrFWjrpjf/FRf1JkmXYYEsGRDuawRbHQFD04quPkAg
-	 S9WQdoLV/7F1Tcqx8Z+tVY5F/JzwcJunri0nrPjnbBpQxtDEQDLY6zy3xAOxoapO2Z
-	 ssjtp/03+7ulpKc7nCqlWM01/26hlzNH2PS1LtXDEfdBuKzDKhrHmE4qrToECnvdxO
-	 Lf/XglYUa9SnQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69L1arbJ73564321
+	b=fhFGAwDmb60GEiUqHc/T1vnMLFYylU7RqfSR+DJEoyVsaWcmTd3k+mmMGR2D2sWi+
+	 tySMs2qsSlrdN84UsGhd/rCrYKOoD+yLYsktxi4j6ghU9jQ3g+gBIP+1EYO/PSS9IJ
+	 g8DMARHmFIKbW0PE/UHTYf2w4c+vfTlag7lP6rMWJgNbsf42kMBC5tKsaX0Tnj3wYG
+	 lSFF5Q4q76Nx98slaJJeKwReTEAQDbNJmHV8SkU9wd1TEz54B1pzwckm57fGJK6dJZ
+	 xBfRkMAPMX1HGz1c2TqatA5K7d72lrvBdlUaS9GLwNd/wJ6BipW5Uq9/bdX+x7a3p6
+	 3yoaFM7He4X9A==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69L2UiLK23631491
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 21 Oct 2026 09:36:53 +0800
+	Wed, 21 Oct 2026 10:30:44 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 21 Oct 2026 09:36:53 +0800
+ 15.2.2562.49; Wed, 21 Oct 2026 10:30:44 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 21 Oct 2026 09:36:53 +0800
+ 15.02.2562.049; Wed, 21 Oct 2026 10:30:44 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Jiaxin Li <18135327133@163.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2] wifi: rtl8180: reject RX frames longer than
- MAX_RX_SIZE
-Thread-Topic: [PATCH v2] wifi: rtl8180: reject RX frames longer than
- MAX_RX_SIZE
-Thread-Index: AQHdYItNBExRLdBy2Ei6tAheIcUZ6bcHN9Og
-Date: Wed, 21 Oct 2026 01:36:52 +0000
-Message-ID: <d34e4cc538314c3e906d22f1b5506c44@realtek.com>
-References: <20261020115938.1433-1-18135327133@163.com>
-In-Reply-To: <20261020115938.1433-1-18135327133@163.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+CC: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"mehmet.fide@screeningeagle.com" <mehmet.fide@screeningeagle.com>
+Subject: RE: [PATCH rtw-next v7 2/3] wifi: rtw88: support channel switch in AP
+ mode
+Thread-Topic: [PATCH rtw-next v7 2/3] wifi: rtw88: support channel switch in
+ AP mode
+Thread-Index: AQHdYNQ0MfXI59RhaUiY0tDdZb+i5rcHRnrA
+Date: Wed, 21 Oct 2026 02:30:44 +0000
+Message-ID: <a12c5e96ff5e4808beb6fb377ade7976@realtek.com>
+References: <20261020204712.3252023-1-mehmet.fide@gmail.com>
+ <20261020204712.3252023-3-mehmet.fide@gmail.com>
+In-Reply-To: <20261020204712.3252023-3-mehmet.fide@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -82,24 +86,31 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 
-Jiaxin Li <18135327133@163.com> wrote:
-> @@ -255,7 +255,13 @@ static void rtl8180_handle_rx(struct ieee80211_hw *d=
-ev)
->                         goto done;
->                 else {
->                         struct ieee80211_rx_status rx_status =3D {0};
-> -                       struct sk_buff *new_skb =3D dev_alloc_skb(MAX_RX_=
-SIZE);
-> +                       struct sk_buff *new_skb;
-> +                       u32 rx_len =3D flags & 0xFFF;
-
-nit: in reverse X'mas.
-
-> +
-> +                       if (unlikely(rx_len > MAX_RX_SIZE))
-> +                               goto done;
-> +
-> +                       new_skb =3D dev_alloc_skb(MAX_RX_SIZE);
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
+> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 >=20
->                         if (unlikely(!new_skb))
->                                 goto done;
+> hostapd's CHAN_SWITCH is refused because the driver does not announce
+> channel switch support, so an rtw88 AP can only change its channel by
+> being torn down and started again.
+>=20
+> Declare WIPHY_FLAG_HAS_CHANNEL_SWITCH and implement
+> channel_switch_beacon: the firmware repeats the beacon held in the
+> first reserved page, so while a switch is announced the page is
+> downloaded again every beacon interval to advance the countdown, and
+> ieee80211_csa_finish() is called once it completes. IBSS shares the
+> page and the work.
+>=20
+> The work is a delayed work of the device and csa_vif names the
+> interface, both under the driver mutex. The countdown is cancelled when
+> the AP stops, when the interface goes away, on WoWLAN suspend and in
+> rtw_core_stop(); the BSS_CHANGED_BEACON replay after a hardware restart
+> resumes it. The other page downloads during a countdown, the TIM update,
+> the PG backup and the one on association, are skipped until the beacon
+> after the switch, since every beacon fetch advances the countdown; the
+> next download carries their changes. A scan is refused: it would take
+> the AP off the channel its stations count down to.
+>=20
+> Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+
