@@ -1,77 +1,81 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792549853;
-	b=vKyDOLIGHcWHyPyBWYYS6+8lKyfuaAXxZe1FX64XRGrcW9GZpOCKb809f97hAubGUg8q
-	 pg+FotFN6RJ1Z2AocpRB3zaZsZTr8ndcfdB8rcK2QLi0tVLUnLMNbd8m1LoqphO9gSG1e
-	 me1N7O7bH8ZBmbWfEE6HA+MGLfsBxCWa919EhEUjVSgmTIOqsUKvGvQ/eV5dEY74rbzgy
-	 6VIUvRF+oUvobtZow1T1eXuN4634Ij54A2qR+J5i1yqXzlcS0TrrU4CzioN4r8guSuvNe
-	 jUyHs+5329FPsjnmgjxWlXHEfLg0vdkSb9B7GPmbPW5McF1wXaGKdNvWVVCRS9lPiNQ==
+	t=1792553715;
+	b=T9j8bSAnYN3KgU5Tenhn3avii22VmHQJM9yilXv5EfywrwsZdl4ddNHhrgc1tc1qtP1z
+	 6KZFukx3xRH0y4w/Td8fxBMeBLjFOD3SggrnW7n4j6z9y7OHxrRXuQwif3FiRQZqPc0Rd
+	 UY/WIFVhy3kk4pGNrcK8oTI66EA20pBauQVLF0Q2NCaTQRv+dhILFW7Nlv/c15tX/YvYf
+	 DaK6DGDnUf0dkW9/5xq+SWkDZamLbD8+QzFLqwlB/dDXv9zYbr8BmKsnNn01/Nus3tu7i
+	 39Yz6V4RiA1NU8P4wZQT4gw2krKZa9/0APrA9AkFQm9vLXWroTT3Lf77I1gbK2IuMWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792549853;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792553715;
 	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
-	 References:In-Reply-To:Accept-Language:Content-Language:
+	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
+	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
 	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=3zCYkVoQjSWVN4y687gqJz4zruPTLeni297ihw/20S8=;
-	b=n7XuONLNVm+UXOXDLFryMs7sWTXaKu8JO6VKUCouk+EGsJF87KjfVW93xNyy1qsS3pG9
-	 3zZjo5NJZAeOqu0FaLUrpsboriYT0gb2gV7yMiDx/J2AqQIygGWPJLqeWU7taHy6VBCdR
-	 l9XWz1kKulcxsuCIFLoXXfUwhE3kWSu/ii8/B6t6cyuWFIlPlrWV7SmMvj6Hba122tp9M
-	 p6KAcmQ8iueTKUrnS9/3ifIc247kJPCly9QBnZJBSTQgYP2l28Ck+U5C/uKAXN4qGpmdX
-	 u3rsn8dixDJG3aW4N8lGJtPogkMdQSm/siK7mqJ5fiVudq6JqbddzY7P8Bm16/unFJA==
+	bh=MD0CiyIwKoZdpWZGqUBydtzwkOb7WcLRSgRiGKInNhs=;
+	b=m7+ZpgwI7I3xQuYXpeY37BZgdwWkIK4mCzh6j/8nLWd9p9nneVSZfrqSJjLjtVtB0md9
+	 P8iMB6J/Ur3Zscao4+B1TSbe0oy5W7Gles7MpDduj9HDQqomKDicre6xVI+93lOg3QJUv
+	 c7PQdXvoWpX6mygogzl67mTNlW4bc9dqsEPw9lZKIkzPUY1RZeNiFe74em9FkkHQZMeRS
+	 f12uKvKEDNEv4BLX7u7ShK1pHvB2lbnX9zcPaeTSwzB/Ljmq/6PnAJVNpxjb9SsBsLpE6
+	 L3ZHaer7mI01CXefd6eU7XTc9sFHCHOS4nyZKzjaDWLl2sfYA/QbtHN1WG8U12vQE3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=realtek.com;
 	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhFGAwDm;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=RWmoeuja;
 	arc=none smtp.remote-ip=211.75.126.72
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AED7B606A319;
-	Wed, 21 Oct 2026 02:30:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AED7B606A319
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1EA5606A320;
+	Wed, 21 Oct 2026 03:35:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1EA5606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=fhFGAwDm
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69L2UiLK23631491, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=RWmoeuja
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69L3Z4wI43664481, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792549844; bh=3zCYkVoQjSWVN4y687gqJz4zruPTLeni297ihw/20S8=;
+	t=1792553704; bh=MD0CiyIwKoZdpWZGqUBydtzwkOb7WcLRSgRiGKInNhs=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=fhFGAwDmb60GEiUqHc/T1vnMLFYylU7RqfSR+DJEoyVsaWcmTd3k+mmMGR2D2sWi+
-	 tySMs2qsSlrdN84UsGhd/rCrYKOoD+yLYsktxi4j6ghU9jQ3g+gBIP+1EYO/PSS9IJ
-	 g8DMARHmFIKbW0PE/UHTYf2w4c+vfTlag7lP6rMWJgNbsf42kMBC5tKsaX0Tnj3wYG
-	 lSFF5Q4q76Nx98slaJJeKwReTEAQDbNJmHV8SkU9wd1TEz54B1pzwckm57fGJK6dJZ
-	 xBfRkMAPMX1HGz1c2TqatA5K7d72lrvBdlUaS9GLwNd/wJ6BipW5Uq9/bdX+x7a3p6
-	 3yoaFM7He4X9A==
+	b=RWmoeujaU8hUzf8V/DyNEX6TqgX13WIOVsRIhH4yFbfI723XTlZXqvUvO5G8FXDlF
+	 ulWatLXdpGKF9hYTQ6IjmSGKuhi1S33cFLELNvVRiYtnRA3sNqE8YRlWMtpHHk1PjC
+	 F4dHNIIaBKJHQCVRt0BZ64BltrnYnrfKIQW0e6MiRujlRrihIP5ekhVoQlRFQXZVxu
+	 GaHBAQr+ZkM98qIljkpjZiTa6EOS235HCOrIjz9m1kTB2In/Dg2SpgBZky3xrCTAKb
+	 ES8EpofLdIoECYLC33zpP2qstt3Q4DfBgl9B5qqQgaQlNTQYatLOCUhSqatEdldSxm
+	 aFwFdSKS4YnnQ==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69L2UiLK23631491
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69L3Z4wI43664481
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 21 Oct 2026 10:30:44 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	Wed, 21 Oct 2026 11:35:04 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 21 Oct 2026 10:30:44 +0800
+ 15.2.2562.49; Wed, 21 Oct 2026 11:35:05 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Wed, 21 Oct 2026 11:35:04 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Wed, 21 Oct 2026 10:30:44 +0800
+ 15.02.2562.049; Wed, 21 Oct 2026 11:35:04 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: Mehmet Fide <mehmet.fide@gmail.com>
 CC: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"mehmet.fide@screeningeagle.com" <mehmet.fide@screeningeagle.com>
-Subject: RE: [PATCH rtw-next v7 2/3] wifi: rtw88: support channel switch in AP
- mode
-Thread-Topic: [PATCH rtw-next v7 2/3] wifi: rtw88: support channel switch in
- AP mode
-Thread-Index: AQHdYNQ0MfXI59RhaUiY0tDdZb+i5rcHRnrA
-Date: Wed, 21 Oct 2026 02:30:44 +0000
-Message-ID: <a12c5e96ff5e4808beb6fb377ade7976@realtek.com>
+Subject: RE: [PATCH rtw-next v7 3/3] wifi: rtw88: time the countdown downloads
+ from the TBTT
+Thread-Topic: [PATCH rtw-next v7 3/3] wifi: rtw88: time the countdown
+ downloads from the TBTT
+Thread-Index: AQHdYNQ1myp/Ong7VE6fzH/GjV6vILcHTQBA
+Date: Wed, 21 Oct 2026 03:35:03 +0000
+Message-ID: <f61cfbcd59cd441da59a16db52512897@realtek.com>
 References: <20261020204712.3252023-1-mehmet.fide@gmail.com>
- <20261020204712.3252023-3-mehmet.fide@gmail.com>
-In-Reply-To: <20261020204712.3252023-3-mehmet.fide@gmail.com>
+ <20261020204712.3252023-4-mehmet.fide@gmail.com>
+In-Reply-To: <20261020204712.3252023-4-mehmet.fide@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -87,30 +91,88 @@ Precedence: list
 MIME-Version: 1.0
 
 Mehmet Fide <mehmet.fide@gmail.com> wrote:
-> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
->=20
-> hostapd's CHAN_SWITCH is refused because the driver does not announce
-> channel switch support, so an rtw88 AP can only change its channel by
-> being torn down and started again.
->=20
-> Declare WIPHY_FLAG_HAS_CHANNEL_SWITCH and implement
-> channel_switch_beacon: the firmware repeats the beacon held in the
-> first reserved page, so while a switch is announced the page is
-> downloaded again every beacon interval to advance the countdown, and
-> ieee80211_csa_finish() is called once it completes. IBSS shares the
-> page and the work.
->=20
-> The work is a delayed work of the device and csa_vif names the
-> interface, both under the driver mutex. The countdown is cancelled when
-> the AP stops, when the interface goes away, on WoWLAN suspend and in
-> rtw_core_stop(); the BSS_CHANGED_BEACON replay after a hardware restart
-> resumes it. The other page downloads during a countdown, the TIM update,
-> the PG backup and the one on association, are skipped until the beacon
-> after the switch, since every beacon fetch advances the countdown; the
-> next download carries their changes. A scan is refused: it would take
-> the AP off the channel its stations count down to.
->=20
-> Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
++/* the beaconing interface is always on port 0 */
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Move into function? Or just mention this in commit message.
+
++static u64 rtw_fw_read_tsf(struct rtw_dev *rtwdev)
++{
++       u32 hi, lo;
++
++       do {
++               hi =3D rtw_read32(rtwdev, REG_TSFTR + 4);
++               lo =3D rtw_read32(rtwdev, REG_TSFTR);
++       } while (hi !=3D rtw_read32(rtwdev, REG_TSFTR + 4));
+
+How about setting a retry limit? Consider if hardware goes wrong
+suddenly returning random number, I'm afraid it becomes infinite
+loop. As my thought, at most it needs one time retry.
+
++
++       return ((u64)hi << 32) | lo;
++}
++
+>  static void rtw_fw_csa_queue(struct rtw_dev *rtwdev, struct ieee80211_vi=
+f *vif)
+>  {
+>         u32 interval =3D ieee80211_tu_to_usec(vif->bss_conf.beacon_int);
+> +       u64 tsf =3D rtw_fw_read_tsf(rtwdev);
+>         s64 delay;
+> +       u32 rem;
+>=20
+> -       rtwdev->csa_due =3D ktime_add_us(rtwdev->csa_due, interval);
+> -       delay =3D ktime_us_delta(rtwdev->csa_due, ktime_get());
+> +       rtwdev->csa_tbtt +=3D interval;
+> +       delay =3D rtwdev->csa_tbtt + RTW_CSA_TBTT_MARGIN_US - tsf;
+> +       if (delay > interval + RTW_CSA_TBTT_MARGIN_US ||
+> +           delay < -(s64)interval) {
+> +               /* the TSF jumped: restart from the next TBTT */
+> +               div_u64_rem(tsf, interval, &rem);
+> +               rtwdev->csa_tbtt =3D tsf - rem + interval;
+> +               delay =3D rtwdev->csa_tbtt + RTW_CSA_TBTT_MARGIN_US - tsf=
+;
+> +       }
+
+an empty line
+
+>         ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->csa_beacon_work=
+,
+>                                      usecs_to_jiffies(max(delay, 0)));
+>  }
+>=20
+>  void rtw_fw_csa_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
+>  {
+> +       u32 interval =3D ieee80211_tu_to_usec(vif->bss_conf.beacon_int);
+> +       u32 rem;
+> +
+>         lockdep_assert_held(&rtwdev->mutex);
+>=20
+>         if (rtwdev->csa_vif =3D=3D vif)
+>                 return;
+>=20
+>         rtwdev->csa_vif =3D vif;
+
+an empty line
+
+> -       rtwdev->csa_due =3D ktime_get();
+> +       rtwdev->csa_tbtt =3D rtw_fw_read_tsf(rtwdev);
+> +       div_u64_rem(rtwdev->csa_tbtt, interval, &rem);
+> +       rtwdev->csa_tbtt -=3D rem;
+> +       /* a TBTT that just passed may have sent the first count already =
+*/
+> +       if (rem < RTW_CSA_TBTT_MARGIN_US)
+> +               rtwdev->csa_tbtt -=3D interval;
+
+an empty line
+
+>         rtw_fw_csa_queue(rtwdev, vif);
+
+The csa_tbtt is just read from register and adjusted to what you want,
+but in rtw_fw_csa_queue() it reads again and adjust. Can you reduce it?
+How about adding an argument to tell rtw_fw_csa_queue() that this is first
+time to initialize csa_tbtt (like the restart case)?
+
+>  }
+
+
 
