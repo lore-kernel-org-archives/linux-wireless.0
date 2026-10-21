@@ -1,68 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792563225;
-	b=Ju1iJFNj7P9NQb8NeUpTQdGhIg3qHQvV7aosj+qwEWKRFIotUq6zp0bqvkJ7IbH32sUa
-	 zUwGEZMpPAxNsYQGS1Qx86Yu8ehDzwNdxO2fvDg8LuuNBJllqA3Gqz0SXitQ/PwyS7J63
-	 egXjxlCc4ratHR75sF+m8fxuZRQpQjSb5dmOha+Snm62UEfzZeQH8wXEsnkFOuni1g/Cs
-	 eH1bsWoTzB+jjAI+MNHmZ2lNiEOZqeO2BimLayYkw95WGgpF547yM0oU1MAD0PRvOGrSa
-	 ZpcDytHlInCcsppBczHGARbGf5fZOYRrCJPNGHZaPC1wQboT1VEJtxobqw8VFd6Yfpg==
+	t=1792564848;
+	b=A+0GZFsb0XNWACae+sIlGAR6bjBTMn8ULfuAiJP21sdtjs5QoKcLXItNUfCSlYFzmiCX
+	 3WDv3T3O9zp3DUu7QsiSd8iW28368hZlbE84fpC54PbZTatytTyc/XEh/xrkuStGcgb1H
+	 Vc4lhVF1Lr24C1Ut0ze9jeUsE/1mzBdKZPjBi0MWJwduSQ/UK5nEBQ54jsubYP/3iYvL/
+	 qHRptlPP6MrwmPYLXnvtX4HmwYWIIKXw+7X58aeYbg2vPjtJ/erXpAHIS2Ae7Wv+bbJ9p
+	 7YiWIisTe/XkCASZVA0f/wfUEtZL3LImkHiENxzBLfpXBWKvkTbWBjREvX3gB1UR6KQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792563225;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=POTt6D1OgauRrY8k1vEWEZeF2cYhNnrrsYVlV43I0WA=;
-	b=sPHmLwKxVvdCXrvUy/VbbbbDhS7vpC+G0Shu1DwLvYVzjzeqcmi0RiwLMv9kK3yi5nGY
-	 j5CcY1iYDoJlf2xtSCaGewh81Thfp+owGOI2JlNoeVIRyOp9WxCbVjO/AIPktDcNqdz3M
-	 Qi5BnhQWEvyNVx3Hx2MwmdJWPuMdAghY2wo9b4GCJeGxHIwWAhe/JOFs2CoGNTVKxJOVj
-	 8kFmC+x278w2gICnvZYgvfRj0hdB0unoJuPKPuOnD0rYuO3ZffRbA8ZQPE3vwMOB2eiT8
-	 OP3GWbVEl6IBcw/FjruBsCl8C1hPmu6tV9Eb4UFxaJZ3azWZ/SOkEe13Zz+EtaJN3Sg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792564848;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=wDpAq55gb3RVcVpMzZxojIe1Vb00kuflJMAc87sfmMQ=;
+	b=Fg4lKe6R0P+aygI8RzjC+jGK5wTQwHHOdT8183sZ6kmtTSqf2fJX+XQ2zQakUhJ52IL8
+	 iUmuRcHBO5UW0o8Q4nZ264eOMJmIiCCzTiaIBUyW7OuxK57L45JEE7FSh0Qenglyp3m5Z
+	 Z9Yy1F6EAsSY4yykkhtmiKfBtYXR7+jmO6F8tYFODKgbiTKw8ydvIur//0yrMT6ebR8Eb
+	 lXhJBvKV35equB+KYpjUwLgxoSUikzraIeRp2o9aX8DQZUk/K7hDkp/cqsJ3aCwkaiokF
+	 uk0P/h3CksRa5qNlW/7Qkgr4RJ4918ctAFGMZd5BbbhqhtDYysTEZH+wLzjgj8fb8cA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA;
-	arc=none smtp.remote-ip=198.175.65.15
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b="c2/iXYyb";
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ULDLFrfp;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B45606A325;
-	Wed, 21 Oct 2026 06:13:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47B45606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DB3606A31B
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 06:40:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23DB3606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792563225; x=1824099225;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=zoRAmnpBls2Nylk53pHmCqUXQ+xNgPqiQAFCKXRHWUU=;
-  b=Dz7CgAHA95NsIn3nkFUb+8jUL7WoUt9bVQoq4JWe9h1fAXsR8Fy/fc9X
-   35n2EASQMdi4A4o01GR6xs+T9OMN8rlHcd0DaeCg0qmSW/PQMp1XWccVM
-   cV1qaUBcgdEUxJEtrVHEHPujejsL/hcVJlH5JwuLIi/TYX4o4/u0ZKDJa
-   3rZQfOSrR21RZMWCmRIUusBbQ+Qp9xhm3d1aTnaag6BJn2IcUEzMcweM6
-   iWupuQdX6oacllJ+u9q//Ndf1X5WB1i9PHEbZjYMtbsATbsfkK5EiFWWH
-   fzh7cn5qYZkORGdprUvFXM0t6lgcjl2YzGk5X2fEDAHXTaH0tIHV/tvNo
-   Q==;
-X-CSE-ConnectionGUID: Ji/Rw3dbSgqG7TzSz+cCSg==
-X-CSE-MsgGUID: 3BB1bHMSRte6axfiSIo7cA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1281495"
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="1281495"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:44 -0700
-X-CSE-ConnectionGUID: q9De8LF1Tz+6m/1zFAuAlg==
-X-CSE-MsgGUID: cWHIF8jUQ1+92Y77y8Qvzg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="2946911"
-Received: from blu2-desk.sh.intel.com (HELO [10.239.156.26]) ([10.239.156.26])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:42 -0700
-Message-ID: <2c840dcf-4292-4579-a62d-f9766b7cb780@linux.intel.com>
-Date: Wed, 21 Oct 2026 14:13:40 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=c2/iXYyb;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ULDLFrfp
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69L5j1043355615
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 06:40:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	wDpAq55gb3RVcVpMzZxojIe1Vb00kuflJMAc87sfmMQ=; b=c2/iXYybx2H4VDo2
+	AJnWd1VpVihNJxW+swHw4BBcnyczIydb2RZJ/c+BpgT7YYn/46wiFS9XCFLhN4r3
+	+WV5Zo2IOvFC6OZMbOFWFMTlz2EE7/JJevisRdlpzAY1wfF7UqjxWWc5CA/uykZ8
+	96wxU2tfG1c+pRiVbXFPJI4GvJKgU3nwnUGUaPREp1Xu9iJSl67eCKI6p4Ukjnwf
+	IsjcOLM5dhTyRVwWO6oSuAq+Yye/cFKbqrXY7vApgLSSGWNaMw2jIiPvthxaZfzS
+	NU4ciQxbfRF7eUOZCdLHsT497VZdMfNpB34+Qs0rl+cqAoyn4Nq8+OdrH0W4Rl4E
+	pdGN0A==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4heda0jbtn-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 06:40:47 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3ac7a4ba546so998690a91.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 23:40:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792564846; x=1793169646; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wDpAq55gb3RVcVpMzZxojIe1Vb00kuflJMAc87sfmMQ=;
+        b=ULDLFrfpdvC+pbLeuhWGKqMXkFm/byG/BBPxU181U5KjKJvqQeEv7Qwlh9s9LhzRQQ
+         6DPN9XspcUBFsWL2bfSvV8gX6I7WkNmSzMr6evLJEjbU1ap7WJ1gZW4r8v/IzfLmnUdN
+         zWu3pjejHPlUR4zWqGl8CGVXhn18rLpIwsDa8MDCSI4MKFcPyzNbpbJBrw2uEA1nMaDe
+         2DoSyXFlT+ZcW2QTfHQ2QeII6kAGFf6CMuVh3E/QjqLhfqsu8BuHXXFQkuAtb1BwAcOr
+         3WllXkOhcYU2VsyO3ETkUW6b5xMdF4x7YytYBafQPPFCEGoV5W5fJM8YhmIwMvKRgBf1
+         CkvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792564846; x=1793169646;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wDpAq55gb3RVcVpMzZxojIe1Vb00kuflJMAc87sfmMQ=;
+        b=P21YqRw8Sf4ZjECOunUWgmdj9zUs7EH/UpPa6nIQWG39idnfGIqb6lSqV2uhL+fxVA
+         veswMZeZgYo3eqlWXHMp7Q9cOuL468wKf8msEDxiVemdQo5u0833QxE2CPIiVljxbOaG
+         OBDgwV1sJoVvlWxUJRMlFJ28JonSgkLiy8z+1AU3AdcMY8WjuEpDBvZXWWRfJkdGLi2e
+         h2FFcJFNo8MAZu0Ujtuorztl2XSAkbys4MXDcOAducwPPVzZV0e1X46GD8t/ZEn3mHkO
+         02QMF4O+r5K8Qog1X0VbfQNHrn/UIJJ+aJU2rUb2ssDSLcq+q4iBM5yKukoSX87KZCf6
+         UfQQ==
+X-Gm-Message-State: AFq9FYLraY7fP+UR42JNvJMUKu+xef3TDSEpEtsbqPznVbrlO9yZg2i2
+	ln0FRn2T/nPhur+48P4psfzp3ZXgC1YNKbFVYPce9kqoJrMrzrfyrwLSK+8ttH5KZieyKupZNqr
+	ocCdvYDPcESqpkjM5CDXVw3H55SG9kwhMDr66EqwW+vCWIS8/zaEE8lbpG4si3o2QeROJCRRmQO
+	jyamFj
+X-Gm-Gg: AYBFou2UZ1NLhsRUpRRYjdGdeT6PHuiiYd/loGoSFnL+CHnarv/Wgbt06xo6j3chZFB
+	08u+lBQmoQIbnteocnyxahwCjeb8yiLNHQPET2XJtD1ewTbsOkwf4zIVtJ6Q5KdiDTrCBR+f9ci
+	R/KnJiiEuks6htVqi1HPxaTwkbi5nTonY7zNrg0lU5QqMG5uVXfCvqz8UxIYvqlSeNxZMk76a3m
+	5gfUjq5poPSCxJzHQ5xlR+Cp/kgY1rHbOVS4yW0CUG6hwAJrgY+3sLM0TX7kXd9GQWQkblutXCi
+	Gkj13u3BrMOIlMLsdhz8aAliWAIrEkRpok23YNxT4jb9WKog5DmcJdoOqGQuRfhVcR62uStO/du
+	JBujdb9GCJPvui+CEn6QS7CkgzuBjees7p2cJpjxjHfoRzZSJY0weVu16ELDYhemMZ1A=
+X-Received: by 2002:a17:90b:1808:b0:3ac:8b67:185b with SMTP id 98e67ed59e1d1-3ad86f199fdmr667125a91.26.1792564846499;
+        Tue, 20 Oct 2026 23:40:46 -0700 (PDT)
+X-Received: by 2002:a17:90b:1808:b0:3ac:8b67:185b with SMTP id 98e67ed59e1d1-3ad86f199fdmr667122a91.26.1792564845959;
+        Tue, 20 Oct 2026 23:40:45 -0700 (PDT)
+Received: from [10.133.33.35] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ad80214aefsm2860239a91.3.2026.10.20.23.40.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2026 23:40:45 -0700 (PDT)
+Message-ID: <bfd4a179-6bff-4d19-a2f5-233011f235ac@oss.qualcomm.com>
+Date: Wed, 21 Oct 2026 14:40:42 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -73,137 +115,75 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: intel-iommu: DMAR PTE Read fault crash-loops a PCIe wifi device,
- v7.3-rc7 -> v7.3 final regression, reproduces on one unit out of five tested
-To: "Perlow, Jason" <jperlow@gmail.com>, Aditya Garg <aditya.garg@linux.dev>,
- dwmw2@infradead.org
-Cc: iommu@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, arend.vanspriel@broadcom.com,
- linux-wireless@vger.kernel.org
-References: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+Subject: Re: [PATCH ath-next 5/8] wifi: ath10k: check the recovery deadline on
+ its own timeline
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20260925-10k-sdio-crash-v1-0-14baf913df94@oss.qualcomm.com>
+ <20260925-10k-sdio-crash-v1-5-14baf913df94@oss.qualcomm.com>
+ <5495071c-8255-4ff4-80d7-9d9f221935c5@oss.qualcomm.com>
 Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+From: Kang Yang <kang.yang@oss.qualcomm.com>
+In-Reply-To: <5495071c-8255-4ff4-80d7-9d9f221935c5@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIxMDAyNiBTYWx0ZWRfX6T3oD6l7zB27
+ fFNRQq2fOILNzlpIPTAX8nrIfUcAzkQfcOC+DfOAE3VkVUFv38+WKfUn0ZBg1LLMxY6QbXn8eyF
+ VtsOQY8E06jaZ0L7ZFWa1f7Ht1WwdWQqdwgWuJoktrXcsGFdK8nwpcO6c9sneN5rLsqtzGaihe+
+ OALXJe1DW4+MxDBoqgfANA6oA3HsTQEY4hzZaOVNWeirNubr+4Y2T6X0mCVcwSxStIKanSB+xVb
+ jt4D/JdlLOclwbJtnaeBl/99lwVmDpB/joOQlddQ9MVwVN2v6yUnLMH6FCGEXNOHugFvyyuaHRI
+ xE+6WuAO6PDxS9TW3bYgR8uATWke2bvQaYl9x/0u3jYRGJFr4FxqTtJ1xIKEk0zoyw0/S7c8Ey+
+ ZjptU6l5pYCaI7LJAH2W+UaEDSFfyM6WM4QFZVS+Df3kp/X0bh03fmbH/582R/YPvSTNWMN/fnE
+ p1Q67CMB/ovFxF1cx8w==
+X-Proofpoint-ORIG-GUID: EFNN2Hn-WmqFVcAdHPqqA-nDIzHyusCK
+X-Proofpoint-GUID: EFNN2Hn-WmqFVcAdHPqqA-nDIzHyusCK
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIxMDAyNiBTYWx0ZWRfX0BsQUW1Qdahh
+ 4ozANfRJ+HusCvPzuAVVqLoaPNUvtbMVLpENEKRh9Mr5xgP0WKAI9oYui+dLI9YNzBv6z6rB5cg
+ byf/JBY5qdmxQoRjnAyf5+0st7s2+hs=
+X-Authority-Analysis: v=2.4 cv=HL5WhYtv c=1 sm=1 tr=0 ts=6ad85e6f cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=3V2wKRshZKF0iVVPyNgA:9 a=QEXdDO2ut3YA:10 a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-21_02,2026-10-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 adultscore=0 impostorscore=0
+ clxscore=1015 phishscore=0 suspectscore=0 bulkscore=0 malwarescore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610210026
 
-On 10/20/26 22:40, Perlow, Jason wrote:
-> Hardware: Intel CoffeeLake-H platforms, various. The affected device is 
-> a Broadcom BCM4364 802.11ac PCIe wifi adapter (14e4:4464) at 
-> 0000:05:00.0 on an Apple MacBookPro16,1 (T2 Mac). Aditya, including you 
-> directly since this is T2 hardware; copying iommu/pci/wireless because 
-> the fault signature and the fact that it reproduces on only one of five 
-> tested machines looks like it needs eyes on the core IOMMU/PCI path, not 
-> the driver.
-> 
-> SYMPTOM
-> 
-> Between a locally-built v7.3-rc7 kernel and a v7.3 final kernel 
-> (same .config template, same patch series beyond one T2-specific AER 
-> quirk that is upstream in final and therefore held out of our patch 
-> set), the BCM4364 wifi firmware on ONE affected unit crash-loops 
-> continuously:
-> 
-> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for 
-> chip BCM4364/4
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: ...
-> ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
-> 
-> repeating every ~6s, indefinitely. dmesg shows the actual mechanism -- a 
-> real IOMMU DMAR page fault on the wifi device, timed to the same cadence 
-> as the firmware crash:
-> 
-> DMAR: DRHD: handling fault status reg 3
-> DMAR: [DMA Read NO_PASID] Request device [0000:05:00.0] fault addr 
-> 0xffeff000 [fault reason 0x06] PTE Read access is not set
-> 
-> Four such faults logged at uptime 13.4s/19.4s/25.3s/31.2s, each 
-> immediately followed by a brcmf_fw_crashed event. intel_iommu=off 
-> removes the fault and the crash entirely (8+ minutes stable, single 
-> clean firmware load, stable AP association). The prior v7.3-rc7 kernel 
-> on the SAME unit has zero DMAR faults and zero firmware crashes with 
-> IOMMU on by default, so this is a regression introduced somewhere in the 
-> rc7->final window on this unit, not a long-standing issue.
 
-Can you confirm that the IOMMU is actually enabled and translating on
-the rc7 boot? Please check that boot's kernel log for:
 
-DMAR: IOMMU enabled
-iommu: Default domain type: Translated
+On 10/16/2026 10:47 PM, Jeff Johnson wrote:
+> On 9/25/2026 5:26 AM, Kang Yang wrote:
+>> @@ -2536,8 +2537,11 @@ static void ath10k_core_recovery_check_work(struct work_struct *work)
+>>   	if (!atomic_read(&ar->pending_recovery))
+>>   		return;
+>>   
+>> -	if (!time_after(jiffies, recovery_start + ATH10K_RECOVERY_TIMEOUT_HZ))
+>> +	if (!time_after(jiffies, recovery_start + ATH10K_RECOVERY_TIMEOUT_HZ)) {
+>> +		queue_delayed_work(ar->workqueue_aux, &ar->recovery_check_work,
+>> +				   ATH10K_RECOVERY_TIMEOUT_HZ);
+>>   		return;
+>> +	}
+> 
+> Even with the help of two different review agents I don't understand the above
+> logic. Under what condition do you expect the above test to succeed? And
+> if/when it does succeed, why not delay for just the time left between jiffies
+> and recovery_start + ATH10K_RECOVERY_TIMEOUT_HZ?
+> 
+> Or as one agent writes:
+> The early re-arm path is only reachable on the first monitor firing, at the
+> strict time_after() boundary. Re-arming for a full
+> ATH10K_RECOVERY_TIMEOUT_HZ there creates timing-dependent recovery behavior:
+> a worker that runs exactly on the expiry jiffy delays failure accounting by
+> another 5s, while one that runs a jiffy later accounts immediately. Use
+> time_after_eq()/remove the branch, or rearm only for the remaining time/1
+> jiffy if early execution is genuinely possible.
 
-> 
-> REPRODUCES ON 1 OF 5 MACHINES TESTED
-> 
-> We ran the identical kernel build (and, where applicable, the identical 
-> firmware blob) across five machines and only one faults:
-> 
-> * Affected unit (MacBookPro16,1, T2, BCM4364 wifi): faults as above.
-> * Second MacBookPro16,1 (same generation, different configuration within 
-> the 16,1 line -- we have not enumerated every hardware delta): same 
-> kernel binary, same firmware blob, IOMMU also active by default (iommu: 
-> Default domain type: Translated, identical to the affected unit) -- zero 
-> DMAR faults, brcmfmac stable.
-> * Three non-Mac x86_64 machines spanning three more wifi vendors (Intel 
-> iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8852BE) -- 
-> IOMMU active and translating on all three, zero DMAR faults, all three 
-> wifi chips loaded firmware and ran cleanly.
-> 
-> So across four different wifi silicon vendors and five physical 
-> machines, IOMMU is actively translating DMA on every one of them and 
-> only the single affected unit faults. This looks like a host-specific or 
-> hardware-configuration-specific trigger rather than a blanket rc7->final 
-> regression that would hit every machine with this kernel. We do not yet 
-> know what distinguishes the affected unit (ACPI RMRR table contents, 
-> exact PCIe link training time, and IOMMU group/domain-attach ordering 
-> are the candidates we have not yet isolated).
-> 
-> WHAT WE RULED OUT BEFORE WRITING IN
-> 
-> * AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is 
-> exact (Apple SEP, 106b:1802) and does not touch the wifi device 
-> (14e4:4464); real PCI topology on the affected unit also shows SEP and 
-> wifi on separate root ports (00:1b.0 -> [04] vs 00:1c.0 -> [05] off the 
-> PCH), so there's no shared-root-port mechanism either.
-> * brcmfmac driver source: git diff v7.3-rc7..v7.3 -- drivers/net/ 
-> wireless/broadcom/brcm80211/ is empty.
-> * Our own config template: byte-identical between the rc7 and final builds.
-> * The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON (drivers/iommu/ 
-> intel/Kconfig): byte-identical text between v7.3-rc7 and v7.3 (default 
-> y, no depends on).
-> 
-> THE ONE ANOMALY WE CAN'T YET EXPLAIN
-> 
-> Despite the last two items above being unchanged, the actual 
-> generated .config has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make 
-> olddefconfig against the rc7 source tree, but =y after the same process 
-> against the final source tree, even though our template explicitly 
-> answers "# CONFIG_INTEL_IOMMU_DEFAULT_ON is not set" in both cases. Our
+Good catch...I will check this>
+> /jeff
 
-If CONFIG_INTEL_IOMMU_DEFAULT_ON was not set in your rc7 build, and
-intel_iommu=on was not on the command line, the Intel IOMMU was
-disabled by default on rc7. In that case, rc7 could never report a
-DMAR fault, and the "regression" is only that v7.3 final enabled the
-IOMMU.
-
-Could you boot the rc7 kernel on the affected unit with intel_iommu=on
-and see whether the same fault shows up? If it does, there is no
-rc7->final regression in the IOMMU code. It would be an existing DMA
-issue with brcmfmac/BCM4364.
-
-> working theory is that some other symbol started selecting/implying 
-> INTEL_IOMMU_DEFAULT_ON between rc7 and final -- which would override an 
-> explicitly-seeded "not set" answer during olddefconfig resolution -- but 
-> we have not identified which one. Happy to bisect further, or provide 
-> the full .config / additional dmesg, if that would help narrow it.
-> 
-> CURRENT STATUS
-> 
-> intel_iommu=off on the affected unit's kernel command line is our 
-> accepted fix for this specific machine while the root cause is 
-> unresolved; we are not disabling IOMMU fleet-wide, since four of the 
-> five test machines show no problem with it on. Posting here in case this 
-> fault signature is recognized, or in case others on different T2 or non- 
-> T2 hardware see the same thing on v7.3 final.
-
-Thanks,
-baolu
