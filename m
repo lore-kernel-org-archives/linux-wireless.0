@@ -1,68 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792562279;
-	b=hgUXo5srvRQAZAq5doJ2FleCYhjJCoMHqxiJOUHrCEH4LXFNpAU5+UFGYH0qdxHkKHTc
-	 18Tgxm7J3qxeoOlgoKSMRhZ9xw4+TlyvK9DXA85i/dFtcXMEaT5rnCKM7FA+t/2g8nwwR
-	 3RhRPa64GYJSUGFaV/k0RHVok0mRwKx1B83DxbppOtu4K+1wTNb3ZWT5HmGKG3KAssbDM
-	 oZELp41QBMM7X01UbiqX03xbYLeUwg8av+1seDaxSQP2Gh6vnQfdRlpHemlC7GfOHjdca
-	 AQ44GlvXuUF6+IPa3PlzYoL6NnLGWoOKZE6g05rxoAbvHNmYO4nEmtqzI2zxK+WU8HQ==
+	t=1792562858;
+	b=Lp/AAKTFjfDYuZt8JBpRHll90P9Vd/GU07sbdpbI5Pl5Ey76Rrrj6l5U7DHwdWMqlHuj
+	 KA/S7gRtCXB7o/5d76979V4MEt8+un0xOHePQSx6MlU5LmuvJt0GHCOzvxVU2unUWLT+A
+	 1uVvoMF75bbAqcGmcUzZVYLlxyGkXHcwoYh9Km8TAB2TU99tr6Jf/C5a5sDxT3/l96y8a
+	 WmIICuwh3qISW9Cm0U1doGtpk7D+ZPECza49UHBUWeabSETKX513MOwiNT5fEp9tFQ2ao
+	 014lHokbwVg9UO7OEHEvtoZ4dBymsKMdmXG59k8rB5kIj7ALNbEeuoZz+bHQ/eMH6hQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792562279;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=G8dYOpxn7MC+ZuaGnfx+ivHYE4BwvuIFkRKXEM8ocss=;
-	b=Az8MXIkf2PDVMcKVXSD1Nsi+dV+beE8dcs+WjdiJOHnhCF5FGMHyK3SsMiEHhiWE6Q0i
-	 Q+OrPdmPlK7M8lCplkfiKTPZzWwMFelvId9R3q2/PRHXNLwENoIlG/w2shw7pjNoiQ68m
-	 qlwBtNSVp1dmuauX2c+zzLEdvs22Z7KM5cnmEl6aeMRJQnR9pJOcGK9jmPFu7cwHmhYcO
-	 PfH84iIhJ4Z9t9kZ3Ywx3IB3Ul4Gh+hP3+UCg0Wsz5XTU0K1GVhgs34jt0QwJxukDJm2L
-	 adC8cHhDMvC7cz2ph42HiTttg9qaUVHwKUWj8HMBkMlrD2NmMTKcPB3YN4xQ4PnQf5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792562858;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
+	bh=hJTbezORZnYJia58M/w7jTBC+CsV7fk7tMYV5VsvrrY=;
+	b=e+XA6r0ZKBBlJvwnJyqK2RoCx3eFGCGftpf4MnVXpPpryv0fJY00A2XpCHivl/jvGhQo
+	 a5/Cf1U92kem4XIF5qXhfBimickH7JusjUH1SPqKof77InR2IfmWIBXS5TMBMZU+6H3ze
+	 +zVQgHgG/D9i+6Ex6kPHkrcz/eI50Lf7v55hTiK65nAogc6ZeWRIO74xjDgO2SMVo8iY1
+	 iYzluJHzoPaKatsHIkmaLTT02iOCt+cKprZjbLA/VjB4NPBps5eugqgjTVxHuAP/unCok
+	 5uGkkUKnMduGh+6gOPjCHWEoIgZwDsF4EiL7yq0gO18ghfQMv9wwhF/63Hy9CKk1RyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T5Wk1+WC;
-	arc=none smtp.remote-ip=192.198.163.14
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fED4uhra;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38851606A319
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 05:57:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 38851606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB03606A319
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 06:07:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BFB03606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T5Wk1+WC
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792562280; x=1824098280;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=H7Us3csM7KlqfmOQtYVzQN6z5KTrQAj7QwzbfGFGHNY=;
-  b=T5Wk1+WCQT5QqdOIvHlcfbIuesT/Svk1Ecw+Cg+HYdAIs+PiumPSeaPJ
-   RacyYYf6MEh2XfvlmenBSgn0nd4+liEQ2nkC+RIZlHgyrr5nTLyLpgTZG
-   DV/SUwsUh97rqBsjwLCG1s9wf/h1VOltJBvwhQiTLFYi6nOlCcJQikycd
-   vb1452D/xw2+EpgOKZr+lGfF2JaSFTv3jg7VRTryS9S4PxReQeU/ewbNd
-   pIwqqizSSHZHrvWitlMPeF8CIwad0bwXO8dXLqrspfO3tp8VjVva2f0WI
-   Syh8TPCsra9OUjWnMaJpoSGffXZCNLYMYEQS2N2bktgJfP1AQBB41IWdG
-   g==;
-X-CSE-ConnectionGUID: mMzj7f9XSeecdPM8PFxklQ==
-X-CSE-MsgGUID: VxPUJzOaQQeTguW8qtZbtw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1293952"
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="1293952"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 22:57:59 -0700
-X-CSE-ConnectionGUID: doxQZF4GRc2o6suR8aK/ng==
-X-CSE-MsgGUID: Off98YcyQr2i3X7DBKcVGg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="3067035"
-Received: from blu2-desk.sh.intel.com (HELO [10.239.156.26]) ([10.239.156.26])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 22:57:56 -0700
-Message-ID: <50cac102-9b50-4d0d-af58-8aac51a6d51c@linux.intel.com>
-Date: Wed, 21 Oct 2026 13:57:53 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fED4uhra
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792562856;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=hJTbezORZnYJia58M/w7jTBC+CsV7fk7tMYV5VsvrrY=;
+	b=fED4uhrantB3LTFfdKuURb6/LRqj+pq5DhlYYQbdhnJwZu1DEn3VQjL0bc/48Fe2EhSd70
+	C3X2v7PTKXseSWNwsckDRXxjW43A2y99pQBCuKdvpsCjvh6KGtOuj5X6BfjBNNGhIscP/O
+	6LnpNY3RbbMxYuSoD71/PuCSu+QRybQ=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-516-LhCrz1F7PyyeUPBsoPOzHg-1; Wed,
+ 21 Oct 2026 06:07:35 +0000
+X-MC-Unique: LhCrz1F7PyyeUPBsoPOzHg-1
+X-Mimecast-MFC-AGG-ID: LhCrz1F7PyyeUPBsoPOzHg_1792562854
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 174E9180028B;
+	Wed, 21 Oct 2026 06:07:33 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9266630001A2;
+	Wed, 21 Oct 2026 06:07:29 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: jjohnson@kernel.org
+Cc: tamizh.raja@oss.qualcomm.com,
+	julius@bairaktaris.de,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v8 0/3] wifi: ath11k: implement TX flow control
+Date: Wed, 21 Oct 2026 08:07:22 +0200
+Message-ID: <20261021060725.242681-1-jtornosm@redhat.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -72,119 +79,34 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] BCM4355 Wi-Fi fails with Intel IOMMU on
- 7.3.0-2-t2-noble
-To: Peter Kiddier <peter@kiddier.org>, linux-wireless@vger.kernel.org
-Cc: brcm80211@lists.linux.dev, iommu@lists.linux.dev,
- arend.vanspriel@broadcom.com, regressions@lists.linux.dev
-References: <CA+3E589O46nj=c1Y+Rwk_nPZZKEUjFvMfWaAFmQ2-7De9iUxFw@mail.gmail.com>
-Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <CA+3E589O46nj=c1Y+Rwk_nPZZKEUjFvMfWaAFmQ2-7De9iUxFw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 10/20/26 19:32, Peter Kiddier wrote:
-> Hello,
-> 
-> I am reporting a Wi-Fi regression on a 2018 Apple MacBook Air with a
-> T2 chip, running Linux Mint Zena based on Ubuntu 24.04.
-> 
-> The Broadcom BCM4355 Wi-Fi device works with kernel 7.2.11-3-t2-noble
-> but fails with 7.3.0-2-t2-noble. Disabling the Intel IOMMU using
-> intel_iommu=off restores Wi-Fi on 7.3.0-2.
-> 
-> Hardware:
-> - Apple MacBook Air 2018 (MacBookAir8,1)
-> - Wi-Fi: Broadcom BCM4355 802.11ac Wireless LAN SoC
-> - PCI ID: 14e4:43dc (subsystem 106b:0843)
-> - Driver: brcmfmac
-> - Interface: wlp2s0
-> 
-> Test results:
-> 
-> - 7.2.11-3-t2-noble, default kernel command line: Wi-Fi works.
-> - 7.3.0-2-t2-noble, default kernel command line: Wi-Fi fails.
-> - 7.3.0-2-t2-noble with intel_iommu=off: Wi-Fi works.
-> - Reloading brcmfmac on the failing configuration does not restore Wi-Fi.
-> 
-> On the failing 7.3.0-2 boot, the driver detects the device, loads its
-> firmware and creates wlp2s0:
-> 
-> brcmfmac 0000:02:00.0: enabling device (0000 -> 0002)
-> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4355c1-pcie for
-> chip BCM4355/12
-> brcmfmac: brcmf_c_process_txcap_blob: TxCap blob found, loading
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4355/12 wl0: Jul  8 2023
-> 17:49:51 version 9.30.503.0.32.5.87 FWID 01-e74b9cb0
-> brcmfmac 0000:02:00.0 wlp2s0: renamed from wlan0
-> 
-> However, Wi-Fi subsequently stops responding. The kernel log reports
-> errors including:
-> 
-> brcmf_msgbuf_query_dcmd: Timeout on response for query command
-> brcmf_cfg80211_scan: scan error (-5)
-> brcmf_run_escan: error (-5)
-> brcmf_msgbuf_tx_ioctl: Failed to reserve space in commonring
-> brcmf_cfg80211_get_channel: chanspec failed (-5)
-> 
-> There is also an error creating the P2P interface:
-> 
-> brcmf_cfg80211_add_iface: add iface p2p-dev-wlp2s0 type 10 failed: err=-52
-> 
-> I tried reloading the driver using:
-> 
-> sudo modprobe -r brcmfmac_wcc
-> sudo modprobe -r brcmfmac
-> sudo modprobe brcmfmac
-> 
-> The driver and firmware loaded again, but Wi-Fi remained unusable.
-> 
-> The firmware files are present under /lib/firmware/brcm/, and the
-> firmware version reported by the driver is the same on the working and
-> failing kernels.
-> 
-> The brcmfmac module metadata differs between the kernels:
-> 
-> Working kernel 7.2.11-3-t2-noble:
-> srcversion: 3B6176FDB720DDE8E7C596B
-> 
-> Failing kernel 7.3.0-2-t2-noble:
-> srcversion: 3DCA38D52402541701276CF
-> 
-> I did not find obvious PCIe AER or fatal errors in the failing boot's
-> kernel log.
-> 
-> It has been suggested testing intel_iommu=off after reloading
-> brcmfmac. The driver reload did not help, but booting with
-> intel_iommu=off restored Wi-Fi.
-> 
-> This strongly suggests an interaction between Intel IOMMU handling and
-> the BCM4355/brcmfmac driver in the 7.3.0-2-t2-noble kernel.
-> 
-> I have not tested a vanilla upstream kernel, so I cannot yet confirm
-> whether this reproduces outside the T2 kernel packages. Unfortunately,
-> I have limited time available for further testing, so I may not be
-> able to investigate additional requests promptly. I wanted to report
-> the reproducible behaviour and the intel_iommu=off workaround in case
-> it helps identify the regression.
-> 
-> Could you advise on further diagnostics, or whether this should be
-> investigated as an IOMMU or brcmfmac regression?
-> 
-> Thank you.
-> 
+This series implements a custom wake_tx_queue operation for the ath11k
+driver to prevent hardware ring overflow issues under heavy traffic.
 
-Can you reproduce this issue with the mainline kernel?
+Without proper flow control, the driver experiences -ENOMEM errors
+("failed to transmit frame -12") when the hardware TCL ring fills up.
+These issues are more commonly observed in VMs with PCIe passthrough but
+also occur on bare metal systems.
 
-Do you see any IOMMU fault messages in the kernel log? You can check
-by running:
+The implementation follows the pattern used in the iwlwifi driver,
+adapted for ath11k hardware ring architecture, checking hardware ring
+space before dequeuing packets from mac80211.
 
-   # dmesg | grep DMAR
+Testing shows stable operation with eliminated -ENOMEM errors and
+improved throughput under heavy traffic conditions.
 
-Have you tried narrowing down the cause with boot options such as
-iommu=pt or intel_iommu=on,sm_off?
+Jose Ignacio Tornos Martinez (3):
+  wifi: ath11k: use queue mapping for WCN6750 ring selection
+  wifi: ath11k: remove skb parameter from get_ring_selector
+  wifi: ath11k: implement custom wake_tx_queue with flow control
 
-Thanks,
-baolu
+v8: Split ath11k and ath12k into separate series to avoid conflict
+    with Julius's airtime queue limits series (ath11k only) and help to
+    unblock both
+    No code changes from v7
+v7: https://lore.kernel.org/all/20260917064825.12747-1-jtornosm@redhat.com/
+--
+2.54.0
+
