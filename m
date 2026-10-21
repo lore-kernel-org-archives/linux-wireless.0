@@ -1,56 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=31.44.14.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792559316;
-	b=P1iC0B/0RdGJ5vwC/StLF9oqy0Mf3pg64GPoaC4WoDKq3V6hkNPO+WMssOuExMZwcDmP
-	 UDv4ihrP+Dus1QPdH5VNiTAKyGMNvYW86357+WQipMKC3iCfJoJeL7e7GNpIQagDINuO1
-	 DP6PvqDYuSuimxgKhweh05hkB2y06G3lJaOSVUZZbLVqdskbGtMeHN7+wtJGZE4EXNcjp
-	 /CD3lx7FuokQ61RcTWmWCLM0H8nd5SEhHtXi3LodOKxEmOXf+o4ui8rUAE9ukMkdv0wxV
-	 Ug/0bhSOOEYZiQi94of2ZU8uqKl/u+g/IiiDH/PIuN+C6Xa1hSDKWKqqb4rNYaoswWA==
+	t=1792559695;
+	b=DgMZigUtgyr3BkBFyge6mVPkSMJnRlM0424lzd0QN/xR6mkCfFL74r6y4TalmsqlCvQl
+	 IRIjb0fiqnxtoUVifhN1Vzck6L80cRuzGdeR1DnLjIzogwJim/BGpZrZQxOapUsMiGH/i
+	 5xGLCP6AT2LOBMzUH2DceQoGx9TP77W52EYq/c7ZShEzpUij+rFmkgpW+0sIKuui+XjtK
+	 g5OFjH592MhDzUe9xOPCaYrTbPlXBGY5W6yyQ1i9otiHvVRUk0sQk6BMUK03lA5DB2qC2
+	 Wv57DYG5LCfj2CyBfaY4vLJPeSzvlO2CggL0oclmMel7ULkXfnd+RedFjPSUIDR1ttg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792559316;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=QkX0db4m40DGwuOP5Wxaheolr6mMnrhzfPJ3IEdQt68=;
-	b=0GNXXZ5PypdV9nKqzlwmT3YXy/oCe+4+V76sJMpF2zS0vGRqi6jnG2doDxtyIujL0cO3
-	 dursTQwVSpGKq1kAFF0OJd2d5H2WoduK42SxO/Y+LJb0k8ReyiYHsc7KQrI/TVIwQSvDC
-	 5u7TCGZJsmACoflHmCX+zPbbIvqeIio6UqFRfCkrL4+5DQ7Rb9gSODskYLNvLjUqW6zkD
-	 xhS903GmxuWE94USm4Z+/3q3ILN0raMLdMosQgERLxVhRXm1nDwkTEv3w/PjQwoVXKJ+f
-	 YsUzqNiBehrhIhVmOMYO94f8MGOjre5SxTKrNYsYCvk3R+mEK9V7kiMd0kzN9PKwWqw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792559695;
+	h=DMARC-Filter:Received:Received:X-Yandex-Fwd:DKIM-Signature:Received:
+	 From:To:Cc:In-Reply-To:References:Subject:MIME-Version:X-Mailer:Date:
+	 Message-Id:Content-Transfer-Encoding:Content-Type;
+	bh=jqWlW6zqb5Tv2gMRTIRS9fn3wqc6RPqo/Vw3J/4+54M=;
+	b=mBaM596MVg2VWXnTJahxrkr9Vu34JuHGsG8IUQd3cPTZz9ICBMseUkoO5nRIl0hOVTZg
+	 hW3BWZhq0ruJ2ZNeA8W/R/kf/KhTFz44Fp71wS9RWa3X0mx/k59sYWVD9KI20piY8Adaw
+	 H3NQm6HhR2azZzsuyl+89PpsghAwql2jusrprzYvNmH7g9YoSUucw1Ig5Fr48hKxyCsRf
+	 a8YkDRUD/RV48nBi7wG7/kamt9HzhIEyyLRAvFfSIpArCY/RSr9IlMFpAug9JZaxqPJJa
+	 E6PV+XcFY9wqqcfy5O3w8PoIgfZPriMVPRd+fqV6O5Dn0Qcq5uzOY0Gf61UuHM/y/1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cAuON3Sh;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=0upti.me;
+	spf=pass smtp.mailfrom=0upti.me;
+	dkim=pass header.d=0upti.me header.i=@0upti.me header.a=rsa-sha256 header.s=mail header.b=dWOYFKWS;
+	arc=none smtp.remote-ip=31.44.14.18
+Received: from forward502d.mail.yandex.net (forward502d.mail.yandex.net [31.44.14.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3087B606A319;
-	Wed, 21 Oct 2026 05:08:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2EB2606A319;
+	Wed, 21 Oct 2026 05:14:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2EB2606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0upti.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cAuON3Sh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97D111F000CE;
-	Wed, 21 Oct 2026 05:08:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792559316;
-	bh=QkX0db4m40DGwuOP5Wxaheolr6mMnrhzfPJ3IEdQt68=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cAuON3ShW2wBA2gcnkl7H4wIdlmQH0gfJo8zFiGjopvTEQF0v4/2jKDmQmvvU1Ywu
-	 gGc5fVTJoSUrA733BvZsMnAM+Lmt4LpCW4OHoCNVM/OQPw90v/9c2F25Dn1xNN7fSl
-	 Gfk7ZjX+bttaxZlGhiEojpJlrc1udHDC8i9mMnAiGqpP40GhW5ih+HLMRNPqUbRoVz
-	 XHL2EkDcQaIXl6GQxM1mXGmYo/TUnPtruTkrCnYc2qtzWu6iTAC3Mfp5n9PPmvjPiu
-	 KbkMzgXVHCYRGXVrQ8bUnnHxss7C06HvmWHzTHhYHnUz303empsFAUUkr4iQQ7GjSa
-	 JonhXcFMqk7NA==
-Date: Wed, 21 Oct 2026 07:08:19 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Shawn Guo <shengchao.guo@oss.qualcomm.com>, 
-	Yingying Tang <yingying.tang@oss.qualcomm.com>, linux-arm-msm@vger.kernel.org, ath12k@lists.infradead.org, 
-	linux-wireless@vger.kernel.org, yintang@qti.qualcomm.com
-Subject: Re: [PATCH ath-next] wifi: ath12k: change MAC buffer ring size to
- 4096
-Message-ID: <5ygj4wgwd7tvuma4f4cmvc46cw2lhabmruk2nxeh44iktn3owg@cxzsmik52fh2>
-References: <20260610031358.2043716-1-yingying.tang@oss.qualcomm.com>
- <atcr70WFLxp8zreK@QCOM-aGQu4IUr3Y>
+	dkim=pass (1024-bit key, unprotected) header.d=0upti.me header.i=@0upti.me header.a=rsa-sha256 header.s=mail header.b=dWOYFKWS
+Received: from mail-nwsmtp-mxback-production-main-369.yp-c.yandex.net (mail-nwsmtp-mxback-production-main-369.yp-c.yandex.net)
+	by forward502d.mail.yandex.net (postfix) with ESMTPS id 796A5C04E3;
+	Wed, 21 Oct 2026 08:14:45 +0300 (MSK)
+Received: from mail.yandex.ru
+	by mail-nwsmtp-mxback-production-main-369 with HTTPS id fETbd21Loa60-gchyJVsg;
+	Wed, 21 Oct 2026 08:14:45 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=0upti.me; s=mail;
+	t=1792559685; bh=jqWlW6zqb5Tv2gMRTIRS9fn3wqc6RPqo/Vw3J/4+54M=;
+	h=Message-Id:References:Date:Cc:Subject:In-Reply-To:To:From;
+	b=dWOYFKWSNM6yJL42a9a6nhJrPaTXHRCAXCDvXZfz0Mj8MvyfAC7uZ0GWpe9jAS71L
+	 FhE15RxA2+D6bYCjtCyfG3HcO1oYjnjjrN/j73Fn7xBU5sBdsxSfwdbjT+BcP3gsLF
+	 4X1wciVB/RM0CldypHt6nJ/wUxcHJMUaBw2qw8w8=
+Authentication-Results: mail-nwsmtp-mxback-production-main-369; dkim=pass header.i=@0upti.me
+Received: by mail-sendbernar-production-main-96 with HTTPS id 52484760394db31a8bc30851e3f601b2;
+	Wed, 21 Oct 2026 08:14:43 +0300
+From: Ilya K <me@0upti.me>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+In-Reply-To: <04b8b928-b671-4236-a792-1141cd81a34b@candelatech.com>
+References: <1767631788532094@64c4e675-cd08-4a74-816f-886742f9bfcd> <529a79bc-dab7-aa41-00bd-c47ecbefaa00@candelatech.com> <471221788538289@323ca970-5bd2-4c6b-b52d-2b863a718615> <3acf531c-bcc7-412b-b3bb-665069260e46@candelatech.com> <2028561788553569@f088f4ec-f441-47a1-b7e4-75a1052aa4df> <2418461788691106@84aa39c5-f501-4e64-8418-6a8b6eb88e21> <eb405366-6574-4e4c-a89d-363751ed848b@candelatech.com> <4175721788798939@f00554c7-d809-471c-9bcf-78e5d8eceab4> <1556871789207706@7dc9deb3-4292-4932-8568-de9b411208d8> <1443771789748846@4a8ec5ae-80ed-44bc-b7d3-6bc660c90136> <211851789913261@df1900ea-d467-4ed7-a7f1-de68a4c3e6dd> <143991791036721@40be7595-980b-4665-ba66-1601e10a0899> <c4286904-2a9a-41fd-93ce-be57964909f6@candelatech.com> <221941791052355@558b3e58-c2b1-4e14-91fe-beb5649d18f6>
+	<5955851791966910@d362902e-9931-4ad0-8e86-72401cc67703> <04b8b928-b671-4236-a792-1141cd81a34b@candelatech.com>
+Subject: Re:[bug] Triple whammy of mt7996e bugs on 7.2+
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,81 +67,14 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <atcr70WFLxp8zreK@QCOM-aGQu4IUr3Y>
+X-Mailer: Yamail [ http://yandex.ru ] 5.0
+Date: Wed, 21 Oct 2026 08:14:43 +0300
+Message-Id: <93881792559683@cb540089-648e-4f63-be25-5737cfc54c1c>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-+ Jeff
+> You might try the latest mt76 tree from Felix, it recently gained a large number of fixes.
 
-On Tue, Oct 20, 2026 at 04:53:03PM +0800, Shawn Guo wrote:
-> + linux-arm-msm
-> 
-> On Tue, Jun 09, 2026 at 08:13:58PM -0700, Yingying Tang wrote:
-> > For WCN7850, MAC buffer ring size is updated to 2048 in
-> > 955df16f2a4c3 ("wifi: ath12k: change MAC buffer ring size to 2048")
-> > to increase peak throughput.
-> > 
-> > But during the RX process, a phenomenon can still be observed where
-> > the throughput drops by about 30% from its peak value and then recovers,
-> > and this behavior repeats during RX.
-> > 
-> > After increasing MAC buffer ring size to 4096, the data rate drop has
-> > gone.
-> > 
-> > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
-> > 
-> > Signed-off-by: Yingying Tang <yingying.tang@oss.qualcomm.com>
-> 
-> FYI, in case someone else runs into this: with this change (merged in
-> v7.3), WiFi on my Lenovo Yoga Slim 7x (X1E80100, WCN7850 hw2.0) stopped
-> working with the older firmware that Debian trixie still ships
-> (firmware-atheros 20250410-2):
-> 
->   WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-> 
-> Probe and firmware download succeed, but every WMI command times out
-> once the interface is brought up:
-> 
->   ath12k_wifi7_pci 0004:01:00.0: wmi command 16387 timeout
->   ath12k_wifi7_pci 0004:01:00.0: failed to send WMI_PDEV_SET_PARAM cmd
->   ath12k_wifi7_pci 0004:01:00.0: failed to enable PMF QOS: -11
->   ath12k_wifi7_pci 0004:01:00.0: fail to start mac operations in pdev idx 0 ret -11
-> 
-> Bisecting ath12k between v7.2 and v7.3 lands on this commit, and
-> reverting it on v7.3 brings WiFi back with the old firmware.
-> 
-> Unmodified v7.3 works fine after updating to the current linux-firmware
-> image:
-> 
->   WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> 
-> On Debian trixie that one is available from trixie-backports
-> (firmware-atheros 20260916-1~bpo13+1).
-> 
-> So nothing needs fixing on the driver side. I'm just leaving this here
-> so that anyone who sees "wmi command ... timeout" on WCN7850 after a
-> kernel upgrade knows to update the firmware first.
-> 
+Well, that survived for a few days, but nope, still crashing :(
 
-Thanks Shawn for reporting this regression!
-
-Jeff, this is unacceptable in two grounds:
-
-1. Driver change *must not* break userspace, in this case the old firmware. The
-driver must maintain backwards compatibility even if the data rate drops with
-the old firmware. This is the promise, kernel strives to keep up from the
-start.
-
-2. The offending patch didn't mention anything about the firmware
-incompatibility, which is too bad. How does the users be notified of needing a
-firmware update?
-
-So I'd suggest reverting this commit and come up with a new change that
-preserves the backwards compatibility with the old firmware while fixing the
-throughput issue.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Maybe I just need to make it log the last few firmware messages...
