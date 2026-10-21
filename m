@@ -1,99 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.41
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792579485;
-	b=EZ2hXIybIteLfxf+v/GQwVKP1Z00T6C4kd2frruKOsvVPa+nnBkhuxKVLpUb5fATRO37
-	 LS6rE0gre4T+8u8ts3lW+VC121mlcFw2TqtgO6ql5BgXC5HkRzVZa4Nt62dC9KxIbINTT
-	 /IYqFKNa0H2oOQ58fSelFxaAV1bdIr8rR8/XOdvySyQnY0elhXp0tyl72gBuJDpOasxN5
-	 mU8OTuhYShmQN/6oqvUK+hq1QoW8djSEyeZYeZwuHnCnwHpxYIsTt0xpQTJEvJ/Tp7T70
-	 3pLW0qiDDdMYOufuB0JfF805rEwa9ExqA7mgWaliKpkvm+dtqEKGenWD91fV1k/Fznw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792579485;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=3+Zu9D+KgKA9DXJq7rrfhDe7h3krW5LnH7aKJrVEA3Y=;
-	b=LAwwDKzoSSZ8+YwgyvwjBlLTPb4Qd/jeQ49JmlKBfS/yjAqX9z79dDAPP3YKmHNx8d2W
-	 6Br6kHaWpnSOybYZOHFcOLe+yEA1LUKS3UUBcIeCpAE51DM4FXxbKo70fZRezaGL6Pi7D
-	 Ky/I16eS6vkshAaFSD/wMpfJR9ydjxE1mS5rGzUUOt9JUW8d76my3rQS2C8fI6eAwH6WA
-	 1SHztcXVQcBeTlz6YX87SJYnudTLhrfvhNSKFMHwgp5Qv+04FN0uo62LzWjCygV4umHyv
-	 /dlhcCj0PQ9hI1OYqCyMWmxc32RvydpHp01SKGsNYm6pBQtvMefYbJSu7zLkwy0+bwA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=EMJ2b1Mf;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.41
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792579915;
+	b=zbS+UtQQ/RLeXWDavCOeOzP8k/0oIHDDl0kunyZ6qGg8vvvoQrGI0ptdUrTxddQqtmwX
+	 XQuFlcBOwbBHKCqlUz88Xn8Du4Mhhw69XlX8hUiQMo4dlVmJx6cKajOxPYDx+b8lNnSmX
+	 HcT2cmYy1Y/XklKJhuBOTm96l8tQHpAVDMKui68bsdYhGRMqx+2aUbjPaKq8qdwBBqTgU
+	 GvFjJo45+q6aCf0uwOVFnmYeDLrZ9slmu2rqh1a/wQ7dFxLTTCpO6oTc73v/ylGgC2xkO
+	 v5Mh98Bb7B+TcqyJDfFj0waqS6PCLEqw6SDKKnWc37w2MBjno8GLaLauPM/oZYwyQRQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792579915;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=U8sTz8ypwYRszYEXhOMC86ERxreYQ5qPpp33bSNuyec=;
+	b=EtWZj5HnNNvgoxZLhSutjh/TaJgXTRqgbAPxOQOUP7aBCQGbspYbR4DvgcwztxRXYmL3
+	 U/UPl8G6Fj+hyO2DEWAziJNJotOds7ZIUism/5svgX1VqJCdl/URRpr9+X8KGOESU3cIL
+	 CuiIBxD2hvCdPkDzt1TQwJSCBpu5J9Dm9P9YVxE4yliSzZFYAcuXw7haSRrOLHGDefRGn
+	 jTJhFQZK/5hkpbNBzyAOtTfGbD7H+l0R7kzOKH9xoTej69ht6vq83bN+2+Oom+ATqHdxg
+	 FBj6+a2INgbDaGrJydCMsfRyggKszvjLwpriZioE61gM10AQTUV458jLG3GRWaKLGCw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Iv7YLnqi;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="KAWy0XT/";
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87AA2606A31B
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 10:44:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 87AA2606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73409606A31B
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 10:51:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73409606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=EMJ2b1Mf
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5bc18f54abbso449441e87.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 03:44:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792579484; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pci7V2C0C8G43B1a7DtCR5tFU0uf+dr42IGorlbeT51qBxPsWHpYOtycNJkKNE5PuY
-         nPwPGaEhbo9+rnWq0SGBK4RFWNc7DVN7gzidV/KUVAjSgo+qdrQZOvqQZqpYT7KrS94P
-         1kFiWaiphoA3IFjxWXs+FCbL5xz7psqNDaV8lLopI4L8jpQVfSwF6AJWNSTkhAGrVrbK
-         4g0Ec93BR5fD6/Wtg82ddKTBl5nFofXeackXVbT4N79K4xwC7l6GxFNk7MGriWr+g3bm
-         T62p7qlUgzLKWJMRPl1661ohJXzscVceRC3aP/pEMEYO9RMz9lvnF3K0MEKJTi4JFD3k
-         mphA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=3+Zu9D+KgKA9DXJq7rrfhDe7h3krW5LnH7aKJrVEA3Y=;
-        fh=+l3qsnemBX+Gp1YeWzlNvKh4WVxUdCWZcyL0weULDkE=;
-        b=gqhsjkzM3RAlK5+DwCorUZVyjJxBoK0XnKEunH4pTPgzsHAraAiE5C00uSa9MysjW9
-         wsR9vEUEmqzWTOq26JmLiq1c2kokrOAOSx1gIkP/D0LWp9+WEDBZ9L++1Mt54wa7s1eh
-         HyuVVsfPe04UErQ+3w9wh/7wf474KC5XL1Wvn6dBPV6wGOhILNwKjs6LUVxOareh9BFc
-         YvNhwhf0IdyP5WMV9zWJtQL/IqiO51Wn8ACT9hxLEXJ8i4AbCOUwOnWctkCcelqTqZFq
-         6EbeURQK5WexRFMtMZhxVGPrlx+vwnkPbIdpsHFwS70FrdZOPNpolzDGAaU8mFmu8+eH
-         7f/Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Iv7YLnqi;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KAWy0XT/
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69LA6Mx33621183
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 10:51:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	U8sTz8ypwYRszYEXhOMC86ERxreYQ5qPpp33bSNuyec=; b=Iv7YLnqiBwxEFUId
+	Awqtb3JfxOY/lFXPR0NvJ3eOCnMGVkKAtewej7eI8WKyEKEt4C6Omq+FE0C9yp/h
+	m+0QQrR+k+Hpyvngu6w4dR1ef+mvzKGh0jqLqafRFCpwYJnSKMLOlYr7LEo85SSe
+	jU7nDaw/e+N6dpG1ntYtVeSvXSmV+xOr/aabyQvur55OgbEKMj8MxEQN9cNfzsGl
+	kijzG32IVJADhOK3+oP7l+rxsn3Liv3OMflXjwXhWijmqxJMC66aNtNLktyCVDoI
+	YY4ZJ+YneqCZ+Me+uqxubkV6Wczhj8oniUj4IfgwMxYkeYprHu5vM6IqFc5aahsr
+	9hellg==
+Received: from mail-dl1-f71.google.com (mail-dl1-f71.google.com [74.125.82.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hebyd3xt4-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 10:51:54 +0000 (GMT)
+Received: by mail-dl1-f71.google.com with SMTP id a92af1059eb24-1663fb7e005so884637c88.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 03:51:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792579484; x=1793184284; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3+Zu9D+KgKA9DXJq7rrfhDe7h3krW5LnH7aKJrVEA3Y=;
-        b=EMJ2b1Mfsr3z531uo4PbTQcnTiI1V6QP2j5RPccaDPxAHktd9HynIpimNpp3Seb44d
-         dsnZSu24RsiD1Ks8D84LeNAS6pJL8bWtjZerKwun5BXvUwNGyxGGXot1ISBjBaelgNWb
-         +LsiBG3i+1rd2dbFbheMbr8XhypCxbMgaV6YqM7xJmr0A6EhAAIIaRAWbMN/NPY/BODc
-         BCFbyAj3A1UEcGi6L+CouAWi/U+85lD9TRk45mfBdIk4o2Hk6O3GAD0V/DT6h5+fMwhB
-         HDu/WXCbJOx9fw8q3qCmbhmO4OLj0UJdhHDMNfw0tSpNpbOvILJCArJ7ODv+AMQ9ddWI
-         UNSQ==
+        d=oss.qualcomm.com; s=google; t=1792579914; x=1793184714; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=U8sTz8ypwYRszYEXhOMC86ERxreYQ5qPpp33bSNuyec=;
+        b=KAWy0XT/eSYqzYHWqLdl9fxGFH2qO2q/Mrqk7peiKlQuQSd4NhEiS1N5sUpmB+3EEM
+         rLgtSnWDmOb++e/p5FOw0b1Y0/A3yTX0hnUAHR52rNyp5gFQre3Oo4aGi9OrpmQTIX2R
+         lDaZrjgJXM6u960ZbhGhaBeYhA+CrrUWoN/mz9t6P51z2TEaaswuBGAFu78H+wJQAyMG
+         Hc188n3x55R2YAWYKTlI4xanexWKWefRHoYFC0T6qcDuyzqxRfdSRZG3iIv1JHaS4pRb
+         XnopvW8+hdaW0AqJpWQep2bvNiQJDv5BOU/pDCQ/4kENFkTC0UFvoJd2s2ufBBlLDerm
+         GQOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792579484; x=1793184284;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=3+Zu9D+KgKA9DXJq7rrfhDe7h3krW5LnH7aKJrVEA3Y=;
-        b=WpvMLrgdRo98yhfc9FTCloxBb2xc8nfdrm1LExvf2jfG+RUnt9xez2129IkZKIry/0
-         8oVurntfYha22cYj9nceERg7tnc+LWqV35lcCKN2/NApFUzXw7uASElYbn2xZdsGAY0P
-         LIhWF1ypO4hcMvNYfeg/404oP2odvolYIChNimI5+g3bPowXQswJHKO4/5ZGTEyDuC6K
-         4XH/NERxaFVRrJZk9f5/ehXGbCq6RQ4jIIehtvQn0p8pP9/wfFfe15EiPG45ogQqLtv4
-         QDEtwK7uyuw0G76xv0QmG+MNJathRU9Ef/xwwPSCewknYPfdHBgJJGA5i3U6PLn3fyeW
-         WtSg==
-X-Forwarded-Encrypted: i=1; AKwUvBw5C4rm806QqhArHbZTKtg/qr8WLDHKOa90FfM54+97d8e2mSX4AM65xKKUmergLL2PCu0CMMl4pPSeiv3G8Q==@vger.kernel.org
-X-Gm-Message-State: AFq9FYLzkMXLLbdQ/LUnQhZo1YfMWlnRZ6ejEFL3KYIQpVEY/xMbH1EX
-	gzVb48cBANd8TBf8G83hENYcWOgwOUmwN381ULb6IC5ohwfSTlXd4V0i7sJGT1f4OefDFAkgQvg
-	uwmRy2GpbDh+vcK5xuHYSLJrIfS0g5bA=
-X-Gm-Gg: AYBFou1+HBtJP2x1ZCrEMXgsna1T7t/Pe/VvLcWqw0pIuxb47topuIytLpMEW54XeXg
-	M8Od+DbHK2mzHUbnKqxgN5Hs4Bi/ME0W0XL8iI/Hf0KUKLku2t06tuAfuQWxti0A5VKAM/cuvAO
-	IauJVzXt4izb7Yll8q/qvnT3BOOHYX+IpWYwgvT21sAV6YTiEnuZ/v1rzvUgwxhqfswqqruXbwK
-	FyUcJfpJgSaH4fm45UhL77aOAnK2pQ+CHDmQDMN1vQFZSK6Kf+uPsbGigPTA+fIavd6nRg4NgXB
-	YhbtNUekrE3SgJLLtLeEVteT837LEJQkK4x4rvpMskOxndo80XxPtBUtFyejexYDo+4N8jtmYWY
-	vZvCJkTnVC7dnU5/NuNKHNjv2BEVAjUx0svApmW34SspUOSEc5P6zTY8jU6pTRS4mRYGe
-X-Received: by 2002:a05:6512:158b:b0:5be:50d6:af8a with SMTP id
- 2adb3069b0e04-5bfa1ceb37cmr564734e87.33.1792579483402; Wed, 21 Oct 2026
- 03:44:43 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792579914; x=1793184714;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=U8sTz8ypwYRszYEXhOMC86ERxreYQ5qPpp33bSNuyec=;
+        b=X1JlNJDr+Gft/4f5/GMnKXe5+oYcmUBkdXBx5titTY7MmcT3bs0vGWFSqG75GFDdT/
+         ggeUfINMU1fCxyaCZWlCnQod+7kwbJX3okoD2auyQc/2cPTijKbGUwnPgBjpXd0UF+zg
+         jWbtsEl9l3AliCiWFVVrfLMzxF1B5pqYpFkLn7RNm3XzGM7fpblcQEDHjuOIen91qrVe
+         HnNkfGzXE/S1VcoEsfWsbSojVJtNuceHF1axfrSwDl/yZGPgJ8jCrn3uXSHdjKeoGgcE
+         0HQybX1iKFCXI8yGoWijnIMXU/mivt1nLvCJ1GcIFa2jmpJgJCO8gV+lB2u4IbTgqOpn
+         KR3g==
+X-Forwarded-Encrypted: i=1; AKwUvBzgmVle8B8rLcfk8RNdlrtsMFywSqthsP0l0HcChsaVyjz8LoWveu9kt5yuzmjnTABPefUSMUcF+fHIcHNXHA==@vger.kernel.org
+X-Gm-Message-State: AFq9FYJK4ad0gJmP6laL8nM2RId8U/euIDAcr/Wo4ic3/JCtoJu5Kawa
+	O46mbl8GXSBfASFUeMdAd3ciO0Wnv4zdEUyelXH/vtuAjUI1u7+7Wa21kzZVDLvcACBZ27dw+NE
+	ss+NXSek1vlKWDQyiQepIJ3pvr3TsbLHQ3Q8+USeWkiPp+Zk4jbnhO9cOUE+fhe9sNgTlE7QIuG
+	NHIA==
+X-Gm-Gg: AYBFou3rSpgG/vlNkeUJXsu61riL8IMA48LSFkH+Bvs2E7kkiuMg5lmpX4CH5eSvAUB
+	S36GRpUgLJcVjdGV/fG5qimkEAcqwO9njS7HtHibJov71QvLewgMMtV656U9C4yqhmtiD8rZZT2
+	e9UxqghnHuDvfzML6Lyf09OOJgH2jNQk66TW8n+rziqxG9HgLSBQ+z/QuVE5CTXYcoY9/kxJIr0
+	QhkYkFoq1OfENETDVgPyKa2eyDhMuOwVcRc9S/5G553sIhqIQ2JwDV74HlwRNR13hiWpbj88J1+
+	04IXk6LWghf3tyHDj/nD8qZgKiT0/4iszca3zyxMjU/WVpL+Ie/cB4G1XO56e+6iLi4t7kdSuwF
+	kloLt4+lzEE1CnP4/doxh9p9Z2qPtqCn4IUo8pGTG
+X-Received: by 2002:a05:701b:4189:20b0:144:fa58:95d8 with SMTP id a92af1059eb24-190a599a3b9mr2307167c88.27.1792579913623;
+        Wed, 21 Oct 2026 03:51:53 -0700 (PDT)
+X-Received: by 2002:a05:701b:4189:20b0:144:fa58:95d8 with SMTP id a92af1059eb24-190a599a3b9mr2307151c88.27.1792579913031;
+        Wed, 21 Oct 2026 03:51:53 -0700 (PDT)
+Received: from [10.152.199.23] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1903a275026sm8216367c88.5.2026.10.21.03.51.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Oct 2026 03:51:52 -0700 (PDT)
+Message-ID: <b5fc72a1-71c9-418c-95b1-897a62f0c6c0@oss.qualcomm.com>
+Date: Wed, 21 Oct 2026 16:21:48 +0530
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,37 +114,146 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261012011707.3378-4-sigefriedhyy@gmail.com> <179185709988.434549.15422498299449004512@kernel.org>
- <CA+7S2v+LHUWXQMD-cYPEzT5-f3Qhw_vz+LEssQH_A_oqDKtnnA@mail.gmail.com>
- <8dcd9564-e9a3-4b00-93b8-3cb023d68047@redhat.com> <CA+7S2v+rWYvz9xKPEeM6=3HPz3o7TbX2uRfRKk95f9Y60HnEiA@mail.gmail.com>
- <976d815d-a9ec-4fa0-9b16-8e55695706c2@redhat.com> <CA+7S2vLWvQd7GrnwB+B+DiqAgST8EjfWwBKzJXtjGRBPVgmOBg@mail.gmail.com>
- <d3a1b219-84da-4ed8-9d87-5619e74bd1f5@redhat.com>
-In-Reply-To: <d3a1b219-84da-4ed8-9d87-5619e74bd1f5@redhat.com>
-From: Yuyang Huang <sigefriedhyy@gmail.com>
-Date: Wed, 21 Oct 2026 19:44:35 +0900
-X-Gm-Features: AclHuK-rJH5v9EVEYVeh2aYcnbIBH6iiXDeQCmZP7VNDudjBotFAAvZQy4bP1zQ
-Message-ID: <CA+7S2vKt_n5MyyiG0wf01wyzTW-SUzyyRSw+eui3CL5rx0Zavw@mail.gmail.com>
-Subject: Re: [PATCH net-next v11 3/6] net: add a generation counter for
- dev->mc changes
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: netdev-bot+sashiko@kernel.org, ajay.kathat@microchip.com, 
-	aleksandr.loktionov@intel.com, andrew+netdev@lunn.ch, 
-	claudiu.beznea@tuxon.dev, davem@davemloft.net, dsahern@kernel.org, 
-	donald.hunter@gmail.com, edumazet@google.com, idosch@nvidia.com, 
-	jacob.e.keller@intel.com, kuba@kernel.org, johannes@sipsolutions.net, 
-	kees@kernel.org, kory.maincent@bootlin.com, kuniyu@google.com, 
-	nicolas.dichtel@6wind.com, nickgarlis@gmail.com, sd@queasysnail.net, 
-	shuah@kernel.org, horms@kernel.org, sdf.kernel@gmail.com, 
-	vadim.fedorenko@linux.dev, willemb@google.com, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath11k: apply the 160 MHz NSS ratio to the radio
+To: Julius Bairaktaris <julius@bairaktaris.de>, jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <20261011123631.1664734-1-julius@bairaktaris.de>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261011123631.1664734-1-julius@bairaktaris.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIxMDA0MyBTYWx0ZWRfX3mB2zlO9APvZ
+ yBSkncjZI0eLQzQjINLoJjZR9noA/koRzPYPpOZEOAfwfMb1FU7tch7d/eLy8iz2Jg50ZpODWFk
+ YP3gQn4vIwTgV9q/3EvERM4Ja3CF4CcWXHgn35RzhJMtHw9pD/Fi3sX/5C33a+rnSA8JDRYx+vs
+ ylZoP2O5rpGx3GzR7xeMbJ1o6COawX+cRYUQzgDuhh2/ggV+eSWBzM1bqn7L5SF6MiOF1WKNUkZ
+ eUQqrjsBmDUH1wgQDLD/6T/+lqWl+lKiSjrLotzjb4ohb7QXRuSTdBy2O5dwvoVkVi3HInHJkVu
+ qh7SLRc6SoyeCt36qRV/M7hGABmpO1EyzjN204SdGTmmplaefXbAf4flfc9up5QXo6PF9B1UtkG
+ BvCtjjp+TyzHubkef4JfeoA0wNCDKxLGeRoTnsmCJ8fSLPn8zcwQSaHLq2RC9mu+XJOql/LEx/o
+ fRSDWg30uqSLLiMk17Q==
+X-Authority-Analysis: v=2.4 cv=TdsDJhQh c=1 sm=1 tr=0 ts=6ad8994a cx=c_pps
+ a=JYo30EpNSr/tUYqK9jHPoA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=VwQbUJbxAAAA:8 a=WNuFRqQ0kxZQpcAD2SsA:9 a=QEXdDO2ut3YA:10
+ a=Fk4IpSoW4aLDllm1B1p-:22
+X-Proofpoint-ORIG-GUID: c91s70BF5F7Sje8g0qEa7yKMraR8K4Yh
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIxMDA0MyBTYWx0ZWRfX93vdFHWjY/F3
+ GeCUjEyb+kt/HDFLKVnL80gTyW/EDMGQv/RDh9FKDLXwY2DXX+Kk4poySZHtnTQeZm+a3gTPwiz
+ daAv151YOf2oyZ1LjzTXHSboS/rrcsw=
+X-Proofpoint-GUID: c91s70BF5F7Sje8g0qEa7yKMraR8K4Yh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-21_03,2026-10-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
+ clxscore=1015 malwarescore=0 priorityscore=1501 lowpriorityscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610210043
 
-> TL;DR: please include the relevant information in later revisions, at
-> least as a reference link.
+On 10/11/2026 6:06 PM, Julius Bairaktaris wrote:
+> The firmware reports the NSS a radio supports at 160 MHz as a ratio of
+> its 80 MHz NSS. Peer assoc applies that ratio to the peer's NSS instead,
+> so on a radio with a 1:2 ratio a two-stream peer is sent one stream at
+> 160 MHz. The HE 160 and 80+80 MCS maps copy the 80 MHz map, so a
+> 4-chain radio with that ratio offers 4 streams at 160 MHz where it
+> supports 2.
+> 
+> Take the 160 MHz NSS from the radio's TX chains, as ath12k does since
+> commit a82ce08775bc ("wifi: ath12k: add extended NSS bandwidth support
+> for 160 MHz"), and limit the 160 and 80+80 MCS maps to the ratio when
+> the firmware reports one.
+> 
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+> 
 
-Understood, thanks for mentioning the background, next time I will
-make sure to include all relevant information in the cover-letter.
+Fixes: ??
 
-Thanks,
-Yuyang
+> Assisted-by: Claude:claude-opus-5-5
+
+The model-specific "Claude:claude-opus-5-5" attribution may no longer be 
+required according to the newer guidance - 
+https://www.kernel.org/doc/html/latest/process/coding-assistants.html#attribution
+
+> Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+> ---
+> On a Xiaomi AX3600 (IPQ8071A, 4-chain 5 GHz radio, firmware reports
+> WMI_NSS_RATIO_1BY2_NSS), `iw phy` lists 4 streams in the HE 160 MHz
+> MCS sets without this patch and 2 with it.
+> 
+>   drivers/net/wireless/ath/ath11k/mac.c | 24 +++++++++++++++++-------
+>   1 file changed, 17 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+> index c1fa42edd3630..6cd163cab9bd7 100644
+> --- a/drivers/net/wireless/ath/ath11k/mac.c
+> +++ b/drivers/net/wireless/ath/ath11k/mac.c
+> @@ -2278,7 +2278,7 @@ static void ath11k_peer_assoc_h_vht(struct ath11k *ar,
+>   
+>   	if (arg->peer_phymode == MODE_11AC_VHT160 ||
+>   	    arg->peer_phymode == MODE_11AC_VHT80_80) {
+> -		tx_nss = ath11k_get_nss_160mhz(ar, max_nss);
+> +		tx_nss = ath11k_get_nss_160mhz(ar, ar->num_tx_chains);
+
+seems ath12k has same issue for VHT care to fix it ?
+
+>   		rx_nss = min(arg->peer_nss, tx_nss);
+>   		arg->peer_bw_rxnss_override = ATH11K_BW_NSS_MAP_ENABLE;
+>   
+> @@ -2588,7 +2588,7 @@ static void ath11k_peer_assoc_h_he(struct ath11k *ar,
+>   
+>   	if (arg->peer_phymode == MODE_11AX_HE160 ||
+>   	    arg->peer_phymode == MODE_11AX_HE80_80) {
+> -		tx_nss = ath11k_get_nss_160mhz(ar, max_nss);
+> +		tx_nss = ath11k_get_nss_160mhz(ar, ar->num_tx_chains);
+>   		rx_nss = min(arg->peer_nss, tx_nss);
+>   		arg->peer_bw_rxnss_override = ATH11K_BW_NSS_MAP_ENABLE;
+>   
+> @@ -5940,7 +5940,7 @@ static void ath11k_mac_set_hemcsmap(struct ath11k *ar,
+>   				    struct ieee80211_sta_he_cap *he_cap,
+>   				    int band)
+>   {
+> -	u16 txmcs_map, rxmcs_map;
+> +	u16 txmcs_map, rxmcs_map, txmcs_map_160, rxmcs_map_160;
+>   	u32 i;
+>   
+>   	rxmcs_map = 0;
+> @@ -5958,18 +5958,28 @@ static void ath11k_mac_set_hemcsmap(struct ath11k *ar,
+>   		else
+>   			rxmcs_map |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
+>   	}
+> +
+> +	txmcs_map_160 = txmcs_map;
+> +	rxmcs_map_160 = rxmcs_map;
+> +	if (cap->nss_ratio_enabled) {
+> +		for (i = ath11k_get_nss_160mhz(ar, ar->num_tx_chains); i < 8; i++)
+> +			txmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
+> +		for (i = ath11k_get_nss_160mhz(ar, ar->num_rx_chains); i < 8; i++)
+> +			rxmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
+> +	}
+> +
+>   	he_cap->he_mcs_nss_supp.rx_mcs_80 =
+>   		cpu_to_le16(rxmcs_map & 0xffff);
+>   	he_cap->he_mcs_nss_supp.tx_mcs_80 =
+>   		cpu_to_le16(txmcs_map & 0xffff);
+>   	he_cap->he_mcs_nss_supp.rx_mcs_160 =
+> -		cpu_to_le16(rxmcs_map & 0xffff);
+> +		cpu_to_le16(rxmcs_map_160);
+>   	he_cap->he_mcs_nss_supp.tx_mcs_160 =
+> -		cpu_to_le16(txmcs_map & 0xffff);
+> +		cpu_to_le16(txmcs_map_160);
+>   	he_cap->he_mcs_nss_supp.rx_mcs_80p80 =
+> -		cpu_to_le16(rxmcs_map & 0xffff);
+> +		cpu_to_le16(rxmcs_map_160);
+>   	he_cap->he_mcs_nss_supp.tx_mcs_80p80 =
+> -		cpu_to_le16(txmcs_map & 0xffff);
+> +		cpu_to_le16(txmcs_map_160);
+>   }
+>   
+>   static int ath11k_mac_copy_he_cap(struct ath11k *ar,
+
+Actual changes looks fine to me
+-- 
+Ramesh
