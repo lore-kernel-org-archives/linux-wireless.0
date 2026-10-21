@@ -1,99 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.221.174
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1792538363;
-	b=nf7/G+dIc/2oxPqyW456HoLWLt2/UVJTqTg12zzJIzZD9FRjgbZFx9HUr73aikp1q4gG
-	 /Es2Ibl5pr7hB0U/YIG00OsDF+ZMyRK0KYg5kRrRyyP7czS/PxbYKdGF7VrM+yGok9Qgn
-	 JuHrR1jr8RIM6jgEV8remnRwCMSMRxqKfrSpmoWSdO4m170c93cam1MdJZN8cdrPGt1g6
-	 CRCfc9bDTMYUJFfIXtiOXXnp9D/VWBS9w1lOHdsiufgZKoahlGhQd7bO3SX82k2dxgErH
-	 Nox0jkO94Ah6jY7trhc1uG8yJ+92Tf43ECAK6udMjRPUisUvwcXk+tyeYwIGx/idYHA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792538363;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=3uU5xVP514mUbrG42KDIZyHj9BphlxVL4c20+8k4/iw=;
-	b=DmuS9Gbt9TgUX3f/Bn5D6reJhRNKuaNMAeb7tnrv1dEbhZusGloJwtsyyiWUinMruLKB
-	 90f8bVgnrEktWfERYFTqXYYJvE+rBOczOrOgn9elrtXKC1DntYyZYczPxrT4v1q+QrEu9
-	 KKPGdaMhyV2Idn3XfqFhSGB9TZacop5wio1VN4tB8meznOkRVx++uh7MajGSp3cfbiVq6
-	 MSUuxYNaSHqsmV4+WNFeOgsbDAjqAGr07p+V+N2WReY9YyTUIyvHxgko4ADfYLxUfHiLv
-	 SMOh/3+b+s5mfGwfXhsPDcgEg7ZxiZS/o9gKa5+tbM77VDAMaK64dqaoIcfh0tVD6kQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="o/mCkYbj";
-	arc=fail smtp.remote-ip=209.85.221.174
-Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com [209.85.221.174])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792543102;
+	b=sHF6IggKMB3cTUDzOvZbgC7l50W2nv730M8LOnbHYnIvPCD8mI/I1YYHszmr73CBYJds
+	 XuqlMCx3oVFYCJJRamhHMysiT+36hg/54HJjr5EnkmhZ5oQcmHo0mqr6kdFx4uRoZdGnv
+	 MCoS5JGqxs1xS8Ea6mRqrD0TtcObOK43Nn4jewGEpwprojVZUFQxpKt0QM8TmD0ONfsVS
+	 ifogzyhVekoUgm37eHwXv/PX/2xGyEWIi5D8MmpmN3UHfe2+KpLqSA+cvx4uSd7kzFK5z
+	 F3aIxsEOwxdeWVjm61DU7wiw6rUW6CEoXmvlnc4r9u/IUHcDSXiDbW+zktEcF49mtjg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792543102;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=HXFVCDgnjjgxR9X2+oHJiKj4Y5WpimrH/aIfriX4MSw=;
+	b=LbZAYir3R7O4tq2tKVaS1dnWEGc0fo7oB00ZDBprCbZ1okcivwdy4+J5CePSPk7h0UKJ
+	 SsVhmFCXSQ3Mg38Z/BNXe5C8m1AUDjPTPgIOmNx0afKHFQ+Wvn9wO2vXU3yEZB8ZNCEmQ
+	 7E0UOBzUJ/atLC4h8vURqt1L70B1tTSXlYaORYgvJfWpWg3vCCOCLpkwF1OoR4ebdkQJu
+	 sMq3DR9Cab03neyuoJh0b74oiqfoXogmcl+gJE6k2Wf+TyF2no6QCp1UPFdHQFsJdcpTd
+	 qMc4E/4rD4EZIWIy77e59E5cqrk3jrmTdEgiXoY0gqVXBc4QQ7xn/RFEJ3q1xAbssUw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=o73MNKiJ;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=V0wPVRHN;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31074606A319
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 23:19:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31074606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6CF606A322
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 00:38:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB6CF606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=o/mCkYbj
-Received: by mail-vk1-f174.google.com with SMTP id 71dfb90a1353d-5eac4855401so37092e0c.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 16:19:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792538362; cv=none;
-        d=google.com; s=arc-20260327;
-        b=EZ6yN/31CPABApj/myZVv5u9r6JFtY67nnlecxTEZwEOqf1NPWTAQWzsIChGGo5V2W
-         Zkijy2JJKPRugfvo+KiJi5z15jMnCDeyamlos2KIj5z2HjNGQSN3jAMGSqqmzaorZCDH
-         DrXWG5I/VbsnGpa2BAxc6lHj5/7ISS9SQqr3HtOzGDgf7pYzgax0oT5Vcz5ppWu3anWt
-         y1rTZzujPbm5g5PXlaH1CwTQorbXIY6F/xX1wpchhnM+xvrXDe0D1gdzWyBpxOX9FqWm
-         lLU3typhhoe5RP8oBnwDJwbSK8yxNeK0u/Ii38hNOtZA48tB33POXEbbOHsghMvFUd7l
-         lUvw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=3uU5xVP514mUbrG42KDIZyHj9BphlxVL4c20+8k4/iw=;
-        fh=Qni4N+/vtu3pzJ4JuHMGP55MzwTbHmsS8X2SgCEIxEk=;
-        b=TTkSKjkNwgSGMYOpMv1dvBerU0F3kXUzxj3YGXIFYeQBi9NLAunmfj7fVqWUsvwpl7
-         YXr/GPPX29cYJmwQvoNA3A08a4WUmW9F0oDOcpE6X/7sPzmqCw5YsDkwL3S8rhgKd9/m
-         5R+HxdH/YQHIbkqMejATyREesKzMtjJkqFYFVEYS8yc3Xq22yza0piqFmOopK3cnl6E3
-         pM9YoYD+6N7++q5B1JYSHhrC99GkDtlcDyhL7CJWSKtRaccXhI2JVxErn8JGlnlu1sSl
-         600SAXX7cL/t49BqlxqWm+Q/L3sdfFWlKMenkeQCQA/QoBjnCnjyuKghlft/gcZWgVh+
-         1RpQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=o73MNKiJ;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=V0wPVRHN
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69KKu9kN1281410
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 00:38:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	HXFVCDgnjjgxR9X2+oHJiKj4Y5WpimrH/aIfriX4MSw=; b=o73MNKiJFJnuycX6
+	l2U/FRlMksGAHvhPprSiOBdS/qPPArjE2CJD5qDOh3kVEsCL5dGvtWVXnxCsZMaZ
+	hCbQvZ6IPJP1zq2hf8qmIksXNAO6n2UMnlVifIME7QtVmHDJgeQ/uyj1PNL+ZDwN
+	MO1S4bRqSOvl6DSHxDua9GtTIscdE7zNixc+oXCFIs2J1e7iSH+GSpKaD8+HlcUp
+	q6ClQtwB9tF+r375pX+bo4pUQ7rx6pMhYsxXuAfxgtQaC10fD5a2bV4zKKfuY+rm
+	7bynBTr2f1qgJ+VWe6oMs7tI25tM664OS1eH1GLeK8chClc8OcgK1cjAj0MX8yyF
+	9VcZkQ==
+Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4he7hvanua-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 00:38:20 +0000 (GMT)
+Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-147be78cd56so587727c88.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2026 17:38:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792538362; x=1793143162; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3uU5xVP514mUbrG42KDIZyHj9BphlxVL4c20+8k4/iw=;
-        b=o/mCkYbjeY34X13UKJqUfc1LQSsmKds7DQlCX8Xv/aDnCKR/rijpjytefciSov8WXn
-         7I+TplU1+FTIj5BY2L9SuUgrdP8zwvkNoFJNGWBrMe5zk6FUKTSktKtX6S7P5pt2HEDh
-         4ZLwCsSC7622r/kwX7/0yND+BKIr2xwjAbHg67PhzeOfpjYONYl2bHJSSsG8j0moGUO9
-         SJsuO2K6/Ll34vjm5vG0xf0OmefKbCCTurKvnAT5UXHR6vChEPnxIhXl+FQof/gIWxie
-         kD7hx8Z0e6/EZEwo6QhOfRG3nR9A5PT2bXfFa0vK2NN7IPjhBr9DMuTH7q8Vo4pQFFge
-         8LCg==
+        d=oss.qualcomm.com; s=google; t=1792543100; x=1793147900; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HXFVCDgnjjgxR9X2+oHJiKj4Y5WpimrH/aIfriX4MSw=;
+        b=V0wPVRHNOO7q54IS/YPtF+iyodsmr9y4mO9OjdgoxLGs2wxbieZUFlCHBNA9ENGyZo
+         ZhftugyKM5OM2x1UkoEk/fvhiejXufRmLzaPGPBiLp8QzKxdQLp3VONnPf+CNdsQp8AI
+         R7BDt5JOwUFeUQXeGaomd0N/i3VzbRNlZf5l6KKQKhBPwBFcWkXUebvuUVAEN38+hcYP
+         +YFh3wqTaQB4saCZSlCS8qOXp4d3N5eRK34/+IylzTqVltBuIsxEqn2TtSAfmAaYXPM8
+         W0hbZqOB0ue+Z7KUF6sKOH3w43pF1oT7Vt1/b7U8oiADLpanUvGQmjGTTczthhmfPXs1
+         aQzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792538362; x=1793143162;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=3uU5xVP514mUbrG42KDIZyHj9BphlxVL4c20+8k4/iw=;
-        b=eqIxYgmg+vApYfOpiBkSQ1c1hU4nTDDUjzj6HttJ4PuJFmN4C3/39xAi/h2t4EcSuk
-         xbrJO2BqdxBuGD0FTLDnrZsLFHcsJkNL2OK9XnWQJ0GHOGDB1E4h2qpRM2jFz/lbX96O
-         69zqIpm9mF4htZUl3E+vMgwA2jHGswyOnuy8vg294g7oweebC+TBEgnn9SNmT0jkKtqx
-         3M/x0vQYRoG4sbNi8SpjdkKD6P0aHA7eNgH9ebCs/GtiA/TszNxwgmsE9T/zn8OB8o0v
-         h6j2K4bgjVXWZouMfIwvYjDRgwQxmZrOAXUhL90ukvZ8rQtew9Rwyf5iKzPoD/EA7Rs+
-         bkpQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwnMYEqtU9H+w/hxZnfo2aJLSoYwRFBMpEWgDb49TyMKmLYAsQCZluXydfDWgZfE/i5pMzKTTEUb8m0os0TPg==@vger.kernel.org
-X-Gm-Message-State: AFq9FYKxtOi0VjZLyuKJNAotzKaX/I5LZ3BHKAIAxnhWhJmUi05mWNQg
-	jcjRTCBAiw/JTT0/Vr6LE6Ewnmg1aNpNTh3m8rlYUb65pB20weWLPh2HnTgd11xRaAAV/ippFDz
-	opitmGJjOICXqyoLOjM451G/dv+BmVJ1bKB6wl7qXig==
-X-Gm-Gg: AYBFou2q3LFkfDGAfJ8Fdlhy+Q4HWx5HNJBJ04wzzeFpmDrZeWLowXKDD38MXYgYIZQ
-	NPr/fw7PicTSDXmYxR20drUxRDEBJVGjn4Ox/CwOcL0byxpI+LL7ZtscGgyOyNDhqWil1GWL0bp
-	Qj159ITZv8laZx0gaSqmeb4DJ1cf+mStFqTDRf++hLoE7FX7zIY/t/QCnrO38a/1//r7C0RcHoW
-	TquoXi8novGfI6YQ+942MOq0sQWuOCdHOMTA302x2llEqgmUL++86qFSYflIMLP0owSFrBn1ZAq
-	ww7QCkbLUWhLPvbnA5jEFhBsGhltlUVsmrcf+1PcTtmPHqZj4s5nap0ofsI3z6n0NJtWvXJFRwC
-	y6QgxT/MvTyh4WoVDAn95
-X-Received: by 2002:a05:6122:3c41:b0:5ea:a173:65f4 with SMTP id
- 71dfb90a1353d-5eaebdbde23mr117013e0c.11.1792538362059; Tue, 20 Oct 2026
- 16:19:22 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792543100; x=1793147900;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HXFVCDgnjjgxR9X2+oHJiKj4Y5WpimrH/aIfriX4MSw=;
+        b=VvwFU6AT7kS349hPVPB1WR6a5UIlUrNDOK/4bE4IvjwLVqCUuV5yA57RDhhPILvwGw
+         cL6bwg5I3RGa4OKjTdoy6RuZr+2xAR+Smqr40pVGf6ovIhkXkPbPkbY0IhrJAzNdAGLd
+         6suAQ6VxJxdK6tOg+bqoEltCvdlARwN9TNUrmGg1y+GvyP1t6FWhtNUlAj/vCN98b30W
+         i0qIQ4rvgumTL3S+eUTQeXzH4NfZwehFALSL/7yNcmCYseT1T7v2SzpMJ/SvwsFulOGy
+         VXPQayPQtVgZfM9h6E9Q/r+4nk4jiXVgxmpKRd5h9mRlZKxXEx/CvR9jIqZvC3QicvNa
+         xTQw==
+X-Gm-Message-State: AFq9FYJ71dZZDYb05bpvDvfK9uy0vcA6iBzGk+GBzah8kQSMBno4YPfw
+	zt1syInRDFPw02LtC7XxpubNctXLo8sNSc7QUskQTFJpWJbs9FbVJ+MQ90gW13gUiZ5POUkI/kV
+	dlHpMAsSw3XxCc/6+eRB0sGr88vCseHXhBMLXhz4NDtBZYZUDGSycgF9PGLKFoA51IK573Q==
+X-Gm-Gg: AYBFou2fOvi5Aa1mgdIk/O6lFVoik8dASPshvwDGxCNBgiDJ+LYRFxWPjapebHVFaz3
+	5w37hWNpV2AqxPRu4Jk63w+ZCjdPghEnmjcKdRsi7srQu3eaKIqOhMp21OSBwfoZYXfAgnJ1wEC
+	n7/6zsn8FhWGxjoSrvyAb9djAlgCZ5IMSEbI+R0eAVRYG1afQghJPmObzBPlbayxlcAsBoo2D3K
+	z3REypyhM+ncpP01e2kndNu6gzGDTGaJSOeL9e/BpCaIGn6+POGrrRtmVnf+1FaiXEVFOuuwjl5
+	9mitrGJBIMP2v16VWRg0p6plnwWXycHlHYe0M5jUPKvS2fjIrhHZfWaj4KbhNPBLmuogyytBf3U
+	YZd0/5Q8BWZ12Ty1rurj6WwhWVmxZ/vhzg7l999UsepmCeOtm8XvO/lvnbw==
+X-Received: by 2002:a05:7023:a5a:b0:143:6080:668f with SMTP id a92af1059eb24-190a6adc7b9mr501684c88.7.1792543099860;
+        Tue, 20 Oct 2026 17:38:19 -0700 (PDT)
+X-Received: by 2002:a05:7023:a5a:b0:143:6080:668f with SMTP id a92af1059eb24-190a6adc7b9mr501614c88.7.1792543098127;
+        Tue, 20 Oct 2026 17:38:18 -0700 (PDT)
+Received: from [192.168.1.20] (33.sub-75-218-193.myvzw.com. [75.218.193.33])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1903d3ae06fsm1928326c88.19.2026.10.20.17.38.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2026 17:38:17 -0700 (PDT)
+Message-ID: <1e1238a6-399d-4cb5-a5ab-756ccac64169@oss.qualcomm.com>
+Date: Tue, 20 Oct 2026 17:38:16 -0700
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,25 +112,168 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261020152412.95560-1-mike.michalo@gmail.com> <20261020224644.3858280-1-mehmet.fide@gmail.com>
-In-Reply-To: <20261020224644.3858280-1-mehmet.fide@gmail.com>
-From: mixalhs <mike.michalo@gmail.com>
-Date: Wed, 21 Oct 2026 01:19:09 +0200
-X-Gm-Features: AclHuK-7YZ-INOiAiQfigqH4orU9yhv8_40k6xqUsVQsalHOxRswe7LmiUqLmVw
-Message-ID: <CAO+rqLgp8ZfogBbOu4rD9N9w9=FdNO+wXca4SR77NV73EGpOmA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] wifi: ath9k: fix WMI command response handling
-To: Mehmet Fide <mehmet.fide@gmail.com>
-Cc: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>, 
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>, Pengpeng Hou <pengpeng@iscas.ac.cn>, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	mehmet.fide@screeningeagle.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath9k: stop WMI event tasklet from rescheduling
+ itself on probe failure
+To: Deepanshu Kartikey <kartikey406@gmail.com>, toke@toke.dk
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+References: <20261003021147.7461-1-kartikey406@gmail.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261003021147.7461-1-kartikey406@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIxMDAwMSBTYWx0ZWRfX3xYABhZtc2K/
+ Gg1PNZutq0+JmCQlWniVemz59hroN5QzdekUOfprugdlRWgt53DWmjtyywCMewZltl2wVIgdiIS
+ GZtDIwfO3kDKdtFJaCCR0fEijYLBA5DU7B1hSpEaBHoKKRLZT9lSKQDKlhw15lOfxvCsR1ciGW4
+ X94W3VxCxNLkgSL4hqkJVjvgRWf6DeAQFCY3aT0xsWqhovfxi9V+V7EqdY5Tntvvx55ko3aqyYY
+ 9oIWqX0/DdnrNNgWN2yFweXFN2robCILOeLmwLKzxt5QUH3roRfeLHd7ftDFiP/epH7WpIJL5J0
+ jFZhO1zfrrXT59x1PiGrrKTYUBN8UNozFfnTAWsErAJYYbA2h9H87ajQ6WGd2rzLZUFx2RimVZa
+ fLLMsfIUQjhHb/Viw06xYCMmgfzNYGD51NvBcV7OHDFVxTgjxDbDd3h6zmhYEq8E9H7BJ0fI5ra
+ VIn6aPaq4xKh/jjVuBw==
+X-Proofpoint-ORIG-GUID: kIjqVuBwTQihr7169uN2CI7HzoVNSbM4
+X-Proofpoint-GUID: kIjqVuBwTQihr7169uN2CI7HzoVNSbM4
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIxMDAwMSBTYWx0ZWRfXymb4LpUouesi
+ FWut1VXoy6xcYY5NJN/JfO8PU4EPny0zxBukynMLRjZnLHrp4Avifx1lNmusErEqtPgSyHlttaI
+ hLQ1SS7xbYgC3M/wTVafXZyK7EIEtus=
+X-Authority-Analysis: v=2.4 cv=NppE4MdJ c=1 sm=1 tr=0 ts=6ad8097c cx=c_pps
+ a=kVLUcbK0zfr7ocalXnG1qA==:117 a=AnolQpdaNwb4XK4FG+QP+g==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=edf1wS77AAAA:8 a=hSkVLCK3AAAA:8 a=pGLkceISAAAA:8 a=_LGFtKlyWMYaSsMoYZQA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=O8hF6Hzn-FEA:10
+ a=vr4QvYf-bLy2KjpDp97w:22 a=DcSpbTIhAlouE1Uv7lRv:22 a=cQPPKAXgyycSBL8etih5:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-20_04,2026-10-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 malwarescore=0 spamscore=0 priorityscore=1501 clxscore=1015
+ suspectscore=0 phishscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610210001
 
-On 2026-10-21, Mehmet Fide wrote:
-> Tested on an AR9271 with firmware 1.4 as an AP, on 6.12.113 with the
-> revert of 93ce8ea70451.
+On 10/2/2026 7:11 PM, Deepanshu Kartikey wrote:
+> Since the init guards were consolidated, ath9k_wmi_event_tasklet()
+> reschedules itself until priv->initialized is set. If
+> ath9k_init_device() fails, initialized is never set, so the tasklet
+> keeps rescheduling itself while the probe error path calls
+> ath9k_destroy_wmi() and frees struct wmi. tasklet_action_common() then
+> touches the freed tasklet, causing a slab-use-after-free.
+> 
+> Make the tasklet drop its queued events and stop rescheduling once
+> wmi->stopped is set, and call tasklet_kill() before freeing wmi in
+> ath9k_destroy_wmi(). The probe error path already sets stopped and
+> kills the RX URBs first, so the tasklet cannot be re-armed afterwards.
+> 
+> Fixes: 1af8dc9ca726 ("wifi: ath9k: Clean up device initialisation guards")
+> Reported-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=e91dc13b1b37759b3d9f
+> Tested-by: syzbot+e91dc13b1b37759b3d9f@syzkaller.appspotmail.com
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/wmi.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+> index 4a08babb6d9d..f8b174b0f209 100644
+> --- a/drivers/net/wireless/ath/ath9k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
+> @@ -122,6 +122,10 @@ void ath9k_stop_wmi(struct ath9k_htc_priv *priv)
+>  
+>  void ath9k_destroy_wmi(struct ath9k_htc_priv *priv)
+>  {
+> +	struct wmi *wmi = priv->wmi;
+> +
+> +	tasklet_kill(&wmi->wmi_event_tasklet);
+> +	skb_queue_purge(&wmi->wmi_event_queue);
+>  	kfree(priv->wmi);
+>  }
+>  
+> @@ -148,6 +152,10 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+>  
+>  	/* Check if ath9k_init_device() completed. */
+>  	if (!smp_load_acquire(&priv->initialized)) {
+> +		if (READ_ONCE(wmi->stopped)) {
+> +			skb_queue_purge(&wmi->wmi_event_queue);
 
-Thanks a lot for testing this on real hardware so fast, Mehmet, and for
-covering the duplicate-response and sequence-wrap cases too. :D
+Can you check my review agent's analysis:
 
-Michalis
+Locking inconsistency in the new tasklet early-exit path** (`wmi.c:156`)
+`wmi_event_queue` has two lockguards in this file:
+- **producer** (`ath9k_wmi_ctrl_rx`, line 249): holds `wmi->wmi_lock`, uses
+`__skb_queue_tail()` (lockless variant)
+- **consumer** (tasklet normal path, line 164): holds `wmi->wmi_lock`, uses
+`__skb_dequeue()`
+- **`ath9k_wmi_event_drain()`** (line 137–139): holds `wmi->wmi_lock`, uses
+`__skb_queue_purge()`
+
+The new `skb_queue_purge()` (locking variant) uses `queue->lock`, which is a
+**different lock** from `wmi->wmi_lock`. The window between
+`ath9k_stop_wmi()` setting `stopped=true` and `ath9k_hif_usb_dealloc_urbs()`
+finishing means `ath9k_wmi_ctrl_rx()` could still be enqueuing under
+`wmi_lock` while the tasklet purges under `queue->lock` — two different
+locks protecting the same queue simultaneously.
+
+It works in practice because `ath9k_wmi_ctrl_rx()` also checks
+`unlikely(wmi->stopped)` at entry and bails early, but the locking is
+technically unsound. The correct pattern (as used in
+`ath9k_wmi_event_drain()`) would be:
+
+```c
+if (READ_ONCE(wmi->stopped)) {
+    spin_lock_irqsave(&wmi->wmi_lock, flags);
+    __skb_queue_purge(&wmi->wmi_event_queue);
+    spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+    return;
+}
+```
+
+The `skb_queue_purge()` in `ath9k_destroy_wmi()` (line 128) is called after
+`tasklet_kill()` and after `ath9k_hif_usb_dealloc_urbs()`, so no concurrent
+producer can run there — that usage is safe.
+
+I always have another agent verify these automated code reviews, and my
+verification agent concurred:
+
+Issue #1 — Locking inconsistency at wmi.c:156 — Valid
+
+The review is correct. Confirmed from the live source:
+
+All code that touches wmi_event_queue uses wmi->wmi_lock with the lockless
+__skb_* variants:
+- producer ath9k_wmi_ctrl_rx (lines 249–252):
+spin_lock_irqsave(&wmi->wmi_lock) + __skb_queue_tail()
+- consumer tasklet normal path (lines 164–169):
+spin_lock_irqsave(&wmi->wmi_lock) + __skb_dequeue()
+- drain ath9k_wmi_event_drain (lines 137–139):
+spin_lock_irqsave(&wmi->wmi_lock) + __skb_queue_purge()
+
+The new early-exit path (lines 155–157) breaks this pattern by using
+skb_queue_purge() (the locking variant, which takes queue->lock — a completely
+different lock). The race is real: ath9k_wmi_ctrl_rx's guard at line 238 is a
+plain read of wmi->stopped (not even READ_ONCE), so it can miss the
+stopped=true write and proceed to enqueue under wmi->wmi_lock while the
+tasklet purges under queue->lock. Two unrelated locks protecting the same
+queue simultaneously is unsound.
+
+The skb_queue_purge() in the new ath9k_destroy_wmi() (line 128) is fine — it
+runs after tasklet_kill() and after URB dealloc, so no concurrent producer
+exists there.
+
+Fix: mirror ath9k_wmi_event_drain's pattern in the tasklet early-exit:
+if (READ_ONCE(wmi->stopped)) {
+    spin_lock_irqsave(&wmi->wmi_lock, flags);
+    __skb_queue_purge(&wmi->wmi_event_queue);
+    spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+    return;
+}
+Note flags is already declared in the tasklet function (line 150), so no new
+variable is needed.
+
+> +			return;
+> +		}
+>  		tasklet_schedule(t);
+>  		return;
+>  	}
+
