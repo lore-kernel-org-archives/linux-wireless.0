@@ -1,47 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1792580264;
-	b=5TWF5lEAi2yRAn2HQXzrTUSfAmp+UG+712RpitOxsD5jmBbuk0yCvb9PrBHhBHJMhWtt
-	 KNsQR1TGEAPtUqFIh1kx2y0l5mua3hM8X88A2ReIrhX11P+7MkoY0MzrPuS7EpkpA+wYS
-	 E2QtPCK8hYsXeAcQ6Ltw5zHungsmQCaKUJA0amhk/IU6BeXhk8aVYj5TOX9zH1cu4htiU
-	 mrdfxxVvR9SNODJ4P8zic5mGH0yoQxnJDC+dB2/yWQ12SloZBxUViafYms+5jz9nUAnWq
-	 QqN2v7f0R8Q7sfE/zT1jD5kvxvhxlNXiadMHMXIqIF7DCceCGkbBZPzPur2ncD1qYDg==
+	b=BceEfluTwYOkFuJVeV0/bFhvflwEYKdQ4azo2qHAHgRQtI+aYsw6L4lztDFtAjT3NPT5
+	 NU1drXBinRPRCqjxK+N9d6of6+1+122yiFG7sblFA6t9O14IEAa2E91x3FHtM2hJpeiFL
+	 CbPG9Qk8kMwc0NTre9NKAN4l7Cnm4pV70eOZ9tUQ6Nw9UrBS4UjKNfv+916TP41QlowKB
+	 h668woTLaXBbL9wK2oIR8VodZzTaFEz5kVgewDk8u9wLk1X3tHw7IJOtSaL2eDhRkUJc9
+	 BsQrTzzpRmVHNnHmdLdL3HO/DTlDFMQcmUPWJkXLl9iiDUDrLRpN1MjwbbEYOnd+dqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792580264;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Subject:Date:Message-Id:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=jmjusv+/TilRvZcy4hr7+HvEUCRXyzMIezmOMmn48E4=;
-	b=AQbYdTsZwZ0DmMuHKd1lq9W+OiNKccfjPjLbmLpqh92DJlbPEkJ21RAghP+5Z0KT7GhD
-	 S0r4xJ/nAZB6JN7d4TSeC8fo6m/SaG8ipRuLCOZuLBUUpMmMrDFHouPduNiaOw/30xhJo
-	 cF19kfiBCSDzKySMtRtfjvEKjx11lKQPL+VxJifgCrpBfJNu0r//lygjVsP0aKY68mhI7
-	 drouPllGo8z2NzARh+UGA66lNo6FNvD+O0s0QKKFlnxSvX9SSyHDAq2rEIh3JIRGz0tpq
-	 oLIrJkM16IZf4p1YJ1Ubeuk/SQqk6vAASCbbNqwdWwHwqfN4RdUHq0qWZB/eyHhIsTw==
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo;
+	bh=fRs+dp/44SrGLjjHHguutQnMLuK82bJeTnuJmmdtx2c=;
+	b=GwFfRBql52MpZKmCXA3WCce93vBoAOcDHwofnEabu0gswogbvbk9nWfL8WLXUlunqIOz
+	 NZ//v1GfBwUYwmDhRGjO9x+PsXK7AZn7KwE+MxPN05wrJaddfysaT5mHBeN/h3EVOq+OU
+	 Ny3pxIW5XAHuZrNapP6lv3Ap6AdY3wwbLbJViDBeS3o57V1Nf2Wy096fshG3gepOgck2K
+	 KlRhA0cPxd1X/aw50iIbhWKzbZiJonHsTNImqNLFr7KVBpJUokbGfs6h+A1t5pnrXmtk9
+	 F/hKzN04sR+MXoPsE0UQQG12bmssNjgHI37hjXpzkN/ltAxoxnjLEshnDofDCw03dnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=IvzovugP;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="XKD10/jR";
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1495606A31A;
-	Wed, 21 Oct 2026 10:57:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1495606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 104EA606A31B;
+	Wed, 21 Oct 2026 10:57:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 104EA606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=IvzovugP
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=XKD10/jR
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=jm
-	jusv+/TilRvZcy4hr7+HvEUCRXyzMIezmOMmn48E4=; b=IvzovugP2uPXzlP9SN
-	lomj1rAijISQFJ1claqNiVNkf2ChAbuKvSn5DYDooGPeX9ymNFhKfbxY8gfjpp9i
-	iG2nXLcz3qkEcw29uDO7E5NuDbH/5M1j+34+dpm1HXOePNxymbrJNLAwWCRf7ZAF
-	lLbK29/LJNWae6qJX5sEglmek=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=fR
+	s+dp/44SrGLjjHHguutQnMLuK82bJeTnuJmmdtx2c=; b=XKD10/jRABazCNIMJs
+	S7jMwCvVY8O3GY9nkIODN4njwP090Xl++9xjweyAXRYhInYOZhhQxFhJOUidHdlj
+	9ZqjveXIuqUQb/rJeiPg92QjY+i5eXUSicfAeF15EQazQ+CtMj0jLnza4U8Lc6hI
+	jt86mWQRGG/Aww/aZwHLHRjvA=
 Received: from pc.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3_1CJmthquYHTBg--.25487S2;
-	Wed, 21 Oct 2026 18:57:15 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3_1CJmthquYHTBg--.25487S3;
+	Wed, 21 Oct 2026 18:57:18 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Felix Fietkau <nbd@nbd.name>,
 	Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -50,19 +51,21 @@ To: Felix Fietkau <nbd@nbd.name>,
 	Sean Wang <sean.wang@mediatek.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Howard Hsu <howard-yh.hsu@mediatek.com>,
-	Bo Jiao <Bo.Jiao@mediatek.com>,
-	Peter Chiu <chui-hao.chiu@mediatek.com>,
 	MeiChia Chiu <meichia.chiu@mediatek.com>,
 	StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
+	Bo Jiao <Bo.Jiao@mediatek.com>,
+	Howard Hsu <howard-yh.hsu@mediatek.com>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 0/2] wifi: mt76: mt7996: clamp beamforming NSS
-Date: Wed, 21 Oct 2026 18:57:10 +0800
-Message-Id: <20261021105712.4124467-1-yaojiale02@163.com>
+Cc: stable@vger.kernel.org
+Subject: [PATCH v2 1/2] wifi: mt76: mt7996: clamp VHT/HE beamforming NSS
+Date: Wed, 21 Oct 2026 18:57:11 +0800
+Message-Id: <20261021105712.4124467-2-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261021105712.4124467-1-yaojiale02@163.com>
+References: <20261021105712.4124467-1-yaojiale02@163.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -73,39 +76,39 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3_1CJmthquYHTBg--.25487S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWruF1fZr1rtr4DGrW7Ar1UJrb_yoWDWrg_u3
-	yvyr95GF48JFWFka1xKFn7Zr1Ivay8Wryvkr1jy39xW34fArs3WrZ3tryrXwsFgay8ZF15
-	twn3Xas7Z3sxZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUj48B5UUUUU==
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7wya1GrYmoxBBgAA3O
+X-CM-TRANSID:_____wD3_1CJmthquYHTBg--.25487S3
+X-Coremail-Antispam: 1Uf129KBjvdXoW7GF1kAw1UXryxuF4Utw43ZFb_yoWfKFXE9F
+	navFnaqFW8Kr10kr42ya9xurySyay8XrykG3y5t3ySga17A3y7urySvFyDJrsruF1xZr1U
+	GwnxXFyjkayagjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUbOzV5UUUUU==
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC7w6a1GrYmo5BKQAA3h
 
-The mt7996 beamforming configuration converts a peer maximum NSS to a
-zero-based column count.  A peer may report no receive streams for a
-VHT, HE, or EHT MCS range.  Decrementing that zero value underflows and
-can send an invalid beamforming configuration to firmware.
+A peer can advertise a VHT or HE MCS map with no supported
+spatial streams.  In that case mt7996_mcu_get_sta_nss() decrements
+zero and produces 255 for the beamforming configuration.
 
-Patch 1 fixes the shared VHT and HE MCS-map conversion.  Patch 2 fixes
-the corresponding EHT conversions for 80, 160, and 320 MHz operation.
+Return zero when the MCS map has no supported streams.
 
-The series was checked with scripts/checkpatch.pl, and each patch was
-checked for application against the common base.
-
-Jiale Yao (2):
-  wifi: mt76: mt7996: clamp VHT/HE beamforming NSS
-  wifi: mt76: mt7996: clamp EHT beamforming NSS
-
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
-Changes in v2:
-- Correct the author and sign-off email address.
-- Add Cc: stable@vger.kernel.org to both patches.
-- No code changes.
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-v1: https://lore.kernel.org/r/20261019093307.1869749-1-yaojiale02@163.com
-
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index cd7587ce5b8a..e6243dd33c31 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -120,7 +120,7 @@ mt7996_mcu_get_sta_nss(u16 mcs_map)
+ 			break;
+ 	}
+ 
+-	return nss - 1;
++	return nss ? nss - 1 : 0;
+ }
+ 
+ static void
 -- 
 2.34.1
 
