@@ -1,107 +1,154 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.3
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.65
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792593733;
-	b=3+6YlGhXfxc/LSOfEWfS7Ff4/Ey77eC1vx+g65MY4M0llmPJ9pjO3xN9e3HJZxg1aJlD
-	 DEAVFtv7EjL6qBqjIBcOFg5m2p4W0Ho3xmtekhwIt+TfBio6iGogBMHpwQcjXF4/PlF8a
-	 s90UZxRF57rKsevVjeXry4mkRiO2T5zaVUQoKsqAAlY6MtfZ/Cl7hBMJjPrN1HhqbRemP
-	 jJej5SNex9VPD+9fy70yXC3CyHk0s0EFkbn6xuiVIB8IK53KbxQ6weJKFC35eO/RS8xOM
-	 abWnquYABOW0TCYuavJn5f3WMYF7nzcnnqz4ojia6FoRFpmnd7vFBXGCfYrBKHEdU2A==
+	t=1792594650;
+	b=wkY1pYZI1+uKlZZ+0jXIWFFjD8mRhv6x0VwEGvAHUIudDhM25MFgLIIFt0f8TkwvH7Gf
+	 y2evg9WWQMEjP567nA/r47KRt+3ohirLlW8C8WwdbLh3m9xxlOMSjth75EvchE22HVh0p
+	 ErIyG9W0P4ZgCURnUt9LBMCxlNadpQLz/eJ2EzHGx1aAvXPTdtvkFYFPf1INd/pFO0R3u
+	 Mb6pfUgVOGgn5bWsqZW14+hytDWsOngiLdNDhlgHJpCkcCMW8u1ZYcLilbmViy4jcm1wh
+	 pdQcV6pZupQ2dQ5iwPp5ieeuW15NLpoah75JT9GxJth9Ok6+M7Akxg4+JORqtuY7ZFg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792593733;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792594650;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Reply-To:Accept-Language:Content-Language:X-MS-Has-Attach:
+	 X-MS-TNEF-Correlator:x-ms-publictraffictype:
+	 x-ms-traffictypediagnostic:x-ms-office365-filtering-correlation-id:
+	 x-ms-exchange-senderadcheck:x-ms-exchange-antispam-relay:
+	 x-microsoft-antispam:x-microsoft-antispam-message-info:
+	 x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:Content-ID:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=m3CxB6xtmT9F0ayB3I8efdWp7E/o9TIKLlFpWK6YibE=;
-	b=knLJqq1uniiWwFtvKqxb92YUT70OzeUAfQ8w8ZtIEVFOXIZnm8vRwfpzsOzoRO6fP5HF
-	 wqCxYrxCU9sKZF3VSqIsu8CkCLvJILBvwq5U6ceG7Y7fUHE2uXqvM53t3vnNbcbnNNkSp
-	 p/zaP4mqq6EkAVcrov9ZSri+vxexVmbBgcLQNwWKN1e4PQjzM18n0sqFKoMU00/e+1r6+
-	 hatg+A2ispu0wjm0IVaofI5BKlDymgI99qm8ClFn43ElUfNVarJMjl9GE8ZYRdzkjBBKT
-	 Mo2IiIlKyEBB+6h0Irw3sjyWlrEhYUgOIu2gd0IB4poyLDSnzCsyFyaMsTOf3V+gM6Q==
+	bh=pxPz4dsD7KBNS5GpMosBUNNirTxxaUoPfbHceUQQVE4=;
+	b=fH4IvaHJPQryWAB2myl2NzxvxIgrMXrr193VjrFgiGew697lu0UW6B43FNkqu/+uMy+/
+	 BLtdONdWB0jlgtRjcM0+CUWTvafaftKkHosLJIVGpZXq4wyySCJmXJl2mXHyaGLMemylR
+	 BycVg/3PTstqV5t6+pvUgUbVrqCc8jPiDCcl08qzvShEqPZ+/IgrEA30hhplUOVkTLHNg
+	 ZqH1bZLHjgnSfLXPjkyCbODMJg5wBrDF0yReCha3ZSJIeXkTVv2Jgl5PE+MIP7nC7vldP
+	 VnpYRhbGIO+8SPmQjw8yHu3pHFISWLaZc29dIeTnBfHQv6w3tqvFlHtMyK0DGkQy9YA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=F97FEM2w;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.3
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010003.outbound.protection.outlook.com [52.101.193.3])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="ea/fW3do";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.65
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011065.outbound.protection.outlook.com [40.93.194.65])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6AE2606A324;
-	Wed, 21 Oct 2026 14:42:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B6AE2606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F010606A31B;
+	Wed, 21 Oct 2026 14:57:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F010606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=F97FEM2w
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=ea/fW3do
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HJHYsvD8aNOT57wwQzfr8DrQSDHTUuOmAbz8b8GptFE63wFP/7WmaRAMfSD7SM+MpM02mwWlEk82WBvepAW8kg8ipociTRddgqzTQ92ftvMmmBQl7n93lkqTSqXsx9qocHs6b4PP469ciGDXUB7rOdyn5Fvz2a9u6WjAFjssZBySlw3WtnlC+fFRoJvCMNVAH9Lt+yiijfgMg4TLvVt1IpoOTFtuJQfcbsjLg/AzcscXEdehuOaSQWnZ0zxjx5E/+YSovr8bzPo8+B0YdJt5gKTtmeUHJ2hYEJEp9mFXAW8pCPJcyT+tEh+DkTun3JWnjiOKgo5awsKd4JUeLmSiPA==
+ b=o8SPBIk+w8IFAhmJcyTTcUZBhiDyW+ZEIHBIVlSYsCmAhoukBThOmsfJScmJq71D0jPUWXSl0mvtKZh/NzoN3xXg/K+/fvNzlqhdbHP5d2fxqXW2+ZMHjKPGjMS9cczSCejNVky3QJBB6r7QIZQ2KYN6lfLmI0aDY3acJNxGAJcljlDXSPaZP3sAMfAQ4+xXUgSVPria2dGu5NGiP+GgsIbrmEYjqnUnejw2HN07EhIcf987/s68ecV149O3N+F8gxs8zi9obDhGiEdn7VVlM1c0VVFAEFLGmJe4RdyIBXJmGkUlzbtxI/M72ntPFmiGFXtcRAxIyFy3BVkz0SU7qA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=m3CxB6xtmT9F0ayB3I8efdWp7E/o9TIKLlFpWK6YibE=;
- b=Ux/L6GUrX0NytWiymmnPwsnAkihOkjKX1cPpORBm/7ec4dImN7tE0z/E59D7x4mYkOPGegeYbhFPNMtM+X6MMFEwuY1f/wEIGmtolHYhAezeOMprUeGVkoqPbEUJ0jfO/O0QRi1LV9+DiuywDhVXknJoMEsk/Bx2fIgiN8pzWoN7FrNA8dr10NxjLLQvyuSOakyPt/CvMyPd0z6ZylqwmLm6twa2pdMZ760NWghqjZPXi+W+2cuTmPCAf8e3XEvQx9zPTO7R2Tw4hIMdwq5GlatjXTJHiYY71pu2Yj8GlQGPmKxC2ieh50M+7jmDykSLQ15sXQXcNV1Q9CmJCwqjsg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
+ bh=pxPz4dsD7KBNS5GpMosBUNNirTxxaUoPfbHceUQQVE4=;
+ b=qOITzNaLKwHyMP5LFscRBZ3/e96JFjlcb4CqCA2VUbeYIOsEviNaQqrmT2Raalysg4vgs52AGtiWv5djeHgSShLZEbepPjUxe3b4/Nwa6tB00PA1zgkKjh7cmGyQAuDMVyAlKGTzc4lJQ+6Ztvc2ODKGfg1hgKinzYbgjUDyRhzK1OOQ68Z9j3NwSPbmbrRJF85KeqezwAAgdko+x/U94S2ol5yHaGCaWzcR1j7OdmWxKeCMMeIOVNRqKqdsvN8BUKD9xOTt15y7ta6NB0VrPbi7FL2S1hY8GQeK+1ejggzkeN2lx2NWKzYAZQOoHhM6b4r3LAe71s7g//9/dRjp9w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m3CxB6xtmT9F0ayB3I8efdWp7E/o9TIKLlFpWK6YibE=;
- b=F97FEM2w5ehNi1jeYormjkfRhvK3VzFwfYP0i4ionAfpGWF8XDkaRluWurlrYPv48dfTWx1eVnLzwA42ZdWclCWiBOjT7X5emul3xHFW/gdHzDAkl1LKSA887RL5+Ql7bu8Kr/9rku5HNVJMulOsfuIcpit8N0JvGWRXZ+O0EmCwPfuJFUBnU+v1okszpj4MkCZTTKwdbfPi7l9rJ8iVKLYBmdrF6xaWh4AC1n9+fu8/ENiMru+gZlOHwjjCaScjjwJkpU8RYPQlj7rCAHd/nM6THMpEfU8K5KL9i9jMV3NxDGyKkD3fTWw4kBgARnV8MOHaeCEluWJeOzbEqb1wwQ==
-Received: from CH2PR10CA0029.namprd10.prod.outlook.com (2603:10b6:610:4c::39)
- by SA1PR12MB8642.namprd12.prod.outlook.com (2603:10b6:806:383::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Wed, 21 Oct
- 2026 14:42:03 +0000
-Received: from BN5PEPF0004698B.namprd02.prod.outlook.com
- (2603:10b6:610:4c:cafe::80) by CH2PR10CA0029.outlook.office365.com
- (2603:10b6:610:4c::39) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.15 via Frontend Transport; Wed,
- 21 Oct 2026 14:41:59 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN5PEPF0004698B.mail.protection.outlook.com (10.167.245.40) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.546.15 via Frontend Transport; Wed, 21 Oct 2026 14:41:59 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Wed, 21 Oct
- 2026 07:41:32 -0700
-Received: from c-237-113-240-247.mtl.labs.mlnx (10.126.231.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 21 Oct 2026 07:41:29 -0700
+ bh=pxPz4dsD7KBNS5GpMosBUNNirTxxaUoPfbHceUQQVE4=;
+ b=ea/fW3doDx3G0fo4VC4mA7oLjXSLvzaA3zGZxg3kYMGBhy5poKkbS+9w1ckUyKblFyQbfk4+AaIBNk4/Xq75LKBZ1rBI1jJEFgtMEYEo6g5RZ3VR9tR7BxBqdi0c/jbumVe8NBaVH9cSALlp89rU4qD1733dN5l3pr4Rh0IHzxUb45YB4hw8PGWSuAyiP3jFdQQOOutJ3UKcnnsx/8gQTg64+I4yqabqNF8K6G2NifBdKO8J11fUehHKJtW7TLCABeApmD/V1UnfWkNculsARbekNwRJ4a4Ffj6u3cUCDJ8JOeNX49UWvyGwD892zMp4CZygSD+BKuFr727j7KEXqA==
+Received: from DS5PPF266051432.namprd12.prod.outlook.com
+ (2603:10b6:f:fc00::648) by BL1PR12MB5825.namprd12.prod.outlook.com
+ (2603:10b6:208:394::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Wed, 21 Oct
+ 2026 14:57:25 +0000
+Received: from DS5PPF266051432.namprd12.prod.outlook.com
+ ([fe80::9cef:7e0f:2134:13fe]) by DS5PPF266051432.namprd12.prod.outlook.com
+ ([fe80::9cef:7e0f:2134:13fe%3]) with mapi id 15.21.0522.017; Wed, 21 Oct 2026
+ 14:57:25 +0000
 From: Cosmin Ratiu <cratiu@nvidia.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>, Tariq Toukan
-	<tariqt@nvidia.com>, Carolina Jubran <cjubran@nvidia.com>, Dragos Tatulea
-	<dtatulea@nvidia.com>, Cosmin Ratiu <cratiu@nvidia.com>, Jakub Kicinski
-	<kuba@kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH] wifi: wext: Limit notifier event flushes to the device's netns
-Date: Wed, 21 Oct 2026 17:41:11 +0300
-Message-ID: <20261021144111.611840-1-cratiu@nvidia.com>
-X-Mailer: git-send-email 2.53.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Tariq Toukan <tariqt@nvidia.com>, "johannes@sipsolutions.net"
+	<johannes@sipsolutions.net>, Carolina Jubran <cjubran@nvidia.com>,
+	"kuba@kernel.org" <kuba@kernel.org>, Dragos Tatulea <dtatulea@nvidia.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] wifi: wext: Limit notifier event flushes to the device's
+ netns
+Thread-Topic: [PATCH] wifi: wext: Limit notifier event flushes to the device's
+ netns
+Thread-Index: AQHdYWpeg4JX56h4BE2f/Sg+OqSmL7cIFhaA
+Date: Wed, 21 Oct 2026 14:57:25 +0000
+Message-ID: <1f19a52be17394943b4269606719ebfc5cc99226.camel@nvidia.com>
+References: <20261021144111.611840-1-cratiu@nvidia.com>
+In-Reply-To: <20261021144111.611840-1-cratiu@nvidia.com>
+Reply-To: Cosmin Ratiu <cratiu@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DS5PPF266051432:EE_|BL1PR12MB5825:EE_
+x-ms-office365-filtering-correlation-id: 3392aaa2-3cce-4ab6-8da6-08df2f839e26
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|23010399003|376014|1800799024|22082099003|18002099003|10067099003|261009223027099003|11063799006|56012099006|38070700021;
+x-microsoft-antispam-message-info:
+ fvLVJFRFVhHl1SeqmUc8V7P+0lrY9Vhyz8TYBEvbeuB8ZoyH8UTtLtdqlCNN8HF9f3mgiH39H0QJKg/nmx7OL6w966Qr4gyrFrxIsz7PhsvVkqiHggsShto34Wy67T8dcePHIsWndY7II22IVUFuP+MwrtXdXV/cX+a4dgd1XsojLMwWUfYly7/xQUICK7UCoj+IBuxYplxaEecfqmLviMWKR47pzcQnJFIHBqQA+GoZsutTJGjFAjmXQBgR/LzAyy5BhMQ1ulAH2hnOb6t+vMbztC5wUYhBRlOhyrZT2OydDBZw7WOqkZv92CQAzaGsRGw4ypmEmZ5eyPCzyVW7oE6aUezO7as3R2CxzTzbHbx4rp8O6epqkb1xVlPpcvBHqkiRrQTDAF9r3UGNHVc+DYJQ5mB474/SXL7U8fxOujXkQHGXgqTaUMEraPtx15WQcMbXJ9w2f8PQry3QDSqpK7uzsJaYTd6VMZdyoNHqG56dT0Er+p9J9nHJYxaSpMUKg4C5FsCJFz75a8SnkFXEO50uA8vcBEHkzRMLOkYS4w2JZnaUumPNUp0nFcJfHhbuMIx76oQvaTycGVuUEx3cW7DkopVBKszfdmt2+p8IwuVXoYfzdB398v+Ibj4EO+EucnvGv9610YMoUjuaW/5los3qLTeRJVL9UIm0uJTR+nHZkAAqyTCZ8GqE+AxDkg309uHIELvibGl0mXfjhk7qYKOI8sep/uboA5XxlPf/4aY=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS5PPF266051432.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(1800799024)(22082099003)(18002099003)(10067099003)(261009223027099003)(11063799006)(56012099006)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?TXRneS9Ydll2bmFJWEpESXN1OUNmVE1sbEd2Vk5BMitOSzJsZGlDNjh4M1VH?=
+ =?utf-8?B?aU5xNGovOFE3UXVFeFgvaUhLKzZqaGQvYm16Y28valNuTXorYks0Q2FaQmQ0?=
+ =?utf-8?B?SDh0TjI5cVdtelVxdDRFMHF4VHlkakNtUnZ2YWJvOStYbFIwMGFnVjFGQmRx?=
+ =?utf-8?B?dmY3RUpiN0dYYm5rZlpBVXVPbFJSNmJra1FScDhTRG1GYmlPZFk0cnNCODh3?=
+ =?utf-8?B?cGJQQjhpY0MxZmk5dmRUYUQ3bnpZZm1FNHc3Sk5WVjlaYzFCbTRJaDRPSHR2?=
+ =?utf-8?B?WnBXVHF2aVNlS0xVVFh0b2ZzVEN3cTExdk1tY3pQRy9UYWlQK0o2UENDWEdW?=
+ =?utf-8?B?RFBaUGRrMjV6bjhyUndibHNreHZUNFZsamkrSmhDMFlzQWNZc0FyUzdBNEVR?=
+ =?utf-8?B?QmFEY0xWeDNLUVNBTWUvajB3SlhLQUJWM1AyWFZ3R3l5aDcxdkFOR2dIdnY0?=
+ =?utf-8?B?K0dUSXVpa1dvZzZ5TWRLb0dxSmJTd3N2V3BxbkRqcFVGTFVONjRaN2JrU05r?=
+ =?utf-8?B?R2tPL05Edld1M2ZjU285cGdoYUZ4SEJLYVVpZisrNzhSZHh0bURvam4yNEsv?=
+ =?utf-8?B?dGRIT1hJN3dKN2RvZGJod05iRWp6K0wxcWE4V2xZWUxpaWZ2ei9vY25GSWNi?=
+ =?utf-8?B?amlRZjdpc3hvL3NSaXgyZmJvNUx1MDJzK24vWS9hMWM4OFFWbjJjVnd5M1g3?=
+ =?utf-8?B?QkdSWEI1TTBXUzBRVy9udUtSQ1RXck1KdVBSOHQ2Sk9QWi9oc3lrUFBia0px?=
+ =?utf-8?B?cXp3TkxGZzBHNTNMallZUmRMckRnRVNZWEFDTGxrZHBJTzYrRUxVWlRqZ2xN?=
+ =?utf-8?B?SjhuTXFRRU1ObEJ1SkdLcFhrVnYzUmdwV2R5cjEzZnBTMWI0eVpjWFgydU5n?=
+ =?utf-8?B?a3J6dGhFenJSaktpZDhadllkVHByNE56Z0ZUTjNUN3dtSXhLd1N3RFluVTN1?=
+ =?utf-8?B?R3pwVWZranpVMm1jNVJxVm15bzdiWlpyaFNrd0NKQXdrb01wQzlsRE5DamNs?=
+ =?utf-8?B?WWV3eFFIUDNUaGZ3YndBcEV2QkFseWR5ei8vOU9UK1ZibXF1emFZTXpRUXEv?=
+ =?utf-8?B?bTZ0UmZmK01KekJhSjRVQWJxMEhLVDhHZklGNGJnd1FyQjFGY1Bzb2lkM3Ft?=
+ =?utf-8?B?SG9tWFgrUW8rZURTYUFvTUoxRlpaSWVKZ0pBcmRCTHF2WE9rakNqcTJuZGdF?=
+ =?utf-8?B?M2xYUXd6T2h1RkhQMHJQLzlHUFFDcklVVnR0KzJseFFKSjNYb3pJeSsyT1BP?=
+ =?utf-8?B?N0YxWXdMQXc1eHpPTTlEMmpkZDY2NGg1c3hwNXVkQ0IrTUt6SXJtYXFVMmx4?=
+ =?utf-8?B?Qmk2aUhvRUF0ZEwvM082V1B5ZlAwVUJZUnVYNE8wME1XWnpZNkl2M09YS2RJ?=
+ =?utf-8?B?cUx5djBucERXVFUrNHZwV3ljMXhWeE1SdUgwVmI4YWhDdW9qUTBaZkJ2VTlR?=
+ =?utf-8?B?TW1DcU9hc3YvR1NycFZxeGVhQXNYNUZqN09NV0ZDSkFSL3FvQjZNL0JoTXM3?=
+ =?utf-8?B?Qy9CdU9UU2xzUWh3YWtxVzJPMUtVcWNiLzlWY3NMYVR4VGRuUHlZZTlRdVlT?=
+ =?utf-8?B?V1VXU1FlNUN6Z3B5RTN5eUM5TDcvU0dWcmJiMVhSQnAvaVVlandwVE9JMUxz?=
+ =?utf-8?B?d0VGMkNBU005cGhBQlgva2NGcDRGNmw5YzhLVEFheGV5ZWJhRmRzWVJqeXgr?=
+ =?utf-8?B?OVVsQVRSSWpNaHlabFRXUEYwK0dpTUdpT2J1M085NDhEdU01VUNSMEpwRjRL?=
+ =?utf-8?B?dG01QXNQVnEyR2ZEMFR0MlhyckZtejlzY09Tb0pXR1h6LzQzM1pwVGxkTC9Q?=
+ =?utf-8?B?cFVFVnVNWEQwaWZsRVNzZDN3WThtd2tSclBlMjBWU3FVOWZRdVVqaW1DQXhy?=
+ =?utf-8?B?Y3FqOEtzbFBRbkt4d2hVRzdlaHdmRmdmOGFwRjVuUkV2NzFlU0xnOHBKOWNY?=
+ =?utf-8?B?OFRlU3hzbnl6ZDV1WTdpanBLeG1oYVZpNjdabjhibVBEYkFBaHN3RS9kSmQ1?=
+ =?utf-8?B?YXNpVlZMTWo5bmNOc2NqdUc0azNBNlU2NC9EYUlmZWVnSVdjay93U2dtSGhq?=
+ =?utf-8?B?UUREMWFNM05Zd0QyNGFSaTZOL1BEMk9jT1JHS1BhS2U1YVN0c3dlNkIzaXAz?=
+ =?utf-8?B?SStZMHZJU2tuckFWTWxjdWNvZkhQcXV3eUdBdU85RUNmRnYxb2hSTHBvSWlp?=
+ =?utf-8?B?ZVJFSlhadUE5dVAwM2VRbkRpVG5BZHhPL3dxVGlIVFlFQUlBdVFSRTFuZ05m?=
+ =?utf-8?B?eWpZMzNLWE1Hd29GTmlkSUM2a1MxWlRzYkxOdktGeUVaMW0zc2xJUFZkTXdl?=
+ =?utf-8?B?NElvTnZZMkhUQVhEMTZOWnd1Z2FVait5cWpvdXk2VjRSN05xa3M5dz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <90FCE945EFA3C74A9D4FD40C161AE4DB@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -111,178 +158,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN5PEPF0004698B:EE_|SA1PR12MB8642:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5cbe9952-e639-4491-9ec7-08df2f8176ba
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|36860700016|82310400026|376014|1800799024|18002099003|11063799006|10067099003|261009223027099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	yo7C++pO61iUZRyxolq9ltT2ovcsvkbGxUUxTqUiC0T8qOdHA9S7kLeOJyPFChK5YMeQ39bYUv32oFnmsycU7xRgeHz1HMRI6e4hCZZ+zlcSvpERPsdWCvGIffMt6cr8mixPNvRM7+T5SMx7aHEuxqn0FJ3hod6cEaXvAnpPWNu7C1LuqzKSJskuxghPcMwNwXaM72vZcIfF+vzusPUH7mraczvARU511SdI7zOYCQ0uYx1HQ1mrhyrDA9t+u34X3o8FkQVU0qXiRobZ3gTz2nZb5ub6ymt2wMGDZ/zogPHHfx2I3t0tOMWb7Sl6CK2XhjLM4dg8WDXy9+WFzrzUA4tGYVVPnSMGKwi4Yf25aLWJg5759KU0T9PdG0MIg455c88n/o4yfxN4Y4uIRWNH8C9p3SZz6QnRXfnk56A3/f0iWgs7d2uomZ+2tIjUgM6kffj7idFOZaXh2EbI+6FiujWNm1cUoMYWCFOeeaS9bKfiRdVI3IW4xZeVWjE0gO8wKMgP/iJ6A1t2aBr1K8jYkiV3V+Hxd0Jwq4kL4pdKzhhtKLF0bZTGFUKCborV9R610IK2OQjS9Qka9tlByf82jKDmHsokxRksK9/nKczZXzXDSHWnq/DViUkLY0tdEBRYVc6XU7lb5tJEP9jsCEIOMKoOwnBfmb4zff+ZLk9M7NN/GahOt6iY7WVG/0881VSgPPP22eCH3RK8uNIfe3bqCg==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(36860700016)(82310400026)(376014)(1800799024)(18002099003)(11063799006)(10067099003)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	dLRSYArC7yLuFVhsJ6ElTLQgOrmqZkM3NIQ7SBogCeAm/yJcCwKmAdsbLCDa9TVMs7k8KyVQIOQwvgZmyVFzo905WjvvX2eg8zeKZSetRyzJYpREaxxVdSj5M7ayqko9H6AjxCmXqir+YhZavMQs1UytvOHuOdZeDyYUz+nbmP8lkWBQrfIG1wWfHv4tI2NLFB55Zyd2lSDtrM31ELCa8Si2Y1fsDAPyDaTW+mj2OpCQdzAd6Z7yWxwxNQmwXU75BDM6/MzOwiUgond2AAMW6cJ/NFIhIauf8SoHUUeBoGnV/bfH/8gB51GMnWlUOPLH5G3FAmwMLOffrKsvCpY1gzriMcV1HLiMM5OwdYo0fPaHIA6H8fxvuinyu86UGAKOYYVU1JuShNOdjLcQAFKWUZro7mWeffZwWUuWVbR7z0PoeUEsjBhrHL0BMEpQnfeS
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 14:41:59.7357
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DS5PPF266051432.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3392aaa2-3cce-4ab6-8da6-08df2f839e26
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Oct 2026 14:57:25.0121
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5cbe9952-e639-4491-9ec7-08df2f8176ba
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN5PEPF0004698B.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8642
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: XPZiQ4NJu3RkrLQpqWP7uPvK/WndLB42XFsAzrwx1cEgy2pmgUwJIK7g9Y1Xre/gb7qlSpjqZH5EqO8WOvBNlw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5825
 
-With mlx5 netdev instance locking enabled, registering an IPoIB netdev
-calls the WEXT notifier while holding the instance mutex. Its call to
-wireless_nlevent_flush() takes net_rwsem to walk every namespace,
-completing the following lockdep dependency cycle:
-
-  netdev instance mutex -> net_rwsem (read) -> GID table mutex
-    -> event_handler_rwsem (read) -> netdev instance mutex
-
-RoCE GID enumeration takes the GID table mutex under net_rwsem. GID
-updates dispatch events under the table mutex, taking event_handler_rwsem.
-The IPoIB event handler takes the netdev instance mutex in
-ipoib_queue_work() to traverse child interfaces.
-
-The all-namespace walk originated in the single global worker servicing
-per-namespace WEXT queues. The ordering fixes later reused that routine
-in netdevice notifiers to prevent delayed WEXT RTM_NEWLINK messages from
-following RTM_DELLINK or reporting stale interface flags. A notifier only
-needs to drain the affected device's namespace; there is no reason for it
-to walk and flush all namespaces.
-
-Pass dev_net(dev) from both notifier callers and make the flush helper
-operate on that namespace. Keep the all-namespace walk and net_rwsem in
-the existing worker. This removes the instance-mutex -> net_rwsem
-dependency while retaining synchronous flushing from the notifiers.
-
-It may seem strange that the fix for a lock cycle across multiple
-subsystems lies in a completely unrelated part of the code, but this
-seemed the most justified lock cycle edge to break.
-
-Issue: 5331015
-Fixes: 8f7b00307bf1 ("net/mlx5e: Convert mlx5 netdevs to instance locking")
-Signed-off-by: Cosmin Ratiu <cratiu@nvidia.com>
-Change-Id: I98d7e77ffc9fa0ce72296d93c200da8fe1db378e
----
- include/net/iw_handler.h |  8 +++++---
- net/wireless/core.c      |  2 +-
- net/wireless/wext-core.c | 33 +++++++++++++++++----------------
- 3 files changed, 23 insertions(+), 20 deletions(-)
-
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index b80e474cb0aa..632618d9ff93 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -201,6 +201,8 @@
- #include <linux/wireless.h>		/* IOCTL user space API */
- #include <linux/if_ether.h>
- 
-+struct net;
-+
- /***************************** VERSION *****************************/
- /*
-  * This constant is used to know which version of the driver API is
-@@ -411,10 +413,10 @@ struct iw_spy_data {
- void wireless_send_event(struct net_device *dev, unsigned int cmd,
- 			 union iwreq_data *wrqu, const char *extra);
- #ifdef CONFIG_WEXT_CORE
--/* flush all previous wext events - if work is done from netdev notifiers */
--void wireless_nlevent_flush(void);
-+/* Flush previous wext events in this netns from netdev notifiers. */
-+void wireless_nlevent_flush(struct net *net);
- #else
--static inline void wireless_nlevent_flush(void) {}
-+static inline void wireless_nlevent_flush(struct net *net) {}
- #endif
- 
- /* We may need a function to send a stream of events to user space.
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index cde3ca85494d..2f49ed14b26e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1878,7 +1878,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		return NOTIFY_DONE;
- 	}
- 
--	wireless_nlevent_flush();
-+	wireless_nlevent_flush(dev_net(dev));
- 
- 	return NOTIFY_OK;
- }
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index db77912b3994..f09c589ff94c 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -342,32 +342,28 @@ static const int compat_event_type_size[] = {
- 
- /* IW event code */
- 
--void wireless_nlevent_flush(void)
-+void wireless_nlevent_flush(struct net *net)
- {
- 	struct sk_buff *skb;
--	struct net *net;
- 
--	down_read(&net_rwsem);
--	for_each_net(net) {
--		while ((skb = skb_dequeue(&net->wext_nlevents)))
--			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
--				    GFP_KERNEL);
--	}
--	up_read(&net_rwsem);
-+	while ((skb = skb_dequeue(&net->wext_nlevents)))
-+		rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL, GFP_KERNEL);
- }
- EXPORT_SYMBOL_GPL(wireless_nlevent_flush);
- 
- static int wext_netdev_notifier_call(struct notifier_block *nb,
- 				     unsigned long state, void *ptr)
- {
-+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
-+
- 	/*
--	 * When a netdev changes state in any way, flush all pending messages
--	 * to avoid them going out in a strange order, e.g. RTM_NEWLINK after
--	 * RTM_DELLINK, or with IFF_UP after without IFF_UP during dev_close()
--	 * or similar - all of which could otherwise happen due to delays from
--	 * schedule_work().
-+	 * When a netdev changes state in any way, flush all pending messages in
-+	 * its network namespace to avoid them going out in a strange order,
-+	 * e.g. RTM_NEWLINK after RTM_DELLINK, or with IFF_UP after without
-+	 * IFF_UP during dev_close() or similar - all of which could otherwise
-+	 * happen due to delays from schedule_work().
- 	 */
--	wireless_nlevent_flush();
-+	wireless_nlevent_flush(dev_net(dev));
- 
- 	return NOTIFY_OK;
- }
-@@ -410,7 +406,12 @@ subsys_initcall(wireless_nlevent_init);
- /* Process events generated by the wireless layer or the driver. */
- static void wireless_nlevent_process(struct work_struct *work)
- {
--	wireless_nlevent_flush();
-+	struct net *net;
-+
-+	down_read(&net_rwsem);
-+	for_each_net(net)
-+		wireless_nlevent_flush(net);
-+	up_read(&net_rwsem);
- }
- 
- static DECLARE_WORK(wireless_nlevent_work, wireless_nlevent_process);
--- 
-2.53.0
-
+T24gV2VkLCAyMDI2LTEwLTIxIGF0IDE3OjQxICswMzAwLCBDb3NtaW4gUmF0aXUgd3JvdGU6DQo+
+IFdpdGggbWx4NSBuZXRkZXYgaW5zdGFuY2UgbG9ja2luZyBlbmFibGVkLCByZWdpc3RlcmluZyBh
+biBJUG9JQg0KPiBuZXRkZXYNCj4gY2FsbHMgdGhlIFdFWFQgbm90aWZpZXIgd2hpbGUgaG9sZGlu
+ZyB0aGUgaW5zdGFuY2UgbXV0ZXguIEl0cyBjYWxsIHRvDQo+IHdpcmVsZXNzX25sZXZlbnRfZmx1
+c2goKSB0YWtlcyBuZXRfcndzZW0gdG8gd2FsayBldmVyeSBuYW1lc3BhY2UsDQo+IGNvbXBsZXRp
+bmcgdGhlIGZvbGxvd2luZyBsb2NrZGVwIGRlcGVuZGVuY3kgY3ljbGU6DQo+IA0KPiDCoCBuZXRk
+ZXYgaW5zdGFuY2UgbXV0ZXggLT4gbmV0X3J3c2VtIChyZWFkKSAtPiBHSUQgdGFibGUgbXV0ZXgN
+Cj4gwqDCoMKgIC0+IGV2ZW50X2hhbmRsZXJfcndzZW0gKHJlYWQpIC0+IG5ldGRldiBpbnN0YW5j
+ZSBtdXRleA0KPiANCj4gUm9DRSBHSUQgZW51bWVyYXRpb24gdGFrZXMgdGhlIEdJRCB0YWJsZSBt
+dXRleCB1bmRlciBuZXRfcndzZW0uIEdJRA0KPiB1cGRhdGVzIGRpc3BhdGNoIGV2ZW50cyB1bmRl
+ciB0aGUgdGFibGUgbXV0ZXgsIHRha2luZw0KPiBldmVudF9oYW5kbGVyX3J3c2VtLg0KPiBUaGUg
+SVBvSUIgZXZlbnQgaGFuZGxlciB0YWtlcyB0aGUgbmV0ZGV2IGluc3RhbmNlIG11dGV4IGluDQo+
+IGlwb2liX3F1ZXVlX3dvcmsoKSB0byB0cmF2ZXJzZSBjaGlsZCBpbnRlcmZhY2VzLg0KPiANCj4g
+VGhlIGFsbC1uYW1lc3BhY2Ugd2FsayBvcmlnaW5hdGVkIGluIHRoZSBzaW5nbGUgZ2xvYmFsIHdv
+cmtlcg0KPiBzZXJ2aWNpbmcNCj4gcGVyLW5hbWVzcGFjZSBXRVhUIHF1ZXVlcy4gVGhlIG9yZGVy
+aW5nIGZpeGVzIGxhdGVyIHJldXNlZCB0aGF0DQo+IHJvdXRpbmUNCj4gaW4gbmV0ZGV2aWNlIG5v
+dGlmaWVycyB0byBwcmV2ZW50IGRlbGF5ZWQgV0VYVCBSVE1fTkVXTElOSyBtZXNzYWdlcw0KPiBm
+cm9tDQo+IGZvbGxvd2luZyBSVE1fREVMTElOSyBvciByZXBvcnRpbmcgc3RhbGUgaW50ZXJmYWNl
+IGZsYWdzLiBBIG5vdGlmaWVyDQo+IG9ubHkNCj4gbmVlZHMgdG8gZHJhaW4gdGhlIGFmZmVjdGVk
+IGRldmljZSdzIG5hbWVzcGFjZTsgdGhlcmUgaXMgbm8gcmVhc29uDQo+IGZvciBpdA0KPiB0byB3
+YWxrIGFuZCBmbHVzaCBhbGwgbmFtZXNwYWNlcy4NCj4gDQo+IFBhc3MgZGV2X25ldChkZXYpIGZy
+b20gYm90aCBub3RpZmllciBjYWxsZXJzIGFuZCBtYWtlIHRoZSBmbHVzaA0KPiBoZWxwZXINCj4g
+b3BlcmF0ZSBvbiB0aGF0IG5hbWVzcGFjZS4gS2VlcCB0aGUgYWxsLW5hbWVzcGFjZSB3YWxrIGFu
+ZCBuZXRfcndzZW0NCj4gaW4NCj4gdGhlIGV4aXN0aW5nIHdvcmtlci4gVGhpcyByZW1vdmVzIHRo
+ZSBpbnN0YW5jZS1tdXRleCAtPiBuZXRfcndzZW0NCj4gZGVwZW5kZW5jeSB3aGlsZSByZXRhaW5p
+bmcgc3luY2hyb25vdXMgZmx1c2hpbmcgZnJvbSB0aGUgbm90aWZpZXJzLg0KPiANCj4gSXQgbWF5
+IHNlZW0gc3RyYW5nZSB0aGF0IHRoZSBmaXggZm9yIGEgbG9jayBjeWNsZSBhY3Jvc3MgbXVsdGlw
+bGUNCj4gc3Vic3lzdGVtcyBsaWVzIGluIGEgY29tcGxldGVseSB1bnJlbGF0ZWQgcGFydCBvZiB0
+aGUgY29kZSwgYnV0IHRoaXMNCj4gc2VlbWVkIHRoZSBtb3N0IGp1c3RpZmllZCBsb2NrIGN5Y2xl
+IGVkZ2UgdG8gYnJlYWsuDQo+IA0KPiBJc3N1ZTogNTMzMTAxNQ0KPiBGaXhlczogOGY3YjAwMzA3
+YmYxICgibmV0L21seDVlOiBDb252ZXJ0IG1seDUgbmV0ZGV2cyB0byBpbnN0YW5jZQ0KPiBsb2Nr
+aW5nIikNCj4gU2lnbmVkLW9mZi1ieTogQ29zbWluIFJhdGl1IDxjcmF0aXVAbnZpZGlhLmNvbT4N
+Cj4gQ2hhbmdlLUlkOiBJOThkN2U3N2ZmYzlmYTBjZTcyMjk2ZDkzYzIwMGRhOGZlMWRiMzc4ZQ0K
+DQpTaWdoLi4uVHVybnMgb3V0IEkgZm9yZ290IHRvIHJlbW92ZSB0aGUgIklzc3VlIiBhbmQgdGhl
+ICJDaGFuZ2UtSWQiDQp0YWdzLg0KU28gdGhlcmUgd2lsbCBiZSBhIHYyIHdpdGhvdXQgdGhvc2Us
+IGJ1dCBwbGVhc2UgbGV0IG1lIGtub3cgYWJvdXQgdGhlDQpyZXN0IG9mIHRoZSBwYXRjaCB1bnRp
+bCB0aGVuLi4uDQoNCkNvc21pbi4NCg0K
