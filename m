@@ -1,77 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792562995;
-	b=0MC8bESyHQZIt93jmZglcyAYUr6cKV7JJLduWAI5MJIYFW8hcn/tYUJet7YARpDjwQu5
-	 EZei8twid+qVWswyAWKoKXNpS+/PyuzzErjfRTAFlZb6mqCyGABwifOn+g/ufbnyW2nZz
-	 0p9f+l/V7Fgsas9rpN1lzxWxBqEQgVW/cGlw+UKVco/7mKDojQVeJJdrY9NSMuyhZg4j2
-	 aXfyPL/gyZW/Ev0dP73I8EhcBiTUqflPiLU35emml+MN1oflcbSIfhsEhjV4MiItaiSep
-	 a6LPHzhZpxtWeqOn7rx19fTQsHLaN9YSf+3HdsmQ2fOF1ryv2VxWcdWYuLAMXwfrbGw==
+	t=1792563225;
+	b=Ju1iJFNj7P9NQb8NeUpTQdGhIg3qHQvV7aosj+qwEWKRFIotUq6zp0bqvkJ7IbH32sUa
+	 zUwGEZMpPAxNsYQGS1Qx86Yu8ehDzwNdxO2fvDg8LuuNBJllqA3Gqz0SXitQ/PwyS7J63
+	 egXjxlCc4ratHR75sF+m8fxuZRQpQjSb5dmOha+Snm62UEfzZeQH8wXEsnkFOuni1g/Cs
+	 eH1bsWoTzB+jjAI+MNHmZ2lNiEOZqeO2BimLayYkw95WGgpF547yM0oU1MAD0PRvOGrSa
+	 ZpcDytHlInCcsppBczHGARbGf5fZOYRrCJPNGHZaPC1wQboT1VEJtxobqw8VFd6Yfpg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792562995;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=/ULUQfRs7dpUUwo6BvSmvv+J9oUgYVFAYQ9WXncGW04=;
-	b=f0fctlIuvAsLrg61hu10N+I6VmvMzqvnDjD3TvAZ4rIfypZxVSK/IaHDgM+KhRjpGEjb
-	 PdV/kYiKc+dNVviJJ4H/I6rv4ti8dUxpPVGhVBWJm4diUD7EIwx0sfEPKJQSEDyr0D+5X
-	 HEVM1kxS6vPJqzetq4G5Gc3MHuVy/Vln/7ck7qUqwT3zPA/Nfd/UKkshGYy17URvSRg0y
-	 umsXYiA3nn/KF4xBKp4Ice7b7AyGrmQ5IiQUz6x6BYDXgC+hjMGxnpLsCOp54TaKNSBqL
-	 4+WSm0K03XHCF9SGfTT4zXXq8heDibi3BfrFI5Te/ompW8UzqUrCR9xnuzTOtBP36UQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792563225;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=POTt6D1OgauRrY8k1vEWEZeF2cYhNnrrsYVlV43I0WA=;
+	b=sPHmLwKxVvdCXrvUy/VbbbbDhS7vpC+G0Shu1DwLvYVzjzeqcmi0RiwLMv9kK3yi5nGY
+	 j5CcY1iYDoJlf2xtSCaGewh81Thfp+owGOI2JlNoeVIRyOp9WxCbVjO/AIPktDcNqdz3M
+	 Qi5BnhQWEvyNVx3Hx2MwmdJWPuMdAghY2wo9b4GCJeGxHIwWAhe/JOFs2CoGNTVKxJOVj
+	 8kFmC+x278w2gICnvZYgvfRj0hdB0unoJuPKPuOnD0rYuO3ZffRbA8ZQPE3vwMOB2eiT8
+	 OP3GWbVEl6IBcw/FjruBsCl8C1hPmu6tV9Eb4UFxaJZ3azWZ/SOkEe13Zz+EtaJN3Sg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=V5hJExdn;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA;
+	arc=none smtp.remote-ip=198.175.65.15
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA7B606A320
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 06:09:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BBA7B606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B45606A325;
+	Wed, 21 Oct 2026 06:13:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47B45606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=V5hJExdn
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792562993;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/ULUQfRs7dpUUwo6BvSmvv+J9oUgYVFAYQ9WXncGW04=;
-	b=V5hJExdnNR+SLPfyIzCmVMVpRJuLgUp+L5ciZJ77FgJkRqRB7iEthnECLTqruxC0WNp2+Z
-	LvmAhwQOPm+DRyiy0m9XoHfqQrLB4QIWjmEvTPLSYcVdLjeeHkGpHhyar2AZqqANFXd1fP
-	m0/djc5i1i8vC/TimR8TJOKWNCza1l8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-482-22M26FMGN1utTps-oAMSWA-1; Wed,
- 21 Oct 2026 06:09:48 +0000
-X-MC-Unique: 22M26FMGN1utTps-oAMSWA-1
-X-Mimecast-MFC-AGG-ID: 22M26FMGN1utTps-oAMSWA_1792562987
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 25B391800611;
-	Wed, 21 Oct 2026 06:09:47 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 886091800347;
-	Wed, 21 Oct 2026 06:09:45 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jjohnson@kernel.org
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v8 2/2] wifi: ath12k: implement custom wake_tx_queue with flow control
-Date: Wed, 21 Oct 2026 08:09:31 +0200
-Message-ID: <20261021060931.249629-3-jtornosm@redhat.com>
-In-Reply-To: <20261021060931.249629-1-jtornosm@redhat.com>
-References: <20261021060931.249629-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792563225; x=1824099225;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=zoRAmnpBls2Nylk53pHmCqUXQ+xNgPqiQAFCKXRHWUU=;
+  b=Dz7CgAHA95NsIn3nkFUb+8jUL7WoUt9bVQoq4JWe9h1fAXsR8Fy/fc9X
+   35n2EASQMdi4A4o01GR6xs+T9OMN8rlHcd0DaeCg0qmSW/PQMp1XWccVM
+   cV1qaUBcgdEUxJEtrVHEHPujejsL/hcVJlH5JwuLIi/TYX4o4/u0ZKDJa
+   3rZQfOSrR21RZMWCmRIUusBbQ+Qp9xhm3d1aTnaag6BJn2IcUEzMcweM6
+   iWupuQdX6oacllJ+u9q//Ndf1X5WB1i9PHEbZjYMtbsATbsfkK5EiFWWH
+   fzh7cn5qYZkORGdprUvFXM0t6lgcjl2YzGk5X2fEDAHXTaH0tIHV/tvNo
+   Q==;
+X-CSE-ConnectionGUID: Ji/Rw3dbSgqG7TzSz+cCSg==
+X-CSE-MsgGUID: 3BB1bHMSRte6axfiSIo7cA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1281495"
+X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
+   d="scan'208";a="1281495"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:44 -0700
+X-CSE-ConnectionGUID: q9De8LF1Tz+6m/1zFAuAlg==
+X-CSE-MsgGUID: cWHIF8jUQ1+92Y77y8Qvzg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
+   d="scan'208";a="2946911"
+Received: from blu2-desk.sh.intel.com (HELO [10.239.156.26]) ([10.239.156.26])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:42 -0700
+Message-ID: <2c840dcf-4292-4579-a62d-f9766b7cb780@linux.intel.com>
+Date: Wed, 21 Oct 2026 14:13:40 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -81,167 +72,138 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+User-Agent: Mozilla Thunderbird
+Subject: Re: intel-iommu: DMAR PTE Read fault crash-loops a PCIe wifi device,
+ v7.3-rc7 -> v7.3 final regression, reproduces on one unit out of five tested
+To: "Perlow, Jason" <jperlow@gmail.com>, Aditya Garg <aditya.garg@linux.dev>,
+ dwmw2@infradead.org
+Cc: iommu@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, arend.vanspriel@broadcom.com,
+ linux-wireless@vger.kernel.org
+References: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Under heavy traffic, ath12k can hang and experiences -ENOMEM errors
-("failed to transmit frame -12") when the hardware TCL ring fills up.
-This issue is more commonly observed in VMs with PCIe passthrough but
-also occurs on bare metal systems.
+On 10/20/26 22:40, Perlow, Jason wrote:
+> Hardware: Intel CoffeeLake-H platforms, various. The affected device is 
+> a Broadcom BCM4364 802.11ac PCIe wifi adapter (14e4:4464) at 
+> 0000:05:00.0 on an Apple MacBookPro16,1 (T2 Mac). Aditya, including you 
+> directly since this is T2 hardware; copying iommu/pci/wireless because 
+> the fault signature and the fact that it reproduces on only one of five 
+> tested machines looks like it needs eyes on the core IOMMU/PCI path, not 
+> the driver.
+> 
+> SYMPTOM
+> 
+> Between a locally-built v7.3-rc7 kernel and a v7.3 final kernel 
+> (same .config template, same patch series beyond one T2-specific AER 
+> quirk that is upstream in final and therefore held out of our patch 
+> set), the BCM4364 wifi firmware on ONE affected unit crash-loops 
+> continuously:
+> 
+> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for 
+> chip BCM4364/4
+> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: ...
+> ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
+> 
+> repeating every ~6s, indefinitely. dmesg shows the actual mechanism -- a 
+> real IOMMU DMAR page fault on the wifi device, timed to the same cadence 
+> as the firmware crash:
+> 
+> DMAR: DRHD: handling fault status reg 3
+> DMAR: [DMA Read NO_PASID] Request device [0000:05:00.0] fault addr 
+> 0xffeff000 [fault reason 0x06] PTE Read access is not set
+> 
+> Four such faults logged at uptime 13.4s/19.4s/25.3s/31.2s, each 
+> immediately followed by a brcmf_fw_crashed event. intel_iommu=off 
+> removes the fault and the crash entirely (8+ minutes stable, single 
+> clean firmware load, stable AP association). The prior v7.3-rc7 kernel 
+> on the SAME unit has zero DMAR faults and zero firmware crashes with 
+> IOMMU on by default, so this is a regression introduced somewhere in the 
+> rc7->final window on this unit, not a long-standing issue.
 
-Implement a custom wake_tx_queue operation that:
+Can you confirm that the IOMMU is actually enabled and translating on
+the rc7 boot? Please check that boot's kernel log for:
 
-1. Checks hardware ring space before dequeuing packets from mac80211
-2. Uses per-ring locking (wake_tx_lock with spin_lock_bh) to serialize
-   concurrent wake_tx_queue calls targeting the same ring and to ensure
-   bottom halves are disabled as required by ieee80211_tx_dequeue()
-3. Syncs with hardware state to get accurate free slot count
-4. Resolves the target TCL ring once using get_ring_selector(txq->ac),
-   which selects the ring based on the access category
-5. Returns early during firmware crash in the same way as other
-   tx paths
+DMAR: IOMMU enabled
+iommu: Default domain type: Translated
 
-This approach follows the pattern used in the iwlwifi driver, adapted
-for ath12k's hardware ring architecture.
+> 
+> REPRODUCES ON 1 OF 5 MACHINES TESTED
+> 
+> We ran the identical kernel build (and, where applicable, the identical 
+> firmware blob) across five machines and only one faults:
+> 
+> * Affected unit (MacBookPro16,1, T2, BCM4364 wifi): faults as above.
+> * Second MacBookPro16,1 (same generation, different configuration within 
+> the 16,1 line -- we have not enumerated every hardware delta): same 
+> kernel binary, same firmware blob, IOMMU also active by default (iommu: 
+> Default domain type: Translated, identical to the affected unit) -- zero 
+> DMAR faults, brcmfmac stable.
+> * Three non-Mac x86_64 machines spanning three more wifi vendors (Intel 
+> iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8852BE) -- 
+> IOMMU active and translating on all three, zero DMAR faults, all three 
+> wifi chips loaded firmware and ran cleanly.
+> 
+> So across four different wifi silicon vendors and five physical 
+> machines, IOMMU is actively translating DMA on every one of them and 
+> only the single affected unit faults. This looks like a host-specific or 
+> hardware-configuration-specific trigger rather than a blanket rc7->final 
+> regression that would hit every machine with this kernel. We do not yet 
+> know what distinguishes the affected unit (ACPI RMRR table contents, 
+> exact PCIe link training time, and IOMMU group/domain-attach ordering 
+> are the candidates we have not yet isolated).
+> 
+> WHAT WE RULED OUT BEFORE WRITING IN
+> 
+> * AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is 
+> exact (Apple SEP, 106b:1802) and does not touch the wifi device 
+> (14e4:4464); real PCI topology on the affected unit also shows SEP and 
+> wifi on separate root ports (00:1b.0 -> [04] vs 00:1c.0 -> [05] off the 
+> PCH), so there's no shared-root-port mechanism either.
+> * brcmfmac driver source: git diff v7.3-rc7..v7.3 -- drivers/net/ 
+> wireless/broadcom/brcm80211/ is empty.
+> * Our own config template: byte-identical between the rc7 and final builds.
+> * The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON (drivers/iommu/ 
+> intel/Kconfig): byte-identical text between v7.3-rc7 and v7.3 (default 
+> y, no depends on).
+> 
+> THE ONE ANOMALY WE CAN'T YET EXPLAIN
+> 
+> Despite the last two items above being unchanged, the actual 
+> generated .config has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make 
+> olddefconfig against the rc7 source tree, but =y after the same process 
+> against the final source tree, even though our template explicitly 
+> answers "# CONFIG_INTEL_IOMMU_DEFAULT_ON is not set" in both cases. Our
 
-This prevents hangs, eliminates -ENOMEM errors, and improves throughput
-by optimizing resource usage and preventing unnecessary packet drops.
+If CONFIG_INTEL_IOMMU_DEFAULT_ON was not set in your rc7 build, and
+intel_iommu=on was not on the command line, the Intel IOMMU was
+disabled by default on rc7. In that case, rc7 could never report a
+DMAR fault, and the "regression" is only that v7.3 final enabled the
+IOMMU.
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+Could you boot the rc7 kernel on the affected unit with intel_iommu=on
+and see whether the same fault shows up? If it does, there is no
+rc7->final regression in the IOMMU code. It would be an existing DMA
+issue with brcmfmac/BCM4364.
 
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v8: Split ath11k and ath12k into separate series to avoid conflict
-    with Julius's airtime queue limits series (ath11k only) and help to
-    unblock both
-    No code changes from v7
-v7: https://lore.kernel.org/all/20260917064825.12747-5-jtornosm@redhat.com/
+> working theory is that some other symbol started selecting/implying 
+> INTEL_IOMMU_DEFAULT_ON between rc7 and final -- which would override an 
+> explicitly-seeded "not set" answer during olddefconfig resolution -- but 
+> we have not identified which one. Happy to bisect further, or provide 
+> the full .config / additional dmesg, if that would help narrow it.
+> 
+> CURRENT STATUS
+> 
+> intel_iommu=off on the affected unit's kernel command line is our 
+> accepted fix for this specific machine while the root cause is 
+> unresolved; we are not disabling IOMMU fleet-wide, since four of the 
+> five test machines show no problem with it on. Posting here in case this 
+> fault signature is recognized, or in case others on different T2 or non- 
+> T2 hardware see the same thing on v7.3 final.
 
- drivers/net/wireless/ath/ath12k/dp.c       |  1 +
- drivers/net/wireless/ath/ath12k/dp.h       |  2 +
- drivers/net/wireless/ath/ath12k/hal.c      |  1 +
- drivers/net/wireless/ath/ath12k/wifi7/hw.c | 69 +++++++++++++++++++++-
- 4 files changed, 72 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
-index f9b37d75956d..e62fa416b992 100644
---- a/drivers/net/wireless/ath/ath12k/dp.c
-+++ b/drivers/net/wireless/ath/ath12k/dp.c
-@@ -1537,6 +1537,7 @@ static int ath12k_dp_setup(struct ath12k_base *ab)
- 	}
-
- 	for (i = 0; i < ab->hw_params->max_tx_ring; i++) {
-+		spin_lock_init(&dp->tx_ring[i].wake_tx_lock);
- 		dp->tx_ring[i].tcl_data_ring_id = i;
-
- 		dp->tx_ring[i].tx_status_head = 0;
-diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
-index bef0f2ba0560..4bf8a8a6d76c 100644
---- a/drivers/net/wireless/ath/ath12k/dp.h
-+++ b/drivers/net/wireless/ath/ath12k/dp.h
-@@ -58,6 +58,8 @@ struct dp_tx_ring {
- 	u8 tcl_data_ring_id;
- 	struct dp_srng tcl_data_ring;
- 	struct dp_srng tcl_comp_ring;
-+	/* Serializes wake_tx_queue operations for this ring */
-+	spinlock_t wake_tx_lock;
- 	struct hal_wbm_completion_ring_tx *tx_status;
- 	int tx_status_head;
- 	int tx_status_tail;
-diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
-index c0c3d2f047ef..fbe4dc41e34b 100644
---- a/drivers/net/wireless/ath/ath12k/hal.c
-+++ b/drivers/net/wireless/ath/ath12k/hal.c
-@@ -390,6 +390,7 @@ int ath12k_hal_srng_src_num_free(struct ath12k_base *ab, struct hal_srng *srng,
- 	else
- 		return ((srng->ring_size - hp + tp) / srng->entry_size) - 1;
- }
-+EXPORT_SYMBOL(ath12k_hal_srng_src_num_free);
-
- void *ath12k_hal_srng_src_next_peek(struct ath12k_base *ab,
- 				    struct hal_srng *srng)
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index 678c512a2199..7bfeb9397465 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -1160,9 +1160,76 @@ static void ath12k_wifi7_mac_op_tx(struct ieee80211_hw *hw,
- 	}
- }
-
-+static void ath12k_wifi7_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
-+					      struct ieee80211_txq *txq)
-+{
-+	struct ath12k_vif *ahvif = ath12k_vif_to_ahvif(txq->vif);
-+	struct ieee80211_tx_control control = {
-+		.sta = txq->sta,
-+	};
-+	struct ieee80211_vif *vif = txq->vif;
-+	struct ath12k_link_vif *arvif;
-+	struct dp_tx_ring *tx_ring;
-+	struct hal_srng *tcl_ring;
-+	struct ath12k_sta *ahsta;
-+	struct ath12k_dp *dp;
-+	struct sk_buff *skb;
-+	struct ath12k *ar;
-+	u8 ring_selector;
-+	int num_free;
-+	u8 ring_id;
-+	u8 link_id;
-+
-+	if (ieee80211_vif_is_mld(vif) && txq->sta) {
-+		ahsta = ath12k_sta_to_ahsta(txq->sta);
-+		link_id = ahsta->assoc_link_id;
-+	} else {
-+		link_id = ahvif->deflink.link_id;
-+	}
-+
-+	rcu_read_lock();
-+
-+	arvif = rcu_dereference(ahvif->link[link_id]);
-+	if (!arvif || !arvif->ar) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	ar = arvif->ar;
-+	dp = ar->ab->dp;
-+
-+	ring_selector = dp->hw_params->hw_ops->get_ring_selector(txq->ac);
-+	ring_id = ring_selector % dp->hw_params->max_tx_ring;
-+	tx_ring = &dp->tx_ring[ring_id];
-+	tcl_ring = &dp->hal->srng_list[tx_ring->tcl_data_ring.ring_id];
-+
-+	while (1) {
-+		if (unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH,
-+				      &ar->ab->dev_flags)))
-+			break;
-+
-+		guard(spinlock_bh)(&tx_ring->wake_tx_lock);
-+
-+		spin_lock_bh(&tcl_ring->lock);
-+		num_free = ath12k_hal_srng_src_num_free(ar->ab, tcl_ring, true);
-+		spin_unlock_bh(&tcl_ring->lock);
-+
-+		if (num_free == 0)
-+			break;
-+
-+		skb = ieee80211_tx_dequeue(hw, txq);
-+		if (!skb)
-+			break;
-+
-+		ath12k_wifi7_mac_op_tx(hw, &control, skb);
-+	}
-+
-+	rcu_read_unlock();
-+}
-+
- static const struct ieee80211_ops ath12k_ops_wifi7 = {
- 	.tx				= ath12k_wifi7_mac_op_tx,
--	.wake_tx_queue			= ieee80211_handle_wake_tx_queue,
-+	.wake_tx_queue			= ath12k_wifi7_mac_op_wake_tx_queue,
- 	.start                          = ath12k_mac_op_start,
- 	.stop                           = ath12k_mac_op_stop,
- 	.reconfig_complete              = ath12k_mac_op_reconfig_complete,
---
-2.54.0
-
+Thanks,
+baolu
