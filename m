@@ -1,94 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792601500;
-	b=QWMbnLtYx/kb6Oe2c6kwhm8Ys3nkBGGCaTvv6HWgaVS0qx5YtOZlYVggqYY2/hEOrFHw
-	 nFANDPmXAm7jrNkUxe6QtBJLxVryU1N733dgXlFN098yJg/SfPHHSVY/pcLm6u14DDGWu
-	 DPpiXkGpWcFSEmSA8j1gBDe7M1gsPh3hAv3ZwkX4bpo771RP3kfl2wziS8/NgUIOVISRm
-	 MRjFoL2OBW3vQbSi8ZTDx5dh4yay4HURagKKVhyuSPHEsiky5dhdxcP26ztZ42rHdTXjo
-	 JuYgVmbsQ+4YVz0DxZZWpR+ueGP+IAu9hMZYM96fqW0nwQsqas1HGiCvbBgxCtlaCaA==
+	t=1792601501;
+	b=fBhcN7B1B1ftPSIBAXtYfNs/E4+9bFUWevLn00TQmAShynKFc1tgfFFJnSE+eItajLIA
+	 8gOr4xOLFnR+UXopAECv2WU2SvCsBjCleP2ok0xxV64OBwaNB0OpVeIsJmN96S4LXl5E3
+	 xrzQ+CRSPoQVH6fQlE4FMYaI9Y0Y3vuITzByVJT+lFH3irX/LBO3eAlGneqEucNWAT/Rk
+	 SqOZQMddWPF705/OVBe+3pWaHCxZR2e3BEtNA2ZPZvxliO0bWADn2LrCuh0b9StMnOO9E
+	 1DcJae9HEhM9ahS3xQv98BUrBh7x1PtMJIbk+s/m0C0iGsNgAs1qWH+vzY8oHq3NVOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792601500;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792601501;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=dacLjl7RN0IeeDiK9b8hPkWa1OXHnnZ0y7fVu/qkLNs=;
-	b=qbiDI2lwm5/2cI5txbEgQf6K/wChOdD+5KEBrrnsMsEirh1IENTrC+gjZ2wVn7xiNww+
-	 0v4suZOQCsnNcIbfqUEwp/yo8+U6BAhWLvGPJVVzm3gDaqH35u54NTCS1Bf725WREZEw8
-	 rwNjAUxI9//bcytmP2HcBKNIjBWycn3lhC6xdQLYpcy7Fsthh79JQRv3AepEQYY4lTeUm
-	 GO2ObtDzeJ7neASkAVnifaSHx/lreLTH/iOkhDk7lc9uQbqjUFFVN1Sjf0Pyxx/2GUt3p
-	 SZkinFIl5d07x2w0mQqWg6/mIPiKKMG2t5MeEx7IDQ7DRo4QcmBYBMKBr/XDbKxEBFQ==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=JXmyT257j9HWX6yMLjeKjbshvliT1svS1XMIFan8Qm4=;
+	b=ZLm3E1Q+Ov9yK7OSPiEBXDYr5ZZ745ipaWRI471M7TBy1KimenI3wcrcz38uJ2ZBbIom
+	 nujqKouO1o/Y2bG2+ExHJGn+zgp/H5KRYPUKZ9yjCQ4INpCuxafJKtr59QGvAleYpOkgI
+	 HeS/RHfMvfmVQOLK2DjGnJiADIbl3LtPnFJKY3Was3wgmdkKBY4FU1Z7dW1e8yhZV8lnB
+	 5TOENcHTjou9gV3a9UCCvE9fUTumEAbD5GWLDo61VAOdDRftOXRegDY9/ThW55RSnG4hR
+	 x+EHTX6x2t2makKJR92mf0fp7HTSDI244FZ7rtn4TJi9oPlFeGJbT9sRzFvKCCxpHJQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=bairaktaris.de;
 	spf=pass smtp.mailfrom=bairaktaris.de;
-	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=WagjL0Om;
-	arc=none smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	dkim=pass header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=Fcqs1HXQ;
+	arc=none smtp.remote-ip=209.85.218.42
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C5A3606A31A
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 16:51:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C5A3606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3969C606A319
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 16:51:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3969C606A319
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=WagjL0Om
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6ae14eecc64so1307252a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 09:51:40 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=bairaktaris.de header.i=@bairaktaris.de header.a=rsa-sha256 header.s=google header.b=Fcqs1HXQ
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-c4086e892a4so123253666b.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 09:51:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bairaktaris.de; s=google; t=1792601499; x=1793206299; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=dacLjl7RN0IeeDiK9b8hPkWa1OXHnnZ0y7fVu/qkLNs=;
-        b=WagjL0OmsY5okLV7EcpILW+/Rq+PC1du8VgIryG5T+Ec0Y3iTImJW868SwpGxrs2Rb
-         5p8/lUKnOpl16ZJxVxcE7s0wxXZZW0Ps6VU4vMQOJ90+o64k9DnXoHAf3BWtzhd8rLW2
-         0rc0OAjQFYEUye2n1InFhBB1s9PUex9ZZtGCRNezrU8oApQiJi2QrrZ2IHIvNYTGOP73
-         9FNYGZS9osOKrKjU11kYEVwDQ2EYsx3hmaFPNSTyfAmLRPE04U+jwI4V6JQTel413cNt
-         qjpcRZWoaQ7iDVcYWu1SklYgAgpwYjmUKT49Lls8av7q29Zx8N51ExT+lUSzWIyl/424
-         KmvQ==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JXmyT257j9HWX6yMLjeKjbshvliT1svS1XMIFan8Qm4=;
+        b=Fcqs1HXQv/0AOgsatOoGMIw6g+PWVptDcac7+4vPArKNLCTWsraViSb4DtdH1our1r
+         ombs/gBCSOiOzumu3qigHVtwMMSKucB2iNT6ih7DjHRwCnAWAQnKovYziRp+1XA3LFzw
+         L8Dj3O6LXk66X78aggc2Q9KQR7vN4Cgi8irULe7XY38oIFsxHYphNuy0FQqjpA7GZQPA
+         KInCx4+95tO6NLUAapSTlDQbzdGXwpKRcy4GcTrH8aBtlFktOcfB6/SjAZxQ96P1C+Zb
+         T1xx/zlDEh8w/A6MnkhKNspV4KuChAn9lf7iV2jWaCfyHFtvOIpszOvWhuAIQHXAAVYu
+         RKkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1792601499; x=1793206299;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=dacLjl7RN0IeeDiK9b8hPkWa1OXHnnZ0y7fVu/qkLNs=;
-        b=zap2xEsXtc2WylfGYt5v0io0FSVLsfYZY28BjXFBOQa0u4Wq2G9kQd9vZNuZOdCcKG
-         uXCpo6Afm4SC8eGOweYzA+/jpSyq17eZPE7mstJbXOh5l1/wKbD2EoXU49ShZa/9V0fi
-         iTLQL4iM7sf5U/gg6TEofZLYusEUj3A4aL1Ak2suV2Vsx2aF3fODi1oK6TEGaihkppDv
-         Iua6jHJx1d9bspikk8eIw2gC2c0/YCAI8pBSIUetcwN4fDXoYAcqhu3eX3kCx6Zm3LN1
-         AT6diNJ8t6laK7nWLy+4pqP4ZXwxjQV87JgfCVVUVLR7VEij5Opps9AqBtYVJuQckR8s
-         yDgg==
-X-Forwarded-Encrypted: i=1; AKwUvBzpyBjX4h15N8vQQcwWsNwJzoi2KVyWP7faLHJPTIJRqCUgbKqirHncP48dP/yZAhfxH3C4L9rrHz/JLNS+aA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ+zQer6aGtSur0OW3r0v2UrZYLvOo4OOyTG9txZIXRqru3TavO
-	IYk5RnwSpRqh2pvbzs0xmcn+KjY/1zVoEnvpE45FOgHx0p5ufFRC5NDc6CD+6q+NPA==
-X-Gm-Gg: AYBFou1EH3tv+AOvCJGjjA3rcym0CmMwdKWRBobgamguQfGS8o6YY1lBy/QZreFvPyg
-	4YtPJBioif221pkdMc7L0JKl7UAZz8Mm4iDJXom2SOJ0tNRWZFmycd2aVUlVas2cBcyr1C7EhYZ
-	OTLHLQSFU+Kir8jqDW8e/5KhoNL0OzmOkFjQrTJ+YR/BYi2qiCauSccImSc7o19IWs5YALTduph
-	qqtN5wsSykj7+YyFBJsTOcA0UBwuUAWk7IhUbwa82YOshGVzfjn/rpnK/p0ec8FuY2nNQUwL9Hs
-	uvrVd551CaDLtzlEfZ9q5wgBWISbjzCN64yW54xpCRoGfl97dTgHNSevsoAGBMudWkGm7widm4K
-	2tDMtzDkEwjtXD2WGczDdIX20WO6wvHB9lwkEOrBJlzuzVf6ar++sMGf4SxRs9PnFaafGeiPpt2
-	HBIatli8W4MASVFK5pSDXsyWBwjYbQcMhln9eEfBVWtYJX0Wfox0wOqeMdNeEJCw6tK7B8WxxkH
-	jUEHJtJooTRUgoAQ5uoOC5F6Omtlg6tu94GgJHPc+fUxH74PvrkDUNCa+f+oE5pWixkzJS69O+5
-	I6Nhfkv6wdAf/PrARDZzQKigwGHtnLHY0KJ2x6ygorM67Xg1XPT3swmuQI0aJ85XCQLH5VCA/gL
-	538Ch6XVIEvXdE0vdHehNrRlndySnFjia+qX37f/hFgUV3b6g43oJTmyEu+XDPue7a0aubVSdRW
-	1jV/upsg5xL+/hClKNiKqIr4tyDo/e607qJSb5rnxVGL7HN+vdCTzm569Bt58po04s
-X-Received: by 2002:a17:907:e0c9:20b0:c46:8b87:c1f4 with SMTP id a640c23a62f3a-c468b87de82mr18142066b.20.1792601498828;
-        Wed, 21 Oct 2026 09:51:38 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JXmyT257j9HWX6yMLjeKjbshvliT1svS1XMIFan8Qm4=;
+        b=lZmNTT+Q3t8g8BTKA3BTMTQ0zAFvIquF+LkSWmtR2JUgOguFk+JyujNBifBVa/nGP5
+         q1Jz7UGP0goYOgT5rXmHi8RWuwiuh3miOHy44La5xkyKxtS0QcJHKe6BwQNPGTuDRIOH
+         HS2ZJAEBZ0iLVbqH2lNpvVm1olau5NpjUkYNDWgm0TliEA/Gb7AjBDHbxZuQfNSLdIMy
+         WFeLW0e1rj8bRlFXHtALAth5t1k1uSNghYLMpoOBUwc4GmDdNyhh7QEuuwTt/UKiVOFV
+         +28uBp4YdL9+7L/miNbeql1MR/RZvEyosIQVeewqTSojeM1T9JkihRL0SPII5/noCZpN
+         Efjw==
+X-Forwarded-Encrypted: i=1; AKwUvByuap+vx7uK2jbdO5tiZJD9BO/f+gnNHIPon/DZkvMTUognFgUqOAjHF1+IY2r4xhFKr55Lg0WXQQUl88/syw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKBtOryei0LNp/Mm0h2U2uVqrM9i5nrgVpuOZcX+xffeTalCtcI
+	jkkMas17woJdL0fs4pm/UFO2vZJfDPYTEMAlUp9h56RD4nHjozY2dYgqBxi90pZa5A==
+X-Gm-Gg: AYBFou0nEQcZmdSSAVpAf8WurmznzD37xFHWfYYd4gZKTZRMcx3C1jGptPnu/Bk6eD2
+	n2vORMDkjA288IS4NjGESRw4DQnH76Gkrvm3tHFH5Kgk8QvGue2Kd6pU0ffkqyeSUSjewtqWpXH
+	8/OPa99nQ84lIpQryHL7GdZ5H/h72KQgAmdp4Ui14YN5dApx9ZznNOnpiagIHWYn/9zamUh3tUl
+	MZyZh/hKjPk6/u0ak7CtyyOsEii6jkC35PysWKewaBfLsy2UEvIROm15kihKvWSQIqiTuQXiX7Z
+	VwXc1vJnMl4uxcXUYsllXuZ6oX0bZohcRuR3wSd1wU6WSJDjmEDkhW5BE2PbiEXetORLLHzUqNz
+	LYhbWLcnYWyxRsTmGnkrbunKigl1s3CFvBMKK/8MeYtAL11VUjUeGXYxPvgvUggW5IMCK6OQ3oR
+	APFvUeM3oQOux3fDV2PoW2gA26mYM8ZcZJp6X/kY9e4AH793Qe7VCxL3WmGjJaI8ieedAiHSjsU
+	WLmSmQk1n0nibmZPtmMf/VfK4hNX7ylDSlQH10cFJmsVDFw2xqu7HzDZOabwOPQKZJCTPOU4Zu7
+	mL6FwQo3gNnJ3GsiJYInuEqZhyyzJWkFHpPHuj27rqWRpFXUk0nyKxiroKFZE9FxKSIq9fehxHc
+	xUQBVGyhR1tqOvzFqRJmJARaR9o/tURMJFPHrZ4XJiJlTh/EQKnjV/ACv4t64+NfusJdITNMNix
+	D3JGGqhYGMS305ez/JYjjY+HxtQ3RDR9dLosGePWBjWZl26mW5qlH+l0huULSKetms
+X-Received: by 2002:a17:907:9604:b0:c29:555e:bf2 with SMTP id a640c23a62f3a-c46799c8dc9mr242364766b.41.1792601499598;
+        Wed, 21 Oct 2026 09:51:39 -0700 (PDT)
 Received: from Desktop.fritz.box ([113.30.223.169])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c468a5de48esm20782466b.66.2026.10.21.09.51.37
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c468a5de48esm20782466b.66.2026.10.21.09.51.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 09:51:38 -0700 (PDT)
+        Wed, 21 Oct 2026 09:51:39 -0700 (PDT)
 From: Julius Bairaktaris <julius@bairaktaris.de>
 To: jjohnson@kernel.org
 Cc: rameshkumar.sundaram@oss.qualcomm.com,
 	ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/2] wifi: ath11k/ath12k: apply the 160 MHz NSS ratio to the radio
-Date: Wed, 21 Oct 2026 18:51:36 +0200
-Message-ID: <20261021165138.388593-1-julius@bairaktaris.de>
+Subject: [PATCH v2 1/2] wifi: ath11k: apply the 160 MHz NSS ratio to the radio
+Date: Wed, 21 Oct 2026 18:51:37 +0200
+Message-ID: <20261021165138.388593-2-julius@bairaktaris.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261021165138.388593-1-julius@bairaktaris.de>
+References: <20261021165138.388593-1-julius@bairaktaris.de>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -100,31 +103,91 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The firmware reports the 160 MHz NSS as a ratio of the radio's 80 MHz
-NSS, but ath11k applies it to the peer's NSS and advertises every chain
-in the HE 160 and 80+80 MCS maps. ath12k fixed this for HE and still
-has the peer-based calculation in its VHT path.
+The firmware reports the NSS a radio supports at 160 MHz as a ratio of
+its 80 MHz NSS. Peer assoc applies that ratio to the peer's NSS instead,
+so on a radio with a 1:2 ratio a two-stream peer is sent one stream at
+160 MHz. The HE 160 and 80+80 MCS maps copy the 80 MHz map, so a
+4-chain radio with that ratio offers 4 streams at 160 MHz where it
+supports 2.
 
-On a Xiaomi AX3600 (IPQ8071A, 4-chain 5 GHz radio, firmware reports
-WMI_NSS_RATIO_1BY2_NSS), `iw phy` lists 4 streams in the HE 160 MHz
-MCS sets without patch 1 and 2 with it. Patch 2 is compile tested only;
-I have no ath12k hardware.
+Take the 160 MHz NSS from the radio's TX chains, as ath12k does since
+commit a82ce08775bc ("wifi: ath12k: add extended NSS bandwidth support
+for 160 MHz"), and limit the 160 and 80+80 MCS maps to the ratio when
+the firmware reports one.
 
-Changes in v2:
-- Add Fixes tags.
-- Use the plain Assisted-by form from coding-assistants.rst.
-- Add patch 2 for the same bug in the ath12k VHT path (Rameshkumar).
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
 
-v1: https://patch.msgid.link/20261011123631.1664734-1-julius@bairaktaris.de
-
-Julius Bairaktaris (2):
-  wifi: ath11k: apply the 160 MHz NSS ratio to the radio
-  wifi: ath12k: apply the 160 MHz NSS ratio to the radio for VHT
-
+Fixes: f552d6fd2f27 ("ath11k: add support for 80P80 and 160 MHz bandwidth")
+Assisted-by: LLM
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+---
  drivers/net/wireless/ath/ath11k/mac.c | 24 +++++++++++++++++-------
- drivers/net/wireless/ath/ath12k/mac.c |  2 +-
- 2 files changed, 18 insertions(+), 8 deletions(-)
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 1a237adaa37d1..a842306d65d9c 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -2278,7 +2278,7 @@ static void ath11k_peer_assoc_h_vht(struct ath11k *ar,
+ 
+ 	if (arg->peer_phymode == MODE_11AC_VHT160 ||
+ 	    arg->peer_phymode == MODE_11AC_VHT80_80) {
+-		tx_nss = ath11k_get_nss_160mhz(ar, max_nss);
++		tx_nss = ath11k_get_nss_160mhz(ar, ar->num_tx_chains);
+ 		rx_nss = min(arg->peer_nss, tx_nss);
+ 		arg->peer_bw_rxnss_override = ATH11K_BW_NSS_MAP_ENABLE;
+ 
+@@ -2588,7 +2588,7 @@ static void ath11k_peer_assoc_h_he(struct ath11k *ar,
+ 
+ 	if (arg->peer_phymode == MODE_11AX_HE160 ||
+ 	    arg->peer_phymode == MODE_11AX_HE80_80) {
+-		tx_nss = ath11k_get_nss_160mhz(ar, max_nss);
++		tx_nss = ath11k_get_nss_160mhz(ar, ar->num_tx_chains);
+ 		rx_nss = min(arg->peer_nss, tx_nss);
+ 		arg->peer_bw_rxnss_override = ATH11K_BW_NSS_MAP_ENABLE;
+ 
+@@ -5940,7 +5940,7 @@ static void ath11k_mac_set_hemcsmap(struct ath11k *ar,
+ 				    struct ieee80211_sta_he_cap *he_cap,
+ 				    int band)
+ {
+-	u16 txmcs_map, rxmcs_map;
++	u16 txmcs_map, rxmcs_map, txmcs_map_160, rxmcs_map_160;
+ 	u32 i;
+ 
+ 	rxmcs_map = 0;
+@@ -5958,18 +5958,28 @@ static void ath11k_mac_set_hemcsmap(struct ath11k *ar,
+ 		else
+ 			rxmcs_map |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
+ 	}
++
++	txmcs_map_160 = txmcs_map;
++	rxmcs_map_160 = rxmcs_map;
++	if (cap->nss_ratio_enabled) {
++		for (i = ath11k_get_nss_160mhz(ar, ar->num_tx_chains); i < 8; i++)
++			txmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
++		for (i = ath11k_get_nss_160mhz(ar, ar->num_rx_chains); i < 8; i++)
++			rxmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
++	}
++
+ 	he_cap->he_mcs_nss_supp.rx_mcs_80 =
+ 		cpu_to_le16(rxmcs_map & 0xffff);
+ 	he_cap->he_mcs_nss_supp.tx_mcs_80 =
+ 		cpu_to_le16(txmcs_map & 0xffff);
+ 	he_cap->he_mcs_nss_supp.rx_mcs_160 =
+-		cpu_to_le16(rxmcs_map & 0xffff);
++		cpu_to_le16(rxmcs_map_160);
+ 	he_cap->he_mcs_nss_supp.tx_mcs_160 =
+-		cpu_to_le16(txmcs_map & 0xffff);
++		cpu_to_le16(txmcs_map_160);
+ 	he_cap->he_mcs_nss_supp.rx_mcs_80p80 =
+-		cpu_to_le16(rxmcs_map & 0xffff);
++		cpu_to_le16(rxmcs_map_160);
+ 	he_cap->he_mcs_nss_supp.tx_mcs_80p80 =
+-		cpu_to_le16(txmcs_map & 0xffff);
++		cpu_to_le16(txmcs_map_160);
+ }
+ 
+ static int ath11k_mac_copy_he_cap(struct ath11k *ar,
 -- 
 2.53.0
 
