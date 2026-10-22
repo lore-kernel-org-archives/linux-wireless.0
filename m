@@ -1,102 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.130.19
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792649283;
-	b=fXTLCJh5kOy4mrPzVssbkTMLMZxPdHi9wbKJ3y4bmifK3eP0X2ekFB/Qh+b6sXB5uSS7
-	 a/tKAPF2ZDM+NzhxAdgd3MQfcA3ZqQCPMF5B72hsYUn/vpSUXbGRGRJRmPIJdXGRTa5ht
-	 xF1tjBUD4Sj6yi1PO21N+IBnsGK7pdxcAne2We+vQ4U5CBNclh3IlSM1tR6ZAeRH/BGBw
-	 /L2FZ5ETDQE5z5abtuD5QOA1LukqMl+HYwJYQAC7yuvEcthVbe2PMzZshTRc98q0qXPDY
-	 wXqeZdihsQ7rcUs9hwOj3mxgW9KmSllwn+fTd3vOJ+ZgU7s34HeTBU9X/0UqzUIaGwQ==
+	t=1792651362;
+	b=ASaosvmJF3e3G2OWyfkMb/uDHivGOXz21rD9w8pUdIknQ2r3yze76b7AmBdOKQwJEXxv
+	 C6TBtJ4Hd1EuVIyZglNtoWf2M+tfQZpCGS+TzedQ/NTArDYMUuesXtwZ1B8jWdetb/4on
+	 Frn2NCMpj4bUcyWelm2VGxJtUY0J3VsFoe9tIriRshDyVwm1c611nWs5AAXu1zawE9Yql
+	 U0lSirtQvVPlM5rvvGOdEByjKNKnJlWE/LVCEKuHsoyRPhXTk1HF0+f5n/DO1U6HEZSqb
+	 awEOX26QqY/gwa4RfMIwwKbyM4RGjKWtMCZ22FhuxxGUWCU+1QdlZBoucH48nbsYEQw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792649283;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-OriginalArrivalTime:
-	 X-EOPAttributedMessage:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:Content-Type:
-	 X-MS-Office365-Filtering-Correlation-Id:X-SET-LOWER-SCL-SCANNER:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=YFthrKfKmSAcUSyW22/xyDsvmiE466rfFMP+jKjZ0Dc=;
-	b=FNCsvXgNbaELHrkJuw4H6Zp0onbFFnwKHuA6au+DXEenOKNGjRHc8YYhm5MrxnN/W67r
-	 nCvav5yRpkM7L6AT2zpbhiwqjsHhr9sxxpA1yOseeXAFq/7Up/RV5H2RqsGp1IPX2PKiJ
-	 yqRGWw1KBbe5zDag5frgcuxT10yxO1KJvjE5CvuPlE6Hk4ZlOcCAJ++so4w7pyuN4wCQX
-	 eSP1fw2x/8RPxY8kn9l0DI1j5IPu5LH1RpLWNNSrfRQIKenVdzctUDm7z0KIu8gIKzdPK
-	 oet27gSd1SmFqoddnkkex0tW4lKocRKPu9C+i6VPpHxRQH1ml0qqZv/gzDmyimFnVrA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792651362;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=J/flEiTmGLficv+5MmLLk4wXKjultVTWKnMpX+Cttak=;
+	b=QKe7XTZuT4iodWan77Zz02tZpoi3Y/Kjt7i3hg6bZSGK9C2FCw7gP8ovHySMo5AxusKJ
+	 2EqZu+8kLbhWVRNWcjpK5RBMFPidiYoicBaja+u0yTevIABOEfbEKq3Z+W7s23yR/wtHF
+	 6XMgzvzCviw2ZwLuBbksNwg/3azy0VDllUVkvPB6iBbaHL/Xe3KzSX2xAdg/b/TxFiWZq
+	 sejxn/BUiuVy4+jLiXO73RvDtfy+A44wiK/nxpztmkfX1ZcupBypKjzr4q9FbME+RfaQI
+	 CdGNovduhxtUp/q19z/SeOBYqmJpURyQPF6CO43advpOhDlHEs/g16O6a91ECDGwWQg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=leica-geosystems.com;
-	spf=fail smtp.mailfrom=leica-geosystems.com;
-	dkim=pass header.d=leica-geosystems.com header.i=@leica-geosystems.com header.a=rsa-sha256 header.s=selector1 header.b=tTNxSY4s;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.130.19
-Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011019.outbound.protection.outlook.com [40.107.130.19])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B0LM9dH3;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A19606A319
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 06:08:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E2A19606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=leica-geosystems.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=leica-geosystems.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67818606A31A;
+	Thu, 22 Oct 2026 06:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=leica-geosystems.com header.i=@leica-geosystems.com header.a=rsa-sha256 header.s=selector1 header.b=tTNxSY4s
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ADBbxGxI1lO1pvVnlgGA9FCrKsG++X5Qarnc1Bwx90FsW0ScIZxYUIU9FjaEqRRIdKsjs9tmhuq12o617LabRrdBqB4jcGIyyb49LPfzCrZ87a06ULUslDPenWrUF7hzbOQo/tzFWAuTOXoCyahLNy3gB6mcPFGzfaf6m2u2oyaJqNwubh1+trUu2d9+9gu3hggMJq8rej5jKme3Gln/c8sZpmY+sh6waZH8e8eobncsBXaE7s3lfcqDRmFxRz0A7LoT2vhZ943lvklUed5GmbbcIxE+nt04LdsiR4jQ+xVcLpkO2EvR7GJXmLk3Cn5Phm6EPKqT6MncQKfuZeNrwg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YFthrKfKmSAcUSyW22/xyDsvmiE466rfFMP+jKjZ0Dc=;
- b=LCsIX/5CKlrx0HgknKY6796781cDh+x6JV7hHklYzbspp8ijhPVZE8prhPVsdp44Ote2QiH2YZuUU8cOjiqeGMec7ZKdVgp4HvKdmW/1gVkY9P/UVK8I/qSur3KcN977hRDCiynlmiP5xN1cxJEx7lhtwF2yaMOi6JFaT62u/r09NLtPjnSEvhFg++aDuKIuY9cnEI9nk+LF4V1qGw0cw32EvTUYKeyuMLJiK+PwKwCJmQzie7LLpcuCyFP/aPA7tgybJswSVyNZ61iRHtAvURwoNZxIyv78MHEWcoRe2zFgexubYQHTxsxmxbdpYlPU8TSw9t93q3zpAMitHPKp/Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 193.8.40.99) smtp.rcpttodomain=vger.kernel.org
- smtp.mailfrom=leica-geosystems.com; dmarc=pass (p=reject sp=reject pct=100)
- action=none header.from=leica-geosystems.com; dkim=none (message not signed);
- arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=leica-geosystems.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YFthrKfKmSAcUSyW22/xyDsvmiE466rfFMP+jKjZ0Dc=;
- b=tTNxSY4s0gCNE5Wm0J7+dJwjg9R7R/YoDXXGCXxOeoUtmzTtOEnD0FxJIua3GyVls8E5XRKWNNlB1l/LB/a4Kfa0aB8wWBE2JX2Wv3AUeh0g0RlZl2CSnJ6k7rHWcbd1TYlBKdcap1Z+SiNJAFIfAWo/RNX+8sDMfY8vVlBTVMQ=
-Received: from AS9PR06CA0315.eurprd06.prod.outlook.com (2603:10a6:20b:45b::26)
- by AS8PR06MB7845.eurprd06.prod.outlook.com (2603:10a6:20b:3c4::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Thu, 22 Oct
- 2026 06:07:58 +0000
-Received: from AMS1EPF0000008D.eurprd05.prod.outlook.com
- (2603:10a6:20b:45b:cafe::78) by AS9PR06CA0315.outlook.office365.com
- (2603:10a6:20b:45b::26) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.16 via Frontend Transport; Thu,
- 22 Oct 2026 06:07:58 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 193.8.40.99) smtp.mailfrom=leica-geosystems.com; dkim=none (message not
- signed) header.d=none;dmarc=pass action=none
- header.from=leica-geosystems.com;
-Received-SPF: Pass (protection.outlook.com: domain of leica-geosystems.com
- designates 193.8.40.99 as permitted sender) receiver=protection.outlook.com;
- client-ip=193.8.40.99; helo=hexagon.com; pr=C
-Received: from hexagon.com (193.8.40.99) by
- AMS1EPF0000008D.mail.protection.outlook.com (10.167.242.84) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.546.15 via Frontend Transport; Thu, 22 Oct 2026 06:07:58 +0000
-Received: from aherlnxbspsrv01.lgs-net.com ([10.61.228.61]) by hexagon.com with Microsoft SMTPSVC(10.0.17763.1697);
-	 Thu, 22 Oct 2026 08:07:58 +0200
-From: Johannes Schneider <johannes.schneider@leica-geosystems.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: ath12k: WCN7850: PTP hardware clock and time stamping - which timer and offset registers may the driver use?
-Date: Thu, 22 Oct 2026 06:07:41 +0000
-Message-ID: <20261022060744.1385839-1-johannes.schneider@leica-geosystems.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B0LM9dH3
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1792651361;
+	b=etiYGrinhqmkiFPWeF5ahK0A8opN9iE/0pd8TjIYkr9DedN3a+d8fTywa6Ad6IQ4T4+m
+	 q6vIahuBNn3gH2AGl2fyv/DVw5k2aB64y/iYNEs7iL+AkLGEkm8Xx/rDQ6ay2n1DyFFuS
+	 EqLcrbFHi4U9g0/waQyJMl2iFu4Q18r8xcW6cQcwUzmziULnqkB1m6UwFmSHpGPQ23D6R
+	 AbmcbHB+uWiVOReqp8tNqKXRK8mNefVtW2Gn7+FBXw60IwDskj+uoZIbo035xTOhfzcGX
+	 EzKLeqOx8vu4SmdwxM0eISoldp9dl8iarM/cR74U8qagTLeWRIgeUht7Za72DVt3rHA==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1792651361;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=J/flEiTmGLficv+5MmLLk4wXKjultVTWKnMpX+Cttak=;
+	b=L97++srPQurkOkrhmwOfSwEvN1hMxqA7sr5Us+OmD7Qy9VN64k6me67ShZRp8f6J4s7M
+	 UHGMrpQy/YJptX/DF+vAOE3wuLC+N57mIzxhhaQKG2PtSyJudECVgtUowXCPRO+Ph9hu+
+	 m0arpVEpgLbPLZLWFJWtyYEM6UWiqhXdeW6Y6L7pgbwUbxcqZ/WTwGZUw7NeqtPr7PDOf
+	 nK+5dXx6T6X9i1S1H75FI6cDvAKnVIfoCtJG2chA1s/W+6QcrjNje619Gv+CQIxZdcoJE
+	 0kdgHXgcXQcNAAuPPSp/3D6SUJdATKgO4ex9zAZIiALlKBJqOr7RiCVXTxyWjp4OOYg==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 3D3AC1F000C2;
+	Thu, 22 Oct 2026 06:42:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792651361;
+	bh=J/flEiTmGLficv+5MmLLk4wXKjultVTWKnMpX+Cttak=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=B0LM9dH322ZXuiEXTgWzPvolOmrHeulPTFzf2ash7Z6HaBZ2Eq9YyGcKtAGxVUl77
+	 feb+pwOr+nzrbxycPDGSVDDTzljAQ8CH8YUr4eNDblY6j7xLIeAmLxkXQADdAy1d3n
+	 ODuA1R1+s7r+0kyg0SlRDG4xc7O475pUM9UVvBWx5J2AcOvqedEsLU//4rSmYictjg
+	 178N+urpjJ3m9pNyMGJvZTIiGvwrZrafj7I1q5fsqNO1gUtTDtj7P30weZ43FogI7X
+	 n0Og0Ewk+Dw2RymB4MoxHLxB1tp4Dyga2VOwPtSzItrUToi1pDA21IYIWXtwrOvdZf
+	 QhmxqPmbRBQyg==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id C2B924351A;
+	Thu, 22 Oct 2026 06:42:39 +0000 (UTC)
+From: John Macias via B4 Relay <devnull+dencity7.gmail.com@kernel.org>
+Date: Wed, 21 Oct 2026 23:42:37 -0700
+Subject: [PATCH ath-next v2 1/2] wifi: ath11k: bound READY MAC address
+ array reads
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -106,92 +83,83 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-OriginalArrivalTime: 22 Oct 2026 06:07:58.0559 (UTC) FILETIME=[AFCC3EF0:01DD61EB]
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AMS1EPF0000008D:EE_|AS8PR06MB7845:EE_
-Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 843d2bbb-05d1-4271-b12a-08df3002d25b
-X-SET-LOWER-SCL-SCANNER: YES
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|30052699003|1800799024|376014|36860700016|82310400026|23010399003|56012099006|11063799006|261021123027099003|6133799003|18002099003|261009223027099003|10067099003|261021121427099003;
-X-Microsoft-Antispam-Message-Info:
-	fc3+1lVhDT0jkGWG2KXzrehTFLBWet8kR0vcuyG0WK/sKIaFyzcpxEE4Vc3oqsHCurmbgXSM2xT8/mW4iePm31bcBTvTDpCauF8p+BojmSu+H5IV0j7yeon84OKmXhDMTLHNc6XpOqOlb02dezzL/DN57HVm7TSJVJA68KzTUZugjF1g1NYOqK/jmRenOyvBb3souIB9KJDQeljzqh3Zzbp3x6y4+v0iCoCaTcTmxgSWUEzKyPtvx85j6eoc9uoN8wpUJcKnM3/qttvT8KG8SXuEHJW+tbj4cbUgW/0+ME8EUFEC8eUp+9vBGxNOBBXONWDl07QbB8eJ/Qrb5f+DYoGkBYhSFBi/u1nZxv/WFN0xoQGOBkzdA6ddCXWuEOaP6ru1URYZOEORN7yJ/8+xAOqgIIaZQb0V7dlaA1gpIHdT2CijhgROyiNV2tB+Q5UqGqnNSY5YzKsCeYxG0eb8CrfGzaaj/8s4XOs6wIipP0CZUweyeuZn5T5SPSJgnhZUjg18cL5dv+DoNL8ut76KPM20xSkx3Up1dMjQSxUcGBrbXu84yWURRkeuQ3h74b5CjsNYJ00r266kZHzX46rJIPWgH/SL1L97j5kGO1R8ZBc+nsI95ta0ILHGwu4yX4QvTgfchvJ/vk4IMGIEni1PBAK6y7X5qG7TxiWAymm9T2G3ftuPLQuZnwVed5DlIDAjgnTC5jElw9qBiSv4JLHoJA==
-X-Forefront-Antispam-Report:
-	CIP:193.8.40.99;CTRY:CH;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:hexagon.com;PTR:ahersrvdom51.leica-geosystems.com;CAT:NONE;SFS:(13230040)(30052699003)(1800799024)(376014)(36860700016)(82310400026)(23010399003)(56012099006)(11063799006)(261021123027099003)(6133799003)(18002099003)(261009223027099003)(10067099003)(261021121427099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	prZpQuB1IWtPPGJpW6PO0zgWXAcdE257KPf81u4+Ad13b01lHxRqa370i0nUCBhR/buhSNQY9sQGSS3ctNwFu5nGSRxXOCdFYilaAvvkLK6lsm8iFhYqM0dMNbWM6WWO5zU0MPyoJ9IePhj5IatpMB9mF+bhW/2NsfK/LnwCiW6eLlF7y31dexajlFdtnRYrt9MsUoAusVgz3FxNKvBC3HVG3AECJrtQErPX3QzM5WEyJFXgPrCH+qZVDrrNTCTaVAD7zcOZimQnDlPHIimjcyxogmF3HfUIKwjqBhPrD+iFslhzqpNzs/12N4i8ZXPQ/5nMzOnIqvLSeuSqNcz64gX02af3Z0IVlDHfdbf+QDAxy4MPyUzGsXQGZk8wsm5xsLD1v8/zsE4zQBDzsHhGRFn4oCDxlt59ydJKVG71VrRaKp9BDR/Z/6l/CzzBdmKe
-X-OriginatorOrg: leica-geosystems.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2026 06:07:58.6809
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 843d2bbb-05d1-4271-b12a-08df3002d25b
-X-MS-Exchange-CrossTenant-Id: 1b16ab3e-b8f6-4fe3-9f3e-2db7fe549f6a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=1b16ab3e-b8f6-4fe3-9f3e-2db7fe549f6a;Ip=[193.8.40.99];Helo=[hexagon.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	AMS1EPF0000008D.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR06MB7845
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261021-rdy-mac-array-bounds-v2-1-cf7f45f868dd@gmail.com>
+References: <20261021-rdy-mac-array-bounds-v2-0-cf7f45f868dd@gmail.com>
+In-Reply-To: <20261021-rdy-mac-array-bounds-v2-0-cf7f45f868dd@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, ath12k@lists.infradead.org, 
+ John Macias <dencity7@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792651359; l=2463;
+ i=dencity7@gmail.com; s=20261015; h=from:subject:message-id;
+ bh=Fqs87XxAhySy9Ng8R56w4xVx0qjiqfm2ePiFbvNvI0Y=;
+ b=1rbPMf1BSr/GGfj65eUpIJF4yZRe3hLo3DA3U+vzKR3WDcbWXpQY9t3TZ8elaMNfkv4yepyYd
+ lFF8gZuF23zAyAOAqk4W+O+tuDj1WP4STFq19BtPLc4uNM6z0yIq6dY
+X-Developer-Key: i=dencity7@gmail.com; a=ed25519;
+ pk=z7cMHA0B6NULvJzsST/bbOOegMB6xCo9+/ytQure7B8=
+X-Endpoint-Received: by B4 Relay for dencity7@gmail.com/20261015 with
+ auth_id=1198
+X-Original-From: John Macias <dencity7@gmail.com>
+Reply-To: dencity7@gmail.com
+Content-Transfer-Encoding: 7bit
 
-Hoi Jeff, all,
+From: John Macias <dencity7@gmail.com>
 
+The READY event carries a fixed record whose num_extra_mac_addr field
+advertises how many per-radio MAC addresses follow, and a separate
+WMI_TAG_ARRAY_FIXED_STRUCT TLV holding that array. The TLV iterator
+only ensures that the array TLV fits inside the event;
+ath11k_wmi_tlv_rdy_parse() then copies one address per radio without
+checking that the array really holds num_radios entries.
 
-we have hardware time stamping and a PTP hardware clock working on
-WCN7850 (hw2.0, firmware WLAN.HMT.1.1.c7-00108) with mainline ath12k
-(v6.16), so linuxptp and chrony can synchronize the system clock over
-Wi-Fi. Between two WCN7850 M.2 cards on i.MX8M Mini EVKs, one AP and
-one STA, the client PHC stays within 0.95 us SD (p99 3.45 us) of the
-master over 6 h, measured against an independent Ethernet PTP
-reference.
+If firmware advertises at least num_radios extra addresses but sends a
+shorter array, for example two radios with an eight-byte array, the second
+ether_addr_copy() reads past the end of the TLV value.
 
-Before posting the series as an RFC, we would like to know whether
-the pieces it relies on are acceptable in ath12k, or whether there is
-a supported alternative.
+Check the array length against num_radios before copying. When it is too
+short, warn and leave pdevs_macaddr_valid unset, so the driver falls back
+to deriving the per-radio addresses as it does when no array is provided,
+instead of failing READY processing.
 
-What the series uses:
+Found by code review while bringing up a device with older firmware; a
+userspace harness that includes the unmodified parser reports a 6-byte
+heap-buffer-overflow read under AddressSanitizer for this input, and
+the fixed parser passes. Compile tested on ath-next (W=1). The same
+change has also run on an IPQ8074 hw1.0 board (with out-of-tree
+enablement patches) on every boot since 16 Oct 2026; that firmware
+sends a well-formed array, so this exercises only the normal path,
+which still assigns both per-radio addresses and prints no warning.
 
-- PHC: the free-running Qtimer, read at MHI_TIME (0xa28/0xa2c),
-  19.2 MHz.
-- TX stamp: the TSF in the TX completion (rate_stats.tsf).
-- RX stamp: the RXPCU_PPDU_END_INFO TSF minus rx_duration, from the RX
-  monitor status ring running beside the STA/AP vdev (no monitor
-  vdev), matched to the frame by phy_ppdu_id; MPDU_START (retry bit,
-  sequence number, addr2) to detect retransmissions.
-- Both stamps are mapped onto the Qtimer with the PMM global offset
-  (0xb500fc/0xb50100), read under the UMAC awake handshake (write
-  0x3004 = 1, poll 0x1e04040 for 0x2), as qca-wifi-host-cmn does for
-  Kiwi (hal/wifi3.0/kiwi/hal_kiwi.c, hif/src/pcie/if_pci.h, public on
-  CodeLinaro, branch wlan-cmn.driver.lnx.2.0).
-- mac80211: a driver op to report the time stamping capabilities
-  (get_ts_info), so ethtool -T and ptp4l see them.
+Tested-on: IPQ8074 hw1.0 AHB WLAN.HK.2.0-01792-QCAHKSWPL_SILICONZ-1
 
-Questions:
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Assisted-by: LLM
+Signed-off-by: John Macias <dencity7@gmail.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-1. The Qtimer at MHI_TIME and the PMM offsets: stable across WCN7850
-   firmware releases and chip revisions, and acceptable for the
-   driver to read? Does the same hold for the other ath12k chips?
-2. The UMAC awake handshake: is it the right way to make the PMM read
-   safe from the driver (without it the firmware crashes), and is
-   releasing it (0x3004 = 0) safe?
-3. WMI_VDEV_TSF_TSTAMP_ACTION with a Qtimer capture request: the TSF
-   report returns a global TSF of 0 on WCN7850, in AP and STA mode.
-   Should it carry the global time? That would replace the PMM read.
-4. The RX monitor status ring beside a STA/AP vdev, without a monitor
-   vdev: a supported configuration? Is there a lighter way to get the
-   PPDU TSF of a received frame? rx_msdu_end.ppdu_start_timestamp is
-   empty on WCN7850.
-5. Which instant do the TX completion TSF and the RXPCU_PPDU_END TSF
-   mark? We see a constant ~16 us TX/RX asymmetry, and the mean offset
-   moves by up to ~2.6 us between associations with the same spread.
-6. Multicast and broadcast frames sent by an AP get no TX completion
-   stamp. Is there a way to get one?
-7. Would a series along these lines be welcome in ath12k, and is
-   anyone already working on PTP for ath12k?
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 08fd6795ed..6ae4e881f8 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -7330,6 +7330,12 @@ static int ath11k_wmi_tlv_rdy_parse(struct ath11k_base *ab, u16 tag, u16 len,
+ 		if (!(ab->num_radios > 1 && num_mac_addr >= ab->num_radios))
+ 			break;
+ 
++		if (len < ab->num_radios * sizeof(*addr_list)) {
++			ath11k_warn(ab, "ready event mac address array too short: %u bytes for %d radios\n",
++				    len, ab->num_radios);
++			break;
++		}
++
+ 		for (i = 0; i < ab->num_radios; i++) {
+ 			pdev = &ab->pdevs[i];
+ 			ether_addr_copy(pdev->mac_addr, addr_list[i].addr);
+
+-- 
+2.47.3
 
 
-thanks and 'Gruß',
-Johannes Schneider
