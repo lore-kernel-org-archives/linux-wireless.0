@@ -1,94 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792635827;
-	b=a8q89E/Cf5gC9vXxmtlbWRzwDkde++TnJwulGk5Z8n6wfp4yd5DPnuvPB9nYS3vMKUC/
-	 KyVHBUs/LVfNK53d7kX0oaVCQMdRHbOOp2TrH/AwJvLdMIRn88rM4etRSm8NTdObw3nxN
-	 S2Clia1/rARRInFhmgyIkUdzmfYoZjWYP1vg4TrmvDsgBZ5dO6hONaouLyKx6r1K/5Lok
-	 lUyLKlR7QkZnvVPCthtWLD94qcsehbrXFA3vdghB78HWq34nOo5zDXCrBj8IPzxwOQI70
-	 swIqf2kZ9E+pgL2CzxSG6BMQi0jSIf3V3GUwbh9hJUh2n6D6yoSNVoEvzEJwWtgiWsw==
+	t=1792635906;
+	b=LEZO/t5z+xgY8IudGje+o/OzTmYM/Lr6INduQpOHPVSxUxHCj/Gn2bDao9s32EQeReyE
+	 VOzqr3uPN/vWwaaM5d9ApU2ma1FhPddDHHImrob44dQu44t6WdD/pzP4jdCtJ8+zK4EYs
+	 t+BKwf0BtnrjunKXEDMncXX4qAZfkbbY2U38EUpcTtcJbpof0djgZHCmSSy2ecYEFqihp
+	 GCUXjTxe2NrRZmC8O9vJNWJ/hXO04eQcqVfa++cLDYbcZ2UBLpwrdUKLKFWygWNu6C1S4
+	 Ij8eCDke5cQglcsWSsB7/q+DlPKMnnuw4KODfP1yWeqbZDyISXuLx3TC+wr8QQ9uDVA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792635827;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=BL3IHRvJ9+gWwxp3abRrWJFWvxWrWClVc4DpkC67oPM=;
-	b=2das2u7cf4mFcKBD/a9C+raGa+72bgM4YZ7wq1NxvQM6w+7c7pJZj1jlTrHnXOc8zTt4
-	 gPts0dDS1pZMHT+Ft7eN7uvnLxDVKSEDvl9enucwkSg1ZZd62GeHTf/ML83qBoCpRNrzz
-	 gjpXy62Y7yrcG5l/MUMu0Pbb08rRngIs12rD4iDzEvyBx8EP7jh8UxSaPcTVYS+7UQp6y
-	 1Q86xmOmTTIIG6kGZZU/W8BiLzLhodCQLV2IDLqGq9aZRwMEI6KyoVX6nxJfMcH+yyzZP
-	 twFo9EWONmxANWf2b/BbYYlAidsDi+rv6X3rQCxekYutwDrQNZnKWCXbAojvfO0fILg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792635906;
+	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
+	 Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:Message-ID:
+	 References:In-Reply-To:Accept-Language:Content-Language:
+	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=AYLwfa7nt8RqVoStesXznFTvEO2nsHJc4ALfOcelwW8=;
+	b=G1AeZn6joLMHWvyS0RtcQI7aHlK0Ug3uINU+LIw8A4ob7n3RN6XRqa1TyxpObBUugnhC
+	 z3jgOkcAFGh7OhklqeqyK++N7FdWnv7czQbNrPM7Gc/u6rw5UV1nrp8fVsmvDDREkpv2L
+	 iWuKS6dHp85tpRQ1pNdzF4e6FhIuX5f7DEPIJPIrOUsccRJVGrBxKpfqOfUrmUy8xwBCY
+	 Qo111zUJctc/ubrHChHddM1GwwdGqkzovv6BXsSaUwiD6oFuUIXvXvjOshGNuwI6KD1XD
+	 kXAQqVsCxoQGKbbDgJoKeGhw0gIqulYjD5rxzVsU00XjALLtNl4Fqrbmorj/mkBYFbQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jDW3F65f;
-	arc=none smtp.remote-ip=209.85.215.176
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=realtek.com;
+	spf=pass smtp.mailfrom=realtek.com;
+	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=MUvRVlQz;
+	arc=none smtp.remote-ip=211.75.126.72
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D649606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 02:23:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D649606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4AB606A319
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 02:25:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BC4AB606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jDW3F65f
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cc52c1b8286so209863a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2026 19:23:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792635826; x=1793240626; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=BL3IHRvJ9+gWwxp3abRrWJFWvxWrWClVc4DpkC67oPM=;
-        b=jDW3F65fISoaz7+amfP89O1a+TNphBoF8sXcXEbXqNHiXy05gjaPxmmP9qspk2t3Fe
-         JuQCtSOIZh6fLy5lcF9Kter3YdL6FRhO/CO4tzPoK/DzJ/956HE5p99gDAJEvuqWjK9I
-         6y27cGBiAxdHopYyhntNX6nkFY8E0t5VOpEYqWJBvTiIp/u//Id8fFNHFT2Ud2wIe6oZ
-         ZV0fDoNkiPdJMqbJSJGGtEoBjSXRNT+3hxGTQXsApCGeJRL3YabEWqheiTZJC2XqwOoQ
-         4hWOsmEdjS7+ffdURfEqu+v5M4I1nSwbx3uygcurNxU4OB9C34H1vX1lmI+DdqpFOsCj
-         vQ4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792635826; x=1793240626;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BL3IHRvJ9+gWwxp3abRrWJFWvxWrWClVc4DpkC67oPM=;
-        b=T1hpcOwaMVxrlLfdWe3kcnn16oOIjZjn5tBBG6y/aVgIilMdNQSMXcBrRPBPDW6C84
-         JBz1Ha7Gw6Jc/TPzr+bGiIeEgVCoPZXEHNPsY1COqubeVaHY+RaK74b/kSLK24I84nLY
-         lb10s0xUA5EnvQ2JEBiAvDPrwdeEjV1w7z+5hQ0nsY/k4MITqEqcwDopLYtargUoMrzm
-         Be9EwEktxXrpOaFeHu5ePc/HLJp9GY+VOlfnwSPQ8HQVNscJcy91wG3JPMYvL8CAoKUN
-         h0MBw2iTZb/OBRmpkGp+uKPTwwa4XRhtuK24qGLdxShq2De0HC6iGBnroahvToxogYuV
-         7/Vw==
-X-Gm-Message-State: AFq9FYJLsoFDQaF210WjQrpAW6kuvpNTNG+DijnuwrNuf9ZM4XFq18e3
-	KuYEbWhb3UQh7BVvdouLaxl6KZyvLGKSzq9JB8ju4dd392HvJu/eSnByw/TlA1ZP
-X-Gm-Gg: AYBFou0lWU2BpyVnA/WuEHwf8wxdfGQPeSpvzBSDtV4h9DsJA31cBoUb+zvEADHX44f
-	ihFH1otQqZscpe4Nb6+jHxs0aBt1qmszaLQb7kg4lnvY1ueVdLPv3uCPMzxxgUXyFzR0/+pwoFq
-	BzW4WEupbw/7Bviqy58pBScYSy35yk/LR7Pk5lRP3/tCHOtRLtQY4qQ2GPTh/0m5XjqVHy6kQuO
-	QQARVojvYHpnHXXpZAKOiIKcDMr+IVl+/VaDcKRhZhvX4PiUndhHwATe6bg6jmGg6uxs5BGii9C
-	2RU8LQsUtTo2pLVoc40XwHRk3A9yRmGrzpBi6/fvrIVcHlF6NsElh+wExF9b1TTzR7IkYOfkOpm
-	wS8994d4P8pywYSwQXhdHSD5idqzK6dsAzKeWnhkXsZ7B/w1+u3StagaKZcyRUgJ2rGF5Rd77wl
-	43wPIilMcptK2HhGs8jbpS73IGw4vXaqs22SL9ICotRj7GwtRtElCwnJH/9Pg5Ecyo2a4TKumDy
-	9vuq1lVB9bY2iA1mSb2aoC6m7co2KBmq2klYbjDawJluHsPCQBuxcDD6D4g87A2Xwldb/vt2gej
-	UAJaVX/kaBkZzisLY/qj7OTettz1rwRz5XlUQ6CpHYpzJR1R+TMR8X7pnScNu9DBfqQwkC2xvdy
-	yQAk3vVq9IbSI6QooZLUiy3wZ9ZYV
-X-Received: by 2002:a17:90b:4c85:b0:3a2:bb9f:f87d with SMTP id 98e67ed59e1d1-3ada6c8842emr643889a91.21.1792635825946;
-        Wed, 21 Oct 2026 19:23:45 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:37f::e36])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ada4954979sm1783949a91.17.2026.10.21.19.23.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 19:23:45 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Linus Walleij <linusw@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	=?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?= <giedrius.statkevicius@gmail.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-kernel@vger.kernel.org (open list),
-	linux-gpio@vger.kernel.org (open list:GPIO SUBSYSTEM:Keyword:(devm_)?gpio_(request|free|direction|get|set))
-Subject: [PATCH ath-next] wifi: ath9k: release the LED GPIO after ath9k_stop()
-Date: Wed, 21 Oct 2026 19:23:43 -0700
-Message-ID: <20261022022343.1409432-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=MUvRVlQz
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69M2OxlB6477221, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1792635899; bh=AYLwfa7nt8RqVoStesXznFTvEO2nsHJc4ALfOcelwW8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=MUvRVlQz/p1l7cJNr15cYnKf5ZiQmqI1JR5lkzmmcyiHZsbfu+fxRj3bQ3Z3zLNOu
+	 xjmLkOXv2m8DLorPN7p+PaJBLdNHChcfnj+72SQsN6wGjeHG2xeckwDlayQV37vy9o
+	 Gy3G5ByU1RhhkywZ+n9y9Tu60iEssM2XKs1Aksmb1vlxK0Xq6RyXy2gTMW3EauLgH0
+	 7RJsIj09ordC8BgneoX3XruFqzS4rq9ckt8lfO3gK8gC6N08wpAzGZHYJsYpUdIhmD
+	 kml7qFpVGTp1q4nwnx1gN+m8hmiYy4WLcXjrdyPw3iFcDpm63oX59/OZH7jH/jiSiu
+	 Hoim+iaQlzN0g==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69M2OxlB6477221
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 22 Oct 2026 10:24:59 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Thu, 22 Oct 2026 10:24:58 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
+ 15.02.2562.049; Thu, 22 Oct 2026 10:24:58 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2 2/2] wifi: rtw88: sdio: limit the high queue
+ to DTIM delivery
+Thread-Topic: [PATCH rtw-next v2 2/2] wifi: rtw88: sdio: limit the high queue
+ to DTIM delivery
+Thread-Index: AQHdYVnJG9JyRljXv0iDmLu7bg5MyrcI1STQ
+Date: Thu, 22 Oct 2026 02:24:58 +0000
+Message-ID: <ea2137c603f146738f8db100e905060a@realtek.com>
+References: <20261021124318.15993-1-luka.gejak@linux.dev>
+ <20261021124318.15993-2-luka.gejak@linux.dev>
+In-Reply-To: <20261021124318.15993-2-luka.gejak@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -98,61 +82,31 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ath9k_deinit_device() frees the LED pin in ath_deinit_leds() before it
-unregisters the hw. ath9k_stop() then switches the LED pin back to an
-input with ath9k_hw_gpio_request_in(). For a SoC GPIO outside of the
-WMAC, ath9k_hw_gpio_request() takes a new descriptor through
-gpiod_get_index() at that point, and nothing releases it again. The
-next probe fails with "request GPIO12 failed:-16" and every LED update
-hits the WARN_ON() in ath9k_hw_set_gpio(). That request also runs
-under sc->sc_pcu_lock, while gpiod_get_index() and
-gpiod_set_consumer_name() may sleep.
+Luka Gejak <luka.gejak@linux.dev> wrote:
+> In AP mode every broadcast and multicast (bmc) frame is sent through the
+> high queue, which the hardware only drains after a DTIM beacon. Only a
+> few frames leave per DTIM, so steady multicast traffic builds a backlog
+> that holds the TX pages the other queues need. Unicast traffic then
+> stalls for seconds and clients can no longer renew their DHCP lease.
+>=20
+> USB had the same problem and was fixed by commit c710c7c2e038 ("wifi:
+> rtw88: usb: route bmc frames via the high queue only for DTIM delivery")
+> and the two commits that followed it. Use the same rule for SDIO. A bmc
+> frame goes to the high queue only when mac80211 asks for DTIM delivery
+> because a station is dozing, the frame is ARP, EAPOL or DHCP, and the
+> budget allows it. All other bmc frames go out on their access category
+> queue.
 
-Free the LED pin after ieee80211_unregister_hw() instead. This also
-frees the pin when the LED class device could not be registered,
-which leaked it before.
+I'd remove second paragraph since it just describes the patch 1/2 does.=20
 
-Seen on a TP-Link Archer C7 v2 (QCA9558, LED on SoC GPIO 12) when
-reloading ath9k.
+>=20
+> Tested on RTL8723BS with an ath9k client.
+>=20
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 
-Fixes: e34f2ff40e03 ("ath9k: bring back direction setting in ath9k_{start_stop}")
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c | 2 --
- drivers/net/wireless/ath/ath9k/init.c | 5 +++++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 2dbc7efdd637..d525d8ef9369 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -67,8 +67,6 @@ void ath_deinit_leds(struct ath_softc *sc)
- 
- 	ath_led_brightness(&sc->led_cdev, LED_OFF);
- 	led_classdev_unregister(&sc->led_cdev);
--
--	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
- }
- 
- void ath_init_leds(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a7a11781d83d..f6aa2ec1683c 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -1128,6 +1128,11 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 	ath9k_deinit_debug(sc);
- 	ath9k_deinit_wow(hw);
- 	ieee80211_unregister_hw(hw);
-+
-+	/* release the LED pin only after ath9k_stop() has configured it */
-+	if (sc->sc_ah->led_pin >= 0)
-+		ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
-+
- 	ath_rx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
- }
--- 
-2.56.0
+
+
 
