@@ -1,109 +1,142 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792666839;
-	b=MEDuIGkd7aet9/Ntu6lvm75uqM2Ip9B4IOpOooMfTd0SYeKxwXeb4NgGMGal6F/Uc5B4
-	 HfGWIxKEdm8yEqC+sx3sKNUWhc5Z/c95Kknd8QYNilvAym7tjoYCun7eQZ2haZGFPIpjU
-	 TC14lPAhAk9yCprV+3ufbEzPbNPZG5ocYfn6bR07wmfnZo+bb4atmcIRTFtwuC7e7HVek
-	 RtkYa7KBzZitIkE1JBIgPqFqakJDz0VZEvT7VXo9pv3d+ptch8Y65CSmZGeKnP4kafdB2
-	 mJXG2MTf79auByI+Txqs63RTE3bX5jU4HSsFubkwIQjKHTZWGKvlIdpU91bxS8hAJyQ==
+	t=1792668763;
+	b=rw6GVOEiu8s3dJLBDy24pxsACbGkvsNT3r1EnlwkkBhB59bz9xkiAFi+zEfLwdWqH4NK
+	 0xbdeL6hcCWO68ozG/+KGyJpztZrxQwOKn/WSIbaj/a61t7OIH5YUQjmGD3fynIgjygIW
+	 OYT9f58ZAA8xou26yMUyVf37RwsqK3voQ3DsaGoj42L3AOo4bNZgXl+BC3f/wbpl0ZVSf
+	 x/6hzzVDwDr0JjGeckHh28Tj2mXkVUR0usfLzdBJtI+xnjAMYKQFJ7KXY4Ktf25Q0wcFt
+	 g9YY0Yr9oz2d6p5QKdPvBgGGcres4OIPdXaWChpt71NxsfKV0Lf/Hctu5ETaOhczvHA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792666839;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792668763;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:X-Authority-Analysis:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=tNgk1Zalkc1M0w3EsqbvSKsYob9Or3oPjo0QS5Err9g=;
-	b=x+YrjgetwiyJ+MylT80r3f9/MSG3oU/Bh3kGsas5YP8HSJakrvZtKbgHtHXgai1MLgE7
-	 Bp3+1unPb63407INkkY7nHkL3aa+CGUxLaZrEJoOIj+3ekAtIkHaiYE4lkEIvCbiUUHXJ
-	 ezxzQTburDfkJwW0wCCOI33iGEnRDpazCsSQ/fdYRuKsOlpqr11Qp88azlegioYn3QjqI
-	 3tlHvORY+V900SEaaX70hwB8zMBY56TNH8c3d7xKcVWXRsps7m/+A8A/RFm0+fbqNDqQr
-	 DvvQN2ByeEg5ZueDMk7Yrn5x9YZFX/t2hVzIEWR3Z25CJ5m2u/4eDLTzjm40F8PVx0A==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
+	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=dXEU4fNstySwei7nZv6T8mycxD11pRJ5qnWjwSzk+X8=;
+	b=hwVm7DKWICs2rmZb2qaQhO4OiPG46BtnxjmKKEUL62yEW/SNs8ZMHsC8zQWvRfWh6J10
+	 ieLM0x4cG6mTvDncVopavySzJu4tVwxjbivQiYZfwDbvdBDmsrdqwGumoRVeXpoCIDcp+
+	 xk7mZYZl94cskmLp1j0DgoU++31uJ8mBZiyhj7vEc8GhGT6nenCyJre0DJL5z/zgDus7O
+	 qCG1JcNT2EI7/uBa1jYnKEZGN2aJbFRAs7BCJ4GepRhW8Abow9hvIoISnotNrq1OJn9JZ
+	 Jq/97sJ2FRSXqs+EZAMPDeIwXO43N9QFAIV1MA3ALVK6PtlH0UHWWvIHdqWAGjVE60Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=UaDET+z2;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=DlDQeqfT;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Z3TQBkVB;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=QYG1Xf6G;
 	arc=none smtp.remote-ip=205.220.168.131
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D3C606A321
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:00:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56D3C606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8649E606A329
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:32:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8649E606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=UaDET+z2;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=DlDQeqfT
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69M9xxFe1962207
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:00:38 GMT
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Z3TQBkVB;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=QYG1Xf6G
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69M9xpjK346108
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:32:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tNgk1Zalkc1M0w3EsqbvSKsYob9Or3oPjo0QS5Err9g=; b=UaDET+z2B6Wm/Tl/
-	c2YSwGwenIEBpibmySjrKLSrKR4hv/K8MyWg696uyqs+tclMvvoEJ6zGKHGQxcBI
-	+d8QC6ZatvL4V38ziy0G+22dZ4oYnXJed+JH34854VVjGp7GTT1aqWYGO3ziHZSe
-	tEHr3iGexgVH2roHaVz2bucKKKunKbbmOCAPaODOMRKtCacqlt1qs1CSxtvbqTiq
-	HdzmqC4XZRT9P+qeQ4gH+5km1QYYjduTP3rztXZktG1kUeHOYH+3rgZ0U3IRr9jF
-	qyx3RIWZv/JGCrW05HG83zhDS6iFfXQlXJwzcQjeifK4+htayLlxme/4sTphU2k/
-	WFgzCg==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hf93ajcsj-1
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=dXEU4fNstySwei7nZv6T8myc
+	xD11pRJ5qnWjwSzk+X8=; b=Z3TQBkVB20a5qG7u5iAzniVCA6vhy+g7rZAljzZj
+	mkKDSbpW1JcJKAAZtfFabQV0ZGI7TqWZlqo3AXsayy42gSw7v6g+1gGBw7SjWB+n
+	pI/1Oy7K2n9v5746SuqfhYWkIf2AoXKZx7NWoRzDGazf/PJ7zSDG0r8ITgSTVaWD
+	X++JFG2o/fpng6QQASI9c5gvT9cyqvFpKlyEjkkUfw+3nMc2lmsStQqjA6rWtVn9
+	7IAK52MAkALuckgcBtHxE8bPGBRQdIx6RxR4jgkbaZVBXDtVSD8N2PbN3uacqza8
+	ACWxeRJbyW2J468G8zRfklcoM2HtzT0dNPxERQanw7SKTA==
+Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com [74.125.82.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hf93dapth-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:00:38 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ab27eb38d6so1819993a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 04:00:38 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 11:32:42 +0000 (GMT)
+Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-14373747468so387108c88.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 04:32:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792666838; x=1793271638; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tNgk1Zalkc1M0w3EsqbvSKsYob9Or3oPjo0QS5Err9g=;
-        b=DlDQeqfT/AGhVmVSF1p5lNf5xutNccqb0Df60Nmer063kvVDBmsApQBgKFiljdx/7C
-         qJ+b4osSE0wIkmwd6U/WkqLBZupfeS1vdQi/+OzSmuijQ59N6/Kg3xn5/k0dzVFRIPi3
-         whxFckorDmdQcWG8LKYttZebKn6WnFDHXXarO02zcmbq9lr8w6sMc6GEbfdo6pVKH/+7
-         L4iBeU45XV3RsbHEMvcyard5Srq2aWzXWgiQl9aWeZ3jBPKFAdBdPh4NHMO8PIkWL0Xj
-         I9GZUPf6OJthcV5NYjdEF6+QHW7dZNVijIylJPUWjCBOuveRBhsduKH3Kg9JstyaMkNJ
-         N0SQ==
+        d=oss.qualcomm.com; s=google; t=1792668762; x=1793273562; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=dXEU4fNstySwei7nZv6T8mycxD11pRJ5qnWjwSzk+X8=;
+        b=QYG1Xf6GP63YYCcSETYUUVRYcrLd+SXv8cR6aRb3KCYkvWyZ9y6XMP6DHnmOYLGNGF
+         TFDzwUE34a3SyTiYrJJ//r5FIrAAFFvPREKaSzsNRZxYLRcU/5QAyhJXc4F7R5raz1Nb
+         M1I7A1erKhkQkJMLXwpri4/femNNkvaNhyGmNivHbhl5J5IiVIedzLHVdGKcI2KSUk8K
+         1Ufe2W+v38JrzYqUCuIuk+xdoUJX6T1/JFwB989aRfJVpfYKKJy3yUriQXhxiUPWe85h
+         pn4hHnPjyqYsUOrIhK70lm0zx5BzDqmqhO/+RhImbgfD25K7nhNcCcyEX1sfM47jkimQ
+         uYVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792666838; x=1793271638;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=tNgk1Zalkc1M0w3EsqbvSKsYob9Or3oPjo0QS5Err9g=;
-        b=g01mkiA6jYgldABzhPLkUJQrGpQUaUticVrE1+imJt0egHQcouBXS11mOOzRjotsYi
-         HQ5qYaTda5ZdZHiOG7uLQFqbo7OZ5c3yr1GCDLATDQ1MBU9Vzni1JngFoaIliV71C1Ln
-         Trf4ncE2/3v6iYNAG3xApLxJzX4a0awyzFO4GE4BKJjPIf1wzsxw1epDguvRpa8b5lOB
-         A9nMTZoA5GwmZS71Msoe7JVdyXgywrIMz/ljAgYBJTeEh9ihtxHIsgd0fTNZiIg+6RhV
-         6GFYCgFAEMZ1Jm3POYscvd0WXtIKLrPVHIii1l9ajq1eJvVXKlSXWdKXhiiaKxU1L3iq
-         sEOw==
-X-Forwarded-Encrypted: i=1; AKwUvBxVPX2tHLzO/7J09EcJtiuXGe0CHruwYAuLMJPHrGSANzzjLOYBLCZUFthVo0AqxfgCrs7N1QvD5HH3VA3bJQ==@vger.kernel.org
-X-Gm-Message-State: AFq9FYItXsPfqvBw7m1fWNUB+7lpcQUFPtlWyeOTRRQekqzayrmo5D3+
-	9f+7NtKamOFgQwUi3aj/jkDNGe1oS39CnZM/MBL+KxzSXQYebV5SPg4/EoOUM4coktCdkKNcIUj
-	OjcKOIIy5CUa6NVS2p6lKXGSSF7Rt9mPTR8V9wV0ydlwi6aorh/OxD2PHfg7qatoi/4XIXw==
-X-Gm-Gg: AYBFou0kCXasqrql4peaDHqd9n98fPKSSWgGPAz5mAd4hy6aGGtvdzZL12k6lSxMVLp
-	wnLJ+tlVIN/DjP8xrPIgzdTZE4u0RlEJRtJCRpvnfJSVsHjEZ3tFo0MANdDycjYoquJfA83KOGW
-	4amGCugd9hdsUKzY0qGkr8Q84hjc6GcuLyPgy/VtLSmarHbcZIAA1XvNNjmQRQvlyKk00aeWknS
-	MFR6P3h7vs+UkjCOcBqkOfp+OD2YgcIBLfKLIJ7A7jMC+ORTMj3UOjH9hZFI9kwg4QrPQuZhvlJ
-	+Vqotn6NXzZhUGAUyg8AJ7UzxbpO3jkR8ooExhvEWAExn1AvobfYps1kiTqK3QB4p6gB18jQ6uB
-	Te6DQBCJ6Zy1IzkMezL22mrqz0u/mkYBsaZrZS6XjlXXooe1Lw3y9EH67oW49cY1tKNX09DvX
-X-Received: by 2002:a17:90b:2c90:b0:3ac:8741:e2e8 with SMTP id 98e67ed59e1d1-3ad86dcacf8mr4085416a91.8.1792666837613;
-        Thu, 22 Oct 2026 04:00:37 -0700 (PDT)
-X-Received: by 2002:a17:90b:2c90:b0:3ac:8741:e2e8 with SMTP id 98e67ed59e1d1-3ad86dcacf8mr4085282a91.8.1792666835602;
-        Thu, 22 Oct 2026 04:00:35 -0700 (PDT)
-Received: from [10.133.33.125] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ada4890bb2sm3793372a91.1.2026.10.22.04.00.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Oct 2026 04:00:35 -0700 (PDT)
-Message-ID: <0d5d36ae-3d65-4dec-98cd-7409ba4180c2@oss.qualcomm.com>
-Date: Thu, 22 Oct 2026 19:00:31 +0800
+        d=1e100.net; s=20260707; t=1792668762; x=1793273562;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dXEU4fNstySwei7nZv6T8mycxD11pRJ5qnWjwSzk+X8=;
+        b=o9m8aVnSFUATFtm+fOb6pzn82rf+xKkdspA3Gi/CGCZKRA9U785kIUGlGfL37IBEtw
+         imquiFAdlZNJirs8lJu92c7n0qJvYwBtf3I/pzPVD0mi8o/YTzSL+DyvRG1fata1juBa
+         Rq1B1Z7mutX/eMoYGz8BcSkPk83riA7oRERhjsantm6cGWQ/5NbKXwUa4D4Gh1rKf7Vo
+         dV0v1uXBsT0qIXg3Fez5FtoF14cF6tsV96K45wOnH9dr/woiugOlTI4QDEIWSVbSGYU3
+         Dyj4gIcj3+caWpoBVZy3ubhVwLM2lYwN3i8hOHLFYotxdjG38zQzr9j1BbVbTbAESnMV
+         gzFg==
+X-Forwarded-Encrypted: i=1; AKwUvByqQ4c1Dg0fvb0uYxvBIPInmcj1e1z5ynzlEE6q7WeSDwfecfosM4q23rq2m8XpT+VyFbGNnw81memiZADUaQ==@vger.kernel.org
+X-Gm-Message-State: AFq9FYKk1D5lOALfDpP9MnLTzVL2Owle8tfQ30oRDwdHbkIptwXxGAqC
+	cOEG2va/vxjyfon/9Xcrk7IpE8PdgCdSUoAuPfIoLA/BOH9l8O5Hl/4n4K8e1rB18rcZ8utd8ny
+	25xA9rdb/aZ2fUk6BmZeAG6V/GsKM31ubCf6dVUk62DDqsEUJp22RGgO7m/Q12JRcuo7/AQ==
+X-Gm-Gg: AYBFou0ajk0pFIJNKqI3sfol/T0PU0UhKyieY7hXozbnWL0jlq8ZbFWqNEJz1Ad+xtC
+	TpaBTUQQCAPMhUp4m1jR+CvQ6qAaBr7l+mJa/2DzXFDlvP20vYlK4VkKRL8iM6xPoSdG5IMmCK3
+	3TkRRQLDAAdreLf8P2gpLp2H4fc1aaV2Leqwe3OwR+gNBL65sVsKXj/ynNqTg82z3xOXKds67TO
+	dGI7axmxNxnW9NwHLvZHFLBwVn/jmVGt1gKbFB0YWTLUgqrsXa8NKWscajVS/Ejkf7LTvsCUSsr
+	ub4jqeze+vMDKJVDSsd3iuZNy/yDF4+4uPghGicNLp56cWI84ctOY9EMqRYS8AqKs3XRjEIVx6w
+	d2js3UPqNOp+umUpGhr4Mn7sBzw==
+X-Received: by 2002:a05:7022:fa01:b0:141:5281:8a41 with SMTP id a92af1059eb24-190a4f06512mr7988818c88.9.1792668761656;
+        Thu, 22 Oct 2026 04:32:41 -0700 (PDT)
+X-Received: by 2002:a05:7022:fa01:b0:141:5281:8a41 with SMTP id a92af1059eb24-190a4f06512mr7988744c88.9.1792668760893;
+        Thu, 22 Oct 2026 04:32:40 -0700 (PDT)
+Received: from hu-mojha-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-190e29381d9sm12143730c88.18.2026.10.22.04.32.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 04:32:40 -0700 (PDT)
+Date: Thu, 22 Oct 2026 17:02:26 +0530
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Sumit Garg <sumit.garg@oss.qualcomm.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Rob Clark <robin.clark@oss.qualcomm.com>,
+        Dmitry Baryshkov <lumag@kernel.org>, David Airlie <airlied@gmail.com>,
+        Simona Vetter <simona@ffwll.ch>,
+        Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+        Dikshita Agarwal <dikshita.agarwal@oss.qualcomm.com>,
+        Bryan O'Donoghue <bod@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alex Elder <elder@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Jeff Johnson <jjohnson@kernel.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Abel Vesa <abelvesa@kernel.org>, Sean Paul <sean@poorly.run>,
+        Akhil P Oommen <akhilpo@oss.qualcomm.com>,
+        Abhinav Kumar <abhinav.kumar@linux.dev>,
+        Jessica Zhang <jesszhan0024@gmail.com>,
+        Marijn Suijten <marijn.suijten@somainline.org>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-remoteproc@vger.kernel.org
+Subject: Re: [PATCH 0/8] Migrate PAS clients to qcom_mdt_pas_load() and
+ qcom_pas_prepare_and_auth_reset()
+Message-ID: <20261022113226.tfuhxqrtfl3c4kcx@hu-mojha-hyd.qualcomm.com>
+References: <20260925155737.4161358-1-mukesh.ojha@oss.qualcomm.com>
+ <ce3f58f7-f500-49f8-89cd-611d8e1ac6ac@oss.qualcomm.com>
+ <20261021130735.h7t2c7txqdfohrs6@hu-mojha-hyd.qualcomm.com>
+ <zqu4sweaftstbt26v2u3ajzv7snnqswuyrktm7t7k5gh4zi77e@d6t2fpsinvxc>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -113,173 +146,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next] wifi: ath12k: change MAC buffer ring size to
- 4096
-To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Cc: Yingying Tang <yingying.tang@oss.qualcomm.com>,
-        linux-arm-msm@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, yintang@qti.qualcomm.com
-References: <20260610031358.2043716-1-yingying.tang@oss.qualcomm.com>
- <atcr70WFLxp8zreK@QCOM-aGQu4IUr3Y>
- <0423c93c-8359-4fd5-9ba0-17e5ed3927dc@oss.qualcomm.com>
- <atnVeGiu9Q07HyUq@QCOM-aGQu4IUr3Y>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <atnVeGiu9Q07HyUq@QCOM-aGQu4IUr3Y>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIyMDA0MyBTYWx0ZWRfX3i+fvLbBlZMg
- 6L86MERI+hcPXicnh542wPo1tG6Hso9zGoVCAa7lAw9Grjlu+F/I6gZL8iBXwpUjzRH6bnyF0sY
- RvKuMX8E+qIw25caNy1taU2mlrbE5OW6j+IF0NDMu8M01rnisLmcUDagkbfpJH6URGi7bkyK2ZG
- vz8oZJCOPSDnAaiR/NGbnCTSZmRqCiE+Ge+l/g8ybTUoO6VrZfczhUbvyw7Fl+d7F7rDXzpO5Rk
- 9MMewBok5JtSSyqmZvHfUarLbJWFGck8NfdKrIYrFeYNDFBKPQHpPBfK6vBrb1Ky2UHwRFAb/Lg
- k3ec4axUaXm8atBR0h4tgZueTZwboFEZJW3Gxhya8YbUA25wEYuzd8J5LXClW1z8tcpqdSYuuR2
- oQueTPFJ98p20yrxxlwtKjY7R0/gToe+0RdHiHTlY4f5TJF6nolxrbjdODNM0oBttYvP/bPDQZa
- qf0MSpi+R6lnyqxQzKA==
-X-Proofpoint-GUID: cNxfRMW_ylaVxOv484qMcyzBijO40VZU
-X-Authority-Analysis: v=2.4 cv=feg4WEQF c=1 sm=1 tr=0 ts=6ad9ecd6 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=EUspDBNiAAAA:8 a=Z4Rwk6OoAAAA:8 a=NbhQ5tqkUGBw_Ouk81MA:9 a=QEXdDO2ut3YA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22 a=HkZW87K1Qel5hWWM3VKY:22
-X-Proofpoint-ORIG-GUID: cNxfRMW_ylaVxOv484qMcyzBijO40VZU
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIyMDA0MyBTYWx0ZWRfX+uELwQ++0Yeh
- KCG1QCAOGCGUmDOwVVy/zRQ0yenOFFuUXKiLDkqLVBzdCR8VEWA9cmvmdRMmonPhyIn4qF3o80l
- 6Sr6Wb2uQ2lvlBPbnO3uzXKjnPOcNEY=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <zqu4sweaftstbt26v2u3ajzv7snnqswuyrktm7t7k5gh4zi77e@d6t2fpsinvxc>
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIyMDA0NSBTYWx0ZWRfX+kAyetUxnKdJ
+ yzl5qlJAF5J01eLAllIZPzB2QImQGC0Tw2Cc8e362dKS7/5S5L3HDDT35swSiZi2aHeY2c/iLRC
+ 0Owikcw2AH/82DgNS/0Rbhrj/CywKR8=
+X-Proofpoint-ORIG-GUID: 1WyOPdnfh_jrXlp1W_f7lmOr2-2lVkwW
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIyMDA0NSBTYWx0ZWRfXwAOkLdXepHVG
+ B0cC4Gwn2+3BU07ktI3382iqxSlQxwZPdGqzBzYXBiC1MFW21pFgrSJhXwoNcijqVL97jtgBiXX
+ d3ZqgdCNdCqVNSTya9avcrQM3/E0QbzTE7g45gkQQAVfz0NpvfWkh+TAmqsvIuvFay2zBnuZGYB
+ 0avZDDiV32L1gJmuyWhqpGjIRT1mtN7F9Muc/b6v7hYJP4z94EoZJc1Jgv8n+BchkGdOjU2Jdjp
+ BfT3pc3oWdUjzcdGBJax/wolvSEMORBokKdw9KrYqT1y52jSel4hyAqMV1tvjwhJTj+i+pKHTTi
+ +s3IAxxiOkGzYHxd/BC/uiZvL3bX+pEElNMbTrqcO2JRQfYW0jYDbE2KYqgsybsN58STrg4TxvO
+ dZRe2swCWYiVRaAjaZXMMd3Jdj3wXtTNUSxtw6zl8XgrX1VFBjxE57xH4oYuugpxm3RLYVVENsQ
+ CJvXFqMLWi7YfbJOLIw==
+X-Proofpoint-GUID: 1WyOPdnfh_jrXlp1W_f7lmOr2-2lVkwW
+X-Authority-Analysis: v=2.4 cv=TIPQ2Fla c=1 sm=1 tr=0 ts=6ad9f45a cx=c_pps
+ a=SvEPeNj+VMjHSW//kvnxuw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=kj9zAlcOel0A:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=ZHN8ZsQmYYvh4dXIsskA:9 a=CjuIK1q_8ugA:10 a=Kq8ClHjjuc5pcCNDwlU0:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-10-22_04,2026-10-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0 suspectscore=0
- spamscore=0 adultscore=0 priorityscore=1501 malwarescore=0 clxscore=1015
+ phishscore=0 malwarescore=0 clxscore=1015 adultscore=0 priorityscore=1501
+ suspectscore=0 impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610220043
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610220045
 
-
-
-On 10/22/2026 5:20 PM, Shawn Guo wrote:
-> On Thu, Oct 22, 2026 at 10:30:45AM +0800, Baochen Qiang wrote:
->>
->>
->> On 10/20/2026 4:53 PM, Shawn Guo wrote:
->>> + linux-arm-msm
->>>
->>> On Tue, Jun 09, 2026 at 08:13:58PM -0700, Yingying Tang wrote:
->>>> For WCN7850, MAC buffer ring size is updated to 2048 in
->>>> 955df16f2a4c3 ("wifi: ath12k: change MAC buffer ring size to 2048")
->>>> to increase peak throughput.
->>>>
->>>> But during the RX process, a phenomenon can still be observed where
->>>> the throughput drops by about 30% from its peak value and then recovers,
->>>> and this behavior repeats during RX.
->>>>
->>>> After increasing MAC buffer ring size to 4096, the data rate drop has
->>>> gone.
->>>>
->>>> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
->>>>
->>>> Signed-off-by: Yingying Tang <yingying.tang@oss.qualcomm.com>
->>>
->>> FYI, in case someone else runs into this: with this change (merged in
->>> v7.3), WiFi on my Lenovo Yoga Slim 7x (X1E80100, WCN7850 hw2.0) stopped
->>> working with the older firmware that Debian trixie still ships
->>> (firmware-atheros 20250410-2):
->>>
->>>   WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
->>>
->>> Probe and firmware download succeed, but every WMI command times out
->>> once the interface is brought up:
->>>
->>>   ath12k_wifi7_pci 0004:01:00.0: wmi command 16387 timeout
->>>   ath12k_wifi7_pci 0004:01:00.0: failed to send WMI_PDEV_SET_PARAM cmd
->>>   ath12k_wifi7_pci 0004:01:00.0: failed to enable PMF QOS: -11
->>>   ath12k_wifi7_pci 0004:01:00.0: fail to start mac operations in pdev idx 0 ret -11
->>>
->>> Bisecting ath12k between v7.2 and v7.3 lands on this commit, and
->>> reverting it on v7.3 brings WiFi back with the old firmware.
->>>
->>> Unmodified v7.3 works fine after updating to the current linux-firmware
->>> image:
->>>
->>>   WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
->>>
->>> On Debian trixie that one is available from trixie-backports
->>> (firmware-atheros 20260916-1~bpo13+1).
->>>
->>> So nothing needs fixing on the driver side. I'm just leaving this here
->>> so that anyone who sees "wmi command ... timeout" on WCN7850 after a
->>> kernel upgrade knows to update the firmware first.
->>
->> Hi Shawn, thanks for reporting this. I just had a quick test
->> WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3 with the latest ath tree
->> (ath-202610191908), everything looks good, simple connection and ping pass, I don't see
->> any ath12k warning.
->>
->> The firmware images I am using comes from the first commit adding WCN7850 firmware:
->>
->> 	fb04a7f4b750 ("ath12k: add new driver and firmware for WCN7850")
->>
->> and the md5 values are:
->>
->> linux-firmware/ath12k/WCN7850/hw2.0$ md5sum ./*
->> d3750b67b1013fe82358d0538fb131b0  ./amss.bin
->> c79c410d585360000c0490f16fda43e2  ./board-2.bin
->> 73056f1d2aff886ce9bff313f455e963  ./m3.bin
->> d0ee61498bf1a205147cdbcf645391e7  ./Notice.txt
->>
->> can you share the md5 values of your images?
+On Wed, Oct 21, 2026 at 04:19:59PM +0300, Dmitry Baryshkov wrote:
+> On Wed, Oct 21, 2026 at 06:37:35PM +0530, Mukesh Ojha wrote:
+> > On Wed, Oct 21, 2026 at 01:32:13PM +0200, Konrad Dybcio wrote:
+> > > On 9/25/26 5:57 PM, Mukesh Ojha wrote:
+> > > > In preparation to remove qcom_mdt_load() and qcom_pas_auth_and_reset()
+> > > > public function, migrate every user to the new PAS context-aware API
+> > > > qcom_mdt_pas_load() and qcom_pas_prepare_and_auth_reset().
+> > > > 
+> > > > This series migrates every remaining caller of the deprecated APIs
+> > > > (qcom_wcnss, adreno zap shader, iris, venus, IPA, ath12k) and then
+> > > > removes qcom_mdt_load() and qcom_pas_auth_and_reset() entirely.
+> > > > 
+> > > > This series is based on top of although no dependency as such.
+> > > >   firmware: qcom: pas: Make MDT buffer retention explicit
+> > > 
+> > > LLM has the following comments:
+> > > 
+> > >  1. Metadata buffer (ctx->ptr) is leaked, and overwritten on
+> > > reload, because qcom_pas_metadata_release() is never called
+> > > (patches 1-6)
+> > >  2. devm_qcom_pas_context_alloc() is called from repeatable runtime
+> > > paths, so contexts accumulate until unbind (patches 2, 3, 4, 6)
+> > >  3. use_tzmem is never set, so the shmbridge prepare step never
+> > > runs on SCM and the commit messages are inaccurate; TEE gets
+> > > a real mem_phys/mem_size change
+> > >  4. Not bisectable: patch 4 relies on the NULL mem_region
+> > > handling that only arrives in patch 7
+> > >  5. Patches 3 and 4 don't apply to this tree; iris
+> > > iris_detect_firmware() still needs mem_virt after the load;
+> > > the base of the series is not stated
+> > >  6. Patch 7: NULL mem_region now means "map internally", which
+> > > weakens the -EINVAL sanity check
+> > >  7. Patch 6: redundant second ioremap_wc() on top of ath12k's
+> > > persistent memremap()
+> > >  8. Patch 6: ctx is set under one scm_auth_enabled check and
+> > > used under another, which is fragile
+> > >  9. Patch 2: the context now carries the full region size instead of
+> > > the MDT size, which matters if use_tzmem gets enabled
+> > > 10. Patch 3: stale qcom_mdt_load() comments remain in
+> > > iris_firmware.c
+> > > 11. Patch 8: no issues found
+> > 
+> > Thanks.  Will address them along with Sasiko's one.
 > 
-> Hi Baochen,
-> 
-> Here are md5 values of the old firmware shipped by trixie firmware-atheros
-> 20250410-2.
-> 
-> $ md5sum /lib/firmware/ath12k/WCN7850/hw2.0/*
-> d3750b67b1013fe82358d0538fb131b0  /lib/firmware/ath12k/WCN7850/hw2.0/amss.bin
-> 5dacdfbe6c3c25d9e0605be8a9f1f6e4  /lib/firmware/ath12k/WCN7850/hw2.0/board-2.bin
+> Just to check. Did you verify your commits with the lockdep and atomic
+> sleep debugging on?
 
-this is different from mine, can you try mine?
+For this series, I did not.
 
-> 73056f1d2aff886ce9bff313f455e963  /lib/firmware/ath12k/WCN7850/hw2.0/m3.bin
-> 
->> and have you ever tried the upstream mainline
->> kernel or the latest ath.git tree?
-> 
-> I'm not sure what you mean by upstream mainline kernel, but v7.3 should
-
-I mean Linus's tree
-
-> be the mainline kernel released a few days ago.
-> 
-> On the other hand, I just tested ath.git tree at tag ath-202610191908,
-> and it worked with the old firmware. So it seems there are some gaps
-> between v7.3 and ath kernel.
-
-can you share the exact tag of v7.3 kernel? is it just below tag?
-
-commit c03c1a14507dfaf8b856c2608f9ac216021fc222 (tag: v7.3)
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sun Oct 18 13:14:58 2026 -1000
-
-    Linux 7.3
-
-diff --git a/Makefile b/Makefile
-index 0dc1a9f4e63e..c61ea07ee505 100644
---- a/Makefile
-+++ b/Makefile
-@@ -2,7 +2,7 @@
- VERSION = 7
- PATCHLEVEL = 3
- SUBLEVEL = 0
--EXTRAVERSION = -rc7
-+EXTRAVERSION =
- NAME = Baby Opossum Posse
-
- # *DOCUMENTATION*
-
-
-> 
-> Shawn
-
+-- 
+-Mukesh Ojha
