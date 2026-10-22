@@ -1,99 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.27
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792655102;
-	b=aD0Wj0ahOMsKArjqMvMYJ4xrLffFShkHeO9jgL5VwfWhzkb8TauVcYbTLpkcGyoIajki
-	 4LUrz1KTdHJbNg3XALDhPOw+xkb+XGowk6fJivZkx6ikk7zR7h4YEAHEPZadOO97mQeCo
-	 Xme5NDreP1brCmtRrTP1+xFWaKUmzRegIpPqwZi7FGztoTeH3Lh4EVy72KKzQGRShgHXg
-	 jFkEvlIGEZ4LUonRrXoLJtut8/vM2nlzEb9XtnUVxJxSY4xgKaBVFQjYt7nATv8Vm3tkr
-	 xigbTb8WrGXXuEG0wVdXjDSQPOThXU+qsqb6XpBZh+9ymzYa39IQzP54vQZ3CeVea7g==
+	t=1792658782;
+	b=1pXzZCjfaaUzLjhvghDny78ouc9mT8WZXv2Hsf0vaSiwTIl6CNW3npXcKKLRTZq1LudW
+	 1Jtivd2a0/xjC2Yp3e4tRqMOw5QfPaZnQml8DegQHXMnBgU2ua5HaQXzGSPmdpKxTkMg9
+	 0coYCpXtm7OiPU6dZGjOvKBat52gCYp4cGOp7THuSz1/GFzA55csbIqeV+bE0iZas/P1f
+	 6CREiAMh1fZ+oYt2cKxSb6jJNNbRWMq3uSFO9ASo3uwNU8vJN7R8EICbTrT8i6gEEQOWa
+	 eLOvYGXyUjBkII6dgm5UV7CA2euYXs/AHjfDpO1biT1BVp0XaYmnJHgxdO78kPcmZbg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792655102;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=smBeIOz6NkG1jWU580xjUrdeHClJDdyW6/BAJvH47mo=;
-	b=jqvtp54pfzwe9GLyfU09SgXw0Hmyvt9SXVz8fGKFho1E7ALpjorYxv+QzNc9H5t7Jbuf
-	 YoQ2r91jLyMfQll/2dmnROnagY1aBzZtgD+kgszkq6NOEKBJ0jezJE8RNrRDT03GHUgi0
-	 vIV1X27+G76PgJKChrw76RAx5id0PRV8pmGxucHksYSAAefqP3yTmI4+saQzqys+LjbWr
-	 b1GjRHmmM5gX74w+e5u+m+kyWmNB5clwRVkty5lhUeGJ0lsnFYjG4L8do/FXO6I643enV
-	 zqQIEw1hBBNQsAYoGC/8gpvTrbBxaCnVLElgPRHeItjRqu4qWwhCwv2ecK7JoJZGXpQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792658782;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Subject:Message-ID:
+	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=7UpZyCZRkDFVI3JJm3sHmXMHrFiDViDiRuCXKOCySmQ=;
+	b=dLka9ot5y0+FVnEXpfmoBgx8eGwrPKo4Wth3AJGpX1kEC1d/cZ+7gC7eio1iNvXi/vIF
+	 mxFduk9OX3RLO6etbCvJNAR3ICbju2Ks2ZJ7f4NgYRlbEwhRGq+avhaaxDLR35qTWMNTB
+	 84kFXpwIPQNMpjaAgx2RK8o8IDHq3wvtiH8+teLW65hgtRWgN8CKa6lshxBcca9KUWZ85
+	 AQSpiGDC7GBkMY7+09rH79Mjv7zlBbuRRAGxa3zquM51Rec/Fg2g4LIWTvaklHNs4kjee
+	 rR7Jn7sdWv+68Shj+v7obWnsg1ESmTAkLDAmVQdaDYZVyeob0vLXfBcGzIui3ypABkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=eX6BfiDr;
-	arc=none smtp.remote-ip=209.85.221.45
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=protonmail.ch;
+	spf=pass smtp.mailfrom=protonmail.ch;
+	dkim=pass header.d=protonmail.ch header.i=@protonmail.ch header.a=rsa-sha256 header.s=protonmail3 header.b=eexnfA+1;
+	arc=none smtp.remote-ip=109.224.244.27
+Received: from mail-24427.protonmail.ch (mail-24427.protonmail.ch [109.224.244.27])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1915606A321
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 07:45:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1915606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C02C606A319
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 08:46:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C02C606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=eX6BfiDr
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-48b0584ad71so1046269f8f.0
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 00:45:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792655100; x=1793259900; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=smBeIOz6NkG1jWU580xjUrdeHClJDdyW6/BAJvH47mo=;
-        b=eX6BfiDruBiLbLZBcpteYeJVqVC98lz+f5/KVbddb5eNPfLQ6yJkrOjpPUAd2v9YNp
-         XOPFqizz89CXH6creH6Z54YeYSBMElaim2KoNKbixrdnYzc31Bza3ODZv8VOgkj+RrMo
-         /loiFPXe4sZPTbXLeLV6OC1abeF1CfDI+nOxthYAoLodAAHiV8yT+bjI9gOH4Hj1TGKl
-         sVV01bcfla9f8m/K4jJGTs0IyB6I5KYP1Rd3PrFaPzbBtH2bOZi21cqGN3Fiz50saBXr
-         lepd/eqVnLWmDrnbs342BYb7NE6cjmuwpLbHmgH7c6GJNOvA9Wdxc5TOL/CTNjQQ/GlB
-         nojQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792655100; x=1793259900;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :references:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=smBeIOz6NkG1jWU580xjUrdeHClJDdyW6/BAJvH47mo=;
-        b=R2AON1pTQVV9WG5DRepF2NteqGlhr0HCz4fMs6vIGzJCHJBGwGEUpeGY8fus73SD3g
-         vvO8HwWeRV/RYP4E2ec6KfAEPDWhSYOF6+1iZO/jfEybejcJtteGJiKIv1s9x3d0xUiA
-         yX5yxYa9YkLH5eO4SrB+ts5Vj4GV1Lj51UO2QzJJ0n7w4juf8MiiNPbRujsogC9y7wFw
-         FeeKoPJCHEC3e0iHtZipaH9Ma4Nh62klpQyu90dCfnH4teDFXeFnnmzPZOTNfTruPz0n
-         D2x/zssphX3Z+n/vcIaqymDxl6/7lqv9XdM9TeDAPp5cyHEKTvvu5D+KSgUXTFBZK5qd
-         p33Q==
-X-Forwarded-Encrypted: i=1; AKwUvBylt5iSlDupr6EqdwYR79njkxhkaIUQ+ISmcgDbm90i9srliruy74WVwJnjPyJTMz32avfnDcTV+NyO+TLzSA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYInd43FWS/z2+PYfb891ro6VM1wqpIKV7BsqPQuxoGIqleRpMv6
-	9Mfg6/RmURM96+UMnSHKNJ/VhSl2OTRmoPNldsE1r4mzsNg/cJUc3PdE
-X-Gm-Gg: AYBFou0lrqCbwb+jfY8z6j2DKFGyJZcrPMOkQnjnXH/qs9TFqQSWqkfH+mP853XwjOg
-	1HqyJFotxa+J8RdiM/4vE5NuUqOn2g083ohEHwQ5LpFKS3tyNxSgr5/1s1/NREY9I8XFdJLhdVc
-	V6uFnczNZmHsmlCFai+X9EslOcQicDECzcWGWFDhofsVK4bWWcWrfgkt8RTh7MBumjgNlPyFBk0
-	5HbktqdUDhU7MMEGQDZdLCgZnGBaudf8ZgD1UVHwwOzs7sSUsw59z9IcIBe1q70VgMwox8bNWNb
-	6j++sb+faKBYjwVmiM6YMD9IQyWD9ZzyoH3fb2zB9cAmagIkwz675Dkul/ZJAKmEm3U2UQkWx04
-	paMlCEiWWOsucDqE44gqAWcAIu2cjMvfuN2ZWdghcnM60b2/N3Rjh9oEKF79speo4Gz1c8/lchu
-	75a/QlExiDCfvs8NI0VGONbDsxW5NOwCzmSB8koYig1D8GQYXVbCMYjYrgPqSaDq8uRLSk3qOc0
-	gOmWBrzk6O+fYQ2YkR1OZdMtgBlsbDHdGPHSnTkR35vVuWAFQjTEPqpV8+aITZV3wfyMYnyfMqr
-	HgMjQZsw+pQjZ4x9yLcW2xhOKLV835nDnc8=
-X-Received: by 2002:a05:6000:420c:b0:48e:888:36b4 with SMTP id ffacd0b85a97d-48e2649d7acmr8838160f8f.9.1792655099919;
-        Thu, 22 Oct 2026 00:44:59 -0700 (PDT)
-Received: from ubuntu-testserver01.home (80.49.46.208.ipv4.supernova.orange.pl. [80.49.46.208])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2584afe1sm12084605f8f.56.2026.10.22.00.44.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 00:44:59 -0700 (PDT)
-From: Viktor Pashaiev <w.paszajew@gmail.com>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Deren Wu <deren.wu@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Viktor Pashaiev <w.paszajew@gmail.com>, linux-wireless@vger.kernel.org,
- linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH wireless] wifi: mt76: usb: keep the tx worker parked
- through a reset or teardown
-In-Reply-To: <20261021233935.748017-1-lucid_duck@justthetip.ca>
-References: <20261021233935.748017-1-lucid_duck@justthetip.ca>
-Date: Thu, 22 Oct 2026 09:44:58 +0200
-Message-ID: <179265509844.119209.13611344830854882043@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key, unprotected) header.d=protonmail.ch header.i=@protonmail.ch header.a=rsa-sha256 header.s=protonmail3 header.b=eexnfA+1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.ch;
+	s=protonmail3; t=1792658779; x=1792917979;
+	bh=7UpZyCZRkDFVI3JJm3sHmXMHrFiDViDiRuCXKOCySmQ=;
+	h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=eexnfA+1Qp1F5DxiIEJEfdIHcYodmby0m+yZqRPZ8srk1Wl1LYAJY5OhDVwNmgcdj
+	 n8iCH8wY0eK9KvccbeuBYDn6LPFhHTLrN5hFiar9F6rLqXkf5ZVAZTufmtBAhtIKUN
+	 m3pxH+MuOiwWdFCzGtIVf/CzGZybVDRrkmcVHllt9V7B/xkVRbybakNaVODDxBipkc
+	 MTpTWM8xniRXBDFLcoSVoYWlXZnrMj8M3cheFtRjYH4c/ajvPjhxlBalP3Cvi4/PIW
+	 uAE15upQSzLkYLE3bsE9I6sAU907pkEJ0GCqVOW1EmNtdFoixUMOAyqfMPtgPMuwu5
+	 UnNpYgILBHcHw==
+Date: Thu, 22 Oct 2026 08:46:17 +0000
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Shalok Shalom <shalokshalom@protonmail.ch>
+Subject: [Bug report] rtw89_8852ae: WoWLAN resume fails with "c2h reg timeout" and "failed to resume for wow -110" on s2idle
+Message-ID: <zvVKbBQduN7iovmmy-oy6UZgR0AOBhnGgl9YuUrYtH48IGxvXoTr-iRZbEp-XyQgxq7LNuQxwRJ16cjQziq2sUKpe4b8UeSr6cNS46TBJQM=@protonmail.ch>
+Feedback-ID: 1182871:user:proton
+X-Pm-Message-ID: f8b96389b5b6695f4e4584114584d08cbc924683
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -103,10 +60,117 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, fixing this inside stop_tx is much cleaner than my disconnect workaroun=
-d. Checked the stop_tx call paths across mt76 and the worker state handling t=
-hrough reset and teardown - looks solid. Built the modules against 7.3 withou=
-t any warnings.
+Hi,
 
-Reviewed-by: Viktor Pashaiev <w.paszajew@gmail.com>
+I am reporting a reproducible failure in the `rtw89` driver for the Realtek=
+ RTL8852AE (PCIe) when using Wake-on-WLAN (WoWLAN) with `s2idle` suspend. T=
+his does not happen always, but frequently.=C2=A0
+The system fails to resume from suspend when a magic packet is received, an=
+d the kernel log shows a firmware communication timeout followed by a failu=
+re to swap back to normal firmware.
+
+The failure begins at `rtw89_fw_read_c2h_reg()` (the C2H timeout), which ca=
+scades into the AOAC read failure and the firmware swap failure (`-110`). T=
+he driver's recovery path has been hardened against a subsequent crash (CVE=
+-2025-21730), but the initial timeout on the PCIe interface during `s2idle`=
+ resume is not resolved by any patch I could identify in the current source=
+ tree.
+
+
+Hardware and Software Environment
+
+-   Laptop: Lenovo Yoga 7 Carbon 14ACN6
+   =20
+-   Wi-Fi: Realtek RTL8852AE (PCIe)
+   =20
+-   Kernel: 7.2.11-zen1-1-zen (Zen branch) and=C2=A06.18.57-2 (LTS branch)
+   =20
+-   Firmware: rtw8852a_fw-1.bin, version 0.13.36.2
+   =20
+-   Sleep state: s2idle (S3 is not exposed by the firmware; confirmed via `=
+cat /sys/power/mem_sleep`)
+   =20
+-   WoWLAN trigger: magic-packet only (`iw phy0 wowlan enable magic-packet`=
+)
+   =20
+   =20
+   =20
+
+Steps to Reproduce
+
+1.  Enable WoWLAN: `sudo iw phy0 wowlan enable magic-packet`
+   =20
+2.  Suspend: `systemctl suspend`
+   =20
+3.  Send a WoL magic packet to the laptop's Wi-Fi MAC address from another =
+device on the same network. (Via OpenWOL from Android)
+   =20
+4.  Observe: the laptop does not wake.
+   =20
+
+
+Output of lspci -nnk
+
+01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852A=
+E 802.11ax PCIe Wireless Network Adapter [10ec:8852]
+Subsystem: Lenovo Device [17aa:4852]
+Kernel driver in use: rtw89_8852ae
+Kernel modules: rtw89_8852ae
+
+Actual Behavior
+
+The system fails to resume from `s2idle`. The following `dmesg` sequence is=
+ captured after a failed wake attempt:
+
+[ 2359.543559] rtw89_8852ae 0000:01:00.0: c2h reg timeout[ 2359.543563] rtw=
+89_8852ae 0000:01:00.0: wow: failed to get aoac rpt by reg
+[ 2359.644802] rtw89_8852ae 0000:01:00.0: wow: failed to get aoac rpt by pk=
+t
+[ 2360.305270] rtw89_8852ae 0000:01:00.0: failed to check wow status disabl=
+ed
+[ 2360.305278] rtw89_8852ae 0000:01:00.0: wow: failed to check disable fw r=
+eady
+[ 2360.305280] rtw89_8852ae 0000:01:00.0: wow: failed to swap to normal fw
+[ 2360.305282] rtw89_8852ae 0000:01:00.0: failed to disable wow
+[ 2360.305285] rtw89_8852ae 0000:01:00.0: failed to resume for wow -110
+[ 2361.916657] rtw89_8852ae 0000:01:00.0: rtw89_hw_scan_offload failed ret =
+-110
+[ 2361.921475] rtw89_8852ae 0000:01:00.0: failed to set wakeup event
+[ 2361.921483] rtw89_8852ae 0000:01:00.0: failed to suspend for wow -1
+
+
+Expected Behavior
+
+The system should reliably resume from `s2idle` when a magic packet is rece=
+ived.
+
+
+Workaround Already Tested (Falsified)
+
+The following have been tried and did not resolve the issue:
+
+-   ASPM/PS module parameters: The following parameters were set and verifi=
+ed as active (`Y`), but the failure persisted:
+    `options rtw89_pci disable_clkreq=3Dy disable_aspm_l1=3Dy disable_aspm_=
+l1ss=3Dy`
+    `options rtw89_core disable_ps_mode=3Dy`
+   =20
+-   `` `disconnect` trigger: The failure occurs even when WoWLAN is configu=
+red to wake on `magic-packet` only.  ``
+   =20
+
+
+
+Conclusion
+
+The failure appears to be a race condition in the `rtw89` driver's firmware=
+ communication layer during the WoWLAN resume path in `s2idle`.=C2=A0
+A related patch for USB devices (`rtw89_fw_read_c2h_reg` timeout) exists, b=
+ut it is explicitly scoped to USB transport (RTL8851BU) and does not apply =
+to this PCIe device.
+
+
+ShalokShalom
