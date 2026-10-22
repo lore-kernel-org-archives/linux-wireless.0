@@ -1,83 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792640946;
-	b=iD3MD99GqdVo8pI9iktBweoCXM2yFMZpPThZLZJGQ2cyMxZB3AD9rToRnIqd/8HmDr5b
-	 DSUDndVxUtT/KnZ0zUqfutWLctp3xng19X0ejqocaRkA64hMdCS4Vf6KVcW7B217LvqHa
-	 iIrZ+o6crp/LO+itI2m2KwalyRcD8d1GX03UTJs5ZlJPRCNQ2MDefjyXUeqN7AvCp6SDd
-	 ykSxgB/kIHUwq7Mnwf8IiE+mfYDk7vMw1TAeH46wFrQJZ4xV0Z1FcXurt9jbIfgw45BK3
-	 WxgmfIl6ATWEmVpr1R7whk32sIfNt8CGE/Fx7phP7qAg3pR8Km8VFH/Fjx+tX0+NuoA==
+	t=1792643446;
+	b=27Hqr4LmP584RrsQfNf6uoXk+NodpONOPNTXKj3KAn2nxcgeyTpw1fkizeWNYn0514yk
+	 NeB9B9XNN74lZfW+7Wy0GQvdbugq4WAxhNXOW3YJZqAzZP9/+EAkhrCPYwpEsOJDMUlxm
+	 mCkfuDnxImMweLJQZ35jMZe/bWt6wQrLkNS5GmqTgGsUhw8WXQ2lLatj1Q5mFxKu6Pu8o
+	 iBmTqupSCw9ZkZN/FgP09IiLh9BSGhSZoRAEJJ9vAtGJRZQENXn+apfdoTk8ZvA9jEwes
+	 y4NCHIehsBA5a8kJ6QbkHZZX7uaq/UWk5a/bbiqZ5qXXDXD1erN60g77S1FAqTi2Ohw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792640946;
-	h=DMARC-Filter:X-SpamFilter-By:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:CC:Subject:Thread-Topic:Thread-Index:Date:
-	 Message-ID:References:In-Reply-To:Accept-Language:Content-Language:
-	 x-originating-ip:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=LmqgZiFbRAvIkPr1jApL88Sp8XKHBPCBhtR5scBhfNA=;
-	b=iJrKssP8FTTWrbMPxPrAy9vXx40OX9o1axpl0SWpTdLwBQUNnLFpz641FWhelvO0rmDV
-	 TRMZQU+HgC7ycRODaQOuk6UZkh3Bb/L2dHyaZtfDye8SiTfnORMJ5rqg1tyvNK9cW0J2o
-	 ZQ+7bAcfaXBVA5gb6oktJpJn0lmR8eT7G2I1nu23xPsZa9faZzhgxtREwWtDwuVB5Zi84
-	 9t8Gh65Izr3Gs1xoFJ8sMnRiE07I8+5SY37iatsxkaep9r2hLtZMA/EIZVVVyEmXzLVNF
-	 rSRMTEar461XsJYbIOKoMcJ80LShb4kQDxt3jvZgdL/BXRUPDIeAZYnaeEKeBTFMeaA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792643446;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=S6I5aLF/kMHQsxm2JxtT1bSC3MaGwPmE2nZ05/LY/aI=;
+	b=fQpr2I2FHrZ0fVyeIGuhuLJ1egr2yh4QBuNkAiv8ZGXY/PuxEhsjT+b9Dzk5eR5H2aSb
+	 8m+1EUsbQU+wdqQtE18uftNnDIFsijY1EQbhDGfX1qTcQBBPJXybAE6LnpOpJOe0M09yt
+	 hNGBRT3AQcvZcCNib/SnXGBltrtNqTSkS9DcfLQ4f1K15Yl1k8GY60UHEgg1SwV9E+GbA
+	 KF0xTv9g/LEQ+FsTlULik7iemUICB9JVDKfShTg9HW9d2Xj5e3CQXM/NJiBrpq3PgT8Da
+	 OM13gJrMh0ScUFfbFQuAExKNNbGMBovJ4BN92m6uJP8h5aisV3r1WQrQ2MnQ98fCFKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=realtek.com;
-	spf=pass smtp.mailfrom=realtek.com;
-	dkim=pass header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b="nWb+lQF/";
-	arc=none smtp.remote-ip=211.75.126.72
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qyt5N3Sm;
+	arc=none smtp.remote-ip=95.215.58.226
+Received: from mta1.migadu.com (out-226.mta1.migadu.com [95.215.58.226])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0944606A31A;
-	Thu, 22 Oct 2026 03:49:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0944606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F218606A322
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 04:30:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F218606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=realtek.com header.i=@realtek.com header.a=rsa-sha256 header.s=dkim header.b=nWb+lQF/
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 69M3n0F71575595, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1792640941; bh=LmqgZiFbRAvIkPr1jApL88Sp8XKHBPCBhtR5scBhfNA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=nWb+lQF/rifEr2sK22hyX7BuRLrMJ22prS02avnx8ERFlOAUOEkxSSxJusl/E4FMc
-	 9zAR3eAuaks1vMV48oxMnYdEhgC+pjln2jn0VnztVQHAnx7w2Az9spFFYLMkKsfRJa
-	 R6qjjYszxF6pykcZb60DcRvS6wI4ScicFlBO3W/khi0fcnkySSLVVcRLu8Yr3zrY+Z
-	 BZ68O3gziBHuF+R7XNYxCbbRp3V4U0WxlCVp9UNG7YepTLzK01BodYv7OJqq29Dmty
-	 bOqZshSg8XmiwF/nfaJnNXXBMz4sf0zqoRYV3Q31pRlYhfikuqiwKoOZqPRejfHQvS
-	 qyJp6UHjtAYoQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 69M3n0F71575595
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 22 Oct 2026 11:49:00 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 22 Oct 2026 11:49:01 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Thu, 22 Oct 2026 11:49:01 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::b3cc:c263:b82d:e87c%10]) with mapi id
- 15.02.2562.049; Thu, 22 Oct 2026 11:49:01 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when the
- rings are reset
-Thread-Topic: [PATCH rtw-next v2] wifi: rtw88: pci: wake the TX queues when
- the rings are reset
-Thread-Index: AQHdWO4MPV0dG/pKrEyzZWvhd4YBNrb5eb7AgAINFoCAAMEoQIAEANAAgAPLA9CAAz37AIABqy0w
-Date: Thu, 22 Oct 2026 03:49:01 +0000
-Message-ID: <74b5ab33c8a3445ea45d2f5d0c8d7387@realtek.com>
-References: <3c588aeae8f74a8caa39aa2852bce437@realtek.com>
- <20261021101356.1976617-1-abdurrahmankaradag19@gmail.com>
-In-Reply-To: <20261021101356.1976617-1-abdurrahmankaradag19@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qyt5N3Sm
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=w30GA5GV1AUqILbk56V0iFaCTvNcyVpADWQmPWWx8iI=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792643442; v=1; x=1793248242;
+ b=qyt5N3SmO44KsFBXUs/+6jkXlCW9dowy9xqu2QhIdG5eOti6OQYdtXdXBJf7tAwVNay00inZ
+ nqvWMWlzdFxJVlRZKVKu0RZQ7wMTHpwM6llQftBs6glZIz7MAkX/5lSp9RJOuQ7ertvcvuV5l6m
+ heWZDANd00Gp1S9JOeqL8id8=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4362ee009ec7c095;
+	Thu, 22 Oct 2026 04:30:37 +0000
+X-Mizu-Trace-ID: 4362ee009ec7c095
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -87,27 +56,56 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Date: Thu, 22 Oct 2026 04:30:37 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <ea8ee18b36d7416c11ae4f1b4046aed087f87f1c@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v2 2/2] wifi: rtw88: sdio: limit the high queue
+ to DTIM delivery
+To: "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <ea2137c603f146738f8db100e905060a@realtek.com>
+References: <20261021124318.15993-1-luka.gejak@linux.dev>
+ <20261021124318.15993-2-luka.gejak@linux.dev>
+ <ea2137c603f146738f8db100e905060a@realtek.com>
 
-Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
-> > I need your help to summarize the dumps. I don't have much time to
-> > analyze them. Sorry.
+October 22, 2026 at 4:24 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrote:
 
-I meant if you have more dumps in the future, please analyze them and
-give us summary.
 
-> They fall into two main groups: stalled TX rings, and a dead link
-> despite continuing ring progress. In the first the hardware read index
-> stops advancing while the ring fills behind it, and in a couple it had
-> filled and the queue was stopped - the state v4 clears. In this group
-> recovery was observed only after reconnect or interface down/up. The
-> second group is the larger one and I have nothing for it; that is what
-> the monitor capture would be for. The patch does not claim to address
-> every link loss.
+>=20
+>=20Luka Gejak <luka.gejak@linux.dev> wrote:
+>=20
+>=20>=20
+>=20> In AP mode every broadcast and multicast (bmc) frame is sent throug=
+h the
+> >  high queue, which the hardware only drains after a DTIM beacon. Only=
+ a
+> >  few frames leave per DTIM, so steady multicast traffic builds a back=
+log
+> >  that holds the TX pages the other queues need. Unicast traffic then
+> >  stalls for seconds and clients can no longer renew their DHCP lease.
+> >=20=20
+>=20>  USB had the same problem and was fixed by commit c710c7c2e038 ("wi=
+fi:
+> >  rtw88: usb: route bmc frames via the high queue only for DTIM delive=
+ry")
+> >  and the two commits that followed it. Use the same rule for SDIO. A =
+bmc
+> >  frame goes to the high queue only when mac80211 asks for DTIM delive=
+ry
+> >  because a station is dozing, the frame is ARP, EAPOL or DHCP, and th=
+e
+> >  budget allows it. All other bmc frames go out on their access catego=
+ry
+> >  queue.
+> >=20
+>=20I'd remove second paragraph since it just describes the patch 1/2 doe=
+s.=20
+>=20
 
-Let's me clarify two groups are:
+Would you be willing to drop it your when applying?
 
-1. stalled TX ring causing queue_stopped flag raised
-2. link (connection) loss (not clear yet)
-
-Ping-Ke
-
+Best regards,
+Luka Gejak
