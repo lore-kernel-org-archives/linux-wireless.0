@@ -1,56 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.27
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.236
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792658782;
-	b=1pXzZCjfaaUzLjhvghDny78ouc9mT8WZXv2Hsf0vaSiwTIl6CNW3npXcKKLRTZq1LudW
-	 1Jtivd2a0/xjC2Yp3e4tRqMOw5QfPaZnQml8DegQHXMnBgU2ua5HaQXzGSPmdpKxTkMg9
-	 0coYCpXtm7OiPU6dZGjOvKBat52gCYp4cGOp7THuSz1/GFzA55csbIqeV+bE0iZas/P1f
-	 6CREiAMh1fZ+oYt2cKxSb6jJNNbRWMq3uSFO9ASo3uwNU8vJN7R8EICbTrT8i6gEEQOWa
-	 eLOvYGXyUjBkII6dgm5UV7CA2euYXs/AHjfDpO1biT1BVp0XaYmnJHgxdO78kPcmZbg==
+	t=1792659078;
+	b=FDuhD5J53h0y48FzYp3a1YvqZk4mpRrKl6MQ1IapCaoZEiJhoH8q7uzA/Qbmwu0Azv0R
+	 yb8dejvTCWzZstmUXYIsGd0WF3rByxNBAP1/Q55T54J4zaqLy/s9vVu5WU3iiLGHvPOSe
+	 avOrCdr+Fn0tGg4NZPi8IX51dLvZRECNV384B/KdIOX4ZOqrzDqkTVP0jpn18Lc73gHBo
+	 yRRoF0sjFzasvN6W9J4wmx4XTqX+LkByussEAUTF8RrkWdChF5Jz5znuz7YUbwbxlzf+F
+	 8WL3FFHg94TzYLtKnnZ8X7xJbGN/16Cupz4Z9rBCRbNKx9BG1KX36m3Jkhnx1AVE8ew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792658782;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Subject:Message-ID:
-	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=7UpZyCZRkDFVI3JJm3sHmXMHrFiDViDiRuCXKOCySmQ=;
-	b=dLka9ot5y0+FVnEXpfmoBgx8eGwrPKo4Wth3AJGpX1kEC1d/cZ+7gC7eio1iNvXi/vIF
-	 mxFduk9OX3RLO6etbCvJNAR3ICbju2Ks2ZJ7f4NgYRlbEwhRGq+avhaaxDLR35qTWMNTB
-	 84kFXpwIPQNMpjaAgx2RK8o8IDHq3wvtiH8+teLW65hgtRWgN8CKa6lshxBcca9KUWZ85
-	 AQSpiGDC7GBkMY7+09rH79Mjv7zlBbuRRAGxa3zquM51Rec/Fg2g4LIWTvaklHNs4kjee
-	 rR7Jn7sdWv+68Shj+v7obWnsg1ESmTAkLDAmVQdaDYZVyeob0vLXfBcGzIui3ypABkg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792659078;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=x3LnsTRS1dnrRM4yNtWpemXuIEJdYAT0PtyCG1QfkdQ=;
+	b=sax0yhrxa0RcY/zQucZUCjMZPjHoMM+LZQcce5EGcHZrvHMifwY+vVBkpOcokt3YlXZ6
+	 nvkJXFgTQwxp4FubrNvqjokbGB/FrHTWy1guaL9BQHRhocoDJBViMjWMTEr/RkQHlxTpy
+	 kPSFLjihhq5FLu9c8MU6UJ0IQ46fph3WoqWJpoClMc9YbON0dE/bJqcpkYdvyBVUGCuXw
+	 GvG2VnnlvP8YhJoygxYVVAPeqnAB5jE7g8gc2pYjtA2WQYQuns23kzYaFWeJfXhwKa/E1
+	 kwdsnyb3jfc/bpsOtwTMOHu+g6iAx1fPj3Axb1JfzY8bNP2ffRf12M57CHKI1XkSH8A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=protonmail.ch;
-	spf=pass smtp.mailfrom=protonmail.ch;
-	dkim=pass header.d=protonmail.ch header.i=@protonmail.ch header.a=rsa-sha256 header.s=protonmail3 header.b=eexnfA+1;
-	arc=none smtp.remote-ip=109.224.244.27
-Received: from mail-24427.protonmail.ch (mail-24427.protonmail.ch [109.224.244.27])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LCstpISX;
+	arc=none smtp.remote-ip=95.215.58.236
+Received: from mta1.migadu.com (out-236.mta1.migadu.com [95.215.58.236])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C02C606A319
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 08:46:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C02C606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.ch
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33370606A31E
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 08:51:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33370606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=protonmail.ch header.i=@protonmail.ch header.a=rsa-sha256 header.s=protonmail3 header.b=eexnfA+1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.ch;
-	s=protonmail3; t=1792658779; x=1792917979;
-	bh=7UpZyCZRkDFVI3JJm3sHmXMHrFiDViDiRuCXKOCySmQ=;
-	h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=eexnfA+1Qp1F5DxiIEJEfdIHcYodmby0m+yZqRPZ8srk1Wl1LYAJY5OhDVwNmgcdj
-	 n8iCH8wY0eK9KvccbeuBYDn6LPFhHTLrN5hFiar9F6rLqXkf5ZVAZTufmtBAhtIKUN
-	 m3pxH+MuOiwWdFCzGtIVf/CzGZybVDRrkmcVHllt9V7B/xkVRbybakNaVODDxBipkc
-	 MTpTWM8xniRXBDFLcoSVoYWlXZnrMj8M3cheFtRjYH4c/ajvPjhxlBalP3Cvi4/PIW
-	 uAE15upQSzLkYLE3bsE9I6sAU907pkEJ0GCqVOW1EmNtdFoixUMOAyqfMPtgPMuwu5
-	 UnNpYgILBHcHw==
-Date: Thu, 22 Oct 2026 08:46:17 +0000
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Shalok Shalom <shalokshalom@protonmail.ch>
-Subject: [Bug report] rtw89_8852ae: WoWLAN resume fails with "c2h reg timeout" and "failed to resume for wow -110" on s2idle
-Message-ID: <zvVKbBQduN7iovmmy-oy6UZgR0AOBhnGgl9YuUrYtH48IGxvXoTr-iRZbEp-XyQgxq7LNuQxwRJ16cjQziq2sUKpe4b8UeSr6cNS46TBJQM=@protonmail.ch>
-Feedback-ID: 1182871:user:proton
-X-Pm-Message-ID: f8b96389b5b6695f4e4584114584d08cbc924683
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LCstpISX
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=2f8PtKyL+H9I/dXyzzOyuH2jrH5LoCjaCgKtz8un7Pk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792659075; v=1; x=1793263875;
+ b=LCstpISX/qKcFrStc7RUSvzSRZTQSA8jxyys/kekD/Be0ki4pJj2cpEcfQLTNISbiPVRBb9k
+ GbtsKBCWtQBuz+UDzaWvkjI7XJaot5ZOB/Ol4FcbIa4EwIEILzmeubOoiu//afMpoy1DCJNeU9F
+ XrM8jEhuiuzuqiao6ixWApVw=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 7d77fb6879c93d29;
+	Thu, 22 Oct 2026 08:51:14 +0000
+X-Mizu-Trace-ID: 7d77fb6879c93d29
+X-Migadu-Flow: FLOW_OUT
+From: Yi Cong <cong.yi@linux.dev>
+To: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	mingyen.hsieh@mediatek.com,
+	emery.hsin@mediatek.com,
+	Yi Cong <yicong@kylinos.cn>
+Subject: [PATCH] wifi: mt76: mt7925: do not report resume failure after reset recovery
+Date: Thu, 22 Oct 2026 16:51:00 +0800
+Message-Id: <20261022085100.132368-1-cong.yi@linux.dev>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -60,117 +71,65 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Yi Cong <yicong@kylinos.cn>
 
-I am reporting a reproducible failure in the `rtw89` driver for the Realtek=
- RTL8852AE (PCIe) when using Wake-on-WLAN (WoWLAN) with `s2idle` suspend. T=
-his does not happen always, but frequently.=C2=A0
-The system fails to resume from suspend when a magic packet is received, an=
-d the kernel log shows a firmware communication timeout followed by a failu=
-re to swap back to normal firmware.
+When the firmware loses its state over suspend-to-RAM, e.g. on
+platforms that cut PCIe auxiliary power, the HIF resume handshake on
+the resume path always times out. The mt792x_reset() fallback already
+recovers the device with a full reinitialization, just like the
+hibernate restore path:
 
-The failure begins at `rtw89_fw_read_c2h_reg()` (the C2H timeout), which ca=
-scades into the AOAC read failure and the firmware swap failure (`-110`). T=
-he driver's recovery path has been hardened against a subsequent crash (CVE=
--2025-21730), but the initial timeout on the PCIe interface during `s2idle`=
- resume is not resolved by any patch I could identify in the current source=
- tree.
+commit d54424fbc53b4 ("wifi: mt76: mt7925: add pci restore for hibernate")
 
+Yet the callback still returns -ETIMEDOUT, so the PM core reports a
+resume failure for an already recovered device on every resume:
 
-Hardware and Software Environment
+mt7925e 0000:12:00.0: PM: dpm_run_callback(): pci_pm_resume returns -110
+mt7925e 0000:12:00.0: PM: failed to resume async: error -110
 
--   Laptop: Lenovo Yoga 7 Carbon 14ACN6
-   =20
--   Wi-Fi: Realtek RTL8852AE (PCIe)
-   =20
--   Kernel: 7.2.11-zen1-1-zen (Zen branch) and=C2=A06.18.57-2 (LTS branch)
-   =20
--   Firmware: rtw8852a_fw-1.bin, version 0.13.36.2
-   =20
--   Sleep state: s2idle (S3 is not exposed by the firmware; confirmed via `=
-cat /sys/power/mem_sleep`)
-   =20
--   WoWLAN trigger: magic-packet only (`iw phy0 wowlan enable magic-packet`=
-)
-   =20
-   =20
-   =20
+Report success instead once the reset fallback is scheduled, and skip
+the follow-up commands that the reloaded firmware cannot answer.
+Platforms whose firmware survives suspend are unaffected.
 
-Steps to Reproduce
+Signed-off-by: Yi Cong <yicong@kylinos.cn>
+---
+ drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-1.  Enable WoWLAN: `sudo iw phy0 wowlan enable magic-packet`
-   =20
-2.  Suspend: `systemctl suspend`
-   =20
-3.  Send a WoL magic packet to the laptop's Wi-Fi MAC address from another =
-device on the same network. (Via OpenWOL from Android)
-   =20
-4.  Observe: the laptop does not wake.
-   =20
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index 0d477dc1086c..82ee58eca78c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -886,6 +886,7 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
+ 	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
+ 	struct mt76_connac_pm *pm = &dev->pm;
+ 	int i, err, ret;
++	bool hif_timeout = false;
+ 
+ 	dev->hif_idle = false;
+ 	err = mt792x_mcu_drv_pmctrl(dev);
+@@ -927,7 +928,9 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
+ 	ret = wait_event_timeout(dev->wait,
+ 				 dev->hif_resumed, 3 * HZ);
+ 	if (!ret) {
+-		err = -ETIMEDOUT;
++		hif_timeout = true;
++		dev_info(mdev->dev,
++			 "HIF resume handshake timed out, recovering through reset\n");
+ 		goto failed;
+ 	}
+ 
+@@ -939,7 +942,7 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
+ failed:
+ 	pm->suspended = false;
+ 
+-	if (err < 0 || restore)
++	if (err < 0 || restore || hif_timeout)
+ 		mt792x_reset(&dev->mt76);
+ 
+ 	return err;
+-- 
+2.25.1
 
-
-Output of lspci -nnk
-
-01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8852A=
-E 802.11ax PCIe Wireless Network Adapter [10ec:8852]
-Subsystem: Lenovo Device [17aa:4852]
-Kernel driver in use: rtw89_8852ae
-Kernel modules: rtw89_8852ae
-
-Actual Behavior
-
-The system fails to resume from `s2idle`. The following `dmesg` sequence is=
- captured after a failed wake attempt:
-
-[ 2359.543559] rtw89_8852ae 0000:01:00.0: c2h reg timeout[ 2359.543563] rtw=
-89_8852ae 0000:01:00.0: wow: failed to get aoac rpt by reg
-[ 2359.644802] rtw89_8852ae 0000:01:00.0: wow: failed to get aoac rpt by pk=
-t
-[ 2360.305270] rtw89_8852ae 0000:01:00.0: failed to check wow status disabl=
-ed
-[ 2360.305278] rtw89_8852ae 0000:01:00.0: wow: failed to check disable fw r=
-eady
-[ 2360.305280] rtw89_8852ae 0000:01:00.0: wow: failed to swap to normal fw
-[ 2360.305282] rtw89_8852ae 0000:01:00.0: failed to disable wow
-[ 2360.305285] rtw89_8852ae 0000:01:00.0: failed to resume for wow -110
-[ 2361.916657] rtw89_8852ae 0000:01:00.0: rtw89_hw_scan_offload failed ret =
--110
-[ 2361.921475] rtw89_8852ae 0000:01:00.0: failed to set wakeup event
-[ 2361.921483] rtw89_8852ae 0000:01:00.0: failed to suspend for wow -1
-
-
-Expected Behavior
-
-The system should reliably resume from `s2idle` when a magic packet is rece=
-ived.
-
-
-Workaround Already Tested (Falsified)
-
-The following have been tried and did not resolve the issue:
-
--   ASPM/PS module parameters: The following parameters were set and verifi=
-ed as active (`Y`), but the failure persisted:
-    `options rtw89_pci disable_clkreq=3Dy disable_aspm_l1=3Dy disable_aspm_=
-l1ss=3Dy`
-    `options rtw89_core disable_ps_mode=3Dy`
-   =20
--   `` `disconnect` trigger: The failure occurs even when WoWLAN is configu=
-red to wake on `magic-packet` only.  ``
-   =20
-
-
-
-Conclusion
-
-The failure appears to be a race condition in the `rtw89` driver's firmware=
- communication layer during the WoWLAN resume path in `s2idle`.=C2=A0
-A related patch for USB devices (`rtw89_fw_read_c2h_reg` timeout) exists, b=
-ut it is explicitly scoped to USB transport (RTL8851BU) and does not apply =
-to this PCIe device.
-
-
-ShalokShalom
