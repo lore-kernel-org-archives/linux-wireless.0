@@ -1,57 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=168.119.38.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1792664328;
-	b=C9ZeHsrGokq4UhRECE659G5QpzI6KS3MtFO/JdCaqW6wq6kBHFxjpJqhJxJRdqCaOC4n
-	 7Tds6q/6BfgVYQGe3zYWQW1p1Hs4nDCFddsZz2rrpm5QSq7LoCUcXBfnTH/EAGKOk4HRB
-	 jTw4zUox6aXS6tDpyuScltD/VVaRgQ5q8zuOeiT2+dAtnVbXuHNO3RvNjEnE5vL9lpJQH
-	 O3hy3KDoBFjWAEV3TSIuREnRsIaBPnlQWY4py2XKcLe+arHaEm/80I/fdvjUtE23ykVf7
-	 SuKIJrB02WKKai0+KD75ShjZ37N5Zom3QVZQU3MzOfqfeKNZ4KrLHYQdl5SZ8yV3vag==
+	b=brqRCiWhfQyUHD3D9geu/34icl4QxXU0w/o0QiAx68vcNSlxNwpMDZMS9qaJ74vGgloC
+	 ORxl1ea+SHarr8eHjHchoL8tDDDBQnNLN+sNsTkn2dmNHfkS7EYpexJeZPANu14Ny6gF5
+	 k9WIetmg2x1/DgZhNPbrh3Qvx22kOpTlVYHDg6Af/xxQ0T9Vf8lYWVUxuebaTzy8Nu3RX
+	 PFdGxJSsY27fR8Bx5N8sExvbfNuVzhglcADCRD3EhbKsgqmlyFnO7VI/D/QciZUd9pxoe
+	 n9RS6x8pJ39AWHcuicHtq46WHRevJmWiKc3OOQ8TLI6a7K4mgR5fm4qAh1MlA+AeAWA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792664328;
 	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=kNkC55NZI9nP28JWi9xogYa13tTxGAosWNocgTEsX5s=;
-	b=BqlDy6DJxDLEGO+2P/BCAJqsrYuJT9VAIbVOw/SkYshFxcRSthGluym7HCotLkC8ptOh
-	 7pRQOM9Mo+JGxMdSTEHphxQHsdAattVFDeDC4UL/cSS8vV+Bm/YBslCgbTTSxev1C+uEv
-	 QGfP+Pi5aUhcPLzYPebRPeE/eY/PTqsm9kpPUIYKoAjpfn3q16PWWabSRUDOQDEa3L7gR
-	 seKGW66UvAjtoWlXJkARm7lHtCHV/8IrQxim7uN2P3qr2DhjHy6HXQ4PcGwLIWYect+uK
-	 Nh9IUcO8xCCK40oklFQvJp+BMZ9zZJIxceEheBXxkkGV1vPbWDmRR553UscvvtiU2UA==
+	bh=LXUFZNu0I8dcHNELYgAHt8Di53PwXKOh2WUuYRvx8Yw=;
+	b=sf0cmWiG5ZjpGGC6gIFxiNxtIJuEihE6NWoPNoxElBmKJQJCEPM4AffYtpGsZtjZ0GHE
+	 YmNC+2IyCPAlwdGGt9yU61rl4s824GMyJUilLKR9Xe1skjLVndzZS0hiHUlbNwF7+Rn0R
+	 /FpGrTwkG4ylLnYzTeOP5D9pmZyacIHeafX1D0NmO0aXnxnp6i8sOmeRHGyrKDz0CgZqA
+	 ywMxWOZDNTuF0O8nvIHOPQFt2d9+9Fi6MJw4JwchOUwxtxp+/7aooWLDXWjIL2bprm1P5
+	 j+txcxrsaiZQ6Z23AJZyEi3cMwlfLvPalSql/UwTX0joKT8FiqV8oVwcOXcdlvp1AHQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=permerror header.from=sipsolutions.net;
 	spf=pass smtp.mailfrom=sipsolutions.net;
-	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ZV0rsY+M;
+	dkim=pass header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=nTOegHZo;
 	arc=none smtp.remote-ip=168.119.38.16
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF186606A31A
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 10:18:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FAAB606A319
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2026 10:18:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=ZV0rsY+M
+	dkim=pass (2048-bit key, unprotected) header.d=sipsolutions.net header.i=@sipsolutions.net header.a=rsa-sha256 header.s=mail header.b=nTOegHZo
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=kNkC55NZI9nP28JWi9xogYa13tTxGAosWNocgTEsX5s=;
-	t=1792664327; x=1793873927; b=ZV0rsY+MrQDp+sapfmR26i2BV6FgC+Op0Q0COsF5egyV+FG
-	ew27IgLF3lD9gkZu0WJo0tIGCggRV9IM7a6FxV2Za4V23VGGiUBCWsjKdaMNR1fHc5m7l9aAlWuw4
-	YlkRcL8LscPN32fNzTuKy6NwIHKlh4UCvRS+doFsvqqCzu8Yms5twrFp+adKMdRaOtkxP6wbaGHiE
-	UgcdrhxZjChWsIf6ZVmWvx4HMXnnKcOrxXC6OKKINaKswI160pFVSoEtX5vaVjEl2Wc88HG9IWezP
-	MHo2DtyFSi2+wqGHfrD/7tKDhOgY8yVVNNMaGj2j4JewJAiWJOJsZ5ipVwtjYEyg==;
+	Resent-Cc:Resent-Message-ID; bh=LXUFZNu0I8dcHNELYgAHt8Di53PwXKOh2WUuYRvx8Yw=;
+	t=1792664327; x=1793873927; b=nTOegHZoOBTLskUfPBZ0j9wrqVavQCT6+SebeIWPrQ/9T0n
+	uKKNZIcZxKEbhpaH1puPFWVx0/FQmSe6ZT2nBTJb5Sjxm0CvCYPcBGH7lcPK7E/OXYlh9Qw9z+/T+
+	P402GLa2Z+DwcoKF2DSZ4Gy9Us0sI91v3qpM9a5bIE4hxoWXYGOFJHE8ci1oRnBDAD249/AKM7T0B
+	9LdT+OTxITNtntNUFMfiCuU0pw39eGEHxOJ/+xVD4gCV3EOGiEzBGOkYz7xw+w8CUnEYIs6F9e2yk
+	M1qz++vSKI6hJN3KA6FVkAPR2GIhPgihsuNdzko0p/PHNdt3VSrKyW5ea6LLi/kQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1xJpsj-00000004Ifb-19E1;
-	Thu, 22 Oct 2026 12:18:45 +0200
+	id 1xJpsj-00000004Ifb-3XvQ;
+	Thu, 22 Oct 2026 12:18:46 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 4/6] wifi: ath12k: register regulatory before wiphy
-Date: Thu, 22 Oct 2026 12:15:35 +0200
-Message-ID: <20261022101836.148512-11-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH wireless-next 5/6] Revert "wifi: iwlwifi: mld: Move regulatory domain initialization"
+Date: Thu, 22 Oct 2026 12:15:36 +0200
+Message-ID: <20261022121836.64d4ecec7915.I3e7049a6765887736a9284beef2b0d7ff49f7748@changeid>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261022101836.148512-8-johannes@sipsolutions.net>
 References: <20261022101836.148512-8-johannes@sipsolutions.net>
@@ -68,61 +69,43 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This order is going to become required, since userspace
-can query the regulatory in the window between the two
-registrations.
+This reverts commit f81aa834bfa9 ("wifi: iwlwifi: mld: Move
+regulatory domain initialization"), a custom regdomain must
+be registered before the wiphy is, otherwise a warning in
+nl80211 can be hit if userspace queries quickly enough.
 
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath12k/mac.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/fw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 01f8c6572f65..2b52f76cff10 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -15094,6 +15094,14 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	for_each_ar(ah, ar, i)
- 		complete_all(&ar->regd_update_completed);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/fw.c b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
+index c33a553488ee..92e519bbc977 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
+@@ -347,6 +347,10 @@ int iwl_mld_load_fw(struct iwl_mld *mld)
+ 	if (ret)
+ 		goto err;
  
-+	for_each_ar(ah, ar, i) {
-+		ret = ath12k_regd_update(ar, true);
-+		if (ret) {
-+			ath12k_err(ar->ab, "ath12k regd update failed: %d\n", ret);
-+			goto err_cleanup_if_combs;
-+		}
-+	}
++	ret = iwl_mld_init_mcc(mld);
++	if (ret)
++		goto err;
 +
- 	ret = ieee80211_register_hw(hw);
- 	if (ret) {
- 		ath12k_err(ab, "ieee80211 registration failed: %d\n", ret);
-@@ -15111,13 +15119,6 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	for_each_ar(ah, ar, i) {
- 		struct ath12k_base *this_ab = ar->ab;
- 
--		/* Apply the regd received during initialization */
--		ret = ath12k_regd_update(ar, true);
--		if (ret) {
--			ath12k_err(this_ab, "ath12k regd update failed: %d\n", ret);
--			goto err_unregister_hw;
--		}
--
- 		if (this_ab->hw_params->current_cc_support) {
- 			struct wmi_set_current_country_arg current_cc = {};
- 			struct ieee80211_regdomain *default_regd;
-@@ -15158,12 +15159,6 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 	mld->fw_status.running = true;
  
  	return 0;
+@@ -544,10 +548,6 @@ int iwl_mld_start_fw(struct iwl_mld *mld)
+ 	if (ret)
+ 		goto error;
  
--err_unregister_hw:
--	for_each_ar(ah, ar, i)
--		ath12k_debugfs_unregister(ar);
+-	ret = iwl_mld_init_mcc(mld);
+-	if (ret)
+-		goto error;
 -
--	ieee80211_unregister_hw(hw);
--
- err_cleanup_if_combs:
- 	ath12k_mac_cleanup_iface_combinations(ah);
+ 	iwl_mld_tx_gp2_start(mld);
  
+ 	return 0;
 -- 
 2.56.0
 
