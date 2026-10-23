@@ -1,101 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.43
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792779595;
-	b=aTKrHAxsSQj/SS1PTeVP+k8rNpaDfzyZu0Lht8xjvt52Hwsr9TDfOi9XuNWwx6HFOUAH
-	 HkYFsZuRO9RPySGjiWzwASxSABibhqIu65JGXhz9NPKzccDe9NEneevONsbBrmJTzABTH
-	 CbC5nhhmZcwy5ZBo7Hi/og7uhXnYzOF4d5gVW+Sv6SJhuVW3FZBPtutL3Wb2tjxyhUNxY
-	 o127v9LIjXbpn+vPwjYCudqrCITjTgH01CBMAbXvibFzsytDH2uXZa15QQQ9aFQ7M8Ua1
-	 592Oum2Ijs6jBRV8huTLB9OExrFCGqFr9ZBUX6TFzBMepQ7/39eIBUMFAETxvLPIB/w==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792779595;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.173
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792782418;
+	b=qnFRbuU37udJs+BfADnFIbp6rNSSmR2TrE4t0nQYm9S7TqSNbF5mTETGbLl+iYKCjoFq
+	 3OKJqKEM9Cjjf06g7hHsxTNLfhUKMhdmcFRENkYDBSR1U+1UVnShsUcyGrxOu8x1qE3p5
+	 zU2g1CVuPdZzdyzHqMZdTtsVsgmf8lH0g8f3Vne6i8Q8EBGeitd44QmFTa4yIJN9hkpy+
+	 benpqK3/qOqllP51oxG9HImj8KZwfbBv0mvQ9w1JAqFzOID7aXYyDofHVxPNtDpH+BjNN
+	 y9/LPP9aVwh+ZL1gQdn3EbEt4MrCLIgTDf980vW4FmfqJEGUJwqwviAOPd+tK0aOAMA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792782418;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=Ib/ri5CDuAjwUK4goxK/03XfhwG7mHhhdijFj1BEbio=;
-	b=A5ZW/PoZvWUeuDa5KNzuRgf2Y/OkTdgKBj8gFc338lJMJ5/EX1+PQyIpWGUSe7iygLze
-	 SviLzDTB2oEye4L9FS2eel+yao1/399WvtCa1CNu7W+oTSS3qXeckaY5FKezkoztu/HGl
-	 Xt89W6M8n1OI4XLQ+QIgZVFwMf7n5v6LPv3t3GbC1CvwlhSi0drAJggj1zgy3F2bCxPym
-	 EwOuaBiDsu1Q+38fyNmpH0z/trkMOiujhZUvxF0/X6QQSDQOZzkQ8ev23/VwFnedJYm7f
-	 HpweZZoQ8+mSVTIWtvV8+QH7EldYETFKM/RZROgSmnlPxp8cbHuIiF6bK/U+OVzhfUQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=2+b6Xp2Wz758MZizwri4WwdSM0RQI5RuQjaDSiYF8TY=;
+	b=5D5g7SKKrM7214EGWCLwD6rHUGQUkmS7ODSdSIb2LJG9y1beRWtHlCQJd6/77awlZVTV
+	 CPZ7I7uGJsuvS4EJLcowKyGt64kZss+0IBI3O5U7xjakIdLN8ZhWEG8sGMgSPxS8QZyjJ
+	 jmbgPEbdi8xFwCK0eM5CtIUZe4c0FPj0AWgViVR9Ud/wMwulJIyd9F/vWLy4NJYmDe/8D
+	 p8laLsghpkTVH1Rqtyjwrn3m7ftG99HAD8rGgefGNoGDVt6Qv+dfruw0R27IVEahsEM18
+	 3Gn58b/BHJQpkoVoJErcyyRi4LveoW19/KIZiKIZ53bbiRxd33EQEollrHVzG/X8CUg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=PTVng4+k;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.43
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=AtRBTfcB;
+	arc=none smtp.remote-ip=74.125.82.173
+Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACE6606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 18:19:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EACE6606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB03B606A31E
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 19:06:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB03B606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=PTVng4+k
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6ac76a02368so1565681a12.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 11:19:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792779593; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ndBff+FA5q/bqw22UYqZPYBqnVRERCqODaV2bnicv8M0Vam9xjKTHMSUfHeaALVaKG
-         gtRwbR8wRQVhaug4jkZ56X960MsnSGaeBuKy+rSH+SYOX1eGg+DsBjOrKVSP1xaoKfO2
-         yRKLfhGA1Xm3kbHjFP53P2GL1WBNxQ7GmG6LOQ4BLIgpg9h9TLSVcEbEwx+ihDtrD++R
-         4zP0F1S4Qx/IioMUoNomeqOIiYkXZhQ1uQ/q6BOfLzCrqj70iSqXcNyAB+xXRyjOfrHS
-         k0lefiq045r/rK9xtzvGuhYtT28rpASwsOlVxg8RfTh69ULKf0d3N5dheLOc3OBSzp71
-         SF0w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Ib/ri5CDuAjwUK4goxK/03XfhwG7mHhhdijFj1BEbio=;
-        fh=82eK3S4t5f/yNxaCu5vhrG4k1zSyVsB9Z/M16ZdVGA0=;
-        b=X7w3PFlk+L03FGlOgia14/EZZ6csVqFJYgvPNU3I3kdSsYylcokQcQiZcvvkxivHAJ
-         B2apSAEewLJVYdUE5ZyJhMcmriU9AgvWXugjXKe1euC815kMtmMxboUDKDKwg0B/w5Xs
-         L+xwfPl/8eIK6ySxF2OVMh/T49ErU8el0Rq97xNuD9zrfyKPQyFmZOhVBjZVwJwXrVTZ
-         3uBlE76U+nwP8GmIInZV2r3hNAPI6Sj5irTDREvibeekoPrQvJM/JSy8XTJtZefa9ljY
-         thjZT0AdRybB+infy9saSPkU3/PI/462AWlE59ew0/RLubCsntChimdLV1OcHWg4S815
-         H99A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=AtRBTfcB
+Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-3645f0f3fcdso2279153eec.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 12:06:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792779593; x=1793384393; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Ib/ri5CDuAjwUK4goxK/03XfhwG7mHhhdijFj1BEbio=;
-        b=PTVng4+kNSaYoXcW9ZVpky8q6wGS/1f+oQ7ufoyFjtG2Wvv6QzpYc9OETVLucX0YLZ
-         aINQMccPii23lGhCvpB7Ga/Z2ZGb4DGGs49zFY4sLcTgR8U7oab7Zr6cnQUQYX4tiRPN
-         AiZO4ZfMme3RiM0tzElJm3Bud8fqTw0jGC743PLpawmnAd1St4vz6bmHO9/IZnURbz8j
-         ao/O/+j+ZGgdYAMr3rMyOWXc7bM/+o+8ieMjEVgPYfs4nMtscFxszBWe5HVOjizdT1eD
-         CEZGOxfccNgWXBw5eZ5jmaaax3HVC3Bak5/u0+lG8hrtCRQpTq8eNHqNJT8mNRXlSR+a
-         A+gQ==
+        d=gmail.com; s=20251104; t=1792782416; x=1793387216; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2+b6Xp2Wz758MZizwri4WwdSM0RQI5RuQjaDSiYF8TY=;
+        b=AtRBTfcBpGQKTHhI+7yJwLms5MHrNAf6xryGSXVZTgD8jxQB+9Ocoa+dVHY3vDnqTB
+         0bUdU94gxHU07oU/rlwUMP/6/ybzvYgp/kqmxt5CLk4gbHLzXIFaiGywlVWAwnaWU2fk
+         jZKaf2pZQuV195uqumrruJJ/UDfF9XYsvcWCYNBATVVfZ1ybMWOCAOUklDR+fS4YzV7R
+         Cj7hSlHhc4GfWsyNqTUCaYQ2Xg8l9gFRBvYpxmZ/44agRx+2BC0oqdQOK2L0pXeF5K7h
+         IVnw/9v+dB90P3JZfEea5110VUpEZ1gcMGRXomox5msJZEuDgxhZayl06Wh4geuOJJr6
+         36ZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792779593; x=1793384393;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Ib/ri5CDuAjwUK4goxK/03XfhwG7mHhhdijFj1BEbio=;
-        b=Kd2/H2rNayyiAHd+fqd079yu+ooDSP3Fx0+fjdMF8o2LjMXntL7KciWsUwVkYEkza1
-         t0B827K1SrJIS4CitemfXo9V/qb+M1gocN+gssgeERNKRQ2+4MoLKsDwUjlurX341bn+
-         Mf1Jzim9EtDyMC1OIhlj6bPRrV/xbLbe65YoM1l/mIFmWuBafoL0mTiTuH2TmXEGToHK
-         SdiIQmJhu8NiEYRC39Cz0FeSx8TpdlJO5R/YY9TYlFVsFkZhHOyhorBgrtdhoZ+kOIAq
-         dxiMmvZEdzOpbYpz+xevgmg+3fllusfcdEy5MUioUgwPWj4HE+rXO/C0F1sG54MzsFkP
-         B4pg==
-X-Gm-Message-State: AFq9FYJ6lJmbBvAHxufxooxDfZbzjRm6h6+wCVc6qTfCuZPm7Wg9KU2g
-	37vlAfKwlU4wwC/55UnDP4QVyck6pK2uX554K5ezAXFLx/e74C9txtheGa25WKTpKUrSFAI8Uau
-	fw7vxMzRGsaGvq1YF9L+auYQVRMM/8uR3wmc2
-X-Gm-Gg: AYBFou0NENzYb7H+QkchWl4z7EAwxHrq84HW7t8ggdWjymN/Q8GnoV62zEOD86zVWUF
-	/G2TeQccypJAm7POYhvgBgoAJaFEEtWdv7skaztkoteFIxUHWXv74LipIVIkZguz+t99u7r6zJT
-	feGtEWlAns23JvSabpK7Gy0fTcWYZheQP+rJzK7EyFxVqccJb/PDDffW2kxAsvk2fg9osnDn1Hd
-	hD3gM5yBrK14Vz+3DHS72viZzKzUL53UdP49yT4ZPHdBlnweGth/PmANipsvDgsTNr2MbJTbWbZ
-	dO+jPle53KhYspg7fE2QoclKlHAPXVbVyAUc2Tn5HZDJNybPFnMNUAmkijY0q84hDT8HVoMSS+3
-	yvCebsZd0SWh9BgDIewPCNKVCzmyx79rxk36G2jctYPZZUOmgUH6B9UNNc0STjPAQrleMi0nfRb
-	+agx/+Wjyl39CRdds3yz9n53m4Ms1xU0q6J9pVig+TFoLtB7tXGoXjuw6RrdDEphiJ6z7EHab9P
-	eqxIiiecTryN2Rf/Ho3T7hR68o4xy24fT4PDIskhTaQB5orD+gF5FlfQNSuKANjwSj9zx0=
-X-Received: by 2002:a05:6402:1ed0:b0:6b1:d439:5c5 with SMTP id
- 4fb4d7f45d1cf-6b442a82876mr18979a12.3.1792779593007; Fri, 23 Oct 2026
- 11:19:53 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792782416; x=1793387216;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2+b6Xp2Wz758MZizwri4WwdSM0RQI5RuQjaDSiYF8TY=;
+        b=HZ8ZrzOD9gUFp7fBA9Uc0MUUZjuF42eyr8FRmladYi421d3GMnmW2cxJ7N6o0T/xS9
+         MnTRAhuoFSnMwkmyxD+XwryeePfwJN91FUX9SjmsZ2GJQluJhm5/FrsV2y3EHQeAF/xt
+         iCCCyP1QessM7xIhYUx53v3OG71ReUpUI7+cE1lOLd1M9VYXY+hvJMLxfeJ7jjHkuhMN
+         akjHRNmHLu8btEXhvuqZWE9/uRjHCNgIN8P75dkhJw8/nSAGmLeHKNl5fEtwcmLLyRIv
+         VnpCIfLILKH2sZsopud+B1msPHY9R/CCvGjnUXL+9DmcdHaZy4HEBGA+B3GsWyQwUS7g
+         nSJA==
+X-Gm-Message-State: AFq9FYKXN7l8UcIa3O9sOwqBdwgw/S8x83P6ACChKRvVGqekhAepaV1W
+	glWg5VSgAASFF9m/tKh/QvJYyatsGjlePLMQ87Vtm28AK1ODYfsaivZtjghpFnfD
+X-Gm-Gg: AYBFou2NbTJEkbHTIHlsNWtJrA81A++e9La8zzjoT14tA8aolKSNd1tvcCrpJQxjrrq
+	MyhhRQrc6AyWurq0Q12kjl9ykzDNUuZqa+Xric9N45woT33IMCF1pUWkJTz7jr1EKGdhqcDdh9G
+	DbR5Y+2r/Fm/llQJ54/FCTkO80N6N+D9rug6PoGFqe0ocl7/qPCVLK/TFTyUp/Dplk2Wk5YwL9B
+	Bn/OuhFsJvqDkdF8iMF4orkDVp1AWYakJkxzluUnpP8EDu7wghweS0cJL36zAW1y7GaDv55+e2Z
+	e5hXt/I6ztzOFf/lD3L+miGzRIz0F9yZkpAJfGZ156JLJiXjVyXfZ5bfpaqSse6Zal0FBtSAyAn
+	hOc7HxnDeYzt18KdCtkPhClOG6Sn5jdlikNIFrgm0GuvwbiWxZSJ458rEa91n2jiA+MW6Vj+ffz
+	8HRn0yKAtabBHgNXMYlgrjjevSFIypFl7M981Id2FsAxRAu4cTuiUsFP1SC2UijJ5idi3YUMiAA
+	pFbI7bjak+JU/vGPI4ypwIah/p64ivhg4Kv4bvmNs5k5E/bKBw3xxJU9FTV1hrts6FwGoNEYIE/
+	UZORntfHDNdcKpj+OxZptAMwk+leL0qVf1c04UWCMByA3SnZD9X/R3nyb54iHw3CzOH5mC5mfQz
+	v4CrZ06xQxCFXLTuhf+o7StROgoRc
+X-Received: by 2002:a05:7300:8812:b0:368:8d1d:2a81 with SMTP id 5a478bee46e88-369e861b306mr278846eec.24.1792782415889;
+        Fri, 23 Oct 2026 12:06:55 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:37f::e34])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8ec50bcsm209607eec.23.2026.10.23.12.06.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 12:06:55 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH wireless] wifi: b43: map the RX buffers DMA_BIDIRECTIONAL
+Date: Fri, 23 Oct 2026 12:06:53 -0700
+Message-ID: <20261023190653.70741-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -105,46 +95,76 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261022022343.1409432-1-rosenp@gmail.com> <87o6ckqvsr.fsf@toke.dk>
-In-Reply-To: <87o6ckqvsr.fsf@toke.dk>
-From: Rosen Penev <rosenp@gmail.com>
-Date: Fri, 23 Oct 2026 11:19:41 -0700
-X-Gm-Features: AclHuK9hNtjapAGTuPaNp1z8hxnwNiaSclFMvsF-Bmo9RDpb45Bd-X4aERvn6hw
-Message-ID: <CAKxU2N9m58fCS1L7SQd_yzxcJV0NNyYHcj=jt_BVkrcc5rSOGA@mail.gmail.com>
-Subject: Re: [PATCH ath-next] wifi: ath9k: release the LED GPIO after ath9k_stop()
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org, Linus Walleij <linusw@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, 
-	=?UTF-8?Q?Giedrius_Statkevi=C4=8Dius?= <giedrius.statkevicius@gmail.com>, 
-	Kalle Valo <kvalo@qca.qualcomm.com>, open list <linux-kernel@vger.kernel.org>, 
-	"open list:GPIO SUBSYSTEM:Keyword:(devm_)?gpio_(request|free|direction|get|set)" <linux-gpio@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 23, 2026 at 8:30=E2=80=AFAM Toke H=C3=B8iland-J=C3=B8rgensen <t=
-oke@toke.dk> wrote:
->
-> Rosen Penev <rosenp@gmail.com> writes:
->
-> > ath9k_deinit_device() frees the LED pin in ath_deinit_leds() before it
-> > unregisters the hw. ath9k_stop() then switches the LED pin back to an
-> > input with ath9k_hw_gpio_request_in(). For a SoC GPIO outside of the
-> > WMAC, ath9k_hw_gpio_request() takes a new descriptor through
-> > gpiod_get_index() at that point, and nothing releases it again. The
-> > next probe fails with "request GPIO12 failed:-16" and every LED update
-> > hits the WARN_ON() in ath9k_hw_set_gpio(). That request also runs
-> > under sc->sc_pcu_lock, while gpiod_get_index() and
-> > gpiod_set_consumer_name() may sleep.
-> >
-> > Free the LED pin after ieee80211_unregister_hw() instead. This also
-> > frees the pin when the LED class device could not be registered,
-> > which leaked it before.
->
-> Hmm, instead of reworking the deinit code, how about we just drop the
-> ath9k_hw_gpio_request_in() call from ath9k_stop()? It's an LED pin, why
-> would it ever need to be reset? The commit that introduced that call
-> says it was "for consistency", which seems entirely bogus in this case?
-Why would it be requested and then not? I imagine on rebind it would
-error out in such a case.
->
-> -Toke
+b43 poisons each RX buffer before it hands it to the device, and drops
+a buffer that still carries the poison, as the device sometimes skips
+one. The RX buffers are mapped and synced DMA_FROM_DEVICE. On a
+non-coherent CPU like the BCM4716 or the BCM4708, the map and the sync
+for the device then only invalidate the cache, so the poison written
+just before never reaches memory. A skipped buffer is read as whatever
+the memory held before, for a recycled buffer the data of its previous
+use: garbage frames, or a length that sends dma_rx() into its path for
+frames spanning several buffers.
+
+Map, sync and unmap the RX buffers DMA_BIDIRECTIONAL, so that the
+poison is written back before the device gets the buffer.
+
+Reported on a Netgear R6400 (BCM4708, BCM4331).
+
+Fixes: cf68636a9773 ("b43: Refresh RX poison on buffer recycling")
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43/dma.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index 05da6987a845..c8585c6dff37 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -353,8 +353,14 @@ static inline
+ 		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
+ 					 buf, len, DMA_TO_DEVICE);
+ 	} else {
++		/*
++		 * Not DMA_FROM_DEVICE: on a non-coherent CPU, the map and
++		 * the sync for the device would then only invalidate the
++		 * cache, and the poison of b43_poison_rx_buffer() would
++		 * never reach memory.
++		 */
+ 		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
+-					 buf, len, DMA_FROM_DEVICE);
++					 buf, len, DMA_BIDIRECTIONAL);
+ 	}
+ 
+ 	return dmaaddr;
+@@ -369,7 +375,7 @@ static inline
+ 				 addr, len, DMA_TO_DEVICE);
+ 	} else {
+ 		dma_unmap_single(ring->dev->dev->dma_dev,
+-				 addr, len, DMA_FROM_DEVICE);
++				 addr, len, DMA_BIDIRECTIONAL);
+ 	}
+ }
+ 
+@@ -379,7 +385,7 @@ static inline
+ {
+ 	B43_WARN_ON(ring->tx);
+ 	dma_sync_single_for_cpu(ring->dev->dev->dma_dev,
+-				    addr, len, DMA_FROM_DEVICE);
++				    addr, len, DMA_BIDIRECTIONAL);
+ }
+ 
+ static inline
+@@ -388,7 +394,7 @@ static inline
+ {
+ 	B43_WARN_ON(ring->tx);
+ 	dma_sync_single_for_device(ring->dev->dev->dma_dev,
+-				   addr, len, DMA_FROM_DEVICE);
++				   addr, len, DMA_BIDIRECTIONAL);
+ }
+ 
+ static inline
+-- 
+2.56.0
+
