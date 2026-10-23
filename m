@@ -1,46 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792753305;
-	b=Pkmetk+ptunrSGZw3vTtbLF3PJM+1KpxLoyt3Poh6ZzmxmNUZPPgWElSujs5/cPMAUYI
-	 9c8NHCzH+0eFJCoJoh/39RHZ+bt8YPrT1fQnx66Tlt2V4qoT5zXNkgrcRVQm8/D2Bx8wh
-	 bOm7d1wImE/V9HBGr07Vj12M6jiYh7UHvg8a+3+/kYkZm3cxyXP7LYs4UuWv64boAY8Xc
-	 8B3ndRDjUuqYDrmstIQc6eBjTk8lERUbxcBIn6GvIx0bHmxQGQ8iqeyR+t9qCP8RvXYDJ
-	 iAOHlzq24TfOvdnvJ+VR60Ur7yWkmEZ+xXrJg5nahekFAoiOI9FBM70/GzpwU2+0wow==
+	t=1792753361;
+	b=Zna8BtfP8gIZJ55GpUr/FdARZNU95Xx3TFR95rXyLwxO8b3v1Pq+JqDs6D+ghtAaFUHw
+	 R+WvBFWfxTBG8Hn/5+ex8iP7TPtwQbjEKQJYUDN1ky5gN//8wF53MGMJyBu3/Va2pcJ1p
+	 +mXYV9DvYqPzUS8JvSmmyExdAdkcJjDwzGCGFqAO1gfnM7tKfROkPDVexue+PDwTiRYLi
+	 5H0g8c/zH7I1OhpQyy8I+fJRg/FxFm7+ebLWvEVP3Wzv0OmjBBihZmlE4or/gpRd3I0T0
+	 2h4X9ErJGLwMG1wHz16sMMXbHiVKwFNdqqsjh+6L7l3UVarimehp7jSRW1HpzJc0SZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792753305;
-	h=DMARC-Filter:From:To:Cc:Subject:Date:X-Clacks-Overhead:Message-ID:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=9i1lMAauhdSb96bAn21amtKRcV/LL4J/0GNVxIc7VqM=;
-	b=ih6d1wlqMUmIE3cYoZGp1LeMwC+s7mtGgaN/54H/zhWrGkgr1er2R4e+3yVuzLun0J9N
-	 i7N47h3Tqc95YtG6X2ddpPbN/8hAvLyi1eN/Y8+bijWuWdhs+GX+BwErQ2vOCd6ZRYn2d
-	 ZbWKUFv3CbrBHmI4MLl4rczmhBtwlG1mrWwT1RCZ8RmvSYTDbugeCx5CZTXNvo4RCo+pJ
-	 +RWg4hNcW1D+dZbWRO6XruXSb2jnd+LoO9S3Z/pdDV5ifVPG8gjSP6jlz6CI1a03jek7C
-	 pzTcuffKNjouiR3jZA7GnheWYdEHoVgwgpFur6jcI83S1eNKSzcZ0lsKadpEqQ/Bopw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792753361;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=eJC7xNgQLQutWHHXkZ4X5MyS9ZRK+CGwoz3uAzjDsLI=;
+	b=WvqthClOPhkfW/xXAneBWlSs54wM9DXjByLWGtMkuV8HoEEnli1JpEMKLmTYm1Zh9NMx
+	 H6w/yDmrFiAKiEjEzv3QfXjsqQS4d7pNpLkJaBCSaN5zy/JdZBG1n/eNtPkKxF+h3Fd+V
+	 s3t7uVC4+ydQtXIdO1jL9qqiFYPf0CFrA3qBR81y84vnEFysXQHL8MQfyfatS4ezwB/UA
+	 wP+Wjtb691/TCJlwF1YvKhh9YE5BQBomxM7bTN72xSGufsWg9xWd1IWonocZVrwuJnayo
+	 VL6mYR4SmjRC9zPwMLi783pNj/Y5Ok50bWNwxO4GjUUpedvYbQ4LMhdNfhrn7xcHYqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=toke.dk;
-	spf=pass smtp.mailfrom=toke.dk;
-	arc=none smtp.remote-ip=45.145.95.4
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XeaVoIN1;
+	arc=none smtp.remote-ip=209.85.221.49
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BDF606A323;
-	Fri, 23 Oct 2026 11:01:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 37BDF606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: mail.toke.dk; dkim=none
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Alexander Wetzel <alexander@wetzel-home.de>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22983606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 11:02:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 22983606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XeaVoIN1
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48afcd7ba9bso428394f8f.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 04:02:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792753359; x=1793358159; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eJC7xNgQLQutWHHXkZ4X5MyS9ZRK+CGwoz3uAzjDsLI=;
+        b=XeaVoIN1AsdgxiXmgX/39WBewj8KDsevg1v+JNoSl8CfcUaq6UcqC5OiYyOJqWFuEA
+         V/TJ/acFlfwmM3CjmgDAjNgD4Efm376U6KgKCC4KQOTL8OO5ivmqKdDjkcRtQ3HrTkC4
+         8KAvznjfZv8uo+qPuiQmH1LIIP30qIn9cFiEZ6/XrH87dWvNAnlOHPUSFZzpUgz5sEmc
+         O0Z19irlBe6wyz7jU9IjWP4HgerhEG/nVWTVCbe6Ng08sNZ9vEYbNXjguEoNbJbdTQSo
+         +i3Am+sqGGt1AO+jszQWF7cHcNA0tZh0medTKbbMXrLkjZ5gtp4bKgxHN7KH4jK6s3ow
+         q6sA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792753359; x=1793358159;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=eJC7xNgQLQutWHHXkZ4X5MyS9ZRK+CGwoz3uAzjDsLI=;
+        b=T6thjKqkY1YqUU7pcp5u/LQKjBmD7XeIQfro2V7C73kfFKUYing2Cw118jJk/YEmVF
+         1eUTL3NjdQ/9FvZXLgw3effFqH5kXafW5mzScMWk9uBC9A4XgM6TZkQImh70QLss15fC
+         owRoz/bGioUQ0M+LqveWpqcFR6j78DgczJm+mRwk6Cx1AHgwglE/+lZ1T3KvE/5jCh5K
+         sGtP8tjie53K8CtnH45qqvXSDSLlByQbEk7UrO4fHmGoL9aNPYcozjk9Z9nrcpRUeIZM
+         D0n559enS5SQIU64FP+9jnlkiWgwFhSCUl8wxAUPM7pzzkE8C35cqXw50v5RMPMLMMxV
+         5v4Q==
+X-Gm-Message-State: AFq9FYKt9vJvLobJYOnPXzSHWqy5bGBQklWv8jihpAK2IJnWgHmInA2+
+	KYiH1sZTPU/kmaC0sij1/FPfM4OvyeARHbo9jaU4fqSYTwfX9rl4dXmE
+X-Gm-Gg: AYBFou24b5CnRra9FeQGQHFvnOITQ/GFDBSZqyZnl0+6sLwIQDXBxZIDdZrW35sth26
+	GgeLxMMWkqqMRt/Iu1Scfy+YUZd3ILOtyU7O/iWRyP0dS1ATyCsTmU3rypOnAw0u+a15aqjYLAH
+	oAu6yqCyihyXZKLe7zIveTAy0YxGs88ngrkkT94UyIXu16UZoBODALy5sWz9upaMp0547IMmXi6
+	tbOubY5p8THU9oMTQAsa3o9iHH77xwrDb3J/Ll24Oa+pbyXOjz7j5981dfYQ7nI9CHELtmgKrZL
+	2Pi8JJRqo+kK0yIlUiJXX5eNHBUw+788c9ssz6zjFH7kwnTMTeQusZfmmbDLWck9VN7yc+GVynZ
+	Y1tp2SRBQdsOvGv7Vsh8CH3+AFjvQkvmqZDU7atpE6/zFwbsVdt4fePK73r5NmWxAlv7iY++kvj
+	wS+90JHWMoLAOyo+obzCoaYxdmBB9XPncF7MGdYHcnUbXUTgNtVrkM9FE4Cw0QVx2E1w3omSOG6
+	3uCwNRedtgmzS14d1W9Y4wTK32B/I5pERvQ+kclRI7WuagYy0rjZCGTJuVqPCkNthjs887zQGLK
+	kTeALpBrFfzXq43WPfLSMEFu1/vDlCOUjYyhCyscAXKTKvb5jiue19I2JPSx9timWbklQudhVyK
+	8uA==
+X-Received: by 2002:a05:6000:40dc:b0:48e:e2a:4093 with SMTP id ffacd0b85a97d-48e3859e1a4mr2854763f8f.19.1792753357897;
+        Fri, 23 Oct 2026 04:02:37 -0700 (PDT)
+Received: from omarchy ([2a02:ff0:1e10:93f:e71c:400:f186:eea4])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e38062dc6sm4189555f8f.55.2026.10.23.04.02.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 04:02:37 -0700 (PDT)
+From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	stable@vger.kernel.org,
-	Evan Severson <eseverson@gmail.com>
-Subject: [PATCH] wifi: mac80211: reinstate IEEE80211_TX_CTL_AMPDU flag in ieee80211_tx_prep_agg()
-Date: Fri, 23 Oct 2026 13:00:51 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <20261023110052.650519-1-toke@toke.dk>
+	linux-kernel@vger.kernel.org,
+	rtl8821cerfe2@gmail.com
+Subject: Re: [PATCH rtw-next v4] wifi: rtw88: pci: wake the TX queues after restart_hw and interface up
+Date: Fri, 23 Oct 2026 14:02:22 +0300
+Message-ID: <20261023110222.2804687-1-abdurrahmankaradag19@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <e9cab7ed7daf45b9b4c2294174f8c1a0@realtek.com>
+References: <e9cab7ed7daf45b9b4c2294174f8c1a0@realtek.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -50,54 +98,27 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The commit 592234e941f1 ("wifi: mac80211: Fix iTXQ AMPDU fragmentation
-handling") changed the way handling of the IEEE80211_TX_CTL_AMPDU flag
-is done in mac80211, so the only place it is set is in
-ieee80211_tx_dequeue().
+> It would look natural to clear queue_stopped before enabling interrupt,
+> since it is intended to reset. More, add a function to be clear that we
+> are resetting queue_stopped, like rtw_pci_reset_tx_{ring or queue}_state().
 
-This means that any frames that are sent to the driver via drv_tx() will
-no longer have the flag set. In particular, this affects packets going
-through ieee80211_tx_pending(). Evan reported that this can result in
-the ath9k driver failing to account such packets in its block ack
-window, eventually overrunning the window and stalling TX.
+Done in v5 as rtw_pci_reset_tx_queue_state(), called first inside the
+irq_lock section. It carries lockdep_assert_held(&rtwpci->irq_lock)
+like rtw_pci_deep_ps_enter() does, to record that the caller holds it.
 
-Fix this by reinstating the flag in ieee80211_tx_prep_agg() when inside
-a valid block ack window. This should be harmless for the TXQ path, and
-will reinstate the previous behaviour for drivers that use the flag as a
-signal to track the packet in the window.
+> Add an empty line before 'running = true'.
 
-Fixes: 592234e941f1 ("wifi: mac80211: Fix iTXQ AMPDU fragmentation handling")
-Cc: stable@vger.kernel.org
-Reported-by: Evan Severson <eseverson@gmail.com>
-Link: https://lore.kernel.org/all/20261014025734.2288693-1-eseverson@gmail.com/
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- net/mac80211/tx.c | 2 ++
- 1 file changed, 2 insertions(+)
+Done.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e9b6a0415d6a..0f46b5ff0c4a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1164,6 +1164,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 	struct sk_buff *purge_skb = NULL;
- 
- 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
-+		info->flags |= IEEE80211_TX_CTL_AMPDU;
- 		reset_agg_timer = true;
- 	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
- 		/*
-@@ -1195,6 +1196,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 		if (!tid_tx) {
- 			/* do nothing, let packet pass through */
- 		} else if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
-+			info->flags |= IEEE80211_TX_CTL_AMPDU;
- 			reset_agg_timer = true;
- 		} else {
- 			queued = true;
--- 
-2.56.0
+> For scanning from idle case, we have an assistant
+> 'test_bit(RTW_FLAG_SCANNING, rtwdev->flags)' if you want.
 
+The case is real - rtw_hw_scan_start() takes the stop before it reaches
+rtw_core_scan_start(), so the stop is already standing when the start
+runs. The flag is not: rtw_core_scan_start() calls rtw_leave_ips() and
+only sets RTW_FLAG_SCANNING at the end of the same function, and that is
+the one set_bit() for it in the driver. So the test would read false
+exactly when the scan's stop is up, and I left it out rather than add a
+check that cannot fire there.
