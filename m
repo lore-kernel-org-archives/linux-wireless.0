@@ -1,47 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792768722;
-	b=oOJJJ12sk6oMz5zerbACO581oni9HQq5oao9pKdoiyrvtnaLgDYgeYQMLfr55jbXtLbv
-	 tARrR905cw90xSHnuc2qDAnWdHpB1ja+xD/iuVTSFnba1nrwktc/o0U1IHF/uSgPWk2RR
-	 JskUJJ2y/GNoCz71sjbpMU3iZ3XCQ7yzEs+Ri77JbGJuPJyfNa6D7Meg54OPid8gFDc7t
-	 dhklgrDw/R1m8+YYv5ucZa4Q92LZqelnwNDrv4tZXLTpwxc/2xoqOL4US8wh7W2kD7gwU
-	 Ur1FiuaNmESPwzZtoFilpc28pYuBntGbYdbW9wYyfs7zdu9I9SR/6lrTbZzOwjtZxnw==
+	t=1792768971;
+	b=n9iwJwEmEXjm8sTHaQ3pqTfXHWy7APGYZp09tW/p0Q66WkvB8sl78+SdDdcH+k7kDfdp
+	 7V6X3Xnrsa2SO2OhWRsI2+fv+GZBNUkmMbr+piaaMscadk1sUXQqV7F82/UdEeBo9vJy/
+	 lCwcSN7PziMI1UV6nEUWN1jwLVVPNoeCRsYlixmhMGJ7AHkb9Cn8PaLVfxH2l2rw0s+56
+	 g2fHkc0KwiwsQ9eo5H+UZp8Q3kBRcIfni8n8VPD+aF7lSfe1JFkOYAFGPEHc2QMwGBoFF
+	 QvBV1pY2JttBX9DJmeg3S8tWZ1bm/9jEs3UvvGxxwN3FmwAWNZ3pi9nzhfrhFG/caWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792768722;
-	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
-	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=54U2YWkn8dZgUs6TPxV23ygtvqSfh3hYkr8iX2Wh1BQ=;
-	b=IUqTRTbS8FBNGvm5+dF8LDb9y4uqJbwXNQxmznmhUc8ywLdY8JkFSCqeGFxSHwUvl32l
-	 NSLh3s/Jo18CnGHGiRV5g8iGiOTLSgBFuHuMgAMC+ApdAfBWDhI77CiSXJR74H+TmyNu+
-	 E0+6YpebGxNdUvNvJaDl1F6FB8Vr/5V0RFYsDbRkRWI4FhU7Z72/3PQiho0lM6yK5dH6W
-	 3N+znu/PPoNyF2yXC+ZHBi1Rx5mqSuE1MZ1HcYL5FtR+1AHyMl0IyjCWpv+G/Pg/+r1Aq
-	 l49nV6SOzHIFCVpqS6BUj7hjdo+gWYFiqKdaBqCO9NmtUI0cBnHDholrQokdQJS/2Yw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792768971;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-Scanned-By;
+	bh=/CDx71/tfsWPALCypf77QFDts6odDm6ZB4NI54JYcdY=;
+	b=W5Hw74Gb7f9/8g7oKm70mYUjVfhos9Z1Al/FBw0zGeL1YuxYfIhEVVPttWaC82AAdW82
+	 2F4p6AZ1lbPFX2t1ly/4CAZermTz1nwSYsSjAjti0g6+O29u/ZOSEwX2pmpmzINbXznUW
+	 gCtLSCq7vcqBoG5GdU38BVy3q5r4l3/zwP/soLcqJMSkQOOQIegdn3prYBuccp0bw+lZQ
+	 8Jh82PLBaDbf5filwZ+QBUkHqfmwhsrn/DcoU5dV9Dw85AhYIQSt4oie9ZWEsOAZ3MGOW
+	 109IhOgTgRszWynHFE7/qT9/QX/k0WKI1p+HvMSjnjvU2OWYUOM9kQZD4O6GD/oiYIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=toke.dk;
-	spf=pass smtp.mailfrom=toke.dk;
-	arc=none smtp.remote-ip=45.145.95.4
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Qxzy65jR;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 084DC606A31A;
-	Fri, 23 Oct 2026 15:18:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 084DC606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: mail.toke.dk; dkim=none
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: "Felix K." <fk@mutemail.de>
-Cc: linux-wireless@vger.kernel.org, "Felix K." <fk@mutemail.de>,
- stable@vger.kernel.org
-Subject: Re: [PATCH ath-next v2] wifi: ath9k: fix beacon slot selection once
- TSF exceeds 2^39 us
-In-Reply-To: <20261022105552.4174828-1-fk@mutemail.de>
-References: <20261022105552.4174828-1-fk@mutemail.de>
-Date: Fri, 23 Oct 2026 17:18:40 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87qzhgqwbz.fsf@toke.dk>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8F7606A321
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 15:22:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EA8F7606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Qxzy65jR
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792768970;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/CDx71/tfsWPALCypf77QFDts6odDm6ZB4NI54JYcdY=;
+	b=Qxzy65jRSbFtrxd9DZ9cQQH7IZldOkRCsMXVqIMJ0NTu7FjhG5mJWLNcfmesqLhnfjWym3
+	PdVnq00NDQ8tR0sVi/JhHyGLsgp41Da9YCZk7J3JWSXkQAbECPMf4Bgbx7axUsVPNXzdbC
+	Av30m0C9lEagb0FNNxlgnA8q7kmTuZM=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-695-OhLi541-PV-XZX-osD665Q-1; Fri,
+ 23 Oct 2026 11:22:46 -0400
+X-MC-Unique: OhLi541-PV-XZX-osD665Q-1
+X-Mimecast-MFC-AGG-ID: OhLi541-PV-XZX-osD665Q_1792768965
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F208E1800758;
+	Fri, 23 Oct 2026 15:22:44 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 204081956089;
+	Fri, 23 Oct 2026 15:22:42 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: egrumbach@gmail.com
+Cc: johannes@sipsolutions.net,
+	jtornosm@redhat.com,
+	linux-wireless@vger.kernel.org,
+	miri.korenblit@intel.com
+Subject: Re: iwlwifi: AX210 firmware ADVANCED_SYSASSERT 0x2010120E on MAC_CONFIG_CMD with ty-a0-gf-a0-89
+Date: Fri, 23 Oct 2026 17:22:36 +0200
+Message-ID: <20261023152236.533085-1-jtornosm@redhat.com>
+In-Reply-To: <CANUX_P2oQDo6_A4w1e6a9_483aFy+iN07P=FyDJyeV6=xBUSYQ@mail.gmail.com>
+References: <CANUX_P2oQDo6_A4w1e6a9_483aFy+iN07P=FyDJyeV6=xBUSYQ@mail.gmail.com>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -51,71 +80,26 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-"Felix K." <fk@mutemail.de> writes:
+Hi Emmanuel,
 
-> ath9k_beacon_choose_slot() derives the staggered beacon slot from the
-> TSF as
->
-> 	tsftu =3D TSF_TO_TU((tsf * ATH_BCBUF) >> 32, tsf * ATH_BCBUF);
-> 	slot =3D (tsftu % (intval * ATH_BCBUF)) / intval;
->
-> TSF_TO_TU() truncates its result to 32 bits, so tsftu is
-> (tsf / 128) mod 2^32 and wraps every 2^39 us (~6.36 days). 2^32 is not
-> a multiple of intval * ATH_BCBUF (800 for the default beacon interval
-> of 100 TU, 2^32 mod 800 =3D 96), so every wrap shifts the computed
-> position within the beacon interval by 96/100 of a slot.
->
-> After the first wrap the SWBA handler therefore picks the vif of the
-> previous slot: every BSS sends its beacon one slot (12.8 ms) late,
-> while its timestamp is still corrected by the tsf_adjust of its own
-> slot, so clients see the beacon 12.8 ms after their expected TBTT.
-> After n wraps the beacons are n slots late (up to 89.6 ms), until the
-> error wraps around after 8 wraps (~51 days). This affects every AP or
-> mesh setup, also with a single vif, since 8 slots are always used.
->
-> Internal resets (e.g. on stuck beacon) preserve the TSF, so the state
-> only recovers when the interface is restarted and ath9k_start() resets
-> the TSF.
->
-> Compute the offset within the beacon interval from the 64-bit TSF
-> instead. For TSF values below 2^39 us the result is identical to the
-> old calculation. TSF_TO_TU() in ath9k.h has no other user and is
-> removed.
->
-> Observed on a TP-Link Archer C7 v2 (QCA9558, AHB) running OpenWrt
-> 25.12.5 (backports 6.18.26) with three AP interfaces on 2.4 GHz. The
-> TSF was set via debugfs (regidx/regval 0x804c/0x8050) followed by
-> "echo 1 > ath9k/reset", and beacons were captured with a second device
-> in monitor mode. Beacon timestamp modulo beacon interval, identical for
-> all three BSS:
->
->   TSF                       offset
->   3.40 days  (0 wraps)        384 us
->   6.36 days  (1 wrap)       13184 us
->   25.45 days (4 wraps)      51584 us
->   44.54 days (7 wraps)      89984 us
->   50.90 days (8 wraps)        384 us
->
-> With the beacons 89.6 ms late, a power saving IoT client (EV charger
-> controller) went from 40 ms to 1.4 s average ping RTT (max 7.2 s) with
-> 1.9% packet loss within 9 minutes. Most other clients were not visibly
-> affected in that time.
->
-> Tested with this patch applied on the same device, using the same
-> debugfs TSF method: the beacons are no longer delayed. The offset stays
-> at 384 us for all three BSS with the TSF set to 0, 1, 4 and 7 wraps,
-> and with the TSF set to 7 wraps the EV charger controller stayed at
-> 40 ms average ping RTT (max 117 ms, no loss) over 5 minutes.
->
-> ath9k_htc_choose_bslot() in htc_drv_beacon.c uses a similar 32-bit
-> TU conversion (wrapping every 2^42 us, ~50.9 days); it is addressed
-> in a separate patch.
->
-> Fixes: dd347f2fb2dd ("ath9k: fix beacon timer handling issues")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix K. <fk@mutemail.de>
+Thank you for your help
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+> Can you please file a ticket on bugzilla?
+Sure, here you can find the ticket:
+https://bugzilla.kernel.org/show_bug.cgi?id=222185
+
+> I'll ask you to provide a firmware dump and we'll try to see what we can do.
+> Checking the conenctors or any physical aspect of the device can be useful.
+Ok, I would need some instructions/reference for the proper firmware dump.
+I didn't think of the antennas because the firmware version 86 (Fedora 38)
+is working, but I can try it. Anyway, since now it is reproducible, I will wait
+in order to get the dump.
+
+Thanks
+
+Best regards
+Jose Ignacio
+
