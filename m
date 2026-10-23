@@ -1,79 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792790259;
-	b=IdTq/ZQ1EVLWx3/DhqjeKB4jieJGw6J1vDqDN74Xb9aTZlPvVYgu5vsa0DU5pqJmENmN
-	 A2jBJF2iOdEL22blt6oIUy69du6rJfeDnhZBNjKhpAnpKfyiuUOOJnorL23xPpSY6WI8Q
-	 eATzyhSfnq3NOsalA81PzpmE2MbUvKRIoEcKp3bltbzBrf5mxjlG6zlHSx9XJGjPfyxmV
-	 Z73X7RMKJinBUjBCWiNbtiQmChQYIPV7AfBaXoK8osKGYgEuGOZVaIThldYOJBGc5tVji
-	 JTd3A6dmG2xqVKI8AQiwgZsFF/Q6hnYq/wRhcUCKevVmZumwuZhbsnSTpT18JN6y1/g==
+	t=1792790502;
+	b=f/Ok6O6aaTqU1fH44udzKzdf9LBVAdhsIkRKnCaKXxNujfOxvNqY9l6h6JNXMBk0u5r9
+	 ei3X9RtC2oveRgoRFNteYLHvPD3nY7FWWPpzX0brXHGj7+HEjVINJwYmsB5GRprmc/Hhb
+	 Z1zfrcvJ35MsDh5isIGbJSXQVu2xZAzcWtZMmVY8zFkHIFFnjYjbAr645wUVUrCGLwX+4
+	 uWXpnWxEwktf8NXKPVnXIcWcnLns9mZpQ3k8IxjISca4sGu1ibYdAVwLF9sSTKWn9he8A
+	 94jztt11p0CLPPgGqx/HmulRUei+5v4Y4SnYLWddKXcAE87tvGHTMVGHGNrLAV3xIuw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792790259;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=A06rIIYHJ41G3DfaEYTLDvBNdpT8f3GUP4YHa//I50Y=;
-	b=1OjKQjVbUERcU0zYIQkoxOH6TO8IzPhX/Hd7DDZyGYisWFoKbW0L5BkIH7lUhuqW0bmd
-	 z/pJ2Nl/hokZDxEUVuHY1DzGF9bY1hPREyzwrh1Rn/vNvMYOSX7OVeDskzVXCyCVXucTZ
-	 Tq8qdVJ0NtGFE/s3kDd4EXvaVPVurRDT4vBGFR2T8surUG1ApYuIyPPxKOl7awnqpFya9
-	 NjuEWHtqwcuRaa9g2Rk1HBv0OhVlFzEudjAC37ZWJP+TWuu6KOQisSXbrpevSdRqI9Mq7
-	 ZeLnXAnzgFRk7QJKUai8G4kv2pprfOP9RmjUabLVeez0oUR/uJpLvQrW5G5KwkDz+og==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792790502;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
+	b=I/o+9wbjSLCEo3mpB6hOjjILZ4osOHldNcaooyE3hj2hrRZXuLWiD/DLBUYSJGo7m46e
+	 mslzh5Wmo0/nlxnPja0MPM6vNLR66mFyynTnfwQA5p6k7UIZMnMDj21ZFG9Mz7+s0HGSE
+	 wip0Wf7/6dfVpR/aLZEFL1M/QtyOgLonbLj5MWF0QmEEn9Ktk2P1Bn5ev4hDj13uC3xsF
+	 0aXi+UVZQpo43f/any0RyaNoh5dA/Rzgt7TwZxgj4akfn7auexOFNxA5T3aM28Qc0MK9s
+	 EOrhVFx230dJ+lo9O518hHYz5Fc5/c5yEQdNGIj2VQemaeBVd1Ie+8wgBv+GVO8Leyw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jiH6QmrU;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A71D1606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 21:17:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jiH6QmrU
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792790258;
-	b=v0pw8haGGFosymCfsoWGkLmDm+tQiprsTEcOpJHg1rsL68cyCr3uLenf0ebI/m61tN2l
-	 nxAI9DpGmPKoQrqCzlX44D4t7eVs3pJfGCTeQCLLl93SayOGiJY2kZzoQTDPpXZ0sVTc7
-	 9GVRM+H+5cbasGF2n/Mx0OZAWQZrEXzxDxbc7elLG/k8GOdr7b2x2kEM7m45eV+FVVcuh
-	 b6PTShs2zweAJRlDWZ1tYtICEgKWbWZVf5PC3mkW8qINxEgVC/ddcRlNRZctuvwvYIQgU
-	 mdp7tSvWR6RuUvWsELL1qivtgVsji4aWlt+AZ4VfC01BTXVjRmEbYOPr+S+XPM/1czA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792790258;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=A06rIIYHJ41G3DfaEYTLDvBNdpT8f3GUP4YHa//I50Y=;
-	b=fv3VpMNIRoIOos/JwMF5V+pl1IXbR9fIPWZWLAFFkaYRW91VmczDzjuOTlyJlgO7FVLO
-	 s7jDWZFSJOugAXLSUx/e5Eq7J6ZIYbVAuQnUfj2hAfLE87MbygvQa25hRQ4gbOcoi9JvY
-	 KPIBtIKB5QtdnDaOK8jNdfHUJA6dybHUhUuZ9OohYRkLIZbTw0YJRZcp6hGqItoCqmBcr
-	 z+5QcqB++2K+xWQyfn26Y8s3Q/+4OvgFyS2SD9Yc0HGwT1r4JyPJNKs9ACTaCMj9HgBH7
-	 EEw5Eef+gtHjmaR8Kft2sQJbjhX0v8ob97rSUmA7mM/YcPyvUtGiQwXbbkve4C1fPHg==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LNibhi+i;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id E7B811F01825;
-	Fri, 23 Oct 2026 21:17:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792790258;
-	bh=A06rIIYHJ41G3DfaEYTLDvBNdpT8f3GUP4YHa//I50Y=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=jiH6QmrUj8yyFRPqGpMXjOsZ4PGDxPVB9cFPdUmJy1RT/vXlBB70ZkzTYZZC15Mpo
-	 A34/gUSc2QM3FoXIu1yFn3cDhGuqGi/gIaj0yXFkzKsQG7S1StT5I1svZf3PTmJ65C
-	 V6JK8Br4AUxvnzbZIYmJXco5QB1odT8wYE4UY3tEvO3AXBc5Kj3PTRT6VcDf7JAI4i
-	 Na8EunJC2DesuATZGR72WxiLVazEEN8ZkLoTEri3CQGJidvDX+uRLWlVieu/qkOxq8
-	 up/T+UEZGpB74aiNcf2JJ6Xl8UdD/m6dgyqtr2yTkapirexo8WejBunLO7D/+bzc0y
-	 JTeOcYd4kW57g==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 7BC8644629;
-	Fri, 23 Oct 2026 21:17:37 +0000 (UTC)
-From: Igor Borodin via B4 Relay <devnull+hatemosphere.protonmail.com@kernel.org>
-Date: Fri, 23 Oct 2026 23:17:17 +0200
-Subject: [PATCH wireless] wifi: mac80211: fix MLO multicast duplicate
- detection
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6983A606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 21:21:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6983A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LNibhi+i
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6ae305e3bd9so2153403a12.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 14:21:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792790501; cv=none;
+        d=google.com; s=arc-20260327;
+        b=VlLG9ETjeQGZHB3ih+zdTjVPQQPY5dsKUS7qXPWkP1o0+8Ncctvjiweu6GzFKaE3xj
+         zooqPtUgJCGN00QwTVomj2huDmSRh4SOv71yiqfRDQ0KdxM7nkEbNSHdXUJqyNk63hL5
+         3KI+jF0LMsKwLrnJTxRVu+fEmeDRA51eq+zGM7RLD6k2pZSZ9AxXk1ugcl6uTTVlZISM
+         q1upsCyHUVmNN44sFcG0hnFr7C9ng/214/70FkkOopXtZhwbxQ1cNhM48KnD5glcIZXA
+         23uVku0Z0o8C++wHX65bmnYb/fSRi71STwhge3AhC5pb5Gf1FUk6WgiuYWeUMREd6K9U
+         5iOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
+        fh=kpWsed6Gl9Jw39uHHbCW8BjdBcTvPDR+t7LwYL3VZw8=;
+        b=cL0mBQAcLAtHHucM9FcGrROlCSvMbSTZ4e5UI3bq+Qg3AEbHfm8Sz5LssIc2SUDUV/
+         0cW0B/1hCtJCqVh5WwyEGG317z51kINl+LFH4DhVzINeHvgdUdiJvqmezuvJw13ZEy1p
+         kU2be1J0i8uDzi8gut6KmSnQWBpJvSwEI/XzO+/m5rUTEKmZc7Ms4qAhcKChtwn390t9
+         Jjlu+fpT2bcMTyOfGTxmQWfoqLHI+XCkcnSIZltoeKjlP5uvc2nGlOmXIu9AsKvKpVOG
+         g+kCh2J1KUj37bxHh2xV2+01SGFpVNRow+2vfiEAeMvppxoHFEnII69iT7VS7zElTzBY
+         No6w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792790501; x=1793395301; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
+        b=LNibhi+ilzYWV0TvVwj/ILgZRg3O8BNOUVlDKMjYBbf2alSGrhFE1ImXw0sfRqOrlW
+         3tAwPIgjpg87VEAhnE/KWA8GzYxTANeK7+NOvkfGQc2CVED32HVR+a9GSDQdHyudUEGQ
+         QoJicWJqQngB8VOuawmYrCUD0dsArr7awxJgAoZZJ63udfxlxKKpLXzrSiIK6ih9VDe1
+         vAKuP35JnKk66f33Qg9xjFzX/HHw30ohXb4Cp4T1ahHuz6pfTV5JVwO3U1ITbHx7ISt1
+         x2ZiOK0EfWDd792YmowRViLqOzzTH6wOa2hF9F1Dz2AD+3rbCof+k6BSSj2p0whsLliN
+         99cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792790501; x=1793395301;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
+        b=wcIb64//3dCAPymJfPquBN1S7jxHnMwccL1iHxn4iAXynJjG7eCq0oBSyciWU5zvdU
+         oP1CseSMapL7BJ0ypdga7ZuOsRi5xIwICC/+6MMDDA39LXG7EmSj6WXnbfNBv4eE4NkS
+         qvuVv58/fZuYLy4fkEqlYew4Vqg0BeosAErCcCwSDG+fY2+yjeT83TLo7YHC1yGT8XNk
+         dFTAb64PtFHrNmBTOIHooudQp7okp3RA0OAxs3NuWfOVIovRtlvi5UpV+w/FUlhAj8OF
+         5Zoq2MQlkuc0+o/5soFAUno383LZIjeUPLunqQrnmBTZuwC4vLv+hsZ7BGgEjR59W6a4
+         1YAQ==
+X-Gm-Message-State: AFq9FYJNOxJC0RB2mBvIfaPbAhojcIz6iMsaZ1HYegG1M7YC3PM3wCHz
+	x13hjkhlQmWPlS1WQTaWRj1U3+xFunZXT92UB1gturlDw6RShF/e+UOJWJJrv1Cpb+VHG4MYHk4
+	3o9w86UGvG116xsDZlbwPoBQw3HLWRvyeZxTF
+X-Gm-Gg: AYBFou0n6k+ThzhYqBg6mrUtWr+ToXwl7bX/FaeYYQeI3Wcm4E3ASMslqBw24wGCUg9
+	ZlJVUscsHskbAtadhRwiVhoRYZZdKBo6rMm2fkHUKW8FBaz6BilCcLjLKyF2pfQZ+KhcvL8Dcgr
+	BUqzYQE8/5jNENFfDojsTXBfH9uhqmFNgmflNH+CA9E57KVubpD8xRxr3I4WLD4PCQ7KmNPEUGl
+	HzwIiegiYk2gGX1gX52bpBGliRq1PxxBgcHErUns3a0lYCzWvoEBh1FbVxG59tYbn5XdHNy+cmg
+	1d6JXmgm4e1k+qMY1DawPXbfPduh7rjswbPWJvi//2FqrcBdRPX9gmGWsmkjveksJZo7fe/oG1t
+	GolTpIHCfceoGRNvwexTmSf212g/HGsGepWTLpFqwDQDaopjj00U5LvSgyKMJowqzXrtRncOWfr
+	XFhP4kyBYD8H5e3xLDmrhNPx1rimhxe6wLMRHPnBeKjc0/hsLcJ5kLDz6rRDlVks17s9NpY8gwr
+	348s2f9j+hE/KvN0cVqcL0CAquD1SjV4Gz14jBZluk3Sb9X5Q==
+X-Received: by 2002:a05:6402:1cc4:b0:6ac:bd53:d29a with SMTP id
+ 4fb4d7f45d1cf-6b442a80c06mr508793a12.3.1792790500756; Fri, 23 Oct 2026
+ 14:21:40 -0700 (PDT)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -83,217 +105,68 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261023-mlo-mcast-dedup-v1-1-3f89b805390a@protonmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAA/yWMzQrCQAwGX6V8ZwPdiK34KuKhZqNG+semrULpu
- 7vqcRhmVrgmU8epWJF0MbehzxB2BeTR9Hcli5nBJVeh5D117UCdND5R1DiPxKGuKzkEiUdGrsa
- kN3v/jme8LGmr7rj8jc/Xp8r0HWLbPtcgDl19AAAA
-X-Change-ID: 20261023-mlo-mcast-dedup-21776c51cd82
-To: Johannes Berg <johannes@sipsolutions.net>
+References: <20261023190653.70741-1-rosenp@gmail.com> <20261023221424.2722795e@barney>
+ <20261023224140.465903eb@barney> <CAKxU2N_1XgjVPdSrCMYzZx4Rb6yjgEe7kBZYyG4RASyBv5BtMw@mail.gmail.com>
+ <20261023225745.696eef3c@barney>
+In-Reply-To: <20261023225745.696eef3c@barney>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Fri, 23 Oct 2026 14:21:27 -0700
+X-Gm-Features: AclHuK9GRIFtl9lqIXhWNWjMucByyfNnLezcnXbef4n3dCMQ4w9XYcqaCpFWgVM
+Message-ID: <CAKxU2N9i6Dn1yKmd-_9DvET6P_GNctTywWgOBXYd2tWoWKY=Sg@mail.gmail.com>
+Subject: Re: [PATCH wireless] wifi: b43: map the RX buffers DMA_BIDIRECTIONAL
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
 Cc: linux-wireless@vger.kernel.org, 
- Igor Borodin <hatemosphere@protonmail.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7120;
- i=hatemosphere@protonmail.com; h=from:subject:message-id;
- bh=oKaGFcKL+evPW05fPWOfbx9QyJKjubsLXdxESkkiZUM=;
- b=kA0DAAgB74wQTOU5e+IByyZiAGrbzvGjT002llrdYERtQSSu/iI1CKyAS4eMP5zCQQZVT+eS6
- 4kBTwQAAQgAORYhBPjCZDY+g8pfh1PFiO+MEEzlOXviBQJq287xGxSAAAAAAAQADm1hbnUyLDIu
- NSsxLjEyLDAsMwAKCRDvjBBM5Tl74vTpB/0ax/1P40aqZ6Gdm1+Xv7wwagiEuUbc938q7fGkM+o
- 5MtUtm5DEpyZiQmPDuaRAgLOAqaMe1sbG6dGbEBhoWGLc/lphxgpJGroTlXxa8ipXSr/MVGG3xy
- xzrgown2tEhl4xP9NrynLMIVpPac/LlnznlA/l8d3CJLeYhBKzPEIodSnpN4qLW4PELlpZBheJg
- JX7q5jP100bXFwhL8tQrL8d4hbiiFzPN6GXZ3oWEdIf3YIi4TI0iPnVvkuLVAFVaPPIXPTTOuSc
- yq+2w8ge5irtDBshw2n0y47xG/8Igp+sWXgxLq80C/cLNtgOkA21hYqXFiFgmi9U1ogd5i2cvSQ
- i
-X-Developer-Key: i=hatemosphere@protonmail.com; a=openpgp;
- fpr=F8C264363E83CA5F8753C588EF8C104CE5397BE2
-X-Endpoint-Received: by B4 Relay for hatemosphere@protonmail.com/default
- with auth_id=1299
-X-Original-From: Igor Borodin <hatemosphere@protonmail.com>
-Reply-To: hatemosphere@protonmail.com
-Content-Transfer-Encoding: 7bit
+	"open list:B43 WIRELESS DRIVER" <b43-dev@lists.infradead.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Igor Borodin <hatemosphere@protonmail.com>
+On Fri, Oct 23, 2026 at 1:58=E2=80=AFPM Michael B=C3=BCsch <m@bues.ch> wrot=
+e:
+>
+> On Fri, 23 Oct 2026 13:44:44 -0700
+> Rosen Penev <rosenp@gmail.com> wrote:
+>
+> > All code is tested on an Asus RT-N16. It runs on non-coherent MIPS.
+>
+> Ok.
+>
+> Describe your development process in human language during patch submissi=
+on.
+I assume that would mostly be appropriate for a cover letter.
+> What has been tested?
+> What has not been tested?
+> What was wrong?
+> What has been fixed?
+> Why is this needed?
+> Why do we need bidirectional DMA and most important why wasn't it necessa=
+ry before?
+Because the codepath is not fatal. One or two duplicated frames. Big deal.
+>
+> AI is great for code generation, bug finding, etc.
+> But for patch submission, pull requests and commit messages it's absolute=
+ly unusable.
+> Please don't do it.
+> Write your commit messages manually, please.
+I've been burned by this many times before where maintainers ask me to
+reword or mention something. It's not practical and wastes everyone's
+time, which is why I'm almost banned from netdev.
+>
+> Please make your commit message be to the point and easy to review.
+> And please slow the process down.
+> You don't need to submit patches right away. Keep them in a queue and STA=
+BILIZE them LOCALLY.
+I figure since wireless doesn't depend on the merge window unlike
+wireless-next I can send them whenever.
+>
+> Please do a little bit of research whom to To and Cc. There are scripts f=
+or that.
+Yeah. All of this goes through ./scripts/get_maintainer.pl
 
-Since commit 676259100cf3 ("wifi: mac80211: implement MLO multicast
-deduplication"), a station MLD drops a group addressed Data frame unless
-its sequence number is newer than the last one it accepted
-(mcast_seq_last).
-
-That assumes all group addressed Data frames of the AP MLD come from a
-single, increasing sequence number space. Some APs use more than one.
-A TP-Link Deco (Wi-Fi 7 MLO network) interleaves two spaces on the same
-link, the second one for frames with More Data set, apparently the
-DTIM-buffered ones. Traced at ieee80211_rx_napi() on the station:
-
-  sn=508 sn=2338 sn=510 sn=2339 sn=513 sn=2340 sn=515 ...
-
-Once a frame of the leading space is accepted, every frame of the other
-space is "not newer" and dropped as RX_DROP_U_DUP until that space
-catches up, which takes minutes, after which the roles swap. Meanwhile
-the station receives almost no broadcast or multicast: ARP requests from
-the LAN are lost and the host becomes unreachable, while unicast keeps
-working. With an RTL8922AE (rtw89) station on a single active link this
-happened every 10-15 minutes, for several minutes each time.
-
-IEEE 802.11be (10.3.2.14, RC16) has the station MLD discard a group
-addressed Data frame it already received on any link, and leaves
-sequence number wraparound handling to the implementation. Do that with
-a small cache of the sequence number and source address of recently
-received frames, as the mesh RMC does, instead of tracking only the
-highest sequence number seen. The cache is much smaller than the
-sequence number space, so a match cannot come from a wrapped number.
-
-Fixes: 676259100cf3 ("wifi: mac80211: implement MLO multicast deduplication")
-Assisted-by: LLM
-Signed-off-by: Igor Borodin <hatemosphere@protonmail.com>
----
-Spec: IEEE 802.11be 10.3.2.14 (SNS11 for group addressed Data of an AP MLD;
-RC16: "A duplicated group addressed Data frame received on any link shall be
-discarded", wraparound handling implementation specific), text as adopted in
-https://mentor.ieee.org/802.11/dcn/23/11-23-0547-04-00be-cr-for-3-2-and-some-clauses-in-35.docx
-
-Tested on v7.3 (Ubuntu 7.3.0-9), RTL8922AE (rtw89), TP-Link Deco
-(Qualcomm-based) MLO network, single active link:
-before: broadcast silences every 10-15 min, several minutes each, group
-        frames dropped as RX_DROP_U_DUP
-after:  no silences; group frames the AP repeated with the same SN and
-        source (eg. around a channel switch) are still dropped
----
- net/mac80211/ieee80211_i.h | 10 +++++++++-
- net/mac80211/mlme.c        | 14 ++++++++++++--
- net/mac80211/rx.c          | 29 ++++++++++++++++++++++++++---
- 3 files changed, 47 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9374c2942..b57a54c4a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -522,6 +522,8 @@ struct ieee80211_adv_ttlm_info {
- 
- DECLARE_EWMA(beacon_signal, 4, 4)
- 
-+#define IEEE80211_MCAST_DUP_ENTRIES	32
-+
- struct ieee80211_if_managed {
- 	struct timer_list timer;
- 	struct timer_list conn_mon_timer;
-@@ -549,7 +551,12 @@ struct ieee80211_if_managed {
- 
- 	unsigned int flags;
- 
--	u16 mcast_seq_last;
-+	/* recent group addressed Data frames, for MLD duplicate detection */
-+	struct {
-+		u8 sa[ETH_ALEN] __aligned(2);
-+		u16 sn;
-+	} mcast_dup[IEEE80211_MCAST_DUP_ENTRIES];
-+	u8 mcast_dup_next;
- 
- 	bool status_acked;
- 	bool status_received;
-@@ -2007,6 +2014,7 @@ void ieee80211_uhr_disable_dbe_all_stas(struct ieee80211_link_data *link);
- 
- /* STA code */
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_mgd_mcast_dup_reset(struct ieee80211_sub_if_data *sdata);
- int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 		       struct cfg80211_auth_request *req);
- int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3c31c1686..66e78d873 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4750,7 +4750,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_vif_set_links(sdata, 0, 0);
- 
--	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
-+	ieee80211_mgd_mcast_dup_reset(sdata);
- 
- 	ifmgd->epcs.enabled = false;
- 	ifmgd->epcs.dialog_token = 0;
-@@ -9495,6 +9495,16 @@ static void ieee80211_ml_sta_reconf_timeout(struct wiphy *wiphy,
- }
- 
- /* interface setup */
-+void ieee80211_mgd_mcast_dup_reset(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(ifmgd->mcast_dup); i++)
-+		ifmgd->mcast_dup[i].sn = IEEE80211_SN_MODULO;
-+	ifmgd->mcast_dup_next = 0;
-+}
-+
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -9532,7 +9542,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	spin_lock_init(&ifmgd->teardown_lock);
- 	ifmgd->teardown_skb = NULL;
- 	ifmgd->orig_teardown_skb = NULL;
--	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
-+	ieee80211_mgd_mcast_dup_reset(sdata);
- }
- 
- static void ieee80211_recalc_smps_work(struct wiphy *wiphy,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 7ead50930..83df06d67 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1517,6 +1517,31 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
- 	__skb_queue_tail(frames, skb);
- }
- 
-+/*
-+ * An AP MLD may send a group addressed Data frame on several links with
-+ * the same SN (SNS11); a frame already received on any link is discarded
-+ * (RC16, IEEE 802.11be 10.3.2.14). Remember recent SN/SA pairs, since a
-+ * single "last SN" breaks with APs that use more than one SN space.
-+ */
-+static bool ieee80211_mgd_mcast_is_dup(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211_hdr *hdr, u16 sn)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(ifmgd->mcast_dup); i++) {
-+		if (ifmgd->mcast_dup[i].sn == sn &&
-+		    ether_addr_equal(ifmgd->mcast_dup[i].sa, hdr->addr3))
-+			return true;
-+	}
-+
-+	i = ifmgd->mcast_dup_next;
-+	ifmgd->mcast_dup_next = (i + 1) % ARRAY_SIZE(ifmgd->mcast_dup);
-+	ifmgd->mcast_dup[i].sn = sn;
-+	ether_addr_copy(ifmgd->mcast_dup[i].sa, hdr->addr3);
-+	return false;
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
- {
-@@ -1555,11 +1580,9 @@ ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
- 		    sdata->vif.type != NL80211_IFTYPE_STATION)
- 			return RX_CONTINUE;
- 
--		if (sdata->u.mgd.mcast_seq_last != IEEE80211_SN_MODULO &&
--		    ieee80211_sn_less_eq(sn, sdata->u.mgd.mcast_seq_last))
-+		if (ieee80211_mgd_mcast_is_dup(sdata, hdr, sn))
- 			return RX_DROP_U_DUP;
- 
--		sdata->u.mgd.mcast_seq_last = sn;
- 		return RX_CONTINUE;
- 	}
- 
-
----
-base-commit: 9d8ec0b5b5295bd23d979d1b2b905de25c36fff2
-change-id: 20261023-mlo-mcast-dedup-21776c51cd82
-
-Best regards,
---  
-Igor Borodin <hatemosphere@protonmail.com>
-
-
+Do note this is an orphaned driver. I expect feature patches to get
+clogged up and Fixes: to get in a bit easier.
+>
+> Thanks a lot.
+>
+> --
+> Michael B=C3=BCsch
+> https://bues.ch/
