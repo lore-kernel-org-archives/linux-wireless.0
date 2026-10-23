@@ -1,100 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.172
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792777242;
-	b=jnfoOOzf8l+d43ef5tDPylnh3f7NIxKKZpWCrq5PRAFz0kifQBK1FqikrLAvPVG5p5jo
-	 aGEDI1SngfomIhX4C6idfOpUAVWxnAx2Fyd93rRdFRt9f/2wTn2MQ8laV7+x2R4DL3rji
-	 XE9SnhyU/hie8+Zjr6+4zsOXywytxbN6OHwNNc2mltto0t26TdnwHYzNPiTQk3lDL2WZX
-	 Ibl7I8lO8rks0FFF3uoflRuYKyDjdsybtuBz0b0gVdzhMZvs3yeJbC8Xg5r6Q+h1qeUp/
-	 k3vH+N2lxE98r11UTr0iHolSQajeXUXVBMjXAaof4jqFkVfPUFgF55knq0do6oEa1gA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792777242;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=FLYRLZKufzwkxxql5ZnFYPULE40YlPDTbaeTn0JxKhA=;
-	b=MH9PLTyIjynMFvpO3irZT4L+rliLacEEEZzCMRLYE32FTXcONzZpTOWC2Mirl2yUPQGX
-	 0ejwgwJr69UJZanbU6B6r/da/k3G7pVU/8jOmK461oYukPb0h0WYxRkKvqF+wV/8E7Uvr
-	 08s8KFodIBv387XJGER3VSthRvL1dAxVZ7TWOSpRrHj7MQHhgYGxFVmxOQSNxCB9BXpgF
-	 KYH/ZkEkA6r5RxY5YHlXa/Ns2DXKiposAuGRB1B14jNW/MapdOmfPHNg6xs1eZZm3P9ye
-	 2zcrZff+9ZmNaIWZxzoslJTySemCd2bJxW5ablM8DAXz3mU8FOo1+RVPddkr/y3QVig==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rhRyLWF0;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.172
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=194.126.200.66
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792778041;
+	b=rtPX7Qd7p1+WppKBn7/QDQS+Uqi+KAXxrHyTuvT/Yv3pc88JKQ4374RTe8xGucuERluF
+	 2zGIQFMzqbTXSLwo48LSLmSXm8866JxjzDe4sk8tHIzERdPFvuDRG/wKiz2FvI0yF5XLn
+	 bnmKeUNvJ3RJ4xxhfKV8p8QMgKUAxQ+ce9khCGb1+Wf4oa41AuNwXVWBH5fAtntOI2f3Q
+	 1w9VHfdsbzcTNFAAqdjeDcvSZshqi66Hm0fIYcWuDcwJkxJVoQFrYCCZ9Dv+fE3t0a27W
+	 y36Lzc/zgRCo1KqJqSdNfznNm7a91rjGcnK9SY1z00cfWFGUgCxA7trZNzWrLvDKpdw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792778041;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:From:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding:X-AntiAbuse:X-AntiAbuse:X-AntiAbuse:
+	 X-AntiAbuse:X-AntiAbuse:X-Get-Message-Sender-Via:
+	 X-Authenticated-Sender;
+	bh=mex1VNRAzB6AdRypwLTafPsp6+YLM9I467IH3rE0fBg=;
+	b=j0kSe9UTwpyZ+5KTmtb0fhqzvaqjNX6UERpYbhe/FOWjCETDwVhPV1ZWLIufjbjLrw9E
+	 0So9kA5kFVomk5btaCunXu4+2Sr9zPwwO8PWyaaG2PwCUBHq1sqIzkoAU7s/yGgE1C6Rm
+	 6qLEp5TERd1CDf0H9NMtFELKvq7urMtLFfdWWHrS2EIXalECT451TU1U2JqnLNpdPPG+J
+	 TvWFkzIvFPpXDYmxhbdc87Wjrch9t7nj4dW2WWxKKPZl5upJgy+AGTlGHqvbI34mHEPbj
+	 7tqGw3+zxXpdJSkh2qJx6tmbyh+iwRLt+ezKifWxAmm77a+Cphqnmb0kZA1o9/+2Zvg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=none header.from=davidmestre.net;
+	spf=pass smtp.mailfrom=davidmestre.net;
+	dkim=pass header.d=davidmestre.net header.i=@davidmestre.net header.a=rsa-sha256 header.s=default header.b=vTT1Px5S;
+	arc=none smtp.remote-ip=194.126.200.66
+Received: from mail-gateway-shared13.cyon.net (mail-gateway-shared13.cyon.net [194.126.200.66])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79A9606A322
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 17:40:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E79A9606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EDA8606A31D
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 17:54:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6EDA8606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=davidmestre.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=davidmestre.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rhRyLWF0
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3ab46699a09so9921171fa.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 10:40:41 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792777240; cv=none;
-        d=google.com; s=arc-20260327;
-        b=jz77FMAboGAwTeli59xcXumn7pOI1eiLCkZa3neDjsaVg6eSEbwXMWL/uRpYlXX9Ok
-         TQpT4R6R2PkibYibv+ijG2NpHTozG6EAGE4B5MVf/+8l2HQK5Y4p+JycZzmCovXnSBwn
-         vceNulVjdRJrjuBuQsT+VYpjXT86xZ6ZfF3AjyBejDEUbwmk/8gADBVKnL43umaLF35c
-         UteK2978ncGpPSm9JwXY63KE3Pz65a52dOzL6Xkurf/eBkOrYv+6lVXAtEaNXnMCG/I7
-         XGzoY2cXQPW5l1s3h/ncFgscAbsOdnCsoP0q67toXGIvG1pjxI1aU5EBtcJkULYYv428
-         v/7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=FLYRLZKufzwkxxql5ZnFYPULE40YlPDTbaeTn0JxKhA=;
-        fh=ouokPDVlXylyA8Us/83JTDZqhZn9rh3wIj6eu0TEmmo=;
-        b=e496GzCaE4TfIznKVZjvdBAQHW4Vam4Zg9D16LonR/cuuw5j/Hv6/0Zk32kSl02ClI
-         S/zWGUDpjq3KVHgv26Cq+Ot8kHTuIfbXAGRjV76lEOjxIRD5OsCL4x/lXo9EMTgK4cOC
-         vu62h0BGAjULIhjp8K37KDipN7orm6TxbpWy4v0fsKIUZ0CHwuetixxqTZXo22k5rmpM
-         VumLKVytwFYzdYdNhbJg1z5HHXctcXKTgTJQ4yGa1WhbNFNdiUuCm/Qu34Dy2aiv2cxQ
-         y1ZOU37fXe1UuM9YzPNWzcuZzdfmUGe0yEiu9AYOq4xz6FcJyN7/0Bpv9muHMWpgWWNI
-         562g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792777240; x=1793382040; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FLYRLZKufzwkxxql5ZnFYPULE40YlPDTbaeTn0JxKhA=;
-        b=rhRyLWF0S/Gi07UjqExh9ZmVInGhJV9xALJxsMa1EY4tGdhuu7hvxN7F/dnr5+To4F
-         tgHd8bbEoyM67I55U8I11pQj9BQMYZy2aihW6boY/CJD/5b3tR5Kx5Tsn0xqHvQVkRPV
-         o5Sq1EAEJ0ss3C5NM8F1U/yHOGpY3p2i1rQEMdYbRI5FhqAOUJ+ZD3dm2TFwH5lIsUE+
-         RSBO4zxIYEbyq9Tm0eljoX9QWvFxXOmoDFbgY8zGn9jzupqJ64zfftc0PkPhmI+iz43A
-         uu0iS7FksQApNsctKyBU+uwrI2uX73x1lOEGhYH9jGGtfRBzuu5/IWt/18v5GA8KYzDy
-         A3jA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792777240; x=1793382040;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FLYRLZKufzwkxxql5ZnFYPULE40YlPDTbaeTn0JxKhA=;
-        b=0FplSeNG2f9dKzRgsLe5fGRTDZ66SLm3KisvPV8qQ4TE1SlN2Ab8bmm/K6vNXmbdCQ
-         nc3QkQnIs5NHadLrti4YlVkdJiXRnGG6ogOaWsohrL+emEUPTxmxGRJNBuPQhlDkEd4o
-         4J8T/9OYSjXV7bhc6n98Uv4rGMBgLsx4DZRXwGlYD7PvxVH9CM3rLm8ZseNIy35WS2ek
-         fLbkWZTqXwiuhMrqpMqlk6Xzyt8bEkKNOeIhtKrZQ+TNASVuT0uMskwi1StusoLwimnN
-         6ocNlm4BcR+4+EHDxobVJ+LeqH/Pa9kTPoEb7lfZaEETGGwDD3uYS4UAlhH2Q/3mbDR7
-         sHIg==
-X-Forwarded-Encrypted: i=1; AKwUvBy20EgJFHGgyb/4TipYmGzIytvvPEZevin6pAZx/okdUK2my5GVG3S/DvHH4oprRnKrkYvHyYuMkz6njFPe8Q==@vger.kernel.org
-X-Gm-Message-State: AFq9FYK5IvNhhwi5yEQClBr+YjuVawb4uJY8B1SXrK0UAzhEyv09i8Bj
-	j4VOogDyq3Hqfa1AY1Ese/lKVCmLtN+IBN3oMTEWnpVqAwaa2RI2V33Rzwa2NfeECEocFfO9LCM
-	yVDiRAGIUYlRh38e7474HB29xtAjTg1vH5hrxUpg=
-X-Gm-Gg: AYBFou0c5xX6rKKOha7aD3fdxJRssFCwBZgRCvVH/TiSWH3myLcHVJ4Fa3cWZhJ7xEm
-	i3o38qmc3Jnf3F/EpUZ2b7Ru5o3cP23pYGop5oB6TJJ4IXVRYjpqzwOSS6PiEow21nufJvi5AQR
-	o91WY7xxOIo+N0HpRYpAAgOUon8u9tWTEljKG6NOgOIwSO0UBCAndN4KwwSYhuG0uxua9B6qihy
-	KhrDyMsSbUw5zhntPx9vQkwgs+yRAgwYMQFjQyYCHGAzU2NST3Tv30Y7oyEb9zxVmet+tXGO27p
-	8ca21DGiCep2r+fmzfdau6+LMYQhlrwB6CZEnp2jH0aI/xhtyuc1tnS25YjUxBHnCJgdV7BcF21
-	3eGhNtx7wALTdd0f23OdhaePCH9qpJuBcrIety1OhvV7XrucmVNE4FXm9fhAAwzkODUoH8b9D
-X-Received: by 2002:a05:651c:a322:b0:3ab:4814:6129 with SMTP id
- 38308e7fff4ca-3ac6fd1e249mr153411fa.18.1792777239960; Fri, 23 Oct 2026
- 10:40:39 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=davidmestre.net header.i=@davidmestre.net header.a=rsa-sha256 header.s=default header.b=vTT1Px5S
+Received: from s143.cyon.net ([149.126.4.152])
+	by mail-gateway-shared13.cyon.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim)
+	(envelope-from <dev@davidmestre.net>)
+	id 1xKJSm-00Cu2a-0u
+	for linux-wireless@vger.kernel.org;
+	Fri, 23 Oct 2026 19:53:58 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=davidmestre.net; s=default; h=Content-Transfer-Encoding:Content-Type:Cc:To:
+	Subject:From:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description; bh=mex1VNRAzB6AdRypwLTafPsp6+YLM9I467IH3rE0fBg=; b=vTT1P
+	x5SD7yViy90d9yBdtIRDusw/2SQtqLTfEoBWj2c6aJ7xyX2G0rIf9Fznq6lVov9ONxRV8O1isqBqd
+	TJxZObrkEizxaTqPxWxVajvUgcfDPOC7EyfDBS6W/bX/tjjAMby7CvXxyUgVN4L+GTVERHYUTupqb
+	EKSBUWZVCPCLh0FNACdINB/GaTechCCWZSWRrVC3FZMyPjqTfONElTd1y6SrEYKEapEELWJzvE115
+	0wOiPjNf2Mk0d43OKy9pqobeBloJLgbRU2JROOMwtzyyJXhTaYpV2MPjsZ4sS5b6hYjvRAufgGL95
+	mCc/PupwQjzm8tfxZf4YDsfQONaOA==;
+Received: from [10.20.10.54] (port=58994 helo=mail.cyon.ch)
+	by s143.cyon.net with esmtpa (Exim 4.100.1)
+	(envelope-from <dev@davidmestre.net>)
+	id 1xKJSi-00000000HRp-43Gw;
+	Fri, 23 Oct 2026 19:53:51 +0200
+Message-ID: <48a5fb10-92ba-4be9-9df5-d92392c968f6@davidmestre.net>
+Date: Fri, 23 Oct 2026 19:53:51 +0200
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -104,27 +67,93 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CAAzpgGfrHpQZQ8iaH5fqZHzk5tTx39+jGvGkVXxhYFkp-A_bQg@mail.gmail.com>
-In-Reply-To: <CAAzpgGfrHpQZQ8iaH5fqZHzk5tTx39+jGvGkVXxhYFkp-A_bQg@mail.gmail.com>
-From: =?UTF-8?B?TG/Dr2MgS0FTU0VM?= <loic.kassel@gmail.com>
-Date: Fri, 23 Oct 2026 19:40:27 +0200
-X-Gm-Features: AclHuK_FiLbhnIm98d_qlqiFw3snCFR2PzcRfrqgURbeufGtsH9VJyRHETTgFU4
-Message-ID: <CAAzpgGeAaOjPdiVOmeY7xZqEymyh4BfhESwAvTzczvqj+YuNHw@mail.gmail.com>
-Subject: Re: [REGRESSION] mac80211_hwsim: CCMP frames dropped on fast-xmit
- (WARNING in ccmp_encrypt_skb, net/mac80211/wpa.c:462)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sai Pratyusha Magam <sai.magam@oss.qualcomm.com>, Rohan Dutta <quic_drohan@quicinc.com>, 
-	linux-wireless@vger.kernel.org, regressions@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+From: David Mestre <dev@davidmestre.net>
+Subject: [PATCH] wifi: mt76: mt7996: handle station airtime counter resets
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - s143.cyon.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - davidmestre.net
+X-Get-Message-Sender-Via: s143.cyon.net: authenticated_id: dev@davidmestre.net
+X-Authenticated-Sender: s143.cyon.net: dev@davidmestre.net
 
-Hi,
+If a WTBL airtime counter resets while the cached baseline remains,
+subtracting the old value produces a large unsigned airtime delta.
+The cached counters are also cleared even when the hardware clear
+operation fails.
 
-A small update on this report: commit 6832075ed4ef ("wifi:
-mac80211_hwsim: reserve headroom for software encryption") is now in
-mainline. It touches the same check in ccmp_encrypt_skb(), so it might
-fix this problem, at least partly. I'll test with 7.4-rc1 and report
-back here.
+Handle backwards counters while preserving normal modular wraparound.
+Clear the cached counters only after a successful hardware clear.
 
-Thanks,
-Lo=C3=AFc Kassel
+Signed-off-by: David Mestre <dev@davidmestre.net>
+---
+  .../net/wireless/mediatek/mt76/mt7996/mac.c   | 27 ++++++++++++++-----
+  1 file changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c 
+b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index f36da54..f8cde54 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -72,6 +72,21 @@ u32 mt7996_mac_wtbl_lmac_addr(struct mt7996_dev *dev, 
+u16 wcid, u8 dw)
+  	return MT_WTBL_LMAC_OFFS(wcid, dw);
+  }
+
++static u32 mt7996_airtime_delta(u32 curr, u32 previous)
++{
++	u32 delta = curr - previous;
++
++	/* WTBL counters can be cleared while the link's cached baseline
++	 * remains. Do not charge an unsigned underflow as airtime. Normal
++	 * counters are cleared at BIT(30); genuine wrap still has a small
++	 * modular delta and is preserved.
++	 */
++	if (curr < previous && delta > BIT(31))
++		return curr;
++
++	return delta;
++}
++
+  static void mt7996_mac_sta_poll(struct mt7996_dev *dev)
+  {
+  	static const u8 ac_to_tid[] = {
+@@ -126,8 +141,10 @@ static void mt7996_mac_sta_poll(struct mt7996_dev *dev)
+  			msta_link->airtime_ac[i] = mt76_rr(dev, addr);
+  			msta_link->airtime_ac[i + 4] = mt76_rr(dev, addr + 4);
+
+-			tx_time[i] = msta_link->airtime_ac[i] - tx_last;
+-			rx_time[i] = msta_link->airtime_ac[i + 4] - rx_last;
++			tx_time[i] = mt7996_airtime_delta(msta_link->airtime_ac[i],
++							  tx_last);
++			rx_time[i] = mt7996_airtime_delta(msta_link->airtime_ac[i + 4],
++							  rx_last);
+
+  			if ((tx_last | rx_last) & BIT(30))
+  				clear = true;
+@@ -135,12 +152,10 @@ static void mt7996_mac_sta_poll(struct mt7996_dev 
+*dev)
+  			addr += 8;
+  		}
+
+-		if (clear) {
+-			mt7996_mac_wtbl_update(dev, idx,
+-					       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
++		if (clear && mt7996_mac_wtbl_update(dev, idx,
++						    MT_WTBL_UPDATE_ADM_COUNT_CLEAR))
+  			memset(msta_link->airtime_ac, 0,
+  			       sizeof(msta_link->airtime_ac));
+-		}
+
+  		if (!wcid->sta)
+  			continue;
+base-commit: 637f84201a14c659221f0e265e4946acdd5c3b1a
+-- 
+2.56.0.windows.1
