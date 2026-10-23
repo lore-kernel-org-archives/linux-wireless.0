@@ -1,120 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792747652;
-	b=Vb+ecXkKD5WHChTCEjD229gKOBTWOR4aK0bl06v5vickYs8lkxVUuVKyl8pPZRfgOwiV
-	 JR5fymCmRZAvQPHsNivDpai0ndZriZgjYUUM5vwnGIjL3+nU6YS89jG7lqiNfPaBS89bV
-	 4lf4ml/BicgPirPjkSmFiLUti312zsNOeRTH2mY76YraHBNwpRC2iiv8WRInrAce/9Nay
-	 SUp91OyRwdQk3hWmGaAE6580gckw77g/wt5llm0nXI80UnKiIEjC8y0Q80lTSwD8W6nH8
-	 IyKBNKSboL+pxfb1ytKuqcCQQ+xWfQkgEjtdnW01MTIRBP6e9uthbXYtzyZTmopmBfw==
+	t=1792752127;
+	b=oe/0LjPZkFzw6jtHGCbFpFO3SSWCzlUl8VZSNVGhH0M16O88nVydL4jneoOjvPNLa2yx
+	 brhhkA1ggDO4fnrakM5R2Hsg5nNAR7LtXDD5Cq5aUAn081Rl+VYuYsM2UjXptZTflinFQ
+	 uGm8BaT9Ng1t5ajG0LGkhZ40y6g/vgdCp9fdVtHxIqvM08Vv6y7KPJGynhoew8RNVNGUf
+	 e2t9JB/jQx/zE4MJKvrQ9/tKrrYnw8WQG0XUnQOhoiRr2/77zyChh02fDKTyuY85sIUTL
+	 rGBxwU4Xiz2tuNpiKmEMddhiC1EnZJ9GW42+/TTnv18rbik39fGXE3cJ28aFWZOwfwA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792747652;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
-	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=9lv12kc3XOEh/6mGhcZ4j2RuF4+816x28PJz0CFe5p4=;
-	b=uUp3qTkHJJ9McKxrvWHd1ciGMBvYc7rPfSzjZNVUFSqbEoCXkTl39e1Nm1MTECdWzTZD
-	 N4ztrrk3aqtpsZauh0UgDj3lZq1wuZRG3wuTrcmIwxqiH71MDqJi9tw/Eq8NdAqbFloqb
-	 AL4g/5OLznt7OSmBfibrvo5bjXtX3FVOeuDCDwEnBAvAVMobqLvV3tpfC+l8L1WZl8CyB
-	 FCOzgM+S/S3Jalh+dac1o7RI1Rt6svU8MdqcXbbzomdNnGpV7hC1OS4jXYBYKqaV3UL+k
-	 yTY3zXOc+Ulr68OL4J2ujpbUMR4uzpvHES8/P2w6MysLS5ZBscNwqqqNb3NcQWzdjjA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792752127;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=/NFK43oOzJfr8L2hy16WF2YSsrjDDXnWtTpY4uSA574=;
+	b=h7/Reuh5A299/E/pBnEcy9JbXsghL4eE9Pyt+5RKZ63jpXR5/DzvfQ9R6ds4CDWh8wng
+	 qJcJ3XsrxlAem4SmBdikuE3HYONMx3ROwUUBotlMDcrXBagQGlA/UobhXoUc+ErDMJ3dI
+	 yA9DfCH5wJXTjgrbCLYJ/YTSuW0u6AMDFOlsRYdonCd2spkmfmjXUn7ITE8zhEJN5odSO
+	 spPHPbkkJwVr946B1D5DvYCrAZ5rnJYApc1zwFhNFuZOxrBhsuKJHCjh9thI6aGMT1RSa
+	 r+M5lH9VJirUEMTCMVXPg5T5hwWlqbCLaB5uU3/M7/WvpgRbzt5hZq1w/8Quvj0KOaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cLxLNcLT;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=A8rYR3JW;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Gpceg3xr;
+	arc=none smtp.remote-ip=209.85.128.54
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0027606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 09:27:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0027606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8957606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 10:42:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E8957606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cLxLNcLT;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=A8rYR3JW
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69N7F5L61200725
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 09:27:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=9lv12kc3XOEh/6mGhcZ4j2Ru
-	F4+816x28PJz0CFe5p4=; b=cLxLNcLTOB7rE5wD+i2jf3tDh/3SXKV+/eOM6peS
-	9SqGbjkViRMUAwiTJKhXRTWUh5IJp+M9K9glLIzD7uhH8pVY6Cc7l/Fg3Q8rBEh9
-	nlavNho7GKFI1AsRCpO4g2YOwV2u3x6hMCwoJoaTJjHejOgEAkR5mcoNxdw0CbA+
-	YPItldyXJDMQWkQMitw38Lbp4Da3plgs7yH+Kx+5D+lOuZU0VEY2YyEjE48CBkbY
-	63ha2rpwJ8XI60lUT8XwUWwJ3LrmQQBLciy1RYddVn755R8Whk3N0EyjfrlyhJSy
-	comnGSSN6vM774x71nzqf4rOLv0+6YcWBDTpKUeu/zAhog==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hfqms2xt1-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 09:27:31 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-93909014c85so123881185a.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 02:27:30 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Gpceg3xr
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a214c5c4c0so3850795e9.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 03:42:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792747650; x=1793352450; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9lv12kc3XOEh/6mGhcZ4j2RuF4+816x28PJz0CFe5p4=;
-        b=A8rYR3JWWWd8B8fqYJuQdjjoh3BSx0Ij+rIuKzp9YsVbq+erF9ZmBVUgDsiuHux+sj
-         qOtML872knip7RH7WsuVAkR2F71uctiQoq94jdAlGK59/kWPFIMs3HKxJdDV3KGHvTJD
-         H8oaoEMJTwSWTigvxW4sxcoRUHkLk2kBoiqDXF+YfQCLdPrL+sn9fUv78ldwSVZymJtq
-         puMzZpYzVhfv8YJQ28RFAua9I3VDVjdPXD9mONaljZa0NrmeJJaUIY301+xiVxdKeUhI
-         MHxp31UuJrRvDA4chDUZSuDExXCKmVeCelhnl+4qPhMcmYUG/hDBegAO4pFSPe6LUOZs
-         xHig==
+        d=gmail.com; s=20251104; t=1792752125; x=1793356925; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/NFK43oOzJfr8L2hy16WF2YSsrjDDXnWtTpY4uSA574=;
+        b=Gpceg3xrXgFA+DKsoVAbMos73W+cLVI9xIoWVPYxVJtjtNr05ux7SDs23k+/70PzsI
+         6ojDF3R00BDPYS0HvJYtimBpCN+l2kUwu9tllEhhcdKwfSTk2Rx4U14HZ4s+4U/3fdnd
+         OGKxYRQnVFE5aLUPoK7dDOTxd4+QVhVFCeIJon8rWJk5Me1dblZKt0txLZakfXBBS9k7
+         ZfxhPQHHGCs/ZyZtF5p9lXvG+neWFtVPae+jykx5xJoqMMj305iNRdGTcIt7DYIVFjhf
+         +i2yhCG+5hUo+QhTr4xxTi3uy9myDX0ycuQP/1yTm1BNExVoPRxPfsseCyVgxXFw3gfv
+         +mXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792747650; x=1793352450;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9lv12kc3XOEh/6mGhcZ4j2RuF4+816x28PJz0CFe5p4=;
-        b=LTz8ULh6TlZSAQxDpcm2VYxU0PKpADGDMDkGra0bVK6KJOhwPQ5UGHJnrwlBSzgO0e
-         HX4bPjl4JGtXf6WwD5tor0hTcZCcAOiCz+bjaHn9x6LRZCdpUGQdHLHtWuUVIdliVrpo
-         dqpNlnieX29jtC5cxUs+g+mikWVwI5AkBOwurq+TiumpcoFPpWEiTUa7A8LG/ku58C7a
-         HAPESD5Mlw4p02jwy8wxz80aPds9BoDQ9JmVH74vsEX9hKneA5ExxifIEZXPkDGc5Bc4
-         jTC6Xdg8ptIM4/5vi2pv/Yx6BbJ9mvjp9g/C1O2vGyZpAKJQ6a872qSmObGAT71tz8Ro
-         dtEg==
-X-Forwarded-Encrypted: i=1; AKwUvBwZ3zo+glVr2fYqykDOYzR6dSdbaJG2faMDaFlk3RwDZWXgiW1ZwBl913+YYOUqqjPn1w7cdYRbintWVEpixA==@vger.kernel.org
-X-Gm-Message-State: AFq9FYK1TNurXZoy8T5xpCiSQJTjS1t4hpCKs/BnIRPcKsH1eAVtWGLd
-	38a8xFZbX8tgpROsGLeomkl+TVl+eAzTMAneCwMhzWYpGwGyriREs8eHYpcSjD21SLMZ/UKlsRv
-	G9aS4dH7A96fV7y6B9YG51dq3LUzk8ekJjaBL5sd4KFPIomyAAlHeC7GA74rzE/Rwi8fv5ifK+w
-	CdNw==
-X-Gm-Gg: AYBFou3OoCkeadbKSIaII41vq1uS/krE7LD8FZSnFNInUa92rip5jVWFB3KVeYfVFMe
-	mkoB3hjYyTP5A8is5cDO5vJCCvfNJKua5CrWrFIUrexJkj040eofw1W+ft9om2HoAhx1a3sATeW
-	WIZfwlgBRGfhldqDriQa9KK9+4KNSWZBVUzSp9akePJ3fBx6m6aaUwxcPOyzOpGX53ECznhYlDj
-	IpGkRQTbgilJ9YmUS7uM8h5P7EpBt+gcsmWVorYiXEPS7d9vioHY/ISTPUls7dBTuSLT2zOFpz9
-	X5WPNrveX/MygG5+uo8YE4Lo4TWJgIVEFZoigG2yDa1TdfS9BWWTQruBwqYaf/cfWoiIGw73T3S
-	ME4g8N/w6xSU=
-X-Received: by 2002:a05:620a:4505:b0:93b:e5e9:23d9 with SMTP id af79cd13be357-93f6f78710emr325900285a.23.1792747649994;
-        Fri, 23 Oct 2026 02:27:29 -0700 (PDT)
-X-Received: by 2002:a05:620a:4505:b0:93b:e5e9:23d9 with SMTP id af79cd13be357-93f6f78710emr325897885a.23.1792747649444;
-        Fri, 23 Oct 2026 02:27:29 -0700 (PDT)
-Received: from localhost ([93.144.6.81])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a211bda21dsm54466305e9.11.2026.10.23.02.27.28
+        d=1e100.net; s=20260707; t=1792752125; x=1793356925;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=/NFK43oOzJfr8L2hy16WF2YSsrjDDXnWtTpY4uSA574=;
+        b=s0czmELP3AD/pq7T/MsKdXFZ7MSgXtpcGHWJoxozsYwAaBPors40wdGg9oOCbdwFcw
+         Kb7dFRmGBMXeGwcdJf97XHFX9VYx2lFJK305cFdckNbX9AM9sMbvcBLOWIIhFKREgN1f
+         fDwXL9OEp/q7z4dTfLNjVW15E7+L5tKe4r4sH9x+gMstegaFXUkVdl4Ql+uLnFDNbSAy
+         VFaldz9AzjiD60Jh6hnFyDvzjlqdOZF0Uq1hdNem7zkaU+lwZyDuTm/lh8lPyHAOYp1i
+         dgXnyFzxP/qgt6nvT6Xsu+qqaGEg5JqaUaFsyLsJMBW9FJIgfttJrzwc8WnoQFGi7o1P
+         j96Q==
+X-Gm-Message-State: AFq9FYInTgcMQGAHgXpt7RSd6shDv2jRJiQqTZiQGKyVp5sdUy9h17/M
+	tJmCXH9GnXRUrqahGNxznAo4SmlN3WTSdhZIQLzCPyH2QUZlOuqUBkM8Dp+6Dw==
+X-Gm-Gg: AYBFou1ndkxvTQ8YKR2pln8MsNQIKA4j9KQs9kOp9W/c/uqMB/GhSpW/2G8ZNc5jFDT
+	FmQtBcTCl044PJ3EssNqoCNbCOvF11cL0EWSFt6DtCZaLT6JD8BTXle5CpKno8jFoeBhuOueIew
+	HiGPF8Fp2RFyicwL0sEaTXYfkE3qtY3/344BNTik/4ogKy4kRHQo5Atn0h76UsscXySdYUzUUNB
+	FyS+0A9u8J+Kb6pa2x/I/IE/IwD6WxpNTGLsJauuEMqe38A8tLP7iZ5a990RqCsCQr2w28uULIf
+	wfPLa6s2IUb9AH/DrdlevSJmz7TKaPxqEeNlN4z975j1sZ+sOUnEpbLti1yPSjzFE466CTCXiZ9
+	egxMfAXqPaJE97wZT9+391Au2f6KRMigYG3o9yM+JwRk5AJPdOCdIoiii8HxVqyiy9j1CSm6Ovz
+	9ZcoTLeIehT3ZjNf6QXRM0xh0t1Cc7VOtkRggvuDhAgtDwtnydT8JedkyFsPFPtiRcHkyEN/S6z
+	lE+99vpOMZV+hmLEVwPcjzjYNsHVph3cgxMrWnovjtheKTjKQiH8fbVTdkVZ46grnSBDtV1ezVg
+	pk668USywGxH3U+0Y2MNnmg0CFSKstI8m5EkMOzoW6u4Vgi7O46H1fdoUGBXOf7/QA2qAl/r/wP
+	idt8=
+X-Received: by 2002:a05:600c:4e55:b0:4a1:d41b:5060 with SMTP id 5b1f17b1804b1-4a211ed013emr27247015e9.22.1792752125001;
+        Fri, 23 Oct 2026 03:42:05 -0700 (PDT)
+Received: from omarchy ([2a02:ff0:1e10:93f:e71c:400:f186:eea4])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a210487d16sm66719955e9.15.2026.10.23.03.42.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 02:27:28 -0700 (PDT)
-Date: Fri, 23 Oct 2026 11:27:27 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Cc: Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>,
-        Baochen Qiang <quic_bqiang@quicinc.com>,
-        P Praneesh <quic_ppranees@quicinc.com>,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
-Subject: Re: [PATCH ath-current] wifi: ath12k: fix DMA direction for
- re-injected Rx buffers
-Message-ID: <atsof77Ru3vW4l0s@lore-desk>
-References: <20261017-ath12k-fix-dma-mapping-for-reinject-packets-v1-1-b94860e18ba4@oss.qualcomm.com>
- <41eff135-80fe-4820-b9c4-48705159a013@oss.qualcomm.com>
+        Fri, 23 Oct 2026 03:42:04 -0700 (PDT)
+From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	linux-kernel@vger.kernel.org,
+	rtl8821cerfe2@gmail.com
+Subject: [PATCH rtw-next v5] wifi: rtw88: pci: wake the TX queues after restart_hw and interface up
+Date: Fri, 23 Oct 2026 13:41:54 +0300
+Message-ID: <20261023104154.2755289-1-abdurrahmankaradag19@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -124,92 +94,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="HZrZ1ts+FdlZCftW"
-Content-Disposition: inline
-In-Reply-To: <41eff135-80fe-4820-b9c4-48705159a013@oss.qualcomm.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAzNyBTYWx0ZWRfX2vk35Hm77uti
- O/cgbaEU6Yw515crx188XHtNPG/RBgg9faNpdfD4xAaUTic/o6dfus6GcKsCgr2xUGOW6sKR+pN
- h63NAlShZtjoIN6mZe+tFitGSg4A0+k+0UJknCZxJ0UPRC7GLiolR0IgVKF1Ib6smv8EhnQkBjs
- NbTXy+rLI2qRXXwDmPHIRvB0YlkuWzULI2HUJMMeygBmdkuYZa0d5Pg0YEbGSiTRw+Pi1bjYIxD
- kElK4x+8YfSNFN2IIQc6k8sQqh2/GO+FY6EYreK8Lx4dx0apxoO+h8KB3c7/Ywm7NoDHdnpzrOM
- qB0LFRWPAhJM6cOXqedqkxJI30zLrtpeaE0zukJAgNPTRRH87u11GVD1BdReQplXq3bn+lH+6KN
- RGNoCLRwbEvCHmBC3oPGQQyQ9WpU9uDHcHyQxCq9FFn3ogXHQyPMibmLI7w/ZXOq1ZKR4Eb03w1
- iD5WtzyUe0Bg7i8vI6w==
-X-Proofpoint-GUID: jsEfSR9q6HQcbKT8pd4GHKwIc5sq_jUs
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAzNyBTYWx0ZWRfX4WlYjaNr+qyM
- Xi3OCN4jlv5HNzOPyRpqD+H+NhLVmCWoTJQs/WP3ZV5COAoha0aQ9J/tgWv4u5wu0DzvSxAsrHh
- B3g5wIXohMLyWprIrEPf/m7BgnlWXmU=
-X-Authority-Analysis: v=2.4 cv=UdbE26SN c=1 sm=1 tr=0 ts=6adb2883 cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=7fYLNvKHbgS61GKHX+yayQ==:17
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=MzmxzcrYCnjYavR0kDUA:9
- a=CjuIK1q_8ugA:10 a=EDCNbuhR6sifr4SWXDUA:9 a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-ORIG-GUID: jsEfSR9q6HQcbKT8pd4GHKwIc5sq_jUs
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_02,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 bulkscore=0 clxscore=1015 adultscore=0
- priorityscore=1501 suspectscore=0 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610230037
+Content-Transfer-Encoding: 8bit
 
---HZrZ1ts+FdlZCftW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+When a TX ring fills, rtw_pci_tx_write() stops the mac80211 queue and
+records it in ring->queue_stopped. The completion loop in
+rtw_pci_tx_isr() is what clears them, and it needs a descriptor to
+complete. If the device goes down first, rtw_pci_dma_release() rewinds
+the indices and frees what was in flight, so nothing is left that
+could. ieee80211_reconfig() does not help either: it wakes only
+IEEE80211_QUEUE_STOP_REASON_SUSPEND, and an interface down/up does not
+reach it at all. TX then stays dead although the device came back.
 
-> On 10/17/2026 5:16 PM, Lorenzo Bianconi wrote:
->=20
-> > --- a/drivers/net/wireless/ath/ath12k/core.h
-> > +++ b/drivers/net/wireless/ath/ath12k/core.h
-> > @@ -149,6 +149,7 @@ struct ath12k_skb_rxcb {
-> >  	u8 tid;
-> >  	u16 peer_id;
-> >  	bool is_end_of_ppdu;
-> > +	bool reinjected;
->=20
-> rxcb->is_frag already identifies a reinjected frame, can we use it instea=
-d?
+Reset that state where the device starts, which both
+ieee80211_restart_hw() and an interface down/up reach through
+rtw_core_start(). Gate the wake on ring->queue_stopped so that a
+start which stopped nothing leaves the queues alone. The wake cannot be
+narrowed to the queue the ring-full path stopped: the flag sits on the
+ring, and rtw_tx_queue_mapping() puts management frames and multicast on
+rings of their own whatever queue they came from, so a flag there does
+not name a queue. mac80211 also keeps a single non-refcounted DRIVER
+stop per queue, shared with the scan paths in fw.c, so
+ieee80211_wake_queues() releases whatever holds that slot.
 
-Hi Baochen,
+Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+---
+v5:
+ - reset the flags before rtw_pci_enable_interrupt(), move it into
+   rtw_pci_reset_tx_queue_state(), and add the blank line before
+   running = true (Ping-Ke Shih)
+ - justify the gate by what it does on a start that stopped nothing,
+   and give the cannot-be-narrowed note its actual reason (Luka Gejak)
 
-I agree, we can use is_frag and drop reinjected field. I will fix it in v2.
+v4: reset the flags and wake from rtw_pci_start() instead of
+    rtw_reconfig_complete(), so an interface down/up is covered as well,
+    and name restart_hw in the subject (Ping-Ke Shih)
+v3: wake from rtw_reconfig_complete() on RECONFIG_TYPE_RESTART
+v2: wake from rtw_pci_reset_trx_ring(), gated on ring->queue_stopped
+v1: https://lore.kernel.org/linux-wireless/20261002231013.11792-1-abdurrahmankaradag19@gmail.com/
 
->=20
->=20
-> > diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c
-> b/drivers/net/wireless/ath/ath12k/dp_rx.c
-> > index 8fa0e90b4531..0003cc5a3720 100644
-> > --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-> > +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-> > @@ -138,6 +138,7 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *d=
-p,
-> >  		if (!rx_desc)
-> >  			goto fail_dma_unmap;
-> >
-> > +		ATH12K_SKB_RXCB(skb)->reinjected =3D false;
->=20
-> These skbs come straight from dev_alloc_skb(), which clears CB area insid=
-e, so this is not
-> required. But for readability purpose I have no objection to keep it.
+ drivers/net/wireless/realtek/rtw88/pci.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-ack, I will drop it in v2.
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 66d2e5f..c7ccde8 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -568,6 +568,23 @@ static void rtw_pci_napi_stop(struct rtw_dev *rtwdev)
+ 	napi_disable(&rtwpci->napi);
+ }
+ 
++static void rtw_pci_reset_tx_queue_state(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	enum rtw_tx_queue_type queue;
++	bool wake = false;
++
++	lockdep_assert_held(&rtwpci->irq_lock);
++
++	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++) {
++		wake |= rtwpci->tx_rings[queue].queue_stopped;
++		rtwpci->tx_rings[queue].queue_stopped = false;
++	}
++
++	if (wake)
++		ieee80211_wake_queues(rtwdev->hw);
++}
++
+ static int rtw_pci_start(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+@@ -575,6 +592,8 @@ static int rtw_pci_start(struct rtw_dev *rtwdev)
+ 	rtw_pci_napi_start(rtwdev);
+ 
+ 	spin_lock_bh(&rtwpci->irq_lock);
++	rtw_pci_reset_tx_queue_state(rtwdev);
++
+ 	rtwpci->running = true;
+ 	rtw_pci_enable_interrupt(rtwdev, rtwpci, false);
+ 	spin_unlock_bh(&rtwpci->irq_lock);
+base-commit: 9b0be45d4d52fd223994e151f169743a97abd290
+-- 
+2.56.0
 
-Regards,
-Lorenzo
-
---HZrZ1ts+FdlZCftW
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCatsofwAKCRA6cBh0uS2t
-rPThAP9iSya+erfxLC2cUfy5puh3lne7T29gwCslj5ZZ6DbaRQEAzUPMdOy6EFaF
-9+0cOYXh9y8wc1ywO4X5CrChESUTXAU=
-=Buzo
------END PGP SIGNATURE-----
-
---HZrZ1ts+FdlZCftW--
