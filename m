@@ -1,52 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=116.203.120.240
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792791275;
-	b=TtLBkEwVXYvzPy7bjcn7APVkCPiYjLaN4dV5u+aibKhJAflrJpl151rT+pHiH+gL4Ra+
-	 mTqEX1n83U46N8SFvKaR958EB6imvGLrVTJQcR1EUs2xo0vTkxgAFghOPZs5j5AMahzUF
-	 8gK+HHxHur/NZFwDhjGj+H1ZcBu5tnE2o3NfsIFbtJ6fQMwlWtUE9g8QmbzSynbCkVWvj
-	 D9xWrJUTpala3HPkHsA2WHyH2nYiBMXOuheesyukG4FpyWMSFQVv7wrsUQrhqPGx0/s3S
-	 +CdU4QKenHlJ91KO7TqXlety60z4M3l6OpzHS1Qh43SEr3QvPIc23pJU4AfImldj5xw==
+	t=1792791679;
+	b=nRfu8hcteCTL5lpYlTF/KSy/+IVpd37dDI7xp8iwMsDSet535KSsWyTQSgHr3NvsyEPG
+	 I57w+36MxL7QYyoz3hCVsLTfrVWm0Q1gXdxA6myPd8tvyxiS8bdqZbHyI9NttkuNfUA+F
+	 wqQyD+QO8v2ABJnhk6P3Ii7let+5lPdQcDOMQ+4f0vhamTjy9IA8CuBEzsDlMicO2wtsT
+	 DN7tU+dKYJdD0QzLwfsfEQka8xPXmrev9z+LCH94VL82QO9kmugKE7AAaBOyAu30y7dPK
+	 EVPnxFlf8HyYxjNJ1sEjNw8WBfGt/33uE1QL5Yibq9wijUZEMhIo9TLM4EQlNU4o+/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792791275;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=hr1zPOfyiZqpY2vU4mmV+T085v++6VBMIs4U467d7Yw=;
-	b=A4OjLm9u3hYghJXvYsiYlxbzRtnWwloeUXKiPkjcW8sFRqy0fss4kuYF3zJ8RIE7acTL
-	 9AhKb2zYqQl+Wpw11Z+c/dGbJUXvIkdXjJ8TvYdL1MW3ZDZhhh72yGIzsShtB1O913ZJR
-	 fFi/VBclj0ZoyAiPRDpEhgPgza12H6JmPxrh6jVP0nrXBJpN7usatOeizBUdu6y5zF6dO
-	 Rnyf9AYqutwsKVP/Q+Kc62lxaDFHosnTO5fK5fwSN57wTi+DYCsOeuFrkbmSlvuowesjQ
-	 k/7K8xXbqbelZdSl0C7rdyGCwI9094Gt48mZgDCeFSUdYdz1VgX+SMcPlLqDYVt5M9Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792791679;
+	h=DMARC-Filter:Date:DKIM-Signature:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type;
+	bh=0NkHIEu/vmmZL6hSATEhLaqxQwhA8tfKkg+Bnz/rxXM=;
+	b=Qo4lDpVN23m1H6uoT4ZTpn8bBPl1R/qkQtnJEzKMK9qaS5sKs8SeqdiDXIRXNsokn01z
+	 eyQdufK++xkiwTuBgbSxQqHe4GoVOgA1slrmR/GvRg/4CFEjVZXg6uP+z64ogpjg42AlM
+	 CaK5I+j8LNb/Lpfio14nKHS4RfMA3ggbakkUsQ6eVS/NNBuob3zmadBujRnEJzKP2PPhB
+	 zvfJhtTQZ9iuXXj5+xBPojyOD4AvrninDVR+gK5/bEJdsXmGRhdll1NHtkNlqgx1eCeM4
+	 URTSYjfkFgdsDUwWrswUXw5bJmvKWT+YoVlKkTAWDjOhkAUiy1RqJdXP/6mk0wpzKlQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TxngfrpR;
-	arc=none smtp.remote-ip=91.218.175.177
-Received: from mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=bues.ch;
+	spf=pass smtp.mailfrom=bues.ch;
+	dkim=pass header.d=bues.ch header.i=@bues.ch header.a=rsa-sha256 header.s=main header.b=UDYiesLQ;
+	arc=none smtp.remote-ip=116.203.120.240
+Received: from mail.bues.ch (bues.ch [116.203.120.240])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63DF606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 21:34:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D63DF606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEED8606A31E;
+	Fri, 23 Oct 2026 21:41:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BEED8606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TxngfrpR
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Yy/2ularjRrwqquDvE7W1R2qQMWoWbNC1XMmGFPCYis=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792791272; v=1; x=1793396072;
- b=TxngfrpRBmc/3c3G6ekAbpppP78ySvns7B7VAsQVHfPPA54Ruo0mVCpvNPg6BceB/6RbYWRe
- feIJrx5rWdH+TSRpXWbR16sDNF9QcceZs52fkI79a42n4GV0DJPkly9e80f65YnEGSqMdFNPiwc
- yNj0roFGB1EhOcG3honOCpc0=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 387b152527310d3e;
-	Fri, 23 Oct 2026 21:34:32 +0000
-X-Mizu-Trace-ID: 387b152527310d3e
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=bues.ch header.i=@bues.ch header.a=rsa-sha256 header.s=main header.b=UDYiesLQ
+Date: Fri, 23 Oct 2026 23:39:53 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
+	t=1792791677;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0NkHIEu/vmmZL6hSATEhLaqxQwhA8tfKkg+Bnz/rxXM=;
+	b=UDYiesLQY1KDuLEUj2mYEDV4XPVOtkXLDByO3LTPXw2PB5aAtviN7v0bJnTM/I7S+DxQ7x
+	ncskYwyQ34+eyKMGvCZl50HRiWMWF8GCz25OrFlYMLaWZhBK+e01VQpJMvEocQHxWvYO4j
+	02Q+XqsVIQwBhm1EfwVIE9/KIa4RieaOfyNEyErbxBKMvVC9qvC5ETze1QW1MDzFcMqXE6
+	B/1FFtud/7sVhQmZa9Y4jmU2cd31JJnGUuPha9UywFQmtUfZOmwLbZm2TbJB8StZ9cpAS6
+	2vn7LH+iqxsZmOHgAlk6GGzrrDHv0sjYF697nwjQgs2xvSskrlXPrzyZC6K3PQ==
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org, "open list:B43 WIRELESS DRIVER"
+ <b43-dev@lists.infradead.org>, open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH wireless] wifi: b43: map the RX buffers
+ DMA_BIDIRECTIONAL
+Message-ID: <20261023233953.65c45360@barney>
+In-Reply-To: <CAKxU2N9i6Dn1yKmd-_9DvET6P_GNctTywWgOBXYd2tWoWKY=Sg@mail.gmail.com>
+References: <20261023190653.70741-1-rosenp@gmail.com>
+ <20261023221424.2722795e@barney>
+ <20261023224140.465903eb@barney>
+ <CAKxU2N_1XgjVPdSrCMYzZx4Rb6yjgEe7kBZYyG4RASyBv5BtMw@mail.gmail.com>
+ <20261023225745.696eef3c@barney>
+ <CAKxU2N9i6Dn1yKmd-_9DvET6P_GNctTywWgOBXYd2tWoWKY=Sg@mail.gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -56,61 +68,77 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Fri, 23 Oct 2026 21:34:31 +0000
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; boundary="Sig_/PGHhB_KIxckt4xeCgKNjilU";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
+
+--Sig_/PGHhB_KIxckt4xeCgKNjilU
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <875b4e96891a2bf256ca1805140b57aeccee4aed@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH rtw-next v2 1/2] wifi: rtw88: move the bmc high queue
- decision to tx.c
-To: "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
-References: <20261021124318.15993-1-luka.gejak@linux.dev>
- <ac6d8824bdeb45148ffd6b5dee7da313@realtek.com>
- <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
 
-Hi Ping-Ke,
+On Fri, 23 Oct 2026 14:21:27 -0700
+Rosen Penev <rosenp@gmail.com> wrote:
 
-October 22, 2026 at 7:11 AM, "Luka Gejak" <luka.gejak@linux.dev> wrote:
+>> Why do we need bidirectional DMA and most important why wasn't it necess=
+ary before? =20
+>Because the codepath is not fatal. One or two duplicated frames. Big deal.
 
+I do not understand what this means.
+Please explain this in human language.
+Why is the code wrong?
+Why did it work for almost two decades?
+Why does it need to change?
+Please explain it to a human being with code examples and failure scenarios=
+ that are understandable.
 
->=20
->=20October 22, 2026 at 4:20 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrot=
-e:
->=20
->=20>=20
->=20> Luka Gejak <luka.gejak@linux.dev> wrote:
-> >=20=20
->=20>=20=20
->=20>  USB decides in usb.c which broadcast and multicast (bmc) frames ma=
-y use
-> >  the high queue. SDIO needs the same decision, so move the helpers to
-> >  tx.c behind a single exported rtw_tx_bmc_use_hiq() and keep the budg=
-et
-> >  state in struct rtw_dev.
-> >=20=20
->=20>  No functional change.
-> >=20=20
->=20>  By my review, I think it doesn't change logic at all, but I hope i=
-f
-> >  someone can help to test USB devices to confirm it still works well.
-> >=20
->=20I ran the same test with rtl8723du and there is no regression.
->=20
->=20Best regards,
-> Luka Gejak
->
+It is completely Ok, if it *does* need to change.
+I am just asking for an explanation that is not AI generated.
 
-I was thinking, as staging got removed, for 10-ish weeks(until 7.5)
-users of RTL8723BS won't have AP mode. So I was wondering if these two
-patches could pass as fixes into rc2 release(or whatever is the first
-rc into which rtw tree is merged), as this would be DHCP stall fix. To
-elaborate: when this driver was merged it, was exposingAP mode to
-userspace, due to RTW88 doing it globally. Therefore AP mode existed,
-but wasn't working properly. So maybe it's a bit of a stretch, but I
-think it's a valid proposal to send it as a fix into next rc release.
+If you want me to read it, it should not be too much for you to type it dow=
+n.
 
-Best regards,
-Luka Gejak
+> > Write your commit messages manually, please. =20
+> I've been burned by this many times before where maintainers ask me to
+> reword or mention something. It's not practical and wastes everyone's
+> time, which is why I'm almost banned from netdev.
+
+I'm sorry, you are wrong.
+This is not how software development works.
+
+If you can't explain what you submit, I am going to NAK everything.
+(even if I don't have the formal power anymore, see below)
+
+> Do note this is an orphaned driver.
+
+Yes, I know. I am the former maintainer.
+
+>I expect [..] Fixes: to get in a bit easier.
+
+No.
+Fixes need to be explained to avoid regressions.
+
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
+
+--Sig_/PGHhB_KIxckt4xeCgKNjilU
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmrb1CkACgkQ9TK+HZCN
+iw6YOQ/9GA6pmW0kusXU0wJyOhu/DEfGo0aS1f6jDOxO4XYQuZYi0CcyhLUHyNRQ
+AWXv2wenyTUG6X3wnmg2q9GZPyMopnpK5TIm9H3B1UaVPzvT6vvb2O01fnQE1CO8
+ZlHKiHtGSKWqRsS60Z5utPTESGIcCUgQ0pOwJAhUyFPTS4D6efSpGCLxTfWZGvLt
+ujUzFviy9InpzA7aES/8vkYTfzDWzc0zHFaLkjqsURcGOsnGxKpe9ZPopSRmcyu2
+3nDLEBgUX+sOJQfZNMELf84w6aGAWNQ4/m64A4ZVKMcLQu/6v0viGxz0PR/SFBm9
+jIz9Ppai7zy6YWuUeCTVGcUQUrK4S5/SN5AnfXq2dYu4r5aXc5YqgQ6DBF2Asztn
+YLXD/txr708CnE0DLjhXvcvxAPVS2wHktQ+nTaJ01XAopeZwLFDHfsUAFMu2xtVY
+7qxpN1DQUkdqUJmc9dG85apmzqVU7dGcxcQXQB8gn40J+3sl9RiDlnCjm8f1s+gV
+Rj3jhtKrnDhgSC1TWOLEHa3vrL5Q7NrRdoZ8c36teMWFyzg+immrkpoFgj8j0wnN
+JhHKIkqNH1Lg3D1ixBRhp+LWOxBCKDsjbazBnUzqP4i/+oqIiFoNEM3A6KR66l8E
+LCSe0h/r7+50Ge8owfG6ie7YFen6PWd8lpSkYtFzz6HYJxlBD6Y=
+=ErUq
+-----END PGP SIGNATURE-----
+
+--Sig_/PGHhB_KIxckt4xeCgKNjilU--
