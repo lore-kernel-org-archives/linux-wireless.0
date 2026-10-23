@@ -1,63 +1,127 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=194.126.200.66
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=46.255.225.202
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792778041;
-	b=rtPX7Qd7p1+WppKBn7/QDQS+Uqi+KAXxrHyTuvT/Yv3pc88JKQ4374RTe8xGucuERluF
-	 2zGIQFMzqbTXSLwo48LSLmSXm8866JxjzDe4sk8tHIzERdPFvuDRG/wKiz2FvI0yF5XLn
-	 bnmKeUNvJ3RJ4xxhfKV8p8QMgKUAxQ+ce9khCGb1+Wf4oa41AuNwXVWBH5fAtntOI2f3Q
-	 1w9VHfdsbzcTNFAAqdjeDcvSZshqi66Hm0fIYcWuDcwJkxJVoQFrYCCZ9Dv+fE3t0a27W
-	 y36Lzc/zgRCo1KqJqSdNfznNm7a91rjGcnK9SY1z00cfWFGUgCxA7trZNzWrLvDKpdw==
+	t=1792778200;
+	b=loyiVxJ5AoZJlqZGg+pU3JW0gjbUS/y/KHlsl7H65Cta4jFo9ZjyJPmZBSw5ichG0Aob
+	 4+ekT4bhroRCtxICDEF7LMvE1NWLOXNFnYv4CT7q/d0XHfYUJ4H0HuFxmNiduWY2qAaB0
+	 Wzi0CvpE6YhPItKMIeJVnBjpfIvSuE1+DNBoz7GN5BiP1Yn00xOCYiB2ic673WjHeBjpW
+	 YREt1M6OGcM3QXQEZ6gesigQoMYKx9rlupLs2aceEsz18T4jBuxb9TeoBNN78J0M9T3I/
+	 QdH9X95GwsbkebgJvUoi6c2WzWLTGyUTs1wbzQG/8Z91afU6hDxl2fucy/iRYIgaJEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792778041;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:From:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding:X-AntiAbuse:X-AntiAbuse:X-AntiAbuse:
-	 X-AntiAbuse:X-AntiAbuse:X-Get-Message-Sender-Via:
-	 X-Authenticated-Sender;
-	bh=mex1VNRAzB6AdRypwLTafPsp6+YLM9I467IH3rE0fBg=;
-	b=j0kSe9UTwpyZ+5KTmtb0fhqzvaqjNX6UERpYbhe/FOWjCETDwVhPV1ZWLIufjbjLrw9E
-	 0So9kA5kFVomk5btaCunXu4+2Sr9zPwwO8PWyaaG2PwCUBHq1sqIzkoAU7s/yGgE1C6Rm
-	 6qLEp5TERd1CDf0H9NMtFELKvq7urMtLFfdWWHrS2EIXalECT451TU1U2JqnLNpdPPG+J
-	 TvWFkzIvFPpXDYmxhbdc87Wjrch9t7nj4dW2WWxKKPZl5upJgy+AGTlGHqvbI34mHEPbj
-	 7tqGw3+zxXpdJSkh2qJx6tmbyh+iwRLt+ezKifWxAmm77a+Cphqnmb0kZA1o9/+2Zvg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792778200;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ThreatScanner-Verdict:X-IPAS-Result:IronPort-PHdr:
+	 IronPort-Data:IronPort-HdrOrdr:X-Talos-CUID:X-Talos-MUID:
+	 X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:Received:Date:
+	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=cVor6heXm2oce1250ghrSSnDDcUiPjp6nRn5tapiiZw=;
+	b=5OBMR8cQT04pljLCPskbGXDXq/Ix13Xukd6QJdXgiAIUwYZ//4nvHLs0dMK2HV0UZPzM
+	 VCu66Yqk1wmbNgjGGocZGZOAZsFH+asKQau12iCARnEtStgwe0Vbm+Kat1P8Z2QW6FwbW
+	 VUF4qR74dldb3+Pkv7iIQbcvrihu7i3byCbhpqzPPkmjk0YskLHLPkDXJDZBJd10hTn1m
+	 bYc9JJ5FH9DKh9f0vzljNEKQ+3IRVOVbIARFq6QDNYAlAyQKVa+SP/CXgJXcVjVQuMPsZ
+	 djaJX8glxaaJtNja8hQXeK6dGhKPzYmjLesrtIne2RKAtKzUXCrMTKG5pzyR4sc9N5Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=davidmestre.net;
-	spf=pass smtp.mailfrom=davidmestre.net;
-	dkim=pass header.d=davidmestre.net header.i=@davidmestre.net header.a=rsa-sha256 header.s=default header.b=vTT1Px5S;
-	arc=none smtp.remote-ip=194.126.200.66
-Received: from mail-gateway-shared13.cyon.net (mail-gateway-shared13.cyon.net [194.126.200.66])
+	dmarc=none header.from=pobox.sk;
+	spf=pass smtp.mailfrom=pobox.sk;
+	dkim=pass header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=UWfY794i;
+	arc=none smtp.remote-ip=46.255.225.202
+Received: from gmmr-1.centrum.cz (gmmr-1.centrum.cz [46.255.225.202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EDA8606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 17:54:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6EDA8606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=davidmestre.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=davidmestre.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F80960A6F70;
+	Fri, 23 Oct 2026 17:56:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F80960A6F70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pobox.sk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pobox.sk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=davidmestre.net header.i=@davidmestre.net header.a=rsa-sha256 header.s=default header.b=vTT1Px5S
-Received: from s143.cyon.net ([149.126.4.152])
-	by mail-gateway-shared13.cyon.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim)
-	(envelope-from <dev@davidmestre.net>)
-	id 1xKJSm-00Cu2a-0u
-	for linux-wireless@vger.kernel.org;
-	Fri, 23 Oct 2026 19:53:58 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=davidmestre.net; s=default; h=Content-Transfer-Encoding:Content-Type:Cc:To:
-	Subject:From:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description; bh=mex1VNRAzB6AdRypwLTafPsp6+YLM9I467IH3rE0fBg=; b=vTT1P
-	x5SD7yViy90d9yBdtIRDusw/2SQtqLTfEoBWj2c6aJ7xyX2G0rIf9Fznq6lVov9ONxRV8O1isqBqd
-	TJxZObrkEizxaTqPxWxVajvUgcfDPOC7EyfDBS6W/bX/tjjAMby7CvXxyUgVN4L+GTVERHYUTupqb
-	EKSBUWZVCPCLh0FNACdINB/GaTechCCWZSWRrVC3FZMyPjqTfONElTd1y6SrEYKEapEELWJzvE115
-	0wOiPjNf2Mk0d43OKy9pqobeBloJLgbRU2JROOMwtzyyJXhTaYpV2MPjsZ4sS5b6hYjvRAufgGL95
-	mCc/PupwQjzm8tfxZf4YDsfQONaOA==;
-Received: from [10.20.10.54] (port=58994 helo=mail.cyon.ch)
-	by s143.cyon.net with esmtpa (Exim 4.100.1)
-	(envelope-from <dev@davidmestre.net>)
-	id 1xKJSi-00000000HRp-43Gw;
-	Fri, 23 Oct 2026 19:53:51 +0200
-Message-ID: <48a5fb10-92ba-4be9-9df5-d92392c968f6@davidmestre.net>
-Date: Fri, 23 Oct 2026 19:53:51 +0200
+	dkim=pass (1024-bit key, unprotected) header.d=pobox.sk header.i=@pobox.sk header.a=rsa-sha256 header.s=mail header.b=UWfY794i
+Received: from gmmr-1.centrum.cz (localhost [127.0.0.1])
+	by gmmr-1.centrum.cz (Postfix) with ESMTP id 4F5E63E7C9;
+	Fri, 23 Oct 2026 19:56:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pobox.sk; s=mail;
+	t=1792778192; bh=cVor6heXm2oce1250ghrSSnDDcUiPjp6nRn5tapiiZw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UWfY794ihKHO3s1+N9gRJFpW2R5okI9QEmlpD42pDup0G1gZZE3yybRQtGT+OhVE4
+	 OWarih0eYfJ2MZSsPgezgMw4zHTfMZg4tVLG9rut7/bX+s5HBtsHIiVBfDY7e2KFcB
+	 00vcrqebrp08M4kVxecH+xYFTFKBkRjQAseAJlBo=
+Received: from antispam62.centrum.cz (antispam62.cent [10.30.208.62])
+	by gmmr-1.centrum.cz (Postfix) with ESMTP id 4D7473BB49;
+	Fri, 23 Oct 2026 19:56:32 +0200 (CEST)
+X-CSE-ConnectionGUID: FNq+xlWlTcKfnkgPk77fjg==
+X-CSE-MsgGUID: SFJrXFnEQN6qpkDo4qVuPg==
+X-ThreatScanner-Verdict: Negative
+X-IPAS-Result: =?us-ascii?q?A2F3BQDtnttq/03h/y5agRKBSYU2li8dA4EThGeFfoZzi?=
+ =?us-ascii?q?0WBag8BAQEBAQEBAQEJUQQBAYISgnMCjhgnOBMBAgQDAgMBAQEBAQEBAQEBA?=
+ =?us-ascii?q?QsBAQYBAQEBAQEGBgECgR2GCVNJAYlIAYIHAYN/AQEBAQIBJwsBRhALDQsuE?=
+ =?us-ascii?q?EYGE4U8AQMQJ7ZeeIEBMxoCZdx/FjUZZoF0FYE4iF8BhXkbg0KBH4ILRIEVg?=
+ =?us-ascii?q?TuBODg+hCmGXwSCIoEMiE2NV1J4HANZLAFLCjUMM3JDA4EpSwU3ZRI/IR0oH?=
+ =?us-ascii?q?jkCOAYFEiARGUFDW0QxKmuBB11wOylgAQIfJx8tFYF2AoJRgSMHVgIBSUEOB?=
+ =?us-ascii?q?0VTCSVDEkckIggSCQETGi4LgRo1RSZBFRhYCxoFGkgIAgsCDHsoERAUgQI9N?=
+ =?us-ascii?q?xUZBJJsgwdbUDAwBzpNVAg9kmOTfZ9aB4QhhHOVY4dmgTeDB5MtA4soh0aZC?=
+ =?us-ascii?q?KN9A4VDgX+Bf02DWlMZjj0W0hx3PwcCBw8ChyqKfYFMAQE?=
+IronPort-PHdr: A9a23:SA8Z5hEFwdr4d552Otwx5Z1Gf4xLhN3EVzX9CrIZgr5DOp6u447ld
+ BSGo6k20hmRB86Ct6wY0KL/iOPJZy8p2d65qncMcZhBBVcuqP49uEgNJvDAImDAaMDQUiohA
+ c5ZX0Vk9XzoeWJcGcL5ekGA6ibqtW1aFRrwLxd6KfroEYDOkcu3y/qy+5rOaAlUmTaxe7x/I
+ Ru3oAnLqsUan4RuJrs+xxbIrXZFdfldyH91K16Ugxvz6cC88YJ5/S9Nofwh7clAUav7f6Q8U
+ 7NVCSktPn426sP2qxTNVBOD6HQEXGoZixZFHQfL4gziUpj+riX1uOx92DKHPcLtVrA7RS6i7
+ 6ZwRxD2jioMKiM0/3vWisx0i6JbvQ6hqhliyIPafI2ZKPxzdb7GcNgEWWROQNpeVy1ZAoO9c
+ YQPCfYBPf1FpIX5vlcCsAeyCRWpCO7p1zRGhGL53bci3uovEQ/IwhItEc8NvnTao9r6KLodX
+ ++3w6TT0TXObOlb1Svh5ITUbxwsp+yHU7JqccrWzEkiDx3LjlKVqYP/JDOey/oDs2+d7+pgT
+ +2vlnUnpB9rojOywcoslpPFhp4SylDC9SV22ps1JcamR05hetOkCJxQuDqdN4p5WM8iWGJot
+ T88x7YbtpG1YDIEx447xx7DdfOHaY6I7wrgWeufIzp1mXBodbK/ihuy8Uauxe7xW9S23VtLr
+ idIndbCuH4Q2xHS6saKRPRz80Wu1DiB1Q3d5O5KLE8omaTULZMq370+loILvEnMHyL6glv6g
+ a+We0k+5OSk9eTqbq/kq5KeL4N4lwLzP6c0lsCiAOk1MBICU3WV9Om+zrHv4E30TbFMg/Yri
+ KfWqoraKt4epqOhBg9V1Zss5AinAje91dQYgWEHLFVYeBKbl4TpO0/BIPT/DfqnjFSslS5nx
+ +vDPr39GpXBM2TPnK39crlj7U5c1BAzzc1a555OFr4AIer/Wk73tNPGEh80KwO5zuf9BNlj1
+ o4TWXiDDrGHPK7Sq1OF5OAiL/GJZIAPuTb9L/Yl5+TpjX88gVIdYbOl3YcQaHC+HvRpOViZY
+ WHyjdcbCmoKpg0+Q/ftiFyNSzJTfHWyU7om5j4nEIKmEZvDRoe1jbyHxyi0A4ZbZmZdBV+RC
+ 3vocZ+LW/ISZy6KOM9ujiQEVaS9S48mzRyuqAj6y7l5IefP5i0YspHj28Zv6+LOlhE+7SZ0A
+ NiF02GRU2F0mXsFRzs33KB5vEx8xU6P0atmjPxCE9xc+fdJXxwkNZ7T0eN6Ecr+WgHfcdeTT
+ lapXNGmDSs2TtIrzN8Ce1x9FMm6jhDfwyqqBKcYl7iKBJwy76Ld0GH9Jsh8y3bcyqYhi0cpQ
+ tBUNWC9mK5/+BbcB5TTn0Waiamqb6Ic0zDJ9GuZymqOpk5YXBZ2UareRX8ffFfZrczl5kPeS
+ L+jEbsqPhNcxs6BK6tKb8Xkg01JSvjtJtrQf368lWGoCRmVw7ODdpDqdHkF0SvFEUYKiw8d8
+ W6dNQgmCCesu3rQAiV2G1zgMAvQ9rxCr3C2Bm+fHwCOZkttkpgeKgQaiPqHRvVbiq4DuyoJt
+ zJ3ERCx3ISFJcCHol9de6BVepsB51FH3H/CuhY1aoDmM6dkhlcDaAltl1vp3RJnTJ5Dx5t55
+ Eg2xRZ/fPrLmGhKcCmViNWpYuW/Fw==
+IronPort-Data: A9a23:AQai66izlcM4+VBVQlKcqKxUX161ZxEKZh0ujC45NGQN5FlHY01je
+ htvUTuEa/eIYGqmKY10PYS1oEIF65SBndAxTQE+rH01RCJjpJueD7x1DKtR0wB+jCHnZBg6h
+ ynLQoCYdKjYdleF+FH1dOSn9SAivU2xbuKUIPbePSxsThNTRi4kiBZy88Y0mYcAbeKRWmthg
+ vus5ZeAULOZ82QsaDxNs/jY8E8HUMna4Vv0gHRvOJing3eBzxH5PLpHTYmtIn3xRJVjH+LSb
+ 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6YGBiIlIPM0STqkAqSh4ai87XB9JAAatjsAhlqvgqo
+ Dl7ncfpFVp2ZP2kdNM1CHG0GwkmVUFPFSSuzXKX6aR/xGWeG5fgLmkH4Ojb8uT0984uaVyi+
+ 8D0JxgjSAnAl+aJxI6waedqhcsbL5a0MoEQ7yQIITHxVZ7KQLjMRuDR4MNAhW92jc1IAezDY
+ owSe1KDbjycPVsVZwpRUshj2rj37pX8W2QwRFa9uewr5G7TxRFq3aLFKN3ffczMXsY9ckOw/
+ z+YoDmmW0hFXDCZ4QGr0GicqOnipAWlQZoROLrk78B3uFLGkwT/DzVTDzNXu8KRjESyc9RVJ
+ woS8y8jxYAu80+mZsX6XBD+rH3slhodXcdAVu438geAzoLK7AuDQGsJVDhMbJohrsBebTgr0
+ EKZ2szoHzFrvaaOYWyS+63Srj6oPyURa2gYakc5oRAtv4el+txuyEiVE5A8T8ZZk+HIJN05+
+ BjSxABWulnZpZdjO3mTlbwfvw+Rmw==
+IronPort-HdrOrdr: A9a23:HBIUDaM3SO4+1cBcTsyjsMiBIKoaSvp037Dk7S9MoDhuA6mlfq
+ eV7ZAmPH7P+VQssR4b8+xoVJPsfZqYz+8T3WBzB8bAYOCFggqVxehZhOOI/9SjIU3DH4Vmu5
+ uIHZITNOHN
+X-Talos-CUID: 9a23:vDyXiWGQvnwhDdQxqmJJ0ldXCsQadkHW73nWIECACjk2Rr+aHAo=
+X-Talos-MUID: 9a23:5i/d2wkznYCCEalP/lR5dnpZGuVy04qoJXkrz4weuOWDaTVOJg+S2WE=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.27,174,1787004000"; 
+   d="scan'208";a="156757117"
+Received: from unknown (HELO gm-smtp10.centrum.cz) ([46.255.225.77])
+  by antispam62.centrum.cz with ESMTP; 23 Oct 2026 19:56:32 +0200
+Received: from blackbox (188-167-137-159.dynamic.chello.sk [188.167.137.159])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by gm-smtp10.centrum.cz (Postfix) with ESMTPSA id CB8DA80911AD;
+	Fri, 23 Oct 2026 19:56:31 +0200 (CEST)
+Date: Fri, 23 Oct 2026 19:56:16 +0200
+From: Tomas Tonhauser <t.tonhauser@pobox.sk>
+To: Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] wifi: ath9k: clear destination mask for
+ non-aggregate frames
+Message-ID: <atufwCYLtoF3UaMk@blackbox>
+References: <20261003192957.761090-1-t.tonhauser@pobox.sk>
+ <87mrs9v3aa.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -67,93 +131,129 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: David Mestre <dev@davidmestre.net>
-Subject: [PATCH] wifi: mt76: mt7996: handle station airtime counter resets
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - s143.cyon.net
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - davidmestre.net
-X-Get-Message-Sender-Via: s143.cyon.net: authenticated_id: dev@davidmestre.net
-X-Authenticated-Sender: s143.cyon.net: dev@davidmestre.net
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87mrs9v3aa.fsf@toke.dk>
 
-If a WTBL airtime counter resets while the cached baseline remains,
-subtracting the old value produces a large unsigned airtime delta.
-The cached counters are also cleared even when the hardware clear
-operation fails.
+On Mon, Oct 19, 2026 at 10:33:33PM +0200, Toke Høiland-Jørgensen wrote:
+> Tomas Tonhauser <t.tonhauser@pobox.sk> writes:
+> 
+> > Frames to stations without an A-MPDU session (e.g. non-WMM/non-HT
+> > clients) use the non-aggregate path. If the hardware returns such a
+> > frame with ATH9K_TXERR_FILT, ath_tx_complete_buf() reports it to
+> > mac80211 as IEEE80211_TX_STAT_TX_FILTERED. For a station that is not
+> > in powersave, ieee80211_handle_filtered_frame() retries it once and
+> > drops it if it is filtered again.
+> >
+> > The aggregate path re-queues filtered subframes on tid->retry_q and
+> > sets tid->clear_ps_filter, so they are retransmitted until they get
+> > through.
+> >
+> > The result is downlink loss to awake non-WMM stations, while WMM/HT
+> > stations on the same radio are unaffected. On a QCA9563 AP with
+> > ESP8266 clients this caused 20-45% ping loss, with two TXERR_FILT
+> > completions per lost frame and no XRETRY failures.
+> >
+> > Set CLRDMASK on every non-aggregate frame. This restores the
+> > behaviour from before commit 5519541d5a5f ("ath9k: fix powersave
+> > frame filtering/buffering in AP mode") for the non-aggregate path
+> > only. The trade-off is that non-aggregate frames already queued in
+> > hardware when a station enters powersave may be sent to the sleeping
+> > station instead of being filtered.
+> >
+> > Assisted-by: LLM
+> > Signed-off-by: Tomas Tonhauser <t.tonhauser@pobox.sk>
+> > ---
+> > RFC: is this direction acceptable, or is one of the alternatives
+> > below preferred?
+> 
+> Hmm, no, I don't think unconditionally clearing the filter is the right
+> thing to do. See below.
 
-Handle backwards counters while preserving normal modular wraparound.
-Clear the cached counters only after a successful hardware clear.
+Understood, thanks for looking at it.
 
-Signed-off-by: David Mestre <dev@davidmestre.net>
----
-  .../net/wireless/mediatek/mt76/mt7996/mac.c   | 27 ++++++++++++++-----
-  1 file changed, 21 insertions(+), 6 deletions(-)
+> 
+> > Setup: TP-Link EAP225 v3 (QCA9563, 2.4 GHz), OpenWrt 25.12.5,
+> > backports 6.18.26. Clients: ESP8266 running Tasmota, modem sleep
+> > disabled, associated without WMM (legacy rates).
+> >
+> > Ping from the AP to one client, 30 packets, 14 lost:
+> >
+> >   station "tx failed":             +14
+> >   station "tx retries":            +2
+> >   ath9k/xmit BE "TXERR Filtered":  +27
+> >   ath9k/xmit BE "MPDUs XRetried":  +0
+> >
+> > A second run: 12 lost, Filtered +28, XRetried +0.
+> >
+> > Ruled out:
+> >  - Client powersave: PS_STA never set in debugfs station flags, and a
+> >    monitor capture showed no client frames with the PM bit set.
+> >  - airtime_flags=0, aql_enable=0, nohwcrypt=1: no change.
+> >  - RF: signal -50..-64 dBm; a WMM/HT client on the same radio has
+> >    0 tx failed out of ~10k frames; the same ESP8266 hardware behind
+> >    an ath10k AP has no loss.
+> >
+> > With the patch: 500 pings to each of five ESP8266 clients, 0 lost.
+> >
+> > Open question: what sets the destination mask for stations that are
+> > awake and never hit XRETRY? 5519541d5a5f removed an unconditional
+> > CLRDMASK commented "needed for crypto errors", so the hardware may
+> > set it in other cases too.
+> 
+> This is a good question. Maybe Felix knows?
+> 
+> Regardless, of your alternatives:
+> 
+> > Alternatives:
+> >  1. Set CLRDMASK only when the station is not sleeping.
+> >  2. Re-queue filtered non-aggregate frames in ath9k for awake
+> >     stations, like the aggregate path does.
+> >  3. Allow more than one software retry in
+> >     ieee80211_handle_filtered_frame() for awake stations.
+> 
+> I think 2. makes the most sense. In fact, AFAICT, there is currently
+> *no* software retry logic for non-aggregated frames in ath9k? So you hit
+> it due to this weird filtering issue, but presumably random interference
+> can also just lead to losses if they exhaust the hardware retry chain.
+> But maybe this is not something that's noticeable because the hardware
+> retry chain is usually enough? Do you notice any errors/retries in your
+> AP stats after applying the fix (in normal usage, not just with a ping
+> test)?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c 
-b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index f36da54..f8cde54 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -72,6 +72,21 @@ u32 mt7996_mac_wtbl_lmac_addr(struct mt7996_dev *dev, 
-u16 wcid, u8 dw)
-  	return MT_WTBL_LMAC_OFFS(wcid, dw);
-  }
+AP uptime with the patch is ~20 days, normal usage (mostly MQTT,
+plus OTA firmware updates of all ESP devices early on).
+Apart from ESP's and the camera (which are fixed), there are mobile
+devices which come and go.
 
-+static u32 mt7996_airtime_delta(u32 curr, u32 previous)
-+{
-+	u32 delta = curr - previous;
-+
-+	/* WTBL counters can be cleared while the link's cached baseline
-+	 * remains. Do not charge an unsigned underflow as airtime. Normal
-+	 * counters are cleared at BIT(30); genuine wrap still has a small
-+	 * modular delta and is preserved.
-+	 */
-+	if (curr < previous && delta > BIT(31))
-+		return curr;
-+
-+	return delta;
-+}
-+
-  static void mt7996_mac_sta_poll(struct mt7996_dev *dev)
-  {
-  	static const u8 ac_to_tid[] = {
-@@ -126,8 +141,10 @@ static void mt7996_mac_sta_poll(struct mt7996_dev *dev)
-  			msta_link->airtime_ac[i] = mt76_rr(dev, addr);
-  			msta_link->airtime_ac[i + 4] = mt76_rr(dev, addr + 4);
+Per station (counters since association, ~19 days):
+  10 x ESP8266 (non-WMM): tx failed 21..84 each,
+                          0.018-0.057% of tx packets,
+                          signal -50..-83 dBm, many hw retries
+  ESP32 (WMM/HT):         1 failed / 1.8M tx packets
+  IP camera (WMM/HT):     0 failed / 268k tx packets
 
--			tx_time[i] = msta_link->airtime_ac[i] - tx_last;
--			rx_time[i] = msta_link->airtime_ac[i + 4] - rx_last;
-+			tx_time[i] = mt7996_airtime_delta(msta_link->airtime_ac[i],
-+							  tx_last);
-+			rx_time[i] = mt7996_airtime_delta(msta_link->airtime_ac[i + 4],
-+							  rx_last);
+ath9k xmit, BE queue, 20 days:
+  MPDUs Completed:   3776047   MPDUs XRetried:   6130 (0.16%)
+  AMPDUs Completed:  111572010 AMPDUs XRetried:  4605
+  TXERR Filtered:    343
 
-  			if ((tx_last | rx_last) & BIT(30))
-  				clear = true;
-@@ -135,12 +152,10 @@ static void mt7996_mac_sta_poll(struct mt7996_dev 
-*dev)
-  			addr += 8;
-  		}
+So the filtering losses are gone, but non-aggregated frames still
+fail after the hardware retry chain far more often than aggregated
+ones, which matches your point about missing software retries for
+them.
 
--		if (clear) {
--			mt7996_mac_wtbl_update(dev, idx,
--					       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
-+		if (clear && mt7996_mac_wtbl_update(dev, idx,
-+						    MT_WTBL_UPDATE_ADM_COUNT_CLEAR))
-  			memset(msta_link->airtime_ac, 0,
-  			       sizeof(msta_link->airtime_ac));
--		}
+> 
+> Anyway, I don't think it's unreasonable to add the same retry logic to
+> non-aggregated frames that we have for aggregated ones, and the retry_q
+> seems like the simplest way to do that.
 
-  		if (!wcid->sta)
-  			continue;
-base-commit: 637f84201a14c659221f0e265e4946acdd5c3b1a
--- 
-2.56.0.windows.1
+I'll work on re-queueing failed/filtered non-aggregate frames on
+tid->retry_q for awake stations and send a v2.
+
+> 
+> -Toke
+
+Thanks,
+Tomas
