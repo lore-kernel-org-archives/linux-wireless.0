@@ -1,84 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792796427;
-	b=24+TP4SbENnBqQ3ggTirQN8qMAVcs0DfNXG70ytjEhJz4rHyhNcB2p4kOcMVqHuZZcbF
-	 upO2evHZmHPk2fHi09zv/mk0Hjd1NInVXFjoS4JF5Zpn+t28/zHRKR2IBsUfwjIYKUHtl
-	 Ikzf0p88RFFg3lgB9OTTOeaA3EVdi+M2cTfPSUPOMJ8lleYi1xiCqsGtrfz0GWyBbMOwz
-	 qAMupuUQbA8cZgkTiYx42cekcVa0TW1rBlTaSuFAP+yskBpVBL/6ZaXAR3ielA7E7DZH+
-	 eLyp7zrkz+pGWTtM1PmA9r08dFsdZ40oRj/CgNZ3+iFazo2QK4UMJ92S1mM0B6qBP9A==
+	t=1792796479;
+	b=MdYqqp8K7oIA+qLxjBVUYB7ycXXrtvRP7yiOKnfYAMWIEDEznnSlFbNPLVkEGHeLm63M
+	 8F28+oRZ0kr2u1oLvmnEBtOjgmlwkUDYuy8645XEIZ9hqgk9mO0Jsd0zGHpEzOHPTTO/X
+	 vvxWp5ZGFCcId5+GbYrKwPDZB7liSfQrshA4BZS15vRxNO02qkpC9DVglP2lllNtySCzF
+	 5yF0cMPnaIGfxbTvnVn3/a5aNRMROZEHcJ/KXXAXItVF/fyGNOAXr5rAyW1KeH7iU73i8
+	 Ra5TDPijjuFCX4oGJVFvYGU/kw8rTmLDwhCOctWv1aMehyaH+GAvM1vCeTtlWhLXZDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792796427;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792796479;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
 	 MIME-Version:User-Agent:Subject:From:To:Cc:References:
 	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=S3Jeh70+ic8OpQA+7kcV7KiSFvtoQYOC+EJkjcuEgm8=;
-	b=q0kXSDyfMYpKSkASs8waR9IlO5O+Vqf8kkZ1Uuuu0JocTzFCaaEycb5+DpgHu0lIwUf0
-	 V4w77p5jzW3Ybfv1lR3XF2AlpfKDoZlvLBOuf9A0UBf2lUxkCGhZdYktnT4PUqaavkZ9A
-	 slZZ0JZvA5ENt6Ee48mTIxndkXWgLrJeBbX1/PKbyqGwTYNFIb2IFUBAgAn/51RqW5RBu
-	 RzDmyOBJhTPaydtoY9XkudjlO/EgAKbGygK50EqYR4euvUGWb0VLjV3BQOYwJ7tgCOhwe
-	 Ca/pPd2WDkiIVg5X1I4s3pCLy8KzXDi3Enx7yUreZmNBi5iLwN7ZW9Aqne/lfBwzI9Q==
+	bh=tTSDRkaddFN6NJuzDVU53nSBAXWOWOdDfoviQEOmVmA=;
+	b=iCBE43JPg9S276paVaLxrgad5wGkYaCOU6MiZwVljhipj8tSiL+pyoxaQTxZMIZeMn0W
+	 Bcqge3rViwf1dLebeE+1uDFgOfrdxMyoImN80sfQyvg83uglUFg55DixVXwrIvey4Aq3Y
+	 3pfhTwKQ6aUcC7DgC5d7A9i7VK9o6Z2j5iVCg+PXrVWeLd69peQZ/5ALoP2ntSbuQ/sC+
+	 0+2NKd4d31rcS4gBWCSHdoxtPdZLbe5MFIL5qxWDLqYA9tySBq8XDu6l90yJQI4pbEAmM
+	 kHf1XCDHjlSfWD/Adhovg1hliykzkh42JJstG+T2f9ebzuDo2YKE1ttkfP7lowqiWJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="WcKv8/mv";
-	arc=none smtp.remote-ip=209.85.221.54
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=kkIp0YTd;
+	arc=none smtp.remote-ip=209.85.128.52
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D21606A31D
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 23:00:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04D21606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B446E606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 23:01:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B446E606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=WcKv8/mv
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48b042c0759so896974f8f.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 16:00:26 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=kkIp0YTd
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a218c463d1so6623645e9.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 16:01:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792796425; x=1793401225; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792796477; x=1793401277; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:content-language
          :references:cc:to:from:subject:user-agent:mime-version:date
          :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=S3Jeh70+ic8OpQA+7kcV7KiSFvtoQYOC+EJkjcuEgm8=;
-        b=WcKv8/mvCuMPO4fJYYrN4scTjbdSx885sUmK1SdvpwlmuS2P9xpjYausd2ttV3odPT
-         +Wpjo8Gxf7oz3b++SJhRW/71mirByLeUTr5ZoNW6503x2PcY4Wthi3O6VAq8rNUnNdv5
-         zy5LT+d0U+lzlFIcQqo6nu1A8VWR6mXdjTgfxqo/EuixgRsjvwCHYToPYJiCjZyQs3md
-         iq8kYXFn/bSCfyKvvSi0PYMja5ZZa32Ps9Odf+d6c3qpK6GAjNdTSdQ8QB5S7DG2S1is
-         4zdM0HTpP2l2xrmi7Z1CNJwjGo1wyICssXuQ9A7vxomXynovH6YHZa2CtdmSVBcjJCwg
-         doGw==
+        bh=tTSDRkaddFN6NJuzDVU53nSBAXWOWOdDfoviQEOmVmA=;
+        b=kkIp0YTd/Y3qvfZ+t3+Qb6o4nIzeT0JkwJA9Pwn6dpiLVujACex3WxNRZptRD+UHnf
+         VcKSLM1gOFb1QSPUnyKboZ9mUzFwMujKcZDP65546mGYO/W2+HfKeIyD1YU5BUmjFw5n
+         jUitCYkqEbaBbN7Lc0XvunJ8ig/ih6CXw8rH3EO0TWvXhvwFVtdPiEdqRyjsUdQ9SQ/4
+         LI3hh2kTEW2tUJeiQMWs76fVkB6PGb65Vl/OpedOXI7YIevyug1yJ7FVeoMxCm/Gq4Qs
+         7xpOJTyiZ9Epp0WLkIJWpxQJfZk573xVFhv7wWPXadBKwU9uVgpjYtyboNN/FQf7/ipt
+         SSxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792796425; x=1793401225;
+        d=1e100.net; s=20260707; t=1792796477; x=1793401277;
         h=content-transfer-encoding:content-type:in-reply-to:content-language
          :references:cc:to:from:subject:user-agent:mime-version:date
          :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=S3Jeh70+ic8OpQA+7kcV7KiSFvtoQYOC+EJkjcuEgm8=;
-        b=LI2Zkwbtw3XSO3Gh0ZG+T3XiaFBY3UI0lOfxMn3OvIQfAnriWDr460BKG7ttRJSTY6
-         82IP5LPnsUOc7hDCblhEpcr8hsZ8xv0seq31sgOdHqByMHQlMKEl9C02dJtWWaJHfoR6
-         9tNMuUl8BTLUJdzGzg/x6F+rDNjrMzr/5DuZ+C+4bGLIBRS1QueKEoSfC3fx474ug1XW
-         A9bx9+oL7SJf93IlxDUyEdPwdJPaBH68Zthn1OXHjAtr8uqYww34eMrgMIgMlrXUjP3C
-         8DVCtULH7mR/JOFpkMRddXTYNJWKOzLnLQ97uYvdXqiyvsZdoP4KUd+35SU1CLXPmfMB
-         ia7w==
-X-Gm-Message-State: AFq9FYKmV/y0Qh2EzDJ6WrbOHgbAYhyYL3hHOXSuSG1Wn/dZyU4sm2Hg
-	CiCTz/BRYdpmFYQEW7HC2B7o2eiFmT3/+r4SCTOCpn8W1p6D7dPRf8aC7Bp0fg==
-X-Gm-Gg: AYBFou1HoaeikPAU9R2wADP7kOY38+XaHFIZyhfFoww/r9g7dE+rX/Xa4uiTg9gKogX
-	C/aELjEXvSZW0ekwr7GuuUyz+GWBTH0XBmzs9SByoM8PAY+YPZ8ZW8e17qdnTJX7Fo5CFf95D3H
-	wswVQxs7j6Kl7Gdthpep2k2/J1mbsWYa/ZTTz+TF/+xA92CcI9rOrKWldid+XoLi5cMK3AQtEtq
-	msml7PgVlFIOnqr77h/X0GeTnRFklGwtoYD43cK6BPbprY/jedcUGwPgwMX+p3hPEYLgKmqac4Q
-	P6Jt54at0W8j4OUyyz5nYOTRa/MXLwj5WMb9tmYMPUMeD7eh8xBmpT6nqlw1iwknsXkxOeRFEAK
-	1ZMsVnGBLKiK8zsJoquJP41pBhG40fGy2kAF9vweGAGUFvP9a3jdh4I9R7n59NdH6KfmP4/LxPt
-	6gPYYxaztJ/YC5tmInOSAXy5u5VpsFdBEGpG7N2XSWTNks5EvV516zmngLQwYIaYXlfwRLPuY/T
-	QhSTwj3n07OC/rYkvS6NvbxhoQcbJd7j11MYhmzkwdmsXzYmX3eTmknt4iOoe4=
-X-Received: by 2002:a05:600c:8708:b0:4a2:fe11:9a75 with SMTP id 5b1f17b1804b1-4a35aae43b4mr5631335e9.0.1792796425184;
-        Fri, 23 Oct 2026 16:00:25 -0700 (PDT)
+        bh=tTSDRkaddFN6NJuzDVU53nSBAXWOWOdDfoviQEOmVmA=;
+        b=sYjTJos8FpCijn58YF+qp0IbuTNVNXhiWjHB38skeRoOJmuIOL0+NJVQYt2n4K7wOE
+         5JvlujpqV+dwvlC39z4Kcp+mdPpNt6CDyNdHf+SRdTiB+IoRjbvq1hMlUB3LCbHLT8kU
+         U04dNh5BArRKi3rfFsZJ3ifbH5BvGwMHprUthXeB64sDUfMF8sO7vej0f6q7/tUwC1Ap
+         6I+C6ugBi4GsBMPDZwG1jfMjviPe5hS2zFbVi1D91LJmE8w4AVAMpeQhx+iPjJ0ZKkRz
+         7rm2Q7L8jFl9N1xD206IUg0u6RmYkOdB53bRNmI5j+DL7rz1eSrU6G2AiHogAqNzjED0
+         5z4Q==
+X-Gm-Message-State: AFq9FYI87cKsG/edxYpJvkSPORYc+NYog8x2QVt9W3mdVqxcmi400gj+
+	pu/1KvuOCx2FPXTt4Po2HzQc+quYHpiaKIZ6ki59AQpDYrbrAOgGZC4uqwCVdQ==
+X-Gm-Gg: AYBFou3kfamTnBWt3q0BNRhj03LZwYy3WESaeeA1OX9TpyjEC+gHEGpMFCiPVXsE70g
+	DFTRzxZuwwLXilCdoeYUMCfVr8RniRXDcrHHBJTz05d54d6eONnBogKCN8xmYZHJ1PY4l+9icWN
+	1LqVz6exKbHr4NHf1nFJcjDAJa8wkmb6WI/TNuAdDndIBhnzvGnshai9pwVlCih6KFopV1blL66
+	l2dGR7HWjoYzd4xsfQJZPvOT9v/CpqpwCMZMCMvEVbLDFC7UJ5/pDMBI/f2AwI2hlxCJ7RTOXoD
+	U9hnygR4sKuZ37LI4d4q1KI92ZPN5NkbDJMJ/cSYE0+47JMPaU2UyJb/cKnLZptixvcSmRa5t9t
+	9V/PqUHGwsksmN0e31gbWFnyhWV3Y+55jPTdSVAEMwP9lhPYIbvgEINKDi5js0ACDgu87dRLfyB
+	D7qvimFP+83Hx7MMpWiAhCnnzADB4AW+2XFxX8b/YExNirC09cO/X9xKtbkGx7WMxjVI6lIN5zo
+	hQd1mqeXBrlLY77Ub+voNh3PyKOaxuRBjB9s4Pxzeh5afv8wm7hgKFbFubxhJ4=
+X-Received: by 2002:a05:600c:4e87:b0:49f:c199:e1e2 with SMTP id 5b1f17b1804b1-4a35acbea9amr5691605e9.28.1792796476835;
+        Fri, 23 Oct 2026 16:01:16 -0700 (PDT)
 Received: from [192.168.1.50] ([81.196.40.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a59d238sm11489515e9.14.2026.10.23.16.00.23
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a0aa097sm14944355e9.3.2026.10.23.16.01.15
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Oct 2026 16:00:23 -0700 (PDT)
-Message-ID: <572b1037-c5f6-447b-94de-21fc62565303@gmail.com>
-Date: Sat, 24 Oct 2026 02:00:22 +0300
+        Fri, 23 Oct 2026 16:01:16 -0700 (PDT)
+Message-ID: <fc308de1-a470-4890-a86a-d8936e093bd5@gmail.com>
+Date: Sat, 24 Oct 2026 02:01:15 +0300
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -89,8 +89,7 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH rtw-next 2/5] wifi: rtw88: Pass TX descriptor to
- rtw_tx_fill_tx_desc()
+Subject: [PATCH rtw-next 3/5] wifi: rtw88: pci: Introduce struct rtw_pci_gen
 From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Cc: Ping-Ke Shih <pkshih@realtek.com>
@@ -100,355 +99,521 @@ In-Reply-To: <2033f1b1-fb12-4a04-aef4-923590e64463@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-The current code assumes the TX descriptor is in the same buffer as
-the 802.11 frame, but that's not true for the RTL8821AE. It uses an
-older design which keeps the TX descriptor in the TX ring.
-
-In order to support the RTL8821AE (PCIe) give rtw_tx_fill_tx_desc() a
-pointer to struct rtw_tx_desc instead of struct sk_buff.
-
-Also pass the TX descriptor to rtw_tx_fill_txdesc_checksum() as
-pointer to struct rtw_tx_desc instead of u8.
+Move a few functions into a new struct rtw_pci_gen in order to add
+support for RTL8821AE and RTL8812AE. That is an older generation of
+chips which handle the PCI communications differently.
 
 Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c       |  4 ++--
- drivers/net/wireless/realtek/rtw88/main.h     |  3 ++-
- drivers/net/wireless/realtek/rtw88/pci.c      |  4 ++--
- drivers/net/wireless/realtek/rtw88/rtw8723b.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8723x.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8723x.h |  4 ++--
- drivers/net/wireless/realtek/rtw88/rtw8812a.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8814a.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8821a.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  2 +-
- drivers/net/wireless/realtek/rtw88/sdio.c     |  4 ++--
- drivers/net/wireless/realtek/rtw88/tx.c       |  4 ++--
- drivers/net/wireless/realtek/rtw88/tx.h       | 10 +++++-----
- drivers/net/wireless/realtek/rtw88/usb.c      | 17 +++++++++--------
- 16 files changed, 34 insertions(+), 32 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.c      | 109 ++++++++++++------
+ drivers/net/wireless/realtek/rtw88/pci.h      |  35 ++++++
+ .../net/wireless/realtek/rtw88/rtw8723de.c    |   7 +-
+ .../net/wireless/realtek/rtw88/rtw8814ae.c    |   7 +-
+ .../net/wireless/realtek/rtw88/rtw8821ce.c    |   9 +-
+ .../net/wireless/realtek/rtw88/rtw8822be.c    |   7 +-
+ .../net/wireless/realtek/rtw88/rtw8822ce.c    |   9 +-
+ 7 files changed, 143 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 945fedcd375b..3a9e1325a519 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -1302,12 +1302,12 @@ static void rtw_fill_rsvd_page_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
- {
- 	struct rtw_tx_pkt_info pkt_info = {0};
- 	const struct rtw_chip_info *chip = rtwdev->chip;
--	u8 *pkt_desc;
-+	struct rtw_tx_desc *pkt_desc;
- 
- 	rtw_tx_rsvd_page_pkt_info_update(rtwdev, &pkt_info, skb, type);
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
--	rtw_tx_fill_tx_desc(rtwdev, &pkt_info, skb);
-+	rtw_tx_fill_tx_desc(rtwdev, &pkt_info, pkt_desc);
- }
- 
- static inline u8 rtw_len_to_page(unsigned int len, u16 page_size)
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index d59f6e323adf..6287994f9b31 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -51,6 +51,7 @@ extern const struct ieee80211_ops rtw_ops;
- 
- struct rtw_dev;
- struct rtw_debugfs;
-+struct rtw_tx_desc;
- 
- enum rtw_hci_type {
- 	RTW_HCI_TYPE_PCIE,
-@@ -913,7 +914,7 @@ struct rtw_chip_ops {
- 	/* for USB/SDIO only */
- 	void (*fill_txdesc_checksum)(struct rtw_dev *rtwdev,
- 				     struct rtw_tx_pkt_info *pkt_info,
--				     u8 *txdesc);
-+				     struct rtw_tx_desc *txdesc);
- 
- 	/* for coex */
- 	void (*coex_set_init)(struct rtw_dev *rtwdev);
 diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index c2d6d3a939cd..d8c5c11bf728 100644
+index d8c5c11bf728..c51ad15cfba7 100644
 --- a/drivers/net/wireless/realtek/rtw88/pci.c
 +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -811,7 +811,7 @@ static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
- 	u32 tx_buf_desc_sz = chip->tx_buf_desc_sz;
- 	u32 size;
- 	u32 psb_len;
--	u8 *pkt_desc;
-+	struct rtw_tx_desc *pkt_desc;
- 	struct rtw_pci_tx_buffer_desc *buf_desc;
- 
- 	ring = &rtwpci->tx_rings[queue];
-@@ -826,7 +826,7 @@ static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 	memset(pkt_desc, 0, tx_pkt_desc_sz);
- 	pkt_info->qsel = rtw_pci_get_tx_qsel(skb, queue);
--	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
-+	rtw_tx_fill_tx_desc(rtwdev, pkt_info, pkt_desc);
- 	dma = dma_map_single(&rtwpci->pdev->dev, skb->data, skb->len,
- 			     DMA_TO_DEVICE);
- 	if (dma_mapping_error(&rtwpci->pdev->dev, dma))
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-index 8bb9c03d769c..af78277fcb17 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
-@@ -2343,7 +2343,7 @@ static void rtw8723b_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
- 
- static void rtw8723b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
+@@ -254,6 +254,8 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+ 				struct rtw_pci_rx_ring *rx_ring,
+ 				u8 desc_size, u32 len)
  {
- 	/* Unlike the shared 8723x helper, the checksum is not inverted here. */
- 	fill_txdesc_checksum_common(txdesc, 16);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723x.c b/drivers/net/wireless/realtek/rtw88/rtw8723x.c
-index 97e6f6a62c0d..9a039cd5c299 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723x.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723x.c
-@@ -681,7 +681,7 @@ void __rtw8723x_pwrtrack_set_xtal(struct rtw_dev *rtwdev, u8 therm_path,
- static
- void __rtw8723x_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 				     struct rtw_tx_pkt_info *pkt_info,
--				     u8 *txdesc)
-+				     struct rtw_tx_desc *txdesc)
- {
- 	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
- 	__le16 chksum = 0;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723x.h b/drivers/net/wireless/realtek/rtw88/rtw8723x.h
-index e07b6ca99b3d..5e674784dfb1 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723x.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723x.h
-@@ -154,7 +154,7 @@ struct rtw8723x_common {
- 	void (*coex_cfg_init)(struct rtw_dev *rtwdev);
- 	void (*fill_txdesc_checksum)(struct rtw_dev *rtwdev,
- 				     struct rtw_tx_pkt_info *pkt_info,
--				     u8 *txdesc);
-+				     struct rtw_tx_desc *txdesc);
- 	void (*debug_txpwr_limit)(struct rtw_dev *rtwdev,
- 				  struct rtw_txpwr_idx *table,
- 				  int tx_path_count);
-@@ -510,7 +510,7 @@ static inline void rtw8723x_coex_cfg_init(struct rtw_dev *rtwdev)
- static inline
- void rtw8723x_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 				   struct rtw_tx_pkt_info *pkt_info,
--				   u8 *txdesc)
-+				   struct rtw_tx_desc *txdesc)
- {
- 	rtw8723x_common.fill_txdesc_checksum(rtwdev, pkt_info, txdesc);
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8812a.c b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-index 781b66ccde67..61afaa02b857 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8812a.c
-@@ -886,7 +886,7 @@ static void rtw8812a_led_set(struct led_classdev *led,
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
+ 	struct sk_buff *skb = NULL;
+ 	dma_addr_t dma;
+@@ -269,6 +271,11 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+ 		return -ENOMEM;
+ 	}
+ 	rx_ring->r.head = head;
++	rx_ring->r.dma = dma;
++	rx_ring->r.len = len;
++	rx_ring->r.desc_size = desc_size;
++	rx_ring->r.wp = 0;
++	rx_ring->r.rp = 0;
  
- static void rtw8812a_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
+ 	for (i = 0; i < len; i++) {
+ 		skb = dev_alloc_skb(buf_sz);
+@@ -280,7 +287,7 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+ 
+ 		memset(skb->data, 0, buf_sz);
+ 		rx_ring->buf[i] = skb;
+-		ret = rtw_pci_reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
++		ret = pci_gen->reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
+ 		if (ret) {
+ 			allocated = i;
+ 			dev_kfree_skb_any(skb);
+@@ -288,12 +295,6 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+ 		}
+ 	}
+ 
+-	rx_ring->r.dma = dma;
+-	rx_ring->r.len = len;
+-	rx_ring->r.desc_size = desc_size;
+-	rx_ring->r.wp = 0;
+-	rx_ring->r.rp = 0;
+-
+ 	return 0;
+ 
+ err_out:
+@@ -316,6 +317,7 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+ static int rtw_pci_init_trx_ring(struct rtw_dev *rtwdev)
  {
- 	fill_txdesc_checksum_common(txdesc, 16);
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8814a.c b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-index fa02aa299b5e..fac69e8fb222 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8814a.c
-@@ -2041,7 +2041,7 @@ static void rtw8814a_led_set(struct led_classdev *led,
- 
- static void rtw8814a_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
- {
- 	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821a.c b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-index 6096d3b8e41b..f0987196caee 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
-@@ -733,7 +733,7 @@ static void rtw8821a_led_set(struct led_classdev *led,
- 
- static void rtw8821a_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
- {
- 	fill_txdesc_checksum_common(txdesc, 16);
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index ee689fa3d87f..da67a6845fd5 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -1230,7 +1230,7 @@ static void rtw8821c_led_set(struct led_classdev *led,
- 
- static void rtw8821c_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
- {
- 	fill_txdesc_checksum_common(txdesc, 16);
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index a56c8befa077..a33ed11b2a63 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -1593,7 +1593,7 @@ static void rtw8822b_led_set(struct led_classdev *led,
- 
- static void rtw8822b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
- {
- 	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 32d9709f2c24..d2d98ae98e33 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -4562,7 +4562,7 @@ static void rtw8822c_led_set(struct led_classdev *led,
- 
- static void rtw8822c_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					  struct rtw_tx_pkt_info *pkt_info,
--					  u8 *txdesc)
-+					  struct rtw_tx_desc *txdesc)
- {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	struct rtw_pci_tx_ring *tx_ring;
+ 	struct rtw_pci_rx_ring *rx_ring;
  	const struct rtw_chip_info *chip = rtwdev->chip;
- 	size_t words;
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 2f0a6739df41..d9a73d30b7f5 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -1180,8 +1180,8 @@ static void rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	unsigned long data_addr, aligned_addr;
-+	struct rtw_tx_desc *pkt_desc;
- 	size_t offset;
--	u8 *pkt_desc;
- 
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 
-@@ -1207,7 +1207,7 @@ static void rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
- 
- 	pkt_info->qsel = rtw_sdio_get_tx_qsel(rtwdev, skb, queue);
- 
--	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
-+	rtw_tx_fill_tx_desc(rtwdev, pkt_info, pkt_desc);
- 	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
+@@ -329,7 +331,7 @@ static int rtw_pci_init_trx_ring(struct rtw_dev *rtwdev)
+ 	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
+ 		tx_ring = &rtwpci->tx_rings[i];
+ 		len = max_num_of_tx_queue(i);
+-		ret = rtw_pci_init_tx_ring(rtwdev, tx_ring, tx_desc_size, len);
++		ret = pci_gen->init_tx_ring(rtwdev, tx_ring, tx_desc_size, len);
+ 		if (ret)
+ 			goto out;
+ 	}
+@@ -525,7 +527,7 @@ static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
+ 	rtwpci->rx_tag = 0;
  }
  
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 701ed7c4f3f7..49ce16352334 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -33,9 +33,9 @@ void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+-static int rtw_pci_setup(struct rtw_dev *rtwdev)
++static int rtw_pci_reset(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 
+@@ -535,6 +537,14 @@ static int rtw_pci_setup(struct rtw_dev *rtwdev)
+ 	return 0;
  }
  
- void rtw_tx_fill_tx_desc(struct rtw_dev *rtwdev,
--			 struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
-+			 struct rtw_tx_pkt_info *pkt_info,
-+			 struct rtw_tx_desc *tx_desc)
++static int rtw_pci_setup(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
++
++	return pci_gen->reset(rtwdev);
++}
++
+ static void rtw_pci_dma_release(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
  {
--	struct rtw_tx_desc *tx_desc = (struct rtw_tx_desc *)skb->data;
- 	bool more_data = false;
- 
- 	if (pkt_info->qsel == TX_DESC_QSEL_HIGH)
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
-index 168f48e87853..af031c02b4b7 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.h
-+++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -97,7 +97,8 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
- 			    struct ieee80211_sta *sta,
- 			    struct sk_buff *skb);
- void rtw_tx_fill_tx_desc(struct rtw_dev *rtwdev,
--			 struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
-+			 struct rtw_tx_pkt_info *pkt_info,
-+			 struct rtw_tx_desc *tx_desc);
- void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
- void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src);
- void rtw_tx_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
-@@ -117,11 +118,10 @@ enum rtw_tx_queue_type rtw_tx_ac_to_hwq(enum ieee80211_ac_numbers ac);
- enum rtw_tx_queue_type rtw_tx_queue_mapping(struct sk_buff *skb);
- 
- static inline
--void fill_txdesc_checksum_common(u8 *txdesc, size_t words)
-+void fill_txdesc_checksum_common(struct rtw_tx_desc *tx_desc, size_t words)
- {
- 	__le16 chksum = 0;
--	__le16 *data = (__le16 *)(txdesc);
--	struct rtw_tx_desc *tx_desc = (struct rtw_tx_desc *)txdesc;
-+	__le16 *data = (__le16 *)(tx_desc);
- 
- 	le32p_replace_bits(&tx_desc->w7, 0, RTW_TX_DESC_W7_TXDESC_CHECKSUM);
- 
-@@ -134,7 +134,7 @@ void fill_txdesc_checksum_common(u8 *txdesc, size_t words)
- 
- static inline void rtw_tx_fill_txdesc_checksum(struct rtw_dev *rtwdev,
- 					       struct rtw_tx_pkt_info *pkt_info,
--					       u8 *txdesc)
-+					       struct rtw_tx_desc *txdesc)
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index a1b58061eb46..599e80650c65 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -38,7 +38,7 @@ static void rtw_usb_fill_tx_checksum(struct rtw_usb *rtwusb,
- 
- 	le32p_replace_bits(&tx_desc->w7, agg_num, RTW_TX_DESC_W7_DMA_TXAGG_NUM);
- 	pkt_info.pkt_offset = le32_get_bits(tx_desc->w1, RTW_TX_DESC_W1_PKT_OFFSET);
--	rtw_tx_fill_txdesc_checksum(rtwdev, &pkt_info, skb->data);
-+	rtw_tx_fill_txdesc_checksum(rtwdev, &pkt_info, tx_desc);
+ 	struct rtw_pci_tx_ring *tx_ring;
+@@ -710,7 +720,7 @@ static u32 __pci_get_hw_tx_ring_rp(struct rtw_dev *rtwdev, u8 pci_q)
+ 	return FIELD_GET(TRX_BD_IDX_MASK, bd_idx);
  }
  
- static void rtw_usb_reg_sec(struct rtw_dev *rtwdev, u32 addr, __le32 *data)
-@@ -511,6 +511,7 @@ static int rtw_usb_write_data(struct rtw_dev *rtwdev,
- 			      u8 *buf)
+-static void __pci_flush_queue(struct rtw_dev *rtwdev, u8 pci_q, bool drop)
++static void rtw_pci_flush_queue(struct rtw_dev *rtwdev, u8 pci_q, bool drop)
  {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_tx_desc *pkt_desc;
- 	struct sk_buff *skb;
- 	unsigned int size;
- 	u8 qsel;
-@@ -525,10 +526,10 @@ static int rtw_usb_write_data(struct rtw_dev *rtwdev,
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 	struct rtw_pci_tx_ring *ring = &rtwpci->tx_rings[pci_q];
+@@ -738,6 +748,9 @@ static void __pci_flush_queue(struct rtw_dev *rtwdev, u8 pci_q, bool drop)
+ static void __rtw_pci_flush_queues(struct rtw_dev *rtwdev, u32 pci_queues,
+ 				   bool drop)
+ {
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
++
+ 	u8 q;
  
- 	skb_reserve(skb, chip->tx_pkt_desc_sz);
- 	skb_put_data(skb, buf, size);
--	skb_push(skb, chip->tx_pkt_desc_sz);
--	memset(skb->data, 0, chip->tx_pkt_desc_sz);
--	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
--	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, skb->data);
-+	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
-+	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
-+	rtw_tx_fill_tx_desc(rtwdev, pkt_info, pkt_desc);
-+	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
+ 	for (q = 0; q < RTK_MAX_TX_QUEUE_NUM; q++) {
+@@ -747,7 +760,7 @@ static void __rtw_pci_flush_queues(struct rtw_dev *rtwdev, u32 pci_queues,
+ 			continue;
  
- 	ret = rtw_usb_write_port(rtwdev, qsel, skb,
- 				 rtw_usb_write_port_complete, skb);
-@@ -644,15 +645,15 @@ static int rtw_usb_tx_write(struct rtw_dev *rtwdev,
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_usb_tx_data *tx_data;
--	u8 *pkt_desc;
-+	struct rtw_tx_desc *pkt_desc;
- 	int ep;
+ 		if (pci_queues & BIT(q))
+-			__pci_flush_queue(rtwdev, q, drop);
++			pci_gen->flush_queue(rtwdev, q, drop);
+ 	}
+ }
  
- 	pkt_info->qsel = rtw_usb_tx_queue_mapping_to_qsel(rtwusb, skb);
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
- 	ep = qsel_to_ep(rtwusb, pkt_info->qsel);
--	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
--	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, skb->data);
-+	rtw_tx_fill_tx_desc(rtwdev, pkt_info, pkt_desc);
-+	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
- 	tx_data = rtw_usb_get_tx_data(skb);
- 	tx_data->sn = pkt_info->sn;
+@@ -790,11 +803,12 @@ static void rtw_pci_tx_kick_off_queue(struct rtw_dev *rtwdev,
+ static void rtw_pci_tx_kick_off(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	enum rtw_tx_queue_type queue;
  
+ 	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++)
+ 		if (test_and_clear_bit(queue, rtwpci->tx_queued))
+-			rtw_pci_tx_kick_off_queue(rtwdev, queue);
++			pci_gen->tx_kick_off_queue(rtwdev, queue);
+ }
+ 
+ static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
+@@ -867,28 +881,32 @@ static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
+ 	return 0;
+ }
+ 
++static void rtw_pci_kick_beacon_queue(struct rtw_dev *rtwdev)
++{
++	rtw_write8_set(rtwdev, RTK_PCI_TXBD_BCN_WORK, BIT_PCI_BCNQ_FLAG);
++}
++
+ static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
+ 					u32 size)
+ {
+-	struct sk_buff *skb;
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	struct rtw_tx_pkt_info pkt_info = {0};
+-	u8 reg_bcn_work;
++	struct sk_buff *skb;
+ 	int ret;
+ 
+ 	skb = rtw_tx_write_data_rsvd_page_get(rtwdev, &pkt_info, buf, size);
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	ret = rtw_pci_tx_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
++	ret = pci_gen->tx_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
+ 	if (ret) {
+ 		rtw_err(rtwdev, "failed to write rsvd page data\n");
+ 		return ret;
+ 	}
+ 
+ 	/* reserved pages go through beacon queue */
+-	reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
+-	reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
+-	rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
++	pci_gen->kick_beacon_queue(rtwdev);
+ 
+ 	return 0;
+ }
+@@ -920,10 +938,11 @@ static int rtw_pci_tx_write(struct rtw_dev *rtwdev,
+ {
+ 	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	struct rtw_pci_tx_ring *ring;
+ 	int ret;
+ 
+-	ret = rtw_pci_tx_write_data(rtwdev, pkt_info, skb, queue);
++	ret = pci_gen->tx_write_data(rtwdev, pkt_info, skb, queue);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1174,6 +1193,7 @@ static irqreturn_t rtw_pci_interrupt_threadfn(int irq, void *dev)
+ {
+ 	struct rtw_dev *rtwdev = dev;
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	u32 irq_status[4];
+ 	bool rx = false;
+ 
+@@ -1181,19 +1201,19 @@ static irqreturn_t rtw_pci_interrupt_threadfn(int irq, void *dev)
+ 	rtw_pci_irq_recognized(rtwdev, rtwpci, irq_status);
+ 
+ 	if (irq_status[0] & IMR_MGNTDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_MGMT);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_MGMT);
+ 	if (irq_status[0] & IMR_HIGHDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_HI0);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_HI0);
+ 	if (irq_status[0] & IMR_BEDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BE);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BE);
+ 	if (irq_status[0] & IMR_BKDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BK);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BK);
+ 	if (irq_status[0] & IMR_VODOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VO);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VO);
+ 	if (irq_status[0] & IMR_VIDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VI);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VI);
+ 	if (irq_status[3] & IMR_H2CDOK)
+-		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
++		pci_gen->tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
+ 	if (irq_status[0] & IMR_ROK) {
+ 		rtw_pci_rx_isr(rtwdev);
+ 		rx = true;
+@@ -1385,6 +1405,7 @@ static void rtw_pci_aspm_set(struct rtw_dev *rtwdev, bool enable)
+ static void rtw_pci_link_ps(struct rtw_dev *rtwdev, bool enter)
+ {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 
+ 	/* Like CLKREQ, ASPM is also implemented by two HW modules, and can
+ 	 * only be enabled when host supports it.
+@@ -1401,13 +1422,14 @@ static void rtw_pci_link_ps(struct rtw_dev *rtwdev, bool enter)
+ 
+ 	if ((enter && atomic_dec_if_positive(&rtwpci->link_usage) == 0) ||
+ 	    (!enter && atomic_inc_return(&rtwpci->link_usage) == 1))
+-		rtw_pci_aspm_set(rtwdev, enter);
++		pci_gen->aspm_set(rtwdev, enter);
+ }
+ 
+ static void rtw_pci_link_cfg(struct rtw_dev *rtwdev)
+ {
+-	const struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
++	const struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct pci_dev *pdev = rtwpci->pdev;
+ 	u16 link_ctrl;
+ 	int ret;
+@@ -1441,7 +1463,7 @@ static void rtw_pci_link_cfg(struct rtw_dev *rtwdev)
+ 	}
+ 
+ 	if (link_ctrl & PCI_EXP_LNKCTL_CLKREQ_EN)
+-		rtw_pci_clkreq_set(rtwdev, true);
++		pci_gen->clkreq_set(rtwdev, true);
+ 
+ 	rtwpci->link_ctrl = link_ctrl;
+ }
+@@ -1664,6 +1686,7 @@ static int rtw_pci_napi_poll(struct napi_struct *napi, int budget)
+ 	struct rtw_pci *rtwpci = container_of(napi, struct rtw_pci, napi);
+ 	struct rtw_dev *rtwdev = container_of((void *)rtwpci, struct rtw_dev,
+ 					      priv);
++	const struct rtw_pci_gen *pci_gen = rtwpci->gen;
+ 	int work_done = 0;
+ 
+ 	if (rtwpci->rx_no_aspm)
+@@ -1672,8 +1695,9 @@ static int rtw_pci_napi_poll(struct napi_struct *napi, int budget)
+ 	while (work_done < budget) {
+ 		u32 work_done_once;
+ 
+-		work_done_once = rtw_pci_rx_napi(rtwdev, rtwpci, RTW_RX_QUEUE_MPDU,
+-						 budget - work_done);
++		work_done_once = pci_gen->rx_napi(rtwdev, rtwpci,
++						  RTW_RX_QUEUE_MPDU,
++						  budget - work_done);
+ 		if (work_done_once == 0)
+ 			break;
+ 		work_done += work_done_once;
+@@ -1689,7 +1713,7 @@ static int rtw_pci_napi_poll(struct napi_struct *napi, int budget)
+ 		 * not be processed immediately. Check whether dma ring is
+ 		 * empty and perform napi_schedule accordingly.
+ 		 */
+-		if (rtw_pci_get_hw_rx_ring_nr(rtwdev, rtwpci))
++		if (pci_gen->get_hw_rx_ring_nr(rtwdev, rtwpci))
+ 			napi_schedule(napi);
+ 	}
+ 	if (rtwpci->rx_no_aspm)
+@@ -1826,6 +1850,7 @@ static const struct dmi_system_id rtw_pci_quirks[] = {
+ int rtw_pci_probe(struct pci_dev *pdev,
+ 		  const struct pci_device_id *id)
+ {
++	struct rtw_pci_info *pci_info = (struct rtw_pci_info *)id->driver_data;
+ 	struct pci_dev *bridge = pci_upstream_bridge(pdev);
+ 	struct ieee80211_hw *hw;
+ 	struct rtw_dev *rtwdev;
+@@ -1843,13 +1868,15 @@ int rtw_pci_probe(struct pci_dev *pdev,
+ 	rtwdev = hw->priv;
+ 	rtwdev->hw = hw;
+ 	rtwdev->dev = &pdev->dev;
+-	rtwdev->chip = (struct rtw_chip_info *)id->driver_data;
++	rtwdev->chip = pci_info->chip_info;
+ 	rtwdev->hci.ops = &rtw_pci_ops;
+ 	rtwdev->hci.type = RTW_HCI_TYPE_PCIE;
+ 
+ 	rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 	atomic_set(&rtwpci->link_usage, 1);
+ 
++	rtwpci->gen = pci_info->pci_gen;
++
+ 	dmi_check_system(rtw_pci_quirks);
+ 
+ 	ret = rtw_core_init(rtwdev);
+@@ -1966,6 +1993,22 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL(rtw_pci_shutdown);
+ 
++const struct rtw_pci_gen rtw_pci_gen_new = {
++	.init_tx_ring = rtw_pci_init_tx_ring,
++	.reset_rx_desc = rtw_pci_reset_rx_desc,
++	.reset = rtw_pci_reset,
++	.flush_queue = rtw_pci_flush_queue,
++	.tx_kick_off_queue = rtw_pci_tx_kick_off_queue,
++	.tx_write_data = rtw_pci_tx_write_data,
++	.kick_beacon_queue = rtw_pci_kick_beacon_queue,
++	.tx_isr = rtw_pci_tx_isr,
++	.get_hw_rx_ring_nr = rtw_pci_get_hw_rx_ring_nr,
++	.rx_napi = rtw_pci_rx_napi,
++	.clkreq_set = rtw_pci_clkreq_set,
++	.aspm_set = rtw_pci_aspm_set,
++};
++EXPORT_SYMBOL(rtw_pci_gen_new);
++
+ MODULE_AUTHOR("Realtek Corporation");
+ MODULE_DESCRIPTION("Realtek PCI 802.11ac wireless driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index 8ffdea11378f..5ab78ba3255d 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -203,8 +203,37 @@ struct rtw_pci_rx_ring {
+ 
+ #define RX_TAG_MAX	8192
+ 
++struct rtw_pci;
++
++struct rtw_pci_gen {
++	int (*init_tx_ring)(struct rtw_dev *rtwdev,
++			    struct rtw_pci_tx_ring *tx_ring,
++			    u8 desc_size, u32 len);
++	int (*reset_rx_desc)(struct rtw_dev *rtwdev, struct sk_buff *skb,
++			     struct rtw_pci_rx_ring *rx_ring, u32 idx,
++			     u32 desc_sz);
++	int (*reset)(struct rtw_dev *rtwdev);
++	void (*flush_queue)(struct rtw_dev *rtwdev, u8 pci_q, bool drop);
++	void (*tx_kick_off_queue)(struct rtw_dev *rtwdev,
++				  enum rtw_tx_queue_type queue);
++	int (*tx_write_data)(struct rtw_dev *rtwdev,
++			     struct rtw_tx_pkt_info *pkt_info,
++			     struct sk_buff *skb,
++			     enum rtw_tx_queue_type queue);
++	void (*kick_beacon_queue)(struct rtw_dev *rtwdev);
++	void (*tx_isr)(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
++		       u8 hw_queue);
++	int (*get_hw_rx_ring_nr)(struct rtw_dev *rtwdev,
++				 struct rtw_pci *rtwpci);
++	u32 (*rx_napi)(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
++		       u8 hw_queue, u32 limit);
++	void (*clkreq_set)(struct rtw_dev *rtwdev, bool enable);
++	void (*aspm_set)(struct rtw_dev *rtwdev, bool enable);
++};
++
+ struct rtw_pci {
+ 	struct pci_dev *pdev;
++	const struct rtw_pci_gen *gen;
+ 
+ 	/* Used for PCI interrupt. */
+ 	spinlock_t hwirq_lock;
+@@ -230,8 +259,14 @@ struct rtw_pci {
+ 	void __iomem *mmap;
+ };
+ 
++struct rtw_pci_info {
++	const struct rtw_chip_info *chip_info;
++	const struct rtw_pci_gen *pci_gen;
++};
++
+ extern const struct dev_pm_ops rtw_pm_ops;
+ extern const struct pci_error_handlers rtw_pci_err_handler;
++extern const struct rtw_pci_gen rtw_pci_gen_new;
+ 
+ int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
+ void rtw_pci_remove(struct pci_dev *pdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.c b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+index c6d0c88e5d81..894b6639ac98 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723de.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+@@ -7,10 +7,15 @@
+ #include "pci.h"
+ #include "rtw8723d.h"
+ 
++static const struct rtw_pci_info rtw_8723de_pci_info = {
++	.chip_info = &rtw8723d_hw_spec,
++	.pci_gen = &rtw_pci_gen_new,
++};
++
+ static const struct pci_device_id rtw_8723de_id_table[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xD723),
+-		.driver_data = (kernel_ulong_t)&rtw8723d_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8723de_pci_info
+ 	},
+ 	{}
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8814ae.c b/drivers/net/wireless/realtek/rtw88/rtw8814ae.c
+index c7436f1c8d40..bfcf4c073a39 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8814ae.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8814ae.c
+@@ -7,10 +7,15 @@
+ #include "pci.h"
+ #include "rtw8814a.h"
+ 
++static const struct rtw_pci_info rtw_8814ae_pci_info = {
++	.chip_info = &rtw8814a_hw_spec,
++	.pci_gen = &rtw_pci_gen_new,
++};
++
+ static const struct pci_device_id rtw_8814ae_id_table[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8813),
+-		.driver_data = (kernel_ulong_t)&rtw8814a_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8814ae_pci_info
+ 	},
+ 	{}
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
+index 52a19cb17daa..b696a83eeb33 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
+@@ -7,14 +7,19 @@
+ #include "pci.h"
+ #include "rtw8821c.h"
+ 
++static const struct rtw_pci_info rtw_8821ce_pci_info = {
++	.chip_info = &rtw8821c_hw_spec,
++	.pci_gen = &rtw_pci_gen_new,
++};
++
+ static const struct pci_device_id rtw_8821ce_id_table[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB821),
+-		.driver_data = (kernel_ulong_t)&rtw8821c_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8821ce_pci_info
+ 	},
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC821),
+-		.driver_data = (kernel_ulong_t)&rtw8821c_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8821ce_pci_info
+ 	},
+ 	{}
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822be.c b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
+index dda597d73219..b6ff59820bc5 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822be.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
+@@ -7,10 +7,15 @@
+ #include "pci.h"
+ #include "rtw8822b.h"
+ 
++static const struct rtw_pci_info rtw_8822be_pci_info = {
++	.chip_info = &rtw8822b_hw_spec,
++	.pci_gen = &rtw_pci_gen_new,
++};
++
+ static const struct pci_device_id rtw_8822be_id_table[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB822),
+-		.driver_data = (kernel_ulong_t)&rtw8822b_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8822be_pci_info
+ 	},
+ 	{}
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+index 7ae95415c224..96ec95582bc8 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+@@ -7,14 +7,19 @@
+ #include "pci.h"
+ #include "rtw8822c.h"
+ 
++static const struct rtw_pci_info rtw_8822ce_pci_info = {
++	.chip_info = &rtw8822c_hw_spec,
++	.pci_gen = &rtw_pci_gen_new,
++};
++
+ static const struct pci_device_id rtw_8822ce_id_table[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822),
+-		.driver_data = (kernel_ulong_t)&rtw8822c_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8822ce_pci_info
+ 	},
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC82F),
+-		.driver_data = (kernel_ulong_t)&rtw8822c_hw_spec
++		.driver_data = (kernel_ulong_t)&rtw_8822ce_pci_info
+ 	},
+ 	{}
+ };
 -- 
 2.55.0
 
