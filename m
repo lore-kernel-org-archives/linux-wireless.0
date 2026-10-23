@@ -1,101 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792790502;
-	b=f/Ok6O6aaTqU1fH44udzKzdf9LBVAdhsIkRKnCaKXxNujfOxvNqY9l6h6JNXMBk0u5r9
-	 ei3X9RtC2oveRgoRFNteYLHvPD3nY7FWWPpzX0brXHGj7+HEjVINJwYmsB5GRprmc/Hhb
-	 Z1zfrcvJ35MsDh5isIGbJSXQVu2xZAzcWtZMmVY8zFkHIFFnjYjbAr645wUVUrCGLwX+4
-	 uWXpnWxEwktf8NXKPVnXIcWcnLns9mZpQ3k8IxjISca4sGu1ibYdAVwLF9sSTKWn9he8A
-	 94jztt11p0CLPPgGqx/HmulRUei+5v4Y4SnYLWddKXcAE87tvGHTMVGHGNrLAV3xIuw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792790502;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
-	b=I/o+9wbjSLCEo3mpB6hOjjILZ4osOHldNcaooyE3hj2hrRZXuLWiD/DLBUYSJGo7m46e
-	 mslzh5Wmo0/nlxnPja0MPM6vNLR66mFyynTnfwQA5p6k7UIZMnMDj21ZFG9Mz7+s0HGSE
-	 wip0Wf7/6dfVpR/aLZEFL1M/QtyOgLonbLj5MWF0QmEEn9Ktk2P1Bn5ev4hDj13uC3xsF
-	 0aXi+UVZQpo43f/any0RyaNoh5dA/Rzgt7TwZxgj4akfn7auexOFNxA5T3aM28Qc0MK9s
-	 EOrhVFx230dJ+lo9O518hHYz5Fc5/c5yEQdNGIj2VQemaeBVd1Ie+8wgBv+GVO8Leyw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LNibhi+i;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.177
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792791275;
+	b=TtLBkEwVXYvzPy7bjcn7APVkCPiYjLaN4dV5u+aibKhJAflrJpl151rT+pHiH+gL4Ra+
+	 mTqEX1n83U46N8SFvKaR958EB6imvGLrVTJQcR1EUs2xo0vTkxgAFghOPZs5j5AMahzUF
+	 8gK+HHxHur/NZFwDhjGj+H1ZcBu5tnE2o3NfsIFbtJ6fQMwlWtUE9g8QmbzSynbCkVWvj
+	 D9xWrJUTpala3HPkHsA2WHyH2nYiBMXOuheesyukG4FpyWMSFQVv7wrsUQrhqPGx0/s3S
+	 +CdU4QKenHlJ91KO7TqXlety60z4M3l6OpzHS1Qh43SEr3QvPIc23pJU4AfImldj5xw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792791275;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
+	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
+	 In-Reply-To:References;
+	bh=hr1zPOfyiZqpY2vU4mmV+T085v++6VBMIs4U467d7Yw=;
+	b=A4OjLm9u3hYghJXvYsiYlxbzRtnWwloeUXKiPkjcW8sFRqy0fss4kuYF3zJ8RIE7acTL
+	 9AhKb2zYqQl+Wpw11Z+c/dGbJUXvIkdXjJ8TvYdL1MW3ZDZhhh72yGIzsShtB1O913ZJR
+	 fFi/VBclj0ZoyAiPRDpEhgPgza12H6JmPxrh6jVP0nrXBJpN7usatOeizBUdu6y5zF6dO
+	 Rnyf9AYqutwsKVP/Q+Kc62lxaDFHosnTO5fK5fwSN57wTi+DYCsOeuFrkbmSlvuowesjQ
+	 k/7K8xXbqbelZdSl0C7rdyGCwI9094Gt48mZgDCeFSUdYdz1VgX+SMcPlLqDYVt5M9Q==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TxngfrpR;
+	arc=none smtp.remote-ip=91.218.175.177
+Received: from mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6983A606A31A
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 21:21:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6983A606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63DF606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 21:34:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D63DF606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LNibhi+i
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6ae305e3bd9so2153403a12.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 14:21:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792790501; cv=none;
-        d=google.com; s=arc-20260327;
-        b=VlLG9ETjeQGZHB3ih+zdTjVPQQPY5dsKUS7qXPWkP1o0+8Ncctvjiweu6GzFKaE3xj
-         zooqPtUgJCGN00QwTVomj2huDmSRh4SOv71yiqfRDQ0KdxM7nkEbNSHdXUJqyNk63hL5
-         3KI+jF0LMsKwLrnJTxRVu+fEmeDRA51eq+zGM7RLD6k2pZSZ9AxXk1ugcl6uTTVlZISM
-         q1upsCyHUVmNN44sFcG0hnFr7C9ng/214/70FkkOopXtZhwbxQ1cNhM48KnD5glcIZXA
-         23uVku0Z0o8C++wHX65bmnYb/fSRi71STwhge3AhC5pb5Gf1FUk6WgiuYWeUMREd6K9U
-         5iOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
-        fh=kpWsed6Gl9Jw39uHHbCW8BjdBcTvPDR+t7LwYL3VZw8=;
-        b=cL0mBQAcLAtHHucM9FcGrROlCSvMbSTZ4e5UI3bq+Qg3AEbHfm8Sz5LssIc2SUDUV/
-         0cW0B/1hCtJCqVh5WwyEGG317z51kINl+LFH4DhVzINeHvgdUdiJvqmezuvJw13ZEy1p
-         kU2be1J0i8uDzi8gut6KmSnQWBpJvSwEI/XzO+/m5rUTEKmZc7Ms4qAhcKChtwn390t9
-         Jjlu+fpT2bcMTyOfGTxmQWfoqLHI+XCkcnSIZltoeKjlP5uvc2nGlOmXIu9AsKvKpVOG
-         g+kCh2J1KUj37bxHh2xV2+01SGFpVNRow+2vfiEAeMvppxoHFEnII69iT7VS7zElTzBY
-         No6w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792790501; x=1793395301; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
-        b=LNibhi+ilzYWV0TvVwj/ILgZRg3O8BNOUVlDKMjYBbf2alSGrhFE1ImXw0sfRqOrlW
-         3tAwPIgjpg87VEAhnE/KWA8GzYxTANeK7+NOvkfGQc2CVED32HVR+a9GSDQdHyudUEGQ
-         QoJicWJqQngB8VOuawmYrCUD0dsArr7awxJgAoZZJ63udfxlxKKpLXzrSiIK6ih9VDe1
-         vAKuP35JnKk66f33Qg9xjFzX/HHw30ohXb4Cp4T1ahHuz6pfTV5JVwO3U1ITbHx7ISt1
-         x2ZiOK0EfWDd792YmowRViLqOzzTH6wOa2hF9F1Dz2AD+3rbCof+k6BSSj2p0whsLliN
-         99cQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792790501; x=1793395301;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=AE0GbBfNma+sNfNfxTvMZspamc+IJ62E4ebI4HKJzHI=;
-        b=wcIb64//3dCAPymJfPquBN1S7jxHnMwccL1iHxn4iAXynJjG7eCq0oBSyciWU5zvdU
-         oP1CseSMapL7BJ0ypdga7ZuOsRi5xIwICC/+6MMDDA39LXG7EmSj6WXnbfNBv4eE4NkS
-         qvuVv58/fZuYLy4fkEqlYew4Vqg0BeosAErCcCwSDG+fY2+yjeT83TLo7YHC1yGT8XNk
-         dFTAb64PtFHrNmBTOIHooudQp7okp3RA0OAxs3NuWfOVIovRtlvi5UpV+w/FUlhAj8OF
-         5Zoq2MQlkuc0+o/5soFAUno383LZIjeUPLunqQrnmBTZuwC4vLv+hsZ7BGgEjR59W6a4
-         1YAQ==
-X-Gm-Message-State: AFq9FYJNOxJC0RB2mBvIfaPbAhojcIz6iMsaZ1HYegG1M7YC3PM3wCHz
-	x13hjkhlQmWPlS1WQTaWRj1U3+xFunZXT92UB1gturlDw6RShF/e+UOJWJJrv1Cpb+VHG4MYHk4
-	3o9w86UGvG116xsDZlbwPoBQw3HLWRvyeZxTF
-X-Gm-Gg: AYBFou0n6k+ThzhYqBg6mrUtWr+ToXwl7bX/FaeYYQeI3Wcm4E3ASMslqBw24wGCUg9
-	ZlJVUscsHskbAtadhRwiVhoRYZZdKBo6rMm2fkHUKW8FBaz6BilCcLjLKyF2pfQZ+KhcvL8Dcgr
-	BUqzYQE8/5jNENFfDojsTXBfH9uhqmFNgmflNH+CA9E57KVubpD8xRxr3I4WLD4PCQ7KmNPEUGl
-	HzwIiegiYk2gGX1gX52bpBGliRq1PxxBgcHErUns3a0lYCzWvoEBh1FbVxG59tYbn5XdHNy+cmg
-	1d6JXmgm4e1k+qMY1DawPXbfPduh7rjswbPWJvi//2FqrcBdRPX9gmGWsmkjveksJZo7fe/oG1t
-	GolTpIHCfceoGRNvwexTmSf212g/HGsGepWTLpFqwDQDaopjj00U5LvSgyKMJowqzXrtRncOWfr
-	XFhP4kyBYD8H5e3xLDmrhNPx1rimhxe6wLMRHPnBeKjc0/hsLcJ5kLDz6rRDlVks17s9NpY8gwr
-	348s2f9j+hE/KvN0cVqcL0CAquD1SjV4Gz14jBZluk3Sb9X5Q==
-X-Received: by 2002:a05:6402:1cc4:b0:6ac:bd53:d29a with SMTP id
- 4fb4d7f45d1cf-6b442a80c06mr508793a12.3.1792790500756; Fri, 23 Oct 2026
- 14:21:40 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TxngfrpR
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Yy/2ularjRrwqquDvE7W1R2qQMWoWbNC1XMmGFPCYis=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792791272; v=1; x=1793396072;
+ b=TxngfrpRBmc/3c3G6ekAbpppP78ySvns7B7VAsQVHfPPA54Ruo0mVCpvNPg6BceB/6RbYWRe
+ feIJrx5rWdH+TSRpXWbR16sDNF9QcceZs52fkI79a42n4GV0DJPkly9e80f65YnEGSqMdFNPiwc
+ yNj0roFGB1EhOcG3honOCpc0=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 387b152527310d3e;
+	Fri, 23 Oct 2026 21:34:32 +0000
+X-Mizu-Trace-ID: 387b152527310d3e
+X-Migadu-Flow: FLOW_OUT
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -105,68 +56,61 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261023190653.70741-1-rosenp@gmail.com> <20261023221424.2722795e@barney>
- <20261023224140.465903eb@barney> <CAKxU2N_1XgjVPdSrCMYzZx4Rb6yjgEe7kBZYyG4RASyBv5BtMw@mail.gmail.com>
- <20261023225745.696eef3c@barney>
-In-Reply-To: <20261023225745.696eef3c@barney>
-From: Rosen Penev <rosenp@gmail.com>
-Date: Fri, 23 Oct 2026 14:21:27 -0700
-X-Gm-Features: AclHuK9GRIFtl9lqIXhWNWjMucByyfNnLezcnXbef4n3dCMQ4w9XYcqaCpFWgVM
-Message-ID: <CAKxU2N9i6Dn1yKmd-_9DvET6P_GNctTywWgOBXYd2tWoWKY=Sg@mail.gmail.com>
-Subject: Re: [PATCH wireless] wifi: b43: map the RX buffers DMA_BIDIRECTIONAL
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, 
-	"open list:B43 WIRELESS DRIVER" <b43-dev@lists.infradead.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Oct 2026 21:34:31 +0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+From: "Luka Gejak" <luka.gejak@linux.dev>
+Message-ID: <875b4e96891a2bf256ca1805140b57aeccee4aed@linux.dev>
+TLS-Required: No
+Subject: Re: [PATCH rtw-next v2 1/2] wifi: rtw88: move the bmc high queue
+ decision to tx.c
+To: "Ping-Ke Shih" <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
+References: <20261021124318.15993-1-luka.gejak@linux.dev>
+ <ac6d8824bdeb45148ffd6b5dee7da313@realtek.com>
+ <5235fd68b703f756cc2ee1e7471339a512db59b8@linux.dev>
 
-On Fri, Oct 23, 2026 at 1:58=E2=80=AFPM Michael B=C3=BCsch <m@bues.ch> wrot=
+Hi Ping-Ke,
+
+October 22, 2026 at 7:11 AM, "Luka Gejak" <luka.gejak@linux.dev> wrote:
+
+
+>=20
+>=20October 22, 2026 at 4:20 AM, "Ping-Ke Shih" <pkshih@realtek.com> wrot=
 e:
+>=20
+>=20>=20
+>=20> Luka Gejak <luka.gejak@linux.dev> wrote:
+> >=20=20
+>=20>=20=20
+>=20>  USB decides in usb.c which broadcast and multicast (bmc) frames ma=
+y use
+> >  the high queue. SDIO needs the same decision, so move the helpers to
+> >  tx.c behind a single exported rtw_tx_bmc_use_hiq() and keep the budg=
+et
+> >  state in struct rtw_dev.
+> >=20=20
+>=20>  No functional change.
+> >=20=20
+>=20>  By my review, I think it doesn't change logic at all, but I hope i=
+f
+> >  someone can help to test USB devices to confirm it still works well.
+> >=20
+>=20I ran the same test with rtl8723du and there is no regression.
+>=20
+>=20Best regards,
+> Luka Gejak
 >
-> On Fri, 23 Oct 2026 13:44:44 -0700
-> Rosen Penev <rosenp@gmail.com> wrote:
->
-> > All code is tested on an Asus RT-N16. It runs on non-coherent MIPS.
->
-> Ok.
->
-> Describe your development process in human language during patch submissi=
-on.
-I assume that would mostly be appropriate for a cover letter.
-> What has been tested?
-> What has not been tested?
-> What was wrong?
-> What has been fixed?
-> Why is this needed?
-> Why do we need bidirectional DMA and most important why wasn't it necessa=
-ry before?
-Because the codepath is not fatal. One or two duplicated frames. Big deal.
->
-> AI is great for code generation, bug finding, etc.
-> But for patch submission, pull requests and commit messages it's absolute=
-ly unusable.
-> Please don't do it.
-> Write your commit messages manually, please.
-I've been burned by this many times before where maintainers ask me to
-reword or mention something. It's not practical and wastes everyone's
-time, which is why I'm almost banned from netdev.
->
-> Please make your commit message be to the point and easy to review.
-> And please slow the process down.
-> You don't need to submit patches right away. Keep them in a queue and STA=
-BILIZE them LOCALLY.
-I figure since wireless doesn't depend on the merge window unlike
-wireless-next I can send them whenever.
->
-> Please do a little bit of research whom to To and Cc. There are scripts f=
-or that.
-Yeah. All of this goes through ./scripts/get_maintainer.pl
 
-Do note this is an orphaned driver. I expect feature patches to get
-clogged up and Fixes: to get in a bit easier.
->
-> Thanks a lot.
->
-> --
-> Michael B=C3=BCsch
-> https://bues.ch/
+I was thinking, as staging got removed, for 10-ish weeks(until 7.5)
+users of RTL8723BS won't have AP mode. So I was wondering if these two
+patches could pass as fixes into rc2 release(or whatever is the first
+rc into which rtw tree is merged), as this would be DHCP stall fix. To
+elaborate: when this driver was merged it, was exposingAP mode to
+userspace, due to RTW88 doing it globally. Therefore AP mode existed,
+but wasn't working properly. So maybe it's a bit of a stretch, but I
+think it's a valid proposal to send it as a fix into next rc release.
+
+Best regards,
+Luka Gejak
