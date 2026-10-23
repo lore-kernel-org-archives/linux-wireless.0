@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792768084;
-	b=LdBQdVagYDb0p0at0XCAmLQc3V4QZWx+R+hIXf/5E9iZNXubjaj1t1USo5MAxDZmjzm3
-	 rlploI0I2/xfbQD4dTOX3tKXR4N3iWwHPVVxL8nVm10xXfGRAzcLvFun84656ZjZCaq2w
-	 xIaDaZMkUOIW2Yjfrusqq7tkLuANLTnYSi9h4b7d/8ZVcxZ+v25LZxTcQiMy+xkb1j+vN
-	 RN7W3k1yVhpOaLuOnHvp/DlQVQ+eYdzgkVs58oPj67ENgejQAznV0uqIqDyGk8K2U7qGU
-	 U6uuFT9BMdUKxXXRLxHBjoEiBLTgIDv9jfs4+ohviz881O2ikMxkK2a0m1l8OmRjZ2A==
+	t=1792768706;
+	b=uNjBDIguHI914ZujZZ8129pdateb5/JzWV9dRl9porpLwEszcKLKuBAOdEfrvIeFSD3j
+	 NsOobIsQW8gqWpzTbV8w3W+n7dEw3drGJuhOWeZ4MNeE30/8ckPojHPKA6G9rDeodNxyn
+	 iqoDUKKKEA/iWoHld4E9m3GohNtK/8FlT7Nm+UsqOmKJylpqft1MmaSMfW2NLQU70ST06
+	 yYZnd0La2W/ESgq6V6TOroRarGVXabsG5DCXldiP7EMM9UlVpmJHBpZWQhyZeZQRztJBQ
+	 g+X/h8hMdA14JqeQicoWzsWMCdR4vpCgdSRpH3ZIUnT3f6BOPn3+JJt7+JZglrQ2Ulg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792768084;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792768706;
 	h=DMARC-Filter:From:To:Cc:Subject:In-Reply-To:References:Date:
 	 X-Clacks-Overhead:Message-ID:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=qdrUlsvoldYcUDWpeedZVww31s/jOKEn4B4s+rGecvs=;
-	b=GgMPxxz1+zWLOyPQO1zma02Uv+5GohBhSoIjg4CgAqVNHAXSb9zgD7iayOPpCfY5svdi
-	 QlE0bkBCpfu+xqCSNb6zjGfEEx3L7LUukrSneCnic8egfZ9kf2LHFBjBJ4IbRijRHb0I6
-	 nqPNCQv63Yp6s8sRG4JdCfetD9lZgmXUiUJm2kAWoQQ0rWuZuBu2yhF/jyT40MvyxEMvI
-	 0FU/2bdayNuqk46ZXhOefz0cn6gptF7NR6kZ1UvEnBXANVEdDeyZUncLJr8RINPCgZZUn
-	 SEuyEy9Vkg8nhMMsQ+8d+vaZ2YDrDuTxh8Upe/YcAf0qQpP0z09HlkWvM3N1kafBeJA==
+	bh=NpThbeRLenQaZEbopJ3XwRa198kGN+iMvl5nVTX+bg4=;
+	b=HiKlELJpvvQ56+h074+Kd+OZ3ru2t59ltcae/hqE2d1efkUTlKz1r9+kMELlssWz4eFH
+	 7L/epZer+XUK0HFtY+OZ44rcZMtbvaufDv+N7VrDk1vdC3qBB2cEDmWva8k5vhexB73rU
+	 FEMO8BWAlMG+bBDB1iPHBuheigTc9kx+GZwYM+9MCXa08ijy5ARqrR60SHJMZL+CJr9E2
+	 0axOZOku18KH3uQiPaDwtz/tWyLskcE+yllrnhjYRB+kJWMlfwjOVycfxTtNaZaYmGl3t
+	 JyO+QxYkuamJDTeQ+85fRcC/FipYlaKjWQvglekKLbkqkP7f8IVkto3TnIwOeZQ+7Sw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=toke.dk;
 	spf=pass smtp.mailfrom=toke.dk;
@@ -25,23 +25,23 @@ Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84D70606A31A;
-	Fri, 23 Oct 2026 15:08:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 84D70606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECA6D606A31B;
+	Fri, 23 Oct 2026 15:18:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ECA6D606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
 Authentication-Results: mail.toke.dk; dkim=none
 From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Mehmet Fide <mehmet.fide@gmail.com>, "Felix K." <fk@mutemail.de>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
- mehmet.fide@screeningeagle.com
+To: "Felix K." <fk@mutemail.de>
+Cc: linux-wireless@vger.kernel.org, "Felix K." <fk@mutemail.de>,
+ stable@vger.kernel.org
 Subject: Re: [PATCH ath-next] wifi: ath9k_htc: fix beacon slot selection
  once TSF exceeds 2^42 us
-In-Reply-To: <20261023135126.4118569-1-mehmet.fide@gmail.com>
-References: <20261023135126.4118569-1-mehmet.fide@gmail.com>
-Date: Fri, 23 Oct 2026 17:07:55 +0200
+In-Reply-To: <20261022105656.4175421-1-fk@mutemail.de>
+References: <20261022105656.4175421-1-fk@mutemail.de>
+Date: Fri, 23 Oct 2026 17:18:21 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87wlr8qwtw.fsf@toke.dk>
+Message-ID: <87tsmcqwci.fsf@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -54,19 +54,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Mehmet Fide <mehmet.fide@gmail.com> writes:
+"Felix K." <fk@mutemail.de> writes:
 
-> On 2026-10-23, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Mehmet, any chance you could test this one? :)
+> ath9k_htc_choose_bslot() derives the beacon slot from the TSF reported
+> in the SWBA event as
 >
-> Tested on an AR9271 (firmware 1.4) as an AP, 6.12.113, with the TSF
-> moved forward by up to 23 wraps of 2^42 us. Without the patch the
-> beacon goes out half an interval off from 10 to 22 wraps; with it, it
-> stays in place throughout. Beacon count and a connected station were
-> fine in both cases.
+> 	tsftu =3D TSF_TO_TU(tsf >> 32, tsf);
+> 	slot =3D ((tsftu % intval) * ATH9K_HTC_MAX_BCN_VIF) / intval;
 >
-> Tested-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+> TSF_TO_TU() truncates its result to 32 bits, so tsftu is
+> (tsf / 1024) mod 2^32 and wraps every 2^42 us (~50.9 days). 2^32 is not
+> a multiple of the beacon interval (2^32 mod 100 =3D 96 for the default
+> of 100 TU), so every wrap shifts the computed position within the
+> beacon interval by 4 TU. Depending on where in the interval the SWBA
+> event arrives, the wrong slot is chosen after one or more wraps. The
+> state only recovers when the TSF is reset.
+>
+> Compute the offset within the beacon interval from the 64-bit TSF
+> instead. For TSF values below 2^42 us and an even beacon interval the
+> result is identical to the old calculation. TSF_TO_TU() in htc.h has no
+> other user and is removed.
+>
+> This is the same issue as in ath9k_beacon_choose_slot(), which is fixed
+> separately. Compile tested only, I do not have ath9k_htc hardware.
+>
+> Fixes: 832f6a18fc2a ("ath9k_htc: Add beacon slots")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix K. <fk@mutemail.de>
 
-Great, thank you! :)
-
--Toke
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
