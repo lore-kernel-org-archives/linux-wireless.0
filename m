@@ -1,89 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=116.203.120.240
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792782565;
-	b=Yt5dc8jfZq9alo1hRW7Gv8iKcke/m2tDxoP8ivdzHd0RDkvk5vX+iOC0vaFWus7JgMJU
-	 B5UnVZ7y7q6kw7pJ2c37yymmMNBowQcDU/Duv8TmB9QcrcNX7L2tD/sZHFbt4Vn1K6yPG
-	 2Hm/nAkHFnRGFvYoZhtyVL8+couAQ/ufQbgWN5Tg6Glp4id2/r4M8UDp3MoFdEI+ZNLcg
-	 FxwR2ICRguvpYcLFMP48C5/mGDDSGMHsQG/TMu7opLyx6FMVyc2MaIYfcBo3DsczGqXJd
-	 awFC9XDnKHUIkNwgjMJ7aAgeOEDI2XZjPx9z2aiOmQndjNtHuVFHEye3NrSZV6aKabQ==
+	t=1792786515;
+	b=Dyo0RYe/oha3OHxlHK1FnlNg1WFlxpE7zGniCH1/yrUbrKfP8idTT6KD7Cll4Scnuc69
+	 qx/s3z8prP/lFLGs9QVSrSVJxmJPo7d/rEofkJZ1MAznccL1NswwKvbQgKo+JU22olJl6
+	 buwY1xYsFiSVe+4k1GhceO+UkUn2EPnP0ISxf7l+s2RS9fOT6/+jgi59J8BqXP8p0d2KF
+	 MbDbY8uwkHr0Yr6Qd5R9kL4I5ELIkJ4+JSjpWOnhw7inqmFV8t12/An5nC0fdgLreBbbu
+	 1hE7FGuW0Yf+yF2uk6hZQMe4g1uDtKAU43RGo13/jfpQZhG77t+g8ewGu/s8GTTFZxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792782565;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=N2r7UOrv8eZqrgzadXu3xwusx/htufx1GM5LO5xd2W0=;
-	b=Ut6V4DmAsiqvOLGtcaQyl6SGwQDljrbORgP0lJQcIDYmIKxl3gIYxxZCXDW9IAeww1Zx
-	 r8zCJ4OPw5zPD9NpJxMJLYHwNdV7jGBOhHoNW/jDWHm91bXCpnJNJCxQeKqU/CsRnBXVc
-	 R2UXoZ3PM6RzZr+nH6XN/3erSqJNnFx2kVzCq6JWegwGweCdgNSrfUqNYFOINlLzkTL/a
-	 rP9ihZi1Bwh3EAUmRLb5lvslD7vesttLQuuORPzd/gKn8oOx07ACSvwt5uVsFh6BrbVgi
-	 eBgO8QLyF3YuBRGHOfdhQzpsaNdq5ejyIU9v31YuXFy2pWDNcbKRSx+gIwyWHRSVNSQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792786515;
+	h=DMARC-Filter:Date:DKIM-Signature:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type;
+	bh=m/PMCHPO/jr5fAoLR41c5oEssMjic1/6mLM+L0/ZmP4=;
+	b=zS8zecnPBgYxr12i2xLwtBW1YqpN+RoKuyDz5ASM99vUXhbHd39dobZx8bhzy1Npi4LW
+	 cFQY9yTG4QuBSRTjzK64/fvpe0OuIT9ZUdLnmQajw+yOTiwIGolb3n1psHaCyiCFwrYJc
+	 SJFSOXaJ+G3wNnFhNGtU0yk3UGih8F2wKjEtp1TRQTtJoJn6WLSfF4Z6dNwGn7sDSR96a
+	 u1+gKfzGr6pGEx1p0AhWdfKBDYWpzna5W6RwByQvX3Ve/HB1bzVT1y7Yjp2omCWiBkc+E
+	 zF6jGSHPWkX96FmqkN8+gV1yzbKMQavWgi6biXXUBmr6JaVXEL4EKJsgRqsoyaVtECA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="TzN/0HUN";
-	arc=none smtp.remote-ip=74.125.82.182
-Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=bues.ch;
+	spf=pass smtp.mailfrom=bues.ch;
+	dkim=pass header.d=bues.ch header.i=@bues.ch header.a=rsa-sha256 header.s=main header.b=faQCOktY;
+	arc=none smtp.remote-ip=116.203.120.240
+Received: from mail.bues.ch (bues.ch [116.203.120.240])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA999606A31E
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 19:09:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA999606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB105606A31A;
+	Fri, 23 Oct 2026 20:15:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB105606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TzN/0HUN
-Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-33fb4680717so1193312eec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 12:09:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792782564; x=1793387364; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=N2r7UOrv8eZqrgzadXu3xwusx/htufx1GM5LO5xd2W0=;
-        b=TzN/0HUNV9zJoXbeF2BOnY4MY4lm1jv4x56xwpa16+sKN6uyLXR4EpwPXiZPU6vVCC
-         EdtXepzELVhCk5RE+u3TI9udHmj0QW3cnrMllzGd5KjaAtOwu3/3MCC8FFzcw5BaR4MX
-         cxw+CX5ATckoV/1a9XQZYZf3eMGzE1xtH33SxaaBJfwKRpoJSCuUi1OArrc+nSD/DQ27
-         9+QhLLFbqqluvQO657S/+aT6a2CmvUGDVF58SjiunSlY2kWtEP2b1uGthsLo7YZ1JA1+
-         v0VnmtFdEtnVXWqMGYvF/EV4qh9FcfJWEO/RDwrwkhD6Ke8t0v5uTiCqFyjmpEITBSrz
-         vRbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792782564; x=1793387364;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=N2r7UOrv8eZqrgzadXu3xwusx/htufx1GM5LO5xd2W0=;
-        b=sugLbmctH1L2yCzC3WlZ4gUGRMfBrI52B/tbQReWDaf9ZOuRUgmV9+dCsg0F/VLezK
-         zd2QY8yJfQ+6nwH5xEQ2M/tBWQebhxRzco4E2nyexKjkJ1vDA4Q1M1DRmirL87gvEIUJ
-         qWaubGdTpPMpWMazuJfxbaIWAzgfYR9HvEb/21VH8d2fz47hLq7AbFphZ6vvKuqHeutu
-         pvcuTrOtLc6T00ea7H1YA3sSWRuA479fjqX5x0WlKN5rKWlQcJzplmaaJX15ZjK0E05W
-         iIsNYAfLKx9arwPIsjSoefwW30TuXmnnU+yf2YEaP8cfp67XcWlUGMAv6uYXiD5NcucN
-         zntg==
-X-Gm-Message-State: AFq9FYJ3DlPThk7+sZ1hQ3Q0dMZ6t5gFiJZfAw1vzOxQE6Lfejrt3f4r
-	9rbrRJ5uAGhy4tXEizAAG6XdJWuXUgZ1G8vTydsYZ+3DVS8lfSr4OwrO1ysOe1xi
-X-Gm-Gg: AYBFou1VfYk/zMrukBCs1LibbEvrEkLwwuNJ57+KsY8jziSJGiOUGAKuLLJ4AYtAhr2
-	supg11jhMDLiiPPIrkGrRmMDBxRNsSan8WMio0H3Fp7i6vJCjOY2i90zGkdWd6bCHrSpGqhDJV6
-	Q12WtKeJY75NyW6jq/CpwNiNNSHyWzjN+LTUAM+a203as0KqwZ4AQLXMy41wbOLmfC/6TeZFg/m
-	Dhri9RdyxCJ2cEOTcWmWHvto4NSbvF84947V8TxEuusifuVjnvybTmtirgmqfzEyF/xirJb80Yy
-	TRIDRwR8BztdrQo9WAgVf16CwUjvJ64lvbn/G2iZRNgJ0sIu1QoBxbrGo5fnpzRHZrv0fI0k+z8
-	WemC+Trloi96snB4jmqE1yClZ9GeA3VPY25C/Uj7rqc1gbwZU5nLNk8wzsyxPCo1gPKciOILxdd
-	qVkvAza38rbPT2TT+fK2fweVDFzEjW+lZgEArvQjQXpQDU4rZ+zuzTGdz/WkwqXoeJe46uNKXTw
-	lbJTqp2tcOjMy/TlFDqyySX2HUpR3XsOq8KPoBp/ZN1FX49VFzEQfrssup9s1Oyjhyj7wkrcvCB
-	kFG1o9x32G2CvEbEuqqtLvakdcx90Cuw/VphbH1T7TixTJc+TjkMKB6JUseApBdZwNFauL0kN16
-	uEu53zIl7vWOAH79vv1X2uQ641vHR
-X-Received: by 2002:a05:7300:80ca:b0:369:e918:3c95 with SMTP id 5a478bee46e88-369e9184604mr68042eec.4.1792782563590;
-        Fri, 23 Oct 2026 12:09:23 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:37f::e34])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8daa3a8sm159990eec.16.2026.10.23.12.09.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 12:09:22 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org (open list:B43 WIRELESS DRIVER),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH wireless] wifi: b43: apply the TX power limit set on the interface
-Date: Fri, 23 Oct 2026 12:09:21 -0700
-Message-ID: <20261023190921.73237-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=bues.ch header.i=@bues.ch header.a=rsa-sha256 header.s=main header.b=faQCOktY
+Date: Fri, 23 Oct 2026 22:14:24 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
+	t=1792786506;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=m/PMCHPO/jr5fAoLR41c5oEssMjic1/6mLM+L0/ZmP4=;
+	b=faQCOktYlanW4afHud0z/jvY8YQ3Tmv0i2ALoSWK2H8If1W+1uJVT7tGEiHoYVYqK1RBO+
+	rR1YQhmJtJ3NVUphzwW1X76OekfXWPY9+Z1BNPZrrNHb1S1c6Mw0NJKrryPE8ctkXF5mWB
+	DMV8mOk7hWmENQPPj2am++9RrEU4+yAdDU/BvkAD/1Vv4FoKApUnQERaY6Tw2PfoiD4+8p
+	MIasi1nbRa5Jb0kImelCHnxPQidwk3gbnyQA1gESF5Hqos0eM73UsMGgHSyJuu70pjBNFG
+	pY8Nj/XLzX/Iz1h5LYjTnShAocH6ZJoBLNy4ipiyj4bZrrQ6P3HlVr8lgNavQg==
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org (open
+ list:B43 WIRELESS DRIVER), linux-kernel@vger.kernel.org (open list)
+Subject: Re: [PATCH wireless] wifi: b43: map the RX buffers
+ DMA_BIDIRECTIONAL
+Message-ID: <20261023221424.2722795e@barney>
+In-Reply-To: <20261023190653.70741-1-rosenp@gmail.com>
+References: <20261023190653.70741-1-rosenp@gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -93,47 +63,118 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="Sig_/EtGF2lcPb61ELDgqh=HK/KQ";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
 
-A TX power limit set with "iw dev <dev> set txpower" never reaches the
-hardware. mac80211 keeps such a limit per interface and only passes it
-to the driver as BSS_CHANGED_TXPOWER. The power level of the hardware
-configuration, which b43_op_config() turns into the desired TX power,
-is only recalculated for a limit set on the whole wiphy, or when the
-channel changes.
+--Sig_/EtGF2lcPb61ELDgqh=HK/KQ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Take the TX power of the interface on BSS_CHANGED_TXPOWER as the
-desired TX power, and recheck the TX power right away, as
-b43_op_config() does.
+Quite honestly, to me this looks like a lot of AI slop is sent to b43 these=
+ days.
+Can you please slow down your submissions so that actual people get a chanc=
+e to review the stuff?
+Thanks!
 
-Fixes: 1ea6f9c0d48b ("mac80211: handle TX power per virtual interface")
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/broadcom/b43/main.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 3825b6ad9f4f..01e3e80b43a5 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -4161,6 +4161,17 @@ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	b43_mac_enable(dev);
-+
-+	/*
-+	 * mac80211 passes a TX power limit set on the interface only here,
-+	 * not in the power level of the hardware configuration.
-+	 */
-+	if (changed & BSS_CHANGED_TXPOWER && conf->txpower > 0 &&
-+	    conf->txpower != dev->phy.desired_txpower) {
-+		dev->phy.desired_txpower = conf->txpower;
-+		b43_phy_txpower_check(dev, B43_TXPWR_IGNORE_TIME |
-+					   B43_TXPWR_IGNORE_TSSI);
-+	}
- out_unlock_mutex:
- 	mutex_unlock(&wl->mutex);
- }
--- 
-2.56.0
 
+On Fri, 23 Oct 2026 12:06:53 -0700
+Rosen Penev <rosenp@gmail.com> wrote:
+
+> b43 poisons each RX buffer before it hands it to the device, and drops
+> a buffer that still carries the poison, as the device sometimes skips
+> one. The RX buffers are mapped and synced DMA_FROM_DEVICE. On a
+> non-coherent CPU like the BCM4716 or the BCM4708, the map and the sync
+> for the device then only invalidate the cache, so the poison written
+> just before never reaches memory. A skipped buffer is read as whatever
+> the memory held before, for a recycled buffer the data of its previous
+> use: garbage frames, or a length that sends dma_rx() into its path for
+> frames spanning several buffers.
+>=20
+> Map, sync and unmap the RX buffers DMA_BIDIRECTIONAL, so that the
+> poison is written back before the device gets the buffer.
+>=20
+> Reported on a Netgear R6400 (BCM4708, BCM4331).
+>=20
+> Fixes: cf68636a9773 ("b43: Refresh RX poison on buffer recycling")
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  drivers/net/wireless/broadcom/b43/dma.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wirele=
+ss/broadcom/b43/dma.c
+> index 05da6987a845..c8585c6dff37 100644
+> --- a/drivers/net/wireless/broadcom/b43/dma.c
+> +++ b/drivers/net/wireless/broadcom/b43/dma.c
+> @@ -353,8 +353,14 @@ static inline
+>  		dmaaddr =3D dma_map_single(ring->dev->dev->dma_dev,
+>  					 buf, len, DMA_TO_DEVICE);
+>  	} else {
+> +		/*
+> +		 * Not DMA_FROM_DEVICE: on a non-coherent CPU, the map and
+> +		 * the sync for the device would then only invalidate the
+> +		 * cache, and the poison of b43_poison_rx_buffer() would
+> +		 * never reach memory.
+> +		 */
+>  		dmaaddr =3D dma_map_single(ring->dev->dev->dma_dev,
+> -					 buf, len, DMA_FROM_DEVICE);
+> +					 buf, len, DMA_BIDIRECTIONAL);
+>  	}
+> =20
+>  	return dmaaddr;
+> @@ -369,7 +375,7 @@ static inline
+>  				 addr, len, DMA_TO_DEVICE);
+>  	} else {
+>  		dma_unmap_single(ring->dev->dev->dma_dev,
+> -				 addr, len, DMA_FROM_DEVICE);
+> +				 addr, len, DMA_BIDIRECTIONAL);
+>  	}
+>  }
+> =20
+> @@ -379,7 +385,7 @@ static inline
+>  {
+>  	B43_WARN_ON(ring->tx);
+>  	dma_sync_single_for_cpu(ring->dev->dev->dma_dev,
+> -				    addr, len, DMA_FROM_DEVICE);
+> +				    addr, len, DMA_BIDIRECTIONAL);
+>  }
+> =20
+>  static inline
+> @@ -388,7 +394,7 @@ static inline
+>  {
+>  	B43_WARN_ON(ring->tx);
+>  	dma_sync_single_for_device(ring->dev->dev->dma_dev,
+> -				   addr, len, DMA_FROM_DEVICE);
+> +				   addr, len, DMA_BIDIRECTIONAL);
+>  }
+> =20
+>  static inline
+
+
+
+--Sig_/EtGF2lcPb61ELDgqh=HK/KQ
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmrbwCAACgkQ9TK+HZCN
+iw5vLA/8DgP3NmxzLRRtxhfbKFM0SPl36d7r97iUfi3lnPyV2HiDvZR6R2AIK7V8
+FmSgoLZTk73e29ildUC5bzampS/b2Ds220dSxNNvEE1dkwxjatPNQvR69GnRnitu
+Jtzg51WaJxm4CSzOxEpaB+IZbpoW+hC+7hNFZh5gflkfXjocPa14o/mCK3sWZyvv
+kSHXf32dRPZpz4S92feA8Ll88QvfaNRpLpWNu6AyoFYXFxn6CYOkYq7bbidcNCYz
+43zatonqNJ/WhjlZ/94XYTqjCFazz4+htEF6Ztp4u5xExX8eWz8eJzhq34gvd5nW
+bd20jVnC6A8Away6q81wD5wtFal2Fa5mpyy6F8YVjSrAW6NmE+x6h/op0a1l0Vw1
+N1j+aibPst8NJhXQ9+h4KfDEh5t4nVohpaTEia4wzNZOtQPEYoUyzK2mh0/KiQbc
+1xOHEXcjkIsZ0RlzEQ3YDNqM9m7Q9t2HS4hrwfMGdWlW0TxmhbIEBSQHhySQmtvF
+TEI4fTeTW8Xg5x+U2hdU4hkv+Knq5AAavykNBU9Clg+jqhq3OZIbsEY3x+kuJafJ
+W0wzJNi4cPwQDs4q5lJOki++s6u5fC3wWmgOomzJYmMxEDmYcgr2VmdyrvNQeTu7
+H6OsBVVrPQ9942VwW6LzuLyERgFScOOx4UYEPCMqfBHbnPSWQrs=
+=nu7c
+-----END PGP SIGNATURE-----
+
+--Sig_/EtGF2lcPb61ELDgqh=HK/KQ--
