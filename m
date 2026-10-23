@@ -1,55 +1,46 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.239.133.37
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.145.95.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792753154;
-	b=rIfbj6r9qUMm+B1s8TtLyLFv/EPiCRogaAlTcKP+4lOXnqq60OBf+NyO2AeqFl0I1JVH
-	 lsXzoVckltwg2KLbmjLClP0bosNJRM4JFkoR/JF7nvnIJiKnGdL5tJ514qcIZYg+50q5e
-	 L7XLf7BOLITuK7glfaA6fh93DUrR5HGksQPeY7P28e64YpDLvZEQWj/i34nXcz7cnzMGr
-	 Chkou2B1ypMrCVf4X28kuUFNui6QSmCfaHOMn80katbFk6Ctoht4V1QGM8+HvNgw1iEgr
-	 kSMdsLaOCgxZz8t3EFcTnaef6EbFVtKV/N+Edj2S0hPc8NS5TwZNJsR+NDeQ/D915Jg==
+	t=1792753305;
+	b=Pkmetk+ptunrSGZw3vTtbLF3PJM+1KpxLoyt3Poh6ZzmxmNUZPPgWElSujs5/cPMAUYI
+	 9c8NHCzH+0eFJCoJoh/39RHZ+bt8YPrT1fQnx66Tlt2V4qoT5zXNkgrcRVQm8/D2Bx8wh
+	 bOm7d1wImE/V9HBGr07Vj12M6jiYh7UHvg8a+3+/kYkZm3cxyXP7LYs4UuWv64boAY8Xc
+	 8B3ndRDjUuqYDrmstIQc6eBjTk8lERUbxcBIn6GvIx0bHmxQGQ8iqeyR+t9qCP8RvXYDJ
+	 iAOHlzq24TfOvdnvJ+VR60Ur7yWkmEZ+xXrJg5nahekFAoiOI9FBM70/GzpwU2+0wow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792753154;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 X-Authenticated-Id;
-	bh=Mezb3aebBAwDE/PfLG1U4xa+UrorOgEthSWjT47v5Vg=;
-	b=IKy1ymRTb2MtlPQE4qEsNA8ehRo1mq+/u7Idd7k4Jj6hkYs/p7pgFmUVdn1TIxyuxpo0
-	 dJiS54iYTyHQVPw/GRwfp7U028PUp4Wktwd3uSLGl+IRz+/wC9/4kKWWwopk1oB3hKW8+
-	 lQFT6lZXxedLeVGIjyxIcfsuEFKKhn3vXWpMLRLAv0roC+H3pfa/gDi9FXDctwBtE8RzG
-	 /RJSem05Vb8Kk39v+NtHViOJHgtrJ0VzyVm3S9WWkzDnHUeDu3ZpXTRc7wI6xrFz3Iezj
-	 oNGeCAycygZGFCcGqk3ldbrzkDlXJORJ3C4hOmmc9rJO66yd5qWwxBSgSQP08iqjQQw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792753305;
+	h=DMARC-Filter:From:To:Cc:Subject:Date:X-Clacks-Overhead:Message-ID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=9i1lMAauhdSb96bAn21amtKRcV/LL4J/0GNVxIc7VqM=;
+	b=ih6d1wlqMUmIE3cYoZGp1LeMwC+s7mtGgaN/54H/zhWrGkgr1er2R4e+3yVuzLun0J9N
+	 i7N47h3Tqc95YtG6X2ddpPbN/8hAvLyi1eN/Y8+bijWuWdhs+GX+BwErQ2vOCd6ZRYn2d
+	 ZbWKUFv3CbrBHmI4MLl4rczmhBtwlG1mrWwT1RCZ8RmvSYTDbugeCx5CZTXNvo4RCo+pJ
+	 +RWg4hNcW1D+dZbWRO6XruXSb2jnd+LoO9S3Z/pdDV5ifVPG8gjSP6jlz6CI1a03jek7C
+	 pzTcuffKNjouiR3jZA7GnheWYdEHoVgwgpFur6jcI83S1eNKSzcZ0lsKadpEqQ/Bopw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=kubik.pl;
-	spf=pass smtp.mailfrom=kubik.pl;
-	arc=none smtp.remote-ip=213.239.133.37
-Received: from mail-e842.seohost-mail.eu (mail-e842.seohost-mail.eu [213.239.133.37])
+	dmarc=pass header.from=toke.dk;
+	spf=pass smtp.mailfrom=toke.dk;
+	arc=none smtp.remote-ip=45.145.95.4
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07A37606A31A;
-	Fri, 23 Oct 2026 10:59:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 07A37606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kubik.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kubik.pl
-Received: from static-46-238-236-132.awacom.net ([46.238.236.132] helo=localhost)
-	by h84.seohost.pl with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <piotr@kubik.pl>)
-	id 1xKCzP-00000007gNm-0m8a;
-	Fri, 23 Oct 2026 12:59:11 +0200
-From: Piotr Kubik <piotr@kubik.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>,
-	Muna Sinada <muna.sinada@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Piotr Kubik <piotr@kubik.pl>,
-	stable@vger.kernel.org
-Subject: [PATCH wireless v2 1/2] wifi: mac80211: change the links of an AP_VLAN station through its AP
-Date: Fri, 23 Oct 2026 12:58:43 +0200
-Message-ID: <20261023105844.1117460-2-piotr@kubik.pl>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261023105844.1117460-1-piotr@kubik.pl>
-References: <20261023105844.1117460-1-piotr@kubik.pl>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BDF606A323;
+	Fri, 23 Oct 2026 11:01:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 37BDF606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+Authentication-Results: mail.toke.dk; dkim=none
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Alexander Wetzel <alexander@wetzel-home.de>
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	stable@vger.kernel.org,
+	Evan Severson <eseverson@gmail.com>
+Subject: [PATCH] wifi: mac80211: reinstate IEEE80211_TX_CTL_AMPDU flag in ieee80211_tx_prep_agg()
+Date: Fri, 23 Oct 2026 13:00:51 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <20261023110052.650519-1-toke@toke.dk>
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -59,37 +50,54 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: piotr@kubik.pl
 
-A 4-address station of an AP MLD moves to an AP_VLAN interface, so its
-sta->sdata is the AP_VLAN. The AP_VLAN is never added to the driver,
-so check_sdata_in_driver() in drv_change_sta_links() warns and returns
--EIO for every link change of such a station. Adding a link fails, and
-removing a link leaves it in the driver, because
-ieee80211_sta_remove_link() ignores the error.
+The commit 592234e941f1 ("wifi: mac80211: Fix iTXQ AMPDU fragmentation
+handling") changed the way handling of the IEEE80211_TX_CTL_AMPDU flag
+is done in mac80211, so the only place it is set is in
+ieee80211_tx_dequeue().
 
-Map the AP_VLAN to its AP first, as drv_sta_state() does.
+This means that any frames that are sent to the driver via drv_tx() will
+no longer have the flag set. In particular, this affects packets going
+through ieee80211_tx_pending(). Evan reported that this can result in
+the ath9k driver failing to account such packets in its block ack
+window, eventually overrunning the window and stalling TX.
 
-Fixes: 469d5d5a3b7a ("wifi: mac80211: synchronize valid links for WDS AP_VLAN interfaces")
+Fix this by reinstating the flag in ieee80211_tx_prep_agg() when inside
+a valid block ack window. This should be harmless for the TXQ path, and
+will reinstate the previous behaviour for drivers that use the flag as a
+signal to track the packet in the window.
+
+Fixes: 592234e941f1 ("wifi: mac80211: Fix iTXQ AMPDU fragmentation handling")
 Cc: stable@vger.kernel.org
-Signed-off-by: Piotr Kubik <piotr@kubik.pl>
+Reported-by: Evan Severson <eseverson@gmail.com>
+Link: https://lore.kernel.org/all/20261014025734.2288693-1-eseverson@gmail.com/
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
- net/mac80211/driver-ops.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 49753b73aba2..823317b2f691 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -593,6 +593,7 @@ int drv_change_sta_links(struct ieee80211_local *local,
- 	might_sleep();
- 	lockdep_assert_wiphy(local->hw.wiphy);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e9b6a0415d6a..0f46b5ff0c4a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1164,6 +1164,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 	struct sk_buff *purge_skb = NULL;
  
-+	sdata = get_bss_sdata(sdata);
- 	if (!check_sdata_in_driver(sdata))
- 		return -EIO;
- 
+ 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++		info->flags |= IEEE80211_TX_CTL_AMPDU;
+ 		reset_agg_timer = true;
+ 	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+ 		/*
+@@ -1195,6 +1196,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 		if (!tid_tx) {
+ 			/* do nothing, let packet pass through */
+ 		} else if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++			info->flags |= IEEE80211_TX_CTL_AMPDU;
+ 			reset_agg_timer = true;
+ 		} else {
+ 			queued = true;
 -- 
-2.55.0
+2.56.0
 
