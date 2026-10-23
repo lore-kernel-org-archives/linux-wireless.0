@@ -1,70 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.244.194.184
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792742616;
-	b=qAtzsW22ZtdjVcwLaCD7bLN2xydJ8y0plU2HHm1fU8d9j5g07pOSuHmZUpUhEh5YsbFc
-	 BtZRCVnq/DX84PLt2F4t2d6IeU8QVY1TErGvHAeiKdujgvFs+d+sDZquz3dY8wY9W7+Wz
-	 h12CKKx12gKWfcA14njCX3by7wGlyTuYY4qM5VJ5IZ+pSo9Ay+gQYZvQN4dinWITqZ5x8
-	 fVSteak3kjjohAvnxQYJolYZUrgLvOeZyluXuLA5hfgAyuAOg7cg6FWBMWEh6VGKGr3Zz
-	 qEEkaDiAf+Tcmd77o4JpWalvYwyBVo7D0qmxpiRZfLpXdyhLMqlRLhCNImetRBB1BaQ==
+	t=1792742847;
+	b=FC2DGgIEsAzCpzjDI/9pQ1yxfsdiD79vx6kS1/r+Zoea/ONitxOLdBefKqOG5OJZ8d+r
+	 e2yEwGC258veTR+/LAnReQpr+hK6Y7Z1oN70hlDQ63Sdivba0aLZ0yozYYMBPFpNDPCZS
+	 oQJz72sYr3NiIAVz0KicvYZb/BcBK1SLrL5YBMILD/IdM3Nffq2kn1/W3hLXJ/DUyK1X3
+	 CN1fpR4lQgHsAc4Lw219BNUNSacqrVVRPrzIljP2cO6uKOdjRcPVfgsjWC3InSBwiOrLz
+	 ktj+rGjFHu5Cs6GK7cpPHTK61ZqyYWY2F4oVM2ADSEVKTjG6K/H6IuHCmVWwtxgNadw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792742616;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received-SPF:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:From:Content-Language:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-PPP-Message-ID:X-Rspamd-Server:
-	 X-Rspamd-Queue-Id:X-NC-CID;
-	bh=s1gTEjF5l3cNLfTPFBPubP5rXcUxTgsvBTvFcOzR7vI=;
-	b=yE7StfY+ZeCZzdXbMBiuj2tlsREOOMPLVUk0gSGFoVnmxWMhpEovwQItR8EQeuHdcAMF
-	 oYYyMgVYvGcMZ36WZ7O1cZxgHWWKJXt70JzedUGNeA0Z0IJsLnsbDdNujPjJctqxfo1Mp
-	 XNq4hx4g2CcGTql8/GwCnwAlsAXUnP1RQaZBPkGkLELBar0eV6F3LPl/C19x3K72kDQ1S
-	 0hO6bbNd1Sh4T8D3wUd1ZrHCmD5Z/PO2BNIqGKYX91fj8EpLgwM3UcFcqWyb5LH3RIxuw
-	 VUE+dnb+iocbqgCzKXrc8LX6m+rcVEdhb+KyaAJaSbqyvFxKzihRk3djiEKh5KUX7Tg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792742847;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=J+FBnRhZ2QnMn481TMIHmuO1R3phrSYLbDfpoygi7QY=;
+	b=x0w26A6qJtogc7cwMMNFBL+04+NlZPVp/VP7v23VasHgTwPx4qysHvWx02+c3DMFFx8P
+	 K+wC/+WQJhWk5LfMMI8C1AIf7fc1tsDNWCpthK1oPW4FcoZHmvVoToPKb9Kr0O1y5HKux
+	 Rj9PMr+z5P/xD6w6hVFRb/BJyE0NdNF6XjT1ODLiO+61Qo/DJpR54giw1nSqtAdyQgaTo
+	 UzGjRj7nV+iMJ44w185FA6hMdc7e8JXbV8bnb3BjIgvIiMBUTMrSeY+CN/3PKs2H+LWIK
+	 DlIfnnDe5glWbAVgjYskCZUs8/OdgtyniFIvFNW+FQ2ZucIHBu8ukDEszqt5BOfqOVw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=leemhuis.info;
-	spf=pass smtp.mailfrom=leemhuis.info;
-	dkim=pass header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=M3au7dUE;
-	arc=none smtp.remote-ip=185.244.194.184
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CATH69gT;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ODTwXAFA;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719C7606A31B
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 08:03:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 719C7606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4676606A31A
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 08:07:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4676606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=M3au7dUE
-Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4j9wWM6DwTz9ZqZ;
-	Fri, 23 Oct 2026 10:03:27 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1792742607;
-	bh=s1gTEjF5l3cNLfTPFBPubP5rXcUxTgsvBTvFcOzR7vI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=M3au7dUEYRt7VacrMmIVy1Ti/GKhc+c/rFOzLSgkbKlfgGVWWdyAW8lEoE/m5JGWm
-	 PvVzJ5ZFmHvbqG6gexzCuHm6wgkI+s/nl3iRqfExNy7HgfZTwthjfxrBTBYY0lUQAT
-	 3g7LN0BbYogjxmQMnOkqChfm7akgPNJM1FKTVzQLIvsE8y4+rml+86xefFTrCtHpRc
-	 pILhyEFW0TqCDFR0tMkS0on708lKHVOKEQrrkQfS0YeEFrl9NgcoIUKuF6zU4FAfg8
-	 4x/bPs3701XTjQoXU+hJqWhR5L5hKHqqQ6WVsMdpOQqkdkj6W6vh6+PorkR2EcZJ+x
-	 OG4mb5OUvxCGg==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4j9wWM5X0Dz7xdj;
-	Fri, 23 Oct 2026 10:03:27 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4j9wWL3y5jz8sb3;
-	Fri, 23 Oct 2026 10:03:26 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 8ECD85F9FC;
-	Fri, 23 Oct 2026 10:03:00 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <f32dfa8b-fc3e-4d8e-a010-20e822ed0c08@leemhuis.info>
-Date: Fri, 23 Oct 2026 10:02:59 +0200
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CATH69gT;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=ODTwXAFA
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69N7F8nl3154070
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 08:07:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	J+FBnRhZ2QnMn481TMIHmuO1R3phrSYLbDfpoygi7QY=; b=CATH69gT/UksPUqN
+	NTGTiU0p9T0kjVHeh/RxszIcC3m7wT+wn+M2dS9EXBhb4tIBQdPRKZXcQH2rWUPn
+	Y4XbHnvuButfWwj9G7KKuxTPQvGWywJrtiULVVARCBYaVQY2WoC+UQWiaaRrbfKN
+	yWrHQ79ARxOjdl/PdFGLiiQfhHcRB9YnBrgaCfhuaAOJfxCblWLd14rJdFiWQM/H
+	QPQ93ZEhJYn2/8I9MXDhfDnkT8VfVxoLAf000yaLAgAPjB5CpQc0FICbcBfJ3JNL
+	JVYDPCtwmg+N9RbcsFg+PeT4i15HzadMV4L/sY7bYvq+YO3OLxvUpK+oHVHMnQjl
+	h5bNkw==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hfqmramhc-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 08:07:25 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cd67e98f68fso871680a12.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2026 01:07:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792742845; x=1793347645; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=J+FBnRhZ2QnMn481TMIHmuO1R3phrSYLbDfpoygi7QY=;
+        b=ODTwXAFAnsFVfn/HhYttQf0vFtynqUtJxxk0fS8GgJJLvxA03V746cXaawZULHhHTU
+         hxtPiek0KUdrnDp/lGXWNwX/+JNKthUCW2XTesEywPRCDga6DRyUx7tcvctl9rAOxwEi
+         BUCHpqr1LW4jv6czUl1L/OvsaSjGJYHNyrtVOO/KlDRzaEBA+cFG/DuyF/8V/+xEo6mi
+         7BZtjjd/1CtQ2GVyioffJEZhaun7GtWERLc6MuKxjdvRyoF+FbQDUDt4Gb8swh+iZMAA
+         mTJRF4kyi7Zv30sgDLwzC5/1D95nV2QOzARXKMZL8h8Lp7Pg1FqoGms3zgEphWQ2qNCb
+         H1/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792742845; x=1793347645;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=J+FBnRhZ2QnMn481TMIHmuO1R3phrSYLbDfpoygi7QY=;
+        b=iUtEV632FCxEqvyyCCdfPu5DSyLL9+BWlG3rhcPa1XxinGdMD3ezqavKIKFcRRIlZN
+         aPLOUaD3XHRFR92V49+Y71DyFVPixGdmnZNT8uaLF/DXhXtF8N1+kGKz7w3NS+GZfiJL
+         OGxldYlyfdLeUoY3zGDZaitdiLQ0KaxXhvnKKzjFL6vs+B+hZej2TSA+y3qJ55RfMJyu
+         yGvcD713KEb91Ds+c9yp7WnkCjt4tbJExsjV9PfX14tUnR9lgb4ivta6V7HWmur8oxCE
+         7IAlJavrM2Hh6kT6lFbK0NB79bTXD/w50LWzD83By8UBAM+1zqBfeFHG0YmK/aSaTg4f
+         Rvcg==
+X-Forwarded-Encrypted: i=1; AKwUvBxtK+1/U30z5j87ORK+NjQ7kMZvlEExqzJ1BgQgktIcQNS0/t3TRtmZzTJu2poUNwuYjydIG8KNtAt9TtKOiw==@vger.kernel.org
+X-Gm-Message-State: AFq9FYLdh2gP8urGt+rdN2qZ0ZYYiri4L+V6Ujm8gm710GwLrcVPtL2i
+	TKOQyjjtjvT2/9xPq+XMOqgiyK62fTpwzOPzP+ClXv0rJMhfC/40+S/GMhcD7T22bbRQ8wae0tk
+	VenzlrjCL1e92rbUw5ECVF7mqSipuIQpmcGccWT4Zskyj6c/YUBVE0W6W6l+AF1CxRKBhKw==
+X-Gm-Gg: AYBFou29iW6pgnXBr1qoXr0MyQ4XAe7U9Dwiq1Skkx9qsYjqkJVS4P1yayo18rNF3YY
+	GlqsJ4apN2zMyEsiO4BJhj9DqZjBh6BhMhZqPoLiGtv6XMcIOUoUanc7AnTnSiISH8mJHTZCyfd
+	QJQvs60+QPiXqiAWd25fEz6/LN2ZD6o64XIhN03tmlYChmYBoP2rGXk+xKezoO8K3Zi723xQaR3
+	BYd2JkaCwjgX1gNxaLyGjP1fSB68qnZhK3KaIIXJPaPvn7Kld5Ap8BnbRDqdEpskgOvmqhnZjG+
+	b77F8KM/yua/7OAoNk13t9N157Gp74MiU+q3BXKz3SZwIrkwDUdOTMk+Nw390zWgfyrq77tfDHd
+	FO1SJjTMRpBFN/PGUA8B7mLSGmtStL6wG/2CcenLh0s8ebtnYFHG1aokFQQ+KYn983w3mydJOJQ
+	==
+X-Received: by 2002:a05:6300:86:b0:3e2:a849:64bc with SMTP id adf61e73a8af0-3e359a97d82mr1320409637.9.1792742845181;
+        Fri, 23 Oct 2026 01:07:25 -0700 (PDT)
+X-Received: by 2002:a05:6300:86:b0:3e2:a849:64bc with SMTP id adf61e73a8af0-3e359a97d82mr1320394637.9.1792742844735;
+        Fri, 23 Oct 2026 01:07:24 -0700 (PDT)
+Received: from [10.133.33.125] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd8ba8e6678sm529974a12.30.2026.10.23.01.07.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Oct 2026 01:07:22 -0700 (PDT)
+Message-ID: <41eff135-80fe-4820-b9c4-48705159a013@oss.qualcomm.com>
+Date: Fri, 23 Oct 2026 16:07:18 +0800
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Post: <mailto:linux-wireless@vger.kernel.org>
@@ -75,45 +115,70 @@ List-Owner: <mailto:linux-wireless+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] mac80211_hwsim: beacons stop after host suspend
- (beacon_timer is CLOCK_MONOTONIC, expiry computed in boottime)
-To: =?UTF-8?Q?Lo=C3=AFc_KASSEL?= <loic.kassel@gmail.com>,
- Johannes Berg <johannes@sipsolutions.net>
-Cc: Benjamin Berg <benjamin.berg@intel.com>, linux-wireless@vger.kernel.org,
- regressions@lists.linux.dev
-References: 
- <CAAzpgGdksHZjx4jc20zqnAG_PQ2e1ggANQjt2eiycUiWc+vPHg@mail.gmail.com>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: 
- <CAAzpgGdksHZjx4jc20zqnAG_PQ2e1ggANQjt2eiycUiWc+vPHg@mail.gmail.com>
+Subject: Re: [PATCH ath-current] wifi: ath12k: fix DMA direction for
+ re-injected Rx buffers
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+        Baochen Qiang <quic_bqiang@quicinc.com>,
+        P Praneesh <quic_ppranees@quicinc.com>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+References: <20261017-ath12k-fix-dma-mapping-for-reinject-packets-v1-1-b94860e18ba4@oss.qualcomm.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20261017-ath12k-fix-dma-mapping-for-reinject-packets-v1-1-b94860e18ba4@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: 
- <179274258092.1091304.11815514332012150800@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: 8ECD85F9FC
-X-NC-CID: bHaKrTAahpzEaoxWAmf/YdJC+XGDJzfWnydqnO3hVLp/Wlim6Ps=
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: TFtkmmbpxZ6-WpXnOWiegVFaUYPQvxNI
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAzMiBTYWx0ZWRfX0uKt8LJC+Esa
+ O9HN01qIef0QHmNM4fmeUJUwTroM57ZTl1IWqlSz0ITqE5LdZNX6exUleaqoFUhytgDEotlRuIj
+ 4Bn3i+FeXV2JSptDWj0tR8xIGsoRCqw=
+X-Authority-Analysis: v=2.4 cv=VNZIDNPX c=1 sm=1 tr=0 ts=6adb15bd cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=l5KLu2utXcWZLmDjM0UA:9 a=QEXdDO2ut3YA:10 a=bFCP_H2QrGi7Okbo017w:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAzMiBTYWx0ZWRfX5cskHt/9QcSg
+ kzWs5VYrmdT4+4Om30jmYM7KzijtLpW5MIAiBRDTDHi/s8pn3WwZJiB4BhEB3QJMVmlLzaRCqRn
+ IrrCEL9gUBPn50JmYrC+6EPVL/HaIOmTFGsiDGryNzZpp7j/GIN5zdumfZeMIHbSOVyoEyiLCUX
+ DttDqOG0hZiDgqw0GGKuwfgabhLLigl7snXdVdJRNbQ33e1melsApRtSFb470K4uNkKF6Kf0enQ
+ a72aKzBA7ItRavCuEUAbUKM6KC7S7wC+l2jmLZYW2tY3pmEIG4J+MtFQ3c/hQ9XHJIs5Wu0B3h9
+ mH5gNc63F26CTnPd27qT+nCVcXB6eW1wn4Z5G0Y6z0OMrgOO7281UcNwoDRMH00d7NZmIaIhRng
+ sgLHpOu7uwzi0W0m8lJ6m/RROncbGViRSqTJguSspDALr74pz5C3wldbLFoOw13m3tHncUAvfh0
+ 72TZ9GFS4c5OrO+0KWg==
+X-Proofpoint-ORIG-GUID: TFtkmmbpxZ6-WpXnOWiegVFaUYPQvxNI
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-23_02,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 suspectscore=0 bulkscore=0 adultscore=0 phishscore=0
+ impostorscore=0 spamscore=0 lowpriorityscore=0 malwarescore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610230032
 
-On 10/18/26 01:12, Loïc KASSEL wrote:
-> Since 7.2, mac80211_hwsim radios in AP mode stop sending beacons
-> after the host has been suspended once. A single beacon goes out
-> roughly every <time spent in suspend> instead of every beacon
-> interval, so stations see massive beacon loss, scans come back empty
-> and APs without associated stations become invisible.> [...]
+On 10/17/2026 5:16 PM, Lorenzo Bianconi wrote:
 
-Thx for this and the other report you just sent minutes later. Sadly
-nobody that is and expert in this area replied yet. With a bit of luck
-my reply will change that, maybe not. Whatever it is, there are two
-things you could do:
+> --- a/drivers/net/wireless/ath/ath12k/core.h
+> +++ b/drivers/net/wireless/ath/ath12k/core.h
+> @@ -149,6 +149,7 @@ struct ath12k_skb_rxcb {
+>  	u8 tid;
+>  	u16 peer_id;
+>  	bool is_end_of_ppdu;
+> +	bool reinjected;
 
-- Test if a current mainline snapshot as of now is improved (the wifi
-changes were merged just a few hours ago) or wait till 7.4-rc1 and test
-that -- maybe it fixes things.
+rxcb->is_frag already identifies a reinjected frame, can we use it instead?
 
-- If not, test with a current mainline snapshot or 7.4-rc1 if the
-problems can be fixed by a revert.
 
-Please report your reports individually for both problems.
+> diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c
+b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> index 8fa0e90b4531..0003cc5a3720 100644
+> --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
+> +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> @@ -138,6 +138,7 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_dp *dp,
+>  		if (!rx_desc)
+>  			goto fail_dma_unmap;
+>
+> +		ATH12K_SKB_RXCB(skb)->reinjected = false;
 
-Ciao, Thorsten
+These skbs come straight from dev_alloc_skb(), which clears CB area inside, so this is not
+required. But for readability purpose I have no objection to keep it.
